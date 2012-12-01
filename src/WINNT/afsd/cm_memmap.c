@@ -895,7 +895,8 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD max
         }
 
         cm_data.buf_nbuffers = cacheBlocks;
-        cm_data.buf_nOrigBuffers = 0;
+        cm_data.buf_nOrigBuffers = cacheBlocks;
+        cm_data.buf_usedCount = 0;
         cm_data.buf_blockSize = blockSize;
         cm_data.buf_hashSize = cm_NextHighestPowerOf2((afs_uint32)(cacheBlocks/7));
 

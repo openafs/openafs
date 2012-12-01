@@ -1480,6 +1480,9 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
 		osi_panic("buf_GetNewLocked: TryMutex failed",__FILE__,__LINE__);
 	    }
 
+            if ( cm_data.buf_usedCount < cm_data.buf_nbuffers)
+                InterlockedIncrement(&cm_data.buf_usedCount);
+
             lock_ReleaseWrite(&buf_globalLock);
             lock_ReleaseRead(&scp->bufCreateLock);
 
