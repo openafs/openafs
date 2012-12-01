@@ -10,7 +10,7 @@
 #ifndef CM_MEMMAP_H
 #define CM_MEMMAP_H 1
 
-#define CM_CONFIG_DATA_VERSION  21
+#define CM_CONFIG_DATA_VERSION  22
 #define CM_CONFIG_DATA_MAGIC            ('A' | 'F'<<8 | 'S'<<16 | CM_CONFIG_DATA_VERSION<<24)
 
 typedef struct cm_config_data {
@@ -98,6 +98,7 @@ typedef struct cm_config_data {
     afs_uint32          buf_reserveWaiting;
     afs_uint32          buf_freeCount;
     afs_uint32          buf_redirCount;
+    afs_uint32          buf_usedCount;
 #else
     afs_uint64		buf_nbuffers;
     afs_uint64		buf_nOrigBuffers;
@@ -106,6 +107,7 @@ typedef struct cm_config_data {
     afs_uint64          buf_reserveWaiting;
     afs_uint64          buf_freeCount;
     afs_uint64          buf_redirCount;
+    afs_uint64          buf_usedCount;
 #endif
     time_t              mountRootGen;
     afsUUID             Uuid;

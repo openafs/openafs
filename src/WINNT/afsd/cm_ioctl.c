@@ -1455,7 +1455,7 @@ cm_IoctlGetCacheParms(struct cm_ioctl *ioctlp, struct cm_user *userp)
      * so we report the entire cache in use since reporting 0 in use disturbs
      * many users.
      */
-    parms.parms[1] = cm_data.buf_nbuffers * (cm_data.buf_blockSize / 1024);
+    parms.parms[1] = cm_data.buf_usedCount * (cm_data.buf_blockSize / 1024);
 
     memcpy(ioctlp->outDatap, &parms, sizeof(parms));
     ioctlp->outDatap += sizeof(parms);
