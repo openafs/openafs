@@ -6334,11 +6334,12 @@ AFSRetrieveFileAttributes( IN AFSDirectoryCB *ParentDirectoryCB,
                                        &pDirectoryEntry,
                                        NULL);
 
-        if( !NT_SUCCESS( ntStatus))
+        if( !NT_SUCCESS( ntStatus) ||
+            ntStatus == STATUS_REPARSE)
         {
 
             //
-            // The volume lock was released on failure above
+            // The volume lock was released on failure or reparse above
             // Except for STATUS_OBJECT_NAME_NOT_FOUND
             //
 
@@ -6998,11 +6999,12 @@ AFSEvaluateRootEntry( IN AFSDirectoryCB *DirectoryCB,
                                        &pDirectoryEntry,
                                        NULL);
 
-        if( !NT_SUCCESS( ntStatus))
+        if( !NT_SUCCESS( ntStatus) ||
+            ntStatus == STATUS_REPARSE)
         {
 
             //
-            // The volume lock was released on failure above
+            // The volume lock was released on failure or reparse above
             // Except for STATUS_OBJECT_NAME_NOT_FOUND
             //
 
@@ -8432,11 +8434,12 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
                                            &pDirectoryEntry,
                                            NULL);
 
-            if( !NT_SUCCESS( ntStatus))
+            if( !NT_SUCCESS( ntStatus) ||
+                ntStatus == STATUS_REPARSE)
             {
 
                 //
-                // The volume lock was released on failure above
+                // The volume lock was released on failure or reparse above
                 // Except for STATUS_OBJECT_NAME_NOT_FOUND
                 //
 
