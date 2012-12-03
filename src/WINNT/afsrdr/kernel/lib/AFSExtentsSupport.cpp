@@ -1429,12 +1429,6 @@ AFSProcessSetFileExtents( IN AFSSetFileExtentsCB *SetExtents )
         if( pVolumeCB != NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSProcessSetFileExtents Acquiring VolumeRoot FileIDTree.TreeLock lock %08lX SHARED %08lX\n",
-                          pVolumeCB->ObjectInfoTree.TreeLock,
-                          PsGetCurrentThread());
-
             lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
@@ -1464,14 +1458,6 @@ AFSProcessSetFileExtents( IN AFSSetFileExtentsCB *SetExtents )
 
         AFSAcquireShared( pVolumeCB->ObjectInfoTree.TreeLock,
                           TRUE);
-
-        lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSProcessSetFileExtents Decrement count on volume %08lX Cnt %d\n",
-                      pVolumeCB,
-                      lCount);
 
         //
         // Now locate the Object in this volume
@@ -1577,6 +1563,18 @@ try_exit:
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSProcessSetFileExtents Decrement count on object %08lX Cnt %d\n",
                           pObjectInfo,
+                          lCount);
+        }
+
+        if ( pVolumeCB)
+        {
+
+            lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSProcessSetFileExtents Decrement count on volume %08lX Cnt %d\n",
+                          pVolumeCB,
                           lCount);
         }
     }
@@ -1843,12 +1841,6 @@ AFSFindFcbToClean(ULONG IgnoreTime, AFSFcb *LastFcb, BOOLEAN Block)
         // The Volume list may move under our feet.  Lock it.
         //
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSFindFcbToClean Acquiring VolumeRoot ObjectInfoTree lock %08lX SHARED %08lX\n",
-                      pVolumeCB->ObjectInfoTree.TreeLock,
-                      PsGetCurrentThread());
-
         lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
@@ -1860,6 +1852,12 @@ AFSFindFcbToClean(ULONG IgnoreTime, AFSFcb *LastFcb, BOOLEAN Block)
         AFSReleaseResource( &pRDRDeviceExt->Specific.RDR.VolumeListLock);
 
         bReleaseVolumeListLock = FALSE;
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSFindFcbToClean Acquiring VolumeRoot ObjectInfoTree lock %08lX SHARED %08lX\n",
+                      pVolumeCB->ObjectInfoTree.TreeLock,
+                      PsGetCurrentThread());
 
         AFSAcquireShared( pVolumeCB->ObjectInfoTree.TreeLock,
                           TRUE);
@@ -2080,12 +2078,6 @@ AFSProcessExtentFailure( PIRP Irp)
         if( pVolumeCB != NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSProcessExtentFailure Acquiring VolumeRoot FileIDTree.TreeLock lock %08lX SHARED %08lX\n",
-                          pVolumeCB->ObjectInfoTree.TreeLock,
-                          PsGetCurrentThread());
-
             lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
@@ -2109,16 +2101,15 @@ AFSProcessExtentFailure( PIRP Irp)
             try_return( ntStatus = STATUS_UNSUCCESSFUL);
         }
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSProcessExtentFailure Acquiring VolumeRoot FileIDTree.TreeLock lock %08lX SHARED %08lX\n",
+                      pVolumeCB->ObjectInfoTree.TreeLock,
+                      PsGetCurrentThread());
+
         AFSAcquireShared( pVolumeCB->ObjectInfoTree.TreeLock,
                           TRUE);
 
-        lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSProcessExtentFailure Decrement count on volume %08lX Cnt %d\n",
-                      pVolumeCB,
-                      lCount);
         //
         // Now locate the Object in this volume
         //
@@ -2208,7 +2199,17 @@ AFSProcessExtentFailure( PIRP Irp)
 
 try_exit:
 
-        NOTHING;
+        if ( pVolumeCB)
+        {
+
+            lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSProcessExtentFailure Decrement count on volume %08lX Cnt %d\n",
+                          pVolumeCB,
+                          lCount);
+        }
     }
 
     return ntStatus;
@@ -2330,12 +2331,6 @@ AFSProcessReleaseFileExtents( IN PIRP Irp)
             if( pVolumeCB != NULL)
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSProcessReleaseFileExtents Acquiring VolumeRoot FileIDTree.TreeLock lock %08lX SHARED %08lX\n",
-                              pVolumeCB->ObjectInfoTree.TreeLock,
-                              PsGetCurrentThread());
-
                 lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
@@ -2359,16 +2354,14 @@ AFSProcessReleaseFileExtents( IN PIRP Irp)
                 try_return( ntStatus = STATUS_UNSUCCESSFUL);
             }
 
+            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSProcessReleaseFileExtents Acquiring VolumeRoot FileIDTree.TreeLock lock %08lX SHARED %08lX\n",
+                          pVolumeCB->ObjectInfoTree.TreeLock,
+                          PsGetCurrentThread());
+
             AFSAcquireShared( pVolumeCB->ObjectInfoTree.TreeLock,
                               TRUE);
-
-            lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSProcessReleaseFileExtents Decrement count on volume %08lX Cnt %d\n",
-                          pVolumeCB,
-                          lCount);
 
             //
             // Now locate the Object in this volume
@@ -2619,6 +2612,19 @@ try_exit:
                           "AFSProcessReleaseFileExtents Decrement count on object %08lX Cnt %d\n",
                           pObjectInfo,
                           lCount);
+        }
+
+        if ( pVolumeCB)
+        {
+
+            lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSProcessReleaseFileExtents Decrement count on volume %08lX Cnt %d\n",
+                          pVolumeCB,
+                          lCount);
+
         }
     }
 
