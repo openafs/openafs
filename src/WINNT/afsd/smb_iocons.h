@@ -103,6 +103,7 @@ struct sbstruct {
 #define VIOC_SETUNIXMODE                0x39
 #define VIOC_GETVERIFYDATA              0x3A
 #define VIOC_SETVERIFYDATA              0x3B
+#define VIOC_GETCALLERACCESS            0x3C
 
 #define VIOC_VOLSTAT_TEST               0x3F
 

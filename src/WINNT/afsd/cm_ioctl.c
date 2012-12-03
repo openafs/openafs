@@ -3629,3 +3629,41 @@ cm_IoctlSetVerifyData(cm_ioctl_t *ioctlp)
     return 0;
 }
 
+/*
+ * VIOC_GETCALLERACCESS internals.
+ *
+ * Assumes that pioctl path has been parsed or skipped.
+ */
+
+afs_int32
+cm_IoctlGetCallerAccess(cm_ioctl_t *ioctlp, struct cm_user *userp, cm_scache_t *scp, cm_req_t *reqp)
+{
+    afs_int32 code;
+    afs_uint32 rights = 0;
+    int haveRights = 0;
+    char *cp;
+
+    lock_ObtainWrite(&scp->rw);
+    code = cm_SyncOp(scp, NULL, userp, reqp, 0,
+                     CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    if (code == 0) {
+        haveRights = cm_HaveAccessRights(scp, userp, reqp, 0xFF0000FF, &rights);
+        cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    }
+    lock_ReleaseWrite(&scp->rw);
+
+    cp = ioctlp->outDatap;
+    /* Copy all this junk into msg->im_data, keeping track of the lengths. */
+    if (haveRights)
+        memcpy(cp, (char *)&rights, sizeof(afs_uint32));
+    else
+        memcpy(cp, (char *)&scp->anyAccess, sizeof(afs_uint32));
+    cp += sizeof(afs_uint32);
+    memcpy(cp, (char *)&scp->anyAccess, sizeof(afs_uint32));
+    cp += sizeof(afs_uint32);
+
+    /* return new size */
+    ioctlp->outDatap = cp;
+
+    return code;
+}
