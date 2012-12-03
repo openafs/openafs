@@ -195,5 +195,7 @@ extern afs_int32 RDR_IoctlGetVerifyData(RDR_ioctl_t *ioctlp, cm_user_t *userp, a
 
 extern afs_int32 RDR_IoctlSetVerifyData(RDR_ioctl_t *ioctlp, cm_user_t *userp, afs_uint32 pflags);
 
+extern afs_int32 RDR_IoctlGetCallerAccess(RDR_ioctl_t *ioctlp, cm_user_t *userp, afs_uint32 pflags);
+
 #endif
 

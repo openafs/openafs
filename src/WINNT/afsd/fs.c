@@ -932,6 +932,61 @@ ListACLCmd(struct cmd_syndesc *as, void *arock)
 }
 
 static int
+GetCallerAccess(struct cmd_syndesc *as, void *arock)
+{
+    afs_int32 code;
+    struct ViceIoctl blob;
+    struct cmd_item *ti;
+    int error = 0;
+    int literal = 0;
+    cm_ioctlQueryOptions_t options;
+
+    if (as->parms[1].items)
+        literal = 1;
+
+    SetDotDefault(&as->parms[0].items);
+    for(ti=as->parms[0].items; ti; ti=ti->next) {
+        cm_fid_t fid;
+        afs_uint32 rights[2];
+
+        /* once per file */
+        memset(&fid, 0, sizeof(fid));
+        memset(&options, 0, sizeof(options));
+        options.size = sizeof(options);
+        options.field_flags |= CM_IOCTL_QOPTS_FIELD_LITERAL;
+        options.literal = literal;
+	blob.in_size = options.size;    /* no variable length data */
+        blob.in = &options;
+
+        blob.out_size = sizeof(cm_fid_t);
+        blob.out = (char *) &fid;
+        if (0 == pioctl_utf8(ti->data, VIOCGETFID, &blob, 1) &&
+            blob.out_size == sizeof(cm_fid_t)) {
+            options.field_flags |= CM_IOCTL_QOPTS_FIELD_FID;
+            options.fid = fid;
+        } else {
+	    fs_Die(errno, ti->data);
+	    error = 1;
+	    continue;
+        }
+
+        blob.out_size = sizeof(rights);
+        blob.out = rights;
+        code = pioctl_utf8(ti->data, VIOC_GETCALLERACCESS, &blob, 1);
+        if (code || blob.out_size != sizeof(rights)) {
+	    fs_Die(errno, ti->data);
+	    error = 1;
+	    continue;
+        }
+
+        printf("Callers access to '%s' is ", ti->data);
+        PRights(rights[0], 0);
+        printf("\n");
+    }
+    return error;
+}
+
+static int
 FlushAllCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
@@ -5158,6 +5213,12 @@ int wmain(int argc, wchar_t **wargv)
     cmd_AddParm(ts, "-if", CMD_FLAG, CMD_OPTIONAL, "initial file acl");
     cmd_AddParm(ts, "-cmd", CMD_FLAG, CMD_OPTIONAL, "output as 'fs setacl' command");
     cmd_CreateAlias(ts, "la");
+
+    ts = cmd_CreateSyntax("getcalleraccess", GetCallerAccess, NULL,
+                          "list callers access");
+    cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
+    cmd_AddParm(ts, "-literal", CMD_FLAG, CMD_OPTIONAL, "literal evaluation of mountpoints and symlinks");
+    cmd_CreateAlias(ts, "gca");
 
     ts = cmd_CreateSyntax("cleanacl", CleanACLCmd, NULL, "clean up access control list");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");

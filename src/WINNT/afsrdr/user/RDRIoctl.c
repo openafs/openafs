@@ -149,6 +149,7 @@ RDR_InitIoctl(void)
     RDR_ioctlProcsp[VIOC_SETUNIXMODE] = RDR_IoctlSetUnixMode;
     RDR_ioctlProcsp[VIOC_GETVERIFYDATA] = RDR_IoctlGetVerifyData;
     RDR_ioctlProcsp[VIOC_SETVERIFYDATA] = RDR_IoctlSetVerifyData;
+    RDR_ioctlProcsp[VIOC_GETCALLERACCESS] = RDR_IoctlGetCallerAccess;
 }
 
 void
@@ -1960,4 +1961,35 @@ RDR_IoctlSetVerifyData(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint
     cm_SkipIoctlPath(&ioctlp->ioctl);
 
     return cm_IoctlSetVerifyData(&ioctlp->ioctl);
+}
+
+afs_int32
+RDR_IoctlGetCallerAccess(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
+{
+    afs_int32 code;
+    cm_scache_t *scp;
+    cm_ioctlQueryOptions_t * optionsp;
+    afs_uint32 flags = 0;
+
+    optionsp = cm_IoctlGetQueryOptions(&ioctlp->ioctl, userp);
+    if (optionsp && CM_IOCTL_QOPTS_HAVE_LITERAL(optionsp))
+        flags |= (optionsp->literal ? CM_PARSE_FLAG_LITERAL : 0);
+
+    if (optionsp && CM_IOCTL_QOPTS_HAVE_FID(optionsp)) {
+        cm_fid_t fid;
+        cm_SkipIoctlPath(&ioctlp->ioctl);
+        cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
+                  optionsp->fid.vnode, optionsp->fid.unique);
+        code = cm_GetSCache(&fid, NULL, &scp, userp, &ioctlp->req);
+    } else {
+        code = RDR_ParseIoctlPath(ioctlp, userp, &ioctlp->req, &scp, flags);
+    }
+    if (code)
+        return code;
+
+    code = cm_IoctlGetCallerAccess(&ioctlp->ioctl, userp, scp, &ioctlp->req);
+
+    cm_ReleaseSCache(scp);
+
+    return code;
 }

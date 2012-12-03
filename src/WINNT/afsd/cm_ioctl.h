@@ -290,6 +290,8 @@ extern afs_int32 cm_IoctlGetVerifyData(cm_ioctl_t *ioctlp);
 
 extern afs_int32 cm_IoctlSetVerifyData(cm_ioctl_t *ioctlp);
 
+extern afs_int32 cm_IoctlGetCallerAccess(cm_ioctl_t *ioctlp, struct cm_user *userp, cm_scache_t *scp, cm_req_t *reqp);
+
 #endif /* __CM_IOCTL_INTERFACES_ONLY__ */
 
 #endif /*  OPENAFS_WINNT_AFSD_CM_IOCTL_H */
