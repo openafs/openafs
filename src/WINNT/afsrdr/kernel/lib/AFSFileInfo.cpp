@@ -3152,6 +3152,22 @@ AFSSetRenameInfo( IN PIRP Irp)
 
                 pTargetFcb = pTargetDirEntry->ObjectInformation->Fcb;
 
+                //
+                // MmForceSectionClosed() can eventually call back into AFSCleanup
+                // which will need to acquire Fcb->Resource exclusively.  Failure
+                // to obtain it here before holding the SectionObjectResource will
+                // permit the locks to be obtained out of order risking a deadlock.
+                //
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSSetRenameInfo Acquiring Fcb lock %08lX EXCL %08lX\n",
+                              &pTargetFcb->NPFcb->Resource,
+                              PsGetCurrentThread());
+
+                AFSAcquireExcl( &pTargetFcb->NPFcb->Resource,
+                                TRUE);
+
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSSetRenameInfo Acquiring Fcb SectionObject lock %08lX EXCL %08lX\n",
@@ -3182,6 +3198,14 @@ AFSSetRenameInfo( IN PIRP Irp)
                               PsGetCurrentThread());
 
                 AFSReleaseResource( &pTargetFcb->NPFcb->SectionObjectResource);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSSetRenameInfo Releasing Fcb lock %08lX EXCL %08lX\n",
+                              &pTargetFcb->NPFcb->Resource,
+                              PsGetCurrentThread());
+
+                AFSReleaseResource( &pTargetFcb->NPFcb->Resource);
             }
 
             ASSERT( pTargetDirEntry->DirOpenReferenceCount > 0);
