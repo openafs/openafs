@@ -4559,6 +4559,7 @@ AFSProcessDFSLink( IN AFSDirectoryCB *DirEntry,
     NTSTATUS ntStatus = STATUS_INVALID_DEVICE_REQUEST;
     UNICODE_STRING uniReparseName;
     UNICODE_STRING uniMUPDeviceName;
+    UNICODE_STRING uniIOMgrDeviceName;
     AFSDirEnumEntry *pDirEntry = NULL;
 
     __Enter
@@ -4570,6 +4571,9 @@ AFSProcessDFSLink( IN AFSDirectoryCB *DirEntry,
 
         RtlInitUnicodeString( &uniMUPDeviceName,
                               L"\\Device\\MUP");
+
+        RtlInitUnicodeString( &uniIOMgrDeviceName,
+                              L"\\??\\");
 
         uniReparseName.Length = 0;
         uniReparseName.Buffer = NULL;
@@ -4689,18 +4693,32 @@ AFSProcessDFSLink( IN AFSDirectoryCB *DirEntry,
         // Start building the name
         //
 
-        RtlCopyMemory( uniReparseName.Buffer,
-                       uniMUPDeviceName.Buffer,
-                       uniMUPDeviceName.Length);
-
-        uniReparseName.Length = uniMUPDeviceName.Length;
-
-        if( DirEntry->NameInformation.TargetName.Buffer[ 0] != L'\\')
+        if ( DirEntry->NameInformation.TargetName.Buffer[ 0] != L'\\' &&
+             DirEntry->NameInformation.TargetName.Buffer[ 1] == L':')
         {
 
-            uniReparseName.Buffer[ uniReparseName.Length/sizeof( WCHAR)] = L'\\';
+            RtlCopyMemory( uniReparseName.Buffer,
+                           uniIOMgrDeviceName.Buffer,
+                           uniIOMgrDeviceName.Length);
 
-            uniReparseName.Length += sizeof( WCHAR);
+            uniReparseName.Length = uniIOMgrDeviceName.Length;
+        }
+        else
+        {
+
+            RtlCopyMemory( uniReparseName.Buffer,
+                           uniMUPDeviceName.Buffer,
+                           uniMUPDeviceName.Length);
+
+            uniReparseName.Length = uniMUPDeviceName.Length;
+
+            if( DirEntry->NameInformation.TargetName.Buffer[ 0] != L'\\')
+            {
+
+                uniReparseName.Buffer[ uniReparseName.Length/sizeof( WCHAR)] = L'\\';
+
+                uniReparseName.Length += sizeof( WCHAR);
+            }
         }
 
         RtlCopyMemory( &uniReparseName.Buffer[ uniReparseName.Length/sizeof( WCHAR)],
