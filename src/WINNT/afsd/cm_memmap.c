@@ -369,6 +369,24 @@ cm_ValidateMappedMemory(char * cachePath)
         return CM_ERROR_INVAL;
     }
 
+    if ( config_data_p->size != sizeof(cm_config_data_t) ) {
+        fprintf(stderr, "AFSCache Header Size 0x%08X != afsd_service Header Size 0x%08X\n",
+                config_data_p->size, sizeof(cm_config_data_t));
+        UnmapViewOfFile(config_data_p);
+        CloseHandle(hm);
+        CloseHandle(hf);
+        return CM_ERROR_INVAL;
+    }
+
+    if ( config_data_p->magic != CM_CONFIG_DATA_MAGIC ) {
+        fprintf(stderr, "AFSCache Magic 0x%08X != afsd_service Magic 0x%08X\n",
+                config_data_p->magic, CM_CONFIG_DATA_MAGIC);
+        UnmapViewOfFile(config_data_p);
+        CloseHandle(hm);
+        CloseHandle(hf);
+        return CM_ERROR_INVAL;
+    }
+
     if ( config_data_p->dirty ) {
         fprintf(stderr, "Previous session terminated prematurely\n");
         UnmapViewOfFile(config_data_p);
@@ -429,12 +447,15 @@ cm_ValidateMappedMemory(char * cachePath)
     config_data_p = (cm_config_data_t *) baseAddress;
 
     fprintf(stderr,"AFS Cache data:\n");
-    fprintf(stderr,"  Base Address   = %p\n",baseAddress);
+    fprintf(stderr,"  Header size    = %u\n", config_data_p->size);
+    fprintf(stderr,"  Magic          = %08x\n", config_data_p->magic);
+    fprintf(stderr,"  Base Address   = %p\n", baseAddress);
     fprintf(stderr,"  stats          = %u\n", config_data_p->stats);
     fprintf(stderr,"  chunkSize      = %u\n", config_data_p->chunkSize);
     fprintf(stderr,"  blockSize      = %u\n", config_data_p->blockSize);
     fprintf(stderr,"  bufferSize     = %I64u\n", config_data_p->bufferSize);
     fprintf(stderr,"  cacheType      = %u\n", config_data_p->cacheType);
+    fprintf(stderr,"  dirty          = %u\n", config_data_p->dirty);
     fprintf(stderr,"  volumeHashTableSize = %u\n", config_data_p->volumeHashTableSize);
     fprintf(stderr,"  currentVolumes = %u\n", config_data_p->currentVolumes);
     fprintf(stderr,"  maxVolumes     = %u\n", config_data_p->maxVolumes);
