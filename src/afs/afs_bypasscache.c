@@ -320,9 +320,9 @@ afs_bypass_copy_page(bypass_page_t pp, int pageoff, struct iovec *rxiov,
     int dolen;
 
     if (partial)
-	dolen = rxiov[iovno].iov_len - iovoff;
-    else
 	dolen = auio->uio_iov[curiov].iov_len - pageoff;
+    else
+	dolen = rxiov[iovno].iov_len - iovoff;
 
 #if !defined(UKERNEL)
 # if defined(KMAP_ATOMIC_TAKES_NO_KM_TYPE)
