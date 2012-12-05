@@ -3151,6 +3151,59 @@ AFSSetRenameInfo( IN PIRP Irp)
             {
 
                 pTargetFcb = pTargetDirEntry->ObjectInformation->Fcb;
+            }
+
+            ASSERT( pTargetDirEntry->DirOpenReferenceCount > 0);
+
+            lCount = InterlockedDecrement( &pTargetDirEntry->DirOpenReferenceCount); // The count we added above
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSSetRenameInfo Decrement count on %wZ DE %p Ccb %p Cnt %d\n",
+                          &pTargetDirEntry->NameInformation.FileName,
+                          pTargetDirEntry,
+                          pSrcCcb,
+                          lCount);
+
+            ASSERT( lCount >= 0);
+
+            if( lCount == 0)
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSSetRenameInfo Deleting dir entry %p name %wZ\n",
+                              pTargetDirEntry,
+                              &pTargetDirEntry->NameInformation.FileName);
+
+                AFSDeleteDirEntry( pTargetParentObject,
+                                   pTargetDirEntry);
+            }
+
+            pTargetDirEntry = NULL;
+
+            if ( pTargetFcb != NULL)
+            {
+
+                //
+                // Do not hold TreeLocks across the MmForceSectionClosed() call as
+                // it can deadlock with Trend Micro's TmPreFlt!TmpQueryFullName
+                //
+
+                if( bReleaseTargetDirLock)
+                {
+                    AFSReleaseResource( pTargetParentObject->Specific.Directory.DirectoryNodeHdr.TreeLock);
+
+                    bReleaseTargetDirLock = FALSE;
+                }
+
+                if( bReleaseSourceDirLock)
+                {
+
+                    AFSReleaseResource( pSourceDirLock);
+
+                    bReleaseSourceDirLock = FALSE;
+                }
 
                 //
                 // MmForceSectionClosed() can eventually call back into AFSCleanup
@@ -3207,35 +3260,6 @@ AFSSetRenameInfo( IN PIRP Irp)
 
                 AFSReleaseResource( &pTargetFcb->NPFcb->Resource);
             }
-
-            ASSERT( pTargetDirEntry->DirOpenReferenceCount > 0);
-
-            lCount = InterlockedDecrement( &pTargetDirEntry->DirOpenReferenceCount); // The count we added above
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSSetRenameInfo Decrement count on %wZ DE %p Ccb %p Cnt %d\n",
-                          &pTargetDirEntry->NameInformation.FileName,
-                          pTargetDirEntry,
-                          pSrcCcb,
-                          lCount);
-
-            ASSERT( lCount >= 0);
-
-            if( lCount == 0)
-            {
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSSetRenameInfo Deleting dir entry %p name %wZ\n",
-                              pTargetDirEntry,
-                              &pTargetDirEntry->NameInformation.FileName);
-
-                AFSDeleteDirEntry( pTargetParentObject,
-                                   pTargetDirEntry);
-            }
-
-            pTargetDirEntry = NULL;
         }
 
 try_exit:
@@ -3269,11 +3293,13 @@ try_exit:
 
         if( bReleaseTargetDirLock)
         {
+
             AFSReleaseResource( pTargetParentObject->Specific.Directory.DirectoryNodeHdr.TreeLock);
         }
 
         if( bReleaseSourceDirLock)
         {
+
             AFSReleaseResource( pSourceDirLock);
         }
     }
