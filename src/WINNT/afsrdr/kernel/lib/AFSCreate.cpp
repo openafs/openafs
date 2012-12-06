@@ -2679,6 +2679,8 @@ AFSProcessOpen( IN PIRP Irp,
                 BooleanFlagOn(ulOptions, FILE_DELETE_ON_CLOSE))
             {
 
+                BOOLEAN bMmFlushed;
+
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSProcessOpen Acquiring Fcb SectionObject lock %08lX EXCL %08lX\n",
@@ -2688,8 +2690,18 @@ AFSProcessOpen( IN PIRP Irp,
                 AFSAcquireExcl( &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
                                 TRUE);
 
-                if( !MmFlushImageSection( &pObjectInfo->Fcb->NPFcb->SectionObjectPointers,
-                                          MmFlushForWrite))
+                bMmFlushed = MmFlushImageSection( &pObjectInfo->Fcb->NPFcb->SectionObjectPointers,
+                                                  MmFlushForWrite);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSProcessOpen Releasing Fcb SectionObject lock %08lX EXCL %08lX\n",
+                              &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
+                              PsGetCurrentThread());
+
+                AFSReleaseResource( &pObjectInfo->Fcb->NPFcb->SectionObjectResource);
+
+                if ( !bMmFlushed)
                 {
 
                     ntStatus = BooleanFlagOn(ulOptions, FILE_DELETE_ON_CLOSE) ? STATUS_CANNOT_DELETE :
@@ -2704,14 +2716,6 @@ AFSProcessOpen( IN PIRP Irp,
 
                     try_return( ntStatus);
                 }
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSProcessOpen Releasing Fcb SectionObject lock %08lX EXCL %08lX\n",
-                              &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
-                              PsGetCurrentThread());
-
-                AFSReleaseResource( &pObjectInfo->Fcb->NPFcb->SectionObjectResource);
             }
 
             if( BooleanFlagOn( ulOptions, FILE_DIRECTORY_FILE))
