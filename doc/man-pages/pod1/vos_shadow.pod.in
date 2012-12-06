@@ -52,10 +52,11 @@ Using this command on a volume when the source volume is not the same
 as parent volume used to create the shadow will leave the destination
 volume in a unknown state.
 
-Do NOT run the B<vos syncserv> or B<vos syncvldb> on any fileserver
-containing shadow volumes. This would update the VLDB to show all
-shadowed Read/Write volumes instead of the source volumes from which
-they were copied.
+Running B<vos syncserv> or B<vos syncvldb> on a fileserver containing 
+shadow volumes will not update the VLDB with the shadowed Read/Write
+volumes as long as the entries for the source volumes still exist. In
+a disaster recovery situation the VLDB entries for the corresponding
+source volumes need hence to be deleted first.
 
 =include fragments/volsize-caution.pod
 
