@@ -209,6 +209,14 @@ bnode_HasCore(struct bnode *abnode)
     return BOP_HASCORE(abnode);
 }
 
+/* wait until bnode_Check() gets called for this bnode */
+static void
+bnode_Wait(struct bnode *abnode)
+{
+    abnode->flags |= BNODE_WAIT;
+    LWP_WaitProcess(abnode);
+}
+
 /* wait for all bnodes to stabilize */
 int
 bnode_WaitAll(void)
@@ -228,8 +236,7 @@ bnode_WaitAll(void)
 	    return code;
 	}
 	if (stat != tb->goal) {
-	    tb->flags |= BNODE_WAIT;
-	    LWP_WaitProcess(tb);
+	    bnode_Wait(tb);
 	    bnode_Release(tb);
 	    goto retry;
 	}
@@ -262,8 +269,7 @@ bnode_WaitStatus(struct bnode *abnode, int astatus)
 	    return -1;		/* no longer our goal, don't keep waiting */
 	}
 	/* otherwise, block */
-	abnode->flags |= BNODE_WAIT;
-	LWP_WaitProcess(abnode);
+	bnode_Wait(abnode);
     }
 }
 
