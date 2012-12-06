@@ -2107,6 +2107,7 @@ AFSSetDispositionInfo( IN PIRP Irp,
             }
             else if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB)
             {
+                BOOLEAN bMmFlushed;
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
@@ -2121,46 +2122,41 @@ AFSSetDispositionInfo( IN PIRP Irp,
                 // Attempt to flush any outstanding data
                 //
 
-                if( !MmFlushImageSection( &pFcb->NPFcb->SectionObjectPointers,
-                                          MmFlushForDelete))
+                bMmFlushed = MmFlushImageSection( &pFcb->NPFcb->SectionObjectPointers,
+                                                  MmFlushForDelete);
+
+                if ( bMmFlushed)
                 {
+
+                    //
+                    // Set PENDING_DELETE before CcPurgeCacheSection to avoid a
+                    // deadlock with Trend Micro's Enterprise anti-virus product
+                    // which attempts to open the file which is being deleted.
+                    //
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_ERROR,
-                                  "AFSSetDispositionInfo Failed to flush image section for delete Entry %wZ\n",
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSSetDispositionInfo Setting PENDING_DELETE on DirEntry %p Name %wZ\n",
+                                  DirectoryCB,
                                   &DirectoryCB->NameInformation.FileName);
 
-                    try_return( ntStatus = STATUS_CANNOT_DELETE);
-                }
+                    SetFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE);
 
-                //
-                // Set PENDING_DELETE before CcPurgeCacheSection to avoid a
-                // deadlock with Trend Micro's Enterprise anti-virus product
-                // which attempts to open the file which is being deleted.
-                //
+                    //
+                    // Purge the cache as well
+                    //
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSSetDispositionInfo Setting PENDING_DELETE on DirEntry %p Name %wZ\n",
-                              DirectoryCB,
-                              &DirectoryCB->NameInformation.FileName);
-
-                SetFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE);
-
-                //
-                // Purge the cache as well
-                //
-
-                if( pFcb->NPFcb->SectionObjectPointers.DataSectionObject != NULL)
-                {
-
-                    if ( !CcPurgeCacheSection( &pFcb->NPFcb->SectionObjectPointers,
-                                               NULL,
-                                               0,
-                                               TRUE))
+                    if( pFcb->NPFcb->SectionObjectPointers.DataSectionObject != NULL)
                     {
 
-                        SetFlag( pFcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
+                        if ( !CcPurgeCacheSection( &pFcb->NPFcb->SectionObjectPointers,
+                                                   NULL,
+                                                   0,
+                                                   TRUE))
+                        {
+
+                            SetFlag( pFcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
+                        }
                     }
                 }
 
@@ -2171,6 +2167,17 @@ AFSSetDispositionInfo( IN PIRP Irp,
                               PsGetCurrentThread());
 
                 AFSReleaseResource( &pFcb->NPFcb->SectionObjectResource);
+
+                if ( !bMmFlushed)
+                {
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_ERROR,
+                                  "AFSSetDispositionInfo Failed to flush image section for delete Entry %wZ\n",
+                                  &DirectoryCB->NameInformation.FileName);
+
+                    try_return( ntStatus = STATUS_CANNOT_DELETE);
+                }
             }
         }
         else
