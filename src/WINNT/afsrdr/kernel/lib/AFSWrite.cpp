@@ -1614,7 +1614,8 @@ AFSCachedWrite( IN PDEVICE_OBJECT DeviceObject,
                 try_return( ntStatus);
             }
 
-            if( ForceFlush)
+            if( ForceFlush ||
+                BooleanFlagOn(pFileObject->Flags, (FO_NO_INTERMEDIATE_BUFFERING + FO_WRITE_THROUGH)))
             {
 
                 //
@@ -1680,7 +1681,8 @@ try_exit:
                 pFcb->Header.ValidDataLength.QuadPart = StartingByte.QuadPart + ByteCount;
             }
 
-            if (BooleanFlagOn(pFileObject->Flags, (FO_NO_INTERMEDIATE_BUFFERING + FO_WRITE_THROUGH)))
+            if ( ForceFlush ||
+                 BooleanFlagOn(pFileObject->Flags, (FO_NO_INTERMEDIATE_BUFFERING + FO_WRITE_THROUGH)))
             {
                 //
                 // Write through asked for... Set things so that we get
