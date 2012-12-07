@@ -1,3 +1,102 @@
+Release 1.7.2100; Changes since 1.7.2000
+
+ * Prevent assertion failure during buffer recycling
+   due resulting from an inability to find the buffer
+   being recycled in the scacheHashTable.
+
+ * Prevent a race between AFSValidateProcessEntry()
+   and AFSProcessDestroy() which can result in a BSOD.
+
+ * Avoid writing dirty cm_buf_t buffers to the file
+   server if the cm_scache_t object has the deleted
+   flag set.
+
+ * Avoid immediate recycling of deleted cm_scache_t
+   objects in order to preserve the deleted flag
+   to prevent unnecessary RPCs when dirty buffers
+   exist at time of deletion.  Temporary files are
+   a good example.
+
+ * Fix afs redirector deletion of objects that have
+   a link count greater than one.
+
+ * Deny access to the SACL queries via QuerySecurity.
+   Executables can now be initiated from drive letter
+   mappings.
+
+ * SMB Path and File Info Queries
+
+ * Do not specify an smbName for tokens in afslogon
+   now that impersonation is used in conjunction with
+   authentication groups.
+
+ * Improve error handling in SetFileRenameInfo request
+   processing.
+
+ * Obtain missing TreeLock on target parent object
+   information CB.
+
+ * Avoid deadlock with Trend Micro Office Scan 10.0
+   during FindFirst/FindNext processing.
+
+ * Add Hard Link support to the AFS Redirector.
+
+ * Do not permit the afsd_service to start if the
+   redirector returns SERVICE_DISABLED.  It means that
+   afsredir.sys loaded but afsredirlib.sys could not.
+
+ * SMB cm_LookupInternal must obtain the cm_scache type
+   of the target object.  If the target is a mount point
+   cm_LookupInternal must resolve the target directory.
+
+ * Handle RX_INVALID_OPERATION aborts without retrying
+   indefinitely.
+
+ * Address DirEntry and Volume reference count underflows
+   in the AFS redirector which could lead to BSOD errors.
+
+ * During AFSClose() free the FCB and CCB before dropping
+   the reference on the DirEntryCB to avoid a race with
+   DirEntryCB destruction which could result in a BSOD.
+
+ * More aggressively garbage collection FCBs in order to
+   avoid deadlocks with Trend Micro 10.0.
+
+ * Implement dynamic cell detection for the Redirector.
+
+ * In order to avoid deadlocks with Trend Micro 10.0 during
+   handle close, do not hold the FCB Resource across Cc and
+   Mm kernel calls.  Instead, introduce a new SectionObjectResource
+   to protect the SectionObjectPointers from racing threads.
+
+ * Introduce AFSDeleteFcbExtents() which doesn't release
+   extents back to the service.  Instead it just deletes
+   them.  This is used during file deletion and truncation.
+
+ * Reduce the number of AFSValidateEntry and AFSVerifyEntry
+   calls.  Rely on the service invalidation mechanism to
+   convey information from cm_MergeStatus when the data is
+   out of date.
+
+ * Restore "fs getcacheparms" functionality.  Used buffers
+   are now tracked via interlocked operations.  "fs flushXXX"
+   operations reduce the number of used buffers.
+
+ * Incorporate RX fixes for setting the correct direction
+   on aborts.
+
+ * Implement "fs getcalleraccess"
+
+ * Permit DFS links to refer to local DOS Devices in addition
+   to UNC paths.
+
+ * A notification from the service to the redirector that
+   a volume is no longer known to be Online is not an invalidation
+   and the cache should not be purged.
+
+ * Re-engage periodic FCB Cleanup operations by the Primary
+   Volume worker thread to flush dirty extents.
+
 Release 1.7.2000; Changes since 1.7.1900
 
  * Fix critical bug in afslogon.dll authentication
