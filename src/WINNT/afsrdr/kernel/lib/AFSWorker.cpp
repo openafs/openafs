@@ -1561,12 +1561,11 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                     else if( pCurrentObject->FileType == AFS_FILE_TYPE_FILE)
                     {
 
-                        AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
-
                         lCount = AFSObjectInfoIncrement( pCurrentObject);
 
-                        if( lCount == 0 &&
-                            pCurrentObject->Fcb != NULL)
+                        AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
+
+                        if( pCurrentObject->Fcb != NULL)
                         {
 
                             //
