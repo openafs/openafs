@@ -148,6 +148,7 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 	return -1;
     }
 
+    cm_RemoveSCacheFromHashTable(scp);
 
     /* invalidate so next merge works fine;
      * also initialize some flags */
