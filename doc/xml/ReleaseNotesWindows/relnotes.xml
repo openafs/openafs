@@ -835,7 +835,14 @@
         <primary>PowerShell</primary>
       </indexterm>
       <para>The OpenAFS client supports UNC paths everywhere. UNC paths provide a canonical name for resources stored within AFS. UNC paths should be used instead of drive letter mappings whenever possible. This is especially true when specifying the location of roaming profiles and redirected folders.</para>
-      <para>Power users that make extensive use of the command line shell, cmd.exe, should consider using JP Software's 4NT or Take Command command processors. Unlike cmd.exe, the JPSoftware shells fully support UNC paths as the current directory. JPSoftware added special recognition for OpenAFS to its command shells, 4NT 7.0 and Take Command 7.0. AFS paths can be entered in UNIX notation (e.g., /afs/openafs.org/software), space utilization reports the output of the volume status for the specified path, and many AFS specific functions and variables have been added to the command language.  Take Command 13.1 will include support for OpenAFS IFS Reparse Points.</para>
+      <para>Power users that make extensive use of the command line shell, cmd.exe, should consider
+        using JP Software's 4NT or Take Command command processors. Unlike cmd.exe, the JPSoftware
+        shells fully support UNC paths as the current directory. JPSoftware added special
+        recognition for OpenAFS to its command shells, 4NT 7.0 and Take Command 7.0. AFS paths can
+        be entered in UNIX notation (e.g., /afs/openafs.org/software), space utilization reports the
+        output of the volume status for the specified path, and many AFS specific functions and
+        variables have been added to the command language. Take Command 14.03 includes support for
+        OpenAFS IFS Reparse Points and Hard Links.</para>
       <para>JPSoftware's web site is
         <ulink url="http://www.jpsoft.com/">http://www.jpsoft.com</ulink>.
       </para>
@@ -917,7 +924,11 @@
       <indexterm significance="normal">
         <primary>checked builds</primary>
       </indexterm>
-      <para>The OpenAFS for Windows installers include Debugging Symbol files which should be installed if you are experiencing problems and need to send crash reports. This is true for both the release and the debug versions of the installers. The difference between the release and debug versions are:</para>
+      <para>The OpenAFS for Windows installers include Debugging Symbol files which should be
+        installed if you are experiencing problems and need to send crash reports or view OpenAFS
+        stack traces within Process Explorer or Debug View. This is true for both the release and
+        the debug versions of the installers. The difference between the release and debug versions
+        are:</para>
       <itemizedlist>
         <listitem>
           <para>whether or not the binaries were compiled with optimization (release: yes, debug: no)</para>
@@ -1590,13 +1601,12 @@
       <indexterm significance="normal">
         <primary>fs whichcell</primary>
       </indexterm>
-      <para>Beginning with the 1.5.31 release, the fs commands
-        <emphasis>examine</emphasis>,
-        <emphasis>flush</emphasis>,
-        <emphasis>whereis</emphasis>, and
-        <emphasis>whichcell</emphasis> provide a new command-line parameter,
-        <emphasis>-literal</emphasis>.  When specified, if the evaluated object is a symlink or a mountpoint the resulting output will describe the specified object and not the target of the symlink or mountpoint.
-      </para>
+      <para>Beginning with the 1.5.31 release, the fs commands <emphasis>examine</emphasis>,
+          <emphasis>flush</emphasis>, <emphasis>getuseraccess</emphasis>, <emphasis>whereis</emphasis>, and
+          <emphasis>whichcell</emphasis> provide a new command-line parameter,
+          <emphasis>-literal</emphasis>. When specified, if the evaluated object is a symlink or a
+        mountpoint the resulting output will describe the specified object and not the target of the
+        symlink or mountpoint. </para>
     </section>
     <section>
       <title id="Out_of_Quota_Errors">3.47. Out of Quota errors</title>
@@ -1786,6 +1796,16 @@
       The following is a list of known issues when using the IFS redirector driver:
       <itemizedlist>
       <listitem>
+            <para>Adobe Reader Protected Mode prevents saving PDF documents to AFS. </para>
+            <para>
+              In Acrobat Reader 9.3.2 Adobe added a new security feature "Protected
+Mode" which is enabled by default.  Protected mode runs AcroRd32.exe in
+a sandbox and prevents undesirable network access.  The release notes
+with all versions of Reader since 9.3.2 indicate that DFS and NFS
+network paths are inaccessible when Protected Mode is on.
+            </para>
+          </listitem>
+          <listitem>
             <para>Command Prompt .LNK files do not behave properly when stored within AFS <itemizedlist>
                 <listitem>
                   <para>Custom properties will be ignored.</para>
@@ -1795,21 +1815,9 @@
                 </listitem>
               </itemizedlist> These issues are the result of the <emphasis role="italic">Console
                 Window Host</emphasis> process (conhost.exe) running outside the logon session's
-              authentication group.  While conhost.exe impersonates the Windows user, it does not
-              impersonate a logon session process.  As a result, it has no tokens and cannot access
+              authentication group. While conhost.exe impersonates the Windows user, it does not
+              impersonate a logon session process. As a result, it has no tokens and cannot access
               the LNK file.</para>
-          </listitem>
-          <listitem>
-            <para>It is not possible to execute an application out of AFS under the following
-              conditions: <itemizedlist>
-                <listitem>
-                  <para>The path is a drive letter mapping</para>
-                </listitem>
-                <listitem>
-                  <para>The application requires elevated privileges</para>
-                </listitem>
-              </itemizedlist> Workaround: use SUBST instead of NET USE to assign drive letters to
-              UNC paths. </para>
           </listitem>
       <listitem>
       <para>The Windows File System <ulink url="http://msdn.microsoft.com/en-us/library/ff549293%28v=vs.85%29.aspx">Volume Query Quota Interface</ulink> is not implemented.  As a result, AFS quota information is not available to application processes or end users via Windows dialogs.</para>
@@ -2232,7 +2240,9 @@
     </section>
     <section>
       <title id="Direct_Code_Contributions">6.4. Direct contributions of code and/or documentation </title>
-      <para>Organizations that use OpenAFS in house and have development staffs are encouraged to contribute any code modifications they make to OpenAFS.org via openafs-bugs@openafs.org. Contributions of documentation are highly desired. </para>
+      <para>Organizations that use OpenAFS in house and have development staffs are encouraged to
+        contribute code and documentation modifications to OpenAFS.org via
+          <emphasis>>http://gerrit.openafs.org/</emphasis>.</para>
     </section>
     <section>
       <title id="OAFW_Mailing_Lists">6.5. OpenAFS for Windows Mailing Lists</title>
@@ -2245,9 +2255,9 @@
       <indexterm significance="normal">
         <primary>openafs-info</primary>
       </indexterm>
-      <para>If you wish to participate in OpenAFS for Windows development please join the
-        <ulink url="mailto:openafs-win32-devel@openafs.org?subject=OpenAFS%20for%20Windows%20Development%20Contribution">openafs-win32-devel@openafs.org</ulink> mailing list.
-      </para>
+      <para>If you wish to participate in OpenAFS for Windows development, please join the <ulink
+          url="mailto:openafs-win32-devel@openafs.org?subject=OpenAFS%20for%20Windows%20Development%20Contribution"
+          >openafs-win32-devel@openafs.org</ulink> mailing list. </para>
       <para>
         <emphasis role="bold">https://lists.openafs.org/mailman/listinfo/openafs-win32-devel</emphasis>
       </para>
@@ -3307,7 +3317,7 @@
           <para>Type: DWORD</para>
           <para>Default: 98304 (CM_CONFIGDEFAULT_CACHESIZE)</para>
           <para>Variable: cm_initParams.cacheSize</para>
-          <para>Size of the AFS cache in 1k blocks.</para>
+          <para>Size of the AFS data cache specified in 1k blocks.</para>
         </section>
         <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_ChunkSize">Value: ChunkSize</title>
@@ -3318,7 +3328,8 @@
           <para>Type: DWORD</para>
           <para>Default: 20 (CM_CONFIGDEFAULT_CHUNKSIZE)</para>
           <para>Variable: cm_logChunkSize (cm_chunkSize = 1 &lt;&lt; cm_logChunkSize)</para>
-          <para>Size of chunk for reading and writing. Actual chunk size is 2^cm_logChunkSize. The default chunk size is therefore 1 MB.</para>
+          <para>Maximum size of chunk for reading and writing. Actual chunk size is
+            2^cm_logChunkSize. The default chunk size is therefore 1 MB.</para>
         </section>
         <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_BlockSize">Value: BlockSize</title>
@@ -3339,7 +3350,8 @@
           <para>Type: DWORD</para>
           <para>Default: 16 (CM_CONFIGDEFAULT_DAEMONS)</para>
           <para>Variable: numBkgD</para>
-          <para>Number of background daemons (number of threads of cm_BkgDaemon). (see cm_BkgDaemon in cm_daemon.c)</para>
+          <para>Number of background daemon threads used to fetch data from and store data to the
+            file servers.</para>
         </section>
         <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_ServerThreads">Value: ServerThreads</title>
@@ -3350,7 +3362,8 @@
           <para>Type: DWORD</para>
           <para>Default: 25 (CM_CONFIGDEFAULT_SVTHREADS)</para>
           <para>Variable: numSvThreads</para>
-          <para>Number of SMB server threads (number of threads of smb_Server). (see smb_Server in smb.c).</para>
+          <para>Number of SMB server or AFS Redirector worker threads used to process application
+            file system requests..</para>
         </section>
         <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_Stats">Value: Stats</title>
@@ -3361,7 +3374,8 @@
           <para>Type: DWORD</para>
           <para>Default: 10000 (CM_CONFIGDEFAULT_STATS)</para>
           <para>Variable: cm_initParams.nStatCaches</para>
-          <para>Cache configuration.</para>
+          <para>The number of file system status objects.  One status object is required for each
+            directory entry (file, directory, mount point, symlink).</para>
         </section>
         <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_Volumes">Value: Volumes</title>
@@ -3375,9 +3389,8 @@ Default:  3333 (CM_CONFIGDEFAULT_STATS/3)
           </para>
           <para>
 Variable: cm_initParams.nVolumes</para>
-          <para>
-            <emphasis>Cache configuration.</emphasis>
-          </para>
+          <para> The number of volume group objects.  One volume group object is required for each
+            set of volume, volume.readonly and volume.backup. </para>
         </section>
         <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_Cells">Value: Cells</title>
@@ -3391,9 +3404,8 @@ Default: 1024 (CM_CONFIGDEFAULT_CELLS)
           </para>
           <para>
 Variable: cm_initParams.nCells</para>
-          <para>
-            <emphasis>Cache configuration.</emphasis>
-          </para>
+          <para> The number of cell objects.  One cell object is required for each cell accessed by
+            the AFS cache manager.</para>
         </section>
         <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_LogoffPreserveTokens">Value: LogoffPreserveTokens</title>
@@ -3405,7 +3417,9 @@ Variable: cm_initParams.nCells</para>
                   </para>
           <para>
 Default : 0</para>
-          <para>If enabled (set to 1), the Logoff Event handler will not attempt to delete the user's tokens if the user's profile is stored outside of AFS.</para>
+          <para>If enabled (set to 1), the Logoff Event handler will not attempt to delete the
+            user's tokens if the user's profile is stored outside of AFS.  This option only applies
+            when the AFS SMB gateway interface is in use.</para>
         </section>
         <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_RootVolume">Value: RootVolume</title>
@@ -3532,7 +3546,10 @@ Default: "AFS"
                   </para>
           <para>
 Variable: cm_NetbiosName</para>
-          <para>Specifies the NetBIOS name (or SMB Server Name) to be used when binding to a Loopback adapter. To provide the old behavior specify a value of "%COMPUTERNAME%-AFS".</para>
+          <para>Specifies the NetBIOS name (or SMB Server Name) to be used when binding to a
+            Loopback adapter. To provide the old behavior specify a value of "%COMPUTERNAME%-AFS".
+            When the AFS Redirector interface is in use, this value specifies the UNC server name
+            registered with the Windows Multiple UNC Provider.</para>
         </section>
         <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_IsGateway">Value: IsGateway</title>
@@ -3549,6 +3566,7 @@ Default: 0
 Variable: isGateway</para>
           <para>Select whether or not this AFS client should act as a gateway. If set and the NetBIOS name hostname-AFS is bound to a physical NIC, other machines in the subnet can access AFS via SMB connections to hostname-AFS.</para>
           <para>When IsGateway is non-zero, the LAN adapter detection code will avoid binding to a loopback adapter. This will ensure that the NetBIOS name will be of the form hostname-AFS instead of the value set by the "NetbiosName" registry value.</para>
+          <para>This setting only applies when the AFS SMB interface is in use.</para>
         </section>
         <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_ReportSessionStartups">Value: ReportSessionStartups</title>
@@ -3768,7 +3786,6 @@ Default: 1
           <para>
 Variable: rx_enable_peer_stats</para>
           <para>When set to 1, the Rx library collects peer statistics.</para>
-          <para></para>
         </section>
         <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_RxEnableProcessStats">Value: RxEnableProcessStats</title>
@@ -3784,7 +3801,6 @@ Default: 1
           <para>
 Variable: rx_extra_process_stats</para>
           <para>When set to 1, the Rx library collects process statistics.</para>
-          <para></para>
         </section>
         <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_RxExtraPackets">Value: RxExtraPackets</title>
@@ -4008,8 +4024,8 @@ Default: 2</para>
 </member>
             </simplelist>
           </para>
-          <para>
-The default is Extended authentication</para>
+          <para> The default is Extended authentication  This value only applies when the SMB server
+            interface is in use.</para>
         </section>
         <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_MaxLogSize">Value: MaxLogSize</title>
@@ -5408,6 +5424,7 @@ Default: local RPC
           <para>Bit 17 (0x20000): Process creation and destruction</para>
           <para>Bit 18 (0x40000): Extent Active counting</para>
           <para>Bit 19 (0x80000): Redirector initialization</para>
+          <para>Bit 20 (0x100000): Name Array processing</para>
         </section>
       </section>
       <section>
