@@ -537,7 +537,7 @@ long buf_Init(int newFile, cm_buf_ops_t *opsp, afs_uint64 nbuffers)
                     bp->redirLastAccess = 0;
                     bp->redirReleaseRequested = 0;
                     buf_ReleaseLocked(bp, TRUE);
-                    InterlockedDecrement(&cm_data.buf_usedCount);
+                    buf_DecrementUsedCount();
                 }
                 bp++;
             }
@@ -560,7 +560,7 @@ long buf_Init(int newFile, cm_buf_ops_t *opsp, afs_uint64 nbuffers)
                 bp->redirLastAccess = 0;
                 bp->redirReleaseRequested = 0;
                 buf_ReleaseLocked(bp, TRUE);
-                InterlockedDecrement(&cm_data.buf_usedCount);
+                buf_DecrementUsedCount();
             }
             lock_ReleaseWrite(&buf_globalLock);
         }
@@ -835,7 +835,7 @@ afs_uint32 buf_CleanLocked(cm_scache_t *scp, cm_buf_t *bp, cm_req_t *reqp,
         bp->error = code;
         bp->dataVersion = CM_BUF_VERSION_BAD;
         bp->dirtyCounter++;
-        InterlockedDecrement(&cm_data.buf_usedCount);
+        buf_DecrementUsedCount();
     }
 
     while ((bp->flags & CM_BUF_DIRTY) == CM_BUF_DIRTY) {
@@ -882,7 +882,7 @@ afs_uint32 buf_CleanLocked(cm_scache_t *scp, cm_buf_t *bp, cm_req_t *reqp,
 	    bp->error = code;
 	    bp->dataVersion = CM_BUF_VERSION_BAD;
 	    bp->dirtyCounter++;
-            InterlockedDecrement(&cm_data.buf_usedCount);
+            buf_DecrementUsedCount();
             break;
 	}
 
@@ -1485,7 +1485,7 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
 	    }
 
             if ( cm_data.buf_usedCount < cm_data.buf_nbuffers)
-                InterlockedIncrement(&cm_data.buf_usedCount);
+                buf_IncrementUsedCount();
 
             lock_ReleaseWrite(&buf_globalLock);
             lock_ReleaseRead(&scp->bufCreateLock);
@@ -1999,7 +1999,7 @@ long buf_Truncate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
                 bufp->dirty_length = 0;
                 bufp->dataVersion = CM_BUF_VERSION_BAD;	/* known bad */
                 bufp->dirtyCounter++;
-                InterlockedDecrement(&cm_data.buf_usedCount);
+                buf_DecrementUsedCount();
             }
             else {
                 /* don't set dirty, since dirty implies
@@ -2098,7 +2098,7 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
                 bp->dataVersion = CM_BUF_VERSION_BAD;	/* known bad */
                 bp->dirtyCounter++;
                 lock_ReleaseMutex(&bp->mx);
-                InterlockedDecrement(&cm_data.buf_usedCount);
+                buf_DecrementUsedCount();
             } else if (!(scp->flags & CM_SCACHEFLAG_RO)) {
                 if (code) {
                     goto skip;
@@ -2126,7 +2126,7 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
                         buf_ReleaseLocked(bp, TRUE);
                         didRelease = 1;
                         if (bp->dataVersion != CM_BUF_VERSION_BAD)
-                            InterlockedDecrement(&cm_data.buf_usedCount);
+                            buf_DecrementUsedCount();
                         buf_Recycle(bp);
                     }
                 }
@@ -2172,7 +2172,7 @@ long buf_InvalidateBuffers(cm_scache_t * scp)
     for (bp = cm_data.buf_fileHashTablepp[i]; bp; bp = bp->fileHashp) {
         if (cm_FidCmp(&bp->fid, &scp->fid) == 0) {
             bp->dataVersion = CM_BUF_VERSION_BAD;
-            InterlockedDecrement(&cm_data.buf_usedCount);
+            buf_DecrementUsedCount();
             found = 1;
         }
     }
@@ -2283,7 +2283,7 @@ long buf_CleanVnode(struct cm_scache *scp, cm_user_t *userp, cm_req_t *reqp)
                     bp->error = code;
                     bp->dataVersion = CM_BUF_VERSION_BAD;
                     bp->dirtyCounter++;
-                    InterlockedDecrement(&cm_data.buf_usedCount);
+                    buf_DecrementUsedCount();
                     break;
                 case CM_ERROR_TIMEDOUT:
                 case CM_ERROR_ALLDOWN:
@@ -2567,7 +2567,7 @@ long buf_CleanDirtyBuffers(cm_scache_t *scp)
 	    }
 	    lock_ReleaseMutex(&bp->mx);
 	    buf_Release(bp);
-            InterlockedDecrement(&cm_data.buf_usedCount);
+            buf_DecrementUsedCount();
 	}
     }
     return 0;

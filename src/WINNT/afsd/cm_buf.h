@@ -257,11 +257,15 @@ buf_MoveToHeadOfRedirQueue(cm_scache_t *scp, cm_buf_t *bufp);
 #define buf_DecrementRedirCount()  InterlockedDecrement(&cm_data.buf_redirCount)
 #define buf_IncrementFreeCount()   InterlockedIncrement(&cm_data.buf_freeCount)
 #define buf_DecrementFreeCount()   InterlockedDecrement(&cm_data.buf_freeCount)
+#define buf_IncrementUsedCount()   InterlockedIncrement(&cm_data.buf_usedCount)
+#define buf_DecrementUsedCount()   InterlockedDecrement(&cm_data.buf_usedCount)
 #else
 #define buf_IncrementRedirCount()  InterlockedIncrement64(&cm_data.buf_redirCount)
 #define buf_DecrementRedirCount()  InterlockedDecrement64(&cm_data.buf_redirCount)
 #define buf_IncrementFreeCount()   InterlockedIncrement64(&cm_data.buf_freeCount)
 #define buf_DecrementFreeCount()   InterlockedDecrement64(&cm_data.buf_freeCount)
+#define buf_IncrementUsedCount()   InterlockedIncrement64(&cm_data.buf_usedCount)
+#define buf_DecrementUsedCount()   InterlockedDecrement64(&cm_data.buf_usedCount)
 #endif
 
 /* error codes */
