@@ -192,10 +192,10 @@
 #define AFS_SUBSYSTEM_PIOCTL_PROCESSING     0x00004000  // PIOCtl processing
 #define AFS_SUBSYSTEM_AUTHGROUP_PROCESSING  0x00008000  // Auth group creation/assignment
 #define AFS_SUBSYSTEM_LOAD_LIBRARY          0x00010000  // Library load and unload, request queuing
-#define AFS_SUBSYSTEM_PROCESS_PROCESSING    0x00010000  // Process creation and destruction
-#define AFS_SUBSYSTEM_EXTENT_ACTIVE_COUNTING 0x00020000 // Extent Active Counts
-#define AFS_SUBSYSTEM_INIT_PROCESSING       0x00040000  // Redirector Initialization
-#define AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING 0x00080000  // Name Array Processing
+#define AFS_SUBSYSTEM_PROCESS_PROCESSING    0x00020000  // Process creation and destruction
+#define AFS_SUBSYSTEM_EXTENT_ACTIVE_COUNTING 0x00040000 // Extent Active Counts
+#define AFS_SUBSYSTEM_INIT_PROCESSING       0x00080000  // Redirector Initialization
+#define AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING 0x00100000  // Name Array Processing
 
 //
 // Invalidation Reasons
