@@ -1064,13 +1064,24 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
     if ((code == CM_ERROR_NOSUCHPATH || code == CM_ERROR_NOSUCHFILE || code == CM_ERROR_BPLUS_NOMATCH) &&
          dscp == cm_data.rootSCachep) {
 
-        StringCchCopyNW(wszName, cbName, _C(CM_PREFIX_VOL), CM_PREFIX_VOL_CCH);
         if (wcschr(wszName, '%') != NULL || wcschr(wszName, '#') != NULL) {
             /*
              * A volume reference:  <cell>{%,#}<volume> -> @vol:<cell>{%,#}<volume>
              */
+            StringCchCopyNW(wszName, cbName, _C(CM_PREFIX_VOL), CM_PREFIX_VOL_CCH);
             StringCbCatNW(wszName, cbName, FileName, FileNameLength);
-        } else {
+            bVol = TRUE;
+
+            code = cm_EvaluateVolumeReference(wszName, CM_FLAG_CHECKPATH, userp, &req, &scp);
+        }
+#ifdef AFS_FREELANCE_CLIENT
+        else if (dscp->fid.cell == AFS_FAKE_ROOT_CELL_ID && dscp->fid.volume == AFS_FAKE_ROOT_VOL_ID &&
+                 dscp->fid.vnode == 1 && dscp->fid.unique == 1) {
+            /*
+             * If this is the Freelance volume root directory then treat unrecognized
+             * names as cell names and attempt to find the appropriate "root.cell".
+             */
+            StringCchCopyNW(wszName, cbName, _C(CM_PREFIX_VOL), CM_PREFIX_VOL_CCH);
             if (FileName[0] == L'.') {
                 StringCbCatNW(wszName, cbName, &FileName[1], FileNameLength);
                 StringCbCatNW(wszName, cbName, L"%", sizeof(WCHAR));
@@ -1079,10 +1090,11 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
                 StringCbCatNW(wszName, cbName, L"#", sizeof(WCHAR));
             }
             StringCbCatNW(wszName, cbName, L"root.cell", 9 * sizeof(WCHAR));
-        }
-        bVol = TRUE;
+            bVol = TRUE;
 
-        code = cm_EvaluateVolumeReference(wszName, CM_FLAG_CHECKPATH, userp, &req, &scp);
+            code = cm_EvaluateVolumeReference(wszName, CM_FLAG_CHECKPATH, userp, &req, &scp);
+        }
+#endif
     }
 
     if (code == 0 && scp) {
