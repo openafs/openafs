@@ -364,6 +364,14 @@ uss: hcrypto kauth cmd comerr rx vlserver vol volser
 bozo: cmd comerr audit auth kauth volser
 	+${COMPILE_PART1} bozo ${COMPILE_PART2}
 
+tbozo: cmd comerr audit auth kauth volser bozo
+	+case ${SYS_NAME} in \
+	sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*|*_darwin_*) \
+		${COMPILE_PART1} tbozo ${COMPILE_PART2} ;; \
+	*) \
+		echo Not building MT bozo for ${SYS_NAME} ;; \
+	esac
+
 vfsck:	vol
 	+set -x; \
 	case ${SYS_NAME} in \
@@ -620,14 +628,14 @@ build_tools: config comerr rxgen
 
 finale_notest: project cmd comerr afsd butc tbutc tbudb @ENABLE_KERNEL_MODULE@ \
 	libuafs audit kauth log ptserver tptserver scout bu_utils ubik uss \
-	bozo @VFSCK@ volser tvolser tsalvaged dviced dvolser libafscp \
+	bozo tbozo @VFSCK@ volser tvolser tsalvaged dviced dvolser libafscp \
 	venus venustests update xstat afsmonitor rxdebug libafsrpc rfc3961 \
 	hcrypto libafsauthent libadmin @MAN_PAGES@ tools platform kopenafs \
 	authtools $(DIR_roken) rxgk rx_test rxkad_test srctests
 	+${COMPILE_PART1} finale ${COMPILE_PART2}
 
 finale_nolibafs_notest: project cmd comerr afsd butc tbutc tbudb libuafs audit kauth \
-	log ptserver tptserver scout bu_utils ubik tubik uss bozo @VFSCK@ \
+	log ptserver tptserver scout bu_utils ubik tubik uss bozo tbozo @VFSCK@ \
 	volser tvolser tsalvaged dviced dvolser libafscp venus venustests \
 	update xstat afsmonitor rxdebug libafsrpc rfc3961 hcrypto \
 	libafsauthent libadmin @MAN_PAGES@ tools platform kopenafs \
@@ -711,6 +719,7 @@ clean2:
 	-${COMPILE_PART1} scout ${COMPILE_CLEAN}
 	-${COMPILE_PART1} uss ${COMPILE_CLEAN}
 	-${COMPILE_PART1} bozo ${COMPILE_CLEAN}
+	-${COMPILE_PART1} tbozo ${COMPILE_CLEAN}
 	-${COMPILE_PART1} vfsck ${COMPILE_CLEAN}
 	-${COMPILE_PART1} tsm41 ${COMPILE_CLEAN}
 	-${COMPILE_PART1} aklog ${COMPILE_CLEAN}
@@ -806,6 +815,7 @@ distclean: clean
 	src/auth/test/Makefile \
 	src/bozo/Makefile \
 	src/bozo/test/Makefile \
+	src/tbozo/Makefile \
 	src/bu_utils/Makefile \
 	src/bubasics/Makefile \
 	src/bucoord/Makefile \

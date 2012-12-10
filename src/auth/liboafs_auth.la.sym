@@ -47,6 +47,9 @@ afsconf_Open
 afsconf_ParseNetFiles
 afsconf_PickClientSecObj
 afsconf_PutTypedKeyList
+afsconf_SawCell
+afsconf_SetCellInfo
+afsconf_SetExtendedCellInfo
 afsconf_SetLocalRealm
 afsconf_SetNoAuthFlag
 afsconf_SetSecurityFlags

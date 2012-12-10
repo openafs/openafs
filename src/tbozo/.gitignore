@@ -1,0 +1,10 @@
+# After changing this file, please run
+#     git ls-files -i --exclude-standard
+# to check that you haven't inadvertently ignored any tracked files.
+
+/bnode.h
+/bos
+/bos_util
+/boserr.c
+/bosint.h
+/bosserver

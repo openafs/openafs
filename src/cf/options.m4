@@ -47,6 +47,12 @@ AC_ARG_ENABLE([ubik-read-while-write],
         [enable vlserver read from db cache during write locks (EXPERIMENTAL)])],
     [],
     [enable_ubik_read_while_write="no"])
+AC_ARG_ENABLE([pthreaded-bos],
+    [AS_HELP_STRING([--enable-pthreaded-bos],
+	[enable installation of pthreaded bos applications (defaults to
+	 disabled)])],
+    [],
+    [enable_pthreaded_bos="no"])
 
 dnl Kernel module build options.
 AC_ARG_WITH([linux-kernel-headers],
@@ -390,6 +396,10 @@ fi
 
 if test "x$enable_pthreaded_ubik" = "xyes"; then
 ENABLE_PTHREADED_UBIK=yes
+fi
+
+if test "x$enable_pthreaded_bos" = "xyes"; then
+ENABLE_PTHREADED_BOS=yes
 fi
 
 dnl If the libtool --disable-shared option is specified, comment out the

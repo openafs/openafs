@@ -12,8 +12,10 @@ ka_GetAdminToken
 ka_GetToken
 ka_Init
 ka_KeyCheckSum
+ka_KeyIsZero
 ka_LocalCell
 ka_ParseLoginName
+ka_PrintBytes
 ka_StringToKey
 ka_UserAuthenticateGeneral
 ka_VerifyUserPassword

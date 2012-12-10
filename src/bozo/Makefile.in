@@ -9,6 +9,7 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.lwp
 
+ENABLE_PTHREADED_BOS=@ENABLE_PTHREADED_BOS@
 
 RPCINCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/rx/rx.h bosint.h
 
@@ -134,26 +135,30 @@ install: bosserver bos bos_util libbos.a bosint.h bnode.h
 	${INSTALL} -d ${DESTDIR}${bindir}
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
 	${INSTALL} -d ${DESTDIR}${libdir}/afs
-	${INSTALL_PROGRAM} bosserver ${DESTDIR}${afssrvsbindir}/bosserver
 	${INSTALL_DATA} bosint.h ${DESTDIR}${includedir}/afs/bosint.h
-	${INSTALL_PROGRAM} bos ${DESTDIR}${bindir}/bos
-	${INSTALL_PROGRAM} bos ${DESTDIR}${afssrvbindir}/bos
-	${INSTALL_PROGRAM} bos_util ${DESTDIR}${afssrvsbindir}/bos_util
 	${INSTALL_DATA} libbos.a ${DESTDIR}${libdir}/afs/libbos.a
 	${INSTALL_DATA} bnode.h ${DESTDIR}${includedir}/afs/bnode.h
+	if [ "x$(ENABLE_PTHREADED_BOS)" != "xyes" ] ; then \
+		${INSTALL_PROGRAM} bosserver ${DESTDIR}${afssrvsbindir}/bosserver; \
+		${INSTALL_PROGRAM} bos ${DESTDIR}${bindir}/bos; \
+		${INSTALL_PROGRAM} bos ${DESTDIR}${afssrvbindir}/bos; \
+		${INSTALL_PROGRAM} bos_util ${DESTDIR}${afssrvsbindir}/bos_util; \
+	fi
 
 dest: bosserver bos bos_util libbos.a bosint.h bnode.h
 	${INSTALL} -d ${DEST}/bin
 	${INSTALL} -d ${DEST}/include/afs
 	${INSTALL} -d ${DEST}/lib/afs
 	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
-	${INSTALL_PROGRAM} bosserver ${DEST}/root.server/usr/afs/bin/bosserver
 	${INSTALL_DATA} bosint.h ${DEST}/include/afs/bosint.h
-	${INSTALL_PROGRAM} bos ${DEST}/bin/bos
-	${INSTALL_PROGRAM} bos ${DEST}/root.server/usr/afs/bin/bos
-	${INSTALL_PROGRAM} bos_util ${DEST}/root.server/usr/afs/bin/bos_util
 	${INSTALL_DATA} libbos.a ${DEST}/lib/afs/libbos.a
 	${INSTALL_DATA} bnode.h ${DEST}/include/afs/bnode.h
+	if [ "x$(ENABLE_PTHREADED_BOS)" != "xyes" ] ; then \
+		${INSTALL_PROGRAM} bosserver ${DEST}/root.server/usr/afs/bin/bosserver; \
+		${INSTALL_PROGRAM} bos ${DEST}/bin/bos; \
+		${INSTALL_PROGRAM} bos ${DEST}/root.server/usr/afs/bin/bos; \
+		${INSTALL_PROGRAM} bos_util ${DEST}/root.server/usr/afs/bin/bos_util; \
+	fi
 
 #
 # Misc. targets

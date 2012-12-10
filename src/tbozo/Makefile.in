@@ -1,0 +1,143 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+#
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+include @TOP_OBJDIR@/src/config/Makefile.libtool
+
+BOZO=$(srcdir)/../bozo
+
+ENABLE_PTHREADED_BOS=@ENABLE_PTHREADED_BOS@
+
+LT_objs=bosint.xdr.lo \
+	bosint.cs.lo \
+	boserr.lo \
+	AFS_component_version_number.lo
+
+LT_deps=$(top_builddir)/src/rx/liboafs_rx.la \
+	$(top_builddir)/src/comerr/liboafs_comerr.la
+
+HEADERS=bnode.h \
+	bosint.h \
+	$(BOZO)/bnode_internal.h \
+	$(BOZO)/bosprototypes.h \
+	$(TOP_INCDIR)/rx/rx.h \
+	$(TOP_INCDIR)/afs/auth.h \
+	$(TOP_INCDIR)/afs/keys.h \
+	$(TOP_INCDIR)/afs/cellconfig.h \
+	$(TOP_INCDIR)/afs/cmd.h \
+	$(TOP_INCDIR)/afs/ktime.h
+
+BOSLIBS=liboafs_bos.la \
+	$(top_builddir)/src/auth/liboafs_auth.la \
+	$(top_builddir)/src/kauth/liboafs_kauth.la \
+	$(top_builddir)/src/volser/liboafs_volser.la \
+	$(top_builddir)/src/rx/liboafs_rx.la \
+	$(top_builddir)/src/rxkad/liboafs_rxkad.la \
+	$(top_builddir)/src/rxstat/liboafs_rxstat.la \
+	$(top_builddir)/src/cmd/liboafs_cmd.la \
+	$(top_builddir)/src/util/liboafs_util.la \
+	$(top_builddir)/src/opr/liboafs_opr.la \
+	$(top_builddir)/src/lwp/liboafs_lwpcompat.la \
+	$(top_builddir)/src/sys/liboafs_sys.la \
+	$(TOP_LIBDIR)/libprocmgmt.a
+
+OBJS=bosserver.o \
+     bnode.o \
+     ezbnodeops.o \
+     fsbnodeops.o \
+     bosint.ss.o \
+     bosoprocs.o \
+     cronbnodeops.o
+
+all: liboafs_bos.la bosserver bos bos_util
+
+generated: bosint.ss.c bosint.xdr.c bosint.cs.c bosint.h bnode.h boserr.c
+
+bosint.xdr.lo: bosint.xdr.c bosint.h
+bosint.cs.lo: bosint.cs.c bosint.h
+bosint.ss.o: bosint.ss.c bosint.h
+
+bosint.cs.c: $(BOZO)/bosint.xg
+	$(RXGEN) -x -A -C -o $@ $(BOZO)/bosint.xg
+
+bosint.ss.c: $(BOZO)/bosint.xg
+	$(RXGEN) -x -A -S -o $@ $(BOZO)/bosint.xg
+
+bosint.xdr.c: $(BOZO)/bosint.xg
+	$(RXGEN) -x -A -c -o $@ $(BOZO)/bosint.xg
+
+bosint.h: $(BOZO)/bosint.xg
+	$(RXGEN) -x -A -h -o $@ $(BOZO)/bosint.xg
+
+boserr.c: $(BOZO)/boserr.et
+	$(COMPILE_ET_C) -p $(BOZO) boserr
+
+bnode.h: $(BOZO)/bnode.p.h $(BOZO)/boserr.et
+	$(COMPILE_ET_H) -p $(BOZO) boserr -h bnode
+
+liboafs_bos.la: liboafs_bos.la.sym $(LT_objs) $(LT_deps)
+	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps)
+
+bnode.o: $(BOZO)/bnode.c $(HEADERS)
+	$(AFS_CCRULE) $(BOZO)/bnode.c
+
+bos.o: $(BOZO)/bos.c $(HEADERS)
+	$(AFS_CCRULE) $(BOZO)/bos.c
+
+bos_util.o: $(BOZO)/bos_util.c $(HEADERS)
+	$(AFS_CCRULE) $(BOZO)/bos_util.c
+
+bosoprocs.o: $(BOZO)/bosoprocs.c $(HEADERS)
+	$(AFS_CCRULE) $(BOZO)/bosoprocs.c
+
+bosserver.o: $(BOZO)/bosserver.c $(HEADERS)
+	$(AFS_CCRULE) $(BOZO)/bosserver.c
+
+cronbnodeops.o: $(BOZO)/cronbnodeops.c $(HEADERS)
+	$(AFS_CCRULE) $(BOZO)/cronbnodeops.c
+
+ezbnodeops.o: $(BOZO)/ezbnodeops.c $(HEADERS)
+	$(AFS_CCRULE) $(BOZO)/ezbnodeops.c
+
+fsbnodeops.o: $(BOZO)/fsbnodeops.c $(HEADERS)
+	$(AFS_CCRULE) $(BOZO)/fsbnodeops.c
+
+bos: bos.o $(BOSLIBS)
+	$(LT_LDRULE_static) bos.o $(BOSLIBS) $(LIB_hcrypto) $(LIB_roken) $(LIB_crypt) $(MT_LIBS)
+
+bos_util: bos_util.o $(BOSLIBS)
+	$(LT_LDRULE_static) bos_util.o $(BOSLIBS) $(LIB_hcrypto) $(LIB_roken) $(LIB_crypt) $(MT_LIBS)
+
+bosserver: $(OBJS) $(BOSLIBS)
+	$(LT_LDRULE_static) $(OBJS) $(BOSLIBS) $(LIB_hcrypto) $(LIB_roken) $(LIB_crypt) $(MT_LIBS)
+
+install: bosserver bos bos_util
+	# Note that bosint.h et al are installed by src/bozo/Makefile
+	if [ "x$(ENABLE_PTHREADED_BOS)" = "xyes" ] ; then \
+		${LT_INSTALL_PROGRAM} bosserver ${DESTDIR}${afssrvsbindir}/bosserver; \
+		${LT_INSTALL_PROGRAM} bos ${DESTDIR}${bindir}/bos; \
+		${LT_INSTALL_PROGRAM} bos ${DESTDIR}${afssrvbindir}/bos; \
+		${LT_INSTALL_PROGRAM} bos_util ${DESTDIR}${afssrvsbindir}/bos_util; \
+	fi
+
+dest: bosserver bos bos_util
+	# Note that bosint.h et al are installed by src/bozo/Makefile
+	if [ "x$(ENABLE_PTHREADED_BOS)" = "xyes" ] ; then \
+		${LT_INSTALL_PROGRAM} bosserver ${DEST}/root.server/usr/afs/bin/bosserver; \
+		${LT_INSTALL_PROGRAM} bos ${DEST}/bin/bos; \
+		${LT_INSTALL_PROGRAM} bos ${DEST}/root.server/usr/afs/bin/bos; \
+		${LT_INSTALL_PROGRAM} bos_util ${DEST}/root.server/usr/afs/bin/bos_util; \
+	fi
+
+clean:
+	$(LT_CLEAN)
+	$(RM) -f *.a *.o bos bos_util bosserver core AFS_component_version_number.c \
+		bnode.h boserr.c bosint.cs.c bosint.h bosint.ss.c bosint.xdr.c
+
+include ../config/Makefile.version

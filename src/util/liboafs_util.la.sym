@@ -3,6 +3,8 @@ BufioClose
 BufioGets
 BufioOpen
 CloseLog
+ConstructLocalBinPath
+ConstructLocalLogPath
 ConstructLocalPath
 FilepathNormalize
 FSLog
@@ -37,7 +39,11 @@ hostutil_GetHostByName
 hostutil_GetNameByINet
 initAFSDirPath
 int64_to_flipbase64
+ktime_DateOf
 ktime_DateToInt32
+ktime_DisplayString
+ktime_ParsePeriodic
+ktime_next
 pthread_recursive_mutex_lock
 pthread_recursive_mutex_unlock
 util_GetHumanInt32

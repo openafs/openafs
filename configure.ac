@@ -135,6 +135,7 @@ AC_CONFIG_FILES([
     src/rxstat/Makefile
     src/scout/Makefile
     src/sys/Makefile
+    src/tbozo/Makefile
     src/tbutc/Makefile
     src/tests/Makefile
     src/tests/run-tests
