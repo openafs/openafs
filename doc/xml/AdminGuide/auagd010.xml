@@ -2773,6 +2773,12 @@
       recommended for temporary access to a volume. For example, if you
       have recently restored a volume from a backup, you can use this
       syntax to quickly access the volume without mounting it.</para>
+
+      <para>This feature is available with Windows and Linux based cache
+      managers by default. This feature is available with other Unix based
+      cache managers when the dynamic root (-dynroot) and fake stat
+      (-fakestat) modes are enabled.</para>
+
       <para>Examples:</para>
       <itemizedlist>
           <listitem>
