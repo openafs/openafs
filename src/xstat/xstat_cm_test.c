@@ -90,58 +90,6 @@ static char *xferOpNames[] = {
 };
 
 
-/*------------------------------------------------------------------------
- * PrintCallInfo
- *
- * Description:
- *	Print out the AFSCB_XSTATSCOLL_PERF_INFO collection we just
- *	received.
- *
- * Arguments:
- *	None.
- *
- * Returns:
- *	Nothing.
- *
- * Environment:
- *	All the info we need is nestled into xstat_cm_Results.
- *
- * Side Effects:
- *	As advertised.
- *------------------------------------------------------------------------*/
-
-void
-PrintCallInfo(void)
-{				/*PrintCallInfo */
-
-    int i;		/*Loop variable */
-    int numInt32s;		/*# int32words returned */
-    afs_int32 *currInt32;	/*Ptr to current afs_int32 value */
-    char *printableTime;	/*Ptr to printable time string */
-    time_t probeTime = xstat_cm_Results.probeTime;
-    /*
-     * Just print out the results of the particular probe.
-     */
-    numInt32s = xstat_cm_Results.data.AFSCB_CollData_len;
-    currInt32 = (afs_int32 *) (xstat_cm_Results.data.AFSCB_CollData_val);
-    printableTime = ctime(&probeTime);
-    printableTime[strlen(printableTime) - 1] = '\0';
-
-    printf
-	("AFSCB_XSTATSCOLL_CALL_INFO (coll %d) for CM %s\n[Poll %u, %s]\n\n",
-	 xstat_cm_Results.collectionNumber, xstat_cm_Results.connP->hostName,
-	 xstat_cm_Results.probeNum, printableTime);
-
-    if (debugging_on)
-	printf("\n[%u entries returned at %" AFS_PTR_FMT "]\n\n", numInt32s, currInt32);
-
-    for (i = 0; i < numInt32s; i++)
-	printf("%u ", *currInt32++);
-    printf("\n");
-
-
-}				/*PrintCallInfo */
-
 /* Print detailed functional call statistics */
 
 void
@@ -1304,8 +1252,6 @@ CM_Handler(void)
 
     switch (xstat_cm_Results.collectionNumber) {
     case AFSCB_XSTATSCOLL_CALL_INFO:
-	/* Why was this commented out in 3.3 ? */
-	/* PrintCallInfo();  */
 	print_cmCallStats();
 	break;
 
