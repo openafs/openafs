@@ -193,7 +193,9 @@ a volume which is no longer in the cache (and thus has no known mount
 point), it will complete the path to the AFS root using the dynamic
 mount directory.
 
-This feature is available whenever the dynamic AFS root is enabled.
+On non-linux cache managers, this feature is available when dynamic
+root and fake stat modes are enabled.
+
 On Linux systems, it is also available even when dynroot is not enabled,
 to support the NFS translator.  It is presently not possible to disable
 this feature, though that ability may be added in the future.  It would
