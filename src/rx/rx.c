@@ -3379,14 +3379,13 @@ rxi_ReceiveServerCall(osi_socket socket, struct rx_packet *np,
      * flag is cleared.
      */
 #ifdef RX_ENABLE_LOCKS
-    if (call->state == RX_STATE_ACTIVE) {
-	int old_error = call->error;
+    if (call->state == RX_STATE_ACTIVE && !call->error) {
 	rxi_WaitforTQBusy(call);
         /* If we entered error state while waiting,
          * must call rxi_CallError to permit rxi_ResetCall
          * to processed when the tqWaiter count hits zero.
          */
-        if (call->error && call->error != old_error) {
+        if (call->error) {
 	    rxi_CallError(call, call->error);
 	    MUTEX_EXIT(&call->lock);
             return NULL;
