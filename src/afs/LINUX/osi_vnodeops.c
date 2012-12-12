@@ -1409,24 +1409,7 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
     AFS_GUNLOCK();
 
     if (ip && S_ISDIR(ip->i_mode)) {
-	int retry = 1;
-	struct dentry *alias;
-
-	while (retry) {
-	    retry = 0;
-
-	    /* Try to invalidate an existing alias in favor of our new one */
-	    alias = d_find_alias(ip);
-	    /* But not if it's disconnected; then we want d_splice_alias below */
-	    if (alias && !(alias->d_flags & DCACHE_DISCONNECTED)) {
-		if (d_invalidate(alias) == 0) {
-		    /* there may be more aliases; try again until we run out */
-		    retry = 1;
-		}
-	    }
-
-	    dput(alias);
-	}
+	d_prune_aliases(ip);
 
 #ifdef STRUCT_DENTRY_OPERATIONS_HAS_D_AUTOMOUNT
 	ip->i_flags |= S_AUTOMOUNT;
