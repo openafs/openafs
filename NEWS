@@ -1,5 +1,95 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.6.2 (in progress)
+
+  All platforms
+
+    * Abort an rx connection when given an unknown service (Gerrit 7593).
+
+    * "idle dead" behavior improvements.
+
+    * Documentation updates.
+
+  All server platforms
+
+    * Fix rare file corruption during background sync (Gerrit 8796).
+
+    * Fix corrupting clients' metadata cache during certain errors (Gerrit
+      6957).
+
+    * Avoid saying a volume doesn't exist when accessed as the volume is
+      going offline (Gerrit 7488).
+
+    * Fix fileservers to properly report >2 TiB partitions.
+
+    * Fix stale volume info from vos examine on non-DAFS filservers.
+
+    * Fix possible volume corruption with vos convertROtoRW.
+
+    * Fix bosserver to preserve all command-line options over restart.
+
+    * Fix bosserver to properly kill hung processes during shutdown.
+
+  All UNIX client platforms
+
+    * Fixes for memcache, especially on Solaris.
+
+    * Increase the size of the DNS resolver answer buffer to allow sites
+      with a long response list to use SRV and AFSDB records.
+
+    * Fix a crash when a server appears to run out of addresses (Gerrit
+      7487).
+
+    * Fix cache corruption when reading from a file another client is
+      simultaneously writing to (Gerrit 7994).
+
+    * Improve handling of disk cache disk errors.
+
+  Linux
+
+    * fix DKMS configuration for DKMS 2.2.
+
+    * Avoid generating inode number 0 with md5 inodes (Gerrit 7276).
+
+    * Fix a crash when reading /proc/fs/openafs/unixusers (Gerrit 7914).
+
+    * Make PAG-less access use the real UID of the calling process
+      instead of the effective UID, when determining what credentials to
+      use (Gerrit 7931).
+
+    * Fix possible abuse of fs mkmount.
+      Prior to 1.6.2, users could crash a client by nesting volume mounts.
+
+    * Fix fileserver memory corruption on RHEL 6
+      Prior to 1.6.2, fileservers on RHEL 6 may crash under heavy load.
+
+    * Fix client page cache corruption on Linux
+      When multiple clients read and write to a file, the reading client
+      may see first page (4096 bytes) of a file as nulls.
+
+    * Support Linux kernels up to 3.7.
+
+    * Support newer glibc versions.
+
+    * Improve client systemd unit file.
+
+    * Update Red Hat packaging.
+
+  OS X
+
+    * Fix crashes on shutdown.
+
+    * Prevent unloading the module before shutdown completes.
+
+    * Security improvement for the OpenAFS preference pane.
+
+  Solaris
+
+    * Support newer versions of the Sun Studio compiler software.
+
+    * Support compiling on newer versions of Solaris 11 and Solaris 10.
+
+
 OpenAFS 1.6.0 (2011-08-15)
 
   All platforms
