@@ -1304,8 +1304,9 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
     if (ip && S_ISDIR(ip->i_mode)) {
 	int retry = 1;
 	struct dentry *alias;
+	int safety;
 
-	while (retry) {
+	for (safety = 0; retry && safety < 64; safety++) {
 	    retry = 0;
 
 	    /* Try to invalidate an existing alias in favor of our new one */
