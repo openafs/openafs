@@ -744,11 +744,16 @@ smb_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
                 return code;
 	    }
 
-	    lastComponent = cm_ClientStrRChr(p,  '\\');
-	    if (lastComponent && (lastComponent - p) > 1 &&
-                cm_ClientStrLen(lastComponent) > 1) {
-		*lastComponent = '\0';
-		lastComponent++;
+	    lastComponent = cm_ClientStrRChr(p,  L'\\');
+	    if (lastComponent && (lastComponent - p) > 1) {
+
+                if (cm_ClientStrLen(lastComponent) == 1) {
+                    *lastComponent = '\0';
+                    lastComponent = L".";
+                } else {
+                    *lastComponent = L'\0';
+                    lastComponent++;
+                }
 
 		code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                                 userp, NULL, reqp, &iscp);

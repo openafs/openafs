@@ -641,10 +641,15 @@ RDR_ParseIoctlPath(RDR_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
             return code;
 	}
 
-	lastComponent = cm_ClientStrRChr(relativePath, '\\');
-	if (lastComponent && (lastComponent - relativePath) > 1 && wcslen(lastComponent) > 1) {
-	    *lastComponent = '\0';
-	    lastComponent++;
+	lastComponent = cm_ClientStrRChr(relativePath, L'\\');
+	if (lastComponent && (lastComponent - relativePath) > 1) {
+            if (wcslen(lastComponent) == 1) {
+                *lastComponent = L'\0';
+                lastComponent = L".";
+            } else {
+                *lastComponent = L'\0';
+                lastComponent++;
+            }
 
 	    code = cm_NameI(substRootp, relativePath, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
 			     userp, NULL, reqp, &iscp);
