@@ -2457,7 +2457,7 @@ cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp, cm_user_t *userp, cm_re
 		code = RXAFS_InlineBulkStatus(rxconnp, &fidStruct,
                                               &statStruct, &callbackStruct, &volSync);
 		if (code == RXGEN_OPCODE) {
-		    cm_SetServerNoInlineBulk(connp->serverp, 0);
+		    cm_SetServerNoInlineBulk(connp->serverp, 1);
 		} else {
 		    inlinebulk = 1;
 		}
