@@ -121,11 +121,12 @@ dnl Kernel module build options.
 AC_ARG_WITH([linux-kernel-headers],
     [AS_HELP_STRING([--with-linux-kernel-headers=path],
         [use the kernel headers found at path (optional, defaults to
-         /usr/src/linux-2.4, then /usr/src/linux)])])
+         /lib/modules/`uname -r`/build, then /lib/modules/`uname -r`/source,
+         then /usr/src/linux-2.4, and lastly /usr/src/linux)])])
 AC_ARG_WITH([linux-kernel-build],
     [AS_HELP_STRING([--with-linux-kernel-build=path],
 	[use the kernel build found at path(optional, defaults to 
-	/usr/src/linux-2.4, then /usr/src/linux)])])
+	kernel headers path)])])
 AC_ARG_WITH([bsd-kernel-headers],
     [AS_HELP_STRING([--with-bsd-kernel-headers=path],
         [use the kernel headers found at path (optional, defaults to
