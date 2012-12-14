@@ -1087,11 +1087,23 @@ DumpVnode(struct iod *iodp, struct VnodeDiskObject *v, int volid,
 			       VAclDiskSize(v));
     }
     if (VNDISK_GET_INO(v)) {
+	afs_sfsize_t indexlen, disklen;
 	IH_INIT(ihP, iodp->device, iodp->parentId, VNDISK_GET_INO(v));
 	fdP = IH_OPEN(ihP);
 	if (fdP == NULL) {
 	    Log("1 Volser: DumpVnode: dump: Unable to open inode %llu for vnode %u (volume %i); not dumped, error %d\n", (afs_uintmax_t) VNDISK_GET_INO(v), vnodeNumber, volid, errno);
 	    IH_RELEASE(ihP);
+	    return VOLSERREAD_DUMPERROR;
+	}
+	VNDISK_GET_LEN(indexlen, v);
+	disklen = FDH_SIZE(fdP);
+	if (indexlen != disklen) {
+	    FDH_REALLYCLOSE(fdP);
+	    IH_RELEASE(ihP);
+	    Log("DumpVnode: volume %lu vnode %lu has inconsistent length "
+	        "(index %lu disk %lu); aborting dump\n",
+	        (unsigned long)volid, (unsigned long)vnodeNumber,
+	        (unsigned long)indexlen, (unsigned long)disklen);
 	    return VOLSERREAD_DUMPERROR;
 	}
 	code = DumpFile(iodp, vnodeNumber, fdP);
