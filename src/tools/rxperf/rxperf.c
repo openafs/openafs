@@ -118,16 +118,25 @@ start_timer(void)
  */
 
 static void
-end_and_print_timer(char *str)
+end_and_print_timer(char *str, long long bytes)
 {
     long long start_l, stop_l;
+    double kbps;
 
     timer_check--;
     assert(timer_check == 0);
     gettimeofday(&timer_stop, NULL);
     start_l = timer_start.tv_sec * 1000000 + timer_start.tv_usec;
     stop_l = timer_stop.tv_sec * 1000000 + timer_stop.tv_usec;
-    printf("%s:\t%8llu msec\n", str, (stop_l - start_l) / 1000);
+    printf("%s:\t%8llu msec", str, (stop_l - start_l) / 1000);
+
+    kbps = bytes * 8000.0 / (stop_l - start_l);
+    if (kbps > 1000000.0)
+        printf("\t[%.4g Gbit/s]\n", kbps/1000000.0);
+    else if (kbps > 1000.0)
+        printf("\t[%.4g Mbit/s]\n", kbps/1000.0);
+    else
+        printf("\t[%.4g kbit/s]\n", kbps);
 }
 
 /*
@@ -792,7 +801,17 @@ do_client(const char *server, short port, char *filename, afs_int32 command,
         pthread_join(thread[i], &status);
 #endif
 
-    end_and_print_timer(stamp);
+    switch (command) {
+    case RX_PERF_RPC:
+        end_and_print_timer(stamp, (long long)threads*times*(sendbytes+readbytes));
+        break;
+    case RX_PERF_RECV:
+    case RX_PERF_SEND:
+    case RX_PERF_FILE:
+        end_and_print_timer(stamp, (long long)threads*times*bytes);
+        break;
+    }
+
     DBFPRINT(("done for good\n"));
 
     if (dumpstats) {
