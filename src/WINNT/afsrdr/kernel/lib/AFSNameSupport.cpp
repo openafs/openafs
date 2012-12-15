@@ -1900,9 +1900,8 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
             //
 
             if( pCurrentObject->FileType == AFS_FILE_TYPE_SYMLINK &&
-                pCurrentObject->TargetFileId.Vnode == 0 &&
-                pCurrentObject->TargetFileId.Unique == 0 &&
-                pDirEntry->NameInformation.TargetName.Length == 0)
+                ( pCurrentObject->TargetFileId.Vnode == 0 ||
+                  pDirEntry->NameInformation.TargetName.Length == 0))
             {
 
                 ntStatus = AFSValidateSymLink( AuthGroup,
