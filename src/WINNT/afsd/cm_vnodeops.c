@@ -1809,6 +1809,7 @@ long cm_HandleLink(cm_scache_t *linkScp, cm_user_t *userp, cm_req_t *reqp)
             /* make sure we are NUL terminated */
             temp[linkScp->length.LowPart] = 0;
             memcpy(linkScp->mountPointStringp, temp, linkScp->length.LowPart + 1);
+            linkScp->mpDataVersion = linkScp->dataVersion;
         }
 
         if ( !strnicmp(linkScp->mountPointStringp, "msdfs:", strlen("msdfs:")) )
