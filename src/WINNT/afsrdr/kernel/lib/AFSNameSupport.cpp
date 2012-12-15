@@ -1447,6 +1447,26 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                                                         &pDirEntry);
                         }
 
+                        if ( pDirEntry == NULL &&
+                             pParentDirEntry->ObjectInformation->VolumeCB == AFSGlobalRoot)
+                        {
+
+                            //
+                            // Check with the service to see if this is a valid cell name
+                            // that can be automatically resolved.  Drop the shared TreeLock
+                            // since AFSCheckCellName must acquire it exclusively.
+                            //
+
+                            AFSReleaseResource( pParentDirEntry->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
+
+                            ntStatus = AFSCheckCellName( AuthGroup,
+                                                         &uniSearchName,
+                                                         &pDirEntry);
+
+                            AFSAcquireShared( pParentDirEntry->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                                              TRUE);
+                        }
+
                         if( pDirEntry == NULL)
                         {
 
