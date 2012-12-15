@@ -2045,12 +2045,53 @@ long cm_NameI(cm_scache_t *rootSCachep, clientchar_t *pathp, long flags,
                  */
                 *cp++ = 0;	/* add null termination */
 		extraFlag = 0;
-		if ((flags & CM_FLAG_DIRSEARCH) && tc == 0)
-		    extraFlag = CM_FLAG_NOMOUNTCHASE;
-		code = cm_Lookup(tscp, component,
-                                 flags | extraFlag,
-                                 userp, reqp, &nscp);
 
+                if (tscp == cm_RootSCachep(userp, reqp)) {
+                    code = cm_Lookup(tscp, component, CM_FLAG_CHECKPATH, userp, reqp, &nscp);
+
+                    if ((code == CM_ERROR_NOSUCHPATH || code == CM_ERROR_NOSUCHFILE ||
+                         code == CM_ERROR_BPLUS_NOMATCH) &&
+                         tscp == cm_data.rootSCachep) {
+
+                        clientchar_t volref[AFSPATHMAX];
+
+                        if (wcschr(component, '%') != NULL || wcschr(component, '#') != NULL) {
+                            /*
+                             * A volume reference:  <cell>{%,#}<volume> -> @vol:<cell>{%,#}<volume>
+                             */
+                            cm_ClientStrCpyN(volref, AFSPATHMAX, _C(CM_PREFIX_VOL), CM_PREFIX_VOL_CCH);
+                            cm_ClientStrCat(volref, AFSPATHMAX, component);
+
+                            code = cm_EvaluateVolumeReference(volref, CM_FLAG_CHECKPATH, userp, reqp, &nscp);
+                        }
+#ifdef AFS_FREELANCE_CLIENT
+                        else if (tscp->fid.cell == AFS_FAKE_ROOT_CELL_ID && tscp->fid.volume == AFS_FAKE_ROOT_VOL_ID &&
+                                  tscp->fid.vnode == 1 && tscp->fid.unique == 1) {
+                            /*
+                             * If this is the Freelance volume root directory then treat unrecognized
+                             * names as cell names and attempt to find the appropriate "root.cell".
+                             */
+                            cm_ClientStrCpyN(volref, AFSPATHMAX, _C(CM_PREFIX_VOL), CM_PREFIX_VOL_CCH);
+                            if (component[0] == L'.') {
+                                cm_ClientStrCat(volref, AFSPATHMAX, &component[1]);
+                                cm_ClientStrCatN(volref, AFSPATHMAX, L"%", sizeof(WCHAR));
+                            } else {
+                                cm_ClientStrCat(volref, AFSPATHMAX, component);
+                                cm_ClientStrCatN(volref, AFSPATHMAX, L"#", sizeof(WCHAR));
+                            }
+                            cm_ClientStrCatN(volref, AFSPATHMAX, L"root.cell", 9 * sizeof(WCHAR));
+
+                            code = cm_EvaluateVolumeReference(volref, CM_FLAG_CHECKPATH, userp, reqp, &nscp);
+                        }
+#endif
+                    }
+                } else {
+                    if ((flags & CM_FLAG_DIRSEARCH) && tc == 0)
+                        extraFlag = CM_FLAG_NOMOUNTCHASE;
+                    code = cm_Lookup(tscp, component,
+                                     flags | extraFlag,
+                                     userp, reqp, &nscp);
+                }
                 if (code == 0) {
                     if (!cm_ClientStrCmp(component,_C("..")) ||
                         !cm_ClientStrCmp(component,_C("."))) {
