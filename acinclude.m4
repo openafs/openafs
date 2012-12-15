@@ -309,16 +309,20 @@ case $system in
 		 if test "x$with_linux_kernel_headers" != "x"; then
 		   LINUX_KERNEL_PATH="$with_linux_kernel_headers"
 		 else
-		   LINUX_KERNEL_PATH="/lib/modules/`uname -r`/source"
-		   if test ! -f "$LINUX_KERNEL_PATH/include/linux/version.h"; then
-		     LINUX_KERNEL_PATH="/lib/modules/`uname -r`/build"
-		   fi
-		   if test ! -f "$LINUX_KERNEL_PATH/include/linux/version.h"; then
-		     LINUX_KERNEL_PATH="/usr/src/linux-2.4"
-		   fi
-		   if test ! -f "$LINUX_KERNEL_PATH/include/linux/version.h"; then
-		     LINUX_KERNEL_PATH="/usr/src/linux"
-		   fi
+		   for utsdir in "/lib/modules/`uname -r`/build" \
+		                 "/lib/modules/`uname -r`/source" \
+		                 "/usr/src/linux-2.4" \
+		                 "/usr/src/linux"; do
+		     LINUX_KERNEL_PATH="$utsdir"
+		     for utsfile in "include/generated/utsrelease.h" \
+		                    "include/linux/utsrelease.h" \
+		                    "include/linux/version.h" \
+		                    "include/linux/version-up.h"; do
+		       if grep "UTS_RELEASE" "$utsdir/$utsfile" >/dev/null 2>&1; then
+		         break 2
+		       fi
+		     done
+		   done
 		 fi
 		 if test "x$with_linux_kernel_build" != "x"; then
 			 LINUX_KERNEL_BUILD="$with_linux_kernel_build"
