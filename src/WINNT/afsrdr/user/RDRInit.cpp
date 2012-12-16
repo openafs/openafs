@@ -925,388 +925,388 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
             break;
         }
 
-    case AFS_REQUEST_TYPE_PIOCTL_READ:
-            {
-                AFSPIOCtlIORequestCB *pPioctlCB = (AFSPIOCtlIORequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+        case AFS_REQUEST_TYPE_PIOCTL_READ:
+        {
+            AFSPIOCtlIORequestCB *pPioctlCB = (AFSPIOCtlIORequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
-                if (afsd_logp->enabled) {
-                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIOCTL_READ Index %08lX Parent %08lX.%08lX.%08lX.%08lX",
-                              RequestBuffer->RequestIndex,
-                              RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume,
-                              RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIOCTL_READ Index %08lX Parent %08lX.%08lX.%08lX.%08lX",
+                          RequestBuffer->RequestIndex,
+                          RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume,
+                          RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
 
-                    osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
-                }
-
-                RDR_PioctlRead( userp,
-                                RequestBuffer->FileId,
-                                pPioctlCB,
-                                bWow64,
-                                bIsLocalSystem,
-                                RequestBuffer->ResultBufferLength,
-                                &pResultCB);
-                break;
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
             }
 
-    case AFS_REQUEST_TYPE_PIOCTL_CLOSE:
-            {
-                AFSPIOCtlOpenCloseRequestCB *pPioctlCB = (AFSPIOCtlOpenCloseRequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+            RDR_PioctlRead( userp,
+                            RequestBuffer->FileId,
+                            pPioctlCB,
+                            bWow64,
+                            bIsLocalSystem,
+                            RequestBuffer->ResultBufferLength,
+                            &pResultCB);
+            break;
+        }
 
-                if (afsd_logp->enabled) {
-                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIOCTL_CLOSE Index %08lX Parent %08lX.%08lX.%08lX.%08lX",
-                              RequestBuffer->RequestIndex,
-                              RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume,
-                              RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+        case AFS_REQUEST_TYPE_PIOCTL_CLOSE:
+        {
+            AFSPIOCtlOpenCloseRequestCB *pPioctlCB = (AFSPIOCtlOpenCloseRequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
-                    osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
-                }
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIOCTL_CLOSE Index %08lX Parent %08lX.%08lX.%08lX.%08lX",
+                          RequestBuffer->RequestIndex,
+                          RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume,
+                          RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
 
-                RDR_PioctlClose( userp,
-                                RequestBuffer->FileId,
-                                pPioctlCB,
-                                bWow64,
-                                RequestBuffer->ResultBufferLength,
-                                &pResultCB);
-                break;
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
             }
 
-
-    case AFS_REQUEST_TYPE_BYTE_RANGE_LOCK:
-            {
-                if (afsd_logp->enabled) {
-                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_BYTE_RANGE_LOCK Index %08lX File %08lX.%08lX.%08lX.%08lX %S",
-                              RequestBuffer->RequestIndex,
-                              RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume,
-                              RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique,
-                              BooleanFlagOn( RequestBuffer->RequestFlags, AFS_REQUEST_FLAG_SYNCHRONOUS) ? L"Sync" : L"Async");
-
-                    osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
-                }
-
-                AFSByteRangeLockRequestCB *pBRLRequestCB = (AFSByteRangeLockRequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
-
-                RDR_ByteRangeLockSync( userp,
-                                       RequestBuffer->FileId,
-                                       pBRLRequestCB,
-                                       bWow64,
-                                       RequestBuffer->ResultBufferLength,
-                                       &pResultCB);
-
-                break;
-            }
-
-    case AFS_REQUEST_TYPE_BYTE_RANGE_UNLOCK:
-            {
-                AFSByteRangeUnlockRequestCB *pBRURequestCB = (AFSByteRangeUnlockRequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
-
-                if (afsd_logp->enabled) {
-                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_BYTE_RANGE_UNLOCK Index %08lX File %08lX.%08lX.%08lX.%08lX",
-                              RequestBuffer->RequestIndex,
-                              RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume,
-                              RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
-
-                    osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
-                }
-
-                RDR_ByteRangeUnlock( userp,
-                                     RequestBuffer->FileId,
-                                     pBRURequestCB,
-                                     bWow64,
-                                     RequestBuffer->ResultBufferLength,
-                                     &pResultCB);
-                break;
-            }
-
-    case AFS_REQUEST_TYPE_BYTE_RANGE_UNLOCK_ALL:
-            {
-                AFSByteRangeUnlockRequestCB *pBRURequestCB = (AFSByteRangeUnlockRequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
-
-                if (afsd_logp->enabled) {
-                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_BYTE_RANGE_UNLOCK_ALL Index %08lX File %08lX.%08lX.%08lX.%08lX",
-                              RequestBuffer->RequestIndex,
-                              RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume,
-                              RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
-
-                    osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
-                }
-
-                RDR_ByteRangeUnlockAll( userp,
-                                        RequestBuffer->FileId,
-                                        pBRURequestCB,
-                                        bWow64,
-                                        RequestBuffer->ResultBufferLength,
-                                        &pResultCB);
-                break;
-            }
-
-    case AFS_REQUEST_TYPE_GET_VOLUME_INFO:
-            {
-                if (afsd_logp->enabled) {
-                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_GET_VOLUME_INFO Index %08lX File %08lX.%08lX.%08lX.%08lX",
-                              RequestBuffer->RequestIndex,
-                              RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume,
-                              RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
-
-                    osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
-                }
-
-                RDR_GetVolumeInfo( userp,
-                                   RequestBuffer->FileId,
-                                   bWow64,
-                                   RequestBuffer->ResultBufferLength,
-                                   &pResultCB);
-                break;
-            }
-
-    case AFS_REQUEST_TYPE_GET_VOLUME_SIZE_INFO:
-            {
-                if (afsd_logp->enabled) {
-                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_GET_VOLUME_SIZE_INFO Index %08lX File %08lX.%08lX.%08lX.%08lX",
-                              RequestBuffer->RequestIndex,
-                              RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume,
-                              RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
-
-                    osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
-                }
-
-                RDR_GetVolumeSizeInfo( userp,
-                                       RequestBuffer->FileId,
-                                       bWow64,
-                                       RequestBuffer->ResultBufferLength,
-                                       &pResultCB);
-                break;
-            }
-
-    case AFS_REQUEST_TYPE_HOLD_FID:
-            {
-
-                AFSHoldFidRequestCB *pHoldFidCB = (AFSHoldFidRequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
-
-                if (afsd_logp->enabled) {
-                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_HOLD_FID Index %08lX",
-                              RequestBuffer->RequestIndex);
-
-                    osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
-                }
-
-                RDR_HoldFid( userp,
-                             pHoldFidCB,
-                             bFast,
+            RDR_PioctlClose( userp,
+                             RequestBuffer->FileId,
+                             pPioctlCB,
+                             bWow64,
                              RequestBuffer->ResultBufferLength,
                              &pResultCB);
+            break;
+        }
 
-                break;
+
+        case AFS_REQUEST_TYPE_BYTE_RANGE_LOCK:
+        {
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_BYTE_RANGE_LOCK Index %08lX File %08lX.%08lX.%08lX.%08lX %S",
+                          RequestBuffer->RequestIndex,
+                          RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume,
+                          RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique,
+                          BooleanFlagOn( RequestBuffer->RequestFlags, AFS_REQUEST_FLAG_SYNCHRONOUS) ? L"Sync" : L"Async");
+
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
             }
 
-    case AFS_REQUEST_TYPE_RELEASE_FID:
-            {
+            AFSByteRangeLockRequestCB *pBRLRequestCB = (AFSByteRangeLockRequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
-                AFSReleaseFidRequestCB *pReleaseFidCB = (AFSReleaseFidRequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
-
-                if (afsd_logp->enabled) {
-                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_RELEASE_FID Index %08lX",
-                              RequestBuffer->RequestIndex);
-
-                    osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
-                }
-
-                RDR_ReleaseFid( userp,
-                                pReleaseFidCB,
-                                bFast,
-                                RequestBuffer->ResultBufferLength,
-                                &pResultCB);
-
-                break;
-            }
-
-    case AFS_REQUEST_TYPE_CLEANUP_PROCESSING:
-            {
-
-                AFSFileCleanupCB *pCleanupCB = (AFSFileCleanupCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
-
-                if (afsd_logp->enabled) {
-                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_CLEANUP_FILE Index %08lX File %08lX.%08lX.%08lX.%08lX",
-                              RequestBuffer->RequestIndex,
-                              RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume,
-                              RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
-
-                    osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
-                }
-
-                RDR_CleanupFileEntry( userp,
-                                      RequestBuffer->FileId,
-                                      RequestBuffer->Name,
-                                      RequestBuffer->NameLength,
-                                      pCleanupCB,
-                                      bWow64,
-                                      bFlushFile,
-                                      bDeleteFile,
-                                      bUnlockFile,
-                                      RequestBuffer->ResultBufferLength,
-                                      &pResultCB);
-
-                break;
-            }
-
-    case AFS_REQUEST_TYPE_PIPE_OPEN:
-            {
-                AFSPipeOpenCloseRequestCB *pPipeCB = (AFSPipeOpenCloseRequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
-
-                if (afsd_logp->enabled) {
-                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIPE_OPEN Index %08lX Parent %08lX.%08lX.%08lX.%08lX",
-                              RequestBuffer->RequestIndex,
-                              RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume,
-                              RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
-
-                    osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
-                }
-
-                RDR_PipeOpen( userp,
-                              RequestBuffer->FileId,
-                              RequestBuffer->Name,
-                              RequestBuffer->NameLength,
-                              pPipeCB,
-                              bWow64,
-                              RequestBuffer->ResultBufferLength,
-                              &pResultCB);
-                break;
-            }
-
-    case AFS_REQUEST_TYPE_PIPE_WRITE:
-            {
-                AFSPipeIORequestCB *pPipeCB = (AFSPipeIORequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
-                BYTE *pPipeData = ((BYTE *)RequestBuffer->Name + RequestBuffer->DataOffset + sizeof(AFSPipeIORequestCB));
-
-                if (afsd_logp->enabled) {
-                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIPE_WRITE Index %08lX Parent %08lX.%08lX.%08lX.%08lX",
-                              RequestBuffer->RequestIndex,
-                              RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume,
-                              RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
-
-                    osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
-                }
-
-                RDR_PipeWrite( userp,
-                               RequestBuffer->FileId,
-                               pPipeCB,
-                               pPipeData,
-                               bWow64,
-                               RequestBuffer->ResultBufferLength,
-                               &pResultCB);
-                break;
-            }
-
-    case AFS_REQUEST_TYPE_PIPE_READ:
-            {
-                AFSPipeIORequestCB *pPipeCB = (AFSPipeIORequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
-
-                if (afsd_logp->enabled) {
-                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIPE_READ Index %08lX Parent %08lX.%08lX.%08lX.%08lX",
-                              RequestBuffer->RequestIndex,
-                              RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume,
-                              RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
-
-                    osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
-                }
-
-                RDR_PipeRead( userp,
-                              RequestBuffer->FileId,
-                              pPipeCB,
-                              bWow64,
-                              RequestBuffer->ResultBufferLength,
-                              &pResultCB);
-                break;
-            }
-
-    case AFS_REQUEST_TYPE_PIPE_CLOSE:
-            {
-                AFSPipeOpenCloseRequestCB *pPipeCB = (AFSPipeOpenCloseRequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
-
-                if (afsd_logp->enabled) {
-                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIPE_CLOSE Index %08lX Parent %08lX.%08lX.%08lX.%08lX",
-                              RequestBuffer->RequestIndex,
-                              RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume,
-                              RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
-
-                    osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
-                }
-
-                RDR_PipeClose( userp,
-                                RequestBuffer->FileId,
-                                pPipeCB,
-                                bWow64,
-                                RequestBuffer->ResultBufferLength,
-                                &pResultCB);
-                break;
-            }
-
-
-    case AFS_REQUEST_TYPE_PIPE_TRANSCEIVE:
-            {
-                AFSPipeIORequestCB *pPipeCB = (AFSPipeIORequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
-                BYTE *pPipeData = ((BYTE *)RequestBuffer->Name + RequestBuffer->DataOffset + sizeof(AFSPipeIORequestCB));
-
-                if (afsd_logp->enabled) {
-                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIPE_TRANSCEIVE Index %08lX",
-                              RequestBuffer->RequestIndex);
-
-                    osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
-                }
-
-                RDR_PipeTransceive( userp,
-                                    RequestBuffer->FileId,
-                                    pPipeCB,
-                                    pPipeData,
-                                    bWow64,
-                                    RequestBuffer->ResultBufferLength,
-                                    &pResultCB);
-                break;
-            }
-
-    case AFS_REQUEST_TYPE_PIPE_QUERY_INFO:
-            {
-                AFSPipeInfoRequestCB *pPipeInfoCB = (AFSPipeInfoRequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
-
-                if (afsd_logp->enabled) {
-                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIPE_QUERY_INFO Index %08lX",
-                              RequestBuffer->RequestIndex);
-
-                    osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
-                }
-
-                RDR_PipeQueryInfo( userp,
+            RDR_ByteRangeLockSync( userp,
                                    RequestBuffer->FileId,
-                                   pPipeInfoCB,
+                                   pBRLRequestCB,
                                    bWow64,
                                    RequestBuffer->ResultBufferLength,
                                    &pResultCB);
-                break;
+
+            break;
+        }
+
+        case AFS_REQUEST_TYPE_BYTE_RANGE_UNLOCK:
+        {
+            AFSByteRangeUnlockRequestCB *pBRURequestCB = (AFSByteRangeUnlockRequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_BYTE_RANGE_UNLOCK Index %08lX File %08lX.%08lX.%08lX.%08lX",
+                          RequestBuffer->RequestIndex,
+                          RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume,
+                          RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
             }
 
-    case AFS_REQUEST_TYPE_PIPE_SET_INFO:
-            {
-                AFSPipeInfoRequestCB *pPipeInfoCB = (AFSPipeInfoRequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
-                BYTE *pPipeData = ((BYTE *)RequestBuffer->Name + RequestBuffer->DataOffset + sizeof(AFSPipeInfoRequestCB));
-
-                if (afsd_logp->enabled) {
-                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIPE_SET_INFO Index %08lX",
-                              RequestBuffer->RequestIndex);
-
-                    osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
-                }
-
-                RDR_PipeSetInfo( userp,
+            RDR_ByteRangeUnlock( userp,
                                  RequestBuffer->FileId,
-                                 pPipeInfoCB,
-                                 pPipeData,
+                                 pBRURequestCB,
                                  bWow64,
                                  RequestBuffer->ResultBufferLength,
                                  &pResultCB);
+            break;
+        }
 
-                break;
+        case AFS_REQUEST_TYPE_BYTE_RANGE_UNLOCK_ALL:
+        {
+            AFSByteRangeUnlockRequestCB *pBRURequestCB = (AFSByteRangeUnlockRequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_BYTE_RANGE_UNLOCK_ALL Index %08lX File %08lX.%08lX.%08lX.%08lX",
+                          RequestBuffer->RequestIndex,
+                          RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume,
+                          RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
             }
 
-    default:
+            RDR_ByteRangeUnlockAll( userp,
+                                    RequestBuffer->FileId,
+                                    pBRURequestCB,
+                                    bWow64,
+                                    RequestBuffer->ResultBufferLength,
+                                    &pResultCB);
+            break;
+        }
+
+        case AFS_REQUEST_TYPE_GET_VOLUME_INFO:
+        {
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_GET_VOLUME_INFO Index %08lX File %08lX.%08lX.%08lX.%08lX",
+                          RequestBuffer->RequestIndex,
+                          RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume,
+                          RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
+
+            RDR_GetVolumeInfo( userp,
+                               RequestBuffer->FileId,
+                               bWow64,
+                               RequestBuffer->ResultBufferLength,
+                               &pResultCB);
+            break;
+        }
+
+        case AFS_REQUEST_TYPE_GET_VOLUME_SIZE_INFO:
+        {
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_GET_VOLUME_SIZE_INFO Index %08lX File %08lX.%08lX.%08lX.%08lX",
+                          RequestBuffer->RequestIndex,
+                          RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume,
+                          RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
+
+            RDR_GetVolumeSizeInfo( userp,
+                                   RequestBuffer->FileId,
+                                   bWow64,
+                                   RequestBuffer->ResultBufferLength,
+                                   &pResultCB);
+            break;
+        }
+
+        case AFS_REQUEST_TYPE_HOLD_FID:
+        {
+
+            AFSHoldFidRequestCB *pHoldFidCB = (AFSHoldFidRequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_HOLD_FID Index %08lX",
+                          RequestBuffer->RequestIndex);
+
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
+
+            RDR_HoldFid( userp,
+                         pHoldFidCB,
+                         bFast,
+                         RequestBuffer->ResultBufferLength,
+                         &pResultCB);
+
+            break;
+        }
+
+        case AFS_REQUEST_TYPE_RELEASE_FID:
+        {
+
+            AFSReleaseFidRequestCB *pReleaseFidCB = (AFSReleaseFidRequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_RELEASE_FID Index %08lX",
+                          RequestBuffer->RequestIndex);
+
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
+
+            RDR_ReleaseFid( userp,
+                            pReleaseFidCB,
+                            bFast,
+                            RequestBuffer->ResultBufferLength,
+                            &pResultCB);
+
+            break;
+        }
+
+        case AFS_REQUEST_TYPE_CLEANUP_PROCESSING:
+        {
+
+            AFSFileCleanupCB *pCleanupCB = (AFSFileCleanupCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_CLEANUP_FILE Index %08lX File %08lX.%08lX.%08lX.%08lX",
+                          RequestBuffer->RequestIndex,
+                          RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume,
+                          RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
+
+            RDR_CleanupFileEntry( userp,
+                                  RequestBuffer->FileId,
+                                  RequestBuffer->Name,
+                                  RequestBuffer->NameLength,
+                                  pCleanupCB,
+                                  bWow64,
+                                  bFlushFile,
+                                  bDeleteFile,
+                                  bUnlockFile,
+                                  RequestBuffer->ResultBufferLength,
+                                  &pResultCB);
+
+            break;
+        }
+
+        case AFS_REQUEST_TYPE_PIPE_OPEN:
+        {
+            AFSPipeOpenCloseRequestCB *pPipeCB = (AFSPipeOpenCloseRequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIPE_OPEN Index %08lX Parent %08lX.%08lX.%08lX.%08lX",
+                          RequestBuffer->RequestIndex,
+                          RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume,
+                          RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
+
+            RDR_PipeOpen( userp,
+                          RequestBuffer->FileId,
+                          RequestBuffer->Name,
+                          RequestBuffer->NameLength,
+                          pPipeCB,
+                          bWow64,
+                          RequestBuffer->ResultBufferLength,
+                          &pResultCB);
+            break;
+        }
+
+        case AFS_REQUEST_TYPE_PIPE_WRITE:
+        {
+            AFSPipeIORequestCB *pPipeCB = (AFSPipeIORequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+            BYTE *pPipeData = ((BYTE *)RequestBuffer->Name + RequestBuffer->DataOffset + sizeof(AFSPipeIORequestCB));
+
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIPE_WRITE Index %08lX Parent %08lX.%08lX.%08lX.%08lX",
+                          RequestBuffer->RequestIndex,
+                          RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume,
+                          RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
+
+            RDR_PipeWrite( userp,
+                           RequestBuffer->FileId,
+                           pPipeCB,
+                           pPipeData,
+                           bWow64,
+                           RequestBuffer->ResultBufferLength,
+                           &pResultCB);
+            break;
+        }
+
+        case AFS_REQUEST_TYPE_PIPE_READ:
+        {
+            AFSPipeIORequestCB *pPipeCB = (AFSPipeIORequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIPE_READ Index %08lX Parent %08lX.%08lX.%08lX.%08lX",
+                          RequestBuffer->RequestIndex,
+                          RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume,
+                          RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
+
+            RDR_PipeRead( userp,
+                          RequestBuffer->FileId,
+                          pPipeCB,
+                          bWow64,
+                          RequestBuffer->ResultBufferLength,
+                          &pResultCB);
+            break;
+        }
+
+        case AFS_REQUEST_TYPE_PIPE_CLOSE:
+        {
+            AFSPipeOpenCloseRequestCB *pPipeCB = (AFSPipeOpenCloseRequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIPE_CLOSE Index %08lX Parent %08lX.%08lX.%08lX.%08lX",
+                          RequestBuffer->RequestIndex,
+                          RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume,
+                          RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
+
+            RDR_PipeClose( userp,
+                           RequestBuffer->FileId,
+                           pPipeCB,
+                           bWow64,
+                           RequestBuffer->ResultBufferLength,
+                           &pResultCB);
+            break;
+        }
+
+
+        case AFS_REQUEST_TYPE_PIPE_TRANSCEIVE:
+        {
+            AFSPipeIORequestCB *pPipeCB = (AFSPipeIORequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+            BYTE *pPipeData = ((BYTE *)RequestBuffer->Name + RequestBuffer->DataOffset + sizeof(AFSPipeIORequestCB));
+
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIPE_TRANSCEIVE Index %08lX",
+                          RequestBuffer->RequestIndex);
+
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
+
+            RDR_PipeTransceive( userp,
+                                RequestBuffer->FileId,
+                                pPipeCB,
+                                pPipeData,
+                                bWow64,
+                                RequestBuffer->ResultBufferLength,
+                                &pResultCB);
+            break;
+        }
+
+        case AFS_REQUEST_TYPE_PIPE_QUERY_INFO:
+        {
+            AFSPipeInfoRequestCB *pPipeInfoCB = (AFSPipeInfoRequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIPE_QUERY_INFO Index %08lX",
+                          RequestBuffer->RequestIndex);
+
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
+
+            RDR_PipeQueryInfo( userp,
+                               RequestBuffer->FileId,
+                               pPipeInfoCB,
+                               bWow64,
+                               RequestBuffer->ResultBufferLength,
+                               &pResultCB);
+            break;
+        }
+
+        case AFS_REQUEST_TYPE_PIPE_SET_INFO:
+        {
+            AFSPipeInfoRequestCB *pPipeInfoCB = (AFSPipeInfoRequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+            BYTE *pPipeData = ((BYTE *)RequestBuffer->Name + RequestBuffer->DataOffset + sizeof(AFSPipeInfoRequestCB));
+
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_PIPE_SET_INFO Index %08lX",
+                          RequestBuffer->RequestIndex);
+
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
+
+            RDR_PipeSetInfo( userp,
+                             RequestBuffer->FileId,
+                             pPipeInfoCB,
+                             pPipeData,
+                             bWow64,
+                             RequestBuffer->ResultBufferLength,
+                             &pResultCB);
+
+            break;
+        }
+
+        default:
             bUnsupported = TRUE;
 
             if (afsd_logp->enabled) {
