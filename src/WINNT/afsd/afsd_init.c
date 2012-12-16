@@ -78,6 +78,7 @@ int cm_chunkSize;
 int cm_virtualCache = 0;
 afs_int32 cm_verifyData = 0;
 int cm_shortNames = 1;
+int cm_directIO = 1;
 
 int smb_UseV3 = 1;
 afs_uint32 smb_Enabled = 1;
@@ -1385,6 +1386,16 @@ afsd_InitCM(char **reasonP)
             cm_shortNames = 1;
     }
     afsi_log("CM ShortNames is %u", cm_shortNames);
+
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "DirectIO", NULL, NULL,
+                           (BYTE *) &dwValue, &dummyLen);
+    if (code == ERROR_SUCCESS) {
+        cm_directIO = (unsigned short) dwValue;
+    } else {
+        cm_directIO = 1;
+    }
+    afsi_log("CM DirectIO is %u", cm_directIO);
 
     RegCloseKey (parmKey);
 

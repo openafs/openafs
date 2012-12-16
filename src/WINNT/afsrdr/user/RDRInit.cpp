@@ -64,6 +64,7 @@ typedef LONG NTSTATUS, *PNTSTATUS;      // not declared in ntstatus.h
 extern "C" {
 #include <osilog.h>
 extern osi_log_t *afsd_logp;
+extern int cm_directIO;
 
 #include <WINNT/afsreg.h>
 #include <afs/cm_config.h>
@@ -367,12 +368,19 @@ RDR_ProcessWorkerThreads(DWORD numThreads)
 
     for (index = 0; index < numThreads; index++)
     {
-        //
-        // 20% of worker threads should be reserved for release extent
-        // event processing
-        //
-        glWorkerThreadInfo[ glThreadHandleIndex].Flags =
-            (glThreadHandleIndex % 5) ? 0 : AFS_REQUEST_RELEASE_THREAD;
+        if ( !cm_directIO)
+        {
+            //
+            // 20% of worker threads should be reserved for release extent
+            // event processing
+            //
+            glWorkerThreadInfo[ glThreadHandleIndex].Flags =
+                (glThreadHandleIndex % 5) ? 0 : AFS_REQUEST_RELEASE_THREAD;
+        }
+        else
+        {
+            glWorkerThreadInfo[ glThreadHandleIndex].Flags = 0;
+        }
         glWorkerThreadInfo[ glThreadHandleIndex].hEvent = hEvent;
         glWorkerThreadInfo[ glThreadHandleIndex].hThread =
             CreateThread( NULL,
@@ -544,6 +552,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
     BOOL                bDeleteFile = (RequestBuffer->RequestFlags & AFS_REQUEST_FLAG_FILE_DELETED) ? TRUE : FALSE;
     BOOL                bUnlockFile = (RequestBuffer->RequestFlags & AFS_REQUEST_FLAG_BYTE_RANGE_UNLOCK_ALL) ? TRUE : FALSE;
     BOOL                bCheckOnly = (RequestBuffer->RequestFlags & AFS_REQUEST_FLAG_CHECK_ONLY) ? TRUE : FALSE;
+    BOOL                bCacheBypass = (RequestBuffer->RequestFlags & AFS_REQUEST_FLAG_CACHE_BYPASS) ? TRUE : FALSE;
     BOOL                bRetry = FALSE;
     BOOL                bUnsupported = FALSE;
     BOOL                bIsLocalSystem = (RequestBuffer->RequestFlags & AFS_REQUEST_LOCAL_SYSTEM_PAG) ? TRUE : FALSE;
@@ -1305,6 +1314,58 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
                              bWow64,
                              RequestBuffer->ResultBufferLength,
                              &pResultCB);
+
+            break;
+        }
+
+
+        case AFS_REQUEST_TYPE_PROCESS_READ_FILE: {
+            AFSFileIOCB *pFileIOCB = (AFSFileIOCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_READ_FILE Index %08lX FID %08lX.%08lX.%08lX.%08lX",
+                          RequestBuffer->RequestIndex,
+                          RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume,
+                          RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
+
+            RDR_ReadFile( userp,
+                          RequestBuffer->FileId,
+                          &pFileIOCB->IOOffset,
+                          pFileIOCB->IOLength,
+                          pFileIOCB->MappedIOBuffer,
+                          bWow64,
+                          bCacheBypass,
+                          RequestBuffer->ResultBufferLength,
+                          &pResultCB);
+
+            break;
+        }
+
+        case AFS_REQUEST_TYPE_PROCESS_WRITE_FILE: {
+            AFSFileIOCB *pFileIOCB = (AFSFileIOCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_WRITE_FILE Index %08lX FID %08lX.%08lX.%08lX.%08lX",
+                          RequestBuffer->RequestIndex,
+                          RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume,
+                          RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
+
+            RDR_WriteFile( userp,
+                           RequestBuffer->FileId,
+                           pFileIOCB,
+                           &pFileIOCB->IOOffset,
+                           pFileIOCB->IOLength,
+                           pFileIOCB->MappedIOBuffer,
+                           bWow64,
+                           bCacheBypass,
+                           RequestBuffer->ResultBufferLength,
+                           &pResultCB);
 
             break;
         }

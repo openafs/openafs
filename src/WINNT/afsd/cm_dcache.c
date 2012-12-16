@@ -2818,6 +2818,8 @@ cm_VerifyStoreData(cm_bulkIO_t *biod, cm_scache_t *savedScp)
                     buf_offset = 0;
                 }
                 cmp_length =  cm_data.buf_blockSize - buf_offset;
+                if (cmp_length > biod->length - bytes_compared)
+                    cmp_length = biod->length - bytes_compared;
 
                 osi_assertx(qdp != NULL, "null osi_queueData_t");
                 bufp = osi_GetQData(qdp);

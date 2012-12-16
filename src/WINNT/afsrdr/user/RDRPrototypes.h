@@ -366,6 +366,29 @@ RDR_PipeTransceive( IN cm_user_t     *userp,
                     IN DWORD          ResultBufferLength,
                     IN OUT AFSCommResult **ResultCB);
 
+void
+RDR_ReadFile( IN cm_user_t     *userp,
+              IN AFSFileID      FileID,
+              IN LARGE_INTEGER *Offset,
+              IN ULONG          Length,
+              IN PVOID          Buffer,
+              IN BOOL           bWow64,
+              IN BOOL           bCacheBypass,
+              IN DWORD          ResultBufferLength,
+              IN OUT AFSCommResult **ResultCB);
+
+void
+RDR_WriteFile( IN cm_user_t     *userp,
+               IN AFSFileID      FileID,
+               IN AFSFileIOCB   *FileIOCB,
+               IN LARGE_INTEGER *Offset,
+               IN ULONG          Length,
+               IN PVOID          Buffer,
+               IN BOOL           bWow64,
+               IN BOOL           bCacheBypass,
+               IN DWORD          ResultBufferLength,
+               IN OUT AFSCommResult **ResultCB);
+
 cm_user_t *
 RDR_UserFromCommRequest( IN AFSCommRequest * pRequest);
 
