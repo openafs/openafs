@@ -214,6 +214,9 @@ void * cm_BkgDaemon(void * vparm)
         if (rp->scp->flags & CM_SCACHEFLAG_DELETED) {
             osi_Log2(afsd_logp,"cm_BkgDaemon[%u] DELETED scp 0x%x", daemonID, rp->scp);
             code = CM_ERROR_BADFD;
+            if (rp->procp == cm_BkgDirectWrite) {
+                cm_BkgDirectWriteDone(rp->scp, rp->rockp, code);
+            }
         } else {
 #ifdef DEBUG_REFCOUNT
             osi_Log3(afsd_logp,"cm_BkgDaemon[%u] (before) scp 0x%x ref %d", daemonID, rp->scp, rp->scp->refCount);
@@ -239,6 +242,7 @@ void * cm_BkgDaemon(void * vparm)
         case CM_ERROR_ALLOFFLINE:
         case CM_ERROR_PARTIALWRITE:
             if (rp->procp == cm_BkgStore ||
+                rp->procp == cm_BkgDirectWrite ||
                 rp->procp == RDR_BkgFetch) {
                 osi_Log3(afsd_logp,
                          "cm_BkgDaemon[%u] re-queueing failed request 0x%p code 0x%x",
@@ -292,7 +296,8 @@ int cm_QueueBKGRequest(cm_scache_t *scp, cm_bkgProc_t *procp, void *rockp,
 
     /* Use separate queues for fetch and store operations */
     daemonID = scp->fid.hash % (cm_nDaemons/2) * 2;
-    if (procp == cm_BkgStore)
+    if (procp == cm_BkgStore ||
+        procp == cm_BkgDirectWrite)
         daemonID++;
 
     /* Check to see if this is a duplicate request */

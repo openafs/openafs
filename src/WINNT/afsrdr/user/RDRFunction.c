@@ -171,6 +171,7 @@ RDR_SetInitParams( OUT AFSRedirectorInitInfo **ppRedirInitInfo, OUT DWORD * pRed
     *ppRedirInitInfo = (AFSRedirectorInitInfo *)malloc(*pRedirInitInfoLen);
     (*ppRedirInitInfo)->Flags = smb_hideDotFiles ? AFS_REDIR_INIT_FLAG_HIDE_DOT_FILES : 0;
     (*ppRedirInitInfo)->Flags |= cm_shortNames ? 0 : AFS_REDIR_INIT_FLAG_DISABLE_SHORTNAMES;
+    (*ppRedirInitInfo)->Flags |= cm_directIO ? AFS_REDIR_INIT_PERFORM_SERVICE_IO : 0;
     (*ppRedirInitInfo)->MaximumChunkLength = cm_data.chunkSize;
     (*ppRedirInitInfo)->GlobalFileId.Cell   = cm_data.rootFid.cell;
     (*ppRedirInitInfo)->GlobalFileId.Volume = cm_data.rootFid.volume;
@@ -6212,4 +6213,308 @@ RDR_PipeTransceive( IN cm_user_t     *userp,
 
     (*ResultCB)->ResultStatus = 0;
     osi_Log0(afsd_logp, "RDR_Pipe_Transceive SUCCESS");
+}
+
+void
+RDR_ReadFile( IN cm_user_t     *userp,
+              IN AFSFileID      FileID,
+              IN LARGE_INTEGER *Offset,
+              IN ULONG          BytesToRead,
+              IN PVOID          Buffer,
+              IN BOOL           bWow64,
+              IN BOOL           bCacheBypass,
+              IN DWORD          ResultBufferLength,
+              IN OUT AFSCommResult **ResultCB)
+{
+    AFSFileIOResultCB * pFileIOResultCB;
+    DWORD         status;
+    ULONG         Length;
+    ULONG         ulBytesRead = 0;
+    afs_uint32    code = 0;
+    cm_fid_t      fid;
+    cm_scache_t * scp = NULL;
+    cm_req_t      req;
+
+    RDR_InitReq(&req, bWow64);
+
+    osi_Log4(afsd_logp, "RDR_ReadFile FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+             FileID.Cell, FileID.Volume, FileID.Vnode, FileID.Unique);
+
+    Length = sizeof(AFSFileIOResultCB);
+    if (Length > ResultBufferLength) {
+        *ResultCB = (AFSCommResult *)malloc(sizeof(AFSCommResult) );
+        if (!(*ResultCB))
+            return;
+        memset( *ResultCB, 0, sizeof(AFSCommResult));
+        (*ResultCB)->ResultStatus = STATUS_BUFFER_OVERFLOW;
+        return;
+    }
+    *ResultCB = (AFSCommResult *)malloc( Length + sizeof( AFSCommResult) );
+    if (!(*ResultCB))
+	return;
+    memset( *ResultCB, '\0', Length );
+    (*ResultCB)->ResultBufferLength = Length;
+    pFileIOResultCB = (AFSFileIOResultCB *)(*ResultCB)->ResultData;
+
+    if ( Buffer == NULL) {
+        (*ResultCB)->ResultStatus = STATUS_INVALID_PARAMETER;
+        osi_Log0(afsd_logp, "RDR_ReadFile Null IOctl Buffer");
+        return;
+    }
+
+    if (FileID.Cell != 0) {
+        fid.cell   = FileID.Cell;
+        fid.volume = FileID.Volume;
+        fid.vnode  = FileID.Vnode;
+        fid.unique = FileID.Unique;
+        fid.hash   = FileID.Hash;
+
+        code = cm_GetSCache(&fid, NULL, &scp, userp, &req);
+        if (code) {
+            smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
+            (*ResultCB)->ResultStatus = status;
+            osi_Log2(afsd_logp, "RDR_ReadFile cm_GetSCache failure code=0x%x status=0x%x",
+                      code, status);
+            return;
+        }
+    } else {
+        (*ResultCB)->ResultStatus = STATUS_OBJECT_NAME_INVALID;
+        osi_Log0(afsd_logp, "RDR_ReadFile Object Name Invalid - Cell = 0");
+        return;
+    }
+
+    /* Ensure that the caller can access this file */
+    lock_ObtainWrite(&scp->rw);
+    code = cm_SyncOp(scp, NULL, userp, &req, PRSFS_READ,
+                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    if (code) {
+        smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
+        (*ResultCB)->ResultStatus = status;
+        lock_ReleaseWrite(&scp->rw);
+        cm_ReleaseSCache(scp);
+        osi_Log2(afsd_logp, "RDR_ReadFile cm_SyncOp failure code=0x%x status=0x%x",
+                  code, status);
+        return;
+    }
+
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+
+    if (scp->fileType == CM_SCACHETYPE_DIRECTORY) {
+        (*ResultCB)->ResultStatus = STATUS_FILE_IS_A_DIRECTORY;
+        lock_ReleaseWrite(&scp->rw);
+        cm_ReleaseSCache(scp);
+        osi_Log1(afsd_logp, "RDR_ReadFile File is a Directory scp=0x%p",
+                 scp);
+        return;
+    }
+
+    if (scp->fileType != CM_SCACHETYPE_FILE) {
+        (*ResultCB)->ResultStatus = STATUS_REPARSE_POINT_NOT_RESOLVED;
+        lock_ReleaseWrite(&scp->rw);
+        cm_ReleaseSCache(scp);
+        osi_Log1(afsd_logp, "RDR_ReadFile File is a MountPoint or Link scp=0x%p",
+                 scp);
+        return;
+    }
+
+    if ( bCacheBypass) {
+        //
+        // Read the file directly into the buffer bypassing the AFS Cache
+        //
+        code = cm_GetData( scp, Offset, Buffer, BytesToRead, &ulBytesRead, userp, &req);
+    } else {
+        //
+        // Read the file via the AFS Cache
+        //
+        code = raw_ReadData( scp, Offset, BytesToRead, Buffer, &ulBytesRead, userp, &req);
+    }
+
+    if (code) {
+        smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
+        (*ResultCB)->ResultStatus = status;
+        osi_Log2(afsd_logp, "RDR_ReadFile failure code=0x%x status=0x%x",
+                 code, status);
+    } else {
+        (*ResultCB)->ResultStatus = STATUS_SUCCESS;
+        pFileIOResultCB->Length = ulBytesRead;
+        pFileIOResultCB->DataVersion.QuadPart = scp->dataVersion;
+        pFileIOResultCB->Expiration.QuadPart = scp->cbExpires;
+    }
+
+    lock_ReleaseWrite(&scp->rw);
+    cm_ReleaseSCache(scp);
+    return;
+}
+
+void
+RDR_WriteFile( IN cm_user_t     *userp,
+               IN AFSFileID      FileID,
+               IN AFSFileIOCB   *FileIOCB,
+               IN LARGE_INTEGER *Offset,
+               IN ULONG          BytesToWrite,
+               IN PVOID          Buffer,
+               IN BOOL           bWow64,
+               IN BOOL           bCacheBypass,
+               IN DWORD          ResultBufferLength,
+               IN OUT AFSCommResult **ResultCB)
+{
+    AFSFileIOResultCB * pFileIOResultCB;
+    DWORD         status;
+    ULONG         Length;
+    ULONG         ulBytesWritten = 0;
+    afs_uint32    code = 0;
+    cm_fid_t      fid;
+    cm_scache_t * scp = NULL;
+    cm_req_t      req;
+
+    RDR_InitReq(&req, bWow64);
+
+    osi_Log4(afsd_logp, "RDR_WriteFile FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+             FileID.Cell, FileID.Volume, FileID.Vnode, FileID.Unique);
+
+    Length = sizeof(AFSFileIOResultCB);
+    if (Length > ResultBufferLength) {
+        *ResultCB = (AFSCommResult *)malloc(sizeof(AFSCommResult) );
+        if (!(*ResultCB))
+            return;
+        memset( *ResultCB, 0, sizeof(AFSCommResult));
+        (*ResultCB)->ResultStatus = STATUS_BUFFER_OVERFLOW;
+        return;
+    }
+    *ResultCB = (AFSCommResult *)malloc( Length + sizeof( AFSCommResult) );
+    if (!(*ResultCB))
+	return;
+    memset( *ResultCB, '\0', Length );
+    (*ResultCB)->ResultBufferLength = Length;
+    pFileIOResultCB = (AFSFileIOResultCB *)(*ResultCB)->ResultData;
+
+    if ( Buffer == NULL) {
+        (*ResultCB)->ResultStatus = STATUS_INVALID_PARAMETER;
+        osi_Log0(afsd_logp, "RDR_WriteFile Null IOctl Buffer");
+        return;
+    }
+
+    if (FileID.Cell != 0) {
+        fid.cell   = FileID.Cell;
+        fid.volume = FileID.Volume;
+        fid.vnode  = FileID.Vnode;
+        fid.unique = FileID.Unique;
+        fid.hash   = FileID.Hash;
+
+        code = cm_GetSCache(&fid, NULL, &scp, userp, &req);
+        if (code) {
+            smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
+            (*ResultCB)->ResultStatus = status;
+            osi_Log2(afsd_logp, "RDR_WriteFile cm_GetSCache failure code=0x%x status=0x%x",
+                      code, status);
+            return;
+        }
+    } else {
+        (*ResultCB)->ResultStatus = STATUS_OBJECT_NAME_INVALID;
+        osi_Log0(afsd_logp, "RDR_WriteFile Object Name Invalid - Cell = 0");
+        return;
+    }
+
+    /* Ensure that the caller can access this file */
+    lock_ObtainWrite(&scp->rw);
+    code = cm_SyncOp(scp, NULL, userp, &req, PRSFS_WRITE,
+                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    if (code == CM_ERROR_NOACCESS && scp->creator == userp) {
+        code = cm_SyncOp(scp, NULL, userp, &req, PRSFS_INSERT,
+                          CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    }
+    if (code) {
+        smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
+        (*ResultCB)->ResultStatus = status;
+        lock_ReleaseWrite(&scp->rw);
+        cm_ReleaseSCache(scp);
+        osi_Log2(afsd_logp, "RDR_WriteFile cm_SyncOp failure code=0x%x status=0x%x",
+                  code, status);
+        return;
+    }
+
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+
+    if (scp->fileType == CM_SCACHETYPE_DIRECTORY) {
+        (*ResultCB)->ResultStatus = STATUS_FILE_IS_A_DIRECTORY;
+        lock_ReleaseWrite(&scp->rw);
+        cm_ReleaseSCache(scp);
+        osi_Log1(afsd_logp, "RDR_WriteFile File is a Directory scp=0x%p",
+                 scp);
+        return;
+    }
+
+    if (scp->fileType != CM_SCACHETYPE_FILE) {
+        (*ResultCB)->ResultStatus = STATUS_REPARSE_POINT_NOT_RESOLVED;
+        lock_ReleaseWrite(&scp->rw);
+        cm_ReleaseSCache(scp);
+        osi_Log1(afsd_logp, "RDR_WriteFile File is a MountPoint or Link scp=0x%p",
+                 scp);
+        return;
+    }
+
+    if (FileIOCB->EndOfFile.QuadPart != scp->length.QuadPart)
+    {
+        cm_attr_t setAttr;
+
+        memset(&setAttr, 0, sizeof(cm_attr_t));
+        if (FileIOCB->EndOfFile.QuadPart != scp->length.QuadPart) {
+            osi_Log4(afsd_logp, "RDR_WriteFile new length fid vol 0x%x vno 0x%x length 0x%x:%x",
+                     scp->fid.volume, scp->fid.vnode,
+                     FileIOCB->EndOfFile.HighPart,
+                     FileIOCB->EndOfFile.LowPart);
+
+            setAttr.mask |= CM_ATTRMASK_LENGTH;
+            setAttr.length.LowPart = FileIOCB->EndOfFile.LowPart;
+            setAttr.length.HighPart = FileIOCB->EndOfFile.HighPart;
+            lock_ReleaseWrite(&scp->rw);
+            code = cm_SetAttr(scp, &setAttr, userp, &req);
+            osi_Log2(afsd_logp, "RDR_WriteFile cm_SetAttr failure scp=0x%p code 0x%x",
+                     scp, code);
+            code = 0;       /* ignore failure */
+            lock_ObtainWrite(&scp->rw);
+        }
+    }
+
+    /*
+     * The input buffer may contain data beyond the end of the file.
+     * Such data must be discarded.
+     */
+    if ( Offset->QuadPart + BytesToWrite > scp->length.QuadPart)
+    {
+        if ( Offset->QuadPart > scp->length.QuadPart) {
+            (*ResultCB)->ResultStatus = STATUS_SUCCESS;
+            lock_ReleaseWrite(&scp->rw);
+            cm_ReleaseSCache(scp);
+            osi_Log1(afsd_logp, "RDR_WriteFile Nothing to do scp=0x%p",
+                     scp);
+            return;
+        }
+
+        BytesToWrite -= (afs_uint32)(Offset->QuadPart + BytesToWrite - scp->length.QuadPart);
+    }
+
+    if (bCacheBypass) {
+        code = cm_DirectWrite( scp, Offset, BytesToWrite,
+                               CM_DIRECT_SCP_LOCKED,
+                               userp, &req, Buffer, &ulBytesWritten);
+    } else {
+        code = raw_WriteData( scp, Offset, BytesToWrite, Buffer, userp, &req, &ulBytesWritten);
+    }
+
+    if (code) {
+        smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
+        (*ResultCB)->ResultStatus = status;
+        osi_Log2(afsd_logp, "RDR_WriteFile failure code=0x%x status=0x%x",
+                 code, status);
+    } else {
+        (*ResultCB)->ResultStatus = STATUS_SUCCESS;
+        pFileIOResultCB->Length = ulBytesWritten;
+        pFileIOResultCB->DataVersion.QuadPart = scp->dataVersion;
+        pFileIOResultCB->Expiration.QuadPart = scp->cbExpires;
+    }
+
+    lock_ReleaseWrite(&scp->rw);
+    cm_ReleaseSCache(scp);
+    return;
 }
