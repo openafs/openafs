@@ -88,6 +88,10 @@ loop:
 		vnode_put(vp);
 		AFS_GLOCK();
 		ReleaseWriteLock(&tvc->lock);
+	    } else {
+		AFS_GUNLOCK();
+		vnode_put(vp);
+		AFS_GLOCK();
 	    }
 	    ObtainReadLock(&afs_xvcache);
 	    uq = QPrev(tq);
