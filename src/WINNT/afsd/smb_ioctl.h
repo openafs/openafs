@@ -215,6 +215,6 @@ extern afs_int32 smb_IoctlGetVerifyData(struct smb_ioctl *ioctlp, struct cm_user
 
 extern afs_int32 smb_IoctlSetVerifyData(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 flags);
 
-extern afs_int32 smb_IoctlGetCallerAccess(struct smb_ioctl_t *ioctlp, struct cm_user *userp, afs_uint32 flags);
+extern afs_int32 smb_IoctlGetCallerAccess(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 flags);
 
 #endif /*  OPENAFS_WINNT_AFSD_SMB_IOCTL_H */
