@@ -484,6 +484,7 @@ static int get_v5cred(krb5_context context,
     krb5_creds increds;
     krb5_error_code r;
     static krb5_principal client_principal = 0;
+    int passes = 0;
 
     if (client_principal) {
         krb5_free_principal(context, client_principal);
@@ -520,7 +521,7 @@ static int get_v5cred(krb5_context context,
         r = krb5_get_credentials(context, 0, _krb425_ccache, &increds, creds);
         if (r == KRB5KRB_AP_ERR_REPEAT)
             Sleep(1000);
-    } while(r == KRB5KRB_AP_ERR_REPEAT);
+    } while(r == KRB5KRB_AP_ERR_REPEAT && passes++ < 2);
 
     if (r) {
         return((int)r);
