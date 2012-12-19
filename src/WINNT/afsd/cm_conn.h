@@ -133,6 +133,13 @@ typedef struct cm_req {
 #endif
 #include "rx.h"
 
+/*
+ * connp->serverp can be accessed without holding a lock because that
+ * never changes once the connection is created.
+ */
+#define SERVERHAS64BIT(connp) (!((connp)->serverp->flags & CM_SERVERFLAG_NO64BIT))
+#define SET_SERVERHASNO64BIT(connp) (cm_SetServerNo64Bit((connp)->serverp, TRUE))
+
 extern void cm_InitConn(void);
 
 extern void cm_InitReq(cm_req_t *reqp);

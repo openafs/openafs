@@ -34,11 +34,6 @@ extern osi_mutex_t cm_Freelance_Lock;
 
 #define USE_RX_IOVEC 1
 
-/* we can access connp->serverp without holding a lock because that
-   never changes since the connection is made. */
-#define SERVERHAS64BIT(connp) (!((connp)->serverp->flags & CM_SERVERFLAG_NO64BIT))
-#define SET_SERVERHASNO64BIT(connp) (cm_SetServerNo64Bit((connp)->serverp, TRUE))
-
 /* functions called back from the buffer package when reading or writing data,
  * or when holding or releasing a vnode pointer.
  */
