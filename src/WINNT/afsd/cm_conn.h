@@ -140,6 +140,9 @@ typedef struct cm_req {
 #define SERVERHAS64BIT(connp) (!((connp)->serverp->flags & CM_SERVERFLAG_NO64BIT))
 #define SET_SERVERHASNO64BIT(connp) (cm_SetServerNo64Bit((connp)->serverp, TRUE))
 
+#define SERVERHASINLINEBULK(connp) (!((connp)->serverp->flags & CM_SERVERFLAG_NOINLINEBULK))
+#define SET_SERVERHASNOINLINEBULK(connp) (cm_SetServerNoInlineBulk((connp)->serverp, TRUE))
+
 extern void cm_InitConn(void);
 
 extern void cm_InitReq(cm_req_t *reqp);

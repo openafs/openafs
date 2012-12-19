@@ -2495,11 +2495,11 @@ cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp, cm_user_t *userp, cm_re
                 continue;
 
             rxconnp = cm_GetRxConn(connp);
-	    if (!(connp->serverp->flags & CM_SERVERFLAG_NOINLINEBULK)) {
+	    if (SERVERHASINLINEBULK(connp)) {
 		code = RXAFS_InlineBulkStatus(rxconnp, &fidStruct,
                                               &statStruct, &callbackStruct, &volSync);
 		if (code == RXGEN_OPCODE) {
-		    cm_SetServerNoInlineBulk(connp->serverp, 1);
+		    SET_SERVERHASNOINLINEBULK(connp);
 		} else {
 		    inlinebulk = 1;
 		}
