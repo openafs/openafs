@@ -320,7 +320,7 @@ AFSRemoveWorkerPool()
     //
     // Loop through the IO workers shutting them down in two stages.
     // First, clear AFS_WORKER_PROCESS_REQUESTS so that workers
-    // stop processing requests.  Second, call AFSShutdownWorkerThread()
+    // stop processing requests.  Second, call AFSShutdownIOWorkerThread()
     // to wake the workers and wait for them to exit.
     //
 
@@ -532,21 +532,23 @@ AFSShutdownVolumeWorker( IN AFSVolumeCB *VolumeCB)
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSWorkQueueContext *pWorker = &VolumeCB->VolumeWorkerContext;
 
-    if( pWorker->WorkerThreadObject != NULL &&
-        BooleanFlagOn( pWorker->State, AFS_WORKER_INITIALIZED))
+    //
+    // Clear the 'keep processing' flag
+    //
+
+    ClearFlag( pWorker->State, AFS_WORKER_PROCESS_REQUESTS);
+
+    if( pWorker->WorkerThreadObject != NULL)
     {
+        while ( BooleanFlagOn( pWorker->State, AFS_WORKER_INITIALIZED) )
+        {
 
-        //
-        // Clear the 'keep processing' flag
-        //
-
-        ClearFlag( pWorker->State, AFS_WORKER_PROCESS_REQUESTS);
-
-        ntStatus = KeWaitForSingleObject( pWorker->WorkerThreadObject,
-                                          Executive,
-                                          KernelMode,
-                                          FALSE,
-                                          NULL);
+            ntStatus = KeWaitForSingleObject( pWorker->WorkerThreadObject,
+                                              Executive,
+                                              KernelMode,
+                                              FALSE,
+                                              NULL);
+        }
 
         ObDereferenceObject( pWorker->WorkerThreadObject);
 
@@ -575,23 +577,26 @@ AFSShutdownWorkerThread( IN AFSWorkQueueContext *PoolContext)
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSLibraryDeviceObject->DeviceExtension;
 
-    if( PoolContext->WorkerThreadObject != NULL &&
-        BooleanFlagOn( PoolContext->State, AFS_WORKER_INITIALIZED))
+    if( PoolContext->WorkerThreadObject != NULL)
     {
 
-        //
-        // Wake up the thread if it is a sleep
-        //
+        while ( BooleanFlagOn( PoolContext->State, AFS_WORKER_INITIALIZED) )
+        {
 
-        KeSetEvent( &pDeviceExt->Specific.Library.WorkerQueueHasItems,
-                    0,
-                    FALSE);
+            //
+            // Wake up the thread if it is a sleep
+            //
 
-        ntStatus = KeWaitForSingleObject( PoolContext->WorkerThreadObject,
-                                          Executive,
-                                          KernelMode,
-                                          FALSE,
-                                          NULL);
+            KeSetEvent( &pDeviceExt->Specific.Library.WorkerQueueHasItems,
+                        0,
+                        FALSE);
+
+            ntStatus = KeWaitForSingleObject( PoolContext->WorkerThreadObject,
+                                              Executive,
+                                              KernelMode,
+                                              FALSE,
+                                              NULL);
+        }
 
         ObDereferenceObject( PoolContext->WorkerThreadObject);
 
@@ -620,23 +625,26 @@ AFSShutdownIOWorkerThread( IN AFSWorkQueueContext *PoolContext)
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSLibraryDeviceObject->DeviceExtension;
 
-    if( PoolContext->WorkerThreadObject != NULL &&
-        BooleanFlagOn( PoolContext->State, AFS_WORKER_INITIALIZED))
+    if( PoolContext->WorkerThreadObject != NULL)
     {
 
-        //
-        // Wake up the thread if it is a sleep
-        //
+        while ( BooleanFlagOn( PoolContext->State, AFS_WORKER_INITIALIZED) )
+        {
 
-        KeSetEvent( &pDeviceExt->Specific.Library.IOWorkerQueueHasItems,
-                    0,
-                    FALSE);
+            //
+            // Wake up the thread if it is a sleep
+            //
 
-        ntStatus = KeWaitForSingleObject( PoolContext->WorkerThreadObject,
-                                          Executive,
-                                          KernelMode,
-                                          FALSE,
-                                          NULL);
+            KeSetEvent( &pDeviceExt->Specific.Library.IOWorkerQueueHasItems,
+                        0,
+                        FALSE);
+
+            ntStatus = KeWaitForSingleObject( PoolContext->WorkerThreadObject,
+                                              Executive,
+                                              KernelMode,
+                                              FALSE,
+                                              NULL);
+        }
 
         ObDereferenceObject( PoolContext->WorkerThreadObject);
 
@@ -1646,6 +1654,8 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
     } // worker thread loop
 
     KeCancelTimer( &Timer);
+
+    ClearFlag( pPoolContext->State, AFS_WORKER_INITIALIZED);
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
