@@ -2060,7 +2060,7 @@ KFW_kinit( krb5_context alt_ctx,
     krb5_creds			my_creds;
     krb5_get_init_creds_opt     options;
     krb5_address **             addrs = NULL;
-    int                         i = 0, addr_count = 0;
+    int                         i = 0, addr_count = 0, passes = 0;
 
     if (!pkrb5_init_context)
         return KRB5_CONFIG_CANTOPEN;
@@ -2182,7 +2182,7 @@ KFW_kinit( krb5_context alt_ctx,
                                               &options);
         if (code == KRB5KRB_AP_ERR_REPEAT)
             Sleep(1000);
-    } while(code == KRB5KRB_AP_ERR_REPEAT);
+    } while(code == KRB5KRB_AP_ERR_REPEAT && passes++ < 2);
 
     if (code)
 	goto cleanup;
@@ -2882,6 +2882,7 @@ KFW_AFS_klog(
     krb5_principal client_principal = NULL;
     krb5_data * k5data = NULL;
     unsigned int i, retry = 0;
+    int passes = 0;
 
     CurrentState = 0;
     memset(HostName, '\0', sizeof(HostName));
@@ -3040,12 +3041,12 @@ KFW_AFS_klog(
             pkrb5_free_unparsed_name(ctx,cname);
             pkrb5_free_unparsed_name(ctx,sname);
         }
-
+	passes = 0;
         do {
             code = pkrb5_get_credentials(ctx, 0, cc, &increds, &k5creds);
             if (code == KRB5KRB_AP_ERR_REPEAT)
                 Sleep(1000);
-        } while(code == KRB5KRB_AP_ERR_REPEAT);
+        } while(code == KRB5KRB_AP_ERR_REPEAT && passes++ < 2);
 
         if (code == 0) {
             /* The client's realm is a local realm for the cell.
@@ -3089,11 +3090,12 @@ KFW_AFS_klog(
                     }
 
                     if (!code) {
+			passes = 0;
                         do {
                             code = pkrb5_get_credentials(ctx, 0, cc, &increds, &k5creds);
                             if (code == KRB5KRB_AP_ERR_REPEAT)
                                 Sleep(1000);
-                        } while(code == KRB5KRB_AP_ERR_REPEAT);
+                        } while(code == KRB5KRB_AP_ERR_REPEAT && passes++ < 2);
                     }
 
                     if (code == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
@@ -3124,11 +3126,12 @@ KFW_AFS_klog(
                         }
 
                         if (!code) {
+			    passes = 0;
                             do {
                                 code = pkrb5_get_credentials(ctx, 0, cc, &increds, &k5creds);
                                 if (code == KRB5KRB_AP_ERR_REPEAT)
                                     Sleep(1000);
-                            } while(code == KRB5KRB_AP_ERR_REPEAT);
+                            } while(code == KRB5KRB_AP_ERR_REPEAT && passes++ < 2);
                         }
                     }
                 }
@@ -3161,11 +3164,12 @@ KFW_AFS_klog(
                     }
 
                     if (!code) {
+			passes = 0;
                         do {
                             code = pkrb5_get_credentials(ctx, 0, cc, &increds, &k5creds);
                             if (code == KRB5KRB_AP_ERR_REPEAT)
                                 Sleep(1000);
-                        } while(code == KRB5KRB_AP_ERR_REPEAT);
+                        } while(code == KRB5KRB_AP_ERR_REPEAT && passes++ < 2);
                     }
 
                     if (!code && !strlen(realm_of_cell))
@@ -3203,11 +3207,12 @@ KFW_AFS_klog(
                     }
 
                     if (!code) {
+			passes = 0;
                         do {
                             code = pkrb5_get_credentials(ctx, 0, cc, &increds, &k5creds);
                             if (code == KRB5KRB_AP_ERR_REPEAT)
                                 Sleep(1000);
-                        } while(code == KRB5KRB_AP_ERR_REPEAT);
+                        } while(code == KRB5KRB_AP_ERR_REPEAT && passes++ < 2);
                     }
 
                     if (!code && !strlen(realm_of_cell))
@@ -3242,11 +3247,12 @@ KFW_AFS_klog(
                     }
 
                     if (!code) {
+			passes = 0;
                         do {
                             code = pkrb5_get_credentials(ctx, 0, cc, &increds, &k5creds);
                             if (code == KRB5KRB_AP_ERR_REPEAT)
                                 Sleep(1000);
-                        } while(code == KRB5KRB_AP_ERR_REPEAT);
+                        } while(code == KRB5KRB_AP_ERR_REPEAT && passes++ < 2);
                     }
 
                     if (!code && !strlen(realm_of_cell))
