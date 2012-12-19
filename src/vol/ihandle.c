@@ -981,15 +981,15 @@ ih_sync_all(void) {
 	for (; ihP; ihP = ihPnext) {
 
 	    if (ihP->ih_synced) {
-		FdHandle_t *fdP;
+		FD_t fd;
 
 		ihP->ih_synced = 0;
 		IH_UNLOCK;
 
-		fdP = IH_OPEN(ihP);
-		if (fdP) {
-		    OS_SYNC(fdP->fd_fd);
-		    FDH_CLOSE(fdP);
+		fd = OS_IOPEN(ihP);
+		if (fd != INVALID_FD) {
+		    OS_SYNC(fd);
+		    OS_CLOSE(fd);
 		}
 
 	  	IH_LOCK;
