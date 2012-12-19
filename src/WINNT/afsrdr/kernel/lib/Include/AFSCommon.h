@@ -1463,9 +1463,6 @@ AFSIOWorkerThread( IN PVOID Context);
 void
 AFSPrimaryVolumeWorkerThread( IN PVOID Context);
 
-void
-AFSVolumeWorkerThread( IN PVOID Context);
-
 NTSTATUS
 AFSInsertWorkitem( IN AFSWorkItem *WorkItem);
 
