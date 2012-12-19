@@ -355,7 +355,8 @@ cm_Analyze(cm_conn_t *connp,
 
     /* timeleft - get it from reqp the same way as cm_ConnByMServers does */
     timeUsed = (GetTickCount() - reqp->startTime) / 1000;
-    if ( reqp->flags & CM_REQ_SOURCE_SMB )
+    if ( (reqp->flags & CM_REQ_SOURCE_SMB) ||
+         (serverp && serverp->type == CM_SERVER_VLDB))
         timeLeft = HardDeadtimeout - timeUsed;
     else
         timeLeft = 0x0FFFFFFF;
@@ -1552,7 +1553,8 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
                                     secObjp,
                                     secIndex);
     rx_SetConnDeadTime(tcp->rxconnp, ConnDeadtimeout);
-    rx_SetConnHardDeadTime(tcp->rxconnp, HardDeadtimeout);
+    if (smb_Enabled || tcp->serverp->type == CM_SERVER_VLDB)
+        rx_SetConnHardDeadTime(tcp->rxconnp, HardDeadtimeout);
 
     /*
      * Setting idle dead timeout to a non-zero value activates RX_CALL_IDLE errors
