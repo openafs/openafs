@@ -389,16 +389,13 @@ AFSInitVolumeWorker( IN AFSVolumeCB *VolumeCB)
     __Enter
     {
 
-        if( VolumeCB == AFSGlobalRoot)
+        if ( VolumeCB != AFSGlobalRoot)
         {
 
-            pStartRoutine = AFSPrimaryVolumeWorkerThread;
+            return STATUS_INVALID_PARAMETER;
         }
-        else
-        {
 
-            pStartRoutine = AFSVolumeWorkerThread;
-        }
+        pStartRoutine = AFSPrimaryVolumeWorkerThread;
 
         //
         // Initialize the worker thread
@@ -1660,102 +1657,6 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
     AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSPrimaryVolumeWorkerThread Exiting\n");
-
-    lCount = InterlockedDecrement( &pControlDeviceExt->Specific.Control.VolumeWorkerThreadCount);
-
-    if( lCount == 0)
-    {
-
-        KeSetEvent( &pControlDeviceExt->Specific.Control.VolumeWorkerCloseEvent,
-                    0,
-                    FALSE);
-    }
-
-    PsTerminateSystemThread( 0);
-
-    return;
-}
-
-void
-AFSVolumeWorkerThread( IN PVOID Context)
-{
-
-    NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSVolumeCB *pVolumeCB = (AFSVolumeCB * )Context;
-    AFSWorkQueueContext *pPoolContext = (AFSWorkQueueContext *)&pVolumeCB->VolumeWorkerContext;
-    AFSDeviceExt *pControlDeviceExt = NULL;
-    AFSDeviceExt *pRDRDeviceExt = NULL;
-    LARGE_INTEGER DueTime;
-    LONG TimeOut;
-    KTIMER Timer;
-    LONG lCount;
-
-    pControlDeviceExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
-
-    pRDRDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
-
-    //
-    // Initialize the timer for the worker thread
-    //
-
-    DueTime.QuadPart = -(5000);
-
-    TimeOut = 5000;
-
-    KeInitializeTimerEx( &Timer,
-                         SynchronizationTimer);
-
-    KeSetTimerEx( &Timer,
-                  DueTime,
-                  TimeOut,
-                  NULL);
-
-    //
-    // Indicate that we are initialized and ready
-    //
-
-    KeSetEvent( &pPoolContext->WorkerThreadReady,
-                0,
-                FALSE);
-
-    //
-    // Indicate we are initialized
-    //
-
-    SetFlag( pPoolContext->State, AFS_WORKER_INITIALIZED);
-
-    while( BooleanFlagOn( pPoolContext->State, AFS_WORKER_PROCESS_REQUESTS))
-    {
-
-        ntStatus = KeWaitForSingleObject( &Timer,
-                                          Executive,
-                                          KernelMode,
-                                          FALSE,
-                                          NULL);
-
-        if( !NT_SUCCESS( ntStatus))
-        {
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                          AFS_TRACE_LEVEL_ERROR,
-                          "AFSVolumeWorkerThread Wait for queue items failed Status %08lX\n", ntStatus);
-        }
-        else
-        {
-
-            //
-            // If we are in shutdown mode and the dirty flag is clear then get out now
-            //
-
-            if( BooleanFlagOn( pRDRDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_REDIRECTOR_SHUTDOWN))
-            {
-
-                break;
-            }
-        }
-    } // worker thread loop
-
-    KeCancelTimer( &Timer);
 
     lCount = InterlockedDecrement( &pControlDeviceExt->Specific.Control.VolumeWorkerThreadCount);
 
