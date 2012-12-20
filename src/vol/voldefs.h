@@ -39,6 +39,8 @@
 /* maximum numbe of Vice partitions */
 #define	VOLMAXPARTS	255
 
+#define VFORMATDIGITS 10
+
 /* All volumes will have a volume header name in this format */
 #if	defined(AFS_AIX_ENV) || defined(AFS_HPUX_ENV)
 /* Note that <afs/param.h> must have been included before we get here... */
@@ -48,7 +50,7 @@
 #define VFORMAT "V%010lu.vol"
 #define	VHDREXT	".vol"
 #endif
-#define	VHDRNAMELEN (11 + sizeof(VHDREXT) - 1) /* must match VFORMAT */
+#define	VHDRNAMELEN (VFORMATDIGITS + 1 + sizeof(VHDREXT) - 1) /* must match VFORMAT */
 #define VMAXPATHLEN 64		/* Maximum length (including null) of a volume
 				 * external path name */
 

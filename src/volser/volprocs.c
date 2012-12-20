@@ -1924,7 +1924,7 @@ GetNextVol(DIR *dirp, char *volname, afs_uint32 *volid)
     while ((dp = readdir(dirp)) != NULL) {
 	/* could be optimized on platforms with dp->d_namlen */
 	if (dp->d_name[0] == 'V' && strlen(dp->d_name) == VHDRNAMELEN
-		&& strcmp(&(dp->d_name[11]), VHDREXT) == 0) {
+		&& strcmp(&(dp->d_name[VFORMATDIGITS + 1]), VHDREXT) == 0) {
 	    *volid = VolumeNumber(dp->d_name);
 	    strcpy(volname, dp->d_name);
 	    return 1;
