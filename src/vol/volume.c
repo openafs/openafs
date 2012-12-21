@@ -2161,10 +2161,25 @@ VPreAttachVolumeById_r(Error * ec,
 	return NULL;
     }
 
+    /* ensure that any vp we pass to VPreAttachVolumeByVp_r
+     * is NOT in exclusive state.
+     */
+ retry:
     vp = VLookupVolume_r(ec, volumeId, NULL);
+
     if (*ec) {
 	return NULL;
     }
+
+    if (vp && VIsExclusiveState(V_attachState(vp))) {
+	VCreateReservation_r(vp);
+	VWaitExclusiveState_r(vp);
+	VCancelReservation_r(vp);
+	vp = NULL;
+	goto retry;    /* look up volume again */
+    }
+
+    /* vp == NULL or vp not exclusive both OK */
 
     return VPreAttachVolumeByVp_r(ec, partp, vp, volumeId);
 }
@@ -2180,6 +2195,8 @@ VPreAttachVolumeById_r(Error * ec,
  * @return volume object pointer
  *
  * @pre VOL_LOCK is held.
+ *
+ * @pre vp (if specified) must not be in exclusive state.
  *
  * @warning Returned volume object pointer does not have to
  *          equal the pointer passed in as argument vp.  There
@@ -2204,6 +2221,11 @@ VPreAttachVolumeByVp_r(Error * ec,
     Volume *nvp = NULL;
 
     *ec = 0;
+
+    /* don't proceed unless it's safe */
+    if (vp) {
+	opr_Assert(!VIsExclusiveState(V_attachState(vp)));
+    }
 
     /* check to see if pre-attach already happened */
     if (vp &&
