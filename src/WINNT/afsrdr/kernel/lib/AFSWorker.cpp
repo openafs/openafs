@@ -948,6 +948,7 @@ void
 AFSPrimaryVolumeWorkerThread( IN PVOID Context)
 {
 
+    UNREFERENCED_PARAMETER(Context);
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSWorkQueueContext *pPoolContext = (AFSWorkQueueContext *)&AFSGlobalRoot->VolumeWorkerContext;
     AFSDeviceExt *pControlDeviceExt = NULL;
@@ -955,13 +956,11 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
     LARGE_INTEGER DueTime;
     LONG TimeOut;
     KTIMER Timer;
-    BOOLEAN bFoundOpenEntry = FALSE;
     AFSObjectInfoCB *pCurrentObject = NULL, *pNextObject = NULL, *pCurrentChildObject = NULL;
     AFSDirectoryCB *pCurrentDirEntry = NULL, *pNextDirEntry = NULL;
     BOOLEAN bReleaseVolumeLock = FALSE;
     AFSVolumeCB *pVolumeCB = NULL, *pNextVolume = NULL;
     AFSFcb *pFcb = NULL;
-    LONG lFileType;
     LARGE_INTEGER liCurrentTime;
     BOOLEAN bVolumeObject = FALSE;
     BOOLEAN bFcbBusy = FALSE;
@@ -1676,7 +1675,6 @@ AFSVolumeWorkerThread( IN PVOID Context)
     AFSWorkQueueContext *pPoolContext = (AFSWorkQueueContext *)&pVolumeCB->VolumeWorkerContext;
     AFSDeviceExt *pControlDeviceExt = NULL;
     AFSDeviceExt *pRDRDeviceExt = NULL;
-    BOOLEAN exitThread = FALSE;
     LARGE_INTEGER DueTime;
     LONG TimeOut;
     KTIMER Timer;
@@ -1914,7 +1912,6 @@ AFSWorkItem *
 AFSRemoveWorkItem()
 {
 
-    NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSWorkItem        *pWorkItem = NULL;
     AFSDeviceExt *pDevExt = NULL;
     LONG lCount;
@@ -1973,7 +1970,6 @@ AFSWorkItem *
 AFSRemoveIOWorkItem()
 {
 
-    NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSWorkItem        *pWorkItem = NULL;
     AFSDeviceExt *pDevExt = NULL;
     LONG lCount;
@@ -2033,7 +2029,6 @@ AFSQueueWorkerRequest( IN AFSWorkItem *WorkItem)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSDeviceExt *pDevExt = NULL;
     BOOLEAN bWait = BooleanFlagOn( WorkItem->RequestFlags, AFS_SYNCHRONOUS_REQUEST);
 
     //
@@ -2064,7 +2059,6 @@ AFSQueueIOWorkerRequest( IN AFSWorkItem *WorkItem)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSDeviceExt *pDevExt = NULL;
     BOOLEAN bWait = BooleanFlagOn( WorkItem->RequestFlags, AFS_SYNCHRONOUS_REQUEST);
 
     //
@@ -2095,7 +2089,6 @@ AFSQueueWorkerRequestAtHead( IN AFSWorkItem *WorkItem)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSDeviceExt *pDevExt = NULL;
     BOOLEAN bWait = BooleanFlagOn( WorkItem->RequestFlags, AFS_SYNCHRONOUS_REQUEST);
 
     //
@@ -2256,7 +2249,7 @@ try_exit:
 
         lCount = InterlockedDecrement( &Fcb->Specific.File.QueuedFlushCount);
 
-	ASSERT( lCount >= 0);
+        ASSERT( lCount >= 0);
 
         if( lCount == 0)
         {

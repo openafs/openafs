@@ -2063,9 +2063,9 @@ AFSCreateDirEntry( IN GUID            *AuthGroup,
                    IN OUT AFSDirectoryCB **DirEntry)
 {
 
+    UNREFERENCED_PARAMETER(FileName);
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDirectoryCB *pDirNode = NULL, *pExistingDirNode = NULL;
-    UNICODE_STRING uniShortName;
     LARGE_INTEGER liFileSize = {0,0};
     LONG lCount;
 
@@ -2745,7 +2745,7 @@ AFSParseName( IN PIRP Irp,
     AFSDeviceExt       *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     UNICODE_STRING      uniFullName, uniComponentName, uniRemainingPath;
     ULONG               ulCRC = 0;
-    AFSDirectoryCB     *pDirEntry = NULL, *pShareDirEntry = NULL, *pTargetDirEntry = NULL;
+    AFSDirectoryCB     *pDirEntry = NULL;
     USHORT              usIndex = 0, usDriveIndex = 0;
     AFSCcb             *pRelatedCcb = NULL;
     AFSNameArrayHdr    *pNameArray = NULL, *pRelatedNameArray = NULL;
@@ -3851,7 +3851,6 @@ AFSCheckCellName( IN GUID *AuthGroup,
     NTSTATUS ntStatus = STATUS_SUCCESS;
     UNICODE_STRING uniName;
     AFSDirEnumEntry *pDirEnumEntry = NULL;
-    AFSDeviceExt *pDevExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     AFSDirHdr *pDirHdr = &AFSGlobalRoot->ObjectInformation.Specific.Directory.DirectoryNodeHdr;
     AFSDirectoryCB *pDirNode = NULL;
     UNICODE_STRING uniDirName, uniTargetName;
@@ -4131,8 +4130,6 @@ AFSBuildMountPointTarget( IN GUID *AuthGroup,
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDeviceExt *pDevExt = (AFSDeviceExt *) AFSRDRDeviceObject->DeviceExtension;
     AFSDirEnumEntry *pDirEntry = NULL;
-    AFSDirectoryCB *pDirNode = NULL;
-    UNICODE_STRING uniDirName, uniTargetName;
     ULONGLONG       ullIndex = 0;
     AFSVolumeCB *pVolumeCB = NULL;
     AFSFileID stTargetFileID;
@@ -4399,8 +4396,6 @@ AFSBuildRootVolume( IN GUID *AuthGroup,
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDeviceExt *pDevExt = (AFSDeviceExt *) AFSRDRDeviceObject->DeviceExtension;
-    AFSDirectoryCB *pDirNode = NULL;
-    UNICODE_STRING uniDirName, uniTargetName;
     ULONGLONG       ullIndex = 0;
     AFSVolumeCB *pVolumeCB = NULL;
     LONG lCount;

@@ -54,7 +54,7 @@ NTSTATUS
 AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
             IN PIRP Irp)
 {
-
+    UNREFERENCED_PARAMETER(LibDeviceObject);
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDeviceExt *pDeviceExt = NULL;
     IO_STACK_LOCATION *pIrpSp = IoGetCurrentIrpStackLocation( Irp);

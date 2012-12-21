@@ -56,6 +56,7 @@ AFSExceptionFilter( IN CHAR *FunctionString,
                     IN PEXCEPTION_POINTERS ExceptPtrs)
 {
 
+    UNREFERENCED_PARAMETER(Code);
     PEXCEPTION_RECORD ExceptRec;
     PCONTEXT Context;
 
@@ -363,7 +364,6 @@ AFSLockSystemBuffer( IN PIRP Irp,
                      IN ULONG Length)
 {
 
-    NTSTATUS Status = STATUS_SUCCESS;
     void *pAddress = NULL;
 
     if( Irp->MdlAddress != NULL)
@@ -423,7 +423,7 @@ AFSLockSystemBuffer( IN PIRP Irp,
 void *
 AFSLockUserBuffer( IN void *UserBuffer,
                    IN ULONG BufferLength,
-				   OUT MDL ** Mdl)
+                   OUT MDL ** Mdl)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
@@ -543,7 +543,6 @@ AFSUnmapServiceMappedBuffer( IN void *MappedBuffer,
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    void *pMappedBuffer = NULL;
     AFSDeviceExt *pDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
     KAPC stApcState;
 
@@ -630,8 +629,8 @@ AFSDefaultDispatch( IN PDEVICE_OBJECT DeviceObject,
                     IN PIRP Irp)
 {
 
+    UNREFERENCED_PARAMETER(DeviceObject);
     NTSTATUS            ntStatus = STATUS_INVALID_DEVICE_REQUEST;
-    PIO_STACK_LOCATION  pIrpSp = IoGetCurrentIrpStackLocation( Irp);
 
     AFSCompleteRequest( Irp,
                         ntStatus);
@@ -646,7 +645,6 @@ AFSInitializeGlobalDirectoryEntries()
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDirectoryCB *pDirNode = NULL;
     ULONG ulEntryLength = 0;
-    AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     AFSObjectInfoCB *pObjectInfoCB = NULL;
     AFSNonPagedDirectoryCB *pNonPagedDirEntry = NULL;
     LONG lCount;
@@ -911,10 +909,6 @@ AFSInitDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
     AFSDirectoryCB *pDirNode = NULL;
     NTSTATUS ntStatus = STATUS_SUCCESS;
     ULONG ulEntryLength = 0;
-    AFSDirEnumEntry *pDirEnumCB = NULL;
-    AFSFileID stTargetFileID;
-    AFSFcb *pVcb = NULL;
-    AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     AFSObjectInfoCB *pObjectInfoCB = NULL;
     BOOLEAN bAllocatedObjectCB = FALSE;
     ULONGLONG ullIndex = 0;
@@ -1303,7 +1297,6 @@ AFSEvaluateNode( IN GUID *AuthGroup,
                  IN AFSDirectoryCB *DirEntry)
 {
 
-    AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDirEnumEntry *pDirEntry = NULL;
     UNICODE_STRING uniTargetName;
@@ -1425,7 +1418,6 @@ AFSValidateSymLink( IN GUID *AuthGroup,
                     IN AFSDirectoryCB *DirEntry)
 {
 
-    AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDirEnumEntry *pDirEntry = NULL;
     UNICODE_STRING uniTargetName;
@@ -1910,12 +1902,8 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSFcb      *pDcb = NULL, *pFcb = NULL, *pNextFcb = NULL;
     AFSVolumeCB *pVolumeCB = NULL;
-    AFSFcb      *pTargetDcb = NULL;
     AFSDeviceExt *pDevExt = (AFSDeviceExt *) AFSRDRDeviceObject->DeviceExtension;
-    AFSDirectoryCB *pCurrentDirEntry = NULL;
-    BOOLEAN     bIsChild = FALSE;
     ULONGLONG   ullIndex = 0;
     AFSObjectInfoCB *pObjectInfo = NULL;
     LONG lCount;
@@ -2473,8 +2461,6 @@ AFSInvalidateVolume( IN AFSVolumeCB *VolumeCB,
     AFSObjectInfoCB *pCurrentObject = NULL;
     AFSObjectInfoCB *pNextObject = NULL;
     LONG lCount;
-    AFSFcb *pFcb = NULL;
-    ULONG ulFilter = 0;
 
     __Enter
     {
@@ -3067,9 +3053,6 @@ AFSVerifyEntry( IN GUID *AuthGroup,
             case AFS_FILE_TYPE_DIRECTORY:
             {
 
-                AFSFcb *pCurrentFcb = NULL;
-                AFSDirectoryCB *pCurrentDirEntry = NULL;
-
                 //
                 // For a directory or root entry flush the content of
                 // the directory enumeration.
@@ -3213,8 +3196,6 @@ AFSSetVolumeState( IN AFSVolumeStatusCB *VolumeStatus)
     AFSDeviceExt *pDevExt = (AFSDeviceExt *) AFSRDRDeviceObject->DeviceExtension;
     ULONGLONG   ullIndex = 0;
     AFSVolumeCB *pVolumeCB = NULL;
-    AFSFcb *pFcb = NULL;
-    AFSObjectInfoCB *pCurrentObject = NULL;
     LONG lCount;
 
     __Enter
@@ -3334,7 +3315,6 @@ AFSValidateDirectoryCache( IN AFSObjectInfoCB *ObjectInfo,
     AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     BOOLEAN  bAcquiredLock = FALSE;
     AFSDirectoryCB *pCurrentDirEntry = NULL, *pNextDirEntry = NULL;
-    AFSFcb *pFcb = NULL;
 
     __Enter
     {
@@ -4186,8 +4166,6 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
             case AFS_FILE_TYPE_DIRECTORY:
             {
 
-                AFSDirectoryCB *pCurrentDirEntry = NULL;
-
                 if( pObjectInfo->DataVersion.QuadPart != pDirEnumEntry->DataVersion.QuadPart)
                 {
 
@@ -4323,7 +4301,7 @@ AFSInitializeSpecialShareNameList()
 
         pObjectInfoCB->ObjectReferenceCount = 1;
 
-        pObjectInfoCB->FileType = AFS_FILE_TYPE_SPECIAL_SHARE_NAME;
+        pObjectInfoCB->FileType = (ULONG) AFS_FILE_TYPE_SPECIAL_SHARE_NAME;
 
         ulEntryLength = sizeof( AFSDirectoryCB) +
                                      uniShareName.Length;
@@ -4409,7 +4387,7 @@ AFSInitializeSpecialShareNameList()
 
         pObjectInfoCB->ObjectReferenceCount = 1;
 
-        pObjectInfoCB->FileType = AFS_FILE_TYPE_SPECIAL_SHARE_NAME;
+        pObjectInfoCB->FileType = (ULONG) AFS_FILE_TYPE_SPECIAL_SHARE_NAME;
 
         ulEntryLength = sizeof( AFSDirectoryCB) +
                                      uniShareName.Length;
@@ -5061,11 +5039,6 @@ AFSPopulateNameArray( IN AFSNameArrayHdr *NameArray,
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSNameArrayCB *pCurrentElement = NULL;
-    UNICODE_STRING uniComponentName, uniRemainingPath;
-    AFSObjectInfoCB *pCurrentObject = NULL;
-    ULONG  ulTotalCount = 0;
-    ULONG ulIndex = 0;
-    USHORT usLength = 0;
     LONG lCount;
 
     __Enter
@@ -5160,11 +5133,6 @@ AFSPopulateNameArrayFromRelatedArray( IN AFSNameArrayHdr *NameArray,
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSNameArrayCB *pCurrentElement = NULL, *pCurrentRelatedElement = NULL;
-    UNICODE_STRING uniComponentName, uniRemainingPath;
-    AFSObjectInfoCB *pObjectInfo = NULL;
-    ULONG  ulTotalCount = 0;
-    ULONG ulIndex = 0;
-    USHORT usLength = 0;
     LONG lCount;
 
     __Enter
@@ -5325,7 +5293,7 @@ AFSInsertNextElement( IN AFSNameArrayHdr *NameArray,
                       &DirectoryCB->NameInformation.FileName,
                       DirectoryCB->ObjectInformation->FileType);
 
-        if( NameArray->Count == NameArray->MaxElementCount)
+        if( NameArray->Count == (LONG) NameArray->MaxElementCount)
         {
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
@@ -5798,6 +5766,8 @@ AFSVerifyVolume( IN ULONGLONG ProcessId,
                  IN AFSVolumeCB *VolumeCB)
 {
 
+    UNREFERENCED_PARAMETER(ProcessId);
+    UNREFERENCED_PARAMETER(VolumeCB);
     NTSTATUS ntStatus = STATUS_SUCCESS;
 
 
@@ -5834,7 +5804,7 @@ AFSInitPIOCtlDirectoryCB( IN AFSObjectInfoCB *ObjectInfo)
 
         pObjectInfoCB->ObjectReferenceCount = 1;
 
-        pObjectInfoCB->FileType = AFS_FILE_TYPE_PIOCTL;
+        pObjectInfoCB->FileType = (ULONG) AFS_FILE_TYPE_PIOCTL;
 
         pObjectInfoCB->FileAttributes = FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM;
 
@@ -5959,8 +5929,8 @@ AFSRetrieveFileAttributes( IN AFSDirectoryCB *ParentDirectoryCB,
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSDirEnumEntry *pDirEntry = NULL, *pLastDirEntry = NULL;
-    UNICODE_STRING uniFullPathName;
+    AFSDirEnumEntry *pDirEntry = NULL;
+    UNICODE_STRING uniFullPathName = {0};
     AFSNameArrayHdr    *pNameArray = NULL;
     AFSVolumeCB *pVolumeCB = NULL;
     AFSDirectoryCB *pDirectoryEntry = NULL, *pParentDirEntry = NULL;
@@ -6717,8 +6687,8 @@ AFSEvaluateRootEntry( IN AFSDirectoryCB *DirectoryCB,
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSDirEnumEntry *pDirEntry = NULL, *pLastDirEntry = NULL;
-    UNICODE_STRING uniFullPathName;
+    AFSDirEnumEntry *pDirEntry = NULL;
+    UNICODE_STRING uniFullPathName = {0};
     AFSNameArrayHdr    *pNameArray = NULL;
     AFSVolumeCB *pVolumeCB = NULL;
     AFSDirectoryCB *pDirectoryEntry = NULL, *pParentDirEntry = NULL;
@@ -7403,7 +7373,6 @@ AFSReadCacheFile( IN void *ReadBuffer,
     PIRP                pIrp = NULL;
     KEVENT              kEvent;
     PIO_STACK_LOCATION  pIoStackLocation = NULL;
-    AFSDeviceExt       *pRdrDevExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     DEVICE_OBJECT      *pTargetDeviceObject = NULL;
     FILE_OBJECT        *pCacheFileObject = NULL;
 
@@ -7544,6 +7513,8 @@ AFSIrpComplete( IN PDEVICE_OBJECT DeviceObject,
                 IN PVOID          Context)
 {
 
+    UNREFERENCED_PARAMETER(Irp);
+    UNREFERENCED_PARAMETER(DeviceObject);
     KEVENT *pEvent = (KEVENT *)Context;
 
     KeSetEvent( pEvent,
@@ -7772,6 +7743,7 @@ AFSUnwindFileInfo( IN AFSFcb *Fcb,
                    IN AFSCcb *Ccb)
 {
 
+    UNREFERENCED_PARAMETER(Fcb);
     if( Ccb->FileUnwindInfo.FileAttributes != (ULONG)-1)
     {
         Ccb->DirectoryCB->ObjectInformation->FileAttributes = Ccb->FileUnwindInfo.FileAttributes;
@@ -7836,7 +7808,7 @@ AFSValidateDirList( IN AFSObjectInfoCB *ObjectInfo)
         pCurrentDirEntry = (AFSDirectoryCB *)pCurrentDirEntry->ListEntry.fLink;
     }
 
-    if( ulCount != ObjectInfo->Specific.Directory.DirectoryNodeCount)
+    if( ulCount != (ULONG) ObjectInfo->Specific.Directory.DirectoryNodeCount)
     {
 
         AFSPrint("AFSValidateDirList Count off Calc: %d Stored: %d\n",
@@ -8107,6 +8079,8 @@ AFSDefaultLogMsg( IN ULONG Subsystem,
                   ...)
 {
 
+    UNREFERENCED_PARAMETER(Subsystem);
+    UNREFERENCED_PARAMETER(Level);
     NTSTATUS ntStatus = STATUS_SUCCESS;
     va_list va_args;
     char chDebugBuffer[ 256];
@@ -8140,7 +8114,6 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSFcb   *pFcb = NULL;
     AFSVolumeCB *pVolumeCB = NULL;
     AFSDeviceExt *pDevExt = (AFSDeviceExt *) AFSRDRDeviceObject->DeviceExtension;
     AFSObjectInfoCB *pObjectInfo = NULL;
@@ -8974,8 +8947,6 @@ AFSRetrieveParentPath( IN UNICODE_STRING *FullFileName,
                        OUT UNICODE_STRING *ParentPath)
 {
 
-    USHORT usIndex = 0;
-
     *ParentPath = *FullFileName;
 
     //
@@ -9110,7 +9081,6 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 {
 
     NTSTATUS            ntStatus = STATUS_SUCCESS;
-    IO_STATUS_BLOCK     stIoStatus;
     LIST_ENTRY         *le;
     AFSExtent          *pEntry;
     ULONG               ulProcessCount = 0;

@@ -55,13 +55,9 @@ AFSInitFcb( IN AFSDirectoryCB  *DirEntry)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     AFSFcb *pFcb = NULL;
     AFSNonPagedFcb *pNPFcb = NULL;
-    IO_STATUS_BLOCK stIoSb = {0,0};
     USHORT  usFcbLength = 0;
-    ULONGLONG   ullIndex = 0;
-    AFSDirEnumEntry *pDirEnumCB = NULL;
     AFSObjectInfoCB *pObjectInfo = NULL, *pParentObjectInfo = NULL;
     AFSVolumeCB *pVolumeCB = NULL;
 
@@ -372,14 +368,13 @@ AFSInitVolume( IN GUID *AuthGroup,
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    IO_STATUS_BLOCK stIoStatus = {0,0};
     AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     AFSNonPagedVolumeCB *pNonPagedVcb = NULL;
     AFSVolumeCB *pVolumeCB = NULL;
     AFSNonPagedObjectInfoCB *pNonPagedObject = NULL;
     ULONGLONG ullIndex = 0;
     BOOLEAN bReleaseLocks = FALSE;
-    AFSVolumeInfoCB stVolumeInformation;
+    AFSVolumeInfoCB stVolumeInformation = {0};
     AFSNonPagedDirectoryCB *pNonPagedDirEntry = NULL;
     LONG lCount;
 
@@ -903,11 +898,10 @@ AFSInitRootFcb( IN ULONGLONG ProcessID,
                 IN AFSVolumeCB *VolumeCB)
 {
 
+    UNREFERENCED_PARAMETER(ProcessID);
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSFcb *pFcb = NULL;
     AFSNonPagedFcb *pNPFcb = NULL;
-    IO_STATUS_BLOCK stIoStatus = {0,0};
-    AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
 
     __Enter
     {
@@ -1028,9 +1022,6 @@ try_exit:
 void
 AFSRemoveRootFcb( IN AFSFcb *RootFcb)
 {
-
-    AFSDirectoryCB *pCurrentDirEntry = NULL;
-    AFSVolumeCB *pVolumeCB = RootFcb->ObjectInformation->VolumeCB;
 
     if( RootFcb->NPFcb != NULL)
     {

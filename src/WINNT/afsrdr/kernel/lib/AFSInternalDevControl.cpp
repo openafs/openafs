@@ -43,6 +43,7 @@ AFSInternalDevControl( IN PDEVICE_OBJECT LibDeviceObject,
                        IN PIRP Irp)
 {
 
+    UNREFERENCED_PARAMETER(LibDeviceObject);
     NTSTATUS ntStatus = STATUS_NOT_IMPLEMENTED;
     IO_STACK_LOCATION *pIrpSp;
 

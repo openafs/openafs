@@ -45,11 +45,10 @@ AFSCachedRead( IN PDEVICE_OBJECT DeviceObject,
                IN LARGE_INTEGER StartingByte,
                IN ULONG ByteCount)
 {
+    UNREFERENCED_PARAMETER(DeviceObject);
     NTSTATUS           ntStatus = STATUS_SUCCESS;
     IO_STACK_LOCATION *pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     PFILE_OBJECT       pFileObject = pIrpSp->FileObject;
-    AFSFcb            *pFcb = (AFSFcb *)pFileObject->FsContext;
-    AFSCcb            *pCcb = (AFSCcb *)pFileObject->FsContext2;
     BOOLEAN            bSynchronousIo = BooleanFlagOn( pFileObject->Flags, FO_SYNCHRONOUS_IO);
     VOID              *pSystemBuffer = NULL;
     ULONG              ulCurrentIO = 0, ulTotalLen = ByteCount;
@@ -196,7 +195,6 @@ AFSNonCachedRead( IN PDEVICE_OBJECT DeviceObject,
     PFILE_OBJECT       pFileObject = pIrpSp->FileObject;
     AFSFcb            *pFcb = (AFSFcb *)pFileObject->FsContext;
     AFSCcb            *pCcb = (AFSCcb *)pFileObject->FsContext2;
-    BOOLEAN            bSynchronousIo = IoIsOperationSynchronous(Irp);
     VOID              *pSystemBuffer = NULL;
     BOOLEAN            bPagingIo = BooleanFlagOn( Irp->Flags, IRP_PAGING_IO);
     BOOLEAN            bLocked = FALSE;
@@ -206,12 +204,10 @@ AFSNonCachedRead( IN PDEVICE_OBJECT DeviceObject,
     ULONG              extentsCount = 0, runCount = 0;
     AFSExtent         *pStartExtent = NULL;
     AFSExtent         *pIgnoreExtent = NULL;
-    BOOLEAN            bExtentsMapped = FALSE;
     BOOLEAN            bCompleteIrp = TRUE;
     ULONG              ulReadByteCount;
     ULONG              ulByteCount;
     AFSDeviceExt      *pDevExt = (AFSDeviceExt *)DeviceObject->DeviceExtension;
-    ULONG              ulRequestCount = 0;
     LARGE_INTEGER      liCurrentTime, liLastRequestTime;
     AFSDeviceExt      *pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
     PFILE_OBJECT       pCacheFileObject = NULL;
@@ -772,6 +768,7 @@ AFSRead( IN PDEVICE_OBJECT LibDeviceObject,
          IN PIRP Irp)
 {
 
+    UNREFERENCED_PARAMETER(LibDeviceObject);
     NTSTATUS ntStatus = STATUS_SUCCESS;
 
     __try
@@ -812,6 +809,7 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
                IN HANDLE OnBehalfOf)
 {
 
+    UNREFERENCED_PARAMETER(OnBehalfOf);
     NTSTATUS            ntStatus = STATUS_SUCCESS;
     AFSDeviceExt       *pDeviceExt;
     IO_STACK_LOCATION  *pIrpSp;
@@ -823,11 +821,9 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
     BOOLEAN             bPagingIo = FALSE;
     BOOLEAN             bNonCachedIo = FALSE;
     BOOLEAN             bCompleteIrp = TRUE;
-    BOOLEAN             bMapped;
     PFILE_OBJECT        pFileObject = NULL;
     LARGE_INTEGER       liStartingByte;
     ULONG               ulByteCount;
-    VOID               *pSystemBuffer = NULL;
 
     pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     pDeviceExt = (AFSDeviceExt *)DeviceObject->DeviceExtension;
@@ -1331,6 +1327,7 @@ AFSIOCtlRead( IN PDEVICE_OBJECT DeviceObject,
               IN PIRP Irp)
 {
 
+    UNREFERENCED_PARAMETER(DeviceObject);
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSPIOCtlIORequestCB stIORequestCB;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
@@ -1468,8 +1465,8 @@ AFSShareRead( IN PDEVICE_OBJECT DeviceObject,
               IN PIRP Irp)
 {
 
+    UNREFERENCED_PARAMETER(DeviceObject);
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSPIOCtlIORequestCB stIORequestCB;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     AFSFcb *pFcb = NULL;
     AFSCcb *pCcb = NULL;

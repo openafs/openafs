@@ -43,6 +43,7 @@ AFSSetSecurity( IN PDEVICE_OBJECT LibDeviceObject,
                 IN PIRP Irp)
 {
 
+    UNREFERENCED_PARAMETER(LibDeviceObject);
     NTSTATUS ntStatus = STATUS_SUCCESS;
     IO_STACK_LOCATION *pIrpSp;
 
@@ -77,6 +78,7 @@ AFSQuerySecurity( IN PDEVICE_OBJECT LibDeviceObject,
                   IN PIRP Irp)
 {
 
+    UNREFERENCED_PARAMETER(LibDeviceObject);
     NTSTATUS ntStatus = STATUS_SUCCESS;
     PIO_STACK_LOCATION pIrpSp;
     PMDL pUserBufferMdl = NULL;
