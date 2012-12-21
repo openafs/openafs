@@ -4629,9 +4629,9 @@ VCloseVolumeHandles_r(Volume * vp)
 	IH_CONDSYNC(vp->vnodeIndex[vLarge].handle);
 	IH_CONDSYNC(vp->vnodeIndex[vSmall].handle);
 	IH_CONDSYNC(vp->diskDataHandle);
-#ifdef AFS_NT40_ENV
+#ifdef AFS_NAMEI_ENV
 	IH_CONDSYNC(vp->linkHandle);
-#endif /* AFS_NT40_ENV */
+#endif /* AFS_NAMEI_ENV */
     }
 
     IH_REALLYCLOSE(vp->vnodeIndex[vLarge].handle);
@@ -4682,9 +4682,9 @@ VReleaseVolumeHandles_r(Volume * vp)
 	IH_CONDSYNC(vp->vnodeIndex[vLarge].handle);
 	IH_CONDSYNC(vp->vnodeIndex[vSmall].handle);
 	IH_CONDSYNC(vp->diskDataHandle);
-#ifdef AFS_NT40_ENV
+#ifdef AFS_NAMEI_ENV
 	IH_CONDSYNC(vp->linkHandle);
-#endif /* AFS_NT40_ENV */
+#endif /* AFS_NAMEI_ENV */
     }
 
     IH_RELEASE(vp->vnodeIndex[vLarge].handle);
