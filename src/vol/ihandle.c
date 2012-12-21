@@ -1089,3 +1089,18 @@ ih_pwrite(int fd, const void * buf, size_t count, afs_foff_t offset)
 	return OS_WRITE(fd, buf, count);
 }
 #endif /* !HAVE_PIO */
+
+#ifndef AFS_NT40_ENV
+int
+ih_isunlinked(int fd)
+{
+    struct afs_stat status;
+    if (afs_fstat(fd, &status) < 0) {
+	return -1;
+    }
+    if (status.st_nlink < 1) {
+	return 1;
+    }
+    return 0;
+}
+#endif /* !AFS_NT40_ENV */

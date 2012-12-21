@@ -61,6 +61,7 @@
  * status information:
  * FDH_SIZE - returns the size of the file.
  * FDH_NLINK - returns the link count of the file.
+ * FDH_ISUNLINKED - returns if the file has been unlinked out from under us
  *
  * Miscellaneous:
  * FDH_FDOPEN - create a descriptor for buffered I/O
@@ -386,6 +387,8 @@ extern ssize_t ih_pwrite(int fd, const void * buf, size_t count, afs_foff_t offs
 # define OS_UNLOCKFILE(FD, O) (!UnlockFile(FD, (DWORD)((O) & 0xFFFFFFFF), (DWORD)((O) >> 32), 2, 0))
 # define OS_ERROR(X) nterr_nt2unix(GetLastError(), X)
 # define OS_UNLINK(X) nt_unlink(X)
+/* we can't have a file unlinked out from under us on NT */
+# define OS_ISUNLINKED(X) (0)
 # define OS_DIRSEP "\\"
 # define OS_DIRSEPC '\\'
 #else
@@ -393,6 +396,8 @@ extern ssize_t ih_pwrite(int fd, const void * buf, size_t count, afs_foff_t offs
 # define OS_UNLOCKFILE(FD, O) flock(FD, LOCK_UN)
 # define OS_ERROR(X) X
 # define OS_UNLINK(X) unlink(X)
+# define OS_ISUNLINKED(X) ih_isunlinked(X)
+extern int ih_isunlinked(FD_t fd);
 # define OS_DIRSEP "/"
 # define OS_DIRSEPC '/'
 #endif
@@ -550,5 +555,6 @@ extern afs_sfsize_t ih_size(FD_t);
 #define FDH_SIZE(H) OS_SIZE((H)->fd_fd)
 #define FDH_LOCKFILE(H, O) OS_LOCKFILE((H)->fd_fd, O)
 #define FDH_UNLOCKFILE(H, O) OS_UNLOCKFILE((H)->fd_fd, O)
+#define FDH_ISUNLINKED(H) OS_ISUNLINKED((H)->fd_fd)
 
 #endif /* _IHANDLE_H_ */
