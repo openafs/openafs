@@ -908,7 +908,7 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type, VnodeId in_vnode, Unique 
     vnp->disk.uniquifier = unique;
     vnp->handle = NULL;
     vcp->allocs++;
-    vp->header->diskstuff.filecount++;
+    V_filecount(vp)++;
 #ifdef AFS_DEMAND_ATTACH_FS
     VnChangeState_r(vnp, VN_STATE_EXCLUSIVE);
 #endif
@@ -1444,8 +1444,8 @@ VPutVnode_r(Error * ec, Vnode * vnp)
 		 * (doing so could cause a "addled bitmap" message).
 		 */
 		if (vnp->delete && !*ec) {
-		    if (Vn_volume(vnp)->header->diskstuff.filecount-- < 1)
-			Vn_volume(vnp)->header->diskstuff.filecount = 0;
+		  if (V_filecount(Vn_volume(vnp))-- < 1)
+		      V_filecount(Vn_volume(vnp)) = 0;
 		    VFreeBitMapEntry_r(ec, vp, &vp->vnodeIndex[class],
 				       vnodeIdToBitNumber(Vn_id(vnp)),
 				       VOL_FREE_BITMAP_WAIT);

@@ -2940,7 +2940,7 @@ attach_volume_header(Error *ec, Volume *vp, struct DiskPartition64 *partp,
     if (VCanUseFSSYNC() && (mode == V_PEEK || peek)) {
 	SYNC_response res;
 	res.payload.len = sizeof(VolumeDiskData);
-	res.payload.buf = &vp->header->diskstuff;
+	res.payload.buf = &(V_disk(vp));
 
 	if (FSYNC_VolOp(vp->hashid,
 			partp->name,

@@ -245,7 +245,7 @@ SetVolumeSync(struct AFSVolSync *async, Volume * avol)
     /* date volume instance was created */
     if (async) {
 	if (avol)
-	    async->spare1 = avol->header->diskstuff.creationDate;
+	    async->spare1 = V_creationDate(avol);
 	else
 	    async->spare1 = 0;
 	async->spare2 = 0;
@@ -1874,7 +1874,7 @@ Alloc_NewVnode(Vnode * parentptr, DirHandle * dir, Volume * volptr,
     if (!VALID_INO(inode)) {
 	ViceLog(0,
 		("Volume : %u vnode = %u Failed to create inode: errno = %d\n",
-		 (*targetptr)->volumePtr->header->diskstuff.id,
+		 V_id((*targetptr)->volumePtr),
 		 (*targetptr)->vnodeNumber, errno));
 	VAdjustDiskUsage(&temp, volptr, -BlocksPreallocatedForVnode, 0);
 	(*targetptr)->delete = 1;	/* delete vnode */

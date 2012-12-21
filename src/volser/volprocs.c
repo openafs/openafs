@@ -819,7 +819,7 @@ VolClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 purgeId,
 	V_type(newvp) = backupVolume;
 	V_backupId(originalvp) = newId;
     }
-    strcpy(newvp->header->diskstuff.name, newName);
+    strcpy(V_name(newvp), newName);
     V_creationDate(newvp) = V_copyDate(newvp);
     ClearVolumeStats(&V_disk(newvp));
     V_destroyMe(newvp) = DESTROY_ME;
@@ -1670,7 +1670,7 @@ VolGetStatus(struct rx_call *acid, afs_int32 atrans,
 	return ENOENT;
     }
 
-    td = &tv->header->diskstuff;
+    td = &(V_disk(tv));
     astatus->volID = td->id;
     astatus->nextUnique = td->uniquifier;
     astatus->type = td->type;
@@ -1733,7 +1733,7 @@ VolSetInfo(struct rx_call *acid, afs_int32 atrans,
 	return ENOENT;
     }
 
-    td = &tv->header->diskstuff;
+    td = &(V_disk(tv));
     /*
      * Add more fields as necessary
      */
@@ -1793,7 +1793,7 @@ VolGetName(struct rx_call *acid, afs_int32 atrans, char **aname)
 	return ENOENT;
     }
 
-    td = &tv->header->diskstuff;
+    td = &(V_disk(tv));
     len = strlen(td->name) + 1;	/* don't forget the null */
     if (len >= SIZE) {
         TClearRxCall(tt);
@@ -1993,7 +1993,7 @@ static int
 FillVolInfo(Volume * vp, volint_info_handle_t * handle)
 {
     unsigned int numStatBytes, now;
-    struct VolumeDiskData *hdr = &vp->header->diskstuff;
+    struct VolumeDiskData *hdr = &(V_disk(vp));
 
     /*read in the relevant info */
     strcpy((char *)VOLINT_INFO_PTR(handle, name), hdr->name);
@@ -2247,7 +2247,7 @@ GetVolInfo(afs_uint32 partId,
      *   -- tkeiser 11/28/2007
      */
 
-    if (tv->header->diskstuff.destroyMe == DESTROY_ME) {
+    if (V_destroyMe(tv) == DESTROY_ME) {
 	switch (mode) {
 	case VOL_INFO_LIST_MULTIPLE:
 	    code = -2;
@@ -2262,7 +2262,7 @@ GetVolInfo(afs_uint32 partId,
 	}
     }
 
-    if (tv->header->diskstuff.needsSalvaged) {
+    if (V_needsSalvaged(tv)) {
 	/*this volume will be salvaged */
 	Log("1 Volser: GetVolInfo: Volume %u (%s:%s) needs to be salvaged\n",
 	    volumeId, pname, volname);
