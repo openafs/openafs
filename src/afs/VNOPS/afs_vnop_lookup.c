@@ -1384,7 +1384,6 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
     int pass = 0, hit = 0;
     int force_eval = afs_fakestat_enable ? 0 : 1;
     long dirCookie;
-    extern afs_int32 afs_mariner;	/*Writing activity to log? */
     afs_hyper_t versionNo;
     int no_read_access = 0;
     struct sysname_info sysState;	/* used only for @sys checking */
