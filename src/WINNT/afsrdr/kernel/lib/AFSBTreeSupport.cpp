@@ -45,7 +45,6 @@ AFSLocateCaseSensitiveDirEntry( IN AFSDirectoryCB *RootNode,
 {
 
     NTSTATUS    ntStatus = STATUS_SUCCESS;
-    AFSDirectoryCB   *pEntry = NULL;
     AFSDirectoryCB   *pCurrentEntry = NULL;
 
     pCurrentEntry = RootNode;
@@ -164,7 +163,6 @@ AFSLocateCaseInsensitiveDirEntry( IN AFSDirectoryCB *RootNode,
 {
 
     NTSTATUS    ntStatus = STATUS_SUCCESS;
-    AFSDirectoryCB   *pEntry = NULL;
     AFSDirectoryCB   *pCurrentEntry = NULL;
 
     pCurrentEntry = RootNode;
@@ -880,7 +878,6 @@ AFSLocateShortNameDirEntry( IN AFSDirectoryCB *RootNode,
 {
 
     NTSTATUS    ntStatus = STATUS_SUCCESS;
-    AFSDirectoryCB   *pEntry = NULL;
     AFSDirectoryCB   *pCurrentEntry = NULL;
 
     pCurrentEntry = RootNode;
@@ -1256,7 +1253,6 @@ AFSLocateHashEntry( IN AFSBTreeEntry *TopNode,
 {
 
     NTSTATUS         ntStatus = STATUS_SUCCESS;
-    AFSBTreeEntry   *pEntry = NULL;
     AFSBTreeEntry   *pCurrentEntry = NULL;
 
     pCurrentEntry = TopNode;

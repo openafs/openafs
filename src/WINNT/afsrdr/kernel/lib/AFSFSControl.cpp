@@ -43,6 +43,7 @@ AFSFSControl( IN PDEVICE_OBJECT LibDeviceObject,
               IN PIRP Irp)
 {
 
+    UNREFERENCED_PARAMETER(LibDeviceObject);
     NTSTATUS ntStatus = STATUS_SUCCESS;
     IO_STACK_LOCATION *pIrpSp;
 
@@ -727,6 +728,7 @@ AFSProcessShareFsCtrl( IN IRP *Irp,
                        IN AFSCcb *Ccb)
 {
 
+    UNREFERENCED_PARAMETER(Fcb);
     NTSTATUS ntStatus = STATUS_SUCCESS;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     ULONG ulOutputBufferLen = 0, ulInputBufferLen;

@@ -56,7 +56,7 @@ NTSTATUS
 AFSCreate( IN PDEVICE_OBJECT LibDeviceObject,
            IN PIRP Irp)
 {
-
+    UNREFERENCED_PARAMETER(LibDeviceObject);
     NTSTATUS ntStatus = STATUS_SUCCESS;
     IO_STACK_LOCATION  *pIrpSp;
     FILE_OBJECT        *pFileObject = NULL;
@@ -138,14 +138,14 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
     AFSDeviceExt       *pDeviceExt = NULL;
     BOOLEAN             bOpenTargetDirectory = FALSE, bReleaseVolume = FALSE;
     PACCESS_MASK        pDesiredAccess = NULL;
-    UNICODE_STRING      uniComponentName, uniPathName, uniRootFileName, uniParsedFileName;
+    UNICODE_STRING      uniComponentName, uniRootFileName, uniParsedFileName;
     UNICODE_STRING      uniSubstitutedPathName;
     UNICODE_STRING      uniRelativeName;
     AFSNameArrayHdr    *pNameArray = NULL;
     AFSVolumeCB        *pVolumeCB = NULL;
     AFSDirectoryCB     *pParentDirectoryCB = NULL, *pDirectoryCB = NULL;
     ULONG               ulParseFlags = 0;
-    GUID                stAuthGroup;
+    GUID                stAuthGroup = {0};
     ULONG               ulNameProcessingFlags = 0;
     BOOLEAN             bOpenedReparsePoint = FALSE;
     LONG                lCount;
@@ -1708,10 +1708,7 @@ AFSProcessCreate( IN PIRP               Irp,
     PFILE_OBJECT pFileObject = NULL;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     ULONG ulOptions = 0;
-    ULONG ulShareMode = 0;
-    ULONG ulAccess = 0;
     ULONG ulAttributes = 0;
-    LARGE_INTEGER   liAllocationSize = {0,0};
     BOOLEAN bFileCreated = FALSE, bReleaseFcb = FALSE, bAllocatedCcb = FALSE;
     PACCESS_MASK pDesiredAccess = NULL;
     USHORT usShareAccess;
@@ -2226,7 +2223,7 @@ AFSOpenTargetDirectory( IN PIRP Irp,
                         OUT AFSFcb **Fcb,
                         OUT AFSCcb **Ccb)
 {
-
+    UNREFERENCED_PARAMETER(VolumeCB);
     NTSTATUS ntStatus = STATUS_SUCCESS;
     PFILE_OBJECT pFileObject = NULL;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
@@ -2234,7 +2231,7 @@ AFSOpenTargetDirectory( IN PIRP Irp,
     USHORT usShareAccess;
     BOOLEAN bAllocatedCcb = FALSE;
     BOOLEAN bReleaseFcb = FALSE;
-    AFSObjectInfoCB *pParentObject = NULL, *pTargetObject = NULL;
+    AFSObjectInfoCB *pParentObject = NULL;
     UNICODE_STRING uniTargetName;
     LONG lCount;
 
@@ -2495,14 +2492,14 @@ AFSProcessOpen( IN PIRP Irp,
                 OUT AFSFcb **Fcb,
                 OUT AFSCcb **Ccb)
 {
-
+    UNREFERENCED_PARAMETER(VolumeCB);
     NTSTATUS ntStatus = STATUS_SUCCESS;
     PFILE_OBJECT pFileObject = NULL;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     PACCESS_MASK pDesiredAccess = NULL;
     USHORT usShareAccess;
     BOOLEAN bAllocatedCcb = FALSE, bReleaseFcb = FALSE;
-    ULONG ulAdditionalFlags = 0, ulOptions = 0;
+    ULONG ulOptions = 0;
     AFSFileOpenCB   stOpenCB;
     AFSFileOpenResultCB stOpenResultCB;
     ULONG       ulResultLen = 0;
@@ -3022,14 +3019,13 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
                               OUT AFSFcb       **Fcb,
                               OUT AFSCcb       **Ccb)
 {
-
+    UNREFERENCED_PARAMETER(DeviceObject);
     NTSTATUS ntStatus = STATUS_SUCCESS;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     PFILE_OBJECT pFileObject = NULL;
     LARGE_INTEGER liZero = {0,0};
     BOOLEAN bReleasePaging = FALSE, bReleaseFcb = FALSE;
     ULONG   ulAttributes = 0;
-    LARGE_INTEGER liTime;
     ULONG ulCreateDisposition = 0;
     BOOLEAN bAllocatedCcb = FALSE;
     BOOLEAN bUserMapped = FALSE;
@@ -3478,7 +3474,6 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
     PFILE_OBJECT pFileObject = NULL;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     BOOLEAN bReleaseFcb = FALSE, bAllocatedCcb = FALSE;
-    UNICODE_STRING uniFullFileName;
     AFSPIOCtlOpenCloseRequestCB stPIOCtlOpen;
     AFSFileID stFileID;
     AFSObjectInfoCB *pParentObjectInfo = NULL;

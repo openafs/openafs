@@ -512,6 +512,7 @@ AFSProcessExtentRun( IN PVOID          SystemBuffer,
 // AFSClose.cpp Prototypes
 //
 
+
 NTSTATUS
 AFSClose( IN PDEVICE_OBJECT DeviceObject,
           IN PIRP Irp);
@@ -1100,7 +1101,7 @@ AFSLockSystemBuffer( IN PIRP Irp,
 void *
 AFSLockUserBuffer( IN void *UserBuffer,
                    IN ULONG BufferLength,
-				   OUT MDL ** Mdl);
+                   OUT MDL ** Mdl);
 
 void *
 AFSMapToService( IN PIRP Irp,

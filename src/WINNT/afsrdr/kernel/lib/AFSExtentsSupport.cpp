@@ -40,8 +40,10 @@
 #define AFS_MAX_FCBS_TO_DROP 10
 
 static ULONG ExtentsMasks[AFS_NUM_EXTENT_LISTS] = AFS_EXTENTS_MASKS;
+#if AFS_VALIDATE_EXTENTS
 static VOID VerifyExtentsLists(AFSFcb *Fcb);
 static AFSExtent *DirtyExtentFor(PLIST_ENTRY le);
+#endif
 
 LIST_ENTRY *
 AFSEntryForOffset( IN AFSFcb *Fcb,
@@ -157,10 +159,8 @@ AFSTearDownFcbExtents( IN AFSFcb *Fcb,
     AFSReleaseExtentsCB *pRelease = NULL;
     BOOLEAN              locked = FALSE;
     NTSTATUS             ntStatus;
-    AFSDeviceExt        *pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
     GUID                *pAuthGroup = AuthGroup;
     GUID                 stAuthGroup;
-    LONG                 lCount;
 
     __Enter
     {
@@ -411,8 +411,6 @@ AFSDeleteFcbExtents( IN AFSFcb *Fcb)
     size_t               sz;
     BOOLEAN              locked = FALSE;
     NTSTATUS             ntStatus;
-    AFSDeviceExt        *pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
-    LONG                 lCount;
 
     __Enter
     {
@@ -757,7 +755,7 @@ BOOLEAN AFSDoExtentsMapRegion(IN AFSFcb *Fcb,
     // *LastExtent as output is either the extent which
     //  contains the Offset, or the last one which doesn't
     //
-    AFSExtent *entry;
+    AFSExtent *entry = NULL;
     AFSExtent *newEntry;
     BOOLEAN retVal = FALSE;
 
@@ -845,7 +843,6 @@ AFSRequestExtentsAsync( IN AFSFcb *Fcb,
     LARGE_INTEGER        liAlignedOffset;
     ULONG                ulAlignedLength = 0;
     BOOLEAN              bRegionMapped = FALSE;
-    ULONGLONG            ullProcessId = (ULONGLONG)PsGetCurrentProcessId();
 
     __Enter
     {
@@ -1595,11 +1592,9 @@ AFSReleaseSpecifiedExtents( IN  AFSReleaseFileExtentsCB *Extents,
 {
     AFSExtent           *pExtent;
     LIST_ENTRY          *le;
-    LIST_ENTRY          *leNext;
     ULONG                ulExtentCount = 0;
     NTSTATUS             ntStatus = STATUS_SUCCESS;
     BOOLEAN              bReleaseAll = FALSE;
-    AFSDeviceExt        *pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
     LONG                 lCount;
 
     __Enter
@@ -1809,6 +1804,7 @@ AFSFcb*
 AFSFindFcbToClean(ULONG IgnoreTime, AFSFcb *LastFcb, BOOLEAN Block)
 {
 
+    UNREFERENCED_PARAMETER(IgnoreTime);
     AFSFcb *pFcb = NULL;
     AFSVolumeCB *pVolumeCB = NULL;
     AFSDeviceExt *pRDRDeviceExt = NULL;
@@ -2220,7 +2216,6 @@ AFSProcessReleaseFileExtents( IN PIRP Irp)
 {
     NTSTATUS                           ntStatus = STATUS_SUCCESS;
     PIO_STACK_LOCATION                 pIrpSp = IoGetCurrentIrpStackLocation( Irp);
-    PFILE_OBJECT                       pFileObject = pIrpSp->FileObject;
     AFSFcb                            *pFcb = NULL;
     AFSVolumeCB                       *pVolumeCB = NULL;
     AFSDeviceExt                      *pDevExt;
@@ -2722,7 +2717,6 @@ AFSFlushExtents( IN AFSFcb *Fcb,
 {
     AFSNonPagedFcb      *pNPFcb = Fcb->NPFcb;
     AFSExtent           *pExtent, *pNextExtent;
-    LIST_ENTRY          *le;
     AFSReleaseExtentsCB *pRelease = NULL;
     ULONG                count = 0;
     ULONG                initialDirtyCount = 0;
@@ -2731,8 +2725,6 @@ AFSFlushExtents( IN AFSFcb *Fcb,
     ULONG                sz = 0;
     NTSTATUS             ntStatus = STATUS_SUCCESS;
     LARGE_INTEGER        liLastFlush;
-    AFSExtent           *pDirtyListHead = NULL, *pDirtyListTail = NULL;
-    AFSDeviceExt        *pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
     GUID                *pAuthGroup = AuthGroup;
     GUID                 stAuthGroup;
     LONG                 lCount;
@@ -2981,7 +2973,7 @@ try_exit:
 
         lCount = InterlockedDecrement( &Fcb->Specific.File.QueuedFlushCount);
 
-	ASSERT( lCount >= 0);
+        ASSERT( lCount >= 0);
 
         if( lCount == 0)
         {
@@ -3026,14 +3018,12 @@ AFSReleaseExtentsWithFlush( IN AFSFcb *Fcb,
     LIST_ENTRY          *le;
     AFSReleaseExtentsCB *pRelease = NULL;
     ULONG                count = 0;
-    ULONG                initialDirtyCount = 0;
     BOOLEAN              bExtentsLocked = FALSE;
     ULONG                total = 0;
     ULONG                sz = 0;
     NTSTATUS             ntStatus = STATUS_SUCCESS;
     LARGE_INTEGER        liLastFlush;
     ULONG                ulRemainingExtentLength = 0;
-    AFSDeviceExt        *pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
     GUID                *pAuthGroup = AuthGroup;
     GUID                 stAuthGroup;
     LONG                 lCount;
@@ -3291,14 +3281,12 @@ AFSReleaseCleanExtents( IN AFSFcb *Fcb,
     LIST_ENTRY          *le;
     AFSReleaseExtentsCB *pRelease = NULL;
     ULONG                count = 0;
-    ULONG                initialDirtyCount = 0;
     BOOLEAN              bExtentsLocked = FALSE;
     ULONG                total = 0;
     ULONG                sz = 0;
     NTSTATUS             ntStatus = STATUS_SUCCESS;
     LARGE_INTEGER        liLastFlush;
     ULONG                ulRemainingExtentLength = 0;
-    AFSDeviceExt        *pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
     GUID                *pAuthGroup = AuthGroup;
     GUID                 stAuthGroup;
 
@@ -3719,6 +3707,7 @@ NextExtent(AFSExtent *Extent, ULONG SkipList)
     return ExtentFor(Extent->Lists[SkipList].Flink, SkipList);
 }
 
+#if AFS_VALIDATE_EXTENTS
 static AFSExtent *DirtyExtentFor(PLIST_ENTRY le)
 {
 
@@ -3780,6 +3769,7 @@ static VOID VerifyExtentsLists(AFSFcb *Fcb)
     }
 #endif
 }
+#endif
 
 void
 AFSTrimExtents( IN AFSFcb *Fcb,
@@ -3793,8 +3783,6 @@ AFSTrimExtents( IN AFSFcb *Fcb,
     NTSTATUS             ntStatus = STATUS_SUCCESS;
     LARGE_INTEGER        liAlignedOffset = {0,0};
     AFSDeviceExt        *pDevExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
-    AFSDeviceExt        *pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
-    LONG                 lCount;
 
     __Enter
     {
@@ -3956,10 +3944,6 @@ AFSTrimSpecifiedExtents( IN AFSFcb *Fcb,
     LIST_ENTRY          *le;
     AFSExtent           *pExtent;
     AFSFileExtentCB     *pFileExtents = Result;
-    NTSTATUS             ntStatus = STATUS_SUCCESS;
-    AFSDeviceExt        *pDevExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
-    AFSDeviceExt        *pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
-    LONG                 lCount;
 
     __Enter
     {

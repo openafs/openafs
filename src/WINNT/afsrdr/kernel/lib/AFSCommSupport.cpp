@@ -1860,7 +1860,6 @@ AFSUpdateFileInformation( IN AFSFileID *ParentFid,
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     AFSFileUpdateCB stUpdateCB;
     ULONG ulResultLen = 0;
     AFSFileUpdateResultCB *pUpdateResultCB = NULL;
@@ -3037,7 +3036,6 @@ AFSNotifyPipeTransceive( IN AFSCcb *Ccb,
     ULONG ulResultLen = 0;
     MDL *pInputMdl = NULL, *pOutputMdl = NULL;
     void *pInputSystemBuffer = NULL, *pOutputSystemBuffer = NULL;
-    ULONG ulBufferLength = OutputLength;
     AFSPipeIORequestCB *pIoRequest = NULL;
 
     __Enter
@@ -3325,7 +3323,6 @@ AFSIsExtentRequestQueued( IN AFSFileID *FileID,
 {
 
     BOOLEAN bRequestQueued = FALSE;
-    NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDeviceExt    *pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
     AFSCommSrvcCB   *pCommSrvc = NULL;
     AFSPoolEntry    *pPoolEntry = NULL;

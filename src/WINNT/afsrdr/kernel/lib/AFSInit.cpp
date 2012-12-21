@@ -60,7 +60,6 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDeviceExt    *pDeviceExt;
-    ULONG ulTimeIncrement = 0;
     UNICODE_STRING uniDeviceName;
     ULONG ulIndex = 0;
     UNICODE_STRING uniRoutine;
@@ -301,6 +300,7 @@ void
 AFSUnload( IN PDRIVER_OBJECT DriverObject)
 {
 
+    UNREFERENCED_PARAMETER(DriverObject);
     if( AFSGlobalRoot != NULL)
     {
 

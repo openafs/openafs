@@ -54,7 +54,7 @@ NTSTATUS
 AFSQueryEA( IN PDEVICE_OBJECT LibDeviceObject,
             IN PIRP Irp)
 {
-
+    UNREFERENCED_PARAMETER(LibDeviceObject);
     NTSTATUS ntStatus = STATUS_EAS_NOT_SUPPORTED;
     IO_STACK_LOCATION *pIrpSp;
 
@@ -100,7 +100,7 @@ NTSTATUS
 AFSSetEA( IN PDEVICE_OBJECT LibDeviceObject,
           IN PIRP Irp)
 {
-
+    UNREFERENCED_PARAMETER(LibDeviceObject);
     NTSTATUS ntStatus = STATUS_EAS_NOT_SUPPORTED;
     IO_STACK_LOCATION *pIrpSp;
 

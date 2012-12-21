@@ -55,15 +55,13 @@ AFSQueryFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
                   IN PIRP Irp)
 {
 
+    UNREFERENCED_PARAMETER(LibDeviceObject);
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
-    ULONG ulRequestType = 0;
     IO_STACK_LOCATION *pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     AFSFcb *pFcb = NULL;
     AFSCcb *pCcb = NULL;
-    PFILE_OBJECT pFileObject;
     BOOLEAN bReleaseMain = FALSE;
-    LONG lLength;
+    LONG lLength = 0;
     FILE_INFORMATION_CLASS stFileInformationClass;
     GUID stAuthGroup;
     PVOID pBuffer;
@@ -509,12 +507,11 @@ AFSSetFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
                 IN PIRP Irp)
 {
 
+    UNREFERENCED_PARAMETER(LibDeviceObject);
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     IO_STACK_LOCATION *pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     AFSFcb *pFcb = NULL;
     AFSCcb *pCcb = NULL;
-    BOOLEAN bCompleteRequest = TRUE;
     FILE_INFORMATION_CLASS FileInformationClass;
     BOOLEAN bCanQueueRequest = FALSE;
     PFILE_OBJECT pFileObject = NULL;
@@ -1027,6 +1024,7 @@ AFSQueryInternalInfo( IN PIRP Irp,
                       IN OUT PLONG Length)
 {
 
+    UNREFERENCED_PARAMETER(Irp);
     NTSTATUS ntStatus = STATUS_SUCCESS;
 
     if( *Length >= sizeof( FILE_INTERNAL_INFORMATION))
@@ -1054,6 +1052,8 @@ AFSQueryEaInfo( IN PIRP Irp,
                 IN OUT PLONG Length)
 {
 
+    UNREFERENCED_PARAMETER(Irp);
+    UNREFERENCED_PARAMETER(DirectoryCB);
     NTSTATUS ntStatus = STATUS_SUCCESS;
 
     RtlZeroMemory( Buffer,
@@ -1082,6 +1082,7 @@ AFSQueryPositionInfo( IN PIRP Irp,
                       IN OUT PLONG Length)
 {
 
+    UNREFERENCED_PARAMETER(Fcb);
     NTSTATUS ntStatus = STATUS_SUCCESS;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
 
@@ -1111,6 +1112,8 @@ AFSQueryAccess( IN PIRP Irp,
                 IN OUT PLONG Length)
 {
 
+    UNREFERENCED_PARAMETER(Irp);
+    UNREFERENCED_PARAMETER(Fcb);
     NTSTATUS ntStatus = STATUS_SUCCESS;
 
     if( *Length >= sizeof( FILE_ACCESS_INFORMATION))
@@ -1139,6 +1142,8 @@ AFSQueryMode( IN PIRP Irp,
               IN OUT PLONG Length)
 {
 
+    UNREFERENCED_PARAMETER(Irp);
+    UNREFERENCED_PARAMETER(Fcb);
     NTSTATUS ntStatus = STATUS_SUCCESS;
 
     if( *Length >= sizeof( FILE_MODE_INFORMATION))
@@ -1167,6 +1172,8 @@ AFSQueryAlignment( IN PIRP Irp,
                    IN OUT PLONG Length)
 {
 
+    UNREFERENCED_PARAMETER(Irp);
+    UNREFERENCED_PARAMETER(Fcb);
     NTSTATUS ntStatus = STATUS_SUCCESS;
 
     if( *Length >= sizeof( FILE_ALIGNMENT_INFORMATION))
@@ -1195,6 +1202,7 @@ AFSQueryNameInfo( IN PIRP Irp,
                   IN OUT PLONG Length)
 {
 
+    UNREFERENCED_PARAMETER(DirectoryCB);
     NTSTATUS ntStatus = STATUS_SUCCESS;
     ULONG ulCopyLength = 0;
     ULONG cchCopied = 0;
@@ -1337,6 +1345,7 @@ AFSQueryShortNameInfo( IN PIRP Irp,
                        IN OUT PLONG Length)
 {
 
+    UNREFERENCED_PARAMETER(Irp);
     NTSTATUS ntStatus = STATUS_BUFFER_TOO_SMALL;
     ULONG ulCopyLength = 0;
 
@@ -1550,9 +1559,9 @@ AFSQueryStreamInfo( IN PIRP Irp,
                     IN OUT PLONG Length)
 {
 
+    UNREFERENCED_PARAMETER(Irp);
     NTSTATUS ntStatus = STATUS_BUFFER_TOO_SMALL;
     ULONG ulCopyLength = 0;
-    AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
 
     if( *Length >= FIELD_OFFSET( FILE_STREAM_INFORMATION, StreamName))
     {
@@ -1621,7 +1630,6 @@ AFSQueryAttribTagInfo( IN PIRP Irp,
 {
 
     NTSTATUS ntStatus = STATUS_BUFFER_TOO_SMALL;
-    ULONG ulCopyLength = 0;
     AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     AFSFcb *pFcb = NULL;
     AFSCcb *pCcb = NULL;
@@ -1735,9 +1743,9 @@ AFSQueryRemoteProtocolInfo( IN PIRP Irp,
                             IN OUT PLONG Length)
 {
 
+    UNREFERENCED_PARAMETER(Irp);
+    UNREFERENCED_PARAMETER(DirectoryCB);
     NTSTATUS ntStatus = STATUS_BUFFER_TOO_SMALL;
-    ULONG ulCopyLength = 0;
-    AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
 
     if( *Length >= sizeof( FILE_REMOTE_PROTOCOL_INFORMATION))
     {
@@ -1772,6 +1780,7 @@ AFSQueryPhysicalNameInfo( IN PIRP Irp,
                           IN OUT PLONG Length)
 {
 
+    UNREFERENCED_PARAMETER(DirectoryCB);
     NTSTATUS ntStatus = STATUS_SUCCESS;
     ULONG ulCopyLength = 0;
     ULONG cchCopied = 0;
@@ -2207,17 +2216,15 @@ AFSSetFileLinkInfo( IN PIRP Irp)
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
-    IO_STATUS_BLOCK stIoSb = {0,0};
     PFILE_LINK_INFORMATION pFileLinkInfo = NULL;
     PFILE_OBJECT pSrcFileObj = NULL;
     PFILE_OBJECT pTargetFileObj = pIrpSp->Parameters.SetFile.FileObject;
-    AFSFcb *pSrcFcb = NULL, *pTargetDcb = NULL, *pTargetFcb = NULL;
+    AFSFcb *pSrcFcb = NULL, *pTargetDcb = NULL;
     AFSCcb *pSrcCcb = NULL, *pTargetDirCcb = NULL;
-    AFSObjectInfoCB *pSrcObject = NULL, *pTargetObject = NULL;
+    AFSObjectInfoCB *pSrcObject = NULL;
     AFSObjectInfoCB *pSrcParentObject = NULL, *pTargetParentObject = NULL;
     UNICODE_STRING uniSourceName, uniTargetName;
     UNICODE_STRING uniFullTargetName, uniTargetParentName;
-    UNICODE_STRING uniShortName;
     BOOLEAN bCommonParent = FALSE;
     AFSDirectoryCB *pTargetDirEntry = NULL;
     AFSDirectoryCB *pNewTargetDirEntry = NULL;
@@ -2225,7 +2232,6 @@ AFSSetFileLinkInfo( IN PIRP Irp)
     BOOLEAN bTargetEntryExists = FALSE;
     LONG lCount;
     BOOLEAN bReleaseTargetDirLock = FALSE;
-    AFSFileID stNewFid;
     ULONG ulNotificationAction = 0, ulNotifyFilter = 0;
 
     __Enter
@@ -2576,7 +2582,6 @@ AFSSetRenameInfo( IN PIRP Irp)
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
-    IO_STATUS_BLOCK stIoSb = {0,0};
     AFSFcb *pSrcFcb = NULL, *pTargetDcb = NULL, *pTargetFcb = NULL;
     AFSCcb *pSrcCcb = NULL, *pTargetDirCcb = NULL;
     PFILE_OBJECT pSrcFileObj = pIrpSp->FileObject;
@@ -2589,9 +2594,9 @@ AFSSetRenameInfo( IN PIRP Irp)
     AFSDirectoryCB *pTargetDirEntry = NULL;
     ULONG ulTargetCRC = 0;
     BOOLEAN bTargetEntryExists = FALSE;
-    AFSObjectInfoCB *pSrcObject = NULL, *pTargetObject = NULL;
+    AFSObjectInfoCB *pSrcObject = NULL;
     AFSObjectInfoCB *pSrcParentObject = NULL, *pTargetParentObject = NULL;
-    AFSFileID stNewFid, stTmpTargetFid;
+    AFSFileID stNewFid;
     ULONG ulNotificationAction = 0, ulNotifyFilter = 0;
     UNICODE_STRING uniFullTargetName;
     BOOLEAN bCommonParent = FALSE;
@@ -3324,6 +3329,7 @@ NTSTATUS
 AFSSetPositionInfo( IN PIRP Irp,
                     IN AFSDirectoryCB *DirectoryCB)
 {
+    UNREFERENCED_PARAMETER(DirectoryCB);
     NTSTATUS ntStatus = STATUS_SUCCESS;
     PFILE_POSITION_INFORMATION pBuffer;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
@@ -3339,6 +3345,7 @@ NTSTATUS
 AFSSetAllocationInfo( IN PIRP Irp,
                       IN AFSDirectoryCB *DirectoryCB)
 {
+    UNREFERENCED_PARAMETER(DirectoryCB);
     NTSTATUS ntStatus = STATUS_SUCCESS;
     PFILE_ALLOCATION_INFORMATION pBuffer;
     BOOLEAN bReleasePaging = FALSE;
@@ -3546,6 +3553,7 @@ NTSTATUS
 AFSSetEndOfFileInfo( IN PIRP Irp,
                      IN AFSDirectoryCB *DirectoryCB)
 {
+    UNREFERENCED_PARAMETER(DirectoryCB);
     NTSTATUS ntStatus = STATUS_SUCCESS;
     PFILE_END_OF_FILE_INFORMATION pBuffer;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
@@ -3757,9 +3765,9 @@ AFSProcessShareSetInfo( IN IRP *Irp,
                         IN AFSCcb *Ccb)
 {
 
+    UNREFERENCED_PARAMETER(Fcb);
     NTSTATUS ntStatus = STATUS_SUCCESS;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
-    ULONG ulOutputBufferLen = 0, ulInputBufferLen;
     FILE_INFORMATION_CLASS ulFileInformationClass;
     void *pPipeInfo = NULL;
 
@@ -3828,9 +3836,9 @@ AFSProcessShareQueryInfo( IN IRP *Irp,
                           IN AFSCcb *Ccb)
 {
 
+    UNREFERENCED_PARAMETER(Fcb);
     NTSTATUS ntStatus = STATUS_SUCCESS;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
-    ULONG ulOutputBufferLen = 0, ulInputBufferLen;
     FILE_INFORMATION_CLASS ulFileInformationClass;
     void *pPipeInfo = NULL;
 
@@ -3902,6 +3910,8 @@ AFSProcessPIOCtlQueryInfo( IN IRP *Irp,
                            IN OUT LONG *Length)
 {
 
+    UNREFERENCED_PARAMETER(Fcb);
+    UNREFERENCED_PARAMETER(Ccb);
     NTSTATUS ntStatus = STATUS_SUCCESS;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     FILE_INFORMATION_CLASS ulFileInformationClass;

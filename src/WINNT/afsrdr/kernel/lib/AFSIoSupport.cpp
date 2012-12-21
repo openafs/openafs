@@ -52,6 +52,7 @@ AFSGetExtents( IN AFSFcb *Fcb,
                OUT ULONG *ExtentCount,
                OUT ULONG *RunCount)
 {
+    UNREFERENCED_PARAMETER(Fcb);
     NTSTATUS           ntStatus = STATUS_SUCCESS;
     ULONG              extentsCount = 0, runCount = 0;
     AFSExtent         *pEndExtent = NULL;
@@ -104,6 +105,7 @@ AFSSetupIoRun( IN PDEVICE_OBJECT CacheDevice,
                IN AFSExtent     *From,
                IN OUT ULONG     *RunCount)
 {
+    UNREFERENCED_PARAMETER(MasterIrp);
     //
     // Do all the work which we can prior to firing off the IRP
     // (allocate them, calculate offsets and so on)
@@ -114,8 +116,7 @@ AFSSetupIoRun( IN PDEVICE_OBJECT CacheDevice,
     ULONG          ulReadOffset;
     ULONG          ulCurrRun = 0;
     AFSExtent     *pExtent = From;
-    AFSExtent     *pNextExtent;
-    PMDL          *pMDL;
+    AFSExtent     *pNextExtent = NULL;
     BOOLEAN        done = FALSE;
     NTSTATUS       ntStatus = STATUS_SUCCESS;
 
@@ -245,6 +246,7 @@ CompletionFunction(IN PDEVICE_OBJECT DeviceObject,
                    PIRP Irp,
                    PVOID Context)
 {
+    UNREFERENCED_PARAMETER(DeviceObject);
     AFSGatherIo *pGather = (AFSGatherIo *) Context;
 
     AFSCompleteIo( pGather, Irp->IoStatus.Status);
@@ -273,7 +275,6 @@ AFSStartIos( IN PFILE_OBJECT     CacheFileObject,
              IN OUT AFSGatherIo *Gather)
 {
 
-    AFSDeviceExt       *pRdrDevExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     PIO_STACK_LOCATION  pIoStackLocation = NULL;
     PIRP                pIrp;
     NTSTATUS            ntStatus = STATUS_SUCCESS;
@@ -401,8 +402,7 @@ AFSProcessExtentRun( IN PVOID          SystemBuffer,
     ULONG          ulOffset = 0;
     ULONG          ulCurrRun = 0;
     AFSExtent     *pExtent = From;
-    AFSExtent     *pNextExtent;
-    PMDL          *pMDL;
+    AFSExtent     *pNextExtent = NULL;
     BOOLEAN        done = FALSE;
     NTSTATUS       ntStatus = STATUS_SUCCESS;
 

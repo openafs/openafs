@@ -74,6 +74,7 @@ AFSWrite( IN PDEVICE_OBJECT LibDeviceObject,
           IN PIRP Irp)
 {
 
+    UNREFERENCED_PARAMETER(LibDeviceObject);
     NTSTATUS ntStatus = STATUS_SUCCESS;
 
     __try
@@ -114,7 +115,6 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
     BOOLEAN            bCompleteIrp = TRUE;
     BOOLEAN            bLockOK;
     HANDLE             hCallingUser = OnBehalfOf;
-    ULONG              ulExtensionLength = 0;
     BOOLEAN            bRetry = FALSE;
     ULONGLONG          ullProcessId = (ULONGLONG)PsGetCurrentProcessId();
 
@@ -720,6 +720,7 @@ AFSIOCtlWrite( IN PDEVICE_OBJECT DeviceObject,
                IN PIRP Irp)
 {
 
+    UNREFERENCED_PARAMETER(DeviceObject);
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSPIOCtlIORequestCB stIORequestCB;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
@@ -870,7 +871,6 @@ AFSNonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
     BOOLEAN            bPagingIo = BooleanFlagOn( Irp->Flags, IRP_PAGING_IO);
     BOOLEAN            bLocked = FALSE;
     BOOLEAN            bCompleteIrp = TRUE;
-    BOOLEAN            bExtentsMapped = FALSE;
     AFSGatherIo       *pGatherIo = NULL;
     AFSIoRun          *pIoRuns = NULL;
     AFSIoRun           stIoRuns[AFS_MAX_STACK_IO_RUNS];
@@ -883,7 +883,6 @@ AFSNonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
     AFSCcb            *pCcb = (AFSCcb *)pFileObject->FsContext2;
     BOOLEAN            bSynchronousFo = BooleanFlagOn( pFileObject->Flags, FO_SYNCHRONOUS_IO);
     AFSDeviceExt      *pDevExt = (AFSDeviceExt *)DeviceObject->DeviceExtension;
-    ULONG              ulRequestCount = 0;
     LARGE_INTEGER      liCurrentTime, liLastRequestTime;
     AFSDeviceExt      *pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
     PFILE_OBJECT       pCacheFileObject = NULL;
@@ -1368,13 +1367,13 @@ try_exit:
             Irp->IoStatus.Information > 0)
         {
 
-	    if ( !bLocked)
-	    {
+            if ( !bLocked)
+            {
 
-		AFSAcquireShared( &pFcb->NPFcb->Specific.File.ExtentsResource,
-				  TRUE);
-		bLocked = TRUE;
-	    }
+                AFSAcquireShared( &pFcb->NPFcb->Specific.File.ExtentsResource,
+                                  TRUE);
+                bLocked = TRUE;
+            }
 
             //
             // Since this is dirty we can mark the extents dirty now.
@@ -1465,15 +1464,14 @@ AFSCachedWrite( IN PDEVICE_OBJECT DeviceObject,
                 IN ULONG ByteCount,
                 IN BOOLEAN ForceFlush)
 {
+    UNREFERENCED_PARAMETER(DeviceObject);
     PVOID              pSystemBuffer = NULL;
     NTSTATUS           ntStatus = STATUS_SUCCESS;
     IO_STATUS_BLOCK    iosbFlush;
     IO_STACK_LOCATION *pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     PFILE_OBJECT       pFileObject = pIrpSp->FileObject;
     AFSFcb            *pFcb = (AFSFcb *)pFileObject->FsContext;
-    AFSCcb            *pCcb = (AFSCcb *)pFileObject->FsContext2;
     BOOLEAN            bSynchronousFo = BooleanFlagOn( pFileObject->Flags, FO_SYNCHRONOUS_IO);
-    BOOLEAN            bMapped = FALSE;
     ULONG              ulCurrentIO = 0, ulTotalLen = ByteCount;
     PMDL               pCurrentMdl = Irp->MdlAddress;
     LARGE_INTEGER      liCurrentOffset;
@@ -1778,8 +1776,8 @@ AFSShareWrite( IN PDEVICE_OBJECT DeviceObject,
                IN PIRP Irp)
 {
 
+    UNREFERENCED_PARAMETER(DeviceObject);
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSPIOCtlIORequestCB stIORequestCB;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     AFSFcb *pFcb = NULL;
     AFSCcb *pCcb = NULL;

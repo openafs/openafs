@@ -42,7 +42,7 @@ NTSTATUS
 AFSSystemControl( IN PDEVICE_OBJECT LibDeviceObject,
                    IN PIRP Irp)
 {
-
+    UNREFERENCED_PARAMETER(LibDeviceObject);
     NTSTATUS ntStatus = STATUS_SUCCESS;
     IO_STACK_LOCATION *pIrpSp;
 

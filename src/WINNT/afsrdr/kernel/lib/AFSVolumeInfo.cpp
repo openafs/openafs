@@ -43,10 +43,10 @@ AFSQueryVolumeInfo( IN PDEVICE_OBJECT LibDeviceObject,
                     IN PIRP Irp)
 {
 
+    UNREFERENCED_PARAMETER(LibDeviceObject);
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     IO_STACK_LOCATION *pIrpSp;
-    FS_INFORMATION_CLASS FsInformationClass;
+    FS_INFORMATION_CLASS FsInformationClass = FileFsMaximumInformation;
     void *pBuffer = NULL;
     ULONG ulLength = 0;
     BOOLEAN bReleaseResource = FALSE;
@@ -249,6 +249,7 @@ AFSSetVolumeInfo( IN PDEVICE_OBJECT DeviceObject,
                   IN PIRP Irp)
 {
 
+    UNREFERENCED_PARAMETER(DeviceObject);
     NTSTATUS ntStatus = STATUS_SUCCESS;
     IO_STACK_LOCATION *pIrpSp;
 
@@ -416,6 +417,7 @@ AFSQueryFsAttributeInfo( IN AFSVolumeInfoCB *VolumeInfo,
                          IN PFILE_FS_ATTRIBUTE_INFORMATION Buffer,
                          IN OUT PULONG Length)
 {
+    UNREFERENCED_PARAMETER(VolumeInfo);
     NTSTATUS ntStatus = STATUS_SUCCESS;
 
     RtlZeroMemory( Buffer,

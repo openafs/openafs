@@ -47,7 +47,6 @@ AFSAddConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSProviderConnectionCB *pConnection = NULL, *pLastConnection = NULL;
     UNICODE_STRING uniRemoteName;
-    USHORT usIndex = 0;
     AFSDeviceExt *pRDRDevExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
 
     __Enter
@@ -1184,7 +1183,7 @@ AFSLocateEnumRootEntry( IN UNICODE_STRING *RemoteName)
 {
 
     AFSProviderConnectionCB *pConnection = NULL;
-    UNICODE_STRING uniServerName, uniRemoteName = *RemoteName;
+    UNICODE_STRING uniRemoteName = *RemoteName;
     AFSDeviceExt *pRDRDevExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
 
     __Enter
@@ -1228,13 +1227,10 @@ AFSEnumerateConnection( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     ULONG ulCRC = 0, ulCopiedLength = 0;
     AFSDirectoryCB *pShareDirEntry = NULL;
     AFSDirectoryCB *pDirEntry = NULL, *pTargetDirEntry = NULL;
     ULONG ulIndex = 0;
-    BOOLEAN bContinueProcessing = TRUE;
-    AFSFileInfoCB stFileInformation;
     LONG lCount;
 
     __Enter
@@ -1494,7 +1490,7 @@ AFSGetConnectionInfo( IN AFSNetworkProviderConnectionCB *ConnectCB,
             try_return( ntStatus = STATUS_DEVICE_NOT_READY);
         }
 
-		uniFullName = uniRemoteName;
+        uniFullName = uniRemoteName;
 
         if( uniRemoteName.Buffer[ 0] == L'\\' &&
             uniRemoteName.Buffer[ 1] == L'\\')

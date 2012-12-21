@@ -54,11 +54,9 @@ NTSTATUS
 AFSDirControl( IN PDEVICE_OBJECT LibDeviceObject,
                IN PIRP Irp)
 {
-
+    UNREFERENCED_PARAMETER(LibDeviceObject);
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    ULONG ulRequestType = 0;
     IO_STACK_LOCATION *pIrpSp = IoGetCurrentIrpStackLocation( Irp);
-    AFSFcb *pFcb = NULL;
 
     __try
     {
@@ -120,21 +118,18 @@ AFSQueryDirectory( IN PIRP Irp)
     AFSFcb *pFcb = NULL;
     AFSCcb *pCcb = NULL;
     BOOLEAN bInitialQuery = FALSE;
-    ULONG ulIndex;
     PUCHAR pBuffer;
     ULONG ulUserBufferLength;
     PUNICODE_STRING puniArgFileName = NULL;
     UNICODE_STRING uniTmpMaskName;
-    UNICODE_STRING uniDirUniBuf;
     WCHAR wchMaskBuffer[ 4];
     FILE_INFORMATION_CLASS FileInformationClass;
-    ULONG ulFileIndex, ulDOSFileIndex;
+    ULONG ulFileIndex;
     BOOLEAN bRestartScan;
     BOOLEAN bReturnSingleEntry;
     BOOLEAN bIndexSpecified;
     ULONG ulNextEntry = 0;
     ULONG ulLastEntry = 0;
-    BOOLEAN bDoCase;
     PFILE_DIRECTORY_INFORMATION pDirInfo;
     PFILE_FULL_DIR_INFORMATION pFullDirInfo;
     PFILE_BOTH_DIR_INFORMATION pBothDirInfo;
@@ -144,7 +139,6 @@ AFSQueryDirectory( IN PIRP Irp)
     AFSDirectoryCB *pDirEntry = NULL;
     BOOLEAN bReleaseMain = FALSE;
     BOOLEAN bReleaseFcb = FALSE;
-    ULONG ulTargetFileType = AFS_FILE_TYPE_UNKNOWN;
     AFSFileInfoCB       stFileInfo;
     AFSObjectInfoCB *pObjectInfo = NULL;
     ULONG ulAdditionalAttributes = 0;
@@ -614,7 +608,6 @@ AFSQueryDirectory( IN PIRP Irp)
         {
 
             ULONG ulBytesRemainingInBuffer;
-            int rc;
 
             ulAdditionalAttributes = 0;
 
@@ -1936,10 +1929,9 @@ BOOLEAN
 AFSNotifyReportChangeCallback( IN void *NotifyContext,
                                IN void *FilterContext)
 {
-
+    UNREFERENCED_PARAMETER(NotifyContext);
+    UNREFERENCED_PARAMETER(FilterContext);
     BOOLEAN bReturn = TRUE;
-    AFSCcb *pDirCcb = (AFSCcb *)NotifyContext;
-    AFSCcb *pNotifyCcb = (AFSCcb *)FilterContext;
 
     __Enter
     {
