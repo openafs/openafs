@@ -27,7 +27,12 @@
 
 extern Date cheaderReadTime;	/* time cheader last read in */
 
-#define set_header_word(tt,field,value) kawrite ((tt), (offsetof(struct kaheader, field)), ((cheader.field = (value)), (char *)&(cheader.field)), sizeof(afs_int32))
+#define set_header_word(tt,field,value) \
+	( \
+	    (cheader.field) = (value), \
+	    kawrite((tt), ((char *)&(cheader.field) - (char *)&cheader), \
+		    (char *)&(cheader.field), sizeof(afs_int32)) \
+	)
 
 #define inc_header_word(tt,field) kawrite ((tt), (offsetof(struct kaheader, field)), ((cheader.field = (htonl(ntohl(cheader.field)+1))), (char *)&(cheader.field)), sizeof(afs_int32))
 

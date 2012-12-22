@@ -293,9 +293,11 @@ struct memoryDB {		/* in core copies of database structures */
 extern struct memoryDB db;
 
 #define set_header_word(ut,field,value) \
-    dbwrite ((ut), (offsetof(struct dbHeader, field)), \
-	     ((db.h.field = (value)), (char *)&(db.h.field)), \
-	     sizeof(afs_int32))
+	( \
+	    (db.h.field) = (value), \
+	    dbwrite((ut), ((char *)&(db.h.field) - (char *)&db.h), \
+		    ((char *)&(db.h.field)), sizeof(afs_int32)) \
+	)
 
 #define set_word_offset(ut,a,b,offset,value) 			      \
     dbwrite ((ut), (a)+(offset),				      \
