@@ -35,7 +35,7 @@ Overview
   * Although we still accept patch submissions to the list, it is
     greatly preferred that you make your submission through Git to
     the OpenAFS Gerrit instance (code review system).  Information
-    can be found at <http://wiki.openafs.org/AFSLore/GitDevelopers>
+    can be found at <http://wiki.openafs.org/GitDevelopers/>
 
 POD and Man Page Generation
 
