@@ -42,6 +42,7 @@ NTSTATUS
 AFSShutdown( IN PDEVICE_OBJECT DeviceObject,
              IN PIRP Irp)
 {
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     IO_STACK_LOCATION *pIrpSp;

@@ -45,7 +45,6 @@ AFSLocateHashEntry( IN AFSBTreeEntry *TopNode,
 {
 
     NTSTATUS         ntStatus = STATUS_SUCCESS;
-    AFSBTreeEntry   *pEntry = NULL;
     AFSBTreeEntry   *pCurrentEntry = NULL;
 
     pCurrentEntry = TopNode;

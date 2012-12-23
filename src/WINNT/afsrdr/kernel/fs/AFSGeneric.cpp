@@ -55,6 +55,7 @@ AFSExceptionFilter( IN CHAR *FunctionString,
                     IN ULONG Code,
                     IN PEXCEPTION_POINTERS ExceptPtrs)
 {
+    UNREFERENCED_PARAMETER(Code);
 
     PEXCEPTION_RECORD ExceptRec;
     PCONTEXT Context;
@@ -609,7 +610,6 @@ AFSUpdateRegistryParameter( IN PUNICODE_STRING ValueName,
     NTSTATUS ntStatus        = STATUS_SUCCESS;
     UNICODE_STRING paramPath, uniParamKey;
     HANDLE hParameters = 0;
-    ULONG ulDisposition = 0;
     OBJECT_ATTRIBUTES stObjectAttributes;
 
     __Enter
@@ -700,7 +700,6 @@ AFSInitializeControlDevice()
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
-    AFSProcessCB *pProcessCB = NULL;
 
     __Enter
     {
@@ -820,7 +819,6 @@ AFSRemoveControlDevice()
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
-    AFSProcessCB *pProcessCB = NULL;
 
     __Enter
     {
@@ -909,7 +907,6 @@ AFSReadServerName()
 {
 
     NTSTATUS ntStatus        = STATUS_SUCCESS;
-    ULONG Default            = 0;
     UNICODE_STRING paramPath;
     RTL_QUERY_REGISTRY_TABLE paramTable[2];
 
@@ -1001,7 +998,6 @@ AFSReadMountRootName()
 {
 
     NTSTATUS ntStatus        = STATUS_SUCCESS;
-    ULONG Default            = 0;
     UNICODE_STRING paramPath;
     RTL_QUERY_REGISTRY_TABLE paramTable[2];
 
@@ -1101,6 +1097,7 @@ NTSTATUS
 AFSSetSysNameInformation( IN AFSSysNameNotificationCB *SysNameInfo,
                           IN ULONG SysNameInfoBufferLength)
 {
+    UNREFERENCED_PARAMETER(SysNameInfoBufferLength);
 
     NTSTATUS         ntStatus = STATUS_SUCCESS;
     AFSDeviceExt    *pControlDevExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
@@ -1255,9 +1252,9 @@ NTSTATUS
 AFSDefaultDispatch( IN PDEVICE_OBJECT DeviceObject,
                     IN PIRP Irp)
 {
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     NTSTATUS            ntStatus = STATUS_INVALID_DEVICE_REQUEST;
-    PIO_STACK_LOCATION  pIrpSp = IoGetCurrentIrpStackLocation( Irp);
 
     AFSCompleteRequest( Irp,
                         ntStatus);
@@ -1274,6 +1271,8 @@ AFSSendDeviceIoControl( IN DEVICE_OBJECT *TargetDeviceObject,
                         IN ULONG OutputBufferLength,
                         OUT ULONG *ResultLength)
 {
+    UNREFERENCED_PARAMETER(OutputBuffer);
+    UNREFERENCED_PARAMETER(OutputBufferLength);
 
     NTSTATUS            ntStatus = STATUS_SUCCESS;
     PIRP                pIrp = NULL;
@@ -1402,6 +1401,8 @@ AFSIrpComplete( IN PDEVICE_OBJECT DeviceObject,
                 IN PIRP           Irp,
                 IN PVOID          Context)
 {
+    UNREFERENCED_PARAMETER(DeviceObject);
+    UNREFERENCED_PARAMETER(Irp);
 
     KEVENT *pEvent = (KEVENT *)Context;
 
@@ -1898,6 +1899,7 @@ try_exit:
 ULONG
 AFSGetSessionId( IN HANDLE ProcessId, OUT BOOLEAN *pbImpersonation)
 {
+    UNREFERENCED_PARAMETER(ProcessId);
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     PACCESS_TOKEN hToken = NULL;

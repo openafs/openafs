@@ -56,8 +56,6 @@ AFSDirControl( IN PDEVICE_OBJECT DeviceObject,
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    ULONG ulRequestType = 0;
-    IO_STACK_LOCATION *pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     AFSDeviceExt *pControlDeviceExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
 
     __try

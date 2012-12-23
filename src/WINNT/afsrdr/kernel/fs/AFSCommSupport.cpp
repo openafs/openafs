@@ -394,7 +394,6 @@ AFSProcessControlRequest( IN PIRP Irp)
     ULONG               ulIoControlCode;
     BOOLEAN             bCompleteRequest = TRUE;
     AFSDeviceExt       *pDevExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
-    ULONG               ulBytesProcessed = 0;
 
     __try
     {
@@ -903,7 +902,6 @@ void
 AFSCleanupIrpPool()
 {
 
-    NTSTATUS        ntStatus = STATUS_SUCCESS;
     AFSPoolEntry   *pEntry = NULL, *pNextEntry = NULL;
     AFSDeviceExt   *pDevExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
     AFSCommSrvcCB  *pCommSrvc = (AFSCommSrvcCB *)&pDevExt->Specific.Control.CommServiceCB;
@@ -967,7 +965,7 @@ AFSCleanupIrpPool()
                 // Here we need to complete the irp, cancelled, and delete the data block
                 //
 
-                pEntry->ResultStatus = STATUS_CANCELLED;
+                pEntry->ResultStatus = (ULONG) STATUS_CANCELLED;
 
                 KeSetEvent( &pEntry->Event,
                             0,
@@ -1013,7 +1011,7 @@ AFSCleanupIrpPool()
 
             pNextEntry = pEntry->fLink;
 
-            pEntry->ResultStatus = STATUS_CANCELLED;
+            pEntry->ResultStatus = (ULONG) STATUS_CANCELLED;
 
             //
             // Here we will set the event of the requestor and let the blocked thread
@@ -1481,7 +1479,6 @@ AFSProcessIrpResult( IN PIRP Irp)
 
     NTSTATUS            ntStatus = STATUS_SUCCESS;
     AFSDeviceExt       *pDevExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
-    IO_STACK_LOCATION  *pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     AFSCommSrvcCB      *pCommSrvc = NULL;
     AFSPoolEntry       *pCurrentEntry = NULL;
     AFSCommResult      *pResult = NULL;

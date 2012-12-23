@@ -42,6 +42,7 @@ NTSTATUS
 AFSQueryQuota( IN PDEVICE_OBJECT DeviceObject,
                IN PIRP Irp)
 {
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     NTSTATUS ntStatus = STATUS_NOT_SUPPORTED;
     IO_STACK_LOCATION *pIrpSp;
@@ -77,6 +78,7 @@ NTSTATUS
 AFSSetQuota( IN PDEVICE_OBJECT DeviceObject,
              IN PIRP Irp)
 {
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     NTSTATUS ntStatus = STATUS_NOT_SUPPORTED;
     IO_STACK_LOCATION *pIrpSp;

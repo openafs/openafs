@@ -42,6 +42,7 @@ NTSTATUS
 AFSInternalDevControl( IN PDEVICE_OBJECT DeviceObject,
                        IN PIRP Irp)
 {
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     NTSTATUS ntStatus = STATUS_NOT_IMPLEMENTED;
     IO_STACK_LOCATION *pIrpSp;

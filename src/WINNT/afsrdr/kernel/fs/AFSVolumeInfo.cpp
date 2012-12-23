@@ -44,7 +44,6 @@ AFSQueryVolumeInfo( IN PDEVICE_OBJECT DeviceObject,
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)DeviceObject->DeviceExtension;
     IO_STACK_LOCATION *pIrpSp;
     AFSDeviceExt *pControlDeviceExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
 
@@ -114,6 +113,7 @@ NTSTATUS
 AFSSetVolumeInfo( IN PDEVICE_OBJECT DeviceObject,
                   IN PIRP Irp)
 {
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     NTSTATUS ntStatus = STATUS_INVALID_DEVICE_REQUEST;
     IO_STACK_LOCATION *pIrpSp;
