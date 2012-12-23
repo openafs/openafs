@@ -68,8 +68,7 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSDeviceExt    *pDeviceExt;
-    ULONG ulTimeIncrement = 0;
+    AFSDeviceExt    *pDeviceExt = NULL;
     UNICODE_STRING uniSymLinkName;
     UNICODE_STRING uniDeviceName;
     ULONG ulIndex = 0;

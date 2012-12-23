@@ -71,6 +71,7 @@ AFSProcessNotifyEx( IN OUT PEPROCESS Process,
                     IN     HANDLE ProcessId,
                     IN OUT PPS_CREATE_NOTIFY_INFO CreateInfo)
 {
+    UNREFERENCED_PARAMETER(Process);
 
     if ( CreateInfo)
     {
@@ -94,7 +95,6 @@ AFSProcessCreate( IN HANDLE ParentId,
                   IN HANDLE CreatingProcessId,
                   IN HANDLE CreatingThreadId)
 {
-    NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
     AFSProcessCB *pProcessCB = NULL;
 
@@ -157,7 +157,7 @@ AFSProcessDestroy( IN HANDLE ProcessId)
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
-    AFSProcessCB *pProcessCB = NULL, *pParentProcessCB = NULL;
+    AFSProcessCB *pProcessCB = NULL;
     AFSProcessAuthGroupCB *pProcessAuthGroup = NULL, *pLastAuthGroup = NULL;
     AFSThreadCB *pThreadCB = NULL, *pNextThreadCB = NULL;
 

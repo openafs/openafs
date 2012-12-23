@@ -42,6 +42,7 @@ NTSTATUS
 AFSLoadLibrary( IN ULONG Flags,
                 IN UNICODE_STRING *ServicePath)
 {
+    UNREFERENCED_PARAMETER(Flags);
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDeviceExt       *pDevExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
@@ -848,6 +849,7 @@ NTSTATUS
 AFSInitializeLibrary( IN AFSFileID *GlobalRootFid,
                       IN BOOLEAN QueueRootEnumeration)
 {
+    UNREFERENCED_PARAMETER(QueueRootEnumeration);
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSLibraryInitCB    stInitLib;

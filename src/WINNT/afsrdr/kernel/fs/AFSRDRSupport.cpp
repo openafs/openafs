@@ -45,9 +45,7 @@ AFSInitRDRDevice()
 
     NTSTATUS       ntStatus = STATUS_SUCCESS;
     UNICODE_STRING uniDeviceName;
-    ULONG          ulIndex = 0;
     AFSDeviceExt  *pDeviceExt = NULL;
-    AFSFileID      stRootFid;
     UNICODE_STRING uniFsRtlRegisterUncProviderEx;
     FsRtlRegisterUncProviderEx_t pFsRtlRegisterUncProviderEx = NULL;
 
@@ -209,10 +207,10 @@ NTSTATUS
 AFSRDRDeviceControl( IN PDEVICE_OBJECT DeviceObject,
                      IN PIRP Irp)
 {
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     NTSTATUS           ntStatus = STATUS_SUCCESS;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
-    PFILE_OBJECT       pFileObject = pIrpSp->FileObject;
     BOOLEAN            bCompleteIrp = TRUE;
 
     __Enter
@@ -347,7 +345,6 @@ AFSInitializeRedirector( IN AFSRedirectorInitInfo *RedirInitInfo)
     NTSTATUS ntStatus = STATUS_SUCCESS;
     LARGE_INTEGER cacheSizeBytes;
     AFSDeviceExt *pDevExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
-    AFSDeviceExt *pControlDevExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
     OBJECT_ATTRIBUTES   stObjectAttribs;
     IO_STATUS_BLOCK stIoStatus;
     UNICODE_STRING uniServiceName;
@@ -849,8 +846,6 @@ AFSInitRdrFcb( OUT AFSFcb **RdrFcb)
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSFcb *pFcb = NULL;
     AFSNonPagedFcb *pNPFcb = NULL;
-    IO_STATUS_BLOCK stIoStatus = {0,0};
-    AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
 
     __Enter
     {

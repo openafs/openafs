@@ -48,6 +48,14 @@ AFSFastIoCheckIfPossible( IN struct _FILE_OBJECT *FileObject,
                           OUT PIO_STATUS_BLOCK IoStatus,
                           IN struct _DEVICE_OBJECT *DeviceObject)
 {
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(FileOffset);
+    UNREFERENCED_PARAMETER(Length);
+    UNREFERENCED_PARAMETER(Wait);
+    UNREFERENCED_PARAMETER(LockKey);
+    UNREFERENCED_PARAMETER(CheckForReadOperation);
+    UNREFERENCED_PARAMETER(IoStatus);
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     BOOLEAN bStatus = FALSE;
 
@@ -65,6 +73,15 @@ AFSFastIoRead( IN struct _FILE_OBJECT *FileObject,
                IN struct _DEVICE_OBJECT *DeviceObject)
 {
 
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(FileOffset);
+    UNREFERENCED_PARAMETER(Length);
+    UNREFERENCED_PARAMETER(Wait);
+    UNREFERENCED_PARAMETER(LockKey);
+    UNREFERENCED_PARAMETER(Buffer);
+    UNREFERENCED_PARAMETER(IoStatus);
+    UNREFERENCED_PARAMETER(DeviceObject);
+
     BOOLEAN bStatus = FALSE;
 
     return bStatus;
@@ -81,6 +98,15 @@ AFSFastIoWrite( IN struct _FILE_OBJECT *FileObject,
                 IN struct _DEVICE_OBJECT *DeviceObject)
 {
 
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(FileOffset);
+    UNREFERENCED_PARAMETER(Length);
+    UNREFERENCED_PARAMETER(Wait);
+    UNREFERENCED_PARAMETER(LockKey);
+    UNREFERENCED_PARAMETER(Buffer);
+    UNREFERENCED_PARAMETER(IoStatus);
+    UNREFERENCED_PARAMETER(DeviceObject);
+
     BOOLEAN bStatus = FALSE;
 
     return bStatus;
@@ -93,6 +119,11 @@ AFSFastIoQueryBasicInfo( IN struct _FILE_OBJECT *FileObject,
                          OUT PIO_STATUS_BLOCK IoStatus,
                          IN struct _DEVICE_OBJECT *DeviceObject)
 {
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(Wait);
+    UNREFERENCED_PARAMETER(Buffer);
+    UNREFERENCED_PARAMETER(IoStatus);
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     BOOLEAN bStatus = FALSE;
 
@@ -106,6 +137,11 @@ AFSFastIoQueryStandardInfo( IN struct _FILE_OBJECT *FileObject,
                             OUT PIO_STATUS_BLOCK IoStatus,
                             IN struct _DEVICE_OBJECT *DeviceObject)
 {
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(Wait);
+    UNREFERENCED_PARAMETER(Buffer);
+    UNREFERENCED_PARAMETER(IoStatus);
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     BOOLEAN bStatus = FALSE;
 
@@ -123,6 +159,15 @@ AFSFastIoLock( IN struct _FILE_OBJECT *FileObject,
                OUT PIO_STATUS_BLOCK IoStatus,
                IN struct _DEVICE_OBJECT *DeviceObject)
 {
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(FileOffset);
+    UNREFERENCED_PARAMETER(Length);
+    UNREFERENCED_PARAMETER(ProcessId);
+    UNREFERENCED_PARAMETER(Key);
+    UNREFERENCED_PARAMETER(FailImmediately);
+    UNREFERENCED_PARAMETER(ExclusiveLock);
+    UNREFERENCED_PARAMETER(IoStatus);
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     BOOLEAN bStatus = FALSE;
 
@@ -138,6 +183,13 @@ AFSFastIoUnlockSingle( IN struct _FILE_OBJECT *FileObject,
                        OUT PIO_STATUS_BLOCK IoStatus,
                        IN struct _DEVICE_OBJECT *DeviceObject)
 {
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(FileOffset);
+    UNREFERENCED_PARAMETER(Length);
+    UNREFERENCED_PARAMETER(ProcessId);
+    UNREFERENCED_PARAMETER(Key);
+    UNREFERENCED_PARAMETER(IoStatus);
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     BOOLEAN bStatus = FALSE;
 
@@ -150,6 +202,10 @@ AFSFastIoUnlockAll( IN struct _FILE_OBJECT *FileObject,
                     OUT PIO_STATUS_BLOCK IoStatus,
                     IN struct _DEVICE_OBJECT *DeviceObject)
 {
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(ProcessId);
+    UNREFERENCED_PARAMETER(IoStatus);
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     BOOLEAN bStatus = FALSE;
 
@@ -163,6 +219,11 @@ AFSFastIoUnlockAllByKey( IN struct _FILE_OBJECT *FileObject,
                          OUT PIO_STATUS_BLOCK IoStatus,
                          IN struct _DEVICE_OBJECT *DeviceObject)
 {
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(ProcessId);
+    UNREFERENCED_PARAMETER(Key);
+    UNREFERENCED_PARAMETER(IoStatus);
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     BOOLEAN bStatus = FALSE;
 
@@ -180,6 +241,15 @@ AFSFastIoDevCtrl( IN struct _FILE_OBJECT *FileObject,
                   OUT PIO_STATUS_BLOCK IoStatus,
                   IN struct _DEVICE_OBJECT *DeviceObject)
 {
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(Wait);
+    UNREFERENCED_PARAMETER(InputBuffer);
+    UNREFERENCED_PARAMETER(InputBufferLength);
+    UNREFERENCED_PARAMETER(OutputBuffer);
+    UNREFERENCED_PARAMETER(OutputBufferLength);
+    UNREFERENCED_PARAMETER(IoControlCode);
+    UNREFERENCED_PARAMETER(IoStatus);
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     BOOLEAN bStatus = FALSE;
 
@@ -229,6 +299,8 @@ VOID
 AFSFastIoDetachDevice( IN struct _DEVICE_OBJECT *SourceDevice,
                        IN struct _DEVICE_OBJECT *TargetDevice)
 {
+    UNREFERENCED_PARAMETER(SourceDevice);
+    UNREFERENCED_PARAMETER(TargetDevice);
 
     return;
 }
@@ -240,6 +312,11 @@ AFSFastIoQueryNetworkOpenInfo( IN struct _FILE_OBJECT *FileObject,
                                OUT struct _IO_STATUS_BLOCK *IoStatus,
                                IN struct _DEVICE_OBJECT *DeviceObject)
 {
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(Wait);
+    UNREFERENCED_PARAMETER(Buffer);
+    UNREFERENCED_PARAMETER(IoStatus);
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     BOOLEAN bStatus = FALSE;
 
@@ -255,6 +332,13 @@ AFSFastIoMdlRead( IN struct _FILE_OBJECT *FileObject,
                   OUT PIO_STATUS_BLOCK IoStatus,
                   IN struct _DEVICE_OBJECT *DeviceObject)
 {
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(FileOffset);
+    UNREFERENCED_PARAMETER(Length);
+    UNREFERENCED_PARAMETER(LockKey);
+    UNREFERENCED_PARAMETER(MdlChain);
+    UNREFERENCED_PARAMETER(IoStatus);
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     BOOLEAN bStatus = FALSE;
 
@@ -266,6 +350,9 @@ AFSFastIoMdlReadComplete( IN struct _FILE_OBJECT *FileObject,
                           IN PMDL MdlChain,
                           IN struct _DEVICE_OBJECT *DeviceObject)
 {
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(MdlChain);
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     BOOLEAN bStatus = FALSE;
 
@@ -281,6 +368,13 @@ AFSFastIoPrepareMdlWrite( IN struct _FILE_OBJECT *FileObject,
                           OUT PIO_STATUS_BLOCK IoStatus,
                           IN struct _DEVICE_OBJECT *DeviceObject)
 {
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(FileOffset);
+    UNREFERENCED_PARAMETER(Length);
+    UNREFERENCED_PARAMETER(LockKey);
+    UNREFERENCED_PARAMETER(MdlChain);
+    UNREFERENCED_PARAMETER(IoStatus);
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     BOOLEAN bStatus = FALSE;
 
@@ -293,6 +387,10 @@ AFSFastIoMdlWriteComplete( IN struct _FILE_OBJECT *FileObject,
                            IN PMDL MdlChain,
                            IN struct _DEVICE_OBJECT *DeviceObject)
 {
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(FileOffset);
+    UNREFERENCED_PARAMETER(MdlChain);
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     BOOLEAN bStatus = FALSE;
 
@@ -305,6 +403,8 @@ AFSFastIoAcquireForModWrite( IN struct _FILE_OBJECT *FileObject,
                              OUT struct _ERESOURCE **ResourceToRelease,
                              IN struct _DEVICE_OBJECT *DeviceObject)
 {
+    UNREFERENCED_PARAMETER(DeviceObject);
+    UNREFERENCED_PARAMETER(EndingOffset);
 
     NTSTATUS ntStatus = STATUS_FILE_LOCK_CONFLICT;
     AFSFcb *pFcb = (AFSFcb *)FileObject->FsContext;
@@ -336,6 +436,8 @@ AFSFastIoReleaseForModWrite( IN struct _FILE_OBJECT *FileObject,
                              IN struct _ERESOURCE *ResourceToRelease,
                              IN struct _DEVICE_OBJECT *DeviceObject)
 {
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
 
@@ -354,6 +456,7 @@ NTSTATUS
 AFSFastIoAcquireForCCFlush( IN struct _FILE_OBJECT *FileObject,
                             IN struct _DEVICE_OBJECT *DeviceObject)
 {
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     NTSTATUS ntStatus = STATUS_FILE_LOCK_CONFLICT;
     AFSFcb *pFcb = (AFSFcb *)FileObject->FsContext;
@@ -411,6 +514,7 @@ NTSTATUS
 AFSFastIoReleaseForCCFlush( IN struct _FILE_OBJECT *FileObject,
                             IN struct _DEVICE_OBJECT *DeviceObject)
 {
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSFcb *pFcb = (AFSFcb *)FileObject->FsContext;
@@ -463,6 +567,16 @@ AFSFastIoReadCompressed( IN struct _FILE_OBJECT *FileObject,
                          IN ULONG CompressedDataInfoLength,
                          IN struct _DEVICE_OBJECT *DeviceObject)
 {
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(FileOffset);
+    UNREFERENCED_PARAMETER(Length);
+    UNREFERENCED_PARAMETER(LockKey);
+    UNREFERENCED_PARAMETER(Buffer);
+    UNREFERENCED_PARAMETER(MdlChain);
+    UNREFERENCED_PARAMETER(IoStatus);
+    UNREFERENCED_PARAMETER(CompressedDataInfo);
+    UNREFERENCED_PARAMETER(CompressedDataInfoLength);
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     BOOLEAN bStatus = FALSE;
 
@@ -481,6 +595,16 @@ AFSFastIoWriteCompressed( IN struct _FILE_OBJECT *FileObject,
                           IN ULONG CompressedDataInfoLength,
                           IN struct _DEVICE_OBJECT *DeviceObject)
 {
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(FileOffset);
+    UNREFERENCED_PARAMETER(Length);
+    UNREFERENCED_PARAMETER(LockKey);
+    UNREFERENCED_PARAMETER(Buffer);
+    UNREFERENCED_PARAMETER(MdlChain);
+    UNREFERENCED_PARAMETER(IoStatus);
+    UNREFERENCED_PARAMETER(CompressedDataInfo);
+    UNREFERENCED_PARAMETER(CompressedDataInfoLength);
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     BOOLEAN bStatus = FALSE;
 
@@ -492,6 +616,9 @@ AFSFastIoMdlReadCompleteCompressed( IN struct _FILE_OBJECT *FileObject,
                                     IN PMDL MdlChain,
                                     IN struct _DEVICE_OBJECT *DeviceObject)
 {
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(MdlChain);
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     BOOLEAN bStatus = FALSE;
 
@@ -504,6 +631,10 @@ AFSFastIoMdlWriteCompleteCompressed( IN struct _FILE_OBJECT *FileObject,
                                      IN PMDL MdlChain,
                                      IN struct _DEVICE_OBJECT *DeviceObject)
 {
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(FileOffset);
+    UNREFERENCED_PARAMETER(MdlChain);
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     BOOLEAN bStatus = FALSE;
 
@@ -515,6 +646,9 @@ AFSFastIoQueryOpen( IN struct _IRP *Irp,
                     OUT PFILE_NETWORK_OPEN_INFORMATION NetworkInformation,
                     IN struct _DEVICE_OBJECT *DeviceObject)
 {
+    UNREFERENCED_PARAMETER(Irp);
+    UNREFERENCED_PARAMETER(NetworkInformation);
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     BOOLEAN bStatus = FALSE;
 

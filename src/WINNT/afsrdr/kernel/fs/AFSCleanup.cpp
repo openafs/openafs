@@ -56,7 +56,6 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)DeviceObject->DeviceExtension;
     IO_STACK_LOCATION *pIrpSp = IoGetCurrentIrpStackLocation( Irp);
 
     __try
@@ -119,9 +118,8 @@ NTSTATUS
 AFSCommonCleanup( IN PDEVICE_OBJECT DeviceObject,
                   IN PIRP Irp)
 {
-
+    UNREFERENCED_PARAMETER(DeviceObject);
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)DeviceObject->DeviceExtension;
     IO_STACK_LOCATION *pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     PFILE_OBJECT pFileObject = NULL;
     AFSDeviceExt *pControlDeviceExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;

@@ -429,7 +429,6 @@ AFSCreateSetProcessAuthGroup( AFSAuthGroupRequestCB *CreateSetAuthGroup)
     AFSProcessAuthGroupCB *pAuthGroup = NULL, *pLastAuthGroup = NULL;
     ULONG ulSessionId = 0;
     ULONGLONG ullTableHash = 0;
-    GUID stAuthGroup;
     UNICODE_STRING uniCallerSID;
     BOOLEAN bImpersonation = FALSE;
 
@@ -1064,7 +1063,6 @@ AFSResetActiveProcessAuthGroup( IN IN AFSAuthGroupRequestCB *AuthGroup)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    GUID *pAuthGroup = NULL;
     AFSProcessCB *pProcessCB = NULL;
     AFSThreadCB *pThreadCB = NULL;
     AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
@@ -1184,7 +1182,6 @@ AFSCreateAuthGroupForSIDorLogonSession( IN AFSAuthGroupRequestCB *AuthGroupReque
     AFSSIDEntryCB *pSIDEntryCB = NULL;
     ULONG ulSessionId = 0;
     ULONGLONG ullTableHash = 0;
-    GUID stAuthGroup;
     UNICODE_STRING uniCallerSID;
     UNICODE_STRING uniGUID;
     BOOLEAN bLocalSystem = FALSE;
