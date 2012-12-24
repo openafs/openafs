@@ -3253,7 +3253,7 @@ AFSSetRenameInfo( IN PIRP Irp)
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
                                   "AFSSetRenameInfo Failed to delete section for target file %wZ\n",
-                                  &pTargetDirEntry->NameInformation.FileName);
+                                  &uniTargetName);
                 }
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
