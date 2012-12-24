@@ -3008,6 +3008,16 @@ NPGetResourceParent( LPNETRESOURCE   lpNetResource,
     WCHAR   *pwchRemoteName = NULL, *pwchSearch = NULL, *pwchSystem = NULL;
     LPNETRESOURCE lpOutResource = (LPNETRESOURCE) lpBuffer;
 
+    if ( NPIsFSDisabled())
+    {
+
+#ifdef AFS_DEBUG_TRACE
+        AFSDbgPrint( L"NPGetResourceParent AFSRDFS is disabled, returning WN_BAD_NETNAME\n");
+#endif
+
+        return WN_BAD_NETNAME;
+    }
+
     if ( lpNetResource == NULL)
     {
 #ifdef AFS_DEBUG_TRACE
@@ -3049,6 +3059,11 @@ NPGetResourceParent( LPNETRESOURCE   lpNetResource,
 
     pwchRemoteName = lpNetResource->lpRemoteName;
 
+    //
+    // The input will be of the form \\AFS\CELL\path.
+    // \\AFS has no parent and by definition returns an empty NETRESOURCE.
+    //
+
     pwchSearch = pwchRemoteName + (wcslen( pwchRemoteName) - 1);
 
     while( pwchSearch != pwchRemoteName)
@@ -3065,7 +3080,8 @@ NPGetResourceParent( LPNETRESOURCE   lpNetResource,
         pwchSearch--;
     }
 
-    if( pwchSearch != pwchRemoteName)
+    if( pwchSearch != pwchRemoteName &&
+        pwchSearch != pwchRemoteName + 1)
     {
 
 #ifdef AFS_DEBUG_TRACE
