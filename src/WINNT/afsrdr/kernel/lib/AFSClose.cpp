@@ -150,22 +150,8 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                 // Remove the Ccb and de-allocate it
                 //
 
-                ntStatus = AFSRemoveCcb( pFcb,
-                                         pCcb);
-
-                if( !NT_SUCCESS( ntStatus))
-                {
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_WARNING,
-                                  "AFSClose Failed to remove Ccb from Fcb Status %08lX\n", ntStatus);
-
-                    //
-                    // We can't actually fail a close operation so reset the status
-                    //
-
-                    ntStatus = STATUS_SUCCESS;
-                }
+                AFSRemoveCcb( pFcb,
+                              pCcb);
 
                 lCount = InterlockedDecrement( &pDirCB->DirOpenReferenceCount);
 
@@ -231,22 +217,8 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                 // Remove the Ccb and de-allocate it
                 //
 
-                ntStatus = AFSRemoveCcb( pFcb,
-                                         pCcb);
-
-                if( !NT_SUCCESS( ntStatus))
-                {
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_WARNING,
-                                  "AFSClose Failed to remove Ccb from Fcb Status %08lX\n", ntStatus);
-
-                    //
-                    // We can't actually fail a close operation so reset the status
-                    //
-
-                    ntStatus = STATUS_SUCCESS;
-                }
+                AFSRemoveCcb( pFcb,
+                              pCcb);
 
                 lCount = InterlockedDecrement( &pDirCB->DirOpenReferenceCount);
 
@@ -363,23 +335,8 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                 // Remove the Ccb and de-allocate it
                 //
 
-                ntStatus = AFSRemoveCcb( pFcb,
-                                         pCcb);
-
-                if( !NT_SUCCESS( ntStatus))
-                {
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_WARNING,
-                                  "AFSClose Failed to remove Ccb from Fcb Status %08lX\n",
-                                  ntStatus);
-
-                    //
-                    // We can't actually fail a close operation so reset the status
-                    //
-
-                    ntStatus = STATUS_SUCCESS;
-                }
+                AFSRemoveCcb( pFcb,
+                              pCcb);
 
                 //
                 // If this entry is deleted then remove the object from the volume tree
@@ -583,22 +540,8 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                 // Remove the Ccb and de-allocate it
                 //
 
-                ntStatus = AFSRemoveCcb( pFcb,
-                                         pCcb);
-
-                if( !NT_SUCCESS( ntStatus))
-                {
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_WARNING,
-                                  "AFSClose Failed to remove Ccb from Fcb Status %08lX\n", ntStatus);
-
-                    //
-                    // We can't actually fail a close operation so reset the status
-                    //
-
-                    ntStatus = STATUS_SUCCESS;
-                }
+                AFSRemoveCcb( pFcb,
+                              pCcb);
 
                 lCount = InterlockedDecrement( &pDirCB->DirOpenReferenceCount);
 

@@ -1230,15 +1230,13 @@ try_exit:
 //
 // Return:
 //
-//      A status is returned for the function
+//      None
 //
 
-NTSTATUS
+void
 AFSRemoveCcb( IN AFSFcb *Fcb,
               IN AFSCcb *Ccb)
 {
-
-    NTSTATUS ntStatus = STATUS_SUCCESS;
 
     AFSAcquireExcl( &Ccb->NPCcb->CcbLock,
                     TRUE);
@@ -1332,8 +1330,6 @@ AFSRemoveCcb( IN AFSFcb *Fcb,
     AFSExFreePoolWithTag( Ccb->NPCcb, AFS_CCB_NP_ALLOCATION_TAG);
 
     AFSExFreePoolWithTag( Ccb, AFS_CCB_ALLOCATION_TAG);
-
-    return ntStatus;
 }
 
 NTSTATUS
