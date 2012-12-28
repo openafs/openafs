@@ -2127,6 +2127,9 @@ h_GetHost_r(struct rx_connection *tcon)
 		    /* the new host is held and locked */
 		} else {
 		    /* This really is a new host */
+		    opr_Assert(interfValid == 1);
+		    initInterfaceAddr_r(host, &interf);
+
 		    cb_conn = host->callback_rxcon;
 		    rx_GetConnection(cb_conn);
 		    H_UNLOCK;
@@ -2141,8 +2144,6 @@ h_GetHost_r(struct rx_connection *tcon)
 				("InitCallBackState3 success on host %" AFS_PTR_FMT " (%s:%d)\n",
 				 host, afs_inet_ntoa_r(host->host, hoststr),
 				 ntohs(host->port)));
-			opr_Assert(interfValid == 1);
-			initInterfaceAddr_r(host, &interf);
 		    }
 		}
 	    }
