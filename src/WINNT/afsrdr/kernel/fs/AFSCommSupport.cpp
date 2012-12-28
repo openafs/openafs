@@ -557,6 +557,13 @@ AFSProcessControlRequest( IN PIRP Irp)
 
                 AFSTraceConfigCB *pTraceInfo = (AFSTraceConfigCB *)Irp->AssociatedIrp.SystemBuffer;
 
+                if ( !AFSIsInGroup( SeExports->SeAliasAdminsSid))
+                {
+
+                    ntStatus = STATUS_ACCESS_DENIED;
+                    break;
+                }
+
                 if( pTraceInfo == NULL ||
                     pIrpSp->Parameters.DeviceIoControl.InputBufferLength < sizeof( AFSTraceConfigCB))
                 {
@@ -573,6 +580,13 @@ AFSProcessControlRequest( IN PIRP Irp)
 
             case IOCTL_AFS_GET_TRACE_BUFFER:
             {
+
+                if ( !AFSIsInGroup( SeExports->SeAliasAdminsSid))
+                {
+
+                    ntStatus = STATUS_ACCESS_DENIED;
+                    break;
+                }
 
                 if( pIrpSp->Parameters.DeviceIoControl.OutputBufferLength == 0)
                 {
@@ -591,6 +605,13 @@ AFSProcessControlRequest( IN PIRP Irp)
 
             case IOCTL_AFS_FORCE_CRASH:
             {
+
+                if ( !AFSIsInGroup( SeExports->SeAliasAdminsSid))
+                {
+
+                    ntStatus = STATUS_ACCESS_DENIED;
+                    break;
+                }
 
 #if DBG
 

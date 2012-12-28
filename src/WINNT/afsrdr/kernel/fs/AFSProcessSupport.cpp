@@ -969,6 +969,34 @@ AFSIsUser( IN PSID Sid)
     return retVal;
 }
 
+BOOLEAN
+AFSIsInGroup(PSID Sid)
+{
+    SECURITY_SUBJECT_CONTEXT subjectContext;
+    PTOKEN_GROUPS groups;
+    PACCESS_TOKEN token;
+    BOOLEAN retVal = FALSE;
+
+    SeCaptureSubjectContext( &subjectContext );
+    SeLockSubjectContext( &subjectContext );
+
+    token = SeQuerySubjectContextToken( &subjectContext );
+
+    if (NT_SUCCESS(SeQueryInformationToken(token, TokenGroups, (PVOID*) &groups)))
+    {
+        ULONG i;
+        for (i = 0; !retVal && i < groups->GroupCount; i++)
+        {
+            retVal = RtlEqualSid(Sid, groups->Groups[i].Sid);
+        }
+
+        ExFreePool( groups );
+    }
+    SeUnlockSubjectContext( &subjectContext );
+    SeReleaseSubjectContext( &subjectContext );
+    return retVal;
+}
+
 VOID
 AFSRegisterService( void)
 {
