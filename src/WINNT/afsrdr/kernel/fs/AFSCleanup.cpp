@@ -76,6 +76,12 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                 //
 
                 AFSCleanupIrpPool();
+
+                //
+                // And reset the Service PID
+                //
+                AFSDeregisterService();
+
             }
 
             if( FlagOn( (ULONG_PTR)pIrpSp->FileObject->FsContext, AFS_REDIRECTOR_INSTANCE))

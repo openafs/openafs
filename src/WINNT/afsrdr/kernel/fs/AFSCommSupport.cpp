@@ -438,6 +438,8 @@ AFSProcessControlRequest( IN PIRP Irp)
 
                 pIrpSp->FileObject->FsContext = (void *)((ULONG_PTR)pIrpSp->FileObject->FsContext | AFS_CONTROL_INSTANCE);
 
+                AFSRegisterService();
+
                 break;
             }
 
@@ -445,6 +447,14 @@ AFSProcessControlRequest( IN PIRP Irp)
             {
 
                 AFSRedirectorInitInfo *pRedirInitInfo = (AFSRedirectorInitInfo *)Irp->AssociatedIrp.SystemBuffer;
+
+                if ( !AFSIsService())
+                {
+
+                    ntStatus = STATUS_ACCESS_DENIED;
+
+                    break;
+                }
 
                 //
                 // Extract off the passed in information which contains the
@@ -485,6 +495,14 @@ AFSProcessControlRequest( IN PIRP Irp)
             case IOCTL_AFS_PROCESS_IRP_REQUEST:
             {
 
+                if ( !AFSIsService())
+                {
+
+                    ntStatus = STATUS_ACCESS_DENIED;
+
+                    break;
+                }
+
                 ntStatus = AFSProcessIrpRequest( Irp);
 
                 break;
@@ -492,6 +510,14 @@ AFSProcessControlRequest( IN PIRP Irp)
 
             case IOCTL_AFS_PROCESS_IRP_RESULT:
             {
+
+                if ( !AFSIsService())
+                {
+
+                    ntStatus = STATUS_ACCESS_DENIED;
+
+                    break;
+                }
 
                 ntStatus = AFSProcessIrpResult( Irp);
 
@@ -502,6 +528,14 @@ AFSProcessControlRequest( IN PIRP Irp)
             {
 
                 AFSSysNameNotificationCB *pSysNameInfo = (AFSSysNameNotificationCB *)Irp->AssociatedIrp.SystemBuffer;
+
+                if ( !AFSIsService())
+                {
+
+                    ntStatus = STATUS_ACCESS_DENIED;
+
+                    break;
+                }
 
                 if( pSysNameInfo == NULL ||
                     pIrpSp->Parameters.DeviceIoControl.InputBufferLength < sizeof( AFSSysNameNotificationCB))
@@ -634,6 +668,14 @@ AFSProcessControlRequest( IN PIRP Irp)
             case IOCTL_AFS_SHUTDOWN:
             {
 
+                if ( !AFSIsService())
+                {
+
+                    ntStatus = STATUS_ACCESS_DENIED;
+
+                    break;
+                }
+
                 ntStatus = AFSShutdownRedirector();
 
                 break;
@@ -641,7 +683,6 @@ AFSProcessControlRequest( IN PIRP Irp)
 
             case IOCTL_AFS_AUTHGROUP_CREATE_AND_SET:
             {
-
 
                 AFSAuthGroupRequestCB *pAuthGroupRequestCB = (AFSAuthGroupRequestCB *)Irp->AssociatedIrp.SystemBuffer;
 
@@ -1050,6 +1091,7 @@ AFSCleanupIrpPool()
         //
 
         AFSReleaseResource( &pCommSrvc->ResultPoolLock);
+
     }
 
     return;

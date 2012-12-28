@@ -38,6 +38,8 @@
 
 #include "AFSCommon.h"
 
+static HANDLE AFSServicePid = NULL;
+
 void
 AFSProcessNotify( IN HANDLE  ParentId,
                   IN HANDLE  ProcessId,
@@ -965,4 +967,22 @@ AFSIsUser( IN PSID Sid)
     SeUnlockSubjectContext( &subjectContext);
     SeReleaseSubjectContext( &subjectContext);
     return retVal;
+}
+
+VOID
+AFSRegisterService( void)
+{
+    AFSServicePid = PsGetCurrentProcessId();
+}
+
+VOID
+AFSDeregisterService( void)
+{
+    AFSServicePid = NULL;
+}
+
+BOOLEAN
+AFSIsService( void)
+{
+    return PsGetCurrentProcessId() == AFSServicePid;
 }

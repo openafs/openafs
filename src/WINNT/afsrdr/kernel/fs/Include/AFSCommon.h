@@ -832,6 +832,15 @@ AFSInitializeThreadCB( IN AFSProcessCB *ProcessCB,
 BOOLEAN
 AFSIsUser( IN PSID Sid);
 
+VOID
+AFSRegisterService( void);
+
+VOID
+AFSDeregisterService( void);
+
+BOOLEAN
+AFSIsService( void);
+
 };
 
 #endif /* _AFS_COMMON_H */
