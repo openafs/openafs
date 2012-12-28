@@ -2184,7 +2184,6 @@ h_GetHost_r(struct rx_connection *tcon)
 		    /* the new host is held and locked */
 		} else {
 		    /* This really is a new host */
-		    h_AddHostToUuidHashTable_r(&identP->uuid, host);
 		    cb_conn = host->callback_rxcon;
 		    rx_GetConnection(cb_conn);
 		    H_UNLOCK;
@@ -4184,6 +4183,8 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
 
     osi_Assert(!host->interface);
     host->interface = interface;
+
+    h_AddHostToUuidHashTable_r(&interface->uuid, host);
 
     if (LogLevel >= 125) {
 	afsUUID_to_string(&interface->uuid, uuidstr, 127);
