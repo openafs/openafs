@@ -158,12 +158,13 @@
 // Debug information
 //
 
-#define AFS_DBG_FLAG_BREAK_ON_ENTRY     0x00000001   // Only enabled in checked build
-#define AFS_DBG_TRACE_TO_DEBUGGER       0x00000002
-#define AFS_DBG_FLAG_ENABLE_FORCE_CRASH 0x00000004   // Only enabled in checked build
-#define AFS_DBG_BUGCHECK_EXCEPTION      0x00000008
-#define AFS_DBG_CLEAN_SHUTDOWN          0x00000010
-#define AFS_DBG_REQUIRE_CLEAN_SHUTDOWN  0x00000020
+#define AFS_DBG_FLAG_BREAK_ON_ENTRY      0x00000001   // Only enabled in checked build
+#define AFS_DBG_TRACE_TO_DEBUGGER        0x00000002
+#define AFS_DBG_FLAG_ENABLE_FORCE_CRASH  0x00000004   // Only enabled in checked build
+#define AFS_DBG_BUGCHECK_EXCEPTION       0x00000008
+#define AFS_DBG_CLEAN_SHUTDOWN           0x00000010
+#define AFS_DBG_REQUIRE_CLEAN_SHUTDOWN   0x00000020
+#define AFS_DBG_DISABLE_SYSTEM_SID_CHECK 0x00000040
 
 //
 // Pool state

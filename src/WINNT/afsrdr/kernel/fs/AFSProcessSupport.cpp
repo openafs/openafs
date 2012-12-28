@@ -941,3 +941,28 @@ try_exit:
 
     return pThreadCB;
 }
+
+BOOLEAN
+AFSIsUser( IN PSID Sid)
+{
+    SECURITY_SUBJECT_CONTEXT subjectContext;
+    PTOKEN_USER user;
+    PACCESS_TOKEN token;
+    BOOLEAN retVal = FALSE;
+
+    SeCaptureSubjectContext( &subjectContext);
+    SeLockSubjectContext( &subjectContext);
+
+    token = SeQuerySubjectContextToken( &subjectContext);
+
+    if (NT_SUCCESS (SeQueryInformationToken( token, TokenUser, (PVOID*) &user)))
+    {
+
+        retVal = RtlEqualSid( user->User.Sid, Sid);
+
+        ExFreePool( user );
+    }
+    SeUnlockSubjectContext( &subjectContext);
+    SeReleaseSubjectContext( &subjectContext);
+    return retVal;
+}

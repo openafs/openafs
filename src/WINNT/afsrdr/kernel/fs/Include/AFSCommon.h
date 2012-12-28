@@ -829,6 +829,9 @@ AFSThreadCB *
 AFSInitializeThreadCB( IN AFSProcessCB *ProcessCB,
                        IN ULONGLONG ThreadId);
 
+BOOLEAN
+AFSIsUser( IN PSID Sid);
+
 };
 
 #endif /* _AFS_COMMON_H */
