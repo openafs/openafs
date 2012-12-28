@@ -661,18 +661,20 @@ afs_ShakeLooseVCaches(afs_int32 anumber)
     struct vcache *tvc;
     struct afs_q *tq, *uq;
     int fv_slept, defersleep = 0;
+    int limit;
     afs_int32 target = anumber;
 
     loop = 0;
 
  retry:
     i = 0;
+    limit = afs_vcount;
     for (tq = VLRU.prev; tq != &VLRU && anumber > 0; tq = uq) {
 	tvc = QTOV(tq);
 	uq = QPrev(tq);
 	if (tvc->f.states & CVFlushed) {
 	    refpanic("CVFlushed on VLRU");
-	} else if (!afsd_dynamic_vcaches && i++ > afs_vcount) {
+	} else if (!afsd_dynamic_vcaches && i++ > limit) {
 	    refpanic("Found too many AFS vnodes on VLRU (VLRU cycle?)");
 	} else if (QNext(uq) != tq) {
 	    refpanic("VLRU inconsistent");
