@@ -663,8 +663,10 @@ afs_ShakeLooseVCaches(afs_int32 anumber)
     int fv_slept, defersleep = 0;
     afs_int32 target = anumber;
 
-    i = 0;
     loop = 0;
+
+ retry:
+    i = 0;
     for (tq = VLRU.prev; tq != &VLRU && anumber > 0; tq = uq) {
 	tvc = QTOV(tq);
 	uq = QPrev(tq);
@@ -685,16 +687,12 @@ afs_ShakeLooseVCaches(afs_int32 anumber)
 	if (fv_slept) {
 	    if (loop++ > 100)
 		break;
-	    uq = VLRU.prev;
-	    i = 0;
-	    continue;	/* start over - may have raced. */
+	    goto retry;	/* start over - may have raced. */
 	}
 	if (uq == &VLRU) {
 	    if (anumber && !defersleep) {
 		defersleep = 1;
-		uq = VLRU.prev;
-		i = 0;
-		continue;
+		goto retry;
 	    }
 	    break;
 	}
