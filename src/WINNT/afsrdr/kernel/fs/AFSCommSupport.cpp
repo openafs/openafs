@@ -407,11 +407,19 @@ AFSProcessControlRequest( IN PIRP Irp)
 
             case IOCTL_AFS_INITIALIZE_CONTROL_DEVICE:
             {
+                if ( !AFSIsUser( SeExports->SeLocalSystemSid)
+#if DBG
+                    && !BooleanFlagOn( AFSDebugFlags, AFS_DBG_DISABLE_SYSTEM_SID_CHECK)
+#endif
+                    )
+                {
 
+                    ntStatus = STATUS_ACCESS_DENIED;
+                    break;
+                }
                 //
                 // Go intialize the pool
                 //
-
                 ntStatus = AFSInitIrpPool();
 
                 if( !NT_SUCCESS( ntStatus))
