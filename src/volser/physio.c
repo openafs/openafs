@@ -83,7 +83,7 @@ ReallyWrite(DirHandle * file, int block, char *data)
  * The handle needs to be dereferenced with the FidZap() routine.
  */
 void
-SetSalvageDirHandle(DirHandle * dir, afs_uint32 volume, afs_int32 device,
+SetSalvageDirHandle(DirHandle * dir, VolumeId volume, afs_int32 device,
                     Inode inode)
 {
     private int SalvageCacheCheck = 1;

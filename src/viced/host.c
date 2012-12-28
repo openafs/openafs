@@ -72,7 +72,7 @@ static struct rx_securityClass *sc = NULL;
 
 /* arguments for PerHost_EnumerateClient enumeration */
 struct enumclient_args {
-    afs_int32 vid;
+    VolumeId vid;
     int (*proc)(struct client *client, void *rock);
     void *rock;
 };
@@ -2258,7 +2258,7 @@ PerHost_EnumerateClient(struct host *host, void *arock)
 }
 
 void
-h_EnumerateClients(afs_int32 vid,
+h_EnumerateClients(VolumeId vid,
                    int (*proc)(struct client *client, void *rock),
                    void *rock)
 {

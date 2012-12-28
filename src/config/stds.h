@@ -256,6 +256,7 @@ typedef struct afsUUID afsUUID;
 #  define AFS_SIZET_FMT "lu"
 # endif /* PRINTF_TAKES_Z_LEN */
 #endif /* AFS_NT40_ENV */
+#define AFS_VOLID_FMT "lu"
 
 /* Functions to safely cast afs_int32 and afs_uint32 so they can be used in
  * printf statemements with %ld and %lu

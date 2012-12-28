@@ -253,7 +253,7 @@ typedef struct ih_init_params
 
 /* Inode handle */
 typedef struct IHandle_s {
-    afs_uint32 ih_vid;		/* Parent volume id. */
+    VolumeId ih_vid;		/* Parent volume id. */
     int ih_dev;			/* device id. */
     int ih_flags;		/* Flags */
     int ih_synced;		/* should be synced next time */

@@ -54,7 +54,7 @@ static afs_int32 transCounter = 1;
 
 /* create a new transaction, returning ptr to same with high ref count */
 struct volser_trans *
-NewTrans(afs_uint32 avol, afs_int32 apart)
+NewTrans(VolumeId avol, afs_int32 apart)
 {
     /* set volid, next, partition */
     struct volser_trans *tt, *newtt;
@@ -182,15 +182,15 @@ GCTrans(void)
     for (tt = allTrans; tt; tt = nt) {
 	nt = tt->next;		/* remember in case we zap it */
 	if (tt->time + OLDTRANSWARN < now) {
-	    Log("trans %u on volume %u %s than %d seconds\n", tt->tid,
-		tt->volid,
+	    Log("trans %u on volume %" AFS_VOLID_FMT " %s than %d seconds\n", tt->tid,
+		afs_printable_VolumeId_lu(tt->volid),
 		((tt->refCount > 0) ? "is older" : "has been idle for more"),
 		(((now - tt->time) / GCWAKEUP) * GCWAKEUP));
 	}
 	if (tt->refCount > 0)
 	    continue;
 	if (tt->time + OLDTRANSTIME < now) {
-	    Log("trans %u on volume %u has timed out\n", tt->tid, tt->volid);
+	    Log("trans %u on volume %" AFS_VOLID_FMT " has timed out\n", tt->tid, afs_printable_VolumeId_lu(tt->volid));
 
 	    tt->refCount++;	/* we're using it now */
 

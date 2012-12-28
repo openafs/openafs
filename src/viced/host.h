@@ -210,7 +210,7 @@ extern struct host *h_GetHost_r(struct rx_connection *tcon);
 extern struct client *h_FindClient_r(struct rx_connection *tcon);
 extern int h_ReleaseClient_r(struct client *client);
 extern void h_TossStuff_r(struct host *host);
-extern void h_EnumerateClients(afs_int32 vid,
+extern void h_EnumerateClients(VolumeId vid,
                                int (*proc)(struct client *client, void *rock),
                                void *arock);
 extern int GetClient(struct rx_connection *tcon, struct client **cp);

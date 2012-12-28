@@ -182,7 +182,7 @@ static void (*HandlerProc[MAXHANDLERS]) (int);
 static struct QueueHead  SalvageHashTable[VSHASH_SIZE];
 
 static struct SalvageQueueNode *
-LookupNode(afs_uint32 vid, char * partName,
+LookupNode(VolumeId vid, char * partName,
 	   struct SalvageQueueNode ** parent)
 {
     struct rx_queue *qp, *nqp;
@@ -1315,7 +1315,7 @@ SALVSYNC_doneWorkByPid(int pid, int status)
 {
     struct SalvageQueueNode * node;
     char partName[16];
-    afs_uint32 volids[VOLMAXTYPES+1];
+    VolumeId volids[VOLMAXTYPES+1];
     unsigned int idx;
 
     memset(volids, 0, sizeof(volids));

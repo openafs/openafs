@@ -26,11 +26,17 @@
 #include <afs/opr_assert.h>
 #include <lwp.h>
 #include <lock.h>
+#include <afs/opr.h>
+#include <rx/rx.h>
+#include <rx/rx_queue.h>
 #include <afs/afsint.h>
 #include <afs/rxgen_consts.h>
 #include <afs/nfs.h>
 #include <afs/errors.h>
 #include <afs/ihandle.h>
+#include <afs/partition.h>
+#include <afs/vnode.h>
+#include <afs/volume.h>
 #include <afs/acl.h>
 #include <afs/ptclient.h>
 #include <afs/prs_fs.h>
@@ -123,7 +129,7 @@ static int get_cb_entry(void);
 
 static int find_fe_by_index(afs_uint32 idx);
 static int find_cb_by_index(afs_uint32 idx);
-static int find_fe_by_fid(afs_uint32 vol, afs_uint32 vn, afs_uint32 uniq);
+static int find_fe_by_fid(VolumeId vol, afs_uint32 vn, afs_uint32 uniq);
 
 
 static int dump_fd = -1;
@@ -1342,7 +1348,7 @@ dump_fe_entry(void)
     DPFSO1("fe");
     DPFV2("vnode", "u", fe_cursor.fe.fe.vnode);
     DPFV2("unique", "u", fe_cursor.fe.fe.unique);
-    DPFV2("volid", "u", fe_cursor.fe.fe.volid);
+    DPFV2("volid", AFS_VOLID_FMT, afs_printable_VolumeId_lu(fe_cursor.fe.fe.volid));
     DPFV2("fnext", "u", fe_cursor.fe.fe.fnext);
     DPFV2("ncbs", "u", fe_cursor.fe.fe.ncbs);
     DPFV2("firstcb", "u", fe_cursor.fe.fe.firstcb);
@@ -1890,7 +1896,7 @@ find_fe_by_index(afs_uint32 idx)
 }
 
 static int
-find_fe_by_fid(afs_uint32 volid, afs_uint32 vnode, afs_uint32 unique)
+find_fe_by_fid(VolumeId volid, afs_uint32 vnode, afs_uint32 unique)
 {
     int i;
 

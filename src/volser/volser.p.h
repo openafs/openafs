@@ -46,7 +46,7 @@ struct volser_trans {
     afs_int32 creationTime;	/* time the transaction started */
     afs_int32 returnCode;	/* transaction error code */
     struct Volume *volume;	/* pointer to open volume */
-    afs_uint32 volid;		/* open volume's id */
+    VolumeId volid;		/* open volume's id */
     afs_int32 partition;	/* open volume's partition */
     afs_int32 dumpTransId;	/* other side's trans id during a dump */
     afs_int32 dumpSeq;		/* next sequence number to use during a dump */

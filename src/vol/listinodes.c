@@ -36,7 +36,7 @@
  */
 int
 ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
-	       afs_uint32 (*judgeInode) (), afs_uint32 judgeParam, int *forcep, int forceR,
+	       afs_uint32 (*judgeInode) (), VolumeId judgeParam, int *forcep, int forceR,
 	       char *wpath, void *rock)
 {
     Log("ListViceInodes not implemented for this platform!\n");
@@ -159,7 +159,7 @@ struct dinode *ginode();
 
 int
 ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
-	       int (*judgeInode) (), afs_uint32 judgeParam, int *forcep, int forceR,
+	       int (*judgeInode) (), VolumeId judgeParam, int *forcep, int forceR,
 	       char *wpath, void *rock)
 {
     char dev[50], rdev[51];
@@ -600,7 +600,7 @@ xfs_RenameFiles(char *dir, xfs_Rename_t * renames, int n_renames)
 
 int
 xfs_ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
-		   int (*judgeInode) (), afs_uint32 judgeParam, int *forcep,
+		   int (*judgeInode) (), VolumeId judgeParam, int *forcep,
 		   int forceR, char *wpath, void *rock)
 {
     i_list_inode_t info;
@@ -794,7 +794,7 @@ xfs_ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
 
 int
 ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
-	       int (*judgeInode) (), afs_uint32 judgeParam, int *forcep, int forceR,
+	       int (*judgeInode) (), VolumeId judgeParam, int *forcep, int forceR,
 	       char *wpath, void *rock)
 {
     char dev[50], rdev[51];
@@ -859,7 +859,7 @@ BUFAREA sblk;
 extern char *afs_rawname();
 int
 ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
-	       int (*judgeInode) (), afs_uint32 judgeParam, int *forcep, int forceR,
+	       int (*judgeInode) (), VolumeId judgeParam, int *forcep, int forceR,
 	       char *wpath, void *rock)
 {
     union {
@@ -1245,7 +1245,7 @@ bread(FD_t fd, char *buf, daddr_t blk, afs_int32 size)
 
 #endif /* AFS_LINUX20_ENV */
 static afs_int32
-convertVolumeInfo(FdHandle_t *fdhr, FdHandle_t *fdhw, afs_uint32 vid)
+convertVolumeInfo(FdHandle_t *fdhr, FdHandle_t *fdhw, VolumeId vid)
 {
     struct VolumeDiskData vd;
     char *p;
@@ -1333,7 +1333,7 @@ getDevName(char *pbuffer, char *wpath)
 
 #ifdef FSSYNC_BUILD_CLIENT
 int
-inode_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
+inode_ConvertROtoRWvolume(char *pname, VolumeId volumeId)
 {
     char dir_name[512], oldpath[512], newpath[512];
     char volname[20];

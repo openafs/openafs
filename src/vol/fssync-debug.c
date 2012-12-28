@@ -58,7 +58,7 @@ int VolumeChanged; /* hack to make dir package happy */
 
 
 struct volop_state {
-    afs_uint32 volume;
+    VolumeId volume;
     afs_uint32 vnode;
     afs_uint32 unique;
     char partName[16];
@@ -698,7 +698,7 @@ VolQuery(struct cmd_syndesc * as, void * rock)
 	memcpy(&v, res.payload.buf, sizeof(Volume));
 
 	printf("volume = {\n");
-	printf("\thashid          = %u\n", v.hashid);
+	printf("\thashid          = %" AFS_VOLID_FMT "\n", afs_printable_VolumeId_lu(v.hashid));
 	printf("\theader          = %p\n", v.header);
 	printf("\tdevice          = %d\n", v.device);
 	printf("\tpartition       = %p\n", v.partition);
@@ -820,7 +820,7 @@ VolHdrQuery(struct cmd_syndesc * as, void * rock)
 	printf("\t\tversion = %u\n", v.stamp.version);
 	printf("\t}\n");
 
-	printf("\tid               = %u\n", v.id);
+	printf("\tid               = %" AFS_VOLID_FMT "\n", afs_printable_VolumeId_lu(v.id));
 	printf("\tname             = '%s'\n", v.name);
 	if (v.inUse != 0) {
 	    printf("\tinUse            = %d (%s)\n", v.inUse, VPTypeToString(v.inUse));
@@ -832,10 +832,10 @@ VolHdrQuery(struct cmd_syndesc * as, void * rock)
 	printf("\tneedsSalvaged    = %d\n", v.needsSalvaged);
 	printf("\tuniquifier       = %u\n", v.uniquifier);
 	printf("\ttype             = %d\n", v.type);
-	printf("\tparentId         = %u\n", v.parentId);
-	printf("\tcloneId          = %u\n", v.cloneId);
-	printf("\tbackupId         = %u\n", v.backupId);
-	printf("\trestoredFromId   = %u\n", v.restoredFromId);
+	printf("\tparentId         = %" AFS_VOLID_FMT "\n", afs_printable_VolumeId_lu(v.parentId));
+	printf("\tcloneId          = %" AFS_VOLID_FMT "\n", afs_printable_VolumeId_lu(v.cloneId));
+	printf("\tbackupId         = %" AFS_VOLID_FMT "\n", afs_printable_VolumeId_lu(v.backupId));
+	printf("\trestoredFromId   = %" AFS_VOLID_FMT "\n", afs_printable_VolumeId_lu(v.restoredFromId));
 	printf("\tneedsCallback    = %d\n", v.needsCallback);
 	printf("\tdestroyMe        = %d\n", v.destroyMe);
 	printf("\tdontSalvage      = %d\n", v.dontSalvage);
@@ -908,7 +908,7 @@ VolOpQuery(struct cmd_syndesc * as, void * rock)
 	printf("\t}\n");
 
 	printf("\tvop = {\n");
-	printf("\t\tvolume         = %u\n", vop.vop.volume);
+	printf("\t\tvolume         = %" AFS_VOLID_FMT "\n", afs_printable_VolumeId_lu(vop.vop.volume));
 	if (strnlen(vop.vop.partName, sizeof(vop.vop.partName)) <
 	    sizeof(vop.vop.partName)) {
 	    printf("\t\tpartName       = '%s'\n", vop.vop.partName);

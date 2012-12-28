@@ -99,7 +99,7 @@ RemoveInodes(struct afs_inode_info *stuff, Device dev, VolumeId parent,
 }
 
 Volume *
-VCreateVolume(Error * ec, char *partname, VolId volumeId, VolId parentId)
+VCreateVolume(Error * ec, char *partname, VolumeId volumeId, VolumeId parentId)
 {				/* Should be the same as volumeId if there is
 				 * no parent */
     Volume *retVal;
@@ -110,7 +110,7 @@ VCreateVolume(Error * ec, char *partname, VolId volumeId, VolId parentId)
 }
 
 Volume *
-VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
+VCreateVolume_r(Error * ec, char *partname, VolumeId volumeId, VolumeId parentId)
 {				/* Should be the same as volumeId if there is
 				 * no parent */
     VolumeDiskData vol;
@@ -192,7 +192,7 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
     vol.stamp.version = VOLUMEINFOVERSION;
     vol.destroyMe = DESTROY_ME;
     snprintf(headerName, sizeof headerName, VFORMAT,
-	     afs_printable_uint32_lu(vol.id));
+	     afs_printable_VolumeId_lu(vol.id));
     snprintf(volumePath, sizeof volumePath, "%s" OS_DIRSEP "%s",
 	     VPartitionPath(partition), headerName);
     rc = stat(volumePath, &st);
@@ -303,8 +303,8 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
     rc = VCreateVolumeDiskHeader(&diskHeader, partition);
     if (rc) {
 	Log("VCreateVolume: Error %d trying to write volume header for "
-	    "volume %u on partition %s; volume not created\n", rc,
-	    vol.id, VPartitionPath(partition));
+	    "volume %" AFS_VOLID_FMT " on partition %s; volume not created\n", rc,
+	    afs_printable_VolumeId_lu(vol.id), VPartitionPath(partition));
 	if (rc == EEXIST) {
 	    *ec = VVOLEXISTS;
 	}
@@ -449,16 +449,16 @@ VReadVolumeDiskHeader(VolumeId volid,
     char path[MAXPATHLEN];
 
     snprintf(path, sizeof(path), "%s" OS_DIRSEP VFORMAT,
-	     VPartitionPath(dp), afs_printable_uint32_lu(volid));
+	     VPartitionPath(dp), afs_printable_VolumeId_lu(volid));
     fd = open(path, O_RDONLY);
     if (fd < 0) {
-	Log("VReadVolumeDiskHeader: Couldn't open header for volume %lu (errno %d).\n",
-	    afs_printable_uint32_lu(volid), errno);
+	Log("VReadVolumeDiskHeader: Couldn't open header for volume %" AFS_VOLID_FMT " (errno %d).\n",
+	    afs_printable_VolumeId_lu(volid), errno);
 	code = -1;
 
     } else if (hdr && read(fd, hdr, sizeof(*hdr)) != sizeof(*hdr)) {
-	Log("VReadVolumeDiskHeader: Couldn't read header for volume %lu.\n",
-	    afs_printable_uint32_lu(volid));
+	Log("VReadVolumeDiskHeader: Couldn't read header for volume %" AFS_VOLID_FMT ".\n",
+	    afs_printable_VolumeId_lu(volid));
 	code = EIO;
     }
 
@@ -504,7 +504,7 @@ _VWriteVolumeDiskHeader(VolumeDiskHeader_t * hdr,
     flags |= O_RDWR;
 
     snprintf(path, sizeof(path), "%s" OS_DIRSEP VFORMAT,
-	     VPartitionPath(dp), afs_printable_uint32_lu(hdr->id));
+	     VPartitionPath(dp), afs_printable_VolumeId_lu(hdr->id));
     fd = open(path, flags, 0644);
     if (fd < 0) {
 	code = errno;
@@ -683,7 +683,7 @@ VDestroyVolumeDiskHeader(struct DiskPartition64 * dp,
 #endif /* AFS_DEMAND_ATTACH_FS */
 
     snprintf(path, sizeof(path), "%s" OS_DIRSEP VFORMAT,
-             VPartitionPath(dp), afs_printable_uint32_lu(volid));
+             VPartitionPath(dp), afs_printable_VolumeId_lu(volid));
     code = unlink(path);
     if (code) {
 	Log("VDestroyVolumeDiskHeader: Couldn't unlink disk header, error = %d\n", errno);
@@ -709,10 +709,10 @@ VDestroyVolumeDiskHeader(struct DiskPartition64 * dp,
     }
     code = FSYNC_VGCDel(dp->name, parent, volid, FSYNC_WHATEVER, &res);
     if (code) {
-	Log("VDestroyVolumeDiskHeader: FSYNC_VGCDel(%s, %lu, %lu) failed "
+	Log("VDestroyVolumeDiskHeader: FSYNC_VGCDel(%s, %" AFS_VOLID_FMT ", %" AFS_VOLID_FMT ") failed "
 	    "with code %ld reason %ld\n", dp->name,
-	    afs_printable_uint32_lu(parent),
-	    afs_printable_uint32_lu(volid),
+	    afs_printable_VolumeId_lu(parent),
+	    afs_printable_VolumeId_lu(volid),
 	    afs_printable_int32_ld(code),
 	    afs_printable_int32_ld(res.hdr.reason));
     }

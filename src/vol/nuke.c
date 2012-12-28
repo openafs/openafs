@@ -51,7 +51,7 @@ struct ilist {
  * Note that ainfo->u.param[0] is always the volume ID, for any vice inode.
  */
 static int
-NukeProc(struct ViceInodeInfo *ainfo, afs_uint32 avolid, void *arock)
+NukeProc(struct ViceInodeInfo *ainfo, VolumeId avolid, void *arock)
 {
     struct ilist **allInodes = (struct ilist **)arock;
     struct ilist *ti;
@@ -88,7 +88,7 @@ NukeProc(struct ViceInodeInfo *ainfo, afs_uint32 avolid, void *arock)
  * indices will be gone.
  */
 int
-nuke(char *aname, afs_int32 avolid)
+nuke(char *aname, VolumeId avolid)
 {
     /* first process the partition containing this junk */
     struct afs_stat_st tstat;

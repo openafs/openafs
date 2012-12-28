@@ -256,9 +256,9 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 	    } else if (rwinode) {
 		if (IH_INC(V_linkHandle(rwvp), rwinode, V_parentId(rwvp)) ==
 		    -1) {
-		    Log("IH_INC failed: %"AFS_PTR_FMT", %s, %u errno %d\n",
+		    Log("IH_INC failed: %"AFS_PTR_FMT", %s, %" AFS_VOLID_FMT " errno %d\n",
 			V_linkHandle(rwvp), PrintInode(stmp, rwinode),
-			V_parentId(rwvp), errno);
+			afs_printable_VolumeId_lu(V_parentId(rwvp)), errno);
 		    VForceOffline(rwvp);
 		    ERROR_EXIT(EIO);
 		}
@@ -309,9 +309,9 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 	    if (inodeinced) {
 		if (IH_DEC(V_linkHandle(rwvp), rwinode, V_parentId(rwvp)) ==
 		    -1) {
-		    Log("IH_DEC failed: %"AFS_PTR_FMT", %s, %u errno %d\n",
+		    Log("IH_DEC failed: %"AFS_PTR_FMT", %s, %" AFS_VOLID_FMT " errno %d\n",
 			V_linkHandle(rwvp), PrintInode(stmp, rwinode),
-			V_parentId(rwvp), errno);
+			afs_printable_VolumeId_lu(V_parentId(rwvp)), errno);
 		    VForceOffline(rwvp);
 		    ERROR_EXIT(EIO);
 		}
@@ -426,8 +426,9 @@ CloneVolume(Error * rerror, Volume * original, Volume * new, Volume * old)
     if (code)
 	ERROR_EXIT(code);
     if (filecount != V_filecount(original) || diskused != V_diskused(original))
-       Log("Clone %u: filecount %d -> %d diskused %d -> %d\n",
-	    V_id(original), filecount, V_filecount(original), diskused, V_diskused(original));
+	Log("Clone %" AFS_VOLID_FMT ": filecount %d -> %d diskused %d -> %d\n",
+	    afs_printable_VolumeId_lu(V_id(original)), filecount,
+	    V_filecount(original), diskused, V_diskused(original));
 
     code = CopyVolumeHeader(&V_disk(original), &V_disk(new));
     if (code)

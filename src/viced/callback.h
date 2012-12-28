@@ -51,7 +51,7 @@ struct cbstruct {
 struct FileEntry {
     afs_uint32 vnode;
     afs_uint32 unique;
-    afs_uint32 volid;
+    VolumeId volid;
     afs_uint32 fnext;           /* index of next FE in hash chain */
     afs_uint32 ncbs;            /* number of callbacks for this FE */
     afs_uint32 firstcb;         /* index of first cb in per-FE list */

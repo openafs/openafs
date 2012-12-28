@@ -987,9 +987,9 @@ DeleteExtraVolumeHeaderFile(struct SalvInfo *salvinfo, struct VolumeSummary *vsp
 	afs_int32 code;
 	code = VDestroyVolumeDiskHeader(salvinfo->fileSysPartition, vsp->header.id, vsp->header.parent);
 	if (code) {
-	    Log("Error %ld destroying volume disk header for volume %lu\n",
+	    Log("Error %ld destroying volume disk header for volume %" AFS_VOLID_FMT "\n",
 	        afs_printable_int32_ld(code),
-	        afs_printable_uint32_lu(vsp->header.id));
+	        afs_printable_VolumeId_lu(vsp->header.id));
 	}
 
 	/* make sure we actually delete the header file; ENOENT
@@ -1133,7 +1133,7 @@ CountVolumeInodes(struct ViceInodeInfo *ip, int maxInodes,
 }
 
 int
-OnlyOneVolume(struct ViceInodeInfo *inodeinfo, afs_uint32 singleVolumeNumber, void *rock)
+OnlyOneVolume(struct ViceInodeInfo *inodeinfo, VolumeId singleVolumeNumber, void *rock)
 {
     if (inodeinfo->u.vnode.vnodeNumber == INODESPECIAL)
 	return (inodeinfo->u.special.parentId == singleVolumeNumber);
@@ -1429,9 +1429,9 @@ AskVolumeSummary(struct SalvInfo *salvinfo, VolumeId singleVolumeNumber)
 	    }
 
 	    if (code) {
-		Log("fileserver refused VGCQuery request for volume %lu on "
+		Log("fileserver refused VGCQuery request for volume %" AFS_VOLID_FMT " on "
 		    "partition %s, code %ld reason %ld\n",
-		    afs_printable_uint32_lu(singleVolumeNumber),
+		    afs_printable_VolumeId_lu(singleVolumeNumber),
 		    salvinfo->fileSysPartition->name,
 		    afs_printable_int32_ld(code),
 		    afs_printable_int32_ld(res.hdr.reason));
@@ -1439,9 +1439,9 @@ AskVolumeSummary(struct SalvInfo *salvinfo, VolumeId singleVolumeNumber)
 	    }
 
 	    if (q_res.rw != singleVolumeNumber) {
-		Log("fileserver requested salvage of clone %lu; scheduling salvage of volume group %lu...\n",
-		    afs_printable_uint32_lu(singleVolumeNumber),
-		    afs_printable_uint32_lu(q_res.rw));
+		Log("fileserver requested salvage of clone %" AFS_VOLID_FMT "; scheduling salvage of volume group %" AFS_VOLID_FMT "...\n",
+		    afs_printable_VolumeId_lu(singleVolumeNumber),
+		    afs_printable_VolumeId_lu(q_res.rw));
 #ifdef SALVSYNC_BUILD_CLIENT
 		if (SALVSYNC_LinkVolume(q_res.rw,
 		                       singleVolumeNumber,
@@ -1583,8 +1583,9 @@ RecordHeader(struct DiskPartition64 *dp, const char *name,
 
 	if (programType == salvageServer) {
 #ifdef SALVSYNC_BUILD_CLIENT
-	    Log("fileserver requested salvage of clone %u; scheduling salvage of volume group %u...\n",
-	        summary.header.id, summary.header.parent);
+	    Log("fileserver requested salvage of clone %" AFS_VOLID_FMT "; scheduling salvage of volume group %" AFS_VOLID_FMT "...\n",
+	        afs_printable_VolumeId_lu(summary.header.id),
+		afs_printable_VolumeId_lu(summary.header.parent));
 	    if (SALVSYNC_LinkVolume(summary.header.parent,
 		                    summary.header.id,
 		                    dp->name,
@@ -1595,8 +1596,8 @@ RecordHeader(struct DiskPartition64 *dp, const char *name,
 	    Exit(SALSRV_EXIT_VOLGROUP_LINK);
 
 	} else {
-	    Log("%u is a read-only volume; not salvaged\n",
-	        singleVolumeNumber);
+	    Log("%" AFS_VOLID_FMT " is a read-only volume; not salvaged\n",
+	        afs_printable_VolumeId_lu(singleVolumeNumber));
 	    Exit(1);
 	}
     }
@@ -1614,7 +1615,7 @@ RecordHeader(struct DiskPartition64 *dp, const char *name,
 	}
 
 	snprintf(nameShouldBe, sizeof nameShouldBe,
-	         VFORMAT, afs_printable_uint32_lu(summary.header.id));
+	         VFORMAT, afs_printable_VolumeId_lu(summary.header.id));
 
 
 	if (strcmp(nameShouldBe, base)) {
@@ -1832,25 +1833,25 @@ CreateLinkTable(struct SalvInfo *salvinfo, struct InodeSummary *isp, Inode ino)
 		      INODESPECIAL, VI_LINKTABLE, isp->RWvolumeId);
     if (!VALID_INO(ino))
 	Abort
-	    ("Unable to allocate link table inode for volume %u (error = %d)\n",
-	     isp->RWvolumeId, errno);
+	    ("Unable to allocate link table inode for volume %" AFS_VOLID_FMT " (error = %d)\n",
+	     afs_printable_VolumeId_lu(isp->RWvolumeId), errno);
     IH_INIT(salvinfo->VGLinkH, salvinfo->fileSysDevice, isp->RWvolumeId, ino);
     fdP = IH_OPEN(salvinfo->VGLinkH);
     if (fdP == NULL)
-	Abort("Can't open link table for volume %u (error = %d)\n",
-	      isp->RWvolumeId, errno);
+	Abort("Can't open link table for volume %" AFS_VOLID_FMT " (error = %d)\n",
+	      afs_printable_VolumeId_lu(isp->RWvolumeId), errno);
 
     if (FDH_TRUNC(fdP, sizeof(version) + sizeof(short)) < 0)
-	Abort("Can't truncate link table for volume %u (error = %d)\n",
-	      isp->RWvolumeId, errno);
+	Abort("Can't truncate link table for volume %" AFS_VOLID_FMT " (error = %d)\n",
+	      afs_printable_VolumeId_lu(isp->RWvolumeId), errno);
 
     version.magic = LINKTABLEMAGIC;
     version.version = LINKTABLEVERSION;
 
     if (FDH_PWRITE(fdP, (char *)&version, sizeof(version), 0)
 	!= sizeof(version))
-	Abort("Can't truncate link table for volume %u (error = %d)\n",
-	      isp->RWvolumeId, errno);
+	Abort("Can't truncate link table for volume %" AFS_VOLID_FMT " (error = %d)\n",
+	      afs_printable_VolumeId_lu(isp->RWvolumeId), errno);
 
     FDH_REALLYCLOSE(fdP);
 
@@ -1964,14 +1965,14 @@ DoSalvageVolumeGroup(struct SalvInfo *salvinfo, struct InodeSummary *isp, int nV
 	nBytes = FDH_PREAD(fdP, (char *)&header, sizeof(struct versionStamp), 0);
 	if (nBytes != sizeof(struct versionStamp)
 	    || header.magic != LINKTABLEMAGIC) {
-            Log("Bad linktable header for volume %u.\n", isp->RWvolumeId);
+            Log("Bad linktable header for volume %" AFS_VOLID_FMT ".\n", afs_printable_VolumeId_lu(isp->RWvolumeId));
 	    FDH_REALLYCLOSE(fdP);
 	    fdP = NULL;
 	}
     }
     if (!VALID_INO(ino) || fdP == NULL) {
-	Log("%s link table for volume %u.\n",
-	    Testing ? "Would have recreated" : "Recreating", isp->RWvolumeId);
+	Log("%s link table for volume %" AFS_VOLID_FMT ".\n",
+	    Testing ? "Would have recreated" : "Recreating", afs_printable_VolumeId_lu(isp->RWvolumeId));
 	if (Testing) {
 	    IH_INIT(salvinfo->VGLinkH, salvinfo->fileSysDevice, -1, -1);
 	} else {
@@ -2017,8 +2018,8 @@ DoSalvageVolumeGroup(struct SalvInfo *salvinfo, struct InodeSummary *isp, int nV
 	}
 #endif
 	if (!Showmode)
-	    Log("%s VOLUME %u%s.\n", rw ? "SALVAGING" : "CHECKING CLONED",
-		lisp->volumeId, (Testing ? "(READONLY mode)" : ""));
+	    Log("%s VOLUME %" AFS_VOLID_FMT "%s.\n", rw ? "SALVAGING" : "CHECKING CLONED",
+		afs_printable_VolumeId_lu(lisp->volumeId), (Testing ? "(READONLY mode)" : ""));
 	/* Check inodes twice.  The second time do things seriously.  This
 	 * way the whole RO volume can be deleted, below, if anything goes wrong */
 	for (check = 1; check >= 0; check--) {
@@ -2058,7 +2059,7 @@ DoSalvageVolumeGroup(struct SalvInfo *salvinfo, struct InodeSummary *isp, int nV
 #endif
 	    if (ip->linkCount != 0 && TraceBadLinkCounts) {
 		TraceBadLinkCounts--;	/* Limit reports, per volume */
-		Log("#### DEBUG #### Link count incorrect by %d; inode %s, size %llu, p=(%u,%u,%u,%u)\n", ip->linkCount, PrintInode(stmp, ip->inodeNumber), (afs_uintmax_t) ip->byteCount, ip->u.param[0], ip->u.param[1], ip->u.param[2], ip->u.param[3]);
+		Log("#### DEBUG #### Link count incorrect by %d; inode %s, size %llu, p=(%u,%u,%u,%u)\n", ip->linkCount, PrintInode(stmp, ip->inodeNumber), (afs_uintmax_t) ip->byteCount, ip->u.param[0], ip->u.param[1], ip->u.param[2], ip->u.param[3]); /* VolumeId in param */
 	    }
 	    while (ip->linkCount > 0) {
 		/* below used to assert, not break */
@@ -2241,8 +2242,8 @@ SalvageVolumeHeaderFile(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 		continue;
 	    }
 	    if (!Showmode) {
-		Log("Duplicate special %d inodes for volume %u found (%s, %s);\n",
-		    ip->u.special.type, isp->volumeId,
+		Log("Duplicate special %d inodes for volume %" AFS_VOLID_FMT " found (%s, %s);\n",
+		    ip->u.special.type, afs_printable_VolumeId_lu(isp->volumeId),
 		    PrintInode(stmp1, ip->inodeNumber),
 		    PrintInode(stmp2, (ip+1)->inodeNumber));
 	    }
@@ -2265,7 +2266,7 @@ SalvageVolumeHeaderFile(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 		}
 	    } else {
 		if (!Showmode)
-		    Log("cannot determine which is correct; salvage of volume %u aborted\n", isp->volumeId);
+		    Log("cannot determine which is correct; salvage of volume %" AFS_VOLID_FMT " aborted\n", afs_printable_VolumeId_lu(isp->volumeId));
 		if (skip) {
 		    free(skip);
 		}
@@ -2346,16 +2347,16 @@ SalvageVolumeHeaderFile(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 	char path[64];
 	char headerName[64];
 	snprintf(headerName, sizeof headerName, VFORMAT,
-		 afs_printable_uint32_lu(isp->volumeId));
+		 afs_printable_VolumeId_lu(isp->volumeId));
 	snprintf(path, sizeof path, "%s" OS_DIRSEP "%s",
 	         salvinfo->fileSysPath, headerName);
 	if (check) {
-	    Log("No header file for volume %u\n", isp->volumeId);
+	    Log("No header file for volume %" AFS_VOLID_FMT "\n", afs_printable_VolumeId_lu(isp->volumeId));
 	    return -1;
 	}
 	if (!Showmode)
-	    Log("No header file for volume %u; %screating %s\n",
-		isp->volumeId, (Testing ? "it would have been " : ""),
+	    Log("No header file for volume %" AFS_VOLID_FMT "; %screating %s\n",
+		afs_printable_VolumeId_lu(isp->volumeId), (Testing ? "it would have been " : ""),
 		path);
 	isp->volSummary = calloc(1, sizeof(struct VolumeSummary));
 
@@ -2387,16 +2388,16 @@ SalvageVolumeHeaderFile(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 	       sizeof(struct VolumeHeader));
 	if (Testing) {
 	    if (!Showmode)
-		Log("It would have written a new header file for volume %u\n",
-		    isp->volumeId);
+		Log("It would have written a new header file for volume %" AFS_VOLID_FMT "\n",
+		    afs_printable_VolumeId_lu(isp->volumeId));
 	} else {
 	    afs_int32 code;
 	    VolumeHeaderToDisk(&diskHeader, &tempHeader);
 	    code = (*writefunc)(&diskHeader, salvinfo->fileSysPartition);
 	    if (code) {
-		Log("Error %ld writing volume header file for volume %lu\n",
+		Log("Error %ld writing volume header file for volume %" AFS_VOLID_FMT "\n",
 		    afs_printable_int32_ld(code),
-		    afs_printable_uint32_lu(diskHeader.id));
+		    afs_printable_VolumeId_lu(diskHeader.id));
 		return -1;
 	    }
 	}
@@ -2509,9 +2510,9 @@ SalvageHeader(struct SalvInfo *salvinfo, struct afs_inode_info *sp,
 	    header.volumeInfo.stamp = sp->stamp;
 	    header.volumeInfo.id = isp->volumeId;
 	    header.volumeInfo.parentId = isp->RWvolumeId;
-	    sprintf(header.volumeInfo.name, "bogus.%u", isp->volumeId);
-	    Log("Warning: the name of volume %u is now \"bogus.%u\"\n",
-		isp->volumeId, isp->volumeId);
+	    sprintf(header.volumeInfo.name, "bogus.%" AFS_VOLID_FMT, afs_printable_VolumeId_lu(isp->volumeId));
+	    Log("Warning: the name of volume %" AFS_VOLID_FMT " is now \"bogus.%" AFS_VOLID_FMT "\"\n",
+		afs_printable_VolumeId_lu(isp->volumeId), afs_printable_VolumeId_lu(isp->volumeId));
 	    header.volumeInfo.inService = 0;
 	    header.volumeInfo.blessed = 0;
 	    /* The + 1000 is a hack in case there are any files out in venus caches */
@@ -2554,14 +2555,14 @@ SalvageHeader(struct SalvInfo *salvinfo, struct afs_inode_info *sp,
 	    if (salvinfo->VolInfo.updateDate) {
 		strcpy(update, TimeStamp(salvinfo->VolInfo.updateDate, 0));
 		if (!Showmode)
-		    Log("%s (%u) %supdated %s\n", salvinfo->VolInfo.name,
-			salvinfo->VolInfo.id,
+		    Log("%s (%" AFS_VOLID_FMT ") %supdated %s\n", salvinfo->VolInfo.name,
+			afs_printable_VolumeId_lu(salvinfo->VolInfo.id),
 			(Testing ? "it would have been " : ""), update);
 	    } else {
 		strcpy(update, TimeStamp(salvinfo->VolInfo.creationDate, 0));
 		if (!Showmode)
-		    Log("%s (%u) not updated (created %s)\n",
-			salvinfo->VolInfo.name, salvinfo->VolInfo.id, update);
+		    Log("%s (%" AFS_VOLID_FMT ") not updated (created %s)\n",
+			salvinfo->VolInfo.name, afs_printable_VolumeId_lu(salvinfo->VolInfo.id), update);
 	    }
 
 	}
@@ -3202,14 +3203,15 @@ JudgeEntry(void *arock, char *name, afs_int32 vnodeNumber,
 	    if (nBytes == size) {
 		buf[size] = '\0';
 		if ( (*buf != '#' && *buf != '%') || buf[strlen(buf)-1] != '.' ) {
-		    Log("Volume %u (%s) mount point %s" OS_DIRSEP "%s to '%s' invalid, %s to symbolic link\n",
-			dir->dirHandle.dirh_handle->ih_vid, dir->vname, dir->name ? dir->name : "??", name, buf,
+		    Log("Volume %" AFS_VOLID_FMT " (%s) mount point %s" OS_DIRSEP "%s to '%s' invalid, %s to symbolic link\n",
+			afs_printable_VolumeId_lu(dir->dirHandle.dirh_handle->ih_vid), dir->vname, dir->name ? dir->name : "??", name, buf,
 			Testing ? "would convert" : "converted");
 		    vnodeEssence->modeBits |= 0111;
 		    vnodeEssence->changed = 1;
-		} else if (ShowMounts) Log("In volume %u (%s) found mountpoint %s" OS_DIRSEP "%s to '%s'\n",
-		    dir->dirHandle.dirh_handle->ih_vid, dir->vname,
-		    dir->name ? dir->name : "??", name, buf);
+		} else if (ShowMounts) 
+		    Log("In volume %" AFS_VOLID_FMT " (%s) found mountpoint %s" OS_DIRSEP "%s to '%s'\n",
+			afs_printable_VolumeId_lu(dir->dirHandle.dirh_handle->ih_vid),
+			dir->vname, dir->name ? dir->name : "??", name, buf);
 	    } else {
 		Log("Volume %s cound not read mount point vnode %u size %d code %d\n",
 		    dir->vname, vnodeNumber, (int)size, (int)nBytes);
@@ -4216,8 +4218,8 @@ SalvageVolume(struct SalvInfo *salvinfo, struct InodeSummary *rwIsp, IHandle_t *
 	opr_Assert(nBytes == sizeof(volHeader));
     }
     if (!Showmode) {
-	Log("%sSalvaged %s (%u): %d files, %d blocks\n",
-	    (Testing ? "It would have " : ""), volHeader.name, volHeader.id,
+	Log("%sSalvaged %s (%" AFS_VOLID_FMT "): %d files, %d blocks\n",
+	    (Testing ? "It would have " : ""), volHeader.name, afs_printable_VolumeId_lu(volHeader.id),
 	    FilesInVolume, BlocksInVolume);
     }
 
@@ -4261,12 +4263,12 @@ MaybeZapVolume(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 	if (isp->volSummary && !isp->volSummary->deleted) {
 	    if (deleteMe) {
 		if (!Showmode)
-		    Log("Volume %u (is only a partial volume--probably an attempt was made to move/restore it when a machine crash occured.\n", isp->volumeId);
+		    Log("Volume %" AFS_VOLID_FMT " (is only a partial volume--probably an attempt was made to move/restore it when a machine crash occured.\n", afs_printable_VolumeId_lu(isp->volumeId));
 		if (!Showmode)
 		    Log("It will be deleted on this server (you may find it elsewhere)\n");
 	    } else {
 		if (!Showmode)
-		    Log("Volume %u needs to be salvaged.  Since it is read-only, however,\n", isp->volumeId);
+		    Log("Volume %" AFS_VOLID_FMT " needs to be salvaged.  Since it is read-only, however,\n", afs_printable_VolumeId_lu(isp->volumeId));
 		if (!Showmode)
 		    Log("it will be deleted instead.  It should be recloned.\n");
 	    }
@@ -4279,9 +4281,9 @@ MaybeZapVolume(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 
 		code = VDestroyVolumeDiskHeader(salvinfo->fileSysPartition, isp->volumeId, isp->RWvolumeId);
 		if (code) {
-		    Log("Error %ld destroying volume disk header for volume %lu\n",
+		    Log("Error %ld destroying volume disk header for volume %" AFS_VOLID_FMT "\n",
 		        afs_printable_int32_ld(code),
-		        afs_printable_uint32_lu(isp->volumeId));
+		        afs_printable_VolumeId_lu(isp->volumeId));
 		}
 
 		/* make sure we actually delete the header file; ENOENT
@@ -4297,9 +4299,9 @@ MaybeZapVolume(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 	    }
 	}
     } else if (!check) {
-	Log("%s salvage was unsuccessful: read-write volume %u\n", message,
-	    isp->volumeId);
-	Abort("Salvage of volume %u aborted\n", isp->volumeId);
+	Log("%s salvage was unsuccessful: read-write volume %" AFS_VOLID_FMT "\n", message,
+	    afs_printable_VolumeId_lu(isp->volumeId));
+	Abort("Salvage of volume %" AFS_VOLID_FMT " aborted\n", afs_printable_VolumeId_lu(isp->volumeId));
     }
 }
 
@@ -4521,7 +4523,7 @@ AskOnline(struct SalvInfo *salvinfo, VolumeId volumeId)
 	if (code == SYNC_OK) {
 	    break;
 	} else if (code == SYNC_DENIED) {
-	    Log("AskOnline:  file server denied online request to volume %u partition %s; trying again...\n", volumeId, salvinfo->fileSysPartition->name);
+	    Log("AskOnline:  file server denied online request to volume %" AFS_VOLID_FMT " partition %s; trying again...\n", afs_printable_VolumeId_lu(volumeId), salvinfo->fileSysPartition->name);
 	} else if (code == SYNC_BAD_COMMAND) {
 	    Log("AskOnline:  fssync protocol mismatch (bad command word '%d')\n",
 		FSYNC_VOL_ON);
@@ -4550,7 +4552,7 @@ AskDelete(struct SalvInfo *salvinfo, VolumeId volumeId)
 	if (code == SYNC_OK) {
 	    break;
 	} else if (code == SYNC_DENIED) {
-	    Log("AskOnline:  file server denied DONE request to volume %u partition %s; trying again...\n", volumeId, salvinfo->fileSysPartition->name);
+	    Log("AskOnline:  file server denied DONE request to volume %" AFS_VOLID_FMT " partition %s; trying again...\n", afs_printable_VolumeId_lu(volumeId), salvinfo->fileSysPartition->name);
 	} else if (code == SYNC_BAD_COMMAND) {
 	    Log("AskOnline:  fssync protocol mismatch (bad command word '%d')\n",
 		FSYNC_VOL_DONE);
@@ -4627,9 +4629,10 @@ PrintInodeList(struct SalvInfo *salvinfo)
     nInodes = st_size / sizeof(struct ViceInodeInfo);
     opr_Verify(OS_READ(salvinfo->inodeFd, buf, st_size) == st_size);
     for (ip = buf; nInodes--; ip++) {
-	Log("Inode:%s, linkCount=%d, size=%#llx, p=(%u,%u,%u,%u)\n",
+	Log("Inode:%s, linkCount=%d, size=%#llx, p=(%" AFS_VOLID_FMT ",%u,%u,%u)\n", /* VolumeId in param */
 	    PrintInode(stmp, ip->inodeNumber), ip->linkCount,
-	    (afs_uintmax_t) ip->byteCount, ip->u.param[0], ip->u.param[1],
+	    (afs_uintmax_t) ip->byteCount,
+	    afs_printable_VolumeId_lu(ip->u.param[0]), ip->u.param[1],
 	    ip->u.param[2], ip->u.param[3]);
     }
     free(buf);
@@ -4643,7 +4646,7 @@ PrintInodeSummary(struct SalvInfo *salvinfo)
 
     for (i = 0; i < salvinfo->nVolumesInInodeFile; i++) {
 	isp = &salvinfo->inodeSummary[i];
-	Log("VID:%u, RW:%u, index:%d, nInodes:%d, nSpecialInodes:%d, maxUniquifier:%u, volSummary\n", isp->volumeId, isp->RWvolumeId, isp->index, isp->nInodes, isp->nSpecialInodes, isp->maxUniquifier);
+	Log("VID:%" AFS_VOLID_FMT ", RW:%" AFS_VOLID_FMT ", index:%d, nInodes:%d, nSpecialInodes:%d, maxUniquifier:%u, volSummary\n", afs_printable_VolumeId_lu(isp->volumeId), afs_printable_VolumeId_lu(isp->RWvolumeId), isp->index, isp->nInodes, isp->nSpecialInodes, isp->maxUniquifier);
     }
 }
 

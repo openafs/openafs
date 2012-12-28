@@ -22,7 +22,7 @@ extern afs_int32 PctSpare;
 /* callback.c */
 extern int InitCallBack(int);
 extern int BreakLaterCallBacks(void);
-extern int BreakVolumeCallBacksLater(afs_uint32);
+extern int BreakVolumeCallBacksLater(VolumeId);
 
 #ifdef AFS_DEMAND_ATTACH_FS
 /*

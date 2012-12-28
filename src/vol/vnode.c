@@ -761,8 +761,8 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type, VnodeId in_vnode, Unique 
 	 * this vnode number was free, so something is wrong. */
 	if (vnp->disk.type != vNull) {
 	    Error tmp;
-	    Log("VAllocVnode:  addled bitmap or vnode object! (vol %ld, "
-		"vnode %p, number %ld, type %ld)\n", (long)vp->hashid, vnp,
+	    Log("VAllocVnode:  addled bitmap or vnode object! (vol %" AFS_VOLID_FMT ", "
+		"vnode %p, number %ld, type %ld)\n", afs_printable_VolumeId_lu(vp->hashid), vnp,
 		(long)Vn_id(vnp), (long)vnp->disk.type);
 	    *ec = EIO;
 	    VFreeBitMapEntry_r(&tmp, vp, &vp->vnodeIndex[class], bitNumber,
@@ -973,12 +973,12 @@ VnLoad(Error * ec, Volume * vp, Vnode * vnp,
 	    dosalv = 0;
 	} else if (nBytes == -1 && errno == EIO) {
 	    /* disk error; salvage */
-	    Log("VnLoad: Couldn't read vnode %u, volume %u (%s); volume needs salvage\n", Vn_id(vnp), V_id(vp), V_name(vp));
+	    Log("VnLoad: Couldn't read vnode %u, volume %" AFS_VOLID_FMT " (%s); volume needs salvage\n", Vn_id(vnp), afs_printable_VolumeId_lu(V_id(vp)), V_name(vp));
 	} else {
 	    /* vnode is not allocated */
 	    if (LogLevel >= 5)
-		Log("VnLoad: Couldn't read vnode %u, volume %u (%s); read %d bytes, errno %d\n",
-		    Vn_id(vnp), V_id(vp), V_name(vp), (int)nBytes, errno);
+		Log("VnLoad: Couldn't read vnode %u, volume %" AFS_VOLID_FMT " (%s); read %d bytes, errno %d\n",
+		    Vn_id(vnp), afs_printable_VolumeId_lu(V_id(vp)), V_name(vp), (int)nBytes, errno);
 	    *ec = VIO;
 	    dosalv = 0;
 	}
@@ -1007,17 +1007,17 @@ VnLoad(Error * ec, Volume * vp, Vnode * vnp,
 	    if ((offset >= index->bitmapSize)
 		|| ((*(index->bitmap + offset) & (1 << (bitNumber & 0x7)))
 		    == 0)) {
-		Log("VnLoad: Request for unallocated vnode %u, volume %u (%s) denied.\n", Vn_id(vnp), V_id(vp), V_name(vp));
+		Log("VnLoad: Request for unallocated vnode %u, volume %" AFS_VOLID_FMT " (%s) denied.\n", Vn_id(vnp), afs_printable_VolumeId_lu(V_id(vp)), V_name(vp));
 		*ec = VNOVNODE;
 		dosalv = 0;
 	    } else {
-		Log("VnLoad: Bad magic number, vnode %u, volume %u (%s); volume needs salvage\n", Vn_id(vnp), V_id(vp), V_name(vp));
+		Log("VnLoad: Bad magic number, vnode %u, volume %" AFS_VOLID_FMT " (%s); volume needs salvage\n", Vn_id(vnp), afs_printable_VolumeId_lu(V_id(vp)), V_name(vp));
 	    }
 	}
 	goto error_encountered;
     }
 
-    IH_INIT(vnp->handle, V_device(vp), V_parentId(vp), VN_GET_INO(vnp));
+    IH_INIT(vnp->handle, V_device(vp), afs_printable_VolumeId_lu(V_parentId(vp)), VN_GET_INO(vnp));
     VnUnlock(vnp, WRITE_LOCK);
 #ifdef AFS_DEMAND_ATTACH_FS
     VnChangeState_r(vnp, VN_STATE_ONLINE);
@@ -1106,7 +1106,7 @@ VnStore(Error * ec, Volume * vp, Vnode * vnp,
 	    VnChangeState_r(vnp, VN_STATE_ERROR);
 #endif
 	} else {
-	    Log("VnStore: Couldn't write vnode %u, volume %u (%s) (error %d)\n", Vn_id(vnp), V_id(Vn_volume(vnp)), V_name(Vn_volume(vnp)), (int)nBytes);
+	    Log("VnStore: Couldn't write vnode %u, volume %" AFS_VOLID_FMT " (%s) (error %d)\n", Vn_id(vnp), afs_printable_VolumeId_lu(V_id(Vn_volume(vnp))), V_name(Vn_volume(vnp)), (int)nBytes);
 #ifdef AFS_DEMAND_ATTACH_FS
 	    goto error_encountered;
 #else

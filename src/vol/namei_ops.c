@@ -599,7 +599,7 @@ namei_RemoveDataDirectories(namei_t * name)
  * types, but if we get that far, this could should be dead by then.
  */
 Inode
-namei_MakeSpecIno(int volid, int type)
+namei_MakeSpecIno(VolumeId volid, int type)
 {
     Inode ino;
     ino = NAMEI_INODESPECIAL;
@@ -1166,8 +1166,8 @@ namei_dec(IHandle_t * ih, Inode ino, int p1)
 	} else {
 	    IHandle_t *th;
 	    IH_INIT(th, ih->ih_dev, ih->ih_vid, ino);
-	    Log("Warning: Lost ref on ihandle dev %d vid %d ino %lld\n",
-		th->ih_dev, th->ih_vid, (afs_int64)th->ih_ino);
+	    Log("Warning: Lost ref on ihandle dev %d vid %" AFS_VOLID_FMT " ino %lld\n",
+		th->ih_dev, afs_printable_VolumeId_lu(th->ih_vid), (afs_int64)th->ih_ino);
 	    IH_RELEASE(th);
 
 	    /* If we're less than 0, someone presumably unlinked;
@@ -1673,15 +1673,15 @@ namei_SetLinkCount(FdHandle_t * fdP, Inode ino, int count, int locked)
 
 /* ListViceInodes - write inode data to a results file. */
 static int DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info,
-		       unsigned int volid);
-static int DecodeVolumeName(char *name, unsigned int *vid);
+		       VolumeId volid);
+static int DecodeVolumeName(char *name, VolumeId *vid);
 static int namei_ListAFSSubDirs(IHandle_t * dirIH,
 				int (*write_fun) (FD_t,
 						  struct ViceInodeInfo *,
 						  char *, char *), FD_t fp,
 				int (*judgeFun) (struct ViceInodeInfo *,
-						 afs_uint32 vid, void *),
-				afs_uint32 singleVolumeNumber, void *rock);
+						 VolumeId vid, void *),
+				VolumeId singleVolumeNumber, void *rock);
 
 
 /* WriteInodeInfo
@@ -1745,8 +1745,8 @@ VerifyDirPerms(char *path)
  */
 int
 ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
-	       int (*judgeInode) (struct ViceInodeInfo * info, afs_uint32 vid, void *rock),
-	       afs_uint32 singleVolumeNumber, int *forcep, int forceR, char *wpath,
+	       int (*judgeInode) (struct ViceInodeInfo * info, VolumeId vid, void *rock),
+	       VolumeId singleVolumeNumber, int *forcep, int forceR, char *wpath,
 	       void *rock)
 {
     int ninodes;
@@ -1812,8 +1812,8 @@ namei_ListAFSFiles(char *dev,
 		   int (*writeFun) (FD_t, struct ViceInodeInfo *, char *,
 				    char *),
 		   FD_t fp,
-		   int (*judgeFun) (struct ViceInodeInfo *, afs_uint32, void *),
-		   afs_uint32 singleVolumeNumber, void *rock)
+		   int (*judgeFun) (struct ViceInodeInfo *, VolumeId, void *),
+		   VolumeId singleVolumeNumber, void *rock)
 {
     IHandle_t ih;
     namei_t name;
@@ -1929,8 +1929,8 @@ _namei_examine_special(char * path1,
 		       int (*writeFun) (FD_t, struct ViceInodeInfo *, char *,
 					char *),
 		       FD_t fp,
-		       int (*judgeFun) (struct ViceInodeInfo *, afs_uint32, void *),
-		       int singleVolumeNumber,
+		       int (*judgeFun) (struct ViceInodeInfo *, VolumeId, void *),
+		       VolumeId singleVolumeNumber,
 		       void *rock)
 {
     int ret = 0;
@@ -1948,9 +1948,9 @@ _namei_examine_special(char * path1,
 	 * consistent with VGID encoded in namei path */
 	Log("namei_ListAFSSubDirs: warning: inconsistent linktable "
 	    "filename \"%s" OS_DIRSEP "%s\"; salvager will delete it "
-	    "(dir_vgid=%u, inode_vgid=%u)\n",
-	    path1, dname, myIH->ih_vid,
-	    info.u.param[0]);
+	    "(dir_vgid=%" AFS_VOLID_FMT ", inode_vgid=%" AFS_VOLID_FMT ")\n",
+	    path1, dname, afs_printable_VolumeId_lu(myIH->ih_vid),
+	    afs_printable_VolumeId_lu(info.u.param[0]));
     } else {
 	char path2[512];
 	/* Open this handle */
@@ -2012,8 +2012,8 @@ _namei_examine_reg(char * path3,
 		   int (*writeFun) (FD_t, struct ViceInodeInfo *, char *,
 				    char *),
 		   FD_t fp,
-		   int (*judgeFun) (struct ViceInodeInfo *, afs_uint32, void *),
-		   int singleVolumeNumber,
+		   int (*judgeFun) (struct ViceInodeInfo *, VolumeId, void *),
+		   VolumeId singleVolumeNumber,
 		   void *rock)
 {
     int ret = 0;
@@ -2083,8 +2083,8 @@ struct listsubdirs_work_node {
     int (*writeFun) (FD_t, struct ViceInodeInfo *, char *, char *);
 
     /** inode filter function */
-    int (*judgeFun) (struct ViceInodeInfo *, afs_uint32, void *);
-    int singleVolumeNumber;             /**< volume id filter */
+    int (*judgeFun) (struct ViceInodeInfo *, VolumeId, void *);
+    VolumeId singleVolumeNumber;             /**< volume id filter */
     void * rock;                        /**< pointer passed to writeFun and judgeFun */
     int code;                           /**< return code from examine function */
     int special;                        /**< asserted when this is a volume
@@ -2410,8 +2410,8 @@ namei_ListAFSSubDirs(IHandle_t * dirIH,
 		     int (*writeFun) (FD_t, struct ViceInodeInfo *, char *,
 				      char *),
 		     FD_t fp,
-		     int (*judgeFun) (struct ViceInodeInfo *, afs_uint32, void *),
-		     afs_uint32 singleVolumeNumber, void *rock)
+		     int (*judgeFun) (struct ViceInodeInfo *, VolumeId, void *),
+		     VolumeId singleVolumeNumber, void *rock)
 {
     int code = 0, ret = 0;
     IHandle_t myIH = *dirIH;
@@ -2515,8 +2515,8 @@ namei_ListAFSSubDirs(IHandle_t * dirIH,
 #endif
 
     if (linkHandle.fd_fd == INVALID_FD) {
-	Log("namei_ListAFSSubDirs: warning: VG %u does not have a link table; "
-	    "salvager will recreate it.\n", dirIH->ih_vid);
+	Log("namei_ListAFSSubDirs: warning: VG %" AFS_VOLID_FMT " does not have a link table; "
+	    "salvager will recreate it.\n", afs_printable_VolumeId_lu(dirIH->ih_vid));
     }
 
     /* Now run through all the other subdirs */
@@ -2643,7 +2643,7 @@ namei_ListAFSSubDirs(IHandle_t * dirIH,
 
 #ifdef AFS_NT40_ENV
 static int
-DecodeVolumeName(char *name, unsigned int *vid)
+DecodeVolumeName(char *name, VolumeId *vid)
 {
     /* Name begins with "Vol_" and ends with .data.  See nt_HandleToVolDir() */
     char stmp[32];
@@ -2663,7 +2663,7 @@ DecodeVolumeName(char *name, unsigned int *vid)
 }
 #else
 static int
-DecodeVolumeName(char *name, unsigned int *vid)
+DecodeVolumeName(char *name, VolumeId *vid)
 {
     if (strlen(name) < 1)
 	return -1;
@@ -2681,7 +2681,7 @@ DecodeVolumeName(char *name, unsigned int *vid)
 #ifdef AFS_NT40_ENV
 static int
 DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info,
-	    unsigned int volid)
+	    VolumeId volid)
 {
     char fpath[512];
     int tag, vno;
@@ -2757,7 +2757,7 @@ DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info,
 #else
 static int
 DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info,
-	    unsigned int volid)
+	    VolumeId volid)
 {
     char fpath[512];
     struct afs_stat_st status;
@@ -2806,15 +2806,15 @@ DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info,
 
 #ifdef FSSYNC_BUILD_CLIENT
 static afs_int32
-convertVolumeInfo(FD_t fdr, FD_t fdw, afs_uint32 vid)
+convertVolumeInfo(FD_t fdr, FD_t fdw, VolumeId vid)
 {
     struct VolumeDiskData vd;
     char *p;
 
     if (OS_READ(fdr, &vd, sizeof(struct VolumeDiskData)) !=
 	sizeof(struct VolumeDiskData)) {
-	Log("1 convertVolumeInfo: read failed for %lu with code %d\n",
-	    afs_printable_uint32_lu(vid),
+	Log("1 convertVolumeInfo: read failed for %" AFS_VOLID_FMT " with code %d\n",
+	    afs_printable_VolumeId_lu(vid),
 	    errno);
 	return -1;
     }
@@ -2876,7 +2876,7 @@ convertVolumeInfo(FD_t fdr, FD_t fdw, afs_uint32 vid)
  */
 
 int
-namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
+namei_ConvertROtoRWvolume(char *pname, VolumeId volumeId)
 {
     int code = 0;
 #ifdef FSSYNC_BUILD_CLIENT
@@ -3003,7 +3003,7 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 	    largeSeen = 1;
 	} else {
 	    closedir(dirp);
-	    Log("1 namei_ConvertROtoRWvolume: unknown type %d of special file found : %s" OS_DIRSEP "%s\n", info.u.param[2], dir_name, dp->d_name);
+	    Log("1 namei_ConvertROtoRWvolume: unknown type %u of special file found : %s" OS_DIRSEP "%s\n", info.u.param[2], dir_name, dp->d_name);
 	    code = -1;
 	    goto done;
 	}

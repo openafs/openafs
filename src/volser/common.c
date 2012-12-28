@@ -22,6 +22,7 @@
 #include <afs/cellconfig.h>
 #include <afs/cmd.h>
 #include <afs/vlserver.h>
+#include <afs/afsint.h>
 #include "volser.h"
 #endif
 

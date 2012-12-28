@@ -283,8 +283,8 @@ CheckLength(struct Volume *vp, struct Vnode *vnp, afs_sfsize_t alen)
 
 	fdP = IH_OPEN(vnp->handle);
 	if (fdP == NULL) {
-	    ViceLog(0, ("CheckLength: cannot open inode for fid %lu.%lu.%lu\n",
-	                afs_printable_uint32_lu(vp->hashid),
+	    ViceLog(0, ("CheckLength: cannot open inode for fid %" AFS_VOLID_FMT ".%lu.%lu\n",
+	                afs_printable_VolumeId_lu(vp->hashid),
 	                afs_printable_uint32_lu(Vn_id(vnp)),
 	                afs_printable_uint32_lu(vnp->disk.uniquifier)));
 	    return -1;
@@ -293,9 +293,9 @@ CheckLength(struct Volume *vp, struct Vnode *vnp, afs_sfsize_t alen)
 	FDH_CLOSE(fdP);
 	if (alen < 0) {
 	    afs_int64 alen64 = alen;
-	    ViceLog(0, ("CheckLength: cannot get size for inode for fid "
-	                "%lu.%lu.%lu; FDH_SIZE returned %" AFS_INT64_FMT "\n",
-	                afs_printable_uint32_lu(vp->hashid),
+	    ViceLog(0, ("CheckLength: cannot get size for inode for fid %"
+	                AFS_VOLID_FMT ".%lu.%lu; FDH_SIZE returned %" AFS_INT64_FMT "\n",
+	                afs_printable_VolumeId_lu(vp->hashid),
 	                afs_printable_uint32_lu(Vn_id(vnp)),
 	                afs_printable_uint32_lu(vnp->disk.uniquifier),
 	                alen64));
@@ -305,9 +305,9 @@ CheckLength(struct Volume *vp, struct Vnode *vnp, afs_sfsize_t alen)
 
     if (alen != vlen) {
 	afs_int64 alen64 = alen, vlen64 = vlen;
-	ViceLog(0, ("Fid %lu.%lu.%lu has inconsistent length (index "
+	ViceLog(0, ("Fid %" AFS_VOLID_FMT ".%lu.%lu has inconsistent length (index "
 	            "%lld inode %lld ); volume must be salvaged\n",
-	            afs_printable_uint32_lu(vp->hashid),
+	            afs_printable_VolumeId_lu(vp->hashid),
 	            afs_printable_uint32_lu(Vn_id(vnp)),
 	            afs_printable_uint32_lu(vnp->disk.uniquifier),
 	            vlen64, alen64));
@@ -1286,16 +1286,16 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_foff_t off, afs_fsize_t len)
     if (!VALID_INO(ino)) {
 	free(buff);
 	VTakeOffline(volptr);
-	ViceLog(0, ("Volume %u now offline, must be salvaged.\n",
-		    volptr->hashid));
+	ViceLog(0, ("Volume %" AFS_VOLID_FMT " now offline, must be salvaged.\n",
+		    afs_printable_VolumeId_lu(volptr->hashid)));
 	return EIO;
     }
     targFdP = IH_OPEN(targetptr->handle);
     if (targFdP == NULL) {
 	rc = errno;
 	ViceLog(0,
-		("CopyOnWrite failed: Failed to open target vnode %u in volume %u (errno = %d)\n",
-		 targetptr->vnodeNumber, V_id(volptr), rc));
+		("CopyOnWrite failed: Failed to open target vnode %u in volume %" AFS_VOLID_FMT " (errno = %d)\n",
+		 targetptr->vnodeNumber, afs_printable_VolumeId_lu(V_id(volptr)), rc));
 	free(buff);
 	VTakeOffline(volptr);
 	return rc;
@@ -1310,8 +1310,8 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_foff_t off, afs_fsize_t len)
 		  (int)targetptr->disk.dataVersion);
     if (!VALID_INO(ino)) {
 	ViceLog(0,
-		("CopyOnWrite failed: Partition %s that contains volume %u may be out of free inodes(errno = %d)\n",
-		 volptr->partition->name, V_id(volptr), errno));
+		("CopyOnWrite failed: Partition %s that contains volume %" AFS_VOLID_FMT " may be out of free inodes(errno = %d)\n",
+		 volptr->partition->name, afs_printable_VolumeId_lu(V_id(volptr)), errno));
 	FDH_CLOSE(targFdP);
 	free(buff);
 	return ENOSPC;
@@ -1361,8 +1361,8 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_foff_t off, afs_fsize_t len)
 	if ((rdlen != length) || (wrlen != length)) {
 	    if ((wrlen < 0) && (errno == ENOSPC)) {	/* disk full */
 		ViceLog(0,
-			("CopyOnWrite failed: Partition %s containing volume %u is full\n",
-			 volptr->partition->name, V_id(volptr)));
+			("CopyOnWrite failed: Partition %s containing volume %" AFS_VOLID_FMT " is full\n",
+			 volptr->partition->name, afs_printable_VolumeId_lu(V_id(volptr))));
 		/* remove destination inode which was partially copied till now */
 		FDH_REALLYCLOSE(newFdP);
 		IH_RELEASE(newH);
@@ -1370,8 +1370,8 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_foff_t off, afs_fsize_t len)
 		rc = IH_DEC(V_linkHandle(volptr), ino, V_parentId(volptr));
 		if (rc) {
 		    ViceLog(0,
-			    ("CopyOnWrite failed: error %u after i_dec on disk full, volume %u in partition %s needs salvage\n",
-			     rc, V_id(volptr), volptr->partition->name));
+			    ("CopyOnWrite failed: error %u after i_dec on disk full, volume %" AFS_VOLID_FMT " in partition %s needs salvage\n",
+			     rc, afs_printable_VolumeId_lu(V_id(volptr)), volptr->partition->name));
 		    VTakeOffline(volptr);
 		}
 		free(buff);
@@ -1382,8 +1382,8 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_foff_t off, afs_fsize_t len)
 		 * time, just case to an unsigned int for printing */
 
 		ViceLog(0,
-			("CopyOnWrite failed: volume %u in partition %s  (tried reading %u, read %u, wrote %u, errno %u) volume needs salvage\n",
-			 V_id(volptr), volptr->partition->name, (unsigned)length, (unsigned)rdlen,
+			("CopyOnWrite failed: volume %" AFS_VOLID_FMT " in partition %s  (tried reading %u, read %u, wrote %u, errno %u) volume needs salvage\n",
+			 afs_printable_VolumeId_lu(V_id(volptr)), volptr->partition->name, (unsigned)length, (unsigned)rdlen,
 			 (unsigned)wrlen, errno));
 #if defined(AFS_DEMAND_ATTACH_FS)
 		ViceLog(0, ("CopyOnWrite failed: requesting salvage\n"));
@@ -1481,8 +1481,8 @@ DeleteTarget(Vnode * parentptr, Volume * volptr, Vnode ** targetptr,
     if ((*targetptr)->disk.uniquifier != fileFid->Unique) {
 	VTakeOffline(volptr);
 	ViceLog(0,
-		("Volume %u now offline, must be salvaged.\n",
-		 volptr->hashid));
+		("Volume %" AFS_VOLID_FMT " now offline, must be salvaged.\n",
+		 afs_printable_VolumeId_lu(volptr->hashid)));
 	errorCode = VSALVAGE;
 	return errorCode;
     }
@@ -1513,8 +1513,8 @@ DeleteTarget(Vnode * parentptr, Volume * volptr, Vnode ** targetptr,
 		{
 		    VTakeOffline(volptr);
 		    ViceLog(0,
-			    ("Volume %u now offline, must be salvaged.\n",
-			     volptr->hashid));
+			    ("Volume %" AFS_VOLID_FMT " now offline, must be salvaged.\n",
+			     afs_printable_VolumeId_lu(volptr->hashid)));
 		    return (EIO);
 		}
 		DT1++;
@@ -1539,8 +1539,8 @@ DeleteTarget(Vnode * parentptr, Volume * volptr, Vnode ** targetptr,
 		   Directory) ? "directory" : "file")));
 	VTakeOffline(volptr);
 	ViceLog(0,
-		("Volume %u now offline, must be salvaged.\n",
-		 volptr->hashid));
+		("Volume %" AFS_VOLID_FMT " now offline, must be salvaged.\n",
+		 afs_printable_VolumeId_lu(volptr->hashid)));
 	if (!errorCode)
 	    errorCode = code;
     }
@@ -1805,14 +1805,16 @@ AdjustDiskUsage(Volume * volptr, afs_sfsize_t length,
 	VAdjustDiskUsage(&nc, volptr, -length, 0);
 	if (rc == VOVERQUOTA) {
 	    ViceLog(2,
-		    ("Volume %u (%s) is full\n", V_id(volptr),
+		    ("Volume %" AFS_VOLID_FMT " (%s) is full\n",
+		     afs_printable_VolumeId_lu(V_id(volptr)),
 		     V_name(volptr)));
 	    return (rc);
 	}
 	if (rc == VDISKFULL) {
 	    ViceLog(0,
-		    ("Partition %s that contains volume %u is full\n",
-		     volptr->partition->name, V_id(volptr)));
+		    ("Partition %s that contains volume %" AFS_VOLID_FMT " is full\n",
+		     volptr->partition->name,
+		     afs_printable_VolumeId_lu(V_id(volptr))));
 	    return (rc);
 	}
 	ViceLog(0, ("Got error return %d from VAdjustDiskUsage\n", rc));
@@ -1873,8 +1875,8 @@ Alloc_NewVnode(Vnode * parentptr, DirHandle * dir, Volume * volptr,
     /* error in creating inode */
     if (!VALID_INO(inode)) {
 	ViceLog(0,
-		("Volume : %u vnode = %u Failed to create inode: errno = %d\n",
-		 V_id((*targetptr)->volumePtr),
+		("Volume : %" AFS_VOLID_FMT " vnode = %u Failed to create inode: errno = %d\n",
+		 afs_printable_VolumeId_lu(V_id((*targetptr)->volumePtr)),
 		 (*targetptr)->vnodeNumber, errno));
 	VAdjustDiskUsage(&temp, volptr, -BlocksPreallocatedForVnode, 0);
 	(*targetptr)->delete = 1;	/* delete vnode */
@@ -3770,8 +3772,8 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
 	    if ((top == 1) && (testnode != 0)) {
 		VTakeOffline(volptr);
 		ViceLog(0,
-			("Volume %u now offline, must be salvaged.\n",
-			 volptr->hashid));
+			("Volume %" AFS_VOLID_FMT " now offline, must be salvaged.\n",
+			 afs_printable_VolumeId_lu(volptr->hashid)));
 		errorCode = EIO;
 		goto Bad_Rename;
 	    }
@@ -4102,8 +4104,8 @@ SAFSS_Symlink(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
 	(void)PutVolumePackage(acall, parentwhentargetnotdir, targetptr,
 			       parentptr, volptr, &client);
 	VTakeOffline(volptr);
-	ViceLog(0, ("Volume %u now offline, must be salvaged.\n",
-		    volptr->hashid));
+	ViceLog(0, ("Volume %" AFS_VOLID_FMT " now offline, must be salvaged.\n",
+		    afs_printable_VolumeId_lu(volptr->hashid)));
 	return EIO;
     }
     len = strlen((char *) LinkContents);
@@ -6187,8 +6189,8 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
     fdP = IH_OPEN(ihP);
     if (fdP == NULL) {
 	VTakeOffline(volptr);
-	ViceLog(0, ("Volume %u now offline, must be salvaged.\n",
-		    volptr->hashid));
+	ViceLog(0, ("Volume %" AFS_VOLID_FMT " now offline, must be salvaged.\n",
+		    afs_printable_VolumeId_lu(volptr->hashid)));
 	return EIO;
     }
     optSize = sendBufSize;
@@ -6198,8 +6200,8 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
     if (tlen < 0) {
 	FDH_CLOSE(fdP);
 	VTakeOffline(volptr);
-	ViceLog(0, ("Volume %u now offline, must be salvaged.\n",
-		    volptr->hashid));
+	ViceLog(0, ("Volume %" AFS_VOLID_FMT " now offline, must be salvaged.\n",
+		    afs_printable_VolumeId_lu(volptr->hashid)));
 	return EIO;
     }
     if (CheckLength(volptr, targetptr, tlen)) {
@@ -6242,8 +6244,8 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 	    FDH_CLOSE(fdP);
 	    FreeSendBuffer((struct afs_buffer *)tbuffer);
 	    VTakeOffline(volptr);
-	    ViceLog(0, ("Volume %u now offline, must be salvaged.\n",
-			volptr->hashid));
+	    ViceLog(0, ("Volume %" AFS_VOLID_FMT " now offline, must be salvaged.\n",
+			afs_printable_VolumeId_lu(volptr->hashid)));
 	    return EIO;
 	}
 	nBytes = rx_Write(Call, tbuffer, wlen);
@@ -6258,8 +6260,8 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 	if (nBytes != wlen) {
 	    FDH_CLOSE(fdP);
 	    VTakeOffline(volptr);
-	    ViceLog(0, ("Volume %u now offline, must be salvaged.\n",
-			volptr->hashid));
+	    ViceLog(0, ("Volume %" AFS_VOLID_FMT " now offline, must be salvaged.\n",
+			afs_printable_VolumeId_lu(volptr->hashid)));
 	    return EIO;
 	}
 	nBytes = rx_Writev(Call, tiov, tnio, wlen);
@@ -6427,8 +6429,8 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	if (GetLinkCountAndSize(volptr, fdP, &linkCount, &DataLength) < 0) {
 	    FDH_CLOSE(fdP);
 	    VTakeOffline(volptr);
-	    ViceLog(0, ("Volume %u now offline, must be salvaged.\n",
-			volptr->hashid));
+	    ViceLog(0, ("Volume %" AFS_VOLID_FMT " now offline, must be salvaged.\n",
+			afs_printable_VolumeId_lu(volptr->hashid)));
 	    return EIO;
 	}
 	if (CheckLength(volptr, targetptr, DataLength)) {
@@ -6479,8 +6481,8 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
     }
     if (!VALID_INO(tinode)) {
 	VTakeOffline(volptr);
-	ViceLog(0,("Volume %u now offline, must be salvaged.\n",
-		   volptr->hashid));
+	ViceLog(0,("Volume %" AFS_VOLID_FMT " now offline, must be salvaged.\n",
+		   afs_printable_VolumeId_lu(volptr->hashid)));
 	return EIO;
     }
 

@@ -36,6 +36,7 @@
 #include <afs/com_err.h>
 #include <afs/cellconfig.h>
 #include <afs/vlserver.h>
+#include <afs/afsint.h>
 #include <afs/volser.h>
 #include <rx/rxkad.h>
 

@@ -15,6 +15,7 @@
 #include <rx/xdr.h>
 #include <afs/vlserver.h>	/*Misc server-side Volume Location stuff */
 #include <ubik.h>
+#include <afs/afsint.h>
 #include <afs/volser.h>
 
 #include "bc.h"

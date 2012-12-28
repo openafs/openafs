@@ -81,10 +81,10 @@ static afs_int32 VolCreateVolume(struct rx_call *, afs_int32, char *,
 				 afs_int32, afs_uint32, afs_uint32 *,
 				 afs_int32 *);
 static afs_int32 VolDeleteVolume(struct rx_call *, afs_int32);
-static afs_int32 VolClone(struct rx_call *, afs_int32, afs_uint32,
-			  afs_int32, char *, afs_uint32 *);
-static afs_int32 VolReClone(struct rx_call *, afs_int32, afs_int32);
-static afs_int32 VolTransCreate(struct rx_call *, afs_uint32, afs_int32,
+static afs_int32 VolClone(struct rx_call *, afs_int32, VolumeId,
+			  afs_int32, char *, VolumeId *);
+static afs_int32 VolReClone(struct rx_call *, afs_int32, VolumeId);
+static afs_int32 VolTransCreate(struct rx_call *, VolumeId, afs_int32,
 				afs_int32, afs_int32 *);
 static afs_int32 VolGetNthVolume(struct rx_call *, afs_int32, afs_uint32 *,
 				 afs_int32 *);
@@ -104,9 +104,9 @@ static afs_int32 VolSetInfo(struct rx_call *, afs_int32, struct volintInfo *);
 static afs_int32 VolGetName(struct rx_call *, afs_int32, char **);
 static afs_int32 VolListPartitions(struct rx_call *, struct pIDs *);
 static afs_int32 XVolListPartitions(struct rx_call *, struct partEntries *);
-static afs_int32 VolListOneVolume(struct rx_call *, afs_int32, afs_uint32,
+static afs_int32 VolListOneVolume(struct rx_call *, afs_int32, VolumeId,
 				  volEntries *);
-static afs_int32 VolXListOneVolume(struct rx_call *, afs_int32, afs_uint32,
+static afs_int32 VolXListOneVolume(struct rx_call *, afs_int32, VolumeId,
 				   volXEntries *);
 static afs_int32 VolListVolumes(struct rx_call *, afs_int32, afs_int32,
 				volEntries *);
@@ -114,8 +114,8 @@ static afs_int32 VolXListVolumes(struct rx_call *, afs_int32, afs_int32,
 				volXEntries *);
 static afs_int32 VolMonitor(struct rx_call *, transDebugEntries *);
 static afs_int32 VolSetIdsTypes(struct rx_call *, afs_int32, char [],
-				afs_int32, afs_uint32, afs_uint32,
-				afs_uint32);
+				afs_int32, VolumeId, VolumeId,
+				VolumeId);
 static afs_int32 VolSetDate(struct rx_call *, afs_int32, afs_int32);
 
 /**
@@ -196,12 +196,12 @@ PartitionID(char *aname)
 }
 
 static int
-ConvertVolume(afs_uint32 avol, char *aname, afs_int32 asize)
+ConvertVolume(VolumeId avol, char *aname, afs_int32 asize)
 {
     if (asize < 18)
 	return -1;
     /* It's better using the Generic VFORMAT since otherwise we have to make changes to too many places... The 14 char limitation in names hits us again in AIX; print in field of 9 digits (still 10 for the rest), right justified with 0 padding */
-    snprintf(aname, asize, VFORMAT, (unsigned long)avol);
+    snprintf(aname, asize, VFORMAT, afs_printable_VolumeId_lu(avol));
     return 0;
 }
 
@@ -466,7 +466,7 @@ VolPartitionInfo(struct rx_call *acid, char *pname, struct diskPartition64
 
 /* obliterate a volume completely, and slowly. */
 afs_int32
-SAFSVolNukeVolume(struct rx_call *acid, afs_int32 apartID, afs_uint32 avolID)
+SAFSVolNukeVolume(struct rx_call *acid, afs_int32 apartID, VolumeId avolID)
 {
     afs_int32 code;
 
@@ -515,7 +515,7 @@ VolNukeVolume(struct rx_call *acid, afs_int32 apartID, afs_uint32 avolID)
  */
 afs_int32
 SAFSVolCreateVolume(struct rx_call *acid, afs_int32 apart, char *aname,
-		    afs_int32 atype, afs_uint32 aparent, afs_uint32 *avolid,
+		    afs_int32 atype, VolumeId aparent, VolumeId *avolid,
 		    afs_int32 *atrans)
 {
     afs_int32 code;
@@ -647,14 +647,15 @@ VolDeleteVolume(struct rx_call *acid, afs_int32 atrans)
     if (!tt)
 	return ENOENT;
     if (tt->vflags & VTDeleted) {
-	Log("1 Volser: Delete: volume %u already deleted \n", tt->volid);
+	Log("1 Volser: Delete: volume %" AFS_VOLID_FMT " already deleted \n",
+	    afs_printable_VolumeId_lu(tt->volid));
 	TRELE(tt);
 	return ENOENT;
     }
     if (DoLogging) {
 	char buffer[16];
-	Log("%s on %s is executing Delete Volume %u\n", caller,
-	    callerAddress(acid, buffer), tt->volid);
+	Log("%s on %s is executing Delete Volume %" AFS_VOLID_FMT "\n", caller,
+	    callerAddress(acid, buffer), afs_printable_VolumeId_lu(tt->volid));
     }
     TSetRxCall(tt, acid, "DeleteVolume");
     VPurgeVolume(&error, tt->volume);	/* don't check error code, it is not set! */
@@ -669,7 +670,8 @@ VolDeleteVolume(struct rx_call *acid, afs_int32 atrans)
     if (TRELE(tt))
 	return VOLSERTRELE_ERROR;
 
-    Log("1 Volser: Delete: volume %u deleted \n", tt->volid);
+    Log("1 Volser: Delete: volume %" AFS_VOLID_FMT " deleted \n",
+	afs_printable_VolumeId_lu(tt->volid));
     return 0;			/* vpurgevolume doesn't set an error code */
 }
 
@@ -685,11 +687,10 @@ VolDeleteVolume(struct rx_call *acid, afs_int32 atrans)
  */
 /* for efficiency reasons, sometimes faster to piggyback a purge here */
 afs_int32
-SAFSVolClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 purgeId,
-	     afs_int32 newType, char *newName, afs_uint32 *newNumber)
+SAFSVolClone(struct rx_call *acid, afs_int32 atrans, VolumeId purgeId,
+	     afs_int32 newType, char *newName, VolumeId *newNumber)
 {
     afs_int32 code;
-
     code = VolClone(acid, atrans, purgeId, newType, newName, newNumber);
     osi_auditU(acid, VS_CloneEvent, code, AUD_LONG, atrans, AUD_LONG, purgeId,
 	       AUD_STR, newName, AUD_LONG, newType, AUD_LONG, *newNumber,
@@ -698,10 +699,10 @@ SAFSVolClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 purgeId,
 }
 
 static afs_int32
-VolClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 purgeId,
-	     afs_int32 newType, char *newName, afs_uint32 *newNumber)
+VolClone(struct rx_call *acid, afs_int32 atrans, VolumeId purgeId,
+	     afs_int32 newType, char *newName, VolumeId *newNumber)
 {
-    afs_uint32 newId;
+    VolumeId newId;
     struct Volume *originalvp, *purgevp, *newvp;
     Error error, code;
     struct volser_trans *tt, *ttc;
@@ -735,7 +736,7 @@ VolClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 purgeId,
     if (!tt)
 	return ENOENT;
     if (tt->vflags & VTDeleted) {
-	Log("1 Volser: Clone: volume %u has been deleted \n", tt->volid);
+	Log("1 Volser: Clone: volume %" AFS_VOLID_FMT " has been deleted \n", afs_printable_VolumeId_lu(tt->volid));
 	TRELE(tt);
 	return ENOENT;
     }
@@ -750,7 +751,7 @@ VolClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 purgeId,
     if (purgeId) {
 	purgevp = VAttachVolume_retry(&error, purgeId, V_VOLUPD);
 	if (error) {
-	    Log("1 Volser: Clone: Could not attach 'purge' volume %u; clone aborted\n", purgeId);
+	    Log("1 Volser: Clone: Could not attach 'purge' volume %" AFS_VOLID_FMT "; clone aborted\n", afs_printable_VolumeId_lu(purgeId));
 	    goto fail;
 	}
     } else {
@@ -758,14 +759,14 @@ VolClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 purgeId,
     }
     originalvp = tt->volume;
     if ((V_destroyMe(originalvp) == DESTROY_ME) || !V_inService(originalvp)) {
-	Log("1 Volser: Clone: Volume %d is offline and cannot be cloned\n",
-	    V_id(originalvp));
+	Log("1 Volser: Clone: Volume %" AFS_VOLID_FMT " is offline and cannot be cloned\n",
+	    afs_printable_VolumeId_lu(V_id(originalvp)));
 	error = VOFFLINE;
 	goto fail;
     }
     if (purgevp) {
 	if (originalvp->device != purgevp->device) {
-	    Log("1 Volser: Clone: Volumes %u and %u are on different devices\n", tt->volid, purgeId);
+	    Log("1 Volser: Clone: Volumes %" AFS_VOLID_FMT " and %" AFS_VOLID_FMT " are on different devices\n", afs_printable_VolumeId_lu(tt->volid), afs_printable_VolumeId_lu(purgeId));
 	    error = EXDEV;
 	    goto fail;
 	}
@@ -775,7 +776,7 @@ VolClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 purgeId,
 	    goto fail;
 	}
 	if (V_parentId(originalvp) != V_parentId(purgevp)) {
-	    Log("1 Volser: Clone: Volume %u and volume %u were not originally cloned from the same parent; aborted\n", purgeId, tt->volid);
+	    Log("1 Volser: Clone: Volume %" AFS_VOLID_FMT " and volume %" AFS_VOLID_FMT " were not originally cloned from the same parent; aborted\n", afs_printable_VolumeId_lu(purgeId), afs_printable_VolumeId_lu(tt->volid));
 	    error = EXDEV;
 	    goto fail;
 	}
@@ -800,10 +801,10 @@ VolClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 purgeId,
     }
     if (newType == readonlyVolume)
 	V_cloneId(originalvp) = newId;
-    Log("1 Volser: Clone: Cloning volume %u to new volume %u\n", tt->volid,
-	newId);
+    Log("1 Volser: Clone: Cloning volume %" AFS_VOLID_FMT " to new volume %" AFS_VOLID_FMT "\n", afs_printable_VolumeId_lu(tt->volid),
+	afs_printable_VolumeId_lu(newId));
     if (purgevp)
-	Log("1 Volser: Clone: Purging old read only volume %u\n", purgeId);
+	Log("1 Volser: Clone: Purging old read only volume %" AFS_VOLID_FMT "\n", afs_printable_VolumeId_lu(purgeId));
     CloneVolume(&error, originalvp, newvp, purgevp);
     purgevp = NULL;		/* clone releases it, maybe even if error */
     if (error) {
@@ -876,7 +877,7 @@ VolClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 purgeId,
 
 /* reclone this volume into the specified id */
 afs_int32
-SAFSVolReClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 cloneId)
+SAFSVolReClone(struct rx_call *acid, afs_int32 atrans, VolumeId cloneId)
 {
     afs_int32 code;
 
@@ -887,7 +888,7 @@ SAFSVolReClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 cloneId)
 }
 
 static afs_int32
-VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
+VolReClone(struct rx_call *acid, afs_int32 atrans, VolumeId cloneId)
 {
     struct Volume *originalvp, *clonevp;
     Error error, code;
@@ -901,8 +902,8 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
 	return VOLSERBAD_ACCESS;
     if (DoLogging) {
 	char buffer[16];
-	Log("%s on %s is executing Reclone Volume %u\n", caller,
-	    callerAddress(acid, buffer), cloneId);
+	Log("%s on %s is executing Reclone Volume %" AFS_VOLID_FMT "\n", caller,
+	    callerAddress(acid, buffer), afs_printable_VolumeId_lu(cloneId));
     }
     error = 0;
     clonevp = originalvp = (Volume *) 0;
@@ -912,7 +913,7 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
     if (!tt)
 	return ENOENT;
     if (tt->vflags & VTDeleted) {
-	Log("1 Volser: VolReClone: volume %u has been deleted \n", tt->volid);
+	Log("1 Volser: VolReClone: volume %" AFS_VOLID_FMT " has been deleted \n", afs_printable_VolumeId_lu(tt->volid));
 	TRELE(tt);
 	return ENOENT;
     }
@@ -925,28 +926,28 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
 
     originalvp = tt->volume;
     if ((V_destroyMe(originalvp) == DESTROY_ME) || !V_inService(originalvp)) {
-	Log("1 Volser: Clone: Volume %d is offline and cannot be cloned\n",
-	    V_id(originalvp));
+	Log("1 Volser: Clone: Volume %" AFS_VOLID_FMT " is offline and cannot be cloned\n",
+	    afs_printable_VolumeId_lu(V_id(originalvp)));
 	error = VOFFLINE;
 	goto fail;
     }
 
     clonevp = VAttachVolume_retry(&error, cloneId, V_VOLUPD);
     if (error) {
-	Log("1 Volser: can't attach clone %d\n", cloneId);
+	Log("1 Volser: can't attach clone %" AFS_VOLID_FMT "\n", afs_printable_VolumeId_lu(cloneId));
 	goto fail;
     }
 
     newType = V_type(clonevp);	/* type of the new volume */
 
     if (originalvp->device != clonevp->device) {
-	Log("1 Volser: Clone: Volumes %u and %u are on different devices\n",
-	    tt->volid, cloneId);
+	Log("1 Volser: Clone: Volumes %" AFS_VOLID_FMT " and %" AFS_VOLID_FMT " are on different devices\n",
+	    afs_printable_VolumeId_lu(tt->volid), afs_printable_VolumeId_lu(cloneId));
 	error = EXDEV;
 	goto fail;
     }
     if (V_parentId(originalvp) != V_parentId(clonevp)) {
-	Log("1 Volser: Clone: Volume %u was not originally cloned from volume %u; aborted\n", cloneId, tt->volid);
+	Log("1 Volser: Clone: Volume %" AFS_VOLID_FMT " was not originally cloned from volume %" AFS_VOLID_FMT "; aborted\n", afs_printable_VolumeId_lu(cloneId), afs_printable_VolumeId_lu(tt->volid));
 	error = EXDEV;
 	goto fail;
     }
@@ -956,8 +957,8 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
     }
 
     error = 0;
-    Log("1 Volser: Clone: Recloning volume %u to volume %u\n", tt->volid,
-	cloneId);
+    Log("1 Volser: Clone: Recloning volume %" AFS_VOLID_FMT " to volume %" AFS_VOLID_FMT "\n", afs_printable_VolumeId_lu(tt->volid),
+	afs_printable_VolumeId_lu(cloneId));
     CloneVolume(&error, originalvp, clonevp, clonevp);
     if (error) {
 	Log("1 Volser: Clone: reclone operation failed with code %d\n",
@@ -1044,7 +1045,7 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
  * See volser.h for definition of iflags (the constants are named IT*).
  */
 afs_int32
-SAFSVolTransCreate(struct rx_call *acid, afs_uint32 volume, afs_int32 partition,
+SAFSVolTransCreate(struct rx_call *acid, VolumeId volume, afs_int32 partition,
 		   afs_int32 iflags, afs_int32 *ttid)
 {
     afs_int32 code;
@@ -1056,7 +1057,7 @@ SAFSVolTransCreate(struct rx_call *acid, afs_uint32 volume, afs_int32 partition,
 }
 
 static afs_int32
-VolTransCreate(struct rx_call *acid, afs_uint32 volume, afs_int32 partition,
+VolTransCreate(struct rx_call *acid, VolumeId volume, afs_int32 partition,
 		   afs_int32 iflags, afs_int32 *ttid)
 {
     struct volser_trans *tt;
@@ -1113,7 +1114,7 @@ VolTransCreate(struct rx_call *acid, afs_uint32 volume, afs_int32 partition,
  * Both the volume number and partition number (one-based) are returned.
  */
 afs_int32
-SAFSVolGetNthVolume(struct rx_call *acid, afs_int32 aindex, afs_uint32 *avolume,
+SAFSVolGetNthVolume(struct rx_call *acid, afs_int32 aindex, VolumeId *avolume,
 		    afs_int32 *apart)
 {
     afs_int32 code;
@@ -1153,8 +1154,8 @@ VolGetFlags(struct rx_call *acid, afs_int32 atid, afs_int32 *aflags)
     if (!tt)
 	return ENOENT;
     if (tt->vflags & VTDeleted) {
-	Log("1 Volser: VolGetFlags: volume %u has been deleted \n",
-	    tt->volid);
+	Log("1 Volser: VolGetFlags: volume %" AFS_VOLID_FMT " has been deleted \n",
+	    afs_printable_VolumeId_lu(tt->volid));
 	TRELE(tt);
 	return ENOENT;
     }
@@ -1197,8 +1198,8 @@ VolSetFlags(struct rx_call *acid, afs_int32 atid, afs_int32 aflags)
     if (!tt)
 	return ENOENT;
     if (tt->vflags & VTDeleted) {
-	Log("1 Volser: VolSetFlags: volume %u has been deleted \n",
-	    tt->volid);
+	Log("1 Volser: VolSetFlags: volume %" AFS_VOLID_FMT " has been deleted \n",
+	    afs_printable_VolumeId_lu(tt->volid));
 	TRELE(tt);
 	return ENOENT;
     }
@@ -1277,7 +1278,7 @@ VolForward(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate,
     if (!tt)
 	return ENOENT;
     if (tt->vflags & VTDeleted) {
-	Log("1 Volser: VolForward: volume %u has been deleted \n", tt->volid);
+	Log("1 Volser: VolForward: volume %" AFS_VOLID_FMT " has been deleted \n", afs_printable_VolumeId_lu(tt->volid));
 	TRELE(tt);
 	return ENOENT;
     }
@@ -1376,7 +1377,7 @@ SAFSVolForwardMultiple(struct rx_call *acid, afs_int32 fromTrans, afs_int32
     if (!tt)
 	return ENOENT;
     if (tt->vflags & VTDeleted) {
-	Log("1 Volser: VolForward: volume %u has been deleted \n", tt->volid);
+	Log("1 Volser: VolForward: volume %" AFS_VOLID_FMT " has been deleted \n", afs_printable_VolumeId_lu(tt->volid));
 	TRELE(tt);
 	return ENOENT;
     }
@@ -1499,7 +1500,7 @@ VolDump(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate,
     if (!tt)
 	return ENOENT;
     if (tt->vflags & VTDeleted) {
-	Log("1 Volser: VolDump: volume %u has been deleted \n", tt->volid);
+	Log("1 Volser: VolDump: volume %" AFS_VOLID_FMT " has been deleted \n", afs_printable_VolumeId_lu(tt->volid));
 	TRELE(tt);
 	return ENOENT;
     }
@@ -1547,7 +1548,7 @@ VolRestore(struct rx_call *acid, afs_int32 atrans, afs_int32 aflags,
     if (!tt)
 	return ENOENT;
     if (tt->vflags & VTDeleted) {
-	Log("1 Volser: VolRestore: volume %u has been deleted \n", tt->volid);
+	Log("1 Volser: VolRestore: volume %" AFS_VOLID_FMT " has been deleted \n", afs_printable_VolumeId_lu(tt->volid));
 	TRELE(tt);
 	return ENOENT;
     }
@@ -1616,8 +1617,8 @@ VolSetForwarding(struct rx_call *acid, afs_int32 atid, afs_int32 anewsite)
     if (!tt)
 	return ENOENT;
     if (tt->vflags & VTDeleted) {
-	Log("1 Volser: VolSetForwarding: volume %u has been deleted \n",
-	    tt->volid);
+	Log("1 Volser: VolSetForwarding: volume %" AFS_VOLID_FMT " has been deleted \n",
+	    afs_printable_VolumeId_lu(tt->volid));
 	TRELE(tt);
 	return ENOENT;
     }
@@ -1657,8 +1658,8 @@ VolGetStatus(struct rx_call *acid, afs_int32 atrans,
     if (!tt)
 	return ENOENT;
     if (tt->vflags & VTDeleted) {
-	Log("1 Volser: VolGetStatus: volume %u has been deleted \n",
-	    tt->volid);
+	Log("1 Volser: VolGetStatus: volume %" AFS_VOLID_FMT " has been deleted \n",
+	    afs_printable_VolumeId_lu(tt->volid));
 	TRELE(tt);
 	return ENOENT;
     }
@@ -1721,7 +1722,7 @@ VolSetInfo(struct rx_call *acid, afs_int32 atrans,
     if (!tt)
 	return ENOENT;
     if (tt->vflags & VTDeleted) {
-	Log("1 Volser: VolSetInfo: volume %u has been deleted \n", tt->volid);
+	Log("1 Volser: VolSetInfo: volume %" AFS_VOLID_FMT " has been deleted \n", afs_printable_VolumeId_lu(tt->volid));
 	TRELE(tt);
 	return ENOENT;
     }
@@ -1781,7 +1782,7 @@ VolGetName(struct rx_call *acid, afs_int32 atrans, char **aname)
     if (!tt)
 	return ENOENT;
     if (tt->vflags & VTDeleted) {
-	Log("1 Volser: VolGetName: volume %u has been deleted \n", tt->volid);
+	Log("1 Volser: VolGetName: volume %" AFS_VOLID_FMT " has been deleted \n", afs_printable_VolumeId_lu(tt->volid));
 	TRELE(tt);
 	return ENOENT;
     }
@@ -1813,7 +1814,7 @@ VolGetName(struct rx_call *acid, afs_int32 atrans, char **aname)
  * - a noop now !*/
 afs_int32
 SAFSVolSignalRestore(struct rx_call *acid, char volname[], int volType,
-		     afs_uint32 parentId, afs_uint32 cloneId)
+		     VolumeId parentId, VolumeId cloneId)
 {
     return 0;
 }
@@ -1917,7 +1918,7 @@ XVolListPartitions(struct rx_call *acid, struct partEntries *pEntries)
  *  false if we got to the end of the directory
  */
 static int
-GetNextVol(DIR *dirp, char *volname, afs_uint32 *volid)
+GetNextVol(DIR *dirp, char *volname, VolumeId *volid)
 {
     struct dirent *dp;
 
@@ -2136,7 +2137,7 @@ FillVolInfo(Volume * vp, volint_info_handle_t * handle)
  * @internal
  */
 static int
-GetVolObject(afs_uint32 volumeId, char * pname, Volume ** vp)
+GetVolObject(VolumeId volumeId, char * pname, Volume ** vp)
 {
     int code;
     SYNC_response res;
@@ -2192,7 +2193,7 @@ typedef enum {
  */
 static int
 GetVolInfo(afs_uint32 partId,
-	   afs_uint32 volumeId,
+	   VolumeId volumeId,
 	   char * pname,
 	   char * volname,
 	   volint_info_handle_t * handle,
@@ -2235,8 +2236,8 @@ GetVolInfo(afs_uint32 partId,
     }
 
     if (error) {
-	Log("1 Volser: GetVolInfo: Could not attach volume %u (%s:%s) error=%d\n",
-	    volumeId, pname, volname, error);
+	Log("1 Volser: GetVolInfo: Could not attach volume %" AFS_VOLID_FMT " (%s:%s) error=%d\n",
+	    afs_printable_VolumeId_lu(volumeId), pname, volname, error);
 	goto drop;
     }
 
@@ -2254,8 +2255,8 @@ GetVolInfo(afs_uint32 partId,
 	    goto drop;
 
 	case VOL_INFO_LIST_SINGLE:
-	    Log("1 Volser: GetVolInfo: Volume %u (%s:%s) will be destroyed on next salvage\n",
-		volumeId, pname, volname);
+	    Log("1 Volser: GetVolInfo: Volume %" AFS_VOLID_FMT " (%s:%s) will be destroyed on next salvage\n",
+		afs_printable_VolumeId_lu(volumeId), pname, volname);
 
 	default:
 	    goto drop;
@@ -2264,8 +2265,8 @@ GetVolInfo(afs_uint32 partId,
 
     if (V_needsSalvaged(tv)) {
 	/*this volume will be salvaged */
-	Log("1 Volser: GetVolInfo: Volume %u (%s:%s) needs to be salvaged\n",
-	    volumeId, pname, volname);
+	Log("1 Volser: GetVolInfo: Volume %" AFS_VOLID_FMT " (%s:%s) needs to be salvaged\n",
+	    afs_printable_VolumeId_lu(volumeId), pname, volname);
     }
 
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -2309,8 +2310,8 @@ GetVolInfo(afs_uint32 partId,
 	if (error) {
 	    VOLINT_INFO_STORE(handle, status, 0);
 	    strcpy((char *)VOLINT_INFO_PTR(handle, name), volname);
-	    Log("1 Volser: GetVolInfo: Could not detach volume %u (%s:%s)\n",
-		volumeId, pname, volname);
+	    Log("1 Volser: GetVolInfo: Could not detach volume %" AFS_VOLID_FMT " (%s:%s)\n",
+		afs_printable_VolumeId_lu(volumeId), pname, volname);
 	}
     }
     if (ttc) {
@@ -2324,7 +2325,7 @@ GetVolInfo(afs_uint32 partId,
 /*return the header information about the <volid> */
 afs_int32
 SAFSVolListOneVolume(struct rx_call *acid, afs_int32 partid,
-                     afs_uint32 volumeId, volEntries *volumeInfo)
+                     VolumeId volumeId, volEntries *volumeInfo)
 {
     afs_int32 code;
 
@@ -2335,12 +2336,12 @@ SAFSVolListOneVolume(struct rx_call *acid, afs_int32 partid,
 
 static afs_int32
 VolListOneVolume(struct rx_call *acid, afs_int32 partid,
-                 afs_uint32 volumeId, volEntries *volumeInfo)
+                 VolumeId volumeId, volEntries *volumeInfo)
 {
     struct DiskPartition64 *partP;
     char pname[9], volname[20];
     DIR *dirp;
-    afs_uint32 volid;
+    VolumeId volid;
     int found = 0;
     int code;
     volint_info_handle_t handle;
@@ -2413,7 +2414,7 @@ VolListOneVolume(struct rx_call *acid, afs_int32 partid,
 
 afs_int32
 SAFSVolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
-		      afs_uint32 a_volID, volXEntries *a_volumeXInfoP)
+		      VolumeId a_volID, volXEntries *a_volumeXInfoP)
 {
     afs_int32 code;
 
@@ -2424,13 +2425,13 @@ SAFSVolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
 
 static afs_int32
 VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
-                  afs_uint32 a_volID, volXEntries *a_volumeXInfoP)
+                  VolumeId a_volID, volXEntries *a_volumeXInfoP)
 {				/*SAFSVolXListOneVolume */
 
     struct DiskPartition64 *partP;	/*Ptr to partition */
     char pname[9], volname[20];	/*Partition, volume names */
     DIR *dirp;			/*Partition directory ptr */
-    afs_uint32 currVolID;	        /*Current volume ID */
+    VolumeId currVolID;	        /*Current volume ID */
     int found = 0;		/*Did we find the volume we need? */
     int code;
     volint_info_handle_t handle;
@@ -2530,7 +2531,7 @@ VolListVolumes(struct rx_call *acid, afs_int32 partid, afs_int32 flags,
     afs_int32 allocSize = 1000;	/*to be changed to a larger figure */
     char pname[9], volname[20];
     DIR *dirp;
-    afs_uint32 volid;
+    VolumeId volid;
     int code;
     volint_info_handle_t handle;
 
@@ -2640,7 +2641,7 @@ VolXListVolumes(struct rx_call *a_rxCidP, afs_int32 a_partID,
     afs_int32 allocSize = 1000;	/*To be changed to a larger figure */
     char pname[9], volname[20];	/*Partition, volume names */
     DIR *dirp;			/*Partition directory ptr */
-    afs_uint32 volid;		/*Current volume ID */
+    VolumeId volid;		/*Current volume ID */
     int code;
     volint_info_handle_t handle;
 
@@ -2817,8 +2818,8 @@ done:
 
 afs_int32
 SAFSVolSetIdsTypes(struct rx_call *acid, afs_int32 atid, char name[],
-		   afs_int32 type, afs_uint32 pId, afs_uint32 cloneId,
-		   afs_uint32 backupId)
+		   afs_int32 type, afs_uint32 pId, VolumeId cloneId,
+		   VolumeId backupId)
 {
     afs_int32 code;
 
@@ -2831,8 +2832,8 @@ SAFSVolSetIdsTypes(struct rx_call *acid, afs_int32 atid, char name[],
 
 static afs_int32
 VolSetIdsTypes(struct rx_call *acid, afs_int32 atid, char name[],
-	       afs_int32 type, afs_uint32 pId, afs_uint32 cloneId,
-	       afs_uint32 backupId)
+	       afs_int32 type, VolumeId pId, VolumeId cloneId,
+	       VolumeId backupId)
 {
     struct Volume *tv;
     Error error = 0;
@@ -2848,7 +2849,7 @@ VolSetIdsTypes(struct rx_call *acid, afs_int32 atid, char name[],
     if (!tt)
 	return ENOENT;
     if (tt->vflags & VTDeleted) {
-	Log("1 Volser: VolSetIds: volume %u has been deleted \n", tt->volid);
+	Log("1 Volser: VolSetIds: volume %" AFS_VOLID_FMT " has been deleted \n", afs_printable_VolumeId_lu(tt->volid));
 	TRELE(tt);
 	return ENOENT;
     }
@@ -2904,7 +2905,7 @@ VolSetDate(struct rx_call *acid, afs_int32 atid, afs_int32 cdate)
     if (!tt)
 	return ENOENT;
     if (tt->vflags & VTDeleted) {
-	Log("1 Volser: VolSetDate: volume %u has been deleted \n", tt->volid);
+	Log("1 Volser: VolSetDate: volume %" AFS_VOLID_FMT " has been deleted \n", afs_printable_VolumeId_lu(tt->volid));
 	TRELE(tt);
 	return ENOENT;
     }
@@ -2932,7 +2933,7 @@ VolSetDate(struct rx_call *acid, afs_int32 atid, afs_int32 cdate)
 
 afs_int32
 SAFSVolConvertROtoRWvolume(struct rx_call *acid, afs_int32 partId,
-			   afs_uint32 volumeId)
+			   VolumeId volumeId)
 {
 #ifdef AFS_NT40_ENV
     return EXDEV;
@@ -2943,7 +2944,7 @@ SAFSVolConvertROtoRWvolume(struct rx_call *acid, afs_int32 partId,
     char pname[16], volname[20];
     struct DiskPartition64 *partP;
     afs_int32 ret = ENODEV;
-    afs_uint32 volid;
+    VolumeId volid;
 
     if (!afsconf_SuperUser(tdir, acid, caller))
 	return VOLSERBAD_ACCESS;	/*not a super user */

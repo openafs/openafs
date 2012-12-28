@@ -38,6 +38,7 @@
 #include <afs/vlserver.h>
 #include <afs/cellconfig.h>
 #include <rx/rxkad.h>
+#include <afs/afsint.h>
 #include <afs/volser.h>
 #include <ubik.h>
 

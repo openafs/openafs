@@ -26,6 +26,7 @@
 #include <afs/budb_client.h>
 #include <afs/bucoord_prototypes.h>
 #include <afs/butm_prototypes.h>
+#include <afs/afsint.h>
 #include <afs/volser.h>
 #include <afs/volser_prototypes.h>
 #include <afs/com_err.h>

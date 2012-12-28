@@ -24,6 +24,7 @@
 #include <afs/budb_prototypes.h>
 #include <afs/butc.h>
 #include <afs/bubasics.h>	/* PA */
+#include <afs/afsint.h>
 #include <afs/volser.h>
 #include <afs/voldefs.h>	/* PA */
 #include <afs/vldbint.h>	/* PA */

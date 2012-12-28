@@ -26,6 +26,7 @@
 #include <ubik.h>
 #include <afs/cmd.h>
 #include <rx/rxkad.h>
+#include <afs/afsint.h>
 #include <afs/volser.h>		/*VLDB_MAXSERVERS */
 #include <afs/com_err.h>
 #include <lock.h>

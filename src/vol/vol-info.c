@@ -379,8 +379,8 @@ PrintVolumeSizes(Volume * vp)
     afs_int64 diff_k = volumeTotals.size_k - volumeTotals.diskused_k;
 
     PrintVolumeSizeHeading();
-    printf("%u\t%9llu%9llu%10llu%10llu%9lld\t%24s\n",
-	   V_id(vp),
+    printf("%" AFS_VOLID_FMT "\t%9llu%9llu%10llu%10llu%9lld\t%24s\n",
+	   afs_printable_VolumeId_lu(V_id(vp)),
 	   volumeTotals.diskused_k,
 	   volumeTotals.auxsize_k, volumeTotals.vnodesize_k,
 	   volumeTotals.size_k, diff_k, V_name(vp));
@@ -658,7 +658,7 @@ GetPartitionName(afs_uint32 partId, char *partName, afs_size_t partNameSize)
  * @return 0 if successful
  */
 static int
-ScanPartitions(char *partNameOrId, afs_uint32 volumeId)
+ScanPartitions(char *partNameOrId, VolumeId volumeId)
 {
     int err = 0;
     char partName[64] = "";
@@ -743,7 +743,7 @@ ScanPartitions(char *partNameOrId, afs_uint32 volumeId)
 	    }
 	}
 	snprintf(name1, sizeof name1, VFORMAT,
-		 afs_printable_uint32_lu(volumeId));
+		 afs_printable_VolumeId_lu(volumeId));
 	if (PrintHeading) {
 	    PrintColumnHeading();
 	}
@@ -788,7 +788,7 @@ static int
 VolInfo(struct cmd_syndesc *as, void *arock)
 {
     struct cmd_item *ti;
-    afs_uint32 volumeId = 0;
+    VolumeId volumeId = 0;
     char *partNameOrId = NULL;
 
     DumpInfo = 1;		/* volinfo default mode */
@@ -916,7 +916,7 @@ static int
 VolScan(struct cmd_syndesc *as, void *arock)
 {
     struct cmd_item *ti;
-    afs_uint32 volumeId = 0;
+    VolumeId volumeId = 0;
     char *partNameOrId = NULL;
     int i;
 
@@ -1183,16 +1183,16 @@ HandleSpecialFile(const char *name, struct DiskPartition64 *dp,
     fdP = IH_OPEN(ih);
     if (fdP == NULL) {
 	fprintf(stderr,
-		"%s: Error opening header file '%s' for volume %u\n", progname,
-		name, header->id);
+		"%s: Error opening header file '%s' for volume %" AFS_VOLID_FMT "\n", progname,
+		name, afs_printable_VolumeId_lu(header->id));
 	perror("open");
 	goto error;
     }
     size = FDH_SIZE(fdP);
     if (size == -1) {
 	fprintf(stderr,
-		"%s: Error getting size of header file '%s' for volume %u\n",
-		progname, name, header->id);
+		"%s: Error getting size of header file '%s' for volume %" AFS_VOLID_FMT "\n",
+		progname, name, afs_printable_VolumeId_lu(header->id));
 	perror("fstat");
 	goto error;
     }
@@ -1240,8 +1240,8 @@ HandleHeaderFiles(struct DiskPartition64 *dp, FD_t header_fd,
 	size = OS_SIZE(header_fd);
 	printf("Volume header (size = %lld):\n", size);
 	printf("\tstamp\t= 0x%x\n", header->stamp.version);
-	printf("\tVolId\t= %u\n", header->id);
-	printf("\tparent\t= %u\n", header->parent);
+	printf("\tVolId\t= %" AFS_VOLID_FMT "\n", afs_printable_VolumeId_lu(header->id));
+	printf("\tparent\t= %" AFS_VOLID_FMT "\n", afs_printable_VolumeId_lu(header->parent));
     }
 
     HandleSpecialFile("Info", dp, header, header->volumeInfo, &size);
@@ -1288,8 +1288,8 @@ IsScannable(Volume * vp)
     case BACKVOL:
 	return ScanVolType & SCAN_BK;
     default:
-	fprintf(stderr, "%s: Volume %u; Unknown volume type %d\n", progname,
-		V_id(vp), V_type(vp));
+	fprintf(stderr, "%s: Volume %" AFS_VOLID_FMT "; Unknown volume type %d\n", progname,
+		afs_printable_VolumeId_lu(V_id(vp)), V_type(vp));
 	break;
     }
     return 0;
@@ -1560,7 +1560,7 @@ volumeTypeShortString(int type)
 void
 PrintHeader(Volume * vp)
 {
-    printf("Volume header for volume %u (%s)\n", V_id(vp), V_name(vp));
+    printf("Volume header for volume %" AFS_VOLID_FMT " (%s)\n", afs_printable_VolumeId_lu(V_id(vp)), V_name(vp));
     printf("stamp.magic = %x, stamp.version = %u\n", V_stamp(vp).magic,
 	   V_stamp(vp).version);
     printf
@@ -1572,9 +1572,8 @@ PrintHeader(Volume * vp)
 	 V_type(vp), volumeTypeString(V_type(vp)), V_uniquifier(vp),
 	 V_needsCallback(vp), V_destroyMe(vp));
     printf
-	("id = %u, parentId = %u, cloneId = %u, backupId = %u, restoredFromId = %u\n",
-	 V_id(vp), V_parentId(vp), V_cloneId(vp), V_backupId(vp),
-	 V_restoredFromId(vp));
+	("id = %" AFS_VOLID_FMT ", parentId = %" AFS_VOLID_FMT ", cloneId = %" AFS_VOLID_FMT ", backupId = %" AFS_VOLID_FMT ", restoredFromId = %" AFS_VOLID_FMT "\n",
+	 afs_printable_VolumeId_lu(V_id(vp)), afs_printable_VolumeId_lu(V_parentId(vp)), afs_printable_VolumeId_lu(V_cloneId(vp)), afs_printable_VolumeId_lu(V_backupId(vp)), afs_printable_VolumeId_lu(V_restoredFromId(vp)));
     printf
 	("maxquota = %d, minquota = %d, maxfiles = %d, filecount = %d, diskused = %d\n",
 	 V_maxquota(vp), V_minquota(vp), V_maxfiles(vp), V_filecount(vp),

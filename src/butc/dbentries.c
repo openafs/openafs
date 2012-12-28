@@ -19,6 +19,7 @@
 #include <afs/tcdata.h>
 #include <afs/bubasics.h>
 #include <afs/budb_client.h>
+#include <afs/afsint.h>
 #include <afs/vldbint.h>
 #include <afs/vlserver.h>
 #include <afs/volser.h>

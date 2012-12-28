@@ -20,6 +20,7 @@
 #include <afs/afsutil.h>
 #include <afs/budb.h>
 #include <afs/bubasics.h>
+#include <afs/afsint.h>
 #include <afs/volser.h>
 
 #include "bc.h"

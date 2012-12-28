@@ -20,6 +20,7 @@
 #include <afs/vlserver.h>
 #include <afs/pterror.h>
 #include <afs/bnode.h>
+#include <afs/afsint.h>
 #include <afs/volser.h>
 #include <ubik.h>
 

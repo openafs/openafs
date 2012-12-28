@@ -16,6 +16,7 @@
 #include <ctype.h>
 
 #include <afs/vlserver.h>
+#include <afs/afsint.h>
 #include <afs/volser.h>
 #include <afs/volint.h>
 

@@ -145,7 +145,7 @@ extern void *calloc(), *realloc();
 #endif
 
 /* Forward declarations */
-static Volume *attach2(Error * ec, VolId volumeId, char *path,
+static Volume *attach2(Error * ec, VolumeId volumeId, char *path,
 		       struct DiskPartition64 *partp, Volume * vp,
 		       int isbusy, int mode, int *acheckedOut);
 static void ReallyFreeVolume(Volume * vp);
@@ -159,7 +159,7 @@ static void VInitVolumeHeaderCache(afs_uint32 howMany);
 static int GetVolumeHeader(Volume * vp);
 static void ReleaseVolumeHeader(struct volHeader *hd);
 static void FreeVolumeHeader(Volume * vp);
-static void AddVolumeToHashTable(Volume * vp, int hashid);
+static void AddVolumeToHashTable(Volume * vp, VolumeId hashid);
 static void DeleteVolumeFromHashTable(Volume * vp);
 #if 0
 static int VHold(Volume * vp);
@@ -171,7 +171,7 @@ static void VCloseVolumeHandles_r(Volume * vp);
 static void LoadVolumeHeader(Error * ec, Volume * vp);
 static int VCheckOffline(Volume * vp);
 static int VCheckDetach(Volume * vp);
-static Volume * GetVolume(Error * ec, Error * client_ec, VolId volumeId,
+static Volume * GetVolume(Error * ec, Error * client_ec, VolumeId volumeId,
                           Volume * hint, const struct timespec *ts);
 
 int LogLevel;			/* Vice loglevel--not defined as extern so that it will be
@@ -311,7 +311,7 @@ struct vinitvolumepackage_thread_param {
 
 static void *VInitVolumePackageThread(void *args);
 static struct DiskPartition64 *VInitNextPartition(struct partition_queue *pq);
-static VolId VInitNextVolumeId(DIR *dirp);
+static VolumeId VInitNextVolumeId(DIR *dirp);
 static int VInitPreAttachVolumes(int nthreads, struct volume_init_queue *vq);
 
 #endif /* !AFS_DEMAND_ATTACH_FS */
@@ -339,7 +339,7 @@ struct VLRU_DiskHeader {
 };
 
 struct VLRU_DiskEntry {
-    afs_uint32 vid;                       /* volume ID */
+    VolumeId vid;                       /* volume ID */
     afs_uint32 idx;                       /* generation */
     afs_uint32 last_get;                  /* timestamp of last get */
 };
@@ -938,7 +938,7 @@ VInitVolumePackageThread(void *args)
     Log("Scanning partitions on thread %d of %d\n", params->thread, params->nthreads);
     while((partition = VInitNextPartition(pq))) {
         DIR *dirp;
-        VolId vid;
+        VolumeId vid;
 
         Log("Partition %s: pre-attaching volumes\n", partition->name);
         dirp = opendir(VPartitionPath(partition));
@@ -1019,11 +1019,11 @@ VInitNextPartition(struct partition_queue *pq)
 /**
  * Find next volume id on the partition.
  */
-static VolId
+static VolumeId
 VInitNextVolumeId(DIR *dirp)
 {
     struct dirent *d;
-    VolId vid = 0;
+    VolumeId vid = 0;
     char *ext;
 
     while((d = readdir(dirp))) {
@@ -1075,7 +1075,7 @@ VInitPreAttachVolumes(int nthreads, struct volume_init_queue *vq)
                     Log("Error looking up volume, code=%d\n", ec);
                 }
                 else if (dup) {
-                    Log("Warning: Duplicate volume id %d detected.\n", vp->hashid);
+                    Log("Warning: Duplicate volume id %" AFS_VOLID_FMT " detected.\n", afs_printable_VolumeId_lu(vp->hashid));
                 }
                 else {
                     /* put pre-attached volume onto the hash table
@@ -1365,8 +1365,8 @@ VShutdown_r(void)
 	    code = VHold_r(vp);
 	    if (code == 0) {
 		if (LogLevel >= 5)
-		    Log("VShutdown:  Attempting to take volume %u offline.\n",
-			vp->hashid);
+		    Log("VShutdown:  Attempting to take volume %" AFS_VOLID_FMT " offline.\n",
+			afs_printable_VolumeId_lu(vp->hashid));
 
 		/* next, take the volume offline (drops reference count) */
 		VOffline_r(vp, "File server was shut down");
@@ -1848,8 +1848,9 @@ VShutdownVolume_r(Volume * vp)
     VCreateReservation_r(vp);
 
     if (LogLevel >= 5) {
-	Log("VShutdownVolume_r:  vid=%u, device=%d, state=%hu\n",
-	    vp->hashid, vp->partition->device, V_attachState(vp));
+	Log("VShutdownVolume_r:  vid=%" AFS_VOLID_FMT ", device=%d, state=%hu\n",
+	    afs_printable_VolumeId_lu(vp->hashid), vp->partition->device,
+	    V_attachState(vp));
     }
 
     /* wait for other blocking ops to finish */
@@ -1875,8 +1876,8 @@ VShutdownVolume_r(Volume * vp)
 	code = VHold_r(vp);
 	if (!code) {
 	    if (LogLevel >= 5)
-		Log("VShutdown:  Attempting to take volume %u offline.\n",
-		    vp->hashid);
+		Log("VShutdown:  Attempting to take volume %" AFS_VOLID_FMT " offline.\n",
+		    afs_printable_VolumeId_lu(vp->hashid));
 
 	    /* take the volume offline (drops reference count) */
 	    VOffline_r(vp, "File server was shut down");
@@ -1938,7 +1939,7 @@ ReadHeader(Error * ec, IHandle_t * h, char *to, int size, bit32 magic,
     fdP = IH_OPEN(h);
     if (fdP == NULL) {
 	Log("ReadHeader: Failed to open %s header file "
-	    "(volume=%u, inode=%s); errno=%d\n", HeaderName(magic), h->ih_vid,
+	    "(volume=%" AFS_VOLID_FMT ", inode=%s); errno=%d\n", HeaderName(magic), afs_printable_VolumeId_lu(h->ih_vid),
 	    PrintInode(stmp, h->ih_ino), errno);
 	*ec = VSALVAGE;
 	return;
@@ -1948,7 +1949,7 @@ ReadHeader(Error * ec, IHandle_t * h, char *to, int size, bit32 magic,
     nbytes = FDH_PREAD(fdP, to, size, 0);
     if (nbytes < 0) {
 	Log("ReadHeader: Failed to read %s header file "
-	    "(volume=%u, inode=%s); errno=%d\n", HeaderName(magic), h->ih_vid,
+	    "(volume=%" AFS_VOLID_FMT ", inode=%s); errno=%d\n", HeaderName(magic), afs_printable_VolumeId_lu(h->ih_vid),
 	    PrintInode(stmp, h->ih_ino), errno);
 	*ec = VSALVAGE;
 	FDH_REALLYCLOSE(fdP);
@@ -1956,18 +1957,18 @@ ReadHeader(Error * ec, IHandle_t * h, char *to, int size, bit32 magic,
     }
     if (nbytes != size) {
 	Log("ReadHeader: Incorrect number of bytes read from %s header file "
-	    "(volume=%u, inode=%s); expected=%d, read=%d\n",
-	    HeaderName(magic), h->ih_vid, PrintInode(stmp, h->ih_ino), size,
-	    (int)nbytes);
+	    "(volume=%" AFS_VOLID_FMT ", inode=%s); expected=%d, read=%d\n",
+	    HeaderName(magic), afs_printable_VolumeId_lu(h->ih_vid), 
+	    PrintInode(stmp, h->ih_ino), size, (int)nbytes);
 	*ec = VSALVAGE;
 	FDH_REALLYCLOSE(fdP);
 	return;
     }
     if (vsn->magic != magic) {
 	Log("ReadHeader: Incorrect magic for %s header file "
-	    "(volume=%u, inode=%s); expected=0x%x, read=0x%x\n",
-	    HeaderName(magic), h->ih_vid, PrintInode(stmp, h->ih_ino), magic,
-	    vsn->magic);
+	    "(volume=%" AFS_VOLID_FMT ", inode=%s); expected=0x%x, read=0x%x\n",
+	    HeaderName(magic), afs_printable_VolumeId_lu(h->ih_vid),
+	    PrintInode(stmp, h->ih_ino), magic, vsn->magic);
 	*ec = VSALVAGE;
 	FDH_REALLYCLOSE(fdP);
 	return;
@@ -1978,8 +1979,8 @@ ReadHeader(Error * ec, IHandle_t * h, char *to, int size, bit32 magic,
     /* Check is conditional, in case caller wants to inspect version himself */
     if (version && vsn->version != version) {
 	Log("ReadHeader: Incorrect version for %s header file "
-	    "(volume=%u, inode=%s); expected=%x, read=%x\n",
-	    HeaderName(magic), h->ih_vid, PrintInode(stmp, h->ih_ino),
+	    "(volume=%" AFS_VOLID_FMT ", inode=%s); expected=%x, read=%x\n",
+	    HeaderName(magic), afs_printable_VolumeId_lu(h->ih_vid), PrintInode(stmp, h->ih_ino),
 	    version, vsn->version);
 	*ec = VSALVAGE;
     }
@@ -2145,7 +2146,7 @@ VPreAttachVolumeByName_r(Error * ec, char *partition, char *name)
 Volume *
 VPreAttachVolumeById_r(Error * ec,
 		       char * partition,
-		       VolId volumeId)
+		       VolumeId volumeId)
 {
     Volume *vp;
     struct DiskPartition64 *partp;
@@ -2198,7 +2199,7 @@ Volume *
 VPreAttachVolumeByVp_r(Error * ec,
 		       struct DiskPartition64 * partp,
 		       Volume * vp,
-		       VolId vid)
+		       VolumeId vid)
 {
     Volume *nvp = NULL;
 
@@ -2217,8 +2218,9 @@ VPreAttachVolumeByVp_r(Error * ec,
 	 *   - volume is in an error state
 	 *   - volume is pre-attached
 	 */
-	Log("VPreattachVolumeByVp_r: volume %u not in quiescent state (state %u flags 0x%x)\n",
-	    vid, V_attachState(vp), V_attachFlags(vp));
+	Log("VPreattachVolumeByVp_r: volume %" AFS_VOLID_FMT " not in quiescent state (state %u flags 0x%x)\n",
+	    afs_printable_VolumeId_lu(vid), V_attachState(vp),
+	    V_attachFlags(vp));
 	goto done;
     } else if (vp) {
 	/* we're re-attaching a volume; clear out some old state */
@@ -2279,7 +2281,7 @@ VPreAttachVolumeByVp_r(Error * ec,
     VChangeState_r(vp, VOL_STATE_PREATTACHED);
 
     if (LogLevel >= 5)
-	Log("VPreAttachVolumeByVp_r:  volume %u pre-attached\n", vp->hashid);
+	Log("VPreAttachVolumeByVp_r:  volume %" AFS_VOLID_FMT " pre-attached\n", afs_printable_VolumeId_lu(vp->hashid));
 
   done:
     if (*ec)
@@ -2310,7 +2312,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
     struct DiskPartition64 *partp;
     char path[64];
     int isbusy = 0;
-    VolId volumeId;
+    VolumeId volumeId;
     int checkedOut;
 #ifdef AFS_DEMAND_ATTACH_FS
     VolumeStats stats_save;
@@ -2558,7 +2560,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
 	    }
 	}
 	if (LogLevel)
-	    Log("VOnline:  volume %u (%s) attached and online\n", V_id(vp),
+	  Log("VOnline:  volume %" AFS_VOLID_FMT " (%s) attached and online\n", afs_printable_VolumeId_lu(V_id(vp)),
 		V_name(vp));
     }
 
@@ -2594,7 +2596,7 @@ VAttachVolumeByVp_r(Error * ec, Volume * vp, int mode)
     struct DiskPartition64 *partp;
     char path[64];
     int isbusy = 0;
-    VolId volumeId;
+    VolumeId volumeId;
     Volume * nvp = NULL;
     VolumeStats stats_save;
     int checkedOut;
@@ -2681,7 +2683,8 @@ VAttachVolumeByVp_r(Error * ec, Volume * vp, int mode)
 
     VUpdateVolume_r(ec, vp, 0);
     if (*ec) {
-	Log("VAttachVolume: Error updating volume %u\n", vp->hashid);
+	Log("VAttachVolume: Error updating volume %" AFS_VOLID_FMT "\n",
+	    afs_printable_VolumeId_lu(vp->hashid));
 	VPutVolume_r(vp);
 	goto done;
     }
@@ -2699,15 +2702,16 @@ VAttachVolumeByVp_r(Error * ec, Volume * vp, int mode)
 #endif /* !AFS_DEMAND_ATTACH_FS */
 	VAddToVolumeUpdateList_r(ec, vp);
 	if (*ec) {
-	    Log("VAttachVolume: Error adding volume %u to update list\n", vp->hashid);
+	    Log("VAttachVolume: Error adding volume %" AFS_VOLID_FMT " to update list\n",
+		afs_printable_VolumeId_lu(vp->hashid));
 	    if (vp)
 		VPutVolume_r(vp);
 	    goto done;
 	}
     }
     if (LogLevel)
-	Log("VOnline:  volume %u (%s) attached and online\n", V_id(vp),
-	    V_name(vp));
+	Log("VOnline:  volume %" AFS_VOLID_FMT " (%s) attached and online\n",
+	    afs_printable_VolumeId_lu(V_id(vp)), V_name(vp));
   done:
     if (reserve) {
 	VCancelReservation_r(nvp);
@@ -3152,7 +3156,7 @@ attach_check_vop(Error *ec, VolumeId volid, struct DiskPartition64 *partp,
  * @post VOL_LOCK held
  */
 static Volume *
-attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
+attach2(Error * ec, VolumeId volumeId, char *path, struct DiskPartition64 *partp,
         Volume * vp, int isbusy, int mode, int *acheckedOut)
 {
     /* have we read in the header successfully? */
@@ -3493,8 +3497,9 @@ locked_error:
 #ifdef AFS_DEMAND_ATTACH_FS
     if (!VIsErrorState(V_attachState(vp))) {
 	if (VIsErrorState(error_state)) {
-	    Log("attach2: forcing vol %u to error state (state %u flags 0x%x ec %d)\n",
-	        vp->hashid, V_attachState(vp), V_attachFlags(vp), *ec);
+	    Log("attach2: forcing vol %" AFS_VOLID_FMT " to error state (state %u flags 0x%x ec %d)\n",
+	        afs_printable_VolumeId_lu(vp->hashid), V_attachState(vp),
+		V_attachFlags(vp), *ec);
 	}
 	VChangeState_r(vp, error_state);
     }
@@ -3910,7 +3915,7 @@ VPutVolumeWithCall(Volume *vp, struct VCallByVol *cbv)
    of whether or not the volume is in service or on/off line.  An error
    code, however, is returned with an indication of the volume's status */
 Volume *
-VGetVolume(Error * ec, Error * client_ec, VolId volumeId)
+VGetVolume(Error * ec, Error * client_ec, VolumeId volumeId)
 {
     Volume *retVal;
     VOL_LOCK;
@@ -3941,7 +3946,7 @@ VGetVolume(Error * ec, Error * client_ec, VolId volumeId)
  *       VPutVolumeWithCall
  */
 Volume *
-VGetVolumeWithCall(Error * ec, Error * client_ec, VolId volumeId,
+VGetVolumeWithCall(Error * ec, Error * client_ec, VolumeId volumeId,
                    const struct timespec *ts, struct VCallByVol *cbv)
 {
     Volume *retVal;
@@ -3953,7 +3958,7 @@ VGetVolumeWithCall(Error * ec, Error * client_ec, VolId volumeId,
 }
 
 Volume *
-VGetVolume_r(Error * ec, VolId volumeId)
+VGetVolume_r(Error * ec, VolumeId volumeId)
 {
     return GetVolume(ec, NULL, volumeId, NULL, NULL);
 }
@@ -3989,7 +3994,7 @@ VGetVolumeByVp_r(Error * ec, Volume * vp)
  * @note for LWP builds, 'timeout' must be NULL
  */
 static Volume *
-GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint,
+GetVolume(Error * ec, Error * client_ec, VolumeId volumeId, Volume * hint,
           const struct timespec *timeout)
 {
     Volume *vp = hint;
@@ -4204,8 +4209,8 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint,
 	    /* Only log the error if it was a totally unexpected error.  Simply
 	     * a missing inode is likely to be caused by the volume being deleted */
 	    if (errno != ENXIO || LogLevel)
-		Log("Volume %u: couldn't reread volume header\n",
-		    vp->hashid);
+		Log("Volume %" AFS_VOLID_FMT ": couldn't reread volume header\n",
+		    afs_printable_VolumeId_lu(vp->hashid));
 #ifdef AFS_DEMAND_ATTACH_FS
 	    if (VCanScheduleSalvage()) {
 		VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, 0 /*flags*/);
@@ -4383,7 +4388,7 @@ VForceOffline_r(Volume * vp, int flags)
 
     strcpy(V_offlineMessage(vp),
 	   "Forced offline due to internal error: volume needs to be salvaged");
-    Log("Volume %u forced offline:  it needs salvaging!\n", V_id(vp));
+    Log("Volume %" AFS_VOLID_FMT " forced offline:  it needs salvaging!\n", afs_printable_VolumeId_lu(V_id(vp)));
 
     V_inUse(vp) = 0;
     vp->goingOffline = 0;
@@ -4456,9 +4461,9 @@ VScanCalls_r(struct Volume *vp)
 	    char hoststr[16];
 	    peer = rx_PeerOf(rx_ConnectionOf(cbv->call));
 
-	    Log("Offlining volume %lu while client %s:%u is trying to read "
+	    Log("Offlining volume %" AFS_VOLID_FMT " while client %s:%u is trying to read "
 	        "from it; kicking client off with error %ld\n",
-	        (long unsigned) vp->hashid,
+	        afs_printable_VolumeId_lu(vp->hashid),
 	        afs_inet_ntoa_r(rx_HostOf(peer), hoststr),
 	        (unsigned) ntohs(rx_PortOf(peer)),
 	        (long) err);
@@ -4917,8 +4922,8 @@ VUpdateVolume_r(Error * ec, Volume * vp, int flags)
 #endif
 
     if (*ec) {
-	Log("VUpdateVolume: error updating volume header, volume %u (%s)\n",
-	    V_id(vp), V_name(vp));
+	Log("VUpdateVolume: error updating volume header, volume %" AFS_VOLID_FMT " (%s)\n",
+	    afs_printable_VolumeId_lu(V_id(vp)), V_name(vp));
 	/* try to update on-disk header,
 	 * while preventing infinite recursion */
 	if (!(flags & VOL_UPDATE_NOFORCEOFF)) {
@@ -5041,8 +5046,8 @@ VCheckDetach(Volume * vp)
 	    V_inUse(vp) = 0;
 	    VUpdateVolume_r(&ec, vp, VOL_UPDATE_NOFORCEOFF);
 	    if (ec) {
-		Log("VCheckDetach: volume header update for volume %u "
-		    "failed with errno %d\n", vp->hashid, errno);
+		Log("VCheckDetach: volume header update for volume %" AFS_VOLID_FMT " "
+		    "failed with errno %d\n", afs_printable_VolumeId_lu(vp->hashid), errno);
 	    }
 	}
 	VReleaseVolumeHandles_r(vp);
@@ -5075,8 +5080,8 @@ VCheckDetach(Volume * vp)
 	    V_inUse(vp) = 0;
 	    VUpdateVolume_r(&ec, vp, VOL_UPDATE_NOFORCEOFF);
 	    if (ec) {
-		Log("VCheckDetach: volume header update for volume %u failed with errno %d\n",
-		    vp->hashid, errno);
+		Log("VCheckDetach: volume header update for volume %" AFS_VOLID_FMT " failed with errno %d\n",
+		    afs_printable_VolumeId_lu(vp->hashid), errno);
 	    }
 	}
 	VReleaseVolumeHandles_r(vp);
@@ -5632,7 +5637,7 @@ VRequestSalvage_r(Error * ec, Volume * vp, int reason, int flags)
 
 	    *ec = VSALVAGING;
 	} else {
-	    Log("VRequestSalvage: volume %u online salvaged too many times; forced offline.\n", vp->hashid);
+	    Log("VRequestSalvage: volume %" AFS_VOLID_FMT " online salvaged too many times; forced offline.\n", afs_printable_VolumeId_lu(vp->hashid));
 
 	    /* make sure neither VScheduleSalvage_r nor
 	     * VUpdateSalvagePriority_r try to schedule another salvage */
@@ -5716,8 +5721,8 @@ static_inline int
 try_SALVSYNC(Volume *vp, char *partName, int *code) {
 #ifdef SALVSYNC_BUILD_CLIENT
     if (VCanUseSALVSYNC()) {
-	Log("Scheduling salvage for volume %lu on part %s over SALVSYNC\n",
-	    afs_printable_uint32_lu(vp->hashid), partName);
+	Log("Scheduling salvage for volume %" AFS_VOLID_FMT " on part %s over SALVSYNC\n",
+	    afs_printable_VolumeId_lu(vp->hashid), partName);
 
 	/* can't use V_id() since there's no guarantee
 	 * we have the disk data header at this point */
@@ -5737,8 +5742,8 @@ static_inline int
 try_FSSYNC(Volume *vp, char *partName, int *code) {
 #ifdef FSSYNC_BUILD_CLIENT
     if (VCanUseFSSYNC()) {
-	Log("Scheduling salvage for volume %lu on part %s over FSSYNC\n",
-	    afs_printable_uint32_lu(vp->hashid), partName);
+	Log("Scheduling salvage for volume %" AFS_VOLID_FMT " on part %s over FSSYNC\n",
+	    afs_printable_VolumeId_lu(vp->hashid), partName);
 
 	/*
 	 * If we aren't the fileserver, tell the fileserver the volume
@@ -5863,19 +5868,19 @@ VScheduleSalvage_r(Volume * vp)
 		break;
 	    case SYNC_DENIED:
 	        ret = VCHECK_SALVAGE_DENIED;
-		Log("VScheduleSalvage_r: Salvage request for volume %lu "
-		    "denied\n", afs_printable_uint32_lu(vp->hashid));
+		Log("VScheduleSalvage_r: Salvage request for volume %" AFS_VOLID_FMT " "
+		    "denied\n", afs_printable_VolumeId_lu(vp->hashid));
 		break;
 	    case SYNC_FAILED:
 	        ret = VCHECK_SALVAGE_FAIL;
-		Log("VScheduleSalvage_r: Salvage request for volume %lu "
-		    "failed\n", afs_printable_uint32_lu(vp->hashid));
+		Log("VScheduleSalvage_r: Salvage request for volume %" AFS_VOLID_FMT " "
+		    "failed\n", afs_printable_VolumeId_lu(vp->hashid));
 		break;
 	    default:
 	        ret = VCHECK_SALVAGE_FAIL;
-		Log("VScheduleSalvage_r: Salvage request for volume %lu "
+		Log("VScheduleSalvage_r: Salvage request for volume %" AFS_VOLID_FMT " "
 		    "received unknown protocol error %d\n",
-		    afs_printable_uint32_lu(vp->hashid), code);
+		    afs_printable_VolumeId_lu(vp->hashid), code);
 		break;
 	    }
 
@@ -6569,7 +6574,7 @@ VGetBitmap_r(Error * ec, Volume * vp, VnodeClass class)
  *
  */
 void
-VGetVolumePath(Error * ec, VolId volumeId, char **partitionp, char **namep)
+VGetVolumePath(Error * ec, VolumeId volumeId, char **partitionp, char **namep)
 {
     static char partition[VMAXPATHLEN], name[VMAXPATHLEN];
     char path[VMAXPATHLEN];
@@ -6579,7 +6584,7 @@ VGetVolumePath(Error * ec, VolId volumeId, char **partitionp, char **namep)
     *ec = 0;
     name[0] = OS_DIRSEPC;
     snprintf(&name[1], (sizeof name) - 1, VFORMAT,
-	     afs_printable_uint32_lu(volumeId));
+	     afs_printable_VolumeId_lu(volumeId));
     for (dp = DiskPartitionList; dp; dp = dp->next) {
 	struct afs_stat_st status;
 	strcpy(path, VPartitionPath(dp));
@@ -6642,7 +6647,7 @@ char *
 VolumeExternalName(VolumeId volumeId)
 {
     static char name[VMAXPATHLEN];
-    snprintf(name, sizeof name, VFORMAT, afs_printable_uint32_lu(volumeId));
+    snprintf(name, sizeof name, VFORMAT, afs_printable_VolumeId_lu(volumeId));
     return name;
 }
 
@@ -6663,7 +6668,7 @@ VolumeExternalName(VolumeId volumeId)
 int
 VolumeExternalName_r(VolumeId volumeId, char * name, size_t len)
 {
-    return snprintf(name, len, VFORMAT, afs_printable_uint32_lu(volumeId));
+    return snprintf(name, len, VFORMAT, afs_printable_VolumeId_lu(volumeId));
 }
 
 
@@ -8402,7 +8407,7 @@ VInitVolumeHash(void)
  *       asynchronous hash chain reordering to finish.
  */
 static void
-AddVolumeToHashTable(Volume * vp, int hashid)
+AddVolumeToHashTable(Volume * vp, VolumeId hashid)
 {
     VolumeHashChainHead * head;
 
@@ -8497,7 +8502,7 @@ DeleteVolumeFromHashTable(Volume * vp)
  *       hint volume object.
  */
 Volume *
-VLookupVolume_r(Error * ec, VolId volumeId, Volume * hint)
+VLookupVolume_r(Error * ec, VolumeId volumeId, Volume * hint)
 {
     int looks = 0;
     Volume * vp, *np;

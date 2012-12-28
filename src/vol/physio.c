@@ -94,7 +94,7 @@ ReallyWrite(DirHandle * file, int block, char *data)
  * The handle needs to be dereferenced with the FidZap() routine.
  */
 void
-SetSalvageDirHandle(DirHandle * dir, afs_int32 volume, Device device,
+SetSalvageDirHandle(DirHandle * dir, VolumeId volume, Device device,
 		    Inode inode, int *volumeChanged)
 {
     static int SalvageCacheCheck = 1;
@@ -137,7 +137,7 @@ FidEq(DirHandle * afile, DirHandle * bfile)
 }
 
 int
-FidVolEq(DirHandle * afile, afs_int32 vid)
+FidVolEq(DirHandle * afile, VolumeId vid)
 {
     if (afile->dirh_volume != vid)
 	return 0;

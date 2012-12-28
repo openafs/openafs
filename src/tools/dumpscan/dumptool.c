@@ -1443,15 +1443,19 @@ DirListInternal(struct vnodeData *vdata, char *pathnames[], int numpathnames,
     } else if (iflag)
 	for (i = 0; i < numentries; i++)
 	    if (!(lvdata = GetVnode(ntohl(eplist[i]->fid.vnode))))
-		printf("%d.0.0\t%s\n",
-		       vol->parentId ? vol->parentId : vol->id,
+		printf("%" AFS_VOLID_FMT ".0.0\t%s\n",
+		       vol->parentId ? afs_printable_VolumeId_lu(vol->parentId)
+		       : afs_printable_VolumeId_lu(vol->id),
 		       eplist[i]->name);
 	    else if (path)
-		printf("%d.%d.%d\t%s/%s\n", vol->id,
+		printf("%" AFS_VOLID_FMT ".%d.%d\t%s/%s\n",
+		       afs_printable_VolumeId_lu(vol->id),
 		       ntohl(eplist[i]->fid.vnode),
 		       ntohl(eplist[i]->fid.vunique), path, eplist[i]->name);
 	    else
-		printf("%d.%d.%d\t%s\n", vol->id, ntohl(eplist[i]->fid.vnode),
+		printf("%" AFS_VOLID_FMT ".%d.%d\t%s\n",
+		       afs_printable_VolumeId_lu(vol->id),
+		       ntohl(eplist[i]->fid.vnode),
 		       ntohl(eplist[i]->fid.vunique), eplist[i]->name);
     else if (lflag) {
 	for (i = 0; i < numentries; i++)

@@ -99,6 +99,9 @@
 #include <afs/afscbint.h>
 #include <afs/afsutil.h>
 #include <afs/ihandle.h>
+#include <afs/partition.h>
+#include <afs/vnode.h>
+#include <afs/volume.h>
 #include "viced_prototypes.h"
 #include "viced.h"
 
@@ -1190,7 +1193,7 @@ MultiBreakVolumeLaterCallBack(struct host *host, void *rock)
 extern pthread_cond_t fsync_cond;
 
 int
-BreakVolumeCallBacksLater(afs_uint32 volume)
+BreakVolumeCallBacksLater(VolumeId volume)
 {
     int hash;
     afs_uint32 *feip;
@@ -1199,7 +1202,8 @@ BreakVolumeCallBacksLater(afs_uint32 volume)
     struct host *host;
     int found = 0;
 
-    ViceLog(25, ("Setting later on volume %u\n", volume));
+    ViceLog(25, ("Setting later on volume %" AFS_VOLID_FMT "\n",
+		 afs_printable_VolumeId_lu(volume)));
     H_LOCK;
     for (hash = 0; hash < FEHASH_SIZE; hash++) {
 	for (feip = &HashTable[hash]; (fe = itofe(*feip)) != NULL; ) {
@@ -1260,8 +1264,8 @@ BreakLaterCallBacks(void)
 		/* Ugly, but used to avoid left side casting */
 		struct object *tmpfe;
 		ViceLog(125,
-			("Unchaining for %u:%u:%u\n", fe->vnode, fe->unique,
-			 fe->volid));
+			("Unchaining for %u:%u:%" AFS_VOLID_FMT "\n", fe->vnode,
+			 fe->unique, afs_printable_VolumeId_lu(fe->volid)));
 		fid.Volume = fe->volid;
 		*feip = fe->fnext;
 		fe->status &= ~FE_LATER; /* not strictly needed */
@@ -1301,9 +1305,10 @@ BreakLaterCallBacks(void)
 		/* leave flag for MultiBreakVolumeCallBack to clear */
 	    } else {
 		ViceLog(125,
-			("Found host %p (%s:%d) non-DELAYED cb for %u:%u:%u\n",
+			("Found host %p (%s:%d) non-DELAYED cb for %u:%u:%" AFS_VOLID_FMT "\n",
 			 host, afs_inet_ntoa_r(host->host, hoststr),
-			 ntohs(host->port), fe->vnode, fe->unique, fe->volid));
+			 ntohs(host->port), fe->vnode, fe->unique,
+			 afs_printable_VolumeId_lu(fe->volid)));
 	    }
 	}
 	myfe = fe;
@@ -1364,10 +1369,11 @@ CleanupTimedOutCallBacks_r(void)
 		cb = itocb(cbi);
 		cbi = cb->tnext;
 		ViceLog(8,
-			("CCB: deleting timed out call back %x (%s:%d), (%u,%u,%u)\n",
+			("CCB: deleting timed out call back %x (%s:%d), (%" AFS_VOLID_FMT ",%u,%u)\n",
                          h_itoh(cb->hhead)->host,
                          afs_inet_ntoa_r(h_itoh(cb->hhead)->host, hoststr),
-			 h_itoh(cb->hhead)->port, itofe(cb->fhead)->volid,
+			 h_itoh(cb->hhead)->port,
+			 afs_printable_VolumeId_lu(itofe(cb->fhead)->volid),
 			 itofe(cb->fhead)->vnode, itofe(cb->fhead)->unique));
 		HDel(cb);
 		CDel(cb, 1);
@@ -2916,9 +2922,9 @@ PrintCB(struct CallBack *cb, afs_uint32 now)
     if (fe == NULL)
 	return;
 
-    printf("vol=%u vn=%u cbs=%d hi=%d st=%d fest=%d, exp in %lu secs at %s",
-	   fe->volid, fe->vnode, fe->ncbs, cb->hhead, cb->status, fe->status,
-	   expires - now, ctime(&expires));
+    printf("vol=%" AFS_VOLID_FMT " vn=%u cbs=%d hi=%d st=%d fest=%d, exp in %lu secs at %s",
+	   afs_printable_VolumeId_lu(fe->volid), fe->vnode, fe->ncbs,
+	   cb->hhead, cb->status, fe->status, expires - now, ctime(&expires));
 }
 
 #endif

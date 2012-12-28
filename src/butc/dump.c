@@ -23,6 +23,7 @@
 #include <afs/vldbint.h>
 #include <afs/ktime.h>
 #include <afs/vlserver.h>
+#include <afs/afsint.h>
 #include <afs/volser.h>
 #include <afs/volser_prototypes.h>
 #include <afs/volint.h>

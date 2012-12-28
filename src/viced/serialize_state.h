@@ -195,7 +195,7 @@ typedef afs_uint32 active_volume_state_avehash_entry;
 
 /* active volume entry */
 struct AVDiskEntry {
-    afs_uint32 volume;
+    VolumeId volume;
     afs_uint32 partition;
     afs_uint32 hash_next;
 };

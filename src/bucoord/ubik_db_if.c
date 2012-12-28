@@ -21,6 +21,7 @@
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <ubik.h>
+#include <afs/afsint.h>
 #include <afs/volser.h>
 #include <afs/volser_prototypes.h>
 #include <afs/afsutil.h>

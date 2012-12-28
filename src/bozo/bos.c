@@ -29,6 +29,7 @@
 #include <ubik.h>
 #include <afs/ktime.h>
 #include <afs/kautils.h>
+#include <afs/afsint.h>
 #include <afs/volser.h>
 
 static int IStatServer(struct cmd_syndesc *as, int int32p);

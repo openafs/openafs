@@ -30,8 +30,8 @@
 #include <afs/vlserver.h>
 #include <afs/pterror.h>
 #include <afs/bnode.h>
-#include <afs/volser.h>
 #include <afs/afscbint.h>
+#include <afs/volser.h>
 
 #include "afs_AdminInternal.h"
 #include "afs_utilAdmin.h"

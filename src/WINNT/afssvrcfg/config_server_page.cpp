@@ -28,6 +28,7 @@ extern "C" {
 #include <afs\afs_vosAdmin.h>
 #include <afs\afs_bosAdmin.h>
 #include <afs\afs_clientAdmin.h>
+#include <afs\afsint.h>
 #include <afs\volser.h>
 #include <afs\dirpath.h>
 #include <WINNT\afsreg.h>

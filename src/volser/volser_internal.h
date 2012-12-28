@@ -21,7 +21,7 @@ extern afs_int32 split_volume(struct rx_call *, Volume *, Volume *,
 
 /* voltrans.c */
 extern struct volser_trans *FindTrans(afs_int32);
-extern struct volser_trans *NewTrans(afs_uint32, afs_int32);
+extern struct volser_trans *NewTrans(VolumeId, afs_int32);
 extern struct volser_trans *TransList(void);
 extern afs_int32 DeleteTrans(struct volser_trans *atrans, afs_int32 lock);
 extern afs_int32 TRELE (struct volser_trans *);

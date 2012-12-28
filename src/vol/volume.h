@@ -393,13 +393,13 @@ typedef struct VolumeDiskData {
 				 * occurred while the volume was on line. */
     bit32 uniquifier;		/* Next vnode uniquifier for this volume */
     int type;			/* */
-    VolId parentId;		/* Id of parent, if type==readonly */
-    VolId cloneId;		/* Latest read-only clone, if type==readwrite,
+    VolumeId parentId;		/* Id of parent, if type==readonly */
+    VolumeId cloneId;		/* Latest read-only clone, if type==readwrite,
 				 * 0 if the volume has never been cloned.  Note: the
 				 * indicated volume does not necessarily exist (it
 				 * may have been deleted since cloning). */
-    VolId backupId;		/* Latest backup copy of this read write volume */
-    VolId restoredFromId;	/* The id in the dump this volume was restored from--used simply
+    VolumeId backupId;	/* Latest backup copy of this read write volume */
+    VolumeId restoredFromId;	/* The id in the dump this volume was restored from--used simply
 				 * to make sure that an incremental dump is not restored on top
 				 * of something inappropriate:  Note:  this field itself is NEVER
 				 * dumped!!! */
@@ -787,10 +787,10 @@ struct volHeader {
 
 extern char *VSalvageMessage;	/* Canonical message when a volume is forced
 				 * offline */
-extern Volume *VGetVolume(Error * ec, Error * client_ec, VolId volumeId);
-extern Volume *VGetVolumeWithCall(Error * ec, Error * client_ec, VolId volumeId,
+extern Volume *VGetVolume(Error * ec, Error * client_ec, VolumeId volumeId);
+extern Volume *VGetVolumeWithCall(Error * ec, Error * client_ec, VolumeId volumeId,
                                   const struct timespec *ts, struct VCallByVol *cbv);
-extern Volume *VGetVolume_r(Error * ec, VolId volumeId);
+extern Volume *VGetVolume_r(Error * ec, VolumeId volumeId);
 extern void VPutVolume(Volume *);
 extern void VPutVolumeWithCall(Volume *vp, struct VCallByVol *cbv);
 extern void VPutVolume_r(Volume *);
@@ -803,10 +803,10 @@ extern void VDisconnectFS_r(void);
 extern int VChildProcReconnectFS(void);
 extern Volume *VAttachVolume(Error * ec, VolumeId volumeId, int mode);
 extern Volume *VAttachVolume_r(Error * ec, VolumeId volumeId, int mode);
-extern Volume *VCreateVolume(Error * ec, char *partname, VolId volumeId,
-			     VolId parentId);
-extern Volume *VCreateVolume_r(Error * ec, char *partname, VolId volumeId,
-			       VolId parentId);
+extern Volume *VCreateVolume(Error * ec, char *partname, VolumeId volumeId,
+			     VolumeId parentId);
+extern Volume *VCreateVolume_r(Error * ec, char *partname, VolumeId volumeId,
+			       VolumeId parentId);
 extern void VGrowBitmap(struct vnodeIndex *index);
 extern int VAllocBitmapEntry(Error * ec, Volume * vp,
 			     struct vnodeIndex *index);
@@ -849,8 +849,8 @@ extern void VolumeHeaderToDisk(VolumeDiskHeader_t * dh, VolumeHeader_t * h);
 extern void AssignVolumeName(VolumeDiskData * vol, char *name, char *ext);
 extern void VTakeOffline_r(Volume * vp);
 extern void VTakeOffline(Volume * vp);
-extern Volume * VLookupVolume_r(Error * ec, VolId volumeId, Volume * hint);
-extern void VGetVolumePath(Error * ec, VolId volumeId, char **partitionp,
+extern Volume * VLookupVolume_r(Error * ec, VolumeId volumeId, Volume * hint);
+extern void VGetVolumePath(Error * ec, VolumeId volumeId, char **partitionp,
 			   char **namep);
 extern char *vol_DevName(dev_t adev, char *wpath);
 extern afs_int32 VIsGoingOffline(struct Volume *vp);
@@ -866,9 +866,9 @@ extern void VLockFileUnlock(struct VLockFile *lf, afs_uint32 offset);
 extern Volume *VPreAttachVolumeByName(Error * ec, char *partition, char *name);
 extern Volume *VPreAttachVolumeByName_r(Error * ec, char *partition, char *name);
 extern Volume *VPreAttachVolumeById_r(Error * ec, char * partition,
-				      VolId volumeId);
+				      VolumeId volumeId);
 extern Volume *VPreAttachVolumeByVp_r(Error * ec, struct DiskPartition64 * partp,
-				      Volume * vp, VolId volume_id);
+				      Volume * vp, VolumeId volume_id);
 extern Volume *VGetVolumeByVp_r(Error * ec, Volume * vp);
 extern int VShutdownByPartition_r(struct DiskPartition64 * dp);
 extern int VShutdownVolume_r(Volume * vp);
@@ -1031,8 +1031,8 @@ extern int VWalkVolumeHeaders(struct DiskPartition64 *dp, const char *partpath,
 #define V_pref(vp,nearInode)   nearInode = 0
 #endif /* NEARINODE_HINT */
 
-hdr_static_inline(unsigned int)
-afs_printable_VolumeId_u(VolumeId d) { return (unsigned int) d; }
+hdr_static_inline(unsigned long)
+afs_printable_VolumeId_lu(VolumeId d) { return (unsigned long) (d); }
 
 hdr_static_inline(unsigned int)
 afs_printable_VnodeId_u(VnodeId d) { return (unsigned int) d; }

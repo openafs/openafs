@@ -367,7 +367,7 @@ FSYNC_salvageThread(void * args)
 	if (node->update_salv_prio) {
 	    if (VUpdateSalvagePriority_r(vp)) {
 		ViceLog(0, ("FSYNC_salvageThread: unable to raise salvage priority "
-		            "for volume %lu\n", afs_printable_uint32_lu(vp->hashid)));
+		            "for volume %" AFS_VOLID_FMT "\n", afs_printable_VolumeId_lu(vp->hashid)));
 	    }
 	}
 
@@ -411,8 +411,8 @@ FSYNC_backgroundSalvage(Volume *vp)
     node->update_salv_prio = vp->salvage.requested;
 
     if (VRequestSalvage_r(&ec, vp, SALVSYNC_ERROR, 0)) {
-	ViceLog(0, ("FSYNC_backgroundSalvage: unable to request salvage for volume %lu\n",
-	            afs_printable_uint32_lu(vp->hashid)));
+	ViceLog(0, ("FSYNC_backgroundSalvage: unable to request salvage for volume %" AFS_VOLID_FMT "\n",
+	            afs_printable_VolumeId_lu(vp->hashid)));
     }
 
     queue_Append(&fsync_salv.head, node);
@@ -704,10 +704,10 @@ FSYNC_com_VolOn(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	(vcom->hdr->programType != vp->pending_vol_op->com.programType)) {
 	/* a different program has this volume checked out. deny. */
 	Log("FSYNC_VolOn: WARNING: program type %u has attempted to manipulate "
-	    "state for volume %u using command code %u while the volume is "
+	    "state for volume %" AFS_VOLID_FMT " using command code %u while the volume is "
 	    "checked out by program type %u for command code %u.\n",
 	    vcom->hdr->programType,
-	    vcom->vop->volume,
+	    afs_printable_VolumeId_lu(vcom->vop->volume),
 	    vcom->hdr->command,
 	    vp->pending_vol_op->com.programType,
 	    vp->pending_vol_op->com.command);
@@ -784,7 +784,7 @@ FSYNC_com_VolOn(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     }
 #else /* !AFS_DEMAND_ATTACH_FS */
     tvolName[0] = OS_DIRSEPC;
-    snprintf(&tvolName[1], sizeof(tvolName)-1, VFORMAT, afs_printable_uint32_lu(vcom->vop->volume));
+    snprintf(&tvolName[1], sizeof(tvolName)-1, VFORMAT, afs_printable_VolumeId_lu(vcom->vop->volume));
     tvolName[sizeof(tvolName)-1] = '\0';
 
     vp = VAttachVolumeByName_r(&error, vcom->vop->partName, tvolName,
@@ -893,37 +893,38 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
                 if (vp->pending_vol_op->com.command == FSYNC_VOL_OFF &&
                     vp->pending_vol_op->com.reason == FSYNC_SALVAGE) {
 
-                    Log("denying offline request for volume %lu; volume is salvaging\n",
-		        afs_printable_uint32_lu(vp->hashid));
+                    Log("denying offline request for volume %" AFS_VOLID_FMT "; volume is salvaging\n",
+		        afs_printable_VolumeId_lu(vp->hashid));
 
                     res->hdr.reason = FSYNC_SALVAGE;
                     goto deny;
                 }
-		Log("volume %u already checked out\n", vp->hashid);
+		Log("volume %" AFS_VOLID_FMT " already checked out\n",
+		    afs_printable_VolumeId_lu(vp->hashid));
 		/* XXX debug */
-		Log("vp->vop = { com = { ver=%u, prog=%d, com=%d, reason=%d, len=%u, flags=0x%x }, vop = { vol=%u, part='%s' } }\n",
+		Log("vp->vop = { com = { ver=%u, prog=%d, com=%d, reason=%d, len=%u, flags=0x%x }, vop = { vol=%" AFS_VOLID_FMT ", part='%s' } }\n",
 		    vp->pending_vol_op->com.proto_version,
 		    vp->pending_vol_op->com.programType,
 		    vp->pending_vol_op->com.command,
 		    vp->pending_vol_op->com.reason,
 		    vp->pending_vol_op->com.command_len,
 		    vp->pending_vol_op->com.flags,
-		    vp->pending_vol_op->vop.volume,
+		    afs_printable_VolumeId_lu(vp->pending_vol_op->vop.volume),
 		    vp->pending_vol_op->vop.partName );
-		Log("vcom = { com = { ver=%u, prog=%d, com=%d, reason=%d, len=%u, flags=0x%x } , vop = { vol=%u, part='%s' } }\n",
+		Log("vcom = { com = { ver=%u, prog=%d, com=%d, reason=%d, len=%u, flags=0x%x } , vop = { vol=%" AFS_VOLID_FMT ", part='%s' } }\n",
 		    vcom->hdr->proto_version,
 		    vcom->hdr->programType,
 		    vcom->hdr->command,
 		    vcom->hdr->reason,
 		    vcom->hdr->command_len,
 		    vcom->hdr->flags,
-		    vcom->vop->volume,
+		    afs_printable_VolumeId_lu(vcom->vop->volume),
 		    vcom->vop->partName);
 		res->hdr.reason = FSYNC_EXCLUSIVE;
 		goto deny;
 	    } else {
-		Log("warning: volume %u recursively checked out by programType id %d\n",
-		    vp->hashid, vcom->hdr->programType);
+		Log("warning: volume %" AFS_VOLID_FMT " recursively checked out by programType id %d\n",
+		    afs_printable_VolumeId_lu(vp->hashid), vcom->hdr->programType);
 	    }
 	}
 
@@ -965,8 +966,8 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	case volumeUtility:
 	case volumeServer:
             if (VIsSalvaging(vp)) {
-                Log("denying offline request for volume %lu; volume is in salvaging state\n",
-		    afs_printable_uint32_lu(vp->hashid));
+                Log("denying offline request for volume %" AFS_VOLID_FMT "; volume is in salvaging state\n",
+		    afs_printable_VolumeId_lu(vp->hashid));
                 res->hdr.reason = FSYNC_SALVAGE;
 
 		/* the volume hasn't been checked out yet by the salvager,
@@ -1038,8 +1039,9 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
                 break;
             }
 
-	    Log("FSYNC_com_VolOff: failed to get heavyweight reference to volume %u (state=%u, flags=0x%x)\n",
-		vcom->vop->volume, V_attachState(vp), V_attachFlags(vp));
+	    Log("FSYNC_com_VolOff: failed to get heavyweight reference to volume %" AFS_VOLID_FMT " (state=%u, flags=0x%x)\n",
+		afs_printable_VolumeId_lu(vcom->vop->volume),
+		V_attachState(vp), V_attachFlags(vp));
 	    res->hdr.reason = FSYNC_VOL_PKG_ERROR;
 	    goto deny;
 	} else if (nvp != vp) {
@@ -1062,8 +1064,8 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	if (VVolOpLeaveOnline_r(vp, &info)) {
 	    VUpdateVolume_r(&error, vp, VOL_UPDATE_WAIT);	/* At least get volume stats right */
 	    if (LogLevel) {
-		Log("FSYNC: Volume %u (%s) was left on line for an external %s request\n",
-		    V_id(vp), V_name(vp),
+		Log("FSYNC: Volume %" AFS_VOLID_FMT " (%s) was left on line for an external %s request\n",
+		    afs_printable_VolumeId_lu(V_id(vp)), V_name(vp),
 		    vcom->hdr->reason == V_CLONE ? "clone" :
 		    vcom->hdr->reason == V_READONLY ? "readonly" :
 		    vcom->hdr->reason == V_DUMP ? "dump" :
@@ -1194,8 +1196,8 @@ FSYNC_com_VolMove(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     }
 
     if ((code == SYNC_OK) && (V_BreakVolumeCallbacks != NULL)) {
-	Log("fssync: volume %u moved to %x; breaking all call backs\n",
-	    vcom->vop->volume, vcom->hdr->reason);
+	Log("fssync: volume %" AFS_VOLID_FMT " moved to %x; breaking all call backs\n",
+	    afs_printable_VolumeId_lu(vcom->vop->volume), vcom->hdr->reason);
 	VOL_UNLOCK;
 	(*V_BreakVolumeCallbacks) (vcom->vop->volume);
 	VOL_LOCK;
@@ -1411,8 +1413,8 @@ FSYNC_com_VolBreakCBKs(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 {
     /* if the volume is being restored, break all callbacks on it */
     if (V_BreakVolumeCallbacks) {
-	Log("fssync: breaking all call backs for volume %u\n",
-	    vcom->vop->volume);
+	Log("fssync: breaking all call backs for volume %" AFS_VOLID_FMT "\n",
+	    afs_printable_VolumeId_lu(vcom->vop->volume));
 	VOL_UNLOCK;
 	(*V_BreakVolumeCallbacks) (vcom->vop->volume);
 	VOL_LOCK;
@@ -2011,7 +2013,7 @@ FSYNC_Drop(osi_socket fd)
 	    }
 #else
 	    tvolName[0] = OS_DIRSEPC;
-	    sprintf(&tvolName[1], VFORMAT, afs_printable_uint32_lu(p[i].volumeID));
+	    sprintf(&tvolName[1], VFORMAT, afs_printable_VolumeId_lu(p[i].volumeID));
 	    vp = VAttachVolumeByName_r(&error, p[i].partName, tvolName,
 				       V_VOLUPD);
 	    if (vp)

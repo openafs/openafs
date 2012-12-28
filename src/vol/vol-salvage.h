@@ -22,8 +22,8 @@
 /* salvager data structures */
 struct InodeSummary {		/* Inode summary file--an entry for each
 				 * volume in the inode file for a partition */
-    VolId volumeId;		/* Volume id */
-    VolId RWvolumeId;		/* RW volume associated */
+    VolumeId volumeId;		/* Volume id */
+    VolumeId RWvolumeId;		/* RW volume associated */
     int index;			/* index into inode file (0, 1, 2 ...) */
     int nInodes;		/* Number of inodes for this volume */
     int nSpecialInodes;		/* Number of special inodes, i.e.  volume
