@@ -1029,7 +1029,7 @@ try_exit:
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE_2,
-                          "AFSCommonCreate (%p) FileObject %p FsContext %08lX FsContext2 %08lX\n",
+                          "AFSCommonCreate (%p) FileObject %p FsContext %p FsContext2 %p\n",
                           Irp,
                           pFileObject,
                           pFcb,
@@ -1104,7 +1104,7 @@ try_exit:
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSCommonCreate (%p) Returning with NULL Fcb FileObject %p FsContext %08lX FsContext2 %08lX\n",
+                              "AFSCommonCreate (%p) Returning with NULL Fcb FileObject %p FsContext %p FsContext2 %p\n",
                               Irp,
                               pFileObject,
                               pFcb,
@@ -1119,7 +1119,7 @@ try_exit:
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSCommonCreate (%p) STATUS_REPARSE FileObject %p FsContext %08lX FsContext2 %08lX\n",
+                              "AFSCommonCreate (%p) STATUS_REPARSE FileObject %p FsContext %p FsContext2 %p\n",
                               Irp,
                               pFileObject,
                               pFcb,
@@ -1468,6 +1468,14 @@ AFSOpenRoot( IN PIRP Irp,
                             TRUE);
         }
 
+        lCount = InterlockedIncrement( &VolumeCB->RootFcb->OpenReferenceCount);
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSOpenRoot Increment count on Fcb %p Cnt %d\n",
+                      VolumeCB->RootFcb,
+                      lCount);
+
         bReleaseFcb = TRUE;
 
         //
@@ -1546,14 +1554,6 @@ AFSOpenRoot( IN PIRP Irp,
         // Increment the open count on this Fcb
         //
 
-        lCount = InterlockedIncrement( &VolumeCB->RootFcb->OpenReferenceCount);
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSOpenRoot Increment count on Fcb %p Cnt %d\n",
-                      VolumeCB->RootFcb,
-                      lCount);
-
         lCount = InterlockedIncrement( &VolumeCB->RootFcb->OpenHandleCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
@@ -1580,6 +1580,17 @@ try_exit:
 
         if( bReleaseFcb)
         {
+            if ( !NT_SUCCESS( ntStatus))
+            {
+
+                lCount = InterlockedDecrement( &VolumeCB->RootFcb->OpenReferenceCount);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSOpenRoot Decrement count on Fcb %p Cnt %d\n",
+                              VolumeCB->RootFcb,
+                              lCount);
+            }
 
             AFSReleaseResource( VolumeCB->RootFcb->Header.Resource);
         }
