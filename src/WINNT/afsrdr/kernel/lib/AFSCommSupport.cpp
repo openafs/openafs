@@ -1526,9 +1526,12 @@ AFSNotifyFileCreate( IN GUID            *AuthGroup,
     LONG       lCount;
     LARGE_INTEGER liOldDataVersion;
     AFSDeviceExt *pDevExt = (AFSDeviceExt *) AFSRDRDeviceObject->DeviceExtension;
+    BOOLEAN bReleaseParentTreeLock = FALSE;
 
     __Enter
     {
+
+        *DirNode = NULL;
 
         //
         // Init the control block for the request
@@ -1602,6 +1605,8 @@ AFSNotifyFileCreate( IN GUID            *AuthGroup,
         AFSAcquireExcl( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
                         TRUE);
 
+        bReleaseParentTreeLock = TRUE;
+
         if( ParentObjectInfo->DataVersion.QuadPart != pResultCB->ParentDataVersion.QuadPart - 1)
         {
 
@@ -1642,20 +1647,7 @@ AFSNotifyFileCreate( IN GUID            *AuthGroup,
                                     &pResultCB->DirEnum.FileId))
                 {
 
-                    lCount = InterlockedIncrement( &pDirNode->DirOpenReferenceCount);
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSNotifyFileCreate Increment count on %wZ DE %p Cnt %d\n",
-                                  &pDirNode->NameInformation.FileName,
-                                  pDirNode,
-                                  lCount);
-
-                    ASSERT( lCount >= 0);
-
                     *DirNode = pDirNode;
-
-                    AFSReleaseResource( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
                     try_return( ntStatus = STATUS_REPARSE);
                 }
@@ -1766,8 +1758,6 @@ AFSNotifyFileCreate( IN GUID            *AuthGroup,
 
             ParentObjectInfo->DataVersion.QuadPart = (ULONGLONG)-1;
 
-            AFSReleaseResource( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
-
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
 
@@ -1833,8 +1823,6 @@ AFSNotifyFileCreate( IN GUID            *AuthGroup,
                           ParentObjectInfo->DataVersion.QuadPart);
         }
 
-        AFSReleaseResource( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
-
         //
         // Return the directory node
         //
@@ -1842,6 +1830,27 @@ AFSNotifyFileCreate( IN GUID            *AuthGroup,
         *DirNode = pDirNode;
 
 try_exit:
+
+        if ( *DirNode != NULL)
+        {
+
+            lCount = InterlockedIncrement( &(*DirNode)->DirOpenReferenceCount);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSNotifyFileCreate Increment count on %wZ DE %p Cnt %d\n",
+                          &(*DirNode)->NameInformation.FileName,
+                          *DirNode,
+                          lCount);
+
+            ASSERT( lCount >= 0);
+        }
+
+        if ( bReleaseParentTreeLock)
+        {
+
+            AFSReleaseResource( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
+        }
 
         if( pResultCB != NULL)
         {
