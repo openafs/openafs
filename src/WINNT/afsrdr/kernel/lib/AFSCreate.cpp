@@ -887,7 +887,7 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSCommonCreate Failing access to %wZ\n",
+                          "AFSCommonCreate Failing access to %wZ Name not found\n",
                           &uniFileName);
 
             try_return( ntStatus = STATUS_OBJECT_NAME_NOT_FOUND);

@@ -1440,6 +1440,11 @@ AFSValidateSymLink( IN GUID *AuthGroup,
             pDirEntry->FileType == AFS_FILE_TYPE_INVALID)
         {
 
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE_2,
+                          "AFSValidateSymLink Invalid type Status %08lX\n",
+                          STATUS_OBJECT_NAME_NOT_FOUND);
+
             try_return( ntStatus = STATUS_OBJECT_NAME_NOT_FOUND);
         }
 
@@ -2251,6 +2256,12 @@ AFSSubstituteSysName( IN UNICODE_STRING *ComponentName,
 
         if( pSysName == NULL)
         {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE_2,
+                          "AFSSubstituteSysName No sysname %wZ Status %08lX\n",
+                          &ComponentName,
+                          STATUS_OBJECT_NAME_NOT_FOUND);
 
             try_return( ntStatus = STATUS_OBJECT_NAME_NOT_FOUND);
         }
@@ -8578,8 +8589,9 @@ AFSCheckSymlinkAccess( IN AFSDirectoryCB *ParentDirectoryCB,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE_2,
-                          "AFSCheckSymlinkAccess Failed to locate entry %wZ\n",
-                          ComponentName);
+                          "AFSCheckSymlinkAccess Failed to locate entry %wZ ntStatus %08X\n",
+                          ComponentName,
+                          STATUS_OBJECT_NAME_NOT_FOUND);
 
             try_return( ntStatus = STATUS_OBJECT_NAME_NOT_FOUND);
         }
