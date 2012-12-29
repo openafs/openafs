@@ -144,6 +144,7 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
     AFSNameArrayHdr    *pNameArray = NULL;
     AFSVolumeCB        *pVolumeCB = NULL;
     AFSDirectoryCB     *pParentDirectoryCB = NULL, *pDirectoryCB = NULL;
+    BOOLEAN             bReleaseParentDir = FALSE, bReleaseDir = FALSE;
     ULONG               ulParseFlags = 0;
     GUID                stAuthGroup = {0};
     ULONG               ulNameProcessingFlags = 0;
@@ -266,6 +267,12 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
             try_return( ntStatus);
         }
 
+        if ( pParentDirectoryCB != NULL)
+        {
+
+            bReleaseParentDir = TRUE;
+        }
+
         //
         // If the returned volume cb is NULL then we are dealing with the \\Server\GlobalRoot
         // name
@@ -317,6 +324,11 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                                              TRUE) == 0)
                 {
 
+                    //
+                    // AFSOpenIOCtlFcb does not free a DirOpenReferenceCount for
+                    // AFSGlobalRoot->DirectoryCB.
+                    //
+
                     ntStatus = AFSOpenIOCtlFcb( Irp,
                                                 &stAuthGroup,
                                                 AFSGlobalRoot->DirectoryCB,
@@ -332,23 +344,26 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                                       ntStatus);
                     }
                 }
-                else if( pParentDirectoryCB != NULL &&
-                         pParentDirectoryCB->ObjectInformation->FileType == AFS_FILE_TYPE_SPECIAL_SHARE_NAME)
+                else if( pParentDirectoryCB != NULL)
                 {
 
-                    ntStatus = AFSOpenSpecialShareFcb( Irp,
-                                                       &stAuthGroup,
-                                                       pParentDirectoryCB,
-                                                       &pFcb,
-                                                       &pCcb);
-
-                    if( !NT_SUCCESS( ntStatus))
+                    if( pParentDirectoryCB->ObjectInformation->FileType == AFS_FILE_TYPE_SPECIAL_SHARE_NAME)
                     {
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                      AFS_TRACE_LEVEL_ERROR,
-                                      "AFSCommonCreate Failed to open special share Fcb Status %08lX\n",
-                                      ntStatus);
+                        ntStatus = AFSOpenSpecialShareFcb( Irp,
+                                                           &stAuthGroup,
+                                                           pParentDirectoryCB,
+                                                           &pFcb,
+                                                           &pCcb);
+
+                        if( !NT_SUCCESS( ntStatus))
+                        {
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                          AFS_TRACE_LEVEL_ERROR,
+                                          "AFSCommonCreate Failed to open special share Fcb Status %08lX\n",
+                                          ntStatus);
+                        }
                     }
                 }
 
@@ -366,18 +381,6 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSCommonCreate Failed to open root Status %08lX\n",
                               ntStatus);
-
-                lCount = InterlockedDecrement( &AFSGlobalRoot->DirectoryCB->DirOpenReferenceCount);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCommonCreate Decrement1 count on &wZ DE %p Ccb %p Cnt %d\n",
-                              &AFSGlobalRoot->DirectoryCB->NameInformation.FileName,
-                              AFSGlobalRoot->DirectoryCB,
-                              NULL,
-                              lCount);
-
-                ASSERT( lCount >= 0);
             }
 
             try_return( ntStatus);
@@ -452,7 +455,7 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                 }
 
                 //
-                // The routine above released the root while walking the
+                // AFSLocateNameEntry released the Parent while walking the
                 // branch
                 //
 
@@ -468,6 +471,8 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                 //
 
                 bReleaseVolume = FALSE;
+
+                bReleaseParentDir = FALSE;
 
                 try_return( ntStatus);
             }
@@ -492,6 +497,8 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                 //
 
                 bReleaseVolume = FALSE;
+
+                bReleaseParentDir = FALSE;
 
                 try_return( ntStatus);
             }
@@ -519,6 +526,10 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                 pParentDirectoryCB != NULL)
             {
 
+                //
+                // pParentDirectoryCB DirOpenReferenceCount is still held
+                //
+
                 UNICODE_STRING uniFinalComponent;
 
                 uniFinalComponent.Length = 0;
@@ -545,6 +556,23 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                     try_return( ntStatus);
                 }
             }
+            else
+            {
+
+                //
+                // AFSLocateNameEntry succeeded.  The parent directory reference
+                // has been released and if there is a directory returned, it is
+                // referenced.
+                //
+
+                bReleaseParentDir = FALSE;
+
+                if ( pDirectoryCB)
+                {
+
+                    bReleaseDir = TRUE;
+                }
+            }
         }
 
         //
@@ -557,6 +585,18 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
         {
 
             pDirectoryCB = pVolumeCB->DirectoryCB;
+
+            lCount = InterlockedIncrement( &pDirectoryCB->DirOpenReferenceCount);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSCommonCreate Increment0 count on %wZ DE %p Ccb %p Cnt %d\n",
+                          &pDirectoryCB->NameInformation.FileName,
+                          pDirectoryCB,
+                          pCcb,
+                          lCount);
+
+            bReleaseDir = TRUE;
         }
 
         if( bOpenTargetDirectory)
@@ -569,19 +609,25 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
             if( pDirectoryCB != NULL)
             {
 
-                //
-                // Perform in this order to prevent thrashing
-                //
+                if ( !bReleaseParentDir)
+                {
 
-                lCount = InterlockedIncrement( &pParentDirectoryCB->DirOpenReferenceCount);
+                    //
+                    // Perform in this order to prevent thrashing
+                    //
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCommonCreate Increment1 count on %wZ DE %p Ccb %p Cnt %d\n",
-                              &pParentDirectoryCB->NameInformation.FileName,
-                              pParentDirectoryCB,
-                              NULL,
-                              lCount);
+                    lCount = InterlockedIncrement( &pParentDirectoryCB->DirOpenReferenceCount);
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSCommonCreate Increment1 count on %wZ DE %p Ccb %p Cnt %d\n",
+                                  &pParentDirectoryCB->NameInformation.FileName,
+                                  pParentDirectoryCB,
+                                  pCcb,
+                                  lCount);
+
+                    bReleaseParentDir = TRUE;
+                }
 
                 //
                 // Do NOT decrement the reference count on the pDirectoryCB yet.
@@ -610,23 +656,6 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                                                &uniComponentName,
                                                &pFcb,
                                                &pCcb);
-            if( pDirectoryCB != NULL)
-            {
-                //
-                // It is now safe to drop the Reference Count
-                //
-                lCount = InterlockedDecrement( &pDirectoryCB->DirOpenReferenceCount);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCommonCreate Decrement2 count on %wZ DE %p Ccb %p Cnt %d\n",
-                              &pDirectoryCB->NameInformation.FileName,
-                              pDirectoryCB,
-                              NULL,
-                              lCount);
-
-                ASSERT( lCount >= 0);
-            }
 
             if( !NT_SUCCESS( ntStatus))
             {
@@ -636,22 +665,6 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                               "AFSCommonCreate Failed to open target directory %wZ Status %08lX\n",
                               &pParentDirectoryCB->NameInformation.FileName,
                               ntStatus);
-
-                //
-                // Decrement the reference on the parent
-                //
-
-                lCount = InterlockedDecrement( &pParentDirectoryCB->DirOpenReferenceCount);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCommonCreate Decrement3 count on %wZ DE %p Ccb %p Cnt %d\n",
-                              &pParentDirectoryCB->NameInformation.FileName,
-                              pParentDirectoryCB,
-                              NULL,
-                              lCount);
-
-                ASSERT( lCount >= 0);
             }
 
             try_return( ntStatus);
@@ -711,18 +724,6 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                                   "AFSCommonCreate Object name collision on create of %wZ Status %08lX\n",
                                   &pDirectoryCB->NameInformation.FileName,
                                   ntStatus);
-
-                    lCount = InterlockedDecrement( &pDirectoryCB->DirOpenReferenceCount);
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSCommonCreate Decrement4 count on %wZ DE %p Ccb %p Cnt %d\n",
-                                  &pDirectoryCB->NameInformation.FileName,
-                                  pDirectoryCB,
-                                  NULL,
-                                  lCount);
-
-                    ASSERT( lCount >= 0);
                 }
                 else
                 {
@@ -731,18 +732,6 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCommonCreate Object name collision on create Status %08lX\n",
                                   ntStatus);
-
-                    lCount = InterlockedDecrement( &pParentDirectoryCB->DirOpenReferenceCount);
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSCommonCreate Decrement5 count on %wZ DE %p Ccb %p Cnt %d\n",
-                                  &pParentDirectoryCB->NameInformation.FileName,
-                                  pParentDirectoryCB,
-                                  NULL,
-                                  lCount);
-
-                    ASSERT( lCount >= 0);
                 }
 
                 try_return( ntStatus = STATUS_OBJECT_NAME_COLLISION);
@@ -773,22 +762,6 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                               ntStatus);
             }
 
-            //
-            // Dereference the parent entry
-            //
-
-            lCount = InterlockedDecrement( &pParentDirectoryCB->DirOpenReferenceCount);
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSCreate Decrement6 count on %wZ DE %p Ccb %p Cnt %d\n",
-                          &pParentDirectoryCB->NameInformation.FileName,
-                          pParentDirectoryCB,
-                          NULL,
-                          lCount);
-
-            ASSERT( lCount >= 0);
-
             try_return( ntStatus);
         }
 
@@ -807,6 +780,11 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                                          &uniComponentName,
                                          TRUE) == 0)
             {
+
+                //
+                // AFSOpenIOCtlFcb does not free a DirOpenReferenceCount for
+                // pParentDirectoryCB.
+                //
 
                 ntStatus = AFSOpenIOCtlFcb( Irp,
                                             &stAuthGroup,
@@ -836,45 +814,6 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                 ntStatus = STATUS_OBJECT_NAME_NOT_FOUND;
             }
 
-            if( !NT_SUCCESS( ntStatus))
-            {
-
-                //
-                // Dereference the parent entry
-                //
-
-                if( pDirectoryCB != NULL)
-                {
-
-                    lCount = InterlockedDecrement( &pDirectoryCB->DirOpenReferenceCount);
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSCommonCreate Decrement7a count on %wZ DE %p Ccb %p Cnt %d\n",
-                                  &pDirectoryCB->NameInformation.FileName,
-                                  pDirectoryCB,
-                                  NULL,
-                                  lCount);
-
-                    ASSERT( lCount >= 0);
-                }
-                else
-                {
-
-                    lCount = InterlockedDecrement( &pParentDirectoryCB->DirOpenReferenceCount);
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSCommonCreate Decrement7b count on %wZ DE %p Ccb %p Cnt %d\n",
-                                  &pParentDirectoryCB->NameInformation.FileName,
-                                  pParentDirectoryCB,
-                                  NULL,
-                                  lCount);
-
-                    ASSERT( lCount >= 0);
-                }
-            }
-
             try_return( ntStatus);
         }
 
@@ -897,18 +836,6 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                               "AFSCommonCreate (%p) Attempt to open root as delete on close\n",
                               Irp);
 
-                lCount = InterlockedDecrement( &pDirectoryCB->DirOpenReferenceCount);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCommonCreate Decrement8 count on %wZ DE %p Ccb %p Cnt %d\n",
-                              &pDirectoryCB->NameInformation.FileName,
-                              pDirectoryCB,
-                              NULL,
-                              lCount);
-
-                ASSERT( lCount >= 0);
-
                 try_return( ntStatus = STATUS_CANNOT_DELETE);
             }
 
@@ -923,18 +850,6 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSCommonCreate (%p) Attempt to open root as target directory\n",
                               Irp);
-
-                lCount = InterlockedDecrement( &pDirectoryCB->DirOpenReferenceCount);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCommonCreate Decrement9 count on %wZ DE %p Ccb %p Cnt %d\n",
-                              &pDirectoryCB->NameInformation.FileName,
-                              pDirectoryCB,
-                              NULL,
-                              lCount);
-
-                ASSERT( lCount >= 0);
 
                 try_return( ntStatus = STATUS_INVALID_PARAMETER);
             }
@@ -958,18 +873,6 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                               pVolumeCB->ObjectInformation.FileId.Cell,
                               pVolumeCB->ObjectInformation.FileId.Volume,
                               ntStatus);
-
-                lCount = InterlockedDecrement( &pDirectoryCB->DirOpenReferenceCount);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCommonCreate Decrement10 count on %wZ DE %p Ccb %p Cnt %d\n",
-                              &pDirectoryCB->NameInformation.FileName,
-                              pDirectoryCB,
-                              NULL,
-                              lCount);
-
-                ASSERT( lCount >= 0);
             }
 
             try_return( ntStatus);
@@ -1016,18 +919,6 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                               "AFSCommonCreate Failed overwrite/supersede on %wZ Status %08lX\n",
                               &pDirectoryCB->NameInformation.FileName,
                               ntStatus);
-
-                lCount = InterlockedDecrement( &pDirectoryCB->DirOpenReferenceCount);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCommonCreate Decrement11 count on %wZ DE %p Ccb %p Cnt %d\n",
-                              &pDirectoryCB->NameInformation.FileName,
-                              pDirectoryCB,
-                              NULL,
-                              lCount);
-
-                ASSERT( lCount >= 0);
             }
 
             try_return( ntStatus);
@@ -1053,18 +944,6 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                           "AFSCommonCreate Failed open on %wZ Status %08lX\n",
                           &pDirectoryCB->NameInformation.FileName,
                           ntStatus);
-
-            lCount = InterlockedDecrement( &pDirectoryCB->DirOpenReferenceCount);
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSCommonCreate Decrement12 count on %wZ DE %p Ccb %p Cnt %d\n",
-                          &pDirectoryCB->NameInformation.FileName,
-                          pDirectoryCB,
-                          NULL,
-                          lCount);
-
-            ASSERT( lCount >= 0);
         }
 
 try_exit:
@@ -1286,6 +1165,46 @@ try_exit:
                           "AFSCommonCreate Decrement count on Volume %08lX Cnt %d\n",
                           pVolumeCB,
                           lCount);
+        }
+
+        if ( bReleaseDir)
+        {
+
+            //
+            // Release the reference from AFSLocateNameEntry
+            //
+
+            lCount = InterlockedDecrement( &pDirectoryCB->DirOpenReferenceCount);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSCommonCreate Decrement count on %wZ DE %p Ccb %p Cnt %d\n",
+                          &pDirectoryCB->NameInformation.FileName,
+                          pDirectoryCB,
+                          pCcb,
+                          lCount);
+
+            ASSERT( lCount >= 0);
+        }
+
+        if ( bReleaseParentDir)
+        {
+
+            //
+            // Release the reference from AFSLocateNameEntry
+            //
+
+            lCount = InterlockedDecrement( &pParentDirectoryCB->DirOpenReferenceCount);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSCommonCreate Decrement count on %wZ DE %p Ccb %p Cnt %d\n",
+                          &pParentDirectoryCB->NameInformation.FileName,
+                          pParentDirectoryCB,
+                          pCcb,
+                          lCount);
+
+            ASSERT( lCount >= 0);
         }
 
         //
@@ -3446,6 +3365,11 @@ AFSControlDeviceCreate( IN PIRP Irp)
     return ntStatus;
 }
 
+//
+// AFSOpenIOCtlFcb does not release a DirOpenReferenceCount on
+// the ParentDirCB.
+//
+
 NTSTATUS
 AFSOpenIOCtlFcb( IN PIRP Irp,
                  IN GUID *AuthGroup,
@@ -3594,20 +3518,6 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
         }
 
         //
-        // Reference the directory entry
-        //
-
-        lCount = InterlockedIncrement( &((*Ccb)->DirectoryCB->DirOpenReferenceCount));
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSOpenIOCtlFcb Increment count on %wZ DE %p Ccb %p Cnt %d\n",
-                      &(*Ccb)->DirectoryCB->NameInformation.FileName,
-                      (*Ccb)->DirectoryCB,
-                      (*Ccb),
-                      lCount);
-
-        //
         // Increment the handle on the node
         //
 
@@ -3646,23 +3556,6 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
         Irp->IoStatus.Information = FILE_OPENED;
 
 try_exit:
-
-        //
-        //Dereference the passed in parent since the returned dir entry
-        // is already referenced
-        //
-
-        lCount = InterlockedDecrement( &ParentDirCB->DirOpenReferenceCount);
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSOpenIOCtlFcb Decrement count on %wZ DE %p Ccb %p Cnt %d\n",
-                      &ParentDirCB->NameInformation.FileName,
-                      ParentDirCB,
-                      NULL,
-                      lCount);
-
-        ASSERT( lCount >= 0);
 
         //
         // If we created the Fcb we need to release the resources

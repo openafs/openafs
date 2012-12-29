@@ -38,6 +38,17 @@
 
 #include "AFSCommon.h"
 
+//
+// AFSLocateNameEntry
+//
+// On entry, *VolumeCB must have a held ReferenceCount provided by
+// the caller which will be released.  On successful exit, *VolumeCB
+// will be assigned the new current volume with a held ReferenceCount.
+//
+// On entry, *ParentDirectoryCB must have a held DirOpenReferenceCount
+// provided by the caller.
+//
+
 NTSTATUS
 AFSLocateNameEntry( IN GUID *AuthGroup,
                     IN PFILE_OBJECT FileObject,
@@ -2127,6 +2138,11 @@ AFSCreateDirEntry( IN GUID            *AuthGroup,
             try_return( ntStatus);
         }
 
+        //
+        // If AFSNotifyFileCreate returns pDirNode != NULL, then its
+        // DirOpenReferenceCount is held.
+        //
+
         AFSAcquireExcl( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
                         TRUE);
 
@@ -2182,19 +2198,32 @@ AFSCreateDirEntry( IN GUID            *AuthGroup,
                                &pExistingDirNode->ObjectInformation->FileId))
             {
 
-                AFSDeleteDirEntry( ParentObjectInfo,
-                                   pDirNode);
+                if ( pExistingDirNode != pDirNode)
+                {
 
-                lCount = InterlockedIncrement( &pExistingDirNode->DirOpenReferenceCount);
+                    lCount = InterlockedDecrement( &pDirNode->DirOpenReferenceCount);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCreateDirEntry Increment count on %wZ DE %p Cnt %d\n",
-                              &pExistingDirNode->NameInformation.FileName,
-                              pExistingDirNode,
-                              lCount);
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSCreateDirEntry Decrement count on %wZ DE %p Cnt %d\n",
+                                  &pDirNode->NameInformation.FileName,
+                                  pDirNode,
+                                  lCount);
 
-                *DirEntry = pExistingDirNode;
+                    AFSDeleteDirEntry( ParentObjectInfo,
+                                       pDirNode);
+
+                    lCount = InterlockedIncrement( &pExistingDirNode->DirOpenReferenceCount);
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSCreateDirEntry Increment count on %wZ DE %p Cnt %d\n",
+                                  &pExistingDirNode->NameInformation.FileName,
+                                  pExistingDirNode,
+                                  lCount);
+
+                    *DirEntry = pExistingDirNode;
+                }
 
                 AFSReleaseResource( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
@@ -2249,7 +2278,6 @@ AFSCreateDirEntry( IN GUID            *AuthGroup,
                     AFSRemoveNameEntry( ParentObjectInfo,
                                         pExistingDirNode);
                 }
-
             }
         }
 
@@ -2270,15 +2298,6 @@ AFSCreateDirEntry( IN GUID            *AuthGroup,
         AFSInsertDirectoryNode( ParentObjectInfo,
                                 pDirNode,
                                 TRUE);
-
-        lCount = InterlockedIncrement( &pDirNode->DirOpenReferenceCount);
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSCreateDirEntry Increment2 count on %wZ DE %p Cnt %d\n",
-                      &pDirNode->NameInformation.FileName,
-                      pDirNode,
-                      lCount);
 
         //
         // Pass back the dir entry
@@ -2766,6 +2785,8 @@ AFSParseName( IN PIRP Irp,
 
         *ParseFlags = AFS_PARSE_FLAG_ROOT_ACCESS;
 
+        *ParentDirectoryCB = NULL;
+
         if( pIrpSp->FileObject->RelatedFileObject != NULL)
         {
 
@@ -2969,7 +2990,7 @@ AFSParseName( IN PIRP Irp,
 
                 RtlCopyMemory( &uniFullName.Buffer[ uniFullName.Length/sizeof( WCHAR)],
                                pIrpSp->FileObject->FileName.Buffer,
-                               pIrpSp->FileObject->FileName.Length);
+                               pIrpSp->FileObject->FileName.Length);
 
                 uniFullName.Length += pIrpSp->FileObject->FileName.Length;
             }
@@ -3061,8 +3082,6 @@ AFSParseName( IN PIRP Irp,
 
             *NameArray = pNameArray;
 
-            *VolumeCB = pVolumeCB;
-
             //
             // Increment our volume reference count
             //
@@ -3075,17 +3094,9 @@ AFSParseName( IN PIRP Irp,
                           pVolumeCB,
                           lCount);
 
+            *VolumeCB = pVolumeCB;
+
             *ParentDirectoryCB = pDirEntry;
-
-            lCount = InterlockedIncrement( &pDirEntry->DirOpenReferenceCount);
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSParseName Increment1 count on %wZ DE %p Ccb %p Cnt %d\n",
-                          &pDirEntry->NameInformation.FileName,
-                          pDirEntry,
-                          NULL,
-                          lCount);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE_2,
@@ -3314,7 +3325,7 @@ AFSParseName( IN PIRP Irp,
         }
 
         //
-        // Check for the \\Server access and return it as though it where \\Server\Globalroot
+        // Check for the \\Server access and return it as though it were \\Server\Globalroot
         //
 
         if( uniRemainingPath.Buffer == NULL ||
@@ -3508,19 +3519,9 @@ AFSParseName( IN PIRP Irp,
 
             *FileName = uniComponentName;
 
-            *ParentDirectoryCB = pDirEntry;
-
             ClearFlag( *ParseFlags, AFS_PARSE_FLAG_ROOT_ACCESS);
 
-            lCount = InterlockedIncrement( &pDirEntry->DirOpenReferenceCount);
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSParseName Increment5 count on %wZ DE %p Ccb %p Cnt %d\n",
-                          &pDirEntry->NameInformation.FileName,
-                          pDirEntry,
-                          NULL,
-                          lCount);
+            *ParentDirectoryCB = pDirEntry;
 
             try_return( ntStatus = STATUS_SUCCESS);
         }
@@ -3694,8 +3695,6 @@ AFSParseName( IN PIRP Irp,
                 //
                 // This is a root open so pass back no parent
                 //
-
-                *ParentDirectoryCB = NULL;
             }
         }
         else
@@ -3763,22 +3762,11 @@ AFSParseName( IN PIRP Irp,
             uniRemainingPath.Length += sizeof( WCHAR);
             uniRemainingPath.MaximumLength += sizeof( WCHAR);
 
-            lCount = InterlockedIncrement( &pVolumeCB->DirectoryCB->DirOpenReferenceCount);
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSParseName Increment6 count on %wZ DE %p Ccb %p Cnt %d\n",
-                          &pVolumeCB->DirectoryCB->NameInformation.FileName,
-                          pVolumeCB->DirectoryCB,
-                          NULL,
-                          lCount);
-
             //
             // Pass back the parent being the volume root
             //
 
             *ParentDirectoryCB = pVolumeCB->DirectoryCB;
-
         }
 
         //
@@ -3813,13 +3801,15 @@ try_exit:
             if( *ParentDirectoryCB != NULL)
             {
 
+                lCount = InterlockedIncrement( &(*ParentDirectoryCB)->DirOpenReferenceCount);
+
                 AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSParseName Count on %wZ DE %p Ccb %p Cnt %d\n",
+                              "AFSParseName Increment1 count on %wZ DE %p Ccb %p Cnt %d\n",
                               &(*ParentDirectoryCB)->NameInformation.FileName,
-                              *ParentDirectoryCB,
+                              (*ParentDirectoryCB),
                               NULL,
-                              (*ParentDirectoryCB)->DirOpenReferenceCount);
+                              lCount);
             }
         }
 
