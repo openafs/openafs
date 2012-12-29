@@ -1309,6 +1309,7 @@ AFSEnumerateConnection( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
 
         //
         // Setup the request to evaluate the entry
+        // On success, pTargetDirEntry has the DirOpenReferenceCount held
         //
 
         ntStatus = AFSEvaluateRootEntry( pShareDirEntry,
@@ -1390,6 +1391,10 @@ AFSEnumerateConnection( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
 
             pDirEntry = (AFSDirectoryCB *)pDirEntry->ListEntry.fLink;
         }
+
+        //
+        // Release the DirOpenReferenceCount obtained from AFSEvaluateRootEntry
+        //
 
         lCount = InterlockedDecrement( &pTargetDirEntry->DirOpenReferenceCount);
 

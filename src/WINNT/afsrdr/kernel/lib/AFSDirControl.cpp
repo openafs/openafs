@@ -609,6 +609,29 @@ AFSQueryDirectory( IN PIRP Irp)
 
             ULONG ulBytesRemainingInBuffer;
 
+            //
+            // Drop the DirOpenReferenceCount held during a prior
+            // execution of the loop
+            //
+
+            if ( pDirEntry != NULL)
+            {
+
+                lCount = InterlockedDecrement( &pDirEntry->DirOpenReferenceCount);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSQueryDirectory Decrement count on %wZ DE %p Ccb %p Cnt %d\n",
+                              &pDirEntry->NameInformation.FileName,
+                              pDirEntry,
+                              pCcb,
+                              lCount);
+
+                ASSERT( lCount >= 0);
+
+                pDirEntry = NULL;
+            }
+
             ulAdditionalAttributes = 0;
 
             //
@@ -621,6 +644,10 @@ AFSQueryDirectory( IN PIRP Irp)
 
                 try_return( ntStatus);
             }
+
+            //
+            // On Success, pDirEntry has a held DirOpenReferenceCount
+            //
 
             pDirEntry = AFSLocateNextDirEntry( pFcb->ObjectInformation,
                                                pCcb);
@@ -654,18 +681,6 @@ AFSQueryDirectory( IN PIRP Irp)
                      BooleanFlagOn( pDirEntry->Flags, AFS_DIR_ENTRY_DELETED))
             {
 
-                lCount = InterlockedDecrement( &pDirEntry->DirOpenReferenceCount);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSQueryDirectory Decrement count on %wZ DE %p Ccb %p Cnt %d\n",
-                              &pDirEntry->NameInformation.FileName,
-                              pDirEntry,
-                              pCcb,
-                              lCount);
-
-                ASSERT( lCount >= 0);
-
                 continue;
             }
 
@@ -688,18 +703,6 @@ AFSQueryDirectory( IN PIRP Irp)
                     if( !FlagOn( pObjectInfo->FileAttributes, FILE_ATTRIBUTE_DIRECTORY))
                     {
 
-                        lCount = InterlockedDecrement( &pDirEntry->DirOpenReferenceCount);
-
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                                      AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSQueryDirectory Decrement2 count on %wZ DE %p Ccb %p Cnt %d\n",
-                                      &pDirEntry->NameInformation.FileName,
-                                      pDirEntry,
-                                      pCcb,
-                                      lCount);
-
-                        ASSERT( lCount >= 0);
-
                         continue;
                     }
                 }
@@ -718,18 +721,6 @@ AFSQueryDirectory( IN PIRP Irp)
                                                       TRUE,
                                                       NULL))
                         {
-
-                            lCount = InterlockedDecrement( &pDirEntry->DirOpenReferenceCount);
-
-                            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                                          AFS_TRACE_LEVEL_VERBOSE,
-                                          "AFSQueryDirectory Decrement3 count on %wZ DE %p Ccb %p Cnt %d\n",
-                                          &pDirEntry->NameInformation.FileName,
-                                          pDirEntry,
-                                          pCcb,
-                                          lCount);
-
-                            ASSERT( lCount >= 0);
 
                             continue;
                         }
@@ -750,18 +741,6 @@ AFSQueryDirectory( IN PIRP Irp)
                                                          &pCcb->MaskName,
                                                          TRUE))
                             {
-
-                                lCount = InterlockedDecrement( &pDirEntry->DirOpenReferenceCount);
-
-                                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                                              AFS_TRACE_LEVEL_VERBOSE,
-                                              "AFSQueryDirectory Decrement4 count on %wZ DE %p Ccb %p Cnt %d\n",
-                                              &pDirEntry->NameInformation.FileName,
-                                              pDirEntry,
-                                              pCcb,
-                                              lCount);
-
-                                ASSERT( lCount >= 0);
 
                                 continue;
                             }
@@ -822,18 +801,6 @@ AFSQueryDirectory( IN PIRP Irp)
                 //
 
                 pCcb->CurrentDirIndex--;
-
-                lCount = InterlockedDecrement( &pDirEntry->DirOpenReferenceCount);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSQueryDirectory Decrement5 count on %wZ DE %p Ccb %p Cnt %d\n",
-                              &pDirEntry->NameInformation.FileName,
-                              pDirEntry,
-                              pCcb,
-                              lCount);
-
-                ASSERT( lCount >= 0);
 
                 try_return( ntStatus = STATUS_SUCCESS);
             }
@@ -1001,6 +968,7 @@ AFSQueryDirectory( IN PIRP Irp)
 
                     break;
                 }
+
                 default:
                 {
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -1009,21 +977,7 @@ AFSQueryDirectory( IN PIRP Irp)
                                   Irp,
                                   FileInformationClass);
 
-                    lCount = InterlockedDecrement( &pDirEntry->DirOpenReferenceCount);
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSQueryDirectory Decrement6 count on %wZ DE %p Ccb %p Cnt %d\n",
-                                  &pDirEntry->NameInformation.FileName,
-                                  pDirEntry,
-                                  pCcb,
-                                  lCount);
-
-                    ASSERT( lCount >= 0);
-
                     try_return( ntStatus = STATUS_INVALID_INFO_CLASS);
-
-                    break;
                 }
             }
 
@@ -1047,20 +1001,20 @@ AFSQueryDirectory( IN PIRP Irp)
             if( ulBytesConverted < pDirEntry->NameInformation.FileName.Length)
             {
 
-                lCount = InterlockedDecrement( &pDirEntry->DirOpenReferenceCount);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSQueryDirectory Decrement7 count on %wZ DE %p Ccb %p Cnt %d\n",
-                              &pDirEntry->NameInformation.FileName,
-                              pDirEntry,
-                              pCcb,
-                              lCount);
-
-                ASSERT( lCount >= 0);
-
                 try_return( ntStatus = STATUS_BUFFER_OVERFLOW);
             }
+
+            dStatus = STATUS_SUCCESS;
+
+            //  Set ourselves up for the next iteration
+            ulLastEntry = ulNextEntry;
+            ulNextEntry += (ULONG)QuadAlign( ulBaseLength + ulBytesConverted);
+        }
+
+try_exit:
+
+        if ( pDirEntry != NULL)
+        {
 
             lCount = InterlockedDecrement( &pDirEntry->DirOpenReferenceCount);
 
@@ -1073,15 +1027,7 @@ AFSQueryDirectory( IN PIRP Irp)
                           lCount);
 
             ASSERT( lCount >= 0);
-
-            dStatus = STATUS_SUCCESS;
-
-            //  Set ourselves up for the next iteration
-            ulLastEntry = ulNextEntry;
-            ulNextEntry += (ULONG)QuadAlign( ulBaseLength + ulBytesConverted);
         }
-
-try_exit:
 
         if( bReleaseMain)
         {
@@ -1241,22 +1187,6 @@ AFSLocateNextDirEntry( IN AFSObjectInfoCB *ObjectInfo,
 
                 pDirEntry = ObjectInfo->Specific.Directory.PIOCtlDirectoryCB;
 
-                if( pDirEntry != NULL)
-                {
-
-                    lCount = InterlockedIncrement( &pDirEntry->DirOpenReferenceCount);
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSLocateNextDirEntry Increment count on %wZ DE %p Ccb %p Cnt %d\n",
-                                  &pDirEntry->NameInformation.FileName,
-                                  pDirEntry,
-                                  Ccb,
-                                  lCount);
-
-                    ASSERT( lCount >= 0);
-                }
-
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSLocateNextDirEntry Returning PIOctl entry %wZ in parent FID %08lX-%08lX-%08lX-%08lX\n",
@@ -1283,22 +1213,6 @@ AFSLocateNextDirEntry( IN AFSObjectInfoCB *ObjectInfo,
 
             pDirEntry = AFSGlobalDotDirEntry;
 
-            if( pDirEntry != NULL)
-            {
-
-                lCount = InterlockedIncrement( &pDirEntry->DirOpenReferenceCount);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSLocateNextDirEntry Increment2 count on %wZ DE %p Ccb %p Cnt %d\n",
-                              &pDirEntry->NameInformation.FileName,
-                              pDirEntry,
-                              Ccb,
-                              lCount);
-
-                ASSERT( lCount >= 0);
-            }
-
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSLocateNextDirEntry Returning1 snapshot entry %wZ in parent FID %08lX-%08lX-%08lX-%08lX\n",
@@ -1316,22 +1230,6 @@ AFSLocateNextDirEntry( IN AFSObjectInfoCB *ObjectInfo,
             //
 
             pDirEntry = AFSGlobalDotDotDirEntry;
-
-            if( pDirEntry != NULL)
-            {
-
-                lCount = InterlockedIncrement( &pDirEntry->DirOpenReferenceCount);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSLocateNextDirEntry Increment3 count on %wZ DE %p Ccb %p Cnt %d\n",
-                              &pDirEntry->NameInformation.FileName,
-                              pDirEntry,
-                              Ccb,
-                              lCount);
-
-                ASSERT( lCount >= 0);
-            }
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -1403,18 +1301,6 @@ AFSLocateNextDirEntry( IN AFSObjectInfoCB *ObjectInfo,
                                       ObjectInfo->FileId.Volume,
                                       ObjectInfo->FileId.Vnode,
                                       ObjectInfo->FileId.Unique);
-
-                        lCount = InterlockedIncrement( &pDirEntry->DirOpenReferenceCount);
-
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                                      AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSLocateNextDirEntry Increment4 count on %wZ DE %p Ccb %p Cnt %d\n",
-                                      &pDirEntry->NameInformation.FileName,
-                                      pDirEntry,
-                                      Ccb,
-                                      lCount);
-
-                        ASSERT( lCount >= 0);
                     }
                     else
                     {
@@ -1450,6 +1336,22 @@ AFSLocateNextDirEntry( IN AFSObjectInfoCB *ObjectInfo,
         }
 
 try_exit:
+
+        if( pDirEntry != NULL)
+        {
+
+            lCount = InterlockedIncrement( &pDirEntry->DirOpenReferenceCount);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSLocateNextDirEntry Increment count on %wZ DE %p Ccb %p Cnt %d\n",
+                          &pDirEntry->NameInformation.FileName,
+                          pDirEntry,
+                          Ccb,
+                          lCount);
+
+            ASSERT( lCount >= 0);
+        }
 
         AFSReleaseResource( &Ccb->NPCcb->CcbLock);
 

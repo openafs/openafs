@@ -6950,6 +6950,7 @@ AFSEvaluateRootEntry( IN AFSDirectoryCB *DirectoryCB,
 
         //
         // Pass back the target dir entry for this request
+        // The caller must release the DirOpenReferenceCount
         //
 
         *TargetDirEntry = pDirectoryEntry;
@@ -8319,7 +8320,7 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
                                            &uniParsedName,
                                            pNameArray,
                                            AFS_LOCATE_FLAGS_NO_MP_TARGET_EVAL |
-                                                        AFS_LOCATE_FLAGS_NO_SL_TARGET_EVAL,
+                                               AFS_LOCATE_FLAGS_NO_SL_TARGET_EVAL,
                                            &pVolumeCB,
                                            &pParentDirEntry,
                                            &pDirectoryEntry,
@@ -8387,7 +8388,7 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
             }
 
             //
-            // Remove the reference made above
+            // Remove the reference obtained from AFSLocateNameEntry
             //
 
             lCount = InterlockedDecrement( &pDirectoryEntry->DirOpenReferenceCount);
