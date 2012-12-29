@@ -144,26 +144,12 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                                    NULL,
                                    NULL);
 
-                pDirCB = pCcb->DirectoryCB;
-
                 //
                 // Remove the Ccb and de-allocate it
                 //
 
                 AFSRemoveCcb( pFcb,
                               pCcb);
-
-                lCount = InterlockedDecrement( &pDirCB->DirOpenReferenceCount);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSClose (IOCtl) Decrement count on %wZ DE %p Ccb %p Cnt %d\n",
-                              &pDirCB->NameInformation.FileName,
-                              pDirCB,
-                              pCcb,
-                              lCount);
-
-                ASSERT( lCount >= 0);
 
                 //
                 // If this is not the root then decrement the open child reference count
@@ -211,26 +197,12 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
 
                 pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
 
-                pDirCB = pCcb->DirectoryCB;
-
                 //
                 // Remove the Ccb and de-allocate it
                 //
 
                 AFSRemoveCcb( pFcb,
                               pCcb);
-
-                lCount = InterlockedDecrement( &pDirCB->DirOpenReferenceCount);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSClose Decrement (Root ALL) count on %wZ DE %p Ccb %p Cnt %d\n",
-                              &pDirCB->NameInformation.FileName,
-                              pDirCB,
-                              pCcb,
-                              lCount);
-
-                ASSERT( lCount >= 0);
 
                 AFSReleaseResource( &pFcb->NPFcb->Resource);
 
@@ -330,6 +302,12 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                 }
 
                 pDirCB = pCcb->DirectoryCB;
+
+                //
+                // Steal the DirOpenReferenceCount from the Ccb
+                //
+
+                pCcb->DirectoryCB = NULL;
 
                 //
                 // Remove the Ccb and de-allocate it
@@ -534,26 +512,12 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                                    NULL);
                 */
 
-                pDirCB = pCcb->DirectoryCB;
-
                 //
                 // Remove the Ccb and de-allocate it
                 //
 
                 AFSRemoveCcb( pFcb,
                               pCcb);
-
-                lCount = InterlockedDecrement( &pDirCB->DirOpenReferenceCount);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSClose (Share) Decrement count on %wZ DE %p Ccb %p Cnt %d\n",
-                              &pDirCB->NameInformation.FileName,
-                              pDirCB,
-                              pCcb,
-                              lCount);
-
-                ASSERT( lCount >= 0);
 
                 //
                 // If this is not the root then decrement the open child reference count
