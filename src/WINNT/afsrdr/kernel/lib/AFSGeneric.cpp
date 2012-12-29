@@ -4993,7 +4993,8 @@ AFSInitNameArray( IN AFSDirectoryCB *DirectoryCB,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSInitNameArray Increment count on %wZ DE %p Cnt %d\n",
+                          "AFSInitNameArray [NA:%p] Increment count on %wZ DE %p Cnt %d\n",
+                          pNameArray,
                           &DirectoryCB->NameInformation.FileName,
                           DirectoryCB,
                           lCount);
@@ -5075,7 +5076,8 @@ AFSPopulateNameArray( IN AFSNameArrayHdr *NameArray,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSPopulateNameArray Increment count on volume %wZ DE %p Cnt %d\n",
+                      "AFSPopulateNameArray [NA:%p] Increment count on volume %wZ DE %p Cnt %d\n",
+                      NameArray,
                       &pCurrentElement->DirectoryCB->NameInformation.FileName,
                       pCurrentElement->DirectoryCB,
                       lCount);
@@ -5188,7 +5190,8 @@ AFSPopulateNameArrayFromRelatedArray( IN AFSNameArrayHdr *NameArray,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSPopulateNameArrayFromRelatedArray Increment count on %wZ DE %p Cnt %d\n",
+                          "AFSPopulateNameArrayFromRelatedArray [NA:%p] Increment count on %wZ DE %p Cnt %d\n",
+                          NameArray,
                           &pCurrentElement->DirectoryCB->NameInformation.FileName,
                           pCurrentElement->DirectoryCB,
                           lCount);
@@ -5255,7 +5258,8 @@ AFSFreeNameArray( IN AFSNameArrayHdr *NameArray)
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSFreeNameArray Decrement count on %wZ DE %p Cnt %d\n",
+                          "AFSFreeNameArray [NA:%p] Decrement count on %wZ DE %p Cnt %d\n",
+                          NameArray,
                           &pCurrentElement->DirectoryCB->NameInformation.FileName,
                           pCurrentElement->DirectoryCB,
                           lCount);
@@ -5340,7 +5344,8 @@ AFSInsertNextElement( IN AFSNameArrayHdr *NameArray,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSInsertNextElement Increment count on %wZ DE %p Cnt %d\n",
+                      "AFSInsertNextElement [NA:%p] Increment count on %wZ DE %p Cnt %d\n",
+                      NameArray,
                       &DirectoryCB->NameInformation.FileName,
                       DirectoryCB,
                       lCount);
@@ -5414,7 +5419,8 @@ AFSBackupEntry( IN AFSNameArrayHdr *NameArray)
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSBackupEntry Decrement count on %wZ DE %p Cnt %d\n",
+                      "AFSBackupEntry [NA:%p] Decrement count on %wZ DE %p Cnt %d\n",
+                      NameArray,
                       &NameArray->CurrentEntry->DirectoryCB->NameInformation.FileName,
                       NameArray->CurrentEntry->DirectoryCB,
                       lCount);
@@ -5572,7 +5578,8 @@ AFSResetNameArray( IN AFSNameArrayHdr *NameArray,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSResetNameArray Decrement count on %wZ DE %p Cnt %d\n",
+                          "AFSResetNameArray [NA:%p] Decrement count on %wZ DE %p Cnt %d\n",
+                          NameArray,
                           &pCurrentElement->DirectoryCB->NameInformation.FileName,
                           pCurrentElement->DirectoryCB,
                           lCount);
@@ -5601,7 +5608,8 @@ AFSResetNameArray( IN AFSNameArrayHdr *NameArray,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSResetNameArray Increment count on %wZ DE %p Cnt %d\n",
+                          "AFSResetNameArray [NA:%p] Increment count on %wZ DE %p Cnt %d\n",
+                          NameArray,
                           &DirectoryCB->NameInformation.FileName,
                           DirectoryCB,
                           lCount);
