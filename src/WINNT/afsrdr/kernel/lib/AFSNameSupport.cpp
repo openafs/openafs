@@ -45,7 +45,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                     IN UNICODE_STRING *ParsedPathName,
                     IN AFSNameArrayHdr *NameArray,
                     IN ULONG Flags,
-                    OUT AFSVolumeCB **VolumeCB,
+                    IN OUT AFSVolumeCB **VolumeCB,
                     IN OUT AFSDirectoryCB **ParentDirectoryCB,
                     OUT AFSDirectoryCB **DirectoryCB,
                     OUT PUNICODE_STRING ComponentName)
