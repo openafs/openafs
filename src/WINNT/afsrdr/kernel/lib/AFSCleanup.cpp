@@ -154,9 +154,11 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                 AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                   TRUE);
 
-                ASSERT( pFcb->OpenHandleCount != 0);
+                FsRtlNotifyCleanup( pControlDeviceExt->Specific.Control.NotifySync,
+                                    &pControlDeviceExt->Specific.Control.DirNotifyList,
+                                    pCcb);
 
-                AFSReleaseResource( &pFcb->NPFcb->Resource);
+                ASSERT( pFcb->OpenHandleCount != 0);
 
                 lCount = InterlockedDecrement( &pFcb->OpenHandleCount);
 
@@ -166,9 +168,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                               pFcb,
                               lCount);
 
-                FsRtlNotifyCleanup( pControlDeviceExt->Specific.Control.NotifySync,
-                                    &pControlDeviceExt->Specific.Control.DirNotifyList,
-                                    pCcb);
+                AFSReleaseResource( &pFcb->NPFcb->Resource);
 
                 break;
             }
@@ -1071,8 +1071,6 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                   lCount);
                 }
 
-                AFSReleaseResource( &pFcb->NPFcb->Resource);
-
                 lCount = InterlockedDecrement( &pFcb->OpenHandleCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
@@ -1080,6 +1078,8 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                               "AFSCleanup (Dir) Decrement handle count on Fcb %p Cnt %d\n",
                               pFcb,
                               lCount);
+
+                AFSReleaseResource( &pFcb->NPFcb->Resource);
 
                 break;
             }
@@ -1372,8 +1372,6 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                   lCount);
                 }
 
-                AFSReleaseResource( &pFcb->NPFcb->Resource);
-
                 lCount = InterlockedDecrement( &pFcb->OpenHandleCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
@@ -1381,6 +1379,8 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                               "AFSCleanup (MP/SL) Decrement handle count on Fcb %p Cnt %d\n",
                               pFcb,
                               lCount);
+
+                AFSReleaseResource( &pFcb->NPFcb->Resource);
 
                 break;
             }
@@ -1418,8 +1418,6 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                   lCount);
                 }
 
-                AFSReleaseResource( &pFcb->NPFcb->Resource);
-
                 lCount = InterlockedDecrement( &pFcb->OpenHandleCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
@@ -1428,13 +1426,15 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                               pFcb,
                               lCount);
 
+                AFSReleaseResource( &pFcb->NPFcb->Resource);
+
                 break;
             }
 
             default:
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_WARNING,
+                              AFS_TRACE_LEVEL_ERROR,
                               "AFSCleanup Processing unknown node type %d\n",
                               pFcb->Header.NodeTypeCode);
 
