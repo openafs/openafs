@@ -2240,19 +2240,6 @@ AFSNotifyHardLink( IN AFSObjectInfoCB *ObjectInfo,
                                     &pResultCB->DirEnum.FileId))
                 {
 
-                    lCount = InterlockedIncrement( &pDirNode->DirOpenReferenceCount);
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSNotifyHardLink Increment count on %wZ DE %p Cnt %d\n",
-                                  &pDirNode->NameInformation.FileName,
-                                  pDirNode,
-                                  lCount);
-
-                    ASSERT( lCount >= 0);
-
-                    AFSReleaseResource( TargetParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
-
                     try_return( ntStatus = STATUS_REPARSE);
                 }
                 else
@@ -2360,8 +2347,6 @@ AFSNotifyHardLink( IN AFSObjectInfoCB *ObjectInfo,
 
             TargetParentObjectInfo->DataVersion.QuadPart = (ULONGLONG)-1;
 
-            AFSReleaseResource( TargetParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
-
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
 
@@ -2429,6 +2414,23 @@ AFSNotifyHardLink( IN AFSObjectInfoCB *ObjectInfo,
 
 try_exit:
 
+        if ( TargetDirectoryCB != NULL)
+        {
+
+            lCount = InterlockedIncrement( &pDirNode->DirOpenReferenceCount);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSNotifyHardLink Increment count on %wZ DE %p Cnt %d\n",
+                          &pDirNode->NameInformation.FileName,
+                          pDirNode,
+                          lCount);
+
+            ASSERT( lCount >= 0);
+
+            *TargetDirectoryCB = pDirNode;
+        }
+
         if ( bReleaseTargetParentLock)
         {
 
@@ -2445,12 +2447,6 @@ try_exit:
         {
 
             AFSExFreePoolWithTag( pHardLinkCB, AFS_HARDLINK_REQUEST_TAG);
-        }
-
-        if ( TargetDirectoryCB)
-        {
-
-            *TargetDirectoryCB = pDirNode;
         }
     }
 
