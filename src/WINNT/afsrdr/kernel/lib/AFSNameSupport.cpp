@@ -1503,6 +1503,16 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                             {
 
                                 ntStatus = STATUS_OBJECT_PATH_NOT_FOUND;
+
+                                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                              AFS_TRACE_LEVEL_VERBOSE,
+                                              "AFSLocateNameEntry (FO: %08lX) Returning path not found for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                              FileObject,
+                                              &uniSearchName,
+                                              pCurrentObject->FileId.Cell,
+                                              pCurrentObject->FileId.Volume,
+                                              pCurrentObject->FileId.Vnode,
+                                              pCurrentObject->FileId.Unique);
                             }
                             else
                             {
@@ -1778,7 +1788,18 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                 if( uniRemainingPath.Length > 0)
                 {
+
                     ntStatus = STATUS_OBJECT_PATH_NOT_FOUND;
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSLocateNameEntry (FO: %08lX) Returning path not found(2) for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                  FileObject,
+                                  &uniComponentName,
+                                  pCurrentObject->FileId.Cell,
+                                  pCurrentObject->FileId.Volume,
+                                  pCurrentObject->FileId.Vnode,
+                                  pCurrentObject->FileId.Unique);
                 }
                 else
                 {
@@ -3593,6 +3614,13 @@ AFSParseName( IN PIRP Irp,
                              uniRemainingPath.Length == 0 &&
                              ntStatus == STATUS_OBJECT_PATH_NOT_FOUND)
                         {
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                          AFS_TRACE_LEVEL_VERBOSE,
+                                          "AFSParseName (%08lX) AFSCheckCellName %wZ returned path not found; ntStatus %08X\n",
+                                          Irp,
+                                          &uniComponentName,
+                                          STATUS_OBJECT_NAME_NOT_FOUND);
 
                             ntStatus = STATUS_OBJECT_NAME_NOT_FOUND;
                         }
