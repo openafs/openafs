@@ -1314,7 +1314,10 @@ AFSOpenAFSRoot( IN PIRP Irp,
         // Initialize the Ccb for the file.
         //
 
-        ntStatus = AFSInitCcb( Ccb);
+        ntStatus = AFSInitCcb( Ccb,
+                               AFSGlobalRoot->DirectoryCB,
+                               0,
+                               0);
 
         if( !NT_SUCCESS( ntStatus))
         {
@@ -1326,12 +1329,6 @@ AFSOpenAFSRoot( IN PIRP Irp,
 
             try_return( ntStatus);
         }
-
-        //
-        // Setup the Ccb
-        //
-
-        (*Ccb)->DirectoryCB = AFSGlobalRoot->DirectoryCB;
 
         //
         // Increment the open count on this Fcb
@@ -1584,7 +1581,10 @@ AFSOpenRoot( IN PIRP Irp,
         // Initialize the Ccb for the file.
         //
 
-        ntStatus = AFSInitCcb( Ccb);
+        ntStatus = AFSInitCcb( Ccb,
+                               VolumeCB->DirectoryCB,
+                               *pDesiredAccess,
+                               0);
 
         if( !NT_SUCCESS( ntStatus))
         {
@@ -1599,14 +1599,6 @@ AFSOpenRoot( IN PIRP Irp,
         }
 
         bAllocatedCcb = TRUE;
-
-        //
-        // Setup the ccb
-        //
-
-        (*Ccb)->DirectoryCB = VolumeCB->DirectoryCB;
-
-        (*Ccb)->GrantedAccess = *pDesiredAccess;
 
         //
         // OK, update the share access on the fileobject
@@ -1944,7 +1936,10 @@ AFSProcessCreate( IN PIRP               Irp,
         // Initialize the Ccb for the file.
         //
 
-        ntStatus = AFSInitCcb( Ccb);
+        ntStatus = AFSInitCcb( Ccb,
+                               pDirEntry,
+                               *pDesiredAccess,
+                               0);
 
         if( !NT_SUCCESS( ntStatus))
         {
@@ -1960,14 +1955,6 @@ AFSProcessCreate( IN PIRP               Irp,
         }
 
         bAllocatedCcb = TRUE;
-
-        //
-        // Initialize the Ccb
-        //
-
-        (*Ccb)->DirectoryCB = pDirEntry;
-
-        (*Ccb)->GrantedAccess = *pDesiredAccess;
 
         //
         // If this is a file, update the headers filesizes.
@@ -2328,7 +2315,10 @@ AFSOpenTargetDirectory( IN PIRP Irp,
         // Initialize the Ccb for the file.
         //
 
-        ntStatus = AFSInitCcb( Ccb);
+        ntStatus = AFSInitCcb( Ccb,
+                               ParentDirectoryCB,
+                               *pDesiredAccess,
+                               0);
 
         if( !NT_SUCCESS( ntStatus))
         {
@@ -2344,14 +2334,6 @@ AFSOpenTargetDirectory( IN PIRP Irp,
         }
 
         bAllocatedCcb = TRUE;
-
-        //
-        // Initialize the Ccb
-        //
-
-        (*Ccb)->DirectoryCB = ParentDirectoryCB;
-
-        (*Ccb)->GrantedAccess = *pDesiredAccess;
 
         if( TargetDirectoryCB != NULL &&
             FsRtlAreNamesEqual( &TargetDirectoryCB->NameInformation.FileName,
@@ -2838,7 +2820,10 @@ AFSProcessOpen( IN PIRP Irp,
         // Initialize the Ccb for the file.
         //
 
-        ntStatus = AFSInitCcb( Ccb);
+        ntStatus = AFSInitCcb( Ccb,
+                               DirectoryCB,
+                               *pDesiredAccess,
+                               ulFileAccess);
 
         if( !NT_SUCCESS( ntStatus))
         {
@@ -2854,12 +2839,6 @@ AFSProcessOpen( IN PIRP Irp,
         }
 
         bAllocatedCcb = TRUE;
-
-        (*Ccb)->DirectoryCB = DirectoryCB;
-
-        (*Ccb)->FileAccess = ulFileAccess;
-
-        (*Ccb)->GrantedAccess = *pDesiredAccess;
 
         //
         // Perform the access check on the target if this is a mount point or symlink
@@ -3197,7 +3176,10 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
         // Initialize the Ccb for the file.
         //
 
-        ntStatus = AFSInitCcb( Ccb);
+        ntStatus = AFSInitCcb( Ccb,
+                               DirectoryCB,
+                               *pDesiredAccess,
+                               0);
 
         if( !NT_SUCCESS( ntStatus))
         {
@@ -3213,14 +3195,6 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
         }
 
         bAllocatedCcb = TRUE;
-
-        //
-        // Initialize the Ccb
-        //
-
-        (*Ccb)->DirectoryCB = DirectoryCB;
-
-        (*Ccb)->GrantedAccess = *pDesiredAccess;
 
         //
         // Set the file length to zero
@@ -3552,7 +3526,10 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
         // Initialize the Ccb for the file.
         //
 
-        ntStatus = AFSInitCcb( Ccb);
+        ntStatus = AFSInitCcb( Ccb,
+                               pParentObjectInfo->Specific.Directory.PIOCtlDirectoryCB,
+                               0,
+                               0);
 
         if( !NT_SUCCESS( ntStatus))
         {
@@ -3567,12 +3544,6 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
         }
 
         bAllocatedCcb = TRUE;
-
-        //
-        // Setup the Ccb
-        //
-
-        (*Ccb)->DirectoryCB = pParentObjectInfo->Specific.Directory.PIOCtlDirectoryCB;
 
         //
         // Set the PIOCtl index
@@ -3828,7 +3799,10 @@ AFSOpenSpecialShareFcb( IN PIRP Irp,
         // Initialize the Ccb for the file.
         //
 
-        ntStatus = AFSInitCcb( Ccb);
+        ntStatus = AFSInitCcb( Ccb,
+                               DirectoryCB,
+                               0,
+                               0);
 
         if( !NT_SUCCESS( ntStatus))
         {
@@ -3843,12 +3817,6 @@ AFSOpenSpecialShareFcb( IN PIRP Irp,
         }
 
         bAllocatedCcb = TRUE;
-
-        //
-        // Setup the Ccb
-        //
-
-        (*Ccb)->DirectoryCB = DirectoryCB;
 
         //
         // Call the service to open the share

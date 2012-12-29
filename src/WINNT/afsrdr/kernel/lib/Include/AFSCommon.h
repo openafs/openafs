@@ -540,7 +540,10 @@ void
 AFSRemoveRootFcb( IN AFSFcb *RootFcb);
 
 NTSTATUS
-AFSInitCcb( IN OUT AFSCcb **Ccb);
+AFSInitCcb( IN OUT AFSCcb **Ccb,
+            IN     AFSDirectoryCB *DirectoryCB,
+            IN     ACCESS_MASK     GrantedAccess,
+            IN     ULONG           FileAccess);
 
 void
 AFSRemoveFcb( IN AFSFcb **Fcb);

@@ -1141,11 +1141,15 @@ AFSRemoveFcb( IN AFSFcb **ppFcb)
 }
 
 NTSTATUS
-AFSInitCcb( IN OUT AFSCcb **Ccb)
+AFSInitCcb( IN OUT AFSCcb **Ccb,
+            IN     AFSDirectoryCB *DirectoryCB,
+            IN     ACCESS_MASK     GrantedAccess,
+            IN     ULONG           FileAccess)
 {
 
     NTSTATUS Status = STATUS_SUCCESS;
     AFSCcb *pCcb = NULL;
+    LONG lCount;
 
     __Enter
     {
@@ -1190,6 +1194,22 @@ AFSInitCcb( IN OUT AFSCcb **Ccb)
         }
 
         ExInitializeResourceLite( &pCcb->NPCcb->CcbLock);
+
+        pCcb->DirectoryCB = DirectoryCB;
+
+        lCount = InterlockedIncrement( &pCcb->DirectoryCB->DirOpenReferenceCount);
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSInitCcb Increment count on %wZ DE %p Ccb %p Cnt %d\n",
+                      &pCcb->DirectoryCB->NameInformation.FileName,
+                      pCcb->DirectoryCB,
+                      pCcb,
+                      lCount);
+
+        pCcb->GrantedAccess = GrantedAccess;
+
+        pCcb->FileAccess = FileAccess;
 
         //
         // Return the Ccb
@@ -1237,6 +1257,8 @@ void
 AFSRemoveCcb( IN AFSFcb *Fcb,
               IN AFSCcb *Ccb)
 {
+
+    LONG lCount;
 
     AFSAcquireExcl( &Ccb->NPCcb->CcbLock,
                     TRUE);
@@ -1317,6 +1339,22 @@ AFSRemoveCcb( IN AFSFcb *Fcb,
     {
 
         AFSExFreePoolWithTag( Ccb->NotifyMask.Buffer, AFS_GENERIC_MEMORY_7_TAG);
+    }
+
+    if ( Ccb->DirectoryCB != NULL)
+    {
+
+        lCount = InterlockedDecrement( &Ccb->DirectoryCB->DirOpenReferenceCount);
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSRemoveCcb Decrement count on %wZ DE %p Ccb %p Cnt %d\n",
+                      &Ccb->DirectoryCB->NameInformation.FileName,
+                      Ccb->DirectoryCB,
+                      Ccb,
+                      lCount);
+
+        ASSERT( lCount >= 0);
     }
 
     AFSReleaseResource( &Ccb->NPCcb->CcbLock);
