@@ -2465,7 +2465,7 @@ AFSSetFileLinkInfo( IN PIRP Irp)
                           "AFSSetFileLinkInfo Target %wZ exists DE %p Count %d, performing delete of target\n",
                           &pTargetDirEntry->NameInformation.FileName,
                           pTargetDirEntry,
-                          pTargetDirEntry->DirOpenReferenceCount);
+                          lCount);
 
             //
             // Pull the directory entry from the parent
@@ -2498,7 +2498,8 @@ AFSSetFileLinkInfo( IN PIRP Irp)
                                       pFileLinkInfo->ReplaceIfExists,
                                       &pNewTargetDirEntry);
 
-        if( !NT_SUCCESS( ntStatus))
+        if( ntStatus != STATUS_REPARSE &&
+            !NT_SUCCESS( ntStatus))
         {
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -2511,9 +2512,13 @@ AFSSetFileLinkInfo( IN PIRP Irp)
             try_return( ntStatus);
         }
 
-        AFSInsertDirectoryNode( pTargetDcb->ObjectInformation,
-                                pNewTargetDirEntry,
-                                TRUE);
+        if ( ntStatus != STATUS_REPARSE)
+        {
+
+            AFSInsertDirectoryNode( pTargetDcb->ObjectInformation,
+                                    pNewTargetDirEntry,
+                                    TRUE);
+        }
 
         //
         // Send notification for the target link file
@@ -2552,6 +2557,10 @@ AFSSetFileLinkInfo( IN PIRP Irp)
         if( pTargetDirEntry != NULL)
         {
 
+            //
+            // Release DirOpenReferenceCount obtained above
+            //
+
             lCount = InterlockedDecrement( &pTargetDirEntry->DirOpenReferenceCount);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
@@ -2559,6 +2568,26 @@ AFSSetFileLinkInfo( IN PIRP Irp)
                           "AFSSetFileLinkInfo Decrement count on %wZ DE %p Ccb %p Cnt %d\n",
                           &pTargetDirEntry->NameInformation.FileName,
                           pTargetDirEntry,
+                          pSrcCcb,
+                          lCount);
+
+            ASSERT( lCount >= 0);
+        }
+
+        if( pNewTargetDirEntry != NULL)
+        {
+
+            //
+            // Release DirOpenReferenceCount obtained from AFSNotifyHardLink
+            //
+
+            lCount = InterlockedDecrement( &pNewTargetDirEntry->DirOpenReferenceCount);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSSetFileLinkInfo Decrement count on %wZ DE %p Ccb %p Cnt %d\n",
+                          &pNewTargetDirEntry->NameInformation.FileName,
+                          pNewTargetDirEntry,
                           pSrcCcb,
                           lCount);
 
