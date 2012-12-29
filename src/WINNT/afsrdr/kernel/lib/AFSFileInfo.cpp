@@ -2875,7 +2875,6 @@ AFSSetRenameInfo( IN PIRP Irp)
 
             lCount = InterlockedIncrement( &pTargetDirEntry->DirOpenReferenceCount);
 
-
             AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSSetRenameInfo Increment count on %wZ DE %p Ccb %p Cnt %d\n",
@@ -2903,7 +2902,7 @@ AFSSetRenameInfo( IN PIRP Irp)
                           "AFSSetRenameInfo Target %wZ exists DE %p Count %d, performing delete of target\n",
                           &pTargetDirEntry->NameInformation.FileName,
                           pTargetDirEntry,
-                          pTargetDirEntry->DirOpenReferenceCount);
+                          lCount);
 
             //
             // Pull the directory entry from the parent
