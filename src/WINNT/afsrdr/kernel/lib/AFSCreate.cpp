@@ -3452,11 +3452,21 @@ AFSControlDeviceCreate( IN PIRP Irp)
     __Enter
     {
 
-        //
-        // For now, jsut let the open happen
-        //
-
-        Irp->IoStatus.Information = FILE_OPENED;
+        if ( KernelMode == Irp->RequestorMode) {
+            //
+            // For now, just let the open happen
+            //
+            Irp->IoStatus.Information = FILE_OPENED;
+        }
+        else
+        {
+            //
+            // Not from usermode, All access must be via
+            // the FS component (which will do the
+            // security check)
+            //
+            ntStatus = STATUS_ACCESS_DENIED;
+        }
     }
 
     return ntStatus;

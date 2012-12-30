@@ -385,6 +385,157 @@ try_exit:
     return ntStatus;
 }
 
+static
+NTSTATUS
+AFSCheckIoctlPermissions( IN ULONG ControlCode)
+{
+    switch ( ControlCode)
+    {
+        //
+        // First the FS ioctls
+        //
+
+        case IOCTL_AFS_INITIALIZE_CONTROL_DEVICE:
+
+            //
+            // Only a System Service can run this (unless we are compiled
+            // for debug with the correct flags set.
+            //
+
+            if ( !AFSIsUser( SeExports->SeLocalSystemSid)
+#if DBG
+                && !BooleanFlagOn( AFSDebugFlags, AFS_DBG_DISABLE_SYSTEM_SID_CHECK)
+#endif
+                )
+            {
+
+                return STATUS_ACCESS_DENIED;
+            }
+            return STATUS_SUCCESS;
+
+        case IOCTL_AFS_INITIALIZE_REDIRECTOR_DEVICE:
+        case IOCTL_AFS_PROCESS_IRP_REQUEST:
+        case IOCTL_AFS_PROCESS_IRP_RESULT:
+        case IOCTL_AFS_SYSNAME_NOTIFICATION:
+        case IOCTL_AFS_SHUTDOWN:
+
+            //
+            // Once initialized, only the service can call these
+            //
+
+            if ( !AFSIsService())
+            {
+
+                return STATUS_ACCESS_DENIED;
+            }
+            return STATUS_SUCCESS;
+
+        case IOCTL_AFS_CONFIGURE_DEBUG_TRACE:
+        case IOCTL_AFS_GET_TRACE_BUFFER:
+        case IOCTL_AFS_FORCE_CRASH:
+
+            //
+            // Any admin can call these
+            //
+
+            if ( !AFSIsInGroup( SeExports->SeAliasAdminsSid))
+            {
+
+                return STATUS_ACCESS_DENIED;
+            }
+            return STATUS_SUCCESS;
+
+        case IOCTL_AFS_AUTHGROUP_CREATE_AND_SET:
+        case IOCTL_AFS_AUTHGROUP_QUERY:
+        case IOCTL_AFS_AUTHGROUP_SET:
+        case IOCTL_AFS_AUTHGROUP_RESET:
+        case IOCTL_AFS_AUTHGROUP_LOGON_CREATE:
+        case IOCTL_AFS_AUTHGROUP_SID_CREATE:
+        case IOCTL_AFS_AUTHGROUP_SID_QUERY:
+
+            //
+            // Anyone can call these.
+            //
+
+            return STATUS_SUCCESS;
+
+        //
+        // And now the LIB ioctls
+        //
+
+        case IOCTL_AFS_INITIALIZE_LIBRARY_DEVICE:
+
+            //
+            // Only the kernel can issue this
+            //
+
+            return STATUS_ACCESS_DENIED;
+
+        case IOCTL_AFS_STATUS_REQUEST:
+        case 0x140390:      // IOCTL_LMR_DISABLE_LOCAL_BUFFERING
+
+            //
+            // Anyone can call these.
+            //
+
+            return STATUS_SUCCESS;
+
+        case IOCTL_AFS_ADD_CONNECTION:
+        case IOCTL_AFS_CANCEL_CONNECTION:
+        case IOCTL_AFS_GET_CONNECTION:
+        case IOCTL_AFS_LIST_CONNECTIONS:
+        case IOCTL_AFS_GET_CONNECTION_INFORMATION:
+
+            //
+            // These must only be called by the network provider but we
+            // don't have a method of enforcing that at the moment.
+            //
+
+            return STATUS_SUCCESS;
+
+        case IOCTL_AFS_SET_FILE_EXTENTS:
+        case IOCTL_AFS_RELEASE_FILE_EXTENTS:
+        case IOCTL_AFS_SET_FILE_EXTENT_FAILURE:
+        case IOCTL_AFS_INVALIDATE_CACHE:
+        case IOCTL_AFS_NETWORK_STATUS:
+        case IOCTL_AFS_VOLUME_STATUS:
+
+            //
+            // Again, service only
+            //
+
+            if ( !AFSIsService())
+            {
+
+                return STATUS_ACCESS_DENIED;
+            }
+            return STATUS_SUCCESS;
+
+        case IOCTL_AFS_GET_OBJECT_INFORMATION:
+
+            //
+            // Admins only
+            //
+
+            if ( !AFSIsInGroup( SeExports->SeAliasAdminsSid))
+            {
+
+                return STATUS_ACCESS_DENIED;
+            }
+            return STATUS_SUCCESS;
+
+        default:
+
+            //
+            // NOTE that for security we police all known functions here
+            // and return STATUS_NOT_IMPLEMENTED.  So new ioctls need to
+            // be added both here and either below or in
+            // ..\lib\AFSDevControl.cpp
+            //
+
+            return STATUS_NOT_IMPLEMENTED;
+    }
+}
 NTSTATUS
 AFSProcessControlRequest( IN PIRP Irp)
 {
@@ -402,21 +553,18 @@ AFSProcessControlRequest( IN PIRP Irp)
 
         ulIoControlCode = pIrpSp->Parameters.DeviceIoControl.IoControlCode;
 
+        ntStatus = AFSCheckIoctlPermissions( ulIoControlCode);
+
+        if ( !NT_SUCCESS( ntStatus))
+        {
+            try_return( ntStatus);
+        }
+
         switch( ulIoControlCode)
         {
 
             case IOCTL_AFS_INITIALIZE_CONTROL_DEVICE:
             {
-                if ( !AFSIsUser( SeExports->SeLocalSystemSid)
-#if DBG
-                    && !BooleanFlagOn( AFSDebugFlags, AFS_DBG_DISABLE_SYSTEM_SID_CHECK)
-#endif
-                    )
-                {
-
-                    ntStatus = STATUS_ACCESS_DENIED;
-                    break;
-                }
                 //
                 // Go intialize the pool
                 //
@@ -447,14 +595,6 @@ AFSProcessControlRequest( IN PIRP Irp)
             {
 
                 AFSRedirectorInitInfo *pRedirInitInfo = (AFSRedirectorInitInfo *)Irp->AssociatedIrp.SystemBuffer;
-
-                if ( !AFSIsService())
-                {
-
-                    ntStatus = STATUS_ACCESS_DENIED;
-
-                    break;
-                }
 
                 //
                 // Extract off the passed in information which contains the
@@ -495,14 +635,6 @@ AFSProcessControlRequest( IN PIRP Irp)
             case IOCTL_AFS_PROCESS_IRP_REQUEST:
             {
 
-                if ( !AFSIsService())
-                {
-
-                    ntStatus = STATUS_ACCESS_DENIED;
-
-                    break;
-                }
-
                 ntStatus = AFSProcessIrpRequest( Irp);
 
                 break;
@@ -510,14 +642,6 @@ AFSProcessControlRequest( IN PIRP Irp)
 
             case IOCTL_AFS_PROCESS_IRP_RESULT:
             {
-
-                if ( !AFSIsService())
-                {
-
-                    ntStatus = STATUS_ACCESS_DENIED;
-
-                    break;
-                }
 
                 ntStatus = AFSProcessIrpResult( Irp);
 
@@ -528,14 +652,6 @@ AFSProcessControlRequest( IN PIRP Irp)
             {
 
                 AFSSysNameNotificationCB *pSysNameInfo = (AFSSysNameNotificationCB *)Irp->AssociatedIrp.SystemBuffer;
-
-                if ( !AFSIsService())
-                {
-
-                    ntStatus = STATUS_ACCESS_DENIED;
-
-                    break;
-                }
 
                 if( pSysNameInfo == NULL ||
                     pIrpSp->Parameters.DeviceIoControl.InputBufferLength < sizeof( AFSSysNameNotificationCB))
@@ -557,13 +673,6 @@ AFSProcessControlRequest( IN PIRP Irp)
 
                 AFSTraceConfigCB *pTraceInfo = (AFSTraceConfigCB *)Irp->AssociatedIrp.SystemBuffer;
 
-                if ( !AFSIsInGroup( SeExports->SeAliasAdminsSid))
-                {
-
-                    ntStatus = STATUS_ACCESS_DENIED;
-                    break;
-                }
-
                 if( pTraceInfo == NULL ||
                     pIrpSp->Parameters.DeviceIoControl.InputBufferLength < sizeof( AFSTraceConfigCB))
                 {
@@ -580,13 +689,6 @@ AFSProcessControlRequest( IN PIRP Irp)
 
             case IOCTL_AFS_GET_TRACE_BUFFER:
             {
-
-                if ( !AFSIsInGroup( SeExports->SeAliasAdminsSid))
-                {
-
-                    ntStatus = STATUS_ACCESS_DENIED;
-                    break;
-                }
 
                 if( pIrpSp->Parameters.DeviceIoControl.OutputBufferLength == 0)
                 {
@@ -605,13 +707,6 @@ AFSProcessControlRequest( IN PIRP Irp)
 
             case IOCTL_AFS_FORCE_CRASH:
             {
-
-                if ( !AFSIsInGroup( SeExports->SeAliasAdminsSid))
-                {
-
-                    ntStatus = STATUS_ACCESS_DENIED;
-                    break;
-                }
 
 #if DBG
 
@@ -688,14 +783,6 @@ AFSProcessControlRequest( IN PIRP Irp)
 
             case IOCTL_AFS_SHUTDOWN:
             {
-
-                if ( !AFSIsService())
-                {
-
-                    ntStatus = STATUS_ACCESS_DENIED;
-
-                    break;
-                }
 
                 ntStatus = AFSShutdownRedirector();
 
@@ -851,8 +938,6 @@ AFSProcessControlRequest( IN PIRP Irp)
             }
         }
 
-//try_exit:
-
     }
     __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
     {
@@ -861,6 +946,8 @@ AFSProcessControlRequest( IN PIRP Irp)
 
         AFSDumpTraceFilesFnc();
     }
+
+try_exit:
 
     if( bCompleteRequest)
     {
