@@ -74,6 +74,14 @@ AFSDevControl( IN PDEVICE_OBJECT LibDeviceObject,
 
                 AFSLibraryInitCB *pLibInitCB = (AFSLibraryInitCB *)Irp->AssociatedIrp.SystemBuffer;
 
+                if ( Irp->RequestorMode != KernelMode)
+                {
+
+                    ntStatus = STATUS_ACCESS_DENIED;
+
+                    break;
+                }
+
                 if( pIrpSp->Parameters.DeviceIoControl.InputBufferLength < sizeof( AFSLibraryInitCB))
                 {
 
@@ -417,6 +425,11 @@ AFSDevControl( IN PDEVICE_OBJECT LibDeviceObject,
 
          default:
             {
+                //
+                // Note that this code path is never executed - default behavior is caught in the
+                // security checks in lib.  New Ioctl functions therefore have to be added here and
+                // in ..\fs\AFSCommSupport.cpp
+                //
 
                 ntStatus = STATUS_NOT_IMPLEMENTED;
 
