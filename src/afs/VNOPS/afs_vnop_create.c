@@ -521,12 +521,24 @@ afs_LocalHero(struct vcache *avc, struct dcache *adc,
 
     AFS_STATCNT(afs_LocalHero);
     hset64(avers, astat->dataVersionHigh, astat->DataVersion);
-    /* this *is* the version number, no matter what */
+    /* avers *is* the version number now, no matter what */
+
     if (adc) {
+	/* does what's in the dcache *now* match what's in the vcache *now*,
+	 * and do we have a valid callback? if not, our local copy is not "ok" */
 	ok = (hsame(avc->f.m.DataVersion, adc->f.versionNo) && avc->callback
 	      && (avc->f.states & CStatd) && avc->cbExpires >= osi_Time());
     } else {
 	ok = 0;
+    }
+    if (ok) {
+	/* check that the DV on the server is what we expect it to be */
+	afs_hyper_t newDV;
+	hset(newDV, adc->f.versionNo);
+	hadd32(newDV, aincr);
+	if (!hsame(avers, newDV)) {
+	    ok = 0;
+	}
     }
 #if defined(AFS_SGI_ENV)
     osi_Assert(avc->v.v_type == VDIR);
