@@ -1,6 +1,7 @@
 openafs (1.6.2~pre2-1) UNRELEASED; urgency=low
 
   * New upstream prerelease.
+    - Support Linux kernels up to 3.7.  (Closes: #685973)
     - Fix fileservers to properly report >2 TiB partitions.
     - Fix stale volume info from vos examine on non-DAFS filservers.
     - Fix possible volume corruption with vos convertROtoRW.
@@ -14,7 +15,6 @@ openafs (1.6.2~pre2-1) UNRELEASED; urgency=low
     - Fix client page cache corruption on Linux.  When multiple clients
       read and write to a file, the reading client may see first couple
       bytes of a file as nulls.
-    - Support Linux kernels up to 3.7.
     - Support newer glibc versions.
   * Switch to xz compression for the upstream tarball, Debian tarball, and
     binary packages.
