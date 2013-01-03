@@ -189,7 +189,7 @@ extern long buf_CleanAndReset(void);
 
 extern void buf_ReserveBuffers(afs_uint64);
 
-extern int buf_TryReserveBuffers(afs_uint64);
+extern afs_uint64 buf_TryReserveBuffers(afs_uint64);
 
 extern void buf_UnreserveBuffers(afs_uint64);
 

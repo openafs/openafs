@@ -16,11 +16,14 @@ typedef struct cm_bulkIO {
     struct cm_user *userp;              /* the user of the request */
     struct cm_req *reqp;                /* the request ptr */
     osi_hyper_t offset;		        /* offset of buffers */
-    long length;			/* # of bytes to be transferred */
-    int reserved;			/* did we reserve multiple buffers? */
+    afs_uint32 length;			/* # of bytes to be transferred */
+    afs_uint64 reserved;		/* # of reserved buffers? */
 
-    /* all of these buffers are held */
-    osi_queueData_t *bufListp;	/* list of buffers involved in I/O */
+    /*
+     * all of these buffers are held.
+     * the lowest offset buffer is at the end of the list.
+     */
+    osi_queueData_t *bufListp;	        /* list of buffers involved in I/O */
     osi_queueData_t *bufListEndp;	/* list of buffers involved in I/O */
 } cm_bulkIO_t;
 

@@ -1026,7 +1026,8 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
 
     /* reserve a chunk's worth of buffers */
     lock_ReleaseWrite(&scp->rw);
-    buf_ReserveBuffers(cm_chunkSize / cm_data.buf_blockSize);
+    biop->reserved = (cm_chunkSize / cm_data.buf_blockSize);
+    buf_ReserveBuffers(biop->reserved);
     lock_ObtainWrite(&scp->rw);
 
     bufp = NULL;
@@ -1073,8 +1074,6 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
 	    bufp = NULL;
         }
     }
-
-    biop->reserved = 1;
 
     /* if we get here, if bufp is null, we didn't find any dirty buffers
      * that weren't already being stored back, so we just quit now.
@@ -1485,7 +1484,7 @@ void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore, long code, int scp_locked)
 
     /* Give back reserved buffers */
     if (biop->reserved)
-        buf_UnreserveBuffers(cm_chunkSize / cm_data.buf_blockSize);
+        buf_UnreserveBuffers(biop->reserved);
 
     if (isStore)
         flags = CM_SCACHESYNC_STOREDATA;
