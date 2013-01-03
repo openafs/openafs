@@ -16,6 +16,8 @@ openafs (1.6.2~pre2-1) UNRELEASED; urgency=low
       bytes of a file as nulls.
     - Support Linux kernels up to 3.7.
     - Support newer glibc versions.
+  * Remove debian/import-upstream and change README.source to document
+    using git-import-orig with --upstream-vcs-tag instead.
   
  -- Russ Allbery <rra@debian.org>  Wed, 02 Jan 2013 21:25:52 -0800
 

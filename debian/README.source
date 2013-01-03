@@ -44,7 +44,7 @@ Importing a New Upstream Release
 
     3. Run debian/rules get-orig-source.  This will generate a tarball
        from the upstream Git tag using git archive, remove the WINNT
-       directory, and create a file named openafs_<version>.orig.tar.gz in
+       directory, and create a file named openafs_<version>.orig.tar.xz in
        the current directory.
 
     4. Ensure that you have the OpenAFS upstream Git repository available
@@ -69,30 +69,12 @@ Importing a New Upstream Release
 
     6. Import the upstream source from the tarball with:
 
-           debian/import-upstream <tarball> <upstream-tag> <local-tag>
+           git-import-orig --upstream-vcs-tag <tag> <tarball>
 
-       where <tarball> is the tarball created by get-orig-source above,
-       <upstream-tag> is the corresponding tag from the upstream Git
-       repository, and <local-tag> is of the form upstream/<version> where
-       <version> is the non-Debian portion of the package version number.
-       (In other words, including any tildes, but not the dash and the
-       Debian revision.)  Replace any tildes in the version with periods
-       when forming the local tag (due to Git limitations).
+       where <tarball> is the tarball created by get-orig-source above and
+       <tag> is the corresponding tag from the upstream Git repository.
 
-    7. Commit the tarball to the repository with pristine-tar, using the
-       new local tag as the reference:
-
-           pristine-tar commit <tarball> <local-tag>
-
-    8. Merge the new upstream source into the master branch:
-
-           git checkout master
-           git merge <local-tag>
-
-       where <local-tag> is the tag you used above.  You can also just
-       merge with the upstream branch; either is equivalent.
-
-    9. Flesh out the changelog entry for the new version with a summary of
+    7. Flesh out the changelog entry for the new version with a summary of
        what changed in that release, and continue as normal with Debian
        packaging.
 
@@ -133,4 +115,4 @@ Pulling Upstream Changes
        edited as necessary to keep the length of the changelog lines
        down.
 
- -- Russ Allbery <rra@debian.org>, Mon, 18 Jul 2011 16:52:14 -0700
+ -- Russ Allbery <rra@debian.org>, Wed,  2 Jan 2013 21:38:50 -0800
