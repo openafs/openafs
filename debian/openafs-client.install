@@ -41,6 +41,7 @@ debian/tmp/usr/share/man/man1/afsmonitor.1            usr/share/man/man1
 debian/tmp/usr/share/man/man1/cmdebug.1               usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs.1                    usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_apropos.1            usr/share/man/man1
+debian/tmp/usr/share/man/man1/fs_bypassthreshold.1    usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_checkservers.1       usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_checkvolumes.1       usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_cleanacl.1           usr/share/man/man1
