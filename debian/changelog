@@ -1,3 +1,24 @@
+openafs (1.6.2~pre2-1) UNRELEASED; urgency=low
+
+  * New upstream prerelease.
+    - Fix fileservers to properly report >2 TiB partitions.
+    - Fix stale volume info from vos examine on non-DAFS filservers.
+    - Fix possible volume corruption with vos convertROtoRW.
+    - Fix bosserver to preserve all command-line options over restart.
+    - Fix bosserver to properly kill hung processes during shutdown.
+    - Fixes for memcache, especially on Solaris.
+    - Increase the size of the DNS resolver answer buffer to allow sites
+      with a long response list to use SRV and AFSDB records.
+    - Fix possible abuse of fs mkmount.  In previous versions, users could
+      crash a client by nesting volume mounts.
+    - Fix client page cache corruption on Linux.  When multiple clients
+      read and write to a file, the reading client may see first couple
+      bytes of a file as nulls.
+    - Support Linux kernels up to 3.7.
+    - Support newer glibc versions.
+  
+ -- Russ Allbery <rra@debian.org>  Wed, 02 Jan 2013 21:25:52 -0800
+
 openafs (1.6.1-2) unstable; urgency=low
 
   * Translation updates:
