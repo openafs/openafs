@@ -16,6 +16,8 @@ openafs (1.6.2~pre2-1) UNRELEASED; urgency=low
       read and write to a file, the reading client may see first couple
       bytes of a file as nulls.
     - Support newer glibc versions.
+  * Build-Depend on hardening-wrapper and enable it to work around the
+    current upstream munging of CFLAGS and LDFLAGS.  (Closes: #659663)
   * Fix server installation instructions in README.servers, which used the
     early demand-attach syntax before separate demand-attach binaries were
     built.  Thanks, Björn Torkelsson.  (Closes: #693311)

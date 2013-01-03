@@ -5,8 +5,8 @@ Maintainer: Russ Allbery <rra@debian.org>
 Uploaders: Sam Hartman <hartmans@debian.org>
 Build-Depends: debhelper (>= 9), autoconf, automake, bison, comerr-dev,
  cpio, dblatex, dkms (>= 2.1.1.1), docbook-xsl, doxygen, flex,
- libfuse-dev, libkrb5-dev, libncurses5-dev, libpam0g-dev, libxml2-utils,
- perl, pkg-config, xsltproc
+ hardening-wrapper, libfuse-dev, libkrb5-dev, libncurses5-dev,
+ libpam0g-dev, libxml2-utils, perl, pkg-config, xsltproc
 Standards-Version: 3.9.4
 Homepage: http://www.openafs.org/
 Vcs-Git: git://anonscm.debian.org/pkg-k5-afs/openafs.git
