@@ -222,7 +222,7 @@ openOutFile(struct volumeHeader *headerPtr)
     if (ask) {
 	first = 1;
 	skip = 0;
-	printf("Press return to retreive volume %s (%u) to file %s; " "s"
+	printf("Press return to retrieve volume %s (%u) to file %s; " "s"
 	       " to skip\n", headerPtr->volumeName, headerPtr->volumeID,
 	       filename);
 	do {
