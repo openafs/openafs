@@ -1877,20 +1877,21 @@ void buf_ReserveBuffers(afs_uint64 nbuffers)
     lock_ReleaseWrite(&buf_globalLock);
 }
 
-int buf_TryReserveBuffers(afs_uint64 nbuffers)
+afs_uint64
+buf_TryReserveBuffers(afs_uint64 nbuffers)
 {
-    int code;
+    afs_uint64 reserved;
 
     lock_ObtainWrite(&buf_globalLock);
     if (cm_data.buf_reservedBufs + nbuffers > cm_data.buf_maxReservedBufs) {
-        code = 0;
+        reserved = 0;
     }
     else {
         cm_data.buf_reservedBufs += nbuffers;
-        code = 1;
+        reserved = nbuffers;
     }
     lock_ReleaseWrite(&buf_globalLock);
-    return code;
+    return reserved;
 }
 
 /* called without global lock held, releases reservation held by
