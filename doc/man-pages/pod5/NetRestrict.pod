@@ -11,6 +11,13 @@ File Servers it connects to.  The server F<NetRestrict> file specifies
 what interfaces should not be registered with AFS Database Servers or used
 to talk to other database servers.
 
+=head2 FORMAT
+
+The F<NetRestrict> file is in ASCII format. One IP address appears on each
+line, in dotted decimal format. The order of the addresses is not
+significant. There is currently no mechanism to specify a range of
+addresses or a wildcard; each IP address must be listed individually.
+
 =head2 Client NetRestrict
 
 The F<NetRestrict> file, if present in a client machine's F</usr/vice/etc>
@@ -28,10 +35,7 @@ list in kernel memory.
 
 The F<NetRestrict> file is in ASCII format. One IP address appears on each
 line, in dotted decimal format. The order of the addresses is not
-significant. The value C<255> is a wildcard that represents all possible
-addresses in that field. For example, the value C<192.12.105.255>
-indicates that the Cache Manager does not register any of the addresses in
-the C<192.12.105> subnet.
+significant.
 
 To display the addresses the Cache Manager is currently registering with
 File Servers, use the B<fs getclientaddrs> command.
@@ -66,10 +70,6 @@ list in the F</usr/afs/local/sysid> file and registers the interfaces in
 the VLDB. The database server processes use a similar procedure when
 initializing, to determine which interfaces to use for communication with
 the peer processes on other database machines in the cell.
-
-The F<NetRestrict> file is in ASCII format. One IP address appears on each
-line, in dotted decimal format. The order of the addresses is not
-significant. 
 
 To display the File Server interface addresses registered in the VLDB, use
 the B<vos listaddrs> command.

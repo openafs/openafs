@@ -87,6 +87,14 @@ struct er {
 } *record;
 afs_int32 maxentries;
 int serveraddrs[MAXSERVERID + 2];
+u_char serverxref[MAXSERVERID + 2];  /**< to resolve cross-linked mh entries */
+int serverref[MAXSERVERID + 2];      /**< which addrs are referenced by vl entries */
+
+struct mhinfo {
+    afs_uint32 addr;			/**< vldb file record */
+    char orphan[VL_MHSRV_PERBLK];	/**< unreferenced mh enties */
+} mhinfo[VL_MAX_ADDREXTBLKS];
+
 
 /*  Used to control what goes to stdout based on quiet flag */
 void
@@ -277,7 +285,7 @@ readheader(struct vlheader *headerp)
 	    ntohl(headerp->vital_header.totalEntries[1]);
 
     headerp->SIT = ntohl(headerp->SIT);
-    for (i = 0; i < MAXSERVERID; i++)
+    for (i = 0; i <= MAXSERVERID; i++)
 	headerp->IpMappedAddr[i] = ntohl(headerp->IpMappedAddr[i]);
     for (i = 0; i < HASHSIZE; i++)
 	headerp->VolnameHash[i] = ntohl(headerp->VolnameHash[i]);
@@ -341,7 +349,7 @@ writeheader(struct vlheader *headerp)
 	    htonl(headerp->vital_header.totalEntries[1]);
 
     headerp->SIT = htonl(headerp->SIT);
-    for (i = 0; i < MAXSERVERID; i++)
+    for (i = 0; i <= MAXSERVERID; i++)
 	headerp->IpMappedAddr[i] = htonl(headerp->IpMappedAddr[i]);
     for (i = 0; i < HASHSIZE; i++)
 	headerp->VolnameHash[i] = htonl(headerp->VolnameHash[i]);
@@ -353,18 +361,20 @@ writeheader(struct vlheader *headerp)
 }
 
 void
-readMH(afs_int32 addr, struct extentaddr *mhblockP)
+readMH(afs_uint32 addr, int block, struct extentaddr *mhblockP)
 {
     int i, j;
     struct extentaddr *e;
 
     vldbread(addr, (char *)mhblockP, VL_ADDREXTBLK_SIZE);
 
-    mhblockP->ex_count = ntohl(mhblockP->ex_count);
-    mhblockP->ex_flags = ntohl(mhblockP->ex_flags);
-    for (i = 0; i < VL_MAX_ADDREXTBLKS; i++)
-	mhblockP->ex_contaddrs[i] = ntohl(mhblockP->ex_contaddrs[i]);
-
+    if (block == 0) {
+        mhblockP->ex_count = ntohl(mhblockP->ex_count);
+        mhblockP->ex_flags = ntohl(mhblockP->ex_flags);
+        for (i = 0; i < VL_MAX_ADDREXTBLKS; i++) {
+	    mhblockP->ex_contaddrs[i] = ntohl(mhblockP->ex_contaddrs[i]);
+        }
+    }
     for (i = 1; i < VL_MHSRV_PERBLK; i++) {
 	e = &(mhblockP[i]);
 
@@ -466,6 +476,33 @@ readentry(afs_int32 addr, struct nvlentry *vlentryp, afs_int32 *type)
 	}
     }
     return;
+}
+
+void
+writeMH(afs_int32 addr, int block, struct extentaddr *mhblockP)
+{
+    int i, j;
+    struct extentaddr *e;
+
+    if (verbose) {
+	quiet_println("Writing back MH block % at addr %u\n", block,  addr);
+    }
+    if (block == 0) {
+	mhblockP->ex_count = htonl(mhblockP->ex_count);
+	mhblockP->ex_flags = htonl(mhblockP->ex_flags);
+	for (i = 0; i < VL_MAX_ADDREXTBLKS; i++) {
+	    mhblockP->ex_contaddrs[i] = htonl(mhblockP->ex_contaddrs[i]);
+	}
+    }
+    for (i = 1; i < VL_MHSRV_PERBLK; i++) {
+	e = &(mhblockP[i]);
+	/* hostuuid was not converted */
+	e->ex_uniquifier = htonl(e->ex_uniquifier);
+	for (j = 0; j < VL_MAXIPADDRS_PERMH; j++) {
+	    e->ex_addrs[j] = htonl(e->ex_addrs[j]);
+	}
+    }
+    vldbwrite(addr, (char *)mhblockP, VL_ADDREXTBLK_SIZE);
 }
 
 void
@@ -890,7 +927,6 @@ CheckIpAddrs(struct vlheader *header)
     int mhblocks = 0;
     afs_int32 i, j, m, rindex;
     afs_int32 mhentries, regentries;
-    afs_uint32 caddrs[VL_MAX_ADDREXTBLKS];
     char mhblock[VL_ADDREXTBLK_SIZE];
     struct extentaddr *MHblock = (struct extentaddr *)mhblock;
     struct extentaddr *e;
@@ -906,7 +942,7 @@ CheckIpAddrs(struct vlheader *header)
 	/* Read the first MH block and from it, gather the
 	 * addresses of all the mh blocks.
 	 */
-	readMH(header->SIT, MHblock);
+	readMH(header->SIT, 0, MHblock);
 	if (MHblock->ex_flags != VLCONTBLOCK) {
 	   log_error
 		(VLDB_CHECK_ERROR,"Multihomed Block 0: Bad entry at %u: Not a valid multihomed block\n",
@@ -914,32 +950,32 @@ CheckIpAddrs(struct vlheader *header)
 	}
 
 	for (i = 0; i < VL_MAX_ADDREXTBLKS; i++) {
-	    caddrs[i] = MHblock->ex_contaddrs[i];
+	    mhinfo[i].addr = MHblock->ex_contaddrs[i];
 	}
 
-	if (header->SIT != caddrs[0]) {
+	if (header->SIT != mhinfo[0].addr) {
 	   log_error
 		(VLDB_CHECK_ERROR,"MH block does not point to self %u in header, %u in block\n",
-		 header->SIT, caddrs[0]);
+		 header->SIT, mhinfo[0].addr);
 	}
 
 	/* Now read each MH block and record it in the record array */
 	for (i = 0; i < VL_MAX_ADDREXTBLKS; i++) {
-	    if (!caddrs[i])
+	    if (!mhinfo[i].addr)
 		continue;
 
-	    readMH(caddrs[i], MHblock);
+	    readMH(mhinfo[i].addr, i, MHblock);
 	    if (MHblock->ex_flags != VLCONTBLOCK) {
 	        log_error
 		    (VLDB_CHECK_ERROR,"Multihomed Block 0: Bad entry at %u: Not a valid multihomed block\n",
 		     header->SIT);
 	    }
 
-	    rindex = caddrs[i] / sizeof(vlentry);
-	    if (record[rindex].addr != caddrs[i] && record[rindex].addr) {
+	    rindex = mhinfo[i].addr / sizeof(vlentry);
+	    if (record[rindex].addr != mhinfo[i].addr && record[rindex].addr) {
 	        log_error
 		    (VLDB_CHECK_ERROR,"INTERNAL VLDB_CHECK_ERROR: addresses %u and %u use same record slot %d\n",
-		     record[rindex].addr, caddrs[i], rindex);
+		     record[rindex].addr, mhinfo[i].addr, rindex);
 	    }
 	    if (record[rindex].type & FRC) {
 	        log_error
@@ -957,23 +993,24 @@ CheckIpAddrs(struct vlheader *header)
 	     */
 	    mhentries = 0;
 	    for (j = 1; j < VL_MHSRV_PERBLK; j++) {
+		int first_ipindex = -1;
 		e = (struct extentaddr *)&(MHblock[j]);
 
-		/* Search the IpMappedAddr array for the reference to this entry */
-		for (ipindex = 0; ipindex < MAXSERVERID; ipindex++) {
-		    if (((header->IpMappedAddr[ipindex] & 0xff000000) ==
-			 0xff000000)
-			&&
-			(((header->
-			   IpMappedAddr[ipindex] & 0x00ff0000) >> 16) == i)
-			&& ((header->IpMappedAddr[ipindex] & 0x0000ffff) ==
-			    j)) {
-			break;
+		/* Search the IpMappedAddr array for all the references to this entry. */
+		/* Use the first reference for checking the ip addresses of this entry. */
+		for (ipindex = 0; ipindex <= MAXSERVERID; ipindex++) {
+		    if (((header->IpMappedAddr[ipindex] & 0xff000000) == 0xff000000)
+			&& (((header-> IpMappedAddr[ipindex] & 0x00ff0000) >> 16) == i)
+			&& ((header->IpMappedAddr[ipindex] & 0x0000ffff) == j)) {
+			if (first_ipindex == -1) {
+			    first_ipindex = ipindex;
+			} else {
+			    serverxref[ipindex] = first_ipindex;
+			}
 		    }
 		}
-		if (ipindex >= MAXSERVERID)
-		    ipindex = -1;
-		else
+		ipindex = first_ipindex;
+		if (ipindex != -1)
 		    serveraddrs[ipindex] = -1;
 
 		if (memcmp(&e->ex_hostuuid, &nulluuid, sizeof(afsUUID)) == 0) {
@@ -997,6 +1034,7 @@ CheckIpAddrs(struct vlheader *header)
 		if (ipaddrs) {
 		    mhentries++;
 		    if (ipindex == -1) {
+		        mhinfo[i].orphan[j] = 1;
 		        log_error
 			    (VLDB_CHECK_ERROR,"MH block %d, index %d: Not referenced by server addrs\n",
 			     i, j);
@@ -1043,6 +1081,9 @@ CheckIpAddrs(struct vlheader *header)
 		   log_error
 			(VLDB_CHECK_ERROR,"IP Addr for entry %d: Multihome block is bad (%d)\n",
 			 i, ((header->IpMappedAddr[i] & 0x00ff0000) >> 16));
+		if (mhinfo[(header->IpMappedAddr[i] & 0x00ff0000) >> 16].addr == 0)
+		    log_error(VLDB_CHECK_ERROR,"IP Addr for entry %d: No such multihome block (%d)\n",
+			 i, ((header->IpMappedAddr[i] & 0x00ff0000) >> 16));
 		if (((header->IpMappedAddr[i] & 0x0000ffff) > VL_MHSRV_PERBLK)
 		    || ((header->IpMappedAddr[i] & 0x0000ffff) < 1))
 		    log_error
@@ -1053,6 +1094,17 @@ CheckIpAddrs(struct vlheader *header)
 			(VLDB_CHECK_WARNING,"warning: IP Addr for entry %d: Multihome entry has no ip addresses\n",
 			 i);
 		    serveraddrs[i] = 0;
+		}
+		if (serverxref[i] != BADSERVERID) {
+		    log_error
+			(VLDB_CHECK_WARNING,
+			"warning: MH block %d, index %d is cross-linked by server numbers %d and %d.\n",
+			(header->IpMappedAddr[i] & 0x00ff0000) >> 16,
+			(header->IpMappedAddr[i] & 0x0000ffff),
+			i, serverxref[i]);
+		    /* set addresses found/not found for this server number,
+		     * using the first index to the mh we found above. */
+		    serveraddrs[i] = serveraddrs[serverxref[i]];
 		}
 		if (listservers) {
 		    quiet_println("   Server ip addr %d = MH block %d, index %d\n",
@@ -1147,6 +1199,47 @@ reportHashChanges(struct vlheader *header, afs_uint32 oldnamehash[HASHSIZE], afs
     }
 }
 
+/**
+ * Remove unreferenced, duplicate multi-home address indices.
+ *
+ * Removes entries from IpMappedAddr which where found to be
+ * duplicates. Only entries which are not referenced by vl entries
+ * are removed on this pass.
+ *
+ * @param[inout] header the vldb header to be updated.
+ */
+void
+removeCrossLinkedAddresses(struct vlheader *header)
+{
+    int i;
+
+    for (i = 0; i <= MAXSERVERID; i++) {
+	if (serverref[i] == 0
+	    && (header->IpMappedAddr[i] & 0xff000000) == 0xff000000
+	    && serverxref[i] != BADSERVERID) {
+	    if (serverxref[i] == i) {
+		log_error(VLDB_CHECK_ERROR,
+			  "INTERNAL VLDB_CHECK_ERROR: serverxref points to self; index %d\n",
+			  i);
+	    } else if (header->IpMappedAddr[serverxref[i]] == 0) {
+		log_error(VLDB_CHECK_ERROR,
+			  "INTERNAL VLDB_CHECK_ERROR: serverxref points to empty addr; index %d, value %d\n",
+			  i, serverxref[i]);
+	    } else if (header->IpMappedAddr[serverxref[i]] != header->IpMappedAddr[i]) {
+		log_error(VLDB_CHECK_ERROR,
+			  "INTERNAL VLDB_CHECK_ERROR: invalid serverxref; index %d, value %d\n",
+			  i, serverxref[i]);
+	    } else {
+		quiet_println
+		    ("FIX: Removing unreferenced address index %d, which cross-links MH block %d, index %d\n",
+		     i, (header->IpMappedAddr[i] & 0x00ff0000) >> 16,
+		     (header->IpMappedAddr[i] & 0x0000ffff));
+		header->IpMappedAddr[i] = 0;
+	    }
+	}
+    }
+}
+
 int
 WorkerBee(struct cmd_syndesc *as, void *arock)
 {
@@ -1154,7 +1247,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     afs_int32 type;
     struct vlheader header;
     struct nvlentry vlentry, vlentry2;
-    int i, j;
+    int i, j, k;
     afs_uint32 oldnamehash[HASHSIZE];
     afs_uint32 oldidhash[MAXTYPES][HASHSIZE];
 
@@ -1195,6 +1288,11 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     record = (struct er *)malloc(maxentries * sizeof(struct er));
     memset(record, 0, (maxentries * sizeof(struct er)));
     memset(serveraddrs, 0, sizeof(serveraddrs));
+    memset(mhinfo, 0, sizeof(mhinfo));
+    memset(serverref, 0, sizeof(serverref));
+    for (i = 0; i <= MAXSERVERID; i++) {
+	serverxref[i] = BADSERVERID;
+    }
 
     /* Will fill in the record array of entries it found */
     ReadAllEntries(&header);
@@ -1337,11 +1435,17 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	    }
 
 	    for (j = 0; j < NMAXNSERVERS; j++) {
-		if ((vlentry.serverNumber[j] != 255)
-		    && (serveraddrs[vlentry.serverNumber[j]] == 0)) {
-		   log_error
-			(VLDB_CHECK_ERROR,"Volume '%s', index %d points to empty server entry %d\n",
-			 vlentry.name, j, vlentry.serverNumber[j]);
+		if (vlentry.serverNumber[j] != BADSERVERID) {
+		    serverref[vlentry.serverNumber[j]] = 1;
+		    if (serveraddrs[vlentry.serverNumber[j]] == 0) {
+			log_error
+			    (VLDB_CHECK_ERROR,"Volume '%s', index %d points to empty server entry %d\n",
+			     vlentry.name, j, vlentry.serverNumber[j]);
+		    } else if (serverxref[vlentry.serverNumber[j]] != BADSERVERID) {
+			    log_error
+			    (VLDB_CHECK_ERROR,"Volume '%s', index %d points to server entry %d, which is cross-linked by %d\n",
+			     vlentry.name, j, vlentry.serverNumber[j], serverxref[vlentry.serverNumber[j]]);
+		    }
 		}
 	    }
 
@@ -1462,15 +1566,70 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 			}
 		    }
 
+		    /* Consolidate server numbers which point to the same mh entry.
+		     * The serverref flags are not reset here, since we want to make
+		     * sure the data is actually written before the server number is
+		     * considered unreferenced. */
+		    for (k = 0; k < NMAXNSERVERS; k++) {
+			if (vlentry.serverNumber[k] != BADSERVERID
+			    && serverxref[vlentry.serverNumber[k]] != BADSERVERID) {
+			    u_char oldsn = vlentry.serverNumber[k];
+			    u_char newsn = serverxref[oldsn];
+			    if (newsn == oldsn) {
+				log_error(VLDB_CHECK_ERROR,
+					  "INTERNAL VLDB_CHECK_ERROR: serverxref points to self; index %d\n",
+					  oldsn);
+			    } else if (header.IpMappedAddr[oldsn] == 0) {
+				log_error(VLDB_CHECK_ERROR,
+					  "INTERNAL VLDB_CHECK_ERROR: serverxref; points to empty address; index %d, value %d\n",
+					  oldsn, newsn);
+			    } else if (header.IpMappedAddr[newsn] != header.IpMappedAddr[oldsn]) {
+				log_error(VLDB_CHECK_ERROR,
+					  "INTERNAL VLDB_CHECK_ERROR: invalid serverxref; index %d\n",
+					  oldsn);
+			    } else {
+				quiet_println
+				    ("FIX: Volume '%s', index %d, server number was %d, is now %d\n",
+				     vlentry.name, k, oldsn, newsn);
+				vlentry.serverNumber[k] = newsn;
+			    }
+			}
+		    }
+
 		    vlentry.nextIdHash[j] = header.VolidHash[j][hash];
 		    header.VolidHash[j][hash] = record[i].addr;
 		}
 		writeentry(record[i].addr, &vlentry);
 	    }
 	}
+	else if (record[i].type & MH) {
+	    int block, index;
+	    char mhblock[VL_ADDREXTBLK_SIZE];
+	    struct extentaddr *MHblock = (struct extentaddr *)mhblock;
+
+	    if (fix) {
+		for (block = 0; block < VL_MAX_ADDREXTBLKS; block++) {
+		    if (mhinfo[block].addr == record[i].addr)
+			break;
+		}
+		if (block == VL_MAX_ADDREXTBLKS) {
+		    continue;  /* skip orphaned extent block */
+		}
+		readMH(record[i].addr, block, MHblock);
+		for (index = 0; index < VL_MHSRV_PERBLK; index++) {
+		    if (mhinfo[block].orphan[index]) {
+			quiet_println("FIX: Removing unreferenced mh entry; block %d, index %d\n",
+				block, index);
+			memset(&(MHblock[index]), 0, sizeof(struct extentaddr));
+		    }
+		}
+		writeMH(record[i].addr, block, MHblock);
+	    }
+	}
     }
     if (fix) {
 	reportHashChanges(&header, oldnamehash, oldidhash);
+	removeCrossLinkedAddresses(&header);
 	writeheader(&header);
     }
 

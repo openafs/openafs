@@ -10,19 +10,24 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
+#if defined(HAVE_LINUX_KTHREAD_RUN) && !defined(UKERNEL)
+#  include "h/kthread.h"
+#endif
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"
 #include "rx/rx_globals.h"
-#if !defined(UKERNEL) && !defined(AFS_LINUX20_ENV)
-#include "net/if.h"
-#ifdef AFS_SGI62_ENV
-#include "h/hashing.h"
-#endif
-#if !defined(AFS_HPUX110_ENV) && !defined(AFS_DARWIN_ENV)
-#include "netinet/in_var.h"
-#endif
+#if !defined(UKERNEL)
+# if !defined(AFS_LINUX20_ENV)
+#  include "net/if.h"
+#  ifdef AFS_SGI62_ENV
+#   include "h/hashing.h"
+#  endif
+#  if !defined(AFS_HPUX110_ENV) && !defined(AFS_DARWIN_ENV)
+#   include "netinet/in_var.h"
+#  endif
+# endif
 #endif /* !defined(UKERNEL) */
 #ifdef AFS_SUN510_ENV
 #include "h/ksynch.h"
@@ -66,7 +71,9 @@ static int AFS_Running = 0;
 static int afs_CacheInit_Done = 0;
 static int afs_Go_Done = 0;
 extern struct interfaceAddr afs_cb_interface;
+#ifdef RXK_LISTENER_ENV
 static int afs_RX_Running = 0;
+#endif
 static int afs_InitSetup_done = 0;
 afs_int32 afs_numcachefiles = -1;
 afs_int32 afs_numfilesperdir = -1;
@@ -291,11 +298,13 @@ afsd_thread(void *rock)
 # ifdef SYS_SETPRIORITY_EXPORTED
     int (*sys_setpriority) (int, int, int) = sys_call_table[__NR_setpriority];
 # endif
-# if defined(AFS_LINUX26_ENV)
+# if !defined(HAVE_LINUX_KTHREAD_RUN)
+#  if defined(AFS_LINUX26_ENV)
     daemonize("afsd");
-# else
+#  else
     daemonize();
-# endif
+#  endif
+# endif /* !HAVE_LINUX_KTHREAD_RUN */
 				/* doesn't do much, since we were forked from keventd, but
 				 * does call mm_release, which wakes up our parent (since it
 				 * used CLONE_VFORK) */
@@ -428,8 +437,14 @@ afsd_launcher(void *rock)
     struct afsd_thread_info *rock = container_of(work, struct afsd_thread_info, tq);
 # endif
 
+# if defined(HAVE_LINUX_KTHREAD_RUN)
+    if (IS_ERR(kthread_run(afsd_thread, (void *)rock, "afsd"))) {
+	afs_warn("kthread_run failed; afs startup will not complete\n");
+    }
+# else /* !HAVE_LINUX_KTHREAD_RUN */
     if (!kernel_thread(afsd_thread, (void *)rock, CLONE_VFORK | SIGCHLD))
 	afs_warn("kernel_thread failed. afs startup will not complete\n");
+# endif /* !HAVE_LINUX_KTHREAD_RUN */
 }
 
 void
@@ -662,7 +677,9 @@ afs_syscall_call(long parm, long parm2, long parm3,
 		   sizeof(struct afs_uspc_param), code);
 	namebufsz = mvParam->bufSz;
 	param1 = afs_osi_Alloc(namebufsz);
+	osi_Assert(param1 != NULL);
 	param2 = afs_osi_Alloc(namebufsz);
+	osi_Assert(param2 != NULL);
 
 	while (afs_initState < AFSOP_START_BKG)
 	    afs_osi_Sleep(&afs_initState);
@@ -867,6 +884,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	 * home cell flag (0x1 bit) and the nosuid flag (0x2 bit) */
 	struct afsop_cell *tcell = afs_osi_Alloc(sizeof(struct afsop_cell));
 
+	osi_Assert(tcell != NULL);
 	code = afs_InitDynroot();
 	if (!code) {
 	    AFS_COPYIN(AFSKPTR(parm2), (caddr_t)tcell->hosts, sizeof(tcell->hosts),
@@ -889,6 +907,9 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	char *tbuffer1 = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
 	int cflags = parm4;
 
+	osi_Assert(tcell != NULL);
+	osi_Assert(tbuffer != NULL);
+	osi_Assert(tbuffer1 != NULL);
 	code = afs_InitDynroot();
 	if (!code) {
 #if 0
@@ -1093,6 +1114,9 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	    afs_osi_Alloc(sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
 	int i;
 
+	osi_Assert(buffer != NULL);
+	osi_Assert(maskbuffer != NULL);
+	osi_Assert(mtubuffer != NULL);
 	/* This is a refresh */
 	if (count & 0x40000000) {
 	    count &= ~0x40000000;
@@ -1158,7 +1182,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 
 	if (refresh) {
 	    afs_CheckServers(1, NULL);     /* check down servers */
-	    afs_CheckServers(0, NULL);     /* check down servers */
+	    afs_CheckServers(0, NULL);     /* check up servers */
 	}
     }
 #ifdef	AFS_SGI53_ENV
@@ -1271,6 +1295,8 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	afs_int32 *kmsg = afs_osi_Alloc(kmsgLen);
 	char *cellname = afs_osi_Alloc(cellLen);
 
+	osi_Assert(kmsg != NULL);
+	osi_Assert(cellname != NULL);
 #ifndef UKERNEL
 	afs_osi_MaskUserLoop();
 #endif
@@ -1373,6 +1399,15 @@ afs_shutdown(void)
     afs_FlushAllVCaches();
 #endif
 
+    afs_termState = AFSOP_STOP_BKG;
+
+    afs_warn("BkG... ");
+    /* Wake-up afs_brsDaemons so that we don't have to wait for a bkg job! */
+    while (afs_termState == AFSOP_STOP_BKG) {
+	afs_osi_Wakeup(&afs_brsDaemons);
+	afs_osi_Sleep(&afs_termState);
+    }
+
     afs_warn("CB... ");
 
     afs_termState = AFSOP_STOP_RXCALLBACK;
@@ -1394,12 +1429,6 @@ afs_shutdown(void)
 	    afs_osi_CancelWait(&AFS_CSWaitHandler);
 	    afs_osi_Sleep(&afs_termState);
 	}
-    }
-    afs_warn("BkG... ");
-    /* Wake-up afs_brsDaemons so that we don't have to wait for a bkg job! */
-    while (afs_termState == AFSOP_STOP_BKG) {
-	afs_osi_Wakeup(&afs_brsDaemons);
-	afs_osi_Sleep(&afs_termState);
     }
     afs_warn("CTrunc... ");
     /* Cancel cache truncate daemon. */

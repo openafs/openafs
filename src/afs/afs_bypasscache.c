@@ -270,48 +270,11 @@ done:
 #ifdef UKERNEL
 typedef void * bypass_page_t;
 
-#define copy_page(pp, pageoff, rxiov, iovno, iovoff, auio, curiov)	\
-    do { \
-	int dolen = auio->uio_iov[curiov].iov_len - pageoff; \
-	memcpy(((char *)pp) + pageoff,		       \
-	       ((char *)rxiov[iovno].iov_base) + iovoff, dolen);	\
-	auio->uio_resid -= dolen; \
-    } while(0)
-
-#define copy_pages(pp, pageoff, rxiov, iovno, iovoff, auio, curiov)	\
-    do { \
-	int dolen = rxiov[iovno].iov_len - iovoff; \
-	memcpy(((char *)pp) + pageoff,				\
-	       ((char *)rxiov[iovno].iov_base) + iovoff, dolen);	\
-	auio->uio_resid -= dolen;	\
-    } while(0)
-
 #define unlock_and_release_pages(auio)
 #define release_full_page(pp, pageoff)
 
 #else
 typedef struct page * bypass_page_t;
-
-#define copy_page(pp, pageoff, rxiov, iovno, iovoff, auio, curiov)	\
-    do { \
-        char *address;						\
-	int dolen = auio->uio_iov[curiov].iov_len - pageoff; \
-	address = kmap_atomic(pp, KM_USER0); \
-	memcpy(address + pageoff, \
-	       (char *)(rxiov[iovno].iov_base) + iovoff, dolen);	\
-	kunmap_atomic(address, KM_USER0); \
-    } while(0)
-
-#define copy_pages(pp, pageoff, rxiov, iovno, iovoff, auio, curiov)	\
-    do { \
-        char *address; \
-	int dolen = rxiov[iovno].iov_len - iovoff; \
-	address = kmap_atomic(pp, KM_USER0); \
-	memcpy(address + pageoff, \
-	       (char *)(rxiov[iovno].iov_base) + iovoff, dolen);	\
-	kunmap_atomic(address, KM_USER0); \
-    } while(0)
-
 
 #define unlock_and_release_pages(auio) \
     do { \
@@ -347,8 +310,38 @@ typedef struct page * bypass_page_t;
 	    afs_warn("afs_NoCacheFetchProc: page not locked!\n"); \
 	put_page(pp); /* decrement refcount */ \
     } while(0)
-
 #endif
+
+static void
+afs_bypass_copy_page(bypass_page_t pp, int pageoff, struct iovec *rxiov,
+	int iovno, int iovoff, struct uio *auio, int curiov, int partial)
+{
+    char *address;
+    int dolen;
+
+    if (partial)
+	dolen = auio->uio_iov[curiov].iov_len - pageoff;
+    else
+	dolen = rxiov[iovno].iov_len - iovoff;
+
+#if !defined(UKERNEL)
+# if defined(KMAP_ATOMIC_TAKES_NO_KM_TYPE)
+    address = kmap_atomic(pp);
+# else
+    address = kmap_atomic(pp, KM_USER0);
+# endif
+#else
+    address = pp;
+#endif
+    memcpy(address + pageoff, (char *)(rxiov[iovno].iov_base) + iovoff, dolen);
+#if !defined(UKERNEL)
+# if defined(KMAP_ATOMIC_TAKES_NO_KM_TYPE)
+    kunmap_atomic(address);
+# else
+    kunmap_atomic(address, KM_USER0);
+# endif
+#endif
+}
 
 /* no-cache prefetch routine */
 static afs_int32
@@ -447,7 +440,7 @@ afs_NoCacheFetchProc(struct rx_call *acall,
 		if (pageoff + (rxiov[iovno].iov_len - iovoff) <= auio->uio_iov[curpage].iov_len) {
 		    /* Copy entire (or rest of) current iovec into current page */
 		    if (pp)
-			copy_pages(pp, pageoff, rxiov, iovno, iovoff, auio, curpage);
+			afs_bypass_copy_page(pp, pageoff, rxiov, iovno, iovoff, auio, curpage, 0);
 		    length -= (rxiov[iovno].iov_len - iovoff);
 		    pageoff += rxiov[iovno].iov_len - iovoff;
 		    iovno++;
@@ -455,7 +448,7 @@ afs_NoCacheFetchProc(struct rx_call *acall,
 		} else {
 		    /* Copy only what's needed to fill current page */
 		    if (pp)
-			copy_page(pp, pageoff, rxiov, iovno, iovoff, auio, curpage);
+			afs_bypass_copy_page(pp, pageoff, rxiov, iovno, iovoff, auio, curpage, 1);
 		    length -= (auio->uio_iov[curpage].iov_len - pageoff);
 		    iovoff += auio->uio_iov[curpage].iov_len - pageoff;
 		    pageoff = auio->uio_iov[curpage].iov_len;
@@ -568,7 +561,6 @@ afs_PrefetchNoCache(struct vcache *avc,
 #endif
 
     struct afs_conn *tc;
-    afs_int32 i;
     struct rx_call *tcall;
     struct tlocal1 {
 	struct AFSVolSync tsync;
@@ -588,7 +580,6 @@ afs_PrefetchNoCache(struct vcache *avc,
       tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK /* ignored */, &rxconn);
 	if (tc) {
 	    avc->callback = tc->srvr->server;
-	    i = osi_Time();
 	    tcall = rx_NewCall(rxconn);
 #ifdef AFS_64BIT_CLIENT
 	    if (!afs_serverHasNo64Bit(tc)) {

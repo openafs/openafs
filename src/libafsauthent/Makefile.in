@@ -25,6 +25,8 @@ UBIK = ../ubik
 UTIL = ../util
 RXKAD = ../rxkad
 PTSERVER = ../ptserver
+VOLSER = ../volser
+VLSERVER = ../vlserver
 SYS = ../sys
 
 AUDITOBJS = audit.o audit-file.o audit-sysvmq.o
@@ -89,6 +91,19 @@ PTSERVEROBJS = \
 	display.o \
 	pterror.o
 
+VOLSEROBJS = \
+	vsprocs.o \
+	vsutils.o \
+	lockprocs.o \
+	volint.xdr.o \
+	volint.cs.o \
+	volerr.o
+
+VLDBOBJS = \
+	vldbint.xdr.o \
+	vldbint.cs.o \
+	vl_errors.o
+
 LIBOBJS = \
 	${AUDITOBJS} \
 	${AUTHOBJS} \
@@ -97,7 +112,9 @@ LIBOBJS = \
 	${UTILOBJS} \
 	${RXKADOBJS} \
 	${PTSERVEROBJS} \
-	${SYSOBJS}
+	${SYSOBJS} \
+	${VOLSEROBJS} \
+	${VLDBOBJS}
 
 all: ${TOP_LIBDIR}/libafsauthent.a
 
@@ -271,6 +288,33 @@ setpag.o: ${SYS}/setpag.c
 
 pioctl.o: ${SYS}/pioctl.c
 	${CCRULE}
+
+vsprocs.o: $(VOLSER)/vsprocs.c
+	$(CCRULE) -I../volser
+
+vsutils.o: $(VOLSER)/vsutils.c
+	$(CCRULE)
+
+lockprocs.o: $(VOLSER)/lockprocs.c
+	$(CCRULE)
+
+volint.xdr.o: ../volser/volint.xdr.c
+	$(CCRULE)
+
+volint.cs.o: ../volser/volint.cs.c
+	$(CCRULE)
+
+volerr.o: $(VOLSER)/volerr.c
+	$(CCRULE)
+
+vldbint.xdr.o: ../vlserver/vldbint.xdr.c
+	$(CCRULE)
+
+vldbint.cs.o: ../vlserver/vldbint.cs.c
+	$(CCRULE)
+
+vl_errors.o: $(VLSERVER)/vl_errors.c
+	$(CCRULE)
 
 clean:
 	$(RM) -f *.o *.a libafsauthent*

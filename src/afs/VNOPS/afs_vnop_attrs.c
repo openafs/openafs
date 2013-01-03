@@ -104,8 +104,9 @@ afs_CopyOutAttrs(struct vcache *avc, struct vattr *attrs)
 	/* The mount point's vnode. */
 	if (tvp) {
 	    attrs->va_nodeid =
-	      afs_calc_inum (tvp->mtpoint.Fid.Volume,
-			      tvp->mtpoint.Fid.Vnode);
+	      afs_calc_inum(tvp->mtpoint.Cell,
+			    tvp->mtpoint.Fid.Volume,
+			    tvp->mtpoint.Fid.Vnode);
 	    if (FidCmp(&afs_rootFid, &avc->f.fid) && !attrs->va_nodeid)
 		attrs->va_nodeid = 2;
 	    afs_PutVolume(tvp, READ_LOCK);
@@ -113,8 +114,9 @@ afs_CopyOutAttrs(struct vcache *avc, struct vattr *attrs)
 	    attrs->va_nodeid = 2;
     } else
 	attrs->va_nodeid = 
-	      afs_calc_inum (avc->f.fid.Fid.Volume,
-			      avc->f.fid.Fid.Vnode);
+	      afs_calc_inum(avc->f.fid.Cell,
+			    avc->f.fid.Fid.Volume,
+			    avc->f.fid.Fid.Vnode);
     attrs->va_nodeid &= 0x7fffffff;	/* Saber C hates negative inode #s! */
     attrs->va_nlink = fakedir ? 100 : avc->f.m.LinkCount;
     attrs->va_size = fakedir ? 4096 : avc->f.m.Length;

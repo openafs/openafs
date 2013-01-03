@@ -40,9 +40,7 @@ LIBS=${RXOBJS} ${UTILOBJS} ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/liblwp.a \
 all: depinstall ${TOP_LIBDIR}/libubik_pthread.a udebug utst_server utst_client
 
 depinstall: \
-	ubik_int.cs.c ubik_int.xdr.c \
-	${TOP_INCDIR}/ubik.h \
-	${TOP_INCDIR}/ubik_int.h
+	ubik_int.cs.c ubik_int.xdr.c
 
 #
 # get the pthreaded rx stuff compiled here
@@ -269,13 +267,7 @@ ${TOP_LIBDIR}/libubik_pthread.a: libubik_pthread.a
 ${DESTDIR}${includedir}/ubik.h: ubik.h
 	${INSTALL} $? $@
 
-${TOP_INCDIR}/ubik.h: ubik.h
-	${INSTALL} $? $@
-
 ${DESTDIR}${includedir}/ubik_int.h: ubik_int.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/ubik_int.h: ubik_int.h
 	${INSTALL} $? $@
 
 dest: \

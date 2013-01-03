@@ -99,7 +99,6 @@ extern kmutex_t afs_global_lock;
 #define ISAFS_GLOCK()	mutex_owned(&afs_global_lock)
 #define osi_InitGlock() \
 	mutex_init(&afs_global_lock, "afs_global_lock", MUTEX_DEFAULT, NULL);
-#endif
 
 
 /* Associate the Berkley signal equivalent lock types to System V's */
@@ -144,6 +143,7 @@ struct afs_ifinfo {
   int         metric;
   ipaddr_t    dstaddr;
 };
+#endif /* AFS_SUN510_ENV */
 
 #define osi_procname(procname, size) strncpy(procname, PTOU(ttoproc(curthread))->u_comm, size)
 

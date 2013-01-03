@@ -176,7 +176,12 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
     afs_ino_str_t stmp;
 
     struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
-    int ReadWriteOriginal = VolumeWriteable(rwvp);
+    /*
+     * The fileserver's -readonly switch should make this false, but we
+     * have no useful way to know in the volserver.
+     * This doesn't make client data mutable.
+     */
+    int ReadWriteOriginal = 1;
 
     /* Correct number of files in volume: this assumes indexes are always
        cloned starting with vLarge */

@@ -28,7 +28,11 @@ osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep) {
 
 struct vcache *
 osi_NewVnode(void) {
-    return (struct vcache *)afs_osi_Alloc(sizeof(struct vcache));
+    struct vcache *avc;
+
+    avc = afs_osi_Alloc(sizeof(struct vcache));
+    osi_Assert(avc != NULL);
+    return avc;
 }
 
 void

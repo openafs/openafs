@@ -540,6 +540,7 @@ afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
 
     if (!code) {
 	code = (*ops->close)(rock, OutStatus, doProcessFS);
+	/* if this succeeds, dv has been bumped. */
 	if (*doProcessFS) {
 	    hadd32(*anewDV, 1);
 	}
@@ -547,6 +548,11 @@ afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
     }
     if (ops)
 	code = (*ops->destroy)(&rock, code);
+
+    /* if we errored, can't trust this. */
+    if (code)
+	*doProcessFS = 0;
+
     return code;
 }
 

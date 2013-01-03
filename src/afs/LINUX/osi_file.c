@@ -56,9 +56,9 @@ afs_linux_raw_open(afs_dcache_id_t *ainode)
 
 #if defined(STRUCT_TASK_STRUCT_HAS_CRED)
     /* Use stashed credentials - prevent selinux/apparmor problems  */
-    filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR, cache_creds);
+    filp = afs_dentry_open(dp, mntget(afs_cacheMnt), O_RDWR, cache_creds);
     if (IS_ERR(filp))
-	filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR, current_cred());
+	filp = afs_dentry_open(dp, mntget(afs_cacheMnt), O_RDWR, current_cred());
 #else
     filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR);
 #endif
@@ -216,7 +216,7 @@ afs_osi_Read(struct osi_file *afile, int offset, void *aptr,
 	if (!afs_shuttingdown)
 	    osi_Panic("osi_Read called with null param");
 	else
-	    return EIO;
+	    return -EIO;
     }
 
     if (offset != -1)
@@ -231,7 +231,9 @@ afs_osi_Read(struct osi_file *afile, int offset, void *aptr,
     } else {
 	afs_Trace2(afs_iclSetp, CM_TRACE_READFAILED, ICL_TYPE_INT32, auio.uio_resid,
 		   ICL_TYPE_INT32, code);
-	code = -1;
+	if (code > 0) {
+	    code *= -1;
+	}
     }
     return code;
 }
@@ -251,7 +253,7 @@ afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
 	if (!afs_shuttingdown)
 	    osi_Panic("afs_osi_Write called with null param");
 	else
-	    return EIO;
+	    return -EIO;
     }
 
     if (offset != -1)
@@ -267,7 +269,9 @@ afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
 	if (code == ENOSPC)
 	    afs_warnuser
 		("\n\n\n*** Cache partition is FULL - Decrease cachesize!!! ***\n\n");
-	code = -1;
+	if (code > 0) {
+	    code *= -1;
+	}
     }
 
     if (afile->proc)

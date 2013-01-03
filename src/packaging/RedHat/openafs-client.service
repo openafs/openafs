@@ -15,4 +15,4 @@ ExecStop=/sbin/rmmod openafs
 KillMode=none
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=multi-user.target remote-fs.target

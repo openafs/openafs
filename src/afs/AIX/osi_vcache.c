@@ -31,7 +31,8 @@ struct vcache *
 osi_NewVnode(void) {
     struct vcache *tvc;
 
-    tvc = (struct vcache *)afs_osi_Alloc(sizeof(struct vcache));
+    tvc = afs_osi_Alloc(sizeof(struct vcache));
+    osi_Assert(tvc != NULL);
 
 #ifdef	KERNEL_HAVE_PIN
     pin((char *)tvc, sizeof(struct vcache));	/* XXX */

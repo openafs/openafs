@@ -775,7 +775,7 @@ int
 hdl_notifier(struct bnode_proc *tp)
 {
 #ifndef AFS_NT40_ENV		/* NT notifier callout not yet implemented */
-    int code, pid;
+    int pid;
     struct stat tstat;
 
     if (stat(tp->bnode->notifier, &tstat)) {
@@ -786,16 +786,15 @@ hdl_notifier(struct bnode_proc *tp)
     if ((pid = fork()) == 0) {
 	FILE *fout;
 	struct bnode *tb = tp->bnode;
-	int ec;
 
 #if defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI51_ENV)
-	ec = setsid();
+	setsid();
 #elif defined(AFS_DARWIN90_ENV)
-	ec = setpgid(0, 0);
+	setpgid(0, 0);
 #elif defined(AFS_LINUX20_ENV) || defined(AFS_AIX_ENV)
-	ec = setpgrp();
+	setpgrp();
 #else
-	ec = setpgrp(0, 0);
+	setpgrp(0, 0);
 #endif
 	fout = popen(tb->notifier, "w");
 	if (fout == NULL) {
@@ -804,7 +803,7 @@ hdl_notifier(struct bnode_proc *tp)
 	    perror(tb->notifier);
 	    exit(1);
 	}
-	code = SendNotifierData(fileno(fout), tp);
+	SendNotifierData(fileno(fout), tp);
 	pclose(fout);
 	exit(0);
     } else if (pid < 0) {

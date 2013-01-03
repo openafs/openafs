@@ -661,3 +661,97 @@ AC_DEFUN([LINUX_IOP_CREATE_TAKES_UMODE_T], [
 			[define if inode.i_op->create takes a umode_t argument],
 			[-Werror])
 ])
+
+
+AC_DEFUN([LINUX_EXPORT_OP_ENCODE_FH_TAKES_INODES], [
+  AC_CHECK_LINUX_BUILD([whether export operation encode_fh takes inode arguments],
+			[ac_cv_linux_export_op_encode_fh__takes_inodes],
+			[#include <linux/exportfs.h>],
+			[struct export_operations _exp_ops;
+			int _encode_fh(struct inode *i, __u32 *fh, int *len, struct inode *p)
+				{return 0;};
+			_exp_ops.encode_fh = _encode_fh;],
+			[EXPORT_OP_ENCODE_FH_TAKES_INODES],
+			[define if encode_fh export op takes inode arguments],
+			[-Werror])
+])
+
+
+AC_DEFUN([LINUX_KMAP_ATOMIC_TAKES_NO_KM_TYPE], [
+  AC_CHECK_LINUX_BUILD([whether kmap_atomic takes no km_type argument],
+			[ac_cv_linux_kma_atomic_takes_no_km_type],
+			[#include <linux/highmem.h>],
+			[struct page *p = NULL;
+			kmap_atomic(p);],
+			[KMAP_ATOMIC_TAKES_NO_KM_TYPE],
+			[define if kmap_atomic takes no km_type argument],
+			[-Werror])
+])
+
+
+AC_DEFUN([LINUX_DENTRY_OPEN_TAKES_PATH], [
+  AC_CHECK_LINUX_BUILD([whether dentry_open takes a path argument],
+			[ac_cv_linux_dentry_open_takes_path],
+			[#include <linux/fs.h>],
+			[struct path p;
+			dentry_open(&p, 0, NULL);],
+			[DENTRY_OPEN_TAKES_PATH],
+			[define if dentry_open takes a path argument],
+			[-Werror])
+])
+
+
+AC_DEFUN([LINUX_D_ALIAS_IS_HLIST], [
+  AC_CHECK_LINUX_BUILD([whether dentry->d_alias is an hlist],
+			[ac_cv_linux_d_alias_is_hlist],
+			[#include <linux/fs.h>],
+			[struct dentry *d = NULL;
+			struct hlist_node *hn = NULL;
+			d->d_alias = *hn;],
+			[D_ALIAS_IS_HLIST],
+			[define if dentry->d_alias is an hlist],
+			[])
+])
+
+
+AC_DEFUN([LINUX_IOP_I_CREATE_TAKES_BOOL], [
+  AC_CHECK_LINUX_BUILD([whether inode_operations.create takes a bool],
+			[ac_cv_linux_func_i_create_takes_bool],
+			[#include <linux/fs.h>
+			#include <linux/namei.h>],
+			[struct inode _inode = {};
+			struct dentry _dentry;
+			bool b = true;
+			(void)_inode.i_op->create(&_inode, &_dentry, 0, b);],
+		       [IOP_CREATE_TAKES_BOOL],
+		       [define if your iops.create takes a bool argument],
+		       [-Werror])
+])
+
+
+AC_DEFUN([LINUX_DOP_D_REVALIDATE_TAKES_UNSIGNED], [
+  AC_CHECK_LINUX_BUILD([whether dentry_operations.d_revalidate takes an unsigned int],
+			[ac_cv_linux_func_d_revalidate_takes_unsigned],
+			[#include <linux/fs.h>
+			#include <linux/namei.h>],
+			[struct dentry_operations dops;
+			int reval(struct dentry *d, unsigned int i) { return 0; };
+			dops.d_revalidate = reval;],
+		       [DOP_REVALIDATE_TAKES_UNSIGNED],
+		       [define if your dops.d_revalidate takes an unsigned int argument],
+		       [-Werror])
+])
+
+
+AC_DEFUN([LINUX_IOP_LOOKUP_TAKES_UNSIGNED], [
+  AC_CHECK_LINUX_BUILD([whether inode operation lookup takes an unsigned int],
+			[ac_cv_linux_func_lookup_takes_unsigned],
+			[#include <linux/fs.h>
+			#include <linux/namei.h>],
+			[struct inode_operations iops;
+			struct dentry *look(struct inode *i, struct dentry *d, unsigned int j) { return NULL; };
+			iops.lookup = look;],
+		       [IOP_LOOKUP_TAKES_UNSIGNED],
+		       [define if your iops.lookup takes an unsigned int argument],
+		       [-Werror])
+])

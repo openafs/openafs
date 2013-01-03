@@ -7,6 +7,7 @@
 //
 
 #import "TaskUtil.h"
+#import "AuthUtil.h"
 
 
 @implementation TaskUtil
@@ -75,6 +76,36 @@
 // -------------------------------------------------------------------------------
 //  executeTask:
 // -------------------------------------------------------------------------------
++(int) executeTaskWithAuth:(NSString*) taskName arguments:(NSArray *)args helper:(NSString *)helper withAuthRef:(AuthorizationRef)authRef {
+    const char *rootHelperApp = [helper fileSystemRepresentation];
+    OSStatus status;
+    AuthorizationFlags flags = kAuthorizationFlagDefaults;
+    int count = [args count];
+    char **myArguments = calloc(count + 2, sizeof(char *));
+    int i=0;
+
+    myArguments[0] = strdup([taskName UTF8String]);
+    for(i=0;i < count;i++) {
+	const char *string = [[args objectAtIndex:i] UTF8String];
+	if(!string)
+	    break;
+	myArguments[1+i] = strdup(string);
+    }
+    myArguments[1+i] = NULL;
+
+    // should use SMJobBless but we need to sign things...
+    status = AuthorizationExecuteWithPrivileges(authRef, rootHelperApp, flags, myArguments, NULL);
+
+    i = 0;
+    while (myArguments[i] != NULL) {
+        free(myArguments[i]);
+        i++;
+    }
+
+    free(myArguments);
+    return status;
+}
+
 +(int) executeTaskWithAuth:(NSString*) taskName arguments:(NSArray *)args authExtForm:(NSData*)auth {
 	NSString *result = nil;
 	int status = 0;

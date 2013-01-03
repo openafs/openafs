@@ -105,11 +105,13 @@ pthread_glock.o: ${UTIL}/pthread_glock.c
 ptserver.o: ${PTSERVER}/ptserver.c ${INCLS}
 	${CCRULE} ${srcdir}/${PTSERVER}/ptserver.c
 
+# When supergroups is enabled, some parts of ptserver cast between
+# # incompatible structs.
 ptutils.o: ${PTSERVER}/ptutils.c ${INCLS}
-	${CCRULE} ${srcdir}/${PTSERVER}/ptutils.c
+	${CCRULE} @CFLAGS_NOSTRICT@ ${srcdir}/${PTSERVER}/ptutils.c
 
 ptprocs.o: ${PTSERVER}/ptprocs.c ${INCLS}
-	${CCRULE} ${srcdir}/${PTSERVER}/ptprocs.c
+	${CCRULE} @CFLAGS_NOSTRICT@ ${srcdir}/${PTSERVER}/ptprocs.c
 
 utils.o: ${PTSERVER}/utils.c ${INCLS}
 	${CCRULE} ${srcdir}/${PTSERVER}/utils.c

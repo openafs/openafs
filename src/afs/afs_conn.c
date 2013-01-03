@@ -148,6 +148,7 @@ afs_Conn(struct VenusFid *afid, struct vrequest *areq,
 
     /* First is always lowest rank, if it's up */
     if ((tv->status[0] == not_busy) && tv->serverHost[0]
+	&& tv->serverHost[0]->addr
 	&& !(tv->serverHost[0]->addr->sa_flags & SRVR_ISDOWN) &&
 	!(((areq->idleError > 0) || (areq->tokenError > 0))
 	  && (areq->skipserver[0] == 1)))
@@ -269,7 +270,8 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	 * gets set, marking the time of its ``birth''.
 	 */
 	UpgradeSToWLock(&afs_xconn, 37);
-	tc = (struct afs_conn *)afs_osi_Alloc(sizeof(struct afs_conn));
+	tc = afs_osi_Alloc(sizeof(struct afs_conn));
+	osi_Assert(tc != NULL);
 	memset(tc, 0, sizeof(struct afs_conn));
 
 	tc->user = tu;

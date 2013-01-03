@@ -29,7 +29,7 @@
 	NSString *afsRootMountPoint;
 	int statCacheEntry;
 	int dCacheDim;
-	int	cacheDimension;
+	int cacheDimension;
 	int daemonNumber;
 	int nVolEntry;
 	bool dynRoot;

@@ -168,7 +168,7 @@ osi_AllocLargeSpace(size_t size)
 	char *p;
 
 	afs_stats_cmperf.LargeBlocksAlloced++;
-	p = (char *)afs_osi_Alloc(AFS_LRALLOCSIZ);
+	p = afs_osi_Alloc(AFS_LRALLOCSIZ);
 #ifdef  KERNEL_HAVE_PIN
 	/*
 	 * Need to pin this memory since under heavy conditions this memory

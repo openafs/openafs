@@ -898,6 +898,7 @@ SRXAFSCB_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
 	 */
 	dataBytes = sizeof(struct afs_CMStats);
 	dataBuffP = (afs_int32 *) afs_osi_Alloc(dataBytes);
+	osi_Assert(dataBuffP != NULL);
 	memcpy((char *)dataBuffP, (char *)&afs_cmstats, dataBytes);
 	a_dataP->AFSCB_CollData_len = dataBytes >> 2;
 	a_dataP->AFSCB_CollData_val = dataBuffP;
@@ -918,6 +919,7 @@ SRXAFSCB_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
 	afs_CountServers();
 	dataBytes = sizeof(afs_stats_cmperf);
 	dataBuffP = (afs_int32 *) afs_osi_Alloc(dataBytes);
+	osi_Assert(dataBuffP != NULL);
 	memcpy((char *)dataBuffP, (char *)&afs_stats_cmperf, dataBytes);
 	a_dataP->AFSCB_CollData_len = dataBytes >> 2;
 	a_dataP->AFSCB_CollData_val = dataBuffP;
@@ -942,6 +944,7 @@ SRXAFSCB_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
 
 	dataBytes = sizeof(afs_stats_cmfullperf);
 	dataBuffP = (afs_int32 *) afs_osi_Alloc(dataBytes);
+	osi_Assert(dataBuffP != NULL);
 	memcpy((char *)dataBuffP, (char *)(&afs_stats_cmfullperf), dataBytes);
 	a_dataP->AFSCB_CollData_len = dataBytes >> 2;
 	a_dataP->AFSCB_CollData_val = dataBuffP;
@@ -1295,8 +1298,8 @@ SRXAFSCB_GetCellServDB(struct rx_call *a_call, afs_int32 a_index,
 	p_name = tcell->cellName;
 	for (j = 0; j < AFSMAXCELLHOSTS && tcell->cellHosts[j]; j++);
 	i = strlen(p_name);
-	a_hosts->serverList_val =
-	    (afs_int32 *) afs_osi_Alloc(j * sizeof(afs_int32));
+	a_hosts->serverList_val = afs_osi_Alloc(j * sizeof(afs_int32));
+	osi_Assert(a_hosts->serverList_val != NULL);
 	a_hosts->serverList_len = j;
 	for (j = 0; j < AFSMAXCELLHOSTS && tcell->cellHosts[j]; j++)
 	    a_hosts->serverList_val[j] =
@@ -1304,7 +1307,7 @@ SRXAFSCB_GetCellServDB(struct rx_call *a_call, afs_int32 a_index,
 	afs_PutCell(tcell, READ_LOCK);
     }
 
-    t_name = (char *)afs_osi_Alloc(i + 1);
+    t_name = afs_osi_Alloc(i + 1);
     if (t_name == NULL) {
 	afs_osi_Free(a_hosts->serverList_val, (j * sizeof(afs_int32)));
 	RX_AFS_GUNLOCK();
@@ -1362,7 +1365,7 @@ SRXAFSCB_GetLocalCell(struct rx_call *a_call, char **a_name)
 	plen = strlen(p_name);
     else
 	plen = 0;
-    t_name = (char *)afs_osi_Alloc(plen + 1);
+    t_name = afs_osi_Alloc(plen + 1);
     if (t_name == NULL) {
 	if (tcell)
 	    afs_PutCell(tcell, READ_LOCK);
@@ -1459,7 +1462,7 @@ SRXAFSCB_GetCacheConfig(struct rx_call *a_call, afs_uint32 callerVersion,
      * Currently only support version 1
      */
     allocsize = sizeof(cm_initparams_v1);
-    t_config = (afs_uint32 *) afs_osi_Alloc(allocsize);
+    t_config = afs_osi_Alloc(allocsize);
     if (t_config == NULL) {
 	RX_AFS_GUNLOCK();
 	return ENOMEM;
@@ -1600,8 +1603,8 @@ SRXAFSCB_GetCellByNum(struct rx_call *a_call, afs_int32 a_cellnum,
 
     for (sn = 0; sn < AFSMAXCELLHOSTS && tcell->cellHosts[sn]; sn++);
     a_hosts->serverList_len = sn;
-    a_hosts->serverList_val =
-	(afs_int32 *) afs_osi_Alloc(sn * sizeof(afs_int32));
+    a_hosts->serverList_val = afs_osi_Alloc(sn * sizeof(afs_int32));
+    osi_Assert(a_hosts->serverList_val != NULL);
 
     for (i = 0; i < sn; i++)
 	a_hosts->serverList_val[i] = ntohl(tcell->cellHosts[i]->addr->sa_ip);
@@ -1642,7 +1645,8 @@ SRXAFSCB_TellMeAboutYourself(struct rx_call *a_call,
     RX_AFS_GUNLOCK();
 
     dataBytes = 1 * sizeof(afs_uint32);
-    dataBuffP = (afs_uint32 *) afs_osi_Alloc(dataBytes);
+    dataBuffP = afs_osi_Alloc(dataBytes);
+    osi_Assert(dataBuffP != NULL);
     dataBuffP[0] = CLIENT_CAPABILITY_ERRORTRANS;
     capabilities->Capabilities_len = dataBytes / sizeof(afs_uint32);
     capabilities->Capabilities_val = dataBuffP;

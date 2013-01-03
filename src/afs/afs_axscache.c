@@ -69,6 +69,7 @@ axs_Alloc(void)
 	return i;
     } else {
 	h = afs_osi_Alloc(sizeof(struct xfreelist));
+	osi_Assert(h != NULL);
 	afs_xaxscnt++;
 	xsp = xfreemallocs;
 	xfreemallocs = h;

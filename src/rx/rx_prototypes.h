@@ -111,7 +111,8 @@ extern struct rx_connection *rxi_FindConnection(osi_socket socket,
 						u_short serviceId,
 						afs_uint32 cid,
 						afs_uint32 epoch, int type,
-						u_int securityIndex);
+						u_int securityIndex,
+						int *unknownService);
 extern struct rx_packet *rxi_ReceivePacket(struct rx_packet *np,
 					   osi_socket socket, afs_uint32 host,
 					   u_short port, int *tnop,
@@ -564,6 +565,9 @@ extern void rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 extern void rxi_SendPacketList(struct rx_call *call,
 			       struct rx_connection *conn,
 			       struct rx_packet **list, int len, int istack);
+extern void rxi_SendRawAbort(osi_socket socket, afs_uint32 host, u_short port,
+			     afs_int32 error, struct rx_packet *source,
+			     int istack);
 extern struct rx_packet *rxi_SendSpecial(struct rx_call *call,
 					 struct rx_connection *conn,
 					 struct rx_packet *optionalPacket,

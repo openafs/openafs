@@ -92,7 +92,6 @@
 	if(cellList) {[cellList removeAllObjects];[cellList release];}
 	if(cellName) {[cellName release];}
 	if(futil) {
-		[futil endAutorization];
 		[futil release];
 		futil = nil; 
 	}
@@ -360,7 +359,7 @@
 	
 	NSCharacterSet *returnCS = [NSCharacterSet characterSetWithCharactersInString:@"\n"];
 	NSFileHandle *fileH = [NSFileHandle fileHandleForReadingAtPath:filePath];
-	if (!fileH) return nil;
+	if (!fileH) return 0;
 	NSData *fileHData = [fileH readDataToEndOfFile];
 	NSString *cacheInfoStrData = [[NSString alloc] initWithData:fileHData
 													   encoding:NSASCIIStringEncoding];
@@ -465,7 +464,7 @@
 // -------------------------------------------------------------------------------
 -(int) readOldAfsdOption:(NSString*)filePath
 {
-	if(!filePath) return nil;
+	if(!filePath) return 0;
 	return [self readAFSDParamLineContent:[[NSString stringWithContentsOfFile:filePath 
 															  encoding:NSUTF8StringEncoding 
 																 error:nil] stringByStandardizingPath]];
@@ -475,7 +474,7 @@
 //  readAFSDParamLineContent:
 // -------------------------------------------------------------------------------
 -(int) readAFSDParamLineContent:(NSString*) paramLine{
-	if (!paramLine) return nil;
+	if (!paramLine) return 0;
 
 	NSString *tmpString = nil;
 	NSCharacterSet *space = [NSCharacterSet characterSetWithCharactersInString:@" "];
@@ -537,16 +536,16 @@
 // -------------------------------------------------------------------------------
 -(int) readNewAfsdOption:(NSString*)filePath
 {
-	if(!filePath) return nil;
-	NSString *currentLines = nil;
-	NSString *paramValue = nil;
-	NSScanner *lineScanner = nil;
+	if(!filePath) return 0;
+	NSString *currentLines = 0;
+	NSString *paramValue = 0;
+	NSScanner *lineScanner = 0;
 	
 	//Get file content
 	NSString *newAFSDConfContent = [NSString stringWithContentsOfFile:filePath 
 															 encoding:NSUTF8StringEncoding 
 																error:nil];
-	if (!newAFSDConfContent) return nil;
+	if (!newAFSDConfContent) return 0;
 	
 	//get lines in array
 	NSArray *confLines = [newAFSDConfContent componentsSeparatedByString:@"\n"];
@@ -1078,23 +1077,18 @@
 // -------------------------------------------------------------------------------
 -(void) shutdown
 {
-	@try {
-		const char *stopArgs[] = {"stop", 0L};
-		if([[AuthUtil shared] autorize] == noErr) {
-			[[AuthUtil shared] execUnixCommand:AFS_DAEMON_STARTUPSCRIPT
-										  args:stopArgs
-										output:nil];
-		}
-
-	}
-	@catch (NSException * e) {
-		@throw e;
-	}
-	@finally {
-	
-	}
-	
-	
+  NSString *rootHelperApp = [[NSBundle bundleForClass:[self class]] pathForResource:@"afshlp" ofType:@""];
+    @try {
+	const char *stopArgs[] = {AFS_DAEMON_STARTUPSCRIPT, "stop", 0L};
+	[[AuthUtil shared] execUnixCommand:[rootHelperApp fileSystemRepresentation]
+			   args:stopArgs
+			   output:nil];
+    }
+    @catch (NSException * e) {
+	@throw e;
+    }
+    @finally {
+    }
 }
 
 
@@ -1103,24 +1097,20 @@
 // -------------------------------------------------------------------------------
 -(void) startup
 {
-	@try {
-		const char *startArgs[] = {"start", 0L};
-		if([[AuthUtil shared] autorize] == noErr) {
-			[[AuthUtil shared] execUnixCommand:AFS_DAEMON_STARTUPSCRIPT
-										  args:startArgs
-										output:nil];
-		}
-
-	}
-	@catch (NSException * e) {
-		@throw e;
-	}
-	@finally {
-
-	}
-
-
+  NSString *rootHelperApp = [[NSBundle bundleForClass:[self class]] pathForResource:@"afshlp" ofType:@""];
+    @try {
+	const char *startArgs[] = {AFS_DAEMON_STARTUPSCRIPT, "start", 0L};
+	[[AuthUtil shared] execUnixCommand:[rootHelperApp fileSystemRepresentation]
+			   args:startArgs
+			   output:nil];
+    }
+    @catch (NSException * e) {
+	@throw e;
+    }
+    @finally {
+    }
 }
+
 // -------------------------------------------------------------------------------
 //  -(void) saveConfigurationFiles
 // -------------------------------------------------------------------------------
@@ -1166,13 +1156,6 @@
 							 encoding:  NSUTF8StringEncoding 
 								error:&err];
 		
-		// backup original file
-		if([futil startAutorization] != noErr){
-			@throw [NSException exceptionWithName:@"saveConfigurationFiles:startAutorization" 
-										   reason:kUserNotAuth
-										 userInfo:nil];
-		}
-
 		if(makeBackup) [self backupConfigurationFiles];
 
 		// install ThisCell
@@ -1220,12 +1203,6 @@
 		[self writeAfsdOption:useAfsdConfVersion?AFSD_TMP_NEW_PREFERENCE_FILE:AFSD_TMP_OLD_PREFERENCE_FILE];
 		
 		// backup original file
-		if([futil startAutorization] != noErr){
-			@throw [NSException exceptionWithName:@"AFSPropertyManager:saveCacheConfigurationFiles:startAutorization" 
-										   reason:kUserNotAuth
-										 userInfo:nil];
-		}
-		
 		if(makeBackup) {
 			//cacheinfo
 			[self backupFile:@"/etc/cacheinfo"];
@@ -1294,11 +1271,6 @@
 {	
 
 	@try{
-		if([futil startAutorization] != noErr){
-			@throw [NSException exceptionWithName:@"backupConfigurationFiles:startAutorization" 
-										   reason:kUserNotAuth
-										 userInfo:nil];
-		}
 		//This cell
 		[self backupFile:@"/etc/ThisCell"];
 	
@@ -1308,7 +1280,6 @@
 		//TheseCell
 		[self backupFile:@"/etc/TheseCells"];
 		
-		//[futil endAutorization];
 	} @catch (NSException *e) {
 		@throw e;
 	} @finally {
@@ -1329,8 +1300,6 @@
 		
 		//Check if the file at path exist
 		NSFileManager *fileManager = [NSFileManager defaultManager];
-		
-		//check if th efile exist
 		if(![fileManager fileExistsAtPath:[filePath stringByExpandingTildeInPath]]) return;
 		
 		// store the source path

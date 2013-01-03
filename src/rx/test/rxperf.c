@@ -832,23 +832,6 @@ do_client(const char *server, short port, char *filename, afs_int32 command,
 
     get_sec(0, &secureobj, &secureindex);
 
-    conn = rx_NewConnection(addr, htons(port), RX_SERVER_ID, secureobj, secureindex);
-    if (conn == NULL)
-	errx(1, "failed to contact server");
-
-#ifdef AFS_PTHREAD_ENV
-    pthread_attr_init(&tattr);
-    pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_JOINABLE);
-#endif
-
-    params->conn = conn;
-    params->filename = filename;
-    params->command = command;
-    params->times = times;
-    params->bytes = bytes;
-    params->sendbytes = sendbytes;
-    params->readbytes = readbytes;
-
     switch (command) {
     case RX_PERF_RPC:
         sprintf(stamp, "RPC: threads\t%d, times\t%d, write bytes\t%d, read bytes\t%d",
@@ -868,11 +851,38 @@ do_client(const char *server, short port, char *filename, afs_int32 command,
         break;
     }
 
+    conn = rx_NewConnection(addr, htons(port), RX_SERVER_ID, secureobj, secureindex);
+    if (conn == NULL)
+	errx(1, "failed to contact server");
+
+#ifdef AFS_PTHREAD_ENV
+    pthread_attr_init(&tattr);
+    pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_JOINABLE);
+#endif
+
+    params->conn = conn;
+    params->filename = filename;
+    params->command = command;
+    params->times = times;
+    params->bytes = bytes;
+    params->sendbytes = sendbytes;
+    params->readbytes = readbytes;
+
     start_timer();
 
 #ifdef AFS_PTHREAD_ENV
-    for ( i=0; i<threads; i++)
+    for ( i=0; i<threads; i++) {
         pthread_create(&thread[i], &tattr, client_thread, params);
+        if ( (i + 1) % RX_MAXCALLS == 0 ) {
+            conn = rx_NewConnection(addr, htons(port), RX_SERVER_ID, secureobj, secureindex);
+            if (conn != NULL) {
+                struct client_data *new_params = malloc(sizeof(struct client_data));
+                memcpy(new_params, params, sizeof(struct client_data));
+                new_params->conn = conn;
+                params = new_params;
+            }
+        }
+    }
 #else
         client_thread(params);
 #endif
@@ -940,7 +950,7 @@ rxperf_server(int argc, char **argv)
     char *ptr;
     int ch;
 
-    while ((ch = getopt(argc, argv, "r:d:p:P:w:W:HNjm:u:4:s:SV")) != -1) {
+    while ((ch = getopt(argc, argv, "r:d:p:P:w:W:HNjm:u:4:s:S:V")) != -1) {
 	switch (ch) {
 	case 'd':
 #ifdef RXDEBUG

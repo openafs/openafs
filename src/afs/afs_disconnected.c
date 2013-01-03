@@ -71,12 +71,14 @@ afs_FindDCacheByFid(struct VenusFid *afid)
     ObtainWriteLock(&afs_xdcache, 758);
     for (index = afs_dvhashTbl[i]; index != NULLIDX;) {
 	if (afs_indexUnique[index] == afid->Fid.Unique) {
-	    tdc = afs_GetDSlot(index, NULL);
-	    ReleaseReadLock(&tdc->tlock);
-	    if (!FidCmp(&tdc->f.fid, afid)) {
-		break;		/* leaving refCount high for caller */
+	    tdc = afs_GetValidDSlot(index);
+	    if (tdc) {
+		ReleaseReadLock(&tdc->tlock);
+		if (!FidCmp(&tdc->f.fid, afid)) {
+		    break;		/* leaving refCount high for caller */
+		}
+		afs_PutDCache(tdc);
 	    }
-	    afs_PutDCache(tdc);
 	}
 	index = afs_dvnextTbl[index];
     }
@@ -563,7 +565,7 @@ afs_ProcessOpRename(struct vcache *avc, struct vrequest *areq)
     old_pdir_fid.Fid.Unique = avc->f.oldParent.unique;
 
     /* Get old name. */
-    old_name = (char *) afs_osi_Alloc(AFSNAMEMAX);
+    old_name = afs_osi_Alloc(AFSNAMEMAX);
     if (!old_name) {
 	/* printf("afs_ProcessOpRename: Couldn't alloc space for old name.\n"); */
 	return ENOMEM;
@@ -575,7 +577,7 @@ afs_ProcessOpRename(struct vcache *avc, struct vrequest *areq)
     }
 
     /* Alloc data first. */
-    new_name = (char *) afs_osi_Alloc(AFSNAMEMAX);
+    new_name = afs_osi_Alloc(AFSNAMEMAX);
     if (!new_name) {
 	/* printf("afs_ProcessOpRename: Couldn't alloc space for new name.\n"); */
 	code = ENOMEM;
@@ -853,7 +855,7 @@ afs_ProcessOpCreate(struct vcache *avc, struct vrequest *areq,
     ObtainWriteLock(&afs_xdcache, 743);
     for (index = afs_dvhashTbl[hash]; index != NULLIDX; index = hash) {
         hash = afs_dvnextTbl[index];
-        tdc = afs_GetDSlot(index, NULL);
+        tdc = afs_GetValidDSlot(index);
         ReleaseReadLock(&tdc->tlock);
 	if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
             if (!FidCmp(&tdc->f.fid, &avc->f.fid)) {

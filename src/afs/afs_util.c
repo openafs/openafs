@@ -187,7 +187,7 @@ afs_strdup(char *s)
     int cc;
 
     cc = strlen(s) + 1;
-    n = (char *)afs_osi_Alloc(cc);
+    n = afs_osi_Alloc(cc);
     if (n)
 	memcpy(n, s, cc);
 
@@ -196,7 +196,7 @@ afs_strdup(char *s)
 
 void
 print_internet_address(char *preamble, struct srvAddr *sa, char *postamble,
-		       int flag)
+		       int flag, int code)
 {
     struct server *aserver = sa->server;
     char *ptr = "\n";
@@ -216,12 +216,12 @@ print_internet_address(char *preamble, struct srvAddr *sa, char *postamble,
 		" (multi-homed address; other same-host interfaces may still be down)\n";
 	}
     }
-    afs_warn("%s%d.%d.%d.%d in cell %s%s%s", preamble, (address >> 24),
+    afs_warn("%s%d.%d.%d.%d in cell %s%s (code %d)%s", preamble, (address >> 24),
 	     (address >> 16) & 0xff, (address >> 8) & 0xff, (address) & 0xff,
-	     aserver->cell->cellName, postamble, ptr);
-    afs_warnuser("%s%d.%d.%d.%d in cell %s%s%s", preamble, (address >> 24),
+	     aserver->cell->cellName, postamble, code, ptr);
+    afs_warnuser("%s%d.%d.%d.%d in cell %s%s (code %d)%s", preamble, (address >> 24),
 		 (address >> 16) & 0xff, (address >> 8) & 0xff,
-		 (address) & 0xff, aserver->cell->cellName, postamble, ptr);
+		 (address) & 0xff, aserver->cell->cellName, postamble, code, ptr);
 
 }				/*print_internet_address */
 
@@ -370,20 +370,35 @@ afs_data_pointer_to_int32(const void *p)
 #ifdef AFS_LINUX20_ENV
 
 afs_int32
-afs_calc_inum(afs_int32 volume, afs_int32 vnode)
+afs_calc_inum(afs_int32 cell, afs_int32 volume, afs_int32 vnode)
 {
-    afs_int32 ino, vno = vnode;
+    afs_int32 ino = 0, vno = vnode;
     char digest[16];
     struct afs_md5 ct;
 
     if (afs_new_inum) {
+	int offset;
 	AFS_MD5_Init(&ct);
+	AFS_MD5_Update(&ct, &cell, 4);
 	AFS_MD5_Update(&ct, &volume, 4);
 	AFS_MD5_Update(&ct, &vnode, 4);
 	AFS_MD5_Final(digest, &ct);
-	memcpy(&ino, digest, sizeof(afs_int32));
-	ino ^= (ino ^ vno) & 1;
-    } else {
+
+	/* Userspace may react oddly to an inode number of 0 or 1, so keep
+	 * reading more of the md5 digest if we get back one of those.
+	 * Make sure not to read beyond the end of the digest; if we somehow
+	 * still have a 0, we will fall through to the non-md5 calculation. */
+	for (offset = 0;
+	     (ino == 0 || ino == 1) &&
+	      offset + sizeof(ino) <= sizeof(digest);
+	     offset++) {
+
+	    memcpy(&ino, &digest[offset], sizeof(ino));
+	    ino ^= (ino ^ vno) & 1;
+	    ino &= 0x7fffffff;      /* Assumes 32 bit ino_t ..... */
+	}
+    }
+    if (ino == 0 || ino == 1) {
 	ino = (volume << 16) + vnode;
     }
     ino &= 0x7fffffff;      /* Assumes 32 bit ino_t ..... */
@@ -393,7 +408,7 @@ afs_calc_inum(afs_int32 volume, afs_int32 vnode)
 #else
 
 afs_int32
-afs_calc_inum (afs_int32 volume, afs_int32 vnode)
+afs_calc_inum(afs_int32 cell, afs_int32 volume, afs_int32 vnode)
 {
     return (volume << 16) + vnode;
 }

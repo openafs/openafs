@@ -931,8 +931,8 @@ afs_icl_LogUse(struct afs_icl_log *logp)
 	    /* we weren't passed in a hint and it wasn't set */
 	    logp->logSize = ICL_DEFAULT_LOGSIZE;
 	}
-	logp->datap =
-	    (afs_int32 *) afs_osi_Alloc(sizeof(afs_int32) * logp->logSize);
+	logp->datap = afs_osi_Alloc(sizeof(afs_int32) * logp->logSize);
+	osi_Assert(logp->datap != NULL);
 #ifdef	KERNEL_HAVE_PIN
 	pin((char *)logp->datap, sizeof(afs_int32) * logp->logSize);
 #endif
@@ -979,8 +979,8 @@ afs_icl_LogSetSize(struct afs_icl_log *logp, afs_int32 logSize)
 #ifdef	KERNEL_HAVE_PIN
 	unpin((char *)logp->datap, sizeof(afs_int32) * logp->logSize);
 #endif
-	logp->datap =
-	    (afs_int32 *) afs_osi_Alloc(sizeof(afs_int32) * logSize);
+	logp->datap = afs_osi_Alloc(sizeof(afs_int32) * logSize);
+	osi_Assert(logp->datap != NULL);
 #ifdef	KERNEL_HAVE_PIN
 	pin((char *)logp->datap, sizeof(afs_int32) * logSize);
 #endif
@@ -1170,6 +1170,7 @@ afs_icl_CreateSetWithFlags(char *name, struct afs_icl_log *baseLogp,
     strcpy(setp->name, name);
     setp->nevents = ICL_DEFAULTEVENTS;
     setp->eventFlags = afs_osi_Alloc(ICL_DEFAULTEVENTS);
+    osi_Assert(setp->eventFlags != NULL);
 #ifdef	KERNEL_HAVE_PIN
     pin((char *)setp->eventFlags, ICL_DEFAULTEVENTS);
 #endif

@@ -51,10 +51,7 @@ static FILE *childin, *childout;	/* file pointers on pipe to kpwvalid */
 static int
 simplify_name(char *orig_name, char *true_name)
 {
-    int thru_symlink;
     struct stat statbuff;
-
-    thru_symlink = 0;
 
 #ifdef AFS_NT40_ENV
     if (stat(orig_name, &statbuff) < 0) {
@@ -80,7 +77,6 @@ simplify_name(char *orig_name, char *true_name)
 	 * the contents of the link for the file name.
 	 */
 	if ((statbuff.st_mode & S_IFMT) == S_IFLNK) {
-	    thru_symlink = 1;
 	    link_chars_read = readlink(orig_name, true_name, 1024);
 	    if (link_chars_read <= 0) {
 		*true_name = '\0';

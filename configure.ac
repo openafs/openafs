@@ -5,8 +5,8 @@ AC_CONFIG_SRCDIR([src/config/stds.h])
 AM_INIT_AUTOMAKE
 
 AC_CONFIG_HEADER(src/config/afsconfig.h)
-MACOS_VERSION=1.6.1
-LINUX_PKGVER=1.6.1
+MACOS_VERSION=1.6.2fc2
+LINUX_PKGVER=1.6.2pre2
 
 dnl Debian wants the release candidate version in the main upstream version,
 dnl and wants ~ before it.
@@ -55,6 +55,7 @@ AS_IF([test x"$KRB5_LIBS" != x],
         add_to_error_table \
         encode_krb5_enc_tkt_part \
         encode_krb5_ticket \
+	krb5_524_conv_principal \
         krb5_allow_weak_crypto \
         krb5_c_encrypt \
         krb5_decode_ticket \
@@ -68,6 +69,9 @@ AS_IF([test x"$KRB5_LIBS" != x],
              [AC_CHECK_LIB([krb524], [krb524_convert_creds_kdc],
                  [LIBS="-lkrb524 $LIBS"
                   KRB5_LIBS="-lkrb524 $KRB5_LIBS"
+		  AC_CHECK_LIB([krb524], [krb5_524_conv_principal],
+		  [AC_DEFINE([HAVE_KRB5_524_CONV_PRINCIPAL], 1,
+		     [Define to 1 if you have the `krb5_524_conv_principal' function.])])
                   AC_DEFINE([HAVE_KRB524_CONVERT_CREDS_KDC], 1,
                      [Define to 1 if you have the `krb524_convert_creds_kdc' function.])])])])
      AC_CHECK_HEADERS([kerberosIV/krb.h])

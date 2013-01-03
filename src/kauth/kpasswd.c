@@ -218,7 +218,6 @@ CommandProc(struct cmd_syndesc *as, void *arock)
     struct passwd pwent;
     struct passwd *pw = &pwent;
 
-    int insist;			/* insist on good password quality */
     int lexplicit = 0;		/* servers specified explicitly */
     int local;			/* explicit cell is same a local cell */
     int foundPassword = 0;	/*Not yet, anyway */
@@ -410,7 +409,6 @@ CommandProc(struct cmd_syndesc *as, void *arock)
     give_to_child(passwd);
 
     /* Get new password if it wasn't provided. */
-    insist = 0;
     if (!foundNewPassword) {
 	if (Pipe)
 	    getpipepass(npasswd, sizeof(npasswd));

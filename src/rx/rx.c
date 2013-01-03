@@ -2910,10 +2910,12 @@ rxi_FindPeer(afs_uint32 host, u_short port,
 struct rx_connection *
 rxi_FindConnection(osi_socket socket, afs_uint32 host,
 		   u_short port, u_short serviceId, afs_uint32 cid,
-		   afs_uint32 epoch, int type, u_int securityIndex)
+		   afs_uint32 epoch, int type, u_int securityIndex,
+		   int *unknownService)
 {
     int hashindex, flag, i;
     struct rx_connection *conn;
+    *unknownService = 0;
     hashindex = CONN_HASH(host, port, cid, epoch, type);
     MUTEX_ENTER(&rx_connHashTable_lock);
     rxLastConn ? (conn = rxLastConn, flag = 0) : (conn =
@@ -2957,6 +2959,7 @@ rxi_FindConnection(osi_socket socket, afs_uint32 host,
 	service = rxi_FindService(socket, serviceId);
 	if (!service || (securityIndex >= service->nSecurityObjects)
 	    || (service->securityObjects[securityIndex] == 0)) {
+	    *unknownService = 1;
 	    MUTEX_EXIT(&rx_connHashTable_lock);
 	    return (struct rx_connection *)0;
 	}
@@ -3114,6 +3117,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
     afs_uint32 currentCallNumber;
     int type;
     int skew;
+    int unknownService = 0;
 #ifdef RXDEBUG
     char *packetType;
 #endif
@@ -3169,13 +3173,16 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
     conn =
 	rxi_FindConnection(socket, host, port, np->header.serviceId,
 			   np->header.cid, np->header.epoch, type,
-			   np->header.securityIndex);
+			   np->header.securityIndex,
+			   &unknownService);
 
+    /* To avoid having 2 connections just abort at each other,
+       don't abort an abort. */
     if (!conn) {
-	/* If no connection found or fabricated, just ignore the packet.
-	 * (An argument could be made for sending an abort packet for
-	 * the conn) */
-	return np;
+        if (unknownService && (np->header.type != RX_PACKET_TYPE_ABORT))
+            rxi_SendRawAbort(socket, host, port, RX_INVALID_OPERATION,
+                             np, 0);
+        return np;
     }
 
     /* If the connection is in an error state, send an abort packet and ignore
@@ -3337,13 +3344,14 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	     */
 #ifdef AFS_GLOBAL_RXLOCK_KERNEL
             if (call->state == RX_STATE_ACTIVE) {
+		int old_error = call->error;
                 rxi_WaitforTQBusy(call);
                 /*
                  * If we entered error state while waiting,
                  * must call rxi_CallError to permit rxi_ResetCall
                  * to processed when the tqWaiter count hits zero.
                  */
-                if (call->error) {
+                if (call->error && call->error != old_error) {
                     rxi_CallError(call, call->error);
                     MUTEX_EXIT(&call->lock);
                     MUTEX_ENTER(&rx_refcnt_mutex);
@@ -4921,12 +4929,11 @@ rxi_AttachServerProc(struct rx_call *call,
 	if (call->flags & RX_CALL_WAIT_PROC) {
 	    /* Conservative:  I don't think this should happen */
 	    call->flags &= ~RX_CALL_WAIT_PROC;
+	    MUTEX_ENTER(&rx_waiting_mutex);
+	    rx_nWaiting--;
+	    MUTEX_EXIT(&rx_waiting_mutex);
 	    if (queue_IsOnQueue(call)) {
 		queue_Remove(call);
-
-                MUTEX_ENTER(&rx_waiting_mutex);
-                rx_nWaiting--;
-                MUTEX_EXIT(&rx_waiting_mutex);
 	    }
 	}
 	call->state = RX_STATE_ACTIVE;
@@ -5428,6 +5435,11 @@ rxi_ResetCall(struct rx_call *call, int newcall)
 	osi_rxWakeup(&call->twind);
 #endif
 
+    if (flags & RX_CALL_WAIT_PROC) {
+	MUTEX_ENTER(&rx_stats_mutex);
+	rx_nWaiting--;
+	MUTEX_EXIT(&rx_stats_mutex);
+    }
 #ifdef RX_ENABLE_LOCKS
     /* The following ensures that we don't mess with any queue while some
      * other thread might also be doing so. The call_queue_lock field is
@@ -5442,12 +5454,6 @@ rxi_ResetCall(struct rx_call *call, int newcall)
 	MUTEX_ENTER(call->call_queue_lock);
 	if (queue_IsOnQueue(call)) {
 	    queue_Remove(call);
-	    if (flags & RX_CALL_WAIT_PROC) {
-
-                MUTEX_ENTER(&rx_waiting_mutex);
-                rx_nWaiting--;
-                MUTEX_EXIT(&rx_waiting_mutex);
-	    }
 	}
 	MUTEX_EXIT(call->call_queue_lock);
 	CLEAR_CALL_QUEUE_LOCK(call);
@@ -5455,8 +5461,6 @@ rxi_ResetCall(struct rx_call *call, int newcall)
 #else /* RX_ENABLE_LOCKS */
     if (queue_IsOnQueue(call)) {
 	queue_Remove(call);
-	if (flags & RX_CALL_WAIT_PROC)
-	    rx_nWaiting--;
     }
 #endif /* RX_ENABLE_LOCKS */
 
@@ -6678,12 +6682,16 @@ rxi_KeepAliveOn(struct rx_call *call)
 void
 rx_KeepAliveOff(struct rx_call *call)
 {
+    MUTEX_ENTER(&call->lock);
     rxi_KeepAliveOff(call);
+    MUTEX_EXIT(&call->lock);
 }
 void
 rx_KeepAliveOn(struct rx_call *call)
 {
+    MUTEX_ENTER(&call->lock);
     rxi_KeepAliveOn(call);
+    MUTEX_EXIT(&call->lock);
 }
 
 void

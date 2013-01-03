@@ -62,7 +62,7 @@ osi_lookupname_internal(char *aname, int followlink, struct vfsmount **mnt,
 #if defined(HAVE_LINUX_PATH_LOOKUP)
     struct nameidata path_data;
 #else
-    struct path path_data;
+    afs_linux_path_t path_data;
 #endif
     int flags = LOOKUP_POSITIVE;
     code = ENOENT;
@@ -78,22 +78,25 @@ osi_lookupname_internal(char *aname, int followlink, struct vfsmount **mnt,
 }
 
 int
-osi_lookupname(char *aname, uio_seg_t seg, int followlink, 
+osi_lookupname(char *aname, uio_seg_t seg, int followlink,
 	       struct dentry **dpp)
 {
     int code;
-    char *tname;
+    afs_name_t tname = NULL;
+    char *name;
+
     code = ENOENT;
     if (seg == AFS_UIOUSER) {
-        tname = getname(aname);
-        if (IS_ERR(tname)) 
-            return PTR_ERR(tname);
+	tname = getname(aname);
+	if (IS_ERR(tname))
+	    return PTR_ERR(tname);
+	name = afs_name_to_string(tname);
     } else {
-        tname = aname;
+	name = aname;
     }
-    code = osi_lookupname_internal(tname, followlink, NULL, dpp);   
+    code = osi_lookupname_internal(name, followlink, NULL, dpp);
     if (seg == AFS_UIOUSER) {
-        putname(tname);
+	afs_putname(tname);
     }
     return code;
 }
@@ -103,17 +106,18 @@ int osi_abspath(char *aname, char *buf, int buflen,
 {
     struct dentry *dp = NULL;
     struct vfsmount *mnt = NULL;
-    char *tname, *path;
+    afs_name_t tname;
+    char *path;
     int code;
 
     code = ENOENT;
     tname = getname(aname);
-    if (IS_ERR(tname)) 
+    if (IS_ERR(tname))
 	return -PTR_ERR(tname);
-    code = osi_lookupname_internal(tname, followlink, &mnt, &dp);   
+    code = osi_lookupname_internal(afs_name_to_string(tname), followlink, &mnt, &dp);
     if (!code) {
 #if defined(D_PATH_TAKES_STRUCT_PATH)
-	struct path p = { mnt, dp };
+	afs_linux_path_t p = { mnt, dp };
 	path = d_path(&p, buf, buflen);
 #else
 	path = d_path(dp, mnt, buf, buflen);
@@ -129,7 +133,7 @@ int osi_abspath(char *aname, char *buf, int buflen,
 	mntput(mnt);
     }
 
-    putname(tname);
+    afs_putname(tname);
     return code;
 }
 

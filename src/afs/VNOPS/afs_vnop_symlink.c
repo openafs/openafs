@@ -277,7 +277,8 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     }
 
     if (!tvc->linkData) {
-	tvc->linkData = (char *)afs_osi_Alloc(alen);
+	tvc->linkData = afs_osi_Alloc(alen);
+	osi_Assert(tvc->linkData != NULL);
 	strncpy(tvc->linkData, atargetName, alen - 1);
 	tvc->linkData[alen - 1] = 0;
     }
@@ -334,6 +335,7 @@ afs_MemHandleLink(struct vcache *avc, struct vrequest *areq)
 	rbuf[alen - 1] = 0;
 	alen = strlen(rbuf) + 1;
 	tp = afs_osi_Alloc(alen);	/* make room for terminating null */
+	osi_Assert(tp != NULL);
 	memcpy(tp, rbuf, alen);
 	osi_FreeLargeSpace(rbuf);
 	if (code != len) {
@@ -390,6 +392,7 @@ afs_UFSHandleLink(struct vcache *avc, struct vrequest *areq)
 	rbuf[alen - 1] = '\0';
 	alen = strlen(rbuf) + 1;
 	tp = afs_osi_Alloc(alen);	/* make room for terminating null */
+	osi_Assert(tp != NULL);
 	memcpy(tp, rbuf, alen);
 	osi_FreeLargeSpace(rbuf);
 	if (code != tlen) {
