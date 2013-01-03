@@ -33,6 +33,7 @@ openafs (1.6.2~pre2-1) UNRELEASED; urgency=low
   * Move single-debian-patch to local-options and patch-header to
     local-patch-header so that they only apply to the packages I build and
     NMUs get regular version-numbered patches.
+  * Update Vcs-* URLs for the new anonscm.debian.org URL layout.
   
  -- Russ Allbery <rra@debian.org>  Wed, 02 Jan 2013 21:25:52 -0800
 
