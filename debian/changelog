@@ -1,3 +1,11 @@
+openafs (1.6.2~pre2-2) experimental; urgency=low
+
+  * Restore include of <sys/param.h> in userspace builds of rx/rx_packet.h
+    to get a definition of MIN and MAX on, at least, powerpc.  Thanks,
+    Andrew Deason.
+
+ -- Russ Allbery <rra@debian.org>  Thu, 03 Jan 2013 12:06:41 -0800
+
 openafs (1.6.2~pre2-1) experimental; urgency=low
 
   * New upstream prerelease.
