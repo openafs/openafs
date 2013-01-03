@@ -84,7 +84,7 @@ get-orig-source:
 	rm -r openafs_$(DEBVERS).orig/src/WINNT
 	tar cf openafs_$(DEBVERS).orig.tar openafs_$(DEBVERS).orig
 	rm -r openafs_$(DEBVERS).orig
-	gzip -9 openafs_$(DEBVERS).orig.tar
+	xz openafs_$(DEBVERS).orig.tar
 
 # Use dh for most actions, with overrides below.
 %:
@@ -264,3 +264,6 @@ override_dh_strip:
 	rm -rf debian/openafs-dbg/usr/lib/debug/sbin
 	rm -rf debian/openafs-dbg/usr/lib/debug/usr/bin
 	rm -rf debian/openafs-dbg/usr/lib/debug/usr/sbin
+
+override_dh_builddeb:
+	dh_builddeb -- -Zxz

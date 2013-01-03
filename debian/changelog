@@ -16,6 +16,8 @@ openafs (1.6.2~pre2-1) UNRELEASED; urgency=low
       bytes of a file as nulls.
     - Support Linux kernels up to 3.7.
     - Support newer glibc versions.
+  * Switch to xz compression for the upstream tarball, Debian tarball, and
+    binary packages.
   * Remove debian/import-upstream and change README.source to document
     using git-import-orig with --upstream-vcs-tag instead.
   * Move single-debian-patch to local-options and patch-header to
