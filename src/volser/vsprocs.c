@@ -5714,7 +5714,7 @@ CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver, afs_int32 apart,
 	if (code) {
 	    if (code != VL_NOENT) {
 		fprintf(STDOUT,
-		        "Could not retreive the VLDB entry for volume %lu \n",
+		        "Could not retrieve the VLDB entry for volume %lu \n",
 		        (unsigned long)rwvolid);
 		ERROR_EXIT(code);
 	    }
