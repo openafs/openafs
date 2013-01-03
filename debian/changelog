@@ -16,6 +16,9 @@ openafs (1.6.2~pre2-1) UNRELEASED; urgency=low
       read and write to a file, the reading client may see first couple
       bytes of a file as nulls.
     - Support newer glibc versions.
+  * Fix server installation instructions in README.servers, which used the
+    early demand-attach syntax before separate demand-attach binaries were
+    built.  (Closes: #693311)
   * Switch to xz compression for the upstream tarball, Debian tarball, and
     binary packages.
   * Remove debian/import-upstream and change README.source to document

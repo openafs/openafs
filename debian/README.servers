@@ -313,10 +313,10 @@ Adding Additional Servers
   3.  If the machine is to be a file server, create an fs instance using
       bos create:
 
-          bos create <host> fs fs -cmd /usr/lib/openafs/dafileserver \
+          bos create <host> dafs dafs -cmd /usr/lib/openafs/dafileserver \
               -cmd /usr/lib/openafs/davolserver \
               -cmd /usr/lib/openafs/salvageserver \
-              -cmd /usr/lib/openafs/salvager -localauth
+              -cmd /usr/lib/openafs/dasalvager -localauth
 
       For a file server, this is all you have to do.  The above uses the
       default fileserver options, however, which are not particularly
