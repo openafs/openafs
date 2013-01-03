@@ -258,8 +258,7 @@ extern void afs_FlushDCache(struct dcache *adc);
 extern void shutdown_dcache(void);
 extern void afs_CacheTruncateDaemon(void);
 extern afs_int32 afs_fsfragsize;
-extern struct dcache *afs_MemGetDSlot(afs_int32 aslot,
-				      struct dcache *tmpdc);
+extern struct dcache *afs_MemGetDSlot(afs_int32 aslot, int indexvalid, int datavalid);
 extern struct dcache *afs_GetDCache(struct vcache *avc,
 				    afs_size_t abyte,
 				    struct vrequest *areq,
@@ -281,8 +280,7 @@ extern void afs_TryToSmush(struct vcache *avc,
 extern void updateV2DC(int lockVc, struct vcache *v, struct dcache *d,
 		       int src);
 extern void afs_WriteThroughDSlots(void);
-extern struct dcache *afs_UFSGetDSlot(afs_int32 aslot,
-				      struct dcache *tmpdc);
+extern struct dcache *afs_UFSGetDSlot(afs_int32 aslot, int indexvalid, int datavalid);
 extern int afs_WriteDCache(struct dcache *adc, int atime);
 extern int afs_wakeup(struct vcache *avc);
 extern int afs_InitCacheFile(char *afile, ino_t ainode);
@@ -853,9 +851,18 @@ extern struct server *afs_GetServer(afs_uint32 * aserver, afs_int32 nservers,
 extern void afs_GetCapabilities(struct server *ts);
 extern void ForceAllNewConnections(void);
 extern void afs_MarkServerUpOrDown(struct srvAddr *sa, int a_isDown);
-extern afs_int32 afs_ServerDown(struct srvAddr *sa);
+extern afs_int32 afs_ServerDown(struct srvAddr *sa, int code);
 extern void afs_CountServers(void);
 extern void afs_CheckServers(int adown, struct cell *acellp);
+extern void afs_LoopServers(int adown, struct cell *acellp, int vlalso,
+			    void (*func1) (struct rx_connection **rxconns,
+					   int nconns, int nservers,
+					   struct afs_conn **conns,
+					   struct srvAddr **addrs),
+			    void (*func2) (struct rx_connection **rxconns,
+					   int nconns, int nservers,
+					   struct afs_conn **conns,
+					   struct srvAddr **addrs));
 extern unsigned int afs_random(void);
 extern int afs_randomMod15(void);
 extern int afs_randomMod127(void);
@@ -968,7 +975,8 @@ extern void afs_MarkUserExpired(afs_int32 pag);
 
 /* afs_util.c */
 extern afs_int32 afs_strtoi_r(const char *str, char **endptr, afs_uint32 *ret);
-extern afs_int32 afs_calc_inum (afs_int32 volume, afs_int32 vnode);
+extern afs_int32 afs_calc_inum(afs_int32 cell, afs_int32 volume,
+                               afs_int32 vnode);
 #ifndef afs_cv2string
 extern char *afs_cv2string(char *ttp, afs_uint32 aval);
 #endif
@@ -989,7 +997,7 @@ extern char *afs_strrchr(char *s, int c);
 #endif
 extern char *afs_strdup(char *s);
 extern void print_internet_address(char *preamble, struct srvAddr *sa,
-				   char *postamble, int flag);
+				   char *postamble, int flag, int code);
 extern afs_int32 afs_data_pointer_to_int32(const void *p);
 
 extern void afs_CheckLocks(void);
@@ -1033,6 +1041,9 @@ extern void afs_FlushReclaimedVcaches(void);
 void afs_vcacheInit(int astatSize);
 extern struct vcache *afs_FindVCache(struct VenusFid *afid, afs_int32 * retry,
 				     afs_int32 flag);
+extern void afs_BadFetchStatus(struct afs_conn *tc);
+extern int afs_CheckFetchStatus(struct afs_conn *tc,
+                                struct AFSFetchStatus *status);
 extern afs_int32 afs_FetchStatus(struct vcache *avc, struct VenusFid *afid,
 				 struct vrequest *areq,
 				 struct AFSFetchStatus *Outsp);

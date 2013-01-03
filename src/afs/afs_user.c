@@ -485,7 +485,8 @@ afs_GetUser(afs_int32 auid, afs_int32 acell, afs_int32 locktype)
 	    }
 	}
     }
-    tu = (struct unixuser *)afs_osi_Alloc(sizeof(struct unixuser));
+    tu = afs_osi_Alloc(sizeof(struct unixuser));
+    osi_Assert(tu != NULL);
 #ifndef AFS_NOSTATS
     afs_stats_cmfullperf.authent.PAGCreations++;
 #endif /* AFS_NOSTATS */

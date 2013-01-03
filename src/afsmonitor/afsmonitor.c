@@ -1417,7 +1417,6 @@ process_config_file(char *a_config_filename)
     char *handlerPtr;		/* ptr to pass theresh handler string */
     int code = 0;		/* error code */
     int linenum = 0;		/* config file line number */
-    int threshCount;		/* count of thresholds for each server */
     int error_in_config;	/* syntax errors in config file  ?? */
     int i;
     int numBytes;
@@ -1453,7 +1452,6 @@ process_config_file(char *a_config_filename)
 
     numFS = 0;
     numCM = 0;
-    threshCount = 0;
     error_in_config = 0;	/* flag to note if config file has syntax errors */
 
     while ((fgets(line, CFG_STR_LEN, configFD)) != NULL) {
@@ -2044,7 +2042,6 @@ execute_thresh_handler(char *a_handler,		/* ptr to handler function + args */
     char fileName[256];		/* file name to execute */
     int i;
     char *ch;
-    int code;
     int argNum;
     int anotherArg;		/* boolean used to flag if another arg is available */
 
@@ -2109,7 +2106,7 @@ execute_thresh_handler(char *a_handler,		/* ptr to handler function + args */
 
     if (fork() == 0) {
 	exec_fsThreshHandler = 1;
-	code = afsmon_Exit(60);
+	afsmon_Exit(60);
     }
 
     return (0);

@@ -784,7 +784,12 @@ fs_procexit(struct bnode *bn, struct bnode_proc *aproc)
 static void
 SetNeedsClock(struct fsbnode *ab)
 {
-    if (ab->b.goal == 1 && ab->fileRunning && ab->volRunning
+    if ((ab->fileSDW && !ab->fileKillSent) || (ab->volSDW && !ab->volKillSent)
+	|| (ab->scanSDW && !ab->scanKillSent) || (ab->salSDW && !ab->salKillSent)
+	|| (ab->salsrvSDW && !ab->salsrvKillSent)) {
+	/* SIGQUIT sent, will send SIGKILL if process does not exit */
+	ab->needsClock = 1;
+    } else if (ab->b.goal == 1 && ab->fileRunning && ab->volRunning
 	&& (!ab->scancmd || ab->scanRunning)
 	&& (!ab->salsrvcmd || ab->salsrvRunning))
 	ab->needsClock = 0;	/* running normally */

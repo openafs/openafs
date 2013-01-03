@@ -1218,7 +1218,13 @@ afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
 #endif /* AFS_NEED_CLIENTCONTEXT */
     if (vp) {
 #ifdef AFS_LINUX22_ENV
+	/*
+	 * Holding the global lock when calling dput can cause a deadlock
+	 * when the kernel calls back into afs_dentry_iput
+	 */
+	AFS_GUNLOCK();
 	dput(dp);
+	AFS_GLOCK();
 #else
 #if defined(AFS_FBSD80_ENV)
     if (VOP_ISLOCKED(vp))
@@ -1937,6 +1943,8 @@ DECL_PIOCTL(PGetVolumeStatus)
     struct rx_connection *rxconn;
     XSTATS_DECLS;
 
+    osi_Assert(offLineMsg != NULL);
+    osi_Assert(motd != NULL);
     AFS_STATCNT(PGetVolumeStatus);
     if (!avc) {
 	code = EINVAL;
@@ -3481,7 +3489,10 @@ DECL_PIOCTL(PFlushVolumeData)
     for (i = 0; i < afs_cacheFiles; i++) {
 	if (!(afs_indexFlags[i] & IFEverUsed))
 	    continue;		/* never had any data */
-	tdc = afs_GetDSlot(i, NULL);
+	tdc = afs_GetValidDSlot(i);
+	if (!tdc) {
+	    continue;
+	}
 	if (tdc->refCount <= 1) {    /* too high, in use by running sys call */
 	    ReleaseReadLock(&tdc->tlock);
 	    if (tdc->f.fid.Fid.Volume == volume && tdc->f.fid.Cell == cell) {
@@ -3824,7 +3835,8 @@ ReSortCells(int s, afs_int32 * l, int vlonly)
 
     if (vlonly) {
 	afs_int32 *p;
-	p = (afs_int32 *) afs_osi_Alloc(sizeof(afs_int32) * (s + 1));
+	p = afs_osi_Alloc(sizeof(afs_int32) * (s + 1));
+        osi_Assert(p != NULL);
 	p[0] = s;
 	memcpy(p + 1, l, s * sizeof(afs_int32));
 	afs_TraverseCells(&ReSortCells_cb, p);
@@ -4848,8 +4860,8 @@ DECL_PIOCTL(PRxStatPeer)
 
 DECL_PIOCTL(PPrefetchFromTape)
 {
-    afs_int32 code, code1;
-    afs_int32 bytes, outval;
+    afs_int32 code;
+    afs_int32 outval;
     struct afs_conn *tc;
     struct rx_call *tcall;
     struct AFSVolSync tsync;
@@ -4892,11 +4904,11 @@ DECL_PIOCTL(PPrefetchFromTape)
 		StartRXAFS_FetchData(tcall, (struct AFSFid *)&tvc->f.fid.Fid, 0,
 				     0);
 	    if (!code) {
-		bytes = rx_Read(tcall, (char *)&outval, sizeof(afs_int32));
+		rx_Read(tcall, (char *)&outval, sizeof(afs_int32));
 		code =
 		    EndRXAFS_FetchData(tcall, &OutStatus, &CallBack, &tsync);
 	    }
-	    code1 = rx_EndCall(tcall, code);
+	    code = rx_EndCall(tcall, code);
 	    RX_AFS_GLOCK();
 	} else
 	    code = -1;
@@ -5082,6 +5094,7 @@ DECL_PIOCTL(PCallBackAddr)
     }
 
     addrs = afs_osi_Alloc(srvAddrCount * sizeof(*addrs));
+    osi_Assert(addrs != NULL);
     j = 0;
     for (i = 0; i < NSERVERS; i++) {
 	for (sa = afs_srvAddrs[i]; sa; sa = sa->next_bkt) {

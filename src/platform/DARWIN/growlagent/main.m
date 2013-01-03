@@ -20,9 +20,9 @@
 
 */
 #import <Foundation/Foundation.h>
+#import <CoreFoundation/CoreFoundation.h>
 #import "GrowlDefines.h"
 #import "GrowlPathway.h"
-#include "CFGrowlAdditions.h"
 
 #include <mach-o/dyld.h>
 #include <unistd.h>
@@ -168,19 +168,32 @@ static void MySocketReadCallBack(CFSocketRef socket, CFSocketCallBackType callba
 	}
 }
 
+CFDataRef readFile(const char *filename)
+{
+    CFDataRef data;
+    // read the file into a CFDataRef
+    FILE *fp = fopen(filename, "r");
+    if (fp) {
+	fseek(fp, 0, SEEK_END);
+	long dataLength = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+	unsigned char *fileData = malloc(dataLength);
+	fread(fileData, 1, dataLength, fp);
+	fclose(fp);
+	data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, fileData, dataLength, kCFAllocatorMalloc);
+    } else
+	data = NULL;
+    
+    return data;
+}
+
 int main(int argc, const char **argv) {
 	BOOL         wait = NO;
 	int          code = EXIT_SUCCESS;
 	CFDataRef icon = NULL;
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-
-	// get icon data for application name
-	char *selfPath;
-	getPath(&selfPath);
-	CFStringRef appPath = CFStringCreateWithCString(kCFAllocatorDefault, selfPath, kCFStringEncodingUTF8);
-	NSURL *appURL = [NSURL fileURLWithPath:(NSString *)appPath];
-	icon = (CFDataRef)copyIconDataForURL(appURL);
-	free(selfPath);
+	NSString* myImage = [[NSBundle mainBundle] pathForResource:@"Andy" ofType:@"icns"];
+	icon = (CFDataRef) readFile([myImage UTF8String]);
 
 	// Register with Growl
 	CFStringRef name = NOTIFICATION_NAME;

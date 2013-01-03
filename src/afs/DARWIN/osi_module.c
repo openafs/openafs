@@ -56,7 +56,7 @@ afs_modload(struct kmod_info *kmod_info, void *data)
     afs_global_lock = lck_mtx_alloc_init(openafs_lck_grp, 0);
 
     if (ret = vfs_fsadd(&afs_vfsentry, &afs_vfstable)) {
-	printf("AFS: vfs_fsadd failed. aborting: %d\n", ret);
+	afs_warn("AFS: vfs_fsadd failed. aborting: %d\n", ret);
 	afs_vfstable = NULL;
 	goto fsadd_out;
     }
@@ -65,14 +65,14 @@ afs_modload(struct kmod_info *kmod_info, void *data)
     afs_cdev.d_ioctl = &afs_cdev_ioctl;
     afs_cdev_major = cdevsw_add(-1, &afs_cdev);
     if (afs_cdev_major == -1) {
-	printf("AFS: cdevsw_add failed. aborting\n");
+	afs_warn("AFS: cdevsw_add failed. aborting\n");
 	goto cdevsw_out;
     }
     afs_cdev_devfs_handle = devfs_make_node(makedev(afs_cdev_major, 0),
                                             DEVFS_CHAR, UID_ROOT, GID_WHEEL,
                                             0666, "openafs_ioctl", 0);
     if (!afs_cdev_devfs_handle) {
-	printf("AFS: devfs_make_node failed. aborting\n");
+	afs_warn("AFS: devfs_make_node failed. aborting\n");
 	cdevsw_remove(afs_cdev_major, &afs_cdev);
     cdevsw_out:
 	vfs_fsremove(afs_vfstable);
@@ -88,11 +88,11 @@ afs_modload(struct kmod_info *kmod_info, void *data)
     afs_vfsconf.vfc_typenum = maxvfsconf++;	/* oddly not VT_AFS */
     afs_vfsconf.vfc_flags = MNT_NODEV;
     if (vfsconf_add(&afs_vfsconf)) {
-	printf("AFS: vfsconf_add failed. aborting\n");
+	afs_warn("AFS: vfsconf_add failed. aborting\n");
 	return KERN_FAILURE;
     }
     if (sysent[AFS_SYSCALL].sy_call != nosys) {
-	printf("AFS_SYSCALL in use. aborting\n");
+	afs_warn("AFS_SYSCALL in use. aborting\n");
 	return KERN_FAILURE;
     }
     sysent[SYS_setgroups].sy_call = Afs_xsetgroups;
@@ -103,7 +103,7 @@ afs_modload(struct kmod_info *kmod_info, void *data)
     sysent[AFS_SYSCALL].sy_funnel = KERNEL_FUNNEL;
 #endif
 #endif
-    printf("%s kext loaded; %u pages at 0x%lx (load tag %u).\n",
+    afs_warn("%s kext loaded; %u pages at 0x%lx (load tag %u).\n",
 	   kmod_info->name, (unsigned)kmod_info->size / PAGE_SIZE,
 	   (unsigned long)kmod_info->address, (unsigned)kmod_info->id);
 
@@ -114,6 +114,8 @@ kern_return_t
 afs_modunload(struct kmod_info * kmod_info, void *data)
 {
     if (afs_globalVFS)
+	return KERN_FAILURE;
+    if ((afs_initState != 0) || (afs_shuttingdown))
 	return KERN_FAILURE;
 #ifdef AFS_DARWIN80_ENV
     if (vfs_fsremove(afs_vfstable))
@@ -133,7 +135,7 @@ afs_modunload(struct kmod_info * kmod_info, void *data)
     MUTEX_FINISH();
     lck_mtx_free(afs_global_lock, openafs_lck_grp);
 #endif
-    printf("%s kext unloaded; (load tag %u).\n",
+    afs_warn("%s kext unloaded; (load tag %u).\n",
 	   kmod_info->name, (unsigned)kmod_info->id);
     return KERN_SUCCESS;
 }

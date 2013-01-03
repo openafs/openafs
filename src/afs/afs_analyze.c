@@ -111,6 +111,7 @@ VLDB_Same(struct VenusFid *afid, struct vrequest *areq)
     if ((i = afs_InitReq(&treq, afs_osi_credp)))
 	return DUNNO;
     v = afs_osi_Alloc(sizeof(*v));
+    osi_Assert(v != NULL);
     tcell = afs_GetCell(afid->Cell, READ_LOCK);
     bp = afs_cv2string(&tbuf[CVBS], afid->Fid.Volume);
     do {
@@ -332,6 +333,55 @@ afs_ClearStatus(struct VenusFid *afid, int op, struct volume *avp)
     return 0;
 }
 
+/*!
+ * \brief
+ *      Print the last errors from the servers for the volume on
+ *      this request.
+ *
+ * \param[in] areq   The request record associated with this operation.
+ * \param[in] afid   The FID of the file involved in the action.  This argument
+ *		     may be null if none was involved.
+ *
+ * \return
+ *      None
+ *
+ * \note
+ *      This routine is called before a hard-mount retry, to display
+ *      the servers by primary address and the errors encountered.
+ */
+static void
+afs_PrintServerErrors(struct vrequest *areq, struct VenusFid *afid)
+{
+    int i;
+    struct volume *tvp;
+    struct srvAddr *sa;
+    afs_uint32 address;
+    char *sep = " (";
+    char *term = "";
+
+    if (afid) {
+	tvp = afs_FindVolume(afid, READ_LOCK);
+	if (tvp) {
+	    for (i = 0; i < AFS_MAXHOSTS; i++) {
+		if (tvp->serverHost[i]) {
+		    sa = tvp->serverHost[i]->addr;
+		    if (sa) {
+			address = ntohl(sa->sa_ip);
+			afs_warnuser("%s%d.%d.%d.%d code=%d", sep,
+				     (address >> 24), (address >> 16) & 0xff,
+				     (address >> 8) & 0xff, (address) & 0xff,
+				     areq->lasterror[i]);
+			sep = ", ";
+			term = ")";
+		    }
+		}
+	    }
+	    afs_PutVolume(tvp, READ_LOCK);
+	}
+    }
+    afs_warnuser("%s\n", term);
+}
+
 /*------------------------------------------------------------------------
  * EXPORTED afs_Analyze
  *
@@ -377,7 +427,6 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
     afs_int32 shouldRetry = 0;
     afs_int32 serversleft = 1;
     struct afs_stats_RPCErrors *aerrP;
-    afs_int32 markeddown;
     afs_uint32 address;
 
     if (AFS_IS_DISCONNECTED && !AFS_IN_SYNC) {
@@ -501,8 +550,9 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
 		    if (shouldRetry) {
 			if (warn) {
 			    afs_warnuser
-			        ("afs: hard-mount waiting for volume %u\n",
+			        ("afs: hard-mount waiting for volume %u",
 			         afid->Fid.Volume);
+			    afs_PrintServerErrors(areq, afid);
 			}
 
 			VSleep(hm_retry_int);
@@ -533,6 +583,8 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
 		}
 	    }
 	}
+	if (aconn) /* simply lacking aconn->server doesn't absolve this */
+	    afs_PutConn(aconn, rxconn, locktype);
 	return shouldRetry;
     }
 
@@ -564,44 +616,55 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
 	return 0;
     }
 
-    /* If network troubles, mark server as having bogued out again. */
-    /* VRESTARTING is < 0 because of backward compatibility issues
-     * with 3.4 file servers and older cache managers */
+    /* Save the last code of this server on this request. */
+    tvp = afs_FindVolume(afid, READ_LOCK);
+    if (tvp) {
+	for (i = 0; i < AFS_MAXHOSTS; i++) {
+	    if (tvp->serverHost[i] == tsp) {
+		areq->lasterror[i] = acode;
+	    }
+	}
+	afs_PutVolume(tvp, READ_LOCK);
+    }
+
 #ifdef AFS_64BIT_CLIENT
     if (acode == -455)
 	acode = 455;
 #endif /* AFS_64BIT_CLIENT */
-    if ((acode < 0) && (acode != VRESTARTING)) {
-	if (acode == RX_MSGSIZE || acode == RX_CALL_BUSY) {
+    if (acode == RX_MSGSIZE || acode == RX_CALL_BUSY) {
+	shouldRetry = 1;
+	goto out;
+    }
+    if (acode == RX_CALL_TIMEOUT || acode == RX_CALL_IDLE || acode == VNOSERVICE) {
+	serversleft = afs_BlackListOnce(areq, afid, tsp);
+	if (afid)
+	    tvp = afs_FindVolume(afid, READ_LOCK);
+	if ((serversleft == 0) && tvp &&
+	    ((tvp->states & VRO) || (tvp->states & VBackup))) {
+	    shouldRetry = 0;
+	} else {
 	    shouldRetry = 1;
-	    goto out;
 	}
-	if (acode == RX_CALL_TIMEOUT || acode == RX_CALL_IDLE) {
-	    serversleft = afs_BlackListOnce(areq, afid, tsp);
-	    if (afid)
-		tvp = afs_FindVolume(afid, READ_LOCK);
-	    if ((serversleft == 0) && tvp &&
-		((tvp->states & VRO) || (tvp->states & VBackup))) {
-		shouldRetry = 0;
-	    } else {
-		shouldRetry = 1;
-	    }
-	    if (!afid || !tvp || (tvp->states & VRO))
-		areq->idleError++;
-	    else if (afs_ClearStatus(afid, op, tvp) == 0)
-		shouldRetry = 0;
+	if (!afid || !tvp || (tvp->states & VRO))
+	    areq->idleError++;
+	else if (afs_ClearStatus(afid, op, tvp) == 0)
+	    shouldRetry = 0;
 
-	    if (tvp)
-		afs_PutVolume(tvp, READ_LOCK);
-	    /* By doing this, we avoid ever marking a server down
-	     * in an idle timeout case. That's because the server is
-	     * still responding and may only be letting a single vnode
-	     * time out. We otherwise risk having the server continually
-	     * be marked down, then up, then down again...
-	     */
-	    goto out;
-	}
-	markeddown = afs_ServerDown(sa);
+	if (tvp)
+	    afs_PutVolume(tvp, READ_LOCK);
+	/* By doing this, we avoid ever marking a server down
+	 * in an idle timeout case. That's because the server is
+	 * still responding and may only be letting a single vnode
+	 * time out. We otherwise risk having the server continually
+	 * be marked down, then up, then down again...
+	 */
+	goto out;
+    }
+    /* If network troubles, mark server as having bogued out again. */
+    /* VRESTARTING is < 0 because of backward compatibility issues
+     * with 3.4 file servers and older cache managers */
+    if ((acode < 0) && (acode != VRESTARTING)) {
+	afs_ServerDown(sa, acode);
 	ForceNewConnections(sa); /**multi homed clients lock:afs_xsrvAddr? */
 	if (aerrP)
 	    (aerrP->err_Server)++;
@@ -727,7 +790,7 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
     }
     /* check for ubik errors; treat them like crashed servers */
     else if (acode >= ERROR_TABLE_BASE_U && acode < ERROR_TABLE_BASE_U + 255) {
-	afs_ServerDown(sa);
+	afs_ServerDown(sa, acode);
 	if (aerrP)
 	    (aerrP->err_Server)++;
 	shouldRetry = 1;	/* retryable (maybe one is working) */
@@ -735,7 +798,7 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
     }
     /* Check for bad volume data base / missing volume. */
     else if (acode == VSALVAGE || acode == VOFFLINE || acode == VNOVOL
-	     || acode == VNOSERVICE || acode == VMOVED) {
+	     || acode == VMOVED) {
 	struct cell *tcell;
 	int same;
 

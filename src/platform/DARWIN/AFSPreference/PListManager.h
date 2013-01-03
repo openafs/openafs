@@ -40,7 +40,7 @@
  @abstract   Enable or disable the system to get kerberos ticket at login time
  @discussion <#(comprehensive description)#>
  */
-+(void) krb5TiketAtLoginTime:(BOOL)enable;
++(void) krb5TiketAtLoginTime:(BOOL)enable helper:(NSString *)helper;
 
 /*!
  @method     checkKrb5AtLoginTimeLaunchdEnable
@@ -80,9 +80,7 @@
  @abstract   exec the launchctl command on a particular plist job
  @discussion <#(comprehensive description)#>
  */
-+(void) launchctlStringCommand:(NSString*)operation
-						option:(NSArray*)option
-					 plistName:(NSString*)plistName;
++(void) launchctlStringCommandAuth:(NSString*)operation option:(NSArray*)option plistName:(NSString*)plistName helper:(NSString *)helper withAuthRef:(AuthorizationRef)authRef;
 /*!
  @method     launchdJobState
  @abstract   check is a job has been submitted to launchd

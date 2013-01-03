@@ -1247,7 +1247,7 @@ RXStore_AccessList(Vnode * targetptr, struct AFSOpaque *AccessList)
 static int
 CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_foff_t off, afs_fsize_t len)
 {
-    Inode ino, nearInode;
+    Inode ino, nearInode AFS_UNUSED;
     ssize_t rdlen;
     ssize_t wrlen;
     afs_fsize_t size;
@@ -1347,7 +1347,7 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_foff_t off, afs_fsize_t len)
 		IH_RELEASE(newH);
 		FDH_REALLYCLOSE(targFdP);
 		rc = IH_DEC(V_linkHandle(volptr), ino, V_parentId(volptr));
-		if (!rc) {
+		if (rc) {
 		    ViceLog(0,
 			    ("CopyOnWrite failed: error %u after i_dec on disk full, volume %u in partition %s needs salvage\n",
 			     rc, V_id(volptr), volptr->partition->name));
@@ -1824,7 +1824,7 @@ Alloc_NewVnode(Vnode * parentptr, DirHandle * dir, Volume * volptr,
     Error errorCode = 0;		/* Error code returned back */
     Error temp;
     Inode inode = 0;
-    Inode nearInode;		/* hint for inode allocation in solaris */
+    Inode nearInode AFS_UNUSED;		/* hint for inode allocation in solaris */
     afs_ino_str_t stmp;
 
     if ((errorCode =
@@ -2045,8 +2045,8 @@ RXGetVolumeStatus(AFSFetchVolumeStatus * status, char **name, char **offMsg,
     status->MinQuota = V_minquota(volptr);
     status->MaxQuota = V_maxquota(volptr);
     status->BlocksInUse = V_diskused(volptr);
-    status->PartBlocksAvail = RoundInt64ToInt32(volptr->partition->free);
-    status->PartMaxBlocks = RoundInt64ToInt32(volptr->partition->totalUsable);
+    status->PartBlocksAvail = RoundInt64ToInt31(volptr->partition->free);
+    status->PartMaxBlocks = RoundInt64ToInt31(volptr->partition->totalUsable);
 
     /* now allocate and copy these things; they're freed by the RXGEN stub */
     temp = strlen(V_name(volptr)) + 1;
@@ -5741,8 +5741,8 @@ SetVolumeStats(struct AFSStatistics *stats)
 
     for (part = DiskPartitionList; part && i < AFS_MSTATDISKS;
 	 part = part->next) {
-	stats->Disks[i].TotalBlocks = RoundInt64ToInt32(part->totalUsable);
-	stats->Disks[i].BlocksAvailable = RoundInt64ToInt32(part->free);
+	stats->Disks[i].TotalBlocks = RoundInt64ToInt31(part->totalUsable);
+	stats->Disks[i].BlocksAvailable = RoundInt64ToInt31(part->free);
 	memset(stats->Disks[i].Name, 0, AFS_DISKNAMESIZE);
 	strncpy(stats->Disks[i].Name, part->name, AFS_DISKNAMESIZE);
 	i++;
@@ -6019,7 +6019,7 @@ SRXAFS_XStatsVersion(struct rx_call * a_call, afs_int32 * a_versionP)
 static void
 FillPerfValues(struct afs_PerfStats *a_perfP)
 {				/*FillPerfValues */
-    afs_uint32 hi, lo;
+    afs_uint32 hi AFS_UNUSED, lo;
     int dir_Buffers;		/*# buffers in use by dir package */
     int dir_Calls;		/*# read calls in dir package */
     int dir_IOs;		/*# I/O ops in dir package */

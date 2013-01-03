@@ -487,7 +487,7 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
     char hoststr[16];
 #ifndef OLD_URECOVERY
     char pbuffer[1028];
-    int flen, fd = -1;
+    int fd = -1;
     afs_int32 epoch = 0;
     afs_int32 pass;
 #endif
@@ -537,7 +537,6 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
     tversion.epoch = 0;		/* start off by labelling in-transit db as invalid */
     (*dbase->setlabel) (dbase, file, &tversion);	/* setlabel does sync */
 #ifndef OLD_URECOVERY
-    flen = length;
     afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.TMP", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
     fd = open(pbuffer, O_CREAT | O_RDWR | O_TRUNC, 0600);
     if (fd < 0) {

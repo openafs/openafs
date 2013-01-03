@@ -2840,6 +2840,8 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     struct DiskPartition64 *partP;
     struct ViceInodeInfo info;
     struct VolumeDiskHeader h;
+    char *rwpart, *rwname;
+    Error ec;
 # ifdef AFS_DEMAND_ATTACH_FS
     int locktype = 0;
 # endif /* AFS_DEMAND_ATTACH_FS */
@@ -2868,6 +2870,19 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 	code = EIO;
 	goto done;
     }
+
+    /* check for existing RW on any partition on this server; */
+    /* if found, return EXDEV - invalid cross-device link */
+    VOL_LOCK;
+    VGetVolumePath(&ec, h.parent, &rwpart, &rwname);
+    if (ec == 0) {
+	Log("1 namei_ConvertROtoRWvolume: RW volume %lu already exists on server partition %s.\n",
+	    afs_printable_uint32_lu(h.parent), rwpart);
+	code = EXDEV;
+	VOL_UNLOCK;
+	goto done;
+    }
+    VOL_UNLOCK;
 
     FSYNC_VolOp(volumeId, pname, FSYNC_VOL_BREAKCBKS, 0, NULL);
 

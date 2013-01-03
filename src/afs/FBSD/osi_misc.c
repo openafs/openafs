@@ -31,13 +31,15 @@ osi_lookupname(char *aname, enum uio_seg seg, int followlink,
     if (glocked)
 	AFS_GUNLOCK();
 
-    flags = 0;
+#if __FreeBSD_version >= 1000021 /* MPSAFE is gone for good! */
     flags = LOCKLEAF;
+#else
+    flags = LOCKLEAF | MPSAFE; /* namei must take Giant if needed */
+#endif
     if (followlink)
 	flags |= FOLLOW;
     else
 	flags |= NOFOLLOW;
-    flags |= MPSAFE; /* namei must take Giant if needed */
     NDINIT(&n, LOOKUP, flags, seg, aname, curthread);
     if ((error = namei(&n)) != 0) {
 	if (glocked)

@@ -30,7 +30,7 @@ To set volume quota, use the B<fs setquota> or B<fs setvol> command.
 
 =head1 CAUTIONS
 
-Currently, the maximum size of a volume is 2 terabytes (2^31 bytes).
+=include fragments/volsize-caution.pod
 
 =head1 OPTIONS
 
@@ -104,7 +104,7 @@ The following example shows the output for the volume C<user.smith>:
 
 The issuer must have the C<r> (read) permission on the ACL of the root
 directory of the volume that houses the file or directory named by the
-B<-path> argument, and C<l> (list) permission on the ACL of each 
+B<-path> argument, and C<l> (list) permission on the ACL of each
 directory that precedes it in the pathname.
 
 =head1 SEE ALSO

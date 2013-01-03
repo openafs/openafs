@@ -284,7 +284,11 @@ afs_evict_inode(struct inode *ip)
 	osi_Panic("inode freed while still hashed");
 
     truncate_inode_pages(&ip->i_data, 0);
+#if defined(HAVE_LINUX_CLEAR_INODE)
+    clear_inode(ip);
+#else
     end_writeback(ip);
+#endif
 
 #if !defined(STRUCT_SUPER_OPERATIONS_HAS_ALLOC_INODE)
     afs_osi_Free(ip->u.generic_ip, sizeof(struct vcache));

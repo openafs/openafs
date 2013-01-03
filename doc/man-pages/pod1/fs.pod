@@ -57,6 +57,7 @@ and L<B<fs whichcell>|fs_whichcell(1)>.
 =item *
 
 Commands to administer the local client cache and related information:
+L<B<fs bypassthreshold>|fs_bypassthreshold(1)>,
 L<B<fs checkvolumes>|fs_checkvolumes(1)>,
 L<B<fs cscpolicy>|fs_cscpolicy(1)>,
 L<B<fs flush>|fs_flush(1)>,

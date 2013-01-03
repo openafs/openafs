@@ -7,6 +7,7 @@
 //
 
 #import <PreferencePanes/PreferencePanes.h>
+#import <SecurityInterface/SFAuthorizationView.h>
 #import "AFSPropertyManager.h"
 #import "global.h"
 #import "ViewUtility.h"
@@ -20,12 +21,13 @@ int CoreMenuExtraRemoveMenuExtra(void *menuExtra, int whoCares);
 
 
 
-@interface AFSCommanderPref : NSPreferencePane 
+@interface AFSCommanderPref : NSPreferencePane <NSTableViewDataSource, NSTableViewDelegate>
 {
 	//for check system version
 	int prefStartUp;
 	// Main View
 	BOOL startAFSAtLogin;
+    IBOutlet SFAuthorizationView *authView;
 	IBOutlet NSView *afsCommanderView;
 	IBOutlet NSSearchField *textSearchField;
 	IBOutlet NSTextField *afsDefaultCellLabel;
@@ -104,6 +106,7 @@ int CoreMenuExtraRemoveMenuExtra(void *menuExtra, int whoCares);
 	NSLock *tokensLock;
 }
 
+- (BOOL)isUnlocked;
 - (void) mainViewDidLoad;
 - (void) willUnselect;
 - (void) didSelect;
@@ -144,11 +147,8 @@ int CoreMenuExtraRemoveMenuExtra(void *menuExtra, int whoCares);
 - (void) modifyCell:(DBCellElement*) cellElement;
 - (void) modifyCellByIDX:(int) idx;
 - (void) showMessage:(NSString*) message;
-- (void) tableViewCellmanageButtonState:(int) rowSelected;
-- (void) tableViewLinkmanageButtonState:(NSIndexSet *) rowsSelectedIndex;
 - (void) setAfsStatus;
 - (void) refreshTokens:(NSTimer*)theTimer;
-- (void) repairHelperTool;
 - (void) writePreferenceFile;
 - (void) readPreferenceFile;
 - (void) refreshGui:(NSNotification *)notification;
@@ -156,6 +156,11 @@ int CoreMenuExtraRemoveMenuExtra(void *menuExtra, int whoCares);
 - (void) afsVolumeMountChange:(NSNotification *)notification;
 - (void)tabView:(NSTabView *)tabView willSelectTabViewItem: (NSTabViewItem *)tabViewItem;
 @end
+
+@interface AFSCommanderPref (TableDelegate)
+- (void) tableViewCellmanageButtonState:(int) rowSelected;
+- (void) tableViewLinkmanageButtonState:(NSIndexSet *) rowsSelectedIndex;
+@end;
 
 @interface AFSCommanderPref (NSTableDataSource)
 - (id) getTableTokensListValue:(int) colId row:(int)row;

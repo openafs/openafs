@@ -279,14 +279,6 @@ PrintOverallPerfInfo(struct afs_PerfStats *a_ovP)
 void
 PrintOpTiming(int a_opIdx, struct fs_stats_opTimingData *a_opTimeP)
 {
-    double fSumTime, avg;
-
-    fSumTime =
-	((double)(a_opTimeP->sumTime.tv_sec)) +
-	(((double)(a_opTimeP->sumTime.tv_usec)) / ((double)(1000000)));
-/*    printf("Double sum time is %f\n", fSumTime);*/
-    avg = fSumTime / ((double)(a_opTimeP->numSuccesses));
-
     printf
 	("%15s: %u ops (%u OK); sum=%lu.%06lu, sqr=%lu.%06lu, min=%lu.%06lu, max=%lu.%06lu\n",
 	 opNames[a_opIdx], a_opTimeP->numOps, a_opTimeP->numSuccesses,
@@ -320,14 +312,6 @@ PrintOpTiming(int a_opIdx, struct fs_stats_opTimingData *a_opTimeP)
 void
 PrintXferTiming(int a_opIdx, struct fs_stats_xferData *a_xferP)
 {
-    double fSumTime, avg;
-
-    fSumTime =
-	((double)(a_xferP->sumTime.tv_sec)) +
-	((double)(a_xferP->sumTime.tv_usec)) / ((double)(1000000));
-
-    avg = fSumTime / ((double)(a_xferP->numSuccesses));
-
     printf
 	("%s: %u xfers (%u OK), time sum=%lu.%06lu, sqr=%lu.%06lu, min=%lu.%06lu, max=%lu.%06lu\n",
 	 xferOpNames[a_opIdx], a_xferP->numXfers, a_xferP->numSuccesses,

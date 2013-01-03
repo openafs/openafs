@@ -57,7 +57,11 @@ afs_StopAFSDB(void)
 	afs_osi_Wakeup(&afsdb_req);
     } else {
 	afsdb_handler_shutdown = 1;
+#if defined(AFS_SUN5_ENV) || defined(RXK_LISTENER_ENV) || defined(RXK_UPCALL_ENV)
 	afs_termState = AFSOP_STOP_RXEVENT;
+#else
+	afs_termState = AFSOP_STOP_COMPLETE;
+#endif
 	afs_osi_Wakeup(&afs_termState);
     }
 }
@@ -229,7 +233,8 @@ afs_cellname_new(char *name, afs_int32 cellnum)
     if (cellnum == 0)
 	cellnum = afs_cellnum_next;
 
-    cn = (struct cell_name *)afs_osi_Alloc(sizeof(*cn));
+    cn = afs_osi_Alloc(sizeof(*cn));
+    osi_Assert(cn != NULL);
     cn->next = afs_cellname_head;
     cn->cellnum = cellnum;
     cn->cellname = afs_strdup(name);
@@ -326,7 +331,6 @@ afs_cellname_init(afs_dcache_id_t *inode, int lookupcode)
 
     while (1) {
 	afs_int32 cellnum, clen, magic;
-	struct cell_name *cn;
 	char *cellname;
 
 	cc = afs_osi_Read(tfile, off, &magic, sizeof(magic));
@@ -364,7 +368,7 @@ afs_cellname_init(afs_dcache_id_t *inode, int lookupcode)
 	    break;
 	}
 
-	cn = afs_cellname_new(cellname, cellnum);
+	afs_cellname_new(cellname, cellnum);
 	afs_osi_Free(cellname, clen + 1);
     }
 
@@ -511,7 +515,8 @@ afs_NewCellAlias(char *alias, char *cell)
     }
 
     UpgradeSToWLock(&afs_xcell, 682);
-    tc = (struct cell_alias *)afs_osi_Alloc(sizeof(struct cell_alias));
+    tc = afs_osi_Alloc(sizeof(struct cell_alias));
+    osi_Assert(tc != NULL);
     tc->alias = afs_strdup(alias);
     tc->cell = afs_strdup(cell);
     tc->next = afs_cellalias_head;
@@ -913,7 +918,8 @@ afs_NewCell(char *acellName, afs_int32 * acellHosts, int aflags,
     if (tc) {
 	aflags &= ~CNoSUID;
     } else {
-	tc = (struct cell *)afs_osi_Alloc(sizeof(struct cell));
+	tc = afs_osi_Alloc(sizeof(struct cell));
+	osi_Assert(tc != NULL);
 	memset(tc, 0, sizeof(*tc));
 	tc->cellName = afs_strdup(acellName);
 	tc->fsport = AFS_FSPORT;

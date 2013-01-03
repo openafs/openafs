@@ -245,7 +245,8 @@ afs_MemGetVolSlot(void)
     if (!afs_freeVolList) {
 	struct volume *newVp;
 
-	newVp = (struct volume *)afs_osi_Alloc(sizeof(struct volume));
+	newVp = afs_osi_Alloc(sizeof(struct volume));
+	osi_Assert(newVp != NULL);
 
 	newVp->next = NULL;
 	afs_freeVolList = newVp;
@@ -317,7 +318,7 @@ afs_CheckVolumeNames(int flags)
 	    for (tv = afs_volumes[i]; tv; tv = tv->next)
 		++vsize;
 
-	volumeID = (afs_int32 *) afs_osi_Alloc(2 * vsize * sizeof(*volumeID));
+	volumeID = afs_osi_Alloc(2 * vsize * sizeof(*volumeID));
 	cellID = (volumeID) ? volumeID + vsize : 0;
     }
 
@@ -635,6 +636,7 @@ afs_SetupVolume(afs_int32 volid, char *aname, void *ve, struct cell *tcell,
     if (agood) {
 	if (!tv->name) {
 	    tv->name = afs_osi_Alloc(strlen(aname) + 1);
+	    osi_Assert(tv->name != NULL);
 	    strcpy(tv->name, aname);
 	}
     }
@@ -702,6 +704,7 @@ afs_NewDynrootVolume(struct VenusFid *fid)
     if (!tcell)
 	return NULL;
     tve = afs_osi_Alloc(sizeof(*tve));
+    osi_Assert(tve != NULL);
     if (!(tcell->states & CHasVolRef))
 	tcell->states |= CHasVolRef;
 

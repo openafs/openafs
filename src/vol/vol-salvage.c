@@ -2580,7 +2580,6 @@ SalvageIndex(struct SalvInfo *salvinfo, Inode ino, VnodeClass class, int RW,
 	     struct ViceInodeInfo *ip, int nInodes,
              struct VolumeSummary *volSummary, int check)
 {
-    VolumeId volumeNumber;
     char buf[SIZEOF_LARGEDISKVNODE];
     struct VnodeDiskObject *vnode = (struct VnodeDiskObject *)buf;
     int err = 0;
@@ -2594,7 +2593,6 @@ SalvageIndex(struct SalvInfo *salvinfo, Inode ino, VnodeClass class, int RW,
     IHandle_t *handle;
     FdHandle_t *fdP;
 
-    volumeNumber = volSummary->header.id;
     IH_INIT(handle, salvinfo->fileSysDevice, volSummary->header.parent, ino);
     fdP = IH_OPEN(handle);
     osi_Assert(fdP != NULL);
@@ -3685,7 +3683,7 @@ CreateRootDir(struct SalvInfo *salvinfo, VolumeDiskData *volHeader,
     Inode *ip;
     afs_sfsize_t bytes;
     struct VnodeEssence *vep;
-    Inode readmeinode;
+    Inode readmeinode = 0;
     time_t now = time(NULL);
 
     if (!salvinfo->vnodeInfo[vLarge].vnodes && !salvinfo->vnodeInfo[vSmall].vnodes) {

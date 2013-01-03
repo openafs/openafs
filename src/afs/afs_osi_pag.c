@@ -481,7 +481,7 @@ afs_InitReq(struct vrequest *av, afs_ucred_t *acred)
 #elif defined(AFS_SUN510_ENV)
         av->uid = crgetruid(acred);
 #else
-	av->uid = afs_cr_uid(acred);	/* default when no pag is set */
+	av->uid = afs_cr_ruid(acred);	/* default when no pag is set */
 #endif
     }
     return 0;

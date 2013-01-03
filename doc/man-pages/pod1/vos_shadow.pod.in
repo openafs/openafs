@@ -1,43 +1,46 @@
 =head1 NAME
 
-vos_clone - Creates a shared-space copy of a volume on a partition
+vos_shadow - Creates a shadow copy of a volume on a different server/partition
 
 =head1 SYNOPSIS
 
 =for html
 <div class="synopsis">
 
-B<vos clone> S<<< [B<-id>] <I<volume name or ID>> >>>
-    S<<< [B<-server>] <I<server name>> >>>
-    S<<< [B<-partition>] <I<partition name>> >>>
+B<vos shadow> S<<< [B<-id>] <I<volume name or ID on source>> >>>
+    S<<< [B<-fromserver>] <I<machine name on source>> >>>
+    S<<< [B<-frompartition>] <I<partition name on source>> >>>
+    S<<< [B<-toserver>] <I<machine name on destination>> >>>
+    S<<< [B<-topartition>] <I<partition name on destination>> >>>
     S<<< [B<-toname> <I<volume name on destination>>] >>>
     S<<< [B<-toid> <I<volume ID on destination>>] >>>
-    [B<-offline>] [B<-readonly>]
-    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>]
+    [B<-offline>] [B<-readonly>] [B<-live>] [B<-incremental>]
+    S<<< [B<-cell> <I<cell name>>] >>>
+    [B<-noauth>] [B<-localauth>]
     [B<-verbose>] [B<-encrypt>] [B<-noresolve>] [B<-help>]
 
-B<vos cl> S<<< [B<-i>] <I<volume name or ID>> >>>
-    S<<< [B<-s>] <I<server name>> >>>
-    S<<< [B<-p>] <I<partition name>> >>>
+B<vos sh> S<<< [B<-id>] <I<volume name or ID on source>> >>>
+    S<<< [B<-froms>] <I<machine name on source>> >>>
+    S<<< [B<-fromp>] <I<partition name on source>> >>>
+    S<<< [B<-tos>] <I<machine name on destination>> >>>
+    S<<< [B<-top>] <I<partition name on destination>> >>>
     S<<< [B<-ton> <I<volume name on destination>>] >>>
-    S<<< [B<-toi> <I<volume ID on destination>>] >>> [B<-o>] [B<-r>]
-    S<<< [B<-c> <I<cell name>>] >>> [B<-noa>]
-    [B<-l>] [B<-v>] [B<-e>] [B<-nor>] [B<-h>]
+    S<<< [B<-toi> <I<volume ID on destination>>] >>>
+    [B<-o>] [B<-r>] [B<-l>] [B<-in>]
+    S<<< [B<-c> <I<cell name>>] >>>
+    [B<-noa>] [B<-lo>] [B<-v>] [B<-e>] [B<-nor>] [B<-h>]
 
 =for html
 </div>
 
 =head1 DESCRIPTION
 
-The B<vos clone> command creates a copy-on-write copy of a volume on the
-same partition and server as the parent volume.
+The B<vos shadow> command creates a shadow copy of a volume on a
+different partition or server.
 
-A clone is a copy of a volume that only stores the changes from the
-parent volume. Cloning is a primitive operation that is used by the B<vos
-move>, B<vos backup>, and B<vos release> commands. A clone functions using
-the same mechanism as a backup volume, but it is persistent. Clone volumes
-can be used as point-in-time copies of the parent volume, but they must be
-used with care.
+A shadow volume is a copy of a volume that does not normally appear in
+the volume location database (VLDB). It is a primitive operation that
+is meant to be used in backup or disaster recovery situations.
 
 =head1 CAUTIONS
 
@@ -45,20 +48,17 @@ This command is not used during normal OpenAFS administration and may
 have adverse effects on the VLDB if not used properly! This command
 should only be used by an expert.
 
-Deleting or moving the parent volume makes the clone volume inaccessible,
-but the clone volume remains in the VLDB and on disk, and it needs to be
-cleaned up manually.
+Using this command on a volume when the source volume is not the same
+as parent volume used to create the shadow will leave the destination
+volume in a unknown state.
 
-There is a maximum limitation of 7 clones when using the namei
-fileserver. You may safely create up to 4 clones using the B<vos clone>
-command. The other three clone slots are used by the backup volume, a
-read-only replica and the temporary clone that is created when executing a
-B<vos move>, B<vos dump>, or other B<vos> commands.
+Running B<vos syncserv> or B<vos syncvldb> on a fileserver containing 
+shadow volumes will not update the VLDB with the shadowed Read/Write
+volumes as long as the entries for the source volumes still exist. In
+a disaster recovery situation the VLDB entries for the corresponding
+source volumes need hence to be deleted first.
 
-Some commands do not work properly on clone volumes. B<vos move> is one
-such command.
-
-Currently, the maximum size of a volume is 2 terabytes (2^31 bytes).
+=include fragments/volsize-caution.pod
 
 =head1 OPTIONS
 
@@ -69,25 +69,33 @@ Currently, the maximum size of a volume is 2 terabytes (2^31 bytes).
 Specifies either the complete name or volume ID number of a read/write
 volume.
 
-=item [B<-server>] <I<machine name>>
+=item [B<-fromserver>] <I<machine name for source>>
 
 Identifies the file server machine where the source volume resides. Provide
 the machine's IP address or its host name (either fully qualified or using
 an unambiguous abbreviation). For details, see L<vos(1)>.
 
-=item [B<-partition>] <I<partition name>>
+=item [B<-frompartition>] <I<partition name for source>>
 
 Names the partition where the source volume resides. Provide the full
 partition name (for, example, B</vicepa>) or one of the abbreviated forms
 described in L<vos(1)>.
 
+=item [B<-toserver>] <I<machine name for destination>>
+
+Identifies the file server machine to which to copy the volume.  Provide
+the machine's IP address or its host name (either fully qualified or using
+an unambiguous abbreviation). For details, see L<vos(1)>.
+
+=item [B<-topartition>] <I<partition name for destination>>
+
+Names the partition to which to copy the volume. Provide the full partition
+name (for, example, B</vicepa>) or one of the abbreviated forms described in
+L<vos(1)>.
+
 =item B<-toname> <I<volume name for new copy>>
 
 The complete name of the new volume to create.
-
-=item B<-toid> <I<volume id for new copy>>
-
-The complete id of the new volume to create.
 
 =item B<-offline>
 
@@ -96,6 +104,17 @@ Leaves the new volume flagged as off-line in the volume database.
 =item B<-readonly>
 
 Flags the new volume as read-only in the volume database.
+
+=item B<-live>
+
+Copies the live volume without cloning.  This is normally not necessary and
+causes the volume to be kept locked for longer than the normal copy
+mechanism.
+
+=item B<-incremental>
+
+Copy the changes from the source volume to a previously created shadow
+volume.
 
 =item B<-cell> <I<cell name>>
 
@@ -160,8 +179,13 @@ superuser C<root>.
 L<vos(1)>,
 L<vos_backup(1)>,
 L<vos_copy(1)>,
-L<vos_move(1)>,
-L<vos_shadow(1)>
+L<vos_move(1)>
+
+L<http://www.openafs.org/pipermail/openafs-info/2005-July/018469.html>
+discusses motivation for the creation of this command.
+
+L<http://workshop.openafs.org/afsbpw06/talks/drh.scs.html> discusses
+one possible use for it.
 
 =head1 COPYRIGHT
 

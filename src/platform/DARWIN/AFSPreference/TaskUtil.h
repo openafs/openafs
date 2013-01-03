@@ -16,4 +16,5 @@
 +(NSString*) executeTaskSearchingPath:(NSString*)unixCommand args:(NSArray*)args;
 +(NSString*) executeTask:(NSString*) taskName arguments:(NSArray *)args;
 +(int) executeTaskWithAuth:(NSString*) taskName arguments:(NSArray *)args authExtForm:(NSData*)auth;
++(int) executeTaskWithAuth:(NSString*) taskName arguments:(NSArray *)args helper:(NSString *)helper withAuthRef:(AuthorizationRef)authRef;
 @end

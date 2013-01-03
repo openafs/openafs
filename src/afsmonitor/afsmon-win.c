@@ -1036,7 +1036,6 @@ create_ovwFrame_objects(void)
     int hostLines;		/* number of lines of host names to display */
     struct onode **ovw_fsNames_o_Ptr;	/* index to list of fs names onodes */
     struct onode **ovw_cmNames_o_Ptr;	/* index to list of cm names onodes */
-    int code;
     int i;
 
     if (afsmon_debug) {
@@ -1066,8 +1065,8 @@ create_ovwFrame_objects(void)
 	sprintf(errMsg, "[ %s ] Failed to create initMsg_o onode\n", rn);
 	afsmon_Exit(250);
     }
-    code = gtxframe_AddToList(ovwFrame, initMsg_o);
-    code = gator_light_set(initMsg_o, HIGHLIGHT);
+    gtxframe_AddToList(ovwFrame, initMsg_o);
+    gator_light_set(initMsg_o, HIGHLIGHT);
     initMsg_on = 1;
 
 
@@ -1079,8 +1078,8 @@ create_ovwFrame_objects(void)
 	sprintf(errMsg, "[ %s ] Failed to create command onode\n", rn);
 	afsmon_Exit(265);
     }
-    code = gtxframe_AddToList(ovwFrame, ovw_cmd_o);
-    code = gator_light_set(ovw_cmd_o, HIGHLIGHT);
+    gtxframe_AddToList(ovwFrame, ovw_cmd_o);
+    gator_light_set(ovw_cmd_o, HIGHLIGHT);
 
     /* create the program name object */
 
@@ -1089,8 +1088,8 @@ create_ovwFrame_objects(void)
 	sprintf(errMsg, "[ %s ] Failed to create programName onode\n", rn);
 	afsmon_Exit(255);
     }
-    code = gtxframe_AddToList(ovwFrame, ovw_progName_o);
-    code = gator_light_set(ovw_progName_o, HIGHLIGHT);
+    gtxframe_AddToList(ovwFrame, ovw_progName_o);
+    gator_light_set(ovw_progName_o, HIGHLIGHT);
 
     /* create the page number object */
 
@@ -1101,8 +1100,8 @@ create_ovwFrame_objects(void)
 	sprintf(errMsg, "[ %s ] Failed to create pageNumber onode\n", rn);
 	afsmon_Exit(260);
     }
-    code = gtxframe_AddToList(ovwFrame, ovw_pageNum_o);
-    code = gator_light_set(ovw_pageNum_o, HIGHLIGHT);
+    gtxframe_AddToList(ovwFrame, ovw_pageNum_o);
+    gator_light_set(ovw_pageNum_o, HIGHLIGHT);
 
     /* create the probe number object */
     ovw_probeNum_o =
@@ -1112,8 +1111,8 @@ create_ovwFrame_objects(void)
 	sprintf(errMsg, "[ %s ] Failed to create probe number onode\n", rn);
 	afsmon_Exit(270);
     }
-    code = gtxframe_AddToList(ovwFrame, ovw_probeNum_o);
-    code = gator_light_set(ovw_probeNum_o, HIGHLIGHT);
+    gtxframe_AddToList(ovwFrame, ovw_probeNum_o);
+    gator_light_set(ovw_probeNum_o, HIGHLIGHT);
 
     /* create the numFS monitored object */
     ovw_numFS_o = initLightObject("", 0, 2, FC_NUMHOSTS_O_WIDTH, afsmon_win);
@@ -1121,7 +1120,7 @@ create_ovwFrame_objects(void)
 	sprintf(errMsg, "[ %s ] Failed to create numFS onode\n", rn);
 	afsmon_Exit(275);
     }
-    code = gtxframe_AddToList(ovwFrame, ovw_numFS_o);
+    gtxframe_AddToList(ovwFrame, ovw_numFS_o);
 
     /* create the numCM monitored object */
     ovw_numCM_o =
@@ -1130,7 +1129,7 @@ create_ovwFrame_objects(void)
 	sprintf(errMsg, "[ %s ] Failed to create numCM_o onode\n", rn);
 	afsmon_Exit(280);
     }
-    code = gtxframe_AddToList(ovwFrame, ovw_numCM_o);
+    gtxframe_AddToList(ovwFrame, ovw_numCM_o);
 
     /* create the number-of-FS-alerts object */
     ovw_FSalerts_o =
@@ -1139,7 +1138,7 @@ create_ovwFrame_objects(void)
 	sprintf(errMsg, "[ %s ] Failed to create FSalerts_o onode\n", rn);
 	afsmon_Exit(285);
     }
-    code = gtxframe_AddToList(ovwFrame, ovw_FSalerts_o);
+    gtxframe_AddToList(ovwFrame, ovw_FSalerts_o);
 
     /* create the number-of-CM-alerts object */
     ovw_CMalerts_o =
@@ -1148,7 +1147,7 @@ create_ovwFrame_objects(void)
 	sprintf(errMsg, "[ %s ] Failed to create CMalerts_o onode\n", rn);
 	afsmon_Exit(290);
     }
-    code = gtxframe_AddToList(ovwFrame, ovw_CMalerts_o);
+    gtxframe_AddToList(ovwFrame, ovw_CMalerts_o);
 
     /* create file-server-name and cache-manager-names objects */
     ovw_numHosts_perPage = maxY - OVW_NUM_FIXED_LINES;
@@ -1180,7 +1179,7 @@ create_ovwFrame_objects(void)
 	 * fflush(debugFD);
 	 * }
 	 */
-	code = gtxframe_AddToList(ovwFrame, *ovw_fsNames_o_Ptr);
+	gtxframe_AddToList(ovwFrame, *ovw_fsNames_o_Ptr);
 	ovw_fsNames_o_Ptr++;
 
     }
@@ -1206,7 +1205,7 @@ create_ovwFrame_objects(void)
 	    sprintf(errMsg, "[ %s ] Failed to create a CM name onode\n", rn);
 	    afsmon_Exit(310);
 	}
-	code = gtxframe_AddToList(ovwFrame, *ovw_cmNames_o_Ptr);
+	gtxframe_AddToList(ovwFrame, *ovw_cmNames_o_Ptr);
 	ovw_cmNames_o_Ptr++;
     }
 
@@ -2080,7 +2079,6 @@ create_FSframe_objects(void)
     struct onode **fsLabels_o_Ptr;
     int x_pos;
     int y_pos;
-    int code;
     int i;
     int j;
     int numBytes;
@@ -2100,13 +2098,13 @@ create_FSframe_objects(void)
 	sprintf(errMsg, "[ %s ] Failed to create fs command onode\n", rn);
 	afsmon_Exit(340);
     }
-    code = gtxframe_AddToList(fsFrame, fs_cmd_o);
-    code = gator_light_set(fs_cmd_o, HIGHLIGHT);
+    gtxframe_AddToList(fsFrame, fs_cmd_o);
+    gator_light_set(fs_cmd_o, HIGHLIGHT);
 
     /* we already have the dimensions for the frame - same as the ovw frame */
     /* use the ovw program name object for the fs screen too */
 
-    code = gtxframe_AddToList(fsFrame, ovw_progName_o);
+    gtxframe_AddToList(fsFrame, ovw_progName_o);
 
 
     /* create the page number object */
@@ -2118,8 +2116,8 @@ create_FSframe_objects(void)
 	sprintf(errMsg, "[ %s ] Failed to create pageNumber onode\n", rn);
 	afsmon_Exit(335);
     }
-    code = gtxframe_AddToList(fsFrame, fs_pageNum_o);
-    code = gator_light_set(fs_pageNum_o, HIGHLIGHT);
+    gtxframe_AddToList(fsFrame, fs_pageNum_o);
+    gator_light_set(fs_pageNum_o, HIGHLIGHT);
 
     /* create the probe number object */
     fs_probeNum_o =
@@ -2130,8 +2128,8 @@ create_FSframe_objects(void)
 	sprintf(errMsg, "[ %s ] Failed to create fs probeNum onode\n", rn);
 	afsmon_Exit(345);
     }
-    code = gtxframe_AddToList(fsFrame, fs_probeNum_o);
-    code = gator_light_set(fs_probeNum_o, HIGHLIGHT);
+    gtxframe_AddToList(fsFrame, fs_probeNum_o);
+    gator_light_set(fs_probeNum_o, HIGHLIGHT);
 
 
     /* create the numFS monitored object */
@@ -2144,7 +2142,7 @@ create_FSframe_objects(void)
 		"[ %s ] Failed to create numFS onode for the fs frame\n", rn);
 	afsmon_Exit(350);
     }
-    code = gtxframe_AddToList(fsFrame, fs_numFS_o);
+    gtxframe_AddToList(fsFrame, fs_numFS_o);
 
     /* create the "more columns to left" indicator */
     fs_leftArrows_o =
@@ -2155,7 +2153,7 @@ create_FSframe_objects(void)
 		rn);
 	afsmon_Exit(355);
     }
-    code = gtxframe_AddToList(fsFrame, fs_leftArrows_o);
+    gtxframe_AddToList(fsFrame, fs_leftArrows_o);
 
     /* create the "more columns to right" indicator */
     fs_rightArrows_o =
@@ -2167,7 +2165,7 @@ create_FSframe_objects(void)
 		rn);
 	afsmon_Exit(360);
     }
-    code = gtxframe_AddToList(fsFrame, fs_rightArrows_o);
+    gtxframe_AddToList(fsFrame, fs_rightArrows_o);
 
 
 
@@ -2230,7 +2228,7 @@ create_FSframe_objects(void)
 	    sprintf(errMsg, "[ %s ] Failed to create an FS name onode\n", rn);
 	    afsmon_Exit(375);
 	}
-	code = gtxframe_AddToList(fsFrame, fs_lines_Ptr->host_o);
+	gtxframe_AddToList(fsFrame, fs_lines_Ptr->host_o);
 
 	/* if (afsmon_debug) {
 	 * fprintf(debugFD,"[ %s ] Addr of host_o = %d for line %d\n",
@@ -2261,7 +2259,7 @@ create_FSframe_objects(void)
 			    "[ %s ] Failed to create an FS data onode\n", rn);
 		    afsmon_Exit(380);
 		}
-		code = gtxframe_AddToList(fsFrame, *fs_data_o_Ptr);
+		gtxframe_AddToList(fsFrame, *fs_data_o_Ptr);
 
 		fs_data_o_Ptr++;
 	    }			/* for each column */
@@ -2300,7 +2298,7 @@ create_FSframe_objects(void)
 			rn);
 		afsmon_Exit(390);
 	    }
-	    code = gtxframe_AddToList(fsFrame, *fsLabels_o_Ptr);
+	    gtxframe_AddToList(fsFrame, *fsLabels_o_Ptr);
 	    fsLabels_o_Ptr++;
 	}
 
@@ -2861,7 +2859,6 @@ create_CMframe_objects(void)
     struct onode **cmLabels_o_Ptr;
     int x_pos;
     int y_pos;
-    int code;
     int i;
     int j;
     int numBytes;
@@ -2882,14 +2879,14 @@ create_CMframe_objects(void)
 	sprintf(errMsg, "[ %s ] Failed to create cm command onode\n", rn);
 	afsmon_Exit(420);
     }
-    code = gtxframe_AddToList(cmFrame, cm_cmd_o);
-    code = gator_light_set(cm_cmd_o, HIGHLIGHT);
+    gtxframe_AddToList(cmFrame, cm_cmd_o);
+    gator_light_set(cm_cmd_o, HIGHLIGHT);
 
 
     /* we already have the dimensions for the frame - same as the ovw frame */
     /* use the ovw program name object for the cm screen too */
 
-    code = gtxframe_AddToList(cmFrame, ovw_progName_o);
+    gtxframe_AddToList(cmFrame, ovw_progName_o);
 
 
     /* create the page number object */
@@ -2901,8 +2898,8 @@ create_CMframe_objects(void)
 	sprintf(errMsg, "[ %s ] Failed to create pageNumber onode\n", rn);
 	afsmon_Exit(415);
     }
-    code = gtxframe_AddToList(cmFrame, cm_pageNum_o);
-    code = gator_light_set(cm_pageNum_o, HIGHLIGHT);
+    gtxframe_AddToList(cmFrame, cm_pageNum_o);
+    gator_light_set(cm_pageNum_o, HIGHLIGHT);
 
     /* create the probe number object */
     cm_probeNum_o =
@@ -2913,8 +2910,8 @@ create_CMframe_objects(void)
 	sprintf(errMsg, "[ %s ] Failed to create cm probeNum onode\n", rn);
 	afsmon_Exit(425);
     }
-    code = gtxframe_AddToList(cmFrame, cm_probeNum_o);
-    code = gator_light_set(cm_probeNum_o, HIGHLIGHT);
+    gtxframe_AddToList(cmFrame, cm_probeNum_o);
+    gator_light_set(cm_probeNum_o, HIGHLIGHT);
 
 
     /* create the numCM monitored object */
@@ -2927,7 +2924,7 @@ create_CMframe_objects(void)
 		"[ %s ] Failed to create numCM onode for the cm frame\n", rn);
 	afsmon_Exit(430);
     }
-    code = gtxframe_AddToList(cmFrame, cm_numCM_o);
+    gtxframe_AddToList(cmFrame, cm_numCM_o);
 
     /* create the "more columns to left" indicator */
     cm_leftArrows_o =
@@ -2938,7 +2935,7 @@ create_CMframe_objects(void)
 		rn);
 	afsmon_Exit(435);
     }
-    code = gtxframe_AddToList(cmFrame, cm_leftArrows_o);
+    gtxframe_AddToList(cmFrame, cm_leftArrows_o);
 
     /* create the "more columns to right" indicator */
     cm_rightArrows_o =
@@ -2950,7 +2947,7 @@ create_CMframe_objects(void)
 		rn);
 	afsmon_Exit(440);
     }
-    code = gtxframe_AddToList(cmFrame, cm_rightArrows_o);
+    gtxframe_AddToList(cmFrame, cm_rightArrows_o);
 
 
 
@@ -3013,7 +3010,7 @@ create_CMframe_objects(void)
 	    sprintf(errMsg, "[ %s ] Failed to create an CM name onode\n", rn);
 	    afsmon_Exit(455);
 	}
-	code = gtxframe_AddToList(cmFrame, cm_lines_Ptr->host_o);
+	gtxframe_AddToList(cmFrame, cm_lines_Ptr->host_o);
 
 	/* if (afsmon_debug) {
 	 * fprintf(debugFD,"[ %s ] Addr of host_o = %d for line %d\n",
@@ -3044,7 +3041,7 @@ create_CMframe_objects(void)
 			    "[ %s ] Failed to create an CM data onode\n", rn);
 		    afsmon_Exit(460);
 		}
-		code = gtxframe_AddToList(cmFrame, *cm_data_o_Ptr);
+		gtxframe_AddToList(cmFrame, *cm_data_o_Ptr);
 
 		cm_data_o_Ptr++;
 	    }			/* for each column */
@@ -3083,7 +3080,7 @@ create_CMframe_objects(void)
 			rn);
 		afsmon_Exit(470);
 	    }
-	    code = gtxframe_AddToList(cmFrame, *cmLabels_o_Ptr);
+	    gtxframe_AddToList(cmFrame, *cmLabels_o_Ptr);
 	    cmLabels_o_Ptr++;
 	}
 

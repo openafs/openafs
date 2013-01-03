@@ -97,7 +97,7 @@ dpkg:
 packages: dest
 	@case ${SYS_NAME} in \
 	*_darwin_* ) \
-		${COMPILE_PART1} packaging/MacOS && sh ./buildpkg.sh ${DEST} ;; \
+		${COMPILE_PART1} packaging/MacOS && bash ./buildpkg.sh ${DEST} ;; \
 	hp_ux110 ) \
 		${COMPILE_PART1} packaging/HP-UX && swpackage -s  psf-1.2.10-transarc-paths-11.00 ;; \
 	hp_ux11i ) \
@@ -336,7 +336,7 @@ dvolser: project tviced usd libafsrpc libafsauthent volser
 		echo Not building DAFS volser for ${SYS_NAME} ;;          \
 	esac
 
-venus: cmd comerr volser ptserver libafscp
+venus: cmd comerr volser ptserver libafscp libafsauthent
 	+${COMPILE_PART1} venus ${COMPILE_PART2}
 	+${COMPILE_PART1} venus/test ${COMPILE_PART2}
 
@@ -590,7 +590,7 @@ libafsrpc: rx rxkad rxstat fsint des
 		echo Not building MT libafsrpc for ${SYS_NAME} ;; \
 	esac
 
-libafsauthent: ubik auth kauth libafsrpc
+libafsauthent: ubik auth kauth libafsrpc volser vlserver
 	+case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*) \
 	${COMPILE_PART1} libafsauthent ${COMPILE_PART2} ;; \

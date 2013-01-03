@@ -2123,23 +2123,25 @@ afsd_run(void)
 	       cacheFiles, inode_for_V, (cacheFiles * sizeof(AFSD_INO_T)));
 #endif
 
-    /*
-     * Set up all the pathnames we'll need for later.
-     */
-    sprintf(fullpn_DCacheFile, "%s/%s", cacheBaseDir, DCACHEFILE);
-    sprintf(fullpn_VolInfoFile, "%s/%s", cacheBaseDir, VOLINFOFILE);
-    sprintf(fullpn_CellInfoFile, "%s/%s", cacheBaseDir, CELLINFOFILE);
-    sprintf(fullpn_VFile, "%s/", cacheBaseDir);
-    vFilePtr = fullpn_VFile + strlen(fullpn_VFile);
+    if (!(cacheFlags & AFSCALL_INIT_MEMCACHE)) {
+	/*
+	 * Set up all the pathnames we'll need for later.
+	 */
+	sprintf(fullpn_DCacheFile, "%s/%s", cacheBaseDir, DCACHEFILE);
+	sprintf(fullpn_VolInfoFile, "%s/%s", cacheBaseDir, VOLINFOFILE);
+	sprintf(fullpn_CellInfoFile, "%s/%s", cacheBaseDir, CELLINFOFILE);
+	sprintf(fullpn_VFile, "%s/", cacheBaseDir);
+	vFilePtr = fullpn_VFile + strlen(fullpn_VFile);
 
-    if (!(cacheFlags & AFSCALL_INIT_MEMCACHE)
-	&& (fsTypeMsg = CheckCacheBaseDir(cacheBaseDir))) {
+	fsTypeMsg = CheckCacheBaseDir(cacheBaseDir);
+	if (fsTypeMsg) {
 #ifdef AFS_SUN5_ENV
-	printf("%s: WARNING: Cache dir check failed (%s)\n", rn, fsTypeMsg);
+	    printf("%s: WARNING: Cache dir check failed (%s)\n", rn, fsTypeMsg);
 #else
-	printf("%s: ERROR: Cache dir check failed (%s)\n", rn, fsTypeMsg);
-	exit(1);
+	    printf("%s: ERROR: Cache dir check failed (%s)\n", rn, fsTypeMsg);
+	    exit(1);
 #endif
+	}
     }
 
     /*
@@ -2410,13 +2412,13 @@ afsd_run(void)
      * Give the kernel the names of the AFS files cached on the workstation's
      * disk.
      */
-    if (afsd_debug)
-	printf
-	    ("%s: Calling AFSOP_CACHEFILE for each of the %d files in '%s'\n",
-	     rn, cacheFiles, cacheBaseDir);
     if (!(cacheFlags & AFSCALL_INIT_MEMCACHE)) {
-	/* ... and again ... */
 	int nocachefile = 0;
+	if (afsd_debug)
+	    printf
+	        ("%s: Calling AFSOP_CACHEFILE for each of the %d files in '%s'\n",
+	         rn, cacheFiles, cacheBaseDir);
+	/* ... and again ... */
 	for (currVFile = 0; currVFile < cacheFiles; currVFile++) {
 	    if (!nocachefile) {
 		sprintf(fullpn_VFile, "%s/D%d/V%d", cacheBaseDir, dir_for_V[currVFile], currVFile);

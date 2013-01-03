@@ -672,7 +672,6 @@ uss_acl_SetDiskQuota(char *a_path, int a_q)
     static char rn[] = "uss_acl_SetDiskQuota";
 #endif
     uss_VolumeStatus_t *status;
-    char *name, *motd, *offmsg;
     char *input;
     char tmp_str[AFS_PIOCTL_MAXSIZE];
 
@@ -683,7 +682,6 @@ uss_acl_SetDiskQuota(char *a_path, int a_q)
 
     status = (uss_VolumeStatus_t *) tmp_str;
     status->MinQuota = status->MaxQuota = -1;
-    name = motd = offmsg = NULL;
     status->MaxQuota = a_q;
 
     input = (char *)status + sizeof(*status);

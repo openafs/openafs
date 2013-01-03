@@ -989,7 +989,7 @@ afsconf_LookupServer(const char *service, const char *protocol,
 {
     int code = 0;
     int len;
-    unsigned char answer[1024];
+    unsigned char answer[4096];
     unsigned char *p;
     char *dotcellname;
     char *realCellName;

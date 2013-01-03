@@ -64,6 +64,7 @@
 #define AFS_USR_LINUX26_ENV	1
 
 #define AFS_ENV			1
+#define AFS_64BIT_CLIENT	1
 #undef  AFS_NONFSTRANS
 #define AFS_NONFSTRANS 		1
 #define AFS_MOUNT_AFS 		"afs"	/* The name of the filesystem type. */

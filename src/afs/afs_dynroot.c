@@ -347,6 +347,7 @@ afs_RebuildDynroot(void)
 	}
 	dotLen = strlen(c->cellName) + 2;
 	dotCell = afs_osi_Alloc(dotLen);
+	osi_Assert(dotCell != NULL);
 	strcpy(dotCell, ".");
 	afs_strcat(dotCell, c->cellName);
 
@@ -365,6 +366,7 @@ afs_RebuildDynroot(void)
 
 	dotLen = strlen(ca->alias) + 2;
 	dotCell = afs_osi_Alloc(dotLen);
+	osi_Assert(dotCell != NULL);
 	strcpy(dotCell, ".");
 	afs_strcat(dotCell, ca->alias);
 
@@ -385,6 +387,7 @@ afs_RebuildDynroot(void)
 
     dirSize = (curPage + 1) * AFS_PAGESIZE;
     newDir = afs_osi_Alloc(dirSize);
+    osi_Assert(newDir != NULL);
 
     /*
      * Now actually construct the directory.
@@ -424,6 +427,7 @@ afs_RebuildDynroot(void)
 
 	dotLen = strlen(c->cellName) + 2;
 	dotCell = afs_osi_Alloc(dotLen);
+	osi_Assert(dotCell != NULL);
 	strcpy(dotCell, ".");
 	afs_strcat(dotCell, c->cellName);
 	afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk, c->cellName,
@@ -443,6 +447,7 @@ afs_RebuildDynroot(void)
 
 	dotLen = strlen(ca->alias) + 2;
 	dotCell = afs_osi_Alloc(dotLen);
+	osi_Assert(dotCell != NULL);
 	strcpy(dotCell, ".");
 	afs_strcat(dotCell, ca->alias);
 	afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk, ca->alias,
@@ -481,6 +486,7 @@ afs_RebuildDynrootMount(void)
     struct DirHeader *dirHeader;
 
     newDir = afs_osi_Alloc(AFS_PAGESIZE);
+    osi_Assert(newDir != NULL);
 
     /*
      * Now actually construct the directory.
@@ -648,6 +654,7 @@ afs_DynrootNewVnode(struct vcache *avc, struct AFSFetchStatus *status)
 	    if (ts) {
 		linklen = strlen(ts->target);
 		avc->linkData = afs_osi_Alloc(linklen + 1);
+		osi_Assert(avc->linkData != NULL);
 		strcpy(avc->linkData, ts->target);
 
 		status->Length = linklen;
@@ -696,6 +703,7 @@ afs_DynrootNewVnode(struct vcache *avc, struct AFSFetchStatus *status)
 		int namelen = strlen(realName);
 		linklen = rw + namelen;
 		avc->linkData = afs_osi_Alloc(linklen + 1);
+		osi_Assert(avc->linkData != NULL);
 		strcpy(avc->linkData, rw ? "." : "");
 		afs_strcat(avc->linkData, realName);
 	    }
@@ -718,6 +726,7 @@ afs_DynrootNewVnode(struct vcache *avc, struct AFSFetchStatus *status)
 	    bp = afs_cv2string(&tbuf[CVBS], avc->f.fid.Fid.Unique);
 	    linklen = 2 + namelen + strlen(bp);
 	    avc->linkData = afs_osi_Alloc(linklen + 1);
+	    osi_Assert(avc->linkData != NULL);
 	    strcpy(avc->linkData, "%");
 	    afs_strcat(avc->linkData, c->cellName);
 	    afs_strcat(avc->linkData, ":");
@@ -741,6 +750,7 @@ afs_DynrootNewVnode(struct vcache *avc, struct AFSFetchStatus *status)
 	    namelen = strlen(c->cellName);
 	    linklen = 1 + namelen + 10;
 	    avc->linkData = afs_osi_Alloc(linklen + 1);
+	    osi_Assert(avc->linkData != NULL);
 	    strcpy(avc->linkData, rw ? "%" : "#");
 	    afs_strcat(avc->linkData, c->cellName);
 	    afs_strcat(avc->linkData, ":root.cell");
@@ -881,11 +891,14 @@ afs_DynrootVOPSymlink(struct vcache *avc, afs_ucred_t *acred,
 
     /* Doesn't already exist -- go ahead and create it */
     tps = afs_osi_Alloc(sizeof(*tps));
+    osi_Assert(tps != NULL);
     tps->index = afs_dynSymlinkIndex++;
     tps->next = afs_dynSymlinkBase;
     tps->name = afs_osi_Alloc(strlen(aname) + 1);
+    osi_Assert(tps->name != NULL);
     strcpy(tps->name, aname);
     tps->target = afs_osi_Alloc(strlen(atargetName) + 1);
+    osi_Assert(tps->target != NULL);
     strcpy(tps->target, atargetName);
     afs_dynSymlinkBase = tps;
     ReleaseWriteLock(&afs_dynSymlinkLock);

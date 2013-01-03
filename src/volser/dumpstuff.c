@@ -1312,7 +1312,7 @@ ReadVnodes(struct iod *iodp, Volume * vp, int incremental,
     struct VnodeClassInfo *vcp;
     IHandle_t *tmpH;
     FdHandle_t *fdP;
-    Inode nearInode;
+    Inode nearInode AFS_UNUSED;
     afs_int32 critical = 0;
 
     tag = iod_getc(iodp);

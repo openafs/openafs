@@ -223,6 +223,7 @@ void osi_linux_nfssrv_init(void)
 	}
 
 	afs_new_authtab[i] = afs_osi_Alloc(sizeof(struct auth_ops));
+	osi_Assert(afs_new_authtab[i] != NULL);
 	*(afs_new_authtab[i]) = *(afs_orig_authtab[i]);
 	afs_new_authtab[i]->owner = THIS_MODULE;
 	afs_new_authtab[i]->accept = svcauth_afs_accept;

@@ -80,11 +80,12 @@ osi_FlushPages(struct vcache *avc, afs_ucred_t *credp)
 	ReleaseWriteLock(&avc->lock);
 	return;
     }
-    if (hiszero(avc->mapDV)) {
-	hset(avc->mapDV, avc->f.m.DataVersion);
-	ReleaseWriteLock(&avc->lock);
-	return;
-    }
+
+    /* At this point, you might think that we can skip trying to flush pages
+     * if mapDV is zero, since a file with a zero DV will not have any data in
+     * it. However, some platforms (notably Linux 2.6.22+) will keep a page
+     * full of zeroes around for an empty file. So play it safe and always
+     * flush pages. */
 
     AFS_STATCNT(osi_FlushPages);
     hset(origDV, avc->f.m.DataVersion);

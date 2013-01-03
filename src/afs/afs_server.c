@@ -238,7 +238,7 @@ afs_MarkServerUpOrDown(struct srvAddr *sa, int a_isDown)
 
 
 afs_int32
-afs_ServerDown(struct srvAddr *sa)
+afs_ServerDown(struct srvAddr *sa, int code)
 {
     struct server *aserver = sa->server;
 
@@ -248,10 +248,10 @@ afs_ServerDown(struct srvAddr *sa)
     afs_MarkServerUpOrDown(sa, SRVR_ISDOWN);
     if (sa->sa_portal == aserver->cell->vlport)
 	print_internet_address
-	    ("afs: Lost contact with volume location server ", sa, "", 1);
+	    ("afs: Lost contact with volume location server ", sa, "", 1, code);
     else
 	print_internet_address("afs: Lost contact with file server ", sa, "",
-			       1);
+			       1, code);
     return 1;
 }				/*ServerDown */
 
@@ -318,7 +318,7 @@ CheckVLServer(struct srvAddr *sa, struct vrequest *areq)
 	if (tc->srvr == sa) {
 	    afs_MarkServerUpOrDown(sa, 0);
 	    print_internet_address("afs: volume location server ", sa,
-				   " is back up", 2);
+				   " is back up", 2, code);
 	}
     }
 
@@ -507,6 +507,7 @@ ForceAllNewConnections(void)
     }
 
     addrs = afs_osi_Alloc(srvAddrCount * sizeof(*addrs));
+    osi_Assert(addrs != NULL);
     j = 0;
     for (i = 0; i < NSERVERS; i++) {
 	for (sa = afs_srvAddrs[i]; sa; sa = sa->next_bkt) {
@@ -524,220 +525,103 @@ ForceAllNewConnections(void)
     }
 }
 
-/* check down servers (if adown), or running servers (if !adown) */
-void
-afs_CheckServers(int adown, struct cell *acellp)
+static void
+CkSrv_MarkUpDown(struct afs_conn **conns, int nconns, afs_int32 *results)
 {
-    struct vrequest treq;
-    struct server *ts;
     struct srvAddr *sa;
     struct afs_conn *tc;
-    afs_int32 i, j;
-    afs_int32 code;
+    afs_int32 i;
+
+    for(i = 0; i < nconns; i++){
+	tc = conns[i];
+	sa = tc->srvr;
+
+	if (( results[i] >= 0 ) && (sa->sa_flags & SRVADDR_ISDOWN) &&
+	    (tc->srvr == sa)) {
+	    /* server back up */
+	    print_internet_address("afs: file server ", sa, " is back up", 2,
+			           results[i]);
+
+	    ObtainWriteLock(&afs_xserver, 244);
+	    ObtainWriteLock(&afs_xsrvAddr, 245);
+	    afs_MarkServerUpOrDown(sa, 0);
+	    ReleaseWriteLock(&afs_xsrvAddr);
+	    ReleaseWriteLock(&afs_xserver);
+
+	    if (afs_waitForeverCount) {
+		afs_osi_Wakeup(&afs_waitForever);
+	    }
+	} else {
+	    if (results[i] < 0) {
+		/* server crashed */
+		afs_ServerDown(sa, results[i]);
+		ForceNewConnections(sa);  /* multi homed clients */
+	    }
+	}
+    }
+}
+
+void
+CkSrv_SetTime(struct rx_connection **rxconns, int nconns, int nservers,
+	      struct afs_conn **conns, struct srvAddr **addrs)
+{
+    struct afs_conn *tc;
     afs_int32 start, end = 0, delta;
     osi_timeval_t tv;
-    struct unixuser *tu;
+    struct srvAddr *sa;
+    afs_int32 *conntimer, *results, *deltas;
+    afs_int32 i = 0;
     char tbuffer[CVBS];
-    int srvAddrCount;
-    struct srvAddr **addrs;
-    struct afs_conn **conns;
-    int nconns;
-    struct rx_connection **rxconns;
-    afs_int32 *conntimer, *deltas, *results;
-    Capabilities *caps = NULL;
 
-    AFS_STATCNT(afs_CheckServers);
+    conntimer = afs_osi_Alloc(nservers * sizeof (afs_int32));
+    osi_Assert(conntimer != NULL);
+    results = afs_osi_Alloc(nservers * sizeof (afs_int32));
+    osi_Assert(results != NULL);
+    deltas = afs_osi_Alloc(nservers * sizeof (afs_int32));
+    osi_Assert(deltas != NULL);
 
-    /*
-     * No sense in doing the server checks if we are running in disconnected
-     * mode
-     */
-    if (AFS_IS_DISCONNECTED)
-        return;
+    /* make sure we're starting from zero */
+    memset(&deltas, 0, sizeof(deltas));
 
-    conns = (struct afs_conn **)0;
-    rxconns = (struct rx_connection **) 0;
-    conntimer = 0;
-    nconns = 0;
-
-    if ((code = afs_InitReq(&treq, afs_osi_credp)))
-	return;
-    ObtainReadLock(&afs_xserver);	/* Necessary? */
-    ObtainReadLock(&afs_xsrvAddr);
-
-    srvAddrCount = 0;
-    for (i = 0; i < NSERVERS; i++) {
-	for (sa = afs_srvAddrs[i]; sa; sa = sa->next_bkt) {
-	    srvAddrCount++;
-	}
-    }
-
-    addrs = afs_osi_Alloc(srvAddrCount * sizeof(*addrs));
-    j = 0;
-    for (i = 0; i < NSERVERS; i++) {
-	for (sa = afs_srvAddrs[i]; sa; sa = sa->next_bkt) {
-	    if (j >= srvAddrCount)
-		break;
-	    addrs[j++] = sa;
-	}
-    }
-
-    ReleaseReadLock(&afs_xsrvAddr);
-    ReleaseReadLock(&afs_xserver);
-
-    conns = (struct afs_conn **)afs_osi_Alloc(j * sizeof(struct afs_conn *));
-    rxconns = (struct rx_connection **)afs_osi_Alloc(j * sizeof(struct rx_connection *));
-    conntimer = (afs_int32 *)afs_osi_Alloc(j * sizeof (afs_int32));
-    deltas = (afs_int32 *)afs_osi_Alloc(j * sizeof (afs_int32));
-    results = (afs_int32 *)afs_osi_Alloc(j * sizeof (afs_int32));
-
-    caps = (Capabilities *)afs_osi_Alloc(j * sizeof (Capabilities));
-    memset(caps, 0, j * sizeof(Capabilities));
-
-    for (i = 0; i < j; i++) {
-	struct rx_connection *rxconn;
-
-	deltas[i] = 0;
-	sa = addrs[i];
-	ts = sa->server;
-	if (!ts)
-	    continue;
-
-	/* See if a cell to check was specified.  If it is spec'd and not
-	 * this server's cell, just skip the server.
-	 */
-	if (acellp && acellp != ts->cell)
-	    continue;
-
-	if ((!adown && (sa->sa_flags & SRVADDR_ISDOWN))
-	    || (adown && !(sa->sa_flags & SRVADDR_ISDOWN)))
-	    continue;
-
-	/* check vlserver with special code */
-	if (sa->sa_portal == AFS_VLPORT) {
-	    CheckVLServer(sa, &treq);
-	    continue;
-	}
-
-	if (!ts->cell)		/* not really an active server, anyway, it must */
-	    continue;		/* have just been added by setsprefs */
-
-	/* get a connection, even if host is down; bumps conn ref count */
-	tu = afs_GetUser(treq.uid, ts->cell->cellNum, SHARED_LOCK);
-	tc = afs_ConnBySA(sa, ts->cell->fsport, ts->cell->cellNum, tu,
-			  1 /*force */ , 1 /*create */ , SHARED_LOCK, 0,
-			  &rxconn);
-	afs_PutUser(tu, SHARED_LOCK);
-	if (!tc)
-	    continue;
-
-	if ((sa->sa_flags & SRVADDR_ISDOWN) || afs_HaveCallBacksFrom(sa->server)
-	    || (tc->srvr->server == afs_setTimeHost)) {
-	    conns[nconns]=tc;
-	    rxconns[nconns]=rxconn;
-	    if (sa->sa_flags & SRVADDR_ISDOWN) {
-		rx_SetConnDeadTime(rxconn, 3);
-		conntimer[nconns]=1;
-	    } else {
-		conntimer[nconns]=0;
-	    }
-	    nconns++;
-	} else /* not holding, kill ref */
-	    afs_PutConn(tc, rxconn, SHARED_LOCK);
-    } /* Outer loop over addrs */
-
+    start = osi_Time();         /* time the gettimeofday call */
     AFS_GUNLOCK();
-    multi_Rx(rxconns,nconns)
-      {
-	multi_RXAFS_GetCapabilities(&caps[multi_i]);
-	results[multi_i] = multi_error;
-      } multi_End;
+    if ( afs_setTimeHost == NULL ) {
+	multi_Rx(rxconns,nconns)
+	{
+	    tv.tv_sec = tv.tv_usec = 0;
+	    multi_RXAFS_GetTime(
+		(afs_uint32 *)&tv.tv_sec, (afs_uint32 *)&tv.tv_usec);
+	    tc = conns[multi_i];
+	    sa = tc->srvr;
+	    if (conntimer[multi_i] == 1)
+		rx_SetConnDeadTime(tc->id, afs_rx_deadtime);
+	    end = osi_Time();
+	    results[multi_i]=multi_error;
+	    if ((start == end) && !multi_error)
+		deltas[multi_i] = end - tv.tv_sec;
+	} multi_End;
+    } else {			/* find and query setTimeHost only */
+	for ( i = 0 ; i < nservers ; i++ ) {
+	    if ( conns[i] == NULL || conns[i]->srvr == NULL )
+		continue;
+	    if ( conns[i]->srvr->server == afs_setTimeHost ) {
+		tv.tv_sec = tv.tv_usec = 0;
+		results[i] = RXAFS_GetTime(rxconns[i],
+					   (afs_uint32 *)&tv.tv_sec,
+					   (afs_uint32 *)&tv.tv_usec);
+		end = osi_Time();
+		if ((start == end) && !results[i])
+		    deltas[i] = end - tv.tv_sec;
+		break;
+	    }
+	}
+    }
     AFS_GLOCK();
 
-    for ( i = 0 ; i < nconns ; i++ ) {
-	ts = addrs[i]->server;
-	if ( !ts )
-	    continue;
-	ts->capabilities = 0;
-	ts->flags |= SCAPS_KNOWN;
-	if ( results[i] == RXGEN_OPCODE ) {
-	    /* Mark server as up - it responded */
-	    results[i] = 0;
-	    continue;
-	}
-	if ( results[i] >= 0 )
-	    /* we currently handle 32-bits of capabilities */
-	    if (caps[i].Capabilities_len > 0) {
-		ts->capabilities = caps[i].Capabilities_val[0];
-		xdr_free((xdrproc_t)xdr_Capabilities, &caps[i]);
-		caps[i].Capabilities_val = NULL;
-		caps[i].Capabilities_len = 0;
-	    }
-    }
-
-    if ( afs_setTime != 0 ) {
-	start = osi_Time();         /* time the gettimeofday call */
-	AFS_GUNLOCK();
-	if ( afs_setTimeHost == NULL ) {
-	    multi_Rx(rxconns,nconns)
-	      {
-		tv.tv_sec = tv.tv_usec = 0;
-		multi_RXAFS_GetTime(
-			(afs_uint32 *)&tv.tv_sec, (afs_uint32 *)&tv.tv_usec);
-		tc = conns[multi_i];
-		sa = tc->srvr;
-		if (conntimer[multi_i] == 1)
-		    rx_SetConnDeadTime(rxconns[multi_i], afs_rx_deadtime);
-		end = osi_Time();
-		results[multi_i]=multi_error;
-		if ((start == end) && !multi_error)
-		  deltas[multi_i] = end - tv.tv_sec;
-
-	      } multi_End;
-	    }
-	else {			/* find and query setTimeHost only */
-	    for ( i = 0 ; i < nconns ; i++ ) {
-		if ( conns[i] == NULL || conns[i]->srvr == NULL )
-		    continue;
-		if ( conns[i]->srvr->server == afs_setTimeHost ) {
-		    tv.tv_sec = tv.tv_usec = 0;
-		    results[i] = RXAFS_GetTime(rxconns[i],
-				(afs_uint32 *)&tv.tv_sec, (afs_uint32 *)&tv.tv_usec);
-		    end = osi_Time();
-		    if ((start == end) && !results[i])
-			deltas[i] = end - tv.tv_sec;
-		    break;
-		}
-	    }
-	}
-	AFS_GLOCK();
-    }
-
-    for(i=0;i<nconns;i++){
-      tc = conns[i];
-      sa = tc->srvr;
-
-      if (( results[i] >= 0 ) && (sa->sa_flags & SRVADDR_ISDOWN) && (tc->srvr == sa)) {
-	/* server back up */
-	print_internet_address("afs: file server ", sa, " is back up", 2);
-
-	ObtainWriteLock(&afs_xserver, 244);
-	ObtainWriteLock(&afs_xsrvAddr, 245);
-	afs_MarkServerUpOrDown(sa, 0);
-	ReleaseWriteLock(&afs_xsrvAddr);
-	ReleaseWriteLock(&afs_xserver);
-
-	if (afs_waitForeverCount) {
-	  afs_osi_Wakeup(&afs_waitForever);
-	}
-      } else {
-	  if ((results[i] < 0) && (results[i] != RXGEN_OPCODE)) {
-	      /* server crashed */
-	      afs_ServerDown(sa);
-	      ForceNewConnections(sa);  /* multi homed clients */
-	  }
-      }
-    }
+    if ( afs_setTimeHost == NULL )
+	CkSrv_MarkUpDown(conns, nconns, results);
+    else /* We lack info for other than this host */
+	CkSrv_MarkUpDown(&conns[i], 1, &results[i]);
 
     /*
      * If we're supposed to set the time, and the call worked
@@ -784,19 +668,19 @@ afs_CheckServers(int adown, struct cell *acellp)
 			    afs_strcat(msgbuf, ", via ");
 			    print_internet_address(msgbuf, sa,
 						   "); clock is still fast.",
-						   0);
+						   0, 0);
 			} else {
 			    afs_strcat(msgbuf,
 				       afs_cv2string(&tbuffer[CVBS], delta));
 			    afs_strcat(msgbuf, " seconds (via ");
-			    print_internet_address(msgbuf, sa, ").", 0);
+			    print_internet_address(msgbuf, sa, ").", 0, 0);
 			}
 		    } else {
 			strcpy(msgbuf, "afs: setting clock ahead ");
 			afs_strcat(msgbuf,
 				   afs_cv2string(&tbuffer[CVBS], -delta));
 			afs_strcat(msgbuf, " seconds (via ");
-			print_internet_address(msgbuf, sa, ").", 0);
+			print_internet_address(msgbuf, sa, ").", 0, 0);
 		    }
                     /* We're only going to set it once; why bother looping? */
 		    break;
@@ -804,7 +688,205 @@ afs_CheckServers(int adown, struct cell *acellp)
 	    }
 	}
     }
+    afs_osi_Free(conntimer, nservers * sizeof(afs_int32));
+    afs_osi_Free(deltas, nservers * sizeof(afs_int32));
+    afs_osi_Free(results, nservers * sizeof(afs_int32));
+}
+
+void
+CkSrv_GetCaps(struct rx_connection **rxconns, int nconns, int nservers,
+	      struct afs_conn **conns, struct srvAddr **addrs)
+{
+    Capabilities *caps;
+    afs_int32 *results;
+    afs_int32 i;
+    struct server *ts;
+
+    caps = afs_osi_Alloc(nservers * sizeof (Capabilities));
+    osi_Assert(caps != NULL);
+    memset(caps, 0, nservers * sizeof(Capabilities));
+
+    results = afs_osi_Alloc(nservers * sizeof (afs_int32));
+    osi_Assert(results != NULL);
+
+    AFS_GUNLOCK();
+    multi_Rx(rxconns,nconns)
+      {
+	multi_RXAFS_GetCapabilities(&caps[multi_i]);
+	results[multi_i] = multi_error;
+      } multi_End;
+    AFS_GLOCK();
+
+    for ( i = 0 ; i < nconns ; i++ ) {
+	ts = addrs[i]->server;
+	if ( !ts )
+	    continue;
+	ts->capabilities = 0;
+	ts->flags |= SCAPS_KNOWN;
+	if ( results[i] == RXGEN_OPCODE ) {
+	    /* Mark server as up - it responded */
+	    results[i] = 0;
+	    continue;
+	}
+	if ( results[i] >= 0 )
+	    /* we currently handle 32-bits of capabilities */
+	    if (caps[i].Capabilities_len > 0) {
+		ts->capabilities = caps[i].Capabilities_val[0];
+		xdr_free((xdrproc_t)xdr_Capabilities, &caps[i]);
+		caps[i].Capabilities_val = NULL;
+		caps[i].Capabilities_len = 0;
+	    }
+    }
+    CkSrv_MarkUpDown(conns, nconns, results);
+
+    afs_osi_Free(caps, nservers * sizeof(Capabilities));
+    afs_osi_Free(results, nservers * sizeof(afs_int32));
+}
+
+/* check down servers (if adown), or running servers (if !adown) */
+void
+afs_CheckServers(int adown, struct cell *acellp)
+{
+    afs_LoopServers(adown?AFS_LS_DOWN:AFS_LS_UP, acellp, 1, CkSrv_GetCaps,
+		    afs_setTime?CkSrv_SetTime:NULL);
+}
+
+/* adown: AFS_LS_UP   - check only up
+ *        AFS_LS_DOWN - check only down.
+ *        AFS_LS_ALL  - check all */
+void
+afs_LoopServers(int adown, struct cell *acellp, int vlalso,
+		void (*func1) (struct rx_connection **rxconns, int nconns,
+			       int nservers, struct afs_conn **conns,
+			       struct srvAddr **addrs),
+		void (*func2) (struct rx_connection **rxconns, int nconns,
+			       int nservers, struct afs_conn **conns,
+			       struct srvAddr **addrs))
+{
+    struct vrequest treq;
+    struct server *ts;
+    struct srvAddr *sa;
+    struct afs_conn *tc = NULL;
+    afs_int32 i, j;
+    afs_int32 code;
+    struct unixuser *tu;
+    int srvAddrCount;
+    struct srvAddr **addrs;
+    struct afs_conn **conns;
+    int nconns;
+    struct rx_connection **rxconns;
+    afs_int32 *conntimer, *results;
+
+    AFS_STATCNT(afs_CheckServers);
+
+    /*
+     * No sense in doing the server checks if we are running in disconnected
+     * mode
+     */
+    if (AFS_IS_DISCONNECTED)
+        return;
+
+    conns = (struct afs_conn **)0;
+    rxconns = (struct rx_connection **) 0;
+    conntimer = 0;
+    nconns = 0;
+
+    if ((code = afs_InitReq(&treq, afs_osi_credp)))
+	return;
+    ObtainReadLock(&afs_xserver);	/* Necessary? */
+    ObtainReadLock(&afs_xsrvAddr);
+
+    srvAddrCount = 0;
+    for (i = 0; i < NSERVERS; i++) {
+	for (sa = afs_srvAddrs[i]; sa; sa = sa->next_bkt) {
+	    srvAddrCount++;
+	}
+    }
+
+    addrs = afs_osi_Alloc(srvAddrCount * sizeof(*addrs));
+    osi_Assert(addrs != NULL);
+    j = 0;
+    for (i = 0; i < NSERVERS; i++) {
+	for (sa = afs_srvAddrs[i]; sa; sa = sa->next_bkt) {
+	    if (j >= srvAddrCount)
+		break;
+	    addrs[j++] = sa;
+	}
+    }
+
+    ReleaseReadLock(&afs_xsrvAddr);
+    ReleaseReadLock(&afs_xserver);
+
+    conns = afs_osi_Alloc(j * sizeof(struct afs_conn *));
+    osi_Assert(conns != NULL);
+    rxconns = afs_osi_Alloc(j * sizeof(struct rx_connection *));
+    osi_Assert(rxconns != NULL);
+    conntimer = afs_osi_Alloc(j * sizeof (afs_int32));
+    osi_Assert(conntimer != NULL);
+    results = afs_osi_Alloc(j * sizeof (afs_int32));
+    osi_Assert(results != NULL);
+
+    for (i = 0; i < j; i++) {
+	struct rx_connection *rxconn;
+
+	sa = addrs[i];
+	ts = sa->server;
+	if (!ts)
+	    continue;
+
+	/* See if a cell to check was specified.  If it is spec'd and not
+	 * this server's cell, just skip the server.
+	 */
+	if (acellp && acellp != ts->cell)
+	    continue;
+
+	if (((adown==AFS_LS_DOWN) && !(sa->sa_flags & SRVADDR_ISDOWN))
+	    || ((adown==AFS_LS_UP) && (sa->sa_flags & SRVADDR_ISDOWN)))
+	    continue;
+
+	/* check vlserver with special code */
+	if (sa->sa_portal == AFS_VLPORT) {
+	    if (vlalso)
+		CheckVLServer(sa, &treq);
+	    continue;
+	}
+
+	if (!ts->cell)		/* not really an active server, anyway, it must */
+	    continue;		/* have just been added by setsprefs */
+
+	/* get a connection, even if host is down; bumps conn ref count */
+	tu = afs_GetUser(treq.uid, ts->cell->cellNum, SHARED_LOCK);
+	tc = afs_ConnBySA(sa, ts->cell->fsport, ts->cell->cellNum, tu,
+			  1 /*force */ , 1 /*create */ , SHARED_LOCK, 0,
+			  &rxconn);
+	afs_PutUser(tu, SHARED_LOCK);
+	if (!tc)
+	    continue;
+
+	if ((sa->sa_flags & SRVADDR_ISDOWN) || afs_HaveCallBacksFrom(sa->server)
+	    || (tc->srvr->server == afs_setTimeHost)) {
+	    conns[nconns]=tc;
+	    rxconns[nconns]=rxconn;
+	    if (sa->sa_flags & SRVADDR_ISDOWN) {
+		rx_SetConnDeadTime(rxconn, 3);
+		conntimer[nconns]=1;
+	    } else {
+		conntimer[nconns]=0;
+	    }
+	    nconns++;
+	} else /* not holding, kill ref */
+	    afs_PutConn(tc, rxconn, SHARED_LOCK);
+    } /* Outer loop over addrs */
+
+    (*func1)(rxconns, nconns, j, conns, addrs);
+
+    if (func2) {
+	(*func2)(rxconns, nconns, j, conns, addrs);
+    }
+
     for (i = 0; i < nconns; i++) {
+	if (conntimer[i] == 1)
+	    rx_SetConnDeadTime(tc->id, afs_rx_deadtime);
 	afs_PutConn(conns[i], rxconns[i], SHARED_LOCK);     /* done with it now */
     }
 
@@ -812,9 +894,7 @@ afs_CheckServers(int adown, struct cell *acellp)
     afs_osi_Free(conns, j * sizeof(struct afs_conn *));
     afs_osi_Free(rxconns, j * sizeof(struct rx_connection *));
     afs_osi_Free(conntimer, j * sizeof(afs_int32));
-    afs_osi_Free(deltas, j * sizeof(afs_int32));
     afs_osi_Free(results, j * sizeof(afs_int32));
-    afs_osi_Free(caps, j * sizeof(Capabilities));
 
 } /*afs_CheckServers*/
 
@@ -1731,11 +1811,10 @@ afs_GetCapabilities(struct server *ts)
     ObtainWriteLock(&afs_xserver, 723);
     /* we forced a conn above; important we mark it down if needed */
     if ((code < 0) && (code != RXGEN_OPCODE)) {
-	afs_PutConn(tc, rxconn, SHARED_LOCK);
-	afs_ServerDown(tc->srvr);
+	afs_ServerDown(tc->srvr, code);
 	ForceNewConnections(tc->srvr); /* multi homed clients */
     }
-
+    afs_PutConn(tc, rxconn, SHARED_LOCK);
     if ( code && code != RXGEN_OPCODE ) {
 	afs_warn("RXAFS_GetCapabilities failed with code %d\n", code);
 	/* better not be anything to free. we failed! */
@@ -1803,7 +1882,6 @@ afs_GetServer(afs_uint32 *aserverp, afs_int32 nservers, afs_int32 acell,
 {
     struct server *oldts = 0, *ts, *newts, *orphts = 0;
     struct srvAddr *oldsa, *newsa, *nextsa, *orphsa;
-    u_short fsport;
     afs_int32 iphash, k, srvcount = 0;
     unsigned int srvhash;
 
@@ -1865,7 +1943,7 @@ afs_GetServer(afs_uint32 *aserverp, afs_int32 nservers, afs_int32 acell,
     if (oldts) {
 	newts = oldts;
     } else {
-	newts = (struct server *)afs_osi_Alloc(sizeof(struct server));
+	newts = afs_osi_Alloc(sizeof(struct server));
 	if (!newts)
 	    panic("malloc of server struct");
 	afs_totalServers++;
@@ -1886,8 +1964,6 @@ afs_GetServer(afs_uint32 *aserverp, afs_int32 nservers, afs_int32 acell,
     }
     if (acell)
 	newts->cell = afs_GetCell(acell, 0);
-
-    fsport = (newts->cell ? newts->cell->fsport : AFS_FSPORT);
 
     /* For each IP address we are registering */
     for (k = 0; k < nservers; k++) {
@@ -1910,7 +1986,7 @@ afs_GetServer(afs_uint32 *aserverp, afs_int32 nservers, afs_int32 acell,
 	if (oldsa) {
 	    newsa = oldsa;
 	} else {
-	    newsa = (struct srvAddr *)afs_osi_Alloc(sizeof(struct srvAddr));
+	    newsa = afs_osi_Alloc(sizeof(struct srvAddr));
 	    if (!newsa)
 		panic("malloc of srvAddr struct");
 	    afs_totalSrvAddrs++;
@@ -1960,8 +2036,7 @@ afs_GetServer(afs_uint32 *aserverp, afs_int32 nservers, afs_int32 acell,
 
 	    /* Have a srvAddr struct. Now get a server struct (if not already) */
 	    if (!orphts) {
-		orphts =
-		    (struct server *)afs_osi_Alloc(sizeof(struct server));
+		orphts = afs_osi_Alloc(sizeof(struct server));
 		if (!orphts)
 		    panic("malloc of lo server struct");
 		memset(orphts, 0, sizeof(struct server));

@@ -90,7 +90,7 @@ afs_CheckServerDaemon(void)
     last10MinCheck = lastCheck = osi_Time();
     while (1) {
 	if (afs_termState == AFSOP_STOP_CS) {
-	    afs_termState = AFSOP_STOP_BKG;
+	    afs_termState = AFSOP_STOP_TRUNCDAEMON;
 	    afs_osi_Wakeup(&afs_termState);
 	    break;
 	}
@@ -108,7 +108,7 @@ afs_CheckServerDaemon(void)
 	}
 	/* shutdown check. */
 	if (afs_termState == AFSOP_STOP_CS) {
-	    afs_termState = AFSOP_STOP_BKG;
+	    afs_termState = AFSOP_STOP_TRUNCDAEMON;
 	    afs_osi_Wakeup(&afs_termState);
 	    break;
 	}
@@ -308,7 +308,7 @@ afs_Daemon(void)
 	    if (afs_CheckServerDaemonStarted)
 		afs_termState = AFSOP_STOP_CS;
 	    else
-		afs_termState = AFSOP_STOP_BKG;
+		afs_termState = AFSOP_STOP_TRUNCDAEMON;
 	    afs_osi_Wakeup(&afs_termState);
 	    return;
 	}
@@ -396,8 +396,13 @@ afs_CheckRootVolume(void)
 		    spin_lock(&dp->d_lock);
 #endif
 #endif
+#if defined(D_ALIAS_IS_HLIST)
+		    hlist_del_init(&dp->d_alias);
+		    hlist_add_head(&dp->d_alias, &(AFSTOV(vcp)->i_dentry));
+#else
 		    list_del_init(&dp->d_alias);
 		    list_add(&dp->d_alias, &(AFSTOV(vcp)->i_dentry));
+#endif
 		    dp->d_inode = AFSTOV(vcp);
 #if defined(AFS_LINUX24_ENV)
 #if defined(AFS_LINUX26_ENV)
@@ -1045,7 +1050,7 @@ afs_BackgroundDaemon(void)
 
 	if (afs_termState == AFSOP_STOP_BKG) {
 	    if (--afs_nbrs <= 0)
-		afs_termState = AFSOP_STOP_TRUNCDAEMON;
+		afs_termState = AFSOP_STOP_RXCALLBACK;
 	    ReleaseWriteLock(&afs_xbrs);
 	    afs_osi_Wakeup(&afs_termState);
 #ifdef AFS_DARWIN80_ENV
@@ -1176,7 +1181,7 @@ afs_sgidaemon(void)
 	    SPUNLOCK(afs_sgibklock, s);
 	    AFS_GLOCK();
 	    tdc->dflags &= ~DFEntryMod;
-	    afs_WriteDCache(tdc, 1);
+	    osi_Assert(afs_WriteDCache(tdc, 1) == 0);
 	    AFS_GUNLOCK();
 	    s = SPLOCK(afs_sgibklock);
 	}

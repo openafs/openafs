@@ -129,6 +129,21 @@ static afs_int32 VolSetIdsTypes(struct rx_call *, afs_int32, char [],
 				afs_uint32);
 static afs_int32 VolSetDate(struct rx_call *, afs_int32, afs_int32);
 
+/**
+ * Return the host address of the caller as a string.
+ *
+ * @param[in]  acid    incoming rx call
+ * @param[out] buffer  buffer to be filled with the addess string
+ *
+ * @return address as formatted by inet_ntoa
+ */
+static_inline char *
+callerAddress(struct rx_call *acid, char *buffer)
+{
+    afs_uint32 ip = rx_HostOf(rx_PeerOf(rx_ConnectionOf(acid)));
+    return afs_inet_ntoa_r(ip, buffer);
+}
+
 /* this call unlocks all of the partition locks we've set */
 int
 VPFullUnlock_r(void)
@@ -327,7 +342,7 @@ ViceCreateRoot(Volume *vp)
     DirHandle dir;
     struct acl_accessList *ACL;
     AFSFid did;
-    Inode inodeNumber, nearInode;
+    Inode inodeNumber, nearInode AFS_UNUSED;
     struct VnodeDiskObject *vnode;
     struct VnodeClassInfo *vcp = &VnodeClassInfo[vLarge];
     IHandle_t *h;
@@ -486,8 +501,11 @@ VolNukeVolume(struct rx_call *acid, afs_int32 apartID, afs_uint32 avolID)
     /* check for access */
     if (!afsconf_SuperUser(tdir, acid, caller))
 	return VOLSERBAD_ACCESS;
-    if (DoLogging)
-	Log("%s is executing VolNukeVolume %u\n", caller, avolID);
+    if (DoLogging) {
+	char buffer[16];
+	Log("%s on %s is executing VolNukeVolume %u\n", caller,
+	    callerAddress(acid, buffer), avolID);
+    }
 
     if (volutil_PartitionName2_r(apartID, partName, sizeof(partName)) != 0)
 	return VOLSERNOVOL;
@@ -541,8 +559,11 @@ VolCreateVolume(struct rx_call *acid, afs_int32 apart, char *aname,
 	return VOLSERBADNAME;
     if (!afsconf_SuperUser(tdir, acid, caller))
 	return VOLSERBAD_ACCESS;
-    if (DoLogging)
-	Log("%s is executing CreateVolume '%s'\n", caller, aname);
+    if (DoLogging) {
+	char buffer[16];
+	Log("%s on %s is executing CreateVolume '%s'\n", caller,
+	    callerAddress(acid, buffer), aname);
+    }
     if ((error = ConvertPartition(apart, ppath, sizeof(ppath))))
 	return error;		/*a standard unix error */
     if (atype != readwriteVolume && atype != readonlyVolume
@@ -643,8 +664,11 @@ VolDeleteVolume(struct rx_call *acid, afs_int32 atrans)
 	TRELE(tt);
 	return ENOENT;
     }
-    if (DoLogging)
-	Log("%s is executing Delete Volume %u\n", caller, tt->volid);
+    if (DoLogging) {
+	char buffer[16];
+	Log("%s on %s is executing Delete Volume %u\n", caller,
+	    callerAddress(acid, buffer), tt->volid);
+    }
     TSetRxCall(tt, acid, "DeleteVolume");
     VPurgeVolume(&error, tt->volume);	/* don't check error code, it is not set! */
     V_destroyMe(tt->volume) = DESTROY_ME;
@@ -703,8 +727,11 @@ VolClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 purgeId,
 	return VOLSERBADNAME;
     if (!afsconf_SuperUser(tdir, acid, caller))
 	return VOLSERBAD_ACCESS;	/*not a super user */
-    if (DoLogging)
-	Log("%s is executing Clone Volume new name=%s\n", caller, newName);
+    if (DoLogging) {
+	char buffer[16];
+	Log("%s on %s is executing Clone Volume new name=%s\n", caller,
+	    callerAddress(acid, buffer), newName);
+    }
     error = 0;
     originalvp = (Volume *) 0;
     purgevp = (Volume *) 0;
@@ -743,12 +770,6 @@ VolClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 purgeId,
 	purgevp = NULL;
     }
     originalvp = tt->volume;
-    if ((V_type(originalvp) == backupVolume)
-	|| (V_type(originalvp) == readonlyVolume)) {
-	Log("1 Volser: Clone: The volume to be cloned must be a read/write; aborted\n");
-	error = EROFS;
-	goto fail;
-    }
     if ((V_destroyMe(originalvp) == DESTROY_ME) || !V_inService(originalvp)) {
 	Log("1 Volser: Clone: Volume %d is offline and cannot be cloned\n",
 	    V_id(originalvp));
@@ -778,13 +799,17 @@ VolClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 purgeId,
     salv_vp = originalvp;
 #endif
 
-    newvp =
-	VCreateVolume(&error, originalvp->partition->name, newId,
-		      V_parentId(originalvp));
-    if (error) {
-	Log("1 Volser: Clone: Couldn't create new volume; clone aborted\n");
-	newvp = (Volume *) 0;
-	goto fail;
+    if (purgeId == newId) {
+	newvp = purgevp;
+    } else {
+	newvp =
+	    VCreateVolume(&error, originalvp->partition->name, newId,
+			  V_parentId(originalvp));
+	if (error) {
+	    Log("1 Volser: Clone: Couldn't create new volume; clone aborted\n");
+	    newvp = (Volume *) 0;
+	    goto fail;
+	}
     }
     if (newType == readonlyVolume)
 	V_cloneId(originalvp) = newId;
@@ -886,8 +911,11 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
     /*not a super user */
     if (!afsconf_SuperUser(tdir, acid, caller))
 	return VOLSERBAD_ACCESS;
-    if (DoLogging)
-	Log("%s is executing Reclone Volume %u\n", caller, cloneId);
+    if (DoLogging) {
+	char buffer[16];
+	Log("%s on %s is executing Reclone Volume %u\n", caller,
+	    callerAddress(acid, buffer), cloneId);
+    }
     error = 0;
     clonevp = originalvp = (Volume *) 0;
     tt = (struct volser_trans *)0;
@@ -2200,8 +2228,15 @@ GetVolInfo(afs_uint32 partId,
     /* Get volume from volserver */
     if (mode == VOL_INFO_LIST_MULTIPLE)
 	tv = VAttachVolumeByName(&error, pname, volname, V_PEEK);
-    else
-	tv = VAttachVolumeByName_retry(&error, pname, volname, V_PEEK);
+    else {
+#ifdef AFS_DEMAND_ATTACH_FS
+	int mode = V_PEEK;
+#else
+	int mode = V_READONLY;   /* informs the fileserver to update the volume headers. */
+#endif
+	tv = VAttachVolumeByName_retry(&error, pname, volname, mode);
+    }
+
     if (error) {
 	Log("1 Volser: GetVolInfo: Could not attach volume %u (%s:%s) error=%d\n",
 	    volumeId, pname, volname, error);
