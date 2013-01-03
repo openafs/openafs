@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -e
+
+# lenny versions of openafs-fileserver symlinked the doc directory to
+# openafs-client.  This was changed in 1.4.12+dfsg-1, but the symlink was
+# never removed, and dpkg won't remove symlinks to a directory.  Belatedly
+# clean up so that we don't overwrite doc files in openafs-client.
+test ! -L /usr/share/doc/openafs-fileserver
+    || rm /usr/share/doc/openafs-fileserver
+
+#DEBHELPER#

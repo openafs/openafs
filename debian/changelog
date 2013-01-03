@@ -18,7 +18,14 @@ openafs (1.6.2~pre2-1) UNRELEASED; urgency=low
     - Support newer glibc versions.
   * Fix server installation instructions in README.servers, which used the
     early demand-attach syntax before separate demand-attach binaries were
-    built.  (Closes: #693311)
+    built.  Thanks, Björn Torkelsson.  (Closes: #693311)
+  * Remove the symlink from the openafs-fileserver doc directory to the
+    openafs-client doc directory.  We used to install this symlink and
+    share doc directories, but this stopped in 1.4.12+dfsg-1.  However,
+    dpkg doesn't remove symlinks to a directory, so systems that had
+    upgraded from the older package were overwriting openafs-client doc
+    files with the openafs-fileserver versions.  Thanks, Andreas
+    Beckmann.  (Closes: #694063)
   * Switch to xz compression for the upstream tarball, Debian tarball, and
     binary packages.
   * Remove debian/import-upstream and change README.source to document
