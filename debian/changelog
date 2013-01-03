@@ -1,4 +1,4 @@
-openafs (1.6.2~pre2-1) UNRELEASED; urgency=low
+openafs (1.6.2~pre2-1) experimental; urgency=low
 
   * New upstream prerelease.
     - Support Linux kernels up to 3.7.  (Closes: #685973)
@@ -38,7 +38,7 @@ openafs (1.6.2~pre2-1) UNRELEASED; urgency=low
   * Update Vcs-* URLs for the new anonscm.debian.org URL layout.
   * Update standards version to 3.9.4 (no changes required).
   
- -- Russ Allbery <rra@debian.org>  Wed, 02 Jan 2013 21:25:52 -0800
+ -- Russ Allbery <rra@debian.org>  Thu, 03 Jan 2013 10:07:39 -0800
 
 openafs (1.6.1-2) unstable; urgency=low
 
