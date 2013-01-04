@@ -1324,6 +1324,7 @@ AC_CHECK_HEADERS([ \
 		   math.h \
 		   mntent.h \
 		   ncurses.h \
+		   ncurses/ncurses.h \
 		   netdb.h \
 		   netinet/in.h \
 		   pthread_np.h \
