@@ -256,6 +256,7 @@ AC_OUTPUT([
     src/rx/test/Makefile
     src/rxdebug/Makefile
     src/rxgen/Makefile
+    src/rxgk/Makefile
     src/rxkad/Makefile
     src/rxkad/test/Makefile
     src/rxosd/Makefile
