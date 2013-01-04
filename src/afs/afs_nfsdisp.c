@@ -24,7 +24,19 @@
 #include "rpc/xdr.h"
 #include "rpc/svc.h"
 #include "nfs/nfs.h"
+
 #include "nfs/export.h"
+/* Solaris 11.1 defines areq to areq_u.areq (and auid to areq_u.auid), for
+ * shortcut accessors to the nfsauth_arg structure. Since we dare to use the
+ * names areq and auid as parameter names in a lot of functions, work around
+ * this by undefining it. */
+#ifdef areq
+# undef areq
+#endif
+#ifdef auid
+# undef auid
+#endif
+
 #include "nfs/nfs_clnt.h"
 #include "nfs/nfs_acl.h"
 #include "afs/afsincludes.h"
