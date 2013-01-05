@@ -2,10 +2,10 @@ This software has been released under the terms of the IBM Public
 License.  For details, see the LICENSE file in the top-level source
 directory or on-line at http://www.openafs.org/dl/license10.html
 
-The document now provides a step by step procedure that takes the user 
-from a basic Windows 2000/XP/2003/Vista/2008 workstation to an OpenAFS 
-development environment.   Details are provided so that a 'beginning' 
-windows developer can build an OpenAFS installable package for Windows 
+The document now provides a step by step procedure that takes the user
+from a basic Windows 2000/XP/2003/Vista/2008 workstation to an OpenAFS
+development environment.   Details are provided so that a 'beginning'
+windows developer can build an OpenAFS installable package for Windows
 2000/XP/2003/Vista/2008.
 
 NOTE 1:
@@ -24,7 +24,7 @@ can be one of:
 
  * Windows XP
  * Windows XP SP2
- * Windows 2003 
+ * Windows 2003
  * Windows 2003 SP1
  * Windows XP 64
  * Windows 2003 64
@@ -34,7 +34,7 @@ can be one of:
  * Windows 7 (32 or 64)
  * Windows 2008 R2 (64)
 
-The build process is controlled by a nmake file that generates the 
+The build process is controlled by a nmake file that generates the
 necessary binaries and binds them into an install package.
 
 The following steps describe how to configure the development environment:
@@ -51,9 +51,9 @@ The following steps describe how to configure the development environment:
    J. Build Wix MSI Install Package
    K. Final Results
    L. Optional Items
-   	
+
 The Microsoft development tools require anywhere from 660 MB to 1.8GB
-of storage depending on which compilers are selected.  The following 
+of storage depending on which compilers are selected.  The following
 versions are supported:
 
     Microsoft Visual Studio .NET 2005
@@ -72,7 +72,7 @@ One of the following Microsoft DDK/WDK is required:
 
     Microsoft Windows Driver Kit 7600
 
-NOTE: Not all combinations of Visual Studio, SDK, and DDK/WDK are 
+NOTE: Not all combinations of Visual Studio, SDK, and DDK/WDK are
 known to work.  OpenAFS for Windows is packaged by Secure Endpoints Inc.
 using the following configurations:
 
@@ -112,14 +112,14 @@ Doxygen is required for Developer Documentation generation
 
     http://www.stack.nl/~dimitri/doxygen/
 
-The NSIS installer requires about 14 MB of storage. The following 
+The NSIS installer requires about 14 MB of storage. The following
 version is supported:
 
     Nullsoft Scriptable Installation System 2.44
       http://sourceforge.net/project/showfiles.php?group_id=22049&package_id=15374
     (Be sure to use the strlen 8192 binaries)
 
-The WiX installer requires about 18 MB of storage.  The following 
+The WiX installer requires about 18 MB of storage.  The following
 version is supported:
 
     Wix 2.0.5325.0
@@ -152,11 +152,11 @@ You will need an unzip utility that can expand compressed tar files.
 For example "Pkzip for Windows" from Pkware will uncompress tar files.
 (http://www.pkware.com/)
 
-Expand the downloaded tar files into target directory (c:\OpenAFS), 
+Expand the downloaded tar files into target directory (c:\OpenAFS),
 the unzip routine will expand the source into a subdirectory tree:
-    c:\OpenAFS\OpenAFS-1.5.61\ 
+    c:\OpenAFS\OpenAFS-1.5.61\
 
-Copy the files 'NTMakefile' and 'ntbuild.bat' from the 'src' 
+Copy the files 'NTMakefile' and 'ntbuild.bat' from the 'src'
 subdirectory to the OpenAFS base directory (aka %AFSROOT%):
 
   From a DOS command prompt window, enter the following copy commands:
@@ -174,7 +174,7 @@ The OpenAFS base directory should look something like the following:
 
 STEP B. Install compiler and development tools.
 
-Install a copy of Microsoft Visual Studio .NET, Visual Studio .NET 2003, 
+Install a copy of Microsoft Visual Studio .NET, Visual Studio .NET 2003,
 or Visual Studio .NET 2005.  Visual Studio 2008 can be used to produce
 builds but the resulting binaries cannot be used on Windows 2000.
 
@@ -191,7 +191,7 @@ STEP C. Install SDK header files.
 
 Files from Microsoft's Platform SDK for Windows Server 2003 SP1 are
 required to complete a build on Windows 2000/XP/2003.   At a minimum the
-following components are known to be required: 
+following components are known to be required:
 
   * Core
   * Data Access
@@ -226,11 +226,11 @@ These files come from the following Microsoft DDKs/SDKs:
 
 STEP D. Configure NTBUILD.BAT.
 
-The NTBUILD.BAT file copied to the OpenAFS base directory must be 
+The NTBUILD.BAT file copied to the OpenAFS base directory must be
 customized for use on your development system.  The provided NTBUILD.BAT
 was developed for use with Visual Studio 2003 and the Windows Server 2003
 Platform SDK.  It requires significant modification to construct a build
-environment for use with other tools.  
+environment for use with other tools.
 
 The following variables must be defined to match your configuration:
 
@@ -267,9 +267,9 @@ The following variables must be defined to match your configuration:
   MSVCVer:  Set to 8.0 if using Visual Studio 8
 
   CODESIGN_DESC: Product Name
-  
+
   CODESIGN_TIMESTAMP: Time Stamp Service for Code Signing Certificate
-   
+
   CODESIGN_URL: Support URL Displayed to End Users
 
   CODESIGN_CROSS_CERT: Path to Microsoft Cross Signing Certificate
@@ -292,7 +292,7 @@ as appropriate:
     AFSPRODUCT_VER_PATCH - Version Patch Number
     AFSPRODUCT_VER_BUILD - Version Build Number
     CELLSERVDB_INSTALL   - The default file name for the CellServDB
-                     	   included in the install Package.
+	   included in the install Package.
     CELLNAME_DEFAULT     - The default home cell name.
     CELLSERVDB_WEB       - The default web address to obtain CellServDB
 
@@ -313,7 +313,7 @@ one that can be downloaded from the web (CELLSERVDB_WEB).
 
 IMPORTANT: When building your own binaries, you must set the AFSPRODUCT_VER_BUILD
 value to a number greater than 1023.  All values 0 to 1023 are reserved for use
-by official OpenAFS.org releases.  A failure to do so will result in Windows 
+by official OpenAFS.org releases.  A failure to do so will result in Windows
 Crash Reports for your binaries being delivered to OpenAFS.org for analysis.
 
 
@@ -350,7 +350,7 @@ STEP F. Begin the build
 While the build is running you will see many compile warnings. This
 behavior is normal; the build process is successful as long as the build
 process doesn't terminate with an error ("nmake.exe return code 0x2")
-and it displays 'Build Finished Successfully'.  Note that although the 
+and it displays 'Build Finished Successfully'.  Note that although the
 the build target is "install", it does not install OpenAFS.
 
 (5) Before rebuilding you must clean the work area:
@@ -365,10 +365,10 @@ Download the Nullsoft Scriptable Installation System (NSIS) 2.44 from
     http://nsis.sourceforge.net/home/
 
 Run the nsis-2.33.exe installer and install to "C:\Program Files\NSIS".
-Then download the large strings build zip file and replace the installed 
-files with the versions from the zip file.  These versions increase 
-the maximum string length from 1024 characters to 8192 characters.  
-This is necessary for installation on systems with long PATH environment 
+Then download the large strings build zip file and replace the installed
+files with the versions from the zip file.  These versions increase
+the maximum string length from 1024 characters to 8192 characters.
+This is necessary for installation on systems with long PATH environment
 strings.
 
 Note: The NSIS installer can only be used to produce 32-bit installers.
@@ -382,7 +382,7 @@ From the %AFSROOT% directory execute:
 
 STEP I.  Install Wix MSI Installer
 
-Download the Wix 2.0.5325.0 installer from 
+Download the Wix 2.0.5325.0 installer from
 
     http://prdownloads.sourceforge.net/wix/sources-2.0.5325.0.zip
 

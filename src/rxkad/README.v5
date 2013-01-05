@@ -2,29 +2,29 @@
 #  This code depends on heimdal's asn1_compile generated krb5 decoding
 #  stuff. The code is originally from rxkad that Björn Grönvall
 #  <bg@sics.se> for kth-krb and was included in Arla.
-# 
+#
 #  The first file, v5der.c are part for of support functions
 #  that all generated files depends on.
-# 
+#
 #  The second file (v5gen.h) is the header file that is generated for
 #  the decoding functions.
-# 
+#
 #  The third file (v5gen.c) is the subset of the generated functions we
 #  need to decode the authenticator.
-# 
+#
 #  The forth file (v5gen-rewrite.h) is used to make sure we don't
 #  pollute the namespace.
-# 
+#
 #  All files are modified to build within OpenAFS environment without
 #  any external dependencies. Below is the shell script that is used to
 #  import the code into the four files.
-# 
+#
 #  All internal symbols are rewritten to _rxkad_v5_.
 #
 
 # Make sure we don't export too much
-# 
-# : lha@nutcracker ; nm ticket5.o | grep T | grep -v _rxkad_v5 
+#
+# : lha@nutcracker ; nm ticket5.o | grep T | grep -v _rxkad_v5
 # 00005748 T tkt_DecodeTicket5
 #
 

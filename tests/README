@@ -19,7 +19,7 @@ level.   The Makefile.in in this directory will also need to be modified
 to recurse into any new directories.  See util/Makefile.in for an example
 of how to write a Makefile.in for a new test directory.
 
-The files comprising the test harness are sourced from the C TAP Harness 
+The files comprising the test harness are sourced from the C TAP Harness
 distribution using the src/external mechanism. The upstream site for that
 distribution is at:
 

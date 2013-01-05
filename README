@@ -27,7 +27,7 @@ A  Configuring
    source in, you will only have an src/ directory.
 
    1. Pick a system to build for, and note its default AFS sys_name.
-      A directory will be automatically created for binaries to be written 
+      A directory will be automatically created for binaries to be written
       into with this name when you build.
 
       alpha_dux40, alpha_dux50, alpha_dux51 (client does not work)
@@ -144,18 +144,18 @@ A  Configuring
 
 B  Building
 
-   1. Now, you can build OpenAFS. 
+   1. Now, you can build OpenAFS.
 
       % make
 
-   2. Install your build using either "make install" to install 
+   2. Install your build using either "make install" to install
       into the current system (you will need to be root, and files
       will be placed as appropriate for Transarc or standard paths),
-      "make install DESTDIR=/some/path" to install into an alternate 
+      "make install DESTDIR=/some/path" to install into an alternate
       directory tree, or if you configured with --enable-transarc-paths
-      make dest to create a complete binary tree in the dest directory      
+      make dest to create a complete binary tree in the dest directory
       under the directory named for the sys_name you built for,
-      e.g. sun4x_57/dest or i386_linux22/dest 
+      e.g. sun4x_57/dest or i386_linux22/dest
 
    3. As appropriate you can clean up or, if you're using Linux, build for
       another kernel version.
@@ -167,7 +167,7 @@ B  Building
 C  Problems
 
    If you have a problem building this source, you may want to visit
-   http://www.openafs.org/ to see if any problems have been reported 
+   http://www.openafs.org/ to see if any problems have been reported
    or to find out how to get more help.
 
    Mailing lists have been set up to help; More details can be found
@@ -199,7 +199,7 @@ D  Linux Notes
 
       % ./configure --with-afs-sysname=<sysname> \
           --with-linux-kernel-headers=/usr/src/linux-2.2.19-i686
-      % make 
+      % make
 
    Your build tree will now include an additional kernel module for your
    additional kernel headers. Be aware that if the kernel version string
@@ -245,9 +245,9 @@ G  FreeBSD Notes
 
    You also need access to your kernel build directory for the opt_global.h
    include file.  Use the --with-bsd-kernel-build= configure option if your
-   kernel build is not GENERIC in the standard place. If 
-   /usr/src/sys/${CPUARCH}/compile/GENERIC does not point to 
-   /usr/obj/usr/src/sys/GENERIC you may need to resolve that and retry the 
+   kernel build is not GENERIC in the standard place. If
+   /usr/src/sys/${CPUARCH}/compile/GENERIC does not point to
+   /usr/obj/usr/src/sys/GENERIC you may need to resolve that and retry the
    build.
 
    There is no server package, but I am told that "make install" will put
