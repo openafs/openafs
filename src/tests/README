@@ -56,7 +56,7 @@ B) Basic functionality
 
 C) Mountpoint tests
 10) Create and remove a good mountpoint. (mkm-rmm)
-20) Create a mountpoint to a nonexistant volume. (mountpoint)
+20) Create a mountpoint to a nonexistent volume. (mountpoint)
 
 D) ACL tests
 10) Add a valid PTS user to an ACL. (acladduser)

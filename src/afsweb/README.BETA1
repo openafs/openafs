@@ -24,7 +24,7 @@ In addition to these you should know the location of the AFS library
 The mod_afs.c file should be in the apache src directory with all the other 
 module files. weblog and weblog_starter should be in the same directory - this
 could be any directory (preferably outside AFS - if it is in AFS then 
-system:anyuser should have the appropriate ACL on that directiry).
+system:anyuser should have the appropriate ACL on that directory).
 
 Editing the following files in the apache src and conf directories:-
 

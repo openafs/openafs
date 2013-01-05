@@ -12,7 +12,7 @@ mutex at the entry point of every public function in the library.
 
 However, not all public functions are made thread safe since not all 
 functions are needed by the NT admin work.  In particular, there are
-many public functions that make up decendants of the functions
+many public functions that make up descendants of the functions
 we wish to use that weren't modified, since these functions will be 
 protected by the locking at a higher level function.
 

@@ -207,7 +207,7 @@ STEP C. Install SDK header files.
 
 Files from Microsoft's Platform SDK for Windows Server 2003 SP1 are
 required to complete a build on Windows 2000/XP/2003.   At a minimum the
-following componets are known to be required: 
+following components are known to be required: 
 
   * Core
   * Data Access

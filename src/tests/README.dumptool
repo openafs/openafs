@@ -64,7 +64,7 @@ accepts the following commands:
 	
 	vcp	Copy a file from the dump, by the vnode.  The first
 		argument is the vnode number, optionally followed by
-		the uniqifier.  E.g:
+		the uniquifier.  E.g:
 
 		vcp 126278 /tmp/file1
 		vcp 126278.43289 /tmp/file2
@@ -79,14 +79,14 @@ Dumptool supports a number of command-line options.  They are detailed
 below:
 
 	-v	Verbose mode.  Output additional information during dump
-		processing.  Each -v will increate output.
+		processing.  Each -v will increase output.
 
 	-f	Force dump processing.  Attempt to continue processing
 		a dump even when some errors are detected.  Not completely
 		tested.
 	
 	-i	Inode dump.  Dump a list of all files in the volume,
-		with their volume/vnode/uniqifier information.
+		with their volume/vnode/uniquifier information.
 
 
 SUPPORT FOR MR-AFS
@@ -149,4 +149,4 @@ think it's only polite for you to do the same.
 CONTACT INFORMATION
 
 As always, please send comments, suggestions, or new features to me,
-Ken Hornstein <kenh@cmf.nrl.navy.mil>.  Shar and enjoy.
+Ken Hornstein <kenh@cmf.nrl.navy.mil>.  Share and enjoy.

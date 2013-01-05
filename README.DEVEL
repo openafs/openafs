@@ -21,7 +21,7 @@ way to do this?)
 
 -- Prototyping and Style --
 Prototypes for all source files in a given dir DDD should be placed
-int the file DDD/DDD_prototypes.h. All externally used (either API
+in the file DDD/DDD_prototypes.h. All externally used (either API
 or used by other source files) routines and variables should be
 prototyped in this file.
 
