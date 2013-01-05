@@ -31,7 +31,7 @@ It has been integrated into OpenAFS 1.5.x.
   clients to reevaluate directory lookups any time the sysname changes.
 - Fixed several bugs related to sysname handling
 - Fixed a bug preventing 'fs exportafs' from changing the flag which
-  controlls whether callbacks are made to NFS clients to obtain tokens
+  controls whether callbacks are made to NFS clients to obtain tokens
   and sysname lists.
 - Starting in this version, when the PAG manager starts up, it makes a
   call to the translator to discard any tokens belonging to that client.
@@ -70,7 +70,7 @@ in order to prevent the common NFS server code from performing unwanted
 access checks, and an fsid option must be provided to set the filesystem
 identifier to be used in NFS filehandles.  Note that for live migration
 to work, a consistent filesystem id must be used on all translator systems.
-The export may be accomplised with a line in /etc/exports:
+The export may be accomplished with a line in /etc/exports:
 
     /afs (rw,no_subtree_check,fsid=42)
 
@@ -155,7 +155,7 @@ changes such that it is talking to a different translator.
 This feature is automatically supported by the PAG manager if it has
 been configured to forward system calls to an NFS translator.  However,
 requests will be honored only if they come from port 7001 on the NFS
-translator host.  In addition, this feature must be enabld on the NFS
+translator host.  In addition, this feature must be enabled on the NFS
 translator system as described above.
 
 
@@ -168,7 +168,7 @@ with credential caching and retrieval is enabled as described above.
 
 The PAG manager maintains a system-wide sysname list, which is used to
 satisfy callback requests from the NFS translator.  This list is set
-intially to contain only the compiled-in default sysname, but can be
+initially to contain only the compiled-in default sysname, but can be
 changed by the superuser using the VIOC_AFS_SYSNAME pioctl or the
 'fs sysname' command.  Any changes are automatically propagated to the
 NFS translator.
@@ -197,7 +197,7 @@ This feature is available whenever the dynamic AFS root is enabled.
 On Linux systems, it is also available even when dynroot is not enabled,
 to support the NFS translator.  It is presently not possible to disable
 this feature, though that ability may be added in the future.  It would
-be difficult to make this feature unavailble to users and still make the
+be difficult to make this feature unavailable to users and still make the
 Linux NFS translator work, since the point of the check being performed
 by the NFS server is to ensure the requested file would be reachable by
 the client.

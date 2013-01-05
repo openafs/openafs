@@ -21,9 +21,9 @@ With the -lsl option, it prints out metadata about all file/symlink.
 This metadata includes the inode number(Ind), UNIX mode bits(Mod), 
 link count(Lnk), the owner(Own), the group(Grp) and the file size(Siz).
 
-With the -ld option, it prints out metadata about all directoies
+With the -ld option, it prints out metadata about all directories
 in this volume. This metadata includes the directory inode(Ind) and
-the directory vnode(Vnd) along woth the directory name. The root 
+the directory vnode(Vnd) along with the directory name. The root 
 directory of the volume is indicated as ~.
 
 With the -dir <directory inode> option, this tool prints out the 

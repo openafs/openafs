@@ -1,5 +1,5 @@
 Included in this directory are copies of the files used to create OpenAFS
-binary packages. It will be endeavoured to keep them up to date, however,
+binary packages. It will be endeavored to keep them up to date, however,
 the files in the binary packaging system used by the vendor (the debian
 directory as used by Debian or the srpm for RedHat packages) is currently
 canonical. These should be treated as reference material only.

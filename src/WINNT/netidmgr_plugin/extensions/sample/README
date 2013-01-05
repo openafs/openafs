@@ -168,14 +168,14 @@
 
 5.      BUILDING
 
-    The build process is fairly starightforward.  The source is set up
+    The build process is fairly straightforward.  The source is set up
     to build using 'nmake', a build tool distributed with the Platform
     SDK as well as with Visual Studio.
 
     1.  Open a command prompt with a suitable build environment.
 
         From a plain command prompt, you can set up a debug build
-        environment targetting Windows XP (32-bit) with:
+        environment targeting Windows XP (32-bit) with:
 
         > "%PROGRAMFILES%\Microsoft Platform SDK\SetEnv.Cmd" /XP32 /DEBUG
 
