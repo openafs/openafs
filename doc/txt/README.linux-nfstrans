@@ -130,7 +130,7 @@ AFS-specific operations via the remote system call interface (rmtsys).
 To enable this feature, afsd must be run with the -rmtsys switch.  OpenAFS
 client utilities will use this feature automatically if the AFSSERVER
 environment variable is set to the address or hostname of the translator
-system, or if the file ~/.AFSSERVER or /.AFSSERVER exists and contains the 
+system, or if the file ~/.AFSSERVER or /.AFSSERVER exists and contains the
 translator's address or hostname.
 
 On systems running the client PAG manager (afspag.ko), AFS system calls
@@ -176,7 +176,7 @@ NFS translator.
 
 ## Dynamic Mount Points
 
-This patch introduces a special directory ".:mount", which can be found 
+This patch introduces a special directory ".:mount", which can be found
 directly below the AFS root directory.  This directory always appears to
 be empty, but any name of the form "cell:volume" will resolve to a mount
 point for the specified volume.  The resulting mount points are always

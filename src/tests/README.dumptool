@@ -54,21 +54,21 @@ accepts the following commands:
 	    -F  Append / to filenames for directories, @ for symlinks,
 		and * for files which have the execute bits set.
 	    -R  Recurse through all subdirectories.
-	
+
 	cd	Change the current directory
 
 	cp	Copy a file from the dump.  Note that globbing is NOT
 		supported, and you must give a filename (the Unix
 		idiom of just giving a destination directory for the
 		second argument to cp will NOT work).
-	
+
 	vcp	Copy a file from the dump, by the vnode.  The first
 		argument is the vnode number, optionally followed by
 		the uniquifier.  E.g:
 
 		vcp 126278 /tmp/file1
 		vcp 126278.43289 /tmp/file2
-	
+
 	quit	Exits dumptool.
 	exit
 
@@ -84,7 +84,7 @@ below:
 	-f	Force dump processing.  Attempt to continue processing
 		a dump even when some errors are detected.  Not completely
 		tested.
-	
+
 	-i	Inode dump.  Dump a list of all files in the volume,
 		with their volume/vnode/uniquifier information.
 
@@ -98,11 +98,11 @@ Additional command line options:
 
 	-d	Dump all residency filenames in the dump file to standard
 		output.
-	
+
 	-t 	Residency tag information.  Allows a user to specify the
 		tag of a residency if the rsserver is not available.
 		Format of option is Residency/Tag
-	
+
 	-r	Residency filesystem information.  Allows a user to specify
 		the residency filesystem information if dumptool is not
 		run on the same host as the residency in the dump.  Format
