@@ -278,7 +278,7 @@ Path_Build(XFILE * X, path_hashinfo * phi, afs_uint32 vnode, char **his_path,
 
     if (vnode == 1) {
 	*his_path = strdup("/");
-	if (!his_path) {
+	if (!*his_path) {
 	    if (phi->p->cb_error)
 		(phi->p->cb_error) (ENOMEM, 1, phi->p->err_refcon,
 				    "No memory for pathname of vnode 1");
