@@ -998,14 +998,15 @@ file_Mount(struct butm_tapeInfo *info, char *tape)
     int xflags;
     afs_int32 code = 0, error = 0, rc = 0;
 
+    if (!info || !tape)
+	ERROR_EXIT(BUTM_BADARGUMENT);
+
     if (info->debug)
 	printf("butm: Mount tape drive\n");
 
     POLL();
     info->error = 0;
 
-    if (!info || !tape)
-	ERROR_EXIT(BUTM_BADARGUMENT);
     if (info->structVersion != BUTM_MAJORVERSION)
 	ERROR_EXIT(BUTM_OLDINTERFACE);
     if (info->tmRock)
