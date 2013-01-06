@@ -239,9 +239,9 @@ copyDir(struct Msg *m, IHandle_t *inh, IHandle_t *outh)
     infdP = IH_OPEN(inh);
     if (!infdP) {
 	sprintf(m->line, "Couldn't open input directory %" AFS_VOLID_FMT ".%u.%u\n",
-		afs_printable_VolumeId_lu(infdP->fd_ih->ih_vid),
-		(afs_uint32)(infdP->fd_ih->ih_ino & NAMEI_VNODEMASK),
-		(afs_uint32)(infdP->fd_ih->ih_ino >> NAMEI_UNIQSHIFT));
+		afs_printable_VolumeId_lu(inh->ih_vid),
+		(afs_uint32)(inh->ih_ino & NAMEI_VNODEMASK),
+		(afs_uint32)(inh->ih_ino >> NAMEI_UNIQSHIFT));
 	rx_Write(m->call, m->line, strlen(m->line));
 	return EIO;
     }
@@ -257,9 +257,9 @@ copyDir(struct Msg *m, IHandle_t *inh, IHandle_t *outh)
     outfdP = IH_OPEN(outh);
     if (!outfdP) {
 	sprintf(m->line, "Couldn't open output directory %" AFS_VOLID_FMT ".%u.%u\n",
-		afs_printable_VolumeId_lu(outfdP->fd_ih->ih_vid),
-		(afs_uint32)(outfdP->fd_ih->ih_ino & NAMEI_VNODEMASK),
-		(afs_uint32)(outfdP->fd_ih->ih_ino >> NAMEI_UNIQSHIFT));
+		afs_printable_VolumeId_lu(outh->ih_vid),
+		(afs_uint32)(outh->ih_ino & NAMEI_VNODEMASK),
+		(afs_uint32)(outh->ih_ino >> NAMEI_UNIQSHIFT));
 	rx_Write(m->call, m->line, strlen(m->line));
 	FDH_REALLYCLOSE(infdP);
 	return EIO;
