@@ -2116,7 +2116,7 @@ ModeMaskMatch(unsigned int modeBits)
 {
     int i;
 
-    for (i = 0; ModeMask[i] && i <= sizeof(ModeMask) / sizeof(*ModeMask); i++) {
+    for (i = 0; i < sizeof(ModeMask) / sizeof(*ModeMask) && ModeMask[i]; i++) {
 	if ((ModeMask[i] & modeBits) == 0) {
 	    return 0;		/* at least one mode bit is not present */
 	}
