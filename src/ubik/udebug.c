@@ -163,7 +163,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
     times[24] = 0;
     if (!oldServer) {
 	printf("Host's addresses are: ");
-	for (j = 0; udebug.interfaceAddr[j] && (j < UBIK_MAX_INTERFACE_ADDR);
+	for (j = 0; (j < UBIK_MAX_INTERFACE_ADDR) && udebug.interfaceAddr[j];
 	     j++)
 	    printf("%s ", afs_inet_ntoa_r(htonl(udebug.interfaceAddr[j]), hoststr));
 	printf("\n");
@@ -296,7 +296,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	    /* otherwise print the structure */
 	    printf("\nServer (%s", afs_inet_ntoa_r(htonl(usdebug.addr), hoststr));
 	    for (j = 0;
-		 ((usdebug.altAddr[j]) && (j < UBIK_MAX_INTERFACE_ADDR - 1));
+		 ((j < UBIK_MAX_INTERFACE_ADDR - 1) && (usdebug.altAddr[j]));
 		 j++)
 		printf(" %s", afs_inet_ntoa_r(htonl(usdebug.altAddr[j]), hoststr));
 	    printf("): (db %d.%d)", usdebug.remoteVersion.epoch,
