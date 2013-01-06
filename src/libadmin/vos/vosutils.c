@@ -568,8 +568,8 @@ AddressMatch(int addrTest, int addrPattern)
     int bPattern;
 
     /* Test the high byte */
-    bTest = addrTest >> 24;
-    bPattern = addrPattern >> 24;
+    bTest = (addrTest >> 24) & 255;
+    bPattern = (addrPattern >> 24) & 255;
     if ((bTest != bPattern) && (bPattern != 255)) {
 	return FALSE;
     }
