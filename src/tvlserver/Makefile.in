@@ -92,13 +92,13 @@ vldbint.xdr.o: vldbint.xdr.c
 
 
 vldbint.ss.c: ${VLSERVER}/vldbint.xg
-	${RXGEN} -A -x -S -o $@ ${srcdir}/${VLSERVER}/vldbint.xg
+	${RXGEN} -A -x -S -o $@ ${VLSERVER}/vldbint.xg
 
 vldbint.xdr.c: ${VLSERVER}/vldbint.xg
-	${RXGEN} -A -x -c -o $@ ${srcdir}/${VLSERVER}/vldbint.xg
+	${RXGEN} -A -x -c -o $@ ${VLSERVER}/vldbint.xg
 
 vldbint.h: ${VLSERVER}/vldbint.xg
-	${RXGEN} -A -u -x -h -o $@ ${srcdir}/${VLSERVER}/vldbint.xg
+	${RXGEN} -A -u -x -h -o $@ ${VLSERVER}/vldbint.xg
 
 vldbint.ss.c: vldbint.h
 vldbint.xdr.c: vldbint.h
@@ -113,7 +113,7 @@ vlclient.o: ${VLSERVER}/vlclient.c
 vl_errors.o: vl_errors.c
 
 vlserver.h vl_errors.c: ${VLSERVER}/vl_errors.et ${VLSERVER}/vlserver.p.h
-	$(RM) -f vlserver.h vl_errors.c; ${COMPILE_ET} -p ${srcdir}/${VLSERVER} vl_errors -h vlserver
+	$(RM) -f vlserver.h vl_errors.c; ${COMPILE_ET} -p ${VLSERVER} vl_errors -h vlserver
 
 system: install
 

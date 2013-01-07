@@ -243,7 +243,7 @@ LT_LDLIB_shlib=$(LIBTOOL) --quiet --mode=link --tag=CC \
 		$(PTH_LDFLAGS) $(PTH_CFLAGS) $(LDFLAGS_$(@)) \
 		-o $@ \
 	        -no-undefined \
-		-export-symbols $@.sym \
+		-export-symbols ${srcdir}/$@.sym \
 		-version-info=$(LT_current):$(LT_revision):$(LT_age)
 
 

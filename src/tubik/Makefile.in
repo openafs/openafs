@@ -48,10 +48,10 @@ utst_int.cs.c: utst_int.h
 utst_int.ss.c: utst_int.h
 utst_int.xdr.c: utst_int.h
 
-utst_server.o: ${UBIK}/utst_server.c
+utst_server.o: ${UBIK}/utst_server.c utst_int.h
 	${AFS_CCRULE} ${UBIK}/utst_server.c
 
-utst_client.o: ${UBIK}/utst_client.c
+utst_client.o: ${UBIK}/utst_client.c utst_int.h
 	${AFS_CCRULE} ${UBIK}/utst_client.c
 
 utst_server: utst_server.o utst_int.ss.o utst_int.xdr.o $(LTLIBS)

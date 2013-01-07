@@ -52,7 +52,7 @@ budb_errs.h: budb_errs.c
 
 budb_errs.c: ${BUDB}/budb_errs.et
 	$(RM) -f budb_errs.c
-	${COMPILE_ET} -p ${srcdir}/${BUDB} budb_errs
+	${COMPILE_ET} -p ${BUDB} budb_errs
 
 #
 # Build targets
@@ -96,16 +96,16 @@ budb_server: $(SERVER_OBJS) ${LIBS}
 		$(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 budb.cs.c: ${BUDB}/budb.rg
-	${RXGEN} -u -C -o $@ ${srcdir}/${BUDB}/budb.rg
+	${RXGEN} -u -C -o $@ ${BUDB}/budb.rg
 
 budb.ss.c: ${BUDB}/budb.rg
-	${RXGEN} -S -o $@ ${srcdir}/${BUDB}/budb.rg
+	${RXGEN} -S -o $@ ${BUDB}/budb.rg
 
 budb.xdr.c: ${BUDB}/budb.rg
-	${RXGEN} -c -o $@ ${srcdir}/${BUDB}/budb.rg
+	${RXGEN} -c -o $@ ${BUDB}/budb.rg
 
 budb.h: ${BUDB}/budb.rg
-	${RXGEN} -u -h -o $@ ${srcdir}/${BUDB}/budb.rg
+	${RXGEN} -u -h -o $@ ${BUDB}/budb.rg
 
 budb.cs.c: budb.h
 budb.xdr.c: budb.h

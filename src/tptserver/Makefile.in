@@ -45,6 +45,9 @@ LIBS_client= \
 all: ptserver pts pt_util db_verify \
 	depinstall readgroup readpwd testpt
 
+generated: \
+	pterror.h pterror.c
+
 depinstall: 
 
 # When supergroups is enabled, some parts of ptserver cast between
@@ -59,7 +62,7 @@ CFLAGS_ptprocs.o = @CFLAGS_NOSTRICT@
 ptserver.o: ${PTSERVER}/ptserver.c ${INCLS}
 	$(AFS_CCRULE) $(PTSERVER)/ptserver.c
 
-ptutils.o: ${PTSERVER}/ptutils.c ${INCLS}
+ptutils.o: ${PTSERVER}/ptutils.c ${INCLS} pterror.h
 	$(AFS_CCRULE) $(PTSERVER)/ptutils.c
 
 ptprocs.o: ${PTSERVER}/ptprocs.c ${INCLS}
@@ -72,13 +75,13 @@ map.o: ${PTSERVER}/map.c ${INCLS}
 	$(AFS_CCRULE) $(PTSERVER)/map.c
 
 ptint.ss.c: ${PTSERVER}/ptint.xg
-	${RXGEN} -A -x -S -o $@ ${srcdir}/${PTSERVER}/ptint.xg
+	${RXGEN} -A -x -S -o $@ ${PTSERVER}/ptint.xg
 
 ptint.xdr.c: ${PTSERVER}/ptint.xg
-	${RXGEN} -A -x -c -o $@ ${srcdir}/${PTSERVER}/ptint.xg
+	${RXGEN} -A -x -c -o $@ ${PTSERVER}/ptint.xg
 
 ptint.h: ${PTSERVER}/ptint.xg
-	${RXGEN} -A -x -h -u -o $@ ${srcdir}/${PTSERVER}/ptint.xg
+	${RXGEN} -A -x -h -u -o $@ ${PTSERVER}/ptint.xg
 
 ptint.ss.c: ptint.h
 ptint.xdr.c: ptint.h
@@ -142,6 +145,11 @@ pt_util.o: ${PTSERVER}/pt_util.c
 
 ubik.o: ${PTSERVER}/ubik.c ${INCLS}
 	$(AFS_CCRULE) $(PTSERVER)/ubik.c
+
+pterror.h: pterror.c
+pterror.c: ${PTSERVER}/pterror.et
+	$(RM) -f pterror.h pterror.c
+	${COMPILE_ET} -p ${PTSERVER} pterror
 
 prerror.h: pterror.h
 	${INSTALL} $? $@
