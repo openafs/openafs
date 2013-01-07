@@ -3043,7 +3043,7 @@ SAFSVolGetSize(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate,
 }
 
 afs_int32
-SAFSVolSplitVolume(struct rx_call *acall, afs_uint32 vid, afs_uint32 new,
+SAFSVolSplitVolume(struct rx_call *acall, afs_uint32 ovid, afs_uint32 onew,
 		   afs_uint32 where, afs_int32 verbose)
 {
 #if defined(AFS_NAMEI_ENV) && !defined(AFS_NT40_ENV)
@@ -3052,6 +3052,8 @@ SAFSVolSplitVolume(struct rx_call *acall, afs_uint32 vid, afs_uint32 new,
     struct volser_trans *tt = 0, *tt2 = 0;
     char caller[MAXKTCNAMELEN];
     char line[128];
+    VolumeId new = onew;
+    VolumeId vid = ovid;
 
     if (!afsconf_SuperUser(tdir, acall, caller))
         return EPERM;
@@ -3072,12 +3074,14 @@ SAFSVolSplitVolume(struct rx_call *acall, afs_uint32 vid, afs_uint32 new,
     if (V_device(vol) != V_device(newvol)
 	|| V_uniquifier(newvol) != 2) {
         if (V_device(vol) != V_device(newvol)) {
-            sprintf(line, "Volumes %u and %u are not in the same partition, aborted.\n",
-		    vid, new);
+            sprintf(line, "Volumes %" AFS_VOLID_FMT " and %" AFS_VOLID_FMT " are not in the same partition, aborted.\n",
+		    afs_printable_VolumeId_lu(vid),
+		    afs_printable_VolumeId_lu(new));
             rx_Write(acall, line, strlen(line));
         }
         if (V_uniquifier(newvol) != 2) {
-            sprintf(line, "Volume %u is not freshly created, aborted.\n", new);
+            sprintf(line, "Volume %" AFS_VOLID_FMT " is not freshly created, aborted.\n",
+		    afs_printable_VolumeId_lu(new));
             rx_Write(acall, line, strlen(line));
         }
         line[0] = 0;
@@ -3088,7 +3092,8 @@ SAFSVolSplitVolume(struct rx_call *acall, afs_uint32 vid, afs_uint32 new,
     }
     tt = NewTrans(vid, V_device(vol));
     if (!tt) {
-        sprintf(line, "Couldn't create transaction for %u, aborted.\n", vid);
+        sprintf(line, "Couldn't create transaction for %" AFS_VOLID_FMT ", aborted.\n",
+		afs_printable_VolumeId_lu(vid));
         rx_Write(acall, line, strlen(line));
         line[0] = 0;
         rx_Write(acall, line, 1);
@@ -3104,7 +3109,8 @@ SAFSVolSplitVolume(struct rx_call *acall, afs_uint32 vid, afs_uint32 new,
 
     tt2 = NewTrans(new, V_device(newvol));
     if (!tt2) {
-        sprintf(line, "Couldn't create transaction for %u, aborted.\n", new);
+        sprintf(line, "Couldn't create transaction for %" AFS_VOLID_FMT ", aborted.\n",
+		afs_printable_VolumeId_lu(new));
         rx_Write(acall, line, strlen(line));
         line[0] = 0;
         rx_Write(acall, line, 1);
