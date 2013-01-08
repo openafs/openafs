@@ -1675,6 +1675,7 @@ afs_inactive(struct vcache *avc, afs_ucred_t *acred)
     }
     mutex_exit(&vp->v_lock);
 
+#ifndef AFS_SUN511_ENV
     /*
      * Solaris calls VOP_OPEN on exec, but doesn't call VOP_CLOSE when
      * the executable exits.  So we clean up the open count here.
@@ -1685,6 +1686,7 @@ afs_inactive(struct vcache *avc, afs_ucred_t *acred)
      */
     if (avc->opens > 0 && avc->mvstat == 0 && !(avc->f.states & CCore))
 	avc->opens = avc->execsOrWriters = 0;
+#endif
 
     afs_InactiveVCache(avc, acred);
 
