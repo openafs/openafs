@@ -30,6 +30,8 @@ afsconf_typedKey_put
 afsconf_typedKey_values
 initialize_ACFG_error_table
 initialize_KTC_error_table
+ktc_curpag
+ktc_ForgetAllTokens
 ktc_GetToken
 ktc_GetTokenEx
 ktc_OldPioctl
@@ -44,3 +46,5 @@ token_importRxkadViceId
 token_replaceToken
 token_setPag
 token_setRxkadViceId
+token_extractRxkad
+xdr_ktc_setTokenData

@@ -1,6 +1,8 @@
+life_to_time
 rxkad_NewClientSecurityObject
 rxkad_NewServerSecurityObject
 rxkad_GetServerInfo
+time_to_life
 tkt_MakeTicket
 tkt_CheckTimes
 initialize_RXK_error_table
