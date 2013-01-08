@@ -287,6 +287,10 @@ LT_LDRULE_static = $(RUN_LD) $(LIBTOOL) --quiet --mode=link --tag=CC \
 			     $(MT_CC) -static $(PTH_LDFLAGS) $(PTH_CFLAGS) \
 			     $(LDFLAGS_$(@)) -o $@
 
+LT_LDRULE_static_NOQ = $(RUN_LD_NOQ) $(LIBTOOL) --quiet --mode=link --tag=CC \
+			     $(MT_CC) -static $(PTH_LDFLAGS) $(PTH_CFLAGS) \
+			     $(LDFLAGS_$(@)) -o $@
+
 LT_INSTALL_DATA=$(LIBTOOL) --quiet --mode=install $(INSTALL_DATA)
 LT_INSTALL_PROGRAM=$(LIBTOOL) --quiet --mode=install $(INSTALL_PROGRAM)
 
