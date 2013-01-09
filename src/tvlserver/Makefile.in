@@ -54,21 +54,21 @@ depinstall:
 
 vldb_check: vldb_check.o AFS_component_version_number.o $(LIBS_client)
 	$(LT_LDRULE_static) vldb_check.o AFS_component_version_number.o \
-		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
+		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
 
 vldb_check.o: ${VLSERVER}/vldb_check.c
 	$(AFS_CCRULE) $(VLSERVER)/vldb_check.c
 
 cnvldb: cnvldb.o $(LIBS_client)
 	$(LT_LDRULE_static) cnvldb.o \
-		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
+		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
 
 cnvldb.o: ${VLSERVER}/cnvldb.c
 	$(AFS_CCRULE) $(VLSERVER)/cnvldb.c
 
 sascnvldb: sascnvldb.o $(LIBS_client)
 	$(LT_LDRULE_static) sascnvldb.o \
-		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
+		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
 
 sascnvldb.o: ${VLSERVER}/sascnvldb.c
 	$(AFS_CCRULE) $(VLSERVER)/sascnvldb.c
@@ -76,7 +76,7 @@ sascnvldb.o: ${VLSERVER}/sascnvldb.c
 vlserver: vlserver.o vlutils.o vlprocs.o vldbint.ss.o vldbint.xdr.o $(LIBS_server)
 	$(LT_LDRULE_static) vlserver.o vlutils.o vlprocs.o vldbint.ss.o \
 		vldbint.xdr.o \
-		$(LIBS_server) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
+		$(LIBS_server) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
 
 vlserver.o: ${VLSERVER}/vlserver.c ${INCLS} AFS_component_version_number.o
 	$(AFS_CCRULE) $(VLSERVER)/vlserver.c
@@ -105,7 +105,7 @@ vldbint.xdr.c: vldbint.h
 
 vlclient: vlclient.o $(LIBS_client)
 	$(LT_LDRULE_static) vlclient.o $(LIBS_client) \
-		$(LIB_roken) ${MT_LIBS} ${XLIBS}
+		$(LIB_roken) ${MT_LIBS}
 
 vlclient.o: ${VLSERVER}/vlclient.c
 	$(AFS_CCRULE) $(VLSERVER)/vlclient.c

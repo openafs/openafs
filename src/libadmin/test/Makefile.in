@@ -41,7 +41,7 @@ CFLAGS_client.o = @CFLAGS_NOERROR@
 
 afscp: afscp.o $(AFSCPOBJS) $(AFSCPLIBS)
 	$(LT_LDRULE_static) afscp.o $(AFSCPOBJS) $(AFSCPLIBS) \
-		$(LIB_roken) $(LIB_crypt) ${MT_LIBS} $(XLIBS)
+		$(LIB_roken) $(LIB_crypt) ${MT_LIBS}
 
 #######################################################################
 install:

@@ -49,87 +49,87 @@ all test tests: $(SAMPLEPROGS)
 
 cm_client_config: cm_client_config.o $(SAMPLELIBS)
 	$(LT_LDRULE_static) $@.o $(SAMPLELIBS) $(LIB_roken) $(LIB_crypt) \
-		$(MT_LIBS) $(XLIBS)
+		$(MT_LIBS)
 
 cm_list_cells: cm_list_cells.o $(SAMPLELIBS)
 	$(LT_LDRULE_static) $@.o $(SAMPLELIBS) $(LIB_roken) $(LIB_crypt) \
-		$(MT_LIBS) $(XLIBS)
+		$(MT_LIBS)
 
 cm_local_cell: cm_local_cell.o $(SAMPLELIBS)
 	$(LT_LDRULE_static) $@.o $(SAMPLELIBS) $(LIB_roken) $(LIB_crypt) \
-		$(MT_LIBS) $(XLIBS)
+		$(MT_LIBS)
 
 cm_server_prefs: cm_server_prefs.o $(SAMPLELIBS)
 	$(LT_LDRULE_static) $@.o $(SAMPLELIBS) $(LIB_roken) $(LIB_crypt) \
-		$(MT_LIBS) $(XLIBS)
+		$(MT_LIBS)
 
 rxdebug_basic_stats: rxdebug_basic_stats.o $(SAMPLELIBS)
 	$(LT_LDRULE_static) $@.o $(SAMPLELIBS) $(LIB_roken) $(LIB_crypt) \
-		$(MT_LIBS) $(XLIBS)
+		$(MT_LIBS)
 
 rxdebug_conns: rxdebug_conns.o $(SAMPLELIBS)
 	$(LT_LDRULE_static) $@.o $(SAMPLELIBS) $(LIB_roken) $(LIB_crypt) \
-		$(MT_LIBS) $(XLIBS)
+		$(MT_LIBS)
 
 rxdebug_peers: rxdebug_peers.o $(SAMPLELIBS)
 	$(LT_LDRULE_static) $@.o $(SAMPLELIBS) $(LIB_roken) $(LIB_crypt) \
-		$(MT_LIBS) $(XLIBS)
+		$(MT_LIBS)
 
 rxdebug_rx_stats: rxdebug_rx_stats.o $(SAMPLELIBS)
 	$(LT_LDRULE_static) $@.o $(SAMPLELIBS) $(LIB_roken) $(LIB_crypt) \
-		$(MT_LIBS) $(XLIBS)
+		$(MT_LIBS)
 
 rxdebug_supported_stats: rxdebug_supported_stats.o $(SAMPLELIBS)
 	$(LT_LDRULE_static) $@.o $(SAMPLELIBS) $(LIB_roken) $(LIB_crypt) \
-		$(MT_LIBS) $(XLIBS)
+		$(MT_LIBS)
 
 rxdebug_version: rxdebug_version.o $(SAMPLELIBS)
 	$(LT_LDRULE_static) $@.o $(SAMPLELIBS) $(LIB_roken) $(LIB_crypt) \
-		$(MT_LIBS) $(XLIBS)
+		$(MT_LIBS)
 
 rxstat_clear_peer: rxstat_clear_peer.o $(SAMPLELIBS)
 	$(LT_LDRULE_static) $@.o $(SAMPLELIBS) $(LIB_roken) $(LIB_crypt) \
-		$(MT_LIBS) $(XLIBS)
+		$(MT_LIBS)
 
 rxstat_clear_process: rxstat_clear_process.o $(SAMPLELIBS)
 	$(LT_LDRULE_static) $@.o $(SAMPLELIBS) $(LIB_roken) $(LIB_crypt) \
-		$(MT_LIBS) $(XLIBS)
+		$(MT_LIBS)
 
 rxstat_disable_peer: rxstat_disable_peer.o $(SAMPLELIBS)
 	$(LT_LDRULE_static) $@.o $(SAMPLELIBS) $(LIB_roken) $(LIB_crypt) \
-		$(MT_LIBS) $(XLIBS)
+		$(MT_LIBS)
 
 rxstat_disable_process: rxstat_disable_process.o $(SAMPLELIBS)
 	$(LT_LDRULE_static) $@.o $(SAMPLELIBS) $(LIB_roken) $(LIB_crypt) \
-		$(MT_LIBS) $(XLIBS)
+		$(MT_LIBS)
 
 rxstat_enable_peer: rxstat_enable_peer.o $(SAMPLELIBS)
 	$(LT_LDRULE_static) $@.o $(SAMPLELIBS) $(LIB_roken) $(LIB_crypt) \
-		$(MT_LIBS) $(XLIBS)
+		$(MT_LIBS)
 
 rxstat_enable_process: rxstat_enable_process.o $(SAMPLELIBS)
 	$(LT_LDRULE_static) $@.o $(SAMPLELIBS) $(LIB_roken) $(LIB_crypt) \
-		$(MT_LIBS) $(XLIBS)
+		$(MT_LIBS)
 
 rxstat_get_peer: rxstat_get_peer.o $(SAMPLELIBS)
 	$(LT_LDRULE_static) $@.o $(SAMPLELIBS) $(LIB_roken) $(LIB_crypt) \
-		$(MT_LIBS) $(XLIBS)
+		$(MT_LIBS)
 
 rxstat_get_process: rxstat_get_process.o $(SAMPLELIBS)
 	$(LT_LDRULE_static) $@.o $(SAMPLELIBS) $(LIB_roken) $(LIB_crypt) \
-		$(MT_LIBS) $(XLIBS)
+		$(MT_LIBS)
 
 rxstat_get_version: rxstat_get_version.o $(SAMPLELIBS)
 	$(LT_LDRULE_static) $@.o $(SAMPLELIBS) $(LIB_roken) $(LIB_crypt) \
-		$(MT_LIBS) $(XLIBS)
+		$(MT_LIBS)
 
 rxstat_query_peer: rxstat_query_peer.o $(SAMPLELIBS)
 	$(LT_LDRULE_static) $@.o $(SAMPLELIBS) $(LIB_roken) $(LIB_crypt) \
-		$(MT_LIBS) $(XLIBS)
+		$(MT_LIBS)
 
 rxstat_query_process: rxstat_query_process.o $(SAMPLELIBS)
 	$(LT_LDRULE_static) $@.o $(SAMPLELIBS) $(LIB_roken) $(LIB_crypt) \
-		$(MT_LIBS) $(XLIBS)
+		$(MT_LIBS)
 
 #
 # Errors

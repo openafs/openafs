@@ -24,7 +24,7 @@ LINK = $(AFS_LDRULE) $@.o ${LIBS}
 MT_LINK = $(CC) $(MT_CFLAGS) $(COMMON_CFLAGS) $(AFS_LDFLAGS) -o $@ \
 	  $@.o $(TOP_LIBDIR)/libafsrpc.a $(TOP_LIBDIR)/libopr.a \
 	  $(LIB_hcrypto) $(LIB_roken) \
-	  $(MT_LIBS) $(XLIBS)
+	  $(MT_LIBS)
 
 TESTS = testclient testserver kstest kctest testqueue tableGen generator
 

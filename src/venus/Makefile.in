@@ -93,7 +93,7 @@ afscbint.ss.o: ../fsint/afscbint.ss.c
 afsio: afsio.o afscbint.ss.o ${AFSIO_LIBS}
 	$(LT_LDRULE_static) afsio.o afscbint.ss.o \
 		${AFSIO_LIBS} \
-		$(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS} \
+		$(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} \
 		$(LDFLAGS_krb5) $(LIB_krb5)
 
 livesys.o: livesys.c ${INCLS} AFS_component_version_number.c

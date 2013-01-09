@@ -54,7 +54,7 @@ fsprobe.o: fsprobe.c AFS_component_version_number.c
 
 fsprobe: fsprobe.o
 	$(LT_LDRULE_static) fsprobe.o \
-		${LIBS} $(LIB_hcrypto) $(LIB_roken) $(MT_LIBS) ${XLIBS}
+		${LIBS} $(LIB_hcrypto) $(LIB_roken) $(MT_LIBS)
 
 CFLAGS_cbd.o = -DINTERPRET_DUMP
 cbd.o: callback.c AFS_component_version_number.c
@@ -128,7 +128,7 @@ afsint.ss.o: ../fsint/afsint.ss.c
 
 fileserver: ${objects} ${LIBS}
 	$(LT_LDRULE_static) ${objects} \
-		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
+		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
 
 install: fileserver
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}

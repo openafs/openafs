@@ -51,7 +51,7 @@ ${TOP_INCDIR}/afs/rxosd.h: rxosd.h
 
 osd: osd.o rxosd.cs.o osddbuser.o policy_parser.o
 	${AFS_LDRULE} osd.o rxosd.cs.o rxosd.xdr.o policy_parser.o \
-		${OSDDBOBJS} ${LIBS} ${MT_LIBS} ${XLIBS}
+		${OSDDBOBJS} ${LIBS} ${MT_LIBS}
 
 CFLAGS_rxosd.o = ${HSM_INC} ${PNFS_OPT} -DBUILDING_RXOSD
 
@@ -155,8 +155,7 @@ rxosd.h: rxosd.xg
 	${RXGEN} -x -h -o $@ ${srcdir}/rxosd.xg
 
 rxosd: rxosd.h ${objects} ${LIBS}
-	${AFS_LDRULE} -ldl ${objects} ${LIBS} ${MT_LIBS} ${XLIBS} \
-			${HSM_LIB}
+	${AFS_LDRULE} -ldl ${objects} ${LIBS} ${MT_LIBS} ${HSM_LIB}
 
 CFLAGS_readabyte.o = ${HSM_INC} ${PNFS_OPT} -DBUILDING_RXOSD
 

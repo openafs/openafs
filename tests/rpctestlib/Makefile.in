@@ -63,7 +63,7 @@ afscbint.xdr.o: ${FSINT}/afscbint.xdr.c
 
 xmpl_driver: librpc_test_lib.a rpc_test_main.o ${LIBS}
 	$(LT_LDRULE_static) rpc_test_main.o librpc_test_lib.a \
-		${LIBS} ${LIB_hcrypto} ${MT_LIBS} ${XLIBS}
+		${LIBS} ${LIB_hcrypto} ${MT_LIBS}
 
 librpc_test_lib.a: ${LIBOBJS}
 	$(RM) -f $@

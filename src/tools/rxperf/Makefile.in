@@ -9,7 +9,7 @@ all: rxperf
 
 rxperf: rxperf.o $(LIBS)
 	$(LT_LDRULE_static) rxperf.o $(LIBS) $(LIB_hcrypto) $(LIB_roken) \
-		$(MT_LIBS) $(XLIBS)
+		$(MT_LIBS)
 
 install:
 

@@ -91,54 +91,53 @@ ptserver: ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o map.o \
 	$(LT_LDRULE_static) ptserver.o ptutils.o ptprocs.o \
 		ptint.ss.o ptint.xdr.o utils.o map.o \
 		$(LIBS_server) \
-		$(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} \
-		${XLIBS}
+		$(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
 
 db_verify.o: ${PTSERVER}/db_verify.c ${INCLS}
 	$(AFS_CCRULE) $(PTSERVER)/db_verify.c
 
 db_verify: db_verify.o $(LIBS_client)
 	$(LT_LDRULE_static) db_verify.o \
-		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
+		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
 
 ptclient: ptclient.o AFS_component_version_number.o $(LIBS_client)
 	$(LT_LDRULE_static) ptclient.o \
-		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
+		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
 
 ptclient.o: ${PTSERVER}/ptclient.c ${INCLS}
 	$(AFS_CCRULE) $(PTSERVER)/ptclient.c
 
 pts: pts.o $(LIBS_client) ${INCLS}
 	$(LT_LDRULE_static) pts.o \
-		${LIBS_client} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
+		${LIBS_client} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
 
 pts.o: ${PTSERVER}/pts.c
 	$(AFS_CCRULE) $(PTSERVER)/pts.c
 
 readgroup: readgroup.o $(LIBS_client)
 	$(LT_LDRULE_static) readgroup.o \
-		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
+		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
 
 readgroup.o: ${PTSERVER}/readgroup.c ${INCLS}
 	$(AFS_CCRULE) $(PTSERVER)/readgroup.c
 
 readpwd: readpwd.o $(LIBS_client)
 	$(LT_LDRULE_static) readpwd.o \
-		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
+		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
 
 readpwd.o: ${PTSERVER}/readpwd.c ${INCLS}
 	$(AFS_CCRULE) $(PTSERVER)/readpwd.c
 
 testpt: testpt.o $(LIBS_client)
 	$(LT_LDRULE_static) testpt.o -lm \
-		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
+		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
 
 testpt.o: ${PTSERVER}/testpt.c ${INCLS}
 	$(AFS_CCRULE) $(PTSERVER)/testpt.c
 
 pt_util: pt_util.o ptutils.o ptubik.o utils.o map.o $(LIBS_client)
 	$(LT_LDRULE_static) pt_util.o ptutils.o ptubik.o utils.o map.o \
-		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
+		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
 
 pt_util.o: ${PTSERVER}/pt_util.c
 	$(AFS_CCRULE) $(PTSERVER)/pt_util.c

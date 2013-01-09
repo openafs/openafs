@@ -69,7 +69,7 @@ all: butc
 
 butc: ${BUTCOBJS} ${BUTCLIBS}
 	$(LT_LDRULE_static) ${BUTCOBJS} ${BUTCLIBS} \
-		$(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
+		$(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
 
 libbutm.a: ${BUTMOBJS} AFS_component_version_number.o
 	-$(RM) -f libbutm.a

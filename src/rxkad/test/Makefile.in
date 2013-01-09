@@ -29,7 +29,7 @@ LIBS=${TOP_LIBDIR}/libauth.a \
 THLIBS= $(top_builddir)/src/cmd/liboafs_cmd.la  \
 	${TOP_LIBDIR}/libafscom_err.a \
 	${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a \
-	${MT_LIBS} ${ULIBS} ${XLIBS} ${LIBRPC} -lpthread
+	${MT_LIBS} ${ULIBS} ${LIBRPC} -lpthread
 
 THRULE = ${MT_CC} $(COMMON_CFLAGS) $(MT_CFLAGS)
 
@@ -104,5 +104,5 @@ th_stress: th_stress.o th_stress.xdr.o th_stress_c.o th_stress_s.o \
 		${LIBRPC}
 	$(LT_LDRULE_static) th_stress.o th_stress.xdr.o th_stress_c.o \
 		th_stress_s.o th_stress.cs.o th_stress.ss.o stress_errs.o \
-		${THLIBS} ${XLIBS}
+		${THLIBS}
 

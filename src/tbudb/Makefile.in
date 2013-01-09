@@ -105,7 +105,7 @@ server.o: ${BUDB}/server.c budb_errs.h ${INCLS}
 
 budb_server: $(SERVER_OBJS) ${LIBS}
 	$(LT_LDRULE_static) $(SERVER_OBJS) ${LIBS} \
-		$(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
+		$(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
 
 budb.cs.c: ${BUDB}/budb.rg
 	${RXGEN} -u -C -o $@ ${BUDB}/budb.rg

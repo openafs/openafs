@@ -164,7 +164,7 @@ namei_ops.o: ${VOL}/namei_ops.c
 
 salvageserver: ${OBJECTS} ${LIBS}
 	$(LT_LDRULE_static) ${OBJECTS} ${LIBS} \
-		$(LIB_hcrypto) $(LIB_roken) $(LIB_crypt) ${MT_LIBS} ${XLIBS}
+		$(LIB_hcrypto) $(LIB_roken) $(LIB_crypt) ${MT_LIBS}
 
 dasalvager: ${SOBJECTS} ${LIBS}
 	$(LT_LDRULE_static) ${SOBJECTS} ${LIBS} \
@@ -172,11 +172,11 @@ dasalvager: ${SOBJECTS} ${LIBS}
 
 dafssync-debug: ${FSSDEBUG_OBJS} ${LIBS}
 	$(LT_LDRULE_static) ${FSSDEBUG_OBJS} ${LIBS} \
-		$(LIB_hcrypto) $(LIB_roken) $(LIB_crypt) ${MT_LIBS} ${XLIBS}
+		$(LIB_hcrypto) $(LIB_roken) $(LIB_crypt) ${MT_LIBS}
 
 salvsync-debug: ${SSSDEBUG_OBJS} ${LIBS}
 	$(LT_LDRULE_static) ${SSSDEBUG_OBJS} ${LIBS} \
-		$(LIB_hcrypto) $(LIB_roken) $(LIB_crypt) ${MT_LIBS} ${XLIBS}
+		$(LIB_hcrypto) $(LIB_roken) $(LIB_crypt) ${MT_LIBS}
 
 install: salvageserver dafssync-debug salvsync-debug dasalvager
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
