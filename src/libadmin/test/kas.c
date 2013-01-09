@@ -45,9 +45,9 @@ GetIntFromString(const char *int_str, const char *error_msg)
 int
 DoKasPrincipalCreate(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { PRINCIPAL, INSTANCE,
+    enum { PRINCIPAL, INSTANCE,
 	PASSWORD
-    } DoKasPrincipalCreate_parm_t;
+    };
     afs_status_t st = 0;
     kas_identity_t user;
     const char *password;
@@ -72,7 +72,7 @@ DoKasPrincipalCreate(struct cmd_syndesc *as, void *arock)
 int
 DoKasPrincipalDelete(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { PRINCIPAL, INSTANCE } DoKasPrincipalGet_parm_t;
+    enum { PRINCIPAL, INSTANCE };
     afs_status_t st = 0;
     kas_identity_t user;
 
@@ -158,7 +158,7 @@ Print_kas_principalEntry_p(kas_principalEntry_p principal, const char *prefix)
 int
 DoKasPrincipalGet(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { PRINCIPAL, INSTANCE } DoKasPrincipalGet_parm_t;
+    enum { PRINCIPAL, INSTANCE };
     afs_status_t st = 0;
     kas_identity_t user;
     kas_principalEntry_t principal;
@@ -215,9 +215,9 @@ DoKasPrincipalList(struct cmd_syndesc *as, void *arock)
 int
 DoKasPrincipalKeySet(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { PRINCIPAL, INSTANCE, PASSWORD,
+    enum { PRINCIPAL, INSTANCE, PASSWORD,
 	KEYVERSION
-    } DoKasPrincipalKeySet_parm_t;
+    };
     afs_status_t st = 0;
     kas_encryptionKey_t key;
     kas_identity_t user;
@@ -255,7 +255,7 @@ DoKasPrincipalKeySet(struct cmd_syndesc *as, void *arock)
 int
 DoKasPrincipalLockStatusGet(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { PRINCIPAL, INSTANCE } DoKasPrincipalLockStatusGet_parm_t;
+    enum { PRINCIPAL, INSTANCE };
     afs_status_t st = 0;
     kas_identity_t user;
     unsigned int lock_end_time = 0;
@@ -281,7 +281,7 @@ DoKasPrincipalLockStatusGet(struct cmd_syndesc *as, void *arock)
 int
 DoKasPrincipalUnlock(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { PRINCIPAL, INSTANCE } DoKasPrincipalUnlock_parm_t;
+    enum { PRINCIPAL, INSTANCE };
     afs_status_t st = 0;
     kas_identity_t user;
 
@@ -303,12 +303,12 @@ DoKasPrincipalUnlock(struct cmd_syndesc *as, void *arock)
 int
 DoKasPrincipalFieldsSet(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { PRINCIPAL, INSTANCE, ADMIN, NOADMIN, GRANTTICKET,
+    enum { PRINCIPAL, INSTANCE, ADMIN, NOADMIN, GRANTTICKET,
 	NOGRANTTICKET, ENCRYPT2, NOENCRYPT, CHANGEPASSWORD,
 	NOCHANGEPASSWORD, REUSEPASSWORD, NOREUSEPASSWORD,
 	EXPIRES, MAXTICKETLIFETIME, PASSWORDEXPIRES,
 	FAILEDPASSWORDATTEMPTS, FAILEDPASSWORDLOCKTIME
-    } DoKasPrincipalFieldsSet_parm_t;
+    };
     afs_status_t st = 0;
     kas_identity_t user;
     kas_admin_t admin;
@@ -545,7 +545,7 @@ Print_kas_serverStats_p(kas_serverStats_p stats, const char *prefix)
 int
 DoKasServerStatsGet(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER } DoKasServerStatsGet_parm_t;
+    enum { SERVER };
     afs_status_t st = 0;
     const char *server_list[2] = { 0, 0 };
     void *kas_server = NULL;
@@ -630,7 +630,7 @@ Print_kas_serverDebugInfo_p(kas_serverDebugInfo_p debug, const char *prefix)
 int
 DoKasServerDebugGet(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER } DoKasServerDebugGet_parm_t;
+    enum { SERVER };
     afs_status_t st = 0;
     const char *server_list[2] = { 0, 0 };
     void *kas_server = NULL;

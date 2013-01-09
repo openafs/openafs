@@ -272,9 +272,9 @@ ktime_ParsePeriodic(char *adate, bos_RestartTime_p ak)
 int
 DoBosProcessCreate(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, PROCESS, BINARY, CRON, CRONTIME,
+    enum { SERVER, PROCESS, BINARY, CRON, CRONTIME,
 	NOTIFIER
-    } DoBosProcessCreate_parm_t;
+    };
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *process = NULL;
@@ -338,9 +338,9 @@ DoBosProcessCreate(struct cmd_syndesc *as, void *arock)
 int
 DoBosFSProcessCreate(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, PROCESS, FILESERVER, VOLSERVER, SALVAGER,
+    enum { SERVER, PROCESS, FILESERVER, VOLSERVER, SALVAGER,
 	NOTIFIER
-    } DoBosFSProcessCreate_parm_t;
+    };
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *process = NULL;
@@ -390,7 +390,7 @@ DoBosFSProcessCreate(struct cmd_syndesc *as, void *arock)
 int
 DoBosProcessDelete(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, PROCESS } DoBosProcessDelete_parm_t;
+    enum { SERVER, PROCESS };
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *process = NULL;
@@ -439,7 +439,7 @@ Print_bos_ProcessExecutionState_p(bos_ProcessExecutionState_p state,
 int
 DoBosProcessExecutionStateGet(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, PROCESS } DoBosProcessExecutionStateGet_parm_t;
+    enum { SERVER, PROCESS };
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *process = NULL;
@@ -475,9 +475,9 @@ DoBosProcessExecutionStateGet(struct cmd_syndesc *as, void *arock)
 int
 DoBosProcessExecutionStateSet(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, PROCESS, STOPPED,
+    enum { SERVER, PROCESS, STOPPED,
 	RUNNING
-    } DoBosProcessExecutionStateSet_parm_t;
+    };
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *process = NULL;
@@ -526,9 +526,9 @@ DoBosProcessExecutionStateSet(struct cmd_syndesc *as, void *arock)
 int
 DoBosProcessExecutionStateSetTemporary(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, PROCESS, STOPPED,
+    enum { SERVER, PROCESS, STOPPED,
 	RUNNING
-    } DoBosProcessExecutionStateSetTemporary_parm_t;
+    };
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *process = NULL;
@@ -578,7 +578,7 @@ DoBosProcessExecutionStateSetTemporary(struct cmd_syndesc *as, void *arock)
 int
 DoBosProcessNameList(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER } DoBosProcessNameList_parm_t;
+    enum { SERVER };
     afs_status_t st = 0;
     void *bos_server = NULL;
     void *iter = NULL;
@@ -667,7 +667,7 @@ Print_bos_ProcessInfo_p(bos_ProcessInfo_p info, const char *prefix)
 int
 DoBosProcessInfoGet(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, PROCESS } DoBosProcessInfoGet_parm_t;
+    enum { SERVER, PROCESS };
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *process = NULL;
@@ -698,7 +698,7 @@ DoBosProcessInfoGet(struct cmd_syndesc *as, void *arock)
 int
 DoBosProcessParameterList(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, PROCESS } DoBosProcessParameterList_parm_t;
+    enum { SERVER, PROCESS };
     afs_status_t st = 0;
     void *bos_server = NULL;
     char *process = NULL;
@@ -742,7 +742,7 @@ DoBosProcessParameterList(struct cmd_syndesc *as, void *arock)
 int
 DoBosProcessNotifierGet(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, PROCESS } DoBosProcessNotifierGet_parm_t;
+    enum { SERVER, PROCESS };
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *process = NULL;
@@ -777,7 +777,7 @@ DoBosProcessNotifierGet(struct cmd_syndesc *as, void *arock)
 int
 DoBosProcessRestart(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, PROCESS } DoBosProcessRestart_parm_t;
+    enum { SERVER, PROCESS };
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *process = NULL;
@@ -805,7 +805,7 @@ DoBosProcessRestart(struct cmd_syndesc *as, void *arock)
 int
 DoBosProcessAllStop(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER } DoBosProcessAllStop_parm_t;
+    enum { SERVER };
     afs_status_t st = 0;
     void *bos_server = NULL;
 
@@ -828,7 +828,7 @@ DoBosProcessAllStop(struct cmd_syndesc *as, void *arock)
 int
 DoBosProcessAllStart(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER } DoBosProcessAllStart_parm_t;
+    enum { SERVER };
     afs_status_t st = 0;
     void *bos_server = NULL;
 
@@ -851,7 +851,7 @@ DoBosProcessAllStart(struct cmd_syndesc *as, void *arock)
 int
 DoBosProcessAllWaitStop(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER } DoBosProcessAllWaitStop_parm_t;
+    enum { SERVER };
     afs_status_t st = 0;
     void *bos_server = NULL;
 
@@ -874,7 +874,7 @@ DoBosProcessAllWaitStop(struct cmd_syndesc *as, void *arock)
 int
 DoBosProcessAllWaitTransition(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER } DoBosProcessAllWaitTransition_parm_t;
+    enum { SERVER };
     afs_status_t st = 0;
     void *bos_server = NULL;
 
@@ -897,7 +897,7 @@ DoBosProcessAllWaitTransition(struct cmd_syndesc *as, void *arock)
 int
 DoBosProcessAllStopAndRestart(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, INCLUDEBOS } DoBosProcessAllStopAndRestart_parm_t;
+    enum { SERVER, INCLUDEBOS };
     afs_status_t st = 0;
     void *bos_server = NULL;
     bos_RestartBosServer_t restart = BOS_DONT_RESTART_BOS_SERVER;
@@ -925,7 +925,7 @@ DoBosProcessAllStopAndRestart(struct cmd_syndesc *as, void *arock)
 int
 DoBosAdminCreate(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, ADMIN } DoBosAdminCreate_parm_t;
+    enum { SERVER, ADMIN };
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *admin = NULL;
@@ -953,7 +953,7 @@ DoBosAdminCreate(struct cmd_syndesc *as, void *arock)
 int
 DoBosAdminDelete(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, ADMIN } DoBosAdminDelete_parm_t;
+    enum { SERVER, ADMIN };
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *admin = NULL;
@@ -981,7 +981,7 @@ DoBosAdminDelete(struct cmd_syndesc *as, void *arock)
 int
 DoBosAdminList(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER } DoBosAdminList_parm_t;
+    enum { SERVER };
     afs_status_t st = 0;
     void *bos_server = NULL;
     void *iter = NULL;
@@ -1020,7 +1020,7 @@ DoBosAdminList(struct cmd_syndesc *as, void *arock)
 int
 DoBosKeyCreate(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, VERSIONNUMBER, KEY } DoBosKeyCreate_parm_t;
+    enum { SERVER, VERSIONNUMBER, KEY };
     afs_status_t st = 0;
     void *bos_server = NULL;
     int version_number = 0;
@@ -1062,7 +1062,7 @@ DoBosKeyCreate(struct cmd_syndesc *as, void *arock)
 int
 DoBosKeyDelete(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, VERSIONNUMBER } DoBosKeyDelete_parm_t;
+    enum { SERVER, VERSIONNUMBER };
     afs_status_t st = 0;
     void *bos_server = NULL;
     int version_number = 0;
@@ -1110,7 +1110,7 @@ Print_bos_KeyInfo_p(bos_KeyInfo_p key, const char *prefix)
 int
 DoBosKeyList(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER } DoBosKeyList_parm_t;
+    enum { SERVER };
     afs_status_t st = 0;
     void *bos_server = NULL;
     void *iter = NULL;
@@ -1149,7 +1149,7 @@ DoBosKeyList(struct cmd_syndesc *as, void *arock)
 int
 DoBosCellSet(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, CELL } DoBosCellSet_parm_t;
+    enum { SERVER, CELL };
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *cell = NULL;
@@ -1177,7 +1177,7 @@ DoBosCellSet(struct cmd_syndesc *as, void *arock)
 int
 DoBosCellGet(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER } DoBosCellGet_parm_t;
+    enum { SERVER };
     afs_status_t st = 0;
     void *bos_server = NULL;
     char cell[BOS_MAX_NAME_LEN];
@@ -1203,7 +1203,7 @@ DoBosCellGet(struct cmd_syndesc *as, void *arock)
 int
 DoBosHostCreate(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, HOST } DoBosHostCreate_parm_t;
+    enum { SERVER, HOST };
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *host = NULL;
@@ -1231,7 +1231,7 @@ DoBosHostCreate(struct cmd_syndesc *as, void *arock)
 int
 DoBosHostDelete(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, HOST } DoBosHostDelete_parm_t;
+    enum { SERVER, HOST };
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *host = NULL;
@@ -1259,7 +1259,7 @@ DoBosHostDelete(struct cmd_syndesc *as, void *arock)
 int
 DoBosHostList(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER } DoBosHostList_parm_t;
+    enum { SERVER };
     afs_status_t st = 0;
     void *bos_server = NULL;
     void *iter = NULL;
@@ -1299,7 +1299,7 @@ DoBosHostList(struct cmd_syndesc *as, void *arock)
 int
 DoBosExecutableCreate(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, BINARY, DEST } DoBosExecutableCreate_parm_t;
+    enum { SERVER, BINARY, DEST };
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *binary = NULL;
@@ -1332,7 +1332,7 @@ DoBosExecutableCreate(struct cmd_syndesc *as, void *arock)
 int
 DoBosExecutableRevert(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, EXECUTABLE } DoBosExecutableRevert_parm_t;
+    enum { SERVER, EXECUTABLE };
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *executable = NULL;
@@ -1360,7 +1360,7 @@ DoBosExecutableRevert(struct cmd_syndesc *as, void *arock)
 int
 DoBosExecutableTimestampGet(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, EXECUTABLE } DoBosExecutableTimestampGet_parm_t;
+    enum { SERVER, EXECUTABLE };
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *executable = NULL;
@@ -1392,9 +1392,9 @@ DoBosExecutableTimestampGet(struct cmd_syndesc *as, void *arock)
 int
 DoBosExecutablePrune(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, OLDFILES, BAKFILES,
+    enum { SERVER, OLDFILES, BAKFILES,
 	COREFILES
-    } DoBosExecutablePrune_parm_t;
+    };
     afs_status_t st = 0;
     void *bos_server = NULL;
     bos_Prune_t old_files = BOS_DONT_PRUNE;
@@ -1433,9 +1433,9 @@ DoBosExecutablePrune(struct cmd_syndesc *as, void *arock)
 int
 DoBosExecutableRestartTimeSet(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, DAILY, WEEKLY,
+    enum { SERVER, DAILY, WEEKLY,
 	TIME
-    } DoBosExecutableRestartTimeSet_parm_t;
+    };
     afs_status_t st = 0;
     void *bos_server = NULL;
     bos_Restart_t type = 0;
@@ -1532,9 +1532,9 @@ Print_bos_RestartTime_p(bos_RestartTime_p restart, const char *prefix)
 int
 DoBosExecutableRestartTimeGet(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, DAILY,
+    enum { SERVER, DAILY,
 	WEEKLY
-    } DoBosExecutableRestartTimeGet_parm_t;
+    };
     afs_status_t st = 0;
     void *bos_server = NULL;
     bos_Restart_t type = 0;
@@ -1583,7 +1583,7 @@ DoBosExecutableRestartTimeGet(struct cmd_syndesc *as, void *arock)
 int
 DoBosLogGet(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, LOGFILE } DoBosLogGet_parm_t;
+    enum { SERVER, LOGFILE };
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *log_file = NULL;
@@ -1631,7 +1631,7 @@ DoBosLogGet(struct cmd_syndesc *as, void *arock)
 int
 DoBosAuthSet(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, REQUIREAUTH, DISABLEAUTH } DoBosAuthSet_parm_t;
+    enum { SERVER, REQUIREAUTH, DISABLEAUTH };
     afs_status_t st = 0;
     void *bos_server = NULL;
     bos_Auth_t auth = 0;
@@ -1675,7 +1675,7 @@ DoBosAuthSet(struct cmd_syndesc *as, void *arock)
 int
 DoBosCommandExecute(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, COMMAND } DoBosCommandExecute_parm_t;
+    enum { SERVER, COMMAND };
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *command = NULL;
@@ -1703,9 +1703,9 @@ DoBosCommandExecute(struct cmd_syndesc *as, void *arock)
 int
 DoBosSalvage(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, PARTITION, VOLUME, NUMSALVAGERS, TMPDIR, LOGFILE,
+    enum { SERVER, PARTITION, VOLUME, NUMSALVAGERS, TMPDIR, LOGFILE,
 	FORCE, NOWRITE, INODES, ROOTINODES, SALVAGEDIRS, BLOCKREADS
-    } DoBosSalvage_parm_t;
+    };
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *partition = NULL;
