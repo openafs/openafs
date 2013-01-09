@@ -21,7 +21,7 @@
 int
 DoUtilErrorTranslate(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { ERROR_CODE } DoUtilErrorTranslate_parm_t;
+    enum { ERROR_CODE };
     afs_status_t st = 0;
     int err = atoi(as->parms[ERROR_CODE].items->data);
     const char *err_str = "unknown error";
@@ -38,7 +38,7 @@ DoUtilErrorTranslate(struct cmd_syndesc *as, void *arock)
 int
 DoUtilDatabaseServerList(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { CELL_NAME } DoUtilDatabaseServerList_parm_t;
+    enum { CELL_NAME };
     afs_status_t st = 0;
     void *iter = NULL;
     util_databaseServerEntry_t server;
@@ -67,7 +67,7 @@ DoUtilDatabaseServerList(struct cmd_syndesc *as, void *arock)
 int
 DoUtilNameToAddress(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER_NAME } DoUtilNameToAddress_parm_t;
+    enum { SERVER_NAME };
     afs_status_t st = 0;
     const char *server = as->parms[SERVER_NAME].items->data;
     int server_addr = 0;

@@ -264,9 +264,9 @@ DoClientLocalCellGet(struct cmd_syndesc *as, void *arock)
 int
 DoClientMountPointCreate(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { DIRECTORY, VOLUME, READWRITE,
+    enum { DIRECTORY, VOLUME, READWRITE,
 	CHECK
-    } DoClientMountPointCreate_parm_t;
+    };
     afs_status_t st = 0;
     const char *directory = NULL;
     const char *volume = NULL;
@@ -318,7 +318,7 @@ Print_afs_serverEntry_p(afs_serverEntry_p serv, const char *prefix)
 int
 DoClientAFSServerGet(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER } DoClientAFSServerGet_parm_t;
+    enum { SERVER };
     afs_status_t st = 0;
     const char *server = NULL;
     afs_serverEntry_t entry;
@@ -463,9 +463,9 @@ GetStatTypeFromString(const char *type)
 int
 DoClientRPCStatsStateGet(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, PROCESS,
+    enum { SERVER, PROCESS,
 	STAT_TYPE
-    } DoClientRPCStatsStateGet_parm_t;
+    };
     afs_status_t st = 0;
     struct rx_connection *conn;
     afs_stat_source_t type;
@@ -522,7 +522,7 @@ DoClientRPCStatsStateGet(struct cmd_syndesc *as, void *arock)
 int
 DoClientRPCStatsStateEnable(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, PROCESS, STAT_TYPE } DoClientRPCStatsEnable_parm_t;
+    enum { SERVER, PROCESS, STAT_TYPE };
     afs_status_t st = 0;
     struct rx_connection *conn;
     afs_stat_source_t type;
@@ -575,9 +575,9 @@ DoClientRPCStatsStateEnable(struct cmd_syndesc *as, void *arock)
 int
 DoClientRPCStatsStateDisable(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, PROCESS,
+    enum { SERVER, PROCESS,
 	STAT_TYPE
-    } DoClientRPCStatsDisable_parm_t;
+    };
     afs_status_t st = 0;
     struct rx_connection *conn;
     afs_stat_source_t type;
@@ -678,7 +678,7 @@ Print_afs_RPCStats_p(afs_RPCStats_p stat, interface_function_list_p f_list,
 int
 DoClientRPCStatsList(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, PROCESS, STAT_TYPE } DoClientRPCStatsList_parm_t;
+    enum { SERVER, PROCESS, STAT_TYPE };
     afs_status_t st = 0;
     struct rx_connection *conn;
     afs_stat_source_t type;
@@ -802,13 +802,13 @@ DoClientRPCStatsList(struct cmd_syndesc *as, void *arock)
 int
 DoClientRPCStatsClear(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, PROCESS, STAT_TYPE, CLEAR_ALL, CLEAR_INVOCATIONS,
+    enum { SERVER, PROCESS, STAT_TYPE, CLEAR_ALL, CLEAR_INVOCATIONS,
 	CLEAR_BYTES_SENT, CLEAR_BYTES_RCVD,
 	CLEAR_QUEUE_TIME_SUM, CLEAR_QUEUE_TIME_SQUARE,
 	CLEAR_QUEUE_TIME_MIN, CLEAR_QUEUE_TIME_MAX,
 	CLEAR_EXEC_TIME_SUM, CLEAR_EXEC_TIME_SQUARE,
 	CLEAR_EXEC_TIME_MIN, CLEAR_EXEC_TIME_MAX
-    } DoClientRPCStatsClear_parm_t;
+    };
     afs_status_t st = 0;
     struct rx_connection *conn;
     afs_stat_source_t type;
@@ -973,7 +973,7 @@ DoClientRPCStatsClear(struct cmd_syndesc *as, void *arock)
 int
 DoClientRPCStatsVersionGet(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { SERVER, PROCESS } DoClientRPCStatsVersionGet_parm_t;
+    enum { SERVER, PROCESS };
     afs_status_t st = 0;
     struct rx_connection *conn;
     afs_stat_source_t type;
@@ -1029,7 +1029,7 @@ int
 DoClientCMGetServerPrefs(struct cmd_syndesc *as, void *arock)
 {
     afs_status_t st = 0;
-    typedef enum { SERVER, PORT } DoClientCMGetServerPrefs_parm_t;
+    enum { SERVER, PORT };
     struct rx_connection *conn;
     int srvrPort = AFSCONF_CALLBACKPORT;
     afs_CMServerPref_t prefs;
@@ -1098,7 +1098,7 @@ int
 DoClientCMListCells(struct cmd_syndesc *as, void *arock)
 {
     afs_status_t st = 0;
-    typedef enum { SERVER, PORT } DoClientCMListCells_parm_t;
+    enum { SERVER, PORT };
     struct rx_connection *conn;
     int srvrPort = AFSCONF_CALLBACKPORT;
     afs_CMListCell_t cellInfo;
@@ -1152,7 +1152,7 @@ int
 DoClientCMLocalCell(struct cmd_syndesc *as, void *arock)
 {
     afs_status_t st = 0;
-    typedef enum { SERVER, PORT } DoClientCMLocalCell_parm_t;
+    enum { SERVER, PORT };
     struct rx_connection *conn;
     int srvrPort = AFSCONF_CALLBACKPORT;
     afs_CMCellName_t cellname;
@@ -1210,7 +1210,7 @@ int
 DoClientCMClientConfig(struct cmd_syndesc *as, void *arock)
 {
     afs_status_t st = 0;
-    typedef enum { SERVER, PORT } DoClientCMLocalCell_parm_t;
+    enum { SERVER, PORT };
     struct rx_connection *conn;
     int srvrPort = AFSCONF_CALLBACKPORT;
     afs_ClientConfig_t config;

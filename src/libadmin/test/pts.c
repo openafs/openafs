@@ -91,7 +91,7 @@ GetUserAccessFromString(const char *in_str, const char *error_msg)
 int
 DoPtsGroupMemberAdd(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { USER, GROUP } DoPtsGroupMemberAdd_parm_t;
+    enum { USER, GROUP };
     afs_status_t st = 0;
     const char *user = as->parms[USER].items->data;
     const char *group = as->parms[GROUP].items->data;
@@ -106,7 +106,7 @@ DoPtsGroupMemberAdd(struct cmd_syndesc *as, void *arock)
 int
 DoPtsGroupOwnerChange(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { OWNER, GROUP } DoPtsGroupOwnerChange_parm_t;
+    enum { OWNER, GROUP };
     afs_status_t st = 0;
     const char *owner = as->parms[OWNER].items->data;
     const char *group = as->parms[GROUP].items->data;
@@ -121,7 +121,7 @@ DoPtsGroupOwnerChange(struct cmd_syndesc *as, void *arock)
 int
 DoPtsGroupCreate(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { OWNER, GROUP } DoPtsGroupCreate_parm_t;
+    enum { OWNER, GROUP };
     afs_status_t st = 0;
     char *owner = as->parms[OWNER].items->data;
     char *group = as->parms[GROUP].items->data;
@@ -171,7 +171,7 @@ Print_pts_GroupEntry_p(pts_GroupEntry_p entry, const char *prefix)
 int
 DoPtsGroupGet(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { GROUP } DoPtsGroupGet_parm_t;
+    enum { GROUP };
     afs_status_t st = 0;
     const char *group = as->parms[GROUP].items->data;
     pts_GroupEntry_t entry;
@@ -188,7 +188,7 @@ DoPtsGroupGet(struct cmd_syndesc *as, void *arock)
 int
 DoPtsGroupDelete(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { GROUP } DoPtsGroupDelete_parm_t;
+    enum { GROUP };
     afs_status_t st = 0;
     const char *group = as->parms[GROUP].items->data;
 
@@ -215,7 +215,7 @@ DoPtsGroupMaxGet(struct cmd_syndesc *as, void *arock)
 int
 DoPtsGroupMaxSet(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { MAX } DoPtsGroupMaxSet_parm_t;
+    enum { MAX };
     afs_status_t st = 0;
     const char *max = as->parms[MAX].items->data;
     int max_group_id;
@@ -232,7 +232,7 @@ DoPtsGroupMaxSet(struct cmd_syndesc *as, void *arock)
 int
 DoPtsGroupMemberList(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { GROUP } DoPtsGroupMemberList_parm_t;
+    enum { GROUP };
     afs_status_t st = 0;
     const char *group = as->parms[GROUP].items->data;
     void *iter;
@@ -261,7 +261,7 @@ DoPtsGroupMemberList(struct cmd_syndesc *as, void *arock)
 int
 DoPtsGroupMemberRemove(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { USER, GROUP } DoPtsGroupMemberRemove_parm_t;
+    enum { USER, GROUP };
     afs_status_t st = 0;
     const char *user = as->parms[USER].items->data;
     const char *group = as->parms[GROUP].items->data;
@@ -276,7 +276,7 @@ DoPtsGroupMemberRemove(struct cmd_syndesc *as, void *arock)
 int
 DoPtsGroupRename(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { GROUP, NEWNAME } DoPtsGroupRename_parm_t;
+    enum { GROUP, NEWNAME };
     afs_status_t st = 0;
     const char *group = as->parms[GROUP].items->data;
     char *new_name = as->parms[NEWNAME].items->data;
@@ -291,9 +291,9 @@ DoPtsGroupRename(struct cmd_syndesc *as, void *arock)
 int
 DoPtsGroupModify(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { GROUP, LISTSTATUS, LISTGROUPSOWNED, LISTMEMBERSHIP,
+    enum { GROUP, LISTSTATUS, LISTGROUPSOWNED, LISTMEMBERSHIP,
 	LISTADD, LISTDELTE
-    } DoPtsGroupModify_parm_t;
+    };
     afs_status_t st = 0;
     const char *group = as->parms[GROUP].items->data;
     pts_GroupUpdateEntry_t entry;
@@ -324,7 +324,7 @@ DoPtsGroupModify(struct cmd_syndesc *as, void *arock)
 int
 DoPtsUserCreate(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { USER } DoPtsUserCreate_parm_t;
+    enum { USER };
     afs_status_t st = 0;
     char *user = as->parms[USER].items->data;
     int new_user_id;
@@ -341,7 +341,7 @@ DoPtsUserCreate(struct cmd_syndesc *as, void *arock)
 int
 DoPtsUserDelete(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { USER } DoPtsUserDelete_parm_t;
+    enum { USER };
     afs_status_t st = 0;
     const char *user = as->parms[USER].items->data;
 
@@ -384,7 +384,7 @@ Print_pts_UserEntry_p(pts_UserEntry_p entry, const char *prefix)
 int
 DoPtsUserGet(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { USER } DoPtsUserGet_parm_t;
+    enum { USER };
     afs_status_t st = 0;
     const char *user = as->parms[USER].items->data;
     pts_UserEntry_t entry;
@@ -401,7 +401,7 @@ DoPtsUserGet(struct cmd_syndesc *as, void *arock)
 int
 DoPtsUserRename(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { USER, NEWNAME } DoPtsUserRename_parm_t;
+    enum { USER, NEWNAME };
     afs_status_t st = 0;
     const char *user = as->parms[USER].items->data;
     char *new_name = as->parms[NEWNAME].items->data;
@@ -416,9 +416,9 @@ DoPtsUserRename(struct cmd_syndesc *as, void *arock)
 int
 DoPtsUserModify(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { USER, GROUPQUOTA, LISTSTATUS, LISTGROUPSOWNED,
+    enum { USER, GROUPQUOTA, LISTSTATUS, LISTGROUPSOWNED,
 	LISTMEMBERSHIP
-    } DoPtsUserModify_parm_t;
+    };
     afs_status_t st = 0;
     const char *user = as->parms[USER].items->data;
     pts_UserUpdateEntry_t entry;
@@ -493,7 +493,7 @@ DoPtsUserMaxGet(struct cmd_syndesc *as, void *arock)
 int
 DoPtsUserMaxSet(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { MAX } DoPtsUserMaxSet_parm_t;
+    enum { MAX };
     afs_status_t st = 0;
     const char *max = as->parms[MAX].items->data;
     int max_user_id;
@@ -510,7 +510,7 @@ DoPtsUserMaxSet(struct cmd_syndesc *as, void *arock)
 int
 DoPtsUserMemberList(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { USER } DoPtsUserMemberList_parm_t;
+    enum { USER };
     afs_status_t st = 0;
     const char *user = as->parms[USER].items->data;
     void *iter;
@@ -540,7 +540,7 @@ DoPtsUserMemberList(struct cmd_syndesc *as, void *arock)
 int
 DoPtsOwnedGroupList(struct cmd_syndesc *as, void *arock)
 {
-    typedef enum { USER } DoPtsOwnedGroupList_parm_t;
+    enum { USER };
     afs_status_t st = 0;
     const char *user = as->parms[USER].items->data;
     void *iter;

@@ -811,7 +811,7 @@ GetVolumePackageWithCall(struct rx_call *acall, struct VCallByVol *cbv,
 			 struct client **client, int locktype,
 			 afs_int32 * rights, afs_int32 * anyrights, int remote)
 {
-    struct acl_accessList *aCL;	/* Internal access List */
+    struct acl_accessList *aCL = NULL;	/* Internal access List */
     int aCLSize;		/* size of the access list */
     Error errorCode = 0;		/* return code to caller */
     struct rx_connection *tcon = rx_ConnectionOf(acall);
