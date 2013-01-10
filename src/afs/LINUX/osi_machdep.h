@@ -179,8 +179,13 @@ afs_set_cr_group_info(cred_t *cred, struct group_info *group_info) {
 # define current_group_info() (current->cred->group_info)
 # define task_gid(task) (task->cred->gid)
 # define task_user(task) (task->cred->user)
-# define task_session_keyring(task) (task->cred->tgcred->session_keyring)
-# define current_session_keyring() (current->cred->tgcred->session_keyring)
+# if defined(STRUCT_CRED_HAS_SESSION_KEYRING)
+#  define task_session_keyring(task) (task->cred->session_keyring)
+#  define current_session_keyring() (current->cred->session_keyring)
+# else
+#  define task_session_keyring(task) (task->cred->tgcred->session_keyring)
+#  define current_session_keyring() (current->cred->tgcred->session_keyring)
+# endif
 
 #else
 
