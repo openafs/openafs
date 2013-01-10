@@ -537,4 +537,18 @@ afs_set_session_keyring(struct key *keyring)
     return old;
 }
 
+static inline int
+afs_truncate(struct inode *inode, int len)
+{
+    int code;
+#if defined(STRUCT_INODE_OPERATIONS_HAS_TRUNCATE)
+    code = vmtruncate(inode, len);
+#else
+    code = inode_newsize_ok(inode, len);
+    if (!code)
+        truncate_setsize(inode, len);
+#endif
+    return code;
+}
+
 #endif /* AFS_LINUX_OSI_COMPAT_H */

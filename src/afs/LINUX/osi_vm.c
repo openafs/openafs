@@ -51,8 +51,7 @@ osi_VM_FlushVCache(struct vcache *avc, int *slept)
     if (avc->opens != 0)
 	return EBUSY;
 
-    return vmtruncate(ip, 0);
-    return 0;
+    return afs_truncate(ip, 0);
 }
 
 /* Try to invalidate pages, for "fs flush" or "fs flushv"; or
@@ -132,5 +131,5 @@ osi_VM_FlushPages(struct vcache *avc, afs_ucred_t *credp)
 void
 osi_VM_Truncate(struct vcache *avc, int alen, afs_ucred_t *acred)
 {
-    vmtruncate(AFSTOV(avc), alen);
+    afs_truncate(AFSTOV(avc), alen);
 }
