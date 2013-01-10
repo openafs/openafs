@@ -238,6 +238,16 @@ typedef struct afsUUID afsUUID;
 #define AFS_DEMAND_ATTACH_FS 1
 #endif
 
+#if defined(BUILD_RXGK) && defined(AFS_PTHREAD_ENV) && !defined(KERNEL)
+/* Only build GSS bits of code on non-kernel pthread builds */
+# define AFS_RXGK_GSS_ENV 1
+#endif
+
+#if defined(ENABLE_RXGK) && !defined(UKERNEL) && (defined(AFS_PTHREAD_ENV) || defined(KERNEL))
+/* Only enable RXGK bits for userspace pthread or non-ukernel kernel code */
+# define AFS_RXGK_ENV 1
+#endif
+
 /* A macro that can be used when printf'ing 64 bit integers, as Unix and
  * windows use a different format string
  */

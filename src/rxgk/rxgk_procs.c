@@ -37,6 +37,8 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
+#ifdef AFS_RXGK_GSS_ENV
+
 #include <rx/rx.h>
 #include <rx/rx_identity.h>
 #include <rx/rxgk.h>
@@ -70,3 +72,5 @@ SRXGK_AFSCombineTokens(struct rx_call *z_call, RXGK_Data *user_tok,
 {
     return RXGEN_OPCODE;
 }
+
+#endif /* AFS_RXGK_GSS_ENV */

@@ -71,9 +71,21 @@ rxgk_errs.c: rxgk_errs.et
 #
 test: all
 
-install: liboafs_rxgk.la
+install: liboafs_rxgk.la rxgk.h rxgk_errs.h rxgk_int.h
+	if [ "@ENABLE_RXGK@" = yes ]; then \
+		${INSTALL} -d ${DESTDIR}${includedir}/rx; \
+		${INSTALL_DATA} ${srcdir}/rxgk.h ${DESTDIR}${includedir}/rx/rxgk.h ; \
+		${INSTALL_DATA} rxgk_errs.h ${DESTDIR}${includedir}/rx/rxgk_errs.h ; \
+		${INSTALL_DATA} rxgk_int.h ${DESTDIR}${includedir}/rx/rxgk_int.h ; \
+	fi
 
-dest: liboafs_rxgk.la
+dest: liboafs_rxgk.la rxgk.h rxgk_errs.h rxgk_int.h
+	if [ "@ENABLE_RXGK@" = yes ]; then \
+		${INSTALL} -d ${DESTDIR}${includedir}/rx; \
+		${INSTALL_DATA} ${srcdir}/rxgk.h ${DEST}/include/rx/rxgk.h ; \
+		${INSTALL_DATA} rxgk_errs.h ${DEST}/include/rx/rxgk_errs.h ; \
+		${INSTALL_DATA} rxgk_int.h ${DEST}/include/rx/rxgk_int.h ; \
+	fi
 
 #
 # Misc. targets

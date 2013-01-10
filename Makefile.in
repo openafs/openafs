@@ -218,7 +218,12 @@ sys: cmd comerr afs hcrypto rx rxstat fsint sys_depinstall
 	+${COMPILE_PART1} sys ${COMPILE_PART2}
 
 rxgk: cmd comerr hcrypto rx rxgk_depinstall
-	+${COMPILE_PART1} rxgk ${COMPILE_PART2}
+	+set -x; \
+	if test "@BUILD_RXGK@" = "yes"; then \
+		${COMPILE_PART1} rxgk ${COMPILE_PART2} ; \
+	else \
+		echo Skipping rxgk for ${SYS_NAME} ; \
+	fi
 
 rxkad: cmd comerr hcrypto rfc3961 rx rxkad_depinstall
 	+${COMPILE_PART1} rxkad ${COMPILE_PART2}
@@ -633,7 +638,7 @@ finale: project cmd comerr afsd butc tbutc tbudb @ENABLE_KERNEL_MODULE@ \
 	bozo @VFSCK@ volser tvolser tsalvaged dviced dvolser libafscp \
 	venus venustests update xstat afsmonitor rxdebug libafsrpc rfc3961 \
 	hcrypto libafsauthent libadmin man-pages tools platform kopenafs \
-	authtools $(DIR_roken)
+	authtools $(DIR_roken) rxgk
 	+${COMPILE_PART1} finale ${COMPILE_PART2}
 
 finale_nolibafs: project cmd comerr afsd butc tbutc tbudb libuafs audit kauth \
@@ -641,7 +646,7 @@ finale_nolibafs: project cmd comerr afsd butc tbutc tbudb libuafs audit kauth \
 	volser tvolser tsalvaged dviced dvolser libafscp venus venustests \
 	update xstat afsmonitor rxdebug libafsrpc rfc3961 hcrypto \
 	libafsauthent libadmin man-pages tools platform kopenafs \
-	authtools $(DIR_roken)
+	authtools $(DIR_roken) rxgk
 	+${COMPILE_PART1} finale ${COMPILE_PART2}
 
 rpctestlib: util fsint rx opr libafsrpc libafsauthent
