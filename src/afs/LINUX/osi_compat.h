@@ -186,14 +186,24 @@ afs_linux_key_alloc(struct key_type *type, const char *desc, uid_t uid,
 }
 
 # if defined(STRUCT_TASK_STRUCT_HAS_CRED)
+static inline struct key *
+afs_session_keyring(afs_ucred_t *cred)
+{
+#  if defined(STRUCT_CRED_HAS_SESSION_KEYRING)
+    return cred->session_keyring;
+#  else
+    return cred->tgcred->session_keyring;
+#  endif
+}
+
 static inline struct key*
 afs_linux_search_keyring(afs_ucred_t *cred, struct key_type *type)
 {
     key_ref_t key_ref;
 
-    if (cred->tgcred->session_keyring) {
+    if (afs_session_keyring(cred)) {
 	key_ref = keyring_search(
-		      make_key_ref(cred->tgcred->session_keyring, 1),
+		      make_key_ref(afs_session_keyring(cred), 1),
 		      type, "_pag");
 	if (IS_ERR(key_ref))
 	    return ERR_CAST(key_ref);
@@ -549,5 +559,25 @@ afs_putname(afs_name_t name) {
     kmem_cache_free(names_cachep, (void *)name);
 }
 #endif
+
+static_inline struct key *
+afs_set_session_keyring(struct key *keyring)
+{
+    struct key *old;
+#if defined(STRUCT_CRED_HAS_SESSION_KEYRING)
+    struct cred *new_creds;
+    old = current_session_keyring();
+    new_creds = prepare_creds();
+    rcu_assign_pointer(new_creds->session_keyring, keyring);
+    commit_creds(new_creds);
+#else
+    spin_lock_irq(&current->sighand->siglock);
+    old = task_session_keyring(current);
+    smp_wmb();
+    task_session_keyring(current) = keyring;
+    spin_unlock_irq(&current->sighand->siglock);
+#endif
+    return old;
+}
 
 #endif /* AFS_LINUX_OSI_COMPAT_H */
