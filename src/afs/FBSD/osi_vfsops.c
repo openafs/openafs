@@ -185,7 +185,9 @@ afs_mount(struct mount *mp, struct thread *td)
 
 #ifdef AFS_FBSD60_ENV
 static int
-#ifdef AFS_FBSD80_ENV
+#if (__FreeBSD_version >= 900503 && __FreeBSD_version < 1000000) || __FreeBSD_version >= 1000004
+afs_cmount(struct mntarg *ma, void *data, uint64_t flags)
+#elif defined(AFS_FBSD80_ENV)
 afs_cmount(struct mntarg *ma, void *data, int flags)
 #else
 afs_cmount(struct mntarg *ma, void *data, int flags, struct thread *td)
