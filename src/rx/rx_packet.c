@@ -2725,6 +2725,7 @@ rxi_PrepareSendPacket(struct rx_call *call,
     afs_uint32 seq = call->tnext++;
     unsigned int i;
     afs_int32 len;		/* len must be a signed type; it can go negative */
+    int code;
 
     /* No data packets on call 0. Where do these come from? */
     if (*call->callNumber == 0)
@@ -2776,7 +2777,15 @@ rxi_PrepareSendPacket(struct rx_call *call,
     if (len)
         p->wirevec[i - 1].iov_len += len;
     MUTEX_ENTER(&call->lock);
-    RXS_PreparePacket(conn->securityObject, call, p);
+    code = RXS_PreparePacket(conn->securityObject, call, p);
+    if (code) {
+	MUTEX_EXIT(&call->lock);
+	rxi_ConnectionError(conn, code);
+	MUTEX_ENTER(&conn->conn_data_lock);
+	p = rxi_SendConnectionAbort(conn, p, 0, 0);
+	MUTEX_EXIT(&conn->conn_data_lock);
+	MUTEX_ENTER(&call->lock);
+    }
 }
 
 /* Given an interface MTU size, calculate an adjusted MTU size that
