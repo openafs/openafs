@@ -28,3 +28,7 @@ ubik_VL_UpdateEntry
 ubik_VL_UpdateEntryByName
 xdr_bulkaddrs
 xdr_bulkentries
+VL_ProbeServer
+EndVL_ProbeServer
+StartVL_ProbeServer
+ubik_VL_ProbeServer
