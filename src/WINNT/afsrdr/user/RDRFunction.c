@@ -3292,8 +3292,7 @@ HexCheckSum(unsigned char * buf, int buflen, unsigned char * md5cksum)
 
 /* do the background fetch. */
 afs_int32
-RDR_BkgFetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4,
-             cm_user_t *userp, cm_req_t *reqp)
+RDR_BkgFetch(cm_scache_t *scp, void *rockp, cm_user_t *userp, cm_req_t *reqp)
 {
     osi_hyper_t length;
     osi_hyper_t base;
@@ -3321,15 +3320,12 @@ RDR_BkgFetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_
     fetched.LowPart = 0;
     fetched.HighPart = 0;
     tblocksize = ConvertLongToLargeInteger(cm_data.buf_blockSize);
-    base.LowPart = p1;
-    base.HighPart = p2;
-    length.LowPart = p3;
-    length.HighPart = p4;
-
+    base = ((rock_BkgFetch_t *)rockp)->base;
+    length = ((rock_BkgFetch_t *)rockp)->length;
     end = LargeIntegerAdd(base, length);
 
     osi_Log5(afsd_logp, "Starting BKG Fetch scp 0x%p offset 0x%x:%x length 0x%x:%x",
-             scp, p2, p1, p4, p3);
+             scp, base.HighPart, base.LowPart, length.HighPart, length.LowPart);
 
     /*
      * Make sure we have a callback.
@@ -3741,12 +3737,21 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
                 buf_Release(bufp);
 
             if (QueueLength) {
-                req.flags &= ~CM_REQ_NORETRY;
-                cm_QueueBKGRequest(scp, RDR_BkgFetch, QueueOffset.LowPart, QueueOffset.HighPart,
-                                   QueueLength, 0, userp, &req);
-                osi_Log3(afsd_logp, "RDR_RequestFileExtentsAsync Queued a Background Fetch offset 0x%x:%x length 0x%x",
-                         QueueOffset.HighPart, QueueOffset.LowPart, QueueLength);
-                req.flags |= CM_REQ_NORETRY;
+                rock_BkgFetch_t * rockp = malloc(sizeof(*rockp));
+
+                if (rockp) {
+                    req.flags &= ~CM_REQ_NORETRY;
+                    rockp->base = QueueOffset;
+                    rockp->length.LowPart = QueueLength;
+                    rockp->length.HighPart = 0;
+
+                    cm_QueueBKGRequest(scp, RDR_BkgFetch, rockp, userp, &req);
+                    osi_Log3(afsd_logp, "RDR_RequestFileExtentsAsync Queued a Background Fetch offset 0x%x:%x length 0x%x",
+                              QueueOffset.HighPart, QueueOffset.LowPart, QueueLength);
+                    req.flags |= CM_REQ_NORETRY;
+                } else {
+                    code = ENOMEM;
+                }
             }
         } else {
             /* No error from buf_Get() can be fatal */
@@ -3757,12 +3762,20 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
 
     if (BeginOffset.QuadPart != EndOffset.QuadPart) {
         afs_uint32 length = (afs_uint32)(EndOffset.QuadPart - BeginOffset.QuadPart);
+        rock_BkgFetch_t * rockp = malloc(sizeof(*rockp));
 
-        req.flags &= ~CM_REQ_NORETRY;
-        cm_QueueBKGRequest(scp, RDR_BkgFetch, BeginOffset.LowPart, BeginOffset.HighPart,
-                           length, 0, userp, &req);
-        osi_Log3(afsd_logp, "RDR_RequestFileExtentsAsync Queued a Background Fetch offset 0x%x:%x length 0x%x",
-                  BeginOffset.HighPart, BeginOffset.LowPart, length);
+        if (rockp) {
+            req.flags &= ~CM_REQ_NORETRY;
+            rockp->base = QueueOffset;
+            rockp->length.LowPart = QueueLength;
+            rockp->length.HighPart = 0;
+
+            cm_QueueBKGRequest(scp, RDR_BkgFetch, rockp, userp, &req);
+            osi_Log3(afsd_logp, "RDR_RequestFileExtentsAsync Queued a Background Fetch offset 0x%x:%x length 0x%x",
+                     BeginOffset.HighPart, BeginOffset.LowPart, length);
+        } else {
+            code = ENOMEM;
+        }
     }
     cm_ReleaseSCache(scp);
 
@@ -3797,6 +3810,7 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
     int         released = 0;
     int         deleted = 0;
     DWORD       status;
+    rock_BkgStore_t *rockp;
 #ifdef ODS_DEBUG
 #ifdef VALIDATE_CHECK_SUM
     char md5dbg[33], md5dbg2[33], md5dbg3[33];
@@ -4250,15 +4264,32 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
                     {
                         length += cm_data.buf_blockSize;
                     } else {
-                        if (!(offset.QuadPart == 0 && length == 0))
-                            cm_QueueBKGRequest(scp, cm_BkgStore, offset.LowPart, offset.HighPart,
-                                                length, 0, userp, &req);
+                        if (!(offset.QuadPart == 0 && length == 0)) {
+                            rockp = malloc(sizeof(*rockp));
+                            if (rockp) {
+                                rockp->length = length;
+                                rockp->offset = offset;
+
+                                cm_QueueBKGRequest(scp, cm_BkgStore, rockp, userp, &req);
+
+                                /* rock is freed by cm_BkgStore */
+                            }
+                        }
                         offset.QuadPart = ReleaseExtentsCB->FileExtents[count].FileOffset.QuadPart;
                         length = cm_data.buf_blockSize;
                     }
                 }
-                cm_QueueBKGRequest(scp, cm_BkgStore, offset.LowPart, offset.HighPart,
-                                   length, 0, userp, &req);
+
+                /* Store whatever is left */
+                rockp = malloc(sizeof(*rockp));
+                if (rockp) {
+                    rockp->length = length;
+                    rockp->offset = offset;
+
+                    cm_QueueBKGRequest(scp, cm_BkgStore, rockp, userp, &req);
+
+                    /* rock is freed by cm_BkgStore */
+                }
             }
         }
         cm_ReleaseSCache(scp);
@@ -4291,6 +4322,7 @@ RDR_ProcessReleaseFileExtentsResult( IN AFSReleaseFileExtentsResultCB *ReleaseFi
     cm_buf_t    *bufp;
     unsigned int fileno, extentno, total_extents = 0;
     AFSReleaseFileExtentsResultFileCB *pNextFileCB;
+    rock_BkgStore_t *rockp;
 #ifdef ODS_DEBUG
 #ifdef VALIDATE_CHECK_SUM
     char md5dbg[33], md5dbg2[33], md5dbg3[33];
@@ -4697,15 +4729,32 @@ RDR_ProcessReleaseFileExtentsResult( IN AFSReleaseFileExtentsResultCB *ReleaseFi
                      length < cm_chunkSize) {
                     length += cm_data.buf_blockSize;
                 } else {
-                    if (!(offset.QuadPart == 0 && length == 0))
-                        cm_QueueBKGRequest(scp, cm_BkgStore, offset.LowPart, offset.HighPart,
-                                            length, 0, userp, &req);
+                    if (!(offset.QuadPart == 0 && length == 0)) {
+                        rockp = malloc(sizeof(*rockp));
+                        if (rockp) {
+                            rockp->offset = offset;
+                            rockp->length = length;
+
+                            cm_QueueBKGRequest(scp, cm_BkgStore, rockp, userp, &req);
+                        } else {
+                            code = ENOMEM;
+                        }
+                    }
                     offset.QuadPart = pExtent->FileOffset.QuadPart;
                     length = cm_data.buf_blockSize;
                 }
             }
-            cm_QueueBKGRequest(scp, cm_BkgStore, offset.LowPart, offset.HighPart,
-                                length, 0, userp, &req);
+
+            /* Background store the rest */
+            rockp = malloc(sizeof(*rockp));
+            if (rockp) {
+                rockp->offset = offset;
+                rockp->length = length;
+
+                cm_QueueBKGRequest(scp, cm_BkgStore, rockp, userp, &req);
+            } else {
+                code = ENOMEM;
+            }
         }
 
         osi_Log5(afsd_logp, "RDR_ProcessReleaseFileExtentsResult File FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x Released %d",

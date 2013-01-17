@@ -117,13 +117,10 @@ afs_int32 cm_RequestWillBlock(cm_bkgRequest_t *rp)
          * exist, check to see if an I/O operation is in progress
          * by using the writing and reading flags as an indicator.
          */
-        osi_hyper_t base;
         cm_buf_t *bufp = NULL;
+        rock_BkgFetch_t *rockp = (rock_BkgFetch_t *)rp->rockp;
 
-        base.LowPart = rp->p1;
-        base.HighPart = rp->p2;
-
-        bufp = buf_Find(&rp->scp->fid, &base);
+        bufp = buf_Find(&rp->scp->fid, &rockp->base);
         if (bufp) {
             willBlock = (bufp->flags & (CM_BUF_WRITING|CM_BUF_READING));
             buf_Release(bufp);
@@ -214,7 +211,7 @@ void * cm_BkgDaemon(void * vparm)
 #ifdef DEBUG_REFCOUNT
             osi_Log3(afsd_logp,"cm_BkgDaemon[%u] (before) scp 0x%x ref %d", daemonID, rp->scp, rp->scp->refCount);
 #endif
-            code = (*rp->procp)(rp->scp, rp->p1, rp->p2, rp->p3, rp->p4, rp->userp, &rp->req);
+            code = (*rp->procp)(rp->scp, rp->rockp, rp->userp, &rp->req);
 #ifdef DEBUG_REFCOUNT
             osi_Log3(afsd_logp,"cm_BkgDaemon[%u] (after) scp 0x%x ref %d", daemonID, rp->scp, rp->scp->refCount);
 #endif
@@ -254,6 +251,7 @@ void * cm_BkgDaemon(void * vparm)
             }
             cm_ReleaseUser(rp->userp);
             cm_ReleaseSCache(rp->scp);
+            free(rp->rockp);
             free(rp);
             lock_ObtainWrite(&cm_daemonLockp[daemonID]);
         }
@@ -264,8 +262,8 @@ void * cm_BkgDaemon(void * vparm)
     return NULL;
 }
 
-void cm_QueueBKGRequest(cm_scache_t *scp, cm_bkgProc_t *procp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4,
-	cm_user_t *userp, cm_req_t *reqp)
+void cm_QueueBKGRequest(cm_scache_t *scp, cm_bkgProc_t *procp, void *rockp,
+                        cm_user_t *userp, cm_req_t *reqp)
 {
     cm_bkgRequest_t *rp, *rpq;
     afs_uint32 daemonID;
@@ -279,10 +277,7 @@ void cm_QueueBKGRequest(cm_scache_t *scp, cm_bkgProc_t *procp, afs_uint32 p1, af
     cm_HoldUser(userp);
     rp->userp = userp;
     rp->procp = procp;
-    rp->p1 = p1;
-    rp->p2 = p2;
-    rp->p3 = p3;
-    rp->p4 = p4;
+    rp->rockp = rockp;
     rp->req = *reqp;
 
     /* Use separate queues for fetch and store operations */
@@ -294,17 +289,27 @@ void cm_QueueBKGRequest(cm_scache_t *scp, cm_bkgProc_t *procp, afs_uint32 p1, af
     /* Check to see if this is a duplicate request */
     for (rpq = cm_bkgListpp[daemonID]; rpq; rpq = (cm_bkgRequest_t *) osi_QNext(&rpq->q))
     {
-        if ( rpq->p1 == p1 &&
-             rpq->p3 == p3 &&
-             rpq->procp == procp &&
-             rpq->p2 == p2 &&
-             rpq->p4 == p4 &&
+        if ( rpq->procp == procp &&
              rpq->scp == scp &&
              rpq->userp == userp)
         {
-            /* found a duplicate; update request with latest info */
-            duplicate = 1;
-            break;
+            if (rp->procp == cm_BkgStore) {
+                rock_BkgStore_t *rock1p = (rock_BkgStore_t *)rp->rockp;
+                rock_BkgStore_t *rock2p = (rock_BkgStore_t *)rpq->rockp;
+
+                duplicate = (memcmp(rock1p, rock2p, sizeof(*rock1p)) == 0);
+            }
+            else if (rp->procp == RDR_BkgFetch || rp->procp == cm_BkgPrefetch) {
+                rock_BkgFetch_t *rock1p = (rock_BkgFetch_t *)rp->rockp;
+                rock_BkgFetch_t *rock2p = (rock_BkgFetch_t *)rpq->rockp;
+
+                duplicate = (memcmp(rock1p, rock2p, sizeof(*rock1p)) == 0);
+            }
+
+            if (duplicate) {
+                /* found a duplicate; update request with latest info */
+                break;
+            }
         }
     }
 
@@ -317,6 +322,7 @@ void cm_QueueBKGRequest(cm_scache_t *scp, cm_bkgProc_t *procp, afs_uint32 p1, af
     if (duplicate) {
         cm_ReleaseSCache(scp);
         cm_ReleaseUser(userp);
+        free(rp->rockp);
         free(rp);
     } else {
         osi_Wakeup((LONG_PTR) &cm_bkgListpp[daemonID]);

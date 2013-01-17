@@ -7546,18 +7546,27 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char
         if (smb_AsyncStore > 0) {
             if (doWriteBack) {
                 long code2;
+                rock_BkgStore_t *rockp = malloc(sizeof(*rockp));
 
-                lock_ObtainWrite(&scp->rw);
-                osi_Log1(smb_logp, "smb_WriteData fid %d calling cm_SyncOp ASYNCSTORE",
-                          fidp->fid);
-                code2 = cm_SyncOp(scp, NULL, userp, &req, 0, CM_SCACHESYNC_ASYNCSTORE);
-                osi_Log2(smb_logp, "smb_WriteData fid %d calling cm_SyncOp ASYNCSTORE returns 0x%x",
-                          fidp->fid, code2);
-                lock_ReleaseWrite(&scp->rw);
-                cm_QueueBKGRequest(scp, cm_BkgStore, writeBackOffset.LowPart,
-                                    writeBackOffset.HighPart,
-                                    smb_AsyncStoreSize, 0, userp, &req);
-                /* cm_SyncOpDone is called at the completion of cm_BkgStore */
+                if (rockp) {
+                    lock_ObtainWrite(&scp->rw);
+                    osi_Log1(smb_logp, "smb_WriteData fid %d calling cm_SyncOp ASYNCSTORE",
+                             fidp->fid);
+                    code2 = cm_SyncOp(scp, NULL, userp, &req, 0, CM_SCACHESYNC_ASYNCSTORE);
+                    osi_Log2(smb_logp, "smb_WriteData fid %d calling cm_SyncOp ASYNCSTORE returns 0x%x",
+                             fidp->fid, code2);
+                    lock_ReleaseWrite(&scp->rw);
+                    if (code2 == 0) {
+                        rockp->length = smb_AsyncStoreSize;
+                        rockp->offset = writeBackOffset;
+
+                        cm_QueueBKGRequest(scp, cm_BkgStore, rockp, userp, &req);
+                        /* cm_SyncOpDone is called at the completion of cm_BkgStore */
+                        /* rock is freed by cm_BkgDaemon */
+                    } else {
+                        free(rockp);
+                    }
+                }
             }
         } else {
             cm_BufWrite(scp, offsetp, *writtenp, 0, userp, &req);

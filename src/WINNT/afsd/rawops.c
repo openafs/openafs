@@ -311,10 +311,21 @@ raw_WriteData( cm_scache_t *scp, osi_hyper_t *offsetp, afs_uint32 length, char *
     }
 
     if (code == 0 && doWriteBack) {
-        code = cm_SyncOp(scp, NULL, userp, reqp, 0, CM_SCACHESYNC_ASYNCSTORE);
-        if (code == 0)
-            cm_QueueBKGRequest(scp, cm_BkgStore, writeBackOffset.LowPart,
-                               writeBackOffset.HighPart, writeBackLength, 0, userp, reqp);
+        rock_BkgStore_t *rockp = malloc(sizeof(*rockp));
+
+        if (rockp) {
+            code = cm_SyncOp(scp, NULL, userp, reqp, 0, CM_SCACHESYNC_ASYNCSTORE);
+            if (code == 0) {
+                rockp->length = writeBackLength;
+                rockp->offset = writeBackOffset;
+
+                cm_QueueBKGRequest(scp, cm_BkgStore, rockp, userp, reqp);
+
+                /* rock is freed by cm_BkgDaemon */
+            } else {
+                free(rockp);
+            }
+        }
     }
 
     /* cm_SyncOpDone is called when cm_BkgStore completes */

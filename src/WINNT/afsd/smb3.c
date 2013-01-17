@@ -8401,11 +8401,19 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     }
     lock_ReleaseRead(&scp->rw);
 
-    if (prefetch)
-        cm_QueueBKGRequest(scp, cm_BkgPrefetch, 0, 0,
-                           scp->length.LowPart, scp->length.HighPart,
-                           userp, &req);
+    if (prefetch) {
+        rock_BkgFetch_t *rockp = malloc(sizeof(*rockp));
 
+        if (rockp) {
+            rockp->base.LowPart = 0;
+            rockp->base.HighPart = 0;
+            rockp->length = scp->length;
+
+            cm_QueueBKGRequest(scp, cm_BkgPrefetch, rockp, userp, &req);
+
+            /* rock is freed by cm_BkgDaemon */
+        }
+    }
 
     osi_Log2(smb_logp, "SMB NT CreateX opening fid %d path %S", fidp->fid,
               osi_LogSaveClientString(smb_logp, realPathp));
@@ -9169,10 +9177,19 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     }
     lock_ReleaseRead(&scp->rw);
 
-    if (prefetch)
-        cm_QueueBKGRequest(scp, cm_BkgPrefetch, 0, 0,
-                           scp->length.LowPart, scp->length.HighPart,
-                           userp, &req);
+    if (prefetch) {
+        rock_BkgFetch_t *rockp = malloc(sizeof(*rockp));
+
+        if (rockp) {
+            rockp->base.LowPart = 0;
+            rockp->base.HighPart = 0;
+            rockp->length = scp->length;
+
+            cm_QueueBKGRequest(scp, cm_BkgPrefetch, rockp, userp, &req);
+
+            /* rock is freed by cm_BkgDaemon */
+        }
+    }
 
     osi_Log1(smb_logp, "SMB NTTranCreate opening fid %d", fidp->fid);
 

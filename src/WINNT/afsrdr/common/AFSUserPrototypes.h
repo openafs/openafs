@@ -60,8 +60,7 @@ extern DWORD
 RDR_SysName(ULONG Architecture, ULONG Count, WCHAR **NameList);
 
 extern afs_int32
-RDR_BkgFetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4,
-             cm_user_t *userp, cm_req_t *reqp);
+RDR_BkgFetch(cm_scache_t *scp, void *rockp, cm_user_t *userp, cm_req_t *reqp);
 
 extern VOID RDR_Suspend( void);
 
