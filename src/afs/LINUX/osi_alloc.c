@@ -262,7 +262,8 @@ get_hash_stats(void)
     afs_lhash_stat(lh_mem_htab, &afs_linux_lsb);
 
     /* clear out the bucket stat vector */
-    for (i = 0; i < MAX_BUCKET_LEN; i++, afs_linux_hash_bucket_dist[i] = 0);
+    for (i = 0; i < MAX_BUCKET_LEN; i++)
+	afs_linux_hash_bucket_dist[i] = 0;
     cur_bucket = cur_bucket_len = 00;
 
     /* populate the bucket stat vector */
