@@ -1152,7 +1152,7 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
                                                pDeviceExt->Specific.RDR.MaximumRPCLength);
 
                     CcSetDirtyPageThreshold( pFileObject,
-                                             AFS_DIRTY_CHUNK_THRESHOLD * pDeviceExt->Specific.RDR.MaximumRPCLength);
+                                             AFS_DIRTY_CHUNK_THRESHOLD * pDeviceExt->Specific.RDR.MaximumRPCLength / 4096);
                 }
                 __except( EXCEPTION_EXECUTE_HANDLER)
                 {
