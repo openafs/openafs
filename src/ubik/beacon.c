@@ -101,7 +101,8 @@ ubeacon_Debug(struct ubik_debug *aparm)
 }
 
 static int
-amSyncSite(void) {
+amSyncSite(void)
+{
     afs_int32 now;
     afs_int32 rcode;
 
