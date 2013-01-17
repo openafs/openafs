@@ -78,7 +78,6 @@ afs_int32 ubik_quorum = 0;
 struct ubik_dbase *ubik_dbase = 0;
 struct ubik_stats ubik_stats;
 afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR];
-afs_int32 ubik_epochTime = 0;
 afs_int32 urecovery_state = 0;
 int (*ubik_SyncWriterCacheProc) (void);
 struct ubik_server *ubik_servers;
@@ -661,7 +660,7 @@ BeginTrans(struct ubik_dbase *dbase, afs_int32 transMode,
 	}
     }
     /* label trans and dbase with new tid */
-    tt->tid.epoch = ubik_epochTime;
+    tt->tid.epoch = version_globals.ubik_epochTime;
     /* bump by two, since tidCounter+1 means trans id'd by tidCounter has finished */
     tt->tid.counter = (dbase->tidCounter += 2);
 
