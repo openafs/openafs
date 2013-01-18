@@ -19,9 +19,6 @@
 #include "cm_diskcache.h"
 #endif /* DISKCACHE95 */
 
-/* default # of buffers if not changed */
-#define CM_BUF_BUFFERS	100
-
 /* default buffer size */
 #define CM_BUF_BLOCKSIZE CM_CONFIGDEFAULT_BLOCKSIZE
 
