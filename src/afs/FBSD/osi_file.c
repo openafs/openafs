@@ -158,7 +158,11 @@ int
 afs_osi_Read(struct osi_file *afile, int offset, void *aptr,
 	     afs_int32 asize)
 {
+#if (__FreeBSD_version >= 900505 && __FreeBSD_Version < 1000000) ||__FreeBSD_version >= 1000009
+    ssize_t resid;
+#else
     int resid;
+#endif
     afs_int32 code;
     AFS_STATCNT(osi_Read);
 
@@ -185,7 +189,7 @@ afs_osi_Read(struct osi_file *afile, int offset, void *aptr,
 	afile->offset += code;
 	osi_DisableAtimes(afile->vnode);
     } else {
-	afs_Trace2(afs_iclSetp, CM_TRACE_READFAILED, ICL_TYPE_INT32, resid,
+	afs_Trace2(afs_iclSetp, CM_TRACE_READFAILED, ICL_TYPE_INT32, (int)resid,
 		   ICL_TYPE_INT32, code);
 	if (code > 0) {
 	    code = -code;
@@ -199,7 +203,11 @@ int
 afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
 	      afs_int32 asize)
 {
-    unsigned int resid;
+#if (__FreeBSD_version >= 900505 && __FreeBSD_Version < 1000000) ||__FreeBSD_version >= 1000009
+    ssize_t resid;
+#else
+    int resid;
+#endif
     afs_int32 code;
     AFS_STATCNT(osi_Write);
     if (!afile)
