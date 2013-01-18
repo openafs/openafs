@@ -51,8 +51,6 @@ liboafs_rx.la: liboafs_rx.la.sym $(LT_objs) $(LT_deps)
 libafsrpc_rx.la: $(LT_objs)
 	$(LT_LDLIB_pic) $(LT_objs)
 
-CFLAGS_rx.lo = @CFLAGS_NOERROR@
-
 #
 # Install targets
 #
