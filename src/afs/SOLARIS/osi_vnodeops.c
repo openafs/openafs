@@ -1558,7 +1558,7 @@ gafs_rename(struct vcache *aodp, char *aname1,
 	if (avcp) {
 	    struct vnode *vp = AFSTOV(avcp), *pvp = AFSTOV(andp);
 
-# ifdef AFS_SUN511_ENV
+# ifdef HAVE_VN_RENAMEPATH
 	    vn_renamepath(pvp, vp, aname2, strlen(aname2));
 # else
 	    mutex_enter(&vp->v_lock);
@@ -1568,7 +1568,7 @@ gafs_rename(struct vcache *aodp, char *aname1,
 	    }
 	    mutex_exit(&vp->v_lock);
 	    vn_setpath(afs_globalVp, pvp, vp, aname2, strlen(aname2));
-# endif /* !AFS_SUN511_ENV */
+# endif /* !HAVE_VN_RENAMEPATH */
 
 	    AFS_RELE(avcp);
 	}
