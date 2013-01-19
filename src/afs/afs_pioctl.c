@@ -5328,7 +5328,15 @@ DECL_PIOCTL(PSetTokens2)
     }
 
     if (tokenSet.flags & AFSTOKEN_EX_SETPAG) {
+#if defined(AFS_LINUX26_ENV)
+	afs_ucred_t *old_cred = *acred;
+#endif
 	if (_settok_setParentPag(acred) == 0) {
+#if defined(AFS_LINUX26_ENV)
+	    /* setpag() may have changed our credentials */
+	    *acred = crref();
+	    crfree(old_cred);
+#endif
 	    afs_InitReq(&treq, *acred);
 	    areq = &treq;
 	}
