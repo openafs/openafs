@@ -37,8 +37,10 @@ typedef struct cm_bkgRequest {
     cm_req_t req;
 } cm_bkgRequest_t;
 
-extern void cm_QueueBKGRequest(cm_scache_t *scp, cm_bkgProc_t *procp, void *rockp, cm_user_t *userp, cm_req_t *reqp);
+extern int cm_QueueBKGRequest(cm_scache_t *scp, cm_bkgProc_t *procp, void *rockp, cm_user_t *userp, cm_req_t *reqp);
 
+/* Daemon count must be divisible by two */
+#define CM_MIN_DAEMONS  2
 #define CM_MAX_DAEMONS 64
 
 #endif /*  OPENAFS_WINNT_AFSD_CM_DAEMON_H */

@@ -44,14 +44,21 @@ long cm_daemonRDRShakeExtentsInterval = 0;
 long cm_daemonAfsdHookReloadInterval = 0;
 long cm_daemonEAccesCheckInterval = 1800;
 
-osi_rwlock_t *cm_daemonLockp;
-afs_uint64 *cm_bkgQueueCountp;		/* # of queued requests */
-cm_bkgRequest_t **cm_bkgListpp;		/* first elt in the list of requests */
-cm_bkgRequest_t **cm_bkgListEndpp;	/* last elt in the list of requests */
+typedef struct daemon_state {
+    osi_rwlock_t lock;
+    afs_uint32   queueCount;
+    cm_bkgRequest_t *head;
+    cm_bkgRequest_t *tail;
+    afs_uint64   completeCount;
+    afs_uint64   retryCount;
+    afs_uint64   errorCount;
+} daemon_state_t;
+
+daemon_state_t *cm_daemons = NULL;
+int cm_nDaemons = 0;
 
 extern int powerStateSuspended;
 int daemon_ShutdownFlag = 0;
-int cm_nDaemons = 0;
 static time_t lastIPAddrChange = 0;
 
 static EVENT_HANDLE cm_Daemon_ShutdownEvent = NULL;
@@ -145,7 +152,7 @@ void * cm_BkgDaemon(void * vparm)
 
     rx_StartClientThread();
 
-    lock_ObtainWrite(&cm_daemonLockp[daemonID]);
+    lock_ObtainWrite(&cm_daemons[daemonID].lock);
     while (daemon_ShutdownFlag == 0) {
         int willBlock = 0;
 
@@ -153,14 +160,14 @@ void * cm_BkgDaemon(void * vparm)
             Sleep(1000);
             continue;
         }
-        if (!cm_bkgListEndpp[daemonID]) {
-            osi_SleepW((LONG_PTR)&cm_bkgListpp[daemonID], &cm_daemonLockp[daemonID]);
-            lock_ObtainWrite(&cm_daemonLockp[daemonID]);
+        if (!cm_daemons[daemonID].tail) {
+            osi_SleepW((LONG_PTR)&cm_daemons[daemonID].head, &cm_daemons[daemonID].lock);
+            lock_ObtainWrite(&cm_daemons[daemonID].lock);
             continue;
         }
 
         /* we found a request */
-        for (rp = cm_bkgListEndpp[daemonID]; rp; rp = (cm_bkgRequest_t *) osi_QPrev(&rp->q))
+        for (rp = cm_daemons[daemonID].tail; rp; rp = (cm_bkgRequest_t *) osi_QPrev(&rp->q))
 	{
             if (rp->scp->flags & CM_SCACHEFLAG_DELETED)
 		break;
@@ -192,15 +199,15 @@ void * cm_BkgDaemon(void * vparm)
             osi_Log2(afsd_logp,"cm_BkgDaemon[%u] sleeping %dms all tasks would block",
                      daemonID, willBlock ? 100 : 1000);
 
-	    lock_ReleaseWrite(&cm_daemonLockp[daemonID]);
+	    lock_ReleaseWrite(&cm_daemons[daemonID].lock);
 	    Sleep(willBlock ? 100 : 1000);
-	    lock_ObtainWrite(&cm_daemonLockp[daemonID]);
+	    lock_ObtainWrite(&cm_daemons[daemonID].lock);
 	    continue;
 	}
 
-        osi_QRemoveHT((osi_queue_t **) &cm_bkgListpp[daemonID], (osi_queue_t **) &cm_bkgListEndpp[daemonID], &rp->q);
-        osi_assertx(cm_bkgQueueCountp[daemonID]-- > 0, "cm_bkgQueueCount 0");
-        lock_ReleaseWrite(&cm_daemonLockp[daemonID]);
+        osi_QRemoveHT((osi_queue_t **) &cm_daemons[daemonID].head, (osi_queue_t **) &cm_daemons[daemonID].tail, &rp->q);
+        osi_assertx(cm_daemons[daemonID].queueCount-- > 0, "cm_bkgQueueCount 0");
+        lock_ReleaseWrite(&cm_daemons[daemonID].lock);
 
 	osi_Log2(afsd_logp,"cm_BkgDaemon[%u] processing request 0x%p", daemonID, rp);
 
@@ -236,33 +243,36 @@ void * cm_BkgDaemon(void * vparm)
                 osi_Log3(afsd_logp,
                          "cm_BkgDaemon[%u] re-queueing failed request 0x%p code 0x%x",
                          daemonID, rp, code);
-                lock_ObtainWrite(&cm_daemonLockp[daemonID]);
-                cm_bkgQueueCountp[daemonID]++;
-                osi_QAddT((osi_queue_t **) &cm_bkgListpp[daemonID], (osi_queue_t **)&cm_bkgListEndpp[daemonID], &rp->q);
+                lock_ObtainWrite(&cm_daemons[daemonID].lock);
+                cm_daemons[daemonID].queueCount++;
+                cm_daemons[daemonID].retryCount++;
+                osi_QAddT((osi_queue_t **) &cm_daemons[daemonID].head, (osi_queue_t **)&cm_daemons[daemonID].tail, &rp->q);
                 break;
             } /* otherwise fall through */
         case 0:  /* success */
         default: /* other error */
             if (code == 0) {
                 osi_Log2(afsd_logp,"cm_BkgDaemon[%u] SUCCESS: request 0x%p", daemonID, rp);
+                cm_daemons[daemonID].completeCount++;
             } else {
                 osi_Log3(afsd_logp,"cm_BkgDaemon[%u] FAILED: request dropped 0x%p code 0x%x",
                          daemonID, rp, code);
+                cm_daemons[daemonID].errorCount++;
             }
             cm_ReleaseUser(rp->userp);
             cm_ReleaseSCache(rp->scp);
             free(rp->rockp);
             free(rp);
-            lock_ObtainWrite(&cm_daemonLockp[daemonID]);
+            lock_ObtainWrite(&cm_daemons[daemonID].lock);
         }
     }
-    lock_ReleaseWrite(&cm_daemonLockp[daemonID]);
+    lock_ReleaseWrite(&cm_daemons[daemonID].lock);
     thrd_SetEvent(cm_BkgDaemon_ShutdownEvent[daemonID]);
     pthread_exit(NULL);
     return NULL;
 }
 
-void cm_QueueBKGRequest(cm_scache_t *scp, cm_bkgProc_t *procp, void *rockp,
+int cm_QueueBKGRequest(cm_scache_t *scp, cm_bkgProc_t *procp, void *rockp,
                         cm_user_t *userp, cm_req_t *reqp)
 {
     cm_bkgRequest_t *rp, *rpq;
@@ -285,47 +295,51 @@ void cm_QueueBKGRequest(cm_scache_t *scp, cm_bkgProc_t *procp, void *rockp,
     if (procp == cm_BkgStore)
         daemonID++;
 
-    lock_ObtainWrite(&cm_daemonLockp[daemonID]);
     /* Check to see if this is a duplicate request */
-    for (rpq = cm_bkgListpp[daemonID]; rpq; rpq = (cm_bkgRequest_t *) osi_QNext(&rpq->q))
-    {
-        if ( rpq->procp == procp &&
-             rpq->scp == scp &&
-             rpq->userp == userp)
+    lock_ObtainWrite(&cm_daemons[daemonID].lock);
+    if ( procp == cm_BkgStore || procp == RDR_BkgFetch || procp == cm_BkgPrefetch ) {
+        for (rpq = cm_daemons[daemonID].head; rpq; rpq = (cm_bkgRequest_t *) osi_QNext(&rpq->q))
         {
-            if (rp->procp == cm_BkgStore) {
-                rock_BkgStore_t *rock1p = (rock_BkgStore_t *)rp->rockp;
-                rock_BkgStore_t *rock2p = (rock_BkgStore_t *)rpq->rockp;
+            if ( rpq->procp == procp &&
+                 rpq->scp == scp &&
+                 rpq->userp == userp)
+            {
+                if (rp->procp == cm_BkgStore) {
+                    rock_BkgStore_t *rock1p = (rock_BkgStore_t *)rp->rockp;
+                    rock_BkgStore_t *rock2p = (rock_BkgStore_t *)rpq->rockp;
 
-                duplicate = (memcmp(rock1p, rock2p, sizeof(*rock1p)) == 0);
-            }
-            else if (rp->procp == RDR_BkgFetch || rp->procp == cm_BkgPrefetch) {
-                rock_BkgFetch_t *rock1p = (rock_BkgFetch_t *)rp->rockp;
-                rock_BkgFetch_t *rock2p = (rock_BkgFetch_t *)rpq->rockp;
+                    duplicate = (memcmp(rock1p, rock2p, sizeof(*rock1p)) == 0);
+                }
+                else if (rp->procp == RDR_BkgFetch || rp->procp == cm_BkgPrefetch) {
+                    rock_BkgFetch_t *rock1p = (rock_BkgFetch_t *)rp->rockp;
+                    rock_BkgFetch_t *rock2p = (rock_BkgFetch_t *)rpq->rockp;
 
-                duplicate = (memcmp(rock1p, rock2p, sizeof(*rock1p)) == 0);
-            }
+                    duplicate = (memcmp(rock1p, rock2p, sizeof(*rock1p)) == 0);
+                }
 
-            if (duplicate) {
-                /* found a duplicate; update request with latest info */
-                break;
+                if (duplicate) {
+                    /* found a duplicate; update request with latest info */
+                    break;
+                }
             }
         }
     }
 
     if (!duplicate) {
-        cm_bkgQueueCountp[daemonID]++;
-        osi_QAddH((osi_queue_t **) &cm_bkgListpp[daemonID], (osi_queue_t **)&cm_bkgListEndpp[daemonID], &rp->q);
+        cm_daemons[daemonID].queueCount++;
+        osi_QAddH((osi_queue_t **) &cm_daemons[daemonID].head, (osi_queue_t **)&cm_daemons[daemonID].tail, &rp->q);
     }
-    lock_ReleaseWrite(&cm_daemonLockp[daemonID]);
+    lock_ReleaseWrite(&cm_daemons[daemonID].lock);
 
     if (duplicate) {
         cm_ReleaseSCache(scp);
         cm_ReleaseUser(userp);
         free(rp->rockp);
         free(rp);
+        return -1;
     } else {
-        osi_Wakeup((LONG_PTR) &cm_bkgListpp[daemonID]);
+        osi_Wakeup((LONG_PTR) &cm_daemons[daemonID].head);
+        return 0;
     }
 }
 
@@ -852,7 +866,7 @@ void cm_DaemonShutdown(void)
 
     /* wait for shutdown */
     for ( i=0; i<cm_nDaemons; i++) {
-        osi_Wakeup((LONG_PTR) &cm_bkgListpp[i]);
+        osi_Wakeup((LONG_PTR) &cm_daemons[i].head);
         if (cm_BkgDaemon_ShutdownEvent[i])
             code = thrd_WaitForSingleObject_Event(cm_BkgDaemon_ShutdownEvent[i], INFINITE);
     }
@@ -886,7 +900,12 @@ void cm_InitDaemon(int nDaemons)
     pthread_attr_init(&tattr);
     pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED);
 
-    cm_nDaemons = (nDaemons > CM_MAX_DAEMONS) ? CM_MAX_DAEMONS : nDaemons;
+    if (nDaemons > CM_MAX_DAEMONS)
+        cm_nDaemons = CM_MAX_DAEMONS;
+    else if (nDaemons < CM_MIN_DAEMONS)
+        cm_nDaemons = CM_MIN_DAEMONS;
+    else
+        cm_nDaemons = (nDaemons / 2) * 2; /* must be divisible by two */
 
     if (osi_Once(&once)) {
 	/* creating IP Address Change monitor daemon */
@@ -900,16 +919,16 @@ void cm_InitDaemon(int nDaemons)
         pstatus = pthread_create(&phandle, &tattr, cm_LockDaemon, 0);
         osi_assertx(pstatus == 0, "cm_LockDaemon thread creation failure");
 
-        cm_bkgListpp = malloc(nDaemons * sizeof(void *));
-        cm_bkgListEndpp = malloc(nDaemons * sizeof(void *));
-        cm_bkgQueueCountp = malloc(nDaemons * sizeof(afs_uint64));
-        cm_daemonLockp = malloc(nDaemons * sizeof(osi_rwlock_t));
+        cm_daemons = malloc(nDaemons * sizeof(daemon_state_t));
 
 	for(i=0; i < cm_nDaemons; i++) {
-            lock_InitializeRWLock(&cm_daemonLockp[i], "cm_daemonLock",
+            lock_InitializeRWLock(&cm_daemons[i].lock, "cm_daemonLock",
                                   LOCK_HIERARCHY_DAEMON_GLOBAL);
-            cm_bkgListpp[i] = cm_bkgListEndpp[i] = NULL;
-            cm_bkgQueueCountp[i]=0;
+            cm_daemons[i].head = cm_daemons[i].tail = NULL;
+            cm_daemons[i].queueCount=0;
+            cm_daemons[i].completeCount=0;
+            cm_daemons[i].retryCount=0;
+            cm_daemons[i].errorCount=0;
             pstatus = pthread_create(&phandle, &tattr, cm_BkgDaemon, (LPVOID)(LONG_PTR)i);
             osi_assertx(pstatus == 0, "cm_BkgDaemon thread creation failure");
         }
