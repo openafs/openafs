@@ -319,7 +319,9 @@ raw_WriteData( cm_scache_t *scp, osi_hyper_t *offsetp, afs_uint32 length, char *
                 rockp->length = writeBackLength;
                 rockp->offset = writeBackOffset;
 
+                lock_ReleaseWrite(&scp->rw);
                 cm_QueueBKGRequest(scp, cm_BkgStore, rockp, userp, reqp);
+                lock_ObtainWrite(&scp->rw);
 
                 /* rock is freed by cm_BkgDaemon */
             } else {
