@@ -186,7 +186,8 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 		     | CM_SCACHEFLAG_RO
 		     | CM_SCACHEFLAG_PURERO
 		     | CM_SCACHEFLAG_OVERQUOTA
-		     | CM_SCACHEFLAG_OUTOFSPACE));
+		     | CM_SCACHEFLAG_OUTOFSPACE
+                     | CM_SCACHEFLAG_ASYNCSTORING));
     scp->serverModTime = 0;
     scp->dataVersion = CM_SCACHE_VERSION_BAD;
     scp->bufDataVersionLow = CM_SCACHE_VERSION_BAD;
