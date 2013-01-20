@@ -30,28 +30,28 @@ typedef struct osi_sleepInfo {
     DWORD *tidp;                /* tid history */
     DWORD tid;		        /* thread ID of sleeper */
     EVENT_HANDLE sema;	        /* semaphore for this entry */
-    unsigned short states;	/* states bits */
-    unsigned short idx;	        /* sleep hash table we're in, if in hash */
-    unsigned short waitFor;	/* what are we waiting for; used for bulk wakeups */
+    long  states;	        /* states bits */
+    long  idx;	                /* sleep hash table we're in, if in hash */
+    unsigned long waitFor;	/* what are we waiting for; used for bulk wakeups */
     unsigned long refCount;     /* reference count from FDs */
 } osi_sleepInfo_t;
 
 /* first guy is the most recently added process */
 typedef struct osi_turnstile {
-	osi_sleepInfo_t *firstp;
-	osi_sleepInfo_t *lastp;
+    osi_sleepInfo_t *firstp;
+    osi_sleepInfo_t *lastp;
 } osi_turnstile_t;
 
 typedef struct osi_sleepFD{
-	osi_fd_t fd;		/* FD header */
-	osi_sleepInfo_t *sip;	/* ptr to the dude */
-	int idx;		/* hash index */
+    osi_fd_t fd;		/* FD header */
+    osi_sleepInfo_t *sip;	/* ptr to the dude */
+    int idx;		        /* hash index */
 } osi_sleepFD_t;
 
 /* struct for single-shot initialization support */
 typedef struct osi_once {
-	long atomic;	/* used for atomicity */
-	int done;	/* tells if initialization is done */
+    long atomic;	/* used for atomicity */
+    int done;	        /* tells if initialization is done */
 } osi_once_t;
 
 /* size of mutex hash table; should be a prime number; used for mutex and lock hashing */
@@ -60,7 +60,7 @@ typedef struct osi_once {
 #define osi_MUTEXHASH(x) ((unsigned short) (((LONG_PTR) x) % (intptr_t) OSI_MUTEXHASHSIZE))
 
 /* size of sleep value hash table.  Must be power of 2 */
-#define OSI_SLEEPHASHSIZE	128
+#define OSI_SLEEPHASHSIZE	256
 
 /* hash function */
 #define osi_SLEEPHASH(x)	(((x)>>2)&(OSI_SLEEPHASHSIZE-1))
