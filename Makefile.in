@@ -611,7 +611,7 @@ shlibafsrpc: rx rxstat fsint rxkad des
 		echo Not building shared libafsrpc for ${SYS_NAME} ;; \
 	esac
 
-shlibafsauthent: ubik auth kauth shlibafsrpc
+shlibafsauthent: bozo ubik auth kauth shlibafsrpc
 	+case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*_darwin_1*|*nbsd*|*obsd*|*fbsd*) \
 	${COMPILE_PART1} shlibafsauthent ${COMPILE_PART2} ;; \

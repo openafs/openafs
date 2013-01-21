@@ -42,7 +42,7 @@
 #if !defined(AFS_DARWIN_ENV) && !defined(AFS_USR_DARWIN_ENV) && !defined(AFS_XBSD_ENV) && !defined(AFS_USR_FBSD_ENV) && !defined(AFS_USR_DFBSD_ENV) && !defined(AFS_LINUX20_ENV)
 #include <sys/sysmacros.h>	/* MIN, MAX on Solaris */
 #endif
-#if !defined(AFS_LINUX26_ENV)
+#if !(defined(AFS_LINUX26_ENV) && defined(KERNEL))
 #include <sys/param.h>		/* MIN, MAX elsewhere */
 #endif
 #endif /* AFS_NT40_ENV */

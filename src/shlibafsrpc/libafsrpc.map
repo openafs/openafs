@@ -62,6 +62,7 @@
 	rxkad_stats_key;
 	afs_com_err;
 	afs_error_message;
+	afs_error_table_name;
 	rx_socket;
 	rxevent_debugFile;
 	rx_debugFile;
@@ -133,15 +134,19 @@
 	rx_SetMaxSendWindow;
 	rx_GetMinPeerTimeout;
 	rx_SetMinPeerTimeout;
+	afs_xdr_alloc;
 	afs_xdr_array;
 	afs_xdr_bytes;
 	afs_xdr_char;
+	afs_xdr_u_char;
 	afs_xdr_free;
 	afs_xdr_int;
 	afs_xdr_opaque;
+	afs_xdr_pointer;
 	afs_xdr_short;
 	afs_xdr_string;
 	afs_xdr_vector;
+	afs_xdr_pointer;
 	rx_InterruptCall;
 	rx_SetBusyChannelError;
 	rx_KeepAliveOn;
