@@ -230,11 +230,16 @@ extern struct lock afs_global_lock;
     } while (0)
 
 /* vnodes */
+#if defined(AFS_OBSD49_ENV)
+extern struct vops afs_vops;
+#define IsAfsVnode(v)      ((v)->v_op == &afs_vops)
+#else
 extern int (**afs_vnodeop_p) ();
+#define IsAfsVnode(v)      ((v)->v_op == afs_vnodeop_p)
+#endif
 #define vType(vc)               AFSTOV(vc)->v_type
 #define vSetVfsp(vc, vfsp)      AFSTOV(vc)->v_mount = (vfsp)
 #define vSetType(vc, type)      AFSTOV(vc)->v_type = (type)
-#define IsAfsVnode(v)      ((v)->v_op == afs_vnodeop_p)
 #define SetAfsVnode(v)     /* nothing; done in getnewvnode() */
 
 #define osi_procname(procname, size) strncpy(procname, curproc->p_comm, size)
