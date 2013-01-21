@@ -151,6 +151,46 @@ int afs_obsd_advlock(void *);
 	((int (*) __P((void *)))eopnotsupp)
 #define afs_obsd_reallocblks afs_obsd_opnotsupp
 
+#if defined(AFS_OBSD49_ENV)
+
+struct vops afs_vops = {
+	.vop_lookup	= afs_obsd_lookup,
+	.vop_create	= afs_obsd_create,
+	.vop_mknod	= afs_obsd_mknod,
+	.vop_open	= afs_obsd_open,
+	.vop_close	= afs_obsd_close,
+	.vop_access	= afs_obsd_access,
+	.vop_getattr	= afs_obsd_getattr,
+	.vop_setattr	= afs_obsd_setattr,
+	.vop_read	= afs_obsd_read,
+	.vop_write	= afs_obsd_write,
+	.vop_ioctl	= afs_obsd_ioctl,
+	.vop_poll	= afs_obsd_select,
+	.vop_fsync	= afs_obsd_fsync,
+	.vop_remove	= afs_obsd_remove,
+	.vop_link	= afs_obsd_link,
+	.vop_rename	= afs_obsd_rename,
+	.vop_mkdir	= afs_obsd_mkdir,
+	.vop_rmdir	= afs_obsd_rmdir,
+	.vop_symlink	= afs_obsd_symlink,
+	.vop_readdir	= afs_obsd_readdir,
+	.vop_readlink	= afs_obsd_readlink,
+	.vop_abortop	= vop_generic_abortop,
+	.vop_inactive	= afs_obsd_inactive,
+	.vop_reclaim	= afs_obsd_reclaim,
+	.vop_lock	= afs_obsd_lock,
+	.vop_unlock	= afs_obsd_unlock,
+	.vop_bmap	= afs_obsd_bmap,
+	.vop_strategy	= afs_obsd_strategy,
+	.vop_print	= afs_obsd_print,
+	.vop_islocked	= afs_obsd_islocked,
+	.vop_pathconf	= afs_obsd_pathconf,
+	.vop_advlock	= afs_obsd_advlock,
+	.vop_bwrite	= vop_generic_bwrite,
+};
+
+#else
+
 /* Global vfs data structures for AFS. */
 int (**afs_vnodeop_p) __P((void *));
 struct vnodeopv_entry_desc afs_vnodeop_entries[] = {
@@ -201,6 +241,8 @@ struct vnodeopv_entry_desc afs_vnodeop_entries[] = {
 };
 struct vnodeopv_desc afs_vnodeop_opv_desc =
     { &afs_vnodeop_p, afs_vnodeop_entries };
+
+#endif
 
 #define GETNAME()	\
     struct componentname *cnp = ap->a_cnp; \
@@ -676,7 +718,11 @@ afs_obsd_rename(void *v)
 	if ((fcnp->cn_flags & SAVESTART) == 0)
 	    panic("afs_rename: lost from startdir");
 	fcnp->cn_nameiop = DELETE;
+#if defined(AFS_OBSD49_ENV)
+	(void)vfs_relookup(fdvp, &fvp, fcnp);
+#else
 	(void)relookup(fdvp, &fvp, fcnp);
+#endif
 	return (VOP_REMOVE(fdvp, fvp, fcnp));
     }
 
