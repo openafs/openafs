@@ -478,19 +478,7 @@ rx_SetEpoch(afs_uint32 epoch)
 #ifndef AFS_NT40_ENV
 static
 #endif
-int rxinit_status = 1;
-#ifdef AFS_PTHREAD_ENV
-/*
- * This mutex protects the following global variables:
- * rxinit_status
- */
-
-#define LOCK_RX_INIT MUTEX_ENTER(&rx_init_mutex)
-#define UNLOCK_RX_INIT MUTEX_EXIT(&rx_init_mutex)
-#else
-#define LOCK_RX_INIT
-#define UNLOCK_RX_INIT
-#endif
+rx_atomic_t rxinit_status = RX_ATOMIC_INIT(1);
 
 int
 rx_InitHost(u_int host, u_int port)
@@ -501,17 +489,13 @@ rx_InitHost(u_int host, u_int port)
     struct timeval tv;
 #endif /* KERNEL */
     char *htable, *ptable;
-    int tmp_status;
 
     SPLVAR;
 
     INIT_PTHREAD_LOCKS;
-    LOCK_RX_INIT;
-    if (rxinit_status == 0) {
-	tmp_status = rxinit_status;
-	UNLOCK_RX_INIT;
-	return tmp_status;	/* Already started; return previous error code. */
-    }
+    if (!rx_atomic_test_and_clear_bit(&rxinit_status, 0))
+	return 0; /* already started */
+
 #ifdef RXDEBUG
     rxi_DebugInit();
 #endif
@@ -533,7 +517,6 @@ rx_InitHost(u_int host, u_int port)
 
     rx_socket = rxi_GetHostUDPSocket(host, (u_short) port);
     if (rx_socket == OSI_NULLSOCKET) {
-	UNLOCK_RX_INIT;
 	return RX_ADDRINUSE;
     }
 #if defined(RX_ENABLE_LOCKS) && defined(KERNEL)
@@ -663,9 +646,8 @@ rx_InitHost(u_int host, u_int port)
 #endif
 
     USERPRI;
-    tmp_status = rxinit_status = 0;
-    UNLOCK_RX_INIT;
-    return tmp_status;
+    rx_atomic_clear_bit(&rxinit_status, 0);
+    return 0;
 }
 
 int
@@ -815,7 +797,7 @@ rx_rto_setPeerTimeoutSecs(struct rx_peer *peer, int secs) {
 void
 rx_SetBusyChannelError(afs_int32 onoff)
 {
-    osi_Assert(rxinit_status != 0);
+    osi_Assert(rx_atomic_test_bit(&rxinit_status, 0));
     rxi_busyChannelError = onoff ? 1 : 0;
 }
 
@@ -2550,11 +2532,9 @@ rx_Finalize(void)
     struct rx_connection **conn_ptr, **conn_end;
 
     INIT_PTHREAD_LOCKS;
-    LOCK_RX_INIT;
-    if (rxinit_status == 1) {
-	UNLOCK_RX_INIT;
+    if (rx_atomic_test_and_set_bit(&rxinit_status, 0))
 	return;			/* Already shutdown. */
-    }
+
     rxi_DeleteCachedConnections();
     if (rx_connHashTable) {
 	MUTEX_ENTER(&rx_connHashTable_lock);
@@ -2594,8 +2574,6 @@ rx_Finalize(void)
     afs_winsockCleanup();
 #endif
 
-    rxinit_status = 1;
-    UNLOCK_RX_INIT;
 }
 #endif
 
@@ -7934,11 +7912,9 @@ shutdown_rx(void)
     struct rx_serverQueueEntry *sq;
 #endif /* KERNEL */
 
-    LOCK_RX_INIT;
-    if (rxinit_status == 1) {
-	UNLOCK_RX_INIT;
+    if (rx_atomic_test_and_set_bit(&rxinit_status, 0))
 	return;			/* Already shutdown. */
-    }
+
 #ifndef KERNEL
     rx_port = 0;
 #ifndef AFS_PTHREAD_ENV
@@ -8062,8 +8038,6 @@ shutdown_rx(void)
     rxi_dataQuota = RX_MAX_QUOTA;
     rxi_availProcs = rxi_totalMin = rxi_minDeficit = 0;
     MUTEX_EXIT(&rx_quota_mutex);
-    rxinit_status = 1;
-    UNLOCK_RX_INIT;
 }
 
 #ifndef KERNEL

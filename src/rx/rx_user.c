@@ -351,7 +351,7 @@ rx_getAllAddrMaskMtu(afs_uint32 addrBuffer[], afs_uint32 maskBuffer[],
 #endif
 
 #ifdef AFS_NT40_ENV
-extern int rxinit_status;
+extern rx_atomic_t rxinit_status;
 void
 rxi_InitMorePackets(void) {
     int npackets, ncbufs;
@@ -372,7 +372,7 @@ rx_GetIFInfo(void)
 
     LOCK_IF_INIT;
     if (Inited) {
-        if (Inited < 2 && rxinit_status == 0) {
+	if (Inited < 2 && !rx_atomic_test_bit(&rxinit_status, 0)) {
             /* We couldn't initialize more packets earlier.
              * Do it now. */
             rxi_InitMorePackets();
@@ -410,7 +410,7 @@ rx_GetIFInfo(void)
      * and we therefore do not have any mutex locks initialized.  As a
      * result we cannot call rxi_MorePackets() without crashing.
      */
-    if (rxinit_status)
+    if (rx_atomic_test_bit(&rxinit_status, 0))
         return;
 
     rxi_InitMorePackets();
