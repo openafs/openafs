@@ -57,6 +57,10 @@
 #include <sys/queue.h>
 #endif
 
+#ifndef curproc
+#include <sys/proc.h>
+#endif
+
 /* Extra kernel definitions (from kdefs file) */
 #ifdef _KERNEL
 #ifdef MULTIPROCESSOR
