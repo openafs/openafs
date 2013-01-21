@@ -4,6 +4,9 @@ openafs (1.6.2~pre3-1) UNRELEASED; urgency=low
     - Avoid unnecessary panic in kernel module when freeing vcaches.
     - Add additional objects to the *_pic libraries in support of the AFS
       Perl bindings.
+  * Remove unnecessary change to the upstream Debian packaging files to
+    support armhf.  These files aren't used during a package build, so no
+    need to carry a Debian patch.
 
  -- Russ Allbery <rra@debian.org>  Mon, 21 Jan 2013 10:51:14 -0800
 

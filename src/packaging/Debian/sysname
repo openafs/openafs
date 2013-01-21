@@ -9,7 +9,7 @@ case `dpkg --print-architecture` in
 alpha)
     echo alpha_linux_26
     ;;
-arm|armel|armhf|armv5tel)
+arm|armel|armv5tel)
     echo arm_linux26
     ;;
 amd64)

@@ -21,7 +21,7 @@ alpha)
         ;;
     esac
     ;;
-arm|armel|armhf|armv5tel)
+arm|armel|armv5tel)
     case $KVERS in
     2.4*)
         echo arm_linux24
