@@ -25,11 +25,14 @@ CCRULE = ${CC} ${CFLAGS} -c $?
 
 AUDIT= ../audit
 AUTH = ../auth
+CMD  = ../cmd
 KAUTH = ../kauth
 UBIK = ../ubik
 UTIL = ../util
 RXKAD = ../rxkad
 PTSERVER = ../ptserver
+VOLSER = ../volser
+VLSERVER = ../vlserver
 SYS = ../sys
 
 AUDITOBJS = audit.o audit-file.o audit-sysvmq.o
@@ -42,6 +45,10 @@ AUTHOBJS = \
 	authcon.o \
 	ktc_errors.o \
 	acfg_errors.o
+
+CMDOBJS = \
+	cmd.o \
+	cmd_errors.o
 
 KAUTHOBJS = \
 	kauth.xdr.o \
@@ -67,11 +74,15 @@ UTILOBJS = \
 	pthread_glock.o \
 	get_krbrlm.o \
 	dirpath.o \
+	hostparse.o \
 	serverLog.o \
 	snprintf.o \
 	strlcat.o \
 	strlcpy.o \
-	fileutil.o
+	fileutil.o \
+	uuid.o \
+	ktime.o \
+	volparse.o
 
 RXKADOBJS = \
 	rxkad_errs.o
@@ -94,15 +105,42 @@ PTSERVEROBJS = \
 	display.o \
 	pterror.o
 
+VOLSEROBJS = \
+	vsutils.o \
+	vsprocs.o \
+	lockprocs.o \
+	volint.xdr.o \
+	volint.cs.o \
+	volerr.o
+
+VLDBOBJS = \
+	vldbint.xdr.o \
+	vldbint.cs.o \
+	vl_errors.o
+
+BOSOBJS = \
+	bosint.xdr.o \
+	bosint.cs.o \
+	boserr.o
+
+USDOBJS = \
+	usd_file.o \
+
 LIBOBJS = \
 	${AUDITOBJS} \
 	${AUTHOBJS} \
+	${CMDOBJS} \
 	${KAUTHOBJS} \
 	${UBIKOBJS} \
 	${UTILOBJS} \
 	${RXKADOBJS} \
 	${PTSERVEROBJS} \
-	${SYSOBJS}
+	${SYSOBJS} \
+	${VOLSEROBJS} \
+	${VLDBOBJS} \
+	$(BOSOBJS) \
+	$(USDOBJS) \
+	AFS_component_version_number.o
 
 LIBAFSAUTHENT = libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR}.${LIBAFSAUTHENTMINOR}
 
@@ -168,6 +206,12 @@ ktc_errors.o: ${AUTH}/ktc_errors.c
 	${CCRULE}
 
 acfg_errors.o: ${AUTH}/acfg_errors.c
+	${CCRULE}
+
+cmd.o: ${CMD}/cmd.c
+	${CCRULE}
+
+cmd_errors.o: ${CMD}/cmd_errors.c
 	${CCRULE}
 
 kauth.xdr.o: ${KAUTH}/kauth.xdr.c
@@ -239,6 +283,18 @@ strlcpy.o: ${UTIL}/strlcpy.c
 fileutil.o: ${UTIL}/fileutil.c
 	${CCRULE}
 
+hostparse.o: ${UTIL}/hostparse.c
+	${CCRULE}
+
+volparse.o: ${UTIL}/volparse.c
+	${CCRULE}
+
+uuid.o: ${UTIL}/uuid.c
+	${CCRULE}
+
+ktime.o: ${UTIL}/ktime.c
+	${CCRULE}
+
 pthread_glock.o: ${UTIL}/pthread_glock.c
 	${CCRULE}
 
@@ -303,7 +359,54 @@ setpag.o: ${SYS}/setpag.c
 pioctl.o: ${SYS}/pioctl.c
 	${CCRULE}
 
+vsprocs.o: $(VOLSER)/vsprocs.c
+	$(CCRULE) -I../volser
+
+vsutils.o: $(VOLSER)/vsutils.c
+	$(CCRULE) -I../volser
+
+lockprocs.o: $(VOLSER)/lockprocs.c
+	$(CCRULE) -I../volser
+
+volint.xdr.o: ../volser/volint.xdr.c
+	$(CCRULE)
+
+volint.cs.o: ../volser/volint.cs.c
+	$(CCRULE)
+
+volerr.o: ../volser/volerr.c
+	$(CCRULE)
+
+vldbint.xdr.o: ../vlserver/vldbint.xdr.c
+	$(CCRULE)
+
+vldbint.cs.o: ../vlserver/vldbint.cs.c
+	$(CCRULE)
+
+vl_errors.o: ../vlserver/vl_errors.c
+	$(CCRULE)
+
+et_name.o: ../comerr/et_name.c
+	$(CCRULE)
+
+bosint.xdr.o: ../bozo/bosint.xdr.c
+	$(CCRULE)
+
+bosint.cs.o: ../bozo/bosint.cs.c
+	$(CCRULE)
+
+boserr.o: ../bozo/boserr.c
+	$(CCRULE)
+
+usd_file.o: ../usd/usd_file.c
+	$(CCRULE)
+
+AFS_component_version_number.o: AFS_component_version_number.c
+	$(CCRULE)
+
+include ../config/Makefile.version
+
 clean:
 	$(RM) -f *.o *.a libafsauthent.a* libafsauthent.sl* libafsauthent.so* \
 		libafsauthent_pic.a libafsauthent.dylib.* \
-		libafsauthent.exp
+		libafsauthent.exp AFS_component_version_number.c

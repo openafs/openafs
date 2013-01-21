@@ -124,7 +124,8 @@ afsremove(struct vcache *adp, struct dcache *tdc,
      * call FindVCache instead of GetVCache since if the file's really
      * gone, we won't be able to fetch the status info anyway.  */
     if (tvc) {
-	afs_MarinerLog("store$Removing", tvc);
+	if (afs_mariner)
+	    afs_MarinerLog("store$Removing", tvc);
 #ifdef AFS_BOZONLOCK_ENV
 	afs_BozonLock(&tvc->pvnLock, tvc);
 	/* Since afs_TryToSmush will do a pvn_vptrunc */
