@@ -138,3 +138,7 @@ libafsrpc.so.1 libafsrpc1 #MINVER#
  afs_xdr_vector@Base 1.6.0~pre6
  rx_KeepAliveOff@Base 1.6.1~pre2
  rx_KeepAliveOn@Base 1.6.1~pre2
+ afs_error_table_name@Base 1.6.2~pre3
+ afs_xdr_alloc@Base 1.6.2~pre3
+ afs_xdr_pointer@Base 1.6.2~pre3
+ afs_xdr_u_char@Base 1.6.2~pre3
