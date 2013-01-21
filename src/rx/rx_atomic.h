@@ -77,6 +77,34 @@ rx_atomic_sub(rx_atomic_t *atomic, int change) {
     InterlockedExchangeAdd(&atomic->var, 0 - change);
 }
 
+static_inline int
+rx_atomic_test_bit(rx_atomic_t *atomic, int bit) {
+    return ((unsigned int) rx_atomic_read(atomic) & 1<<bit) != 0;
+}
+
+/* No InterlockedOr or InterlockedAnd on ix86, so just use the
+ * BitTest functions */
+
+static_inline void
+rx_atomic_set_bit(rx_atomic_t *atomic, int bit) {
+    (void) InterlockedBitTestAndSet(&atomic->var, bit);
+}
+
+static_inline void
+rx_atomic_clear_bit(rx_atomic_t *atomic, int bit) {
+    (void) InterlockedBitTestAndReset(&atomic->var, bit);
+}
+
+static_inline int
+rx_atomic_test_and_set_bit(rx_atomic_t *atomic, int bit) {
+    return InterlockedBitTestAndSet(&atomic->var, bit);
+}
+
+static_inline int
+rx_atomic_test_and_clear_bit(rx_atomic_t *atomic, int bit) {
+    return InterlockedBitTestAndReset(&atomic->var, bit);
+}
+
 #elif defined(AFS_AIX61_ENV) || defined(AFS_USR_AIX61_ENV)
 #include <sys/atomic_op.h>
 
@@ -129,6 +157,31 @@ rx_atomic_sub(rx_atomic_t *atomic, int change) {
     fetch_and_add(&atomic->var, -change);
 }
 
+static_inline int
+rx_atomic_test_bit(rx_atomic_t *atomic, int bit) {
+    return ((unsigned int) rx_atomic_read(atomic) & 1<<bit) != 0;
+}
+
+static_inline void
+rx_atomic_set_bit(rx_atomic_t *atomic, int bit) {
+    fetch_and_or(&atomic->var, 1<<bit);
+}
+
+static_inline void
+rx_atomic_clear_bit(rx_atomic_t *atomic, int bit) {
+    fetch_and_and(&atomic->var, ~(1<<bit));
+}
+
+static_inline int
+rx_atomic_test_and_set_bit(rx_atomic_t *atomic, int bit) {
+    return (fetch_and_or(&atomic->var, (1<<bit)) & 1<<bit) == 0;
+}
+
+static_inline int
+rx_atomic_test_and_clear_bit(rx_atomic_t *atomic, int bit) {
+    return (fetch_and_and(&atomic->var, ~(1<<bit)) & 1<<bit) != 0;
+}
+
 #elif defined(AFS_DARWIN80_ENV) || defined(AFS_USR_DARWIN80_ENV)
 
 #include <libkern/OSAtomic.h>
@@ -136,6 +189,8 @@ rx_atomic_sub(rx_atomic_t *atomic, int change) {
 #define OSAtomicIncrement32 OSIncrementAtomic
 #define OSAtomicAdd32 OSAddAtomic
 #define OSAtomicDecrement32 OSDecrementAtomic
+#define OSAtomicOr32 OSBitOrAtomic
+#define OSAtomicAnd32 OSBitAndAtomic
 #endif
 
 typedef struct {
@@ -186,6 +241,35 @@ static_inline void
 rx_atomic_sub(rx_atomic_t *atomic, int change) {
     OSAtomicAdd32(0 - change, &atomic->var);
 }
+
+static_inline int
+rx_atomic_test_bit(rx_atomic_t *atomic, int bit) {
+    return ((unsigned int) rx_atomic_read(atomic) & 1<<bit) != 0;
+}
+
+static_inline void
+rx_atomic_set_bit(rx_atomic_t *atomic, int bit) {
+    OSAtomicOr32(1<<bit, (volatile uint32_t *)&atomic->var);
+}
+
+static_inline void
+rx_atomic_clear_bit(rx_atomic_t *atomic, int bit) {
+    OSAtomicAnd32(~(1<<bit), (volatile uint32_t *)&atomic->var);
+}
+
+static_inline int
+rx_atomic_test_and_set_bit(rx_atomic_t *atomic, int bit) {
+    return ((OSAtomicOr32Orig(1<<bit, (volatile uint32_t *)&atomic->var) & 1<<bit)
+	        != 0);
+}
+
+static_inline int
+rx_atomic_test_and_clear_bit(rx_atomic_t *atomic, int bit) {
+    return ((OSAtomicAnd32Orig(~(1<<bit),
+			       (volatile uint32_t *)&atomic->var) & 1<<bit)
+	    != 0);
+}
+
 #elif defined(AFS_LINUX26_ENV) && defined(KERNEL)
 #include <asm/atomic.h>
 
@@ -200,6 +284,11 @@ typedef atomic_t rx_atomic_t;
 #define rx_atomic_dec(X)	  atomic_dec(X)
 #define rx_atomic_dec_and_read(X) atomic_dec_return(X)
 #define rx_atomic_sub(X, V)	  atomic_sub(V, X)
+#define rx_atomic_test_bit(X, B)  test_bit(B, (unsigned long *) &(X)->counter)
+#define rx_atomic_set_bit(X, B)   set_bit(B, (unsigned long *) &(X)->counter)
+#define rx_atomic_clear_bit(X, B) clear_bit(B, (unsigned long *) &(X)->counter)
+#define rx_atomic_test_and_set_bit(X, B)    test_and_set_bit(B, (unsigned long *) &(X)->counter)
+#define rx_atomic_test_and_clear_bit(X, B)  test_and_clear_bit(B, (unsigned long *) &(X)->counter)
 
 #elif defined(AFS_SUN510_ENV) || (defined(AFS_SUN5_ENV) && defined(KERNEL) && !defined(UKERNEL))
 
@@ -265,6 +354,31 @@ rx_atomic_sub(rx_atomic_t *atomic, int change) {
     atomic_add_32(&atomic->var, 0 - change);
 }
 
+static_inline int
+rx_atomic_test_bit(rx_atomic_t *atomic, int bit) {
+    return ((unsigned int) rx_atomic_read(atomic) & 1<<bit) != 0;
+}
+
+static_inline void
+rx_atomic_set_bit(rx_atomic_t *atomic, int bit) {
+    atomic_or_32(&atomic->var, 1<<bit);
+}
+
+static_inline void
+rx_atomic_clear_bit(rx_atomic_t *atomic, int bit) {
+    atomic_and_32(&atomic->var, ~(1<<bit));
+}
+
+static_inline int
+rx_atomic_test_and_set_bit(rx_atomic_t *atomic, int bit) {
+    return (atomic_set_long_excl(&atomic->var, bit) == -1);
+}
+
+static_inline int
+rx_atomic_test_and_clear_bit(rx_atomic_t *atomic, int bit) {
+    return (atomic_clear_long_excl(&atomic->var, bit) == 0);
+}
+
 #elif defined(__GNUC__) && defined(HAVE_SYNC_FETCH_AND_ADD)
 
 typedef struct {
@@ -314,6 +428,31 @@ rx_atomic_dec_and_read(rx_atomic_t *atomic) {
 static_inline void
 rx_atomic_sub(rx_atomic_t *atomic, int change) {
     (void)__sync_fetch_and_sub(&atomic->var, change);
+}
+
+static_inline int
+rx_atomic_test_bit(rx_atomic_t *atomic, int bit) {
+    return ((unsigned int) rx_atomic_read(atomic) & 1<<bit) != 0;
+}
+
+static_inline void
+rx_atomic_set_bit(rx_atomic_t *atomic, int bit) {
+    (void)__sync_fetch_and_or(&atomic->var, 1<<bit);
+}
+
+static_inline void
+rx_atomic_clear_bit(rx_atomic_t *atomic, int bit) {
+    (void)__sync_fetch_and_and(&atomic->var, ~(1<<bit));
+}
+
+static_inline int
+rx_atomic_test_and_set_bit(rx_atomic_t *atomic, int bit) {
+    return (__sync_fetch_and_or(&atomic->var, 1<<bit) & 1<<bit) != 0;
+}
+
+static_inline int
+rx_atomic_test_and_clear_bit(rx_atomic_t *atomic, int bit) {
+    return (__sync_fetch_and_and(&atomic->var, ~(1<<bit)) & 1<<bit) != 0;
 }
 
 #else
@@ -410,6 +549,48 @@ rx_atomic_sub(rx_atomic_t *atomic, int change) {
     MUTEX_EXIT(&rx_atomic_mutex);
 }
 
+static_inline int
+rx_atomic_test_bit(rx_atomic_t *atomic, int bit) {
+    return ((unsigned int) rx_atomic_read(atomic) & 1<<bit) != 0;
+}
+
+static_inline void
+rx_atomic_set_bit(rx_atomic_t *atomic, int bit) {
+    MUTEX_ENTER(&rx_atomic_mutex);
+    atomic->var |= (1<<bit);
+    MUTEX_EXIT(&rx_atomic_mutex);
+}
+
+static_inline void
+rx_atomic_clear_bit(rx_atomic_t *atomic, int bit) {
+    MUTEX_ENTER(&rx_atomic_mutex);
+    atomic->var &= ~(1<<bit);
+    MUTEX_EXIT(&rx_atomic_mutex);
+}
+
+static_inline int
+rx_atomic_test_and_set_bit(rx_atomic_t *atomic, int bit) {
+    int val;
+
+    MUTEX_ENTER(&rx_atomic_mutex);
+    val = atomic->var;
+    atomic->var |= 1<<bit;
+    MUTEX_EXIT(&rx_atomic_mutex);
+
+    return (val & 1<<bit) == 1<<bit;
+}
+
+static_inline int
+rx_atomic_test_and_clear_bit(rx_atomic_t *atomic, int bit) {
+    int val;
+
+    MUTEX_ENTER(&rx_atomic_mutex);
+    val = atomic->var;
+    atomic->var &= ~(1<<bit);
+    MUTEX_EXIT(&rx_atomic_mutex);
+
+    return (val & 1<<bit) == 1<<bit;
+}
 #endif
 
 #endif
