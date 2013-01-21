@@ -154,9 +154,10 @@ sub extract_openafs {
     my $major = $1;
     $major -= 4;
 
-    $oversion =~ /org.openafs.filesystems.afs\(([0-9.]+)\)/;
+    $oversion =~ /org.openafs.filesystems.afs\(([0-9.abcf]+)\)/;
     my $vers = $1;
     $vers =~ s/fc/pre/;
+    $vers =~ s/f/pre/;
     my $dmgvers = $vers;
     if ($vers =~ /([0-9]+)f([0-9]+)/) {
 	$dmgvers = "$1" . "." . "$2";
@@ -401,6 +402,7 @@ sub generate_symbol_files {
 		system( $kextprog,
 			"-c", "-e",
 			"-r", $temp_dir,
+			"-r", $sysextpath,
 			"-k", $kernel,
 			"-s", $temp_dir,
 			"-arch", $kextarch,
@@ -410,7 +412,6 @@ sub generate_symbol_files {
 		system( $kextprog,
 			"-c", "-e",
 			"-r", $temp_dir,
-			"-r", $sysextpath,
 			"-k", $kernel,
 			"-s", $temp_dir,
 			"-arch", $kextarch,
