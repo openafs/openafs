@@ -622,7 +622,7 @@ rxkad_get_ticket(krb5_context context, char *realm,
 	afs_com_err(progname, status, "while getting AFS tickets");
 #ifdef KRB5_CC_NOT_KTYPE
 	if (status == KRB5_CC_NOT_KTYPE) {
-	    fprintf(stderr, "allow_weak_enctypes may be required in the Kerberos configuration\n");
+	    fprintf(stderr, "allow_weak_crypto may be required in the Kerberos configuration\n");
 	}
 #endif
 	status = AKLOG_KERBEROS;
