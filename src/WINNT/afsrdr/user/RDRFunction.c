@@ -1796,7 +1796,7 @@ RDR_CleanupFileEntry( IN cm_user_t *userp,
     }
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 
-    if ((bLastHandle || bFlushFile) &&
+    if (bLastHandle && (scp->fileType == CM_SCACHETYPE_FILE) &&
         scp->redirBufCount > 0)
     {
         LARGE_INTEGER heldExtents;
@@ -1862,14 +1862,9 @@ RDR_CleanupFileEntry( IN cm_user_t *userp,
 
     /* If not a readonly object, flush dirty data and update metadata */
     if (!(scp->flags & CM_SCACHEFLAG_RO)) {
-        if ((bLastHandle || bFlushFile) &&
-             buf_DirtyBuffersExist(&scp->fid)) {
-            if (!bScpLocked) {
-                lock_ObtainWrite(&scp->rw);
-                bScpLocked = TRUE;
-            }
-            code = cm_SyncOp(scp, NULL, userp, &req, PRSFS_WRITE,
-                             CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+        if ((scp->fileType == CM_SCACHETYPE_FILE) && (bLastHandle || bFlushFile)) {
+            /* Serialize with any outstanding AsyncStore operation */
+            code = cm_SyncOp(scp, NULL, userp, &req, 0, CM_SCACHESYNC_ASYNCSTORE);
             if (code == 0) {
                 if (bScpLocked) {
                     lock_ReleaseWrite(&scp->rw);
