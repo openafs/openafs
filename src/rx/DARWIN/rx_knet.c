@@ -18,6 +18,8 @@
 #endif
 
 #ifdef RXK_UPCALL_ENV
+extern int rxinit_status;
+
 void
 rx_upcall(socket_t so, void *arg, __unused int waitflag)
 {
@@ -33,6 +35,11 @@ rx_upcall(socket_t so, void *arg, __unused int waitflag)
     afs_int32 tlen;
     afs_int32 savelen;          /* was using rlen but had aliasing problems */
     size_t nbytes, resid, noffset;
+
+    /* if rx is shut down, but the socket is not closed yet, we
+       can't process packets. just return now. */
+    if (rxinit_status)
+	return;
 
     p = rxi_AllocPacket(RX_PACKET_CLASS_RECEIVE);
     rx_computelen(p, tlen);

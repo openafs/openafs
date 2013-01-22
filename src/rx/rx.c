@@ -441,7 +441,7 @@ rx_SetEpoch(afs_uint32 epoch)
  * by the kernel.  Whether this will ever overlap anything in
  * /etc/services is anybody's guess...  Returns 0 on success, -1 on
  * error. */
-#ifndef AFS_NT40_ENV
+#if !(defined(AFS_NT40_ENV) || defined(RXK_UPCALL_ENV))
 static
 #endif
 int rxinit_status = 1;
