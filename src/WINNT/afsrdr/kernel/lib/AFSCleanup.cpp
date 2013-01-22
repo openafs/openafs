@@ -596,18 +596,23 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                                         (ULONG)FILE_ACTION_MODIFIED);
                     }
 
+
                     //
-                    // Attempt to flush any dirty extents to the server. This may be a little
-                    // aggressive, to flush whenever the handle is closed, but it ensures
-                    // coherency.
+                    // Whenever a handle with write access or the last handle is closed
+                    // notify the service to FSync the file.  If the redirector is holding
+                    // dirty extents, flush them to the service.  This is a bit aggressive
+                    // but it ensures cache coherency.
                     //
 
-                    if( (pCcb->GrantedAccess & FILE_WRITE_DATA) &&
-                        pFcb->Specific.File.ExtentsDirtyCount != 0)
+                    if( (pCcb->GrantedAccess & FILE_WRITE_DATA) || (pFcb->OpenHandleCount == 1))
                     {
 
-                        AFSFlushExtents( pFcb,
-                                         &pCcb->AuthGroup);
+                        if ( pFcb->Specific.File.ExtentsDirtyCount != 0)
+                        {
+
+                            AFSFlushExtents( pFcb,
+                                             &pCcb->AuthGroup);
+                        }
 
                         ulNotificationFlags |= AFS_REQUEST_FLAG_FLUSH_FILE;
                     }
