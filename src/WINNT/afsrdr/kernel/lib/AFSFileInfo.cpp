@@ -3178,7 +3178,7 @@ AFSSetRenameInfo( IN PIRP Irp)
         // Now update the notification for the target file
         //
 
-        AFSFsRtlNotifyFullReportChange( pTargetParentObject->ParentObjectInformation,
+        AFSFsRtlNotifyFullReportChange( pTargetParentObject,
                                         pSrcCcb,
                                         (ULONG)ulNotifyFilter,
                                         (ULONG)ulNotificationAction);
