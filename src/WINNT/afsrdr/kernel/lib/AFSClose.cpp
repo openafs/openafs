@@ -161,7 +161,7 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
 
                     InterlockedDecrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSClose (IOCtl) Decrement child open ref count on Parent object %p Cnt %d\n",
                                   pObjectInfo->ParentObjectInformation,
@@ -449,7 +449,7 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
 
                     InterlockedDecrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSClose Decrement child open ref count on Parent object %p Cnt %d\n",
                                   pObjectInfo->ParentObjectInformation,
@@ -529,7 +529,7 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
 
                     lCount = InterlockedDecrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSClose (Share) Decrement child open ref count on Parent object %p Cnt %d\n",
                                   pObjectInfo->ParentObjectInformation,
