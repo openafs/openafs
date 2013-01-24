@@ -154,6 +154,20 @@ NTSTATUS
 #define AFS_OBJECT_FLAGS_VERIFY_DATA                    0x00000200
 
 //
+// Object information reference count reasons
+//
+
+#define AFS_OBJECT_REFERENCE_DIRENTRY                   0
+#define AFS_OBJECT_REFERENCE_CHILD                      1
+#define AFS_OBJECT_REFERENCE_INVALIDATION               2
+#define AFS_OBJECT_REFERENCE_GLOBAL                     3
+#define AFS_OBJECT_REFERENCE_EXTENTS                    4
+#define AFS_OBJECT_REFERENCE_WORKER                     5
+#define AFS_OBJECT_REFERENCE_STATUS                     6
+// unused                                               7
+#define AFS_OBJECT_REFERENCE_MAX                        8
+
+//
 // Define one second in terms of 100 nS units
 //
 

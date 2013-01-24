@@ -193,6 +193,8 @@ typedef struct _AFS_OBJECT_INFORMATION_CB
 
     LONG                      ObjectReferenceCount;
 
+    LONG                      ObjectReferences[ 8];
+
     AFSNonPagedObjectInfoCB  *NonPagedInfo;
 
     //

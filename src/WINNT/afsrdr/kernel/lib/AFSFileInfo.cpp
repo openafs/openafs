@@ -3146,6 +3146,24 @@ AFSSetRenameInfo( IN PIRP Irp)
 
             lCount = InterlockedIncrement( &pTargetParentObject->Specific.Directory.ChildOpenReferenceCount);
 
+            lCount = AFSObjectInfoIncrement( pTargetParentObject,
+                                             AFS_OBJECT_REFERENCE_CHILD);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSSetRenameInfo Increment count on parent object %p Cnt %d\n",
+                          pTargetParentObject,
+                          lCount);
+
+            lCount = AFSObjectInfoDecrement( pSrcCcb->DirectoryCB->ObjectInformation->ParentObjectInformation,
+                                             AFS_OBJECT_REFERENCE_CHILD);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSSetRenameInfo Decrement count on parent object %p Cnt %d\n",
+                          pSrcCcb->DirectoryCB->ObjectInformation->ParentObjectInformation,
+                          lCount);
+
             pSrcCcb->DirectoryCB->ObjectInformation->ParentObjectInformation = pTargetParentObject;
 
             ulNotificationAction = FILE_ACTION_ADDED;

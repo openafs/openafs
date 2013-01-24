@@ -1323,10 +1323,12 @@ AFSAllocateObjectInfo( IN AFSObjectInfoCB *ParentObjectInfo,
                        IN ULONGLONG HashIndex);
 
 LONG
-AFSObjectInfoIncrement( IN AFSObjectInfoCB *ObjectInfo);
+AFSObjectInfoIncrement( IN AFSObjectInfoCB *ObjectInfo,
+                        IN LONG             Reason);
 
 LONG
-AFSObjectInfoDecrement( IN AFSObjectInfoCB *ObjectInfo);
+AFSObjectInfoDecrement( IN AFSObjectInfoCB *ObjectInfo,
+                        IN LONG             Reason);
 
 void
 AFSDeleteObjectInfo( IN AFSObjectInfoCB *ObjectInfo);

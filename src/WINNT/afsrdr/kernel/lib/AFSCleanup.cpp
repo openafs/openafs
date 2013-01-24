@@ -741,7 +741,8 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                     // The ObjectReferenceCount will be freed by AFSPerformObjectInvalidate
                     //
 
-                    lCount = AFSObjectInfoIncrement( pObjectInfo);
+                    lCount = AFSObjectInfoIncrement( pObjectInfo,
+                                                     AFS_OBJECT_REFERENCE_INVALIDATION);
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,

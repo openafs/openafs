@@ -670,7 +670,8 @@ AFSInitializeGlobalDirectoryEntries()
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
 
-        lCount = AFSObjectInfoIncrement( pObjectInfoCB);
+        lCount = AFSObjectInfoIncrement( pObjectInfoCB,
+                                         AFS_OBJECT_REFERENCE_GLOBAL);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
@@ -777,7 +778,8 @@ AFSInitializeGlobalDirectoryEntries()
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
 
-        lCount = AFSObjectInfoIncrement( pObjectInfoCB);
+        lCount = AFSObjectInfoIncrement( pObjectInfoCB,
+                                         AFS_OBJECT_REFERENCE_GLOBAL);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
@@ -970,7 +972,8 @@ AFSInitDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
                           FileName);
         }
 
-        lCount = AFSObjectInfoIncrement( pObjectInfoCB);
+        lCount = AFSObjectInfoIncrement( pObjectInfoCB,
+                                         AFS_OBJECT_REFERENCE_DIRENTRY);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
@@ -1196,7 +1199,8 @@ try_exit:
             if( pObjectInfoCB != NULL)
             {
 
-                lCount = AFSObjectInfoDecrement( pObjectInfoCB);
+                lCount = AFSObjectInfoDecrement( pObjectInfoCB,
+                                                 AFS_OBJECT_REFERENCE_DIRENTRY);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
@@ -2021,7 +2025,8 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
             // Reference the node so it won't be torn down
             //
 
-            lCount = AFSObjectInfoIncrement( pObjectInfo);
+            lCount = AFSObjectInfoIncrement( pObjectInfo,
+                                             AFS_OBJECT_REFERENCE_INVALIDATION);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -2056,7 +2061,8 @@ try_exit:
         if( pObjectInfo != NULL)
         {
 
-            lCount = AFSObjectInfoDecrement( pObjectInfo);
+            lCount = AFSObjectInfoDecrement( pObjectInfo,
+                                             AFS_OBJECT_REFERENCE_INVALIDATION);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -2516,7 +2522,8 @@ AFSInvalidateVolume( IN AFSVolumeCB *VolumeCB,
         if ( pCurrentObject )
         {
 
-            lCount = AFSObjectInfoIncrement( pCurrentObject);
+            lCount = AFSObjectInfoIncrement( pCurrentObject,
+                                             AFS_OBJECT_REFERENCE_INVALIDATION);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -2530,7 +2537,8 @@ AFSInvalidateVolume( IN AFSVolumeCB *VolumeCB,
             if ( pCurrentObject)
             {
 
-                lCount = AFSObjectInfoDecrement( pCurrentObject);
+                lCount = AFSObjectInfoDecrement( pCurrentObject,
+                                                 AFS_OBJECT_REFERENCE_INVALIDATION);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
@@ -2556,7 +2564,8 @@ AFSInvalidateVolume( IN AFSVolumeCB *VolumeCB,
             // Reference the node so it won't be torn down
             //
 
-            lCount = AFSObjectInfoIncrement( pCurrentObject);
+            lCount = AFSObjectInfoIncrement( pCurrentObject,
+                                             AFS_OBJECT_REFERENCE_INVALIDATION);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -2577,7 +2586,8 @@ AFSInvalidateVolume( IN AFSVolumeCB *VolumeCB,
                 // Reference the node so it won't be torn down
                 //
 
-                lCount = AFSObjectInfoIncrement( pNextObject);
+                lCount = AFSObjectInfoIncrement( pNextObject,
+                                                 AFS_OBJECT_REFERENCE_INVALIDATION);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
@@ -2594,7 +2604,8 @@ AFSInvalidateVolume( IN AFSVolumeCB *VolumeCB,
             if ( pCurrentObject )
             {
 
-                lCount = AFSObjectInfoDecrement( pCurrentObject);
+                lCount = AFSObjectInfoDecrement( pCurrentObject,
+                                                 AFS_OBJECT_REFERENCE_INVALIDATION);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
@@ -4289,6 +4300,7 @@ AFSInitializeSpecialShareNameList()
     UNICODE_STRING uniShareName;
     ULONG ulEntryLength = 0;
     AFSNonPagedDirectoryCB *pNonPagedDirEntry = NULL;
+    LONG lCount;
 
     __Enter
     {
@@ -4305,12 +4317,14 @@ AFSInitializeSpecialShareNameList()
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
 
+        lCount = AFSObjectInfoIncrement( pObjectInfoCB,
+                                         AFS_OBJECT_REFERENCE_GLOBAL);
+
         AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSInitializeSpecialShareNameList (srvsvc) Initializing count (1) on object %p\n",
-                      pObjectInfoCB);
-
-        pObjectInfoCB->ObjectReferenceCount = 1;
+                      "AFSInitializeSpecialShareNameList (srvsvc) Increment count on object %p Cnt %d\n",
+                      pObjectInfoCB,
+                      lCount);
 
         pObjectInfoCB->FileType = (ULONG) AFS_FILE_TYPE_SPECIAL_SHARE_NAME;
 
@@ -4391,12 +4405,14 @@ AFSInitializeSpecialShareNameList()
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
 
+        lCount = AFSObjectInfoIncrement( pObjectInfoCB,
+                                         AFS_OBJECT_REFERENCE_GLOBAL);
+
         AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSInitializeSpecialShareNameList (ipc$) Initializing count (1) on object %p\n",
-                      pObjectInfoCB);
-
-        pObjectInfoCB->ObjectReferenceCount = 1;
+                      "AFSInitializeSpecialShareNameList (ipc$) Incrementing count on object %p Cnt %d\n",
+                      pObjectInfoCB,
+                      lCount);
 
         pObjectInfoCB->FileType = (ULONG) AFS_FILE_TYPE_SPECIAL_SHARE_NAME;
 
@@ -5816,12 +5832,14 @@ AFSInitPIOCtlDirectoryCB( IN AFSObjectInfoCB *ObjectInfo)
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
 
+        lCount = AFSObjectInfoIncrement( pObjectInfoCB,
+                                         AFS_OBJECT_REFERENCE_DIRENTRY);
+
         AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSInitPIOCtlDirectoryCB Initializing count (1) on object %p\n",
-                      pObjectInfoCB);
-
-        pObjectInfoCB->ObjectReferenceCount = 1;
+                      "AFSInitPIOCtlDirectoryCB Increment count on object %p Cnt %d\n",
+                      pObjectInfoCB,
+                      lCount);
 
         pObjectInfoCB->FileType = (ULONG) AFS_FILE_TYPE_PIOCTL;
 
@@ -5897,7 +5915,8 @@ AFSInitPIOCtlDirectoryCB( IN AFSObjectInfoCB *ObjectInfo)
             // Increment the open reference and handle on the node
             //
 
-            lCount = AFSObjectInfoIncrement( pDirNode->ObjectInformation);
+            lCount = AFSObjectInfoIncrement( pDirNode->ObjectInformation,
+                                             AFS_OBJECT_REFERENCE_DIRENTRY);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -5929,6 +5948,15 @@ try_exit:
 
             if ( pObjectInfoCB != NULL)
             {
+
+                lCount = AFSObjectInfoDecrement( pObjectInfoCB,
+                                                 AFS_OBJECT_REFERENCE_DIRENTRY);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSInitPIOCtlDirectoryCB Decrement count on object %p Cnt %d\n",
+                              pObjectInfoCB,
+                              lCount);
 
                 AFSDeleteObjectInfo( pObjectInfoCB);
             }
@@ -6453,7 +6481,15 @@ AFSAllocateObjectInfo( IN AFSObjectInfoCB *ParentObjectInfo,
 
         if( ParentObjectInfo != NULL)
         {
-            lCount = AFSObjectInfoIncrement( ParentObjectInfo);
+
+            lCount = AFSObjectInfoIncrement( ParentObjectInfo,
+                                             AFS_OBJECT_REFERENCE_CHILD);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSAllocateObjectInfo Increment count on parent object %p Cnt %d\n",
+                          ParentObjectInfo,
+                          lCount);
         }
 
         //
@@ -6520,7 +6556,8 @@ try_exit:
 }
 
 LONG
-AFSObjectInfoIncrement( IN AFSObjectInfoCB *ObjectInfo)
+AFSObjectInfoIncrement( IN AFSObjectInfoCB *ObjectInfo,
+                        IN LONG Reason)
 {
 
     LONG lCount;
@@ -6551,13 +6588,16 @@ AFSObjectInfoIncrement( IN AFSObjectInfoCB *ObjectInfo)
         }
     }
 
+    InterlockedIncrement( &ObjectInfo->ObjectReferences[ Reason]);
+
     AFSReleaseResource( &ObjectInfo->NonPagedInfo->ObjectInfoLock);
 
     return lCount;
 }
 
 LONG
-AFSObjectInfoDecrement( IN AFSObjectInfoCB *ObjectInfo)
+AFSObjectInfoDecrement( IN AFSObjectInfoCB *ObjectInfo,
+                        IN LONG Reason)
 {
 
     LONG lCount;
@@ -6579,6 +6619,10 @@ AFSObjectInfoDecrement( IN AFSObjectInfoCB *ObjectInfo)
 
         lCount = InterlockedDecrement( &ObjectInfo->ObjectReferenceCount);
     }
+
+    lCount = InterlockedDecrement( &ObjectInfo->ObjectReferences[ Reason]);
+
+    ASSERT( lCount >= 0);
 
     AFSReleaseResource( &ObjectInfo->NonPagedInfo->ObjectInfoLock);
 
@@ -6606,6 +6650,8 @@ AFSDeleteObjectInfo( IN AFSObjectInfoCB *ObjectInfo)
 
         return;
     }
+
+    ASSERT( ObjectInfo->ObjectReferenceCount == 0);
 
     if( !ExIsResourceAcquiredExclusiveLite( ObjectInfo->VolumeCB->ObjectInfoTree.TreeLock))
     {
@@ -6670,7 +6716,14 @@ AFSDeleteObjectInfo( IN AFSObjectInfoCB *ObjectInfo)
     if( ObjectInfo->ParentObjectInformation != NULL)
     {
 
-        lCount = AFSObjectInfoDecrement( ObjectInfo->ParentObjectInformation);
+        lCount = AFSObjectInfoDecrement( ObjectInfo->ParentObjectInformation,
+                                         AFS_OBJECT_REFERENCE_CHILD);
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSDeleteObjectInfo Decrement count on parent object %p Cnt %d\n",
+                      ObjectInfo->ParentObjectInformation,
+                      lCount);
     }
 
     if( bAcquiredTreeLock)
@@ -8032,12 +8085,16 @@ AFSCloseLibrary()
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDirectoryCB *pDirNode = NULL, *pLastDirNode = NULL;
+    LONG lCount;
 
     __Enter
     {
 
         if( AFSGlobalDotDirEntry != NULL)
         {
+
+            lCount = AFSObjectInfoDecrement( AFSGlobalDotDirEntry->ObjectInformation,
+                                             AFS_OBJECT_REFERENCE_GLOBAL);
 
             AFSDeleteObjectInfo( AFSGlobalDotDirEntry->ObjectInformation);
 
@@ -8052,6 +8109,9 @@ AFSCloseLibrary()
 
         if( AFSGlobalDotDotDirEntry != NULL)
         {
+
+            lCount = AFSObjectInfoDecrement( AFSGlobalDotDotDirEntry->ObjectInformation,
+                                             AFS_OBJECT_REFERENCE_GLOBAL);
 
             AFSDeleteObjectInfo( AFSGlobalDotDotDirEntry->ObjectInformation);
 
@@ -8073,6 +8133,9 @@ AFSCloseLibrary()
             {
 
                 pLastDirNode = (AFSDirectoryCB *)pDirNode->ListEntry.fLink;
+
+                lCount = AFSObjectInfoDecrement( pDirNode->ObjectInformation,
+                                                 AFS_OBJECT_REFERENCE_GLOBAL);
 
                 AFSDeleteObjectInfo( pDirNode->ObjectInformation);
 
@@ -8194,7 +8257,14 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
 
                 pObjectInfo = &pVolumeCB->ObjectInformation;
 
-                lCount = AFSObjectInfoIncrement( pObjectInfo);
+                lCount = AFSObjectInfoIncrement( pObjectInfo,
+                                                 AFS_OBJECT_REFERENCE_STATUS);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSGetObjectStatus Increment1 count on object %p Cnt %d\n",
+                              pObjectInfo,
+                              lCount);
 
                 lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
 
@@ -8231,11 +8301,12 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
                     // Reference the node so it won't be torn down
                     //
 
-                    lCount = AFSObjectInfoIncrement( pObjectInfo);
+                    lCount = AFSObjectInfoIncrement( pObjectInfo,
+                                                     AFS_OBJECT_REFERENCE_STATUS);
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSGetObjectStatus Increment count on object %p Cnt %d\n",
+                                  "AFSGetObjectStatus Increment2 count on object %p Cnt %d\n",
                                   pObjectInfo,
                                   lCount);
                 }
@@ -8416,7 +8487,14 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
 
             pObjectInfo = pDirectoryEntry->ObjectInformation;
 
-            lCount = AFSObjectInfoIncrement( pObjectInfo);
+            lCount = AFSObjectInfoIncrement( pObjectInfo,
+                                             AFS_OBJECT_REFERENCE_STATUS);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSGetObjectStatus Increment3 count on object %p Cnt %d\n",
+                          pObjectInfo,
+                          lCount);
 
             if( pVolumeCB != NULL)
             {
@@ -8476,7 +8554,14 @@ try_exit:
         if( pObjectInfo != NULL)
         {
 
-            lCount = AFSObjectInfoDecrement( pObjectInfo);
+            lCount = AFSObjectInfoDecrement( pObjectInfo,
+                                             AFS_OBJECT_REFERENCE_STATUS);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSGetObjectStatus Decrement count on object %p Cnt %d\n",
+                          pObjectInfo,
+                          lCount);
         }
 
         if( pNameArray != NULL)
@@ -9106,6 +9191,7 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
     AFSExtent          *pEntry;
     ULONG               ulProcessCount = 0;
     ULONG               ulCount = 0;
+    LONG                lCount;
 
     __Enter
     {
@@ -9547,11 +9633,19 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
             }
         }
 
-        if( ObjectInfo != NULL)
-        {
+        //
+        // Destroy the reference passed in by the caller to AFSInvalidateObject
+        // or AFSQueueInvalidateObject
+        //
 
-            AFSObjectInfoDecrement( ObjectInfo);
-        }
+        lCount = AFSObjectInfoDecrement( ObjectInfo,
+                                         AFS_OBJECT_REFERENCE_INVALIDATION);
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSPerformObjectInvalidation Decrement count on object %p Cnt %d\n",
+                      ObjectInfo,
+                      lCount);
     }
 
     return ntStatus;

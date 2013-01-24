@@ -1399,7 +1399,14 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                     // with an invalidation call from the service during AFSCleanupFcb
                                     //
 
-                                    lCount = AFSObjectInfoIncrement( pCurrentChildObject);
+                                    lCount = AFSObjectInfoIncrement( pCurrentChildObject,
+                                                                     AFS_OBJECT_REFERENCE_WORKER);
+
+                                    AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                                                  AFS_TRACE_LEVEL_VERBOSE,
+                                                  "AFSPrimaryVolumeWorkerThread Increment count on object %p Cnt %d\n",
+                                                  pCurrentChildObject,
+                                                  lCount);
 
                                     if( lCount == 1 &&
                                         pCurrentChildObject->Fcb != NULL &&
@@ -1436,7 +1443,14 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                                         TRUE);
                                     }
 
-                                    lCount = AFSObjectInfoDecrement( pCurrentChildObject);
+                                    lCount = AFSObjectInfoDecrement( pCurrentChildObject,
+                                                                     AFS_OBJECT_REFERENCE_WORKER);
+
+                                    AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                                                  AFS_TRACE_LEVEL_VERBOSE,
+                                                  "AFSPrimaryVolumeWorkerThread Decrement1 count on object %p Cnt %d\n",
+                                                  pCurrentChildObject,
+                                                  lCount);
 
                                     AFSAcquireExcl( &pCurrentChildObject->NonPagedInfo->ObjectInfoLock,
                                                     TRUE);
@@ -1565,7 +1579,14 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                     else if( pCurrentObject->FileType == AFS_FILE_TYPE_FILE)
                     {
 
-                        lCount = AFSObjectInfoIncrement( pCurrentObject);
+                        lCount = AFSObjectInfoIncrement( pCurrentObject,
+                                                         AFS_OBJECT_REFERENCE_WORKER);
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSPrimaryVolumeWorkerThread Increment2 count on object %p Cnt %d\n",
+                                      pCurrentObject,
+                                      lCount);
 
                         AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
 
@@ -1587,7 +1608,14 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                             }
                         }
 
-                        lCount = AFSObjectInfoDecrement( pCurrentObject);
+                        lCount = AFSObjectInfoDecrement( pCurrentObject,
+                                                         AFS_OBJECT_REFERENCE_WORKER);
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSPrimaryVolumeWorkerThread Decrement2 count on object %p Cnt %d\n",
+                                      pCurrentObject,
+                                      lCount);
 
                         if( !AFSAcquireExcl( pVolumeCB->ObjectInfoTree.TreeLock,
                                              FALSE))
