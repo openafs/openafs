@@ -436,6 +436,12 @@ typedef struct _AFS_DIRECTORY_CB
     LONG             DirOpenReferenceCount;
 
     //
+    // Current count of reference from Name Array entries
+    //
+
+    LONG             NameArrayReferenceCount;
+
+    //
     // File index used in directory enumerations
     //
 

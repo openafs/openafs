@@ -1085,6 +1085,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
 
                 if( pVolumeCB->ObjectInfoListHead == NULL &&
                     pVolumeCB->DirectoryCB->DirOpenReferenceCount <= 0 &&
+                    pVolumeCB->DirectoryCB->NameArrayReferenceCount <= 0 &&
                     pVolumeCB->VolumeReferenceCount == 1 &&
                     ( pVolumeCB->RootFcb == NULL ||
                       pVolumeCB->RootFcb->OpenReferenceCount == 0) &&
@@ -1277,6 +1278,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                         {
 
                             if( pCurrentDirEntry->DirOpenReferenceCount > 0 ||
+                                pCurrentDirEntry->NameArrayReferenceCount > 0 ||
                                 ( pCurrentDirEntry->ObjectInformation->Fcb != NULL &&
                                   pCurrentDirEntry->ObjectInformation->Fcb->OpenReferenceCount > 0) ||
                                 liCurrentTime.QuadPart <= pCurrentDirEntry->ObjectInformation->LastAccessCount.QuadPart ||
@@ -1342,6 +1344,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                 {
 
                                     if( pCurrentDirEntry->DirOpenReferenceCount > 0 ||
+                                        pCurrentDirEntry->NameArrayReferenceCount > 0 ||
                                         ( pCurrentDirEntry->ObjectInformation->Fcb != NULL &&
                                           pCurrentDirEntry->ObjectInformation->Fcb->OpenReferenceCount > 0) ||
                                         liCurrentTime.QuadPart <= pCurrentDirEntry->ObjectInformation->LastAccessCount.QuadPart ||

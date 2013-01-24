@@ -196,6 +196,7 @@
 #define AFS_SUBSYSTEM_EXTENT_ACTIVE_COUNTING 0x00040000 // Extent Active Counts
 #define AFS_SUBSYSTEM_INIT_PROCESSING       0x00080000  // Redirector Initialization
 #define AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING 0x00100000  // Name Array Processing
+#define AFS_SUBSYSTEM_NAME_ARRAY_REF_COUNTING 0x00200000  // Name Array DirectoryCB refcnts
 
 //
 // Invalidation Reasons
