@@ -74,7 +74,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
-                      "AFSLocateNameEntry (FO: %08lX) Processing full name %wZ\n",
+                      "AFSLocateNameEntry (FO: %p) Processing full name %wZ\n",
                       FileObject,
                       RootPathName);
 
@@ -151,7 +151,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSLocateNameEntry (FO: %08lX) Deleted parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                              "AFSLocateNameEntry (FO: %p) Deleted parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                               FileObject,
                               &pDirEntry->NameInformation.FileName,
                               pCurrentObject->FileId.Cell,
@@ -168,7 +168,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSLocateNameEntry (FO: %08lX) Delete pending on %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                              "AFSLocateNameEntry (FO: %p) Delete pending on %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                               FileObject,
                               &pDirEntry->NameInformation.FileName,
                               pCurrentObject->FileId.Cell,
@@ -191,7 +191,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSLocateNameEntry (FO: %08lX) Verifying parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                              "AFSLocateNameEntry (FO: %p) Verifying parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                               FileObject,
                               &pDirEntry->NameInformation.FileName,
                               pCurrentObject->FileId.Cell,
@@ -216,7 +216,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
-                                  "AFSLocateNameEntry (FO: %08lX) Failed to verify parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                  "AFSLocateNameEntry (FO: %p) Failed to verify parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                                   FileObject,
                                   &pDirEntry->NameInformation.FileName,
                                   pCurrentObject->FileId.Cell,
@@ -239,7 +239,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSLocateNameEntry (FO: %08lX) Evaluating parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                              "AFSLocateNameEntry (FO: %p) Evaluating parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                               FileObject,
                               &pDirEntry->NameInformation.FileName,
                               pCurrentObject->FileId.Cell,
@@ -261,7 +261,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                           AFS_TRACE_LEVEL_ERROR,
-                                          "AFSLocateNameEntry (FO: %08lX) Failed to evaluate object %wZ FID %08lX-%08lX-%08lX-%08lX PARENT NULL Status %08lX\n",
+                                          "AFSLocateNameEntry (FO: %p) Failed to evaluate object %wZ FID %08lX-%08lX-%08lX-%08lX PARENT NULL Status %08lX\n",
                                           FileObject,
                                           &pDirEntry->NameInformation.FileName,
                                           pCurrentObject->FileId.Cell,
@@ -275,7 +275,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                           AFS_TRACE_LEVEL_ERROR,
-                                          "AFSLocateNameEntry (FO: %08lX) Failed to evaluate object %wZ FID %08lX-%08lX-%08lX-%08lX PARENT %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                          "AFSLocateNameEntry (FO: %p) Failed to evaluate object %wZ FID %08lX-%08lX-%08lX-%08lX PARENT %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                                           FileObject,
                                           &pDirEntry->NameInformation.FileName,
                                           pCurrentObject->FileId.Cell,
@@ -293,7 +293,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                     {
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
-                                      "AFSLocateNameEntry (FO: %08lX) Failed to evaluate parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                      "AFSLocateNameEntry (FO: %p) Failed to evaluate parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                                       FileObject,
                                       &pDirEntry->NameInformation.FileName,
                                       pCurrentObject->FileId.Cell,
@@ -366,7 +366,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSLocateNameEntry (FO: %08lX) Verifying symlink parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                      "AFSLocateNameEntry (FO: %p) Verifying symlink parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                                       FileObject,
                                       &pDirEntry->NameInformation.FileName,
                                       pCurrentObject->FileId.Cell,
@@ -388,7 +388,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                           AFS_TRACE_LEVEL_ERROR,
-                                          "AFSLocateNameEntry (FO: %08lX) Failed to verify symlink parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                          "AFSLocateNameEntry (FO: %p) Failed to verify symlink parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                                           FileObject,
                                           &pDirEntry->NameInformation.FileName,
                                           pCurrentObject->FileId.Cell,
@@ -431,7 +431,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
-                                      "AFSLocateNameEntry (FO: %08lX) Failed to retrieve target name for symlink %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                      "AFSLocateNameEntry (FO: %p) Failed to retrieve target name for symlink %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                                       FileObject,
                                       &pDirEntry->NameInformation.FileName,
                                       pCurrentObject->FileId.Cell,
@@ -450,7 +450,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSLocateNameEntry (FO: %08lX) Processing relative symlink target %wZ for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                      "AFSLocateNameEntry (FO: %p) Processing relative symlink target %wZ for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                                       FileObject,
                                       &pDirEntry->NameInformation.TargetName,
                                       &pDirEntry->NameInformation.FileName,
@@ -614,7 +614,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSLocateNameEntry (FO: %08lX) Processing absolute symlink target %wZ for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                      "AFSLocateNameEntry (FO: %p) Processing absolute symlink target %wZ for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                                       FileObject,
                                       &pDirEntry->NameInformation.TargetName,
                                       &pDirEntry->NameInformation.FileName,
@@ -735,7 +735,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                           AFS_TRACE_LEVEL_VERBOSE,
-                                          "AFSLocateNameEntry (FO: %08lX) Current volume not global, resetting for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                          "AFSLocateNameEntry (FO: %p) Current volume not global, resetting for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                                           FileObject,
                                           &pDirEntry->NameInformation.FileName,
                                           pCurrentObject->FileId.Cell,
@@ -747,7 +747,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                                           AFS_TRACE_LEVEL_VERBOSE,
-                                          "AFSLocateNameEntry Decrement count on volume %08lX Cnt %d\n",
+                                          "AFSLocateNameEntry Decrement count on volume %p Cnt %d\n",
                                           pCurrentVolume,
                                           lCount);
 
@@ -757,7 +757,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                                           AFS_TRACE_LEVEL_VERBOSE,
-                                          "AFSLocateNameEntry Increment count on volume %08lX Cnt %d\n",
+                                          "AFSLocateNameEntry Increment count on volume %p Cnt %d\n",
                                           pCurrentVolume,
                                           lCount);
                         }
@@ -803,7 +803,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSLocateNameEntry (FO: %08lX) Resetting name array for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                      "AFSLocateNameEntry (FO: %p) Resetting name array for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                                       FileObject,
                                       &pDirEntry->NameInformation.FileName,
                                       pCurrentObject->FileId.Cell,
@@ -857,7 +857,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSLocateNameEntry (FO: %08lX) Building MP target for parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                  "AFSLocateNameEntry (FO: %p) Building MP target for parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                                   FileObject,
                                   &pDirEntry->NameInformation.FileName,
                                   pCurrentObject->FileId.Cell,
@@ -878,7 +878,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSLocateNameEntry Decrement2 count on volume %08lX Cnt %d\n",
+                                  "AFSLocateNameEntry Decrement2 count on volume %p Cnt %d\n",
                                   pCurrentVolume,
                                   lCount);
 
@@ -891,7 +891,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
-                                      "AFSLocateNameEntry (FO: %08lX) Failed to build MP target for parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                      "AFSLocateNameEntry (FO: %p) Failed to build MP target for parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                                       FileObject,
                                       &pDirEntry->NameInformation.FileName,
                                       pCurrentObject->FileId.Cell,
@@ -1010,7 +1010,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
-                                      "AFSLocateNameEntry (FO: %08lX) Failed to process DFSLink parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                      "AFSLocateNameEntry (FO: %p) Failed to process DFSLink parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                                       FileObject,
                                       &pDirEntry->NameInformation.FileName,
                                       pCurrentObject->FileId.Cell,
@@ -1046,7 +1046,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSLocateNameEntry (FO: %08lX) Enumerating parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                              "AFSLocateNameEntry (FO: %p) Enumerating parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                               FileObject,
                               &pDirEntry->NameInformation.FileName,
                               pCurrentObject->FileId.Cell,
@@ -1071,7 +1071,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
-                                      "AFSLocateNameEntry (FO: %08lX) Failed to enumerate parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                      "AFSLocateNameEntry (FO: %p) Failed to enumerate parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                                       FileObject,
                                       &pDirEntry->NameInformation.FileName,
                                       pCurrentObject->FileId.Cell,
@@ -1096,7 +1096,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
-                                  "AFSLocateNameEntry (FO: %08lX) Encountered file node %wZ FID %08lX-%08lX-%08lX-%08lX in path processing\n",
+                                  "AFSLocateNameEntry (FO: %p) Encountered file node %wZ FID %08lX-%08lX-%08lX-%08lX in path processing\n",
                                   FileObject,
                                   &pDirEntry->NameInformation.FileName,
                                   pCurrentObject->FileId.Cell,
@@ -1118,7 +1118,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSLocateNameEntry (FO: %08lX) Returning file %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                  "AFSLocateNameEntry (FO: %p) Returning file %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                                   FileObject,
                                   &pDirEntry->NameInformation.FileName,
                                   pCurrentObject->FileId.Cell,
@@ -1151,7 +1151,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSLocateNameEntry (FO: %08lX) Completed processing returning %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                              "AFSLocateNameEntry (FO: %p) Completed processing returning %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                               FileObject,
                               &pDirEntry->NameInformation.FileName,
                               pCurrentObject->FileId.Cell,
@@ -1222,7 +1222,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSLocateNameEntry (FO: %08lX) Backing up entry from %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                              "AFSLocateNameEntry (FO: %p) Backing up entry from %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                               FileObject,
                               &pDirEntry->NameInformation.FileName,
                               pCurrentObject->FileId.Cell,
@@ -1312,7 +1312,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE_2,
-                                  "AFSLocateNameEntry (FO: %08lX) Processing @SYS substitution for %wZ Index %08lX\n",
+                                  "AFSLocateNameEntry (FO: %p) Processing @SYS substitution for %wZ Index %08lX\n",
                                   FileObject,
                                   &uniComponentName,
                                   ulSubstituteIndex);
@@ -1326,7 +1326,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE_2,
-                                      "AFSLocateNameEntry (FO: %08lX) Located substitution %wZ for %wZ Index %08lX\n",
+                                      "AFSLocateNameEntry (FO: %p) Located substitution %wZ for %wZ Index %08lX\n",
                                       FileObject,
                                       &uniSearchName,
                                       &uniComponentName,
@@ -1347,7 +1347,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
-                                      "AFSLocateNameEntry (FO: %08lX) Failed to locate substitute string for %wZ Index %08lX Status %08lX\n",
+                                      "AFSLocateNameEntry (FO: %p) Failed to locate substitute string for %wZ Index %08lX Status %08lX\n",
                                       FileObject,
                                       &uniComponentName,
                                       ulSubstituteIndex,
@@ -1388,7 +1388,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSLocateNameEntry (FO: %08lX) Searching for entry %wZ case sensitive\n",
+                              "AFSLocateNameEntry (FO: %p) Searching for entry %wZ case sensitive\n",
                               FileObject,
                               &uniSearchName);
 
@@ -1411,7 +1411,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE_2,
-                                  "AFSLocateNameEntry (FO: %08lX) Searching for entry %wZ case insensitive\n",
+                                  "AFSLocateNameEntry (FO: %p) Searching for entry %wZ case insensitive\n",
                                   FileObject,
                                   &uniSearchName);
 
@@ -1438,7 +1438,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                           AFS_TRACE_LEVEL_VERBOSE_2,
-                                          "AFSLocateNameEntry (FO: %08lX) Searching for entry %wZ short name\n",
+                                          "AFSLocateNameEntry (FO: %p) Searching for entry %wZ short name\n",
                                           FileObject,
                                           &uniSearchName);
 
@@ -1500,7 +1500,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                               AFS_TRACE_LEVEL_VERBOSE,
-                                              "AFSLocateNameEntry (FO: %08lX) Returning name not found for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                              "AFSLocateNameEntry (FO: %p) Returning name not found for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                                               FileObject,
                                               &uniSearchName,
                                               pCurrentObject->FileId.Cell,
@@ -1585,7 +1585,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSLocateNameEntry (FO: %08lX) Verifying(2) parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                      "AFSLocateNameEntry (FO: %p) Verifying(2) parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                                       FileObject,
                                       &pParentDirEntry->NameInformation.FileName,
                                       pParentDirEntry->ObjectInformation->FileId.Cell,
@@ -1610,7 +1610,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                           AFS_TRACE_LEVEL_ERROR,
-                                          "AFSLocateNameEntry (FO: %08lX) Failed to verify(2) parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                          "AFSLocateNameEntry (FO: %p) Failed to verify(2) parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                                           FileObject,
                                           &pParentDirEntry->NameInformation.FileName,
                                           pParentDirEntry->ObjectInformation->FileId.Cell,
@@ -1624,7 +1624,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSLocateNameEntry (FO: %08lX) Reprocessing component %wZ in parent %wZ\n",
+                                      "AFSLocateNameEntry (FO: %p) Reprocessing component %wZ in parent %wZ\n",
                                       FileObject,
                                       &uniSearchName,
                                       &pParentDirEntry->NameInformation.FileName);
@@ -1666,7 +1666,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSLocateNameEntry (FO: %08lX) Deleted entry %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                              "AFSLocateNameEntry (FO: %p) Deleted entry %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                               FileObject,
                               &pDirEntry->NameInformation.FileName,
                               pCurrentObject->FileId.Cell,
@@ -1706,7 +1706,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING|AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSLocateNameEntry Deleting dir entry %08lX (%08lX) for %wZ\n",
+                                  "AFSLocateNameEntry Deleting dir entry %p (%p) for %wZ\n",
                                   pDirEntry,
                                   pCurrentObject,
                                   &pDirEntry->NameInformation.FileName);
@@ -1729,7 +1729,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                             AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                                           AFS_TRACE_LEVEL_VERBOSE,
-                                          "AFSLocateNameEntry Removing object %08lX from volume tree\n",
+                                          "AFSLocateNameEntry Removing object %p from volume tree\n",
                                           pCurrentObject);
 
                             AFSRemoveHashEntry( &pCurrentObject->VolumeCB->ObjectInfoTree.TreeHead,
@@ -1776,7 +1776,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSLocateNameEntry (FO: %08lX) Returning name not found(2) for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                  "AFSLocateNameEntry (FO: %p) Returning name not found(2) for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                                   FileObject,
                                   &uniComponentName,
                                   pCurrentObject->FileId.Cell,
@@ -1838,7 +1838,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSLocateNameEntry (FO: %08lX) Substituting %wZ into %wZ Index %08lX\n",
+                              "AFSLocateNameEntry (FO: %p) Substituting %wZ into %wZ Index %08lX\n",
                               FileObject,
                               &uniSearchName,
                               &uniComponentName,
@@ -1870,7 +1870,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
-                                  "AFSLocateNameEntry (FO: %08lX) Failure to substitute %wZ into %wZ Index %08lX Status %08lX\n",
+                                  "AFSLocateNameEntry (FO: %p) Failure to substitute %wZ into %wZ Index %08lX Status %08lX\n",
                                   FileObject,
                                   &uniSearchName,
                                   &uniComponentName,
@@ -1912,7 +1912,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
-                                  "AFSLocateNameEntry (FO: %08lX) Failed to evaluate possible DFS Link %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                  "AFSLocateNameEntry (FO: %p) Failed to evaluate possible DFS Link %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                                   FileObject,
                                   &pDirEntry->NameInformation.FileName,
                                   pCurrentObject->FileId.Cell,
@@ -1931,7 +1931,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSLocateNameEntry (FO: %08lX) Inserting name array entry %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                          "AFSLocateNameEntry (FO: %p) Inserting name array entry %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                           FileObject,
                           &pDirEntry->NameInformation.FileName,
                           pCurrentObject->FileId.Cell,
@@ -1953,7 +1953,7 @@ try_exit:
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSLocateNameEntry (FO: %08lX) Completed processing %wZ Status %08lX\n",
+                      "AFSLocateNameEntry (FO: %p) Completed processing %wZ Status %08lX\n",
                       FileObject,
                       RootPathName,
                       ntStatus);
@@ -2003,7 +2003,7 @@ try_exit:
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSLocateNameEntry Decrement3 count on volume %08lX Cnt %d\n",
+                              "AFSLocateNameEntry Decrement3 count on volume %p Cnt %d\n",
                               pCurrentVolume,
                               lCount);
             }
@@ -2425,7 +2425,7 @@ AFSInsertDirectoryNode( IN AFSObjectInfoCB *ParentObjectInfo,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSInsertDirectoryNode Inserting entry %08lX %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                          "AFSInsertDirectoryNode Inserting entry %p %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                           DirEntry,
                           &DirEntry->NameInformation.FileName,
                           DirEntry->ObjectInformation->FileId.Cell,
@@ -2480,7 +2480,7 @@ AFSDeleteDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING | AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSDeleteDirEntry Deleting dir entry in parent %08lX Entry %08lX %wZ FID %08lX-%08lX-%08lX-%08lX RefCount %08lX\n",
+                      "AFSDeleteDirEntry Deleting dir entry in parent %08lX Entry %p %wZ FID %08lX-%08lX-%08lX-%08lX RefCount %d\n",
                       ParentObjectInfo,
                       DirEntry,
                       &DirEntry->NameInformation.FileName,
@@ -2522,7 +2522,7 @@ AFSDeleteDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSDeleteDirEntry Decrement count on object %08lX Cnt %d\n",
+                      "AFSDeleteDirEntry Decrement count on object %p Cnt %d\n",
                       DirEntry->ObjectInformation,
                       lCount);
 
@@ -2564,7 +2564,7 @@ AFSRemoveDirNodeFromParent( IN AFSObjectInfoCB *ParentObjectInfo,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSRemoveDirNodeFromParent Removing DirEntry %08lX %wZ FID %08lX-%08lX-%08lX-%08lX from Parent %08lX\n",
+                      "AFSRemoveDirNodeFromParent Removing DirEntry %p %wZ FID %08lX-%08lX-%08lX-%08lX from Parent %p\n",
                       DirEntry,
                       &DirEntry->NameInformation.FileName,
                       DirEntry->ObjectInformation->FileId.Cell,
@@ -2578,7 +2578,7 @@ AFSRemoveDirNodeFromParent( IN AFSObjectInfoCB *ParentObjectInfo,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSRemoveDirNodeFromParent Removing DirEntry %08lX name %wZ\n",
+                          "AFSRemoveDirNodeFromParent Removing DirEntry %p name %wZ\n",
                           DirEntry,
                           &DirEntry->NameInformation.FileName);
 
@@ -2785,7 +2785,7 @@ AFSParseName( IN PIRP Irp,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE_2,
-                          "AFSParseName (%08lX) Relative open for %wZ FID %08lX-%08lX-%08lX-%08lX component %wZ\n",
+                          "AFSParseName (%p) Relative open for %wZ FID %08lX-%08lX-%08lX-%08lX component %wZ\n",
                           Irp,
                           &pRelatedCcb->DirectoryCB->NameInformation.FileName,
                           pRelatedCcb->DirectoryCB->ObjectInformation->FileId.Cell,
@@ -2799,7 +2799,7 @@ AFSParseName( IN PIRP Irp,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSParseName (%08lX) Component %wZ contains wild cards\n",
+                              "AFSParseName (%p) Component %wZ contains wild cards\n",
                               Irp,
                               &uniFullName);
 
@@ -2829,7 +2829,7 @@ AFSParseName( IN PIRP Irp,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSParseName (%08lX) Volume %08lX:%08lX OFFLINE/INVALID\n",
+                              "AFSParseName (%p) Volume %08lX:%08lX OFFLINE/INVALID\n",
                               Irp,
                               pVolumeCB->ObjectInformation.FileId.Cell,
                               pVolumeCB->ObjectInformation.FileId.Volume);
@@ -2844,7 +2844,7 @@ AFSParseName( IN PIRP Irp,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSParseName (%08lX) Verifying root of volume %08lX:%08lX\n",
+                              "AFSParseName (%p) Verifying root of volume %08lX:%08lX\n",
                               Irp,
                               pVolumeCB->ObjectInformation.FileId.Cell,
                               pVolumeCB->ObjectInformation.FileId.Volume);
@@ -2857,7 +2857,7 @@ AFSParseName( IN PIRP Irp,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
-                                  "AFSParseName (%08lX) Failed verification of root Status %08lX\n",
+                                  "AFSParseName (%p) Failed verification of root Status %08lX\n",
                                   Irp,
                                   ntStatus);
 
@@ -2874,7 +2874,7 @@ AFSParseName( IN PIRP Irp,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSParseName (%08lX) Verifying parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                              "AFSParseName (%p) Verifying parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                               Irp,
                               &pDirEntry->NameInformation.FileName,
                               pDirEntry->ObjectInformation->FileId.Cell,
@@ -2899,7 +2899,7 @@ AFSParseName( IN PIRP Irp,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSParseName (%08lX) Failed verification of parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                  "AFSParseName (%p) Failed verification of parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                                   Irp,
                                   &pDirEntry->NameInformation.FileName,
                                   pDirEntry->ObjectInformation->FileId.Cell,
@@ -2932,7 +2932,7 @@ AFSParseName( IN PIRP Irp,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSParseName (%08lX) Failed to allocate full name buffer\n",
+                              "AFSParseName (%p) Failed to allocate full name buffer\n",
                               Irp);
 
                 try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
@@ -2995,7 +2995,7 @@ AFSParseName( IN PIRP Irp,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSParseName (%08lX) Failed to initialize name array\n",
+                                  "AFSParseName (%p) Failed to initialize name array\n",
                                   Irp);
 
                     AFSExFreePoolWithTag( uniFullName.Buffer, 0);
@@ -3022,7 +3022,7 @@ AFSParseName( IN PIRP Irp,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSParseName (%08lX) Failed to initialize name array\n",
+                                  "AFSParseName (%p) Failed to initialize name array\n",
                                   Irp);
 
                     AFSExFreePoolWithTag( uniFullName.Buffer, 0);
@@ -3040,7 +3040,7 @@ AFSParseName( IN PIRP Irp,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSParseName (%08lX) Failed to populate name array\n",
+                              "AFSParseName (%p) Failed to populate name array\n",
                               Irp);
 
                 AFSExFreePoolWithTag( uniFullName.Buffer, 0);
@@ -3071,7 +3071,7 @@ AFSParseName( IN PIRP Irp,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSParseName Increment count on volume %08lX Cnt %d\n",
+                          "AFSParseName Increment count on volume %p Cnt %d\n",
                           pVolumeCB,
                           lCount);
 
@@ -3089,7 +3089,7 @@ AFSParseName( IN PIRP Irp,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE_2,
-                          "AFSParseName (%08lX) Returning full name %wZ\n",
+                          "AFSParseName (%p) Returning full name %wZ\n",
                           Irp,
                           &uniFullName);
 
@@ -3108,7 +3108,7 @@ AFSParseName( IN PIRP Irp,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSParseName (%08lX) Name %wZ contains wild cards or too short\n",
+                          "AFSParseName (%p) Name %wZ contains wild cards or too short\n",
                           Irp,
                           &uniFullName);
 
@@ -3181,7 +3181,7 @@ AFSParseName( IN PIRP Irp,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSParseName (%08lX) Name %wZ does not have server name\n",
+                              "AFSParseName (%p) Name %wZ does not have server name\n",
                               Irp,
                               &pIrpSp->FileObject->FileName);
 
@@ -3198,7 +3198,7 @@ AFSParseName( IN PIRP Irp,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSParseName (%08lX) Name %wZ contains invalid drive mapping\n",
+                              "AFSParseName (%p) Name %wZ contains invalid drive mapping\n",
                               Irp,
                               &pIrpSp->FileObject->FileName);
 
@@ -3211,7 +3211,7 @@ AFSParseName( IN PIRP Irp,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSParseName (%08lX) Component %wZ contains wild cards\n",
+                          "AFSParseName (%p) Component %wZ contains wild cards\n",
                           Irp,
                           &uniFullName);
 
@@ -3220,7 +3220,7 @@ AFSParseName( IN PIRP Irp,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
-                      "AFSParseName (%08lX) Processing full name %wZ\n",
+                      "AFSParseName (%p) Processing full name %wZ\n",
                       Irp,
                       &uniFullName);
 
@@ -3248,7 +3248,7 @@ AFSParseName( IN PIRP Irp,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSParseName (%08lX) Volume %08lX:%08lX OFFLINE/INVALID\n",
+                          "AFSParseName (%p) Volume %08lX:%08lX OFFLINE/INVALID\n",
                           Irp,
                           AFSGlobalRoot->ObjectInformation.FileId.Cell,
                           AFSGlobalRoot->ObjectInformation.FileId.Volume);
@@ -3263,7 +3263,7 @@ AFSParseName( IN PIRP Irp,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSParseName (%08lX) Verifying root of volume %08lX:%08lX\n",
+                          "AFSParseName (%p) Verifying root of volume %08lX:%08lX\n",
                           Irp,
                           AFSGlobalRoot->ObjectInformation.FileId.Cell,
                           AFSGlobalRoot->ObjectInformation.FileId.Volume);
@@ -3276,7 +3276,7 @@ AFSParseName( IN PIRP Irp,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSParseName (%08lX) Failed verification of root Status %08lX\n",
+                              "AFSParseName (%p) Failed verification of root Status %08lX\n",
                               Irp,
                               ntStatus);
 
@@ -3293,7 +3293,7 @@ AFSParseName( IN PIRP Irp,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSParseName (%08lX) Enumerating global root of volume %08lX:%08lX\n",
+                          "AFSParseName (%p) Enumerating global root of volume %08lX:%08lX\n",
                           Irp,
                           AFSGlobalRoot->ObjectInformation.FileId.Cell,
                           AFSGlobalRoot->ObjectInformation.FileId.Volume);
@@ -3305,7 +3305,7 @@ AFSParseName( IN PIRP Irp,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSParseName (%08lX) Failed enumeraiton of root Status %08lX\n",
+                              "AFSParseName (%p) Failed enumeraiton of root Status %08lX\n",
                               Irp,
                               ntStatus);
 
@@ -3324,7 +3324,7 @@ AFSParseName( IN PIRP Irp,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE_2,
-                          "AFSParseName (%08lX) Returning global root access\n",
+                          "AFSParseName (%p) Returning global root access\n",
                           Irp);
 
             lCount = InterlockedIncrement( &AFSGlobalRoot->DirectoryCB->DirOpenReferenceCount);
@@ -3372,7 +3372,7 @@ AFSParseName( IN PIRP Irp,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSParseName (%08lX) Component %wZ contains wild cards\n",
+                          "AFSParseName (%p) Component %wZ contains wild cards\n",
                           Irp,
                           &uniComponentName);
 
@@ -3403,7 +3403,7 @@ AFSParseName( IN PIRP Irp,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSParseName (%08lX) Returning global root access\n",
+                              "AFSParseName (%p) Returning global root access\n",
                               Irp);
 
                 lCount = InterlockedIncrement( &AFSGlobalRoot->DirectoryCB->DirOpenReferenceCount);
@@ -3446,7 +3446,7 @@ AFSParseName( IN PIRP Irp,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSParseName (%08lX) Returning root PIOCtl access\n",
+                              "AFSParseName (%p) Returning root PIOCtl access\n",
                               Irp);
 
                 lCount = InterlockedIncrement( &AFSGlobalRoot->DirectoryCB->DirOpenReferenceCount);
@@ -3474,7 +3474,7 @@ AFSParseName( IN PIRP Irp,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE_2,
-                          "AFSParseName (%08lX) Returning root share name %wZ access\n",
+                          "AFSParseName (%p) Returning root share name %wZ access\n",
                           Irp,
                           &uniComponentName);
 
@@ -3634,7 +3634,7 @@ AFSParseName( IN PIRP Irp,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSParseName (%08lX) Failed to initialize name array\n",
+                              "AFSParseName (%p) Failed to initialize name array\n",
                               Irp);
 
                 try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
@@ -3648,7 +3648,7 @@ AFSParseName( IN PIRP Irp,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSParseName (%08lX) Failed to insert name array element\n",
+                              "AFSParseName (%p) Failed to insert name array element\n",
                               Irp);
 
                 try_return( ntStatus);
@@ -3714,7 +3714,7 @@ AFSParseName( IN PIRP Irp,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSParseName (%08lX) Failed to initialize name array\n",
+                              "AFSParseName (%p) Failed to initialize name array\n",
                               Irp);
 
                 try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
@@ -3801,7 +3801,7 @@ AFSParseName( IN PIRP Irp,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSParseName Increment2 count on global volume %08lX Cnt %d\n",
+                      "AFSParseName Increment2 count on global volume %p Cnt %d\n",
                       pVolumeCB,
                       lCount);
 
@@ -3980,7 +3980,7 @@ AFSCheckCellName( IN GUID *AuthGroup,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSCheckCellName Increment count on volume %08lX Cnt %d\n",
+                          "AFSCheckCellName Increment count on volume %p Cnt %d\n",
                           pVolumeCB,
                           lCount);
         }
@@ -4237,7 +4237,7 @@ AFSBuildMountPointTarget( IN GUID *AuthGroup,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSBuildMountPointTarget Acquiring RDR VolumeTreeLock lock %08lX EXCL %08lX\n",
+                      "AFSBuildMountPointTarget Acquiring RDR VolumeTreeLock lock %p EXCL %08lX\n",
                       &pDevExt->Specific.RDR.VolumeTreeLock,
                       PsGetCurrentThread());
 
@@ -4310,7 +4310,7 @@ AFSBuildMountPointTarget( IN GUID *AuthGroup,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSBuildMountPointTarget Increment count on volume %08lX Cnt %d\n",
+                          "AFSBuildMountPointTarget Increment count on volume %p Cnt %d\n",
                           pVolumeCB,
                           lCount);
 
@@ -4343,7 +4343,7 @@ AFSBuildMountPointTarget( IN GUID *AuthGroup,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSBuildMountPoint Decrement count on volume %08lX Cnt %d\n",
+                              "AFSBuildMountPoint Decrement count on volume %p Cnt %d\n",
                               pVolumeCB,
                               lCount);
 
@@ -4416,7 +4416,7 @@ AFSBuildRootVolume( IN GUID *AuthGroup,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSBuildRootVolume Acquiring RDR VolumeTreeLock lock %08lX EXCL %08lX\n",
+                      "AFSBuildRootVolume Acquiring RDR VolumeTreeLock lock %p EXCL %08lX\n",
                       &pDevExt->Specific.RDR.VolumeTreeLock,
                       PsGetCurrentThread());
 
@@ -4488,7 +4488,7 @@ AFSBuildRootVolume( IN GUID *AuthGroup,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSBuildRootVolume Increment count on volume %08lX Cnt %d\n",
+                          "AFSBuildRootVolume Increment count on volume %p Cnt %d\n",
                           pVolumeCB,
                           lCount);
 
@@ -4522,7 +4522,7 @@ AFSBuildRootVolume( IN GUID *AuthGroup,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSBuildRootVolume Decrement count on volume %08lX Cnt %d\n",
+                              "AFSBuildRootVolume Decrement count on volume %p Cnt %d\n",
                               pVolumeCB,
                               lCount);
 

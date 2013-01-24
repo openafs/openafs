@@ -219,7 +219,7 @@ AFSReleaseResource( IN PERESOURCE Resource)
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSReleaseResource Releasing lock %08lX Thread %08lX\n",
+                      "AFSReleaseResource Releasing lock %p Thread %08lX\n",
                       Resource,
                       PsGetCurrentThread());
     }
@@ -237,7 +237,7 @@ AFSConvertToShared( IN PERESOURCE Resource)
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSConvertToShared Converting lock %08lX Thread %08lX\n",
+                  "AFSConvertToShared Converting lock %p Thread %08lX\n",
                   Resource,
                   PsGetCurrentThread());
 
@@ -1144,7 +1144,7 @@ AFSSetSysNameInformation( IN AFSSysNameNotificationCB *SysNameInfo,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSSetSysNameInformation Acquiring SysName lock %08lX EXCL %08lX\n",
+                      "AFSSetSysNameInformation Acquiring SysName lock %p EXCL %08lX\n",
                       pSysNameLock,
                       PsGetCurrentThread());
 
@@ -1652,7 +1652,7 @@ AFSAcquireFcbForLazyWrite( IN PVOID Fcb,
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSAcquireFcbForLazyWrite Acquiring Fcb %08lX\n",
+                  "AFSAcquireFcbForLazyWrite Acquiring Fcb %p\n",
                   Fcb);
 
     //
@@ -1661,7 +1661,7 @@ AFSAcquireFcbForLazyWrite( IN PVOID Fcb,
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSAcquireFcbForLazyWrite Attempt to acquire Fcb PagingIo lock %08lX SHARED %08lX\n",
+                  "AFSAcquireFcbForLazyWrite Attempt to acquire Fcb PagingIo lock %p SHARED %08lX\n",
                   &pFcb->NPFcb->PagingResource,
                   PsGetCurrentThread());
 
@@ -1671,7 +1671,7 @@ AFSAcquireFcbForLazyWrite( IN PVOID Fcb,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSAcquireFcbForLazyWrite Acquired Fcb PagingIo lock %08lX SHARED %08lX\n",
+                      "AFSAcquireFcbForLazyWrite Acquired Fcb PagingIo lock %p SHARED %08lX\n",
                       &pFcb->NPFcb->PagingResource,
                       PsGetCurrentThread());
 
@@ -1679,7 +1679,7 @@ AFSAcquireFcbForLazyWrite( IN PVOID Fcb,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSAcquireFcbForLazyWrite Attempt to acquire Fcb SectionObject lock %08lX SHARED %08lX\n",
+                      "AFSAcquireFcbForLazyWrite Attempt to acquire Fcb SectionObject lock %p SHARED %08lX\n",
                       &pFcb->NPFcb->SectionObjectResource,
                       PsGetCurrentThread());
 
@@ -1689,7 +1689,7 @@ AFSAcquireFcbForLazyWrite( IN PVOID Fcb,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSAcquireFcbForLazyWrite Acquired Fcb SectionObject lock %08lX SHARED %08lX\n",
+                          "AFSAcquireFcbForLazyWrite Acquired Fcb SectionObject lock %p SHARED %08lX\n",
                           &pFcb->NPFcb->SectionObjectResource,
                           PsGetCurrentThread());
 
@@ -1732,7 +1732,7 @@ AFSReleaseFcbFromLazyWrite( IN PVOID Fcb)
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSReleaseFcbFromLazyWrite Releasing Fcb %08lX\n",
+                  "AFSReleaseFcbFromLazyWrite Releasing Fcb %p\n",
                   Fcb);
 
     IoSetTopLevelIrp( NULL);
@@ -1754,7 +1754,7 @@ AFSAcquireFcbForReadAhead( IN PVOID Fcb,
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSAcquireFcbForReadAhead Attempt to acquire Fcb SectionObject lock %08lX SHARED %08lX\n",
+                  "AFSAcquireFcbForReadAhead Attempt to acquire Fcb SectionObject lock %p SHARED %08lX\n",
                   &pFcb->NPFcb->SectionObjectResource,
                   PsGetCurrentThread());
 
@@ -1764,7 +1764,7 @@ AFSAcquireFcbForReadAhead( IN PVOID Fcb,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSAcquireFcbForReadAhead Acquired Fcb SectionObject lock %08lX SHARED %08lX\n",
+                      "AFSAcquireFcbForReadAhead Acquired Fcb SectionObject lock %p SHARED %08lX\n",
                       &pFcb->NPFcb->SectionObjectResource,
                       PsGetCurrentThread());
 

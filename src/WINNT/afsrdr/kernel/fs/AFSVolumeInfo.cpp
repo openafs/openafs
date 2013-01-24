@@ -125,7 +125,7 @@ AFSSetVolumeInfo( IN PDEVICE_OBJECT DeviceObject,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_WARNING,
-                      "AFSSetVolumeInfo Entry for FO %08lX\n", pIrpSp->FileObject);
+                      "AFSSetVolumeInfo Entry for FO %p\n", pIrpSp->FileObject);
 
         AFSCompleteRequest( Irp,
                             ntStatus);

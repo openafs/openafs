@@ -363,7 +363,7 @@ AFSCompleteIo( IN AFSGatherIo *Gather,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSCompleteIo Completing Irp %08lX Status %08lX\n",
+                          "AFSCompleteIo Completing Irp %p Status %08lX\n",
                           Gather->MasterIrp,
                           Gather->Status);
 

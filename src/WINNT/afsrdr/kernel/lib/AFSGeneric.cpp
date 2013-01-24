@@ -275,7 +275,7 @@ AFSReleaseResource( IN PERESOURCE Resource)
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSReleaseResource Releasing lock %08lX Thread %08lX\n",
+                  "AFSReleaseResource Releasing lock %p Thread %08lX\n",
                   Resource,
                   PsGetCurrentThread());
 
@@ -292,7 +292,7 @@ AFSConvertToShared( IN PERESOURCE Resource)
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSConvertToShared Converting lock %08lX Thread %08lX\n",
+                  "AFSConvertToShared Converting lock %p Thread %08lX\n",
                   Resource,
                   PsGetCurrentThread());
 
@@ -674,7 +674,7 @@ AFSInitializeGlobalDirectoryEntries()
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSInitializeGlobalDirectoryEntries Increment count on object %08lX Cnt %d\n",
+                      "AFSInitializeGlobalDirectoryEntries Increment count on object %p Cnt %d\n",
                       pObjectInfoCB,
                       lCount);
 
@@ -781,7 +781,7 @@ AFSInitializeGlobalDirectoryEntries()
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSInitializeGlobalDirectoryEntries Increment count on object %08lX Cnt %d\n",
+                      "AFSInitializeGlobalDirectoryEntries Increment count on object %p Cnt %d\n",
                       pObjectInfoCB,
                       lCount);
 
@@ -964,7 +964,7 @@ AFSInitDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSInitDirEntry initialized object %08lX Parent Object %08lX for %wZ\n",
+                          "AFSInitDirEntry initialized object %p Parent Object %p for %wZ\n",
                           pObjectInfoCB,
                           ParentObjectInfo,
                           FileName);
@@ -974,7 +974,7 @@ AFSInitDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSInitDirEntry Increment count on object %08lX Cnt %d\n",
+                      "AFSInitDirEntry Increment count on object %p Cnt %d\n",
                       pObjectInfoCB,
                       lCount);
 
@@ -1200,7 +1200,7 @@ try_exit:
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSInitDirEntry Decrement count on object %08lX Cnt %d\n",
+                              "AFSInitDirEntry Decrement count on object %p Cnt %d\n",
                               pObjectInfoCB,
                               lCount);
 
@@ -1928,7 +1928,7 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSInvalidateCache Acquiring RDR VolumeTreeLock lock %08lX SHARED %08lX\n",
+                      "AFSInvalidateCache Acquiring RDR VolumeTreeLock lock %p SHARED %08lX\n",
                       &pDevExt->Specific.RDR.VolumeTreeLock,
                       PsGetCurrentThread());
 
@@ -1955,7 +1955,7 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSInvalidateCache Increment count on volume %08lX Cnt %d\n",
+                          "AFSInvalidateCache Increment count on volume %p Cnt %d\n",
                           pVolumeCB,
                           lCount);
         }
@@ -2020,7 +2020,7 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSInvalidateCache Increment count on object %08lX Cnt %d\n",
+                          "AFSInvalidateCache Increment count on object %p Cnt %d\n",
                           pObjectInfo,
                           lCount);
         }
@@ -2055,7 +2055,7 @@ try_exit:
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSInvalidateCache Decrement count on object %08lX Cnt %d\n",
+                          "AFSInvalidateCache Decrement count on object %p Cnt %d\n",
                           pObjectInfo,
                           lCount);
         }
@@ -2067,7 +2067,7 @@ try_exit:
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSInvalidateCache Decrement count on volume %08lX Cnt %d\n",
+                          "AFSInvalidateCache Decrement count on volume %p Cnt %d\n",
                           pVolumeCB,
                           lCount);
         }
@@ -2229,7 +2229,7 @@ AFSSubstituteSysName( IN UNICODE_STRING *ComponentName,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSSubstituteSysName Acquiring SysName lock %08lX SHARED %08lX\n",
+                      "AFSSubstituteSysName Acquiring SysName lock %p SHARED %08lX\n",
                       pSysNameLock,
                       PsGetCurrentThread());
 
@@ -2509,7 +2509,7 @@ AFSInvalidateVolume( IN AFSVolumeCB *VolumeCB,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSInvalidateVolumeObjects Increment count on object %08lX Cnt %d\n",
+                          "AFSInvalidateVolumeObjects Increment count on object %p Cnt %d\n",
                           pCurrentObject,
                           lCount);
 
@@ -2523,7 +2523,7 @@ AFSInvalidateVolume( IN AFSVolumeCB *VolumeCB,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSInvalidateVolumeObjects Decrement count on object %08lX Cnt %d\n",
+                              "AFSInvalidateVolumeObjects Decrement count on object %p Cnt %d\n",
                               pCurrentObject,
                               lCount);
             }
@@ -2549,7 +2549,7 @@ AFSInvalidateVolume( IN AFSVolumeCB *VolumeCB,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSInvalidateVolumeObjects Increment count on object %08lX Cnt %d\n",
+                          "AFSInvalidateVolumeObjects Increment count on object %p Cnt %d\n",
                           pCurrentObject,
                           lCount);
         }
@@ -2570,7 +2570,7 @@ AFSInvalidateVolume( IN AFSVolumeCB *VolumeCB,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSInvalidateVolumeObjects Increment count on object %08lX Cnt %d\n",
+                              "AFSInvalidateVolumeObjects Increment count on object %p Cnt %d\n",
                               pNextObject,
                               lCount);
             }
@@ -2587,7 +2587,7 @@ AFSInvalidateVolume( IN AFSVolumeCB *VolumeCB,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSInvalidateVolumeObjects Decrement count on object %08lX Cnt %d\n",
+                              "AFSInvalidateVolumeObjects Decrement count on object %p Cnt %d\n",
                               pCurrentObject,
                               lCount);
             }
@@ -2616,7 +2616,7 @@ AFSInvalidateAllVolumes( VOID)
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSInvalidateAllVolumes Acquiring RDR VolumeListLock lock %08lX SHARED %08lX\n",
+                  "AFSInvalidateAllVolumes Acquiring RDR VolumeListLock lock %p SHARED %08lX\n",
                   &pRDRDeviceExt->Specific.RDR.VolumeListLock,
                   PsGetCurrentThread());
 
@@ -2630,7 +2630,7 @@ AFSInvalidateAllVolumes( VOID)
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSInvalidateAllVolumes Acquiring VolumeRoot ObjectInfoTree lock %08lX SHARED %08lX\n",
+                      "AFSInvalidateAllVolumes Acquiring VolumeRoot ObjectInfoTree lock %p SHARED %08lX\n",
                       pVolumeCB->ObjectInfoTree.TreeLock,
                       PsGetCurrentThread());
 
@@ -2638,7 +2638,7 @@ AFSInvalidateAllVolumes( VOID)
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSInvalidateAllVolumes Increment count on volume %08lX Cnt %d\n",
+                      "AFSInvalidateAllVolumes Increment count on volume %p Cnt %d\n",
                       pVolumeCB,
                       lCount);
     }
@@ -2655,7 +2655,7 @@ AFSInvalidateAllVolumes( VOID)
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSInvalidateAllVolumes Increment count on volume %08lX Cnt %d\n",
+                          "AFSInvalidateAllVolumes Increment count on volume %p Cnt %d\n",
                           pVolumeCB,
                           lCount);
         }
@@ -2673,7 +2673,7 @@ AFSInvalidateAllVolumes( VOID)
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSInvalidateAllVolumes Decrement count on volume %08lX Cnt %d\n",
+                      "AFSInvalidateAllVolumes Decrement count on volume %p Cnt %d\n",
                       pVolumeCB,
                       lCount);
 
@@ -2944,7 +2944,7 @@ AFSVerifyEntry( IN GUID *AuthGroup,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSVerifyEntry Acquiring Fcb lock %08lX EXCL %08lX\n",
+                                  "AFSVerifyEntry Acquiring Fcb lock %p EXCL %08lX\n",
                                   &pObjectInfo->Fcb->NPFcb->Resource,
                                   PsGetCurrentThread());
 
@@ -2984,7 +2984,7 @@ AFSVerifyEntry( IN GUID *AuthGroup,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSVerifyEntry Acquiring Fcb SectionObject lock %08lX EXCL %08lX\n",
+                                  "AFSVerifyEntry Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                                   &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
                                   PsGetCurrentThread());
 
@@ -3001,7 +3001,7 @@ AFSVerifyEntry( IN GUID *AuthGroup,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSVerifyEntry Releasing Fcb SectionObject lock %08lX EXCL %08lX\n",
+                                  "AFSVerifyEntry Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                                   &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
                                   PsGetCurrentThread());
 
@@ -3214,7 +3214,7 @@ AFSSetVolumeState( IN AFSVolumeStatusCB *VolumeStatus)
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSSetVolumeState Acquiring RDR VolumeTreeLock lock %08lX SHARED %08lX\n",
+                      "AFSSetVolumeState Acquiring RDR VolumeTreeLock lock %p SHARED %08lX\n",
                       &pDevExt->Specific.RDR.VolumeTreeLock,
                       PsGetCurrentThread());
 
@@ -3237,7 +3237,7 @@ AFSSetVolumeState( IN AFSVolumeStatusCB *VolumeStatus)
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSSetVolumeState Increment count on volume %08lX Cnt %d\n",
+                          "AFSSetVolumeState Increment count on volume %p Cnt %d\n",
                           pVolumeCB,
                           lCount);
 
@@ -3332,7 +3332,7 @@ AFSValidateDirectoryCache( IN AFSObjectInfoCB *ObjectInfo,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSValidateDirectoryCache Acquiring DirectoryNodeHdr.TreeLock lock %08lX EXCL %08lX\n",
+                          "AFSValidateDirectoryCache Acquiring DirectoryNodeHdr.TreeLock lock %p EXCL %08lX\n",
                           ObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
                           PsGetCurrentThread());
 
@@ -3352,7 +3352,7 @@ AFSValidateDirectoryCache( IN AFSObjectInfoCB *ObjectInfo,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSValidateDirectoryCache Empty Node List but Non-Zero Node Count %08lX for dir FID %08lX-%08lX-%08lX-%08lX\n",
+                          "AFSValidateDirectoryCache Empty Node List but Non-Zero Node Count %d for dir FID %08lX-%08lX-%08lX-%08lX\n",
                           ObjectInfo->Specific.Directory.DirectoryNodeCount,
                           ObjectInfo->FileId.Cell,
                           ObjectInfo->FileId.Volume,
@@ -3913,7 +3913,7 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSValidateEntry Acquiring Fcb lock %08lX EXCL %08lX\n",
+                                      "AFSValidateEntry Acquiring Fcb lock %p EXCL %08lX\n",
                                       &pCurrentFcb->NPFcb->Resource,
                                       PsGetCurrentThread());
 
@@ -3976,7 +3976,7 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
 
                             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                           AFS_TRACE_LEVEL_VERBOSE,
-                                          "AFSValidateEntry Acquiring Fcb SectionObject lock %08lX EXCL %08lX\n",
+                                          "AFSValidateEntry Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                                           &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
                                           PsGetCurrentThread());
 
@@ -4056,7 +4056,7 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
 
                             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                           AFS_TRACE_LEVEL_VERBOSE,
-                                          "AFSValidateEntry Acquiring Fcb SectionObject lock %08lX EXCL %08lX\n",
+                                          "AFSValidateEntry Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                                           &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
                                           PsGetCurrentThread());
 
@@ -4132,7 +4132,7 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSValidateEntry Acquiring Fcb SectionObject lock %08lX EXCL %08lX\n",
+                                      "AFSValidateEntry Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                                       &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
                                       PsGetCurrentThread());
 
@@ -4153,7 +4153,7 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSValidateEntry Releasing Fcb SectionObject lock %08lX EXCL %08lX\n",
+                                      "AFSValidateEntry Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                                       &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
                                       PsGetCurrentThread());
 
@@ -4176,7 +4176,7 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSValidateEntry Acquiring DirectoryNodeHdr.TreeLock lock %08lX EXCL %08lX\n",
+                                  "AFSValidateEntry Acquiring DirectoryNodeHdr.TreeLock lock %p EXCL %08lX\n",
                                   pObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
                                   PsGetCurrentThread());
 
@@ -4296,7 +4296,7 @@ AFSInitializeSpecialShareNameList()
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSInitializeSpecialShareNameList (srvsvc) Initializing count (1) on object %08lX\n",
+                      "AFSInitializeSpecialShareNameList (srvsvc) Initializing count (1) on object %p\n",
                       pObjectInfoCB);
 
         pObjectInfoCB->ObjectReferenceCount = 1;
@@ -4382,7 +4382,7 @@ AFSInitializeSpecialShareNameList()
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSInitializeSpecialShareNameList (ipc$) Initializing count (1) on object %08lX\n",
+                      "AFSInitializeSpecialShareNameList (ipc$) Initializing count (1) on object %p\n",
                       pObjectInfoCB);
 
         pObjectInfoCB->ObjectReferenceCount = 1;
@@ -4683,7 +4683,7 @@ AFSEnumerateGlobalRoot( IN GUID *AuthGroup)
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSEnumerateGlobalRoot Acquiring GlobalRoot DirectoryNodeHdr.TreeLock lock %08lX EXCL %08lX\n",
+                      "AFSEnumerateGlobalRoot Acquiring GlobalRoot DirectoryNodeHdr.TreeLock lock %p EXCL %08lX\n",
                       AFSGlobalRoot->ObjectInformation.Specific.Directory.DirectoryNodeHdr.TreeLock,
                       PsGetCurrentThread());
 
@@ -5799,7 +5799,7 @@ AFSInitPIOCtlDirectoryCB( IN AFSObjectInfoCB *ObjectInfo)
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSInitPIOCtlDirectoryCB Initializing count (1) on object %08lX\n",
+                      "AFSInitPIOCtlDirectoryCB Initializing count (1) on object %p\n",
                       pObjectInfoCB);
 
         pObjectInfoCB->ObjectReferenceCount = 1;
@@ -5870,7 +5870,7 @@ AFSInitPIOCtlDirectoryCB( IN AFSObjectInfoCB *ObjectInfo)
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_WARNING,
-                          "AFSInitPIOCtlDirectoryCB Raced PIOCtlDirectoryCB %08lX pFcb %08lX\n",
+                          "AFSInitPIOCtlDirectoryCB Raced PIOCtlDirectoryCB %p pFcb %p\n",
                           ObjectInfo->Specific.Directory.PIOCtlDirectoryCB,
                           pDirNode);
 
@@ -5882,7 +5882,7 @@ AFSInitPIOCtlDirectoryCB( IN AFSObjectInfoCB *ObjectInfo)
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSInitPIOCtlDirectoryCB Increment count on Object %08lX Cnt %d\n",
+                          "AFSInitPIOCtlDirectoryCB Increment count on Object %p Cnt %d\n",
                           pDirNode->ObjectInformation,
                           lCount);
 
@@ -6189,7 +6189,7 @@ AFSRetrieveFileAttributes( IN AFSDirectoryCB *ParentDirectoryCB,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSRetrieveFileAttributes Increment count on volume %08lX Cnt %d\n",
+                      "AFSRetrieveFileAttributes Increment count on volume %p Cnt %d\n",
                       pVolumeCB,
                       lCount);
 
@@ -6233,7 +6233,7 @@ AFSRetrieveFileAttributes( IN AFSDirectoryCB *ParentDirectoryCB,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSRetrieveFileAttributes Decrement count on volume %08lX Cnt %d\n",
+                                  "AFSRetrieveFileAttributes Decrement count on volume %p Cnt %d\n",
                                   pVolumeCB,
                                   lCount);
                 }
@@ -6349,7 +6349,7 @@ try_exit:
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSRetrieveFileAttributes Decrement2 count on volume %08lX Cnt %d\n",
+                          "AFSRetrieveFileAttributes Decrement2 count on volume %p Cnt %d\n",
                           pVolumeCB,
                           lCount);
         }
@@ -6854,7 +6854,7 @@ AFSEvaluateRootEntry( IN AFSDirectoryCB *DirectoryCB,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSEvaluateRootEntry Increment count on volume %08lX Cnt %d\n",
+                      "AFSEvaluateRootEntry Increment count on volume %p Cnt %d\n",
                       pVolumeCB,
                       lCount);
 
@@ -6898,7 +6898,7 @@ AFSEvaluateRootEntry( IN AFSDirectoryCB *DirectoryCB,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSEvaluateRootEntry Decrement count on volume %08lX Cnt %d\n",
+                                  "AFSEvaluateRootEntry Decrement count on volume %p Cnt %d\n",
                                   pVolumeCB,
                                   lCount);
                 }
@@ -6961,7 +6961,7 @@ try_exit:
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSEvaluateRootEntry Decrement2 count on volume %08lX Cnt %d\n",
+                          "AFSEvaluateRootEntry Decrement2 count on volume %p Cnt %d\n",
                           pVolumeCB,
                           lCount);
         }
@@ -7023,7 +7023,7 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCleanupEntry Acquiring Fcb lock %08lX SHARED %08lX\n",
+                              "AFSCleanupEntry Acquiring Fcb lock %p SHARED %08lX\n",
                               &Fcb->NPFcb->Resource,
                               PsGetCurrentThread());
 
@@ -7035,7 +7035,7 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSCleanupEntry Acquiring Fcb SectionObject lock %08lX EXCL %08lX\n",
+                                  "AFSCleanupEntry Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                                   &Fcb->NPFcb->SectionObjectResource,
                                   PsGetCurrentThread());
 
@@ -7106,7 +7106,7 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSCleanupFcb Releasing Fcb SectionObject lock %08lX EXCL %08lX\n",
+                                  "AFSCleanupFcb Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                                   &Fcb->NPFcb->SectionObjectResource,
                                   PsGetCurrentThread());
 
@@ -7115,7 +7115,7 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCleanupEntry Releasing Fcb lock %08lX SHARED %08lX\n",
+                              "AFSCleanupEntry Releasing Fcb lock %p SHARED %08lX\n",
                               &Fcb->NPFcb->Resource,
                               PsGetCurrentThread());
 
@@ -7201,7 +7201,7 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSCleanupFcb Acquiring Fcb SectionObject lock %08lX EXCL %08lX\n",
+                          "AFSCleanupFcb Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                           &Fcb->NPFcb->SectionObjectResource,
                           PsGetCurrentThread());
 
@@ -7271,7 +7271,7 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCleanupFcb Releasing Fcb SectionObject lock %08lX EXCL %08lX\n",
+                              "AFSCleanupFcb Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                               &Fcb->NPFcb->SectionObjectResource,
                               PsGetCurrentThread());
 
@@ -7956,7 +7956,7 @@ AFSInitializeLibrary( IN AFSLibraryInitCB *LibraryInit)
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSInitializeLibrary Increment count on volume %08lX Cnt %d\n",
+                          "AFSInitializeLibrary Increment count on volume %p Cnt %d\n",
                           AFSGlobalRoot,
                           lCount);
 
@@ -7990,7 +7990,7 @@ AFSInitializeLibrary( IN AFSLibraryInitCB *LibraryInit)
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSInitializeLibrary Decrement count on volume %08lX Cnt %d\n",
+                      "AFSInitializeLibrary Decrement count on volume %p Cnt %d\n",
                       AFSGlobalRoot,
                       lCount);
 
@@ -8156,7 +8156,7 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSGetObjectStatus Increment count on volume %08lX Cnt %d\n",
+                              "AFSGetObjectStatus Increment count on volume %p Cnt %d\n",
                               pVolumeCB,
                               lCount);
             }
@@ -8180,7 +8180,7 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSGetObjectStatus Decrement count on volume %08lX Cnt %d\n",
+                              "AFSGetObjectStatus Decrement count on volume %p Cnt %d\n",
                               pVolumeCB,
                               lCount);
             }
@@ -8194,7 +8194,7 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSGetObjectStatus Decrement2 count on volume %08lX Cnt %d\n",
+                              "AFSGetObjectStatus Decrement2 count on volume %p Cnt %d\n",
                               pVolumeCB,
                               lCount);
 
@@ -8215,7 +8215,7 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSGetObjectStatus Increment count on object %08lX Cnt %d\n",
+                                  "AFSGetObjectStatus Increment count on object %p Cnt %d\n",
                                   pObjectInfo,
                                   lCount);
                 }
@@ -8291,7 +8291,7 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSGetObjectStatus Increment2 count on volume %08lX Cnt %d\n",
+                          "AFSGetObjectStatus Increment2 count on volume %p Cnt %d\n",
                           pVolumeCB,
                           lCount);
 
@@ -8336,7 +8336,7 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                                       AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSGetObjectStatus Decrement3 count on volume %08lX Cnt %d\n",
+                                      "AFSGetObjectStatus Decrement3 count on volume %p Cnt %d\n",
                                       pVolumeCB,
                                       lCount);
                     }
@@ -8405,7 +8405,7 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSGetObjectStatus Decrement4 count on volume %08lX Cnt %d\n",
+                              "AFSGetObjectStatus Decrement4 count on volume %p Cnt %d\n",
                               pVolumeCB,
                               lCount);
             }
@@ -9146,7 +9146,7 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSPerformObjectInvalidate Acquiring Fcb extents lock %08lX SHARED %08lX\n",
+                                  "AFSPerformObjectInvalidate Acquiring Fcb extents lock %p SHARED %08lX\n",
                                   &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource,
                                   PsGetCurrentThread());
 
@@ -9198,7 +9198,7 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 
                                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                               AFS_TRACE_LEVEL_VERBOSE,
-                                              "AFSPerformObjectInvalidation Acquiring Fcb SectionObject lock %08lX EXCL %08lX\n",
+                                              "AFSPerformObjectInvalidation Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                                               &ObjectInfo->Fcb->NPFcb->SectionObjectResource,
                                               PsGetCurrentThread());
 
@@ -9254,7 +9254,7 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 
                                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                               AFS_TRACE_LEVEL_VERBOSE,
-                                              "AFSPerformObjectInvalidation Releasing Fcb SectionObject lock %08lX EXCL %08lX\n",
+                                              "AFSPerformObjectInvalidation Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                                               &ObjectInfo->Fcb->NPFcb->SectionObjectResource,
                                               PsGetCurrentThread());
 
@@ -9270,7 +9270,7 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 
                             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                           AFS_TRACE_LEVEL_VERBOSE,
-                                          "AFSPerformObjectInvalidation Acquiring Fcb SectionObject lock %08lX EXCL %08lX\n",
+                                          "AFSPerformObjectInvalidation Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                                           &ObjectInfo->Fcb->NPFcb->SectionObjectResource,
                                           PsGetCurrentThread());
 
@@ -9494,7 +9494,7 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 
                             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                           AFS_TRACE_LEVEL_VERBOSE,
-                                          "AFSPerformObjectInvalidation Releasing Fcb SectionObject lock %08lX EXCL %08lX\n",
+                                          "AFSPerformObjectInvalidation Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                                           &ObjectInfo->Fcb->NPFcb->SectionObjectResource,
                                           PsGetCurrentThread());
 

@@ -65,7 +65,7 @@ AFSQueryEA( IN PDEVICE_OBJECT LibDeviceObject,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_ERROR,
-                      "AFSQueryEa Entry for FO %08lX\n", pIrpSp->FileObject);
+                      "AFSQueryEa Entry for FO %p\n", pIrpSp->FileObject);
 
         AFSCompleteRequest( Irp,
                             ntStatus);
@@ -111,7 +111,7 @@ AFSSetEA( IN PDEVICE_OBJECT LibDeviceObject,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_ERROR,
-                      "AFSSetEa Entry for FO %08lX\n", pIrpSp->FileObject);
+                      "AFSSetEa Entry for FO %p\n", pIrpSp->FileObject);
 
         AFSCompleteRequest( Irp,
                             ntStatus);

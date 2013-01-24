@@ -131,7 +131,7 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "%s (%08lX) Located AuthGroup %wZ after validation\n",
+                          "%s (%p) Located AuthGroup %wZ after validation\n",
                           __FUNCTION__,
                           Irp,
                           &uniGUIDString);
@@ -141,7 +141,7 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
         {
             AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "%s (%08lX) Failed to locate AuthGroup\n",
+                          "%s (%p) Failed to locate AuthGroup\n",
                           __FUNCTION__,
                           Irp);
         }
@@ -156,7 +156,7 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSCommonCreate (%08lX) Processing volume open request\n",
+                          "AFSCommonCreate (%p) Processing volume open request\n",
                           Irp);
 
             ntStatus = AFSOpenRedirector( Irp);
@@ -202,7 +202,7 @@ try_exit:
         if ( pFileObject) {
             AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "%s (%08lX) File \"%wZ\" AuthGroup '%wZ' ntStatus %08lX\n",
+                          "%s (%p) File \"%wZ\" AuthGroup '%wZ' ntStatus %08lX\n",
                           __FUNCTION__,
                           Irp,
                           &pFileObject->FileName,

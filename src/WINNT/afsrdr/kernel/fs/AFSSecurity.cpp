@@ -55,7 +55,7 @@ AFSSetSecurity( IN PDEVICE_OBJECT DeviceObject,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSSetSecurity Entry for FO %08lX\n",
+                      "AFSSetSecurity Entry for FO %p\n",
                       pIrpSp->FileObject);
 
         if( DeviceObject == AFSDeviceObject)
@@ -150,7 +150,7 @@ AFSQuerySecurity( IN PDEVICE_OBJECT DeviceObject,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSQuerySecurity Entry for FO %08lX\n",
+                      "AFSQuerySecurity Entry for FO %p\n",
                       pIrpSp->FileObject);
 
         if( DeviceObject == AFSDeviceObject)

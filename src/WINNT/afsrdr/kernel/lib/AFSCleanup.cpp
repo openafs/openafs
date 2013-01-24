@@ -147,7 +147,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCleanup Acquiring GlobalRoot lock %08lX EXCL %08lX\n",
+                              "AFSCleanup Acquiring GlobalRoot lock %p EXCL %08lX\n",
                               &pFcb->NPFcb->Resource,
                               PsGetCurrentThread());
 
@@ -162,7 +162,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCleanup (RootAll) Decrement handle count on Fcb %08lX Cnt %d\n",
+                              "AFSCleanup (RootAll) Decrement handle count on Fcb %p Cnt %d\n",
                               pFcb,
                               lCount);
 
@@ -178,7 +178,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCleanup Acquiring PIOCtl lock %08lX EXCL %08lX\n",
+                              "AFSCleanup Acquiring PIOCtl lock %p EXCL %08lX\n",
                               &pFcb->NPFcb->Resource,
                               PsGetCurrentThread());
 
@@ -199,7 +199,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSCleanup (IOCtl) Decrement child open handle count on Parent object %08lX Cnt %d\n",
+                                  "AFSCleanup (IOCtl) Decrement child open handle count on Parent object %p Cnt %d\n",
                                   pObjectInfo->ParentObjectInformation,
                                   lCount);
                 }
@@ -210,7 +210,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCleanup (IOCtl) Decrement handle count on Fcb %08lX Cnt %d\n",
+                              "AFSCleanup (IOCtl) Decrement handle count on Fcb %p Cnt %d\n",
                               pFcb,
                               lCount);
 
@@ -230,7 +230,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCleanup Acquiring Fcb SectionObject lock %08lX EXCL %08lX\n",
+                              "AFSCleanup Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                               &pFcb->NPFcb->SectionObjectResource,
                               PsGetCurrentThread());
 
@@ -321,7 +321,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCleanup Tearing down cache map for Fcb %08lX FileObject %08lX\n",
+                              "AFSCleanup Tearing down cache map for Fcb %p FileObject %p\n",
                               pFcb,
                               pFileObject);
 
@@ -332,7 +332,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCleanup Releasing Fcb SectionObject lock %08lX EXCL %08lX\n",
+                              "AFSCleanup Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                               &pFcb->NPFcb->SectionObjectResource,
                               PsGetCurrentThread());
 
@@ -340,7 +340,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCleanup Acquiring Fcb lock %08lX EXCL %08lX\n",
+                              "AFSCleanup Acquiring Fcb lock %p EXCL %08lX\n",
                               &pFcb->NPFcb->Resource,
                               PsGetCurrentThread());
 
@@ -484,7 +484,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                           AFS_TRACE_LEVEL_VERBOSE,
-                                          "AFSCleanup Acquiring Fcb extents lock %08lX EXCL %08lX\n",
+                                          "AFSCleanup Acquiring Fcb extents lock %p EXCL %08lX\n",
                                           &pFcb->NPFcb->Specific.File.ExtentsResource,
                                           PsGetCurrentThread());
 
@@ -505,7 +505,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                           AFS_TRACE_LEVEL_VERBOSE,
-                                          "AFSCleanup Releasing Fcb extents lock %08lX EXCL %08lX\n",
+                                          "AFSCleanup Releasing Fcb extents lock %p EXCL %08lX\n",
                                           &pFcb->NPFcb->Specific.File.ExtentsResource,
                                           PsGetCurrentThread());
 
@@ -721,7 +721,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSCleanup (File) Decrement child open handle count on Parent object %08lX Cnt %d\n",
+                                  "AFSCleanup (File) Decrement child open handle count on Parent object %p Cnt %d\n",
                                   pParentObjectInfo,
                                   lCount);
                 }
@@ -731,7 +731,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCleanup (File) Decrement handle count on Fcb %08lX Cnt %d\n",
+                              "AFSCleanup (File) Decrement handle count on Fcb %p Cnt %d\n",
                               pFcb,
                               lCount);
 
@@ -786,7 +786,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCleanup Acquiring Dcb lock %08lX EXCL %08lX\n",
+                              "AFSCleanup Acquiring Dcb lock %p EXCL %08lX\n",
                               &pFcb->NPFcb->Resource,
                               PsGetCurrentThread());
 
@@ -1066,7 +1066,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSCleanup (Dir) Decrement child open handle count on Parent object %08lX Cnt %d\n",
+                                  "AFSCleanup (Dir) Decrement child open handle count on Parent object %p Cnt %d\n",
                                   pParentObjectInfo,
                                   lCount);
                 }
@@ -1077,7 +1077,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCleanup (Dir) Decrement handle count on Fcb %08lX Cnt %d\n",
+                              "AFSCleanup (Dir) Decrement handle count on Fcb %p Cnt %d\n",
                               pFcb,
                               lCount);
 
@@ -1096,7 +1096,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCleanup (MP/SL) Acquiring Dcb lock %08lX EXCL %08lX\n",
+                              "AFSCleanup (MP/SL) Acquiring Dcb lock %p EXCL %08lX\n",
                               &pFcb->NPFcb->Resource,
                               PsGetCurrentThread());
 
@@ -1367,7 +1367,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSCleanup (MP/SL) Decrement child open handle count on Parent object %08lX Cnt %d\n",
+                                  "AFSCleanup (MP/SL) Decrement child open handle count on Parent object %p Cnt %d\n",
                                   pParentObjectInfo,
                                   lCount);
                 }
@@ -1378,7 +1378,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCleanup (MP/SL) Decrement handle count on Fcb %08lX Cnt %d\n",
+                              "AFSCleanup (MP/SL) Decrement handle count on Fcb %p Cnt %d\n",
                               pFcb,
                               lCount);
 
@@ -1390,7 +1390,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCleanup Acquiring SPECIAL SHARE lock %08lX EXCL %08lX\n",
+                              "AFSCleanup Acquiring SPECIAL SHARE lock %p EXCL %08lX\n",
                               &pFcb->NPFcb->Resource,
                               PsGetCurrentThread());
 
@@ -1413,7 +1413,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSCleanup (Share) Decrement child open handle count on Parent object %08lX Cnt %d\n",
+                                  "AFSCleanup (Share) Decrement child open handle count on Parent object %p Cnt %d\n",
                                   pParentObjectInfo,
                                   lCount);
                 }
@@ -1424,7 +1424,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCleanup (Share) Decrement handle count on Fcb %08lX Cnt %d\n",
+                              "AFSCleanup (Share) Decrement handle count on Fcb %p Cnt %d\n",
                               pFcb,
                               lCount);
 

@@ -907,7 +907,7 @@ AFSInitRdrFcb( OUT AFSFcb **RdrFcb)
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSInitRootFcb Acquiring Fcb lock %08lX EXCL %08lX\n",
+                      "AFSInitRootFcb Acquiring Fcb lock %p EXCL %08lX\n",
                       &pNPFcb->Resource,
                       PsGetCurrentThread());
 

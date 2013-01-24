@@ -158,7 +158,7 @@ AFSQueryDirectory( IN PIRP Irp)
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSQueryDirectory Attempted access (%08lX) when pFcb == NULL\n",
+                          "AFSQueryDirectory Attempted access (%p) when pFcb == NULL\n",
                           Irp);
 
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
@@ -171,7 +171,7 @@ AFSQueryDirectory( IN PIRP Irp)
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSQueryDirectory Attempted access (%08lX) to non-directory Fcb %08lX NodeType %u\n",
+                          "AFSQueryDirectory Attempted access (%p) to non-directory Fcb %p NodeType %u\n",
                           Irp,
                           pFcb,
                           pFcb->Header.NodeTypeCode);
@@ -211,7 +211,7 @@ AFSQueryDirectory( IN PIRP Irp)
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSQueryDirectory Acquiring Dcb lock %08lX EXCL %08lX\n",
+                          "AFSQueryDirectory Acquiring Dcb lock %p EXCL %08lX\n",
                           &pFcb->NPFcb->Resource,
                           PsGetCurrentThread());
 
@@ -230,7 +230,7 @@ AFSQueryDirectory( IN PIRP Irp)
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSQueryDirectory Acquiring Dcb lock %08lX SHARED %08lX\n",
+                          "AFSQueryDirectory Acquiring Dcb lock %p SHARED %08lX\n",
                           &pFcb->NPFcb->Resource,
                           PsGetCurrentThread());
 
@@ -597,7 +597,7 @@ AFSQueryDirectory( IN PIRP Irp)
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSQueryDirectory (%08lX) Unknown FileInformationClass %u\n",
+                              "AFSQueryDirectory (%p) Unknown FileInformationClass %u\n",
                               Irp,
                               FileInformationClass);
 
@@ -1005,7 +1005,7 @@ AFSQueryDirectory( IN PIRP Irp)
                 {
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
-                                  "AFSQueryDirectory (%08lX) Unknown FileInformationClass %u\n",
+                                  "AFSQueryDirectory (%p) Unknown FileInformationClass %u\n",
                                   Irp,
                                   FileInformationClass);
 
@@ -1131,7 +1131,7 @@ AFSNotifyChangeDirectory( IN PIRP Irp)
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSNotifyChangeDirectory Attempted access (%08lX) when pFcb == NULL\n",
+                          "AFSNotifyChangeDirectory Attempted access (%p) when pFcb == NULL\n",
                           Irp);
 
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
@@ -1157,7 +1157,7 @@ AFSNotifyChangeDirectory( IN PIRP Irp)
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSNotifyChangeDirectory Acquiring Dcb lock %08lX EXCL %08lX\n",
+                      "AFSNotifyChangeDirectory Acquiring Dcb lock %p EXCL %08lX\n",
                       &pFcb->NPFcb->Resource,
                       PsGetCurrentThread());
 
@@ -1767,7 +1767,7 @@ AFSFsRtlNotifyFullChangeDirectory( IN AFSObjectInfoCB *ObjectInfo,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_DIR_NOTIF_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSFsRtlNotifyFullChangeDirectory Registering notification on %wZ Irp %08lX Filter %08lX Tree %02lX\n",
+                      "AFSFsRtlNotifyFullChangeDirectory Registering notification on %wZ Irp %p Filter %08lX Tree %02lX\n",
                       &Ccb->NotifyMask,
                       NotifyIrp,
                       CompletionFilter,

@@ -1223,7 +1223,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
 
                                     AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                                                   AFS_TRACE_LEVEL_VERBOSE,
-                                                  "AFSPrimaryVolumeWorkerThread Deleting deleted object %08lX\n",
+                                                  "AFSPrimaryVolumeWorkerThread Deleting deleted object %p\n",
                                                   pCurrentObject);
 
                                     AFSDeleteObjectInfo( pCurrentObject);
@@ -1386,7 +1386,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
 
                                     AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING | AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                                                   AFS_TRACE_LEVEL_VERBOSE,
-                                                  "AFSPrimaryVolumeWorkerThread Deleting DE %wZ Object %08lX\n",
+                                                  "AFSPrimaryVolumeWorkerThread Deleting DE %wZ Object %p\n",
                                                   &pCurrentDirEntry->NameInformation.FileName,
                                                   pCurrentChildObject);
 
@@ -1470,7 +1470,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
 
                                         AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                                                       AFS_TRACE_LEVEL_VERBOSE,
-                                                      "AFSPrimaryVolumeWorkerThread Deleting object %08lX\n",
+                                                      "AFSPrimaryVolumeWorkerThread Deleting object %p\n",
                                                       pCurrentChildObject);
 
                                         AFSDeleteObjectInfo( pCurrentChildObject);
@@ -1685,7 +1685,7 @@ AFSInsertWorkitem( IN AFSWorkItem *WorkItem)
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSInsertWorkitem Acquiring Control QueueLock lock %08lX EXCL %08lX\n",
+                  "AFSInsertWorkitem Acquiring Control QueueLock lock %p EXCL %08lX\n",
                   &pDevExt->Specific.Library.QueueLock,
                   PsGetCurrentThread());
 
@@ -1696,7 +1696,7 @@ AFSInsertWorkitem( IN AFSWorkItem *WorkItem)
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSInsertWorkitem Inserting work item %08lX Count %08lX\n",
+                  "AFSInsertWorkitem Inserting work item %p Count %d\n",
                   WorkItem,
                   lCount);
 
@@ -1736,7 +1736,7 @@ AFSInsertIOWorkitem( IN AFSWorkItem *WorkItem)
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSInsertIOWorkitem Acquiring Control QueueLock lock %08lX EXCL %08lX\n",
+                  "AFSInsertIOWorkitem Acquiring Control QueueLock lock %p EXCL %08lX\n",
                   &pDevExt->Specific.Library.IOQueueLock,
                   PsGetCurrentThread());
 
@@ -1747,7 +1747,7 @@ AFSInsertIOWorkitem( IN AFSWorkItem *WorkItem)
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSInsertWorkitem Inserting IO work item %08lX Count %08lX\n",
+                  "AFSInsertWorkitem Inserting IO work item %p Count %d\n",
                   WorkItem,
                   lCount);
 
@@ -1787,7 +1787,7 @@ AFSInsertWorkitemAtHead( IN AFSWorkItem *WorkItem)
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSInsertWorkitemAtHead Acquiring Control QueueLock lock %08lX EXCL %08lX\n",
+                  "AFSInsertWorkitemAtHead Acquiring Control QueueLock lock %p EXCL %08lX\n",
                   &pDevExt->Specific.Library.QueueLock,
                   PsGetCurrentThread());
 
@@ -1802,7 +1802,7 @@ AFSInsertWorkitemAtHead( IN AFSWorkItem *WorkItem)
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSInsertWorkitemAtHead Inserting work item %08lX Count %08lX\n",
+                  "AFSInsertWorkitemAtHead Inserting work item %p Count %d\n",
                   WorkItem,
                   lCount);
 
@@ -1831,7 +1831,7 @@ AFSRemoveWorkItem()
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSRemoveWorkItem Acquiring Control QueueLock lock %08lX EXCL %08lX\n",
+                  "AFSRemoveWorkItem Acquiring Control QueueLock lock %p EXCL %08lX\n",
                   &pDevExt->Specific.Library.QueueLock,
                   PsGetCurrentThread());
 
@@ -1847,7 +1847,7 @@ AFSRemoveWorkItem()
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSRemoveWorkItem Removing work item %08lX Count %08lX Thread %08lX\n",
+                      "AFSRemoveWorkItem Removing work item %p Count %d Thread %08lX\n",
                       pWorkItem,
                       lCount,
                       PsGetCurrentThreadId());
@@ -1889,7 +1889,7 @@ AFSRemoveIOWorkItem()
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSRemoveIOWorkItem Acquiring Control QueueLock lock %08lX EXCL %08lX\n",
+                  "AFSRemoveIOWorkItem Acquiring Control QueueLock lock %p EXCL %08lX\n",
                   &pDevExt->Specific.Library.IOQueueLock,
                   PsGetCurrentThread());
 
@@ -1905,7 +1905,7 @@ AFSRemoveIOWorkItem()
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSRemoveWorkItem Removing work item %08lX Count %08lX Thread %08lX\n",
+                      "AFSRemoveWorkItem Removing work item %p Count %d Thread %08lX\n",
                       pWorkItem,
                       lCount,
                       PsGetCurrentThreadId());
@@ -2128,13 +2128,13 @@ AFSQueueFlushExtents( IN AFSFcb *Fcb,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSQueueFlushExtents Increment count on Fcb %08lX Cnt %d\n",
+                      "AFSQueueFlushExtents Increment count on Fcb %p Cnt %d\n",
                       Fcb,
                       lCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSQueueFlushExtents Workitem %08lX for FID %08lX-%08lX-%08lX-%08lX\n",
+                      "AFSQueueFlushExtents Workitem %p for FID %08lX-%08lX-%08lX-%08lX\n",
                       pWorkItem,
                       Fcb->ObjectInformation->FileId.Cell,
                       Fcb->ObjectInformation->FileId.Volume,
@@ -2231,7 +2231,7 @@ AFSQueueGlobalRootEnumeration()
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSQueueGlobalRootEnumeration Workitem %08lX\n",
+                      "AFSQueueGlobalRootEnumeration Workitem %p\n",
                       pWorkItem);
 
         ntStatus = AFSQueueWorkerRequest( pWorkItem);
@@ -2342,7 +2342,7 @@ AFSQueueStartIos( IN PFILE_OBJECT CacheFileObject,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSQueueStartIos Queuing IO Workitem %08lX\n",
+                      "AFSQueueStartIos Queuing IO Workitem %p\n",
                       pWorkItem);
 
         ntStatus = AFSQueueIOWorkerRequest( pWorkItem);
@@ -2414,7 +2414,7 @@ AFSQueueInvalidateObject( IN AFSObjectInfoCB *ObjectInfo,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSQueueInvalidateObject Workitem %08lX\n",
+                      "AFSQueueInvalidateObject Workitem %p\n",
                       pWorkItem);
 
         ntStatus = AFSQueueWorkerRequest( pWorkItem);
