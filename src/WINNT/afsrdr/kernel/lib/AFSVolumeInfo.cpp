@@ -231,7 +231,7 @@ try_exit:
 
         AFSDbgLogMsg( 0,
                       0,
-                      "EXCEPTION - AFSQueryVolumeInfo FO %08lX InfoClass %d FCB %08lX ObjectInfo %08lX VolCB %08lX\n",
+                      "EXCEPTION - AFSQueryVolumeInfo FO %p InfoClass %d FCB %p ObjectInfo %p VolCB %p\n",
                       pFileObject,
                       FsInformationClass,
                       pFcb,
@@ -260,7 +260,7 @@ AFSSetVolumeInfo( IN PDEVICE_OBJECT DeviceObject,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_WARNING,
-                      "AFSSetVolumeInfo Entry for FO %08lX\n", pIrpSp->FileObject);
+                      "AFSSetVolumeInfo Entry for FO %p\n", pIrpSp->FileObject);
 
         AFSCompleteRequest( Irp,
                             ntStatus);

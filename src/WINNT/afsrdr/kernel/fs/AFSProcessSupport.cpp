@@ -105,7 +105,7 @@ AFSProcessCreate( IN HANDLE ParentId,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSProcessCreate Acquiring Control ProcessTree.TreeLock lock %08lX EXCL %08lX\n",
+                      "AFSProcessCreate Acquiring Control ProcessTree.TreeLock lock %p EXCL %08lX\n",
                       pDeviceExt->Specific.Control.ProcessTree.TreeLock,
                       PsGetCurrentThread());
 
@@ -168,7 +168,7 @@ AFSProcessDestroy( IN HANDLE ProcessId)
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSProcessDestroy Acquiring Control ProcessTree.TreeLock lock %08lX EXCL %08lX\n",
+                      "AFSProcessDestroy Acquiring Control ProcessTree.TreeLock lock %p EXCL %08lX\n",
                       pDeviceExt->Specific.Control.ProcessTree.TreeLock,
                       PsGetCurrentThreadId());
 
@@ -276,7 +276,7 @@ AFSValidateProcessEntry( IN HANDLE  ProcessId,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSValidateProcessEntry Acquiring Control ProcessTree.TreeLock lock %08lX SHARED %08lX\n",
+                          "AFSValidateProcessEntry Acquiring Control ProcessTree.TreeLock lock %p SHARED %08lX\n",
                           pDeviceExt->Specific.Control.ProcessTree.TreeLock,
                           PsGetCurrentThread());
 
@@ -819,7 +819,7 @@ AFSIs64BitProcess( IN ULONGLONG ProcessId)
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSIs64BitProcess Acquiring Control ProcessTree.TreeLock lock %08lX SHARED %08lX\n",
+                      "AFSIs64BitProcess Acquiring Control ProcessTree.TreeLock lock %p SHARED %08lX\n",
                       pDeviceExt->Specific.Control.ProcessTree.TreeLock,
                       PsGetCurrentThread());
 

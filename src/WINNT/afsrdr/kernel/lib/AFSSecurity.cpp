@@ -54,7 +54,7 @@ AFSSetSecurity( IN PDEVICE_OBJECT LibDeviceObject,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_ERROR,
-                      "AFSSetSecurity Entry for FO %08lX\n",
+                      "AFSSetSecurity Entry for FO %p\n",
                       pIrpSp->FileObject);
 
         AFSCompleteRequest( Irp,
@@ -104,7 +104,7 @@ AFSQuerySecurity( IN PDEVICE_OBJECT LibDeviceObject,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSQuerySecurity (%08lX) Entry for FO %08lX SI %08lX\n",
+                      "AFSQuerySecurity (%p) Entry for FO %p SI %08lX\n",
                       Irp,
                       pFileObject,
                       SecurityInformation);
@@ -114,7 +114,7 @@ AFSQuerySecurity( IN PDEVICE_OBJECT LibDeviceObject,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSQuerySecurity Attempted access (%08lX) when pFcb == NULL\n",
+                          "AFSQuerySecurity Attempted access (%p) when pFcb == NULL\n",
                           Irp);
 
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
@@ -125,7 +125,7 @@ AFSQuerySecurity( IN PDEVICE_OBJECT LibDeviceObject,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSQuerySecurity Attempted access (%08lX) SACL\n",
+                          "AFSQuerySecurity Attempted access (%p) SACL\n",
                           Irp);
 
             try_return( ntStatus = STATUS_ACCESS_DENIED);

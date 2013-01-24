@@ -164,7 +164,7 @@ AFSInitFcb( IN AFSDirectoryCB  *DirEntry)
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSInitFcb Acquiring Fcb lock %08lX EXCL %08lX\n",
+                      "AFSInitFcb Acquiring Fcb lock %p EXCL %08lX\n",
                       &pNPFcb->Resource,
                       PsGetCurrentThread());
 
@@ -281,14 +281,14 @@ AFSInitFcb( IN AFSDirectoryCB  *DirEntry)
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_WARNING,
-                          "AFSInitFcb Raced Fcb %08lX pFcb %08lX Name %wZ\n",
+                          "AFSInitFcb Raced Fcb %p pFcb %p Name %wZ\n",
                           pObjectInfo->Fcb,
                           pFcb,
                           &DirEntry->NameInformation.FileName);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSInitFcb Acquiring Fcb lock %08lX EXCL %08lX\n",
+                          "AFSInitFcb Acquiring Fcb lock %p EXCL %08lX\n",
                           &pObjectInfo->Fcb->NPFcb->Resource,
                           PsGetCurrentThread());
 
@@ -304,7 +304,7 @@ AFSInitFcb( IN AFSDirectoryCB  *DirEntry)
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSInitFcb Initialized Fcb %08lX Name %wZ\n",
+                      "AFSInitFcb Initialized Fcb %p Name %wZ\n",
                       &pObjectInfo->Fcb,
                       &DirEntry->NameInformation.FileName);
 
@@ -438,7 +438,7 @@ AFSInitVolume( IN GUID *AuthGroup,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSInitVolume Increment count on volume %08lX Cnt %d\n",
+                              "AFSInitVolume Increment count on volume %p Cnt %d\n",
                               pVolumeCB,
                               lCount);
 
@@ -547,7 +547,7 @@ AFSInitVolume( IN GUID *AuthGroup,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSInitVolume Initializing count (2) on volume %08lX\n",
+                      "AFSInitVolume Initializing count (2) on volume %p\n",
                       pVolumeCB);
 
         pVolumeCB->VolumeReferenceCount = 2;
@@ -962,7 +962,7 @@ AFSInitRootFcb( IN ULONGLONG ProcessID,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSInitRootFcb Acquiring Fcb lock %08lX EXCL %08lX\n",
+                      "AFSInitRootFcb Acquiring Fcb lock %p EXCL %08lX\n",
                       &pNPFcb->Resource,
                       PsGetCurrentThread());
 
@@ -1084,7 +1084,7 @@ AFSRemoveFcb( IN AFSFcb **ppFcb)
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSRemoveFcb Removing Fcb %08lX\n",
+                  "AFSRemoveFcb Removing Fcb %p\n",
                   pFcb);
 
     if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB)

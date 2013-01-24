@@ -82,7 +82,7 @@ AFSQueryFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSQueryFileInfo Attempted access (%08lX) when pFcb == NULL\n",
+                          "AFSQueryFileInfo Attempted access (%p) when pFcb == NULL\n",
                           Irp);
 
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
@@ -123,7 +123,7 @@ AFSQueryFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSQueryFileInfo Acquiring Fcb lock %08lX SHARED %08lX\n",
+                      "AFSQueryFileInfo Acquiring Fcb lock %p SHARED %08lX\n",
                       &pFcb->NPFcb->Resource,
                       PsGetCurrentThread());
 
@@ -532,7 +532,7 @@ AFSSetFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSSetFileInfo Attempted access (%08lX) when pFcb == NULL\n",
+                          "AFSSetFileInfo Attempted access (%p) when pFcb == NULL\n",
                           Irp);
 
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
@@ -547,7 +547,7 @@ AFSSetFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSSetFileInfo Acquiring Fcb lock %08lX EXCL %08lX\n",
+                      "AFSSetFileInfo Acquiring Fcb lock %p EXCL %08lX\n",
                       &pFcb->NPFcb->Resource,
                       PsGetCurrentThread());
 
@@ -2120,7 +2120,7 @@ AFSSetDispositionInfo( IN PIRP Irp,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSSetDispositionInfo Acquiring Fcb SectionObject lock %08lX EXCL %08lX\n",
+                              "AFSSetDispositionInfo Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                               &pFcb->NPFcb->SectionObjectResource,
                               PsGetCurrentThread());
 
@@ -2171,7 +2171,7 @@ AFSSetDispositionInfo( IN PIRP Irp,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSSetDispositionInfo Releasing Fcb SectionObject lock %08lX EXCL %08lX\n",
+                              "AFSSetDispositionInfo Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                               &pFcb->NPFcb->SectionObjectResource,
                               PsGetCurrentThread());
 
@@ -2462,7 +2462,7 @@ AFSSetFileLinkInfo( IN PIRP Irp)
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING | AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSSetFileLinkInfo Target %wZ exists DE %p Count %08lX, performing delete of target\n",
+                          "AFSSetFileLinkInfo Target %wZ exists DE %p Count %d, performing delete of target\n",
                           &pTargetDirEntry->NameInformation.FileName,
                           pTargetDirEntry,
                           pTargetDirEntry->DirOpenReferenceCount);
@@ -2871,7 +2871,7 @@ AFSSetRenameInfo( IN PIRP Irp)
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING | AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSSetRenameInfo Target %wZ exists DE %p Count %08lX, performing delete of target\n",
+                          "AFSSetRenameInfo Target %wZ exists DE %p Count %d, performing delete of target\n",
                           &pTargetDirEntry->NameInformation.FileName,
                           pTargetDirEntry,
                           pTargetDirEntry->DirOpenReferenceCount);
@@ -3226,7 +3226,7 @@ AFSSetRenameInfo( IN PIRP Irp)
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSSetRenameInfo Acquiring Fcb lock %08lX EXCL %08lX\n",
+                              "AFSSetRenameInfo Acquiring Fcb lock %p EXCL %08lX\n",
                               &pTargetFcb->NPFcb->Resource,
                               PsGetCurrentThread());
 
@@ -3235,7 +3235,7 @@ AFSSetRenameInfo( IN PIRP Irp)
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSSetRenameInfo Acquiring Fcb SectionObject lock %08lX EXCL %08lX\n",
+                              "AFSSetRenameInfo Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                               &pTargetFcb->NPFcb->SectionObjectResource,
                               PsGetCurrentThread());
 
@@ -3258,7 +3258,7 @@ AFSSetRenameInfo( IN PIRP Irp)
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSSetRenameInfo Releasing Fcb SectionObject lock %08lX EXCL %08lX\n",
+                              "AFSSetRenameInfo Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                               &pTargetFcb->NPFcb->SectionObjectResource,
                               PsGetCurrentThread());
 
@@ -3266,7 +3266,7 @@ AFSSetRenameInfo( IN PIRP Irp)
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSSetRenameInfo Releasing Fcb lock %08lX EXCL %08lX\n",
+                              "AFSSetRenameInfo Releasing Fcb lock %p EXCL %08lX\n",
                               &pTargetFcb->NPFcb->Resource,
                               PsGetCurrentThread());
 
@@ -3384,7 +3384,7 @@ AFSSetAllocationInfo( IN PIRP Irp,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSSetAllocationInfo Acquiring Fcb SectionObject lock %08lX EXCL %08lX\n",
+                      "AFSSetAllocationInfo Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                       &pFcb->NPFcb->SectionObjectResource,
                       PsGetCurrentThread());
 
@@ -3396,7 +3396,7 @@ AFSSetAllocationInfo( IN PIRP Irp,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSSetAllocationInfo Releasing Fcb SectionObject lock %08lX EXCL %08lX\n",
+                      "AFSSetAllocationInfo Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                       &pFcb->NPFcb->SectionObjectResource,
                       PsGetCurrentThread());
 
@@ -3419,7 +3419,7 @@ AFSSetAllocationInfo( IN PIRP Irp,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSSetAllocationInfo Acquiring Fcb PagingIo lock %08lX EXCL %08lX\n",
+                          "AFSSetAllocationInfo Acquiring Fcb PagingIo lock %p EXCL %08lX\n",
                           &pFcb->NPFcb->PagingResource,
                           PsGetCurrentThread());
 
@@ -3468,7 +3468,7 @@ AFSSetAllocationInfo( IN PIRP Irp,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSSetAllocationInfo Acquiring Fcb PagingIo lock %08lX EXCL %08lX\n",
+                      "AFSSetAllocationInfo Acquiring Fcb PagingIo lock %p EXCL %08lX\n",
                       &pFcb->NPFcb->PagingResource,
                       PsGetCurrentThread());
 
@@ -3587,7 +3587,7 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSSetEndOfFileInfo Acquiring Fcb SectionObject lock %08lX EXCL %08lX\n",
+                          "AFSSetEndOfFileInfo Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                           &pFcb->NPFcb->SectionObjectResource,
                           PsGetCurrentThread());
 
@@ -3599,7 +3599,7 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSSetEndOfFileInfo Releasing Fcb SectionObject lock %08lX EXCL %08lX\n",
+                          "AFSSetEndOfFileInfo Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                           &pFcb->NPFcb->SectionObjectResource,
                           PsGetCurrentThread());
 
@@ -3620,7 +3620,7 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
                 //
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSSetAllocationInfo Acquiring Fcb PagingIo lock %08lX EXCL %08lX\n",
+                              "AFSSetAllocationInfo Acquiring Fcb PagingIo lock %p EXCL %08lX\n",
                               &pFcb->NPFcb->PagingResource,
                               PsGetCurrentThread());
 
@@ -3669,7 +3669,7 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
             //
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSSetAllocationInfo Acquiring Fcb PagingIo lock %08lX EXCL %08lX\n",
+                          "AFSSetAllocationInfo Acquiring Fcb PagingIo lock %p EXCL %08lX\n",
                           &pFcb->NPFcb->PagingResource,
                           PsGetCurrentThread());
 

@@ -54,7 +54,7 @@ AFSSystemControl( IN PDEVICE_OBJECT DeviceObject,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_WARNING,
-                      "AFSSystemControl Entry for FO %08lX\n",
+                      "AFSSystemControl Entry for FO %p\n",
                       pIrpSp->FileObject);
 
         AFSCompleteRequest( Irp,

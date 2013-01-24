@@ -264,7 +264,7 @@ AFSFastIoAcquireFile( IN struct _FILE_OBJECT *FileObject)
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSFastIoAcquireFile Acquiring Fcb SectionObject lock %08lX EXCL %08lX\n",
+                  "AFSFastIoAcquireFile Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                   &pFcb->NPFcb->SectionObjectResource,
                   PsGetCurrentThread());
 
@@ -285,7 +285,7 @@ AFSFastIoReleaseFile( IN struct _FILE_OBJECT *FileObject)
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSFastIoReleaseFile Releasing Fcb SectionObject lock %08lX EXCL %08lX\n",
+                      "AFSFastIoReleaseFile Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                       &pFcb->NPFcb->SectionObjectResource,
                       PsGetCurrentThread());
 
@@ -418,7 +418,7 @@ AFSFastIoAcquireForModWrite( IN struct _FILE_OBJECT *FileObject,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSFastIoAcquireForModWrite Acquired Fcb SectionObject lock %08lX EXCL %08lX\n",
+                          "AFSFastIoAcquireForModWrite Acquired Fcb SectionObject lock %p EXCL %08lX\n",
                           &pFcb->NPFcb->SectionObjectResource,
                           PsGetCurrentThread());
 
@@ -443,7 +443,7 @@ AFSFastIoReleaseForModWrite( IN struct _FILE_OBJECT *FileObject,
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSFastIoReleaseForModWrite Releasing lock %08lX EXCL %08lX\n",
+                  "AFSFastIoReleaseForModWrite Releasing lock %p EXCL %08lX\n",
                   ResourceToRelease,
                   PsGetCurrentThread());
 
@@ -463,7 +463,7 @@ AFSFastIoAcquireForCCFlush( IN struct _FILE_OBJECT *FileObject,
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSFastIoAcquireForCCFlush Acquiring Fcb PagingIo lock %08lX SHARED %08lX\n",
+                  "AFSFastIoAcquireForCCFlush Acquiring Fcb PagingIo lock %p SHARED %08lX\n",
                   &pFcb->NPFcb->PagingResource,
                   PsGetCurrentThread());
 
@@ -475,7 +475,7 @@ AFSFastIoAcquireForCCFlush( IN struct _FILE_OBJECT *FileObject,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSFastIoAcquireForCCFlush Acquiring Fcb SectionObject lock %08lX EXCL %08lX\n",
+                      "AFSFastIoAcquireForCCFlush Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                       &pFcb->NPFcb->SectionObjectResource,
                       PsGetCurrentThread());
 
@@ -487,7 +487,7 @@ AFSFastIoAcquireForCCFlush( IN struct _FILE_OBJECT *FileObject,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSFastIoAcquireForCCFlush Acquiring Fcb SectionObject lock %08lX SHARED %08lX\n",
+                      "AFSFastIoAcquireForCCFlush Acquiring Fcb SectionObject lock %p SHARED %08lX\n",
                       &pFcb->NPFcb->SectionObjectResource,
                       PsGetCurrentThread());
 

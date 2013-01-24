@@ -109,7 +109,7 @@ AFSRetrieveAuthGroup( IN ULONGLONG ProcessId,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSRetrieveAuthGroup Acquiring Control ProcessTree.TreeLock lock %08lX SHARED %08lX\n",
+                      "AFSRetrieveAuthGroup Acquiring Control ProcessTree.TreeLock lock %p SHARED %08lX\n",
                       pDeviceExt->Specific.Control.ProcessTree.TreeLock,
                       PsGetCurrentThread());
 

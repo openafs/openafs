@@ -54,7 +54,7 @@ AFSAddConnectionEx( IN UNICODE_STRING *RemoteName,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSAddConnectionEx Acquiring AFSProviderListLock lock %08lX EXCL %08lX\n",
+                      "AFSAddConnectionEx Acquiring AFSProviderListLock lock %p EXCL %08lX\n",
                       &pRDRDevExt->Specific.RDR.ProviderListLock,
                       PsGetCurrentThread());
 

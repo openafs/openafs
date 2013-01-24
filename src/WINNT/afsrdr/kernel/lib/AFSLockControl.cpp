@@ -69,7 +69,7 @@ AFSLockControl( IN PDEVICE_OBJECT LibDeviceObject,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSLockControl Attempted access (%08lX) when pFcb == NULL\n",
+                          "AFSLockControl Attempted access (%p) when pFcb == NULL\n",
                           Irp);
 
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
@@ -81,7 +81,7 @@ AFSLockControl( IN PDEVICE_OBJECT LibDeviceObject,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSLockControl Acquiring Fcb lock %08lX SHARED %08lX\n",
+                      "AFSLockControl Acquiring Fcb lock %p SHARED %08lX\n",
                       &pFcb->NPFcb->Resource,
                       PsGetCurrentThread());
 
@@ -168,7 +168,7 @@ AFSLockControl( IN PDEVICE_OBJECT LibDeviceObject,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSLockControl Acquiring Fcb SectionObject lock %08lX SHARED %08lX\n",
+                              "AFSLockControl Acquiring Fcb SectionObject lock %p SHARED %08lX\n",
                               &pFcb->NPFcb->SectionObjectResource,
                               PsGetCurrentThread());
 
@@ -198,7 +198,7 @@ AFSLockControl( IN PDEVICE_OBJECT LibDeviceObject,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSLockControl Releasing Fcb SectionObject lock %08lX SHARED %08lX\n",
+                              "AFSLockControl Releasing Fcb SectionObject lock %p SHARED %08lX\n",
                               &pFcb->NPFcb->SectionObjectResource,
                               PsGetCurrentThread());
 
@@ -234,7 +234,7 @@ AFSLockControl( IN PDEVICE_OBJECT LibDeviceObject,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSLockControl Acquiring Fcb SectionObject lock %08lX SHARED %08lX\n",
+                              "AFSLockControl Acquiring Fcb SectionObject lock %p SHARED %08lX\n",
                               &pFcb->NPFcb->SectionObjectResource,
                               PsGetCurrentThread());
 
@@ -247,7 +247,7 @@ AFSLockControl( IN PDEVICE_OBJECT LibDeviceObject,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSLockControl Releasing Fcb SectionObject lock %08lX SHARED %08lX\n",
+                              "AFSLockControl Releasing Fcb SectionObject lock %p SHARED %08lX\n",
                               &pFcb->NPFcb->SectionObjectResource,
                               PsGetCurrentThread());
 
