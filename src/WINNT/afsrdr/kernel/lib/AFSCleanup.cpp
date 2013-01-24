@@ -197,7 +197,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                     lCount = InterlockedDecrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCleanup (IOCtl) Decrement child open handle count on Parent object %p Cnt %d\n",
                                   pObjectInfo->ParentObjectInformation,
@@ -719,7 +719,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                     lCount = InterlockedDecrement( &pParentObjectInfo->Specific.Directory.ChildOpenHandleCount);
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCleanup (File) Decrement child open handle count on Parent object %p Cnt %d\n",
                                   pParentObjectInfo,
@@ -741,7 +741,13 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                     // The ObjectReferenceCount will be freed by AFSPerformObjectInvalidate
                     //
 
-                    AFSObjectInfoIncrement( pObjectInfo);
+                    lCount = AFSObjectInfoIncrement( pObjectInfo);
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSCleanup Setting Purge on Close Increment count on object %p Cnt %d\n",
+                                  pObjectInfo,
+                                  lCount);
 
                     ClearFlag( pFcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
 
@@ -1064,7 +1070,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                     lCount = InterlockedDecrement( &pParentObjectInfo->Specific.Directory.ChildOpenHandleCount);
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCleanup (Dir) Decrement child open handle count on Parent object %p Cnt %d\n",
                                   pParentObjectInfo,
@@ -1365,7 +1371,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                     lCount = InterlockedDecrement( &pParentObjectInfo->Specific.Directory.ChildOpenHandleCount);
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCleanup (MP/SL) Decrement child open handle count on Parent object %p Cnt %d\n",
                                   pParentObjectInfo,
@@ -1411,7 +1417,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                     lCount = InterlockedDecrement( &pParentObjectInfo->Specific.Directory.ChildOpenHandleCount);
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCleanup (Share) Decrement child open handle count on Parent object %p Cnt %d\n",
                                   pParentObjectInfo,

@@ -1981,7 +1981,7 @@ AFSProcessCreate( IN PIRP               Irp,
 
         lCount = InterlockedIncrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessCreate Increment child open handle count on Parent object %p Cnt %d\n",
                       pObjectInfo->ParentObjectInformation,
@@ -2334,7 +2334,7 @@ AFSOpenTargetDirectory( IN PIRP Irp,
 
             lCount = InterlockedIncrement( &pParentObject->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+            AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSOpenTargetDirectory Increment child open handle count on Parent object %p Cnt %d\n",
                           pParentObject->ParentObjectInformation,
@@ -2342,7 +2342,7 @@ AFSOpenTargetDirectory( IN PIRP Irp,
 
             lCount = InterlockedIncrement( &pParentObject->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+            AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSOpenTargetDirectory Increment child open ref count on Parent object %p Cnt %d\n",
                           pParentObject->ParentObjectInformation,
@@ -2807,7 +2807,7 @@ AFSProcessOpen( IN PIRP Irp,
 
         lCount = InterlockedIncrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessOpen Increment child open handle count on Parent object %p Cnt %d\n",
                       pObjectInfo->ParentObjectInformation,
@@ -2815,7 +2815,7 @@ AFSProcessOpen( IN PIRP Irp,
 
         lCount = InterlockedIncrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessOpen Increment child open ref count on Parent object %p Cnt %d\n",
                       pObjectInfo->ParentObjectInformation,
@@ -3260,7 +3260,7 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
 
         lCount = InterlockedIncrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessOverwriteSupersede Increment child open handle count on Parent object %p Cnt %d\n",
                       pObjectInfo->ParentObjectInformation,
@@ -3268,7 +3268,7 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
 
         lCount = InterlockedIncrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessOverwriteSupersede Increment child open ref count on Parent object %p Cnt %d\n",
                       pObjectInfo->ParentObjectInformation,
@@ -3546,7 +3546,7 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
 
         lCount = InterlockedIncrement( &pParentObjectInfo->Specific.Directory.ChildOpenHandleCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenIOCtlFcb Increment child open handle count on Parent object %p Cnt %d\n",
                       pParentObjectInfo,
@@ -3554,7 +3554,7 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
 
         lCount = InterlockedIncrement( &pParentObjectInfo->Specific.Directory.ChildOpenReferenceCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenIOCtlFcb Increment child open ref count on Parent object %p Cnt %d\n",
                       pParentObjectInfo,
@@ -3775,7 +3775,7 @@ AFSOpenSpecialShareFcb( IN PIRP Irp,
 
         lCount = InterlockedIncrement( &pParentObjectInfo->Specific.Directory.ChildOpenHandleCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenSpecialShareFcb Increment child open handle count on Parent object %p Cnt %d\n",
                       pParentObjectInfo,
@@ -3783,7 +3783,7 @@ AFSOpenSpecialShareFcb( IN PIRP Irp,
 
         lCount = InterlockedIncrement( &pParentObjectInfo->Specific.Directory.ChildOpenReferenceCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenSpecialShareFcb Increment child open ref count on Parent object %p Cnt %d\n",
                       pParentObjectInfo,
