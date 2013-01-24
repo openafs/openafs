@@ -468,7 +468,7 @@ AFSInitVolume( IN GUID *AuthGroup,
         // into the volume tree ...
         //
 
-        pVolumeCB = (AFSVolumeCB *)AFSExAllocatePoolWithTag( NonPagedPool,
+        pVolumeCB = (AFSVolumeCB *)AFSExAllocatePoolWithTag( PagedPool,
                                                              sizeof( AFSVolumeCB),
                                                              AFS_VCB_ALLOCATION_TAG);
 
