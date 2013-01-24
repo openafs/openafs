@@ -311,7 +311,14 @@ AFSEnumerateDirectory( IN GUID *AuthGroup,
                             // The ObjectReferenceCount will be freed by AFSPerformObjectInvalidate
                             //
 
-                            lCount = AFSObjectInfoIncrement( pObjectInfo);
+                            lCount = AFSObjectInfoIncrement( pObjectInfo,
+                                                             AFS_OBJECT_REFERENCE_INVALIDATION);
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                                          AFS_TRACE_LEVEL_VERBOSE,
+                                          "AFSEnumerateDirectory calling AFSPerformObjectInvalidate Increment count on object %p Cnt %d\n",
+                                          pObjectInfo,
+                                          lCount);
 
                             AFSPerformObjectInvalidate( pObjectInfo,
                                                         AFS_INVALIDATE_DATA_VERSION);
@@ -1090,13 +1097,27 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
                             // lock hierarchy.
                             //
 
-                            lCount = AFSObjectInfoIncrement( pObjectInfo);
+                            lCount = AFSObjectInfoIncrement( pObjectInfo,
+                                                             AFS_OBJECT_REFERENCE_INVALIDATION);
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                                          AFS_TRACE_LEVEL_VERBOSE,
+                                          "AFSVerifyDirectoryContent calling AFSQueueInvalidateObject Increment count on object %p Cnt %d\n",
+                                          pObjectInfo,
+                                          lCount);
 
                             if ( !NT_SUCCESS( AFSQueueInvalidateObject( pObjectInfo,
                                                                         AFS_INVALIDATE_DATA_VERSION)))
                             {
 
-                                lCount = AFSObjectInfoDecrement( pObjectInfo);
+                                lCount = AFSObjectInfoDecrement( pObjectInfo,
+                                                                 AFS_OBJECT_REFERENCE_INVALIDATION);
+
+                                AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                                              AFS_TRACE_LEVEL_VERBOSE,
+                                              "AFSVerifyDirectoryContent AFSQueueInvalidateObject failed Decrement count on object %p Cnt %d\n",
+                                              pObjectInfo,
+                                              lCount);
                             }
                         }
                         else

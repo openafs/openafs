@@ -1473,7 +1473,8 @@ AFSProcessSetFileExtents( IN AFSSetFileExtentsCB *SetExtents )
             // Reference the node so it won't be torn down
             //
 
-            lCount = AFSObjectInfoIncrement( pObjectInfo);
+            lCount = AFSObjectInfoIncrement( pObjectInfo,
+                                             AFS_OBJECT_REFERENCE_EXTENTS);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -1554,7 +1555,8 @@ try_exit:
         if( pObjectInfo != NULL)
         {
 
-            lCount = AFSObjectInfoDecrement( pObjectInfo);
+            lCount = AFSObjectInfoDecrement( pObjectInfo,
+                                             AFS_OBJECT_REFERENCE_EXTENTS);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -1982,12 +1984,14 @@ AFSFindFcbToClean(ULONG IgnoreTime, AFSFcb *LastFcb, BOOLEAN Block)
                 // A hit a very palpable hit.  Pin it
                 //
 
-                lCount = AFSObjectInfoIncrement( pCurrentObject);
+                lCount = AFSObjectInfoIncrement( pFcb->ObjectInformation,
+                                                 AFS_OBJECT_REFERENCE_EXTENTS);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSFindFcbToClean Increment count on Fcb %p Cnt %d\n",
-                              pCurrentObject,
+                              "AFSFindFcbToClean Increment count on Fcb %p object %pCnt %d\n",
+                              pFcb,
+                              pFcb->ObjectInformation,
                               lCount);
 
                 bLocatedEntry = TRUE;
@@ -2124,7 +2128,8 @@ AFSProcessExtentFailure( PIRP Irp)
             // Reference the node so it won't be torn down
             //
 
-            lCount = AFSObjectInfoIncrement( pObjectInfo);
+            lCount = AFSObjectInfoIncrement( pObjectInfo,
+                                             AFS_OBJECT_REFERENCE_EXTENTS);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -2185,7 +2190,8 @@ AFSProcessExtentFailure( PIRP Irp)
 
         AFSReleaseResource( &pObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource);
 
-        lCount = AFSObjectInfoDecrement( pObjectInfo);
+        lCount = AFSObjectInfoDecrement( pObjectInfo,
+                                         AFS_OBJECT_REFERENCE_EXTENTS);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
@@ -2375,7 +2381,8 @@ AFSProcessReleaseFileExtents( IN PIRP Irp)
                 // Reference the node so it won't be torn down
                 //
 
-                lCount = AFSObjectInfoIncrement( pObjectInfo);
+                lCount = AFSObjectInfoIncrement( pObjectInfo,
+                                                 AFS_OBJECT_REFERENCE_EXTENTS);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
@@ -2600,7 +2607,8 @@ try_exit:
         if( pObjectInfo != NULL)
         {
 
-            lCount = AFSObjectInfoDecrement( pObjectInfo);
+            lCount = AFSObjectInfoDecrement( pObjectInfo,
+                                             AFS_OBJECT_REFERENCE_EXTENTS);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,

@@ -2556,9 +2556,8 @@ AFSDeleteDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
         // Dereference the object for this dir entry
         //
 
-        ASSERT( DirEntry->ObjectInformation->ObjectReferenceCount > 0);
-
-        lCount = AFSObjectInfoDecrement( DirEntry->ObjectInformation);
+        lCount = AFSObjectInfoDecrement( DirEntry->ObjectInformation,
+                                         AFS_OBJECT_REFERENCE_DIRENTRY);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
