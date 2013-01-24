@@ -5016,9 +5016,9 @@ AFSInitNameArray( IN AFSDirectoryCB *DirectoryCB,
 
             pNameArray->LinkCount = 0;
 
-            lCount = InterlockedIncrement( &DirectoryCB->DirOpenReferenceCount);
+            lCount = InterlockedIncrement( &DirectoryCB->NameArrayReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSInitNameArray [NA:%p] Increment count on %wZ DE %p Cnt %d\n",
                           pNameArray,
@@ -5099,9 +5099,9 @@ AFSPopulateNameArray( IN AFSNameArrayHdr *NameArray,
 
         pCurrentElement->DirectoryCB = DirectoryCB->ObjectInformation->VolumeCB->DirectoryCB;
 
-        lCount = InterlockedIncrement( &pCurrentElement->DirectoryCB->DirOpenReferenceCount);
+        lCount = InterlockedIncrement( &pCurrentElement->DirectoryCB->NameArrayReferenceCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+        AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSPopulateNameArray [NA:%p] Increment count on volume %wZ DE %p Cnt %d\n",
                       NameArray,
@@ -5213,9 +5213,9 @@ AFSPopulateNameArrayFromRelatedArray( IN AFSNameArrayHdr *NameArray,
                 SetFlag( pCurrentElement->Flags, AFS_NAME_ARRAY_FLAG_ROOT_ELEMENT);
             }
 
-            lCount = InterlockedIncrement( &pCurrentElement->DirectoryCB->DirOpenReferenceCount);
+            lCount = InterlockedIncrement( &pCurrentElement->DirectoryCB->NameArrayReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSPopulateNameArrayFromRelatedArray [NA:%p] Increment count on %wZ DE %p Cnt %d\n",
                           NameArray,
@@ -5281,9 +5281,9 @@ AFSFreeNameArray( IN AFSNameArrayHdr *NameArray)
 
             pCurrentElement = &NameArray->ElementArray[ lElement];
 
-            lCount = InterlockedDecrement( &pCurrentElement->DirectoryCB->DirOpenReferenceCount);
+            lCount = InterlockedDecrement( &pCurrentElement->DirectoryCB->NameArrayReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSFreeNameArray [NA:%p] Decrement count on %wZ DE %p Cnt %d\n",
                           NameArray,
@@ -5367,9 +5367,9 @@ AFSInsertNextElement( IN AFSNameArrayHdr *NameArray,
 
         lCount = InterlockedIncrement( &NameArray->Count);
 
-        lCount = InterlockedIncrement( &DirectoryCB->DirOpenReferenceCount);
+        lCount = InterlockedIncrement( &DirectoryCB->NameArrayReferenceCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+        AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInsertNextElement [NA:%p] Increment count on %wZ DE %p Cnt %d\n",
                       NameArray,
@@ -5377,7 +5377,7 @@ AFSInsertNextElement( IN AFSNameArrayHdr *NameArray,
                       DirectoryCB,
                       lCount);
 
-        ASSERT( lCount >= 2);
+        ASSERT( lCount > 0);
 
         pCurrentElement->DirectoryCB = DirectoryCB;
 
@@ -5442,9 +5442,9 @@ AFSBackupEntry( IN AFSNameArrayHdr *NameArray)
             try_return( pCurrentElement);
         }
 
-        lCount = InterlockedDecrement( &NameArray->CurrentEntry->DirectoryCB->DirOpenReferenceCount);
+        lCount = InterlockedDecrement( &NameArray->CurrentEntry->DirectoryCB->NameArrayReferenceCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+        AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSBackupEntry [NA:%p] Decrement count on %wZ DE %p Cnt %d\n",
                       NameArray,
@@ -5601,9 +5601,9 @@ AFSResetNameArray( IN AFSNameArrayHdr *NameArray,
 
             pCurrentElement = &NameArray->ElementArray[ lElement];
 
-            lCount = InterlockedDecrement( &pCurrentElement->DirectoryCB->DirOpenReferenceCount);
+            lCount = InterlockedDecrement( &pCurrentElement->DirectoryCB->NameArrayReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSResetNameArray [NA:%p] Decrement count on %wZ DE %p Cnt %d\n",
                           NameArray,
@@ -5631,9 +5631,9 @@ AFSResetNameArray( IN AFSNameArrayHdr *NameArray,
 
             NameArray->LinkCount = 0;
 
-            lCount = InterlockedIncrement( &DirectoryCB->DirOpenReferenceCount);
+            lCount = InterlockedIncrement( &DirectoryCB->NameArrayReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSResetNameArray [NA:%p] Increment count on %wZ DE %p Cnt %d\n",
                           NameArray,
