@@ -165,7 +165,7 @@ NTSTATUS
 // Fcb lifetime in seconds
 //
 
-#define AFS_OBJECT_LIFETIME             600 * AFS_ONE_SECOND
+#define AFS_OBJECT_LIFETIME             20 * AFS_ONE_SECOND
 
 #define AFS_EXTENT_REQUEST_TIME         10 * AFS_ONE_SECOND
 
