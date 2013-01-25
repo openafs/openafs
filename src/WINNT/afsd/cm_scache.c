@@ -1932,8 +1932,10 @@ long cm_MergeStatus(cm_scache_t *dscp,
     if (((flags & (CM_MERGEFLAG_STOREDATA|CM_MERGEFLAG_DIROP)) && (dv_diff(dataVersion, scp->dataVersion) > activeRPCs)) ||
          (!(flags & (CM_MERGEFLAG_STOREDATA|CM_MERGEFLAG_DIROP)) && (scp->dataVersion != dataVersion)) ||
          scp->bufDataVersionLow == CM_SCACHE_VERSION_BAD ||
-         scp->fileType == CM_SCACHETYPE_DIRECTORY)
+         scp->fileType == CM_SCACHETYPE_DIRECTORY ||
+         flags & CM_MERGEFLAG_CACHE_BYPASS) {
         scp->bufDataVersionLow = dataVersion;
+    }
 
     if (RDR_Initialized) {
         /*
