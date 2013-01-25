@@ -110,6 +110,7 @@ typedef struct _AFS_COMM_RESULT_BLOCK
 #define AFS_REDIR_INIT_FLAG_HIDE_DOT_FILES          0x00000001
 #define AFS_REDIR_INIT_NO_PAGING_FILE               0x00000002
 #define AFS_REDIR_INIT_FLAG_DISABLE_SHORTNAMES	    0x00000004
+#define AFS_REDIR_INIT_PERFORM_SERVICE_IO           0x00000008
 
 typedef struct _AFS_REDIR_INIT_INFO_CB
 {
@@ -1242,6 +1243,46 @@ typedef struct _AFS_REPARSE_TAG_INFORMATION
     };
 
 } AFSReparseTagInfo;
+
+//
+// File IO CB
+//
+
+typedef struct _AFS_FILE_IO_CB
+{
+
+    LARGE_INTEGER   IOOffset;
+
+    ULONG           IOLength;
+
+    void           *MappedIOBuffer; // Mapped buffer for access by service
+
+    void           *SystemIOBuffer; // Service should not access this pointer
+
+    void           *SystemIOBufferMdl; // The service should not access this pointer
+
+    LARGE_INTEGER   LastAccessTime;
+
+    LARGE_INTEGER   LastWriteTime;
+
+    LARGE_INTEGER   ChangeTime;
+
+    LARGE_INTEGER   CreateTime;
+
+    LARGE_INTEGER   EndOfFile;
+
+} AFSFileIOCB;
+
+typedef struct _AFS_FILE_IO_RESULT_CB
+{
+
+    ULONG           Length;
+
+    LARGE_INTEGER   DataVersion;
+
+    LARGE_INTEGER   Expiration;		/* FILETIME */
+
+} AFSFileIOResultCB;
 
 #endif /* _AFS_USER_STRUCT_H */
 

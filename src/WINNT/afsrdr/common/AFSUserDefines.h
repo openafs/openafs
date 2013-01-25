@@ -92,6 +92,8 @@
 #define AFS_REQUEST_TYPE_RELEASE_FILE_ACCESS     0x00000021
 #define AFS_REQUEST_TYPE_GET_VOLUME_SIZE_INFO    0x00000022
 #define AFS_REQUEST_TYPE_HARDLINK_FILE           0x00000023
+#define AFS_REQUEST_TYPE_PROCESS_READ_FILE       0x00000024
+#define AFS_REQUEST_TYPE_PROCESS_WRITE_FILE      0x00000025
 
 //
 // Request Flags, these are passed up from the file system
@@ -142,6 +144,10 @@
 
 #define AFS_REQUEST_LOCAL_SYSTEM_PAG             0x00000200 // Indicates that the caller is or was at some point a system
                                                             // process
+
+#define AFS_REQUEST_FLAG_CACHE_BYPASS            0x00000400 // Indicates that the AFS_REQUEST_TYPE_PROCESS_READ_FILE or
+                                                            // AFS_REQUEST_TYPE_PROCESS_WRITE_FILE is to be performed directly
+                                                            // against the file server bypassing the AFS Cache file.
 
 #define AFS_REQUEST_FLAG_LAST_COMPONENT          0x00000800 // During an AFS_REQUEST_TYPE_TARGET_BY_NAME the provided name
                                                             // is the last component in the path.

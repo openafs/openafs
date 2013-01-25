@@ -54,6 +54,13 @@ AFSNonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
 
 static
 NTSTATUS
+AFSNonCachedWriteDirect( IN PDEVICE_OBJECT DeviceObject,
+                         IN PIRP Irp,
+                         IN LARGE_INTEGER StartingByte,
+                         IN ULONG ByteCount);
+
+static
+NTSTATUS
 AFSExtendingWrite( IN AFSFcb *Fcb,
                    IN PFILE_OBJECT FileObject,
                    IN LONGLONG NewLength);
@@ -117,6 +124,7 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
     BOOLEAN            bLockOK;
     HANDLE             hCallingUser = OnBehalfOf;
     ULONGLONG          ullProcessId = (ULONGLONG)PsGetCurrentProcessId();
+    AFSDeviceExt       *pRDRDevExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
 
     pIrpSp = IoGetCurrentIrpStackLocation( Irp);
 
@@ -225,6 +233,7 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
         // Is the Cache not there yet?  Exit.
         //
         if( !BooleanFlagOn( AFSLibControlFlags, AFS_REDIR_LIB_FLAGS_NONPERSISTENT_CACHE) &&
+            !BooleanFlagOn( pRDRDevExt->DeviceFlags, AFS_REDIR_INIT_PERFORM_SERVICE_IO) &&
             NULL == pDeviceExt->Specific.RDR.CacheFileObject)
         {
 
@@ -695,7 +704,15 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
                           ulByteCount,
                           bRetry ? " RETRY" : "");
 
-            ntStatus = AFSNonCachedWrite( DeviceObject, Irp,  liStartingByte, ulByteCount);
+            if( BooleanFlagOn( pRDRDevExt->DeviceFlags, AFS_DEVICE_FLAG_DIRECT_SERVICE_IO))
+            {
+
+                ntStatus = AFSNonCachedWriteDirect( DeviceObject, Irp,  liStartingByte, ulByteCount);
+            }
+            else
+            {
+                ntStatus = AFSNonCachedWrite( DeviceObject, Irp,  liStartingByte, ulByteCount);
+            }
         }
 
 try_exit:
@@ -1487,6 +1504,177 @@ try_exit:
 
             AFSCompleteRequest( Irp, ntStatus);
         }
+    }
+
+    return ntStatus;
+}
+
+static
+NTSTATUS
+AFSNonCachedWriteDirect( IN PDEVICE_OBJECT DeviceObject,
+                         IN PIRP Irp,
+                         IN LARGE_INTEGER StartingByte,
+                         IN ULONG ByteCount)
+{
+    NTSTATUS           ntStatus = STATUS_UNSUCCESSFUL;
+    VOID              *pSystemBuffer = NULL;
+    BOOLEAN            bPagingIo = BooleanFlagOn( Irp->Flags, IRP_PAGING_IO);
+    IO_STACK_LOCATION *pIrpSp = IoGetCurrentIrpStackLocation( Irp);
+    PFILE_OBJECT       pFileObject = pIrpSp->FileObject;
+    AFSFcb            *pFcb = (AFSFcb *)pFileObject->FsContext;
+    AFSCcb            *pCcb = (AFSCcb *)pFileObject->FsContext2;
+    BOOLEAN            bSynchronousFo = BooleanFlagOn( pFileObject->Flags, FO_SYNCHRONOUS_IO);
+    BOOLEAN            bNoIntermediateBuffering = BooleanFlagOn( pFileObject->Flags, FO_NO_INTERMEDIATE_BUFFERING);
+    AFSDeviceExt      *pDevExt = (AFSDeviceExt *)DeviceObject->DeviceExtension;
+    AFSFileIOCB        stFileIORequest;
+    AFSFileIOResultCB  stFileIOResult;
+    ULONG              ulResultLen = 0;
+    ULONG              ulFlags;
+
+    __Enter
+    {
+        Irp->IoStatus.Information = 0;
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSNonCachedWriteDirect (FO: %p) StartingByte %08lX:%08lX Length %08lX\n",
+                      pFileObject,
+                      StartingByte.HighPart,
+                      StartingByte.LowPart,
+                      ByteCount);
+
+        if (ByteCount > pDevExt->Specific.RDR.MaxIo.QuadPart)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSNonCachedWriteDirect (%p) Request %08lX Actual %08lX larger than MaxIO %I64X\n",
+                          Irp,
+                          ByteCount,
+                          pIrpSp->Parameters.Write.Length,
+                          pDevExt->Specific.RDR.MaxIo.QuadPart);
+
+            try_return( ntStatus = STATUS_UNSUCCESSFUL);
+        }
+
+        //
+        // Get the mapping for the buffer
+        //
+        pSystemBuffer = AFSLockSystemBuffer( Irp,
+                                             ByteCount);
+
+        if( pSystemBuffer == NULL)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSNonCachedWriteDirect (%p) Failed to map system buffer\n",
+                          Irp);
+
+            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+        }
+
+        //
+        // Issue the request at the service for processing
+        //
+
+        ulResultLen = sizeof( AFSFileIOResultCB);
+
+        RtlZeroMemory( &stFileIORequest,
+                       sizeof( AFSFileIOCB));
+
+        RtlZeroMemory( &stFileIOResult,
+                       sizeof( AFSFileIOResultCB));
+
+        stFileIORequest.SystemIOBuffer = pSystemBuffer;
+
+        stFileIORequest.SystemIOBufferMdl = Irp->MdlAddress;
+
+        stFileIORequest.IOLength = ByteCount;
+
+        stFileIORequest.IOOffset = StartingByte;
+
+        ulFlags = AFS_REQUEST_FLAG_SYNCHRONOUS;
+
+        if ( bNoIntermediateBuffering)
+        {
+
+            ulFlags |= AFS_REQUEST_FLAG_CACHE_BYPASS;
+        }
+
+        //
+        // Update file metadata
+        //
+
+        stFileIORequest.EndOfFile = pFcb->ObjectInformation->EndOfFile;
+
+        stFileIORequest.CreateTime = pFcb->ObjectInformation->CreationTime;
+
+        stFileIORequest.ChangeTime = pFcb->ObjectInformation->ChangeTime;
+
+        stFileIORequest.LastAccessTime = pFcb->ObjectInformation->LastAccessTime;
+
+        stFileIORequest.LastWriteTime = pFcb->ObjectInformation->LastWriteTime;
+
+        //
+        // Write the data to the service
+        //
+
+        ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_PROCESS_WRITE_FILE,
+                                      ulFlags,
+                                      &pCcb->AuthGroup,
+                                      &pCcb->DirectoryCB->NameInformation.FileName,
+                                      &pFcb->ObjectInformation->FileId,
+                                      pFcb->ObjectInformation->VolumeCB->VolumeInformation.Cell,
+                                      pFcb->ObjectInformation->VolumeCB->VolumeInformation.CellLength,
+                                      &stFileIORequest,
+                                      sizeof( AFSFileIOCB),
+                                      &stFileIOResult,
+                                      &ulResultLen);
+
+        if( NT_SUCCESS( ntStatus))
+        {
+
+            Irp->IoStatus.Information = (ULONG_PTR)stFileIOResult.Length;
+        }
+        else
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSNonCachedWriteDirect (%p) Failed to send write to service Status %08lX\n",
+                          Irp,
+                          ntStatus);
+
+        }
+
+try_exit:
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSNonCachedWriteDirect (FO: %p) StartingByte %08lX:%08lX Length %08lX Status %08lX\n",
+                      pFileObject,
+                      StartingByte.HighPart,
+                      StartingByte.LowPart,
+                      ByteCount,
+                      ntStatus);
+
+        if (NT_SUCCESS(ntStatus) &&
+            !bPagingIo &&
+            bSynchronousFo)
+        {
+
+            pFileObject->CurrentByteOffset.QuadPart = StartingByte.QuadPart + ByteCount;
+        }
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSNonCachedWriteDirect Completing Irp %p Status %08lX Info %08lX\n",
+                      Irp,
+                      ntStatus,
+                      Irp->IoStatus.Information);
+
+        AFSCompleteRequest( Irp, ntStatus);
     }
 
     return ntStatus;

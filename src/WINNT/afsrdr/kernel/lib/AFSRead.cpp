@@ -757,6 +757,168 @@ try_exit:
     return ntStatus;
 }
 
+static
+NTSTATUS
+AFSNonCachedReadDirect( IN PDEVICE_OBJECT DeviceObject,
+                        IN PIRP Irp,
+                        IN LARGE_INTEGER StartingByte)
+{
+    NTSTATUS           ntStatus = STATUS_UNSUCCESSFUL;
+    IO_STACK_LOCATION *pIrpSp = IoGetCurrentIrpStackLocation( Irp);
+    PFILE_OBJECT       pFileObject = pIrpSp->FileObject;
+    AFSFcb            *pFcb = (AFSFcb *)pFileObject->FsContext;
+    AFSCcb            *pCcb = (AFSCcb *)pFileObject->FsContext2;
+    VOID              *pSystemBuffer = NULL;
+    ULONG              ulByteCount = 0;
+    ULONG              ulReadByteCount = 0;
+    ULONG              ulFlags;
+    BOOLEAN            bNoIntermediateBuffering = BooleanFlagOn( pFileObject->Flags, FO_NO_INTERMEDIATE_BUFFERING);
+    AFSDeviceExt      *pDevExt = (AFSDeviceExt *)DeviceObject->DeviceExtension;
+    AFSFileIOCB        stFileIORequest;
+    AFSFileIOResultCB  stFileIOResult;
+    ULONG              ulResultLen = 0;
+
+    __Enter
+    {
+
+        Irp->IoStatus.Information = 0;
+
+        ulByteCount = pIrpSp->Parameters.Read.Length;
+
+        if (ulByteCount > pDevExt->Specific.RDR.MaxIo.QuadPart)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSNonCachedReadDirect (%p) Request larger than MaxIO %I64X\n",
+                          Irp,
+                          pDevExt->Specific.RDR.MaxIo.QuadPart);
+
+            try_return( ntStatus = STATUS_UNSUCCESSFUL);
+        }
+
+        pSystemBuffer = AFSLockSystemBuffer( Irp,
+                                             ulByteCount);
+
+        if( pSystemBuffer == NULL)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSNonCachedReadDirect (%p) Failed to map system buffer\n",
+                          Irp);
+
+            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+        }
+
+        if( StartingByte.QuadPart + ulByteCount > pFcb->Header.FileSize.QuadPart)
+        {
+            ULONG zeroCount = (ULONG) (StartingByte.QuadPart + ulByteCount - pFcb->Header.FileSize.QuadPart);
+            ulReadByteCount = (ULONG)(pFcb->Header.FileSize.QuadPart - StartingByte.QuadPart);
+
+            //
+            // Clear up to EOF
+            //
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSNonCachedReadDirect (%p) Zeroing to EOF zero byte length %08lX\n",
+                          Irp,
+                          zeroCount);
+
+            RtlZeroMemory( ((PCHAR)pSystemBuffer) + ulReadByteCount, zeroCount);
+        }
+        else
+        {
+            ulReadByteCount = ulByteCount;
+        }
+
+        //
+        // Issue the request at the service for processing
+        //
+
+        ulResultLen = sizeof( AFSFileIOResultCB);
+
+        RtlZeroMemory( &stFileIORequest,
+                       sizeof( AFSFileIOCB));
+
+        RtlZeroMemory( &stFileIOResult,
+                       sizeof( AFSFileIOResultCB));
+
+        stFileIORequest.SystemIOBuffer = pSystemBuffer;
+
+        stFileIORequest.SystemIOBufferMdl = Irp->MdlAddress;
+
+        stFileIORequest.IOOffset = StartingByte;
+
+        stFileIORequest.IOLength = ulReadByteCount;
+
+        ulFlags = AFS_REQUEST_FLAG_SYNCHRONOUS;
+
+        if ( bNoIntermediateBuffering)
+        {
+
+            ulFlags |= AFS_REQUEST_FLAG_CACHE_BYPASS;
+        }
+
+        ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_PROCESS_READ_FILE,
+                                      ulFlags,
+                                      &pCcb->AuthGroup,
+                                      &pCcb->DirectoryCB->NameInformation.FileName,
+                                      &pFcb->ObjectInformation->FileId,
+                                      pFcb->ObjectInformation->VolumeCB->VolumeInformation.Cell,
+                                      pFcb->ObjectInformation->VolumeCB->VolumeInformation.CellLength,
+                                      &stFileIORequest,
+                                      sizeof( AFSFileIOCB),
+                                      &stFileIOResult,
+                                      &ulResultLen);
+
+        if( NT_SUCCESS( ntStatus))
+        {
+
+            Irp->IoStatus.Information = (ULONG_PTR)stFileIOResult.Length;
+        }
+        else
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSNonCachedReadDirect (%p) Failed to send read to service Status %08lX\n",
+                          Irp,
+                          ntStatus);
+        }
+
+try_exit:
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSNonCachedReadDirect (%p) Completed request Status %08lX\n",
+                      Irp,
+                      ntStatus);
+
+        if (NT_SUCCESS(ntStatus) &&
+            !BooleanFlagOn( Irp->Flags, IRP_PAGING_IO) &&
+            BooleanFlagOn( pFileObject->Flags, FO_SYNCHRONOUS_IO))
+        {
+            //
+            // Update the CBO if this is a sync, nopaging read
+            //
+            pFileObject->CurrentByteOffset.QuadPart = StartingByte.QuadPart + ulByteCount;
+        }
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSNonCachedReadDirect Completing irp %08lX Status %08lX Info %08lX\n",
+                      Irp,
+                      ntStatus,
+                      Irp->IoStatus.Information);
+
+        AFSCompleteRequest( Irp, ntStatus );
+    }
+
+    return ntStatus;
+}
+
 //
 // Function: AFSDispatch
 //
@@ -825,6 +987,7 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
     PFILE_OBJECT        pFileObject = NULL;
     LARGE_INTEGER       liStartingByte;
     ULONG               ulByteCount;
+    AFSDeviceExt       *pRDRDevExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
 
     pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     pDeviceExt = (AFSDeviceExt *)DeviceObject->DeviceExtension;
@@ -937,6 +1100,7 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
         // No fileobject yet?  Bail.
         //
         if( !BooleanFlagOn( AFSLibControlFlags, AFS_REDIR_LIB_FLAGS_NONPERSISTENT_CACHE) &&
+            !BooleanFlagOn( pRDRDevExt->DeviceFlags, AFS_REDIR_INIT_PERFORM_SERVICE_IO) &&
             NULL == pDeviceExt->Specific.RDR.CacheFileObject)
         {
 
@@ -1282,7 +1446,15 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
                           liStartingByte.QuadPart,
                           ulByteCount);
 
-            ntStatus = AFSNonCachedRead( DeviceObject, Irp,  liStartingByte);
+            if( BooleanFlagOn( pRDRDevExt->DeviceFlags, AFS_DEVICE_FLAG_DIRECT_SERVICE_IO))
+            {
+
+                ntStatus = AFSNonCachedReadDirect( DeviceObject, Irp,  liStartingByte);
+            }
+            else
+            {
+                ntStatus = AFSNonCachedRead( DeviceObject, Irp,  liStartingByte);
+            }
         }
 
 try_exit:
