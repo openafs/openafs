@@ -879,7 +879,7 @@ cm_BkgPrefetch(cm_scache_t *scp, void *rockp, cm_user_t *userp, cm_req_t *reqp)
             rxheld = 0;
         }
 
-        code = buf_Get(scp, &offset, reqp, &bp);
+        code = buf_Get(scp, &offset, reqp, 0, &bp);
         if (code)
             break;
 
@@ -1324,7 +1324,7 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
         if (LargeIntegerGreaterThanOrEqualTo(pageBase, fileSize))
             break;
 
-        code = buf_Get(scp, &pageBase, reqp, &tbp);
+        code = buf_Get(scp, &pageBase, reqp, 0, &tbp);
         if (code) {
             lock_ObtainWrite(&scp->rw);
             cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);

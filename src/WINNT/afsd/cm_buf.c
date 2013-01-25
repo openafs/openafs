@@ -1258,12 +1258,14 @@ buf_ExistsLocked(struct cm_scache *scp, osi_hyper_t *offsetp)
  * space from the buffer pool.  In that case, the buffer will be returned
  * without being hashed into the hash table.
  */
-long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *reqp, cm_buf_t **bufpp)
+long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *reqp,
+                      afs_uint32 flags, cm_buf_t **bufpp)
 {
     cm_buf_t *bp;	/* buffer we're dealing with */
     cm_buf_t *nextBp;	/* next buffer in file hash chain */
     afs_uint32 i;	/* temp */
     afs_uint64 n_bufs, n_nonzero, n_busy, n_dirty, n_own, n_redir;
+    int bufCreateLocked = !!(flags & BUF_GET_FLAG_BUFCREATE_LOCKED);
 
 #ifdef TESTING
     buf_ValidateBufQueues();
@@ -1278,12 +1280,14 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
         n_dirty = 0;
         n_redir = 0;
 
-        lock_ObtainRead(&scp->bufCreateLock);
+        if (!bufCreateLocked)
+            lock_ObtainRead(&scp->bufCreateLock);
         lock_ObtainWrite(&buf_globalLock);
         /* check to see if we lost the race */
         if (buf_ExistsLocked(scp, offsetp)) {
             lock_ReleaseWrite(&buf_globalLock);
-            lock_ReleaseRead(&scp->bufCreateLock);
+            if (!bufCreateLocked)
+                lock_ReleaseRead(&scp->bufCreateLock);
             return CM_BUF_EXISTS;
         }
 
@@ -1291,7 +1295,8 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
 	if (!cm_data.buf_freeListEndp)
 	{
 	    lock_ReleaseWrite(&buf_globalLock);
-            lock_ReleaseRead(&scp->bufCreateLock);
+            if (!bufCreateLocked)
+                lock_ReleaseRead(&scp->bufCreateLock);
 
             if ( RDR_Initialized )
                 goto rdr_release;
@@ -1375,7 +1380,8 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
                  */
                 buf_HoldLocked(bp);
                 lock_ReleaseWrite(&buf_globalLock);
-                lock_ReleaseRead(&scp->bufCreateLock);
+                if (!bufCreateLocked)
+                    lock_ReleaseRead(&scp->bufCreateLock);
 
                 /*
                  * grab required lock and clean.
@@ -1395,7 +1401,8 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
 
                 /* but first obtain the locks we gave up
                  * before the buf_CleanAsync() call */
-                lock_ObtainRead(&scp->bufCreateLock);
+                if (!bufCreateLocked)
+                    lock_ObtainRead(&scp->bufCreateLock);
                 lock_ObtainWrite(&buf_globalLock);
 
                 /*
@@ -1404,7 +1411,8 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
                  */
                 if (buf_ExistsLocked(scp, offsetp)) {
                     lock_ReleaseWrite(&buf_globalLock);
-                    lock_ReleaseRead(&scp->bufCreateLock);
+                    if (!bufCreateLocked)
+                        lock_ReleaseRead(&scp->bufCreateLock);
                     return CM_BUF_EXISTS;
                 }
 
@@ -1488,7 +1496,8 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
                 buf_IncrementUsedCount();
 
             lock_ReleaseWrite(&buf_globalLock);
-            lock_ReleaseRead(&scp->bufCreateLock);
+            if (!bufCreateLocked)
+                lock_ReleaseRead(&scp->bufCreateLock);
 
             *bufpp = bp;
 
@@ -1498,7 +1507,8 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
             return 0;
         } /* for all buffers in lru queue */
         lock_ReleaseWrite(&buf_globalLock);
-        lock_ReleaseRead(&scp->bufCreateLock);
+        if (!bufCreateLocked)
+            lock_ReleaseRead(&scp->bufCreateLock);
 
 	osi_Log2(afsd_logp, "buf_GetNewLocked: Free Buffer List has %u buffers none free; redir %u", n_bufs, n_redir);
         osi_Log4(afsd_logp, "... nonzero %u; own %u; busy %u; dirty %u", n_nonzero, n_own, n_busy, n_dirty);
@@ -1527,7 +1537,7 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
  *
  * The scp must be unlocked when passed in unlocked.
  */
-long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *reqp, cm_buf_t **bufpp)
+long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *reqp, afs_uint32 flags, cm_buf_t **bufpp)
 {
     cm_buf_t *bp;
     long code;
@@ -1561,7 +1571,7 @@ long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *reqp, cm_buf
         }
 
         /* otherwise, we have to create a page */
-        code = buf_GetNewLocked(scp, &pageOffset, reqp, &bp);
+        code = buf_GetNewLocked(scp, &pageOffset, reqp, flags, &bp);
         switch (code) {
         case 0:
             /* the requested buffer was created */

@@ -170,9 +170,11 @@ extern cm_buf_t *buf_FindAllLocked(struct cm_fid *, osi_hyper_t *, afs_uint32 fl
 
 extern cm_buf_t *buf_FindAll(struct cm_fid *, osi_hyper_t *, afs_uint32 flags);
 
-extern long buf_GetNewLocked(struct cm_scache *, osi_hyper_t *, cm_req_t *, cm_buf_t **);
+extern long buf_GetNewLocked(struct cm_scache *, osi_hyper_t *, cm_req_t *, afs_uint32, cm_buf_t **);
 
-extern long buf_Get(struct cm_scache *, osi_hyper_t *, cm_req_t *, cm_buf_t **);
+extern long buf_Get(struct cm_scache *, osi_hyper_t *, cm_req_t *, afs_uint32, cm_buf_t **);
+
+#define BUF_GET_FLAG_BUFCREATE_LOCKED   1
 
 extern afs_uint32 buf_CleanLocked(cm_scache_t *, cm_buf_t *, cm_req_t *, afs_uint32 flags, afs_uint32 *);
 

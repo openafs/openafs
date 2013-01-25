@@ -5124,7 +5124,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
                 bufferp = NULL;
             }
             lock_ReleaseWrite(&scp->rw);
-            code = buf_Get(scp, &thyper, &req, &bufferp);
+            code = buf_Get(scp, &thyper, &req, 0, &bufferp);
             lock_ObtainMutex(&dsp->mx);
 
             /* now, if we're doing a star match, do bulk fetching of all of
@@ -7249,7 +7249,7 @@ long smb_ReadData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char 
             }
             lock_ReleaseWrite(&scp->rw);
 
-            code = buf_Get(scp, &thyper, &req, &bufferp);
+            code = buf_Get(scp, &thyper, &req, 0, &bufferp);
 
             lock_ObtainWrite(&scp->rw);
             if (code) goto done;
@@ -7439,7 +7439,7 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char
             }
             lock_ReleaseWrite(&scp->rw);
 
-            code = buf_Get(scp, &thyper, &req, &bufferp);
+            code = buf_Get(scp, &thyper, &req, 0, &bufferp);
 
             lock_ObtainMutex(&bufferp->mx);
             lock_ObtainWrite(&scp->rw);

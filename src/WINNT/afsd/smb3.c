@@ -5903,7 +5903,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                 bufferp = NULL;
             }
             lock_ReleaseWrite(&scp->rw);
-            code = buf_Get(scp, &thyper, &req, &bufferp);
+            code = buf_Get(scp, &thyper, &req, 0, &bufferp);
             lock_ObtainWrite(&scp->rw);
             if (code) {
                 osi_Log2(smb_logp, "T2 search dir buf_Get scp %x failed %d", scp, code);
