@@ -80,7 +80,7 @@ raw_ReadData( cm_scache_t *scp, osi_hyper_t *offsetp,
             }
             lock_ReleaseWrite(&scp->rw);
 
-            code = buf_Get(scp, &thyper, reqp, &bufp);
+            code = buf_Get(scp, &thyper, reqp, 0, &bufp);
 
             lock_ObtainWrite(&scp->rw);
             if (code) goto done;
@@ -211,7 +211,7 @@ raw_WriteData( cm_scache_t *scp, osi_hyper_t *offsetp, afs_uint32 length, char *
             }
             lock_ReleaseWrite(&scp->rw);
 
-            code = buf_Get(scp, &thyper, reqp, &bufp);
+            code = buf_Get(scp, &thyper, reqp, 0, &bufp);
             if (bufp)
                 lock_ObtainMutex(&bufp->mx);
 

@@ -3420,7 +3420,7 @@ RDR_BkgFetch(cm_scache_t *scp, void *rockp, cm_user_t *userp, cm_req_t *reqp)
             rwheld = 0;
         }
 
-        code = buf_Get(scp, &offset, reqp, &bufp);
+        code = buf_Get(scp, &offset, reqp, 0, &bufp);
         if (code) {
             /*
              * any error from buf_Get() is non-fatal.
@@ -3657,7 +3657,7 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
         QueueLength = 0;
         thyper.QuadPart = ByteOffset.QuadPart;
 
-        code = buf_Get(scp, &thyper, &req, &bufp);
+        code = buf_Get(scp, &thyper, &req, 0,  &bufp);
         if (code == 0) {
             lock_ObtainMutex(&bufp->mx);
             bBufRelease = TRUE;

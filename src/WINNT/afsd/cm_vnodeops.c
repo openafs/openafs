@@ -360,7 +360,7 @@ long cm_CheckNTDelete(cm_scache_t *dscp, cm_scache_t *scp, cm_user_t *userp,
         return code;
 
     thyper.HighPart = 0; thyper.LowPart = 0;
-    code = buf_Get(scp, &thyper, reqp, &bufferp);
+    code = buf_Get(scp, &thyper, reqp, 0, &bufferp);
     if (code)
         return code;
 
@@ -603,7 +603,7 @@ long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
                 bufferp = NULL;
             }
 
-            code = buf_Get(scp, &thyper, reqp, &bufferp);
+            code = buf_Get(scp, &thyper, reqp, 0, &bufferp);
             if (code) {
                 /* if buf_Get() fails we do not have a buffer object to lock */
                 bufferp = NULL;
