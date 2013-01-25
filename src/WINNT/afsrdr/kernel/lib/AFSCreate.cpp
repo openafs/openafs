@@ -2051,6 +2051,26 @@ try_exit:
             AFSReleaseResource( &(*Fcb)->NPFcb->Resource);
         }
 
+        if ( bFileCreated)
+        {
+
+            //
+            // Decrement the reference added during initialization of the DE
+            // AFSInitCcb allocates its own reference count.
+            //
+
+            lCount = InterlockedDecrement( &pDirEntry->DirOpenReferenceCount);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSProcessCreate Decrement count on %wZ DE %p Cnt %d\n",
+                          &pDirEntry->NameInformation.FileName,
+                          pDirEntry,
+                          lCount);
+
+            ASSERT( lCount >= 0);
+        }
+
         if( !NT_SUCCESS( ntStatus))
         {
 
@@ -2076,21 +2096,6 @@ try_exit:
                 AFSNotifyDelete( pDirEntry,
                                  AuthGroup,
                                  FALSE);
-
-                //
-                // Decrement the reference added during initialization of the DE
-                //
-
-                lCount = InterlockedDecrement( &pDirEntry->DirOpenReferenceCount);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSProcessCreate Decrement count on %wZ DE %p Cnt %d\n",
-                              &pDirEntry->NameInformation.FileName,
-                              pDirEntry,
-                              lCount);
-
-                ASSERT( lCount >= 0);
 
                 //
                 // Pull the directory entry from the parent
