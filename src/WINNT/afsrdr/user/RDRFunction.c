@@ -5460,26 +5460,19 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
         }
 
         if (code == 0) {
-            if (volStat.MaxQuota)
-            {
-                pResultCB->TotalAllocationUnits.QuadPart = volStat.MaxQuota;
-                if (volType == ROVOL || volType == BACKVOL) {
-                    pResultCB->AvailableAllocationUnits.QuadPart = 0;
-                }
-                else
+            if (volType == ROVOL || volType == BACKVOL) {
+                pResultCB->TotalAllocationUnits.QuadPart = volStat.BlocksInUse;
+                pResultCB->AvailableAllocationUnits.QuadPart = 0;
+            } else {
+                if (volStat.MaxQuota)
                 {
+                    pResultCB->TotalAllocationUnits.QuadPart = volStat.MaxQuota;
                     pResultCB->AvailableAllocationUnits.QuadPart =
                         min(volStat.MaxQuota - volStat.BlocksInUse, volStat.PartBlocksAvail);
                 }
-            }
-            else
-            {
-                pResultCB->TotalAllocationUnits.QuadPart = volStat.PartMaxBlocks;
-                if (volType == ROVOL || volType == BACKVOL) {
-                    pResultCB->AvailableAllocationUnits.QuadPart = 0;
-                }
                 else
                 {
+                    pResultCB->TotalAllocationUnits.QuadPart = volStat.PartMaxBlocks;
                     pResultCB->AvailableAllocationUnits.QuadPart = volStat.PartBlocksAvail;
                 }
             }
@@ -5636,26 +5629,19 @@ RDR_GetVolumeSizeInfo( IN cm_user_t     *userp,
         }
 
         if (code == 0) {
-            if (volStat.MaxQuota)
-            {
-                pResultCB->TotalAllocationUnits.QuadPart = volStat.MaxQuota;
-                if (volType == ROVOL || volType == BACKVOL) {
-                    pResultCB->AvailableAllocationUnits.QuadPart = 0;
-                }
-                else
+            if (volType == ROVOL || volType == BACKVOL) {
+                pResultCB->TotalAllocationUnits.QuadPart = volStat.BlocksInUse;
+                pResultCB->AvailableAllocationUnits.QuadPart = 0;
+            } else {
+                if (volStat.MaxQuota)
                 {
+                    pResultCB->TotalAllocationUnits.QuadPart = volStat.MaxQuota;
                     pResultCB->AvailableAllocationUnits.QuadPart =
                         min(volStat.MaxQuota - volStat.BlocksInUse, volStat.PartBlocksAvail);
                 }
-            }
-            else
-            {
-                pResultCB->TotalAllocationUnits.QuadPart = volStat.PartMaxBlocks;
-                if (volType == ROVOL || volType == BACKVOL) {
-                    pResultCB->AvailableAllocationUnits.QuadPart = 0;
-                }
                 else
                 {
+                    pResultCB->TotalAllocationUnits.QuadPart = volStat.PartMaxBlocks;
                     pResultCB->AvailableAllocationUnits.QuadPart = volStat.PartBlocksAvail;
                 }
             }
