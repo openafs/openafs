@@ -5415,7 +5415,7 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
         memcpy(&pResultCB->VolumeCreationTime, &ft, sizeof(ft));
 
         pResultCB->AvailableAllocationUnits.QuadPart = 0;
-        pResultCB->Characteristics |= FILE_READ_ONLY_DEVICE;
+        pResultCB->FileSystemAttributes |= FILE_READ_ONLY_VOLUME;
 
         pResultCB->VolumeLabelLength = cm_Utf8ToUtf16( "Freelance.Local.Root", -1, pResultCB->VolumeLabel,
                                                        (sizeof(pResultCB->VolumeLabel) / sizeof(WCHAR)) + 1);
@@ -5431,7 +5431,8 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
         }
         volType = cm_VolumeType(volp, scp->fid.volume);
 
-        pResultCB->Characteristics |= ((volType == ROVOL || volType == BACKVOL) ? FILE_READ_ONLY_DEVICE : 0);
+        if (volType == ROVOL || volType == BACKVOL)
+            pResultCB->FileSystemAttributes |= FILE_READ_ONLY_VOLUME;
 
         code = cm_SyncOp(scp, NULL, userp, &req, PRSFS_READ,
                          CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
