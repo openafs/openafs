@@ -425,7 +425,6 @@ AFSQueryFsAttributeInfo( IN AFSVolumeInfoCB *VolumeInfo,
                          IN PFILE_FS_ATTRIBUTE_INFORMATION Buffer,
                          IN OUT PULONG Length)
 {
-    UNREFERENCED_PARAMETER(VolumeInfo);
     NTSTATUS ntStatus = STATUS_SUCCESS;
 
     RtlZeroMemory( Buffer,
@@ -434,10 +433,7 @@ AFSQueryFsAttributeInfo( IN AFSVolumeInfoCB *VolumeInfo,
     if( *Length >= (LONG)(sizeof( FILE_FS_ATTRIBUTE_INFORMATION)))
     {
 
-        Buffer->FileSystemAttributes = (FILE_CASE_PRESERVED_NAMES |
-                                        FILE_UNICODE_ON_DISK |
-                                        FILE_SUPPORTS_HARD_LINKS |
-                                        FILE_SUPPORTS_REPARSE_POINTS);
+        Buffer->FileSystemAttributes = VolumeInfo->FileSystemAttributes;
 
         Buffer->MaximumComponentNameLength = 255;
 
