@@ -1099,7 +1099,7 @@ AFSNonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSNonCachedWrite (%p) Successfully retrieved map extents count %08lX run count %08lX\n",
+                      "AFSNonCachedWrite (%p) Successfully retrieved map extents count %d run count %d\n",
                       Irp,
                       extentsCount,
                       runCount);

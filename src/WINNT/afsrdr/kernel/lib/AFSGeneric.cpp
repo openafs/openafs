@@ -3444,7 +3444,7 @@ AFSValidateDirectoryCache( IN AFSObjectInfoCB *ObjectInfo,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSValidateDirectoryCache Clear VALID flag on DE %p Reference count %08lX\n",
+                                  "AFSValidateDirectoryCache Clear VALID flag on DE %p Reference count %d\n",
                                   pCurrentDirEntry,
                                   pCurrentDirEntry->DirOpenReferenceCount);
 
@@ -3550,7 +3550,7 @@ AFSValidateDirectoryCache( IN AFSObjectInfoCB *ObjectInfo,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSValidateDirectoryCache Processing INVALID DE %p Reference count %08lX\n",
+                          "AFSValidateDirectoryCache Processing INVALID DE %p Reference count %d\n",
                           pCurrentDirEntry,
                           pCurrentDirEntry->DirOpenReferenceCount);
 
