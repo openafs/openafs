@@ -1647,7 +1647,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
     afs_uint32 nbytes;			/* bytes in transfer */
     afs_uint32 nbytes_hi = 0;            /* high-order 32 bits of bytes in transfer */
     afs_uint64 length_found = 0;
-    long rbytes;			/* bytes in rx_Read call */
+    long rxbytes;			/* bytes in rx_Read call */
     long temp;
     AFSFetchStatus afsStatus;
     AFSCallBack callback;
@@ -1994,9 +1994,9 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
 
                 iov = 0;
                 iov_offset = 0;
-                rbytes = temp;
+                rxbytes = temp;
 
-                while (rbytes > 0) {
+                while (rxbytes > 0) {
                     afs_int32 len;
 
                     osi_assertx(bufferp != NULL, "null cm_buf_t");
@@ -2005,7 +2005,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
                     memcpy(bufferp + buffer_offset, tiov[iov].iov_base + iov_offset, len);
                     iov_offset += len;
                     buffer_offset += len;
-                    rbytes -= len;
+                    rxbytes -= len;
 
                     if (iov_offset == tiov[iov].iov_len) {
                         iov++;
@@ -2051,10 +2051,10 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
                  */
                 osi_assertx(bufferp != NULL, "null cm_buf_t");
 
-                /* read rbytes of data */
-                rbytes = (afs_uint32)(length_found > cm_data.buf_blockSize ? cm_data.buf_blockSize : length_found);
-                temp = rx_Read(rxcallp, bufferp, rbytes);
-                if (temp < rbytes) {
+                /* read rxbytes of data */
+                rxbytes = (afs_uint32)(length_found > cm_data.buf_blockSize ? cm_data.buf_blockSize : length_found);
+                temp = rx_Read(rxcallp, bufferp, rxbytes);
+                if (temp < rxbytes) {
                     /*
                      * If the file server returned (filesize - offset),
                      * then the first rx_Read will return zero octets of data.
@@ -2114,26 +2114,26 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
              * all of the rest of the pages.
              */
 #ifdef USE_RX_IOVEC
-            rbytes = cm_data.buf_blockSize - buffer_offset;
+            rxbytes = cm_data.buf_blockSize - buffer_offset;
             bufferp = tbufp->datap + buffer_offset;
 #else /* USE_RX_IOVEC */
             /* bytes fetched */
 	    osi_assertx((bufferp - tbufp->datap) < LONG_MAX, "data >= LONG_MAX");
-            rbytes = (long) (bufferp - tbufp->datap);
+            rxbytes = (long) (bufferp - tbufp->datap);
 
             /* bytes left to zero */
-            rbytes = cm_data.buf_blockSize - rbytes;
+            rxbytes = cm_data.buf_blockSize - rxbytes;
 #endif /* USE_RX_IOVEC */
             while(qdp) {
-                if (rbytes != 0)
-                    memset(bufferp, 0, rbytes);
+                if (rxbytes != 0)
+                    memset(bufferp, 0, rxbytes);
                 qdp = (osi_queueData_t *) osi_QPrev(&qdp->q);
                 if (qdp == NULL)
                     break;
                 tbufp = osi_GetQData(qdp);
                 bufferp = tbufp->datap;
                 /* bytes to clear in this page */
-                rbytes = cm_data.buf_blockSize;
+                rxbytes = cm_data.buf_blockSize;
             }
         }
 
@@ -2225,7 +2225,7 @@ long cm_GetData(cm_scache_t *scp, osi_hyper_t *offsetp, char *datap, int data_le
     afs_uint64 length_found = 0;
     char *bufferp = datap;
     afs_uint32 buffer_offset = 0;
-    long rbytes;			/* bytes in rx_Read call */
+    long rxbytes;			/* bytes in rx_Read call */
     long temp;
     AFSFetchStatus afsStatus;
     AFSCallBack callback;
@@ -2447,9 +2447,9 @@ long cm_GetData(cm_scache_t *scp, osi_hyper_t *offsetp, char *datap, int data_le
 
                 iov = 0;
                 iov_offset = 0;
-                rbytes = temp;
+                rxbytes = temp;
 
-                while (rbytes > 0) {
+                while (rxbytes > 0) {
                     afs_int32 len;
 
                     osi_assertx(bufferp != NULL, "null cm_buf_t");
@@ -2458,7 +2458,7 @@ long cm_GetData(cm_scache_t *scp, osi_hyper_t *offsetp, char *datap, int data_le
                     memcpy(bufferp + buffer_offset, tiov[iov].iov_base + iov_offset, len);
                     iov_offset += len;
                     buffer_offset += len;
-                    rbytes -= len;
+                    rxbytes -= len;
 
                     if (iov_offset == tiov[iov].iov_len) {
                         iov++;
@@ -2474,10 +2474,10 @@ long cm_GetData(cm_scache_t *scp, osi_hyper_t *offsetp, char *datap, int data_le
                  */
                 osi_assertx(bufferp != NULL, "null cm_buf_t");
 
-                /* read rbytes of data */
-                rbytes = (afs_uint32)(length_found > data_length ? data_length : length_found);
-                temp = rx_Read(rxcallp, bufferp, rbytes);
-                if (temp < rbytes) {
+                /* read rxbytes of data */
+                rxbytes = (afs_uint32)(length_found > data_length ? data_length : length_found);
+                temp = rx_Read(rxcallp, bufferp, rxbytes);
+                if (temp < rxbytes) {
                     /*
                      * If the file server returned (filesize - offset),
                      * then the first rx_Read will return zero octets of data.
@@ -2507,18 +2507,18 @@ long cm_GetData(cm_scache_t *scp, osi_hyper_t *offsetp, char *datap, int data_le
              * all of the rest of the pages.
              */
 #ifdef USE_RX_IOVEC
-            rbytes = data_length - buffer_offset;
+            rxbytes = data_length - buffer_offset;
             bufferp = datap + buffer_offset;
 #else /* USE_RX_IOVEC */
             /* bytes fetched */
 	    osi_assertx((bufferp - datap) < LONG_MAX, "data >= LONG_MAX");
-            rbytes = (long) (bufferp - datap);
+            rxbytes = (long) (bufferp - datap);
 
             /* bytes left to zero */
-            rbytes = data_length - rbytes;
+            rxbytes = data_length - rxbytes;
 #endif /* USE_RX_IOVEC */
-            if (rbytes != 0)
-                memset(bufferp, 0, rbytes);
+            if (rxbytes != 0)
+                memset(bufferp, 0, rxbytes);
         }
 
         if (code == 0) {
@@ -2582,7 +2582,7 @@ cm_VerifyStoreData(cm_bulkIO_t *biod, cm_scache_t *savedScp)
     afs_uint32 nbytes;			/* bytes in transfer */
     afs_uint32 nbytes_hi = 0;           /* high-order 32 bits of bytes in transfer */
     afs_uint64 length_found = 0;
-    long rbytes;			/* bytes in rx_Read call */
+    long rxbytes;			/* bytes in rx_Read call */
     long temp;
     AFSFetchStatus afsStatus;
     AFSCallBack callback;
@@ -2719,10 +2719,10 @@ cm_VerifyStoreData(cm_bulkIO_t *biod, cm_scache_t *savedScp)
                  */
                 osi_assertx(bufferp != NULL, "null cm_buf_t");
 
-                /* read rbytes of data */
-                rbytes = (afs_uint32)(length_found > biod->length ? biod->length : length_found);
-                temp = rx_Read(rxcallp, bufferp, rbytes);
-                if (temp < rbytes) {
+                /* read rxbytes of data */
+                rxbytes = (afs_uint32)(length_found > biod->length ? biod->length : length_found);
+                temp = rx_Read(rxcallp, bufferp, rxbytes);
+                if (temp < rxbytes) {
                     /*
                      * If the file server returned (filesize - offset),
                      * then the first rx_Read will return zero octets of data.
