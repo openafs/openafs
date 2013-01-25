@@ -693,12 +693,17 @@ AFSInitializeGlobalDirectoryEntries()
 
             AFSDeleteObjectInfo( pObjectInfoCB);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
+            AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING | AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSInitializeGlobalDirectory AFS_DIR_ENTRY_TAG allocation failure\n");
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSInitializeGlobalDirectory AFS_DIR_ENTRY_TAG allocated %p\n",
+                      pDirNode);
 
         pNonPagedDirEntry = (AFSNonPagedDirectoryCB *)AFSLibExAllocatePoolWithTag( NonPagedPool,
                                                                                    sizeof( AFSNonPagedDirectoryCB),
@@ -799,10 +804,19 @@ AFSInitializeGlobalDirectoryEntries()
         if( pDirNode == NULL)
         {
 
+            AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING | AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSInitializeGlobalDirectoryEntries AFS_DIR_ENTRY_TAG allocation failure\n");
+
             AFSDeleteObjectInfo( pObjectInfoCB);
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSInitializeGlobalDirectoryEntries AFS_DIR_ENTRY_TAG allocated %p\n",
+                      pDirNode);
 
         pNonPagedDirEntry = (AFSNonPagedDirectoryCB *)AFSLibExAllocatePoolWithTag( NonPagedPool,
                                                                                    sizeof( AFSNonPagedDirectoryCB),
@@ -1004,6 +1018,11 @@ AFSInitDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSInitDirEntry AFS_DIR_ENTRY_TAG allocated %p\n",
+                      pDirNode);
+
         pNonPagedDirEntry = (AFSNonPagedDirectoryCB *)AFSExAllocatePoolWithTag( NonPagedPool,
                                                                                 sizeof( AFSNonPagedDirectoryCB),
                                                                                 AFS_DIR_ENTRY_NP_TAG);
@@ -1186,6 +1205,11 @@ try_exit:
 
             if( pDirNode != NULL)
             {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSInitDirEntry AFS_DIR_ENTRY_TAG deallocating %p\n",
+                              pDirNode);
 
                 AFSExFreePoolWithTag( pDirNode, AFS_DIR_ENTRY_TAG);
 
@@ -4343,6 +4367,11 @@ AFSInitializeSpecialShareNameList()
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSInitializeSpecialShareNameList (srvsvc) AFS_DIR_ENTRY_TAG allocated %p\n",
+                      pDirNode);
+
         pNonPagedDirEntry = (AFSNonPagedDirectoryCB *)AFSLibExAllocatePoolWithTag( NonPagedPool,
                                                                                    sizeof( AFSNonPagedDirectoryCB),
                                                                                    AFS_DIR_ENTRY_NP_TAG);
@@ -4430,6 +4459,11 @@ AFSInitializeSpecialShareNameList()
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSInitializeSpecialShareNameList (ipc$) AFS_DIR_ENTRY_TAG allocated %p\n",
+                      pDirNode);
 
         pNonPagedDirEntry = (AFSNonPagedDirectoryCB *)AFSLibExAllocatePoolWithTag( NonPagedPool,
                                                                                    sizeof( AFSNonPagedDirectoryCB),
@@ -5859,6 +5893,11 @@ AFSInitPIOCtlDirectoryCB( IN AFSObjectInfoCB *ObjectInfo)
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSInitPIOCtlDirectoryCB AFS_DIR_ENTRY_TAG allocated %p\n",
+                      pDirNode);
+
         pNonPagedDirEntry = (AFSNonPagedDirectoryCB *)AFSExAllocatePoolWithTag( NonPagedPool,
                                                                                 sizeof( AFSNonPagedDirectoryCB),
                                                                                 AFS_DIR_ENTRY_NP_TAG);
@@ -5934,6 +5973,11 @@ try_exit:
 
             if ( pDirNode != NULL)
             {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSInitPIOCtlDirectoryCB AFS_DIR_ENTRY_TAG deallocating %p\n",
+                              pDirNode);
 
                 AFSExFreePoolWithTag( pDirNode, AFS_DIR_ENTRY_TAG);
             }

@@ -197,6 +197,9 @@
 #define AFS_SUBSYSTEM_INIT_PROCESSING       0x00080000  // Redirector Initialization
 #define AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING 0x00100000  // Name Array Processing
 #define AFS_SUBSYSTEM_NAME_ARRAY_REF_COUNTING 0x00200000  // Name Array DirectoryCB refcnts
+#define AFS_SUBSYSTEM_FCB_ALLOCATION        0x01000000  // AFSFileCB Allocation
+#define AFS_SUBSYSTEM_DIRENTRY_ALLOCATION   0x02000000  // AFSDirectoryCB Allocation
+#define AFS_SUBSYSTEM_OBJINFO_ALLOCATION    0x04000000  // AFSObjectInformationCB Allocation
 
 //
 // Invalidation Reasons

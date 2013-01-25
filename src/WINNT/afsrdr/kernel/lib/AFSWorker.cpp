@@ -1217,6 +1217,11 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
 
                                         AFSExFreePoolWithTag( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->NonPaged, AFS_DIR_ENTRY_NP_TAG);
 
+                                        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+                                                      AFS_TRACE_LEVEL_VERBOSE,
+                                                      "AFSPrimaryVolumeWorkerThread (pioctl) AFS_DIR_ENTRY_TAG deallocating %p\n",
+                                                      pCurrentObject->Specific.Directory.PIOCtlDirectoryCB);
+
                                         AFSExFreePoolWithTag( pCurrentObject->Specific.Directory.PIOCtlDirectoryCB, AFS_DIR_ENTRY_TAG);
                                     }
 
@@ -1479,6 +1484,11 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                             ExDeleteResourceLite( &pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->NonPaged->Lock);
 
                                             AFSExFreePoolWithTag( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->NonPaged, AFS_DIR_ENTRY_NP_TAG);
+
+                                            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+                                                          AFS_TRACE_LEVEL_VERBOSE,
+                                                          "AFSPrimaryVolumeWorkerThread (pioctl) AFS_DIR_ENTRY_TAG deallocating %p\n",
+                                                          pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB);
 
                                             AFSExFreePoolWithTag( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB, AFS_DIR_ENTRY_TAG);
                                         }
