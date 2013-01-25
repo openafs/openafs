@@ -397,6 +397,14 @@ AFSQueryFsDeviceInfo( IN AFSVolumeInfoCB *VolumeInfo,
     if( *Length >= (LONG)sizeof( FILE_FS_DEVICE_INFORMATION))
     {
 
+        //
+        // This value is used to determine the return type of
+        // Win32 GetFileType().  Returning FILE_DEVICE_NETWORK_FILE_SYSTEM
+        // results in GetFileType returning FILE_TYPE_UNKNOWN which breaks
+        // msys-based applications.  They treat all files as character
+        // special devices instead of files.
+        //
+
         Buffer->DeviceType = FILE_DEVICE_DISK;
 
         Buffer->Characteristics = VolumeInfo->Characteristics;

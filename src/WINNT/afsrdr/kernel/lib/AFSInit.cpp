@@ -165,7 +165,7 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
         }
 
         //
-        // Initilize the control device
+        // Initialize the control device
         //
 
         RtlInitUnicodeString( &uniDeviceName,
@@ -174,7 +174,7 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
         ntStatus = IoCreateDevice( DriverObject,
                                    sizeof( AFSDeviceExt),
                                    &uniDeviceName,
-                                   FILE_DEVICE_DISK_FILE_SYSTEM,
+                                   FILE_DEVICE_NETWORK_FILE_SYSTEM,
                                    0,
                                    FALSE,
                                    &AFSLibraryDeviceObject);
