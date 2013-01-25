@@ -1174,6 +1174,21 @@ AFSCleanupIrpPool()
 
             pEntry->ResultStatus = (ULONG) STATUS_CANCELLED;
 
+            if( pEntry->RequestType == AFS_REQUEST_TYPE_PROCESS_READ_FILE ||
+                pEntry->RequestType == AFS_REQUEST_TYPE_PROCESS_WRITE_FILE)
+            {
+
+                AFSFileIOCB *pFileIO = (AFSFileIOCB *)pEntry->Data;
+
+                if( pFileIO->MappedIOBuffer != NULL)
+                {
+                    MmUnmapLockedPages( pFileIO->MappedIOBuffer,
+                                        (PMDL)pFileIO->SystemIOBufferMdl);
+
+                    pFileIO->MappedIOBuffer = NULL;
+                }
+            }
+
             //
             // Here we will set the event of the requestor and let the blocked thread
             // free the data block
@@ -1550,6 +1565,26 @@ AFSProcessIrpRequest( IN PIRP Irp)
                                    pRequest->NameLength);
                 }
 
+                //
+                // If this is an IO request then need to map the system buffer to the service process
+                //
+
+                if( pEntry->RequestType == AFS_REQUEST_TYPE_PROCESS_READ_FILE ||
+                    pEntry->RequestType == AFS_REQUEST_TYPE_PROCESS_WRITE_FILE)
+                {
+
+                    AFSFileIOCB *pFileIO = (AFSFileIOCB *)pEntry->Data;
+
+                    ASSERT( pFileIO->SystemIOBuffer != NULL);
+
+                    pFileIO->MappedIOBuffer = MmMapLockedPagesSpecifyCache( (PMDL)pFileIO->SystemIOBufferMdl,
+                                                                            UserMode,
+                                                                            MmCached,
+                                                                            NULL,
+                                                                            FALSE,
+                                                                            NormalPagePriority);
+                }
+
                 pRequest->DataOffset = 0;
 
                 pRequest->DataLength = pEntry->DataLength;
@@ -1738,6 +1773,25 @@ AFSProcessIrpResult( IN PIRP Irp)
         {
 
             try_return( ntStatus = STATUS_INVALID_PARAMETER);
+        }
+
+        //
+        // If this is an IO request, unmap the user buffer
+        //
+
+        if( pCurrentEntry->RequestType == AFS_REQUEST_TYPE_PROCESS_READ_FILE ||
+            pCurrentEntry->RequestType == AFS_REQUEST_TYPE_PROCESS_WRITE_FILE)
+        {
+
+            AFSFileIOCB *pFileIO = (AFSFileIOCB *)pCurrentEntry->Data;
+
+            if( pFileIO->MappedIOBuffer != NULL)
+            {
+                MmUnmapLockedPages( pFileIO->MappedIOBuffer,
+                                    (PMDL)pFileIO->SystemIOBufferMdl);
+
+                pFileIO->MappedIOBuffer = NULL;
+            }
         }
 
         //

@@ -510,155 +510,172 @@ AFSInitializeRedirector( IN AFSRedirectorInitInfo *RedirInitInfo)
             SetFlag( pDevExt->DeviceFlags, AFS_DEVICE_FLAG_DISABLE_SHORTNAMES);
         }
 
-        if( RedirInitInfo->MemoryCacheOffset.QuadPart != 0 &&
-            RedirInitInfo->MemoryCacheLength.QuadPart != 0)
+        //
+        // Are we performing direct to service IO?
+        //
+
+        if( BooleanFlagOn( RedirInitInfo->Flags, AFS_REDIR_INIT_PERFORM_SERVICE_IO))
         {
 
-            ntStatus = STATUS_INSUFFICIENT_RESOURCES;
+            //
+            // Send IO requests directly to service
+            //
 
-#ifdef AMD64
-            pDevExt->Specific.RDR.CacheMdl = MmCreateMdl( NULL,
-                                                          (void *)RedirInitInfo->MemoryCacheOffset.QuadPart,
-                                                          RedirInitInfo->MemoryCacheLength.QuadPart);
-#else
-            pDevExt->Specific.RDR.CacheMdl = MmCreateMdl( NULL,
-                                                          (void *)RedirInitInfo->MemoryCacheOffset.LowPart,
-                                                          RedirInitInfo->MemoryCacheLength.LowPart);
-#endif
+            SetFlag( pDevExt->DeviceFlags, AFS_DEVICE_FLAG_DIRECT_SERVICE_IO);
+        }
+        else
+        {
 
-            if( pDevExt->Specific.RDR.CacheMdl != NULL)
+            if( RedirInitInfo->MemoryCacheOffset.QuadPart != 0 &&
+                RedirInitInfo->MemoryCacheLength.QuadPart != 0)
             {
 
-                __try
-                {
+                ntStatus = STATUS_INSUFFICIENT_RESOURCES;
 
-                    MmProbeAndLockPages( pDevExt->Specific.RDR.CacheMdl,
-                                         KernelMode,
-                                         IoModifyAccess);
-
-                    pDevExt->Specific.RDR.CacheBaseAddress = MmGetSystemAddressForMdlSafe( pDevExt->Specific.RDR.CacheMdl,
-                                                                                           NormalPagePriority);
-                }
-                __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
-                {
-
-                    AFSDumpTraceFilesFnc();
-
-                    IoFreeMdl( pDevExt->Specific.RDR.CacheMdl);
-                    pDevExt->Specific.RDR.CacheMdl = NULL;
-                }
+#ifdef AMD64
+                pDevExt->Specific.RDR.CacheMdl = MmCreateMdl( NULL,
+                                                              (void *)RedirInitInfo->MemoryCacheOffset.QuadPart,
+                                                              RedirInitInfo->MemoryCacheLength.QuadPart);
+#else
+                pDevExt->Specific.RDR.CacheMdl = MmCreateMdl( NULL,
+                                                              (void *)RedirInitInfo->MemoryCacheOffset.LowPart,
+                                                              RedirInitInfo->MemoryCacheLength.LowPart);
+#endif
 
                 if( pDevExt->Specific.RDR.CacheMdl != NULL)
                 {
-                    pDevExt->Specific.RDR.CacheLength = RedirInitInfo->MemoryCacheLength;
-                    ntStatus = STATUS_SUCCESS;
+
+                    __try
+                    {
+
+                        MmProbeAndLockPages( pDevExt->Specific.RDR.CacheMdl,
+                                             KernelMode,
+                                             IoModifyAccess);
+
+                        pDevExt->Specific.RDR.CacheBaseAddress = MmGetSystemAddressForMdlSafe( pDevExt->Specific.RDR.CacheMdl,
+                                                                                               NormalPagePriority);
+                    }
+                    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
+                    {
+
+                        AFSDumpTraceFilesFnc();
+
+                        IoFreeMdl( pDevExt->Specific.RDR.CacheMdl);
+                        pDevExt->Specific.RDR.CacheMdl = NULL;
+                    }
+
+                    if( pDevExt->Specific.RDR.CacheMdl != NULL)
+                    {
+                        pDevExt->Specific.RDR.CacheLength = RedirInitInfo->MemoryCacheLength;
+                        ntStatus = STATUS_SUCCESS;
+                    }
+
+                }
+            }
+
+            if( !NT_SUCCESS( ntStatus) &&
+                RedirInitInfo->CacheFileNameLength == 0)
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_INIT_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSInitializeRedirector Unable to initialize cache file %08lX\n",
+                              ntStatus);
+
+                try_return( ntStatus);
+            }
+
+            if( pDevExt->Specific.RDR.CacheMdl == NULL)
+            {
+
+                if( RedirInitInfo->CacheFileNameLength == 0)
+                {
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_INIT_PROCESSING,
+                                  AFS_TRACE_LEVEL_ERROR,
+                                  "AFSInitializeRedirector CacheMdl == NULL\n");
+
+                    try_return( ntStatus = STATUS_INVALID_PARAMETER);
                 }
 
-            }
-        }
+                //
+                // Go open the cache file
+                //
 
-        if( !NT_SUCCESS( ntStatus) &&
-            RedirInitInfo->CacheFileNameLength == 0)
-        {
+                pDevExt->Specific.RDR.CacheFile.Length = 0;
+                pDevExt->Specific.RDR.CacheFile.MaximumLength = (USHORT)RedirInitInfo->CacheFileNameLength + (4 * sizeof( WCHAR));
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_INIT_PROCESSING,
-                          AFS_TRACE_LEVEL_ERROR,
-                          "AFSInitializeRedirector Unable to initialize cache file %08lX\n",
-                          ntStatus);
+                pDevExt->Specific.RDR.CacheFile.Buffer = (WCHAR *)AFSExAllocatePoolWithTag( PagedPool,
+                                                                                            pDevExt->Specific.RDR.CacheFile.MaximumLength,
+                                                                                            AFS_GENERIC_MEMORY_24_TAG);
 
-            try_return( ntStatus);
-        }
+                if( pDevExt->Specific.RDR.CacheFile.Buffer == NULL)
+                {
 
-        if( pDevExt->Specific.RDR.CacheMdl == NULL)
-        {
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_INIT_PROCESSING,
+                                  AFS_TRACE_LEVEL_ERROR,
+                                  "AFSInitializeRedirector AFS_GENERIC_MEMORY_24_TAG allocation failure\n");
 
-            if( RedirInitInfo->CacheFileNameLength == 0)
-            {
+                    try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+                }
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_INIT_PROCESSING,
-                              AFS_TRACE_LEVEL_ERROR,
-                              "AFSInitializeRedirector CacheMdl == NULL\n");
+                RtlCopyMemory( pDevExt->Specific.RDR.CacheFile.Buffer,
+                               L"\\??\\",
+                               4 * sizeof( WCHAR));
 
-                try_return( ntStatus = STATUS_INVALID_PARAMETER);
-            }
+                pDevExt->Specific.RDR.CacheFile.Length = 4 * sizeof( WCHAR);
 
-            //
-            // Go open the cache file
-            //
+                RtlCopyMemory( &pDevExt->Specific.RDR.CacheFile.Buffer[ pDevExt->Specific.RDR.CacheFile.Length/sizeof( WCHAR)],
+                               RedirInitInfo->CacheFileName,
+                               RedirInitInfo->CacheFileNameLength);
 
-            pDevExt->Specific.RDR.CacheFile.Length = 0;
-            pDevExt->Specific.RDR.CacheFile.MaximumLength = (USHORT)RedirInitInfo->CacheFileNameLength + (4 * sizeof( WCHAR));
+                pDevExt->Specific.RDR.CacheFile.Length += (USHORT)RedirInitInfo->CacheFileNameLength;
 
-            pDevExt->Specific.RDR.CacheFile.Buffer = (WCHAR *)AFSExAllocatePoolWithTag( PagedPool,
-                                                                                        pDevExt->Specific.RDR.CacheFile.MaximumLength,
-                                                                                        AFS_GENERIC_MEMORY_24_TAG);
+                InitializeObjectAttributes( &stObjectAttribs,
+                                            &pDevExt->Specific.RDR.CacheFile,
+                                            OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
+                                            NULL,
+                                            NULL);
 
-            if( pDevExt->Specific.RDR.CacheFile.Buffer == NULL)
-            {
+                ntStatus = ZwOpenFile( &pDevExt->Specific.RDR.CacheFileHandle,
+                                       GENERIC_READ | GENERIC_WRITE,
+                                       &stObjectAttribs,
+                                       &stIoStatus,
+                                       FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                       FILE_WRITE_THROUGH | FILE_RANDOM_ACCESS);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_INIT_PROCESSING,
-                              AFS_TRACE_LEVEL_ERROR,
-                              "AFSInitializeRedirector AFS_GENERIC_MEMORY_24_TAG allocation failure\n");
+                if( !NT_SUCCESS( ntStatus))
+                {
 
-                try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
-            }
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_INIT_PROCESSING,
+                                  AFS_TRACE_LEVEL_ERROR,
+                                  "AFSInitializeRedirector ZwOpenFile failure %08lX\n",
+                                  ntStatus);
 
-            RtlCopyMemory( pDevExt->Specific.RDR.CacheFile.Buffer,
-                           L"\\??\\",
-                           4 * sizeof( WCHAR));
+                    try_return( ntStatus);
+                }
 
-            pDevExt->Specific.RDR.CacheFile.Length = 4 * sizeof( WCHAR);
+                //
+                // Map to the fileobject
+                //
 
-            RtlCopyMemory( &pDevExt->Specific.RDR.CacheFile.Buffer[ pDevExt->Specific.RDR.CacheFile.Length/sizeof( WCHAR)],
-                           RedirInitInfo->CacheFileName,
-                           RedirInitInfo->CacheFileNameLength);
+                ntStatus = ObReferenceObjectByHandle( pDevExt->Specific.RDR.CacheFileHandle,
+                                                      SYNCHRONIZE,
+                                                      NULL,
+                                                      KernelMode,
+                                                      (void **)&pDevExt->Specific.RDR.CacheFileObject,
+                                                      NULL);
 
-            pDevExt->Specific.RDR.CacheFile.Length += (USHORT)RedirInitInfo->CacheFileNameLength;
+                if( !NT_SUCCESS( ntStatus))
+                {
 
-            InitializeObjectAttributes( &stObjectAttribs,
-                                        &pDevExt->Specific.RDR.CacheFile,
-                                        OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
-                                        NULL,
-                                        NULL);
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_INIT_PROCESSING,
+                                  AFS_TRACE_LEVEL_ERROR,
+                                  "AFSInitializeRedirector ObReferenceObjectByHandle failure %08lX\n",
+                                  ntStatus);
 
-            ntStatus = ZwOpenFile( &pDevExt->Specific.RDR.CacheFileHandle,
-                                   GENERIC_READ | GENERIC_WRITE,
-                                   &stObjectAttribs,
-                                   &stIoStatus,
-                                   FILE_SHARE_READ | FILE_SHARE_WRITE,
-                                   FILE_WRITE_THROUGH | FILE_RANDOM_ACCESS);
-
-            if( !NT_SUCCESS( ntStatus))
-            {
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_INIT_PROCESSING,
-                              AFS_TRACE_LEVEL_ERROR,
-                              "AFSInitializeRedirector ZwOpenFile failure %08lX\n",
-                              ntStatus);
-
-                try_return( ntStatus);
-            }
-
-            //
-            // Map to the fileobject
-            //
-
-            ntStatus = ObReferenceObjectByHandle( pDevExt->Specific.RDR.CacheFileHandle,
-                                                  SYNCHRONIZE,
-                                                  NULL,
-                                                  KernelMode,
-                                                  (void **)&pDevExt->Specific.RDR.CacheFileObject,
-                                                  NULL);
-
-            if( !NT_SUCCESS( ntStatus))
-            {
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_INIT_PROCESSING,
-                              AFS_TRACE_LEVEL_ERROR,
-                              "AFSInitializeRedirector ObReferenceObjectByHandle failure %08lX\n",
-                              ntStatus);
-
-                try_return( ntStatus);
+                    try_return( ntStatus);
+                }
             }
         }
 
