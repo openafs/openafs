@@ -565,6 +565,11 @@ AFSInitVolume( IN GUID *AuthGroup,
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSInitVolume AFS_DIR_ENTRY_TAG allocated %p\n",
+                      pVolumeCB->DirectoryCB);
+
         pNonPagedDirEntry = (AFSNonPagedDirectoryCB *)AFSExAllocatePoolWithTag( NonPagedPool,
                                                                                 sizeof( AFSNonPagedDirectoryCB),
                                                                                 AFS_DIR_ENTRY_NP_TAG);
@@ -707,6 +712,11 @@ try_exit:
                 if( pVolumeCB->DirectoryCB != NULL)
                 {
 
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSInitVolume AFS_DIR_ENTRY_TAG deallocating %p\n",
+                                  pVolumeCB->DirectoryCB);
+
                     AFSExFreePoolWithTag( pVolumeCB->DirectoryCB, AFS_DIR_ENTRY_TAG);
                 }
 
@@ -818,6 +828,11 @@ AFSRemoveVolume( IN AFSVolumeCB *VolumeCB)
 
             AFSExFreePoolWithTag( VolumeCB->ObjectInformation.Specific.Directory.PIOCtlDirectoryCB->NonPaged, AFS_DIR_ENTRY_NP_TAG);
 
+            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSRemoveVolume (pioctl) AFS_DIR_ENTRY_TAG deallocating %p\n",
+                          VolumeCB->ObjectInformation.Specific.Directory.PIOCtlDirectoryCB);
+
             AFSExFreePoolWithTag( VolumeCB->ObjectInformation.Specific.Directory.PIOCtlDirectoryCB, AFS_DIR_ENTRY_TAG);
         }
 
@@ -870,6 +885,11 @@ AFSRemoveVolume( IN AFSVolumeCB *VolumeCB)
 
                 AFSExFreePoolWithTag( VolumeCB->DirectoryCB->NonPaged, AFS_DIR_ENTRY_NP_TAG);
             }
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSRemoveVolume AFS_DIR_ENTRY_TAG deallocating %p\n",
+                          VolumeCB->DirectoryCB);
 
             AFSExFreePoolWithTag( VolumeCB->DirectoryCB, AFS_DIR_ENTRY_TAG);
         }

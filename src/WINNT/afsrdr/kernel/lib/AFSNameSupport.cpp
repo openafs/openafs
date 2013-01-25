@@ -2580,6 +2580,11 @@ AFSDeleteDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
         // Free up the dir entry
         //
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSDeleteDirEntry AFS_DIR_ENTRY_TAG deallocating %p\n",
+                      DirEntry);
+
         AFSExFreePoolWithTag( DirEntry, AFS_DIR_ENTRY_TAG);
     }
 
