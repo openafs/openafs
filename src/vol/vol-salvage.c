@@ -3089,31 +3089,42 @@ JudgeEntry(void *arock, char *name, afs_int32 vnodeNumber,
      * or if the directory is orphaned.
      */
     if (!vnodeEssence->unique || (vnodeEssence->unique) != unique) {
-	if (!vnodeEssence->unique
-	    && ((strcmp(name, "..") == 0) || (strcmp(name, ".") == 0))) {
-	    /* This is an orphaned directory. Don't delete the . or ..
-	     * entry. Otherwise, it will get created in the next
-	     * salvage and deleted again here. So Just skip it.
-	     */
-	    return 0;
-	}
-
 	todelete = ((!vnodeEssence->unique || dirOrphaned) ? 1 : 0);
 
-	if (!Showmode) {
-	    Log("dir vnode %u: %s" OS_DIRSEP "%s (vnode %u): unique changed from %u to %u %s\n", dir->vnodeNumber, (dir->name ? dir->name : "??"), name, vnodeNumber, unique, vnodeEssence->unique, (!todelete ? "" : (Testing ? "-- would have deleted" : "-- deleted")));
+	if (todelete
+	    && ((strcmp(name, "..") == 0) || (strcmp(name, ".") == 0))) {
+		if (dirOrphaned) {
+		    /* This is an orphaned directory. Don't delete the . or ..
+		     * entry. Otherwise, it will get created in the next
+		     * salvage and deleted again here. So Just skip it.
+		     * */
+		    return 0;
+		}
+		/* (vnodeEssence->unique == 0 && ('.' || '..'));
+		 * Entries arriving here should be deleted, but the directory
+		 * is not orphaned. Therefore, the entry must be pointing at
+		 * the wrong vnode.  Skip the 'else' clause and fall through;
+		 * the code below will repair the entry so it correctly points
+		 * at the vnode of the current directory (if '.') or the parent
+		 * directory (if '..'). */
+	} else {
+	    if (!Showmode) {
+		Log("dir vnode %u: %s" OS_DIRSEP "%s (vnode %u): unique changed from %u to %u %s\n",
+		    dir->vnodeNumber, (dir->name ? dir->name : "??"), name, vnodeNumber, unique,
+		    vnodeEssence->unique, (!todelete ? "" : (Testing ? "-- would have deleted" : "-- deleted")));
+	    }
+	    if (!Testing) {
+		AFSFid fid;
+		fid.Vnode = vnodeNumber;
+		fid.Unique = vnodeEssence->unique;
+		CopyOnWrite(salvinfo, dir);
+		opr_Verify(afs_dir_Delete(&dir->dirHandle, name) == 0);
+		if (!todelete)
+		    opr_Verify(afs_dir_Create(&dir->dirHandle, name, &fid) == 0);
+	    }
+	    if (todelete)
+		return 0;		/* no need to continue */
 	}
-	if (!Testing) {
-	    AFSFid fid;
-	    fid.Vnode = vnodeNumber;
-	    fid.Unique = vnodeEssence->unique;
-	    CopyOnWrite(salvinfo, dir);
-	    opr_Verify(afs_dir_Delete(&dir->dirHandle, name) == 0);
-	    if (!todelete)
-		opr_Verify(afs_dir_Create(&dir->dirHandle, name, &fid) == 0);
-	}
-	if (todelete)
-	    return 0;		/* no need to continue */
     }
 
     if (strcmp(name, ".") == 0) {
