@@ -413,6 +413,13 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
             {
                 static const LONGLONG llWriteDelay = (LONGLONG)-100000;
                 bRetry = TRUE;
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                              AFS_TRACE_LEVEL_WARNING,
+                              "AFSCommonWrite (FO: %p) CcCanIWrite says No room for %u bytes! Retry in 10ms\n",
+                              pFileObject,
+                              ulByteCount);
+
                 KeDelayExecutionThread(KernelMode, FALSE, (PLARGE_INTEGER)&llWriteDelay);
             }
         }
@@ -891,6 +898,14 @@ AFSNonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
     __Enter
     {
         Irp->IoStatus.Information = 0;
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSNonCachedWrite (FO: %p) StartingByte %08lX:%08lX Length %08lX\n",
+                      pFileObject,
+                      StartingByte.HighPart,
+                      StartingByte.LowPart,
+                      ByteCount);
 
         if (ByteCount > pDevExt->Specific.RDR.MaxIo.QuadPart)
         {
@@ -1404,8 +1419,11 @@ try_exit:
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSNonCachedWrite (%p) Completed request Status %08lX\n",
-                      Irp,
+                      "AFSNonCachedWrite (FO: %p) StartingByte %08lX:%08lX Length %08lX Status %08lX\n",
+                      pFileObject,
+                      StartingByte.HighPart,
+                      StartingByte.LowPart,
+                      ByteCount,
                       ntStatus);
 
         if (NT_SUCCESS(ntStatus) &&
