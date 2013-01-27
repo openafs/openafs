@@ -380,7 +380,7 @@ AFSInitVolumeWorker( IN AFSVolumeCB *VolumeCB)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSWorkQueueContext *pWorker = &VolumeCB->VolumeWorkerContext;
+    AFSWorkQueueContext *pWorker = &VolumeCB->NonPagedVcb->VolumeWorkerContext;
     HANDLE hThread;
     AFSDeviceExt *pControlDeviceExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
     PKSTART_ROUTINE pStartRoutine = NULL;
@@ -527,7 +527,7 @@ AFSShutdownVolumeWorker( IN AFSVolumeCB *VolumeCB)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSWorkQueueContext *pWorker = &VolumeCB->VolumeWorkerContext;
+    AFSWorkQueueContext *pWorker = &VolumeCB->NonPagedVcb->VolumeWorkerContext;
 
     //
     // Clear the 'keep processing' flag
@@ -955,7 +955,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
 
     UNREFERENCED_PARAMETER(Context);
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSWorkQueueContext *pPoolContext = (AFSWorkQueueContext *)&AFSGlobalRoot->VolumeWorkerContext;
+    AFSWorkQueueContext *pPoolContext = (AFSWorkQueueContext *)&AFSGlobalRoot->NonPagedVcb->VolumeWorkerContext;
     AFSDeviceExt *pControlDeviceExt = NULL;
     AFSDeviceExt *pRDRDeviceExt = NULL;
     LARGE_INTEGER DueTime;
