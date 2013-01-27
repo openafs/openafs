@@ -46,7 +46,7 @@ cm_user_t *cm_NewUser(void)
 
     userp = malloc(sizeof(*userp));
     memset(userp, 0, sizeof(*userp));
-    userp->refCount = 1;
+    InterlockedIncrement( &userp->refCount);
     lock_InitializeMutex(&userp->mx, "cm_user_t", LOCK_HIERARCHY_USER);
     return userp;
 }
@@ -97,8 +97,11 @@ cm_ucell_t *cm_FindUCell(cm_user_t *userp, int iterator)
 
 void cm_HoldUser(cm_user_t *up)
 {
+    long lcount;
+
     lock_ObtainWrite(&cm_userLock);
-    up->refCount++;
+    lcount = InterlockedIncrement( &up->refCount);
+    osi_assertx(lcount > 0, "user refcount error");
     lock_ReleaseWrite(&cm_userLock);
 }
 
@@ -106,13 +109,15 @@ void cm_ReleaseUser(cm_user_t *userp)
 {
     cm_ucell_t *ucp;
     cm_ucell_t *ncp;
+    long lcount;
 
     if (userp == NULL)
         return;
 
     lock_ObtainWrite(&cm_userLock);
-    osi_assertx(userp->refCount-- > 0, "cm_user_t refCount 0");
-    if (userp->refCount == 0) {
+    lcount = InterlockedDecrement(&userp->refCount);
+    osi_assertx(lcount >= 0, "cm_user_t refCount < 0");
+    if (lcount == 0) {
         lock_FinalizeMutex(&userp->mx);
         for (ucp = userp->cellInfop; ucp; ucp = ncp) {
             ncp = ucp->nextp;
@@ -129,7 +134,7 @@ void cm_ReleaseUser(cm_user_t *userp)
 void cm_HoldUserVCRef(cm_user_t *userp)
 {
     lock_ObtainMutex(&userp->mx);
-    userp->vcRefs++;
+    InterlockedIncrement(&userp->vcRefs);
     lock_ReleaseMutex(&userp->mx);
 }
 
@@ -141,8 +146,11 @@ void cm_HoldUserVCRef(cm_user_t *userp)
  */
 void cm_ReleaseUserVCRef(cm_user_t *userp)
 {
+    long lcount;
+
     lock_ObtainMutex(&userp->mx);
-    osi_assertx(userp->vcRefs-- > 0, "cm_user_t refCount 0");
+    lcount = InterlockedDecrement(&userp->vcRefs);
+    osi_assertx(lcount >= 0, "cm_user vcRefs refCount < 0");
     lock_ReleaseMutex(&userp->mx);
 }
 
