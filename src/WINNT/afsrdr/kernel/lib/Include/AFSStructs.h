@@ -323,7 +323,13 @@ typedef struct _AFS_NON_PAGED_VOLUME_CB
 
     ERESOURCE           DirectoryNodeHdrLock;
 
-}AFSNonPagedVolumeCB;
+    //
+    // Volume worker thread
+    //
+
+    AFSWorkQueueContext       VolumeWorkerContext;
+
+} AFSNonPagedVolumeCB;
 
 typedef struct _AFS_VOLUME_CB
 {
@@ -379,12 +385,6 @@ typedef struct _AFS_VOLUME_CB
     //
 
     AFSFcb                   *RootFcb;
-
-    //
-    // Volume worker thread
-    //
-
-    AFSWorkQueueContext       VolumeWorkerContext;
 
     //
     // Volume information
