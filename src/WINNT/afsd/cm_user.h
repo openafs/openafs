@@ -44,10 +44,10 @@ typedef struct cm_ucell {
 #define CM_UCELLFLAG_ROOTUSER  0x10     /* cm_rootUser connection */
 
 typedef struct cm_user {
-    unsigned long refCount;             /* ref count - cm_userLock */
+    long refCount;                      /* ref count - cm_userLock */
     cm_ucell_t *cellInfop;	        /* list of cell info */
     osi_mutex_t mx;		        /* mutex */
-    int vcRefs;			        /* count of references from virtual circuits */
+    long vcRefs;			/* count of references from virtual circuits */
     long flags;
     GUID authgroup;                     /* AFS redirector */
 } cm_user_t;
