@@ -2787,6 +2787,62 @@ AFSEvaluateTargetByID( IN AFSObjectInfoCB *ObjectInfo,
         }
 
         //
+        // A BSOD can occur if the pEvalResultCB->FileType is FILE but the
+        // ObjectInfo->FileType is something else.  The same is true for
+        // pDirEnumEntry->FileType is DIRECTORY.  Perform a sanity check
+        // to ensure consistency.  An inconsistent pDirEnumEntry can be
+        // produced as a result of invalid status info received from a file
+        // server.  If the types are inconsistent or if the type does not
+        // match the implied type derived from the vnode (odd values are
+        // directories and even values are other types), prevent the request
+        // from completing successfully.  This may prevent access to the file or
+        // directory but will prevent a BSOD.
+        //
+
+        if ( !AFSIsEqualFID( &ObjectInfo->FileId,
+                             &pEvalResultCB->DirEnum.FileId))
+        {
+
+            try_return( ntStatus = STATUS_UNSUCCESSFUL);
+        }
+
+        switch ( pEvalResultCB->DirEnum.FileType)
+        {
+
+        case AFS_FILE_TYPE_DIRECTORY:
+            if ( (pEvalResultCB->DirEnum.FileId.Vnode & 0x1) != 0x1)
+            {
+
+                try_return( ntStatus = STATUS_UNSUCCESSFUL);
+            }
+
+            if ( ObjectInfo->FileType != AFS_FILE_TYPE_UNKNOWN &&
+                 ObjectInfo->FileType != AFS_FILE_TYPE_DIRECTORY)
+            {
+
+                try_return( ntStatus = STATUS_UNSUCCESSFUL);
+            }
+
+            break;
+
+        case AFS_FILE_TYPE_FILE:
+            if ( (pEvalResultCB->DirEnum.FileId.Vnode & 0x1) != 0x0)
+            {
+
+                try_return( ntStatus = STATUS_UNSUCCESSFUL);
+            }
+
+            if ( ObjectInfo->FileType != AFS_FILE_TYPE_UNKNOWN &&
+                 ObjectInfo->FileType != AFS_FILE_TYPE_FILE)
+            {
+
+                try_return( ntStatus = STATUS_UNSUCCESSFUL);
+            }
+
+            break;
+        }
+
+        //
         // Validate the parent data version
         //
 
