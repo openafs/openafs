@@ -152,10 +152,6 @@ AFSInitFcb( IN AFSDirectoryCB  *DirEntry)
 
         ExInitializeResourceLite( &pNPFcb->CcbListLock);
 
-        pFcb->Header.Resource = &pNPFcb->Resource;
-
-        pFcb->Header.PagingIoResource = &pNPFcb->PagingResource;
-
         //
         // Grab the Fcb for processing
         //
@@ -168,6 +164,10 @@ AFSInitFcb( IN AFSDirectoryCB  *DirEntry)
 
         AFSAcquireExcl( &pNPFcb->Resource,
                         TRUE);
+
+        pFcb->Header.Resource = &pNPFcb->Resource;
+
+        pFcb->Header.PagingIoResource = &pNPFcb->PagingResource;
 
         pFcb->NPFcb = pNPFcb;
 
@@ -820,7 +820,7 @@ AFSRemoveVolume( IN AFSVolumeCB *VolumeCB)
                 AFSReleaseResource( &VolumeCB->ObjectInformation.Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->NonPagedInfo->ObjectInfoLock);
             }
 
-            AFSDeleteObjectInfo( VolumeCB->ObjectInformation.Specific.Directory.PIOCtlDirectoryCB->ObjectInformation);
+            AFSDeleteObjectInfo( &VolumeCB->ObjectInformation.Specific.Directory.PIOCtlDirectoryCB->ObjectInformation);
 
             ExDeleteResourceLite( &VolumeCB->ObjectInformation.Specific.Directory.PIOCtlDirectoryCB->NonPaged->Lock);
 
@@ -946,6 +946,7 @@ AFSInitRootFcb( IN ULONGLONG ProcessID,
                        sizeof( AFSFcb));
 
         pFcb->Header.NodeByteSize = sizeof( AFSFcb);
+
         pFcb->Header.NodeTypeCode = AFS_ROOT_FCB;
 
         pNPFcb = (AFSNonPagedFcb *)AFSExAllocatePoolWithTag( NonPagedPool,
@@ -966,6 +967,7 @@ AFSInitRootFcb( IN ULONGLONG ProcessID,
                        sizeof( AFSNonPagedFcb));
 
         pNPFcb->Size = sizeof( AFSNonPagedFcb);
+
         pNPFcb->Type = AFS_NON_PAGED_FCB;
 
         //
@@ -978,6 +980,12 @@ AFSInitRootFcb( IN ULONGLONG ProcessID,
 
         ExInitializeResourceLite( &pNPFcb->Resource);
 
+        ExInitializeResourceLite( &pNPFcb->PagingResource);
+
+        ExInitializeResourceLite( &pNPFcb->SectionObjectResource);
+
+        ExInitializeResourceLite( &pNPFcb->CcbListLock);
+
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitRootFcb Acquiring Fcb lock %p EXCL %08lX\n",
@@ -986,10 +994,6 @@ AFSInitRootFcb( IN ULONGLONG ProcessID,
 
         AFSAcquireExcl( &pNPFcb->Resource,
                         TRUE);
-
-        ExInitializeResourceLite( &pNPFcb->PagingResource);
-
-        ExInitializeResourceLite( &pNPFcb->CcbListLock);
 
         pFcb->Header.Resource = &pNPFcb->Resource;
 
@@ -1001,23 +1005,77 @@ AFSInitRootFcb( IN ULONGLONG ProcessID,
         // Save the root Fcb in the VolumeCB
         //
 
-        VolumeCB->ObjectInformation.Fcb = pFcb;
+        pFcb->ObjectInformation = &VolumeCB->ObjectInformation;
 
         VolumeCB->ObjectInformation.VolumeCB = VolumeCB;
 
-        VolumeCB->RootFcb = pFcb;
+        AFSAcquireShared( &VolumeCB->ObjectInformation.NonPagedInfo->ObjectInfoLock,
+                          TRUE);
+        //
+        // Swap the allocated FCB into the ObjectInformation structure if it
+        // does not already have one.
+        //
 
-        pFcb->ObjectInformation = &VolumeCB->ObjectInformation;
+        if ( InterlockedCompareExchangePointer( (PVOID *)&VolumeCB->ObjectInformation.Fcb, pFcb, NULL) != NULL)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_WARNING,
+                          "AFSInitRootFcb Raced Fcb %p pFcb %p\n",
+                          VolumeCB->ObjectInformation.Fcb,
+                          pFcb);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSInitRootFcb Acquiring Fcb lock %p EXCL %08lX\n",
+                          &VolumeCB->ObjectInformation.Fcb->NPFcb->Resource,
+                          PsGetCurrentThread());
+
+            AFSReleaseResource( &VolumeCB->ObjectInformation.NonPagedInfo->ObjectInfoLock);
+
+            AFSAcquireExcl( &VolumeCB->ObjectInformation.Fcb->NPFcb->Resource,
+                            TRUE);
+
+            try_return( ntStatus = STATUS_REPARSE);
+        }
+
+        VolumeCB->RootFcb = VolumeCB->ObjectInformation.Fcb;
+
+        AFSReleaseResource( &VolumeCB->ObjectInformation.NonPagedInfo->ObjectInfoLock);
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSInitRootFcb Initialized Fcb %p\n",
+                      &VolumeCB->ObjectInformation.Fcb);
 
 try_exit:
 
-        if( !NT_SUCCESS( ntStatus))
+        if( !NT_SUCCESS( ntStatus) ||
+            ntStatus == STATUS_REPARSE)
         {
 
             if( pFcb != NULL)
             {
 
-                AFSRemoveRootFcb( pFcb);
+                if( pNPFcb != NULL)
+                {
+
+                    AFSReleaseResource( &pNPFcb->Resource);
+
+                    FsRtlTeardownPerStreamContexts( &pFcb->Header);
+
+                    ExDeleteResourceLite( &pNPFcb->SectionObjectResource);
+
+                    ExDeleteResourceLite( &pNPFcb->PagingResource);
+
+                    ExDeleteResourceLite( &pNPFcb->CcbListLock);
+
+                    ExDeleteResourceLite( &pNPFcb->Resource);
+
+                    AFSExFreePoolWithTag( pNPFcb, AFS_FCB_NP_ALLOCATION_TAG);
+                }
+
+                AFSExFreePoolWithTag( pFcb, AFS_FCB_ALLOCATION_TAG);
             }
         }
     }
@@ -1030,42 +1088,67 @@ try_exit:
 //
 // Description:
 //
-//      This function performs root Fcb removal/deallocation
+//      This function performs root Fcb removal/deallocation from
+//      the provided VolumeCB object.
 //
 // Return:
 //
-//      A status is returned for the function
+//      None
 //
 
 void
-AFSRemoveRootFcb( IN AFSFcb *RootFcb)
+AFSRemoveRootFcb( IN AFSVolumeCB *VolumeCB)
 {
+    AFSFcb * pRootFcb;
 
-    if( RootFcb->NPFcb != NULL)
+    pRootFcb = (AFSFcb *) InterlockedCompareExchangePointer( (PVOID *)&VolumeCB->ObjectInformation.Fcb,
+                                                             NULL,
+                                                             (PVOID *)&VolumeCB->ObjectInformation.Fcb);
+
+    if ( pRootFcb == NULL)
+    {
+
+        return;
+    }
+
+    //
+    // The Fcb has been disconnected from the ObjectInformation block.
+    // Clear it from the RootFcb convenience pointer.
+    //
+
+    VolumeCB->RootFcb = NULL;
+
+    if( pRootFcb->NPFcb != NULL)
     {
 
         //
         // Now the resource
         //
 
-        ExDeleteResourceLite( &RootFcb->NPFcb->Resource);
+        ExDeleteResourceLite( &pRootFcb->NPFcb->Resource);
 
-        ExDeleteResourceLite( &RootFcb->NPFcb->PagingResource);
+        ExDeleteResourceLite( &pRootFcb->NPFcb->PagingResource);
 
-        ExDeleteResourceLite( &RootFcb->NPFcb->CcbListLock);
+        ExDeleteResourceLite( &pRootFcb->NPFcb->SectionObjectResource);
+
+        ExDeleteResourceLite( &pRootFcb->NPFcb->CcbListLock);
+
+        FsRtlTeardownPerStreamContexts( &pRootFcb->Header);
 
         //
         // The non paged region
         //
 
-        AFSExFreePoolWithTag( RootFcb->NPFcb, AFS_FCB_NP_ALLOCATION_TAG);
+        AFSExFreePoolWithTag( pRootFcb->NPFcb, AFS_FCB_NP_ALLOCATION_TAG);
+
+        pRootFcb->NPFcb = NULL;
     }
 
     //
     // And the Fcb itself
     //
 
-    AFSExFreePoolWithTag( RootFcb, AFS_FCB_ALLOCATION_TAG);
+    AFSExFreePoolWithTag( pRootFcb, AFS_FCB_ALLOCATION_TAG);
 
     return;
 }
@@ -1095,6 +1178,8 @@ AFSRemoveFcb( IN AFSFcb **ppFcb)
 
         return;
     }
+
+    ASSERT( pFcb->Header.NodeTypeCode != AFS_ROOT_FCB);
 
     //
     // Uninitialize the file lock if it is a file

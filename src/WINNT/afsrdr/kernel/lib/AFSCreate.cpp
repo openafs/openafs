@@ -1449,23 +1449,13 @@ AFSOpenRoot( IN PIRP Irp,
         // init the volume fcb
         //
 
-        if( VolumeCB->RootFcb == NULL)
+        ntStatus = AFSInitRootFcb( (ULONGLONG)PsGetCurrentProcessId(),
+                                   VolumeCB);
+
+        if( !NT_SUCCESS( ntStatus))
         {
 
-            ntStatus = AFSInitRootFcb( (ULONGLONG)PsGetCurrentProcessId(),
-                                       VolumeCB);
-
-            if( !NT_SUCCESS( ntStatus))
-            {
-
-                try_return( ntStatus);
-            }
-        }
-        else
-        {
-
-            AFSAcquireExcl( VolumeCB->RootFcb->Header.Resource,
-                            TRUE);
+            try_return( ntStatus);
         }
 
         lCount = InterlockedIncrement( &VolumeCB->RootFcb->OpenReferenceCount);

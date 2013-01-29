@@ -691,7 +691,7 @@ AFSInitializeGlobalDirectoryEntries()
         if( pDirNode == NULL)
         {
 
-            AFSDeleteObjectInfo( pObjectInfoCB);
+            AFSDeleteObjectInfo( &pObjectInfoCB);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING | AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
                           AFS_TRACE_LEVEL_ERROR,
@@ -714,7 +714,7 @@ AFSInitializeGlobalDirectoryEntries()
 
             ExFreePool( pDirNode);
 
-            AFSDeleteObjectInfo( pObjectInfoCB);
+            AFSDeleteObjectInfo( &pObjectInfoCB);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
@@ -808,7 +808,7 @@ AFSInitializeGlobalDirectoryEntries()
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSInitializeGlobalDirectoryEntries AFS_DIR_ENTRY_TAG allocation failure\n");
 
-            AFSDeleteObjectInfo( pObjectInfoCB);
+            AFSDeleteObjectInfo( &pObjectInfoCB);
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -827,7 +827,7 @@ AFSInitializeGlobalDirectoryEntries()
 
             ExFreePool( pDirNode);
 
-            AFSDeleteObjectInfo( pObjectInfoCB);
+            AFSDeleteObjectInfo( &pObjectInfoCB);
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -884,7 +884,7 @@ try_exit:
             if( AFSGlobalDotDirEntry != NULL)
             {
 
-                AFSDeleteObjectInfo( AFSGlobalDotDirEntry->ObjectInformation);
+                AFSDeleteObjectInfo( &AFSGlobalDotDirEntry->ObjectInformation);
 
                 ExDeleteResourceLite( &AFSGlobalDotDirEntry->NonPaged->Lock);
 
@@ -898,7 +898,7 @@ try_exit:
             if( AFSGlobalDotDotDirEntry != NULL)
             {
 
-                AFSDeleteObjectInfo( AFSGlobalDotDotDirEntry->ObjectInformation);
+                AFSDeleteObjectInfo( &AFSGlobalDotDotDirEntry->ObjectInformation);
 
                 ExDeleteResourceLite( &AFSGlobalDotDotDirEntry->NonPaged->Lock);
 
@@ -1237,7 +1237,7 @@ try_exit:
 
                     ASSERT( pObjectInfoCB->ObjectReferenceCount == 0);
 
-                    AFSDeleteObjectInfo( pObjectInfoCB);
+                    AFSDeleteObjectInfo( &pObjectInfoCB);
                 }
             }
         }
@@ -4396,7 +4396,7 @@ AFSInitializeSpecialShareNameList()
         if( pDirNode == NULL)
         {
 
-            AFSDeleteObjectInfo( pObjectInfoCB);
+            AFSDeleteObjectInfo( &pObjectInfoCB);
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -4415,7 +4415,7 @@ AFSInitializeSpecialShareNameList()
 
             ExFreePool( pDirNode);
 
-            AFSDeleteObjectInfo( pObjectInfoCB);
+            AFSDeleteObjectInfo( &pObjectInfoCB);
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -4489,7 +4489,7 @@ AFSInitializeSpecialShareNameList()
         if( pDirNode == NULL)
         {
 
-            AFSDeleteObjectInfo( pObjectInfoCB);
+            AFSDeleteObjectInfo( &pObjectInfoCB);
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -4508,7 +4508,7 @@ AFSInitializeSpecialShareNameList()
 
             ExFreePool( pDirNode);
 
-            AFSDeleteObjectInfo( pObjectInfoCB);
+            AFSDeleteObjectInfo( &pObjectInfoCB);
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -4563,7 +4563,7 @@ try_exit:
 
                     pLastDirNode = (AFSDirectoryCB *)pDirNode->ListEntry.fLink;
 
-                    AFSDeleteObjectInfo( pDirNode->ObjectInformation);
+                    AFSDeleteObjectInfo( &pDirNode->ObjectInformation);
 
                     ExDeleteResourceLite( &pDirNode->NonPaged->Lock);
 
@@ -6021,7 +6021,7 @@ try_exit:
                               pObjectInfoCB,
                               lCount);
 
-                AFSDeleteObjectInfo( pObjectInfoCB);
+                AFSDeleteObjectInfo( &pObjectInfoCB);
             }
         }
     }
@@ -6744,14 +6744,17 @@ AFSReleaseObjectInfo( IN AFSObjectInfoCB **ppObjectInfo)
 }
 
 void
-AFSDeleteObjectInfo( IN AFSObjectInfoCB *ObjectInfo)
+AFSDeleteObjectInfo( IN AFSObjectInfoCB **ppObjectInfo)
 {
 
     BOOLEAN bAcquiredTreeLock = FALSE;
+    AFSObjectInfoCB *pObjectInfo = (*ppObjectInfo);
+    BOOLEAN bHeldInService = BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_HELD_IN_SERVICE);
     AFSObjectInfoCB * pParentObjectInfo = NULL;
+    AFSFileID FileId;
     LONG lCount;
 
-    if ( BooleanFlagOn( ObjectInfo->Flags, AFS_OBJECT_ROOT_VOLUME))
+    if ( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_ROOT_VOLUME))
     {
 
         //
@@ -6764,77 +6767,81 @@ AFSDeleteObjectInfo( IN AFSObjectInfoCB *ObjectInfo)
         return;
     }
 
-    ASSERT( ObjectInfo->ObjectReferenceCount == 0);
+    ASSERT( pObjectInfo->ObjectReferenceCount == 0);
 
-    if( !ExIsResourceAcquiredExclusiveLite( ObjectInfo->VolumeCB->ObjectInfoTree.TreeLock))
+    (*ppObjectInfo) = NULL;
+
+    if( !ExIsResourceAcquiredExclusiveLite( pObjectInfo->VolumeCB->ObjectInfoTree.TreeLock))
     {
 
-        ASSERT( !ExIsResourceAcquiredLite( ObjectInfo->VolumeCB->ObjectInfoTree.TreeLock));
+        ASSERT( !ExIsResourceAcquiredLite( pObjectInfo->VolumeCB->ObjectInfoTree.TreeLock));
 
-        AFSAcquireExcl( ObjectInfo->VolumeCB->ObjectInfoTree.TreeLock,
+        AFSAcquireExcl( pObjectInfo->VolumeCB->ObjectInfoTree.TreeLock,
                         TRUE);
 
         bAcquiredTreeLock = TRUE;
     }
 
-    if ( BooleanFlagOn( ObjectInfo->Flags, AFS_OBJECT_FLAGS_PARENT_FID))
+    if ( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_FLAGS_PARENT_FID))
     {
 
-        pParentObjectInfo = AFSFindObjectInfo( ObjectInfo->VolumeCB,
-                                               &ObjectInfo->ParentFileId);
+        pParentObjectInfo = AFSFindObjectInfo( pObjectInfo->VolumeCB,
+                                               &pObjectInfo->ParentFileId);
     }
 
     //
     // Remove it from the tree and list if it was inserted
     //
 
-    if( BooleanFlagOn( ObjectInfo->Flags, AFS_OBJECT_INSERTED_HASH_TREE))
+    if( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_INSERTED_HASH_TREE))
     {
 
-        AFSRemoveHashEntry( &ObjectInfo->VolumeCB->ObjectInfoTree.TreeHead,
-                            &ObjectInfo->TreeEntry);
+        AFSRemoveHashEntry( &pObjectInfo->VolumeCB->ObjectInfoTree.TreeHead,
+                            &pObjectInfo->TreeEntry);
     }
 
-    if( BooleanFlagOn( ObjectInfo->Flags, AFS_OBJECT_INSERTED_VOLUME_LIST))
+    if( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_INSERTED_VOLUME_LIST))
     {
 
-        if( ObjectInfo->ListEntry.fLink == NULL)
+        if( pObjectInfo->ListEntry.fLink == NULL)
         {
 
-            ObjectInfo->VolumeCB->ObjectInfoListTail = (AFSObjectInfoCB *)ObjectInfo->ListEntry.bLink;
+            pObjectInfo->VolumeCB->ObjectInfoListTail = (AFSObjectInfoCB *)pObjectInfo->ListEntry.bLink;
 
-            if( ObjectInfo->VolumeCB->ObjectInfoListTail != NULL)
+            if( pObjectInfo->VolumeCB->ObjectInfoListTail != NULL)
             {
 
-                ObjectInfo->VolumeCB->ObjectInfoListTail->ListEntry.fLink = NULL;
+                pObjectInfo->VolumeCB->ObjectInfoListTail->ListEntry.fLink = NULL;
             }
         }
         else
         {
 
-            ((AFSObjectInfoCB *)(ObjectInfo->ListEntry.fLink))->ListEntry.bLink = ObjectInfo->ListEntry.bLink;
+            ((AFSObjectInfoCB *)(pObjectInfo->ListEntry.fLink))->ListEntry.bLink = pObjectInfo->ListEntry.bLink;
         }
 
-        if( ObjectInfo->ListEntry.bLink == NULL)
+        if( pObjectInfo->ListEntry.bLink == NULL)
         {
 
-            ObjectInfo->VolumeCB->ObjectInfoListHead = (AFSObjectInfoCB *)ObjectInfo->ListEntry.fLink;
+            pObjectInfo->VolumeCB->ObjectInfoListHead = (AFSObjectInfoCB *)pObjectInfo->ListEntry.fLink;
 
-            if( ObjectInfo->VolumeCB->ObjectInfoListHead != NULL)
+            if( pObjectInfo->VolumeCB->ObjectInfoListHead != NULL)
             {
 
-                ObjectInfo->VolumeCB->ObjectInfoListHead->ListEntry.bLink = NULL;
+                pObjectInfo->VolumeCB->ObjectInfoListHead->ListEntry.bLink = NULL;
             }
         }
         else
         {
 
-            ((AFSObjectInfoCB *)(ObjectInfo->ListEntry.bLink))->ListEntry.fLink = ObjectInfo->ListEntry.fLink;
+            ((AFSObjectInfoCB *)(pObjectInfo->ListEntry.bLink))->ListEntry.fLink = pObjectInfo->ListEntry.fLink;
         }
     }
 
     if( pParentObjectInfo != NULL)
     {
+
+        ClearFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_PARENT_FID);
 
         lCount = AFSObjectInfoDecrement( pParentObjectInfo,
                                          AFS_OBJECT_REFERENCE_CHILD);
@@ -6844,31 +6851,39 @@ AFSDeleteObjectInfo( IN AFSObjectInfoCB *ObjectInfo)
                       "AFSDeleteObjectInfo Decrement count on parent object %p Cnt %d\n",
                       pParentObjectInfo,
                       lCount);
+
+        AFSReleaseObjectInfo( &pParentObjectInfo);
     }
 
     if( bAcquiredTreeLock)
     {
 
-        AFSReleaseResource( ObjectInfo->VolumeCB->ObjectInfoTree.TreeLock);
+        AFSReleaseResource( pObjectInfo->VolumeCB->ObjectInfoTree.TreeLock);
     }
+
+    if( bHeldInService)
+    {
+
+        FileId = pObjectInfo->FileId;
+    }
+
+    ExDeleteResourceLite( &pObjectInfo->NonPagedInfo->ObjectInfoLock);
+
+    ExDeleteResourceLite( &pObjectInfo->NonPagedInfo->DirectoryNodeHdrLock);
+
+    AFSExFreePoolWithTag( pObjectInfo->NonPagedInfo, AFS_NP_OBJECT_INFO_TAG);
+
+    AFSExFreePoolWithTag( pObjectInfo, AFS_OBJECT_INFO_TAG);
 
     //
     // Release the fid in the service
     //
 
-    if( BooleanFlagOn( ObjectInfo->Flags, AFS_OBJECT_HELD_IN_SERVICE))
+    if( bHeldInService)
     {
 
-        AFSReleaseFid( &ObjectInfo->FileId);
+        AFSReleaseFid( &FileId);
     }
-
-    ExDeleteResourceLite( &ObjectInfo->NonPagedInfo->ObjectInfoLock);
-
-    ExDeleteResourceLite( &ObjectInfo->NonPagedInfo->DirectoryNodeHdrLock);
-
-    AFSExFreePoolWithTag( ObjectInfo->NonPagedInfo, AFS_NP_OBJECT_INFO_TAG);
-
-    AFSExFreePoolWithTag( ObjectInfo, AFS_OBJECT_INFO_TAG);
 
     return;
 }
@@ -8216,7 +8231,7 @@ AFSCloseLibrary()
             lCount = AFSObjectInfoDecrement( AFSGlobalDotDirEntry->ObjectInformation,
                                              AFS_OBJECT_REFERENCE_GLOBAL);
 
-            AFSDeleteObjectInfo( AFSGlobalDotDirEntry->ObjectInformation);
+            AFSDeleteObjectInfo( &AFSGlobalDotDirEntry->ObjectInformation);
 
             ExDeleteResourceLite( &AFSGlobalDotDirEntry->NonPaged->Lock);
 
@@ -8233,7 +8248,7 @@ AFSCloseLibrary()
             lCount = AFSObjectInfoDecrement( AFSGlobalDotDotDirEntry->ObjectInformation,
                                              AFS_OBJECT_REFERENCE_GLOBAL);
 
-            AFSDeleteObjectInfo( AFSGlobalDotDotDirEntry->ObjectInformation);
+            AFSDeleteObjectInfo( &AFSGlobalDotDotDirEntry->ObjectInformation);
 
             ExDeleteResourceLite( &AFSGlobalDotDotDirEntry->NonPaged->Lock);
 
@@ -8257,7 +8272,7 @@ AFSCloseLibrary()
                 lCount = AFSObjectInfoDecrement( pDirNode->ObjectInformation,
                                                  AFS_OBJECT_REFERENCE_GLOBAL);
 
-                AFSDeleteObjectInfo( pDirNode->ObjectInformation);
+                AFSDeleteObjectInfo( &pDirNode->ObjectInformation);
 
                 ExDeleteResourceLite( &pDirNode->NonPaged->Lock);
 
