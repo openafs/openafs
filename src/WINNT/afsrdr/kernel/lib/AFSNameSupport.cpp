@@ -2514,12 +2514,11 @@ AFSInsertDirectoryNode( IN AFSObjectInfoCB *ParentObjectInfo,
     return;
 }
 
-NTSTATUS
+void
 AFSDeleteDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
                    IN AFSDirectoryCB *DirEntry)
 {
 
-    NTSTATUS ntStatus = STATUS_SUCCESS;
     LONG lCount;
 
     __Enter
@@ -2594,8 +2593,6 @@ AFSDeleteDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
 
         AFSExFreePoolWithTag( DirEntry, AFS_DIR_ENTRY_TAG);
     }
-
-    return ntStatus;
 }
 
 NTSTATUS

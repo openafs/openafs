@@ -537,7 +537,7 @@ AFSInitRootFcb( IN ULONGLONG ProcessID,
                 IN AFSVolumeCB *VolumeCB);
 
 void
-AFSRemoveRootFcb( IN AFSFcb *RootFcb);
+AFSRemoveRootFcb( IN AFSVolumeCB *VolumeCB);
 
 NTSTATUS
 AFSInitCcb( IN OUT AFSCcb **Ccb,
@@ -586,7 +586,7 @@ AFSInsertDirectoryNode( IN AFSObjectInfoCB *ParentObjectInfo,
                         IN AFSDirectoryCB *DirEntry,
                         IN BOOLEAN InsertInEnumList);
 
-NTSTATUS
+void
 AFSDeleteDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
                    IN AFSDirectoryCB *DirEntry);
 
@@ -1331,7 +1331,7 @@ AFSObjectInfoDecrement( IN AFSObjectInfoCB *ObjectInfo,
                         IN LONG             Reason);
 
 void
-AFSDeleteObjectInfo( IN AFSObjectInfoCB *ObjectInfo);
+AFSDeleteObjectInfo( IN AFSObjectInfoCB **ppObjectInfo);
 
 AFSObjectInfoCB *
 AFSFindObjectInfo( IN AFSVolumeCB * VolumeCB,
