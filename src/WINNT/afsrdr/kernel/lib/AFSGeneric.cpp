@@ -5844,7 +5844,7 @@ AFSVerifyVolume( IN ULONGLONG ProcessId,
 }
 
 NTSTATUS
-AFSInitPIOCtlDirectoryCB( IN AFSObjectInfoCB *ObjectInfo)
+AFSInitPIOCtlDirectoryCB( IN AFSObjectInfoCB *ParentObjectInfo)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
@@ -5857,7 +5857,7 @@ AFSInitPIOCtlDirectoryCB( IN AFSObjectInfoCB *ObjectInfo)
     __Enter
     {
 
-        pObjectInfoCB = AFSAllocateObjectInfo( ObjectInfo,
+        pObjectInfoCB = AFSAllocateObjectInfo( ParentObjectInfo,
                                                0);
 
         if( pObjectInfoCB == NULL)
@@ -5887,8 +5887,6 @@ AFSInitPIOCtlDirectoryCB( IN AFSObjectInfoCB *ObjectInfo)
 
         if( pDirNode == NULL)
         {
-
-            AFSDeleteObjectInfo( pObjectInfoCB);
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -5941,27 +5939,14 @@ AFSInitPIOCtlDirectoryCB( IN AFSObjectInfoCB *ObjectInfo)
         pDirNode->CaseInsensitiveTreeEntry.HashIndex = AFSGenerateCRC( &pDirNode->NameInformation.FileName,
                                                                        TRUE);
 
-        if ( InterlockedCompareExchangePointer( (PVOID *)&ObjectInfo->Specific.Directory.PIOCtlDirectoryCB, pDirNode, NULL) != NULL)
+        if ( InterlockedCompareExchangePointer( (PVOID *)&ParentObjectInfo->Specific.Directory.PIOCtlDirectoryCB, pDirNode, NULL) != NULL)
         {
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_WARNING,
                           "AFSInitPIOCtlDirectoryCB Raced PIOCtlDirectoryCB %p pFcb %p\n",
-                          ObjectInfo->Specific.Directory.PIOCtlDirectoryCB,
+                          ParentObjectInfo->Specific.Directory.PIOCtlDirectoryCB,
                           pDirNode);
-
-            //
-            // Increment the open reference and handle on the node
-            //
-
-            lCount = AFSObjectInfoIncrement( pDirNode->ObjectInformation,
-                                             AFS_OBJECT_REFERENCE_DIRENTRY);
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSInitPIOCtlDirectoryCB Increment count on Object %p Cnt %d\n",
-                          pDirNode->ObjectInformation,
-                          lCount);
 
             try_return( ntStatus = STATUS_REPARSE);
         }
