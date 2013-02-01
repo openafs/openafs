@@ -45,7 +45,7 @@ libafsrpc_pic.la: $(LT_objs)
 	$(LT_LDLIB_pic) $(LT_objs)
 
 # AIX needs libafsrpc to also be linked against the syscall import list
-libafsrpc.a: $(LT_objs)
+libafsrpc.a: $(LT_objs) libafsrpc.la
 	$(LT_LDLIB_static) $(LT_objs)
 	@set -e; set -x; case "${SYS_NAME}" in \
 	    rs_aix*) \
