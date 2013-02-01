@@ -1333,6 +1333,13 @@ AFSObjectInfoDecrement( IN AFSObjectInfoCB *ObjectInfo,
 void
 AFSDeleteObjectInfo( IN AFSObjectInfoCB *ObjectInfo);
 
+AFSObjectInfoCB *
+AFSFindObjectInfo( IN AFSVolumeCB * VolumeCB,
+                   IN AFSFileID   * FileID);
+
+void
+AFSReleaseObjectInfo( IN OUT AFSObjectInfoCB **ppObjectInfo);
+
 NTSTATUS
 AFSEvaluateRootEntry( IN AFSDirectoryCB *DirectoryCB,
                       OUT AFSDirectoryCB **TargetDirEntry);

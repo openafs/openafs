@@ -773,14 +773,14 @@ AFSIOCtlWrite( IN PDEVICE_OBJECT DeviceObject,
         RtlZeroMemory( &stParentFID,
                        sizeof( AFSFileID));
 
-        if( pFcb->ObjectInformation->ParentObjectInformation != NULL)
+        if( BooleanFlagOn( pFcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_PARENT_FID))
         {
 
             //
             // The parent directory FID of the node
             //
 
-            stParentFID = pFcb->ObjectInformation->ParentObjectInformation->FileId;
+            stParentFID = pFcb->ObjectInformation->ParentFileId;
         }
 
         //
@@ -1754,7 +1754,7 @@ AFSExtendingWrite( IN AFSFcb *Fcb,
     // Tell the server
     //
 
-    ntStatus = AFSUpdateFileInformation( &Fcb->ObjectInformation->ParentObjectInformation->FileId,
+    ntStatus = AFSUpdateFileInformation( &Fcb->ObjectInformation->ParentFileId,
                                          Fcb->ObjectInformation,
                                          &pCcb->AuthGroup);
 

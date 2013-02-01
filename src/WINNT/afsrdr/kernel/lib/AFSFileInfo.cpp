@@ -621,9 +621,10 @@ AFSSetFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
         RtlZeroMemory( &stParentFileId,
                        sizeof( AFSFileID));
 
-        if( pFcb->ObjectInformation->ParentObjectInformation != NULL)
+        if( BooleanFlagOn( pFcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_PARENT_FID))
         {
-            stParentFileId = pFcb->ObjectInformation->ParentObjectInformation->FileId;
+
+            stParentFileId = pFcb->ObjectInformation->ParentFileId;
         }
 
         //
@@ -1980,13 +1981,21 @@ AFSSetBasicInfo( IN PIRP Irp,
         if( ulNotifyFilter > 0)
         {
 
-            if( DirectoryCB->ObjectInformation->ParentObjectInformation != NULL)
+            if( BooleanFlagOn( DirectoryCB->ObjectInformation->Flags, AFS_OBJECT_FLAGS_PARENT_FID))
             {
 
-                AFSFsRtlNotifyFullReportChange( DirectoryCB->ObjectInformation->ParentObjectInformation,
-                                                pCcb,
-                                                (ULONG)ulNotifyFilter,
-                                                (ULONG)FILE_ACTION_MODIFIED);
+                AFSObjectInfoCB * pParentObjectInfo = AFSFindObjectInfo( DirectoryCB->ObjectInformation->VolumeCB,
+                                                                         &DirectoryCB->ObjectInformation->ParentFileId);
+
+                if ( pParentObjectInfo != NULL)
+                {
+                    AFSFsRtlNotifyFullReportChange( pParentObjectInfo,
+                                                    pCcb,
+                                                    (ULONG)ulNotifyFilter,
+                                                    (ULONG)FILE_ACTION_MODIFIED);
+
+                    AFSReleaseObjectInfo( &pParentObjectInfo);
+                }
             }
         }
 
@@ -2243,7 +2252,13 @@ AFSSetFileLinkInfo( IN PIRP Irp)
         pSrcCcb = (AFSCcb *)pSrcFileObj->FsContext2;
 
         pSrcObject = pSrcFcb->ObjectInformation;
-        pSrcParentObject = pSrcFcb->ObjectInformation->ParentObjectInformation;
+
+        if ( BooleanFlagOn( pSrcFcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_PARENT_FID))
+        {
+
+            pSrcParentObject = AFSFindObjectInfo( pSrcFcb->ObjectInformation->VolumeCB,
+                                                  &pSrcFcb->ObjectInformation->ParentFileId);
+        }
 
         pFileLinkInfo = (PFILE_LINK_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
 
@@ -2434,7 +2449,8 @@ AFSSetFileLinkInfo( IN PIRP Irp)
         if( pTargetDirEntry != NULL)
         {
 
-            ASSERT( pTargetParentObject == pTargetDirEntry->ObjectInformation->ParentObjectInformation);
+            ASSERT( BooleanFlagOn( pTargetDirEntry->ObjectInformation->Flags, AFS_OBJECT_FLAGS_PARENT_FID) &&
+                    AFSIsEqualFID( &pTargetParentObject->FileId, &pTargetDirEntry->ObjectInformation->ParentFileId));
 
             lCount = InterlockedIncrement( &pTargetDirEntry->DirOpenReferenceCount);
 
@@ -2491,7 +2507,7 @@ AFSSetFileLinkInfo( IN PIRP Irp)
 
         ntStatus = AFSNotifyHardLink( pSrcFcb->ObjectInformation,
                                       &pSrcCcb->AuthGroup,
-                                      pSrcFcb->ObjectInformation->ParentObjectInformation,
+                                      pSrcParentObject,
                                       pTargetDcb->ObjectInformation,
                                       pSrcCcb->DirectoryCB,
                                       &uniTargetName,
@@ -2535,7 +2551,7 @@ AFSSetFileLinkInfo( IN PIRP Irp)
             ulNotificationAction = FILE_ACTION_ADDED;
         }
 
-        AFSFsRtlNotifyFullReportChange( pTargetParentObject->ParentObjectInformation,
+        AFSFsRtlNotifyFullReportChange( pTargetParentObject,
                                         pSrcCcb,
                                         (ULONG)ulNotifyFilter,
                                         (ULONG)ulNotificationAction);
@@ -2548,7 +2564,7 @@ AFSSetFileLinkInfo( IN PIRP Irp)
             if( bTargetEntryExists)
             {
 
-                AFSInsertDirectoryNode( pTargetDirEntry->ObjectInformation->ParentObjectInformation,
+                AFSInsertDirectoryNode( pTargetParentObject,
                                         pTargetDirEntry,
                                         FALSE);
             }
@@ -2599,6 +2615,19 @@ AFSSetFileLinkInfo( IN PIRP Irp)
 
             AFSReleaseResource( pTargetParentObject->Specific.Directory.DirectoryNodeHdr.TreeLock);
         }
+
+        if ( pSrcParentObject != NULL)
+        {
+
+            AFSReleaseObjectInfo( &pSrcParentObject);
+        }
+
+        //
+        // No need to release pTargetParentObject as it is either a copy of pSrcParentObject
+        // or (AFSFcb *)pTargetFileObj->FsContext->ObjectInformation
+        //
+
+        pTargetParentObject = NULL;
     }
 
     return ntStatus;
@@ -2646,7 +2675,13 @@ AFSSetRenameInfo( IN PIRP Irp)
         pSrcCcb = (AFSCcb *)pSrcFileObj->FsContext2;
 
         pSrcObject = pSrcFcb->ObjectInformation;
-        pSrcParentObject = pSrcFcb->ObjectInformation->ParentObjectInformation;
+
+        if ( BooleanFlagOn( pSrcFcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_PARENT_FID))
+        {
+
+            pSrcParentObject = AFSFindObjectInfo( pSrcFcb->ObjectInformation->VolumeCB,
+                                                  &pSrcFcb->ObjectInformation->ParentFileId);
+        }
 
         //
         // Perform some basic checks to ensure FS integrity
@@ -2871,7 +2906,8 @@ AFSSetRenameInfo( IN PIRP Irp)
         if( pTargetDirEntry != NULL)
         {
 
-            ASSERT( pTargetParentObject == pTargetDirEntry->ObjectInformation->ParentObjectInformation);
+            ASSERT( BooleanFlagOn( pTargetDirEntry->ObjectInformation->Flags, AFS_OBJECT_FLAGS_PARENT_FID) &&
+                    AFSIsEqualFID( &pTargetParentObject->FileId, &pTargetDirEntry->ObjectInformation->ParentFileId));
 
             lCount = InterlockedIncrement( &pTargetDirEntry->DirOpenReferenceCount);
 
@@ -2927,7 +2963,7 @@ AFSSetRenameInfo( IN PIRP Irp)
         // same parent we do not pull the node from the enumeration list
         //
 
-        AFSRemoveDirNodeFromParent( pSrcFcb->ObjectInformation->ParentObjectInformation,
+        AFSRemoveDirNodeFromParent( pSrcParentObject,
                                     pSrcCcb->DirectoryCB,
                                     !bCommonParent);
 
@@ -2938,7 +2974,7 @@ AFSSetRenameInfo( IN PIRP Irp)
 
         ntStatus = AFSNotifyRename( pSrcFcb->ObjectInformation,
                                     &pSrcCcb->AuthGroup,
-                                    pSrcFcb->ObjectInformation->ParentObjectInformation,
+                                    pSrcParentObject,
                                     pTargetDcb->ObjectInformation,
                                     pSrcCcb->DirectoryCB,
                                     &uniTargetName,
@@ -2951,7 +2987,7 @@ AFSSetRenameInfo( IN PIRP Irp)
             // Attempt to re-insert the directory entry
             //
 
-            AFSInsertDirectoryNode( pSrcFcb->ObjectInformation->ParentObjectInformation,
+            AFSInsertDirectoryNode( pSrcParentObject,
                                     pSrcCcb->DirectoryCB,
                                     !bCommonParent);
 
@@ -2969,7 +3005,7 @@ AFSSetRenameInfo( IN PIRP Irp)
         // Set the notification up for the source file
         //
 
-        if( pSrcCcb->DirectoryCB->ObjectInformation->ParentObjectInformation == pTargetParentObject &&
+        if( pSrcParentObject == pTargetParentObject &&
             !bTargetEntryExists)
         {
 
@@ -2992,7 +3028,7 @@ AFSSetRenameInfo( IN PIRP Irp)
             ulNotifyFilter = FILE_NOTIFY_CHANGE_FILE_NAME;
         }
 
-        AFSFsRtlNotifyFullReportChange( pSrcCcb->DirectoryCB->ObjectInformation->ParentObjectInformation,
+        AFSFsRtlNotifyFullReportChange( pSrcParentObject,
                                         pSrcCcb,
                                         (ULONG)ulNotifyFilter,
                                         (ULONG)ulNotificationAction);
@@ -3011,7 +3047,7 @@ AFSSetRenameInfo( IN PIRP Irp)
             // Attempt to re-insert the directory entry
             //
 
-            AFSInsertDirectoryNode( pSrcFcb->ObjectInformation->ParentObjectInformation,
+            AFSInsertDirectoryNode( pSrcParentObject,
                                     pSrcCcb->DirectoryCB,
                                     !bCommonParent);
 
@@ -3135,12 +3171,12 @@ AFSSetRenameInfo( IN PIRP Irp)
         // Update the parent pointer in the source object if they are different
         //
 
-        if( pSrcCcb->DirectoryCB->ObjectInformation->ParentObjectInformation != pTargetParentObject)
+        if( pSrcParentObject != pTargetParentObject)
         {
 
-            lCount = InterlockedDecrement( &pSrcCcb->DirectoryCB->ObjectInformation->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
+            lCount = InterlockedDecrement( &pSrcParentObject->Specific.Directory.ChildOpenHandleCount);
 
-            lCount = InterlockedDecrement( &pSrcCcb->DirectoryCB->ObjectInformation->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
+            lCount = InterlockedDecrement( &pSrcParentObject->Specific.Directory.ChildOpenReferenceCount);
 
             lCount = InterlockedIncrement( &pTargetParentObject->Specific.Directory.ChildOpenHandleCount);
 
@@ -3155,16 +3191,20 @@ AFSSetRenameInfo( IN PIRP Irp)
                           pTargetParentObject,
                           lCount);
 
-            lCount = AFSObjectInfoDecrement( pSrcCcb->DirectoryCB->ObjectInformation->ParentObjectInformation,
+            lCount = AFSObjectInfoDecrement( pSrcParentObject,
                                              AFS_OBJECT_REFERENCE_CHILD);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSSetRenameInfo Decrement count on parent object %p Cnt %d\n",
-                          pSrcCcb->DirectoryCB->ObjectInformation->ParentObjectInformation,
+                          pSrcParentObject,
                           lCount);
 
-            pSrcCcb->DirectoryCB->ObjectInformation->ParentObjectInformation = pTargetParentObject;
+            pSrcCcb->DirectoryCB->ObjectInformation->ParentFileId = pTargetParentObject->FileId;
+
+            SetFlag( pSrcCcb->DirectoryCB->ObjectInformation->Flags, AFS_OBJECT_FLAGS_PARENT_FID);
+
+            pSrcParentObject = pTargetParentObject;
 
             ulNotificationAction = FILE_ACTION_ADDED;
         }
@@ -3327,7 +3367,10 @@ try_exit:
 
             if( bTargetEntryExists)
             {
-                AFSInsertDirectoryNode( pTargetDirEntry->ObjectInformation->ParentObjectInformation,
+
+                ASSERT( pTargetParentObject != NULL);
+
+                AFSInsertDirectoryNode( pTargetParentObject,
                                         pTargetDirEntry,
                                         FALSE);
             }
@@ -3360,12 +3403,25 @@ try_exit:
 
             AFSReleaseResource( pSourceDirLock);
         }
-    }
 
-    if ( bDereferenceTargetParentObject)
-    {
+        if ( bDereferenceTargetParentObject)
+        {
 
-        ObDereferenceObject( pTargetParentFileObj);
+            ObDereferenceObject( pTargetParentFileObj);
+        }
+
+        if ( pSrcParentObject != NULL)
+        {
+
+            AFSReleaseObjectInfo( &pSrcParentObject);
+        }
+
+        //
+        // No need to release pTargetParentObject as it is either a copy of pSrcParentObject
+        // or (AFSFcb *)pTargetFileObj->FsContext->ObjectInformation
+        //
+
+        pTargetParentObject = NULL;
     }
 
     return ntStatus;
@@ -3543,7 +3599,10 @@ AFSSetAllocationInfo( IN PIRP Irp,
     //
     if (bTellService)
     {
-        ntStatus = AFSUpdateFileInformation( &pFcb->ObjectInformation->ParentObjectInformation->FileId,
+
+        ASSERT( BooleanFlagOn( pFcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_PARENT_FID));
+
+        ntStatus = AFSUpdateFileInformation( &pFcb->ObjectInformation->ParentFileId,
                                              pFcb->ObjectInformation,
                                              &pCcb->AuthGroup);
     }
@@ -3761,7 +3820,9 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
         // Tell the server
         //
 
-        ntStatus = AFSUpdateFileInformation( &pFcb->ObjectInformation->ParentObjectInformation->FileId,
+        ASSERT( BooleanFlagOn( pFcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_PARENT_FID));
+
+        ntStatus = AFSUpdateFileInformation( &pFcb->ObjectInformation->ParentFileId,
                                              pFcb->ObjectInformation,
                                              &pCcb->AuthGroup);
 
