@@ -3325,7 +3325,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
     afs_uint32 cloneVolId = 0, roVolId;
     struct replica *replicas = 0;
     struct nvldbentry entry, storeEntry;
-    int i, volcount = 0, m, fullrelease, vldbindex;
+    int i, volcount = 0, m, vldbindex;
     int failure;
     struct restoreCookie cookie;
     struct rx_connection **toconns = 0;
@@ -3357,6 +3357,19 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
     int notreleased = 0;
     int tried_justnewsites = 0;
     int justnewsites = 0; /* are we just trying to release to new RO sites? */
+    int sites = 0; /* number of ro sites */
+    int new_sites = 0; /* number of ro sites markes as new */
+
+    typedef enum {
+        CR_RECOVER    = 0x0000, /**< not complete: a recovery from a previous failed release */
+        CR_FORCED     = 0x0001, /**< complete: forced by caller */
+        CR_LAST_OK    = 0x0002, /**< complete: no sites have been marked as new release */
+        CR_ALL_NEW    = 0x0004, /**< complete: all sites have been marked as new release */
+        CR_NEW_RW     = 0x0008, /**< complete: read-write has changed */
+        CR_RO_MISSING = 0x0010, /**< complete: ro clone is missing */
+    } complete_release_t;
+
+    complete_release_t complete_release = CR_RECOVER;
 
     memset(remembertime, 0, sizeof(remembertime));
     memset(&results, 0, sizeof(results));
@@ -3413,30 +3426,50 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 	ONERROR(vcode, entry.name, "Could not update vldb entry for %s.\n");
     }
 
-    /* Will we be completing a previously unfinished release. -force overrides */
-    for (s = 0, m = 0, fullrelease=0, i=0; (i<entry.nServers); i++) {
+    /*
+     * Determine if this is to be a complete release or a recovery of a
+     * previous unfinished release. The previous release is considered to be
+     * unfinished when the clone was successfully distributed to at least one
+     * (but not all) of the read-only sites, as indicated by the NEW_REPSITE
+     * vldb flags.
+     *
+     * The caller can override the vldb flags check using the -force
+     * flag, to force this to be a complete release.
+     */
+    for (i = 0; i < entry.nServers; i++) {
 	if (entry.serverFlags[i] & ITSROVOL) {
-	    m++;
-	    if (entry.serverFlags[i] & NEW_REPSITE) s++;
-	    if (entry.serverFlags[i] & RO_DONTUSE) notreleased++;
+	    sites++;
+	    if (entry.serverFlags[i] & NEW_REPSITE)
+		new_sites++;
+	    if (entry.serverFlags[i] & RO_DONTUSE)
+		notreleased++;
 	}
 	origflags[i] = entry.serverFlags[i];
     }
-    if ((forceflag && !fullrelease) || (s == m) || (s == 0))
-	fullrelease = 1;
 
-    if (!forceflag && (s == m || s == 0)) {
-	if (notreleased && notreleased != m) {
+    if (forceflag) {
+	complete_release |= CR_FORCED;
+    }
+
+    if (new_sites == 0) {
+	complete_release |= CR_LAST_OK;
+    } else if (new_sites == sites) {
+	complete_release |= CR_ALL_NEW;
+    }
+
+    if ((complete_release & (CR_LAST_OK | CR_ALL_NEW))
+	&& !(complete_release & CR_FORCED)) {
+	if (notreleased && notreleased != sites) {
 	    /* we have some new unreleased sites. try to just release to those,
-	     * if the RW has not changed */
+	     * if the RW has not changed. The caller can override with -force. */
 	    justnewsites = 1;
 	}
     }
 
     /* Determine which volume id to use and see if it exists */
-    cloneVolId =
-	((fullrelease
-	  || (entry.cloneId == 0)) ? entry.volumeId[ROVOL] : entry.cloneId);
+    cloneVolId = (complete_release || entry.cloneId == 0)
+		  ? entry.volumeId[ROVOL] : entry.cloneId;
+
     code = VolumeExists(afromserver, afrompart, cloneVolId);
     roexists = ((code == ENODEV) ? 0 : 1);
 
@@ -3468,10 +3501,10 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 	ONERROR(-1, afromserver,
 		"Cannot establish connection with server 0x%x\n");
 
-    if (!fullrelease) {
-	if (!roexists)
-	    fullrelease = 1;	/* Do a full release if RO clone does not exist */
-	else {
+    if (!complete_release) {
+	if (!roexists) {
+	    complete_release |= CR_RO_MISSING;	/* Do a complete release if RO clone does not exist */
+	} else {
 	    /* Begin transaction on RW and mark it busy while we query it */
 	    code = AFSVolTransCreate_retry(
 			fromconn, afromvol, afrompart, ITBusy, &fromtid
@@ -3511,37 +3544,55 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 		    "Failed to end transaction on RW clone %u\n");
 
 	    if (rwcrdate > clcrdate)
-		fullrelease = 2;/* Do a full release if RO clone older than RW */
+		complete_release |= CR_NEW_RW; /* Do a complete release if RO clone older than RW */
 	}
     }
 
-    if (fullrelease != 1) {
+    if (!complete_release || (complete_release & CR_NEW_RW)) {
 	/* in case the RW has changed, and just to be safe */
 	justnewsites = 0;
     }
 
     if (verbose) {
-	switch (fullrelease) {
-	    case 2:
-		fprintf(STDOUT, "RW %lu changed, doing a complete release\n",
-			(unsigned long)afromvol);
-		break;
-	    case 1:
-		fprintf(STDOUT, "This is a complete release of volume %lu\n",
-			(unsigned long)afromvol);
-		if (justnewsites) {
-		    tried_justnewsites = 1;
-		    fprintf(STDOUT, "There are new RO sites; we will try to "
-		                    "only release to new sites\n");
+	if (!complete_release) {
+	    fprintf(STDOUT,
+		    "This is a recovery of previously failed release\n");
+	} else {
+	    fprintf(STDOUT, "This is a complete release of volume %u", afromvol);
+	    /* Give the reasons for a complete release, except if only CR_LAST_OK. */
+	    if (complete_release != CR_LAST_OK) {
+		char *sep = " (";
+		if (complete_release & CR_FORCED) {
+		    fprintf(STDOUT, "%sforced", sep);
+		    sep = ", ";
 		}
-		break;
-	    case 0:
-		fprintf(STDOUT, "This is a completion of a previous release\n");
-		break;
+		if (complete_release & CR_LAST_OK) {
+		    fprintf(STDOUT, "%slast ok", sep);
+		    sep = ", ";
+		}
+		if (complete_release & CR_ALL_NEW) {
+		    fprintf(STDOUT, "%sall sites are new", sep);
+		    sep = ", ";
+		}
+		if (complete_release & CR_NEW_RW) {
+		    fprintf(STDOUT, "%srw %u changed", sep, afromvol);
+		    sep = ", ";
+		}
+		if (complete_release & CR_RO_MISSING) {
+		    fprintf(STDOUT, "%sro clone missing", sep);
+		}
+		fprintf(STDOUT, ")");
+	    }
+	    fprintf(STDOUT, "\n");
+	    if (justnewsites) {
+		tried_justnewsites = 1;
+		fprintf(STDOUT, "There are new RO sites; we will try to "
+			"only release to new sites\n");
+	    }
 	}
     }
 
-    if (fullrelease) {
+    if (complete_release) {
 	afs_int32 oldest = 0;
 	/* If the RO clone exists, then if the clone is a temporary
 	 * clone, delete it. Or if the RO clone is marked RO_DONTUSE
@@ -3670,7 +3721,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 	 * anything with the RO clone, so skip the reclone */
 	/* noop */
 
-    } else if (fullrelease) {
+    } else if (complete_release) {
 
 	if (roclone) {
 	    strcpy(vname, entry.name);
@@ -3762,7 +3813,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
     if (justnewsites) {
 	VPRINT("RW vol has not changed; only releasing to new RO sites\n");
 	/* act like this is a completion of a previous release */
-	fullrelease = 0;
+	complete_release = CR_RECOVER;
     } else if (tried_justnewsites) {
 	VPRINT("RW vol has changed; releasing to all sites\n");
     }
@@ -3807,14 +3858,14 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 	memset(&orig_status, 0, sizeof(orig_status));
 	code = AFSVolGetStatus(fromconn, fromtid, &orig_status);
     }
-    if (!fullrelease && code)
+    if (!complete_release && code)
 	ONERROR(VOLSERNOVOL, afromvol,
 		"Old clone is inaccessible. Try vos release -f %u.\n");
     ONERROR0(code, "Failed to create transaction on the release clone\n");
     VDONE;
 
     /* if we have a clone, treat this as done, for now */
-    if (stayUp && !fullrelease) {
+    if (stayUp && !complete_release) {
 	entry.serverFlags[roindex] |= NEW_REPSITE;
 	entry.serverFlags[roindex] &= ~RO_DONTUSE;
 	entry.flags |= RO_EXISTS;
@@ -3868,15 +3919,28 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 		continue;
 
 	    /* Thisdate is the date from which we want to pick up all changes */
-	    if (forceflag || !fullrelease
-		|| (rwcrdate > times[volcount].crtime)) {
-		/* If the forceflag is set, then we want to do a full dump.
-		 * If it's not a full release, we can't be sure that the creation
-		 *  date is good (so we also do a full dump).
-		 * If the RW volume was replaced (its creation date is newer than
-		 *  the last release), then we can't be sure what has changed (so
-		 *  we do a full dump).
+	    if (forceflag) {
+		/* Do a full dump when forced by the caller. */
+		VPRINT("This will be a full dump: forced\n");
+		thisdate = 0;
+	    } else if (!complete_release) {
+		/* If this release is a recovery of a failed release, we can't be
+		 * sure the creation date is good, so do a full dump.
 		 */
+		VPRINT("This will be a full dump: previous release failed\n");
+		thisdate = 0;
+	    } else if (times[volcount].crtime == 0) {
+		/* A full dump is needed for a new read-only volume. */
+		VPRINT
+		    ("This will be a full dump: read-only volume needs to be created\n");
+		thisdate = 0;
+	    } else if ((rwcrdate > times[volcount].crtime)) {
+		/* If the RW volume was replaced (its creation date is newer than
+		 * the last release), then we can't be sure what has changed (so
+		 * we do a full dump).
+		 */
+		VPRINT
+		    ("This will be a full dump: read-write volume was replaced\n");
 		thisdate = 0;
 	    } else if (remembertime[vldbindex].validtime) {
 		/* Trans was prev ended. Use the time from the prev trans
@@ -3939,7 +4003,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 	    }
 
 	    if (fromdate == 0)
-		fprintf(STDOUT, " (full release)");
+		fprintf(STDOUT, " (entire volume)");
 	    else {
 		tmv = fromdate;
 		fprintf(STDOUT, " (as of %.24s)", ctime(&tmv));
