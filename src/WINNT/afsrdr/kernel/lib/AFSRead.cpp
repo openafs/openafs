@@ -1373,16 +1373,14 @@ AFSIOCtlRead( IN PDEVICE_OBJECT DeviceObject,
         RtlZeroMemory( &stParentFID,
                        sizeof( AFSFileID));
 
-        if( pFcb->ObjectInformation->ParentObjectInformation != NULL)
+        if( BooleanFlagOn( pFcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_PARENT_FID))
         {
 
             //
             // The parent directory FID of the node
             //
 
-            ASSERT( pFcb->ObjectInformation->ParentObjectInformation->FileType == AFS_FILE_TYPE_DIRECTORY);
-
-            stParentFID = pFcb->ObjectInformation->ParentObjectInformation->FileId;
+            stParentFID = pFcb->ObjectInformation->ParentFileId;
         }
 
         //

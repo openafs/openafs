@@ -106,6 +106,13 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
         pObjectInfo = pFcb->ObjectInformation;
 
+        if ( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_FLAGS_PARENT_FID))
+        {
+
+            pParentObjectInfo = AFSFindObjectInfo( pObjectInfo->VolumeCB,
+                                                   &pObjectInfo->ParentFileId);
+        }
+
         pRootFcb = pObjectInfo->VolumeCB->RootFcb;
 
         RtlZeroMemory( &stFileCleanup,
@@ -191,16 +198,16 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                 // Decrement the open child handle count
                 //
 
-                if( pObjectInfo->ParentObjectInformation != NULL &&
-                    pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount > 0)
+                if( pParentObjectInfo != NULL &&
+                    pParentObjectInfo->Specific.Directory.ChildOpenHandleCount > 0)
                 {
 
-                    lCount = InterlockedDecrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
+                    lCount = InterlockedDecrement( &pParentObjectInfo->Specific.Directory.ChildOpenHandleCount);
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCleanup (IOCtl) Decrement child open handle count on Parent object %p Cnt %d\n",
-                                  pObjectInfo->ParentObjectInformation,
+                                  pParentObjectInfo,
                                   lCount);
                 }
 
@@ -368,10 +375,10 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                 ASSERT( pFcb->OpenHandleCount != 0);
 
-                if( pFcb->ObjectInformation->ParentObjectInformation != NULL)
+                if( pParentObjectInfo != NULL)
                 {
 
-                    stFileCleanup.ParentId = pFcb->ObjectInformation->ParentObjectInformation->FileId;
+                    stFileCleanup.ParentId = pParentObjectInfo->FileId;
                 }
 
                 stFileCleanup.LastAccessTime = pObjectInfo->LastAccessTime;
@@ -522,66 +529,80 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                         ClearFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE);
 
-                        pParentObjectInfo = pObjectInfo->ParentObjectInformation;
-
                         ASSERT( pParentObjectInfo != NULL);
 
-                        AFSAcquireExcl( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
-                                        TRUE);
-
-                        if ( pParentObjectInfo->DataVersion.QuadPart != pResultCB->ParentDataVersion.QuadPart - 1)
+                        if ( pParentObjectInfo != NULL)
                         {
 
-                            SetFlag( pParentObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
+                            AFSAcquireExcl( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                                            TRUE);
 
-                            pParentObjectInfo->DataVersion.QuadPart = (ULONGLONG)-1;
+                            if ( pParentObjectInfo->DataVersion.QuadPart != pResultCB->ParentDataVersion.QuadPart - 1)
+                            {
+
+                                SetFlag( pParentObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
+
+                                pParentObjectInfo->DataVersion.QuadPart = (ULONGLONG)-1;
+                            }
+                            else
+                            {
+
+                                pParentObjectInfo->DataVersion.QuadPart = pResultCB->ParentDataVersion.QuadPart;
+                            }
+
+                            //
+                            // Now that the service has the entry has deleted we need to remove it from the parent
+                            // tree so another lookup on the node will fail
+                            //
+
+                            if( !BooleanFlagOn( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_NOT_IN_PARENT_TREE))
+                            {
+
+                                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                              AFS_TRACE_LEVEL_VERBOSE,
+                                              "AFSCleanup DE %p for %wZ removing entry\n",
+                                              pCcb->DirectoryCB,
+                                              &pCcb->DirectoryCB->NameInformation.FileName);
+
+                                AFSRemoveNameEntry( pParentObjectInfo,
+                                                    pCcb->DirectoryCB);
+                            }
+                            else
+                            {
+
+                                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                              AFS_TRACE_LEVEL_VERBOSE,
+                                              "AFSCleanup DE %p for %wZ NOT removing entry due to flag set\n",
+                                              pCcb->DirectoryCB,
+                                              &pCcb->DirectoryCB->NameInformation.FileName);
+                            }
+
+                            AFSReleaseResource( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
+
+                            AFSFsRtlNotifyFullReportChange( pParentObjectInfo,
+                                                            pCcb,
+                                                            (ULONG)FILE_NOTIFY_CHANGE_FILE_NAME,
+                                                            (ULONG)FILE_ACTION_REMOVED);
                         }
                         else
                         {
+                            if( !BooleanFlagOn( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_NOT_IN_PARENT_TREE))
+                            {
 
-                            pParentObjectInfo->DataVersion.QuadPart = pResultCB->ParentDataVersion.QuadPart;
+                                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                              AFS_TRACE_LEVEL_VERBOSE,
+                                              "AFSCleanup DE %p for %wZ NOT removing entry due to pParentObjectInfo == NULL\n",
+                                              pCcb->DirectoryCB,
+                                              &pCcb->DirectoryCB->NameInformation.FileName);
+                            }
                         }
-
-                        //
-                        // Now that the service has the entry has deleted we need to remove it from the parent
-                        // tree so another lookup on the node will fail
-                        //
-
-                        if( !BooleanFlagOn( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_NOT_IN_PARENT_TREE))
-                        {
-
-                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                          AFS_TRACE_LEVEL_VERBOSE,
-                                          "AFSCleanup DE %p for %wZ removing entry\n",
-                                          pCcb->DirectoryCB,
-                                          &pCcb->DirectoryCB->NameInformation.FileName);
-
-                            AFSRemoveNameEntry( pParentObjectInfo,
-                                                pCcb->DirectoryCB);
-                        }
-                        else
-                        {
-
-                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                          AFS_TRACE_LEVEL_VERBOSE,
-                                          "AFSCleanup DE %p for %wZ NOT removing entry due to flag set\n",
-                                          pCcb->DirectoryCB,
-                                          &pCcb->DirectoryCB->NameInformation.FileName);
-                        }
-
-                        AFSReleaseResource( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
-
-                        AFSFsRtlNotifyFullReportChange( pParentObjectInfo,
-                                                        pCcb,
-                                                        (ULONG)FILE_NOTIFY_CHANGE_FILE_NAME,
-                                                        (ULONG)FILE_ACTION_REMOVED);
-
                     }
                 }
                 else
                 {
 
-                    if( BooleanFlagOn( pFcb->Flags, AFS_FCB_FLAG_FILE_MODIFIED))
+                    if( BooleanFlagOn( pFcb->Flags, AFS_FCB_FLAG_FILE_MODIFIED) &&
+                        pParentObjectInfo != NULL)
                     {
 
                         ULONG ulNotifyFilter = 0;
@@ -590,7 +611,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                         ulNotifyFilter |= (FILE_NOTIFY_CHANGE_ATTRIBUTES);
 
-                        AFSFsRtlNotifyFullReportChange( pObjectInfo->ParentObjectInformation,
+                        AFSFsRtlNotifyFullReportChange( pParentObjectInfo,
                                                         pCcb,
                                                         (ULONG)ulNotifyFilter,
                                                         (ULONG)FILE_ACTION_MODIFIED);
@@ -688,8 +709,6 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                     if ( NT_SUCCESS( ntStatus))
                     {
 
-                        pParentObjectInfo = pObjectInfo->ParentObjectInformation;
-
                         if ( pParentObjectInfo != NULL)
                         {
 
@@ -714,8 +733,6 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                 //
                 // Decrement the open child handle count
                 //
-
-                pParentObjectInfo = pObjectInfo->ParentObjectInformation;
 
                 if( pParentObjectInfo != NULL)
                 {
@@ -811,10 +828,10 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                 ASSERT( pFcb->OpenHandleCount != 0);
 
-                if( pFcb->ObjectInformation->ParentObjectInformation != NULL)
+                if( pParentObjectInfo != NULL)
                 {
 
-                    stFileCleanup.ParentId = pFcb->ObjectInformation->ParentObjectInformation->FileId;
+                    stFileCleanup.ParentId = pParentObjectInfo->FileId;
                 }
 
                 stFileCleanup.LastAccessTime = pObjectInfo->LastAccessTime;
@@ -914,54 +931,67 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                         ClearFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE);
 
-                        pParentObjectInfo = pObjectInfo->ParentObjectInformation;
-
                         ASSERT( pParentObjectInfo != NULL);
 
-                        AFSAcquireExcl( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
-                                        TRUE);
-
-                        if ( pParentObjectInfo->DataVersion.QuadPart != pResultCB->ParentDataVersion.QuadPart - 1)
+                        if ( pParentObjectInfo != NULL)
                         {
 
-                            SetFlag( pParentObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
+                            AFSAcquireExcl( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                                            TRUE);
 
-                            pParentObjectInfo->DataVersion.QuadPart = (ULONGLONG)-1;
+                            if ( pParentObjectInfo->DataVersion.QuadPart != pResultCB->ParentDataVersion.QuadPart - 1)
+                            {
+
+                                SetFlag( pParentObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
+
+                                pParentObjectInfo->DataVersion.QuadPart = (ULONGLONG)-1;
+                            }
+                            else
+                            {
+
+                                pParentObjectInfo->DataVersion.QuadPart = pResultCB->ParentDataVersion.QuadPart;
+                            }
+
+                            //
+                            // Now that the service has the entry has deleted we need to remove it from the parent
+                            // tree so another lookup on the node will fail
+                            //
+
+                            if( !BooleanFlagOn( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_NOT_IN_PARENT_TREE))
+                            {
+
+                                AFSRemoveNameEntry( pParentObjectInfo,
+                                                    pCcb->DirectoryCB);
+                            }
+                            else
+                            {
+
+                                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                              AFS_TRACE_LEVEL_VERBOSE,
+                                              "AFSCleanup DE %p for %wZ NOT removing entry due to flag set\n",
+                                              pCcb->DirectoryCB,
+                                              &pCcb->DirectoryCB->NameInformation.FileName);
+                            }
+
+                            AFSReleaseResource( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
+
+                            AFSFsRtlNotifyFullReportChange( pParentObjectInfo,
+                                                            pCcb,
+                                                            (ULONG)FILE_NOTIFY_CHANGE_FILE_NAME,
+                                                            (ULONG)FILE_ACTION_REMOVED);
                         }
                         else
                         {
+                            if( !BooleanFlagOn( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_NOT_IN_PARENT_TREE))
+                            {
 
-                            pParentObjectInfo->DataVersion.QuadPart = pResultCB->ParentDataVersion.QuadPart;
+                                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                              AFS_TRACE_LEVEL_VERBOSE,
+                                              "AFSCleanup DE %p for %wZ NOT removing entry due to pParentObjectInfo == NULL\n",
+                                              pCcb->DirectoryCB,
+                                              &pCcb->DirectoryCB->NameInformation.FileName);
+                            }
                         }
-
-                        //
-                        // Now that the service has the entry has deleted we need to remove it from the parent
-                        // tree so another lookup on the node will fail
-                        //
-
-                        if( !BooleanFlagOn( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_NOT_IN_PARENT_TREE))
-                        {
-
-                            AFSRemoveNameEntry( pParentObjectInfo,
-                                                pCcb->DirectoryCB);
-                        }
-                        else
-                        {
-
-                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                          AFS_TRACE_LEVEL_VERBOSE,
-                                          "AFSCleanup DE %p for %wZ NOT removing entry due to flag set\n",
-                                          pCcb->DirectoryCB,
-                                          &pCcb->DirectoryCB->NameInformation.FileName);
-                        }
-
-                        AFSReleaseResource( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
-
-                        AFSFsRtlNotifyFullReportChange( pParentObjectInfo,
-                                                        pCcb,
-                                                        (ULONG)FILE_NOTIFY_CHANGE_FILE_NAME,
-                                                        (ULONG)FILE_ACTION_REMOVED);
-
                     }
                 }
 
@@ -973,25 +1003,20 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                 else
                 {
 
-                    if( BooleanFlagOn( pFcb->Flags, AFS_FCB_FLAG_FILE_MODIFIED))
+                    if( BooleanFlagOn( pFcb->Flags, AFS_FCB_FLAG_FILE_MODIFIED) &&
+                        pParentObjectInfo != NULL)
                     {
 
                         ULONG ulNotifyFilter = 0;
 
                         ClearFlag( pFcb->Flags, AFS_FCB_FLAG_FILE_MODIFIED);
 
-                        pParentObjectInfo = pObjectInfo->ParentObjectInformation;
+                        ulNotifyFilter |= (FILE_NOTIFY_CHANGE_ATTRIBUTES);
 
-                        if(  pParentObjectInfo != NULL)
-                        {
-
-                            ulNotifyFilter |= (FILE_NOTIFY_CHANGE_ATTRIBUTES);
-
-                            AFSFsRtlNotifyFullReportChange( pParentObjectInfo,
-                                                            pCcb,
-                                                            (ULONG)ulNotifyFilter,
-                                                            (ULONG)FILE_ACTION_MODIFIED);
-                        }
+                        AFSFsRtlNotifyFullReportChange( pParentObjectInfo,
+                                                        pCcb,
+                                                        (ULONG)ulNotifyFilter,
+                                                        (ULONG)FILE_ACTION_MODIFIED);
                     }
 
                     //
@@ -1012,8 +1037,6 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                     if ( NT_SUCCESS( ntStatus))
                     {
-
-                        pParentObjectInfo = pObjectInfo->ParentObjectInformation;
 
                         if ( pParentObjectInfo != NULL)
                         {
@@ -1067,8 +1090,6 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                 // Decrement the open child handle count
                 //
 
-                pParentObjectInfo = pObjectInfo->ParentObjectInformation;
-
                 if( pParentObjectInfo != NULL)
                 {
 
@@ -1121,10 +1142,10 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                 ASSERT( pFcb->OpenHandleCount != 0);
 
-                if( pFcb->ObjectInformation->ParentObjectInformation != NULL)
+                if( pParentObjectInfo != NULL)
                 {
 
-                    stFileCleanup.ParentId = pFcb->ObjectInformation->ParentObjectInformation->FileId;
+                    stFileCleanup.ParentId = pParentObjectInfo->FileId;
                 }
 
                 stFileCleanup.LastAccessTime = pObjectInfo->LastAccessTime;
@@ -1224,53 +1245,67 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                         ClearFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE);
 
-                        pParentObjectInfo = pObjectInfo->ParentObjectInformation;
-
                         ASSERT( pParentObjectInfo != NULL);
 
-                        AFSAcquireExcl( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
-                                        TRUE);
-
-                        if ( pParentObjectInfo->DataVersion.QuadPart != pResultCB->ParentDataVersion.QuadPart - 1)
+                        if ( pParentObjectInfo != NULL)
                         {
 
-                            SetFlag( pParentObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
+                            AFSAcquireExcl( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                                            TRUE);
 
-                            pParentObjectInfo->DataVersion.QuadPart = (ULONGLONG)-1;
+                            if ( pParentObjectInfo->DataVersion.QuadPart != pResultCB->ParentDataVersion.QuadPart - 1)
+                            {
+
+                                SetFlag( pParentObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
+
+                                pParentObjectInfo->DataVersion.QuadPart = (ULONGLONG)-1;
+                            }
+                            else
+                            {
+                                pParentObjectInfo->DataVersion.QuadPart = pResultCB->ParentDataVersion.QuadPart;
+                            }
+
+                            //
+                            // Now that the service has the entry has deleted we need to remove it from the parent
+                            // tree so another lookup on the node will fail
+                            //
+
+                            if( !BooleanFlagOn( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_NOT_IN_PARENT_TREE))
+                            {
+
+                                AFSRemoveNameEntry( pParentObjectInfo,
+                                                    pCcb->DirectoryCB);
+                            }
+                            else
+                            {
+
+                                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                              AFS_TRACE_LEVEL_VERBOSE,
+                                              "AFSCleanup DE %p for %wZ NOT removing entry due to flag set\n",
+                                              pCcb->DirectoryCB,
+                                              &pCcb->DirectoryCB->NameInformation.FileName);
+                            }
+
+                            AFSReleaseResource( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
+
+                            AFSFsRtlNotifyFullReportChange( pParentObjectInfo,
+                                                            pCcb,
+                                                            (ULONG)FILE_NOTIFY_CHANGE_FILE_NAME,
+                                                            (ULONG)FILE_ACTION_REMOVED);
                         }
                         else
                         {
-                            pParentObjectInfo->DataVersion.QuadPart = pResultCB->ParentDataVersion.QuadPart;
+
+                            if( !BooleanFlagOn( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_NOT_IN_PARENT_TREE))
+                            {
+
+                                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                              AFS_TRACE_LEVEL_VERBOSE,
+                                              "AFSCleanup DE %p for %wZ NOT removing entry due to pParentObjectInfo == NULL\n",
+                                              pCcb->DirectoryCB,
+                                              &pCcb->DirectoryCB->NameInformation.FileName);
+                            }
                         }
-
-                        //
-                        // Now that the service has the entry has deleted we need to remove it from the parent
-                        // tree so another lookup on the node will fail
-                        //
-
-                        if( !BooleanFlagOn( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_NOT_IN_PARENT_TREE))
-                        {
-
-                            AFSRemoveNameEntry( pParentObjectInfo,
-                                                pCcb->DirectoryCB);
-                        }
-                        else
-                        {
-
-                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                          AFS_TRACE_LEVEL_VERBOSE,
-                                          "AFSCleanup DE %p for %wZ NOT removing entry due to flag set\n",
-                                          pCcb->DirectoryCB,
-                                          &pCcb->DirectoryCB->NameInformation.FileName);
-                        }
-
-                        AFSReleaseResource( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
-
-                        AFSFsRtlNotifyFullReportChange( pParentObjectInfo,
-                                                        pCcb,
-                                                        (ULONG)FILE_NOTIFY_CHANGE_FILE_NAME,
-                                                        (ULONG)FILE_ACTION_REMOVED);
-
                     }
                 }
 
@@ -1282,25 +1317,20 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                 else
                 {
 
-                    if( BooleanFlagOn( pFcb->Flags, AFS_FCB_FLAG_FILE_MODIFIED))
+                    if( BooleanFlagOn( pFcb->Flags, AFS_FCB_FLAG_FILE_MODIFIED) &&
+                        pParentObjectInfo != NULL)
                     {
 
                         ULONG ulNotifyFilter = 0;
 
                         ClearFlag( pFcb->Flags, AFS_FCB_FLAG_FILE_MODIFIED);
 
-                        pParentObjectInfo = pObjectInfo->ParentObjectInformation;
+                        ulNotifyFilter |= (FILE_NOTIFY_CHANGE_ATTRIBUTES);
 
-                        if(  pParentObjectInfo != NULL)
-                        {
-
-                            ulNotifyFilter |= (FILE_NOTIFY_CHANGE_ATTRIBUTES);
-
-                            AFSFsRtlNotifyFullReportChange( pParentObjectInfo,
-                                                            pCcb,
-                                                            (ULONG)ulNotifyFilter,
-                                                            (ULONG)FILE_ACTION_MODIFIED);
-                        }
+                        AFSFsRtlNotifyFullReportChange( pParentObjectInfo,
+                                                        pCcb,
+                                                        (ULONG)ulNotifyFilter,
+                                                        (ULONG)FILE_ACTION_MODIFIED);
                     }
 
                     //
@@ -1321,8 +1351,6 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                     if ( NT_SUCCESS( ntStatus))
                     {
-
-                        pParentObjectInfo = pObjectInfo->ParentObjectInformation;
 
                         if ( pParentObjectInfo != NULL)
                         {
@@ -1367,8 +1395,6 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                 //
                 // Decrement the open child handle count
                 //
-
-                pParentObjectInfo = pObjectInfo->ParentObjectInformation;
 
                 if( pParentObjectInfo != NULL)
                 {
@@ -1415,8 +1441,6 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                 // Decrement the open child handle count
                 //
 
-                pParentObjectInfo = pObjectInfo->ParentObjectInformation;
-
                 if( pParentObjectInfo != NULL &&
                     pParentObjectInfo->Specific.Directory.ChildOpenHandleCount > 0)
                 {
@@ -1455,6 +1479,12 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
 
 try_exit:
+
+        if ( pParentObjectInfo != NULL)
+        {
+
+            AFSReleaseObjectInfo( &pParentObjectInfo);
+        }
 
         if( pResultCB != NULL)
         {

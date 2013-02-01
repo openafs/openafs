@@ -207,7 +207,7 @@ typedef struct _AFS_OBJECT_INFORMATION_CB
     // Parent object information
     //
 
-    struct _AFS_OBJECT_INFORMATION_CB   *ParentObjectInformation;
+    AFSFileID	            ParentFileId;
 
     //
     // Pointer to the current Fcb, if available

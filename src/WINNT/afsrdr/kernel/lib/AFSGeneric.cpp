@@ -1591,6 +1591,7 @@ AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
     NTSTATUS ntStatus = STATUS_SUCCESS;
     IO_STATUS_BLOCK stIoStatus;
     ULONG ulFilter = 0;
+    AFSObjectInfoCB * pParentObjectInfo = NULL;
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
@@ -1601,6 +1602,13 @@ AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
                   (*ppObjectInfo)->FileId.Vnode,
                   (*ppObjectInfo)->FileId.Unique,
                   Reason);
+
+    if ( BooleanFlagOn( (*ppObjectInfo)->Flags, AFS_OBJECT_FLAGS_PARENT_FID))
+    {
+
+        pParentObjectInfo = AFSFindObjectInfo( (*ppObjectInfo)->VolumeCB,
+                                               &(*ppObjectInfo)->ParentFileId);
+    }
 
     if( (*ppObjectInfo)->FileType == AFS_FILE_TYPE_SYMLINK ||
         (*ppObjectInfo)->FileType == AFS_FILE_TYPE_DFSLINK ||
@@ -1644,27 +1652,31 @@ AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
             SetFlag( (*ppObjectInfo)->Flags, AFS_OBJECT_FLAGS_VERIFY);
         }
 
-        ulFilter = FILE_NOTIFY_CHANGE_FILE_NAME;
-
-        if( Reason == AFS_INVALIDATE_CREDS)
+        if ( pParentObjectInfo != NULL)
         {
-            ulFilter |= FILE_NOTIFY_CHANGE_SECURITY;
-        }
 
-        if( Reason == AFS_INVALIDATE_DATA_VERSION ||
-            Reason == AFS_INVALIDATE_FLUSHED)
-        {
-            ulFilter |= FILE_NOTIFY_CHANGE_SIZE | FILE_NOTIFY_CHANGE_LAST_WRITE;
-        }
-        else
-        {
-            ulFilter |= FILE_NOTIFY_CHANGE_ATTRIBUTES;
-        }
+            ulFilter = FILE_NOTIFY_CHANGE_FILE_NAME;
 
-        AFSFsRtlNotifyFullReportChange( (*ppObjectInfo)->ParentObjectInformation,
-                                        NULL,
-                                        ulFilter,
-                                        FILE_ACTION_MODIFIED);
+            if( Reason == AFS_INVALIDATE_CREDS)
+            {
+                ulFilter |= FILE_NOTIFY_CHANGE_SECURITY;
+            }
+
+            if( Reason == AFS_INVALIDATE_DATA_VERSION ||
+                Reason == AFS_INVALIDATE_FLUSHED)
+            {
+                ulFilter |= FILE_NOTIFY_CHANGE_SIZE | FILE_NOTIFY_CHANGE_LAST_WRITE;
+            }
+            else
+            {
+                ulFilter |= FILE_NOTIFY_CHANGE_ATTRIBUTES;
+            }
+
+            AFSFsRtlNotifyFullReportChange( pParentObjectInfo,
+                                            NULL,
+                                            ulFilter,
+                                            FILE_ACTION_MODIFIED);
+        }
 
         try_return( ntStatus);
     }
@@ -1695,37 +1707,37 @@ AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
                           (*ppObjectInfo)->FileId.Vnode,
                           (*ppObjectInfo)->FileId.Unique);
 
-            if( (*ppObjectInfo)->ParentObjectInformation != NULL)
+            if( pParentObjectInfo != NULL)
             {
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSInvalidateObject Set VERIFY flag on parent fid %08lX-%08lX-%08lX-%08lX\n",
-                              (*ppObjectInfo)->ParentObjectInformation->FileId.Cell,
-                              (*ppObjectInfo)->ParentObjectInformation->FileId.Volume,
-                              (*ppObjectInfo)->ParentObjectInformation->FileId.Vnode,
-                              (*ppObjectInfo)->ParentObjectInformation->FileId.Unique);
+                              pParentObjectInfo->FileId.Cell,
+                              pParentObjectInfo->FileId.Volume,
+                              pParentObjectInfo->FileId.Vnode,
+                              pParentObjectInfo->FileId.Unique);
 
-                SetFlag( (*ppObjectInfo)->ParentObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY);
+                SetFlag( pParentObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
 
-                (*ppObjectInfo)->ParentObjectInformation->DataVersion.QuadPart = (ULONGLONG)-1;
+                pParentObjectInfo->DataVersion.QuadPart = (ULONGLONG)-1;
 
-                (*ppObjectInfo)->ParentObjectInformation->Expiration.QuadPart = 0;
+                pParentObjectInfo->Expiration.QuadPart = 0;
+
+                if( (*ppObjectInfo)->FileType == AFS_FILE_TYPE_DIRECTORY)
+                {
+                    ulFilter = FILE_NOTIFY_CHANGE_DIR_NAME;
+                }
+                else
+                {
+                    ulFilter = FILE_NOTIFY_CHANGE_FILE_NAME;
+                }
+
+                AFSFsRtlNotifyFullReportChange( pParentObjectInfo,
+                                                NULL,
+                                                ulFilter,
+                                                FILE_ACTION_REMOVED);
             }
-
-            if( (*ppObjectInfo)->FileType == AFS_FILE_TYPE_DIRECTORY)
-            {
-                ulFilter = FILE_NOTIFY_CHANGE_DIR_NAME;
-            }
-            else
-            {
-                ulFilter = FILE_NOTIFY_CHANGE_FILE_NAME;
-            }
-
-            AFSFsRtlNotifyFullReportChange( (*ppObjectInfo)->ParentObjectInformation,
-                                            NULL,
-                                            ulFilter,
-                                            FILE_ACTION_REMOVED);
 
             if( NT_SUCCESS( AFSQueueInvalidateObject( (*ppObjectInfo),
                                                       Reason)))
@@ -1883,10 +1895,10 @@ AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
                                                 ulFilter,
                                                 FILE_ACTION_MODIFIED);
             }
-            else
+            else if ( pParentObjectInfo != NULL)
             {
 
-                AFSFsRtlNotifyFullReportChange( (*ppObjectInfo)->ParentObjectInformation,
+                AFSFsRtlNotifyFullReportChange( pParentObjectInfo,
                                                 NULL,
                                                 ulFilter,
                                                 FILE_ACTION_MODIFIED);
@@ -1926,6 +1938,12 @@ AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
     }
 
   try_exit:
+
+    if ( pParentObjectInfo != NULL)
+    {
+
+        AFSReleaseObjectInfo( &pParentObjectInfo);
+    }
 
     return ntStatus;
 }
@@ -2118,11 +2136,13 @@ AFSIsChildOfParent( IN AFSFcb *Dcb,
 
     BOOLEAN bIsChild = FALSE;
     AFSFcb *pCurrentFcb = Fcb;
+    AFSObjectInfoCB * pParentObjectInfo = NULL;
 
     while( pCurrentFcb != NULL)
     {
 
-        if( pCurrentFcb->ObjectInformation->ParentObjectInformation == Dcb->ObjectInformation)
+        if( BooleanFlagOn( pCurrentFcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_PARENT_FID) &&
+            AFSIsEqualFID( &pCurrentFcb->ObjectInformation->ParentFileId, &Dcb->ObjectInformation->FileId))
         {
 
             bIsChild = TRUE;
@@ -2130,7 +2150,21 @@ AFSIsChildOfParent( IN AFSFcb *Dcb,
             break;
         }
 
-        pCurrentFcb = pCurrentFcb->ObjectInformation->ParentObjectInformation->Fcb;
+        pParentObjectInfo = AFSFindObjectInfo( pCurrentFcb->ObjectInformation->VolumeCB,
+                                               &pCurrentFcb->ObjectInformation->ParentFileId);
+
+        if ( pParentObjectInfo != NULL)
+        {
+
+            pCurrentFcb = pParentObjectInfo->Fcb;
+
+            AFSReleaseObjectInfo( &pParentObjectInfo);
+        }
+        else
+        {
+
+            pCurrentFcb = NULL;
+        }
     }
 
     return bIsChild;
@@ -6504,12 +6538,14 @@ AFSAllocateObjectInfo( IN AFSObjectInfoCB *ParentObjectInfo,
 
         pObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock = &pObjectInfo->NonPagedInfo->DirectoryNodeHdrLock;
 
-        pObjectInfo->VolumeCB = ParentObjectInfo->VolumeCB;
-
-        pObjectInfo->ParentObjectInformation = ParentObjectInfo;
-
         if( ParentObjectInfo != NULL)
         {
+
+            pObjectInfo->VolumeCB = ParentObjectInfo->VolumeCB;
+
+            pObjectInfo->ParentFileId = ParentObjectInfo->FileId;
+
+            SetFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_PARENT_FID);
 
             lCount = AFSObjectInfoIncrement( ParentObjectInfo,
                                              AFS_OBJECT_REFERENCE_CHILD);
@@ -6529,6 +6565,8 @@ AFSAllocateObjectInfo( IN AFSObjectInfoCB *ParentObjectInfo,
 
         if( HashIndex != 0)
         {
+
+            ASSERT( ParentObjectInfo);
 
             //
             // Insert the entry into the object tree and list
@@ -6658,13 +6696,59 @@ AFSObjectInfoDecrement( IN AFSObjectInfoCB *ObjectInfo,
     return lCount;
 }
 
+AFSObjectInfoCB *
+AFSFindObjectInfo( IN AFSVolumeCB *VolumeCB,
+                   IN AFSFileID   *FileId)
+{
+    DWORD            ntStatus = STATUS_SUCCESS;
+    ULONGLONG        ullIndex;
+    AFSObjectInfoCB *pObjectInfo = NULL;
 
+    if ( AFSIsEqualFID( &VolumeCB->ObjectInformation.FileId, FileId))
+    {
+
+        pObjectInfo = &VolumeCB->ObjectInformation;
+    }
+    else
+    {
+
+        AFSAcquireExcl( VolumeCB->ObjectInfoTree.TreeLock,
+                        TRUE);
+
+        ullIndex = AFSCreateLowIndex( FileId);
+
+        ntStatus = AFSLocateHashEntry( VolumeCB->ObjectInfoTree.TreeHead,
+                                       ullIndex,
+                                       (AFSBTreeEntry **)&pObjectInfo);
+
+        AFSReleaseResource( VolumeCB->ObjectInfoTree.TreeLock);
+    }
+
+    if ( NT_SUCCESS( ntStatus)) {
+
+        AFSObjectInfoIncrement( pObjectInfo,
+                                AFS_OBJECT_REFERENCE_FIND);
+    }
+
+    return pObjectInfo;
+}
+
+void
+AFSReleaseObjectInfo( IN AFSObjectInfoCB **ppObjectInfo)
+{
+
+    AFSObjectInfoDecrement( *ppObjectInfo,
+                            AFS_OBJECT_REFERENCE_FIND);
+
+    *ppObjectInfo = NULL;
+}
 
 void
 AFSDeleteObjectInfo( IN AFSObjectInfoCB *ObjectInfo)
 {
 
     BOOLEAN bAcquiredTreeLock = FALSE;
+    AFSObjectInfoCB * pParentObjectInfo = NULL;
     LONG lCount;
 
     if ( BooleanFlagOn( ObjectInfo->Flags, AFS_OBJECT_ROOT_VOLUME))
@@ -6691,6 +6775,13 @@ AFSDeleteObjectInfo( IN AFSObjectInfoCB *ObjectInfo)
                         TRUE);
 
         bAcquiredTreeLock = TRUE;
+    }
+
+    if ( BooleanFlagOn( ObjectInfo->Flags, AFS_OBJECT_FLAGS_PARENT_FID))
+    {
+
+        pParentObjectInfo = AFSFindObjectInfo( ObjectInfo->VolumeCB,
+                                               &ObjectInfo->ParentFileId);
     }
 
     //
@@ -6742,16 +6833,16 @@ AFSDeleteObjectInfo( IN AFSObjectInfoCB *ObjectInfo)
         }
     }
 
-    if( ObjectInfo->ParentObjectInformation != NULL)
+    if( pParentObjectInfo != NULL)
     {
 
-        lCount = AFSObjectInfoDecrement( ObjectInfo->ParentObjectInformation,
+        lCount = AFSObjectInfoDecrement( pParentObjectInfo,
                                          AFS_OBJECT_REFERENCE_CHILD);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSDeleteObjectInfo Decrement count on parent object %p Cnt %d\n",
-                      ObjectInfo->ParentObjectInformation,
+                      pParentObjectInfo,
                       lCount);
     }
 

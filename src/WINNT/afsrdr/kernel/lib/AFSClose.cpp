@@ -61,6 +61,7 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
     AFSDeviceExt *pDeviceExt = NULL;
     AFSCcb *pCcb = NULL;
     AFSObjectInfoCB *pObjectInfo = NULL;
+    AFSObjectInfoCB *pParentObjectInfo = NULL;
     AFSDirectoryCB *pDirCB = NULL;
     LONG lCount;
 
@@ -128,7 +129,7 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                 RtlZeroMemory( &stParentFileId,
                                sizeof( AFSFileID));
 
-                stParentFileId = pObjectInfo->ParentObjectInformation->FileId;
+                stParentFileId = pObjectInfo->ParentFileId;
 
                 //
                 // Issue the close request to the service
@@ -155,17 +156,24 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                 // If this is not the root then decrement the open child reference count
                 //
 
-                if( pObjectInfo->ParentObjectInformation != NULL &&
-                    pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount > 0)
+                if ( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_FLAGS_PARENT_FID))
                 {
 
-                    InterlockedDecrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
+                    pParentObjectInfo = AFSFindObjectInfo( pObjectInfo->VolumeCB,
+                                                           &pObjectInfo->ParentFileId);
+                }
+
+                if( pParentObjectInfo != NULL &&
+                    pParentObjectInfo->Specific.Directory.ChildOpenReferenceCount > 0)
+                {
+
+                    InterlockedDecrement( &pParentObjectInfo->Specific.Directory.ChildOpenReferenceCount);
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSClose (IOCtl) Decrement child open ref count on Parent object %p Cnt %d\n",
-                                  pObjectInfo->ParentObjectInformation,
-                                  pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
+                                  pParentObjectInfo,
+                                  pParentObjectInfo->Specific.Directory.ChildOpenReferenceCount);
                 }
 
                 AFSReleaseResource( &pFcb->NPFcb->Resource);
@@ -310,6 +318,17 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                 pCcb->DirectoryCB = NULL;
 
                 //
+                // Object the Parent ObjectInformationCB
+                //
+
+                if( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_FLAGS_PARENT_FID))
+                {
+
+                    pParentObjectInfo = AFSFindObjectInfo( pObjectInfo->VolumeCB,
+                                                           &pObjectInfo->ParentFileId);
+                }
+
+                //
                 // Remove the Ccb and de-allocate it
                 //
 
@@ -355,72 +374,77 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                         AFSReleaseResource( &pObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource);
                     }
 
-                    AFSAcquireExcl( pObjectInfo->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock,
-                                    TRUE);
+                    ASSERT( pParentObjectInfo != NULL);
 
-                    AFSAcquireExcl( pObjectInfo->VolumeCB->ObjectInfoTree.TreeLock,
-                                    TRUE);
-
-                    lCount = InterlockedDecrement( &pDirCB->DirOpenReferenceCount);
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSClose (Other) Decrement count on %wZ DE %p Ccb %p Cnt %d\n",
-                                  &pDirCB->NameInformation.FileName,
-                                  pDirCB,
-                                  pCcb,
-                                  lCount);
-
-                    ASSERT( lCount >= 0);
-
-                    if( lCount == 0)
+                    if ( pParentObjectInfo != NULL)
                     {
+                        AFSAcquireExcl( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                                        TRUE);
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
+                        AFSAcquireExcl( pObjectInfo->VolumeCB->ObjectInfoTree.TreeLock,
+                                        TRUE);
+
+                        lCount = InterlockedDecrement( &pDirCB->DirOpenReferenceCount);
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                                       AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSClose Deleting dir entry %p (%p) for %wZ  FID %08lX-%08lX-%08lX-%08lX\n",
-                                      pDirCB,
-                                      pObjectInfo,
+                                      "AFSClose (Other) Decrement count on %wZ DE %p Ccb %p Cnt %d\n",
                                       &pDirCB->NameInformation.FileName,
-                                      pObjectInfo->FileId.Cell,
-                                      pObjectInfo->FileId.Volume,
-                                      pObjectInfo->FileId.Vnode,
-                                      pObjectInfo->FileId.Unique);
+                                      pDirCB,
+                                      pCcb,
+                                      lCount);
 
-                        //
-                        // Remove and delete the directory entry from the parent list
-                        //
+                        ASSERT( lCount >= 0);
 
-                        AFSDeleteDirEntry( pObjectInfo->ParentObjectInformation,
-                                           pDirCB);
-
-                        AFSAcquireShared( &pObjectInfo->NonPagedInfo->ObjectInfoLock,
-                                          TRUE);
-
-                        if( pObjectInfo->ObjectReferenceCount <= 0)
+                        if( lCount == 0)
                         {
 
-                            if( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_INSERTED_HASH_TREE))
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
+                                          AFS_TRACE_LEVEL_VERBOSE,
+                                          "AFSClose Deleting dir entry %p (%p) for %wZ  FID %08lX-%08lX-%08lX-%08lX\n",
+                                          pDirCB,
+                                          pObjectInfo,
+                                          &pDirCB->NameInformation.FileName,
+                                          pObjectInfo->FileId.Cell,
+                                          pObjectInfo->FileId.Volume,
+                                          pObjectInfo->FileId.Vnode,
+                                          pObjectInfo->FileId.Unique);
+
+                            //
+                            // Remove and delete the directory entry from the parent list
+                            //
+
+                            AFSDeleteDirEntry( pParentObjectInfo,
+                                               pDirCB);
+
+                            AFSAcquireShared( &pObjectInfo->NonPagedInfo->ObjectInfoLock,
+                                              TRUE);
+
+                            if( pObjectInfo->ObjectReferenceCount <= 0)
                             {
 
-                                AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
-                                              AFS_TRACE_LEVEL_VERBOSE,
-                                              "AFSClose Removing object %p from volume tree\n",
-                                              pObjectInfo);
+                                if( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_INSERTED_HASH_TREE))
+                                {
 
-                                AFSRemoveHashEntry( &pObjectInfo->VolumeCB->ObjectInfoTree.TreeHead,
-                                                    &pObjectInfo->TreeEntry);
+                                    AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
+                                                  AFS_TRACE_LEVEL_VERBOSE,
+                                                  "AFSClose Removing object %p from volume tree\n",
+                                                  pObjectInfo);
 
-                                ClearFlag( pObjectInfo->Flags, AFS_OBJECT_INSERTED_HASH_TREE);
+                                    AFSRemoveHashEntry( &pObjectInfo->VolumeCB->ObjectInfoTree.TreeHead,
+                                                        &pObjectInfo->TreeEntry);
+
+                                    ClearFlag( pObjectInfo->Flags, AFS_OBJECT_INSERTED_HASH_TREE);
+                                }
                             }
+
+                            AFSReleaseResource( &pObjectInfo->NonPagedInfo->ObjectInfoLock);
                         }
 
-                        AFSReleaseResource( &pObjectInfo->NonPagedInfo->ObjectInfoLock);
+                        AFSReleaseResource( pObjectInfo->VolumeCB->ObjectInfoTree.TreeLock);
+
+                        AFSReleaseResource( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
                     }
-
-                    AFSReleaseResource( pObjectInfo->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
-
-                    AFSReleaseResource( pObjectInfo->VolumeCB->ObjectInfoTree.TreeLock);
                 }
                 else
                 {
@@ -443,17 +467,17 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                 //
 
                 if( pObjectInfo != NULL &&
-                    pObjectInfo->ParentObjectInformation != NULL &&
-                    pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount > 0)
+                    pParentObjectInfo != NULL &&
+                    pParentObjectInfo->Specific.Directory.ChildOpenReferenceCount > 0)
                 {
 
-                    InterlockedDecrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
+                    InterlockedDecrement( &pParentObjectInfo->Specific.Directory.ChildOpenReferenceCount);
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSClose Decrement child open ref count on Parent object %p Cnt %d\n",
-                                  pObjectInfo->ParentObjectInformation,
-                                  pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
+                                  pParentObjectInfo,
+                                  pParentObjectInfo->Specific.Directory.ChildOpenReferenceCount);
                 }
 
                 //
@@ -479,6 +503,17 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                 AFSPipeOpenCloseRequestCB stPipeClose;
 
                 pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
+
+                //
+                // Object the Parent ObjectInformationCB
+                //
+
+                if( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_FLAGS_PARENT_FID))
+                {
+
+                    pParentObjectInfo = AFSFindObjectInfo( pObjectInfo->VolumeCB,
+                                                           &pObjectInfo->ParentFileId);
+                }
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
@@ -523,16 +558,16 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                 // If this is not the root then decrement the open child reference count
                 //
 
-                if( pObjectInfo->ParentObjectInformation != NULL &&
-                    pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount > 0)
+                if( pParentObjectInfo != NULL &&
+                    pParentObjectInfo->Specific.Directory.ChildOpenReferenceCount > 0)
                 {
 
-                    lCount = InterlockedDecrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
+                    lCount = InterlockedDecrement( &pParentObjectInfo->Specific.Directory.ChildOpenReferenceCount);
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSClose (Share) Decrement child open ref count on Parent object %p Cnt %d\n",
-                                  pObjectInfo->ParentObjectInformation,
+                                  pParentObjectInfo,
                                   lCount);
                 }
 
@@ -578,6 +613,12 @@ try_exit:
                       "EXCEPTION - AFSClose\n");
 
         AFSDumpTraceFilesFnc();
+    }
+
+    if ( pParentObjectInfo != NULL)
+    {
+
+        AFSReleaseObjectInfo( &pParentObjectInfo);
     }
 
     return ntStatus;

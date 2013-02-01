@@ -267,7 +267,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                     if ( ntStatus == STATUS_NOT_A_DIRECTORY)
                     {
 
-                        if ( pCurrentObject->ParentObjectInformation == NULL)
+                        if ( !BooleanFlagOn( pCurrentObject->Flags, AFS_OBJECT_FLAGS_PARENT_FID))
                         {
 
                             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -293,10 +293,10 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                                           pCurrentObject->FileId.Volume,
                                           pCurrentObject->FileId.Vnode,
                                           pCurrentObject->FileId.Unique,
-                                          pCurrentObject->ParentObjectInformation->FileId.Cell,
-                                          pCurrentObject->ParentObjectInformation->FileId.Volume,
-                                          pCurrentObject->ParentObjectInformation->FileId.Vnode,
-                                          pCurrentObject->ParentObjectInformation->FileId.Unique,
+                                          pCurrentObject->ParentFileId.Cell,
+                                          pCurrentObject->ParentFileId.Volume,
+                                          pCurrentObject->ParentFileId.Vnode,
+                                          pCurrentObject->ParentFileId.Unique,
                                           ntStatus);
                         }
                     }
@@ -1700,7 +1700,12 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                 // on the entry
                 //
 
-                pParentObjectInfo = pCurrentObject->ParentObjectInformation;
+                if( BooleanFlagOn( pCurrentObject->Flags, AFS_OBJECT_FLAGS_PARENT_FID))
+                {
+
+                    pParentObjectInfo = AFSFindObjectInfo( pCurrentObject->VolumeCB,
+                                                           &pCurrentObject->ParentFileId);
+                }
 
                 ASSERT( pParentObjectInfo != NULL);
 
@@ -1780,6 +1785,8 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                 AFSReleaseResource( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
                 AFSReleaseResource( pCurrentObject->VolumeCB->ObjectInfoTree.TreeLock);
+
+                AFSReleaseObjectInfo( &pParentObjectInfo);
 
                 //
                 // We deleted the dir entry so check if there is any remaining portion

@@ -58,17 +58,13 @@ AFSInitFcb( IN AFSDirectoryCB  *DirEntry)
     AFSFcb *pFcb = NULL;
     AFSNonPagedFcb *pNPFcb = NULL;
     USHORT  usFcbLength = 0;
-    AFSObjectInfoCB *pObjectInfo = NULL, *pParentObjectInfo = NULL;
+    AFSObjectInfoCB *pObjectInfo = NULL;
     AFSVolumeCB *pVolumeCB = NULL;
 
     __Enter
     {
 
         pObjectInfo = DirEntry->ObjectInformation;
-
-        pParentObjectInfo = pObjectInfo->ParentObjectInformation;
-
-        pVolumeCB = pObjectInfo->VolumeCB;
 
         if ( pObjectInfo->Fcb != NULL)
         {
@@ -78,6 +74,8 @@ AFSInitFcb( IN AFSDirectoryCB  *DirEntry)
 
             try_return( ntStatus = STATUS_SUCCESS);
         }
+
+        pVolumeCB = pObjectInfo->VolumeCB;
 
         //
         // Allocate the Fcb and the nonpaged portion of the Fcb.

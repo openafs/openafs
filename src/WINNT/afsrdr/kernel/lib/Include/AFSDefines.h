@@ -152,6 +152,7 @@ NTSTATUS
 #define AFS_OBJECT_HELD_IN_SERVICE                      0x00000080
 #define AFS_OBJECT_ROOT_VOLUME                          0x00000100
 #define AFS_OBJECT_FLAGS_VERIFY_DATA                    0x00000200
+#define AFS_OBJECT_FLAGS_PARENT_FID                     0x00000400
 
 //
 // Object information reference count reasons
@@ -164,7 +165,7 @@ NTSTATUS
 #define AFS_OBJECT_REFERENCE_EXTENTS                    4
 #define AFS_OBJECT_REFERENCE_WORKER                     5
 #define AFS_OBJECT_REFERENCE_STATUS                     6
-// unused                                               7
+#define AFS_OBJECT_REFERENCE_FIND                       7
 #define AFS_OBJECT_REFERENCE_MAX                        8
 
 //

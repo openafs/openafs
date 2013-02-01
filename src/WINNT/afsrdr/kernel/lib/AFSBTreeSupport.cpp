@@ -1252,7 +1252,7 @@ AFSLocateHashEntry( IN AFSBTreeEntry *TopNode,
                     IN OUT AFSBTreeEntry **TreeEntry)
 {
 
-    NTSTATUS         ntStatus = STATUS_SUCCESS;
+    NTSTATUS         ntStatus = STATUS_NOT_FOUND;
     AFSBTreeEntry   *pCurrentEntry = NULL;
 
     pCurrentEntry = TopNode;
@@ -1279,7 +1279,7 @@ AFSLocateHashEntry( IN AFSBTreeEntry *TopNode,
 
             *TreeEntry = TopNode;
 
-            try_return( ntStatus);
+            try_return( ntStatus = STATUS_SUCCESS);
         }
 
         //
@@ -1349,6 +1349,8 @@ AFSLocateHashEntry( IN AFSBTreeEntry *TopNode,
                 //
 
                 *TreeEntry = pCurrentEntry;
+
+                ntStatus = STATUS_SUCCESS;
 
                 break;
             }

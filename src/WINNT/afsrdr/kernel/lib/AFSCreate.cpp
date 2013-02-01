@@ -1741,12 +1741,12 @@ AFSProcessCreate( IN PIRP               Irp,
                 if ( ntStatus == STATUS_NOT_A_DIRECTORY)
                 {
 
-                    if ( pParentObjectInfo == pObjectInfo->ParentObjectInformation)
+                    if ( !BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_FLAGS_PARENT_FID))
                     {
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
-                                      "AFSProcessCreate (%p) Failed to evaluate object %wZ FID %08lX-%08lX-%08lX-%08lX PARENT %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                      "AFSProcessCreate (%p) Failed to evaluate object %wZ FID %08lX-%08lX-%08lX-%08lX PARENT %08lX-%08lX-%08lX-%08lX != NULL Status %08lX\n",
                                       Irp,
                                       &pDirEntry->NameInformation.FileName,
                                       pObjectInfo->FileId.Cell,
@@ -1759,12 +1759,12 @@ AFSProcessCreate( IN PIRP               Irp,
                                       pParentObjectInfo->FileId.Unique,
                                       ntStatus);
                     }
-                    else if ( pObjectInfo->ParentObjectInformation == NULL)
+                    else if ( AFSIsEqualFID( &pParentObjectInfo->FileId, &pObjectInfo->ParentFileId))
                     {
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
-                                      "AFSProcessCreate (%p) Failed to evaluate object %wZ FID %08lX-%08lX-%08lX-%08lX PARENT %08lX-%08lX-%08lX-%08lX != NULL Status %08lX\n",
+                                      "AFSProcessCreate (%p) Failed to evaluate object %wZ FID %08lX-%08lX-%08lX-%08lX PARENT %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                                       Irp,
                                       &pDirEntry->NameInformation.FileName,
                                       pObjectInfo->FileId.Cell,
@@ -1793,10 +1793,10 @@ AFSProcessCreate( IN PIRP               Irp,
                                       pParentObjectInfo->FileId.Volume,
                                       pParentObjectInfo->FileId.Vnode,
                                       pParentObjectInfo->FileId.Unique,
-                                      pObjectInfo->ParentObjectInformation->FileId.Cell,
-                                      pObjectInfo->ParentObjectInformation->FileId.Volume,
-                                      pObjectInfo->ParentObjectInformation->FileId.Vnode,
-                                      pObjectInfo->ParentObjectInformation->FileId.Unique,
+                                      pObjectInfo->ParentFileId.Cell,
+                                      pObjectInfo->ParentFileId.Volume,
+                                      pObjectInfo->ParentFileId.Vnode,
+                                      pObjectInfo->ParentFileId.Unique,
                                       ntStatus);
                     }
                 }
@@ -1820,6 +1820,9 @@ AFSProcessCreate( IN PIRP               Irp,
 
             ClearFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_NOT_EVALUATED);
         }
+
+        ASSERT( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_FLAGS_PARENT_FID) &&
+                AFSIsEqualFID( &pParentObjectInfo->FileId, &pObjectInfo->ParentFileId));
 
         //
         // We may have raced and the Fcb is already created
@@ -1979,20 +1982,20 @@ AFSProcessCreate( IN PIRP               Irp,
         // Increment the open reference and handle on the parent node
         //
 
-        lCount = InterlockedIncrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
+        lCount = InterlockedIncrement( &pParentObjectInfo->Specific.Directory.ChildOpenHandleCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessCreate Increment child open handle count on Parent object %p Cnt %d\n",
-                      pObjectInfo->ParentObjectInformation,
+                      pParentObjectInfo,
                       lCount);
 
-        lCount = InterlockedIncrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
+        lCount = InterlockedIncrement( &pParentObjectInfo->Specific.Directory.ChildOpenReferenceCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessCreate Increment child open ref count on Parent object %p Cnt %d\n",
-                      pObjectInfo->ParentObjectInformation,
+                      pParentObjectInfo,
                       lCount);
 
         if( ulOptions & FILE_DELETE_ON_CLOSE)
@@ -2154,6 +2157,7 @@ AFSOpenTargetDirectory( IN PIRP Irp,
     BOOLEAN bAllocatedCcb = FALSE;
     BOOLEAN bReleaseFcb = FALSE;
     AFSObjectInfoCB *pParentObject = NULL;
+    AFSObjectInfoCB *pGrandParentObject = NULL;
     UNICODE_STRING uniTargetName;
     LONG lCount;
 
@@ -2334,24 +2338,33 @@ AFSOpenTargetDirectory( IN PIRP Irp,
         // Increment the open reference and handle on the parent node
         //
 
-        if( pParentObject->ParentObjectInformation != NULL)
+        if( BooleanFlagOn( pParentObject->Flags, AFS_OBJECT_FLAGS_PARENT_FID))
         {
 
-            lCount = InterlockedIncrement( &pParentObject->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
+            pGrandParentObject = AFSFindObjectInfo( pParentObject->VolumeCB,
+                                                    &pParentObject->ParentFileId);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSOpenTargetDirectory Increment child open handle count on Parent object %p Cnt %d\n",
-                          pParentObject->ParentObjectInformation,
-                          lCount);
+            if ( pGrandParentObject)
+            {
 
-            lCount = InterlockedIncrement( &pParentObject->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
+                lCount = InterlockedIncrement( &pGrandParentObject->Specific.Directory.ChildOpenHandleCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSOpenTargetDirectory Increment child open ref count on Parent object %p Cnt %d\n",
-                          pParentObject->ParentObjectInformation,
-                          lCount);
+                AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSOpenTargetDirectory Increment child open handle count on Parent object %p Cnt %d\n",
+                              pGrandParentObject,
+                              lCount);
+
+                lCount = InterlockedIncrement( &pGrandParentObject->Specific.Directory.ChildOpenReferenceCount);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSOpenTargetDirectory Increment child open ref count on Parent object %p Cnt %d\n",
+                              pGrandParentObject,
+                              lCount);
+
+                AFSReleaseObjectInfo( &pGrandParentObject);
+            }
         }
 
 try_exit:
@@ -2437,6 +2450,9 @@ AFSProcessOpen( IN PIRP Irp,
         pParentObjectInfo = ParentDirCB->ObjectInformation;
 
         pObjectInfo = DirectoryCB->ObjectInformation;
+
+        ASSERT( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_FLAGS_PARENT_FID) &&
+                AFSIsEqualFID( &pParentObjectInfo->FileId, &pObjectInfo->ParentFileId));
 
         //
         // Check if the entry is pending a deletion
@@ -2810,20 +2826,20 @@ AFSProcessOpen( IN PIRP Irp,
         // Increment the open reference and handle on the parent node
         //
 
-        lCount = InterlockedIncrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
+        lCount = InterlockedIncrement( &pParentObjectInfo->Specific.Directory.ChildOpenHandleCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessOpen Increment child open handle count on Parent object %p Cnt %d\n",
-                      pObjectInfo->ParentObjectInformation,
+                      pParentObjectInfo,
                       lCount);
 
-        lCount = InterlockedIncrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
+        lCount = InterlockedIncrement( &pParentObjectInfo->Specific.Directory.ChildOpenReferenceCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessOpen Increment child open ref count on Parent object %p Cnt %d\n",
-                      pObjectInfo->ParentObjectInformation,
+                      pParentObjectInfo,
                       lCount);
 
         if( BooleanFlagOn( ulOptions, FILE_DELETE_ON_CLOSE))
@@ -2980,6 +2996,9 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
         pParentObjectInfo = ParentDirCB->ObjectInformation;
 
         pObjectInfo = DirectoryCB->ObjectInformation;
+
+        ASSERT( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_FLAGS_PARENT_FID) &&
+                AFSIsEqualFID( &pParentObjectInfo->FileId, &pObjectInfo->ParentFileId));
 
         //
         // Check if we should go and retrieve updated information for the node
@@ -3263,20 +3282,20 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
         // Increment the open reference and handle on the parent node
         //
 
-        lCount = InterlockedIncrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
+        lCount = InterlockedIncrement( &pParentObjectInfo->Specific.Directory.ChildOpenHandleCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessOverwriteSupersede Increment child open handle count on Parent object %p Cnt %d\n",
-                      pObjectInfo->ParentObjectInformation,
+                      pParentObjectInfo,
                       lCount);
 
-        lCount = InterlockedIncrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
+        lCount = InterlockedIncrement( &pParentObjectInfo->Specific.Directory.ChildOpenReferenceCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessOverwriteSupersede Increment child open ref count on Parent object %p Cnt %d\n",
-                      pObjectInfo->ParentObjectInformation,
+                      pParentObjectInfo,
                       lCount);
 
         AFSReleaseResource( pObjectInfo->Fcb->Header.Resource);
@@ -3633,6 +3652,7 @@ AFSOpenSpecialShareFcb( IN PIRP Irp,
     PFILE_OBJECT pFileObject = NULL;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     BOOLEAN bReleaseFcb = FALSE, bAllocatedCcb = FALSE, bAllocateFcb = FALSE;
+    AFSObjectInfoCB *pObjectInfo = NULL;
     AFSObjectInfoCB *pParentObjectInfo = NULL;
     AFSPipeOpenCloseRequestCB stPipeOpen;
     LONG lCount;
@@ -3648,7 +3668,14 @@ AFSOpenSpecialShareFcb( IN PIRP Irp,
                       Irp,
                       &DirectoryCB->NameInformation.FileName);
 
-        pParentObjectInfo = DirectoryCB->ObjectInformation->ParentObjectInformation;
+        pObjectInfo = DirectoryCB->ObjectInformation;
+
+        if ( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_FLAGS_PARENT_FID))
+        {
+
+            pParentObjectInfo = AFSFindObjectInfo( pObjectInfo->VolumeCB,
+                                                   &pObjectInfo->ParentFileId);
+        }
 
         if( DirectoryCB->ObjectInformation->Fcb == NULL)
         {
@@ -3659,7 +3686,7 @@ AFSOpenSpecialShareFcb( IN PIRP Irp,
 
             ntStatus = AFSInitFcb( DirectoryCB);
 
-            *Fcb = DirectoryCB->ObjectInformation->Fcb;
+            *Fcb = pObjectInfo->Fcb;
 
             if( !NT_SUCCESS( ntStatus))
             {
@@ -3684,7 +3711,7 @@ AFSOpenSpecialShareFcb( IN PIRP Irp,
         else
         {
 
-            *Fcb = DirectoryCB->ObjectInformation->Fcb;
+            *Fcb = pObjectInfo->Fcb;
 
             AFSAcquireExcl( &(*Fcb)->NPFcb->Resource,
                             TRUE);
