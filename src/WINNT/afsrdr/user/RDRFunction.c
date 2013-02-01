@@ -1866,12 +1866,26 @@ RDR_CleanupFileEntry( IN cm_user_t *userp,
             /* Serialize with any outstanding AsyncStore operation */
             code = cm_SyncOp(scp, NULL, userp, &req, 0, CM_SCACHESYNC_ASYNCSTORE);
             if (code == 0) {
-                if (bScpLocked) {
-                    lock_ReleaseWrite(&scp->rw);
-                    bScpLocked = FALSE;
-                }
+                cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_ASYNCSTORE);
 
-                code = cm_FSync(scp, userp, &req, bScpLocked);
+                code = cm_SyncOp(scp, NULL, userp, &req, PRSFS_WRITE,
+                                 CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+                /*
+                 * If we only have 'i' bits, then we should still be able to
+                 * set flush the file.
+                 */
+                if (code == CM_ERROR_NOACCESS && scp->creator == userp) {
+                    code = cm_SyncOp(scp, NULL, userp, &req, PRSFS_INSERT,
+                                     CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+                }
+                if (code == 0) {
+                    if (bScpLocked) {
+                        lock_ReleaseWrite(&scp->rw);
+                        bScpLocked = FALSE;
+                    }
+
+                    code = cm_FSync(scp, userp, &req, bScpLocked);
+                }
             }
             if (bLastHandle && code)
                 goto unlock;
@@ -4235,6 +4249,10 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
             lock_ObtainWrite(&scp->rw);
             code = cm_SyncOp(scp, NULL, userp, &req, PRSFS_WRITE,
                              CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+            if (code == CM_ERROR_NOACCESS && scp->creator == userp) {
+                code = cm_SyncOp(scp, NULL, userp, &req, PRSFS_INSERT,
+                                 CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+            }
             lock_ReleaseWrite(&scp->rw);
             if (code == 0)
                 code = cm_FSync(scp, userp, &req, FALSE);
@@ -4247,6 +4265,10 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
             lock_ObtainWrite(&scp->rw);
             code = cm_SyncOp(scp, NULL, userp, &req, PRSFS_WRITE,
                              CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+            if (code == CM_ERROR_NOACCESS && scp->creator == userp) {
+                code = cm_SyncOp(scp, NULL, userp, &req, PRSFS_INSERT,
+                                  CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+            }
             lock_ReleaseWrite(&scp->rw);
             if (code == 0) {
                 /*
