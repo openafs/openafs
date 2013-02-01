@@ -2870,13 +2870,15 @@ ReleaseVolume(struct cmd_syndesc *as, void *arock)
     afs_uint32 avolid;
     afs_uint32 aserver;
     afs_int32 apart, vtype, code, err;
-    int force = 0;
-    int stayUp = 0;
+    int flags = 0;
 
-    if (as->parms[1].items)
-	force = 1;
-    if (as->parms[2].items)
-	stayUp = 1;
+    if (as->parms[1].items) /* -force */
+	flags |= (REL_COMPLETE | REL_FULLDUMPS);
+    if (as->parms[2].items) /* -stayonline */
+	flags |= REL_STAYUP;
+    if (as->parms[3].items) /* -force-reclone */
+        flags |= REL_COMPLETE;
+
     avolid = vsu_GetVolumeID(as->parms[0].items->data, cstruct, &err);
     if (avolid == 0) {
 	if (err)
@@ -2902,7 +2904,7 @@ ReleaseVolume(struct cmd_syndesc *as, void *arock)
 	return E2BIG;
     }
 
-    code = UV_ReleaseVolume(avolid, aserver, apart, force, stayUp);
+    code = UV_ReleaseVolume(avolid, aserver, apart, flags);
 
     if (code) {
 	PrintDiagnostics("release", code);
@@ -5982,9 +5984,12 @@ main(int argc, char **argv)
     ts = cmd_CreateSyntax("release", ReleaseVolume, NULL, "release a volume");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
     cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL,
-		"force a complete release");
+		"force a complete release and full dumps");
+    cmd_AddParmAlias(ts, 1, "-f"); /* original force option */
     cmd_AddParm(ts, "-stayonline", CMD_FLAG, CMD_OPTIONAL,
 		"release to cloned temp vol, then clone back to repsite RO");
+    cmd_AddParm(ts, "-force-reclone", CMD_FLAG, CMD_OPTIONAL,
+		"force a reclone and complete release with incremental dumps");
     COMMONPARMS;
 
     ts = cmd_CreateSyntax("dump", DumpVolumeCmd, NULL, "dump a volume");

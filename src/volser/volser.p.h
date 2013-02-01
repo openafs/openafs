@@ -185,6 +185,11 @@ struct partList {		/*used by the backup system */
 #define RV_NODEL        0x100000
 #define RV_RWONLY	0x200000
 
+/* Values for the UV_ReleaseVolume flags parameters */
+#define REL_COMPLETE    0x000001  /* force a complete release */
+#define REL_FULLDUMPS   0x000002  /* force full dumps */
+#define REL_STAYUP      0x000004  /* dump to clones to avoid offline time */
+
 struct ubik_client;
 extern afs_uint32 vsu_GetVolumeID(char *astring, struct ubik_client *acstruct, afs_int32 *errp);
 extern int vsu_ExtractName(char rname[], char name[]);

@@ -3449,23 +3449,31 @@ DoVolOnline(struct nvldbentry *vldbEntryPtr, afs_uint32 avolid, int index,
     return code;
 }
 
-/* UV_ReleaseVolume()
- *    Release volume <afromvol> on <afromserver> <afrompart> to all
- *    its RO sites (full release). Unless the previous release was
- *    incomplete: in which case we bring the remaining incomplete
- *    volumes up to date with the volumes that were released
- *    successfully.
- *    forceflag: Performs a full release.
+/**
+ * Release a volume to read-only sites
  *
- *    Will create a clone from the RW, then dump the clone out to
- *    the remaining replicas. If there is more than 1 RO sites,
- *    ensure that the VLDB says at least one RO is available all
- *    the time: Influences when we write back the VLDB entry.
+ * Release volume <afromvol> on <afromserver> <afrompart> to all
+ * its RO sites (full release). Unless the previous release was
+ * incomplete: in which case we bring the remaining incomplete
+ * volumes up to date with the volumes that were released
+ * successfully.
+ *
+ * Will create a clone from the RW, then dump the clone out to
+ * the remaining replicas. If there is more than 1 RO sites,
+ * ensure that the VLDB says at least one RO is available all
+ * the time: Influences when we write back the VLDB entry.
+ *
+ * @param[in] afromvol      volume to be released
+ * @param[in] afromserver   server containing afromvol
+ * @param[in] afrompart     partition containing afromvol
+ * @param[in] flags         bitmap of options
+ *                            REL_COMPLETE  - force a complete release
+ *                            REL_FULLDUMPS - force full dumps
+ *                            REL_STAYUP    - dump to clones to avoid offline time
  */
-
 int
 UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
-		 afs_int32 afrompart, int forceflag, int stayUp)
+		 afs_int32 afrompart, int flags)
 {
     char vname[64];
     afs_int32 code = 0;
@@ -3507,6 +3515,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
     int justnewsites = 0; /* are we just trying to release to new RO sites? */
     int sites = 0; /* number of ro sites */
     int new_sites = 0; /* number of ro sites markes as new */
+    int stayUp = (flags & REL_STAYUP);
 
     typedef enum {
         CR_RECOVER    = 0x0000, /**< not complete: a recovery from a previous failed release */
@@ -3582,7 +3591,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
      * vldb flags.
      *
      * The caller can override the vldb flags check using the -force
-     * flag, to force this to be a complete release.
+     * or -force-reclone flag, to force this to be a complete release.
      */
     for (i = 0; i < entry.nServers; i++) {
 	if (entry.serverFlags[i] & ITSROVOL) {
@@ -3595,7 +3604,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 	origflags[i] = entry.serverFlags[i];
     }
 
-    if (forceflag) {
+    if (flags & REL_COMPLETE) {
 	complete_release |= CR_FORCED;
     }
 
@@ -3609,7 +3618,8 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 	&& !(complete_release & CR_FORCED)) {
 	if (notreleased && notreleased != sites) {
 	    /* we have some new unreleased sites. try to just release to those,
-	     * if the RW has not changed. The caller can override with -force. */
+	     * if the RW has not changed. The caller can override with -force
+	     * or with -force-reclone. */
 	    justnewsites = 1;
 	}
     }
@@ -4067,7 +4077,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 		continue;
 
 	    /* Thisdate is the date from which we want to pick up all changes */
-	    if (forceflag) {
+	    if (flags & REL_FULLDUMPS) {
 		/* Do a full dump when forced by the caller. */
 		VPRINT("This will be a full dump: forced\n");
 		thisdate = 0;

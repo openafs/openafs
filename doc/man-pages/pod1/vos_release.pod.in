@@ -7,7 +7,8 @@ vos_release - Updates read-only volumes to match the read/write source volume
 =for html
 <div class="synopsis">
 
-B<vos release> S<<< B<-id> <I<volume name or ID>> >>> [B<-force>]
+B<vos release> S<<< B<-id> <I<volume name or ID>> >>>
+    [B<-force>] [B<-force-reclone>]
     S<<< [B<-cell> <I<cell name>>] >>>
     [B<-noauth>] [B<-localauth>] [B<-stayonline>]
     [B<-verbose>] [B<-encrypt>] [B<-noresolve>]
@@ -15,7 +16,8 @@ B<vos release> S<<< B<-id> <I<volume name or ID>> >>> [B<-force>]
     [B<-help>]
 
 B<vos rel> S<<< B<-i> <I<volume name or ID>> >>>
-    [B<-f>] S<<< [B<-c> <I<cell name>>] >>> [B<-stayon>]
+    [B<-force>] [B<-force-r>]
+    S<<< [B<-c> <I<cell name>>] >>> [B<-stayon>]
     [B<-noa>] [B<-l>] [B<-v>] [B<-e>] [B<-nor>]
     S<<< [B<-co> <I<config directory>>] >>>
     [B<-h>]
@@ -107,15 +109,19 @@ on site definitions in the VLDB entry, the previous B<vos release> command
 completed successfully and all read-only sites currently have the same
 volume. The Volume Server infers that the current B<vos release> command
 was issued because the read/write volume has changed. The Volume Server
-creates a new ReleaseClone and distributes it to all of the read-only
-sites.
+creates a new ReleaseClone volume and distributes a copy of the clone
+volume to all the read-only sites.  In order to reduce the amount of data
+transferred during a release, the Volume Server sends incremental changes to
+remote sites during the release.  The Volume Server only sends files and
+directories which have been changed in the read/write volume since the
+previous release.
 
 =item *
 
 If any site definition in the VLDB entry is marked with a flag, either the
 previous release operation did not complete successfully or a new
 read-only site was defined since the last release. The Volume Server does
-not create a new ReleaseClone, instead distributing the existing
+not create a new ReleaseClone, instead distributing the entire existing
 ReleaseClone to sites marked with the C<Old release> or C<Not released>
 flag. As previously noted, the VL Server marks each VLDB site definition
 with the C<New release> flag as the site receives the ReleaseClone, and
@@ -129,6 +135,10 @@ flag. This is appropriate if, for example, the data at the read/write site
 has changed since the existing ReleaseClone was created during the
 previous release operation.
 
+The B<-force-reclone> will force the creation of a new release clone volume,
+but will not force a full volume dump to be distributed to the remote sites.
+Instead, incremental changes will be distributed when possible.
+
 =head1 OPTIONS
 
 =over 4
@@ -140,9 +150,15 @@ volume.
 
 =item B<-force>
 
-Creates a new ReleaseClone and distributes it all read-only sites
-regardless of whether or not any site definitions in the VLDB entry are
-marked with a flag.
+Creates a new ReleaseClone and distributes the entire clone volume to
+all read-only sites, regardless of the C<New release>, C<Old release>, or
+C<Not released> site flags.
+
+=item B<-force-reclone>
+
+Creates a new ReleaseClone and incrementally distributes the clone volume to
+all read-only sites, regardless of the C<New release>, C<Old release>, or
+C<Not released> site flags.
 
 =item B<-stayonline>
 
