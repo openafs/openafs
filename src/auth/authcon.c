@@ -331,7 +331,8 @@ afsconf_PickClientSecObj(struct afsconf_dir *dir, afsconf_secflags flags,
 	     * explicitly requested. Check for this, and bail out if we
 	     * get one. Note that this leaks a security object at present
 	     */
-	    if (*scIndex == RX_SECIDX_NULL) {
+	    if (!(flags & AFSCONF_SECOPTS_FALLBACK_NULL) &&
+		*scIndex == RX_SECIDX_NULL) {
 		sc = NULL;
 		code = AFSCONF_NOTFOUND;
 		goto out;
