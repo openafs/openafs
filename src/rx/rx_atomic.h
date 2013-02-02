@@ -174,7 +174,7 @@ rx_atomic_clear_bit(rx_atomic_t *atomic, int bit) {
 
 static_inline int
 rx_atomic_test_and_set_bit(rx_atomic_t *atomic, int bit) {
-    return (fetch_and_or(&atomic->var, (1<<bit)) & 1<<bit) == 0;
+    return (fetch_and_or(&atomic->var, (1<<bit)) & 1<<bit) != 0;
 }
 
 static_inline int
