@@ -1409,7 +1409,7 @@ panic(char *format, ...)
     va_list ap;
 
     va_start(ap, format);
-    ubik_print("Ubik PANIC: ");
+    ubik_print("Ubik PANIC:\n");
     ubik_vprint(format, ap);
     va_end(ap);
 
