@@ -3775,8 +3775,8 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
 
         if (rockp) {
             req.flags &= ~CM_REQ_NORETRY;
-            rockp->base = QueueOffset;
-            rockp->length.LowPart = QueueLength;
+            rockp->base = BeginOffset;
+            rockp->length.LowPart = length;
             rockp->length.HighPart = 0;
 
             cm_QueueBKGRequest(scp, RDR_BkgFetch, rockp, userp, &req);
