@@ -652,10 +652,9 @@ SDISK_UpdateInterfaceAddr(struct rx_call *rxcall,
     /* if (probableMatch) */
     /* inconsistent addresses in CellServDB */
     if (!probableMatch || found) {
-	ubik_print("Inconsistent Cell Info from server: ");
+	ubik_print("Inconsistent Cell Info from server:\n");
 	for (i = 0; i < UBIK_MAX_INTERFACE_ADDR && inAddr->hostAddr[i]; i++)
-	    ubik_print("%s ", afs_inet_ntoa_r(htonl(inAddr->hostAddr[i]), hoststr));
-	ubik_print("\n");
+	    ubik_print("... %s\n", afs_inet_ntoa_r(htonl(inAddr->hostAddr[i]), hoststr));
 	fflush(stdout);
 	fflush(stderr);
 	printServerInfo();
@@ -667,10 +666,9 @@ SDISK_UpdateInterfaceAddr(struct rx_call *rxcall,
     for (i = 1; i < UBIK_MAX_INTERFACE_ADDR; i++)
 	ts->addr[i] = htonl(inAddr->hostAddr[i]);
 
-    ubik_print("ubik: A Remote Server has addresses: ");
+    ubik_print("ubik: A Remote Server has addresses:\n");
     for (i = 0; i < UBIK_MAX_INTERFACE_ADDR && ts->addr[i]; i++)
-	ubik_print("%s ", afs_inet_ntoa_r(ts->addr[i], hoststr));
-    ubik_print("\n");
+	ubik_print("... %s\n", afs_inet_ntoa_r(ts->addr[i], hoststr));
 
     UBIK_ADDR_UNLOCK;
     return 0;
@@ -683,13 +681,12 @@ printServerInfo(void)
     int i, j = 1;
     char hoststr[16];
 
-    ubik_print("Local CellServDB:");
+    ubik_print("Local CellServDB:\n");
     for (ts = ubik_servers; ts; ts = ts->next, j++) {
-	ubik_print("Server %d: ", j);
+	ubik_print("  Server %d:\n", j);
 	for (i = 0; (i < UBIK_MAX_INTERFACE_ADDR) && ts->addr[i]; i++)
-	    ubik_print("%s ", afs_inet_ntoa_r(ts->addr[i], hoststr));
+	    ubik_print("  ... %s\n", afs_inet_ntoa_r(ts->addr[i], hoststr));
     }
-    ubik_print("\n");
 }
 
 afs_int32

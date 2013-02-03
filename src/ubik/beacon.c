@@ -660,7 +660,7 @@ verifyInterfaceAddress(afs_uint32 *ame, struct afsconf_cell *info,
     }
 
     if (count <= 0) {		/* no address found */
-	ubik_print("ubik: No network addresses found, aborting..");
+	ubik_print("ubik: No network addresses found, aborting..\n");
 	return UBADHOST;
     }
 
@@ -684,7 +684,7 @@ verifyInterfaceAddress(afs_uint32 *ame, struct afsconf_cell *info,
 	    *ame = myAddr[0];
 	    tcount = rx_getAllAddr(myAddr2, UBIK_MAX_INTERFACE_ADDR);
 	    if (tcount <= 0) {	/* no address found */
-		ubik_print("ubik: No network addresses found, aborting..");
+		ubik_print("ubik: No network addresses found, aborting..\n");
 		return UBADHOST;
 	    }
 
@@ -817,12 +817,11 @@ ubeacon_updateUbikNetworkAddress(afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR])
 		UBIK_ADDR_UNLOCK;
 	    } else if (multi_error == UBADHOST) {
 		code = UBADHOST;	/* remote CellServDB inconsistency */
-		ubik_print("Inconsistent Cell Info on server: ");
+		ubik_print("Inconsistent Cell Info on server:\n");
 		UBIK_ADDR_LOCK;
 		for (j = 0; j < UBIK_MAX_INTERFACE_ADDR && ts->addr[j]; j++)
-		    ubik_print("%s ", afs_inet_ntoa_r(ts->addr[j], hoststr));
+		    ubik_print("... %s\n", afs_inet_ntoa_r(ts->addr[j], hoststr));
 		UBIK_ADDR_UNLOCK;
-		ubik_print("\n");
 	    } else {
 		UBIK_BEACON_LOCK;
 		ts->up = 0;	/* mark the remote server as down */
