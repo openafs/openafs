@@ -1267,7 +1267,7 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
     osi_hyper_t fileSize;		/* the # of bytes in the file */
     osi_queueData_t *heldBufListp;	/* we hold all buffers in this list */
     osi_queueData_t *heldBufListEndp;	/* first one */
-    int reserving;
+    afs_uint64 reserving;
 
     tblocksize = ConvertLongToLargeInteger(cm_data.buf_blockSize);
 
