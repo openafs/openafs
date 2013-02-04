@@ -2002,7 +2002,8 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
         if( pVolumeCB != NULL)
         {
 
-            lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
+            lCount = AFSVolumeIncrement( pVolumeCB,
+                                         AFS_VOLUME_REFERENCE_INVALIDATE);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -2116,7 +2117,8 @@ try_exit:
         if ( pVolumeCB != NULL)
         {
 
-            lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
+            lCount = AFSVolumeDecrement( pVolumeCB,
+                                         AFS_VOLUME_REFERENCE_INVALIDATE);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -2714,7 +2716,8 @@ AFSInvalidateAllVolumes( VOID)
                       pVolumeCB->ObjectInfoTree.TreeLock,
                       PsGetCurrentThread());
 
-        lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
+        lCount = AFSVolumeIncrement( pVolumeCB,
+                                     AFS_VOLUME_REFERENCE_INVALIDATE);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
@@ -2731,7 +2734,8 @@ AFSInvalidateAllVolumes( VOID)
         if ( pNextVolumeCB)
         {
 
-            lCount = InterlockedIncrement( &pNextVolumeCB->VolumeReferenceCount);
+            lCount = AFSVolumeIncrement( pNextVolumeCB,
+                                         AFS_VOLUME_REFERENCE_INVALIDATE);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -2749,7 +2753,8 @@ AFSInvalidateAllVolumes( VOID)
         AFSAcquireShared( &pRDRDeviceExt->Specific.RDR.VolumeListLock,
                           TRUE);
 
-        lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
+        lCount = AFSVolumeDecrement( pVolumeCB,
+                                     AFS_VOLUME_REFERENCE_INVALIDATE);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
@@ -3313,7 +3318,8 @@ AFSSetVolumeState( IN AFSVolumeStatusCB *VolumeStatus)
         if( pVolumeCB != NULL)
         {
 
-            lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
+            lCount = AFSVolumeIncrement( pVolumeCB,
+                                         AFS_VOLUME_REFERENCE_INVALIDATE);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -6043,6 +6049,7 @@ AFSRetrieveFileAttributes( IN AFSDirectoryCB *ParentDirectoryCB,
     UNICODE_STRING uniFullPathName = {0};
     AFSNameArrayHdr    *pNameArray = NULL;
     AFSVolumeCB *pVolumeCB = NULL;
+    LONG VolumeReferenceReason = AFS_VOLUME_REFERENCE_INVALID;
     AFSDirectoryCB *pDirectoryEntry = NULL, *pParentDirEntry = NULL;
     WCHAR *pwchBuffer = NULL;
     UNICODE_STRING uniComponentName, uniRemainingPath, uniParsedName;
@@ -6295,12 +6302,16 @@ AFSRetrieveFileAttributes( IN AFSDirectoryCB *ParentDirectoryCB,
         // Increment the ref count on the volume and dir entry for correct processing below
         //
 
-        lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
+        VolumeReferenceReason = AFS_VOLUME_REFERENCE_FILE_ATTRS;
+
+        lCount = AFSVolumeIncrement( pVolumeCB,
+                                     VolumeReferenceReason);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSRetrieveFileAttributes Increment count on volume %p Cnt %d\n",
+                      "AFSRetrieveFileAttributes Increment count on volume %p Reason %u Cnt %d\n",
                       pVolumeCB,
+                      VolumeReferenceReason,
                       lCount);
 
         lCount = InterlockedIncrement( &pParentDirEntry->DirOpenReferenceCount);
@@ -6320,6 +6331,7 @@ AFSRetrieveFileAttributes( IN AFSDirectoryCB *ParentDirectoryCB,
                                        pNameArray,
                                        AFS_LOCATE_FLAGS_NO_MP_TARGET_EVAL,
                                        &pVolumeCB,
+                                       &VolumeReferenceReason,
                                        &pParentDirEntry,
                                        &pDirectoryEntry,
                                        NULL);
@@ -6339,12 +6351,14 @@ AFSRetrieveFileAttributes( IN AFSDirectoryCB *ParentDirectoryCB,
                 if( pVolumeCB != NULL)
                 {
 
-                    lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
+                    lCount = AFSVolumeDecrement( pVolumeCB,
+                                                 VolumeReferenceReason);
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSRetrieveFileAttributes Decrement count on volume %p Cnt %d\n",
+                                  "AFSRetrieveFileAttributes Decrement count on volume %p Reason %u Cnt %d\n",
                                   pVolumeCB,
+                                  VolumeReferenceReason,
                                   lCount);
                 }
 
@@ -6455,12 +6469,14 @@ try_exit:
         if( pVolumeCB != NULL)
         {
 
-            lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
+            lCount = AFSVolumeDecrement( pVolumeCB,
+                                         VolumeReferenceReason);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSRetrieveFileAttributes Decrement2 count on volume %p Cnt %d\n",
+                          "AFSRetrieveFileAttributes Decrement2 count on volume %p Reason %u Cnt %d\n",
                           pVolumeCB,
+                          VolumeReferenceReason,
                           lCount);
         }
 
@@ -6898,6 +6914,7 @@ AFSEvaluateRootEntry( IN AFSDirectoryCB *DirectoryCB,
     UNICODE_STRING uniFullPathName = {0};
     AFSNameArrayHdr    *pNameArray = NULL;
     AFSVolumeCB *pVolumeCB = NULL;
+    LONG VolumeReferenceReason = AFS_VOLUME_REFERENCE_INVALID;
     AFSDirectoryCB *pDirectoryEntry = NULL, *pParentDirEntry = NULL;
     WCHAR *pwchBuffer = NULL;
     UNICODE_STRING uniComponentName, uniRemainingPath, uniParsedName;
@@ -7057,12 +7074,16 @@ AFSEvaluateRootEntry( IN AFSDirectoryCB *DirectoryCB,
 
         pParentDirEntry = AFSGlobalRoot->DirectoryCB;
 
-        lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
+        VolumeReferenceReason = AFS_VOLUME_REFERENCE_EVAL_ROOT;
+
+        lCount = AFSVolumeIncrement( pVolumeCB,
+                                     VolumeReferenceReason);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSEvaluateRootEntry Increment count on volume %p Cnt %d\n",
+                      "AFSEvaluateRootEntry Increment count on volume %p Reason %u Cnt %d\n",
                       pVolumeCB,
+                      VolumeReferenceReason,
                       lCount);
 
         lCount = InterlockedIncrement( &pParentDirEntry->DirOpenReferenceCount);
@@ -7082,6 +7103,7 @@ AFSEvaluateRootEntry( IN AFSDirectoryCB *DirectoryCB,
                                        pNameArray,
                                        0,
                                        &pVolumeCB,
+                                       &VolumeReferenceReason,
                                        &pParentDirEntry,
                                        &pDirectoryEntry,
                                        NULL);
@@ -7101,12 +7123,14 @@ AFSEvaluateRootEntry( IN AFSDirectoryCB *DirectoryCB,
                 if( pVolumeCB != NULL)
                 {
 
-                    lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
+                    lCount = AFSVolumeDecrement( pVolumeCB,
+                                                 VolumeReferenceReason);
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSEvaluateRootEntry Decrement count on volume %p Cnt %d\n",
+                                  "AFSEvaluateRootEntry Decrement count on volume %p Reason %u Cnt %d\n",
                                   pVolumeCB,
+                                  VolumeReferenceReason,
                                   lCount);
                 }
 
@@ -7165,12 +7189,14 @@ try_exit:
         if( pVolumeCB != NULL)
         {
 
-            lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
+            lCount = AFSVolumeDecrement( pVolumeCB,
+                                         VolumeReferenceReason);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSEvaluateRootEntry Decrement2 count on volume %p Cnt %d\n",
+                          "AFSEvaluateRootEntry Decrement2 count on volume %p Reason %u Cnt %d\n",
                           pVolumeCB,
+                          VolumeReferenceReason,
                           lCount);
         }
 
@@ -8136,6 +8162,7 @@ AFSInitializeLibrary( IN AFSLibraryInitCB *LibraryInit)
 
         ntStatus = AFSInitVolume( NULL,
                                   &LibraryInit->GlobalRootFid,
+                                  AFS_VOLUME_REFERENCE_GLOBAL_ROOT,
                                   &AFSGlobalRoot);
 
         if( !NT_SUCCESS( ntStatus))
@@ -8160,11 +8187,12 @@ AFSInitializeLibrary( IN AFSLibraryInitCB *LibraryInit)
                           "AFSInitializeLibrary AFSInitRootFcb failure %08lX\n",
                           ntStatus);
 
-            lCount = InterlockedDecrement( &AFSGlobalRoot->VolumeReferenceCount);
+            lCount = AFSVolumeDecrement( AFSGlobalRoot,
+                                         AFS_VOLUME_REFERENCE_GLOBAL_ROOT);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSInitializeLibrary Increment count on volume %p Cnt %d\n",
+                          "AFSInitializeLibrary Decrement count on volume %p Cnt %d\n",
                           AFSGlobalRoot,
                           lCount);
 
@@ -8194,7 +8222,8 @@ AFSInitializeLibrary( IN AFSLibraryInitCB *LibraryInit)
 
         AFSInitVolumeWorker( AFSGlobalRoot);
 
-        lCount = InterlockedDecrement( &AFSGlobalRoot->VolumeReferenceCount);
+        lCount = AFSVolumeDecrement( AFSGlobalRoot,
+                                     AFS_VOLUME_REFERENCE_GLOBAL_ROOT);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
@@ -8333,6 +8362,7 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSVolumeCB *pVolumeCB = NULL;
+    LONG VolumeReferenceReason = AFS_VOLUME_REFERENCE_INVALID;
     AFSDeviceExt *pDevExt = (AFSDeviceExt *) AFSRDRDeviceObject->DeviceExtension;
     AFSObjectInfoCB *pObjectInfo = NULL;
     ULONGLONG   ullIndex = 0;
@@ -8370,12 +8400,16 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
             if( pVolumeCB != NULL)
             {
 
-                lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
+                VolumeReferenceReason = AFS_VOLUME_REFERENCE_GET_OBJECT;
+
+                lCount = AFSVolumeIncrement( pVolumeCB,
+                                             VolumeReferenceReason);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSGetObjectStatus Increment count on volume %p Cnt %d\n",
+                              "AFSGetObjectStatus Increment count on volume %p Reason %u Cnt %d\n",
                               pVolumeCB,
+                              VolumeReferenceReason,
                               lCount);
             }
 
@@ -8400,28 +8434,12 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
                               "AFSGetObjectStatus Increment1 count on object %p Cnt %d\n",
                               pObjectInfo,
                               lCount);
-
-                lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSGetObjectStatus Decrement count on volume %p Cnt %d\n",
-                              pVolumeCB,
-                              lCount);
             }
             else
             {
 
                 AFSAcquireShared( pVolumeCB->ObjectInfoTree.TreeLock,
                                   TRUE);
-
-                lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSGetObjectStatus Decrement2 count on volume %p Cnt %d\n",
-                              pVolumeCB,
-                              lCount);
 
                 ullIndex = AFSCreateLowIndex( &GetStatusInfo->FileID);
 
@@ -8513,12 +8531,16 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
             // Increment the ref count on the volume and dir entry for correct processing below
             //
 
-            lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
+            VolumeReferenceReason = AFS_VOLUME_REFERENCE_GET_OBJECT;
+
+            lCount = AFSVolumeIncrement( pVolumeCB,
+                                         VolumeReferenceReason);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSGetObjectStatus Increment2 count on volume %p Cnt %d\n",
+                          "AFSGetObjectStatus Increment2 count on volume %p Reason %u Cnt %d\n",
                           pVolumeCB,
+                          VolumeReferenceReason,
                           lCount);
 
             lCount = InterlockedIncrement( &pParentDirEntry->DirOpenReferenceCount);
@@ -8539,6 +8561,7 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
                                            AFS_LOCATE_FLAGS_NO_MP_TARGET_EVAL |
                                                AFS_LOCATE_FLAGS_NO_SL_TARGET_EVAL,
                                            &pVolumeCB,
+                                           &VolumeReferenceReason,
                                            &pParentDirEntry,
                                            &pDirectoryEntry,
                                            NULL);
@@ -8558,12 +8581,14 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
                     if( pVolumeCB != NULL)
                     {
 
-                        lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
+                        lCount = AFSVolumeDecrement( pVolumeCB,
+                                                     VolumeReferenceReason);
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                                       AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSGetObjectStatus Decrement3 count on volume %p Cnt %d\n",
+                                      "AFSGetObjectStatus Decrement3 count on volume %p Reason %u Cnt %d\n",
                                       pVolumeCB,
+                                      VolumeReferenceReason,
                                       lCount);
                     }
 
@@ -8630,18 +8655,6 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
                           "AFSGetObjectStatus Increment3 count on object %p Cnt %d\n",
                           pObjectInfo,
                           lCount);
-
-            if( pVolumeCB != NULL)
-            {
-
-                lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSGetObjectStatus Decrement4 count on volume %p Cnt %d\n",
-                              pVolumeCB,
-                              lCount);
-            }
         }
 
         //
@@ -8696,6 +8709,20 @@ try_exit:
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSGetObjectStatus Decrement count on object %p Cnt %d\n",
                           pObjectInfo,
+                          lCount);
+        }
+
+        if( pVolumeCB != NULL)
+        {
+
+            lCount = AFSVolumeDecrement( pVolumeCB,
+                                         VolumeReferenceReason);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSGetObjectStatus Decrement4 count on volume %p Reason %u Cnt %d\n",
+                          pVolumeCB,
+                          VolumeReferenceReason,
                           lCount);
         }
 

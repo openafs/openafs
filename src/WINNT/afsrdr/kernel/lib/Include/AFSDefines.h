@@ -169,6 +169,23 @@ NTSTATUS
 #define AFS_OBJECT_REFERENCE_MAX                        8
 
 //
+// Volume reference count reasons
+//
+
+#define AFS_VOLUME_REFERENCE_INVALID                    0
+#define AFS_VOLUME_REFERENCE_EXTENTS                    1
+#define AFS_VOLUME_REFERENCE_GLOBAL_ROOT                2
+#define AFS_VOLUME_REFERENCE_INVALIDATE                 3
+#define AFS_VOLUME_REFERENCE_FILE_ATTRS                 4
+#define AFS_VOLUME_REFERENCE_EVAL_ROOT                  5
+#define AFS_VOLUME_REFERENCE_GET_OBJECT                 6
+#define AFS_VOLUME_REFERENCE_MOUNTPT                    7
+#define AFS_VOLUME_REFERENCE_BUILD_ROOT                 8
+#define AFS_VOLUME_REFERENCE_LOCATE_NAME                9
+#define AFS_VOLUME_REFERENCE_PARSE_NAME                10
+#define AFS_VOLUME_REFERENCE_MAX                       12
+
+//
 // Define one second in terms of 100 nS units
 //
 

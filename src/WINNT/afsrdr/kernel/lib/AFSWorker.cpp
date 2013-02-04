@@ -1873,7 +1873,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                 if( pVolumeCB->ObjectInfoListHead == NULL &&
                     pVolumeCB->DirectoryCB->DirOpenReferenceCount <= 0 &&
                     pVolumeCB->DirectoryCB->NameArrayReferenceCount <= 0 &&
-                    pVolumeCB->VolumeReferenceCount == 1 &&
+                    pVolumeCB->VolumeReferenceCount == 0 &&
                     ( pVolumeCB->RootFcb == NULL ||
                       pVolumeCB->RootFcb->OpenReferenceCount == 0) &&
                     pVolumeCB->ObjectInformation.ObjectReferenceCount <= 0)

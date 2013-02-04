@@ -362,6 +362,7 @@ try_exit:
 NTSTATUS
 AFSInitVolume( IN GUID *AuthGroup,
                IN AFSFileID *RootFid,
+               IN LONG VolumeReferenceReason,
                OUT AFSVolumeCB **VolumeCB)
 {
 
@@ -432,12 +433,14 @@ AFSInitVolume( IN GUID *AuthGroup,
                 // So we don't lock with an invalidation call ...
                 //
 
-                lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
+                lCount = AFSVolumeIncrement( pVolumeCB,
+                                             VolumeReferenceReason);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSInitVolume Increment count on volume %p Cnt %d\n",
+                              "AFSInitVolume Increment count on volume %p Reason %u Cnt %d\n",
                               pVolumeCB,
+                              VolumeReferenceReason,
                               lCount);
 
                 AFSReleaseResource( pDeviceExt->Specific.RDR.VolumeTree.TreeLock);
@@ -539,16 +542,15 @@ AFSInitVolume( IN GUID *AuthGroup,
 
         pVolumeCB->ObjectInfoTree.TreeLock = &pNonPagedVcb->ObjectInfoTreeLock;
 
-        //
-        // Bias our reference by 1
-        //
+        lCount = AFSVolumeIncrement( pVolumeCB,
+                                     VolumeReferenceReason);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSInitVolume Initializing count (2) on volume %p\n",
-                      pVolumeCB);
-
-        pVolumeCB->VolumeReferenceCount = 2;
+                      "AFSInitVolume Initializing volume %p Reason %u count %d\n",
+                      pVolumeCB,
+                      VolumeReferenceReason,
+                      lCount);
 
         AFSAcquireExcl( pVolumeCB->VolumeLock,
                         TRUE);
@@ -631,6 +633,11 @@ AFSInitVolume( IN GUID *AuthGroup,
         //
 
         pVolumeCB->DirectoryCB->ObjectInformation = &pVolumeCB->ObjectInformation;
+
+        //
+        // The ObjectInformation VolumeCB pointer does not obtain
+        // a reference count.
+        //
 
         pVolumeCB->DirectoryCB->ObjectInformation->VolumeCB = pVolumeCB;
 
@@ -751,6 +758,8 @@ AFSRemoveVolume( IN AFSVolumeCB *VolumeCB)
 
     __Enter
     {
+
+        ASSERT( VolumeCB->VolumeReferenceCount == 0);
 
         //
         // Remove the volume from the tree and list
@@ -898,6 +907,37 @@ AFSRemoveVolume( IN AFSVolumeCB *VolumeCB)
     return ntStatus;
 }
 
+LONG
+AFSVolumeIncrement( IN AFSVolumeCB *VolumeCB,
+                    IN LONG Reason)
+{
+
+    LONG lCount;
+
+    lCount = InterlockedIncrement( &VolumeCB->VolumeReferenceCount);
+
+    InterlockedIncrement( &VolumeCB->VolumeReferences[ Reason]);
+
+    return lCount;
+}
+
+LONG
+AFSVolumeDecrement( IN AFSVolumeCB *VolumeCB,
+                    IN LONG Reason)
+{
+
+    LONG lCount;
+
+    lCount = InterlockedDecrement( &VolumeCB->VolumeReferences[ Reason]);
+
+    ASSERT( lCount >= 0);
+
+    lCount = InterlockedDecrement( &VolumeCB->VolumeReferenceCount);
+
+    ASSERT( lCount >= 0);
+
+    return lCount;
+}
 
 //
 // Function: AFSInitRootFcb

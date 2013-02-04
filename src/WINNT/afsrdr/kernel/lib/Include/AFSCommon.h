@@ -527,10 +527,19 @@ AFSInitFcb( IN AFSDirectoryCB   *DirEntry);
 NTSTATUS
 AFSInitVolume( IN GUID *AuthGroup,
                IN AFSFileID *RootFid,
+               IN LONG VolumeReferenceReason,
                OUT AFSVolumeCB **VolumeCB);
 
 NTSTATUS
 AFSRemoveVolume( IN AFSVolumeCB *VolumeCB);
+
+LONG
+AFSVolumeIncrement( IN AFSVolumeCB *VolumeCB,
+                    IN LONG         Reason);
+
+LONG
+AFSVolumeDecrement( IN AFSVolumeCB *VolumeCB,
+                    IN LONG         Reason);
 
 NTSTATUS
 AFSInitRootFcb( IN ULONGLONG ProcessID,
@@ -568,6 +577,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                     IN AFSNameArrayHdr *NameArray,
                     IN ULONG Flags,
                     IN OUT AFSVolumeCB **VolumeCB,
+                    IN OUT LONG *pVolumeReferenceReason,
                     IN OUT AFSDirectoryCB **ParentDirectoryCB,
                     OUT AFSDirectoryCB **DirectoryCB,
                     OUT PUNICODE_STRING ComponentName);

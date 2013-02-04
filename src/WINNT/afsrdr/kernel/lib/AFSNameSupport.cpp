@@ -57,6 +57,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                     IN AFSNameArrayHdr *NameArray,
                     IN ULONG Flags,
                     IN OUT AFSVolumeCB **VolumeCB,
+                    IN OUT LONG *pVolumeReferenceReason,
                     IN OUT AFSDirectoryCB **ParentDirectoryCB,
                     OUT AFSDirectoryCB **DirectoryCB,
                     OUT PUNICODE_STRING ComponentName)
@@ -77,6 +78,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
     AFSObjectInfoCB  *pParentObjectInfo = NULL;
     AFSVolumeCB      *pCurrentVolume = *VolumeCB;
     BOOLEAN           bReleaseCurrentVolume = TRUE;
+    LONG              VolumeReferenceReason = *pVolumeReferenceReason;
     BOOLEAN           bSubstitutedName = FALSE;
     LONG              lCount;
 
@@ -135,7 +137,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
         while( TRUE)
         {
 
-            ASSERT( pCurrentVolume->VolumeReferenceCount > 1);
+            ASSERT( pCurrentVolume->VolumeReferenceCount > 0);
 
             ASSERT( pDirEntry->DirOpenReferenceCount > 0);
 
@@ -754,22 +756,28 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                                           pCurrentObject->FileId.Vnode,
                                           pCurrentObject->FileId.Unique);
 
-                            lCount = InterlockedDecrement( &pCurrentVolume->VolumeReferenceCount);
+                            lCount = AFSVolumeDecrement( pCurrentVolume,
+                                                         VolumeReferenceReason);
 
                             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                                           AFS_TRACE_LEVEL_VERBOSE,
-                                          "AFSLocateNameEntry Decrement count on volume %p Cnt %d\n",
+                                          "AFSLocateNameEntry Decrement count on volume %p Reason %u Cnt %d\n",
                                           pCurrentVolume,
+                                          VolumeReferenceReason,
                                           lCount);
 
                             pCurrentVolume = AFSGlobalRoot;
 
-                            lCount = InterlockedIncrement( &pCurrentVolume->VolumeReferenceCount);
+                            VolumeReferenceReason = AFS_VOLUME_REFERENCE_LOCATE_NAME;
+
+                            lCount = AFSVolumeIncrement( pCurrentVolume,
+                                                         VolumeReferenceReason);
 
                             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                                           AFS_TRACE_LEVEL_VERBOSE,
-                                          "AFSLocateNameEntry Increment count on volume %p Cnt %d\n",
+                                          "AFSLocateNameEntry Increment count on volume %p Reason %u Cnt %d\n",
                                           pCurrentVolume,
+                                          VolumeReferenceReason,
                                           lCount);
                         }
 
@@ -883,15 +891,19 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                     // Also decrement the ref count on the volume
                     //
 
-                    ASSERT( pCurrentVolume->VolumeReferenceCount > 1);
+                    ASSERT( pCurrentVolume->VolumeReferenceCount > 0);
 
-                    lCount = InterlockedDecrement( &pCurrentVolume->VolumeReferenceCount);
+                    lCount = AFSVolumeDecrement( pCurrentVolume,
+                                                 VolumeReferenceReason);
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSLocateNameEntry Decrement2 count on volume %p Cnt %d\n",
+                                  "AFSLocateNameEntry Decrement2 count on volume %p Reason %u Cnt %d\n",
                                   pCurrentVolume,
+                                  VolumeReferenceReason,
                                   lCount);
+
+                    bReleaseCurrentVolume = FALSE;
 
                     ntStatus = AFSBuildMountPointTarget( AuthGroup,
                                                          pDirEntry,
@@ -911,16 +923,14 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                                       pCurrentObject->FileId.Unique,
                                       ntStatus);
 
-                        //
-                        // We already decremented the current volume above
-                        //
-
-                        bReleaseCurrentVolume = FALSE;
-
                         try_return( ntStatus);
                     }
 
-                    ASSERT( pCurrentVolume->VolumeReferenceCount > 1);
+                    ASSERT( pCurrentVolume->VolumeReferenceCount > 0);
+
+                    bReleaseCurrentVolume = TRUE;
+
+                    VolumeReferenceReason = AFS_VOLUME_REFERENCE_MOUNTPT;
 
                     //
                     // We want to restart processing here on the new parent ...
@@ -2036,15 +2046,19 @@ try_exit:
             if( bReleaseCurrentVolume)
             {
 
-                ASSERT( pCurrentVolume->VolumeReferenceCount > 1);
+                ASSERT( pCurrentVolume->VolumeReferenceCount > 0);
 
-                lCount = InterlockedDecrement( &pCurrentVolume->VolumeReferenceCount);
+                lCount = AFSVolumeDecrement( pCurrentVolume,
+                                             VolumeReferenceReason);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSLocateNameEntry Decrement3 count on volume %p Cnt %d\n",
+                              "AFSLocateNameEntry Decrement3 count on volume %p Reason %u Cnt %d\n",
                               pCurrentVolume,
+                              VolumeReferenceReason,
                               lCount);
+
+                bReleaseCurrentVolume = FALSE;
             }
 
             if( RootPathName->Buffer != uniFullPathName.Buffer)
@@ -2086,6 +2100,11 @@ try_exit:
         {
 
             AFSExFreePoolWithTag( uniSearchName.Buffer, 0);
+        }
+
+        if ( bReleaseCurrentVolume) {
+
+            *pVolumeReferenceReason = VolumeReferenceReason;
         }
     }
 
@@ -3115,7 +3134,8 @@ AFSParseName( IN PIRP Irp,
             // Increment our volume reference count
             //
 
-            lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
+            lCount = AFSVolumeIncrement( pVolumeCB,
+                                         AFS_VOLUME_REFERENCE_PARSE_NAME);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -3821,7 +3841,8 @@ AFSParseName( IN PIRP Irp,
         // Increment our reference on the volume
         //
 
-        lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
+        lCount = AFSVolumeIncrement( pVolumeCB,
+                                     AFS_VOLUME_REFERENCE_PARSE_NAME);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
@@ -3851,7 +3872,7 @@ try_exit:
 
         if( *VolumeCB != NULL)
         {
-            ASSERT( (*VolumeCB)->VolumeReferenceCount > 1);
+            ASSERT( (*VolumeCB)->VolumeReferenceCount > 0);
         }
 
         if( ntStatus != STATUS_SUCCESS)
@@ -3985,6 +4006,10 @@ AFSCheckCellName( IN GUID *AuthGroup,
                                            &pDirEnumEntry->FileId,
                                            &pVolumeCB);
 
+            //
+            // On success returns with a volume reference count held
+            //
+
             if( !NT_SUCCESS( ntStatus))
             {
                 try_return( ntStatus);
@@ -4002,11 +4027,12 @@ AFSCheckCellName( IN GUID *AuthGroup,
                           NULL,
                           lCount);
 
-            lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
+            lCount = AFSVolumeDecrement( pVolumeCB,
+                                         AFS_VOLUME_REFERENCE_BUILD_ROOT);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSCheckCellName Increment count on volume %p Cnt %d\n",
+                          "AFSCheckCellName Decrement count on volume %p Cnt %d\n",
                           pVolumeCB,
                           lCount);
         }
@@ -4308,6 +4334,7 @@ AFSBuildMountPointTarget( IN GUID *AuthGroup,
 
             ntStatus = AFSInitVolume( AuthGroup,
                                       &stTargetFileID,
+                                      AFS_VOLUME_REFERENCE_MOUNTPT,
                                       &pVolumeCB);
 
             if( !NT_SUCCESS( ntStatus))
@@ -4332,7 +4359,8 @@ AFSBuildMountPointTarget( IN GUID *AuthGroup,
             // obtain one to match
             //
 
-            lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
+            lCount = AFSVolumeIncrement( pVolumeCB,
+                                         AFS_VOLUME_REFERENCE_MOUNTPT);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -4365,7 +4393,8 @@ AFSBuildMountPointTarget( IN GUID *AuthGroup,
             if( !NT_SUCCESS( ntStatus))
             {
 
-                lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
+                lCount = AFSVolumeDecrement( pVolumeCB,
+                                             AFS_VOLUME_REFERENCE_MOUNTPT);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
@@ -4486,6 +4515,7 @@ AFSBuildRootVolume( IN GUID *AuthGroup,
 
             ntStatus = AFSInitVolume( AuthGroup,
                                       FileId,
+                                      AFS_VOLUME_REFERENCE_BUILD_ROOT,
                                       &pVolumeCB);
 
             if( !NT_SUCCESS( ntStatus))
@@ -4510,7 +4540,8 @@ AFSBuildRootVolume( IN GUID *AuthGroup,
             // obtain one to match
             //
 
-            lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
+            lCount = AFSVolumeIncrement( pVolumeCB,
+                                         AFS_VOLUME_REFERENCE_BUILD_ROOT);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -4544,7 +4575,8 @@ AFSBuildRootVolume( IN GUID *AuthGroup,
             if( !NT_SUCCESS( ntStatus))
             {
 
-                lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
+                lCount = AFSVolumeDecrement( pVolumeCB,
+                                             AFS_VOLUME_REFERENCE_BUILD_ROOT);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,

@@ -143,6 +143,7 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
     UNICODE_STRING      uniRelativeName;
     AFSNameArrayHdr    *pNameArray = NULL;
     AFSVolumeCB        *pVolumeCB = NULL;
+    LONG                VolumeReferenceReason = AFS_VOLUME_REFERENCE_INVALID;
     AFSDirectoryCB     *pParentDirectoryCB = NULL, *pDirectoryCB = NULL;
     BOOLEAN             bReleaseParentDir = FALSE, bReleaseDir = FALSE;
     ULONG               ulParseFlags = 0;
@@ -390,6 +391,8 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
         // We have a reference on the root volume
         //
 
+        VolumeReferenceReason = AFS_VOLUME_REFERENCE_PARSE_NAME;
+
         bReleaseVolume = TRUE;
 
         //
@@ -441,6 +444,7 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                                            pNameArray,
                                            ulNameProcessingFlags,
                                            &pVolumeCB,
+                                           &VolumeReferenceReason,
                                            &pParentDirectoryCB,
                                            &pDirectoryCB,
                                            &uniComponentName);
@@ -467,12 +471,15 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                               ntStatus);
 
                 //
-                // We released any root volume locks in the above on failure
+                // We released any root volume locks in AFSLocateNameEntry on failure
+                // other than STATUS_OBJECT_NAME_NOT_FOUND
                 //
 
                 bReleaseVolume = FALSE;
 
                 bReleaseParentDir = FALSE;
+
+                VolumeReferenceReason = AFS_VOLUME_REFERENCE_INVALID;
 
                 try_return( ntStatus);
             }
@@ -1158,12 +1165,14 @@ try_exit:
         if( bReleaseVolume)
         {
 
-            lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
+            lCount = AFSVolumeDecrement( pVolumeCB,
+                                         VolumeReferenceReason);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSCommonCreate Decrement count on Volume %08lX Cnt %d\n",
+                          "AFSCommonCreate Decrement count on Volume %08lX Reason %u Cnt %d\n",
                           pVolumeCB,
+                          VolumeReferenceReason,
                           lCount);
         }
 
