@@ -1426,7 +1426,8 @@ AFSProcessSetFileExtents( IN AFSSetFileExtentsCB *SetExtents )
         if( pVolumeCB != NULL)
         {
 
-            lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
+            lCount = AFSVolumeIncrement( pVolumeCB,
+                                         AFS_VOLUME_REFERENCE_EXTENTS);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -1568,7 +1569,8 @@ try_exit:
         if ( pVolumeCB)
         {
 
-            lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
+            lCount = AFSVolumeDecrement( pVolumeCB,
+                                         AFS_VOLUME_REFERENCE_EXTENTS);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -1839,7 +1841,8 @@ AFSFindFcbToClean(ULONG IgnoreTime, AFSFcb *LastFcb, BOOLEAN Block)
         // The Volume list may move under our feet.  Lock it.
         //
 
-        lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
+        lCount = AFSVolumeIncrement( pVolumeCB,
+                                     AFS_VOLUME_REFERENCE_EXTENTS);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
@@ -1860,7 +1863,8 @@ AFSFindFcbToClean(ULONG IgnoreTime, AFSFcb *LastFcb, BOOLEAN Block)
         AFSAcquireShared( pVolumeCB->ObjectInfoTree.TreeLock,
                           TRUE);
 
-        lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
+        lCount = AFSVolumeDecrement( pVolumeCB,
+                                     AFS_VOLUME_REFERENCE_EXTENTS);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
@@ -2078,7 +2082,8 @@ AFSProcessExtentFailure( PIRP Irp)
         if( pVolumeCB != NULL)
         {
 
-            lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
+            lCount = AFSVolumeIncrement( pVolumeCB,
+                                         AFS_VOLUME_REFERENCE_EXTENTS);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -2204,7 +2209,8 @@ try_exit:
         if ( pVolumeCB)
         {
 
-            lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
+            lCount = AFSVolumeDecrement( pVolumeCB,
+                                         AFS_VOLUME_REFERENCE_EXTENTS);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -2332,7 +2338,8 @@ AFSProcessReleaseFileExtents( IN PIRP Irp)
             if( pVolumeCB != NULL)
             {
 
-                lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
+                lCount = AFSVolumeIncrement( pVolumeCB,
+                                             AFS_VOLUME_REFERENCE_EXTENTS);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
@@ -2620,7 +2627,8 @@ try_exit:
         if ( pVolumeCB)
         {
 
-            lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
+            lCount = AFSVolumeDecrement( pVolumeCB,
+                                         AFS_VOLUME_REFERENCE_EXTENTS);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,

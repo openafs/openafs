@@ -358,6 +358,8 @@ typedef struct _AFS_VOLUME_CB
 
     LONG                      VolumeReferenceCount;
 
+    LONG                      VolumeReferences[ AFS_VOLUME_REFERENCE_MAX];
+
     //
     // Object information tree
     //
