@@ -6683,7 +6683,7 @@ AFSObjectInfoDecrement( IN AFSObjectInfoCB *ObjectInfo,
                         IN LONG Reason)
 {
 
-    LONG lCount;
+    LONG lCount, lCount2;
 
     AFSAcquireShared( &ObjectInfo->NonPagedInfo->ObjectInfoLock,
                       TRUE);
@@ -6703,9 +6703,9 @@ AFSObjectInfoDecrement( IN AFSObjectInfoCB *ObjectInfo,
         lCount = InterlockedDecrement( &ObjectInfo->ObjectReferenceCount);
     }
 
-    lCount = InterlockedDecrement( &ObjectInfo->ObjectReferences[ Reason]);
+    lCount2 = InterlockedDecrement( &ObjectInfo->ObjectReferences[ Reason]);
 
-    ASSERT( lCount >= 0);
+    ASSERT( lCount2 >= 0);
 
     AFSReleaseResource( &ObjectInfo->NonPagedInfo->ObjectInfoLock);
 
