@@ -77,6 +77,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
     AFSObjectInfoCB  *pCurrentObject = NULL;
     AFSObjectInfoCB  *pParentObjectInfo = NULL;
     AFSVolumeCB      *pCurrentVolume = *VolumeCB;
+    AFSVolumeCB      *pTargetVolume = NULL;
     BOOLEAN           bReleaseCurrentVolume = TRUE;
     LONG              VolumeReferenceReason = *pVolumeReferenceReason;
     BOOLEAN           bSubstitutedName = FALSE;
@@ -891,23 +892,9 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                     // Also decrement the ref count on the volume
                     //
 
-                    ASSERT( pCurrentVolume->VolumeReferenceCount > 0);
-
-                    lCount = AFSVolumeDecrement( pCurrentVolume,
-                                                 VolumeReferenceReason);
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSLocateNameEntry Decrement2 count on volume %p Reason %u Cnt %d\n",
-                                  pCurrentVolume,
-                                  VolumeReferenceReason,
-                                  lCount);
-
-                    bReleaseCurrentVolume = FALSE;
-
                     ntStatus = AFSBuildMountPointTarget( AuthGroup,
                                                          pDirEntry,
-                                                         &pCurrentVolume);
+                                                         &pTargetVolume);
 
                     if( !NT_SUCCESS( ntStatus))
                     {
@@ -928,7 +915,21 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                     ASSERT( pCurrentVolume->VolumeReferenceCount > 0);
 
-                    bReleaseCurrentVolume = TRUE;
+                    lCount = AFSVolumeDecrement( pCurrentVolume,
+                                                 VolumeReferenceReason);
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSLocateNameEntry Decrement2 count on volume %p Reason %u Cnt %d\n",
+                                  pCurrentVolume,
+                                  VolumeReferenceReason,
+                                  lCount);
+
+                    pCurrentVolume = pTargetVolume;
+
+                    pTargetVolume = NULL;
+
+                    ASSERT( pCurrentVolume->VolumeReferenceCount > 0);
 
                     VolumeReferenceReason = AFS_VOLUME_REFERENCE_MOUNTPT;
 
