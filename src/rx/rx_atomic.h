@@ -280,7 +280,7 @@ typedef atomic_t rx_atomic_t;
 #define rx_atomic_inc(X)	  atomic_inc(X)
 #define rx_atomic_inc_and_read(X) atomic_inc_return(X)
 #define rx_atomic_add(X, V)	  atomic_add(V, X)
-#define rx_atomic_add_and_read(X, V) atomic_add_return(V, X);
+#define rx_atomic_add_and_read(X, V) atomic_add_return(V, X)
 #define rx_atomic_dec(X)	  atomic_dec(X)
 #define rx_atomic_dec_and_read(X) atomic_dec_return(X)
 #define rx_atomic_sub(X, V)	  atomic_sub(V, X)
