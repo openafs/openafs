@@ -114,11 +114,39 @@ RDR_SetInitParams( OUT AFSRedirectorInitInfo **ppRedirInitInfo, OUT DWORD * pRed
     extern char cm_CachePath[];
     extern cm_config_data_t cm_data;
     extern int smb_hideDotFiles;
-    size_t cm_CachePathLen = strlen(cm_CachePath);
+    size_t CachePathLen;
+    DWORD TempPathLen;
     size_t err;
-    DWORD TempPathLen = ExpandEnvironmentStringsW(L"%TEMP%", NULL, 0);
     MEMORYSTATUSEX memStatus;
     DWORD maxMemoryCacheSize;
+    char FullCachePath[MAX_PATH];
+    char TempPath[MAX_PATH];
+    char FullTempPath[MAX_PATH];
+
+    /*
+     * The %TEMP% environment variable may be relative instead
+     * of absolute which can result in the redirector referring
+     * to a different directory than the service.  The full path
+     * must therefore be obtained first.
+     */
+
+    CachePathLen = GetFullPathNameA(cm_CachePath, MAX_PATH, FullCachePath, NULL);
+    if (CachePathLen == 0) {
+        osi_Log0(afsd_logp, "RDR_SetInitParams Unable to obtain Full Cache Path");
+        return STATUS_OBJECT_NAME_NOT_FOUND;
+    }
+
+    TempPathLen = ExpandEnvironmentStringsA("%TEMP%", TempPath, MAX_PATH);
+    if (TempPathLen == 0) {
+        osi_Log0(afsd_logp, "RDR_SetInitParams Unable to expand %%TEMP%%");
+        return STATUS_OBJECT_NAME_NOT_FOUND;
+    }
+
+    TempPathLen = GetFullPathNameA(TempPath, MAX_PATH, FullTempPath, NULL);
+    if (TempPathLen == 0) {
+        osi_Log0(afsd_logp, "RDR_SetInitParams Unable to obtain Full Temp Path");
+        return STATUS_OBJECT_NAME_NOT_FOUND;
+    }
 
     memStatus.dwLength = sizeof(memStatus);
     if (GlobalMemoryStatusEx(&memStatus)) {
@@ -139,7 +167,7 @@ RDR_SetInitParams( OUT AFSRedirectorInitInfo **ppRedirInitInfo, OUT DWORD * pRed
         maxMemoryCacheSize = 65536;
     }
 
-    *pRedirInitInfoLen = (DWORD) (sizeof(AFSRedirectorInitInfo) + (cm_CachePathLen + TempPathLen) * sizeof(WCHAR));
+    *pRedirInitInfoLen = (DWORD) (sizeof(AFSRedirectorInitInfo) + (CachePathLen + TempPathLen) * sizeof(WCHAR));
     *ppRedirInitInfo = (AFSRedirectorInitInfo *)malloc(*pRedirInitInfoLen);
     (*ppRedirInitInfo)->Flags = smb_hideDotFiles ? AFS_REDIR_INIT_FLAG_HIDE_DOT_FILES : 0;
     (*ppRedirInitInfo)->Flags |= cm_shortNames ? 0 : AFS_REDIR_INIT_FLAG_DISABLE_SHORTNAMES;
@@ -162,8 +190,8 @@ RDR_SetInitParams( OUT AFSRedirectorInitInfo **ppRedirInitInfo, OUT DWORD * pRed
     } else {
         (*ppRedirInitInfo)->MemoryCacheOffset.QuadPart = 0;
         (*ppRedirInitInfo)->MemoryCacheLength.QuadPart = 0;
-        (*ppRedirInitInfo)->CacheFileNameLength = (ULONG) (cm_CachePathLen * sizeof(WCHAR));
-        err = mbstowcs((*ppRedirInitInfo)->CacheFileName, cm_CachePath, (cm_CachePathLen + 1) *sizeof(WCHAR));
+        (*ppRedirInitInfo)->CacheFileNameLength = (ULONG) (CachePathLen * sizeof(WCHAR));
+        err = mbstowcs((*ppRedirInitInfo)->CacheFileName, FullCachePath, (CachePathLen + 1) *sizeof(WCHAR));
         if (err == -1) {
             free(*ppRedirInitInfo);
             osi_Log0(afsd_logp, "RDR_SetInitParams Invalid Object Name");
@@ -173,9 +201,14 @@ RDR_SetInitParams( OUT AFSRedirectorInitInfo **ppRedirInitInfo, OUT DWORD * pRed
     }
     (*ppRedirInitInfo)->DumpFileLocationOffset = FIELD_OFFSET(AFSRedirectorInitInfo, CacheFileName) + (*ppRedirInitInfo)->CacheFileNameLength;
     (*ppRedirInitInfo)->DumpFileLocationLength = (TempPathLen - 1) * sizeof(WCHAR);
-    ExpandEnvironmentStringsW(L"%TEMP%",
-                              (LPWSTR)(((PBYTE)(*ppRedirInitInfo)) + (*ppRedirInitInfo)->DumpFileLocationOffset),
-                              TempPathLen);
+
+    err = mbstowcs((((PBYTE)(*ppRedirInitInfo)) + (*ppRedirInitInfo)->DumpFileLocationOffset),
+                   FullTempPath, (TempPathLen + 1) *sizeof(WCHAR));
+    if (err == -1) {
+        free(*ppRedirInitInfo);
+        osi_Log0(afsd_logp, "RDR_SetInitParams Invalid Object Name");
+        return STATUS_OBJECT_NAME_INVALID;
+    }
 
     osi_Log0(afsd_logp,"RDR_SetInitParams Success");
     return 0;
