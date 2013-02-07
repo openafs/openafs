@@ -5514,6 +5514,28 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
 
         pResultCB->VolumeLabelLength = cm_Utf8ToUtf16( volp->namep, -1, pResultCB->VolumeLabel,
                                                        (sizeof(pResultCB->VolumeLabel) / sizeof(WCHAR)) + 1);
+
+        if ( pResultCB->VolumeLabelLength) {
+
+            /* add .readonly and .backup if appropriate */
+            switch ( volType) {
+            case ROVOL:
+                pResultCB->VolumeLabelLength--;
+                pResultCB->VolumeLabelLength += cm_Utf8ToUtf16( ".readonly", -1,
+                                                                &pResultCB->VolumeLabel[ pResultCB->VolumeLabelLength],
+                                                                (sizeof(pResultCB->VolumeLabel) / sizeof(WCHAR)) - pResultCB->VolumeLabelLength + 1);
+                break;
+
+            case BACKVOL:
+                pResultCB->VolumeLabelLength--;
+                pResultCB->VolumeLabelLength += cm_Utf8ToUtf16( ".backup", -1,
+                                                                &pResultCB->VolumeLabel[ pResultCB->VolumeLabelLength],
+                                                                (sizeof(pResultCB->VolumeLabel) / sizeof(WCHAR)) - pResultCB->VolumeLabelLength + 1);
+                break;
+            }
+        }
+
+        /* do not include the trailing nul */
         if ( pResultCB->VolumeLabelLength )
             pResultCB->VolumeLabelLength--;
 
