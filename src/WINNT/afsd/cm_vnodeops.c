@@ -2505,6 +2505,17 @@ cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp, cm_user_t *userp, cm_re
 		}
 	    }
 	    if (!inlinebulk) {
+                /*
+                 * It is important to note that RXAFS_BulkStatus is quite braindead.
+                 * The AFS 3.6 file server implementation returns arrays that are
+                 * sized to hold responses for all of the requested FIDs but it only
+                 * populates their contents up to the point where it detects an error.
+                 * Unfortunately, it does inform the caller which entries were filled
+                 * and which were not.  The caller has no ability to determine which
+                 * FID the RPC return code applies to or which of the FIDs valid status
+                 * info and callbacks have been issued for.  As a result, when an
+                 * error is returned, none of the data received can be trusted.
+                 */
 		code = RXAFS_BulkStatus(rxconnp, &fidStruct,
 					&statStruct, &callbackStruct, &volSync);
 	    }
@@ -2548,6 +2559,17 @@ cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp, cm_user_t *userp, cm_re
         if (code) {
             osi_Log2(afsd_logp, "CALL %sBulkStatus FAILURE code 0x%x",
 		      inlinebulk ? "Inline" : "", code);
+            if (!inlinebulk) {
+                /*
+                 * Since an error occurred and it is impossible to determine
+                 * the context in which the returned error code should be
+                 * interpreted, we return the CM_ERROR_BULKSTAT_FAILURE error
+                 * which indicates that Bulk Stat cannot be used for the
+                 * current request.  The caller should fallback to using
+                 * individual RXAFS_FetchStatus calls.
+                 */
+                code = CM_ERROR_BULKSTAT_FAILURE;
+            }
             cm_EndCallbackGrantingCall(NULL, &cbReq, NULL, NULL, 0);
             break;
         }

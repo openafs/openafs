@@ -4666,6 +4666,7 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp, smb_dirListPatch_t **dirPatchespp,
     smb_dirListPatch_t *npatchp;
     afs_uint32 rights;
     afs_int32 mustFake = 0;
+    afs_int32 nobulkstat = 0;
     clientchar_t path[AFSPATHMAX];
 
     lock_ObtainWrite(&dscp->rw);
@@ -4691,6 +4692,7 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp, smb_dirListPatch_t **dirPatchespp,
         memset(bsp, 0, sizeof(cm_bulkStat_t));
         bsp->userp = userp;
 
+      restart_patchset:
         for (patchp = *dirPatchespp, count=0;
              patchp;
              patchp = (smb_dirListPatch_t *) osi_QNext(&patchp->q)) {
@@ -4726,6 +4728,15 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp, smb_dirListPatch_t **dirPatchespp,
                         cm_ReleaseSCache(tscp);
                         continue;
                     }
+
+                    if (nobulkstat) {
+                        code = cm_SyncOp(tscp, NULL, userp, reqp, 0,
+                                          CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+                        lock_ReleaseWrite(&tscp->rw);
+                        cm_ReleaseSCache(tscp);
+                        continue;
+                    }
+
                     lock_ReleaseWrite(&tscp->rw);
                 } /* got lock */
                 cm_ReleaseSCache(tscp);
@@ -4740,6 +4751,16 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp, smb_dirListPatch_t **dirPatchespp,
                 code = cm_TryBulkStatRPC(dscp, bsp, userp, reqp);
                 memset(bsp, 0, sizeof(cm_bulkStat_t));
                 bsp->userp = userp;
+
+                if (code == CM_ERROR_BULKSTAT_FAILURE) {
+                    /*
+                    * If bulk stat cannot be used for this directory
+                    * we must perform individual fetch status calls.
+                    * Restart from the beginning of the patch series.
+                    */
+                    nobulkstat = 1;
+                    goto restart_patchset;
+                }
             }
         }
 
