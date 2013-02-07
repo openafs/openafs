@@ -5364,7 +5364,6 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
     cm_scache_t *scp = NULL;
     cm_volume_t *volp = NULL;
     afs_uint32   volType;
-    cm_cell_t   *cellp = NULL;
     cm_fid_t    Fid;
     afs_uint32  code;
     cm_req_t    req;
@@ -5447,6 +5446,11 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
                                                        (sizeof(pResultCB->VolumeLabel) / sizeof(WCHAR)) + 1);
         if ( pResultCB->VolumeLabelLength )
             pResultCB->VolumeLabelLength--;
+
+        pResultCB->CellLength = cm_Utf8ToUtf16( "Freelance.Local", -1, pResultCB->Cell,
+                                                (sizeof(pResultCB->Cell) / sizeof(WCHAR)) + 1);
+        if ( pResultCB->CellLength )
+            pResultCB->CellLength--;
     } else {
         memcpy(&pResultCB->VolumeCreationTime, &ft, sizeof(ft));
 
@@ -5539,6 +5543,13 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
         if ( pResultCB->VolumeLabelLength )
             pResultCB->VolumeLabelLength--;
 
+        pResultCB->CellLength = cm_Utf8ToUtf16( volp->cellp->name, -1, pResultCB->Cell,
+                                                (sizeof(pResultCB->Cell) / sizeof(WCHAR)) + 1);
+
+        /* do not include the trailing nul */
+        if ( pResultCB->CellLength )
+            pResultCB->CellLength--;
+
         if (sync_done) {
             if (!scp_locked) {
                 lock_ObtainWrite(&scp->rw);
@@ -5574,7 +5585,6 @@ RDR_GetVolumeSizeInfo( IN cm_user_t     *userp,
     cm_scache_t *scp = NULL;
     cm_volume_t *volp = NULL;
     afs_uint32   volType;
-    cm_cell_t   *cellp = NULL;
     cm_fid_t    Fid;
     afs_uint32  code;
     cm_req_t    req;

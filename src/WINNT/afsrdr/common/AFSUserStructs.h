@@ -264,7 +264,11 @@ typedef struct _AFS_VOLUME_INFORMATION
 
     ULONG           VolumeLabelLength;
 
-    WCHAR           VolumeLabel[128];            /* Volume:Cell */
+    WCHAR           VolumeLabel[128];           /* Volume */
+
+    ULONG           CellLength;
+
+    WCHAR           Cell[128];                  /* Cell */
 
 } AFSVolumeInfoCB;
 
