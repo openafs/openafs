@@ -2348,12 +2348,15 @@ cm_BPlusDirEnumBulkStat(cm_direnum_t *enump)
     cm_user_t   *userp = enump->userp;
     cm_bulkStat_t *bsp = NULL;
     afs_uint32 ** bs_errorCodep = NULL;
+    afs_uint32 ** bs_flagsp = NULL;
     afs_uint32    dscp_errorCode = 0;
+    afs_uint32    dscp_flags = 0;
     afs_uint32 count;
     afs_uint32 code = 0;
     cm_req_t req;
     int i;
     cm_scache_t   *tscp;
+    afs_int32 nobulkstat = 0;
 
     cm_InitReq(&req);
     req.flags = enump->reqFlags;
@@ -2369,8 +2372,14 @@ cm_BPlusDirEnumBulkStat(cm_direnum_t *enump)
     memset(bsp, 0, sizeof(cm_bulkStat_t));
     bsp->userp = userp;
 
-    bs_errorCodep = malloc(sizeof(DWORD *) * AFSCBMAX);
+    bs_errorCodep = malloc(sizeof(afs_uint32 *) * AFSCBMAX);
     if (!bs_errorCodep) {
+        code = ENOMEM;
+        goto done;
+    }
+
+    bs_flagsp = malloc(sizeof(afs_uint32 *) * AFSCBMAX);
+    if (!bs_flagsp) {
         code = ENOMEM;
         goto done;
     }
@@ -2385,8 +2394,10 @@ cm_BPlusDirEnumBulkStat(cm_direnum_t *enump)
     bsp->fids[0].Vnode = dscp->fid.vnode;
     bsp->fids[0].Unique = dscp->fid.unique;
     bs_errorCodep[0] = &dscp_errorCode;
+    bs_flagsp[0] = &dscp_flags;
     bsp->counter++;
 
+  restart_stat:
     for ( count = 0; count < enump->count; count++ ) {
         if ( !wcscmp(L".", enump->entry[count].name) || !wcscmp(L"..", enump->entry[count].name) ) {
             continue;
@@ -2407,6 +2418,17 @@ cm_BPlusDirEnumBulkStat(cm_direnum_t *enump)
                     enump->entry[count].errorCode = 0;
                     continue;
                 }
+
+                if (nobulkstat) {
+                    code = cm_SyncOp(tscp, NULL, userp, &req, 0,
+                                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+                    lock_ReleaseWrite(&tscp->rw);
+                    cm_ReleaseSCache(tscp);
+                    enump->entry[count].flags |= CM_DIRENUM_FLAG_GOT_STATUS;
+                    enump->entry[count].errorCode = code;
+                    continue;
+                }
+
                 lock_ReleaseWrite(&tscp->rw);
             }	/* got lock */
             cm_ReleaseSCache(tscp);
@@ -2416,14 +2438,30 @@ cm_BPlusDirEnumBulkStat(cm_direnum_t *enump)
         bsp->fids[i].Volume = enump->entry[count].fid.volume;
         bsp->fids[i].Vnode = enump->entry[count].fid.vnode;
         bsp->fids[i].Unique = enump->entry[count].fid.unique;
-        enump->entry[count].flags |= CM_DIRENUM_FLAG_GOT_STATUS;
         bs_errorCodep[i] = &enump->entry[count].errorCode;
+        bs_flagsp[bsp->counter] = &enump->entry[i].flags;
+        enump->entry[count].flags |= CM_DIRENUM_FLAG_GOT_STATUS;
 
         if (bsp->counter == AFSCBMAX) {
             code = cm_TryBulkStatRPC(dscp, bsp, userp, &req);
-            if (code)
-                goto done;
+            if (code == CM_ERROR_BULKSTAT_FAILURE) {
+                /*
+                 * If bulk stat cannot be used for this directory
+                 * we must perform individual fetch status calls.
+                 * Restart from the beginning of the enumeration.
+                 */
+                nobulkstat = 1;
 
+                for (i=0; i<bsp->counter; i++) {
+                    *(bs_flagsp[i]) &= ~CM_DIRENUM_FLAG_GOT_STATUS;
+                }
+                goto restart_stat;
+            }
+
+            if (code) {
+                /* on any other error, exit */
+                goto done;
+            }
             for ( i=0; i<bsp->counter; i++) {
                 *(bs_errorCodep[i]) = cm_MapRPCError(bsp->stats[i].errorCode, &req);
             }
@@ -2451,6 +2489,20 @@ cm_BPlusDirEnumBulkStat(cm_direnum_t *enump)
 
     if (bsp->counter > 0) {
         code = cm_TryBulkStatRPC(dscp, bsp, userp, &req);
+        if (code == CM_ERROR_BULKSTAT_FAILURE) {
+            /*
+             * If bulk stat cannot be used for this directory
+             * we must perform individual fetch status calls.
+             * Restart from the beginning of the enumeration.
+             */
+            nobulkstat = 1;
+
+            for (i=0; i<bsp->counter; i++) {
+                *(bs_flagsp[i]) &= ~CM_DIRENUM_FLAG_GOT_STATUS;
+            }
+            goto restart_stat;
+        }
+
         if (code)
             goto done;
 
@@ -2469,6 +2521,8 @@ cm_BPlusDirEnumBulkStat(cm_direnum_t *enump)
         free(bsp);
     if (bs_errorCodep)
         free(bs_errorCodep);
+    if (bs_flagsp)
+        free(bs_flagsp);
 
     return code;
 }
@@ -2486,18 +2540,21 @@ cm_BPlusDirEnumBulkStatOne(cm_direnum_t *enump, cm_scache_t *scp)
     cm_user_t   *userp = enump->userp;
     cm_bulkStat_t *bsp = NULL;
     afs_uint32 ** bs_errorCodep = NULL;
+    afs_uint32 ** bs_flagsp = NULL;
     afs_uint32    dscp_errorCode = 0;
+    afs_uint32    dscp_flags = 0;
     afs_uint32    scp_errorCode = 0;
+    afs_uint32    scp_flags = 0;
     afs_uint32 code = 0;
     afs_uint32 i;
     cm_req_t req;
     cm_scache_t   *tscp;
 
-    cm_InitReq(&req);
-    req.flags = enump->reqFlags;
-
     if ( dscp->fid.cell == AFS_FAKE_ROOT_CELL_ID )
         return 0;
+
+    cm_InitReq(&req);
+    req.flags = enump->reqFlags;
 
     bsp = malloc(sizeof(cm_bulkStat_t));
     if (!bsp) {
@@ -2507,8 +2564,14 @@ cm_BPlusDirEnumBulkStatOne(cm_direnum_t *enump, cm_scache_t *scp)
     memset(bsp, 0, sizeof(cm_bulkStat_t));
     bsp->userp = userp;
 
-    bs_errorCodep = malloc(sizeof(DWORD *) * AFSCBMAX);
+    bs_errorCodep = malloc(sizeof(afs_uint32 *) * AFSCBMAX);
     if (!bs_errorCodep) {
+        code = ENOMEM;
+        goto done;
+    }
+
+    bs_flagsp = malloc(sizeof(afs_uint32 *) * AFSCBMAX);
+    if (!bs_flagsp) {
         code = ENOMEM;
         goto done;
     }
@@ -2523,6 +2586,7 @@ cm_BPlusDirEnumBulkStatOne(cm_direnum_t *enump, cm_scache_t *scp)
     bsp->fids[0].Vnode = dscp->fid.vnode;
     bsp->fids[0].Unique = dscp->fid.unique;
     bs_errorCodep[0] = &dscp_errorCode;
+    bs_flagsp[0] = &dscp_flags;
     bsp->counter++;
 
     /*
@@ -2537,6 +2601,7 @@ cm_BPlusDirEnumBulkStatOne(cm_direnum_t *enump, cm_scache_t *scp)
     bsp->fids[1].Vnode = scp->fid.vnode;
     bsp->fids[1].Unique = scp->fid.unique;
     bs_errorCodep[1] = &scp_errorCode;
+    bs_flagsp[1] = &scp_flags;
     bsp->counter++;
 
     if (enump->count <= AFSCBMAX - 1) {
@@ -2581,14 +2646,27 @@ cm_BPlusDirEnumBulkStatOne(cm_direnum_t *enump, cm_scache_t *scp)
         bsp->fids[bsp->counter].Volume = enump->entry[i].fid.volume;
         bsp->fids[bsp->counter].Vnode = enump->entry[i].fid.vnode;
         bsp->fids[bsp->counter].Unique = enump->entry[i].fid.unique;
-        enump->entry[i].flags |= CM_DIRENUM_FLAG_GOT_STATUS;
         bs_errorCodep[bsp->counter] = &enump->entry[i].errorCode;
+        bs_flagsp[bsp->counter] = &enump->entry[i].flags;
+        enump->entry[i].flags |= CM_DIRENUM_FLAG_GOT_STATUS;
         bsp->counter++;
     }
 
     if (bsp->counter > 0) {
         code = cm_TryBulkStatRPC(dscp, bsp, userp, &req);
         /* Now process any errors that might have occurred */
+        if (code == CM_ERROR_BULKSTAT_FAILURE) {
+            for (i=2; i<bsp->counter; i++) {
+                *(bs_flagsp[i]) &= ~CM_DIRENUM_FLAG_GOT_STATUS;
+            }
+
+            lock_ObtainWrite(&scp->rw);
+            code = cm_SyncOp(scp, NULL, userp, &req, 0,
+                              CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+            lock_ReleaseWrite(&scp->rw);
+            goto done;
+        }
+
         if (code)
             goto done;
 
@@ -2608,6 +2686,8 @@ cm_BPlusDirEnumBulkStatOne(cm_direnum_t *enump, cm_scache_t *scp)
         free(bsp);
     if (bs_errorCodep)
         free(bs_errorCodep);
+    if (bs_flagsp)
+        free(bs_flagsp);
 
     return code;
 }
@@ -2619,18 +2699,21 @@ cm_BPlusDirEnumBulkStatNext(cm_direnum_t *enump)
     cm_user_t   *userp = enump->userp;
     cm_bulkStat_t *bsp = NULL;
     afs_uint32 ** bs_errorCodep = NULL;
+    afs_uint32 ** bs_flagsp = NULL;
     afs_uint32    dscp_errorCode = 0;
+    afs_uint32    dscp_flags = 0;
     afs_uint32 count;
     afs_uint32 code = 0;
     cm_req_t req;
     cm_scache_t   *tscp;
+    afs_int32     next = -1;
     int i;
-
-    cm_InitReq(&req);
-    req.flags = enump->reqFlags;
 
     if ( dscp->fid.cell == AFS_FAKE_ROOT_CELL_ID )
         return 0;
+
+    cm_InitReq(&req);
+    req.flags = enump->reqFlags;
 
     bsp = malloc(sizeof(cm_bulkStat_t));
     if (!bsp) {
@@ -2640,8 +2723,14 @@ cm_BPlusDirEnumBulkStatNext(cm_direnum_t *enump)
     memset(bsp, 0, sizeof(cm_bulkStat_t));
     bsp->userp = userp;
 
-    bs_errorCodep = malloc(sizeof(DWORD *) * AFSCBMAX);
+    bs_errorCodep = malloc(sizeof(afs_uint32 *) * AFSCBMAX);
     if (!bs_errorCodep) {
+        code = ENOMEM;
+        goto done;
+    }
+
+    bs_flagsp = malloc(sizeof(afs_uint32 *) * AFSCBMAX);
+    if (!bs_flagsp) {
         code = ENOMEM;
         goto done;
     }
@@ -2656,6 +2745,7 @@ cm_BPlusDirEnumBulkStatNext(cm_direnum_t *enump)
     bsp->fids[0].Vnode = dscp->fid.vnode;
     bsp->fids[0].Unique = dscp->fid.unique;
     bs_errorCodep[0] = &dscp_errorCode;
+    bs_flagsp[0] = &dscp_flags;
     bsp->counter++;
 
     for ( count = enump->next; count < enump->count && bsp->counter < AFSCBMAX; count++ ) {
@@ -2663,6 +2753,8 @@ cm_BPlusDirEnumBulkStatNext(cm_direnum_t *enump)
             continue;
         }
 
+        if (next == -1)
+            next = count;
         tscp = cm_FindSCache(&enump->entry[count].fid);
         if (tscp) {
             if (lock_TryWrite(&tscp->rw)) {
@@ -2686,14 +2778,37 @@ cm_BPlusDirEnumBulkStatNext(cm_direnum_t *enump)
         bsp->fids[bsp->counter].Volume = enump->entry[count].fid.volume;
         bsp->fids[bsp->counter].Vnode = enump->entry[count].fid.vnode;
         bsp->fids[bsp->counter].Unique = enump->entry[count].fid.unique;
-        enump->entry[count].flags |= CM_DIRENUM_FLAG_GOT_STATUS;
         bs_errorCodep[bsp->counter] = &enump->entry[count].errorCode;
+        bs_flagsp[bsp->counter] = &enump->entry[count].flags;
+        enump->entry[count].flags |= CM_DIRENUM_FLAG_GOT_STATUS;
         bsp->counter++;
     }
 
     if (bsp->counter > 0) {
         code = cm_TryBulkStatRPC(dscp, bsp, userp, &req);
         /* Now process any errors that might have occurred */
+        if (code == CM_ERROR_BULKSTAT_FAILURE) {
+            for (i=0; i<bsp->counter; i++) {
+                *(bs_flagsp[i]) &= ~CM_DIRENUM_FLAG_GOT_STATUS;
+            }
+
+            code = cm_GetSCache(&enump->entry[next].fid, NULL, &tscp, userp, &req);
+            if (code == 0) {
+                if (lock_TryWrite(&tscp->rw)) {
+                    code = cm_SyncOp(tscp, NULL, userp, &req, 0,
+                                     CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+                    lock_ReleaseWrite(&tscp->rw);
+                    *(bs_errorCodep[1]) = code;
+                    *(bs_flagsp[1]) |= CM_DIRENUM_FLAG_GOT_STATUS;
+                }
+                cm_ReleaseSCache(tscp);
+            } else {
+                *(bs_errorCodep[1]) = code;
+                *(bs_flagsp[1]) |= CM_DIRENUM_FLAG_GOT_STATUS;
+            }
+            goto done;
+        }
+
         if (code)
             goto done;
 
@@ -2712,6 +2827,8 @@ cm_BPlusDirEnumBulkStatNext(cm_direnum_t *enump)
         free(bsp);
     if (bs_errorCodep)
         free(bs_errorCodep);
+    if (bs_flagsp)
+        free(bs_flagsp);
 
     return code;
 }
