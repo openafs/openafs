@@ -341,6 +341,8 @@ typedef struct _AFS_FILE_OPEN_RESULT_CB
 
     ULONG           FileAccess;
 
+    ULONG           Authenticated;
+
 } AFSFileOpenResultCB;
 
 typedef struct _AFS_FILE_ACCESS_RELEASE_CB
