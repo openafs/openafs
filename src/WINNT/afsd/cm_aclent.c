@@ -157,6 +157,27 @@ time_t cm_TGTLifeTime(cm_user_t *userp, afs_uint32 cellID)
     return expirationTime;
 }
 
+int
+cm_HaveToken(cm_user_t *userp, afs_uint32 cellID)
+{
+    cm_cell_t *cellp = NULL;
+    cm_ucell_t * ucp = NULL;
+    int         havetoken = 0;
+    time_t      now;
+
+    lock_ObtainMutex(&userp->mx);
+    cellp = cm_FindCellByID(cellID, CM_FLAG_NOPROBE);
+    ucp = cm_GetUCell(userp, cellp);
+    if (ucp->ticketp) {
+        now = time(NULL);
+        if (ucp->expirationTime > now)
+            havetoken = 1;
+    }
+    lock_ReleaseMutex(&userp->mx);
+
+    return havetoken;
+}
+
 
 /*
  * Add rights to an acl cache entry.  Do the right thing if not present,

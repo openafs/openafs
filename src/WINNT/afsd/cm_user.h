@@ -72,6 +72,8 @@ extern void cm_ReleaseUserVCRef(cm_user_t *up);
 
 extern void cm_CheckTokenCache(time_t now);
 
+extern int  cm_HaveToken(cm_user_t *userp, afs_uint32 cellID);
+
 extern cm_user_t *cm_rootUserp;
 
 #endif /*  OPENAFS_WINNT_AFSD_CM_USER_H */
