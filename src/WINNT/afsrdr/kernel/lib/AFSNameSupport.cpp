@@ -42,7 +42,7 @@
 // AFSLocateNameEntry
 //
 // On entry, *VolumeCB must have a held ReferenceCount provided by
-// the caller which will be released.  On successful exit, *VolumeCB
+// the caller which will not be released.  On successful exit, *OutVolumeCB
 // will be assigned the new current volume with a held ReferenceCount.
 //
 // On entry, *ParentDirectoryCB must have a held DirOpenReferenceCount
@@ -52,14 +52,16 @@
 NTSTATUS
 AFSLocateNameEntry( IN GUID *AuthGroup,
                     IN PFILE_OBJECT FileObject,
-                    IN UNICODE_STRING *RootPathName,
+                    IN OUT UNICODE_STRING *RootPathName,
                     IN UNICODE_STRING *ParsedPathName,
                     IN AFSNameArrayHdr *NameArray,
                     IN ULONG Flags,
-                    IN OUT AFSVolumeCB **VolumeCB,
-                    IN OUT LONG *pVolumeReferenceReason,
-                    IN OUT AFSDirectoryCB **ParentDirectoryCB,
-                    OUT AFSDirectoryCB **DirectoryCB,
+                    IN AFSVolumeCB *VolumeCB,
+                    IN AFSDirectoryCB *ParentDirectoryCB,
+                    OUT AFSVolumeCB **OutVolumeCB,
+                    OUT LONG *OutVolumeReferenceReason,
+                    OUT AFSDirectoryCB **OutParentDirectoryCB,
+                    OUT AFSDirectoryCB **OutDirectoryCB,
                     OUT PUNICODE_STRING ComponentName)
 {
 
@@ -76,15 +78,17 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
     UNICODE_STRING    uniRelativeName, uniNoOpName;
     AFSObjectInfoCB  *pCurrentObject = NULL;
     AFSObjectInfoCB  *pParentObjectInfo = NULL;
-    AFSVolumeCB      *pCurrentVolume = *VolumeCB;
+    AFSVolumeCB      *pCurrentVolume = NULL;
     AFSVolumeCB      *pTargetVolume = NULL;
-    BOOLEAN           bReleaseCurrentVolume = TRUE;
-    LONG              VolumeReferenceReason = *pVolumeReferenceReason;
+    BOOLEAN           bReleaseCurrentVolume = FALSE;
+    LONG              VolumeReferenceReason;
     BOOLEAN           bSubstitutedName = FALSE;
     LONG              lCount;
 
     __Enter
     {
+
+        ASSERT( *OutVolumeCB != VolumeCB);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
@@ -120,7 +124,23 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
         pParentDirEntry = NULL;
 
-        pDirEntry = *ParentDirectoryCB;
+        pDirEntry = ParentDirectoryCB;
+
+        pCurrentVolume = VolumeCB;
+
+        VolumeReferenceReason = AFS_VOLUME_REFERENCE_LOCATE_NAME;
+
+        lCount = AFSVolumeIncrement( pCurrentVolume,
+                                     VolumeReferenceReason);
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSLocateNameEntry Increment count on volume %p Reason %u Cnt %d\n",
+                      pCurrentVolume,
+                      VolumeReferenceReason,
+                      lCount);
+
+        bReleaseCurrentVolume = TRUE;
 
         uniPathName = *ParsedPathName;
 
@@ -350,11 +370,15 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                         // Pass back the directory entries
                         //
 
-                        *ParentDirectoryCB = pParentDirEntry;
+                        *OutParentDirectoryCB = pParentDirEntry;
 
-                        *DirectoryCB = pDirEntry;
+                        *OutDirectoryCB = pDirEntry;
 
-                        *VolumeCB = pCurrentVolume;
+                        *OutVolumeCB = pCurrentVolume;
+
+                        *OutVolumeReferenceReason = VolumeReferenceReason;
+
+                        bReleaseCurrentVolume = FALSE;
 
                         *RootPathName = uniFullPathName;
 
@@ -864,11 +888,15 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                         // Pass back the directory entries
                         //
 
-                        *ParentDirectoryCB = pParentDirEntry;
+                        *OutParentDirectoryCB = pParentDirEntry;
 
-                        *DirectoryCB = pDirEntry;
+                        *OutDirectoryCB = pDirEntry;
 
-                        *VolumeCB = pCurrentVolume;
+                        *OutVolumeCB = pCurrentVolume;
+
+                        *OutVolumeReferenceReason = VolumeReferenceReason;
+
+                        bReleaseCurrentVolume = FALSE;
 
                         *RootPathName = uniFullPathName;
 
@@ -991,11 +1019,15 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                         // Pass back the directory entries
                         //
 
-                        *ParentDirectoryCB = pParentDirEntry;
+                        *OutParentDirectoryCB = pParentDirEntry;
 
-                        *DirectoryCB = pDirEntry;
+                        *OutDirectoryCB = pDirEntry;
 
-                        *VolumeCB = pCurrentVolume;
+                        *OutVolumeCB = pCurrentVolume;
+
+                        *OutVolumeReferenceReason = VolumeReferenceReason;
+
+                        bReleaseCurrentVolume = FALSE;
 
                         *RootPathName = uniFullPathName;
 
@@ -1152,11 +1184,15 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                     // Pass back the directory entries
                     //
 
-                    *ParentDirectoryCB = pParentDirEntry;
+                    *OutParentDirectoryCB = pParentDirEntry;
 
-                    *DirectoryCB = pDirEntry;
+                    *OutDirectoryCB = pDirEntry;
 
-                    *VolumeCB = pCurrentVolume;
+                    *OutVolumeCB = pCurrentVolume;
+
+                    *OutVolumeReferenceReason = VolumeReferenceReason;
+
+                    bReleaseCurrentVolume = FALSE;
 
                     *RootPathName = uniFullPathName;
                 }
@@ -1185,11 +1221,15 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                 // Pass back the directory entries
                 //
 
-                *ParentDirectoryCB = pParentDirEntry;
+                *OutParentDirectoryCB = pParentDirEntry;
 
-                *DirectoryCB = pDirEntry;
+                *OutDirectoryCB = pDirEntry;
 
-                *VolumeCB = pCurrentVolume;
+                *OutVolumeCB = pCurrentVolume;
+
+                *OutVolumeReferenceReason = VolumeReferenceReason;
+
+                bReleaseCurrentVolume = FALSE;
 
                 *RootPathName = uniFullPathName;
 
@@ -1382,11 +1422,15 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                             // Pass back the directory entries
                             //
 
-                            *ParentDirectoryCB = pParentDirEntry;
+                            *OutParentDirectoryCB = pParentDirEntry;
 
-                            *DirectoryCB = NULL;
+                            *OutDirectoryCB = NULL;
 
-                            *VolumeCB = pCurrentVolume;
+                            *OutVolumeCB = pCurrentVolume;
+
+                            *OutVolumeReferenceReason = VolumeReferenceReason;
+
+                            bReleaseCurrentVolume = FALSE;
 
                             if( ComponentName != NULL)
                             {
@@ -1544,11 +1588,15 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                                 // Pass back the directory entries
                                 //
 
-                                *ParentDirectoryCB = pParentDirEntry;
+                                *OutParentDirectoryCB = pParentDirEntry;
 
-                                *DirectoryCB = NULL;
+                                *OutDirectoryCB = NULL;
 
-                                *VolumeCB = pCurrentVolume;
+                                *OutVolumeCB = pCurrentVolume;
+
+                                *OutVolumeReferenceReason = VolumeReferenceReason;
+
+                                bReleaseCurrentVolume = FALSE;
 
                                 if( ComponentName != NULL)
                                 {
@@ -1675,7 +1723,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSLocateNameEntry Increment5 count on %wZ DE %p Ccb %p Cnt %d\n",
+                                  "AFSLocateNameEntry Increment6 count on %wZ DE %p Ccb %p Cnt %d\n",
                                   &pDirEntry->NameInformation.FileName,
                                   pDirEntry,
                                   NULL,
@@ -1838,11 +1886,15 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                     // Pass back the directory entries
                     //
 
-                    *ParentDirectoryCB = pParentDirEntry;
+                    *OutParentDirectoryCB = pParentDirEntry;
 
-                    *DirectoryCB = NULL;
+                    *OutDirectoryCB = NULL;
 
-                    *VolumeCB = pCurrentVolume;
+                    *OutVolumeCB = pCurrentVolume;
+
+                    *OutVolumeReferenceReason = VolumeReferenceReason;
+
+                    bReleaseCurrentVolume = FALSE;
 
                     if( ComponentName != NULL)
                     {
@@ -2044,24 +2096,6 @@ try_exit:
                 ASSERT( lCount >= 0);
             }
 
-            if( bReleaseCurrentVolume)
-            {
-
-                ASSERT( pCurrentVolume->VolumeReferenceCount > 0);
-
-                lCount = AFSVolumeDecrement( pCurrentVolume,
-                                             VolumeReferenceReason);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSLocateNameEntry Decrement3 count on volume %p Reason %u Cnt %d\n",
-                              pCurrentVolume,
-                              VolumeReferenceReason,
-                              lCount);
-
-                bReleaseCurrentVolume = FALSE;
-            }
-
             if( RootPathName->Buffer != uniFullPathName.Buffer)
             {
 
@@ -2071,29 +2105,47 @@ try_exit:
         else
         {
 
-            if( *ParentDirectoryCB != NULL)
+            if( *OutParentDirectoryCB != NULL)
             {
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSLocateNameEntry Count on Parent %wZ DE %p Ccb %p Cnt %d\n",
-                              &(*ParentDirectoryCB)->NameInformation.FileName,
-                              *ParentDirectoryCB,
+                              &(*OutParentDirectoryCB)->NameInformation.FileName,
+                              *OutParentDirectoryCB,
                               NULL,
-                              (*ParentDirectoryCB)->DirOpenReferenceCount);
+                              (*OutParentDirectoryCB)->DirOpenReferenceCount);
             }
 
-            if( *DirectoryCB != NULL)
+            if( *OutDirectoryCB != NULL)
             {
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSLocateNameEntry Count on %wZ DE %p Ccb %p Cnt %d\n",
-                              &(*DirectoryCB)->NameInformation.FileName,
-                              *DirectoryCB,
+                              &(*OutDirectoryCB)->NameInformation.FileName,
+                              *OutDirectoryCB,
                               NULL,
-                              (*DirectoryCB)->DirOpenReferenceCount);
+                              (*OutDirectoryCB)->DirOpenReferenceCount);
             }
+        }
+
+        if( bReleaseCurrentVolume)
+        {
+
+            ASSERT( pCurrentVolume->VolumeReferenceCount > 0);
+
+            lCount = AFSVolumeDecrement( pCurrentVolume,
+                                         VolumeReferenceReason);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSLocateNameEntry Decrement7 count on volume %p Reason %u Cnt %d\n",
+                          pCurrentVolume,
+                          VolumeReferenceReason,
+                          lCount);
+
+            bReleaseCurrentVolume = FALSE;
         }
 
         if( bSubstituteName &&
@@ -2101,11 +2153,6 @@ try_exit:
         {
 
             AFSExFreePoolWithTag( uniSearchName.Buffer, 0);
-        }
-
-        if ( bReleaseCurrentVolume) {
-
-            *pVolumeReferenceReason = VolumeReferenceReason;
         }
     }
 

@@ -144,6 +144,8 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
     AFSNameArrayHdr    *pNameArray = NULL;
     AFSVolumeCB        *pVolumeCB = NULL;
     LONG                VolumeReferenceReason = AFS_VOLUME_REFERENCE_INVALID;
+    AFSVolumeCB        *pNewVolumeCB = NULL;
+    LONG                NewVolumeReferenceReason = AFS_VOLUME_REFERENCE_INVALID;
     AFSDirectoryCB     *pParentDirectoryCB = NULL, *pDirectoryCB = NULL;
     BOOLEAN             bReleaseParentDir = FALSE, bReleaseDir = FALSE;
     ULONG               ulParseFlags = 0;
@@ -443,11 +445,41 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                                            &uniParsedFileName,
                                            pNameArray,
                                            ulNameProcessingFlags,
-                                           &pVolumeCB,
-                                           &VolumeReferenceReason,
+                                           pVolumeCB,
+                                           pParentDirectoryCB,
+                                           &pNewVolumeCB,
+                                           &NewVolumeReferenceReason,
                                            &pParentDirectoryCB,
                                            &pDirectoryCB,
                                            &uniComponentName);
+
+            //
+            // AFSLocateNameEntry returns pNewVolumeCB with a reference held
+            // even if pVolumeCB == pNewVolumeCB.  It is always safe to release
+            // the reference on pVolumeCB that was held prior to the call.
+            // If pVolumeCB == pNewVolumeCB, the reference from AFSLocateNameEntry
+            // will be released second.
+            //
+
+            lCount = AFSVolumeDecrement( pVolumeCB,
+                                         VolumeReferenceReason);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSCommonCreate Decrement count on volume %p Reason %u Cnt %d\n",
+                          pVolumeCB,
+                          VolumeReferenceReason,
+                          lCount);
+
+            pVolumeCB = pNewVolumeCB;
+
+            pNewVolumeCB = NULL;
+
+            VolumeReferenceReason = NewVolumeReferenceReason;
+
+            NewVolumeReferenceReason = AFS_VOLUME_REFERENCE_INVALID;
+
+            bReleaseVolume = (pVolumeCB != NULL);
 
             if( !NT_SUCCESS( ntStatus) &&
                 ntStatus != STATUS_OBJECT_NAME_NOT_FOUND)
@@ -470,16 +502,7 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                               &uniFileName,
                               ntStatus);
 
-                //
-                // We released any root volume locks in AFSLocateNameEntry on failure
-                // other than STATUS_OBJECT_NAME_NOT_FOUND
-                //
-
-                bReleaseVolume = FALSE;
-
                 bReleaseParentDir = FALSE;
-
-                VolumeReferenceReason = AFS_VOLUME_REFERENCE_INVALID;
 
                 try_return( ntStatus);
             }
@@ -498,12 +521,6 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                 //
 
                 Irp->IoStatus.Information = IO_REPARSE;
-
-                //
-                // We released the volume lock above
-                //
-
-                bReleaseVolume = FALSE;
 
                 bReleaseParentDir = FALSE;
 

@@ -572,14 +572,16 @@ AFSInsertCcb( IN AFSFcb *Fcb,
 NTSTATUS
 AFSLocateNameEntry( IN GUID *AuthGroup,
                     IN PFILE_OBJECT FileObject,
-                    IN UNICODE_STRING *RootPathName,
+                    IN OUT UNICODE_STRING *RootPathName,
                     IN UNICODE_STRING *ParsedPathName,
                     IN AFSNameArrayHdr *NameArray,
                     IN ULONG Flags,
-                    IN OUT AFSVolumeCB **VolumeCB,
-                    IN OUT LONG *pVolumeReferenceReason,
-                    IN OUT AFSDirectoryCB **ParentDirectoryCB,
-                    OUT AFSDirectoryCB **DirectoryCB,
+                    IN AFSVolumeCB *VolumeCB,
+                    IN AFSDirectoryCB *ParentDirectoryCB,
+                    OUT AFSVolumeCB **OutVolumeCB,
+                    OUT LONG *OutVolumeReferenceReason,
+                    OUT AFSDirectoryCB **OutParentDirectoryCB,
+                    OUT AFSDirectoryCB **OutDirectoryCB,
                     OUT PUNICODE_STRING ComponentName);
 
 NTSTATUS
