@@ -2706,7 +2706,7 @@ AFSDeleteDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
     __Enter
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING | AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+        AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING | AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSDeleteDirEntry Deleting dir entry in parent %p Entry %p %wZ FID %08lX-%08lX-%08lX-%08lX RefCount %d\n",
                       ParentObjectInfo,
@@ -2792,7 +2792,7 @@ AFSRemoveDirNodeFromParent( IN AFSObjectInfoCB *ParentObjectInfo,
 
         ASSERT( ExIsResourceAcquiredExclusiveLite( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock));
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSRemoveDirNodeFromParent Removing DirEntry %p %wZ FID %08lX-%08lX-%08lX-%08lX from Parent %p\n",
                       DirEntry,
@@ -2806,7 +2806,7 @@ AFSRemoveDirNodeFromParent( IN AFSObjectInfoCB *ParentObjectInfo,
         if( !BooleanFlagOn( DirEntry->Flags, AFS_DIR_ENTRY_NOT_IN_PARENT_TREE))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSRemoveDirNodeFromParent Removing DirEntry %p name %wZ\n",
                           DirEntry,
@@ -2818,7 +2818,7 @@ AFSRemoveDirNodeFromParent( IN AFSObjectInfoCB *ParentObjectInfo,
         else
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSRemoveDirNodeFromParent DE %p for %wZ NOT removing entry due to flag set\n",
                           DirEntry,
