@@ -594,9 +594,18 @@ afs_SetupVolume(afs_int32 volid, char *aname, void *ve, struct cell *tcell,
 		err =
 		    afs_osi_Read(tfile, sizeof(struct fvolume) * j,
 				 &staticFVolume, sizeof(struct fvolume));
-		if (err != sizeof(struct fvolume))
-		    osi_Panic("read volumeinfo2");
 		osi_UFSClose(tfile);
+		if (err != sizeof(struct fvolume)) {
+		    afs_warn("afs_SetupVolume: error %d reading volumeinfo\n",
+		             (int)err);
+		    /* put tv back on the free list; the data in it is not valid */
+		    tv->next = afs_freeVolList;
+		    afs_freeVolList = tv;
+		    /* staticFVolume contents are not valid */
+		    afs_FVIndex = -1;
+		    ReleaseWriteLock(&afs_xvolume);
+		    return NULL;
+		}
 		afs_FVIndex = j;
 	    }
 	    tf = &staticFVolume;
