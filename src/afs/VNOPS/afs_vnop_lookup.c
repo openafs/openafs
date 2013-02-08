@@ -1430,11 +1430,8 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
     if (code)
 	goto done;
 
-    *avcp = NULL;		/* Since some callers don't initialize it */
-
     /* come back to here if we encounter a non-existent object in a read-only
      * volume's directory */
-
   redo:
     *avcp = NULL;		/* Since some callers don't initialize it */
     bulkcode = 0;
