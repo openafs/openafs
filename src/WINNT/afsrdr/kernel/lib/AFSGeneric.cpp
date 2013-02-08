@@ -7854,7 +7854,7 @@ AFSRemoveNameEntry( IN AFSObjectInfoCB *ParentObjectInfo,
         if( BooleanFlagOn( DirEntry->Flags, AFS_DIR_ENTRY_NOT_IN_PARENT_TREE))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSRemoveNameEntry DE %p for %wZ has NOT_IN flag set\n",
                           DirEntry,
@@ -7869,7 +7869,7 @@ AFSRemoveNameEntry( IN AFSObjectInfoCB *ParentObjectInfo,
         // Remove the entry from the parent tree
         //
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSRemoveNameEntry DE %p for %wZ removing from case sensitive tree\n",
                       DirEntry,
@@ -7878,7 +7878,7 @@ AFSRemoveNameEntry( IN AFSObjectInfoCB *ParentObjectInfo,
         AFSRemoveCaseSensitiveDirEntry( &ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,
                                         DirEntry);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSRemoveNameEntry DE %p for %wZ removing from case insensitive tree\n",
                       DirEntry,
@@ -7894,7 +7894,7 @@ AFSRemoveNameEntry( IN AFSObjectInfoCB *ParentObjectInfo,
             // From the short name tree
             //
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSRemoveNameEntry DE %p for %wZ removing from shortname tree\n",
                           DirEntry,
@@ -7906,7 +7906,7 @@ AFSRemoveNameEntry( IN AFSObjectInfoCB *ParentObjectInfo,
             ClearFlag( DirEntry->Flags, AFS_DIR_ENTRY_INSERTED_SHORT_NAME);
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSRemoveNameEntry DE %p for %wZ setting NOT_IN flag\n",
                       DirEntry,

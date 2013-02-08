@@ -1225,7 +1225,7 @@ AFSRemoveFcb( IN AFSFcb **ppFcb)
     // Uninitialize the file lock if it is a file
     //
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+    AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSRemoveFcb Removing Fcb %p\n",
                   pFcb);
