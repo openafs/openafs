@@ -1,3 +1,17 @@
+openafs (1.6.2~pre3-2) UNRELEASED; urgency=low
+
+  * Avoid re-running setup after build when building modules from the
+    openafs-modules-source package with module-assistant.  This will
+    hopefully avoid an issue where, following an upgrade of
+    openafs-modules-source, module-assistant cannot build new module
+    packages without an intervening module-assistant clean.  Patch from
+    Thorsten Alteholz.  (Closes: #660622)
+  * Make another attempt at suppressing the wildcard action for building
+    debian/rules to fix problems building module packages using
+    make-kpkg.  Patch from Thorsten Alteholz.  (Closes: #639475)
+
+ -- Russ Allbery <rra@debian.org>  Sat, 09 Feb 2013 14:50:39 -0800
+
 openafs (1.6.2~pre3-1) experimental; urgency=low
 
   * New upstream prerelease.

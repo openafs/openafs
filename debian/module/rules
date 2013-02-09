@@ -29,23 +29,27 @@ package    = openafs
 modulepkg := openafs-modules-$(KVERS)${INT_SUBARCH}
 moduledir := debian/$(modulepkg)/lib/modules/$(KVERS)/fs
 
-# After building the package m-a calls debian/rules with target 
-# 'echo-debfile'. As this triggers the setup:-target, the flag-file '
-# setup' will be created again. 
-# In following builds m-a might unpack the original tar-file again
-# and thus overwrites the debian/control file. As the original file 
-# does not contain any binary package definition and due to the still 
-# available file 'setup', no rebuild happens and an error appears 
-# (dh: "No packages to build.")
-# In case of changes to m-a more dummy target must be added here.
-# (the target may not be empty!)
+# After building the package, m-a calls debian/rules with the target
+# echo-debfile.  Without this dummy rule, this would trigger the setup
+# target (by way of the wildcard rule for dh), which re-creates the setup
+# flag file that we removed during make clean.
+#
+# Then, if module-assistant unpacks a new version of the source, the setup
+# file already exists so the setup rule isn't run again.  But the
+# debian/control file is the template from the new source, which doesn't
+# contain any buildable packages.
+#
+# Add a dummy target for echo-debfile to ensure that setup isn't run again
+# after clean.  If there are further changes to module-assistant, causing it
+# to run other targets after clean, more similar dummy rules may need to be
+# added.
 echo-debfile:
-	echo "dummy target: echo-debfile"
+	@true
 
 # make-kpkg tries to rebuild debian/rules first, so add a dummy target to
 # avoid our dh wildcard rule and a fatal error.
 debian/rules ./debian/rules:
-	echo "dummy target: debian/rules"
+	@true
 
 # This setup must be done before running any other target if it hasn't
 # already been done.
