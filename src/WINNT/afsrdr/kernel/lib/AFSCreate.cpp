@@ -147,6 +147,7 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
     AFSVolumeCB        *pNewVolumeCB = NULL;
     LONG                NewVolumeReferenceReason = AFS_VOLUME_REFERENCE_INVALID;
     AFSDirectoryCB     *pParentDirectoryCB = NULL, *pDirectoryCB = NULL;
+    AFSDirectoryCB     *pNewParentDirectoryCB = NULL;
     BOOLEAN             bReleaseParentDir = FALSE, bReleaseDir = FALSE;
     ULONG               ulParseFlags = 0;
     GUID                stAuthGroup = {0};
@@ -449,7 +450,7 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                                            pParentDirectoryCB,
                                            &pNewVolumeCB,
                                            &NewVolumeReferenceReason,
-                                           &pParentDirectoryCB,
+                                           &pNewParentDirectoryCB,
                                            &pDirectoryCB,
                                            &uniComponentName);
 
@@ -481,6 +482,38 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
 
             bReleaseVolume = (pVolumeCB != NULL);
 
+            //
+            // AFSLocateNameEntry does not alter the reference count of
+            // pParentDirectoryCB and it returns pNewParentDirectoryCB with
+            // a reference held.
+            //
+
+            if ( bReleaseParentDir)
+            {
+
+                lCount = InterlockedDecrement( &pParentDirectoryCB->DirOpenReferenceCount);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSCommonCreate DecrementX count on %wZ DE %p Ccb %p Cnt %d\n",
+                              &pParentDirectoryCB->NameInformation.FileName,
+                              pParentDirectoryCB,
+                              pCcb,
+                              lCount);
+            }
+
+            pParentDirectoryCB = pNewParentDirectoryCB;
+
+            pNewParentDirectoryCB = NULL;
+
+            bReleaseParentDir = (pParentDirectoryCB != NULL);
+
+            if ( pDirectoryCB)
+            {
+
+                bReleaseDir = TRUE;
+            }
+
             if( !NT_SUCCESS( ntStatus) &&
                 ntStatus != STATUS_OBJECT_NAME_NOT_FOUND)
             {
@@ -502,8 +535,6 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                               &uniFileName,
                               ntStatus);
 
-                bReleaseParentDir = FALSE;
-
                 try_return( ntStatus);
             }
 
@@ -521,8 +552,6 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                 //
 
                 Irp->IoStatus.Information = IO_REPARSE;
-
-                bReleaseParentDir = FALSE;
 
                 try_return( ntStatus);
             }
@@ -578,23 +607,6 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                                   ntStatus);
 
                     try_return( ntStatus);
-                }
-            }
-            else
-            {
-
-                //
-                // AFSLocateNameEntry succeeded.  The parent directory reference
-                // has been released and if there is a directory returned, it is
-                // referenced.
-                //
-
-                bReleaseParentDir = FALSE;
-
-                if ( pDirectoryCB)
-                {
-
-                    bReleaseDir = TRUE;
                 }
             }
         }
