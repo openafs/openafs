@@ -185,7 +185,8 @@ tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 		  int (*get_key) (void *, int, struct ktc_encryptionKey *),
 		  char *get_key_rock, int serv_kvno, char *name, char *inst,
 		  char *cell, struct ktc_encryptionKey *session_key, afs_int32 * host,
-		  afs_uint32 * start, afs_uint32 * end, afs_int32 disableCheckdot)
+		  afs_uint32 * start, afs_uint32 * end, afs_int32 disableCheckdot,
+		  rxkad_alt_decrypt_func alt_decrypt)
 {
     char plain[MAXKRB5TICKETLEN];
     struct ktc_encryptionKey serv_key;
@@ -226,32 +227,40 @@ tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 	v5_serv_kvno = *t5.enc_part.kvno;
     }
 
-    /* Check that the key type really fit into 8 bytes */
+    /* check ticket */
+    if (t5.enc_part.cipher.length > sizeof(plain))
+	goto bad_ticket;
     switch (t5.enc_part.etype) {
     case ETYPE_DES_CBC_CRC:
     case ETYPE_DES_CBC_MD4:
     case ETYPE_DES_CBC_MD5:
+	/* Check that the key type really fit into 8 bytes */
+	if (t5.enc_part.cipher.length % 8 != 0)
+	    goto bad_ticket;
+
+	code = (*get_key) (get_key_rock, v5_serv_kvno, &serv_key);
+	if (code)
+	    goto unknown_key;
+
+	/* Decrypt data here, save in plain, assume it will shrink */
+	code =
+	    krb5_des_decrypt(&serv_key, t5.enc_part.etype,
+			     t5.enc_part.cipher.data,
+			     t5.enc_part.cipher.length, plain, &plainsiz);
+	if (code != 0)
+	    goto bad_ticket;
 	break;
     default:
-	goto unknown_key;
+	if (alt_decrypt != NULL) {
+	    plainsiz = sizeof(plain);
+	    code = alt_decrypt(v5_serv_kvno, t5.enc_part.etype,
+			       t5.enc_part.cipher.data,
+			       t5.enc_part.cipher.length, plain, &plainsiz);
+	    if (code != 0)
+		goto cleanup;
+	} else
+	    goto unknown_key;
     }
-
-    /* check ticket */
-    if (t5.enc_part.cipher.length > sizeof(plain)
-	|| t5.enc_part.cipher.length % 8 != 0)
-	goto bad_ticket;
-
-    code = (*get_key) (get_key_rock, v5_serv_kvno, &serv_key);
-    if (code)
-	goto unknown_key;
-
-    /* Decrypt data here, save in plain, assume it will shrink */
-    code =
-	krb5_des_decrypt(&serv_key, t5.enc_part.etype,
-			 t5.enc_part.cipher.data, t5.enc_part.cipher.length,
-			 plain, &plainsiz);
-    if (code != 0)
-	goto bad_ticket;
 
     /* Decode ticket */
     code = decode_EncTicketPart((unsigned char *)plain, plainsiz, &decr_part, &siz);

@@ -130,6 +130,8 @@ extern afs_int32 rxkad_SetConfiguration(struct rx_securityClass *aobj,
                                         struct rx_connection *aconn,
                                         rx_securityConfigVariables atype,
                                         void * avalue, void **aresult);
+extern int rxkad_SetAltDecryptProc(struct rx_securityClass *aobj,
+				   rxkad_alt_decrypt_func alt_decrypt);
 
 /* ticket.c */
 extern int tkt_DecodeTicket(char *asecret, afs_int32 ticketLen,
@@ -159,7 +161,8 @@ extern int tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 			     char *get_key_rock, int serv_kvno, char *name,
 			     char *inst, char *cell, struct ktc_encryptionKey *session_key,
 			     afs_int32 * host, afs_uint32 * start,
-			     afs_uint32 * end, afs_int32 disableDotCheck);
+			     afs_uint32 * end, afs_int32 disableDotCheck,
+			     rxkad_alt_decrypt_func alt_decrypt);
 
 #if !defined(NO_DES_H_INCLUDE)
 static_inline unsigned char *
