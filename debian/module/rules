@@ -29,9 +29,23 @@ package    = openafs
 modulepkg := openafs-modules-$(KVERS)${INT_SUBARCH}
 moduledir := debian/$(modulepkg)/lib/modules/$(KVERS)/fs
 
+# After building the package m-a calls debian/rules with target 
+# 'echo-debfile'. As this triggers the setup:-target, the flag-file '
+# setup' will be created again. 
+# In following builds m-a might unpack the original tar-file again
+# and thus overwrites the debian/control file. As the original file 
+# does not contain any binary package definition and due to the still 
+# available file 'setup', no rebuild happens and an error appears 
+# (dh: "No packages to build.")
+# In case of changes to m-a more dummy target must be added here.
+# (the target may not be empty!)
+echo-debfile:
+	echo "dummy target: echo-debfile"
+
 # make-kpkg tries to rebuild debian/rules first, so add a dummy target to
 # avoid our dh wildcard rule and a fatal error.
 debian/rules ./debian/rules:
+	echo "dummy target: debian/rules"
 
 # This setup must be done before running any other target if it hasn't
 # already been done.
