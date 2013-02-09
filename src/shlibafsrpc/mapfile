@@ -45,6 +45,7 @@
 	rxkad_GetServerInfo;
 	rxkad_NewClientSecurityObject;
 	rxkad_NewServerSecurityObject;
+	rxkad_SetAltDecryptProc;
 	rxnull_NewClientSecurityObject;
 	rxnull_NewServerSecurityObject;
 	rxs_Release;
