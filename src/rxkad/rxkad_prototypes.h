@@ -163,6 +163,9 @@ extern int tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 			     afs_int32 * host, afs_uint32 * start,
 			     afs_uint32 * end, afs_int32 disableDotCheck,
 			     rxkad_alt_decrypt_func alt_decrypt);
+/* ticket5_keytab.c */
+extern int rxkad_InitKeytabDecrypt(const char *);
+extern int rxkad_BindKeytabDecrypt(struct rx_securityClass *);
 
 #if !defined(NO_DES_H_INCLUDE)
 static_inline unsigned char *

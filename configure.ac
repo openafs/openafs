@@ -57,8 +57,12 @@ AS_IF([test x"$KRB5_LIBS" != x],
         encode_krb5_ticket \
 	krb5_524_conv_principal \
         krb5_allow_weak_crypto \
+        krb5_c_decrypt \
         krb5_c_encrypt \
+        krb5_crypto_init \
         krb5_decode_ticket \
+        krb5_decrypt_tkt_part \
+        krb5_encrypt_tkt_part \
         krb5_enctype_enable \
         krb5_get_init_creds_opt_alloc \
         krb5_get_prompt_types \
@@ -76,8 +80,13 @@ AS_IF([test x"$KRB5_LIBS" != x],
                      [Define to 1 if you have the `krb524_convert_creds_kdc' function.])])])])
      AC_CHECK_HEADERS([kerberosIV/krb.h])
      AC_CHECK_HEADERS([kerberosV/heim_err.h])
-     AC_CHECK_MEMBERS([krb5_creds.keyblock, krb5_creds.keyblock.enctype, krb5_creds.session,
-                       krb5_prompt.type], , , [#include <krb5.h>])
+     AC_CHECK_MEMBERS([krb5_creds.keyblock, krb5_creds.keyblock.enctype,
+		       krb5_creds.session, krb5_keytab_entry.key,
+		       krb5_keytab_entry.keyblock, krb5_keyblock.enctype,
+		       krb5_keyblock.keytype, krb5_prompt.type], , ,
+		       [#include <krb5.h>])
+     AC_CHECK_DECLS([krb5_free_keytab_entry_contents, krb5_kt_free_entry,
+		    KRB5_KU_TICKET], [], [], [#include <krb5.h>])
      RRA_LIB_KRB5_RESTORE])
 AC_SUBST([BUILD_KRB5])
 AC_SUBST([MAKE_KRB5])
