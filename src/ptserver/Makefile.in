@@ -57,7 +57,7 @@ depinstall: \
 # Build targets
 #
 ptserver: ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o $(LIBS) ${TOP_LIBDIR}/libaudit.a map.o
-	$(CC) ${CFLAGS} -o ptserver ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o map.o $(LIBS) ${XLIBS} ${TOP_LIBDIR}/libaudit.a
+	$(CC) ${CFLAGS} -o ptserver ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o map.o $(LIBS) ${XLIBS} ${TOP_LIBDIR}/libaudit.a ${KRB5_LIBS}
 
 ptserver.o: ptserver.c ${INCLS} AFS_component_version_number.c
 
@@ -103,10 +103,10 @@ display.o: display.c ${INCLS}
 db_verify.o: db_verify.c ${INCLS} AFS_component_version_number.c
 
 db_verify: db_verify.o pterror.o display.o $(LIBS)
-	$(CC) ${CFLAGS} -o db_verify db_verify.o display.o pterror.o $(LIBS) ${XLIBS}
+	$(CC) ${CFLAGS} -o db_verify db_verify.o display.o pterror.o $(LIBS) ${XLIBS} ${KRB5_LIBS}
 
 ptclient: ptclient.o display.o libprot.a $(LIBS)
-	$(CC) ${CFLAGS} -o ptclient ptclient.o display.o libprot.a $(LIBS) ${XLIBS}
+	$(CC) ${CFLAGS} -o ptclient ptclient.o display.o libprot.a $(LIBS) ${XLIBS} ${KRB5_LIBS}
 
 ptclient.o: ptclient.c ${INCLS} AFS_component_version_number.c
 
@@ -122,32 +122,32 @@ libprot.a: ptuser.o pterror.o ptint.cs.o ptint.xdr.o AFS_component_version_numbe
 	$(RANLIB) $@
 
 pts: pts.o libprot.a ${TOP_LIBDIR}/libcmd.a $(LIBS)
-	$(CC) ${CFLAGS} -o pts pts.o ${TOP_LIBDIR}/libcmd.a libprot.a ${LIBS} ${XLIBS}
+	$(CC) ${CFLAGS} -o pts pts.o ${TOP_LIBDIR}/libcmd.a libprot.a ${LIBS} ${XLIBS} ${KRB5_LIBS}
 
 pts.o: pts.c ${LINCLS} ${TOP_INCDIR}/afs/cmd.h AFS_component_version_number.c
 
 readgroup: readgroup.o libprot.a $(LIBS)
-	$(CC) ${CFLAGS} -o readgroup readgroup.o libprot.a ${LIBS} ${XLIBS}
+	$(CC) ${CFLAGS} -o readgroup readgroup.o libprot.a ${LIBS} ${XLIBS} ${KRB5_LIBS}
 
 readgroup.o: readgroup.c ${LINCLS} AFS_component_version_number.c
 
 readpwd: readpwd.o libprot.a $(LIBS)
-	$(CC) ${CFLAGS} -o readpwd readpwd.o libprot.a ${LIBS} ${XLIBS}
+	$(CC) ${CFLAGS} -o readpwd readpwd.o libprot.a ${LIBS} ${XLIBS} ${KRB5_LIBS}
 
 readpwd.o: readpwd.c ${LINCLS} AFS_component_version_number.c
 
 testpt: testpt.o libprot.a ${TOP_LIBDIR}/libcmd.a $(LIBS)
 	case "$(SYS_NAME)" in \
 	*_darwin_12 ) \
-		$(CC) ${CFLAGS} -o testpt testpt.o ${TOP_LIBDIR}/libcmd.a libprot.a $(LIBS) ;; \
+		$(CC) ${CFLAGS} -o testpt testpt.o ${TOP_LIBDIR}/libcmd.a libprot.a $(LIBS) ${KRB5_LIBS} ;; \
 	* ) \
-		$(CC) ${CFLAGS} -o testpt testpt.o -lm ${TOP_LIBDIR}/libcmd.a libprot.a $(LIBS) ${XLIBS} ;; \
+		$(CC) ${CFLAGS} -o testpt testpt.o -lm ${TOP_LIBDIR}/libcmd.a libprot.a $(LIBS) ${XLIBS} ${KRB5_LIBS} ;; \
 	esac
 
 testpt.o: testpt.c ${INCLS} ${TOP_INCDIR}/afs/cmd.h AFS_component_version_number.c
 
 pt_util: pt_util.o ptutils.o ubik.o utils.o map.o libprot.a $(LIBS)
-	$(CC) ${CFLAGS} -o pt_util pt_util.o ptutils.o ubik.o utils.o map.o libprot.a ${TOP_LIBDIR}/libcmd.a $(LIBS) ${XLIBS}
+	$(CC) ${CFLAGS} -o pt_util pt_util.o ptutils.o ubik.o utils.o map.o libprot.a ${TOP_LIBDIR}/libcmd.a $(LIBS) ${XLIBS} ${KRB5_LIBS}
 
 ubik.o: ubik.c ${INCLS}
 

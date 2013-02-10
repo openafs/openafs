@@ -71,7 +71,7 @@ struct_ops.o: budb_errs.h
 server.o: server.c budb_errs.h ${INCLS} AFS_component_version_number.c
 
 budb_server: $(SERVER_OBJS) ${LIBS}
-	${CC} ${LDFLAGS} -o budb_server $(SERVER_OBJS) ${LIBS} ${XLIBS}
+	${CC} ${LDFLAGS} -o budb_server $(SERVER_OBJS) ${LIBS} ${XLIBS} ${KRB5_LIBS}
 
 budb.cs.c: budb.rg
 	${RXGEN} -A -u -C -o $@ ${srcdir}/budb.rg

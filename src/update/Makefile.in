@@ -23,10 +23,10 @@ all: upserver upclient
 # Build targets
 #
 upclient: client.o update.cs.o utils.o ${LIBS} 
-	${CC} ${CFLAGS} -o upclient client.o update.cs.o utils.o ${LIBS} ${XLIBS}
+	${CC} ${CFLAGS} -o upclient client.o update.cs.o utils.o ${LIBS} ${XLIBS} ${KRB5_LIBS}
 
 upserver: server.o utils.o update.ss.o ${LIBS}
-	${CC} ${CFLAGS} -o upserver server.o utils.o update.ss.o ${LIBS} ${XLIBS}
+	${CC} ${CFLAGS} -o upserver server.o utils.o update.ss.o ${LIBS} ${XLIBS} ${KRB5_LIBS}
 
 utils.o: utils.c update.h global.h
 

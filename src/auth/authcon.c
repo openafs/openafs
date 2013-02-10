@@ -45,6 +45,9 @@
 #include <des.h>
 #include <des_prototypes.h>
 #include <rx/rxkad.h>
+#ifdef USE_RXKAD_KEYTAB
+#include <afs/dirpath.h>
+#endif
 #include <rx/rx.h>
 #include "cellconfig.h"
 #include "keys.h"
@@ -71,12 +74,30 @@ afsconf_ServerAuth(register struct afsconf_dir *adir,
 {
     register struct rx_securityClass *tclass;
 
+#ifdef USE_RXKAD_KEYTAB
+    int keytab_enable = 0;
+    char *keytab_name;
+    size_t ktlen;
+    ktlen = 5 + strlen(adir->name) + 1 + strlen(AFSDIR_RXKAD_KEYTAB_FILE) + 1;
+    keytab_name = malloc(ktlen);
+    if (keytab_name != NULL) {
+	strcompose(keytab_name, ktlen, "FILE:", adir->name, "/",
+		   AFSDIR_RXKAD_KEYTAB_FILE, (char *)NULL);
+	if (rxkad_InitKeytabDecrypt(keytab_name) == 0)
+	    keytab_enable = 1;
+	free(keytab_name);
+    }
+#endif
     LOCK_GLOBAL_MUTEX;
     tclass = (struct rx_securityClass *)
 	rxkad_NewServerSecurityObject(0, adir, afsconf_GetKey, NULL);
     if (tclass) {
 	*astr = tclass;
 	*aindex = 2;		/* kerberos security index */
+#ifdef USE_RXKAD_KEYTAB
+	if (keytab_enable)
+	    rxkad_BindKeytabDecrypt(tclass);
+#endif
 	UNLOCK_GLOBAL_MUTEX;
 	return 0;
     } else {

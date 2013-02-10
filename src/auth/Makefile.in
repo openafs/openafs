@@ -36,7 +36,10 @@ depinstall: \
 cellconfig.o: cellconfig.c ${INCLS}
 ktc.o: ktc.c ${INCLS} ${TOP_INCDIR}/afs/vice.h
 writeconfig.o: writeconfig.c ${INCLS}
+
 authcon.o: authcon.c ${INCLS}
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/authcon.c @KRB5CFLAGS@
+
 userok.o: userok.c ${INCLS}
 cellconfig.o: cellconfig.c ${INCLS}
 copyauth.o: copyauth.c ${INCLS} AFS_component_version_number.o

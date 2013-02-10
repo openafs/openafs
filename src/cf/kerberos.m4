@@ -56,6 +56,8 @@ if test X$conf_krb5 = XYES; then
 	AC_MSG_RESULT([Configuring support for Kerberos 5 utilities])
 	BUILD_KRB5=yes
 	MAKE_KRB5=
+	AC_DEFINE([USE_RXKAD_KEYTAB], 1,
+		  [Define to 1 if krb5 libraries are available and rxkad can use keytabs])
 	save_CPPFLAGS="$CPPFLAGS"
 	CPPFLAGS="$CPPFLAGS $KRB5CFLAGS"
 	save_LIBS="$LIBS"
