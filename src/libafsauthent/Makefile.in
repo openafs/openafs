@@ -71,7 +71,7 @@ UTILOBJS = \
 	fileutil.o
 
 RXKADOBJS = \
-	rxkad_errs.o
+	rxkad_errs.o @MAKE_KRB5@ ticket5_keytab.o
 
 SYSOBJS = \
 	rmtsysc.o \
@@ -148,7 +148,7 @@ writeconfig.o: ${AUTH}/writeconfig.c
 	${CCRULE} -I../auth
 
 authcon.o: ${AUTH}/authcon.c
-	${CCRULE} -I../auth
+	${CCRULE} -I../auth @KRB5_CPPFLAGS@
 
 ktc_errors.o: ${AUTH}/ktc_errors.c
 	${CCRULE}
@@ -230,6 +230,9 @@ pthread_glock.o: ${UTIL}/pthread_glock.c
 
 rxkad_errs.o: ${RXKAD}/rxkad_errs.c
 	${CCRULE}
+
+ticket5_keytab.o: ${RXKAD}/ticket5_keytab.c
+	${CCRULE} @KRB5_CPPFLAGS@
 
 ptclient.o: ${PTSERVER}/ptclient.c
 	${CCRULE} -I../ptserver

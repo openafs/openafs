@@ -26,7 +26,11 @@
 #include <des.h>
 #include <des_prototypes.h>
 #include <rx/rxkad.h>
+#ifdef USE_RXKAD_KEYTAB
+#include <afs/dirpath.h>
+#endif
 #include <rx/rx.h>
+#include <afs/afsutil.h>
 #include "cellconfig.h"
 #include "keys.h"
 #include "auth.h"
@@ -51,13 +55,30 @@ afsconf_ServerAuth(void *arock,
 {
     struct afsconf_dir *adir = (struct afsconf_dir *) arock;
     struct rx_securityClass *tclass;
-
+#ifdef USE_RXKAD_KEYTAB
+    int keytab_enable = 0;
+    char *keytab_name;
+    size_t ktlen;
+    ktlen = 5 + strlen(adir->name) + 1 + strlen(AFSDIR_RXKAD_KEYTAB_FILE) + 1;
+    keytab_name = malloc(ktlen);
+    if (keytab_name != NULL) {
+	strcompose(keytab_name, ktlen, "FILE:", adir->name, "/",
+		   AFSDIR_RXKAD_KEYTAB_FILE, (char *)NULL);
+	if (rxkad_InitKeytabDecrypt(keytab_name) == 0)
+	    keytab_enable = 1;
+	free(keytab_name);
+    }
+#endif
     LOCK_GLOBAL_MUTEX;
     tclass = (struct rx_securityClass *)
 	rxkad_NewServerSecurityObject(0, adir, afsconf_GetKey, NULL);
     if (tclass) {
 	*astr = tclass;
 	*aindex = RX_SECIDX_KAD;
+#ifdef USE_RXKAD_KEYTAB
+	if (keytab_enable)
+	    rxkad_BindKeytabDecrypt(tclass);
+#endif
 	UNLOCK_GLOBAL_MUTEX;
 	return 0;
     } else {
@@ -231,6 +252,20 @@ afsconf_BuildServerSecurityObjects(struct afsconf_dir *dir,
 			           struct rx_securityClass ***classes,
 			           afs_int32 *numClasses)
 {
+#ifdef USE_RXKAD_KEYTAB
+    int keytab_enable = 0;
+    char *keytab_name;
+    size_t ktlen;
+    ktlen = 5 + strlen(dir->name) + 1 + strlen(AFSDIR_RXKAD_KEYTAB_FILE) + 1;
+    keytab_name = malloc(ktlen);
+    if (keytab_name != NULL) {
+	strcompose(keytab_name, ktlen, "FILE:", dir->name, "/",
+		   AFSDIR_RXKAD_KEYTAB_FILE, (char *)NULL);
+	if (rxkad_InitKeytabDecrypt(keytab_name) == 0)
+	    keytab_enable = 1;
+	free(keytab_name);
+    }
+#endif
     if (flags & AFSCONF_SEC_OBJS_RXKAD_CRYPT)
 	*numClasses = 4;
     else
@@ -242,9 +277,18 @@ afsconf_BuildServerSecurityObjects(struct afsconf_dir *dir,
     (*classes)[1] = NULL;
     (*classes)[2] = rxkad_NewServerSecurityObject(0, dir,
 						  afsconf_GetKey, NULL);
-    if (flags & AFSCONF_SEC_OBJS_RXKAD_CRYPT)
+#ifdef USE_RXKAD_KEYTAB
+    if (keytab_enable)
+	rxkad_BindKeytabDecrypt((*classes)[2]);
+#endif
+    if (flags & AFSCONF_SEC_OBJS_RXKAD_CRYPT) {
 	(*classes)[3] = rxkad_NewServerSecurityObject(rxkad_crypt, dir,
 						      afsconf_GetKey, NULL);
+#ifdef USE_RXKAD_KEYTAB
+	if (keytab_enable)
+	    rxkad_BindKeytabDecrypt((*classes)[3]);
+#endif
+    }
 }
 #endif
 

@@ -50,6 +50,8 @@ MAKE_KRB5="#"
 AS_IF([test x"$KRB5_LIBS" != x],
     [BUILD_KRB5=yes
      MAKE_KRB5=
+     AC_DEFINE([USE_RXKAD_KEYTAB], 1,
+	       [Define to 1 if krb5 libraries are available and rxkad can use keytabs])
      RRA_LIB_KRB5_SWITCH
      AC_CHECK_FUNCS([add_error_table \
         add_to_error_table \

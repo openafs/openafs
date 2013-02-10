@@ -151,7 +151,7 @@ server.o: ${BUDB}/server.c budb_errs.h ${INCLS}
 
 
 budb_server: $(SERVER_OBJS) ${LIBS}
-	${CC} ${LDFLAGS} -o budb_server $(SERVER_OBJS) ${LIBS} ${MT_LIBS} ${XLIBS}
+	${CC} ${LDFLAGS} -o budb_server $(SERVER_OBJS) ${LIBS} ${MT_LIBS} ${XLIBS} ${KRB5_LIBS}
 
 budb.cs.c: ${BUDB}/budb.rg
 	${RXGEN} -u -C -o $@ ${srcdir}/${BUDB}/budb.rg

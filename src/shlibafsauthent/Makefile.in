@@ -85,7 +85,7 @@ UTILOBJS = \
 	volparse.o
 
 RXKADOBJS = \
-	rxkad_errs.o
+	rxkad_errs.o @MAKE_KRB5@ ticket5_keytab.o
 
 SYSOBJS = \
 	rmtsysc.o \
@@ -171,7 +171,7 @@ dest: ${LIBAFSAUTHENT} libafsauthent_pic.a
 ${LIBAFSAUTHENT}: ${LIBOBJS} libafsauthent.map
 	../config/shlib-build -d $(srcdir) -l libafsauthent \
 		-M ${LIBAFSAUTHENTMAJOR} -m ${LIBAFSAUTHENTMINOR} -- \
-		-L${TOP_LIBDIR} -lafsrpc ${LIB_crypt} ${LIBOBJS} ${LIB_AFSDB} ${MT_LIBS}
+		-L${TOP_LIBDIR} -lafsrpc ${LIB_crypt} ${LIBOBJS} ${LIB_AFSDB} ${MT_LIBS} ${KRB5_LIBS}
 
 libafsauthent_pic.a: ${LIBOBJS}
 	$(RM) -f $@
@@ -200,7 +200,7 @@ writeconfig.o: ${AUTH}/writeconfig.c
 	${CCRULE}
 
 authcon.o: ${AUTH}/authcon.c
-	${CCRULE}
+	${CCRULE} @KRB5_CPPFLAGS@
 
 ktc_errors.o: ${AUTH}/ktc_errors.c
 	${CCRULE}
@@ -300,6 +300,9 @@ pthread_glock.o: ${UTIL}/pthread_glock.c
 
 rxkad_errs.o: ${RXKAD}/rxkad_errs.c
 	${CCRULE}
+
+ticket5_keytab.o: ${RXKAD}/ticket5_keytab.c
+	${CCRULE} @KRB5_CPPFLAGS@
 
 ptclient.o: ${PTSERVER}/ptclient.c
 	${CCRULE}
