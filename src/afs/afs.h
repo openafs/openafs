@@ -725,9 +725,9 @@ struct SimpleLocks {
 #else
 #define VREFCOUNT(v)		((v)->vrefCount)
 #define VREFCOUNT_GT(v,y)     ((v)->vrefCount > (y))
-#define VREFCOUNT_SET(v, c)	(v)->vrefCount = c;
-#define VREFCOUNT_DEC(v)	(v)->vrefCount--;
-#define VREFCOUNT_INC(v)	(v)->vrefCount++;
+#define VREFCOUNT_SET(v, c)	(v)->vrefCount = c
+#define VREFCOUNT_DEC(v)	(v)->vrefCount--
+#define VREFCOUNT_INC(v)	(v)->vrefCount++
 #define d_unhash(d) list_empty(&(d)->d_hash)
 #define dget_locked(d) dget(d)
 #endif

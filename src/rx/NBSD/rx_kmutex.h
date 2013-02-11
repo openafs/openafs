@@ -40,7 +40,7 @@ typedef kmutex_t afs_kmutex_t;
 
 #define MUTEX_INIT(a,b,c,d) mutex_init((a), (c), IPL_NONE)
 #define MUTEX_DESTROY(a) mutex_destroy((a))
-#define MUTEX_ENTER(a) mutex_enter((a));
+#define MUTEX_ENTER(a) mutex_enter((a))
 #define MUTEX_TRYENTER(a) mutex_tryenter((a))
 #define MUTEX_EXIT(a) mutex_exit((a))
 #define MUTEX_ASSERT(a) osi_Assert(mutex_owned((a)))

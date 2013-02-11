@@ -88,10 +88,10 @@ typedef unsigned long long afs_uint64;
 #ifndef HAVE_INT64TOINT32
 #define Int64ToInt32(a)    (a) & MAX_AFS_UINT32
 #endif
-#define FillInt64(t,h,l) (t) = ((afs_int64)(h) << 32) | (l);
-#define SplitInt64(t,h,l) (h) = ((afs_int64)t) >> 32; (l) = (t) & MAX_AFS_UINT32;
-#define RoundInt64ToInt32(a)    (a > MAX_AFS_UINT32) ? MAX_AFS_UINT32 : a;
-#define RoundInt64ToInt31(a)    (a > MAX_AFS_INT32) ? MAX_AFS_INT32 : a;
+#define FillInt64(t,h,l) (t) = ((afs_int64)(h) << 32) | (l)
+#define SplitInt64(t,h,l) (h) = ((afs_int64)t) >> 32; (l) = (t) & MAX_AFS_UINT32
+#define RoundInt64ToInt32(a)    (a > MAX_AFS_UINT32) ? MAX_AFS_UINT32 : a
+#define RoundInt64ToInt31(a)    (a > MAX_AFS_INT32) ? MAX_AFS_INT32 : a
 
 #ifdef AFS_64BIT_CLIENT
 typedef afs_int64 afs_size_t;

@@ -73,9 +73,9 @@ afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
 
 afs_event_t *afs_evhasht[AFS_EVHASHSIZE];	/* Hash table for events */
 #if (_MIPS_SZPTR == 64)
-#define afs_evhash(event)	(afs_uint32) ((((long)event)>>3) & (AFS_EVHASHSIZE-1));
+#define afs_evhash(event)	(afs_uint32) ((((long)event)>>3) & (AFS_EVHASHSIZE-1))
 #else
-#define afs_evhash(event)	(afs_uint32) ((((long)event)>>2) & (AFS_EVHASHSIZE-1));
+#define afs_evhash(event)	(afs_uint32) ((((long)event)>>2) & (AFS_EVHASHSIZE-1))
 #endif
 int afs_evhashcnt = 0;
 

@@ -327,7 +327,7 @@ int main(int argc, char ** argv)
 
     cm_InitNormalization();
 
-#define RUNTEST(f) printf("Begin " #f "\n"); trv = f(); printf ("End " #f "\n\n"); if (trv != 0) return trv;
+#define RUNTEST(f) printf("Begin " #f "\n"); trv = f(); printf ("End " #f "\n\n"); if (trv != 0) return trv
 
     RUNTEST(cm_NormalizeStringAllocTest);
     RUNTEST(cm_NormalizeStringTest);

@@ -206,7 +206,7 @@ extern afs_uint64 bplus_free_time;
 /* access tree flag values */
 #define settreeflags(B,v) (B->flags |= (v & TREE_FLAGS_MASK))
 #define gettreeflags(B)   (B->flags)
-#define cleartreeflags(B) (B->flags = 0);
+#define cleartreeflags(B) (B->flags = 0)
 
 /* access node flag values */
 #define setflag(j, v) ((j)->flags |= (v & FLAGS_MASK))

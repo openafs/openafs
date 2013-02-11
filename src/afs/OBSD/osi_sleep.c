@@ -126,7 +126,7 @@ afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
 }
 
 afs_event_t *afs_evhasht[AFS_EVHASHSIZE];     /* Hash table for events */
-#define afs_evhash(event)       (afs_uint32) ((((long)event)>>2) & (AFS_EVHASHSIZE-1));
+#define afs_evhash(event)       (afs_uint32) ((((long)event)>>2) & (AFS_EVHASHSIZE-1))
 int afs_evhashcnt = 0;
 
 /* Get and initialize event structure corresponding to lwp event (i.e. address)

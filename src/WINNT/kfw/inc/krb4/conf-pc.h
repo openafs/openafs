@@ -102,7 +102,7 @@ typedef unsigned int WORD;
 
 #define RANDOM_KRB_INT32_1 ((KRB_INT32) time(NULL))
 #define RANDOM_KRB_INT32_2 ((KRB_INT32) getpid())
-#define TIME_GMT_UNIXSEC unix_time_gmt_unixsec((unsigned KRB_INT32 *)0);
+#define TIME_GMT_UNIXSEC unix_time_gmt_unixsec((unsigned KRB_INT32 *)0)
 #ifndef MAXPATHLEN
 #define MAXPATHLEN _MAX_PATH
 #endif

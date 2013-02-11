@@ -69,7 +69,7 @@ enum vcexcl { EXCL, NONEXCL };
 #ifndef AFS_DARWIN80_ENV
 #define vnode_clearfsnode(x) ((x)->v_data = 0)
 #define vnode_fsnode(x) (x)->v_data
-#define vnode_lock(x) vn_lock(x, LK_EXCLUSIVE | LK_RETRY, current_proc());
+#define vnode_lock(x) vn_lock(x, LK_EXCLUSIVE | LK_RETRY, current_proc())
 #define vnode_isvroot(x) (((x)->v_flag & VROOT)?1:0)
 #define vnode_vtype(x) (x)->v_type
 #define vnode_isdir(x) ((x)->v_type == VDIR)
@@ -143,7 +143,7 @@ typedef struct proc afs_proc_t;
 
 #define osi_vnhold(avc,r)       VN_HOLD(AFSTOV(avc))
 #define VN_HOLD(vp) darwin_vn_hold(vp)
-#define VN_RELE(vp) vrele(vp);
+#define VN_RELE(vp) vrele(vp)
 
 void darwin_vn_hold(struct vnode *vp);
 
@@ -205,11 +205,11 @@ extern struct lock__bsd__ afs_global_lock;
 #define USERPRI
 #if 0
 #undef SPLVAR
-#define SPLVAR int x;
+#define SPLVAR int x
 #undef NETPRI
-#define NETPRI x=splnet();
+#define NETPRI x=splnet()
 #undef USERPRI
-#define USERPRI splx(x);
+#define USERPRI splx(x)
 #endif
 
 #define AFS_APPL_UFS_CACHE 1

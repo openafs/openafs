@@ -45,8 +45,8 @@
 #ifdef AFS_PTHREAD_ENV
 #include <afs/opr.h>
 #include <opr/lock.h>
-#define LOCK_LOCK(A) opr_mutex_enter(&(A)->mutex);
-#define LOCK_UNLOCK(A) opr_mutex_exit(&(A)->mutex);
+#define LOCK_LOCK(A) opr_mutex_enter(&(A)->mutex)
+#define LOCK_UNLOCK(A) opr_mutex_exit(&(A)->mutex)
 #else /* AFS_PTHREAD_ENV */
 #define LOCK_LOCK(A)
 #define LOCK_UNLOCK(A)

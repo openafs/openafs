@@ -54,7 +54,7 @@ void dump_hex(BYTE * buffer, int cb)
     fprintf(stderr, "\n");
 }
 
-#define CCall(f) if (!f) goto done;
+#define CCall(f) if (!f) goto done
 
 BOOL init_test_data(void)
 {

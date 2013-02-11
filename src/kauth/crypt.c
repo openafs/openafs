@@ -681,14 +681,14 @@ des_cipher(const char *in, char *out, long salt, int num_iter)
 #define	SPTAB(t, i)	(*(long *)((unsigned char *)t + i*(sizeof(long)/4)))
 #if defined(gould)
 	    /* use this if B.b[i] is evaluated just once ... */
-#define	DOXOR(x,y,i)	x^=SPTAB(SPE[0][i],B.b[i]); y^=SPTAB(SPE[1][i],B.b[i]);
+#define	DOXOR(x,y,i)	x^=SPTAB(SPE[0][i],B.b[i]); y^=SPTAB(SPE[1][i],B.b[i])
 #else
 #if defined(pdp11)
 	    /* use this if your "long" int indexing is slow */
-#define	DOXOR(x,y,i)	j=B.b[i]; x^=SPTAB(SPE[0][i],j); y^=SPTAB(SPE[1][i],j);
+#define	DOXOR(x,y,i)	j=B.b[i]; x^=SPTAB(SPE[0][i],j); y^=SPTAB(SPE[1][i],j)
 #else
 	    /* use this if "k" is allocated to a register ... */
-#define	DOXOR(x,y,i)	k=B.b[i]; x^=SPTAB(SPE[0][i],k); y^=SPTAB(SPE[1][i],k);
+#define	DOXOR(x,y,i)	k=B.b[i]; x^=SPTAB(SPE[0][i],k); y^=SPTAB(SPE[1][i],k)
 #endif
 #endif
 

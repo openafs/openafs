@@ -87,8 +87,8 @@ local_osi_Time()
 #include <sys/mutex.h>
 extern kmutex_t afs_global_lock;
 
-#define AFS_GLOCK()	mutex_enter(&afs_global_lock);
-#define AFS_GUNLOCK()	mutex_exit(&afs_global_lock);
+#define AFS_GLOCK()	mutex_enter(&afs_global_lock)
+#define AFS_GUNLOCK()	mutex_exit(&afs_global_lock)
 #define ISAFS_GLOCK()	mutex_owned(&afs_global_lock)
 #define osi_InitGlock() \
 	mutex_init(&afs_global_lock, "afs_global_lock", MUTEX_DEFAULT, NULL);

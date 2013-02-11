@@ -54,7 +54,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* Recycled nodes are filled with this value if WEAK_MEM_ORDER. */
 #define INVALID_BYTE 0
-#define INITIALISE_NODES(_p,_c) memset((_p), INVALID_BYTE, (_c));
+#define INITIALISE_NODES(_p,_c) memset((_p), INVALID_BYTE, (_c))
 
 /* Number of unique block sizes we can deal with. Equivalently, the
  * number of unique object caches which can be created. */

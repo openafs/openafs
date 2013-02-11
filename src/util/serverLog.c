@@ -33,8 +33,8 @@
 #if defined(AFS_PTHREAD_ENV)
 #include <pthread.h>
 static pthread_mutex_t serverLogMutex;
-#define LOCK_SERVERLOG() opr_Verify(pthread_mutex_lock(&serverLogMutex) == 0);
-#define UNLOCK_SERVERLOG() opr_Verify(pthread_mutex_unlock(&serverLogMutex) == 0);
+#define LOCK_SERVERLOG() opr_Verify(pthread_mutex_lock(&serverLogMutex) == 0)
+#define UNLOCK_SERVERLOG() opr_Verify(pthread_mutex_unlock(&serverLogMutex) == 0)
 
 #ifdef AFS_NT40_ENV
 #define NULLDEV "NUL"
