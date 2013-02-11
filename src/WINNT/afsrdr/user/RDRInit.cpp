@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2008 Secure Endpoints, Inc.
- * Copyright (c) 2009-2011 Your File System, Inc.
+ * Copyright (c) 2009-2013 Your File System, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -68,6 +68,8 @@ extern osi_log_t *afsd_logp;
 #include <WINNT/afsreg.h>
 #include <afs/cm_config.h>
 #include <afs/cm_error.h>
+#include <afs/cm_nls.h>
+#include <afs/cm_user.h>
 }
 #include <RDRPrototypes.h>
 
@@ -1318,6 +1320,11 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
             }
 
             break;
+    }
+
+    if (userp) {
+        pResultCB->Authenticated = cm_HaveToken( userp,
+                                                 RequestBuffer->FileId.Cell);
     }
 
     if( BooleanFlagOn( RequestBuffer->RequestFlags, AFS_REQUEST_FLAG_SYNCHRONOUS))
