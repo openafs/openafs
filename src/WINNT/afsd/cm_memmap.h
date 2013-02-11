@@ -40,8 +40,8 @@ typedef struct cm_config_data {
 
     cm_cell_t	*       allCellsp;
     cm_cell_t   *       freeCellsp;
-    afs_uint32          currentCells;
-    afs_uint32          maxCells;
+    afs_int32           currentCells;
+    afs_int32           maxCells;
 
     cm_volume_t	*       rootVolumep;
     cm_cell_t   *       rootCellp;

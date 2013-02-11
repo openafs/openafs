@@ -180,6 +180,7 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
     afs_uint32 hash;
     cm_cell_rock_t rock;
     size_t len;
+    afs_int32 cellID;
 
     if (namep == NULL || !namep[0] || !strcmp(namep,CM_IOCTL_FILENAME_NOSLASH))
         return NULL;
@@ -269,15 +270,16 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
             if ( cm_data.currentCells >= cm_data.maxCells )
                 osi_panic("Exceeded Max Cells", __FILE__, __LINE__);
 
-            /* don't increment currentCells until we know that we
-             * are going to keep this entry
+            /*
+             * the cellID cannot be 0.
+             * If there is a name collision, one of the entries
+             * will end up on cm_data.freeCellsp for reuse.
              */
-            cp = &cm_data.cellBaseAddress[InterlockedIncrement(&cm_data.currentCells) - 1];
+            cellID = InterlockedIncrement(&cm_data.currentCells);
+            cp = &cm_data.cellBaseAddress[cellID - 1];
             memset(cp, 0, sizeof(cm_cell_t));
             cp->magic = CM_CELL_MAGIC;
-
-            /* the cellID cannot be 0 */
-            cp->cellID = ++cm_data.currentCells;
+            cp->cellID = cellID;
 
             /* otherwise we found the cell, and so we're nearly done */
             lock_InitializeMutex(&cp->mx, "cm_cell_t mutex", LOCK_HIERARCHY_CELL);
