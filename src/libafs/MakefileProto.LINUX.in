@@ -343,7 +343,7 @@ ${LINUX_LIBAFS_NAME}.ko afspag.ko: .FORCE
 	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" $(MAKE) -C ${LINUX_KERNEL_BUILD} M=@TOP_OBJDIR@/src/libafs/${KDIR} modules 2>&1 | tee .makelog
 	@if [ `grep ^WARNING .makelog | wc -l` -ne 0 ]; then \
 		echo Error: Undefined symbols in modules ; \
-		rm .makelog \
+		rm .makelog ; \
 		exit 1 ; \
 	fi
 	rm .makelog
