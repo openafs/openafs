@@ -3086,8 +3086,6 @@ RDR_OpenFileEntry( IN cm_user_t *userp,
     {
         int count = 0;
 
-        pResultCB->Authenticated = cm_HaveToken(userp, scp->fid.cell);
-
         do {
             if (count++ > 0) {
                 Sleep(350);

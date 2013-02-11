@@ -59,7 +59,7 @@ typedef struct _AFS_FILE_ID
 typedef struct _AFS_COMM_REQUEST_BLOCK
 {
 
-    AFSFileID       FileId;             /* Initialize unused elements to 0 */
+    AFSFileID       FileId;          /* Initialize unused elements to 0 */
 
     ULONG           RequestType;
 
@@ -67,17 +67,17 @@ typedef struct _AFS_COMM_REQUEST_BLOCK
 
     ULONG           RequestFlags;    /* AFS_REQUEST_FLAG_xxxx */
 
-    ULONG           NameLength;      // Length of the name in bytes
+    ULONG           NameLength;      /* Length of the name in bytes */
 
-    ULONG           DataOffset;       // This offset is from the end of the structure, including the name
+    ULONG           DataOffset;      /* This offset is from the end of the structure, including the name */
 
     ULONG           DataLength;
 
-    GUID            AuthGroup;      // Length: sizeof(GUID) */
+    GUID            AuthGroup;       /* Length: sizeof(GUID) */
 
     ULONG           ResultBufferLength;    /* Do not exceed this length in response */
 
-    LONG            QueueCount;     // Current outstanding requests in the queue
+    LONG            QueueCount;      /* Current outstanding requests in the queue */
 
     WCHAR           Name[ 1];
 
@@ -95,9 +95,9 @@ typedef struct _AFS_COMM_RESULT_BLOCK
 
     ULONG           ResultStatus;        /* NTSTATUS_xxx */
 
-    ULONG           ResultBufferLength;    /* Not to exceed AFSCommRequest ResultBufferLength */
+    ULONG           ResultBufferLength;  /* Not to exceed AFSCommRequest ResultBufferLength */
 
-    ULONG           Reserved;           /* To ease Quad Alignment */
+    ULONG           Authenticated;       /* Tokens or No? */
 
     char            ResultData[ 1];
 
@@ -344,8 +344,6 @@ typedef struct _AFS_FILE_OPEN_RESULT_CB
     ULONG           GrantedAccess;
 
     ULONG           FileAccess;
-
-    ULONG           Authenticated;
 
 } AFSFileOpenResultCB;
 
