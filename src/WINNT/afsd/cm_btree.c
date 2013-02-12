@@ -2719,7 +2719,7 @@ cm_BPlusDirEnumBulkStatNext(cm_direnum_t *enump)
 long
 cm_BPlusDirNextEnumEntry(cm_direnum_t *enump, cm_direnum_entry_t **entrypp)
 {
-    long code;
+    long code = 0;
 
     if (enump == NULL || entrypp == NULL || enump->next >= enump->count) {
 	if (entrypp)
@@ -2731,8 +2731,6 @@ cm_BPlusDirNextEnumEntry(cm_direnum_t *enump, cm_direnum_entry_t **entrypp)
     if (enump->fetchStatus &&
 		!(enump->entry[enump->next].flags & CM_DIRENUM_FLAG_GOT_STATUS)) {
         code = cm_BPlusDirEnumBulkStatNext(enump);
-        if (code)
-            return code;
     }
 
     *entrypp = &enump->entry[enump->next++];
@@ -2741,7 +2739,12 @@ cm_BPlusDirNextEnumEntry(cm_direnum_t *enump, cm_direnum_entry_t **entrypp)
 	return CM_ERROR_STOPNOW;
     }
     else {
-	osi_Log0(afsd_logp, "cm_BPlusDirNextEnumEntry SUCCESS");
+        if (code) {
+            (*entrypp)->errorCode = code;
+            osi_Log1(afsd_logp, "cm_BPlusDirNextEnumEntry ERROR 0x%x", code);
+        } else {
+            osi_Log0(afsd_logp, "cm_BPlusDirNextEnumEntry SUCCESS");
+        }
 	return 0;
     }
 }
