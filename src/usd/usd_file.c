@@ -392,9 +392,6 @@ usd_FileStandardInput(usd_handle_t * usdP)
 {
     usd_handle_t usd;
 
-    if (usdP)
-	*usdP = NULL;
-
     usd = calloc(1, sizeof(*usd));
     usd->handle = (void *)((unsigned long)0);
     usd->read = usd_FileRead;
@@ -419,9 +416,6 @@ static int
 usd_FileStandardOutput(usd_handle_t * usdP)
 {
     usd_handle_t usd;
-
-    if (usdP)
-	*usdP = NULL;
 
     usd = calloc(1, sizeof(*usd));
     usd->handle = (void *)((unsigned long)1);
