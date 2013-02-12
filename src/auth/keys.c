@@ -365,6 +365,8 @@ _parseOriginalKeyFile(struct afsconf_dir *dir, char *fileName)
     for(i=0; i<nkeys; i++) {
 
 	key = afsconf_typedKey_blank();
+	if (key == NULL)
+	    goto fail;
 
 	key->type = afsconf_rxkad;
 	key->subType = 0;
@@ -473,6 +475,8 @@ _parseExtendedKeyFile(struct afsconf_dir *dir, char *fileName)
 	afs_int32 reclen;
 
 	key = afsconf_typedKey_blank();
+	if (key == NULL)
+	    goto fail;
 
 	/* The only data version we currently parse has a reclen of 16.
 	 * Anything smaller indicates a corrupt key file. Anything more,
