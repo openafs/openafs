@@ -1479,7 +1479,7 @@ put_prentries(struct prentry *tentry, prentries *bulkentries)
     if (bulkentries->prentries_val == 0) {
 	bulkentries->prentries_len = 0;
 	bulkentries->prentries_val = malloc(PR_MAXENTRIES *
-					    sizeof(struct prentry));
+					    sizeof(struct prlistentries));
 	if (!bulkentries->prentries_val) {
 	    return (PRNOMEM);
 	}
@@ -1489,7 +1489,7 @@ put_prentries(struct prentry *tentry, prentries *bulkentries)
 	return (-1);
     }
 
-    entry = (struct prlistentries *)bulkentries->prentries_val;
+    entry = bulkentries->prentries_val;
     entry += bulkentries->prentries_len;
 
     entry->flags = tentry->flags >> PRIVATE_SHIFT;
