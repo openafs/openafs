@@ -9124,7 +9124,7 @@ rx_clearProcessRPCStats(afs_uint32 clearFlag)
     for (opr_queue_Scan(&processStats, cursor)) {
 	unsigned int num_funcs = 0, i;
 	struct rx_interface_stat *rpc_stat
-	     = opr_queue_Entry(rpc_stat, struct rx_interface_stat, entry);
+	     = opr_queue_Entry(cursor, struct rx_interface_stat, entry);
 
 	num_funcs = rpc_stat->stats[0].func_total;
 	for (i = 0; i < num_funcs; i++) {
