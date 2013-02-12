@@ -522,7 +522,6 @@ _parseExtendedKeyFile(struct afsconf_dir *dir, char *fileName)
 	code = read(fd, key->key.val, reclen);
 	if (code != reclen) {
 	    rx_opaque_freeContents(&key->key);
-	    free(key);
 	    goto fail;
 	}
 	code = addMemoryKey(dir, key, 1);
