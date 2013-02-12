@@ -2112,7 +2112,7 @@ SVL_GetAddrs(struct rx_call *rxcall,
 
     VLog(5, ("GetAddrs\n"));
     addrsp->bulkaddrs_val = taddrp =
-	malloc(sizeof(afs_int32) * (MAXSERVERID + 1));
+	malloc(sizeof(afs_uint32) * (MAXSERVERID + 1));
     nservers = *nentries = addrsp->bulkaddrs_len = 0;
 
     if (!taddrp) {
@@ -2595,7 +2595,7 @@ SVL_GetAddrsU(struct rx_call *rxcall,
 	goto abort;
     }
     addrsp->bulkaddrs_val = taddrp =
-	malloc(sizeof(afs_int32) * (MAXSERVERID + 1));
+	malloc(sizeof(afs_uint32) * (MAXSERVERID + 1));
     nservers = *nentries = addrsp->bulkaddrs_len = 0;
     if (!taddrp) {
 	code = VL_NOMEM;
