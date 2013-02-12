@@ -846,10 +846,8 @@ afsconf_GetAllKeys(struct afsconf_dir *dir, struct afsconf_typedKeyList **keys)
 	typeEntry = opr_queue_Entry(typeCursor, struct keyTypeList, link);
 	for (opr_queue_Scan(&typeEntry->kvnoList, kvnoCursor)) {
 	    kvnoEntry = opr_queue_Entry(kvnoCursor, struct kvnoList, link);
-	    for (opr_queue_Scan(&kvnoEntry->subTypeList, subCursor)) {
-		subEntry = opr_queue_Entry(subCursor, struct subTypeList, link);
+	    for (opr_queue_Scan(&kvnoEntry->subTypeList, subCursor))
 		count++;
-	    }
 	}
     }
 
