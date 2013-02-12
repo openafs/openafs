@@ -1204,7 +1204,7 @@ AddToSGEntry(struct ubik_trans *tt, struct prentry *entry, afs_int32 loc, afs_in
 afs_int32
 AddToPRList(prlist *alist, int *sizeP, afs_int32 id)
 {
-    char *tmp;
+    afs_int32 *tmp;
     int count;
 
     if (alist->prlist_len >= *sizeP) {
@@ -1216,7 +1216,7 @@ AddToPRList(prlist *alist, int *sizeP, afs_int32 id)
 	}
 	if (!tmp)
 	    return (PRNOMEM);
-	alist->prlist_val = (afs_int32 *) tmp;
+	alist->prlist_val = tmp;
 	*sizeP = count;
     }
     alist->prlist_val[alist->prlist_len++] = id;
