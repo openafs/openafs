@@ -19,13 +19,13 @@
 #include <roken.h>
 #include <afs/opr.h>
 
+#include <limits.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <afs/ptclient.h>
 #include <afs/ptuser.h>
 
 #include "acl.h"
-
 #ifdef AFS_PTHREAD_ENV
 #include <pthread.h>
 pthread_mutex_t acl_list_mutex;
@@ -242,7 +242,7 @@ acl_Internalize_pr(int (*func)(namelist *names, idlist *ids), char *elist, struc
 
     if (sscanf(elist, "%d\n%d\n", &p, &n) != 2)
 	return -1;
-    if (p + n > ACL_MAXENTRIES)
+    if (p < 0 || n < 0 || p > INT_MAX - n || p + n > ACL_MAXENTRIES)
 	return (-1);
     acl_NewACL(p + n, acl);
     (*acl)->total = p + n;
@@ -266,7 +266,7 @@ acl_Internalize_pr(int (*func)(namelist *names, idlist *ids), char *elist, struc
     nextc++;			/* now at the beginning of the entry list */
     for (i = 0; i < (*acl)->positive; i++) {
 	int k;
-	if (sscanf(nextc, "%s\t%d\n", lnames.namelist_val[i], &k) != 2) {
+	if (sscanf(nextc, "%63s\t%d\n", lnames.namelist_val[i], &k) != 2) {
 	    free(lnames.namelist_val);
 	    return (-1);
 	}
@@ -278,7 +278,7 @@ acl_Internalize_pr(int (*func)(namelist *names, idlist *ids), char *elist, struc
     for (i = (*acl)->total - 1; i >= (*acl)->total - (*acl)->negative;
 	 i--, j++) {
 	if (sscanf
-	    (nextc, "%s\t%d\n", lnames.namelist_val[j],
+	    (nextc, "%63s\t%d\n", lnames.namelist_val[j],
 	     &((*acl)->entries[j].rights)) != 2) {
 	    free(lnames.namelist_val);
 	    return (-1);

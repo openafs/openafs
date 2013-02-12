@@ -1532,7 +1532,7 @@ afsclient_ACLEntryAdd(const char *directory, const char *user,
      */
 
     is_dfs =
-	sscanf(old_acl_string, "%d dfs:%d %s", &cur_acl.nplus, &cur_acl.dfs,
+	sscanf(old_acl_string, "%d dfs:%d %1024s", &cur_acl.nplus, &cur_acl.dfs,
 	       cur_acl.cell);
     ptr = strchr(old_acl_string, '\n');
     ptr++;
@@ -1557,7 +1557,7 @@ afsclient_ACLEntryAdd(const char *directory, const char *user,
      */
 
     for (i = 0; i < (cur_acl.nplus + cur_acl.nminus); i++) {
-	sscanf(ptr, "%s%d\n", cur_user, &cur_user_acl);
+	sscanf(ptr, "%63s%d\n", cur_user, &cur_user_acl);
 	/*
 	 * Skip the entry for the user we are replacing/adding
 	 */
