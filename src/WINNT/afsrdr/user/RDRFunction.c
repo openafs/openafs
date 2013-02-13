@@ -5590,6 +5590,7 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
         }
     }
     pResultCB->VolumeLabelLength *= sizeof(WCHAR);  /* convert to bytes from chars */
+    pResultCB->CellLength *= sizeof(WCHAR);         /* convert to bytes from chars */
 
   _done:
     if (scp_locked)
