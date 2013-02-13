@@ -756,6 +756,7 @@ try_exit:
     }
     return ntStatus;
 }
+
 //
 // Function: AFSDispatch
 //
@@ -1422,6 +1423,8 @@ AFSIOCtlRead( IN PDEVICE_OBJECT DeviceObject,
                                       &pCcb->AuthGroup,
                                       NULL,
                                       &stParentFID,
+                                      NULL,
+                                      0,
                                       (void *)&stIORequestCB,
                                       sizeof( AFSPIOCtlIORequestCB),
                                       &stIOResultCB,
@@ -1536,6 +1539,8 @@ AFSShareRead( IN PDEVICE_OBJECT DeviceObject,
                                       &pCcb->AuthGroup,
                                       &pCcb->DirectoryCB->NameInformation.FileName,
                                       NULL,
+                                      NULL,
+                                      0,
                                       (void *)&stIoRequest,
                                       sizeof( AFSPipeIORequestCB),
                                       pBuffer,
