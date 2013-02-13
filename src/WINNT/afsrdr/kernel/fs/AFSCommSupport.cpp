@@ -55,6 +55,8 @@ AFSReleaseFid( IN AFSFileID *FileId)
                                       NULL,
                                       0,
                                       NULL,
+                                      0,
+                                      NULL,
                                       NULL);
     }
 
@@ -67,6 +69,8 @@ AFSProcessRequest( IN ULONG RequestType,
                    IN GUID *AuthGroup,
                    IN PUNICODE_STRING FileName,
                    IN AFSFileID *FileId,
+                   IN WCHAR *Cell,
+                   IN ULONG  CellLength,
                    IN void  *Data,
                    IN ULONG DataLength,
                    IN OUT void *ResultBuffer,
