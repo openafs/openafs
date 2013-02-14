@@ -573,7 +573,6 @@ BStore(struct brequest *ab)
     AFS_STATCNT(BStore);
     if ((code = afs_InitReq(&treq, ab->cred)))
 	return;
-    code = 0;
     tvc = ab->vc;
 #if defined(AFS_SGI_ENV)
     /*
@@ -620,7 +619,6 @@ BPartialStore(struct brequest *ab)
     AFS_STATCNT(BStore);
     if ((code = afs_InitReq(&treq, ab->cred)))
 	return;
-    code = 0;
     tvc = ab->vc;
     locked = tvc->lock.excl_locked? 1:0;
     if (!locked)
