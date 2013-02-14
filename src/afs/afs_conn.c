@@ -470,7 +470,6 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
     glocked = ISAFS_GLOCK();
     if (tc->forceConnectFS) {
 	UpgradeSToWLock(&afs_xconn, 38);
-	csec = (struct rx_securityClass *)0;
 	if (tc->id) {
 	    if (sap->natping == tc)
 		sap->natping = NULL;
