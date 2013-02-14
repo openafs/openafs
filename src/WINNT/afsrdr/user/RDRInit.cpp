@@ -1322,14 +1322,10 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
             break;
     }
 
-    if (userp) {
-        pResultCB->Authenticated = cm_HaveToken( userp,
-                                                 RequestBuffer->FileId.Cell);
-    }
-
     if( BooleanFlagOn( RequestBuffer->RequestFlags, AFS_REQUEST_FLAG_SYNCHRONOUS))
     {
-	if (pResultCB == NULL) {
+
+        if (pResultCB == NULL) {
 	    // We failed probably due to a memory allocation error
             // unless the unsupported flag was set.
 	    pResultCB = &stResultCB;
@@ -1339,6 +1335,11 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
             else
                 pResultCB->ResultStatus = STATUS_NO_MEMORY;
 	}
+
+        if (userp) {
+            pResultCB->Authenticated = cm_HaveToken( userp,
+                                                     RequestBuffer->FileId.Cell);
+        }
 
         //
         // This is how the filter associates the response information passed in the IOCtl below to the
