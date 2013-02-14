@@ -1031,9 +1031,9 @@ AFSQueryInternalInfo( IN PIRP Irp,
     if( *Length >= sizeof( FILE_INTERNAL_INFORMATION))
     {
 
-        Buffer->IndexNumber.HighPart = Fcb->ObjectInformation->FileId.Volume;
+        Buffer->IndexNumber.HighPart = Fcb->ObjectInformation->FileId.Vnode;
 
-        Buffer->IndexNumber.LowPart = Fcb->ObjectInformation->FileId.Vnode;
+        Buffer->IndexNumber.LowPart = Fcb->ObjectInformation->FileId.Unique;
 
         *Length -= sizeof( FILE_INTERNAL_INFORMATION);
     }
