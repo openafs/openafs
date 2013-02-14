@@ -287,7 +287,7 @@ AFSQueryFsVolumeInfo( IN AFSVolumeInfoCB *VolumeInfo,
 {
 
     NTSTATUS ntStatus = STATUS_BUFFER_TOO_SMALL;
-    ULONG ulCopyLength;
+    ULONG ulLabelLength;
 
     RtlZeroMemory( Buffer,
                    *Length);
@@ -295,17 +295,16 @@ AFSQueryFsVolumeInfo( IN AFSVolumeInfoCB *VolumeInfo,
     if( *Length >= (ULONG)sizeof( FILE_FS_VOLUME_INFORMATION))
     {
 
-        if( *Length >= (ULONG)(FIELD_OFFSET( FILE_FS_VOLUME_INFORMATION, VolumeLabel) + (LONG)VolumeInfo->VolumeLabelLength))
-        {
+        ulLabelLength = VolumeInfo->VolumeLabelLength +
+            VolumeInfo->CellLength + sizeof( WCHAR);
 
-            ulCopyLength = (LONG)VolumeInfo->VolumeLabelLength;
+        if( *Length >= (ULONG)(FIELD_OFFSET( FILE_FS_VOLUME_INFORMATION, VolumeLabel) + ulLabelLength))
+        {
 
             ntStatus = STATUS_SUCCESS;
         }
         else
         {
-
-            ulCopyLength = *Length - FIELD_OFFSET( FILE_FS_VOLUME_INFORMATION, VolumeLabel);
 
             ntStatus = STATUS_BUFFER_OVERFLOW;
         }
@@ -314,20 +313,37 @@ AFSQueryFsVolumeInfo( IN AFSVolumeInfoCB *VolumeInfo,
 
         Buffer->VolumeSerialNumber = VolumeInfo->VolumeID;
 
-        Buffer->VolumeLabelLength = VolumeInfo->VolumeLabelLength;
+        Buffer->VolumeLabelLength = ulLabelLength;
 
         Buffer->SupportsObjects = FALSE;
 
         *Length -= FIELD_OFFSET( FILE_FS_VOLUME_INFORMATION, VolumeLabel);
 
-        if( ulCopyLength > 0)
+        if( *Length > 0)
         {
 
             RtlCopyMemory( Buffer->VolumeLabel,
-                           VolumeInfo->VolumeLabel,
-                           ulCopyLength);
+                           VolumeInfo->Cell,
+                           min( *Length, VolumeInfo->CellLength));
 
-            *Length -= ulCopyLength;
+            *Length -= min( *Length, VolumeInfo->CellLength);
+
+            if ( *Length >= sizeof( WCHAR))
+            {
+
+                Buffer->VolumeLabel[ VolumeInfo->CellLength / sizeof( WCHAR)] = L'#';
+
+                *Length -= sizeof( WCHAR);
+
+                if ( *Length > 0) {
+
+                    RtlCopyMemory( &Buffer->VolumeLabel[ (VolumeInfo->CellLength + sizeof( WCHAR)) / sizeof( WCHAR)],
+                                   VolumeInfo->VolumeLabel,
+                                   min( *Length, VolumeInfo->VolumeLabelLength));
+
+                    *Length -= min( *Length, VolumeInfo->VolumeLabelLength);
+                }
+            }
         }
     }
 
