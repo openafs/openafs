@@ -143,8 +143,6 @@ afs_Daemon(void)
     char cs_warned = 0;
 
     AFS_STATCNT(afs_Daemon);
-    last1MinCheck = last3MinCheck = last60MinCheck = last10MinCheck =
-    last5MinCheck = lastNMinCheck = 0;
 
     afs_rootFid.Fid.Volume = 0;
     while (afs_initState < 101)
