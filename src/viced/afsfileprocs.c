@@ -1701,9 +1701,11 @@ Update_TargetVnodeStatus(Vnode * targetptr, afs_uint32 Caller,
     if (Caller & TVS_SDATA) {
 	targetptr->disk.dataVersion++;
 	if (!remote && VanillaUser(client)) {
-	    targetptr->disk.modeBits &= ~04000;	/* turn off suid for file. */
+	    /* turn off suid */
+	    targetptr->disk.modeBits = targetptr->disk.modeBits & ~04000;
 #ifdef CREATE_SGUID_ADMIN_ONLY
-	    targetptr->disk.modeBits &= ~02000;	/* turn off sgid for file. */
+	    /* turn off sgid */
+	    targetptr->disk.modeBits = targetptr->disk.modeBits & ~02000;
 #endif
 	}
     }
@@ -1719,9 +1721,11 @@ Update_TargetVnodeStatus(Vnode * targetptr, afs_uint32 Caller,
     if (InStatus->Mask & AFS_SETOWNER) {
 	/* admin is allowed to do chmod, chown as well as chown, chmod. */
 	if (!remote && VanillaUser(client)) {
-	    targetptr->disk.modeBits &= ~04000;	/* turn off suid for file. */
+	    /* turn off suid */
+	    targetptr->disk.modeBits = targetptr->disk.modeBits & ~04000;
 #ifdef CREATE_SGUID_ADMIN_ONLY
-	    targetptr->disk.modeBits &= ~02000;	/* turn off sgid for file. */
+	    /* turn off sgid */
+	    targetptr->disk.modeBits = targetptr->disk.modeBits & ~02000;
 #endif
 	}
 	targetptr->disk.owner = InStatus->Owner;
