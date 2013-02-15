@@ -184,7 +184,8 @@ get_definition(void)
 	def_const(defp);
 	break;
     case TOK_EOF:
-	return (NULL);
+	free(defp);
+	return NULL;
     case TOK_PACKAGE:
 	def_package(defp);
 	break;
