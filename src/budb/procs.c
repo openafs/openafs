@@ -346,7 +346,7 @@ FreeReturnList(struct returnList *list)
 static afs_int32
 AddToReturnList(struct returnList *list, dbadr a, afs_int32 *to_skipP)
 {
-    char *tmp;
+    dbadr *tmp;
     afs_int32 size;
 
     if (a == 0)
@@ -372,7 +372,7 @@ AddToReturnList(struct returnList *list, dbadr a, afs_int32 *to_skipP)
 	}
 	if (!tmp)
 	    return BUDB_NOMEM;
-	list->elements = (dbadr *) tmp;
+	list->elements = tmp;
 	list->allocSize = size;
     }
 

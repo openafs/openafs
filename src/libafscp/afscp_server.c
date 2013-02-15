@@ -369,7 +369,8 @@ afscp_ServerByAddr(struct afscp_cell *thecell, afs_uint32 addr)
 	else
 	    thecell->srvsalloced = 4;
 	newlist = realloc(thecell->fsservers,
-			  thecell->srvsalloced * sizeof(struct afscp_server));
+			  thecell->srvsalloced
+			      * sizeof(struct afscp_server *));
 	if (newlist == NULL) {
 	    return NULL;
 	}

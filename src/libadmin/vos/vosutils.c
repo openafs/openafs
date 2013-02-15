@@ -279,7 +279,7 @@ VLDB_ListAttributes(afs_cell_handle_p cellHandle,
 
 		if (*entriesp > 0) {
 		    blkentriesp->nbulkentries_val =
-			calloc(*entriesp, sizeof(*blkentriesp));
+			calloc(*entriesp, sizeof(struct nvldbentry));
 		    if (blkentriesp->nbulkentries_val != NULL) {
 		        for (i = 0; i < *entriesp; i++) {
 			    OldVLDB_to_NewVLDB((struct vldbentry *)&arrayEntries.
