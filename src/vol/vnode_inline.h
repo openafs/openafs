@@ -236,7 +236,7 @@ VnIsErrorState(VnState state)
 static_inline int
 VnIsValidState(VnState state)
 {
-    if ((state >= 0) &&
+    if (((int) state >= 0) &&
 	(state < VN_STATE_COUNT)) {
 	return 1;
     }

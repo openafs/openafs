@@ -1848,9 +1848,9 @@ VShutdownVolume_r(Volume * vp)
     VCreateReservation_r(vp);
 
     if (LogLevel >= 5) {
-	Log("VShutdownVolume_r:  vid=%" AFS_VOLID_FMT ", device=%d, state=%hu\n",
+	Log("VShutdownVolume_r:  vid=%" AFS_VOLID_FMT ", device=%d, state=%u\n",
 	    afs_printable_VolumeId_lu(vp->hashid), vp->partition->device,
-	    V_attachState(vp));
+	    (unsigned int) V_attachState(vp));
     }
 
     /* wait for other blocking ops to finish */
