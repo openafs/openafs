@@ -335,74 +335,70 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
             bNonCachedIo = FALSE;
         }
 
-        if ( !bNonCachedIo) {
+        if ( !bNonCachedIo && !bPagingIo)
+        {
 
-            if( !bPagingIo)
+            if( pFileObject->PrivateCacheMap == NULL)
             {
 
-                if( pFileObject->PrivateCacheMap == NULL)
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSCommonWrite Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
+                              &pNPFcb->SectionObjectResource,
+                              PsGetCurrentThread());
+
+                AFSAcquireExcl( &pNPFcb->SectionObjectResource,
+                                TRUE);
+
+                bReleaseSectionObject = TRUE;
+
+                __try
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSCommonWrite Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
-                                  &pNPFcb->SectionObjectResource,
-                                  PsGetCurrentThread());
+                                  "AFSCommonWrite Initialize caching on Fcb %p FileObject %p\n",
+                                  pFcb,
+                                  pFileObject);
 
-                    AFSAcquireExcl( &pNPFcb->SectionObjectResource,
-                                    TRUE);
+                    CcInitializeCacheMap( pFileObject,
+                                          (PCC_FILE_SIZES)&pFcb->Header.AllocationSize,
+                                          FALSE,
+                                          AFSLibCacheManagerCallbacks,
+                                          pFcb);
 
-                    bReleaseSectionObject = TRUE;
+                    CcSetReadAheadGranularity( pFileObject,
+                                               pDeviceExt->Specific.RDR.MaximumRPCLength);
 
-                    __try
-                    {
+                    CcSetDirtyPageThreshold( pFileObject,
+                                             AFS_DIRTY_CHUNK_THRESHOLD * pDeviceExt->Specific.RDR.MaximumRPCLength / 4096);
+                }
+                __except( EXCEPTION_EXECUTE_HANDLER)
+                {
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                                      AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSCommonWrite Initialize caching on Fcb %p FileObject %p\n",
-                                      pFcb,
-                                      pFileObject);
+                    ntStatus = GetExceptionCode();
 
-                        CcInitializeCacheMap( pFileObject,
-                                              (PCC_FILE_SIZES)&pFcb->Header.AllocationSize,
-                                              FALSE,
-                                              AFSLibCacheManagerCallbacks,
-                                              pFcb);
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                                  AFS_TRACE_LEVEL_ERROR,
+                                  "AFSCommonWrite (%p) Exception thrown while initializing cache map Status %08lX\n",
+                                  Irp,
+                                  ntStatus);
+                }
 
-                        CcSetReadAheadGranularity( pFileObject,
-                                                   pDeviceExt->Specific.RDR.MaximumRPCLength);
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSCommonWrite Releasing Fcb SectionObject lock %p EXCL %08lX\n",
+                              &pNPFcb->SectionObjectResource,
+                              PsGetCurrentThread());
 
-                        CcSetDirtyPageThreshold( pFileObject,
-                                                 AFS_DIRTY_CHUNK_THRESHOLD * pDeviceExt->Specific.RDR.MaximumRPCLength / 4096);
-                    }
-                    __except( EXCEPTION_EXECUTE_HANDLER)
-                    {
+                AFSReleaseResource( &pNPFcb->SectionObjectResource);
 
-                        ntStatus = GetExceptionCode();
+                bReleaseSectionObject = FALSE;
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                                      AFS_TRACE_LEVEL_ERROR,
-                                      "AFSCommonWrite (%p) Exception thrown while initializing cache map Status %08lX\n",
-                                      Irp,
-                                      ntStatus);
-                    }
+                if( !NT_SUCCESS( ntStatus))
+                {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSCommonWrite Releasing Fcb SectionObject lock %p EXCL %08lX\n",
-                                  &pNPFcb->SectionObjectResource,
-                                  PsGetCurrentThread());
-
-                    AFSReleaseResource( &pNPFcb->SectionObjectResource);
-
-                    bReleaseSectionObject = FALSE;
-
-
-                    if( !NT_SUCCESS( ntStatus))
-                    {
-
-                        try_return( ntStatus);
-                    }
+                    try_return( ntStatus);
                 }
             }
 
