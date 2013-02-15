@@ -1841,8 +1841,8 @@ VShutdownVolume_r(Volume * vp)
     VCreateReservation_r(vp);
 
     if (LogLevel >= 5) {
-	Log("VShutdownVolume_r:  vid=%u, device=%d, state=%hu\n",
-	    vp->hashid, vp->partition->device, V_attachState(vp));
+	Log("VShutdownVolume_r:  vid=%u, device=%d, state=%u\n",
+	    vp->hashid, vp->partition->device, (unsigned int)V_attachState(vp));
     }
 
     /* wait for other blocking ops to finish */
