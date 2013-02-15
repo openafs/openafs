@@ -430,6 +430,8 @@ def_typedef(definition * defp)
 {
     declaration dec;
 
+    memset(&dec, 0, sizeof(dec));
+
     defp->def_kind = DEF_TYPEDEF;
     get_declaration(&dec, DEF_TYPEDEF);
     defp->def_name = dec.name;
