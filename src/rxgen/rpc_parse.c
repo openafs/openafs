@@ -1413,7 +1413,8 @@ ss_ProcParams_setup(definition * defp)
 		}
 		f_print(fout, "\t%s %s", plist->pl.param_type,
 			plist->pl.param_name);
-		*pntr = pres;
+		if (pntr)
+		    *pntr = pres;
 	    } else if (strchr(plist->pl.param_type, '*') == 0) {
 		f_print(fout, "\t%s %s", plist->pl.param_type,
 			plist->pl.param_name);
