@@ -183,6 +183,9 @@ addKey(struct afsconf_dir *dir, int argc, char **argv) {
 	kvno = atoi(argv[3]);
 	if (type == afsconf_rxkad) {
 	    typedKey = keyFromCommandLine(afsconf_rxkad, kvno, 0, argv[5], 8);
+	} else {
+	    fprintf(stderr, "Unknown key type %s\n", argv[2]);
+	    exit(1);
 	}
 	break;
       default:
