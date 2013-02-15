@@ -38,12 +38,22 @@
 
 #include "AFSCommon.h"
 
+
+static
+NTSTATUS
+AFSWriteComplete( IN PDEVICE_OBJECT DeviceObject,
+                  IN PIRP Irp,
+                  IN PVOID Contxt);
+
 //
 // Function: AFSWrite
 //
 // Description:
 //
-//      This is the dispatch handler for the IRP_MJ_WRITE request
+//      This is the dispatch handler for the IRP_MJ_WRITE request.  Since we want to
+//      allow the library to pend the write we need to lock the library for the
+//      duration of the thread calling the library but also for the life of the IRP.
+//      So this code path establishes an IO completion function.
 //
 // Return:
 //
@@ -84,19 +94,54 @@ AFSWrite( IN PDEVICE_OBJECT DeviceObject,
 
             if( ntStatus != STATUS_PENDING)
             {
+
                 AFSCompleteRequest( Irp, ntStatus);
             }
 
             try_return( ntStatus);
         }
 
-        IoSkipCurrentIrpStackLocation( Irp);
+        //
+        // Increment the outstanding IO count again - this time for the
+        // completion routine.
+        //
+
+        ntStatus = AFSCheckLibraryState( Irp);
+
+        if( !NT_SUCCESS( ntStatus) ||
+            ntStatus == STATUS_PENDING)
+        {
+
+            AFSClearLibraryRequest();
+
+            if( ntStatus != STATUS_PENDING)
+            {
+
+                AFSCompleteRequest( Irp, ntStatus);
+            }
+
+            try_return( ntStatus);
+        }
+
+        //
+        // And send it down, but arrange to capture the comletion
+        // so we can free our lock against unloading.
+        //
+
+        IoCopyCurrentIrpStackLocationToNext( Irp);
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "Setting AFSWriteComplete as IoCompletion Routine Irp %p\n",
+                      Irp);
+
+        IoSetCompletionRoutine( Irp, AFSWriteComplete, NULL, TRUE, TRUE, TRUE);
 
         ntStatus = IoCallDriver( pControlDeviceExt->Specific.Control.LibraryDeviceObject,
                                  Irp);
 
         //
-        // Indicate the library is done with the request
+        // Indicate the library/thread pair is done with the request
         //
 
         AFSClearLibraryRequest();
@@ -114,4 +159,40 @@ try_exit:
     }
 
     return ntStatus;
+}
+
+//
+// AFSWriteComplete
+//
+static
+NTSTATUS
+AFSWriteComplete( IN PDEVICE_OBJECT DeviceObject,
+                  IN PIRP Irp,
+                  IN PVOID Context)
+{
+    UNREFERENCED_PARAMETER(DeviceObject);
+    UNREFERENCED_PARAMETER(Irp);
+    UNREFERENCED_PARAMETER(Context);
+    BOOLEAN bPending = FALSE;
+
+    //
+    // Indicate the library/IRP pair is done with the request
+    //
+
+    AFSClearLibraryRequest();
+
+    if (Irp->PendingReturned) {
+
+        bPending = TRUE;
+
+        IoMarkIrpPending(Irp);
+    }
+
+    AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                  AFS_TRACE_LEVEL_VERBOSE,
+                  "AFSWriteComplete Irp %p%s\n",
+                  Irp,
+                  bPending ? " PENDING" : "");
+
+    return STATUS_CONTINUE_COMPLETION;
 }

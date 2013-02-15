@@ -1327,6 +1327,11 @@ AFSSendDeviceIoControl( IN DEVICE_OBJECT *TargetDeviceObject,
         // Set the completion routine.
         //
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "Setting AFSIrpComplete as IoCompletion Routine Irp %p\n",
+                      pIrp);
+
         IoSetCompletionRoutine( pIrp,
                                 AFSIrpComplete,
                                 &kEvent,
