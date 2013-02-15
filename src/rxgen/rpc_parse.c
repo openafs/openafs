@@ -2034,7 +2034,6 @@ er_ProcProcsArray_setup(void)
 			"\nstatic afs_int32 (*StubProcsArray%d[])(struct rx_call *z_call, XDR *z_xdrs) = {_%s%s%s",
 			PackageIndex, prefix, defp->pc.proc_prefix,
 			((definition *) listp->val)->pc.proc_name);
-		defp = (definition *) listp->val;
 	    }
 	}
 	listp = listp->next;
