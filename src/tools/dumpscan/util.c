@@ -138,7 +138,7 @@ match_next_vnode(XFILE * X, dump_parser * p, dt_uint64 * where,
 	    return DSERR_FMT;
 	if (x > vnode && x - vnode > 10000)
 	    return DSERR_FMT;
-	if (y < 0 || y > p->vol_uniquifier)
+	if (y > p->vol_uniquifier)
 	    return DSERR_FMT;
 
 	/* Now, what follows the vnode/uniquifier? */
