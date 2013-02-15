@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2008, 2009, 2010, 2011 Kernel Drivers, LLC.
- * Copyright (c) 2009, 2010, 2011 Your File System, Inc.
+ * Copyright (c) 2008-2013 Kernel Drivers, LLC.
+ * Copyright (c) 2009-2013 Your File System, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -10,10 +10,8 @@
  * - Redistributions of source code must retain the above copyright notice,
  *   this list of conditions and the following disclaimer.
  * - Redistributions in binary form must reproduce the above copyright
- *   notice,
- *   this list of conditions and the following disclaimer in the
- *   documentation
- *   and/or other materials provided with the distribution.
+ *   notice, this list of conditions and the following disclaimer in the
+ *   documentation and/or other materials provided with the distribution.
  * - Neither the names of Kernel Drivers, LLC and Your File System, Inc.
  *   nor the names of their contributors may be used to endorse or promote
  *   products derived from this software without specific prior written
@@ -143,6 +141,7 @@ AFSQueryDirectory( IN PIRP Irp)
     AFSObjectInfoCB *pObjectInfo = NULL;
     ULONG ulAdditionalAttributes = 0;
     LONG lCount;
+    BOOLEAN     bNonWildcardMatch = FALSE;
 
     __Enter
     {
@@ -201,6 +200,39 @@ AFSQueryDirectory( IN PIRP Irp)
 
         bInitialQuery = (BOOLEAN)( !BooleanFlagOn( pCcb->Flags, CCB_FLAG_DIRECTORY_QUERY_MAPPED));
 
+        //
+        // Check if we previously processed a direct query
+        //
+
+        if( bInitialQuery &&
+            BooleanFlagOn( pCcb->Flags, CCB_FLAG_DIRECTORY_QUERY_DIRECT_QUERY))
+        {
+            bInitialQuery = FALSE;
+        }
+        else if( bRestartScan)
+        {
+            //
+            // Clear our direct to service flag so we reprocess things correctly.
+            //
+
+            ClearFlag( pCcb->Flags, CCB_FLAG_DIRECTORY_QUERY_DIRECT_QUERY);
+
+            if( !FsRtlDoesNameContainWildCards( &pCcb->MaskName))
+            {
+
+                if( RtlCompareUnicodeString( &AFSPIOCtlName,
+                                                &pCcb->MaskName,
+                                                TRUE) != 0)
+                {
+                    bNonWildcardMatch = TRUE;
+                }
+            }
+        }
+
+        //
+        // Setup the query mask
+        //
+
         if( bInitialQuery)
         {
 
@@ -219,6 +251,112 @@ AFSQueryDirectory( IN PIRP Irp)
                             TRUE);
 
             bReleaseFcb = TRUE;
+
+            //
+            // Determine the type of mask passed in for later processing
+            //
+
+            ClearFlag( pCcb->Flags, CCB_FLAG_DIR_OF_DIRS_ONLY);
+
+            // build mask if none
+            if( puniArgFileName == NULL)
+            {
+                puniArgFileName = &uniTmpMaskName;
+                puniArgFileName->Length = 0;
+                puniArgFileName->Buffer = NULL;
+            }
+
+            if( puniArgFileName->Length == 0)
+            {
+
+                puniArgFileName->Length = sizeof(WCHAR);
+                puniArgFileName->MaximumLength = (USHORT)4;
+            }
+
+            if( puniArgFileName->Buffer == NULL)
+            {
+
+                puniArgFileName->Buffer = wchMaskBuffer;
+
+                RtlZeroMemory( wchMaskBuffer,
+                               4);
+
+                RtlCopyMemory( &puniArgFileName->Buffer[ 0],
+                               L"*",
+                               sizeof(WCHAR));
+            }
+
+            if( (( puniArgFileName->Length == sizeof(WCHAR)) &&
+                 ( puniArgFileName->Buffer[0] == L'*')))
+            {
+
+                SetFlag( pCcb->Flags, CCB_FLAG_FULL_DIRECTORY_QUERY);
+            }
+            else
+            {
+
+                if( (( puniArgFileName->Length == sizeof(WCHAR)) &&
+                     ( puniArgFileName->Buffer[0] == L'<')) ||
+                    (( puniArgFileName->Length == 2*sizeof(WCHAR)) &&
+                    ( RtlEqualMemory( puniArgFileName->Buffer, L"*.", 2*sizeof(WCHAR) ))))
+                {
+
+                    SetFlag( pCcb->Flags, CCB_FLAG_DIR_OF_DIRS_ONLY);
+                }
+
+                //
+                // Build the name for procesisng
+                //
+
+                pCcb->MaskName.Length = puniArgFileName->Length;
+                pCcb->MaskName.MaximumLength = pCcb->MaskName.Length;
+
+                pCcb->MaskName.Buffer = (WCHAR *)AFSExAllocatePoolWithTag( PagedPool,
+                                                                           pCcb->MaskName.Length,
+                                                                           AFS_GENERIC_MEMORY_6_TAG);
+
+                if( pCcb->MaskName.Buffer == NULL)
+                {
+
+                    try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+                }
+
+                if( FsRtlDoesNameContainWildCards( puniArgFileName))
+                {
+
+                    RtlUpcaseUnicodeString( &pCcb->MaskName,
+                                            puniArgFileName,
+                                            FALSE);
+
+                    SetFlag( pCcb->Flags, CCB_FLAG_MASK_CONTAINS_WILD_CARDS);
+
+                    if( FsRtlIsNameInExpression( &pCcb->MaskName,
+                                                 &AFSPIOCtlName,
+                                                 TRUE,
+                                                 NULL))
+                    {
+                        SetFlag( pCcb->Flags, CCB_FLAG_MASK_PIOCTL_QUERY);
+                    }
+                }
+                else
+                {
+
+                    RtlCopyMemory( pCcb->MaskName.Buffer,
+                                   puniArgFileName->Buffer,
+                                   pCcb->MaskName.Length);
+
+                    if( RtlCompareUnicodeString( &AFSPIOCtlName,
+                                                 &pCcb->MaskName,
+                                                 TRUE) == 0)
+                    {
+                        SetFlag( pCcb->Flags, CCB_FLAG_MASK_PIOCTL_QUERY);
+                    }
+                    else
+                    {
+                        bNonWildcardMatch = TRUE;
+                    }
+                }
+            }
         }
         else
         {
@@ -238,6 +376,15 @@ AFSQueryDirectory( IN PIRP Irp)
                               TRUE);
 
             bReleaseFcb = TRUE;
+
+            //
+            // Have we already processed this entry directly from the service?
+            //
+
+            if( BooleanFlagOn( pCcb->Flags, CCB_FLAG_DIRECTORY_QUERY_DIRECT_QUERY))
+            {
+                try_return( ntStatus = STATUS_NO_MORE_FILES);
+            }
         }
 
         //
@@ -251,10 +398,71 @@ AFSQueryDirectory( IN PIRP Irp)
         bReleaseMain = TRUE;
 
         //
-        // Before attempting to insert the new entry, check if we need to validate the parent
+        // Before attempting to insert the new entry, check if we need to enumerate or validate the parent
         //
 
-        if( BooleanFlagOn( pFcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY))
+        if( !BooleanFlagOn( pFcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_DIRECTORY_ENUMERATED))
+        {
+
+            //
+            // If this is a non wildcard match then just process it directly from the service since the directory
+            // is not yet enumerated
+            //
+
+            if( bNonWildcardMatch)
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSQueryDirectory Processing non-wildcard match directly parent %wZ Mask %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                              &pCcb->DirectoryCB->NameInformation.FileName,
+                              &pCcb->MaskName,
+                              pFcb->ObjectInformation->FileId.Cell,
+                              pFcb->ObjectInformation->FileId.Volume,
+                              pFcb->ObjectInformation->FileId.Vnode,
+                              pFcb->ObjectInformation->FileId.Unique);
+
+                ntStatus = AFSProcessDirectoryQueryDirect( pFcb,
+                                                           pCcb,
+                                                           Irp);
+
+                SetFlag( pCcb->Flags, CCB_FLAG_DIRECTORY_QUERY_DIRECT_QUERY);
+
+                try_return( ntStatus);
+            }
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSQueryDirectory Enumerating parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                          &pCcb->DirectoryCB->NameInformation.FileName,
+                          pFcb->ObjectInformation->FileId.Cell,
+                          pFcb->ObjectInformation->FileId.Volume,
+                          pFcb->ObjectInformation->FileId.Vnode,
+                          pFcb->ObjectInformation->FileId.Unique);
+
+            ntStatus = AFSEnumerateDirectory( &pCcb->AuthGroup,
+                                              pFcb->ObjectInformation,
+                                              TRUE);
+
+            if( !NT_SUCCESS( ntStatus))
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSQueryDirectory Failed to enumerate parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                              &pCcb->DirectoryCB->NameInformation.FileName,
+                              pFcb->ObjectInformation->FileId.Cell,
+                              pFcb->ObjectInformation->FileId.Volume,
+                              pFcb->ObjectInformation->FileId.Vnode,
+                              pFcb->ObjectInformation->FileId.Unique,
+                              ntStatus);
+
+                try_return( ntStatus);
+            }
+
+            SetFlag( pFcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_DIRECTORY_ENUMERATED);
+        }
+        else if( BooleanFlagOn( pFcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY))
         {
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -363,156 +571,58 @@ AFSQueryDirectory( IN PIRP Irp)
 
             SetFlag( pCcb->Flags, CCB_FLAG_DIRECTORY_QUERY_MAPPED);
 
-            ClearFlag( pCcb->Flags, CCB_FLAG_DIR_OF_DIRS_ONLY);
-
-            // build mask if none
-            if( puniArgFileName == NULL)
+            if( BooleanFlagOn( pCcb->Flags, CCB_FLAG_MASK_PIOCTL_QUERY))
             {
-                puniArgFileName = &uniTmpMaskName;
-                puniArgFileName->Length = 0;
-                puniArgFileName->Buffer = NULL;
-            }
-
-            if( puniArgFileName->Length == 0)
-            {
-
-                puniArgFileName->Length = sizeof(WCHAR);
-                puniArgFileName->MaximumLength = (USHORT)4;
-            }
-
-            if( puniArgFileName->Buffer == NULL)
-            {
-
-                puniArgFileName->Buffer = wchMaskBuffer;
-
-                RtlZeroMemory( wchMaskBuffer,
-                               4);
-
-                RtlCopyMemory( &puniArgFileName->Buffer[ 0],
-                               L"*",
-                               sizeof(WCHAR));
-            }
-
-            if( (( puniArgFileName->Length == sizeof(WCHAR)) &&
-                 ( puniArgFileName->Buffer[0] == L'*')))
-            {
-
-                SetFlag( pCcb->Flags, CCB_FLAG_FULL_DIRECTORY_QUERY);
-            }
-            else
-            {
-
-                if( (( puniArgFileName->Length == sizeof(WCHAR)) &&
-                     ( puniArgFileName->Buffer[0] == L'<')) ||
-                    (( puniArgFileName->Length == 2*sizeof(WCHAR)) &&
-                    ( RtlEqualMemory( puniArgFileName->Buffer, L"*.", 2*sizeof(WCHAR) ))))
+                if( pFcb->ObjectInformation->Specific.Directory.PIOCtlDirectoryCB == NULL)
                 {
 
-                    SetFlag( pCcb->Flags, CCB_FLAG_DIR_OF_DIRS_ONLY);
-                }
+                    AFSReleaseResource( &pCcb->NPCcb->CcbLock);
 
-                //
-                // Build the name for procesisng
-                //
+                    AFSReleaseResource( pFcb->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
-                pCcb->MaskName.Length = puniArgFileName->Length;
-                pCcb->MaskName.MaximumLength = pCcb->MaskName.Length;
+                    bReleaseMain = FALSE;
 
-                pCcb->MaskName.Buffer = (WCHAR *)AFSExAllocatePoolWithTag( PagedPool,
-                                                                           pCcb->MaskName.Length,
-                                                                           AFS_GENERIC_MEMORY_6_TAG);
+                    AFSAcquireExcl( &pFcb->NPFcb->Resource,
+                                    TRUE);
 
-                if( pCcb->MaskName.Buffer == NULL)
-                {
-
-                    try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
-                }
-
-                if( FsRtlDoesNameContainWildCards( puniArgFileName))
-                {
-
-                    RtlUpcaseUnicodeString( &pCcb->MaskName,
-                                            puniArgFileName,
-                                            FALSE);
-
-                    SetFlag( pCcb->Flags, CCB_FLAG_MASK_CONTAINS_WILD_CARDS);
-
-                    if( FsRtlIsNameInExpression( &pCcb->MaskName,
-                                                 &AFSPIOCtlName,
-                                                 TRUE,
-                                                 NULL))
-                    {
-                        SetFlag( pCcb->Flags, CCB_FLAG_MASK_PIOCTL_QUERY);
-                    }
-                }
-                else
-                {
-
-                    RtlCopyMemory( pCcb->MaskName.Buffer,
-                                   puniArgFileName->Buffer,
-                                   pCcb->MaskName.Length);
-
-                    if( RtlCompareUnicodeString( &AFSPIOCtlName,
-                                                 &pCcb->MaskName,
-                                                 TRUE) == 0)
-                    {
-                        SetFlag( pCcb->Flags, CCB_FLAG_MASK_PIOCTL_QUERY);
-                    }
-                }
-
-                if( BooleanFlagOn( pCcb->Flags, CCB_FLAG_MASK_PIOCTL_QUERY))
-                {
                     if( pFcb->ObjectInformation->Specific.Directory.PIOCtlDirectoryCB == NULL)
                     {
 
-                        AFSReleaseResource( &pCcb->NPCcb->CcbLock);
+                        ntStatus = AFSInitPIOCtlDirectoryCB( pFcb->ObjectInformation);
 
-                        AFSReleaseResource( pFcb->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
-
-                        bReleaseMain = FALSE;
-
-                        AFSAcquireExcl( &pFcb->NPFcb->Resource,
-                                        TRUE);
-
-                        if( pFcb->ObjectInformation->Specific.Directory.PIOCtlDirectoryCB == NULL)
+                        if( !NT_SUCCESS( ntStatus))
                         {
 
-                            ntStatus = AFSInitPIOCtlDirectoryCB( pFcb->ObjectInformation);
+                            AFSReleaseResource( &pFcb->NPFcb->Resource);
 
-                            if( !NT_SUCCESS( ntStatus))
-                            {
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                          AFS_TRACE_LEVEL_ERROR,
+                                          "AFSQueryDirectory Init PIOCtl directory failure for parent %wZ Mask %wZ Status %08lX\n",
+                                          &pCcb->DirectoryCB->NameInformation.FileName,
+                                          &pCcb->MaskName,
+                                          ntStatus);
 
-                                AFSReleaseResource( &pFcb->NPFcb->Resource);
-
-                                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                              AFS_TRACE_LEVEL_ERROR,
-                                              "AFSQueryDirectory Init PIOCtl directory failure for parent %wZ Mask %wZ Status %08lX\n",
-                                              &pCcb->DirectoryCB->NameInformation.FileName,
-                                              &pCcb->MaskName,
-                                              ntStatus);
-
-                                try_return( ntStatus);
-                            }
+                            try_return( ntStatus);
                         }
-
-                        AFSAcquireShared( pFcb->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock,
-                                          TRUE);
-
-                        bReleaseMain = TRUE;
-
-                        AFSReleaseResource( &pFcb->NPFcb->Resource);
-
-                        AFSAcquireExcl( &pCcb->NPCcb->CcbLock,
-                                        TRUE);
                     }
-                }
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSQueryDirectory Enumerating content for parent %wZ Mask %wZ\n",
-                              &pCcb->DirectoryCB->NameInformation.FileName,
-                              &pCcb->MaskName);
+                    AFSAcquireShared( pFcb->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                                        TRUE);
+
+                    bReleaseMain = TRUE;
+
+                    AFSReleaseResource( &pFcb->NPFcb->Resource);
+
+                    AFSAcquireExcl( &pCcb->NPCcb->CcbLock,
+                                    TRUE);
+                }
             }
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSQueryDirectory Enumerating content for parent %wZ Mask %wZ\n",
+                          &pCcb->DirectoryCB->NameInformation.FileName,
+                          &pCcb->MaskName);
         }
 
         // Check if we need to start from index
@@ -1879,4 +1989,240 @@ AFSIsNameInSnapshot( IN AFSSnapshotHdr *SnapshotHdr,
     }
 
     return bIsInSnapshot;
+}
+
+NTSTATUS
+AFSProcessDirectoryQueryDirect( IN AFSFcb *Fcb,
+                                IN AFSCcb *Ccb,
+                                IN IRP *Irp)
+{
+
+    NTSTATUS        ntStatus = STATUS_SUCCESS;
+    AFSDirEnumEntry *pDirEnum = NULL;
+    IO_STACK_LOCATION *pIrpSp = IoGetCurrentIrpStackLocation( Irp);
+    PUCHAR           pBuffer = NULL;
+    ULONG            ulBaseLength = 0;
+    ULONG            ulAdditionalAttributes = 0;
+    AFSFileInfoCB    stFileInfo;
+    ULONG            ulBytesConverted = 0;
+    PFILE_DIRECTORY_INFORMATION pDirInfo;
+    PFILE_FULL_DIR_INFORMATION pFullDirInfo;
+    PFILE_BOTH_DIR_INFORMATION pBothDirInfo;
+    PFILE_NAMES_INFORMATION pNamesInfo;
+
+    __Enter
+    {
+
+        //
+        // query the service for the entry
+        //
+
+        ntStatus = AFSEvaluateTargetByName( &Ccb->AuthGroup,
+                                            Fcb->ObjectInformation,
+                                            &Ccb->MaskName,
+                                            AFS_REQUEST_FLAG_LAST_COMPONENT,
+                                            &pDirEnum);
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSProcessDirectoryQueryDirect Failed to locate non-wildcard match directly parent %wZ Mask %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                          &Ccb->DirectoryCB->NameInformation.FileName,
+                          &Ccb->MaskName,
+                          Fcb->ObjectInformation->FileId.Cell,
+                          Fcb->ObjectInformation->FileId.Volume,
+                          Fcb->ObjectInformation->FileId.Vnode,
+                          Fcb->ObjectInformation->FileId.Unique,
+                          ntStatus);
+
+            try_return( ntStatus = STATUS_NO_SUCH_FILE);
+        }
+
+        pBuffer = (PUCHAR)AFSLockSystemBuffer( Irp,
+                                               pIrpSp->Parameters.QueryDirectory.Length);
+
+        if( pBuffer == NULL)
+        {
+
+            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+        }
+
+        //
+        // Process the enum request
+        //
+
+        switch( pIrpSp->Parameters.QueryDirectory.FileInformationClass)
+        {
+
+            case FileDirectoryInformation:
+
+                ulBaseLength = FIELD_OFFSET( FILE_DIRECTORY_INFORMATION,
+                                             FileName[0] );
+                break;
+
+            case FileFullDirectoryInformation:
+
+                ulBaseLength = FIELD_OFFSET( FILE_FULL_DIR_INFORMATION,
+                                             FileName[0] );
+                break;
+
+            case FileNamesInformation:
+
+                ulBaseLength = FIELD_OFFSET( FILE_NAMES_INFORMATION,
+                                             FileName[0] );
+                break;
+
+            case FileBothDirectoryInformation:
+
+                ulBaseLength = FIELD_OFFSET( FILE_BOTH_DIR_INFORMATION,
+                                             FileName[0] );
+                break;
+
+            case FileIdBothDirectoryInformation:
+
+                ulBaseLength = FIELD_OFFSET( FILE_ID_BOTH_DIR_INFORMATION,
+                                             FileName[0] );
+
+                break;
+
+            case FileIdFullDirectoryInformation:
+
+                ulBaseLength = FIELD_OFFSET( FILE_ID_FULL_DIR_INFORMATION,
+                                             FileName[0] );
+
+                break;
+
+            default:
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSProcessDirectoryQueryDirect (%p) Unknown FileInformationClass %u\n",
+                              Irp,
+                              pIrpSp->Parameters.QueryDirectory.FileInformationClass);
+
+                try_return( ntStatus = STATUS_INVALID_INFO_CLASS);
+        }
+
+        switch( pDirEnum->FileType)
+        {
+
+            case AFS_FILE_TYPE_MOUNTPOINT:
+            case AFS_FILE_TYPE_DFSLINK:
+            {
+
+                ulAdditionalAttributes = FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT;
+
+                break;
+            }
+
+            case AFS_FILE_TYPE_SYMLINK:
+            {
+
+                //
+                // Note: we need to evaluate this entry to determine if the target is a directory or not
+                //
+
+                ulAdditionalAttributes |= FILE_ATTRIBUTE_REPARSE_POINT;
+
+                break;
+            }
+        }
+
+        //  Zero the base part of the structure.
+        RtlZeroMemory( pBuffer,
+                       ulBaseLength);
+
+        switch( pIrpSp->Parameters.QueryDirectory.FileInformationClass)
+        {
+
+            //  Now fill the base parts of the structure that are applicable.
+            case FileIdBothDirectoryInformation:
+            case FileBothDirectoryInformation:
+            {
+                pBothDirInfo = (PFILE_BOTH_DIR_INFORMATION)pBuffer;
+
+                pBothDirInfo->ShortNameLength = (CHAR)pDirEnum->ShortNameLength;
+
+                if( pDirEnum->ShortNameLength > 0)
+                {
+                    RtlCopyMemory( &pBothDirInfo->ShortName[ 0],
+                                   &pDirEnum->ShortName[ 0],
+                                   pBothDirInfo->ShortNameLength);
+                }
+            }
+            case FileIdFullDirectoryInformation:
+            case FileFullDirectoryInformation:
+            {
+                pFullDirInfo = (PFILE_FULL_DIR_INFORMATION)pBuffer;
+                pFullDirInfo->EaSize = 0;
+            }
+            case FileDirectoryInformation:
+            {
+                pDirInfo = (PFILE_DIRECTORY_INFORMATION)pBuffer;
+
+                pDirInfo->CreationTime = pDirEnum->CreationTime;
+                pDirInfo->LastWriteTime = pDirEnum->LastWriteTime;
+                pDirInfo->LastAccessTime = pDirEnum->LastAccessTime;
+                pDirInfo->ChangeTime = pDirEnum->ChangeTime;
+
+                pDirInfo->EndOfFile = pDirEnum->EndOfFile;
+                pDirInfo->AllocationSize = pDirEnum->AllocationSize;
+
+                if ( ulAdditionalAttributes && pDirEnum->FileAttributes == FILE_ATTRIBUTE_NORMAL)
+                {
+                    pDirInfo->FileAttributes = ulAdditionalAttributes;
+                }
+                else
+                {
+                    pDirInfo->FileAttributes = pDirEnum->FileAttributes | ulAdditionalAttributes;
+                }
+
+                pDirInfo->FileIndex = pDirEnum->FileIndex;
+                pDirInfo->FileNameLength = pDirEnum->FileNameLength;
+
+                break;
+            }
+
+            case FileNamesInformation:
+            {
+                pNamesInfo = (PFILE_NAMES_INFORMATION)pBuffer;
+                pNamesInfo->FileIndex = pDirEnum->FileIndex;
+                pNamesInfo->FileNameLength = pDirEnum->FileNameLength;
+
+                break;
+            }
+
+            default:
+            {
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSProcessDirectoryQueryDirect (%p) Unknown FileInformationClass %u\n",
+                              Irp,
+                              pIrpSp->Parameters.QueryDirectory.FileInformationClass);
+
+                try_return( ntStatus = STATUS_INVALID_INFO_CLASS);
+            }
+        }
+
+        ulBytesConverted = pIrpSp->Parameters.QueryDirectory.Length - ulBaseLength >= pDirEnum->FileNameLength ?
+                                        pDirEnum->FileNameLength :
+                                        pIrpSp->Parameters.QueryDirectory.Length - ulBaseLength;
+
+        RtlCopyMemory( &pBuffer[ ulBaseLength],
+                       (void *)((char *)pDirEnum + pDirEnum->FileNameOffset),
+                       ulBytesConverted);
+
+        Irp->IoStatus.Information = ulBaseLength + ulBytesConverted;
+
+try_exit:
+
+        if( pDirEnum != NULL)
+        {
+            ExFreePool( pDirEnum);
+        }
+    }
+
+    return ntStatus;
 }
