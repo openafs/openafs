@@ -1173,7 +1173,8 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
             //
 
             if( pCurrentObject->FileType == AFS_FILE_TYPE_DIRECTORY &&
-                !BooleanFlagOn( pCurrentObject->Flags, AFS_OBJECT_FLAGS_DIRECTORY_ENUMERATED))
+                !BooleanFlagOn( pCurrentObject->Flags, AFS_OBJECT_FLAGS_DIRECTORY_ENUMERATED) &&
+                uniPathName.Length > 0)
             {
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,

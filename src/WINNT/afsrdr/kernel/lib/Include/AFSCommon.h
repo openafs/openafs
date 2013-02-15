@@ -992,6 +992,11 @@ BOOLEAN
 AFSIsNameInSnapshot( IN AFSSnapshotHdr *SnapshotHdr,
                      IN ULONG HashIndex);
 
+NTSTATUS
+AFSProcessDirectoryQueryDirect( IN AFSFcb *Fcb,
+                                IN AFSCcb *Ccb,
+                                IN IRP *Irp);
+
 //
 // AFSFSControl.cpp Prototypes
 //
