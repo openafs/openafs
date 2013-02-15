@@ -15,7 +15,11 @@
 #include <roken.h>
 
 #ifdef IGNORE_SOME_GCC_WARNINGS
-# pragma GCC diagnostic warning "-Wdeprecated-declarations"
+# ifdef __clang__
+#  pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+# else
+#  pragma GCC diagnostic warning "-Wdeprecated-declarations"
+# endif
 #endif
 
 #ifdef HAVE_SYS_RESOURCE_H
