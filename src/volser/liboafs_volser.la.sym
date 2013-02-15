@@ -16,6 +16,7 @@ UV_BackupVolume
 UV_Bind
 UV_ChangeLocation
 UV_CloneVolume
+UV_ConvertRO
 UV_CopyVolume2
 UV_CreateVolume3
 UV_DeleteVolume

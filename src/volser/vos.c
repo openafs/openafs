@@ -5504,16 +5504,13 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
     afs_uint32 volid;
     afs_uint32 server;
     afs_int32 code, i, same;
-    struct nvldbentry entry, checkEntry, storeEntry;
+    struct nvldbentry entry;
     afs_int32 vcode;
-    afs_int32 rwindex = 0;
     afs_uint32 rwserver = 0;
     afs_int32 rwpartition = 0;
-    afs_int32 roindex = 0;
     afs_uint32 roserver = 0;
     afs_int32 ropartition = 0;
     int force = 0;
-    struct rx_connection *aconn;
     int c, dc;
 
     server = GetServer(as->parms[0].items->data);
@@ -5566,7 +5563,6 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
     MapHostToNetwork(&entry);
     for (i = 0; i < entry.nServers; i++) {
 	if (entry.serverFlags[i] & ITSRWVOL) {
-	    rwindex = i;
 	    rwserver = entry.serverNumber[i];
 	    rwpartition = entry.serverPartition[i];
 	    if (roserver)
@@ -5580,7 +5576,6 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
 		return ENOENT;
 	    }
 	    if (same) {
-		roindex = i;
 		roserver = entry.serverNumber[i];
 		ropartition = entry.serverPartition[i];
 		if (rwserver)
@@ -5614,110 +5609,8 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
 	}
     }
 
-    vcode =
-	ubik_VL_SetLock(cstruct, 0, entry.volumeId[RWVOL], RWVOL,
-		  VLOP_MOVE);
-    if (vcode) {
-	fprintf(STDERR,
-		"Unable to lock volume %lu, code %d\n",
-		(unsigned long)entry.volumeId[RWVOL],vcode);
-	PrintError("", vcode);
-	return -1;
-    }
+    code = UV_ConvertRO(server, partition, volid, &entry);
 
-    /* make sure the VLDB entry hasn't changed since we started */
-    memset(&checkEntry, 0, sizeof(checkEntry));
-    vcode = VLDB_GetEntryByID(volid, -1, &checkEntry);
-    if (vcode) {
-	fprintf(STDERR,
-                "Could not fetch the entry for volume %lu from VLDB\n",
-                (unsigned long)volid);
-	PrintError("convertROtoRW ", vcode);
-	code = vcode;
-	goto error_exit;
-    }
-
-    MapHostToNetwork(&checkEntry);
-    entry.flags &= ~VLOP_ALLOPERS;  /* clear any stale lock operation flags */
-    entry.flags |= VLOP_MOVE;        /* set to match SetLock operation above */
-    if (memcmp(&entry, &checkEntry, sizeof(entry)) != 0) {
-        fprintf(STDERR,
-                "VLDB entry for volume %lu has changed; please reissue the command.\n",
-                (unsigned long)volid);
-        code = -1;
-        goto error_exit;
-    }
-
-    aconn = UV_Bind(server, AFSCONF_VOLUMEPORT);
-    code = AFSVolConvertROtoRWvolume(aconn, partition, volid);
-    if (code) {
-	fprintf(STDERR,
-		"Converting RO volume %lu to RW volume failed with code %d\n",
-		(unsigned long)volid, code);
-	PrintError("convertROtoRW ", code);
-	goto error_exit;
-    }
-    /* Update the VLDB to match what we did on disk as much as possible.  */
-    /* If the converted RO was in the VLDB, make it look like the new RW. */
-    if (roserver) {
-	entry.serverFlags[roindex] = ITSRWVOL;
-    } else {
-	/* Add a new site entry for the newly created RW.  It's possible
-	 * (but unlikely) that we are already at MAXNSERVERS and that this
-	 * new site will invalidate the whole VLDB entry;  however,
-	 * VLDB_ReplaceEntry will detect this and return VL_BADSERVER,
-	 * so we need no extra guard logic here.
-	 */
-	afs_int32 newrwindex = entry.nServers;
-	(entry.nServers)++;
-	entry.serverNumber[newrwindex] = server;
-	entry.serverPartition[newrwindex] = partition;
-	entry.serverFlags[newrwindex] = ITSRWVOL;
-    }
-    entry.flags |= RW_EXISTS;
-    entry.flags &= ~BACK_EXISTS;
-
-    /* if the old RW was in the VLDB, remove it by decrementing the number */
-    /* of servers, replacing the RW entry with the last entry, and zeroing */
-    /* out the last entry. */
-    if (rwserver) {
-	(entry.nServers)--;
-	if (rwindex != entry.nServers) {
-	    entry.serverNumber[rwindex] = entry.serverNumber[entry.nServers];
-	    entry.serverPartition[rwindex] =
-		entry.serverPartition[entry.nServers];
-	    entry.serverFlags[rwindex] = entry.serverFlags[entry.nServers];
-	    entry.serverNumber[entry.nServers] = 0;
-	    entry.serverPartition[entry.nServers] = 0;
-	    entry.serverFlags[entry.nServers] = 0;
-	}
-    }
-    entry.flags &= ~RO_EXISTS;
-    for (i = 0; i < entry.nServers; i++) {
-	if (entry.serverFlags[i] & ITSROVOL) {
-	    if (!(entry.serverFlags[i] & (RO_DONTUSE | NEW_REPSITE)))
-		entry.flags |= RO_EXISTS;
-	}
-    }
-    MapNetworkToHost(&entry, &storeEntry);
-    code =
-	VLDB_ReplaceEntry(entry.volumeId[RWVOL], RWVOL, &storeEntry,
-			  (LOCKREL_OPCODE | LOCKREL_AFSID |
-			   LOCKREL_TIMESTAMP));
-    if (code) {
-	fprintf(STDERR,
-		"Warning: volume converted, but vldb update failed with code %d!\n",
-		code);
-    }
-
-  error_exit:
-    vcode = UV_LockRelease(entry.volumeId[RWVOL]);
-    if (vcode) {
-	fprintf(STDERR,
-		"Unable to unlock volume %lu, code %d\n",
-		(unsigned long)entry.volumeId[RWVOL],vcode);
-	PrintError("", vcode);
-    }
     return code;
 }
 
