@@ -161,7 +161,7 @@ bos_ServerOpen(const void *cellHandle, const char *serverName,
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
-    bos_server_p bos_server = malloc(sizeof(bos_server_t));
+    bos_server_p bos_server = calloc(1, sizeof(bos_server_t));
     int serverAddress;
 
     /*
