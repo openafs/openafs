@@ -277,21 +277,24 @@ VLDB_ListAttributes(afs_cell_handle_p cellHandle,
 		if (*entriesp > arrayEntries.bulkentries_len)
 		    *entriesp = arrayEntries.bulkentries_len;
 
-		blkentriesp->nbulkentries_val =
-		    malloc(*entriesp * sizeof(*blkentriesp));
-		if (blkentriesp->nbulkentries_val != NULL) {
-		    for (i = 0; i < *entriesp; i++) {
-			OldVLDB_to_NewVLDB((struct vldbentry *)&arrayEntries.
-					   bulkentries_val[i],
-					   (struct nvldbentry *)&blkentriesp->
-					   nbulkentries_val[i], &tst);
+		if (*entriesp > 0) {
+		    blkentriesp->nbulkentries_val =
+			calloc(*entriesp, sizeof(*blkentriesp));
+		    if (blkentriesp->nbulkentries_val != NULL) {
+		        for (i = 0; i < *entriesp; i++) {
+			    OldVLDB_to_NewVLDB((struct vldbentry *)&arrayEntries.
+					       bulkentries_val[i],
+					       (struct nvldbentry *)&blkentriesp->
+					       nbulkentries_val[i], &tst);
+			}
+		    } else {
+			tst = ADMNOMEM;
 		    }
 		} else {
-		    tst = ADMNOMEM;
+		    blkentriesp->nbulkentries_val = NULL;
 		}
-		if (arrayEntries.bulkentries_val) {
-		    free(arrayEntries.bulkentries_val);
-		}
+
+		xdr_free((xdrproc_t)xdr_bulkentries, &arrayEntries);
 
 		rc = 1;
 	    }

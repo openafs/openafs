@@ -790,11 +790,15 @@ RunTheTest(struct cmd_syndesc *a_s, void *arock)
     if (debugging_on)
 	printf("%s: Allocating socket array for %d Cache Manager(s)\n", rn,
 	       numCMs);
-    CMSktArray = malloc(numCMs * sizeof(struct sockaddr_in));
-    if (CMSktArray == (struct sockaddr_in *)0) {
-	printf("%s: Can't allocate socket array for %d Cache Managers\n", rn,
-	       numCMs);
-	exit(1);
+    if (numCMs > 0) {
+	CMSktArray = calloc(numCMs, sizeof(struct sockaddr_in));
+	if (CMSktArray == NULL) {
+	    printf("%s: Can't allocate socket array for %d Cache Managers\n",
+		   rn, numCMs);
+	    exit(1);
+	}
+    } else {
+	CMSktArray = NULL;
     }
 
     /*
@@ -824,7 +828,12 @@ RunTheTest(struct cmd_syndesc *a_s, void *arock)
      */
     if (debugging_on)
 	printf("Allocating %d long(s) for coll ID\n", numCollIDs);
-    collIDP = malloc(numCollIDs * sizeof(afs_int32));
+
+    if (numCollIDs > 0)
+	collIDP = calloc(numCollIDs, sizeof(afs_int32));
+    else
+	collIDP = NULL;
+
     currCollIDP = collIDP;
     curr_item = a_s->parms[P_COLL_IDS].items;
     for (currCollIDIdx = 0; currCollIDIdx < numCollIDs; currCollIDIdx++) {

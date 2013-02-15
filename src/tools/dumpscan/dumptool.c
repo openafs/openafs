@@ -1149,12 +1149,19 @@ ScanVnodes(FILE * f, VolumeDiskData * vol, int sizescan)
 	numSmallVnodes = numFileVnodes;
 
     } else {
-	LargeVnodeIndex = (struct vnodeData **)
-	    malloc(numDirVnodes * sizeof(struct vnodeData));
-	SmallVnodeIndex = (struct vnodeData **)
-	    malloc(numFileVnodes * sizeof(struct vnodeData));
+	if (numDirVnodes == 0)
+	    LargeVnodeIndex = NULL;
+	else
+	    LargeVnodeIndex = malloc(numDirVnodes
+				      * sizeof(struct vnodeData *));
+	if (numFileVnodes == 0)
+	    SmallVnodeIndex = NULL;
+	else
+	    SmallVnodeIndex = malloc(numFileVnodes
+				      * sizeof(struct vnodeData *));
 
-	if (LargeVnodeIndex == NULL || SmallVnodeIndex == NULL) {
+	if ((numDirVnodes != 0 && LargeVnodeIndex == NULL) ||
+	    (numFileVnodes != 0 && SmallVnodeIndex == NULL)) {
 	    if (verbose)
 		fprintf(stderr,
 			"Unable to allocate space " "for vnode tables\n");

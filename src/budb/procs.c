@@ -534,9 +534,12 @@ SendReturnList(struct ubik_trans *ut,
 
     /* Allocate space for the return values if needed and zero it */
     if (eList->budb_dumpList_val == 0) {
-	eList->budb_dumpList_val = calloc(to_return, e_size);
-	if (!eList->budb_dumpList_val)
-	    return (BUDB_NOMEM);
+	if (to_return > 0) {
+	    eList->budb_dumpList_val = calloc(to_return, e_size);
+	    if (!eList->budb_dumpList_val)
+		return (BUDB_NOMEM);
+	} else
+	    eList->budb_dumpList_val = NULL;
     } else {
         memset(eList->budb_dumpList_val, 0, e_size * to_return);
     }

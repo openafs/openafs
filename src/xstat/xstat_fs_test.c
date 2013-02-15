@@ -726,7 +726,12 @@ RunTheTest(struct cmd_syndesc *a_s, void *dummy)
      */
     if (debugging_on)
 	printf("Allocating %d long(s) for coll ID\n", numCollIDs);
-    collIDP = malloc(numCollIDs * sizeof(afs_int32));
+
+    if (numCollIDs > 0)
+	collIDP = calloc(numCollIDs, sizeof(afs_int32));
+    else
+	collIDP = NULL;
+
     currCollIDP = collIDP;
     curr_item = a_s->parms[P_COLL_IDS].items;
     for (currCollIDIdx = 0; currCollIDIdx < numCollIDs; currCollIDIdx++) {

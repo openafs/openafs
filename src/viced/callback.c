@@ -422,11 +422,13 @@ FDel(struct FileEntry *fe)
 int
 InitCallBack(int nblks)
 {
+    opr_Assert(nblks > 0);
+
     H_LOCK;
     tfirst = CBtime(time(NULL));
     /* N.B. The "-1", below, is because
      * FE[0] and CB[0] are not used--and not allocated */
-    FE = ((struct FileEntry *)(calloc(nblks, sizeof(struct FileEntry))));
+    FE = calloc(nblks, sizeof(struct FileEntry));
     if (!FE) {
 	ViceLogThenPanic(0, ("Failed malloc in InitCallBack\n"));
     }
@@ -434,7 +436,7 @@ InitCallBack(int nblks)
     cbstuff.nFEs = nblks;
     while (cbstuff.nFEs)
 	FreeFE(&FE[cbstuff.nFEs]);	/* This is correct */
-    CB = ((struct CallBack *)(calloc(nblks, sizeof(struct CallBack))));
+    CB = calloc(nblks, sizeof(struct CallBack));
     if (!CB) {
 	ViceLogThenPanic(0, ("Failed malloc in InitCallBack\n"));
     }
