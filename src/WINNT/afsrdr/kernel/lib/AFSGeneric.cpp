@@ -4819,12 +4819,6 @@ AFSEnumerateGlobalRoot( IN GUID *AuthGroup)
 
         pDirGlobalDirNode = AFSGlobalRoot->ObjectInformation.Specific.Directory.DirectoryNodeListHead;
 
-        //
-        // Indicate the node is initialized
-        //
-
-        SetFlag( AFSGlobalRoot->ObjectInformation.Flags, AFS_OBJECT_FLAGS_DIRECTORY_ENUMERATED);
-
         uniFullName.MaximumLength = PAGE_SIZE;
         uniFullName.Length = 0;
 

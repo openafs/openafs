@@ -1457,28 +1457,22 @@ AFSOpenRoot( IN PIRP Irp,
             AFSAcquireExcl( VolumeCB->ObjectInformation.Specific.Directory.DirectoryNodeHdr.TreeLock,
                             TRUE);
 
-            if( !BooleanFlagOn( VolumeCB->ObjectInformation.Flags, AFS_OBJECT_FLAGS_DIRECTORY_ENUMERATED))
+            ntStatus = AFSEnumerateDirectory( AuthGroup,
+                                              &VolumeCB->ObjectInformation,
+                                              TRUE);
+
+            if( !NT_SUCCESS( ntStatus))
             {
 
-                ntStatus = AFSEnumerateDirectory( AuthGroup,
-                                                  &VolumeCB->ObjectInformation,
-                                                  TRUE);
+                AFSReleaseResource( VolumeCB->ObjectInformation.Specific.Directory.DirectoryNodeHdr.TreeLock);
 
-                if( !NT_SUCCESS( ntStatus))
-                {
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSOpenRoot (%p) Failed to enumerate directory Status %08lX\n",
+                              Irp,
+                              ntStatus);
 
-                    AFSReleaseResource( VolumeCB->ObjectInformation.Specific.Directory.DirectoryNodeHdr.TreeLock);
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_ERROR,
-                                  "AFSOpenRoot (%p) Failed to enumerate directory Status %08lX\n",
-                                  Irp,
-                                  ntStatus);
-
-                    try_return( ntStatus);
-                }
-
-                SetFlag( VolumeCB->ObjectInformation.Flags, AFS_OBJECT_FLAGS_DIRECTORY_ENUMERATED);
+                try_return( ntStatus);
             }
 
             AFSReleaseResource( VolumeCB->ObjectInformation.Specific.Directory.DirectoryNodeHdr.TreeLock);
