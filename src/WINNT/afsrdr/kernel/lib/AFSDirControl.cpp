@@ -459,8 +459,6 @@ AFSQueryDirectory( IN PIRP Irp)
 
                 try_return( ntStatus);
             }
-
-            SetFlag( pFcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_DIRECTORY_ENUMERATED);
         }
         else if( BooleanFlagOn( pFcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY))
         {

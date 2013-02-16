@@ -1215,8 +1215,6 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                         try_return( ntStatus);
                     }
-
-                    SetFlag( pDirEntry->ObjectInformation->Flags, AFS_OBJECT_FLAGS_DIRECTORY_ENUMERATED);
                 }
 
                 AFSReleaseResource( pCurrentObject->Specific.Directory.DirectoryNodeHdr.TreeLock);

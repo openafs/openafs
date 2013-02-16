@@ -63,6 +63,12 @@ AFSEnumerateDirectory( IN GUID *AuthGroup,
 
         ASSERT( ExIsResourceAcquiredExclusiveLite( ObjectInfoCB->Specific.Directory.DirectoryNodeHdr.TreeLock));
 
+        if( BooleanFlagOn( ObjectInfoCB->Flags, AFS_OBJECT_FLAGS_DIRECTORY_ENUMERATED))
+        {
+
+            try_return( ntStatus = STATUS_SUCCESS);
+        }
+
         uniGUID.Length = 0;
         uniGUID.MaximumLength = 0;
         uniGUID.Buffer = NULL;
@@ -683,13 +689,18 @@ try_exit:
             AFSExFreePoolWithTag( pBuffer, AFS_DIR_BUFFER_TAG);
         }
 
-        //
-        // If the processing failed then we should reset the directory content in the event
-        // it is re-enumerated
-        //
-
-        if( !NT_SUCCESS( ntStatus))
+        if ( NT_SUCCESS( ntStatus))
         {
+
+            SetFlag( ObjectInfoCB->Flags, AFS_OBJECT_FLAGS_DIRECTORY_ENUMERATED);
+        }
+        else
+        {
+
+            //
+            // If the processing failed then we should reset the directory
+            // content in the event it is re-enumerated
+            //
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
