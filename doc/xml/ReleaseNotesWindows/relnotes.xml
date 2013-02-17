@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.3//EN"
-        "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"[
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.3//EN" "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"[
 <!ENTITY version SYSTEM "version.xml">
 ]>
 <book>
@@ -47,8 +46,7 @@
       \\AFS UNC server name.</para>
     <para>OpenAFS is the product of an open source development effort begun on 1 November 2000.
       OpenAFS is maintained and developed by a group of volunteers with the support of the end user
-      community. When OpenAFS is used as part of your computing infrastructure, please <link
-        linkend="Contributing_to_OpenAFS">contribute</link> to its continued growth. </para>
+      community. When OpenAFS is used as part of your computing infrastructure, please <link linkend="Contributing_to_OpenAFS">contribute</link> to its continued growth. </para>
   </preface>
   <chapter id="chap_1">
     <title id="Installer_Options">Installer Options</title>
@@ -149,8 +147,7 @@
         <indexterm significance="normal">
           <primary>disk space required</primary>
         </indexterm> Up to 60mb required for the OpenAFS binaries plus 100MB for the default
-        AFSCache file. The size of the AFSCache file may be adjusted via <link
-          linkend="Regkey_TransarcAFSDaemon_Parameters_CacheSize">the Registry</link> after
+        AFSCache file. The size of the AFSCache file may be adjusted via <link linkend="Regkey_TransarcAFSDaemon_Parameters_CacheSize">the Registry</link> after
         installation. The maximum cache size for 32-bit Windows is approximately 1.2GB. On 64-bit
         Windows there is no enforced limit on the cache size. </para>
     </section>
@@ -217,8 +214,7 @@
       </indexterm>
       <para>The OpenAFS distribution ships with its own implementation of Kerberos v4 and although
         it is Kerberos v5 capable, it relies on third-party Kerberos v5 libraries. The OpenAFS 1.4
-        series (and later) integrates with <ulink url="https://www.secure-endpoints.com/heimdal"
-          >Heimdal</ulink> or <ulink url="http://web.mit.edu/kerberos/">MIT Kerberos for
+        series (and later) integrates with <ulink url="https://www.secure-endpoints.com/heimdal">Heimdal</ulink> or <ulink url="http://web.mit.edu/kerberos/">MIT Kerberos for
           Windows</ulink> 2.6.5 and above. OpenAFS Kerberos v5 capable functionality includes
         integrated logon, the AFS Authentication Tool, the Network Identity Manager AFS provider,
         and the aklog command. These tools provide support for Kerberos v5 authentication including
@@ -227,13 +223,11 @@
       <indexterm significance="normal">
         <primary>network identity manager</primary>
       </indexterm>
-      <para>The recommended versions of <ulink url="https://www.secure-endpoints.com/heimdal"
-          >Heimdal</ulink> and <ulink url="http://web.mit.edu/kerberos/">MIT Kerberos for
+      <para>The recommended versions of <ulink url="https://www.secure-endpoints.com/heimdal">Heimdal</ulink> and <ulink url="http://web.mit.edu/kerberos/">MIT Kerberos for
           Windows</ulink> are distributed by <ulink url="https://www.secure-endpoints.com/">Secure
           Endpoints Inc.</ulink>. As of this writing, the Secure Endpoints Inc. distribution
         provides 64-bit Windows support which is unavailable from MIT.  KFW 3.2.2 includes Network
-        Identity Manager 1.3.1 which integrates with the <link
-          linkend="Network_Identity_Manager_Provider">AFS Provider</link> installed as part of
+        Identity Manager 1.3.1 which integrates with the <link linkend="Network_Identity_Manager_Provider">AFS Provider</link> installed as part of
         OpenAFS for Windows. The most recent version of Network Identity Manager is version 2.1
         which is available as an independent upgrade to MIT Kerberos for Windows.   Heimdal does not
         include a version of Network Identity Manager.</para>
@@ -262,8 +256,7 @@
               <para> There are two things to consider when using an Active Directory as the Kerberos
                 realm that issues the AFS service ticket. First, the Kerberos v5 tickets issued by
                 Active Directory can be quite large when compared to tickets issued by traditional
-                UNIX KDCs due to the inclusion of Windows specific authorization data <ulink
-                  url="http://msdn.microsoft.com/en-us/library/cc237917%28v=prot.10%29.aspx">(the
+                UNIX KDCs due to the inclusion of Windows specific authorization data <ulink url="http://msdn.microsoft.com/en-us/library/cc237917%28v=prot.10%29.aspx">(the
                   Microsoft PAC)</ulink>. If the issued tickets are larger than 344 bytes, OpenAFS
                 1.2.x servers will be unable to process them and will issue a RXKADBADTICKET error.
                 OpenAFS 1.4 (and beyond) servers can support the largest tickets that Active
@@ -276,8 +269,7 @@
                 the resulting Kerberos v5 tokens. Windows 2000 Active Directory issues tickets with
                 the DES-CBC-CRC enctype. Windows Server 2008 R2 Active Directory domain by default
                 disables use of DES-CBC-MD5 and it must be enabled. </para>
-              <para>Microsoft has documented in <ulink url="http://support.microsoft.com/kb/832572/"
-                  >Knowledge Base article 832572</ulink> a new NO_AUTH_REQUIRED flag that can be set
+              <para>Microsoft has documented in <ulink url="http://support.microsoft.com/kb/832572/">Knowledge Base article 832572</ulink> a new NO_AUTH_REQUIRED flag that can be set
                 on the account mapped to the AFS service principal. When this flag is set, the PAC
                 authorization data will not be included in the ticket. Setting this flag is
                 recommended for all accounts that are associated with non-Windows services and that
@@ -289,8 +281,7 @@
             </listitem>
             <listitem>
               <para>Starting with Windows 7 and Windows Server 2008 R2, Microsoft has disabled the
-                single DES encryption types,<ulink
-                  url="http://technet.microsoft.com/en-us/library/dd560670(WS.10).aspx">TechNet:
+                single DES encryption types,<ulink url="http://technet.microsoft.com/en-us/library/dd560670(WS.10).aspx">TechNet:
                   Changes in Kerberos Authentication</ulink>. DES must be enabled via Group Policy
                 in order for Active Directory to be used as a KDC for OpenAFS.  Enable weak
                 encryption becuase of AFS... Start &gt; Administrative Tools &gt; Group Policy
@@ -331,17 +322,14 @@
           <primary>network identity manager</primary>
         </indexterm>
         <para>As of release 1.5.9, OpenAFS for Windows includes a Network Identity Manager Provider
-          for obtaining AFS tokens. This plug-in is a contribution from <ulink
-            url="https://www.secure-endpoints.com/">Secure Endpoints Inc.</ulink> Network Identity
-          Manager is a multiple identity credential management tool that ships with <ulink
-            url="http://web.mit.edu/kerberos/">MIT Kerberos for Windows</ulink> version 3.0 and
-          above. The OpenAFS plug-in requires <ulink url="https://www.secure-endpoints.com/heimdal"
-            >Heimdal</ulink> or <ulink url="http://web.mit.edu/kerberos/">MIT Kerberos for
+          for obtaining AFS tokens. This plug-in is a contribution from <ulink url="https://www.secure-endpoints.com/">Secure Endpoints Inc.</ulink> Network Identity
+          Manager is a multiple identity credential management tool that ships with <ulink url="http://web.mit.edu/kerberos/">MIT Kerberos for Windows</ulink> version 3.0 and
+          above. The OpenAFS plug-in requires <ulink url="https://www.secure-endpoints.com/heimdal">Heimdal</ulink> or <ulink url="http://web.mit.edu/kerberos/">MIT Kerberos for
             Windows</ulink> version 3.1 or above. </para>
         <para>
           <inlinemediaobject>
             <imageobject>
-              <imagedata format="JPG" fileref="relnotes00.jpg" />
+              <imagedata format="JPG" fileref="relnotes00.jpg"/>
             </imageobject>
           </inlinemediaobject>
         </para>
@@ -349,7 +337,7 @@
         <para>
           <inlinemediaobject>
             <imageobject>
-              <imagedata format="JPG" fileref="relnotes01.jpg" />
+              <imagedata format="JPG" fileref="relnotes01.jpg"/>
             </imageobject>
           </inlinemediaobject>
         </para>
@@ -357,7 +345,7 @@
         <para>
           <inlinemediaobject>
             <imageobject>
-              <imagedata format="JPG" fileref="relnotes02.jpg" />
+              <imagedata format="JPG" fileref="relnotes02.jpg"/>
             </imageobject>
           </inlinemediaobject>
         </para>
@@ -519,18 +507,15 @@
         servers.</para>
       <para>Integrated Logon is required if roaming user profiles are stored within the AFS file
         system. OpenAFS does not provide tools for synchronizing the Windows and Kerberos user
-        accounts and passwords.  Integrated Logon can be enabled or disabled via the <link
-          linkend="Value_LogonOptions">LogonOptions</link> registry value.</para>
+        accounts and passwords.  Integrated Logon can be enabled or disabled via the <link linkend="Value_LogonOptions">LogonOptions</link> registry value.</para>
       <para>When Heimdal or KFW is installed, Integrated Logon will use it to obtain tokens using
         Kerberos v5. If you must use the <emphasis role="italic">deprecated</emphasis> kaserver for
-        authentication instead of Kerberos v5, the use of KFW can be disabled via the <link
-          linkend="Value_EnableKFW">EnableKFW</link> registry value. </para>
+        authentication instead of Kerberos v5, the use of KFW can be disabled via the <link linkend="Value_EnableKFW">EnableKFW</link> registry value. </para>
       <para>Integrated Logon will not transfer Kerberos v5 tickets into the user's logon session credential cache.  This is no longer possible on Vista and Windows 7.</para>
       <para>Integrated Logon does not have the ability to cache the username and password for the
         purpose of obtaining tokens if the Kerberos KDC is inaccessible at logon time.</para>
       <para>Integrated Logon supports the ability to obtain tokens for multiple cells.  For further
-        information on how to configure this feature, read about the <link
-          linkend="Value_TheseCells">TheseCells</link> registry value. </para>
+        information on how to configure this feature, read about the <link linkend="Value_TheseCells">TheseCells</link> registry value. </para>
       <para>Depending on the configuration of the local machine, it is possible for logon
         authentication to complete with one of the following user account types:</para>
       <para>
@@ -1178,7 +1163,7 @@
       <para>OpenAFS for Windows implements an SMB server which is used as a gateway to the AFS filesystem. Because of limitations of the SMB implementation in pre-1.5.50 releases, Windows stored all files into AFS using OEM code pages such as CP437 (United States) or CP850 (Western Europe). These code pages are incompatible with the ISO Latin-1 or Unicode (UTF-8) character sets typically used as the default on UNIX systems in both the United States and Western Europe. Filenames stored by OpenAFS for Windows were therefore unreadable on UNIX systems if they include any of the following characters:</para>
       <informaltable frame="all">
         <tgroup rowsep="1" align="left" colsep="1" cols="1">
-          <colspec colwidth="442pt" colname="c1" />
+          <colspec colwidth="442pt" colname="c1"/>
           <tbody>
             <row>
               <entry>
@@ -1512,8 +1497,7 @@
       <para>Windows Vista, Windows 7, and Server 2008 [R2] implement
         <ulink url="http://www.microsoft.com/technet/windowsvista/library/0d75f774-8514-4c9e-ac08-4c21f5c6c2d9.mspx">User Account Control</ulink> (UAC), a new security feature that implements least user privilege.  With UAC, applications only run with the minimum required privileges.  Even Administrator accounts run applications without the "Administrator" access control credentials.  One side effect of this is that existing applications that mix user and system configuration capabilities must be re-written to separate those functions that require "Administrator" privileges into a separate process space.  Future updates to OpenAFS will incorporate the necessary privilege separation, until that time some functions such as the Start and Stop Service features of the AFS Authentication Tool and the AFS Control Panel will not work unless they are "Run as Administrator".  When a Vista user account that is a member of the "Administrators" group is used to access the AFS Control Panel (afs_config.exe), the process must be "Run as Administrator".   Otherwise, attempts to modify the OpenAFS configuration will appear to succeed but in reality will have failed due to Vista's system file and registry virtualization feature.
       </para>
-      <para>The help files provided with OpenAFS are in .HLP format. <ulink
-          url="http://support.microsoft.com/kb/917607">Windows Vista, Windows 7, and Server 2008
+      <para>The help files provided with OpenAFS are in .HLP format. <ulink url="http://support.microsoft.com/kb/917607">Windows Vista, Windows 7, and Server 2008
           [R2] do not include a help engine for this format.</ulink>
       </para>
       <para><emphasis>The following items only apply when the OpenAFS Service is manually configured as an SMB Gateway.</emphasis></para>
@@ -2035,8 +2019,7 @@ network paths are inaccessible when Protected Mode is on.
         <primary>TraceOption</primary>
       </indexterm>
       <para>If you are having trouble with the Integrated Logon operations it is often useful to be
-        able to obtain a log of what it is attempting to do. Setting the <link
-          linkend="Value_AFSLogon_Debug">Debug</link> registry value: </para>
+        able to obtain a log of what it is attempting to do. Setting the <link linkend="Value_AFSLogon_Debug">Debug</link> registry value: </para>
       <para> [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]</para>
       <para> REG_DWORD Debug = 0x01</para>
       <para>will instruct the Integrated Logon Network Provider and Event Handlers to log information to the Windows Event Log: Application under the name "AFS Logon".</para>
@@ -2188,7 +2171,7 @@ network paths are inaccessible when Protected Mode is on.
       </para>
       <informaltable frame="none">
         <tgroup rowsep="1" align="left" colsep="1" cols="1">
-          <colspec colwidth="405pt" colname="c1" />
+          <colspec colwidth="405pt" colname="c1"/>
           <tbody>
             <row>
               <entry>
@@ -2255,9 +2238,7 @@ network paths are inaccessible when Protected Mode is on.
       <indexterm significance="normal">
         <primary>openafs-info</primary>
       </indexterm>
-      <para>If you wish to participate in OpenAFS for Windows development, please join the <ulink
-          url="mailto:openafs-win32-devel@openafs.org?subject=OpenAFS%20for%20Windows%20Development%20Contribution"
-          >openafs-win32-devel@openafs.org</ulink> mailing list. </para>
+      <para>If you wish to participate in OpenAFS for Windows development, please join the <ulink url="mailto:openafs-win32-devel@openafs.org?subject=OpenAFS%20for%20Windows%20Development%20Contribution">openafs-win32-devel@openafs.org</ulink> mailing list. </para>
       <para>
         <emphasis role="bold">https://lists.openafs.org/mailman/listinfo/openafs-win32-devel</emphasis>
       </para>
@@ -2364,7 +2345,7 @@ network paths are inaccessible when Protected Mode is on.
           <title id="MSI_OAFW_Properties">7.2.1.2 OpenAFS for Windows Properties</title>
           <informaltable frame="all">
             <tgroup rowsep="1" align="left" colsep="1" cols="1">
-              <colspec colwidth="447pt" colname="c1" />
+              <colspec colwidth="447pt" colname="c1"/>
               <tbody>
                 <row>
                   <entry>
@@ -2398,7 +2379,7 @@ network paths are inaccessible when Protected Mode is on.
             <para>These properties are used to set the values of registry entries associated with OpenAFS for Windows.</para>
             <informaltable frame="all">
               <tgroup rowsep="1" align="left" colsep="1" cols="1">
-                <colspec colwidth="447pt" colname="c1" />
+                <colspec colwidth="447pt" colname="c1"/>
                 <tbody>
                   <row>
                     <entry>
@@ -2586,7 +2567,7 @@ network paths are inaccessible when Protected Mode is on.
             <para>These properties are combined to add a command line option to the shortcut that will be created in the Start:Programs:OpenAFS and Start:Programs:Startup folders (see CREDSSTARTUP). The method of specifying the option was chosen for easy integration with the Windows Installer user interface. Although other methods can be used to specify options to AFSCREDS.EXE, it is advised that they be avoided as transforms including such options may not apply to future releases of OpenAFS.</para>
             <informaltable frame="all">
               <tgroup rowsep="1" align="left" colsep="1" cols="1">
-                <colspec colwidth="447pt" colname="c1" />
+                <colspec colwidth="447pt" colname="c1"/>
                 <tbody>
                   <row>
                     <entry>
@@ -2692,8 +2673,8 @@ network paths are inaccessible when Protected Mode is on.
                 <para>Enter the following :</para>
                 <informaltable frame="all">
                   <tgroup rowsep="1" align="left" colsep="1" cols="2">
-                    <colspec colwidth="84pt" colname="c1" />
-                    <colspec colwidth="318pt" colname="c2" />
+                    <colspec colwidth="84pt" colname="c1"/>
+                    <colspec colwidth="318pt" colname="c2"/>
                     <tbody>
                       <row>
                         <entry>
@@ -2732,7 +2713,7 @@ network paths are inaccessible when Protected Mode is on.
                           <para>Condition</para>
                         </entry>
                         <entry>
-                          <para></para>
+                          <para/>
                         </entry>
                       </row>
                       <row>
@@ -2762,8 +2743,8 @@ network paths are inaccessible when Protected Mode is on.
                 <para>Add a new row (Ctrl-R or 'Tables'-&gt;'Add Row') with the following values:</para>
                 <informaltable frame="all">
                   <tgroup rowsep="1" align="left" colsep="1" cols="2">
-                    <colspec colwidth="94pt" colname="c1" />
-                    <colspec colwidth="307pt" colname="c2" />
+                    <colspec colwidth="94pt" colname="c1"/>
+                    <colspec colwidth="307pt" colname="c2"/>
                     <tbody>
                       <row>
                         <entry>
@@ -2786,7 +2767,7 @@ network paths are inaccessible when Protected Mode is on.
                           <para>Title</para>
                         </entry>
                         <entry>
-                          <para></para>
+                          <para/>
                         </entry>
                       </row>
                       <row>
@@ -2794,7 +2775,7 @@ network paths are inaccessible when Protected Mode is on.
                           <para>Description</para>
                         </entry>
                         <entry>
-                          <para></para>
+                          <para/>
                         </entry>
                       </row>
                       <row>
@@ -2818,7 +2799,7 @@ network paths are inaccessible when Protected Mode is on.
                           <para>Directory_</para>
                         </entry>
                         <entry>
-                          <para></para>
+                          <para/>
                         </entry>
                       </row>
                       <row>
@@ -2848,8 +2829,8 @@ network paths are inaccessible when Protected Mode is on.
                 <para>Add a new row with the following values:</para>
                 <informaltable frame="all">
                   <tgroup rowsep="1" align="left" colsep="1" cols="2">
-                    <colspec colwidth="90pt" colname="c1" />
-                    <colspec colwidth="312pt" colname="c2" />
+                    <colspec colwidth="90pt" colname="c1"/>
+                    <colspec colwidth="312pt" colname="c2"/>
                     <tbody>
                       <row>
                         <entry>
@@ -2883,8 +2864,8 @@ network paths are inaccessible when Protected Mode is on.
                 <para>Add a new row with the following values:</para>
                 <informaltable frame="all">
                   <tgroup rowsep="1" align="left" colsep="1" cols="2">
-                    <colspec colwidth="91pt" colname="c1" />
-                    <colspec colwidth="311pt" colname="c2" />
+                    <colspec colwidth="91pt" colname="c1"/>
+                    <colspec colwidth="311pt" colname="c2"/>
                     <tbody>
                       <row>
                         <entry>
@@ -2953,8 +2934,8 @@ network paths are inaccessible when Protected Mode is on.
                 <para>Add a row with the following values :</para>
                 <informaltable frame="all">
                   <tgroup rowsep="1" align="left" colsep="1" cols="2">
-                    <colspec colwidth="93pt" colname="c1" />
-                    <colspec colwidth="309pt" colname="c2" />
+                    <colspec colwidth="93pt" colname="c1"/>
+                    <colspec colwidth="309pt" colname="c2"/>
                     <tbody>
                       <row>
                         <entry>
@@ -3000,7 +2981,7 @@ network paths are inaccessible when Protected Mode is on.
         <para> We create a new feature and component to hold the new registry keys.</para>
         <informaltable frame="all">
           <tgroup rowsep="1" align="left" colsep="1" cols="1">
-            <colspec colwidth="448pt" colname="c1" />
+            <colspec colwidth="448pt" colname="c1"/>
             <tbody>
               <row>
                 <entry>
@@ -3133,7 +3114,7 @@ network paths are inaccessible when Protected Mode is on.
         <para> We create a new feature and component to hold the new registry keys.</para>
         <informaltable frame="all">
           <tgroup rowsep="1" align="left" colsep="1" cols="1">
-            <colspec colwidth="447pt" colname="c1" />
+            <colspec colwidth="447pt" colname="c1"/>
             <tbody>
               <row>
                 <entry>
@@ -3466,11 +3447,9 @@ Variable: cm_mountRoot</para>
             <primary>AFSCache</primary>
           </indexterm>
           <para id="Value_CachePath">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
-          <para>Type: REG_SZ or REG_EXPAND_SZ
-                  </para>
-          <para>
-Default: "%TEMP%\AFSCache"
-                  </para>
+          <para>Type: Use REG_SZ if the path contains no expansion variables or REG_EXPAND_SZ if it
+            does.</para>
+          <para> Default: "%TEMP%\AFSCache"  (REG_EXPAND_SZ)</para>
           <para>
 Variable: cm_CachePath</para>
           <para>Location of on-disk cache file. The default is the SYSTEM account's TEMP directory. The attributes assigned to the file are HIDDEN and SYSTEM.</para>
@@ -4916,8 +4895,7 @@ NSIS: %WINDIR%\SYSTEM32\afslogon.dll</para>
               <indexterm significance="normal">
                 <primary>LogonOptions</primary>
               </indexterm>
-              <para id="Value_LogonOptions"
-                >[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
+              <para id="Value_LogonOptions">[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
               <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
                 name&gt;]</para>
               <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
@@ -5018,8 +4996,7 @@ NSIS: %WINDIR%\SYSTEM32\afslogon.dll</para>
               <indexterm significance="normal">
                 <primary>Realm</primary>
               </indexterm>
-              <para id="Value_Realm"
-                >[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
+              <para id="Value_Realm">[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
               <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
                 name&gt;]</para>
               <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
@@ -5037,8 +5014,7 @@ NSIS: %WINDIR%\SYSTEM32\afslogon.dll</para>
               <indexterm significance="normal">
                 <primary>TheseCells</primary>
               </indexterm>
-              <para id="Value_TheseCells"
-                >[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
+              <para id="Value_TheseCells">[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
               <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
                 name&gt;]</para>
               <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
@@ -5055,8 +5031,7 @@ NSIS: %WINDIR%\SYSTEM32\afslogon.dll</para>
               <indexterm significance="normal">
                 <primary>Username</primary>
               </indexterm>
-              <para id="Value_Username"
-                >[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
+              <para id="Value_Username">[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
                 name&gt;\&lt;user name&gt;]</para>
               <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST\&lt;user name&gt;]</para>
               <para>Type: REG_SZ </para>
