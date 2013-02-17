@@ -22,6 +22,9 @@ afstest_IsLoopbackNetworkDefault(void)
 
     gethostname(hostname, sizeof(hostname));
     host = gethostbyname(hostname);
+    if (!host) {
+	skip_all("Can't resolve hostname %s\n", hostname);
+    }
     memcpy(&addr, host->h_addr, sizeof(addr));
 
     return(rx_IsLoopbackAddr(ntohl(addr)));
@@ -41,4 +44,20 @@ afstest_SkipTestsIfLoopbackNetIsDefault(void)
 	skip_all("Default IP address is on the loopback network!\n");
     }
     return retval;
+}
+
+/*!
+ * Skips all TAP tests if the current machine's hostname can't be resolved
+ * to any IP address.
+ */
+void
+afstest_SkipTestsIfBadHostname(void)
+{
+    char hostname[MAXHOSTCHARS];
+    struct hostent *host;
+
+    gethostname(hostname, sizeof(hostname));
+    host = gethostbyname(hostname);
+    if (!host)
+	skip_all("Can't resolve hostname %s\n", hostname);
 }

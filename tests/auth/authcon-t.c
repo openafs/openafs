@@ -51,6 +51,8 @@ main(int argc, char **argv)
     struct afsconf_typedKey *key;
     int code = 0;
 
+    afstest_SkipTestsIfBadHostname();
+
     plan(9);
     dirname = afstest_BuildTestConfig();
 

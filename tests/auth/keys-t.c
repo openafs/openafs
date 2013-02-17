@@ -106,6 +106,8 @@ int main(int argc, char **argv)
     int code;
     int i;
 
+    afstest_SkipTestsIfBadHostname();
+
     plan(134);
 
     /* Create a temporary afs configuration directory */

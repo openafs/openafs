@@ -54,3 +54,4 @@ extern int afstest_GetUbikClient(struct afsconf_dir *dir, char *service,
 /* network.c */
 extern int afstest_IsLoopbackNetworkDefault(void);
 extern int afstest_SkipTestsIfLoopbackNetIsDefault(void);
+extern void afstest_SkipTestsIfBadHostname(void);

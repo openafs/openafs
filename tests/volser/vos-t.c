@@ -95,10 +95,12 @@ main(int argc, char **argv)
     struct ubik_client *ubikClient = NULL;
     int ret = 0;
 
-    plan(6);
-
+    /* Skip all tests if the current hostname can't be resolved */
+    afstest_SkipTestsIfBadHostname();
     /* Skip all tests if the current hostname is on the loopback network */
     afstest_SkipTestsIfLoopbackNetIsDefault();
+
+    plan(6);
 
     code = rx_Init(0);
 

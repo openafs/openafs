@@ -373,6 +373,8 @@ int main(int argc, char **argv)
     int code;
     int ret = 0;
 
+    afstest_SkipTestsIfBadHostname();
+
     /* Start the client and the server if requested */
 
     if (argc == 3 ) {

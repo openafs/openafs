@@ -15,22 +15,22 @@ MODULE_LIBS = 	../tap/libtap.a \
 		$(LIB_rfc3961) $(LIB_roken) \
 		$(XLIBS)
 
-authcon-t: authcon-t.o ../common/config.o
-	$(LT_LDRULE_static) authcon-t.o ../common/config.o \
+authcon-t: authcon-t.o ../common/config.o ../common/network.o
+	$(LT_LDRULE_static) authcon-t.o ../common/config.o ../common/network.o \
 		$(MODULE_LIBS)
 
 superuser-t: superuser-t.o ../common/config.o ../common/rxkad.o \
-	     test.cs.o test.ss.o test.xdr.o
+	     test.cs.o test.ss.o test.xdr.o ../common/network.o
 	$(LT_LDRULE_static) superuser-t.o ../common/config.o \
 		../common/rxkad.o ../common/servers.o \
-		test.cs.o test.ss.o test.xdr.o \
+		test.cs.o test.ss.o test.xdr.o ../common/network.o \
 		$(MODULE_LIBS)
 
-keys-t: keys-t.o ../common/config.o
-	$(LT_LDRULE_static) keys-t.o ../common/config.o $(MODULE_LIBS)
+keys-t: keys-t.o ../common/config.o ../common/network.o
+	$(LT_LDRULE_static) keys-t.o ../common/config.o ../common/network.o $(MODULE_LIBS)
 
-realms-t: realms-t.o ../common/config.o
-	$(LT_LDRULE_static) realms-t.o ../common/config.o $(MODULE_LIBS)
+realms-t: realms-t.o ../common/config.o ../common/network.o
+	$(LT_LDRULE_static) realms-t.o ../common/config.o ../common/network.o $(MODULE_LIBS)
 
 writekeyfile: writekeyfile.o
 	$(LT_LDRULE_static) writekeyfile.o $(MODULE_LIBS)

@@ -35,6 +35,7 @@
 
 #include <hcrypto/des.h>
 
+#include <tests/tap/basic.h>
 #include "common.h"
 
 static FILE *

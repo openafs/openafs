@@ -359,6 +359,8 @@ test_update_config_files(void)
 int
 main(int argc, char **argv)
 {
+    afstest_SkipTestsIfBadHostname();
+
     plan(113);
 
     test_edges();
