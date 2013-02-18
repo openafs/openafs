@@ -118,6 +118,7 @@ NTSTATUS
 #define AFS_WORK_ENUMERATE_GLOBAL_ROOT          0x0006
 #define AFS_WORK_INVALIDATE_OBJECT              0x0007
 #define AFS_WORK_START_IOS                      0x0008
+#define AFS_WORK_DEFERRED_WRITE                 0x0009
 
 //
 // Worker request flags

@@ -38,6 +38,11 @@
 
 #include "AFSCommon.h"
 
+static
+VOID
+AFSPostedDeferredWrite( IN PVOID Context1,
+                        IN PVOID Context2);
+
 //
 // Function: AFSInitializeWorkerPool
 //
@@ -916,11 +921,24 @@ AFSIOWorkerThread( IN PVOID Context)
                         break;
                     }
 
+                    case AFS_WORK_DEFERRED_WRITE:
+                    {
+
+                        ntStatus = AFSCommonWrite( pWorkItem->Specific.AsynchIo.Device,
+                                                   pWorkItem->Specific.AsynchIo.Irp,
+                                                   pWorkItem->Specific.AsynchIo.CallingProcess,
+                                                   TRUE);
+
+                        freeWorkItem = TRUE;
+
+                        break;
+                    }
+
                     default:
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
-                                      "AFSWorkerThread Unknown request type %d\n", pWorkItem->RequestType);
+                                      "AFSIOWorkerThread Unknown request type %d\n", pWorkItem->RequestType);
 
                         break;
                 }
@@ -2733,4 +2751,146 @@ try_exit:
     }
 
     return ntStatus;
+}
+
+NTSTATUS
+AFSDeferWrite( IN PDEVICE_OBJECT DeviceObject,
+               IN PFILE_OBJECT FileObject,
+               IN HANDLE CallingUser,
+               IN PIRP Irp,
+               IN ULONG BytesToWrite,
+               IN BOOLEAN bRetrying)
+{
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSWorkItem *pWorkItem = NULL;
+
+    __try
+    {
+
+        //
+        // Pin the user buffer (first time round only - AFSLockSystemBuffer is
+        // idempotent)
+        //
+
+        if ( NULL == AFSLockSystemBuffer( Irp, BytesToWrite ))
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "%s Could not pin user memory item\n",
+                          __FUNCTION__);
+
+            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES );
+        }
+
+        pWorkItem = (AFSWorkItem *) AFSLibExAllocatePoolWithTag( NonPagedPool,
+                                                                 sizeof(AFSWorkItem),
+                                                                 AFS_WORK_ITEM_TAG);
+
+        if (NULL == pWorkItem)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "%s Failed to allocate work item\n",
+                          __FUNCTION__);
+
+            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES );
+        }
+
+        RtlZeroMemory( pWorkItem,
+                       sizeof(AFSWorkItem));
+
+        pWorkItem->Size = sizeof( AFSWorkItem);
+
+        pWorkItem->RequestType = AFS_WORK_DEFERRED_WRITE;
+
+        pWorkItem->Specific.AsynchIo.CallingProcess = CallingUser;
+
+        pWorkItem->Specific.AsynchIo.Device = DeviceObject;
+
+        pWorkItem->Specific.AsynchIo.Irp = Irp;
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING | AFS_SUBSYSTEM_WORKER_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "%s Workitem %p\n",
+                      __FUNCTION__,
+                      pWorkItem);
+
+        CcDeferWrite( FileObject, AFSPostedDeferredWrite, pWorkItem, NULL, BytesToWrite, bRetrying);
+
+        IoMarkIrpPending(Irp);
+
+        ntStatus = STATUS_PENDING;
+    }
+    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
+    {
+
+        AFSDbgLogMsg( 0,
+                      0,
+                      "EXCEPTION - %s \n",
+                      __FUNCTION__);
+
+        ntStatus = GetExceptionCode();
+    }
+
+try_exit:
+
+    AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+                  AFS_TRACE_LEVEL_VERBOSE,
+                  "%s complete Status %08lX\n",
+                  __FUNCTION__,
+                  ntStatus);
+
+    if( !NT_SUCCESS( ntStatus))
+    {
+
+        if( pWorkItem != NULL)
+        {
+
+            ExFreePoolWithTag( pWorkItem, AFS_WORK_ITEM_TAG);
+        }
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                      AFS_TRACE_LEVEL_ERROR,
+                      "%s Failed to queue request Status %08lX\n",
+                      __FUNCTION__,
+                      ntStatus);
+    }
+
+    return ntStatus;
+}
+
+static
+VOID
+AFSPostedDeferredWrite( IN PVOID Context1,
+                        IN PVOID Context2)
+{
+    UNREFERENCED_PARAMETER( Context2);
+    NTSTATUS ntStatus;
+
+    AFSWorkItem *pWorkItem = (AFSWorkItem *) Context1;
+
+    AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING | AFS_SUBSYSTEM_WORKER_PROCESSING,
+                  AFS_TRACE_LEVEL_ERROR,
+                  "%s Workitem %p\n",
+                  __FUNCTION__,
+                  pWorkItem);
+
+    ntStatus = AFSQueueIOWorkerRequest( pWorkItem);
+
+    if (!NT_SUCCESS( ntStatus))
+    {
+
+        AFSCompleteRequest( pWorkItem->Specific.AsynchIo.Irp, ntStatus);
+
+        ExFreePoolWithTag( pWorkItem, AFS_WORK_ITEM_TAG);
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING | AFS_SUBSYSTEM_WORKER_PROCESSING,
+                      AFS_TRACE_LEVEL_ERROR,
+                      "%s (%p) Failed to queue request Status %08lX\n",
+                      __FUNCTION__,
+                      pWorkItem->Specific.AsynchIo.Irp,
+                      ntStatus);
+    }
 }
