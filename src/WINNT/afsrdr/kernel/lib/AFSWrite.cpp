@@ -123,6 +123,8 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
     __Enter
     {
 
+        Irp->IoStatus.Information = 0;
+
         pFileObject = pIrpSp->FileObject;
 
         //
@@ -289,8 +291,6 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSCommonWrite (%p) Failing request due to INVALID fcb\n",
                           Irp);
-
-            Irp->IoStatus.Information = 0;
 
             try_return( ntStatus = STATUS_FILE_DELETED);
         }
@@ -755,6 +755,8 @@ AFSIOCtlWrite( IN PDEVICE_OBJECT DeviceObject,
     __Enter
     {
 
+        Irp->IoStatus.Information = 0;
+
         RtlZeroMemory( &stIORequestCB,
                        sizeof( AFSPIOCtlIORequestCB));
 
@@ -914,7 +916,6 @@ AFSNonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
 
     __Enter
     {
-        Irp->IoStatus.Information = 0;
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
