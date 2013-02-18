@@ -80,7 +80,7 @@ AFSWrite( IN PDEVICE_OBJECT LibDeviceObject,
     __try
     {
 
-        ntStatus = AFSCommonWrite( AFSRDRDeviceObject, Irp, NULL);
+        ntStatus = AFSCommonWrite( AFSRDRDeviceObject, Irp, NULL, FALSE);
     }
     __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
@@ -94,7 +94,8 @@ AFSWrite( IN PDEVICE_OBJECT LibDeviceObject,
 NTSTATUS
 AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
                 IN PIRP Irp,
-                IN HANDLE OnBehalfOf)
+                IN HANDLE OnBehalfOf,
+                IN BOOLEAN bRetry)
 {
 
     NTSTATUS           ntStatus = STATUS_SUCCESS;
@@ -115,7 +116,6 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
     BOOLEAN            bCompleteIrp = TRUE;
     BOOLEAN            bLockOK;
     HANDLE             hCallingUser = OnBehalfOf;
-    BOOLEAN            bRetry = FALSE;
     ULONGLONG          ullProcessId = (ULONGLONG)PsGetCurrentProcessId();
 
     pIrpSp = IoGetCurrentIrpStackLocation( Irp);
@@ -402,21 +402,38 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
                 }
             }
 
-            while (!CcCanIWrite( pFileObject,
-                                 ulByteCount,
-                                 FALSE,
-                                 bRetry))
+            if (!CcCanIWrite( pFileObject,
+                              ulByteCount,
+                              FALSE,
+                              bRetry))
             {
-                static const LONGLONG llWriteDelay = (LONGLONG)-100000;
-                bRetry = TRUE;
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
                               AFS_TRACE_LEVEL_WARNING,
-                              "AFSCommonWrite (FO: %p) CcCanIWrite says No room for %u bytes! Retry in 10ms\n",
+                              "AFSCommonWrite (FO: %p) CcCanIWrite says No room for Offset %0I64X Length %08lX bytes! Deferring%s\n",
                               pFileObject,
-                              ulByteCount);
+                              liStartingByte.QuadPart,
+                              ulByteCount,
+                              bRetry ? " RETRY" : "");
 
-                KeDelayExecutionThread(KernelMode, FALSE, (PLARGE_INTEGER)&llWriteDelay);
+                ntStatus = AFSDeferWrite( DeviceObject, pFileObject, hCallingUser, Irp, ulByteCount, bRetry);
+
+                if ( STATUS_PENDING == ntStatus)
+                {
+
+                    bCompleteIrp = FALSE;
+                }
+                else
+                {
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                                  AFS_TRACE_LEVEL_ERROR,
+                                  "AFSCommonWrite (FO: %p) AFSDeferWrite failure Status %08lX\n",
+                                  pFileObject,
+                                  ntStatus);
+                }
+
+                try_return( ntStatus);
             }
         }
 
@@ -629,10 +646,11 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSCommonWrite (%p) Processing CACHED request Offset %I64X Len %08lX\n",
+                          "AFSCommonWrite (%p) Processing CACHED request Offset %0I64X Len %08lX%s\n",
                           Irp,
                           liStartingByte.QuadPart,
-                          ulByteCount);
+                          ulByteCount,
+                          bRetry ? " RETRY" : "");
 
             ntStatus = AFSCachedWrite( DeviceObject, Irp, liStartingByte, ulByteCount, TRUE);
 
@@ -671,10 +689,11 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSCommonWrite (%p) Processing NON-CACHED request Offset %I64X Len %08lX\n",
+                          "AFSCommonWrite (%p) Processing NON-CACHED request Offset %0I64X Len %08lX%s\n",
                           Irp,
                           liStartingByte.QuadPart,
-                          ulByteCount);
+                          ulByteCount,
+                          bRetry ? " RETRY" : "");
 
             ntStatus = AFSNonCachedWrite( DeviceObject, Irp,  liStartingByte, ulByteCount);
         }

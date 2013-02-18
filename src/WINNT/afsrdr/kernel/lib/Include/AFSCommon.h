@@ -717,8 +717,9 @@ AFSShareRead( IN PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS
 AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
-          IN PIRP Irp,
-          IN HANDLE CallingUser);
+                IN PIRP Irp,
+                IN HANDLE CallingUser,
+                IN BOOLEAN bRetry);
 
 NTSTATUS
 AFSWrite( IN PDEVICE_OBJECT DeviceObject,
@@ -731,6 +732,14 @@ AFSIOCtlWrite( IN PDEVICE_OBJECT DeviceObject,
 NTSTATUS
 AFSShareWrite( IN PDEVICE_OBJECT DeviceObject,
                IN PIRP Irp);
+
+NTSTATUS
+AFSDeferWrite( IN PDEVICE_OBJECT DeviceObject,
+               IN PFILE_OBJECT FileObject,
+               IN HANDLE CallingUser,
+               IN PIRP Irp,
+               IN ULONG BytesToWrite,
+               IN BOOLEAN Retrying);
 
 //
 // AFSFileInfo.cpp Prototypes
