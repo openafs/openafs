@@ -2785,6 +2785,11 @@ rxi_PrepareSendPacket(struct rx_call *call,
 	p = rxi_SendConnectionAbort(conn, p, 0, 0);
 	MUTEX_EXIT(&conn->conn_data_lock);
 	MUTEX_ENTER(&call->lock);
+	/* setting a connection error means all calls for that conn are also
+	 * error'd. if this call does not have an error by now, something is
+	 * very wrong, and we risk sending data in the clear that is supposed
+	 * to be encrypted. */
+	osi_Assert(call->error);
     }
 }
 
