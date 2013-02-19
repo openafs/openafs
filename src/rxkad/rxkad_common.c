@@ -430,7 +430,6 @@ rxkad_CheckPacket(struct rx_securityClass *aobj, struct rx_call *acall,
 
     tconn = rx_ConnectionOf(acall);
     len = rx_GetDataSize(apacket);
-    checkCksum = 0;		/* init */
     if (rx_IsServerConn(tconn)) {
 	struct rxkad_sconn *sconn;
 	sconn = rx_GetSecurityData(tconn);
