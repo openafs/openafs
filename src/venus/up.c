@@ -296,6 +296,10 @@ Copy(char *file1, char *file2, short recursive, int level)
 
 	    /* Close the files */
 	    code = close(f1);
+	    if (code < 0) {
+		perror("close ");
+		rcode = 1;
+	    }
 	    code = close(f2);
 	    if (code < 0) {
 		perror("close ");
