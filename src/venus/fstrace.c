@@ -661,7 +661,6 @@ icl_DumpKernel(FILE *outFilep, char *setname)
 			    i, (long)tname, sizeof(tname), 0, 0);
 	    if (code) {
 		if (errno == EBADF) {
-		    code = 0;
 		    continue;	/* missing slot, nothing to worry about */
 		}
 		break;
