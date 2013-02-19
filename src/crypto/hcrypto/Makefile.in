@@ -158,6 +158,7 @@ ${TOP_LIBDIR}/libafshcrypto_lwp.a: libafshcrypto_lwp.a
 
 CFLAGS_test_cipher.o= -I${UPSTREAM}/roken/
 CFLAGS_rand-unix.o=@CFLAGS_NOERROR@
+CFLAGS_validate.o=@CFLAGS_NOERROR@
 CFLAGS_evp.o=-DHAVE_CONFIG_H
 
 aes.o: ${UPSTREAM}/hcrypto/aes.c ${HEADERS}
