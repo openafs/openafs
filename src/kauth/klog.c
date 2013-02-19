@@ -158,7 +158,6 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 
     struct passwd pwent;
     struct passwd *pw = &pwent;
-    struct passwd *lclpw = &pwent;
     char passwd[BUFSIZ];
 
     static char rn[] = "klog";	/*Routine name */
@@ -269,7 +268,6 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	    foundExplicitCell = 1;
 	    strncpy(realm, cell, sizeof(realm));
 	}
-	lclpw->pw_name = name;
     } else {
 	/* No explicit name provided: use Unix uid. */
 	pw = getpwuid(getuid());
@@ -282,7 +280,6 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	    }
 	    KLOGEXIT(KABADARGUMENT);
 	}
-	lclpw = pw;
     }
 
     if (as->parms[aPASSWORD].items) {
