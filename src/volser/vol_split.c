@@ -314,7 +314,6 @@ afs_int32 copyVnodes(struct Msg *m, Volume *vol, Volume *newvol,
     FdHandle_t *newfdP = 0;
     struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
     struct VnodeExtract *e;
-    afs_sfsize_t size;
     afs_uint64 offset;
     Inode ino, newino;
 
@@ -332,7 +331,6 @@ afs_int32 copyVnodes(struct Msg *m, Volume *vol, Volume *newvol,
 	code = EIO;
 	goto Bad_Copy;
     }
-    size = FDH_SIZE(fdP);
 
     for (i=0; i<length; i++) {
 	e = &list[i];
@@ -434,7 +432,7 @@ afs_int32 copyVnodes(struct Msg *m, Volume *vol, Volume *newvol,
 	IHandle_t *h, *newh;
         char buf2[SIZEOF_LARGEDISKVNODE];
         struct VnodeDiskObject *vnode2 = (struct VnodeDiskObject *)&buf2;
-	afs_uint64 newoffset;
+	afs_uint64 newoffset, size;
 
 	newoffset = vcp->diskSize;
 	if (FDH_PREAD(newfdP, vnode2, vcp->diskSize, newoffset) != vcp->diskSize) {
