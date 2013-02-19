@@ -1689,6 +1689,7 @@ AFSGetConnectionInfo( IN AFSNetworkProviderConnectionCB *ConnectCB,
             ntStatus = AFSEvaluateTargetByName( NULL,
                                                 &AFSGlobalRoot->ObjectInformation,
                                                 &uniShareName,
+                                                0,
                                                 &pDirEnumEntry);
 
             if( !NT_SUCCESS( ntStatus))

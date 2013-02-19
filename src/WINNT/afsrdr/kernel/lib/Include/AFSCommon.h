@@ -222,6 +222,7 @@ NTSTATUS
 AFSEvaluateTargetByName( IN GUID *AuthGroup,
                          IN AFSObjectInfoCB *ParentObjectInfo,
                          IN PUNICODE_STRING SourceName,
+                         IN ULONG Flags,
                          OUT AFSDirEnumEntry **DirEnumEntry);
 
 NTSTATUS

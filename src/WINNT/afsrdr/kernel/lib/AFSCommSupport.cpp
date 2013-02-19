@@ -2938,6 +2938,7 @@ NTSTATUS
 AFSEvaluateTargetByName( IN GUID *AuthGroup,
                          IN AFSObjectInfoCB *ParentObjectInfo,
                          IN PUNICODE_STRING SourceName,
+                         IN ULONG Flags,
                          OUT AFSDirEnumEntry **DirEnumEntry)
 {
 
@@ -2973,7 +2974,7 @@ AFSEvaluateTargetByName( IN GUID *AuthGroup,
         ulResultBufferLength = PAGE_SIZE;
 
         ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_EVAL_TARGET_BY_NAME,
-                                      AFS_REQUEST_FLAG_SYNCHRONOUS,
+                                      AFS_REQUEST_FLAG_SYNCHRONOUS | Flags,
                                       AuthGroup,
                                       SourceName,
                                       NULL,
