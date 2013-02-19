@@ -2004,7 +2004,7 @@ WhoIsThisWithName(struct rx_call *acall, struct ubik_trans *at, afs_int32 *aid,
 	     strcat(vname, "@");
 	     strcat(vname, tcell);
 	     lcstring(vname, vname, sizeof(vname));
-	     code = NameToID(at, vname, aid);
+	     NameToID(at, vname, aid);
 	     if (aname)
 		strcpy(aname, vname);
 	     return 2;

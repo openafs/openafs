@@ -1262,7 +1262,7 @@ main(int argc, char **argv)
 
     finished = 1;
     source = NULL;
-    if ((code = cmd_Dispatch(argc, argv))) {
+    if (cmd_Dispatch(argc, argv)) {
 	CleanUp(NULL, NULL);
 	exit(1);
     }
@@ -1293,7 +1293,7 @@ main(int argc, char **argv)
 	}
 	savec = parsev[0];
 	parsev[0] = argv[0];
-	code = cmd_Dispatch(parsec, parsev);
+	cmd_Dispatch(parsec, parsev);
 	parsev[0] = savec;
 	cmd_FreeArgv(parsev);
     }
