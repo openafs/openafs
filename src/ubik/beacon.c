@@ -421,12 +421,11 @@ ubeacon_Interact(void *dummy)
 	    tt.tv_sec = temp;
 	    tt.tv_usec = 0;
 #ifdef AFS_PTHREAD_ENV
-	    code = select(0, 0, 0, 0, &tt);
+	    select(0, 0, 0, 0, &tt);
 #else
-	    code = IOMGR_Select(0, 0, 0, 0, &tt);
+	    IOMGR_Select(0, 0, 0, 0, &tt);
 #endif
-	} else
-	    code = 0;
+	}
 
 	lastWakeupTime = FT_ApproxTime();	/* started a new collection phase */
 
