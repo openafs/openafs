@@ -4476,7 +4476,6 @@ static int
 ListVLDB(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 apart;
-    afs_uint32 aserver;
     afs_int32 code;
     afs_int32 vcode;
     struct VldbListByAttributes attributes;
@@ -4490,7 +4489,6 @@ ListVLDB(struct cmd_syndesc *as, void *arock)
     int quiet, sort, lock;
     afs_int32 thisindex, nextindex;
 
-    aserver = 0;
     apart = 0;
 
     attributes.Mask = 0;
@@ -4517,6 +4515,8 @@ ListVLDB(struct cmd_syndesc *as, void *arock)
 
     /* Server specified */
     if (as->parms[1].items) {
+	afs_uint32 aserver;
+
 	aserver = GetServer(as->parms[1].items->data);
 	if (aserver == 0) {
 	    fprintf(STDERR, "vos: server '%s' not found in host table\n",
