@@ -305,7 +305,6 @@ acl_Internalize_pr(int (*func)(namelist *names, idlist *ids), char *elist, struc
 	}
 	(*acl)->entries[i].id = lids.idlist_val[i];
     }
-    j = i;
     for (i = (*acl)->total - 1; i >= (*acl)->total - (*acl)->negative; i--) {
 	if (lids.idlist_val[i] == ANONYMOUSID) {
 	    free(lnames.namelist_val);
