@@ -685,6 +685,7 @@ lockFile(struct cmd_syndesc *as, void *arock)
 	code = GetVenusFidByPath(fname, cell, &avfp);
     if (code != 0) {
 	afs_com_err(pnp, code, "(file not found: %s)", fname);
+	afscp_FreeFid(avfp);
 	return code;
     }
 
@@ -772,6 +773,7 @@ readFile(struct cmd_syndesc *as, void *unused)
     else
 	code = GetVenusFidByPath(fname, cell, &avfp);
     if (code != 0) {
+	afscp_FreeFid(avfp);
 	afs_com_err(pnp, code, "(file not found: %s)", fname);
 	return code;
     }
@@ -896,6 +898,7 @@ writeFile(struct cmd_syndesc *as, void *unused)
     if (useFid) {
 	code = GetVenusFidByFid(fname, cell, 1, &newvfp);
 	if (code != 0) {
+	    afscp_FreeFid(newvfp);
 	    afs_com_err(pnp, code, "(GetVenusFidByFid returned code %d)", code);
 	    return code;
 	}
