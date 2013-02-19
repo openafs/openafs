@@ -1092,7 +1092,15 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
         return;
     }
 
-    code = cm_Lookup(dscp, wszName, CM_FLAG_CHECKPATH, userp, &req, &scp);
+    code = cm_Lookup(dscp, wszName, CM_FLAG_CHECKPATH | CM_FLAG_NOMOUNTCHASE,
+                     userp, &req, &scp);
+
+    if (!CaseSensitive &&
+        (code == CM_ERROR_NOSUCHPATH || code == CM_ERROR_NOSUCHFILE || code == CM_ERROR_BPLUS_NOMATCH)) {
+        code = cm_Lookup(dscp, wszName,
+                         CM_FLAG_CHECKPATH | CM_FLAG_NOMOUNTCHASE | CM_FLAG_CASEFOLD,
+                         userp, &req, &scp);
+    }
 
     if ((code == CM_ERROR_NOSUCHPATH || code == CM_ERROR_NOSUCHFILE || code == CM_ERROR_BPLUS_NOMATCH) &&
          dscp == cm_data.rootSCachep) {
