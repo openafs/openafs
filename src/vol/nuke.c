@@ -186,7 +186,6 @@ nuke(char *aname, VolumeId avolid)
 		IH_RELEASE(fileH);
 #endif /* AFS_NAMEI_ENV */
 	    }
-	    ni = ti->next;
 	    if (li) free(li);
 	    li = ti;
 	}
