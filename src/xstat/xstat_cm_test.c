@@ -922,7 +922,7 @@ RunTheTest(struct cmd_syndesc *a_s, void *arock)
      */
     if (debugging_on)
 	printf("\nYawn, main thread just woke up.  Cleaning things out...\n");
-    code = xstat_cm_Cleanup(1);	/*Get rid of malloc'ed data */
+    xstat_cm_Cleanup(1);	/*Get rid of malloc'ed data */
     rx_Finalize();
     return (0);
 
