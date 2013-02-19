@@ -178,14 +178,12 @@ find_me(char *arg, char *parent_dir)
 	 */
 	strncpy(parent_dir, truename, bp - truename);
 	parent_dir[bp - truename] = 0;
-	bp++;			/*Skip the slash */
     } else {
 	/*
 	 * No slash appears in the given file name.  Set parent_dir to the current
 	 * directory, and the last component as the given name.
 	 */
 	strcpy(parent_dir, ".");
-	bp = truename;
     }
 
     return 1;			/* found it */
