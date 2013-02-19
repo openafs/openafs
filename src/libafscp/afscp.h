@@ -132,7 +132,7 @@ int afscp_CheckCallBack(const struct afscp_venusfid *fid,
 			afs_uint32 *expiretime);
 int afscp_FindCallBack(const struct afscp_venusfid *f,
 		       const struct afscp_server *server,
-		       struct afscp_callback *ret);
+		       struct afscp_callback **ret);
 int afscp_AddCallBack(const struct afscp_server *,
 		      const struct AFSFid *,
 		      const struct AFSFetchStatus *,

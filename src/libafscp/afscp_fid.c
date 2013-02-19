@@ -278,7 +278,7 @@ afscp_CheckCallBack(const struct afscp_venusfid *fid, const struct afscp_server 
     if (code != 0)
 	return code;
 
-    code = afscp_FindCallBack(fid, server, cb);
+    code = afscp_FindCallBack(fid, server, &cb);
     if (code != 0)
 	return code;
 
