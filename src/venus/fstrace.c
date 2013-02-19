@@ -1611,12 +1611,13 @@ icl_EnumerateLogs(int (*aproc)
 		    (char *name, void *arock, struct afs_icl_log * tp),
 		  void *arock)
 {
-    struct afs_icl_log *tp;
+    struct afs_icl_log *tp, *np;
     afs_int32 code;
 
     code = 0;
-    for (tp = afs_icl_allLogs; tp; tp = tp->nextp) {
+    for (tp = afs_icl_allLogs; tp; tp = np) {
 	tp->refCount++;		/* hold this guy */
+	np = tp->nextp;
 	code = (*aproc) (tp->name, arock, tp);
 	if (--tp->refCount == 0)
 	    icl_ZapLog(tp);
