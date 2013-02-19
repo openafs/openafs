@@ -875,7 +875,6 @@ PrintName(char *name, char *inst, char *acell, int buflen, char *buf)
 	    left = ka_ConvertBytes(buf + nlen, buflen - nlen, acell, len);
 	    if (left)
 		goto bad_name;
-	    nlen += len;
 	}
     }
     return 0;
@@ -1318,7 +1317,7 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 
     /* MyAfterProc() destroys the conn, but just to be sure */
     if (conn) {
-	code = ubik_ClientDestroy(conn);
+	ubik_ClientDestroy(conn);
 	conn = 0;
     }
 
@@ -1670,8 +1669,8 @@ ka_AdminInteractive(int cmd_argc, char *cmd_argv[])
 			  "enter interactive mode");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("noauthentication", NoAuth, NULL,
-			  "connect to AuthServer w/o using token");
+    cmd_CreateSyntax("noauthentication", NoAuth, NULL,
+		     "connect to AuthServer w/o using token");
 
     ts = cmd_CreateSyntax("list", ListUsers, NULL,
 			  "list all users in database");
@@ -1805,7 +1804,7 @@ ka_AdminInteractive(int cmd_argc, char *cmd_argv[])
     cmd_AddParm(ts, "-long", CMD_FLAG, CMD_OPTIONAL,
 		"show session key and ticket");
 
-    ts = cmd_CreateSyntax("quit", Quit, NULL, "exit program");
+    cmd_CreateSyntax("quit", Quit, NULL, "exit program");
 
     finished = 1;
     conn = 0;			/* no connection yet */
