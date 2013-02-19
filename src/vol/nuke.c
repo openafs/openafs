@@ -190,7 +190,7 @@ nuke(char *aname, VolumeId avolid)
 	    li = ti;
 	}
 	if (li) free(li);
-	code = 0;		/* we really don't care about it except for debugging */
+
 	allInodes = NULL;
 
 	/* at this point, we should try to remove the volume header file itself.
