@@ -135,9 +135,6 @@ ka_UserAuthenticateGeneral(afs_int32 flags, char *name, char *instance,
     int remainingTime = 0;
     struct ktc_encryptionKey key;
     afs_int32 code, dosetpag = 0;
-#if !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_USR_LINUX20_ENV) && !defined(AFS_XBSD_ENV) || defined(AFS_FBSD_ENV)
-    void (*old)(int);
-#endif
 
     if (reasonP)
 	*reasonP = "";
@@ -171,7 +168,7 @@ ka_UserAuthenticateGeneral(afs_int32 flags, char *name, char *instance,
 
 #if !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_USR_LINUX20_ENV) && (!defined(AFS_XBSD_ENV) || defined(AFS_FBSD_ENV))
     /* handle smoothly the case where no AFS system calls exists (yet) */
-    old = signal(SIGSYS, SIG_IGN);
+    (void)signal(SIGSYS, SIG_IGN);
 #endif
 #ifdef	AFS_DECOSF_ENV
     (void)signal(SIGTRAP, SIG_IGN);
