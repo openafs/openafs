@@ -561,6 +561,32 @@ typedef struct _AFS_DEVICE_EXTENSION
 
             KEVENT              MemoryAvailableEvent;
 
+            //
+            // Worker Pool Queues
+            //
+
+            ERESOURCE           QueueLock;
+
+            struct _AFS_WORK_ITEM     *QueueHead;
+
+            struct _AFS_WORK_ITEM     *QueueTail;
+
+            KEVENT              WorkerQueueHasItems;
+
+            LONG                QueueItemCount;
+
+            ERESOURCE           IOQueueLock;
+
+            struct _AFS_WORK_ITEM     *IOQueueHead;
+
+            struct _AFS_WORK_ITEM     *IOQueueTail;
+
+            KEVENT              IOWorkerQueueHasItems;
+
+            LONG                IOQueueItemCount;
+
+
+
         } Control;
 
         struct
@@ -667,16 +693,6 @@ typedef struct _AFS_DEVICE_EXTENSION
 
             struct _AFS_WORKER_QUEUE_HDR *PoolHead;
 
-            ERESOURCE        QueueLock;
-
-            struct _AFS_WORK_ITEM     *QueueHead;
-
-            struct _AFS_WORK_ITEM     *QueueTail;
-
-            KEVENT           WorkerQueueHasItems;
-
-            LONG             QueueItemCount;
-
             //
             // IO Worker queue
             //
@@ -684,16 +700,6 @@ typedef struct _AFS_DEVICE_EXTENSION
             ULONG            IOWorkerCount;
 
             struct _AFS_WORKER_QUEUE_HDR *IOPoolHead;
-
-            ERESOURCE        IOQueueLock;
-
-            struct _AFS_WORK_ITEM     *IOQueueHead;
-
-            struct _AFS_WORK_ITEM     *IOQueueTail;
-
-            KEVENT           IOWorkerQueueHasItems;
-
-            LONG             IOQueueItemCount;
 
         } Library;
 

@@ -206,18 +206,12 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
         }
 
         //
-        // Initialize the worker thread pool
+        // Initialize the worker thread pool counts.
         //
 
-        ntStatus = AFSInitializeWorkerPool();
+        pDeviceExt->Specific.Library.WorkerCount = 0;
 
-        if( !NT_SUCCESS( ntStatus))
-        {
-
-            AFSPrint("AFS DriverEntry Failed to initialize worker pool Status %08lX\n", ntStatus);
-
-            try_return( ntStatus);
-        }
+        pDeviceExt->Specific.Library.IOWorkerCount = 0;
 
         //
         // Fill in the dispatch table
@@ -263,12 +257,6 @@ try_exit:
         {
 
             AFSPrint("AFSLibrary DriverEntry failed to initialize %08lX\n", ntStatus);
-
-            if( AFSLibraryDeviceObject != NULL)
-            {
-
-                AFSRemoveWorkerPool();
-            }
 
             if( AFSRegistryPath.Buffer != NULL)
             {

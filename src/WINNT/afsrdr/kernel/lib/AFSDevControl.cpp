@@ -104,6 +104,23 @@ AFSDevControl( IN PDEVICE_OBJECT LibDeviceObject,
                 }
 
                 //
+                // Initialize the worker pool.
+                //
+
+                ntStatus = AFSInitializeWorkerPool();
+
+                if( !NT_SUCCESS( ntStatus))
+                {
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
+                                  AFS_TRACE_LEVEL_ERROR,
+                                  "AFSDevControl AFSInitializeWorkerPool failure %08lX\n",
+                                  ntStatus);
+
+                    break;
+                }
+
+                //
                 // Initialize our global entries
                 //
 
