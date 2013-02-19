@@ -713,6 +713,7 @@ afscp_ResolvePath(const char *path)
     }
     cell = afscp_DefaultCell();
     if (cell == NULL) {
+	free(p);
 	afscp_errno = EINVAL;
 	return NULL;
     }
