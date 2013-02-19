@@ -421,6 +421,23 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
         AFSSysProcess = PsGetCurrentProcessId();
 
         //
+        // Initialize the worker Queues and their syncrhonization structures
+        //
+
+        KeInitializeEvent( &pDeviceExt->Specific.Control.WorkerQueueHasItems,
+                           SynchronizationEvent,
+                           FALSE);
+
+        ExInitializeResourceLite( &pDeviceExt->Specific.Control.QueueLock);
+
+        KeInitializeEvent( &pDeviceExt->Specific.Control.IOWorkerQueueHasItems,
+                           SynchronizationEvent,
+                           FALSE);
+
+        ExInitializeResourceLite( &pDeviceExt->Specific.Control.IOQueueLock);
+
+
+        //
         // Register for shutdown notification
         //
 

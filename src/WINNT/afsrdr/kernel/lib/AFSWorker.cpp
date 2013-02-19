@@ -72,18 +72,6 @@ AFSInitializeWorkerPool()
         // Initialize the worker threads.
         //
 
-        pDevExt->Specific.Library.WorkerCount = 0;
-
-        KeInitializeEvent( &pDevExt->Specific.Library.WorkerQueueHasItems,
-                           SynchronizationEvent,
-                           FALSE);
-
-        //
-        // Initialize the queue resource
-        //
-
-        ExInitializeResourceLite( &pDevExt->Specific.Library.QueueLock);
-
         while( pDevExt->Specific.Library.WorkerCount < AFS_WORKER_COUNT)
         {
 
@@ -153,18 +141,6 @@ AFSInitializeWorkerPool()
         //
         // Now our IO Worker queue
         //
-
-        pDevExt->Specific.Library.IOWorkerCount = 0;
-
-        KeInitializeEvent( &pDevExt->Specific.Library.IOWorkerQueueHasItems,
-                           SynchronizationEvent,
-                           FALSE);
-
-        //
-        // Initialize the queue resource
-        //
-
-        ExInitializeResourceLite( &pDevExt->Specific.Library.IOQueueLock);
 
         while( pDevExt->Specific.Library.IOWorkerCount < AFS_IO_WORKER_COUNT)
         {
@@ -320,8 +296,6 @@ AFSRemoveWorkerPool()
 
     pDevExt->Specific.Library.PoolHead = NULL;
 
-    ExDeleteResourceLite( &pDevExt->Specific.Library.QueueLock);
-
     //
     // Loop through the IO workers shutting them down in two stages.
     // First, clear AFS_WORKER_PROCESS_REQUESTS so that workers
@@ -374,8 +348,6 @@ AFSRemoveWorkerPool()
     }
 
     pDevExt->Specific.Library.IOPoolHead = NULL;
-
-    ExDeleteResourceLite( &pDevExt->Specific.Library.IOQueueLock);
 
     return ntStatus;
 }
@@ -577,7 +549,7 @@ AFSShutdownWorkerThread( IN AFSWorkQueueContext *PoolContext)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSLibraryDeviceObject->DeviceExtension;
+    AFSDeviceExt *pControlDeviceExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
 
     if( PoolContext->WorkerThreadObject != NULL)
     {
@@ -589,7 +561,7 @@ AFSShutdownWorkerThread( IN AFSWorkQueueContext *PoolContext)
             // Wake up the thread if it is a sleep
             //
 
-            KeSetEvent( &pDeviceExt->Specific.Library.WorkerQueueHasItems,
+            KeSetEvent( &pControlDeviceExt->Specific.Control.WorkerQueueHasItems,
                         0,
                         FALSE);
 
@@ -625,7 +597,7 @@ AFSShutdownIOWorkerThread( IN AFSWorkQueueContext *PoolContext)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSLibraryDeviceObject->DeviceExtension;
+    AFSDeviceExt *pControlDeviceExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
 
     if( PoolContext->WorkerThreadObject != NULL)
     {
@@ -637,7 +609,7 @@ AFSShutdownIOWorkerThread( IN AFSWorkQueueContext *PoolContext)
             // Wake up the thread if it is a sleep
             //
 
-            KeSetEvent( &pDeviceExt->Specific.Library.IOWorkerQueueHasItems,
+            KeSetEvent( &pControlDeviceExt->Specific.Control.IOWorkerQueueHasItems,
                         0,
                         FALSE);
 
@@ -676,10 +648,10 @@ AFSWorkerThread( IN PVOID Context)
     AFSWorkQueueContext *pPoolContext = (AFSWorkQueueContext *)Context;
     AFSWorkItem *pWorkItem;
     BOOLEAN freeWorkItem = TRUE;
-    AFSDeviceExt *pLibraryDevExt = NULL;
+    AFSDeviceExt *pControlDevExt = NULL;
     LONG lCount;
 
-    pLibraryDevExt = (AFSDeviceExt *)AFSLibraryDeviceObject->DeviceExtension;
+    pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
 
     //
     // Indicate that we are initialized and ready
@@ -695,7 +667,7 @@ AFSWorkerThread( IN PVOID Context)
 
     SetFlag( pPoolContext->State, AFS_WORKER_INITIALIZED);
 
-    ntStatus = KeWaitForSingleObject( &pLibraryDevExt->Specific.Library.WorkerQueueHasItems,
+    ntStatus = KeWaitForSingleObject( &pControlDevExt->Specific.Control.WorkerQueueHasItems,
                                       Executive,
                                       KernelMode,
                                       FALSE,
@@ -721,7 +693,7 @@ AFSWorkerThread( IN PVOID Context)
             if( pWorkItem == NULL)
             {
 
-                ntStatus = KeWaitForSingleObject( &pLibraryDevExt->Specific.Library.WorkerQueueHasItems,
+                ntStatus = KeWaitForSingleObject( &pControlDevExt->Specific.Control.WorkerQueueHasItems,
                                                   Executive,
                                                   KernelMode,
                                                   FALSE,
@@ -811,7 +783,7 @@ AFSWorkerThread( IN PVOID Context)
 
     // Wake up another worker so they too can exit
 
-    KeSetEvent( &pLibraryDevExt->Specific.Library.WorkerQueueHasItems,
+    KeSetEvent( &pControlDevExt->Specific.Control.WorkerQueueHasItems,
                 0,
                 FALSE);
 
@@ -828,9 +800,9 @@ AFSIOWorkerThread( IN PVOID Context)
     AFSWorkQueueContext *pPoolContext = (AFSWorkQueueContext *)Context;
     AFSWorkItem *pWorkItem;
     BOOLEAN freeWorkItem = TRUE;
-    AFSDeviceExt *pLibraryDevExt = NULL, *pRdrDevExt = NULL;
+    AFSDeviceExt *pControlDevExt = NULL, *pRdrDevExt = NULL;
 
-    pLibraryDevExt = (AFSDeviceExt *)AFSLibraryDeviceObject->DeviceExtension;
+    pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
 
     //
     // Indicate that we are initialized and ready
@@ -847,7 +819,7 @@ AFSIOWorkerThread( IN PVOID Context)
 
     SetFlag( pPoolContext->State, AFS_WORKER_INITIALIZED);
 
-    ntStatus = KeWaitForSingleObject( &pLibraryDevExt->Specific.Library.IOWorkerQueueHasItems,
+    ntStatus = KeWaitForSingleObject( &pControlDevExt->Specific.Control.IOWorkerQueueHasItems,
                                       Executive,
                                       KernelMode,
                                       FALSE,
@@ -873,7 +845,7 @@ AFSIOWorkerThread( IN PVOID Context)
             if( pWorkItem == NULL)
             {
 
-                ntStatus = KeWaitForSingleObject( &pLibraryDevExt->Specific.Library.IOWorkerQueueHasItems,
+                ntStatus = KeWaitForSingleObject( &pControlDevExt->Specific.Control.IOWorkerQueueHasItems,
                                                   Executive,
                                                   KernelMode,
                                                   FALSE,
@@ -958,7 +930,7 @@ AFSIOWorkerThread( IN PVOID Context)
 
     // Wake up another IOWorker so they too can exit
 
-    KeSetEvent( &pLibraryDevExt->Specific.Library.IOWorkerQueueHasItems,
+    KeSetEvent( &pControlDevExt->Specific.Control.IOWorkerQueueHasItems,
                 0,
                 FALSE);
 
@@ -1978,21 +1950,21 @@ AFSInsertWorkitem( IN AFSWorkItem *WorkItem)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSDeviceExt *pDevExt = NULL;
+    AFSDeviceExt *pControlDevExt = NULL;
     LONG lCount;
 
-    pDevExt = (AFSDeviceExt *)AFSLibraryDeviceObject->DeviceExtension;
+    pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSInsertWorkitem Acquiring Control QueueLock lock %p EXCL %08lX\n",
-                  &pDevExt->Specific.Library.QueueLock,
+                  &pControlDevExt->Specific.Control.QueueLock,
                   PsGetCurrentThread());
 
-    AFSAcquireExcl( &pDevExt->Specific.Library.QueueLock,
+    AFSAcquireExcl( &pControlDevExt->Specific.Control.QueueLock,
                     TRUE);
 
-    lCount = InterlockedIncrement( &pDevExt->Specific.Library.QueueItemCount);
+    lCount = InterlockedIncrement( &pControlDevExt->Specific.Control.QueueItemCount);
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
@@ -2000,26 +1972,26 @@ AFSInsertWorkitem( IN AFSWorkItem *WorkItem)
                   WorkItem,
                   lCount);
 
-    if( pDevExt->Specific.Library.QueueTail != NULL) // queue already has nodes
+    if( pControlDevExt->Specific.Control.QueueTail != NULL) // queue already has nodes
     {
 
-        pDevExt->Specific.Library.QueueTail->next = WorkItem;
+        pControlDevExt->Specific.Control.QueueTail->next = WorkItem;
     }
     else // first node
     {
 
-        pDevExt->Specific.Library.QueueHead = WorkItem;
+        pControlDevExt->Specific.Control.QueueHead = WorkItem;
     }
 
     WorkItem->next = NULL;
-    pDevExt->Specific.Library.QueueTail = WorkItem;
+    pControlDevExt->Specific.Control.QueueTail = WorkItem;
 
     // indicate that the queue has nodes
-    KeSetEvent( &(pDevExt->Specific.Library.WorkerQueueHasItems),
+    KeSetEvent( &(pControlDevExt->Specific.Control.WorkerQueueHasItems),
                 0,
                 FALSE);
 
-    AFSReleaseResource( &pDevExt->Specific.Library.QueueLock);
+    AFSReleaseResource( &pControlDevExt->Specific.Control.QueueLock);
 
     return ntStatus;
 }
@@ -2029,21 +2001,21 @@ AFSInsertIOWorkitem( IN AFSWorkItem *WorkItem)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSDeviceExt *pDevExt = NULL;
+    AFSDeviceExt *pControlDevExt = NULL;
     LONG lCount;
 
-    pDevExt = (AFSDeviceExt *)AFSLibraryDeviceObject->DeviceExtension;
+    pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSInsertIOWorkitem Acquiring Control QueueLock lock %p EXCL %08lX\n",
-                  &pDevExt->Specific.Library.IOQueueLock,
+                  &pControlDevExt->Specific.Control.IOQueueLock,
                   PsGetCurrentThread());
 
-    AFSAcquireExcl( &pDevExt->Specific.Library.IOQueueLock,
+    AFSAcquireExcl( &pControlDevExt->Specific.Control.IOQueueLock,
                     TRUE);
 
-    lCount = InterlockedIncrement( &pDevExt->Specific.Library.IOQueueItemCount);
+    lCount = InterlockedIncrement( &pControlDevExt->Specific.Control.IOQueueItemCount);
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
@@ -2051,26 +2023,26 @@ AFSInsertIOWorkitem( IN AFSWorkItem *WorkItem)
                   WorkItem,
                   lCount);
 
-    if( pDevExt->Specific.Library.IOQueueTail != NULL) // queue already has nodes
+    if( pControlDevExt->Specific.Control.IOQueueTail != NULL) // queue already has nodes
     {
 
-        pDevExt->Specific.Library.IOQueueTail->next = WorkItem;
+        pControlDevExt->Specific.Control.IOQueueTail->next = WorkItem;
     }
     else // first node
     {
 
-        pDevExt->Specific.Library.IOQueueHead = WorkItem;
+        pControlDevExt->Specific.Control.IOQueueHead = WorkItem;
     }
 
     WorkItem->next = NULL;
-    pDevExt->Specific.Library.IOQueueTail = WorkItem;
+    pControlDevExt->Specific.Control.IOQueueTail = WorkItem;
 
     // indicate that the queue has nodes
-    KeSetEvent( &(pDevExt->Specific.Library.IOWorkerQueueHasItems),
+    KeSetEvent( &(pControlDevExt->Specific.Control.IOWorkerQueueHasItems),
                 0,
                 FALSE);
 
-    AFSReleaseResource( &pDevExt->Specific.Library.IOQueueLock);
+    AFSReleaseResource( &pControlDevExt->Specific.Control.IOQueueLock);
 
     return ntStatus;
 }
@@ -2080,25 +2052,25 @@ AFSInsertWorkitemAtHead( IN AFSWorkItem *WorkItem)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSDeviceExt *pDevExt = NULL;
+    AFSDeviceExt *pControlDevExt = NULL;
     LONG lCount;
 
-    pDevExt = (AFSDeviceExt *)AFSLibraryDeviceObject->DeviceExtension;
+    pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSInsertWorkitemAtHead Acquiring Control QueueLock lock %p EXCL %08lX\n",
-                  &pDevExt->Specific.Library.QueueLock,
+                  &pControlDevExt->Specific.Control.QueueLock,
                   PsGetCurrentThread());
 
-    AFSAcquireExcl( &pDevExt->Specific.Library.QueueLock,
+    AFSAcquireExcl( &pControlDevExt->Specific.Control.QueueLock,
                     TRUE);
 
-    WorkItem->next = pDevExt->Specific.Library.QueueHead;
+    WorkItem->next = pControlDevExt->Specific.Control.QueueHead;
 
-    pDevExt->Specific.Library.QueueHead = WorkItem;
+    pControlDevExt->Specific.Control.QueueHead = WorkItem;
 
-    lCount = InterlockedIncrement( &pDevExt->Specific.Library.QueueItemCount);
+    lCount = InterlockedIncrement( &pControlDevExt->Specific.Control.QueueItemCount);
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
@@ -2110,11 +2082,11 @@ AFSInsertWorkitemAtHead( IN AFSWorkItem *WorkItem)
     // indicate that the queue has nodes
     //
 
-    KeSetEvent( &(pDevExt->Specific.Library.WorkerQueueHasItems),
+    KeSetEvent( &(pControlDevExt->Specific.Control.WorkerQueueHasItems),
                 0,
                 FALSE);
 
-    AFSReleaseResource( &pDevExt->Specific.Library.QueueLock);
+    AFSReleaseResource( &pControlDevExt->Specific.Control.QueueLock);
 
     return ntStatus;
 }
@@ -2124,26 +2096,26 @@ AFSRemoveWorkItem()
 {
 
     AFSWorkItem        *pWorkItem = NULL;
-    AFSDeviceExt *pDevExt = NULL;
+    AFSDeviceExt *pControlDevExt = NULL;
     LONG lCount;
 
-    pDevExt = (AFSDeviceExt *)AFSLibraryDeviceObject->DeviceExtension;
+    pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSRemoveWorkItem Acquiring Control QueueLock lock %p EXCL %08lX\n",
-                  &pDevExt->Specific.Library.QueueLock,
+                  &pControlDevExt->Specific.Control.QueueLock,
                   PsGetCurrentThread());
 
-    AFSAcquireExcl( &pDevExt->Specific.Library.QueueLock,
+    AFSAcquireExcl( &pControlDevExt->Specific.Control.QueueLock,
                     TRUE);
 
-    if( pDevExt->Specific.Library.QueueHead != NULL) // queue has nodes
+    if( pControlDevExt->Specific.Control.QueueHead != NULL) // queue has nodes
     {
 
-        pWorkItem = pDevExt->Specific.Library.QueueHead;
+        pWorkItem = pControlDevExt->Specific.Control.QueueHead;
 
-        lCount = InterlockedDecrement( &pDevExt->Specific.Library.QueueItemCount);
+        lCount = InterlockedDecrement( &pControlDevExt->Specific.Control.QueueItemCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
@@ -2152,12 +2124,12 @@ AFSRemoveWorkItem()
                       lCount,
                       PsGetCurrentThreadId());
 
-        pDevExt->Specific.Library.QueueHead = pDevExt->Specific.Library.QueueHead->next;
+        pControlDevExt->Specific.Control.QueueHead = pControlDevExt->Specific.Control.QueueHead->next;
 
-        if( pDevExt->Specific.Library.QueueHead == NULL) // if queue just became empty
+        if( pControlDevExt->Specific.Control.QueueHead == NULL) // if queue just became empty
         {
 
-            pDevExt->Specific.Library.QueueTail = NULL;
+            pControlDevExt->Specific.Control.QueueTail = NULL;
         }
         else
         {
@@ -2166,13 +2138,13 @@ AFSRemoveWorkItem()
             // Wake up another worker
             //
 
-            KeSetEvent( &(pDevExt->Specific.Library.WorkerQueueHasItems),
+            KeSetEvent( &(pControlDevExt->Specific.Control.WorkerQueueHasItems),
                         0,
                         FALSE);
         }
     }
 
-    AFSReleaseResource( &pDevExt->Specific.Library.QueueLock);
+    AFSReleaseResource( &pControlDevExt->Specific.Control.QueueLock);
 
     return pWorkItem;
 }
@@ -2182,26 +2154,26 @@ AFSRemoveIOWorkItem()
 {
 
     AFSWorkItem        *pWorkItem = NULL;
-    AFSDeviceExt *pDevExt = NULL;
+    AFSDeviceExt *pControlDevExt = NULL;
     LONG lCount;
 
-    pDevExt = (AFSDeviceExt *)AFSLibraryDeviceObject->DeviceExtension;
+    pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSRemoveIOWorkItem Acquiring Control QueueLock lock %p EXCL %08lX\n",
-                  &pDevExt->Specific.Library.IOQueueLock,
+                  &pControlDevExt->Specific.Control.IOQueueLock,
                   PsGetCurrentThread());
 
-    AFSAcquireExcl( &pDevExt->Specific.Library.IOQueueLock,
+    AFSAcquireExcl( &pControlDevExt->Specific.Control.IOQueueLock,
                     TRUE);
 
-    if( pDevExt->Specific.Library.IOQueueHead != NULL) // queue has nodes
+    if( pControlDevExt->Specific.Control.IOQueueHead != NULL) // queue has nodes
     {
 
-        pWorkItem = pDevExt->Specific.Library.IOQueueHead;
+        pWorkItem = pControlDevExt->Specific.Control.IOQueueHead;
 
-        lCount = InterlockedDecrement( &pDevExt->Specific.Library.IOQueueItemCount);
+        lCount = InterlockedDecrement( &pControlDevExt->Specific.Control.IOQueueItemCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
@@ -2210,12 +2182,12 @@ AFSRemoveIOWorkItem()
                       lCount,
                       PsGetCurrentThreadId());
 
-        pDevExt->Specific.Library.IOQueueHead = pDevExt->Specific.Library.IOQueueHead->next;
+        pControlDevExt->Specific.Control.IOQueueHead = pControlDevExt->Specific.Control.IOQueueHead->next;
 
-        if( pDevExt->Specific.Library.IOQueueHead == NULL) // if queue just became empty
+        if( pControlDevExt->Specific.Control.IOQueueHead == NULL) // if queue just became empty
         {
 
-            pDevExt->Specific.Library.IOQueueTail = NULL;
+            pControlDevExt->Specific.Control.IOQueueTail = NULL;
         }
         else
         {
@@ -2224,13 +2196,13 @@ AFSRemoveIOWorkItem()
             // Wake up another worker
             //
 
-            KeSetEvent( &(pDevExt->Specific.Library.IOWorkerQueueHasItems),
+            KeSetEvent( &(pControlDevExt->Specific.Control.IOWorkerQueueHasItems),
                         0,
                         FALSE);
         }
     }
 
-    AFSReleaseResource( &pDevExt->Specific.Library.IOQueueLock);
+    AFSReleaseResource( &pControlDevExt->Specific.Control.IOQueueLock);
 
     return pWorkItem;
 }
