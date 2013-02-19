@@ -1855,7 +1855,6 @@ ListMountCmd(struct cmd_syndesc *as, void *arock)
 
 	code = pioctl(parent_dir, VIOC_AFS_STAT_MT_PT, &blob, 1);
 	free(last_component);
-	free(parent_dir);
 
 	if (code == 0) {
 	    printf("'%s' is a %smount point for volume '%s'\n", ti->data,
@@ -1869,6 +1868,7 @@ ListMountCmd(struct cmd_syndesc *as, void *arock)
 	    }
 	    error = 1;
 	}
+	free(parent_dir);
     }
     return error;
 }
@@ -4158,7 +4158,6 @@ FlushMountCmd(struct cmd_syndesc *as, void *arock)
 	code = pioctl(parent_dir, VIOC_AFS_FLUSHMOUNT, &blob, 1);
 
 	free(last_component);
-	free(parent_dir);
 
 	if (code != 0) {
 	    if (errno == EINVAL) {
@@ -4168,6 +4167,7 @@ FlushMountCmd(struct cmd_syndesc *as, void *arock)
 	    }
 	    error = 1;
 	}
+	free(parent_dir);
     }
     return error;
 }
