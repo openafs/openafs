@@ -228,6 +228,7 @@ ubik_ClientInit(struct rx_connection **serverconns,
     memset((void *)tc, 0, sizeof(*tc));
 #ifdef AFS_PTHREAD_ENV
     if (pthread_mutex_init(&(tc->cm), (const pthread_mutexattr_t *)0)) {
+	free(tc);
 	return UMUTEXINIT;
     }
 #endif
