@@ -743,10 +743,10 @@ struct afscp_venusfid *
 afscp_ResolvePathFromVol(const struct afscp_volume *v, const char *path)
 {
     struct afscp_venusfid *root, *ret;
-    char *p;
+    char *origp, *p;
 
     /* so we can modify the string */
-    p = strdup(path);
+    origp = p = strdup(path);
     if (p == NULL) {
 	afscp_errno = ENOMEM;
 	return NULL;
@@ -759,6 +759,6 @@ afscp_ResolvePathFromVol(const struct afscp_volume *v, const char *path)
 	free(root);
     } else
 	ret = root;
-    free(p);
+    free(origp);
     return ret;
 }
