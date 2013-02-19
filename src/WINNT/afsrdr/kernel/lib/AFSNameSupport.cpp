@@ -4125,6 +4125,7 @@ AFSCheckCellName( IN GUID *AuthGroup,
         ntStatus = AFSEvaluateTargetByName( AuthGroup,
                                             &AFSGlobalRoot->ObjectInformation,
                                             CellName,
+                                            0,
                                             &pDirEnumEntry);
 
         if( !NT_SUCCESS( ntStatus))

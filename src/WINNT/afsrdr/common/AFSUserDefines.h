@@ -143,6 +143,9 @@
 #define AFS_REQUEST_LOCAL_SYSTEM_PAG             0x00000200 // Indicates that the caller is or was at some point a system
                                                             // process
 
+#define AFS_REQUEST_FLAG_LAST_COMPONENT          0x00000800 // During an AFS_REQUEST_TYPE_TARGET_BY_NAME the provided name
+                                                            // is the last component in the path.
+
 //
 // Request Flags, these are passed down from the sevice
 //

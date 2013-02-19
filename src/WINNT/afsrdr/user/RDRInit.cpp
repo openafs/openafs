@@ -624,6 +624,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
                                     RequestBuffer->Name,
                                     RequestBuffer->NameLength,
                                     RequestBuffer->RequestFlags & AFS_REQUEST_FLAG_CASE_SENSITIVE ? TRUE : FALSE,
+                                    RequestBuffer->RequestFlags & AFS_REQUEST_FLAG_LAST_COMPONENT ? TRUE : FALSE,
                                     bWow64, bFast, bHoldFid,
                                     RequestBuffer->ResultBufferLength,
                                     &pResultCB);

@@ -988,6 +988,7 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
                         IN WCHAR   *FileNameCounted,
                         IN DWORD    FileNameLength,
                         IN BOOL     CaseSensitive,
+                        IN BOOL     LastComponent,
                         IN BOOL     bWow64,
                         IN BOOL     bHoldFid,
                         IN BOOL     bNoFollow,
@@ -1008,6 +1009,7 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
     size_t        cbName;
     BOOL          bVol = FALSE;
     wchar_t       FileName[260];
+    afs_uint32    lookupFlags;
 
     StringCchCopyNW(FileName, 260, FileNameCounted, FileNameLength / sizeof(WCHAR));
 
@@ -1092,14 +1094,16 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
         return;
     }
 
-    code = cm_Lookup(dscp, wszName, CM_FLAG_CHECKPATH | CM_FLAG_NOMOUNTCHASE,
-                     userp, &req, &scp);
+    lookupFlags = CM_FLAG_NOMOUNTCHASE;
+
+    if ( !LastComponent )
+        lookupFlags |= CM_FLAG_CHECKPATH;
+    code = cm_Lookup(dscp, wszName, lookupFlags, userp, &req, &scp);
 
     if (!CaseSensitive &&
         (code == CM_ERROR_NOSUCHPATH || code == CM_ERROR_NOSUCHFILE || code == CM_ERROR_BPLUS_NOMATCH)) {
-        code = cm_Lookup(dscp, wszName,
-                         CM_FLAG_CHECKPATH | CM_FLAG_NOMOUNTCHASE | CM_FLAG_CASEFOLD,
-                         userp, &req, &scp);
+        lookupFlags |= CM_FLAG_CASEFOLD;
+        code = cm_Lookup(dscp, wszName, lookupFlags, userp, &req, &scp);
     }
 
     if ((code == CM_ERROR_NOSUCHPATH || code == CM_ERROR_NOSUCHFILE || code == CM_ERROR_BPLUS_NOMATCH) &&
