@@ -1052,7 +1052,6 @@ writeFile(struct cmd_syndesc *as, void *unused)
     while (!code && bytes) {
 	Len = bytes;
 	length = Len;
-	tbuf = bufchain;
 	if (Len) {
 	    for (tbuf = bufchain; tbuf; tbuf = tbuf->next) {
 		if (tbuf->used == 0)
