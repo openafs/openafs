@@ -1931,9 +1931,8 @@ defect #3069
 	blob.in_size = 0;
 	blob.out_size = AFS_PIOCTL_MAXSIZE;
 	blob.out = space;
-	code =
-	    pioctl(Parent(as->parms[0].items->data), VIOC_FILE_CELL_NAME,
-		   &blob, 1);
+	pioctl(Parent(as->parms[0].items->data), VIOC_FILE_CELL_NAME,
+	       &blob, 1);
     }
 
     dir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH);
@@ -3822,8 +3821,8 @@ defect 3069
 			  "list configured cells");
     cmd_AddParm(ts, "-numeric", CMD_FLAG, CMD_OPTIONAL, "addresses only");
 
-    ts = cmd_CreateSyntax("listaliases", ListAliasesCmd, NULL,
-			  "list configured cell aliases");
+    cmd_CreateSyntax("listaliases", ListAliasesCmd, NULL,
+		     "list configured cell aliases");
 
     ts = cmd_CreateSyntax("setquota", SetQuotaCmd, NULL, "set volume quota");
     cmd_AddParm(ts, "-path", CMD_SINGLE, CMD_OPTIONAL, "dir/file path");
@@ -3863,7 +3862,7 @@ defect 3069
     ts = cmd_CreateSyntax("whereis", WhereIsCmd, NULL, "list file's location");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
 
-    ts = cmd_CreateSyntax("wscell", WSCellCmd, NULL, "list workstation's cell");
+    cmd_CreateSyntax("wscell", WSCellCmd, NULL, "list workstation's cell");
 
 /*
     ts = cmd_CreateSyntax("primarycell", PrimaryCellCmd, NULL, "obsolete (listed primary cell)");
@@ -3925,7 +3924,7 @@ defect 3069
 			  "set cache manager encryption flag");
     cmd_AddParm(ts, "-crypt", CMD_SINGLE, 0, "on or off");
 
-    ts = cmd_CreateSyntax("getcrypt", GetCryptCmd, NULL,
+    cmd_CreateSyntax("getcrypt", GetCryptCmd, NULL,
 			  "get cache manager encryption flag");
 
     ts = cmd_CreateSyntax("rxstatproc", RxStatProcCmd, NULL,
