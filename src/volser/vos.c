@@ -280,7 +280,6 @@ SendFile(usd_handle_t ufd, struct rx_call *call, long blksize)
 {
     char *buffer = (char *)0;
     afs_int32 error = 0;
-    int done = 0;
     afs_uint32 nbytes;
 
     buffer = malloc(blksize);
@@ -289,7 +288,7 @@ SendFile(usd_handle_t ufd, struct rx_call *call, long blksize)
 	return -1;
     }
 
-    while (!error && !done) {
+    while (!error) {
 #ifndef AFS_NT40_ENV		/* NT csn't select on non-socket fd's */
 	fd_set in;
 	FD_ZERO(&in);
@@ -307,10 +306,10 @@ SendFile(usd_handle_t ufd, struct rx_call *call, long blksize)
 	            afs_error_message(error));
 	    break;
 	}
-	if (nbytes == 0) {
-	    done = 1;
+
+	if (nbytes == 0)
 	    break;
-	}
+
 	if (rx_Write(call, buffer, nbytes) != nbytes) {
 	    error = -1;
 	    break;
