@@ -674,10 +674,10 @@ lockFile(struct cmd_syndesc *as, void *arock)
 	locktype = LockRead;
 
     if (realm != NULL)
-	code = afscp_SetDefaultRealm(realm);
+	afscp_SetDefaultRealm(realm);
 
     if (cell != NULL)
-	code = afscp_SetDefaultCell(cell);
+	afscp_SetDefaultCell(cell);
 
     if (useFid)
 	code = GetVenusFidByFid(fname, cell, 0, &avfp);
@@ -763,10 +763,10 @@ readFile(struct cmd_syndesc *as, void *unused)
 	MD5_Init(&md5);
 
     if (realm != NULL)
-	code = afscp_SetDefaultRealm(realm);
+	afscp_SetDefaultRealm(realm);
 
     if (cell != NULL)
-	code = afscp_SetDefaultCell(cell);
+	afscp_SetDefaultCell(cell);
 
     if (useFid)
 	code = GetVenusFidByFid(fname, cell, 0, &avfp);
@@ -880,10 +880,10 @@ writeFile(struct cmd_syndesc *as, void *unused)
 	afscp_Insecure();
 
     if (realm != NULL)
-	code = afscp_SetDefaultRealm(realm);
+	afscp_SetDefaultRealm(realm);
 
     if (cell != NULL)
-	code = afscp_SetDefaultCell(cell);
+	afscp_SetDefaultCell(cell);
 
     if (sSynthLen) {
 	code = util_GetInt64(sSynthLen, &synthlength);
