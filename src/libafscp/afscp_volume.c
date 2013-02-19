@@ -171,8 +171,8 @@ afscp_VolumeByName(struct afscp_cell *cell, const char *vname,
     }
 
     ret->voltype = intype;
-    server = afscp_ServerByIndex(ret->servers[0]);
 #ifdef AFSCP_DEBUG
+    server = afscp_ServerByIndex(ret->servers[0]);
     if (server != NULL)
 	i.s_addr = server->addrs[0];
     else
@@ -313,8 +313,8 @@ afscp_VolumeById(struct afscp_cell *cell, afs_uint32 id)
 	break;
     }
     ret->voltype = voltype;
-    server = afscp_ServerByIndex(ret->servers[0]);
 #ifdef AFSCP_DEBUG
+    server = afscp_ServerByIndex(ret->servers[0]);
     if (server)
 	i.s_addr = server->addrs[0];
     else
