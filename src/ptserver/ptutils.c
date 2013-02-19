@@ -457,6 +457,8 @@ CreateEntry(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid, af
 
 	/* write updated entry for group */
 	code = pr_Write(at, 0, pos, &centry, sizeof(centry));
+	if (code)
+	    return PRDBFAIL;
 
 	/* Now add the new user entry to the database */
 	tentry.creator = creator;
