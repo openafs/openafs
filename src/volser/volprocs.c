@@ -721,7 +721,6 @@ VolClone(struct rx_call *acid, afs_int32 atrans, VolumeId purgeId,
 	    callerAddress(acid, buffer), newName);
     }
     error = 0;
-    originalvp = (Volume *) 0;
     purgevp = (Volume *) 0;
     newvp = (Volume *) 0;
     tt = ttc = (struct volser_trans *)0;
@@ -907,7 +906,6 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, VolumeId cloneId)
     }
     error = 0;
     clonevp = originalvp = (Volume *) 0;
-    tt = (struct volser_trans *)0;
 
     tt = FindTrans(atrans);
     if (!tt)
@@ -1269,9 +1267,6 @@ VolForward(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate,
 
     if (!afsconf_SuperUser(tdir, acid, caller))
 	return VOLSERBAD_ACCESS;	/*not a super user */
-    /* initialize things */
-    tcon = (struct rx_connection *)0;
-    tt = (struct volser_trans *)0;
 
     /* find the local transaction */
     tt = FindTrans(fromTrans);
@@ -2975,10 +2970,8 @@ SAFSVolConvertROtoRWvolume(struct rx_call *acid, afs_int32 partId,
 	}
     }
 
-    if (ttc) {
+    if (ttc)
         DeleteTrans(ttc, 1);
-        ttc = (struct volser_trans *)0;
-    }
 
     closedir(dirp);
     return ret;
