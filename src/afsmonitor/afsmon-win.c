@@ -772,9 +772,9 @@ ovw_refresh(int a_pageNum,	/* page to refresh overview display */
 		/* highlighten if overflowed or probe failed */
 
 		if (fsDataP->ovfCount || !fsDataP->probeOK)
-		    code = gator_light_set(*tmp_fsNames_o, 1);
+		    gator_light_set(*tmp_fsNames_o, 1);
 		else
-		    code = gator_light_set(*tmp_fsNames_o, 0);
+		    gator_light_set(*tmp_fsNames_o, 0);
 
 
 	    } else {		/* no more hosts, blank the rest of the entries */
@@ -846,9 +846,9 @@ ovw_refresh(int a_pageNum,	/* page to refresh overview display */
 
 		/* highlighten if overflow or if probe failed */
 		if (cmDataP->ovfCount || !cmDataP->probeOK)
-		    code = gator_light_set(*tmp_cmNames_o, 1);
+		    gator_light_set(*tmp_cmNames_o, 1);
 		else
-		    code = gator_light_set(*tmp_cmNames_o, 0);
+		    gator_light_set(*tmp_cmNames_o, 0);
 
 
 	    } else {		/* no more hosts, blank the rest of the entries */
@@ -1710,15 +1710,13 @@ fs_refresh(int a_pageNum,	/* page to display */
 
 	if (labelIdx < fs_numCols) {
 	    dataIndex = fs_Display_map[labelIdx];
-	    code =
-		display_Server_label(fs_labels[dataIndex], *fsLabels_o_Ptr1,
-				     *fsLabels_o_Ptr2, *fsLabels_o_Ptr3);
+	    display_Server_label(fs_labels[dataIndex], *fsLabels_o_Ptr1,
+				 *fsLabels_o_Ptr2, *fsLabels_o_Ptr3);
 
 	    labelIdx++;		/* next label */
 	} else {
-	    code =
-		display_Server_label("//", *fsLabels_o_Ptr1, *fsLabels_o_Ptr2,
-				     *fsLabels_o_Ptr3);
+	    display_Server_label("//", *fsLabels_o_Ptr1, *fsLabels_o_Ptr2,
+				 *fsLabels_o_Ptr3);
 	}
 
 	fsLabels_o_Ptr1++;	/* next onode in label row 1 */
@@ -1799,17 +1797,16 @@ fs_refresh(int a_pageNum,	/* page to display */
 
 		    dataIndex = fs_Display_map[fs_curr_RCol];
 
-		    code =
-			display_Server_datum(fsDataP->data[dataIndex],
-					     *firstSlot_o_Ptr,
-					     *secondSlot_o_Ptr,
-					     fsDataP->probeOK, RIGHT_JUSTIFY,
-					     fsDataP->threshOvf[dataIndex]);
+		    display_Server_datum(fsDataP->data[dataIndex],
+					 *firstSlot_o_Ptr,
+					 *secondSlot_o_Ptr,
+					 fsDataP->probeOK, RIGHT_JUSTIFY,
+					 fsDataP->threshOvf[dataIndex]);
 
 		    fs_curr_RCol++;
 		} else {	/* no more data, blank out columns */
-		    code = display_Server_datum("", *firstSlot_o_Ptr, *secondSlot_o_Ptr, 1,	/* probe ok */
-						RIGHT_JUSTIFY, 0);	/* no overflow */
+		    display_Server_datum("", *firstSlot_o_Ptr, *secondSlot_o_Ptr, 1,	/* probe ok */
+					 RIGHT_JUSTIFY, 0);	/* no overflow */
 		}
 
 
@@ -1848,8 +1845,8 @@ fs_refresh(int a_pageNum,	/* page to display */
 	    secondSlot_o_Ptr = tmp_fs_lines_P->data_o[1];
 
 	    for (k = 0; k < fs_cols_perPage; k++) {
-		code = display_Server_datum("", *firstSlot_o_Ptr, *secondSlot_o_Ptr, 1,	/* probe OK */
-					    RIGHT_JUSTIFY, 0);	/* dont highlight */
+		display_Server_datum("", *firstSlot_o_Ptr, *secondSlot_o_Ptr, 1,	/* probe OK */
+				     RIGHT_JUSTIFY, 0);	/* dont highlight */
 
 		firstSlot_o_Ptr++;
 		secondSlot_o_Ptr++;
@@ -2491,15 +2488,13 @@ cm_refresh(int a_pageNum,		/* page to display */
 
 	if (labelIdx < cm_numCols) {
 	    dataIndex = cm_Display_map[labelIdx];
-	    code =
-		display_Server_label(cm_labels[dataIndex], *cmLabels_o_Ptr1,
-				     *cmLabels_o_Ptr2, *cmLabels_o_Ptr3);
+	    display_Server_label(cm_labels[dataIndex], *cmLabels_o_Ptr1,
+				 *cmLabels_o_Ptr2, *cmLabels_o_Ptr3);
 
 	    labelIdx++;		/* next label */
 	} else {
-	    code =
-		display_Server_label("//", *cmLabels_o_Ptr1, *cmLabels_o_Ptr2,
-				     *cmLabels_o_Ptr3);
+	    display_Server_label("//", *cmLabels_o_Ptr1, *cmLabels_o_Ptr2,
+				 *cmLabels_o_Ptr3);
 	}
 
 	cmLabels_o_Ptr1++;	/* next onode in label row 1 */
@@ -2580,17 +2575,16 @@ cm_refresh(int a_pageNum,		/* page to display */
 
 		    dataIndex = cm_Display_map[cm_curr_RCol];
 
-		    code =
-			display_Server_datum(cmDataP->data[dataIndex],
-					     *firstSlot_o_Ptr,
-					     *secondSlot_o_Ptr,
-					     cmDataP->probeOK, RIGHT_JUSTIFY,
-					     cmDataP->threshOvf[dataIndex]);
+		    display_Server_datum(cmDataP->data[dataIndex],
+					 *firstSlot_o_Ptr,
+					 *secondSlot_o_Ptr,
+					 cmDataP->probeOK, RIGHT_JUSTIFY,
+					 cmDataP->threshOvf[dataIndex]);
 
 		    cm_curr_RCol++;
 		} else {	/* no more data, blank out columns */
-		    code = display_Server_datum("", *firstSlot_o_Ptr, *secondSlot_o_Ptr, 1,	/* probe ok */
-						RIGHT_JUSTIFY, 0);	/* no overflow */
+		    display_Server_datum("", *firstSlot_o_Ptr, *secondSlot_o_Ptr, 1,	/* probe ok */
+					 RIGHT_JUSTIFY, 0);	/* no overflow */
 		}
 
 
@@ -2629,7 +2623,7 @@ cm_refresh(int a_pageNum,		/* page to display */
 	    secondSlot_o_Ptr = tmp_cm_lines_P->data_o[1];
 
 	    for (k = 0; k < cm_cols_perPage; k++) {
-		code = display_Server_datum("", *firstSlot_o_Ptr, *secondSlot_o_Ptr, 1,	/* probe OK */
+		display_Server_datum("", *firstSlot_o_Ptr, *secondSlot_o_Ptr, 1,	/* probe OK */
 					    RIGHT_JUSTIFY, 0);	/* dont highlight */
 
 		firstSlot_o_Ptr++;
