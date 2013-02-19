@@ -479,6 +479,8 @@ RemoveFromIDHash(struct ubik_trans *tt, afs_int32 aid, afs_int32 *loc)		/* ??? i
 	    return PRDBFAIL;
 	bentry.nextID = tentry.nextID;
 	code = pr_WriteEntry(tt, 0, trail, &bentry);
+	if (code)
+	    return PRDBFAIL;
     }
     *loc = current;
     return PRSUCCESS;
@@ -557,6 +559,8 @@ RemoveFromNameHash(struct ubik_trans *tt, char *aname, afs_int32 *loc)
 	    return PRDBFAIL;
 	bentry.nextName = tentry.nextName;
 	code = pr_WriteEntry(tt, 0, trail, &bentry);
+	if (code)
+	    return PRDBFAIL;
     }
     *loc = current;
     return PRSUCCESS;
