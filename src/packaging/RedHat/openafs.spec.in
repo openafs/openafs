@@ -292,7 +292,6 @@ what gets built:
  --without krb5                   Disable krb5 support (default: with krb5)
  --with bitmap-later              Enable "bitmap later" support
  --with bos-restricted            Enable "bos restricted" mode
- --with largefiles                Enable "largefile fileserver" mode
  --with supergroups               Enable "supergroups"
 
  --target=i386                    The target architecture to build for.
@@ -834,7 +833,6 @@ PrintRedhatKernelFix() {
 config_opts="--enable-redhat-buildsys \
 	%{?_with_bitmap_later:--enable-bitmap-later} \
 	%{?_with_bos_restricted:--enable-bos-restricted-mode} \
-	%{?_with_largefiles:--enable-largefile-fileserver} \
 	%{?_with_supergroups:--enable-supergroups} \
 	--enable-transarc-paths"
 
