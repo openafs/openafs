@@ -1513,7 +1513,7 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
     pntg = 1;
     toconn = UV_Bind(atoserver, AFSCONF_VOLUMEPORT);	/* get connections to the servers */
     fromconn = UV_Bind(afromserver, AFSCONF_VOLUMEPORT);
-    fromtid = totid = 0;	/* initialize to uncreated */
+    totid = 0;	/* initialize to uncreated */
 
     /* ***
      * clone the read/write volume locally.
@@ -2084,7 +2084,6 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
 	ubik_VL_ReleaseLock(cstruct, 0, afromvol, -1,
 			    (LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP));
 	VDONE;
-	islocked = 0;
     }
   done:			/* routine cleanup */
     if (volName)
