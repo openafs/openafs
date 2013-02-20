@@ -643,7 +643,6 @@ UV_PartitionInfo64(afs_uint32 server, char *pname,
     struct rx_connection *aconn;
     afs_int32 code = 0;
 
-    aconn = (struct rx_connection *)0;
     aconn = UV_Bind(server, AFSCONF_VOLUMEPORT);
     code = AFSVolPartitionInfo64(aconn, pname, partition);
     if (code == RXGEN_OPCODE) {
@@ -722,7 +721,6 @@ UV_CreateVolume3(afs_uint32 aserver, afs_int32 apart, char *aname,
     struct volintInfo tstatus;
 
     tid = 0;
-    aconn = (struct rx_connection *)0;
     error = 0;
 
     init_volintInfo(&tstatus);
@@ -4565,7 +4563,6 @@ UV_RestoreVolume2(afs_uint32 toserver, afs_int32 topart, afs_uint32 tovolid,
     error = 0;
     reuseID = 1;
     tocall = (struct rx_call *)0;
-    toconn = (struct rx_connection *)0;
     tempconn = (struct rx_connection *)0;
     totid = 0;
     temptid = 0;
@@ -5341,7 +5338,6 @@ UV_ZapVolumeClones(afs_uint32 aserver, afs_int32 apart,
     afs_int32 code = 0;
     afs_int32 success = 1;
 
-    aconn = (struct rx_connection *)0;
     aconn = UV_Bind(aserver, AFSCONF_VOLUMEPORT);
     curPos = 0;
     for (curPtr = volPtr; curPos < arraySize; curPtr++) {
@@ -5386,7 +5382,6 @@ UV_GenerateVolumeClones(afs_uint32 aserver, afs_int32 apart,
     afs_uint32 curCloneId = 0;
     char cloneName[256];	/*max vol name */
 
-    aconn = (struct rx_connection *)0;
     aconn = UV_Bind(aserver, AFSCONF_VOLUMEPORT);
     curPos = 0;
     if ((volPtr->volFlags & REUSECLONEID) && (volPtr->volFlags & ENTRYVALID))
