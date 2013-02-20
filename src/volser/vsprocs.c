@@ -2023,8 +2023,8 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
 	}
 
 	if (volid && toconn)
-	    code = DoVolDelete(toconn, volid, atopart,
-			       "destination", 0, NULL, "Recovery:");
+	    DoVolDelete(toconn, volid, atopart,
+			"destination", 0, NULL, "Recovery:");
 
 	/* put source volume on-line */
 	if (fromconn) {
@@ -2063,20 +2063,19 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
 
 	/* delete backup volume */
 	if (fromconn) {
-	    code = DoVolDelete(fromconn, backupId, afrompart,
-			       "backup", 0, NULL, "Recovery:");
+	    DoVolDelete(fromconn, backupId, afrompart,
+			"backup", 0, NULL, "Recovery:");
 
-	    code = DoVolDelete(fromconn, afromvol, afrompart, "source",
-			       (atoserver != afromserver)?atoserver:0,
-			       NULL, NULL);
+	    DoVolDelete(fromconn, afromvol, afrompart, "source",
+			(atoserver != afromserver)?atoserver:0,
+			NULL, NULL);
 	}
     }
 
     /* common cleanup - delete local clone */
-    if (newVol) {
-	code = DoVolDelete(fromconn, newVol, afrompart,
-			   "clone", 0, NULL, "Recovery:");
-    }
+    if (newVol)
+	DoVolDelete(fromconn, newVol, afrompart,
+		    "clone", 0, NULL, "Recovery:");
 
     /* unlock VLDB entry */
     if (islocked) {
