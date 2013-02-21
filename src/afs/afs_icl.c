@@ -83,14 +83,17 @@ afs_icl_InitLogs(void)
 
     /* initialize the ICL system */
     code = afs_icl_CreateLog("cmfx", 60 * 1024, &logp);
-    if (code == 0)
-	code =
-	    afs_icl_CreateSetWithFlags("cm", logp, NULL,
-				       ICL_CRSET_FLAG_DEFAULT_OFF,
-				       &afs_iclSetp);
-    code =
-	afs_icl_CreateSet("cmlongterm", logp, NULL,
-			  &afs_iclLongTermSetp);
+    if (code)
+	return code;
+
+    code = afs_icl_CreateSetWithFlags("cm", logp, NULL,
+				      ICL_CRSET_FLAG_DEFAULT_OFF,
+				      &afs_iclSetp);
+    if (code)
+	return code;
+
+    code = afs_icl_CreateSet("cmlongterm", logp, NULL,
+			     &afs_iclLongTermSetp);
     return code;
 }
 
