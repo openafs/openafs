@@ -3319,7 +3319,6 @@ afs_dcacheInit(int afiles, int ablocks, int aDentries, int achunk, int aflags)
 	    afs_warn("afsd: memory cache too large for available memory.\n");
 	    afs_warn("afsd: AFS files cannot be accessed.\n\n");
 	    dcacheDisabled = 1;
-	    afiles = ablocks = 0;
 	} else
 	    afs_warn("Memory cache: Allocating %d dcache entries...",
 		   aDentries);
