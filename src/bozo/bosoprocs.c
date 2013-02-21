@@ -252,7 +252,7 @@ SaveOldFiles(char *aname)
 
     if (bakTime && (oldTime == 0 || bakTime < now - BOZO_OLDTIME)) {
 	/* no .OLD file, or .BAK is at least a week old */
-	code = rk_rename(bbuffer, obuffer);
+	rk_rename(bbuffer, obuffer);
     }
 
     /* finally rename to .BAK extension */
