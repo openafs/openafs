@@ -3107,7 +3107,6 @@ vlentry_to_vldbentry(struct vl_ctx *ctx, struct nvlentry *VlEntry,
     for (i = 0; i < OMAXNSERVERS; i++) {
 	if (VlEntry->serverNumber[i] == BADSERVERID)
 	    break;
-	j = VlEntry->serverNumber[i];
 	code = multiHomedExtent(ctx, VlEntry->serverNumber[i], &exp);
 	if (code)
 	    return code;
