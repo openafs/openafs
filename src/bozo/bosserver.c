@@ -1103,9 +1103,8 @@ main(int argc, char **argv, char **envp)
 	}
     }
 
-    code = LWP_CreateProcess(BozoDaemon, BOZO_LWP_STACKSIZE, /* priority */ 1,
-			     /* param */ NULL , "bozo-the-clown",
-			     &bozo_pid);
+    LWP_CreateProcess(BozoDaemon, BOZO_LWP_STACKSIZE, /* priority */ 1,
+		      /* param */ NULL , "bozo-the-clown", &bozo_pid);
 
     /* try to read the key from the config file */
     tdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
