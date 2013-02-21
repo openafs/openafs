@@ -856,7 +856,6 @@ AddKey(struct cmd_syndesc *as, void *arock)
 */
 	ka_StringToKey(buf, tcell, &tkey);
     }
-    tconn = GetConn(as, 1);
     code = BOZO_AddKey(tconn, temp, ktc_to_bozoptr(&tkey));
     if (code) {
 	printf("bos: failed to set key %d (%s)\n", temp, em(code));
