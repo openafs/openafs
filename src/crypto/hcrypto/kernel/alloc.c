@@ -55,10 +55,10 @@ char*
 _afscrypto_strdup(const char *str) {
     char *ptr;
 
-    ptr = malloc(strlen(str));
+    ptr = malloc(strlen(str) + 1);
     if (ptr == NULL)
        return ptr;
-    memcpy(ptr, str, strlen(str));
+    memcpy(ptr, str, strlen(str) + 1);
 
     return ptr;
 }
