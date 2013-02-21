@@ -1006,9 +1006,6 @@ SBOZO_Restart(struct rx_call *acall, char *ainstance)
 	goto fail;
     }
 
-    /* setup return code */
-    code = 0;
-
     bnode_Hold(tb);
     bnode_SetStat(tb, BSTAT_SHUTDOWN);
     code = bnode_WaitStatus(tb, BSTAT_SHUTDOWN);	/* this can fail */
