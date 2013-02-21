@@ -299,7 +299,6 @@ ReadBozoFile(char *aname)
 
     for (code = 0; code < MAXPARMS; code++)
 	parms[code] = NULL;
-    tfile = (FILE *) 0;
     if (!aname)
 	aname = (char *)bozo_fileName;
     tfile = fopen(aname, "r");
@@ -307,7 +306,7 @@ ReadBozoFile(char *aname)
 	return 0;		/* -1 */
     instp = malloc(BOZO_BSSIZE);
     typep = malloc(BOZO_BSSIZE);
-    notifier = notp = malloc(BOZO_BSSIZE);
+    notp = malloc(BOZO_BSSIZE);
     while (1) {
 	/* ok, read lines giving parms and such from the file */
 	tp = fgets(tbuffer, sizeof(tbuffer), tfile);
