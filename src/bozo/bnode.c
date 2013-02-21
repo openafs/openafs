@@ -151,7 +151,7 @@ SaveCore(struct bnode *abnode, struct bnode_proc
 	    TimeFields->tm_hour, TimeFields->tm_min, TimeFields->tm_sec);
     strcpy(tbuffer, FileName);
 #endif
-    code = rk_rename(corefile, tbuffer);
+    rk_rename(corefile, tbuffer);
     free(corefile);
 }
 
