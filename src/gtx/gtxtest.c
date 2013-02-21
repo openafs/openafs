@@ -45,7 +45,7 @@ ChangeMenuCmd(void *param1, void *param2)
 	if (code)
 	    gtxframe_DisplayString(tf, "Can't delete menu!");
     } else if (arock == 3) {
-	code = gtxframe_ClearMenus(tf);
+	gtxframe_ClearMenus(tf);
 	gtxframe_AddMenu(frameA, "FrameB", "b");
 	gtxframe_AddMenu(frameA, "NewLabel", "c");
     }
@@ -72,7 +72,7 @@ ChangeListCmd(void *param1, void *param2)
 	if (code)
 	    gtxframe_DisplayString(tf, "Can't delete light!");
     } else if (arock == 3) {
-	code = gtxframe_ClearList(tf);
+	gtxframe_ClearList(tf);
 	gtxframe_AddToList(frameA, objectA);
 	gtxframe_AddToList(frameA, lightA);
     }
