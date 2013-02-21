@@ -64,7 +64,6 @@ CheckAndDeleteVolume(struct rx_connection *aconn, afs_int32 apart,
     afs_int32 error, code, tid, rcode;
 
     error = 0;
-    code = 0;
 
     if (okvol == 0) {
 	code = AFSVolTransCreate(aconn, delvol, apart, ITOffline, &tid);
@@ -1172,15 +1171,13 @@ static int
 DelVol(struct rx_connection *conn, afs_uint32 vid, afs_int32 part,
        afs_int32 flags)
 {
-    afs_int32 acode, ccode, rcode, tid;
-    ccode = rcode = tid = 0;
+    afs_int32 acode, rcode, tid;
+    rcode = tid = 0;
 
     acode = AFSVolTransCreate(conn, vid, part, flags, &tid);
     if (!acode) {		/* It really was there */
 	acode = AFSVolDeleteVolume(conn, tid);
-	ccode = AFSVolEndTrans(conn, tid, &rcode);
-	if (!ccode)
-	    ccode = rcode;
+	AFSVolEndTrans(conn, tid, &rcode);
     }
 
     return acode;
@@ -1302,7 +1299,7 @@ GetTrans(afs_cell_handle_p cellHandle, struct nvldbentry *vldbEntryPtr,
 	 afs_int32 * transPtr, afs_int32 * timePtr, afs_status_p st)
 {
     int rc = 0;
-    afs_status_t tst = 0, etst = 0;
+    afs_status_t tst = 0;
     afs_uint32 volid;
     struct volser_status tstatus;
     int rcode;
@@ -1374,10 +1371,8 @@ GetTrans(afs_cell_handle_p cellHandle, struct nvldbentry *vldbEntryPtr,
   fail_GetTrans:
 
     if ((rc == 0) && (*transPtr)) {
-	etst = AFSVolEndTrans(*connPtr, *transPtr, &rcode);
+	AFSVolEndTrans(*connPtr, *transPtr, &rcode);
 	*transPtr = 0;
-	if (!etst)
-	    etst = rcode;
     }
 
     if (st != NULL) {
@@ -2049,7 +2044,6 @@ DumpFunction(struct rx_call *call, const char *filename)
     afs_int32 error, code;
 
     error = 0;
-    fd = -1;
 
     fd = open(filename, O_CREAT | O_TRUNC | O_WRONLY, 0666);
     if (fd < 0 || fstat(fd, &status) < 0) {
@@ -2097,12 +2091,10 @@ UV_DumpVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
 
     islocked = 0;
     rxError = 0;
-    fromcall = (struct rx_call *)0;
     fromconn = (struct rx_connection *)0;
     fromtid = 0;
     fromcall = (struct rx_call *)0;
 
-    islocked = 0;
     if (!aVLDB_GetEntryByID(cellHandle, afromvol, -1, &entry, &tst)) {
 	goto fail_UV_DumpVolume;
     }
@@ -2183,7 +2175,6 @@ SendFile(int fd, struct rx_call *call,
     int blockSize;
     fd_set in;
     afs_int32 error = 0;
-    int done = 0;
     int nbytes;
 
 #ifdef AFS_NT40_ENV
@@ -2209,7 +2200,7 @@ t structure!! */
 	return ADMNOMEM;
     }
 
-    while (!error && !done) {
+    while (!error) {
 	FD_ZERO(&in);
 	FD_SET(fd, &in);
 #ifndef AFS_NT40_ENV		/* NT csn't select on non-socket fd's */
@@ -2220,10 +2211,10 @@ t structure!! */
 	    error = ADMVOSRESTOREFILEREADFAIL;
 	    break;
 	}
-	if (nbytes == 0) {
-	    done = 1;
+
+	if (nbytes == 0)
 	    break;
-	}
+
 	if (rx_Write(call, buffer, nbytes) != nbytes) {
 	    error = ADMVOSRESTOREFILEWRITEFAIL;
 	    break;
@@ -2242,7 +2233,6 @@ WriteData(struct rx_call *call, const char *filename)
     afs_int32 error, code;
 
     error = 0;
-    fd = -1;
 
     fd = open(filename, 0);
     if (fd < 0 || fstat(fd, &status) < 0) {
@@ -2301,10 +2291,8 @@ UV_RestoreVolume(afs_cell_handle_p cellHandle, afs_int32 toserver,
 
     memset(&cookie, 0, sizeof(cookie));
     islocked = 0;
-    success = 0;
     reuseID = 1;
     tocall = (struct rx_call *)0;
-    toconn = (struct rx_connection *)0;
     tempconn = (struct rx_connection *)0;
     totid = 0;
     temptid = 0;
@@ -2988,7 +2976,7 @@ ProcessEntries(afs_cell_handle_p cellHandle, struct qHead *myQueue,
 {
     struct aqueue elem;
     int success, temp;
-    afs_uint32 temp1, temp2;
+    afs_uint32 temp2;
     afs_int32 vcode;
     afs_uint32 maxVolid = 0;
     struct nvldbentry entry;
@@ -3020,30 +3008,24 @@ ProcessEntries(afs_cell_handle_p cellHandle, struct qHead *myQueue,
 	    continue;
 	}
 	if (maxVolid <= elem.ids[RWVOL]) {
-	    temp1 = maxVolid;
 	    temp2 = elem.ids[RWVOL] - maxVolid + 1;
 	    maxVolid = 0;
-	    vcode =
-		ubik_VL_GetNewVolumeId(cellHandle->vos, 0, temp2,
-			  &maxVolid);
+	    ubik_VL_GetNewVolumeId(cellHandle->vos, 0, temp2,
+			  	   &maxVolid);
 	    maxVolid += temp2;
 	}
 	if (maxVolid <= elem.ids[ROVOL]) {
-	    temp1 = maxVolid;
 	    temp2 = elem.ids[ROVOL] - maxVolid + 1;
 	    maxVolid = 0;
-	    vcode =
-		ubik_VL_GetNewVolumeId(cellHandle->vos, 0, temp2,
-			  &maxVolid);
+	    ubik_VL_GetNewVolumeId(cellHandle->vos, 0, temp2,
+				   &maxVolid);
 	    maxVolid += temp2;
 	}
 	if (maxVolid <= elem.ids[BACKVOL]) {
-	    temp1 = maxVolid;
-	    temp2 = elem.ids[BACKVOL] - temp1 + 1;
+	    temp2 = elem.ids[BACKVOL] - maxVolid + 1;
 	    maxVolid = 0;
-	    vcode =
-		ubik_VL_GetNewVolumeId(cellHandle->vos, 0, temp2,
-			  &maxVolid);
+	    ubik_VL_GetNewVolumeId(cellHandle->vos, 0, temp2,
+				   &maxVolid);
 	    maxVolid += temp2;
 	}
 	aVLDB_GetEntryByID(cellHandle, elem.ids[RWVOL], RWVOL, &entry, &tst);
