@@ -1115,7 +1115,6 @@ mini_PrintDiskStats(struct mini_line *a_srvline,
      * mark all used disk objects for this server as inactive and fix
      * their line numbers if needed.
      */
-    sc_disk = a_srvline->disks;
     used_disk_idx = a_srvline->used_head;
     while (used_disk_idx != SCOUT_NIL) {
 	if (scout_debug) {
@@ -1327,7 +1326,6 @@ FS_Handler(void)
     curr_probeOK = fsprobe_Results.probeOK;
     curr_line_num = curr_line->base_line;
 
-    setting = 0;
     for (curr_srvidx = 0; curr_srvidx < scout_screen.numServers;
 	 curr_srvidx++) {
 	/*
@@ -1352,18 +1350,18 @@ FS_Handler(void)
 	    sprintf(sp, "%d", curr_stats->CurrentConnections);
 	} else
 	    sp = sblank;
-	code = mini_justify(sp,	/*Src buffer */
-			    lightdata->label,	/*Dest buffer */
-			    scout_col_width[COL_CONN],	/*Dest's width */
-			    SCOUT_RIGHT_JUSTIFY,	/*Right-justify */
-			    SCOUT_LEFT_TRUNC,	/*Left-truncate */
-			    SCOUT_ISNT_LDISK);	/*Not a labeled disk */
+	mini_justify(sp,	/*Src buffer */
+		     lightdata->label,	/*Dest buffer */
+		     scout_col_width[COL_CONN],	/*Dest's width */
+		     SCOUT_RIGHT_JUSTIFY,	/*Right-justify */
+		     SCOUT_LEFT_TRUNC,	/*Left-truncate */
+		     SCOUT_ISNT_LDISK);	/*Not a labeled disk */
 	if (scout_attn_conn != SCOUT_ATTN_NOTUSED
 	    && curr_stats->CurrentConnections >= scout_attn_conn)
 	    setting = 1;
 	else
 	    setting = 0;
-	code = gator_light_set(curr_line->currConns_lp, setting);
+	gator_light_set(curr_line->currConns_lp, setting);
 
 	lightdata = (struct gator_lightobj *)(curr_line->fetches_lp->o_data);
 	if (*curr_probeOK == 0) {
@@ -1371,18 +1369,18 @@ FS_Handler(void)
 	    sprintf(sp, "%u", curr_stats->TotalFetchs);
 	} else
 	    sp = sblank;
-	code = mini_justify(sp,	/*Src buffer */
-			    lightdata->label,	/*Dest buffer */
-			    scout_col_width[COL_FETCH],	/*Dest's width */
-			    SCOUT_RIGHT_JUSTIFY,	/*Right-justify */
-			    SCOUT_LEFT_TRUNC,	/*Left-truncate */
-			    SCOUT_ISNT_LDISK);	/*Not a labeled disk */
+	mini_justify(sp,	/*Src buffer */
+		     lightdata->label,	/*Dest buffer */
+		     scout_col_width[COL_FETCH],	/*Dest's width */
+		     SCOUT_RIGHT_JUSTIFY,	/*Right-justify */
+		     SCOUT_LEFT_TRUNC,	/*Left-truncate */
+		     SCOUT_ISNT_LDISK);	/*Not a labeled disk */
 	if (scout_attn_fetch != SCOUT_ATTN_NOTUSED
 	    && curr_stats->TotalFetchs >= scout_attn_fetch)
 	    setting = 1;
 	else
 	    setting = 0;
-	code = gator_light_set(curr_line->fetches_lp, setting);
+	gator_light_set(curr_line->fetches_lp, setting);
 
 	lightdata = (struct gator_lightobj *)(curr_line->stores_lp->o_data);
 	if (*curr_probeOK == 0) {
@@ -1390,18 +1388,18 @@ FS_Handler(void)
 	    sprintf(sp, "%u", curr_stats->TotalStores);
 	} else
 	    sp = sblank;
-	code = mini_justify(sp,	/*Src buffer */
-			    lightdata->label,	/*Dest buffer */
-			    scout_col_width[COL_STORE],	/*Dest's width */
-			    SCOUT_RIGHT_JUSTIFY,	/*Right-justify */
-			    SCOUT_LEFT_TRUNC,	/*Left-truncate */
-			    SCOUT_ISNT_LDISK);	/*Not a labeled disk */
+	mini_justify(sp,	/*Src buffer */
+		     lightdata->label,	/*Dest buffer */
+		     scout_col_width[COL_STORE],	/*Dest's width */
+		     SCOUT_RIGHT_JUSTIFY,	/*Right-justify */
+		     SCOUT_LEFT_TRUNC,	/*Left-truncate */
+		     SCOUT_ISNT_LDISK);	/*Not a labeled disk */
 	if (scout_attn_store != SCOUT_ATTN_NOTUSED
 	    && curr_stats->TotalStores >= scout_attn_store)
 	    setting = 1;
 	else
 	    setting = 0;
-	code = gator_light_set(curr_line->stores_lp, setting);
+	gator_light_set(curr_line->stores_lp, setting);
 
 	lightdata =
 	    (struct gator_lightobj *)(curr_line->workstations_lp->o_data);
@@ -1410,18 +1408,18 @@ FS_Handler(void)
 	    sprintf(sp, "%d", curr_stats->WorkStations);
 	} else
 	    sp = sblank;
-	code = mini_justify(sp,	/*Src buffer */
-			    lightdata->label,	/*Dest buffer */
-			    scout_col_width[COL_WK],	/*Dest's width */
-			    SCOUT_RIGHT_JUSTIFY,	/*Right-justify */
-			    SCOUT_LEFT_TRUNC,	/*Left-truncate */
-			    SCOUT_ISNT_LDISK);	/*Not a labeled disk */
+	mini_justify(sp,	/*Src buffer */
+		     lightdata->label,	/*Dest buffer */
+		     scout_col_width[COL_WK],	/*Dest's width */
+		     SCOUT_RIGHT_JUSTIFY,	/*Right-justify */
+		     SCOUT_LEFT_TRUNC,	/*Left-truncate */
+		     SCOUT_ISNT_LDISK);	/*Not a labeled disk */
 	if (scout_attn_workstations != SCOUT_ATTN_NOTUSED
 	    && curr_stats->WorkStations >= scout_attn_workstations)
 	    setting = 1;
 	else
 	    setting = 0;
-	code = gator_light_set(curr_line->workstations_lp, setting);
+	gator_light_set(curr_line->workstations_lp, setting);
 
 	/*
 	 * We turn the server light on if there was an error in the
@@ -1429,7 +1427,7 @@ FS_Handler(void)
 	 * (Don't forget to fix the light's line if it needs it).
 	 */
 	setting = (*curr_probeOK) ? 1 : 0;
-	code = gator_light_set(curr_line->srvName_lp, setting);
+	gator_light_set(curr_line->srvName_lp, setting);
 
 	/*
 	 * Print out the disk statistics.  The value returned is the
@@ -1585,7 +1583,6 @@ init_mini_line(struct sockaddr_in *a_skt, int a_lineNum,
 		"[%s] Can't center server name inside of light object\n", rn);
 	return (code);
     }
-    curr_x += scout_col_width[COL_SRVNAME] + 1;
 
     if (scout_initDiskLightObjects(a_line, scout_frame->window)) {
 	fprintf(stderr, "[%s:%s] Can't create disk light objects\n", pn, rn);
@@ -1781,11 +1778,10 @@ execute_scout(int a_numservers, struct cmd_item *a_srvname, int a_pkg)
 					    scout_gwin);	/*Window */
     if (scout_banner0_lp != NULL) {
 	lightdata = (struct gator_lightobj *)(scout_banner0_lp->o_data);
-	code =
-	    mini_justify(scout_Banner, lightdata->label, scout_frameDims.maxx,
-			 SCOUT_CENTER, SCOUT_RIGHT_TRUNC, SCOUT_ISNT_LDISK);
-	code = gator_light_set(scout_banner0_lp, 1);
-	code = gtxframe_AddToList(scout_frame, scout_banner0_lp);
+	mini_justify(scout_Banner, lightdata->label, scout_frameDims.maxx,
+		     SCOUT_CENTER, SCOUT_RIGHT_TRUNC, SCOUT_ISNT_LDISK);
+	gator_light_set(scout_banner0_lp, 1);
+	gtxframe_AddToList(scout_frame, scout_banner0_lp);
 
 	/*Debugging */
 	if (scout_debug)
@@ -1815,12 +1811,11 @@ execute_scout(int a_numservers, struct cmd_item *a_srvname, int a_pkg)
 		 attn_label);
 
 	lightdata = (struct gator_lightobj *)(scout_banner1_lp->o_data);
-	code =
-	    mini_justify(scout_Banner, lightdata->label, scout_frameDims.maxx,
-			 SCOUT_LEFT_JUSTIFY, SCOUT_RIGHT_TRUNC,
-			 SCOUT_ISNT_LDISK);
+	mini_justify(scout_Banner, lightdata->label, scout_frameDims.maxx,
+		     SCOUT_LEFT_JUSTIFY, SCOUT_RIGHT_TRUNC,
+		     SCOUT_ISNT_LDISK);
 
-	code = gtxframe_AddToList(scout_frame, scout_banner1_lp);
+	gtxframe_AddToList(scout_frame, scout_banner1_lp);
     }
 
     scout_banner2_lp = mini_initLightObject("Banner 2",	/*Light name */
@@ -1837,11 +1832,10 @@ execute_scout(int a_numservers, struct cmd_item *a_srvname, int a_pkg)
 		 scout_underline[5]);
 
 	lightdata = (struct gator_lightobj *)(scout_banner2_lp->o_data);
-	code =
-	    mini_justify(scout_Banner, lightdata->label,
-			 scout_frameDims.maxx, SCOUT_LEFT_JUSTIFY,
-			 SCOUT_RIGHT_TRUNC, SCOUT_ISNT_LDISK);
-	code = gtxframe_AddToList(scout_frame, scout_banner2_lp);
+	mini_justify(scout_Banner, lightdata->label,
+		     scout_frameDims.maxx, SCOUT_LEFT_JUSTIFY,
+		     SCOUT_RIGHT_TRUNC, SCOUT_ISNT_LDISK);
+	gtxframe_AddToList(scout_frame, scout_banner2_lp);
     }
 
     for (i = 0; i < a_numservers; i++) {
@@ -1978,11 +1972,11 @@ execute_scout(int a_numservers, struct cmd_item *a_srvname, int a_pkg)
     while (1) {
 	tv.tv_sec = 60 * 60;	/*Sleep for an hour at a time */
 	tv.tv_usec = 0;
-	code = select(0,	/*Num fds */
-		      0,	/*Descriptors ready for reading */
-		      0,	/*Descriptors ready for writing */
-		      0,	/*Descriptors with exceptional conditions */
-		      &tv);	/*Timeout structure */
+	select(0,	/*Num fds */
+	       0,	/*Descriptors ready for reading */
+	       0,	/*Descriptors ready for writing */
+	       0,	/*Descriptors with exceptional conditions */
+	       &tv);	/*Timeout structure */
     }				/*Sleep forever */
 
 #if 0
