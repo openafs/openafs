@@ -1733,12 +1733,11 @@ save_FS_results_inCB(int a_newProbeCycle)	/* start of a new probe cycle ? */
 	break;
     case AFS_XSTATSCOLL_CBSTATS:
 	index = 1;
+	break;
     default:
-	if (index < 0) {
-	    fprintf(stderr, "[ %s ] collection number %d is out of range.\n",
-		    rn, xstat_fs_Results.collectionNumber);
-	    afsmon_Exit(51);
-	}
+	fprintf(stderr, "[ %s ] collection number %d is out of range.\n",
+		rn, xstat_fs_Results.collectionNumber);
+	afsmon_Exit(51);
     }
 
     /* If a new probe cycle started, mark the list in the current buffer
