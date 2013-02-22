@@ -1394,7 +1394,7 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_foff_t off, afs_fsize_t len)
 		FDH_REALLYCLOSE(newFdP);
 		IH_RELEASE(newH);
 		FDH_REALLYCLOSE(targFdP);
-		rc = IH_DEC(V_linkHandle(volptr), ino, V_parentId(volptr));
+		IH_DEC(V_linkHandle(volptr), ino, V_parentId(volptr));
 		free(buff);
 		VTakeOffline(volptr);
 		return EIO;
