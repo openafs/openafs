@@ -1648,6 +1648,11 @@ vl_Initialize(const char *confDir)
 	exit(1);
     }
     code = afsconf_GetCellInfo(tdir, NULL, AFSCONF_VLDBSERVICE, &info);
+    if (code) {
+	ViceLog(0,
+		("vl_Initialize: Failed to get cell information\n"));
+	exit(1);
+    }
     if (info.numServers > MAXSERVERS) {
 	ViceLog(0,
 		("vl_Initialize: info.numServers=%d (> MAXSERVERS=%d)\n",
