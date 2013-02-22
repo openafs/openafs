@@ -6503,7 +6503,7 @@ SRXAFS_GetCapabilities(struct rx_call * acall, Capabilities * capabilities)
     code = CallPostamble(tcon, code, thost);
 
 
-    return 0;
+    return code;
 }
 
 afs_int32
