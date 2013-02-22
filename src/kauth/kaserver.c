@@ -328,9 +328,13 @@ main(int argc, char *argv[])
 	    "Migrating to a Kerberos 5 KDC is advised.  "
 	    "http://www.openafs.org/no-more-des.html\n"));
 
-    code =
-	afsconf_GetExtendedCellInfo(KA_conf, cell, AFSCONF_KAUTHSERVICE,
-				    &cellinfo, clones);
+    code = afsconf_GetExtendedCellInfo(KA_conf, cell, AFSCONF_KAUTHSERVICE,
+				       &cellinfo, clones);
+    if (code) {
+	afs_com_err(whoami, code, "Couldn't read cell configuration");
+	exit(1);
+    }
+
     if (servers) {
 	if ((code = ubik_ParseServerList(argc, argv, &myHost, serverList))) {
 	    afs_com_err(whoami, code, "Couldn't parse server list");
