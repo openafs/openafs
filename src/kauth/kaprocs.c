@@ -1638,7 +1638,11 @@ kamGetEntry(struct rx_call *call,
 	memcpy(&aentry->key, &tentry.key, sizeof(struct ktc_encryptionKey));
     else
 	memset(&aentry->key, 0, sizeof(aentry->key));
+
     code = ka_KeyCheckSum((char *)&tentry.key, &aentry->keyCheckSum);
+    if (code)
+	goto abort;
+
     if (!tentry.pwsums[0] && npwSums > 1 && !tentry.pwsums[1]) {
 	aentry->reserved3 = 0x12340000;
     } else {
