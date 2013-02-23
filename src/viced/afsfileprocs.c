@@ -343,7 +343,10 @@ CallPreamble(struct rx_call *acall, int activecall,
   retry:
     tclient = h_FindClient_r(*tconn);
     if (!tclient) {
-	ViceLog(0, ("CallPreamble: Couldn't get client.\n"));
+	ViceLog(0, ("CallPreamble: Couldn't get client struct for host "
+	            "%s:%d, sending busy signal\n",
+	            afs_inet_ntoa_r(rx_HostOf(rx_PeerOf(*tconn)), hoststr),
+	            (int)ntohs(rx_PortOf(rx_PeerOf(*tconn)))));
 	H_UNLOCK;
 	return VBUSY;
     }
@@ -352,7 +355,10 @@ CallPreamble(struct rx_call *acall, int activecall,
 	if (!retry_flag) {
 	    h_ReleaseClient_r(tclient);
 	    h_Release_r(thost);
-	    ViceLog(0, ("CallPreamble: Couldn't get CPS. Fail\n"));
+	    ViceLog(0, ("CallPreamble: Couldn't get CPS for client from host "
+	                "%s:%d, failing request\n",
+	                afs_inet_ntoa_r(thost->host, hoststr),
+	                (int)ntohs(thost->port)));
 	    H_UNLOCK;
 	    return -1001;
 	}
@@ -380,7 +386,10 @@ CallPreamble(struct rx_call *acall, int activecall,
 	    h_ReleaseClient_r(tclient);
 	    h_Release_r(thost);
 	    H_UNLOCK;
-	    ViceLog(0, ("CallPreamble: couldn't reconnect to ptserver\n"));
+	    ViceLog(0, ("CallPreamble: couldn't reconnect to ptserver while "
+	                "handling request for %s:%d\n",
+	                afs_inet_ntoa_r(thost->host, hoststr),
+	                (int)ntohs(thost->port)));
 	    return -1001;
 	}
 
