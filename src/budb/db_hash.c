@@ -1107,7 +1107,7 @@ scanHashTableBlock(struct ubik_trans *ut,
     int entrySize;		/* hashed entry size */
 
     char entry[sizeof(struct block)];
-    dbadr entryAddr, nextEntryAddr;
+    dbadr entryAddr;
 
     int i;
 
@@ -1119,19 +1119,17 @@ scanHashTableBlock(struct ubik_trans *ut,
      */
 
     for (i = 0; (i < nHTBuckets) && (index < length); i++, index++) {	/*f */
-	entryAddr = 0;
-	nextEntryAddr = ntohl(htBlockPtr->bucket[i]);
+	entryAddr = ntohl(htBlockPtr->bucket[i]);
 
 	/* if this is the old hash table, all entries below the progress mark
 	 * should have been moved to the new hash table
 	 */
-	if (old && (index < mhtPtr->progress) && nextEntryAddr)
+	if (old && (index < mhtPtr->progress) && entryAddr)
 	    return BUDB_INTERNALERROR;
 
 	/* now walk down the chain of each bucket */
-	while (nextEntryAddr) {	/*w */
+	while (entryAddr) {	/*w */
 
-	    entryAddr = nextEntryAddr;
 	    if (dbread(ut, entryAddr, &entry[0], entrySize))
 		return (BUDB_INTERNALERROR);
 
@@ -1139,7 +1137,7 @@ scanHashTableBlock(struct ubik_trans *ut,
 		(*operationFn) (entryAddr, &entry[0], rockPtr);
 	    }
 
-	    nextEntryAddr =
+	    entryAddr =
 		ntohl(*((dbadr *) (entry + mhtPtr->threadOffset)));
 	}			/*w */
 
