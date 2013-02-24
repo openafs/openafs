@@ -482,6 +482,11 @@ main(int argc, char **argv)
 
 	code = afsconf_GetExtendedCellInfo (BU_conf, lcell, 0, &cellinfo,
 					    clones);
+	if (code) {
+	    LogError(0, "Can't read cell information\n");
+	    ERROR(code);
+	}
+
 	code =
 	    convert_cell_to_ubik(&cellinfo, &globalConfPtr->myHost,
 				 globalConfPtr->serverList);
