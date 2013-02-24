@@ -511,7 +511,11 @@ writeDbDump(struct butm_tapeInfo *tapeInfoPtr, afs_uint32 taskId,
 		    LWP_CreateProcess(KeepAlive, 16384, 1, (void *)NULL,
 				      "Keep-alive process", &alivePid);
 #endif
-		/* XXX should we check code here ??? XXX */
+		if (code) {
+		    ErrorLog(0, taskId, code, 0,
+			     "Failed to create keep alive process\n");
+		    ERROR_EXIT(code);
+		}
 	    }
 	    firstcall = 0;
 
