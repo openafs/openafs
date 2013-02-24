@@ -5531,7 +5531,6 @@ UV_XListVolumes(afs_uint32 a_serverID, afs_int32 a_partID, int a_all,
      * We set the val field to a null pointer as a hint for the stub to
      * allocate space.
      */
-    code = 0;
     *a_numEntsInResultP = 0;
     *a_resultPP = (volintXInfo *) 0;
     volumeXInfo.volXEntries_val = (volintXInfo *) 0;
@@ -5572,8 +5571,6 @@ UV_ListOneVolume(afs_uint32 aserver, afs_int32 apart, afs_uint32 volid,
     struct rx_connection *aconn;
     afs_int32 code = 0;
     volEntries volumeInfo;
-
-    code = 0;
 
     *resultPtr = (volintInfo *) 0;
     volumeInfo.volEntries_val = (volintInfo *) 0;	/*this hints the stub to allocate space */
@@ -5637,7 +5634,6 @@ UV_XListOneVolume(afs_uint32 a_serverID, afs_int32 a_partID, afs_uint32 a_volID,
      * the info.  Setting the val field to a null pointer tells the stub
      * to allocate space for us.
      */
-    code = 0;
     *a_resultPP = (volintXInfo *) 0;
     volumeXInfo.volXEntries_val = (volintXInfo *) 0;
     volumeXInfo.volXEntries_len = 0;
