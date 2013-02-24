@@ -1030,13 +1030,15 @@ try_exit:
                     SetFlag( pCcb->Flags, CCB_FLAG_MASK_OPENED_REPARSE_POINT);
                 }
 
+                lCount = pCcb->DirectoryCB->DirOpenReferenceCount;
+
                 AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCommonCreate Count on %wZ DE %p Ccb %p Cnt %d\n",
                               &pCcb->DirectoryCB->NameInformation.FileName,
                               pCcb->DirectoryCB,
                               pCcb,
-                              lCount = pCcb->DirectoryCB->DirOpenReferenceCount);
+                              lCount);
 
                 ASSERT( lCount >= 0);
 
