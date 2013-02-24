@@ -495,7 +495,6 @@ bcdb_GetTextFile(udbClientTextP ctPtr)
 	ERROR(BUDB_INTERNALERROR);
     charList.charListT_len = bufferSize;
 
-    offset = 0;
     nextOffset = 0;
     ctPtr->textSize = 0;
     while (nextOffset != -1) {
