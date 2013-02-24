@@ -1487,7 +1487,7 @@ CreateDump(struct rx_call *call, struct budb_dumpEntry *dump)
 	dump->created = dump->id;
     d.created = htonl(dump->created);
 
-    principal = d.dumper;
+    d.dumper = principal;
     tapeSet_hton(&dump->tapes, &d.tapes);
 
     d.flags = htonl(dump->flags | BUDB_DUMP_INPROGRESS);
