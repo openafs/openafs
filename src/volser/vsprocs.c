@@ -4543,7 +4543,6 @@ UV_RestoreVolume2(afs_uint32 toserver, afs_int32 topart, afs_uint32 tovolid,
     char tovolreal[VOLSER_OLDMAXVOLNAME];
     afs_uint32 pvolid;
     afs_int32 temptid, pparentid;
-    int success;
     struct nvldbentry entry, storeEntry;
     afs_int32 error;
     int islocked;
@@ -4557,7 +4556,6 @@ UV_RestoreVolume2(afs_uint32 toserver, afs_int32 topart, afs_uint32 tovolid,
 
     memset(&cookie, 0, sizeof(cookie));
     islocked = 0;
-    success = 0;
     error = 0;
     reuseID = 1;
     tocall = (struct rx_call *)0;
@@ -4757,10 +4755,9 @@ UV_RestoreVolume2(afs_uint32 toserver, afs_int32 topart, afs_uint32 tovolid,
 	goto refail;
     }
 
-    success = 1;
     fprintf(STDOUT, " done\n");
     fflush(STDOUT);
-    if (success && (!reuseID || (flags & RV_FULLRST))) {
+    if (!reuseID || (flags & RV_FULLRST)) {
 	/* Volume was restored on the file server, update the
 	 * VLDB to reflect the change.
 	 */
