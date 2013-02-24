@@ -3162,7 +3162,7 @@ h_stateVerifyAddrHash(struct fs_dump_state * state, struct host * h,
 static int
 h_stateVerifyUuidHash(struct fs_dump_state * state, struct host * h)
 {
-    int ret = 0, found = 0;
+    int ret = 0;
     struct host *host = NULL;
     struct h_UuidHashChain *chain;
     afsUUID * uuidp = &h->interface->uuid;
@@ -3185,7 +3185,6 @@ h_stateVerifyUuidHash(struct fs_dump_state * state, struct host * h)
 			    h->index, host->index));
 		state->flags.warnings_generated = 1;
 	    }
-	    found = 1;
 	    goto done;
 	}
 	if (chain_len > FS_STATE_H_MAX_UUID_HASH_CHAIN_LEN) {
@@ -3197,16 +3196,16 @@ h_stateVerifyUuidHash(struct fs_dump_state * state, struct host * h)
 	chain_len++;
     }
 
-    if (!found) {
-	afsUUID_to_string(uuidp, tmp, sizeof(tmp));
-	if (state->mode == FS_STATE_LOAD_MODE) {
-	    ViceLog(0, ("h_stateVerifyUuidHash: error: uuid %s not found in hash\n", tmp));
-	    ret = 1;
-	    goto done;
-	} else {
-	    ViceLog(0, ("h_stateVerifyUuidHash: warning: uuid %s not found in hash\n", tmp));
-	    state->flags.warnings_generated = 1;
-	}
+    /* Fall through, so host not found */
+
+    afsUUID_to_string(uuidp, tmp, sizeof(tmp));
+    if (state->mode == FS_STATE_LOAD_MODE) {
+	ViceLog(0, ("h_stateVerifyUuidHash: error: uuid %s not found in hash\n", tmp));
+	ret = 1;
+	goto done;
+    } else {
+	ViceLog(0, ("h_stateVerifyUuidHash: warning: uuid %s not found in hash\n", tmp));
+	state->flags.warnings_generated = 1;
     }
 
  done:
