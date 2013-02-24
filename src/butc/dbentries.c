@@ -474,10 +474,6 @@ dbWatcher(void *unused)
 		    free(entryPtr->dlq_structPtr);
 		free(entryPtr);
 	    }
-	    entryPtr = (dlqlinkP) 0;
-	    dumpPtr = (budb_dumpEntry *) 0;
-	    volPtr = (budb_volumeEntry *) 0;
-	    tapePtr = (budb_tapeEntry *) 0;
 	}			/*while */
 
 	dbWatcherinprogress = 0;
