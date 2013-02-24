@@ -288,10 +288,9 @@ stringNowReplace(char *logFile, char *deviceName)
 	*pos = '_';
     strcat(logFile, deviceName);
     /* now put back deviceName to the way it was */
-    if (mvFlag) {
-	mvFlag = 0;
+    if (mvFlag)
 	deviceName -= devPrefLen;
-    }
+
     strcpy(deviceName, storeDevice);
 
     return (0);
