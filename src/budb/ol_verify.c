@@ -1188,7 +1188,6 @@ verifyTextChain(struct ubik_trans *ut, struct textBlock *tbPtr)
 
     for (new = 0; new < 2; new++) {
 	size = 0;
-	blockAddr = ntohl(tbPtr->textAddr);
 
 	for (blockAddr =
 	     (new ? ntohl(tbPtr->newTextAddr) : ntohl(tbPtr->textAddr));
