@@ -1,5 +1,9 @@
 openafs (1.6.2~pre3-2) UNRELEASED; urgency=low
 
+  * Fix DKMS builds of the OpenAFS kernel module for amd64 kernels on the
+    i386 architecture by parsing the kernel version for the architecture
+    and kernel class and using that to tell the OpenAFS build system what
+    sysname to use.  Patch from Thorsten Alteholz.
   * Avoid re-running setup after build when building modules from the
     openafs-modules-source package with module-assistant.  This will
     hopefully avoid an issue where, following an upgrade of
