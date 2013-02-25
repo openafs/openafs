@@ -525,7 +525,7 @@ main(int argc, char **argv)
     if (!interact)
 	add_std_args(ts);
 
-    ts = cmd_CreateSyntax("quit", bc_QuitCmd, NULL, "leave the program");
+    cmd_CreateSyntax("quit", bc_QuitCmd, NULL, "leave the program");
 
     ts = cmd_CreateSyntax("volsetrestore", bc_VolsetRestoreCmd, NULL,
 			  "restore a set of volumes");
@@ -562,7 +562,7 @@ main(int argc, char **argv)
     if (!interact)
 	add_std_args(ts);
 
-    ts = cmd_CreateSyntax("jobs", bc_JobsCmd, NULL, "list running jobs");
+    cmd_CreateSyntax("jobs", bc_JobsCmd, NULL, "list running jobs");
 
     ts = cmd_CreateSyntax("kill", bc_KillCmd, NULL, "kill running job");
     cmd_AddParm(ts, "-id", CMD_SINGLE, CMD_REQUIRED,
