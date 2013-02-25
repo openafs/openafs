@@ -297,8 +297,6 @@ dumpVolume(struct tc_dumpDesc * curDump, struct dumpRock * dparamsPtr)
 	chunkSize = 0;
 	fragmentvolume = 0;
 	while (!endofvolume && !fragmentvolume) {	/*w */
-	    bytesread = 0;
-
 	    /* Check for abort in the middle of writing data */
 	    if (volBytesRead >= chunkSize) {
 		chunkSize += BIGCHUNK;
@@ -649,8 +647,6 @@ xbsaDumpVolume(struct tc_dumpDesc * curDump, struct dumpRock * dparamsPtr)
     volBytesRead = 0;
     chunkSize = 0;
     while (!endofvolume) {	/*w */
-	bytesread = 0;
-
 	/* Check for abort in the middle of writing data */
 	if (volBytesRead >= chunkSize) {
 	    chunkSize += BIGCHUNK;
