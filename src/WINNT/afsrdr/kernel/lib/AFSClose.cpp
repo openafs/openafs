@@ -398,7 +398,8 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
 
                         ASSERT( lCount >= 0);
 
-                        if( lCount == 0)
+                        if( lCount == 0 &&
+                            pDirCB->NameArrayReferenceCount <= 0)
                         {
 
                             AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,

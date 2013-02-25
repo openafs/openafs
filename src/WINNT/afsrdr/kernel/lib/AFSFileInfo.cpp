@@ -3265,7 +3265,8 @@ AFSSetRenameInfo( IN PIRP Irp)
 
             ASSERT( lCount >= 0);
 
-            if( lCount == 0)
+            if( lCount == 0 &&
+                pTargetDirEntry->NameArrayReferenceCount <= 0)
             {
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,

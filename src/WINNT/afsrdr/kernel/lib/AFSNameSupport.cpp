@@ -1914,7 +1914,8 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                 ASSERT( lCount >= 0);
 
-                if( lCount == 0)
+                if( lCount == 0 &&
+                    pDirEntry->NameArrayReferenceCount <= 0)
                 {
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING|AFS_SUBSYSTEM_CLEANUP_PROCESSING,
@@ -2445,7 +2446,8 @@ AFSCreateDirEntry( IN GUID            *AuthGroup,
                 // Need to tear down this entry and rebuild it below
                 //
 
-                if( pExistingDirNode->DirOpenReferenceCount <= 0)
+                if( pExistingDirNode->DirOpenReferenceCount <= 0 &&
+                    pExistingDirNode->NameArrayReferenceCount <= 0)
                 {
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
