@@ -347,7 +347,8 @@ AFSEnumerateDirectory( IN GUID *AuthGroup,
                         // Need to tear down this entry and rebuild it below
                         //
 
-                        if( pDirNode->DirOpenReferenceCount <= 0)
+                        if( pDirNode->DirOpenReferenceCount <= 0 &&
+                            pDirNode->NameArrayReferenceCount <= 0)
                         {
 
                             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -1183,7 +1184,8 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
                     // Need to tear down this entry and rebuild it below
                     //
 
-                    if( pDirNode->DirOpenReferenceCount <= 0)
+                    if( pDirNode->DirOpenReferenceCount <= 0 &&
+                        pDirNode->NameArrayReferenceCount <= 0)
                     {
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -1713,7 +1715,8 @@ AFSNotifyFileCreate( IN GUID            *AuthGroup,
                                   pResultCB->DirEnum.FileId.Vnode,
                                   pResultCB->DirEnum.FileId.Unique);
 
-                    if( pDirNode->DirOpenReferenceCount <= 0)
+                    if( pDirNode->DirOpenReferenceCount <= 0 &&
+                        pDirNode->NameArrayReferenceCount <= 0)
                     {
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -2321,7 +2324,8 @@ AFSNotifyHardLink( IN AFSObjectInfoCB *ObjectInfo,
                                   pResultCB->DirEnum.FileId.Vnode,
                                   pResultCB->DirEnum.FileId.Unique);
 
-                    if( pDirNode->DirOpenReferenceCount <= 0)
+                    if( pDirNode->DirOpenReferenceCount <= 0 &&
+                        pDirNode->NameArrayReferenceCount <= 0)
                     {
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,

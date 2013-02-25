@@ -3465,7 +3465,8 @@ AFSValidateDirectoryCache( IN AFSObjectInfoCB *ObjectInfo,
                 //
 
                 if( BooleanFlagOn( pCurrentDirEntry->Flags, AFS_DIR_ENTRY_DELETED) &&
-                    pCurrentDirEntry->DirOpenReferenceCount <= 0)
+                    pCurrentDirEntry->DirOpenReferenceCount <= 0 &&
+                    pCurrentDirEntry->NameArrayReferenceCount <= 0)
                 {
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -3594,7 +3595,8 @@ AFSValidateDirectoryCache( IN AFSObjectInfoCB *ObjectInfo,
                           pCurrentDirEntry,
                           pCurrentDirEntry->DirOpenReferenceCount);
 
-            if( pCurrentDirEntry->DirOpenReferenceCount <= 0)
+            if( pCurrentDirEntry->DirOpenReferenceCount <= 0 &&
+                pCurrentDirEntry->NameArrayReferenceCount <= 0)
             {
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -4717,7 +4719,8 @@ AFSResetDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB)
 
             pNextDirEntry = (AFSDirectoryCB *)pCurrentDirEntry->ListEntry.fLink;
 
-            if( pCurrentDirEntry->DirOpenReferenceCount <= 0)
+            if( pCurrentDirEntry->DirOpenReferenceCount <= 0 &&
+                pCurrentDirEntry->NameArrayReferenceCount <= 0)
             {
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
