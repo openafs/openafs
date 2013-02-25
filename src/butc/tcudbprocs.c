@@ -821,7 +821,6 @@ readDbTape(struct butm_tapeInfo *tapeInfoPtr,
 	if (!code)
 	    strcpy(tapeName, te.name);
     }
-    code = 0;
 
     while (1) {			/*w */
 	if (interactiveFlag) {	/* need a tape to read */
