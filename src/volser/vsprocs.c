@@ -2578,8 +2578,8 @@ cpincr:
 
     /* common cleanup - delete local clone */
     if (cloneVol)
-	code = DoVolDelete(fromconn, cloneVol, afrompart,
-			   "clone", 0, NULL, "Recovery:");
+	DoVolDelete(fromconn, cloneVol, afrompart,
+		    "clone", 0, NULL, "Recovery:");
 
   done:			/* routine cleanup */
     if (fromconn)
