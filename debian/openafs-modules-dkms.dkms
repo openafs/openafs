@@ -1,5 +1,24 @@
 # DKMS configuration for the OpenAFS kernel module.  -*- sh -*-
 
+# look for arch in kernel version, this looks
+# like: 3.2.0-4-686-pae or 3.2.0-4-amd64
+ARCH=`echo $kernelver|awk -F"-" '{printf("%s",$3)}'`
+case "$ARCH" in
+  amd64) AFS_SYSNAME="amd64_linuxXX" ;;
+  486 | 686) AFS_SYSNAME="i386_linuxXX" ;;
+  *) AFS_SYSNAME="NOTHING" ;;
+esac
+
+# the kernel version should be part of the SYSNAME
+case "$kernelver" in
+  2.2.*) AFS_SYSKVERS=22 ;;
+  2.4.*) AFS_SYSKVERS=24 ;;
+  2.6.* | 3.*) AFS_SYSKVERS=26 ;;
+  *) AFS_SYSKVERS=00;; 
+esac
+_AFS_SYSNAME=`echo $AFS_SYSNAME|sed s/XX\$/$AFS_SYSKVERS/`
+AFS_SYSNAME="$_AFS_SYSNAME"
+
 # The version is replaced at build time by dh_dkms invoked in debian/rules.
 PACKAGE_NAME="openafs"
 PACKAGE_VERSION="#MODULE_VERSION#"
@@ -8,9 +27,20 @@ BUILT_MODULE_NAME[0]="$PACKAGE_NAME"
 DEST_MODULE_LOCATION[0]="/updates/dkms/"
 AUTOINSTALL=yes
 
-MAKE[0]="(./configure --disable-linux-syscall-probing \
+if [ "${AFS_SYSNAME}" == "NOTHING" ]; then
+  # we have no special SYSNAME so let configure make the magic
+  MAKE[0]="(./configure --disable-linux-syscall-probing \
                       --with-linux-kernel-packaging \
                       --with-linux-kernel-headers=${kernel_source_dir} \
           && make \
           && mv src/libafs/MODLOAD-*/openafs.ko .)"
+else
+  # we already know who we are so go on
+  MAKE[0]="(./configure --disable-linux-syscall-probing \
+                      --with-afs-sysname=${AFS_SYSNAME} \
+                      --with-linux-kernel-packaging \
+                      --with-linux-kernel-headers=${kernel_source_dir} \
+          && make \
+          && mv src/libafs/MODLOAD-*/openafs.ko .)"
+fi
 CLEAN="rm -f openafs.ko && make clean"
