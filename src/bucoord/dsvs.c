@@ -542,7 +542,6 @@ FindDump(struct bc_config *aconfig, char *nodeString,
 	return (-3);
     }
 
-    matchLength = 0;
     curptr = &nodeString[1];	/* past first / */
     separator = strchr(curptr, '/');
     if (separator == 0)
