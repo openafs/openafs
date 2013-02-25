@@ -143,6 +143,7 @@ void krb5_set_error_message(krb5_context, krb5_error_code, const char *, ...);
 krb5_error_code krb5_abortx(krb5_context, const char *, ...);
 
 #define krb5_clear_error_message(ctx)
+#define krb5_enomem(ctx) ENOMEM
 
 /* Local prototypes. These are functions that we aren't admitting to in the
  * public API */

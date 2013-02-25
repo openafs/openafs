@@ -100,6 +100,12 @@ static void krb5_set_error_message(krb5_context context, krb5_error_code ret,
     return;
 }
 
+static krb5_error_code
+krb5_enomem(krb5_context context)
+{
+    return ENOMEM;
+}
+
 /* Play it safe, by saying we're always suid. */
 static int issuid(void) {
     return 1;
