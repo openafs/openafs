@@ -40,7 +40,7 @@ typedef struct afs_config_section_struct afs_config_section;
 extern int afs_config_parse_file_multi(const char *, afs_config_section **);
 extern int afs_config_parse_file(const char *, afs_config_section **);
 extern int afs_config_file_free(afs_config_section *s);
-extern const char* fs_config_get_string(const afs_config_section *, ...);
+extern const char* afs_config_get_string(const afs_config_section *, ...);
 extern int afs_config_get_bool(const afs_config_section *, ...);
 extern int afs_config_get_int(const afs_config_section *c, ...);
 
