@@ -60,7 +60,6 @@
 afs_int32
 krb_write_ticket_file(char *realm)
 {
-    char ticket_file[AFSDIR_PATH_MAX];
     int fd;
     int count;
     afs_int32 code;
@@ -83,10 +82,15 @@ krb_write_ticket_file(char *realm)
      * back upon /tmp/tkt(uid}.
      */
     if ((tf_name = (char *)getenv("KRBTKFILE")))
-	(void)sprintf(ticket_file, "%s", tf_name);
-    else
-	(void)sprintf(ticket_file, "%s/tkt%d", gettmpdir(), getuid());
-    fd = open(ticket_file, O_WRONLY + O_CREAT + O_TRUNC, 0700);
+	fd = open(tf_name, O_WRONLY | O_CREAT | O_TRUNC, 0700);
+    else {
+	asprintf(&tf_name, "%s/tkt%d", gettmpdir(), getuid());
+	if (tf_name == NULL)
+	    return ENOMEM;
+	fd = open(tf_name, O_WRONLY | O_CREAT | O_TRUNC, 0700);
+	free(tf_name);
+    }
+
     if (fd <= 0)
 	return errno;
 
