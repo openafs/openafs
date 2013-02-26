@@ -728,7 +728,7 @@ ReadVNode(afs_int32 count)
 		 */
 		afs_snprintf(linkname, sizeof linkname, "%s" OS_DIRSEP "%s%d", parentdir,
 			     AFILE, vn.vnode);
-		len = readlink(linkname, fname, MAXNAMELEN);
+		len = readlink(linkname, fname, MAXNAMELEN - 1);
 		if (len < 0) {
 		    afs_snprintf(filename, sizeof filename, "%s" OS_DIRSEP "%s%d",
 				 rootdir, OFILE, vn.vnode);
