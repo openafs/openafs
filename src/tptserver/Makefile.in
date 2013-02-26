@@ -136,15 +136,15 @@ testpt: testpt.o $(LIBS_client)
 testpt.o: ${PTSERVER}/testpt.c ${INCLS}
 	$(AFS_CCRULE) $(PTSERVER)/testpt.c
 
-pt_util: pt_util.o ptutils.o ubik.o utils.o map.o $(LIBS_client)
-	$(LT_LDRULE_static) pt_util.o ptutils.o ubik.o utils.o map.o \
+pt_util: pt_util.o ptutils.o ptubik.o utils.o map.o $(LIBS_client)
+	$(LT_LDRULE_static) pt_util.o ptutils.o ptubik.o utils.o map.o \
 		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 pt_util.o: ${PTSERVER}/pt_util.c
 	$(AFS_CCRULE) $(PTSERVER)/pt_util.c
 
-ubik.o: ${PTSERVER}/ubik.c ${INCLS}
-	$(AFS_CCRULE) $(PTSERVER)/ubik.c
+ptubik.o: ${PTSERVER}/ptubik.c ${INCLS}
+	$(AFS_CCRULE) $(PTSERVER)/ptubik.c
 
 pterror.h: pterror.c
 pterror.c: ${PTSERVER}/pterror.et

@@ -130,7 +130,7 @@ PTCLIENT_EXERES = $(OUT)\ptclient.res
 
 PT_UTIL_EXEOBJS = \
         $(OUT)\pt_util.obj \
-        $(OUT)\ubik.obj
+        $(OUT)\ptubik.obj
 
 $(PT_UTIL_EXEOBJS): $(SRC_DIR)\$$(@B).c
         $(C2OBJ) -I$(SRC_DIR) $**
