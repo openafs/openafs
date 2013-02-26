@@ -612,8 +612,10 @@ SBOZO_ListKeys(struct rx_call *acall, afs_int32 an, afs_int32 *akvno,
     if (code == 0) {
 	akeyinfo->mod_sec = tstat.st_mtime;
     }
-    ka_KeyCheckSum(tkeys.key[an].key, &akeyinfo->keyCheckSum);
-    /* only errors is bad key parity */
+
+    /* If the key is bad, this will produce an error. Should never happen,
+     * but ... */
+    code = ka_KeyCheckSum(tkeys.key[an].key, &akeyinfo->keyCheckSum);
 
   fail:
     if (noauth)
