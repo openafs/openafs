@@ -112,7 +112,7 @@ afscp_FindCallBack(const struct afscp_venusfid *f,
     time_t now;
     struct afscp_venusfid fid;
 
-    ret = NULL;
+    *ret = NULL;
 
     time(&now);
     for (i = 0; i < afscp_maxcallbacks; i++) {
