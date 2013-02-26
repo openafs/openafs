@@ -6540,6 +6540,7 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	/* Set the file's length; we've already done an lseek to the right
 	 * spot above.
 	 */
+	tlen = 0; /* Just a source of data for the write */
 	nBytes = FDH_PWRITE(fdP, &tlen, 1, Pos);
 	if (nBytes != 1) {
 	    errorCode = -1;
