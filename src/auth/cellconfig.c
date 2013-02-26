@@ -461,10 +461,18 @@ afsconf_Open(const char *adir)
 		fgets(afs_confdir, 128, fp);
 		fclose(fp);
 	    } else {
-		char pathname[256];
+		char *pathname = NULL;
 
-		sprintf(pathname, "%s/%s", home_dir, ".AFSCONF");
+		asprintf(&pathname, "%s/%s", home_dir, ".AFSCONF");
+		if (pathname == NULL) {
+		    free(tdir);
+		    UNLOCK_GLOBAL_MUTEX;
+		    return (struct afsconf_dir *) 0;
+		}
+
 		fp = fopen(pathname, "r");
+		free(pathname);
+
 		if (fp == 0) {
 		    /* Our last chance is the "/.AFSCONF" file */
 		    fp = fopen("/.AFSCONF", "r");
