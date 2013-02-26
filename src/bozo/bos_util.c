@@ -180,13 +180,11 @@ main(int argc, char **argv)
 	for (i = 0; i < tkeys.nkeys; i++) {
 	    if (tkeys.key[i].kvno != -1) {
 		int count;
-		unsigned char x[8];
 		memcpy(tbuffer, tkeys.key[i].key, 8);
 		tbuffer[8] = 0;
 		printf("kvno %4d: key is '%s' '", tkeys.key[i].kvno, tbuffer);
-		strcpy((char *)x, (char *)tbuffer);
 		for (count = 0; count < 8; count++)
-		    printf("\\%03o", x[count]);
+		    printf("\\%03o", tbuffer[count]);
 		printf("'\n");
 	    }
 	}
