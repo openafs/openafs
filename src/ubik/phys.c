@@ -274,6 +274,9 @@ uphys_setlabel(struct ubik_dbase *adbase, afs_int32 afile,
     fd = uphys_open(adbase, afile);
     if (fd < 0)
 	return UNOENT;
+
+    memset(&thdr, 0, sizeof(thdr));
+
     thdr.version.epoch = htonl(aversion->epoch);
     thdr.version.counter = htonl(aversion->counter);
     thdr.magic = htonl(UBIK_MAGIC);
