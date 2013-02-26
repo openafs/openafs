@@ -33,6 +33,7 @@ ubik_BeginTrans(struct ubik_dbase *dbase, afs_int32 transMode,
     struct ubik_hdr thdr;
 
     if (!init) {
+	memset(&thdr, 0, sizeof(thdr));
 	thdr.version.epoch = htonl(2);
 	thdr.version.counter = htonl(0);
 	thdr.magic = htonl(UBIK_MAGIC);
