@@ -202,14 +202,14 @@ testpt: testpt.o $(PTOBJS) ${TOP_LIBDIR}/libcmd.a $(LIBS)
 testpt.o: ${PTSERVER}/testpt.c ${INCLS}
 	${CCRULE} ${srcdir}/${PTSERVER}/testpt.c
 
-pt_util: pt_util.o ptutils.o ubik.o utils.o map.o $(PTOBJS) $(LIBS)
-	$(CC) ${CFLAGS} -o pt_util pt_util.o ptutils.o ubik.o utils.o map.o $(PTOBJS) ${TOP_LIBDIR}/libcmd.a $(LIBS) ${MT_LIBS} ${XLIBS} ${KRB5_LIBS}
+pt_util: pt_util.o ptutils.o ptubik.o utils.o map.o $(PTOBJS) $(LIBS)
+	$(CC) ${CFLAGS} -o pt_util pt_util.o ptutils.o ptubik.o utils.o map.o $(PTOBJS) ${TOP_LIBDIR}/libcmd.a $(LIBS) ${MT_LIBS} ${XLIBS} ${KRB5_LIBS}
 
 pt_util.o: ${PTSERVER}/pt_util.c
 	${CCRULE} ${srcdir}/${PTSERVER}/pt_util.c
 
-ubik.o: ${PTSERVER}/ubik.c ${INCLS}
-	${CCRULE} ${srcdir}/${PTSERVER}/ubik.c
+ptubik.o: ${PTSERVER}/ptubik.c ${INCLS}
+	${CCRULE} ${srcdir}/${PTSERVER}/ptubik.c
 
 prerror.h: pterror.h
 	${INSTALL} $? $@
