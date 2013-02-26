@@ -1103,8 +1103,12 @@ main(int argc, char **argv, char **envp)
 	}
     }
 
-    LWP_CreateProcess(BozoDaemon, BOZO_LWP_STACKSIZE, /* priority */ 1,
-		      /* param */ NULL , "bozo-the-clown", &bozo_pid);
+    code = LWP_CreateProcess(BozoDaemon, BOZO_LWP_STACKSIZE, /* priority */ 1,
+			     /* param */ NULL , "bozo-the-clown", &bozo_pid);
+    if (code) {
+	bozo_Log("Failed to create daemon thread\n");
+        exit(1);
+    }
 
     /* try to read the key from the config file */
     tdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
