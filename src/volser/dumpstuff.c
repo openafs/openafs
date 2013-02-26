@@ -281,7 +281,8 @@ ReadStandardTagLen(struct iod *iodp, unsigned char tag, afs_int32 section,
     afs_int32 code, i;
     afs_uint32 off = tag >> 5;
     afs_uint32 mask = 1 << (tag & 0x1f);
-    unsigned char len, buf[8], *p;
+    int len;
+    unsigned char buf[8], *p;
 
     if (!oldtagsInited)
         initNonStandardTags();
@@ -295,7 +296,9 @@ ReadStandardTagLen(struct iod *iodp, unsigned char tag, afs_int32 section,
     }
     if (tag <= MAX_TLV_TAG) {
         len = iod_getc(iodp);
-        if (len < 128)
+	if (len == EOF)
+	    return VOLSERDUMPERROR;
+	else if (len < 128)
             *length = len;
         else {
             len &= 0x7f;
