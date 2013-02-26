@@ -1887,9 +1887,13 @@ defect #3069
 	blob.in_size = 0;
 	blob.out_size = AFS_PIOCTL_MAXSIZE;
 	blob.out = space;
-	code =
-	    pioctl(Parent(as->parms[0].items->data), VIOC_FILE_CELL_NAME,
-		   &blob, 1);
+	code = pioctl(Parent(as->parms[0].items->data), VIOC_FILE_CELL_NAME,
+	       	      &blob, 1);
+	if (code) {
+	   fprintf(stderr,
+		   "%s: couldn't get cell name for file's parent\n", pn);
+	   return 1;
+	}
     }
 
     code = GetCellName(cellName ? cellName : space, &info);
