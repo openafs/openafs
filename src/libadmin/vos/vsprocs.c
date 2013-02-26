@@ -2996,22 +2996,31 @@ ProcessEntries(afs_cell_handle_p cellHandle, struct qHead *myQueue,
 	if (maxVolid <= elem.ids[RWVOL]) {
 	    temp2 = elem.ids[RWVOL] - maxVolid + 1;
 	    maxVolid = 0;
-	    ubik_VL_GetNewVolumeId(cellHandle->vos, 0, temp2,
-			  	   &maxVolid);
+	    vcode = ubik_VL_GetNewVolumeId(cellHandle->vos, 0, temp2,
+			  	   	   &maxVolid);
+	    if (vcode)
+		return vcode;
+
 	    maxVolid += temp2;
 	}
 	if (maxVolid <= elem.ids[ROVOL]) {
 	    temp2 = elem.ids[ROVOL] - maxVolid + 1;
 	    maxVolid = 0;
-	    ubik_VL_GetNewVolumeId(cellHandle->vos, 0, temp2,
-				   &maxVolid);
+	    vcode = ubik_VL_GetNewVolumeId(cellHandle->vos, 0, temp2,
+					   &maxVolid);
+	    if (vcode)
+		return vcode;
+
 	    maxVolid += temp2;
 	}
 	if (maxVolid <= elem.ids[BACKVOL]) {
 	    temp2 = elem.ids[BACKVOL] - maxVolid + 1;
 	    maxVolid = 0;
-	    ubik_VL_GetNewVolumeId(cellHandle->vos, 0, temp2,
-				   &maxVolid);
+	    vcode = ubik_VL_GetNewVolumeId(cellHandle->vos, 0, temp2,
+					   &maxVolid);
+	    if (vcode)
+		return vcode;
+
 	    maxVolid += temp2;
 	}
 	aVLDB_GetEntryByID(cellHandle, elem.ids[RWVOL], RWVOL, &entry, &tst);
