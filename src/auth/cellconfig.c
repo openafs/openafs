@@ -453,22 +453,17 @@ afsconf_Open(const char *adir)
 	    if (!(home_dir = getenv("HOME"))) {
 		/* Our last chance is the "/.AFSCONF" file */
 		fp = fopen("/.AFSCONF", "r");
-		if (fp == 0) {
-		    free(tdir);
-		    UNLOCK_GLOBAL_MUTEX;
-		    return (struct afsconf_dir *)0;
-		}
+		if (fp == 0)
+		    goto fail;
+
 		fgets(afs_confdir, 128, fp);
 		fclose(fp);
 	    } else {
 		char *pathname = NULL;
 
 		asprintf(&pathname, "%s/%s", home_dir, ".AFSCONF");
-		if (pathname == NULL) {
-		    free(tdir);
-		    UNLOCK_GLOBAL_MUTEX;
-		    return (struct afsconf_dir *) 0;
-		}
+		if (pathname == NULL)
+		    goto fail;
 
 		fp = fopen(pathname, "r");
 		free(pathname);
@@ -476,21 +471,16 @@ afsconf_Open(const char *adir)
 		if (fp == 0) {
 		    /* Our last chance is the "/.AFSCONF" file */
 		    fp = fopen("/.AFSCONF", "r");
-		    if (fp == 0) {
-			free(tdir);
-			UNLOCK_GLOBAL_MUTEX;
-			return (struct afsconf_dir *)0;
-		    }
+		    if (fp == 0)
+			goto fail;
 		}
 		fgets(afs_confdir, 128, fp);
 		fclose(fp);
 	    }
 	    len = strlen(afs_confdir);
-	    if (len == 0) {
-		free(tdir);
-		UNLOCK_GLOBAL_MUTEX;
-		return (struct afsconf_dir *)0;
-	    }
+	    if (len == 0)
+		goto fail;
+
 	    if (afs_confdir[len - 1] == '\n') {
 		afs_confdir[len - 1] = 0;
 	    }
@@ -500,13 +490,16 @@ afsconf_Open(const char *adir)
 	code = afsconf_OpenInternal(tdir, 0, 0);
 	if (code) {
 	    free(tdir->name);
-	    free(tdir);
-	    UNLOCK_GLOBAL_MUTEX;
-	    return (struct afsconf_dir *)0;
+	    goto fail;
 	}
     }
     UNLOCK_GLOBAL_MUTEX;
     return tdir;
+
+fail:
+    free(tdir);
+    UNLOCK_GLOBAL_MUTEX;
+    return NULL;
 }
 
 static int
