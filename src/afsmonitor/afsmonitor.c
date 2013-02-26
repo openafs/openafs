@@ -491,7 +491,7 @@ afsmon_Exit(int a_exitVal)	/* exit code */
 	    fprintf(debugFD, ", prev \n");
 	free(prev_fsData);
     }
-    if (prev_cmData != (struct cm_Display_Data *)0) {
+    if (curr_cmData != (struct cm_Display_Data *)0) {
 	if (afsmon_debug)
 	    fprintf(debugFD, "Deallocating CM Print Buffers .... curr");
 	free(curr_cmData);
