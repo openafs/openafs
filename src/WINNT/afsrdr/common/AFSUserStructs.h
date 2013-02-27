@@ -1311,5 +1311,14 @@ typedef struct _AFS_FILE_IO_RESULT_CB
 
 } AFSFileIOResultCB;
 
+typedef struct _AFS_SET_REPARSE_POINT_POLICY
+{
+
+    ULONG       Policy;
+
+    ULONG       Scope;
+
+} AFSSetReparsePointPolicyCB;
+
 #endif /* _AFS_USER_STRUCT_H */
 

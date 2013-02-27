@@ -516,6 +516,9 @@ AFSCheckThreadDacl( OUT GUID *AuthGroup);
 NTSTATUS
 AFSProcessSetProcessDacl( IN AFSProcessCB *ProcessCB);
 
+NTSTATUS
+AFSSetReparsePointPolicy( IN AFSSetReparsePointPolicyCB *Policy);
+
 //
 // Prototypes in AFSFastIoSupprt.cpp
 //

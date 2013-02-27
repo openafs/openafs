@@ -680,6 +680,12 @@ typedef struct _AFS_DEVICE_EXTENSION
 
             struct _AFSFSD_PROVIDER_CONNECTION_CB   *ProviderEnumerationList;
 
+	    //
+	    // Reparse point policy
+	    //
+
+	    ULONG               ReparsePointPolicy;
+
         } RDR;
 
         struct

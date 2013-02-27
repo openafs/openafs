@@ -326,4 +326,27 @@
 #define AFS_FILE_ACCESS_EXCLUSIVE       0x00000001
 #define AFS_FILE_ACCESS_SHARED          0x00000002
 
+//
+// Reparse Point processing policy
+//
+
+#define AFS_REPARSE_POINT_POLICY_RESET       0x00000000 // This will reset the policy to default
+							// behavior which is to process the
+							// "open as reparse point" flag during
+							// Create per normal operation.
+
+#define AFS_REPARSE_POINT_TO_FILE_AS_FILE    0x00000001 // If indicated then ignore any attempt to
+							// "open as reparse point" when the target is
+							// a file.
+
+#define AFS_REPARSE_POINT_VALID_POLICY_FLAGS 0x00000001
+
+//
+// Reparse Point policy scope
+//
+
+#define AFS_REPARSE_POINT_POLICY_GLOBAL      0x00000000
+
+#define AFS_REPARSE_POINT_POLICY_AUTHGROUP   0x00000001
+
 #endif /* _AFS_USER_DEFINE_H */

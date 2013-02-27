@@ -529,6 +529,14 @@ AFSCheckIoctlPermissions( IN ULONG ControlCode)
             }
             return STATUS_SUCCESS;
 
+	case IOCTL_AFS_SET_REPARSE_POLICY:
+
+	    //
+	    // Anyone can call this
+	    //
+
+	    return STATUS_SUCCESS;
+
         default:
 
             //
@@ -904,6 +912,23 @@ AFSProcessControlRequest( IN PIRP Irp)
 
                 break;
             }
+
+	    case IOCTL_AFS_SET_REPARSE_POLICY:
+	    {
+
+		AFSSetReparsePointPolicyCB *pPolicy = (AFSSetReparsePointPolicyCB *)Irp->AssociatedIrp.SystemBuffer;
+
+		if( pPolicy == NULL ||
+		    pIrpSp->Parameters.DeviceIoControl.InputBufferLength < sizeof( AFSSetReparsePointPolicyCB))
+		{
+		    ntStatus = STATUS_INVALID_PARAMETER;
+		    break;
+		}
+
+		ntStatus = AFSSetReparsePointPolicy( pPolicy);
+
+		break;
+	    }
 
             default:
             {

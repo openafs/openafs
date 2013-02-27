@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2008-2011 Kernel Drivers, LLC.
- * Copyright (c) 2009-2011 Your File System, Inc.
+ * Copyright (c) 2008-2013 Kernel Drivers, LLC.
+ * Copyright (c) 2009-2013 Your File System, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -10,15 +10,12 @@
  * - Redistributions of source code must retain the above copyright notice,
  *   this list of conditions and the following disclaimer.
  * - Redistributions in binary form must reproduce the above copyright
- *   notice,
- *   this list of conditions and the following disclaimer in the
- *   documentation
- *   and/or other materials provided with the distribution.
+ *   notice, this list of conditions and the following disclaimer in the
+ *   documentation and/or other materials provided with the distribution.
  * - Neither the name of Kernel Drivers, LLC nor the names of its
- *   contributors may be
- *   used to endorse or promote products derived from this software without
- *   specific prior written permission from Kernel Drivers, LLC
- *   and Your File System, Inc.
+ *   contributors may be used to endorse or promote products derived from
+ *   this software without specific prior written permission from
+ *   Kernel Drivers, LLC and Your File System, Inc.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
@@ -183,6 +180,13 @@
 #define AFS_VOLUME_PRIVATE_WOKER_INITIALIZED            0x00000002
 #define AFS_VOLUME_INSERTED_HASH_TREE                   0x00000004
 #define AFS_VOLUME_ACTIVE_GLOBAL_ROOT                   0x00000008
+
+//
+// Authentication Group Flags
+//
+
+#define AFS_AUTHGROUP_REPARSE_POLICY_SET                0x00000001
+#define AFS_AUTHGROUP_REPARSE_POINT_TO_FILE_AS_FILE     0x00000002
 
 //
 // Need this to handle the break point definition
