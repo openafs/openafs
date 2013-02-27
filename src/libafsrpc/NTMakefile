@@ -47,18 +47,22 @@ LIBRXKAD_OBJS = $(OUT)\rxkad_client.obj $(OUT)\rxkad_server.obj $(OUT)\rxkad_com
 
 LIBRXKAD_REGOBJS = $(OUT)\bg-fcrypt.obj
 
-UTILOBJS = $(OUT)\winsock_nt.obj
+UTILOBJS = $(OUT)\winsock_nt.obj \
+           $(OUT)\pthread_glock.obj
 
 COMERRBJS = $(OUT)\error_msg.obj $(OUT)\et_name.obj $(OUT)\com_err.obj
 
 LWPOBJS = $(OUT)\lock.obj $(OUT)\fasttime.obj $(OUT)\threadname.obj
 
-FSINTBJS = $(OUT)\afsint.cs.obj $(OUT)\afsint.xdr.obj $(OUT)\afscbint.cs.obj $(OUT)\afscbint.xdr.obj \
-	$(OUT)\afsaux.obj
+FSINTBJS = $(OUT)\afsint.cs.obj \
+           $(OUT)\afsint.xdr.obj \
+           $(OUT)\afscbint.cs.obj \
+           $(OUT)\afscbint.xdr.obj \
+	   $(OUT)\afsaux.obj
 
 DLLOBJS = $(MULTIOBJS) $(RXOBJS) $(XDROBJS) $(RXSTATBJS) $(LIBRXKAD_OBJS) \
-	$(LIBRXKAD_REGOBJS) $(UTILBJS) $(COMERRBJS) \
-	$(FSINTBJS) $(LWPOBJS) $(OUT)\afsrpc.res
+	$(LIBRXKAD_REGOBJS) $(UTILOBJS) $(COMERRBJS) \
+        $(LWPOBJS) $(OUT)\afsrpc.res
 
 $(MULTIOBJS) $(RXOBJS) $(XDROBJS):$(RX)\$$(@B).c
 	$(C2OBJ) $** -I$(RX) 
@@ -85,12 +89,8 @@ NTMAKE = nmake /nologo /f ntmakefile
 
 
 DLLLIBS =\
-!IF (("$(SYS_NAME)"=="i386_win95" ) || ("$(SYS_NAME)"=="I386_WIN95" ))
-	$(DESTDIR)\lib\win95\afspthread.lib \
-!ELSE
 	$(DESTDIR)\lib\afspthread.lib \
-!ENDIF
-	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afs\mtafsutil.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\opr.lib \
 	$(DESTDIR)\lib\afshcrypto.lib \

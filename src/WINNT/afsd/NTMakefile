@@ -408,13 +408,13 @@ EXELIBS = \
 
 EXELIBS2 = \
         $(DESTDIR)\lib\afsrpc.lib \
+        $(DESTDIR)\lib\afsauthent.lib \
+	$(DESTDIR)\lib\afs\mtafsint.lib \
 	$(DESTDIR)\lib\afs\afsprot.lib \
 	$(DESTDIR)\lib\afs\afspioctl.lib \
 	$(DESTDIR)\lib\afs\afscom_err.lib \
 	$(DESTDIR)\lib\afs\afscmd.lib \
-	$(DESTDIR)\lib\afs\afsutil.lib \
-	$(DESTDIR)\lib\afsubik.lib \
-	$(DESTDIR)\lib\afsrxkad.lib \
+	$(DESTDIR)\lib\afs\mtafsutil.lib \
 	$(DESTDIR)\lib\afslwp.lib \
 	$(DESTDIR)\lib\libosi.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
@@ -467,12 +467,11 @@ AFSD_EXEFILE = $(EXEDIR)\afsd.exe
 
 AFSD_EXELIBS =\
 	$(DESTDIR)\lib\libosi.lib \
+	$(DESTDIR)\lib\afsrpc.lib \
+	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\afs\mtafsvldb.lib \
 	$(DESTDIR)\lib\afs\mtafsint.lib \
-	$(DESTDIR)\lib\afsrpc.lib \
-        $(DESTDIR)\lib\afsrxkad.lib \
 	$(DESTDIR)\lib\afs\mtafsutil.lib \
-	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afspthread.lib \

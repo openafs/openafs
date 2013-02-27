@@ -137,9 +137,10 @@ ILIBDIR = $(DESTDIR)\lib\afs
 
 DLLLIBS =\
 	$(DESTDIR)\lib\afspthread.lib \
+	$(DESTDIR)\lib\afs\mtafsint.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
-        $(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afsauthent.lib \
+        $(DESTDIR)\lib\afs\mtafsutil.lib \
         $(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\opr.lib \
         $(DESTDIR)\lib\afsroken.lib
