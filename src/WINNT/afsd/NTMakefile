@@ -439,12 +439,7 @@ EXELIBS2 = \
 	$(DESTDIR)\lib\afshcrypto.lib \
 	$(DESTDIR)\lib\afsroken.lib
 
-EXELIBS3 = \
-	$(DESTDIR)\lib\afs\afscmd.lib \
-	$(DESTDIR)\lib\afsrxkad.lib \
-	$(DESTDIR)\lib\opr.lib \
-	$(DESTDIR)\lib\afshcrypto.lib \
-	$(DESTDIR)\lib\afsroken.lib
+LIBCMD = $(DESTDIR)\lib\afs\afscmd.lib
 
 # klog.exe
 $(EXEDIR)\klog.exe: $(OUT)\cklog.obj $(OUT)\klog.res $(DESTDIR)\lib\krbcompat_delayload.obj $(EXELIBS) $(HEIMDEPS)
@@ -546,7 +541,7 @@ KFWLIBS = \
 LINKOPTS = /DELAYLOAD:krbv4w32.dll /DELAYLOAD:krb5_32.dll /DELAYLOAD:comerr32.dll
 !endif
 
-$(EXEDIR)\afsio.exe: $(AFSIOOBJS) $(OUT)\afsio.res $(RXOBJS) $(AFSD_EXELIBS) $(EXELIBS3) $(AFSCPLIB)
+$(EXEDIR)\afsio.exe: $(AFSIOOBJS) $(OUT)\afsio.res $(RXOBJS) $(AFSD_EXELIBS) $(LIBCMD) $(AFSCPLIB)
 	$(EXECONLINK) $(KFWLIBS) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib rpcrt4.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
