@@ -87,8 +87,6 @@ ListUsedIds(struct cmd_syndesc *as, void *arock)
 	}
     }
     range = abs(startId - maxId);
-    if (range < 0)
-	range = -range;
     range++;			/* number that can be printed */
     if (range < number) {
 	fprintf(stderr, "Only %d ids to be checked.\n", range);
