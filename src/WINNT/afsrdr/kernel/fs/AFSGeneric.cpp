@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2008, 2009, 2010, 2011 Kernel Drivers, LLC.
- * Copyright (c) 2009, 2010, 2011 Your File System, Inc.
+ * Copyright (c) 2008, 2009, 2010, 2011, 2012, 2013 Kernel Drivers, LLC.
+ * Copyright (c) 2009, 2010, 2011, 2012, 2013 Your File System, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -10,10 +10,8 @@
  * - Redistributions of source code must retain the above copyright notice,
  *   this list of conditions and the following disclaimer.
  * - Redistributions in binary form must reproduce the above copyright
- *   notice,
- *   this list of conditions and the following disclaimer in the
- *   documentation
- *   and/or other materials provided with the distribution.
+ *   notice, this list of conditions and the following disclaimer in the
+ *   documentation and/or other materials provided with the distribution.
  * - Neither the names of Kernel Drivers, LLC and Your File System, Inc.
  *   nor the names of their contributors may be used to endorse or promote
  *   products derived from this software without specific prior written
@@ -2234,4 +2232,31 @@ try_exit:
     return ntStatus;
 }
 
+NTSTATUS
+AFSSetReparsePointPolicy( IN AFSSetReparsePointPolicyCB *PolicyCB)
+{
+
+    NTSTATUS    ntStatus = STATUS_SUCCESS;
+    AFSDeviceExt* pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
+    ULONG       ulPolicy = 0;
+
+    __Enter
+    {
+
+	ulPolicy = (PolicyCB->Policy & AFS_REPARSE_POINT_VALID_POLICY_FLAGS);
+
+	if ( PolicyCB->Scope == AFS_REPARSE_POINT_POLICY_GLOBAL)
+	{
+
+	    pDeviceExt->Specific.RDR.ReparsePointPolicy = ulPolicy;
+	}
+	else if ( PolicyCB->Scope == AFS_REPARSE_POINT_POLICY_AUTHGROUP)
+	{
+
+	    ntStatus = STATUS_NOT_SUPPORTED;
+	}
+    }
+
+    return ntStatus;
+}
 
