@@ -455,6 +455,7 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
     /* send the file back to the requester */
 
     dbase = ubik_dbase;
+    pbuffer[0] = '\0';
 
     if ((code = ubik_CheckAuth(rxcall))) {
 	DBHOLD(dbase);
@@ -576,7 +577,9 @@ failed_locked:
 
 failed:
     if (code) {
-	unlink(pbuffer);
+	if (pbuffer[0] != '\0')
+	    unlink(pbuffer);
+
 	/* Failed to sync. Allow reads again for now. */
 	if (dbase != NULL) {
 	    UBIK_VERSION_LOCK;
