@@ -18,7 +18,6 @@ RELDIR=libafsauthent
 AUDIT = ..\audit
 AUTH = ..\auth
 KAUTH = ..\kauth
-UBIK = ..\ubik
 RXKAD = ..\rxkad
 PTSERVER = ..\ptserver
 SYS = ..\sys
@@ -60,13 +59,6 @@ KAUTHOBJS = \
 	$(OUT)\user_nt.obj \
         $(OUT)\katoken.obj
 
-UBIKOBJS = \
-	$(OUT)\uinit.obj \
-	$(OUT)\ubikclient.obj \
-	$(OUT)\uerrors.obj \
-	$(OUT)\ubik_int.cs.obj \
-	$(OUT)\ubik_int.xdr.obj
-
 RXKADOBJS = \
 	$(OUT)\rxkad_errs.obj
 
@@ -87,7 +79,6 @@ WINNTAFSDOBJS =\
 DLLOBJS =\
 	$(AUTHOBJS) \
 	$(KAUTHOBJS) \
-	$(UBIKOBJS) \
 	$(RXKADOBJS) \
 	$(PTSERVEROBJS) \
 	$(SYSOBJS) \
@@ -103,9 +94,6 @@ $(AUTHOBJS): $(AUTH)\$$(@B).c
 
 $(KAUTHOBJS): $(KAUTH)\$$(@B).c
 	$(C2OBJ) -I$(KAUTH) $**
-
-$(UBIKOBJS): $(UBIK)\$$(@B).c
-	$(C2OBJ) -I$(UBIK) $**
 
 $(RXKADOBJS): $(RXKAD)\$$(@B).c
 	$(C2OBJ) -I$(RXKAD) $**
@@ -123,6 +111,7 @@ $(SYSOBJS): $(SYS)\$$(@B).c
 	$(C2OBJ) -I$(SYS) $**
 
 DLLLIBS =\
+        $(DESTDIR)\lib\afs\mtafsubik.lib \
 	$(DESTDIR)\lib\afspthread.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
 	$(DESTDIR)\lib\afs\mtafsutil.lib \
