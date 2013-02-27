@@ -1037,11 +1037,15 @@ afs_NewCell(char *acellName, afs_int32 * acellHosts, int aflags,
     return 0;
 
   bad:
+    ReleaseWriteLock(&tc->lock);
+
     if (newc) {
+	/* If we're a new cell, nobody else can see us, so doing this
+	 * after lock release is safe */
 	afs_osi_FreeStr(tc->cellName);
 	afs_osi_Free(tc, sizeof(struct cell));
     }
-    ReleaseWriteLock(&tc->lock);
+
     ReleaseWriteLock(&afs_xcell);
     return code;
 }
