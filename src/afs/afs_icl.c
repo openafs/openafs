@@ -237,7 +237,7 @@ Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
 	setp = afs_icl_FindSet(tname);
 	if (!setp)
 	    return ENOENT;
-	if (p2 > ICL_LOGSPERSET)
+	if (p2 >= ICL_LOGSPERSET)
 	    return EINVAL;
 	if (!(tlp = setp->logs[p2]))
 	    return EBADF;
