@@ -1072,8 +1072,8 @@ ObtainTokens( PLUID lpLogonId,
             *p++ = '@';
             StringCchCopy(p, len - tlen -1, pOpt->realm ? pOpt->realm : realm);
             code = KFW_AFS_get_cred(principal, cell, password, 0, NULL, preason);
-            DebugEvent("KFW_AFS_get_cred  uname=[%s] smbname=[%s] cell=[%s] code=[%d]",
-                        principal, pOpt->smbName, cell, code);
+            DebugEvent("KFW_AFS_get_cred  uname=[%s] smbname=[NULL] cell=[%s] code=[%d]",
+                        principal, cell, code);
 
             if (code == 0 && pOpt->theseCells) {
                 p = pOpt->theseCells;
@@ -1082,8 +1082,8 @@ ObtainTokens( PLUID lpLogonId,
                         SetEnvironmentVariable(DO_NOT_REGISTER_VARNAME, "");
                         code2 = KFW_AFS_get_cred(principal, p, password, 0, NULL, preason);
                         SetEnvironmentVariable(DO_NOT_REGISTER_VARNAME, NULL);
-                        DebugEvent("KFW_AFS_get_cred  uname=[%s] smbname=[%s] cell=[%s] code=[%d]",
-                                    principal, pOpt->smbName, p, code2);
+                        DebugEvent("KFW_AFS_get_cred  uname=[%s] smbname=[NULL] cell=[%s] code=[%d]",
+                                    principal, p, code2);
                     }
                     p += strlen(p) + 1;
                 }
@@ -1094,11 +1094,11 @@ ObtainTokens( PLUID lpLogonId,
         SetEnvironmentVariable(DO_NOT_REGISTER_VARNAME, NULL);
 
     } else {
-        code = ka_UserAuthenticateGeneral2(KA_USERAUTH_VERSION+KA_USERAUTH_AUTHENT_LOGON,
+        code = ka_UserAuthenticateGeneral2(KA_USERAUTH_VERSION,
                                             uname, "", cell, password, NULL, 0, &pw_exp, 0,
                                             preason);
-        DebugEvent("AFS AfsLogon - (INTEGRATED only)ka_UserAuthenticateGeneral2 Code[%x] uname[%s] smbname=[%s] Cell[%s] PwExp=[%d] Reason=[%s]",
-                    code, uname, pOpt->smbName, cell, pw_exp, *preason ? *preason : "");
+        DebugEvent("AFS AfsLogon - (INTEGRATED only)ka_UserAuthenticateGeneral2 Code[%d] uname[%s] smbname=[NULL] Cell[%s] PwExp=[%d] Reason=[%s]",
+                    code, uname, cell, pw_exp, *preason ? *preason : "");
     }
 
     RevertSecurityContext(&LogonContext);
