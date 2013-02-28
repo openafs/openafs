@@ -623,6 +623,8 @@ pr_ListMembers(char *group, namelist *lnames)
     afs_int32 code;
     afs_int32 gid;
 
+    memset(lnames, 0, sizeof(namelist));
+
     code = pr_SNameToId(group, &gid);
     if (code)
 	return code;
