@@ -19,7 +19,6 @@ AUDIT = ..\audit
 AUTH = ..\auth
 KAUTH = ..\kauth
 UBIK = ..\ubik
-UTIL = ..\util
 RXKAD = ..\rxkad
 PTSERVER = ..\ptserver
 SYS = ..\sys
@@ -68,12 +67,6 @@ UBIKOBJS = \
 	$(OUT)\ubik_int.cs.obj \
 	$(OUT)\ubik_int.xdr.obj
 
-UTILOBJS = \
-	$(OUT)\pthread_glock.obj \
-	$(OUT)\fileutil.obj \
-	$(OUT)\dirpath.obj \
-	$(OUT)\readdir_nt.obj
-
 RXKADOBJS = \
 	$(OUT)\rxkad_errs.obj
 
@@ -95,7 +88,6 @@ DLLOBJS =\
 	$(AUTHOBJS) \
 	$(KAUTHOBJS) \
 	$(UBIKOBJS) \
-	$(UTILOBJS) \
 	$(RXKADOBJS) \
 	$(PTSERVEROBJS) \
 	$(SYSOBJS) \
@@ -115,9 +107,6 @@ $(KAUTHOBJS): $(KAUTH)\$$(@B).c
 $(UBIKOBJS): $(UBIK)\$$(@B).c
 	$(C2OBJ) -I$(UBIK) $**
 
-$(UTILOBJS): $(UTIL)\$$(@B).c
-	$(C2OBJ) -I$(UTIL) $**
-
 $(RXKADOBJS): $(RXKAD)\$$(@B).c
 	$(C2OBJ) -I$(RXKAD) $**
 
@@ -134,13 +123,9 @@ $(SYSOBJS): $(SYS)\$$(@B).c
 	$(C2OBJ) -I$(SYS) $**
 
 DLLLIBS =\
-!IF (("$(SYS_NAME)"=="i386_win95" ) || ("$(SYS_NAME)"=="I386_WIN95" ))
-	$(DESTDIR)\lib\win95\afspthread.lib \
-!ELSE
 	$(DESTDIR)\lib\afspthread.lib \
-!ENDIF
 	$(DESTDIR)\lib\afsrpc.lib \
-	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afs\mtafsutil.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
         $(DESTDIR)\lib\afs\afsprocmgmt.lib \
