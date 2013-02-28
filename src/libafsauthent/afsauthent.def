@@ -49,9 +49,9 @@ EXPORTS
 	ubik_ParseClientList				@49
 	getDirPath					@50
 	ka_AuthSpecificServersConn			@51
-	pthread_recursive_mutex_lock			@52
-	pthread_recursive_mutex_unlock			@53
-	grmutex						@54 DATA
+;	pthread_recursive_mutex_lock			@52
+;	pthread_recursive_mutex_unlock			@53
+;	grmutex						@54 DATA
 	initAFSDirPath					@55
 ;     	renamefile					@56
 	opendir						@57

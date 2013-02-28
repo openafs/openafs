@@ -33,3 +33,6 @@ EXPORTS
         pthread_rwlock_tryrdlock                        @31
         pthread_rwlock_trywrlock                        @32
         pthread_rwlock_unlock                           @33
+	pthread_recursive_mutex_lock			@34
+	pthread_recursive_mutex_unlock			@35
+	grmutex						@36 DATA

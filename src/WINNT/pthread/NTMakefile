@@ -20,6 +20,8 @@ LIBINCLUDES = \
 
 PTHR_DLLFILE = $(DESTDIR)\lib\afspthread.dll
 
+UTIL = ..\..\util
+
 $(OUT)\pthread.res: pthread.rc AFS_component_version_number.h
 	$(RC) /fo$*.res $(*F).rc
 
@@ -27,7 +29,13 @@ PTHR_DLLOBJS = \
 	$(OUT)\pthread.obj \
 	$(OUT)\pthread.res
 
-$(PTHR_DLLFILE): $(PTHR_DLLOBJS)
+UTILOBJS = \
+	$(OUT)\pthread_glock.obj
+
+$(UTILOBJS): $(UTIL)\$$(@B).c
+	$(C2OBJ) -I$(UTIL) -DAFS_PTHREAD_ENV $**
+
+$(PTHR_DLLFILE): $(PTHR_DLLOBJS) $(UTILOBJS)
 	$(DLLCONLINK) /DEF:pthread.def
         $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
