@@ -325,7 +325,8 @@ vos_BackupVolumeCreateMultiple(const void *cellHandle,
     int equal = 0;
     char backbuf[1024];
 
-    memset((void *)&attr, 0, sizeof(attr));
+    memset(&attr, 0, sizeof(attr));
+    memset(&arrayEntries, 0, sizeof(arrayEntries));
 
     /*
      * Validate arguments
