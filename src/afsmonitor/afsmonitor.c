@@ -1299,8 +1299,8 @@ parse_showEntry(char *a_line)
 
 	if (strcasestr(arg2, "_group") != NULL) {
 
-	    if (fromIdx < 0 || toIdx < 0 || fromIdx > NUM_CM_STAT_ENTRIES
-		|| toIdx > NUM_CM_STAT_ENTRIES)
+	    if (fromIdx < 0 || toIdx < 0 || fromIdx >= NUM_CM_STAT_ENTRIES
+		|| toIdx >= NUM_CM_STAT_ENTRIES)
 		return (-10);
 	    for (j = fromIdx; j <= toIdx; j++) {
 		if (!cm_showFlags[j]) {
@@ -1308,7 +1308,7 @@ parse_showEntry(char *a_line)
 		    cm_DisplayItems_count++;
 		    cm_showFlags[j] = 1;
 		}
-		if (cm_DisplayItems_count > NUM_CM_STAT_ENTRIES) {
+		if (cm_DisplayItems_count >= NUM_CM_STAT_ENTRIES) {
 		    fprintf(stderr, "[ %s ] cm_DisplayItems_count ovf\n", rn);
 		    return (-11);
 		}
@@ -1327,8 +1327,8 @@ parse_showEntry(char *a_line)
 
 		if (strcasestr(catName, "_group") != NULL) {
 		    if (fromIdx < 0 || toIdx < 0
-			|| fromIdx > NUM_CM_STAT_ENTRIES
-			|| toIdx > NUM_CM_STAT_ENTRIES)
+			|| fromIdx >= NUM_CM_STAT_ENTRIES
+			|| toIdx >= NUM_CM_STAT_ENTRIES)
 			return (-12);
 		    for (j = fromIdx; j <= toIdx; j++) {
 			if (!cm_showFlags[j]) {
@@ -1336,7 +1336,7 @@ parse_showEntry(char *a_line)
 			    cm_DisplayItems_count++;
 			    cm_showFlags[j] = 1;
 			}
-			if (cm_DisplayItems_count > NUM_CM_STAT_ENTRIES) {
+			if (cm_DisplayItems_count >= NUM_CM_STAT_ENTRIES) {
 			    fprintf(stderr,
 				    "[ %s ] cm_DisplayItems_count ovf\n", rn);
 			    return (-13);
