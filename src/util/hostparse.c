@@ -131,10 +131,13 @@ hostutil_GetNameByINet(afs_uint32 addr)
 ** w.x.y.z 	# machineName
 ** returns the network interface in network byte order
 */
+
+#define MAXBYTELEN 32
 afs_uint32
 extractAddr(char *line, int maxSize)
 {
-    char byte1[32], byte2[32], byte3[32], byte4[32];
+    char byte1[MAXBYTELEN], byte2[MAXBYTELEN];
+    char byte3[MAXBYTELEN], byte4[MAXBYTELEN];
     int i = 0;
     char *endPtr;
     afs_uint32 val1, val2, val3, val4;
@@ -153,7 +156,7 @@ extractAddr(char *line, int maxSize)
     while ((*line != '.') && maxSize) {	/* extract first byte */
 	if (!isdigit(*line))
 	    return AFS_IPINVALID;
-	if (i > 31)
+	if (i >= MAXBYTELEN-1)
 	    return AFS_IPINVALID;	/* no space */
 	byte1[i++] = *line++;
 	maxSize--;
@@ -166,7 +169,7 @@ extractAddr(char *line, int maxSize)
     while ((*line != '.') && maxSize) {	/* extract second byte */
 	if (!isdigit(*line))
 	    return AFS_IPINVALID;
-	if (i > 31)
+	if (i >= MAXBYTELEN-1)
 	    return AFS_IPINVALID;	/* no space */
 	byte2[i++] = *line++;
 	maxSize--;
@@ -179,7 +182,7 @@ extractAddr(char *line, int maxSize)
     while ((*line != '.') && maxSize) {
 	if (!isdigit(*line))
 	    return AFS_IPINVALID;
-	if (i > 31)
+	if (i >= MAXBYTELEN-1)
 	    return AFS_IPINVALID;	/* no space */
 	byte3[i++] = *line++;
 	maxSize--;
@@ -192,7 +195,7 @@ extractAddr(char *line, int maxSize)
     while (*line && !isspace(*line) && maxSize) {
 	if (!isdigit(*line))
 	    return AFS_IPINVALID;
-	if (i > 31)
+	if (i >= MAXBYTELEN-1)
 	    return AFS_IPINVALID;	/* no space */
 	byte4[i++] = *line++;
 	maxSize--;
