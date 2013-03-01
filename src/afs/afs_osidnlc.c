@@ -81,7 +81,7 @@ GetMeAnEntry(void)
 	    break;
     }
 
-    if (nameptr >= NHSIZE);
+    if (nameptr >= NHSIZE)
 	nameptr = 0;
 
     TRACE(ScavengeEntryT, nameptr);
