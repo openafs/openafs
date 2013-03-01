@@ -333,6 +333,11 @@ main(int argc, char *argv[])
 	for (i = 1; i < MAXSERVERS; i++) {
 	    if (!serverList[i])
 		break;
+	    if (i >= MAXHOSTSPERCELL) {
+		fprintf(stderr,
+			"Too many ubik servers specified on command line\n");
+		exit(1);
+	    }
 	    cellinfo.hostAddr[i].sin_addr.s_addr = serverList[i];
 	}
 	cellinfo.numServers = i;
