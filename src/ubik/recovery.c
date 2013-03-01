@@ -882,7 +882,7 @@ DoProbe(struct ubik_server *server)
     char hoststr[16];
 
     UBIK_ADDR_LOCK;
-    for (i = 0; (addr = server->addr[i]) && (i < UBIK_MAX_INTERFACE_ADDR);
+    for (i = 0; (i < UBIK_MAX_INTERFACE_ADDR) && (addr = server->addr[i]);
 	 i++) {
 	conns[i] =
 	    rx_NewConnection(addr, ubik_callPortal, DISK_SERVICE_ID,
