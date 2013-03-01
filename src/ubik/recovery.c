@@ -878,7 +878,7 @@ DoProbe(struct ubik_server *server)
     extern afs_int32 ubikSecIndex;
     extern struct rx_securityClass *ubikSecClass;
 
-    for (i = 0; (addr = server->addr[i]) && (i < UBIK_MAX_INTERFACE_ADDR);
+    for (i = 0; (i < UBIK_MAX_INTERFACE_ADDR) && (addr = server->addr[i]);
 	 i++) {
 	conns[i] =
 	    rx_NewConnection(addr, ubik_callPortal, DISK_SERVICE_ID,
