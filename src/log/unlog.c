@@ -65,7 +65,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 
     if (as->parms[0].items) {	/* A cell is provided */
 	for (itp = as->parms[0].items; itp; itp = itp->next) {
-	    if (i > MAXCELLS) {
+	    if (i >= MAXCELLS) {
 		printf
 		    ("The maximum number of cells (%d) is exceeded; the rest are ignored\n",
 		     MAXCELLS);
