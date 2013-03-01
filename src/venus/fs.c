@@ -1726,8 +1726,8 @@ static int
 GetLastComponent(const char *data, char **outdir, char **outbase,
 		 int *thru_symlink)
 {
-    char orig_name[1024];	/*Original name, may be modified */
-    char true_name[1024];	/*``True'' dirname (e.g., symlink target) */
+    char orig_name[MAXPATHLEN];	/*Original name, may be modified */
+    char true_name[MAXPATHLEN];	/*``True'' dirname (e.g., symlink target) */
     char *lastSlash;
     struct stat statbuff;	/*Buffer for status info */
     int link_chars_read;	/*Num chars read in readlink() */
@@ -1758,8 +1758,8 @@ GetLastComponent(const char *data, char **outdir, char **outbase,
 	if (thru_symlink)
 	     *thru_symlink = 1;
 
-	/* Read name of resolved file */
-	link_chars_read = readlink(orig_name, true_name, 1024);
+	/* Read name of resolved file (leave space for NULL!) */
+	link_chars_read = readlink(orig_name, true_name, MAXPATHLEN-1);
 	if (link_chars_read <= 0) {
 	    fprintf(stderr,
 		    "%s: Can't read target name for '%s' symbolic link!\n",
