@@ -902,11 +902,15 @@ udbClientInit(int noAuthFlag, int localauth, char *cellName)
     if (&udbHandle.uh_scIndex == RX_SECIDX_NULL && !noAuthFlag)
 	afs_com_err(whoami, 0, "Can't get tokens - running unauthenticated");
 
-    if (info.numServers > MAXSERVERS) {
+    /* We have to have space for the trailing NULL that terminates the server
+     * conneciton array - so we can only store MAXSERVERS-1 real elements in
+     * that array.
+     */
+    if (info.numServers >= MAXSERVERS) {
 	afs_com_err(whoami, 0,
 		"Warning: %d BDB servers exist for cell '%s', can only remember the first %d",
-		info.numServers, cellName, MAXSERVERS);
-	info.numServers = MAXSERVERS;
+		info.numServers, cellName, MAXSERVERS-1);
+	info.numServers = MAXSERVERS - 1;
     }
 
     /* establish connections to the servers. Check for failed connections? */
