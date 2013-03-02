@@ -39,7 +39,7 @@ static int
 open_file(const char *fileName)
 {
     int tempfd, flags;
-    char oldName[MAXPATHLEN];
+    char *oldName;
 
 #ifndef AFS_NT40_ENV
     struct stat statbuf;
@@ -50,10 +50,14 @@ open_file(const char *fileName)
     } else
 #endif
     {
-        strcpy(oldName, fileName);
-        strcat(oldName, ".old");
+	asprintf(&oldName, "%s.old", fileName);
+	if (oldName == NULL) {
+	    printf("Warning: Unable to create backup filename. Auditing ignored\n");
+	    return 1;
+	}
         rk_rename(fileName, oldName);
         flags = O_WRONLY | O_TRUNC | O_CREAT;
+	free(oldName);
     }
     tempfd = open(fileName, flags, 0666);
     if (tempfd > -1) {
