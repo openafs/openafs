@@ -734,6 +734,7 @@ AFSQueryDirectory( IN PIRP Irp)
         {
 
             ULONG ulBytesRemainingInBuffer;
+	    BOOLEAN bUseFileInfo = FALSE;
 
             //
             // Drop the DirOpenReferenceCount held during a prior
@@ -986,9 +987,18 @@ AFSQueryDirectory( IN PIRP Irp)
 
                                 ulAdditionalAttributes = FILE_ATTRIBUTE_DIRECTORY;
                             }
+			    else if ( AFSIgnoreReparsePointToFile())
+			    {
+
+				bUseFileInfo = TRUE;
+			    }
                         }
 
-                        ulAdditionalAttributes |= FILE_ATTRIBUTE_REPARSE_POINT;
+			if ( bUseFileInfo == FALSE)
+			{
+
+			    ulAdditionalAttributes |= FILE_ATTRIBUTE_REPARSE_POINT;
+			}
 
                         break;
                     }
@@ -1044,9 +1054,23 @@ AFSQueryDirectory( IN PIRP Irp)
                 }
                 case FileDirectoryInformation:
                 {
+
                     pDirInfo = (PFILE_DIRECTORY_INFORMATION)&pBuffer[ ulNextEntry];
 
-                    if( BooleanFlagOn( pDirEntry->Flags, AFS_DIR_ENTRY_FAKE))
+		    if( bUseFileInfo)
+		    {
+
+			pDirInfo->CreationTime = stFileInfo.CreationTime;
+			pDirInfo->LastWriteTime = stFileInfo.LastWriteTime;
+			pDirInfo->LastAccessTime = stFileInfo.LastAccessTime;
+			pDirInfo->ChangeTime = stFileInfo.ChangeTime;
+
+			pDirInfo->EndOfFile = stFileInfo.EndOfFile;
+			pDirInfo->AllocationSize = stFileInfo.AllocationSize;
+
+			pDirInfo->FileAttributes = stFileInfo.FileAttributes | ulAdditionalAttributes;
+		    }
+		    else if( BooleanFlagOn( pDirEntry->Flags, AFS_DIR_ENTRY_FAKE))
                     {
 
                         pDirInfo->CreationTime = pFcb->ObjectInformation->CreationTime;
