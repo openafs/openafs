@@ -1336,7 +1336,7 @@ auth_to_path(krb5_context context, char *path)
 
     /* Initialize */
     if (path[0] == DIR)
-	strcpy(pathtocheck, path);
+	strlcpy(pathtocheck, path, sizeof(pathtocheck));
     else {
 	if (getcwd(pathtocheck, sizeof(pathtocheck)) == NULL) {
 	    fprintf(stderr, "Unable to find current working directory:\n");
@@ -1345,15 +1345,15 @@ auth_to_path(krb5_context context, char *path)
 	    exit(AKLOG_BADPATH);
 	}
 	else {
-	    strcat(pathtocheck, DIRSTRING);
-	    strcat(pathtocheck, path);
+	    strlcat(pathtocheck, DIRSTRING, sizeof(pathtocheck));
+	    strlcat(pathtocheck, path, sizeof(pathtocheck));
 	}
     }
     next_path(pathtocheck);
 
     /* Go on to the next level down the path */
     while ((nextpath = next_path(NULL))) {
-	strcpy(pathtocheck, nextpath);
+	strlcpy(pathtocheck, nextpath, sizeof(pathtocheck));
 	afs_dprintf("Checking directory %s\n", pathtocheck);
 	/*
 	 * If this is an afs mountpoint, determine what cell from
