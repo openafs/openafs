@@ -63,7 +63,6 @@ main(int argc, char **argv)
     struct sockaddr_in host;
     afs_int32 code;
     struct hostent *hp;
-    char hnamebuf[200];
     struct timeval tv;
     int noAuth = 1;		/* Default is authenticated connections */
 
@@ -78,9 +77,7 @@ main(int argc, char **argv)
 #ifdef STRUCT_SOCKADDR_HAS_SA_LEN
     host.sin_len = sizeof(struct sockaddr_in);
 #endif
-    if (host.sin_addr.s_addr != -1) {
-	strcpy(hnamebuf, av[0]);
-    } else {
+    if (host.sin_addr.s_addr == -1) {
 	hp = gethostbyname(av[0]);
 	if (hp) {
 	    host.sin_family = hp->h_addrtype;
