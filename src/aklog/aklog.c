@@ -1192,12 +1192,16 @@ next_path(char *origpath)
 	    ? elast_comp - last_comp : strlen(last_comp);
 	strncat(pathtocheck, last_comp, len);
 	memset(linkbuf, 0, sizeof(linkbuf));
-	if ((link = (readlink(pathtocheck, linkbuf,
-				    sizeof(linkbuf)) > 0))) {
+	link = readlink(pathtocheck, linkbuf, sizeof(linkbuf)-1);
+
+	if (link > 0) {
+	    linkbuf[link] = '\0'; /* NUL terminate string */
+
 	    if (++symlinkcount > MAXSYMLINKS) {
 		fprintf(stderr, "%s: %s\n", progname, strerror(ELOOP));
 		exit(AKLOG_BADPATH);
 	    }
+
 	    memset(tmpbuf, 0, sizeof(tmpbuf));
 	    if (elast_comp)
 		strcpy(tmpbuf, elast_comp);
