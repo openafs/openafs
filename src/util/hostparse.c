@@ -104,8 +104,8 @@ hostutil_GetNameByINet(afs_uint32 addr)
 	return NULL;
 #endif
     th = gethostbyaddr((void *)&addr, sizeof(addr), AF_INET);
-    if (th) {
-	strcpy(tbuffer, th->h_name);
+    if (th && strlen(th->h_name) < sizeof(tbuffer)) {
+	strlcpy(tbuffer, th->h_name, sizeof(tbuffer));
     } else {
 	addr = ntohl(addr);
 	sprintf(tbuffer, "%d.%d.%d.%d", (int)((addr >> 24) & 0xff),
