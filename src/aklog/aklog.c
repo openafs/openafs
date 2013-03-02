@@ -1172,7 +1172,7 @@ next_path(char *origpath)
     if (origpath) {
 	memset(path, 0, sizeof(path));
 	memset(pathtocheck, 0, sizeof(pathtocheck));
-	strcpy(path, origpath);
+	strlcpy(path, origpath, sizeof(path));
 	last_comp = path;
 	symlinkcount = 0;
 	return(NULL);
@@ -1203,7 +1203,7 @@ next_path(char *origpath)
 
 	    memset(tmpbuf, 0, sizeof(tmpbuf));
 	    if (elast_comp)
-		strcpy(tmpbuf, elast_comp);
+		strlcpy(tmpbuf, elast_comp, sizeof(tmpbuf));
 	    if (linkbuf[0] == DIR) {
 		/*
 		 * If this is a symbolic link to an absolute path,
