@@ -468,6 +468,8 @@ pts_GroupOwnerChange(const void *cellHandle, const char *targetGroup,
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     idlist ids;
 
+    memset(&ids, 0, sizeof(ids));
+
     /*
      * Validate arguments
      */
