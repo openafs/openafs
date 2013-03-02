@@ -356,7 +356,11 @@ ktc_SetTokenEx(struct ktc_setTokenData *token) {
 
 	memset(&server, 0, sizeof(server));
 	strcpy(server.name, "afs");
-	strcpy(server.cell, token->cell);
+	if (strlcpy(server.cell, token->cell, sizeof(server.cell))
+		>= sizeof(server.cell)) {
+	    free(rxkadToken);
+	    return KTC_INVAL;
+	}
 	code = ktc_SetToken(&server, rxkadToken, &client, flags);
 	free(rxkadToken);
 	return code;
