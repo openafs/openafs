@@ -474,29 +474,22 @@ DoClientRPCStatsStateGet(struct cmd_syndesc *as, void *arock)
     afs_stat_type_t which = 0;
     afs_RPCStatsState_t state;
 
-    if (as->parms[PROCESS].items) {
-	typeIsValid =
-	    GetStatSourceFromString(as->parms[PROCESS].items->data, &type,
-				    &srvrPort);
-    }
+    typeIsValid = GetStatSourceFromString(as->parms[PROCESS].items->data,
+					  &type, &srvrPort);
 
-    if (as->parms[STAT_TYPE].items) {
-	which = GetStatTypeFromString(as->parms[STAT_TYPE].items->data);
-    }
+    which = GetStatTypeFromString(as->parms[STAT_TYPE].items->data);
 
-    if (as->parms[SERVER].items) {
-	if (typeIsValid) {
-	    if (!afsclient_RPCStatOpen
-		(cellHandle, as->parms[SERVER].items->data, type, &conn,
-		 &st)) {
-		ERR_ST_EXT("afsclient_RPCStatOpen", st);
-	    }
-	} else {
-	    if (!afsclient_RPCStatOpenPort
-		(cellHandle, as->parms[SERVER].items->data, srvrPort, &conn,
-		 &st)) {
-		ERR_ST_EXT("afsclient_RPCStatOpenPort", st);
-	    }
+    if (typeIsValid) {
+	if (!afsclient_RPCStatOpen(cellHandle,
+				   as->parms[SERVER].items->data,
+				   type, &conn, &st)) {
+	    ERR_ST_EXT("afsclient_RPCStatOpen", st);
+	}
+    } else {
+	if (!afsclient_RPCStatOpenPort(cellHandle,
+				       as->parms[SERVER].items->data,
+				       srvrPort, &conn, &st)) {
+	    ERR_ST_EXT("afsclient_RPCStatOpenPort", st);
 	}
     }
 
@@ -527,32 +520,25 @@ DoClientRPCStatsStateEnable(struct cmd_syndesc *as, void *arock)
     struct rx_connection *conn;
     afs_stat_source_t type;
     int srvrPort;
-    int typeIsValid = 0;
-    afs_stat_type_t which = 0;
+    int typeIsValid;
+    afs_stat_type_t which;
 
-    if (as->parms[PROCESS].items) {
-	typeIsValid =
-	    GetStatSourceFromString(as->parms[PROCESS].items->data, &type,
-				    &srvrPort);
-    }
+    typeIsValid = GetStatSourceFromString(as->parms[PROCESS].items->data,
+					  &type, &srvrPort);
 
-    if (as->parms[STAT_TYPE].items) {
-	which = GetStatTypeFromString(as->parms[STAT_TYPE].items->data);
-    }
+    which = GetStatTypeFromString(as->parms[STAT_TYPE].items->data);
 
-    if (as->parms[SERVER].items) {
-	if (typeIsValid) {
-	    if (!afsclient_RPCStatOpen
-		(cellHandle, as->parms[SERVER].items->data, type, &conn,
-		 &st)) {
-		ERR_ST_EXT("afsclient_RPCStatOpen", st);
-	    }
-	} else {
-	    if (!afsclient_RPCStatOpenPort
-		(cellHandle, as->parms[SERVER].items->data, srvrPort, &conn,
-		 &st)) {
-		ERR_ST_EXT("afsclient_RPCStatOpenPort", st);
-	    }
+    if (typeIsValid) {
+	if (!afsclient_RPCStatOpen(cellHandle,
+				   as->parms[SERVER].items->data,
+				   type, &conn, &st)) {
+	    ERR_ST_EXT("afsclient_RPCStatOpen", st);
+	}
+    } else {
+	if (!afsclient_RPCStatOpenPort(cellHandle,
+				       as->parms[SERVER].items->data,
+				       srvrPort, &conn, &st)) {
+	    ERR_ST_EXT("afsclient_RPCStatOpenPort", st);
 	}
     }
 
@@ -582,32 +568,25 @@ DoClientRPCStatsStateDisable(struct cmd_syndesc *as, void *arock)
     struct rx_connection *conn;
     afs_stat_source_t type;
     int srvrPort;
-    int typeIsValid = 0;
-    afs_stat_type_t which = 0;
+    int typeIsValid;
+    afs_stat_type_t which;
 
-    if (as->parms[PROCESS].items) {
-	typeIsValid =
-	    GetStatSourceFromString(as->parms[PROCESS].items->data, &type,
-				    &srvrPort);
-    }
+    typeIsValid = GetStatSourceFromString(as->parms[PROCESS].items->data,
+					  &type, &srvrPort);
 
-    if (as->parms[STAT_TYPE].items) {
-	which = GetStatTypeFromString(as->parms[STAT_TYPE].items->data);
-    }
+    which = GetStatTypeFromString(as->parms[STAT_TYPE].items->data);
 
-    if (as->parms[SERVER].items) {
-	if (typeIsValid) {
-	    if (!afsclient_RPCStatOpen
-		(cellHandle, as->parms[SERVER].items->data, type, &conn,
-		 &st)) {
-		ERR_ST_EXT("afsclient_RPCStatOpen", st);
-	    }
-	} else {
-	    if (!afsclient_RPCStatOpenPort
-		(cellHandle, as->parms[SERVER].items->data, srvrPort, &conn,
-		 &st)) {
-		ERR_ST_EXT("afsclient_RPCStatOpenPort", st);
-	    }
+    if (typeIsValid) {
+	if (!afsclient_RPCStatOpen(cellHandle,
+				   as->parms[SERVER].items->data,
+				   type, &conn, &st)) {
+	    ERR_ST_EXT("afsclient_RPCStatOpen", st);
+	}
+    } else {
+	if (!afsclient_RPCStatOpenPort(cellHandle,
+				       as->parms[SERVER].items->data,
+				       srvrPort, &conn, &st)) {
+	    ERR_ST_EXT("afsclient_RPCStatOpenPort", st);
 	}
     }
 
@@ -683,8 +662,8 @@ DoClientRPCStatsList(struct cmd_syndesc *as, void *arock)
     struct rx_connection *conn;
     afs_stat_source_t type;
     int srvrPort;
-    int typeIsValid = 0;
-    afs_stat_type_t which = 0;
+    int typeIsValid;
+    afs_stat_type_t which;
     afs_RPCStats_t stats;
     void *iter;
     int i = 0;
@@ -694,29 +673,22 @@ DoClientRPCStatsList(struct cmd_syndesc *as, void *arock)
      || pthread_once(&pthread_func_list_once, cr_list));
 #endif
 
-    if (as->parms[PROCESS].items) {
-	typeIsValid =
-	    GetStatSourceFromString(as->parms[PROCESS].items->data, &type,
-				    &srvrPort);
-    }
+    typeIsValid = GetStatSourceFromString(as->parms[PROCESS].items->data,
+					  &type, &srvrPort);
 
-    if (as->parms[STAT_TYPE].items) {
-	which = GetStatTypeFromString(as->parms[STAT_TYPE].items->data);
-    }
+    which = GetStatTypeFromString(as->parms[STAT_TYPE].items->data);
 
-    if (as->parms[SERVER].items) {
-	if (typeIsValid) {
-	    if (!afsclient_RPCStatOpen
-		(cellHandle, as->parms[SERVER].items->data, type, &conn,
-		 &st)) {
-		ERR_ST_EXT("afsclient_RPCStatOpen", st);
-	    }
-	} else {
-	    if (!afsclient_RPCStatOpenPort
-		(cellHandle, as->parms[SERVER].items->data, srvrPort, &conn,
-		 &st)) {
-		ERR_ST_EXT("afsclient_RPCStatOpenPort", st);
-	    }
+    if (typeIsValid) {
+	if (!afsclient_RPCStatOpen(cellHandle,
+				   as->parms[SERVER].items->data,
+				   type, &conn, &st)) {
+	    ERR_ST_EXT("afsclient_RPCStatOpen", st);
+	}
+    } else {
+	if (!afsclient_RPCStatOpenPort(cellHandle,
+				       as->parms[SERVER].items->data,
+				       srvrPort, &conn, &st)) {
+	    ERR_ST_EXT("afsclient_RPCStatOpenPort", st);
 	}
     }
 
@@ -813,35 +785,28 @@ DoClientRPCStatsClear(struct cmd_syndesc *as, void *arock)
     struct rx_connection *conn;
     afs_stat_source_t type;
     int srvrPort;
-    int typeIsValid = 0;
-    afs_stat_type_t which = 0;
+    int typeIsValid;
+    afs_stat_type_t which;
     afs_RPCStatsClearFlag_t flag = 0;
     int seen_all = 0;
     int seen_any = 0;
 
-    if (as->parms[PROCESS].items) {
-	typeIsValid =
-	    GetStatSourceFromString(as->parms[PROCESS].items->data, &type,
-				    &srvrPort);
-    }
+    typeIsValid = GetStatSourceFromString(as->parms[PROCESS].items->data,
+					  &type, &srvrPort);
 
-    if (as->parms[STAT_TYPE].items) {
-	which = GetStatTypeFromString(as->parms[STAT_TYPE].items->data);
-    }
+    which = GetStatTypeFromString(as->parms[STAT_TYPE].items->data);
 
-    if (as->parms[SERVER].items) {
-	if (typeIsValid) {
-	    if (!afsclient_RPCStatOpen
-		(cellHandle, as->parms[SERVER].items->data, type, &conn,
-		 &st)) {
-		ERR_ST_EXT("afsclient_RPCStatOpen", st);
-	    }
-	} else {
-	    if (!afsclient_RPCStatOpenPort
-		(cellHandle, as->parms[SERVER].items->data, srvrPort, &conn,
-		 &st)) {
-		ERR_ST_EXT("afsclient_RPCStatOpenPort", st);
-	    }
+    if (typeIsValid) {
+	if (!afsclient_RPCStatOpen(cellHandle,
+				   as->parms[SERVER].items->data,
+				   type, &conn, &st)) {
+	    ERR_ST_EXT("afsclient_RPCStatOpen", st);
+	}
+    } else {
+	if (!afsclient_RPCStatOpenPort(cellHandle,
+				       as->parms[SERVER].items->data,
+				       srvrPort, &conn, &st)) {
+	    ERR_ST_EXT("afsclient_RPCStatOpenPort", st);
 	}
     }
 
@@ -978,28 +943,23 @@ DoClientRPCStatsVersionGet(struct cmd_syndesc *as, void *arock)
     struct rx_connection *conn;
     afs_stat_source_t type;
     int srvrPort;
-    int typeIsValid = 0;
+    int typeIsValid;
     afs_RPCStatsVersion_t version;
 
-    if (as->parms[PROCESS].items) {
-	typeIsValid =
-	    GetStatSourceFromString(as->parms[PROCESS].items->data, &type,
-				    &srvrPort);
-    }
+    typeIsValid = GetStatSourceFromString(as->parms[PROCESS].items->data,
+					  &type, &srvrPort);
 
-    if (as->parms[SERVER].items) {
-	if (typeIsValid) {
-	    if (!afsclient_RPCStatOpen
-		(cellHandle, as->parms[SERVER].items->data, type, &conn,
-		 &st)) {
-		ERR_ST_EXT("afsclient_RPCStatOpen", st);
-	    }
-	} else {
-	    if (!afsclient_RPCStatOpenPort
-		(cellHandle, as->parms[SERVER].items->data, srvrPort, &conn,
-		 &st)) {
-		ERR_ST_EXT("afsclient_RPCStatOpenPort", st);
-	    }
+    if (typeIsValid) {
+	if (!afsclient_RPCStatOpen(cellHandle,
+				   as->parms[SERVER].items->data,
+				   type, &conn, &st)) {
+	    ERR_ST_EXT("afsclient_RPCStatOpen", st);
+	}
+    } else {
+	if (!afsclient_RPCStatOpenPort(cellHandle,
+				       as->parms[SERVER].items->data,
+				       srvrPort, &conn, &st)) {
+	    ERR_ST_EXT("afsclient_RPCStatOpenPort", st);
 	}
     }
 
@@ -1046,12 +1006,10 @@ DoClientCMGetServerPrefs(struct cmd_syndesc *as, void *arock)
 	}
     }
 
-    if (as->parms[SERVER].items) {
-	if (!afsclient_CMStatOpenPort
-	    (cellHandle, as->parms[SERVER].items->data, srvrPort, &conn,
-	     &st)) {
-	    ERR_ST_EXT("afsclient_CMStatOpenPort", st);
-	}
+    if (!afsclient_CMStatOpenPort(cellHandle,
+				  as->parms[SERVER].items->data,
+				  srvrPort, &conn, &st)) {
+	ERR_ST_EXT("afsclient_CMStatOpenPort", st);
     }
 
     if (!util_CMGetServerPrefsBegin(conn, &iter, &st)) {
@@ -1115,12 +1073,10 @@ DoClientCMListCells(struct cmd_syndesc *as, void *arock)
 	}
     }
 
-    if (as->parms[SERVER].items) {
-	if (!afsclient_CMStatOpenPort
-	    (cellHandle, as->parms[SERVER].items->data, srvrPort, &conn,
-	     &st)) {
-	    ERR_ST_EXT("afsclient_CMStatOpenPort", st);
-	}
+    if (!afsclient_CMStatOpenPort(cellHandle,
+				  as->parms[SERVER].items->data,
+				  srvrPort, &conn, &st)) {
+	ERR_ST_EXT("afsclient_CMStatOpenPort", st);
     }
 
     if (!util_CMListCellsBegin(conn, &iter, &st)) {
@@ -1168,12 +1124,10 @@ DoClientCMLocalCell(struct cmd_syndesc *as, void *arock)
 	}
     }
 
-    if (as->parms[SERVER].items) {
-	if (!afsclient_CMStatOpenPort
-	    (cellHandle, as->parms[SERVER].items->data, srvrPort, &conn,
-	     &st)) {
-	    ERR_ST_EXT("afsclient_CMStatOpenPort", st);
-	}
+    if (!afsclient_CMStatOpenPort(cellHandle,
+				  as->parms[SERVER].items->data,
+				  srvrPort, &conn, &st)) {
+	ERR_ST_EXT("afsclient_CMStatOpenPort", st);
     }
 
     if (!util_CMLocalCell(conn, cellname, &st)) {
@@ -1226,12 +1180,10 @@ DoClientCMClientConfig(struct cmd_syndesc *as, void *arock)
 	}
     }
 
-    if (as->parms[SERVER].items) {
-	if (!afsclient_CMStatOpenPort
-	    (cellHandle, as->parms[SERVER].items->data, srvrPort, &conn,
-	     &st)) {
-	    ERR_ST_EXT("afsclient_CMStatOpenPort", st);
-	}
+    if (!afsclient_CMStatOpenPort(cellHandle,
+				  as->parms[SERVER].items->data,
+				  srvrPort, &conn, &st)) {
+	ERR_ST_EXT("afsclient_CMStatOpenPort", st);
     }
 
     if (!util_CMClientConfig(conn, &config, &st)) {
