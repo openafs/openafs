@@ -137,6 +137,8 @@ ka_log(char *principal, char *instance, char *sprincipal, char *sinstance,
 {
     char logbuf[512];		/* not random! 63 . 63 , 63 . 63 max key */
 
+    logbuf[0] = '\0';		/* Empty string */
+
     if (*principal)
 	strcpy(logbuf, principal);
     if (realm) {
