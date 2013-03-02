@@ -539,7 +539,7 @@ convert_mhentries(int oldfd, int newfd, struct vlheader_2 *header,
 		basei = (addr >> 16) & 0xff;
 		index = addr & 0xffff;
 
-		if ((basei >= VL_ADDREXTBLK_SIZE) || !base[basei]) {
+		if ((basei >= VL_MAX_ADDREXTBLKS) || !base[basei]) {
 		    fprintf(stderr,
 			    "Warning: mh entry %d has no IP address; ignored!!\n",
 			    i);
