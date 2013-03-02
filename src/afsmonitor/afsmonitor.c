@@ -24,6 +24,7 @@
 #include <string.h>
 #include <errno.h>
 #include <afs/cmd.h>
+#include <afs/afsutil.h>
 #include <signal.h>
 #undef IN
 #include <sys/types.h>
@@ -1001,10 +1002,12 @@ store_threshold(int a_type,		/* 1 = fs , 2 = cm */
 	    for (j = 0; j < tmp_host->numThresh; j++) {
 		if ((threshP->itemName[0] == '\0')
 		    || (strcasecmp(threshP->itemName, a_varName) == 0)) {
-		    strncpy(threshP->itemName, a_varName,
-			    THRESH_VAR_NAME_LEN);
-		    strncpy(threshP->threshVal, a_value, THRESH_VAR_LEN);
-		    strcpy(threshP->handler, a_handler);
+		    strlcpy(threshP->itemName, a_varName,
+			    sizeof(threshP->itemName));
+		    strlcpy(threshP->threshVal, a_value,
+			    sizeof(threshP->threshVal));
+		    strlcpy(threshP->handler, a_handler,
+			    sizeof(threshP->handler));
 		    threshP->index = index;
 		    done = 1;
 		    break;
@@ -1056,9 +1059,9 @@ store_threshold(int a_type,		/* 1 = fs , 2 = cm */
     for (i = 0; i < tmp_host->numThresh; i++) {
 	if ((threshP->itemName[0] == '\0')
 	    || (strcasecmp(threshP->itemName, a_varName) == 0)) {
-	    strncpy(threshP->itemName, a_varName, THRESH_VAR_NAME_LEN);
-	    strncpy(threshP->threshVal, a_value, THRESH_VAR_LEN);
-	    strcpy(threshP->handler, a_handler);
+	    strlcpy(threshP->itemName, a_varName, sizeof(threshP->itemName));
+	    strlcpy(threshP->threshVal, a_value, sizeof(threshP->threshVal));
+	    strlcpy(threshP->handler, a_handler, sizeof(threshP->handler));
 	    threshP->index = index;
 	    done = 1;
 	    break;
