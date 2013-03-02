@@ -1125,8 +1125,7 @@ get_afs_mountpoint(char *file, char *mountpoint, int size)
     struct ViceIoctl vio;
     char cellname[BUFSIZ];
 
-    memset(our_file, 0, sizeof(our_file));
-    strcpy(our_file, file);
+    strlcpy(our_file, file, sizeof(our_file));
 
     if ((last_component = strrchr(our_file, DIR))) {
 	*last_component++ = 0;
@@ -1152,8 +1151,8 @@ get_afs_mountpoint(char *file, char *mountpoint, int size)
 	    vio.out = cellname;
 
 	    if (!pioctl(file, VIOC_FILE_CELL_NAME, &vio, 1)) {
-		strcat(cellname, VOLMARKERSTRING);
-		strcat(cellname, mountpoint + 1);
+		strlcat(cellname, VOLMARKERSTRING, sizeof(cellname));
+		strlcat(cellname, mountpoint + 1, sizeof(cellname));
 		memset(mountpoint + 1, 0, size - 1);
 		strcpy(mountpoint + 1, cellname);
 	    }
