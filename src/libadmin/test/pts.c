@@ -124,7 +124,7 @@ DoPtsGroupCreate(struct cmd_syndesc *as, void *arock)
     afs_status_t st = 0;
     char *owner = as->parms[OWNER].items->data;
     char *group = as->parms[GROUP].items->data;
-    int new_group_id;
+    int new_group_id = 0;
 
     if (!pts_GroupCreate(cellHandle, group, owner, &new_group_id, &st)) {
 	ERR_ST_EXT("pts_GroupMemberAdd", st);
