@@ -553,7 +553,9 @@ CompFindUser(struct afsconf_dir *adir, char *name, char *sep, char *inst,
     if (!name || !name[0]) {
 	return 0;
     }
-    strcpy(fullname, name);
+
+    if (strlcpy(fullname, name, sizeof(fullname)) >= sizeof(fullname))
+	return 0;
 
     /* might have instance */
     if (inst && inst[0]) {
@@ -561,14 +563,20 @@ CompFindUser(struct afsconf_dir *adir, char *name, char *sep, char *inst,
 	    return 0;
 	}
 
-	strcat(fullname, sep);
-	strcat(fullname, inst);
+	if (strlcat(fullname, sep, sizeof(fullname)) >= sizeof(fullname))
+	    return 0;
+
+	if (strlcat(fullname, inst, sizeof(fullname)) >= sizeof(fullname))
+	    return 0;
     }
 
     /* might have realm */
     if (realm && realm[0]) {
-	strcat(fullname, "@");
-	strcat(fullname, realm);
+	if (strlcat(fullname, "@", sizeof(fullname)) >= sizeof(fullname))
+	    return 0;
+
+	if (strlcat(fullname, realm, sizeof(fullname)) >= sizeof(fullname))
+	    return 0;
     }
 
     testId = rx_identity_new(RX_ID_KRB4, fullname, fullname, strlen(fullname));
