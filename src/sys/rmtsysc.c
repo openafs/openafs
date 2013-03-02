@@ -68,10 +68,14 @@ GetAfsServerAddr(char *syscall)
 	    fgets(server_name, 128, fp);
 	    fclose(fp);
 	} else {
-	    char pathname[256];
+	    char *pathname;
 
-	    sprintf(pathname, "%s/%s", home_dir, ".AFSSERVER");
+	    asprintf(&pathname, "%s/%s", home_dir, ".AFSSERVER");
+	    if (pathname == NULL)
+		return 0;
 	    fp = fopen(pathname, "r");
+	    free(pathname);
+
 	    if (fp == 0) {
 		/* Our last chance is the "/.AFSSERVER" file */
 		fp = fopen("/.AFSSERVER", "r");
