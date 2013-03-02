@@ -327,7 +327,7 @@ DoPtsUserCreate(struct cmd_syndesc *as, void *arock)
     enum { USER };
     afs_status_t st = 0;
     char *user = as->parms[USER].items->data;
-    int new_user_id;
+    int new_user_id = 0;
 
     if (!pts_UserCreate(cellHandle, user, &new_user_id, &st)) {
 	ERR_ST_EXT("pts_UserCreate", st);
