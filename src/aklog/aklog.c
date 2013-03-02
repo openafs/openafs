@@ -1532,7 +1532,7 @@ main(int argc, char *argv[])
 		  (strcmp(argv[i], "-c") == 0)) && !pmode)
 	    if (++i < argc) {
 		cmode++;
-		strcpy(cell, argv[i]);
+		strlcpy(cell, argv[i], sizeof(cell));
 	    }
 	    else
 		usage();
@@ -1552,7 +1552,7 @@ main(int argc, char *argv[])
 		  (strcmp(argv[i], "-p") == 0)) && !cmode)
 	    if (++i < argc) {
 		pmode++;
-		strcpy(path, argv[i]);
+		strlcpy(path, argv[i], sizeof(path));
 	    }
 	    else
 		usage();
@@ -1568,11 +1568,11 @@ main(int argc, char *argv[])
 	    if (strchr(argv[i], DIR) || (strcmp(argv[i], ".") == 0) ||
 		(strcmp(argv[i], "..") == 0)) {
 		pmode++;
-		strcpy(path, argv[i]);
+		strlcpy(path, argv[i], sizeof(path));
 	    }
 	    else {
 		cmode++;
-		strcpy(cell, argv[i]);
+		strlcpy(cell, argv[i], sizeof(path));
 	    }
 	}
 	else
@@ -1582,7 +1582,7 @@ main(int argc, char *argv[])
 	    if (((i + 1) < argc) && (strcmp(argv[i + 1], "-k") == 0)) {
 		i+=2;
 		if (i < argc)
-		    strcpy(realm, argv[i]);
+		    strlcpy(realm, argv[i], sizeof(realm));
 		else
 		    usage();
 	    }
@@ -1662,8 +1662,8 @@ main(int argc, char *argv[])
 	    FILE *f;
 	    char fcell[100], xlog_path[512];
 
-	    strcpy(xlog_path, pwd->pw_dir);
-	    strcat(xlog_path, "/.xlog");
+	    strlcpy(xlog_path, pwd->pw_dir, sizeof(xlog_path));
+	    strlcat(xlog_path, "/.xlog", sizeof(xlog_path));
 
 	    if ((stat(xlog_path, &sbuf) == 0) &&
 		((f = fopen(xlog_path, "r")) != NULL)) {
