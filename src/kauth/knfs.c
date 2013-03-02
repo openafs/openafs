@@ -190,7 +190,7 @@ GetTokens(afs_int32 ahost, afs_int32 auid)
 		    sprintf(clientName.name, "Unix UID %d", ct.ViceId);
 		    clientName.instance[0] = 0;
 		}
-		strcpy(clientName.cell, tp);
+		strlcpy(clientName.cell, tp, sizeof(clientName.cell));
 
 		tokenExpireTime = token.endTime;
 		strcpy(UserName, clientName.name);
