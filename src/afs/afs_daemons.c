@@ -306,7 +306,7 @@ afs_Daemon(void)
 int
 afs_CheckRootVolume(void)
 {
-    char rootVolName[32];
+    char rootVolName[MAXROOTVOLNAMELEN];
     struct volume *tvp = NULL;
     int usingDynroot = afs_GetDynrootEnable();
     int localcell;

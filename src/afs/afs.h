@@ -88,6 +88,7 @@ extern int afs_shuttingdown;
 #define	MAXVOLS		128	/* max vols we can store */
 #define	MAXSYSNAME	128	/* max sysname (i.e. @sys) size */
 #define MAXNUMSYSNAMES	32	/* max that current constants allow */
+#define MAXROOTVOLNAMELEN	64	/* max length of root volume name */
 #define	NOTOKTIMEOUT	(2*3600)	/* time after which to timeout conns sans tokens */
 #define	NOPAG		0xffffffff
 
