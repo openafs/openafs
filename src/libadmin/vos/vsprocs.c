@@ -1328,14 +1328,18 @@ GetTrans(afs_cell_handle_p cellHandle, struct nvldbentry *vldbEntryPtr,
 
     /* If the volume does not exist, create it */
     if (!volid || tst) {
-	char volname[64];
+	char volname[VL_MAXNAMELEN];
 
 	if (volid && (tst != VNOVOL)) {
 	    goto fail_GetTrans;
 	}
 
-	strcpy(volname, vldbEntryPtr->name);
-	strcat(volname, ".readonly");
+	strlcpy(volname, vldbEntryPtr->name, sizeof(volname));
+	if (strlcat(volname, ".readonly", sizeof(volname))
+		>= sizeof(volname)) {
+	    tst = ENOMEM;
+	    goto fail_GetTrans;
+	}
 
 	tst =
 	    AFSVolCreateVolume(*connPtr, vldbEntryPtr->serverPartition[index],
