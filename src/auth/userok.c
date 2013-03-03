@@ -597,20 +597,13 @@ kerberosSuperUser(struct afsconf_dir *adir, char *tname, char *tinst,
 		  char *tcell, struct rx_identity **identity)
 {
     char tcell_l[MAXKTCREALMLEN] = "";
-    char *tmp;
     int code;
     afs_int32 islocal;
     int flag;
 
     /* generate lowercased version of cell name */
-    if (tcell) {
-	strcpy(tcell_l, tcell);
-	tmp = tcell_l;
-	while (*tmp) {
-	    *tmp = tolower(*tmp);
-	    tmp++;
-	}
-    }
+    if (tcell)
+	opr_lcstring(tcell_l, tcell, sizeof(tcell_l));
 
     code = afsconf_IsLocalRealmMatch(adir, &islocal, tname, tinst, tcell);
     if (code) {
