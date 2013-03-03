@@ -641,6 +641,33 @@ typedef struct _AFS_FILE_HARDLINK_RESULT_CB
 
 
 //
+// Create Symlink CB
+//
+
+typedef struct _AFS_CREATE_SYMLINK_CB
+{
+
+    AFSFileID       ParentId;              /* Must be directory */
+
+                                           /* Source Name and FileID in Common Request Block */
+
+    USHORT          TargetNameLength;
+
+    WCHAR           TargetName[ 1];
+
+} AFSCreateSymlinkCB;
+
+typedef struct _AFS_CREATE_SYMLINK_RESULT_CB
+{
+
+    LARGE_INTEGER   ParentDataVersion;
+
+    AFSDirEnumEntry DirEnum;
+
+} AFSCreateSymlinkResultCB;
+
+
+//
 // Control structures for AFS_REQUEST_TYPE_EVAL_TARGET_BY_ID
 // and AFS_REQUEST_TYPE_EVAL_TARGET_BY_NAME
 //
