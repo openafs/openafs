@@ -293,10 +293,10 @@ vsprocs.o: $(VOLSER)/vsprocs.c
 	$(CCRULE) -I../volser
 
 vsutils.o: $(VOLSER)/vsutils.c
-	$(CCRULE)
+	$(CCRULE) -I../volser
 
 lockprocs.o: $(VOLSER)/lockprocs.c
-	$(CCRULE)
+	$(CCRULE) -I../volser
 
 volint.xdr.o: ../volser/volint.xdr.c
 	$(CCRULE)

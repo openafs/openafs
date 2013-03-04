@@ -367,7 +367,7 @@ main(int argc, char **argv)
 	    foo = line;
 	    skip(&foo);
 	    for (i = 0; ((lnames.namelist_len < PR_MAXLIST)
-			 && (sscanf(foo, "%s", lnames.namelist_val[i]) !=
+			 && (sscanf(foo, "%63s", lnames.namelist_val[i]) !=
 			     EOF)); i++) {
 		lnames.namelist_len++;
 		skip(&foo);

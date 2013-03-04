@@ -92,11 +92,11 @@ volint.ss.o: ${VOLSER}/volint.ss.c
 volint.xdr.o: ${VOLSER}/volint.xdr.c
 	${COMPILE}
 vsprocs.o: ${VOLSER}/vsprocs.c
-	${COMPILE}
+	$(COMPILE) -I../volser
 vsutils.o: ${VOLSER}/vsutils.c
-	${COMPILE}
+	${COMPILE} -I../volser
 lockprocs.o: ${VOLSER}/lockprocs.c
-	${COMPILE}
+	${COMPILE} -I../volser
 
 assert.o: ${UTIL}/assert.c
 	${COMPILE}
@@ -225,7 +225,7 @@ afsint.xdr.o: ${FSINT}/afsint.xdr.c
 	${COMPILE}
 
 vos.o: ${VOLSER}/vos.c
-	${COMPILE}
+	${COMPILE} -I../volser
 
 vos: vos.o  ${VOSOBJS} ${VLSERVEROBJS} ${LIBS} ${TOP_LIBDIR}/libubik_pthread.a
 	${CC} ${LDFLAGS} -o vos vos.o ${VOSOBJS} ${VLSERVEROBJS} ${LIBS} ${TOP_LIBDIR}/libubik_pthread.a ${MT_LIBS} ${XLIBS}

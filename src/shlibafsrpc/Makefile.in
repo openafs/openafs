@@ -382,7 +382,7 @@ strlcpy.o: ${UTIL}/strlcpy.c
 	${CCRULE}
 
 fasttime.o: ${LWP}/fasttime.c
-	${CCRULE} ${LWP}/fasttime.c
+	${CCRULE}
 
 syscall.o: ${SYS}/syscall.s
 	case "$(SYS_NAME)" in \

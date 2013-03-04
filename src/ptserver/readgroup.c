@@ -111,7 +111,7 @@ main(int argc, char **argv)
 	    /* grab the group name */
 	    memset(gname, 0, PR_MAXNAMELEN);
 	    memset(owner, 0, PR_MAXNAMELEN);
-	    sscanf(buf, "%s %d", gname, &id);
+	    sscanf(buf, "%63s %d", gname, &id);
 	    tmp = buf;
 	    skip(&tmp);
 	    skip(&tmp);
@@ -138,7 +138,7 @@ main(int argc, char **argv)
 	    if (!fail) {
 		/* read members out of buf and add to the group */
 		memset(name, 0, PR_MAXNAMELEN);
-		while (sscanf(tmp, "%s", name) != EOF) {
+		while (sscanf(tmp, "%63s", name) != EOF) {
 		    if (strchr(name, ':') == NULL) {
 			/* then it's not a group */
 			code = pr_AddToGroup(name, gname);
@@ -176,7 +176,7 @@ main(int argc, char **argv)
 	    memset(name, 0, PR_MAXNAMELEN);
 	    tmp = buf;
 	    tmp++;
-	    while (sscanf(tmp, "%s", name) != EOF) {
+	    while (sscanf(tmp, "%63s", name) != EOF) {
 		if (strchr(name, ':') == NULL) {
 		    /* then it's not a group */
 		    code = pr_AddToGroup(name, gname);
