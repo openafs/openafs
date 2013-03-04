@@ -1162,21 +1162,17 @@ bc_VolRestoreCmd(struct cmd_syndesc *as, void *arock)
     }
 
     /* specified other destination host */
-    if (as->parms[0].items) {
-	tp = as->parms[0].items->data;
-	if (bc_ParseHost(tp, &destServ)) {
-	    afs_com_err(whoami, 0, "Failed to locate destination host '%s'", tp);
-	    return -1;
-	}
+    tp = as->parms[0].items->data;
+    if (bc_ParseHost(tp, &destServ)) {
+	afs_com_err(whoami, 0, "Failed to locate destination host '%s'", tp);
+	return -1;
     }
 
     /* specified other destination partition */
-    if (as->parms[1].items) {
-	tp = as->parms[1].items->data;
-	if (bc_GetPartitionID(tp, &destPartition)) {
-	    afs_com_err(whoami, 0, "Can't parse destination partition '%s'", tp);
-	    return -1;
-	}
+    tp = as->parms[1].items->data;
+    if (bc_GetPartitionID(tp, &destPartition)) {
+	afs_com_err(whoami, 0, "Can't parse destination partition '%s'", tp);
+	return -1;
     }
 
     for (ti = as->parms[2].items; ti; ti = ti->next) {
