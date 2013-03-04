@@ -108,7 +108,7 @@
 #define AFS_EXTENTS_RESULT_TAG       'XEFA'
 #define AFS_SYS_NAME_NODE_TAG        'NSFA'
 #define AFS_REPARSE_NAME_TAG         'NRFA'
-#define AFS_NAME_ARRAY_TAG           'ANFA'
+#define AFS_NAME_ARRAY_TAG           'RAFA'
 #define AFS_OBJECT_INFO_TAG          'IOFA'
 #define AFS_NP_OBJECT_INFO_TAG       'ONFA'
 #define AFS_DIR_SNAPSHOT_TAG         'SSFA'
