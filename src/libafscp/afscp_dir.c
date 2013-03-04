@@ -370,7 +370,7 @@ gettoproot(struct afscp_cell *cell, char *p, char **q,
 	    r = p;
 	    while (*r && *r != '/')
 		r++;
-	    if (!*r && !p) {
+	    if (!*r && !*p) {
 		afscp_errno = ENODEV;
 		return 1;
 	    }
