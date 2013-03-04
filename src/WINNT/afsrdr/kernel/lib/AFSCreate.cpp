@@ -425,193 +425,590 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                 try_return( ntStatus);
             }
 
-            //
-            // Opening a reparse point directly?
-            //
 
-            ulNameProcessingFlags = AFS_LOCATE_FLAGS_SUBSTITUTE_NAME;
-
-            if( BooleanFlagOn( ulOptions, FILE_OPEN_REPARSE_POINT))
+	    if ( !AFSIgnoreReparsePointToFile() ||
+		 !BooleanFlagOn( ulOptions, FILE_OPEN_REPARSE_POINT))
             {
-                ulNameProcessingFlags |= (AFS_LOCATE_FLAGS_NO_MP_TARGET_EVAL |
-                                          AFS_LOCATE_FLAGS_NO_SL_TARGET_EVAL |
-                                          AFS_LOCATE_FLAGS_NO_DFS_LINK_EVAL);
-            }
+		//
+		// If there is no ReparsePointPolicy then the FILE_OPEN_REPARSE_POINT
+		// flag is applied if it is set.
+		//
+		// If the FILE_OPEN_REPARSE_POINT flag is not set, then there is
+		// no extra work to be done in any case.  Use a single pass evaluation.
+		//
 
-            uniSubstitutedPathName = uniRootFileName;
+		ulNameProcessingFlags = AFS_LOCATE_FLAGS_SUBSTITUTE_NAME;
 
-            ntStatus = AFSLocateNameEntry( &stAuthGroup,
-                                           pFileObject,
-                                           &uniRootFileName,
-                                           &uniParsedFileName,
-                                           pNameArray,
-                                           ulNameProcessingFlags,
-                                           pVolumeCB,
-                                           pParentDirectoryCB,
-                                           &pNewVolumeCB,
-                                           &NewVolumeReferenceReason,
-                                           &pNewParentDirectoryCB,
-                                           &pDirectoryCB,
-                                           &uniComponentName);
+		//
+		// Opening a reparse point directly?
+		//
 
-            if ( pNewVolumeCB != NULL)
-            {
+		if( BooleanFlagOn( ulOptions, FILE_OPEN_REPARSE_POINT))
+		{
+		    ulNameProcessingFlags |= (AFS_LOCATE_FLAGS_NO_MP_TARGET_EVAL |
+					       AFS_LOCATE_FLAGS_NO_SL_TARGET_EVAL |
+					       AFS_LOCATE_FLAGS_NO_DFS_LINK_EVAL);
+		}
 
-                //
-                // AFSLocateNameEntry returns pNewVolumeCB with a reference held
-                // even if pVolumeCB == pNewVolumeCB.  It is always safe to release
-                // the reference on pVolumeCB that was held prior to the call.
-                // If pVolumeCB == pNewVolumeCB, the reference from AFSLocateNameEntry
-                // will be released second.
-                //
+		uniSubstitutedPathName = uniRootFileName;
 
-                lCount = AFSVolumeDecrement( pVolumeCB,
-                                             VolumeReferenceReason);
+		ntStatus = AFSLocateNameEntry( &stAuthGroup,
+					       pFileObject,
+					       &uniRootFileName,
+					       &uniParsedFileName,
+					       pNameArray,
+					       ulNameProcessingFlags,
+					       pVolumeCB,
+					       pParentDirectoryCB,
+					       &pNewVolumeCB,
+					       &NewVolumeReferenceReason,
+					       &pNewParentDirectoryCB,
+					       &pDirectoryCB,
+					       &uniComponentName);
 
-                AFSDbgTrace(( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCommonCreate Decrement count on volume %p Reason %u Cnt %d\n",
-                              pVolumeCB,
-                              VolumeReferenceReason,
-                              lCount));
+		if ( pNewVolumeCB != NULL)
+		{
 
-                pVolumeCB = pNewVolumeCB;
+		    //
+		    // AFSLocateNameEntry returns pNewVolumeCB with a reference held
+		    // even if pVolumeCB == pNewVolumeCB.  It is always safe to release
+		    // the reference on pVolumeCB that was held prior to the call.
+		    // If pVolumeCB == pNewVolumeCB, the reference from AFSLocateNameEntry
+		    // will be released second.
+		    //
 
-                pNewVolumeCB = NULL;
+		    lCount = AFSVolumeDecrement( pVolumeCB,
+						 VolumeReferenceReason);
 
-                VolumeReferenceReason = NewVolumeReferenceReason;
+		    AFSDbgTrace(( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+				  AFS_TRACE_LEVEL_VERBOSE,
+				  "AFSCommonCreate Decrement count on volume %p Reason %u Cnt %d\n",
+				  pVolumeCB,
+				  VolumeReferenceReason,
+				  lCount));
 
-                NewVolumeReferenceReason = AFS_VOLUME_REFERENCE_INVALID;
+		    pVolumeCB = pNewVolumeCB;
 
-                bReleaseVolume = (pVolumeCB != NULL);
-            }
+		    pNewVolumeCB = NULL;
 
-            //
-            // AFSLocateNameEntry does not alter the reference count of
-            // pParentDirectoryCB and it returns pNewParentDirectoryCB with
-            // a reference held.
-            //
+		    VolumeReferenceReason = NewVolumeReferenceReason;
 
-            if ( bReleaseParentDir)
-            {
+		    NewVolumeReferenceReason = AFS_VOLUME_REFERENCE_INVALID;
 
-                lCount = InterlockedDecrement( &pParentDirectoryCB->DirOpenReferenceCount);
+		    bReleaseVolume = (pVolumeCB != NULL);
+		}
 
-                AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCommonCreate DecrementX count on %wZ DE %p Ccb %p Cnt %d\n",
-                              &pParentDirectoryCB->NameInformation.FileName,
-                              pParentDirectoryCB,
-                              pCcb,
-                              lCount));
-            }
+		//
+		// AFSLocateNameEntry does not alter the reference count of
+		// pParentDirectoryCB and it returns pNewParentDirectoryCB with
+		// a reference held.
+		//
 
-            pParentDirectoryCB = pNewParentDirectoryCB;
+		if ( bReleaseParentDir)
+		{
 
-            pNewParentDirectoryCB = NULL;
+		    lCount = InterlockedDecrement( &pParentDirectoryCB->DirOpenReferenceCount);
 
-            bReleaseParentDir = (pParentDirectoryCB != NULL);
+		    AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+				  AFS_TRACE_LEVEL_VERBOSE,
+				  "AFSCommonCreate DecrementX count on %wZ DE %p Ccb %p Cnt %d\n",
+				  &pParentDirectoryCB->NameInformation.FileName,
+				  pParentDirectoryCB,
+				  pCcb,
+				  lCount));
+		}
 
-            if ( pDirectoryCB)
-            {
+		pParentDirectoryCB = pNewParentDirectoryCB;
 
-                bReleaseDir = TRUE;
-            }
+		pNewParentDirectoryCB = NULL;
 
-            if( !NT_SUCCESS( ntStatus) &&
-                ntStatus != STATUS_OBJECT_NAME_NOT_FOUND)
-            {
+		bReleaseParentDir = (pParentDirectoryCB != NULL);
 
-                if ( uniSubstitutedPathName.Buffer == uniRootFileName.Buffer)
+		if ( pDirectoryCB)
+		{
+
+		    bReleaseDir = TRUE;
+		}
+
+		if( !NT_SUCCESS( ntStatus) &&
+		    ntStatus != STATUS_OBJECT_NAME_NOT_FOUND)
+		{
+
+		    if ( uniSubstitutedPathName.Buffer == uniRootFileName.Buffer)
+		    {
+			uniSubstitutedPathName.Buffer = NULL;
+		    }
+
+		    //
+		    // AFSLocateNameEntry released the Parent while walking the
+		    // branch
+		    //
+
+		    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+				  AFS_TRACE_LEVEL_VERBOSE,
+				  "AFSCommonCreate (%p) Failed to locate name entry for %wZ Status %08lX\n",
+				  Irp,
+				  &uniFileName,
+				  ntStatus));
+
+		    try_return( ntStatus);
+		}
+
+		//
+		// Check for STATUS_REPARSE
+		//
+
+		if( ntStatus == STATUS_REPARSE)
+		{
+
+		    uniSubstitutedPathName.Buffer = NULL;
+
+		    //
+		    // Update the information and return
+		    //
+
+		    Irp->IoStatus.Information = IO_REPARSE;
+
+		    try_return( ntStatus);
+		}
+
+		//
+		// If we re-allocated the name, then update our substitute name
+		//
+
+		if( uniSubstitutedPathName.Buffer != uniRootFileName.Buffer)
                 {
+
+		    uniSubstitutedPathName = uniRootFileName;
+		}
+		else
+		{
+
                     uniSubstitutedPathName.Buffer = NULL;
                 }
 
                 //
-                // AFSLocateNameEntry released the Parent while walking the
-                // branch
+		// Check for a symlink access
                 //
 
-                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCommonCreate (%p) Failed to locate name entry for %wZ Status %08lX\n",
-                              Irp,
-                              &uniFileName,
-                              ntStatus));
+		if( ntStatus == STATUS_OBJECT_NAME_NOT_FOUND &&
+		    pParentDirectoryCB != NULL)
+		{
 
-                try_return( ntStatus);
-            }
+		    //
+		    // pParentDirectoryCB DirOpenReferenceCount is still held
+		    //
 
-            //
-            // Check for STATUS_REPARSE
-            //
+		    UNICODE_STRING uniFinalComponent;
 
-            if( ntStatus == STATUS_REPARSE)
+		    uniFinalComponent.Length = 0;
+		    uniFinalComponent.MaximumLength = 0;
+		    uniFinalComponent.Buffer = NULL;
+
+		    AFSRetrieveFinalComponent( &uniFileName,
+					       &uniFinalComponent);
+
+		    ntStatus = AFSCheckSymlinkAccess( pParentDirectoryCB,
+						      &uniFinalComponent);
+
+		    if( !NT_SUCCESS( ntStatus) &&
+			ntStatus != STATUS_OBJECT_NAME_NOT_FOUND)
+		    {
+
+			AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+				      AFS_TRACE_LEVEL_VERBOSE,
+				      "AFSCommonCreate (%p) Failing access to symlink %wZ Status %08lX\n",
+				      Irp,
+				      &uniFileName,
+				      ntStatus));
+
+			try_return( ntStatus);
+		    }
+		}
+	    }
+	    else
             {
+		AFSNameArrayHdr    *pNameArrayClone = NULL;
+		UNICODE_STRING      uniRootFileNameClone;
 
-                uniSubstitutedPathName.Buffer = NULL;
+		//
+		// The FILE_OPEN_REPARSE_POINT flag has been specified and a ReparsePointPolicy
+		// is in effect which conditionally applies depending on the type of the target
+		// object.  Therefore, two lookup passes must be performed.
+		//   1. Evaluate the path as if the FILE_OPEN_REPARSE_POINT flag had
+		//      not been specified.
+		//   2. If the target object type matches the policy, use it and ignore
+		//      the FILE_OPEN_REPARSE_POINT flag.
+		//   3. If the target object type does not match the policy, perform
+		//      a second pass that opens the reparse point.
+		//   4. If the target object cannot be evaluated, perform the second pass
+		//      that opens the reparse point.
 
-                //
-                // Update the information and return
-                //
 
-                Irp->IoStatus.Information = IO_REPARSE;
+		ulNameProcessingFlags = AFS_LOCATE_FLAGS_SUBSTITUTE_NAME;
 
-                try_return( ntStatus);
-            }
-
-            //
-            // If we re-allocated the name, then update our substitute name
-            //
-
-            if( uniSubstitutedPathName.Buffer != uniRootFileName.Buffer)
-            {
-
-                uniSubstitutedPathName = uniRootFileName;
-            }
-            else
-            {
-
-                uniSubstitutedPathName.Buffer = NULL;
-            }
-
-            //
-            // Check for a symlink access
-            //
-
-            if( ntStatus == STATUS_OBJECT_NAME_NOT_FOUND &&
-                pParentDirectoryCB != NULL)
-            {
+		uniSubstitutedPathName = uniRootFileName;
 
                 //
-                // pParentDirectoryCB DirOpenReferenceCount is still held
+		// Since we may need to replay the call with different options
+		// the values that might be altered need to be cloned:
+		//   1. uniRootFileName
+		//   2. pNameArray
                 //
 
-                UNICODE_STRING uniFinalComponent;
+		pNameArrayClone = AFSInitNameArray( NULL, 0);
 
-                uniFinalComponent.Length = 0;
-                uniFinalComponent.MaximumLength = 0;
-                uniFinalComponent.Buffer = NULL;
+		if ( pNameArrayClone == NULL)
+		{
 
-                AFSRetrieveFinalComponent( &uniFileName,
-                                           &uniFinalComponent);
+		    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+				  AFS_TRACE_LEVEL_VERBOSE,
+				  "AFSCommonCreate (%p) Failed to initialize name array clone\n",
+				  Irp));
 
-                ntStatus = AFSCheckSymlinkAccess( pParentDirectoryCB,
-                                                  &uniFinalComponent);
+		    try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+		}
+
+		ntStatus = AFSPopulateNameArrayFromRelatedArray( pNameArrayClone,
+								 pNameArray,
+								 NULL);
+
+		if ( !NT_SUCCESS(ntStatus))
+		{
+
+		    AFSFreeNameArray( pNameArrayClone);
+
+		    try_return( ntStatus);
+		}
+
+		uniRootFileNameClone = uniRootFileName;
+
+		uniRootFileNameClone.Buffer = (WCHAR *)AFSExAllocatePoolWithTag( PagedPool,
+										 uniRootFileNameClone.MaximumLength,
+										 AFS_NAME_BUFFER_ELEVEN_TAG);
+
+		if( uniRootFileNameClone.Buffer == NULL)
+		{
+
+		    AFSFreeNameArray( pNameArrayClone);
+
+		    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+				  AFS_TRACE_LEVEL_ERROR,
+				  "AFSCommonCreate (%p) Failed to allocate uniRootFileNameClone\n",
+				  Irp));
+
+		    try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+		}
+
+		RtlCopyMemory( uniRootFileNameClone.Buffer,
+			       uniRootFileName.Buffer,
+			       uniRootFileNameClone.Length);
+
+                //
+		// Now that the data is saved perform the lookup to determine
+		// what the target resolves to.
+                //
+
+		ntStatus = AFSLocateNameEntry( &stAuthGroup,
+					       pFileObject,
+					       &uniRootFileName,
+					       &uniParsedFileName,
+					       pNameArray,
+					       ulNameProcessingFlags,
+					       pVolumeCB,
+					       pParentDirectoryCB,
+					       &pNewVolumeCB,
+					       &NewVolumeReferenceReason,
+					       &pNewParentDirectoryCB,
+					       &pDirectoryCB,
+					       &uniComponentName);
+
+		if ( ntStatus == STATUS_SUCCESS ||
+		     ntStatus == STATUS_REPARSE ||
+		     ntStatus == STATUS_OBJECT_NAME_NOT_FOUND ||
+		     ntStatus == STATUS_ACCESS_DENIED)
+		{
+		    //
+		    // Decide what to do based upon the ReparsePointPolicy
+		    // and the type of the target object.
+		    //
+
+		    if ( ntStatus == STATUS_SUCCESS &&
+			 AFSIgnoreReparsePointToFile() &&
+			 pDirectoryCB->ObjectInformation->FileType == AFS_FILE_TYPE_FILE)
+		    {
+
+			//
+			// We found an entity that matches the policy.
+			// Therefore, we are done.  Cleanup the cloned data
+			// and clear the FILE_OPEN_REPARSE_FLAG so we do not
+			// later mark the CCB with CCB_FLAG_MASK_OPENED_REPARSE_POINT.
+			//
+
+			AFSFreeNameArray( pNameArrayClone);
+
+			pNameArrayClone = NULL;
+
+			AFSExFreePoolWithTag( uniRootFileNameClone.Buffer,
+					      AFS_NAME_BUFFER_ELEVEN_TAG);
+
+			RtlZeroMemory( &uniRootFileNameClone,
+				       sizeof( UNICODE_STRING));
+
+			ClearFlag( ulOptions, FILE_OPEN_REPARSE_POINT);
+		    }
+		    else
+		    {
+			//
+			//  There is no matching policy, so we need to cleanup the
+			//  output values from AFSLocateNameEntry(), restore the
+			//  cloned information, and re-issue the request attempting
+			//  to open the reparse point (if any).
+			//
+
+			if ( pNewVolumeCB != NULL)
+			{
+
+			    lCount = AFSVolumeDecrement( pNewVolumeCB,
+							 NewVolumeReferenceReason);
+
+			    pNewVolumeCB = NULL;
+
+			    NewVolumeReferenceReason = AFS_VOLUME_REFERENCE_INVALID;
+			}
+
+			if ( pNewParentDirectoryCB)
+			{
+
+			    lCount = InterlockedDecrement( &pNewParentDirectoryCB->DirOpenReferenceCount);
+
+			    AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+					  AFS_TRACE_LEVEL_VERBOSE,
+					  "AFSCommonCreate DecrementY count on %wZ DE %p Ccb %p Cnt %d\n",
+					  &pNewParentDirectoryCB->NameInformation.FileName,
+					  pNewParentDirectoryCB,
+					  pCcb,
+					  lCount));
+
+			    pNewParentDirectoryCB = NULL;
+			}
+
+			if ( pDirectoryCB)
+			{
+
+			    lCount = InterlockedDecrement( &pDirectoryCB->DirOpenReferenceCount);
+
+			    AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+					  AFS_TRACE_LEVEL_VERBOSE,
+					  "AFSCommonCreate DecrementZ count on %wZ DE %p Ccb %p Cnt %d\n",
+					  &pDirectoryCB->NameInformation.FileName,
+					  pDirectoryCB,
+					  pCcb,
+					  lCount));
+
+			    pDirectoryCB = NULL;
+			}
+
+			RtlZeroMemory( &uniComponentName,
+				       sizeof( UNICODE_STRING));
+
+			if ( uniSubstitutedPathName.Buffer != uniRootFileName.Buffer)
+			{
+
+			    AFSExFreePoolWithTag( uniRootFileName.Buffer, 0);
+
+			    uniRootFileName = uniSubstitutedPathName;
+			}
+
+			AFSFreeNameArray( pNameArray);
+
+			pNameArray = pNameArrayClone;
+
+			pNameArrayClone = NULL;
+
+			//
+			// Retry the lookup
+			//
+
+			ulNameProcessingFlags |= (AFS_LOCATE_FLAGS_NO_MP_TARGET_EVAL |
+						   AFS_LOCATE_FLAGS_NO_SL_TARGET_EVAL |
+						   AFS_LOCATE_FLAGS_NO_DFS_LINK_EVAL);
+
+			ntStatus = AFSLocateNameEntry( &stAuthGroup,
+						       pFileObject,
+						       &uniRootFileName,
+						       &uniParsedFileName,
+						       pNameArray,
+						       ulNameProcessingFlags,
+						       pVolumeCB,
+						       pParentDirectoryCB,
+						       &pNewVolumeCB,
+						       &NewVolumeReferenceReason,
+						       &pNewParentDirectoryCB,
+						       &pDirectoryCB,
+						       &uniComponentName);
+		    }
+		}
+
+		if ( pNewVolumeCB != NULL)
+		{
+
+		    //
+		    // AFSLocateNameEntry returns pNewVolumeCB with a reference held
+		    // even if pVolumeCB == pNewVolumeCB.  It is always safe to release
+		    // the reference on pVolumeCB that was held prior to the call.
+		    // If pVolumeCB == pNewVolumeCB, the reference from AFSLocateNameEntry
+		    // will be released second.
+		    //
+
+		    lCount = AFSVolumeDecrement( pVolumeCB,
+						 VolumeReferenceReason);
+
+		    AFSDbgTrace(( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+				  AFS_TRACE_LEVEL_VERBOSE,
+				  "AFSCommonCreate Decrement count on volume %p Reason %u Cnt %d\n",
+				  pVolumeCB,
+				  VolumeReferenceReason,
+				  lCount));
+
+		    pVolumeCB = pNewVolumeCB;
+
+		    pNewVolumeCB = NULL;
+
+		    VolumeReferenceReason = NewVolumeReferenceReason;
+
+		    NewVolumeReferenceReason = AFS_VOLUME_REFERENCE_INVALID;
+
+		    bReleaseVolume = (pVolumeCB != NULL);
+		}
+
+		//
+		// AFSLocateNameEntry does not alter the reference count of
+		// pParentDirectoryCB and it returns pNewParentDirectoryCB with
+		// a reference held.
+		//
+
+		if ( bReleaseParentDir)
+		{
+
+		    lCount = InterlockedDecrement( &pParentDirectoryCB->DirOpenReferenceCount);
+
+		    AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+				  AFS_TRACE_LEVEL_VERBOSE,
+				  "AFSCommonCreate DecrementX count on %wZ DE %p Ccb %p Cnt %d\n",
+				  &pParentDirectoryCB->NameInformation.FileName,
+				  pParentDirectoryCB,
+				  pCcb,
+				  lCount));
+		}
+
+		pParentDirectoryCB = pNewParentDirectoryCB;
+
+		pNewParentDirectoryCB = NULL;
+
+		bReleaseParentDir = (pParentDirectoryCB != NULL);
+
+		if ( pDirectoryCB)
+		{
+
+		    bReleaseDir = TRUE;
+		}
 
                 if( !NT_SUCCESS( ntStatus) &&
                     ntStatus != STATUS_OBJECT_NAME_NOT_FOUND)
                 {
 
+		    if ( uniSubstitutedPathName.Buffer == uniRootFileName.Buffer)
+		    {
+			uniSubstitutedPathName.Buffer = NULL;
+		    }
+
+		    //
+		    // AFSLocateNameEntry released the Parent while walking the
+		    // branch
+		    //
+
                     AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSCommonCreate (%p) Failing access to symlink %wZ Status %08lX\n",
+				  "AFSCommonCreate (%p) Failed to locate name entry for %wZ Status %08lX\n",
                                   Irp,
                                   &uniFileName,
                                   ntStatus));
 
                     try_return( ntStatus);
                 }
+
+		//
+		// Check for STATUS_REPARSE
+		//
+
+		if( ntStatus == STATUS_REPARSE)
+		{
+
+		    uniSubstitutedPathName.Buffer = NULL;
+
+		    //
+		    // Update the information and return
+		    //
+
+		    Irp->IoStatus.Information = IO_REPARSE;
+
+		    try_return( ntStatus);
+		}
+
+		//
+		// If we re-allocated the name, then update our substitute name
+		//
+
+		if( uniSubstitutedPathName.Buffer != uniRootFileName.Buffer)
+		{
+
+		    uniSubstitutedPathName = uniRootFileName;
+		}
+		else
+		{
+
+		    uniSubstitutedPathName.Buffer = NULL;
+		}
+
+		//
+		// Check for a symlink access
+		//
+
+		if( ntStatus == STATUS_OBJECT_NAME_NOT_FOUND &&
+		    pParentDirectoryCB != NULL)
+		{
+
+		    //
+		    // pParentDirectoryCB DirOpenReferenceCount is still held
+		    //
+
+		    UNICODE_STRING uniFinalComponent;
+
+		    uniFinalComponent.Length = 0;
+		    uniFinalComponent.MaximumLength = 0;
+		    uniFinalComponent.Buffer = NULL;
+
+		    AFSRetrieveFinalComponent( &uniFileName,
+					       &uniFinalComponent);
+
+		    ntStatus = AFSCheckSymlinkAccess( pParentDirectoryCB,
+						      &uniFinalComponent);
+
+		    if( !NT_SUCCESS( ntStatus) &&
+			ntStatus != STATUS_OBJECT_NAME_NOT_FOUND)
+		    {
+
+			AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+				      AFS_TRACE_LEVEL_VERBOSE,
+				      "AFSCommonCreate (%p) Failing access to symlink %wZ Status %08lX\n",
+				      Irp,
+				      &uniFileName,
+				      ntStatus));
+
+			try_return( ntStatus);
+		    }
+		}
             }
         }
 
