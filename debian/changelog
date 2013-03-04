@@ -1,4 +1,4 @@
-openafs (1.6.2-1) UNRELEASED; urgency=low
+openafs (1.6.2-1) experimental; urgency=low
 
   * New upstream release.
     - OPENAFS-SA-2013-001: Fix fileserver buffer overflow when parsing
@@ -22,7 +22,7 @@ openafs (1.6.2-1) UNRELEASED; urgency=low
     debian/rules to fix problems building module packages using
     make-kpkg.  Patch from Thorsten Alteholz.  (Closes: #639475)
 
- -- Russ Allbery <rra@debian.org>  Sat, 09 Feb 2013 14:50:39 -0800
+ -- Russ Allbery <rra@debian.org>  Mon, 04 Mar 2013 13:54:30 -0800
 
 openafs (1.6.2~pre3-1) experimental; urgency=low
 
