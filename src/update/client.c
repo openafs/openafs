@@ -177,10 +177,18 @@ main(int argc, char **argv)
 		    ("Usage: upclient <hostname> [-crypt] [-clear] [-t <retry time>] [-verbose]* <dir>+ [-help]\n");
 		exit(1);
 	    }
-	} else if (strlen(hostname) == 0)
-	    strcpy(hostname, argv[a]);
-	else {
-	    strcpy(filename, argv[a]);
+	} else if (strlen(hostname) == 0) {
+	    if (strlcpy(hostname, argv[a], sizeof(hostname))
+		    >= sizeof(hostname)) {
+		fprintf(stderr, "Supplied hostname is too long\n");
+		exit(1);
+	    }
+	} else {
+	    if (strlcpy(filename, argv[a], sizeof(filename))
+		    >= sizeof(filename)) {
+		fprintf(stderr, "Supplied filename is too long\n");
+		exit(1);
+	    }
 	    FilepathNormalize(filename);
 	    AddToList(&dirname, filename);
 	}
