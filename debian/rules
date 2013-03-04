@@ -103,24 +103,24 @@ override_dh_auto_configure:
 	mv doc/man-pages/pod1/up.pod doc/man-pages/pod1/afs-up.pod
 	rm -f doc/man-pages/man1/up.1
 	sh regen.sh
-	afslogsdir=/var/log/openafs afslocaldir=/var/lib/openafs/local \
-	    sh configure \
+	afslogsdir=/var/log/openafs afslocaldir=/var/lib/openafs/local	   \
+	    sh configure						   \
 	    CFLAGS='$(CFLAGS)' CPPFLAGS='$(CPPFLAGS)' LDFLAGS='$(LDFLAGS)' \
-	    --with-afs-sysname=$(SYS_NAME) --disable-kernel-module \
-	    --prefix=/usr --mandir=\$${prefix}/share/man \
-	    --sysconfdir=/etc --libexecdir=/usr/lib --with-krb5 \
-	    --localstatedir=/var/lib --enable-supergroups \
-	    --enable-fuse-client --enable-debug --enable-debug-lwp \
-	    --with-docbook2pdf=dblatex --with-xslt-processor=xsltproc \
-	    --with-html-xsl=$(HTML_XSL) \
+	    --with-afs-sysname=$(SYS_NAME) --disable-kernel-module	   \
+	    --prefix=/usr --mandir=\$${prefix}/share/man		   \
+	    --sysconfdir=/etc --libexecdir=/usr/lib --with-krb5		   \
+	    --localstatedir=/var/lib --enable-supergroups		   \
+	    --enable-fuse-client --enable-debug --enable-debug-lwp	   \
+	    --with-docbook2pdf=dblatex --with-xslt-processor=xsltproc	   \
+	    --with-html-xsl=$(HTML_XSL)					   \
 	    $(DEBIAN_OPT_FLAGS) $(SYSTEM)
 
 # Also build a libafs_tree and build the XML documentation.
 override_dh_auto_build:
 	dh_auto_build
 	$(MAKE) libafs_tree
-	set -e; for d in AdminGuide QuickStartUnix UserGuide ; do \
-	    $(MAKE) -C doc/xml/$$d all ; \
+	set -e; for d in AdminGuide QuickStartUnix UserGuide ; do	\
+	    $(MAKE) -C doc/xml/$$d all ;				\
 	done
 
 # The manipulation of debian/changelog here is unnecessary with a regular
@@ -130,7 +130,7 @@ override_dh_auto_build:
 override_dh_auto_clean:
 	[ ! -f doc/man-pages/pod1/afs-up.pod ] \
 	    || mv doc/man-pages/pod1/afs-up.pod doc/man-pages/pod1/up.pod
-	set -e; for d in AdminGuide QuickStartUnix UserGuide ; do \
+	set -e; for d in AdminGuide QuickStartUnix UserGuide ; do	    \
 	    [ ! -f doc/xml/$$d/Makefile ] || $(MAKE) -C doc/xml/$$d clean ; \
 	done
 	[ ! -f debian/changelog.in ] \
@@ -157,27 +157,27 @@ override_dh_install:
 
 	mkdir -p $(DOCS)/html
 	cp doc/xml/*.gif doc/xml/*.html $(DOCS)/html/
-	set -e; for d in AdminGuide QuickStartUnix UserGuide ; do \
-	    mkdir $(DOCS)/html/$$d ; \
-	    cp doc/xml/$$d/*.html $(DOCS)/html/$$d/ ; \
-	    cp doc/xml/$$d/*.pdf $(DOCS)/ ; \
+	set -e; for d in AdminGuide QuickStartUnix UserGuide ; do	\
+	    mkdir $(DOCS)/html/$$d ;					\
+	    cp doc/xml/$$d/*.html $(DOCS)/html/$$d/ ;			\
+	    cp doc/xml/$$d/*.pdf $(DOCS)/ ;				\
 	done
 	cp doc/xml/AdminGuide/*.png $(DOCS)/html/AdminGuide/
 	mkdir $(DOCS)/html/arch-overview
 	cp doc/arch/arch-overview.h $(DOCS)/html/arch-overview
 	cd $(DOCS)/html/arch-overview && doxygen -g && doxygen \
 	    && rm Doxyfile *.h && mv html/* . && rm -r latex html
-	set -e; for h in doc/protocol/*.h ; do \
-	    mkdir $(DOCS)/html/`basename $$h .h` ; \
-	    cp $$h $(DOCS)/html/`basename $$h .h` ; \
-	    cd $(DOCS)/html/`basename $$h .h` && doxygen -g && doxygen \
-		&& rm Doxyfile *.h && mv html/* . && rm -r latex html \
-		&& cd $(CURDIR) ; \
+	set -e; for h in doc/protocol/*.h ; do				\
+	    mkdir $(DOCS)/html/`basename $$h .h` ;			\
+	    cp $$h $(DOCS)/html/`basename $$h .h` ;			\
+	    cd $(DOCS)/html/`basename $$h .h` && doxygen -g && doxygen	\
+		&& rm Doxyfile *.h && mv html/* . && rm -r latex html	\
+		&& cd $(CURDIR) ;					\
 	done
 
 	install -d debian/$(srcpkg)/usr/src/modules/$(package)
-	cd libafs_tree && find . -print | \
-	    cpio -admp $(CURDIR)/debian/$(srcpkg)/usr/src/modules/$(package)
+	cd libafs_tree && find . -print \
+	    | cpio -admp $(CURDIR)/debian/$(srcpkg)/usr/src/modules/$(package)
 	cp .version debian/$(srcpkg)/usr/src/modules/$(package)/
 	mkdir -p debian/$(srcpkg)/usr/src/modules/$(package)/debian
 	cp debian/copyright debian/module/* \
@@ -217,11 +217,11 @@ override_dh_install:
 	    debian/libpam-openafs-kaserver/lib/security/pam_afs.krb.so
 
 	install -d debian/openafs-dbserver/usr/share/man/man8
-	( cd debian && pod2man --section 8 --center "Debian GNU/Linux" \
-	    afs-rootvol ) \
+	( cd debian && pod2man --section 8 --center "Debian GNU/Linux"	\
+	    afs-rootvol )						\
 	    >debian/openafs-dbserver/usr/share/man/man8/afs-rootvol.8
-	( cd debian && pod2man --section 8 --center "Debian GNU/Linux" \
-	    afs-newcell ) \
+	( cd debian && pod2man --section 8 --center "Debian GNU/Linux"	\
+	    afs-newcell )						\
 	    >debian/openafs-dbserver/usr/share/man/man8/afs-newcell.8
 
 	install -d debian/$(srcpkg)/usr/share/doc/$(srcpkg)
@@ -237,15 +237,15 @@ override_dh_installinit:
 override_dh_installdocs:
 	dh_installdocs $(DOC_PACKAGES) --link-doc=openafs-client
 	dh_installdocs --remaining-packages
-	set -e; if [ -d "$(DOCS)" ] ; then \
-	    for d in arch-overview bos-spec fs-cm-spec rx-spec \
-		     vldb-vol-spec ; do \
-		if [ -f "$(DOCS)/html/$$d/jquery.js" ] ; then \
-		    rm $(DOCS)/html/$$d/jquery.js ; \
-		    ln -s /usr/share/javascript/jquery/jquery.min.js \
-			$(DOCS)/html/$$d/jquery.js ; \
-		fi ; \
-	    done ; \
+	set -e; if [ -d "$(DOCS)" ] ; then				\
+	    for d in arch-overview bos-spec fs-cm-spec rx-spec		\
+		     vldb-vol-spec ; do					\
+		if [ -f "$(DOCS)/html/$$d/jquery.js" ] ; then		\
+		    rm $(DOCS)/html/$$d/jquery.js ;			\
+		    ln -s /usr/share/javascript/jquery/jquery.min.js	\
+			$(DOCS)/html/$$d/jquery.js ;			\
+		fi ;							\
+	    done ;							\
 	fi
 
 # Install the upstream NEWS file as the upstream changelog.
