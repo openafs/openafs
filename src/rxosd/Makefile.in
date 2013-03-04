@@ -22,8 +22,6 @@ VOL=../vol
 OSDDBSRC=${srcdir}/../osddb
 FSINT=../fsint
 
-CC=${MT_CC}
-
 CLIENTOBJS=osd.o
 
 RXOSDOBJS=rxosd.o rxosd.ss.o rxosd.cs.o rxosd.xdr.o rxosd_hpss.o rxosd_dcache.o	
