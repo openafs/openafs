@@ -117,7 +117,6 @@ static const char msf_warning[] =
 char c_file[MAXPATHLEN];	/* output file */
 char h_file[MAXPATHLEN];	/* output */
 char msf_file[MAXPATHLEN];
-char et_file[MAXPATHLEN];	/* full path to input file */
 
 static void
 usage(void)
@@ -142,6 +141,7 @@ int
 main(int argc, char **argv)
 {
     char *p, *ename;
+    char *et_file;
     char const *const *cpp;
     int got_language = 0;
     char *got_include = 0;
@@ -314,13 +314,18 @@ main(int argc, char **argv)
 	filename = p;
     }
 
-    sprintf(et_file, "%s/%s", got_prefix, filename);
+    if (asprintf(&et_file, "%s/%s", got_prefix, filename) < 0) {
+	fprintf(stderr, "Couldn't allocate memory for filename\n");
+	exit(1);
+    }
 
     yyin = fopen(et_file, "r");
     if (!yyin) {
 	perror(et_file);
 	exit(1);
     }
+
+    free(et_file);
 
     /* on NT, yyout is not initialized to stdout */
     if (!yyout) {
