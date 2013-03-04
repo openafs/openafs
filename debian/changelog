@@ -7,6 +7,7 @@ openafs (1.6.2-1) UNRELEASED; urgency=low
     - OPENAFS-SA-2013-002: Fix ptserver buffer overflow via integer
       overflow in the IdToName RPC.  (CVE-2013-1795)
     - Fix aklog warning about allow_weak_crypto.
+  * Update CellServDB to the 2013-01-28 version.
   * Fix DKMS builds of the OpenAFS kernel module for amd64 kernels on the
     i386 architecture by parsing the kernel version for the architecture
     and kernel class and using that to tell the OpenAFS build system what
