@@ -5238,18 +5238,31 @@ AFSPopulateNameArrayFromRelatedArray( IN AFSNameArrayHdr *NameArray,
     __Enter
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSPopulateNameArray [NA:%p] passed RelatedNameArray %p DE %p FID %08lX-%08lX-%08lX-%08lX %wZ Type %d\n",
-                      NameArray,
-                      RelatedNameArray,
-                      DirectoryCB,
-                      DirectoryCB->ObjectInformation->FileId.Cell,
-                      DirectoryCB->ObjectInformation->FileId.Volume,
-                      DirectoryCB->ObjectInformation->FileId.Vnode,
-                      DirectoryCB->ObjectInformation->FileId.Unique,
-                      &DirectoryCB->NameInformation.FileName,
-                      DirectoryCB->ObjectInformation->FileType);
+        if ( DirectoryCB)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSPopulateNameArray [NA:%p] passed RelatedNameArray %p DE %p FID %08lX-%08lX-%08lX-%08lX %wZ Type %d\n",
+                          NameArray,
+                          RelatedNameArray,
+                          DirectoryCB,
+                          DirectoryCB->ObjectInformation->FileId.Cell,
+                          DirectoryCB->ObjectInformation->FileId.Volume,
+                          DirectoryCB->ObjectInformation->FileId.Vnode,
+                          DirectoryCB->ObjectInformation->FileId.Unique,
+                          &DirectoryCB->NameInformation.FileName,
+                          DirectoryCB->ObjectInformation->FileType);
+        }
+        else
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSPopulateNameArray [NA:%p] passed RelatedNameArray %p DE NULL\n",
+                          NameArray,
+                          RelatedNameArray);
+        }
 
         //
         // Init some info in the header
