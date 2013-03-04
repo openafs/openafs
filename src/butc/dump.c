@@ -1859,6 +1859,8 @@ volumeHeader_hton(struct volumeHeader *hostPtr, struct volumeHeader *netPtr)
 {
     struct volumeHeader volHdr;
 
+    memset(&volHdr, 0, sizeof(volHdr));
+
     strcpy(volHdr.preamble, hostPtr->preamble);
     strcpy(volHdr.postamble, hostPtr->postamble);
     strcpy(volHdr.volumeName, hostPtr->volumeName);
