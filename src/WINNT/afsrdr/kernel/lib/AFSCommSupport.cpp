@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2008, 2009, 2010, 2011 Kernel Drivers, LLC.
- * Copyright (c) 2009, 2010, 2011 Your File System, Inc.
+ * Copyright (c) 2008, 2009, 2010, 2011, 2012, 2013 Kernel Drivers, LLC.
+ * Copyright (c) 2009, 2010, 2011, 2012, 2013 Your File System, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -10,10 +10,8 @@
  * - Redistributions of source code must retain the above copyright notice,
  *   this list of conditions and the following disclaimer.
  * - Redistributions in binary form must reproduce the above copyright
- *   notice,
- *   this list of conditions and the following disclaimer in the
- *   documentation
- *   and/or other materials provided with the distribution.
+ *   notice, this list of conditions and the following disclaimer in the
+ *   documentation and/or other materials provided with the distribution.
  * - Neither the names of Kernel Drivers, LLC and Your File System, Inc.
  *   nor the names of their contributors may be used to endorse or promote
  *   products derived from this software without specific prior written
@@ -3514,4 +3512,149 @@ AFSIsExtentRequestQueued( IN AFSFileID *FileID,
     }
 
     return bRequestQueued;
+}
+
+NTSTATUS
+AFSCreateSymlink( IN GUID *AuthGroup,
+                  IN AFSObjectInfoCB *ParentObjectInfo,
+                  IN UNICODE_STRING *FileName,
+                  IN AFSObjectInfoCB *ObjectInfo,
+                  IN UNICODE_STRING *TargetName)
+{
+
+    NTSTATUS                  ntStatus = STATUS_SUCCESS;
+    AFSCreateSymlinkCB       *pSymlinkCreate = NULL;
+    ULONG                     ulResultLen = 0;
+    AFSCreateSymlinkResultCB *pSymlinkResult = NULL;
+
+    __Enter
+    {
+
+        //
+        // Allocate our request and result structures
+        //
+
+        pSymlinkCreate = (AFSCreateSymlinkCB *)ExAllocatePoolWithTag( PagedPool,
+                                                                      sizeof( AFSCreateSymlinkCB) +
+                                                                          TargetName->Length,
+                                                                      AFS_SYMLINK_REQUEST_TAG);
+
+        if( pSymlinkCreate == NULL)
+        {
+
+            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+        }
+
+        RtlZeroMemory( pSymlinkCreate,
+                       sizeof( AFSCreateSymlinkCB) +
+                             TargetName->Length);
+
+        pSymlinkResult = (AFSCreateSymlinkResultCB *)ExAllocatePoolWithTag( PagedPool,
+                                                                            PAGE_SIZE,
+                                                                            AFS_SYMLINK_REQUEST_TAG);
+
+        if( pSymlinkResult == NULL)
+        {
+
+            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+        }
+
+        RtlZeroMemory( pSymlinkResult,
+                       PAGE_SIZE);
+
+        //
+        // Populate the request buffer
+        //
+
+        RtlCopyMemory( &pSymlinkCreate->ParentId,
+                       &ObjectInfo->ParentFileId,
+                       sizeof( AFSFileID));
+
+        pSymlinkCreate->TargetNameLength = TargetName->Length;
+
+        RtlCopyMemory( pSymlinkCreate->TargetName,
+                       TargetName->Buffer,
+                       TargetName->Length);
+
+        ulResultLen = PAGE_SIZE;
+
+        //
+        // Call the service to create the symlink entry
+        //
+
+        ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_CREATE_SYMLINK,
+                                      AFS_REQUEST_FLAG_SYNCHRONOUS,
+                                      AuthGroup,
+                                      FileName,
+                                      &ObjectInfo->FileId,
+                                      ObjectInfo->VolumeCB->VolumeInformation.Cell,
+                                      ObjectInfo->VolumeCB->VolumeInformation.CellLength,
+                                      pSymlinkCreate,
+                                      sizeof( AFSCreateSymlinkCB) +
+                                                TargetName->Length,
+                                      pSymlinkResult,
+                                      &ulResultLen);
+
+        if ( ntStatus == STATUS_FILE_DELETED )
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSCreateSymlink failed FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                          ObjectInfo->FileId.Cell,
+                          ObjectInfo->FileId.Volume,
+                          ObjectInfo->FileId.Vnode,
+                          ObjectInfo->FileId.Unique,
+                          ntStatus);
+
+            SetFlag( ParentObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
+
+            ClearFlag( ParentObjectInfo->Flags, AFS_OBJECT_FLAGS_DIRECTORY_ENUMERATED);
+
+            SetFlag( ObjectInfo->Flags, AFS_OBJECT_FLAGS_DELETED);
+
+            try_return( ntStatus = STATUS_ACCESS_DENIED);
+        }
+        else if( ntStatus != STATUS_SUCCESS)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSCreateSymlink failed FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                          ObjectInfo->FileId.Cell,
+                          ObjectInfo->FileId.Volume,
+                          ObjectInfo->FileId.Vnode,
+                          ObjectInfo->FileId.Unique,
+                          ntStatus);
+
+            try_return( ntStatus);
+        }
+
+        //
+        // After successful creation the open object has been deleted and replaced by
+        // the actual symlink.
+        //
+
+        SetFlag( ParentObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
+
+        ClearFlag( ParentObjectInfo->Flags, AFS_OBJECT_FLAGS_DIRECTORY_ENUMERATED);
+
+        SetFlag( ObjectInfo->Flags, AFS_OBJECT_FLAGS_DELETED);
+
+try_exit:
+
+        if( pSymlinkCreate != NULL)
+        {
+
+            AFSExFreePoolWithTag( pSymlinkCreate, AFS_SYMLINK_REQUEST_TAG);
+        }
+
+        if( pSymlinkResult != NULL)
+        {
+
+            AFSExFreePoolWithTag( pSymlinkResult, AFS_SYMLINK_REQUEST_TAG);
+        }
+    }
+
+    return ntStatus;
 }
