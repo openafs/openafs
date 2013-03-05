@@ -1209,20 +1209,29 @@ void cm_InsertServerList(cm_serverRef_t** list, cm_serverRef_t* element)
         cm_serverRef_t  **currentp = list;
         cm_serverRef_t  **nextp = NULL;
         cm_serverRef_t  * next = NULL;
+        cm_server_t     * serverp = NULL;
 
         for (currentp = list; *currentp; currentp = nextp)
         {
             nextp = &(*currentp)->next;
+            /* obtain a refcnt on next in case cm_serverLock is dropped */
+            if (*nextp)
+                cm_GetServerRef(*nextp, TRUE);
             if ((*currentp)->refCount == 0 &&
                 (*currentp)->status == srv_deleted) {
                 next = *nextp;
 
                 if ((*currentp)->volID)
                     cm_RemoveVolumeFromServer((*currentp)->server, (*currentp)->volID);
-                cm_FreeServer((*currentp)->server);
+                serverp = (*currentp)->server;
                 free(*currentp);
                 nextp = &next;
+                /* cm_FreeServer will drop cm_serverLock if serverp->refCount == 0 */
+                cm_FreeServer(serverp);
             }
+            /* drop the next refcnt obtained above. */
+            if (*nextp)
+                cm_PutServerRef(*nextp, TRUE);
         }
     }
 
@@ -1491,6 +1500,7 @@ void cm_FreeServerList(cm_serverRef_t** list, afs_uint32 flags)
     cm_serverRef_t  **current;
     cm_serverRef_t  **nextp;
     cm_serverRef_t  * next;
+    cm_server_t     * serverp;
     afs_int32         refCount;
 
     lock_ObtainWrite(&cm_serverLock);
@@ -1504,15 +1514,20 @@ void cm_FreeServerList(cm_serverRef_t** list, afs_uint32 flags)
     while (*current)
     {
         nextp = &(*current)->next;
+        /* obtain a refcnt on next in case cm_serverLock is dropped */
+        if (*nextp)
+            cm_GetServerRef(*nextp, TRUE);
         refCount = cm_PutServerRef(*current, TRUE);
         if (refCount == 0) {
             next = *nextp;
 
             if ((*current)->volID)
                 cm_RemoveVolumeFromServer((*current)->server, (*current)->volID);
-            cm_FreeServer((*current)->server);
+            serverp = (*current)->server;
             free(*current);
             *current = next;
+            /* cm_FreeServer will drop cm_serverLock if serverp->refCount == 0 */
+            cm_FreeServer(serverp);
         } else {
             if (flags & CM_FREESERVERLIST_DELETE) {
                 (*current)->status = srv_deleted;
@@ -1521,6 +1536,9 @@ void cm_FreeServerList(cm_serverRef_t** list, afs_uint32 flags)
             }
             current = nextp;
         }
+        /* drop the next refcnt obtained above. */
+        if (*current)
+            cm_PutServerRef(*current, TRUE);
     }
 
   done:
