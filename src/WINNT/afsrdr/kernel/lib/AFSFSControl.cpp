@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2008, 2009, 2010, 2011 Kernel Drivers, LLC.
- * Copyright (c) 2009, 2010, 2011 Your File System, Inc.
+ * Copyright (c) 2008, 2009, 2010, 2011, 2012, 2013 Kernel Drivers, LLC.
+ * Copyright (c) 2009, 2010, 2011, 2012, 2013 Your File System, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -10,10 +10,8 @@
  * - Redistributions of source code must retain the above copyright notice,
  *   this list of conditions and the following disclaimer.
  * - Redistributions in binary form must reproduce the above copyright
- *   notice,
- *   this list of conditions and the following disclaimer in the
- *   documentation
- *   and/or other materials provided with the distribution.
+ *   notice, this list of conditions and the following disclaimer in the
+ *   documentation and/or other materials provided with the distribution.
  * - Neither the names of Kernel Drivers, LLC and Your File System, Inc.
  *   nor the names of their contributors may be used to endorse or promote
  *   products derived from this software without specific prior written
@@ -570,26 +568,20 @@ AFSProcessUserFsRequest( IN PIRP Irp)
             case FSCTL_SET_REPARSE_POINT:
             {
 
-                REPARSE_GUID_DATA_BUFFER *pReparseBuffer = (REPARSE_GUID_DATA_BUFFER *)Irp->AssociatedIrp.SystemBuffer;
+                REPARSE_GUID_DATA_BUFFER *pReparseGUIDBuffer = (REPARSE_GUID_DATA_BUFFER *)Irp->AssociatedIrp.SystemBuffer;
+                REPARSE_DATA_BUFFER *pReparseBuffer = NULL;
+                AFSReparseTagInfo *pReparseInfo = NULL;
+                AFSObjectInfoCB *pParentObjectInfo = NULL;
+                UNICODE_STRING uniTargetName;
+                ULONGLONG ullIndex = 0;
+                LONG lCount;
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE_2,
+                              AFS_TRACE_LEVEL_VERBOSE,
                               "AFSProcessUserFsRequest Processing FSCTL_SET_REPARSE_POINT request %wZ Type 0x%x Attrib 0x%x\n",
                               &pCcb->DirectoryCB->NameInformation.FileName,
                               pCcb->DirectoryCB->ObjectInformation->FileType,
                               pCcb->DirectoryCB->ObjectInformation->FileAttributes);
-
-                //
-                // Check if we have the reparse entry set on the entry
-                //
-
-                if( !BooleanFlagOn( pCcb->DirectoryCB->ObjectInformation->FileAttributes, FILE_ATTRIBUTE_REPARSE_POINT))
-                {
-
-                    ntStatus = STATUS_NOT_A_REPARSE_POINT;
-
-                    break;
-                }
 
                 if( ulInputBufferLen < FIELD_OFFSET( REPARSE_GUID_DATA_BUFFER, GenericReparseBuffer.DataBuffer))
                 {
@@ -599,29 +591,208 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                     break;
                 }
 
-                if( (pReparseBuffer->ReparseTag & 0x0000FFFF) != IO_REPARSE_TAG_OPENAFS_DFS)
+                if( (pReparseGUIDBuffer->ReparseTag & 0x0000FFFF) == IO_REPARSE_TAG_OPENAFS_DFS)
                 {
 
-                    ntStatus = STATUS_IO_REPARSE_TAG_MISMATCH;
+                    if( RtlCompareMemory( &pReparseGUIDBuffer->ReparseGuid,
+                                          &GUID_AFS_REPARSE_GUID,
+                                          sizeof( GUID)) != sizeof( GUID))
+                    {
 
-                    break;
+                        ntStatus = STATUS_REPARSE_ATTRIBUTE_CONFLICT;
+
+                        break;
+                    }
+
+                    if( ulInputBufferLen < FIELD_OFFSET( REPARSE_GUID_DATA_BUFFER, GenericReparseBuffer.DataBuffer) +
+                                                                        sizeof( AFSReparseTagInfo))
+                    {
+
+                        ntStatus = STATUS_IO_REPARSE_DATA_INVALID;
+
+                        break;
+                    }
+
+                    pReparseInfo = (AFSReparseTagInfo *)pReparseGUIDBuffer->GenericReparseBuffer.DataBuffer;
+
+                    switch( pReparseInfo->SubTag)
+                    {
+
+                        case OPENAFS_SUBTAG_SYMLINK:
+                        {
+
+                            if( ulInputBufferLen < (ULONG)(FIELD_OFFSET( REPARSE_GUID_DATA_BUFFER, GenericReparseBuffer.DataBuffer) +
+                                                           FIELD_OFFSET( AFSReparseTagInfo, AFSSymLink.Buffer) +
+                                                           pReparseInfo->AFSSymLink.SymLinkTargetLength))
+                            {
+
+                                ntStatus = STATUS_IO_REPARSE_DATA_INVALID;
+
+                                break;
+                            }
+
+                            uniTargetName.Length = pReparseInfo->AFSSymLink.SymLinkTargetLength;
+                            uniTargetName.MaximumLength = uniTargetName.Length;
+
+                            uniTargetName.Buffer = (WCHAR *)pReparseInfo->AFSSymLink.Buffer;
+
+                            break;
+                        }
+
+                        case OPENAFS_SUBTAG_UNC:
+                        {
+
+                            if( ulInputBufferLen < (ULONG)(FIELD_OFFSET( REPARSE_GUID_DATA_BUFFER, GenericReparseBuffer.DataBuffer) +
+                                                           FIELD_OFFSET( AFSReparseTagInfo, UNCReferral.Buffer) +
+                                                           pReparseInfo->UNCReferral.UNCTargetLength))
+                            {
+
+                                ntStatus = STATUS_IO_REPARSE_DATA_INVALID;
+
+                                break;
+                            }
+
+                            uniTargetName.Length = pReparseInfo->UNCReferral.UNCTargetLength;
+                            uniTargetName.MaximumLength = uniTargetName.Length;
+
+                            uniTargetName.Buffer = (WCHAR *)pReparseInfo->UNCReferral.Buffer;
+
+                            break;
+                        }
+
+                        case OPENAFS_SUBTAG_MOUNTPOINT:
+                            //
+                            // Not yet handled
+                            //
+                        default:
+                        {
+
+                            ntStatus = STATUS_IO_REPARSE_DATA_INVALID;
+
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    //
+                    // Handle Microsoft Reparse Tags
+                    //
+
+                    switch( pReparseGUIDBuffer->ReparseTag)
+                    {
+
+                        case IO_REPARSE_TAG_MOUNT_POINT:
+                        {
+
+                            pReparseBuffer = (REPARSE_DATA_BUFFER *)Irp->AssociatedIrp.SystemBuffer;
+
+                            uniTargetName.Length = pReparseBuffer->MountPointReparseBuffer.PrintNameLength;
+                            uniTargetName.MaximumLength = uniTargetName.Length;
+
+                            uniTargetName.Buffer = (WCHAR *)((char *)pReparseBuffer->MountPointReparseBuffer.PathBuffer +
+                                                              pReparseBuffer->MountPointReparseBuffer.PrintNameOffset);
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                          AFS_TRACE_LEVEL_VERBOSE_2,
+                                          "AFSProcessUserFsRequest IO_REPARSE_TAG_MOUNT_POINT request %wZ\n",
+                                          &uniTargetName);
+
+                            ntStatus = STATUS_IO_REPARSE_DATA_INVALID;
+
+                            break;
+                        }
+
+                        case IO_REPARSE_TAG_SYMLINK:
+                        {
+
+                            pReparseBuffer = (REPARSE_DATA_BUFFER *)Irp->AssociatedIrp.SystemBuffer;
+
+                            uniTargetName.Length = pReparseBuffer->SymbolicLinkReparseBuffer.SubstituteNameLength;
+                            uniTargetName.MaximumLength = uniTargetName.Length;
+
+                            uniTargetName.Buffer = (WCHAR *)((char *)pReparseBuffer->SymbolicLinkReparseBuffer.PathBuffer +
+                                                              pReparseBuffer->SymbolicLinkReparseBuffer.SubstituteNameOffset);
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                          AFS_TRACE_LEVEL_VERBOSE_2,
+                                          "AFSProcessUserFsRequest IO_REPARSE_TAG_SYMLINK request %wZ\n",
+                                          &uniTargetName);
+                            break;
+                        }
+
+                        default:
+                        {
+
+                            ntStatus = STATUS_IO_REPARSE_DATA_INVALID;
+
+                            break;
+                        }
+                    }
                 }
 
-                if( RtlCompareMemory( &pReparseBuffer->ReparseGuid,
-                                      &GUID_AFS_REPARSE_GUID,
-                                      sizeof( GUID)) != sizeof( GUID))
+                if( !NT_SUCCESS( ntStatus))
                 {
-
-                    ntStatus = STATUS_REPARSE_ATTRIBUTE_CONFLICT;
 
                     break;
                 }
 
                 //
-                // For now deny access on this call
+                // First thing is to locate/create our object information block
+                // for this entry
                 //
 
-                ntStatus = STATUS_INVALID_PARAMETER;
+                AFSAcquireExcl( pCcb->DirectoryCB->ObjectInformation->VolumeCB->ObjectInfoTree.TreeLock,
+                                TRUE);
+
+                ullIndex = AFSCreateLowIndex( &pCcb->DirectoryCB->ObjectInformation->ParentFileId);
+
+                ntStatus = AFSLocateHashEntry( pCcb->DirectoryCB->ObjectInformation->VolumeCB->ObjectInfoTree.TreeHead,
+                                               ullIndex,
+                                               (AFSBTreeEntry **)&pParentObjectInfo);
+
+                if ( NT_SUCCESS( ntStatus) &&
+                     pParentObjectInfo)
+                {
+
+                    lCount = AFSObjectInfoIncrement( pParentObjectInfo,
+                                                     AFS_OBJECT_REFERENCE_DIRENTRY);
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSProcessUserFsRequest Increment count on object %p Cnt %d\n",
+                                  pParentObjectInfo,
+                                  lCount);
+                }
+
+                AFSReleaseResource( pCcb->DirectoryCB->ObjectInformation->VolumeCB->ObjectInfoTree.TreeLock);
+
+                //
+                // Extract out the information to the call to the service
+                //
+
+                ntStatus = AFSCreateSymlink( &pCcb->AuthGroup,
+                                             pParentObjectInfo,
+                                             &pCcb->DirectoryCB->NameInformation.FileName,
+                                             pCcb->DirectoryCB->ObjectInformation,
+                                             &uniTargetName);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE_2,
+                              "AFSProcessUserFsRequest Processed FSCTL_SET_REPARSE_POINT request %wZ Type 0x%x Attrib 0x%x Status %08lX\n",
+                              &pCcb->DirectoryCB->NameInformation.FileName,
+                              pCcb->DirectoryCB->ObjectInformation->FileType,
+                              pCcb->DirectoryCB->ObjectInformation->FileAttributes,
+                              ntStatus);
+
+                lCount = AFSObjectInfoDecrement( pParentObjectInfo,
+                                                 AFS_OBJECT_REFERENCE_DIRENTRY);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSProcessUserFsRequest Decrement count on object %p Cnt %d\n",
+                              pParentObjectInfo,
+                              lCount);
 
                 break;
             }

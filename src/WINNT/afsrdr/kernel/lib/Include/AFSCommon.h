@@ -264,6 +264,13 @@ AFSIsExtentRequestQueued( IN AFSFileID *FileID,
                           IN LARGE_INTEGER *ExtentOffset,
                           IN ULONG Length);
 
+NTSTATUS
+AFSCreateSymlink( IN GUID *AuthGroup,
+                  IN AFSObjectInfoCB *ParentObjectInfo,
+                  IN UNICODE_STRING *FileName,
+                  IN AFSObjectInfoCB *ObjectInfo,
+                  IN UNICODE_STRING *TargetName);
+
 //
 // AFSCreate.cpp Prototypes
 //

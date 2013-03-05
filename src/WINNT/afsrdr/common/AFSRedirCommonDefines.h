@@ -128,6 +128,7 @@
 #define AFS_PROCESS_AG_CB_TAG        'APFA'
 #define AFS_BYTERANGE_TAG            '_RBA'
 #define AFS_HARDLINK_REQUEST_TAG     'LFFA'
+#define AFS_SYMLINK_REQUEST_TAG      'YSFA'
 
 #define __Enter
 
