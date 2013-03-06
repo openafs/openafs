@@ -714,6 +714,21 @@ AC_DEFUN([LINUX_D_ALIAS_IS_HLIST], [
 ])
 
 
+AC_DEFUN([LINUX_HLIST_ITERATOR_NO_NODE], [
+  AC_CHECK_LINUX_BUILD([whether hlist iterators don't need a node parameter],
+			[ac_cv_linux_hlist_takes_no_node],
+			[#include <linux/list.h>
+			#include <linux/fs.h>],
+			[struct dentry *d = NULL, *cur;
+			struct inode *ip;
+			hlist_for_each_entry(cur, &ip->i_dentry, d_alias) { }
+			],
+			[HLIST_ITERATOR_NO_NODE],
+			[define if hlist iterators don't need a node parameter],
+			[])
+])
+
+
 AC_DEFUN([LINUX_IOP_I_CREATE_TAKES_BOOL], [
   AC_CHECK_LINUX_BUILD([whether inode_operations.create takes a bool],
 			[ac_cv_linux_func_i_create_takes_bool],

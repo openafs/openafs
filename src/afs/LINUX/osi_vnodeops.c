@@ -701,7 +701,7 @@ canonical_dentry(struct inode *ip)
 {
     struct vcache *vcp = VTOAFS(ip);
     struct dentry *first = NULL, *ret = NULL, *cur;
-#if defined(D_ALIAS_IS_HLIST)
+#if defined(D_ALIAS_IS_HLIST) && !defined(HLIST_ITERATOR_NO_NODE)
     struct hlist_node *p;
 #endif
 
@@ -724,7 +724,11 @@ canonical_dentry(struct inode *ip)
 # endif
 
 #if defined(D_ALIAS_IS_HLIST)
+# if defined(HLIST_ITERATOR_NO_NODE)
+    hlist_for_each_entry(cur, &ip->i_dentry, d_alias) {
+# else
     hlist_for_each_entry(cur, p, &ip->i_dentry, d_alias) {
+# endif
 #else
     list_for_each_entry_reverse(cur, &ip->i_dentry, d_alias) {
 #endif
