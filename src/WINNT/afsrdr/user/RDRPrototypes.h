@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2008 Secure Endpoints, Inc.
- * Copyright (c) 2009-2011 Your File System, Inc.
+ * Copyright (c) 2009-2013 Your File System, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -142,6 +142,16 @@ RDR_HardLinkFileEntry( IN cm_user_t *userp,
                        IN BOOL bWow64,
                        IN DWORD ResultBufferLength,
                        IN OUT AFSCommResult **ResultCB);
+
+void
+RDR_CreateSymlinkEntry( IN cm_user_t *userp,
+                        IN AFSFileID FileId,
+                        IN WCHAR *FileName,
+                        IN DWORD FileNameLength,
+                        IN AFSCreateSymlinkCB *SymlinkCB,
+                        IN BOOL bWow64,
+                        IN DWORD ResultBufferLength,
+                        IN OUT AFSCommResult **ResultCB);
 
 void
 RDR_FlushFileEntry( IN cm_user_t *userp,

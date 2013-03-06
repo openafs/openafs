@@ -779,6 +779,38 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
             break;
         }
 
+        case AFS_REQUEST_TYPE_CREATE_SYMLINK:
+        {
+
+            AFSCreateSymlinkCB *pCreateSymlinkCB = (AFSCreateSymlinkCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+
+            WCHAR wchFileName[ 256];
+
+            if (afsd_logp->enabled) {
+                memset( wchFileName, '\0', 256 * sizeof( WCHAR));
+
+                memcpy( wchFileName,
+                        RequestBuffer->Name,
+                        RequestBuffer->NameLength);
+
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_CREATE_SYMLINK Index %08lX File %S",
+                          RequestBuffer->RequestIndex, wchFileName);
+
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
+
+            RDR_CreateSymlinkEntry( userp,
+                                    RequestBuffer->FileId,
+                                    RequestBuffer->Name,
+                                    RequestBuffer->NameLength,
+                                    pCreateSymlinkCB,
+                                    bWow64,
+                                    RequestBuffer->ResultBufferLength,
+                                    &pResultCB);
+
+            break;
+        }
+
         case AFS_REQUEST_TYPE_REQUEST_FILE_EXTENTS:
         {
 
