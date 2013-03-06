@@ -1,3 +1,12 @@
+openafs (1.6.2-2) UNRELEASED; urgency=low
+
+  * Support configuring -dynroot-sparse via debconf.  The AFS_DYNROOT
+    option in /etc/openafs/afs.conf.client is now tri-valued instead of a
+    boolean, and the boolean values will be mapped to the corresponding
+    options on upgrade.  Based on work by Jakob Haufe.  (Closes: #644564)
+
+ -- Russ Allbery <rra@debian.org>  Wed, 06 Mar 2013 00:48:49 -0800
+
 openafs (1.6.2-1) experimental; urgency=low
 
   * New upstream release.
