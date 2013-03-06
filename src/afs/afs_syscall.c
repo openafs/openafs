@@ -521,7 +521,7 @@ afs_syscall(long syscall, long parm1, long parm2, long parm3, long parm4)
 #else
 # if defined(UKERNEL)
 int
-Afs_syscall()
+Afs_syscall(void)
 {
     struct a {
 	long syscall;
