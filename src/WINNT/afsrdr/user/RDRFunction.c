@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2008 Secure Endpoints, Inc.
- * Copyright (c) 2009-2011 Your File System, Inc.
+ * Copyright (c) 2009-2013 Your File System, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -2858,6 +2858,285 @@ RDR_HardLinkFileEntry( IN cm_user_t *userp,
     cm_ReleaseSCache(targetDscp);
     return;
 }
+
+
+void
+RDR_CreateSymlinkEntry( IN cm_user_t *userp,
+                        IN AFSFileID FileId,
+                        IN WCHAR *FileNameCounted,
+                        IN DWORD FileNameLength,
+                        IN AFSCreateSymlinkCB *SymlinkCB,
+                        IN BOOL bWow64,
+                        IN DWORD ResultBufferLength,
+                        IN OUT AFSCommResult **ResultCB)
+{
+    AFSCreateSymlinkResultCB *pResultCB = NULL;
+    size_t size = sizeof(AFSCommResult) + ResultBufferLength - 1;
+    cm_fid_t            parentFid;
+    cm_fid_t            Fid;
+    afs_uint32          code;
+    cm_scache_t *       dscp = NULL;
+    afs_uint32          flags = 0;
+    cm_attr_t           setAttr;
+    cm_scache_t *       scp = NULL;
+    cm_req_t            req;
+    DWORD               status;
+    wchar_t             FileName[260];
+    char               *TargetPath = NULL;
+
+    StringCchCopyNW(FileName, 260, FileNameCounted, FileNameLength / sizeof(WCHAR));
+    TargetPath = cm_Utf16ToUtf8Alloc( SymlinkCB->TargetName,  SymlinkCB->TargetNameLength / sizeof(WCHAR), NULL);
+
+    osi_Log4( afsd_logp, "RDR_CreateSymlinkEntry parent FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+              SymlinkCB->ParentId.Cell, SymlinkCB->ParentId.Volume,
+              SymlinkCB->ParentId.Vnode, SymlinkCB->ParentId.Unique);
+    osi_Log1(afsd_logp, "... name=%S", osi_LogSaveStringW(afsd_logp, FileName));
+
+    RDR_InitReq(&req, bWow64);
+    memset(&setAttr, 0, sizeof(cm_attr_t));
+
+    *ResultCB = (AFSCommResult *)malloc(size);
+    if (!(*ResultCB)) {
+        osi_Log0(afsd_logp, "RDR_CreateSymlinkEntry out of memory");
+        free(TargetPath);
+	return;
+    }
+
+    memset( *ResultCB,
+            '\0',
+            size);
+
+    parentFid.cell   = SymlinkCB->ParentId.Cell;
+    parentFid.volume = SymlinkCB->ParentId.Volume;
+    parentFid.vnode  = SymlinkCB->ParentId.Vnode;
+    parentFid.unique = SymlinkCB->ParentId.Unique;
+    parentFid.hash   = SymlinkCB->ParentId.Hash;
+
+    code = cm_GetSCache(&parentFid, NULL, &dscp, userp, &req);
+    if (code) {
+        smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
+        (*ResultCB)->ResultStatus = status;
+        if ( status == STATUS_INVALID_HANDLE)
+            status = STATUS_OBJECT_PATH_INVALID;
+        osi_Log2(afsd_logp, "RDR_CreateSymlinkEntry cm_GetSCache ParentFID failure code=0x%x status=0x%x",
+                  code, status);
+        free(TargetPath);
+        return;
+    }
+
+    lock_ObtainWrite(&dscp->rw);
+    code = cm_SyncOp(dscp, NULL, userp, &req, 0,
+                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    if (code) {
+        smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
+        (*ResultCB)->ResultStatus = status;
+        lock_ReleaseWrite(&dscp->rw);
+        cm_ReleaseSCache(dscp);
+        osi_Log3(afsd_logp, "RDR_CreateSymlinkEntry cm_SyncOp failure (1) dscp=0x%p code=0x%x status=0x%x",
+                 dscp, code, status);
+        free(TargetPath);
+        return;
+    }
+
+    cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    lock_ReleaseWrite(&dscp->rw);
+
+    if (dscp->fileType != CM_SCACHETYPE_DIRECTORY) {
+        (*ResultCB)->ResultStatus = STATUS_NOT_A_DIRECTORY;
+        cm_ReleaseSCache(dscp);
+        osi_Log1(afsd_logp, "RDR_CreateSymlinkEntry Not a Directory dscp=0x%p",
+                 dscp);
+        free(TargetPath);
+        return;
+    }
+
+    Fid.cell   = FileId.Cell;
+    Fid.volume = FileId.Volume;
+    Fid.vnode  = FileId.Vnode;
+    Fid.unique = FileId.Unique;
+    Fid.hash   = FileId.Hash;
+
+    code = cm_GetSCache(&Fid, NULL, &scp, userp, &req);
+    if (code) {
+        smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
+        (*ResultCB)->ResultStatus = status;
+        if ( status == STATUS_INVALID_HANDLE)
+            status = STATUS_OBJECT_PATH_INVALID;
+        osi_Log2(afsd_logp, "RDR_CreateSymlinkEntry cm_GetSCache FID failure code=0x%x status=0x%x",
+                  code, status);
+        free(TargetPath);
+        return;
+    }
+
+    lock_ObtainWrite(&scp->rw);
+    code = cm_SyncOp(scp, NULL, userp, &req, 0,
+                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    if (code) {
+        smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
+        (*ResultCB)->ResultStatus = status;
+        lock_ReleaseWrite(&scp->rw);
+        cm_ReleaseSCache(scp);
+        osi_Log3(afsd_logp, "RDR_CreateSymlinkEntry cm_SyncOp failure (1) scp=0x%p code=0x%x status=0x%x",
+                 scp, code, status);
+        free(TargetPath);
+        return;
+    }
+
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    lock_ReleaseWrite(&scp->rw);
+
+    /* Remove the temporary object */
+    if (scp->fileType == CM_SCACHETYPE_DIRECTORY)
+        code = cm_RemoveDir(dscp, NULL, FileName, userp, &req);
+    else
+        code = cm_Unlink(dscp, NULL, FileName, userp, &req);
+    cm_ReleaseSCache(scp);
+    scp = NULL;
+    if (code && code != CM_ERROR_NOSUCHFILE) {
+        smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
+        (*ResultCB)->ResultStatus = status;
+        cm_ReleaseSCache(dscp);
+        osi_Log2(afsd_logp, "RDR_CreateSymlinkEntry Unable to delete file dscp=0x%p code=0x%x",
+                 dscp, code);
+        free(TargetPath);
+        return;
+    }
+
+    /*
+     * The target path is going to be provided by the redirector in one of the following forms:
+     *
+     * 1. Relative path.
+     * 2. Absolute path prefaced as \??\UNC\<server>\<share>\<path>
+     * 3. Absolute path prefaced as \??\<drive-letter>:\<path>
+     *
+     * Relative paths can be used with just slash conversion.  Absolute paths must be converted.
+     * UNC paths with a server name that matches cm_NetbiosName then the path is an AFS path and
+     * it must be converted to /<server>/<share>/<path>.  Other UNC paths must be converted to
+     * msdfs:\\<server>\<share>\<path>.  Local disk paths should be converted to
+     * msdfs:<drive-letter>:<path>.
+     */
+
+    if ( TargetPath[0] == '\\' ) {
+        size_t nbNameLen = strlen(cm_NetbiosName);
+        size_t len;
+        char  *s;
+
+        if ( strncmp(TargetPath, "\\??\\UNC\\", 8) == 0) {
+
+            if (strncmp(&TargetPath[8], cm_NetbiosName, nbNameLen) == 0 &&
+                TargetPath[8 + nbNameLen] == '\\')
+            {
+                /* AFS path */
+                s = strdup(&TargetPath[8 + nbNameLen]);
+                free(TargetPath);
+                TargetPath = s;
+                for (; *s; s++) {
+                    if (*s == '\\')
+                        *s = '/';
+                }
+            } else {
+                /*
+                 * non-AFS UNC path (msdfs:\\server\share\path)
+                 * strlen("msdfs:\\") == 7 + 1 for the NUL
+                 */
+                len = 8 + strlen(&TargetPath[7]);
+                s = malloc(8 + strlen(&TargetPath[7]));
+                StringCbCopy(s, len, "msdfs:\\");
+                StringCbCat(s, len, &TargetPath[7]);
+                free(TargetPath);
+                TargetPath = s;
+            }
+        } else {
+            /* non-UNC path (msdfs:<drive>:\<path> */
+            s = strdup(&TargetPath[4]);
+            free(TargetPath);
+            TargetPath = s;
+        }
+
+    } else {
+        /* relative paths require slash conversion */
+        char *s = TargetPath;
+        for (; *s; s++) {
+            if (*s == '\\')
+                *s = '/';
+        }
+    }
+
+    /* Use current time */
+    setAttr.mask = CM_ATTRMASK_UNIXMODEBITS | CM_ATTRMASK_CLIENTMODTIME;
+    setAttr.unixModeBits = 0755;
+    setAttr.clientModTime = time(NULL);
+
+    code = cm_SymLink(dscp, FileName, TargetPath, flags, &setAttr, userp, &req, &scp);
+    free(TargetPath);
+
+    if (code == 0) {
+        wchar_t shortName[13]=L"";
+        cm_dirFid_t dfid;
+        DWORD dwRemaining;
+
+        if (dscp->flags & CM_SCACHEFLAG_ANYWATCH) {
+            smb_NotifyChange(FILE_ACTION_ADDED,
+                             FILE_NOTIFY_CHANGE_DIR_NAME,
+                             dscp, FileName, NULL, TRUE);
+        }
+
+        (*ResultCB)->ResultStatus = 0;  // We will be able to fit all the data in here
+
+        (*ResultCB)->ResultBufferLength = sizeof( AFSCreateSymlinkResultCB);
+
+        pResultCB = (AFSCreateSymlinkResultCB *)(*ResultCB)->ResultData;
+
+        dwRemaining = ResultBufferLength - sizeof( AFSCreateSymlinkResultCB) + sizeof( AFSDirEnumEntry);
+
+        lock_ObtainWrite(&dscp->rw);
+        code = cm_SyncOp(dscp, NULL, userp, &req, 0,
+                          CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+        if (code) {
+            smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
+            (*ResultCB)->ResultStatus = status;
+            lock_ReleaseWrite(&dscp->rw);
+            cm_ReleaseSCache(dscp);
+            cm_ReleaseSCache(scp);
+            osi_Log3(afsd_logp, "RDR_CreateSymlinkEntry cm_SyncOp failure (2) dscp=0x%p code=0x%x status=0x%x",
+                      dscp, code, status);
+            return;
+        }
+
+        pResultCB->ParentDataVersion.QuadPart = dscp->dataVersion;
+
+        cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+        lock_ReleaseWrite(&dscp->rw);
+
+        if (cm_shortNames) {
+            dfid.vnode = htonl(scp->fid.vnode);
+            dfid.unique = htonl(scp->fid.unique);
+
+            if (!cm_Is8Dot3(FileName))
+                cm_Gen8Dot3NameIntW(FileName, &dfid, shortName, NULL);
+            else
+                shortName[0] = '\0';
+        }
+
+        code = RDR_PopulateCurrentEntry(&pResultCB->DirEnum, dwRemaining,
+                                        dscp, scp, userp, &req, FileName, shortName,
+                                        RDR_POP_FOLLOW_MOUNTPOINTS | RDR_POP_EVALUATE_SYMLINKS,
+                                        0, NULL, &dwRemaining);
+        cm_ReleaseSCache(scp);
+        (*ResultCB)->ResultBufferLength = ResultBufferLength - dwRemaining;
+        osi_Log0(afsd_logp, "RDR_CreateSymlinkEntry SUCCESS");
+    } else {
+        (*ResultCB)->ResultStatus = STATUS_FILE_DELETED;
+        (*ResultCB)->ResultBufferLength = 0;
+        osi_Log2(afsd_logp, "RDR_CreateSymlinkEntry FAILURE code=0x%x status=0x%x",
+                  code, STATUS_FILE_DELETED);
+    }
+
+    cm_ReleaseSCache(dscp);
+
+    return;
+}
+
 
 void
 RDR_FlushFileEntry( IN cm_user_t *userp,
