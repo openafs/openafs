@@ -34,6 +34,12 @@ failed server, or accidental deletion.
 The command name is case-sensitive.  It must be issued with the capital "RO"
 and "RW".
 
+After running vos convertROtoRW, the old file server will still contain
+the old Read/Write copy of the volume, even if the VLDB no longer
+references it. You can view the old volume with B<vos listvol>, and you
+should remove the old copy (for example, with B<vos zap>) so that the
+original file server will match the VLDB.
+
 =head1 OPTIONS
 
 =over 4
