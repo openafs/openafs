@@ -1191,6 +1191,12 @@ DoVolDelete(struct rx_connection *aconn, afs_uint32 avolid,
     code =
 	AFSVolTransCreate_retry(aconn, avolid, apart, ITOffline, &ttid);
 
+    /* return early and quietly for VNOVOL; don't continue the attempt to delete. */
+    if (code == VNOVOL) {
+	error = code;
+	goto dfail;
+    }
+
     EGOTO2(dfail, code, "%sFailed to start transaction on %u\n",
 	   prefix, avolid);
 
