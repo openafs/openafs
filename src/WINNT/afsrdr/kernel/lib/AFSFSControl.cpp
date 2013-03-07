@@ -160,6 +160,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp );
     AFSCcb *pCcb = NULL;
     ULONG ulOutputBufferLen, ulInputBufferLen;
+    BOOLEAN bRelative = FALSE;
 
     __Enter
     {
@@ -420,29 +421,49 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                             break;
                         }
 
-                        if( ulRemainingLen < (ULONG) FIELD_OFFSET( AFSReparseTagInfo, AFSSymLink.Buffer) + pCcb->DirectoryCB->NameInformation.TargetName.Length)
+                        bRelative = AFSIsRelativeName( &pCcb->DirectoryCB->NameInformation.TargetName);
+
+                        if( ulRemainingLen < (ULONG) FIELD_OFFSET( AFSReparseTagInfo, AFSSymLink.Buffer) +
+                            pCcb->DirectoryCB->NameInformation.TargetName.Length + (bRelative ? 0 : sizeof( WCHAR)))
                         {
 
                             ntStatus = STATUS_BUFFER_TOO_SMALL;
 
                             Irp->IoStatus.Information = FIELD_OFFSET( REPARSE_GUID_DATA_BUFFER, GenericReparseBuffer.DataBuffer) +
                                                         FIELD_OFFSET( AFSReparseTagInfo, AFSSymLink.Buffer) +
-                                                        pCcb->DirectoryCB->NameInformation.TargetName.Length;
+                                                        pCcb->DirectoryCB->NameInformation.TargetName.Length +
+                                                        (bRelative ? 0 : sizeof( WCHAR));
 
                             break;
                         }
 
                         pReparseInfo->SubTag = OPENAFS_SUBTAG_SYMLINK;
 
-                        pReparseInfo->AFSSymLink.RelativeLink = AFSIsRelativeName( &pCcb->DirectoryCB->NameInformation.TargetName);
+                        pReparseInfo->AFSSymLink.RelativeLink = bRelative;
 
                         pReparseInfo->AFSSymLink.SymLinkTargetLength = pCcb->DirectoryCB->NameInformation.TargetName.Length;
 
-                        RtlCopyMemory( pReparseInfo->AFSSymLink.Buffer,
-                                       pCcb->DirectoryCB->NameInformation.TargetName.Buffer,
-                                       pCcb->DirectoryCB->NameInformation.TargetName.Length);
+                        if ( pReparseInfo->AFSSymLink.RelativeLink == FALSE)
+                        {
 
-                        pReparseBuffer->ReparseDataLength = (FIELD_OFFSET( AFSReparseTagInfo, AFSSymLink.Buffer) + pCcb->DirectoryCB->NameInformation.TargetName.Length);
+                            pReparseInfo->AFSSymLink.Buffer[0] = L'\\';
+
+                            RtlCopyMemory( &pReparseInfo->AFSSymLink.Buffer[ 1],
+                                           pCcb->DirectoryCB->NameInformation.TargetName.Buffer,
+                                           pCcb->DirectoryCB->NameInformation.TargetName.Length);
+
+                            pReparseInfo->AFSSymLink.SymLinkTargetLength += sizeof( WCHAR);
+                        }
+                        else
+                        {
+
+                            RtlCopyMemory( pReparseInfo->AFSSymLink.Buffer,
+                                           pCcb->DirectoryCB->NameInformation.TargetName.Buffer,
+                                           pCcb->DirectoryCB->NameInformation.TargetName.Length);
+                        }
+
+                        pReparseBuffer->ReparseDataLength = (FIELD_OFFSET( AFSReparseTagInfo, AFSSymLink.Buffer)
+                                                              + pReparseInfo->AFSSymLink.SymLinkTargetLength);
 
                         break;
                     }
@@ -513,14 +534,17 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                             break;
                         }
 
-                        if( ulRemainingLen < (ULONG) FIELD_OFFSET( AFSReparseTagInfo, UNCReferral.Buffer) + pCcb->DirectoryCB->NameInformation.TargetName.Length)
+                        if( ulRemainingLen < (ULONG) FIELD_OFFSET( AFSReparseTagInfo, UNCReferral.Buffer) +
+                            pCcb->DirectoryCB->NameInformation.TargetName.Length +
+                            (pCcb->DirectoryCB->NameInformation.TargetName.Buffer[0] == L'\\' ? sizeof( WCHAR) : 0))
                         {
 
                             ntStatus = STATUS_BUFFER_TOO_SMALL;
 
                             Irp->IoStatus.Information = FIELD_OFFSET( REPARSE_GUID_DATA_BUFFER, GenericReparseBuffer.DataBuffer) +
                                                         FIELD_OFFSET( AFSReparseTagInfo, UNCReferral.Buffer) +
-                                                        pCcb->DirectoryCB->NameInformation.TargetName.Length;
+                                                        pCcb->DirectoryCB->NameInformation.TargetName.Length +
+                                                        (pCcb->DirectoryCB->NameInformation.TargetName.Buffer[0] == L'\\' ? sizeof( WCHAR) : 0);
 
                             break;
                         }
@@ -529,11 +553,27 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 
                         pReparseInfo->UNCReferral.UNCTargetLength = pCcb->DirectoryCB->NameInformation.TargetName.Length;
 
-                        RtlCopyMemory( pReparseInfo->UNCReferral.Buffer,
-                                       pCcb->DirectoryCB->NameInformation.TargetName.Buffer,
-                                       pCcb->DirectoryCB->NameInformation.TargetName.Length);
+                        if ( pCcb->DirectoryCB->NameInformation.TargetName.Buffer[0] == L'\\')
+                        {
 
-                        pReparseBuffer->ReparseDataLength = (FIELD_OFFSET( AFSReparseTagInfo, UNCReferral.Buffer) + pCcb->DirectoryCB->NameInformation.TargetName.Length);
+                            pReparseInfo->UNCReferral.Buffer[0] = L'\\';
+
+                            RtlCopyMemory( &pReparseInfo->UNCReferral.Buffer[ 1],
+                                           pCcb->DirectoryCB->NameInformation.TargetName.Buffer,
+                                           pCcb->DirectoryCB->NameInformation.TargetName.Length);
+
+                            pReparseInfo->UNCReferral.UNCTargetLength += sizeof( WCHAR);
+                        }
+                        else
+                        {
+
+                            RtlCopyMemory( pReparseInfo->UNCReferral.Buffer,
+                                           pCcb->DirectoryCB->NameInformation.TargetName.Buffer,
+                                           pCcb->DirectoryCB->NameInformation.TargetName.Length);
+                        }
+
+                        pReparseBuffer->ReparseDataLength = (FIELD_OFFSET( AFSReparseTagInfo, UNCReferral.Buffer)
+                                                              + pReparseInfo->UNCReferral.UNCTargetLength);
 
                         break;
                     }
