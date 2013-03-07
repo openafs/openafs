@@ -688,6 +688,34 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                                           NULL,
                                           lCount);
                         }
+
+                        if ( pDirEntry->ObjectInformation->VolumeCB != pCurrentVolume)
+                        {
+
+                            lCount = AFSVolumeDecrement( pCurrentVolume,
+                                                         VolumeReferenceReason);
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+                                          AFS_TRACE_LEVEL_VERBOSE,
+                                          "AFSLocateNameEntry Decrement count on volume %p Reason %u Cnt %d\n",
+                                          pCurrentVolume,
+                                          VolumeReferenceReason,
+                                          lCount);
+
+                            pCurrentVolume = pDirEntry->ObjectInformation->VolumeCB;
+
+                            VolumeReferenceReason = AFS_VOLUME_REFERENCE_LOCATE_NAME;
+
+                            lCount = AFSVolumeIncrement( pCurrentVolume,
+                                                         VolumeReferenceReason);
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+                                          AFS_TRACE_LEVEL_VERBOSE,
+                                          "AFSLocateNameEntry Increment count on volume %p Reason %u Cnt %d\n",
+                                          pCurrentVolume,
+                                          VolumeReferenceReason,
+                                          lCount);
+                        }
                     }
                     else
                     {
@@ -1450,6 +1478,34 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                                       NULL,
                                       lCount);
                     }
+                }
+
+                if ( pDirEntry->ObjectInformation->VolumeCB != pCurrentVolume)
+                {
+
+                    lCount = AFSVolumeDecrement( pCurrentVolume,
+                                                 VolumeReferenceReason);
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSLocateNameEntry Decrement count on volume %p Reason %u Cnt %d\n",
+                                  pCurrentVolume,
+                                  VolumeReferenceReason,
+                                  lCount);
+
+                    pCurrentVolume = pDirEntry->ObjectInformation->VolumeCB;
+
+                    VolumeReferenceReason = AFS_VOLUME_REFERENCE_LOCATE_NAME;
+
+                    lCount = AFSVolumeIncrement( pCurrentVolume,
+                                                 VolumeReferenceReason);
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSLocateNameEntry Increment count on volume %p Reason %u Cnt %d\n",
+                                  pCurrentVolume,
+                                  VolumeReferenceReason,
+                                  lCount);
                 }
 
                 uniPathName = uniRemainingPath;
