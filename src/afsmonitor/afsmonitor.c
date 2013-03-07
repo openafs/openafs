@@ -18,22 +18,12 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <stdio.h>
 #include <math.h>
-#include <string.h>
-#include <errno.h>
-#include <afs/cmd.h>
-#include <signal.h>
-#undef IN
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <netdb.h>
 #include <ctype.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
+
+#include <afs/cmd.h>
 
 #include <afs/gtxwindows.h>		/*Generic window package */
 #include <afs/gtxobjects.h>		/*Object definitions */
