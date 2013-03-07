@@ -370,11 +370,8 @@ gettoproot(struct afscp_cell *cell, char *p, char **q,
 	    r = p;
 	    while (*r && *r != '/')
 		r++;
-	    if (!*r && !*p) {
-		afscp_errno = ENODEV;
-		return 1;
-	    }
-	    *r++ = 0;
+	    if (*r)
+		*r++ = 0;
 	    *q = r;
 	    afs_dprintf(("gettoproot: dynroot looking up cell %s\n", p));
 	    cell = afscp_CellByName(p, NULL);
