@@ -6351,31 +6351,34 @@ AFSRetrieveFileAttributes( IN AFSDirectoryCB *ParentDirectoryCB,
                                        &pDirectoryEntry,
                                        NULL);
 
-        //
-        // AFSLocateNameEntry returns pNewVolumeCB with a reference held
-        // even if pVolumeCB == pNewVolumeCB.  It is always safe to release
-        // the reference on pVolumeCB that was held prior to the call.
-        // If pVolumeCB == pNewVolumeCB, the reference from AFSLocateNameEntry
-        // will be released second.
-        //
+        if ( pNewVolumeCB != NULL)
+        {
+            //
+            // AFSLocateNameEntry returns pNewVolumeCB with a reference held
+            // even if pVolumeCB == pNewVolumeCB.  It is always safe to release
+            // the reference on pVolumeCB that was held prior to the call.
+            // If pVolumeCB == pNewVolumeCB, the reference from AFSLocateNameEntry
+            // will be released second.
+            //
 
-        lCount = AFSVolumeDecrement( pVolumeCB,
-                                     VolumeReferenceReason);
+            lCount = AFSVolumeDecrement( pVolumeCB,
+                                         VolumeReferenceReason);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSRetrieveFileAttributes Decrement count on volume %p Reason %u Cnt %d\n",
-                      pVolumeCB,
-                      VolumeReferenceReason,
-                      lCount);
+            AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSRetrieveFileAttributes Decrement count on volume %p Reason %u Cnt %d\n",
+                          pVolumeCB,
+                          VolumeReferenceReason,
+                          lCount);
 
-        pVolumeCB = pNewVolumeCB;
+            pVolumeCB = pNewVolumeCB;
 
-        pNewVolumeCB = NULL;
+            pNewVolumeCB = NULL;
 
-        VolumeReferenceReason = NewVolumeReferenceReason;
+            VolumeReferenceReason = NewVolumeReferenceReason;
 
-        NewVolumeReferenceReason = AFS_VOLUME_REFERENCE_INVALID;
+            NewVolumeReferenceReason = AFS_VOLUME_REFERENCE_INVALID;
+        }
 
         //
         // AFSLocateNameEntry does not alter the reference count of
@@ -7133,31 +7136,34 @@ AFSEvaluateRootEntry( IN AFSDirectoryCB *DirectoryCB,
                                        &pDirectoryEntry,
                                        NULL);
 
-        //
-        // AFSLocateNameEntry returns pNewVolumeCB with a reference held
-        // even if pVolumeCB == pNewVolumeCB.  It is always safe to release
-        // the reference on pVolumeCB that was held prior to the call.
-        // If pVolumeCB == pNewVolumeCB, the reference from AFSLocateNameEntry
-        // will be released second.
-        //
+        if ( pNewVolumeCB != NULL)
+        {
+            //
+            // AFSLocateNameEntry returns pNewVolumeCB with a reference held
+            // even if pVolumeCB == pNewVolumeCB.  It is always safe to release
+            // the reference on pVolumeCB that was held prior to the call.
+            // If pVolumeCB == pNewVolumeCB, the reference from AFSLocateNameEntry
+            // will be released second.
+            //
 
-        lCount = AFSVolumeDecrement( pVolumeCB,
-                                     VolumeReferenceReason);
+            lCount = AFSVolumeDecrement( pVolumeCB,
+                                         VolumeReferenceReason);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSEvaluateRootEntry Decrement count on volume %p Reason %u Cnt %d\n",
-                      pVolumeCB,
-                      VolumeReferenceReason,
-                      lCount);
+            AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSEvaluateRootEntry Decrement count on volume %p Reason %u Cnt %d\n",
+                          pVolumeCB,
+                          VolumeReferenceReason,
+                          lCount);
 
-        pVolumeCB = pNewVolumeCB;
+            pVolumeCB = pNewVolumeCB;
 
-        pNewVolumeCB = NULL;
+            pNewVolumeCB = NULL;
 
-        VolumeReferenceReason = NewVolumeReferenceReason;
+            VolumeReferenceReason = NewVolumeReferenceReason;
 
-        NewVolumeReferenceReason = AFS_VOLUME_REFERENCE_INVALID;
+            NewVolumeReferenceReason = AFS_VOLUME_REFERENCE_INVALID;
+        }
 
         //
         // AFSLocateNameEntry does not alter the reference count of
@@ -8621,31 +8627,35 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
                                            &pDirectoryEntry,
                                            NULL);
 
-            //
-            // AFSLocateNameEntry returns pNewVolumeCB with a reference held
-            // even if pVolumeCB == pNewVolumeCB.  It is always safe to release
-            // the reference on pVolumeCB that was held prior to the call.
-            // If pVolumeCB == pNewVolumeCB, the reference from AFSLocateNameEntry
-            // will be released second.
-            //
+            if ( pNewVolumeCB != NULL)
+            {
 
-            lCount = AFSVolumeDecrement( pVolumeCB,
-                                         VolumeReferenceReason);
+                //
+                // AFSLocateNameEntry returns pNewVolumeCB with a reference held
+                // even if pVolumeCB == pNewVolumeCB.  It is always safe to release
+                // the reference on pVolumeCB that was held prior to the call.
+                // If pVolumeCB == pNewVolumeCB, the reference from AFSLocateNameEntry
+                // will be released second.
+                //
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSGetObjectStatus Decrement count on volume %p Reason %u Cnt %d\n",
-                          pVolumeCB,
-                          VolumeReferenceReason,
-                          lCount);
+                lCount = AFSVolumeDecrement( pVolumeCB,
+                                             VolumeReferenceReason);
 
-            pVolumeCB = pNewVolumeCB;
+                AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSGetObjectStatus Decrement count on volume %p Reason %u Cnt %d\n",
+                              pVolumeCB,
+                              VolumeReferenceReason,
+                              lCount);
 
-            pNewVolumeCB = NULL;
+                pVolumeCB = pNewVolumeCB;
 
-            VolumeReferenceReason = NewVolumeReferenceReason;
+                pNewVolumeCB = NULL;
 
-            NewVolumeReferenceReason = AFS_VOLUME_REFERENCE_INVALID;
+                VolumeReferenceReason = NewVolumeReferenceReason;
+
+                NewVolumeReferenceReason = AFS_VOLUME_REFERENCE_INVALID;
+            }
 
             //
             // AFSLocateNameEntry does not alter the reference count of
