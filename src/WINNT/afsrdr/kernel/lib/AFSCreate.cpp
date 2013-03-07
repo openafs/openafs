@@ -454,33 +454,37 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                                            &pDirectoryCB,
                                            &uniComponentName);
 
-            //
-            // AFSLocateNameEntry returns pNewVolumeCB with a reference held
-            // even if pVolumeCB == pNewVolumeCB.  It is always safe to release
-            // the reference on pVolumeCB that was held prior to the call.
-            // If pVolumeCB == pNewVolumeCB, the reference from AFSLocateNameEntry
-            // will be released second.
-            //
+            if ( pNewVolumeCB != NULL)
+            {
 
-            lCount = AFSVolumeDecrement( pVolumeCB,
-                                         VolumeReferenceReason);
+                //
+                // AFSLocateNameEntry returns pNewVolumeCB with a reference held
+                // even if pVolumeCB == pNewVolumeCB.  It is always safe to release
+                // the reference on pVolumeCB that was held prior to the call.
+                // If pVolumeCB == pNewVolumeCB, the reference from AFSLocateNameEntry
+                // will be released second.
+                //
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSCommonCreate Decrement count on volume %p Reason %u Cnt %d\n",
-                          pVolumeCB,
-                          VolumeReferenceReason,
-                          lCount);
+                lCount = AFSVolumeDecrement( pVolumeCB,
+                                             VolumeReferenceReason);
 
-            pVolumeCB = pNewVolumeCB;
+                AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSCommonCreate Decrement count on volume %p Reason %u Cnt %d\n",
+                              pVolumeCB,
+                              VolumeReferenceReason,
+                              lCount);
 
-            pNewVolumeCB = NULL;
+                pVolumeCB = pNewVolumeCB;
 
-            VolumeReferenceReason = NewVolumeReferenceReason;
+                pNewVolumeCB = NULL;
 
-            NewVolumeReferenceReason = AFS_VOLUME_REFERENCE_INVALID;
+                VolumeReferenceReason = NewVolumeReferenceReason;
 
-            bReleaseVolume = (pVolumeCB != NULL);
+                NewVolumeReferenceReason = AFS_VOLUME_REFERENCE_INVALID;
+
+                bReleaseVolume = (pVolumeCB != NULL);
+            }
 
             //
             // AFSLocateNameEntry does not alter the reference count of
