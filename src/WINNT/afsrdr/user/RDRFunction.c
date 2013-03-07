@@ -606,38 +606,110 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
             wtarget = (WCHAR *)((PBYTE)pCurrentEntry + pCurrentEntry->TargetNameOffset);
 
             if (dwFlags & RDR_POP_EVALUATE_SYMLINKS) {
-                char * mp;
 
                 code2 = cm_HandleLink(scp, userp, reqp);
                 if (code2 == 0) {
-                    mp = scp->mountPointStringp;
-                    len = strlen(mp);
-                    if ( len != 0 ) {
-                        /* Strip off the msdfs: prefix from the target name for the file system */
-                        if (scp->fileType == CM_SCACHETYPE_DFSLINK) {
-                            osi_Log0(afsd_logp, "RDR_PopulateCurrentEntry DFSLink Detected");
-                            pCurrentEntry->FileType = scp->fileType;
+                    size_t wtarget_len = 0;
 
-                            if (!strncmp("msdfs:", mp, 6)) {
-                                mp += 6;
-                                len -= 6;
-                            }
+                    if (scp->mountPointStringp[0]) {
+                        char * mp;
+                        char * s;
+                        size_t offset = 0;
+
+                        len = strlen(scp->mountPointStringp) + 1;
+                        mp = strdup(scp->mountPointStringp);
+
+                        for (s=mp; *s; s++) {
+                            if (*s == '/')
+                                *s = '\\';
                         }
-                        /* only send one slash to the redirector */
-                        if (mp[0] == '\\' && mp[1] == '\\') {
-                            mp++;
-                            len--;
+
+                        if (strncmp("msdfs:", mp, 6) == 0) {
+                            offset = 6;
                         }
+
+
+                        if ( mp[offset + 1] == ':' && mp[offset] != '\\') {
+                            /* Local drive letter.  Must return <drive>:\<path> */
+                            pCurrentEntry->FileType = CM_SCACHETYPE_DFSLINK;
+                            wtarget_len = len - offset;
 #ifdef UNICODE
-                        cch = MultiByteToWideChar( CP_UTF8, 0, mp,
-                                                   len * sizeof(char),
-                                                   wtarget,
-                                                   len * sizeof(WCHAR));
+                            cch = MultiByteToWideChar( CP_UTF8, 0, &mp[offset],
+                                                       wtarget_len * sizeof(char),
+                                                       wtarget,
+                                                       wtarget_len * sizeof(WCHAR));
 #else
-                        mbstowcs(wtarget, mp, len);
+                            mbstowcs(wtarget, &mp[offset], wtarget_len);
 #endif
+                        } else if (mp[offset] == '\\') {
+                            size_t nbNameLen = strlen(cm_NetbiosName);
+
+                            if ( strncmp(&mp[offset + 1], cm_NetbiosName, nbNameLen) == 0 &&
+                                 mp[offset + nbNameLen + 1] == '\\')
+                            {
+                                /* an AFS symlink */
+                                pCurrentEntry->FileType = CM_SCACHETYPE_SYMLINK;
+                                wtarget_len = len - offset;
+#ifdef UNICODE
+                                cch = MultiByteToWideChar( CP_UTF8, 0, &mp[offset],
+                                                           wtarget_len * sizeof(char),
+                                                           wtarget,
+                                                           wtarget_len * sizeof(WCHAR));
+#else
+                                mbstowcs(wtarget, &mp[offset], wtarget_len);
+#endif
+                            } else if ( mp[offset + 1] == '\\' &&
+                                        strncmp(&mp[offset + 2], cm_NetbiosName, strlen(cm_NetbiosName)) == 0 &&
+                                        mp[offset + nbNameLen + 2] == '\\')
+                            {
+                                /* an AFS symlink */
+                                pCurrentEntry->FileType = CM_SCACHETYPE_SYMLINK;
+                                wtarget_len = len - offset - 1;
+#ifdef UNICODE
+                                cch = MultiByteToWideChar( CP_UTF8, 0, &mp[offset + 1],
+                                                           wtarget_len * sizeof(char),
+                                                           wtarget,
+                                                           wtarget_len * sizeof(WCHAR));
+#else
+                                mbstowcs(wtarget, &mp[offset + 1], wtarget_len);
+#endif
+                            } else {
+                                /*
+                                 * treat as a UNC path. Needs to be \<server>\<share\<path>
+                                 */
+                                pCurrentEntry->FileType = CM_SCACHETYPE_DFSLINK;
+
+                                if ( mp[offset] == '\\' && mp[offset + 1] == '\\')
+                                     offset++;
+
+                                wtarget_len = len - offset;
+#ifdef UNICODE
+                                cch = MultiByteToWideChar( CP_UTF8, 0, &mp[offset],
+                                                           wtarget_len * sizeof(char),
+                                                           wtarget,
+                                                           wtarget_len * sizeof(WCHAR));
+#else
+                                mbstowcs(wtarget, &mp[offset], wtarget_len);
+#endif
+                            }
+                        } else {
+                            /* Relative AFS Symlink */
+                            pCurrentEntry->FileType = CM_SCACHETYPE_SYMLINK;
+                            wtarget_len = len - offset;
+#ifdef UNICODE
+                            cch = MultiByteToWideChar( CP_UTF8, 0, &mp[offset],
+                                                       wtarget_len * sizeof(char),
+                                                       wtarget,
+                                                       wtarget_len * sizeof(WCHAR));
+#else
+                            mbstowcs(wtarget, &mp[offset], wtarget_len);
+#endif
+                        }
+
+                        free(mp);
                     }
-                    pCurrentEntry->TargetNameLength = (ULONG)(sizeof(WCHAR) * len);
+
+                    pCurrentEntry->TargetNameLength = (ULONG)(sizeof(WCHAR) * (wtarget_len - 1));
                 } else {
                     osi_Log2(afsd_logp, "RDR_PopulateCurrentEntry cm_HandleLink failed scp=0x%p code=0x%x",
                              scp, code2);
