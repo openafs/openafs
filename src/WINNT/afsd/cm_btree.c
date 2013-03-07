@@ -2753,8 +2753,6 @@ cm_BPlusDirEnumBulkStatNext(cm_direnum_t *enump)
             continue;
         }
 
-        if (next == -1)
-            next = count;
         tscp = cm_FindSCache(&enump->entry[count].fid);
         if (tscp) {
             if (lock_TryWrite(&tscp->rw)) {
@@ -2775,6 +2773,10 @@ cm_BPlusDirEnumBulkStatNext(cm_direnum_t *enump)
             cm_ReleaseSCache(tscp);
         }	/* found entry */
 
+        /* 'next' is the enump entry that is stored in the [bsp->counter == 1] element */
+        if (next == -1)
+            next = count;
+
         bsp->fids[bsp->counter].Volume = enump->entry[count].fid.volume;
         bsp->fids[bsp->counter].Vnode = enump->entry[count].fid.vnode;
         bsp->fids[bsp->counter].Unique = enump->entry[count].fid.unique;
@@ -2792,19 +2794,22 @@ cm_BPlusDirEnumBulkStatNext(cm_direnum_t *enump)
                 *(bs_flagsp[i]) &= ~CM_DIRENUM_FLAG_GOT_STATUS;
             }
 
-            code = cm_GetSCache(&enump->entry[next].fid, NULL, &tscp, userp, &req);
-            if (code == 0) {
-                if (lock_TryWrite(&tscp->rw)) {
-                    code = cm_SyncOp(tscp, NULL, userp, &req, 0,
-                                     CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-                    lock_ReleaseWrite(&tscp->rw);
+            /* if next == -1, there is no entry to update the status of */
+            if (next != -1) {
+                code = cm_GetSCache(&enump->entry[next].fid, NULL, &tscp, userp, &req);
+                if (code == 0) {
+                    if (lock_TryWrite(&tscp->rw)) {
+                        code = cm_SyncOp(tscp, NULL, userp, &req, 0,
+                                          CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+                        lock_ReleaseWrite(&tscp->rw);
+                        *(bs_errorCodep[1]) = code;
+                        *(bs_flagsp[1]) |= CM_DIRENUM_FLAG_GOT_STATUS;
+                    }
+                    cm_ReleaseSCache(tscp);
+                } else {
                     *(bs_errorCodep[1]) = code;
                     *(bs_flagsp[1]) |= CM_DIRENUM_FLAG_GOT_STATUS;
                 }
-                cm_ReleaseSCache(tscp);
-            } else {
-                *(bs_errorCodep[1]) = code;
-                *(bs_flagsp[1]) |= CM_DIRENUM_FLAG_GOT_STATUS;
             }
             goto done;
         }
