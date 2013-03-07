@@ -848,10 +848,12 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                 }
 
                 //
-                // For now deny access on this call
+                // Claim success.  The typical usage is setting delete on close
+                // as the next operation on the reparse point before closing
+                // the handle.
                 //
 
-                ntStatus = STATUS_ACCESS_DENIED;
+                ntStatus = STATUS_SUCCESS;
 
                 break;
             }
