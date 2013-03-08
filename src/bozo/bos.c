@@ -803,8 +803,6 @@ AddKey(struct cmd_syndesc *as, void *arock)
     afs_int32 code;
     struct ktc_encryptionKey tkey;
     afs_int32 temp;
-    char *tcell;
-    char cellBuffer[256];
     char buf[BUFSIZ], ver[BUFSIZ];
 
     tconn = GetConn(as, 1);
@@ -839,22 +837,29 @@ AddKey(struct cmd_syndesc *as, void *arock)
 */
 	strcpy((char *)&tkey, buf);
     } else {			/* kerberos key */
+	char *tcell;
 	if (as->parms[ADDPARMOFFSET].items) {
-	    strcpy(cellBuffer, as->parms[ADDPARMOFFSET].items->data);
+	    tcell = strdup(as->parms[ADDPARMOFFSET].items->data);
+	    if (tcell == NULL) {
+		fprintf(stderr, "bos: Unable to allocate memory for cellname\n");
+		exit(1);
+	    }
 
 	    /* string to key needs upper-case cell names */
 
 	    /* I don't believe this is true.  The string to key function
 	     * actually expands the cell name, then LOWER-CASES it.  Perhaps it
 	     * didn't use to??? */
-	    ucstring(cellBuffer, cellBuffer, strlen(cellBuffer));
-	    tcell = cellBuffer;
+	    ucstring(tcell, tcell, strlen(tcell));
 	} else
 	    tcell = NULL;	/* no cell specified, use current */
 /*
 	ka_StringToKey(as->parms[1].items->data, tcell, &tkey);
 */
 	ka_StringToKey(buf, tcell, &tkey);
+
+	if (tcell)
+	    free(tcell);
     }
     code = BOZO_AddKey(tconn, temp, ktc_to_bozoptr(&tkey));
     if (code) {
