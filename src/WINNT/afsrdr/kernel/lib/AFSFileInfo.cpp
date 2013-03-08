@@ -2197,6 +2197,20 @@ AFSSetDispositionInfo( IN PIRP Irp,
                     try_return( ntStatus = STATUS_CANNOT_DELETE);
                 }
             }
+            else if( pFcb->Header.NodeTypeCode == AFS_SYMBOLIC_LINK_FCB ||
+                     pFcb->Header.NodeTypeCode == AFS_MOUNT_POINT_FCB ||
+                     pFcb->Header.NodeTypeCode == AFS_DFS_LINK_FCB ||
+                     pFcb->Header.NodeTypeCode == AFS_INVALID_FCB)
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSSetDispositionInfo Setting PENDING_DELETE on DirEntry %p Name %wZ\n",
+                              DirectoryCB,
+                              &DirectoryCB->NameInformation.FileName);
+
+                SetFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE);
+            }
         }
         else
         {
