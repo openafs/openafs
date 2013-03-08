@@ -146,14 +146,13 @@ GetPartitionID(char *aname)
 
 /* make ctime easier to use */
 static char *
-DateOf(afs_int32 atime)
+DateOf(time_t atime)
 {
     static char tbuffer[30];
     char *tp;
-    time_t t = (time_t) atime;
-    tp = ctime(&t);
+    tp = ctime(&atime);
     if (tp) {
-	strcpy(tbuffer, tp);
+	strlcpy(tbuffer, tp, sizeof(tbuffer));
 	tbuffer[24] = 0;	/* get rid of new line */
     } else
 	strcpy(tbuffer, "BAD TIME");
