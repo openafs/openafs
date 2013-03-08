@@ -793,9 +793,12 @@ AddKey(struct cmd_syndesc *as, void *arock)
     tconn = GetConn(as, 1);
     memset(&tkey, 0, sizeof(struct ktc_encryptionKey));
 
-    if (as->parms[1].items)
-	strcpy(buf, as->parms[1].items->data);
-    else {
+    if (as->parms[1].items) {
+	if (strlcpy(buf, as->parms[1].items->data, sizeof(buf)) >= sizeof(buf)) {
+	    fprintf(stderr, "Key data too long for buffer\n");
+	    exit(1);
+	}
+    } else {
 	/* prompt for key */
 	code = UI_UTIL_read_pw_string(buf, sizeof(buf), "input key: ", 0);
 	if (code || strlen(buf) == 0) {
