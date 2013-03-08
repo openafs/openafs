@@ -1724,9 +1724,15 @@ AFSQueryAttribTagInfo( IN PIRP Irp,
             }
         }
 
-        if( BooleanFlagOn( DirectoryCB->ObjectInformation->FileAttributes, FILE_ATTRIBUTE_REPARSE_POINT))
+        if ( DirectoryCB->ObjectInformation->FileType == AFS_FILE_TYPE_MOUNTPOINT)
         {
+
             Buffer->ReparseTag = IO_REPARSE_TAG_SURROGATE|IO_REPARSE_TAG_OPENAFS_DFS;
+        }
+        else if( BooleanFlagOn( DirectoryCB->ObjectInformation->FileAttributes, FILE_ATTRIBUTE_REPARSE_POINT))
+        {
+
+            Buffer->ReparseTag = IO_REPARSE_TAG_SYMLINK;
         }
 
         *Length -= sizeof( FILE_ATTRIBUTE_TAG_INFORMATION);
