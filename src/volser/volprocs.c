@@ -1300,6 +1300,9 @@ VolForward(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate,
 	rx_NewConnection(htonl(destination->destHost),
 			 htons(destination->destPort), VOLSERVICE_ID,
 			 securityObject, securityIndex);
+
+    RXS_Close(securityObject); /* will be freed after connection destroyed */
+
     if (!tcon) {
         TClearRxCall(tt);
 	TRELE(tt);
@@ -1431,6 +1434,9 @@ SAFSVolForwardMultiple(struct rx_call *acid, afs_int32 fromTrans, afs_int32
 	    }
 	}
     }
+
+    /* Security object will be freed when all connections destroyed */
+    RXS_Close(securityObject);
 
     /* these next calls implictly call rx_Write when writing out data */
     code = DumpVolMulti(tcalls, i, vp, fromDate, 0, codes);
