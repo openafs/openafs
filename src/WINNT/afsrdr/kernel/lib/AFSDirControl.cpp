@@ -207,6 +207,7 @@ AFSQueryDirectory( IN PIRP Irp)
         if( bInitialQuery &&
             BooleanFlagOn( pCcb->Flags, CCB_FLAG_DIRECTORY_QUERY_DIRECT_QUERY))
         {
+
             bInitialQuery = FALSE;
         }
         else if( bRestartScan)
@@ -217,12 +218,19 @@ AFSQueryDirectory( IN PIRP Irp)
 
             ClearFlag( pCcb->Flags, CCB_FLAG_DIRECTORY_QUERY_DIRECT_QUERY);
 
-            if( !FsRtlDoesNameContainWildCards( &pCcb->MaskName))
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSQueryDirectory Enumerating content for parent %wZ Mask %wZ Restart Query\n",
+                          &pCcb->DirectoryCB->NameInformation.FileName,
+                          &pCcb->MaskName);
+
+            if( pCcb->MaskName.Length > 0 &&
+                !FsRtlDoesNameContainWildCards( &pCcb->MaskName))
             {
 
                 if( RtlCompareUnicodeString( &AFSPIOCtlName,
-                                                &pCcb->MaskName,
-                                                TRUE) != 0)
+                                             &pCcb->MaskName,
+                                             TRUE) != 0)
                 {
                     bNonWildcardMatch = TRUE;
                 }
@@ -340,6 +348,12 @@ AFSQueryDirectory( IN PIRP Irp)
                 }
                 else
                 {
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSQueryDirectory FsRtlDoesNameContainWildCards == FALSE parent %wZ Mask %wZ\n",
+                                  &pCcb->DirectoryCB->NameInformation.FileName,
+                                  puniArgFileName);
 
                     RtlCopyMemory( pCcb->MaskName.Buffer,
                                    puniArgFileName->Buffer,
