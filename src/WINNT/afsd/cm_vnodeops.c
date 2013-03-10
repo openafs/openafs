@@ -2828,6 +2828,7 @@ long cm_SetLength(cm_scache_t *scp, osi_hyper_t *sizep, cm_user_t *userp,
 {
     long code;
     int shrinking;
+    int available;
 
     /* start by locking out buffer creation */
     lock_ObtainWrite(&scp->bufCreateLock);
@@ -2899,9 +2900,19 @@ long cm_SetLength(cm_scache_t *scp, osi_hyper_t *sizep, cm_user_t *userp,
         scp->mask |= CM_SCACHEMASK_LENGTH;
     }
     else if (LargeIntegerGreaterThan(*sizep, scp->length)) {
-        /* really extending the file */
-        /* Check to see if we have sufficient quota */
-        if (cm_IsSpaceAvailable(&scp->fid, sizep, userp, reqp)) {
+        /*
+         * Really extending the file so must check to see if we
+         * have sufficient quota.  cm_IsSpaceAvailable() obtains
+         * the cm_scache.rw lock on the volume root directory.
+         * vnode 1 < scp->fid.vnode therefore calling cm_IsSpaceAvailable
+         * while holding scp->rw is a lock order violation.
+         * Dropping it is ok because we are holding scp->bufCreateLock
+         * which prevents the size of the file from changing.
+         */
+        lock_ReleaseWrite(&scp->rw);
+        available = cm_IsSpaceAvailable(&scp->fid, sizep, userp, reqp);
+        lock_ObtainWrite(&scp->rw);
+        if (available) {
             scp->length = *sizep;
             scp->mask |= CM_SCACHEMASK_LENGTH;
         } else {
