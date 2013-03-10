@@ -1579,7 +1579,6 @@ RDR_UpdateFileEntry( IN cm_user_t *userp,
     }
 
     lock_ObtainWrite(&dscp->rw);
-    bScpLocked = TRUE;
     code = cm_SyncOp(dscp, NULL, userp, &req, 0,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) {
@@ -1594,7 +1593,6 @@ RDR_UpdateFileEntry( IN cm_user_t *userp,
 
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     lock_ReleaseWrite(&dscp->rw);
-    bScpLocked = FALSE;
 
     if (dscp->fileType != CM_SCACHETYPE_DIRECTORY) {
         (*ResultCB)->ResultStatus = STATUS_NOT_A_DIRECTORY;
