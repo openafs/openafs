@@ -2909,9 +2909,22 @@ long cm_SetLength(cm_scache_t *scp, osi_hyper_t *sizep, cm_user_t *userp,
          * Dropping it is ok because we are holding scp->bufCreateLock
          * which prevents the size of the file from changing.
          */
-        lock_ReleaseWrite(&scp->rw);
-        available = cm_IsSpaceAvailable(&scp->fid, sizep, userp, reqp);
-        lock_ObtainWrite(&scp->rw);
+        afs_uint64 nextChunk = scp->length.QuadPart;
+
+        nextChunk -= (nextChunk & 0xFFFFF);
+        nextChunk += 0x100000;
+
+        if (sizep->QuadPart > nextChunk) {
+            lock_ReleaseWrite(&scp->rw);
+            available = cm_IsSpaceAvailable(&scp->fid, sizep, userp, reqp);
+            lock_ObtainWrite(&scp->rw);
+        } else {
+            /*
+             * The file server permits 1MB quota overruns so only check
+             * when the file size increases by at least that much.
+             */
+            available = 1;
+        }
         if (available) {
             scp->length = *sizep;
             scp->mask |= CM_SCACHEMASK_LENGTH;
