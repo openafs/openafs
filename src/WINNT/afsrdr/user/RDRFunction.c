@@ -5690,6 +5690,7 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
     cm_req_t    req;
     DWORD       status;
     FILETIME ft = {0x832cf000, 0x01abfcc4}; /* October 1, 1982 00:00:00 +0600 */
+    afs_uint32  flags;
 
     char volName[32]="(unknown)";
     char offLineMsg[256]="server temporarily inaccessible";
@@ -5773,8 +5774,6 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
         if ( pResultCB->CellLength )
             pResultCB->CellLength--;
     } else {
-        memcpy(&pResultCB->VolumeCreationTime, &ft, sizeof(ft));
-
         volp = cm_GetVolumeByFID(&scp->fid);
         if (!volp) {
             code = CM_ERROR_NOSUCHVOLUME;
@@ -5785,8 +5784,10 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
         if (volType == ROVOL || volType == BACKVOL)
             pResultCB->FileSystemAttributes |= FILE_READ_ONLY_VOLUME;
 
-        code = cm_SyncOp(scp, NULL, userp, &req, PRSFS_READ,
-                         CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+        flags = CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS;
+        if (scp->volumeCreationDate == 0)
+            flags |= CM_SCACHESYNC_FORCECB;
+        code = cm_SyncOp(scp, NULL, userp, &req, PRSFS_READ, flags);
         if (code == 0)
         {
             sync_done = 1;
@@ -5809,6 +5810,10 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
             } while (cm_Analyze(connp, userp, &req, &scp->fid, NULL, 0, NULL, NULL, NULL, NULL, code));
             code = cm_MapRPCError(code, &req);
         }
+
+        if ( scp->volumeCreationDate )
+            cm_LargeSearchTimeFromUnixTime(&ft, scp->volumeCreationDate);
+        memcpy(&pResultCB->VolumeCreationTime, &ft, sizeof(ft));
 
         if (code == 0) {
             if (volType == ROVOL || volType == BACKVOL) {
