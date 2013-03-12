@@ -11572,7 +11572,7 @@ int smb_DumpVCP(FILE *outputFile, char *cookie, int lock)
                      cookie, ucellp, ucellp->cellp, ucellp->flags, ucellp->ticketLen, ucellp->kvno,
                      ucellp->expirationTime, ucellp->gen,
                      ucellp->userName,
-                     ucellp->cellp->name);
+                     ucellp->cellp ? ucellp->cellp->name : "<null>");
             WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
         }
 
