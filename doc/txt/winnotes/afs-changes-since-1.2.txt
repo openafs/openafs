@@ -1,3 +1,279 @@
+Release 1.7.2200; Changes since 1.7.2100
+
+ * pioctl path processing reliably interprets a path
+   ending in a trailing slash as a directory.
+
+ * Improved support for IBM AFS 3.6 file servers which do
+   not implement either of the bulk status RPCs.  Correctly
+   mark the server flag to indicate that bulk status is not
+   supported and improve the error handling to ensure that
+   individual fetch status rpcs are used during directory
+   enumeration.
+
+ * Prevent a race that could have resulted in the incorrect
+   data version being associated with a symlink target string.
+   As a result the target would be re-evaluated even though
+   the cache manager was already in possession of the correct
+   value.
+
+ * In cm_NameI() it is possible that a symlink to an absolute path
+   is reached for which the component after the 'mountRoot' is not
+   present in the mountRoot directory.  If the mountRoot is the
+   Freelance root.volume then it is appropriate to attempt automatic
+   cell resolution.
+
+ * During AFSLocateNameEntry processing of an absolute symlink the
+   component being searched for in the AFSGlobalRoot volume may not
+   be found.  In this case, use AFSCheckCell() to query the service
+   to resolve the name.  If the AFSGlobalRoot happens to be the
+   Freelance Root Volume then the service can resolve it even though
+   it is not present in the directory listing.
+
+ * Instead of validating the symlink target if both the TargetFID
+   and the Target Name fields are undefined, perform the validating
+   if either of them are undefined.
+
+ * Handle a KRB5KRB_AP_ERR_REPEAT error sent by a KDC for the Windows
+   aklog and the afskfw library.  The KRB5KRB_AP_ERR_REPEAT is sent
+   when the KDC detects a replay.  However, the KDC replay detection
+   is known to generate many false positives.  If KRB5KRB_AP_ERR_REPEAT
+   is received, wait one second and retry the request.
+
+ * KFW_AFS_klog change.  If an explicit 'realm' is specified as input:
+
+   a. Do not duplicate a request for afs/cellname@REALM if the
+      explicit realm matches the realm of the client principal.
+
+   b. If afs/cellname@REALM fails, request afs@REALM for the
+      explicit realm.
+
+ * Wait for all worker threads to exit before unloading the
+   AFSRedirLib.sys.  Premature unloading could result in a BSOD.
+
+ * AFSRedirLib.sys SetRenameInfo could BSOD when logging is enabled.
+   After the Target Dirctory CB has been deleted, it is not
+   safe to reference the FileName component.  Use the uniTargetName
+   in the error log message.
+
+ * Fix WNetGetResourceParent processing for \\afs.
+   When the input name is \\afs the parent must be an empty
+   NETRESOURCE structure.  The null lpRemoteName field represents
+   no parent.
+
+ * Access control checks have been applied to all calls to the
+   AFSRedir.sys and AFSRedirLib.sys drivers to ensure that arbitrary
+   actors cannot issue requests that could corrupt data, poison the
+   cache or generate a BSOD.
+
+ * CellServDB update 28 Jan 2013
+
+ * Major rework of internal reference counting within AFSRedirLib.sys
+   prevents memory leaks and premature object deallocation.
+
+ * Major rework of garbage collection algorithms significantly reduce
+   overall memory consumption.
+
+ * Replacement of the I/O pathway between the afsd_service.exe and the
+   AFSRedirLib.sys provides a significant improvement in I/O throughput
+   across a broad range of file access patterns.
+
+ * Implementation of deferred cached writes in the AFS redirector
+   reduces CPU utlization while decreasing in-kernel write latency.
+
+ * The UNIX cache manager does not implement hard dead timeouts
+   on file server connections.  The Windows cache manager had to
+   because of the SMB connection timeout requirements.  For the
+   AFS redirector there is no timeout requirement.  Therefore,
+   when the SMB stack is disabled the Windows cache manager can
+   disable the hard dead timeout. The idle dead timeouts are in place
+   to cancel connections when file servers stop replying with real data.
+
+ * Only the VolumeWorkerContext of the VolumeCB should be allocated
+   from the non-paged pool.  Allocate the VolumeCB itself from the
+   paged pool.The VolumeWorkerContext contains a KEVENT which must be
+   allocated from the NonPaged pool.  Move it to the AFSNonPagedVolumeCB
+   struct.
+
+ * When AFSSetRenameInfo makes a change, it is the parent object
+   that must be notified not the parent of the parent.
+
+ * Do not rely on a count of dirty extents to determine if the
+   service should flush a file during a cleanup operation.  Simply
+   because there are no dirty extents held by the redirector does
+   not imply that the service has no dirty buffers for the file.
+
+ * If the cm_scache type is something other than a file, there
+   is no point performing an FSync.   Do not incur the overhead.
+   Take into account any outstanding AsyncStore operations that
+   might be in-flight.
+
+ * Consistently report our device type as FILE_DEVICE_NETWORK_FILE_SYSTEM
+   instead of FILE_DEVICE_DISK or FILE_DEVICE_DISK_FILE_SYSTEM except
+   when returning FILE_FS_DEVICE_INFORMATION where we must lie and state
+   that the device type is FILE_DEVICE_DISK.  Otherwise, the Win32 API
+   GetFileType() returns FILE_TYPE_UNKNOWN instead of FILE_TYPE_DISK.
+
+   Applications built from msys (but not current cygwin) treat files
+   of type FILE_TYPE_UNKNOWN as special character devices instead of
+   files.  This breaks msysGit.
+
+ * AFSQueryFsAttributeInfo File System attributes are set by the
+   service in the volume information request.  Use the values the
+   service provides instead of returning an incomplete hard coded list.
+
+ * Instead of stating that the AFS device is read only; report
+   that the volume in question is read only using the FILE_READ_ONLY_VOLUME
+   file system characteristic.
+
+ * .readonly volumes can be stored on multiple partitions which each
+   have a different size and free space available.  To ensure consistency
+   regardless of which partition the .readonly is accessed from and
+   because .readonly volume sizes cannot change, report the allocation
+   size of the volume as the partition size.  Continue to report that
+   volume has zero free sectors because the volume cannot be written to.
+
+ * Test for PRSFS_INSERT in redirector interface. If a test for PRSFS_WRITE
+   fails and the cm_scache.creator is the current user, then also test for
+   PRSFS_INSERT privilege.
+
+ * Although rare there have been BSODs which were the result of
+   the ObjectInformationCB being freed while another ObjectInformationCB
+   is pointing to it via the ParentObjectInformation pointer. The pointer
+   has been removed and replaced with the ParentFileId which is used to
+   lookup the Parent ObjectInformationCB via the VolumeCB BTree of all
+   volume objects. The reference counting rules remain the same.
+
+ * If the file server provides the service with bogus status info
+   and that status info is inconsistent with the allocated fields
+   in the associated ObjectInformationCB and FCB structures, it can
+   result in a BSOD.  Perform some basic sanity checks and if an
+   inconsistency is discovered, fail the request.  This may result
+   in the inability to access a file/directory but will prevent a
+   BSOD.
+
+ * FILE_FS_VOLUME_INFORMATION now includes the full volume name (not
+   the volume group name) for RO and BK volume types.
+
+ * FILE_FS_VOLUME_INFORMATION now includes the actual volume creation
+   timestamp.
+
+ * FILE_FS_VOLUME_INFORMATION now includes the cell name as part
+   of the volume name.
+
+ * During cm_cell generation the cm_data.currentCells value was
+   incremented twice.  As a result cm_currentCells did not equal the
+   number of cm_cell objects allocated.  Upon restart the AFSCache
+   contents would be discarded.
+
+ * RDR_SetInitParams provides two paths to the redirector, the AFSCache
+   file path and the path of the %TEMP% environment variable.  If either
+   of these paths are relative paths and not absolute (or full) paths,
+   the redirector and the service will interpret them differently.
+   Ensure that the full paths are delivered to the redirector.
+
+ * The unique file ID returned as part of the BY_HANDLE_FILE_INFORMATION
+   data structure obtained via GetFileInformationByHandle() is only
+   guarranteed to be unique within the volume where volume uniqueness is
+   determined by the volume's serial number.
+
+   It therefore doesn't make sense to return the volume id as part of
+   FILE_INTERNAL_INFORMATION IndexNumber.  Instead return Vnode and
+   Unique as that is what ensures uniqueness within an existing AFS
+   volume.
+
+   Unfortunately, {VolId, Vnode, Unique} does not guarantee uniqueness
+   for when multiple cells are in use.
+
+ * rxi_PrepareSendPacket calls RXS_PreparePacket to allow the security
+   class to modify the given packet appropriately (to be undone by
+   CheckPacket on the other endpoint). However, currently
+   rxi_PrepareSendPacket ignores all errors generated by
+   RXS_PreparePacket, and processing continues as if there was no error
+   which can result in unencrypted data being leaked onto the wire.
+
+ * When the library is unloaded it stops all worker threads and then
+   evaporates the work item queues.  Thus any work items which are pending
+   will disappear.  Whilst it is OK that the threads going away, any work
+   items need to remain queued so that when the library is restarted the
+   work can continue.  The work item queues and their synchronization
+   primitives have been moved into AFSRedir.sys maintained Control Device
+   Object Extension.  The list of worker threads remains in the Library
+   Device Object Extension.
+
+ * Directory lookups in AFS should favor case-sensivite matches
+   but permit case-insensitive matches otherwise.  When the service
+   evaluates names on behalf of the redirector it should not follow
+   mount points.  The redirector exposes mount points as junctions.
+
+ * The AFS redirector has required that directories be fully enumerated
+   when the directory object is opened.  This is a very expensive
+   operation involving large numbers of file server RPC round trips for
+   directories with tens of thousands of objects and those containing
+   symlinks.
+
+   This patchset delays directory enumeration for the last component
+   in a path until such time as dirctory data is requested by the
+   application.  If the request is for a non-wildcard pattern, the
+   service will be asked to provide the details for just the one required
+   object.
+
+   Delaying the directory enumeration improves performance for
+   GetFileAttributes[Ex], GetDiskFreeSpace[Ex], GetVolumeInformation,
+   and GetNamedSecurityInfo Win32 API calls.   In those cases it is
+   no longer necessary to enumerate the target directory at all.
+
+ * 1.7.2000 halted the practice of calling ka_UserAuthenticateGeneral2()
+   with the alternate smbName.  It should have halted the practice of passing
+   flag KA_USERAUTH_AUTHENT_LOGON which indicates that the smbName parameter
+   has been provided.   Passing KA_USERAUTH_AUTHENT_LOGON without the smbName
+   field results in a KTC_INVAL error.  This error only impacts sites that
+   still use kaserver or Kerberos v4 for authentication.
+
+ * Add support for creating symlinks via the Win32 CreateSymbolicLink API.
+
+ * Add support for deleting symlinks to files via the Win32 DeleteFile API.
+
+ * Add support for deleting symlinks to directories via the Win32
+   RemoveDirectory API.
+
+ * The redirector now exports symlinks as Microsoft Symlink Reparse Points
+   instead of OpenAFS Reparse Points.  This permits Symlinks to be
+   recognized by a broader range of tools and improves compatibility with
+   Cygwin.
+
+ * cm_FreeServerList obtains cm_serverLock exclusively and in some
+   circumstances will call cm_FreeServer().   cm_FreeServer() will
+   drop the cm_serverLock if the cm_server_t.refCount is zero in order to
+   avoid a lock order violation when calling cm_GCConnections() since
+   cm_connLock is higher in the lock hierarchy.
+
+   The call to cm_FreeServer is performed after the cm_serverRef_t
+   to be deleted is identified but before it is removed from the list.
+   There is the potential for two threads calling cm_FreeServerList()
+   to race and for more than one thread to attempt to delete the same
+   cm_serverRef_t twice.
+
+   Fix this by:
+
+   a. maintain a private copy of the cm_server_t pointer, delete the
+      cm_serverRef_t and update the list pointers before calling cm_FreeServer().
+
+   b. obtain and release a refcnt on the next cm_serverRef_t to ensure
+      that it is not deleted out from underneath the thread in case the
+      cm_serverLock is dropped.
+
+ * Relative symlinks including a ".." component could be processed incorrectly
+   if the ".." crosses over a mount point or symlink whose source and target
+   are in different volumes.
+
+ * Instead of performing a free space (or quota) check on every extending
+   write, perform the check only when the file length is increased beyond
+   the next 1MB boundary.   The file server permits 1MB quota over runs
+   and issuing the volume status rpc to the file server is extremely
+   expensive.  Especially for append only applications that write just a few
+   bytes at a time.
+
+
 Release 1.7.2100; Changes since 1.7.2000
 
  * Prevent assertion failure during buffer recycling
