@@ -137,9 +137,15 @@
           <listitem>
             <para>Microsoft Windows XP Professional (pre-SP2)</para>
           </listitem>
+          <listitem>
+            <para>Microsoft Windows 8 RT (ARM)</para>
+          </listitem>
         </itemizedlist>
       </para>
-      <para>Older releases of OpenAFS are available for download if unsupported operating systems must be used. The last version of OpenAFS with support for Win9x is 1.2.2b. The last version with support for Windows NT 4.0 is 1.2.10.  The last version to support Windows 2000 and XP SP1 is 1.6.x.</para>
+      <para>Older releases of OpenAFS are available for download if unsupported operating systems
+        must be used. The last version of OpenAFS with support for Win9x is 1.2.2b. The last version
+        with support for Windows NT 4.0 is 1.2.10. The last version to support Windows 2000 and XP
+        SP1 is 1.6.1.</para>
     </section>
     <section>
       <title id="Disk_Space">2.2 Disk Space</title>
@@ -367,13 +373,15 @@
         </itemizedlist>
       </section>
       <section>
-        <title>3.2.4. Heimdal 1.5 and Weak Encryption Types</title>
+        <title>3.2.4. Heimdal 1.5, MIT 4.x, and Weak Encryption Types</title>
         <para>Just as Microsoft disabled the use of Weak Encryption Types in Windows 7 and Windows
           Server 2008 R2, Heimdal and MIT have disabled the use of weak encryption types in their
-          latest releases.  In order to use Heimdal 1.5 or MIT Kerberos 1.9 or later with OpenAFS,
-          the weak encryption types including DES-CBC-CRC and DES-CBC-MD5 must be enabled.  In
+          latest releases. In order to use Heimdal 1.5 or MIT Kerberos 1.9 or later with OpenAFS,
+          the weak encryption types including DES-CBC-CRC and DES-CBC-MD5 must be enabled. In
           Heimdal, this is performed by adding "allow_weak_crypto = true" to the [libdefaults]
-          section of the %SystemRoot%\ProgramData\krb5.conf file.</para>
+          section of the %SystemRoot%\ProgramData\Kerberos\krb5.conf file.  In MIT KFW 4.x, this is
+          performed by adding "allow_weak_crypto = true" to the [libdefaults] section of the
+          %SystemRoot%\ProgramData\MIT\Kerberos5\krb5.ini file.</para>
         <para>Futures versions of OpenAFS will not have this requirement.</para>
       </section>
     </section>
@@ -821,17 +829,19 @@
       </indexterm>
       <para>The OpenAFS client supports UNC paths everywhere. UNC paths provide a canonical name for resources stored within AFS. UNC paths should be used instead of drive letter mappings whenever possible. This is especially true when specifying the location of roaming profiles and redirected folders.</para>
       <para>Power users that make extensive use of the command line shell, cmd.exe, should consider
-        using JP Software's 4NT or Take Command command processors. Unlike cmd.exe, the JPSoftware
-        shells fully support UNC paths as the current directory. JPSoftware added special
-        recognition for OpenAFS to its command shells, 4NT 7.0 and Take Command 7.0. AFS paths can
-        be entered in UNIX notation (e.g., /afs/openafs.org/software), space utilization reports the
-        output of the volume status for the specified path, and many AFS specific functions and
-        variables have been added to the command language. Take Command 14.03 includes support for
-        OpenAFS IFS Reparse Points and Hard Links.</para>
+        using JP Software's Take Command command processor. Unlike cmd.exe, the JPSoftware shells
+        fully support UNC paths as the current directory. JPSoftware added special recognition for
+        OpenAFS to its command shells starting in version 7.0. AFS paths can be entered in UNIX
+        notation (e.g., /afs/openafs.org/software), space utilization reports the output of the
+        volume status for the specified path, and many AFS specific functions and variables have
+        been added to the command language. Take Command 14.03 includes support for OpenAFS IFS
+        Reparse Points and Hard Links.</para>
       <para>JPSoftware's web site is
         <ulink url="http://www.jpsoft.com/">http://www.jpsoft.com</ulink>.
       </para>
-      <para>Microsoft PowerShell 1.0 and 2.0 will also support UNC paths as the current directory. </para>
+      <para>Microsoft PowerShell 1.0, 2.0 and 3.0 also support UNC paths as the current directory. </para>
+      <para>The Cygwin environment also supports UNC paths as the current directory.   Enter AFS
+        paths with two leading forward slashes:  //afs/grand.central.org/software/openafs/.</para>
     </section>
     <section>
       <title id="aklog.exe">3.10. aklog.exe</title>
@@ -1484,7 +1494,8 @@
       <para>OpenAFS on 64-bit Windows benefits from the lifting of the 2GB process memory restriction that is present in 32-bit Windows. Without this restriction the AFS Cache File can become arbitrarily large limited only by available disk space.</para>
     </section>
     <section>
-      <title id="Windows_Vista_Known_Issues">3.43. Known Issues with Microsoft Windows Vista, Windows 7, and Server 2008 [R2]</title>
+      <title id="Windows_Vista_Known_Issues">3.43. Known Issues with Microsoft Windows Vista,
+        Windows 7, Server 2008 [R2], Windows 8 and Server 2012</title>
       <indexterm significance="normal">
         <primary>windows vista</primary>
       </indexterm>
@@ -1497,8 +1508,9 @@
       <para>Windows Vista, Windows 7, and Server 2008 [R2] implement
         <ulink url="http://www.microsoft.com/technet/windowsvista/library/0d75f774-8514-4c9e-ac08-4c21f5c6c2d9.mspx">User Account Control</ulink> (UAC), a new security feature that implements least user privilege.  With UAC, applications only run with the minimum required privileges.  Even Administrator accounts run applications without the "Administrator" access control credentials.  One side effect of this is that existing applications that mix user and system configuration capabilities must be re-written to separate those functions that require "Administrator" privileges into a separate process space.  Future updates to OpenAFS will incorporate the necessary privilege separation, until that time some functions such as the Start and Stop Service features of the AFS Authentication Tool and the AFS Control Panel will not work unless they are "Run as Administrator".  When a Vista user account that is a member of the "Administrators" group is used to access the AFS Control Panel (afs_config.exe), the process must be "Run as Administrator".   Otherwise, attempts to modify the OpenAFS configuration will appear to succeed but in reality will have failed due to Vista's system file and registry virtualization feature.
       </para>
-      <para>The help files provided with OpenAFS are in .HLP format. <ulink url="http://support.microsoft.com/kb/917607">Windows Vista, Windows 7, and Server 2008
-          [R2] do not include a help engine for this format.</ulink>
+      <para>The help files provided with OpenAFS are in .HLP format. <ulink
+          url="http://support.microsoft.com/kb/917607">Windows Vista, Windows 7, Server 2008 [R2],
+          Windows 8 and Server 2012 do not include a help engine for this format.</ulink>
       </para>
       <para><emphasis>The following items only apply when the OpenAFS Service is manually configured as an SMB Gateway.</emphasis></para>
       <para>OpenAFS for Windows works with Microsoft Windows Vista, Windows 7 and Server 2008 [R2] from both the command prompt and the Explorer Shell.
@@ -1728,16 +1740,29 @@
       <indexterm significance="normal">
         <primary>symlinks</primary>
       </indexterm>
-      <para>
-		The IFS redirector driver represents all AFS mount points and AFS symlinks as reparse points within the file system name space
-		using a Microsoft assigned tag value. Tools that are OpenAFS reparse point aware can create, query
- 	 	and remove AFS symlinks and mount points without requiring knowledge
- 		of AFS pioctls.  The explorer shell will be able to delete a mount
- 		point or symlink as part of a recursive directory tree removal without
- 		crossing into the reparse point target.
-      </para>
+      <para> The AFS redirector driver represents all AFS mount points and AFS symlinks as reparse
+        points within the file system name space using a Microsoft assigned tag value. Tools that
+        are OpenAFS reparse point aware can create, query and remove AFS symlinks and mount points
+        without requiring knowledge of AFS pioctls. The explorer shell will be able to delete a
+        mount point or symlink as part of a recursive directory tree removal without crossing into
+        the reparse point target. </para>
       <para>The Explorer Shell displays Symlinks and Mount Points using overlay icons.</para>
       <para><inlinegraphic fileref="relnotes03.jpg" align="center" arch=""/></para>
+      <para>Beginning with 1.7.22, AFS Symlinks are represented as Microsoft Symlink reparse points
+        instead of an OpenAFS specific reparse point.  Symlinks can now be created using the Win32
+          <ulink
+          url="http://msdn.microsoft.com/en-us/library/windows/desktop/aa363866%28v=vs.85%29.aspx"
+          >CreateSymbolicLink</ulink> API and follow all of the behaviors of Microsoft Windows'
+          <ulink
+          url="http://msdn.microsoft.com/en-us/library/windows/desktop/aa365680%28v=vs.85%29.aspx"
+          >Symbolic Links</ulink>.  Any tool capable of creating symbolic links on NTFS can now do
+        so within AFS.</para>
+      <para>Symbolic Links to Files are not supported by all Microsoft Windows applications because
+        directory enumerations, GetFileAttributes and GetFileAttributesEx return the attributes and
+        size of the Symbolic Link and not that of the target file.   Applications that treat the
+        size of the Symbolic Link as the size of the target file will misbehave.  All Java releases
+        1.6.x and earlier and all .NET applications as of this writing use the Symbolic Link size as
+        the size of the target file.  Java 1.7 correctly processes Symbolic Links.</para>
     </section>
 
     <section>
