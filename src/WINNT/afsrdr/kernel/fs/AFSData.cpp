@@ -122,4 +122,6 @@ GUID                AFSNoPAGAuthGroup;
 
 PAFSSetInformationToken AFSSetInformationToken = NULL;
 
+PAFSDbgLogMsg       AFSDebugTraceFnc = NULL;
+
 }

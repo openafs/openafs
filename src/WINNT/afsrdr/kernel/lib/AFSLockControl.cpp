@@ -67,10 +67,10 @@ AFSLockControl( IN PDEVICE_OBJECT LibDeviceObject,
         if( pFcb == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSLockControl Attempted access (%p) when pFcb == NULL\n",
-                          Irp);
+                          Irp));
 
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
         }
@@ -79,11 +79,11 @@ AFSLockControl( IN PDEVICE_OBJECT LibDeviceObject,
         // Acquire the main shared for adding the lock control to the list
         //
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSLockControl Acquiring Fcb lock %p SHARED %08lX\n",
                       &pFcb->NPFcb->Resource,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         AFSAcquireShared( &pFcb->NPFcb->Resource,
                           TRUE);
@@ -93,27 +93,27 @@ AFSLockControl( IN PDEVICE_OBJECT LibDeviceObject,
         if( pFcb->Header.NodeTypeCode == AFS_IOCTL_FCB)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSLockControl Failing request against PIOCtl Fcb\n");
+                          "AFSLockControl Failing request against PIOCtl Fcb\n"));
 
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
         }
         else if( pFcb->Header.NodeTypeCode == AFS_SPECIAL_SHARE_FCB)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSLockControl Failing request against SpecialShare Fcb\n");
+                          "AFSLockControl Failing request against SpecialShare Fcb\n"));
 
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
         }
         else if( pFcb->Header.NodeTypeCode == AFS_INVALID_FCB)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSLockControl Failing request against Invalid Fcb\n");
+                          "AFSLockControl Failing request against Invalid Fcb\n"));
 
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
         }
@@ -168,11 +168,11 @@ AFSLockControl( IN PDEVICE_OBJECT LibDeviceObject,
                 // Flush data and then release the locks on the file server
                 //
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSLockControl Acquiring Fcb SectionObject lock %p SHARED %08lX\n",
                               &pFcb->NPFcb->SectionObjectResource,
-                              PsGetCurrentThread());
+                              PsGetCurrentThread()));
 
                 AFSAcquireShared( &pFcb->NPFcb->SectionObjectResource,
                                   TRUE);
@@ -185,7 +185,7 @@ AFSLockControl( IN PDEVICE_OBJECT LibDeviceObject,
                 if( !NT_SUCCESS( stIoStatus.Status))
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
                                   "AFSLockControl CcFlushCache [1] failure FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX Bytes 0x%08lX\n",
                                   pFcb->ObjectInformation->FileId.Cell,
@@ -193,16 +193,16 @@ AFSLockControl( IN PDEVICE_OBJECT LibDeviceObject,
                                   pFcb->ObjectInformation->FileId.Vnode,
                                   pFcb->ObjectInformation->FileId.Unique,
                                   stIoStatus.Status,
-                                  stIoStatus.Information);
+                                  stIoStatus.Information));
 
                     ntStatus = stIoStatus.Status;
                 }
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSLockControl Releasing Fcb SectionObject lock %p SHARED %08lX\n",
                               &pFcb->NPFcb->SectionObjectResource,
-                              PsGetCurrentThread());
+                              PsGetCurrentThread()));
 
                 AFSReleaseResource( &pFcb->NPFcb->SectionObjectResource);
 
@@ -236,11 +236,11 @@ AFSLockControl( IN PDEVICE_OBJECT LibDeviceObject,
                 // Flush the data and then release the file server locks
                 //
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSLockControl Acquiring Fcb SectionObject lock %p SHARED %08lX\n",
                               &pFcb->NPFcb->SectionObjectResource,
-                              PsGetCurrentThread());
+                              PsGetCurrentThread()));
 
                 AFSAcquireShared( &pFcb->NPFcb->SectionObjectResource,
                                   TRUE);
@@ -249,18 +249,18 @@ AFSLockControl( IN PDEVICE_OBJECT LibDeviceObject,
                               pIrpSp->Parameters.LockControl.Length->LowPart,
                               &stIoStatus);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSLockControl Releasing Fcb SectionObject lock %p SHARED %08lX\n",
                               &pFcb->NPFcb->SectionObjectResource,
-                              PsGetCurrentThread());
+                              PsGetCurrentThread()));
 
                 AFSReleaseResource( &pFcb->NPFcb->SectionObjectResource);
 
                 if( !NT_SUCCESS( stIoStatus.Status))
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
                                   "AFSLockControl CcFlushCache [2] failure FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX Bytes 0x%08lX\n",
                                   pFcb->ObjectInformation->FileId.Cell,
@@ -268,7 +268,7 @@ AFSLockControl( IN PDEVICE_OBJECT LibDeviceObject,
                                   pFcb->ObjectInformation->FileId.Vnode,
                                   pFcb->ObjectInformation->FileId.Unique,
                                   stIoStatus.Status,
-                                  stIoStatus.Information);
+                                  stIoStatus.Information));
 
                     ntStatus = stIoStatus.Status;
                 }
@@ -341,9 +341,9 @@ try_exit:
     __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
     {
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
-                      "EXCEPTION - AFSLockControl\n");
+                      "EXCEPTION - AFSLockControl\n"));
 
         AFSDumpTraceFilesFnc();
 

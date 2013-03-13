@@ -52,22 +52,22 @@ AFSAddConnectionEx( IN UNICODE_STRING *RemoteName,
     __Enter
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSAddConnectionEx Acquiring AFSProviderListLock lock %p EXCL %08lX\n",
                       &pRDRDevExt->Specific.RDR.ProviderListLock,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         AFSAcquireExcl( &pRDRDevExt->Specific.RDR.ProviderListLock,
                         TRUE);
 
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_NETWORK_PROVIDER,
+        AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSAddConnectionEx remote name %wZ display type %08lX flags %08lX\n",
                       RemoteName,
                       DisplayType,
-                      Flags);
+                      Flags));
 
         //
         // If this is a server, start in the enum list, otherwise
@@ -134,9 +134,10 @@ AFSAddConnectionEx( IN UNICODE_STRING *RemoteName,
             uniRemoteName.Length -= sizeof( WCHAR);
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_NETWORK_PROVIDER,
+        AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSAddConnectionEx Inserting remote name %wZ\n", &uniRemoteName);
+                      "AFSAddConnectionEx Inserting remote name %wZ\n",
+                      &uniRemoteName));
 
         //
         // Allocate a new node and add it to our list

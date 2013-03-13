@@ -52,10 +52,10 @@ AFSSystemControl( IN PDEVICE_OBJECT DeviceObject,
     __try
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_WARNING,
                       "AFSSystemControl Entry for FO %p\n",
-                      pIrpSp->FileObject);
+                      pIrpSp->FileObject));
 
         AFSCompleteRequest( Irp,
                             ntStatus);
@@ -64,9 +64,9 @@ AFSSystemControl( IN PDEVICE_OBJECT DeviceObject,
     __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
-                      "EXCEPTION - AFSSystemControl\n");
+                      "EXCEPTION - AFSSystemControl\n"));
 
         AFSDumpTraceFilesFnc();
     }

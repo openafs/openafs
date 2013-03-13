@@ -74,6 +74,8 @@ void               *AFSLibCacheBaseAddress = NULL;
 
 LARGE_INTEGER       AFSLibCacheLength = {0,0};
 
+PAFSDbgLogMsg       AFSDebugTraceFnc = NULL;
+
 //
 // List of 'special' share names we need to handle
 //

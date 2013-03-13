@@ -106,9 +106,9 @@ try_exit:
     __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
-                      "EXCEPTION - AFSQueryEA\n");
+                      "EXCEPTION - AFSQueryEA\n"));
 
         AFSDumpTraceFilesFnc();
     }
@@ -184,9 +184,9 @@ try_exit:
     __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
-                      "EXCEPTION - AFSSetEA\n");
+                      "EXCEPTION - AFSSetEA\n"));
 
         AFSDumpTraceFilesFnc();
     }

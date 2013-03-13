@@ -103,21 +103,21 @@ AFSProcessCreate( IN HANDLE ParentId,
     __Enter
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessCreate Acquiring Control ProcessTree.TreeLock lock %p EXCL %08lX\n",
                       pDeviceExt->Specific.Control.ProcessTree.TreeLock,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         AFSAcquireExcl( pDeviceExt->Specific.Control.ProcessTree.TreeLock,
                         TRUE);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_PROCESS_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_PROCESS_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessCreate Parent %08lX Process %08lX %08lX\n",
                       ParentId,
                       ProcessId,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         pProcessCB = AFSInitializeProcessCB( (ULONGLONG)ParentId,
                                              (ULONGLONG)ProcessId);
@@ -139,12 +139,12 @@ AFSProcessCreate( IN HANDLE ParentId,
         else
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_PROCESS_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_PROCESS_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSProcessCreate Initialization failure for Parent %08lX Process %08lX %08lX\n",
                           ParentId,
                           ProcessId,
-                          PsGetCurrentThread());
+                          PsGetCurrentThread()));
         }
 
         AFSReleaseResource( pDeviceExt->Specific.Control.ProcessTree.TreeLock);
@@ -166,11 +166,11 @@ AFSProcessDestroy( IN HANDLE ProcessId)
     __Enter
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessDestroy Acquiring Control ProcessTree.TreeLock lock %p EXCL %08lX\n",
                       pDeviceExt->Specific.Control.ProcessTree.TreeLock,
-                      PsGetCurrentThreadId());
+                      PsGetCurrentThreadId()));
 
         AFSAcquireExcl( pDeviceExt->Specific.Control.ProcessTree.TreeLock,
                         TRUE);
@@ -178,11 +178,11 @@ AFSProcessDestroy( IN HANDLE ProcessId)
         // It's a remove so pull the entry
         //
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_PROCESS_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_PROCESS_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessDestroy Process %08lX %08lX\n",
                       ProcessId,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         ntStatus = AFSLocateHashEntry( pDeviceExt->Specific.Control.ProcessTree.TreeHead,
                                        (ULONGLONG)ProcessId,
@@ -225,12 +225,12 @@ AFSProcessDestroy( IN HANDLE ProcessId)
         }
         else
         {
-            AFSDbgLogMsg( AFS_SUBSYSTEM_PROCESS_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_PROCESS_PROCESSING,
                           AFS_TRACE_LEVEL_WARNING,
                           "AFSProcessDestroy Process %08lX not found in ProcessTree Status %08lX %08lX\n",
                           ProcessId,
                           ntStatus,
-                          PsGetCurrentThread());
+                          PsGetCurrentThread()));
         }
 
         AFSReleaseResource( pDeviceExt->Specific.Control.ProcessTree.TreeLock);
@@ -274,21 +274,21 @@ AFSValidateProcessEntry( IN HANDLE  ProcessId,
         if ( !bProcessTreeLocked)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSValidateProcessEntry Acquiring Control ProcessTree.TreeLock lock %p SHARED %08lX\n",
                           pDeviceExt->Specific.Control.ProcessTree.TreeLock,
-                          PsGetCurrentThread());
+                          PsGetCurrentThread()));
 
             AFSAcquireShared( pDeviceExt->Specific.Control.ProcessTree.TreeLock,
                               TRUE);
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s Entry for ProcessID %I64X\n",
                       __FUNCTION__,
-                      ullProcessID);
+                      ullProcessID));
 
         ntStatus = AFSLocateHashEntry( pDeviceExt->Specific.Control.ProcessTree.TreeHead,
                                        ullProcessID,
@@ -325,11 +325,11 @@ AFSValidateProcessEntry( IN HANDLE  ProcessId,
                 pProcessCB == NULL)
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "%s Failed to locate process entry for ProcessID %I64X\n",
                               __FUNCTION__,
-                              ullProcessID);
+                              ullProcessID));
 
                 try_return( ntStatus = STATUS_UNSUCCESSFUL);
             }
@@ -348,11 +348,11 @@ AFSValidateProcessEntry( IN HANDLE  ProcessId,
         if( pProcessCB->ParentProcessId != 0)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s Locating process entry for Parent ProcessID %I64X\n",
                           __FUNCTION__,
-                          pProcessCB->ParentProcessId);
+                          pProcessCB->ParentProcessId));
 
             ntStatus = AFSLocateHashEntry( pDeviceExt->Specific.Control.ProcessTree.TreeHead,
                                            (ULONGLONG)pProcessCB->ParentProcessId,
@@ -364,21 +364,21 @@ AFSValidateProcessEntry( IN HANDLE  ProcessId,
                 AFSAcquireExcl( &pParentProcessCB->Lock,
                                 TRUE);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "%s Located process entry for Parent ProcessID %I64X\n",
                               __FUNCTION__,
-                              pProcessCB->ParentProcessId);
+                              pProcessCB->ParentProcessId));
             }
         }
         else
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s No parent ID for ProcessID %I64X\n",
                           __FUNCTION__,
-                          ullProcessID);
+                          ullProcessID));
         }
 
         AFSAcquireExcl( &pProcessCB->Lock,
@@ -411,11 +411,11 @@ AFSValidateProcessEntry( IN HANDLE  ProcessId,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "%s Failed to locate callers SID for ProcessID %I64X\n",
                           __FUNCTION__,
-                          ullProcessID);
+                          ullProcessID));
 
             try_return( ntStatus);
         }
@@ -425,22 +425,22 @@ AFSValidateProcessEntry( IN HANDLE  ProcessId,
         if( ulSessionId == (ULONG)-1)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "%s Failed to retrieve session ID for ProcessID %I64X\n",
                           __FUNCTION__,
-                          ullProcessID);
+                          ullProcessID));
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s Retrieved callers SID %wZ for ProcessID %I64X Session %08lX\n",
                       __FUNCTION__,
                       &uniSIDString,
                       ullProcessID,
-                      ulSessionId);
+                      ulSessionId));
 
         //
         // If there is an Auth Group for the current process,
@@ -460,14 +460,14 @@ AFSValidateProcessEntry( IN HANDLE  ProcessId,
                 RtlStringFromGUID( *pAuthGroup,
                                    &uniGUID);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "%s Located valid AuthGroup GUID %wZ for SID %wZ ProcessID %I64X Session %08lX\n",
                               __FUNCTION__,
                               &uniGUID,
                               &uniSIDString,
                               ullProcessID,
-                              ulSessionId);
+                              ulSessionId));
 
                 if( uniGUID.Buffer != NULL)
                 {
@@ -512,14 +512,14 @@ AFSValidateProcessEntry( IN HANDLE  ProcessId,
                     RtlStringFromGUID( *(pProcessCB->ActiveAuthGroup),
                                        &uniGUID);
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "%s PID %I64X Session %08lX inherited Active AuthGroup %wZ from thread %I64X\n",
                                   __FUNCTION__,
                                   ullProcessID,
                                   ulSessionId,
                                   &uniGUID,
-                                  pParentThreadCB->ThreadId);
+                                  pParentThreadCB->ThreadId));
 
                     if( uniGUID.Buffer != NULL)
                     {
@@ -541,14 +541,14 @@ AFSValidateProcessEntry( IN HANDLE  ProcessId,
                     RtlStringFromGUID( *(pProcessCB->ActiveAuthGroup),
                                        &uniGUID);
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "%s PID %I64X Session %08lX inherited Active AuthGroup %wZ from parent PID %I64X\n",
                                   __FUNCTION__,
                                   ullProcessID,
                                   ulSessionId,
                                   &uniGUID,
-                                  pParentProcessCB->TreeEntry.HashIndex);
+                                  pParentProcessCB->TreeEntry.HashIndex));
 
                     if( uniGUID.Buffer != NULL)
                     {
@@ -570,14 +570,14 @@ AFSValidateProcessEntry( IN HANDLE  ProcessId,
                     RtlStringFromGUID( *(pProcessCB->ActiveAuthGroup),
                                        &uniGUID);
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "%s Returning(1) Active AuthGroup %wZ for SID %wZ PID %I64X Session %08lX\n",
                                   __FUNCTION__,
                                   &uniGUID,
                                   &uniSIDString,
                                   ullProcessID,
-                                  ulSessionId);
+                                  ulSessionId));
 
                     if( uniGUID.Buffer != NULL)
                     {
@@ -601,14 +601,14 @@ AFSValidateProcessEntry( IN HANDLE  ProcessId,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "%s Failed to hash SID %wZ for PID %I64X Session %08lX Status %08lX\n",
                           __FUNCTION__,
                           &uniSIDString,
                           ullProcessID,
                           ulSessionId,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -663,14 +663,14 @@ AFSValidateProcessEntry( IN HANDLE  ProcessId,
                 RtlStringFromGUID( pSIDEntryCB->AuthGroup,
                                    &uniGUID);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "%s  SID %wZ PID %I64X Session %08lX generated NEW AG %wZ\n",
                               __FUNCTION__,
                               &uniSIDString,
                               ullProcessID,
                               ulSessionId,
-                              &uniGUID);
+                              &uniGUID));
 
                 if( uniGUID.Buffer != NULL)
                 {
@@ -705,14 +705,14 @@ AFSValidateProcessEntry( IN HANDLE  ProcessId,
         RtlStringFromGUID( pSIDEntryCB->AuthGroup,
                            &uniGUID);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s SID %wZ PID %I64X Session %08lX assigned AG %wZ\n",
                       __FUNCTION__,
                       &uniSIDString,
                       ullProcessID,
                       ulSessionId,
-                      &uniGUID);
+                      &uniGUID));
 
         if( uniGUID.Buffer != NULL)
         {
@@ -728,12 +728,12 @@ AFSValidateProcessEntry( IN HANDLE  ProcessId,
         {
             SetFlag( pProcessCB->Flags, AFS_PROCESS_LOCAL_SYSTEM_AUTH);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s Setting PID %I64X Session %08lX with LOCAL SYSTEM AUTHORITY\n",
                           __FUNCTION__,
                           ullProcessID,
-                          ulSessionId);
+                          ulSessionId));
         }
 
         //
@@ -747,14 +747,14 @@ AFSValidateProcessEntry( IN HANDLE  ProcessId,
         RtlStringFromGUID( *(pProcessCB->ActiveAuthGroup),
                            &uniGUID);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s Returning(2) Active AuthGroup %wZ for SID %wZ PID %I64X Session %08lX\n",
                       __FUNCTION__,
                       &uniGUID,
                       &uniSIDString,
                       ullProcessID,
-                      ulSessionId);
+                      ulSessionId));
 
         if( uniGUID.Buffer != NULL)
         {
@@ -817,11 +817,11 @@ AFSIs64BitProcess( IN ULONGLONG ProcessId)
     __Enter
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSIs64BitProcess Acquiring Control ProcessTree.TreeLock lock %p SHARED %08lX\n",
                       pDeviceExt->Specific.Control.ProcessTree.TreeLock,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         AFSAcquireShared( pDeviceExt->Specific.Control.ProcessTree.TreeLock,
                           TRUE);

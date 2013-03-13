@@ -81,14 +81,14 @@ AFSInitFcb( IN AFSDirectoryCB  *DirEntry)
         // Allocate the Fcb and the nonpaged portion of the Fcb.
         //
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
                       "AFSInitFcb Initializing fcb for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                       &DirEntry->NameInformation.FileName,
                       pObjectInfo->FileId.Cell,
                       pObjectInfo->FileId.Volume,
                       pObjectInfo->FileId.Vnode,
-                      pObjectInfo->FileId.Unique);
+                      pObjectInfo->FileId.Unique));
 
         usFcbLength = sizeof( AFSFcb);
 
@@ -99,9 +99,9 @@ AFSInitFcb( IN AFSDirectoryCB  *DirEntry)
         if( pFcb == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSInitFcb Failed to allocate fcb\n");
+                          "AFSInitFcb Failed to allocate fcb\n"));
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -118,9 +118,9 @@ AFSInitFcb( IN AFSDirectoryCB  *DirEntry)
         if( pNPFcb == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSInitFcb Failed to allocate non-paged fcb\n");
+                          "AFSInitFcb Failed to allocate non-paged fcb\n"));
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -156,11 +156,11 @@ AFSInitFcb( IN AFSDirectoryCB  *DirEntry)
         // Grab the Fcb for processing
         //
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitFcb Acquiring Fcb lock %p EXCL %08lX\n",
                       &pNPFcb->Resource,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         AFSAcquireExcl( &pNPFcb->Resource,
                         TRUE);
@@ -277,18 +277,18 @@ AFSInitFcb( IN AFSDirectoryCB  *DirEntry)
         if ( InterlockedCompareExchangePointer( (PVOID *)&pObjectInfo->Fcb, pFcb, NULL) != NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_WARNING,
                           "AFSInitFcb Raced Fcb %p pFcb %p Name %wZ\n",
                           pObjectInfo->Fcb,
                           pFcb,
-                          &DirEntry->NameInformation.FileName);
+                          &DirEntry->NameInformation.FileName));
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSInitFcb Acquiring Fcb lock %p EXCL %08lX\n",
                           &pObjectInfo->Fcb->NPFcb->Resource,
-                          PsGetCurrentThread());
+                          PsGetCurrentThread()));
 
             AFSReleaseResource( &pObjectInfo->NonPagedInfo->ObjectInfoLock);
 
@@ -300,11 +300,11 @@ AFSInitFcb( IN AFSDirectoryCB  *DirEntry)
 
         AFSReleaseResource( &pObjectInfo->NonPagedInfo->ObjectInfoLock);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitFcb Initialized Fcb %p Name %wZ\n",
                       &pObjectInfo->Fcb,
-                      &DirEntry->NameInformation.FileName);
+                      &DirEntry->NameInformation.FileName));
 
 try_exit:
 
@@ -314,10 +314,10 @@ try_exit:
             if ( !NT_SUCCESS( ntStatus))
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSInitFcb Failed to initialize fcb Status %08lX\n",
-                              ntStatus);
+                              ntStatus));
             }
 
             if( pFcb != NULL)
@@ -399,10 +399,10 @@ AFSInitVolume( IN GUID *AuthGroup,
             if( !NT_SUCCESS( ntStatus))
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSInitVolume AFSRetrieveVolumeInformation(RootFid) failure %08lX\n",
-                              ntStatus);
+                              ntStatus));
 
                 try_return( ntStatus);
             }
@@ -436,12 +436,12 @@ AFSInitVolume( IN GUID *AuthGroup,
                 lCount = AFSVolumeIncrement( pVolumeCB,
                                              VolumeReferenceReason);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSInitVolume Increment count on volume %p Reason %u Cnt %d\n",
                               pVolumeCB,
                               VolumeReferenceReason,
-                              lCount);
+                              lCount));
 
                 AFSReleaseResource( pDeviceExt->Specific.RDR.VolumeTree.TreeLock);
 
@@ -476,9 +476,9 @@ AFSInitVolume( IN GUID *AuthGroup,
         if( pVolumeCB == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSInitVolume Failed to allocate the root volume cb\n");
+                          "AFSInitVolume Failed to allocate the root volume cb\n"));
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -497,9 +497,9 @@ AFSInitVolume( IN GUID *AuthGroup,
         if( pNonPagedVcb == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSInitVolume Failed to allocate the root non paged volume cb\n");
+                          "AFSInitVolume Failed to allocate the root non paged volume cb\n"));
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -518,9 +518,9 @@ AFSInitVolume( IN GUID *AuthGroup,
         if( pNonPagedObject == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSInitVolume Failed to allocate the root non paged object cb\n");
+                          "AFSInitVolume Failed to allocate the root non paged object cb\n"));
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -545,12 +545,12 @@ AFSInitVolume( IN GUID *AuthGroup,
         lCount = AFSVolumeIncrement( pVolumeCB,
                                      VolumeReferenceReason);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitVolume Initializing volume %p Reason %u count %d\n",
                       pVolumeCB,
                       VolumeReferenceReason,
-                      lCount);
+                      lCount));
 
         AFSAcquireExcl( pVolumeCB->VolumeLock,
                         TRUE);
@@ -565,10 +565,10 @@ AFSInitVolume( IN GUID *AuthGroup,
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+        AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitVolume AFS_DIR_ENTRY_TAG allocated %p\n",
-                      pVolumeCB->DirectoryCB);
+                      pVolumeCB->DirectoryCB));
 
         pNonPagedDirEntry = (AFSNonPagedDirectoryCB *)AFSExAllocatePoolWithTag( NonPagedPool,
                                                                                 sizeof( AFSNonPagedDirectoryCB),
@@ -717,10 +717,10 @@ try_exit:
                 if( pVolumeCB->DirectoryCB != NULL)
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSInitVolume AFS_DIR_ENTRY_TAG deallocating %p\n",
-                                  pVolumeCB->DirectoryCB);
+                                  pVolumeCB->DirectoryCB));
 
                     AFSExFreePoolWithTag( pVolumeCB->DirectoryCB, AFS_DIR_ENTRY_TAG);
                 }
@@ -835,10 +835,10 @@ AFSRemoveVolume( IN AFSVolumeCB *VolumeCB)
 
             AFSExFreePoolWithTag( VolumeCB->ObjectInformation.Specific.Directory.PIOCtlDirectoryCB->NonPaged, AFS_DIR_ENTRY_NP_TAG);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+            AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSRemoveVolume (pioctl) AFS_DIR_ENTRY_TAG deallocating %p\n",
-                          VolumeCB->ObjectInformation.Specific.Directory.PIOCtlDirectoryCB);
+                          VolumeCB->ObjectInformation.Specific.Directory.PIOCtlDirectoryCB));
 
             AFSExFreePoolWithTag( VolumeCB->ObjectInformation.Specific.Directory.PIOCtlDirectoryCB, AFS_DIR_ENTRY_TAG);
         }
@@ -893,10 +893,10 @@ AFSRemoveVolume( IN AFSVolumeCB *VolumeCB)
                 AFSExFreePoolWithTag( VolumeCB->DirectoryCB->NonPaged, AFS_DIR_ENTRY_NP_TAG);
             }
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+            AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSRemoveVolume AFS_DIR_ENTRY_TAG deallocating %p\n",
-                          VolumeCB->DirectoryCB);
+                          VolumeCB->DirectoryCB));
 
             AFSExFreePoolWithTag( VolumeCB->DirectoryCB, AFS_DIR_ENTRY_TAG);
         }
@@ -975,9 +975,9 @@ AFSInitRootFcb( IN ULONGLONG ProcessID,
         if( pFcb == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSInitRootFcb Failed to allocate the root fcb\n");
+                          "AFSInitRootFcb Failed to allocate the root fcb\n"));
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -996,9 +996,9 @@ AFSInitRootFcb( IN ULONGLONG ProcessID,
         if( pNPFcb == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSInitRootFcb Failed to allocate the non-paged fcb\n");
+                          "AFSInitRootFcb Failed to allocate the non-paged fcb\n"));
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -1026,11 +1026,11 @@ AFSInitRootFcb( IN ULONGLONG ProcessID,
 
         ExInitializeResourceLite( &pNPFcb->CcbListLock);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitRootFcb Acquiring Fcb lock %p EXCL %08lX\n",
                       &pNPFcb->Resource,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         AFSAcquireExcl( &pNPFcb->Resource,
                         TRUE);
@@ -1059,17 +1059,17 @@ AFSInitRootFcb( IN ULONGLONG ProcessID,
         if ( InterlockedCompareExchangePointer( (PVOID *)&VolumeCB->ObjectInformation.Fcb, pFcb, NULL) != NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_WARNING,
                           "AFSInitRootFcb Raced Fcb %p pFcb %p\n",
                           VolumeCB->ObjectInformation.Fcb,
-                          pFcb);
+                          pFcb));
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSInitRootFcb Acquiring Fcb lock %p EXCL %08lX\n",
                           &VolumeCB->ObjectInformation.Fcb->NPFcb->Resource,
-                          PsGetCurrentThread());
+                          PsGetCurrentThread()));
 
             AFSReleaseResource( &VolumeCB->ObjectInformation.NonPagedInfo->ObjectInfoLock);
 
@@ -1083,10 +1083,10 @@ AFSInitRootFcb( IN ULONGLONG ProcessID,
 
         AFSReleaseResource( &VolumeCB->ObjectInformation.NonPagedInfo->ObjectInfoLock);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitRootFcb Initialized Fcb %p\n",
-                      &VolumeCB->ObjectInformation.Fcb);
+                      &VolumeCB->ObjectInformation.Fcb));
 
 try_exit:
 
@@ -1225,10 +1225,10 @@ AFSRemoveFcb( IN AFSFcb **ppFcb)
     // Uninitialize the file lock if it is a file
     //
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
+    AFSDbgTrace(( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSRemoveFcb Removing Fcb %p\n",
-                  pFcb);
+                  pFcb));
 
     if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB)
     {
@@ -1308,9 +1308,9 @@ AFSInitCcb( IN OUT AFSCcb **Ccb,
         if( pCcb == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSInitCcb Failed to allocate Ccb\n");
+                          "AFSInitCcb Failed to allocate Ccb\n"));
 
             try_return( Status = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -1329,9 +1329,9 @@ AFSInitCcb( IN OUT AFSCcb **Ccb,
         if( pCcb->NPCcb == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSInitCcb Failed to allocate NPCcb\n");
+                          "AFSInitCcb Failed to allocate NPCcb\n"));
 
             try_return( Status = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -1342,13 +1342,13 @@ AFSInitCcb( IN OUT AFSCcb **Ccb,
 
         lCount = InterlockedIncrement( &pCcb->DirectoryCB->DirOpenReferenceCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitCcb Increment count on %wZ DE %p Ccb %p Cnt %d\n",
                       &pCcb->DirectoryCB->NameInformation.FileName,
                       pCcb->DirectoryCB,
                       pCcb,
-                      lCount);
+                      lCount));
 
         pCcb->GrantedAccess = GrantedAccess;
 
@@ -1489,13 +1489,13 @@ AFSRemoveCcb( IN AFSFcb *Fcb,
 
         lCount = InterlockedDecrement( &Ccb->DirectoryCB->DirOpenReferenceCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSRemoveCcb Decrement count on %wZ DE %p Ccb %p Cnt %d\n",
                       &Ccb->DirectoryCB->NameInformation.FileName,
                       Ccb->DirectoryCB,
                       Ccb,
-                      lCount);
+                      lCount));
 
         ASSERT( lCount >= 0);
     }

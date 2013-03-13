@@ -79,6 +79,8 @@ extern PAFSProcessRequest  AFSProcessRequest;
 
 extern PAFSDbgLogMsg       AFSDbgLogMsg;
 
+extern PAFSDbgLogMsg       AFSDebugTraceFnc;
+
 extern PAFSAddConnectionEx AFSAddConnectionEx;
 
 extern PAFSExAllocatePoolWithTag   AFSExAllocatePoolWithTag;

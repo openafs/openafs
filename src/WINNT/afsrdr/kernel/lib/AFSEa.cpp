@@ -63,9 +63,10 @@ AFSQueryEA( IN PDEVICE_OBJECT LibDeviceObject,
     __try
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_ERROR,
-                      "AFSQueryEa Entry for FO %p\n", pIrpSp->FileObject);
+                      "AFSQueryEa Entry for FO %p\n",
+                      pIrpSp->FileObject));
 
         AFSCompleteRequest( Irp,
                             ntStatus);
@@ -74,9 +75,9 @@ AFSQueryEA( IN PDEVICE_OBJECT LibDeviceObject,
     __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
-                      "EXCEPTION - AFSQueryEA\n");
+                      "EXCEPTION - AFSQueryEA\n"));
 
         AFSDumpTraceFilesFnc();
     }
@@ -109,9 +110,9 @@ AFSSetEA( IN PDEVICE_OBJECT LibDeviceObject,
     __try
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_ERROR,
-                      "AFSSetEa Entry for FO %p\n", pIrpSp->FileObject);
+                      "AFSSetEa Entry for FO %p\n", pIrpSp->FileObject));
 
         AFSCompleteRequest( Irp,
                             ntStatus);
@@ -120,9 +121,9 @@ AFSSetEA( IN PDEVICE_OBJECT LibDeviceObject,
     __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
-                      "EXCEPTION - AFSSetEA\n");
+                      "EXCEPTION - AFSSetEA\n"));
 
         AFSDumpTraceFilesFnc();
     }

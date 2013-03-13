@@ -130,10 +130,10 @@ AFSWrite( IN PDEVICE_OBJECT DeviceObject,
 
         IoCopyCurrentIrpStackLocationToNext( Irp);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "Setting AFSWriteComplete as IoCompletion Routine Irp %p\n",
-                      Irp);
+                      Irp));
 
         IoSetCompletionRoutine( Irp, AFSWriteComplete, NULL, TRUE, TRUE, TRUE);
 
@@ -188,11 +188,11 @@ AFSWriteComplete( IN PDEVICE_OBJECT DeviceObject,
         IoMarkIrpPending(Irp);
     }
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+    AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSWriteComplete Irp %p%s\n",
                   Irp,
-                  bPending ? " PENDING" : "");
+                  bPending ? " PENDING" : ""));
 
     return STATUS_CONTINUE_COMPLETION;
 }

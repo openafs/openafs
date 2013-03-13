@@ -152,11 +152,11 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
             case AFS_ROOT_ALL:
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCleanup Acquiring GlobalRoot lock %p EXCL %08lX\n",
                               &pFcb->NPFcb->Resource,
-                              PsGetCurrentThread());
+                              PsGetCurrentThread()));
 
                 AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                   TRUE);
@@ -169,11 +169,11 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                 lCount = InterlockedDecrement( &pFcb->OpenHandleCount);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCleanup (RootAll) Decrement handle count on Fcb %p Cnt %d\n",
                               pFcb,
-                              lCount);
+                              lCount));
 
                 AFSReleaseResource( &pFcb->NPFcb->Resource);
 
@@ -183,11 +183,11 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
             case AFS_IOCTL_FCB:
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCleanup Acquiring PIOCtl lock %p EXCL %08lX\n",
                               &pFcb->NPFcb->Resource,
-                              PsGetCurrentThread());
+                              PsGetCurrentThread()));
 
                 AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                   TRUE);
@@ -204,22 +204,22 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                     lCount = InterlockedDecrement( &pParentObjectInfo->Specific.Directory.ChildOpenHandleCount);
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCleanup (IOCtl) Decrement child open handle count on Parent object %p Cnt %d\n",
                                   pParentObjectInfo,
-                                  lCount);
+                                  lCount));
                 }
 
                 AFSReleaseResource( &pFcb->NPFcb->Resource);
 
                 lCount = InterlockedDecrement( &pFcb->OpenHandleCount);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCleanup (IOCtl) Decrement handle count on Fcb %p Cnt %d\n",
                               pFcb,
-                              lCount);
+                              lCount));
 
                 break;
             }
@@ -235,11 +235,11 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                 // We may be performing some cleanup on the Fcb so grab it exclusive to ensure no collisions
                 //
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCleanup Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                               &pFcb->NPFcb->SectionObjectResource,
-                              PsGetCurrentThread());
+                              PsGetCurrentThread()));
 
                 AFSAcquireExcl( &pFcb->NPFcb->SectionObjectResource,
                                 TRUE);
@@ -263,7 +263,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                         if( !NT_SUCCESS( stIoSB.Status))
                         {
 
-                            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                            AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                                           AFS_TRACE_LEVEL_ERROR,
                                           "AFSCleanup CcFlushCache failure %wZ FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX Bytes 0x%08lX\n",
                                           &pCcb->FullFileName,
@@ -272,7 +272,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                           pObjectInfo->FileId.Vnode,
                                           pObjectInfo->FileId.Unique,
                                           stIoSB.Status,
-                                          stIoSB.Information);
+                                          stIoSB.Information));
 
                             ntStatus = stIoSB.Status;
                         }
@@ -288,13 +288,13 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                                        FALSE))
                             {
 
-                                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                                AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                                               AFS_TRACE_LEVEL_WARNING,
                                               "AFSCleanup CcPurgeCacheSection failure FID %08lX-%08lX-%08lX-%08lX\n",
                                               pObjectInfo->FileId.Cell,
                                               pObjectInfo->FileId.Volume,
                                               pObjectInfo->FileId.Vnode,
-                                              pObjectInfo->FileId.Unique);
+                                              pObjectInfo->FileId.Unique));
 
                                 SetFlag( pObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
                             }
@@ -309,14 +309,14 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                         ntStatus = GetExceptionCode();
 
-                        AFSDbgLogMsg( 0,
+                        AFSDbgTrace(( 0,
                                       0,
                                       "EXCEPTION - AFSCleanup Cc FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
                                       pObjectInfo->FileId.Cell,
                                       pObjectInfo->FileId.Volume,
                                       pObjectInfo->FileId.Vnode,
                                       pObjectInfo->FileId.Unique,
-                                      ntStatus);
+                                      ntStatus));
 
                         SetFlag( pObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
                     }
@@ -326,30 +326,30 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                 // Uninitialize the cache map. This call is unconditional.
                 //
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCleanup Tearing down cache map for Fcb %p FileObject %p\n",
                               pFcb,
-                              pFileObject);
+                              pFileObject));
 
                 CcUninitializeCacheMap( pFileObject,
                                         NULL,
                                         NULL);
 
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCleanup Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                               &pFcb->NPFcb->SectionObjectResource,
-                              PsGetCurrentThread());
+                              PsGetCurrentThread()));
 
                 AFSReleaseResource( &pFcb->NPFcb->SectionObjectResource);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCleanup Acquiring Fcb lock %p EXCL %08lX\n",
                               &pFcb->NPFcb->Resource,
-                              PsGetCurrentThread());
+                              PsGetCurrentThread()));
 
                 AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                 TRUE);
@@ -469,11 +469,11 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                         ntStatus != STATUS_OBJECT_NAME_NOT_FOUND)
                     {
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
                                       "AFSCleanup Failed to notify service of deleted file %wZ Status %08lX\n",
                                       &pCcb->FullFileName,
-                                      ntStatus);
+                                      ntStatus));
 
                         ntStatus = STATUS_SUCCESS;
 
@@ -491,11 +491,11 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                             // Stop anything possibly in process
                             //
 
-                            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                            AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                           AFS_TRACE_LEVEL_VERBOSE,
                                           "AFSCleanup Acquiring Fcb extents lock %p EXCL %08lX\n",
                                           &pFcb->NPFcb->Specific.File.ExtentsResource,
-                                          PsGetCurrentThread());
+                                          PsGetCurrentThread()));
 
                             AFSAcquireExcl( &pFcb->NPFcb->Specific.File.ExtentsResource,
                                             TRUE);
@@ -512,20 +512,20 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                             AFSDeleteFcbExtents( pFcb);
 
-                            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                            AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                           AFS_TRACE_LEVEL_VERBOSE,
                                           "AFSCleanup Releasing Fcb extents lock %p EXCL %08lX\n",
                                           &pFcb->NPFcb->Specific.File.ExtentsResource,
-                                          PsGetCurrentThread());
+                                          PsGetCurrentThread()));
 
                             AFSReleaseResource( &pFcb->NPFcb->Specific.File.ExtentsResource);
                         }
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
                                       "AFSCleanup Setting DELETE flag in file %wZ Dir Entry %p\n",
                                       &pCcb->FullFileName,
-                                      pCcb->DirectoryCB);
+                                      pCcb->DirectoryCB));
 
                         SetFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_DELETED);
 
@@ -560,11 +560,11 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                             if( !BooleanFlagOn( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_NOT_IN_PARENT_TREE))
                             {
 
-                                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                               AFS_TRACE_LEVEL_VERBOSE,
                                               "AFSCleanup DE %p for %wZ removing entry\n",
                                               pCcb->DirectoryCB,
-                                              &pCcb->DirectoryCB->NameInformation.FileName);
+                                              &pCcb->DirectoryCB->NameInformation.FileName));
 
                                 AFSRemoveNameEntry( pParentObjectInfo,
                                                     pCcb->DirectoryCB);
@@ -572,11 +572,11 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                             else
                             {
 
-                                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                               AFS_TRACE_LEVEL_VERBOSE,
                                               "AFSCleanup DE %p for %wZ NOT removing entry due to flag set\n",
                                               pCcb->DirectoryCB,
-                                              &pCcb->DirectoryCB->NameInformation.FileName);
+                                              &pCcb->DirectoryCB->NameInformation.FileName));
                             }
 
                             AFSReleaseResource( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
@@ -591,11 +591,11 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                             if( !BooleanFlagOn( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_NOT_IN_PARENT_TREE))
                             {
 
-                                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                               AFS_TRACE_LEVEL_VERBOSE,
                                               "AFSCleanup DE %p for %wZ NOT removing entry due to pParentObjectInfo == NULL\n",
                                               pCcb->DirectoryCB,
-                                              &pCcb->DirectoryCB->NameInformation.FileName);
+                                              &pCcb->DirectoryCB->NameInformation.FileName));
                             }
                         }
                     }
@@ -745,21 +745,21 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                     lCount = InterlockedDecrement( &pParentObjectInfo->Specific.Directory.ChildOpenHandleCount);
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCleanup (File) Decrement child open handle count on Parent object %p Cnt %d\n",
                                   pParentObjectInfo,
-                                  lCount);
+                                  lCount));
                 }
 
 
                 lCount = InterlockedDecrement( &pFcb->OpenHandleCount);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCleanup (File) Decrement handle count on Fcb %p Cnt %d\n",
                               pFcb,
-                              lCount);
+                              lCount));
 
                 if( BooleanFlagOn( pFcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE))
                 {
@@ -770,11 +770,11 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                     lCount = AFSObjectInfoIncrement( pObjectInfo,
                                                      AFS_OBJECT_REFERENCE_INVALIDATION);
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCleanup Setting Purge on Close Increment count on object %p Cnt %d\n",
                                   pObjectInfo,
-                                  lCount);
+                                  lCount));
 
                     ClearFlag( pFcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
 
@@ -817,11 +817,11 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                 // We may be performing some cleanup on the Fcb so grab it exclusive to ensure no collisions
                 //
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCleanup Acquiring Dcb lock %p EXCL %08lX\n",
                               &pFcb->NPFcb->Resource,
-                              PsGetCurrentThread());
+                              PsGetCurrentThread()));
 
                 AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                   TRUE);
@@ -912,11 +912,11 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                         ntStatus != STATUS_OBJECT_NAME_NOT_FOUND)
                     {
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
                                       "AFSCleanup Failed to notify service of deleted directory %wZ Status %08lX\n",
                                       &pCcb->FullFileName,
-                                      ntStatus);
+                                      ntStatus));
 
                         ntStatus = STATUS_SUCCESS;
 
@@ -927,11 +927,11 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                         ntStatus = STATUS_SUCCESS;
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
                                       "AFSCleanup Setting DELETE flag in directory %wZ Dir Entry %p\n",
                                       &pCcb->FullFileName,
-                                      pCcb->DirectoryCB);
+                                      pCcb->DirectoryCB));
 
                         SetFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_DELETED);
 
@@ -972,11 +972,11 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                             else
                             {
 
-                                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                               AFS_TRACE_LEVEL_VERBOSE,
                                               "AFSCleanup DE %p for %wZ NOT removing entry due to flag set\n",
                                               pCcb->DirectoryCB,
-                                              &pCcb->DirectoryCB->NameInformation.FileName);
+                                              &pCcb->DirectoryCB->NameInformation.FileName));
                             }
 
                             AFSReleaseResource( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
@@ -991,11 +991,11 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                             if( !BooleanFlagOn( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_NOT_IN_PARENT_TREE))
                             {
 
-                                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                               AFS_TRACE_LEVEL_VERBOSE,
                                               "AFSCleanup DE %p for %wZ NOT removing entry due to pParentObjectInfo == NULL\n",
                                               pCcb->DirectoryCB,
-                                              &pCcb->DirectoryCB->NameInformation.FileName);
+                                              &pCcb->DirectoryCB->NameInformation.FileName));
                             }
                         }
                     }
@@ -1105,20 +1105,20 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                     lCount = InterlockedDecrement( &pParentObjectInfo->Specific.Directory.ChildOpenHandleCount);
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCleanup (Dir) Decrement child open handle count on Parent object %p Cnt %d\n",
                                   pParentObjectInfo,
-                                  lCount);
+                                  lCount));
                 }
 
                 lCount = InterlockedDecrement( &pFcb->OpenHandleCount);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCleanup (Dir) Decrement handle count on Fcb %p Cnt %d\n",
                               pFcb,
-                              lCount);
+                              lCount));
 
                 AFSReleaseResource( &pFcb->NPFcb->Resource);
 
@@ -1135,11 +1135,11 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                 // We may be performing some cleanup on the Fcb so grab it exclusive to ensure no collisions
                 //
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCleanup (MP/SL) Acquiring Dcb lock %p EXCL %08lX\n",
                               &pFcb->NPFcb->Resource,
-                              PsGetCurrentThread());
+                              PsGetCurrentThread()));
 
                 AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                   TRUE);
@@ -1230,11 +1230,11 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                         ntStatus != STATUS_OBJECT_NAME_NOT_FOUND)
                     {
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
                                       "AFSCleanup Failed to notify service of deleted MP/SL %wZ Status %08lX\n",
                                       &pCcb->FullFileName,
-                                      ntStatus);
+                                      ntStatus));
 
                         ntStatus = STATUS_SUCCESS;
 
@@ -1245,11 +1245,11 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                         ntStatus = STATUS_SUCCESS;
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
                                       "AFSCleanup Setting DELETE flag in MP/SL %wZ Dir Entry %p\n",
                                       &pCcb->FullFileName,
-                                      pCcb->DirectoryCB);
+                                      pCcb->DirectoryCB));
 
                         SetFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_DELETED);
 
@@ -1289,11 +1289,11 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                             else
                             {
 
-                                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                               AFS_TRACE_LEVEL_VERBOSE,
                                               "AFSCleanup DE %p for %wZ NOT removing entry due to flag set\n",
                                               pCcb->DirectoryCB,
-                                              &pCcb->DirectoryCB->NameInformation.FileName);
+                                              &pCcb->DirectoryCB->NameInformation.FileName));
                             }
 
                             AFSReleaseResource( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
@@ -1309,11 +1309,11 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                             if( !BooleanFlagOn( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_NOT_IN_PARENT_TREE))
                             {
 
-                                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                               AFS_TRACE_LEVEL_VERBOSE,
                                               "AFSCleanup DE %p for %wZ NOT removing entry due to pParentObjectInfo == NULL\n",
                                               pCcb->DirectoryCB,
-                                              &pCcb->DirectoryCB->NameInformation.FileName);
+                                              &pCcb->DirectoryCB->NameInformation.FileName));
                             }
                         }
                     }
@@ -1415,20 +1415,20 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                     lCount = InterlockedDecrement( &pParentObjectInfo->Specific.Directory.ChildOpenHandleCount);
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCleanup (MP/SL) Decrement child open handle count on Parent object %p Cnt %d\n",
                                   pParentObjectInfo,
-                                  lCount);
+                                  lCount));
                 }
 
                 lCount = InterlockedDecrement( &pFcb->OpenHandleCount);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCleanup (MP/SL) Decrement handle count on Fcb %p Cnt %d\n",
                               pFcb,
-                              lCount);
+                              lCount));
 
                 AFSReleaseResource( &pFcb->NPFcb->Resource);
 
@@ -1438,11 +1438,11 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
             case AFS_SPECIAL_SHARE_FCB:
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCleanup Acquiring SPECIAL SHARE lock %p EXCL %08lX\n",
                               &pFcb->NPFcb->Resource,
-                              PsGetCurrentThread());
+                              PsGetCurrentThread()));
 
                 AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                 TRUE);
@@ -1459,20 +1459,20 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                     lCount = InterlockedDecrement( &pParentObjectInfo->Specific.Directory.ChildOpenHandleCount);
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCleanup (Share) Decrement child open handle count on Parent object %p Cnt %d\n",
                                   pParentObjectInfo,
-                                  lCount);
+                                  lCount));
                 }
 
                 lCount = InterlockedDecrement( &pFcb->OpenHandleCount);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCleanup (Share) Decrement handle count on Fcb %p Cnt %d\n",
                               pFcb,
-                              lCount);
+                              lCount));
 
                 AFSReleaseResource( &pFcb->NPFcb->Resource);
 
@@ -1481,10 +1481,10 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
             default:
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSCleanup Processing unknown node type %d\n",
-                              pFcb->Header.NodeTypeCode);
+                              pFcb->Header.NodeTypeCode));
 
                 break;
         }
@@ -1523,9 +1523,9 @@ try_exit:
     __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
-                      "EXCEPTION - AFSCleanup\n");
+                      "EXCEPTION - AFSCleanup\n"));
 
         AFSDumpTraceFilesFnc();
     }

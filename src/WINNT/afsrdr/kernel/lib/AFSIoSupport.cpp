@@ -361,11 +361,11 @@ AFSCompleteIo( IN AFSGatherIo *Gather,
         if( Gather->CompleteMasterIrp)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSCompleteIo Completing Irp %p Status %08lX\n",
                           Gather->MasterIrp,
-                          Gather->Status);
+                          Gather->Status));
 
             AFSCompleteRequest(Gather->MasterIrp, Gather->Status);
         }

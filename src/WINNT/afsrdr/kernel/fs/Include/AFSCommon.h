@@ -743,6 +743,9 @@ NTSTATUS
 AFSInitializeLibrary( IN AFSFileID *GlobalRootFid,
                       IN BOOLEAN QueueRootEnumeration);
 
+NTSTATUS
+AFSConfigLibraryDebug( void);
+
 //
 // AFSRDRSupport.cpp Prototypes
 //

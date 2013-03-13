@@ -104,11 +104,11 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                 AFSPIOCtlOpenCloseRequestCB stPIOCtlClose;
                 AFSFileID stParentFileId;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSClose Acquiring GlobalRoot lock %p EXCL %08lX\n",
                               &pFcb->NPFcb->Resource,
-                              PsGetCurrentThread());
+                              PsGetCurrentThread()));
 
                 AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                   TRUE);
@@ -171,22 +171,22 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
 
                     InterlockedDecrement( &pParentObjectInfo->Specific.Directory.ChildOpenReferenceCount);
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSClose (IOCtl) Decrement child open ref count on Parent object %p Cnt %d\n",
                                   pParentObjectInfo,
-                                  pParentObjectInfo->Specific.Directory.ChildOpenReferenceCount);
+                                  pParentObjectInfo->Specific.Directory.ChildOpenReferenceCount));
                 }
 
                 AFSReleaseResource( &pFcb->NPFcb->Resource);
 
                 lCount = InterlockedDecrement( &pFcb->OpenReferenceCount);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSClose (IOCtl) Decrement count on Fcb %p Cnt %d\n",
                               pFcb,
-                              lCount);
+                              lCount));
 
                 ASSERT( lCount >= 0);
 
@@ -196,11 +196,11 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
             case AFS_ROOT_ALL:
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSClose Acquiring Special Root ALL lock %p EXCL %08lX\n",
                               &pFcb->NPFcb->Resource,
-                              PsGetCurrentThread());
+                              PsGetCurrentThread()));
 
                 AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                 TRUE);
@@ -218,11 +218,11 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
 
                 lCount = InterlockedDecrement( &pFcb->OpenReferenceCount);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSClose (RootAll) Decrement count on Fcb %p Cnt %d\n",
                               pFcb,
-                              lCount);
+                              lCount));
 
                 ASSERT( lCount >= 0);
 
@@ -248,11 +248,11 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                 // We may be performing some cleanup on the Fcb so grab it exclusive to ensure no collisions
                 //
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSClose Acquiring Dcb lock %p EXCL %08lX\n",
                               &pFcb->NPFcb->Resource,
-                              PsGetCurrentThread());
+                              PsGetCurrentThread()));
 
                 AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                 TRUE);
@@ -352,11 +352,11 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                         // Stop anything possibly in process
                         //
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
                                       "AFSClose Acquiring Fcb extents lock %p EXCL %08lX\n",
                                       &pFcb->NPFcb->Specific.File.ExtentsResource,
-                                      PsGetCurrentThread());
+                                      PsGetCurrentThread()));
 
                         AFSAcquireExcl( &pObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource,
                                         TRUE);
@@ -367,11 +367,11 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                                     0,
                                     FALSE);
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
                                       "AFSClose Releasing Fcb extents lock %p EXCL %08lX\n",
                                       &pFcb->NPFcb->Specific.File.ExtentsResource,
-                                      PsGetCurrentThread());
+                                      PsGetCurrentThread()));
 
                         AFSReleaseResource( &pObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource);
                     }
@@ -388,13 +388,13 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
 
                         lCount = InterlockedDecrement( &pDirCB->DirOpenReferenceCount);
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                                       AFS_TRACE_LEVEL_VERBOSE,
                                       "AFSClose (Other) Decrement count on %wZ DE %p Ccb %p Cnt %d\n",
                                       &pDirCB->NameInformation.FileName,
                                       pDirCB,
                                       pCcb,
-                                      lCount);
+                                      lCount));
 
                         ASSERT( lCount >= 0);
 
@@ -402,7 +402,7 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                             pDirCB->NameArrayReferenceCount <= 0)
                         {
 
-                            AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
+                            AFSDbgTrace(( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                                           AFS_TRACE_LEVEL_VERBOSE,
                                           "AFSClose Deleting dir entry %p (%p) for %wZ  FID %08lX-%08lX-%08lX-%08lX\n",
                                           pDirCB,
@@ -411,7 +411,7 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                                           pObjectInfo->FileId.Cell,
                                           pObjectInfo->FileId.Volume,
                                           pObjectInfo->FileId.Vnode,
-                                          pObjectInfo->FileId.Unique);
+                                          pObjectInfo->FileId.Unique));
 
                             //
                             // Remove and delete the directory entry from the parent list
@@ -429,10 +429,10 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                                 if( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_INSERTED_HASH_TREE))
                                 {
 
-                                    AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
+                                    AFSDbgTrace(( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                                                   AFS_TRACE_LEVEL_VERBOSE,
                                                   "AFSClose Removing object %p from volume tree\n",
-                                                  pObjectInfo);
+                                                  pObjectInfo));
 
                                     AFSRemoveHashEntry( &pObjectInfo->VolumeCB->ObjectInfoTree.TreeHead,
                                                         &pObjectInfo->TreeEntry);
@@ -454,13 +454,13 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
 
                     lCount = InterlockedDecrement( &pDirCB->DirOpenReferenceCount);
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSClose (Other2) Decrement count on %wZ DE %p Ccb %p Cnt %d\n",
                                   &pDirCB->NameInformation.FileName,
                                   pDirCB,
                                   pCcb,
-                                  lCount);
+                                  lCount));
 
                     ASSERT( lCount >= 0);
                 }
@@ -476,11 +476,11 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
 
                     InterlockedDecrement( &pParentObjectInfo->Specific.Directory.ChildOpenReferenceCount);
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSClose Decrement child open ref count on Parent object %p Cnt %d\n",
                                   pParentObjectInfo,
-                                  pParentObjectInfo->Specific.Directory.ChildOpenReferenceCount);
+                                  pParentObjectInfo->Specific.Directory.ChildOpenReferenceCount));
                 }
 
                 //
@@ -489,11 +489,11 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
 
                 lCount = InterlockedDecrement( &pFcb->OpenReferenceCount);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSClose Decrement count on Fcb %p Cnt %d\n",
                               pFcb,
-                              lCount);
+                              lCount));
 
                 ASSERT( lCount >= 0);
 
@@ -518,11 +518,11 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                                                            &pObjectInfo->ParentFileId);
                 }
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSClose Acquiring Special Share lock %p EXCL %08lX\n",
                               &pFcb->NPFcb->Resource,
-                              PsGetCurrentThread());
+                              PsGetCurrentThread()));
 
                 AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                 TRUE);
@@ -569,22 +569,22 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
 
                     lCount = InterlockedDecrement( &pParentObjectInfo->Specific.Directory.ChildOpenReferenceCount);
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSClose (Share) Decrement child open ref count on Parent object %p Cnt %d\n",
                                   pParentObjectInfo,
-                                  lCount);
+                                  lCount));
                 }
 
                 AFSReleaseResource( &pFcb->NPFcb->Resource);
 
                 lCount = InterlockedDecrement( &pFcb->OpenReferenceCount);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSClose (Share) Decrement count on Fcb %p Cnt %d\n",
                               pFcb,
-                              lCount);
+                              lCount));
 
                 ASSERT( lCount >= 0);
 
@@ -593,10 +593,10 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
 
             default:
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSClose Processing unknown node type %d\n",
-                              pFcb->Header.NodeTypeCode);
+                              pFcb->Header.NodeTypeCode));
 
                 break;
         }
@@ -613,9 +613,9 @@ try_exit:
     __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
-                      "EXCEPTION - AFSClose\n");
+                      "EXCEPTION - AFSClose\n"));
 
         AFSDumpTraceFilesFnc();
     }

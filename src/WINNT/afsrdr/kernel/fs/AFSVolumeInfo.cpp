@@ -99,9 +99,9 @@ try_exit:
     __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
-                      "EXCEPTION - AFSQueryVolumeInfo\n");
+                      "EXCEPTION - AFSQueryVolumeInfo\n"));
 
         AFSDumpTraceFilesFnc();
     }
@@ -123,9 +123,10 @@ AFSSetVolumeInfo( IN PDEVICE_OBJECT DeviceObject,
     __try
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_WARNING,
-                      "AFSSetVolumeInfo Entry for FO %p\n", pIrpSp->FileObject);
+                      "AFSSetVolumeInfo Entry for FO %p\n",
+                      pIrpSp->FileObject));
 
         AFSCompleteRequest( Irp,
                             ntStatus);
@@ -134,9 +135,9 @@ AFSSetVolumeInfo( IN PDEVICE_OBJECT DeviceObject,
     __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
-                      "EXCEPTION - AFSSetVolumeInfo\n");
+                      "EXCEPTION - AFSSetVolumeInfo\n"));
 
         AFSDumpTraceFilesFnc();
     }

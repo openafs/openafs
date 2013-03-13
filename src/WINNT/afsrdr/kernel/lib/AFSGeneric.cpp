@@ -67,7 +67,7 @@ AFSExceptionFilter( IN CHAR *FunctionString,
 
         Context = ExceptPtrs->ContextRecord;
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
                       "AFSExceptionFilter (Library) - EXR %p CXR %p Function %s Code %08lX Address %p Routine %p\n",
                       ExceptRec,
@@ -75,7 +75,7 @@ AFSExceptionFilter( IN CHAR *FunctionString,
                       FunctionString,
                       ExceptRec->ExceptionCode,
                       ExceptRec->ExceptionAddress,
-                      (void *)AFSExceptionFilter);
+                      (void *)AFSExceptionFilter));
 
         DbgPrint("**** Exception Caught in AFS Redirector Library ****\n");
 
@@ -148,13 +148,13 @@ AFSLibExAllocatePoolWithTag( IN POOL_TYPE  PoolType,
         else
         {
 
-            AFSDbgLogMsg( 0,
+            AFSDbgTrace(( 0,
                           0,
                           "AFSLibExAllocatePoolWithTag failure Type %08lX Size %08lX Tag %08lX %08lX\n",
                           PoolType,
                           NumberOfBytes,
                           Tag,
-                          PsGetCurrentThread());
+                          PsGetCurrentThread()));
 
             AFSBreakPoint();
         }
@@ -273,11 +273,11 @@ void
 AFSReleaseResource( IN PERESOURCE Resource)
 {
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSReleaseResource Releasing lock %p Thread %08lX\n",
                   Resource,
-                  PsGetCurrentThread());
+                  PsGetCurrentThread()));
 
     ExReleaseResourceLite( Resource);
 
@@ -290,11 +290,11 @@ void
 AFSConvertToShared( IN PERESOURCE Resource)
 {
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSConvertToShared Converting lock %p Thread %08lX\n",
                   Resource,
-                  PsGetCurrentThread());
+                  PsGetCurrentThread()));
 
     ExConvertExclusiveToSharedLite( Resource);
 
@@ -662,10 +662,10 @@ AFSInitializeGlobalDirectoryEntries()
         if( pObjectInfoCB == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSInitializeGlobalDirectory AFSAllocateObjectInfo failure %08lX\n",
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -673,11 +673,11 @@ AFSInitializeGlobalDirectoryEntries()
         lCount = AFSObjectInfoIncrement( pObjectInfoCB,
                                          AFS_OBJECT_REFERENCE_GLOBAL);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitializeGlobalDirectoryEntries Increment count on object %p Cnt %d\n",
                       pObjectInfoCB,
-                      lCount);
+                      lCount));
 
         ntStatus = STATUS_SUCCESS;
 
@@ -693,17 +693,17 @@ AFSInitializeGlobalDirectoryEntries()
 
             AFSDeleteObjectInfo( &pObjectInfoCB);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING | AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+            AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING | AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSInitializeGlobalDirectory AFS_DIR_ENTRY_TAG allocation failure\n");
+                          "AFSInitializeGlobalDirectory AFS_DIR_ENTRY_TAG allocation failure\n"));
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+        AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitializeGlobalDirectory AFS_DIR_ENTRY_TAG allocated %p\n",
-                      pDirNode);
+                      pDirNode));
 
         pNonPagedDirEntry = (AFSNonPagedDirectoryCB *)AFSLibExAllocatePoolWithTag( NonPagedPool,
                                                                                    sizeof( AFSNonPagedDirectoryCB),
@@ -716,9 +716,9 @@ AFSInitializeGlobalDirectoryEntries()
 
             AFSDeleteObjectInfo( &pObjectInfoCB);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSInitializeGlobalDirectory AFS_DIR_ENTRY_NP_TAG allocation failure\n");
+                          "AFSInitializeGlobalDirectory AFS_DIR_ENTRY_NP_TAG allocation failure\n"));
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -775,10 +775,10 @@ AFSInitializeGlobalDirectoryEntries()
         if( pObjectInfoCB == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSInitializeGlobalDirectory AFSAllocateObjectInfo (2) failure %08lX\n",
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -786,11 +786,11 @@ AFSInitializeGlobalDirectoryEntries()
         lCount = AFSObjectInfoIncrement( pObjectInfoCB,
                                          AFS_OBJECT_REFERENCE_GLOBAL);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitializeGlobalDirectoryEntries Increment count on object %p Cnt %d\n",
                       pObjectInfoCB,
-                      lCount);
+                      lCount));
 
         ntStatus = STATUS_SUCCESS;
 
@@ -804,19 +804,19 @@ AFSInitializeGlobalDirectoryEntries()
         if( pDirNode == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING | AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+            AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING | AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSInitializeGlobalDirectoryEntries AFS_DIR_ENTRY_TAG allocation failure\n");
+                          "AFSInitializeGlobalDirectoryEntries AFS_DIR_ENTRY_TAG allocation failure\n"));
 
             AFSDeleteObjectInfo( &pObjectInfoCB);
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+        AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitializeGlobalDirectoryEntries AFS_DIR_ENTRY_TAG allocated %p\n",
-                      pDirNode);
+                      pDirNode));
 
         pNonPagedDirEntry = (AFSNonPagedDirectoryCB *)AFSLibExAllocatePoolWithTag( NonPagedPool,
                                                                                    sizeof( AFSNonPagedDirectoryCB),
@@ -934,14 +934,14 @@ AFSInitDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
     __Enter
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitDirEntry Initializing entry %wZ parent FID %08lX-%08lX-%08lX-%08lX\n",
                       FileName,
                       ParentObjectInfo->FileId.Cell,
                       ParentObjectInfo->FileId.Volume,
                       ParentObjectInfo->FileId.Vnode,
-                      ParentObjectInfo->FileId.Unique);
+                      ParentObjectInfo->FileId.Unique));
 
         //
         // First thing is to locate/create our object information block
@@ -978,22 +978,22 @@ AFSInitDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
 
             bAllocatedObjectCB = TRUE;
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSInitDirEntry initialized object %p Parent Object %p for %wZ\n",
                           pObjectInfoCB,
                           ParentObjectInfo,
-                          FileName);
+                          FileName));
         }
 
         lCount = AFSObjectInfoIncrement( pObjectInfoCB,
                                          AFS_OBJECT_REFERENCE_DIRENTRY);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitDirEntry Increment count on object %p Cnt %d\n",
                       pObjectInfoCB,
-                      lCount);
+                      lCount));
 
         AFSReleaseResource( ParentObjectInfo->VolumeCB->ObjectInfoTree.TreeLock);
 
@@ -1018,10 +1018,10 @@ AFSInitDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+        AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitDirEntry AFS_DIR_ENTRY_TAG allocated %p\n",
-                      pDirNode);
+                      pDirNode));
 
         pNonPagedDirEntry = (AFSNonPagedDirectoryCB *)AFSExAllocatePoolWithTag( NonPagedPool,
                                                                                 sizeof( AFSNonPagedDirectoryCB),
@@ -1081,7 +1081,7 @@ AFSInitDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
                                                                            TRUE);
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitDirEntry Initialized DE %p for %wZ in parent FID %08lX-%08lX-%08lX-%08lX\n",
                       pDirNode,
@@ -1089,7 +1089,7 @@ AFSInitDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
                       ParentObjectInfo->FileId.Cell,
                       ParentObjectInfo->FileId.Volume,
                       ParentObjectInfo->FileId.Vnode,
-                      ParentObjectInfo->FileId.Unique);
+                      ParentObjectInfo->FileId.Unique));
 
         if( TargetName != NULL &&
             TargetName->Length > 0)
@@ -1215,10 +1215,10 @@ try_exit:
             if( pDirNode != NULL)
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+                AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSInitDirEntry AFS_DIR_ENTRY_TAG deallocating %p\n",
-                              pDirNode);
+                              pDirNode));
 
                 AFSExFreePoolWithTag( pDirNode, AFS_DIR_ENTRY_TAG);
 
@@ -1235,11 +1235,11 @@ try_exit:
                 lCount = AFSObjectInfoDecrement( pObjectInfoCB,
                                                  AFS_OBJECT_REFERENCE_DIRENTRY);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSInitDirEntry Decrement count on object %p Cnt %d\n",
                               pObjectInfoCB,
-                              lCount);
+                              lCount));
 
                 if( bAllocatedObjectCB)
                 {
@@ -1486,10 +1486,10 @@ AFSValidateSymLink( IN GUID *AuthGroup,
             pDirEntry->FileType == AFS_FILE_TYPE_INVALID)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE_2,
                           "AFSValidateSymLink Invalid type Status %08lX\n",
-                          STATUS_OBJECT_NAME_NOT_FOUND);
+                          STATUS_OBJECT_NAME_NOT_FOUND));
 
             try_return( ntStatus = STATUS_OBJECT_NAME_NOT_FOUND);
         }
@@ -1620,7 +1620,7 @@ AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
     ULONG ulFilter = 0;
     AFSObjectInfoCB * pParentObjectInfo = NULL;
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSInvalidateObject Invalidation on node type %d for fid %08lX-%08lX-%08lX-%08lX Reason %d\n",
                   (*ppObjectInfo)->FileType,
@@ -1628,7 +1628,7 @@ AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
                   (*ppObjectInfo)->FileId.Volume,
                   (*ppObjectInfo)->FileId.Vnode,
                   (*ppObjectInfo)->FileId.Unique,
-                  Reason);
+                  Reason));
 
     if ( BooleanFlagOn( (*ppObjectInfo)->Flags, AFS_OBJECT_FLAGS_PARENT_FID))
     {
@@ -1668,13 +1668,13 @@ AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
 
             (*ppObjectInfo)->TargetFileId.Unique = 0;
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSInvalidateObject Setting VERIFY flag on fid %08lX-%08lX-%08lX-%08lX\n",
                           (*ppObjectInfo)->FileId.Cell,
                           (*ppObjectInfo)->FileId.Volume,
                           (*ppObjectInfo)->FileId.Vnode,
-                          (*ppObjectInfo)->FileId.Unique);
+                          (*ppObjectInfo)->FileId.Unique));
 
             SetFlag( (*ppObjectInfo)->Flags, AFS_OBJECT_FLAGS_VERIFY);
         }
@@ -1726,24 +1726,24 @@ AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
 
             SetFlag( (*ppObjectInfo)->Flags, AFS_OBJECT_FLAGS_DELETED);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSInvalidateObject Set DELETE flag on fid %08lX-%08lX-%08lX-%08lX\n",
                           (*ppObjectInfo)->FileId.Cell,
                           (*ppObjectInfo)->FileId.Volume,
                           (*ppObjectInfo)->FileId.Vnode,
-                          (*ppObjectInfo)->FileId.Unique);
+                          (*ppObjectInfo)->FileId.Unique));
 
             if( pParentObjectInfo != NULL)
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSInvalidateObject Set VERIFY flag on parent fid %08lX-%08lX-%08lX-%08lX\n",
                               pParentObjectInfo->FileId.Cell,
                               pParentObjectInfo->FileId.Volume,
                               pParentObjectInfo->FileId.Vnode,
-                              pParentObjectInfo->FileId.Unique);
+                              pParentObjectInfo->FileId.Unique));
 
                 SetFlag( pParentObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
 
@@ -1782,13 +1782,13 @@ AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
                 (*ppObjectInfo)->Fcb != NULL)
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSInvalidateObject Flush/purge file fid %08lX-%08lX-%08lX-%08lX\n",
                               (*ppObjectInfo)->FileId.Cell,
                               (*ppObjectInfo)->FileId.Volume,
                               (*ppObjectInfo)->FileId.Vnode,
-                              (*ppObjectInfo)->FileId.Unique);
+                              (*ppObjectInfo)->FileId.Unique));
 
                 AFSAcquireExcl( &(*ppObjectInfo)->Fcb->NPFcb->SectionObjectResource,
                                 TRUE);
@@ -1804,7 +1804,7 @@ AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
                     if( !NT_SUCCESS( stIoStatus.Status))
                     {
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
                                       "AFSInvalidateObject CcFlushCache failure FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX Bytes 0x%08lX\n",
                                       (*ppObjectInfo)->FileId.Cell,
@@ -1812,7 +1812,7 @@ AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
                                       (*ppObjectInfo)->FileId.Vnode,
                                       (*ppObjectInfo)->FileId.Unique,
                                       stIoStatus.Status,
-                                      stIoStatus.Information);
+                                      stIoStatus.Information));
 
                         ntStatus = stIoStatus.Status;
                     }
@@ -1827,13 +1827,13 @@ AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
                                                    FALSE))
                         {
 
-                            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                            AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                                           AFS_TRACE_LEVEL_WARNING,
                                           "AFSInvalidateObject CcPurgeCacheSection failure FID %08lX-%08lX-%08lX-%08lX\n",
                                           (*ppObjectInfo)->FileId.Cell,
                                           (*ppObjectInfo)->FileId.Volume,
                                           (*ppObjectInfo)->FileId.Vnode,
-                                          (*ppObjectInfo)->FileId.Unique);
+                                          (*ppObjectInfo)->FileId.Unique));
 
                             SetFlag( (*ppObjectInfo)->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
                         }
@@ -1844,14 +1844,14 @@ AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
 
                     ntStatus = GetExceptionCode();
 
-                    AFSDbgLogMsg( 0,
+                    AFSDbgTrace(( 0,
                                   0,
                                   "EXCEPTION - AFSInvalidateObject Cc FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
                                   (*ppObjectInfo)->FileId.Cell,
                                   (*ppObjectInfo)->FileId.Volume,
                                   (*ppObjectInfo)->FileId.Vnode,
                                   (*ppObjectInfo)->FileId.Unique,
-                                  ntStatus);
+                                  ntStatus));
 
                     SetFlag( (*ppObjectInfo)->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
                 }
@@ -1874,13 +1874,13 @@ AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
             if( (*ppObjectInfo)->FileType == AFS_FILE_TYPE_FILE)
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSInvalidateObject Setting VERIFY_DATA flag on fid %08lX-%08lX-%08lX-%08lX\n",
                               (*ppObjectInfo)->FileId.Cell,
                               (*ppObjectInfo)->FileId.Volume,
                               (*ppObjectInfo)->FileId.Vnode,
-                              (*ppObjectInfo)->FileId.Unique);
+                              (*ppObjectInfo)->FileId.Unique));
 
                 SetFlag( (*ppObjectInfo)->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA);
             }
@@ -1937,13 +1937,13 @@ AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
 
             (*ppObjectInfo)->Expiration.QuadPart = 0;
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSInvalidateObject Setting VERIFY flag on fid %08lX-%08lX-%08lX-%08lX\n",
                           (*ppObjectInfo)->FileId.Cell,
                           (*ppObjectInfo)->FileId.Volume,
                           (*ppObjectInfo)->FileId.Vnode,
-                          (*ppObjectInfo)->FileId.Unique);
+                          (*ppObjectInfo)->FileId.Unique));
 
             SetFlag( (*ppObjectInfo)->Flags, AFS_OBJECT_FLAGS_VERIFY);
 
@@ -1989,7 +1989,7 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
     __Enter
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInvalidateCache Invalidation FID %08lX-%08lX-%08lX-%08lX Type %d WholeVolume %d Reason %d\n",
                       InvalidateCB->FileID.Cell,
@@ -1998,17 +1998,17 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
                       InvalidateCB->FileID.Unique,
                       InvalidateCB->FileType,
                       InvalidateCB->WholeVolume,
-                      InvalidateCB->Reason);
+                      InvalidateCB->Reason));
 
         //
         // Need to locate the Fcb for the directory to purge
         //
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInvalidateCache Acquiring RDR VolumeTreeLock lock %p SHARED %08lX\n",
                       &pDevExt->Specific.RDR.VolumeTreeLock,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         //
         // Starve any exclusive waiters on this paticular call
@@ -2032,11 +2032,11 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
             lCount = AFSVolumeIncrement( pVolumeCB,
                                          AFS_VOLUME_REFERENCE_INVALIDATE);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSInvalidateCache Increment count on volume %p Cnt %d\n",
                           pVolumeCB,
-                          lCount);
+                          lCount));
         }
 
         AFSReleaseResource( &pDevExt->Specific.RDR.VolumeTreeLock);
@@ -2045,14 +2045,14 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
             pVolumeCB == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_WARNING,
                           "AFSInvalidateCache Invalidation FAILURE Unable to locate volume node FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                           InvalidateCB->FileID.Cell,
                           InvalidateCB->FileID.Volume,
                           InvalidateCB->FileID.Vnode,
                           InvalidateCB->FileID.Unique,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus = STATUS_SUCCESS);
         }
@@ -2098,11 +2098,11 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
             lCount = AFSObjectInfoIncrement( pObjectInfo,
                                              AFS_OBJECT_REFERENCE_INVALIDATION);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSInvalidateCache Increment count on object %p Cnt %d\n",
                           pObjectInfo,
-                          lCount);
+                          lCount));
         }
 
         AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
@@ -2111,14 +2111,14 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
             pObjectInfo == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSInvalidateCache Invalidation FAILURE Unable to locate object FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                           InvalidateCB->FileID.Cell,
                           InvalidateCB->FileID.Volume,
                           InvalidateCB->FileID.Vnode,
                           InvalidateCB->FileID.Unique,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus = STATUS_SUCCESS);
         }
@@ -2134,11 +2134,11 @@ try_exit:
             lCount = AFSObjectInfoDecrement( pObjectInfo,
                                              AFS_OBJECT_REFERENCE_INVALIDATION);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSInvalidateCache Decrement count on object %p Cnt %d\n",
                           pObjectInfo,
-                          lCount);
+                          lCount));
         }
 
         if ( pVolumeCB != NULL)
@@ -2147,11 +2147,11 @@ try_exit:
             lCount = AFSVolumeDecrement( pVolumeCB,
                                          AFS_VOLUME_REFERENCE_INVALIDATE);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSInvalidateCache Decrement count on volume %p Cnt %d\n",
                           pVolumeCB,
-                          lCount);
+                          lCount));
         }
     }
 
@@ -2325,11 +2325,11 @@ AFSSubstituteSysName( IN UNICODE_STRING *ComponentName,
 
 #endif
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSSubstituteSysName Acquiring SysName lock %p SHARED %08lX\n",
                       pSysNameLock,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         AFSAcquireShared( pSysNameLock,
                           TRUE);
@@ -2350,11 +2350,11 @@ AFSSubstituteSysName( IN UNICODE_STRING *ComponentName,
         if( pSysName == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE_2,
                           "AFSSubstituteSysName No sysname %wZ Status %08lX\n",
                           &ComponentName,
-                          STATUS_OBJECT_NAME_NOT_FOUND);
+                          STATUS_OBJECT_NAME_NOT_FOUND));
 
             try_return( ntStatus = STATUS_OBJECT_NAME_NOT_FOUND);
         }
@@ -2569,14 +2569,14 @@ AFSInvalidateVolume( IN AFSVolumeCB *VolumeCB,
     __Enter
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInvalidateVolume Invalidate volume fid %08lX-%08lX-%08lX-%08lX Reason %08lX\n",
                       VolumeCB->ObjectInformation.FileId.Cell,
                       VolumeCB->ObjectInformation.FileId.Volume,
                       VolumeCB->ObjectInformation.FileId.Vnode,
                       VolumeCB->ObjectInformation.FileId.Unique,
-                      Reason);
+                      Reason));
 
         //
         // Depending on the reason for invalidation then perform work on the node
@@ -2612,11 +2612,11 @@ AFSInvalidateVolume( IN AFSVolumeCB *VolumeCB,
             lCount = AFSObjectInfoIncrement( pCurrentObject,
                                              AFS_OBJECT_REFERENCE_INVALIDATION);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSInvalidateVolumeObjects Increment count on object %p Cnt %d\n",
                           pCurrentObject,
-                          lCount);
+                          lCount));
 
             AFSInvalidateObject( &pCurrentObject,
                                  Reason);
@@ -2627,11 +2627,11 @@ AFSInvalidateVolume( IN AFSVolumeCB *VolumeCB,
                 lCount = AFSObjectInfoDecrement( pCurrentObject,
                                                  AFS_OBJECT_REFERENCE_INVALIDATION);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSInvalidateVolumeObjects Decrement count on object %p Cnt %d\n",
                               pCurrentObject,
-                              lCount);
+                              lCount));
             }
         }
 
@@ -2654,11 +2654,11 @@ AFSInvalidateVolume( IN AFSVolumeCB *VolumeCB,
             lCount = AFSObjectInfoIncrement( pCurrentObject,
                                              AFS_OBJECT_REFERENCE_INVALIDATION);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSInvalidateVolumeObjects Increment count on object %p Cnt %d\n",
                           pCurrentObject,
-                          lCount);
+                          lCount));
         }
 
         while( pCurrentObject != NULL)
@@ -2676,11 +2676,11 @@ AFSInvalidateVolume( IN AFSVolumeCB *VolumeCB,
                 lCount = AFSObjectInfoIncrement( pNextObject,
                                                  AFS_OBJECT_REFERENCE_INVALIDATION);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSInvalidateVolumeObjects Increment count on object %p Cnt %d\n",
                               pNextObject,
-                              lCount);
+                              lCount));
             }
 
             AFSReleaseResource( VolumeCB->ObjectInfoTree.TreeLock);
@@ -2694,11 +2694,11 @@ AFSInvalidateVolume( IN AFSVolumeCB *VolumeCB,
                 lCount = AFSObjectInfoDecrement( pCurrentObject,
                                                  AFS_OBJECT_REFERENCE_INVALIDATION);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSInvalidateVolumeObjects Decrement count on object %p Cnt %d\n",
                               pCurrentObject,
-                              lCount);
+                              lCount));
             }
 
             AFSAcquireShared( VolumeCB->ObjectInfoTree.TreeLock,
@@ -2723,11 +2723,11 @@ AFSInvalidateAllVolumes( VOID)
 
     pRDRDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSInvalidateAllVolumes Acquiring RDR VolumeListLock lock %p SHARED %08lX\n",
                   &pRDRDeviceExt->Specific.RDR.VolumeListLock,
-                  PsGetCurrentThread());
+                  PsGetCurrentThread()));
 
     AFSAcquireShared( &pRDRDeviceExt->Specific.RDR.VolumeListLock,
                       TRUE);
@@ -2737,20 +2737,20 @@ AFSInvalidateAllVolumes( VOID)
     if ( pVolumeCB)
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInvalidateAllVolumes Acquiring VolumeRoot ObjectInfoTree lock %p SHARED %08lX\n",
                       pVolumeCB->ObjectInfoTree.TreeLock,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         lCount = AFSVolumeIncrement( pVolumeCB,
                                      AFS_VOLUME_REFERENCE_INVALIDATE);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInvalidateAllVolumes Increment count on volume %p Cnt %d\n",
                       pVolumeCB,
-                      lCount);
+                      lCount));
     }
 
     while( pVolumeCB != NULL)
@@ -2764,11 +2764,11 @@ AFSInvalidateAllVolumes( VOID)
             lCount = AFSVolumeIncrement( pNextVolumeCB,
                                          AFS_VOLUME_REFERENCE_INVALIDATE);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSInvalidateAllVolumes Increment count on volume %p Cnt %d\n",
                           pVolumeCB,
-                          lCount);
+                          lCount));
         }
 
         AFSReleaseResource( &pRDRDeviceExt->Specific.RDR.VolumeListLock);
@@ -2783,11 +2783,11 @@ AFSInvalidateAllVolumes( VOID)
         lCount = AFSVolumeDecrement( pVolumeCB,
                                      AFS_VOLUME_REFERENCE_INVALIDATE);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInvalidateAllVolumes Decrement count on volume %p Cnt %d\n",
                       pVolumeCB,
-                      lCount);
+                      lCount));
 
         pVolumeCB = pNextVolumeCB;
     }
@@ -2808,14 +2808,14 @@ AFSVerifyEntry( IN GUID *AuthGroup,
     __Enter
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
                       "AFSVerifyEntry Verifying entry %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                       &DirEntry->NameInformation.FileName,
                       pObjectInfo->FileId.Cell,
                       pObjectInfo->FileId.Volume,
                       pObjectInfo->FileId.Vnode,
-                      pObjectInfo->FileId.Unique);
+                      pObjectInfo->FileId.Unique));
 
         ntStatus = AFSEvaluateTargetByID( pObjectInfo,
                                           AuthGroup,
@@ -2825,7 +2825,7 @@ AFSVerifyEntry( IN GUID *AuthGroup,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSVerifyEntry Evaluate Target failed %wZ FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
                           &DirEntry->NameInformation.FileName,
@@ -2833,7 +2833,7 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                           pObjectInfo->FileId.Volume,
                           pObjectInfo->FileId.Vnode,
                           pObjectInfo->FileId.Unique,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -2847,7 +2847,7 @@ AFSVerifyEntry( IN GUID *AuthGroup,
             if ( !BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA))
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSVerifyEntry No DV change %I64X for Fcb %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                               pObjectInfo->DataVersion.QuadPart,
@@ -2855,7 +2855,7 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                               pObjectInfo->FileId.Cell,
                               pObjectInfo->FileId.Volume,
                               pObjectInfo->FileId.Vnode,
-                              pObjectInfo->FileId.Unique);
+                              pObjectInfo->FileId.Unique));
 
                 //
                 // We are ok, just get out
@@ -2930,7 +2930,7 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                 if ( pObjectInfo->DataVersion.QuadPart != pDirEnumEntry->DataVersion.QuadPart)
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSVerifyEntry DV Change %wZ FID %08lX-%08lX-%08lX-%08lX (%08lX != %08lX)\n",
                                   &DirEntry->NameInformation.FileName,
@@ -2939,8 +2939,7 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                                   pObjectInfo->FileId.Vnode,
                                   pObjectInfo->FileId.Unique,
                                   pObjectInfo->DataVersion.LowPart,
-                                  pDirEnumEntry->DataVersion.LowPart
-                                  );
+                                  pDirEnumEntry->DataVersion.LowPart));
 
                     bPurgeExtents = TRUE;
                 }
@@ -2950,14 +2949,14 @@ AFSVerifyEntry( IN GUID *AuthGroup,
 
                     bPurgeExtents = TRUE;
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSVerifyEntry Clearing VERIFY_DATA flag %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                                   &DirEntry->NameInformation.FileName,
                                   pObjectInfo->FileId.Cell,
                                   pObjectInfo->FileId.Volume,
                                   pObjectInfo->FileId.Vnode,
-                                  pObjectInfo->FileId.Unique);
+                                  pObjectInfo->FileId.Unique));
 
                     ClearFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA);
                 }
@@ -2965,14 +2964,14 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                 if( pObjectInfo->Fcb != NULL)
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSVerifyEntry Flush/purge entry %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                                   &DirEntry->NameInformation.FileName,
                                   pObjectInfo->FileId.Cell,
                                   pObjectInfo->FileId.Volume,
                                   pObjectInfo->FileId.Vnode,
-                                  pObjectInfo->FileId.Unique);
+                                  pObjectInfo->FileId.Unique));
 
                     AFSAcquireExcl( &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
                                     TRUE);
@@ -2988,7 +2987,7 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                         if( !NT_SUCCESS( stIoStatus.Status))
                         {
 
-                            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                            AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                                           AFS_TRACE_LEVEL_ERROR,
                                           "AFSVerifyEntry CcFlushCache failure %wZ FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX Bytes 0x%08lX\n",
                                           &DirEntry->NameInformation.FileName,
@@ -2997,7 +2996,7 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                                           pObjectInfo->FileId.Vnode,
                                           pObjectInfo->FileId.Unique,
                                           stIoStatus.Status,
-                                          stIoStatus.Information);
+                                          stIoStatus.Information));
 
                             ntStatus = stIoStatus.Status;
                         }
@@ -3012,14 +3011,14 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                                                        FALSE))
                             {
 
-                                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                                AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                                               AFS_TRACE_LEVEL_WARNING,
                                               "AFSVerifyEntry CcPurgeCacheSection failure %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                                               &DirEntry->NameInformation.FileName,
                                               pObjectInfo->FileId.Cell,
                                               pObjectInfo->FileId.Volume,
                                               pObjectInfo->FileId.Vnode,
-                                              pObjectInfo->FileId.Unique);
+                                              pObjectInfo->FileId.Unique));
 
                                 SetFlag( pObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
                             }
@@ -3029,7 +3028,7 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                     {
                         ntStatus = GetExceptionCode();
 
-                        AFSDbgLogMsg( 0,
+                        AFSDbgTrace(( 0,
                                       0,
                                       "EXCEPTION - AFSVerifyEntry CcFlushCache or CcPurgeCacheSection %wZ FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
                                       &DirEntry->NameInformation.FileName,
@@ -3037,7 +3036,7 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                                       pObjectInfo->FileId.Volume,
                                       pObjectInfo->FileId.Vnode,
                                       pObjectInfo->FileId.Unique,
-                                      ntStatus);
+                                      ntStatus));
 
                         SetFlag( pObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
                     }
@@ -3054,11 +3053,11 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                     // Reacquire the Fcb to purge the cache
                     //
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSVerifyEntry Acquiring Fcb lock %p EXCL %08lX\n",
                                   &pObjectInfo->Fcb->NPFcb->Resource,
-                                  PsGetCurrentThread());
+                                  PsGetCurrentThread()));
 
                     AFSAcquireExcl( &pObjectInfo->Fcb->NPFcb->Resource,
                                     TRUE);
@@ -3073,7 +3072,7 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                     if( !NT_SUCCESS( ntStatus))
                     {
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
                                       "AFSVerifyEntry Meta Data Update failed %wZ FID %08lX-%08lX-%08lX-%08lX ntStatus %08lX\n",
                                       &DirEntry->NameInformation.FileName,
@@ -3081,7 +3080,7 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                                       pObjectInfo->FileId.Volume,
                                       pObjectInfo->FileId.Vnode,
                                       pObjectInfo->FileId.Unique,
-                                      ntStatus);
+                                      ntStatus));
 
                         break;
                     }
@@ -3094,11 +3093,11 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                     pObjectInfo->Fcb->Header.FileSize.QuadPart        = pObjectInfo->EndOfFile.QuadPart;
                     pObjectInfo->Fcb->Header.ValidDataLength.QuadPart = pObjectInfo->EndOfFile.QuadPart;
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSVerifyEntry Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                                   &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
-                                  PsGetCurrentThread());
+                                  PsGetCurrentThread()));
 
                     AFSAcquireExcl( &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
                                     TRUE);
@@ -3111,11 +3110,11 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                                         (PCC_FILE_SIZES)&pObjectInfo->Fcb->Header.AllocationSize);
                     }
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSVerifyEntry Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                                   &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
-                                  PsGetCurrentThread());
+                                  PsGetCurrentThread()));
 
                     AFSReleaseResource( &pObjectInfo->Fcb->NPFcb->SectionObjectResource);
 
@@ -3134,7 +3133,7 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                     if( !NT_SUCCESS( ntStatus))
                     {
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
                                       "AFSVerifyEntry Meta Data Update failed %wZ FID %08lX-%08lX-%08lX-%08lX ntStatus %08lX\n",
                                       &DirEntry->NameInformation.FileName,
@@ -3142,19 +3141,19 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                                       pObjectInfo->FileId.Volume,
                                       pObjectInfo->FileId.Vnode,
                                       pObjectInfo->FileId.Unique,
-                                      ntStatus);
+                                      ntStatus));
 
                         break;
                     }
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_WARNING,
                                   "AFSVerifyEntry Fcb NULL %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                                   &DirEntry->NameInformation.FileName,
                                   pObjectInfo->FileId.Cell,
                                   pObjectInfo->FileId.Volume,
                                   pObjectInfo->FileId.Vnode,
-                                  pObjectInfo->FileId.Unique);
+                                  pObjectInfo->FileId.Unique));
                 }
 
                 ClearFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
@@ -3173,14 +3172,14 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                 if( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_FLAGS_DIRECTORY_ENUMERATED))
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE_2,
                                   "AFSVerifyEntry Validating directory content for entry %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                                   &DirEntry->NameInformation.FileName,
                                   pObjectInfo->FileId.Cell,
                                   pObjectInfo->FileId.Volume,
                                   pObjectInfo->FileId.Vnode,
-                                  pObjectInfo->FileId.Unique);
+                                  pObjectInfo->FileId.Unique));
 
                     AFSAcquireExcl( pObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
                                     TRUE);
@@ -3275,7 +3274,7 @@ AFSVerifyEntry( IN GUID *AuthGroup,
 
             default:
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_WARNING,
                               "AFSVerifyEntry Attempt to verify node of type %d %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                               pObjectInfo->FileType,
@@ -3283,7 +3282,7 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                               pObjectInfo->FileId.Cell,
                               pObjectInfo->FileId.Volume,
                               pObjectInfo->FileId.Vnode,
-                              pObjectInfo->FileId.Unique);
+                              pObjectInfo->FileId.Unique));
 
                 break;
         }
@@ -3313,22 +3312,22 @@ AFSSetVolumeState( IN AFSVolumeStatusCB *VolumeStatus)
     __Enter
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSSetVolumeState Marking volume state %d Volume Cell %08lX Volume %08lX\n",
                       VolumeStatus->Online,
                       VolumeStatus->FileID.Cell,
-                      VolumeStatus->FileID.Volume);
+                      VolumeStatus->FileID.Volume));
 
         //
         // Need to locate the Fcb for the directory to purge
         //
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSSetVolumeState Acquiring RDR VolumeTreeLock lock %p SHARED %08lX\n",
                       &pDevExt->Specific.RDR.VolumeTreeLock,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         AFSAcquireShared( &pDevExt->Specific.RDR.VolumeTreeLock, TRUE);
 
@@ -3348,11 +3347,11 @@ AFSSetVolumeState( IN AFSVolumeStatusCB *VolumeStatus)
             lCount = AFSVolumeIncrement( pVolumeCB,
                                          AFS_VOLUME_REFERENCE_INVALIDATE);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSSetVolumeState Increment count on volume %p Cnt %d\n",
                           pVolumeCB,
-                          lCount);
+                          lCount));
 
             AFSReleaseResource( &pDevExt->Specific.RDR.VolumeTreeLock);
 
@@ -3432,22 +3431,22 @@ AFSValidateDirectoryCache( IN AFSObjectInfoCB *ObjectInfo,
     __Enter
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSValidateDirectoryCache Validating content for FID %08lX-%08lX-%08lX-%08lX\n",
                       ObjectInfo->FileId.Cell,
                       ObjectInfo->FileId.Volume,
                       ObjectInfo->FileId.Vnode,
-                      ObjectInfo->FileId.Unique);
+                      ObjectInfo->FileId.Unique));
 
         if( !ExIsResourceAcquiredLite( ObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSValidateDirectoryCache Acquiring DirectoryNodeHdr.TreeLock lock %p EXCL %08lX\n",
                           ObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
-                          PsGetCurrentThread());
+                          PsGetCurrentThread()));
 
             AFSAcquireExcl( ObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
                             TRUE);
@@ -3463,14 +3462,14 @@ AFSValidateDirectoryCache( IN AFSObjectInfoCB *ObjectInfo,
              ObjectInfo->Specific.Directory.DirectoryNodeCount > 0)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSValidateDirectoryCache Empty Node List but Non-Zero Node Count %d for dir FID %08lX-%08lX-%08lX-%08lX\n",
                           ObjectInfo->Specific.Directory.DirectoryNodeCount,
                           ObjectInfo->FileId.Cell,
                           ObjectInfo->FileId.Volume,
                           ObjectInfo->FileId.Vnode,
-                          ObjectInfo->FileId.Unique);
+                          ObjectInfo->FileId.Unique));
         }
 
         //
@@ -3496,11 +3495,11 @@ AFSValidateDirectoryCache( IN AFSObjectInfoCB *ObjectInfo,
                     pCurrentDirEntry->NameArrayReferenceCount <= 0)
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSValidateDirectoryCache Deleting dir entry %p name %wZ\n",
                                   pCurrentDirEntry,
-                                  &pCurrentDirEntry->NameInformation.FileName);
+                                  &pCurrentDirEntry->NameInformation.FileName));
 
                     AFSDeleteDirEntry( ObjectInfo,
                                        pCurrentDirEntry);
@@ -3510,11 +3509,11 @@ AFSValidateDirectoryCache( IN AFSObjectInfoCB *ObjectInfo,
 
                     ClearFlag( pCurrentDirEntry->Flags, AFS_DIR_ENTRY_VALID);
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSValidateDirectoryCache Clear VALID flag on DE %p Reference count %d\n",
                                   pCurrentDirEntry,
-                                  pCurrentDirEntry->DirOpenReferenceCount);
+                                  pCurrentDirEntry->DirOpenReferenceCount));
 
                     //
                     // We pull the short name from the parent tree since it could change below
@@ -3523,12 +3522,12 @@ AFSValidateDirectoryCache( IN AFSObjectInfoCB *ObjectInfo,
                     if( BooleanFlagOn( pCurrentDirEntry->Flags, AFS_DIR_ENTRY_INSERTED_SHORT_NAME))
                     {
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
                                       "AFSValidateDirectoryCache Removing DE %p (%08lX) from shortname tree for %wZ\n",
                                       pCurrentDirEntry,
                                       pCurrentDirEntry->Type.Data.ShortNameTreeEntry.HashIndex,
-                                      &pCurrentDirEntry->NameInformation.FileName);
+                                      &pCurrentDirEntry->NameInformation.FileName));
 
                         AFSRemoveShortNameDirEntry( &ObjectInfo->Specific.Directory.ShortNameTree,
                                                     pCurrentDirEntry);
@@ -3577,11 +3576,11 @@ AFSValidateDirectoryCache( IN AFSObjectInfoCB *ObjectInfo,
 
                         ObjectInfo->Specific.Directory.ShortNameTree = pCurrentDirEntry;
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
                                       "AFSValidateDirectoryCache Insert DE %p to head of shortname tree for %wZ\n",
                                       pCurrentDirEntry,
-                                      &pCurrentDirEntry->NameInformation.FileName);
+                                      &pCurrentDirEntry->NameInformation.FileName));
 
                         SetFlag( pCurrentDirEntry->Flags, AFS_DIR_ENTRY_INSERTED_SHORT_NAME);
                     }
@@ -3591,22 +3590,22 @@ AFSValidateDirectoryCache( IN AFSObjectInfoCB *ObjectInfo,
                         if( !NT_SUCCESS( AFSInsertShortNameDirEntry( ObjectInfo->Specific.Directory.ShortNameTree,
                                                                      pCurrentDirEntry)))
                         {
-                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                           AFS_TRACE_LEVEL_VERBOSE,
                                           "AFSValidateDirectoryCache Failed to insert DE %p (%08lX) to shortname tree for %wZ\n",
                                           pCurrentDirEntry,
                                           pCurrentDirEntry->Type.Data.ShortNameTreeEntry.HashIndex,
-                                          &pCurrentDirEntry->NameInformation.FileName);
+                                          &pCurrentDirEntry->NameInformation.FileName));
                         }
                         else
                         {
                             SetFlag( pCurrentDirEntry->Flags, AFS_DIR_ENTRY_INSERTED_SHORT_NAME);
 
-                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                           AFS_TRACE_LEVEL_VERBOSE,
                                           "AFSValidateDirectoryCache Insert DE %p to shortname tree for %wZ\n",
                                           pCurrentDirEntry,
-                                          &pCurrentDirEntry->NameInformation.FileName);
+                                          &pCurrentDirEntry->NameInformation.FileName));
                         }
                     }
                 }
@@ -3616,24 +3615,24 @@ AFSValidateDirectoryCache( IN AFSObjectInfoCB *ObjectInfo,
                 continue;
             }
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSValidateDirectoryCache Processing INVALID DE %p Reference count %d\n",
                           pCurrentDirEntry,
-                          pCurrentDirEntry->DirOpenReferenceCount);
+                          pCurrentDirEntry->DirOpenReferenceCount));
 
             if( pCurrentDirEntry->DirOpenReferenceCount <= 0 &&
                 pCurrentDirEntry->NameArrayReferenceCount <= 0)
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSValidateDirectoryCache Deleting dir entry %wZ from parent FID %08lX-%08lX-%08lX-%08lX\n",
                               &pCurrentDirEntry->NameInformation.FileName,
                               ObjectInfo->FileId.Cell,
                               ObjectInfo->FileId.Volume,
                               ObjectInfo->FileId.Vnode,
-                              ObjectInfo->FileId.Unique);
+                              ObjectInfo->FileId.Unique));
 
                 AFSDeleteDirEntry( ObjectInfo,
                                    pCurrentDirEntry);
@@ -3641,7 +3640,7 @@ AFSValidateDirectoryCache( IN AFSObjectInfoCB *ObjectInfo,
             else
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSValidateDirectoryCache Setting dir entry %p Name %wZ DELETED in parent FID %08lX-%08lX-%08lX-%08lX\n",
                               pCurrentDirEntry,
@@ -3649,7 +3648,7 @@ AFSValidateDirectoryCache( IN AFSObjectInfoCB *ObjectInfo,
                               ObjectInfo->FileId.Cell,
                               ObjectInfo->FileId.Volume,
                               ObjectInfo->FileId.Vnode,
-                              ObjectInfo->FileId.Unique);
+                              ObjectInfo->FileId.Unique));
 
                 SetFlag( pCurrentDirEntry->Flags, AFS_DIR_ENTRY_DELETED);
 
@@ -3877,7 +3876,7 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
         // correct order
         //
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
                       "AFSValidateEntry Validating entry %wZ FID %08lX-%08lX-%08lX-%08lX FastCall %u\n",
                       &DirEntry->NameInformation.FileName,
@@ -3885,7 +3884,7 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                       pObjectInfo->FileId.Volume,
                       pObjectInfo->FileId.Vnode,
                       pObjectInfo->FileId.Unique,
-                      FastCall);
+                      FastCall));
 
         //
         // If this is a fake node then bail since the service knows nothing about it
@@ -3912,14 +3911,14 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
             pObjectInfo->Expiration.QuadPart >= liSystemTime.QuadPart)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE_2,
                           "AFSValidateEntry Directory entry %wZ FID %08lX-%08lX-%08lX-%08lX VALID\n",
                           &DirEntry->NameInformation.FileName,
                           pObjectInfo->FileId.Cell,
                           pObjectInfo->FileId.Volume,
                           pObjectInfo->FileId.Vnode,
-                          pObjectInfo->FileId.Unique);
+                          pObjectInfo->FileId.Unique));
 
             try_return( ntStatus);
         }
@@ -3936,7 +3935,7 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSValidateEntry Failed to evaluate entry FastCall %d %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                           FastCall,
@@ -3945,7 +3944,7 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                           pObjectInfo->FileId.Volume,
                           pObjectInfo->FileId.Vnode,
                           pObjectInfo->FileId.Unique,
-                          ntStatus);
+                          ntStatus));
 
             //
             // Failed validation of node so return access-denied
@@ -3954,7 +3953,7 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
             try_return( ntStatus);
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSValidateEntry Validating entry FastCall %d %wZ FID %08lX-%08lX-%08lX-%08lX DV %I64X returned DV %I64X FT %d\n",
                       FastCall,
@@ -3965,7 +3964,7 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                       pObjectInfo->FileId.Unique,
                       pObjectInfo->DataVersion.QuadPart,
                       pDirEnumEntry->DataVersion.QuadPart,
-                      pDirEnumEntry->FileType);
+                      pDirEnumEntry->FileType));
 
 
         //
@@ -4035,11 +4034,11 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                     if( !ExIsResourceAcquiredLite( &pCurrentFcb->NPFcb->Resource))
                     {
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
                                       "AFSValidateEntry Acquiring Fcb lock %p EXCL %08lX\n",
                                       &pCurrentFcb->NPFcb->Resource,
-                                      PsGetCurrentThread());
+                                      PsGetCurrentThread()));
 
                         AFSAcquireExcl( &pCurrentFcb->NPFcb->Resource,
                                         TRUE);
@@ -4052,19 +4051,19 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
 
                         IO_STATUS_BLOCK stIoStatus;
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE_2,
                                       "AFSValidateEntry Flush/purge entry %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                                       &DirEntry->NameInformation.FileName,
                                       pObjectInfo->FileId.Cell,
                                       pObjectInfo->FileId.Volume,
                                       pObjectInfo->FileId.Vnode,
-                                      pObjectInfo->FileId.Unique);
+                                      pObjectInfo->FileId.Unique));
 
                         if ( pObjectInfo->DataVersion.QuadPart != pDirEnumEntry->DataVersion.QuadPart)
                         {
 
-                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                           AFS_TRACE_LEVEL_VERBOSE,
                                           "AFSValidateEntry DV Change %wZ FID %08lX-%08lX-%08lX-%08lX (%08lX != %08lX)\n",
                                           &DirEntry->NameInformation.FileName,
@@ -4073,8 +4072,7 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                                           pObjectInfo->FileId.Vnode,
                                           pObjectInfo->FileId.Unique,
                                           pObjectInfo->DataVersion.LowPart,
-                                          pDirEnumEntry->DataVersion.LowPart
-                                          );
+                                          pDirEnumEntry->DataVersion.LowPart));
 
                             bPurgeExtents = TRUE;
                         }
@@ -4086,23 +4084,23 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                             {
                                 bPurgeExtents = TRUE;
 
-                                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                               AFS_TRACE_LEVEL_VERBOSE,
                                               "AFSVerifyEntry Clearing VERIFY_DATA flag %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                                               &DirEntry->NameInformation.FileName,
                                               pObjectInfo->FileId.Cell,
                                               pObjectInfo->FileId.Volume,
                                               pObjectInfo->FileId.Vnode,
-                                              pObjectInfo->FileId.Unique);
+                                              pObjectInfo->FileId.Unique));
 
                                 ClearFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA);
                             }
 
-                            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                            AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                           AFS_TRACE_LEVEL_VERBOSE,
                                           "AFSValidateEntry Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                                           &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
-                                          PsGetCurrentThread());
+                                          PsGetCurrentThread()));
 
                             AFSAcquireExcl( &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
                                             TRUE);
@@ -4124,7 +4122,7 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                                 if( !NT_SUCCESS( stIoStatus.Status))
                                 {
 
-                                    AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                                    AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                                                   AFS_TRACE_LEVEL_ERROR,
                                                   "AFSValidateEntry CcFlushCache failure %wZ FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX Bytes 0x%08lX\n",
                                                   &DirEntry->NameInformation.FileName,
@@ -4133,7 +4131,7 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                                                   pObjectInfo->FileId.Vnode,
                                                   pObjectInfo->FileId.Unique,
                                                   stIoStatus.Status,
-                                                  stIoStatus.Information);
+                                                  stIoStatus.Information));
 
                                     ntStatus = stIoStatus.Status;
                                 }
@@ -4148,14 +4146,14 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                                                                FALSE))
                                     {
 
-                                        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                                        AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                                                       AFS_TRACE_LEVEL_WARNING,
                                                       "AFSValidateEntry CcPurgeCacheSection failure %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                                                       &DirEntry->NameInformation.FileName,
                                                       pObjectInfo->FileId.Cell,
                                                       pObjectInfo->FileId.Volume,
                                                       pObjectInfo->FileId.Vnode,
-                                                      pObjectInfo->FileId.Unique);
+                                                      pObjectInfo->FileId.Unique));
 
                                         SetFlag( pObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
                                     }
@@ -4165,7 +4163,7 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                             {
                                 ntStatus = GetExceptionCode();
 
-                                AFSDbgLogMsg( 0,
+                                AFSDbgTrace(( 0,
                                               0,
                                               "EXCEPTION - AFSValidateEntry CcFlushCache or CcPurgeCacheSection %wZ FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
                                               &DirEntry->NameInformation.FileName,
@@ -4173,16 +4171,16 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                                               pObjectInfo->FileId.Volume,
                                               pObjectInfo->FileId.Vnode,
                                               pObjectInfo->FileId.Unique,
-                                              ntStatus);
+                                              ntStatus));
 
                                 SetFlag( pObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
                             }
 
-                            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                            AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                           AFS_TRACE_LEVEL_VERBOSE,
                                           "AFSValidateEntry Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                                           &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
-                                          PsGetCurrentThread());
+                                          PsGetCurrentThread()));
 
                             AFSReleaseResource( &pObjectInfo->Fcb->NPFcb->SectionObjectResource);
 
@@ -4231,7 +4229,7 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                     if( !NT_SUCCESS( ntStatus))
                     {
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
                                       "AFSValidateEntry Meta Data Update failed %wZ FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
                                       &DirEntry->NameInformation.FileName,
@@ -4239,7 +4237,7 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                                       pObjectInfo->FileId.Volume,
                                       pObjectInfo->FileId.Vnode,
                                       pObjectInfo->FileId.Unique,
-                                      ntStatus);
+                                      ntStatus));
 
                         break;
                     }
@@ -4254,11 +4252,11 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                     {
                         FILE_OBJECT *pCCFileObject;
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
                                       "AFSValidateEntry Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                                       &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
-                                      PsGetCurrentThread());
+                                      PsGetCurrentThread()));
 
                         AFSAcquireExcl( &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
                                         TRUE);
@@ -4275,11 +4273,11 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                                             (PCC_FILE_SIZES)&pObjectInfo->Fcb->Header.AllocationSize);
                         }
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
                                       "AFSValidateEntry Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                                       &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
-                                      PsGetCurrentThread());
+                                      PsGetCurrentThread()));
 
                         AFSReleaseResource( &pObjectInfo->Fcb->NPFcb->SectionObjectResource);
                     }
@@ -4298,23 +4296,23 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                     // the directory enumeration.
                     //
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSValidateEntry Acquiring DirectoryNodeHdr.TreeLock lock %p EXCL %08lX\n",
                                   pObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
-                                  PsGetCurrentThread());
+                                  PsGetCurrentThread()));
 
                     if( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_FLAGS_DIRECTORY_ENUMERATED))
                     {
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE_2,
                                       "AFSValidateEntry Validating directory content for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                                       &DirEntry->NameInformation.FileName,
                                       pObjectInfo->FileId.Cell,
                                       pObjectInfo->FileId.Volume,
                                       pObjectInfo->FileId.Vnode,
-                                      pObjectInfo->FileId.Unique);
+                                      pObjectInfo->FileId.Unique));
 
                         AFSAcquireExcl( pObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
                                         TRUE);
@@ -4328,7 +4326,7 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                     if( !NT_SUCCESS( ntStatus))
                     {
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
                                       "AFSValidateEntry Failed to re-enumerate %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                                       &DirEntry->NameInformation.FileName,
@@ -4336,7 +4334,7 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                                       pObjectInfo->FileId.Volume,
                                       pObjectInfo->FileId.Vnode,
                                       pObjectInfo->FileId.Unique,
-                                      ntStatus);
+                                      ntStatus));
 
                         break;
                     }
@@ -4360,7 +4358,7 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
 
             default:
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_WARNING,
                               "AFSValidateEntry Attempt to verify node of type %d FastCall %d %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                               pObjectInfo->FileType,
@@ -4369,7 +4367,7 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                               pObjectInfo->FileId.Cell,
                               pObjectInfo->FileId.Volume,
                               pObjectInfo->FileId.Vnode,
-                              pObjectInfo->FileId.Unique);
+                              pObjectInfo->FileId.Unique));
 
                 break;
         }
@@ -4422,11 +4420,11 @@ AFSInitializeSpecialShareNameList()
         lCount = AFSObjectInfoIncrement( pObjectInfoCB,
                                          AFS_OBJECT_REFERENCE_GLOBAL);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitializeSpecialShareNameList (srvsvc) Increment count on object %p Cnt %d\n",
                       pObjectInfoCB,
-                      lCount);
+                      lCount));
 
         pObjectInfoCB->FileType = (ULONG) AFS_FILE_TYPE_SPECIAL_SHARE_NAME;
 
@@ -4445,10 +4443,10 @@ AFSInitializeSpecialShareNameList()
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+        AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitializeSpecialShareNameList (srvsvc) AFS_DIR_ENTRY_TAG allocated %p\n",
-                      pDirNode);
+                      pDirNode));
 
         pNonPagedDirEntry = (AFSNonPagedDirectoryCB *)AFSLibExAllocatePoolWithTag( NonPagedPool,
                                                                                    sizeof( AFSNonPagedDirectoryCB),
@@ -4515,11 +4513,11 @@ AFSInitializeSpecialShareNameList()
         lCount = AFSObjectInfoIncrement( pObjectInfoCB,
                                          AFS_OBJECT_REFERENCE_GLOBAL);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitializeSpecialShareNameList (ipc$) Incrementing count on object %p Cnt %d\n",
                       pObjectInfoCB,
-                      lCount);
+                      lCount));
 
         pObjectInfoCB->FileType = (ULONG) AFS_FILE_TYPE_SPECIAL_SHARE_NAME;
 
@@ -4538,10 +4536,10 @@ AFSInitializeSpecialShareNameList()
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+        AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitializeSpecialShareNameList (ipc$) AFS_DIR_ENTRY_TAG allocated %p\n",
-                      pDirNode);
+                      pDirNode));
 
         pNonPagedDirEntry = (AFSNonPagedDirectoryCB *)AFSLibExAllocatePoolWithTag( NonPagedPool,
                                                                                    sizeof( AFSNonPagedDirectoryCB),
@@ -4639,11 +4637,11 @@ AFSGetSpecialShareNameEntry( IN UNICODE_STRING *ShareName,
     {
 
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
                       "AFSGetSpecialShareNameEntry share name %wZ secondary name %wZ\n",
                       ShareName,
-                      SecondaryName);
+                      SecondaryName));
 
         uniFullShareName = *ShareName;
 
@@ -4759,11 +4757,11 @@ AFSResetDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB)
                 pCurrentDirEntry->NameArrayReferenceCount <= 0)
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSResetDirectoryContent Deleting dir entry %p for %wZ\n",
                               pCurrentDirEntry,
-                              &pCurrentDirEntry->NameInformation.FileName);
+                              &pCurrentDirEntry->NameInformation.FileName));
 
                 AFSDeleteDirEntry( ObjectInfoCB,
                                    pCurrentDirEntry);
@@ -4771,11 +4769,11 @@ AFSResetDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB)
             else
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSResetDirectoryContent Setting DELETE flag in dir entry %p for %wZ\n",
                               pCurrentDirEntry,
-                              &pCurrentDirEntry->NameInformation.FileName);
+                              &pCurrentDirEntry->NameInformation.FileName));
 
                 SetFlag( pCurrentDirEntry->Flags, AFS_DIR_ENTRY_DELETED);
 
@@ -4798,13 +4796,13 @@ AFSResetDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB)
 
         ObjectInfoCB->Specific.Directory.DirectoryNodeCount = 0;
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_DIR_NODE_COUNT,
+        AFSDbgTrace(( AFS_SUBSYSTEM_DIR_NODE_COUNT,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSResetDirectoryContent Reset count to 0 on parent FID %08lX-%08lX-%08lX-%08lX\n",
                       ObjectInfoCB->FileId.Cell,
                       ObjectInfoCB->FileId.Volume,
                       ObjectInfoCB->FileId.Vnode,
-                      ObjectInfoCB->FileId.Unique);
+                      ObjectInfoCB->FileId.Unique));
     }
 
     return ntStatus;
@@ -4821,11 +4819,11 @@ AFSEnumerateGlobalRoot( IN GUID *AuthGroup)
     __Enter
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSEnumerateGlobalRoot Acquiring GlobalRoot DirectoryNodeHdr.TreeLock lock %p EXCL %08lX\n",
                       AFSGlobalRoot->ObjectInformation.Specific.Directory.DirectoryNodeHdr.TreeLock,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         AFSAcquireExcl( AFSGlobalRoot->ObjectInformation.Specific.Directory.DirectoryNodeHdr.TreeLock,
                         TRUE);
@@ -5099,9 +5097,9 @@ AFSInitNameArray( IN AFSDirectoryCB *DirectoryCB,
         if( pNameArray == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSInitNameArray Failed to allocate name array\n");
+                          "AFSInitNameArray Failed to allocate name array\n"));
 
             try_return( pNameArray);
         }
@@ -5125,13 +5123,13 @@ AFSInitNameArray( IN AFSDirectoryCB *DirectoryCB,
 
             lCount = InterlockedIncrement( &DirectoryCB->NameArrayReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_NAME_ARRAY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSInitNameArray [NA:%p] Increment count on %wZ DE %p Cnt %d\n",
                           pNameArray,
                           &DirectoryCB->NameInformation.FileName,
                           DirectoryCB,
-                          lCount);
+                          lCount));
 
             pCurrentElement->DirectoryCB = DirectoryCB;
 
@@ -5145,7 +5143,7 @@ AFSInitNameArray( IN AFSDirectoryCB *DirectoryCB,
                 SetFlag( pCurrentElement->Flags, AFS_NAME_ARRAY_FLAG_ROOT_ELEMENT);
             }
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSInitNameArray [NA:%p] Element[0] DE %p FID %08lX-%08lX-%08lX-%08lX %wZ Type %d\n",
                           pNameArray,
@@ -5155,7 +5153,7 @@ AFSInitNameArray( IN AFSDirectoryCB *DirectoryCB,
                           pCurrentElement->FileId.Vnode,
                           pCurrentElement->FileId.Unique,
                           &pCurrentElement->DirectoryCB->NameInformation.FileName,
-                          pCurrentElement->DirectoryCB->ObjectInformation->FileType);
+                          pCurrentElement->DirectoryCB->ObjectInformation->FileType));
         }
 
 try_exit:
@@ -5179,7 +5177,7 @@ AFSPopulateNameArray( IN AFSNameArrayHdr *NameArray,
     __Enter
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSPopulateNameArray [NA:%p] passed Path %wZ DE %p FID %08lX-%08lX-%08lX-%08lX %wZ Type %d\n",
                       NameArray,
@@ -5190,7 +5188,7 @@ AFSPopulateNameArray( IN AFSNameArrayHdr *NameArray,
                       DirectoryCB->ObjectInformation->FileId.Vnode,
                       DirectoryCB->ObjectInformation->FileId.Unique,
                       &DirectoryCB->NameInformation.FileName,
-                      DirectoryCB->ObjectInformation->FileType);
+                      DirectoryCB->ObjectInformation->FileType));
 
         //
         // Init some info in the header
@@ -5208,13 +5206,13 @@ AFSPopulateNameArray( IN AFSNameArrayHdr *NameArray,
 
         lCount = InterlockedIncrement( &pCurrentElement->DirectoryCB->NameArrayReferenceCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_NAME_ARRAY_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSPopulateNameArray [NA:%p] Increment count on volume %wZ DE %p Cnt %d\n",
                       NameArray,
                       &pCurrentElement->DirectoryCB->NameInformation.FileName,
                       pCurrentElement->DirectoryCB,
-                      lCount);
+                      lCount));
 
         pCurrentElement->Component = DirectoryCB->ObjectInformation->VolumeCB->DirectoryCB->NameInformation.FileName;
 
@@ -5232,7 +5230,7 @@ AFSPopulateNameArray( IN AFSNameArrayHdr *NameArray,
 
         NameArray->LinkCount = 0;
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSPopulateNameArray [NA:%p] Element[0] DE %p FID %08lX-%08lX-%08lX-%08lX %wZ Type %d\n",
                       NameArray,
@@ -5242,7 +5240,7 @@ AFSPopulateNameArray( IN AFSNameArrayHdr *NameArray,
                       pCurrentElement->FileId.Vnode,
                       pCurrentElement->FileId.Unique,
                       &pCurrentElement->DirectoryCB->NameInformation.FileName,
-                      pCurrentElement->DirectoryCB->ObjectInformation->FileType);
+                      pCurrentElement->DirectoryCB->ObjectInformation->FileType));
 
         //
         // If the root is the parent then we are done ...
@@ -5277,7 +5275,7 @@ AFSPopulateNameArrayFromRelatedArray( IN AFSNameArrayHdr *NameArray,
         if ( DirectoryCB)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSPopulateNameArray [NA:%p] passed RelatedNameArray %p DE %p FID %08lX-%08lX-%08lX-%08lX %wZ Type %d\n",
                           NameArray,
@@ -5288,16 +5286,16 @@ AFSPopulateNameArrayFromRelatedArray( IN AFSNameArrayHdr *NameArray,
                           DirectoryCB->ObjectInformation->FileId.Vnode,
                           DirectoryCB->ObjectInformation->FileId.Unique,
                           &DirectoryCB->NameInformation.FileName,
-                          DirectoryCB->ObjectInformation->FileType);
+                          DirectoryCB->ObjectInformation->FileType));
         }
         else
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSPopulateNameArray [NA:%p] passed RelatedNameArray %p DE NULL\n",
                           NameArray,
-                          RelatedNameArray);
+                          RelatedNameArray));
         }
 
         //
@@ -5335,17 +5333,17 @@ AFSPopulateNameArrayFromRelatedArray( IN AFSNameArrayHdr *NameArray,
 
             lCount = InterlockedIncrement( &pCurrentElement->DirectoryCB->NameArrayReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_NAME_ARRAY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSPopulateNameArrayFromRelatedArray [NA:%p] Increment count on %wZ DE %p Cnt %d\n",
                           NameArray,
                           &pCurrentElement->DirectoryCB->NameInformation.FileName,
                           pCurrentElement->DirectoryCB,
-                          lCount);
+                          lCount));
 
             lCount = InterlockedIncrement( &NameArray->Count);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSPopulateNameArrayFromRelatedArray [NA:%p] Element[%d] DE %p FID %08lX-%08lX-%08lX-%08lX %wZ Type %d\n",
                           NameArray,
@@ -5356,7 +5354,7 @@ AFSPopulateNameArrayFromRelatedArray( IN AFSNameArrayHdr *NameArray,
                           pCurrentElement->FileId.Vnode,
                           pCurrentElement->FileId.Unique,
                           &pCurrentElement->DirectoryCB->NameInformation.FileName,
-                          pCurrentElement->DirectoryCB->ObjectInformation->FileType);
+                          pCurrentElement->DirectoryCB->ObjectInformation->FileType));
 
             if( pCurrentElement->DirectoryCB == DirectoryCB ||
                 NameArray->Count == RelatedNameArray->Count)
@@ -5391,10 +5389,10 @@ AFSFreeNameArray( IN AFSNameArrayHdr *NameArray)
     __Enter
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSFreeNameArray [NA:%p]\n",
-                      NameArray);
+                      NameArray));
 
         for ( lElement = 0; lElement < NameArray->Count; lElement++)
         {
@@ -5403,13 +5401,13 @@ AFSFreeNameArray( IN AFSNameArrayHdr *NameArray)
 
             lCount = InterlockedDecrement( &pCurrentElement->DirectoryCB->NameArrayReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_NAME_ARRAY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSFreeNameArray [NA:%p] Decrement count on %wZ DE %p Cnt %d\n",
                           NameArray,
                           &pCurrentElement->DirectoryCB->NameInformation.FileName,
                           pCurrentElement->DirectoryCB,
-                          lCount);
+                          lCount));
 
             ASSERT( lCount >= 0);
         }
@@ -5432,7 +5430,7 @@ AFSInsertNextElement( IN AFSNameArrayHdr *NameArray,
     __Enter
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInsertNextElement [NA:%p] passed DE %p FID %08lX-%08lX-%08lX-%08lX %wZ Type %d\n",
                       NameArray,
@@ -5442,15 +5440,15 @@ AFSInsertNextElement( IN AFSNameArrayHdr *NameArray,
                       DirectoryCB->ObjectInformation->FileId.Vnode,
                       DirectoryCB->ObjectInformation->FileId.Unique,
                       &DirectoryCB->NameInformation.FileName,
-                      DirectoryCB->ObjectInformation->FileType);
+                      DirectoryCB->ObjectInformation->FileType));
 
         if( NameArray->Count == (LONG) NameArray->MaxElementCount)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSInsertNextElement [NA:%p] Name has reached Maximum Size\n",
-                          NameArray);
+                          NameArray));
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -5462,12 +5460,12 @@ AFSInsertNextElement( IN AFSNameArrayHdr *NameArray,
                                 &DirectoryCB->ObjectInformation->FileId) )
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
                               AFS_TRACE_LEVEL_WARNING,
                               "AFSInsertNextElement [NA:%p] DE %p recursion Status %08X\n",
                               NameArray,
                               DirectoryCB,
-                              STATUS_ACCESS_DENIED);
+                              STATUS_ACCESS_DENIED));
 
                 try_return( ntStatus = STATUS_ACCESS_DENIED);
             }
@@ -5489,13 +5487,13 @@ AFSInsertNextElement( IN AFSNameArrayHdr *NameArray,
 
         lCount = InterlockedIncrement( &DirectoryCB->NameArrayReferenceCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_NAME_ARRAY_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInsertNextElement [NA:%p] Increment count on %wZ DE %p Cnt %d\n",
                       NameArray,
                       &DirectoryCB->NameInformation.FileName,
                       DirectoryCB,
-                      lCount);
+                      lCount));
 
         ASSERT( lCount > 0);
 
@@ -5513,7 +5511,7 @@ AFSInsertNextElement( IN AFSNameArrayHdr *NameArray,
             SetFlag( pCurrentElement->Flags, AFS_NAME_ARRAY_FLAG_ROOT_ELEMENT);
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInsertNextElement [NA:%p] Element[%d] DE %p FID %08lX-%08lX-%08lX-%08lX %wZ Type %d\n",
                       NameArray,
@@ -5524,7 +5522,7 @@ AFSInsertNextElement( IN AFSNameArrayHdr *NameArray,
                       pCurrentElement->FileId.Vnode,
                       pCurrentElement->FileId.Unique,
                       &pCurrentElement->DirectoryCB->NameInformation.FileName,
-                      pCurrentElement->DirectoryCB->ObjectInformation->FileType);
+                      pCurrentElement->DirectoryCB->ObjectInformation->FileType));
 
 try_exit:
 
@@ -5546,31 +5544,31 @@ AFSBackupEntry( IN AFSNameArrayHdr *NameArray)
     __Enter
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSBackupEntry [NA:%p]\n",
-                      NameArray);
+                      NameArray));
 
         if( NameArray->Count == 0)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSBackupEntry [NA:%p] No more entries\n",
-                          NameArray);
+                          NameArray));
 
             try_return( pCurrentElement);
         }
 
         lCount = InterlockedDecrement( &NameArray->CurrentEntry->DirectoryCB->NameArrayReferenceCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_NAME_ARRAY_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSBackupEntry [NA:%p] Decrement count on %wZ DE %p Cnt %d\n",
                       NameArray,
                       &NameArray->CurrentEntry->DirectoryCB->NameInformation.FileName,
                       NameArray->CurrentEntry->DirectoryCB,
-                      lCount);
+                      lCount));
 
         ASSERT( lCount >= 0);
 
@@ -5582,10 +5580,10 @@ AFSBackupEntry( IN AFSNameArrayHdr *NameArray)
         {
             NameArray->CurrentEntry = NULL;
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSBackupEntry [NA:%p] No more entries\n",
-                          NameArray);
+                          NameArray));
         }
         else
         {
@@ -5598,7 +5596,7 @@ AFSBackupEntry( IN AFSNameArrayHdr *NameArray)
 
             pDirectoryCB = pCurrentElement->DirectoryCB;
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSBackupEntry [NA:%p] Returning Element[%d] DE %p FID %08lX-%08lX-%08lX-%08lX %wZ Type %d\n",
                           NameArray,
@@ -5609,7 +5607,7 @@ AFSBackupEntry( IN AFSNameArrayHdr *NameArray)
                           pCurrentElement->FileId.Vnode,
                           pCurrentElement->FileId.Unique,
                           &pCurrentElement->DirectoryCB->NameInformation.FileName,
-                          pCurrentElement->DirectoryCB->ObjectInformation->FileType);
+                          pCurrentElement->DirectoryCB->ObjectInformation->FileType));
 
             //
             // If the entry we are removing is a volume root,
@@ -5647,19 +5645,19 @@ AFSGetParentEntry( IN AFSNameArrayHdr *NameArray)
     __Enter
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSGetParentEntry [NA:%p]\n",
-                      NameArray);
+                      NameArray));
 
         if( NameArray->Count == 0 ||
             NameArray->Count == 1)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSGetParentEntry [NA:%p] No more entries\n",
-                          NameArray);
+                          NameArray));
 
             try_return( pDirEntry = NULL);
         }
@@ -5668,7 +5666,7 @@ AFSGetParentEntry( IN AFSNameArrayHdr *NameArray)
 
         pDirEntry = pElement->DirectoryCB;
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSGetParentEntry [NA:%p] Returning Element[%d] DE %p FID %08lX-%08lX-%08lX-%08lX %wZ Type %d\n",
                       NameArray,
@@ -5679,7 +5677,7 @@ AFSGetParentEntry( IN AFSNameArrayHdr *NameArray)
                       pElement->FileId.Vnode,
                       pElement->FileId.Unique,
                       &pElement->DirectoryCB->NameInformation.FileName,
-                      pElement->DirectoryCB->ObjectInformation->FileType);
+                      pElement->DirectoryCB->ObjectInformation->FileType));
 
 try_exit:
 
@@ -5701,7 +5699,7 @@ AFSResetNameArray( IN AFSNameArrayHdr *NameArray,
     __Enter
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSResetNameArray [NA:%p] passed DE %p FID %08lX-%08lX-%08lX-%08lX %wZ Type %d\n",
                       NameArray,
@@ -5711,7 +5709,8 @@ AFSResetNameArray( IN AFSNameArrayHdr *NameArray,
                       DirectoryCB->ObjectInformation->FileId.Vnode,
                       DirectoryCB->ObjectInformation->FileId.Unique,
                       &DirectoryCB->NameInformation.FileName,
-                      DirectoryCB->ObjectInformation->FileType);
+                      DirectoryCB->ObjectInformation->FileType));
+
         //
         // Dereference previous name array contents
         //
@@ -5723,13 +5722,13 @@ AFSResetNameArray( IN AFSNameArrayHdr *NameArray,
 
             lCount = InterlockedDecrement( &pCurrentElement->DirectoryCB->NameArrayReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_NAME_ARRAY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSResetNameArray [NA:%p] Decrement count on %wZ DE %p Cnt %d\n",
                           NameArray,
                           &pCurrentElement->DirectoryCB->NameInformation.FileName,
                           pCurrentElement->DirectoryCB,
-                          lCount);
+                          lCount));
 
             ASSERT( lCount >= 0);
         }
@@ -5753,13 +5752,13 @@ AFSResetNameArray( IN AFSNameArrayHdr *NameArray,
 
             lCount = InterlockedIncrement( &DirectoryCB->NameArrayReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_NAME_ARRAY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSResetNameArray [NA:%p] Increment count on %wZ DE %p Cnt %d\n",
                           NameArray,
                           &DirectoryCB->NameInformation.FileName,
                           DirectoryCB,
-                          lCount);
+                          lCount));
 
             pCurrentElement->DirectoryCB = DirectoryCB;
 
@@ -5775,7 +5774,7 @@ AFSResetNameArray( IN AFSNameArrayHdr *NameArray,
                 SetFlag( pCurrentElement->Flags, AFS_NAME_ARRAY_FLAG_ROOT_ELEMENT);
             }
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSResetNameArray [NA:%p] Element[0] DE %p FID %08lX-%08lX-%08lX-%08lX %wZ Type %d\n",
                           NameArray,
@@ -5785,7 +5784,7 @@ AFSResetNameArray( IN AFSNameArrayHdr *NameArray,
                           pCurrentElement->FileId.Vnode,
                           pCurrentElement->FileId.Unique,
                           &pCurrentElement->DirectoryCB->NameInformation.FileName,
-                          pCurrentElement->DirectoryCB->ObjectInformation->FileType);
+                          pCurrentElement->DirectoryCB->ObjectInformation->FileType));
         }
     }
 
@@ -5955,11 +5954,11 @@ AFSInitPIOCtlDirectoryCB( IN AFSObjectInfoCB *ParentObjectInfo)
         lCount = AFSObjectInfoIncrement( pObjectInfoCB,
                                          AFS_OBJECT_REFERENCE_DIRENTRY);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitPIOCtlDirectoryCB Increment count on object %p Cnt %d\n",
                       pObjectInfoCB,
-                      lCount);
+                      lCount));
 
         pObjectInfoCB->FileType = (ULONG) AFS_FILE_TYPE_PIOCTL;
 
@@ -5977,10 +5976,10 @@ AFSInitPIOCtlDirectoryCB( IN AFSObjectInfoCB *ParentObjectInfo)
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+        AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitPIOCtlDirectoryCB AFS_DIR_ENTRY_TAG allocated %p\n",
-                      pDirNode);
+                      pDirNode));
 
         pNonPagedDirEntry = (AFSNonPagedDirectoryCB *)AFSExAllocatePoolWithTag( NonPagedPool,
                                                                                 sizeof( AFSNonPagedDirectoryCB),
@@ -6028,11 +6027,11 @@ AFSInitPIOCtlDirectoryCB( IN AFSObjectInfoCB *ParentObjectInfo)
         if ( InterlockedCompareExchangePointer( (PVOID *)&ParentObjectInfo->Specific.Directory.PIOCtlDirectoryCB, pDirNode, NULL) != NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_WARNING,
                           "AFSInitPIOCtlDirectoryCB Raced PIOCtlDirectoryCB %p pFcb %p\n",
                           ParentObjectInfo->Specific.Directory.PIOCtlDirectoryCB,
-                          pDirNode);
+                          pDirNode));
 
             try_return( ntStatus = STATUS_REPARSE);
         }
@@ -6045,10 +6044,10 @@ try_exit:
             if ( pDirNode != NULL)
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+                AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSInitPIOCtlDirectoryCB AFS_DIR_ENTRY_TAG deallocating %p\n",
-                              pDirNode);
+                              pDirNode));
 
                 AFSExFreePoolWithTag( pDirNode, AFS_DIR_ENTRY_TAG);
             }
@@ -6067,11 +6066,11 @@ try_exit:
                 lCount = AFSObjectInfoDecrement( pObjectInfoCB,
                                                  AFS_OBJECT_REFERENCE_DIRENTRY);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSInitPIOCtlDirectoryCB Decrement count on object %p Cnt %d\n",
                               pObjectInfoCB,
-                              lCount);
+                              lCount));
 
                 AFSDeleteObjectInfo( &pObjectInfoCB);
             }
@@ -6313,10 +6312,10 @@ AFSRetrieveFileAttributes( IN AFSDirectoryCB *ParentDirectoryCB,
 
                 AFSReleaseResource( &DirectoryCB->NonPaged->Lock);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSRetrieveFileAttributes Name %wZ contains invalid server name\n",
-                              &uniFullPathName);
+                              &uniFullPathName));
 
                 try_return( ntStatus = STATUS_OBJECT_PATH_INVALID);
             }
@@ -6356,22 +6355,22 @@ AFSRetrieveFileAttributes( IN AFSDirectoryCB *ParentDirectoryCB,
         lCount = AFSVolumeIncrement( pVolumeCB,
                                      VolumeReferenceReason);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSRetrieveFileAttributes Increment count on volume %p Reason %u Cnt %d\n",
                       pVolumeCB,
                       VolumeReferenceReason,
-                      lCount);
+                      lCount));
 
         lCount = InterlockedIncrement( &pParentDirEntry->DirOpenReferenceCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSRetrieveFileAttributes Increment count on %wZ DE %p Ccb %p Cnt %d\n",
                       &pParentDirEntry->NameInformation.FileName,
                       pParentDirEntry,
                       NULL,
-                      lCount);
+                      lCount));
 
         ntStatus = AFSLocateNameEntry( NULL,
                                        NULL,
@@ -6400,12 +6399,12 @@ AFSRetrieveFileAttributes( IN AFSDirectoryCB *ParentDirectoryCB,
             lCount = AFSVolumeDecrement( pVolumeCB,
                                          VolumeReferenceReason);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSRetrieveFileAttributes Decrement count on volume %p Reason %u Cnt %d\n",
                           pVolumeCB,
                           VolumeReferenceReason,
-                          lCount);
+                          lCount));
 
             pVolumeCB = pNewVolumeCB;
 
@@ -6424,12 +6423,12 @@ AFSRetrieveFileAttributes( IN AFSDirectoryCB *ParentDirectoryCB,
 
         lCount = InterlockedDecrement( &pParentDirEntry->DirOpenReferenceCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSRetrieveFileAttributes DecrementX count on %wZ DE %p Cnt %d\n",
                       &pParentDirEntry->NameInformation.FileName,
                       pParentDirEntry,
-                      lCount);
+                      lCount));
 
         pParentDirEntry = pNewParentDirEntry;
 
@@ -6498,13 +6497,13 @@ try_exit:
 
             lCount = InterlockedDecrement( &pDirectoryEntry->DirOpenReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSRetrieveFileAttributes Decrement1 count on %wZ DE %p Ccb %p Cnt %d\n",
                           &pDirectoryEntry->NameInformation.FileName,
                           pDirectoryEntry,
                           NULL,
-                          lCount);
+                          lCount));
 
             ASSERT( lCount >= 0);
         }
@@ -6514,13 +6513,13 @@ try_exit:
 
             lCount = InterlockedDecrement( &pParentDirEntry->DirOpenReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSRetrieveFileAttributes Decrement2 count on %wZ DE %p Ccb %p Cnt %d\n",
                           &pParentDirEntry->NameInformation.FileName,
                           pParentDirEntry,
                           NULL,
-                          lCount);
+                          lCount));
 
             ASSERT( lCount >= 0);
         }
@@ -6531,12 +6530,12 @@ try_exit:
             lCount = AFSVolumeDecrement( pVolumeCB,
                                          VolumeReferenceReason);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSRetrieveFileAttributes Decrement2 count on volume %p Reason %u Cnt %d\n",
                           pVolumeCB,
                           VolumeReferenceReason,
-                          lCount);
+                          lCount));
         }
 
         if( pNameArray != NULL)
@@ -6625,11 +6624,11 @@ AFSAllocateObjectInfo( IN AFSObjectInfoCB *ParentObjectInfo,
             lCount = AFSObjectInfoIncrement( ParentObjectInfo,
                                              AFS_OBJECT_REFERENCE_CHILD);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSAllocateObjectInfo Increment count on parent object %p Cnt %d\n",
                           ParentObjectInfo,
-                          lCount);
+                          lCount));
         }
 
         //
@@ -6921,11 +6920,11 @@ AFSDeleteObjectInfo( IN AFSObjectInfoCB **ppObjectInfo)
         lCount = AFSObjectInfoDecrement( pParentObjectInfo,
                                          AFS_OBJECT_REFERENCE_CHILD);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSDeleteObjectInfo Decrement count on parent object %p Cnt %d\n",
                       pParentObjectInfo,
-                      lCount);
+                      lCount));
 
         AFSReleaseObjectInfo( &pParentObjectInfo);
     }
@@ -7141,22 +7140,22 @@ AFSEvaluateRootEntry( IN AFSDirectoryCB *DirectoryCB,
         lCount = AFSVolumeIncrement( pVolumeCB,
                                      VolumeReferenceReason);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSEvaluateRootEntry Increment count on volume %p Reason %u Cnt %d\n",
                       pVolumeCB,
                       VolumeReferenceReason,
-                      lCount);
+                      lCount));
 
         lCount = InterlockedIncrement( &pParentDirEntry->DirOpenReferenceCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSEvaluateRootEntry Increment count on %wZ DE %p Ccb %p Cnt %d\n",
                       &pParentDirEntry->NameInformation.FileName,
                       pParentDirEntry,
                       NULL,
-                      lCount);
+                      lCount));
 
         ntStatus = AFSLocateNameEntry( NULL,
                                        NULL,
@@ -7185,12 +7184,12 @@ AFSEvaluateRootEntry( IN AFSDirectoryCB *DirectoryCB,
             lCount = AFSVolumeDecrement( pVolumeCB,
                                          VolumeReferenceReason);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSEvaluateRootEntry Decrement count on volume %p Reason %u Cnt %d\n",
                           pVolumeCB,
                           VolumeReferenceReason,
-                          lCount);
+                          lCount));
 
             pVolumeCB = pNewVolumeCB;
 
@@ -7209,12 +7208,12 @@ AFSEvaluateRootEntry( IN AFSDirectoryCB *DirectoryCB,
 
         lCount = InterlockedDecrement( &pParentDirEntry->DirOpenReferenceCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSEvaluateRootEntry DecrementX count on %wZ DE %p Cnt %d\n",
                       &pParentDirEntry->NameInformation.FileName,
                       pParentDirEntry,
-                      lCount);
+                      lCount));
 
         pParentDirEntry = pNewParentDirEntry;
 
@@ -7245,13 +7244,13 @@ try_exit:
 
             lCount = InterlockedDecrement( &pDirectoryEntry->DirOpenReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSEvaluateRootEntry Decrement1 count on %wZ DE %p Ccb %p Cnt %d\n",
                           &pDirectoryEntry->NameInformation.FileName,
                           pDirectoryEntry,
                           NULL,
-                          lCount);
+                          lCount));
 
             ASSERT( lCount >= 0);
         }
@@ -7261,13 +7260,13 @@ try_exit:
 
             lCount = InterlockedDecrement( &pParentDirEntry->DirOpenReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSEvaluateRootEntry Decrement2 count on %wZ DE %p Ccb %p Cnt %d\n",
                           &pParentDirEntry->NameInformation.FileName,
                           pParentDirEntry,
                           NULL,
-                          lCount);
+                          lCount));
 
             ASSERT( lCount >= 0);
         }
@@ -7284,12 +7283,12 @@ try_exit:
             lCount = AFSVolumeDecrement( pVolumeCB,
                                          VolumeReferenceReason);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSEvaluateRootEntry Decrement2 count on volume %p Reason %u Cnt %d\n",
                           pVolumeCB,
                           VolumeReferenceReason,
-                          lCount);
+                          lCount));
         }
 
         if( pNameArray != NULL)
@@ -7347,11 +7346,11 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
                 !BooleanFlagOn( Fcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_DELETED))
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCleanupEntry Acquiring Fcb lock %p SHARED %08lX\n",
                               &Fcb->NPFcb->Resource,
-                              PsGetCurrentThread());
+                              PsGetCurrentThread()));
 
                 AFSAcquireShared( &Fcb->NPFcb->Resource,
                                   TRUE);
@@ -7359,11 +7358,11 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
                 if( Fcb->OpenReferenceCount > 0)
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCleanupEntry Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                                   &Fcb->NPFcb->SectionObjectResource,
-                                  PsGetCurrentThread());
+                                  PsGetCurrentThread()));
 
                     AFSAcquireExcl( &Fcb->NPFcb->SectionObjectResource,
                                     TRUE);
@@ -7379,7 +7378,7 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
                         if( !NT_SUCCESS( stIoStatus.Status))
                         {
 
-                            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                            AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                                           AFS_TRACE_LEVEL_ERROR,
                                           "AFSCleanupFcb CcFlushCache [1] failure FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX Bytes 0x%08lX\n",
                                           Fcb->ObjectInformation->FileId.Cell,
@@ -7387,7 +7386,7 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
                                           Fcb->ObjectInformation->FileId.Vnode,
                                           Fcb->ObjectInformation->FileId.Unique,
                                           stIoStatus.Status,
-                                          stIoStatus.Information);
+                                          stIoStatus.Information));
 
                             ntStatus = stIoStatus.Status;
                         }
@@ -7401,13 +7400,13 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
                                                        FALSE))
                             {
 
-                                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                                AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                                               AFS_TRACE_LEVEL_WARNING,
                                               "AFSCleanupFcb CcPurgeCacheSection [1] failure FID %08lX-%08lX-%08lX-%08lX\n",
                                               Fcb->ObjectInformation->FileId.Cell,
                                               Fcb->ObjectInformation->FileId.Volume,
                                               Fcb->ObjectInformation->FileId.Vnode,
-                                              Fcb->ObjectInformation->FileId.Unique);
+                                              Fcb->ObjectInformation->FileId.Unique));
 
                                 SetFlag( Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
                             }
@@ -7418,32 +7417,32 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
 
                         ntStatus = GetExceptionCode();
 
-                        AFSDbgLogMsg( 0,
+                        AFSDbgTrace(( 0,
                                       0,
                                       "EXCEPTION - AFSCleanupFcb Cc [1] FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
                                       Fcb->ObjectInformation->FileId.Cell,
                                       Fcb->ObjectInformation->FileId.Volume,
                                       Fcb->ObjectInformation->FileId.Vnode,
                                       Fcb->ObjectInformation->FileId.Unique,
-                                      ntStatus);
+                                      ntStatus));
 
                         SetFlag( Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
                     }
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCleanupFcb Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                                   &Fcb->NPFcb->SectionObjectResource,
-                                  PsGetCurrentThread());
+                                  PsGetCurrentThread()));
 
                     AFSReleaseResource( &Fcb->NPFcb->SectionObjectResource);
                 }
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCleanupEntry Releasing Fcb lock %p SHARED %08lX\n",
                               &Fcb->NPFcb->Resource,
-                              PsGetCurrentThread());
+                              PsGetCurrentThread()));
 
                 AFSReleaseResource( &Fcb->NPFcb->Resource);
 
@@ -7525,11 +7524,11 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
                                         (AFS_SERVER_PURGE_SLEEP * pControlDeviceExt->Specific.Control.FcbPurgeTimeCount.QuadPart))))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSCleanupFcb Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                           &Fcb->NPFcb->SectionObjectResource,
-                          PsGetCurrentThread());
+                          PsGetCurrentThread()));
 
             if ( AFSAcquireExcl( &Fcb->NPFcb->SectionObjectResource, ForceFlush))
             {
@@ -7545,7 +7544,7 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
                     if( !NT_SUCCESS( stIoStatus.Status))
                     {
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
                                       "AFSCleanupFcb CcFlushCache [2] failure FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX Bytes 0x%08lX\n",
                                       Fcb->ObjectInformation->FileId.Cell,
@@ -7553,7 +7552,7 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
                                       Fcb->ObjectInformation->FileId.Vnode,
                                       Fcb->ObjectInformation->FileId.Unique,
                                       stIoStatus.Status,
-                                      stIoStatus.Information);
+                                      stIoStatus.Information));
 
                         ntStatus = stIoStatus.Status;
                     }
@@ -7568,13 +7567,13 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
                                                    FALSE))
                         {
 
-                            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                            AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                                           AFS_TRACE_LEVEL_WARNING,
                                           "AFSCleanupFcb CcPurgeCacheSection [2] failure FID %08lX-%08lX-%08lX-%08lX\n",
                                           Fcb->ObjectInformation->FileId.Cell,
                                           Fcb->ObjectInformation->FileId.Volume,
                                           Fcb->ObjectInformation->FileId.Vnode,
-                                          Fcb->ObjectInformation->FileId.Unique);
+                                          Fcb->ObjectInformation->FileId.Unique));
 
                             SetFlag( Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
                         }
@@ -7585,21 +7584,21 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
 
                     ntStatus = GetExceptionCode();
 
-                    AFSDbgLogMsg( 0,
+                    AFSDbgTrace(( 0,
                                   0,
                                   "EXCEPTION - AFSCleanupFcb Cc [2] FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
                                   Fcb->ObjectInformation->FileId.Cell,
                                   Fcb->ObjectInformation->FileId.Volume,
                                   Fcb->ObjectInformation->FileId.Vnode,
                                   Fcb->ObjectInformation->FileId.Unique,
-                                  ntStatus);
+                                  ntStatus));
                 }
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCleanupFcb Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                               &Fcb->NPFcb->SectionObjectResource,
-                              PsGetCurrentThread());
+                              PsGetCurrentThread()));
 
                 AFSReleaseResource( &Fcb->NPFcb->SectionObjectResource);
 
@@ -7906,11 +7905,11 @@ AFSRemoveNameEntry( IN AFSObjectInfoCB *ParentObjectInfo,
         if( BooleanFlagOn( DirEntry->Flags, AFS_DIR_ENTRY_NOT_IN_PARENT_TREE))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSRemoveNameEntry DE %p for %wZ has NOT_IN flag set\n",
                           DirEntry,
-                          &DirEntry->NameInformation.FileName);
+                          &DirEntry->NameInformation.FileName));
 
             try_return( ntStatus);
         }
@@ -7921,20 +7920,20 @@ AFSRemoveNameEntry( IN AFSObjectInfoCB *ParentObjectInfo,
         // Remove the entry from the parent tree
         //
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSRemoveNameEntry DE %p for %wZ removing from case sensitive tree\n",
                       DirEntry,
-                      &DirEntry->NameInformation.FileName);
+                      &DirEntry->NameInformation.FileName));
 
         AFSRemoveCaseSensitiveDirEntry( &ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,
                                         DirEntry);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSRemoveNameEntry DE %p for %wZ removing from case insensitive tree\n",
                       DirEntry,
-                      &DirEntry->NameInformation.FileName);
+                      &DirEntry->NameInformation.FileName));
 
         AFSRemoveCaseInsensitiveDirEntry( &ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead,
                                           DirEntry);
@@ -7946,11 +7945,11 @@ AFSRemoveNameEntry( IN AFSObjectInfoCB *ParentObjectInfo,
             // From the short name tree
             //
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSRemoveNameEntry DE %p for %wZ removing from shortname tree\n",
                           DirEntry,
-                          &DirEntry->NameInformation.FileName);
+                          &DirEntry->NameInformation.FileName));
 
             AFSRemoveShortNameDirEntry( &ParentObjectInfo->Specific.Directory.ShortNameTree,
                                         DirEntry);
@@ -7958,11 +7957,11 @@ AFSRemoveNameEntry( IN AFSObjectInfoCB *ParentObjectInfo,
             ClearFlag( DirEntry->Flags, AFS_DIR_ENTRY_INSERTED_SHORT_NAME);
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSRemoveNameEntry DE %p for %wZ setting NOT_IN flag\n",
                       DirEntry,
-                      &DirEntry->NameInformation.FileName);
+                      &DirEntry->NameInformation.FileName));
 
         SetFlag( DirEntry->Flags, AFS_DIR_ENTRY_NOT_IN_PARENT_TREE);
 
@@ -8005,9 +8004,9 @@ AFSGetAuthenticationId()
             if( hToken == NULL)
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_NETWORK_PROVIDER,
+                AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSGetAuthenticationId Failed to retrieve impersonation or primary token\n");
+                              "AFSGetAuthenticationId Failed to retrieve impersonation or primary token\n"));
 
                 try_return( ntStatus);
             }
@@ -8022,9 +8021,10 @@ AFSGetAuthenticationId()
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_NETWORK_PROVIDER,
+            AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSGetAuthenticationId Failed to retrieve information Status %08lX\n", ntStatus);
+                          "AFSGetAuthenticationId Failed to retrieve information Status %08lX\n",
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -8032,10 +8032,10 @@ AFSGetAuthenticationId()
         liAuthId.HighPart = pTokenInfo->AuthenticationId.HighPart;
         liAuthId.LowPart = pTokenInfo->AuthenticationId.LowPart;
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_NETWORK_PROVIDER,
+        AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSGetAuthenticationId Successfully retrieved authentication ID %I64X\n",
-                      liAuthId.QuadPart);
+                      liAuthId.QuadPart));
 
 try_exit:
 
@@ -8212,6 +8212,8 @@ AFSInitializeLibrary( IN AFSLibraryInitCB *LibraryInit)
 
         AFSDbgLogMsg = LibraryInit->AFSDbgLogMsg;
 
+        AFSDebugTraceFnc = AFSDbgLogMsg;
+
         AFSAddConnectionEx = LibraryInit->AFSAddConnectionEx;
 
         AFSExAllocatePoolWithTag = LibraryInit->AFSExAllocatePoolWithTag;
@@ -8260,10 +8262,10 @@ AFSInitializeLibrary( IN AFSLibraryInitCB *LibraryInit)
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSInitializeLibrary AFSInitVolume failure %08lX\n",
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -8274,19 +8276,19 @@ AFSInitializeLibrary( IN AFSLibraryInitCB *LibraryInit)
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSInitializeLibrary AFSInitRootFcb failure %08lX\n",
-                          ntStatus);
+                          ntStatus));
 
             lCount = AFSVolumeDecrement( AFSGlobalRoot,
                                          AFS_VOLUME_REFERENCE_GLOBAL_ROOT);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSInitializeLibrary Decrement count on volume %p Cnt %d\n",
                           AFSGlobalRoot,
-                          lCount);
+                          lCount));
 
             AFSReleaseResource( AFSGlobalRoot->VolumeLock);
 
@@ -8317,11 +8319,11 @@ AFSInitializeLibrary( IN AFSLibraryInitCB *LibraryInit)
         lCount = AFSVolumeDecrement( AFSGlobalRoot,
                                      AFS_VOLUME_REFERENCE_GLOBAL_ROOT);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitializeLibrary Decrement count on volume %p Cnt %d\n",
                       AFSGlobalRoot,
-                      lCount);
+                      lCount));
 
         AFSReleaseResource( AFSGlobalRoot->VolumeLock);
 
@@ -8500,12 +8502,12 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
                 lCount = AFSVolumeIncrement( pVolumeCB,
                                              VolumeReferenceReason);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSGetObjectStatus Increment count on volume %p Reason %u Cnt %d\n",
                               pVolumeCB,
                               VolumeReferenceReason,
-                              lCount);
+                              lCount));
             }
 
             AFSReleaseResource( &pDevExt->Specific.RDR.VolumeTreeLock);
@@ -8524,11 +8526,11 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
                 lCount = AFSObjectInfoIncrement( pObjectInfo,
                                                  AFS_OBJECT_REFERENCE_STATUS);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSGetObjectStatus Increment1 count on object %p Cnt %d\n",
                               pObjectInfo,
-                              lCount);
+                              lCount));
             }
             else
             {
@@ -8552,11 +8554,11 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
                     lCount = AFSObjectInfoIncrement( pObjectInfo,
                                                      AFS_OBJECT_REFERENCE_STATUS);
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSGetObjectStatus Increment2 count on object %p Cnt %d\n",
                                   pObjectInfo,
-                                  lCount);
+                                  lCount));
                 }
 
                 AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
@@ -8594,10 +8596,10 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
                                          &AFSServerName,
                                          TRUE) != 0)
             {
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSGetObjectStatus Name %wZ contains invalid server name\n",
-                              &uniFullPathName);
+                              &uniFullPathName));
 
                 try_return( ntStatus = STATUS_OBJECT_PATH_INVALID);
             }
@@ -8631,22 +8633,22 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
             lCount = AFSVolumeIncrement( pVolumeCB,
                                          VolumeReferenceReason);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSGetObjectStatus Increment2 count on volume %p Reason %u Cnt %d\n",
                           pVolumeCB,
                           VolumeReferenceReason,
-                          lCount);
+                          lCount));
 
             lCount = InterlockedIncrement( &pParentDirEntry->DirOpenReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSGetObjectStatus Increment count on %wZ DE %p Ccb %p Cnt %d\n",
                           &pParentDirEntry->NameInformation.FileName,
                           pParentDirEntry,
                           NULL,
-                          lCount);
+                          lCount));
 
             ntStatus = AFSLocateNameEntry( NULL,
                                            NULL,
@@ -8677,12 +8679,12 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
                 lCount = AFSVolumeDecrement( pVolumeCB,
                                              VolumeReferenceReason);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSGetObjectStatus Decrement count on volume %p Reason %u Cnt %d\n",
                               pVolumeCB,
                               VolumeReferenceReason,
-                              lCount);
+                              lCount));
 
                 pVolumeCB = pNewVolumeCB;
 
@@ -8701,12 +8703,12 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
 
             lCount = InterlockedDecrement( &pParentDirEntry->DirOpenReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSGetObjectStatus DecrementX count on %wZ DE %p Cnt %d\n",
                           &pParentDirEntry->NameInformation.FileName,
                           pParentDirEntry,
-                          lCount);
+                          lCount));
 
             pParentDirEntry = pNewParentDirEntry;
 
@@ -8726,11 +8728,11 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
             lCount = AFSObjectInfoIncrement( pObjectInfo,
                                              AFS_OBJECT_REFERENCE_STATUS);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSGetObjectStatus Increment3 count on object %p Cnt %d\n",
                           pObjectInfo,
-                          lCount);
+                          lCount));
         }
 
         //
@@ -8780,13 +8782,13 @@ try_exit:
 
             lCount = InterlockedDecrement( &pDirectoryEntry->DirOpenReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSGetObjectStatus Decrement1 count on %wZ DE %p Ccb %p Cnt %d\n",
                           &pDirectoryEntry->NameInformation.FileName,
                           pDirectoryEntry,
                           NULL,
-                          lCount);
+                          lCount));
 
             ASSERT( lCount >= 0);
         }
@@ -8796,13 +8798,13 @@ try_exit:
 
             lCount = InterlockedDecrement( &pParentDirEntry->DirOpenReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSGetObjectStatus Decrement2 count on %wZ DE %p Ccb %p Cnt %d\n",
                           &pParentDirEntry->NameInformation.FileName,
                           pParentDirEntry,
                           NULL,
-                          lCount);
+                          lCount));
 
             ASSERT( lCount >= 0);
         }
@@ -8813,11 +8815,11 @@ try_exit:
             lCount = AFSObjectInfoDecrement( pObjectInfo,
                                              AFS_OBJECT_REFERENCE_STATUS);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSGetObjectStatus Decrement count on object %p Cnt %d\n",
                           pObjectInfo,
-                          lCount);
+                          lCount));
         }
 
         if( pVolumeCB != NULL)
@@ -8826,12 +8828,12 @@ try_exit:
             lCount = AFSVolumeDecrement( pVolumeCB,
                                          VolumeReferenceReason);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSGetObjectStatus Decrement4 count on volume %p Reason %u Cnt %d\n",
                           pVolumeCB,
                           VolumeReferenceReason,
-                          lCount);
+                          lCount));
         }
 
         if( pNameArray != NULL)
@@ -8862,10 +8864,10 @@ AFSCheckSymlinkAccess( IN AFSDirectoryCB *ParentDirectoryCB,
         // Search for the entry in the parent
         //
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
                       "AFSCheckSymlinkAccess Searching for entry %wZ case sensitive\n",
-                      ComponentName);
+                      ComponentName));
 
         ulCRC = AFSGenerateCRC( ComponentName,
                                 FALSE);
@@ -8884,10 +8886,10 @@ AFSCheckSymlinkAccess( IN AFSDirectoryCB *ParentDirectoryCB,
             // Missed so perform a case insensitive lookup
             //
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE_2,
                           "AFSCheckSymlinkAccess Searching for entry %wZ case insensitive\n",
-                          ComponentName);
+                          ComponentName));
 
             ulCRC = AFSGenerateCRC( ComponentName,
                                     TRUE);
@@ -8910,10 +8912,10 @@ AFSCheckSymlinkAccess( IN AFSDirectoryCB *ParentDirectoryCB,
                                             NULL))
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE_2,
                                   "AFSCheckSymlinkAccess Searching for entry %wZ short name\n",
-                                  ComponentName);
+                                  ComponentName));
 
                     AFSLocateShortNameDirEntry( ParentDirectoryCB->ObjectInformation->Specific.Directory.ShortNameTree,
                                                 ulCRC,
@@ -8926,13 +8928,13 @@ AFSCheckSymlinkAccess( IN AFSDirectoryCB *ParentDirectoryCB,
         {
             lCount = InterlockedIncrement( &pDirEntry->DirOpenReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSCheckSymlinkAccess Increment count on %wZ DE %p Ccb %p Cnt %d\n",
                           &pDirEntry->NameInformation.FileName,
                           pDirEntry,
                           NULL,
-                          lCount);
+                          lCount));
 
             ASSERT( lCount >= 0);
         }
@@ -8942,11 +8944,11 @@ AFSCheckSymlinkAccess( IN AFSDirectoryCB *ParentDirectoryCB,
         if( pDirEntry == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE_2,
                           "AFSCheckSymlinkAccess Failed to locate entry %wZ ntStatus %08X\n",
                           ComponentName,
-                          STATUS_OBJECT_NAME_NOT_FOUND);
+                          STATUS_OBJECT_NAME_NOT_FOUND));
 
             try_return( ntStatus = STATUS_OBJECT_NAME_NOT_FOUND);
         }
@@ -8956,22 +8958,22 @@ AFSCheckSymlinkAccess( IN AFSDirectoryCB *ParentDirectoryCB,
         // denied.
         //
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
                       "AFSCheckSymlinkAccess Failing symlink access to entry %wZ REPARSE_POINT_NOT_RESOLVED\n",
-                      ComponentName);
+                      ComponentName));
 
         ntStatus = STATUS_REPARSE_POINT_NOT_RESOLVED;
 
         lCount = InterlockedDecrement( &pDirEntry->DirOpenReferenceCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSCheckSymlinkAccess Decrement count on %wZ DE %p Ccb %p Cnt %d\n",
                       &pDirEntry->NameInformation.FileName,
                       pDirEntry,
                       NULL,
-                      lCount);
+                      lCount));
 
         ASSERT( lCount >= 0);
 
@@ -9081,6 +9083,7 @@ AFSCreateDefaultSecurityDescriptor()
         if( pWorldSID == NULL)
         {
             AFSPrint( "AFSCreateDefaultSecurityDescriptor unable to allocate World SID\n");
+
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
 
@@ -9521,11 +9524,11 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 
                     bLocked = TRUE;
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSPerformObjectInvalidate Acquiring Fcb extents lock %p SHARED %08lX\n",
                                   &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource,
-                                  PsGetCurrentThread());
+                                  PsGetCurrentThread()));
 
                     AFSAcquireShared( &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource,
                                       TRUE);
@@ -9573,11 +9576,11 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                             else
                             {
 
-                                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                               AFS_TRACE_LEVEL_VERBOSE,
                                               "AFSPerformObjectInvalidation Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                                               &ObjectInfo->Fcb->NPFcb->SectionObjectResource,
-                                              PsGetCurrentThread());
+                                              PsGetCurrentThread()));
 
                                 AFSAcquireExcl( &ObjectInfo->Fcb->NPFcb->SectionObjectResource,
                                                 TRUE);
@@ -9596,13 +9599,13 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                                                               FALSE))
                                     {
 
-                                        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                                        AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                                                       AFS_TRACE_LEVEL_WARNING,
                                                       "AFSPerformObjectInvalidation CcPurgeCacheSection failure FID %08lX-%08lX-%08lX-%08lX\n",
                                                       ObjectInfo->FileId.Cell,
                                                       ObjectInfo->FileId.Volume,
                                                       ObjectInfo->FileId.Vnode,
-                                                      ObjectInfo->FileId.Unique);
+                                                      ObjectInfo->FileId.Unique));
 
                                         SetFlag( ObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
                                     }
@@ -9617,23 +9620,23 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 
                                     ntStatus = GetExceptionCode();
 
-                                    AFSDbgLogMsg( 0,
+                                    AFSDbgTrace(( 0,
                                                   0,
                                                   "EXCEPTION - AFSPerformObjectInvalidation FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
                                                   ObjectInfo->FileId.Cell,
                                                   ObjectInfo->FileId.Volume,
                                                   ObjectInfo->FileId.Vnode,
                                                   ObjectInfo->FileId.Unique,
-                                                  ntStatus);
+                                                  ntStatus));
 
                                     SetFlag( ObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
                                 }
 
-                                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                               AFS_TRACE_LEVEL_VERBOSE,
                                               "AFSPerformObjectInvalidation Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                                               &ObjectInfo->Fcb->NPFcb->SectionObjectResource,
-                                              PsGetCurrentThread());
+                                              PsGetCurrentThread()));
 
                                 AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->SectionObjectResource);
                             }
@@ -9645,11 +9648,11 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 
                             bExtentsLocked = FALSE;
 
-                            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                            AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                           AFS_TRACE_LEVEL_VERBOSE,
                                           "AFSPerformObjectInvalidation Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                                           &ObjectInfo->Fcb->NPFcb->SectionObjectResource,
-                                          PsGetCurrentThread());
+                                          PsGetCurrentThread()));
 
                             AFSAcquireExcl( &ObjectInfo->Fcb->NPFcb->SectionObjectResource,
                                             TRUE);
@@ -9698,13 +9701,13 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                                                                       FALSE))
                                             {
 
-                                                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                                                AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                                                               AFS_TRACE_LEVEL_WARNING,
                                                               "AFSPerformObjectInvalidation [1] CcPurgeCacheSection failure FID %08lX-%08lX-%08lX-%08lX\n",
                                                               ObjectInfo->FileId.Cell,
                                                               ObjectInfo->FileId.Volume,
                                                               ObjectInfo->FileId.Vnode,
-                                                              ObjectInfo->FileId.Unique);
+                                                              ObjectInfo->FileId.Unique));
 
                                                 bPurgeOnClose = TRUE;
                                             }
@@ -9756,13 +9759,13 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                                                                           FALSE))
                                                 {
 
-                                                    AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                                                    AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                                                                   AFS_TRACE_LEVEL_WARNING,
                                                                   "AFSPerformObjectInvalidation [2] CcPurgeCacheSection failure FID %08lX-%08lX-%08lX-%08lX\n",
                                                                   ObjectInfo->FileId.Cell,
                                                                   ObjectInfo->FileId.Volume,
                                                                   ObjectInfo->FileId.Vnode,
-                                                                  ObjectInfo->FileId.Unique);
+                                                                  ObjectInfo->FileId.Unique));
 
                                                     bPurgeOnClose = TRUE;
                                                 }
@@ -9796,13 +9799,13 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                                                                               FALSE))
                                                     {
 
-                                                        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                                                        AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                                                                       AFS_TRACE_LEVEL_WARNING,
                                                                       "AFSPerformObjectInvalidation [3] CcPurgeCacheSection failure FID %08lX-%08lX-%08lX-%08lX\n",
                                                                       ObjectInfo->FileId.Cell,
                                                                       ObjectInfo->FileId.Volume,
                                                                       ObjectInfo->FileId.Vnode,
-                                                                      ObjectInfo->FileId.Unique);
+                                                                      ObjectInfo->FileId.Unique));
 
                                                         bPurgeOnClose = TRUE;
                                                     }
@@ -9830,13 +9833,13 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                                                                   FALSE))
                                         {
 
-                                            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                                            AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                                                           AFS_TRACE_LEVEL_WARNING,
                                                           "AFSPerformObjectInvalidation [4] CcPurgeCacheSection failure FID %08lX-%08lX-%08lX-%08lX\n",
                                                           ObjectInfo->FileId.Cell,
                                                           ObjectInfo->FileId.Volume,
                                                           ObjectInfo->FileId.Vnode,
-                                                          ObjectInfo->FileId.Unique);
+                                                          ObjectInfo->FileId.Unique));
 
                                             bPurgeOnClose = TRUE;
                                         }
@@ -9859,21 +9862,21 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 
                                 ntStatus = GetExceptionCode();
 
-                                AFSDbgLogMsg( 0,
+                                AFSDbgTrace(( 0,
                                               0,
                                               "EXCEPTION - AFSPerformObjectInvalidation FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                                               ObjectInfo->FileId.Cell,
                                               ObjectInfo->FileId.Volume,
                                               ObjectInfo->FileId.Vnode,
                                               ObjectInfo->FileId.Unique,
-                                              ntStatus);
+                                              ntStatus));
                             }
 
-                            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                            AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                           AFS_TRACE_LEVEL_VERBOSE,
                                           "AFSPerformObjectInvalidation Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                                           &ObjectInfo->Fcb->NPFcb->SectionObjectResource,
-                                          PsGetCurrentThread());
+                                          PsGetCurrentThread()));
 
                             AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->SectionObjectResource);
                         }
@@ -9911,11 +9914,11 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
         lCount = AFSObjectInfoDecrement( ObjectInfo,
                                          AFS_OBJECT_REFERENCE_INVALIDATION);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSPerformObjectInvalidation Decrement count on object %p Cnt %d\n",
                       ObjectInfo,
-                      lCount);
+                      lCount));
     }
 
     return ntStatus;

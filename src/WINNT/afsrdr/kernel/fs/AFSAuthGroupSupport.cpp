@@ -61,22 +61,22 @@ AFSRetrieveAuthGroup( IN ULONGLONG ProcessId,
         if( ulSessionId == (ULONG)-1)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "%s Failed to retrieve session ID for PID %I64X\n",
                           __FUNCTION__,
-                          ProcessId);
+                          ProcessId));
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s Entry for Session %08lX PID %I64X TID %I64X\n",
                       __FUNCTION__,
                       ulSessionId,
                       ProcessId,
-                      ThreadId);
+                      ThreadId));
 
         ntStatus = AFSCheckThreadDacl( AuthGroup);
 
@@ -90,14 +90,14 @@ AFSRetrieveAuthGroup( IN ULONGLONG ProcessId,
             RtlStringFromGUID( *AuthGroup,
                                &uniGUIDString);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s Located AuthGroup %wZ via DACL for Session %08lX PID %I64X TID %I64X\n",
                           __FUNCTION__,
                           &uniGUIDString,
                           ulSessionId,
                           ProcessId,
-                          ThreadId);
+                          ThreadId));
 
             if( uniGUIDString.Buffer != NULL)
             {
@@ -107,11 +107,11 @@ AFSRetrieveAuthGroup( IN ULONGLONG ProcessId,
             try_return( ntStatus = STATUS_SUCCESS);
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSRetrieveAuthGroup Acquiring Control ProcessTree.TreeLock lock %p SHARED %08lX\n",
                       pDeviceExt->Specific.Control.ProcessTree.TreeLock,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         ntStatus = STATUS_SUCCESS;
 
@@ -126,13 +126,13 @@ AFSRetrieveAuthGroup( IN ULONGLONG ProcessId,
             pProcessCB == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "%s Failed to locate process entry for Session %08lX PID %I64X TID %I64X\n",
                           __FUNCTION__,
                           ulSessionId,
                           ProcessId,
-                          ThreadId);
+                          ThreadId));
 
             AFSReleaseResource( pDeviceExt->Specific.Control.ProcessTree.TreeLock);
 
@@ -166,14 +166,14 @@ AFSRetrieveAuthGroup( IN ULONGLONG ProcessId,
             RtlStringFromGUID( *AuthGroup,
                                &uniGUIDString);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s Located AuthGroup %wZ in thread Session %08lX PID %I64X TID %I64X\n",
                           __FUNCTION__,
                           &uniGUIDString,
                           ulSessionId,
                           ProcessId,
-                          ThreadId);
+                          ThreadId));
 
             if( uniGUIDString.Buffer != NULL)
             {
@@ -196,14 +196,14 @@ AFSRetrieveAuthGroup( IN ULONGLONG ProcessId,
             RtlStringFromGUID( *AuthGroup,
                                &uniGUIDString);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s Located AuthGroup %wZ in process Session %08lX PID %I64X TID %I64X\n",
                           __FUNCTION__,
                           &uniGUIDString,
                           ulSessionId,
                           ProcessId,
-                          ThreadId);
+                          ThreadId));
 
             if( uniGUIDString.Buffer != NULL)
             {
@@ -217,13 +217,13 @@ AFSRetrieveAuthGroup( IN ULONGLONG ProcessId,
             AFSIsNoPAGAuthGroup( pAuthGroup))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s No AuthGroup located, validating process for Session %08lX PID %I64X TID %I64X\n",
                           __FUNCTION__,
                           ulSessionId,
                           ProcessId,
-                          ThreadId);
+                          ThreadId));
 
             pAuthGroup = AFSValidateProcessEntry( PsGetCurrentProcessId(),
                                                   FALSE);
@@ -241,14 +241,14 @@ AFSRetrieveAuthGroup( IN ULONGLONG ProcessId,
                 RtlStringFromGUID( *AuthGroup,
                                    &uniGUIDString);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "%s Located AuthGroup %wZ after validation Session %08lX PID %I64X TID %I64X\n",
                               __FUNCTION__,
                               &uniGUIDString,
                               ulSessionId,
                               ProcessId,
-                              ThreadId);
+                              ThreadId));
 
                 if( uniGUIDString.Buffer != NULL)
                 {
@@ -257,13 +257,13 @@ AFSRetrieveAuthGroup( IN ULONGLONG ProcessId,
             }
             else
             {
-                AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "%s Failed to locate AuthGroup for Session %08lX PID %I64X TID %I64X\n",
                               __FUNCTION__,
                               ulSessionId,
                               ProcessId,
-                              ThreadId);
+                              ThreadId));
             }
         }
 
@@ -300,11 +300,11 @@ AFSIsLocalSystemAuthGroup( IN GUID *AuthGroup)
         RtlStringFromGUID( *AuthGroup,
                            &uniGUIDString);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
                       "%s Checking AuthGroup %wZ\n",
                       __FUNCTION__,
-                      &uniGUIDString);
+                      &uniGUIDString));
 
         AFSAcquireShared( pDeviceExt->Specific.Control.ProcessTree.TreeLock,
                           TRUE);
@@ -318,11 +318,11 @@ AFSIsLocalSystemAuthGroup( IN GUID *AuthGroup)
         {
             bIsLocalSys = TRUE;
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s AuthGroup %wZ is LOCAL SYSTEM\n",
                           __FUNCTION__,
-                          &uniGUIDString);
+                          &uniGUIDString));
         }
 
         AFSReleaseResource( pDeviceExt->Specific.Control.ProcessTree.TreeLock);
@@ -356,12 +356,12 @@ AFSIsLocalSystemSID( IN UNICODE_STRING *SIDString)
             bIsLocalSys = TRUE;
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
                       "%s AuthGroup SID %wZ is %sLOCAL SYSTEM\n",
                       __FUNCTION__,
                       SIDString,
-                      bIsLocalSys ? "" : "not ");
+                      bIsLocalSys ? "" : "not "));
     }
 
     return bIsLocalSys;
@@ -391,12 +391,12 @@ AFSIsNoPAGAuthGroup( IN GUID *AuthGroup)
             bIsNoPAG = TRUE;
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
                       "%s AuthGroup %wZ is %sNoPAG\n",
                       __FUNCTION__,
                       &uniGUIDString,
-                      bIsNoPAG ? "" : "not ");
+                      bIsNoPAG ? "" : "not "));
 
         if( uniGUIDString.Buffer != NULL)
         {
@@ -450,11 +450,11 @@ AFSCreateSetProcessAuthGroup( AFSAuthGroupRequestCB *CreateSetAuthGroup)
             pProcessCB == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "%s Failed to locate process CB for PID %I64X\n",
                           __FUNCTION__,
-                          ullProcessID);
+                          ullProcessID));
 
             AFSReleaseResource( pDeviceExt->Specific.Control.ProcessTree.TreeLock);
             try_return( ntStatus = STATUS_UNSUCCESSFUL);
@@ -470,22 +470,22 @@ AFSCreateSetProcessAuthGroup( AFSAuthGroupRequestCB *CreateSetAuthGroup)
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "%s Failed to locate caller SID for PID %I64X Status %08lX\n",
                           __FUNCTION__,
                           ullProcessID,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s Retrieved caller SID %wZ for PID %I64X\n",
                       __FUNCTION__,
                       &uniCallerSID,
-                      ullProcessID);
+                      ullProcessID));
 
 
         if( CreateSetAuthGroup->SIDLength != 0)
@@ -496,12 +496,12 @@ AFSCreateSetProcessAuthGroup( AFSAuthGroupRequestCB *CreateSetAuthGroup)
 
             uniPassedSIDString.Buffer = CreateSetAuthGroup->SIDString;
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s Validating passed SID %wZ for PID %I64X\n",
                           __FUNCTION__,
                           &uniPassedSIDString,
-                          ullProcessID);
+                          ullProcessID));
 
             if( RtlCompareUnicodeString( &uniCallerSID,
                                          &uniPassedSIDString,
@@ -511,47 +511,47 @@ AFSCreateSetProcessAuthGroup( AFSAuthGroupRequestCB *CreateSetAuthGroup)
                 if( !BooleanFlagOn( pProcessCB->Flags, AFS_PROCESS_LOCAL_SYSTEM_AUTH))
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
                                   "%s Caller specified SID %wZ for PID %I64X but caller is not LOCAL SYSTEM AUTHORITY\n",
                                   __FUNCTION__,
                                   &uniPassedSIDString,
-                                  ullProcessID);
+                                  ullProcessID));
 
                     try_return( ntStatus = STATUS_ACCESS_DENIED);
                 }
 
                 uniSIDString = uniPassedSIDString;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "%s Using passed SID %wZ for PID %I64X\n",
                               __FUNCTION__,
                               &uniSIDString,
-                              ullProcessID);
+                              ullProcessID));
             }
             else
             {
                 uniSIDString = uniCallerSID;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "%s Caller and passed SID are equal SID %wZ for PID %I64X\n",
                               __FUNCTION__,
                               &uniSIDString,
-                              ullProcessID);
+                              ullProcessID));
             }
         }
         else
         {
             uniSIDString = uniCallerSID;
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s No SID passed, using callers SID %wZ for PID %I64X\n",
                           __FUNCTION__,
                           &uniSIDString,
-                          ullProcessID);
+                          ullProcessID));
         }
 
         ntStatus = RtlHashUnicodeString( &uniSIDString,
@@ -562,13 +562,13 @@ AFSCreateSetProcessAuthGroup( AFSAuthGroupRequestCB *CreateSetAuthGroup)
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "%s Failed to hash SID %wZ for PID %I64X Status %08lX\n",
                           __FUNCTION__,
                           &uniSIDString,
                           ullProcessID,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -578,12 +578,12 @@ AFSCreateSetProcessAuthGroup( AFSAuthGroupRequestCB *CreateSetAuthGroup)
         if( ulSessionId == (ULONG)-1)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "%s Failed to retrieve SessionID PID %I64X Status %08lX\n",
                           __FUNCTION__,
                           ullProcessID,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -591,12 +591,12 @@ AFSCreateSetProcessAuthGroup( AFSAuthGroupRequestCB *CreateSetAuthGroup)
         if( CreateSetAuthGroup->SessionId != (ULONG)-1)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s Checking passed SessionID %08lX for PID %I64X\n",
                           __FUNCTION__,
                           CreateSetAuthGroup->SessionId,
-                          ullProcessID);
+                          ullProcessID));
 
             if( ulSessionId != CreateSetAuthGroup->SessionId)
             {
@@ -604,34 +604,34 @@ AFSCreateSetProcessAuthGroup( AFSAuthGroupRequestCB *CreateSetAuthGroup)
                 if( !BooleanFlagOn( pProcessCB->Flags, AFS_PROCESS_LOCAL_SYSTEM_AUTH))
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
                                   "%s Passed SessionID %08lX for PID %I64X, failed because caller is not LOCAL SYSTEM AUTHORITY\n",
                                   __FUNCTION__,
                                   CreateSetAuthGroup->SessionId,
-                                  ullProcessID);
+                                  ullProcessID));
 
                     try_return( ntStatus = STATUS_ACCESS_DENIED);
                 }
 
                 ulSessionId = CreateSetAuthGroup->SessionId;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "%s Using passed SessionID %08lX for PID %I64X\n",
                               __FUNCTION__,
                               ulSessionId,
-                              ullProcessID);
+                              ullProcessID));
             }
         }
         else
         {
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s Using callers SessionID %08lX for PID %I64X\n",
                           __FUNCTION__,
                           ulSessionId,
-                          ullProcessID);
+                          ullProcessID));
         }
 
         ullTableHash = ( ((ULONGLONG)ulSessionId << 32) | ulSIDHash);
@@ -654,13 +654,13 @@ AFSCreateSetProcessAuthGroup( AFSAuthGroupRequestCB *CreateSetAuthGroup)
         if( pAuthGroup != NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "%s Located AuthGroup for SID %wZ SessionID %08lX for PID %I64X, failing request\n",
                           __FUNCTION__,
                           &uniSIDString,
                           ulSessionId,
-                          ullProcessID);
+                          ullProcessID));
 
             try_return( ntStatus = STATUS_INVALID_PARAMETER);
         }
@@ -690,13 +690,13 @@ AFSCreateSetProcessAuthGroup( AFSAuthGroupRequestCB *CreateSetAuthGroup)
             pLastAuthGroup->Next = pAuthGroup;
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s Allocated new AuthGroup for SID %wZ SessionID %08lX for PID %I64X\n",
                       __FUNCTION__,
                       &uniSIDString,
                       ulSessionId,
-                      ullProcessID);
+                      ullProcessID));
 
         if( BooleanFlagOn( CreateSetAuthGroup->Flags, AFS_PAG_FLAGS_THREAD_AUTH_GROUP))
         {
@@ -729,26 +729,26 @@ AFSCreateSetProcessAuthGroup( AFSAuthGroupRequestCB *CreateSetAuthGroup)
                 pThreadCB->ActiveAuthGroup = &pAuthGroup->AuthGroup;
             }
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s Set new AuthGroup for SID %wZ SessionID %08lX for PID %I64X on thread ID %I64X\n",
                           __FUNCTION__,
                           &uniSIDString,
                           ulSessionId,
                           ullProcessID,
-                          ullThreadId);
+                          ullThreadId));
         }
         else if( BooleanFlagOn( CreateSetAuthGroup->Flags, AFS_PAG_FLAGS_SET_AS_ACTIVE))
         {
             pProcessCB->ActiveAuthGroup = &pAuthGroup->AuthGroup;
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s Set new AuthGroup for SID %wZ SessionID %08lX for PID %I64X on process\n",
                           __FUNCTION__,
                           &uniSIDString,
                           ulSessionId,
-                          ullProcessID);
+                          ullProcessID));
         }
 
 try_exit:
@@ -791,11 +791,11 @@ AFSQueryProcessAuthGroupList( IN GUID *GUIDList,
     __Enter
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s Entry for PID %I64X\n",
                       __FUNCTION__,
-                      ullProcessID);
+                      ullProcessID));
 
         AFSAcquireShared( pDeviceExt->Specific.Control.ProcessTree.TreeLock,
                           TRUE);
@@ -808,11 +808,11 @@ AFSQueryProcessAuthGroupList( IN GUID *GUIDList,
             pProcessCB == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "%s Failed to locate process entry PID %I64X\n",
                           __FUNCTION__,
-                          ullProcessID);
+                          ullProcessID));
 
             AFSReleaseResource( pDeviceExt->Specific.Control.ProcessTree.TreeLock);
             try_return( ntStatus = STATUS_UNSUCCESSFUL);
@@ -838,12 +838,12 @@ AFSQueryProcessAuthGroupList( IN GUID *GUIDList,
             GUIDList == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s Buffer too small for query, required %08lX for PID %I64X\n",
                           __FUNCTION__,
                           ulRequiredLength,
-                          ullProcessID);
+                          ullProcessID));
 
             *ReturnLength = ulRequiredLength;
             try_return( ntStatus = STATUS_BUFFER_OVERFLOW);
@@ -866,12 +866,12 @@ AFSQueryProcessAuthGroupList( IN GUID *GUIDList,
             RtlStringFromGUID( pAuthGroup->AuthGroup,
                                &uniGUIDString);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s Adding AuthGroup %wZ for PID %I64X\n",
                           __FUNCTION__,
                           &uniGUIDString,
-                          ullProcessID);
+                          ullProcessID));
 
             if( uniGUIDString.Buffer != NULL)
             {
@@ -925,12 +925,12 @@ AFSSetActiveProcessAuthGroup( IN AFSAuthGroupRequestCB *ActiveAuthGroup)
         RtlStringFromGUID( ActiveAuthGroup->AuthGroup,
                            &uniGUIDString);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s Entry for ProcessID %I64X AuthGroup GUID %wZ\n",
                       __FUNCTION__,
                       ullProcessID,
-                      &uniGUIDString);
+                      &uniGUIDString));
 
         AFSAcquireShared( pDeviceExt->Specific.Control.ProcessTree.TreeLock,
                           TRUE);
@@ -943,11 +943,11 @@ AFSSetActiveProcessAuthGroup( IN AFSAuthGroupRequestCB *ActiveAuthGroup)
             pProcessCB == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "%s Failed to locate process entry for ProcessID %I64X\n",
                           __FUNCTION__,
-                          ullProcessID);
+                          ullProcessID));
 
             AFSReleaseResource( pDeviceExt->Specific.Control.ProcessTree.TreeLock);
             try_return( ntStatus = STATUS_UNSUCCESSFUL);
@@ -976,12 +976,12 @@ AFSSetActiveProcessAuthGroup( IN AFSAuthGroupRequestCB *ActiveAuthGroup)
         if( pAuthGroup == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s Failed to locate AuthGroup for ProcessID %I64X AuthGroup GUID %wZ\n",
                           __FUNCTION__,
                           ullProcessID,
-                          &uniGUIDString);
+                          &uniGUIDString));
 
             try_return( ntStatus = STATUS_INVALID_PARAMETER);
         }
@@ -1017,24 +1017,24 @@ AFSSetActiveProcessAuthGroup( IN AFSAuthGroupRequestCB *ActiveAuthGroup)
                 pThreadCB->ActiveAuthGroup = &pAuthGroup->AuthGroup;
             }
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s Set active AuthGroup for ProcessID %I64X AuthGroup GUID %wZ on thread %I64X\n",
                           __FUNCTION__,
                           ullProcessID,
                           &uniGUIDString,
-                          ullThreadId);
+                          ullThreadId));
         }
         else
         {
             pProcessCB->ActiveAuthGroup = &pAuthGroup->AuthGroup;
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s Set active AuthGroup for ProcessID %I64X AuthGroup GUID %wZ on process\n",
                           __FUNCTION__,
                           ullProcessID,
-                          &uniGUIDString);
+                          &uniGUIDString));
         }
 
 try_exit:
@@ -1072,11 +1072,11 @@ AFSResetActiveProcessAuthGroup( IN IN AFSAuthGroupRequestCB *AuthGroup)
     __Enter
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s Entry for ProcessID %I64X\n",
                       __FUNCTION__,
-                      ullProcessID);
+                      ullProcessID));
 
         AFSAcquireShared( pDeviceExt->Specific.Control.ProcessTree.TreeLock,
                           TRUE);
@@ -1089,11 +1089,11 @@ AFSResetActiveProcessAuthGroup( IN IN AFSAuthGroupRequestCB *AuthGroup)
             pProcessCB == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "%s Failed to locate AuthGroup for ProcessID %I64X\n",
                           __FUNCTION__,
-                          ullProcessID);
+                          ullProcessID));
 
             AFSReleaseResource( pDeviceExt->Specific.Control.ProcessTree.TreeLock);
             try_return( ntStatus = STATUS_UNSUCCESSFUL);
@@ -1121,12 +1121,12 @@ AFSResetActiveProcessAuthGroup( IN IN AFSAuthGroupRequestCB *AuthGroup)
                 pThreadCB = pThreadCB->Next;
             }
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s Reset AuthGroup list on thread %I64X for ProcessID %I64X\n",
                           __FUNCTION__,
                           ullThreadId,
-                          ullProcessID);
+                          ullProcessID));
         }
         else
         {
@@ -1140,11 +1140,11 @@ AFSResetActiveProcessAuthGroup( IN IN AFSAuthGroupRequestCB *AuthGroup)
                 pThreadCB = pThreadCB->Next;
             }
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s Reset AuthGroup list on process for ProcessID %I64X\n",
                           __FUNCTION__,
-                          ullProcessID);
+                          ullProcessID));
         }
 
         AFSReleaseResource( &pProcessCB->Lock);
@@ -1190,25 +1190,25 @@ AFSCreateAuthGroupForSIDorLogonSession( IN AFSAuthGroupRequestCB *AuthGroupReque
     __Enter
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s Entry for ProcessID %I64X ThreadID %I64X\n",
                       __FUNCTION__,
                       ullProcessID,
-                      ullThreadId);
+                      ullThreadId));
 
         ntStatus = AFSGetCallerSID( &uniCallerSID, &bImpersonation);
 
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "%s Failed to retrieve callers SID for ProcessID %I64X ThreadID %I64X Status %08lX\n",
                           __FUNCTION__,
                           ullProcessID,
                           ullThreadId,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -1219,11 +1219,11 @@ AFSCreateAuthGroupForSIDorLogonSession( IN AFSAuthGroupRequestCB *AuthGroupReque
             bLocalSystem == FALSE)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "%s caller is %wZ and LOCAL SYSTEM AUTHORITY required\n",
                           __FUNCTION__,
-                          uniCallerSID);
+                          uniCallerSID));
 
             try_return( ntStatus = STATUS_ACCESS_DENIED);
         }
@@ -1234,10 +1234,10 @@ AFSCreateAuthGroupForSIDorLogonSession( IN AFSAuthGroupRequestCB *AuthGroupReque
                AuthGroupRequestCB->SessionId == (ULONG)-1))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "%s SID and SessionId are mandatory\n",
-                          __FUNCTION__);
+                          __FUNCTION__));
 
             try_return( ntStatus = STATUS_INVALID_PARAMETER);
         }
@@ -1248,22 +1248,22 @@ AFSCreateAuthGroupForSIDorLogonSession( IN AFSAuthGroupRequestCB *AuthGroupReque
                AuthGroupRequestCB->SessionId != (ULONG)-1))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "%s SID and SessionId must not be specified\n",
-                          __FUNCTION__);
+                          __FUNCTION__));
 
             try_return( ntStatus = STATUS_INVALID_PARAMETER);
         }
 
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s Retrieved callers SID %wZ for ProcessID %I64X ThreadID %I64X\n",
                       __FUNCTION__,
                       &uniCallerSID,
                       ullProcessID,
-                      ullThreadId);
+                      ullThreadId));
 
         if( AuthGroupRequestCB != NULL &&
             AuthGroupRequestCB->SIDLength != 0)
@@ -1274,13 +1274,13 @@ AFSCreateAuthGroupForSIDorLogonSession( IN AFSAuthGroupRequestCB *AuthGroupReque
 
             uniPassedSIDString.Buffer = AuthGroupRequestCB->SIDString;
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s Checking passed SID %wZ for ProcessID %I64X ThreadID %I64X\n",
                           __FUNCTION__,
                           &uniPassedSIDString,
                           ullProcessID,
-                          ullThreadId);
+                          ullThreadId));
 
             if( RtlCompareUnicodeString( &uniCallerSID,
                                          &uniPassedSIDString,
@@ -1290,51 +1290,51 @@ AFSCreateAuthGroupForSIDorLogonSession( IN AFSAuthGroupRequestCB *AuthGroupReque
                 if( !bLocalSystem)
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
                                   "%s Not using passed SID %wZ for ProcessID %I64X ThreadID %I64X caller is not LOCAL SYSTEM AUTHORITY\n",
                                   __FUNCTION__,
                                   &uniPassedSIDString,
                                   ullProcessID,
-                                  ullThreadId);
+                                  ullThreadId));
 
                     try_return( ntStatus = STATUS_ACCESS_DENIED);
                 }
 
                 uniSIDString = uniPassedSIDString;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "%s Using passed SID %wZ for ProcessID %I64X ThreadID %I64X\n",
                               __FUNCTION__,
                               &uniSIDString,
                               ullProcessID,
-                              ullThreadId);
+                              ullThreadId));
             }
             else
             {
                 uniSIDString = uniCallerSID;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "%s Both SIDs are equal, using callers SID %wZ for ProcessID %I64X ThreadID %I64X\n",
                               __FUNCTION__,
                               &uniSIDString,
                               ullProcessID,
-                              ullThreadId);
+                              ullThreadId));
             }
         }
         else
         {
             uniSIDString = uniCallerSID;
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s Using callers SID %wZ for ProcessID %I64X ThreadID %I64X\n",
                           __FUNCTION__,
                           &uniSIDString,
                           ullProcessID,
-                          ullThreadId);
+                          ullThreadId));
         }
 
         ntStatus = RtlHashUnicodeString( &uniSIDString,
@@ -1345,14 +1345,14 @@ AFSCreateAuthGroupForSIDorLogonSession( IN AFSAuthGroupRequestCB *AuthGroupReque
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "%s Failed to hash SID %wZ for ProcessID %I64X ThreadID %I64X Status %08lX\n",
                           __FUNCTION__,
                           &uniSIDString,
                           ullProcessID,
                           ullThreadId,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -1362,12 +1362,12 @@ AFSCreateAuthGroupForSIDorLogonSession( IN AFSAuthGroupRequestCB *AuthGroupReque
         if( ulSessionId == (ULONG)-1)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "%s Failed to retrieve session ID for ProcessID %I64X ThreadID %I64X\n",
                           __FUNCTION__,
                           ullProcessID,
-                          ullThreadId);
+                          ullThreadId));
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -1377,38 +1377,38 @@ AFSCreateAuthGroupForSIDorLogonSession( IN AFSAuthGroupRequestCB *AuthGroupReque
             AuthGroupRequestCB->SessionId != (ULONG)-1)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s Checking passed SessionID %08lX for ProcessID %I64X ThreadID %I64X\n",
                           __FUNCTION__,
                           AuthGroupRequestCB->SessionId,
                           ullProcessID,
-                          ullThreadId);
+                          ullThreadId));
 
             if( ulSessionId != AuthGroupRequestCB->SessionId)
             {
 
                 ulSessionId = AuthGroupRequestCB->SessionId;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "%s Using passed SessionID %08lX for ProcessID %I64X ThreadID %I64X\n",
                               __FUNCTION__,
                               AuthGroupRequestCB->SessionId,
                               ullProcessID,
-                              ullThreadId);
+                              ullThreadId));
             }
         }
         else
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s Using callers SessionID %08lX for ProcessID %I64X ThreadID %I64X\n",
                           __FUNCTION__,
                           ulSessionId,
                           ullProcessID,
-                          ullThreadId);
+                          ullThreadId));
         }
 
         ullTableHash = ( ((ULONGLONG)ulSessionId << 32) | ulSIDHash);
@@ -1424,25 +1424,25 @@ AFSCreateAuthGroupForSIDorLogonSession( IN AFSAuthGroupRequestCB *AuthGroupReque
             pSIDEntryCB != NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s Located SID entry for SID %wZ SessionID %08lX ProcessID %I64X ThreadID %I64X, updating GUID\n",
                           __FUNCTION__,
                           &uniSIDString,
                           ulSessionId,
                           ullProcessID,
-                          ullThreadId);
+                          ullThreadId));
 
             uniGUID.Buffer = NULL;
 
             RtlStringFromGUID( pSIDEntryCB->AuthGroup,
                                &uniGUID);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s Updating existing AuthGroup GUID %wZ\n",
                           __FUNCTION__,
-                          &uniGUID);
+                          &uniGUID));
 
             if( uniGUID.Buffer != NULL)
             {
@@ -1456,11 +1456,11 @@ AFSCreateAuthGroupForSIDorLogonSession( IN AFSAuthGroupRequestCB *AuthGroupReque
             RtlStringFromGUID( pSIDEntryCB->AuthGroup,
                                &uniGUID);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s Updated existing AuthGroup GUID %wZ\n",
                           __FUNCTION__,
-                          &uniGUID);
+                          &uniGUID));
 
             if( uniGUID.Buffer != NULL)
             {
@@ -1505,13 +1505,13 @@ AFSCreateAuthGroupForSIDorLogonSession( IN AFSAuthGroupRequestCB *AuthGroupReque
         RtlStringFromGUID( pSIDEntryCB->AuthGroup,
                            &uniGUID);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s Created new AuthGroup GUID %wZ SID %wZ Session %08lX\n",
                       __FUNCTION__,
                       &uniGUID,
                       &uniSIDString,
-                      ulSessionId);
+                      ulSessionId));
 
         if( uniGUID.Buffer != NULL)
         {
@@ -1555,45 +1555,45 @@ AFSQueryAuthGroup( IN AFSAuthGroupRequestCB *AuthGroup,
     __Enter
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s Entry for ProcessID %I64X\n",
                       __FUNCTION__,
-                      ullProcessID);
+                      ullProcessID));
 
         if( AuthGroup == NULL ||
             AuthGroup->SIDLength == 0)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s No SID specified, retrieving callers SID for ProcessID %I64X\n",
                           __FUNCTION__,
-                          ullProcessID);
+                          ullProcessID));
 
             ntStatus = AFSGetCallerSID( &uniSIDString, &bImpersonation);
 
             if( !NT_SUCCESS( ntStatus))
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "%s Failed to retrieve callers SID for ProcessID %I64X Status %08lX\n",
                               __FUNCTION__,
                               ullProcessID,
-                              ntStatus);
+                              ntStatus));
 
                 try_return( ntStatus);
             }
 
             bReleaseSID = TRUE;
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s Retrieved callers SID %wZ for ProcessID %I64X\n",
                           __FUNCTION__,
                           &uniSIDString,
-                          ullProcessID);
+                          ullProcessID));
         }
         else
         {
@@ -1603,12 +1603,12 @@ AFSQueryAuthGroup( IN AFSAuthGroupRequestCB *AuthGroup,
 
             uniSIDString.Buffer = AuthGroup->SIDString;
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s Using passed SID %wZ for ProcessID %I64X\n",
                           __FUNCTION__,
                           &uniSIDString,
-                          ullProcessID);
+                          ullProcessID));
         }
 
         ntStatus = RtlHashUnicodeString( &uniSIDString,
@@ -1619,13 +1619,13 @@ AFSQueryAuthGroup( IN AFSAuthGroupRequestCB *AuthGroup,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "%s Failed to hash SID %wZ for ProcessID %I64X Status %08lX\n",
                           __FUNCTION__,
                           &uniSIDString,
                           ullProcessID,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -1634,43 +1634,43 @@ AFSQueryAuthGroup( IN AFSAuthGroupRequestCB *AuthGroup,
             AuthGroup->SessionId == -1)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s No SessionID specified, retrieving callers for ProcessID %I64X\n",
                           __FUNCTION__,
-                          ullProcessID);
+                          ullProcessID));
 
             ulSessionId = AFSGetSessionId( (HANDLE)ullProcessID, &bImpersonation);
 
             if( ulSessionId == (ULONG)-1)
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "%s Failed to retrieve callers Session ID for ProcessID %I64X\n",
                               __FUNCTION__,
-                              ullProcessID);
+                              ullProcessID));
 
                 try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
             }
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s Retrieved callers SessionID %08lX for ProcessID %I64X\n",
                           __FUNCTION__,
                           ulSessionId,
-                          ullProcessID);
+                          ullProcessID));
         }
         else
         {
             ulSessionId = AuthGroup->SessionId;
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s Using passed SessionID %08lX for ProcessID %I64X\n",
                           __FUNCTION__,
                           ulSessionId,
-                          ullProcessID);
+                          ullProcessID));
         }
 
         ullTableHash = ( ((ULONGLONG)ulSessionId << 32) | ulSIDHash);
@@ -1685,13 +1685,13 @@ AFSQueryAuthGroup( IN AFSAuthGroupRequestCB *AuthGroup,
         if( pSIDEntryCB == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "%s Failed to locate SID entry for SID %wZ SessionID %08lX ProcessID %I64X\n",
                           __FUNCTION__,
                           &uniSIDString,
                           ulSessionId,
-                          ullProcessID);
+                          ullProcessID));
 
             AFSReleaseResource( pDeviceExt->Specific.Control.AuthGroupTree.TreeLock);
             try_return( ntStatus = STATUS_NOT_FOUND);
@@ -1708,12 +1708,12 @@ AFSQueryAuthGroup( IN AFSAuthGroupRequestCB *AuthGroup,
         RtlStringFromGUID( pSIDEntryCB->AuthGroup,
                            &uniGUID);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s Retrieved AuthGroup GUID %wZ for ProcessID %I64X\n",
                       __FUNCTION__,
                       &uniGUID,
-                      ullProcessID);
+                      ullProcessID));
 
         if( uniGUID.Buffer != NULL)
         {
