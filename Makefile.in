@@ -307,7 +307,7 @@ volser: cmd comerr usd kauth vlserver audit
 
 tvolser: project viced usd libafsrpc libafsauthent volser
 	+@case ${SYS_NAME} in						\
-	*_darwin_*|alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[no]bsd*)   \
+	*_darwin_*|alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*)   \
 		${COMPILE_PART1} tvolser ${COMPILE_PART2} ;;            \
 	*)                                                              \
 		echo Not building MT volser for ${SYS_NAME} ;;          \
@@ -315,7 +315,7 @@ tvolser: project viced usd libafsrpc libafsauthent volser
 
 dvolser: project viced usd libafsrpc libafsauthent volser
 	+@case ${SYS_NAME} in						\
-	*_darwin_*|alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[no]bsd*)   \
+	*_darwin_*|alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*)   \
 		${COMPILE_PART1} dvolser ${COMPILE_PART2} ;;            \
 	*)                                                              \
 		echo Not building DAFS volser for ${SYS_NAME} ;;          \
