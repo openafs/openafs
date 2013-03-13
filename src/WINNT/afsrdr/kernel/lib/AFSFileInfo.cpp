@@ -80,10 +80,10 @@ AFSQueryFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
         if( pFcb == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSQueryFileInfo Attempted access (%p) when pFcb == NULL\n",
-                          Irp);
+                          Irp));
 
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
         }
@@ -121,11 +121,11 @@ AFSQueryFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
         // Grab the main shared right off the bat
         //
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSQueryFileInfo Acquiring Fcb lock %p SHARED %08lX\n",
                       &pFcb->NPFcb->Resource,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         AFSAcquireShared( &pFcb->NPFcb->Resource,
                           TRUE);
@@ -139,9 +139,9 @@ AFSQueryFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
         if( pFcb->Header.NodeTypeCode == AFS_SPECIAL_SHARE_FCB)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSQueryFileInfo Processing request against SpecialShare Fcb\n");
+                          "AFSQueryFileInfo Processing request against SpecialShare Fcb\n"));
 
             ntStatus = AFSProcessShareQueryInfo( Irp,
                                                  pFcb,
@@ -151,9 +151,9 @@ AFSQueryFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
         }
         else if( pFcb->Header.NodeTypeCode == AFS_IOCTL_FCB)
         {
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSQueryFileInfo request against PIOCtl Fcb\n");
+                          "AFSQueryFileInfo request against PIOCtl Fcb\n"));
 
             ntStatus = AFSProcessPIOCtlQueryInfo( Irp,
                                                   pFcb,
@@ -165,9 +165,9 @@ AFSQueryFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
 
         else if( pFcb->Header.NodeTypeCode == AFS_INVALID_FCB)
         {
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSQueryFileInfo request against Invalid Fcb\n");
+                          "AFSQueryFileInfo request against Invalid Fcb\n"));
 
             try_return( ntStatus = STATUS_ACCESS_DENIED);
         }
@@ -454,7 +454,7 @@ try_exit:
                 pCcb->DirectoryCB != NULL)
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSQueryFileInfo Failed to process request for %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                               &pCcb->DirectoryCB->NameInformation.FileName,
@@ -462,16 +462,16 @@ try_exit:
                               pCcb->DirectoryCB->ObjectInformation->FileId.Volume,
                               pCcb->DirectoryCB->ObjectInformation->FileId.Vnode,
                               pCcb->DirectoryCB->ObjectInformation->FileId.Unique,
-                              ntStatus);
+                              ntStatus));
             }
         }
     }
     __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
-                      "EXCEPTION - AFSQueryFileInfo\n");
+                      "EXCEPTION - AFSQueryFileInfo\n"));
 
         AFSDumpTraceFilesFnc();
 
@@ -530,10 +530,10 @@ AFSSetFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
         if( pFcb == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSSetFileInfo Attempted access (%p) when pFcb == NULL\n",
-                          Irp);
+                          Irp));
 
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
         }
@@ -545,11 +545,11 @@ AFSSetFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
         // Grab the Fcb EXCL
         //
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSSetFileInfo Acquiring Fcb lock %p EXCL %08lX\n",
                       &pFcb->NPFcb->Resource,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         AFSAcquireExcl( &pFcb->NPFcb->Resource,
                         TRUE);
@@ -563,18 +563,18 @@ AFSSetFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
         if( pFcb->Header.NodeTypeCode == AFS_IOCTL_FCB)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSSetFileInfo Failing request against PIOCtl Fcb\n");
+                          "AFSSetFileInfo Failing request against PIOCtl Fcb\n"));
 
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
         }
         else if( pFcb->Header.NodeTypeCode == AFS_SPECIAL_SHARE_FCB)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSSetFileInfo Processing request against SpecialShare Fcb\n");
+                          "AFSSetFileInfo Processing request against SpecialShare Fcb\n"));
 
             ntStatus = AFSProcessShareSetInfo( Irp,
                                                pFcb,
@@ -586,10 +586,10 @@ AFSSetFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
         if( BooleanFlagOn( pFcb->ObjectInformation->VolumeCB->VolumeInformation.Characteristics, FILE_READ_ONLY_DEVICE))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSSetFileInfo Request failed due to read only volume\n",
-                          Irp);
+                          Irp));
 
             try_return( ntStatus = STATUS_MEDIA_WRITE_PROTECTED);
         }
@@ -597,9 +597,9 @@ AFSSetFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
         if( pFcb->Header.NodeTypeCode == AFS_INVALID_FCB &&
             FileInformationClass != FileDispositionInformation)
         {
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSSetFileInfo request against Invalid Fcb\n");
+                          "AFSSetFileInfo request against Invalid Fcb\n"));
 
             try_return( ntStatus = STATUS_ACCESS_DENIED);
         }
@@ -733,7 +733,7 @@ try_exit:
                 AFSUnwindFileInfo( pFcb,
                                    pCcb);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSSetFileInfo Failed to send file info update to service request for %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                               &pCcb->DirectoryCB->NameInformation.FileName,
@@ -741,7 +741,7 @@ try_exit:
                               pCcb->DirectoryCB->ObjectInformation->FileId.Volume,
                               pCcb->DirectoryCB->ObjectInformation->FileId.Vnode,
                               pCcb->DirectoryCB->ObjectInformation->FileId.Unique,
-                              ntStatus);
+                              ntStatus));
 
                 AFSReleaseResource( &pFcb->NPFcb->Resource);
             }
@@ -754,7 +754,7 @@ try_exit:
                 pCcb->DirectoryCB != NULL)
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSSetFileInfo Failed to process request for %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                               &pCcb->DirectoryCB->NameInformation.FileName,
@@ -762,16 +762,16 @@ try_exit:
                               pCcb->DirectoryCB->ObjectInformation->FileId.Volume,
                               pCcb->DirectoryCB->ObjectInformation->FileId.Vnode,
                               pCcb->DirectoryCB->ObjectInformation->FileId.Unique,
-                              ntStatus);
+                              ntStatus));
             }
         }
     }
     __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
-                      "EXCEPTION - AFSSetFileInfo\n");
+                      "EXCEPTION - AFSSetFileInfo\n"));
 
         AFSDumpTraceFilesFnc();
 
@@ -882,13 +882,13 @@ AFSQueryBasicInfo( IN PIRP Irp,
         }
 
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
                       "AFSQueryBasicInfo %wZ Type 0x%x Attrib 0x%x -> 0x%x\n",
                       &pCcb->DirectoryCB->NameInformation.FileName,
                       pCcb->DirectoryCB->ObjectInformation->FileType,
                       pCcb->DirectoryCB->ObjectInformation->FileAttributes,
-                      ulFileAttribs);
+                      ulFileAttribs));
 
         Buffer->CreationTime = DirectoryCB->ObjectInformation->CreationTime;
         Buffer->LastAccessTime = DirectoryCB->ObjectInformation->LastAccessTime;
@@ -1007,13 +1007,13 @@ AFSQueryStandardInfo( IN PIRP Irp,
                               TRUE);
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
                       "AFSQueryStandardInfo %wZ Type 0x%x Attrib 0x%x -> 0x%x\n",
                       &pCcb->DirectoryCB->NameInformation.FileName,
                       pCcb->DirectoryCB->ObjectInformation->FileType,
                       pCcb->DirectoryCB->ObjectInformation->FileAttributes,
-                      ulFileAttribs);
+                      ulFileAttribs));
 
         Buffer->Directory = BooleanFlagOn( ulFileAttribs, FILE_ATTRIBUTE_DIRECTORY);
 
@@ -1523,13 +1523,13 @@ AFSQueryNetworkInfo( IN PIRP Irp,
                               TRUE);
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
                       "AFSQueryNetworkInfo %wZ Type 0x%x Attrib 0x%x -> 0x%x\n",
                       &pCcb->DirectoryCB->NameInformation.FileName,
                       pCcb->DirectoryCB->ObjectInformation->FileType,
                       pCcb->DirectoryCB->ObjectInformation->FileAttributes,
-                      ulFileAttribs);
+                      ulFileAttribs));
 
         Buffer->CreationTime.QuadPart = DirectoryCB->ObjectInformation->CreationTime.QuadPart;
         Buffer->LastAccessTime.QuadPart = DirectoryCB->ObjectInformation->LastAccessTime.QuadPart;
@@ -1718,13 +1718,13 @@ AFSQueryAttribTagInfo( IN PIRP Irp,
                               TRUE);
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
                       "AFSAttribTagInfo %wZ Type 0x%x Attrib 0x%x -> 0x%x\n",
                       &pCcb->DirectoryCB->NameInformation.FileName,
                       pCcb->DirectoryCB->ObjectInformation->FileType,
                       pCcb->DirectoryCB->ObjectInformation->FileAttributes,
-                      ulFileAttribs);
+                      ulFileAttribs));
 
         Buffer->FileAttributes = ulFileAttribs;
 
@@ -2059,9 +2059,9 @@ AFSSetDispositionInfo( IN PIRP Irp,
         if( pFcb->Header.NodeTypeCode == AFS_ROOT_FCB)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSSetDispositionInfo Attempt to delete root entry\n");
+                          "AFSSetDispositionInfo Attempt to delete root entry\n"));
 
             try_return( ntStatus = STATUS_CANNOT_DELETE);
         }
@@ -2073,10 +2073,10 @@ AFSSetDispositionInfo( IN PIRP Irp,
         if( BooleanFlagOn( DirectoryCB->ObjectInformation->FileAttributes, FILE_ATTRIBUTE_READONLY))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSSetDispositionInfo Attempt to delete read only entry %wZ\n",
-                          &DirectoryCB->NameInformation.FileName);
+                          &DirectoryCB->NameInformation.FileName));
 
             try_return( ntStatus = STATUS_CANNOT_DELETE);
         }
@@ -2095,11 +2095,11 @@ AFSSetDispositionInfo( IN PIRP Irp,
             if( !NT_SUCCESS( ntStatus))
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSSetDispositionInfo Cannot delete entry %wZ Status %08lX\n",
                               &DirectoryCB->NameInformation.FileName,
-                              ntStatus);
+                              ntStatus));
 
                 try_return( ntStatus);
             }
@@ -2121,11 +2121,11 @@ AFSSetDispositionInfo( IN PIRP Irp,
                 if( pFcb->ObjectInformation->Specific.Directory.ChildOpenHandleCount > 0)
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
                                   "AFSSetDispositionInfo Attempt to delete directory %wZ with open %u handles\n",
                                   &DirectoryCB->NameInformation.FileName,
-                                  pFcb->ObjectInformation->Specific.Directory.ChildOpenHandleCount);
+                                  pFcb->ObjectInformation->Specific.Directory.ChildOpenHandleCount));
 
                     try_return( ntStatus = STATUS_DIRECTORY_NOT_EMPTY);
                 }
@@ -2133,19 +2133,19 @@ AFSSetDispositionInfo( IN PIRP Irp,
                 if( !AFSIsDirectoryEmptyForDelete( pFcb))
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
                                   "AFSSetDispositionInfo Attempt to delete non-empty directory %wZ\n",
-                                  &DirectoryCB->NameInformation.FileName);
+                                  &DirectoryCB->NameInformation.FileName));
 
                     try_return( ntStatus = STATUS_DIRECTORY_NOT_EMPTY);
                 }
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSSetDispositionInfo Setting PENDING_DELETE on DirEntry  %p Name %wZ\n",
                               DirectoryCB,
-                              &DirectoryCB->NameInformation.FileName);
+                              &DirectoryCB->NameInformation.FileName));
 
                 SetFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE);
             }
@@ -2153,11 +2153,11 @@ AFSSetDispositionInfo( IN PIRP Irp,
             {
                 BOOLEAN bMmFlushed;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSSetDispositionInfo Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                               &pFcb->NPFcb->SectionObjectResource,
-                              PsGetCurrentThread());
+                              PsGetCurrentThread()));
 
                 AFSAcquireExcl( &pFcb->NPFcb->SectionObjectResource,
                                 TRUE);
@@ -2178,11 +2178,11 @@ AFSSetDispositionInfo( IN PIRP Irp,
                     // which attempts to open the file which is being deleted.
                     //
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSSetDispositionInfo Setting PENDING_DELETE on DirEntry %p Name %wZ\n",
                                   DirectoryCB,
-                                  &DirectoryCB->NameInformation.FileName);
+                                  &DirectoryCB->NameInformation.FileName));
 
                     SetFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE);
 
@@ -2204,21 +2204,21 @@ AFSSetDispositionInfo( IN PIRP Irp,
                     }
                 }
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSSetDispositionInfo Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                               &pFcb->NPFcb->SectionObjectResource,
-                              PsGetCurrentThread());
+                              PsGetCurrentThread()));
 
                 AFSReleaseResource( &pFcb->NPFcb->SectionObjectResource);
 
                 if ( !bMmFlushed)
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
                                   "AFSSetDispositionInfo Failed to flush image section for delete Entry %wZ\n",
-                                  &DirectoryCB->NameInformation.FileName);
+                                  &DirectoryCB->NameInformation.FileName));
 
                     try_return( ntStatus = STATUS_CANNOT_DELETE);
                 }
@@ -2229,11 +2229,11 @@ AFSSetDispositionInfo( IN PIRP Irp,
                      pFcb->Header.NodeTypeCode == AFS_INVALID_FCB)
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSSetDispositionInfo Setting PENDING_DELETE on DirEntry %p Name %wZ\n",
                               DirectoryCB,
-                              &DirectoryCB->NameInformation.FileName);
+                              &DirectoryCB->NameInformation.FileName));
 
                 SetFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE);
             }
@@ -2309,9 +2309,9 @@ AFSSetFileLinkInfo( IN PIRP Irp)
         if( pSrcFcb->Header.NodeTypeCode != AFS_FILE_FCB)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSSetFileLinkInfo Attempt to non-file (INVALID_PARAMETER)\n");
+                          "AFSSetFileLinkInfo Attempt to non-file (INVALID_PARAMETER)\n"));
 
             try_return( ntStatus = STATUS_INVALID_PARAMETER);
         }
@@ -2334,10 +2334,10 @@ AFSSetFileLinkInfo( IN PIRP Irp)
                 // error.
                 //
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSSetFileLinkInfo Attempt to link %wZ to alternate directory by handle INVALID_PARAMETER\n",
-                              &pSrcCcb->DirectoryCB->NameInformation.FileName);
+                              &pSrcCcb->DirectoryCB->NameInformation.FileName));
 
                 try_return( ntStatus = STATUS_INVALID_PARAMETER);
             }
@@ -2371,11 +2371,11 @@ AFSSetFileLinkInfo( IN PIRP Irp)
                     // will be moved to.  Must obtain the TargetParentObject.
                     //
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
                                   "AFSSetFileLinkInfo Attempt to link  %wZ to alternate directory %wZ (NOT_SAME_DEVICE)\n",
                                   &pSrcCcb->DirectoryCB->NameInformation.FileName,
-                                  &uniFullTargetName);
+                                  &uniFullTargetName));
 
                     try_return( ntStatus = STATUS_NOT_SAME_DEVICE);
                 }
@@ -2433,10 +2433,10 @@ AFSSetFileLinkInfo( IN PIRP Irp)
             if( pTargetParentObject->VolumeCB != pSrcObject->VolumeCB)
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSSetFileLinkInfo Attempt to link to different volume %wZ\n",
-                              &pSrcCcb->DirectoryCB->NameInformation.FileName);
+                              &pSrcCcb->DirectoryCB->NameInformation.FileName));
 
                 try_return( ntStatus = STATUS_NOT_SAME_DEVICE);
             }
@@ -2494,34 +2494,34 @@ AFSSetFileLinkInfo( IN PIRP Irp)
 
             lCount = InterlockedIncrement( &pTargetDirEntry->DirOpenReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSSetFileLinkInfo Increment count on %wZ DE %p Ccb %p Cnt %d\n",
                           &pTargetDirEntry->NameInformation.FileName,
                           pTargetDirEntry,
                           pSrcCcb,
-                          lCount);
+                          lCount));
 
             ASSERT( lCount >= 0);
 
             if( !pFileLinkInfo->ReplaceIfExists)
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSSetFileLinkInfo Attempt to link with target collision %wZ Target %wZ\n",
                               &pSrcCcb->DirectoryCB->NameInformation.FileName,
-                              &pTargetDirEntry->NameInformation.FileName);
+                              &pTargetDirEntry->NameInformation.FileName));
 
                 try_return( ntStatus = STATUS_OBJECT_NAME_COLLISION);
             }
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING | AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING | AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSSetFileLinkInfo Target %wZ exists DE %p Count %d, performing delete of target\n",
                           &pTargetDirEntry->NameInformation.FileName,
                           pTargetDirEntry,
-                          lCount);
+                          lCount));
 
             //
             // Pull the directory entry from the parent
@@ -2535,9 +2535,9 @@ AFSSetFileLinkInfo( IN PIRP Irp)
         }
         else
         {
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSSetFileLinkInfo Target does NOT exist, normal linking\n");
+                          "AFSSetFileLinkInfo Target does NOT exist, normal linking\n"));
         }
 
         //
@@ -2558,12 +2558,12 @@ AFSSetFileLinkInfo( IN PIRP Irp)
             !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSSetFileLinkInfo Failed link of %wZ to target %wZ Status %08lX\n",
                           &pSrcCcb->DirectoryCB->NameInformation.FileName,
                           &uniTargetName,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -2619,13 +2619,13 @@ AFSSetFileLinkInfo( IN PIRP Irp)
 
             lCount = InterlockedDecrement( &pTargetDirEntry->DirOpenReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSSetFileLinkInfo Decrement count on %wZ DE %p Ccb %p Cnt %d\n",
                           &pTargetDirEntry->NameInformation.FileName,
                           pTargetDirEntry,
                           pSrcCcb,
-                          lCount);
+                          lCount));
 
             ASSERT( lCount >= 0);
         }
@@ -2639,13 +2639,13 @@ AFSSetFileLinkInfo( IN PIRP Irp)
 
             lCount = InterlockedDecrement( &pNewTargetDirEntry->DirOpenReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSSetFileLinkInfo Decrement count on %wZ DE %p Ccb %p Cnt %d\n",
                           &pNewTargetDirEntry->NameInformation.FileName,
                           pNewTargetDirEntry,
                           pSrcCcb,
-                          lCount);
+                          lCount));
 
             ASSERT( lCount >= 0);
         }
@@ -2734,9 +2734,9 @@ AFSSetRenameInfo( IN PIRP Irp)
             // Can't rename the root directory
             //
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSSetRenameInfo Attempt to rename root entry\n");
+                          "AFSSetRenameInfo Attempt to rename root entry\n"));
 
             try_return( ntStatus = STATUS_INVALID_PARAMETER);
         }
@@ -2751,10 +2751,10 @@ AFSSetRenameInfo( IN PIRP Irp)
             if( pSrcFcb->ObjectInformation->Specific.Directory.ChildOpenHandleCount > 0)
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSSetRenameInfo Attempt to rename directory with open children %wZ\n",
-                              &pSrcCcb->DirectoryCB->NameInformation.FileName);
+                              &pSrcCcb->DirectoryCB->NameInformation.FileName));
 
                 try_return( ntStatus = STATUS_ACCESS_DENIED);
             }
@@ -2780,9 +2780,9 @@ AFSSetRenameInfo( IN PIRP Irp)
             if ( pRenameInfo->RootDirectory)
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSSetRenameInfo Handle provided but no FileObject ntStatus INVALID_PARAMETER\n");
+                              "AFSSetRenameInfo Handle provided but no FileObject ntStatus INVALID_PARAMETER\n"));
 
                 try_return( ntStatus = STATUS_INVALID_PARAMETER);
             }
@@ -2816,11 +2816,11 @@ AFSSetRenameInfo( IN PIRP Irp)
                     // will be moved to.  Must obtain the TargetParentObject.
                     //
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
                                   "AFSSetRenameInfo Attempt to move %wZ to %wZ -- not yet supported (NOT_SAME_DEVICE)\n",
                                   &pSrcCcb->DirectoryCB->NameInformation.FileName,
-                                  &uniFullTargetName);
+                                  &uniFullTargetName));
 
                     try_return( ntStatus = STATUS_NOT_SAME_DEVICE);
                 }
@@ -2881,10 +2881,10 @@ AFSSetRenameInfo( IN PIRP Irp)
         if( pTargetParentObject->VolumeCB != pSrcObject->VolumeCB)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSSetRenameInfo Attempt to rename directory to different volume %wZ\n",
-                          &pSrcCcb->DirectoryCB->NameInformation.FileName);
+                          &pSrcCcb->DirectoryCB->NameInformation.FileName));
 
             try_return( ntStatus = STATUS_NOT_SAME_DEVICE);
         }
@@ -2951,34 +2951,34 @@ AFSSetRenameInfo( IN PIRP Irp)
 
             lCount = InterlockedIncrement( &pTargetDirEntry->DirOpenReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSSetRenameInfo Increment count on %wZ DE %p Ccb %p Cnt %d\n",
                           &pTargetDirEntry->NameInformation.FileName,
                           pTargetDirEntry,
                           pSrcCcb,
-                          lCount);
+                          lCount));
 
             ASSERT( lCount >= 0);
 
             if( !bReplaceIfExists)
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSSetRenameInfo Attempt to rename directory with target collision %wZ Target %wZ\n",
                               &pSrcCcb->DirectoryCB->NameInformation.FileName,
-                              &pTargetDirEntry->NameInformation.FileName);
+                              &pTargetDirEntry->NameInformation.FileName));
 
                 try_return( ntStatus = STATUS_OBJECT_NAME_COLLISION);
             }
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING | AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING | AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSSetRenameInfo Target %wZ exists DE %p Count %d, performing delete of target\n",
                           &pTargetDirEntry->NameInformation.FileName,
                           pTargetDirEntry,
-                          lCount);
+                          lCount));
 
             //
             // Pull the directory entry from the parent
@@ -2992,9 +2992,9 @@ AFSSetRenameInfo( IN PIRP Irp)
         }
         else
         {
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSSetRenameInfo Target does NOT exist, normal rename\n");
+                          "AFSSetRenameInfo Target does NOT exist, normal rename\n"));
         }
 
         //
@@ -3031,12 +3031,12 @@ AFSSetRenameInfo( IN PIRP Irp)
                                     pSrcCcb->DirectoryCB,
                                     !bCommonParent);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSSetRenameInfo Failed rename of %wZ to target %wZ Status %08lX\n",
                           &pSrcCcb->DirectoryCB->NameInformation.FileName,
                           &uniTargetName,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -3091,12 +3091,12 @@ AFSSetRenameInfo( IN PIRP Irp)
                                     pSrcCcb->DirectoryCB,
                                     !bCommonParent);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSSetRenameInfo Failed update of dir entry %wZ to target %wZ Status %08lX\n",
                           &pSrcCcb->DirectoryCB->NameInformation.FileName,
                           &uniTargetName,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -3177,11 +3177,11 @@ AFSSetRenameInfo( IN PIRP Irp)
             pSrcCcb->DirectoryCB->Type.Data.ShortNameTreeEntry.HashIndex = AFSGenerateCRC( &uniShortName,
                                                                                            TRUE);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSSetRenameInfo Initialized short name hash for %wZ longname %wZ\n",
                           &uniShortName,
-                          &pSrcCcb->DirectoryCB->NameInformation.FileName);
+                          &pSrcCcb->DirectoryCB->NameInformation.FileName));
         }
         else
         {
@@ -3225,20 +3225,20 @@ AFSSetRenameInfo( IN PIRP Irp)
             lCount = AFSObjectInfoIncrement( pTargetParentObject,
                                              AFS_OBJECT_REFERENCE_CHILD);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSSetRenameInfo Increment count on parent object %p Cnt %d\n",
                           pTargetParentObject,
-                          lCount);
+                          lCount));
 
             lCount = AFSObjectInfoDecrement( pSrcParentObject,
                                              AFS_OBJECT_REFERENCE_CHILD);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSSetRenameInfo Decrement count on parent object %p Cnt %d\n",
                           pSrcParentObject,
-                          lCount);
+                          lCount));
 
             pSrcCcb->DirectoryCB->ObjectInformation->ParentFileId = pTargetParentObject->FileId;
 
@@ -3271,11 +3271,11 @@ AFSSetRenameInfo( IN PIRP Irp)
         if( bTargetEntryExists)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSSetRenameInfo Setting DELETE flag in dir entry %p name %wZ\n",
                           pTargetDirEntry,
-                          &pTargetDirEntry->NameInformation.FileName);
+                          &pTargetDirEntry->NameInformation.FileName));
 
             SetFlag( pTargetDirEntry->Flags, AFS_DIR_ENTRY_DELETED);
 
@@ -3295,13 +3295,13 @@ AFSSetRenameInfo( IN PIRP Irp)
 
             lCount = InterlockedDecrement( &pTargetDirEntry->DirOpenReferenceCount); // The count we added above
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSSetRenameInfo Decrement count on %wZ DE %p Ccb %p Cnt %d\n",
                           &pTargetDirEntry->NameInformation.FileName,
                           pTargetDirEntry,
                           pSrcCcb,
-                          lCount);
+                          lCount));
 
             ASSERT( lCount >= 0);
 
@@ -3309,11 +3309,11 @@ AFSSetRenameInfo( IN PIRP Irp)
                 pTargetDirEntry->NameArrayReferenceCount <= 0)
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSSetRenameInfo Deleting dir entry %p name %wZ\n",
                               pTargetDirEntry,
-                              &pTargetDirEntry->NameInformation.FileName);
+                              &pTargetDirEntry->NameInformation.FileName));
 
                 AFSDeleteDirEntry( pTargetParentObject,
                                    pTargetDirEntry);
@@ -3351,20 +3351,20 @@ AFSSetRenameInfo( IN PIRP Irp)
                 // permit the locks to be obtained out of order risking a deadlock.
                 //
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSSetRenameInfo Acquiring Fcb lock %p EXCL %08lX\n",
                               &pTargetFcb->NPFcb->Resource,
-                              PsGetCurrentThread());
+                              PsGetCurrentThread()));
 
                 AFSAcquireExcl( &pTargetFcb->NPFcb->Resource,
                                 TRUE);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSSetRenameInfo Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                               &pTargetFcb->NPFcb->SectionObjectResource,
-                              PsGetCurrentThread());
+                              PsGetCurrentThread()));
 
                 AFSAcquireExcl( &pTargetFcb->NPFcb->SectionObjectResource,
                                 TRUE);
@@ -3377,25 +3377,25 @@ AFSSetRenameInfo( IN PIRP Irp)
                                            TRUE))
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
                                   "AFSSetRenameInfo Failed to delete section for target file %wZ\n",
-                                  &uniTargetName);
+                                  &uniTargetName));
                 }
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSSetRenameInfo Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                               &pTargetFcb->NPFcb->SectionObjectResource,
-                              PsGetCurrentThread());
+                              PsGetCurrentThread()));
 
                 AFSReleaseResource( &pTargetFcb->NPFcb->SectionObjectResource);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSSetRenameInfo Releasing Fcb lock %p EXCL %08lX\n",
                               &pTargetFcb->NPFcb->Resource,
-                              PsGetCurrentThread());
+                              PsGetCurrentThread()));
 
                 AFSReleaseResource( &pTargetFcb->NPFcb->Resource);
             }
@@ -3422,13 +3422,13 @@ try_exit:
 
             lCount = InterlockedDecrement( &pTargetDirEntry->DirOpenReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSSetRenameInfo Decrement2 count on %wZ DE %p Ccb %p Cnt %d\n",
                           &pTargetDirEntry->NameInformation.FileName,
                           pTargetDirEntry,
                           pSrcCcb,
-                          lCount);
+                          lCount));
 
             ASSERT( lCount >= 0);
         }
@@ -3525,11 +3525,11 @@ AFSSetAllocationInfo( IN PIRP Irp,
     if( pFcb->Header.AllocationSize.QuadPart > pBuffer->AllocationSize.QuadPart)
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSSetAllocationInfo Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                       &pFcb->NPFcb->SectionObjectResource,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         AFSAcquireExcl( &pFcb->NPFcb->SectionObjectResource,
                         TRUE);
@@ -3537,11 +3537,11 @@ AFSSetAllocationInfo( IN PIRP Irp,
         bUserMapped = !MmCanFileBeTruncated( pFileObject->SectionObjectPointer,
                                              &pBuffer->AllocationSize);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSSetAllocationInfo Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                       &pFcb->NPFcb->SectionObjectResource,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         AFSReleaseResource( &pFcb->NPFcb->SectionObjectResource);
 
@@ -3560,11 +3560,11 @@ AFSSetAllocationInfo( IN PIRP Irp,
             // If this is a truncation we need to grab the paging IO resource.
             //
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSSetAllocationInfo Acquiring Fcb PagingIo lock %p EXCL %08lX\n",
                           &pFcb->NPFcb->PagingResource,
-                          PsGetCurrentThread());
+                          PsGetCurrentThread()));
 
             AFSAcquireExcl( &pFcb->NPFcb->PagingResource,
                             TRUE);
@@ -3609,11 +3609,11 @@ AFSSetAllocationInfo( IN PIRP Irp,
         // Tell Cc if allocation is increased.
         //
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSSetAllocationInfo Acquiring Fcb PagingIo lock %p EXCL %08lX\n",
                       &pFcb->NPFcb->PagingResource,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         AFSAcquireExcl( &pFcb->NPFcb->PagingResource,
                         TRUE);
@@ -3731,11 +3731,11 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
         if( pBuffer->EndOfFile.QuadPart < pFcb->Header.FileSize.QuadPart)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSSetEndOfFileInfo Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                           &pFcb->NPFcb->SectionObjectResource,
-                          PsGetCurrentThread());
+                          PsGetCurrentThread()));
 
             AFSAcquireExcl( &pFcb->NPFcb->SectionObjectResource,
                             TRUE);
@@ -3743,11 +3743,11 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
             bUserMapped = !MmCanFileBeTruncated( pFileObject->SectionObjectPointer,
                                                  &pBuffer->EndOfFile);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSSetEndOfFileInfo Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                           &pFcb->NPFcb->SectionObjectResource,
-                          PsGetCurrentThread());
+                          PsGetCurrentThread()));
 
             AFSReleaseResource( &pFcb->NPFcb->SectionObjectResource);
 
@@ -3764,11 +3764,11 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
                 // If this is a truncation we need to grab the paging
                 // IO resource.
                 //
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSSetAllocationInfo Acquiring Fcb PagingIo lock %p EXCL %08lX\n",
                               &pFcb->NPFcb->PagingResource,
-                              PsGetCurrentThread());
+                              PsGetCurrentThread()));
 
                 AFSAcquireExcl( &pFcb->NPFcb->PagingResource,
                                 TRUE);
@@ -3813,11 +3813,11 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
             // If this is a truncation we need to grab the paging
             // IO resource.
             //
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSSetAllocationInfo Acquiring Fcb PagingIo lock %p EXCL %08lX\n",
                           &pFcb->NPFcb->PagingResource,
-                          PsGetCurrentThread());
+                          PsGetCurrentThread()));
 
             AFSAcquireExcl( &pFcb->NPFcb->PagingResource,
                             TRUE);
@@ -3923,11 +3923,11 @@ AFSProcessShareSetInfo( IN IRP *Irp,
     {
         ulFileInformationClass = pIrpSp->Parameters.SetFile.FileInformationClass;
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_PIPE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_PIPE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessShareSetInfo On pipe %wZ Class %08lX\n",
                       &Ccb->DirectoryCB->NameInformation.FileName,
-                      ulFileInformationClass);
+                      ulFileInformationClass));
 
         pPipeInfo = AFSLockSystemBuffer( Irp,
                                          pIrpSp->Parameters.SetFile.Length);
@@ -3935,10 +3935,10 @@ AFSProcessShareSetInfo( IN IRP *Irp,
         if( pPipeInfo == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_PIPE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_PIPE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSProcessShareSetInfo Failed to lock buffer on pipe %wZ\n",
-                          &Ccb->DirectoryCB->NameInformation.FileName);
+                          &Ccb->DirectoryCB->NameInformation.FileName));
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -3955,20 +3955,20 @@ AFSProcessShareSetInfo( IN IRP *Irp,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_PIPE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_PIPE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSProcessShareSetInfo Failed to send request to service on pipe %wZ Status %08lX\n",
                           &Ccb->DirectoryCB->NameInformation.FileName,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_PIPE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_PIPE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessShareSetInfo Completed request on pipe %wZ Class %08lX\n",
                       &Ccb->DirectoryCB->NameInformation.FileName,
-                      ulFileInformationClass);
+                      ulFileInformationClass));
 
 try_exit:
 
@@ -3995,11 +3995,11 @@ AFSProcessShareQueryInfo( IN IRP *Irp,
 
         ulFileInformationClass = pIrpSp->Parameters.QueryFile.FileInformationClass;
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_PIPE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_PIPE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessShareQueryInfo On pipe %wZ Class %08lX\n",
                       &Ccb->DirectoryCB->NameInformation.FileName,
-                      ulFileInformationClass);
+                      ulFileInformationClass));
 
         pPipeInfo = AFSLockSystemBuffer( Irp,
                                          pIrpSp->Parameters.QueryFile.Length);
@@ -4007,10 +4007,10 @@ AFSProcessShareQueryInfo( IN IRP *Irp,
         if( pPipeInfo == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_PIPE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_PIPE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSProcessShareQueryInfo Failed to lock buffer on pipe %wZ\n",
-                          &Ccb->DirectoryCB->NameInformation.FileName);
+                          &Ccb->DirectoryCB->NameInformation.FileName));
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -4028,20 +4028,20 @@ AFSProcessShareQueryInfo( IN IRP *Irp,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_PIPE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_PIPE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSProcessShareQueryInfo Failed to send request to service on pipe %wZ Status %08lX\n",
                           &Ccb->DirectoryCB->NameInformation.FileName,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_PIPE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_PIPE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessShareQueryInfo Completed request on pipe %wZ Class %08lX\n",
                       &Ccb->DirectoryCB->NameInformation.FileName,
-                      ulFileInformationClass);
+                      ulFileInformationClass));
 
 try_exit:
 
@@ -4075,9 +4075,9 @@ AFSProcessPIOCtlQueryInfo( IN IRP *Irp,
             case FileBasicInformation:
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSProcessPIOCtlQueryInfo (FileBasicInformation)\n");
+                              "AFSProcessPIOCtlQueryInfo (FileBasicInformation)\n"));
 
                 if ( *Length >= sizeof( FILE_BASIC_INFORMATION))
                 {
@@ -4102,9 +4102,9 @@ AFSProcessPIOCtlQueryInfo( IN IRP *Irp,
             case FileStandardInformation:
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSProcessPIOCtlQueryInfo (FileStandardInformation)\n");
+                              "AFSProcessPIOCtlQueryInfo (FileStandardInformation)\n"));
 
                 if ( *Length >= sizeof( FILE_STANDARD_INFORMATION))
                 {
@@ -4137,9 +4137,9 @@ AFSProcessPIOCtlQueryInfo( IN IRP *Irp,
                 PFILE_NAME_INFORMATION pNameInfo = (PFILE_NAME_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
                 UNICODE_STRING uniName;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSProcessPIOCtlQueryInfo (FileNameInformation)\n");
+                              "AFSProcessPIOCtlQueryInfo (FileNameInformation)\n"));
 
                 pFcb = (AFSFcb *)pIrpSp->FileObject->FsContext;
                 pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
@@ -4217,10 +4217,10 @@ AFSProcessPIOCtlQueryInfo( IN IRP *Irp,
                             uniName.Buffer = pNameInfo->FileName;
                         }
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
                                       "AFSProcessPIOCtlQueryInfo (FileNameInformation) Returning %wZ\n",
-                                      &uniName);
+                                      &uniName));
                     }
                 }
 
@@ -4232,9 +4232,9 @@ AFSProcessPIOCtlQueryInfo( IN IRP *Irp,
 
                 PFILE_INTERNAL_INFORMATION pInternalInfo = (PFILE_INTERNAL_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSProcessPIOCtlQueryInfo (FileInternalInformation)\n");
+                              "AFSProcessPIOCtlQueryInfo (FileInternalInformation)\n"));
 
                 if( *Length >= sizeof( FILE_INTERNAL_INFORMATION))
                 {
@@ -4258,9 +4258,9 @@ AFSProcessPIOCtlQueryInfo( IN IRP *Irp,
             {
                 ntStatus = STATUS_INVALID_PARAMETER;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
                               AFS_TRACE_LEVEL_WARNING,
-                              "AFSProcessPIOCtlQueryInfo (FileAllInformation) Not Implemented\n");
+                              "AFSProcessPIOCtlQueryInfo (FileAllInformation) Not Implemented\n"));
 
                 break;
             }
@@ -4269,9 +4269,9 @@ AFSProcessPIOCtlQueryInfo( IN IRP *Irp,
             {
                 ntStatus = STATUS_INVALID_PARAMETER;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
                               AFS_TRACE_LEVEL_WARNING,
-                              "AFSProcessPIOCtlQueryInfo (FileEaInformation) Not Implemented\n");
+                              "AFSProcessPIOCtlQueryInfo (FileEaInformation) Not Implemented\n"));
 
                 break;
             }
@@ -4280,9 +4280,9 @@ AFSProcessPIOCtlQueryInfo( IN IRP *Irp,
             {
                 ntStatus = STATUS_INVALID_PARAMETER;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
                               AFS_TRACE_LEVEL_WARNING,
-                              "AFSProcessPIOCtlQueryInfo (FilePositionInformation) Not Implemented\n");
+                              "AFSProcessPIOCtlQueryInfo (FilePositionInformation) Not Implemented\n"));
 
                 break;
             }
@@ -4291,9 +4291,9 @@ AFSProcessPIOCtlQueryInfo( IN IRP *Irp,
             {
                 ntStatus = STATUS_INVALID_PARAMETER;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
                               AFS_TRACE_LEVEL_WARNING,
-                              "AFSProcessPIOCtlQueryInfo (FileAlternateNameInformation) Not Implemented\n");
+                              "AFSProcessPIOCtlQueryInfo (FileAlternateNameInformation) Not Implemented\n"));
 
                 break;
             }
@@ -4302,9 +4302,9 @@ AFSProcessPIOCtlQueryInfo( IN IRP *Irp,
             {
                 ntStatus = STATUS_INVALID_PARAMETER;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
                               AFS_TRACE_LEVEL_WARNING,
-                              "AFSProcessPIOCtlQueryInfo (FileNetworkOpenInformation) Not Implemented\n");
+                              "AFSProcessPIOCtlQueryInfo (FileNetworkOpenInformation) Not Implemented\n"));
 
                 break;
             }
@@ -4313,9 +4313,9 @@ AFSProcessPIOCtlQueryInfo( IN IRP *Irp,
             {
                 ntStatus = STATUS_INVALID_PARAMETER;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
                               AFS_TRACE_LEVEL_WARNING,
-                              "AFSProcessPIOCtlQueryInfo (FileStreamInformation) Not Implemented\n");
+                              "AFSProcessPIOCtlQueryInfo (FileStreamInformation) Not Implemented\n"));
 
                 break;
             }
@@ -4324,9 +4324,9 @@ AFSProcessPIOCtlQueryInfo( IN IRP *Irp,
             {
                 ntStatus = STATUS_INVALID_PARAMETER;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
                               AFS_TRACE_LEVEL_WARNING,
-                              "AFSProcessPIOCtlQueryInfo (FileAttributeTagInformation) Not Implemented\n");
+                              "AFSProcessPIOCtlQueryInfo (FileAttributeTagInformation) Not Implemented\n"));
 
                 break;
             }
@@ -4335,9 +4335,9 @@ AFSProcessPIOCtlQueryInfo( IN IRP *Irp,
             {
                 ntStatus = STATUS_INVALID_PARAMETER;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
                               AFS_TRACE_LEVEL_WARNING,
-                              "AFSProcessPIOCtlQueryInfo (FileRemoteProtocolInformation) Not Implemented\n");
+                              "AFSProcessPIOCtlQueryInfo (FileRemoteProtocolInformation) Not Implemented\n"));
 
                 break;
             }
@@ -4346,9 +4346,9 @@ AFSProcessPIOCtlQueryInfo( IN IRP *Irp,
             {
                 ntStatus = STATUS_INVALID_PARAMETER;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
                               AFS_TRACE_LEVEL_WARNING,
-                              "AFSProcessPIOCtlQueryInfo (FileNetworkPhysicalNameInformation) Not Implemented\n");
+                              "AFSProcessPIOCtlQueryInfo (FileNetworkPhysicalNameInformation) Not Implemented\n"));
 
                 break;
             }
@@ -4357,20 +4357,20 @@ AFSProcessPIOCtlQueryInfo( IN IRP *Irp,
             {
                 ntStatus = STATUS_INVALID_PARAMETER;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
                               AFS_TRACE_LEVEL_WARNING,
                               "AFSProcessPIOCtlQueryInfo Not handling request %08lX\n",
-                              ulFileInformationClass);
+                              ulFileInformationClass));
 
                 break;
             }
         }
     }
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
+    AFSDbgTrace(( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSProcessPIOCtlQueryInfo ntStatus %08lX\n",
-                  ntStatus);
+                  ntStatus));
 
     return ntStatus;
 }

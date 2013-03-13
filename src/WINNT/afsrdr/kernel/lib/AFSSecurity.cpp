@@ -52,10 +52,10 @@ AFSSetSecurity( IN PDEVICE_OBJECT LibDeviceObject,
     __try
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_ERROR,
                       "AFSSetSecurity Entry for FO %p\n",
-                      pIrpSp->FileObject);
+                      pIrpSp->FileObject));
 
         AFSCompleteRequest( Irp,
                             ntStatus);
@@ -63,9 +63,9 @@ AFSSetSecurity( IN PDEVICE_OBJECT LibDeviceObject,
     __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
-                      "EXCEPTION - AFSSetSecurity\n");
+                      "EXCEPTION - AFSSetSecurity\n"));
 
         AFSDumpTraceFilesFnc();
     }
@@ -102,20 +102,20 @@ AFSQuerySecurity( IN PDEVICE_OBJECT LibDeviceObject,
 
         pCcb = (AFSCcb *)pFileObject->FsContext2;
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSQuerySecurity (%p) Entry for FO %p SI %08lX\n",
                       Irp,
                       pFileObject,
-                      SecurityInformation);
+                      SecurityInformation));
 
         if( pFcb == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSQuerySecurity Attempted access (%p) when pFcb == NULL\n",
-                          Irp);
+                          Irp));
 
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
         }
@@ -123,10 +123,10 @@ AFSQuerySecurity( IN PDEVICE_OBJECT LibDeviceObject,
         if ( SecurityInformation & SACL_SECURITY_INFORMATION)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSQuerySecurity Attempted access (%p) SACL\n",
-                          Irp);
+                          Irp));
 
             try_return( ntStatus = STATUS_ACCESS_DENIED);
         }
@@ -134,9 +134,9 @@ AFSQuerySecurity( IN PDEVICE_OBJECT LibDeviceObject,
         if( AFSDefaultSD == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSQuerySecurity No default SD allocated\n");
+                          "AFSQuerySecurity No default SD allocated\n"));
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -147,9 +147,9 @@ AFSQuerySecurity( IN PDEVICE_OBJECT LibDeviceObject,
             Irp->UserBuffer == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSQuerySecurity Buffer too small\n");
+                          "AFSQuerySecurity Buffer too small\n"));
 
             Irp->IoStatus.Information = (ULONG_PTR)ulSDLength;
 
@@ -163,9 +163,9 @@ AFSQuerySecurity( IN PDEVICE_OBJECT LibDeviceObject,
         if( pLockedUserBuffer == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSQuerySecurity Failed to lock user buffer\n");
+                          "AFSQuerySecurity Failed to lock user buffer\n"));
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -187,9 +187,9 @@ try_exit:
     __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
-                      "EXCEPTION - AFSQuerySecurity\n");
+                      "EXCEPTION - AFSQuerySecurity\n"));
 
         AFSDumpTraceFilesFnc();
     }

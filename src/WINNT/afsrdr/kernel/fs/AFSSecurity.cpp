@@ -53,10 +53,10 @@ AFSSetSecurity( IN PDEVICE_OBJECT DeviceObject,
     __try
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSSetSecurity Entry for FO %p\n",
-                      pIrpSp->FileObject);
+                      pIrpSp->FileObject));
 
         if( DeviceObject == AFSDeviceObject)
         {
@@ -123,9 +123,9 @@ try_exit:
     __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
-                      "EXCEPTION - AFSSetSecurity\n");
+                      "EXCEPTION - AFSSetSecurity\n"));
 
         AFSDumpTraceFilesFnc();
     }
@@ -148,10 +148,10 @@ AFSQuerySecurity( IN PDEVICE_OBJECT DeviceObject,
     __try
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSQuerySecurity Entry for FO %p\n",
-                      pIrpSp->FileObject);
+                      pIrpSp->FileObject));
 
         if( DeviceObject == AFSDeviceObject)
         {
@@ -218,9 +218,9 @@ try_exit:
     __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
-                      "EXCEPTION - AFSQuerySecurity\n");
+                      "EXCEPTION - AFSQuerySecurity\n"));
 
         AFSDumpTraceFilesFnc();
     }

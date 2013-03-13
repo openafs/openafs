@@ -108,11 +108,11 @@ AFSProcessRequest( IN ULONG RequestType,
         // Grab the pool resource and check the state
         //
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessRequest Acquiring IrpPoolLock lock %p EXCL %08lX\n",
                       &pCommSrvc->IrpPoolLock,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         AFSAcquireExcl( &pCommSrvc->IrpPoolLock,
                         TRUE);
@@ -265,10 +265,10 @@ AFSProcessRequest( IN ULONG RequestType,
 
         if( AFSIsNoPAGAuthGroup( &pPoolEntry->AuthGroup))
         {
-            AFSDbgLogMsg( 0,
+            AFSDbgTrace(( 0,
                           0,
                           "AFSProcessRequest NoPAG Auth Group %08lX\n",
-                          PsGetCurrentThread());
+                          PsGetCurrentThread()));
         }
 
         //
@@ -468,6 +468,7 @@ AFSCheckIoctlPermissions( IN ULONG ControlCode)
         //
 
         case IOCTL_AFS_INITIALIZE_LIBRARY_DEVICE:
+        case IOCTL_AFS_CONFIG_LIBRARY_TRACE:
 
             //
             // Only the kernel can issue this
@@ -986,20 +987,20 @@ AFSInitIrpPool()
         // locks. We also do this in the tear down of the pool
         //
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitIrpPool Acquiring IrpPoolLock lock %p EXCL %08lX\n",
                       &pCommSrvc->IrpPoolLock,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         AFSAcquireExcl( &pCommSrvc->IrpPoolLock,
                           TRUE);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitIrpPool Acquiring ResultPoolLock lock %p EXCL %08lX\n",
                       &pCommSrvc->ResultPoolLock,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         AFSAcquireExcl( &pCommSrvc->ResultPoolLock,
                           TRUE);
@@ -1075,20 +1076,20 @@ AFSCleanupIrpPool()
         // Irp pool then the result pool lock
         //
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSCleanupIrpPool Acquiring IrpPoolLock lock %p EXCL %08lX\n",
                       &pCommSrvc->IrpPoolLock,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         AFSAcquireExcl( &pCommSrvc->IrpPoolLock,
                         TRUE);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSCleanupIrpPool Acquiring ResultPoolLock lock %p EXCL %08lX\n",
                       &pCommSrvc->ResultPoolLock,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         AFSAcquireExcl( &pCommSrvc->ResultPoolLock,
                         TRUE);
@@ -1234,11 +1235,11 @@ AFSInsertRequest( IN AFSCommSrvcCB *CommSrvc,
     __Enter
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInsertRequest Acquiring IrpPoolLock lock %p EXCL %08lX\n",
                       &CommSrvc->IrpPoolLock,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         AFSAcquireExcl( &CommSrvc->IrpPoolLock,
                         TRUE);
@@ -1309,11 +1310,11 @@ AFSProcessIrpRequest( IN PIRP Irp)
 
         pRequest = (AFSCommRequest *)Irp->AssociatedIrp.SystemBuffer;
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessIrpRequest Acquiring IrpPoolLock lock %p EXCL %08lX\n",
                       &pCommSrvc->IrpPoolLock,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         AFSAcquireExcl( &pCommSrvc->IrpPoolLock,
                         TRUE);
@@ -1402,11 +1403,11 @@ AFSProcessIrpRequest( IN PIRP Irp)
             // Grab the lock on the request pool
             //
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSProcessIrpRequest Acquiring IrpPoolLock (WAIT) lock %p EXCL %08lX\n",
                           &pCommSrvc->IrpPoolLock,
-                          PsGetCurrentThread());
+                          PsGetCurrentThread()));
 
             AFSAcquireExcl( &pCommSrvc->IrpPoolLock,
                             TRUE);
@@ -1622,11 +1623,11 @@ AFSProcessIrpRequest( IN PIRP Irp)
                     pEntry->fLink = NULL;
                     pEntry->bLink = NULL;
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSProcessIrpRequest Acquiring ResultPoolLock lock %p EXCL %08lX\n",
                                   &pCommSrvc->ResultPoolLock,
-                                  PsGetCurrentThread());
+                                  PsGetCurrentThread()));
 
                     AFSAcquireExcl( &pCommSrvc->ResultPoolLock,
                                     TRUE);
@@ -1702,11 +1703,11 @@ AFSProcessIrpResult( IN PIRP Irp)
         // Go look for our entry
         //
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessIrpResult Acquiring ResultPoolLock lock %p EXCL %08lX\n",
                       &pCommSrvc->ResultPoolLock,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         AFSAcquireExcl( &pCommSrvc->ResultPoolLock,
                           TRUE);

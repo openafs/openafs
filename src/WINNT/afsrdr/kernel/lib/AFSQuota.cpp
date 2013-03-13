@@ -52,10 +52,10 @@ AFSQueryQuota( IN PDEVICE_OBJECT LibDeviceObject,
     __try
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_ERROR,
                       "AFSQueryQuota Entry for FO %p\n",
-                      pIrpSp->FileObject);
+                      pIrpSp->FileObject));
 
         AFSCompleteRequest( Irp,
                             ntStatus);
@@ -64,9 +64,9 @@ AFSQueryQuota( IN PDEVICE_OBJECT LibDeviceObject,
     __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
-                      "EXCEPTION - AFSQueryQuota\n");
+                      "EXCEPTION - AFSQueryQuota\n"));
 
         AFSDumpTraceFilesFnc();
     }
@@ -88,10 +88,10 @@ AFSSetQuota( IN PDEVICE_OBJECT DeviceObject,
     __try
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_ERROR,
                       "AFSSetQuota Entry for FO %p\n",
-                      pIrpSp->FileObject);
+                      pIrpSp->FileObject));
 
         AFSCompleteRequest( Irp,
                             ntStatus);
@@ -99,9 +99,9 @@ AFSSetQuota( IN PDEVICE_OBJECT DeviceObject,
     __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
-                      "EXCEPTION - AFSSetQuota\n");
+                      "EXCEPTION - AFSSetQuota\n"));
 
         AFSDumpTraceFilesFnc();
     }

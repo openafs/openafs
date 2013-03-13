@@ -82,9 +82,9 @@ AFSShutdown( IN PDEVICE_OBJECT DeviceObject,
     __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
-                      "EXCEPTION - AFSShutdown\n");
+                      "EXCEPTION - AFSShutdown\n"));
 
         AFSDumpTraceFilesFnc();
     }

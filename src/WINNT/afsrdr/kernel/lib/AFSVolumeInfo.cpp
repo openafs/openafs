@@ -65,9 +65,9 @@ AFSQueryVolumeInfo( IN PDEVICE_OBJECT LibDeviceObject,
         if( pFileObject == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSQueryVolumeInfo Failing request with NULL FileObject\n");
+                          "AFSQueryVolumeInfo Failing request with NULL FileObject\n"));
 
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
         }
@@ -77,9 +77,9 @@ AFSQueryVolumeInfo( IN PDEVICE_OBJECT LibDeviceObject,
         if( pFcb == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSQueryVolumeInfo Failing request with NULL Fcb\n");
+                          "AFSQueryVolumeInfo Failing request with NULL Fcb\n"));
 
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
         }
@@ -89,9 +89,9 @@ AFSQueryVolumeInfo( IN PDEVICE_OBJECT LibDeviceObject,
         if( pObjectInfo == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSQueryVolumeInfo Failing request with NULL ObjectInformation\n");
+                          "AFSQueryVolumeInfo Failing request with NULL ObjectInformation\n"));
 
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
         }
@@ -114,27 +114,27 @@ AFSQueryVolumeInfo( IN PDEVICE_OBJECT LibDeviceObject,
         if( pFcb->Header.NodeTypeCode == AFS_IOCTL_FCB)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSQueryVolumeInfo Failing request against PIOCtl Fcb\n");
+                          "AFSQueryVolumeInfo Failing request against PIOCtl Fcb\n"));
 
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
         }
         else if( pFcb->Header.NodeTypeCode == AFS_SPECIAL_SHARE_FCB)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSQueryVolumeInfo Failing request against SpecialShare Fcb\n");
+                          "AFSQueryVolumeInfo Failing request against SpecialShare Fcb\n"));
 
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
         }
         else if( pFcb->Header.NodeTypeCode == AFS_INVALID_FCB)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSQueryVolumeInfo Failing request against SpecialShare Fcb\n");
+                          "AFSQueryVolumeInfo Failing request against SpecialShare Fcb\n"));
 
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
         }
@@ -198,10 +198,10 @@ AFSQueryVolumeInfo( IN PDEVICE_OBJECT LibDeviceObject,
 
             default:
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_WARNING,
                               "AFSQueryVolumeInfo Invalid class %d\n",
-                              FsInformationClass);
+                              FsInformationClass));
 
                 ntStatus = STATUS_INVALID_PARAMETER;
 
@@ -229,14 +229,14 @@ try_exit:
     __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
                       "EXCEPTION - AFSQueryVolumeInfo FO %p InfoClass %d FCB %p ObjectInfo %p VolCB %p\n",
                       pFileObject,
                       FsInformationClass,
                       pFcb,
                       pObjectInfo,
-                      pVolumeCB);
+                      pVolumeCB));
 
         AFSDumpTraceFilesFnc();
     }
@@ -258,9 +258,10 @@ AFSSetVolumeInfo( IN PDEVICE_OBJECT DeviceObject,
     __try
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_WARNING,
-                      "AFSSetVolumeInfo Entry for FO %p\n", pIrpSp->FileObject);
+                      "AFSSetVolumeInfo Entry for FO %p\n",
+                      pIrpSp->FileObject));
 
         AFSCompleteRequest( Irp,
                             ntStatus);
@@ -269,9 +270,9 @@ AFSSetVolumeInfo( IN PDEVICE_OBJECT DeviceObject,
     __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
-                      "EXCEPTION - AFSSetVolumeInfo\n");
+                      "EXCEPTION - AFSSetVolumeInfo\n"));
 
         AFSDumpTraceFilesFnc();
     }

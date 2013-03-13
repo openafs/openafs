@@ -80,9 +80,9 @@ try_exit:
     __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
-                      "EXCEPTION - AFSCreate\n");
+                      "EXCEPTION - AFSCreate\n"));
 
         ntStatus = STATUS_ACCESS_DENIED;
 
@@ -129,21 +129,21 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
             RtlStringFromGUID( *pAuthGroup,
                                &uniGUIDString);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s (%p) Located AuthGroup %wZ after validation\n",
                           __FUNCTION__,
                           Irp,
-                          &uniGUIDString);
+                          &uniGUIDString));
 
         }
         else
         {
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s (%p) Failed to locate AuthGroup\n",
                           __FUNCTION__,
-                          Irp);
+                          Irp));
         }
 
         //
@@ -154,10 +154,10 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
             pFileObject->FileName.Buffer == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSCommonCreate (%p) Processing volume open request\n",
-                          Irp);
+                          Irp));
 
             ntStatus = AFSOpenRedirector( Irp);
 
@@ -200,14 +200,14 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
 try_exit:
 
         if ( pFileObject) {
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s (%p) File \"%wZ\" AuthGroup '%wZ' ntStatus %08lX\n",
                           __FUNCTION__,
                           Irp,
                           &pFileObject->FileName,
                           &uniGUIDString,
-                          ntStatus);
+                          ntStatus));
         }
 
         if( uniGUIDString.Buffer != NULL)

@@ -71,10 +71,10 @@ AFSInitRDRDevice()
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_INIT_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_INIT_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSInitRDRDevice IoCreateDevice failure %08lX\n",
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -117,10 +117,10 @@ AFSInitRDRDevice()
         if ( !NT_SUCCESS(ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_INIT_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_INIT_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSInitRDRDevice AFSInitRdrFcb failure %08lX\n",
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -151,10 +151,10 @@ AFSInitRDRDevice()
                                                     0);
             if ( !NT_SUCCESS( ntStatus))
             {
-                AFSDbgLogMsg( AFS_SUBSYSTEM_INIT_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_INIT_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSInitRDRDevice FsRtlRegisterUncProvider failure %08lX\n",
-                              ntStatus);
+                              ntStatus));
             }
         }
         else
@@ -171,10 +171,10 @@ AFSInitRDRDevice()
             }
             else
             {
-                AFSDbgLogMsg( AFS_SUBSYSTEM_INIT_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_INIT_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSInitRDRDevice FsRtlRegisterUncProvider failure %08lX\n",
-                              ntStatus);
+                              ntStatus));
             }
         }
 
@@ -372,10 +372,10 @@ AFSInitializeRedirector( IN AFSRedirectorInitInfo *RedirInitInfo)
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_INIT_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_INIT_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSInitializeRedirector AFSLoadLibrary failure %08lX\n",
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -404,9 +404,9 @@ AFSInitializeRedirector( IN AFSRedirectorInitInfo *RedirInitInfo)
         if( AFSDumpFileLocation.Buffer == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_INIT_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_INIT_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSInitializeRedirector AFS_GENERIC_MEMORY_23_TAG allocation error\n");
+                          "AFSInitializeRedirector AFS_GENERIC_MEMORY_23_TAG allocation error\n"));
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -584,10 +584,10 @@ AFSInitializeRedirector( IN AFSRedirectorInitInfo *RedirInitInfo)
                 RedirInitInfo->CacheFileNameLength == 0)
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_INIT_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_INIT_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSInitializeRedirector Unable to initialize cache file %08lX\n",
-                              ntStatus);
+                              ntStatus));
 
                 try_return( ntStatus);
             }
@@ -598,9 +598,9 @@ AFSInitializeRedirector( IN AFSRedirectorInitInfo *RedirInitInfo)
                 if( RedirInitInfo->CacheFileNameLength == 0)
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_INIT_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_INIT_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
-                                  "AFSInitializeRedirector CacheMdl == NULL\n");
+                                  "AFSInitializeRedirector CacheMdl == NULL\n"));
 
                     try_return( ntStatus = STATUS_INVALID_PARAMETER);
                 }
@@ -619,9 +619,9 @@ AFSInitializeRedirector( IN AFSRedirectorInitInfo *RedirInitInfo)
                 if( pDevExt->Specific.RDR.CacheFile.Buffer == NULL)
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_INIT_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_INIT_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
-                                  "AFSInitializeRedirector AFS_GENERIC_MEMORY_24_TAG allocation failure\n");
+                                  "AFSInitializeRedirector AFS_GENERIC_MEMORY_24_TAG allocation failure\n"));
 
                     try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
                 }
@@ -654,10 +654,10 @@ AFSInitializeRedirector( IN AFSRedirectorInitInfo *RedirInitInfo)
                 if( !NT_SUCCESS( ntStatus))
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_INIT_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_INIT_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
                                   "AFSInitializeRedirector ZwOpenFile failure %08lX\n",
-                                  ntStatus);
+                                  ntStatus));
 
                     try_return( ntStatus);
                 }
@@ -676,10 +676,10 @@ AFSInitializeRedirector( IN AFSRedirectorInitInfo *RedirInitInfo)
                 if( !NT_SUCCESS( ntStatus))
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_INIT_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_INIT_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
                                   "AFSInitializeRedirector ObReferenceObjectByHandle failure %08lX\n",
-                                  ntStatus);
+                                  ntStatus));
 
                     try_return( ntStatus);
                 }
@@ -699,10 +699,10 @@ AFSInitializeRedirector( IN AFSRedirectorInitInfo *RedirInitInfo)
 
         if ( !NT_SUCCESS( ntStatus))
         {
-            AFSDbgLogMsg( AFS_SUBSYSTEM_INIT_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_INIT_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSInitializeRedirector AFSInitializeLibrary failure %08lX\n",
-                          ntStatus);
+                          ntStatus));
         }
 
 try_exit:
@@ -885,9 +885,9 @@ AFSInitRdrFcb( OUT AFSFcb **RdrFcb)
         if( pFcb == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSInitRdrFcb Failed to allocate the root fcb\n");
+                          "AFSInitRdrFcb Failed to allocate the root fcb\n"));
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -905,9 +905,9 @@ AFSInitRdrFcb( OUT AFSFcb **RdrFcb)
         if( pNPFcb == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSInitRdrFcb Failed to allocate the non-paged fcb\n");
+                          "AFSInitRdrFcb Failed to allocate the non-paged fcb\n"));
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -929,11 +929,11 @@ AFSInitRdrFcb( OUT AFSFcb **RdrFcb)
 
         ExInitializeResourceLite( &pNPFcb->Resource);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitRootFcb Acquiring Fcb lock %p EXCL %08lX\n",
                       &pNPFcb->Resource,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         ExInitializeResourceLite( &pNPFcb->PagingResource);
 

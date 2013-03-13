@@ -96,9 +96,9 @@ try_exit:
     __except( AFSExceptionFilter( __FUNCTION__, (ntStatus = GetExceptionCode()), GetExceptionInformation()))
     {
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
-                      "EXCEPTION - AFSLockControl\n");
+                      "EXCEPTION - AFSLockControl\n"));
 
         AFSDumpTraceFilesFnc();
 

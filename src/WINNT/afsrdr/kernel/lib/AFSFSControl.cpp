@@ -79,9 +79,9 @@ AFSFSControl( IN PDEVICE_OBJECT LibDeviceObject,
     __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
-                      "EXCEPTION - AFSFSControl\n");
+                      "EXCEPTION - AFSFSControl\n"));
 
         AFSDumpTraceFilesFnc();
     }
@@ -175,9 +175,9 @@ AFSProcessUserFsRequest( IN PIRP Irp)
             pCcb->DirectoryCB == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE_2,
-                          "AFSProcessUserFsRequest Invalid Fcb\n");
+                          "AFSProcessUserFsRequest Invalid Fcb\n"));
 
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
         }
@@ -226,9 +226,9 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 
             case FSCTL_LOCK_VOLUME:
             {
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSProcessUserFsRequest Processing FSCTL_LOCK_VOLUME request\n");
+                              "AFSProcessUserFsRequest Processing FSCTL_LOCK_VOLUME request\n"));
 
                 ntStatus = STATUS_NOT_IMPLEMENTED;
 
@@ -237,9 +237,9 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 
             case FSCTL_UNLOCK_VOLUME:
             {
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSProcessUserFsRequest Processing FSCTL_UNLOCK_VOLUME request\n");
+                              "AFSProcessUserFsRequest Processing FSCTL_UNLOCK_VOLUME request\n"));
 
                 ntStatus = STATUS_NOT_IMPLEMENTED;
 
@@ -248,9 +248,9 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 
             case FSCTL_DISMOUNT_VOLUME:
             {
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSProcessUserFsRequest Processing FSCTL_DISMOUNT_VOLUME request\n");
+                              "AFSProcessUserFsRequest Processing FSCTL_DISMOUNT_VOLUME request\n"));
 
                 ntStatus = STATUS_NOT_IMPLEMENTED;
 
@@ -259,9 +259,9 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 
             case FSCTL_MARK_VOLUME_DIRTY:
             {
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSProcessUserFsRequest Processing FSCTL_MARK_VOLUME_DIRTY request\n");
+                              "AFSProcessUserFsRequest Processing FSCTL_MARK_VOLUME_DIRTY request\n"));
 
                 ntStatus = STATUS_NOT_IMPLEMENTED;
 
@@ -270,9 +270,9 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 
             case FSCTL_IS_VOLUME_DIRTY:
             {
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSProcessUserFsRequest Processing FSCTL_IS_VOLUME_DIRTY request\n");
+                              "AFSProcessUserFsRequest Processing FSCTL_IS_VOLUME_DIRTY request\n"));
 
                 ntStatus = STATUS_NOT_IMPLEMENTED;
 
@@ -281,9 +281,9 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 
             case FSCTL_IS_VOLUME_MOUNTED:
             {
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSProcessUserFsRequest Processing FSCTL_IS_VOLUME_MOUNTED request\n");
+                              "AFSProcessUserFsRequest Processing FSCTL_IS_VOLUME_MOUNTED request\n"));
 
                 ntStatus = STATUS_NOT_IMPLEMENTED;
 
@@ -292,9 +292,9 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 
             case FSCTL_IS_PATHNAME_VALID:
             {
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSProcessUserFsRequest Processing FSCTL_IS_PATHNAME_VALID request\n");
+                              "AFSProcessUserFsRequest Processing FSCTL_IS_PATHNAME_VALID request\n"));
 
                 ntStatus = STATUS_SUCCESS;
 
@@ -306,9 +306,9 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 #endif
             case FSCTL_CSC_INTERNAL:
             {
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSProcessUserFsRequest Processing FSCTL_CSC_INTERNAL request\n");
+                              "AFSProcessUserFsRequest Processing FSCTL_CSC_INTERNAL request\n"));
 
                 ntStatus = STATUS_INVALID_DEVICE_REQUEST;
 
@@ -325,12 +325,12 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                 BOOLEAN bRelative = FALSE;
                 WCHAR * PathBuffer = NULL;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
                               "AFSProcessUserFsRequest Processing FSCTL_GET_REPARSE_POINT request %wZ Type 0x%x Attrib 0x%x\n",
                               &pCcb->DirectoryCB->NameInformation.FileName,
                               pCcb->DirectoryCB->ObjectInformation->FileType,
-                              pCcb->DirectoryCB->ObjectInformation->FileAttributes);
+                              pCcb->DirectoryCB->ObjectInformation->FileAttributes));
 
                 //
                 // Check if we have the reparse entry set on the entry
@@ -399,14 +399,14 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 
                     SetFlag( pCcb->DirectoryCB->ObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY);
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSProcessUserFsRequest Verifying symlink %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                                   &pCcb->DirectoryCB->NameInformation.FileName,
                                   pCcb->DirectoryCB->ObjectInformation->FileId.Cell,
                                   pCcb->DirectoryCB->ObjectInformation->FileId.Volume,
                                   pCcb->DirectoryCB->ObjectInformation->FileId.Vnode,
-                                  pCcb->DirectoryCB->ObjectInformation->FileId.Unique);
+                                  pCcb->DirectoryCB->ObjectInformation->FileId.Unique));
 
                     ntStatus = AFSVerifyEntry( &pCcb->AuthGroup,
                                                pCcb->DirectoryCB);
@@ -414,7 +414,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                     if( !NT_SUCCESS( ntStatus))
                     {
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
                                       "AFSProcessUserFsRequest Failed to verify symlink %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                                       &pCcb->DirectoryCB->NameInformation.FileName,
@@ -422,7 +422,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                                       pCcb->DirectoryCB->ObjectInformation->FileId.Volume,
                                       pCcb->DirectoryCB->ObjectInformation->FileId.Vnode,
                                       pCcb->DirectoryCB->ObjectInformation->FileId.Unique,
-                                      ntStatus);
+                                      ntStatus));
 
                         AFSReleaseResource( &pCcb->DirectoryCB->NonPaged->Lock);
 
@@ -674,12 +674,12 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                 ULONGLONG ullIndex = 0;
                 LONG lCount;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSProcessUserFsRequest Processing FSCTL_SET_REPARSE_POINT request %wZ Type 0x%x Attrib 0x%x\n",
                               &pCcb->DirectoryCB->NameInformation.FileName,
                               pCcb->DirectoryCB->ObjectInformation->FileType,
-                              pCcb->DirectoryCB->ObjectInformation->FileAttributes);
+                              pCcb->DirectoryCB->ObjectInformation->FileAttributes));
 
                 if( ulInputBufferLen < FIELD_OFFSET( REPARSE_GUID_DATA_BUFFER, GenericReparseBuffer.DataBuffer))
                 {
@@ -791,10 +791,10 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                             uniTargetName.Buffer = (WCHAR *)((char *)pReparseBuffer->MountPointReparseBuffer.PathBuffer +
                                                               pReparseBuffer->MountPointReparseBuffer.PrintNameOffset);
 
-                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                           AFS_TRACE_LEVEL_VERBOSE_2,
                                           "AFSProcessUserFsRequest IO_REPARSE_TAG_MOUNT_POINT request %wZ\n",
-                                          &uniTargetName);
+                                          &uniTargetName));
 
                             ntStatus = STATUS_IO_REPARSE_DATA_INVALID;
 
@@ -812,10 +812,10 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                             uniTargetName.Buffer = (WCHAR *)((char *)pReparseBuffer->SymbolicLinkReparseBuffer.PathBuffer +
                                                               pReparseBuffer->SymbolicLinkReparseBuffer.SubstituteNameOffset);
 
-                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                           AFS_TRACE_LEVEL_VERBOSE_2,
                                           "AFSProcessUserFsRequest IO_REPARSE_TAG_SYMLINK request %wZ\n",
-                                          &uniTargetName);
+                                          &uniTargetName));
                             break;
                         }
 
@@ -856,11 +856,11 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                     lCount = AFSObjectInfoIncrement( pParentObjectInfo,
                                                      AFS_OBJECT_REFERENCE_DIRENTRY);
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSProcessUserFsRequest Increment count on object %p Cnt %d\n",
                                   pParentObjectInfo,
-                                  lCount);
+                                  lCount));
                 }
 
                 AFSReleaseResource( pCcb->DirectoryCB->ObjectInformation->VolumeCB->ObjectInfoTree.TreeLock);
@@ -875,22 +875,22 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                                              pCcb->DirectoryCB->ObjectInformation,
                                              &uniTargetName);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
                               "AFSProcessUserFsRequest Processed FSCTL_SET_REPARSE_POINT request %wZ Type 0x%x Attrib 0x%x Status %08lX\n",
                               &pCcb->DirectoryCB->NameInformation.FileName,
                               pCcb->DirectoryCB->ObjectInformation->FileType,
                               pCcb->DirectoryCB->ObjectInformation->FileAttributes,
-                              ntStatus);
+                              ntStatus));
 
                 lCount = AFSObjectInfoDecrement( pParentObjectInfo,
                                                  AFS_OBJECT_REFERENCE_DIRENTRY);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSProcessUserFsRequest Decrement count on object %p Cnt %d\n",
                               pParentObjectInfo,
-                              lCount);
+                              lCount));
 
                 break;
             }
@@ -900,12 +900,12 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 
                 REPARSE_GUID_DATA_BUFFER *pReparseBuffer = (REPARSE_GUID_DATA_BUFFER *)Irp->AssociatedIrp.SystemBuffer;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
                               "AFSProcessUserFsRequest Processing FSCTL_DELETE_REPARSE_POINT request %wZ Type 0x%x Attrib 0x%x\n",
                               &pCcb->DirectoryCB->NameInformation.FileName,
                               pCcb->DirectoryCB->ObjectInformation->FileType,
-                              pCcb->DirectoryCB->ObjectInformation->FileAttributes);
+                              pCcb->DirectoryCB->ObjectInformation->FileAttributes));
 
                 //
                 // Check if we have the reparse entry set on the entry
@@ -975,9 +975,10 @@ AFSProcessUserFsRequest( IN PIRP Irp)
             default :
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSProcessUserFsRequest Processing default (%08lX) request\n", ulFsControlCode);
+                              "AFSProcessUserFsRequest Processing default (%08lX) request\n",
+                              ulFsControlCode));
 
                 ntStatus = STATUS_INVALID_DEVICE_REQUEST;
 
@@ -1019,10 +1020,10 @@ AFSProcessShareFsCtrl( IN IRP *Irp,
             case FSCTL_PIPE_TRANSCEIVE:
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_PIPE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_PIPE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSProcessShareFsCtrl On pipe %wZ Class FSCTL_PIPE_TRANSCEIVE\n",
-                              &Ccb->DirectoryCB->NameInformation.FileName);
+                              &Ccb->DirectoryCB->NameInformation.FileName));
 
                 ntStatus = AFSNotifyPipeTransceive( Ccb,
                                                     ulInputBufferLen,
@@ -1034,11 +1035,11 @@ AFSProcessShareFsCtrl( IN IRP *Irp,
                 if( !NT_SUCCESS( ntStatus))
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_PIPE_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_PIPE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSProcessShareFsCtrl Failure on pipe %wZ Class FSCTL_PIPE_TRANSCEIVE Status %08lX\n",
                                   &Ccb->DirectoryCB->NameInformation.FileName,
-                                  ntStatus);
+                                  ntStatus));
                 }
 
                 break;

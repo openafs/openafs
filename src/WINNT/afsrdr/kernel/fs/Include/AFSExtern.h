@@ -105,6 +105,8 @@ extern void               *AFSDumpBuffer;
 
 extern ULONG               AFSDumpBufferLength;
 
+extern PAFSDbgLogMsg       AFSDebugTraceFnc;
+
 }
 
 #endif /* _AFS_EXTERN_H */

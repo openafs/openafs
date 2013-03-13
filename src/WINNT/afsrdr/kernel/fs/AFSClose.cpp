@@ -79,9 +79,9 @@ try_exit:
     __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
-                      "EXCEPTION - AFSClose\n");
+                      "EXCEPTION - AFSClose\n"));
 
         AFSDumpTraceFilesFnc();
     }

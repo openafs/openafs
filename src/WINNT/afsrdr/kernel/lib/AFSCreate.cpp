@@ -71,10 +71,10 @@ AFSCreate( IN PDEVICE_OBJECT LibDeviceObject,
             pFileObject->FileName.Buffer == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSCreate (%p) Processing control device open request\n",
-                          Irp);
+                          Irp));
 
             ntStatus = AFSControlDeviceCreate( Irp);
 
@@ -84,10 +84,10 @@ AFSCreate( IN PDEVICE_OBJECT LibDeviceObject,
         if( AFSRDRDeviceObject == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSCreate (%p) Invalid request to open before library is initialized\n",
-                          Irp);
+                          Irp));
 
             try_return( ntStatus = STATUS_DEVICE_NOT_READY);
         }
@@ -102,9 +102,9 @@ try_exit:
     __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
-                      "EXCEPTION - AFSCreate\n");
+                      "EXCEPTION - AFSCreate\n"));
 
         ntStatus = STATUS_ACCESS_DENIED;
 
@@ -201,10 +201,10 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
         if( BooleanFlagOn( pDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_REDIRECTOR_SHUTDOWN))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_WARNING,
                           "AFSCommonCreate (%p) Open request after shutdown\n",
-                          Irp);
+                          Irp));
 
             try_return( ntStatus = STATUS_TOO_LATE);
         }
@@ -217,10 +217,10 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
             if( !NT_SUCCESS( ntStatus))
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSCommonCreate Failed to enumerate global root Status %08lX\n",
-                              ntStatus);
+                              ntStatus));
 
                 try_return( ntStatus);
             }
@@ -245,12 +245,12 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           uniFileName.Length > 0 ? AFS_TRACE_LEVEL_ERROR : AFS_TRACE_LEVEL_VERBOSE,
                           "AFSCommonCreate (%p) Failed to parse name \"%wZ\" Status %08lX\n",
                           Irp,
                           &uniFileName,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -342,10 +342,10 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                     if( !NT_SUCCESS( ntStatus))
                     {
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
                                       "AFSCommonCreate Failed to open root IOCtl Fcb Status %08lX\n",
-                                      ntStatus);
+                                      ntStatus));
                     }
                 }
                 else if( pParentDirectoryCB != NULL)
@@ -363,10 +363,10 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                         if( !NT_SUCCESS( ntStatus))
                         {
 
-                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                           AFS_TRACE_LEVEL_ERROR,
                                           "AFSCommonCreate Failed to open special share Fcb Status %08lX\n",
-                                          ntStatus);
+                                          ntStatus));
                         }
                     }
                 }
@@ -381,10 +381,10 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
             if( !NT_SUCCESS( ntStatus))
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSCommonCreate Failed to open root Status %08lX\n",
-                              ntStatus);
+                              ntStatus));
             }
 
             try_return( ntStatus);
@@ -415,12 +415,12 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
 
                 ntStatus = STATUS_OBJECT_NAME_NOT_FOUND;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCommonCreate (%p) Invalid name %wZ Status %08lX\n",
                               Irp,
                               &uniFileName,
-                              ntStatus);
+                              ntStatus));
 
                 try_return( ntStatus);
             }
@@ -468,12 +468,12 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                 lCount = AFSVolumeDecrement( pVolumeCB,
                                              VolumeReferenceReason);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCommonCreate Decrement count on volume %p Reason %u Cnt %d\n",
                               pVolumeCB,
                               VolumeReferenceReason,
-                              lCount);
+                              lCount));
 
                 pVolumeCB = pNewVolumeCB;
 
@@ -497,13 +497,13 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
 
                 lCount = InterlockedDecrement( &pParentDirectoryCB->DirOpenReferenceCount);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCommonCreate DecrementX count on %wZ DE %p Ccb %p Cnt %d\n",
                               &pParentDirectoryCB->NameInformation.FileName,
                               pParentDirectoryCB,
                               pCcb,
-                              lCount);
+                              lCount));
             }
 
             pParentDirectoryCB = pNewParentDirectoryCB;
@@ -532,12 +532,12 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                 // branch
                 //
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCommonCreate (%p) Failed to locate name entry for %wZ Status %08lX\n",
                               Irp,
                               &uniFileName,
-                              ntStatus);
+                              ntStatus));
 
                 try_return( ntStatus);
             }
@@ -603,12 +603,12 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                     ntStatus != STATUS_OBJECT_NAME_NOT_FOUND)
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCommonCreate (%p) Failing access to symlink %wZ Status %08lX\n",
                                   Irp,
                                   &uniFileName,
-                                  ntStatus);
+                                  ntStatus));
 
                     try_return( ntStatus);
                 }
@@ -628,13 +628,13 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
 
             lCount = InterlockedIncrement( &pDirectoryCB->DirOpenReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSCommonCreate Increment0 count on %wZ DE %p Ccb %p Cnt %d\n",
                           &pDirectoryCB->NameInformation.FileName,
                           pDirectoryCB,
                           pCcb,
-                          lCount);
+                          lCount));
 
             bReleaseDir = TRUE;
         }
@@ -658,13 +658,13 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
 
                     lCount = InterlockedIncrement( &pParentDirectoryCB->DirOpenReferenceCount);
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCommonCreate Increment1 count on %wZ DE %p Ccb %p Cnt %d\n",
                                   &pParentDirectoryCB->NameInformation.FileName,
                                   pParentDirectoryCB,
                                   pCcb,
-                                  lCount);
+                                  lCount));
 
                     bReleaseParentDir = TRUE;
                 }
@@ -700,11 +700,11 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
             if( !NT_SUCCESS( ntStatus))
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSCommonCreate Failed to open target directory %wZ Status %08lX\n",
                               &pParentDirectoryCB->NameInformation.FileName,
-                              ntStatus);
+                              ntStatus));
             }
 
             try_return( ntStatus);
@@ -716,22 +716,22 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
             if( pDirectoryCB == NULL ||
                 !BooleanFlagOn( pDirectoryCB->ObjectInformation->FileAttributes, FILE_ATTRIBUTE_REPARSE_POINT))
             {
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCommonCreate (%p) Reparse open request but attribute not set for %wZ DirCB %p Type %08lX\n",
                               Irp,
                               &uniFileName,
                               pDirectoryCB,
-                              pDirectoryCB ? pDirectoryCB->ObjectInformation->FileType : 0);
+                              pDirectoryCB ? pDirectoryCB->ObjectInformation->FileType : 0));
             }
             else
             {
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCommonCreate (%p) Opening as reparse point %wZ Type %08lX\n",
                               Irp,
                               &uniFileName,
-                              pDirectoryCB->ObjectInformation->FileType);
+                              pDirectoryCB->ObjectInformation->FileType));
 
                 bOpenedReparsePoint = TRUE;
             }
@@ -759,19 +759,19 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                 if( pDirectoryCB != NULL)
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCommonCreate Object name collision on create of %wZ Status %08lX\n",
                                   &pDirectoryCB->NameInformation.FileName,
-                                  ntStatus);
+                                  ntStatus));
                 }
                 else
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCommonCreate Object name collision on create Status %08lX\n",
-                                  ntStatus);
+                                  ntStatus));
                 }
 
                 try_return( ntStatus = STATUS_OBJECT_NAME_COLLISION);
@@ -794,12 +794,12 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
             if( !NT_SUCCESS( ntStatus))
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSCommonCreate Failed to create of %wZ in directory %wZ Status %08lX\n",
                               &uniComponentName,
                               &pParentDirectoryCB->NameInformation.FileName,
-                              ntStatus);
+                              ntStatus));
             }
 
             try_return( ntStatus);
@@ -835,21 +835,21 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                 if( !NT_SUCCESS( ntStatus))
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
                                   "AFSCommonCreate Failed to IOCtl open on %wZ Status %08lX\n",
                                   &uniComponentName,
-                                  ntStatus);
+                                  ntStatus));
                 }
             }
             else
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCommonCreate (%p) File %wZ name not found\n",
                               Irp,
-                              &uniFileName);
+                              &uniFileName));
 
                 ntStatus = STATUS_OBJECT_NAME_NOT_FOUND;
             }
@@ -871,10 +871,10 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
             if( BooleanFlagOn( ulOptions, FILE_DELETE_ON_CLOSE ))
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSCommonCreate (%p) Attempt to open root as delete on close\n",
-                              Irp);
+                              Irp));
 
                 try_return( ntStatus = STATUS_CANNOT_DELETE);
             }
@@ -886,10 +886,10 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
             if( bOpenTargetDirectory)
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSCommonCreate (%p) Attempt to open root as target directory\n",
-                              Irp);
+                              Irp));
 
                 try_return( ntStatus = STATUS_INVALID_PARAMETER);
             }
@@ -907,12 +907,12 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
             if( !NT_SUCCESS( ntStatus))
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSCommonCreate Failed to open volume root %08lX-%08lX Status %08lX\n",
                               pVolumeCB->ObjectInformation.FileId.Cell,
                               pVolumeCB->ObjectInformation.FileId.Volume,
-                              ntStatus);
+                              ntStatus));
             }
 
             try_return( ntStatus);
@@ -925,10 +925,10 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
         if( pDirectoryCB == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSCommonCreate Failing access to %wZ Name not found\n",
-                          &uniFileName);
+                          &uniFileName));
 
             try_return( ntStatus = STATUS_OBJECT_NAME_NOT_FOUND);
         }
@@ -954,11 +954,11 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
             if( !NT_SUCCESS( ntStatus))
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSCommonCreate Failed overwrite/supersede on %wZ Status %08lX\n",
                               &pDirectoryCB->NameInformation.FileName,
-                              ntStatus);
+                              ntStatus));
             }
 
             try_return( ntStatus);
@@ -979,11 +979,11 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSCommonCreate Failed open on %wZ Status %08lX\n",
                           &pDirectoryCB->NameInformation.FileName,
-                          ntStatus);
+                          ntStatus));
         }
 
 try_exit:
@@ -1036,13 +1036,13 @@ try_exit:
 
                 lCount = pCcb->DirectoryCB->DirOpenReferenceCount;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCommonCreate Count on %wZ DE %p Ccb %p Cnt %d\n",
                               &pCcb->DirectoryCB->NameInformation.FileName,
                               pCcb->DirectoryCB,
                               pCcb,
-                              lCount);
+                              lCount));
 
                 ASSERT( lCount >= 0);
 
@@ -1069,13 +1069,13 @@ try_exit:
             // If we make it here then init the FO for the request.
             //
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE_2,
                           "AFSCommonCreate (%p) FileObject %p FsContext %p FsContext2 %p\n",
                           Irp,
                           pFileObject,
                           pFcb,
-                          pCcb);
+                          pCcb));
 
             pFileObject->FsContext = (void *)pFcb;
 
@@ -1144,13 +1144,13 @@ try_exit:
             else
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSCommonCreate (%p) Returning with NULL Fcb FileObject %p FsContext %p FsContext2 %p\n",
                               Irp,
                               pFileObject,
                               pFcb,
-                              pCcb);
+                              pCcb));
             }
         }
         else
@@ -1159,13 +1159,13 @@ try_exit:
                 ntStatus == STATUS_REPARSE)
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSCommonCreate (%p) STATUS_REPARSE FileObject %p FsContext %p FsContext2 %p\n",
                               Irp,
                               pFileObject,
                               pFcb,
-                              pCcb);
+                              pCcb));
             }
 
             //
@@ -1203,12 +1203,12 @@ try_exit:
             lCount = AFSVolumeDecrement( pVolumeCB,
                                          VolumeReferenceReason);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSCommonCreate Decrement count on Volume %08lX Reason %u Cnt %d\n",
                           pVolumeCB,
                           VolumeReferenceReason,
-                          lCount);
+                          lCount));
         }
 
         if ( bReleaseDir)
@@ -1220,13 +1220,13 @@ try_exit:
 
             lCount = InterlockedDecrement( &pDirectoryCB->DirOpenReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSCommonCreate Decrement count on %wZ DE %p Ccb %p Cnt %d\n",
                           &pDirectoryCB->NameInformation.FileName,
                           pDirectoryCB,
                           pCcb,
-                          lCount);
+                          lCount));
 
             ASSERT( lCount >= 0);
         }
@@ -1240,13 +1240,13 @@ try_exit:
 
             lCount = InterlockedDecrement( &pParentDirectoryCB->DirOpenReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSCommonCreate Decrement count on %wZ DE %p Ccb %p Cnt %d\n",
                           &pParentDirectoryCB->NameInformation.FileName,
                           pParentDirectoryCB,
                           pCcb,
-                          lCount);
+                          lCount));
 
             ASSERT( lCount >= 0);
         }
@@ -1285,10 +1285,10 @@ AFSOpenAFSRoot( IN PIRP Irp,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSOpenAFSRoot (%p) Failed to allocate Ccb\n",
-                          Irp);
+                          Irp));
 
             try_return( ntStatus);
         }
@@ -1299,19 +1299,19 @@ AFSOpenAFSRoot( IN PIRP Irp,
 
         lCount = InterlockedIncrement( &AFSGlobalRoot->RootFcb->OpenReferenceCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenAFSRoot Increment count on Fcb %p Cnt %d\n",
                       AFSGlobalRoot->RootFcb,
-                      lCount);
+                      lCount));
 
         lCount = InterlockedIncrement( &AFSGlobalRoot->RootFcb->OpenHandleCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenAFSRoot Increment handle count on Fcb %p Cnt %d\n",
                       AFSGlobalRoot->RootFcb,
-                      lCount);
+                      lCount));
 
         *Fcb = AFSGlobalRoot->RootFcb;
 
@@ -1364,11 +1364,11 @@ AFSOpenRoot( IN PIRP Irp,
 
             ntStatus = STATUS_FILE_IS_A_DIRECTORY;
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSOpenRoot (%p) Attempt to open root as file Status %08lX\n",
                           Irp,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -1385,11 +1385,11 @@ AFSOpenRoot( IN PIRP Irp,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSOpenRoot (%p) Failed to validate root entry Status %08lX\n",
                           Irp,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -1436,14 +1436,14 @@ AFSOpenRoot( IN PIRP Irp,
                                    &uniGUID);
             }
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSOpenRoot (%p) Failed open in service volume %08lX-%08lX AuthGroup %wZ Status %08lX\n",
                           Irp,
                           VolumeCB->ObjectInformation.FileId.Cell,
                           VolumeCB->ObjectInformation.FileId.Volume,
                           &uniGUID,
-                          ntStatus);
+                          ntStatus));
 
             if( AuthGroup != NULL)
             {
@@ -1472,11 +1472,11 @@ AFSOpenRoot( IN PIRP Irp,
 
                 AFSReleaseResource( VolumeCB->ObjectInformation.Specific.Directory.DirectoryNodeHdr.TreeLock);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSOpenRoot (%p) Failed to enumerate directory Status %08lX\n",
                               Irp,
-                              ntStatus);
+                              ntStatus));
 
                 try_return( ntStatus);
             }
@@ -1500,11 +1500,11 @@ AFSOpenRoot( IN PIRP Irp,
 
         lCount = InterlockedIncrement( &VolumeCB->RootFcb->OpenReferenceCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenRoot Increment count on Fcb %p Cnt %d\n",
                       VolumeCB->RootFcb,
-                      lCount);
+                      lCount));
 
         bReleaseFcb = TRUE;
 
@@ -1524,11 +1524,11 @@ AFSOpenRoot( IN PIRP Irp,
             if( !NT_SUCCESS( ntStatus))
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSOpenRoot (%p) Access check failure Status %08lX\n",
                               Irp,
-                              ntStatus);
+                              ntStatus));
 
                 try_return( ntStatus);
             }
@@ -1546,11 +1546,11 @@ AFSOpenRoot( IN PIRP Irp,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSOpenRoot (%p) Failed to allocate Ccb Status %08lX\n",
                           Irp,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -1586,11 +1586,11 @@ AFSOpenRoot( IN PIRP Irp,
 
         lCount = InterlockedIncrement( &VolumeCB->RootFcb->OpenHandleCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenRoot Increment handle count on Fcb %p Cnt %d\n",
                       VolumeCB->RootFcb,
-                      lCount);
+                      lCount));
 
         //
         // Indicate the object is held
@@ -1615,11 +1615,11 @@ try_exit:
 
                 lCount = InterlockedDecrement( &VolumeCB->RootFcb->OpenReferenceCount);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSOpenRoot Decrement count on Fcb %p Cnt %d\n",
                               VolumeCB->RootFcb,
-                              lCount);
+                              lCount));
             }
 
             AFSReleaseResource( VolumeCB->RootFcb->Header.Resource);
@@ -1699,20 +1699,20 @@ AFSProcessCreate( IN PIRP               Irp,
             ulAttributes |= FILE_ATTRIBUTE_DIRECTORY;
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessCreate (%p) Creating file %wZ Attributes %08lX\n",
                       Irp,
                       FullFileName,
-                      ulAttributes);
+                      ulAttributes));
 
         if( BooleanFlagOn( VolumeCB->VolumeInformation.Characteristics, FILE_READ_ONLY_DEVICE))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSProcessCreate Request failed due to read only volume %wZ\n",
-                          FullFileName);
+                          FullFileName));
 
             try_return( ntStatus = STATUS_MEDIA_WRITE_PROTECTED);
         }
@@ -1734,12 +1734,12 @@ AFSProcessCreate( IN PIRP               Irp,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSProcessCreate (%p) Failed to create directory entry %wZ Status %08lX\n",
                           Irp,
                           FullFileName,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -1752,7 +1752,7 @@ AFSProcessCreate( IN PIRP               Irp,
             pObjectInfo->FileType == AFS_FILE_TYPE_UNKNOWN)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSProcessCreate (%p) Evaluating object %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                           Irp,
@@ -1760,7 +1760,7 @@ AFSProcessCreate( IN PIRP               Irp,
                           pObjectInfo->FileId.Cell,
                           pObjectInfo->FileId.Volume,
                           pObjectInfo->FileId.Vnode,
-                          pObjectInfo->FileId.Unique);
+                          pObjectInfo->FileId.Unique));
 
             ntStatus = AFSEvaluateNode( AuthGroup,
                                         pDirEntry);
@@ -1774,7 +1774,7 @@ AFSProcessCreate( IN PIRP               Irp,
                     if ( !BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_FLAGS_PARENT_FID))
                     {
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
                                       "AFSProcessCreate (%p) Failed to evaluate object %wZ FID %08lX-%08lX-%08lX-%08lX PARENT %08lX-%08lX-%08lX-%08lX != NULL Status %08lX\n",
                                       Irp,
@@ -1787,12 +1787,12 @@ AFSProcessCreate( IN PIRP               Irp,
                                       pParentObjectInfo->FileId.Volume,
                                       pParentObjectInfo->FileId.Vnode,
                                       pParentObjectInfo->FileId.Unique,
-                                      ntStatus);
+                                      ntStatus));
                     }
                     else if ( AFSIsEqualFID( &pParentObjectInfo->FileId, &pObjectInfo->ParentFileId))
                     {
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
                                       "AFSProcessCreate (%p) Failed to evaluate object %wZ FID %08lX-%08lX-%08lX-%08lX PARENT %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                                       Irp,
@@ -1805,12 +1805,12 @@ AFSProcessCreate( IN PIRP               Irp,
                                       pParentObjectInfo->FileId.Volume,
                                       pParentObjectInfo->FileId.Vnode,
                                       pParentObjectInfo->FileId.Unique,
-                                      ntStatus);
+                                      ntStatus));
                     }
                     else
                     {
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
                                       "AFSProcessCreate (%p) Failed to evaluate object %wZ FID %08lX-%08lX-%08lX-%08lX PARENT %08lX-%08lX-%08lX-%08lX != %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                                       Irp,
@@ -1827,13 +1827,13 @@ AFSProcessCreate( IN PIRP               Irp,
                                       pObjectInfo->ParentFileId.Volume,
                                       pObjectInfo->ParentFileId.Vnode,
                                       pObjectInfo->ParentFileId.Unique,
-                                      ntStatus);
+                                      ntStatus));
                     }
                 }
                 else
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
                                   "AFSProcessCreate (%p) Failed to evaluate object %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                                   Irp,
@@ -1842,7 +1842,7 @@ AFSProcessCreate( IN PIRP               Irp,
                                   pObjectInfo->FileId.Volume,
                                   pObjectInfo->FileId.Vnode,
                                   pObjectInfo->FileId.Unique,
-                                  ntStatus);
+                                  ntStatus));
                 }
 
                 try_return( ntStatus);
@@ -1869,12 +1869,12 @@ AFSProcessCreate( IN PIRP               Irp,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSProcessCreate (%p) Failed to initialize fcb %wZ Status %08lX\n",
                           Irp,
                           FullFileName,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -1887,11 +1887,11 @@ AFSProcessCreate( IN PIRP               Irp,
 
         lCount = InterlockedIncrement( &(*Fcb)->OpenReferenceCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessCreate Increment count on Fcb %p Cnt %d\n",
                       *Fcb,
-                      lCount);
+                      lCount));
 
         bReleaseFcb = TRUE;
 
@@ -1907,12 +1907,12 @@ AFSProcessCreate( IN PIRP               Irp,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSProcessCreate (%p) Failed to initialize ccb %wZ Status %08lX\n",
                           Irp,
                           FullFileName,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -2002,11 +2002,11 @@ AFSProcessCreate( IN PIRP               Irp,
 
         lCount = InterlockedIncrement( &(*Fcb)->OpenHandleCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessCreate Increment handle count on Fcb %p Cnt %d\n",
                       (*Fcb),
-                      lCount);
+                      lCount));
 
         //
         // Increment the open reference and handle on the parent node
@@ -2014,19 +2014,19 @@ AFSProcessCreate( IN PIRP               Irp,
 
         lCount = InterlockedIncrement( &pParentObjectInfo->Specific.Directory.ChildOpenHandleCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessCreate Increment child open handle count on Parent object %p Cnt %d\n",
                       pParentObjectInfo,
-                      lCount);
+                      lCount));
 
         lCount = InterlockedIncrement( &pParentObjectInfo->Specific.Directory.ChildOpenReferenceCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessCreate Increment child open ref count on Parent object %p Cnt %d\n",
                       pParentObjectInfo,
-                      lCount);
+                      lCount));
 
         if( ulOptions & FILE_DELETE_ON_CLOSE)
         {
@@ -2035,12 +2035,12 @@ AFSProcessCreate( IN PIRP               Irp,
             // Mark it for delete on close
             //
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSProcessCreate (%p) Setting PENDING_DELETE flag in DirEntry %p Name %wZ\n",
                           Irp,
                           pDirEntry,
-                          FullFileName);
+                          FullFileName));
 
             SetFlag( pDirEntry->Flags, AFS_DIR_ENTRY_PENDING_DELETE);
         }
@@ -2074,11 +2074,11 @@ try_exit:
 
                 lCount = InterlockedDecrement( &(*Fcb)->OpenReferenceCount);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSProcessCreate Decrement count on Fcb %p Cnt %d\n",
                               *Fcb,
-                              lCount);
+                              lCount));
             }
 
             AFSReleaseResource( &(*Fcb)->NPFcb->Resource);
@@ -2094,12 +2094,12 @@ try_exit:
 
             lCount = InterlockedDecrement( &pDirEntry->DirOpenReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSProcessCreate Decrement count on %wZ DE %p Cnt %d\n",
                           &pDirEntry->NameInformation.FileName,
                           pDirEntry,
-                          lCount);
+                          lCount));
 
             ASSERT( lCount >= 0);
         }
@@ -2110,12 +2110,12 @@ try_exit:
             if( bFileCreated)
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSProcessCreate Create failed, removing DE %p from parent object %p Status %08lX\n",
                               pDirEntry,
                               pParentObjectInfo,
-                              ntStatus);
+                              ntStatus));
 
                 //
                 // Remove the dir entry from the parent
@@ -2199,11 +2199,11 @@ AFSOpenTargetDirectory( IN PIRP Irp,
 
         pFileObject = pIrpSp->FileObject;
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenTargetDirectory (%p) Processing file %wZ\n",
                       Irp,
-                      TargetName);
+                      TargetName));
 
         pParentObject = ParentDirectoryCB->ObjectInformation;
 
@@ -2227,12 +2227,12 @@ AFSOpenTargetDirectory( IN PIRP Irp,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSOpenTargetDirectory (%p) Failed to initialize fcb %wZ Status %08lX\n",
                           Irp,
                           &ParentDirectoryCB->NameInformation.FileName,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -2245,11 +2245,11 @@ AFSOpenTargetDirectory( IN PIRP Irp,
 
         lCount = InterlockedIncrement( &pParentObject->Fcb->OpenReferenceCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenTargetDirectory Increment count on Fcb %p Cnt %d\n",
                       pParentObject->Fcb,
-                      lCount);
+                      lCount));
 
         bReleaseFcb = TRUE;
 
@@ -2269,12 +2269,12 @@ AFSOpenTargetDirectory( IN PIRP Irp,
             if( !NT_SUCCESS( ntStatus))
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSOpenTargetDirectory (%p) Access check failure %wZ Status %08lX\n",
                               Irp,
                               &ParentDirectoryCB->NameInformation.FileName,
-                              ntStatus);
+                              ntStatus));
 
                 try_return( ntStatus);
             }
@@ -2292,12 +2292,12 @@ AFSOpenTargetDirectory( IN PIRP Irp,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSOpenTargetDirectory (%p) Failed to initialize ccb %wZ Status %08lX\n",
                           Irp,
                           &ParentDirectoryCB->NameInformation.FileName,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -2358,11 +2358,11 @@ AFSOpenTargetDirectory( IN PIRP Irp,
 
         lCount = InterlockedIncrement( &pParentObject->Fcb->OpenHandleCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenTargetDirectory Increment handle count on Fcb %p Cnt %d\n",
                       pParentObject->Fcb,
-                      lCount);
+                      lCount));
 
         //
         // Increment the open reference and handle on the parent node
@@ -2379,19 +2379,19 @@ AFSOpenTargetDirectory( IN PIRP Irp,
 
                 lCount = InterlockedIncrement( &pGrandParentObject->Specific.Directory.ChildOpenHandleCount);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSOpenTargetDirectory Increment child open handle count on Parent object %p Cnt %d\n",
                               pGrandParentObject,
-                              lCount);
+                              lCount));
 
                 lCount = InterlockedIncrement( &pGrandParentObject->Specific.Directory.ChildOpenReferenceCount);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSOpenTargetDirectory Increment child open ref count on Parent object %p Cnt %d\n",
                               pGrandParentObject,
-                              lCount);
+                              lCount));
 
                 AFSReleaseObjectInfo( &pGrandParentObject);
             }
@@ -2410,11 +2410,11 @@ try_exit:
 
                 lCount = InterlockedDecrement( &pParentObject->Fcb->OpenReferenceCount);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSOpenTargetDirectory Decrement count on Fcb %p Cnt %d\n",
                               pParentObject->Fcb,
-                              lCount);
+                              lCount));
             }
 
             AFSReleaseResource( &pParentObject->Fcb->NPFcb->Resource);
@@ -2493,12 +2493,12 @@ AFSProcessOpen( IN PIRP Irp,
 
             ntStatus = STATUS_DELETE_PENDING;
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSProcessOpen (%p) Entry pending delete %wZ Status %08lX\n",
                           Irp,
                           &DirectoryCB->NameInformation.FileName,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -2521,12 +2521,12 @@ AFSProcessOpen( IN PIRP Irp,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSProcessOpen (%p) Failed to validate entry %wZ Status %08lX\n",
                           Irp,
                           &DirectoryCB->NameInformation.FileName,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -2547,12 +2547,12 @@ AFSProcessOpen( IN PIRP Irp,
 
                 ntStatus = STATUS_CANNOT_DELETE;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSProcessOpen (%p) Cannot delete entry %wZ marked for delete on close Status %08lX\n",
                               Irp,
                               &DirectoryCB->NameInformation.FileName,
-                              ntStatus);
+                              ntStatus));
 
                 try_return( ntStatus);
             }
@@ -2567,12 +2567,12 @@ AFSProcessOpen( IN PIRP Irp,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSProcessOpen (%p) Failed to init fcb on %wZ Status %08lX\n",
                           Irp,
                           &DirectoryCB->NameInformation.FileName,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -2591,11 +2591,11 @@ AFSProcessOpen( IN PIRP Irp,
 
         lCount = InterlockedIncrement( &pObjectInfo->Fcb->OpenReferenceCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessOpen Increment2 count on Fcb %p Cnt %d\n",
                       pObjectInfo->Fcb,
-                      lCount);
+                      lCount));
 
         //
         // Check access on the entry
@@ -2613,12 +2613,12 @@ AFSProcessOpen( IN PIRP Irp,
             if( !NT_SUCCESS( ntStatus))
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSProcessOpen (%p) Failed to check share access on %wZ Status %08lX\n",
                               Irp,
                               &DirectoryCB->NameInformation.FileName,
-                              ntStatus);
+                              ntStatus));
 
                 try_return( ntStatus);
             }
@@ -2641,11 +2641,11 @@ AFSProcessOpen( IN PIRP Irp,
 
                 BOOLEAN bMmFlushed;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSProcessOpen Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                               &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
-                              PsGetCurrentThread());
+                              PsGetCurrentThread()));
 
                 AFSAcquireExcl( &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
                                 TRUE);
@@ -2653,11 +2653,11 @@ AFSProcessOpen( IN PIRP Irp,
                 bMmFlushed = MmFlushImageSection( &pObjectInfo->Fcb->NPFcb->SectionObjectPointers,
                                                   MmFlushForWrite);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSProcessOpen Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                               &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
-                              PsGetCurrentThread());
+                              PsGetCurrentThread()));
 
                 AFSReleaseResource( &pObjectInfo->Fcb->NPFcb->SectionObjectResource);
 
@@ -2667,12 +2667,12 @@ AFSProcessOpen( IN PIRP Irp,
                     ntStatus = BooleanFlagOn(ulOptions, FILE_DELETE_ON_CLOSE) ? STATUS_CANNOT_DELETE :
                                                                             STATUS_SHARING_VIOLATION;
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
                                   "AFSProcessOpen (%p) Failed to flush image section %wZ Status %08lX\n",
                                   Irp,
                                   &DirectoryCB->NameInformation.FileName,
-                                  ntStatus);
+                                  ntStatus));
 
                     try_return( ntStatus);
                 }
@@ -2683,12 +2683,12 @@ AFSProcessOpen( IN PIRP Irp,
 
                 ntStatus = STATUS_NOT_A_DIRECTORY;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSProcessOpen (%p) Attempt to open file as directory %wZ Status %08lX\n",
                               Irp,
                               &DirectoryCB->NameInformation.FileName,
-                              ntStatus);
+                              ntStatus));
 
                 try_return( ntStatus);
             }
@@ -2704,12 +2704,12 @@ AFSProcessOpen( IN PIRP Irp,
 
                 ntStatus = STATUS_FILE_IS_A_DIRECTORY;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSProcessOpen (%p) Attempt to open directory as file %wZ Status %08lX\n",
                               Irp,
                               &DirectoryCB->NameInformation.FileName,
-                              ntStatus);
+                              ntStatus));
 
                 try_return( ntStatus);
             }
@@ -2760,12 +2760,12 @@ AFSProcessOpen( IN PIRP Irp,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSProcessOpen (%p) Failed open in service %wZ Status %08lX\n",
                           Irp,
                           &DirectoryCB->NameInformation.FileName,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -2787,14 +2787,14 @@ AFSProcessOpen( IN PIRP Irp,
 
             ntStatus = STATUS_ACCESS_DENIED;
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSProcessOpen (%p) Failed to check access from service Desired %08lX Granted %08lX Entry %wZ Status %08lX\n",
                           Irp,
                           *pDesiredAccess,
                           stOpenResultCB.GrantedAccess,
                           &DirectoryCB->NameInformation.FileName,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -2811,12 +2811,12 @@ AFSProcessOpen( IN PIRP Irp,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSProcessOpen (%p) Failed to initialize ccb %wZ Status %08lX\n",
                           Irp,
                           &DirectoryCB->NameInformation.FileName,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -2848,11 +2848,11 @@ AFSProcessOpen( IN PIRP Irp,
 
         lCount = InterlockedIncrement( &pObjectInfo->Fcb->OpenHandleCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessOpen Increment handle count on Fcb %p Cnt %d\n",
                       pObjectInfo->Fcb,
-                      lCount);
+                      lCount));
 
         //
         // Increment the open reference and handle on the parent node
@@ -2860,19 +2860,19 @@ AFSProcessOpen( IN PIRP Irp,
 
         lCount = InterlockedIncrement( &pParentObjectInfo->Specific.Directory.ChildOpenHandleCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessOpen Increment child open handle count on Parent object %p Cnt %d\n",
                       pParentObjectInfo,
-                      lCount);
+                      lCount));
 
         lCount = InterlockedIncrement( &pParentObjectInfo->Specific.Directory.ChildOpenReferenceCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessOpen Increment child open ref count on Parent object %p Cnt %d\n",
                       pParentObjectInfo,
-                      lCount);
+                      lCount));
 
         if( BooleanFlagOn( ulOptions, FILE_DELETE_ON_CLOSE))
         {
@@ -2881,12 +2881,12 @@ AFSProcessOpen( IN PIRP Irp,
             // Mark it for delete on close
             //
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSProcessOpen (%p) Setting PENDING_DELETE flag in DirEntry %p Name %wZ\n",
                           Irp,
                           DirectoryCB,
-                          &DirectoryCB->NameInformation.FileName);
+                          &DirectoryCB->NameInformation.FileName));
 
             SetFlag( DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE);
         }
@@ -2918,11 +2918,11 @@ try_exit:
 
                 lCount = InterlockedDecrement( &pObjectInfo->Fcb->OpenReferenceCount);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSProcessOpen Decrement2 count on Fcb %p Cnt %d\n",
                               pObjectInfo->Fcb,
-                              lCount);
+                              lCount));
             }
 
             AFSReleaseResource( pObjectInfo->Fcb->Header.Resource);
@@ -3018,11 +3018,11 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
         if( BooleanFlagOn( VolumeCB->VolumeInformation.Characteristics, FILE_READ_ONLY_DEVICE))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSProcessOverwriteSupersede Request failed on %wZ due to read only volume\n",
                           Irp,
-                          &DirectoryCB->NameInformation.FileName);
+                          &DirectoryCB->NameInformation.FileName));
 
             try_return( ntStatus = STATUS_MEDIA_WRITE_PROTECTED);
         }
@@ -3046,12 +3046,12 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSProcessOverwriteSupersede (%p) Failed to validate entry %wZ Status %08lX\n",
                           Irp,
                           &DirectoryCB->NameInformation.FileName,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -3067,12 +3067,12 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSProcessOverwriteSupersede (%p) Failed to initialize fcb %wZ Status %08lX\n",
                           Irp,
                           &DirectoryCB->NameInformation.FileName,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -3085,11 +3085,11 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
 
         lCount = InterlockedIncrement( &pObjectInfo->Fcb->OpenReferenceCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessOverwriteSupersede Increment2 count on Fcb %p Cnt %d\n",
                       pObjectInfo->Fcb,
-                      lCount);
+                      lCount));
 
         bReleaseFcb = TRUE;
 
@@ -3109,22 +3109,22 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
             if( !NT_SUCCESS( ntStatus))
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSProcessOverwriteSupersede (%p) Access check failure %wZ Status %08lX\n",
                               Irp,
                               &DirectoryCB->NameInformation.FileName,
-                              ntStatus);
+                              ntStatus));
 
                 try_return( ntStatus);
             }
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessOverwriteSupercede Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                       &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         AFSAcquireExcl( &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
                         TRUE);
@@ -3137,11 +3137,11 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
         bUserMapped = !MmCanFileBeTruncated( &pObjectInfo->Fcb->NPFcb->SectionObjectPointers,
                                              &liZero);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessOverwriteSupercede Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                       &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         AFSReleaseResource( &pObjectInfo->Fcb->NPFcb->SectionObjectResource);
 
@@ -3150,12 +3150,12 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
 
             ntStatus = STATUS_USER_MAPPED_FILE;
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSProcessOverwriteSupersede (%p) File user mapped %wZ Status %08lX\n",
                           Irp,
                           &DirectoryCB->NameInformation.FileName,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -3172,12 +3172,12 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSProcessOverwriteSupersede (%p) Failed to initialize ccb %wZ Status %08lX\n",
                           Irp,
                           &DirectoryCB->NameInformation.FileName,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -3242,12 +3242,12 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
             pObjectInfo->Fcb->ObjectInformation->EndOfFile = liSaveSize;
             pObjectInfo->Fcb->ObjectInformation->AllocationSize = liSaveAlloc;
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSProcessOverwriteSupersede (%p) Failed to update file information %wZ Status %08lX\n",
                           Irp,
                           &DirectoryCB->NameInformation.FileName,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -3306,11 +3306,11 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
 
         lCount = InterlockedIncrement( &pObjectInfo->Fcb->OpenHandleCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessOverwriteSupersede Increment handle count on Fcb %p Cnt %d\n",
                       pObjectInfo->Fcb,
-                      lCount);
+                      lCount));
 
         //
         // Increment the open reference and handle on the parent node
@@ -3318,19 +3318,19 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
 
         lCount = InterlockedIncrement( &pParentObjectInfo->Specific.Directory.ChildOpenHandleCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessOverwriteSupersede Increment child open handle count on Parent object %p Cnt %d\n",
                       pParentObjectInfo,
-                      lCount);
+                      lCount));
 
         lCount = InterlockedIncrement( &pParentObjectInfo->Specific.Directory.ChildOpenReferenceCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessOverwriteSupersede Increment child open ref count on Parent object %p Cnt %d\n",
                       pParentObjectInfo,
-                      lCount);
+                      lCount));
 
         AFSReleaseResource( pObjectInfo->Fcb->Header.Resource);
 
@@ -3372,11 +3372,11 @@ try_exit:
 
                 lCount = InterlockedDecrement( &pObjectInfo->Fcb->OpenReferenceCount);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSProcessOverwriteSupersede Decrement2 count on Fcb %p Cnt %d\n",
                               pObjectInfo->Fcb,
-                              lCount);
+                              lCount));
             }
 
             AFSReleaseResource( pObjectInfo->Fcb->Header.Resource);
@@ -3490,11 +3490,11 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSOpenIOCtlFcb (%p) Failed to initialize fcb Status %08lX\n",
                           Irp,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -3507,11 +3507,11 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
 
         lCount = InterlockedIncrement( &(*Fcb)->OpenReferenceCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenIOCtlFcb Increment count on Fcb %p Cnt %d\n",
                       (*Fcb),
-                      lCount);
+                      lCount));
 
         bReleaseFcb = TRUE;
 
@@ -3527,11 +3527,11 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSOpenIOCtlFcb (%p) Failed to initialize ccb Status %08lX\n",
                           Irp,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -3579,11 +3579,11 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSOpenIOCtlFcb (%p) Failed service open Status %08lX\n",
                           Irp,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -3594,11 +3594,11 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
 
         lCount = InterlockedIncrement( &(*Fcb)->OpenHandleCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenIOCtlFcb Increment handle count on Fcb %p Cnt %d\n",
                       (*Fcb),
-                      lCount);
+                      lCount));
 
         //
         // Increment the open reference and handle on the parent node
@@ -3606,19 +3606,19 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
 
         lCount = InterlockedIncrement( &pParentObjectInfo->Specific.Directory.ChildOpenHandleCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenIOCtlFcb Increment child open handle count on Parent object %p Cnt %d\n",
                       pParentObjectInfo,
-                      lCount);
+                      lCount));
 
         lCount = InterlockedIncrement( &pParentObjectInfo->Specific.Directory.ChildOpenReferenceCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenIOCtlFcb Increment child open ref count on Parent object %p Cnt %d\n",
                       pParentObjectInfo,
-                      lCount);
+                      lCount));
 
         //
         // Return the open result for this file
@@ -3643,11 +3643,11 @@ try_exit:
 
                 lCount = InterlockedDecrement( &(*Fcb)->OpenReferenceCount);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSOpenIOCtlFcb Decrement count on Fcb %p Cnt %d\n",
                               (*Fcb),
-                              lCount);
+                              lCount));
             }
 
             AFSReleaseResource( &(*Fcb)->NPFcb->Resource);
@@ -3698,11 +3698,11 @@ AFSOpenSpecialShareFcb( IN PIRP Irp,
 
         pFileObject = pIrpSp->FileObject;
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_PIPE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_PIPE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
                       "AFSOpenSpecialShareFcb (%p) Processing Share %wZ open\n",
                       Irp,
-                      &DirectoryCB->NameInformation.FileName);
+                      &DirectoryCB->NameInformation.FileName));
 
         pObjectInfo = DirectoryCB->ObjectInformation;
 
@@ -3727,11 +3727,11 @@ AFSOpenSpecialShareFcb( IN PIRP Irp,
             if( !NT_SUCCESS( ntStatus))
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_PIPE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_PIPE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSOpenSpecialShareFcb (%p) Failed to initialize fcb Status %08lX\n",
                               Irp,
-                              ntStatus);
+                              ntStatus));
 
                 try_return( ntStatus);
             }
@@ -3759,11 +3759,11 @@ AFSOpenSpecialShareFcb( IN PIRP Irp,
 
         lCount = InterlockedIncrement( &(*Fcb)->OpenReferenceCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenSpecialShareFcb Increment count on Fcb %p Cnt %d\n",
                       (*Fcb),
-                      lCount);
+                      lCount));
 
         bReleaseFcb = TRUE;
 
@@ -3779,11 +3779,11 @@ AFSOpenSpecialShareFcb( IN PIRP Irp,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_PIPE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_PIPE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSOpenSpecialShareFcb (%p) Failed to initialize ccb Status %08lX\n",
                           Irp,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -3822,22 +3822,22 @@ AFSOpenSpecialShareFcb( IN PIRP Irp,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_PIPE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_PIPE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSOpenSpecialShareFcb (%p) Failed service open Status %08lX\n",
                           Irp,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
 
         lCount = InterlockedIncrement( &(*Fcb)->OpenHandleCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenSpecialShareFcb Increment handle count on Fcb %p Cnt %d\n",
                       (*Fcb),
-                      lCount);
+                      lCount));
 
         //
         // Increment the open reference and handle on the parent node
@@ -3845,19 +3845,19 @@ AFSOpenSpecialShareFcb( IN PIRP Irp,
 
         lCount = InterlockedIncrement( &pParentObjectInfo->Specific.Directory.ChildOpenHandleCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenSpecialShareFcb Increment child open handle count on Parent object %p Cnt %d\n",
                       pParentObjectInfo,
-                      lCount);
+                      lCount));
 
         lCount = InterlockedIncrement( &pParentObjectInfo->Specific.Directory.ChildOpenReferenceCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenSpecialShareFcb Increment child open ref count on Parent object %p Cnt %d\n",
                       pParentObjectInfo,
-                      lCount);
+                      lCount));
 
         //
         // Return the open result for this file
@@ -3878,11 +3878,11 @@ try_exit:
 
                 lCount = InterlockedDecrement( &(*Fcb)->OpenReferenceCount);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSOpenSpecialShareFcb Decrement count on Fcb %p Cnt %d\n",
                               (*Fcb),
-                              lCount);
+                              lCount));
             }
 
             AFSReleaseResource( &(*Fcb)->NPFcb->Resource);

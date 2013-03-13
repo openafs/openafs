@@ -829,6 +829,12 @@ typedef struct _AFS_LIBRARY_INIT_CB
 
 } AFSLibraryInitCB;
 
+typedef struct _AFS_TRACE_CONFIG_CB
+{
+
+    PAFSDbgLogMsg       AFSDbgLogMsg;
+
+} AFSDebugTraceConfigCB;
 
 #endif
 

@@ -233,6 +233,11 @@ static inline void AFSBreakPoint() {
 
 #endif
 
+#define AFSDbgTrace(X) \
+{ \
+    PAFSDbgLogMsg pTraceFnc = AFSDebugTraceFnc; \
+    if( pTraceFnc != NULL) { pTraceFnc X;} \
+}
 //
 // Library control device name
 //

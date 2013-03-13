@@ -294,9 +294,9 @@ AFSInsertCaseSensitiveDirEntry( IN AFSDirectoryCB *RootNode,
         if( pCurrentEntry == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_WARNING,
-                          "AFSInsertCaseSensitiveDirEntry Invalid root node\n");
+                          "AFSInsertCaseSensitiveDirEntry Invalid root node\n"));
 
             try_return( ntStatus = STATUS_UNSUCCESSFUL);
         }
@@ -365,11 +365,11 @@ AFSInsertCaseSensitiveDirEntry( IN AFSDirectoryCB *RootNode,
             else
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSInsertCaseSensitiveDirEntry Collision with DE %p for %wZ\n",
                               pCurrentEntry,
-                              &pCurrentEntry->NameInformation.FileName);
+                              &pCurrentEntry->NameInformation.FileName));
 
                 ntStatus = STATUS_UNSUCCESSFUL;
 
@@ -405,9 +405,9 @@ AFSInsertCaseInsensitiveDirEntry( IN AFSDirectoryCB *RootNode,
         if( pCurrentEntry == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_WARNING,
-                          "AFSInsertCaseInsensitiveDirEntry Invalid root node\n");
+                          "AFSInsertCaseInsensitiveDirEntry Invalid root node\n"));
 
             try_return( ntStatus = STATUS_UNSUCCESSFUL);
         }
@@ -1009,9 +1009,9 @@ AFSInsertShortNameDirEntry( IN AFSDirectoryCB *RootNode,
         if( pCurrentEntry == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_WARNING,
-                          "AFSInsertShortNameDirEntry Invalid root node\n");
+                          "AFSInsertShortNameDirEntry Invalid root node\n"));
 
             try_return( ntStatus = STATUS_UNSUCCESSFUL);
         }
@@ -1082,12 +1082,12 @@ AFSInsertShortNameDirEntry( IN AFSDirectoryCB *RootNode,
 
                 ntStatus = STATUS_UNSUCCESSFUL;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSInsertShortNameDirEntry Collision with DE %p for shortname %S and %wZ\n",
                               pCurrentEntry,
                               pCurrentEntry->NameInformation.ShortName,
-                              &pCurrentEntry->NameInformation.FileName);
+                              &pCurrentEntry->NameInformation.FileName));
 
                 break;
             }
@@ -1384,9 +1384,9 @@ AFSInsertHashEntry( IN AFSBTreeEntry *TopNode,
         if( pCurrentEntry == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_WARNING,
-                          "AFSInsertHashEntry Invalid root node\n");
+                          "AFSInsertHashEntry Invalid root node\n"));
 
             try_return( ntStatus = STATUS_UNSUCCESSFUL);
         }
@@ -1455,10 +1455,10 @@ AFSInsertHashEntry( IN AFSBTreeEntry *TopNode,
             else
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_WARNING,
                               "AFSInsertHashEntry Attempt to re-insert a CRC %I64X\n",
-                              FileIDEntry->HashIndex);
+                              FileIDEntry->HashIndex));
 
                 ntStatus = STATUS_UNSUCCESSFUL;
 

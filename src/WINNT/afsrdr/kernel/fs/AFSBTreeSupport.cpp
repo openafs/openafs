@@ -174,9 +174,9 @@ AFSInsertHashEntry( IN AFSBTreeEntry *TopNode,
         if( pCurrentEntry == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_WARNING,
-                          "AFSInsertHashEntry Invalid root node\n");
+                          "AFSInsertHashEntry Invalid root node\n"));
 
             try_return( ntStatus = STATUS_UNSUCCESSFUL);
         }
@@ -245,10 +245,10 @@ AFSInsertHashEntry( IN AFSBTreeEntry *TopNode,
             else
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_WARNING,
                               "AFSInsertHashEntry Attempt to re-insert a CRC %I64X\n",
-                              FileIDEntry->HashIndex);
+                              FileIDEntry->HashIndex));
 
                 ASSERT( FALSE);
 

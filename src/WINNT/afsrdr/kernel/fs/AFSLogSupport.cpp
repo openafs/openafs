@@ -207,6 +207,10 @@ AFSInitializeDbgLog()
             AFSDbgLogRemainingLength = AFSDbgBufferLength;
 
             ntStatus = STATUS_SUCCESS;
+
+            InterlockedCompareExchangePointer( (PVOID *)&AFSDebugTraceFnc,
+                                               (void *)AFSDbgLogMsg,
+                                               NULL);
         }
     }
 
@@ -387,12 +391,24 @@ AFSConfigureTrace( IN AFSTraceConfigCB *TraceInfo)
                     try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
                 }
 
+                InterlockedCompareExchangePointer( (PVOID *)&AFSDebugTraceFnc,
+                                                   (void *)AFSDbgLogMsg,
+                                                   NULL);
+
                 AFSDbgCurrentBuffer = AFSDbgBuffer;
 
                 AFSDbgLogRemainingLength = AFSDbgBufferLength;
 
                 AFSTagInitialLogEntry();
             }
+            else
+            {
+                InterlockedCompareExchangePointer( (PVOID *)&AFSDebugTraceFnc,
+                                                   NULL,
+                                                   (void *)AFSDbgLogMsg);
+            }
+
+            AFSConfigLibraryDebug();
         }
 
 try_exit:
@@ -484,7 +500,7 @@ AFSTagInitialLogEntry()
     RtlTimeToTimeFields( &liLocalTime,
                          &timeFields);
 
-    AFSDbgLogMsg( 0,
+    AFSDbgTrace(( 0,
                   0,
                   "AFS Log Initialized %d-%d-%d %d:%d Level %d Subsystems %08lX\n",
                   timeFields.Month,
@@ -493,7 +509,7 @@ AFSTagInitialLogEntry()
                   timeFields.Hour,
                   timeFields.Minute,
                   AFSTraceLevel,
-                  AFSTraceComponent);
+                  AFSTraceComponent));
 
     return;
 }

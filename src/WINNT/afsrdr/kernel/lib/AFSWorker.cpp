@@ -82,9 +82,9 @@ AFSInitializeWorkerPool()
             if( pCurrentWorker == NULL)
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSInitializeWorkerPool Failed to allocate worker context\n");
+                              "AFSInitializeWorkerPool Failed to allocate worker context\n"));
 
                 ntStatus = STATUS_INSUFFICIENT_RESOURCES;
 
@@ -100,9 +100,10 @@ AFSInitializeWorkerPool()
             if( !NT_SUCCESS( ntStatus))
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSInitializeWorkerPool Failed to initialize worker thread Status %08lX\n", ntStatus);
+                              "AFSInitializeWorkerPool Failed to initialize worker thread Status %08lX\n",
+                              ntStatus));
 
                 ExFreePool( pCurrentWorker);
 
@@ -152,9 +153,9 @@ AFSInitializeWorkerPool()
             if( pCurrentWorker == NULL)
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSInitializeWorkerPool Failed to allocate IO worker context\n");
+                              "AFSInitializeWorkerPool Failed to allocate IO worker context\n"));
 
                 ntStatus = STATUS_INSUFFICIENT_RESOURCES;
 
@@ -170,9 +171,10 @@ AFSInitializeWorkerPool()
             if( !NT_SUCCESS( ntStatus))
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSInitializeWorkerPool Failed to initialize IO worker thread Status %08lX\n", ntStatus);
+                              "AFSInitializeWorkerPool Failed to initialize IO worker thread Status %08lX\n",
+                              ntStatus));
 
                 ExFreePool( pCurrentWorker);
 
@@ -679,9 +681,10 @@ AFSWorkerThread( IN PVOID Context)
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSWorkerThread Wait for queue items failed Status %08lX\n", ntStatus);
+                          "AFSWorkerThread Wait for queue items failed Status %08lX\n",
+                          ntStatus));
 
             ntStatus = STATUS_SUCCESS;
         }
@@ -761,9 +764,10 @@ AFSWorkerThread( IN PVOID Context)
 
                     default:
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
-                                      "AFSWorkerThread Unknown request type %d\n", pWorkItem->RequestType);
+                                      "AFSWorkerThread Unknown request type %d\n",
+                                      pWorkItem->RequestType));
 
                         break;
                 }
@@ -831,9 +835,10 @@ AFSIOWorkerThread( IN PVOID Context)
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSIOWorkerThread Wait for queue items failed Status %08lX\n", ntStatus);
+                          "AFSIOWorkerThread Wait for queue items failed Status %08lX\n",
+                          ntStatus));
 
             ntStatus = STATUS_SUCCESS;
         }
@@ -908,9 +913,10 @@ AFSIOWorkerThread( IN PVOID Context)
 
                     default:
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
-                                      "AFSIOWorkerThread Unknown request type %d\n", pWorkItem->RequestType);
+                                      "AFSIOWorkerThread Unknown request type %d\n",
+                                      pWorkItem->RequestType));
 
                         break;
                 }
@@ -952,11 +958,11 @@ AFSExamineDirectory( IN AFSObjectInfoCB * pCurrentObject,
 
     pCurrentChildObject = pCurrentDirEntry->ObjectInformation;
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING | AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+    AFSDbgTrace(( AFS_SUBSYSTEM_CLEANUP_PROCESSING | AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSExamineDirectory Deleting DE %wZ Object %p\n",
                   &pCurrentDirEntry->NameInformation.FileName,
-                  pCurrentChildObject);
+                  pCurrentChildObject));
 
     AFSDeleteDirEntry( pCurrentObject,
                        pCurrentDirEntry);
@@ -972,11 +978,11 @@ AFSExamineDirectory( IN AFSObjectInfoCB * pCurrentObject,
         lCount = AFSObjectInfoIncrement( pCurrentChildObject,
                                          AFS_OBJECT_REFERENCE_WORKER);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSExamineDirectory Increment count on object %p Cnt %d\n",
                       pCurrentChildObject,
-                      lCount);
+                      lCount));
 
         if( lCount == 1 &&
             pCurrentChildObject->Fcb != NULL &&
@@ -1019,11 +1025,11 @@ AFSExamineDirectory( IN AFSObjectInfoCB * pCurrentObject,
         lCount = AFSObjectInfoDecrement( pCurrentChildObject,
                                          AFS_OBJECT_REFERENCE_WORKER);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSExamineDirectory Decrement1 count on object %p Cnt %d\n",
                       pCurrentChildObject,
-                      lCount);
+                      lCount));
 
         if( lCount == 0 &&
             pCurrentChildObject->Fcb != NULL &&
@@ -1049,20 +1055,20 @@ AFSExamineDirectory( IN AFSObjectInfoCB * pCurrentObject,
 
                 AFSExFreePoolWithTag( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->NonPaged, AFS_DIR_ENTRY_NP_TAG);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+                AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSExamineDirectory (pioctl) AFS_DIR_ENTRY_TAG deallocating %p\n",
-                              pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB);
+                              pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB));
 
                 AFSExFreePoolWithTag( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB, AFS_DIR_ENTRY_TAG);
             }
 
             AFSReleaseResource( &pCurrentChildObject->NonPagedInfo->ObjectInfoLock);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSExamineDirectory Deleting object %p\n",
-                          pCurrentChildObject);
+                          pCurrentChildObject));
 
             AFSDeleteObjectInfo( &pCurrentChildObject);
         }
@@ -1155,20 +1161,20 @@ AFSExamineObjectInfo( IN AFSObjectInfoCB * pCurrentObject,
 
                             AFSExFreePoolWithTag( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->NonPaged, AFS_DIR_ENTRY_NP_TAG);
 
-                            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+                            AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
                                           AFS_TRACE_LEVEL_VERBOSE,
                                           "AFSExamineObjectInfo (pioctl) AFS_DIR_ENTRY_TAG deallocating %p\n",
-                                          pCurrentObject->Specific.Directory.PIOCtlDirectoryCB);
+                                          pCurrentObject->Specific.Directory.PIOCtlDirectoryCB));
 
                             AFSExFreePoolWithTag( pCurrentObject->Specific.Directory.PIOCtlDirectoryCB, AFS_DIR_ENTRY_TAG);
                         }
 
                         AFSReleaseResource( &pCurrentObject->NonPagedInfo->ObjectInfoLock);
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
                                       "AFSExamineObjectInfo Deleting deleted object %p\n",
-                                      pCurrentObject);
+                                      pCurrentObject));
 
                         AFSDeleteObjectInfo( &pCurrentObject);
                     }
@@ -1202,12 +1208,12 @@ AFSExamineObjectInfo( IN AFSObjectInfoCB * pCurrentObject,
 
                     if ( pCcb->NameArray) {
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
                                       "AFSExamineObjectInfo Found Object %p Fcb %p Ccb %p\n",
                                       pCurrentObject,
                                       pCurrentObject->Fcb,
-                                      pCcb);
+                                      pCcb));
                     }
                 }
 
@@ -1517,11 +1523,11 @@ AFSExamineObjectInfo( IN AFSObjectInfoCB * pCurrentObject,
             lCount = AFSObjectInfoIncrement( pCurrentObject,
                                              AFS_OBJECT_REFERENCE_WORKER);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSExamineObjectInfo Increment3 count on object %p Cnt %d\n",
                           pCurrentObject,
-                          lCount);
+                          lCount));
 
             AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
 
@@ -1549,12 +1555,11 @@ AFSExamineObjectInfo( IN AFSObjectInfoCB * pCurrentObject,
             lCount = AFSObjectInfoDecrement( pCurrentObject,
                                              AFS_OBJECT_REFERENCE_WORKER);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSExamineObjectInfo Decrement3 count on object %p Cnt %d\n",
                           pCurrentObject,
-                          lCount);
-
+                          lCount));
 
             if ( bTemp == FALSE)
             {
@@ -1693,11 +1698,11 @@ AFSExamineVolume( IN AFSVolumeCB *pVolumeCB)
                     lCount = AFSObjectInfoIncrement( pNextObject,
                                                      AFS_OBJECT_REFERENCE_WORKER);
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSExamineVolume Increment count on object %p Cnt %d\n",
                                   pNextObject,
-                                  lCount);
+                                  lCount));
                 }
             }
             else
@@ -1716,11 +1721,11 @@ AFSExamineVolume( IN AFSVolumeCB *pVolumeCB)
                 lCount = AFSObjectInfoDecrement( pNextObject,
                                                  AFS_OBJECT_REFERENCE_WORKER);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSExamineVolume Decrement count on object %p Cnt %d\n",
                               pNextObject,
-                              lCount);
+                              lCount));
             }
 
             //
@@ -1762,9 +1767,9 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
     BOOLEAN bFcbBusy = FALSE;
     LONG lCount;
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
+    AFSDbgTrace(( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSPrimaryVolumeWorkerThread Initialized\n");
+                  "AFSPrimaryVolumeWorkerThread Initialized\n"));
 
     //
     // Initialize the timer for the worker thread
@@ -1938,9 +1943,9 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
 
     ClearFlag( pPoolContext->State, AFS_WORKER_INITIALIZED);
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
+    AFSDbgTrace(( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSPrimaryVolumeWorkerThread Exiting\n");
+                  "AFSPrimaryVolumeWorkerThread Exiting\n"));
 
     lCount = InterlockedDecrement( &pControlDeviceExt->Specific.Control.VolumeWorkerThreadCount);
 
@@ -1967,22 +1972,22 @@ AFSInsertWorkitem( IN AFSWorkItem *WorkItem)
 
     pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSInsertWorkitem Acquiring Control QueueLock lock %p EXCL %08lX\n",
                   &pControlDevExt->Specific.Control.QueueLock,
-                  PsGetCurrentThread());
+                  PsGetCurrentThread()));
 
     AFSAcquireExcl( &pControlDevExt->Specific.Control.QueueLock,
                     TRUE);
 
     lCount = InterlockedIncrement( &pControlDevExt->Specific.Control.QueueItemCount);
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+    AFSDbgTrace(( AFS_SUBSYSTEM_WORKER_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSInsertWorkitem Inserting work item %p Count %d\n",
                   WorkItem,
-                  lCount);
+                  lCount));
 
     if( pControlDevExt->Specific.Control.QueueTail != NULL) // queue already has nodes
     {
@@ -2018,22 +2023,22 @@ AFSInsertIOWorkitem( IN AFSWorkItem *WorkItem)
 
     pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSInsertIOWorkitem Acquiring Control QueueLock lock %p EXCL %08lX\n",
                   &pControlDevExt->Specific.Control.IOQueueLock,
-                  PsGetCurrentThread());
+                  PsGetCurrentThread()));
 
     AFSAcquireExcl( &pControlDevExt->Specific.Control.IOQueueLock,
                     TRUE);
 
     lCount = InterlockedIncrement( &pControlDevExt->Specific.Control.IOQueueItemCount);
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+    AFSDbgTrace(( AFS_SUBSYSTEM_WORKER_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSInsertWorkitem Inserting IO work item %p Count %d\n",
                   WorkItem,
-                  lCount);
+                  lCount));
 
     if( pControlDevExt->Specific.Control.IOQueueTail != NULL) // queue already has nodes
     {
@@ -2069,11 +2074,11 @@ AFSInsertWorkitemAtHead( IN AFSWorkItem *WorkItem)
 
     pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSInsertWorkitemAtHead Acquiring Control QueueLock lock %p EXCL %08lX\n",
                   &pControlDevExt->Specific.Control.QueueLock,
-                  PsGetCurrentThread());
+                  PsGetCurrentThread()));
 
     AFSAcquireExcl( &pControlDevExt->Specific.Control.QueueLock,
                     TRUE);
@@ -2084,11 +2089,11 @@ AFSInsertWorkitemAtHead( IN AFSWorkItem *WorkItem)
 
     lCount = InterlockedIncrement( &pControlDevExt->Specific.Control.QueueItemCount);
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+    AFSDbgTrace(( AFS_SUBSYSTEM_WORKER_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSInsertWorkitemAtHead Inserting work item %p Count %d\n",
                   WorkItem,
-                  lCount);
+                  lCount));
 
     //
     // indicate that the queue has nodes
@@ -2113,11 +2118,11 @@ AFSRemoveWorkItem()
 
     pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSRemoveWorkItem Acquiring Control QueueLock lock %p EXCL %08lX\n",
                   &pControlDevExt->Specific.Control.QueueLock,
-                  PsGetCurrentThread());
+                  PsGetCurrentThread()));
 
     AFSAcquireExcl( &pControlDevExt->Specific.Control.QueueLock,
                     TRUE);
@@ -2129,12 +2134,12 @@ AFSRemoveWorkItem()
 
         lCount = InterlockedDecrement( &pControlDevExt->Specific.Control.QueueItemCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_WORKER_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSRemoveWorkItem Removing work item %p Count %d Thread %08lX\n",
                       pWorkItem,
                       lCount,
-                      PsGetCurrentThreadId());
+                      PsGetCurrentThreadId()));
 
         pControlDevExt->Specific.Control.QueueHead = pControlDevExt->Specific.Control.QueueHead->next;
 
@@ -2171,11 +2176,11 @@ AFSRemoveIOWorkItem()
 
     pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSRemoveIOWorkItem Acquiring Control QueueLock lock %p EXCL %08lX\n",
                   &pControlDevExt->Specific.Control.IOQueueLock,
-                  PsGetCurrentThread());
+                  PsGetCurrentThread()));
 
     AFSAcquireExcl( &pControlDevExt->Specific.Control.IOQueueLock,
                     TRUE);
@@ -2187,12 +2192,12 @@ AFSRemoveIOWorkItem()
 
         lCount = InterlockedDecrement( &pControlDevExt->Specific.Control.IOQueueItemCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_WORKER_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSRemoveWorkItem Removing work item %p Count %d Thread %08lX\n",
                       pWorkItem,
                       lCount,
-                      PsGetCurrentThreadId());
+                      PsGetCurrentThreadId()));
 
         pControlDevExt->Specific.Control.IOQueueHead = pControlDevExt->Specific.Control.IOQueueHead->next;
 
@@ -2322,13 +2327,13 @@ AFSQueueFlushExtents( IN AFSFcb *Fcb,
     __try
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_WORKER_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSQueueFlushExtents Queuing request for FID %08lX-%08lX-%08lX-%08lX\n",
                       Fcb->ObjectInformation->FileId.Cell,
                       Fcb->ObjectInformation->FileId.Volume,
                       Fcb->ObjectInformation->FileId.Vnode,
-                      Fcb->ObjectInformation->FileId.Unique);
+                      Fcb->ObjectInformation->FileId.Unique));
 
         //
         // Increment our flush count here just to keep the number of items in the
@@ -2340,13 +2345,13 @@ AFSQueueFlushExtents( IN AFSFcb *Fcb,
         if( lCount > 3)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_WORKER_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSQueueFlushExtents Max queued items for FID %08lX-%08lX-%08lX-%08lX\n",
                           Fcb->ObjectInformation->FileId.Cell,
                           Fcb->ObjectInformation->FileId.Volume,
                           Fcb->ObjectInformation->FileId.Vnode,
-                          Fcb->ObjectInformation->FileId.Unique);
+                          Fcb->ObjectInformation->FileId.Unique));
 
             try_return( ntStatus);
         }
@@ -2354,9 +2359,9 @@ AFSQueueFlushExtents( IN AFSFcb *Fcb,
         if( BooleanFlagOn( pRDRDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_REDIRECTOR_SHUTDOWN))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSQueueFlushExtents Failing request, in shutdown\n");
+                          "AFSQueueFlushExtents Failing request, in shutdown\n"));
 
             try_return( ntStatus = STATUS_TOO_LATE);
         }
@@ -2372,9 +2377,9 @@ AFSQueueFlushExtents( IN AFSFcb *Fcb,
         if( pWorkItem == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSQueueFlushExtents Failed to allocate work item\n");
+                          "AFSQueueFlushExtents Failed to allocate work item\n"));
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -2410,33 +2415,33 @@ AFSQueueFlushExtents( IN AFSFcb *Fcb,
 
         lCount = InterlockedIncrement( &Fcb->OpenReferenceCount);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSQueueFlushExtents Increment count on Fcb %p Cnt %d\n",
                       Fcb,
-                      lCount);
+                      lCount));
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_WORKER_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSQueueFlushExtents Workitem %p for FID %08lX-%08lX-%08lX-%08lX\n",
                       pWorkItem,
                       Fcb->ObjectInformation->FileId.Cell,
                       Fcb->ObjectInformation->FileId.Volume,
                       Fcb->ObjectInformation->FileId.Vnode,
-                      Fcb->ObjectInformation->FileId.Unique);
+                      Fcb->ObjectInformation->FileId.Unique));
 
         ntStatus = AFSQueueWorkerRequest( pWorkItem);
 
 try_exit:
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_WORKER_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSQueueFlushExtents Request complete Status %08lX FID %08lX-%08lX-%08lX-%08lX\n",
                       Fcb->ObjectInformation->FileId.Cell,
                       Fcb->ObjectInformation->FileId.Volume,
                       Fcb->ObjectInformation->FileId.Vnode,
                       Fcb->ObjectInformation->FileId.Unique,
-                      ntStatus);
+                      ntStatus));
 
         //
         // Remove the count we added above
@@ -2465,17 +2470,18 @@ try_exit:
                 ExFreePoolWithTag( pWorkItem, AFS_WORK_ITEM_TAG);
             }
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSQueueFlushExtents Failed to queue request Status %08lX\n", ntStatus);
+                          "AFSQueueFlushExtents Failed to queue request Status %08lX\n",
+                          ntStatus));
         }
     }
     __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
-                      "EXCEPTION - AFSQueueFlushExtents\n");
+                      "EXCEPTION - AFSQueueFlushExtents\n"));
 
         AFSDumpTraceFilesFnc();
     }
@@ -2499,9 +2505,9 @@ AFSQueueGlobalRootEnumeration()
         if (NULL == pWorkItem)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSQueueGlobalRootEnumeration Failed to allocate work item\n");
+                          "AFSQueueGlobalRootEnumeration Failed to allocate work item\n"));
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES );
         }
@@ -2513,19 +2519,19 @@ AFSQueueGlobalRootEnumeration()
 
         pWorkItem->RequestType = AFS_WORK_ENUMERATE_GLOBAL_ROOT;
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_WORKER_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSQueueGlobalRootEnumeration Workitem %p\n",
-                      pWorkItem);
+                      pWorkItem));
 
         ntStatus = AFSQueueWorkerRequest( pWorkItem);
 
 try_exit:
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_WORKER_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSQueueGlobalRootEnumeration Request complete Status %08lX\n",
-                      ntStatus);
+                      ntStatus));
 
         if( !NT_SUCCESS( ntStatus))
         {
@@ -2536,18 +2542,18 @@ try_exit:
                 ExFreePoolWithTag( pWorkItem, AFS_WORK_ITEM_TAG);
             }
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSQueueGlobalRootEnumeration Failed to queue request Status %08lX\n",
-                          ntStatus);
+                          ntStatus));
         }
     }
     __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
-                      "EXCEPTION - AFSQueueGlobalRootEnumeration\n");
+                      "EXCEPTION - AFSQueueGlobalRootEnumeration\n"));
 
         AFSDumpTraceFilesFnc();
     }
@@ -2574,9 +2580,9 @@ AFSQueueStartIos( IN PFILE_OBJECT CacheFileObject,
         if( BooleanFlagOn( pRDRDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_REDIRECTOR_SHUTDOWN))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSQueueStartIos Failing request, in shutdown\n");
+                          "AFSQueueStartIos Failing request, in shutdown\n"));
 
             try_return( ntStatus = STATUS_TOO_LATE);
         }
@@ -2592,9 +2598,9 @@ AFSQueueStartIos( IN PFILE_OBJECT CacheFileObject,
         if( pWorkItem == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSQueueStartIos Failed to allocate work item\n");
+                          "AFSQueueStartIos Failed to allocate work item\n"));
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -2624,19 +2630,19 @@ AFSQueueStartIos( IN PFILE_OBJECT CacheFileObject,
 
         pWorkItem->Specific.CacheAccess.GatherIo = GatherIo;
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_WORKER_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSQueueStartIos Queuing IO Workitem %p\n",
-                      pWorkItem);
+                      pWorkItem));
 
         ntStatus = AFSQueueIOWorkerRequest( pWorkItem);
 
 try_exit:
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_WORKER_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSQueueStartIos Request complete Status %08lX\n",
-                      ntStatus);
+                      ntStatus));
 
         if( !NT_SUCCESS( ntStatus))
         {
@@ -2651,9 +2657,9 @@ try_exit:
     __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
-                      "EXCEPTION - AFSQueueStartIos\n");
+                      "EXCEPTION - AFSQueueStartIos\n"));
 
         AFSDumpTraceFilesFnc();
     }
@@ -2678,9 +2684,9 @@ AFSQueueInvalidateObject( IN AFSObjectInfoCB *ObjectInfo,
         if (NULL == pWorkItem)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSQueueInvalidateObject Failed to allocate work item\n");
+                          "AFSQueueInvalidateObject Failed to allocate work item\n"));
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES );
         }
@@ -2696,19 +2702,19 @@ AFSQueueInvalidateObject( IN AFSObjectInfoCB *ObjectInfo,
 
         pWorkItem->Specific.Invalidate.InvalidateReason = InvalidateReason;
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_WORKER_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSQueueInvalidateObject Workitem %p\n",
-                      pWorkItem);
+                      pWorkItem));
 
         ntStatus = AFSQueueWorkerRequest( pWorkItem);
 
 try_exit:
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_WORKER_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSQueueInvalidateObject Request complete Status %08lX\n",
-                      ntStatus);
+                      ntStatus));
 
         if( !NT_SUCCESS( ntStatus))
         {
@@ -2718,18 +2724,18 @@ try_exit:
                 ExFreePoolWithTag( pWorkItem, AFS_WORK_ITEM_TAG);
             }
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSQueueInvalidateObject Failed to queue request Status %08lX\n",
-                          ntStatus);
+                          ntStatus));
         }
     }
     __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
-                      "EXCEPTION - AFSQueueInvalidateObject\n");
+                      "EXCEPTION - AFSQueueInvalidateObject\n"));
 
         AFSDumpTraceFilesFnc();
     }
@@ -2759,10 +2765,10 @@ AFSDeferWrite( IN PDEVICE_OBJECT DeviceObject,
         if ( NULL == AFSLockSystemBuffer( Irp, BytesToWrite ))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "%s Could not pin user memory item\n",
-                          __FUNCTION__);
+                          __FUNCTION__));
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES );
         }
@@ -2774,10 +2780,10 @@ AFSDeferWrite( IN PDEVICE_OBJECT DeviceObject,
         if (NULL == pWorkItem)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "%s Failed to allocate work item\n",
-                          __FUNCTION__);
+                          __FUNCTION__));
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES );
         }
@@ -2795,11 +2801,11 @@ AFSDeferWrite( IN PDEVICE_OBJECT DeviceObject,
 
         pWorkItem->Specific.AsynchIo.Irp = Irp;
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING | AFS_SUBSYSTEM_WORKER_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING | AFS_SUBSYSTEM_WORKER_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s Workitem %p\n",
                       __FUNCTION__,
-                      pWorkItem);
+                      pWorkItem));
 
         CcDeferWrite( FileObject, AFSPostedDeferredWrite, pWorkItem, NULL, BytesToWrite, bRetrying);
 
@@ -2810,21 +2816,21 @@ AFSDeferWrite( IN PDEVICE_OBJECT DeviceObject,
     __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
                       "EXCEPTION - %s \n",
-                      __FUNCTION__);
+                      __FUNCTION__));
 
         ntStatus = GetExceptionCode();
     }
 
 try_exit:
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+    AFSDbgTrace(( AFS_SUBSYSTEM_WORKER_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "%s complete Status %08lX\n",
                   __FUNCTION__,
-                  ntStatus);
+                  ntStatus));
 
     if( !NT_SUCCESS( ntStatus))
     {
@@ -2835,11 +2841,11 @@ try_exit:
             ExFreePoolWithTag( pWorkItem, AFS_WORK_ITEM_TAG);
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_ERROR,
                       "%s Failed to queue request Status %08lX\n",
                       __FUNCTION__,
-                      ntStatus);
+                      ntStatus));
     }
 
     return ntStatus;
@@ -2855,11 +2861,11 @@ AFSPostedDeferredWrite( IN PVOID Context1,
 
     AFSWorkItem *pWorkItem = (AFSWorkItem *) Context1;
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING | AFS_SUBSYSTEM_WORKER_PROCESSING,
+    AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING | AFS_SUBSYSTEM_WORKER_PROCESSING,
                   AFS_TRACE_LEVEL_ERROR,
                   "%s Workitem %p\n",
                   __FUNCTION__,
-                  pWorkItem);
+                  pWorkItem));
 
     ntStatus = AFSQueueIOWorkerRequest( pWorkItem);
 
@@ -2870,11 +2876,11 @@ AFSPostedDeferredWrite( IN PVOID Context1,
 
         ExFreePoolWithTag( pWorkItem, AFS_WORK_ITEM_TAG);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING | AFS_SUBSYSTEM_WORKER_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING | AFS_SUBSYSTEM_WORKER_PROCESSING,
                       AFS_TRACE_LEVEL_ERROR,
                       "%s (%p) Failed to queue request Status %08lX\n",
                       __FUNCTION__,
                       pWorkItem->Specific.AsynchIo.Irp,
-                      ntStatus);
+                      ntStatus));
     }
 }

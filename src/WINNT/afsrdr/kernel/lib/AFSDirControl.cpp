@@ -88,9 +88,9 @@ AFSDirControl( IN PDEVICE_OBJECT LibDeviceObject,
     __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
-                      "EXCEPTION - AFSDirControl\n");
+                      "EXCEPTION - AFSDirControl\n"));
 
         AFSDumpTraceFilesFnc();
     }
@@ -155,10 +155,10 @@ AFSQueryDirectory( IN PIRP Irp)
         if( pFcb == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSQueryDirectory Attempted access (%p) when pFcb == NULL\n",
-                          Irp);
+                          Irp));
 
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
         }
@@ -168,12 +168,12 @@ AFSQueryDirectory( IN PIRP Irp)
             pFcb->Header.NodeTypeCode != AFS_ROOT_ALL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSQueryDirectory Attempted access (%p) to non-directory Fcb %p NodeType %u\n",
                           Irp,
                           pFcb,
-                          pFcb->Header.NodeTypeCode);
+                          pFcb->Header.NodeTypeCode));
 
             pFcb = NULL;
 
@@ -218,11 +218,11 @@ AFSQueryDirectory( IN PIRP Irp)
 
             ClearFlag( pCcb->Flags, CCB_FLAG_DIRECTORY_QUERY_DIRECT_QUERY);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSQueryDirectory Enumerating content for parent %wZ Mask %wZ Restart Query\n",
                           &pCcb->DirectoryCB->NameInformation.FileName,
-                          &pCcb->MaskName);
+                          &pCcb->MaskName));
 
             if( pCcb->MaskName.Length > 0 &&
                 !FsRtlDoesNameContainWildCards( &pCcb->MaskName))
@@ -244,16 +244,16 @@ AFSQueryDirectory( IN PIRP Irp)
         if( bInitialQuery)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSQueryDirectory Enumerating content for parent %wZ Initial Query\n",
-                          &pCcb->DirectoryCB->NameInformation.FileName);
+                          &pCcb->DirectoryCB->NameInformation.FileName));
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSQueryDirectory Acquiring Dcb lock %p EXCL %08lX\n",
                           &pFcb->NPFcb->Resource,
-                          PsGetCurrentThread());
+                          PsGetCurrentThread()));
 
             AFSAcquireExcl( &pFcb->NPFcb->Resource,
                             TRUE);
@@ -349,11 +349,11 @@ AFSQueryDirectory( IN PIRP Irp)
                 else
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSQueryDirectory FsRtlDoesNameContainWildCards == FALSE parent %wZ Mask %wZ\n",
                                   &pCcb->DirectoryCB->NameInformation.FileName,
-                                  puniArgFileName);
+                                  puniArgFileName));
 
                     RtlCopyMemory( pCcb->MaskName.Buffer,
                                    puniArgFileName->Buffer,
@@ -375,16 +375,16 @@ AFSQueryDirectory( IN PIRP Irp)
         else
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSQueryDirectory Enumerating content for parent %wZ Subsequent\n",
-                          &pCcb->DirectoryCB->NameInformation.FileName);
+                          &pCcb->DirectoryCB->NameInformation.FileName));
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSQueryDirectory Acquiring Dcb lock %p SHARED %08lX\n",
                           &pFcb->NPFcb->Resource,
-                          PsGetCurrentThread());
+                          PsGetCurrentThread()));
 
             AFSAcquireShared( &pFcb->NPFcb->Resource,
                               TRUE);
@@ -426,7 +426,7 @@ AFSQueryDirectory( IN PIRP Irp)
             if( bNonWildcardMatch)
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSQueryDirectory Processing non-wildcard match directly parent %wZ Mask %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                               &pCcb->DirectoryCB->NameInformation.FileName,
@@ -434,7 +434,7 @@ AFSQueryDirectory( IN PIRP Irp)
                               pFcb->ObjectInformation->FileId.Cell,
                               pFcb->ObjectInformation->FileId.Volume,
                               pFcb->ObjectInformation->FileId.Vnode,
-                              pFcb->ObjectInformation->FileId.Unique);
+                              pFcb->ObjectInformation->FileId.Unique));
 
                 ntStatus = AFSProcessDirectoryQueryDirect( pFcb,
                                                            pCcb,
@@ -445,14 +445,14 @@ AFSQueryDirectory( IN PIRP Irp)
                 try_return( ntStatus);
             }
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSQueryDirectory Enumerating parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                           &pCcb->DirectoryCB->NameInformation.FileName,
                           pFcb->ObjectInformation->FileId.Cell,
                           pFcb->ObjectInformation->FileId.Volume,
                           pFcb->ObjectInformation->FileId.Vnode,
-                          pFcb->ObjectInformation->FileId.Unique);
+                          pFcb->ObjectInformation->FileId.Unique));
 
             ntStatus = AFSEnumerateDirectory( &pCcb->AuthGroup,
                                               pFcb->ObjectInformation,
@@ -461,7 +461,7 @@ AFSQueryDirectory( IN PIRP Irp)
             if( !NT_SUCCESS( ntStatus))
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSQueryDirectory Failed to enumerate parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                               &pCcb->DirectoryCB->NameInformation.FileName,
@@ -469,7 +469,7 @@ AFSQueryDirectory( IN PIRP Irp)
                               pFcb->ObjectInformation->FileId.Volume,
                               pFcb->ObjectInformation->FileId.Vnode,
                               pFcb->ObjectInformation->FileId.Unique,
-                              ntStatus);
+                              ntStatus));
 
                 try_return( ntStatus);
             }
@@ -477,14 +477,14 @@ AFSQueryDirectory( IN PIRP Irp)
         else if( BooleanFlagOn( pFcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSQueryDirectory Verifying parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                           &pCcb->DirectoryCB->NameInformation.FileName,
                           pFcb->ObjectInformation->FileId.Cell,
                           pFcb->ObjectInformation->FileId.Volume,
                           pFcb->ObjectInformation->FileId.Vnode,
-                          pFcb->ObjectInformation->FileId.Unique);
+                          pFcb->ObjectInformation->FileId.Unique));
 
             ntStatus = AFSVerifyEntry( &pCcb->AuthGroup,
                                        pCcb->DirectoryCB);
@@ -492,7 +492,7 @@ AFSQueryDirectory( IN PIRP Irp)
             if( !NT_SUCCESS( ntStatus))
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSQueryDirectory Failed to verify parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                               &pCcb->DirectoryCB->NameInformation.FileName,
@@ -500,7 +500,7 @@ AFSQueryDirectory( IN PIRP Irp)
                               pFcb->ObjectInformation->FileId.Volume,
                               pFcb->ObjectInformation->FileId.Vnode,
                               pFcb->ObjectInformation->FileId.Unique,
-                              ntStatus);
+                              ntStatus));
 
                 try_return( ntStatus);
             }
@@ -521,12 +521,12 @@ AFSQueryDirectory( IN PIRP Irp)
             if( !NT_SUCCESS( ntStatus))
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSQueryDirectory Snapshot directory failure for parent %wZ Mask %wZ Status %08lX\n",
                               &pCcb->DirectoryCB->NameInformation.FileName,
                               &pCcb->MaskName,
-                              ntStatus);
+                              ntStatus));
 
                 try_return( ntStatus);
             }
@@ -571,12 +571,12 @@ AFSQueryDirectory( IN PIRP Irp)
 
                 AFSReleaseResource( &pCcb->NPCcb->CcbLock);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSQueryDirectory Snapshot directory failure for parent %wZ Mask %wZ Status %08lX\n",
                               &pCcb->DirectoryCB->NameInformation.FileName,
                               &pCcb->MaskName,
-                              ntStatus);
+                              ntStatus));
 
                 try_return( ntStatus);
             }
@@ -607,12 +607,12 @@ AFSQueryDirectory( IN PIRP Irp)
 
                             AFSReleaseResource( &pFcb->NPFcb->Resource);
 
-                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                           AFS_TRACE_LEVEL_ERROR,
                                           "AFSQueryDirectory Init PIOCtl directory failure for parent %wZ Mask %wZ Status %08lX\n",
                                           &pCcb->DirectoryCB->NameInformation.FileName,
                                           &pCcb->MaskName,
-                                          ntStatus);
+                                          ntStatus));
 
                             try_return( ntStatus);
                         }
@@ -630,11 +630,11 @@ AFSQueryDirectory( IN PIRP Irp)
                 }
             }
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSQueryDirectory Enumerating content for parent %wZ Mask %wZ\n",
                           &pCcb->DirectoryCB->NameInformation.FileName,
-                          &pCcb->MaskName);
+                          &pCcb->MaskName));
         }
 
         // Check if we need to start from index
@@ -717,11 +717,11 @@ AFSQueryDirectory( IN PIRP Irp)
 
             default:
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSQueryDirectory (%p) Unknown FileInformationClass %u\n",
                               Irp,
-                              FileInformationClass);
+                              FileInformationClass));
 
                 try_return( ntStatus = STATUS_INVALID_INFO_CLASS);
         }
@@ -741,13 +741,13 @@ AFSQueryDirectory( IN PIRP Irp)
 
                 lCount = InterlockedDecrement( &pDirEntry->DirOpenReferenceCount);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSQueryDirectory Decrement count on %wZ DE %p Ccb %p Cnt %d\n",
                               &pDirEntry->NameInformation.FileName,
                               pDirEntry,
                               pCcb,
-                              lCount);
+                              lCount));
 
                 ASSERT( lCount >= 0);
 
@@ -1004,11 +1004,11 @@ AFSQueryDirectory( IN PIRP Irp)
             }
 
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSQueryDirectory Insert into parent %wZ Entry %wZ\n",
                           &pCcb->DirectoryCB->NameInformation.FileName,
-                          &pDirEntry->NameInformation.FileName);
+                          &pDirEntry->NameInformation.FileName));
 
             //  Zero the base part of the structure.
             RtlZeroMemory( &pBuffer[ ulNextEntry],
@@ -1102,11 +1102,11 @@ AFSQueryDirectory( IN PIRP Irp)
 
                 default:
                 {
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
                                   "AFSQueryDirectory (%p) Unknown FileInformationClass %u\n",
                                   Irp,
-                                  FileInformationClass);
+                                  FileInformationClass));
 
                     try_return( ntStatus = STATUS_INVALID_INFO_CLASS);
                 }
@@ -1149,13 +1149,13 @@ try_exit:
 
             lCount = InterlockedDecrement( &pDirEntry->DirOpenReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSQueryDirectory Decrement8 count on %wZ DE %p Ccb %p Cnt %d\n",
                           &pDirEntry->NameInformation.FileName,
                           pDirEntry,
                           pCcb,
-                          lCount);
+                          lCount));
 
             ASSERT( lCount >= 0);
         }
@@ -1206,10 +1206,10 @@ AFSNotifyChangeDirectory( IN PIRP Irp)
         if( pFcb == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSNotifyChangeDirectory Attempted access (%p) when pFcb == NULL\n",
-                          Irp);
+                          Irp));
 
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
         }
@@ -1219,11 +1219,11 @@ AFSNotifyChangeDirectory( IN PIRP Irp)
             pFcb->Header.NodeTypeCode != AFS_ROOT_ALL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSNotifyChangeDirectory NodeTypeCode !AFS_DIRECTORY_FCB && !AFS_ROOT_FCB %wZ NodeTypeCode 0x%x\n",
                           &pCcb->DirectoryCB->NameInformation.FileName,
-                          pFcb->Header.NodeTypeCode);
+                          pFcb->Header.NodeTypeCode));
 
             try_return( ntStatus = STATUS_INVALID_PARAMETER);
         }
@@ -1232,11 +1232,11 @@ AFSNotifyChangeDirectory( IN PIRP Irp)
         ulCompletionFilter = pIrpSp->Parameters.NotifyDirectory.CompletionFilter;
         bWatchTree = BooleanFlagOn( pIrpSp->Flags, SL_WATCH_TREE);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSNotifyChangeDirectory Acquiring Dcb lock %p EXCL %08lX\n",
                       &pFcb->NPFcb->Resource,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         AFSAcquireExcl( &pFcb->NPFcb->Resource,
                           TRUE);
@@ -1318,14 +1318,14 @@ AFSLocateNextDirEntry( IN AFSObjectInfoCB *ObjectInfo,
 
                 pDirEntry = ObjectInfo->Specific.Directory.PIOCtlDirectoryCB;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSLocateNextDirEntry Returning PIOctl entry %wZ in parent FID %08lX-%08lX-%08lX-%08lX\n",
                               &pDirEntry->NameInformation.FileName,
                               ObjectInfo->FileId.Cell,
                               ObjectInfo->FileId.Volume,
                               ObjectInfo->FileId.Vnode,
-                              ObjectInfo->FileId.Unique);
+                              ObjectInfo->FileId.Unique));
             }
 
             Ccb->CurrentDirIndex++;
@@ -1344,14 +1344,14 @@ AFSLocateNextDirEntry( IN AFSObjectInfoCB *ObjectInfo,
 
             pDirEntry = AFSGlobalDotDirEntry;
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSLocateNextDirEntry Returning1 snapshot entry %wZ in parent FID %08lX-%08lX-%08lX-%08lX\n",
                           &pDirEntry->NameInformation.FileName,
                           ObjectInfo->FileId.Cell,
                           ObjectInfo->FileId.Volume,
                           ObjectInfo->FileId.Vnode,
-                          ObjectInfo->FileId.Unique);
+                          ObjectInfo->FileId.Unique));
         }
         else if( Ccb->CurrentDirIndex == (ULONG)AFS_DIR_ENTRY_DOT_DOT_INDEX)
         {
@@ -1362,14 +1362,14 @@ AFSLocateNextDirEntry( IN AFSObjectInfoCB *ObjectInfo,
 
             pDirEntry = AFSGlobalDotDotDirEntry;
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSLocateNextDirEntry Returning2 snapshot entry %wZ in parent FID %08lX-%08lX-%08lX-%08lX\n",
                           &pDirEntry->NameInformation.FileName,
                           ObjectInfo->FileId.Cell,
                           ObjectInfo->FileId.Volume,
                           ObjectInfo->FileId.Vnode,
-                          ObjectInfo->FileId.Unique);
+                          ObjectInfo->FileId.Unique));
         }
         else
         {
@@ -1387,10 +1387,10 @@ AFSLocateNextDirEntry( IN AFSObjectInfoCB *ObjectInfo,
 
             ulCount = Ccb->CurrentDirIndex;
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSLocateNextDirEntry CurrentDirIndex %08lX\n",
-                          ulCount);
+                          ulCount));
 
             //
             // Get to a valid entry
@@ -1401,10 +1401,10 @@ AFSLocateNextDirEntry( IN AFSObjectInfoCB *ObjectInfo,
 
                 pDirEntry = NULL;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSLocateNextDirEntry Searching for hash %08lX\n",
-                              pSnapshotEntry->NameHash);
+                              pSnapshotEntry->NameHash));
 
                 if( pSnapshotEntry->NameHash == 0)
                 {
@@ -1423,7 +1423,7 @@ AFSLocateNextDirEntry( IN AFSObjectInfoCB *ObjectInfo,
                     if( pDirEntry != NULL)
                     {
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
                                       "AFSLocateNextDirEntry Returning3 snapshot entry %wZ (%08lX) in parent FID %08lX-%08lX-%08lX-%08lX\n",
                                       &pDirEntry->NameInformation.FileName,
@@ -1431,32 +1431,32 @@ AFSLocateNextDirEntry( IN AFSObjectInfoCB *ObjectInfo,
                                       ObjectInfo->FileId.Cell,
                                       ObjectInfo->FileId.Volume,
                                       ObjectInfo->FileId.Vnode,
-                                      ObjectInfo->FileId.Unique);
+                                      ObjectInfo->FileId.Unique));
                     }
                     else
                     {
 
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
                                       "AFSLocateNextDirEntry Returning3 NO snapshot entry in parent FID %08lX-%08lX-%08lX-%08lX\n",
                                       ObjectInfo->FileId.Cell,
                                       ObjectInfo->FileId.Volume,
                                       ObjectInfo->FileId.Vnode,
-                                      ObjectInfo->FileId.Unique);
+                                      ObjectInfo->FileId.Unique));
                     }
 
                     break;
                 }
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSLocateNextDirEntry Entry %08lX not found in parent FID %08lX-%08lX-%08lX-%08lX\n",
                               pSnapshotEntry->NameHash,
                               ObjectInfo->FileId.Cell,
                               ObjectInfo->FileId.Volume,
                               ObjectInfo->FileId.Vnode,
-                              ObjectInfo->FileId.Unique);
+                              ObjectInfo->FileId.Unique));
 
                 pSnapshotEntry++;
 
@@ -1473,13 +1473,13 @@ try_exit:
 
             lCount = InterlockedIncrement( &pDirEntry->DirOpenReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSLocateNextDirEntry Increment count on %wZ DE %p Ccb %p Cnt %d\n",
                           &pDirEntry->NameInformation.FileName,
                           pDirEntry,
                           Ccb,
-                          lCount);
+                          lCount));
 
             ASSERT( lCount >= 0);
         }
@@ -1680,7 +1680,7 @@ AFSSnapshotDirectory( IN AFSFcb *Fcb,
                                       (ULONG)pDirEntry->CaseSensitiveTreeEntry.HashIndex))
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSSnapshotDirectory Snapshot (%08lX) Inserting entry %wZ (%08lX) Flags %08lX in parent FID %08lX-%08lX-%08lX-%08lX\n",
                               pSnapshotHdr->EntryCount,
@@ -1690,7 +1690,7 @@ AFSSnapshotDirectory( IN AFSFcb *Fcb,
                               Fcb->ObjectInformation->FileId.Cell,
                               Fcb->ObjectInformation->FileId.Volume,
                               Fcb->ObjectInformation->FileId.Vnode,
-                              Fcb->ObjectInformation->FileId.Unique);
+                              Fcb->ObjectInformation->FileId.Unique));
 
                 pSnapshotEntry->NameHash = (ULONG)pDirEntry->CaseSensitiveTreeEntry.HashIndex;
 
@@ -1699,7 +1699,7 @@ AFSSnapshotDirectory( IN AFSFcb *Fcb,
             else
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSSnapshotDirectory Snapshot (%08lX) Skipping entry %wZ (%08lX) Flags %08lX in parent FID %08lX-%08lX-%08lX-%08lX\n",
                               pSnapshotHdr->EntryCount,
@@ -1709,7 +1709,7 @@ AFSSnapshotDirectory( IN AFSFcb *Fcb,
                               Fcb->ObjectInformation->FileId.Cell,
                               Fcb->ObjectInformation->FileId.Volume,
                               Fcb->ObjectInformation->FileId.Vnode,
-                              Fcb->ObjectInformation->FileId.Unique);
+                              Fcb->ObjectInformation->FileId.Unique));
             }
 
             pDirEntry = (AFSDirectoryCB *)pDirEntry->ListEntry.fLink;
@@ -1798,13 +1798,13 @@ AFSFsRtlNotifyFullChangeDirectory( IN AFSObjectInfoCB *ObjectInfo,
             Ccb->NotifyMask.Length = (USHORT)sztLength;
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_DIR_NOTIF_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_DIR_NOTIF_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSFsRtlNotifyFullChangeDirectory Registering notification on %wZ Irp %p Filter %08lX Tree %02lX\n",
                       &Ccb->NotifyMask,
                       NotifyIrp,
                       CompletionFilter,
-                      WatchTree);
+                      WatchTree));
 
         FsRtlNotifyFilterChangeDirectory( pDeviceExt->Specific.Control.NotifySync,
                                         &pDeviceExt->Specific.Control.DirNotifyList,
@@ -1921,7 +1921,7 @@ AFSFsRtlNotifyFullReportChange( IN AFSObjectInfoCB *ParentObjectInfo,
 
         usNameOffset = uniName.Length - uniComponentName.Length;
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_DIR_NOTIF_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_DIR_NOTIF_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSFsRtlNotifyFullReportChange Notification call for %wZ Filter %08lX Action %08lX Offset %08lX Len %08lX CompLen %08lX\n",
                       &uniName,
@@ -1929,7 +1929,7 @@ AFSFsRtlNotifyFullReportChange( IN AFSObjectInfoCB *ParentObjectInfo,
                       NotificationAction,
                       usNameOffset,
                       uniName.Length,
-                      uniComponentName.Length);
+                      uniComponentName.Length));
 
         FsRtlNotifyFilterReportChange( pDeviceExt->Specific.Control.NotifySync,
                                        &pDeviceExt->Specific.Control.DirNotifyList,
@@ -1991,10 +1991,10 @@ AFSIsNameInSnapshot( IN AFSSnapshotHdr *SnapshotHdr,
 
             bIsInSnapshot = TRUE;
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSIsNameInSnapshot  Hash index %08lX already in snapshot\n",
-                          HashIndex);
+                          HashIndex));
 
             break;
         }
@@ -2046,7 +2046,7 @@ AFSProcessDirectoryQueryDirect( IN AFSFcb *Fcb,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSProcessDirectoryQueryDirect Failed to locate non-wildcard match directly parent %wZ Mask %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                           &Ccb->DirectoryCB->NameInformation.FileName,
@@ -2055,7 +2055,7 @@ AFSProcessDirectoryQueryDirect( IN AFSFcb *Fcb,
                           Fcb->ObjectInformation->FileId.Volume,
                           Fcb->ObjectInformation->FileId.Vnode,
                           Fcb->ObjectInformation->FileId.Unique,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus = STATUS_NO_SUCH_FILE);
         }
@@ -2116,11 +2116,11 @@ AFSProcessDirectoryQueryDirect( IN AFSFcb *Fcb,
 
             default:
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSProcessDirectoryQueryDirect (%p) Unknown FileInformationClass %u\n",
                               Irp,
-                              pIrpSp->Parameters.QueryDirectory.FileInformationClass);
+                              pIrpSp->Parameters.QueryDirectory.FileInformationClass));
 
                 try_return( ntStatus = STATUS_INVALID_INFO_CLASS);
         }
@@ -2216,11 +2216,11 @@ AFSProcessDirectoryQueryDirect( IN AFSFcb *Fcb,
 
             default:
             {
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSProcessDirectoryQueryDirect (%p) Unknown FileInformationClass %u\n",
                               Irp,
-                              pIrpSp->Parameters.QueryDirectory.FileInformationClass);
+                              pIrpSp->Parameters.QueryDirectory.FileInformationClass));
 
                 try_return( ntStatus = STATUS_INVALID_INFO_CLASS);
             }

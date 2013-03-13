@@ -67,7 +67,7 @@ AFSExceptionFilter( IN CHAR *FunctionString,
 
         Context = ExceptPtrs->ContextRecord;
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
                       "AFSExceptionFilter (Framework) - EXR %p CXR %p Function %s Code %08lX Address %p Routine %p\n",
                       ExceptRec,
@@ -75,7 +75,7 @@ AFSExceptionFilter( IN CHAR *FunctionString,
                       FunctionString,
                       ExceptRec->ExceptionCode,
                       ExceptRec->ExceptionAddress,
-                      (void *)AFSExceptionFilter);
+                      (void *)AFSExceptionFilter));
 
         DbgPrint("**** Exception Caught in AFS Redirector ****\n");
 
@@ -217,11 +217,11 @@ AFSReleaseResource( IN PERESOURCE Resource)
     if( Resource != &AFSDbgLogLock)
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSReleaseResource Releasing lock %p Thread %08lX\n",
                       Resource,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
     }
 
     ExReleaseResourceLite( Resource);
@@ -235,11 +235,11 @@ void
 AFSConvertToShared( IN PERESOURCE Resource)
 {
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSConvertToShared Converting lock %p Thread %08lX\n",
                   Resource,
-                  PsGetCurrentThread());
+                  PsGetCurrentThread()));
 
     ExConvertExclusiveToSharedLite( Resource);
 
@@ -1150,11 +1150,11 @@ AFSSetSysNameInformation( IN AFSSysNameNotificationCB *SysNameInfo,
         // Process the request
         //
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSSetSysNameInformation Acquiring SysName lock %p EXCL %08lX\n",
                       pSysNameLock,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         AFSAcquireExcl( pSysNameLock,
                         TRUE);
@@ -1335,10 +1335,10 @@ AFSSendDeviceIoControl( IN DEVICE_OBJECT *TargetDeviceObject,
         // Set the completion routine.
         //
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "Setting AFSIrpComplete as IoCompletion Routine Irp %p\n",
-                      pIrp);
+                      pIrp));
 
         IoSetCompletionRoutine( pIrp,
                                 AFSIrpComplete,
@@ -1465,13 +1465,13 @@ AFSExAllocatePoolWithTag( IN POOL_TYPE  PoolType,
             if ( bTimeout || pControlDevExt == NULL)
             {
 
-                AFSDbgLogMsg( 0,
+                AFSDbgTrace(( 0,
                               0,
                               "AFSExAllocatePoolWithTag failure Type %08lX Size %08lX Tag %08lX %08lX\n",
                               PoolType,
                               NumberOfBytes,
                               Tag,
-                              PsGetCurrentThread());
+                              PsGetCurrentThread()));
 
                 switch ( Tag ) {
 
@@ -1563,12 +1563,12 @@ AFSShutdownRedirector()
     __Enter
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s Shutting down redirector Extent count %08lX Request count %08lX\n",
                       __FUNCTION__,
                       pControlDevExt->Specific.Control.ExtentCount,
-                      pControlDevExt->Specific.Control.OutstandingServiceRequestCount);
+                      pControlDevExt->Specific.Control.OutstandingServiceRequestCount));
 
         //
         // Set the shutdown flag so the worker is more agressive in tearing down extents
@@ -1591,10 +1591,10 @@ AFSShutdownRedirector()
         if( ntStatus == STATUS_TIMEOUT)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_WARNING,
                           "AFSShutdownRedirector Failed to complete all service requests Remaining count %08lX\n",
-                          pControlDevExt->Specific.Control.OutstandingServiceRequestCount);
+                          pControlDevExt->Specific.Control.OutstandingServiceRequestCount));
 
             try_return( ntStatus = STATUS_UNSUCCESSFUL);
         }
@@ -1616,10 +1616,10 @@ AFSShutdownRedirector()
         if( ntStatus == STATUS_TIMEOUT)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_WARNING,
                           "AFSShutdownRedirector Failed to purge all extents Remaining count %08lX\n",
-                          pControlDevExt->Specific.Control.ExtentCount);
+                          pControlDevExt->Specific.Control.ExtentCount));
 
             try_return( ntStatus = STATUS_UNSUCCESSFUL);
         }
@@ -1634,13 +1634,13 @@ AFSShutdownRedirector()
 
 try_exit:
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s Completed shut down of redirector Extent count %08lX Request count %08lX Status %08lX\n",
                       __FUNCTION__,
                       pControlDevExt->Specific.Control.ExtentCount,
                       pControlDevExt->Specific.Control.OutstandingServiceRequestCount,
-                      ntStatus);
+                      ntStatus));
     }
 
     return ntStatus;
@@ -1663,48 +1663,48 @@ AFSAcquireFcbForLazyWrite( IN PVOID Fcb,
     // Try and acquire the Fcb resource
     //
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+    AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSAcquireFcbForLazyWrite Acquiring Fcb %p\n",
-                  Fcb);
+                  Fcb));
 
     //
     // Try and grab the paging
     //
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSAcquireFcbForLazyWrite Attempt to acquire Fcb PagingIo lock %p SHARED %08lX\n",
                   &pFcb->NPFcb->PagingResource,
-                  PsGetCurrentThread());
+                  PsGetCurrentThread()));
 
     if( AFSAcquireShared( &pFcb->NPFcb->PagingResource,
                           Wait))
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSAcquireFcbForLazyWrite Acquired Fcb PagingIo lock %p SHARED %08lX\n",
                       &pFcb->NPFcb->PagingResource,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         bReleasePaging = TRUE;
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSAcquireFcbForLazyWrite Attempt to acquire Fcb SectionObject lock %p SHARED %08lX\n",
                       &pFcb->NPFcb->SectionObjectResource,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         if( AFSAcquireShared( &pFcb->NPFcb->SectionObjectResource,
                               Wait))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSAcquireFcbForLazyWrite Acquired Fcb SectionObject lock %p SHARED %08lX\n",
                           &pFcb->NPFcb->SectionObjectResource,
-                          PsGetCurrentThread());
+                          PsGetCurrentThread()));
 
             bReleaseSectionObject = TRUE;
 
@@ -1743,10 +1743,10 @@ AFSReleaseFcbFromLazyWrite( IN PVOID Fcb)
 
     AFSFcb *pFcb = (AFSFcb *)Fcb;
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+    AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSReleaseFcbFromLazyWrite Releasing Fcb %p\n",
-                  Fcb);
+                  Fcb));
 
     IoSetTopLevelIrp( NULL);
 
@@ -1765,21 +1765,21 @@ AFSAcquireFcbForReadAhead( IN PVOID Fcb,
     BOOLEAN bStatus = FALSE;
     AFSFcb *pFcb = (AFSFcb *)Fcb;
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSAcquireFcbForReadAhead Attempt to acquire Fcb SectionObject lock %p SHARED %08lX\n",
                   &pFcb->NPFcb->SectionObjectResource,
-                  PsGetCurrentThread());
+                  PsGetCurrentThread()));
 
     if( AFSAcquireShared( &pFcb->NPFcb->SectionObjectResource,
                           Wait))
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSAcquireFcbForReadAhead Acquired Fcb SectionObject lock %p SHARED %08lX\n",
                       &pFcb->NPFcb->SectionObjectResource,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         bStatus = TRUE;
 
@@ -1831,9 +1831,9 @@ AFSGetCallerSID( OUT UNICODE_STRING *SIDString, OUT BOOLEAN *pbImpersonation)
             if( hToken == NULL)
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSGetCallerSID Failed to retrieve impersonation or primary token\n");
+                              "AFSGetCallerSID Failed to retrieve impersonation or primary token\n"));
 
                 try_return( ntStatus);
             }
@@ -1848,9 +1848,10 @@ AFSGetCallerSID( OUT UNICODE_STRING *SIDString, OUT BOOLEAN *pbImpersonation)
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSGetCallerSID Failed to retrieve information Status %08lX\n", ntStatus);
+                          "AFSGetCallerSID Failed to retrieve information Status %08lX\n",
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -1866,19 +1867,20 @@ AFSGetCallerSID( OUT UNICODE_STRING *SIDString, OUT BOOLEAN *pbImpersonation)
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSGetCallerSID Failed to convert sid to string Status %08lX\n", ntStatus);
+                          "AFSGetCallerSID Failed to convert sid to string Status %08lX\n",
+                          ntStatus));
 
             try_return( ntStatus);
         }
 
         *SIDString = uniSIDString;
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING | AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING | AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
                       "AFSGetCallerSID Successfully retrieved SID %wZ\n",
-                      SIDString);
+                      SIDString));
 
         if ( bPrimaryToken == FALSE &&
              pbImpersonation)
@@ -1938,9 +1940,9 @@ AFSGetSessionId( IN HANDLE ProcessId, OUT BOOLEAN *pbImpersonation)
             if( hToken == NULL)
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSGetSessionId Failed to retrieve impersonation or primary token\n");
+                              "AFSGetSessionId Failed to retrieve impersonation or primary token\n"));
 
                 try_return( ntStatus);
             }
@@ -1956,18 +1958,18 @@ AFSGetSessionId( IN HANDLE ProcessId, OUT BOOLEAN *pbImpersonation)
         {
             ulSessionId = (ULONG)-1;
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSGetSessionId Failed to retrieve session id Status %08lX\n",
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING | AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING | AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
                       "AFSGetSessionId found %08lX\n",
-                      ulSessionId);
+                      ulSessionId));
 
         if ( bPrimaryToken == FALSE &&
              pbImpersonation)

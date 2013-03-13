@@ -60,10 +60,10 @@ AFSFlushBuffers( IN PDEVICE_OBJECT LibDeviceObject,
         if( pFcb == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSFlushBuffers Attempted access (%p) when pFcb == NULL\n",
-                          Irp);
+                          Irp));
 
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
         }
@@ -87,11 +87,11 @@ AFSFlushBuffers( IN PDEVICE_OBJECT LibDeviceObject,
             try_return( ntStatus = STATUS_INVALID_PARAMETER);
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSFlushBuffers Acquiring Fcb SectionObject lock %p SHARED %08lX\n",
                       &pFcb->NPFcb->SectionObjectResource,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         AFSAcquireShared( &pFcb->NPFcb->SectionObjectResource,
                           TRUE);
@@ -111,7 +111,7 @@ AFSFlushBuffers( IN PDEVICE_OBJECT LibDeviceObject,
             if (!NT_SUCCESS( iosb.Status ))
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSFlushBuffers CcFlushCache [1] failure FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX Bytes 0x%08lX\n",
                               pFcb->ObjectInformation->FileId.Cell,
@@ -119,7 +119,7 @@ AFSFlushBuffers( IN PDEVICE_OBJECT LibDeviceObject,
                               pFcb->ObjectInformation->FileId.Vnode,
                               pFcb->ObjectInformation->FileId.Unique,
                               iosb.Status,
-                              iosb.Information);
+                              iosb.Information));
 
                 try_return( ntStatus = iosb.Status );
             }
@@ -130,11 +130,11 @@ AFSFlushBuffers( IN PDEVICE_OBJECT LibDeviceObject,
             try_return( ntStatus = GetExceptionCode());
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSFlushBuffers Releasing Fcb SectionObject lock %p SHARED %08lX\n",
                       &pFcb->NPFcb->SectionObjectResource,
-                      PsGetCurrentThread());
+                      PsGetCurrentThread()));
 
         AFSReleaseResource( &pFcb->NPFcb->SectionObjectResource);
 
@@ -162,11 +162,11 @@ try_exit:
         if ( bReleaseSectionObject)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSFlushBuffers Releasing Fcb SectionObject lock %p SHARED %08lX\n",
                           &pFcb->NPFcb->SectionObjectResource,
-                          PsGetCurrentThread());
+                          PsGetCurrentThread()));
 
             AFSReleaseResource( &pFcb->NPFcb->SectionObjectResource);
         }

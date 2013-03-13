@@ -95,10 +95,10 @@ AFSDevControl( IN PDEVICE_OBJECT LibDeviceObject,
                 if( !NT_SUCCESS( ntStatus))
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
                                   "AFSDevControl AFSInitializeLibrary failure %08lX\n",
-                                  ntStatus);
+                                  ntStatus));
 
                     break;
                 }
@@ -112,10 +112,10 @@ AFSDevControl( IN PDEVICE_OBJECT LibDeviceObject,
                 if( !NT_SUCCESS( ntStatus))
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
                                   "AFSDevControl AFSInitializeWorkerPool failure %08lX\n",
-                                  ntStatus);
+                                  ntStatus));
 
                     break;
                 }
@@ -129,10 +129,10 @@ AFSDevControl( IN PDEVICE_OBJECT LibDeviceObject,
                 if( !NT_SUCCESS( ntStatus))
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
                                   "AFSDevControl AFSInitializeGlobalDirectoryEntries failure %08lX\n",
-                                  ntStatus);
+                                  ntStatus));
 
                     break;
                 }
@@ -142,10 +142,10 @@ AFSDevControl( IN PDEVICE_OBJECT LibDeviceObject,
                 if( !NT_SUCCESS( ntStatus))
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
+                    AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
                                   "AFSDevControl AFSInitializeSpecialShareNameList failure %08lX\n",
-                                  ntStatus);
+                                  ntStatus));
 
                     break;
                 }
@@ -440,6 +440,16 @@ AFSDevControl( IN PDEVICE_OBJECT LibDeviceObject,
                 break;
             }
 
+            case IOCTL_AFS_CONFIG_LIBRARY_TRACE:
+            {
+
+                InterlockedCompareExchangePointer( (PVOID *)&AFSDebugTraceFnc,
+                                                   NULL,
+                                                   (void *)AFSDbgLogMsg);
+
+                break;
+            }
+
          default:
             {
                 //
@@ -462,10 +472,10 @@ AFSDevControl( IN PDEVICE_OBJECT LibDeviceObject,
 
         ntStatus = STATUS_UNSUCCESSFUL;
 
-        AFSDbgLogMsg( 0,
+        AFSDbgTrace(( 0,
                       0,
                       "EXCEPTION - AFSDevControl %08lX\n",
-                      ulIoControlCode);
+                      ulIoControlCode));
 
         AFSDumpTraceFilesFnc();
     }

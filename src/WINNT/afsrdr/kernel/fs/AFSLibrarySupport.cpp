@@ -59,10 +59,10 @@ AFSLoadLibrary( IN ULONG Flags,
         // other requests coming through
         //
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s Start load library\n",
-                      __FUNCTION__);
+                      __FUNCTION__));
 
         ntStatus = KeWaitForSingleObject( &pDevExt->Specific.Control.LoadLibraryEvent,
                                           Executive,
@@ -73,10 +73,10 @@ AFSLoadLibrary( IN ULONG Flags,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSLoadLibrary Wait for LoadLibraryEvent failure %08lX\n",
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -88,10 +88,10 @@ AFSLoadLibrary( IN ULONG Flags,
         if( BooleanFlagOn( pDevExt->Specific.Control.LibraryState, AFS_LIBRARY_LOADED))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s Library already loaded\n",
-                          __FUNCTION__);
+                          __FUNCTION__));
 
             try_return( ntStatus = STATUS_DEVICE_NOT_READY);
         }
@@ -103,9 +103,9 @@ AFSLoadLibrary( IN ULONG Flags,
         if( pDevExt->Specific.Control.LibraryServicePath.Buffer == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSLoadLibrary AFS_GENERIC_MEMORY_25_TAG allocation error\n");
+                          "AFSLoadLibrary AFS_GENERIC_MEMORY_25_TAG allocation error\n"));
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -129,11 +129,11 @@ AFSLoadLibrary( IN ULONG Flags,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "%s Failed to load library Status %08lX\n",
                           __FUNCTION__,
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -152,10 +152,10 @@ AFSLoadLibrary( IN ULONG Flags,
 
         if( !NT_SUCCESS( ntStatus))
         {
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSLoadLibrary IoGetDeviceObjectPointer failure %08lX\n",
-                          ntStatus);
+                          ntStatus));
 
             try_return( ntStatus);
         }
@@ -186,10 +186,10 @@ AFSLoadLibrary( IN ULONG Flags,
 
         ClearFlag( pDevExt->Specific.Control.LibraryState, AFS_LIBRARY_QUEUE_CANCELLED);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s Completed load library, processing queued requests\n",
-                      __FUNCTION__);
+                      __FUNCTION__));
 
         AFSReleaseResource( &pDevExt->Specific.Control.LibraryStateLock);
 
@@ -201,11 +201,11 @@ AFSLoadLibrary( IN ULONG Flags,
 
 try_exit:
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s Library load complete Status %08lX\n",
                       __FUNCTION__,
-                      ntStatus);
+                      ntStatus));
 
         if( !NT_SUCCESS( ntStatus))
         {
@@ -247,10 +247,10 @@ AFSUnloadLibrary( IN BOOLEAN CancelQueue)
         // other requests coming through
         //
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s Start unload library\n",
-                      __FUNCTION__);
+                      __FUNCTION__));
 
         ntStatus = KeWaitForSingleObject( &pDevExt->Specific.Control.LoadLibraryEvent,
                                           Executive,
@@ -313,11 +313,11 @@ AFSUnloadLibrary( IN BOOLEAN CancelQueue)
                 ntStatus != STATUS_SUCCESS)
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "%s Failed request event Status %08lX\n",
                               __FUNCTION__,
-                              ntStatus);
+                              ntStatus));
 
                 SetFlag( pDevExt->Specific.Control.LibraryState, AFS_LIBRARY_LOADED);
 
@@ -328,19 +328,19 @@ AFSUnloadLibrary( IN BOOLEAN CancelQueue)
                 try_return( ntStatus);
             }
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY,
+            AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "%s Wait for inflight requests to complete %08lX\n",
                           __FUNCTION__,
-                          pDevExt->Specific.Control.InflightLibraryRequests);
+                          pDevExt->Specific.Control.InflightLibraryRequests));
         }
 
         AFSReleaseResource( &pDevExt->Specific.Control.LibraryStateLock);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s Processing queued results\n",
-                      __FUNCTION__);
+                      __FUNCTION__));
 
         AFSProcessQueuedResults( TRUE);
 
@@ -369,11 +369,11 @@ AFSUnloadLibrary( IN BOOLEAN CancelQueue)
 
 try_exit:
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s Library unload complete Status %08lX\n",
                       __FUNCTION__,
-                      ntStatus);
+                      ntStatus));
 
         KeSetEvent( &pDevExt->Specific.Control.LoadLibraryEvent,
                     0,
@@ -398,13 +398,13 @@ AFSCheckLibraryState( IN PIRP Irp)
         AFSAcquireShared( &pDevExt->Specific.Control.LibraryStateLock,
                           TRUE);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s Entry State %08lX Irp %p Function %08lX\n",
                       __FUNCTION__,
                       pRDRDevExt->DeviceFlags,
                       Irp,
-                      pIrpSp->MajorFunction);
+                      pIrpSp->MajorFunction));
 
         if( BooleanFlagOn( pRDRDevExt->DeviceFlags, AFS_DEVICE_FLAG_REDIRECTOR_SHUTDOWN))
         {
@@ -418,31 +418,31 @@ AFSCheckLibraryState( IN PIRP Irp)
             if( Irp != NULL)
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "%s Queuing request %p\n",
                               __FUNCTION__,
-                              Irp);
+                              Irp));
 
                 ntStatus = AFSQueueLibraryRequest( Irp);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "%s Queued request %p Status %08lX\n",
                               __FUNCTION__,
                               Irp,
-                              ntStatus);
+                              ntStatus));
             }
             else
             {
 
                 ntStatus = STATUS_TOO_LATE;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "%s Failing request %p\n",
                               __FUNCTION__,
-                              Irp);
+                              Irp));
             }
 
             try_return( ntStatus);
@@ -455,13 +455,13 @@ AFSCheckLibraryState( IN PIRP Irp)
 
 try_exit:
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s Completed Irp %p Status %08lX Inflight Count %08lX\n",
                       __FUNCTION__,
                       Irp,
                       ntStatus,
-                      pDevExt->Specific.Control.InflightLibraryRequests);
+                      pDevExt->Specific.Control.InflightLibraryRequests));
 
         AFSReleaseResource( &pDevExt->Specific.Control.LibraryStateLock);
     }
@@ -478,11 +478,11 @@ AFSClearLibraryRequest()
 
     __Enter
     {
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s Inflight Count %08lX\n",
                       __FUNCTION__,
-                      pDevExt->Specific.Control.InflightLibraryRequests);
+                      pDevExt->Specific.Control.InflightLibraryRequests));
 
         if( InterlockedDecrement( &pDevExt->Specific.Control.InflightLibraryRequests) == 0)
         {
@@ -513,12 +513,12 @@ AFSQueueLibraryRequest( IN PIRP Irp)
         AFSAcquireExcl( &pDevExt->Specific.Control.LibraryQueueLock,
                         TRUE);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s Entry for Irp %p Function %08lX\n",
                       __FUNCTION__,
                       Irp,
-                      pIrpSp->MajorFunction);
+                      pIrpSp->MajorFunction));
 
         //
         // Has the load processing timed out and we are no longer
@@ -529,11 +529,11 @@ AFSQueueLibraryRequest( IN PIRP Irp)
             BooleanFlagOn( pRDRDevExt->DeviceFlags, AFS_DEVICE_FLAG_REDIRECTOR_SHUTDOWN))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY,
+            AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY,
                           AFS_TRACE_LEVEL_ERROR,
                           "%s Library not loaded for Irp %p\n",
                           __FUNCTION__,
-                          Irp);
+                          Irp));
 
             try_return( ntStatus = STATUS_DEVICE_NOT_READY);
         }
@@ -569,12 +569,12 @@ AFSQueueLibraryRequest( IN PIRP Irp)
 
 try_exit:
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s Completed for Irp %p Status %08lX\n",
                       __FUNCTION__,
                       Irp,
-                      ntStatus);
+                      ntStatus));
 
         AFSReleaseResource( &pDevExt->Specific.Control.LibraryQueueLock);
     }
@@ -593,10 +593,10 @@ AFSProcessQueuedResults( IN BOOLEAN CancelRequest)
     __Enter
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s Entry\n",
-                      __FUNCTION__);
+                      __FUNCTION__));
 
         //
         // Loop through the queue either resubmitting requests or cancelling them
@@ -633,11 +633,11 @@ AFSProcessQueuedResults( IN BOOLEAN CancelRequest)
 
                 pRequest->Irp->IoStatus.Status = STATUS_CANCELLED;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "%s Cancelling request Irp %p\n",
                               __FUNCTION__,
-                              pRequest->Irp);
+                              pRequest->Irp));
 
                 IoCompleteRequest( pRequest->Irp,
                                    IO_NO_INCREMENT);
@@ -645,11 +645,11 @@ AFSProcessQueuedResults( IN BOOLEAN CancelRequest)
             else
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY,
+                AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "%s Resubmitting request Irp %p\n",
                               __FUNCTION__,
-                              pRequest->Irp);
+                              pRequest->Irp));
 
                 AFSSubmitLibraryRequest( pRequest->Irp);
             }
@@ -657,10 +657,10 @@ AFSProcessQueuedResults( IN BOOLEAN CancelRequest)
             ExFreePool( pRequest);
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s Completed\n",
-                      __FUNCTION__);
+                      __FUNCTION__));
     }
 
     return ntStatus;
@@ -676,12 +676,12 @@ AFSSubmitLibraryRequest( IN PIRP Irp)
     __Enter
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY,
+        AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s Submitting Irp %p Function %08lX\n",
                       __FUNCTION__,
                       Irp,
-                      pIrpSp->MajorFunction);
+                      pIrpSp->MajorFunction));
 
         switch( pIrpSp->MajorFunction)
         {
@@ -916,10 +916,57 @@ AFSInitializeLibrary( IN AFSFileID *GlobalRootFid,
         if ( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_INIT_PROCESSING,
+            AFSDbgTrace(( AFS_SUBSYSTEM_INIT_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSInitializeLibrary AFSSendDeviceIoControl failure %08lX\n",
-                          ntStatus);
+                          ntStatus));
+        }
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSConfigLibraryDebug()
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSDebugTraceConfigCB stConfigLib;
+    AFSDeviceExt       *pDevExt;
+
+    __Enter
+    {
+
+        if ( AFSDeviceObject != NULL &&
+             AFSDeviceObject->DeviceExtension != NULL)
+        {
+
+            pDevExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
+
+            if ( pDevExt->Specific.Control.LibraryDeviceObject != NULL)
+            {
+                RtlZeroMemory( &stConfigLib,
+                               sizeof( AFSDebugTraceConfigCB));
+
+                stConfigLib.AFSDbgLogMsg = AFSDebugTraceFnc;
+
+                ntStatus = AFSSendDeviceIoControl( pDevExt->Specific.Control.LibraryDeviceObject,
+                                                   IOCTL_AFS_CONFIG_LIBRARY_TRACE,
+                                                   &stConfigLib,
+                                                   sizeof( AFSDebugTraceConfigCB),
+                                                   NULL,
+                                                   0,
+                                                   NULL);
+
+                if ( !NT_SUCCESS( ntStatus))
+                {
+
+                    AFSDbgTrace(( AFS_SUBSYSTEM_INIT_PROCESSING,
+                                  AFS_TRACE_LEVEL_ERROR,
+                                  "AFSInitializeLibrary AFSSendDeviceIoControl failure %08lX\n",
+                                  ntStatus));
+                }
+            }
         }
     }
 
