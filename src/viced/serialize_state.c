@@ -74,7 +74,7 @@ static int fs_stateSizeFile(struct fs_dump_state * state);
 static int fs_stateResizeFile(struct fs_dump_state * state, size_t min_add);
 static int fs_stateTruncateFile(struct fs_dump_state * state);
 
-static int fs_stateMapFile(struct fs_dump_state * state);
+static int fs_stateMapFile(struct fs_dump_state * state, int preserve_flag);
 static int fs_stateUnmapFile(struct fs_dump_state * state);
 
 static int fs_stateIncCursor(struct fs_dump_state * state, size_t len);
@@ -340,7 +340,7 @@ fs_stateCreateDump(struct fs_dump_state * state)
 	goto done;
     }
 
-    if (fs_stateMapFile(state)) {
+    if (fs_stateMapFile(state, 0)) {
 	ViceLog(0, ("fs_stateCreateDump: failed to memory map state dump file '%s'\n",
 		    state->fn));
 	ret = 1;
@@ -465,7 +465,7 @@ fs_stateLoadDump(struct fs_dump_state * state)
     state->file_len = status.st_size;
 
 #ifdef FS_STATE_USE_MMAP
-    if (fs_stateMapFile(state)) {
+    if (fs_stateMapFile(state, 0)) {
 	ViceLog(0, ("fs_stateLoadDump: failed to memory map state dump file '%s'\n",
 		    state->fn));
 	ret = 1;
@@ -734,7 +734,7 @@ fs_stateResizeFile(struct fs_dump_state * state, size_t min_add)
 	goto done;
     }
 
-    if (fs_stateMapFile(state)) {
+    if (fs_stateMapFile(state, 1)) {
 	ViceLog(0, ("fs_stateResizeFile: remapping memory mapped file failed\n"));
 	ret = 1;
 	goto done;
@@ -757,7 +757,7 @@ fs_stateTruncateFile(struct fs_dump_state * state)
 }
 
 static int
-fs_stateMapFile(struct fs_dump_state * state)
+fs_stateMapFile(struct fs_dump_state * state, int preserve_flag )
 {
     int ret = 0, flags;
 
@@ -791,8 +791,16 @@ fs_stateMapFile(struct fs_dump_state * state)
 
     state->mmap.size = state->file_len;
     state->mmap.cursor = state->mmap.map;
-    state->mmap.offset = 0;
 
+    if (preserve_flag) {
+	/* don't lose track of where we are during a file resize */
+	afs_foff_t curr_offset = state->mmap.offset;
+
+	state->mmap.offset = 0;
+	fs_stateIncCursor(state, curr_offset);
+    } else {		/* reset offset */
+	state->mmap.offset = 0;
+    }
     /* for state loading, accesses will be sequential, so let's give
      * the VM subsystem a heads up */
     if (state->mode == FS_STATE_LOAD_MODE) {
