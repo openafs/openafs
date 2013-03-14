@@ -961,112 +961,116 @@ AFSExamineDirectory( IN AFSObjectInfoCB * pCurrentObject,
     AFSDeleteDirEntry( pCurrentObject,
                        pCurrentDirEntry);
 
-    //
-    // Acquire ObjectInfoLock shared here so as not to deadlock
-    // with an invalidation call from the service during AFSCleanupFcb
-    //
-
-    lCount = AFSObjectInfoIncrement( pCurrentChildObject,
-                                     AFS_OBJECT_REFERENCE_WORKER);
-
-    AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
-                  AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSExamineDirectory Increment count on object %p Cnt %d\n",
-                  pCurrentChildObject,
-                  lCount);
-
-    if( lCount == 1 &&
-        pCurrentChildObject->Fcb != NULL &&
-        pCurrentChildObject->FileType == AFS_FILE_TYPE_FILE)
+    if ( pCurrentChildObject != NULL)
     {
 
         //
-        // We must not hold pVolumeCB->ObjectInfoTree.TreeLock exclusive
-        // across an AFSCleanupFcb call since it can deadlock with an
-        // invalidation call from the service.
+        // Acquire ObjectInfoLock shared here so as not to deadlock
+        // with an invalidation call from the service during AFSCleanupFcb
         //
 
-        AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
+        lCount = AFSObjectInfoIncrement( pCurrentChildObject,
+                                         AFS_OBJECT_REFERENCE_WORKER);
 
-        //
-        // Cannot hold a TreeLock across an AFSCleanupFcb call
-        // as it can deadlock with an invalidation ioctl initiated
-        // from the service.
-        //
-        // Dropping the TreeLock permits the
-        // pCurrentObject->ObjectReferenceCount to change
-        //
-
-        ntStatus = AFSCleanupFcb( pCurrentChildObject->Fcb,
-                                  TRUE);
-
-        if ( ntStatus == STATUS_RETRY)
-        {
-
-            bFcbBusy = TRUE;
-        }
-
-        AFSAcquireExcl( pVolumeCB->ObjectInfoTree.TreeLock,
-                        TRUE);
-    }
-
-    AFSAcquireExcl( &pCurrentChildObject->NonPagedInfo->ObjectInfoLock,
-                    TRUE);
-
-    lCount = AFSObjectInfoDecrement( pCurrentChildObject,
-                                     AFS_OBJECT_REFERENCE_WORKER);
-
-    AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
-                  AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSExamineDirectory Decrement1 count on object %p Cnt %d\n",
-                  pCurrentChildObject,
-                  lCount);
-
-    if( lCount == 0 &&
-        pCurrentChildObject->Fcb != NULL &&
-        pCurrentChildObject->Fcb->OpenReferenceCount == 0)
-    {
-
-        AFSRemoveFcb( &pCurrentChildObject->Fcb);
-
-        if( pCurrentChildObject->FileType == AFS_FILE_TYPE_DIRECTORY &&
-            pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB != NULL)
-        {
-
-            AFSAcquireExcl( &pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->NonPagedInfo->ObjectInfoLock,
-                            TRUE);
-
-            AFSRemoveFcb( &pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb);
-
-            AFSReleaseResource( &pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->NonPagedInfo->ObjectInfoLock);
-
-            AFSDeleteObjectInfo( &pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation);
-
-            ExDeleteResourceLite( &pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->NonPaged->Lock);
-
-            AFSExFreePoolWithTag( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->NonPaged, AFS_DIR_ENTRY_NP_TAG);
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSExamineDirectory (pioctl) AFS_DIR_ENTRY_TAG deallocating %p\n",
-                          pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB);
-
-            AFSExFreePoolWithTag( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB, AFS_DIR_ENTRY_TAG);
-        }
-
-        AFSReleaseResource( &pCurrentChildObject->NonPagedInfo->ObjectInfoLock);
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
+        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSExamineDirectory Deleting object %p\n",
-                      pCurrentChildObject);
+                      "AFSExamineDirectory Increment count on object %p Cnt %d\n",
+                      pCurrentChildObject,
+                      lCount);
 
-        AFSDeleteObjectInfo( &pCurrentChildObject);
-    }
-    else
-    {
+        if( lCount == 1 &&
+            pCurrentChildObject->Fcb != NULL &&
+            pCurrentChildObject->FileType == AFS_FILE_TYPE_FILE)
+        {
 
-        AFSReleaseResource( &pCurrentChildObject->NonPagedInfo->ObjectInfoLock);
+            //
+            // We must not hold pVolumeCB->ObjectInfoTree.TreeLock exclusive
+            // across an AFSCleanupFcb call since it can deadlock with an
+            // invalidation call from the service.
+            //
+
+            AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
+
+            //
+            // Cannot hold a TreeLock across an AFSCleanupFcb call
+            // as it can deadlock with an invalidation ioctl initiated
+            // from the service.
+            //
+            // Dropping the TreeLock permits the
+            // pCurrentObject->ObjectReferenceCount to change
+            //
+
+            ntStatus = AFSCleanupFcb( pCurrentChildObject->Fcb,
+                                      TRUE);
+
+            if ( ntStatus == STATUS_RETRY)
+            {
+
+                bFcbBusy = TRUE;
+            }
+
+            AFSAcquireExcl( pVolumeCB->ObjectInfoTree.TreeLock,
+                            TRUE);
+        }
+
+        AFSAcquireExcl( &pCurrentChildObject->NonPagedInfo->ObjectInfoLock,
+                        TRUE);
+
+        lCount = AFSObjectInfoDecrement( pCurrentChildObject,
+                                         AFS_OBJECT_REFERENCE_WORKER);
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSExamineDirectory Decrement1 count on object %p Cnt %d\n",
+                      pCurrentChildObject,
+                      lCount);
+
+        if( lCount == 0 &&
+            pCurrentChildObject->Fcb != NULL &&
+            pCurrentChildObject->Fcb->OpenReferenceCount == 0)
+        {
+
+            AFSRemoveFcb( &pCurrentChildObject->Fcb);
+
+            if( pCurrentChildObject->FileType == AFS_FILE_TYPE_DIRECTORY &&
+                pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB != NULL)
+            {
+
+                AFSAcquireExcl( &pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->NonPagedInfo->ObjectInfoLock,
+                                TRUE);
+
+                AFSRemoveFcb( &pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb);
+
+                AFSReleaseResource( &pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->NonPagedInfo->ObjectInfoLock);
+
+                AFSDeleteObjectInfo( &pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation);
+
+                ExDeleteResourceLite( &pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->NonPaged->Lock);
+
+                AFSExFreePoolWithTag( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->NonPaged, AFS_DIR_ENTRY_NP_TAG);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSExamineDirectory (pioctl) AFS_DIR_ENTRY_TAG deallocating %p\n",
+                              pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB);
+
+                AFSExFreePoolWithTag( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB, AFS_DIR_ENTRY_TAG);
+            }
+
+            AFSReleaseResource( &pCurrentChildObject->NonPagedInfo->ObjectInfoLock);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSExamineDirectory Deleting object %p\n",
+                          pCurrentChildObject);
+
+            AFSDeleteObjectInfo( &pCurrentChildObject);
+        }
+        else
+        {
+
+            AFSReleaseResource( &pCurrentChildObject->NonPagedInfo->ObjectInfoLock);
+        }
     }
 
     return bFcbBusy;
@@ -1252,45 +1256,49 @@ AFSExamineObjectInfo( IN AFSObjectInfoCB * pCurrentObject,
                         break;
                     }
 
-                    if ( pCurrentDirEntry->ObjectInformation->Fcb != NULL &&
-                         pCurrentDirEntry->ObjectInformation->Fcb->OpenReferenceCount > 0)
-                    {
-
-                        break;
-                    }
-
-                    if ( liCurrentTime.QuadPart <= pCurrentDirEntry->ObjectInformation->LastAccessCount.QuadPart ||
-                         liCurrentTime.QuadPart - pCurrentDirEntry->ObjectInformation->LastAccessCount.QuadPart <
-                         pControlDeviceExt->Specific.Control.ObjectLifeTimeCount.QuadPart)
-                    {
-
-                        break;
-                    }
-
-                    if ( pCurrentDirEntry->ObjectInformation->FileType == AFS_FILE_TYPE_DIRECTORY)
-                    {
-
-                        if ( pCurrentDirEntry->ObjectInformation->Specific.Directory.DirectoryNodeListHead != NULL)
-                        {
-
-                            break;
-                        }
-
-                        if ( pCurrentDirEntry->ObjectInformation->Specific.Directory.ChildOpenReferenceCount > 0)
-                        {
-
-                            break;
-                        }
-                    }
-
-                    if ( pCurrentDirEntry->ObjectInformation->FileType == AFS_FILE_TYPE_FILE)
+                    if ( pCurrentDirEntry->ObjectInformation != NULL)
                     {
 
                         if ( pCurrentDirEntry->ObjectInformation->Fcb != NULL &&
-                             pCurrentDirEntry->ObjectInformation->Fcb->Specific.File.ExtentsDirtyCount > 0)
+                             pCurrentDirEntry->ObjectInformation->Fcb->OpenReferenceCount > 0)
                         {
 
                             break;
+                        }
+
+                        if ( liCurrentTime.QuadPart <= pCurrentDirEntry->ObjectInformation->LastAccessCount.QuadPart ||
+                             liCurrentTime.QuadPart - pCurrentDirEntry->ObjectInformation->LastAccessCount.QuadPart <
+                             pControlDeviceExt->Specific.Control.ObjectLifeTimeCount.QuadPart)
+                        {
+
+                            break;
+                        }
+
+                        if ( pCurrentDirEntry->ObjectInformation->FileType == AFS_FILE_TYPE_DIRECTORY)
+                        {
+
+                            if ( pCurrentDirEntry->ObjectInformation->Specific.Directory.DirectoryNodeListHead != NULL)
+                            {
+
+                                break;
+                            }
+
+                            if ( pCurrentDirEntry->ObjectInformation->Specific.Directory.ChildOpenReferenceCount > 0)
+                            {
+
+                                break;
+                            }
+                        }
+
+                        if ( pCurrentDirEntry->ObjectInformation->FileType == AFS_FILE_TYPE_FILE)
+                        {
+
+                            if ( pCurrentDirEntry->ObjectInformation->Fcb != NULL &&
+                                 pCurrentDirEntry->ObjectInformation->Fcb->Specific.File.ExtentsDirtyCount > 0)
+                            {
+
+                                break;
+                            }
                         }
                     }
 
@@ -1357,45 +1365,49 @@ AFSExamineObjectInfo( IN AFSObjectInfoCB * pCurrentObject,
                             break;
                         }
 
-                        if ( pCurrentDirEntry->ObjectInformation->Fcb != NULL &&
-                             pCurrentDirEntry->ObjectInformation->Fcb->OpenReferenceCount > 0)
-                        {
-
-                            break;
-                        }
-
-                        if ( liCurrentTime.QuadPart <= pCurrentDirEntry->ObjectInformation->LastAccessCount.QuadPart ||
-                             liCurrentTime.QuadPart - pCurrentDirEntry->ObjectInformation->LastAccessCount.QuadPart <
-                             pControlDeviceExt->Specific.Control.ObjectLifeTimeCount.QuadPart)
-                        {
-
-                            break;
-                        }
-
-                        if ( pCurrentDirEntry->ObjectInformation->FileType == AFS_FILE_TYPE_DIRECTORY)
-                        {
-
-                            if ( pCurrentDirEntry->ObjectInformation->Specific.Directory.DirectoryNodeListHead != NULL)
-                            {
-
-                                break;
-                            }
-
-                            if ( pCurrentDirEntry->ObjectInformation->Specific.Directory.ChildOpenReferenceCount > 0)
-                            {
-
-                                break;
-                            }
-                        }
-
-                        if ( pCurrentDirEntry->ObjectInformation->FileType == AFS_FILE_TYPE_FILE)
+                        if ( pCurrentDirEntry->ObjectInformation != NULL)
                         {
 
                             if ( pCurrentDirEntry->ObjectInformation->Fcb != NULL &&
-                                 pCurrentDirEntry->ObjectInformation->Fcb->Specific.File.ExtentsDirtyCount > 0)
+                                 pCurrentDirEntry->ObjectInformation->Fcb->OpenReferenceCount > 0)
                             {
 
                                 break;
+                            }
+
+                            if ( liCurrentTime.QuadPart <= pCurrentDirEntry->ObjectInformation->LastAccessCount.QuadPart ||
+                                 liCurrentTime.QuadPart - pCurrentDirEntry->ObjectInformation->LastAccessCount.QuadPart <
+                                 pControlDeviceExt->Specific.Control.ObjectLifeTimeCount.QuadPart)
+                            {
+
+                                break;
+                            }
+
+                            if ( pCurrentDirEntry->ObjectInformation->FileType == AFS_FILE_TYPE_DIRECTORY)
+                            {
+
+                                if ( pCurrentDirEntry->ObjectInformation->Specific.Directory.DirectoryNodeListHead != NULL)
+                                {
+
+                                    break;
+                                }
+
+                                if ( pCurrentDirEntry->ObjectInformation->Specific.Directory.ChildOpenReferenceCount > 0)
+                                {
+
+                                    break;
+                                }
+                            }
+
+                            if ( pCurrentDirEntry->ObjectInformation->FileType == AFS_FILE_TYPE_FILE)
+                            {
+
+                                if ( pCurrentDirEntry->ObjectInformation->Fcb != NULL &&
+                                     pCurrentDirEntry->ObjectInformation->Fcb->Specific.File.ExtentsDirtyCount > 0)
+                                {
+
+                                    break;
+                                }
                             }
                         }
 
