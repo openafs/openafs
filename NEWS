@@ -1,8 +1,10 @@
                        User-Visible OpenAFS Changes
 
-OpenAFS 1.6.2 (in progress)
+OpenAFS 1.6.2
 
   All platforms
+
+    * Fix buffer overflows in fileserver and ptserver.
 
     * Abort an rx connection when given an unknown service (Gerrit 7593).
 
