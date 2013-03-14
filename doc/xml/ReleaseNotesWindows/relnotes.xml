@@ -4326,6 +4326,31 @@ Default: 0</para>
           <para>0: use the older I/O processing mechanism.</para>
           <para>1: use the new Direct I/O processing mechanism.</para>
         </section>
+        <section>
+          <title id="Regkey_TransarcAFSDaemon_Parameters_VolumeInfoReadOnlyFlag">Value: VolumeInfoReadOnlyFlag</title>
+          <indexterm significance="normal">
+            <primary>VolumeInfoReadOnlyFlag</primary>
+          </indexterm>
+          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para>Type: DWORD {0, 1}
+          </para>
+          <para>
+            Default: 1</para>
+          <para>The Win32 GetVolumeInformation and GetVolumeInformationByHandle APIs permit
+            applications to query volume attributes such as Case Preserving, Case Insensitive
+            lookups, support for hard links, support for reparse points, support for Unicode and
+            whether or not the volume is read only.  The FILE_READ_ONLY_VOLUME flag when set permits
+            applications such as the Explorer Shell to disable the "Delete" and "Rename" options and
+            prevent copying files into the volume without issuing the request to the file system.
+            Unfortunately, the Windows 7 explorer shell has a bug when a drive letter is mapped to a
+            UNC path.  If the mapped path refers to a read only volume, then all volumes accessible
+            via the drive letter are also treated as read only.  This bug is fixed in Windows 8 and
+            Server 2012.  To improve application compatibility the setting of the
+            FILE_READ_ONLY_VOLUME flag is disabled by default on Windows 7 and below and enabled on
+            Windows 8 and above.</para>
+          <para>0: prevent setting the FILE_READ_ONLY_VOLUME flag. (default on Win7 and below).</para>
+          <para>1: permit setting the FILE_READ_ONLY_VOLUME flag. (default on Win8 and above)</para>
+        </section>
       </section>
       <section>
         <title id="Regkey_TransarcAFSDaemon_Parameters_GlobalAutoMapper">Regkey:
