@@ -1,5 +1,13 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.6.2.1
+
+  Linux clients
+
+    * Support Linux kernels up to 3.8.
+
+    * Make the init script cope with the output of ifconfig on recent Fedora.
+
 OpenAFS 1.6.2
 
   All platforms
