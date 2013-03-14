@@ -57,7 +57,6 @@ typedef struct rock_BkgDirectWrite {
     afs_uint32  length;
     afs_uint32  bypass_cache;
     void *      memoryRegion;
-    cm_bulkIO_t biod;		/* bulk IO descriptor */
 } rock_BkgDirectWrite_t;
 
 extern afs_int32

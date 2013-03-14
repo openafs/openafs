@@ -55,7 +55,6 @@
 
 static afs_int32
 int_DirectWrite( IN cm_scache_t *scp,
-                 IN cm_bulkIO_t *biodp,
                  IN osi_hyper_t *offsetp,
                  IN afs_uint32   length,
                  IN afs_uint32   flags,
@@ -80,8 +79,6 @@ int_DirectWrite( IN cm_scache_t *scp,
     afs_uint32 written = 0;
 
     osi_assertx(userp != NULL, "null cm_user_t");
-    osi_assertx(biodp != NULL, "null cm_bulkIO_t");
-    osi_assertx(biodp->scp == scp, "cm_bulkIO_t.scp != scp");
 
     memset(&volSync, 0, sizeof(volSync));
     if (bytesWritten)
@@ -325,7 +322,6 @@ cm_BkgDirectWriteDone( cm_scache_t *scp, void *vrockp, afs_int32 code)
     rock_BkgDirectWrite_t *rockp = ((rock_BkgDirectWrite_t *)vrockp);
 
     lock_ObtainWrite(&scp->rw);
-    cm_ReleaseBIOD(&rockp->biod, 1, code, 1);
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_STOREDATA_EXCL | CM_SCACHESYNC_ASYNCSTORE);
     lock_ReleaseWrite(&scp->rw);
     free(rockp->memoryRegion);
@@ -340,15 +336,9 @@ cm_BkgDirectWrite( cm_scache_t *scp, void *vrockp, struct cm_user *userp, cm_req
     afs_uint32 bytesWritten;
     afs_int32  code;
 
-    /*
-     * Must fixup biod->reqp value since we are no longer running with the
-     * same stack as when the BIOD was created.
-     */
-    rockp->biod.reqp = reqp;
-
     osi_assertx(rockp->memoryRegion, "memoryRegion is NULL");
 
-    code = int_DirectWrite(scp, &rockp->biod, &rockp->offset, rockp->length,
+    code = int_DirectWrite(scp, &rockp->offset, rockp->length,
                            flags, userp, reqp,
                            rockp->memoryRegion, &bytesWritten);
 
@@ -373,7 +363,6 @@ cm_BkgDirectWrite( cm_scache_t *scp, void *vrockp, struct cm_user *userp, cm_req
     return code;
 }
 
-
 /*
  * cm_SetupDirectStoreBIOD differs from cm_SetupStoreBIOD in that it
  * doesn't worry about whether or not the cm_buf_t is dirty or not.  Nor
@@ -391,6 +380,7 @@ cm_BkgDirectWrite( cm_scache_t *scp, void *vrockp, struct cm_user *userp, cm_req
  * is required so that buf_WaitIO synchronizes properly with the buffer as it
  * is being written out.
  *
+ * Not currently used but want to make sure the code does not rot.
  */
 afs_int32
 cm_SetupDirectStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, afs_uint32 inSize,
