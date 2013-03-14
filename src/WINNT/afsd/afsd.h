@@ -118,6 +118,7 @@ extern int cm_dnsEnabled;
 extern int cm_readonlyVolumeVersioning;
 extern int cm_shortNames;
 extern int cm_directIO;
+extern int cm_volumeInfoReadOnlyFlag;
 
 extern long rx_mtu;
 

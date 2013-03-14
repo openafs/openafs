@@ -79,6 +79,7 @@ int cm_virtualCache = 0;
 afs_int32 cm_verifyData = 0;
 int cm_shortNames = 1;
 int cm_directIO = 1;
+int cm_volumeInfoReadOnlyFlag = 0;
 
 int smb_UseV3 = 1;
 afs_uint32 smb_Enabled = 1;
@@ -1386,6 +1387,22 @@ afsd_InitCM(char **reasonP)
             cm_shortNames = 1;
     }
     afsi_log("CM ShortNames is %u", cm_shortNames);
+
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "VolumeInfoReadOnlyFlag", NULL, NULL,
+                           (BYTE *) &dwValue, &dummyLen);
+    if (code == ERROR_SUCCESS) {
+        cm_volumeInfoReadOnlyFlag = (unsigned short) dwValue;
+    } else {
+        /* enable by default on Win 8 and Server 2012 */
+        if (osVersion.dwMajorVersion > 6 ||
+            osVersion.dwMajorVersion == 6 &&
+            osVersion.dwMinorVersion >= 2)
+            cm_volumeInfoReadOnlyFlag = 1;
+        else
+            cm_volumeInfoReadOnlyFlag = 0;
+    }
+    afsi_log("CM VolumeInfoReadOnlyFlag is %u", cm_volumeInfoReadOnlyFlag);
 
     dummyLen = sizeof(DWORD);
     code = RegQueryValueEx(parmKey, "DirectIO", NULL, NULL,
