@@ -132,6 +132,13 @@ AFSInitRDRDevice()
         AFSRDRDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
         //
+        // Increase the StackSize to support the extra stack frame required
+        // for use of IoCompletion routines.
+        //
+
+        AFSRDRDeviceObject->StackSize++;
+
+        //
         // Register this device with MUP with FilterMgr if Vista or above
         //
 

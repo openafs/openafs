@@ -808,6 +808,14 @@ AFSInitializeControlDevice()
         pDeviceExt->Specific.Control.AuthGroupTree.TreeLock = &pDeviceExt->Specific.Control.AuthGroupTreeLock;
 
         pDeviceExt->Specific.Control.AuthGroupTree.TreeHead = NULL;
+
+        //
+        // Increase the StackSize to support the extra stack frame required
+        // for use of IoCompletion routines.
+        //
+
+        AFSDeviceObject->StackSize++;
+
     }
 
     return ntStatus;
