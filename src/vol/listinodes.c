@@ -446,7 +446,6 @@ xfs_VerifyInode(char *dir, uint64_t pino, char *name, i_list_inode_t * info,
     int update_chown = 0;
     int retCode = 0;
     char tmpName[32];
-    b64_string_t stmp;
     int tag;
     afs_ino_str_t stmp;
 
