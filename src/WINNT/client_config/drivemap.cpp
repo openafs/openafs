@@ -1197,7 +1197,10 @@ void DoUnMapShare(BOOL drivemap)	//disconnect drivemap
     _strlwr(szPath);
     lpnrLocal=(LPNETRESOURCE) GlobalAlloc(GPTR,cbBuffer);
     do {
+        /* Reset lpnrLocal and cEntries before each call */
 	memset(lpnrLocal,0,cbBuffer);
+        cEntries = -1;
+
 	if ((res = WNetEnumResource(hEnum,&cEntries,lpnrLocal,&cbBuffer))==NO_ERROR)
 	{
 	    for (DWORD i=0;i<cEntries;i++)
@@ -1217,7 +1220,7 @@ void DoUnMapShare(BOOL drivemap)	//disconnect drivemap
 		}
 	    }
 	}
-    } while (res!=ERROR_NO_MORE_ITEMS);
+    } while (res == NO_ERROR);
     GlobalFree((HGLOBAL)lpnrLocal);
     WNetCloseEnum(hEnum);
 }
@@ -1249,8 +1252,11 @@ BOOL DoMapShareChange(BOOL removeUnknown)
     sprintf(szPath,"\\\\%s\\",szMachine);
     _strlwr(szPath);
     do {
+        /* Reset lpnrLocal and cEntries before each call */
 	memset(lpnrLocal,0,cbBuffer);
-	if ((res = WNetEnumResource(hEnum,&cEntries,lpnrLocal,&cbBuffer))==NO_ERROR)
+        cEntries = -1;
+
+        if ((res = WNetEnumResource(hEnum,&cEntries,lpnrLocal,&cbBuffer))==NO_ERROR)
 	{
 	    for (DWORD i=0;i<cEntries;i++)
 	    {
@@ -1274,7 +1280,7 @@ BOOL DoMapShareChange(BOOL removeUnknown)
 	      nextname:;
 	    }
 	}
-    } while (res!=ERROR_NO_MORE_ITEMS);
+    } while (res == NO_ERROR);
     GlobalFree((HGLOBAL)lpnrLocal);
     WNetCloseEnum(hEnum);
     sprintf(szPath,"\\\\%s\\all",szMachine);
