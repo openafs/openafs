@@ -1139,17 +1139,26 @@ AFSInitDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
 
             pObjectInfoCB->FileAttributes = DirEnumEntry->FileAttributes;
 
-            if( pObjectInfoCB->FileType == AFS_FILE_TYPE_MOUNTPOINT)
-            {
-
-                pObjectInfoCB->FileAttributes = (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT);
-            }
-
-            if (pObjectInfoCB->FileType == AFS_FILE_TYPE_SYMLINK ||
+            if( pObjectInfoCB->FileType == AFS_FILE_TYPE_MOUNTPOINT ||
                 pObjectInfoCB->FileType == AFS_FILE_TYPE_DFSLINK)
             {
 
-                pObjectInfoCB->FileAttributes = FILE_ATTRIBUTE_REPARSE_POINT;
+                pObjectInfoCB->FileAttributes |= (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT);
+            }
+
+            if (pObjectInfoCB->FileType == AFS_FILE_TYPE_SYMLINK)
+            {
+
+                if ( pObjectInfoCB->FileAttributes == FILE_ATTRIBUTE_NORMAL)
+                {
+
+                    pObjectInfoCB->FileAttributes = FILE_ATTRIBUTE_REPARSE_POINT;
+                }
+                else
+                {
+
+                    pObjectInfoCB->FileAttributes |= FILE_ATTRIBUTE_REPARSE_POINT;
+                }
             }
 
             pObjectInfoCB->EaSize = DirEnumEntry->EaSize;
@@ -1365,17 +1374,26 @@ AFSEvaluateNode( IN GUID *AuthGroup,
 
         DirEntry->ObjectInformation->FileAttributes = pDirEntry->FileAttributes;
 
-        if( pDirEntry->FileType == AFS_FILE_TYPE_MOUNTPOINT)
-        {
-
-            DirEntry->ObjectInformation->FileAttributes = (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT);
-        }
-
-        if( pDirEntry->FileType == AFS_FILE_TYPE_SYMLINK ||
+        if( pDirEntry->FileType == AFS_FILE_TYPE_MOUNTPOINT ||
             pDirEntry->FileType == AFS_FILE_TYPE_DFSLINK)
         {
 
-            DirEntry->ObjectInformation->FileAttributes = FILE_ATTRIBUTE_REPARSE_POINT;
+            DirEntry->ObjectInformation->FileAttributes |= (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT);
+        }
+
+        if( pDirEntry->FileType == AFS_FILE_TYPE_SYMLINK)
+        {
+
+            if ( DirEntry->ObjectInformation->FileAttributes == FILE_ATTRIBUTE_NORMAL)
+            {
+
+                DirEntry->ObjectInformation->FileAttributes = FILE_ATTRIBUTE_REPARSE_POINT;
+            }
+            else
+            {
+
+                DirEntry->ObjectInformation->FileAttributes |= FILE_ATTRIBUTE_REPARSE_POINT;
+            }
         }
 
         DirEntry->ObjectInformation->EaSize = pDirEntry->EaSize;
@@ -1554,17 +1572,26 @@ AFSValidateSymLink( IN GUID *AuthGroup,
 
         DirEntry->ObjectInformation->FileAttributes = pDirEntry->FileAttributes;
 
-        if( pDirEntry->FileType == AFS_FILE_TYPE_MOUNTPOINT)
-        {
-
-            DirEntry->ObjectInformation->FileAttributes = (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT);
-        }
-
-        if( pDirEntry->FileType == AFS_FILE_TYPE_SYMLINK ||
+        if( pDirEntry->FileType == AFS_FILE_TYPE_MOUNTPOINT ||
             pDirEntry->FileType == AFS_FILE_TYPE_DFSLINK)
         {
 
-            DirEntry->ObjectInformation->FileAttributes = FILE_ATTRIBUTE_REPARSE_POINT;
+            DirEntry->ObjectInformation->FileAttributes |= (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT);
+        }
+
+        if( pDirEntry->FileType == AFS_FILE_TYPE_SYMLINK)
+        {
+
+            if ( DirEntry->ObjectInformation->FileAttributes == FILE_ATTRIBUTE_NORMAL)
+            {
+
+                DirEntry->ObjectInformation->FileAttributes = FILE_ATTRIBUTE_REPARSE_POINT;
+            }
+            else
+            {
+
+                DirEntry->ObjectInformation->FileAttributes |= FILE_ATTRIBUTE_REPARSE_POINT;
+            }
         }
 
         DirEntry->ObjectInformation->EaSize = pDirEntry->EaSize;
@@ -3728,17 +3755,26 @@ AFSUpdateMetaData( IN AFSDirectoryCB *DirEntry,
 
         pObjectInfo->FileAttributes = DirEnumEntry->FileAttributes;
 
-        if( pObjectInfo->FileType == AFS_FILE_TYPE_MOUNTPOINT)
-        {
-
-            pObjectInfo->FileAttributes = (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT);
-        }
-
-        if( pObjectInfo->FileType == AFS_FILE_TYPE_SYMLINK ||
+        if( pObjectInfo->FileType == AFS_FILE_TYPE_MOUNTPOINT ||
             pObjectInfo->FileType == AFS_FILE_TYPE_DFSLINK)
         {
 
-            pObjectInfo->FileAttributes = FILE_ATTRIBUTE_REPARSE_POINT;
+            pObjectInfo->FileAttributes |= (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT);
+        }
+
+        if( pObjectInfo->FileType == AFS_FILE_TYPE_SYMLINK)
+        {
+
+            if ( pObjectInfo->FileAttributes == FILE_ATTRIBUTE_NORMAL)
+            {
+
+                pObjectInfo->FileAttributes = FILE_ATTRIBUTE_REPARSE_POINT;
+            }
+            else
+            {
+
+                pObjectInfo->FileAttributes |= FILE_ATTRIBUTE_REPARSE_POINT;
+            }
         }
 
         pObjectInfo->EaSize = DirEnumEntry->EaSize;
@@ -6416,13 +6452,13 @@ AFSRetrieveFileAttributes( IN AFSDirectoryCB *ParentDirectoryCB,
         // Check for the mount point being returned
         //
 
-        if( pDirectoryEntry->ObjectInformation->FileType == AFS_FILE_TYPE_MOUNTPOINT)
+        if( pDirectoryEntry->ObjectInformation->FileType == AFS_FILE_TYPE_MOUNTPOINT ||
+            pDirectoryEntry->ObjectInformation->FileType == AFS_FILE_TYPE_DFSLINK)
         {
 
-            FileInfo->FileAttributes = (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT);
+            FileInfo->FileAttributes |= (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT);
         }
-        else if( pDirectoryEntry->ObjectInformation->FileType == AFS_FILE_TYPE_SYMLINK ||
-                 pDirectoryEntry->ObjectInformation->FileType == AFS_FILE_TYPE_DFSLINK)
+        else if( pDirectoryEntry->ObjectInformation->FileType == AFS_FILE_TYPE_SYMLINK)
         {
 
             if ( FileInfo->FileAttributes == FILE_ATTRIBUTE_NORMAL)

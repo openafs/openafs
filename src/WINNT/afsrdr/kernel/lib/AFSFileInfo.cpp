@@ -846,6 +846,22 @@ AFSQueryBasicInfo( IN PIRP Irp,
 
             AFSReleaseResource( &pFcb->NPFcb->Resource);
 
+            //
+            // Its a reparse point regardless of whether the file attributes
+            // can be retrieved for the target.
+            //
+
+            if ( ulFileAttribs == FILE_ATTRIBUTE_NORMAL)
+            {
+
+                ulFileAttribs = FILE_ATTRIBUTE_REPARSE_POINT;
+            }
+            else
+            {
+
+                ulFileAttribs |= FILE_ATTRIBUTE_REPARSE_POINT;
+            }
+
             if( NT_SUCCESS( AFSRetrieveFileAttributes( pParentDirectoryCB,
                                                        DirectoryCB,
                                                        &uniParentPath,
@@ -853,17 +869,6 @@ AFSQueryBasicInfo( IN PIRP Irp,
                                                        &pCcb->AuthGroup,
                                                        &stFileInfo)))
             {
-
-                if ( ulFileAttribs == FILE_ATTRIBUTE_NORMAL)
-                {
-
-                    ulFileAttribs = FILE_ATTRIBUTE_REPARSE_POINT;
-                }
-                else
-                {
-
-                    ulFileAttribs |= FILE_ATTRIBUTE_REPARSE_POINT;
-                }
 
                 if ( stFileInfo.FileAttributes & FILE_ATTRIBUTE_DIRECTORY)
                 {
@@ -967,6 +972,22 @@ AFSQueryStandardInfo( IN PIRP Irp,
 
             AFSReleaseResource( &pFcb->NPFcb->Resource);
 
+            //
+            // Its a reparse point regardless of whether or not the
+            // file attributes can be retrieved.
+            //
+
+            if ( ulFileAttribs == FILE_ATTRIBUTE_NORMAL)
+            {
+
+                ulFileAttribs = FILE_ATTRIBUTE_REPARSE_POINT;
+            }
+            else
+            {
+
+                ulFileAttribs |= FILE_ATTRIBUTE_REPARSE_POINT;
+            }
+
             if( NT_SUCCESS( AFSRetrieveFileAttributes( pParentDirectoryCB,
                                                        DirectoryCB,
                                                        &uniParentPath,
@@ -974,17 +995,6 @@ AFSQueryStandardInfo( IN PIRP Irp,
                                                        &pCcb->AuthGroup,
                                                        &stFileInfo)))
             {
-
-                if ( ulFileAttribs == FILE_ATTRIBUTE_NORMAL)
-                {
-
-                    ulFileAttribs = FILE_ATTRIBUTE_REPARSE_POINT;
-                }
-                else
-                {
-
-                    ulFileAttribs |= FILE_ATTRIBUTE_REPARSE_POINT;
-                }
 
                 if ( stFileInfo.FileAttributes & FILE_ATTRIBUTE_DIRECTORY)
                 {
@@ -1478,6 +1488,22 @@ AFSQueryNetworkInfo( IN PIRP Irp,
 
             AFSReleaseResource( &pFcb->NPFcb->Resource);
 
+            //
+            // Its a reparse point regardless of whether the file attributes
+            // can be retrieved for the target.
+            //
+
+            if ( ulFileAttribs == FILE_ATTRIBUTE_NORMAL)
+            {
+
+                ulFileAttribs = FILE_ATTRIBUTE_REPARSE_POINT;
+            }
+            else
+            {
+
+                ulFileAttribs |= FILE_ATTRIBUTE_REPARSE_POINT;
+            }
+
             if( NT_SUCCESS( AFSRetrieveFileAttributes( pParentDirectoryCB,
                                                        DirectoryCB,
                                                        &uniParentPath,
@@ -1485,17 +1511,6 @@ AFSQueryNetworkInfo( IN PIRP Irp,
                                                        &pCcb->AuthGroup,
                                                        &stFileInfo)))
             {
-
-                if ( ulFileAttribs == FILE_ATTRIBUTE_NORMAL)
-                {
-
-                    ulFileAttribs = FILE_ATTRIBUTE_REPARSE_POINT;
-                }
-                else
-                {
-
-                    ulFileAttribs |= FILE_ATTRIBUTE_REPARSE_POINT;
-                }
 
                 if ( stFileInfo.FileAttributes & FILE_ATTRIBUTE_DIRECTORY)
                 {
@@ -1668,6 +1683,22 @@ AFSQueryAttribTagInfo( IN PIRP Irp,
 
             AFSReleaseResource( &pFcb->NPFcb->Resource);
 
+            //
+            // Its a reparse point regardless of whether the file attributes
+            // can be retrieved for the target.
+            //
+
+            if ( ulFileAttribs == FILE_ATTRIBUTE_NORMAL)
+            {
+
+                ulFileAttribs = FILE_ATTRIBUTE_REPARSE_POINT;
+            }
+            else
+            {
+
+                ulFileAttribs |= FILE_ATTRIBUTE_REPARSE_POINT;
+            }
+
             if( NT_SUCCESS( AFSRetrieveFileAttributes( pParentDirectoryCB,
                                                        DirectoryCB,
                                                        &uniParentPath,
@@ -1675,17 +1706,6 @@ AFSQueryAttribTagInfo( IN PIRP Irp,
                                                        &pCcb->AuthGroup,
                                                        &stFileInfo)))
             {
-
-                if ( ulFileAttribs == FILE_ATTRIBUTE_NORMAL)
-                {
-
-                    ulFileAttribs = FILE_ATTRIBUTE_REPARSE_POINT;
-                }
-                else
-                {
-
-                    ulFileAttribs |= FILE_ATTRIBUTE_REPARSE_POINT;
-                }
 
                 if ( stFileInfo.FileAttributes & FILE_ATTRIBUTE_DIRECTORY)
                 {
