@@ -108,6 +108,38 @@ RDR_FID2fid( AFSFileID *FileId, cm_fid_t *fid)
     fid->hash = FileId->Hash;
 }
 
+unsigned long
+RDR_ExtAttributes(cm_scache_t *scp)
+{
+    unsigned long attrs;
+
+    if (scp->fileType == CM_SCACHETYPE_DIRECTORY ||
+        scp->fid.vnode & 0x1)
+    {
+        attrs = SMB_ATTR_DIRECTORY;
+#ifdef SPECIAL_FOLDERS
+        attrs |= SMB_ATTR_SYSTEM;		/* FILE_ATTRIBUTE_SYSTEM */
+#endif /* SPECIAL_FOLDERS */
+    } else if ( scp->fileType == CM_SCACHETYPE_MOUNTPOINT ||
+                scp->fileType == CM_SCACHETYPE_DFSLINK ||
+                scp->fileType == CM_SCACHETYPE_INVALID)
+    {
+        attrs = SMB_ATTR_DIRECTORY | SMB_ATTR_REPARSE_POINT;
+    } else if ( scp->fileType == CM_SCACHETYPE_SYMLINK) {
+        attrs = SMB_ATTR_REPARSE_POINT;
+    } else {
+        attrs = 0;
+    }
+
+    if ((scp->unixModeBits & 0200) == 0)
+        attrs |= SMB_ATTR_READONLY;		/* Read-only */
+
+    if (attrs == 0)
+        attrs = SMB_ATTR_NORMAL;		/* FILE_ATTRIBUTE_NORMAL */
+
+    return attrs;
+}
+
 DWORD
 RDR_SetInitParams( OUT AFSRedirectorInitInfo **ppRedirInitInfo, OUT DWORD * pRedirInitInfoLen )
 {
@@ -530,7 +562,7 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
                 pCurrentEntry->FileAttributes = SMB_ATTR_NORMAL;
         }
     } else
-        pCurrentEntry->FileAttributes = smb_ExtAttributes(scp);
+        pCurrentEntry->FileAttributes = RDR_ExtAttributes(scp);
     pCurrentEntry->EaSize = 0;
     pCurrentEntry->Links = scp->linkCount;
 
