@@ -540,6 +540,7 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
             break;
         case CM_SCACHETYPE_MOUNTPOINT:
         case CM_SCACHETYPE_INVALID:
+        case CM_SCACHETYPE_DFSLINK:
             pCurrentEntry->FileAttributes = SMB_ATTR_DIRECTORY | SMB_ATTR_REPARSE_POINT;
             break;
         case CM_SCACHETYPE_SYMLINK:
@@ -822,8 +823,6 @@ RDR_PopulateCurrentEntryNoScp( IN  AFSDirEnumEntry * pCurrentEntry,
     pCurrentEntry->FileId.Unique = fidp->unique;
     pCurrentEntry->FileId.Hash = fidp->hash;
 
-    pCurrentEntry->FileType = CM_SCACHETYPE_UNKNOWN;
-
     pCurrentEntry->DataVersion.QuadPart = CM_SCACHE_VERSION_BAD;
 
     cm_LargeSearchTimeFromUnixTime(&ft, 0);
@@ -839,8 +838,14 @@ RDR_PopulateCurrentEntryNoScp( IN  AFSDirEnumEntry * pCurrentEntry,
 
     pCurrentEntry->EndOfFile.QuadPart = 0;
     pCurrentEntry->AllocationSize.QuadPart = 0;
-    pCurrentEntry->FileAttributes = 0;
+    if (fidp->vnode & 0x1) {
+        pCurrentEntry->FileType = CM_SCACHETYPE_DIRECTORY;
+        pCurrentEntry->FileAttributes = SMB_ATTR_DIRECTORY;
+    } else {
+        pCurrentEntry->FileType = CM_SCACHETYPE_UNKNOWN;
+        pCurrentEntry->FileAttributes = SMB_ATTR_NORMAL;
     pCurrentEntry->EaSize = 0;
+    }
     pCurrentEntry->Links = 0;
 
     len = wcslen(shortName);

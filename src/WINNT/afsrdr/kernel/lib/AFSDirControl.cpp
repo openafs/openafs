@@ -928,58 +928,67 @@ AFSQueryDirectory( IN PIRP Irp)
             }
 
 
-            //
-            // For Symlinks and Mount Points the reparse point attribute
-            // must be associated with the directory entry.  In addition,
-            // for Symlinks it must be determined if the target object is
-            // a directory or not.  If so, the directory attribute must be
-            // specified.  Mount points always refer to directories and
-            // must have the directory attribute set.
-            //
-
-            switch( pObjectInfo->FileType)
+            switch ( FileInformationClass)
             {
-
-            case AFS_FILE_TYPE_MOUNTPOINT:
-            case AFS_FILE_TYPE_DFSLINK:
-            {
-
-                ulAdditionalAttributes = FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT;
-
-                break;
-            }
-
-            case AFS_FILE_TYPE_SYMLINK:
-            {
+            case FileIdBothDirectoryInformation:
+            case FileBothDirectoryInformation:
+            case FileIdFullDirectoryInformation:
+            case FileFullDirectoryInformation:
+            case FileDirectoryInformation:
 
                 //
-                // Go grab the file information for this entry
-                // No worries on failures since we will just display
-                // pseudo information
+                // For Symlinks and Mount Points the reparse point attribute
+                // must be associated with the directory entry.  In addition,
+                // for Symlinks it must be determined if the target object is
+                // a directory or not.  If so, the directory attribute must be
+                // specified.  Mount points always refer to directories and
+                // must have the directory attribute set.
                 //
 
-                RtlZeroMemory( &stFileInfo,
-                               sizeof( AFSFileInfoCB));
-
-                if( NT_SUCCESS( AFSRetrieveFileAttributes( pCcb->DirectoryCB,
-                                                           pDirEntry,
-                                                           &pCcb->FullFileName,
-                                                           pCcb->NameArray,
-                                                           &pCcb->AuthGroup,
-                                                           &stFileInfo)))
+                switch( pObjectInfo->FileType)
                 {
 
-                    if ( stFileInfo.FileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+                case AFS_FILE_TYPE_MOUNTPOINT:
+                case AFS_FILE_TYPE_DFSLINK:
                     {
 
-                        ulAdditionalAttributes = FILE_ATTRIBUTE_DIRECTORY;
+                        ulAdditionalAttributes = FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT;
+
+                        break;
+                    }
+
+                case AFS_FILE_TYPE_SYMLINK:
+                    {
+
+                        //
+                        // Go grab the file information for this entry
+                        // No worries on failures since we will just display
+                        // pseudo information
+                        //
+
+                        RtlZeroMemory( &stFileInfo,
+                                       sizeof( AFSFileInfoCB));
+
+                        if( NT_SUCCESS( AFSRetrieveFileAttributes( pCcb->DirectoryCB,
+                                                                   pDirEntry,
+                                                                   &pCcb->FullFileName,
+                                                                   pCcb->NameArray,
+                                                                   &pCcb->AuthGroup,
+                                                                   &stFileInfo)))
+                        {
+
+                            if ( stFileInfo.FileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+                            {
+
+                                ulAdditionalAttributes = FILE_ATTRIBUTE_DIRECTORY;
+                            }
+                        }
+
+                        ulAdditionalAttributes |= FILE_ATTRIBUTE_REPARSE_POINT;
+
+                        break;
                     }
                 }
-
-                ulAdditionalAttributes |= FILE_ATTRIBUTE_REPARSE_POINT;
-
-                break;
-            }
             }
 
             //
@@ -2015,7 +2024,6 @@ AFSProcessDirectoryQueryDirect( IN AFSFcb *Fcb,
     PUCHAR           pBuffer = NULL;
     ULONG            ulBaseLength = 0;
     ULONG            ulAdditionalAttributes = 0;
-    AFSFileInfoCB    stFileInfo;
     ULONG            ulBytesConverted = 0;
     PFILE_DIRECTORY_INFORMATION pDirInfo;
     PFILE_FULL_DIR_INFORMATION pFullDirInfo;
