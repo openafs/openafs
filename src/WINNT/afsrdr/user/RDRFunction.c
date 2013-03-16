@@ -676,7 +676,7 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
                         } else if (mp[offset] == '\\') {
                             size_t nbNameLen = strlen(cm_NetbiosName);
 
-                            if ( strncmp(&mp[offset + 1], cm_NetbiosName, nbNameLen) == 0 &&
+                            if ( strnicmp(&mp[offset + 1], cm_NetbiosName, nbNameLen) == 0 &&
                                  mp[offset + nbNameLen + 1] == '\\')
                             {
                                 /* an AFS symlink */
@@ -691,7 +691,7 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
                                 mbstowcs(wtarget, &mp[offset], wtarget_len);
 #endif
                             } else if ( mp[offset + 1] == '\\' &&
-                                        strncmp(&mp[offset + 2], cm_NetbiosName, strlen(cm_NetbiosName)) == 0 &&
+                                        strnicmp(&mp[offset + 2], cm_NetbiosName, strlen(cm_NetbiosName)) == 0 &&
                                         mp[offset + nbNameLen + 2] == '\\')
                             {
                                 /* an AFS symlink */
