@@ -176,14 +176,6 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
             ntStatus = STATUS_SUCCESS;
         }
 
-        //
-        // Initialize the debug log and dump file interface
-        //
-
-        AFSInitializeDbgLog();
-
-        AFSInitializeDumpFile();
-
 #if DBG
 
         if( BooleanFlagOn( AFSDebugFlags, AFS_DBG_FLAG_BREAK_ON_ENTRY))
@@ -211,6 +203,14 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
 
             try_return( ntStatus = STATUS_UNSUCCESSFUL);
         }
+
+        //
+        // Initialize the debug log and dump file interface
+        //
+
+        AFSInitializeDbgLog();
+
+        AFSInitializeDumpFile();
 
         //
         // Setup the registry string
