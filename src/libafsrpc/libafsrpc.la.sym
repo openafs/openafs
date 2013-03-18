@@ -164,6 +164,7 @@ rxs_Release
 time_to_life
 tkt_CheckTimes
 tkt_DecodeTicket
+tkt_DeriveDesKey
 tkt_MakeTicket
 tkt_MakeTicket5
 xdr_afsUUID
