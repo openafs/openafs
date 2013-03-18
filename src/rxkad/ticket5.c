@@ -83,6 +83,7 @@
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <des.h>
+#include <des_prototypes.h>
 #include "lifetimes.h"
 #include "rxkad.h"
 #endif /* defined(UKERNEL) */
@@ -184,8 +185,11 @@ static const struct krb_convert sconv_list[] = {
 static int
   krb5_des_decrypt(struct ktc_encryptionKey *, int, void *, size_t, void *,
 		   size_t *);
-
-
+static int rxkad_derive_des_key(const void *, size_t,
+				struct ktc_encryptionKey *);
+static int compress_parity_bits(void *, size_t *);
+static void hmac_md5_iov(const void *, size_t, const struct iovec *,
+			 unsigned int, void *);
 
 
 int
@@ -330,21 +334,9 @@ tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
     }
 
     /* Verify that decr_part.key is of right type */
-    switch (decr_part.key.keytype) {
-    case ETYPE_DES_CBC_CRC:
-    case ETYPE_DES_CBC_MD4:
-    case ETYPE_DES_CBC_MD5:
-	break;
-    default:
+    if (tkt_DeriveDesKey(decr_part.key.keytype, decr_part.key.keyvalue.data,
+			 decr_part.key.keyvalue.length, session_key) != 0)
 	goto bad_ticket;
-    }
-
-    if (decr_part.key.keyvalue.length != 8)
-	goto bad_ticket;
-
-    /* Extract session key */
-    memcpy(session_key, decr_part.key.keyvalue.data, 8);
-
     /* Check lifetimes and host addresses, flags etc */
     {
 	time_t now = time(0);	/* Use fast time package instead??? */
@@ -491,4 +483,177 @@ krb5_des_decrypt(struct ktc_encryptionKey *key, int etype, void *in,
     memmove(out, (char *)out + CONFOUNDERSZ + cksumsz, *outsz);
 
     return ret;
+}
+
+/*
+ * Use NIST SP800-108 with HMAC(MD5) in counter mode as the PRF to derive a
+ * des key from another type of key.
+ *
+ * L is 64, as we take 64 random bits and turn them into a 56-bit des key.
+ * The output of hmac_md5 is 128 bits; we take the first 64 only, so n
+ * properly should be 1.  However, we apply a slight variation due to the
+ * possibility of producing a weak des key.  If the output key is weak, do NOT
+ * simply correct it, instead, the counter is advanced and the next output
+ * used.  As such, we code so as to have n be the full 255 permitted by our
+ * encoding of the counter i in an 8-bit field.  L itself is encoded as a
+ * 32-bit field, big-endian.  We use the constant string "rxkad" as a label
+ * for this key derivation, the standard NUL byte separator, and omit a
+ * key-derivation context.  The input key is unique to the krb5 service ticket,
+ * which is unlikely to be used in an other location.  If it is used in such
+ * a fashion, both locations will derive the same des key from the PRF, but
+ * this is no different from if a krb5 des key had been used in the same way,
+ * as traditional krb5 rxkad uses the ticket session key directly as the token
+ * key.
+ */
+static int
+rxkad_derive_des_key(const void *in, size_t insize,
+		     struct ktc_encryptionKey *out)
+{
+    unsigned char i;
+    char Lbuf[4];		/* bits of output, as 32 bit word, MSB first */
+    char tmp[16];
+    struct iovec iov[3];
+    des_cblock ktmp;
+
+    Lbuf[0] = 0;
+    Lbuf[1] = 0;
+    Lbuf[2] = 0;
+    Lbuf[3] = 64;
+
+    iov[0].iov_base = &i;
+    iov[0].iov_len = 1;
+    iov[1].iov_base = "rxkad";
+    iov[1].iov_len = strlen("rxkad") + 1;   /* includes label and separator */
+    iov[2].iov_base = Lbuf;
+    iov[2].iov_len = 4;
+
+    /* stop when 8 bit counter wraps to 0 */
+    for (i = 1; i ; i++) {
+	hmac_md5_iov(in, insize, iov, 3, tmp);
+	memcpy(ktmp, tmp, 8);
+	des_fixup_key_parity(ktmp);
+	if (!des_is_weak_key(ktmp)) {
+	    memcpy(out->data, ktmp, 8);
+	    return 0;
+	}
+    }
+    return -1;
+}
+
+/*
+ * This is the inverse of the random-to-key for 3des specified in
+ * rfc3961, converting blocks of 8 bytes to blocks of 7 bytes by distributing
+ * the bits of each 8th byte as the lsb of the previous 7 bytes.
+ */
+static int
+compress_parity_bits(void *buffer, size_t *bufsiz)
+{
+    unsigned char *cb, tmp;
+    int i, j, nk;
+
+    if (*bufsiz % 8 != 0)
+	return 1;
+    cb = (unsigned char *)buffer;
+    nk = *bufsiz / 8;
+    for (i = 0; i < nk; i++) {
+	tmp = cb[8 * i + 7] >> 1;
+	for (j = 0; j < 7; j++) {
+	    cb[8 * i + j] &= 0xfe;
+	    cb[8 * i + j] |= tmp & 0x1;
+	    tmp >>= 1;
+	}
+    }
+    for (i = 1; i < nk; i++)
+	memmove(cb + 7 * i, cb + 8 * i, 7);
+    *bufsiz = 7 * nk;
+    return 0;
+}
+
+/* HMAC: Keyed-Hashing for Message Authentication, using MD5 as the hash.
+ * See RFC 2104.
+ *
+ * The constants 64 and 16 are the input block size and output length,
+ * respectively, of md5.
+ */
+static void
+hmac_md5_iov(const void *key, size_t ks,
+	     const struct iovec *data, unsigned int niov, void *output)
+{
+    MD5_CTX md5;
+    const unsigned char *kp;
+    unsigned int i;
+    unsigned char tmp[16], tmpk[16], i_pad[64], o_pad[64];
+    if (ks > 64) {
+	MD5_Init(&md5);
+	MD5_Update(&md5, key, ks);
+	MD5_Final(tmpk, &md5);
+	key = tmpk;
+	ks = 16;
+    }
+    kp = key;
+    for (i = 0; i < ks; i++)
+	i_pad[i] = kp[i] ^ 0x36;
+    memset(i_pad + ks, 0x36, 64 - ks);
+    MD5_Init(&md5);
+    MD5_Update(&md5, i_pad, 64);
+    for (i = 0; i < niov; i++)
+	MD5_Update(&md5, data[i].iov_base, data[i].iov_len);
+    MD5_Final(tmp, &md5);
+    for (i = 0; i < ks; i++)
+	o_pad[i] = kp[i] ^ 0x5c;
+    memset(o_pad + ks, 0x5c, 64 - ks);
+    MD5_Init(&md5);
+    MD5_Update(&md5, o_pad, 64);
+    MD5_Update(&md5, tmp, 16);
+    MD5_Final(output, &md5);
+}
+
+/*
+ * Enctype-specific knowledge about how to derive a des key from a given
+ * key.  If given a des key, use it directly; otherwise, perform any
+ * parity fixup that may be needed and pass through to the hmad-md5 bits.
+ */
+int
+tkt_DeriveDesKey(int enctype, void *keydata, size_t keylen,
+		 struct ktc_encryptionKey *output)
+{
+    switch (enctype) {
+    case ETYPE_DES_CBC_CRC:
+    case ETYPE_DES_CBC_MD4:
+    case ETYPE_DES_CBC_MD5:
+	if (keylen != 8)
+	    return 1;
+
+	/* Extract session key */
+	memcpy(output, keydata, 8);
+	break;
+    case ETYPE_NULL:
+    case 4:
+    case 6:
+    case 8:
+    case 9:
+    case 10:
+    case 11:
+    case 12:
+    case 13:
+    case 14:
+    case 15:
+	return 1;
+	/*In order to become a "Cryptographic Key" as specified in
+	 * SP800-108, it must be indistinguishable from a random bitstring. */
+    case ETYPE_DES3_CBC_MD5:
+    case ETYPE_OLD_DES3_CBC_SHA1:
+    case ETYPE_DES3_CBC_SHA1:
+	if (compress_parity_bits(keydata, &keylen))
+	    return 1;
+	/* FALLTHROUGH */
+    default:
+	if (enctype < 0)
+	    return 1;
+	if (keylen < 7)
+	    return 1;
+	if (rxkad_derive_des_key(keydata, keylen, output) != 0)
+	    return 1;
+    }
+    return 0;
 }

@@ -638,6 +638,8 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	    char *p;
 	    char k4name[ANAME_SZ], k4inst[INST_SZ], k4realm[REALM_SZ];
 	    int len;
+	    void *inkey = get_cred_keydata(v5cred);
+	    size_t inkey_sz = get_cred_keylen(v5cred);
 
 	    if (dflag)
 	    	printf("Using Kerberos V5 ticket natively\n");
@@ -675,8 +677,9 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	    atoken.kvno = RXKAD_TKT_TYPE_KERBEROS_V5;
 	    atoken.startTime = v5cred->times.starttime;;
 	    atoken.endTime = v5cred->times.endtime;
-	    memcpy(&atoken.sessionKey, get_cred_keydata(v5cred),
-		   get_cred_keylen(v5cred));
+	    if (tkt_DeriveDesKey(get_creds_enctype(v5cred), inkey, inkey_sz,
+				 &atoken.sessionKey) != 0)
+		return RXKADBADKEY;
 	    atoken.ticketLen = v5cred->ticket.length;
 	    memcpy(atoken.ticket, v5cred->ticket.data, atoken.ticketLen);
 #ifndef HAVE_NO_KRB5_524
@@ -1911,8 +1914,9 @@ static krb5_error_code get_credv5(krb5_context context,
     
     increds.client = client_principal;
     increds.times.endtime = 0;
-    /* Ask for DES since that is what V4 understands */
-    get_creds_enctype((&increds)) = ENCTYPE_DES_CBC_CRC;
+    if (do524)
+	/* Ask for DES since that is what V4 understands */
+	get_creds_enctype((&increds)) = ENCTYPE_DES_CBC_CRC;
     
     if (keytab) {
 	int allowed_enctypes[] = {

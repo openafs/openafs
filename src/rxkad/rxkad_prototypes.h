@@ -153,6 +153,12 @@ extern int tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 			     afs_int32 * host, afs_int32 * start,
 			     afs_int32 * end, afs_int32 disableDotCheck,
 			     rxkad_alt_decrypt_func alt_decrypt);
+/*
+ * Compute a des key from a key of a semi-arbitrary kerberos 5 enctype.
+ * Modifies keydata if enctype is 3des.
+ */
+extern int tkt_DeriveDesKey(int enctype, void *keydata, size_t keylen, struct ktc_encryptionKey
+			    *output);
 /* ticket5_keytab.c */
 extern int rxkad_InitKeytabDecrypt(const char *);
 extern int rxkad_BindKeytabDecrypt(struct rx_securityClass *);

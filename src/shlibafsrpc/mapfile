@@ -52,6 +52,7 @@
 	time_to_life;
 	tkt_CheckTimes;
 	tkt_DecodeTicket;
+	tkt_DeriveDesKey;
 	tkt_MakeTicket;
 	xdrrx_create;
 	hton_syserr_conv;
