@@ -869,7 +869,8 @@ afs_klog(khm_handle identity,
         increds.client = client_principal;
         increds.times.endtime = 0;
         /* Ask for DES since that is what V4 understands */
-        increds.keyblock.enctype = ENCTYPE_DES_CBC_CRC;
+	if (method == AFS_TOKEN_KRB524)
+	    increds.keyblock.enctype = ENCTYPE_DES_CBC_CRC;
 
 #ifdef KRB5_TC_NOTICKET
         flags = KRB5_TC_OPENCLOSE;
@@ -1051,9 +1052,11 @@ afs_klog(khm_handle identity,
         atoken.kvno = RXKAD_TKT_TYPE_KERBEROS_V5;
         atoken.startTime = k5creds->times.starttime;
         atoken.endTime = k5creds->times.endtime;
-        memcpy(&atoken.sessionKey,
-               k5creds->keyblock.contents,
-               k5creds->keyblock.length);
+	if (tkt_DeriveDesKey(k5creds->keyblock.enctype,
+			     k5creds->keyblock.contents,
+			     k5creds->keyblock.length,
+			     &atoken.sessionKey))
+	    goto cleanup;
         atoken.ticketLen = k5creds->ticket.length;
         memcpy(atoken.ticket, k5creds->ticket.data, atoken.ticketLen);
 

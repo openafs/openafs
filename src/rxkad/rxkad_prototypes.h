@@ -169,6 +169,12 @@ extern int tkt_MakeTicket5(char *ticket, int *ticketLen, int enctype, int *kvno,
 			   char *name, char *inst, char *cell, afs_uint32 start,
 			   afs_uint32 end, struct ktc_encryptionKey *sessionKey,
 			   char *sname, char *sinst);
+/*
+ * Compute a des key from a key of a semi-arbitrary kerberos 5 enctype.
+ * Modifies keydata if enctype is 3des.
+ */
+extern int tkt_DeriveDesKey(int enctype, void *keydata, size_t keylen, struct ktc_encryptionKey
+			    *output);
 
 static_inline DES_cblock *
 ktc_to_cblock(struct ktc_encryptionKey *key) {
