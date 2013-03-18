@@ -152,7 +152,7 @@ extern int cm_Analyze(cm_conn_t *connp, struct cm_user *up, struct cm_req *reqp,
                       afs_uint32 storeOp,
                       struct AFSFetchStatus *statusp,
                       struct AFSVolSync *volInfop,
-                      cm_serverRef_t * serversp,
+                      cm_serverRef_t ** vlServerspp,
                       struct cm_callbackRequest *cbrp, long code);
 
 extern long cm_ConnByMServers(struct cm_serverRef *, afs_uint32, struct cm_user *,

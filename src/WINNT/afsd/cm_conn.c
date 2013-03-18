@@ -211,7 +211,8 @@ void cm_InitReq(cm_req_t *reqp)
 }
 
 long cm_GetVolServerList(cm_volume_t *volp, afs_uint32 volid, struct cm_user *userp,
-	struct cm_req *reqp, afs_uint32 *replicated, cm_serverRef_t ***serversppp)
+                         struct cm_req *reqp, afs_uint32 *replicated,
+                         cm_serverRef_t ***serversppp)
 {
     *serversppp = cm_GetVolServers(volp, volid, userp, reqp, replicated);
     return (*serversppp ? 0 : CM_ERROR_NOSUCHVOLUME);
@@ -245,13 +246,13 @@ long cm_GetServerList(struct cm_fid *fidp, struct cm_user *userp,
     return (*serversppp ? 0 : CM_ERROR_NOSUCHVOLUME);
 }
 
-void
-cm_SetServerBusyStatus(cm_serverRef_t *serversp, cm_server_t *serverp)
+static void
+cm_SetServerBusyStatus(cm_serverRef_t **serverspp, cm_server_t *serverp)
 {
     cm_serverRef_t *tsrp;
 
-    lock_ObtainWrite(&cm_serverLock);
-    for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
+    lock_ObtainRead(&cm_serverLock);
+    for (tsrp = *serverspp; tsrp; tsrp=tsrp->next) {
         if (tsrp->status == srv_deleted)
             continue;
         if (cm_ServerEqual(tsrp->server, serverp) && tsrp->status == srv_not_busy) {
@@ -259,23 +260,23 @@ cm_SetServerBusyStatus(cm_serverRef_t *serversp, cm_server_t *serverp)
             break;
         }
     }
-    lock_ReleaseWrite(&cm_serverLock);
+    lock_ReleaseRead(&cm_serverLock);
 }
 
-void
-cm_ResetServerBusyStatus(cm_serverRef_t *serversp)
+static void
+cm_ResetServerBusyStatus(cm_serverRef_t **serverspp)
 {
     cm_serverRef_t *tsrp;
 
-    lock_ObtainWrite(&cm_serverLock);
-    for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
+    lock_ObtainRead(&cm_serverLock);
+    for (tsrp = *serverspp; tsrp; tsrp=tsrp->next) {
         if (tsrp->status == srv_deleted)
             continue;
         if (tsrp->status == srv_busy) {
             tsrp->status = srv_not_busy;
         }
     }
-    lock_ReleaseWrite(&cm_serverLock);
+    lock_ReleaseRead(&cm_serverLock);
 }
 
 /*
@@ -303,12 +304,12 @@ cm_Analyze(cm_conn_t *connp,
            afs_uint32 storeOp,
            AFSFetchStatus *statusp,
            AFSVolSync *volSyncp,
-           cm_serverRef_t * serversp,
+           cm_serverRef_t ** vlServerspp,
            cm_callbackRequest_t *cbrp,
            long errorCode)
 {
     cm_server_t *serverp = NULL;
-    cm_serverRef_t **serverspp = NULL;
+    cm_serverRef_t **volServerspp = NULL;
     cm_serverRef_t *tsrp;
     cm_ucell_t *ucellp;
     cm_volume_t * volp = NULL;
@@ -377,14 +378,16 @@ cm_Analyze(cm_conn_t *connp,
     if (errorCode) {
         if (cellp == NULL && serverp)
             cellp = serverp->cellp;
-        if (cellp == NULL && serversp) {
+        if (cellp == NULL && vlServerspp) {
             struct cm_serverRef * refp;
-            for ( refp=serversp ; cellp == NULL && refp != NULL; refp=refp->next) {
+            lock_ObtainRead(&cm_serverLock);
+            for ( refp=*vlServerspp ; cellp == NULL && refp != NULL; refp=refp->next) {
                 if (refp->status == srv_deleted)
                     continue;
                 if ( refp->server )
                     cellp = refp->server->cellp;
             }
+            lock_ReleaseRead(&cm_serverLock);
         }
         if (cellp == NULL && fidp) {
             cellp = cm_FindCellByID(fidp->cell, 0);
@@ -443,11 +446,11 @@ cm_Analyze(cm_conn_t *connp,
                 lock_ObtainWrite(&volp->rw);
                 if (cm_UpdateVolumeLocation(cellp, userp, reqp, volp) == 0) {
                     lock_ReleaseWrite(&volp->rw);
-                    code = cm_GetVolServerList(volp, fidp->volume, userp, reqp, &replicated, &serverspp);
+                    code = cm_GetVolServerList(volp, fidp->volume, userp, reqp, &replicated, &volServerspp);
                     if (code == 0) {
-                        if (!cm_IsServerListEmpty(*serverspp))
+                        if (!cm_IsServerListEmpty(*volServerspp))
                             retry = 1;
-                        cm_FreeServerList(serverspp, 0);
+                        cm_FreeServerList(volServerspp, 0);
                     }
                 } else {
                     lock_ReleaseWrite(&volp->rw);
@@ -493,18 +496,16 @@ cm_Analyze(cm_conn_t *connp,
                                       CM_GETVOL_FLAG_NO_LRU_UPDATE,
                                       &volp);
             if (code == 0) {
-                if (!serversp) {
-                    code = cm_GetVolServerList(volp, fidp->volume, userp, reqp, &replicated, &serverspp);
-                    if (code == 0) {
-                        serversp = *serverspp;
+                if (volServerspp == NULL) {
+                    code = cm_GetVolServerList(volp, fidp->volume, userp, reqp, &replicated, &volServerspp);
+                    if (code == 0)
                         free_svr_list = 1;
-                    }
                 }
-                cm_ResetServerBusyStatus(serversp);
+                cm_ResetServerBusyStatus(volServerspp);
                 if (free_svr_list) {
-                    cm_FreeServerList(serverspp, 0);
+                    cm_FreeServerList(volServerspp, 0);
                     free_svr_list = 0;
-                    serversp = NULL;
+                    volServerspp = NULL;
                 }
 
                 /*
@@ -544,18 +545,16 @@ cm_Analyze(cm_conn_t *connp,
                                      CM_GETVOL_FLAG_NO_LRU_UPDATE,
                                      &volp);
             if (code == 0) {
-                if (!serversp) {
-                    code = cm_GetVolServerList(volp, fidp->volume, userp, reqp, &replicated, &serverspp);
-                    if (code == 0) {
-                        serversp = *serverspp;
+                if (volServerspp == NULL) {
+                    code = cm_GetVolServerList(volp, fidp->volume, userp, reqp, &replicated, &volServerspp);
+                    if (code == 0)
                         free_svr_list = 1;
-                    }
                 }
-                cm_ResetServerBusyStatus(serversp);
+                cm_ResetServerBusyStatus(volServerspp);
                 if (free_svr_list) {
-                    cm_FreeServerList(serverspp, 0);
+                    cm_FreeServerList(volServerspp, 0);
                     free_svr_list = 0;
-                    serversp = NULL;
+                    volServerspp = NULL;
                 }
 
                 if (timeLeft > 7) {
@@ -576,8 +575,8 @@ cm_Analyze(cm_conn_t *connp,
             if (timeLeft > 7) {
                 thrd_Sleep(5000);
 
-                if (serversp) {
-                    cm_ResetServerBusyStatus(serversp);
+                if (vlServerspp) {
+                    cm_ResetServerBusyStatus(vlServerspp);
                     retry = 1;
                 }
             }
@@ -591,12 +590,10 @@ cm_Analyze(cm_conn_t *connp,
                                       CM_GETVOL_FLAG_NO_LRU_UPDATE,
                                       &volp);
             if (code == 0) {
-                if (!serversp) {
-                    code = cm_GetVolServerList(volp, fidp->volume, userp, reqp, &replicated, &serverspp);
-                    if (code == 0) {
-                        serversp = *serverspp;
+                if (volServerspp == NULL) {
+                    code = cm_GetVolServerList(volp, fidp->volume, userp, reqp, &replicated, &volServerspp);
+                    if (code == 0)
                         free_svr_list = 1;
-                    }
                 }
 
                 statep = cm_VolumeStateByID(volp, fidp->volume);
@@ -638,12 +635,12 @@ cm_Analyze(cm_conn_t *connp,
             osi_Log3(afsd_logp, format, osi_LogSaveString(afsd_logp,addr), fidp->volume, cellp->name);
             LogEvent(EVENTLOG_WARNING_TYPE, msgID, addr, fidp->volume, cellp->name);
 
-            cm_SetServerBusyStatus(serversp, serverp);
+            cm_SetServerBusyStatus(volServerspp, serverp);
         }
 
         if (free_svr_list) {
-            cm_FreeServerList(serverspp, 0);
-            serversp = NULL;
+            cm_FreeServerList(volServerspp, 0);
+            volServerspp = NULL;
             free_svr_list = 0;
         }
         retry = 1;
@@ -740,74 +737,75 @@ cm_Analyze(cm_conn_t *connp,
              * Mark server offline for this volume or delete the volume
              * from the server list if it was moved or is not present.
              */
-            if (!serversp || location_updated) {
-                code = cm_GetServerList(fidp, userp, reqp, &replicated, &serverspp);
-                if (code == 0) {
-                    serversp = *serverspp;
+            if (volServerspp == NULL || location_updated) {
+                code = cm_GetServerList(fidp, userp, reqp, &replicated, &volServerspp);
+                if (code == 0)
                     free_svr_list = 1;
-                }
             }
         }
 
-        lock_ObtainWrite(&cm_serverLock);
-        for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
-            if (tsrp->status == srv_deleted)
-                continue;
 
-            sprintf(addr, "%d.%d.%d.%d",
-                     ((tsrp->server->addr.sin_addr.s_addr & 0xff)),
-                     ((tsrp->server->addr.sin_addr.s_addr & 0xff00)>> 8),
-                     ((tsrp->server->addr.sin_addr.s_addr & 0xff0000)>> 16),
-                     ((tsrp->server->addr.sin_addr.s_addr & 0xff000000)>> 24));
+        if (volServerspp) {
+            lock_ObtainWrite(&cm_serverLock);
+            for (tsrp = *volServerspp; tsrp; tsrp=tsrp->next) {
+                if (tsrp->status == srv_deleted)
+                    continue;
 
-            if (cm_ServerEqual(tsrp->server, serverp)) {
-                /* REDIRECT */
-                switch (errorCode) {
-                case VMOVED:
-                    osi_Log2(afsd_logp, "volume %u moved from server %s",
-                             fidp->volume, osi_LogSaveString(afsd_logp,addr));
-                    tsrp->status = srv_deleted;
-                    if (fidp)
-                        cm_RemoveVolumeFromServer(serverp, fidp->volume);
-                    break;
-                case VNOVOL:
-                    /*
-                     * The 1.6.0 and 1.6.1 file servers send transient VNOVOL errors which
-                     * are no indicative of the volume not being present.  For example,
-                     * VNOVOL can be sent during a transition to a VBUSY state prior to
-                     * salvaging or when cloning a .backup volume instance.  As a result
-                     * the cache manager must attempt at least one retry when a VNOVOL is
-                     * receive but there are no changes to the volume location information.
-                     */
-                    if (reqp->vnovolError > 0 && cm_ServerEqual(reqp->errorServp, serverp)) {
-                        osi_Log2(afsd_logp, "volume %u not present on server %s",
+                sprintf(addr, "%d.%d.%d.%d",
+                         ((tsrp->server->addr.sin_addr.s_addr & 0xff)),
+                         ((tsrp->server->addr.sin_addr.s_addr & 0xff00)>> 8),
+                         ((tsrp->server->addr.sin_addr.s_addr & 0xff0000)>> 16),
+                         ((tsrp->server->addr.sin_addr.s_addr & 0xff000000)>> 24));
+
+                if (cm_ServerEqual(tsrp->server, serverp)) {
+                    /* REDIRECT */
+                    switch (errorCode) {
+                    case VMOVED:
+                        osi_Log2(afsd_logp, "volume %u moved from server %s",
                                   fidp->volume, osi_LogSaveString(afsd_logp,addr));
                         tsrp->status = srv_deleted;
                         if (fidp)
                             cm_RemoveVolumeFromServer(serverp, fidp->volume);
-                    } else {
-                        osi_Log2(afsd_logp, "VNOVOL received for volume %u from server %s",
-                                 fidp->volume, osi_LogSaveString(afsd_logp,addr));
-                        if (replicated) {
-                            if (tsrp->status == srv_not_busy)
-                                tsrp->status = srv_busy;
+                        break;
+                    case VNOVOL:
+                        /*
+                        * The 1.6.0 and 1.6.1 file servers send transient VNOVOL errors which
+                        * are no indicative of the volume not being present.  For example,
+                        * VNOVOL can be sent during a transition to a VBUSY state prior to
+                        * salvaging or when cloning a .backup volume instance.  As a result
+                        * the cache manager must attempt at least one retry when a VNOVOL is
+                        * receive but there are no changes to the volume location information.
+                        */
+                        if (reqp->vnovolError > 0 && cm_ServerEqual(reqp->errorServp, serverp)) {
+                            osi_Log2(afsd_logp, "volume %u not present on server %s",
+                                      fidp->volume, osi_LogSaveString(afsd_logp,addr));
+                            tsrp->status = srv_deleted;
+                            if (fidp)
+                                cm_RemoveVolumeFromServer(serverp, fidp->volume);
                         } else {
-                            Sleep(2000);
+                            osi_Log2(afsd_logp, "VNOVOL received for volume %u from server %s",
+                                      fidp->volume, osi_LogSaveString(afsd_logp,addr));
+                            if (replicated) {
+                                if (tsrp->status == srv_not_busy)
+                                    tsrp->status = srv_busy;
+                            } else {
+                                Sleep(2000);
+                            }
                         }
+                        break;
+                    case VOFFLINE:
+                        osi_Log2(afsd_logp, "VOFFLINE received for volume %u from server %s",
+                                  fidp->volume, osi_LogSaveString(afsd_logp,addr));
+                        tsrp->status = srv_offline;
+                        break;
+                    default:
+                        osi_Log3(afsd_logp, "volume %u exists on server %s with status %u",
+                                  fidp->volume, osi_LogSaveString(afsd_logp,addr), tsrp->status);
                     }
-                    break;
-                case VOFFLINE:
-                    osi_Log2(afsd_logp, "VOFFLINE received for volume %u from server %s",
-                              fidp->volume, osi_LogSaveString(afsd_logp,addr));
-                    tsrp->status = srv_offline;
-                    break;
-                default:
-                    osi_Log3(afsd_logp, "volume %u exists on server %s with status %u",
-                             fidp->volume, osi_LogSaveString(afsd_logp,addr), tsrp->status);
                 }
             }
+            lock_ReleaseWrite(&cm_serverLock);
         }
-        lock_ReleaseWrite(&cm_serverLock);
 
         /* Remember that the VNOVOL error occurred */
         if (errorCode == VNOVOL) {
@@ -817,8 +815,8 @@ cm_Analyze(cm_conn_t *connp,
 
         /* Free the server list before cm_ForceUpdateVolume is called */
         if (free_svr_list) {
-            cm_FreeServerList(serverspp, 0);
-            serversp = NULL;
+            cm_FreeServerList(volServerspp, 0);
+            volServerspp = NULL;
             free_svr_list = 0;
         }
 
@@ -1344,12 +1342,12 @@ cm_Analyze(cm_conn_t *connp,
         reqp->flags &= ~CM_REQ_VOLUME_UPDATED;
     }
 
-    if ( serversp &&
+    if ( vlServerspp &&
          errorCode != VBUSY &&
          errorCode != VRESTARTING &&
          errorCode != CM_ERROR_ALLBUSY)
     {
-        cm_ResetServerBusyStatus(serversp);
+        cm_ResetServerBusyStatus(vlServerspp);
     }
 
     /* retry until we fail to find a connection */
