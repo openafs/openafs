@@ -1873,6 +1873,12 @@ main(int argc, char *argv[])
     sc[1] = 0;			/* rxvab_NewServerSecurityObject(key1, 0) */
     sc[2] = rxkad_NewServerSecurityObject(rxkad_clear, NULL, get_key, NULL);
     sc[3] = rxkad_NewServerSecurityObject(rxkad_crypt, NULL, get_key, NULL);
+#ifdef USE_RXKAD_KEYTAB
+    if (rxkad_InitKeytabDecrypt(AFSDIR_SERVER_RXKAD_KEYTAB_FILEPATH) == 0) {
+        rxkad_BindKeytabDecrypt(sc[2]);
+        rxkad_BindKeytabDecrypt(sc[3]);
+    }
+#endif
     tservice = rx_NewServiceHost(rx_bindhost,  /* port */ 0, /* service id */ 
 				 1,	/*service name */
 				 "AFS",

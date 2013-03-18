@@ -494,6 +494,10 @@ main(int argc, char **argv)
 	rxkad_NewServerSecurityObject(0, tdir, afsconf_GetKey, NULL);
     if (securityObjects[0] == (struct rx_securityClass *)0)
 	Abort("rxnull_NewServerSecurityObject");
+#ifdef USE_RXKAD_KEYTAB
+    if (securityObjects[2] != NULL && rxkad_InitKeytabDecrypt(AFSDIR_SERVER_RXKAD_KEYTAB_FILEPATH) == 0)
+        rxkad_BindKeytabDecrypt(securityObjects[2]);
+#endif
     service =
 	rx_NewServiceHost(host, 0, VOLSERVICE_ID, "VOLSER", securityObjects, 3,
 		      AFSVolExecuteRequest);

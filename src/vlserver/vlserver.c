@@ -355,7 +355,10 @@ main(argc, argv)
     sc[0] = rxnull_NewServerSecurityObject();
     sc[1] = (struct rx_securityClass *)0;
     sc[2] = rxkad_NewServerSecurityObject(0, tdir, afsconf_GetKey, NULL);
-
+#ifdef USE_RXKAD_KEYTAB
+    if (rxkad_InitKeytabDecrypt(AFSDIR_SERVER_RXKAD_KEYTAB_FILEPATH) == 0)
+	rxkad_BindKeytabDecrypt(sc[2]);
+#endif
     tservice =
 	rx_NewServiceHost(host, 0, USER_SERVICE_ID, "Vldb server", sc, 3,
 		      VL_ExecuteRequest);

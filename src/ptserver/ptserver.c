@@ -523,6 +523,10 @@ main(int argc, char **argv)
     sc[1] = 0;
     if (kerberosKeys) {
 	sc[2] = rxkad_NewServerSecurityObject(0, prdir, afsconf_GetKey, NULL);
+#ifdef USE_RXKAD_KEYTAB
+	if (rxkad_InitKeytabDecrypt(AFSDIR_SERVER_RXKAD_KEYTAB_FILEPATH) == 0)
+	    rxkad_BindKeytabDecrypt(sc[2]);
+#endif
     } else
 	sc[2] = sc[0];
 

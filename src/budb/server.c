@@ -524,6 +524,10 @@ main(argc, argv)
     sca[RX_SCINDEX_KAD] =
 	rxkad_NewServerSecurityObject(rxkad_clear, BU_conf, afsconf_GetKey,
 				      NULL);
+#ifdef USE_RXKAD_KEYTAB
+    if (rxkad_InitKeytabDecrypt(AFSDIR_SERVER_RXKAD_KEYTAB_FILEPATH) == 0)
+        rxkad_BindKeytabDecrypt(sca[RX_SCINDEX_KAD]);
+#endif
 
     /* Disable jumbograms */
     rx_SetNoJumbo();

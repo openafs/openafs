@@ -1005,6 +1005,10 @@ main(int argc, char **argv, char **envp)
     bozo_rxsc[1] = (struct rx_securityClass *)0;
     bozo_rxsc[2] =
 	rxkad_NewServerSecurityObject(0, tdir, afsconf_GetKey, NULL);
+#ifdef USE_RXKAD_KEYTAB
+    if (rxkad_InitKeytabDecrypt(AFSDIR_SERVER_RXKAD_KEYTAB_FILEPATH) == 0)
+        rxkad_BindKeytabDecrypt(bozo_rxsc[2]);
+#endif
 
     /* Disable jumbograms */
     rx_SetNoJumbo();
