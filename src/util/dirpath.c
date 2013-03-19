@@ -225,6 +225,8 @@ initDirPathArray(void)
 	   "/NoUsrViceDirectoryOnWindows");
     strcpy(dirPathArray[AFSDIR_CLIENT_ETC_DIRPATH_ID],
 	   ntClientConfigDirShort);
+
+    clntEtcDir = pathp = dirPathArray[AFSDIR_CLIENT_ETC_DIRPATH_ID];
 #else
     strcpy(dirPathArray[AFSDIR_CLIENT_VICE_DIRPATH_ID], afsClntDirPath);
 
