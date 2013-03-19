@@ -440,9 +440,13 @@ AFSQueryDirectory( IN PIRP Irp)
                                                            pCcb,
                                                            Irp);
 
-                SetFlag( pCcb->Flags, CCB_FLAG_DIRECTORY_QUERY_DIRECT_QUERY);
+                if ( ntStatus != STATUS_REPARSE_OBJECT)
+                {
 
-                try_return( ntStatus);
+                    SetFlag( pCcb->Flags, CCB_FLAG_DIRECTORY_QUERY_DIRECT_QUERY);
+
+                    try_return( ntStatus);
+                }
             }
 
             AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -2060,6 +2064,31 @@ AFSProcessDirectoryQueryDirect( IN AFSFcb *Fcb,
             try_return( ntStatus = STATUS_NO_SUCH_FILE);
         }
 
+        if ( pDirEnum->FileType == AFS_FILE_TYPE_SYMLINK &&
+             pIrpSp->Parameters.QueryDirectory.FileInformationClass != FileNamesInformation)
+        {
+
+            //
+            // If the file type is symlink the file attributes of the target object
+            // must be evaluated to determine if the object is a directory or not.
+            // We do not process that here.  Instead, return STATUS_REPARSE_OBJECT and
+            // let AFSQueryDirectory() evaluate everything.
+            //
+
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSProcessDirectoryQueryDirect Found Symlink parent %wZ Mask %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                          &Ccb->DirectoryCB->NameInformation.FileName,
+                          &Ccb->MaskName,
+                          Fcb->ObjectInformation->FileId.Cell,
+                          Fcb->ObjectInformation->FileId.Volume,
+                          Fcb->ObjectInformation->FileId.Vnode,
+                          Fcb->ObjectInformation->FileId.Unique,
+                          STATUS_REPARSE_OBJECT));
+
+            try_return( ntStatus = STATUS_REPARSE_OBJECT);
+        }
+
         pBuffer = (PUCHAR)AFSLockSystemBuffer( Irp,
                                                pIrpSp->Parameters.QueryDirectory.Length);
 
@@ -2125,8 +2154,10 @@ AFSProcessDirectoryQueryDirect( IN AFSFcb *Fcb,
                 try_return( ntStatus = STATUS_INVALID_INFO_CLASS);
         }
 
-        switch( pDirEnum->FileType)
+        if ( pIrpSp->Parameters.QueryDirectory.FileInformationClass != FileNamesInformation)
         {
+            switch( pDirEnum->FileType)
+            {
 
             case AFS_FILE_TYPE_MOUNTPOINT:
             case AFS_FILE_TYPE_DFSLINK:
@@ -2140,13 +2171,10 @@ AFSProcessDirectoryQueryDirect( IN AFSFcb *Fcb,
             case AFS_FILE_TYPE_SYMLINK:
             {
 
-                //
-                // Note: we need to evaluate this entry to determine if the target is a directory or not
-                //
-
-                ulAdditionalAttributes |= FILE_ATTRIBUTE_REPARSE_POINT;
+                ASSERT( FALSE);
 
                 break;
+            }
             }
         }
 
