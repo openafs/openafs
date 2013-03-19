@@ -6,7 +6,7 @@
   <bookinfo>
     <title>OpenAFS for Windows Release Notes</title>
     <copyright>
-      <year>2003-2012</year>
+      <year>2003-2013</year>
       <holder>Secure Endpoints Inc. and Your File System Inc.</holder>
     </copyright>
     <legalnotice>
@@ -1884,6 +1884,37 @@ network paths are inaccessible when Protected Mode is on.
       In Windows 8 and Server 2012 Microsoft has introduced a new file system, ReFS, and has begun the process of transitioning away from several legacy file system properties including 8.3 compatible short names for all file system objects.
       The OpenAFS file system has followed suit and is disabling automatic generation of 8.3 compatible names on Windows 8 and Server 2012.
       </para>
+    </section>
+    <section>
+      <title id="explorer_read_only_volume_bug">3.57. The Explorer Shell, Drive Letter Mappings, and Read Only Volumes</title>
+      <indexterm significance="normal">
+        <primary>explorer shell</primary>
+      </indexterm>
+      <indexterm significance="normal">
+        <primary>drive letter mappings</primary>
+      </indexterm>
+      <indexterm significance="normal">
+        <primary>.readonly volumes</primary>
+      </indexterm>
+      <para>File systems can expose a variety of information about the underlying volumes they serve
+        to applications.  All AFS volumes are described as supporting Case Preservation, Hard Links,
+        Reparse Points and Unicode characters.  For .readonly volumes the file system can indicate
+        that the volume is a Read Only Volume.  The benefit of doing so is that applications such as
+        the Explorer Shell can alter their behavior to improve the user experience.  For example,
+        when the volume is reported as read-only the Explorer Shell can remove the Rename, Delete,
+        and other file modifying operations from the user interface.  Unfortunately, the Windows 7
+        Explorer Shell is broken with regards to Volume Information queries when issued on Network
+        Mapped Drive Letters.  Instead of performing a volume information query on the current
+        directory, the Explorer Shell only queries the root directory of the mapped drive letter.
+        As a result, if the drive letter is mapped to a .readonly volume, all paths accessed via the
+        drive letter are considered to be read-only even when they are not.  This behavior is fixed
+        in Windows 8 and Server 2012.</para>
+      <para>Due to this bug, OpenAFS on Windows 7 and below does not report the
+        <ulink url="http://msdn.microsoft.com/en-us/library/windows/desktop/aa964920%28v=vs.85%29.aspx">FILE_READ_ONLY_VOLUME</ulink>
+        flag as part of the volume information.  The Explorer Shell properly
+        queries the volume information for UNC paths.  If network mapped drive letters are not used,
+        it is often convenient if the FILE_READ_ONLY_VOLUME flag is reported.  This can be
+        configured using the <link linkend="Regkey_TransarcAFSDaemon_Parameters_VolumeInfoReadOnlyFlag">VolumeInfoReadOnlyFlag</link> registry value.</para>
     </section>
 
   </chapter>
