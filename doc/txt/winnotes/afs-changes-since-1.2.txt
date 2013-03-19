@@ -1,3 +1,68 @@
+Release 1.7.2300; Changes since 1.7.2200
+
+ * Protect against BSOD during garbage collection if the
+   DirectoryCB->ObjectInformation pointer is NULL.
+
+ * Explorer Shell on Windows 7 and earlier has a bug when processing
+   volume information for network drive letter mappings.  If the root
+   directory of the drive letter has the FILE_READ_ONLY_VOLUME flag
+   set, then it treats all subdirectories as read-only even when the
+   path crosses into a new volume.  This bug is fixed in Windows 8.
+
+   Due to this bug setting the FILE_READ_ONLY_VOLUME flag as was
+   added in 1.7.22 has now been disabled by default on Windows 7
+   and below.  There is a new registry value "VolumeInfoReadOnlyFlag"
+   which permits the flag to be set for .readonly volumes.
+
+ * Fix a bug in Direct I/O Store operations.  BIOD operations are
+   not used and a BIOD structure should not have been present in
+   1.7.2200.
+
+ * Prevent an infinite processing loop in afscreds.exe when
+   WNetEnumResource() returned a failure condition.
+
+ * Improve the consistency of file attributes computed in afsd_service
+   and file attributes computed in afsredirlib.sys.  Especially those
+   involving reparse point flags.
+
+ * Netbios name comparisions must be case insensitive otherwise some
+   AFS symlinks will be reported to the AFS redirector as a DFS Link.
+
+ * Third party filter drivers can take up space in the Irp stack.
+   In at least one case on XP no space was left for afsredir.sys to
+   issue a call to afsredirlib.sys.  Increase the Irp stack requirements
+   for the DeviceObjects allocated by AFS prior to the registration with
+   MUP.
+
+ * Replace AFSDbgMsgLog function with a macro, AFSDbgTrace, which avoids
+   function calls and parameter list evaluation when trace is disabled.
+   This change increases the number of file system operations that can
+   be processed by 30%.
+
+ * Avoid cm_Analyze race on cm_serverRef lists which could result in
+   afsd_service.exe termination.
+
+ * Non-wildcard directory queries failed to evaluate symlink targets
+   and could return an incorrect setting for the FILE_ATTRIBUTE_DIRECTORY
+   attribute.
+
+ * 'buf_globalLock' contention is reduced when the Direct I/O pathway is
+   used as it is known that no cm_buf object can have the CM_BUF_QREDIR
+   flag bit set.
+
+ * Protect against a BSOD during FSCTL_SET_REPARSE_POINT processing.
+
+ * When canceling a network connection to a UNC path, do not match
+   connections that have drive letters assigned.  Only cancel the connection
+   if there it matches the UNC path and has no local name.
+
+ * The WN_ALREADY_CONNECTED error is only to be returned if a local
+   device name (aka drive letter) is provided in the request.  Otherwise,
+   the proper return status is WN_SUCCESS if an unnamed connection is
+   requested.
+
+ * AFS Symlinks can be copied using the robocopy.exe /SL option.
+
 Release 1.7.2200; Changes since 1.7.2100
 
  * pioctl path processing reliably interprets a path
