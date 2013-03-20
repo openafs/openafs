@@ -2520,6 +2520,9 @@ long buf_ClearRDRFlag(cm_scache_t *scp, char *reason)
     afs_uint32 bcount = 0;
     afs_uint32 i;
 
+    if (!RDR_Initialized || cm_directIO)
+        return 0;
+
     i = BUF_FILEHASH(fidp);
 
     lock_ObtainWrite(&scp->rw);
