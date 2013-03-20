@@ -458,7 +458,9 @@ AFSCancelConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
             if( ( ConnectCB->LocalName != L'\0' &&
                   pConnection->LocalName == ConnectCB->LocalName)
                 ||
-                ( RtlCompareUnicodeString( &uniRemoteName,
+                ( ConnectCB->LocalName == L'\0' &&
+                  pConnection->LocalName == L'\0' &&
+                  RtlCompareUnicodeString( &uniRemoteName,
                                            &pConnection->RemoteName,
                                            TRUE) == 0))
             {
