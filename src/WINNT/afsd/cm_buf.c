@@ -2252,14 +2252,16 @@ long buf_CleanVnode(struct cm_scache *scp, cm_user_t *userp, cm_req_t *reqp)
              * it back in order to determine whether or not it is in
              * fact dirty.
              */
-            lock_ObtainRead(&buf_globalLock);
             if (bp->qFlags & CM_BUF_QREDIR) {
-                osi_Log1(buf_logp,"buf_CleanVnode buffer held by redirector bp 0x%p", bp);
+                lock_ObtainRead(&buf_globalLock);
+                if (bp->qFlags & CM_BUF_QREDIR) {
+                    osi_Log1(buf_logp,"buf_CleanVnode buffer held by redirector bp 0x%p", bp);
 
-                /* Retrieve single extent from the redirector */
-                buf_RDRShakeAnExtentFree(bp, reqp);
+                    /* Retrieve single extent from the redirector */
+                    buf_RDRShakeAnExtentFree(bp, reqp);
+                }
+                lock_ReleaseRead(&buf_globalLock);
             }
-            lock_ReleaseRead(&buf_globalLock);
 
             lock_ObtainMutex(&bp->mx);
             if ((bp->flags & CM_BUF_DIRTY)) {
