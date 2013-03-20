@@ -2497,7 +2497,7 @@ long buf_RDRBuffersExist(cm_fid_t *fidp)
     afs_uint32 i;
     long found = 0;
 
-    if (!RDR_Initialized)
+    if (!RDR_Initialized || cm_directIO)
         return 0;
 
     i = BUF_FILEHASH(fidp);
