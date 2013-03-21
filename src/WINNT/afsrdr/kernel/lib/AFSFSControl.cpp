@@ -849,8 +849,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                                                ullIndex,
                                                (AFSBTreeEntry **)&pParentObjectInfo);
 
-                if ( NT_SUCCESS( ntStatus) &&
-                     pParentObjectInfo)
+                if ( NT_SUCCESS( ntStatus))
                 {
 
                     lCount = AFSObjectInfoIncrement( pParentObjectInfo,
@@ -865,32 +864,36 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 
                 AFSReleaseResource( pCcb->DirectoryCB->ObjectInformation->VolumeCB->ObjectInfoTree.TreeLock);
 
-                //
-                // Extract out the information to the call to the service
-                //
+                if ( NT_SUCCESS( ntStatus))
+                {
 
-                ntStatus = AFSCreateSymlink( &pCcb->AuthGroup,
-                                             pParentObjectInfo,
-                                             &pCcb->DirectoryCB->NameInformation.FileName,
-                                             pCcb->DirectoryCB->ObjectInformation,
-                                             &uniTargetName);
+                    //
+                    // Extract out the information to the call to the service
+                    //
 
-                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSProcessUserFsRequest Processed FSCTL_SET_REPARSE_POINT request %wZ Type 0x%x Attrib 0x%x Status %08lX\n",
-                              &pCcb->DirectoryCB->NameInformation.FileName,
-                              pCcb->DirectoryCB->ObjectInformation->FileType,
-                              pCcb->DirectoryCB->ObjectInformation->FileAttributes,
-                              ntStatus));
+                    ntStatus = AFSCreateSymlink( &pCcb->AuthGroup,
+                                                 pParentObjectInfo,
+                                                 &pCcb->DirectoryCB->NameInformation.FileName,
+                                                 pCcb->DirectoryCB->ObjectInformation,
+                                                 &uniTargetName);
 
-                lCount = AFSObjectInfoDecrement( pParentObjectInfo,
-                                                 AFS_OBJECT_REFERENCE_DIRENTRY);
+                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE_2,
+                                  "AFSProcessUserFsRequest Processed FSCTL_SET_REPARSE_POINT request %wZ Type 0x%x Attrib 0x%x Status %08lX\n",
+                                  &pCcb->DirectoryCB->NameInformation.FileName,
+                                  pCcb->DirectoryCB->ObjectInformation->FileType,
+                                  pCcb->DirectoryCB->ObjectInformation->FileAttributes,
+                                  ntStatus));
 
-                AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSProcessUserFsRequest Decrement count on object %p Cnt %d\n",
-                              pParentObjectInfo,
-                              lCount));
+                    lCount = AFSObjectInfoDecrement( pParentObjectInfo,
+                                                     AFS_OBJECT_REFERENCE_DIRENTRY);
+
+                    AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSProcessUserFsRequest Decrement count on object %p Cnt %d\n",
+                                  pParentObjectInfo,
+                                  lCount));
+                }
 
                 break;
             }
