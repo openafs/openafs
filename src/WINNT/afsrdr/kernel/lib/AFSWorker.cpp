@@ -2370,9 +2370,9 @@ AFSQueueFlushExtents( IN AFSFcb *Fcb,
         // Allocate our request structure and send it to the worker
         //
 
-        pWorkItem = (AFSWorkItem *)AFSLibExAllocatePoolWithTag( NonPagedPool,
-                                                                sizeof( AFSWorkItem),
-                                                                AFS_WORK_ITEM_TAG);
+        pWorkItem = (AFSWorkItem *)AFSExAllocatePoolWithTag( NonPagedPool,
+                                                             sizeof( AFSWorkItem),
+                                                             AFS_WORK_ITEM_TAG);
 
         if( pWorkItem == NULL)
         {
@@ -2499,9 +2499,9 @@ AFSQueueGlobalRootEnumeration()
     __try
     {
 
-        pWorkItem = (AFSWorkItem *) AFSLibExAllocatePoolWithTag( NonPagedPool,
-                                                                 sizeof(AFSWorkItem),
-                                                                 AFS_WORK_ITEM_TAG);
+        pWorkItem = (AFSWorkItem *) AFSExAllocatePoolWithTag( NonPagedPool,
+                                                              sizeof(AFSWorkItem),
+                                                              AFS_WORK_ITEM_TAG);
         if (NULL == pWorkItem)
         {
 
@@ -2591,9 +2591,9 @@ AFSQueueStartIos( IN PFILE_OBJECT CacheFileObject,
         // Allocate our request structure and send it to the worker
         //
 
-        pWorkItem = (AFSWorkItem *)AFSLibExAllocatePoolWithTag( NonPagedPool,
-                                                                sizeof( AFSWorkItem),
-                                                                AFS_WORK_ITEM_TAG);
+        pWorkItem = (AFSWorkItem *)AFSExAllocatePoolWithTag( NonPagedPool,
+                                                             sizeof( AFSWorkItem),
+                                                             AFS_WORK_ITEM_TAG);
 
         if( pWorkItem == NULL)
         {
@@ -2678,9 +2678,9 @@ AFSQueueInvalidateObject( IN AFSObjectInfoCB *ObjectInfo,
     __try
     {
 
-        pWorkItem = (AFSWorkItem *) AFSLibExAllocatePoolWithTag( NonPagedPool,
-                                                                 sizeof(AFSWorkItem),
-                                                                 AFS_WORK_ITEM_TAG);
+        pWorkItem = (AFSWorkItem *) AFSExAllocatePoolWithTag( NonPagedPool,
+                                                              sizeof(AFSWorkItem),
+                                                              AFS_WORK_ITEM_TAG);
         if (NULL == pWorkItem)
         {
 
@@ -2773,9 +2773,9 @@ AFSDeferWrite( IN PDEVICE_OBJECT DeviceObject,
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES );
         }
 
-        pWorkItem = (AFSWorkItem *) AFSLibExAllocatePoolWithTag( NonPagedPool,
-                                                                 sizeof(AFSWorkItem),
-                                                                 AFS_WORK_ITEM_TAG);
+        pWorkItem = (AFSWorkItem *) AFSExAllocatePoolWithTag( NonPagedPool,
+                                                              sizeof(AFSWorkItem),
+                                                              AFS_WORK_ITEM_TAG);
 
         if (NULL == pWorkItem)
         {
