@@ -121,6 +121,8 @@ AFSAddConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
                               &uniRemoteName,
                               ConnectCB->LocalName,
                               ConnectCB->AuthenticationId.QuadPart));
+
+                *ResultStatus = WN_ALREADY_CONNECTED;
             }
             else
             {
@@ -130,13 +132,13 @@ AFSAddConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
                               "AFSAddConnection ALREADY_CONNECTED remote name %wZ Local (NULL) authentication id %I64X\n",
                               &uniRemoteName,
                               ConnectCB->AuthenticationId.QuadPart));
-            }
 
-            *ResultStatus = WN_ALREADY_CONNECTED;
+                *ResultStatus = WN_SUCCESS;
+            }
 
             *ReturnOutputBufferLength = sizeof( ULONG);
 
-            try_return( ntStatus);
+            try_return( ntStatus = STATUS_SUCCESS);
         }
 
         //
