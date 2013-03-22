@@ -323,6 +323,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                 ULONG ulRemainingLen = ulOutputBufferLen;
                 AFSReparseTagInfo *pReparseInfo = NULL;
                 BOOLEAN bRelative = FALSE;
+                BOOLEAN bDriveLetter = FALSE;
                 WCHAR * PathBuffer = NULL;
 
                 AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -448,56 +449,104 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 
                         bRelative = AFSIsRelativeName( &pCcb->DirectoryCB->NameInformation.TargetName);
 
-                        if( ulRemainingLen < (ULONG) FIELD_OFFSET( REPARSE_DATA_BUFFER, SymbolicLinkReparseBuffer.PathBuffer) +
-                            pCcb->DirectoryCB->NameInformation.TargetName.Length + (bRelative ? 0 : sizeof( WCHAR)))
+                        if ( bRelative)
                         {
 
-                            ntStatus = STATUS_BUFFER_TOO_SMALL;
+                            if( ulRemainingLen < (ULONG) FIELD_OFFSET( REPARSE_DATA_BUFFER, SymbolicLinkReparseBuffer.PathBuffer) +
+                                pCcb->DirectoryCB->NameInformation.TargetName.Length)
+                            {
 
-                            Irp->IoStatus.Information = FIELD_OFFSET( REPARSE_DATA_BUFFER, SymbolicLinkReparseBuffer.PathBuffer) +
-                                pCcb->DirectoryCB->NameInformation.TargetName.Length + (bRelative ? 0 : sizeof( WCHAR));
+                                ntStatus = STATUS_BUFFER_TOO_SMALL;
 
-                            break;
+                                Irp->IoStatus.Information = FIELD_OFFSET( REPARSE_DATA_BUFFER, SymbolicLinkReparseBuffer.PathBuffer) +
+                                    pCcb->DirectoryCB->NameInformation.TargetName.Length;
+
+                                break;
+                            }
+
+                            pMSFTReparseBuffer->SymbolicLinkReparseBuffer.Flags = SYMLINK_FLAG_RELATIVE;
+
+                            pMSFTReparseBuffer->SymbolicLinkReparseBuffer.SubstituteNameLength =
+                                pCcb->DirectoryCB->NameInformation.TargetName.Length;
+
+                            pMSFTReparseBuffer->SymbolicLinkReparseBuffer.PrintNameLength =
+                                pCcb->DirectoryCB->NameInformation.TargetName.Length;
+
+                            pMSFTReparseBuffer->SymbolicLinkReparseBuffer.SubstituteNameOffset = 0;
+
+                            pMSFTReparseBuffer->SymbolicLinkReparseBuffer.PrintNameOffset = 0;
+
+                            PathBuffer = pMSFTReparseBuffer->SymbolicLinkReparseBuffer.PathBuffer;
+
+                            RtlCopyMemory( PathBuffer,
+                                           pCcb->DirectoryCB->NameInformation.TargetName.Buffer,
+                                           pCcb->DirectoryCB->NameInformation.TargetName.Length);
+
+                            pReparseBuffer->ReparseDataLength = FIELD_OFFSET( REPARSE_DATA_BUFFER, SymbolicLinkReparseBuffer.PathBuffer) -
+                                FIELD_OFFSET( REPARSE_DATA_BUFFER, GenericReparseBuffer.DataBuffer) +
+                                pMSFTReparseBuffer->SymbolicLinkReparseBuffer.SubstituteNameLength;
                         }
-
-                        pMSFTReparseBuffer->SymbolicLinkReparseBuffer.Flags = (bRelative ? SYMLINK_FLAG_RELATIVE : 0);
-
-                        pMSFTReparseBuffer->SymbolicLinkReparseBuffer.SubstituteNameLength =
-                            pCcb->DirectoryCB->NameInformation.TargetName.Length;
-
-                        pMSFTReparseBuffer->SymbolicLinkReparseBuffer.PrintNameLength =
-                            pCcb->DirectoryCB->NameInformation.TargetName.Length;
-
-                        pMSFTReparseBuffer->SymbolicLinkReparseBuffer.SubstituteNameOffset = 0;
-
-                        pMSFTReparseBuffer->SymbolicLinkReparseBuffer.PrintNameOffset = 0;
-
-                        PathBuffer = pMSFTReparseBuffer->SymbolicLinkReparseBuffer.PathBuffer;
-
-                        if ( bRelative == FALSE)
+                        else
                         {
 
+                            if( ulRemainingLen < (ULONG) FIELD_OFFSET( REPARSE_DATA_BUFFER, SymbolicLinkReparseBuffer.PathBuffer) +
+                                /* Display Name */
+                                pCcb->DirectoryCB->NameInformation.TargetName.Length + 1 * sizeof( WCHAR) +
+                                /* Substitute Name */
+                                pCcb->DirectoryCB->NameInformation.TargetName.Length + 7 * sizeof( WCHAR))
+                            {
+
+                                ntStatus = STATUS_BUFFER_TOO_SMALL;
+
+                                Irp->IoStatus.Information = FIELD_OFFSET( REPARSE_DATA_BUFFER, SymbolicLinkReparseBuffer.PathBuffer) +
+                                    pCcb->DirectoryCB->NameInformation.TargetName.Length + 1 * sizeof( WCHAR) +
+                                    pCcb->DirectoryCB->NameInformation.TargetName.Length + 7 * sizeof( WCHAR);
+
+                                break;
+                            }
+
+                            pMSFTReparseBuffer->SymbolicLinkReparseBuffer.Flags = 0;
+
+                            pMSFTReparseBuffer->SymbolicLinkReparseBuffer.SubstituteNameLength =
+                                pCcb->DirectoryCB->NameInformation.TargetName.Length + 7 * sizeof( WCHAR);
+
+                            pMSFTReparseBuffer->SymbolicLinkReparseBuffer.PrintNameLength =
+                                pCcb->DirectoryCB->NameInformation.TargetName.Length + 1 * sizeof( WCHAR);
+
+                            pMSFTReparseBuffer->SymbolicLinkReparseBuffer.SubstituteNameOffset =
+                                pMSFTReparseBuffer->SymbolicLinkReparseBuffer.PrintNameLength;
+
+                            pMSFTReparseBuffer->SymbolicLinkReparseBuffer.PrintNameOffset = 0;
+
+                            PathBuffer = pMSFTReparseBuffer->SymbolicLinkReparseBuffer.PathBuffer;
+
+                            /* Display Name */
                             *PathBuffer++ = L'\\';
 
                             RtlCopyMemory( PathBuffer,
                                            pCcb->DirectoryCB->NameInformation.TargetName.Buffer,
                                            pCcb->DirectoryCB->NameInformation.TargetName.Length);
 
-                            pMSFTReparseBuffer->SymbolicLinkReparseBuffer.SubstituteNameLength += sizeof( WCHAR);
+                            PathBuffer += pCcb->DirectoryCB->NameInformation.TargetName.Length / sizeof( WCHAR);
 
-                            pMSFTReparseBuffer->SymbolicLinkReparseBuffer.PrintNameLength += sizeof( WCHAR);
-                        }
-                        else
-                        {
+                            /* Substitute Name */
+                            *PathBuffer++ = L'\\';
+                            *PathBuffer++ = L'?';
+                            *PathBuffer++ = L'?';
+                            *PathBuffer++ = L'\\';
+                            *PathBuffer++ = L'U';
+                            *PathBuffer++ = L'N';
+                            *PathBuffer++ = L'C';
 
                             RtlCopyMemory( PathBuffer,
                                            pCcb->DirectoryCB->NameInformation.TargetName.Buffer,
                                            pCcb->DirectoryCB->NameInformation.TargetName.Length);
-                        }
 
-                        pReparseBuffer->ReparseDataLength = FIELD_OFFSET( REPARSE_DATA_BUFFER, SymbolicLinkReparseBuffer.PathBuffer)
-                            - FIELD_OFFSET( REPARSE_DATA_BUFFER, GenericReparseBuffer.DataBuffer)
-                            + pMSFTReparseBuffer->SymbolicLinkReparseBuffer.SubstituteNameLength;
+                            pReparseBuffer->ReparseDataLength = FIELD_OFFSET( REPARSE_DATA_BUFFER, SymbolicLinkReparseBuffer.PathBuffer) -
+                                FIELD_OFFSET( REPARSE_DATA_BUFFER, GenericReparseBuffer.DataBuffer) +
+                                pMSFTReparseBuffer->SymbolicLinkReparseBuffer.PrintNameLength +
+                                pMSFTReparseBuffer->SymbolicLinkReparseBuffer.SubstituteNameLength;
+                        }
 
                         break;
                     }
@@ -568,58 +617,164 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                             break;
                         }
 
-                        if( ulRemainingLen < (ULONG) FIELD_OFFSET( REPARSE_DATA_BUFFER, SymbolicLinkReparseBuffer.PathBuffer) +
-                            pCcb->DirectoryCB->NameInformation.TargetName.Length +
-                            (pCcb->DirectoryCB->NameInformation.TargetName.Buffer[0] == L'\\' ? sizeof( WCHAR) : 0))
+                        bRelative = ( pCcb->DirectoryCB->NameInformation.TargetName.Buffer[0] == L'\\');
+
+                        bDriveLetter = (bRelative == FALSE && pCcb->DirectoryCB->NameInformation.TargetName.Buffer[1] == L':');
+
+                        if ( bRelative)
                         {
 
-                            ntStatus = STATUS_BUFFER_TOO_SMALL;
+                            if( ulRemainingLen < (ULONG) FIELD_OFFSET( REPARSE_DATA_BUFFER, SymbolicLinkReparseBuffer.PathBuffer) +
+                                pCcb->DirectoryCB->NameInformation.TargetName.Length)
+                            {
 
-                            Irp->IoStatus.Information = FIELD_OFFSET( REPARSE_DATA_BUFFER, SymbolicLinkReparseBuffer.PathBuffer) +
-                                pCcb->DirectoryCB->NameInformation.TargetName.Length +
-                                (pCcb->DirectoryCB->NameInformation.TargetName.Buffer[0] == L'\\' ? sizeof( WCHAR) : 0);
+                                ntStatus = STATUS_BUFFER_TOO_SMALL;
 
-                            break;
+                                Irp->IoStatus.Information = FIELD_OFFSET( REPARSE_DATA_BUFFER, SymbolicLinkReparseBuffer.PathBuffer) +
+                                    pCcb->DirectoryCB->NameInformation.TargetName.Length;
+
+                                break;
+                            }
+
+                            pMSFTReparseBuffer->SymbolicLinkReparseBuffer.Flags = SYMLINK_FLAG_RELATIVE;
+
+                            pMSFTReparseBuffer->SymbolicLinkReparseBuffer.SubstituteNameLength =
+                                pCcb->DirectoryCB->NameInformation.TargetName.Length;
+
+                            pMSFTReparseBuffer->SymbolicLinkReparseBuffer.PrintNameLength =
+                                pCcb->DirectoryCB->NameInformation.TargetName.Length;
+
+                            pMSFTReparseBuffer->SymbolicLinkReparseBuffer.SubstituteNameOffset = 0;
+
+                            pMSFTReparseBuffer->SymbolicLinkReparseBuffer.PrintNameOffset = 0;
+
+                            PathBuffer = pMSFTReparseBuffer->SymbolicLinkReparseBuffer.PathBuffer;
+
+                            RtlCopyMemory( PathBuffer,
+                                           pCcb->DirectoryCB->NameInformation.TargetName.Buffer,
+                                           pCcb->DirectoryCB->NameInformation.TargetName.Length);
+
+                            pReparseBuffer->ReparseDataLength = FIELD_OFFSET( REPARSE_DATA_BUFFER, SymbolicLinkReparseBuffer.PathBuffer) -
+                                FIELD_OFFSET( REPARSE_DATA_BUFFER, GenericReparseBuffer.DataBuffer) +
+                                pMSFTReparseBuffer->SymbolicLinkReparseBuffer.SubstituteNameLength;
                         }
-
-                        pMSFTReparseBuffer->SymbolicLinkReparseBuffer.Flags = 0;
-
-                        pMSFTReparseBuffer->SymbolicLinkReparseBuffer.SubstituteNameLength =
-                            pCcb->DirectoryCB->NameInformation.TargetName.Length;
-
-                        pMSFTReparseBuffer->SymbolicLinkReparseBuffer.PrintNameLength =
-                            pCcb->DirectoryCB->NameInformation.TargetName.Length;
-
-                        pMSFTReparseBuffer->SymbolicLinkReparseBuffer.SubstituteNameOffset = 0;
-
-                        pMSFTReparseBuffer->SymbolicLinkReparseBuffer.PrintNameOffset = 0;
-
-                        PathBuffer = pMSFTReparseBuffer->SymbolicLinkReparseBuffer.PathBuffer;
-
-                        if ( pCcb->DirectoryCB->NameInformation.TargetName.Buffer[0] == L'\\')
+                        else if ( bDriveLetter)
                         {
 
+                            if( ulRemainingLen < (ULONG) FIELD_OFFSET( REPARSE_DATA_BUFFER, SymbolicLinkReparseBuffer.PathBuffer) +
+                                /* Display Name */
+                                pCcb->DirectoryCB->NameInformation.TargetName.Length +
+                                /* Substitute Name */
+                                pCcb->DirectoryCB->NameInformation.TargetName.Length + 4 * sizeof( WCHAR))
+                            {
+
+                                ntStatus = STATUS_BUFFER_TOO_SMALL;
+
+                                Irp->IoStatus.Information = FIELD_OFFSET( REPARSE_DATA_BUFFER, SymbolicLinkReparseBuffer.PathBuffer) +
+                                    pCcb->DirectoryCB->NameInformation.TargetName.Length +
+                                    pCcb->DirectoryCB->NameInformation.TargetName.Length + 4 * sizeof( WCHAR);
+
+                                break;
+                            }
+
+                            pMSFTReparseBuffer->SymbolicLinkReparseBuffer.Flags = 0;
+
+                            pMSFTReparseBuffer->SymbolicLinkReparseBuffer.SubstituteNameLength =
+                                pCcb->DirectoryCB->NameInformation.TargetName.Length + 4 * sizeof( WCHAR);
+
+                            pMSFTReparseBuffer->SymbolicLinkReparseBuffer.PrintNameLength =
+                                pCcb->DirectoryCB->NameInformation.TargetName.Length;
+
+                            pMSFTReparseBuffer->SymbolicLinkReparseBuffer.SubstituteNameOffset =
+                                pMSFTReparseBuffer->SymbolicLinkReparseBuffer.PrintNameLength;
+
+                            pMSFTReparseBuffer->SymbolicLinkReparseBuffer.PrintNameOffset = 0;
+
+                            PathBuffer = pMSFTReparseBuffer->SymbolicLinkReparseBuffer.PathBuffer;
+
+                            /* Display Name */
+                            RtlCopyMemory( PathBuffer,
+                                           pCcb->DirectoryCB->NameInformation.TargetName.Buffer,
+                                           pCcb->DirectoryCB->NameInformation.TargetName.Length);
+
+                            PathBuffer += pCcb->DirectoryCB->NameInformation.TargetName.Length / sizeof( WCHAR);
+
+                            /* Substitute Name */
+                            *PathBuffer++ = L'\\';
+                            *PathBuffer++ = L'?';
+                            *PathBuffer++ = L'?';
                             *PathBuffer++ = L'\\';
 
                             RtlCopyMemory( PathBuffer,
                                            pCcb->DirectoryCB->NameInformation.TargetName.Buffer,
                                            pCcb->DirectoryCB->NameInformation.TargetName.Length);
 
-                            pMSFTReparseBuffer->SymbolicLinkReparseBuffer.SubstituteNameLength += sizeof( WCHAR);
-
-                            pMSFTReparseBuffer->SymbolicLinkReparseBuffer.PrintNameLength += sizeof( WCHAR);
+                            pReparseBuffer->ReparseDataLength = FIELD_OFFSET( REPARSE_DATA_BUFFER, SymbolicLinkReparseBuffer.PathBuffer) -
+                                FIELD_OFFSET( REPARSE_DATA_BUFFER, GenericReparseBuffer.DataBuffer) +
+                                pMSFTReparseBuffer->SymbolicLinkReparseBuffer.PrintNameLength +
+                                pMSFTReparseBuffer->SymbolicLinkReparseBuffer.SubstituteNameLength;
                         }
                         else
                         {
 
+                            if( ulRemainingLen < (ULONG) FIELD_OFFSET( REPARSE_DATA_BUFFER, SymbolicLinkReparseBuffer.PathBuffer) +
+                                /* Display Name */
+                                pCcb->DirectoryCB->NameInformation.TargetName.Length + 1 * sizeof( WCHAR) +
+                                /* Substitute Name */
+                                pCcb->DirectoryCB->NameInformation.TargetName.Length + 7 * sizeof( WCHAR))
+                            {
+
+                                ntStatus = STATUS_BUFFER_TOO_SMALL;
+
+                                Irp->IoStatus.Information = FIELD_OFFSET( REPARSE_DATA_BUFFER, SymbolicLinkReparseBuffer.PathBuffer) +
+                                    pCcb->DirectoryCB->NameInformation.TargetName.Length + 1 * sizeof( WCHAR) +
+                                    pCcb->DirectoryCB->NameInformation.TargetName.Length + 7 * sizeof( WCHAR);
+
+                                break;
+                            }
+
+                            pMSFTReparseBuffer->SymbolicLinkReparseBuffer.Flags = 0;
+
+                            pMSFTReparseBuffer->SymbolicLinkReparseBuffer.SubstituteNameLength =
+                                pCcb->DirectoryCB->NameInformation.TargetName.Length + 7 * sizeof( WCHAR);
+
+                            pMSFTReparseBuffer->SymbolicLinkReparseBuffer.PrintNameLength =
+                                pCcb->DirectoryCB->NameInformation.TargetName.Length + 1 * sizeof( WCHAR);
+
+                            pMSFTReparseBuffer->SymbolicLinkReparseBuffer.SubstituteNameOffset =
+                                pMSFTReparseBuffer->SymbolicLinkReparseBuffer.PrintNameLength;
+
+                            pMSFTReparseBuffer->SymbolicLinkReparseBuffer.PrintNameOffset = 0;
+
+                            PathBuffer = pMSFTReparseBuffer->SymbolicLinkReparseBuffer.PathBuffer;
+
+                            /* Display Name */
+                            *PathBuffer++ = L'\\';
+
                             RtlCopyMemory( PathBuffer,
                                            pCcb->DirectoryCB->NameInformation.TargetName.Buffer,
                                            pCcb->DirectoryCB->NameInformation.TargetName.Length);
-                        }
 
-                        pReparseBuffer->ReparseDataLength = FIELD_OFFSET( REPARSE_DATA_BUFFER, SymbolicLinkReparseBuffer.PathBuffer)
-                            - FIELD_OFFSET( REPARSE_DATA_BUFFER, GenericReparseBuffer.DataBuffer)
-                            + pMSFTReparseBuffer->SymbolicLinkReparseBuffer.SubstituteNameLength;
+                            PathBuffer += pCcb->DirectoryCB->NameInformation.TargetName.Length / sizeof( WCHAR);
+
+                            /* Substitute Name */
+                            *PathBuffer++ = L'\\';
+                            *PathBuffer++ = L'?';
+                            *PathBuffer++ = L'?';
+                            *PathBuffer++ = L'\\';
+                            *PathBuffer++ = L'U';
+                            *PathBuffer++ = L'N';
+                            *PathBuffer++ = L'C';
+
+                            RtlCopyMemory( PathBuffer,
+                                           pCcb->DirectoryCB->NameInformation.TargetName.Buffer,
+                                           pCcb->DirectoryCB->NameInformation.TargetName.Length);
+
+                            pReparseBuffer->ReparseDataLength = FIELD_OFFSET( REPARSE_DATA_BUFFER, SymbolicLinkReparseBuffer.PathBuffer) -
+                                FIELD_OFFSET( REPARSE_DATA_BUFFER, GenericReparseBuffer.DataBuffer) +
+                                pMSFTReparseBuffer->SymbolicLinkReparseBuffer.PrintNameLength +
+                                pMSFTReparseBuffer->SymbolicLinkReparseBuffer.SubstituteNameLength;
+                        }
 
                         break;
                     }
