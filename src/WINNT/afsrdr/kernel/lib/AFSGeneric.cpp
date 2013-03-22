@@ -6822,13 +6822,13 @@ AFSDeleteObjectInfo( IN AFSObjectInfoCB **ppObjectInfo)
 {
 
     BOOLEAN bAcquiredTreeLock = FALSE;
-    AFSObjectInfoCB *pObjectInfo = (*ppObjectInfo);
-    BOOLEAN bHeldInService = BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_HELD_IN_SERVICE);
+    AFSObjectInfoCB *pObjectInfo = NULL;
+    BOOLEAN bHeldInService;
     AFSObjectInfoCB * pParentObjectInfo = NULL;
     AFSFileID FileId;
     LONG lCount;
 
-    if ( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_ROOT_VOLUME))
+    if ( BooleanFlagOn( (*ppObjectInfo)->Flags, AFS_OBJECT_ROOT_VOLUME))
     {
 
         //
@@ -6841,9 +6841,19 @@ AFSDeleteObjectInfo( IN AFSObjectInfoCB **ppObjectInfo)
         return;
     }
 
+    pObjectInfo = (AFSObjectInfoCB *) InterlockedCompareExchangePointer( (PVOID *)ppObjectInfo,
+                                                                         NULL,
+                                                                         (PVOID *)ppObjectInfo);
+
+    if ( pObjectInfo == NULL)
+    {
+
+        return;
+    }
+
     ASSERT( pObjectInfo->ObjectReferenceCount == 0);
 
-    (*ppObjectInfo) = NULL;
+    bHeldInService = BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_HELD_IN_SERVICE);
 
     if( !ExIsResourceAcquiredExclusiveLite( pObjectInfo->VolumeCB->ObjectInfoTree.TreeLock))
     {
