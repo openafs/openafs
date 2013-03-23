@@ -998,11 +998,19 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                 AFSAcquireExcl( pCcb->DirectoryCB->ObjectInformation->VolumeCB->ObjectInfoTree.TreeLock,
                                 TRUE);
 
-                ullIndex = AFSCreateLowIndex( &pCcb->DirectoryCB->ObjectInformation->ParentFileId);
+                if ( AFSIsVolumeFID( &pCcb->DirectoryCB->ObjectInformation->ParentFileId))
+                {
 
-                ntStatus = AFSLocateHashEntry( pCcb->DirectoryCB->ObjectInformation->VolumeCB->ObjectInfoTree.TreeHead,
-                                               ullIndex,
-                                               (AFSBTreeEntry **)&pParentObjectInfo);
+                    pParentObjectInfo = &pCcb->DirectoryCB->ObjectInformation->VolumeCB->ObjectInformation;
+                }
+                else
+                {
+                    ullIndex = AFSCreateLowIndex( &pCcb->DirectoryCB->ObjectInformation->ParentFileId);
+
+                    ntStatus = AFSLocateHashEntry( pCcb->DirectoryCB->ObjectInformation->VolumeCB->ObjectInfoTree.TreeHead,
+                                                   ullIndex,
+                                                   (AFSBTreeEntry **)&pParentObjectInfo);
+                }
 
                 if ( NT_SUCCESS( ntStatus))
                 {
