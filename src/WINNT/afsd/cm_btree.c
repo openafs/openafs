@@ -2357,6 +2357,7 @@ cm_BPlusDirEnumBulkStat(cm_direnum_t *enump)
     int i;
     cm_scache_t   *tscp;
     afs_int32 nobulkstat = 0;
+    afs_int32 base = 1;
 
     cm_InitReq(&req);
     req.flags = enump->reqFlags;
@@ -2443,6 +2444,7 @@ cm_BPlusDirEnumBulkStat(cm_direnum_t *enump)
         enump->entry[count].flags |= CM_DIRENUM_FLAG_GOT_STATUS;
 
         if (bsp->counter == AFSCBMAX) {
+            base = 0;
             code = cm_TryBulkStatRPC(dscp, bsp, userp, &req);
             if (code == CM_ERROR_BULKSTAT_FAILURE) {
                 /*
@@ -2487,7 +2489,12 @@ cm_BPlusDirEnumBulkStat(cm_direnum_t *enump)
         }
     }
 
-    if (bsp->counter > 0) {
+    /*
+     * if the counter is 1, only the directory entry is in the list,
+     * do not issue the RPC.
+     */
+
+    if (bsp->counter > base) {
         code = cm_TryBulkStatRPC(dscp, bsp, userp, &req);
         if (code == CM_ERROR_BULKSTAT_FAILURE) {
             /*
@@ -2652,8 +2659,14 @@ cm_BPlusDirEnumBulkStatOne(cm_direnum_t *enump, cm_scache_t *scp)
         bsp->counter++;
     }
 
-    if (bsp->counter > 0) {
+    /*
+     * if the counter is 1, only the directory entry is in the list,
+     * do not issue the RPC.
+     */
+
+    if (bsp->counter > 1) {
         code = cm_TryBulkStatRPC(dscp, bsp, userp, &req);
+
         /* Now process any errors that might have occurred */
         if (code == CM_ERROR_BULKSTAT_FAILURE) {
             for (i=2; i<bsp->counter; i++) {
@@ -2786,8 +2799,14 @@ cm_BPlusDirEnumBulkStatNext(cm_direnum_t *enump)
         bsp->counter++;
     }
 
-    if (bsp->counter > 0) {
+    /*
+     * if the counter is 1, only the directory entry is in the list,
+     * do not issue the RPC.
+     */
+
+    if (bsp->counter > 1) {
         code = cm_TryBulkStatRPC(dscp, bsp, userp, &req);
+
         /* Now process any errors that might have occurred */
         if (code == CM_ERROR_BULKSTAT_FAILURE) {
             for (i=0; i<bsp->counter; i++) {
