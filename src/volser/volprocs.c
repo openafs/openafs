@@ -2338,7 +2338,6 @@ VolListOneVolume(struct rx_call *acid, afs_int32 partid,
     DIR *dirp;
     VolumeId volid;
     int found = 0;
-    int code;
     volint_info_handle_t handle;
 
     volumeInfo->volEntries_val = calloc(1, sizeof(volintInfo));
@@ -2369,19 +2368,20 @@ VolListOneVolume(struct rx_call *acid, afs_int32 partid,
 	handle.volinfo_type = VOLINT_INFO_TYPE_BASE;
 	handle.volinfo_ptr.base = volumeInfo->volEntries_val;
 
-	code = GetVolInfo(partid,
-			  volid,
-			  pname,
-			  volname,
-			  &handle,
-			  VOL_INFO_LIST_SINGLE);
+	/* The return code from GetVolInfo is ignored; there is no error from
+	 * it that results in the whole call being aborted. Any volume
+	 * attachment failures are reported in 'status' field in the
+	 * volumeInfo payload. */
+	GetVolInfo(partid,
+	           volid,
+	           pname,
+	           volname,
+	           &handle,
+	           VOL_INFO_LIST_SINGLE);
     }
 
     closedir(dirp);
-    if (found)
-        return code ? ENODEV: 0;
-    else
-        return ENODEV;
+    return (found) ? 0 : ENODEV;
 }
 
 /*------------------------------------------------------------------------
@@ -2477,6 +2477,7 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
     }
 
     if (found) {
+	int error;
 #ifndef AFS_PTHREAD_ENV
 	IOMGR_Poll();
 #endif
@@ -2484,13 +2485,15 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
 	handle.volinfo_type = VOLINT_INFO_TYPE_EXT;
 	handle.volinfo_ptr.ext = a_volumeXInfoP->volXEntries_val;
 
-	code = GetVolInfo(a_partID,
-			  a_volID,
-			  pname,
-			  volname,
-			  &handle,
-			  VOL_INFO_LIST_SINGLE);
-
+	error = GetVolInfo(a_partID,
+	                   a_volID,
+	                   pname,
+	                   volname,
+	                   &handle,
+	                   VOL_INFO_LIST_SINGLE);
+	if (!error) {
+	    code = 0;
+	}
     }
 
     /*
@@ -2498,10 +2501,7 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
      * return the proper value.
      */
     closedir(dirp);
-    if (found)
-        return code ? ENODEV: 0;
-    else
-        return ENODEV;
+    return code;
 }				/*SAFSVolXListOneVolume */
 
 /*returns all the volumes on partition partid. If flags = 1 then all the
