@@ -1117,7 +1117,7 @@ AFSExamineObjectInfo( IN AFSObjectInfoCB * pCurrentObject,
             //
 
             if( BooleanFlagOn( pCurrentObject->Flags, AFS_OBJECT_FLAGS_DELETED) &&
-                pCurrentObject->ObjectReferenceCount <= 0 &&
+                pCurrentObject->ObjectReferenceCount == 0 &&
                 ( pCurrentObject->Fcb == NULL ||
                   pCurrentObject->Fcb->OpenReferenceCount == 0) &&
                 pCurrentObject->Specific.Directory.DirectoryNodeListHead == NULL &&
@@ -1138,7 +1138,7 @@ AFSExamineObjectInfo( IN AFSObjectInfoCB * pCurrentObject,
                     AFSAcquireExcl( &pCurrentObject->NonPagedInfo->ObjectInfoLock,
                                     TRUE);
 
-                    if ( pCurrentObject->ObjectReferenceCount <= 0)
+                    if ( pCurrentObject->ObjectReferenceCount == 0)
                     {
 
                         AFSRemoveFcb( &pCurrentObject->Fcb);
