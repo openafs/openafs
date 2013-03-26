@@ -1468,10 +1468,17 @@ main(int argc, char *argv[])
 	char *defaultpath = "~/Library/Preferences/edu.mit.Kerberos:/Library/Preferences/edu.mit.Kerberos";
 #endif
 	filepath = getenv("KRB5_CONFIG");
-	asprintf(&newpath, "%s:%s/krb5-weak.conf",
-		 filepath ? filepath : defaultpath,
-		 AFSDIR_CLIENT_ETC_DIRPATH);
-	setenv("KRB5_CONFIG", newpath, 1);
+
+	/* only fiddle with KRB5_CONFIG if krb5-weak.conf actually exists */
+	asprintf(&newpath, "%s/krb5-weak.conf", AFSDIR_CLIENT_ETC_DIRPATH);
+	if (access(newpath, R_OK) == 0) {
+	    free(newpath);
+	    newpath = NULL;
+	    asprintf(&newpath, "%s:%s/krb5-weak.conf",
+	             filepath ? filepath : defaultpath,
+	             AFSDIR_CLIENT_ETC_DIRPATH);
+	    setenv("KRB5_CONFIG", newpath, 1);
+	}
 #endif
 	krb5_init_context(&context);
 
