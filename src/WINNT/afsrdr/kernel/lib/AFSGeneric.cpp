@@ -1062,6 +1062,11 @@ AFSInitDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
                           FileName));
         }
 
+        //
+        // This reference count is either stored into the return DirectoryCB
+        // or released before function exit.
+        //
+
         lCount = AFSObjectInfoIncrement( pObjectInfoCB,
                                          AFS_OBJECT_REFERENCE_DIRENTRY);
 
