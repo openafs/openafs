@@ -1520,7 +1520,7 @@ main(int argc, char *argv[])
     {
 	char *filepath = NULL, *newpath = NULL;
 #ifndef AFS_DARWIN_ENV
-	char *defaultpath = "/etc/krb5.conf";
+	char *defaultpath = "/etc/krb5.conf:/etc/krb5/krb5.conf";
 #else
 	char *defaultpath = "~/Library/Preferences/edu.mit.Kerberos:/Library/Preferences/edu.mit.Kerberos";
 #endif
