@@ -689,7 +689,20 @@ AFSInitializeGlobalDirectoryEntries()
         if( pDirNode == NULL)
         {
 
-            AFSDeleteObjectInfo( &pObjectInfoCB);
+            lCount = AFSObjectInfoDecrement( pObjectInfoCB,
+                                             AFS_OBJECT_REFERENCE_GLOBAL);
+
+            AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSInitializeGlobalDirectoryEntries Decrement count on object %p Cnt %d\n",
+                          pObjectInfoCB,
+                          lCount));
+
+            if ( lCount == 0)
+            {
+
+                AFSDeleteObjectInfo( &pObjectInfoCB);
+            }
 
             AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING | AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
                           AFS_TRACE_LEVEL_ERROR,
@@ -712,7 +725,20 @@ AFSInitializeGlobalDirectoryEntries()
 
             ExFreePool( pDirNode);
 
-            AFSDeleteObjectInfo( &pObjectInfoCB);
+            lCount = AFSObjectInfoDecrement( pObjectInfoCB,
+                                             AFS_OBJECT_REFERENCE_GLOBAL);
+
+            AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSInitializeGlobalDirectoryEntries Decrement count on object %p Cnt %d\n",
+                          pObjectInfoCB,
+                          lCount));
+
+            if ( lCount == 0)
+            {
+
+                AFSDeleteObjectInfo( &pObjectInfoCB);
+            }
 
             AFSDbgTrace(( AFS_SUBSYSTEM_LOAD_LIBRARY | AFS_SUBSYSTEM_INIT_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
@@ -806,7 +832,20 @@ AFSInitializeGlobalDirectoryEntries()
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSInitializeGlobalDirectoryEntries AFS_DIR_ENTRY_TAG allocation failure\n"));
 
-            AFSDeleteObjectInfo( &pObjectInfoCB);
+            lCount = AFSObjectInfoDecrement( pObjectInfoCB,
+                                             AFS_OBJECT_REFERENCE_GLOBAL);
+
+            AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSInitializeGlobalDirectoryEntries Decrement count on object %p Cnt %d\n",
+                          pObjectInfoCB,
+                          lCount));
+
+            if ( lCount == 0)
+            {
+
+                AFSDeleteObjectInfo( &pObjectInfoCB);
+            }
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -825,7 +864,20 @@ AFSInitializeGlobalDirectoryEntries()
 
             ExFreePool( pDirNode);
 
-            AFSDeleteObjectInfo( &pObjectInfoCB);
+            lCount = AFSObjectInfoDecrement( pObjectInfoCB,
+                                             AFS_OBJECT_REFERENCE_GLOBAL);
+
+            AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSInitializeGlobalDirectoryEntries Decrement count on object %p Cnt %d\n",
+                          pObjectInfoCB,
+                          lCount));
+
+            if ( lCount == 0)
+            {
+
+                AFSDeleteObjectInfo( &pObjectInfoCB);
+            }
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -882,7 +934,20 @@ try_exit:
             if( AFSGlobalDotDirEntry != NULL)
             {
 
-                AFSDeleteObjectInfo( &AFSGlobalDotDirEntry->ObjectInformation);
+                lCount = AFSObjectInfoDecrement( AFSGlobalDotDirEntry->ObjectInformation,
+                                                 AFS_OBJECT_REFERENCE_GLOBAL);
+
+                AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSInitializeGlobalDirectoryEntries Decrement count on object %p Cnt %d\n",
+                              AFSGlobalDotDirEntry->ObjectInformation,
+                              lCount));
+
+                if ( lCount == 0)
+                {
+
+                    AFSDeleteObjectInfo( &AFSGlobalDotDirEntry->ObjectInformation);
+                }
 
                 ExDeleteResourceLite( &AFSGlobalDotDirEntry->NonPaged->Lock);
 
@@ -896,7 +961,20 @@ try_exit:
             if( AFSGlobalDotDotDirEntry != NULL)
             {
 
-                AFSDeleteObjectInfo( &AFSGlobalDotDotDirEntry->ObjectInformation);
+                lCount = AFSObjectInfoDecrement( AFSGlobalDotDotDirEntry->ObjectInformation,
+                                                 AFS_OBJECT_REFERENCE_GLOBAL);
+
+                AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSInitializeGlobalDirectoryEntries Decrement count on object %p Cnt %d\n",
+                              AFSGlobalDotDotDirEntry->ObjectInformation,
+                              lCount));
+
+                if ( lCount == 0)
+                {
+
+                    AFSDeleteObjectInfo( &AFSGlobalDotDotDirEntry->ObjectInformation);
+                }
 
                 ExDeleteResourceLite( &AFSGlobalDotDotDirEntry->NonPaged->Lock);
 
@@ -1239,10 +1317,9 @@ try_exit:
                               pObjectInfoCB,
                               lCount));
 
-                if( bAllocatedObjectCB)
+                if( bAllocatedObjectCB &&
+                    lCount == 0)
                 {
-
-                    ASSERT( pObjectInfoCB->ObjectReferenceCount == 0);
 
                     AFSDeleteObjectInfo( &pObjectInfoCB);
                 }
@@ -4436,7 +4513,20 @@ AFSInitializeSpecialShareNameList()
         if( pDirNode == NULL)
         {
 
-            AFSDeleteObjectInfo( &pObjectInfoCB);
+            lCount = AFSObjectInfoDecrement( pObjectInfoCB,
+                                             AFS_OBJECT_REFERENCE_GLOBAL);
+
+            AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSInitializeSpecialShareNameList Decrement count on object %p Cnt %d\n",
+                          pObjectInfoCB,
+                          lCount));
+
+            if ( lCount == 0)
+            {
+
+                AFSDeleteObjectInfo( &pObjectInfoCB);
+            }
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -4455,7 +4545,20 @@ AFSInitializeSpecialShareNameList()
 
             ExFreePool( pDirNode);
 
-            AFSDeleteObjectInfo( &pObjectInfoCB);
+            lCount = AFSObjectInfoDecrement( pObjectInfoCB,
+                                             AFS_OBJECT_REFERENCE_GLOBAL);
+
+            AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSInitializeSpecialShareNameList Decrement count on object %p Cnt %d\n",
+                          pObjectInfoCB,
+                          lCount));
+
+            if ( lCount == 0)
+            {
+
+                AFSDeleteObjectInfo( &pObjectInfoCB);
+            }
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -4529,7 +4632,20 @@ AFSInitializeSpecialShareNameList()
         if( pDirNode == NULL)
         {
 
-            AFSDeleteObjectInfo( &pObjectInfoCB);
+            lCount = AFSObjectInfoDecrement( pObjectInfoCB,
+                                             AFS_OBJECT_REFERENCE_GLOBAL);
+
+            AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSInitializeSpecialShareNameList Decrement count on object %p Cnt %d\n",
+                          pObjectInfoCB,
+                          lCount));
+
+            if ( lCount == 0)
+            {
+
+                AFSDeleteObjectInfo( &pObjectInfoCB);
+            }
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -4548,7 +4664,20 @@ AFSInitializeSpecialShareNameList()
 
             ExFreePool( pDirNode);
 
-            AFSDeleteObjectInfo( &pObjectInfoCB);
+            lCount = AFSObjectInfoDecrement( pObjectInfoCB,
+                                             AFS_OBJECT_REFERENCE_GLOBAL);
+
+            AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSInitializeSpecialShareNameList Decrement count on object %p Cnt %d\n",
+                          pObjectInfoCB,
+                          lCount));
+
+            if ( lCount == 0)
+            {
+
+                AFSDeleteObjectInfo( &pObjectInfoCB);
+            }
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -4603,7 +4732,20 @@ try_exit:
 
                     pLastDirNode = (AFSDirectoryCB *)pDirNode->ListEntry.fLink;
 
-                    AFSDeleteObjectInfo( &pDirNode->ObjectInformation);
+                    lCount = AFSObjectInfoDecrement( pDirNode->ObjectInformation,
+                                                     AFS_OBJECT_REFERENCE_GLOBAL);
+
+                    AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSInitializeSpecialShareNameList Decrement count on object %p Cnt %d\n",
+                                  pDirNode->ObjectInformation,
+                                  lCount));
+
+                    if ( lCount == 0)
+                    {
+
+                        AFSDeleteObjectInfo( &pDirNode->ObjectInformation);
+                    }
 
                     ExDeleteResourceLite( &pDirNode->NonPaged->Lock);
 
@@ -5321,7 +5463,11 @@ try_exit:
                               pObjectInfoCB,
                               lCount));
 
-                AFSDeleteObjectInfo( &pObjectInfoCB);
+                if ( lCount == 0)
+                {
+
+                    AFSDeleteObjectInfo( &pObjectInfoCB);
+                }
             }
         }
     }
@@ -7635,7 +7781,11 @@ AFSCloseLibrary()
                           AFSGlobalDotDirEntry->ObjectInformation,
                           lCount));
 
-            AFSDeleteObjectInfo( &AFSGlobalDotDirEntry->ObjectInformation);
+            if ( lCount == 0)
+            {
+
+                AFSDeleteObjectInfo( &AFSGlobalDotDirEntry->ObjectInformation);
+            }
 
             ExDeleteResourceLite( &AFSGlobalDotDirEntry->NonPaged->Lock);
 
@@ -7658,7 +7808,11 @@ AFSCloseLibrary()
                           AFSGlobalDotDotDirEntry->ObjectInformation,
                           lCount));
 
-            AFSDeleteObjectInfo( &AFSGlobalDotDotDirEntry->ObjectInformation);
+            if ( lCount == 0)
+            {
+
+                AFSDeleteObjectInfo( &AFSGlobalDotDotDirEntry->ObjectInformation);
+            }
 
             ExDeleteResourceLite( &AFSGlobalDotDotDirEntry->NonPaged->Lock);
 
@@ -7688,7 +7842,11 @@ AFSCloseLibrary()
                               pDirNode->ObjectInformation,
                               lCount));
 
-                AFSDeleteObjectInfo( &pDirNode->ObjectInformation);
+                if ( lCount == 0)
+                {
+
+                    AFSDeleteObjectInfo( &pDirNode->ObjectInformation);
+                }
 
                 ExDeleteResourceLite( &pDirNode->NonPaged->Lock);
 
