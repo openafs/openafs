@@ -6267,10 +6267,6 @@ AFSDeleteObjectInfo( IN AFSObjectInfoCB **ppObjectInfo)
 
     ASSERT( *ppObjectInfo == NULL);
 
-    ASSERT( pObjectInfo->ObjectReferenceCount == 0);
-
-    bHeldInService = BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_HELD_IN_SERVICE);
-
     if( !ExIsResourceAcquiredExclusiveLite( pObjectInfo->VolumeCB->ObjectInfoTree.TreeLock))
     {
 
@@ -6281,6 +6277,10 @@ AFSDeleteObjectInfo( IN AFSObjectInfoCB **ppObjectInfo)
 
         bAcquiredTreeLock = TRUE;
     }
+
+    ASSERT( pObjectInfo->ObjectReferenceCount == 0);
+
+    bHeldInService = BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_HELD_IN_SERVICE);
 
     if ( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_FLAGS_PARENT_FID))
     {
@@ -6366,6 +6366,8 @@ AFSDeleteObjectInfo( IN AFSObjectInfoCB **ppObjectInfo)
 
         FileId = pObjectInfo->FileId;
     }
+
+    ASSERT( pObjectInfo->ObjectReferenceCount == 0);
 
     ExDeleteResourceLite( &pObjectInfo->NonPagedInfo->ObjectInfoLock);
 
