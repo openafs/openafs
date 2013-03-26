@@ -22,6 +22,7 @@ LIBS= \
 	$(LIBDIR)\afs\afsint.lib \
 	$(LIBDIR)\afs\afscmd.lib \
 	$(LIBDIR)\afsrx.lib \
+	$(LIBDIR)\afshcrypto.lib \
 	$(LIBDIR)\afslwp.lib \
 	$(LIBDIR)\afs\afspioctl.lib \
 	$(LIBDIR)\afs\afsutil.lib \

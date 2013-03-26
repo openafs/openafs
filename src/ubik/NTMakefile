@@ -131,6 +131,7 @@ UDBG_EXEOBJS =\
 UDBG_EXELIBS =\
 	$(DESTDIR)\lib\afsubik.lib \
 	$(DESTDIR)\lib\afsrx.lib \
+	$(DESTDIR)\lib\afshcrypto.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afslwp.lib \
      	$(DESTDIR)\lib\afs\afscom_err.lib \

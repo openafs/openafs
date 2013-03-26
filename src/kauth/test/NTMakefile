@@ -17,6 +17,7 @@ EXELIBS = \
 	$(DESTDIR)\afsubik.lib \
 	$(DESTDIR)\afs\afsprot.lib \
 	$(DESTDIR)\afsrx.lib \
+	$(DESTDIR)\lib\afshcrypto.lib \
 	$(DESTDIR)\afs\afscom_err.lib \
 	$(DESTDIR)\afs\afskauth.lib \
 	$(DESTDIR)\lib\afsrfc3961.lib

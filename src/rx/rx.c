@@ -73,6 +73,7 @@ extern afs_int32 afs_termState;
 #endif /* KERNEL */
 
 #include <opr/queue.h>
+#include <hcrypto/rand.h>
 
 #include "rx.h"
 #include "rx_clock.h"
@@ -157,6 +158,7 @@ static void rxi_AckAllInTransmitQueue(struct rx_call *call);
 static void rxi_CancelKeepAliveEvent(struct rx_call *call);
 static void rxi_CancelDelayedAbortEvent(struct rx_call *call);
 static void rxi_CancelGrowMTUEvent(struct rx_call *call);
+static void update_nextCid(void);
 
 #ifdef RX_ENABLE_LOCKS
 struct rx_tq_debug {
@@ -394,6 +396,7 @@ struct rx_connection *rxLastConn = 0;
  * tiers:
  *
  * rx_connHashTable_lock - synchronizes conn creation, rx_connHashTable access
+ *                         also protects updates to rx_nextCid
  * conn_call_lock - used to synchonize rx_EndCall and rx_NewCall
  * call->lock - locks call data fields.
  * These are independent of each other:
@@ -439,13 +442,6 @@ static int rxdb_fileID = RXDB_FILE_RX;
 struct rx_serverQueueEntry *rx_waitForPacket = 0;
 
 /* ------------Exported Interfaces------------- */
-
-/* This function allows rxkad to set the epoch to a suitably random number
- * which rx_NewConnection will use in the future.  The principle purpose is to
- * get rxnull connections to use the same epoch as the rxkad connections do, at
- * least once the first rxkad connection is established.  This is important now
- * that the host/port addresses aren't used in FindConnection: the uniqueness
- * of epoch/cid matters and the start time won't do. */
 
 #ifdef AFS_PTHREAD_ENV
 /*
@@ -608,12 +604,12 @@ rx_InitHost(u_int host, u_int port)
 #endif
     }
     rx_stats.minRtt.sec = 9999999;
-#ifdef	KERNEL
-    rx_SetEpoch(tv.tv_sec | 0x80000000);
-#else
-    rx_SetEpoch(tv.tv_sec);	/* Start time of this package, rxkad
-				 * will provide a randomer value. */
-#endif
+    if (RAND_bytes(&rx_epoch, sizeof(rx_epoch)) != 1)
+	return -1;
+    rx_epoch  = (rx_epoch & ~0x40000000) | 0x80000000;
+    if (RAND_bytes(&rx_nextCid, sizeof(rx_nextCid)) != 1)
+	return -1;
+    rx_nextCid &= RX_CIDMASK;
     MUTEX_ENTER(&rx_quota_mutex);
     rxi_dataQuota += rx_extraQuota; /* + extra pkts caller asked to rsrv */
     MUTEX_EXIT(&rx_quota_mutex);
@@ -1042,7 +1038,6 @@ rx_NewConnection(afs_uint32 shost, u_short sport, u_short sservice,
 		 int serviceSecurityIndex)
 {
     int hashindex, i;
-    afs_int32 cid;
     struct rx_connection *conn;
 
     SPLVAR;
@@ -1063,10 +1058,10 @@ rx_NewConnection(afs_uint32 shost, u_short sport, u_short sservice,
 #endif
     NETPRI;
     MUTEX_ENTER(&rx_connHashTable_lock);
-    cid = (rx_nextCid += RX_MAXCALLS);
     conn->type = RX_CLIENT_CONNECTION;
-    conn->cid = cid;
     conn->epoch = rx_epoch;
+    conn->cid = rx_nextCid;
+    update_nextCid();
     conn->peer = rxi_FindPeer(shost, sport, 1);
     conn->serviceId = sservice;
     conn->securityObject = securityObject;
@@ -6724,6 +6719,19 @@ rxi_CancelGrowMTUEvent(struct rx_call *call)
 	rxevent_Cancel(&call->growMTUEvent);
 	CALL_RELE(call, RX_CALL_REFCOUNT_MTU);
     }
+}
+
+/*
+ * Increment the counter for the next connection ID, handling overflow.
+ */
+static void
+update_nextCid(void)
+{
+    /* Overflow is technically undefined behavior; avoid it. */
+    if (rx_nextCid > MAX_AFS_INT32 - (1 << RX_CIDSHIFT))
+	rx_nextCid = -1 * ((MAX_AFS_INT32 / RX_CIDSHIFT) * RX_CIDSHIFT);
+    else
+	rx_nextCid += 1 << RX_CIDSHIFT;
 }
 
 static void

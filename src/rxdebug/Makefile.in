@@ -11,6 +11,7 @@ include @TOP_OBJDIR@/src/config/Makefile.lwp
 
 
 LIBS=${TOP_LIBDIR}/librx.a \
+     ${TOP_LIBDIR}/libafshcrypto_lwp.a \
      ${TOP_LIBDIR}/liblwp.a \
      ${TOP_LIBDIR}/libcmd.a \
      ${TOP_LIBDIR}/libsys.a \

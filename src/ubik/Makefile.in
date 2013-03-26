@@ -28,7 +28,8 @@ INCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/lock.h \
 	${TOP_INCDIR}/rx/rx.h ${TOP_INCDIR}/rx/xdr.h \
 	${TOP_INCDIR}/lock.h ubik.h ubik_int.h
 
-LIBS=${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libauth.a \
+LIBS=${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/libafshcrypto_lwp.a \
+	${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/libafscom_err.a ${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/libafsutil.a ${TOP_LIBDIR}/libopr.a \

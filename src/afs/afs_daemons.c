@@ -36,10 +36,6 @@ struct brequest afs_brs[NBRS];	/* request structures */
 struct afs_osi_WaitHandle AFS_WaitHandler, AFS_CSWaitHandler;
 static int afs_brs_count = 0;	/* request counter, to service reqs in order */
 
-static int rxepoch_checked = 0;
-#define afs_CheckRXEpoch() {if (rxepoch_checked == 0 && rxkad_EpochWasSet) { \
-	rxepoch_checked = 1; afs_GCUserData(/* force flag */ 1);  } }
-
 /* PAG garbage collection */
 /* We induce a compile error if param.h does not define AFS_GCPAGS */
 afs_int32 afs_gcpags = AFS_GCPAGS;
@@ -202,7 +198,6 @@ afs_Daemon(void)
 #if 0
 	    afs_StoreDirtyVcaches();
 #endif
-	    afs_CheckRXEpoch();
 	    last1MinCheck = now;
 	}
 
@@ -1189,7 +1184,7 @@ shutdown_daemons(void)
     AFS_STATCNT(shutdown_daemons);
     if (afs_cold_shutdown) {
 	afs_brsDaemons = brsInit = 0;
-	rxepoch_checked = afs_nbrs = 0;
+	afs_nbrs = 0;
 	memset(afs_brs, 0, sizeof(afs_brs));
 	memset(&afs_xbrs, 0, sizeof(afs_lock_t));
 	afs_brsWaiters = 0;

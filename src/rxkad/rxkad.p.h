@@ -90,7 +90,6 @@ typedef signed char rxkad_level;
     ((((type) == 1) || ((type) == 2)) ? ((type)-1) : 0)
 
 
-extern int rxkad_EpochWasSet;	/* TRUE => we called rx_SetEpoch */
 /* Get key by enctype.  Takes a rock (path to conf dir), kvno and enctype as
  * input and returns the key and key length.  On input, the keylength parameter
  * must be set to the length of storage allocated by the caller. */

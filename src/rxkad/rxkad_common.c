@@ -70,7 +70,6 @@ struct rxkad_stats rxkad_stats;
 #ifdef AFS_PTHREAD_ENV
 /* Pthread initialisation */
 static pthread_once_t rxkad_once_init = PTHREAD_ONCE_INIT;
-extern pthread_mutex_t rxkad_client_uid_mutex;
 extern pthread_mutex_t rxkad_random_mutex;
 
 static void
@@ -83,7 +82,6 @@ rxkad_global_stats_init(void)
 
 static void
 rxkad_InitPthread(void) {
-    MUTEX_INIT(&rxkad_client_uid_mutex, "uid", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rxkad_random_mutex, "rxkad random", MUTEX_DEFAULT, 0);
 
     rxkad_global_stats_init();
@@ -356,7 +354,6 @@ rxkad_NewConnection(struct rx_securityClass *aobj,
 	if (!(tcp->type & rxkad_client))
 	    return RXKADINCONSISTENCY;
 	rxkad_SetLevel(aconn, tcp->level);	/* set header and trailer sizes */
-	rxkad_AllocCID(aobj, aconn);	/* CHANGES cid AND epoch!!!! */
 	rxkad_DeriveXORInfo(aconn, (fc_KeySchedule *)tcp->keysched, (char *)tcp->ivec, (char *)data->preSeq);
 	INC_RXKAD_STATS(connections[rxkad_LevelIndex(tcp->level)]);
     }

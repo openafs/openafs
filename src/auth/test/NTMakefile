@@ -42,6 +42,7 @@ KTC_EXELIBS =\
 	$(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afs\afsauth.lib \
 	$(DESTDIR)\lib\afsrx.lib \
+	$(DESTDIR)\lib\afshcrypto.lib \
 	$(DESTDIR)\lib\afslwp.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afspioctl.lib \

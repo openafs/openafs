@@ -107,6 +107,7 @@ static char *nt_symbols[] = {
 /* all one string */
     "LIBS = $(DESTDIR)/lib/afsrxkad.lib \\\n"
 	"\t$(DESTDIR)/lib/afsdes.lib \\\n" "\t$(DESTDIR)/lib/afsrx.lib \\\n"
+	"\t$(DESTDIR)/lib/afshcrypto.lib \\\n"
 	"\t$(DESTDIR)/lib/afslwp.lib \\\n"
 	"\t$(DESTDIR)/lib/afs/afscmd.lib \\\n"
 	"\t$(DESTDIR)/lib/afs/afsafs_com_err.lib \\\n"

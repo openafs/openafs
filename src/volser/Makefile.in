@@ -54,6 +54,7 @@ VOLDUMP_LIBS = \
 	${TOP_LIBDIR}/libafscom_err.a \
 	${TOP_LIBDIR}/libdir.a \
 	${TOP_LIBDIR}/librx.a  \
+	${TOP_LIBDIR}/libafshcrypto_lwp.a \
 	${TOP_LIBDIR}/liblwp.a  \
 	${TOP_LIBDIR}/libsys.a  \
 	${TOP_LIBDIR}/libacl.a \

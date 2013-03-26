@@ -18,6 +18,7 @@ RPCINCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/rx/rx.h
 LIBS=${TOP_LIBDIR}/libafsint.a \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/libafshcrypto_lwp.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/libopr.a \

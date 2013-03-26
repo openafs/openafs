@@ -26,6 +26,7 @@ EXEOBJS =\
 EXELIBS =\
 	$(DESTDIR)\lib\afsrxkad.lib \
 	$(DESTDIR)\lib\afsrx.lib \
+	$(DESTDIR)\lib\afshcrypto.lib \
 	$(DESTDIR)\lib\afsdes.lib \
 	$(DESTDIR)\lib\afslwp.lib \
 	$(DESTDIR)\lib\afs\afscmd.lib \
