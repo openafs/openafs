@@ -2213,7 +2213,7 @@ GetVolInfo(afs_uint32 partId,
     ttc = NewTrans(volumeId, partId);
     if (!ttc) {
 	code = -3;
-	VOLINT_INFO_STORE(handle, status, VOLSERVOLBUSY);
+	VOLINT_INFO_STORE(handle, status, VBUSY);
 	VOLINT_INFO_STORE(handle, volid, volumeId);
 	goto drop;
     }
