@@ -2797,6 +2797,13 @@ AFSDeleteDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
             AFSExFreePoolWithTag( DirEntry->NameInformation.TargetName.Buffer, 0);
         }
 
+        if( BooleanFlagOn( DirEntry->Flags, AFS_DIR_ENTRY_DELETED) &&
+            DirEntry->ObjectInformation->Links == 0)
+        {
+
+            SetFlag( DirEntry->ObjectInformation->Flags, AFS_OBJECT_FLAGS_DELETED);
+        }
+
         //
         // Dereference the object for this dir entry
         //
@@ -2809,13 +2816,6 @@ AFSDeleteDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
                       "AFSDeleteDirEntry Decrement count on object %p Cnt %d\n",
                       DirEntry->ObjectInformation,
                       lCount));
-
-        if( BooleanFlagOn( DirEntry->Flags, AFS_DIR_ENTRY_DELETED) &&
-            DirEntry->ObjectInformation->Links == 0)
-        {
-
-            SetFlag( DirEntry->ObjectInformation->Flags, AFS_OBJECT_FLAGS_DELETED);
-        }
 
         ExDeleteResourceLite( &DirEntry->NonPaged->Lock);
 
