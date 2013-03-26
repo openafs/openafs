@@ -26,15 +26,15 @@ CFLAGS_ktc_krb.lo        = -DAFS_KERBEROS_ENV -I../auth
 
 afs_setcred.lo: afs_setcred.c afs_pam_msg.h afs_message.h afs_util.h
 afs_setcred_krb.lo: afs_setcred.c afs_pam_msg.h afs_message.h afs_util.h
-	$(LT_CCRULE) afs_setcred.c
+	$(LT_CCRULE) ${srcdir}/afs_setcred.c
 
 afs_auth.lo: afs_auth.c afs_pam_msg.h afs_message.h afs_util.h
 afs_auth_krb.lo: afs_auth.c afs_pam_msg.h afs_message.h afs_util.h
-	$(LT_CCRULE) afs_auth.c
+	$(LT_CCRULE) ${srcdir}/afs_auth.c
 
 afs_util.lo: afs_util.c afs_pam_msg.h afs_message.h afs_util.h
 afs_util_krb.lo: afs_util.c afs_pam_msg.h afs_message.h afs_util.h
-	$(LT_CCRULE) afs_util.c
+	$(LT_CCRULE) ${srcdir}/afs_util.c
 
 ktc_krb.lo: ${srcdir}/../auth/ktc.c ${TOP_INCDIR}/afs/cellconfig.h \
 		${TOP_INCDIR}/afs/auth.h ${srcdir}/../auth/keys.h \
