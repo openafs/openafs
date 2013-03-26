@@ -33,8 +33,8 @@ typedef unsigned short etap_event_t;
 #include <sys/lock.h>
 #include <sys/user.h>
 #include <sys/vnode.h>
-#include <sys/kauth.h>
 #endif
+#include <sys/kauth.h>
 #include <kern/thread.h>
 
 #ifdef AFS_DARWIN80_ENV
