@@ -167,7 +167,8 @@ NTSTATUS
 #define AFS_OBJECT_REFERENCE_WORKER                     5
 #define AFS_OBJECT_REFERENCE_STATUS                     6
 #define AFS_OBJECT_REFERENCE_FIND                       7
-#define AFS_OBJECT_REFERENCE_MAX                        8
+#define AFS_OBJECT_REFERENCE_FS_REQ                     8
+#define AFS_OBJECT_REFERENCE_MAX                        9
 
 //
 // Volume reference count reasons
