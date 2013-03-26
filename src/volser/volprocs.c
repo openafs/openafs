@@ -2428,7 +2428,6 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
     DIR *dirp;			/*Partition directory ptr */
     VolumeId currVolID;	        /*Current volume ID */
     int found = 0;		/*Did we find the volume we need? */
-    int code;
     volint_info_handle_t handle;
 
     /*
@@ -2440,7 +2439,6 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
 	return ENOMEM;
 
     a_volumeXInfoP->volXEntries_len = 1;
-    code = ENODEV;
 
     /*
      * If the partition name we've been given is bad, bogue out.
@@ -2477,7 +2475,6 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
     }
 
     if (found) {
-	int error;
 #ifndef AFS_PTHREAD_ENV
 	IOMGR_Poll();
 #endif
@@ -2485,15 +2482,16 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
 	handle.volinfo_type = VOLINT_INFO_TYPE_EXT;
 	handle.volinfo_ptr.ext = a_volumeXInfoP->volXEntries_val;
 
-	error = GetVolInfo(a_partID,
-	                   a_volID,
-	                   pname,
-	                   volname,
-	                   &handle,
-	                   VOL_INFO_LIST_SINGLE);
-	if (!error) {
-	    code = 0;
-	}
+	/* The return code from GetVolInfo is ignored; there is no error from
+	 * it that results in the whole call being aborted. Any volume
+	 * attachment failures are reported in 'status' field in the
+	 * volumeInfo payload. */
+	GetVolInfo(a_partID,
+	           a_volID,
+	           pname,
+	           volname,
+	           &handle,
+	           VOL_INFO_LIST_SINGLE);
     }
 
     /*
@@ -2501,7 +2499,7 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
      * return the proper value.
      */
     closedir(dirp);
-    return code;
+    return (found) ? 0 : ENODEV;
 }				/*SAFSVolXListOneVolume */
 
 /*returns all the volumes on partition partid. If flags = 1 then all the
