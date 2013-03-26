@@ -1016,7 +1016,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                 {
 
                     lCount = AFSObjectInfoIncrement( pParentObjectInfo,
-                                                     AFS_OBJECT_REFERENCE_DIRENTRY);
+                                                     AFS_OBJECT_REFERENCE_FS_REQ);
 
                     AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
@@ -1049,7 +1049,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                                   ntStatus));
 
                     lCount = AFSObjectInfoDecrement( pParentObjectInfo,
-                                                     AFS_OBJECT_REFERENCE_DIRENTRY);
+                                                     AFS_OBJECT_REFERENCE_FS_REQ);
 
                     AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
