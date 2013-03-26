@@ -1002,7 +1002,7 @@ extern void afs_GCPAGs_perproc_func(afs_proc_t * pproc);
 #endif /* AFS_GCPAGS */
 extern void afs_ComputePAGStats(void);
 extern void afs_PutUser(struct unixuser *au, afs_int32 locktype);
-extern void afs_GCUserData(int aforce);
+extern void afs_GCUserData(void);
 extern void afs_CheckTokenCache(void);
 extern void afs_ResetAccessCache(afs_int32 uid, afs_int32 cell, int alock);
 extern void afs_ResetUserConns(struct unixuser *auser);

@@ -61,7 +61,7 @@ afs_Daemon(void)
 	now = osi_Time();
 
 	if (last10MinCheck + 600 < now) {
-	    afs_GCUserData(0);
+	    afs_GCUserData();
 	}
 
 	if (last60MinCheck + 3600 < now) {

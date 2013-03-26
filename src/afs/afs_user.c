@@ -55,14 +55,10 @@ void afs_ResetAccessCache(afs_int32 uid, afs_int32 cell, int alock);
 
 
 /* Called from afs_Daemon to garbage collect unixusers no longer using system,
- * and their conns.  The aforce parameter tells the function to flush all
- * *unauthenticated* conns, no matter what their expiration time; it exists
- * because after we choose our final rx epoch, we want to stop using calls with
- * other epochs as soon as possible (old file servers act bizarrely when they
- * see epoch changes).
+ * and their conns.
  */
 void
-afs_GCUserData(int aforce)
+afs_GCUserData(void)
 {
     struct unixuser *tu, **lu, *nu;
     int i;
@@ -88,7 +84,7 @@ afs_GCUserData(int aforce)
 		    if (!afs_HasUsableTokens(tu->tokens, now))
 			delFlag = 1;
 		} else {
-		    if (aforce || (tu->tokenTime < now - NOTOKTIMEOUT))
+		    if (tu->tokenTime < now - NOTOKTIMEOUT)
 			delFlag = 1;
 		}
 	    }

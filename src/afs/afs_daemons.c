@@ -247,7 +247,7 @@ afs_Daemon(void)
 #endif /* else AFS_USERSPACE_IP_ADDR */
 	    if (!afs_CheckServerDaemonStarted)
 		afs_CheckServers(0, NULL);
-	    afs_GCUserData(0);	/* gc old conns */
+	    afs_GCUserData();	/* gc old conns */
 	    /* This is probably the wrong way of doing GC for the various exporters but it will suffice for a while */
 	    for (exporter = root_exported; exporter;
 		 exporter = exporter->exp_next) {
