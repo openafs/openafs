@@ -79,9 +79,6 @@ rx_SetCallAbortCode
 rx_SetConnDeadTime
 rx_SetConnHardDeadTime
 rx_SetConnSecondsUntilNatPing
-rx_SetConnectionEpoch
-rx_SetConnectionId
-rx_SetEpoch
 rx_SetLocalStatus
 rx_SetMaxMTU
 rx_SetMaxReceiveWindow

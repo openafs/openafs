@@ -16,19 +16,9 @@
 #include "rx.h"
 #include "rx_conn.h"
 
-void
-rx_SetConnectionEpoch(struct rx_connection *conn, afs_uint32 epoch) {
-    conn->epoch = epoch;
-}
-
 afs_uint32
 rx_GetConnectionEpoch(struct rx_connection *conn) {
     return conn->epoch;
-}
-
-void
-rx_SetConnectionId(struct rx_connection *conn, afs_uint32 cid) {
-    conn->cid = cid;
 }
 
 afs_uint32

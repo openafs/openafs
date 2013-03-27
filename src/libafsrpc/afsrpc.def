@@ -297,9 +297,9 @@ EXPORTS
 	rx_GetThreadNum				@305
 	rx_SetThreadNum				@306
 
-        rx_SetConnectionEpoch                   @307
+;	rx_SetConnectionEpoch			@307
         rx_GetConnectionEpoch                   @308
-        rx_SetConnectionId                      @309
+;	rx_SetConnectionId			@309
         rx_GetConnectionId                      @310
         rx_GetSecurityData                      @311
         rx_SetSecurityData                      @312

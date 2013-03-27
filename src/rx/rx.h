@@ -69,9 +69,7 @@ struct rx_packet;
 
 /* Connection management */
 
-extern void rx_SetConnectionEpoch(struct rx_connection *conn, afs_uint32 epoch);
 extern afs_uint32  rx_GetConnectionEpoch(struct rx_connection *conn);
-extern void rx_SetConnectionId(struct rx_connection *conn, afs_uint32 id);
 extern afs_uint32  rx_GetConnectionId(struct rx_connection *conn);
 extern void *rx_GetSecurityData(struct rx_connection *conn);
 extern void  rx_SetSecurityData(struct rx_connection *conn, void *data);
