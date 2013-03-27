@@ -78,6 +78,9 @@ cm_ShutdownVolume(void)
         volp->cbExpiresRO = 0;
         volp->cbIssuedRO = 0;
         volp->cbServerpRO = NULL;
+        volp->volumeSizeRO = 0;
+        _InterlockedAnd(&volp->volumeSizeRO, ~CM_VOLUMEFLAG_RO_SIZE_VALID);
+
         lock_FinalizeRWLock(&volp->rw);
     }
 
@@ -119,6 +122,8 @@ void cm_InitVolume(int newFile, long maxVols)
                 volp->cbExpiresRO = 0;
                 volp->cbIssuedRO = 0;
                 volp->cbServerpRO = NULL;
+                volp->volumeSizeRO = 0;
+                _InterlockedAnd(&volp->volumeSizeRO, ~CM_VOLUMEFLAG_RO_SIZE_VALID);
             }
         }
         osi_EndOnce(&once);
@@ -1285,6 +1290,7 @@ cm_CheckOfflineVolumeState(cm_volume_t *volp, cm_vol_state_t *statep, afs_uint32
     cm_req_t req;
     struct rx_connection * rxconnp;
     char volName[32];
+    afs_uint32 volType;
     char offLineMsg[256];
     char motd[256];
     long alldown, alldeleted;
@@ -1295,6 +1301,8 @@ cm_CheckOfflineVolumeState(cm_volume_t *volp, cm_vol_state_t *statep, afs_uint32
     Name = volName;
     OfflineMsg = offLineMsg;
     MOTD = motd;
+
+    volType = cm_VolumeType(volp, volID);
 
     if (statep->ID != 0 && (!volID || volID == statep->ID)) {
         /* create fid for volume root so that VNOVOL and VMOVED errors can be processed */
@@ -1354,6 +1362,15 @@ cm_CheckOfflineVolumeState(cm_volume_t *volp, cm_vol_state_t *statep, afs_uint32
                             rx_PutConnection(rxconnp);
                         } while (cm_Analyze(connp, cm_rootUserp, &req, &vfid, NULL, 0, NULL, NULL, NULL, NULL, code));
                         code = cm_MapRPCError(code, &req);
+
+                        if (code == 0 && volType == ROVOL)
+                        {
+
+                            lock_ObtainWrite(&volp->rw);
+                            volp->volumeSizeRO = volStat.BlocksInUse * 1024;
+                            _InterlockedOr(&volp->flags, CM_VOLUMEFLAG_RO_SIZE_VALID);
+                            lock_ReleaseWrite(&volp->rw);
+                        }
                     }
 
                     lock_ObtainWrite(&vscp->rw);

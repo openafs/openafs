@@ -53,6 +53,7 @@ typedef struct cm_volume {
     time_t cbIssuedRO;                  /* latest RO issue time; by cm_scacheLock */
     time_t creationDateRO;              /* latest volume creation date; 0 if unknown; by cm_scacheLock */
     time_t lastUpdateTime;              /* most recent volume location update cm_volumeLock */
+    afs_uint64 volumeSizeRO;            /* latest RO volume size */
 } cm_volume_t;
 
 #define CM_VOLUMEFLAG_RESET	   1	/* reload this info on next use */
@@ -60,6 +61,7 @@ typedef struct cm_volume {
 #define CM_VOLUMEFLAG_UPDATING_VL  8
 #define CM_VOLUMEFLAG_DFS_VOLUME  16
 #define CM_VOLUMEFLAG_NOEXIST     32
+#define CM_VOLUMEFLAG_RO_SIZE_VALID 64
 
 #define CM_VOLUME_QFLAG_IN_HASH      1
 #define CM_VOLUME_QFLAG_IN_LRU_QUEUE 2
