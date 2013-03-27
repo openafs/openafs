@@ -57,6 +57,7 @@ AFS_OS_OBJS = \
 AFS_OS_PAGOBJS = \
 	osi_alloc.o \
 	osi_cred.o \
+	osi_crypto.o \
 	osi_gcpags.o \
 	osi_groups.o \
 	osi_inode.o \
@@ -92,11 +93,14 @@ CFLAGS_evp.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto \
 	       -DHAVE_CONFIG_H
 CFLAGS_evp-algs.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
 CFLAGS_evp-kernel.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
+CFLAGS_rand-fortuna-kernel.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
+CFLAGS_rand-timer-kernel.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
 CFLAGS_rand-kernel.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
 CFLAGS_aes.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
 CFLAGS_rijndael-alg-fst.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto \
 			    -DNO_CONFIG_H
 CFLAGS_sha.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
+CFLAGS_sha256-kernel.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
 CFLAGS_md5.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
 CFLAGS_random.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
 

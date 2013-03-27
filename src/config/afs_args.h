@@ -52,6 +52,7 @@
 #define AFSOP_BKG_HANDLER        41     /* userspace-capable Bkg daemon */
 #define AFSOP_SET_RXMAXFRAGS     43     /* set rxi_nSendFrags, rxi_nRecvFrags */
 #define AFSOP_SET_RMTSYS_FLAG    44     /* set flag if rmtsys is enabled */
+#define AFSOP_SEED_ENTROPY       45     /* Give the kernel hcrypto entropy */
 
 /* The range 20-30 is reserved for AFS system offsets in the afs_syscall */
 #define	AFSCALL_PIOCTL		20

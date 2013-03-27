@@ -36,6 +36,20 @@
 #endif
 #define assert osi_Assert
 
+/* Linux's current.h defines current to get_current(), conflicing with
+ * heimdal's rand-fortuna.c's local variable. */
+#if defined(current)
+#undef current
+#define current current
+#endif
+
+/* AIX and some Solaris (and others, presumably) still have a 'u' symbol for
+ * the user area.  rand-fortuna.c has a local variable of that name. */
+#if defined(u)
+#undef u
+#define u u
+#endif
+
 /* hcrypto uses "static inline", which isn't supported by some of our
  * compilers */
 #if !defined(inline) && !defined(__GNUC__)
@@ -64,3 +78,22 @@ void * _afscrypto_realloc(void *, size_t);
 /* osi_readRandom is also prototyped in afs_prototypes.h, but pulling that in
  * here creates loads of additional dependencies */
 extern int osi_readRandom(void *, afs_size_t);
+
+#if defined(getpid)
+/* On linux, getpid() is unfortunately declared in terms of current, which
+ * already gives us a namespace clash.  It was lousy entropy, anyway. */
+#undef getpid
+#define getpid()	1
+#else
+static_inline pid_t getpid(void) {return 1;};
+#endif
+static_inline int open(const char *path, int flags, ...) {return -1;}
+static_inline void abort(void) {osi_Panic("hckernel aborting\n");}
+static_inline void rk_cloexec(int fd) {}
+static_inline ssize_t read(int d, void *buf, size_t nbytes) {return -1;}
+static_inline int close(int d) {return -1;}
+#if defined(HAVE_GETUID)
+#undef HAVE_GETUID
+#endif
+static_inline int gettimeofday(struct timeval *tp, void *tzp)
+    {if (tp == NULL) return -1; tp->tv_sec = osi_Time(); tp->tv_usec = 0; return 0;}
