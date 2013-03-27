@@ -174,7 +174,7 @@ afs_statfs(struct vfs *afsp, struct statfs *abp, struct ucred *credp)
     abp->f_type = 0;
     abp->f_bsize = afsp->vfs_bsize;
     abp->f_blocks = abp->f_bfree = abp->f_bavail = abp->f_files =
-	abp->f_ffree = 9000000;
+	abp->f_ffree = AFS_VFS_FAKEFREE;
     abp->f_vfstype = AFS_VFSFSID;
     abp->f_vfsnumber = afsp->vfs_number;
     abp->f_vfsoff = abp->f_vfslen = abp->f_vfsvers = -1;

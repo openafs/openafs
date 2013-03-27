@@ -375,14 +375,8 @@ afs_statfs(struct osi_vfs *afsp, struct statfs *abp)
     AFS_STATCNT(afs_statfs);
     abp->f_bsize = afsp->osi_vfs_bsize;
 
-    /*
-     * Fake a high number below to satisfy programs that use the ustat (for
-     * * AIX), or statfs (for the rest) call to make sure that there's
-     * enough * space in the device partition before storing something there
-     * (like * ed(1))
-     */
     abp->f_blocks = abp->f_bfree = abp->f_bavail = abp->f_files =
-	abp->f_ffree = 9000000;
+	abp->f_ffree = AFS_VFS_FAKEFREE;
     abp->f_fsid.val[0] = AFS_VFSMAGIC;	/* magic */
     abp->f_fsid.val[1] = (int)AFS_VFSFSID;
     return 0;
