@@ -345,7 +345,7 @@ afs_statfs(struct super_block *sbp, struct statfs *__statp, int size)
     statp->f_bsize = sbp->s_blocksize;
 #endif
     statp->f_blocks = statp->f_bfree = statp->f_bavail = statp->f_files =
-	statp->f_ffree = 9000000;
+	statp->f_ffree = AFS_VFS_FAKEFREE;
     statp->f_fsid.val[0] = AFS_VFSMAGIC;
     statp->f_fsid.val[1] = AFS_VFSFSID;
     statp->f_namelen = 256;

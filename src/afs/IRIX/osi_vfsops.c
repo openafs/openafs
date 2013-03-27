@@ -313,7 +313,7 @@ afs_statfs(OSI_VFS_ARG(afsp), abp, avp)
      * before storing something there.
      */
     abp->f_blocks = abp->f_bfree = abp->f_bavail = abp->f_files =
-	abp->f_ffree = abp->f_favail = 900000;
+	abp->f_ffree = abp->f_favail = AFS_VFS_FAKEFREE;
 
     abp->f_fsid = AFS_VFSMAGIC;	/* magic */
     strcpy(abp->f_basetype, AFS_MOUNT_AFS);
