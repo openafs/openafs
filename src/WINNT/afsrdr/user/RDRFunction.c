@@ -5894,31 +5894,56 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
         if (cm_volumeInfoReadOnlyFlag && (volType == ROVOL || volType == BACKVOL))
             pResultCB->FileSystemAttributes |= FILE_READ_ONLY_VOLUME;
 
-        flags = CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS;
-        if (scp->volumeCreationDate == 0)
-            flags |= CM_SCACHESYNC_FORCECB;
-        code = cm_SyncOp(scp, NULL, userp, &req, PRSFS_READ, flags);
-        if (code == 0)
+        code = -1;
+
+        if ( volType == ROVOL &&
+             (volp->flags & CM_VOLUMEFLAG_RO_SIZE_VALID))
         {
-            sync_done = 1;
+            lock_ObtainRead(&volp->rw);
+            if (volp->flags & CM_VOLUMEFLAG_RO_SIZE_VALID) {
+                volStat.BlocksInUse = volp->volumeSizeRO / 1024;
+                code = 0;
+            }
+            lock_ReleaseRead(&volp->rw);
+        }
+        
+        if (code == -1)
+        {
+            flags = CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS;
+            if (scp->volumeCreationDate == 0)
+                flags |= CM_SCACHESYNC_FORCECB;
+            code = cm_SyncOp(scp, NULL, userp, &req, PRSFS_READ, flags);
+            if (code == 0)
+            {
+                sync_done = 1;
 
-            Name = volName;
-            OfflineMsg = offLineMsg;
-            MOTD = motd;
-            lock_ReleaseWrite(&scp->rw);
-            scp_locked = 0;
+                Name = volName;
+                OfflineMsg = offLineMsg;
+                MOTD = motd;
+                lock_ReleaseWrite(&scp->rw);
+                scp_locked = 0;
 
-            do {
-                code = cm_ConnFromFID(&scp->fid, userp, &req, &connp);
-                if (code) continue;
+                do {
+                    code = cm_ConnFromFID(&scp->fid, userp, &req, &connp);
+                    if (code) continue;
 
-                rxconnp = cm_GetRxConn(connp);
-                code = RXAFS_GetVolumeStatus(rxconnp, scp->fid.volume,
-                                              &volStat, &Name, &OfflineMsg, &MOTD);
-                rx_PutConnection(rxconnp);
+                    rxconnp = cm_GetRxConn(connp);
+                    code = RXAFS_GetVolumeStatus(rxconnp, scp->fid.volume,
+                                                 &volStat, &Name, &OfflineMsg, &MOTD);
+                    rx_PutConnection(rxconnp);
 
-            } while (cm_Analyze(connp, userp, &req, &scp->fid, NULL, 0, NULL, NULL, NULL, NULL, code));
-            code = cm_MapRPCError(code, &req);
+                } while (cm_Analyze(connp, userp, &req, &scp->fid, NULL, 0, NULL, NULL, NULL, NULL, code));
+                code = cm_MapRPCError(code, &req);
+
+                if (code == 0 && volType == ROVOL)
+                {
+
+                    lock_ObtainWrite(&volp->rw);
+                    volp->volumeSizeRO = volStat.BlocksInUse * 1024;
+                    _InterlockedOr(&volp->flags, CM_VOLUMEFLAG_RO_SIZE_VALID);
+                    lock_ReleaseWrite(&volp->rw);
+                }
+            }
         }
 
         if ( scp->volumeCreationDate )
@@ -6098,29 +6123,54 @@ RDR_GetVolumeSizeInfo( IN cm_user_t     *userp,
 
         volType = cm_VolumeType(volp, scp->fid.volume);
 
-        code = cm_SyncOp(scp, NULL, userp, &req, PRSFS_READ,
-                         CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-        if (code == 0)
+        code = -1;
+
+        if ( volType == ROVOL &&
+             (volp->flags & CM_VOLUMEFLAG_RO_SIZE_VALID))
         {
-            sync_done = 1;
+            lock_ObtainRead(&volp->rw);
+            if (volp->flags & CM_VOLUMEFLAG_RO_SIZE_VALID) {
+                volStat.BlocksInUse = volp->volumeSizeRO / 1024;
+                code = 0;
+            }
+            lock_ReleaseRead(&volp->rw);
+        }
+        
+        if (code == -1)
+        {
+            code = cm_SyncOp(scp, NULL, userp, &req, PRSFS_READ,
+                              CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+            if (code == 0)
+            {
+                sync_done = 1;
 
-            Name = volName;
-            OfflineMsg = offLineMsg;
-            MOTD = motd;
-            lock_ReleaseWrite(&scp->rw);
-            scp_locked = 0;
+                Name = volName;
+                OfflineMsg = offLineMsg;
+                MOTD = motd;
+                lock_ReleaseWrite(&scp->rw);
+                scp_locked = 0;
 
-            do {
-                code = cm_ConnFromFID(&scp->fid, userp, &req, &connp);
-                if (code) continue;
+                do {
+                    code = cm_ConnFromFID(&scp->fid, userp, &req, &connp);
+                    if (code) continue;
 
-                rxconnp = cm_GetRxConn(connp);
-                code = RXAFS_GetVolumeStatus(rxconnp, scp->fid.volume,
-                                              &volStat, &Name, &OfflineMsg, &MOTD);
-                rx_PutConnection(rxconnp);
+                    rxconnp = cm_GetRxConn(connp);
+                    code = RXAFS_GetVolumeStatus(rxconnp, scp->fid.volume,
+                                                  &volStat, &Name, &OfflineMsg, &MOTD);
+                    rx_PutConnection(rxconnp);
 
-            } while (cm_Analyze(connp, userp, &req, &scp->fid, NULL, 0, NULL, NULL, NULL, NULL, code));
-            code = cm_MapRPCError(code, &req);
+                } while (cm_Analyze(connp, userp, &req, &scp->fid, NULL, 0, NULL, NULL, NULL, NULL, code));
+                code = cm_MapRPCError(code, &req);
+
+                if (code == 0 && volType == ROVOL)
+                {
+
+                    lock_ObtainWrite(&volp->rw);
+                    volp->volumeSizeRO = volStat.BlocksInUse * 1024;
+                    _InterlockedOr(&volp->flags, CM_VOLUMEFLAG_RO_SIZE_VALID);
+                    lock_ReleaseWrite(&volp->rw);
+                }
+            }
         }
 
         if (code == 0) {

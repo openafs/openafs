@@ -227,6 +227,8 @@ cm_callbackDiscardROVolumeByFID(cm_fid_t *fidp)
         if (volp->cbExpiresRO) {
             volp->cbExpiresRO = 0;
             volp->cbIssuedRO = 0;
+            volp->volumeSizeRO = 0;
+            _InterlockedAnd(&volp->volumeSizeRO, ~CM_VOLUMEFLAG_RO_SIZE_VALID);
             if (volp->cbServerpRO) {
                 cm_PutServer(volp->cbServerpRO);
                 volp->cbServerpRO = NULL;
