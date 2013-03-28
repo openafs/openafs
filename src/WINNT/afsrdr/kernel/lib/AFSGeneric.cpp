@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2008, 2009, 2010, 2011 Kernel Drivers, LLC.
- * Copyright (c) 2009, 2010, 2011 Your File System, Inc.
+ * Copyright (c) 2009, 2010, 2011, 2012, 2013 Your File System, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -10,10 +10,8 @@
  * - Redistributions of source code must retain the above copyright notice,
  *   this list of conditions and the following disclaimer.
  * - Redistributions in binary form must reproduce the above copyright
- *   notice,
- *   this list of conditions and the following disclaimer in the
- *   documentation
- *   and/or other materials provided with the distribution.
+ *   notice, this list of conditions and the following disclaimer in the
+ *   documentation and/or other materials provided with the distribution.
  * - Neither the names of Kernel Drivers, LLC and Your File System, Inc.
  *   nor the names of their contributors may be used to endorse or promote
  *   products derived from this software without specific prior written
@@ -6777,6 +6775,7 @@ AFSFindObjectInfo( IN AFSVolumeCB *VolumeCB,
     DWORD            ntStatus = STATUS_SUCCESS;
     ULONGLONG        ullIndex;
     AFSObjectInfoCB *pObjectInfo = NULL;
+    LONG             lCount;
 
     if ( AFSIsEqualFID( &VolumeCB->ObjectInformation.FileId, FileId))
     {
@@ -6800,8 +6799,14 @@ AFSFindObjectInfo( IN AFSVolumeCB *VolumeCB,
 
     if ( NT_SUCCESS( ntStatus)) {
 
-        AFSObjectInfoIncrement( pObjectInfo,
-                                AFS_OBJECT_REFERENCE_FIND);
+        lCount = AFSObjectInfoIncrement( pObjectInfo,
+                                         AFS_OBJECT_REFERENCE_FIND);
+
+        AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSFindObjectInfo Decrement count on object %p Cnt %d\n",
+                      pObjectInfo,
+                      lCount));
     }
 
     return pObjectInfo;
@@ -6810,9 +6815,16 @@ AFSFindObjectInfo( IN AFSVolumeCB *VolumeCB,
 void
 AFSReleaseObjectInfo( IN AFSObjectInfoCB **ppObjectInfo)
 {
+    LONG lCount;
 
-    AFSObjectInfoDecrement( *ppObjectInfo,
-                            AFS_OBJECT_REFERENCE_FIND);
+    lCount = AFSObjectInfoDecrement( *ppObjectInfo,
+                                     AFS_OBJECT_REFERENCE_FIND);
+
+    AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                  AFS_TRACE_LEVEL_VERBOSE,
+                  "AFSReleaseObjectInfo Decrement count on object %p Cnt %d\n",
+                  *ppObjectInfo,
+                  lCount));
 
     *ppObjectInfo = NULL;
 }
@@ -8364,6 +8376,12 @@ AFSCloseLibrary()
             lCount = AFSObjectInfoDecrement( AFSGlobalDotDirEntry->ObjectInformation,
                                              AFS_OBJECT_REFERENCE_GLOBAL);
 
+            AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSCloseLibrary Decrement count on parent object %p Cnt %d\n",
+                          AFSGlobalDotDirEntry->ObjectInformation,
+                          lCount));
+
             AFSDeleteObjectInfo( &AFSGlobalDotDirEntry->ObjectInformation);
 
             ExDeleteResourceLite( &AFSGlobalDotDirEntry->NonPaged->Lock);
@@ -8380,6 +8398,12 @@ AFSCloseLibrary()
 
             lCount = AFSObjectInfoDecrement( AFSGlobalDotDotDirEntry->ObjectInformation,
                                              AFS_OBJECT_REFERENCE_GLOBAL);
+
+            AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSCloseLibrary Decrement count on parent object %p Cnt %d\n",
+                          AFSGlobalDotDotDirEntry->ObjectInformation,
+                          lCount));
 
             AFSDeleteObjectInfo( &AFSGlobalDotDotDirEntry->ObjectInformation);
 
@@ -8404,6 +8428,12 @@ AFSCloseLibrary()
 
                 lCount = AFSObjectInfoDecrement( pDirNode->ObjectInformation,
                                                  AFS_OBJECT_REFERENCE_GLOBAL);
+
+                AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSCloseLibrary Decrement count on parent object %p Cnt %d\n",
+                              pDirNode->ObjectInformation,
+                              lCount));
 
                 AFSDeleteObjectInfo( &pDirNode->ObjectInformation);
 
