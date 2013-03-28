@@ -2765,14 +2765,11 @@ AFSDeleteDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
 
         AFSDbgTrace(( AFS_SUBSYSTEM_CLEANUP_PROCESSING | AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSDeleteDirEntry Deleting dir entry in parent %p Entry %p %wZ FID %08lX-%08lX-%08lX-%08lX RefCount %d\n",
+                      "AFSDeleteDirEntry Deleting dir entry in parent %p Entry %p object %p %wZ RefCount %d\n",
                       ParentObjectInfo,
                       DirEntry,
+                      DirEntry->ObjectInformation,
                       &DirEntry->NameInformation.FileName,
-                      DirEntry->ObjectInformation->FileId.Cell,
-                      DirEntry->ObjectInformation->FileId.Volume,
-                      DirEntry->ObjectInformation->FileId.Vnode,
-                      DirEntry->ObjectInformation->FileId.Unique,
                       DirEntry->DirOpenReferenceCount));
 
         ASSERT( DirEntry->DirOpenReferenceCount == 0);
@@ -2797,25 +2794,29 @@ AFSDeleteDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
             AFSExFreePoolWithTag( DirEntry->NameInformation.TargetName.Buffer, 0);
         }
 
-        if( BooleanFlagOn( DirEntry->Flags, AFS_DIR_ENTRY_DELETED) &&
-            DirEntry->ObjectInformation->Links == 0)
+        if ( DirEntry->ObjectInformation != NULL)
         {
 
-            SetFlag( DirEntry->ObjectInformation->Flags, AFS_OBJECT_FLAGS_DELETED);
+            if( BooleanFlagOn( DirEntry->Flags, AFS_DIR_ENTRY_DELETED) &&
+                DirEntry->ObjectInformation->Links == 0)
+            {
+
+                SetFlag( DirEntry->ObjectInformation->Flags, AFS_OBJECT_FLAGS_DELETED);
+            }
+
+            //
+            // Dereference the object for this dir entry
+            //
+
+            lCount = AFSObjectInfoDecrement( DirEntry->ObjectInformation,
+                                             AFS_OBJECT_REFERENCE_DIRENTRY);
+
+            AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSDeleteDirEntry Decrement count on object %p Cnt %d\n",
+                          DirEntry->ObjectInformation,
+                          lCount));
         }
-
-        //
-        // Dereference the object for this dir entry
-        //
-
-        lCount = AFSObjectInfoDecrement( DirEntry->ObjectInformation,
-                                         AFS_OBJECT_REFERENCE_DIRENTRY);
-
-        AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSDeleteDirEntry Decrement count on object %p Cnt %d\n",
-                      DirEntry->ObjectInformation,
-                      lCount));
 
         ExDeleteResourceLite( &DirEntry->NonPaged->Lock);
 
@@ -2849,16 +2850,30 @@ AFSRemoveDirNodeFromParent( IN AFSObjectInfoCB *ParentObjectInfo,
 
         ASSERT( ExIsResourceAcquiredExclusiveLite( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock));
 
-        AFSDbgTrace(( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSRemoveDirNodeFromParent Removing DirEntry %p %wZ FID %08lX-%08lX-%08lX-%08lX from Parent %p\n",
-                      DirEntry,
-                      &DirEntry->NameInformation.FileName,
-                      DirEntry->ObjectInformation->FileId.Cell,
-                      DirEntry->ObjectInformation->FileId.Volume,
-                      DirEntry->ObjectInformation->FileId.Vnode,
-                      DirEntry->ObjectInformation->FileId.Unique,
-                      ParentObjectInfo));
+        if ( DirEntry->ObjectInformation != NULL)
+        {
+
+            AFSDbgTrace(( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSRemoveDirNodeFromParent Removing DirEntry %p %wZ FID %08lX-%08lX-%08lX-%08lX from Parent %p\n",
+                          DirEntry,
+                          &DirEntry->NameInformation.FileName,
+                          DirEntry->ObjectInformation->FileId.Cell,
+                          DirEntry->ObjectInformation->FileId.Volume,
+                          DirEntry->ObjectInformation->FileId.Vnode,
+                          DirEntry->ObjectInformation->FileId.Unique,
+                          ParentObjectInfo));
+        }
+        else
+        {
+
+            AFSDbgTrace(( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSRemoveDirNodeFromParent Removing DirEntry %p %wZ from Parent %p\n",
+                          DirEntry,
+                          &DirEntry->NameInformation.FileName,
+                          ParentObjectInfo));
+        }
 
         if( !BooleanFlagOn( DirEntry->Flags, AFS_DIR_ENTRY_NOT_IN_PARENT_TREE))
         {
