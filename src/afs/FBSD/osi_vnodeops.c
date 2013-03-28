@@ -1076,24 +1076,6 @@ afs_vop_poll(ap)
     return (1);
 }
 
-/*
- * Mmap a file
- *
- * NB Currently unsupported.
- */
-/* ARGSUSED */
-int
-afs_vop_mmap(ap)
-     struct vop_mmap_args	/* {
-				 * struct vnode *a_vp;
-				 * int  a_fflags;
-				 * struct ucred *a_cred;
-				 * struct thread *td;
-				 * } */ *ap;
-{
-    return (EINVAL);
-}
-
 int
 afs_vop_fsync(ap)
      struct vop_fsync_args	/* {
