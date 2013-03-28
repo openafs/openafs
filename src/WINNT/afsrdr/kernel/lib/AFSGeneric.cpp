@@ -6848,20 +6848,22 @@ AFSDeleteObjectInfo( IN AFSObjectInfoCB **ppObjectInfo)
         // embedded in the VolumeCB.
         //
 
-        ASSERT( TRUE);
+        ASSERT( FALSE);
 
         return;
     }
 
     pObjectInfo = (AFSObjectInfoCB *) InterlockedCompareExchangePointer( (PVOID *)ppObjectInfo,
                                                                          NULL,
-                                                                         (PVOID *)ppObjectInfo);
+                                                                         *ppObjectInfo);
 
     if ( pObjectInfo == NULL)
     {
 
         return;
     }
+
+    ASSERT( *ppObjectInfo == NULL);
 
     ASSERT( pObjectInfo->ObjectReferenceCount == 0);
 
