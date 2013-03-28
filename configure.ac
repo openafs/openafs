@@ -83,9 +83,17 @@ AS_IF([test x"$KRB5_LIBS" != x],
      AC_CHECK_HEADERS([kerberosV/heim_err.h])
      AC_CHECK_MEMBERS([krb5_creds.keyblock, krb5_creds.keyblock.enctype, krb5_creds.session,
                        krb5_prompt.type], , , [#include <krb5.h>])
+dnl If we have krb5_creds.session, we are using heimdal
+dnl If we're using heimdal, aklog needs libasn1 for encode_EncTicketPart and a
+dnl few other functions. But just aklog; not any of the other stuff that uses
+dnl krb5.
+     AS_IF([test x"$ac_cv_member_krb5_creds_session" = xyes],
+           [AC_CHECK_LIB([asn1], [encode_EncTicketPart],
+	                [AKLOG_KRB5_LIBS="-lasn1"])])
      RRA_LIB_KRB5_RESTORE])
 AC_SUBST([BUILD_KRB5])
 AC_SUBST([MAKE_KRB5])
+AC_SUBST([AKLOG_KRB5_LIBS])
 
 dnl Probe for GSSAPI
 RRA_LIB_GSSAPI
