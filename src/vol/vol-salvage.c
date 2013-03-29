@@ -2985,17 +2985,8 @@ CopyAndSalvage(struct SalvInfo *salvinfo, struct DirSummary *dir)
 		  vnodeIndexOffset(vcp, dir->vnodeNumber), (char *)&vnode,
 		  sizeof(vnode));
     osi_Assert(lcode == sizeof(vnode));
-#if 0
-#ifdef AFS_NT40_ENV
-    nt_sync(salvinfo->fileSysDevice);
-#else
-    sync();			/* this is slow, but hopefully rarely called.  We don't have
-				 * an open FD on the file itself to fsync.
-				 */
-#endif
-#else
-    salvinfo->vnodeInfo[vLarge].handle->ih_synced = 1;
-#endif
+    IH_CONDSYNC(salvinfo->vnodeInfo[vLarge].handle);
+
     /* make sure old directory file is really closed */
     fdP = IH_OPEN(dir->dirHandle.dirh_handle);
     FDH_REALLYCLOSE(fdP);

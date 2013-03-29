@@ -964,6 +964,7 @@ FlagMsg(void)
     fputs("[-abortthreshold <abort threshold>] ", stdout);
     fputs("[-nojumbo (disable jumbogram network packets - deprecated)] ", stdout);
     fputs("[-jumbo (enable jumbogram network packets)] ", stdout);
+    fputs("[-sync <always | delayed | onclose | never>]", stdout);
 /*   fputs("[-enable_peer_stats] ", stdout); */
 /*   fputs("[-enable_process_stats] ", stdout); */
     fputs("[-help]\n", stdout);
@@ -1435,6 +1436,16 @@ ParseArgs(int argc, char *argv[])
 	}
 	else if (strcmp(argv[i], "-saneacls") == 0) {
 	    saneacls = 1;
+	}
+	else if (strcmp(argv[i], "-sync") == 0) {
+	    if ((i + 1) >= argc) {
+		printf("You have to specify -sync <sync behavior>\n");
+		return -1;
+	    }
+	    if (ih_SetSyncBehavior(argv[++i])) {
+		printf("Invalid -sync value %s\n", argv[i]);
+		return -1;
+	    }
 	}
 	else {
 	    return (-1);
