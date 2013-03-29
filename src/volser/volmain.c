@@ -367,6 +367,16 @@ main(int argc, char **argv)
 	    rx_enableProcessRPCStats();
 	} else if (strcmp(argv[code], "-preserve-vol-stats") == 0) {
 	    DoPreserveVolumeStats = 1;
+	} else if (strcmp(argv[code], "-sync") == 0) {
+	    if ((code + 1) >= argc) {
+		printf("You have to specify -sync <sync_behavior>\n");
+		exit(1);
+	    }
+	    ih_PkgDefaults();
+	    if (ih_SetSyncBehavior(argv[++code])) {
+		printf("Invalid -sync value %s\n", argv[code]);
+		exit(1);
+	    }
 	}
 #ifndef AFS_NT40_ENV
 	else if (strcmp(argv[code], "-syslog") == 0) {
@@ -387,6 +397,7 @@ main(int argc, char **argv)
 		   "[-udpsize <size of socket buffer in bytes>] "
 		   "[-syslog[=FACILITY]] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
+		   "[-sync <always | onclose | never>] "
 		   "[-help]\n");
 #else
 	    printf("Usage: volserver [-log] [-p <number of processes>] "
@@ -394,6 +405,7 @@ main(int argc, char **argv)
 		   "[-nojumbo] [-jumbo] [-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals] "
 		   "[-udpsize <size of socket buffer in bytes>] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
+		   "[-sync <always | onclose | never>] "
 		   "[-help]\n");
 #endif
 	    VS_EXIT(1);

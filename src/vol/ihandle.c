@@ -97,6 +97,31 @@ void ih_PkgDefaults(void)
     /* fd cache size that will be used if/when ih_UseLargeCache()
      * is called */
     vol_io_params.fd_max_cachesize = FD_MAX_CACHESIZE;
+
+    vol_io_params.sync_behavior = IH_SYNC_ONCLOSE;
+}
+
+int
+ih_SetSyncBehavior(const char *behavior)
+{
+    int val;
+
+    if (strcmp(behavior, "always") == 0) {
+	val = IH_SYNC_ALWAYS;
+
+    } else if (strcmp(behavior, "onclose") == 0) {
+	val = IH_SYNC_ONCLOSE;
+
+    } else if (strcmp(behavior, "never") == 0) {
+	val = IH_SYNC_NEVER;
+
+    } else {
+	/* invalid behavior name */
+	return -1;
+    }
+
+    vol_io_params.sync_behavior = val;
+    return 0;
 }
 
 #ifdef AFS_PTHREAD_ENV
@@ -864,6 +889,8 @@ ih_reallyclose(IHandle_t * ihP)
     ihP->ih_refcnt++;   /* must not disappear over unlock */
     if (ihP->ih_synced) {
 	FdHandle_t *fdP;
+	opr_Assert(vol_io_params.sync_behavior != IH_SYNC_ALWAYS);
+	opr_Assert(vol_io_params.sync_behavior != IH_SYNC_NEVER);
         ihP->ih_synced = 0;
 	IH_UNLOCK;
 
@@ -1031,3 +1058,22 @@ ih_isunlinked(int fd)
     return 0;
 }
 #endif /* !AFS_NT40_ENV */
+
+int
+ih_fdsync(FdHandle_t *fdP)
+{
+    switch (vol_io_params.sync_behavior) {
+    case IH_SYNC_ALWAYS:
+	return OS_SYNC(fdP->fd_fd);
+    case IH_SYNC_ONCLOSE:
+	if (fdP->fd_ih) {
+	    fdP->fd_ih->ih_synced = 1;
+	    return 0;
+	}
+	return 1;
+    case IH_SYNC_NEVER:
+	return 0;
+    default:
+	opr_Assert(0);
+    }
+}

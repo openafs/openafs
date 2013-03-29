@@ -978,7 +978,8 @@ enum optionsList {
     OPT_rxmaxmtu,
     OPT_udpsize,
     OPT_dotted,
-    OPT_realm
+    OPT_realm,
+    OPT_sync
 };
 
 static int
@@ -992,6 +993,7 @@ ParseArgs(int argc, char *argv[])
 
     int lwps_max;
     char *auditFileName = NULL;
+    char *sync_behavior = NULL;
 
 #if defined(AFS_AIX32_ENV)
     extern int aixlow_water;
@@ -1156,6 +1158,8 @@ ParseArgs(int argc, char *argv[])
 			"permit Kerberos 5 principals with dots");
     cmd_AddParmAtOffset(opts, OPT_realm, "-realm",
 			CMD_LIST, CMD_OPTIONAL, "local realm");
+    cmd_AddParmAtOffset(opts, OPT_sync, "-sync",
+			CMD_SINGLE, CMD_OPTIONAL, "always | onclose | never");
 
     code = cmd_Parse(argc, argv, &opts);
     if (code)
@@ -1289,6 +1293,12 @@ ParseArgs(int argc, char *argv[])
 		    &vol_io_params.fd_max_cachesize);
     cmd_OptionAsUint(opts, OPT_vhandle_initial_cachesize,
 		    &vol_io_params.fd_initial_cachesize);
+    if (cmd_OptionAsString(opts, OPT_sync, &sync_behavior) == 0) {
+	if (ih_SetSyncBehavior(sync_behavior)) {
+	    printf("Invalid -sync value %s\n", sync_behavior);
+	    return -1;
+	}
+    }
 
 #ifdef AFS_DEMAND_ATTACH_FS
     if (cmd_OptionPresent(opts, OPT_fs_state_dont_save))

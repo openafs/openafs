@@ -200,6 +200,21 @@ typedef struct StreamHandle_s {
 #define FD_HANDLE_MALLOCSIZE	((size_t)((4096/sizeof(FdHandle_t))))
 #define STREAM_HANDLE_MALLOCSIZE 1
 
+/* Possible values for the vol_io_params.sync_behavior option.
+ * These dictate what actually happens when you call FDH_SYNC or IH_CONDSYNC. */
+#define IH_SYNC_ALWAYS  (1) /* This makes FDH_SYNCs do what you'd probably
+                             * expect: a synchronous fsync() */
+#define IH_SYNC_ONCLOSE (2) /* This makes FDH_SYNCs just flag the ih as "I
+                             * need to sync", and does not perform the actual
+                             * fsync() until we IH_REALLYCLOSE. This provides a
+                             * little assurance over IH_SYNC_NEVER when a volume
+                             * has gone offline, and a few other situations. */
+#define IH_SYNC_NEVER   (3) /* This makes FDH_SYNCs do nothing. Faster, but
+                             * obviously less durable. The OS may ensure that
+                             * our data hits the disk eventually, depending on
+                             * the platform and various OS-specific tuning
+                             * parameters. */
+
 
 /* READ THIS.
  *
@@ -218,8 +233,9 @@ typedef struct ih_init_params
     afs_uint32 fd_handle_setaside; /* for non-cached i/o, trad. was 128 */
     afs_uint32 fd_initial_cachesize; /* what was 'default' */
     afs_uint32 fd_max_cachesize; /* max open files if large-cache activated */
-} ih_init_params;
 
+    int sync_behavior; /* one of the IH_SYNC_* constants */
+} ih_init_params;
 
 /* Number of file descriptors needed for non-cached I/O */
 #define FD_HANDLE_SETASIDE	128 /* Match to MAX_FILESERVER_THREAD */
@@ -301,6 +317,7 @@ extern FD_t *ih_fdopen(FdHandle_t * h, char *fdperms);
 extern void ih_PkgDefaults(void);
 extern void ih_Initialize(void);
 extern void ih_UseLargeCache(void);
+extern int ih_SetSyncBehavior(const char *behavior);
 extern IHandle_t *ih_init(int /*@alt Device@ */ dev, int /*@alt VolId@ */ vid,
 			  Inode ino);
 extern IHandle_t *ih_copy(IHandle_t * ihP);
@@ -550,12 +567,14 @@ extern afs_sfsize_t ih_size(FD_t);
 #define FDH_WRITE(H, B, S) OS_WRITE((H)->fd_fd, B, S)
 #define FDH_SEEK(H, O, F) OS_SEEK((H)->fd_fd, O, F)
 
-#define FDH_SYNC(H) ((H->fd_ih!=NULL) ? ( H->fd_ih->ih_synced = 1) - 1 : 1)
+#define FDH_SYNC(H) ih_fdsync(H)
 #define FDH_TRUNC(H, L) OS_TRUNC((H)->fd_fd, L)
 #define FDH_SIZE(H) OS_SIZE((H)->fd_fd)
 #define FDH_LOCKFILE(H, O) OS_LOCKFILE((H)->fd_fd, O)
 #define FDH_UNLOCKFILE(H, O) OS_UNLOCKFILE((H)->fd_fd, O)
 #define FDH_ISUNLINKED(H) OS_ISUNLINKED((H)->fd_fd)
+
+extern int ih_fdsync(FdHandle_t *fdP);
 
 #ifdef AFS_NT40_ENV
 # define afs_stat_st     __stat64

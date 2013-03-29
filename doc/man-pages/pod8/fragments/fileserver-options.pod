@@ -337,3 +337,92 @@ B<-offline-shutdown-timeout> is the value specified for
 B<-offline-timeout>. Otherwise, the default value is C<-1>.
 
 For the LWP fileserver, the only valid value for this option is C<-1>.
+
+=item B<-sync> <always | onclose | none>
+
+This option changes how hard the fileserver tries to ensure that data written
+to volumes actually hits the physical disk.
+
+Normally, when the fileserver writes to disk, the underlying filesystem or
+Operating System may delay writes from actually going to disk, and reorder
+which writes hit the disk first. So, during an unclean shutdown of the machine
+(if the power goes out, or the machine crashes, etc), file data may become lost
+that the server previously told clients was already successfully written.
+
+To try to mitigate this, the fileserver will try to "sync" file data to the
+physical disk at numerous points during various I/O. However, this can result
+in significantly reduced performance. Depending on the usage patterns, this may
+or may not be acceptable. This option dictates specifically what the fileserver
+does when it wants to perform a "sync".
+
+There are several options; pass one of these as the argument to -sync. The
+default is C<onclose>.
+
+=over 4
+
+=item always
+
+This causes a sync operation to always sync immediately and synchronously.
+This is the slowest option that provides the greatest protection against data
+loss in the event of a crash.
+
+Note that this is still not a 100% guarantee that data will not be lost or
+corrupted during a crash. The underlying filesystem itself may cause data to
+be lost or corrupt in such a situation. And OpenAFS itself does not (yet) even
+guarantee that all data is consistent at any point in time; so even if the
+filesystem and OS do not buffer or reorder any writes, you are not guaranteed
+that all data will be okay after a crash.
+
+This was the only behavior allowed in OpenAFS releases prior to 1.4.5.
+
+=item onclose
+
+This causes a sync to do nothing immediately, but causes the relevant file to
+be flagged as potentially needing a sync. When a volume is detached, volume
+metadata files flaged for synced are synced, as well as data files that have
+been accessed recently. Events that cause a volume to detach include:
+performing volume operations (dump, restore, clone, etc), a clean shutdown
+of the fileserver, or during DAFS "soft detachment".
+
+Effectively this option is the same as C<never> while a volume is attached and
+actively being used, but if a volume is detached, there is an additional
+guarantee for the data's consistency.
+
+After the removal of the C<delayed> option after the OpenAFS 1.6 series, this
+option became the default.
+
+=item never
+
+This causes all syncs to never do anything. This is the fastest option, with
+the weakest guarantees for data consistency.
+
+Depending on the underlying filesystem and Operating System, there may be
+guarantees that any data written to disk will hit the physical media after a
+certain amount of time. For example, Linux's pdflush process usually makes this
+guarantee, and ext3 can make certain various consistency guarantees according
+to the options given. ZFS on Solaris can also provide similar guarantees, as
+can various other platforms and filesystems. Consult the documentation for
+your platform if you are unsure.
+
+=item delayed
+
+This option used to exist in OpenAFS 1.6, but was later removed due to issues
+encountered with data corruption during normal operation. Outside of the
+OpenAFS 1.6 series, it is not a valid option, and the fileserver will fail to
+start if you specify this (or any other unknown option). It caused syncs to
+occur in a background thread, executing every 10 seconds.
+
+This was the only behavior allowed in OpenAFS releases starting from 1.4.5 up
+to and including 1.6.2. It was also the default for the 1.6 series starting in
+OpenAFS 1.6.3.
+
+=back
+
+Which option you choose is not an easy decision to make. Various developers
+and experts sometimes disagree on which option is the most reasonable, and it
+may depend on the specific scenario and workload involved. Some argue that
+the C<always> option does not provide significantly greater guarantees over
+any other option, whereas others argue that choosing anything besides the
+C<always> option allows for an unacceptable risk of data loss. This may
+depend on your usage patterns, your platform and filesystem, and who you talk
+to about this topic.
