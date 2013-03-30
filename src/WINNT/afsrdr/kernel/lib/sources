@@ -30,6 +30,7 @@ SOURCES= AFSInit.cpp \
          AFSIoSupport.cpp \
 	 AFSLockControl.cpp \
 	 AFSMD5Support.cpp \
+         AFSNameArray.cpp \
 	 AFSNameSupport.cpp \
 	 AFSNetworkProviderSupport.cpp \
 	 AFSQuota.cpp \

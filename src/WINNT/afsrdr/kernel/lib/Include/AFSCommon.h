@@ -1294,40 +1294,6 @@ AFSUpdateTargetName( IN OUT UNICODE_STRING *TargetName,
                      IN WCHAR *NameBuffer,
                      IN USHORT NameLength);
 
-AFSNameArrayHdr *
-AFSInitNameArray( IN AFSDirectoryCB *DirectoryCB,
-                  IN ULONG InitialElementCount);
-
-NTSTATUS
-AFSPopulateNameArray( IN AFSNameArrayHdr *NameArray,
-                      IN UNICODE_STRING *Path,
-                      IN AFSDirectoryCB *DirectoryCB);
-
-NTSTATUS
-AFSPopulateNameArrayFromRelatedArray( IN AFSNameArrayHdr *NameArray,
-                                      IN AFSNameArrayHdr *RelatedNameArray,
-                                      IN AFSDirectoryCB *DirectoryCB);
-
-NTSTATUS
-AFSFreeNameArray( IN AFSNameArrayHdr *NameArray);
-
-NTSTATUS
-AFSInsertNextElement( IN AFSNameArrayHdr *NameArray,
-                      IN AFSDirectoryCB *DirEntry);
-
-AFSDirectoryCB *
-AFSBackupEntry( IN AFSNameArrayHdr *NameArray);
-
-AFSDirectoryCB *
-AFSGetParentEntry( IN AFSNameArrayHdr *NameArray);
-
-void
-AFSResetNameArray( IN AFSNameArrayHdr *NameArray,
-                   IN AFSDirectoryCB *DirEntry);
-
-void
-AFSDumpNameArray( IN IN AFSNameArrayHdr *NameArray);
-
 void
 AFSSetEnumerationEvent( IN AFSFcb *Fcb);
 
@@ -1473,6 +1439,44 @@ AFSRetrieveValidAuthGroup( IN AFSFcb *Fcb,
 NTSTATUS
 AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                             IN ULONG InvalidateReason);
+
+//
+// AFSNameArray.cpp Prototypes
+//
+
+AFSNameArrayHdr *
+AFSInitNameArray( IN AFSDirectoryCB *DirectoryCB,
+                  IN ULONG InitialElementCount);
+
+NTSTATUS
+AFSPopulateNameArray( IN AFSNameArrayHdr *NameArray,
+                      IN UNICODE_STRING *Path,
+                      IN AFSDirectoryCB *DirectoryCB);
+
+NTSTATUS
+AFSPopulateNameArrayFromRelatedArray( IN AFSNameArrayHdr *NameArray,
+                                      IN AFSNameArrayHdr *RelatedNameArray,
+                                      IN AFSDirectoryCB *DirectoryCB);
+
+NTSTATUS
+AFSFreeNameArray( IN AFSNameArrayHdr *NameArray);
+
+NTSTATUS
+AFSInsertNextElement( IN AFSNameArrayHdr *NameArray,
+                      IN AFSDirectoryCB *DirEntry);
+
+AFSDirectoryCB *
+AFSBackupEntry( IN AFSNameArrayHdr *NameArray);
+
+AFSDirectoryCB *
+AFSGetParentEntry( IN AFSNameArrayHdr *NameArray);
+
+void
+AFSResetNameArray( IN AFSNameArrayHdr *NameArray,
+                   IN AFSDirectoryCB *DirEntry);
+
+void
+AFSDumpNameArray( IN IN AFSNameArrayHdr *NameArray);
 
 //
 // AFSWorker.cpp Prototypes
