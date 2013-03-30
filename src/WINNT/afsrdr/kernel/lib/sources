@@ -38,6 +38,7 @@ SOURCES= AFSInit.cpp \
 	 AFSSecurity.cpp \
 	 AFSShutdown.cpp \
 	 AFSSystemControl.cpp \
+         AFSVolume.cpp \
 	 AFSVolumeInfo.cpp \
 	 AFSWorker.cpp \
 	 AFSWrite.cpp \
