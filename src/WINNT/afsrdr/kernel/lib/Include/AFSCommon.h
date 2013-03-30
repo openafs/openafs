@@ -533,23 +533,6 @@ NTSTATUS
 AFSInitFcb( IN AFSDirectoryCB   *DirEntry);
 
 NTSTATUS
-AFSInitVolume( IN GUID *AuthGroup,
-               IN AFSFileID *RootFid,
-               IN LONG VolumeReferenceReason,
-               OUT AFSVolumeCB **VolumeCB);
-
-NTSTATUS
-AFSRemoveVolume( IN AFSVolumeCB *VolumeCB);
-
-LONG
-AFSVolumeIncrement( IN AFSVolumeCB *VolumeCB,
-                    IN LONG         Reason);
-
-LONG
-AFSVolumeDecrement( IN AFSVolumeCB *VolumeCB,
-                    IN LONG         Reason);
-
-NTSTATUS
 AFSInitRootFcb( IN ULONGLONG ProcessID,
                 IN AFSVolumeCB *VolumeCB);
 
@@ -912,6 +895,27 @@ AFSSetEA( IN PDEVICE_OBJECT DeviceObject,
 NTSTATUS
 AFSFlushBuffers( IN PDEVICE_OBJECT DeviceObject,
                  IN PIRP Irp);
+
+//
+// AFSVolume.cpp Prototypes
+//
+
+NTSTATUS
+AFSInitVolume( IN GUID *AuthGroup,
+               IN AFSFileID *RootFid,
+               IN LONG VolumeReferenceReason,
+               OUT AFSVolumeCB **VolumeCB);
+
+NTSTATUS
+AFSRemoveVolume( IN AFSVolumeCB *VolumeCB);
+
+LONG
+AFSVolumeIncrement( IN AFSVolumeCB *VolumeCB,
+                    IN LONG         Reason);
+
+LONG
+AFSVolumeDecrement( IN AFSVolumeCB *VolumeCB,
+                    IN LONG         Reason);
 
 //
 // AFSVolumeInfo.cpp Prototypes
