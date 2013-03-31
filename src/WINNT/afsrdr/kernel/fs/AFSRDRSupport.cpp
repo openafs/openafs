@@ -64,7 +64,7 @@ AFSInitRDRDevice()
                                    sizeof( AFSDeviceExt),
                                    pFsRtlRegisterUncProviderEx ? NULL : &uniDeviceName,
                                    FILE_DEVICE_NETWORK_FILE_SYSTEM,
-                                   FILE_REMOTE_DEVICE,
+                                   FILE_DEVICE_SECURE_OPEN | FILE_REMOTE_DEVICE,
                                    FALSE,
                                    &AFSRDRDeviceObject);
 
