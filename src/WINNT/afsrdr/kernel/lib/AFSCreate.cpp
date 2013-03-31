@@ -1706,7 +1706,7 @@ AFSProcessCreate( IN PIRP               Irp,
                       FullFileName,
                       ulAttributes));
 
-        if( BooleanFlagOn( VolumeCB->VolumeInformation.Characteristics, FILE_READ_ONLY_DEVICE))
+        if( BooleanFlagOn( VolumeCB->VolumeInformation.FileSystemAttributes, FILE_READ_ONLY_VOLUME))
         {
 
             AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -3015,7 +3015,7 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
 
         ulCreateDisposition = (pIrpSp->Parameters.Create.Options >> 24) & 0x000000ff;
 
-        if( BooleanFlagOn( VolumeCB->VolumeInformation.Characteristics, FILE_READ_ONLY_DEVICE))
+        if( BooleanFlagOn( VolumeCB->VolumeInformation.FileSystemAttributes, FILE_READ_ONLY_VOLUME))
         {
 
             AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,

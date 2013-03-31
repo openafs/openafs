@@ -247,7 +247,7 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
         }
 
         if( pFcb->ObjectInformation->VolumeCB != NULL &&
-            BooleanFlagOn( pFcb->ObjectInformation->VolumeCB->VolumeInformation.Characteristics, FILE_READ_ONLY_DEVICE))
+            BooleanFlagOn( pFcb->ObjectInformation->VolumeCB->VolumeInformation.FileSystemAttributes, FILE_READ_ONLY_VOLUME))
         {
 
             AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
