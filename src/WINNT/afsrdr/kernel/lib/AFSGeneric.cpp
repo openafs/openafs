@@ -5348,7 +5348,7 @@ AFSInitPIOCtlDirectoryCB( IN AFSObjectInfoCB *ParentObjectInfo)
         }
 
         lCount = AFSObjectInfoIncrement( pObjectInfoCB,
-                                         AFS_OBJECT_REFERENCE_DIRENTRY);
+                                         AFS_OBJECT_REFERENCE_PIOCTL);
 
         AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
@@ -5460,7 +5460,7 @@ try_exit:
             {
 
                 lCount = AFSObjectInfoDecrement( pObjectInfoCB,
-                                                 AFS_OBJECT_REFERENCE_DIRENTRY);
+                                                 AFS_OBJECT_REFERENCE_PIOCTL);
 
                 AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
@@ -6234,157 +6234,169 @@ AFSReleaseObjectInfo( IN AFSObjectInfoCB **ppObjectInfo)
 void
 AFSDeleteObjectInfo( IN AFSObjectInfoCB **ppObjectInfo)
 {
-
     BOOLEAN bAcquiredTreeLock = FALSE;
     AFSObjectInfoCB *pObjectInfo = NULL;
+    AFSVolumeCB * pVolume = NULL;
     BOOLEAN bHeldInService;
     AFSObjectInfoCB * pParentObjectInfo = NULL;
     AFSFileID FileId;
     LONG lCount;
 
-    if ( BooleanFlagOn( (*ppObjectInfo)->Flags, AFS_OBJECT_ROOT_VOLUME))
+    __Enter
     {
-
-        //
-        // AFSDeleteObjectInfo should never be called on the ObjectInformationCB
-        // embedded in the VolumeCB.
-        //
-
-        ASSERT( FALSE);
-
-        return;
-    }
-
-    pObjectInfo = (AFSObjectInfoCB *) InterlockedCompareExchangePointer( (PVOID *)ppObjectInfo,
-                                                                         NULL,
-                                                                         *ppObjectInfo);
-
-    if ( pObjectInfo == NULL)
-    {
-
-        return;
-    }
-
-    ASSERT( *ppObjectInfo == NULL);
-
-    if( !ExIsResourceAcquiredExclusiveLite( pObjectInfo->VolumeCB->ObjectInfoTree.TreeLock))
-    {
-
-        ASSERT( !ExIsResourceAcquiredLite( pObjectInfo->VolumeCB->ObjectInfoTree.TreeLock));
-
-        AFSAcquireExcl( pObjectInfo->VolumeCB->ObjectInfoTree.TreeLock,
-                        TRUE);
-
-        bAcquiredTreeLock = TRUE;
-    }
-
-    ASSERT( pObjectInfo->ObjectReferenceCount == 0);
-
-    bHeldInService = BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_HELD_IN_SERVICE);
-
-    if ( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_FLAGS_PARENT_FID))
-    {
-
-        pParentObjectInfo = AFSFindObjectInfo( pObjectInfo->VolumeCB,
-                                               &pObjectInfo->ParentFileId);
-    }
-
-    //
-    // Remove it from the tree and list if it was inserted
-    //
-
-    if( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_INSERTED_HASH_TREE))
-    {
-
-        AFSRemoveHashEntry( &pObjectInfo->VolumeCB->ObjectInfoTree.TreeHead,
-                            &pObjectInfo->TreeEntry);
-    }
-
-    if( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_INSERTED_VOLUME_LIST))
-    {
-
-        if( pObjectInfo->ListEntry.fLink == NULL)
+        if ( BooleanFlagOn( (*ppObjectInfo)->Flags, AFS_OBJECT_ROOT_VOLUME))
         {
 
-            pObjectInfo->VolumeCB->ObjectInfoListTail = (AFSObjectInfoCB *)pObjectInfo->ListEntry.bLink;
+            //
+            // AFSDeleteObjectInfo should never be called on the ObjectInformationCB
+            // embedded in the VolumeCB.
+            //
 
-            if( pObjectInfo->VolumeCB->ObjectInfoListTail != NULL)
+            ASSERT( FALSE);
+
+            return;
+        }
+
+        pVolume = (*ppObjectInfo)->VolumeCB;
+
+        if( !ExIsResourceAcquiredExclusiveLite( pVolume->ObjectInfoTree.TreeLock))
+        {
+
+            ASSERT( !ExIsResourceAcquiredLite( pVolume->ObjectInfoTree.TreeLock));
+
+            AFSAcquireExcl( pVolume->ObjectInfoTree.TreeLock,
+                            TRUE);
+
+            bAcquiredTreeLock = TRUE;
+        }
+
+        for ( lCount = 0; lCount < AFS_OBJECT_REFERENCE_MAX; lCount++)
+        {
+
+            ASSERT( (*ppObjectInfo)->ObjectReferences[ lCount] >= 0);
+        }
+
+        ASSERT( (*ppObjectInfo)->ObjectReferenceCount == 0);
+
+        pObjectInfo = (AFSObjectInfoCB *) InterlockedCompareExchangePointer( (PVOID *)ppObjectInfo,
+                                                                             NULL,
+                                                                             *ppObjectInfo);
+
+        if ( pObjectInfo == NULL)
+        {
+
+            try_return( NOTHING);
+        }
+
+        ASSERT( *ppObjectInfo == NULL);
+
+        if ( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_FLAGS_PARENT_FID))
+        {
+
+            pParentObjectInfo = AFSFindObjectInfo( pVolume,
+                                                   &pObjectInfo->ParentFileId);
+            if( pParentObjectInfo != NULL)
             {
 
-                pObjectInfo->VolumeCB->ObjectInfoListTail->ListEntry.fLink = NULL;
+                ClearFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_PARENT_FID);
+
+                lCount = AFSObjectInfoDecrement( pParentObjectInfo,
+                                                 AFS_OBJECT_REFERENCE_CHILD);
+
+                AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSDeleteObjectInfo Decrement count on parent object %p Cnt %d\n",
+                              pParentObjectInfo,
+                              lCount));
+
+                AFSReleaseObjectInfo( &pParentObjectInfo);
             }
         }
-        else
+
+        //
+        // Remove it from the tree and list if it was inserted
+        //
+
+        if( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_INSERTED_HASH_TREE))
         {
 
-            ((AFSObjectInfoCB *)(pObjectInfo->ListEntry.fLink))->ListEntry.bLink = pObjectInfo->ListEntry.bLink;
+            AFSRemoveHashEntry( &pVolume->ObjectInfoTree.TreeHead,
+                                &pObjectInfo->TreeEntry);
         }
 
-        if( pObjectInfo->ListEntry.bLink == NULL)
+        if( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_INSERTED_VOLUME_LIST))
         {
 
-            pObjectInfo->VolumeCB->ObjectInfoListHead = (AFSObjectInfoCB *)pObjectInfo->ListEntry.fLink;
-
-            if( pObjectInfo->VolumeCB->ObjectInfoListHead != NULL)
+            if( pObjectInfo->ListEntry.fLink == NULL)
             {
 
-                pObjectInfo->VolumeCB->ObjectInfoListHead->ListEntry.bLink = NULL;
+                pVolume->ObjectInfoListTail = (AFSObjectInfoCB *)pObjectInfo->ListEntry.bLink;
+
+                if( pVolume->ObjectInfoListTail != NULL)
+                {
+
+                    pVolume->ObjectInfoListTail->ListEntry.fLink = NULL;
+                }
+            }
+            else
+            {
+
+                ((AFSObjectInfoCB *)(pObjectInfo->ListEntry.fLink))->ListEntry.bLink = pObjectInfo->ListEntry.bLink;
+            }
+
+            if( pObjectInfo->ListEntry.bLink == NULL)
+            {
+
+                pVolume->ObjectInfoListHead = (AFSObjectInfoCB *)pObjectInfo->ListEntry.fLink;
+
+                if( pVolume->ObjectInfoListHead != NULL)
+                {
+
+                    pVolume->ObjectInfoListHead->ListEntry.bLink = NULL;
+                }
+            }
+            else
+            {
+
+                ((AFSObjectInfoCB *)(pObjectInfo->ListEntry.bLink))->ListEntry.fLink = pObjectInfo->ListEntry.fLink;
             }
         }
-        else
+
+        bHeldInService = BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_HELD_IN_SERVICE);
+
+        if( bHeldInService)
         {
 
-            ((AFSObjectInfoCB *)(pObjectInfo->ListEntry.bLink))->ListEntry.fLink = pObjectInfo->ListEntry.fLink;
+            FileId = pObjectInfo->FileId;
         }
-    }
 
-    if( pParentObjectInfo != NULL)
-    {
+        ASSERT( pObjectInfo->ObjectReferenceCount == 0);
 
-        ClearFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_PARENT_FID);
+        ExDeleteResourceLite( &pObjectInfo->NonPagedInfo->ObjectInfoLock);
 
-        lCount = AFSObjectInfoDecrement( pParentObjectInfo,
-                                         AFS_OBJECT_REFERENCE_CHILD);
+        ExDeleteResourceLite( &pObjectInfo->NonPagedInfo->DirectoryNodeHdrLock);
 
-        AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSDeleteObjectInfo Decrement count on parent object %p Cnt %d\n",
-                      pParentObjectInfo,
-                      lCount));
+        AFSExFreePoolWithTag( pObjectInfo->NonPagedInfo, AFS_NP_OBJECT_INFO_TAG);
 
-        AFSReleaseObjectInfo( &pParentObjectInfo);
-    }
+        AFSExFreePoolWithTag( pObjectInfo, AFS_OBJECT_INFO_TAG);
 
-    if( bAcquiredTreeLock)
-    {
+try_exit:
 
-        AFSReleaseResource( pObjectInfo->VolumeCB->ObjectInfoTree.TreeLock);
-    }
+        if( bAcquiredTreeLock)
+        {
 
-    if( bHeldInService)
-    {
+            AFSReleaseResource( pVolume->ObjectInfoTree.TreeLock);
+        }
 
-        FileId = pObjectInfo->FileId;
-    }
+        //
+        // Release the fid in the service
+        //
 
-    ASSERT( pObjectInfo->ObjectReferenceCount == 0);
+        if( bHeldInService)
+        {
 
-    ExDeleteResourceLite( &pObjectInfo->NonPagedInfo->ObjectInfoLock);
-
-    ExDeleteResourceLite( &pObjectInfo->NonPagedInfo->DirectoryNodeHdrLock);
-
-    AFSExFreePoolWithTag( pObjectInfo->NonPagedInfo, AFS_NP_OBJECT_INFO_TAG);
-
-    AFSExFreePoolWithTag( pObjectInfo, AFS_OBJECT_INFO_TAG);
-
-    //
-    // Release the fid in the service
-    //
-
-    if( bHeldInService)
-    {
-
-        AFSReleaseFid( &FileId);
+            AFSReleaseFid( &FileId);
+        }
     }
 
     return;

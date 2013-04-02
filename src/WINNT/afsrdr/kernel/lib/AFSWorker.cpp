@@ -943,149 +943,18 @@ AFSIOWorkerThread( IN PVOID Context)
     return;
 }
 
-static BOOLEAN
-AFSExamineDirectory( IN AFSObjectInfoCB * pCurrentObject,
-                     IN AFSDirectoryCB  * pCurrentDirEntry)
-{
-    NTSTATUS ntStatus;
-    AFSFcb *pFcb = NULL;
-    AFSObjectInfoCB *pCurrentChildObject = NULL;
-    AFSVolumeCB * pVolumeCB = pCurrentObject->VolumeCB;
-    BOOLEAN bFcbBusy = FALSE;
-    LONG lCount;
-
-    pCurrentChildObject = pCurrentDirEntry->ObjectInformation;
-
-    AFSDbgTrace(( AFS_SUBSYSTEM_CLEANUP_PROCESSING | AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                  AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSExamineDirectory Deleting DE %wZ Object %p\n",
-                  &pCurrentDirEntry->NameInformation.FileName,
-                  pCurrentChildObject));
-
-    AFSDeleteDirEntry( pCurrentObject,
-                       pCurrentDirEntry);
-
-    if ( pCurrentChildObject != NULL)
-    {
-
-        //
-        // Acquire ObjectInfoLock shared here so as not to deadlock
-        // with an invalidation call from the service during AFSCleanupFcb
-        //
-
-        lCount = AFSObjectInfoIncrement( pCurrentChildObject,
-                                         AFS_OBJECT_REFERENCE_WORKER);
-
-        AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSExamineDirectory Increment count on object %p Cnt %d\n",
-                      pCurrentChildObject,
-                      lCount));
-
-        if( lCount == 1 &&
-            pCurrentChildObject->Fcb != NULL &&
-            pCurrentChildObject->FileType == AFS_FILE_TYPE_FILE)
-        {
-
-            //
-            // We must not hold pVolumeCB->ObjectInfoTree.TreeLock exclusive
-            // across an AFSCleanupFcb call since it can deadlock with an
-            // invalidation call from the service.
-            //
-
-            AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
-
-            //
-            // Cannot hold a TreeLock across an AFSCleanupFcb call
-            // as it can deadlock with an invalidation ioctl initiated
-            // from the service.
-            //
-            // Dropping the TreeLock permits the
-            // pCurrentObject->ObjectReferenceCount to change
-            //
-
-            ntStatus = AFSCleanupFcb( pCurrentChildObject->Fcb,
-                                      TRUE);
-
-            if ( ntStatus == STATUS_RETRY)
-            {
-
-                bFcbBusy = TRUE;
-            }
-
-            AFSAcquireExcl( pVolumeCB->ObjectInfoTree.TreeLock,
-                            TRUE);
-        }
-
-        AFSAcquireExcl( &pCurrentChildObject->NonPagedInfo->ObjectInfoLock,
-                        TRUE);
-
-        lCount = AFSObjectInfoDecrement( pCurrentChildObject,
-                                         AFS_OBJECT_REFERENCE_WORKER);
-
-        AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSExamineDirectory Decrement1 count on object %p Cnt %d\n",
-                      pCurrentChildObject,
-                      lCount));
-
-        if( lCount == 0 &&
-            pCurrentChildObject->Fcb != NULL &&
-            pCurrentChildObject->Fcb->OpenReferenceCount == 0)
-        {
-
-            AFSRemoveFcb( &pCurrentChildObject->Fcb);
-
-            if( pCurrentChildObject->FileType == AFS_FILE_TYPE_DIRECTORY &&
-                pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB != NULL)
-            {
-
-                AFSAcquireExcl( &pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->NonPagedInfo->ObjectInfoLock,
-                                TRUE);
-
-                AFSRemoveFcb( &pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb);
-
-                AFSReleaseResource( &pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->NonPagedInfo->ObjectInfoLock);
-
-                AFSDeleteObjectInfo( &pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation);
-
-                ExDeleteResourceLite( &pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->NonPaged->Lock);
-
-                AFSExFreePoolWithTag( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->NonPaged, AFS_DIR_ENTRY_NP_TAG);
-
-                AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSExamineDirectory (pioctl) AFS_DIR_ENTRY_TAG deallocating %p\n",
-                              pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB));
-
-                AFSExFreePoolWithTag( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB, AFS_DIR_ENTRY_TAG);
-            }
-
-            AFSReleaseResource( &pCurrentChildObject->NonPagedInfo->ObjectInfoLock);
-
-            AFSDbgTrace(( AFS_SUBSYSTEM_CLEANUP_PROCESSING | AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSExamineDirectory Deleting object %p\n",
-                          pCurrentChildObject));
-
-            AFSDeleteObjectInfo( &pCurrentChildObject);
-        }
-        else
-        {
-
-            AFSReleaseResource( &pCurrentChildObject->NonPagedInfo->ObjectInfoLock);
-        }
-    }
-
-    return bFcbBusy;
-}
-
 //
-// Called with VolumeCB->ObjectInfoTree.TreeLock held shared.
-// The TreeLock will be released unless *pbReleaseVolumeLock is set to FALSE.
+// Called with VolumeCB->ObjectInfoTree.TreeLock held exclusive.
+// pCurrentObject->ObjectReferenceCount is incremented by the caller.
+//
+// The *pbReleaseVolumeLock is set to FALSE if the TreeLock is dropped
+// before returning.
+//
+// pCurrentObject must either be destroyed or the reference count
+// decremented before returning.
 //
 
-static BOOLEAN
+static void
 AFSExamineObjectInfo( IN AFSObjectInfoCB * pCurrentObject,
                       IN BOOLEAN           bVolumeObject,
                       IN OUT BOOLEAN     * pbReleaseVolumeLock)
@@ -1097,125 +966,130 @@ AFSExamineObjectInfo( IN AFSObjectInfoCB * pCurrentObject,
     AFSObjectInfoCB *pCurrentChildObject = NULL;
     AFSVolumeCB * pVolumeCB = pCurrentObject->VolumeCB;
     LARGE_INTEGER liCurrentTime;
-    BOOLEAN bFcbBusy = FALSE;
     LONG lCount;
     BOOLEAN bTemp;
 
-    switch ( pCurrentObject->FileType) {
+    __Enter
+    {
 
-    case AFS_FILE_TYPE_DIRECTORY:
+        ASSERT( ExIsResourceAcquiredExclusiveLite( pVolumeCB->ObjectInfoTree.TreeLock));
+
+        switch ( pCurrentObject->FileType)
+        {
+
+        case AFS_FILE_TYPE_DIRECTORY:
         {
 
             if ( BooleanFlagOn( pRDRDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_REDIRECTOR_SHUTDOWN))
             {
 
-                return FALSE;
+                try_return( ntStatus);
             }
 
             //
             // If this object is deleted then remove it from the parent, if we can
             //
 
-            if( BooleanFlagOn( pCurrentObject->Flags, AFS_OBJECT_FLAGS_DELETED) &&
-                pCurrentObject->ObjectReferenceCount == 0 &&
-                ( pCurrentObject->Fcb == NULL ||
-                  pCurrentObject->Fcb->OpenReferenceCount == 0) &&
-                pCurrentObject->Specific.Directory.DirectoryNodeListHead == NULL &&
-                pCurrentObject->Specific.Directory.ChildOpenReferenceCount == 0)
+            if( BooleanFlagOn( pCurrentObject->Flags, AFS_OBJECT_FLAGS_DELETED))
             {
 
-                AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
-
-                //
-                // Dropping the TreeLock permits the
-                // pCurrentObject->ObjectReferenceCount to change
-                //
-
-                if( AFSAcquireExcl( pVolumeCB->ObjectInfoTree.TreeLock,
-                                    FALSE))
+                if ( pCurrentObject->ObjectReferenceCount == 1 &&
+                     ( pCurrentObject->Fcb == NULL ||
+                       pCurrentObject->Fcb->OpenReferenceCount == 0) &&
+                     pCurrentObject->Specific.Directory.DirectoryNodeListHead == NULL &&
+                     pCurrentObject->Specific.Directory.ChildOpenReferenceCount == 0)
                 {
 
                     AFSAcquireExcl( &pCurrentObject->NonPagedInfo->ObjectInfoLock,
                                     TRUE);
 
-                    if ( pCurrentObject->ObjectReferenceCount == 0)
+                    if ( pCurrentObject->Fcb != NULL)
                     {
 
                         AFSRemoveFcb( &pCurrentObject->Fcb);
-
-                        if( pCurrentObject->Specific.Directory.PIOCtlDirectoryCB != NULL)
-                        {
-
-                            AFSAcquireExcl( &pCurrentObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->NonPagedInfo->ObjectInfoLock,
-                                            TRUE);
-
-                            AFSRemoveFcb( &pCurrentObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb);
-
-                            AFSReleaseResource( &pCurrentObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->NonPagedInfo->ObjectInfoLock);
-
-                            AFSDeleteObjectInfo( &pCurrentObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation);
-
-                            ExDeleteResourceLite( &pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->NonPaged->Lock);
-
-                            AFSExFreePoolWithTag( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->NonPaged, AFS_DIR_ENTRY_NP_TAG);
-
-                            AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
-                                          AFS_TRACE_LEVEL_VERBOSE,
-                                          "AFSExamineObjectInfo (pioctl) AFS_DIR_ENTRY_TAG deallocating %p\n",
-                                          pCurrentObject->Specific.Directory.PIOCtlDirectoryCB));
-
-                            AFSExFreePoolWithTag( pCurrentObject->Specific.Directory.PIOCtlDirectoryCB, AFS_DIR_ENTRY_TAG);
-                        }
-
-                        AFSReleaseResource( &pCurrentObject->NonPagedInfo->ObjectInfoLock);
-
-                        AFSDbgTrace(( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
-                                      AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSExamineObjectInfo Deleting deleted object %p\n",
-                                      pCurrentObject));
-
-                        AFSDeleteObjectInfo( &pCurrentObject);
                     }
-                    else
+
+                    if( pCurrentObject->Specific.Directory.PIOCtlDirectoryCB != NULL)
                     {
 
-                        AFSReleaseResource( &pCurrentObject->NonPagedInfo->ObjectInfoLock);
+                        AFSAcquireExcl( &pCurrentObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->NonPagedInfo->ObjectInfoLock,
+                                        TRUE);
+
+                        AFSRemoveFcb( &pCurrentObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb);
+
+                        AFSReleaseResource( &pCurrentObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->NonPagedInfo->ObjectInfoLock);
+
+                        lCount = AFSObjectInfoDecrement( pCurrentObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation,
+                                                         AFS_OBJECT_REFERENCE_PIOCTL);
+
+                        AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSExamineObjectInfo Decrement count on object %p Cnt %d\n",
+                                      pCurrentObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation,
+                                      lCount));
+
+                        ASSERT( lCount == 0);
+
+                        if ( lCount == 0)
+                        {
+
+                            AFSDeleteObjectInfo( &pCurrentObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation);
+                        }
+
+                        ExDeleteResourceLite( &pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->NonPaged->Lock);
+
+                        AFSExFreePoolWithTag( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->NonPaged, AFS_DIR_ENTRY_NP_TAG);
+
+                        AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSExamineObjectInfo (pioctl) AFS_DIR_ENTRY_TAG deallocating %p\n",
+                                      pCurrentObject->Specific.Directory.PIOCtlDirectoryCB));
+
+                        AFSExFreePoolWithTag( pCurrentObject->Specific.Directory.PIOCtlDirectoryCB, AFS_DIR_ENTRY_TAG);
+
+                        pCurrentObject->Specific.Directory.PIOCtlDirectoryCB = NULL;
                     }
 
-                    AFSConvertToShared( pVolumeCB->ObjectInfoTree.TreeLock);
-                }
-                else
-                {
+                    AFSReleaseResource( &pCurrentObject->NonPagedInfo->ObjectInfoLock);
 
-                    *pbReleaseVolumeLock = FALSE;
+                    lCount = AFSObjectInfoDecrement( pCurrentObject,
+                                                     AFS_OBJECT_REFERENCE_WORKER);
+
+                    AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSExamineObjectInfo Decrement1 count on object %p Cnt %d\n",
+                                  pCurrentObject,
+                                  lCount));
+
+                    AFSDbgTrace(( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSExamineObjectInfo Deleting deleted object %p\n",
+                                  pCurrentObject));
+
+                    //
+                    // The CurrentReferenceCount must be zero or we would not
+                    // have gotten this far.   It is safe to delete the ObjectInfoCB.
+                    //
+
+                    AFSDeleteObjectInfo( &pCurrentObject);
                 }
 
-                return bFcbBusy;
+                //
+                // Finished processing the AFS_OBJECT_FLAGS_DELETED case.
+                //
+
+                try_return( ntStatus);
             }
+
+            //
+            // pCurrentObject not marked Deleted.
+            //
 
             if ( pCurrentObject->Fcb != NULL &&
                  pCurrentObject->Fcb->CcbListHead != NULL)
             {
 
-                AFSCcb *pCcb;
-
-                for ( pCcb = pCurrentObject->Fcb->CcbListHead;
-                      pCcb;
-                      pCcb = (AFSCcb *)pCcb->ListEntry.fLink)
-                {
-
-                    if ( pCcb->NameArray) {
-
-                        AFSDbgTrace(( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
-                                      AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSExamineObjectInfo Found Object %p Fcb %p Ccb %p\n",
-                                      pCurrentObject,
-                                      pCurrentObject->Fcb,
-                                      pCcb));
-                    }
-                }
-
-                return bFcbBusy;
+                try_return( ntStatus);
             }
 
             if( pCurrentObject->Specific.Directory.ChildOpenReferenceCount > 0 ||
@@ -1223,41 +1097,44 @@ AFSExamineObjectInfo( IN AFSObjectInfoCB * pCurrentObject,
                   pCurrentObject->Fcb->OpenReferenceCount > 0))
             {
 
-                return bFcbBusy;
+                try_return( ntStatus);
             }
 
-            if ( pCurrentObject->FileType != AFS_FILE_TYPE_DIRECTORY ||
+            if ( pCurrentObject->FileType == AFS_FILE_TYPE_DIRECTORY &&
                  pCurrentObject->Specific.Directory.DirectoryNodeListHead != NULL)
             {
+
+                //
+                // Directory Entry Processing
+                //
+                // First pass is performed with the TreeLock held shared.
+                // If we detect any objects in use, we give up quickly without
+                // making any changes and without blocking other threads.
+                // The second pass is performed with the TreeLock held exclusive
+                // so deletions can take place.
+                //
 
                 if( !AFSAcquireShared( pCurrentObject->Specific.Directory.DirectoryNodeHdr.TreeLock,
                                        FALSE))
                 {
 
-                    return bFcbBusy;
+                    try_return( ntStatus);
                 }
 
-                pCurrentDirEntry = pCurrentObject->Specific.Directory.DirectoryNodeListHead;
-
-                //
-                // Directory Entry Processing
-                //
-
                 KeQueryTickCount( &liCurrentTime);
+
+                pCurrentDirEntry = pCurrentObject->Specific.Directory.DirectoryNodeListHead;
 
                 while( pCurrentDirEntry != NULL)
                 {
 
-                    if( pCurrentDirEntry->DirOpenReferenceCount > 0)
+                    if( pCurrentDirEntry->DirOpenReferenceCount > 0 ||
+                        pCurrentDirEntry->NameArrayReferenceCount > 0)
                     {
 
-                        break;
-                    }
+                        AFSReleaseResource( pCurrentObject->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
-                    if ( pCurrentDirEntry->NameArrayReferenceCount > 0)
-                    {
-
-                        break;
+                        try_return( ntStatus);
                     }
 
                     if ( pCurrentDirEntry->ObjectInformation != NULL)
@@ -1267,7 +1144,9 @@ AFSExamineObjectInfo( IN AFSObjectInfoCB * pCurrentObject,
                              pCurrentDirEntry->ObjectInformation->Fcb->OpenReferenceCount > 0)
                         {
 
-                            break;
+                            AFSReleaseResource( pCurrentObject->Specific.Directory.DirectoryNodeHdr.TreeLock);
+
+                            try_return( ntStatus);
                         }
 
                         if ( liCurrentTime.QuadPart <= pCurrentDirEntry->ObjectInformation->LastAccessCount.QuadPart ||
@@ -1275,7 +1154,9 @@ AFSExamineObjectInfo( IN AFSObjectInfoCB * pCurrentObject,
                              pControlDeviceExt->Specific.Control.ObjectLifeTimeCount.QuadPart)
                         {
 
-                            break;
+                            AFSReleaseResource( pCurrentObject->Specific.Directory.DirectoryNodeHdr.TreeLock);
+
+                            try_return( ntStatus);
                         }
 
                         if ( pCurrentDirEntry->ObjectInformation->FileType == AFS_FILE_TYPE_DIRECTORY)
@@ -1309,45 +1190,30 @@ AFSExamineObjectInfo( IN AFSObjectInfoCB * pCurrentObject,
                     pCurrentDirEntry = (AFSDirectoryCB *)pCurrentDirEntry->ListEntry.fLink;
                 }
 
+                AFSReleaseResource( pCurrentObject->Specific.Directory.DirectoryNodeHdr.TreeLock);
+
                 if( pCurrentDirEntry != NULL)
                 {
 
-                    AFSReleaseResource( pCurrentObject->Specific.Directory.DirectoryNodeHdr.TreeLock);
-
-                    return bFcbBusy;
+                    try_return( ntStatus);
                 }
 
-                AFSReleaseResource( pCurrentObject->Specific.Directory.DirectoryNodeHdr.TreeLock);
-
-                AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
-
                 //
-                // Now acquire the locks excl without deadlocking
+                // Attempt the second pass with the TreeLock held exclusive.
+                // The the TreeLock cannot be obtained without blocking it means that
+                // the directory is in active use, so do nothing.
                 //
 
                 if( AFSAcquireExcl( pCurrentObject->Specific.Directory.DirectoryNodeHdr.TreeLock,
                                     FALSE))
                 {
 
-                    if( !AFSAcquireExcl( pVolumeCB->ObjectInfoTree.TreeLock,
-                                         FALSE))
-                    {
-
-                        AFSReleaseResource( pCurrentObject->Specific.Directory.DirectoryNodeHdr.TreeLock);
-
-                        *pbReleaseVolumeLock = FALSE;
-
-                        return bFcbBusy;
-                    }
-
                     if( pCurrentObject->Specific.Directory.ChildOpenReferenceCount > 0)
                     {
 
                         AFSReleaseResource( pCurrentObject->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
-                        AFSConvertToShared( pVolumeCB->ObjectInfoTree.TreeLock);
-
-                        return bFcbBusy;
+                        try_return( ntStatus);
                     }
 
                     KeQueryTickCount( &liCurrentTime);
@@ -1421,12 +1287,20 @@ AFSExamineObjectInfo( IN AFSObjectInfoCB * pCurrentObject,
                     if( pCurrentDirEntry != NULL)
                     {
 
+                        //
+                        // At least one entry in the directory is actively in use.
+                        // Drop the lock and exit without removing anything.
+                        //
+
                         AFSReleaseResource( pCurrentObject->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
-                        AFSConvertToShared( pVolumeCB->ObjectInfoTree.TreeLock);
-
-                        return bFcbBusy;
+                        try_return( ntStatus);
                     }
+
+                    //
+                    // Third pass, process each directory entry and remove what we can.
+                    // The VolumeCB TreeLock and the ObjectInfo TreeLock are still held exclusive.
+                    //
 
                     pCurrentDirEntry = pCurrentObject->Specific.Directory.DirectoryNodeListHead;
 
@@ -1435,8 +1309,20 @@ AFSExamineObjectInfo( IN AFSObjectInfoCB * pCurrentObject,
 
                         pNextDirEntry = (AFSDirectoryCB *)pCurrentDirEntry->ListEntry.fLink;
 
-                        AFSExamineDirectory( pCurrentObject,
-                                             pCurrentDirEntry);
+                        //
+                        // Delete the DirectoryCB which in turn removes the DIRENTRY reference
+                        // count from the associated ObjectInfoCB.  The reference count held above
+                        // may now be the only one left.
+                        //
+
+                        AFSDbgTrace(( AFS_SUBSYSTEM_CLEANUP_PROCESSING | AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSExamineObjectInfo Deleting DE %wZ Object %p\n",
+                                      &pCurrentDirEntry->NameInformation.FileName,
+                                      pCurrentDirEntry->ObjectInformation));
+
+                        AFSDeleteDirEntry( pCurrentObject,
+                                           pCurrentDirEntry);
 
                         pCurrentDirEntry = pNextDirEntry;
                     }
@@ -1448,24 +1334,6 @@ AFSExamineObjectInfo( IN AFSObjectInfoCB * pCurrentObject,
                     ClearFlag( pCurrentObject->Flags, AFS_OBJECT_FLAGS_DIRECTORY_ENUMERATED);
 
                     AFSReleaseResource( pCurrentObject->Specific.Directory.DirectoryNodeHdr.TreeLock);
-
-                    AFSConvertToShared( pVolumeCB->ObjectInfoTree.TreeLock);
-                }
-                else
-                {
-
-                    //
-                    // Try to grab the volume lock again ... no problem if we don't
-                    //
-
-                    if( !AFSAcquireShared( pVolumeCB->ObjectInfoTree.TreeLock,
-                                           FALSE))
-                    {
-
-                        *pbReleaseVolumeLock = FALSE;
-
-                        return bFcbBusy;
-                    }
                 }
             }
             else if ( bVolumeObject == FALSE)
@@ -1474,15 +1342,12 @@ AFSExamineObjectInfo( IN AFSObjectInfoCB * pCurrentObject,
                 // No children
                 //
 
-                AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
-
-                if ( !AFSAcquireExcl( pVolumeCB->ObjectInfoTree.TreeLock,
-                                      FALSE))
+                if( pCurrentObject->ObjectReferenceCount > 1 ||
+                    pCurrentObject->Fcb != NULL &&
+                    pCurrentObject->Fcb->OpenReferenceCount > 0)
                 {
 
-                    *pbReleaseVolumeLock = FALSE;
-
-                    return bFcbBusy;
+                    try_return( ntStatus);
                 }
 
                 AFSAcquireExcl( &pCurrentObject->NonPagedInfo->ObjectInfoLock,
@@ -1490,9 +1355,9 @@ AFSExamineObjectInfo( IN AFSObjectInfoCB * pCurrentObject,
 
                 KeQueryTickCount( &liCurrentTime);
 
-                if( pCurrentObject->ObjectReferenceCount <= 0 &&
+                if( pCurrentObject->ObjectReferenceCount == 1 &&
                     ( pCurrentObject->Fcb == NULL ||
-                      pCurrentObject->Fcb->OpenReferenceCount <= 0) &&
+                      pCurrentObject->Fcb->OpenReferenceCount == 0) &&
                     liCurrentTime.QuadPart > pCurrentObject->LastAccessCount.QuadPart &&
                     liCurrentTime.QuadPart - pCurrentObject->LastAccessCount.QuadPart >
                     pControlDeviceExt->Specific.Control.ObjectLifeTimeCount.QuadPart)
@@ -1502,6 +1367,20 @@ AFSExamineObjectInfo( IN AFSObjectInfoCB * pCurrentObject,
 
                     AFSReleaseResource( &pCurrentObject->NonPagedInfo->ObjectInfoLock);
 
+                    lCount = AFSObjectInfoDecrement( pCurrentObject,
+                                                     AFS_OBJECT_REFERENCE_WORKER);
+
+                    AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSExamineObjectInfo Decrement4 count on object %p Cnt %d\n",
+                                  pCurrentObject,
+                                  lCount));
+
+                    //
+                    // The Volume TreeLock is held exclusive.  Therefore, the ObjectReferenceCount
+                    // cannot change.  It is therefore safe to delete the ObjectInfoCB
+                    //
+
                     AFSDeleteObjectInfo( &pCurrentObject);
                 }
                 else
@@ -1509,162 +1388,206 @@ AFSExamineObjectInfo( IN AFSObjectInfoCB * pCurrentObject,
 
                     AFSReleaseResource( &pCurrentObject->NonPagedInfo->ObjectInfoLock);
                 }
-
-                AFSConvertToShared( pVolumeCB->ObjectInfoTree.TreeLock);
             }
-        }
-        break;
 
-    case AFS_FILE_TYPE_FILE:
+            break;
+        }
+
+        case AFS_FILE_TYPE_FILE:
         {
 
-            lCount = AFSObjectInfoIncrement( pCurrentObject,
-                                             AFS_OBJECT_REFERENCE_WORKER);
+            if( pCurrentObject->ObjectReferenceCount > 1 ||
+                pCurrentObject->Fcb != NULL &&
+                pCurrentObject->Fcb->OpenReferenceCount > 0)
+            {
 
-            AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSExamineObjectInfo Increment3 count on object %p Cnt %d\n",
-                          pCurrentObject,
-                          lCount));
-
-            AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
+                try_return( ntStatus);
+            }
 
             if( pCurrentObject->Fcb != NULL)
             {
 
+                AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
+
                 //
-                // Dropping the TreeLock permits the
-                // pCurrentObject->ObjectReferenceCount to change
+                // Dropping the VolumeCB TreeLock permits the
+                // pCurrentObject->ObjectReferenceCount to change.
+                // But it cannot be held across the AFSCleanupFcb
+                // call.
                 //
 
                 ntStatus = AFSCleanupFcb( pCurrentObject->Fcb,
                                           FALSE);
 
-                if ( ntStatus == STATUS_RETRY)
+                if (!AFSAcquireExcl( pVolumeCB->ObjectInfoTree.TreeLock,
+                                     FALSE))
                 {
 
-                    bFcbBusy = TRUE;
+                    *pbReleaseVolumeLock = FALSE;
+                }
+
+                if ( ntStatus == STATUS_RETRY ||
+                     *pbReleaseVolumeLock == FALSE)
+                {
+
+                    //
+                    // The Fcb is in use.
+                    //
+
+                    try_return( ntStatus);
                 }
             }
 
-            bTemp = AFSAcquireExcl( pVolumeCB->ObjectInfoTree.TreeLock,
-                                    FALSE);
+            //
+            // VolumeCB is held exclusive
+            //
+
+            AFSAcquireExcl( &pCurrentObject->NonPagedInfo->ObjectInfoLock,
+                            TRUE);
+
+            KeQueryTickCount( &liCurrentTime);
+
+            if( pCurrentObject->ObjectReferenceCount == 1 &&
+                ( pCurrentObject->Fcb == NULL ||
+                  ( pCurrentObject->Fcb->OpenReferenceCount == 0 &&
+                    pCurrentObject->Fcb->Specific.File.ExtentsDirtyCount == 0)) &&
+                liCurrentTime.QuadPart > pCurrentObject->LastAccessCount.QuadPart &&
+                liCurrentTime.QuadPart - pCurrentObject->LastAccessCount.QuadPart >
+                pControlDeviceExt->Specific.Control.ObjectLifeTimeCount.QuadPart)
+            {
+
+                AFSRemoveFcb( &pCurrentObject->Fcb);
+
+                AFSReleaseResource( &pCurrentObject->NonPagedInfo->ObjectInfoLock);
+
+                lCount = AFSObjectInfoDecrement( pCurrentObject,
+                                                 AFS_OBJECT_REFERENCE_WORKER);
+
+                AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSExamineObjectInfo Decrement5 count on object %p Cnt %d\n",
+                              pCurrentObject,
+                              lCount));
+
+                //
+                // The VolumeCB TreeLock is held exclusive so the
+                // ObjectReferenceCount cannot change.
+                //
+
+                AFSDeleteObjectInfo( &pCurrentObject);
+            }
+            else
+            {
+
+                AFSReleaseResource( &pCurrentObject->NonPagedInfo->ObjectInfoLock);
+            }
+
+            break;
+        }
+
+        default:
+        {
+
+            AFSAcquireExcl( &pCurrentObject->NonPagedInfo->ObjectInfoLock,
+                            TRUE);
+
+            KeQueryTickCount( &liCurrentTime);
+
+            if( pCurrentObject->ObjectReferenceCount == 1 &&
+                ( pCurrentObject->Fcb == NULL ||
+                  pCurrentObject->Fcb->OpenReferenceCount == 0) &&
+                liCurrentTime.QuadPart > pCurrentObject->LastAccessCount.QuadPart &&
+                liCurrentTime.QuadPart - pCurrentObject->LastAccessCount.QuadPart >
+                pControlDeviceExt->Specific.Control.ObjectLifeTimeCount.QuadPart)
+            {
+
+                AFSRemoveFcb( &pCurrentObject->Fcb);
+
+                AFSReleaseResource( &pCurrentObject->NonPagedInfo->ObjectInfoLock);
+
+                lCount = AFSObjectInfoDecrement( pCurrentObject,
+                                                 AFS_OBJECT_REFERENCE_WORKER);
+
+                AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSExamineObjectInfo Decrement6 count on object %p Cnt %d\n",
+                              pCurrentObject,
+                              lCount));
+
+                //
+                // The VolumeCB TreeLock is held exclusive so the
+                // ObjectReferenceCount cannot change.
+                //
+
+                AFSDeleteObjectInfo( &pCurrentObject);
+            }
+            else
+            {
+
+                AFSReleaseResource( &pCurrentObject->NonPagedInfo->ObjectInfoLock);
+            }
+        }
+        }
+
+      try_exit:
+
+        if ( pCurrentObject != NULL)
+        {
 
             lCount = AFSObjectInfoDecrement( pCurrentObject,
                                              AFS_OBJECT_REFERENCE_WORKER);
 
             AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSExamineObjectInfo Decrement3 count on object %p Cnt %d\n",
+                          "AFSExamineObjectInfo Decrement count on object %p Cnt %d\n",
                           pCurrentObject,
                           lCount));
-
-            if ( bTemp == FALSE)
-            {
-
-                *pbReleaseVolumeLock = FALSE;
-
-                return bFcbBusy;
-            }
-
-            AFSAcquireExcl( &pCurrentObject->NonPagedInfo->ObjectInfoLock,
-                            TRUE);
-
-            KeQueryTickCount( &liCurrentTime);
-
-            if( pCurrentObject->ObjectReferenceCount <= 0 &&
-                ( pCurrentObject->Fcb == NULL ||
-                  ( pCurrentObject->Fcb->OpenReferenceCount <= 0 &&
-                    pCurrentObject->Fcb->Specific.File.ExtentsDirtyCount <= 0)) &&
-                liCurrentTime.QuadPart > pCurrentObject->LastAccessCount.QuadPart &&
-                liCurrentTime.QuadPart - pCurrentObject->LastAccessCount.QuadPart >
-                pControlDeviceExt->Specific.Control.ObjectLifeTimeCount.QuadPart)
-            {
-
-                AFSRemoveFcb( &pCurrentObject->Fcb);
-
-                AFSReleaseResource( &pCurrentObject->NonPagedInfo->ObjectInfoLock);
-
-                AFSDeleteObjectInfo( &pCurrentObject);
-            }
-            else
-            {
-
-                AFSReleaseResource( &pCurrentObject->NonPagedInfo->ObjectInfoLock);
-            }
-
-            AFSConvertToShared( pVolumeCB->ObjectInfoTree.TreeLock);
-        }
-        break;
-
-    default:
-        {
-
-            AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
-
-            if ( !AFSAcquireExcl( pVolumeCB->ObjectInfoTree.TreeLock,
-                                  FALSE))
-            {
-
-                *pbReleaseVolumeLock = FALSE;
-
-                return bFcbBusy;
-            }
-
-            AFSAcquireExcl( &pCurrentObject->NonPagedInfo->ObjectInfoLock,
-                            TRUE);
-
-            KeQueryTickCount( &liCurrentTime);
-
-            if( pCurrentObject->ObjectReferenceCount <= 0 &&
-                ( pCurrentObject->Fcb == NULL ||
-                  pCurrentObject->Fcb->OpenReferenceCount <= 0) &&
-                liCurrentTime.QuadPart > pCurrentObject->LastAccessCount.QuadPart &&
-                liCurrentTime.QuadPart - pCurrentObject->LastAccessCount.QuadPart >
-                pControlDeviceExt->Specific.Control.ObjectLifeTimeCount.QuadPart)
-            {
-
-                AFSRemoveFcb( &pCurrentObject->Fcb);
-
-                AFSReleaseResource( &pCurrentObject->NonPagedInfo->ObjectInfoLock);
-
-                AFSDeleteObjectInfo( &pCurrentObject);
-            }
-            else
-            {
-
-                AFSReleaseResource( &pCurrentObject->NonPagedInfo->ObjectInfoLock);
-            }
-
-            AFSConvertToShared( pVolumeCB->ObjectInfoTree.TreeLock);
         }
     }
-
-    return bFcbBusy;
 }
 
+//
+// Called with VolumeCB->VolumeLock held shared.
+//
 
-static BOOLEAN
+static void
 AFSExamineVolume( IN AFSVolumeCB *pVolumeCB)
 {
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSObjectInfoCB *pCurrentObject = NULL, *pNextObject = NULL;
-    BOOLEAN bReleaseVolumeLock = FALSE;
+    BOOLEAN bReleaseVolumeTreeLock = FALSE;
     BOOLEAN bVolumeObject = FALSE;
-    BOOLEAN bFcbBusy = FALSE;
     LONG lCount;
 
-    if( AFSAcquireShared( pVolumeCB->ObjectInfoTree.TreeLock,
-                          FALSE))
+    //
+    // The Volume ObjectInfoTree TreeLock must be held exclusive to
+    // prevent other threads from obtaining a reference to an ObjectInfoCB
+    // via AFSFindObjectInfo() while it is being deleted.  This is
+    // annoying but the alternative is to hold the TreeLock shared during
+    // garbage collection and exclusive during find operations.
+    //
+
+    if( AFSAcquireExcl( pVolumeCB->ObjectInfoTree.TreeLock,
+                        TRUE))
     {
 
-        bReleaseVolumeLock = TRUE;
+        bReleaseVolumeTreeLock = TRUE;
 
         pCurrentObject = pVolumeCB->ObjectInfoListHead;
 
+        lCount = AFSObjectInfoIncrement( pCurrentObject,
+                                         AFS_OBJECT_REFERENCE_WORKER);
+
+        AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSExamineVolume Increment count on object %p Cnt %d\n",
+                      pCurrentObject,
+                      lCount));
+
         pNextObject = NULL;
 
-        while( pCurrentObject != NULL)
+        while( pCurrentObject != NULL &&
+               bReleaseVolumeTreeLock == TRUE)
         {
 
             if( pCurrentObject != &pVolumeCB->ObjectInformation)
@@ -1711,43 +1634,49 @@ AFSExamineVolume( IN AFSVolumeCB *pVolumeCB)
                 bVolumeObject = TRUE;
             }
 
-            bFcbBusy = AFSExamineObjectInfo( pCurrentObject, bVolumeObject, &bReleaseVolumeLock);
-
-            if ( pNextObject)
-            {
-
-                lCount = AFSObjectInfoDecrement( pNextObject,
-                                                 AFS_OBJECT_REFERENCE_WORKER);
-
-                AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSExamineVolume Decrement count on object %p Cnt %d\n",
-                              pNextObject,
-                              lCount));
-            }
+            AFSExamineObjectInfo( pCurrentObject, bVolumeObject, &bReleaseVolumeTreeLock);
 
             //
-            // If AFSExamineObjectInfo drops the VolumeLock before returning
-            // we must halt processing of the Volume's ObjectInfo list.
+            // The CurrentObject is either destroyed or the reference count has been
+            // dropped by AFSExamineObjectInfo().
             //
 
-            if ( bReleaseVolumeLock == FALSE)
+            if ( bReleaseVolumeTreeLock == FALSE)
             {
 
-                break;
+                //
+                // Try to obtain the Volume's ObjectInfoTree.TreeLock after dropping
+                // other locks and continue.
+                //
+
+                bReleaseVolumeTreeLock = AFSAcquireExcl( pVolumeCB->ObjectInfoTree.TreeLock,
+                                                         FALSE);
             }
 
             pCurrentObject = pNextObject;
+
+            pNextObject = NULL;
         }
 
-        if( bReleaseVolumeLock)
+        if ( pCurrentObject != NULL)
+        {
+
+            lCount = AFSObjectInfoDecrement( pCurrentObject,
+                                             AFS_OBJECT_REFERENCE_WORKER);
+
+            AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSExamineVolume Decrement count on object %p Cnt %d\n",
+                          pCurrentObject,
+                          lCount));
+        }
+
+        if( bReleaseVolumeTreeLock)
         {
 
             AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
         }
     }
-
-    return bFcbBusy;
 }
 
 void
@@ -1762,7 +1691,6 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
     LONG TimeOut;
     KTIMER Timer;
     AFSVolumeCB *pVolumeCB = NULL, *pNextVolume = NULL;
-    BOOLEAN bFcbBusy = FALSE;
     LONG lCount;
 
     AFSDbgTrace(( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
@@ -1802,20 +1730,11 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
     while( BooleanFlagOn( pPoolContext->State, AFS_WORKER_PROCESS_REQUESTS))
     {
 
-        if ( bFcbBusy == FALSE)
-        {
-
-            KeWaitForSingleObject( &Timer,
-                                   Executive,
-                                   KernelMode,
-                                   FALSE,
-                                   NULL);
-        }
-        else
-        {
-
-            bFcbBusy = FALSE;
-        }
+        KeWaitForSingleObject( &Timer,
+                               Executive,
+                               KernelMode,
+                               FALSE,
+                               NULL);
 
         //
         // This is the primary volume worker so it will traverse the volume list
@@ -1868,8 +1787,8 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
 
                 pNextVolume = (AFSVolumeCB *)pVolumeCB->ListEntry.fLink;
 
-                AFSAcquireShared( &pVolumeCB->ObjectInformation.NonPagedInfo->ObjectInfoLock,
-                                  TRUE);
+                AFSAcquireExcl( &pVolumeCB->ObjectInformation.NonPagedInfo->ObjectInfoLock,
+                                TRUE);
 
                 //
                 // If VolumeCB is idle, the Volume can be garbage collected
