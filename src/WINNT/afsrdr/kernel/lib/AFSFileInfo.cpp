@@ -3316,7 +3316,7 @@ AFSSetRenameInfo( IN PIRP Irp)
                               &pTargetDirEntry->NameInformation.FileName));
 
                 AFSDeleteDirEntry( pTargetParentObject,
-                                   pTargetDirEntry);
+                                   &pTargetDirEntry);
             }
 
             pTargetDirEntry = NULL;

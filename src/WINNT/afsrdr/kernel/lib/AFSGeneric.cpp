@@ -3582,7 +3582,7 @@ AFSValidateDirectoryCache( IN AFSObjectInfoCB *ObjectInfo,
                                   &pCurrentDirEntry->NameInformation.FileName));
 
                     AFSDeleteDirEntry( ObjectInfo,
-                                       pCurrentDirEntry);
+                                       &pCurrentDirEntry);
                 }
                 else
                 {
@@ -3715,7 +3715,7 @@ AFSValidateDirectoryCache( IN AFSObjectInfoCB *ObjectInfo,
                               ObjectInfo->FileId.Unique));
 
                 AFSDeleteDirEntry( ObjectInfo,
-                                   pCurrentDirEntry);
+                                   &pCurrentDirEntry);
             }
             else
             {
@@ -4909,7 +4909,7 @@ AFSResetDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB)
                               &pCurrentDirEntry->NameInformation.FileName));
 
                 AFSDeleteDirEntry( ObjectInfoCB,
-                                   pCurrentDirEntry);
+                                   &pCurrentDirEntry);
             }
             else
             {

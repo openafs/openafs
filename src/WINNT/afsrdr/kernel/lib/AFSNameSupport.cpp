@@ -1986,7 +1986,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                     //
 
                     AFSDeleteDirEntry( pParentObjectInfo,
-                                       pDirEntry);
+                                       &pDirEntry);
 
                     AFSAcquireShared( &pCurrentObject->NonPagedInfo->ObjectInfoLock,
                                       TRUE);
@@ -2477,7 +2477,7 @@ AFSCreateDirEntry( IN GUID            *AuthGroup,
                                   lCount));
 
                     AFSDeleteDirEntry( ParentObjectInfo,
-                                       pDirNode);
+                                       &pDirNode);
 
                     lCount = InterlockedIncrement( &pExistingDirNode->DirOpenReferenceCount);
 
@@ -2521,7 +2521,7 @@ AFSCreateDirEntry( IN GUID            *AuthGroup,
                                   pDirNode->ObjectInformation->FileId.Unique));
 
                     AFSDeleteDirEntry( ParentObjectInfo,
-                                       pExistingDirNode);
+                                       &pExistingDirNode);
                 }
                 else
                 {
@@ -2755,72 +2755,83 @@ AFSInsertDirectoryNode( IN AFSObjectInfoCB *ParentObjectInfo,
 
 void
 AFSDeleteDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
-                   IN AFSDirectoryCB *DirEntry)
+                   IN AFSDirectoryCB **ppDirEntry)
 {
 
     LONG lCount;
+    AFSDirectoryCB *pDirEntry;
 
     __Enter
     {
 
+        pDirEntry = (AFSDirectoryCB *) InterlockedCompareExchangePointer( (PVOID *)ppDirEntry,
+                                                                          NULL,
+                                                                          *ppDirEntry);
+
+        if ( pDirEntry == NULL)
+        {
+
+            try_return( NOTHING);
+        }
+
         AFSDbgTrace(( AFS_SUBSYSTEM_CLEANUP_PROCESSING | AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSDeleteDirEntry Deleting dir entry in parent %p Entry %p object %p %wZ RefCount %d\n",
+                      "AFSDeletepDirEntry Deleting dir entry in parent %p Entry %p object %p %wZ RefCount %d\n",
                       ParentObjectInfo,
-                      DirEntry,
-                      DirEntry->ObjectInformation,
-                      &DirEntry->NameInformation.FileName,
-                      DirEntry->DirOpenReferenceCount));
+                      pDirEntry,
+                      pDirEntry->ObjectInformation,
+                      &pDirEntry->NameInformation.FileName,
+                      pDirEntry->DirOpenReferenceCount));
 
-        ASSERT( DirEntry->DirOpenReferenceCount == 0);
+        ASSERT( pDirEntry->DirOpenReferenceCount == 0);
 
         AFSRemoveDirNodeFromParent( ParentObjectInfo,
-                                    DirEntry,
+                                    pDirEntry,
                                     TRUE);
 
         //
         // Free up the name buffer if it was reallocated
         //
 
-        if( BooleanFlagOn( DirEntry->Flags, AFS_DIR_RELEASE_NAME_BUFFER))
+        if( BooleanFlagOn( pDirEntry->Flags, AFS_DIR_RELEASE_NAME_BUFFER))
         {
 
-            AFSExFreePoolWithTag( DirEntry->NameInformation.FileName.Buffer, 0);
+            AFSExFreePoolWithTag( pDirEntry->NameInformation.FileName.Buffer, 0);
         }
 
-        if( BooleanFlagOn( DirEntry->Flags, AFS_DIR_RELEASE_TARGET_NAME_BUFFER))
+        if( BooleanFlagOn( pDirEntry->Flags, AFS_DIR_RELEASE_TARGET_NAME_BUFFER))
         {
 
-            AFSExFreePoolWithTag( DirEntry->NameInformation.TargetName.Buffer, 0);
+            AFSExFreePoolWithTag( pDirEntry->NameInformation.TargetName.Buffer, 0);
         }
 
-        if ( DirEntry->ObjectInformation != NULL)
+        if ( pDirEntry->ObjectInformation != NULL)
         {
 
-            if( BooleanFlagOn( DirEntry->Flags, AFS_DIR_ENTRY_DELETED) &&
-                DirEntry->ObjectInformation->Links == 0)
+            if( BooleanFlagOn( pDirEntry->Flags, AFS_DIR_ENTRY_DELETED) &&
+                pDirEntry->ObjectInformation->Links == 0)
             {
 
-                SetFlag( DirEntry->ObjectInformation->Flags, AFS_OBJECT_FLAGS_DELETED);
+                SetFlag( pDirEntry->ObjectInformation->Flags, AFS_OBJECT_FLAGS_DELETED);
             }
 
             //
             // Dereference the object for this dir entry
             //
 
-            lCount = AFSObjectInfoDecrement( DirEntry->ObjectInformation,
+            lCount = AFSObjectInfoDecrement( pDirEntry->ObjectInformation,
                                              AFS_OBJECT_REFERENCE_DIRENTRY);
 
             AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSDeleteDirEntry Decrement count on object %p Cnt %d\n",
-                          DirEntry->ObjectInformation,
+                          "AFSDeletepDirEntry Decrement count on object %p Cnt %d\n",
+                          pDirEntry->ObjectInformation,
                           lCount));
         }
 
-        ExDeleteResourceLite( &DirEntry->NonPaged->Lock);
+        ExDeleteResourceLite( &pDirEntry->NonPaged->Lock);
 
-        AFSExFreePoolWithTag( DirEntry->NonPaged, AFS_DIR_ENTRY_NP_TAG);
+        AFSExFreePoolWithTag( pDirEntry->NonPaged, AFS_DIR_ENTRY_NP_TAG);
 
         //
         // Free up the dir entry
@@ -2828,10 +2839,14 @@ AFSDeleteDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
 
         AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSDeleteDirEntry AFS_DIR_ENTRY_TAG deallocating %p\n",
-                      DirEntry));
+                      "AFSDeletepDirEntry AFS_DIR_ENTRY_TAG deallocating %p\n",
+                      pDirEntry));
 
-        AFSExFreePoolWithTag( DirEntry, AFS_DIR_ENTRY_TAG);
+        AFSExFreePoolWithTag( pDirEntry, AFS_DIR_ENTRY_TAG);
+
+try_exit:
+
+        NOTHING;
     }
 }
 
@@ -4325,7 +4340,7 @@ AFSCheckCellName( IN GUID *AuthGroup,
                 {
 
                     AFSDeleteDirEntry( &AFSGlobalRoot->ObjectInformation,
-                                       pDirNode);
+                                       &pDirNode);
 
                     AFSReleaseResource( AFSGlobalRoot->ObjectInformation.Specific.Directory.DirectoryNodeHdr.TreeLock);
 

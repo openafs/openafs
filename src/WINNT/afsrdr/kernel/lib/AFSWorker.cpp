@@ -1322,7 +1322,7 @@ AFSExamineObjectInfo( IN AFSObjectInfoCB * pCurrentObject,
                                       pCurrentDirEntry->ObjectInformation));
 
                         AFSDeleteDirEntry( pCurrentObject,
-                                           pCurrentDirEntry);
+                                           &pCurrentDirEntry);
 
                         pCurrentDirEntry = pNextDirEntry;
                     }
