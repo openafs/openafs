@@ -432,6 +432,7 @@ AFSRemoveVolume( IN AFSVolumeCB *VolumeCB)
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
+    LONG lCount;
 
     __Enter
     {
@@ -506,7 +507,22 @@ AFSRemoveVolume( IN AFSVolumeCB *VolumeCB)
                 AFSReleaseResource( &VolumeCB->ObjectInformation.Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->NonPagedInfo->ObjectInfoLock);
             }
 
-            AFSDeleteObjectInfo( &VolumeCB->ObjectInformation.Specific.Directory.PIOCtlDirectoryCB->ObjectInformation);
+            lCount = AFSObjectInfoDecrement( VolumeCB->ObjectInformation.Specific.Directory.PIOCtlDirectoryCB->ObjectInformation,
+                                             AFS_OBJECT_REFERENCE_PIOCTL);
+
+            AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSRemoveVolume Decrement count on object %p Cnt %d\n",
+                          VolumeCB->ObjectInformation.Specific.Directory.PIOCtlDirectoryCB->ObjectInformation,
+                          lCount));
+
+            ASSERT( lCount == 0);
+
+            if ( lCount == 0)
+            {
+
+                AFSDeleteObjectInfo( &VolumeCB->ObjectInformation.Specific.Directory.PIOCtlDirectoryCB->ObjectInformation);
+            }
 
             ExDeleteResourceLite( &VolumeCB->ObjectInformation.Specific.Directory.PIOCtlDirectoryCB->NonPaged->Lock);
 

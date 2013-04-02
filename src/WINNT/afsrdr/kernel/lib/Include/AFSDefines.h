@@ -168,7 +168,8 @@ NTSTATUS
 #define AFS_OBJECT_REFERENCE_STATUS                     6
 #define AFS_OBJECT_REFERENCE_FIND                       7
 #define AFS_OBJECT_REFERENCE_FS_REQ                     8
-#define AFS_OBJECT_REFERENCE_MAX                        9
+#define AFS_OBJECT_REFERENCE_PIOCTL                     9
+#define AFS_OBJECT_REFERENCE_MAX                       10
 
 //
 // Volume reference count reasons
