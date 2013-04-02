@@ -6179,6 +6179,11 @@ AFSFindObjectInfo( IN AFSVolumeCB *VolumeCB,
     AFSObjectInfoCB *pObjectInfo = NULL;
     LONG             lCount;
 
+    ullIndex = AFSCreateLowIndex( FileId);
+
+    AFSAcquireShared( VolumeCB->ObjectInfoTree.TreeLock,
+                      TRUE);
+
     if ( AFSIsEqualFID( &VolumeCB->ObjectInformation.FileId, FileId))
     {
 
@@ -6187,16 +6192,9 @@ AFSFindObjectInfo( IN AFSVolumeCB *VolumeCB,
     else
     {
 
-        AFSAcquireExcl( VolumeCB->ObjectInfoTree.TreeLock,
-                        TRUE);
-
-        ullIndex = AFSCreateLowIndex( FileId);
-
         ntStatus = AFSLocateHashEntry( VolumeCB->ObjectInfoTree.TreeHead,
                                        ullIndex,
                                        (AFSBTreeEntry **)&pObjectInfo);
-
-        AFSReleaseResource( VolumeCB->ObjectInfoTree.TreeLock);
     }
 
     if ( NT_SUCCESS( ntStatus)) {
@@ -6210,6 +6208,8 @@ AFSFindObjectInfo( IN AFSVolumeCB *VolumeCB,
                       pObjectInfo,
                       lCount));
     }
+
+    AFSReleaseResource( VolumeCB->ObjectInfoTree.TreeLock);
 
     return pObjectInfo;
 }
