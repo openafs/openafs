@@ -591,7 +591,7 @@ AFSInsertDirectoryNode( IN AFSObjectInfoCB *ParentObjectInfo,
 
 void
 AFSDeleteDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
-                   IN AFSDirectoryCB *DirEntry);
+                   IN AFSDirectoryCB **ppDirEntry);
 
 NTSTATUS
 AFSRemoveDirNodeFromParent( IN AFSObjectInfoCB *ParentObjectInfo,

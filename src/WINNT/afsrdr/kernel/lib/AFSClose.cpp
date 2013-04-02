@@ -418,7 +418,7 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                             //
 
                             AFSDeleteDirEntry( pParentObjectInfo,
-                                               pDirCB);
+                                               &pDirCB);
 
                             AFSAcquireShared( &pObjectInfo->NonPagedInfo->ObjectInfoLock,
                                               TRUE);

@@ -364,7 +364,7 @@ AFSEnumerateDirectory( IN GUID *AuthGroup,
                                           pCurrentDirEntry->FileId.Unique));
 
                             AFSDeleteDirEntry( ObjectInfoCB,
-                                               pDirNode);
+                                               &pDirNode);
                         }
                         else
                         {
@@ -534,7 +534,7 @@ AFSEnumerateDirectory( IN GUID *AuthGroup,
                         //
 
                         AFSDeleteDirEntry( ObjectInfoCB,
-                                           pDirNode);
+                                           &pDirNode);
 
                         pCurrentDirEntry = (AFSDirEnumEntry *)((char *)pCurrentDirEntry + ulEntryLength);
 
@@ -1201,7 +1201,7 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
                                       pCurrentDirEntry->FileId.Unique));
 
                         AFSDeleteDirEntry( ObjectInfoCB,
-                                           pDirNode);
+                                           &pDirNode);
                     }
                     else
                     {
@@ -1373,7 +1373,7 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
                         //
 
                         AFSDeleteDirEntry( ObjectInfoCB,
-                                           pDirNode);
+                                           &pDirNode);
 
                         pCurrentDirEntry = (AFSDirEnumEntry *)((char *)pCurrentDirEntry + ulEntryLength);
 
@@ -1732,7 +1732,7 @@ AFSNotifyFileCreate( IN GUID            *AuthGroup,
                                       pResultCB->DirEnum.FileId.Unique));
 
                         AFSDeleteDirEntry( ParentObjectInfo,
-                                           pDirNode);
+                                           &pDirNode);
                     }
                     else
                     {
@@ -2341,7 +2341,7 @@ AFSNotifyHardLink( IN AFSObjectInfoCB *ObjectInfo,
                                       pResultCB->DirEnum.FileId.Unique));
 
                         AFSDeleteDirEntry( TargetParentObjectInfo,
-                                           pDirNode);
+                                           &pDirNode);
                     }
                     else
                     {
