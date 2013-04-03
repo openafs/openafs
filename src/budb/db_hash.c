@@ -547,22 +547,22 @@ ht_HashEntry(struct memoryHashTable *mht,
     switch (type) {
     case HT_dumpIden_FUNCTION:
 	retval = IdHashFunction(ntohl(((struct dump *)e)->id));
-	LogDebug(5, "HashEntry: dumpid returns %d\n", retval);
+	LogDebug(5, "HashEntry: dumpid returns %u\n", retval);
 	break;
 
     case HT_dumpName_FUNCTION:
 	retval = StringHashFunction((unsigned char *)((struct dump *)e)->dumpName);
-	LogDebug(5, "HashEntry: dumpname returns %d\n", retval);
+	LogDebug(5, "HashEntry: dumpname returns %u\n", retval);
 	break;
 
     case HT_tapeName_FUNCTION:
 	retval = StringHashFunction((unsigned char *)((struct tape *)e)->name);
-	LogDebug(5, "HashEntry: tapename returns %d\n", retval);
+	LogDebug(5, "HashEntry: tapename returns %u\n", retval);
 	break;
 
     case HT_volName_FUNCTION:
 	retval = StringHashFunction((unsigned char *)((struct volInfo *)e)->name);
-	LogDebug(5, "HashEntry: volname returns %d\n", retval);
+	LogDebug(5, "HashEntry: volname returns %u\n", retval);
 	break;
 
     default:
@@ -722,7 +722,7 @@ ht_HashInList(struct ubik_trans *ut, struct memoryHashTable *mht,
 
     for (ea = listA; ea; ea = next_ea) {	/*f */
 
-	LogDebug(3, "ht_HashInList: move entry at %d, type %d\n", ea,
+	LogDebug(3, "ht_HashInList: move entry at %u, type %d\n", ea,
 		 ntohl(mht->ht->functionType));
 
 	if (dbread(ut, ea, e, e_size))
@@ -749,7 +749,7 @@ ht_HashInList(struct ubik_trans *ut, struct memoryHashTable *mht,
 
 	    /* get the hash value */
 	    hash = ht_HashEntry(mht, e) % mht->length;
-	    LogDebug(4, "ht_HashInList: moved to %d\n", hash);
+	    LogDebug(4, "ht_HashInList: moved to %u\n", hash);
 
 	    /* get the new hash table block */
 	    code = ht_GetTableBlock(ut, mht, hash, 0 /*old */ , &block, &bo);
@@ -934,7 +934,7 @@ ht_HashIn(struct ubik_trans *ut,
     code = set_word_offset(ut, ea, e, mht->threadOffset, block->b.bucket[bo]);
     if (code)
 	return BUDB_IO;
-    LogDebug(5, "Hashin: set %d to %d\n", mht->threadOffset,
+    LogDebug(5, "Hashin: set %d to %u\n", mht->threadOffset,
 	     block->b.bucket[bo]);
 
     code =
