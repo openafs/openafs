@@ -121,14 +121,18 @@ fail:
 void
 afstest_UnlinkTestConfig(char *dir)
 {
+    DIR *dirp;
+    struct dirent *de;
+
+    /* Sanity check, only zap directories that look like ours */
+    if (!strstr(dir, "afs_"))
+	return;
     if (getenv("MAKECHECK") != NULL) {
-	unlinkConfigFile(dir, "KeyFile");
-	unlinkConfigFile(dir, "KeyFileExt");
-	unlinkConfigFile(dir, "CellServDB");
-	unlinkConfigFile(dir, "ThisCell");
-	unlinkConfigFile(dir, "UserList");
-	unlinkConfigFile(dir, "krb.conf");
-	unlinkConfigFile(dir, "krb.excl");
+	dirp = opendir(dir);
+	if (!dirp)
+	    return;
+	while ((de = readdir(dirp)))
+	    unlinkConfigFile(dir, de->d_name);
 	rmdir(dir);
     }
 }
