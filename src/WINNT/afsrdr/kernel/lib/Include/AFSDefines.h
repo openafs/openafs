@@ -218,11 +218,11 @@ NTSTATUS
 #endif
 
 #ifndef SetFlag
-#define SetFlag(_F,_SF)       ((_F) |= (_SF))
+#define SetFlag(_F,_SF)       InterlockedOr(&(_F), (_SF))
 #endif
 
 #ifndef ClearFlag
-#define ClearFlag(_F,_SF)     ((_F) &= ~(_SF))
+#define ClearFlag(_F,_SF)     InterlockedAnd(&(_F), ~(_SF))
 #endif
 
 #define QuadAlign(Ptr) (                \
