@@ -19,6 +19,16 @@
  * cached by IO_CLOSE. To make sure a file descriptor is really closed call
  * IH_REALLYCLOSE.
  *
+ * Note that IH_REALLYCLOSE does not guarantee that all file descriptors are
+ * closed (or are marked as needing close) by the time it returns, in the case
+ * of an IH_OPEN being executed in parallel. If a separate thread is running
+ * an IH_OPEN on the same IHandle_t at around the same time, it is possible for
+ * it to open the file, then IH_REALLYCLOSE runs, and then IH_OPEN associates
+ * the file handle with the IHandle_t. For this reason, it is probably an
+ * error if it is ever possible to have an IH_OPEN call run at the same time as
+ * an IH_REALLYCLOSE call on the same IHandle_t. If such functionality is
+ * required, ihandle must be changed to accomodate this.
+ *
  * The IHandle_t also provides a place to do other optimizations. In the
  * NT user space file system, we keep a separate special file for the
  * link counts and using the IHandle_t allows keeping the details of
