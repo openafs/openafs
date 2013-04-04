@@ -5338,11 +5338,16 @@ AFSInitPIOCtlDirectoryCB( IN AFSObjectInfoCB *ParentObjectInfo)
     __Enter
     {
 
+        AFSAcquireExcl( ParentObjectInfo->VolumeCB->ObjectInfoTree.TreeLock,
+                        TRUE);
+
         pObjectInfoCB = AFSAllocateObjectInfo( ParentObjectInfo,
                                                0);
 
         if( pObjectInfoCB == NULL)
         {
+
+            AFSReleaseResource( ParentObjectInfo->VolumeCB->ObjectInfoTree.TreeLock);
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -5355,6 +5360,8 @@ AFSInitPIOCtlDirectoryCB( IN AFSObjectInfoCB *ParentObjectInfo)
                       "AFSInitPIOCtlDirectoryCB Increment count on object %p Cnt %d\n",
                       pObjectInfoCB,
                       lCount));
+
+        AFSReleaseResource( ParentObjectInfo->VolumeCB->ObjectInfoTree.TreeLock);
 
         pObjectInfoCB->FileType = (ULONG) AFS_FILE_TYPE_PIOCTL;
 
