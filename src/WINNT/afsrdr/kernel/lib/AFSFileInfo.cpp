@@ -458,10 +458,10 @@ try_exit:
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSQueryFileInfo Failed to process request for %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                               &pCcb->DirectoryCB->NameInformation.FileName,
-                              pCcb->DirectoryCB->ObjectInformation->FileId.Cell,
-                              pCcb->DirectoryCB->ObjectInformation->FileId.Volume,
-                              pCcb->DirectoryCB->ObjectInformation->FileId.Vnode,
-                              pCcb->DirectoryCB->ObjectInformation->FileId.Unique,
+                              pFcb->ObjectInformation->FileId.Cell,
+                              pFcb->ObjectInformation->FileId.Volume,
+                              pFcb->ObjectInformation->FileId.Vnode,
+                              pFcb->ObjectInformation->FileId.Unique,
                               ntStatus));
             }
         }
@@ -737,10 +737,10 @@ try_exit:
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSSetFileInfo Failed to send file info update to service request for %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                               &pCcb->DirectoryCB->NameInformation.FileName,
-                              pCcb->DirectoryCB->ObjectInformation->FileId.Cell,
-                              pCcb->DirectoryCB->ObjectInformation->FileId.Volume,
-                              pCcb->DirectoryCB->ObjectInformation->FileId.Vnode,
-                              pCcb->DirectoryCB->ObjectInformation->FileId.Unique,
+                              pFcb->ObjectInformation->FileId.Cell,
+                              pFcb->ObjectInformation->FileId.Volume,
+                              pFcb->ObjectInformation->FileId.Vnode,
+                              pFcb->ObjectInformation->FileId.Unique,
                               ntStatus));
 
                 AFSReleaseResource( &pFcb->NPFcb->Resource);
@@ -758,10 +758,10 @@ try_exit:
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSSetFileInfo Failed to process request for %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                               &pCcb->DirectoryCB->NameInformation.FileName,
-                              pCcb->DirectoryCB->ObjectInformation->FileId.Cell,
-                              pCcb->DirectoryCB->ObjectInformation->FileId.Volume,
-                              pCcb->DirectoryCB->ObjectInformation->FileId.Vnode,
-                              pCcb->DirectoryCB->ObjectInformation->FileId.Unique,
+                              pFcb->ObjectInformation->FileId.Cell,
+                              pFcb->ObjectInformation->FileId.Volume,
+                              pFcb->ObjectInformation->FileId.Vnode,
+                              pFcb->ObjectInformation->FileId.Unique,
                               ntStatus));
             }
         }
@@ -886,8 +886,8 @@ AFSQueryBasicInfo( IN PIRP Irp,
                       AFS_TRACE_LEVEL_VERBOSE_2,
                       "AFSQueryBasicInfo %wZ Type 0x%x Attrib 0x%x -> 0x%x\n",
                       &pCcb->DirectoryCB->NameInformation.FileName,
-                      pCcb->DirectoryCB->ObjectInformation->FileType,
-                      pCcb->DirectoryCB->ObjectInformation->FileAttributes,
+                      pFcb->ObjectInformation->FileType,
+                      pFcb->ObjectInformation->FileAttributes,
                       ulFileAttribs));
 
         Buffer->CreationTime = DirectoryCB->ObjectInformation->CreationTime;
@@ -1011,8 +1011,8 @@ AFSQueryStandardInfo( IN PIRP Irp,
                       AFS_TRACE_LEVEL_VERBOSE_2,
                       "AFSQueryStandardInfo %wZ Type 0x%x Attrib 0x%x -> 0x%x\n",
                       &pCcb->DirectoryCB->NameInformation.FileName,
-                      pCcb->DirectoryCB->ObjectInformation->FileType,
-                      pCcb->DirectoryCB->ObjectInformation->FileAttributes,
+                      pFcb->ObjectInformation->FileType,
+                      pFcb->ObjectInformation->FileAttributes,
                       ulFileAttribs));
 
         Buffer->Directory = BooleanFlagOn( ulFileAttribs, FILE_ATTRIBUTE_DIRECTORY);
@@ -1527,8 +1527,8 @@ AFSQueryNetworkInfo( IN PIRP Irp,
                       AFS_TRACE_LEVEL_VERBOSE_2,
                       "AFSQueryNetworkInfo %wZ Type 0x%x Attrib 0x%x -> 0x%x\n",
                       &pCcb->DirectoryCB->NameInformation.FileName,
-                      pCcb->DirectoryCB->ObjectInformation->FileType,
-                      pCcb->DirectoryCB->ObjectInformation->FileAttributes,
+                      pFcb->ObjectInformation->FileType,
+                      pFcb->ObjectInformation->FileAttributes,
                       ulFileAttribs));
 
         Buffer->CreationTime.QuadPart = DirectoryCB->ObjectInformation->CreationTime.QuadPart;
@@ -1722,8 +1722,8 @@ AFSQueryAttribTagInfo( IN PIRP Irp,
                       AFS_TRACE_LEVEL_VERBOSE_2,
                       "AFSAttribTagInfo %wZ Type 0x%x Attrib 0x%x -> 0x%x\n",
                       &pCcb->DirectoryCB->NameInformation.FileName,
-                      pCcb->DirectoryCB->ObjectInformation->FileType,
-                      pCcb->DirectoryCB->ObjectInformation->FileAttributes,
+                      pFcb->ObjectInformation->FileType,
+                      pFcb->ObjectInformation->FileAttributes,
                       ulFileAttribs));
 
         Buffer->FileAttributes = ulFileAttribs;
@@ -3057,7 +3057,7 @@ AFSSetRenameInfo( IN PIRP Irp)
             ulNotificationAction = FILE_ACTION_REMOVED;
         }
 
-        if( pSrcCcb->DirectoryCB->ObjectInformation->FileType == AFS_FILE_TYPE_DIRECTORY)
+        if( pSrcFcb->ObjectInformation->FileType == AFS_FILE_TYPE_DIRECTORY)
         {
 
             ulNotifyFilter = FILE_NOTIFY_CHANGE_DIR_NAME;
@@ -3240,9 +3240,9 @@ AFSSetRenameInfo( IN PIRP Irp)
                           pSrcParentObject,
                           lCount));
 
-            pSrcCcb->DirectoryCB->ObjectInformation->ParentFileId = pTargetParentObject->FileId;
+            pSrcFcb->ObjectInformation->ParentFileId = pTargetParentObject->FileId;
 
-            SetFlag( pSrcCcb->DirectoryCB->ObjectInformation->Flags, AFS_OBJECT_FLAGS_PARENT_FID);
+            SetFlag( pSrcFcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_PARENT_FID);
 
             pSrcParentObject = pTargetParentObject;
 

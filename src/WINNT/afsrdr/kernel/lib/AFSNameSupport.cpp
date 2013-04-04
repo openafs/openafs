@@ -3107,10 +3107,10 @@ AFSParseName( IN PIRP Irp,
                           "AFSParseName (%p) Relative open for %wZ FID %08lX-%08lX-%08lX-%08lX component %wZ\n",
                           Irp,
                           &pRelatedCcb->DirectoryCB->NameInformation.FileName,
-                          pRelatedCcb->DirectoryCB->ObjectInformation->FileId.Cell,
-                          pRelatedCcb->DirectoryCB->ObjectInformation->FileId.Volume,
-                          pRelatedCcb->DirectoryCB->ObjectInformation->FileId.Vnode,
-                          pRelatedCcb->DirectoryCB->ObjectInformation->FileId.Unique,
+                          pRelatedFcb->ObjectInformation->FileId.Cell,
+                          pRelatedFcb->ObjectInformation->FileId.Volume,
+                          pRelatedFcb->ObjectInformation->FileId.Vnode,
+                          pRelatedFcb->ObjectInformation->FileId.Unique,
                           &uniFullName));
 
             if( FsRtlDoesNameContainWildCards( &uniFullName))

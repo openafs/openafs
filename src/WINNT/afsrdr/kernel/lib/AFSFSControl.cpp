@@ -330,14 +330,14 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                               AFS_TRACE_LEVEL_VERBOSE_2,
                               "AFSProcessUserFsRequest Processing FSCTL_GET_REPARSE_POINT request %wZ Type 0x%x Attrib 0x%x\n",
                               &pCcb->DirectoryCB->NameInformation.FileName,
-                              pCcb->DirectoryCB->ObjectInformation->FileType,
-                              pCcb->DirectoryCB->ObjectInformation->FileAttributes));
+                              pFcb->ObjectInformation->FileType,
+                              pFcb->ObjectInformation->FileAttributes));
 
                 //
                 // Check if we have the reparse entry set on the entry
                 //
 
-                if( !BooleanFlagOn( pCcb->DirectoryCB->ObjectInformation->FileAttributes, FILE_ATTRIBUTE_REPARSE_POINT))
+                if( !BooleanFlagOn( pFcb->ObjectInformation->FileAttributes, FILE_ATTRIBUTE_REPARSE_POINT))
                 {
 
                     ntStatus = STATUS_NOT_A_REPARSE_POINT;
@@ -346,7 +346,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                 }
 
 
-                switch ( pCcb->DirectoryCB->ObjectInformation->FileType) {
+                switch ( pFcb->ObjectInformation->FileType) {
                 case AFS_FILE_TYPE_MOUNTPOINT:
 
                     if( ulOutputBufferLen < FIELD_OFFSET( REPARSE_GUID_DATA_BUFFER, GenericReparseBuffer.DataBuffer))
@@ -396,18 +396,18 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                     // We'll reset the DV to ensure we validate the metadata content
                     //
 
-                    pCcb->DirectoryCB->ObjectInformation->DataVersion.QuadPart = (ULONGLONG)-1;
+                    pFcb->ObjectInformation->DataVersion.QuadPart = (ULONGLONG)-1;
 
-                    SetFlag( pCcb->DirectoryCB->ObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY);
+                    SetFlag( pFcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY);
 
                     AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSProcessUserFsRequest Verifying symlink %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                                   &pCcb->DirectoryCB->NameInformation.FileName,
-                                  pCcb->DirectoryCB->ObjectInformation->FileId.Cell,
-                                  pCcb->DirectoryCB->ObjectInformation->FileId.Volume,
-                                  pCcb->DirectoryCB->ObjectInformation->FileId.Vnode,
-                                  pCcb->DirectoryCB->ObjectInformation->FileId.Unique));
+                                  pFcb->ObjectInformation->FileId.Cell,
+                                  pFcb->ObjectInformation->FileId.Volume,
+                                  pFcb->ObjectInformation->FileId.Vnode,
+                                  pFcb->ObjectInformation->FileId.Unique));
 
                     ntStatus = AFSVerifyEntry( &pCcb->AuthGroup,
                                                pCcb->DirectoryCB);
@@ -419,10 +419,10 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                                       AFS_TRACE_LEVEL_ERROR,
                                       "AFSProcessUserFsRequest Failed to verify symlink %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                                       &pCcb->DirectoryCB->NameInformation.FileName,
-                                      pCcb->DirectoryCB->ObjectInformation->FileId.Cell,
-                                      pCcb->DirectoryCB->ObjectInformation->FileId.Volume,
-                                      pCcb->DirectoryCB->ObjectInformation->FileId.Vnode,
-                                      pCcb->DirectoryCB->ObjectInformation->FileId.Unique,
+                                      pFcb->ObjectInformation->FileId.Cell,
+                                      pFcb->ObjectInformation->FileId.Volume,
+                                      pFcb->ObjectInformation->FileId.Vnode,
+                                      pFcb->ObjectInformation->FileId.Unique,
                                       ntStatus));
 
                         AFSReleaseResource( &pCcb->DirectoryCB->NonPaged->Lock);
@@ -433,7 +433,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 
                 pReparseInfo = (AFSReparseTagInfo *)&pReparseBuffer->GenericReparseBuffer.DataBuffer[ 0];
 
-                switch( pCcb->DirectoryCB->ObjectInformation->FileType)
+                switch( pFcb->ObjectInformation->FileType)
                 {
 
                     case AFS_FILE_TYPE_SYMLINK:
@@ -791,7 +791,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 
                     ulRemainingLen -= pReparseBuffer->ReparseDataLength;
 
-                    if ( pCcb->DirectoryCB->ObjectInformation->FileType == AFS_FILE_TYPE_MOUNTPOINT)
+                    if ( pFcb->ObjectInformation->FileType == AFS_FILE_TYPE_MOUNTPOINT)
                     {
 
                         pReparseBuffer->ReparseTag = IO_REPARSE_TAG_SURROGATE|IO_REPARSE_TAG_OPENAFS_DFS;
@@ -833,8 +833,8 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSProcessUserFsRequest Processing FSCTL_SET_REPARSE_POINT request %wZ Type 0x%x Attrib 0x%x\n",
                               &pCcb->DirectoryCB->NameInformation.FileName,
-                              pCcb->DirectoryCB->ObjectInformation->FileType,
-                              pCcb->DirectoryCB->ObjectInformation->FileAttributes));
+                              pFcb->ObjectInformation->FileType,
+                              pFcb->ObjectInformation->FileAttributes));
 
                 if( ulInputBufferLen < FIELD_OFFSET( REPARSE_GUID_DATA_BUFFER, GenericReparseBuffer.DataBuffer))
                 {
@@ -995,19 +995,19 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                 // for this entry
                 //
 
-                AFSAcquireExcl( pCcb->DirectoryCB->ObjectInformation->VolumeCB->ObjectInfoTree.TreeLock,
+                AFSAcquireExcl( pFcb->ObjectInformation->VolumeCB->ObjectInfoTree.TreeLock,
                                 TRUE);
 
-                if ( AFSIsVolumeFID( &pCcb->DirectoryCB->ObjectInformation->ParentFileId))
+                if ( AFSIsVolumeFID( &pFcb->ObjectInformation->ParentFileId))
                 {
 
-                    pParentObjectInfo = &pCcb->DirectoryCB->ObjectInformation->VolumeCB->ObjectInformation;
+                    pParentObjectInfo = &pFcb->ObjectInformation->VolumeCB->ObjectInformation;
                 }
                 else
                 {
-                    ullIndex = AFSCreateLowIndex( &pCcb->DirectoryCB->ObjectInformation->ParentFileId);
+                    ullIndex = AFSCreateLowIndex( &pFcb->ObjectInformation->ParentFileId);
 
-                    ntStatus = AFSLocateHashEntry( pCcb->DirectoryCB->ObjectInformation->VolumeCB->ObjectInfoTree.TreeHead,
+                    ntStatus = AFSLocateHashEntry( pFcb->ObjectInformation->VolumeCB->ObjectInfoTree.TreeHead,
                                                    ullIndex,
                                                    (AFSBTreeEntry **)&pParentObjectInfo);
                 }
@@ -1025,7 +1025,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                                   lCount));
                 }
 
-                AFSReleaseResource( pCcb->DirectoryCB->ObjectInformation->VolumeCB->ObjectInfoTree.TreeLock);
+                AFSReleaseResource( pFcb->ObjectInformation->VolumeCB->ObjectInfoTree.TreeLock);
 
                 if ( NT_SUCCESS( ntStatus))
                 {
@@ -1037,15 +1037,15 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                     ntStatus = AFSCreateSymlink( &pCcb->AuthGroup,
                                                  pParentObjectInfo,
                                                  &pCcb->DirectoryCB->NameInformation.FileName,
-                                                 pCcb->DirectoryCB->ObjectInformation,
+                                                 pFcb->ObjectInformation,
                                                  &uniTargetName);
 
                     AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE_2,
                                   "AFSProcessUserFsRequest Processed FSCTL_SET_REPARSE_POINT request %wZ Type 0x%x Attrib 0x%x Status %08lX\n",
                                   &pCcb->DirectoryCB->NameInformation.FileName,
-                                  pCcb->DirectoryCB->ObjectInformation->FileType,
-                                  pCcb->DirectoryCB->ObjectInformation->FileAttributes,
+                                  pFcb->ObjectInformation->FileType,
+                                  pFcb->ObjectInformation->FileAttributes,
                                   ntStatus));
 
                     lCount = AFSObjectInfoDecrement( pParentObjectInfo,
@@ -1070,14 +1070,14 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                               AFS_TRACE_LEVEL_VERBOSE_2,
                               "AFSProcessUserFsRequest Processing FSCTL_DELETE_REPARSE_POINT request %wZ Type 0x%x Attrib 0x%x\n",
                               &pCcb->DirectoryCB->NameInformation.FileName,
-                              pCcb->DirectoryCB->ObjectInformation->FileType,
-                              pCcb->DirectoryCB->ObjectInformation->FileAttributes));
+                              pFcb->ObjectInformation->FileType,
+                              pFcb->ObjectInformation->FileAttributes));
 
                 //
                 // Check if we have the reparse entry set on the entry
                 //
 
-                if( !BooleanFlagOn( pCcb->DirectoryCB->ObjectInformation->FileAttributes, FILE_ATTRIBUTE_REPARSE_POINT))
+                if( !BooleanFlagOn( pFcb->ObjectInformation->FileAttributes, FILE_ATTRIBUTE_REPARSE_POINT))
                 {
 
                     ntStatus = STATUS_NOT_A_REPARSE_POINT;
