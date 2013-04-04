@@ -88,6 +88,12 @@ struct host {
      * the index fields isn't zeroed. XXX
      */
     afs_uint32 index;		/* Host table index, for vicecb.c */
+    unsigned int n_tmays;       /* how many successful TellMeAboutYourself calls
+                                 * have we made against this host? */
+    /* cache of the result of the last successful TMAY call to this host */
+    struct interfaceAddr tmay_interf;
+    Capabilities tmay_caps;
+
     struct Lock lock;		/* Write lock for synchronization of
 				 * VenusDown flag */
 #ifdef AFS_PTHREAD_ENV
