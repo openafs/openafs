@@ -390,10 +390,10 @@ main(int argc, char **argv)
     cmd_OptionAsString(opts, OPT_logfile, &logFile);
 
     if (cmd_OptionAsInt(opts, OPT_threads, &lwps) == 0) {
-	if (lwps > 16) {	/* maximum of 16 */
+	if (lwps > 64) {	/* maximum of 64 */
 	    printf("Warning: '-p %d' is too big; using %d instead\n",
-		   lwps, 16);
-	    lwps = 16;
+		   lwps, 64);
+	    lwps = 64;
 	} else if (lwps < 3) {	/* minimum of 3 */
 	    printf("Warning: '-p %d' is too small; using %d instead\n",
 		   lwps, 3);

@@ -91,7 +91,7 @@ F</usr/afs/db/prdb>.
 =item B<-p> <I<number of threads>>
 
 Sets the number of server lightweight processes (LWPs or pthreads) to run.
-Provide a positive integer from the range C<3> to C<16>. The default
+Provide a positive integer from the range C<3> to C<64>. The default
 value is C<3>.
 
 =item B<-groupdepth> <I<# of nested groups>>, B<-depth> <I<# of nested groups>>
