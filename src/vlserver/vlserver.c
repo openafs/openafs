@@ -38,7 +38,7 @@
 #include "vlserver.h"
 #include "vlserver_internal.h"
 
-#define MAXLWP 16
+#define MAXLWP 64
 struct afsconf_dir *vldb_confdir = 0;	/* vldb configuration dir */
 int lwps = 9;
 

@@ -69,7 +69,7 @@ and C<125>.
 =item B<-p> <I<number of threads>>
 
 Sets the number of server lightweight processes (LWPs or pthreads) to run.
-Provide an integer between C<3> and C<16>. The default is C<9>.
+Provide an integer between C<3> and C<64>. The default is C<9>.
 
 =item B<-jumbo>
 
