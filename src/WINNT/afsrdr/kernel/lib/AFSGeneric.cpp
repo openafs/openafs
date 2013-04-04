@@ -7519,27 +7519,27 @@ AFSUnwindFileInfo( IN AFSFcb *Fcb,
     UNREFERENCED_PARAMETER(Fcb);
     if( Ccb->FileUnwindInfo.FileAttributes != (ULONG)-1)
     {
-        Ccb->DirectoryCB->ObjectInformation->FileAttributes = Ccb->FileUnwindInfo.FileAttributes;
+        Fcb->ObjectInformation->FileAttributes = Ccb->FileUnwindInfo.FileAttributes;
     }
 
     if( Ccb->FileUnwindInfo.CreationTime.QuadPart != (ULONGLONG)-1)
     {
-        Ccb->DirectoryCB->ObjectInformation->CreationTime.QuadPart = Ccb->FileUnwindInfo.CreationTime.QuadPart;
+        Fcb->ObjectInformation->CreationTime.QuadPart = Ccb->FileUnwindInfo.CreationTime.QuadPart;
     }
 
     if( Ccb->FileUnwindInfo.LastAccessTime.QuadPart != (ULONGLONG)-1)
     {
-        Ccb->DirectoryCB->ObjectInformation->LastAccessTime.QuadPart = Ccb->FileUnwindInfo.LastAccessTime.QuadPart;
+        Fcb->ObjectInformation->LastAccessTime.QuadPart = Ccb->FileUnwindInfo.LastAccessTime.QuadPart;
     }
 
     if( Ccb->FileUnwindInfo.LastWriteTime.QuadPart != (ULONGLONG)-1)
     {
-        Ccb->DirectoryCB->ObjectInformation->LastWriteTime.QuadPart = Ccb->FileUnwindInfo.LastWriteTime.QuadPart;
+        Fcb->ObjectInformation->LastWriteTime.QuadPart = Ccb->FileUnwindInfo.LastWriteTime.QuadPart;
     }
 
     if( Ccb->FileUnwindInfo.ChangeTime.QuadPart != (ULONGLONG)-1)
     {
-        Ccb->DirectoryCB->ObjectInformation->ChangeTime.QuadPart = Ccb->FileUnwindInfo.ChangeTime.QuadPart;
+        Fcb->ObjectInformation->ChangeTime.QuadPart = Ccb->FileUnwindInfo.ChangeTime.QuadPart;
     }
 
     return;
