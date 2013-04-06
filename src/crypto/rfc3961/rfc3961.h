@@ -11,13 +11,13 @@ typedef struct _krb5_context * krb5_context;
 typedef struct {
     size_t length;
     void *data;
-} heim_octet_string;
+} afs_heim_octet_string;
 
-typedef heim_octet_string krb5_data;
+typedef afs_heim_octet_string krb5_data;
 
 typedef struct {
   int keytype;
-  heim_octet_string keyvalue;
+  afs_heim_octet_string keyvalue;
 } krb5_keyblock;
 
 typedef struct krb5_crypto_data *krb5_crypto;
@@ -45,7 +45,7 @@ typedef enum CKSUMTYPE {
 
 typedef struct Checksum {
   CKSUMTYPE cksumtype;
-  heim_octet_string checksum;
+  afs_heim_octet_string checksum;
 } Checksum;
 
 typedef int krb5_cksumtype;
@@ -82,6 +82,24 @@ enum {
 };
 
 typedef ENCTYPE krb5_enctype;
+
+#define krb5_init_context oafs_h_krb5_init_context
+#define krb5_free_context oafs_h_krb5_free_context
+#define krb5_enctype_valid oafs_h_krb5_enctype_valid
+#define krb5_crypto_init oafs_h_krb5_crypto_init
+#define krb5_crypto_destroy oafs_h_krb5_crypto_destroy
+#define krb5_encrypt oafs_h_krb5_encrypt
+#define krb5_decrypt oafs_h_krb5_decrypt
+#define krb5_enctype_keybits oafs_h_krb5_enctype_keybits
+#define krb5_data_free oafs_h_krb5_data_free
+#define krb5_data_alloc oafs_h_krb5_data_alloc
+#define krb5_keyblock_init oafs_h_krb5_keyblock_init
+#define krb5_copy_keyblock oafs_h_krb5_copy_keyblock
+#define krb5_copy_keyblock_contents oafs_h_krb5_copy_keyblock_contents
+#define krb5_free_keyblock oafs_h_krb5_free_keyblock
+#define krb5_free_keyblock_contents oafs_h_krb5_free_keyblock_contents
+#define krb5_keyblock_zero oafs_h_krb5_keyblock_zero
+#define krb5_keyblock_get_enctype oafs_h_krb5_keyblock_get_enctype
 
 krb5_error_code krb5_init_context(krb5_context *context);
 
@@ -122,6 +140,12 @@ krb5_error_code krb5_data_alloc(krb5_data *p, int len);
 void krb5_free_keyblock_contents(krb5_context context,
 				 krb5_keyblock *keyblock);
 
+#define krb5_crypto_prf oafs_h_krb5_crypto_prf
+#define krb5_crypto_fx_cf2 oafs_h_krb5_crypto_fx_cf2
+#define krb5_generate_random_block oafs_h_krb5_generate_random_block
+#define krb5_random_to_key oafs_h_krb5_random_ro_key
+#define krb5_crypto_overhead oafs_h_krb5_crypto_overhead
+
 krb5_error_code krb5_crypto_prf(krb5_context context,
 				const krb5_crypto crypto,
 				const krb5_data *input,
@@ -135,7 +159,7 @@ krb5_error_code krb5_crypto_fx_cf2(krb5_context context,
 				   krb5_enctype enctype,
 				   krb5_keyblock *res);
 
-krb5_error_code krb5_generate_random_block(void *buf, size_t len);
+void krb5_generate_random_block(void *buf, size_t len);
 
 krb5_error_code krb5_random_to_key(krb5_context context,
 				   krb5_enctype type,
@@ -145,6 +169,12 @@ krb5_error_code krb5_random_to_key(krb5_context context,
 
 size_t krb5_crypto_overhead (krb5_context context,
 			     krb5_crypto crypto);
+
+#define krb5_crypto_get_checksum_type oafs_h_krb5_crypto_get_checksum_type
+#define krb5_checksumsize oafs_h_krb5_checksumsize
+#define krb5_create_checksum oafs_h_krb5_create_checksum
+#define krb5_verify_checksum oafs_h_krb5_verify_checksum
+#define free_Checksum oafs_h_free_Checksum
 
 krb5_error_code krb5_crypto_get_checksum_type (krb5_context context,
 					       krb5_crypto crypto,
@@ -168,4 +198,23 @@ krb5_error_code krb5_verify_checksum (krb5_context context,
 				      size_t len,
 				      Checksum *cksum);
 
+
 void free_Checksum(Checksum *data);
+
+void krb5_keyblock_zero(krb5_keyblock *keyblock);
+void krb5_free_keyblock_contents(krb5_context context,
+			    krb5_keyblock *keyblock);
+void krb5_free_keyblock(krb5_context context,
+		   krb5_keyblock *keyblock);
+krb5_error_code krb5_copy_keyblock_contents (krb5_context context,
+			     const krb5_keyblock *inblock,
+			     krb5_keyblock *to);
+krb5_error_code krb5_copy_keyblock (krb5_context context,
+		    const krb5_keyblock *inblock,
+		    krb5_keyblock **to);
+krb5_enctype krb5_keyblock_get_enctype(const krb5_keyblock *block);
+krb5_error_code krb5_keyblock_init(krb5_context context,
+		   krb5_enctype type,
+		   const void *data,
+		   size_t size,
+		   krb5_keyblock *key);

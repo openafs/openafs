@@ -180,7 +180,7 @@ rxgen: lwp
 	$(NTMAKE)
 	$(CD) ..\..
 
-opr: hcrypto
+opr: rfc3961
      @echo ***** $@
 	$(DOCD) $(SRC)\opr
 	$(CD) $(SRC)\opr
@@ -191,6 +191,13 @@ hcrypto: roken
      @echo ***** $@
 	$(DOCD) $(SRC)\crypto\hcrypto
 	$(CD) $(SRC)\crypto\hcrypto
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+rfc3961: hcrypto
+     @echo ***** $@
+	$(DOCD) $(SRC)\crypto\$@
+	$(CD) $(SRC)\crypto\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 

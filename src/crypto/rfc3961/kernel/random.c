@@ -30,8 +30,8 @@
 
 #include "rfc3961.h"
 
-krb5_error_code
+void
 krb5_generate_random_block(void *buf, size_t len)
 {
-    return osi_readRandom(buf, len);
+    osi_readRandom(buf, len);
 }
