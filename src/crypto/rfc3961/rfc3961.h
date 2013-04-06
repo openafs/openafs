@@ -4,6 +4,9 @@
  * selected bits of Heimdal's libkrb5.
  */
 
+#ifndef RFC3961_RFC3961_H
+#define RFC3961_RFC3961_H
+
 typedef int krb5_error_code;
 typedef int krb5_key_usage;
 typedef struct _krb5_context * krb5_context;
@@ -22,6 +25,7 @@ typedef struct {
 
 typedef struct krb5_crypto_data *krb5_crypto;
 
+#ifndef RFC3961_NO_ENUMS
 typedef enum CKSUMTYPE {
   CKSUMTYPE_NONE = 0,
   CKSUMTYPE_CRC32 = 1,
@@ -42,14 +46,18 @@ typedef enum CKSUMTYPE {
   CKSUMTYPE_HMAC_MD5 = -138,
   CKSUMTYPE_HMAC_MD5_ENC = -1138
 } CKSUMTYPE;
+#endif
 
+#ifndef RFC3961_NO_CKSUM
 typedef struct Checksum {
   CKSUMTYPE cksumtype;
   afs_heim_octet_string checksum;
 } Checksum;
 
 typedef int krb5_cksumtype;
+#endif
 
+#ifndef RFC3961_NO_ENUMS
 typedef enum ENCTYPE {
   ETYPE_NULL = 0,
   ETYPE_DES_CBC_CRC = 1,
@@ -82,6 +90,10 @@ enum {
 };
 
 typedef ENCTYPE krb5_enctype;
+
+#else
+typedef int krb5_enctype;
+#endif
 
 #define krb5_init_context oafs_h_krb5_init_context
 #define krb5_free_context oafs_h_krb5_free_context
@@ -170,6 +182,7 @@ krb5_error_code krb5_random_to_key(krb5_context context,
 size_t krb5_crypto_overhead (krb5_context context,
 			     krb5_crypto crypto);
 
+#ifndef RFC3961_NO_CKSUM
 #define krb5_crypto_get_checksum_type oafs_h_krb5_crypto_get_checksum_type
 #define krb5_checksumsize oafs_h_krb5_checksumsize
 #define krb5_create_checksum oafs_h_krb5_create_checksum
@@ -200,6 +213,7 @@ krb5_error_code krb5_verify_checksum (krb5_context context,
 
 
 void free_Checksum(Checksum *data);
+#endif
 
 void krb5_keyblock_zero(krb5_keyblock *keyblock);
 void krb5_free_keyblock_contents(krb5_context context,
@@ -218,3 +232,5 @@ krb5_error_code krb5_keyblock_init(krb5_context context,
 		   const void *data,
 		   size_t size,
 		   krb5_keyblock *key);
+
+#endif /* RFC3961_RFC3961_H */
