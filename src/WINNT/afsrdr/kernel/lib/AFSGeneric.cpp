@@ -8936,6 +8936,7 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                             IN ULONG InvalidateReason)
 {
 
+    AFSDeviceExt       *pRDRDevExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     NTSTATUS            ntStatus = STATUS_SUCCESS;
     LIST_ENTRY         *le;
     AFSExtent          *pEntry;
@@ -9001,57 +9002,199 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 
                     bLocked = TRUE;
 
-                    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSPerformObjectInvalidate Acquiring Fcb extents lock %p SHARED %08lX\n",
-                                  &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource,
-                                  PsGetCurrentThread()));
-
-                    AFSAcquireShared( &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource,
-                                      TRUE);
-
-                    bExtentsLocked = TRUE;
-
-                    //
-                    // There are several possibilities here:
-                    //
-                    // 0. If there are no extents or all of the extents are dirty, do nothing.
-                    //
-                    // 1. There could be nothing dirty and an open reference count of zero
-                    //    in which case we can just tear down all of the extents without
-                    //    holding any resources.
-                    //
-                    // 2. There could be nothing dirty and a non-zero open reference count
-                    //    in which case we can issue a CcPurge against the entire file
-                    //    while holding just the Fcb Resource.
-                    //
-                    // 3. There can be dirty extents in which case we need to identify
-                    //    the non-dirty ranges and then perform a CcPurge on just the
-                    //    non-dirty ranges while holding just the Fcb Resource.
-                    //
-
-                    if ( ObjectInfo->Fcb->Specific.File.ExtentCount != ObjectInfo->Fcb->Specific.File.ExtentsDirtyCount)
+                    if( BooleanFlagOn( pRDRDevExt->DeviceFlags, AFS_DEVICE_FLAG_DIRECT_SERVICE_IO))
                     {
 
-                        if ( ObjectInfo->Fcb->Specific.File.ExtentsDirtyCount == 0)
+                        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSPerformObjectInvalidation DirectIO Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
+                                      &ObjectInfo->Fcb->NPFcb->SectionObjectResource,
+                                      PsGetCurrentThread()));
+
+                        AFSAcquireExcl( &ObjectInfo->Fcb->NPFcb->SectionObjectResource,
+                                        TRUE);
+
+                        AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->Resource);
+
+                        bLocked = FALSE;
+
+                        __try
                         {
 
-                            AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource );
-
-                            bExtentsLocked = FALSE;
-
-                            if ( ObjectInfo->Fcb->OpenReferenceCount == 0)
+                            if( ObjectInfo->Fcb->NPFcb->SectionObjectPointers.DataSectionObject != NULL &&
+                                !CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
+                                                      NULL,
+                                                      0,
+                                                      FALSE))
                             {
 
-                                AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->Resource);
+                                AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
+                                              AFS_TRACE_LEVEL_WARNING,
+                                              "AFSPerformObjectInvalidation DirectIO CcPurgeCacheSection failure FID %08lX-%08lX-%08lX-%08lX\n",
+                                              ObjectInfo->FileId.Cell,
+                                              ObjectInfo->FileId.Volume,
+                                              ObjectInfo->FileId.Vnode,
+                                              ObjectInfo->FileId.Unique));
 
-                                bLocked = FALSE;
-
-                                AFSTearDownFcbExtents( ObjectInfo->Fcb,
-                                                       NULL);
+                                SetFlag( ObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
                             }
                             else
                             {
+
+                                bCleanExtents = TRUE;
+                            }
+                        }
+                        __except( EXCEPTION_EXECUTE_HANDLER)
+                        {
+
+                            ntStatus = GetExceptionCode();
+
+                            AFSDbgTrace(( 0,
+                                          0,
+                                          "EXCEPTION - AFSPerformObjectInvalidation DirectIO FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
+                                          ObjectInfo->FileId.Cell,
+                                          ObjectInfo->FileId.Volume,
+                                          ObjectInfo->FileId.Vnode,
+                                          ObjectInfo->FileId.Unique,
+                                          ntStatus));
+
+                            SetFlag( ObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
+                        }
+
+                        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSPerformObjectInvalidation DirectIO Releasing Fcb SectionObject lock %p EXCL %08lX\n",
+                                      &ObjectInfo->Fcb->NPFcb->SectionObjectResource,
+                                      PsGetCurrentThread()));
+
+                        AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->SectionObjectResource);
+                    }
+                    else
+                    {
+
+                        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSPerformObjectInvalidate Acquiring Fcb extents lock %p SHARED %08lX\n",
+                                      &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource,
+                                      PsGetCurrentThread()));
+
+                        AFSAcquireShared( &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource,
+                                          TRUE);
+
+                        bExtentsLocked = TRUE;
+
+                        //
+                        // There are several possibilities here:
+                        //
+                        // 0. If there are no extents or all of the extents are dirty, do nothing.
+                        //
+                        // 1. There could be nothing dirty and an open reference count of zero
+                        //    in which case we can just tear down all of the extents without
+                        //    holding any resources.
+                        //
+                        // 2. There could be nothing dirty and a non-zero open reference count
+                        //    in which case we can issue a CcPurge against the entire file
+                        //    while holding just the Fcb Resource.
+                        //
+                        // 3. There can be dirty extents in which case we need to identify
+                        //    the non-dirty ranges and then perform a CcPurge on just the
+                        //    non-dirty ranges while holding just the Fcb Resource.
+                        //
+
+                        if ( ObjectInfo->Fcb->Specific.File.ExtentCount != ObjectInfo->Fcb->Specific.File.ExtentsDirtyCount)
+                        {
+
+                            if ( ObjectInfo->Fcb->Specific.File.ExtentsDirtyCount == 0)
+                            {
+
+                                AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource );
+
+                                bExtentsLocked = FALSE;
+
+                                if ( ObjectInfo->Fcb->OpenReferenceCount == 0)
+                                {
+
+                                    AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->Resource);
+
+                                    bLocked = FALSE;
+
+                                    AFSTearDownFcbExtents( ObjectInfo->Fcb,
+                                                           NULL);
+                                }
+                                else
+                                {
+
+                                    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                                  AFS_TRACE_LEVEL_VERBOSE,
+                                                  "AFSPerformObjectInvalidation Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
+                                                  &ObjectInfo->Fcb->NPFcb->SectionObjectResource,
+                                                  PsGetCurrentThread()));
+
+                                    AFSAcquireExcl( &ObjectInfo->Fcb->NPFcb->SectionObjectResource,
+                                                    TRUE);
+
+                                    AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->Resource);
+
+                                    bLocked = FALSE;
+
+                                    __try
+                                    {
+
+                                        if( ObjectInfo->Fcb->NPFcb->SectionObjectPointers.DataSectionObject != NULL &&
+                                            !CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
+                                                                  NULL,
+                                                                  0,
+                                                                  FALSE))
+                                        {
+
+                                            AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
+                                                          AFS_TRACE_LEVEL_WARNING,
+                                                          "AFSPerformObjectInvalidation CcPurgeCacheSection failure FID %08lX-%08lX-%08lX-%08lX\n",
+                                                          ObjectInfo->FileId.Cell,
+                                                          ObjectInfo->FileId.Volume,
+                                                          ObjectInfo->FileId.Vnode,
+                                                          ObjectInfo->FileId.Unique));
+
+                                            SetFlag( ObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
+                                        }
+                                        else
+                                        {
+
+                                            bCleanExtents = TRUE;
+                                        }
+                                    }
+                                    __except( EXCEPTION_EXECUTE_HANDLER)
+                                    {
+
+                                        ntStatus = GetExceptionCode();
+
+                                        AFSDbgTrace(( 0,
+                                                      0,
+                                                      "EXCEPTION - AFSPerformObjectInvalidation FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
+                                                      ObjectInfo->FileId.Cell,
+                                                      ObjectInfo->FileId.Volume,
+                                                      ObjectInfo->FileId.Vnode,
+                                                      ObjectInfo->FileId.Unique,
+                                                      ntStatus));
+
+                                        SetFlag( ObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
+                                    }
+
+                                    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                                  AFS_TRACE_LEVEL_VERBOSE,
+                                                  "AFSPerformObjectInvalidation Releasing Fcb SectionObject lock %p EXCL %08lX\n",
+                                                  &ObjectInfo->Fcb->NPFcb->SectionObjectResource,
+                                                  PsGetCurrentThread()));
+
+                                    AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->SectionObjectResource);
+                                }
+                            }
+                            else
+                            {
+
+                                AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource );
+
+                                bExtentsLocked = FALSE;
 
                                 AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                               AFS_TRACE_LEVEL_VERBOSE,
@@ -9066,179 +9209,49 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 
                                 bLocked = FALSE;
 
+                                //
+                                // Must build a list of non-dirty ranges from the beginning of the file
+                                // to the end.  There can be at most (Fcb->Specific.File.ExtentsDirtyCount + 1)
+                                // ranges.  In all but the most extreme random data write scenario there will
+                                // be significantly fewer.
+                                //
+                                // For each range we need offset and size.
+                                //
+
+                                AFSByteRange * ByteRangeList = NULL;
+                                ULONG          ulByteRangeCount = 0;
+                                ULONG          ulIndex;
+                                BOOLEAN        bPurgeOnClose = FALSE;
+
                                 __try
                                 {
 
-                                    if( ObjectInfo->Fcb->NPFcb->SectionObjectPointers.DataSectionObject != NULL &&
-                                        !CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
-                                                              NULL,
-                                                              0,
-                                                              FALSE))
+                                    ulByteRangeCount = AFSConstructCleanByteRangeList( ObjectInfo->Fcb,
+                                                                                       &ByteRangeList);
+
+                                    if ( ByteRangeList != NULL ||
+                                         ulByteRangeCount == 0)
                                     {
 
-                                        AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
-                                                      AFS_TRACE_LEVEL_WARNING,
-                                                      "AFSPerformObjectInvalidation CcPurgeCacheSection failure FID %08lX-%08lX-%08lX-%08lX\n",
-                                                      ObjectInfo->FileId.Cell,
-                                                      ObjectInfo->FileId.Volume,
-                                                      ObjectInfo->FileId.Vnode,
-                                                      ObjectInfo->FileId.Unique));
-
-                                        SetFlag( ObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
-                                    }
-                                    else
-                                    {
-
-                                        bCleanExtents = TRUE;
-                                    }
-                                }
-                                __except( EXCEPTION_EXECUTE_HANDLER)
-                                {
-
-                                    ntStatus = GetExceptionCode();
-
-                                    AFSDbgTrace(( 0,
-                                                  0,
-                                                  "EXCEPTION - AFSPerformObjectInvalidation FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
-                                                  ObjectInfo->FileId.Cell,
-                                                  ObjectInfo->FileId.Volume,
-                                                  ObjectInfo->FileId.Vnode,
-                                                  ObjectInfo->FileId.Unique,
-                                                  ntStatus));
-
-                                    SetFlag( ObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
-                                }
-
-                                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                                              AFS_TRACE_LEVEL_VERBOSE,
-                                              "AFSPerformObjectInvalidation Releasing Fcb SectionObject lock %p EXCL %08lX\n",
-                                              &ObjectInfo->Fcb->NPFcb->SectionObjectResource,
-                                              PsGetCurrentThread()));
-
-                                AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->SectionObjectResource);
-                            }
-                        }
-                        else
-                        {
-
-                            AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource );
-
-                            bExtentsLocked = FALSE;
-
-                            AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                                          AFS_TRACE_LEVEL_VERBOSE,
-                                          "AFSPerformObjectInvalidation Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
-                                          &ObjectInfo->Fcb->NPFcb->SectionObjectResource,
-                                          PsGetCurrentThread()));
-
-                            AFSAcquireExcl( &ObjectInfo->Fcb->NPFcb->SectionObjectResource,
-                                            TRUE);
-
-                            AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->Resource);
-
-                            bLocked = FALSE;
-
-                            //
-                            // Must build a list of non-dirty ranges from the beginning of the file
-                            // to the end.  There can be at most (Fcb->Specific.File.ExtentsDirtyCount + 1)
-                            // ranges.  In all but the most extreme random data write scenario there will
-                            // be significantly fewer.
-                            //
-                            // For each range we need offset and size.
-                            //
-
-                            AFSByteRange * ByteRangeList = NULL;
-                            ULONG          ulByteRangeCount = 0;
-                            ULONG          ulIndex;
-                            BOOLEAN        bPurgeOnClose = FALSE;
-
-                            __try
-                            {
-
-                                ulByteRangeCount = AFSConstructCleanByteRangeList( ObjectInfo->Fcb,
-                                                                                   &ByteRangeList);
-
-                                if ( ByteRangeList != NULL ||
-                                     ulByteRangeCount == 0)
-                                {
-
-                                    for ( ulIndex = 0; ulIndex < ulByteRangeCount; ulIndex++)
-                                    {
-
-                                        ULONG ulSize;
-
-                                        do {
-
-                                            ulSize = ByteRangeList[ulIndex].Length.QuadPart > DWORD_MAX ? DWORD_MAX : ByteRangeList[ulIndex].Length.LowPart;
-
-                                            if( ObjectInfo->Fcb->NPFcb->SectionObjectPointers.DataSectionObject != NULL &&
-                                                !CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
-                                                                      &ByteRangeList[ulIndex].FileOffset,
-                                                                      ulSize,
-                                                                      FALSE))
-                                            {
-
-                                                AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
-                                                              AFS_TRACE_LEVEL_WARNING,
-                                                              "AFSPerformObjectInvalidation [1] CcPurgeCacheSection failure FID %08lX-%08lX-%08lX-%08lX\n",
-                                                              ObjectInfo->FileId.Cell,
-                                                              ObjectInfo->FileId.Volume,
-                                                              ObjectInfo->FileId.Vnode,
-                                                              ObjectInfo->FileId.Unique));
-
-                                                bPurgeOnClose = TRUE;
-                                            }
-                                            else
-                                            {
-
-                                                bCleanExtents = TRUE;
-                                            }
-
-                                            ByteRangeList[ulIndex].Length.QuadPart -= ulSize;
-
-                                            ByteRangeList[ulIndex].FileOffset.QuadPart += ulSize;
-
-                                        } while ( ByteRangeList[ulIndex].Length.QuadPart > 0);
-                                    }
-                                }
-                                else
-                                {
-
-                                    //
-                                    // We couldn't allocate the memory to build the purge list
-                                    // so just walk the extent list while holding the ExtentsList Resource.
-                                    // This could deadlock but we do not have much choice.
-                                    //
-
-                                    AFSAcquireExcl(  &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource,
-                                                    TRUE);
-                                    bExtentsLocked = TRUE;
-
-                                    le = ObjectInfo->Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST].Flink;
-
-                                    ulProcessCount = 0;
-
-                                    ulCount = (ULONG)ObjectInfo->Fcb->Specific.File.ExtentCount;
-
-                                    if( ulCount > 0)
-                                    {
-                                        pEntry = ExtentFor( le, AFS_EXTENTS_LIST );
-
-                                        while( ulProcessCount < ulCount)
+                                        for ( ulIndex = 0; ulIndex < ulByteRangeCount; ulIndex++)
                                         {
-                                            pEntry = ExtentFor( le, AFS_EXTENTS_LIST );
 
-                                            if( !BooleanFlagOn( pEntry->Flags, AFS_EXTENT_DIRTY))
-                                            {
-                                                if( !CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
-                                                                          &pEntry->FileOffset,
-                                                                          pEntry->Size,
+                                            ULONG ulSize;
+
+                                            do {
+
+                                                ulSize = ByteRangeList[ulIndex].Length.QuadPart > DWORD_MAX ? DWORD_MAX : ByteRangeList[ulIndex].Length.LowPart;
+
+                                                if( ObjectInfo->Fcb->NPFcb->SectionObjectPointers.DataSectionObject != NULL &&
+                                                    !CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
+                                                                          &ByteRangeList[ulIndex].FileOffset,
+                                                                          ulSize,
                                                                           FALSE))
                                                 {
 
                                                     AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                                                                   AFS_TRACE_LEVEL_WARNING,
-                                                                  "AFSPerformObjectInvalidation [2] CcPurgeCacheSection failure FID %08lX-%08lX-%08lX-%08lX\n",
+                                                                  "AFSPerformObjectInvalidation [1] CcPurgeCacheSection failure FID %08lX-%08lX-%08lX-%08lX\n",
                                                                   ObjectInfo->FileId.Cell,
                                                                   ObjectInfo->FileId.Volume,
                                                                   ObjectInfo->FileId.Vnode,
@@ -9251,34 +9264,52 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 
                                                     bCleanExtents = TRUE;
                                                 }
-                                            }
 
-                                            if( liCurrentOffset.QuadPart < pEntry->FileOffset.QuadPart)
+                                                ByteRangeList[ulIndex].Length.QuadPart -= ulSize;
+
+                                                ByteRangeList[ulIndex].FileOffset.QuadPart += ulSize;
+
+                                            } while ( ByteRangeList[ulIndex].Length.QuadPart > 0);
+                                        }
+                                    }
+                                    else
+                                    {
+
+                                        //
+                                        // We couldn't allocate the memory to build the purge list
+                                        // so just walk the extent list while holding the ExtentsList Resource.
+                                        // This could deadlock but we do not have much choice.
+                                        //
+
+                                        AFSAcquireExcl(  &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource,
+                                                        TRUE);
+                                        bExtentsLocked = TRUE;
+
+                                        le = ObjectInfo->Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST].Flink;
+
+                                        ulProcessCount = 0;
+
+                                        ulCount = (ULONG)ObjectInfo->Fcb->Specific.File.ExtentCount;
+
+                                        if( ulCount > 0)
+                                        {
+                                            pEntry = ExtentFor( le, AFS_EXTENTS_LIST );
+
+                                            while( ulProcessCount < ulCount)
                                             {
+                                                pEntry = ExtentFor( le, AFS_EXTENTS_LIST );
 
-                                                liFlushLength.QuadPart = pEntry->FileOffset.QuadPart - liCurrentOffset.QuadPart;
-
-                                                while( liFlushLength.QuadPart > 0)
+                                                if( !BooleanFlagOn( pEntry->Flags, AFS_EXTENT_DIRTY))
                                                 {
-
-                                                    if( liFlushLength.QuadPart > 512 * 1024000)
-                                                    {
-                                                        ulFlushLength = 512 * 1024000;
-                                                    }
-                                                    else
-                                                    {
-                                                        ulFlushLength = liFlushLength.LowPart;
-                                                    }
-
                                                     if( !CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
-                                                                              &liCurrentOffset,
-                                                                              ulFlushLength,
+                                                                              &pEntry->FileOffset,
+                                                                              pEntry->Size,
                                                                               FALSE))
                                                     {
 
                                                         AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                                                                       AFS_TRACE_LEVEL_WARNING,
-                                                                      "AFSPerformObjectInvalidation [3] CcPurgeCacheSection failure FID %08lX-%08lX-%08lX-%08lX\n",
+                                                                      "AFSPerformObjectInvalidation [2] CcPurgeCacheSection failure FID %08lX-%08lX-%08lX-%08lX\n",
                                                                       ObjectInfo->FileId.Cell,
                                                                       ObjectInfo->FileId.Volume,
                                                                       ObjectInfo->FileId.Vnode,
@@ -9291,78 +9322,119 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 
                                                         bCleanExtents = TRUE;
                                                     }
-
-                                                    liFlushLength.QuadPart -= ulFlushLength;
                                                 }
+
+                                                if( liCurrentOffset.QuadPart < pEntry->FileOffset.QuadPart)
+                                                {
+
+                                                    liFlushLength.QuadPart = pEntry->FileOffset.QuadPart - liCurrentOffset.QuadPart;
+
+                                                    while( liFlushLength.QuadPart > 0)
+                                                    {
+
+                                                        if( liFlushLength.QuadPart > 512 * 1024000)
+                                                        {
+                                                            ulFlushLength = 512 * 1024000;
+                                                        }
+                                                        else
+                                                        {
+                                                            ulFlushLength = liFlushLength.LowPart;
+                                                        }
+
+                                                        if( !CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
+                                                                                  &liCurrentOffset,
+                                                                                  ulFlushLength,
+                                                                                  FALSE))
+                                                        {
+
+                                                            AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
+                                                                          AFS_TRACE_LEVEL_WARNING,
+                                                                          "AFSPerformObjectInvalidation [3] CcPurgeCacheSection failure FID %08lX-%08lX-%08lX-%08lX\n",
+                                                                          ObjectInfo->FileId.Cell,
+                                                                          ObjectInfo->FileId.Volume,
+                                                                          ObjectInfo->FileId.Vnode,
+                                                                          ObjectInfo->FileId.Unique));
+
+                                                            bPurgeOnClose = TRUE;
+                                                        }
+                                                        else
+                                                        {
+
+                                                            bCleanExtents = TRUE;
+                                                        }
+
+                                                        liFlushLength.QuadPart -= ulFlushLength;
+                                                    }
+                                                }
+
+                                                liCurrentOffset.QuadPart = pEntry->FileOffset.QuadPart + pEntry->Size;
+
+                                                ulProcessCount++;
+                                                le = le->Flink;
                                             }
-
-                                            liCurrentOffset.QuadPart = pEntry->FileOffset.QuadPart + pEntry->Size;
-
-                                            ulProcessCount++;
-                                            le = le->Flink;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        if( !CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
-                                                                  NULL,
-                                                                  0,
-                                                                  FALSE))
-                                        {
-
-                                            AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
-                                                          AFS_TRACE_LEVEL_WARNING,
-                                                          "AFSPerformObjectInvalidation [4] CcPurgeCacheSection failure FID %08lX-%08lX-%08lX-%08lX\n",
-                                                          ObjectInfo->FileId.Cell,
-                                                          ObjectInfo->FileId.Volume,
-                                                          ObjectInfo->FileId.Vnode,
-                                                          ObjectInfo->FileId.Unique));
-
-                                            bPurgeOnClose = TRUE;
                                         }
                                         else
                                         {
+                                            if( !CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
+                                                                      NULL,
+                                                                      0,
+                                                                      FALSE))
+                                            {
 
-                                            bCleanExtents = TRUE;
+                                                AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
+                                                              AFS_TRACE_LEVEL_WARNING,
+                                                              "AFSPerformObjectInvalidation [4] CcPurgeCacheSection failure FID %08lX-%08lX-%08lX-%08lX\n",
+                                                              ObjectInfo->FileId.Cell,
+                                                              ObjectInfo->FileId.Volume,
+                                                              ObjectInfo->FileId.Vnode,
+                                                              ObjectInfo->FileId.Unique));
+
+                                                bPurgeOnClose = TRUE;
+                                            }
+                                            else
+                                            {
+
+                                                bCleanExtents = TRUE;
+                                            }
+                                        }
+
+                                        if ( bPurgeOnClose)
+                                        {
+
+                                            SetFlag( ObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
                                         }
                                     }
-
-                                    if ( bPurgeOnClose)
-                                    {
-
-                                        SetFlag( ObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
-                                    }
                                 }
+                                __except( EXCEPTION_EXECUTE_HANDLER)
+                                {
+
+                                    ntStatus = GetExceptionCode();
+
+                                    AFSDbgTrace(( 0,
+                                                  0,
+                                                  "EXCEPTION - AFSPerformObjectInvalidation FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                                  ObjectInfo->FileId.Cell,
+                                                  ObjectInfo->FileId.Volume,
+                                                  ObjectInfo->FileId.Vnode,
+                                                  ObjectInfo->FileId.Unique,
+                                                  ntStatus));
+                                }
+
+                                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                              AFS_TRACE_LEVEL_VERBOSE,
+                                              "AFSPerformObjectInvalidation Releasing Fcb SectionObject lock %p EXCL %08lX\n",
+                                              &ObjectInfo->Fcb->NPFcb->SectionObjectResource,
+                                              PsGetCurrentThread()));
+
+                                AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->SectionObjectResource);
                             }
-                            __except( EXCEPTION_EXECUTE_HANDLER)
-                            {
-
-                                ntStatus = GetExceptionCode();
-
-                                AFSDbgTrace(( 0,
-                                              0,
-                                              "EXCEPTION - AFSPerformObjectInvalidation FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
-                                              ObjectInfo->FileId.Cell,
-                                              ObjectInfo->FileId.Volume,
-                                              ObjectInfo->FileId.Vnode,
-                                              ObjectInfo->FileId.Unique,
-                                              ntStatus));
-                            }
-
-                            AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                                          AFS_TRACE_LEVEL_VERBOSE,
-                                          "AFSPerformObjectInvalidation Releasing Fcb SectionObject lock %p EXCL %08lX\n",
-                                          &ObjectInfo->Fcb->NPFcb->SectionObjectResource,
-                                          PsGetCurrentThread()));
-
-                            AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->SectionObjectResource);
                         }
-                    }
 
-                    if ( bExtentsLocked)
-                    {
+                        if ( bExtentsLocked)
+                        {
 
-                        AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource );
+                            AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource );
+                        }
                     }
 
                     if ( bLocked)
