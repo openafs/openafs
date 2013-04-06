@@ -310,28 +310,6 @@ AFSEnumerateDirectory( IN GUID *AuthGroup,
                         if( pDirNode->ObjectInformation->DataVersion.QuadPart != pCurrentDirEntry->DataVersion.QuadPart)
                         {
 
-                            LONG lCount;
-                            AFSObjectInfoCB *pObjectInfo = pDirNode->ObjectInformation;
-
-                            //
-                            // The ObjectReferenceCount will be freed by AFSPerformObjectInvalidate
-                            //
-
-                            lCount = AFSObjectInfoIncrement( pObjectInfo,
-                                                             AFS_OBJECT_REFERENCE_INVALIDATION);
-
-                            AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
-                                          AFS_TRACE_LEVEL_VERBOSE,
-                                          "AFSEnumerateDirectory calling AFSPerformObjectInvalidate Increment count on object %p Cnt %d\n",
-                                          pObjectInfo,
-                                          lCount));
-
-                            AFSPerformObjectInvalidate( pObjectInfo,
-                                                        AFS_INVALIDATE_DATA_VERSION);
-                        }
-                        else
-                        {
-
                             AFSUpdateMetaData( pDirNode,
                                                pCurrentDirEntry);
                         }
@@ -1101,42 +1079,6 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
                         //
 
                         if( pObjectInfo->DataVersion.QuadPart != pCurrentDirEntry->DataVersion.QuadPart)
-                        {
-
-                            //
-                            // The ObjectReferenceCount will be freed by AFSPerformObjectInvalidate
-                            // if successfully queued.  Cannot call AFSPerformObjectInvalidate directly
-                            // because ObjectInfoCB->Specific.Directory.DirectoryNodeHdr.TreeLock is
-                            // held during the sequence AFSVerifyEntry->AFSValidateDirectoryCache->
-                            // AFSVerifyDirectoryContent and AFSPerformObjectInvalidate requires the
-                            // Fcb->NPFcb->Resource which must be held prior to the TreeLock in the
-                            // lock hierarchy.
-                            //
-
-                            lCount = AFSObjectInfoIncrement( pObjectInfo,
-                                                             AFS_OBJECT_REFERENCE_INVALIDATION);
-
-                            AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
-                                          AFS_TRACE_LEVEL_VERBOSE,
-                                          "AFSVerifyDirectoryContent calling AFSQueueInvalidateObject Increment count on object %p Cnt %d\n",
-                                          pObjectInfo,
-                                          lCount));
-
-                            if ( !NT_SUCCESS( AFSQueueInvalidateObject( pObjectInfo,
-                                                                        AFS_INVALIDATE_DATA_VERSION)))
-                            {
-
-                                lCount = AFSObjectInfoDecrement( pObjectInfo,
-                                                                 AFS_OBJECT_REFERENCE_INVALIDATION);
-
-                                AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
-                                              AFS_TRACE_LEVEL_VERBOSE,
-                                              "AFSVerifyDirectoryContent AFSQueueInvalidateObject failed Decrement count on object %p Cnt %d\n",
-                                              pObjectInfo,
-                                              lCount));
-                            }
-                        }
-                        else
                         {
 
                             AFSUpdateMetaData( pDirNode,
