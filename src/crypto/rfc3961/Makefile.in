@@ -7,14 +7,84 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+include @TOP_OBJDIR@/src/config/Makefile.lwptool
+top_builddir=@TOP_OBJDIR@
 
-all:  ${TOP_INCDIR}/afs/rfc3961.h
+
+UPSTREAM= ${TOP_SRCDIR}/external/heimdal
+
+MODULE_INCLUDE=-I${srcdir} -I${TOP_INCDIR}/hcrypto -I$(UPSTREAM)/krb5 -I$(UPSTREAM)/hcrypto
+
+HEADERS=rfc3961.h krb5_locl.h $(UPSTREAM)/krb5/crypto.h
+
+all:  ${TOP_INCDIR}/afs/rfc3961.h liboafs_rfc3961.la libafsrpc_rfc3961.la \
+        ${TOP_LIBDIR}/libafsrfc3961.a
 
 ${TOP_INCDIR}/afs/rfc3961.h: rfc3961.h
 	${INSTALL_DATA} $? $@
 
-install:
+install: libafsrfc3961.a
+	${INSTALL_DATA} libafsrfc3961.a ${DESTDIR}${libdir}/libafsrfc3961.a
 
-dest:
+dest: libafsrfc3961.a
+	${INSTALL_DATA} libafsrfc3961.a ${DEST}/lib/libafsrfc3961.a
 
 clean:
+	$(LT_CLEAN)
+	$(RM) -f *.o *.a
+
+LT_objs=context.lo copy.lo crypto-aes.lo crypto-algs.lo crypto-arcfour.lo \
+	crypto.lo crypto-des3.lo crypto-des.lo crypto-des-common.lo \
+	crypto-evp.lo crypto-null.lo crypto-rand.lo data.lo keyblock.lo \
+	n-fold.lo store-int.lo
+
+LT_deps=
+
+LT_libs=$(LDFLAGS_hcrypto) $(LIB_hcrypto) $(LDFLAGS_roken) $(LIB_roken)
+
+${TOP_LIBDIR}/libafsrfc3961.a: libafsrfc3961.a
+	${INSTALL_DATA} $? $@
+
+CFLAGS_crypto-arcfour.lo=@CFLAGS_NOERROR@
+CFLAGS_crypto-des-common.lo=@CFLAGS_NOERROR@
+
+context.lo: context.c ${HEADERS}
+copy.lo: copy.c ${HEADERS}
+crypto-aes.lo: ${UPSTREAM}/krb5/crypto-aes.c ${HEADERS}
+	$(LTLWP_CCRULE) ${UPSTREAM}/krb5/crypto-aes.c
+crypto-algs.lo: ${UPSTREAM}/krb5/crypto-algs.c ${HEADERS}
+	$(LTLWP_CCRULE) ${UPSTREAM}/krb5/crypto-algs.c
+crypto-arcfour.lo: ${UPSTREAM}/krb5/crypto-arcfour.c ${HEADERS}
+	$(LTLWP_CCRULE) ${UPSTREAM}/krb5/crypto-arcfour.c
+crypto.lo: ${UPSTREAM}/krb5/crypto.c ${HEADERS}
+	$(LTLWP_CCRULE) ${UPSTREAM}/krb5/crypto.c
+crypto-des3.lo: ${UPSTREAM}/krb5/crypto-des3.c ${HEADERS}
+	$(LTLWP_CCRULE) ${UPSTREAM}/krb5/crypto-des3.c
+crypto-des.lo: ${UPSTREAM}/krb5/crypto-des.c ${HEADERS}
+	$(LTLWP_CCRULE) ${UPSTREAM}/krb5/crypto-des.c
+crypto-des-common.lo: ${UPSTREAM}/krb5/crypto-des-common.c ${HEADERS}
+	$(LTLWP_CCRULE) ${UPSTREAM}/krb5/crypto-des-common.c
+crypto-evp.lo: ${UPSTREAM}/krb5/crypto-evp.c ${HEADERS}
+	$(LTLWP_CCRULE) ${UPSTREAM}/krb5/crypto-evp.c
+crypto-null.lo: ${UPSTREAM}/krb5/crypto-null.c ${HEADERS}
+	$(LTLWP_CCRULE) ${UPSTREAM}/krb5/crypto-null.c
+crypto-rand.lo: ${UPSTREAM}/krb5/crypto-rand.c ${HEADERS}
+	$(LTLWP_CCRULE) ${UPSTREAM}/krb5/crypto-rand.c
+data.lo: ${UPSTREAM}/krb5/data.c ${HEADERS}
+	$(LTLWP_CCRULE) ${UPSTREAM}/krb5/data.c
+keyblock.lo: ${UPSTREAM}/krb5/keyblock.c ${HEADERS}
+	$(LTLWP_CCRULE) ${UPSTREAM}/krb5/keyblock.c
+n-fold.lo: ${UPSTREAM}/krb5/n-fold.c ${HEADERS}
+	$(LTLWP_CCRULE) ${UPSTREAM}/krb5/n-fold.c
+store-int.lo: ${UPSTREAM}/krb5/store-int.c ${HEADERS}
+	$(LTLWP_CCRULE) ${UPSTREAM}/krb5/store-int.c
+
+liboafs_rfc3961.la: liboafs_rfc3961.la.sym $(LT_objs) $(LT_deps)
+	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs) $(MT_LIBS)
+
+libafsrpc_rfc3961.la: $(LT_objs)
+	$(LT_LDLIB_pic) $(LT_objs) $(MT_LIBS)
+
+libafsrfc3961.a: $(LT_objs)
+	$(LT_LDLIB_lwp) $(LT_objs)

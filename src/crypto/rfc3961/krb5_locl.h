@@ -7,32 +7,52 @@
 #include "config.h"
 
 #else
-
+#include <afsconfig.h>
+#include <afs/stds.h>
 #include <roken.h>
 
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
+#ifndef AFS_NT40_ENV
 #include <sys/param.h>
 #include <inttypes.h>
-#include <sys/types.h>
 #include <sys/errno.h>
-#include <pthread.h>
+#endif
+#include <sys/types.h>
 
 #endif
 
 #include <hcrypto/evp.h>
+#include <hcrypto/des.h>
+#include <hcrypto/rc4.h>
 #include <hcrypto/sha.h>
+#include <hcrypto/md5.h>
 
 #include "rfc3961.h"
 
 #ifndef KERNEL
+#ifdef AFS_PTHREAD_ENV
+#include <pthread.h>
 # define HEIMDAL_MUTEX pthread_mutex_t
 # define HEIMDAL_MUTEX_INITIALIZER PTHREAD_MUTEX_INITIALIZER
 # define HEIMDAL_MUTEX_init(m) pthread_mutex_init(m, NULL)
 # define HEIMDAL_MUTEX_lock(m) pthread_mutex_lock(m)
 # define HEIMDAL_MUTEX_unlock(m) pthread_mutex_unlock(m)
 # define HEIMDAL_MUTEX_destroy(m) pthread_mutex_destroy(m)
+#else
+/* The one location in this library which uses mutexes is the PRNG
+ * code. As this code takes no locks, never yields, and does no
+ * I/O through the LWP IO Manager, it cannot be pre-empted, so
+ * it is safe to simply remove the locks in this case
+ */
+#define HEIMDAL_MUTEX int
+#define HEIMDAL_MUTEX_INITIALIZER 0
+#define HEIMDAL_MUTEX_init(m) do { (void)(m); } while(0)
+#define HEIMDAL_MUTEX_lock(m) do { (void)(m); } while(0)
+#define HEIMDAL_MUTEX_unlock(m) do { (void)(m); } while(0)
+#define HEIMDAL_MUTEX_destroy(m) do { (void)(m); } while(0)
+#endif
 #endif
 
 #define HEIMDAL_SMALLER 1
@@ -73,7 +93,7 @@ typedef ssize_t krb5_ssize_t;
 typedef struct EncryptedData {
   int etype;
   int *kvno;
-  heim_octet_string cipher;
+  afs_heim_octet_string cipher;
 } EncryptedData;
 
 typedef enum krb5_salttype {
@@ -95,6 +115,7 @@ typedef enum krb5_keytype {
 #define KRB5_ENCTYPE_OLD_DES3_CBC_SHA1 KEYTYPE_DES3
 #define KRB5_ENCTYPE_AES128_CTS_HMAC_SHA1_96 KEYTYPE_AES128
 #define KRB5_ENCTYPE_AES256_CTS_HMAC_SHA1_96 KEYTYPE_AES256
+#define KRB5_ENCTYPE_ARCFOUR_HMAC_MD5 KEYTYPE_ARCFOUR
 
 typedef struct krb5_salt {
     krb5_salttype salttype;
@@ -140,6 +161,70 @@ typedef struct krb5_crypto_iov {
  * numbers out, but no meaningful text */
 #define N_(X, Y) X
 
+/* rename internal symbols, to reduce conflicts with external kerberos
+   libraries */
+#define krb5_abortx _oafs_h_krb5_abortx
+#define krb5_set_error_message _oafs_h_krb5_set_error_message
+#define copy_EncryptionKey _oafs_h_copy_EncryptionKey
+#define der_copy_octet_string _oafs_h_der_copy_octet_string
+#define _krb5_HMAC_MD5_checksum _oafs_h__krb5_HMAC_MD5_checksum
+#define _krb5_usage2arcfour _oafs_h__krb5_usage2arcfour
+#define _krb5_SP_HMAC_SHA1_checksum _oafs_h__krb5_SP_HMAC_SHA1_checksum
+#define _krb5_derive_key _oafs_h__krb5_derive_key
+#define _krb5_find_checksum _oafs_h__krb5_find_checksum
+#define _krb5_find_enctype _oafs_h__krb5_find_enctype
+#define _krb5_free_key_data _oafs_h__krb5_free_key_data
+#define _krb5_internal_hmac _oafs_h__krb5_internal_hmac
+#define krb5_allow_weak_crypto _oafs_h_krb5_allow_weak_crypto
+#define krb5_checksum_disable _oafs_h_krb5_checksum_disable
+#define krb5_checksum_is_collision_proof _oafs_h_krb5_checksum_is_collision_proof
+#define krb5_checksum_is_keyed _oafs_h_krb5_checksum_is_keyed
+#define krb5_cksumtype_to_enctype _oafs_h_krb5_cksumtype_to_enctype
+#define krb5_cksumtype_valid _oafs_h_krb5_cksumtype_valid
+#define krb5_create_checksum_iov _oafs_h_krb5_create_checksum_iov
+#define krb5_crypto_getblocksize _oafs_h_krb5_crypto_getblocksize
+#define krb5_crypto_getconfoundersize _oafs_h_krb5_crypto_getconfoundersize
+#define krb5_crypto_getenctype _oafs_h_krb5_crypto_getenctype
+#define krb5_crypto_getpadsize _oafs_h_krb5_crypto_getpadsize
+#define krb5_crypto_length _oafs_h_krb5_crypto_length
+#define krb5_crypto_length_iov _oafs_h_krb5_crypto_length_iov
+#define krb5_crypto_prf_length _oafs_h_krb5_crypto_prf_length
+#define krb5_decrypt_EncryptedData _oafs_h_krb5_decrypt_EncryptedData
+#define krb5_decrypt_iov_ivec _oafs_h_krb5_decrypt_iov_ivec
+#define krb5_decrypt_ivec _oafs_h_krb5_decrypt_ivec
+#define krb5_derive_key _oafs_h_krb5_derive_key
+#define krb5_encrypt_EncryptedData _oafs_h_krb5_encrypt_EncryptedData
+#define krb5_encrypt_iov_ivec _oafs_h_krb5_encrypt_iov_ivec
+#define krb5_encrypt_ivec _oafs_h_krb5_encrypt_ivec
+#define krb5_enctype_disable _oafs_h_krb5_enctype_disable
+#define krb5_enctype_enable _oafs_h_krb5_enctype_enable
+#define krb5_enctype_keysize _oafs_h_krb5_enctype_keysize
+#define krb5_enctype_to_keytype _oafs_h_krb5_enctype_to_keytype
+#define krb5_enctype_to_string _oafs_h_krb5_enctype_to_string
+#define krb5_generate_random_keyblock _oafs_h_krb5_generate_random_keyblock
+#define krb5_get_wrapped_length _oafs_h_krb5_get_wrapped_length
+#define krb5_hmac _oafs_h_krb5_hmac
+#define krb5_is_enctype_weak _oafs_h_krb5_is_enctype_weak
+#define krb5_string_to_enctype _oafs_h_krb5_string_to_enctype
+#define krb5_verify_checksum_iov _oafs_h_krb5_verify_checksum_iov
+#define _krb5_DES3_random_to_key _oafs_h__krb5_DES3_random_to_key
+#define _krb5_xor _oafs_h__krb5_xor
+#define _krb5_evp_cleanup _oafs_h__krb5_evp_cleanup
+#define _krb5_evp_encrypt _oafs_h__krb5_evp_encrypt
+#define _krb5_evp_encrypt_cts _oafs_h__krb5_evp_encrypt_cts
+#define _krb5_evp_schedule _oafs_h__krb5_evp_schedule
+#define krb5_copy_data _oafs_h_krb5_copy_data
+#define krb5_data_cmp _oafs_h_krb5_data_cmp
+#define krb5_data_copy _oafs_h_krb5_data_copy
+#define krb5_data_ct_cmp _oafs_h_krb5_data_ct_cmp
+#define krb5_data_realloc _oafs_h_krb5_data_realloc
+#define krb5_data_zero _oafs_h_krb5_data_zero
+#define krb5_free_data _oafs_h_krb5_free_data
+#define _krb5_n_fold _oafs_h__krb5_n_fold
+#define _krb5_get_int _oafs_h__krb5_get_int
+#define _krb5_put_int _oafs_h__krb5_put_int
+
+
 /* These have to be real functions, because IRIX doesn't seem to support
  * variadic macros */
 void krb5_set_error_message(krb5_context, krb5_error_code, const char *, ...);
@@ -175,10 +260,13 @@ void krb5_free_keyblock(krb5_context, krb5_keyblock *);
 int krb5_data_ct_cmp(const krb5_data *, const krb5_data *);
 int der_copy_octet_string(const krb5_data *, krb5_data *);
 int copy_EncryptionKey(const krb5_keyblock *, krb5_keyblock *);
-int ct_memcmp(const void *p1, const void *p2, size_t len);
 krb5_error_code krb5_enctype_to_string(krb5_context context,
 				       krb5_enctype etype,
 				       char **string);
+#ifdef KERNEL
+/* Roken provides this in userspace, but we're on our own in the kernel. */
+int ct_memcmp(const void *p1, const void *p2, size_t len);
+#endif
 
 
 #include "crypto.h"
@@ -202,22 +290,38 @@ krb5_error_code _krb5_SP_HMAC_SHA1_checksum (krb5_context,
 					     const void *,
 					     size_t, unsigned, Checksum *);
 
-/* These are bodges - we don't implement these encryption types, but
- * crypto.c contains hard coded references to them, and to these funcs.
- *
- * They will never actually be called ...
+void _krb5_xor(DES_cblock *key, const unsigned char *b);
+
+#ifdef KERNEL
+/*
+ * Ew, gross!
+ * crypto.c contains hard-coded references to these, so even though we don't
+ * implement these enctypes in the kernel, we need to have stubs present in
+ * order to link a kernel module.  In userspace, we do implement these enctypes,
+ * and the real functions are provided by the heimdal source files.
  */
 static_inline krb5_error_code
 _krb5_usage2arcfour(krb5_context context, unsigned *usage) {
-   return -1;
+    return -1;
 }
 
 static_inline void
+_krb5_DES3_random_to_key(krb5_context context, krb5_keyblock *key,
+			 const void *rand, size_t size) {
+    return;
+}
+#else	/* KERNEL */
+void
 _krb5_DES3_random_to_key (krb5_context context,
 			  krb5_keyblock *key,
 			  const void *rand,
-			  size_t size) {
-   return;
-}
+			  size_t size);
+
+krb5_error_code _krb5_usage2arcfour(krb5_context context, unsigned *usage);
+#endif	/* KERNEL */
 
 #define _krb5_AES_salt NULL
+#define _krb5_arcfour_salt NULL
+#define _krb5_des3_salt NULL
+#define _krb5_des3_salt_derived NULL
+#define _krb5_des_salt NULL
