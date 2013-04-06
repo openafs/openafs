@@ -81,6 +81,10 @@
 #include "v5der.c"
 #include "v5gen.c"
 
+#define RFC3961_NO_ENUMS
+#define RFC3961_NO_CKSUM
+#include <afs/rfc3961.h>
+
 /*
  * Principal conversion Taken from src/lib/krb5/krb/conv_princ from MIT Kerberos.  If you
  * find a need to change the services here, please consider opening a
@@ -176,12 +180,19 @@ static int
 int
 tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 		  int (*get_key) (void *, int, struct ktc_encryptionKey *),
+		  rxkad_get_key_enctype_func get_key_enctype,
 		  char *get_key_rock, int serv_kvno, char *name, char *inst,
 		  char *cell, struct ktc_encryptionKey *session_key, afs_int32 * host,
 		  afs_uint32 * start, afs_uint32 * end, afs_int32 disableCheckdot)
 {
     char plain[MAXKRB5TICKETLEN];
     struct ktc_encryptionKey serv_key;
+    void *keybuf;
+    size_t keysize, allocsiz;
+    krb5_context context;
+    krb5_keyblock k;
+    krb5_crypto cr;
+    krb5_data plaindata;
     Ticket t5;			/* Must free */
     EncTicketPart decr_part;	/* Must free */
     int code;
@@ -224,25 +235,82 @@ tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
     case ETYPE_DES_CBC_CRC:
     case ETYPE_DES_CBC_MD4:
     case ETYPE_DES_CBC_MD5:
+	/* check ticket */
+	if (t5.enc_part.cipher.length > sizeof(plain)
+	    || t5.enc_part.cipher.length % 8 != 0)
+	    goto bad_ticket;
+
+	code = (*get_key) (get_key_rock, v5_serv_kvno, &serv_key);
+	if (code)
+	    goto unknown_key;
+
+	/* Decrypt data here, save in plain, assume it will shrink */
+	code =
+	    krb5_des_decrypt(&serv_key, t5.enc_part.etype,
+			     t5.enc_part.cipher.data, t5.enc_part.cipher.length,
+			     plain, &plainsiz);
 	break;
     default:
-	goto unknown_key;
+	if (get_key_enctype == NULL)
+	    goto unknown_key;
+	code = krb5_init_context(&context);
+	if (code != 0)
+	    goto unknown_key;
+	code = krb5_enctype_valid(context, t5.enc_part.etype);
+	if (code != 0) {
+	    krb5_free_context(context);
+	    goto unknown_key;
+	}
+	code = krb5_enctype_keybits(context,  t5.enc_part.etype, &keysize);
+	if (code != 0) {
+	    krb5_free_context(context);
+	    goto unknown_key;
+	}
+	keysize = keysize / 8;
+	allocsiz = keysize;
+	keybuf = rxi_Alloc(allocsiz);
+	/* this is not quite a hole for afsconf_GetKeyByTypes. A wrapper
+	   that calls afsconf_GetKeyByTypes and afsconf_typedKey_values
+	   is needed */
+	code = get_key_enctype(get_key_rock, v5_serv_kvno, t5.enc_part.etype,
+			       keybuf, &keysize);
+	if (code) {
+	    rxi_Free(keybuf, allocsiz);
+	    krb5_free_context(context);
+	    goto unknown_key;
+	}
+	code = krb5_keyblock_init(context, t5.enc_part.etype,
+				  keybuf, keysize, &k);
+	rxi_Free(keybuf, allocsiz);
+	if (code != 0) {
+	    krb5_free_context(context);
+	    goto unknown_key;
+	}
+	code = krb5_crypto_init(context, &k, t5.enc_part.etype, &cr);
+	krb5_free_keyblock_contents(context, &k);
+	if (code != 0) {
+	    krb5_free_context(context);
+	    goto unknown_key;
+	}
+#ifndef KRB5_KU_TICKET
+#define KRB5_KU_TICKET 2
+#endif
+	code = krb5_decrypt(context, cr, KRB5_KU_TICKET, t5.enc_part.cipher.data,
+			    t5.enc_part.cipher.length, &plaindata);
+	krb5_crypto_destroy(context, cr);
+	if (code == 0) {
+	    if (plaindata.length > MAXKRB5TICKETLEN) {
+		krb5_data_free(&plaindata);
+		krb5_free_context(context);
+		goto bad_ticket;
+	    }
+	    memcpy(plain, plaindata.data, plaindata.length);
+	    plainsiz = plaindata.length;
+	    krb5_data_free(&plaindata);
+	}
+	krb5_free_context(context);
     }
 
-    /* check ticket */
-    if (t5.enc_part.cipher.length > sizeof(plain)
-	|| t5.enc_part.cipher.length % 8 != 0)
-	goto bad_ticket;
-
-    code = (*get_key) (get_key_rock, v5_serv_kvno, &serv_key);
-    if (code)
-	goto unknown_key;
-
-    /* Decrypt data here, save in plain, assume it will shrink */
-    code =
-	krb5_des_decrypt(&serv_key, t5.enc_part.etype,
-			 t5.enc_part.cipher.data, t5.enc_part.cipher.length,
-			 plain, &plainsiz);
     if (code != 0)
 	goto bad_ticket;
 

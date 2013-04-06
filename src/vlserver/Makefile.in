@@ -35,6 +35,7 @@ LIBS=\
 	${TOP_LIBDIR}/libaudit.a \
 	${TOP_LIBDIR}/libafsutil.a \
 	$(TOP_LIBDIR)/libopr.a \
+	${TOP_LIBDIR}/libafsrfc3961.a \
 	${TOP_LIBDIR}/libafshcrypto_lwp.a
 
 LT_objs = vldbint.xdr.lo vldbint.cs.lo vl_errors.lo

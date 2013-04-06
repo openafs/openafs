@@ -335,6 +335,7 @@ LOGON_DLLLIBS =\
     $(DESTDIR)\lib\afs\afsutil.lib \
     $(DESTDIR)\lib\opr.lib \
     $(DESTDIR)\lib\afsroken.lib \
+    $(DESTDIR)\lib\afsrpc.lib \
     $(LANAHELPERLIB) \
     $(AFSKFWLIB)
 
@@ -421,7 +422,8 @@ EXELIBS = \
 	$(DESTDIR)\lib\libafsconf.lib \
 	$(DESTDIR)\lib\opr.lib \
 	$(DESTDIR)\lib\afshcrypto.lib \
-	$(DESTDIR)\lib\afsroken.lib
+	$(DESTDIR)\lib\afsroken.lib \
+	$(DESTDIR)\lib\afsrfc3961.lib
 
 EXELIBS2 = \
         $(DESTDIR)\lib\afsrpc.lib \

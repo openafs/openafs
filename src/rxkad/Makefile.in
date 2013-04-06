@@ -23,7 +23,8 @@ LT_objs=rxkad_client.lo rxkad_server.lo rxkad_common.lo rxkad_errs.lo \
 
 LT_deps=$(top_builddir)/src/comerr/liboafs_comerr.la \
 	$(top_builddir)/src/rx/liboafs_rx.la \
-	$(top_builddir)/src/opr/liboafs_opr.la
+	$(top_builddir)/src/opr/liboafs_opr.la \
+	$(top_builddir)/src/crypto/rfc3961/liboafs_rfc3961.la
 
 LT_libs=$(LDFLAGS_hcrypto) $(LIB_hcrypto)
 

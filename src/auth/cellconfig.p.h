@@ -150,7 +150,8 @@ struct afsconf_typedKeyList {
 
 typedef enum {
     afsconf_rxkad = 0,
-    afsconf_rxgk  =1
+    afsconf_rxgk  =1,
+    afsconf_rxkad_krb5  =2
 } afsconf_keyType;
 
 extern struct afsconf_typedKey *

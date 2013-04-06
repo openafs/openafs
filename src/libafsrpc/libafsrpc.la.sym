@@ -153,6 +153,7 @@ rxi_RoundUpPacket
 rxi_SetCallNumberVector
 rxkad_GetServerInfo
 rxkad_NewClientSecurityObject
+rxkad_NewKrb5ServerSecurityObject
 rxkad_NewServerSecurityObject
 rxkad_global_stats
 rxkad_global_stats_lock

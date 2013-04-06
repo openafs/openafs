@@ -51,6 +51,7 @@ LIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libafsutil.a \
 	${TOP_LIBDIR}/libopr.a \
 	$(DBM) \
+	${TOP_LIBDIR}/libafsrfc3961.a \
 	${TOP_LIBDIR}/libafshcrypto_lwp.a
 
 KLIBS=${TOP_LIBDIR}/libubik.a \
@@ -65,6 +66,7 @@ KLIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libafscom_err.a \
 	${TOP_LIBDIR}/libafsutil.a \
 	${TOP_LIBDIR}/libopr.a \
+	${TOP_LIBDIR}/libafsrfc3961.a \
 	${TOP_LIBDIR}/libafshcrypto_lwp.a
 
 all: liboafs_kauth.la libauthent_kauth.la \

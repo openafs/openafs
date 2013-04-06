@@ -165,6 +165,23 @@ rxkad_NewServerSecurityObject(rxkad_level level, void *get_key_rock,
     return tsc;
 }
 
+struct rx_securityClass *
+rxkad_NewKrb5ServerSecurityObject(rxkad_level level, void *get_key_rock,
+				  int (*get_key) (void *get_key_rock, int kvno,
+						  struct ktc_encryptionKey *
+						  serverKey),
+				  rxkad_get_key_enctype_func get_key_enctype,
+				  int (*user_ok) (char *name, char *instance,
+						  char *cell, afs_int32 kvno)
+) {
+    struct rx_securityClass *tsc;
+    struct rxkad_sprivate *tsp;
+    tsc = rxkad_NewServerSecurityObject(level, get_key_rock, get_key, user_ok);
+    tsp = (struct rxkad_sprivate *)tsc->privateData;
+    tsp->get_key_enctype = get_key_enctype;
+    return tsc;
+}
+
 /* server: called to tell if a connection authenticated properly */
 
 int
@@ -325,8 +342,9 @@ rxkad_CheckResponse(struct rx_securityClass *aobj,
     if (code == -1 && ((kvno == RXKAD_TKT_TYPE_KERBEROS_V5)
 	|| (kvno == RXKAD_TKT_TYPE_KERBEROS_V5_ENCPART_ONLY))) {
 	code =
-	    tkt_DecodeTicket5(tix, tlen, tsp->get_key, tsp->get_key_rock,
-			      kvno, client.name, client.instance, client.cell,
+	    tkt_DecodeTicket5(tix, tlen, tsp->get_key, tsp->get_key_enctype,
+			      tsp->get_key_rock, kvno, client.name,
+			      client.instance, client.cell,
 			      &sessionkey, &host, &start, &end,
 			      tsp->flags & RXS_CONFIG_FLAGS_DISABLE_DOTCHECK);
 	if (code)

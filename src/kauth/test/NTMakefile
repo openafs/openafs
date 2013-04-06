@@ -18,7 +18,8 @@ EXELIBS = \
 	$(DESTDIR)\afs\afsprot.lib \
 	$(DESTDIR)\afsrx.lib \
 	$(DESTDIR)\afs\afscom_err.lib \
-	$(DESTDIR)\afs\afskauth.lib
+	$(DESTDIR)\afs\afskauth.lib \
+	$(DESTDIR)\lib\afsrfc3961.lib
 
 
 $(OUT)\multiklog.exe: $(OUT)\multiklog.obj
