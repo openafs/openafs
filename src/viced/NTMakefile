@@ -62,7 +62,8 @@ EXELIBS = \
         $(DESTDIR)\lib\afs\afspioctl.lib \
 	$(DESTDIR)\lib\opr.lib \
 	$(DESTDIR)\lib\afshcrypto.lib \
-	$(DESTDIR)\lib\afsroken.lib
+	$(DESTDIR)\lib\afsroken.lib \
+	$(DESTDIR)\lib\afsrfc3961.lib
 
 $(EXEFILE): $(EXEOBJS) $(EXERES) $(EXELIBS)
 	$(EXECONLINK)

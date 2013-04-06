@@ -38,7 +38,8 @@ EXELIBS = \
         $(DESTDIR)\lib\afsrpc.lib \
         $(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\opr.lib \
-	$(DESTDIR)\lib\afsroken.lib
+	$(DESTDIR)\lib\afsroken.lib \
+	$(DESTDIR)\lib\afsrpc.lib
 
 !IF "$(CPU)" == "IA64" || "$(CPU)" == "AMD64" || "$(CPU)" == "ALPHA64"
 OTHERLIBS = \

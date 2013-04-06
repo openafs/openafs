@@ -42,6 +42,7 @@ LIBS=${TOP_LIBDIR}/libbubasics.a \
 	${TOP_LIBDIR}/libafscom_err.a \
 	${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libopr.a \
+	${TOP_LIBDIR}/libafsrfc3961.a \
 	${TOP_LIBDIR}/libafshcrypto_lwp.a
 
 COMMON_OBJS = database.o db_alloc.o db_dump.o db_hash.o struct_ops.o ol_verify.o

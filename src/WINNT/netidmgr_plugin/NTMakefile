@@ -98,6 +98,7 @@ OBJFILES= 				\
 
 LIBFILES= 				\
         $(DESTDIR)\lib\afsroken.lib     \
+	$(DESTDIR)\lib\afsrpc.lib       \
 	$(DESTDIR)\lib\afsauthent.lib 	\
 	$(DESTDIR)\lib\libafsconf.lib 	\
         $(DESTDIR)\lib\afs\mtafsutil.lib\

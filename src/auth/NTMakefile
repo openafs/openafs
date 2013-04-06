@@ -99,7 +99,8 @@ EXELIBS =\
 	$(EXELIBDIR)\libafsconf.lib \
 	$(EXELIBDIR)\opr.lib \
 	$(EXELIBDIR)\afshcrypto.lib \
-	$(EXELIBDIR)\afsroken.lib
+	$(EXELIBDIR)\afsroken.lib \
+	$(EXELIBDIR)\afsrfc3961.lib
 
 $(SETKEY_EXEFILE): $(SETKEY_EXEOBJS) $(EXELIBS)
 	$(EXECONLINK) dnsapi.lib shell32.lib

@@ -213,7 +213,7 @@ afs: config export comerr afs_depinstall
 sys: cmd comerr afs hcrypto rx rxstat fsint auth sys_depinstall
 	+${COMPILE_PART1} sys ${COMPILE_PART2}
 
-rxkad: cmd comerr hcrypto rx rxkad_depinstall
+rxkad: cmd comerr hcrypto rfc3961 rx rxkad_depinstall
 	+${COMPILE_PART1} rxkad ${COMPILE_PART2}
 
 auth: cmd comerr hcrypto lwp rx rxkad audit sys_depinstall auth_depinstall

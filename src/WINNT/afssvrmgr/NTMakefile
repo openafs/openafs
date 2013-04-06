@@ -103,7 +103,8 @@ EXELIBS = \
 	$(DESTDIR)\lib\afs\TaAfsAppLib.lib \
         $(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\opr.lib \
-	$(DESTDIR)\lib\afsroken.lib
+	$(DESTDIR)\lib\afsroken.lib \
+	$(DESTDIR)\lib\afsrpc.lib
 
 ############################################################################
 

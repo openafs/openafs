@@ -42,6 +42,31 @@ QuickAuth(struct rx_securityClass **astr, afs_int32 *aindex)
 }
 
 #if !defined(UKERNEL)
+static int _afsconf_GetRxkadKrb5Key(void *arock, int kvno, int enctype, void *outkey,
+				    size_t *keylen)
+{
+    struct afsconf_dir *adir = arock;
+    struct afsconf_typedKey *kobj;
+    struct rx_opaque *keymat;
+    afsconf_keyType tktype;
+    int tkvno, tenctype;
+    int code;
+
+    code = afsconf_GetKeyByTypes(adir, afsconf_rxkad_krb5, kvno, enctype, &kobj);
+    if (code != 0)
+	return code;
+    afsconf_typedKey_values(kobj, &tktype, &tkvno, &tenctype, &keymat);
+    if (*keylen < keymat->len) {
+	afsconf_typedKey_put(&kobj);
+	return AFSCONF_BADKEY;
+    }
+    memcpy(outkey, keymat->val, keymat->len);
+    *keylen = keymat->len;
+    afsconf_typedKey_put(&kobj);
+    return 0;
+}
+
+
 /* Return an appropriate security class and index */
 afs_int32
 afsconf_ServerAuth(void *arock,
@@ -53,7 +78,8 @@ afsconf_ServerAuth(void *arock,
 
     LOCK_GLOBAL_MUTEX;
     tclass = (struct rx_securityClass *)
-	rxkad_NewServerSecurityObject(0, adir, afsconf_GetKey, NULL);
+	rxkad_NewKrb5ServerSecurityObject(0, adir, afsconf_GetKey,
+					  _afsconf_GetRxkadKrb5Key, NULL);
     if (tclass) {
 	*astr = tclass;
 	*aindex = RX_SECIDX_KAD;
@@ -254,12 +280,16 @@ afsconf_BuildServerSecurityObjects(void *rock,
 
     (*classes)[0] = rxnull_NewServerSecurityObject();
     (*classes)[1] = NULL;
-    (*classes)[2] = rxkad_NewServerSecurityObject(0, dir,
-						  afsconf_GetKey, NULL);
+    (*classes)[2] = rxkad_NewKrb5ServerSecurityObject(0, dir,
+						      afsconf_GetKey,
+						      _afsconf_GetRxkadKrb5Key,
+						      NULL);
 
     if (dir->securityFlags & AFSCONF_SECOPTS_ALWAYSENCRYPT)
-	(*classes)[3] = rxkad_NewServerSecurityObject(rxkad_crypt, dir,
-						      afsconf_GetKey, NULL);
+	(*classes)[3] = rxkad_NewKrb5ServerSecurityObject(rxkad_crypt, dir,
+							  afsconf_GetKey,
+							  _afsconf_GetRxkadKrb5Key,
+							  NULL);
 }
 #endif
 

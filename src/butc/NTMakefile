@@ -55,7 +55,8 @@ EXELIBS =\
 	$(DESTDIR)\lib\libafsconf.lib \
 	$(DESTDIR)\lib\opr.lib \
 	$(DESTDIR)\lib\afshcrypto.lib \
-	$(DESTDIR)\lib\afsroken.lib
+	$(DESTDIR)\lib\afsroken.lib \
+	$(DESTDIR)\lib\afsrfc3961.lib
 
 $(EXERES): butc.rc AFS_component_version_number.h
 

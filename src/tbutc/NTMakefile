@@ -83,7 +83,8 @@ BUTCLIBS=$(DESTDIR)\lib\afs\afsbudb.lib  \
 	     $(DESTDIR)\lib\libafsconf.lib \
 	     $(DESTDIR)\lib\opr.lib \
 	     $(DESTDIR)\lib\afshcrypto.lib \
-	     $(DESTDIR)\lib\afsroken.lib
+	     $(DESTDIR)\lib\afsroken.lib \
+	     $(DESTDIR)\lib\afsrfc3961.lib
 
 
 # rm $(OUT)\tcstatus.obj

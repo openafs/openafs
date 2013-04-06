@@ -70,7 +70,8 @@ BOSSERVER_EXELIBS =\
         $(DESTDIR)\lib\afs\afspioctl.lib \
 	$(DESTDIR)\lib\opr.lib \
 	$(DESTDIR)\lib\afshcrypto.lib \
-	$(DESTDIR)\lib\afsroken.lib
+	$(DESTDIR)\lib\afsroken.lib \
+	$(DESTDIR)\lib\afsrfc3961.lib
 
 $(BOSSERVER_EXEFILE): $(BOSSERVER_EXEOBJS) $(BOSSERVER_EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
@@ -109,7 +110,8 @@ BOS_EXELIBS =\
 	$(DESTDIR)\lib\libafsconf.lib \
 	$(DESTDIR)\lib\opr.lib \
 	$(DESTDIR)\lib\afshcrypto.lib \
-	$(DESTDIR)\lib\afsroken.lib
+	$(DESTDIR)\lib\afsroken.lib \
+	$(DESTDIR)\lib\afsrfc3961.lib
 
 
 $(RS_BOS_EXEFILE): $(BOS_EXEOBJS) $(BOS_EXELIBS)

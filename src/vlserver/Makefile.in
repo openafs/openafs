@@ -32,6 +32,7 @@ LIBS=\
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/libafsutil.a \
 	$(TOP_LIBDIR)/libopr.a \
+	${TOP_LIBDIR}/libafsrfc3961.a \
 	${TOP_LIBDIR}/libafshcrypto_lwp.a
 
 OBJS=vldbint.xdr.o vldbint.cs.o vl_errors.o

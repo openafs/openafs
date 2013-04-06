@@ -95,7 +95,8 @@ PTSERVER_EXELIBS =\
 	$(DESTDIR)\lib\libafsconf.lib \
         $(DESTDIR)\lib\afs\afspioctl.lib \
         $(DESTDIR)\lib\afs\afsprocmgmt.lib \
-        $(DESTDIR)\lib\afspthread.lib
+        $(DESTDIR)\lib\afspthread.lib \
+	$(DESTDIR)\lib\afsrfc3961.lib
 
 $(PTSERVER): $(PTSERVER_EXEOBJS) $(PTUTILS_OBJ) $(PTINT_XDR_OBJ) $(UTILS_OBJ) $(MAP_OBJ) $(LWP_OBJS) $(PTSERVER_EXERES) $(RXKADOBJS) $(PTSERVER_EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib

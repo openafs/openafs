@@ -108,6 +108,12 @@ extern struct rx_securityClass *rxkad_NewServerSecurityObject(rxkad_level
 							       char *cell,
 							       afs_int32
 							       kvno));
+extern struct rx_securityClass *rxkad_NewKrb5ServerSecurityObject
+(rxkad_level level, void *get_key_rock,
+ int (*get_key) (void *get_key_rock, int kvno,
+		 struct ktc_encryptionKey *serverKey),
+ rxkad_get_key_enctype_func get_key_enctype,
+ int (*user_ok) (char *name, char *instance, char *cell, afs_int32 kvno));
 extern int rxkad_CheckAuthentication(struct rx_securityClass *aobj,
 				     struct rx_connection *aconn);
 extern int rxkad_CreateChallenge(struct rx_securityClass *aobj,
@@ -153,6 +159,7 @@ extern afs_uint32 _rxkad_crc_update(const char *p, size_t len, afs_uint32 res);
 extern int tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 			     int (*get_key) (void *, int,
 					     struct ktc_encryptionKey *),
+			     rxkad_get_key_enctype_func get_key2,
 			     char *get_key_rock, int serv_kvno, char *name,
 			     char *inst, char *cell, struct ktc_encryptionKey *session_key,
 			     afs_int32 * host, afs_uint32 * start,

@@ -33,6 +33,7 @@ LIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libafsutil.a \
 	${TOP_LIBDIR}/libopr.a \
 	$(DBM) \
+	${TOP_LIBDIR}/libafsrfc3961.a \
 	${TOP_LIBDIR}/libafshcrypto_lwp.a
 
 UKSRCS=authclient.c user.c kautils.h kaserver.h kaaux.c katoken.c \
@@ -50,6 +51,7 @@ KLIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libafscom_err.a \
 	${TOP_LIBDIR}/libafsutil.a \
 	${TOP_LIBDIR}/libopr.a \
+	${TOP_LIBDIR}/libafsrfc3961.a \
 	${TOP_LIBDIR}/libafshcrypto_lwp.a
 
 OBJS=kauth.xdr.o kauth.cs.o kaaux.o client.o authclient.o katoken.o kautils.o kalocalcell.o kaerrors.o user.o krb_tf.o
