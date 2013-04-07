@@ -120,6 +120,7 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
     BOOLEAN            bReleaseSectionObject = FALSE;
     BOOLEAN            bReleasePaging = FALSE;
     BOOLEAN            bExtendingWrite = FALSE;
+    BOOLEAN            bSynchronousFo = FALSE;
     BOOLEAN            bCompleteIrp = TRUE;
     BOOLEAN            bForceFlush = FALSE;
     BOOLEAN            bLockOK;
@@ -177,6 +178,7 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
         bPagingIo      = BooleanFlagOn( Irp->Flags, IRP_PAGING_IO);
         bNonCachedIo   = BooleanFlagOn( Irp->Flags, IRP_NOCACHE);
         ulByteCount    = pIrpSp->Parameters.Write.Length;
+        bSynchronousFo = BooleanFlagOn( pFileObject->Flags, FO_SYNCHRONOUS_IO);
 
         if( pFcb->Header.NodeTypeCode != AFS_IOCTL_FCB &&
             pFcb->Header.NodeTypeCode != AFS_FILE_FCB  &&
@@ -664,7 +666,6 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
                           bRetry ? " RETRY" : ""));
 
             ntStatus = AFSCachedWrite( DeviceObject, Irp, liStartingByte, ulByteCount, bForceFlush);
-
         }
         else
         {
@@ -695,6 +696,37 @@ try_exit:
                       "AFSCommonWrite (%p) Process complete Status %08lX\n",
                       Irp,
                       ntStatus));
+
+        if ( NT_SUCCESS( ntStatus))
+        {
+            if ( !bPagingIo)
+            {
+
+                if( bSynchronousFo)
+                {
+
+                    pFileObject->CurrentByteOffset.QuadPart = liStartingByte.QuadPart + ulByteCount;
+                }
+
+                //
+                // If this extended the Vdl, then update it accordingly
+                //
+
+                if( liStartingByte.QuadPart + ulByteCount > pFcb->Header.ValidDataLength.QuadPart)
+                {
+
+                    pFcb->Header.ValidDataLength.QuadPart = liStartingByte.QuadPart + ulByteCount;
+                }
+
+                if( !BooleanFlagOn( pFcb->Flags, AFS_FCB_FLAG_UPDATE_LAST_WRITE_TIME))
+                {
+
+                    SetFlag( pFcb->Flags, AFS_FCB_FLAG_UPDATE_WRITE_TIME);
+
+                    KeQuerySystemTime( &pFcb->ObjectInformation->LastWriteTime);
+                }
+            }
+        }
 
         ObDereferenceObject(pFileObject);
 
@@ -1859,22 +1891,6 @@ try_exit:
 
             Irp->IoStatus.Information = ByteCount;
 
-            if( bSynchronousFo)
-            {
-
-                pFileObject->CurrentByteOffset.QuadPart = StartingByte.QuadPart + ByteCount;
-            }
-
-            //
-            // If this extended the Vdl, then update it accordingly
-            //
-
-            if( StartingByte.QuadPart + ByteCount > pFcb->Header.ValidDataLength.QuadPart)
-            {
-
-                pFcb->Header.ValidDataLength.QuadPart = StartingByte.QuadPart + ByteCount;
-            }
-
             if ( ForceFlush ||
                  BooleanFlagOn(pFileObject->Flags, (FO_NO_INTERMEDIATE_BUFFERING + FO_WRITE_THROUGH)))
             {
@@ -1883,14 +1899,6 @@ try_exit:
                 // flush when the worker thread next wakes up
                 //
                 pFcb->Specific.File.LastServerFlush.QuadPart = 0;
-            }
-
-            if( !BooleanFlagOn( pFcb->Flags, AFS_FCB_FLAG_UPDATE_LAST_WRITE_TIME))
-            {
-
-                SetFlag( pFcb->Flags, AFS_FCB_FLAG_UPDATE_WRITE_TIME);
-
-                KeQuerySystemTime( &pFcb->ObjectInformation->LastWriteTime);
             }
         }
 
