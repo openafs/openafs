@@ -7,15 +7,17 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openafs 1.4.10+dfsg1-2\n"
 "Report-Msgid-Bugs-To: openafs@packages.debian.org\n"
-"POT-Creation-Date: 2009-02-13 09:22-0800\n"
+"POT-Creation-Date: 2013-04-08 11:17-0700\n"
 "PO-Revision-Date: 2009-06-16 20:50+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <debian-l10n-russian@lists.debian.org>\n"
+"Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: KBabel 1.11.4\n"
-"Plural-Forms:  nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Plural-Forms:  nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
 #. Type: string
 #. Description
@@ -37,15 +39,14 @@ msgid ""
 "cell is configured.  When you are ready you can edit /etc/openafs/afs.conf."
 "client to enable the client."
 msgstr ""
-"AFS использует файл /etc/openafs/CellServDB для хранения списка серверов, "
-"с которыми нужно соединяться при поиске частей ячейки. Ячейка, которой "
+"AFS использует файл /etc/openafs/CellServDB для хранения списка серверов, с "
+"которыми нужно соединяться при поиске частей ячейки. Ячейка, которой "
 "принадлежит данная рабочая станция, указывается не в этом файле. Введите "
 "имена хостов серверов базы данных через пробел. ВАЖНО: если вы создаёте "
 "новую ячейку и эта машина является базой данных этой ячейки, то введите "
-"здесь только имя данной машины; добавляйте другие серверы по мере ввода "
-"их в работу. "
-"Также, выключите запуск клиента AFS при загрузке машины пока не будет "
-"настроена ячейка. Когда будете готовы, можете включить клиент, "
+"здесь только имя данной машины; добавляйте другие серверы по мере ввода их в "
+"работу. Также, выключите запуск клиента AFS при загрузке машины пока не "
+"будет настроена ячейка. Когда будете готовы, можете включить клиент, "
 "отредактировав файл /etc/openafs/afs.conf.client."
 
 #. Type: string
@@ -82,9 +83,9 @@ msgid ""
 "to dedicate a partition to their AFS cache."
 msgstr ""
 "AFS использует часть диска для кэширования удалённых файлов для ускорения "
-"доступа. Этот кэш будет смонтирован в каталог /var/cache/openafs. "
-"Очень важно, чтобы кэш не переполнил раздел на котором расположен. "
-"Часто пользователи создают отдельный раздел для кэша AFS."
+"доступа. Этот кэш будет смонтирован в каталог /var/cache/openafs. Очень "
+"важно, чтобы кэш не переполнил раздел на котором расположен. Часто "
+"пользователи создают отдельный раздел для кэша AFS."
 
 #. Type: boolean
 #. Description
@@ -102,12 +103,12 @@ msgid ""
 "you choose not to start AFS at boot, run /etc/init.d/openafs-client force-"
 "start to start the client when you wish to run it."
 msgstr ""
-"Обычно, большинство пользователей, устанавливающих пакет "
-"openafs-client, ожидают, что AFS будет монтироваться автоматически "
-"при включении компьютера. Однако, если вы планируете настройку "
-"новой ячейки или работаете на ноутбуке, то можете не захотеть этого. "
-"Если вы укажите не запускать AFS при включении, то по желанию "
-"его можно запустить командой /etc/init.d/openafs-client force-start."
+"Обычно, большинство пользователей, устанавливающих пакет openafs-client, "
+"ожидают, что AFS будет монтироваться автоматически при включении компьютера. "
+"Однако, если вы планируете настройку новой ячейки или работаете на ноутбуке, "
+"то можете не захотеть этого. Если вы укажите не запускать AFS при включении, "
+"то по желанию его можно запустить командой /etc/init.d/openafs-client force-"
+"start."
 
 #. Type: boolean
 #. Description
@@ -145,35 +146,53 @@ msgid ""
 "confidentiality and is likely to make the job of a casual attacker "
 "significantly more difficult."
 msgstr ""
-"AFS предоставляет нестойкое подобие шифрования, которое можно включить "
-"для обмена данными между клиентом и файловыми серверами. Хотя это шифрование "
+"AFS предоставляет нестойкое подобие шифрования, которое можно включить для "
+"обмена данными между клиентом и файловыми серверами. Хотя это шифрование "
 "слабее чем DES и недостаточно для очень конфиденциальных данных, оно всё же "
 "обеспечивает некоторую защиту, которая значительно осложнит работу "
 "неискушённому атакующему."
 
-#. Type: boolean
-#. Description
+#. Type: select
+#. Choices
 #: ../openafs-client.templates:7001
+msgid "Yes"
+msgstr ""
+
+#. Type: select
+#. Choices
+#: ../openafs-client.templates:7001
+msgid "Sparse"
+msgstr ""
+
+#. Type: select
+#. Choices
+#: ../openafs-client.templates:7001
+msgid "No"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../openafs-client.templates:7002
 msgid "Dynamically generate the contents of /afs?"
 msgstr "Генерировать содержимое /afs динамически?"
 
-#. Type: boolean
+#. Type: select
 #. Description
-#: ../openafs-client.templates:7001
+#: ../openafs-client.templates:7002
 msgid ""
 "/afs generally contains an entry for each cell that a client can talk to. "
 "Traditionally, these entries were generated by servers in the client's home "
 "cell.  However, OpenAFS clients can generate the contents of /afs "
 "dynamically based on the contents of /etc/openafs/CellServDB and DNS."
 msgstr ""
-"В /afs, в основном, содержатся элементы для каждой ячейки, с которыми работает клиент. "
-"Обычно, эти элементы генерируются серверами клиентской домашней ячейки. Однако, "
-"клиенты OpenAFS могут генерировать содержимое /afs динамически на основе содержимого "
-"/etc/openafs/CellServDB и DNS."
+"В /afs, в основном, содержатся элементы для каждой ячейки, с которыми "
+"работает клиент. Обычно, эти элементы генерируются серверами клиентской "
+"домашней ячейки. Однако, клиенты OpenAFS могут генерировать содержимое /afs "
+"динамически на основе содержимого /etc/openafs/CellServDB и DNS."
 
-#. Type: boolean
+#. Type: select
 #. Description
-#: ../openafs-client.templates:7001
+#: ../openafs-client.templates:7002
 msgid ""
 "If you generate /afs dynamically, you may need to create /etc/openafs/"
 "CellAlias to include aliases for common cells.  (The syntax of this file is "
@@ -181,9 +200,20 @@ msgid ""
 "cell.)"
 msgstr ""
 "Если вы разрешите генерировать /afs динамически, то вам может потребоваться "
-"создать /etc/openafs/CellAlias с псевдонимами часто используемых ячеек. (В файле "
-"указываются псевдонимы по одному на строку в формате: имя ячейки, пробел, "
-"псевдоним ячейки.)"
+"создать /etc/openafs/CellAlias с псевдонимами часто используемых ячеек. (В "
+"файле указываются псевдонимы по одному на строку в формате: имя ячейки, "
+"пробел, псевдоним ячейки.)"
+
+#. Type: select
+#. Description
+#: ../openafs-client.templates:7002
+msgid ""
+"The Sparse option is the same as Yes except that, rather than populating /"
+"afs from /etc/openafs/CellServDB immediately, cells other than the local "
+"cell will not appear until they are accessed.  Cell aliases as set in the "
+"CellAlias file are shown as normal, although they may appear to be dangling "
+"links until traversed."
+msgstr ""
 
 #. Type: boolean
 #. Description
@@ -204,13 +234,13 @@ msgid ""
 "operations locally to avoid these hangs.  You want this option under most "
 "circumstances."
 msgstr ""
-"Так как AFS представляет собой глобальное файловое пространство, операции "
-"с каталогом /afs могут создавать значительный сетевой трафик. "
-"Если некоторые ячейки AFS недоступны, то просмотр /afs с помощью "
-"команды ls или графического файлового обозревателя может приостановить "
-"работу машины на несколько минут. В AFS есть возможность симулировать "
-"ответы для таких операций, чтобы предотвратить зависания. В большинстве "
-"случаев лучше воспользоваться данной возможностью."
+"Так как AFS представляет собой глобальное файловое пространство, операции с "
+"каталогом /afs могут создавать значительный сетевой трафик. Если некоторые "
+"ячейки AFS недоступны, то просмотр /afs с помощью команды ls или "
+"графического файлового обозревателя может приостановить работу машины на "
+"несколько минут. В AFS есть возможность симулировать ответы для таких "
+"операций, чтобы предотвратить зависания. В большинстве случаев лучше "
+"воспользоваться данной возможностью."
 
 #. Type: string
 #. Description
@@ -247,7 +277,6 @@ msgid ""
 msgstr ""
 "Вы работаете с пакетом файлового сервера OpenAFS на архитектуре alpha. "
 "Скорее всего, он не работает; код DES часто отказывает на alpha, тоже "
-"случается и с потоковым файловым сервером. Вероятно, файловый сервер "
-"просто не запустится, но если это даже произойдёт, то в результате "
-"это может повредить данные. Это было предупреждение."
-
+"случается и с потоковым файловым сервером. Вероятно, файловый сервер просто "
+"не запустится, но если это даже произойдёт, то в результате это может "
+"повредить данные. Это было предупреждение."

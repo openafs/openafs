@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openafs\n"
 "Report-Msgid-Bugs-To: openafs@packages.debian.org\n"
-"POT-Creation-Date: 2009-02-13 09:22-0800\n"
+"POT-Creation-Date: 2013-04-08 11:17-0700\n"
 "PO-Revision-Date: 2012-01-06 05:26+0100\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <debian-l10n-danish@lists.debian.org>\n"
@@ -36,15 +36,15 @@ msgid ""
 "cell is configured.  When you are ready you can edit /etc/openafs/afs.conf."
 "client to enable the client."
 msgstr ""
-"AFS bruger filen /etc/openafs/CellServDB, der indeholder listen over servere, "
-"som skal kontaktes for at finde dele af en celle. Cellen, du hævder at denne "
-"arbejdsstation tilhører, er ikke i denne fil. Indtast værtsnavnene for "
-"databaseserverne adskilt af mellemrum. VIGTIGT: Hvis du opretter en ny celle "
-"og denne maskine skal være databaseserveren i den celle, så indtast kun den "
-"maskines navn; tilføj de andre servere senere når de er oppe og køre. "
-"Husk også ikke at aktivere AFS-klienten til igangsættelse ved opstart på "
-"denne server før cellen er konfigureret. Når du er klar, kan du redigere "
-"/etc/openafs/afs.conf.client for at aktivere klienten."
+"AFS bruger filen /etc/openafs/CellServDB, der indeholder listen over "
+"servere, som skal kontaktes for at finde dele af en celle. Cellen, du hævder "
+"at denne arbejdsstation tilhører, er ikke i denne fil. Indtast værtsnavnene "
+"for databaseserverne adskilt af mellemrum. VIGTIGT: Hvis du opretter en ny "
+"celle og denne maskine skal være databaseserveren i den celle, så indtast "
+"kun den maskines navn; tilføj de andre servere senere når de er oppe og "
+"køre. Husk også ikke at aktivere AFS-klienten til igangsættelse ved opstart "
+"på denne server før cellen er konfigureret. Når du er klar, kan du redigere /"
+"etc/openafs/afs.conf.client for at aktivere klienten."
 
 #. Type: string
 #. Description
@@ -80,10 +80,10 @@ msgid ""
 "to dedicate a partition to their AFS cache."
 msgstr ""
 "AFS bruger et område af disken til at mellemlagre eksterne filer for "
-"hurtigere adgang. Dette mellemlager vil blive monteret på /var/cache/openafs. "
-"Det er vigtigt at mellemlageret ikke overfylder partitionen, som den er "
-"placeret på. Ofte finder andre det brugbart at dedikere en partition til "
-"deres AFS-mellemlager."
+"hurtigere adgang. Dette mellemlager vil blive monteret på /var/cache/"
+"openafs. Det er vigtigt at mellemlageret ikke overfylder partitionen, som "
+"den er placeret på. Ofte finder andre det brugbart at dedikere en partition "
+"til deres AFS-mellemlager."
 
 #. Type: boolean
 #. Description
@@ -101,12 +101,12 @@ msgid ""
 "you choose not to start AFS at boot, run /etc/init.d/openafs-client force-"
 "start to start the client when you wish to run it."
 msgstr ""
-"Normalt forventer de fleste brugere som installerer pakken openafs-client "
-"at AFS monteres automatisk ved opstart. Men hvis du planlægger at opsætte "
-"en ny celle eller er på en bærbar, så vil du måske ikke have at den "
-"igangsættes ved opstartstidspunktet. Hvis du vælger ikke at igangsætte "
-"AFS ved opstart så kør /etc/init.d/openafs-client forece-start for at "
-"starte klienten, når du ønsker at køre den."
+"Normalt forventer de fleste brugere som installerer pakken openafs-client at "
+"AFS monteres automatisk ved opstart. Men hvis du planlægger at opsætte en ny "
+"celle eller er på en bærbar, så vil du måske ikke have at den igangsættes "
+"ved opstartstidspunktet. Hvis du vælger ikke at igangsætte AFS ved opstart "
+"så kør /etc/init.d/openafs-client forece-start for at starte klienten, når "
+"du ønsker at køre den."
 
 #. Type: boolean
 #. Description
@@ -145,21 +145,39 @@ msgid ""
 "confidentiality and is likely to make the job of a casual attacker "
 "significantly more difficult."
 msgstr ""
-"AFS tilbyder en svag form for kryptering, som valgfrit kan bruges mellem "
-"en klient og filserverne. Selv om krypteringen er svagere end DES og derfor "
-"ikke er tilstrækkelig for meget fortrolige data, så giver det dog en "
-"mindre form for fortrolighed og det vil sandsynligvis gøre jobbet for "
-"en vilkårlig angriber markant sværere."
+"AFS tilbyder en svag form for kryptering, som valgfrit kan bruges mellem en "
+"klient og filserverne. Selv om krypteringen er svagere end DES og derfor "
+"ikke er tilstrækkelig for meget fortrolige data, så giver det dog en mindre "
+"form for fortrolighed og det vil sandsynligvis gøre jobbet for en vilkårlig "
+"angriber markant sværere."
 
-#. Type: boolean
-#. Description
+#. Type: select
+#. Choices
 #: ../openafs-client.templates:7001
+msgid "Yes"
+msgstr ""
+
+#. Type: select
+#. Choices
+#: ../openafs-client.templates:7001
+msgid "Sparse"
+msgstr ""
+
+#. Type: select
+#. Choices
+#: ../openafs-client.templates:7001
+msgid "No"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../openafs-client.templates:7002
 msgid "Dynamically generate the contents of /afs?"
 msgstr "Dynamisk oprette indholdet for /afs?"
 
-#. Type: boolean
+#. Type: select
 #. Description
-#: ../openafs-client.templates:7001
+#: ../openafs-client.templates:7002
 msgid ""
 "/afs generally contains an entry for each cell that a client can talk to. "
 "Traditionally, these entries were generated by servers in the client's home "
@@ -168,12 +186,12 @@ msgid ""
 msgstr ""
 "/afs indeholder normalt et punkt for hver celle, som en klient kan snakke "
 "med. Traditionelt blev disse punkter oprettet af servere i klientens "
-"hjemmecelle. OpenAFS-klienter kan dog oprette indholdet af /afs "
-"dynamisk baseret på indholdet af /etc/openafs/CellServDB og DNS."
+"hjemmecelle. OpenAFS-klienter kan dog oprette indholdet af /afs dynamisk "
+"baseret på indholdet af /etc/openafs/CellServDB og DNS."
 
-#. Type: boolean
+#. Type: select
 #. Description
-#: ../openafs-client.templates:7001
+#: ../openafs-client.templates:7002
 msgid ""
 "If you generate /afs dynamically, you may need to create /etc/openafs/"
 "CellAlias to include aliases for common cells.  (The syntax of this file is "
@@ -181,9 +199,20 @@ msgid ""
 "cell.)"
 msgstr ""
 "Hvis du opretter /afs dynamisk så skal du måske oprette /etc/openafs/"
-"CellAlias for at inkludere aliasser for gængse celler (syntaksen for "
-"denne fil er en linje per alias, med cellenavn, et mellemrum, og så "
-"aliasset for den celle)."
+"CellAlias for at inkludere aliasser for gængse celler (syntaksen for denne "
+"fil er en linje per alias, med cellenavn, et mellemrum, og så aliasset for "
+"den celle)."
+
+#. Type: select
+#. Description
+#: ../openafs-client.templates:7002
+msgid ""
+"The Sparse option is the same as Yes except that, rather than populating /"
+"afs from /etc/openafs/CellServDB immediately, cells other than the local "
+"cell will not appear until they are accessed.  Cell aliases as set in the "
+"CellAlias file are shown as normal, although they may appear to be dangling "
+"links until traversed."
+msgstr ""
 
 #. Type: boolean
 #. Description
@@ -202,12 +231,12 @@ msgid ""
 "operations locally to avoid these hangs.  You want this option under most "
 "circumstances."
 msgstr ""
-"Da AFS er et globalt filrum, kan handlinger på /afs-mappen skabe "
-"betydelig netværkstrafik. Hvis nogle AFS-celler er utilgængelige når "
-"der kigges på /afs med brug af ls eller en grafisk filbrowser måske "
-"optager din maskine i minutter ad gangen, så har AFS en indstilling "
-"der kan simulere svaret på disse handlinger lokalt for at undgå disse "
-"lange svartider. Du vil som oftest gerne have denne indstilling."
+"Da AFS er et globalt filrum, kan handlinger på /afs-mappen skabe betydelig "
+"netværkstrafik. Hvis nogle AFS-celler er utilgængelige når der kigges på /"
+"afs med brug af ls eller en grafisk filbrowser måske optager din maskine i "
+"minutter ad gangen, så har AFS en indstilling der kan simulere svaret på "
+"disse handlinger lokalt for at undgå disse lange svartider. Du vil som "
+"oftest gerne have denne indstilling."
 
 #. Type: string
 #. Description
@@ -224,8 +253,8 @@ msgid ""
 "the same cell as the workstation's client belongs to."
 msgstr ""
 "AFS-filservere tilhører en celle. De har nøglen for den celles "
-"Kerberostjeneste og betjener arkiver i den celle. Normalt er denne "
-"celle den samme celle som arbejdsstationens klient hører til."
+"Kerberostjeneste og betjener arkiver i den celle. Normalt er denne celle den "
+"samme celle som arbejdsstationens klient hører til."
 
 #. Type: note
 #. Description
@@ -243,8 +272,6 @@ msgid ""
 "does load, data corruption may result.  You have been warned."
 msgstr ""
 "Du kører OpenAFS-filserverpakken på en alfa. Dette virker sandsynligvis "
-"ikke; DES-koden er utroværdig i alfa, sammen med den tråede filserver. "
-"Højst sandsynligt vil filserveren slet ikke starte op, men hvis den "
-"kommer op, kan ødelæggelse af data blive resultatet. Du er advaret."
-
-
+"ikke; DES-koden er utroværdig i alfa, sammen med den tråede filserver. Højst "
+"sandsynligt vil filserveren slet ikke starte op, men hvis den kommer op, kan "
+"ødelæggelse af data blive resultatet. Du er advaret."
