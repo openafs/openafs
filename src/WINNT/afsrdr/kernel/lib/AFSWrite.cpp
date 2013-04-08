@@ -669,35 +669,6 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
         else
         {
 
-            //
-            // if bPagingIo, Paging Resource held Shared
-            // else Main and SectionObject resources held Shared
-            //
-
-            if( bReleaseSectionObject)
-            {
-
-                AFSReleaseResource( &pNPFcb->SectionObjectResource);
-
-                bReleaseSectionObject = FALSE;
-            }
-
-            if( bReleasePaging)
-            {
-
-                AFSReleaseResource( &pNPFcb->PagingResource);
-
-                bReleasePaging = FALSE;
-            }
-
-            if( bReleaseMain)
-            {
-
-                AFSReleaseResource( &pNPFcb->Resource);
-
-                bReleaseMain = FALSE;
-            }
-
             AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSCommonWrite (%p) Processing NON-CACHED request Offset %0I64X Len %08lX%s\n",
