@@ -1,5 +1,7 @@
-openafs (1.6.2-2) UNRELEASED; urgency=low
+openafs (1.6.2.1-1) UNRELEASED; urgency=low
 
+  * New upstream release.
+    - Support for Linux 3.8.
   * Support configuring -dynroot-sparse via debconf.  The AFS_DYNROOT
     option in /etc/openafs/afs.conf.client is now tri-valued instead of a
     boolean, and the boolean values will be mapped to the corresponding
