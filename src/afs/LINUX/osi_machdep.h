@@ -17,60 +17,60 @@
 
 #include <linux/version.h>
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,4)
-#define AFS_LINUX26_ONEGROUP_ENV 1
+# define AFS_LINUX26_ONEGROUP_ENV 1
 #endif
 
 /* Only needed for xdr.h in glibc 2.1.x */
 #ifndef quad_t
-#define quad_t __quad_t
-#define u_quad_t __u_quad_t
+# define quad_t __quad_t
+# define u_quad_t __u_quad_t
 #endif
 
 #undef getuerror
 
 #ifdef STRUCT_TASK_STRUCT_HAS_TGID
-#define getpid() current->tgid
-#ifdef STRUCT_TASK_STRUCT_HAS_REAL_PARENT
-#define getppid() current->real_parent->tgid
-#elif defined(STRUCT_TASK_STRUCT_HAS_PARENT)
-#define getppid() current->parent->tgid
-#else
-#define getppid() current->p_opptr->tgid
-#endif
+# define getpid() current->tgid
+# ifdef STRUCT_TASK_STRUCT_HAS_REAL_PARENT
+#  define getppid() current->real_parent->tgid
+# elif defined(STRUCT_TASK_STRUCT_HAS_PARENT)
+#  define getppid() current->parent->tgid
+# else
+#  define getppid() current->p_opptr->tgid
+# endif
 #else /* !STRUCT_TASK_STRUCT_HAS_TGID */
-#define getpid() current->pid
-#ifdef STRUCT_TASK_STRUCT_HAS_REAL_PARENT
-#define getppid() current->real_parent->pid
-#elif defined(STRUCT_TASK_STRUCT_HAS_PARENT)
-#define getppid() current->parent->pid
-#else
-#define getppid() current->p_opptr->pid
-#endif
+# define getpid() current->pid
+# ifdef STRUCT_TASK_STRUCT_HAS_REAL_PARENT
+#  define getppid() current->real_parent->pid
+# elif defined(STRUCT_TASK_STRUCT_HAS_PARENT)
+#  define getppid() current->parent->pid
+# else
+#  define getppid() current->p_opptr->pid
+# endif
 #endif /* STRUCT_TASK_STRUCT_HAS_TGID */
 
 #ifdef RECALC_SIGPENDING_TAKES_VOID
-#define RECALC_SIGPENDING(X) recalc_sigpending()
+# define RECALC_SIGPENDING(X) recalc_sigpending()
 #else
-#define RECALC_SIGPENDING(X) recalc_sigpending(X)
+# define RECALC_SIGPENDING(X) recalc_sigpending(X)
 #endif
 
 #if defined (STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK)
-#define SIG_LOCK(X) spin_lock_irq(&X->sigmask_lock)
-#define SIG_UNLOCK(X) spin_unlock_irq(&X->sigmask_lock)
+# define SIG_LOCK(X) spin_lock_irq(&X->sigmask_lock)
+# define SIG_UNLOCK(X) spin_unlock_irq(&X->sigmask_lock)
 #elif defined (STRUCT_TASK_STRUCT_HAS_SIGHAND)
-#define SIG_LOCK(X) spin_lock_irq(&X->sighand->siglock)
-#define SIG_UNLOCK(X) spin_unlock_irq(&X->sighand->siglock)
+# define SIG_LOCK(X) spin_lock_irq(&X->sighand->siglock)
+# define SIG_UNLOCK(X) spin_unlock_irq(&X->sighand->siglock)
 #else
-#define SIG_LOCK(X) spin_lock_irq(&X->sig->siglock)
-#define SIG_UNLOCK(X) spin_unlock_irq(&X->sig->siglock)
+# define SIG_LOCK(X) spin_lock_irq(&X->sig->siglock)
+# define SIG_UNLOCK(X) spin_unlock_irq(&X->sig->siglock)
 #endif
 
 #if defined (STRUCT_TASK_STRUCT_HAS_RLIM)
-#define TASK_STRUCT_RLIM rlim
+# define TASK_STRUCT_RLIM rlim
 #elif defined (STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM)
-#define TASK_STRUCT_RLIM signal->rlim
+# define TASK_STRUCT_RLIM signal->rlim
 #else
-#error Not sure what to do about rlim (should be in the Linux task struct somewhere....)
+# error Not sure what to do about rlim (should be in the Linux task struct somewhere....)
 #endif
 
 
@@ -83,13 +83,13 @@ static inline time_t osi_Time(void) {
     return xtime.tv_sec;
 }
 #else
-#define osi_Time() (xtime.tv_sec)
+# define osi_Time() (xtime.tv_sec)
 #endif
 
 
 
 #ifdef AFS_LINUX_64BIT_KERNEL
-#define osi_GetTime(V)                                 \
+# define osi_GetTime(V)                                 \
     do {                                               \
        struct timeval __afs_tv;                              \
        do_gettimeofday(&__afs_tv);                           \
@@ -97,7 +97,7 @@ static inline time_t osi_Time(void) {
        (V)->tv_usec = (afs_int32)__afs_tv.tv_usec;           \
     } while (0)
 #else
-#define osi_GetTime(V) do_gettimeofday((V))
+# define osi_GetTime(V) do_gettimeofday((V))
 #endif
 
 #undef gop_lookupname
@@ -149,12 +149,12 @@ typedef struct task_struct afs_proc_t;
 typedef struct cred afs_ucred_t;
 typedef struct cred cred_t;
 
-#define afs_cr_uid(cred) ((cred)->fsuid)
-#define afs_cr_gid(cred) ((cred)->fsgid)
-#define afs_cr_ruid(cred) ((cred)->uid)
-#define afs_cr_rgid(cred) ((cred)->gid)
-#define afs_cr_group_info(cred) ((cred)->group_info)
-#define crhold(c) (get_cred(c))
+# define afs_cr_uid(cred) ((cred)->fsuid)
+# define afs_cr_gid(cred) ((cred)->fsgid)
+# define afs_cr_ruid(cred) ((cred)->uid)
+# define afs_cr_rgid(cred) ((cred)->gid)
+# define afs_cr_group_info(cred) ((cred)->group_info)
+# define crhold(c) (get_cred(c))
 static inline void
 afs_set_cr_uid(cred_t *cred, uid_t uid) {
     cred->fsuid = uid;
@@ -176,11 +176,16 @@ afs_set_cr_group_info(cred_t *cred, struct group_info *group_info) {
     cred->group_info = group_info;
 }
 
-#define current_group_info() (current->cred->group_info)
-#define task_gid(task) (task->cred->gid)
-#define task_user(task) (task->cred->user)
-#define task_session_keyring(task) (task->cred->tgcred->session_keyring)
-#define current_session_keyring() (current->cred->tgcred->session_keyring)
+# define current_group_info() (current->cred->group_info)
+# define task_gid(task) (task->cred->gid)
+# define task_user(task) (task->cred->user)
+# if defined(STRUCT_CRED_HAS_SESSION_KEYRING)
+#  define task_session_keyring(task) (task->cred->session_keyring)
+#  define current_session_keyring() (current->cred->session_keyring)
+# else
+#  define task_session_keyring(task) (task->cred->tgcred->session_keyring)
+#  define current_session_keyring() (current->cred->tgcred->session_keyring)
+# endif
 
 #else
 
@@ -194,31 +199,31 @@ typedef struct afs_cred {
 } cred_t;
 
 typedef struct afs_cred afs_ucred_t;
-#define afs_cr_group_info(cred) ((cred)->cr_group_info)
+# define afs_cr_group_info(cred) ((cred)->cr_group_info)
 static inline void
 afs_set_cr_group_info(cred_t *cred, struct group_info *group_info) {
     cred->cr_group_info = group_info;
 }
 
-#define current_group_info() (current->group_info)
-#if !defined(task_gid)
-#define task_gid(task) (task->gid)
-#endif
-#if !defined(task_uid)
-#define task_uid(task) (task->uid)
-#endif
-#define task_user(task) (task->user)
-#define task_session_keyring(task) (task->signal->session_keyring)
-#define current_session_keyring() (current->signal->session_keyring)
-#define crhold(c) atomic_inc(&(c)->cr_ref)
+# define current_group_info() (current->group_info)
+# if !defined(task_gid)
+#  define task_gid(task) (task->gid)
+# endif
+# if !defined(task_uid)
+#  define task_uid(task) (task->uid)
+# endif
+# define task_user(task) (task->user)
+# define task_session_keyring(task) (task->signal->session_keyring)
+# define current_session_keyring() (current->signal->session_keyring)
+# define crhold(c) atomic_inc(&(c)->cr_ref)
 
 #endif /* defined(STRUCT_TASK_STRUCT_HAS_CRED) */
 
 #if !defined(current_cred)
-#define current_gid() (current->gid)
-#define current_uid() (current->uid)
-#define current_fsgid() (current->fsgid)
-#define current_fsuid() (current->fsuid)
+# define current_gid() (current->gid)
+# define current_uid() (current->uid)
+# define current_fsgid() (current->fsgid)
+# define current_fsuid() (current->fsuid)
 #endif
 
 /* UIO manipulation */
@@ -245,7 +250,7 @@ struct uio {
 #define OSIFILE_INODE(a) FILE_INODE((a)->filp)
 
 #if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
-#define NEED_IOCTL32
+# define NEED_IOCTL32
 #endif
 
 #include <linux/version.h>
@@ -256,8 +261,8 @@ struct uio {
 extern struct mutex afs_global_lock;
 #else
 extern struct semaphore afs_global_lock;
-#define mutex_lock(lock) down(lock)
-#define mutex_unlock(lock) up(lock)
+# define mutex_lock(lock) down(lock)
+# define mutex_unlock(lock) up(lock)
 #endif
 extern int afs_global_owner;
 
@@ -285,63 +290,63 @@ do { \
 #ifdef AFS_AMD64_LINUX20_ENV
 /* RHEL5 beta's kernel doesn't define these. They aren't gonna change, so... */
 
-#ifndef __NR_ia32_afs_syscall
-#define __NR_ia32_afs_syscall 137
-#endif
-#ifndef __NR_ia32_setgroups
-#define __NR_ia32_setgroups 81
-#endif
-#ifndef __NR_ia32_setgroups32
-#define __NR_ia32_setgroups32 206
-#endif
-#ifndef __NR_ia32_close
-#define __NR_ia32_close 6
-#endif
-#ifndef __NR_ia32_chdir
-#define __NR_ia32_chdir 12
-#endif
-#ifndef __NR_ia32_break
-#define __NR_ia32_break 17
-#endif
-#ifndef __NR_ia32_stty
-#define __NR_ia32_stty 31
-#endif
-#ifndef __NR_ia32_gtty
-#define __NR_ia32_gtty 32
-#endif
-#ifndef __NR_ia32_ftime
-#define __NR_ia32_ftime 35
-#endif
-#ifndef __NR_ia32_prof
-#define __NR_ia32_prof 44
-#endif
-#ifndef __NR_ia32_lock
-#define __NR_ia32_lock 53
-#endif
-#ifndef __NR_ia32_mpx
-#define __NR_ia32_mpx 56
-#endif
-#ifndef __NR_ia32_exit
-#define __NR_ia32_exit 1
-#endif
-#ifndef __NR_ia32_mount
-#define __NR_ia32_mount 21
-#endif
-#ifndef __NR_ia32_read
-#define __NR_ia32_read 3
-#endif
-#ifndef __NR_ia32_write
-#define __NR_ia32_write 4
-#endif
-#ifndef __NR_ia32_open
-#define __NR_ia32_open 5
-#endif
-#ifndef __NR_ia32_close
-#define __NR_ia32_close 6
-#endif
-#ifndef __NR_ia32_unlink
-#define __NR_ia32_unlink 10
-#endif
+# ifndef __NR_ia32_afs_syscall
+#  define __NR_ia32_afs_syscall 137
+# endif
+# ifndef __NR_ia32_setgroups
+#  define __NR_ia32_setgroups 81
+# endif
+# ifndef __NR_ia32_setgroups32
+#  define __NR_ia32_setgroups32 206
+# endif
+# ifndef __NR_ia32_close
+#  define __NR_ia32_close 6
+# endif
+# ifndef __NR_ia32_chdir
+#  define __NR_ia32_chdir 12
+# endif
+# ifndef __NR_ia32_break
+#  define __NR_ia32_break 17
+# endif
+# ifndef __NR_ia32_stty
+#  define __NR_ia32_stty 31
+# endif
+# ifndef __NR_ia32_gtty
+#  define __NR_ia32_gtty 32
+# endif
+# ifndef __NR_ia32_ftime
+#  define __NR_ia32_ftime 35
+# endif
+# ifndef __NR_ia32_prof
+#  define __NR_ia32_prof 44
+# endif
+# ifndef __NR_ia32_lock
+#  define __NR_ia32_lock 53
+# endif
+# ifndef __NR_ia32_mpx
+#  define __NR_ia32_mpx 56
+# endif
+# ifndef __NR_ia32_exit
+#  define __NR_ia32_exit 1
+# endif
+# ifndef __NR_ia32_mount
+#  define __NR_ia32_mount 21
+# endif
+# ifndef __NR_ia32_read
+#  define __NR_ia32_read 3
+# endif
+# ifndef __NR_ia32_write
+#  define __NR_ia32_write 4
+# endif
+# ifndef __NR_ia32_open
+#  define __NR_ia32_open 5
+# endif
+# ifndef __NR_ia32_close
+#  define __NR_ia32_close 6
+# endif
+# ifndef __NR_ia32_unlink
+#  define __NR_ia32_unlink 10
+# endif
 #endif
 
 #define osi_procname(procname, size) strncpy(procname, current->comm, size)

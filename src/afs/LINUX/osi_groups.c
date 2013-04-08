@@ -214,14 +214,9 @@ install_session_keyring(struct key *keyring)
     }
 
     /* install the keyring */
-    spin_lock_irq(&current->sighand->siglock);
-    old = task_session_keyring(current);
-    smp_wmb();
-    task_session_keyring(current) = keyring;
-    spin_unlock_irq(&current->sighand->siglock);
-
+    old = afs_set_session_keyring(keyring);
     if (old)
-	    key_put(old);
+	key_put(old);
 
 out:
     return code;
