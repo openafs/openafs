@@ -945,10 +945,21 @@ AFSConfigLibraryDebug()
 
             if ( pDevExt->Specific.Control.LibraryDeviceObject != NULL)
             {
+
                 RtlZeroMemory( &stConfigLib,
                                sizeof( AFSDebugTraceConfigCB));
 
-                stConfigLib.AFSDbgLogMsg = AFSDebugTraceFnc;
+                if ( BooleanFlagOn( AFSDebugFlags, AFS_DBG_TRACE_TO_DEBUGGER) ||
+                     AFSDbgBufferLength > 0)
+                {
+
+                    stConfigLib.AFSDbgLogMsg = AFSDebugTraceFnc;
+                }
+                else
+                {
+
+                    stConfigLib.AFSDbgLogMsg = NULL;
+                }
 
                 ntStatus = AFSSendDeviceIoControl( pDevExt->Specific.Control.LibraryDeviceObject,
                                                    IOCTL_AFS_CONFIG_LIBRARY_TRACE,
