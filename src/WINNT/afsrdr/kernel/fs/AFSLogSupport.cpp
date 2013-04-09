@@ -265,7 +265,8 @@ AFSConfigureTrace( IN AFSTraceConfigCB *TraceInfo)
 
         if( TraceInfo->TraceLevel == AFSTraceLevel &&
             TraceInfo->TraceBufferLength == AFSDbgBufferLength &&
-            TraceInfo->Subsystem == AFSTraceComponent)
+            TraceInfo->Subsystem == AFSTraceComponent &&
+            TraceInfo->DebugFlags == AFSDebugFlags)
         {
 
             //
