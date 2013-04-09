@@ -728,6 +728,49 @@ try_exit:
             }
         }
 
+        if ( !bPagingIo && bNonCachedIo && CcIsFileCached( pFileObject) &&
+             pNPFcb->SectionObjectPointers.DataSectionObject != NULL &&
+             bReleaseSectionObject)
+        {
+            //
+            // Regardless of whether or not the a non-paging non-cached write
+            // succeeds or fails, if the file is cached the contents of the
+            // cache are no longer up to date.  A CcPurgeCacheSection must be
+            // performed to force subsequent cached reads to obtain the data
+            // from the service.
+            //
+            // The Fcb Resource is dropped in order to permit filters that perform
+            // an open via a worker thread in response to a purge to do so without
+            // deadlocking.  The SectionObjectResource is held across the purge to
+            // prevent racing with other cache operations.
+            //
+
+            if( bReleaseMain)
+            {
+
+                AFSReleaseResource( &pNPFcb->Resource);
+
+                bReleaseMain = FALSE;
+            }
+
+            if ( !CcPurgeCacheSection( &pNPFcb->SectionObjectPointers,
+                                       &liStartingByte,
+                                       ulByteCount,
+                                       FALSE))
+            {
+
+                AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
+                              AFS_TRACE_LEVEL_WARNING,
+                              "AFSCommonWrite CcPurgeCacheSection failure FID %08lX-%08lX-%08lX-%08lX\n",
+                              pFcb->ObjectInformation->FileId.Cell,
+                              pFcb->ObjectInformation->FileId.Volume,
+                              pFcb->ObjectInformation->FileId.Vnode,
+                              pFcb->ObjectInformation->FileId.Unique));
+
+                SetFlag( pFcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
+            }
+        }
+
         ObDereferenceObject(pFileObject);
 
         if( bReleaseSectionObject)
