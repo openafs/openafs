@@ -442,10 +442,21 @@ AFSDevControl( IN PDEVICE_OBJECT LibDeviceObject,
 
             case IOCTL_AFS_CONFIG_LIBRARY_TRACE:
             {
+                AFSDebugTraceConfigCB *pConfigLib;
+
+                if ( pIrpSp->Parameters.DeviceIoControl.InputBufferLength != sizeof( AFSDebugTraceConfigCB))
+                {
+
+                    ntStatus = STATUS_INVALID_PARAMETER;
+
+                    break;
+                }
+
+                pConfigLib = (AFSDebugTraceConfigCB *)Irp->AssociatedIrp.SystemBuffer;
 
                 InterlockedCompareExchangePointer( (PVOID *)&AFSDebugTraceFnc,
-                                                   NULL,
-                                                   (void *)AFSDbgLogMsg);
+                                                   pConfigLib->AFSDbgLogMsg,
+                                                   (void *)pConfigLib->AFSDbgLogMsg);
 
                 break;
             }
