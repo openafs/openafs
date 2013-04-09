@@ -516,7 +516,7 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
                                     (liStartingByte.LowPart == FILE_WRITE_TO_END_OF_FILE &&
                                       liStartingByte.HighPart == -1)) ;
 
-                if( bExtendingWrite)
+                if( bExtendingWrite || bNonCachedIo)
                 {
                     //
                     // Check for lock inversion
