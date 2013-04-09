@@ -2798,7 +2798,7 @@ AFSDeleteDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
 
         AFSDbgTrace(( AFS_SUBSYSTEM_CLEANUP_PROCESSING | AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSDeletepDirEntry Deleting dir entry in parent %p Entry %p object %p %wZ RefCount %d\n",
+		      "AFSDeleteDirEntry Deleting dir entry in parent %p Entry %p object %p %wZ RefCount %d\n",
                       ParentObjectInfo,
                       pDirEntry,
                       pDirEntry->ObjectInformation,
@@ -2849,7 +2849,7 @@ AFSDeleteDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
 
             AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSDeletepDirEntry Decrement count on object %p Cnt %d\n",
+			  "AFSDeleteDirEntry Decrement count on object %p Cnt %d\n",
                           pDirEntry->ObjectInformation,
                           lCount));
 
@@ -2866,7 +2866,7 @@ AFSDeleteDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
 
         AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSDeletepDirEntry AFS_DIR_ENTRY_TAG deallocating %p\n",
+		      "AFSDeleteDirEntry AFS_DIR_ENTRY_TAG deallocating %p\n",
                       pDirEntry));
 
         AFSExFreePoolWithTag( pDirEntry, AFS_DIR_ENTRY_TAG);
