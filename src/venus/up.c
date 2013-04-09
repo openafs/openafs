@@ -25,7 +25,7 @@
 
 /* ************************************************************* */
 
-#define MAXACL 400
+#define MAXACL AFS_PIOCTL_MAXSIZE
 
 short verbose = 0;
 short renameTargets = 0;
