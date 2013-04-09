@@ -709,7 +709,8 @@ try_exit:
                 }
 
                 //
-                // If this extended the Vdl, then update it accordingly
+                // If this extended the VDL, then update it accordingly.
+                // Increasing the VDL does not require a call to CcSetFileSizes.
                 //
 
                 if( liStartingByte.QuadPart + ulByteCount > pFcb->Header.ValidDataLength.QuadPart)
