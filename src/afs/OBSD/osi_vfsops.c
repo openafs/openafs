@@ -245,8 +245,13 @@ afs_mount(mp, path, data, ndp, p)
     mp->osi_vfs_fsid.val[0] = AFS_VFSMAGIC;	/* magic */
     mp->osi_vfs_fsid.val[1] = (int)AFS_VFSFSID;
 
+#if defined(AFS_OBSD53_ENV)
+    bzero(mp->mnt_stat.f_mntonname, MNAMELEN);
+    strlcpy(mp->mnt_stat.f_mntonname, path, MNAMELEN);
+#else
     (void)copyinstr(path, mp->mnt_stat.f_mntonname, MNAMELEN - 1, &size);
     bzero(mp->mnt_stat.f_mntonname + size, MNAMELEN - size);
+#endif
     bzero(mp->mnt_stat.f_mntfromname, MNAMELEN);
     strcpy(mp->mnt_stat.f_mntfromname, "AFS");
     /* null terminated string "AFS" will fit, just leave it be. */
