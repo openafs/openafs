@@ -767,10 +767,7 @@ AFSListConnections( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
             // adjust it to be the server name itself
             //
 
-            if( uniShareName.Length == 0 ||
-                RtlCompareUnicodeString( &uniShareName,
-                                         &AFSGlobalRootName,
-                                         TRUE) == 0)
+            if( uniShareName.Length == 0)
             {
 
                 bGlobalEnumeration = TRUE;
