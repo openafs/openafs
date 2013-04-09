@@ -54,6 +54,7 @@ AFSQueryVolumeInfo( IN PDEVICE_OBJECT LibDeviceObject,
     AFSFcb *pFcb = NULL;
     AFSObjectInfoCB *pObjectInfo = NULL;
     AFSVolumeCB *pVolumeCB = NULL;
+    BOOLEAN bDosDevice = FALSE;
 
     pIrpSp = IoGetCurrentIrpStackLocation( Irp);
 
@@ -95,6 +96,11 @@ AFSQueryVolumeInfo( IN PDEVICE_OBJECT LibDeviceObject,
 
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
         }
+
+        bDosDevice = pFileObject->FileName.Length > 4 * sizeof( WCHAR) &&
+            pFileObject->FileName.Buffer[0] == L'\\' &&
+            pFileObject->FileName.Buffer[1] == L';' &&
+            pFileObject->FileName.Buffer[3] == L':';
 
         pVolumeCB = pObjectInfo->VolumeCB;
 
@@ -151,6 +157,7 @@ AFSQueryVolumeInfo( IN PDEVICE_OBJECT LibDeviceObject,
 
                 ntStatus = AFSQueryFsVolumeInfo( &pVolumeCB->VolumeInformation,
                                                  (PFILE_FS_VOLUME_INFORMATION)pBuffer,
+                                                 bDosDevice,
                                                  &ulLength);
 
                 break;
@@ -283,6 +290,7 @@ AFSSetVolumeInfo( IN PDEVICE_OBJECT DeviceObject,
 NTSTATUS
 AFSQueryFsVolumeInfo( IN AFSVolumeInfoCB *VolumeInfo,
                       IN PFILE_FS_VOLUME_INFORMATION Buffer,
+                      IN BOOLEAN bDosDevice,
                       IN OUT PULONG Length)
 
 {
@@ -296,8 +304,17 @@ AFSQueryFsVolumeInfo( IN AFSVolumeInfoCB *VolumeInfo,
     if( *Length >= (ULONG)sizeof( FILE_FS_VOLUME_INFORMATION))
     {
 
-        ulLabelLength = VolumeInfo->VolumeLabelLength +
-            VolumeInfo->CellLength + sizeof( WCHAR);
+        if ( bDosDevice)
+        {
+
+            ulLabelLength = VolumeInfo->VolumeLabelLength;
+        }
+        else
+        {
+
+            ulLabelLength = VolumeInfo->VolumeLabelLength +
+                VolumeInfo->CellLength + sizeof( WCHAR);
+        }
 
         if( *Length >= (ULONG)(FIELD_OFFSET( FILE_FS_VOLUME_INFORMATION, VolumeLabel) + ulLabelLength))
         {
@@ -323,26 +340,39 @@ AFSQueryFsVolumeInfo( IN AFSVolumeInfoCB *VolumeInfo,
         if( *Length > 0)
         {
 
-            RtlCopyMemory( Buffer->VolumeLabel,
-                           VolumeInfo->Cell,
-                           min( *Length, VolumeInfo->CellLength));
-
-            *Length -= min( *Length, VolumeInfo->CellLength);
-
-            if ( *Length >= sizeof( WCHAR))
+            if ( bDosDevice)
             {
 
-                Buffer->VolumeLabel[ VolumeInfo->CellLength / sizeof( WCHAR)] = L'#';
+                RtlCopyMemory( Buffer->VolumeLabel,
+                               VolumeInfo->VolumeLabel,
+                               min( *Length, VolumeInfo->VolumeLabelLength));
 
-                *Length -= sizeof( WCHAR);
+                *Length -= min( *Length, VolumeInfo->VolumeLabelLength);
+            }
+            else
+            {
 
-                if ( *Length > 0) {
+                RtlCopyMemory( Buffer->VolumeLabel,
+                               VolumeInfo->Cell,
+                               min( *Length, VolumeInfo->CellLength));
 
-                    RtlCopyMemory( &Buffer->VolumeLabel[ (VolumeInfo->CellLength + sizeof( WCHAR)) / sizeof( WCHAR)],
-                                   VolumeInfo->VolumeLabel,
-                                   min( *Length, VolumeInfo->VolumeLabelLength));
+                *Length -= min( *Length, VolumeInfo->CellLength);
 
-                    *Length -= min( *Length, VolumeInfo->VolumeLabelLength);
+                if ( *Length >= sizeof( WCHAR))
+                {
+
+                    Buffer->VolumeLabel[ VolumeInfo->CellLength / sizeof( WCHAR)] = L'#';
+
+                    *Length -= sizeof( WCHAR);
+
+                    if ( *Length > 0) {
+
+                        RtlCopyMemory( &Buffer->VolumeLabel[ (VolumeInfo->CellLength + sizeof( WCHAR)) / sizeof( WCHAR)],
+                                       VolumeInfo->VolumeLabel,
+                                       min( *Length, VolumeInfo->VolumeLabelLength));
+
+                        *Length -= min( *Length, VolumeInfo->VolumeLabelLength);
+                    }
                 }
             }
         }

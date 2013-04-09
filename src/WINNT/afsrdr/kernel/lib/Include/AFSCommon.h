@@ -932,6 +932,7 @@ AFSSetVolumeInfo( IN PDEVICE_OBJECT DeviceObject,
 NTSTATUS
 AFSQueryFsVolumeInfo( IN AFSVolumeInfoCB *VolumeInfo,
                       IN PFILE_FS_VOLUME_INFORMATION Buffer,
+                      IN BOOLEAN bDosDevice,
                       IN OUT PULONG Length);
 
 NTSTATUS
