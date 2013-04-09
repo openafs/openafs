@@ -356,7 +356,7 @@ afs_PrintServerErrors(struct vrequest *areq, struct VenusFid *afid)
 	tvp = afs_FindVolume(afid, READ_LOCK);
 	if (tvp) {
 	    for (i = 0; i < AFS_MAXHOSTS; i++) {
-		if (tvp->serverHost[i]) {
+		if (areq->lasterror[i] && tvp->serverHost[i]) {
 		    sa = tvp->serverHost[i]->addr;
 		    if (sa) {
 			address = ntohl(sa->sa_ip);
