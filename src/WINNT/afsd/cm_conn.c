@@ -1154,6 +1154,11 @@ cm_Analyze(cm_conn_t *connp,
             _InterlockedAnd(&ucellp->flags, ~CM_UCELLFLAG_RXKAD);
             ucellp->gen++;
             lock_ReleaseMutex(&userp->mx);
+
+            reqp->flags |= CM_REQ_NEW_CONN_FORCED;
+            forcing_new = 1;
+            cm_ForceNewConnections(serverp);
+
             if ( timeLeft > 2 )
                 retry = 1;
         }
