@@ -1201,7 +1201,9 @@ cm_Analyze(cm_conn_t *connp,
             retry = 1;
         }
     } else if (errorCode == VICECONNBAD || errorCode == VICETOKENDEAD) {
-	cm_ForceNewConnections(serverp);
+        reqp->flags |= CM_REQ_NEW_CONN_FORCED;
+        forcing_new = 1;
+        cm_ForceNewConnections(serverp);
         if ( timeLeft > 2 )
             retry = 1;
     } else {
