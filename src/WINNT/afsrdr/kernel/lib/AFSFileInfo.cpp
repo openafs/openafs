@@ -2130,6 +2130,52 @@ AFSSetDispositionInfo( IN PIRP Irp,
                     try_return( ntStatus = STATUS_DIRECTORY_NOT_EMPTY);
                 }
 
+                //
+                // Make sure the directory is enumerated before checking to see if it is empty.
+                //
+
+                if( !BooleanFlagOn( pFcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_DIRECTORY_ENUMERATED))
+                {
+
+                    AFSAcquireExcl( pFcb->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                                    TRUE);
+
+                    if( !BooleanFlagOn( pFcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_DIRECTORY_ENUMERATED))
+                    {
+
+                        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSSetDispositionInfo Enumerating parent FID %08lX-%08lX-%08lX-%08lX\n",
+                                      pFcb->ObjectInformation->FileId.Cell,
+                                      pFcb->ObjectInformation->FileId.Volume,
+                                      pFcb->ObjectInformation->FileId.Vnode,
+                                      pFcb->ObjectInformation->FileId.Unique));
+
+                        ntStatus = AFSEnumerateDirectory( &pCcb->AuthGroup,
+                                                          pFcb->ObjectInformation,
+                                                          TRUE);
+
+                        if( !NT_SUCCESS( ntStatus))
+                        {
+
+                            AFSReleaseResource( pFcb->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
+
+                            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                          AFS_TRACE_LEVEL_ERROR,
+                                          "AFSSetDispositionInfo Failed to enumerate parent FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                          pFcb->ObjectInformation->FileId.Cell,
+                                          pFcb->ObjectInformation->FileId.Volume,
+                                          pFcb->ObjectInformation->FileId.Vnode,
+                                          pFcb->ObjectInformation->FileId.Unique,
+                                          ntStatus));
+
+                            try_return( ntStatus);
+                        }
+                    }
+
+                    AFSReleaseResource( pFcb->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
+                }
+
                 if( !AFSIsDirectoryEmptyForDelete( pFcb))
                 {
 
