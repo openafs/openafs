@@ -7306,6 +7306,8 @@ AFSIsDirectoryEmptyForDelete( IN AFSFcb *Fcb)
     __Enter
     {
 
+        ASSERT( Fcb->ObjectInformation->FileType == AFS_FILE_TYPE_DIRECTORY);
+
         AFSAcquireShared( Fcb->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock,
                           TRUE);
 
