@@ -23,6 +23,28 @@
 	hc_MD5_Update;
 	hc_RAND_bytes;
 	hc_UI_UTIL_read_pw_string;
+	hc_EVP_CIPHER_CTX_block_size;
+	hc_EVP_CIPHER_CTX_cleanup;
+	hc_EVP_CIPHER_CTX_init;
+	hc_EVP_CIPHER_CTX_iv_length;
+	hc_EVP_Cipher;
+	hc_EVP_CipherInit_ex;
+	hc_EVP_Digest;
+	hc_EVP_DigestFinal_ex;
+	hc_EVP_DigestInit_ex;
+	hc_EVP_DigestUpdate;
+	hc_EVP_MD_CTX_create;
+	hc_EVP_MD_CTX_destroy;
+	hc_EVP_aes_128_cbc;
+	hc_EVP_aes_256_cbc;
+	hc_EVP_des_ede3_cbc;
+	hc_EVP_md5;
+	hc_EVP_rc4;
+	hc_EVP_sha1;
+	hc_RAND_status;
+	hc_RAND_file_name;
+	hc_RAND_add;
+	hc_RAND_write_file;
     local:
 	*;
 };
