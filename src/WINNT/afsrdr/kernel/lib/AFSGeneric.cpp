@@ -2759,6 +2759,9 @@ AFSInvalidateVolume( IN AFSVolumeCB *VolumeCB,
             AFSInvalidateObject( &pCurrentObject,
                                  Reason);
 
+            AFSAcquireShared( VolumeCB->ObjectInfoTree.TreeLock,
+                              TRUE);
+
             if ( pCurrentObject )
             {
 
@@ -2771,9 +2774,6 @@ AFSInvalidateVolume( IN AFSVolumeCB *VolumeCB,
                               pCurrentObject,
                               lCount));
             }
-
-            AFSAcquireShared( VolumeCB->ObjectInfoTree.TreeLock,
-                              TRUE);
 
             pCurrentObject = pNextObject;
         }
