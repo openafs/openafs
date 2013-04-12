@@ -151,6 +151,7 @@ long cm_BPlusDirBuildTree(cm_scache_t *scp, cm_user_t *userp, cm_req_t* reqp);
 int  cm_BPlusDirFoo(struct cm_scache *scp, struct cm_dirEntry *dep, void *dummy, osi_hyper_t *entryOffsetp);
 void cm_BPlusDumpStats(void);
 int  cm_MemDumpBPlusStats(FILE *outputFile, char *cookie, int lock);
+int  cm_BPlusDirIsEmpty(cm_dirOp_t *op, afs_uint32 *pbEmpty);
 
 /******************* directory enumeration operations ****************/
 typedef struct cm_direnum_entry {
