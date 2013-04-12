@@ -1997,6 +1997,57 @@ int  cm_BPlusDirDeleteEntry(cm_dirOp_t * op, clientchar_t *centry)
 
 }
 
+/*
+   On entry:
+       op->scp->dirlock is read locked
+
+   On exit:
+       op->scp->dirlock is read locked
+
+   Return:
+
+*/
+int cm_BPlusDirIsEmpty(cm_dirOp_t *op, afs_uint32 *pbEmpty)
+{
+    int rc = 0;
+    afs_uint32 count = 0, slot, numentries;
+    Nptr leafNode = NONODE, nextLeafNode;
+    Nptr firstDataNode, dataNode, nextDataNode;
+
+    if (op->scp->dirBplus == NULL ||
+        op->dataVersion != op->scp->dirDataVersion) {
+        rc = EINVAL;
+        goto done;
+    }
+
+    /* If we find any entry that is not "." or "..", the directory is not empty */
+
+    for (count = 0, leafNode = getleaf(op->scp->dirBplus); leafNode; leafNode = nextLeafNode) {
+
+	for ( slot = 1, numentries = numentries(leafNode); slot <= numentries; slot++) {
+	    firstDataNode = getnode(leafNode, slot);
+
+	    for ( dataNode = firstDataNode; dataNode; dataNode = nextDataNode) {
+
+                if ( cm_ClientStrCmp(getdatavalue(dataNode).cname, L".") &&
+                     cm_ClientStrCmp(getdatavalue(dataNode).cname, L".."))
+                {
+
+                    *pbEmpty = 0;
+                    goto done;
+                }
+
+		nextDataNode = getdatanext(dataNode);
+	    }
+	}
+	nextLeafNode = getnextnode(leafNode);
+    }
+
+    *pbEmpty = 1;
+
+  done:
+    return rc;
+}
 
 int cm_BPlusDirFoo(struct cm_scache *scp, struct cm_dirEntry *dep,
                    void *dummy, osi_hyper_t *entryOffsetp)
