@@ -1002,7 +1002,6 @@ AFSInitDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
     NTSTATUS ntStatus = STATUS_SUCCESS;
     ULONG ulEntryLength = 0;
     AFSObjectInfoCB *pObjectInfoCB = NULL;
-    BOOLEAN bAllocatedObjectCB = FALSE;
     ULONGLONG ullIndex = 0;
     AFSNonPagedDirectoryCB *pNonPagedDirEntry = NULL;
     LONG lCount;
@@ -1033,8 +1032,7 @@ AFSInitDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
                                        ullIndex,
                                        (AFSBTreeEntry **)&pObjectInfoCB);
 
-        if( !NT_SUCCESS( ntStatus) ||
-            pObjectInfoCB == NULL)
+        if( !NT_SUCCESS( ntStatus))
         {
 
             //
@@ -1052,14 +1050,99 @@ AFSInitDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
                 try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
             }
 
-            bAllocatedObjectCB = TRUE;
-
             AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSInitDirEntry initialized object %p Parent Object %p for %wZ\n",
                           pObjectInfoCB,
                           ParentObjectInfo,
                           FileName));
+
+            //
+            // If we allocated the object information cb then set the information
+            //
+
+            pObjectInfoCB->FileId = DirEnumEntry->FileId;
+
+            pObjectInfoCB->TargetFileId = DirEnumEntry->TargetFileId;
+
+            pObjectInfoCB->FileType = DirEnumEntry->FileType;
+
+            pObjectInfoCB->FileAttributes = DirEnumEntry->FileAttributes;
+
+            if( pObjectInfoCB->FileType == AFS_FILE_TYPE_MOUNTPOINT ||
+                pObjectInfoCB->FileType == AFS_FILE_TYPE_DFSLINK)
+            {
+
+                pObjectInfoCB->FileAttributes |= (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT);
+            }
+
+            if (pObjectInfoCB->FileType == AFS_FILE_TYPE_SYMLINK)
+            {
+
+                if ( pObjectInfoCB->FileAttributes == FILE_ATTRIBUTE_NORMAL)
+                {
+
+                    pObjectInfoCB->FileAttributes = FILE_ATTRIBUTE_REPARSE_POINT;
+                }
+                else
+                {
+
+                    pObjectInfoCB->FileAttributes |= FILE_ATTRIBUTE_REPARSE_POINT;
+                }
+            }
+
+            //
+            // Check for the case where we have a filetype of SymLink but both the TargetFid and the
+            // TargetName are empty. In this case set the filetype to zero so we evaluate it later in
+            // the code
+            //
+
+            if( pObjectInfoCB->FileType == AFS_FILE_TYPE_SYMLINK &&
+                pObjectInfoCB->TargetFileId.Vnode == 0 &&
+                pObjectInfoCB->TargetFileId.Unique == 0 &&
+                (TargetName == NULL || TargetName->Length == 0))
+            {
+
+                //
+                // This will ensure we perform a validation on the node
+                //
+
+                pObjectInfoCB->FileType = AFS_FILE_TYPE_UNKNOWN;
+            }
+
+            if( pObjectInfoCB->FileType == AFS_FILE_TYPE_UNKNOWN)
+            {
+
+                SetFlag( pObjectInfoCB->Flags, AFS_OBJECT_FLAGS_NOT_EVALUATED);
+            }
+
+            SetFlag( pObjectInfoCB->Flags, AFS_OBJECT_FLAGS_VERIFY);
+        }
+
+        if ( BooleanFlagOn( pObjectInfoCB->Flags, AFS_OBJECT_FLAGS_VERIFY))
+        {
+
+            pObjectInfoCB->CreationTime = DirEnumEntry->CreationTime;
+
+            pObjectInfoCB->LastAccessTime = DirEnumEntry->LastAccessTime;
+
+            pObjectInfoCB->LastWriteTime = DirEnumEntry->LastWriteTime;
+
+            pObjectInfoCB->ChangeTime = DirEnumEntry->ChangeTime;
+
+            pObjectInfoCB->EndOfFile = DirEnumEntry->EndOfFile;
+
+            pObjectInfoCB->AllocationSize = DirEnumEntry->AllocationSize;
+
+            pObjectInfoCB->EaSize = DirEnumEntry->EaSize;
+
+            pObjectInfoCB->Links = DirEnumEntry->Links;
+
+            pObjectInfoCB->Expiration = DirEnumEntry->Expiration;
+
+            pObjectInfoCB->DataVersion = DirEnumEntry->DataVersion;
+
+            ClearFlag( pObjectInfoCB->Flags, AFS_OBJECT_FLAGS_VERIFY);
         }
 
         //
@@ -1189,96 +1272,6 @@ AFSInitDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
                            pDirNode->NameInformation.TargetName.Length);
         }
 
-        //
-        // If we allocated the object information cb then update the information
-        //
-
-        if( bAllocatedObjectCB)
-        {
-
-            //
-            // Populate the rest of the data
-            //
-
-            pObjectInfoCB->FileId = DirEnumEntry->FileId;
-
-            pObjectInfoCB->TargetFileId = DirEnumEntry->TargetFileId;
-
-            pObjectInfoCB->FileType = DirEnumEntry->FileType;
-
-            pObjectInfoCB->CreationTime = DirEnumEntry->CreationTime;
-
-            pObjectInfoCB->LastAccessTime = DirEnumEntry->LastAccessTime;
-
-            pObjectInfoCB->LastWriteTime = DirEnumEntry->LastWriteTime;
-
-            pObjectInfoCB->ChangeTime = DirEnumEntry->ChangeTime;
-
-            pObjectInfoCB->EndOfFile = DirEnumEntry->EndOfFile;
-
-            pObjectInfoCB->AllocationSize = DirEnumEntry->AllocationSize;
-
-            pObjectInfoCB->FileAttributes = DirEnumEntry->FileAttributes;
-
-            if( pObjectInfoCB->FileType == AFS_FILE_TYPE_MOUNTPOINT ||
-                pObjectInfoCB->FileType == AFS_FILE_TYPE_DFSLINK)
-            {
-
-                pObjectInfoCB->FileAttributes |= (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT);
-            }
-
-            if (pObjectInfoCB->FileType == AFS_FILE_TYPE_SYMLINK)
-            {
-
-                if ( pObjectInfoCB->FileAttributes == FILE_ATTRIBUTE_NORMAL)
-                {
-
-                    pObjectInfoCB->FileAttributes = FILE_ATTRIBUTE_REPARSE_POINT;
-                }
-                else
-                {
-
-                    pObjectInfoCB->FileAttributes |= FILE_ATTRIBUTE_REPARSE_POINT;
-                }
-            }
-
-            pObjectInfoCB->EaSize = DirEnumEntry->EaSize;
-
-            //
-            // Check for the case where we have a filetype of SymLink but both the TargetFid and the
-            // TargetName are empty. In this case set the filetype to zero so we evaluate it later in
-            // the code
-            //
-
-            if( pObjectInfoCB->FileType == AFS_FILE_TYPE_SYMLINK &&
-                pObjectInfoCB->TargetFileId.Vnode == 0 &&
-                pObjectInfoCB->TargetFileId.Unique == 0 &&
-                pDirNode->NameInformation.TargetName.Length == 0)
-            {
-
-                //
-                // This will ensure we perform a validation on the node
-                //
-
-                pObjectInfoCB->FileType = AFS_FILE_TYPE_UNKNOWN;
-            }
-
-            if( pObjectInfoCB->FileType == AFS_FILE_TYPE_UNKNOWN)
-            {
-
-                SetFlag( pObjectInfoCB->Flags, AFS_OBJECT_FLAGS_NOT_EVALUATED);
-            }
-        }
-
-        //
-        // Object specific information
-        //
-
-        pObjectInfoCB->Links = DirEnumEntry->Links;
-
-        pObjectInfoCB->Expiration = DirEnumEntry->Expiration;
-
-        pObjectInfoCB->DataVersion = DirEnumEntry->DataVersion;
 
 try_exit:
 
@@ -1313,6 +1306,9 @@ try_exit:
             if( pObjectInfoCB != NULL)
             {
 
+                AFSAcquireShared( pObjectInfoCB->VolumeCB->ObjectInfoTree.TreeLock,
+                                  TRUE);
+
                 lCount = AFSObjectInfoDecrement( pObjectInfoCB,
                                                  AFS_OBJECT_REFERENCE_DIRENTRY);
 
@@ -1322,12 +1318,7 @@ try_exit:
                               pObjectInfoCB,
                               lCount));
 
-                if( bAllocatedObjectCB &&
-                    lCount == 0)
-                {
-
-                    AFSDeleteObjectInfo( &pObjectInfoCB);
-                }
+                AFSReleaseResource( pObjectInfoCB->VolumeCB->ObjectInfoTree.TreeLock);
             }
         }
     }
