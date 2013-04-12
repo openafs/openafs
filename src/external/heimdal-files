@@ -1,8 +1,15 @@
 lib/krb5/config_file.c		krb5/config_file.c
 lib/krb5/crypto.c		krb5/crypto.c
 lib/krb5/crypto.h		krb5/crypto.h
+lib/krb5/crypto-algs.c		krb5/crypto-algs.c
+lib/krb5/crypto-arcfour.c	krb5/crypto-arcfour.c
 lib/krb5/crypto-aes.c		krb5/crypto-aes.c
+lib/krb5/crypto-des-common.c	krb5/crypto-des-common.c
+lib/krb5/crypto-des.c		krb5/crypto-des.c
+lib/krb5/crypto-des3.c		krb5/crypto-des3.c
 lib/krb5/crypto-evp.c		krb5/crypto-evp.c
+lib/krb5/crypto-null.c		krb5/crypto-null.c
+lib/krb5/crypto-rand.c		krb5/crypto-rand.c
 lib/krb5/data.c			krb5/data.c
 lib/krb5/expand_path.c		krb5/expand_path.c
 lib/krb5/keyblock.c		krb5/keyblock.c
@@ -76,6 +83,7 @@ lib/roken/hex.c			roken/hex.c
 lib/roken/hex.h			roken/hex.h
 lib/roken/issuid.c		roken/issuid.c
 lib/roken/localtime_r.c		roken/localtime_r.c
+lib/roken/mkdir.c		roken/mkdir.c
 lib/roken/mkstemp.c		roken/mkstemp.c
 lib/roken/net_read.c		roken/net_read.c
 lib/roken/net_write.c		roken/net_write.c
