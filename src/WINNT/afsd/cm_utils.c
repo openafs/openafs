@@ -309,6 +309,7 @@ long cm_MapRPCErrorRmdir(long error, cm_req_t *reqp)
     else if (error == EINVAL)
         error = CM_ERROR_INVAL;
     else if (error == ENOTEMPTY
+              || error == EEXIST
               || error == 17		/* AIX */
               || error == 66		/* SunOS 4, Digital UNIX */
               || error == 93		/* Solaris 2, IRIX */
