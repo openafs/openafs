@@ -2327,6 +2327,37 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
         return;
     }
 
+    if (scp->fileType == CM_SCACHETYPE_DIRECTORY) {
+        cm_dirOp_t dirop;
+
+        lock_ReleaseWrite(&scp->rw);
+
+        code = cm_BeginDirOp(scp, userp, &req, CM_DIRLOCK_READ,
+                             CM_DIROP_FLAG_NONE, &dirop);
+        if (code == 0) {
+            /* is the directory empty? if not, CM_ERROR_NOTEMPTY */
+            afs_uint32 bEmpty;
+
+            code = cm_BPlusDirIsEmpty(&dirop, &bEmpty);
+            if (code == 0 && !bEmpty)
+                code = CM_ERROR_NOTEMPTY;
+
+            cm_EndDirOp(&dirop);
+        }
+
+        if (code) {
+            smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
+            (*ResultCB)->ResultStatus = status;
+            (*ResultCB)->ResultBufferLength = 0;
+            cm_ReleaseSCache(scp);
+            cm_ReleaseSCache(dscp);
+            osi_Log3(afsd_logp, "RDR_DeleteFileEntry cm_SyncOp failure scp=0x%p code=0x%x status=0x%x",
+                     scp, code, status);
+            return;
+        }
+        lock_ObtainWrite(&scp->rw);
+    }
+
     if (!bCheckOnly) {
         /* Drop all locks since the file is being deleted */
         code = cm_SyncOp(scp, NULL, userp, &req, 0,
