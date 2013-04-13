@@ -2011,7 +2011,8 @@ AFSSetBasicInfo( IN PIRP Irp,
             {
 
                 AFSObjectInfoCB * pParentObjectInfo = AFSFindObjectInfo( DirectoryCB->ObjectInformation->VolumeCB,
-                                                                         &DirectoryCB->ObjectInformation->ParentFileId);
+                                                                         &DirectoryCB->ObjectInformation->ParentFileId,
+                                                                         TRUE);
 
                 if ( pParentObjectInfo != NULL)
                 {
@@ -2343,7 +2344,8 @@ AFSSetFileLinkInfo( IN PIRP Irp)
         {
 
             pSrcParentObject = AFSFindObjectInfo( pSrcFcb->ObjectInformation->VolumeCB,
-                                                  &pSrcFcb->ObjectInformation->ParentFileId);
+                                                  &pSrcFcb->ObjectInformation->ParentFileId,
+                                                  TRUE);
         }
 
         if( pSrcParentObject == NULL)
@@ -2778,7 +2780,8 @@ AFSSetRenameInfo( IN PIRP Irp)
         {
 
             pSrcParentObject = AFSFindObjectInfo( pSrcFcb->ObjectInformation->VolumeCB,
-                                                  &pSrcFcb->ObjectInformation->ParentFileId);
+                                                  &pSrcFcb->ObjectInformation->ParentFileId,
+                                                  TRUE);
         }
 
         if( pSrcParentObject == NULL)

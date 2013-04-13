@@ -162,7 +162,8 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                 {
 
                     pParentObjectInfo = AFSFindObjectInfo( pObjectInfo->VolumeCB,
-                                                           &pObjectInfo->ParentFileId);
+                                                           &pObjectInfo->ParentFileId,
+                                                           FALSE);
                 }
 
                 if( pParentObjectInfo != NULL &&
@@ -327,7 +328,8 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                 {
 
                     pParentObjectInfo = AFSFindObjectInfo( pObjectInfo->VolumeCB,
-                                                           &pObjectInfo->ParentFileId);
+                                                           &pObjectInfo->ParentFileId,
+                                                           FALSE);
                 }
 
                 //
@@ -515,7 +517,8 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                 {
 
                     pParentObjectInfo = AFSFindObjectInfo( pObjectInfo->VolumeCB,
-                                                           &pObjectInfo->ParentFileId);
+                                                           &pObjectInfo->ParentFileId,
+                                                           FALSE);
                 }
 
                 AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,

@@ -110,7 +110,8 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
         {
 
             pParentObjectInfo = AFSFindObjectInfo( pObjectInfo->VolumeCB,
-                                                   &pObjectInfo->ParentFileId);
+                                                   &pObjectInfo->ParentFileId,
+                                                   FALSE);
         }
 
         pRootFcb = pObjectInfo->VolumeCB->RootFcb;

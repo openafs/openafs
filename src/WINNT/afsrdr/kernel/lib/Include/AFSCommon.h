@@ -1340,7 +1340,8 @@ AFSDeleteObjectInfo( IN AFSObjectInfoCB **ppObjectInfo);
 
 AFSObjectInfoCB *
 AFSFindObjectInfo( IN AFSVolumeCB * VolumeCB,
-                   IN AFSFileID   * FileID);
+                   IN AFSFileID   * FileID,
+                   IN BOOLEAN       bUpdateLastUse);
 
 void
 AFSReleaseObjectInfo( IN OUT AFSObjectInfoCB **ppObjectInfo);
