@@ -1636,6 +1636,15 @@ AFSExamineVolume( IN AFSVolumeCB *pVolumeCB)
 
             AFSExamineObjectInfo( pCurrentObject, bVolumeObject, &bReleaseVolumeTreeLock);
 
+            if ( bReleaseVolumeTreeLock == TRUE &&
+                 ( ExGetExclusiveWaiterCount( pVolumeCB->ObjectInfoTree.TreeLock) > 0 ||
+                   ExGetSharedWaiterCount( pVolumeCB->ObjectInfoTree.TreeLock) > 0))
+            {
+
+                AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
+
+                bReleaseVolumeTreeLock = FALSE;
+            }
             //
             // The CurrentObject is either destroyed or the reference count has been
             // dropped by AFSExamineObjectInfo().
