@@ -1699,6 +1699,12 @@ AFSSnapshotDirectory( IN AFSFcb *Fcb,
                 pSnapshotEntry->NameHash = (ULONG)pDirEntry->CaseSensitiveTreeEntry.HashIndex;
 
                 pSnapshotEntry++;
+
+                if ( pDirEntry->ObjectInformation != NULL)
+                {
+
+                    KeQueryTickCount( &pDirEntry->ObjectInformation->LastAccessCount);
+                }
             }
             else
             {
