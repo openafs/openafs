@@ -1017,6 +1017,8 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
 
                         SetFlag( pDirNode->Flags, AFS_DIR_ENTRY_VALID);
 
+                        KeQueryTickCount( &ObjectInfoCB->LastAccessCount);
+
                         if( pCurrentDirEntry->ShortNameLength > 0 &&
                             pDirNode->NameInformation.ShortNameLength > 0)
                         {

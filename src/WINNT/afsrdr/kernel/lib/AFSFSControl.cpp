@@ -1023,6 +1023,8 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                                   "AFSProcessUserFsRequest Increment count on object %p Cnt %d\n",
                                   pParentObjectInfo,
                                   lCount));
+
+                    KeQueryTickCount( &pParentObjectInfo->LastAccessCount);
                 }
 
                 AFSReleaseResource( pFcb->ObjectInformation->VolumeCB->ObjectInfoTree.TreeLock);

@@ -1159,6 +1159,8 @@ AFSInitDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
                       pObjectInfoCB,
                       lCount));
 
+        KeQueryTickCount( &pObjectInfoCB->LastAccessCount);
+
         AFSReleaseResource( ParentObjectInfo->VolumeCB->ObjectInfoTree.TreeLock);
 
         ntStatus = STATUS_SUCCESS;
@@ -8040,6 +8042,8 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
                                   "AFSGetObjectStatus Increment2 count on object %p Cnt %d\n",
                                   pObjectInfo,
                                   lCount));
+
+                    KeQueryTickCount( &pObjectInfo->LastAccessCount);
                 }
 
                 AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
