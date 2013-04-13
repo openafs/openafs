@@ -1,14 +1,14 @@
 # Portuguese translation for openafs debconf messages
 # Copyright (C) 2007 Miguel Figueiredo 
 # This file is distributed under the same license as the openafs package.
-# Miguel Figueiredo <elmig@debianpt.org>, 2007.
+# Miguel Figueiredo <elmig@debianpt.org>, 2007, 2013.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: openafs 1.4.2-5\n"
 "Report-Msgid-Bugs-To: openafs@packages.debian.org\n"
 "POT-Creation-Date: 2013-04-08 11:17-0700\n"
-"PO-Revision-Date: 2009-02-13 09:24-0800\n"
+"PO-Revision-Date: 2013-04-08 22:18+0100\n"
 "Last-Translator: Miguel Figueiredo <elmig@debianpt.org>\n"
 "Language-Team: Portuguese <traduz@debianpt.org>\n"
 "Language: pt\n"
@@ -157,19 +157,19 @@ msgstr ""
 #. Choices
 #: ../openafs-client.templates:7001
 msgid "Yes"
-msgstr ""
+msgstr "Sim"
 
 #. Type: select
 #. Choices
 #: ../openafs-client.templates:7001
 msgid "Sparse"
-msgstr ""
+msgstr "Escasso"
 
 #. Type: select
 #. Choices
 #: ../openafs-client.templates:7001
 msgid "No"
-msgstr ""
+msgstr "Não"
 
 #. Type: select
 #. Description
@@ -216,6 +216,11 @@ msgid ""
 "CellAlias file are shown as normal, although they may appear to be dangling "
 "links until traversed."
 msgstr ""
+"A opção Escasso é o mesmo que a Sim, excepto que em vez de preencher "
+"imediatamente /afs a partir de /etc/openafs/CellServDB, as células que não "
+"a célula local, não aparecerão até serem acedidas. Os aliases para as células "
+"definidas no ficheiro CellAlias são mostradas como normalmente, embora "
+"possam parecer ser links pendentes até serem atravessados."
 
 #. Type: boolean
 #. Description

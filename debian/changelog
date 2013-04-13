@@ -8,6 +8,9 @@ openafs (1.6.2.1-1) UNRELEASED; urgency=low
     options on upgrade.  Based on work by Jakob Haufe.  (Closes: #644564)
   * Translation updates:
     - Czech, thanks Martin Šín.  (Closes: #705013)
+    - Russian, thanks Yuri Kozlov.  (Closes: #705159)
+    - French, thanks Christian Perrier.  (Closes: #705296)
+    - Portuguese, thanks Miguel Figueiredo.  (Closes: #705307)
 
  -- Russ Allbery <rra@debian.org>  Wed, 06 Mar 2013 00:48:49 -0800
 

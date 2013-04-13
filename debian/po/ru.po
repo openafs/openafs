@@ -1,21 +1,21 @@
 # translation of ru.po to Russian
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
+# This file is distributed under the same license as the openafs package.
 #
-# Yuri Kozlov <yuray@komyakino.ru>, 2009.
+# Yuri Kozlov <yuray@komyakino.ru>, 2009, 2013.
 msgid ""
 msgstr ""
-"Project-Id-Version: openafs 1.4.10+dfsg1-2\n"
+"Project-Id-Version: openafs 1.6.2.1-1\n"
 "Report-Msgid-Bugs-To: openafs@packages.debian.org\n"
 "POT-Creation-Date: 2013-04-08 11:17-0700\n"
-"PO-Revision-Date: 2009-06-16 20:50+0400\n"
+"PO-Revision-Date: 2013-04-10 21:11+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <debian-l10n-russian@lists.debian.org>\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: KBabel 1.11.4\n"
+"X-Generator: Lokalize 1.4\n"
 "Plural-Forms:  nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
@@ -41,12 +41,12 @@ msgid ""
 msgstr ""
 "AFS использует файл /etc/openafs/CellServDB для хранения списка серверов, с "
 "которыми нужно соединяться при поиске частей ячейки. Ячейка, которой "
-"принадлежит данная рабочая станция, указывается не в этом файле. Введите "
-"имена хостов серверов базы данных через пробел. ВАЖНО: если вы создаёте "
+"принадлежит данная рабочая станция, указывается не в этом файле. Вводите "
+"имена узлов серверов базы данных через пробел. ВАЖНО: если вы создаёте "
 "новую ячейку и эта машина является базой данных этой ячейки, то введите "
 "здесь только имя данной машины; добавляйте другие серверы по мере ввода их в "
 "работу. Также, выключите запуск клиента AFS при загрузке машины пока не "
-"будет настроена ячейка. Когда будете готовы, можете включить клиент, "
+"будет настроена ячейка. Когда будете готовы, включите клиент, "
 "отредактировав файл /etc/openafs/afs.conf.client."
 
 #. Type: string
@@ -91,7 +91,7 @@ msgstr ""
 #. Description
 #: ../openafs-client.templates:4001
 msgid "Run Openafs client now and at boot?"
-msgstr "Запустить клиента Openafs сейчас и при включении компьютера?"
+msgstr "Запустить клиент Openafs сейчас и при включении компьютера?"
 
 #. Type: boolean
 #. Description
@@ -156,19 +156,19 @@ msgstr ""
 #. Choices
 #: ../openafs-client.templates:7001
 msgid "Yes"
-msgstr ""
+msgstr "Да"
 
 #. Type: select
 #. Choices
 #: ../openafs-client.templates:7001
 msgid "Sparse"
-msgstr ""
+msgstr "Частично"
 
 #. Type: select
 #. Choices
 #: ../openafs-client.templates:7001
 msgid "No"
-msgstr ""
+msgstr "Нет"
 
 #. Type: select
 #. Description
@@ -214,6 +214,13 @@ msgid ""
 "CellAlias file are shown as normal, although they may appear to be dangling "
 "links until traversed."
 msgstr ""
+"Значение «Частично» означает что и «Да», за исключением того, "
+"что заполнение /afs из /etc/openafs/CellServDB выполняется сразу, "
+"все ячейки кроме локальной не появятся до тех пор, "
+"пока к ним не будет выполнено обращение. Псевдонимы ячеек "
+"задаются в файле CellAlias как обычно, хотя они могут вести себя "
+"как подвисшие ссылки (dangling links) пока не будет "
+"выполнен обход."
 
 #. Type: boolean
 #. Description
@@ -280,3 +287,4 @@ msgstr ""
 "случается и с потоковым файловым сервером. Вероятно, файловый сервер просто "
 "не запустится, но если это даже произойдёт, то в результате это может "
 "повредить данные. Это было предупреждение."
+
