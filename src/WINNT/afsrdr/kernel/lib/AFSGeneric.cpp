@@ -9468,6 +9468,9 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
         // or AFSQueueInvalidateObject
         //
 
+        AFSAcquireShared( ObjectInfo->VolumeCB->ObjectInfoTree.TreeLock,
+                          TRUE);
+
         lCount = AFSObjectInfoDecrement( ObjectInfo,
                                          AFS_OBJECT_REFERENCE_INVALIDATION);
 
@@ -9476,6 +9479,8 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                       "AFSPerformObjectInvalidation Decrement count on object %p Cnt %d\n",
                       ObjectInfo,
                       lCount));
+
+        AFSReleaseResource( ObjectInfo->VolumeCB->ObjectInfoTree.TreeLock);
     }
 
     return ntStatus;
