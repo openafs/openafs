@@ -1705,7 +1705,8 @@ AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
     {
 
         pParentObjectInfo = AFSFindObjectInfo( (*ppObjectInfo)->VolumeCB,
-                                               &(*ppObjectInfo)->ParentFileId);
+                                               &(*ppObjectInfo)->ParentFileId,
+                                               FALSE);
     }
 
     if( (*ppObjectInfo)->FileType == AFS_FILE_TYPE_SYMLINK ||
@@ -2251,7 +2252,8 @@ AFSIsChildOfParent( IN AFSFcb *Dcb,
         }
 
         pParentObjectInfo = AFSFindObjectInfo( pCurrentFcb->ObjectInformation->VolumeCB,
-                                               &pCurrentFcb->ObjectInformation->ParentFileId);
+                                               &pCurrentFcb->ObjectInformation->ParentFileId,
+                                               FALSE);
 
         if ( pParentObjectInfo != NULL)
         {
@@ -6170,7 +6172,8 @@ AFSObjectInfoDecrement( IN AFSObjectInfoCB *ObjectInfo,
 
 AFSObjectInfoCB *
 AFSFindObjectInfo( IN AFSVolumeCB *VolumeCB,
-                   IN AFSFileID   *FileId)
+                   IN AFSFileID   *FileId,
+                   IN BOOLEAN      bUpdateLastUse)
 {
     DWORD            ntStatus = STATUS_SUCCESS;
     ULONGLONG        ullIndex;
@@ -6205,6 +6208,12 @@ AFSFindObjectInfo( IN AFSVolumeCB *VolumeCB,
                       "AFSFindObjectInfo Decrement count on object %p Cnt %d\n",
                       pObjectInfo,
                       lCount));
+
+        if ( bUpdateLastUse)
+        {
+
+            KeQueryTickCount( &pObjectInfo->LastAccessCount);
+        }
     }
 
     AFSReleaseResource( VolumeCB->ObjectInfoTree.TreeLock);
@@ -6292,7 +6301,9 @@ AFSDeleteObjectInfo( IN AFSObjectInfoCB **ppObjectInfo)
         {
 
             pParentObjectInfo = AFSFindObjectInfo( pVolume,
-                                                   &pObjectInfo->ParentFileId);
+                                                   &pObjectInfo->ParentFileId,
+                                                   FALSE);
+
             if( pParentObjectInfo != NULL)
             {
 

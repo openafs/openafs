@@ -2372,7 +2372,8 @@ AFSOpenTargetDirectory( IN PIRP Irp,
         {
 
             pGrandParentObject = AFSFindObjectInfo( pParentObject->VolumeCB,
-                                                    &pParentObject->ParentFileId);
+                                                    &pParentObject->ParentFileId,
+                                                    TRUE);
 
             if ( pGrandParentObject)
             {
@@ -3710,7 +3711,8 @@ AFSOpenSpecialShareFcb( IN PIRP Irp,
         {
 
             pParentObjectInfo = AFSFindObjectInfo( pObjectInfo->VolumeCB,
-                                                   &pObjectInfo->ParentFileId);
+                                                   &pObjectInfo->ParentFileId,
+                                                   TRUE);
         }
 
         if( DirectoryCB->ObjectInformation->Fcb == NULL)

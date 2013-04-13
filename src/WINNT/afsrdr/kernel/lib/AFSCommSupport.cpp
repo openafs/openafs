@@ -1967,7 +1967,8 @@ AFSNotifyDelete( IN AFSDirectoryCB *DirectoryCB,
         pObjectInfo = DirectoryCB->ObjectInformation;
 
         pParentObjectInfo = AFSFindObjectInfo( pObjectInfo->VolumeCB,
-                                               &pObjectInfo->ParentFileId);
+                                               &pObjectInfo->ParentFileId,
+                                               FALSE);
 
         stDelete.ParentId = pObjectInfo->ParentFileId;
 
@@ -2688,7 +2689,8 @@ AFSEvaluateTargetByID( IN AFSObjectInfoCB *ObjectInfo,
         {
 
             pParentObjectInfo = AFSFindObjectInfo( ObjectInfo->VolumeCB,
-                                                   &ObjectInfo->ParentFileId);
+                                                   &ObjectInfo->ParentFileId,
+                                                   TRUE);
 
             stTargetID.ParentId = ObjectInfo->ParentFileId;
         }

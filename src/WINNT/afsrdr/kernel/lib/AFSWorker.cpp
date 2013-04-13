@@ -1650,7 +1650,7 @@ AFSExamineVolume( IN AFSVolumeCB *pVolumeCB)
                 //
 
                 bReleaseVolumeTreeLock = AFSAcquireExcl( pVolumeCB->ObjectInfoTree.TreeLock,
-                                                         FALSE);
+                                                         TRUE);
             }
 
             pCurrentObject = pNextObject;

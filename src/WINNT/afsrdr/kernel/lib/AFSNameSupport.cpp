@@ -1947,7 +1947,8 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                 {
 
                     pParentObjectInfo = AFSFindObjectInfo( pCurrentObject->VolumeCB,
-                                                           &pCurrentObject->ParentFileId);
+                                                           &pCurrentObject->ParentFileId,
+                                                           FALSE);
                 }
 
                 ASSERT( pParentObjectInfo != NULL);
