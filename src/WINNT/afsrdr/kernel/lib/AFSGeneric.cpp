@@ -9515,3 +9515,18 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 
     return ntStatus;
 }
+
+BOOLEAN
+AFSIgnoreReparsePointToFile( void)
+{
+    AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
+    BOOLEAN bIgnoreReparsePoint;
+
+    {
+
+	bIgnoreReparsePoint = BooleanFlagOn( pDeviceExt->Specific.RDR.ReparsePointPolicy,
+					     AFS_REPARSE_POINT_TO_FILE_AS_FILE);
+    }
+
+    return bIgnoreReparsePoint;
+}

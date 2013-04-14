@@ -1446,6 +1446,9 @@ NTSTATUS
 AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                             IN ULONG InvalidateReason);
 
+BOOLEAN
+AFSIgnoreReparsePointToFile( void);
+
 //
 // AFSNameArray.cpp Prototypes
 //
