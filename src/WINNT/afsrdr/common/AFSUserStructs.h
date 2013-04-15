@@ -134,6 +134,8 @@ typedef struct _AFS_REDIR_INIT_INFO_CB
                                         // dynamic and will be increased in size as
                                         // needed by this amount
 
+    ULONG       GlobalReparsePointPolicy; // One or more of AFS_REPARSE_POINT_VALID_POLICY_FLAGS
+
     LARGE_INTEGER MemoryCacheOffset;    // The offset in the afsd_service process memory
                                         // space at which the extents are allocated
     LARGE_INTEGER MemoryCacheLength;    // and the length of the allocated region
