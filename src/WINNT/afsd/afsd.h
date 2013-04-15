@@ -120,6 +120,8 @@ extern int cm_shortNames;
 extern int cm_directIO;
 extern int cm_volumeInfoReadOnlyFlag;
 
+extern afs_uint32 rdr_ReparsePointPolicy;
+
 extern long rx_mtu;
 
 extern HANDLE WaitToTerminate;

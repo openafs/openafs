@@ -214,6 +214,7 @@ RDR_SetInitParams( OUT AFSRedirectorInitInfo **ppRedirInitInfo, OUT DWORD * pRed
     (*ppRedirInitInfo)->CacheBlockSize = cm_data.blockSize;
     (*ppRedirInitInfo)->MaxPathLinkCount = MAX_FID_COUNT;
     (*ppRedirInitInfo)->NameArrayLength = MAX_FID_COUNT;
+    (*ppRedirInitInfo)->GlobalReparsePointPolicy = rdr_ReparsePointPolicy;
     if (cm_virtualCache || cm_data.bufferSize <= maxMemoryCacheSize) {
         osi_Log0(afsd_logp, "RDR_SetInitParams Initializing Memory Extent Interface");
         (*ppRedirInitInfo)->MemoryCacheOffset.QuadPart = (LONGLONG)cm_data.bufDataBaseAddress;

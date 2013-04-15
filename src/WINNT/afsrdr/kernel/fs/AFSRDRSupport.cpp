@@ -518,6 +518,12 @@ AFSInitializeRedirector( IN AFSRedirectorInitInfo *RedirInitInfo)
         }
 
         //
+	// Global Reparse Point Policy
+	//
+
+	pDevExt->Specific.RDR.ReparsePointPolicy = RedirInitInfo->GlobalReparsePointPolicy;
+
+	//
         // Are we performing direct to service IO?
         //
 

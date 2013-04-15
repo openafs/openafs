@@ -81,6 +81,8 @@ int cm_shortNames = 1;
 int cm_directIO = 1;
 int cm_volumeInfoReadOnlyFlag = 0;
 
+afs_uint32 rdr_ReparsePointPolicy = 0;
+
 int smb_UseV3 = 1;
 afs_uint32 smb_Enabled = 1;
 
@@ -1413,6 +1415,16 @@ afsd_InitCM(char **reasonP)
         cm_directIO = 1;
     }
     afsi_log("CM DirectIO is %u", cm_directIO);
+
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "ReparsePointPolicy", NULL, NULL,
+			   (BYTE *) &dwValue, &dummyLen);
+    if (code == ERROR_SUCCESS) {
+	rdr_ReparsePointPolicy = (unsigned short) dwValue;
+    } else {
+	rdr_ReparsePointPolicy = 0;
+    }
+    afsi_log("RDR ReparsePointPolicy is 0x%x", rdr_ReparsePointPolicy);
 
     RegCloseKey (parmKey);
 
