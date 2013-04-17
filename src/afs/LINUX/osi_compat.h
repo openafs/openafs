@@ -476,7 +476,7 @@ afs_dentry_open(struct dentry *dp, struct vfsmount *mnt, int flags, const struct
     filp = dentry_open(&path, flags, creds);
     return filp;
 #else
-    return dentry_open(dp, mntget(mnt), flags, creds);
+    return dentry_open(dp, mnt, flags, creds);
 #endif
 }
 #endif
