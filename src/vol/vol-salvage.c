@@ -4159,7 +4159,7 @@ SalvageVolume(struct SalvInfo *salvinfo, struct InodeSummary *rwIsp, IHandle_t *
     /* Make sure the uniquifer is big enough: maxunique is the real maxUniquifier */
     if (volHeader.uniquifier < (maxunique + 1)) {
 	if (!Showmode)
-	    Log("Volume uniquifier is too low; fixed\n");
+	    Log("Volume uniquifier %u is too low (max uniq %u); fixed\n", volHeader.uniquifier, maxunique);
 	/* Plus 2,000 in case there are workstations out there with
 	 * cached vnodes that have since been deleted
 	 */
