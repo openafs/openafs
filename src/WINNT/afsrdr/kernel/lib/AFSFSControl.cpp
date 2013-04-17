@@ -1050,6 +1050,9 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                                   pFcb->ObjectInformation->FileAttributes,
                                   ntStatus));
 
+                    AFSAcquireShared( pFcb->ObjectInformation->VolumeCB->ObjectInfoTree.TreeLock,
+                                      TRUE);
+
                     lCount = AFSObjectInfoDecrement( pParentObjectInfo,
                                                      AFS_OBJECT_REFERENCE_FS_REQ);
 
@@ -1058,6 +1061,8 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                                   "AFSProcessUserFsRequest Decrement count on object %p Cnt %d\n",
                                   pParentObjectInfo,
                                   lCount));
+
+                    AFSReleaseResource( pFcb->ObjectInformation->VolumeCB->ObjectInfoTree.TreeLock);
                 }
 
                 break;

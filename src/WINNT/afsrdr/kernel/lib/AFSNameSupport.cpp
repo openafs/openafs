@@ -2820,6 +2820,9 @@ AFSDeleteDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
             // Dereference the object for this dir entry
             //
 
+            AFSAcquireShared( pDirEntry->ObjectInformation->VolumeCB->ObjectInfoTree.TreeLock,
+                              TRUE);
+
             lCount = AFSObjectInfoDecrement( pDirEntry->ObjectInformation,
                                              AFS_OBJECT_REFERENCE_DIRENTRY);
 
@@ -2828,6 +2831,8 @@ AFSDeleteDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
                           "AFSDeletepDirEntry Decrement count on object %p Cnt %d\n",
                           pDirEntry->ObjectInformation,
                           lCount));
+
+            AFSReleaseResource( pDirEntry->ObjectInformation->VolumeCB->ObjectInfoTree.TreeLock);
         }
 
         ExDeleteResourceLite( &pDirEntry->NonPaged->Lock);

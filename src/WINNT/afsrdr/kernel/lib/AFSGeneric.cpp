@@ -2144,7 +2144,7 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
             try_return( ntStatus);
         }
 
-        AFSAcquireShared( pVolumeCB->ObjectInfoTree.TreeLock,
+        AFSAcquireExcl( pVolumeCB->ObjectInfoTree.TreeLock,
                           TRUE);
 
         if ( AFSIsVolumeFID( &InvalidateCB->FileID))
@@ -2675,6 +2675,9 @@ AFSInvalidateVolume( IN AFSVolumeCB *VolumeCB,
             }
         }
 
+        AFSAcquireShared( VolumeCB->ObjectInfoTree.TreeLock,
+                          TRUE);
+
         //
         // Invalidate the volume root directory
         //
@@ -2693,8 +2696,13 @@ AFSInvalidateVolume( IN AFSVolumeCB *VolumeCB,
                           pCurrentObject,
                           lCount));
 
+            AFSReleaseResource( VolumeCB->ObjectInfoTree.TreeLock);
+
             AFSInvalidateObject( &pCurrentObject,
                                  Reason);
+
+            AFSAcquireShared( VolumeCB->ObjectInfoTree.TreeLock,
+                              TRUE);
 
             if ( pCurrentObject)
             {
@@ -2713,9 +2721,6 @@ AFSInvalidateVolume( IN AFSVolumeCB *VolumeCB,
         //
         // Apply invalidation to all other volume objects
         //
-
-        AFSAcquireShared( VolumeCB->ObjectInfoTree.TreeLock,
-                          TRUE);
 
         pCurrentObject = VolumeCB->ObjectInfoListHead;
 
@@ -6023,6 +6028,9 @@ AFSAllocateObjectInfo( IN AFSObjectInfoCB *ParentObjectInfo,
 
             SetFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_PARENT_FID);
 
+            AFSAcquireShared( ParentObjectInfo->VolumeCB->ObjectInfoTree.TreeLock,
+                              TRUE);
+
             lCount = AFSObjectInfoIncrement( ParentObjectInfo,
                                              AFS_OBJECT_REFERENCE_CHILD);
 
@@ -6031,6 +6039,8 @@ AFSAllocateObjectInfo( IN AFSObjectInfoCB *ParentObjectInfo,
                           "AFSAllocateObjectInfo Increment count on parent object %p Cnt %d\n",
                           ParentObjectInfo,
                           lCount));
+
+            AFSReleaseResource( ParentObjectInfo->VolumeCB->ObjectInfoTree.TreeLock);
         }
 
         //
@@ -6311,6 +6321,9 @@ AFSDeleteObjectInfo( IN AFSObjectInfoCB **ppObjectInfo)
 
                 ClearFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_PARENT_FID);
 
+                AFSAcquireShared( pParentObjectInfo->VolumeCB->ObjectInfoTree.TreeLock,
+                                  TRUE);
+
                 lCount = AFSObjectInfoDecrement( pParentObjectInfo,
                                                  AFS_OBJECT_REFERENCE_CHILD);
 
@@ -6319,6 +6332,8 @@ AFSDeleteObjectInfo( IN AFSObjectInfoCB **ppObjectInfo)
                               "AFSDeleteObjectInfo Decrement count on parent object %p Cnt %d\n",
                               pParentObjectInfo,
                               lCount));
+
+                AFSReleaseResource( pParentObjectInfo->VolumeCB->ObjectInfoTree.TreeLock);
 
                 AFSReleaseObjectInfo( &pParentObjectInfo);
             }
@@ -8006,6 +8021,9 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
 
                 pObjectInfo = &pVolumeCB->ObjectInformation;
 
+                AFSAcquireShared( pVolumeCB->ObjectInfoTree.TreeLock,
+                                  TRUE);
+
                 lCount = AFSObjectInfoIncrement( pObjectInfo,
                                                  AFS_OBJECT_REFERENCE_STATUS);
 
@@ -8014,12 +8032,14 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
                               "AFSGetObjectStatus Increment1 count on object %p Cnt %d\n",
                               pObjectInfo,
                               lCount));
+
+                AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
             }
             else
             {
 
-                AFSAcquireShared( pVolumeCB->ObjectInfoTree.TreeLock,
-                                  TRUE);
+                AFSAcquireExcl( pVolumeCB->ObjectInfoTree.TreeLock,
+                                TRUE);
 
                 ullIndex = AFSCreateLowIndex( &GetStatusInfo->FileID);
 
@@ -8210,6 +8230,9 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
 
             pObjectInfo = pDirectoryEntry->ObjectInformation;
 
+            AFSAcquireExcl( pObjectInfo->VolumeCB->ObjectInfoTree.TreeLock,
+                            TRUE);
+
             lCount = AFSObjectInfoIncrement( pObjectInfo,
                                              AFS_OBJECT_REFERENCE_STATUS);
 
@@ -8218,6 +8241,8 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
                           "AFSGetObjectStatus Increment3 count on object %p Cnt %d\n",
                           pObjectInfo,
                           lCount));
+
+            AFSReleaseResource( pObjectInfo->VolumeCB->ObjectInfoTree.TreeLock);
         }
 
         //
@@ -8294,21 +8319,26 @@ try_exit:
             ASSERT( lCount >= 0);
         }
 
-        if( pObjectInfo != NULL)
-        {
-
-            lCount = AFSObjectInfoDecrement( pObjectInfo,
-                                             AFS_OBJECT_REFERENCE_STATUS);
-
-            AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSGetObjectStatus Decrement count on object %p Cnt %d\n",
-                          pObjectInfo,
-                          lCount));
-        }
-
         if( pVolumeCB != NULL)
         {
+
+            if( pObjectInfo != NULL)
+            {
+
+                AFSAcquireShared( pVolumeCB->ObjectInfoTree.TreeLock,
+                                  TRUE);
+
+                lCount = AFSObjectInfoDecrement( pObjectInfo,
+                                                 AFS_OBJECT_REFERENCE_STATUS);
+
+                AFSDbgTrace(( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSGetObjectStatus Decrement count on object %p Cnt %d\n",
+                              pObjectInfo,
+                              lCount));
+
+                AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
+            }
 
             lCount = AFSVolumeDecrement( pVolumeCB,
                                          VolumeReferenceReason);
