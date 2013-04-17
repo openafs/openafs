@@ -54,17 +54,13 @@ afs_linux_raw_open(afs_dcache_id_t *ainode)
     tip = dp->d_inode;
     tip->i_flags |= S_NOATIME;	/* Disable updating access times. */
 
-    /* note that if this is ever changed to recover from errors, we will need
-     * to put this reference back */
-    mntget(afs_cacheMnt);
-
 #if defined(STRUCT_TASK_STRUCT_HAS_CRED)
     /* Use stashed credentials - prevent selinux/apparmor problems  */
-    filp = afs_dentry_open(dp, afs_cacheMnt, O_RDWR, cache_creds);
+    filp = afs_dentry_open(dp, mntget(afs_cacheMnt), O_RDWR, cache_creds);
     if (IS_ERR(filp))
-	filp = afs_dentry_open(dp, afs_cacheMnt, O_RDWR, current_cred());
+	filp = afs_dentry_open(dp, mntget(afs_cacheMnt), O_RDWR, current_cred());
 #else
-    filp = dentry_open(dp, afs_cacheMnt, O_RDWR);
+    filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR);
 #endif
     if (IS_ERR(filp))
 	osi_Panic("Can't open file: %d\n", (int) PTR_ERR(filp));
