@@ -3295,6 +3295,14 @@ AFSSetRenameInfo( IN PIRP Irp)
 
             lCount = InterlockedIncrement( &pTargetParentObject->Specific.Directory.ChildOpenReferenceCount);
 
+
+            //
+            // Guaranteed to be in the same volume
+            //
+
+            AFSAcquireExcl( pSrcParentObject->VolumeCB->ObjectInfoTree.TreeLock,
+                            TRUE);
+
             lCount = AFSObjectInfoIncrement( pTargetParentObject,
                                              AFS_OBJECT_REFERENCE_CHILD);
 
@@ -3316,6 +3324,8 @@ AFSSetRenameInfo( IN PIRP Irp)
             pSrcFcb->ObjectInformation->ParentFileId = pTargetParentObject->FileId;
 
             SetFlag( pSrcFcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_PARENT_FID);
+
+            AFSReleaseResource( pSrcParentObject->VolumeCB->ObjectInfoTree.TreeLock);
 
             ulNotificationAction = FILE_ACTION_ADDED;
         }
