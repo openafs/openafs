@@ -787,6 +787,9 @@ NTSTATUS
 AFSConfigureTrace( IN AFSTraceConfigCB *TraceInfo);
 
 NTSTATUS
+AFSGetTraceConfig( OUT AFSTraceConfigCB *TraceInfo);
+
+NTSTATUS
 AFSGetTraceBuffer( IN ULONG TraceBufferLength,
                    OUT void *TraceBuffer,
                    OUT ULONG_PTR *CopiedLength);

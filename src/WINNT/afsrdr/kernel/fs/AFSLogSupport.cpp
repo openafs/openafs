@@ -421,6 +421,31 @@ try_exit:
 }
 
 NTSTATUS
+AFSGetTraceConfig( OUT AFSTraceConfigCB *TraceInfo)
+{
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+
+    __Enter
+    {
+
+	AFSAcquireExcl( &AFSDbgLogLock,
+			TRUE);
+
+	TraceInfo->TraceLevel = AFSTraceLevel;
+
+	TraceInfo->TraceBufferLength = AFSDbgBufferLength;
+
+	TraceInfo->Subsystem = AFSTraceComponent;
+
+	TraceInfo->DebugFlags = AFSDebugFlags;
+
+	AFSReleaseResource( &AFSDbgLogLock);
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
 AFSGetTraceBuffer( IN ULONG TraceBufferLength,
                    OUT void *TraceBuffer,
                    OUT ULONG_PTR *CopiedLength)
