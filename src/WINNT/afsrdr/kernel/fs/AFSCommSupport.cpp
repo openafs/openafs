@@ -527,9 +527,10 @@ AFSCheckIoctlPermissions( IN ULONG ControlCode)
 
                 return STATUS_ACCESS_DENIED;
             }
-            return STATUS_SUCCESS;
+	    return STATUS_SUCCESS;
 
 	case IOCTL_AFS_SET_REPARSE_POLICY:
+	case IOCTL_AFS_GET_REPARSE_POLICY:
 
 	    //
 	    // Anyone can call this
@@ -930,8 +931,31 @@ AFSProcessControlRequest( IN PIRP Irp)
 		break;
 	    }
 
-            default:
-            {
+	    case IOCTL_AFS_GET_REPARSE_POLICY:
+	    {
+
+		AFSGetReparsePointPolicyCB *pPolicy = (AFSGetReparsePointPolicyCB *)Irp->AssociatedIrp.SystemBuffer;
+
+		if( pPolicy == NULL ||
+		    pIrpSp->Parameters.DeviceIoControl.OutputBufferLength < sizeof( AFSGetReparsePointPolicyCB))
+		{
+		    ntStatus = STATUS_INVALID_PARAMETER;
+		    break;
+		}
+
+		ntStatus = AFSGetReparsePointPolicy( pPolicy);
+
+		if ( NT_SUCCESS( ntStatus))
+		{
+
+		    Irp->IoStatus.Information = sizeof( AFSGetReparsePointPolicyCB);
+		}
+
+		break;
+	    }
+
+	    default:
+	    {
 
                 //
                 // Check the state of the library
