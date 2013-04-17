@@ -435,8 +435,10 @@ AFSCheckIoctlPermissions( IN ULONG ControlCode)
             return STATUS_SUCCESS;
 
         case IOCTL_AFS_CONFIGURE_DEBUG_TRACE:
+	case IOCTL_AFS_GET_DEBUG_TRACE:
         case IOCTL_AFS_GET_TRACE_BUFFER:
         case IOCTL_AFS_FORCE_CRASH:
+
 
             //
             // Any admin can call these
@@ -700,6 +702,31 @@ AFSProcessControlRequest( IN PIRP Irp)
 
                 break;
             }
+
+	    case IOCTL_AFS_GET_DEBUG_TRACE:
+	    {
+
+		AFSTraceConfigCB *pTraceInfo = (AFSTraceConfigCB *)Irp->AssociatedIrp.SystemBuffer;
+
+		if( pTraceInfo == NULL ||
+		    pIrpSp->Parameters.DeviceIoControl.OutputBufferLength < sizeof( AFSTraceConfigCB))
+		{
+
+		    ntStatus = STATUS_INVALID_PARAMETER;
+
+		    break;
+		}
+
+		ntStatus = AFSGetTraceConfig( pTraceInfo);
+
+		if ( NT_SUCCESS( ntStatus))
+		{
+
+		    Irp->IoStatus.Information = sizeof( AFSTraceConfigCB);
+		}
+
+		break;
+	    }
 
             case IOCTL_AFS_GET_TRACE_BUFFER:
             {
