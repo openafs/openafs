@@ -56,14 +56,17 @@ afs_linux_raw_open(afs_dcache_id_t *ainode)
 
 #if defined(STRUCT_TASK_STRUCT_HAS_CRED)
     /* Use stashed credentials - prevent selinux/apparmor problems  */
-    filp = afs_dentry_open(dp, mntget(afs_cacheMnt), O_RDWR, cache_creds);
+    filp = afs_dentry_open(dp, afs_cacheMnt, O_RDWR, cache_creds);
     if (IS_ERR(filp))
-	filp = afs_dentry_open(dp, mntget(afs_cacheMnt), O_RDWR, current_cred());
+	filp = afs_dentry_open(dp, afs_cacheMnt, O_RDWR, current_cred());
 #else
-    filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR);
+    filp = dentry_open(dget(dp), mntget(afs_cacheMnt), O_RDWR);
 #endif
     if (IS_ERR(filp))
 	osi_Panic("Can't open file: %d\n", (int) PTR_ERR(filp));
+
+    dput(dp);
+
     return filp;
 }
 
