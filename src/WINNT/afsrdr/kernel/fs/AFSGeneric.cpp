@@ -2260,3 +2260,30 @@ AFSSetReparsePointPolicy( IN AFSSetReparsePointPolicyCB *PolicyCB)
     return ntStatus;
 }
 
+
+NTSTATUS
+AFSGetReparsePointPolicy( OUT AFSGetReparsePointPolicyCB *PolicyCB)
+{
+
+    NTSTATUS    ntStatus = STATUS_SUCCESS;
+    AFSDeviceExt* pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
+
+    __Enter
+    {
+
+	PolicyCB->GlobalPolicy = pDeviceExt->Specific.RDR.ReparsePointPolicy;
+
+	//
+	// When per-AuthGroup or per-Process policies are permitted
+	// this function will need to query the policies when determining
+	// the active policy.
+	//
+
+	{
+
+	    PolicyCB->ActivePolicy = PolicyCB->GlobalPolicy;
+	}
+    }
+
+    return ntStatus;
+}
