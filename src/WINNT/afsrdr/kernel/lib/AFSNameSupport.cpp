@@ -641,6 +641,8 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                         pDirEntry = AFSBackupEntry( pNameArray);
 
+                        pCurrentObject = pDirEntry->ObjectInformation;
+
                         //
                         // Increment our reference on this dir entry
                         //
@@ -894,6 +896,8 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                         pDirEntry = pCurrentVolume->DirectoryCB;
 
+                        pCurrentObject = pDirEntry->ObjectInformation;
+
                         //
                         // Reference the new dir entry
                         //
@@ -1067,6 +1071,8 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                     ASSERT( lCount >= 0);
 
                     pDirEntry = pCurrentVolume->DirectoryCB;
+
+                    pCurrentObject = pDirEntry->ObjectInformation;
 
                     lCount = InterlockedIncrement( &pDirEntry->DirOpenReferenceCount);
 
@@ -1432,6 +1438,8 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                     try_return(ntStatus = STATUS_OBJECT_PATH_INVALID);
                 }
 
+                pCurrentObject = pDirEntry->ObjectInformation;
+
                 lCount = InterlockedIncrement( &pDirEntry->DirOpenReferenceCount);
 
                 AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
@@ -1534,6 +1542,8 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
             pParentDirEntry = pDirEntry;
 
             pDirEntry = NULL;
+
+            pCurrentObject = NULL;
 
             uniSearchName = uniComponentName;
 
@@ -1749,13 +1759,13 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                                 AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                               AFS_TRACE_LEVEL_VERBOSE,
-                                              "AFSLocateNameEntry (FO: %p) Returning path not found for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                              "AFSLocateNameEntry (FO: %p) Returning path not found for %wZ in Parent FID %08lX-%08lX-%08lX-%08lX\n",
                                               FileObject,
                                               &uniSearchName,
-                                              pCurrentObject->FileId.Cell,
-                                              pCurrentObject->FileId.Volume,
-                                              pCurrentObject->FileId.Vnode,
-                                              pCurrentObject->FileId.Unique));
+                                              pParentDirEntry->ObjectInformation->FileId.Cell,
+                                              pParentDirEntry->ObjectInformation->FileId.Volume,
+                                              pParentDirEntry->ObjectInformation->FileId.Vnode,
+                                              pParentDirEntry->ObjectInformation->FileId.Unique));
                             }
                             else
                             {
@@ -1764,13 +1774,13 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                                 AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                               AFS_TRACE_LEVEL_VERBOSE,
-                                              "AFSLocateNameEntry (FO: %p) Returning name not found for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                              "AFSLocateNameEntry (FO: %p) Returning name not found for %wZ in Parent FID %08lX-%08lX-%08lX-%08lX\n",
                                               FileObject,
                                               &uniSearchName,
-                                              pCurrentObject->FileId.Cell,
-                                              pCurrentObject->FileId.Volume,
-                                              pCurrentObject->FileId.Vnode,
-                                              pCurrentObject->FileId.Unique));
+                                              pParentDirEntry->ObjectInformation->FileId.Cell,
+                                              pParentDirEntry->ObjectInformation->FileId.Volume,
+                                              pParentDirEntry->ObjectInformation->FileId.Vnode,
+                                              pParentDirEntry->ObjectInformation->FileId.Unique));
 
                                 //
                                 // Pass back the directory entries
@@ -1808,6 +1818,8 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                         // Is more than one link entry for this node then fail the lookup request
                         //
 
+                        pCurrentObject = pDirEntry->ObjectInformation;
+
                         if( !BooleanFlagOn( pDirEntry->Flags, AFS_DIR_ENTRY_CASE_INSENSTIVE_LIST_HEAD) ||
                             pDirEntry->CaseInsensitiveList.fLink != NULL)
                         {
@@ -1840,6 +1852,8 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                     // If the verify flag is set on the parent and the current entry is deleted
                     // revalidate the parent and search again.
                     //
+
+                    pCurrentObject = pDirEntry->ObjectInformation;
 
                     if( BooleanFlagOn( pDirEntry->ObjectInformation->Flags, AFS_OBJECT_FLAGS_DELETED) &&
                         BooleanFlagOn( pParentDirEntry->ObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY))
@@ -1896,6 +1910,8 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                         pDirEntry = NULL;
 
+                        pCurrentObject = NULL;
+
                         continue;
                     }
 
@@ -1922,175 +1938,180 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
             // If we have a dirEntry for this component, perform some basic validation on it
             //
 
-            if( pDirEntry != NULL &&
-                BooleanFlagOn( pDirEntry->ObjectInformation->Flags, AFS_OBJECT_FLAGS_DELETED))
+            if( pDirEntry != NULL)
             {
 
                 pCurrentObject = pDirEntry->ObjectInformation;
 
-                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_ERROR,
-                              "AFSLocateNameEntry (FO: %p) Deleted entry %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                              FileObject,
-                              &pDirEntry->NameInformation.FileName,
-                              pCurrentObject->FileId.Cell,
-                              pCurrentObject->FileId.Volume,
-                              pCurrentObject->FileId.Vnode,
-                              pCurrentObject->FileId.Unique));
-
-                //
-                // This entry was deleted through the invalidation call back so perform cleanup
-                // on the entry
-                //
-
-                if( BooleanFlagOn( pCurrentObject->Flags, AFS_OBJECT_FLAGS_PARENT_FID))
+                if (BooleanFlagOn( pDirEntry->ObjectInformation->Flags, AFS_OBJECT_FLAGS_DELETED))
                 {
 
-                    pParentObjectInfo = AFSFindObjectInfo( pCurrentObject->VolumeCB,
-                                                           &pCurrentObject->ParentFileId,
-                                                           FALSE);
-                }
-
-                ASSERT( pParentObjectInfo != NULL);
-
-                AFSAcquireExcl( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
-                                TRUE);
-
-                AFSAcquireExcl( pCurrentObject->VolumeCB->ObjectInfoTree.TreeLock,
-                                TRUE);
-
-                lCount = InterlockedDecrement( &pDirEntry->DirOpenReferenceCount);
-
-                AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSLocateNameEntry Decrement count on %wZ DE %p Ccb %p Cnt %d\n",
-                              &pDirEntry->NameInformation.FileName,
-                              pDirEntry,
-                              NULL,
-                              lCount));
-
-                ASSERT( lCount >= 0);
-
-                if( lCount == 0 &&
-                    pDirEntry->NameArrayReferenceCount <= 0)
-                {
-
-                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING|AFS_SUBSYSTEM_CLEANUP_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSLocateNameEntry Deleting dir entry %p (%p) for %wZ\n",
-                                  pDirEntry,
-                                  pCurrentObject,
-                                  &pDirEntry->NameInformation.FileName));
+                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_ERROR,
+                                  "AFSLocateNameEntry (FO: %p) Deleted entry %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                  FileObject,
+                                  &pDirEntry->NameInformation.FileName,
+                                  pCurrentObject->FileId.Cell,
+                                  pCurrentObject->FileId.Volume,
+                                  pCurrentObject->FileId.Vnode,
+                                  pCurrentObject->FileId.Unique));
 
                     //
-                    // Remove and delete the directory entry from the parent list
+                    // This entry was deleted through the invalidation call back so perform cleanup
+                    // on the entry
                     //
 
-                    AFSDeleteDirEntry( pParentObjectInfo,
-                                       &pDirEntry);
-
-                    AFSAcquireShared( &pCurrentObject->NonPagedInfo->ObjectInfoLock,
-                                      TRUE);
-
-                    if( pCurrentObject->ObjectReferenceCount <= 0)
+                    if( BooleanFlagOn( pCurrentObject->Flags, AFS_OBJECT_FLAGS_PARENT_FID))
                     {
 
-                        if( BooleanFlagOn( pCurrentObject->Flags, AFS_OBJECT_INSERTED_HASH_TREE))
+                        pParentObjectInfo = AFSFindObjectInfo( pCurrentObject->VolumeCB,
+                                                               &pCurrentObject->ParentFileId,
+                                                               FALSE);
+                    }
+
+                    ASSERT( pParentObjectInfo != NULL);
+
+                    AFSAcquireExcl( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                                    TRUE);
+
+                    AFSAcquireExcl( pCurrentObject->VolumeCB->ObjectInfoTree.TreeLock,
+                                    TRUE);
+
+                    lCount = InterlockedDecrement( &pDirEntry->DirOpenReferenceCount);
+
+                    AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSLocateNameEntry Decrement count on %wZ DE %p Ccb %p Cnt %d\n",
+                                  &pDirEntry->NameInformation.FileName,
+                                  pDirEntry,
+                                  NULL,
+                                  lCount));
+
+                    ASSERT( lCount >= 0);
+
+                    if( lCount == 0 &&
+                        pDirEntry->NameArrayReferenceCount <= 0)
+                    {
+
+                        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING|AFS_SUBSYSTEM_CLEANUP_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSLocateNameEntry Deleting dir entry %p (%p) for %wZ\n",
+                                      pDirEntry,
+                                      pCurrentObject,
+                                      &pDirEntry->NameInformation.FileName));
+
+                        //
+                        // Remove and delete the directory entry from the parent list
+                        //
+
+                        AFSDeleteDirEntry( pParentObjectInfo,
+                                           &pDirEntry);
+
+                        AFSAcquireShared( &pCurrentObject->NonPagedInfo->ObjectInfoLock,
+                                          TRUE);
+
+                        if( pCurrentObject->ObjectReferenceCount <= 0)
                         {
 
-                            AFSDbgTrace(( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
-                                          AFS_TRACE_LEVEL_VERBOSE,
-                                          "AFSLocateNameEntry Removing object %p from volume tree\n",
-                                          pCurrentObject));
+                            if( BooleanFlagOn( pCurrentObject->Flags, AFS_OBJECT_INSERTED_HASH_TREE))
+                            {
 
-                            AFSRemoveHashEntry( &pCurrentObject->VolumeCB->ObjectInfoTree.TreeHead,
-                                                &pCurrentObject->TreeEntry);
+                                AFSDbgTrace(( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
+                                              AFS_TRACE_LEVEL_VERBOSE,
+                                              "AFSLocateNameEntry Removing object %p from volume tree\n",
+                                              pCurrentObject));
 
-                            ClearFlag( pCurrentObject->Flags, AFS_OBJECT_INSERTED_HASH_TREE);
+                                AFSRemoveHashEntry( &pCurrentObject->VolumeCB->ObjectInfoTree.TreeHead,
+                                                    &pCurrentObject->TreeEntry);
+
+                                ClearFlag( pCurrentObject->Flags, AFS_OBJECT_INSERTED_HASH_TREE);
+                            }
                         }
+
+                        AFSReleaseResource( &pCurrentObject->NonPagedInfo->ObjectInfoLock);
                     }
-
-                    AFSReleaseResource( &pCurrentObject->NonPagedInfo->ObjectInfoLock);
-                }
-                else
-                {
-
-                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSLocateNameEntry Setting DELETE flag in dir entry %p for %wZ\n",
-                                  pDirEntry,
-                                  &pDirEntry->NameInformation.FileName));
-
-                    SetFlag( pDirEntry->Flags, AFS_DIR_ENTRY_DELETED);
-
-                    AFSRemoveNameEntry( pParentObjectInfo,
-                                        pDirEntry);
-                }
-
-                AFSReleaseResource( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
-
-                AFSReleaseResource( pCurrentObject->VolumeCB->ObjectInfoTree.TreeLock);
-
-                AFSReleaseObjectInfo( &pParentObjectInfo);
-
-                //
-                // We deleted the dir entry so check if there is any remaining portion
-                // of the name to process.
-                //
-
-                if( uniRemainingPath.Length > 0)
-                {
-
-                    ntStatus = STATUS_OBJECT_PATH_NOT_FOUND;
-
-                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSLocateNameEntry (FO: %p) Returning path not found(2) for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                                  FileObject,
-                                  &uniComponentName,
-                                  pCurrentObject->FileId.Cell,
-                                  pCurrentObject->FileId.Volume,
-                                  pCurrentObject->FileId.Vnode,
-                                  pCurrentObject->FileId.Unique));
-                }
-                else
-                {
-
-                    ntStatus = STATUS_OBJECT_NAME_NOT_FOUND;
-
-                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSLocateNameEntry (FO: %p) Returning name not found(2) for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                                  FileObject,
-                                  &uniComponentName,
-                                  pCurrentObject->FileId.Cell,
-                                  pCurrentObject->FileId.Volume,
-                                  pCurrentObject->FileId.Vnode,
-                                  pCurrentObject->FileId.Unique));
-
-                    //
-                    // Pass back the directory entries
-                    //
-
-                    *OutParentDirectoryCB = pParentDirEntry;
-
-                    pParentDirEntry = NULL;
-
-                    *OutDirectoryCB = NULL;
-
-                    *OutVolumeCB = pCurrentVolume;
-
-                    *OutVolumeReferenceReason = VolumeReferenceReason;
-
-                    bReleaseCurrentVolume = FALSE;
-
-                    if( ComponentName != NULL)
+                    else
                     {
 
-                        *ComponentName = uniComponentName;
+                        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSLocateNameEntry Setting DELETE flag in dir entry %p for %wZ\n",
+                                      pDirEntry,
+                                      &pDirEntry->NameInformation.FileName));
+
+                        SetFlag( pDirEntry->Flags, AFS_DIR_ENTRY_DELETED);
+
+                        AFSRemoveNameEntry( pParentObjectInfo,
+                                            pDirEntry);
                     }
 
-                    *RootPathName = uniFullPathName;
+                    AFSReleaseResource( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
+
+                    AFSReleaseResource( pCurrentObject->VolumeCB->ObjectInfoTree.TreeLock);
+
+                    //
+                    // We deleted the dir entry so check if there is any remaining portion
+                    // of the name to process.
+                    //
+
+                    if( uniRemainingPath.Length > 0)
+                    {
+
+                        ntStatus = STATUS_OBJECT_PATH_NOT_FOUND;
+
+                        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSLocateNameEntry (FO: %p) Returning path not found(2) for %wZ in Parent FID %08lX-%08lX-%08lX-%08lX\n",
+                                      FileObject,
+                                      &uniComponentName,
+                                      pParentObjectInfo->FileId.Cell,
+                                      pParentObjectInfo->FileId.Volume,
+                                      pParentObjectInfo->FileId.Vnode,
+                                      pParentObjectInfo->FileId.Unique));
+
+                        AFSReleaseObjectInfo( &pParentObjectInfo);
+                    }
+                    else
+                    {
+
+                        ntStatus = STATUS_OBJECT_NAME_NOT_FOUND;
+
+                        AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSLocateNameEntry (FO: %p) Returning name not found(2) for %wZ in Parent FID %08lX-%08lX-%08lX-%08lX\n",
+                                      FileObject,
+                                      &uniComponentName,
+                                      pParentObjectInfo->FileId.Cell,
+                                      pParentObjectInfo->FileId.Volume,
+                                      pParentObjectInfo->FileId.Vnode,
+                                      pParentObjectInfo->FileId.Unique));
+
+                        AFSReleaseObjectInfo( &pParentObjectInfo);
+
+                        //
+                        // Pass back the directory entries
+                        //
+
+                        *OutParentDirectoryCB = pParentDirEntry;
+
+                        pParentDirEntry = NULL;
+
+                        *OutDirectoryCB = NULL;
+
+                        *OutVolumeCB = pCurrentVolume;
+
+                        *OutVolumeReferenceReason = VolumeReferenceReason;
+
+                        bReleaseCurrentVolume = FALSE;
+
+                        if( ComponentName != NULL)
+                        {
+
+                            *ComponentName = uniComponentName;
+                        }
+
+                        *RootPathName = uniFullPathName;
+                    }
                 }
             }
 
