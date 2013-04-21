@@ -11,6 +11,8 @@ openafs (1.6.2.1-1) UNRELEASED; urgency=low
     - Russian, thanks Yuri Kozlov.  (Closes: #705159)
     - French, thanks Christian Perrier.  (Closes: #705296)
     - Portuguese, thanks Miguel Figueiredo.  (Closes: #705307)
+    - Danish, thanks Joe Hansen.  (Closes: #705660)
+    - Italian, thanks Beatrice Torracca.  (Closes: #705864)
 
  -- Russ Allbery <rra@debian.org>  Wed, 06 Mar 2013 00:48:49 -0800
 

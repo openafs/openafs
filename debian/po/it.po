@@ -1,13 +1,13 @@
 # Italian translation of openafs debconf messages
 # Copyright (C) 2012 openafs package copyright holder
 # This file is distributed under the same license as the openafs package.
-# Beatrice Torracca <beatricet@libero.it>, 2012.
+# Beatrice Torracca <beatricet@libero.it>, 2012, 2013.
 msgid ""
 msgstr ""
 "Project-Id-Version: openafs\n"
 "Report-Msgid-Bugs-To: openafs@packages.debian.org\n"
 "POT-Creation-Date: 2013-04-08 11:17-0700\n"
-"PO-Revision-Date: 2012-05-05 16:56+0200\n"
+"PO-Revision-Date: 2013-04-21 13:21+0200\n"
 "Last-Translator: Beatrice Torracca <beatricet@libero.it>\n"
 "Language-Team: Italian <debian-l10n-italian@lists.debian.org>\n"
 "Language: it\n"
@@ -156,19 +156,19 @@ msgstr ""
 #. Choices
 #: ../openafs-client.templates:7001
 msgid "Yes"
-msgstr ""
+msgstr "Sì"
 
 #. Type: select
 #. Choices
 #: ../openafs-client.templates:7001
 msgid "Sparse"
-msgstr ""
+msgstr "Sparse"
 
 #. Type: select
 #. Choices
 #: ../openafs-client.templates:7001
 msgid "No"
-msgstr ""
+msgstr "No"
 
 #. Type: select
 #. Description
@@ -187,9 +187,9 @@ msgid ""
 msgstr ""
 "/afs contiene generalmente una voce per ciascuna cella con cui un client può "
 "comunicare. Tradizionalmente queste voci erano generate dai server nella "
-"cella madre del client. Tuttavia, i client OpenAFS possono generare il "
-"contenuto di /afs dinamicamente in base al contenuto di /etc/openafs/"
-"CellServDB e DNS."
+"cella a cui appartiene il client. Tuttavia, i client OpenAFS possono "
+"generare il contenuto di /afs dinamicamente in base al contenuto di "
+"/etc/openafs/CellServDB e DNS."
 
 #. Type: select
 #. Description
@@ -215,14 +215,20 @@ msgid ""
 "CellAlias file are shown as normal, although they may appear to be dangling "
 "links until traversed."
 msgstr ""
+"L'opzione Sparse è uguale a Sì tranne per il fatto che, invece di popolare "
+"immediatamente /afs da /etc/openafs/CellServDB, le celle diverse da quella "
+"locale non appariranno fino a che non si accederà ad esse. Gli alias per le "
+"celle, così come impostati nel file CellAlias, sono mostrati normalmente "
+"anche se potrebbero sembrare collegamenti interrotti fino a che non vengono "
+"esplorati."
 
 #. Type: boolean
 #. Description
 #: ../openafs-client.templates:8001
 msgid "Use fakestat to avoid hangs when listing /afs?"
 msgstr ""
-"Usare fakestat per evitare blocchi quando viene elencato il contenuto di /"
-"afs?"
+"Usare fakestat per evitare blocchi quando viene elencato il contenuto di "
+"/afs?"
 
 #. Type: boolean
 #. Description
