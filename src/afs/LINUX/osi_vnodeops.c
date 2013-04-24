@@ -1134,6 +1134,7 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 		    code = afs_EvalFakeStat(&vcp, &fakestate, &treq);
 		if ((tryEvalOnly && vcp->mvstat == 1) || code) {
 		    /* a mount point, not yet replaced by its directory */
+		    dput(parent);
 		    goto bad_dentry;
 		}
 	    }
@@ -1150,8 +1151,10 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 	 * always require a crref() which would be "slow".
 	 */
 	if (vcp->last_looker != treq.uid) {
-	    if (!afs_AccessOK(vcp, (vType(vcp) == VREG) ? PRSFS_READ : PRSFS_LOOKUP, &treq, CHECK_MODE_BITS))
+	    if (!afs_AccessOK(vcp, (vType(vcp) == VREG) ? PRSFS_READ : PRSFS_LOOKUP, &treq, CHECK_MODE_BITS)) {
+		dput(parent);
 		goto bad_dentry;
+	    }
 
 	    vcp->last_looker = treq.uid;
 	}
