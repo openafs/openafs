@@ -126,7 +126,7 @@ L<fileserver(8)> for an explanation of each interface.
 Bind the Rx socket to the primary interface only.  (If not specified, the
 Rx socket will listen on all interfaces.)
 
-=item B<-logfile <I<log file>>
+=item B<-logfile> <I<log file>>
 
 Sets the file to use for server logging. If logfile is not specified, and
 no other logging options are supplied, this will be F</usr/afs/logs/VLLog>.
@@ -134,12 +134,12 @@ Note that this option is intended for debugging and testing purposes.
 Changing the location of the log file from the command line may result
 in undesirable interactions with tools such as B<bos>.
 
-=item B<-database <I<databse path>>
+=item B<-database> <I<database path>>
 
 Set the location of the database used by this program. This option is
 intended primarily for testing purposes.
 
-=item B<-config <I<configuration directory>>
+=item B<-config> <I<configuration directory>>
 
 Set the location of the configuration directory used to configure this
 service. In a typical configuration this will be F</usr/afs/etc> - this
