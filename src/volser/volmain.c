@@ -45,6 +45,7 @@
 #include <ubik.h>
 #include <afs/audit.h>
 #include <afs/afsutil.h>
+#include <afs/cmd.h>
 #include <lwp.h>
 
 #include "volser.h"
@@ -73,6 +74,9 @@ int udpBufSize = 0;		/* UDP buffer size for receive */
 int rxBind = 0;
 int rxkadDisableDotCheck = 0;
 int DoPreserveVolumeStats = 0;
+int rxJumbograms = 0;	/* default is to not send and receive jumbograms. */
+int rxMaxMTU = -1;
+char *auditFileName = NULL;
 
 #define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
 afs_uint32 SHostAddrs[ADDRSPERSITE];
@@ -250,6 +254,140 @@ vol_IsLocalRealmMatch(void *rock, char *name, char *inst, char *cell)
     return islocal;
 }
 
+enum optionsList {
+    OPT_log,
+    OPT_rxbind,
+    OPT_dotted,
+    OPT_debug,
+    OPT_threads,
+    OPT_auditlog,
+    OPT_audit_interface,
+    OPT_nojumbo,
+    OPT_jumbo,
+    OPT_rxmaxmtu,
+    OPT_sleep,
+    OPT_udpsize,
+    OPT_peer,
+    OPT_process,
+    OPT_preserve_vol_stats,
+    OPT_sync,
+    OPT_syslog
+};
+
+static int
+ParseArgs(int argc, char **argv) {
+    int code;
+    int optval;
+    char *optstring;
+    struct cmd_syndesc *opts;
+    char *sleepSpec;
+    char *sync_behavior;
+
+    opts = cmd_CreateSyntax(NULL, NULL, NULL, NULL);
+    cmd_AddParmAtOffset(opts, OPT_log, "-log", CMD_FLAG, CMD_OPTIONAL,
+	   "log vos users");
+    cmd_AddParmAtOffset(opts, OPT_rxbind, "-rxbind", CMD_FLAG, CMD_OPTIONAL,
+	   "bind only to the primary interface");
+    cmd_AddParmAtOffset(opts, OPT_dotted, "-dotted", CMD_FLAG, CMD_OPTIONAL,
+	   "permit Kerberos 5 principals with dots");
+    cmd_AddParmAtOffset(opts, OPT_debug, "-d", CMD_SINGLE, CMD_OPTIONAL,
+	   "debug level");
+    cmd_AddParmAtOffset(opts, OPT_threads, "-p", CMD_SINGLE, CMD_OPTIONAL,
+	   "number of threads");
+    cmd_AddParmAtOffset(opts, OPT_auditlog, "-auditlog", CMD_SINGLE,
+	   CMD_OPTIONAL, "location of audit log");
+    cmd_AddParmAtOffset(opts, OPT_audit_interface, "-audit-interface",
+	   CMD_SINGLE, CMD_OPTIONAL, "interface to use for audit logging");
+    cmd_AddParmAtOffset(opts, OPT_nojumbo, "-nojumbo", CMD_FLAG, CMD_OPTIONAL,
+	    "disable jumbograms");
+    cmd_AddParmAtOffset(opts, OPT_jumbo, "-jumbo", CMD_FLAG, CMD_OPTIONAL,
+	    "enable jumbograms");
+    cmd_AddParmAtOffset(opts, OPT_rxmaxmtu, "-rxmaxmtu", CMD_SINGLE,
+	    CMD_OPTIONAL, "maximum MTU for RX");
+    cmd_AddParmAtOffset(opts, OPT_udpsize, "-udpsize", CMD_SINGLE,
+	    CMD_OPTIONAL, "size of socket buffer in bytes");
+    cmd_AddParmAtOffset(opts, OPT_udpsize, "-sleep", CMD_SINGLE,
+	    CMD_OPTIONAL, "make background daemon sleep (LWP only)");
+    cmd_AddParmAtOffset(opts, OPT_peer, "-enable_peer_stats", CMD_FLAG,
+	    CMD_OPTIONAL, "enable RX transport statistics");
+    cmd_AddParmAtOffset(opts, OPT_process, "-enable_process_stats", CMD_FLAG,
+	    CMD_OPTIONAL, "enable RX RPC statistics");
+    cmd_AddParmAtOffset(opts, OPT_preserve_vol_stats, "-preserve-vol-stats", CMD_FLAG,
+	    CMD_OPTIONAL, "preserve volume statistics");
+#if !defined(AFS_NT40_ENV)
+    cmd_AddParmAtOffset(opts, OPT_syslog, "-syslog", CMD_SINGLE_OR_FLAG,
+	    CMD_OPTIONAL, "log to syslog");
+#endif
+    cmd_AddParmAtOffset(opts, OPT_sync, "-sync",
+	    CMD_SINGLE, CMD_OPTIONAL, "always | onclose | never");
+
+    code = cmd_Parse(argc, argv, &opts);
+
+    if (code)
+	return 1;
+
+    cmd_OptionAsFlag(opts, OPT_log, &DoLogging);
+    cmd_OptionAsFlag(opts, OPT_rxbind, &rxBind);
+    cmd_OptionAsFlag(opts, OPT_dotted, &rxkadDisableDotCheck);
+    cmd_OptionAsFlag(opts, OPT_preserve_vol_stats, &DoPreserveVolumeStats);
+    cmd_OptionAsInt(opts, OPT_debug, &LogLevel);
+    if (cmd_OptionPresent(opts, OPT_peer))
+	rx_enablePeerRPCStats();
+    if (cmd_OptionPresent(opts, OPT_process))
+	rx_enableProcessRPCStats();
+    if (cmd_OptionPresent(opts, OPT_nojumbo))
+	rxJumbograms = 0;
+    if (cmd_OptionPresent(opts, OPT_jumbo))
+	rxJumbograms = 1;
+#ifndef AFS_NT40_ENV
+    if (cmd_OptionPresent(opts, OPT_syslog)) {
+	serverLogSyslog = 1;
+	cmd_OptionAsInt(opts, OPT_syslog, &serverLogSyslogFacility);
+    }
+#endif
+    cmd_OptionAsInt(opts, OPT_rxmaxmtu, &rxMaxMTU);
+    if (cmd_OptionAsInt(opts, OPT_udpsize, &optval) == 0) {
+	if (optval < rx_GetMinUdpBufSize()) {
+	    printf("Warning:udpsize %d is less than minimum %d; ignoring\n",
+		    optval, rx_GetMinUdpBufSize());
+	} else
+	    udpBufSize = optval;
+    }
+    cmd_OptionAsString(opts, OPT_auditlog, &auditFileName);
+
+    if (cmd_OptionAsString(opts, OPT_audit_interface, &optstring) == 0) {
+	if (osi_audit_interface(optstring)) {
+	    printf("Invalid audit interface '%s'\n", optstring);
+	    return -1;
+	}
+	free(optstring);
+	optstring = NULL;
+    }
+    if (cmd_OptionAsInt(opts, OPT_threads, &lwps) == 0) {
+	if (lwps > MAXLWP) {
+	    printf("Warning: '-p %d' is too big; using %d instead\n", lwps, MAXLWP);
+	    lwps = MAXLWP;
+	}
+    }
+    if (cmd_OptionAsString(opts, OPT_sleep, &sleepSpec) == 0) {
+	sscanf(sleepSpec, "%d/%d", &TTsleep, &TTrun);
+	if ((TTsleep < 0) || (TTrun <= 0)) {
+	    printf("Warning: '-sleep %d/%d' is incorrect; ignoring\n",
+		    TTsleep, TTrun);
+	    TTsleep = TTrun = 0;
+	}
+
+    }
+    if (cmd_OptionAsString(opts, OPT_sync, &sync_behavior) == 0) {
+	if (ih_SetSyncBehavior(sync_behavior)) {
+	    printf("Invalid -sync value %s\n", sync_behavior);
+	    return -1;
+	}
+    }
+
+    return 0;
+}
+
 #include "AFS_component_version_number.c"
 int
 main(int argc, char **argv)
@@ -259,11 +397,7 @@ main(int argc, char **argv)
     afs_int32 numClasses;
     struct rx_service *service;
     int rxpackets = 100;
-    int rxJumbograms = 0;	/* default is to send and receive jumbograms. */
-    int rxMaxMTU = -1;
-    int bufSize = 0;		/* temp variable to read in udp socket buf size */
     afs_uint32 host = ntohl(INADDR_ANY);
-    char *auditFileName = NULL;
     VolumePackageOptions opts;
 
 #ifdef	AFS_AIX32_ENV
@@ -296,120 +430,7 @@ main(int argc, char **argv)
 
     TTsleep = TTrun = 0;
 
-    /* parse cmd line */
-    for (code = 1; code < argc; code++) {
-	if (strcmp(argv[code], "-log") == 0) {
-	    /* set extra logging flag */
-	    DoLogging = 1;
-	} else if (strcmp(argv[code], "-help") == 0) {
-	    goto usage;
-	} else if (strcmp(argv[code], "-rxbind") == 0) {
-	    rxBind = 1;
-	} else if (strcmp(argv[code], "-allow-dotted-principals") == 0) {
-	    rxkadDisableDotCheck = 1;
-	} else if (strcmp(argv[code], "-d") == 0) {
-	    if ((code + 1) >= argc) {
-		fprintf(stderr, "missing argument for -d\n");
-		return -1;
-	    }
-	    debuglevel = atoi(argv[++code]);
-	    LogLevel = debuglevel;
-	} else if (strcmp(argv[code], "-p") == 0) {
-	    lwps = atoi(argv[++code]);
-	    if (lwps > MAXLWP) {
-		printf("Warning: '-p %d' is too big; using %d instead\n",
-		       lwps, MAXLWP);
-		lwps = MAXLWP;
-	    }
-	} else if (strcmp(argv[code], "-auditlog") == 0) {
-	    auditFileName = argv[++code];
-
-	} else if (strcmp(argv[code], "-audit-interface") == 0) {
-	    char *interface = argv[++code];
-
-	    if (osi_audit_interface(interface)) {
-		printf("Invalid audit interface '%s'\n", interface);
-		return -1;
-	    }
-	} else if (strcmp(argv[code], "-nojumbo") == 0) {
-	    rxJumbograms = 0;
-	} else if (strcmp(argv[code], "-jumbo") == 0) {
-	    rxJumbograms = 1;
-	} else if (!strcmp(argv[code], "-rxmaxmtu")) {
-	    if ((code + 1) >= argc) {
-		fprintf(stderr, "missing argument for -rxmaxmtu\n");
-		exit(1);
-	    }
-	    rxMaxMTU = atoi(argv[++code]);
-	} else if (strcmp(argv[code], "-sleep") == 0) {
-	    sscanf(argv[++code], "%d/%d", &TTsleep, &TTrun);
-	    if ((TTsleep < 0) || (TTrun <= 0)) {
-		printf("Warning: '-sleep %d/%d' is incorrect; ignoring\n",
-		       TTsleep, TTrun);
-		TTsleep = TTrun = 0;
-	    }
-	} else if (strcmp(argv[code], "-udpsize") == 0) {
-	    if ((code + 1) >= argc) {
-		printf("You have to specify -udpsize <integer value>\n");
-		exit(1);
-	    }
-	    sscanf(argv[++code], "%d", &bufSize);
-	    if (bufSize < rx_GetMinUdpBufSize())
-		printf
-		    ("Warning:udpsize %d is less than minimum %d; ignoring\n",
-		     bufSize, rx_GetMinUdpBufSize());
-	    else
-		udpBufSize = bufSize;
-	} else if (strcmp(argv[code], "-enable_peer_stats") == 0) {
-	    rx_enablePeerRPCStats();
-	} else if (strcmp(argv[code], "-enable_process_stats") == 0) {
-	    rx_enableProcessRPCStats();
-	} else if (strcmp(argv[code], "-preserve-vol-stats") == 0) {
-	    DoPreserveVolumeStats = 1;
-	} else if (strcmp(argv[code], "-sync") == 0) {
-	    if ((code + 1) >= argc) {
-		printf("You have to specify -sync <sync_behavior>\n");
-		exit(1);
-	    }
-	    ih_PkgDefaults();
-	    if (ih_SetSyncBehavior(argv[++code])) {
-		printf("Invalid -sync value %s\n", argv[code]);
-		exit(1);
-	    }
-	}
-#ifndef AFS_NT40_ENV
-	else if (strcmp(argv[code], "-syslog") == 0) {
-	    /* set syslog logging flag */
-	    serverLogSyslog = 1;
-	} else if (strncmp(argv[code], "-syslog=", 8) == 0) {
-	    serverLogSyslog = 1;
-	    serverLogSyslogFacility = atoi(argv[code] + 8);
-	}
-#endif
-	else {
-	    printf("volserver: unrecognized flag '%s'\n", argv[code]);
-	  usage:
-#ifndef AFS_NT40_ENV
-	    printf("Usage: volserver [-log] [-p <number of processes>] "
-		   "[-auditlog <log path>] [-d <debug level>] "
-		   "[-nojumbo] [-jumbo] [-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals] "
-		   "[-udpsize <size of socket buffer in bytes>] "
-		   "[-syslog[=FACILITY]] "
-		   "[-enable_peer_stats] [-enable_process_stats] "
-		   "[-sync <always | onclose | never>] "
-		   "[-help]\n");
-#else
-	    printf("Usage: volserver [-log] [-p <number of processes>] "
-		   "[-auditlog <log path>] [-d <debug level>] "
-		   "[-nojumbo] [-jumbo] [-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals] "
-		   "[-udpsize <size of socket buffer in bytes>] "
-		   "[-enable_peer_stats] [-enable_process_stats] "
-		   "[-sync <always | onclose | never>] "
-		   "[-help]\n");
-#endif
-	    VS_EXIT(1);
-	}
-    }
+    ParseArgs(argc, argv);
 
     if (auditFileName) {
 	osi_audit_file(auditFileName);
