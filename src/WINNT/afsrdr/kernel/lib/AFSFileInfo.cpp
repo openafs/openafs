@@ -2340,11 +2340,11 @@ AFSSetFileLinkInfo( IN PIRP Irp)
 
         pSrcObject = pSrcFcb->ObjectInformation;
 
-        if ( BooleanFlagOn( pSrcFcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_PARENT_FID))
+        if ( BooleanFlagOn( pSrcObject->Flags, AFS_OBJECT_FLAGS_PARENT_FID))
         {
 
-            pSrcParentObject = AFSFindObjectInfo( pSrcFcb->ObjectInformation->VolumeCB,
-                                                  &pSrcFcb->ObjectInformation->ParentFileId,
+            pSrcParentObject = AFSFindObjectInfo( pSrcObject->VolumeCB,
+                                                  &pSrcObject->ParentFileId,
                                                   TRUE);
         }
 
@@ -2605,7 +2605,7 @@ AFSSetFileLinkInfo( IN PIRP Irp)
         // request to the service.
         //
 
-        ntStatus = AFSNotifyHardLink( pSrcFcb->ObjectInformation,
+        ntStatus = AFSNotifyHardLink( pSrcObject,
                                       &pSrcCcb->AuthGroup,
                                       pSrcParentObject,
                                       pTargetDcb->ObjectInformation,
@@ -2776,11 +2776,11 @@ AFSSetRenameInfo( IN PIRP Irp)
 
         pSrcObject = pSrcFcb->ObjectInformation;
 
-        if ( BooleanFlagOn( pSrcFcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_PARENT_FID))
+        if ( BooleanFlagOn( pSrcObject->Flags, AFS_OBJECT_FLAGS_PARENT_FID))
         {
 
-            pSrcParentObject = AFSFindObjectInfo( pSrcFcb->ObjectInformation->VolumeCB,
-                                                  &pSrcFcb->ObjectInformation->ParentFileId,
+            pSrcParentObject = AFSFindObjectInfo( pSrcObject->VolumeCB,
+                                                  &pSrcObject->ParentFileId,
                                                   TRUE);
         }
 
@@ -2821,7 +2821,7 @@ AFSSetRenameInfo( IN PIRP Irp)
             // If there are any open children then fail the rename
             //
 
-            if( pSrcFcb->ObjectInformation->Specific.Directory.ChildOpenHandleCount > 0)
+            if( pSrcObject->Specific.Directory.ChildOpenHandleCount > 0)
             {
 
                 AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -3085,7 +3085,7 @@ AFSSetRenameInfo( IN PIRP Irp)
         // request to the service.
         //
 
-        ntStatus = AFSNotifyRename( pSrcFcb->ObjectInformation,
+        ntStatus = AFSNotifyRename( pSrcObject,
                                     &pSrcCcb->AuthGroup,
                                     pSrcParentObject,
                                     pTargetDcb->ObjectInformation,
@@ -3130,7 +3130,7 @@ AFSSetRenameInfo( IN PIRP Irp)
             ulNotificationAction = FILE_ACTION_REMOVED;
         }
 
-        if( pSrcFcb->ObjectInformation->FileType == AFS_FILE_TYPE_DIRECTORY)
+        if( pSrcObject->FileType == AFS_FILE_TYPE_DIRECTORY)
         {
 
             ulNotifyFilter = FILE_NOTIFY_CHANGE_DIR_NAME;
@@ -3321,9 +3321,9 @@ AFSSetRenameInfo( IN PIRP Irp)
                           pSrcParentObject,
                           lCount));
 
-            pSrcFcb->ObjectInformation->ParentFileId = pTargetParentObject->FileId;
+            pSrcObject->ParentFileId = pTargetParentObject->FileId;
 
-            SetFlag( pSrcFcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_PARENT_FID);
+            SetFlag( pSrcObject->Flags, AFS_OBJECT_FLAGS_PARENT_FID);
 
             AFSReleaseResource( pSrcParentObject->VolumeCB->ObjectInfoTree.TreeLock);
 
