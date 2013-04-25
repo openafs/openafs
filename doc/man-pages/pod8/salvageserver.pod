@@ -290,6 +290,14 @@ directory.
 Salvageserver runs in client Mode.  The requested volume on the requested
 partition will be scheduled for salvaging by the Salvageserver daemon.
 
+=item B<-logfile> <I<log file>>
+
+Sets the file to use for server logging.  If logfile is not specified and
+no other logging options are supplied, this will be F</usr/afs/logs/SalsrvLog>.
+Note that this option is intended for debugging and testing purposes.
+Changing the location of the log file from the command line may result
+in undesirable interactions with tools such as B<bos>.
+
 =item B<-help>
 
 Prints the online help for this command. All other valid options are

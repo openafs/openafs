@@ -110,6 +110,7 @@
 #include <pthread.h>
 #endif
 
+char *logFileName = NULL;
 
 #if !defined(AFS_DEMAND_ATTACH_FS)
 #error "online salvager only supported for demand attach fileserver"
@@ -183,6 +184,7 @@ enum optionsList {
     OPT_syslog,
     OPT_syslogfacility,
     OPT_datelogs,
+    OPT_logfile,
     OPT_client
 };
 
@@ -378,6 +380,8 @@ main(int argc, char **argv)
     arock.argc = argc;
     arock.argv = argv;
 
+    logFileName = strdup(AFSDIR_SERVER_SALSRVLOG_FILEPATH);
+
     ts = cmd_CreateSyntax("initcmd", handleit, &arock, "initialize the program");
     cmd_AddParmAtOffset(ts, OPT_partition, "-partition", CMD_SINGLE,
 	    CMD_OPTIONAL, "Name of partition to salvage");
@@ -417,6 +421,9 @@ main(int argc, char **argv)
 
     cmd_AddParmAtOffset(ts, OPT_client, "-client", CMD_FLAG, CMD_OPTIONAL,
 		"Use SALVSYNC to ask salvageserver to salvage a volume");
+
+    cmd_AddParmAtOffset(ts, OPT_logfile, "-logfile", CMD_SINGLE, CMD_OPTIONAL,
+	    "Location of log file ");
 
     err = cmd_Dispatch(argc, argv);
     Exit(err);
@@ -496,7 +503,7 @@ SalvageServer(int argc, char **argv)
      * multiple salvagers appending to the log.
      */
 
-    CheckLogFile((char *)AFSDIR_SERVER_SALSRVLOG_FILEPATH);
+    CheckLogFile(logFileName);
 #ifndef AFS_NT40_ENV
 #ifdef AFS_LINUX20_ENV
     fcntl(fileno(logFile), F_SETFL, O_APPEND);	/* Isn't this redundant? */
