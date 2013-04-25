@@ -3244,8 +3244,6 @@ AFSSetRenameInfo( IN PIRP Irp)
 
             SetFlag( pSrcFcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_PARENT_FID);
 
-            pSrcParentObject = pTargetParentObject;
-
             ulNotificationAction = FILE_ACTION_ADDED;
         }
         else
