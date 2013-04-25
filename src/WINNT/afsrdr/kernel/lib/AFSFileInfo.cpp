@@ -2300,6 +2300,18 @@ AFSSetFileLinkInfo( IN PIRP Irp)
                                                   &pSrcFcb->ObjectInformation->ParentFileId);
         }
 
+        if( pSrcParentObject == NULL)
+        {
+
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSSetFileLinkInfo Unable to resolve SrcParentObject (INVALID_PARAMETER)\n"));
+
+            ASSERT( FALSE);
+
+            try_return( ntStatus = STATUS_INVALID_PARAMETER);
+        }
+
         pFileLinkInfo = (PFILE_LINK_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
 
         //
@@ -2721,6 +2733,18 @@ AFSSetRenameInfo( IN PIRP Irp)
 
             pSrcParentObject = AFSFindObjectInfo( pSrcFcb->ObjectInformation->VolumeCB,
                                                   &pSrcFcb->ObjectInformation->ParentFileId);
+        }
+
+        if( pSrcParentObject == NULL)
+        {
+
+            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSSetRenameInfo Unable to resolve SrcParentObject (INVALID_PARAMETER)\n"));
+
+            ASSERT( FALSE);
+
+            try_return( ntStatus = STATUS_INVALID_PARAMETER);
         }
 
         //
