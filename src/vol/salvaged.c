@@ -166,14 +166,34 @@ struct {
 
 #define DEFAULT_PARALLELISM 4 /* allow 4 parallel salvage workers by default */
 
+enum optionsList {
+    OPT_partition,
+    OPT_volumeid,
+    OPT_debug,
+    OPT_nowrite,
+    OPT_inodes,
+    OPT_oktozap,
+    OPT_rootinodes,
+    OPT_salvagedirs,
+    OPT_blockreads,
+    OPT_parallel,
+    OPT_tmpdir,
+    OPT_showlog,
+    OPT_orphans,
+    OPT_syslog,
+    OPT_syslogfacility,
+    OPT_datelogs,
+    OPT_client
+};
+
 static int
-handleit(struct cmd_syndesc *as, void *arock)
+handleit(struct cmd_syndesc *opts, void *arock)
 {
-    struct cmd_item *ti;
     char pname[100], *temp;
     afs_int32 seenpart = 0, seenvol = 0;
     VolumeId vid = 0;
     struct cmdline_rock *rock = (struct cmdline_rock *)arock;
+    char *optstring = NULL;
 
 #ifdef AFS_SGI_VNODE_GLUE
     if (afs_init_kernel_config(-1) < 0) {
@@ -183,26 +203,19 @@ handleit(struct cmd_syndesc *as, void *arock)
     }
 #endif
 
-    if (as->parms[2].items)	/* -debug */
-	debug = 1;
-    if (as->parms[3].items)	/* -nowrite */
-	Testing = 1;
-    if (as->parms[4].items)	/* -inodes */
-	ListInodeOption = 1;
-    if (as->parms[5].items)	/* -oktozap */
-	OKToZap = 1;
-    if (as->parms[6].items)	/* -rootinodes */
-	ShowRootFiles = 1;
-    if (as->parms[8].items)	/* -ForceReads */
-	forceR = 1;
-    if ((ti = as->parms[9].items)) {	/* -Parallel # */
-	temp = ti->data;
-	if (strncmp(temp, "all", 3) == 0) {
+    cmd_OptionAsFlag(opts, OPT_debug, &debug);
+    cmd_OptionAsFlag(opts, OPT_nowrite, &Testing);
+    cmd_OptionAsFlag(opts, OPT_inodes, &ListInodeOption);
+    cmd_OptionAsFlag(opts, OPT_oktozap, &OKToZap);
+    cmd_OptionAsFlag(opts, OPT_rootinodes, &ShowRootFiles);
+    cmd_OptionAsFlag(opts, OPT_blockreads, &forceR);
+    if (cmd_OptionAsString(opts, OPT_parallel, &optstring) == 0) {
+	if (strncmp(optstring, "all", 3) == 0) {
 	    PartsPerDisk = 1;
 	    temp += 3;
 	}
-	if (strlen(temp) != 0) {
-	    Parallel = atoi(temp);
+	if (strlen(optstring) != 0) {
+	    Parallel = atoi(optstring);
 	    if (Parallel < 1)
 		Parallel = 1;
 	    if (Parallel > MAXPARALLEL) {
@@ -211,58 +224,61 @@ handleit(struct cmd_syndesc *as, void *arock)
 		Parallel = MAXPARALLEL;
 	    }
 	}
+	free(optstring);
+	optstring = NULL;
     } else {
 	Parallel = min(DEFAULT_PARALLELISM, MAXPARALLEL);
     }
-    if ((ti = as->parms[10].items)) {	/* -tmpdir */
+    if (cmd_OptionAsString(opts, OPT_tmpdir, &optstring) == 0) {
 	DIR *dirp;
-
-	tmpdir = ti->data;
-	dirp = opendir(tmpdir);
+	dirp = opendir(optstring);
 	if (!dirp) {
 	    printf
 		("Can't open temporary placeholder dir %s; using current partition \n",
-		 tmpdir);
+		 optstring);
 	    tmpdir = NULL;
 	} else
 	    closedir(dirp);
+	free(optstring);
+	optstring = NULL;
     }
-    if ((ti = as->parms[11].items))	/* -showlog */
-	ShowLog = 1;
-    if ((ti = as->parms[12].items)) {	/* -orphans */
+    cmd_OptionAsFlag(opts, OPT_showlog, &ShowLog);
+    if (cmd_OptionAsString(opts, OPT_orphans, &optstring) == 0) {
 	if (Testing)
 	    orphans = ORPH_IGNORE;
-	else if (strcmp(ti->data, "remove") == 0
-		 || strcmp(ti->data, "r") == 0)
+	else if (strcmp(optstring, "remove") == 0
+		 || strcmp(optstring, "r") == 0)
 	    orphans = ORPH_REMOVE;
-	else if (strcmp(ti->data, "attach") == 0
-		 || strcmp(ti->data, "a") == 0)
+	else if (strcmp(optstring, "attach") == 0
+		 || strcmp(optstring, "a") == 0)
 	    orphans = ORPH_ATTACH;
+	free(optstring);
+	optstring = NULL;
     }
 #ifndef AFS_NT40_ENV		/* ignore options on NT */
-    if ((ti = as->parms[13].items)) {	/* -syslog */
+    if (cmd_OptionPresent(opts, OPT_syslog)) {
 	useSyslog = 1;
 	ShowLog = 0;
     }
-    if ((ti = as->parms[14].items)) {	/* -syslogfacility */
-	useSyslogFacility = atoi(ti->data);
-    }
+    cmd_OptionAsInt(opts, OPT_syslogfacility, &useSyslogFacility);
 
-    if ((ti = as->parms[15].items)) {	/* -datelogs */
+    if (cmd_OptionPresent(opts, OPT_datelogs)) {
 	TimeStampLogFile((char *)AFSDIR_SERVER_SALSRVLOG_FILEPATH);
     }
 #endif
 
-    if ((ti = as->parms[16].items)) {   /* -client */
-	if ((ti = as->parms[0].items)) {	/* -partition */
+    if (cmd_OptionPresent(opts, OPT_client)) {
+	if (cmd_OptionAsString(opts, OPT_partition, &optstring) == 0) {
 	    seenpart = 1;
-	    strlcpy(pname, ti->data, sizeof(pname));
+	    strlcpy(pname, optstring, sizeof(pname));
+	    free(optstring);
+	    optstring = NULL;
 	}
-	if ((ti = as->parms[1].items)) {	/* -volumeid */
+	if (cmd_OptionAsString(opts, OPT_volumeid, &optstring) == 0) {
 	    char *end;
 	    unsigned long vid_l;
 	    seenvol = 1;
-	    vid_l = strtoul(ti->data, &end, 10);
+	    vid_l = strtoul(optstring, &end, 10);
 	    if (vid_l >= MAX_AFS_UINT32 || vid_l == ULONG_MAX || *end != '\0') {
 		printf("Invalid volume id specified; salvage aborted\n");
 		exit(-1);
@@ -363,43 +379,43 @@ main(int argc, char **argv)
     arock.argv = argv;
 
     ts = cmd_CreateSyntax("initcmd", handleit, &arock, "initialize the program");
-    cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_OPTIONAL,
-		"Name of partition to salvage");
-    cmd_AddParm(ts, "-volumeid", CMD_SINGLE, CMD_OPTIONAL,
-		"Volume Id to salvage");
-    cmd_AddParm(ts, "-debug", CMD_FLAG, CMD_OPTIONAL,
-		"Run in Debugging mode");
-    cmd_AddParm(ts, "-nowrite", CMD_FLAG, CMD_OPTIONAL,
-		"Run readonly/test mode");
-    cmd_AddParm(ts, "-inodes", CMD_FLAG, CMD_OPTIONAL,
-		"Just list affected afs inodes - debugging flag");
-    cmd_AddParm(ts, "-oktozap", CMD_FLAG, CMD_OPTIONAL,
-		"Give permission to destroy bogus inodes/volumes - debugging flag");
-    cmd_AddParm(ts, "-rootinodes", CMD_FLAG, CMD_OPTIONAL,
-		"Show inodes owned by root - debugging flag");
-    cmd_AddParm(ts, "-salvagedirs", CMD_FLAG, CMD_OPTIONAL,
-		"Force rebuild/salvage of all directories");
-    cmd_AddParm(ts, "-blockreads", CMD_FLAG, CMD_OPTIONAL,
-		"Read smaller blocks to handle IO/bad blocks");
-    cmd_AddParm(ts, "-parallel", CMD_SINGLE, CMD_OPTIONAL,
-		"# of max parallel partition salvaging");
-    cmd_AddParm(ts, "-tmpdir", CMD_SINGLE, CMD_OPTIONAL,
-		"Name of dir to place tmp files ");
-    cmd_AddParm(ts, "-showlog", CMD_FLAG, CMD_OPTIONAL,
-		"Show log file upon completion");
-    cmd_AddParm(ts, "-orphans", CMD_SINGLE, CMD_OPTIONAL,
-		"ignore | remove | attach");
+    cmd_AddParmAtOffset(ts, OPT_partition, "-partition", CMD_SINGLE,
+	    CMD_OPTIONAL, "Name of partition to salvage");
+    cmd_AddParmAtOffset(ts, OPT_volumeid, "-volumeid", CMD_SINGLE, CMD_OPTIONAL,
+	    "Volume Id to salvage");
+    cmd_AddParmAtOffset(ts, OPT_debug, "-debug", CMD_FLAG, CMD_OPTIONAL,
+	    "Run in Debugging mode");
+    cmd_AddParmAtOffset(ts, OPT_nowrite, "-nowrite", CMD_FLAG, CMD_OPTIONAL,
+	    "Run readonly/test mode");
+    cmd_AddParmAtOffset(ts, OPT_inodes, "-inodes", CMD_FLAG, CMD_OPTIONAL,
+	    "Just list affected afs inodes - debugging flag");
+    cmd_AddParmAtOffset(ts, OPT_oktozap, "-oktozap", CMD_FLAG, CMD_OPTIONAL,
+	    "Give permission to destroy bogus inodes/volumes - debugging flag");
+    cmd_AddParmAtOffset(ts, OPT_rootinodes, "-rootinodes", CMD_FLAG,
+	    CMD_OPTIONAL, "Show inodes owned by root - debugging flag");
+    cmd_AddParmAtOffset(ts, OPT_salvagedirs, "-salvagedirs", CMD_FLAG,
+	    CMD_OPTIONAL, "Force rebuild/salvage of all directories");
+    cmd_AddParmAtOffset(ts, OPT_blockreads, "-blockreads", CMD_FLAG,
+	    CMD_OPTIONAL, "Read smaller blocks to handle IO/bad blocks");
+    cmd_AddParmAtOffset(ts, OPT_parallel, "-parallel", CMD_SINGLE, CMD_OPTIONAL,
+	    "# of max parallel partition salvaging");
+    cmd_AddParmAtOffset(ts, OPT_tmpdir, "-tmpdir", CMD_SINGLE, CMD_OPTIONAL,
+	    "Name of dir to place tmp files ");
+    cmd_AddParmAtOffset(ts, OPT_showlog, "-showlog", CMD_FLAG, CMD_OPTIONAL,
+	    "Show log file upon completion");
+    cmd_AddParmAtOffset(ts, OPT_orphans, "-orphans", CMD_SINGLE, CMD_OPTIONAL,
+	    "ignore | remove | attach");
 
-    /* note - syslog isn't avail on NT, but if we make it conditional, have
-     * to deal with screwy offsets for cmd params */
-    cmd_AddParm(ts, "-syslog", CMD_FLAG, CMD_OPTIONAL,
-		"Write salvage log to syslogs");
-    cmd_AddParm(ts, "-syslogfacility", CMD_SINGLE, CMD_OPTIONAL,
-		"Syslog facility number to use");
-    cmd_AddParm(ts, "-datelogs", CMD_FLAG, CMD_OPTIONAL,
+#if !defined(AFS_NT40_ENV)
+    cmd_AddParmAtOffset(ts, OPT_syslog, "-syslog", CMD_FLAG, CMD_OPTIONAL,
+	    "Write salvage log to syslogs");
+    cmd_AddParmAtOffset(ts, OPT_syslogfacility, "-syslogfacility", CMD_SINGLE,
+	    CMD_OPTIONAL, "Syslog facility number to use");
+    cmd_AddParmAtOffset(ts, OPT_datelogs, "-datelogs", CMD_FLAG, CMD_OPTIONAL,
 		"Include timestamp in logfile filename");
+#endif
 
-    cmd_AddParm(ts, "-client", CMD_FLAG, CMD_OPTIONAL,
+    cmd_AddParmAtOffset(ts, OPT_client, "-client", CMD_FLAG, CMD_OPTIONAL,
 		"Use SALVSYNC to ask salvageserver to salvage a volume");
 
     err = cmd_Dispatch(argc, argv);
