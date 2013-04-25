@@ -258,7 +258,6 @@ main(int argc, char **argv)
     struct rx_securityClass **securityClasses;
     afs_int32 numClasses;
     struct rx_service *service;
-    struct ktc_encryptionKey tkey;
     int rxpackets = 100;
     int rxJumbograms = 0;	/* default is to send and receive jumbograms. */
     int rxMaxMTU = -1;
@@ -523,7 +522,6 @@ main(int argc, char **argv)
     /* initialize audit user check */
     osi_audit_set_user_check(tdir, vol_IsLocalRealmMatch);
 
-    afsconf_GetKey(tdir, 999, &tkey);
     afsconf_BuildServerSecurityObjects(tdir, &securityClasses, &numClasses);
     if (securityClasses[0] == NULL)
 	Abort("rxnull_NewServerSecurityObject");
