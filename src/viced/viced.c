@@ -93,6 +93,7 @@ static afs_int32 Do_VLRegisterRPC(void);
 
 int eventlog = 0, rxlog = 0;
 FILE *debugFile;
+char *logFile = NULL;
 
 pthread_mutex_t fsync_glock_mutex;
 pthread_cond_t fsync_cond;
@@ -1161,11 +1162,15 @@ ParseArgs(int argc, char *argv[])
     cmd_AddParmAtOffset(opts, OPT_sync, "-sync",
 			CMD_SINGLE, CMD_OPTIONAL, "always | onclose | never");
 
+    /* testing options */
+    cmd_AddParmAtOffset(opts, OPT_logfile, "-logfile", CMD_SINGLE,
+	    CMD_OPTIONAL, "location of log file");
+    cmd_AddParmAtOffset(opts, OPT_config, "-config", CMD_SINGLE,
+	    CMD_OPTIONAL, "configuration location");
+
     code = cmd_Parse(argc, argv, &opts);
     if (code)
 	return -1;
-
-    /* XXX - cmd_OptionAsString(opts, OPT_config, &configDir); */
 
     cmd_OpenConfigFile(AFSDIR_SERVER_CONFIG_FILE_FILEPATH);
     cmd_SetCommandName("fileserver");
@@ -1355,7 +1360,6 @@ ParseArgs(int argc, char *argv[])
     }
 
     cmd_OptionAsInt(opts, OPT_debug, &LogLevel);
-    /* XXX - cmd_OptionAsString(opts, OPT_logfile, &logFile); */
     cmd_OptionAsFlag(opts, OPT_mrafslogs, &mrafsStyleLogs);
 
     if (cmd_OptionAsInt(opts, OPT_threads, &lwps) == 0) {
@@ -1422,6 +1426,10 @@ ParseArgs(int argc, char *argv[])
     } else {
 	busy_threshold = 3 * rxpackets / 2;
     }
+
+    cmd_OptionAsString(opts, OPT_logfile, &logFile);
+    cmd_OptionAsString(opts, OPT_config, &FS_configPath);
+
 
     if (auditFileName)
 	osi_audit_file(auditFileName);
@@ -1849,6 +1857,9 @@ main(int argc, char *argv[])
     /* check for the parameter file */
     CheckParms();
 
+    FS_configPath = strdup(AFSDIR_SERVER_ETC_DIRPATH);
+    logFile = strdup(AFSDIR_SERVER_FILELOG_FILEPATH);
+
     if (ParseArgs(argc, argv)) {
 	exit(-1);
     }
@@ -1861,7 +1872,6 @@ main(int argc, char *argv[])
 	exit(1);
     }
 #endif
-    FS_configPath = strdup(AFSDIR_SERVER_ETC_DIRPATH);
 
     confDir = afsconf_Open(FS_configPath);
     if (!confDir) {
@@ -1877,7 +1887,7 @@ main(int argc, char *argv[])
 #ifndef AFS_NT40_ENV
     serverLogSyslogTag = "fileserver";
 #endif
-    OpenLog(AFSDIR_SERVER_FILELOG_FILEPATH);
+    OpenLog(logFile);
     SetupLogSignals();
 
     LogCommandLine(argc, argv, "starting", "", "File server", FSLog);

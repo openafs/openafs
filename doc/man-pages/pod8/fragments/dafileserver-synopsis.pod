@@ -56,3 +56,4 @@ B<dafileserver>
     S<<< [B<-unsafe-nosalvage>] >>>
     S<<< [B<-offline-timeout> <I<timeout in seconds>>] >>>
     S<<< [B<-offline-shutdown-timeout> <I<timeout in seconds>>] >>>
+    S<<< [B<-logfile <I<log file>>] >>> S<<< [B<-config <I<configuration path>>] >>>

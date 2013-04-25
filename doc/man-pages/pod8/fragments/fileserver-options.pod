@@ -426,3 +426,18 @@ any other option, whereas others argue that choosing anything besides the
 C<always> option allows for an unacceptable risk of data loss. This may
 depend on your usage patterns, your platform and filesystem, and who you talk
 to about this topic.
+
+=item B<-logfile> <I<log file>>
+
+Sets the file to use for server logging.  If logfile is not specified and
+no other logging options are supplied, this will be F</usr/afs/logs/FileLog>.
+Note that this option is intended for debugging and testing purposes.
+Changing the location of the log file from the command line may result
+in undesirable interactions with tools such as B<bos>.
+
+=item B<-config> <I<configuration directory>>
+
+Set the location of the configuration directory used to configure this
+service.  In a typical configuration this will be F</usr/afs/etc> - this
+option allows the use of alternative configuration locations for testing
+purposes.
