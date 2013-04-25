@@ -79,7 +79,7 @@ cm_ShutdownVolume(void)
         volp->cbIssuedRO = 0;
         volp->cbServerpRO = NULL;
         volp->volumeSizeRO = 0;
-        _InterlockedAnd(&volp->volumeSizeRO, ~CM_VOLUMEFLAG_RO_SIZE_VALID);
+        _InterlockedAnd(&volp->flags, ~CM_VOLUMEFLAG_RO_SIZE_VALID);
 
         lock_FinalizeRWLock(&volp->rw);
     }
@@ -123,7 +123,7 @@ void cm_InitVolume(int newFile, long maxVols)
                 volp->cbIssuedRO = 0;
                 volp->cbServerpRO = NULL;
                 volp->volumeSizeRO = 0;
-                _InterlockedAnd(&volp->volumeSizeRO, ~CM_VOLUMEFLAG_RO_SIZE_VALID);
+                _InterlockedAnd(&volp->flags, ~CM_VOLUMEFLAG_RO_SIZE_VALID);
             }
         }
         osi_EndOnce(&once);
