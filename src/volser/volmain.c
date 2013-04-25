@@ -77,6 +77,8 @@ int DoPreserveVolumeStats = 0;
 int rxJumbograms = 0;	/* default is to not send and receive jumbograms. */
 int rxMaxMTU = -1;
 char *auditFileName = NULL;
+char *logFile = NULL;
+char *configDir = NULL;
 
 #define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
 afs_uint32 SHostAddrs[ADDRSPERSITE];
@@ -271,7 +273,9 @@ enum optionsList {
     OPT_process,
     OPT_preserve_vol_stats,
     OPT_sync,
-    OPT_syslog
+    OPT_syslog,
+    OPT_logfile,
+    OPT_config
 };
 
 static int
@@ -320,6 +324,10 @@ ParseArgs(int argc, char **argv) {
 #endif
     cmd_AddParmAtOffset(opts, OPT_sync, "-sync",
 	    CMD_SINGLE, CMD_OPTIONAL, "always | onclose | never");
+    cmd_AddParmAtOffset(opts, OPT_logfile, "-logfile", CMD_SINGLE,
+	   CMD_OPTIONAL, "location of log file");
+    cmd_AddParmAtOffset(opts, OPT_config, "-config", CMD_SINGLE,
+	   CMD_OPTIONAL, "configuration location");
 
     code = cmd_Parse(argc, argv, &opts);
 
@@ -384,6 +392,8 @@ ParseArgs(int argc, char **argv) {
 	    return -1;
 	}
     }
+    cmd_OptionAsString(opts, OPT_logfile, &logFile);
+    cmd_OptionAsString(opts, OPT_config, &configDir);
 
     return 0;
 }
@@ -430,6 +440,9 @@ main(int argc, char **argv)
 
     TTsleep = TTrun = 0;
 
+    configDir = strdup(AFSDIR_SERVER_ETC_DIRPATH);
+    logFile = strdup(AFSDIR_SERVER_VOLSERLOG_FILEPATH);
+
     ParseArgs(argc, argv);
 
     if (auditFileName) {
@@ -458,7 +471,7 @@ main(int argc, char **argv)
 #endif
     /* Open VolserLog and map stdout, stderr into it; VInitVolumePackage2 can
        log, so we need to do this here */
-    OpenLog(AFSDIR_SERVER_VOLSERLOG_FILEPATH);
+    OpenLog(logFile);
 
     VOptDefaults(volumeServer, &opts);
     if (VInitVolumePackage2(volumeServer, &opts)) {
@@ -533,10 +546,10 @@ main(int argc, char **argv)
 
     /* Create a single security object, in this case the null security object, for unauthenticated connections, which will be used to control security on connections made to this server */
 
-    tdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
+    tdir = afsconf_Open(configDir);
     if (!tdir) {
 	Abort("volser: could not open conf files in %s\n",
-	      AFSDIR_SERVER_ETC_DIRPATH);
+	      configDir);
 	VS_EXIT(1);
     }
 
