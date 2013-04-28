@@ -165,6 +165,7 @@ time_to_life
 tkt_CheckTimes
 tkt_DecodeTicket
 tkt_MakeTicket
+tkt_MakeTicket5
 xdr_afsUUID
 xdr_afs_int32
 xdr_afs_int64

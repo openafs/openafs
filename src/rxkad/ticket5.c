@@ -536,3 +536,99 @@ krb5_des_decrypt(struct ktc_encryptionKey *key, int etype, void *in,
 
     return ret;
 }
+
+
+int
+tkt_MakeTicket5(char *ticket, int *ticketLen, int enctype, int *kvno,
+		void *key, size_t keylen,
+		char *name, char *inst, char *cell, afs_uint32 start,
+		afs_uint32 end, struct ktc_encryptionKey *sessionKey,
+		char *sname, char *sinst)
+{
+    EncTicketPart data;
+    EncryptedData encdata;
+    char *buf, *encodebuf;
+    size_t encodelen, allocsiz;
+    heim_general_string carray[2];
+    int code;
+    krb5_context context;
+    krb5_keyblock kb;
+    krb5_crypto cr;
+    krb5_data encrypted;
+    size_t tl;
+
+    memset(&encrypted, 0, sizeof(encrypted));
+    cr = NULL;
+    context = NULL;
+    buf = NULL;
+    memset(&kb, 0, sizeof(kb));
+    memset(&data, 0, sizeof(data));
+
+    data.flags.transited_policy_checked = 1;
+    data.key.keytype=ETYPE_DES_CBC_CRC;
+    data.key.keyvalue.data=sessionKey->data;
+    data.key.keyvalue.length=8;
+    data.crealm=cell;
+    carray[0]=name;
+    carray[1]=inst;
+    data.cname.name_type=KRB5_NT_PRINCIPAL;
+    data.cname.name_string.val=carray;
+    data.cname.name_string.len=inst[0]?2:1;
+    data.authtime=start;
+    data.endtime=end;
+
+    allocsiz = length_EncTicketPart(&data);
+    buf = rxi_Alloc(allocsiz);
+    encodelen = allocsiz;
+    /* encode function wants pointer to end of buffer */
+    encodebuf = buf + allocsiz - 1;
+    code = encode_EncTicketPart(encodebuf, allocsiz, &data, &encodelen);
+
+    if (code)
+	goto cleanup;
+    code = krb5_init_context(&context);
+    if (code)
+	goto cleanup;
+    code = krb5_keyblock_init(context, enctype, key, keylen, &kb);
+    if (code)
+	goto cleanup;
+    code = krb5_crypto_init(context, &kb, enctype, &cr);
+    if (code)
+	goto cleanup;
+    code = krb5_encrypt(context, cr, KRB5_KU_TICKET, buf,
+			encodelen, &encrypted);
+    if (code)
+	goto cleanup;
+    memset(&encdata, 0, sizeof(encdata));
+    encdata.etype=enctype;
+    encdata.kvno=kvno;
+    encdata.cipher.data=encrypted.data;
+    encdata.cipher.length=encrypted.length;
+
+    if (length_EncryptedData(&encdata) > *ticketLen) {
+	code = RXKADTICKETLEN;
+	goto cleanup;
+    }
+    tl=*ticketLen;
+    code = encode_EncryptedData(ticket + *ticketLen - 1, *ticketLen, &encdata, &tl);
+    if (code == 0) {
+	*kvno=RXKAD_TKT_TYPE_KERBEROS_V5_ENCPART_ONLY;
+	/*
+	 * encode function fills in from the end. move data to
+	 * beginning of buffer
+	 */
+	memmove(ticket, ticket + *ticketLen - tl, tl);
+	*ticketLen=tl;
+    }
+
+cleanup:
+    krb5_data_free(&encrypted);
+    if (cr != NULL)
+	krb5_crypto_destroy(context, cr);
+    krb5_free_keyblock_contents(context, &kb);
+    krb5_free_context(context);
+    rxi_Free(buf, allocsiz);
+    if ((code && 0xFFFFFF00) == ERROR_TABLE_BASE_asn1)
+	return RXKADINCONSISTENCY;
+    return code;
+}

@@ -162,5 +162,10 @@ extern int tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 			     char *inst, char *cell, struct ktc_encryptionKey *session_key,
 			     afs_int32 * host, afs_uint32 * start,
 			     afs_uint32 * end, afs_int32 disableDotCheck);
+extern int tkt_MakeTicket5(char *ticket, int *ticketLen, int enctype, int *kvno,
+			   void *key, size_t keylen,
+			   char *name, char *inst, char *cell, afs_uint32 start,
+			   afs_uint32 end, struct ktc_encryptionKey *sessionKey,
+			   char *sname, char *sinst);
 
 #endif

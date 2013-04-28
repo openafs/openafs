@@ -341,6 +341,7 @@ EXPORTS
 	rx_GetNetworkError                      @346
         afs_set_com_err_hook                    @347
 	rxkad_NewKrb5ServerSecurityObject       @348
+	tkt_MakeTicket5                         @349
 
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA
