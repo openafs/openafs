@@ -85,6 +85,8 @@ typedef ENCTYPE krb5_enctype;
 
 krb5_error_code krb5_init_context(krb5_context *context);
 
+void krb5_free_context(krb5_context context);
+
 krb5_error_code krb5_enctype_valid(krb5_context, krb5_enctype);
 
 krb5_error_code krb5_crypto_init(krb5_context context,
