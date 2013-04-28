@@ -8,6 +8,12 @@ krb5_init_context(krb5_context *ctx) {
 }
 
 void
+krb5_free_context(krb5_context ctx)
+{
+    return;
+}
+
+void
 krb5_set_error_message(krb5_context ctx, krb5_error_code ret, const char *fmt,
 		       ...)
 {
