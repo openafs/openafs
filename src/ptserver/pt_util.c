@@ -231,10 +231,10 @@ CommandProc(struct cmd_syndesc *a_as, void *arock)
 
     if (wflag) {
 	struct usr_list *u;
+	int seenGroup = 0;
 
 	while (fgets(buffer, sizeof(buffer), dfp)) {
 	    int id, oid, cid, flags, quota, uid;
-	    int seenGroup = 0;
 	    char name[PR_MAXNAMELEN], mem[PR_MAXNAMELEN];
 
 	    if (isspace(*buffer)) {
