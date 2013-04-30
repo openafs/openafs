@@ -47,6 +47,15 @@
 #define AFS_SETCHUNKSIZE(chunk) { afs_LogChunk = chunk; \
 		      afs_FirstCSize = afs_OtherCSize = (1 << chunk);  }
 
+/**
+ * The states a dcache slot can be in.
+ */
+typedef enum dslot_state {
+    DSLOT_NEW = 0,	/**< Use to create a slot if needed. */
+    DSLOT_UNUSED = 1,	/**< Contains a free or discarded dcache. */
+    DSLOT_VALID = 2,	/**< The dcache is known to exist and be valid. */
+} dslot_state;
+
 /*
  * Functions exported by a cache type
  */
@@ -60,7 +69,7 @@ struct afs_cacheOps {
     int (*close) (struct osi_file * fp);
     int (*vreadUIO) (afs_dcache_id_t *, struct uio *);
     int (*vwriteUIO) (struct vcache *, afs_dcache_id_t *, struct uio *);
-    struct dcache *(*GetDSlot) (afs_int32 aslot, int indexvalid, int datavalid);
+    struct dcache *(*GetDSlot) (afs_int32 aslot, dslot_state type);
     struct volume *(*GetVolSlot) (afs_int32 volid, struct cell *cell);
     int (*HandleLink) (struct vcache * avc, struct vrequest * areq);
 };
@@ -76,14 +85,15 @@ struct afs_cacheOps {
 
 /* Use afs_GetValidDSlot to get a dcache from a dcache slot number when we
  * know the dcache contains data we want (e.g. it's on the hash table) */
-#define	afs_GetValidDSlot(slot)	(*(afs_cacheType->GetDSlot))(slot, 1, 1)
+#define	afs_GetValidDSlot(slot)	(*(afs_cacheType->GetDSlot))(slot, DSLOT_VALID)
 /* Use afs_GetUnusedDSlot when loading a dcache entry that is on the free or
  * discard lists (the dcache does not contain valid data, but we know the
  * dcache entry itself exists). */
-#define	afs_GetUnusedDSlot(slot)	(*(afs_cacheType->GetDSlot))(slot, 1, 0)
+#define	afs_GetUnusedDSlot(slot)	(*(afs_cacheType->GetDSlot))(slot, DSLOT_UNUSED)
 /* Use afs_GetNewDSlot only when initializing dcache slots (the given slot
- * number may not exist at all). */
-#define	afs_GetNewDSlot(slot)	(*(afs_cacheType->GetDSlot))(slot, 0, 0)
+ * number may not exist at all). This will always succeed; if we can't find the
+ * given dslot, we will create a new, empty slot. */
+#define	afs_GetNewDSlot(slot)	(*(afs_cacheType->GetDSlot))(slot, DSLOT_NEW)
 
 /* These memcpys should get optimised to simple assignments when afs_dcache_id_t
  * is simple */

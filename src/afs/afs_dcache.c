@@ -2703,14 +2703,14 @@ afs_WriteThroughDSlots(void)
  *
  * Parameters:
  *	aslot : Dcache slot to look at.
- *      needvalid : Whether the specified slot should already exist
+ *      type : What 'type' of dslot to get; see the dslot_state enum
  *
  * Environment:
  *	Must be called with afs_xdcache write-locked.
  */
 
 struct dcache *
-afs_MemGetDSlot(afs_int32 aslot, int indexvalid, int datavalid)
+afs_MemGetDSlot(afs_int32 aslot, dslot_state type)
 {
     struct dcache *tdc;
     int existing = 0;
@@ -2731,10 +2731,14 @@ afs_MemGetDSlot(afs_int32 aslot, int indexvalid, int datavalid)
 	return tdc;
     }
 
-    /* if 'indexvalid' is true, the slot must already exist and be populated
-     * somewhere. for memcache, the only place that dcache entries exist is
-     * in memory, so if we did not find it above, something is very wrong. */
-    osi_Assert(!indexvalid);
+    /* if we got here, the given slot is not in memory in our list of known
+     * slots. for memcache, the only place a dslot can exist is in memory, so
+     * if the caller is expecting to get back a known dslot, and we've reached
+     * here, something is very wrong. DSLOT_NEW is the only type of dslot that
+     * may not exist; for all others, the caller assumes the given dslot
+     * already exists. so, 'type' had better be DSLOT_NEW here, or something is
+     * very wrong. */
+    osi_Assert(type == DSLOT_NEW);
 
     if (!afs_freeDSList)
 	afs_GetDownDSlot(4);
@@ -2795,20 +2799,13 @@ unsigned int last_error = 0, lasterrtime = 0;
  *
  * Parameters:
  *	aslot : Dcache slot to look at.
- *      indexvalid : 1 if we know the slot we're giving is valid, and thus
- *                   reading the dcache from the disk index should succeed. 0
- *                   if we are initializing a new dcache, and so reading from
- *                   the disk index may fail.
- *      datavalid : 0 if we are loading a dcache entry from the free or
- *                  discard list, so we know the data in the given dcache is
- *                  not valid. 1 if we are loading a known used dcache, so the
- *                  data in the dcache must be valid.
+ *      type : What 'type' of dslot to get; see the dslot_state enum
  *
  * Environment:
  *	afs_xdcache lock write-locked.
  */
 struct dcache *
-afs_UFSGetDSlot(afs_int32 aslot, int indexvalid, int datavalid)
+afs_UFSGetDSlot(afs_int32 aslot, dslot_state type)
 {
     afs_int32 code;
     struct dcache *tdc;
@@ -2871,7 +2868,10 @@ afs_UFSGetDSlot(afs_int32 aslot, int indexvalid, int datavalid)
 	last_error = code;
 #endif
 	lasterrtime = osi_Time();
-	if (indexvalid) {
+	if (type != DSLOT_NEW) {
+	    /* If we are requesting a non-DSLOT_NEW slot, this is an error.
+	     * non-DSLOT_NEW slots are supposed to already exist, so if we
+	     * failed to read in the slot, something is wrong. */
 	    struct osi_stat tstat;
 	    if (afs_osi_Stat(afs_cacheInodep, &tstat)) {
 		tstat.size = -1;
@@ -2891,22 +2891,22 @@ afs_UFSGetDSlot(afs_int32 aslot, int indexvalid, int datavalid)
     }
     if (!afs_CellNumValid(tdc->f.fid.Cell)) {
 	entryok = 0;
-	if (datavalid) {
+	if (type == DSLOT_VALID) {
 	    osi_Panic("afs: needed valid dcache but index %d off %d has "
 	              "invalid cell num %d\n",
 	              (int)aslot, off, (int)tdc->f.fid.Cell);
 	}
     }
 
-    if (datavalid && tdc->f.fid.Fid.Volume == 0) {
+    if (type == DSLOT_VALID && tdc->f.fid.Fid.Volume == 0) {
 	osi_Panic("afs: invalid zero-volume dcache entry at slot %d off %d",
 	          (int)aslot, off);
     }
 
-    if (indexvalid && !datavalid) {
-	/* we know that the given dslot does exist, but the data in it is not
-	 * valid. this only occurs when we pull a dslot from the free or
-	 * discard list, so be sure not to re-use the data; force invalidation.
+    if (type == DSLOT_UNUSED) {
+	/* the requested dslot is known to exist, but contain invalid data
+	 * (this happens when we're using a dslot from the free or discard
+	 * list). be sure not to re-use the data in it, so force invalidation.
 	 */
 	entryok = 0;
     }
