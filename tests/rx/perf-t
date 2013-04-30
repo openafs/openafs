@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use Test::More tests=>4;
-use POSIX "sys_wait_h";
+use POSIX qw(:sys_wait_h :signal_h);
 
 my $port = 4000;
 my $build = $ENV{BUILD};
@@ -37,7 +37,7 @@ is (0,
 
 kill("TERM", $pid);
 waitpid($pid, 0);
-if (WIFSIGNALED($?) && WTERMSIG($?) != POSIX::SIGTERM) {
+if (WIFSIGNALED($?) && WTERMSIG($?) != SIGTERM) {
     fail("Server died with signal ".WTERMSIG($?));
 } elsif (WIFEXITED($?) && WEXITSTATUS($?) != 0) {
     fail("Server exited with code". WEXITSTATUS($?));
