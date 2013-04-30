@@ -18,9 +18,8 @@ my $srcdir = "$builddir/src/kauth";
 
 #---------------------------------------------------------------------
 
-# Keep track of number of tests we ran. We don't know up front.
-my $testcount = 0;
+my @sub_commands = lookup_sub_commands($srcdir, $command);
+plan tests => scalar @sub_commands;
 
-check_command_binary("$srcdir/$command");
-my $count = test_command_man_pages($builddir, "$srcdir/$command");
-done_testing($count);
+test_command_man_pages($builddir, $command, @sub_commands);
+

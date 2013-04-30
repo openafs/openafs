@@ -19,27 +19,14 @@ sub check_command_binary {
     }
 }
 
-# TAP test: test_command_man_pages
 #
-# Gather a list of a command's subcommands (like listvol for vos)
-# by running a command with the "help" argument.  From that list
-# of subcommands spit out, see if a man page exists for that
-# command_subcommand
+# Run the command help to determine the list of sub-commands.
 #
-# Arguments: two scalars:
-#
-#                builddir : A path to the OpenAFS build directory,
-#                           such as /tmp/1.4.14
-#
-#         fullpathcommand : The full path to the actual command's
-#                           binary, such as /tmp/1.4.14/src/volser/vos
-#
-# Returns: the number of tests run
-#
-sub test_command_man_pages {
-    my ($builddir, $fullpathcommand) = @_;
+sub lookup_sub_commands {
+    my ($srcdir, $command) = @_;
 
-    my $command = basename($fullpathcommand);
+    my $fullpathcommand = "$srcdir/$command";
+    check_command_binary($fullpathcommand);
 
     # build up our list of available commands from the help output
     open(HELPOUT, "$fullpathcommand help 2>&1 |") or BAIL_OUT("can't fork: $!");
@@ -53,6 +40,25 @@ sub test_command_man_pages {
     }
     close HELPOUT;
     @subcommlist = sort(@subcommlist);
+    return @subcommlist;
+}
+
+# TAP test: test_command_man_pages
+#
+# Test if a man page exists for each command sub-command.
+# Runs one test per sub-command.
+#
+# Arguments:
+#
+#                builddir : A path to the OpenAFS build directory,
+#                           such as /tmp/1.4.14
+#
+#                 command : the name of the command (e.g. vos)
+#
+#             subcommlist : a list of sub-commands for command
+#
+sub test_command_man_pages {
+    my ($builddir, $command, @subcommlist) = @_;
 
     # The following is because File::Find makes no sense to me
     # for this purpose, and actually seems totally misnamed
@@ -78,9 +84,7 @@ sub test_command_man_pages {
 		last;
 	    }
 	}
-	$testcount = $testcount + 1;
 	ok($found eq 1, "existence of man page for $command" . "_$subcommand");
     }
-    return $testcount;
 }
 1;
