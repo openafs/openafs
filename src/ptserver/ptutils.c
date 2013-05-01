@@ -193,7 +193,7 @@ CorrectUserName(char *name)
 static afs_int32
 CorrectGroupName(struct ubik_trans *ut, char aname[PR_MAXNAMELEN],	/* name for group */
 		 afs_int32 cid,		/* caller id */
-		 afs_int32 oid,		/* owner of group */
+		 afs_int32 *oid,		/* owner of group */
 		 char cname[PR_MAXNAMELEN])	/* correct name for group */
 {
     afs_int32 code;
@@ -207,14 +207,14 @@ CorrectGroupName(struct ubik_trans *ut, char aname[PR_MAXNAMELEN],	/* name for g
 	return PRBADNAM;
     admin = pr_noAuth || IsAMemberOf(ut, cid, SYSADMINID);
 
-    if (oid == 0)
-	oid = cid;
+    if (((*oid == 0) || (*oid == ANONYMOUSID)) && !admin)
+	*oid = cid;
 
     /* Determine the correct prefix for the name. */
-    if (oid == SYSADMINID)
+    if (*oid == SYSADMINID)
 	prefix = "system";
     else {
-	afs_int32 loc = FindByID(ut, oid);
+	afs_int32 loc = FindByID(ut, *oid);
 	if (loc == 0) {
 	    /* let admin create groups owned by non-existent ids (probably
 	     * setting a group to own itself).  Check that they look like
@@ -243,6 +243,13 @@ CorrectGroupName(struct ubik_trans *ut, char aname[PR_MAXNAMELEN],	/* name for g
 
     strcpy(name, aname);	/* in case aname & cname are same */
     suffix = strchr(name, ':');
+    /* let e.g. pt_util create groups with "wrong" names (like
+     * an orphan whose parent ID was reused).  Check that they look like
+     * groups (with a colon) or otherwise are good user names. */
+    if (pr_noAuth) {
+	strcpy(cname, aname);
+	goto done;
+    }
     if (suffix == 0) {
 	/* sysadmin can make groups w/o ':', but they must still look like
 	 * legal user names. */
@@ -332,11 +339,8 @@ CreateEntry(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid, af
 
     memset(&tentry, 0, sizeof(tentry));
 
-    if ((oid == 0) || (oid == ANONYMOUSID))
-	oid = creator;
-
     if (flag & PRGRP) {
-	code = CorrectGroupName(at, aname, creator, oid, tentry.name);
+	code = CorrectGroupName(at, aname, creator, &oid, tentry.name);
 	if (code)
 	    return code;
 	if (strcmp(aname, tentry.name) != 0)
@@ -2081,7 +2085,7 @@ ChangeEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 cid, char *name, afs
 	    /* don't let foreign cell groups change name */
 	    if (atsign != NULL)
 		return PRPERM;
-	    code = CorrectGroupName(at, name, cid, tentry.owner, tentry.name);
+	    code = CorrectGroupName(at, name, cid, &tentry.owner, tentry.name);
 	    if (code)
 		return code;
 
