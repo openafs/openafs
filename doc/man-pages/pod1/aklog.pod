@@ -186,39 +186,39 @@ The exit status of B<aklog> will be one of the following:
 
 =over 3
 
-=item 0
+=item C<0>
 
 Success -- No error occurred.
 
-=item 1
+=item C<1>
 
 Usage -- Bad command syntax; accompanied by a usage message.
 
-=item 2
+=item C<2>
 
 Something failed -- More than one cell or pathname was given on the
 command line and at least one failure occurred.  A more specific error
 status is returned when only one directive is given.
 
-=item 3
+=item C<3>
 
 AFS -- Unable to get AFS configuration or unable to get information about
 a specific cell.
 
-=item 4
+=item C<4>
 
 Kerberos -- Unable to get tickets for authentication.
 
-=item 5
+=item C<5>
 
 Token -- Unable to get tokens.
 
-=item 6
+=item C<6>
 
 Bad pathname -- The path given was not a directory or lstat(2) failed on
 some component of the pathname.
 
-=item 7
+=item C<7>
 
 Miscellaneous -- An internal failure occurred.  For example, B<aklog>
 returns this if it runs out of memory.
