@@ -44,6 +44,8 @@
 extern char *optarg;
 extern int optind;
 
+extern int pr_noAuth;
+
 int restricted = 0;
 
 static int display_entry(int);
@@ -147,6 +149,9 @@ CommandProc(struct cmd_syndesc *a_as, void *arock)
 
     if (tparm[0].items) {
 	wflag++;
+	/* so we are treated as admin and can create "mis"owned
+	   groups */
+	pr_noAuth = 1;
     }
     if (tparm[1].items) {
 	flags |= DO_USR;
