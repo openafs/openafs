@@ -18,7 +18,7 @@ MODULE_CFLAGS = -DRXDEBUG -DFSSYNC_BUILD_CLIENT \
 		-DAFS_DEMAND_ATTACH_FS
 
 SCFLAGS=$(COMMON_CFLAGS) -I.. -DRXDEBUG -DFSSYNC_BUILD_CLIENT \
-	-DAFS_DEMAND_ATTACH_UTIL
+	-DAFS_DEMAND_ATTACH_UTIL $(PTH_CFLAGS)
 
 SCCRULE=$(RUN_CC) ${MT_CC} ${SCFLAGS} -c $? -o $@
 
@@ -29,6 +29,7 @@ SALVAGEDOBJS=salvaged.o vol-salvage.o physio.o
 SALVAGEROBJS=salvager.o s_vol-salvage.o s_physio.o
 
 DIROBJS=buffer.o dir.o salvage.o
+SDIROBJS=s_buffer.o s_dir.o s_salvage.o
 
 VLIBOBJS=volume.o vnode.o vutil.o partition.o fssync-client.o \
 	 clone.o nuke.o devname.o listinodes.o ihandle.o \
@@ -38,7 +39,7 @@ SVLIBOBJS=s_volume.o s_vnode.o s_vutil.o s_partition.o s_fssync-client.o \
 	 s_namei_ops.o s_salvsync-server.o s_salvsync-client.o s_daemon_com.o
 
 OBJECTS= ${SALVAGEDOBJS} ${VLIBOBJS} ${DIROBJS}
-SOBJECTS= ${SALVAGEROBJS} ${SVLIBOBJS}
+SOBJECTS= ${SALVAGEROBJS} ${SVLIBOBJS} ${SDIROBJS}
 
 FSSDEBUG_OBJS = fssync-debug.o physio.o common.o ${VLIBOBJS} ${DIROBJS}
 
@@ -49,15 +50,6 @@ LIBS=   \
 	$(top_builddir)/src/util/liboafs_util.la \
 	$(top_builddir)/src/cmd/liboafs_cmd.la \
 	$(top_builddir)/src/lwp/liboafs_lwpcompat.la \
-	$(top_builddir)/src/opr/liboafs_opr.la
-
-SLIBS=	${top_builddir}/src/cmd/liboafs_cmd.la \
-	${TOP_LIBDIR}/libdir.a \
-	${TOP_LIBDIR}/librx.a \
-	${TOP_LIBDIR}/liblwp.a \
-	${TOP_LIBDIR}/libsys.a \
-	${TOP_LIBDIR}/libacl.a \
-	$(top_builddir)/src/util/liboafs_util.la \
 	$(top_builddir)/src/opr/liboafs_opr.la
 
 all: salvageserver dafssync-debug salvsync-debug dasalvager
@@ -96,6 +88,12 @@ s_salvsync-client.o: ${VOL}/salvsync-client.c
 	${SCCRULE}
 s_daemon_com.o: ${VOL}/daemon_com.c
 	${SCCRULE}
+s_buffer.o: ${DIR}/buffer.c
+	$(SCCRULE)
+s_dir.o: ${DIR}/dir.c
+	$(SCCRULE)
+s_salvage.o: ${DIR}/salvage.c
+	$(SCCRULE)
 
 salvaged.o: ${VOL}/salvaged.c
 	$(AFS_CCRULE) $(VOL)/salvaged.c
@@ -167,9 +165,9 @@ salvageserver: ${OBJECTS} ${LIBS}
 	$(LT_LDRULE_static) ${OBJECTS} ${LIBS} \
 		$(LIB_hcrypto) $(LIB_roken) $(LIB_crypt) ${MT_LIBS} ${XLIBS}
 
-dasalvager: ${SOBJECTS} ${SLIBS}
-	$(LT_LDRULE_static) ${SOBJECTS} ${SLIBS} \
-		$(LIB_roken) ${XLIBS}
+dasalvager: ${SOBJECTS} ${LIBS}
+	$(LT_LDRULE_static) ${SOBJECTS} ${LIBS} \
+		$(LIB_hcrypto) $(LIB_roken) $(LIB_crypt) ${MT_LIBS} ${XLIBS}
 
 dafssync-debug: ${FSSDEBUG_OBJS} ${LIBS}
 	$(LT_LDRULE_static) ${FSSDEBUG_OBJS} ${LIBS} \
