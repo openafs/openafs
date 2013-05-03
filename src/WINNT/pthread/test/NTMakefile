@@ -10,20 +10,24 @@ RELDIR=WINNT\pthread\test
 
 test tests: ptest.exe tsd.exe native.exe
 
+EXELIBDIR = $(DESTDIR)\lib
 
-$(OUT)\ptest.exe: $(OUT)\ptest.obj $(DESTDIR)/lib/afspthread.lib $(DESTDIR)/lib/afs/afsutil.lib
+EXELIBS =\
+        $(EXELIBDIR)/afspthread.lib $(EXELIBDIR)/afs/mtafsutil.lib
+
+$(OUT)\ptest.exe: $(OUT)\ptest.obj
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 
-$(OUT)\tsd.exe: $(OUT)\tsd.obj $(DESTDIR)/lib/afspthread.lib $(DESTDIR)/lib/afs/afsutil.lib
+$(OUT)\tsd.exe: $(OUT)\tsd.obj $(EXELIBS)
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 
-$(OUT)\native.exe: $(OUT)\native.obj $(DESTDIR)/lib/afspthread.lib $(DESTDIR)/lib/afs/afsutil.lib
+$(OUT)\native.exe: $(OUT)\native.obj $(EXELIBS)
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
