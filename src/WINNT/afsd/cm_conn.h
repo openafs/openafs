@@ -46,11 +46,12 @@ typedef struct cm_conn {
         afs_int32 refCount;		/* Interlocked */
 	int ucgen;			/* ucellp's generation number */
         afs_uint32 flags;		/* locked by mx */
-	int cryptlevel;			/* encrytion status */
+	int cryptlevel;			/* encryption status */
 } cm_conn_t;
 
 #define CM_CONN_FLAG_FORCE_NEW          1
 #define CM_CONN_FLAG_REPLICATION        2
+#define CM_CONN_FLAG_NEW                4
 
 /*
  * structure used for tracking RPC progress
