@@ -60,7 +60,7 @@ DLLLIBS =\
 	$(DESTDIR)\lib\afs\afsadminutil.lib \
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
-	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afs\mtafsutil.lib \
         $(DESTDIR)\lib\afsroken.lib
 
 $(DLLFILE): $(DLLOBJS) $(DLLLIBS)
