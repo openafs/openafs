@@ -394,7 +394,11 @@ cm_Analyze(cm_conn_t *connp,
         }
     }
 
-    if (errorCode == CM_ERROR_TIMEDOUT) {
+    if (errorCode == 0) {
+	if (connp)
+	    _InterlockedAnd(&connp->flags, ~CM_CONN_FLAG_NEW);
+    }
+    else if (errorCode == CM_ERROR_TIMEDOUT) {
 	osi_Log0(afsd_logp, "cm_Analyze passed CM_ERROR_TIMEDOUT");
         if ( timeLeft > 5 ) {
             thrd_Sleep(3000);
@@ -415,6 +419,9 @@ cm_Analyze(cm_conn_t *connp,
             thrd_Sleep(1000);
             retry = 1;
         }
+
+	if (connp)
+	    _InterlockedAnd(&connp->flags, ~CM_CONN_FLAG_NEW);
     }
 
     /* if there is nosuchvolume, then we have a situation in which a
@@ -585,6 +592,9 @@ cm_Analyze(cm_conn_t *connp,
 
     /* special codes:  VBUSY and VRESTARTING */
     else if (errorCode == VBUSY || errorCode == VRESTARTING) {
+	if (connp)
+	    _InterlockedAnd(&connp->flags, ~CM_CONN_FLAG_NEW);
+
         if (fidp) {
             code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp,
                                       CM_GETVOL_FLAG_NO_LRU_UPDATE,
@@ -650,6 +660,9 @@ cm_Analyze(cm_conn_t *connp,
     else if (errorCode == VNOVOL || errorCode == VMOVED || errorCode == VOFFLINE ||
              errorCode == VSALVAGE || errorCode == VIO)
     {
+	if (connp)
+	    _InterlockedAnd(&connp->flags, ~CM_CONN_FLAG_NEW);
+
         /* In case of timeout */
         reqp->volumeError = errorCode;
 
@@ -823,6 +836,9 @@ cm_Analyze(cm_conn_t *connp,
         if ( timeLeft > 2 )
             retry = 1;
     } else if ( errorCode == VNOVNODE ) {
+	if (connp)
+	    _InterlockedAnd(&connp->flags, ~CM_CONN_FLAG_NEW);
+
 	if ( fidp ) {
 	    osi_Log4(afsd_logp, "cm_Analyze passed VNOVNODE cell %u vol %u vn %u uniq %u.",
 		      fidp->cell, fidp->volume, fidp->vnode, fidp->unique);
@@ -947,6 +963,9 @@ cm_Analyze(cm_conn_t *connp,
          * is currently busy on the server.  Unconditionally
          * retry the request so an alternate call channel can be used.
          */
+	if (connp)
+	    _InterlockedAnd(&connp->flags, ~CM_CONN_FLAG_NEW);
+
         if (serverp)
             sprintf(addr, "%d.%d.%d.%d",
                     ((serverp->addr.sin_addr.s_addr & 0xff)),
@@ -970,6 +989,9 @@ cm_Analyze(cm_conn_t *connp,
          * The RPC was not serviced so it can be retried and any
          * existing status information is still valid.
          */
+	if (connp)
+	    _InterlockedAnd(&connp->flags, ~CM_CONN_FLAG_NEW);
+
         if (fidp) {
             if (serverp)
                 sprintf(addr, "%d.%d.%d.%d",
@@ -1010,6 +1032,9 @@ cm_Analyze(cm_conn_t *connp,
          * client should fail over to another server.  If this is a
          * request against a single source, the client may retry once.
          */
+	if (connp)
+	    _InterlockedAnd(&connp->flags, ~CM_CONN_FLAG_NEW);
+
         if (serverp)
             sprintf(addr, "%d.%d.%d.%d",
                     ((serverp->addr.sin_addr.s_addr & 0xff)),
@@ -1078,7 +1103,8 @@ cm_Analyze(cm_conn_t *connp,
                  (reqp->flags & CM_REQ_NEW_CONN_FORCED ? "yes" : "no"));
 
         if (serverp) {
-            if ((reqp->flags & CM_REQ_NEW_CONN_FORCED)) {
+	    if ((connp->flags & CM_CONN_FLAG_NEW) ||
+		(reqp->flags & CM_REQ_NEW_CONN_FORCED)) {
                 lock_ObtainMutex(&serverp->mx);
                 if (!(serverp->flags & CM_SERVERFLAG_DOWN)) {
                     _InterlockedOr(&serverp->flags, CM_SERVERFLAG_DOWN);
@@ -1128,7 +1154,8 @@ cm_Analyze(cm_conn_t *connp,
                  (reqp->flags & CM_REQ_NEW_CONN_FORCED ? "yes" : "no"));
 
         if (serverp) {
-            if (reqp->flags & CM_REQ_NEW_CONN_FORCED) {
+	    if ((connp->flags & CM_CONN_FLAG_NEW) ||
+		(reqp->flags & CM_REQ_NEW_CONN_FORCED)) {
                 reqp->errorServp = serverp;
                 reqp->tokenError = errorCode;
             } else {
@@ -1182,6 +1209,9 @@ cm_Analyze(cm_conn_t *connp,
         osi_Log2(afsd_logp, "cm_Analyze: rxkad error code 0x%x (%s)",
                   errorCode, s);
 
+	if (connp)
+	    _InterlockedAnd(&connp->flags, ~CM_CONN_FLAG_NEW);
+
         if (serverp) {
             reqp->errorServp = serverp;
             reqp->tokenError = errorCode;
@@ -1195,6 +1225,9 @@ cm_Analyze(cm_conn_t *connp,
          * to answer our query.  Therefore, we will retry the request
          * and force the use of another server.
          */
+	if (connp)
+	    _InterlockedAnd(&connp->flags, ~CM_CONN_FLAG_NEW);
+
         if (serverp) {
             reqp->errorServp = serverp;
             reqp->tokenError = errorCode;
@@ -1207,6 +1240,9 @@ cm_Analyze(cm_conn_t *connp,
         if ( timeLeft > 2 )
             retry = 1;
     } else {
+	if (connp)
+	    _InterlockedAnd(&connp->flags, ~CM_CONN_FLAG_NEW);
+
         if (errorCode) {
             char * s = "unknown error";
             switch ( errorCode ) {
@@ -1340,6 +1376,7 @@ cm_Analyze(cm_conn_t *connp,
         cm_PutConn(connp);
 
     /*
+
      * clear the volume updated flag if we succeed.
      * this way the flag will not prevent a subsequent volume
      * from being updated if necessary.
@@ -1593,6 +1630,7 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
         rxs_Release(secObjp);   /* Decrement the initial refCount */
 
     _InterlockedAnd(&tcp->flags, ~CM_CONN_FLAG_FORCE_NEW);
+    _InterlockedOr(&tcp->flags, CM_CONN_FLAG_NEW);
 }
 
 long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, afs_uint32 replicated, cm_conn_t **connpp)
