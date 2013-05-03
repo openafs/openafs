@@ -1565,7 +1565,7 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
      * Setting idle dead timeout to a non-zero value activates RX_CALL_IDLE errors
      */
     if (replicated) {
-        tcp->flags &= CM_CONN_FLAG_REPLICATION;
+	_InterlockedOr(&tcp->flags, CM_CONN_FLAG_REPLICATION);
         rx_SetConnIdleDeadTime(tcp->rxconnp, ReplicaIdleDeadtimeout);
     } else {
         rx_SetConnIdleDeadTime(tcp->rxconnp, IdleDeadtimeout);
@@ -1591,6 +1591,8 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
     tcp->ucgen = ucellp->gen;
     if (secObjp)
         rxs_Release(secObjp);   /* Decrement the initial refCount */
+
+    _InterlockedAnd(&tcp->flags, ~CM_CONN_FLAG_FORCE_NEW);
 }
 
 long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, afs_uint32 replicated, cm_conn_t **connpp)
@@ -1654,7 +1656,6 @@ long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, afs_uint32 replicat
                 osi_Log0(afsd_logp, "cm_ConnByServer replace connection due to token update");
             else
                 osi_Log0(afsd_logp, "cm_ConnByServer replace connection due to crypt change");
-            tcp->flags &= ~CM_CONN_FLAG_FORCE_NEW;
             rx_SetConnSecondsUntilNatPing(tcp->rxconnp, 0);
             rx_DestroyConnection(tcp->rxconnp);
             cm_NewRXConnection(tcp, ucellp, serverp, replicated);
@@ -1777,7 +1778,7 @@ void cm_ForceNewConnections(cm_server_t *serverp)
     lock_ObtainWrite(&cm_connLock);
     for (tcp = serverp->connsp; tcp; tcp=tcp->nextp) {
 	lock_ObtainMutex(&tcp->mx);
-	tcp->flags |= CM_CONN_FLAG_FORCE_NEW;
+	_InterlockedOr(&tcp->flags, CM_CONN_FLAG_FORCE_NEW);
 	lock_ReleaseMutex(&tcp->mx);
     }
     lock_ReleaseWrite(&cm_connLock);
