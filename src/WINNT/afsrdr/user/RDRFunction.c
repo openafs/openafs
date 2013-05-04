@@ -5892,8 +5892,8 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
     pResultCB->CellID = scp->fid.cell;
     pResultCB->VolumeID = scp->fid.volume;
     pResultCB->Characteristics = FILE_REMOTE_DEVICE;
-    pResultCB->FileSystemAttributes = FILE_CASE_PRESERVED_NAMES | FILE_UNICODE_ON_DISK |
-        FILE_SUPPORTS_HARD_LINKS | FILE_SUPPORTS_REPARSE_POINTS;
+    pResultCB->FileSystemAttributes = FILE_CASE_SENSITIVE_SEARCH | FILE_CASE_PRESERVED_NAMES |
+        FILE_UNICODE_ON_DISK | FILE_SUPPORTS_HARD_LINKS | FILE_SUPPORTS_REPARSE_POINTS;
 
     if (scp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
          scp->fid.volume==AFS_FAKE_ROOT_VOL_ID)
