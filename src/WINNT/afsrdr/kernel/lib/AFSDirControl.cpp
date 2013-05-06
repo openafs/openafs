@@ -2298,7 +2298,9 @@ try_exit:
 
         if( pDirEnum != NULL)
         {
-            ExFreePool( pDirEnum);
+
+	    AFSLibExFreePoolWithTag( pDirEnum,
+				     AFS_GENERIC_MEMORY_3_TAG);
         }
     }
 

@@ -261,7 +261,8 @@ try_exit:
             if( AFSRegistryPath.Buffer != NULL)
             {
 
-                ExFreePool( AFSRegistryPath.Buffer);
+		AFSLibExFreePoolWithTag( AFSRegistryPath.Buffer,
+					 AFS_GENERIC_MEMORY_13_TAG);
             }
 
             if( AFSLibraryDeviceObject != NULL)
@@ -309,14 +310,17 @@ AFSUnload( IN PDRIVER_OBJECT DriverObject)
     if( AFSRegistryPath.Buffer != NULL)
     {
 
-        ExFreePool( AFSRegistryPath.Buffer);
+	AFSLibExFreePoolWithTag( AFSRegistryPath.Buffer,
+				 AFS_GENERIC_MEMORY_13_TAG);
     }
 
     AFSCloseLibrary();
 
     if( AFSDefaultSD != NULL)
     {
-        ExFreePool( AFSDefaultSD);
+
+	AFSLibExFreePoolWithTag( AFSDefaultSD,
+				 AFS_GENERIC_MEMORY_27_TAG);
     }
 
     if( AFSLibraryDeviceObject != NULL)

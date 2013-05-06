@@ -723,7 +723,8 @@ AFSInitializeGlobalDirectoryEntries()
         if( pNonPagedDirEntry == NULL)
         {
 
-            ExFreePool( pDirNode);
+	    AFSLibExFreePoolWithTag( pDirNode,
+				     AFS_DIR_ENTRY_TAG);
 
             lCount = AFSObjectInfoDecrement( pObjectInfoCB,
                                              AFS_OBJECT_REFERENCE_GLOBAL);
@@ -862,7 +863,8 @@ AFSInitializeGlobalDirectoryEntries()
         if( pNonPagedDirEntry == NULL)
         {
 
-            ExFreePool( pDirNode);
+	    AFSLibExFreePoolWithTag( pDirNode,
+				     AFS_DIR_ENTRY_TAG);
 
             lCount = AFSObjectInfoDecrement( pObjectInfoCB,
                                              AFS_OBJECT_REFERENCE_GLOBAL);
@@ -951,9 +953,11 @@ try_exit:
 
                 ExDeleteResourceLite( &AFSGlobalDotDirEntry->NonPaged->Lock);
 
-                ExFreePool( AFSGlobalDotDirEntry->NonPaged);
+		AFSLibExFreePoolWithTag( AFSGlobalDotDirEntry->NonPaged,
+					 AFS_DIR_ENTRY_NP_TAG);
 
-                ExFreePool( AFSGlobalDotDirEntry);
+		AFSLibExFreePoolWithTag( AFSGlobalDotDirEntry,
+					 AFS_DIR_ENTRY_TAG);
 
                 AFSGlobalDotDirEntry = NULL;
             }
@@ -978,9 +982,11 @@ try_exit:
 
                 ExDeleteResourceLite( &AFSGlobalDotDotDirEntry->NonPaged->Lock);
 
-                ExFreePool( AFSGlobalDotDotDirEntry->NonPaged);
+		AFSLibExFreePoolWithTag( AFSGlobalDotDotDirEntry->NonPaged,
+					 AFS_DIR_ENTRY_NP_TAG);
 
-                ExFreePool( AFSGlobalDotDotDirEntry);
+		AFSLibExFreePoolWithTag( AFSGlobalDotDotDirEntry,
+					 AFS_DIR_ENTRY_TAG);
 
                 AFSGlobalDotDotDirEntry = NULL;
             }
@@ -4548,7 +4554,8 @@ AFSInitializeSpecialShareNameList()
         if( pNonPagedDirEntry == NULL)
         {
 
-            ExFreePool( pDirNode);
+	    AFSLibExFreePoolWithTag( pDirNode,
+				     AFS_DIR_ENTRY_TAG);
 
             lCount = AFSObjectInfoDecrement( pObjectInfoCB,
                                              AFS_OBJECT_REFERENCE_GLOBAL);
@@ -4667,7 +4674,8 @@ AFSInitializeSpecialShareNameList()
         if( pNonPagedDirEntry == NULL)
         {
 
-            ExFreePool( pDirNode);
+	    AFSLibExFreePoolWithTag( pDirNode,
+				     AFS_DIR_ENTRY_TAG);
 
             lCount = AFSObjectInfoDecrement( pObjectInfoCB,
                                              AFS_OBJECT_REFERENCE_GLOBAL);
@@ -4754,9 +4762,11 @@ try_exit:
 
                     ExDeleteResourceLite( &pDirNode->NonPaged->Lock);
 
-                    ExFreePool( pDirNode->NonPaged);
+		    AFSLibExFreePoolWithTag( pDirNode->NonPaged,
+					     AFS_DIR_ENTRY_NP_TAG);
 
-                    ExFreePool( pDirNode);
+		    AFSLibExFreePoolWithTag( pDirNode,
+					     AFS_DIR_ENTRY_TAG);
 
                     pDirNode = pLastDirNode;
                 }
@@ -5057,7 +5067,8 @@ AFSEnumerateGlobalRoot( IN GUID *AuthGroup)
             pDirGlobalDirNode = (AFSDirectoryCB *)pDirGlobalDirNode->ListEntry.fLink;
         }
 
-        AFSExFreePoolWithTag( uniFullName.Buffer, 0);
+	AFSLibExFreePoolWithTag( uniFullName.Buffer,
+				 AFS_GENERIC_MEMORY_12_TAG);
 
 try_exit:
 
@@ -7836,9 +7847,11 @@ AFSCloseLibrary()
 
             ExDeleteResourceLite( &AFSGlobalDotDirEntry->NonPaged->Lock);
 
-            ExFreePool( AFSGlobalDotDirEntry->NonPaged);
+	    AFSLibExFreePoolWithTag( AFSGlobalDotDirEntry->NonPaged,
+				     AFS_DIR_ENTRY_NP_TAG);
 
-            ExFreePool( AFSGlobalDotDirEntry);
+	    AFSLibExFreePoolWithTag( AFSGlobalDotDirEntry,
+				     AFS_DIR_ENTRY_TAG);
 
             AFSGlobalDotDirEntry = NULL;
         }
@@ -7863,9 +7876,11 @@ AFSCloseLibrary()
 
             ExDeleteResourceLite( &AFSGlobalDotDotDirEntry->NonPaged->Lock);
 
-            ExFreePool( AFSGlobalDotDotDirEntry->NonPaged);
+	    AFSLibExFreePoolWithTag( AFSGlobalDotDotDirEntry->NonPaged,
+				  AFS_DIR_ENTRY_NP_TAG);
 
-            ExFreePool( AFSGlobalDotDotDirEntry);
+	    AFSLibExFreePoolWithTag( AFSGlobalDotDotDirEntry,
+				  AFS_DIR_ENTRY_TAG);
 
             AFSGlobalDotDotDirEntry = NULL;
         }
@@ -7897,9 +7912,11 @@ AFSCloseLibrary()
 
                 ExDeleteResourceLite( &pDirNode->NonPaged->Lock);
 
-                ExFreePool( pDirNode->NonPaged);
+		AFSLibExFreePoolWithTag( pDirNode->NonPaged,
+					 AFS_DIR_ENTRY_NP_TAG);
 
-                ExFreePool( pDirNode);
+		AFSLibExFreePoolWithTag( pDirNode,
+					 AFS_DIR_ENTRY_TAG);
 
                 pDirNode = pLastDirNode;
             }
@@ -8808,28 +8825,38 @@ try_exit:
 
             if( pRelativeSecurityDescr != NULL)
             {
-                ExFreePool( pRelativeSecurityDescr);
+
+		AFSLibExFreePoolWithTag( pRelativeSecurityDescr,
+					 AFS_GENERIC_MEMORY_27_TAG);
             }
         }
 
         if( pSecurityDescr != NULL)
         {
-            ExFreePool( pSecurityDescr);
+
+	    AFSLibExFreePoolWithTag( pSecurityDescr,
+				     AFS_GENERIC_MEMORY_27_TAG);
         }
 
         if( pSACL != NULL)
         {
-            ExFreePool( pSACL);
+
+	    AFSLibExFreePoolWithTag( pSACL,
+				     AFS_GENERIC_MEMORY_29_TAG);
         }
 
         if( pACE != NULL)
         {
-            ExFreePool( pACE);
+
+	    AFSLibExFreePoolWithTag( pACE,
+				     AFS_GENERIC_MEMORY_29_TAG);
         }
 
         if( pWorldSID != NULL)
         {
-            ExFreePool( pWorldSID);
+
+	    AFSLibExFreePoolWithTag( pWorldSID,
+				     AFS_GENERIC_MEMORY_29_TAG);
         }
     }
 
