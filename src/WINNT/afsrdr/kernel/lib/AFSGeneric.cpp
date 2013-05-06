@@ -8772,9 +8772,9 @@ AFSCreateDefaultSecurityDescriptor()
             try_return( ntStatus = STATUS_INVALID_PARAMETER);
         }
 
-        pRelativeSecurityDescr = (SECURITY_DESCRIPTOR *)ExAllocatePoolWithTag( NonPagedPool,
-                                                                               PAGE_SIZE,
-                                                                               AFS_GENERIC_MEMORY_27_TAG);
+	pRelativeSecurityDescr = (SECURITY_DESCRIPTOR *)AFSLibExAllocatePoolWithTag( NonPagedPool,
+										     PAGE_SIZE,
+										     AFS_GENERIC_MEMORY_27_TAG);
 
         if( pRelativeSecurityDescr == NULL)
         {
