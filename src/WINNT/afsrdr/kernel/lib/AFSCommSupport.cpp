@@ -3231,7 +3231,8 @@ try_exit:
         if( pIoRequest != NULL)
         {
 
-            AFSExFreePoolWithTag( pIoRequest, AFS_GENERIC_MEMORY_4_TAG);
+	    AFSLibExFreePoolWithTag( pIoRequest,
+				     AFS_GENERIC_MEMORY_4_TAG);
         }
     }
 

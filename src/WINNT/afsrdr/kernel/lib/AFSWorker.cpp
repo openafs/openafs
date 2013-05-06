@@ -103,7 +103,8 @@ AFSInitializeWorkerPool()
                               "AFSInitializeWorkerPool Failed to initialize worker thread Status %08lX\n",
                               ntStatus));
 
-                ExFreePool( pCurrentWorker);
+		AFSLibExFreePoolWithTag( pCurrentWorker,
+					 AFS_WORKER_CB_TAG);
 
                 break;
             }
@@ -174,7 +175,8 @@ AFSInitializeWorkerPool()
                               "AFSInitializeWorkerPool Failed to initialize IO worker thread Status %08lX\n",
                               ntStatus));
 
-                ExFreePool( pCurrentWorker);
+		AFSLibExFreePoolWithTag( pCurrentWorker,
+					 AFS_WORKER_CB_TAG);
 
                 break;
             }
@@ -281,7 +283,8 @@ AFSRemoveWorkerPool()
 
         pNextWorker = pCurrentWorker->fLink;
 
-        ExFreePool( pCurrentWorker);
+	AFSLibExFreePoolWithTag( pCurrentWorker,
+				 AFS_WORKER_CB_TAG);
 
         pCurrentWorker = pNextWorker;
 
@@ -334,7 +337,8 @@ AFSRemoveWorkerPool()
 
         pNextWorker = pCurrentWorker->fLink;
 
-        ExFreePool( pCurrentWorker);
+	AFSLibExFreePoolWithTag( pCurrentWorker,
+				 AFS_WORKER_CB_TAG);
 
         pCurrentWorker = pNextWorker;
 
@@ -773,7 +777,8 @@ AFSWorkerThread( IN PVOID Context)
                 if( freeWorkItem)
                 {
 
-                    ExFreePoolWithTag( pWorkItem, AFS_WORK_ITEM_TAG);
+		    AFSExFreePoolWithTag( pWorkItem,
+					  AFS_WORK_ITEM_TAG);
                 }
 
                 ntStatus = STATUS_SUCCESS;
@@ -922,7 +927,8 @@ AFSIOWorkerThread( IN PVOID Context)
                 if( freeWorkItem)
                 {
 
-                    ExFreePoolWithTag( pWorkItem, AFS_WORK_ITEM_TAG);
+		    AFSLibExFreePoolWithTag( pWorkItem,
+					     AFS_WORK_ITEM_TAG);
                 }
 
                 ntStatus = STATUS_SUCCESS;
@@ -1038,14 +1044,16 @@ AFSExamineObjectInfo( IN AFSObjectInfoCB * pCurrentObject,
 
                         ExDeleteResourceLite( &pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->NonPaged->Lock);
 
-                        AFSExFreePoolWithTag( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->NonPaged, AFS_DIR_ENTRY_NP_TAG);
+			AFSExFreePoolWithTag( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->NonPaged,
+					      AFS_DIR_ENTRY_NP_TAG);
 
                         AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_ALLOCATION,
                                       AFS_TRACE_LEVEL_VERBOSE,
                                       "AFSExamineObjectInfo (pioctl) AFS_DIR_ENTRY_TAG deallocating %p\n",
                                       pCurrentObject->Specific.Directory.PIOCtlDirectoryCB));
 
-                        AFSExFreePoolWithTag( pCurrentObject->Specific.Directory.PIOCtlDirectoryCB, AFS_DIR_ENTRY_TAG);
+			AFSExFreePoolWithTag( pCurrentObject->Specific.Directory.PIOCtlDirectoryCB,
+					      AFS_DIR_ENTRY_TAG);
 
                         pCurrentObject->Specific.Directory.PIOCtlDirectoryCB = NULL;
                     }
@@ -2393,7 +2401,8 @@ try_exit:
 
                 lCount = InterlockedDecrement( &Fcb->OpenReferenceCount);
 
-                ExFreePoolWithTag( pWorkItem, AFS_WORK_ITEM_TAG);
+		AFSExFreePoolWithTag( pWorkItem,
+				      AFS_WORK_ITEM_TAG);
             }
 
             AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -2465,7 +2474,8 @@ try_exit:
             if( pWorkItem != NULL)
             {
 
-                ExFreePoolWithTag( pWorkItem, AFS_WORK_ITEM_TAG);
+		AFSExFreePoolWithTag( pWorkItem,
+				      AFS_WORK_ITEM_TAG);
             }
 
             AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -2576,7 +2586,8 @@ try_exit:
             if( pWorkItem != NULL)
             {
 
-                ExFreePoolWithTag( pWorkItem, AFS_WORK_ITEM_TAG);
+		AFSExFreePoolWithTag( pWorkItem,
+				      AFS_WORK_ITEM_TAG);
             }
         }
     }
@@ -2647,7 +2658,9 @@ try_exit:
 
             if( pWorkItem != NULL)
             {
-                ExFreePoolWithTag( pWorkItem, AFS_WORK_ITEM_TAG);
+
+		AFSExFreePoolWithTag( pWorkItem,
+				      AFS_WORK_ITEM_TAG);
             }
 
             AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -2764,7 +2777,8 @@ try_exit:
         if( pWorkItem != NULL)
         {
 
-            ExFreePoolWithTag( pWorkItem, AFS_WORK_ITEM_TAG);
+	    AFSExFreePoolWithTag( pWorkItem,
+				  AFS_WORK_ITEM_TAG);
         }
 
         AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -2800,7 +2814,8 @@ AFSPostedDeferredWrite( IN PVOID Context1,
 
         AFSCompleteRequest( pWorkItem->Specific.AsynchIo.Irp, ntStatus);
 
-        ExFreePoolWithTag( pWorkItem, AFS_WORK_ITEM_TAG);
+	AFSExFreePoolWithTag( pWorkItem,
+			      AFS_WORK_ITEM_TAG);
 
         AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING | AFS_SUBSYSTEM_WORKER_PROCESSING,
                       AFS_TRACE_LEVEL_ERROR,

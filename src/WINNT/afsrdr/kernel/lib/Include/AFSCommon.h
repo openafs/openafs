@@ -1426,6 +1426,10 @@ AFSLibExAllocatePoolWithTag( IN POOL_TYPE  PoolType,
                              IN SIZE_T  NumberOfBytes,
                              IN ULONG  Tag);
 
+#define AFSLibExFreePool(x)          ExFreePool(x)
+
+#define AFSLibExFreePoolWithTag(x,y) ExFreePoolWithTag(x,y)
+
 BOOLEAN
 AFSValidNameFormat( IN UNICODE_STRING *FileName);
 
