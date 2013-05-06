@@ -95,9 +95,9 @@ AFSEnumerateDirectory( IN GUID *AuthGroup,
         // Initialize the directory enumeration buffer for the directory
         //
 
-        pBuffer = AFSExAllocatePoolWithTag( PagedPool,
-                                            AFS_DIR_ENUM_BUFFER_LEN,
-                                            AFS_DIR_BUFFER_TAG);
+	pBuffer = AFSLibExAllocatePoolWithTag( PagedPool,
+					       AFS_DIR_ENUM_BUFFER_LEN,
+					       AFS_DIR_BUFFER_TAG);
 
         if( pBuffer == NULL)
         {
@@ -803,9 +803,9 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
         // Initialize the directory enumeration buffer for the directory
         //
 
-        pBuffer = AFSExAllocatePoolWithTag( PagedPool,
-                                            AFS_DIR_ENUM_BUFFER_LEN,
-                                            AFS_DIR_BUFFER_TAG);
+	pBuffer = AFSLibExAllocatePoolWithTag( PagedPool,
+					       AFS_DIR_ENUM_BUFFER_LEN,
+					       AFS_DIR_BUFFER_TAG);
 
         if( pBuffer == NULL)
         {
@@ -1536,9 +1536,9 @@ AFSNotifyFileCreate( IN GUID            *AuthGroup,
         // Allocate our return buffer
         //
 
-        pResultCB = (AFSFileCreateResultCB *)AFSExAllocatePoolWithTag( PagedPool,
-                                                                       PAGE_SIZE,
-                                                                       AFS_GENERIC_MEMORY_1_TAG);
+	pResultCB = (AFSFileCreateResultCB *)AFSLibExAllocatePoolWithTag( PagedPool,
+									  PAGE_SIZE,
+									  AFS_GENERIC_MEMORY_1_TAG);
 
         if( pResultCB == NULL)
         {
@@ -1884,9 +1884,9 @@ AFSUpdateFileInformation( IN AFSFileID *ParentFid,
 
         stUpdateCB.LastWriteTime = ObjectInfo->LastWriteTime;
 
-        pUpdateResultCB = (AFSFileUpdateResultCB *)AFSExAllocatePoolWithTag( PagedPool,
-                                                                             PAGE_SIZE,
-                                                                             AFS_UPDATE_RESULT_TAG);
+	pUpdateResultCB = (AFSFileUpdateResultCB *)AFSLibExAllocatePoolWithTag( PagedPool,
+										PAGE_SIZE,
+										AFS_UPDATE_RESULT_TAG);
 
         if( pUpdateResultCB == NULL)
         {
@@ -2107,9 +2107,9 @@ AFSNotifyHardLink( IN AFSObjectInfoCB *ObjectInfo,
         // Init the control block for the request
         //
 
-        pHardLinkCB = (AFSFileHardLinkCB *)AFSExAllocatePoolWithTag( PagedPool,
-                                                                     PAGE_SIZE,
-                                                                     AFS_HARDLINK_REQUEST_TAG);
+	pHardLinkCB = (AFSFileHardLinkCB *)AFSLibExAllocatePoolWithTag( PagedPool,
+									PAGE_SIZE,
+									AFS_HARDLINK_REQUEST_TAG);
 
         if( pHardLinkCB == NULL)
         {
@@ -2482,9 +2482,9 @@ AFSNotifyRename( IN AFSObjectInfoCB *ObjectInfo,
         // Init the control block for the request
         //
 
-        pRenameCB = (AFSFileRenameCB *)AFSExAllocatePoolWithTag( PagedPool,
-                                                                 PAGE_SIZE,
-                                                                 AFS_RENAME_REQUEST_TAG);
+	pRenameCB = (AFSFileRenameCB *)AFSLibExAllocatePoolWithTag( PagedPool,
+								    PAGE_SIZE,
+								    AFS_RENAME_REQUEST_TAG);
 
         if( pRenameCB == NULL)
         {
@@ -2701,9 +2701,9 @@ AFSEvaluateTargetByID( IN AFSObjectInfoCB *ObjectInfo,
         // Allocate our response buffer
         //
 
-        pEvalResultCB = (AFSFileEvalResultCB *)AFSExAllocatePoolWithTag( PagedPool,
-                                                                         PAGE_SIZE,
-                                                                         AFS_GENERIC_MEMORY_30_TAG);
+	pEvalResultCB = (AFSFileEvalResultCB *)AFSLibExAllocatePoolWithTag( PagedPool,
+									    PAGE_SIZE,
+									    AFS_GENERIC_MEMORY_30_TAG);
 
         if( pEvalResultCB == NULL)
         {
@@ -2847,9 +2847,9 @@ AFSEvaluateTargetByID( IN AFSObjectInfoCB *ObjectInfo,
         if( DirEnumEntry != NULL)
         {
 
-            pDirEnumCB = (AFSDirEnumEntry *)AFSExAllocatePoolWithTag( PagedPool,
-                                                                      PAGE_SIZE,
-                                                                      AFS_GENERIC_MEMORY_2_TAG);
+	    pDirEnumCB = (AFSDirEnumEntry *)AFSLibExAllocatePoolWithTag( PagedPool,
+									 PAGE_SIZE,
+									 AFS_GENERIC_MEMORY_2_TAG);
 
             if( pDirEnumCB == NULL)
             {
@@ -2916,9 +2916,9 @@ AFSEvaluateTargetByName( IN GUID *AuthGroup,
         // Allocate our response buffer
         //
 
-        pEvalResultCB = (AFSFileEvalResultCB *)AFSExAllocatePoolWithTag( PagedPool,
-                                                                         PAGE_SIZE,
-                                                                         AFS_GENERIC_MEMORY_31_TAG);
+	pEvalResultCB = (AFSFileEvalResultCB *)AFSLibExAllocatePoolWithTag( PagedPool,
+									    PAGE_SIZE,
+									    AFS_GENERIC_MEMORY_31_TAG);
 
         if( pEvalResultCB == NULL)
         {
@@ -2987,9 +2987,9 @@ AFSEvaluateTargetByName( IN GUID *AuthGroup,
         if( DirEnumEntry != NULL)
         {
 
-            pDirEnumCB = (AFSDirEnumEntry *)AFSExAllocatePoolWithTag( PagedPool,
-                                                                      PAGE_SIZE,
-                                                                      AFS_GENERIC_MEMORY_3_TAG);
+	    pDirEnumCB = (AFSDirEnumEntry *)AFSLibExAllocatePoolWithTag( PagedPool,
+									 PAGE_SIZE,
+									 AFS_GENERIC_MEMORY_3_TAG);
 
             if( pDirEnumCB == NULL)
             {
@@ -3139,10 +3139,10 @@ AFSNotifyPipeTransceive( IN AFSCcb *Ccb,
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
 
-        pIoRequest = (AFSPipeIORequestCB *)AFSExAllocatePoolWithTag( PagedPool,
-                                                                     sizeof( AFSPipeIORequestCB) +
+	pIoRequest = (AFSPipeIORequestCB *)AFSLibExAllocatePoolWithTag( PagedPool,
+									sizeof( AFSPipeIORequestCB) +
                                                                                 InputLength,
-                                                                     AFS_GENERIC_MEMORY_4_TAG);
+									AFS_GENERIC_MEMORY_4_TAG);
 
         if( pIoRequest == NULL)
         {
@@ -3251,10 +3251,10 @@ AFSNotifySetPipeInfo( IN AFSCcb *Ccb,
     __Enter
     {
 
-        pInfoRequest = (AFSPipeInfoRequestCB *)AFSExAllocatePoolWithTag( PagedPool,
-                                                                         sizeof( AFSPipeInfoRequestCB) +
+	pInfoRequest = (AFSPipeInfoRequestCB *)AFSLibExAllocatePoolWithTag( PagedPool,
+									    sizeof( AFSPipeInfoRequestCB) +
                                                                                 InputLength,
-                                                                         AFS_GENERIC_MEMORY_5_TAG);
+									    AFS_GENERIC_MEMORY_5_TAG);
 
         if( pInfoRequest == NULL)
         {
@@ -3480,10 +3480,10 @@ AFSCreateSymlink( IN GUID *AuthGroup,
         // Allocate our request and result structures
         //
 
-        pSymlinkCreate = (AFSCreateSymlinkCB *)ExAllocatePoolWithTag( PagedPool,
-                                                                      sizeof( AFSCreateSymlinkCB) +
-                                                                          TargetName->Length,
-                                                                      AFS_SYMLINK_REQUEST_TAG);
+	pSymlinkCreate = (AFSCreateSymlinkCB *)AFSLibExAllocatePoolWithTag( PagedPool,
+									    sizeof( AFSCreateSymlinkCB) +
+									    TargetName->Length,
+									    AFS_SYMLINK_REQUEST_TAG);
 
         if( pSymlinkCreate == NULL)
         {
@@ -3495,9 +3495,9 @@ AFSCreateSymlink( IN GUID *AuthGroup,
                        sizeof( AFSCreateSymlinkCB) +
                              TargetName->Length);
 
-        pSymlinkResult = (AFSCreateSymlinkResultCB *)ExAllocatePoolWithTag( PagedPool,
-                                                                            PAGE_SIZE,
-                                                                            AFS_SYMLINK_REQUEST_TAG);
+	pSymlinkResult = (AFSCreateSymlinkResultCB *)AFSLibExAllocatePoolWithTag( PagedPool,
+										  PAGE_SIZE,
+										  AFS_SYMLINK_REQUEST_TAG);
 
         if( pSymlinkResult == NULL)
         {
