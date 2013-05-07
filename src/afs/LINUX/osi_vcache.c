@@ -19,10 +19,8 @@ osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep) {
 
     struct dentry *dentry;
     struct inode *inode = AFSTOV(avc);
-#if defined(D_ALIAS_IS_HLIST)
-    struct hlist_node *cur, *head, *list_end;
-#else
-    struct list_head *cur, *head, *list_end;
+#if defined(D_ALIAS_IS_HLIST) && !defined(HLIST_ITERATOR_NO_NODE)
+    struct hlist_node *p;
 #endif
 
     /* First, see if we can evict the inode from the dcache */
@@ -33,13 +31,9 @@ osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep) {
 
 #if defined(HAVE_DCACHE_LOCK)
         spin_lock(&dcache_lock);
-	head = &inode->i_dentry;
 
 restart:
-        cur = head;
-	while ((cur = cur->next) != head) {
-	    dentry = list_entry(cur, struct dentry, d_alias);
-
+	list_for_each_entry(dentry, &inode->i_dentry, d_alias) {
 	    if (d_unhashed(dentry))
 		continue;
 	    dget_locked(dentry);
@@ -57,23 +51,17 @@ restart:
 	spin_unlock(&dcache_lock);
 #else /* HAVE_DCACHE_LOCK */
 	spin_lock(&inode->i_lock);
-#if defined(D_ALIAS_IS_HLIST)
-	head = inode->i_dentry.first;
-	list_end = NULL;
-#else
-	head = &inode->i_dentry;
-	list_end = head;
-#endif
 
 restart:
-	cur = head;
-	while ((cur = cur->next) != list_end) {
 #if defined(D_ALIAS_IS_HLIST)
-	    dentry = hlist_entry(cur, struct dentry, d_alias);
+# if defined(HLIST_ITERATOR_NO_NODE)
+	hlist_for_each_entry(dentry, &inode->i_dentry, d_alias) {
+# else
+	hlist_for_each_entry(dentry, p, &inode->i_dentry, d_alias) {
+# endif
 #else
-	    dentry = list_entry(cur, struct dentry, d_alias);
+	list_for_each_entry(dentry, &inode->i_dentry, d_alias) {
 #endif
-
 	    spin_lock(&dentry->d_lock);
 	    if (d_unhashed(dentry)) {
 		spin_unlock(&dentry->d_lock);
