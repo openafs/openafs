@@ -321,8 +321,11 @@ RDR_ProcessWorkerThreads(DWORD numThreads)
 
     if( glDevHandle == INVALID_HANDLE_VALUE)
     {
+	dwErr = GetLastError();
+
         free(redirInitInfo);
-        return GetLastError();
+
+	return dwErr;
     }
 
     //
@@ -338,13 +341,15 @@ RDR_ProcessWorkerThreads(DWORD numThreads)
                               &bytesReturned ))
     {
 
+	dwErr = GetLastError();
+
         CloseHandle( glDevHandle);
 
         glDevHandle = NULL;
 
         free(redirInitInfo);
 
-        return GetLastError();
+	return dwErr;
     }
 
     //
@@ -423,13 +428,21 @@ RDR_ProcessWorkerThreads(DWORD numThreads)
                               &bytesReturned ))
     {
 
+	//
+	// Must kill off the worker threads we spawned.
+	//
+
+	RDR_ShutdownFinal();
+
+	dwErr = GetLastError();
+
         CloseHandle( glDevHandle);
 
         glDevHandle = NULL;
 
         free(redirInitInfo);
 
-        return GetLastError();
+	return dwErr;
     }
 
     free(redirInitInfo);
