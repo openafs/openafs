@@ -1,5 +1,90 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.6.3 (in progress)
+
+All platforms
+
+    * Obey the jumbo/nojumbo settings for ubik servers (the DB servers)
+      too. In previous releases, those servers may have used jumbograms
+      even if they were not configured to do so. This change corrects
+      the actual behaviour, and will improve performance and reliability
+      for sites where jumbograms are problematic. It could cause a decrease
+      in performance for sites where jumbograms work, but those can turn
+      them back on manually.
+
+    * Dozens of fixes for common coding problems like use after free,
+      use of possibly uninitialised memory, reading or writing past the
+      end of arrays and potential NULL pointer derefences. Spotted by
+      code analysis tools or human inspection.
+
+    * Documentation improvements.
+
+    * Fixes and improvements to the diagnostic or log messages printed by
+      vos, the fileserver and others.
+
+    * Build fixes, making parallel builds more reliable with certain
+      configuration options and helping various platforms including
+      recent releases of IRIX, Solaris and several flavours of Linux.
+
+    * Avoid sending a small amount of data over the wire unencrypted
+      under certain conditions, and emit the correct error message in
+      this case.
+
+All server platforms
+
+    * Avoid generating duplicate IDs for readonly and backup volumes,
+      which could happen under certain conditions.
+
+    * Allow the fileserver to return volume data like quota or free space,
+      which is available publicly elsewhere, without the additional access
+      check for read permissions on a volume's root directory the fileserver
+      performed before.
+
+    * The fileserver now emits a log message when it ran out of memory for
+      for callbacks.
+
+    * Avoid several potential fileserver problems, including memory
+      corruption and segmentation faults, due to client bookkeeping.
+
+    * Avoid known cases of silent data corruption due to background syncs
+      on the fileserver, especially during Copy on Write.
+
+    * Make the fileserver sync behaviour runtime configurable. Up to 1.4.5,
+      we had synchronous syncs which were safe but really slow. Since 1.4.5,
+      we've had asynchronous syncs which are much faster but believed to
+      be the cause of rare data corruption issues, and while all known cases
+      of these happening are believed to be fixed in the 1.6.3 release, doubts
+      remain. This change allows choosing between those, and in addition allows
+      to turn syncs by the fileserver off altogether, thus relying on the vice
+      partition's backend filesystem and the operating system, or to just
+      execute them when a volume is detached. The default behaviour is
+      unchanged from releases since 1.4.5, but it's highly recommended to
+      consider the additional options this change provides. Future OpenAFS
+      releases will default to "-sync=none".
+
+    * For dbservers, avoid a situation where misinterpreting transient
+      network errors causes long-term issues with achieving ubik quorum.
+
+All UNIX client platforms
+
+    * Improvements to the detection of an aklog-specific krb5 configuration
+      file, for the purposes of turning on "weak crypto" for aklog.
+
+    * Fixed a regression introduced in release 1.6.2 which caused the
+      supposedly persistent disk cache to be discarded upon client start.
+      (RT #131655)
+
+Linux
+
+    * Support Linux kernels up to 3.9
+
+    * Fixed two bugs making it impossible to unmount a disk cache filesystem
+      after it has been used by the client. (RT #131613)
+
+OpenBSD
+
+    * Improved support for OpenBSD 4.9 to 5.3
+
 OpenAFS 1.6.2.1
 
   Linux clients
