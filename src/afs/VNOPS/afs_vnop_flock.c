@@ -538,7 +538,7 @@ DoLockWarning(afs_ucred_t * acred)
 	    ("afs: byte-range locks only enforced for processes on this machine (pid %d (%s), user %ld).\n", pid, procname, (long)afs_cr_uid(acred));
 #else
 	afs_warnuser
-	    ("afs: byte-range lock/unlock ignored; make sure no one else is running this program (pid %d (%s), user %ld).\n", pid, procname, afs_cr_uid(acred));
+	    ("afs: byte-range lock/unlock ignored; make sure no one else is running this program (pid %d (%s), user %ld).\n", pid, procname, (long)afs_cr_uid(acred));
 #endif
 	afs_osi_Free(procname, 256);
     }
