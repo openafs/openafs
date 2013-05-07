@@ -154,6 +154,7 @@ struct xfs_inode_info {
 # include <linux/sched.h>
 # include <linux/mm.h>
 # include <linux/slab.h>
+# include <linux/proc_fs.h>
 # include <linux/string.h>
 # if defined(HAVE_LINUX_SEMAPHORE_H)
 #  include <linux/semaphore.h>

@@ -595,4 +595,17 @@ afs_truncate(struct inode *inode, int len)
     return code;
 }
 
+static inline struct proc_dir_entry *
+afs_proc_create(char *name, umode_t mode, struct proc_dir_entry *parent, struct file_operations *fops) {
+#if defined(HAVE_LINUX_PROC_CREATE)
+    return proc_create(name, mode, parent, fops);
+#else
+    struct proc_dir_entry *entry;
+    entry = create_proc_entry(name, mode, parent);
+    if (entry)
+	entry->proc_fops = fops;
+    return entry;
+#endif
+}
+
 #endif /* AFS_LINUX_OSI_COMPAT_H */
