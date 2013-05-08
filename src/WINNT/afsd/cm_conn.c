@@ -519,7 +519,9 @@ cm_Analyze(cm_conn_t *connp,
                  * Do not perform a cm_CheckOfflineVolume() if cm_Analyze()
                  * was called by cm_CheckOfflineVolumeState().
                  */
-                if (!(reqp->flags & CM_REQ_OFFLINE_VOL_CHK) && timeLeft > 7) {
+		if (!(reqp->flags & (CM_REQ_OFFLINE_VOL_CHK|CM_REQ_NORETRY)) &&
+		    timeLeft > 7)
+		{
                     thrd_Sleep(5000);
 
                     /* cm_CheckOfflineVolume() resets the serverRef state */
@@ -568,7 +570,9 @@ cm_Analyze(cm_conn_t *connp,
 		 * retry all replicas for 5 minutes waiting 15 seconds
 		 * between attempts.
 		 */
-		if (timeLeft > 20 && reqp->volbusyCount++ < 20) {
+		if (timeLeft > 20 && !(reqp->flags & CM_REQ_NORETRY) &&
+		    reqp->volbusyCount++ < 20)
+		{
 		    thrd_Sleep(15000);
                     retry = 1;
                 }
@@ -582,13 +586,12 @@ cm_Analyze(cm_conn_t *connp,
         } else {    /* VL Server query */
             osi_Log0(afsd_logp, "cm_Analyze passed CM_ERROR_ALLBUSY (VL Server).");
 
-            if (timeLeft > 7) {
+	    if (timeLeft > 7 && !(reqp->flags & CM_REQ_NORETRY) && vlServerspp)
+	    {
                 thrd_Sleep(5000);
 
-                if (vlServerspp) {
-                    cm_ResetServerBusyStatus(vlServerspp);
-                    retry = 1;
-                }
+		cm_ResetServerBusyStatus(vlServerspp);
+		retry = 1;
             }
         }
     }
