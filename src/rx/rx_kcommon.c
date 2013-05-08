@@ -1295,7 +1295,7 @@ osi_Panic(char *msg, ...)
 	icmn_err(CE_PANIC, msg, ap);
 	va_end(ap);
     }
-#elif defined(AFS_DARWIN80_ENV) || (defined(AFS_LINUX22_ENV) && !defined(AFS_LINUX_26_ENV))
+#elif defined(AFS_DARWIN80_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_FBSD_ENV) || defined(UKERNEL)
     char buf[256];
     va_list ap;
     if (!msg)
@@ -1305,7 +1305,7 @@ osi_Panic(char *msg, ...)
     vsnprintf(buf, sizeof(buf), msg, ap);
     va_end(ap);
     printf("%s", buf);
-    panic(buf);
+    panic("%s", buf);
 #else
     va_list ap;
     if (!msg)
