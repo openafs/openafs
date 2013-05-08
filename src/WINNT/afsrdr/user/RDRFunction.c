@@ -5999,7 +5999,10 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
                     pResultCB->AvailableAllocationUnits.QuadPart = volStat.PartBlocksAvail;
                 }
             }
-        } else {
+	} else if ( code != CM_ERROR_ALLBUSY &&
+		    code != CM_ERROR_ALLOFFLINE &&
+		    code != CM_ERROR_ALLDOWN)
+	{
             /*
              * Lie about the available space.  Out of quota errors will need
              * detected when the file server rejects the store data.
