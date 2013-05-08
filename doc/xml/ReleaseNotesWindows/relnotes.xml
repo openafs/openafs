@@ -840,8 +840,9 @@
         <ulink url="http://www.jpsoft.com/">http://www.jpsoft.com</ulink>.
       </para>
       <para>Microsoft PowerShell 1.0, 2.0 and 3.0 also support UNC paths as the current directory. </para>
-      <para>The Cygwin environment also supports UNC paths as the current directory.   Enter AFS
-        paths with two leading forward slashes:  //afs/grand.central.org/software/openafs/.</para>
+      <para>The Cygwin environment also supports UNC paths as the current directory. Enter AFS paths
+	with two leading forward slashes: //afs/grand.central.org/software/openafs/.  As of Cygwin
+	1.7.18-1, AFS Symbolic Links are supported natively by the Cygwin environment.</para>
     </section>
     <section>
       <title id="aklog.exe">3.10. aklog.exe</title>
@@ -1835,40 +1836,50 @@ network paths are inaccessible when Protected Mode is on.
       <para>The Windows <ulink url="https://secure.wikimedia.org/wikipedia/en/wiki/Shadow_Copy">Volume Shadow Copy Service</ulink> is not implemented.  As a result, AFS backup volumes are not accessible via the Explorer Shell.</para>
       </listitem>
       <listitem>
-      <para>
-      There is no support for storing DOS attributes such as Hidden, System, or Archive.
-      </para>
+      <para>There is no support for storing DOS attributes such as Hidden, System, or Archive. </para>
       </listitem>
       <listitem>
-      <para>
-      There is no support for Alternate Data Streams as required by Windows User Account Control to store Zone Identity data.
-      </para>
+      <para>There is no support for Alternate Data Streams as required by Windows User Account
+	      Control to store Zone Identity data. </para>
       </listitem>
       <listitem>
-      <para>
-      There is no support for Extended Attributes.
-      </para>
+      <para>There is no support for Extended Attributes. </para>
       </listitem>
       <listitem>
-      <para>
-      There is no support for <ulink url="https://blogs.technet.com/b/hugofe/archive/2010/06/21/windows-2008-access-based-enumeration-abe.aspx">Access Based Enumeration</ulink>.
-      </para>
+      <para>There is no support for <ulink
+		url="https://blogs.technet.com/b/hugofe/archive/2010/06/21/windows-2008-access-based-enumeration-abe.aspx"
+		>Access Based Enumeration</ulink>. </para>
       </listitem>
       <listitem>
-      <para>
-      There is no support for <ulink url="https://secure.wikimedia.org/wikipedia/en/wiki/Windows_Management_Instrumentation">Windows Management Instrumentation</ulink>
-      </para>
+      <para>There is no support for <ulink
+		url="https://secure.wikimedia.org/wikipedia/en/wiki/Windows_Management_Instrumentation"
+		>Windows Management Instrumentation</ulink>
+	    </para>
       </listitem>
       <listitem>
-      <para>
-      There is no support for <ulink url="http://msdn.microsoft.com/en-us/library/aa363997%28v=vs.85%29.aspx">Distributed Link Tracking and Object Identifiers</ulink>
-      </para>
+      <para>There is no support for <ulink
+		url="http://msdn.microsoft.com/en-us/library/aa363997%28v=vs.85%29.aspx">Distributed
+		Link Tracking and Object Identifiers</ulink>
+	    </para>
       </listitem>
       <listitem>
-      <para>
-      There is no support for storing <ulink url="http://msdn.microsoft.com/en-us/magazine/cc982153.aspx">Windows Access Control Lists</ulink>.  Only the AFS ACLs are enforced.
-      </para>
-      </listitem>
+	    <para>There is no support for storing <ulink
+		url="http://msdn.microsoft.com/en-us/magazine/cc982153.aspx">Windows Access Control
+		Lists</ulink>. Only the AFS ACLs are enforced. </para>
+	  </listitem>
+	  <listitem>
+	    <para>There is a bug in the Explorer Shell which can result in the Shell responding to a
+	      Ctrl-V (Paste) operation with an out of space error.  The bug is that the Shell
+	      queries the root directory of the UNC Path or Drive Letter for free space instead of
+	      the path in which the Paste is being performed.  To work around the bug, select a
+	      directory in another volume under the same root and then return to the target
+	      directory before initiating the Paste.  Performing the Paste using the Context Menu
+	      instead of Ctrl-V will avoid triggering the bug.</para>
+	  </listitem>
+	  <listitem>
+	    <para>Windows file systems support a maximum of 31 reparse points (mount points or
+	      symbolic links) within a path.</para>
+	  </listitem>
       </itemizedlist>
       </para>
     </section>
@@ -4332,8 +4343,8 @@ Default: 0</para>
           <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD {0, 1}
           </para>
-          <para>
-            Default: 0 on Windows 8 and Server 2012, 1 otherwise</para>
+	  <para> Default: 0 on Windows 7, Windows 8, Server 2008 R2 and Server 2012, 1
+	    otherwise</para>
           <para>Determines whether or not the AFS Cache Manager will generate 8.3 compatible shortnames for all objects stored in AFS.  Short names are disabled by default on Windows 8 and Server 2012.  All prior operating systems enable short names by default.</para>
           <para>0: do not generate 8.3 compatible short names.</para>
           <para>1: generate 8.3 compatible short names.</para>
@@ -4382,6 +4393,36 @@ Default: 0</para>
           <para>0: prevent setting the FILE_READ_ONLY_VOLUME flag. (default on Win7 and below).</para>
           <para>1: permit setting the FILE_READ_ONLY_VOLUME flag. (default on Win8 and above)</para>
         </section>
+	<section>
+	  <title id="Regkey_TransarcAFSDaemon_Parameters_ReparsePointPolicy">Value: ReparsePointPolicy</title>
+	  <indexterm significance="normal">
+	    <primary>ReparsePointPolicy</primary>
+	  </indexterm>
+	  <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+	  <para>Type: DWORD {0, 1}
+	  </para>
+	  <para>
+	    Default: 0</para>
+	  <para>Windows file systems use <ulink
+	      url="http://msdn.microsoft.com/en-us/library/windows/desktop/aa365503%28v=vs.85%29.aspx"
+	      >reparse points</ulink> to represent special file system objects such as NTFS
+	    Junctions, Symbolic Links and AFS Mount Points.  Windows applications must be designed
+	    to work with <ulink
+	      url="http://msdn.microsoft.com/en-us/library/windows/desktop/aa365680%28v=vs.85%29.aspx"
+	      >Symbolic Links</ulink> because <ulink
+	      url="http://msdn.microsoft.com/en-us/library/windows/desktop/aa365682%28v=vs.85%29.aspx"
+	      >several standard file system functions</ulink> behave differently when the provided
+	    path specifies a reparse point.  Although there is not a significant impact for Symbolic
+	    Links to Directories and Mount Points to volume root directories, Symbolic Links to
+	    Files can result in applications misinterpreting the file size and attributes.</para>
+	  <para>The ReparsePointPolicy value permits alternate behaviors for reparse point objects
+	    on  a global basis.  In this version, there is only one policy option which permits
+	    Symbolic Links to Files to be represented with the target file's size and attributes in
+	    the output of FindFirstFile, GetFileAttributes, and GetFileAttributesEx
+	    operations.</para>
+	  <para>0: All Reparse Points are treated as reparse points.</para>
+	  <para>1: Reparse Points to Files treated as the target File.</para>
+	</section>
       </section>
       <section>
         <title id="Regkey_TransarcAFSDaemon_Parameters_GlobalAutoMapper">Regkey:
