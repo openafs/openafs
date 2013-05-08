@@ -67,6 +67,7 @@ typedef struct cm_req {
     int tokenError;
     int idleError;
     int vnovolError;
+    int volbusyCount;
     afs_uint32 flags;
     clientchar_t * tidPathp;
     clientchar_t * relPathp;

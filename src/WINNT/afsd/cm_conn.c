@@ -564,9 +564,12 @@ cm_Analyze(cm_conn_t *connp,
                     volServerspp = NULL;
                 }
 
-                if (timeLeft > 7) {
-                    thrd_Sleep(5000);
-                    statep = cm_VolumeStateByID(volp, fidp->volume);
+		/*
+		 * retry all replicas for 5 minutes waiting 15 seconds
+		 * between attempts.
+		 */
+		if (timeLeft > 20 && reqp->volbusyCount++ < 20) {
+		    thrd_Sleep(15000);
                     retry = 1;
                 }
                 cm_UpdateVolumeStatus(volp, fidp->volume);
