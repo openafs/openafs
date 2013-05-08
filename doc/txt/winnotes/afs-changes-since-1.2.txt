@@ -1,3 +1,144 @@
+Release 1.7.2400; Changes since 1.7.2300
+
+ * Optimize btree enumerations by avoiding unnecessary bulk stat
+   RPCs.
+
+ * Reduce the number of RXAFS_GetVolumeStatus RPC calls issued
+   against .readonly volumes by cacheing the volume size information.
+
+ * Fix additional AFSObjectInformationCB reference counting errors
+   including an error during renaming of an object to a direct
+   subdirectory of the source directory which eventually resulted
+   in a BSOD.
+
+ * Set both FILE_DEVICE_SECURE_OPEN and FILE_DEVICE_REMOTE when
+   creating Device Objects for the AFS Redirector.
+
+ * Instead of testing for the FILE_READ_ONLY_DEVICE device characteristic
+   the afs redirector must now check if the volume FileSystemAttributes
+   include FILE_READ_ONLY_VOLUME when deciding to return media protected
+   errors.
+
+ * Another major reorganization of garbage collection operations
+   within the AFSPrimaryVolumeWorkerThread.  These changes are safer but
+   may hold onto the VolumeCB TreeLock exclusively longer than necessary.
+   Lock management will be revisited in a subsequent release.
+
+   Apply last accessed time values to objects that are garbage collected.
+   Objects will be skipped if they were accessed within the last 20 seconds.
+
+ * The AFS Redirectory SetFlag and ClearFlag macros now use interlocked
+   operations.
+
+ * Increment the AFSCache data version to 23 due to changes in the
+   cached data structures.
+
+ * Fix runtime toggling of AFS redirector trace operations.
+
+ * \\afs\all is a special share name that refers to the global root
+   which in the AFS redirector is actually \\AFS.  However, from the
+   perspective of the network provider interface \\afs\all is just a
+   share which refers to a directory.   Do not treat attempts to evaluate
+   it as if they were the same as evaluating \\AFS.  One is a global
+   enumeration (\\AFS) and the other is just a hidden share name.
+
+ * In 1.7.2200 the AFS Redirectory began to return
+
+     cellname{%,#}volume
+
+   as the volume label in the Volume Information response.  For UNC
+   paths this is fine but for DOS devices on Windows 7 and earlier returning
+   a volume label that is longer than the NTFS maximum label length (32
+   characters) results in the Explorer Shell treating the volume as if it
+   does not support long file names.
+
+   From this release forward if the FileObject->FileName indicates that
+   the query is for a DOS Device, only return the AFS volume name and not the
+   cell informmation in the Volume Information response.
+
+ * Ensure that ValidDataLength and FileSize remain in sync with the data for
+   non-paging non-cached writes.  This is critical because the Windows cache
+   manager uses this information to trigger a page fault to read data from
+   the afsd_service upon receiving an extended cached write that doesn't fill
+   a full 4K page.
+
+ * Fix a race condition between NonCached and Cached Writes which can result
+   in data corruption within the Windows Cache Manager cache.
+
+ * Consolidate all data version change operations in the afsd_service.  The
+   service will notify the redirector when a file's data should be purged
+   from the Windows Cache Manager.
+
+ * When a NonCached write bypasses the Windows Cache Manager, any overwritten
+   data must be purged from the Windows Cache Manager.
+
+ * cm_Analyze invalidated the credentials for the cell upon receiving an
+   RXKADEXPIRED error from a server but failed for force the establishment of
+   a new rx connection to the server.  As a result, the expired credentials
+   would continue to be used until the credential expires.
+
+ * cm_Analyze forces new rx connections in response to VICECONNBAD and
+   VICETOKENDEAD errors but failed to mark the cm_req_t with
+   CM_REQ_NEW_CONN_FORCED and failed to set 'forcing_new' to true ensuring
+   that a retry would take place even if the cm_req_t included the no retry
+   flag.
+
+ * If the file server is asked to remove a directory that is not empty
+   one might expect it to return UAENOTEMPTY but instead it returns UAEEXIST.
+   Map UAEEXIST to CM_ERROR_NOEMPTY so the correct error is returned to the
+   application.
+
+ * RDR_DeleteFileEntry should check to see that a directory entry
+   that is a directory is in fact empty.  The most frequent use of
+   RDR_DeleteFileEntry is to check whether the object can be deleted
+   prior to setting the DeletePending state which in turn results in
+   the object being deleted during Cleanup.  If the directory is not
+   empty during Cleanup it is too late for the error to be seen by
+   the application.
+
+ * The new CM_CONN_FLAG_NEW flag is set on the cm_conn object whenever
+   a new rx_connection has been created.   The flag is cleared in cm_Analyze
+   if the call succeeded or if the error is one that is generated as a
+   result of communicating with the peer.  If no communication with the
+   peer has taken place the connection is considered "new".
+
+   For errors that would result in forcing a new connection, check whether
+   the existing connection is already "new".  This avoids an extra
+   RX_CALL_DEAD timeout period in the case where a "new" connection was
+   already in use.
+
+ * IOCTL_AFS_SET_REPARSE_POLICY is a new ioctl that can be executed
+   by anyone to alter the behavior of AFS Symlink-to-File reparse point
+   processing.   Policy can be set for a global default or for the active
+   authentication group.  If the AFS_REPARSE_POINT_TO_FILE_AS_FILE policy is
+   active, afs symlinks will not be reported as reparse points if the symlink
+   target is known to be a file.
+
+ * "ReparsePointPolicy" registry key
+
+   HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters
+
+     DWORD "ReparsePointPolicy"
+
+   Valid values are:
+
+     0 - No global policy set
+     1 - Reparse Points to Files treated as the target File
+
+ * Introduce IOCTL_AFS_GET_REPARSE_POLICY to permit the global
+   and active authgroup reparse point policies to be queried.
+
+ * Permit the active Debug Flags and Trace Configuration to be
+   queried by administrators using IOCTL_AFS_GET_DEBUG_TRACE.
+
+ * When the afsd_service is unable to properly initialize the redirector
+   if it has spawned worker threads for redirector communications they
+   will know be terminated instead of spinning and consuming 100% of the
+   available CPU.
+
+ * If the volume state is CM_ERROR_ALLBUSY, do not retry a particular
+   request for more than five minutes.
+
 Release 1.7.2300; Changes since 1.7.2200
 
  * Protect against BSOD during garbage collection if the
