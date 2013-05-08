@@ -836,7 +836,15 @@ enum usr_uio_rw { USR_UIO_READ, USR_UIO_WRITE };
 #endif
 #define NBPG			4096
 
-#define panic(S)		do{fprintf(stderr, "%s", S);assert(0);}while(0)
+static_inline void panic(const char *format, ...) AFS_NORETURN;
+static_inline void panic(const char *format, ...)
+{
+    va_list ap;
+    va_start(ap, format);
+    vfprintf(stderr, format, ap);
+    va_end(ap);
+    assert(0);
+};
 #define abort()			assert(0)
 #define usr_assert(A)		assert(A)
 
