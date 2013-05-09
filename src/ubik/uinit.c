@@ -143,10 +143,10 @@ internal_client_init_dir(const char *confDir, char *cellName, int secFlags,
 
     code = afsconf_GetCellInfo(dir, cellName, serviceid, &info);
     if (code) {
-	afsconf_Close(dir);
 	fprintf(stderr, "%s: can't find cell %s's hosts in %s/%s\n",
 		progname?progname:"<unknown>", cellName, confDir,
 		AFSDIR_CELLSERVDB_FILE);
+	afsconf_Close(dir);
 	return code;
     }
 
