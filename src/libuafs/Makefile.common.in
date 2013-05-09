@@ -217,36 +217,10 @@ UAFSOBJ = \
 	$(UOBJ)/dirpath.o \
 	$(UOBJ)/fileutil.o \
 	$(UOBJ)/netrestrict.o \
-	$(UOBJ)/et_name.o \
-	$(UOBJ)/com_err.o \
-	$(UOBJ)/error_msg.o \
-	$(UOBJ)/uerrors.o \
-	$(UOBJ)/kaerrors.o \
-	$(UOBJ)/ktc_errors.o \
-	$(UOBJ)/rxkad_errs.o \
-	$(UOBJ)/authclient.o \
-	$(UOBJ)/authcon.o \
 	$(UOBJ)/cellconfig.o \
 	$(UOBJ)/keys.o \
 	$(UOBJ)/realms.o \
-	$(UOBJ)/client.o \
-	$(UOBJ)/acfg_errors.o \
-	$(UOBJ)/kaaux.o \
-	$(UOBJ)/kalocalcell.o \
-	$(UOBJ)/kauth.cs.o \
-	$(UOBJ)/kauth.xdr.o \
 	$(UOBJ)/ktc.o \
-	$(UOBJ)/ptint.cs.o \
-	$(UOBJ)/ptint.xdr.o \
-	$(UOBJ)/ptuser.o \
-	$(UOBJ)/pterror.o \
-	$(UOBJ)/ticket.o \
-	$(UOBJ)/katoken.o \
-	$(UOBJ)/ubik_int.cs.o \
-	$(UOBJ)/ubik_int.xdr.o \
-	$(UOBJ)/ubikclient.o \
-	$(UOBJ)/user.o \
-	$(UOBJ)/hostparse.o \
 	$(UOBJ)/Krxstat.ss.o \
 	$(UOBJ)/Krxstat.xdr.o \
 	$(UOBJ)/rxstat.o \
@@ -366,36 +340,10 @@ PICUAFSOBJ = \
 	$(PICOBJ)/dirpath.o \
 	$(PICOBJ)/fileutil.o \
 	$(PICOBJ)/netrestrict.o \
-	$(PICOBJ)/et_name.o \
-	$(PICOBJ)/com_err.o \
-	$(PICOBJ)/error_msg.o \
-	$(PICOBJ)/uerrors.o \
-	$(PICOBJ)/kaerrors.o \
-	$(PICOBJ)/ktc_errors.o \
-	$(PICOBJ)/rxkad_errs.o \
-	$(PICOBJ)/authclient.o \
-	$(PICOBJ)/authcon.o \
 	$(PICOBJ)/cellconfig.o \
 	$(PICOBJ)/keys.o \
 	$(PICOBJ)/realms.o \
-	$(PICOBJ)/client.o \
-	$(PICOBJ)/acfg_errors.o \
-	$(PICOBJ)/kaaux.o \
-	$(PICOBJ)/kalocalcell.o \
-	$(PICOBJ)/kauth.cs.o \
-	$(PICOBJ)/kauth.xdr.o \
 	$(PICOBJ)/ktc.o \
-	$(PICOBJ)/ptint.cs.o \
-	$(PICOBJ)/ptint.xdr.o \
-	$(PICOBJ)/ptuser.o \
-	$(PICOBJ)/pterror.o \
-	$(PICOBJ)/ticket.o \
-	$(PICOBJ)/katoken.o \
-	$(PICOBJ)/ubik_int.cs.o \
-	$(PICOBJ)/ubik_int.xdr.o \
-	$(PICOBJ)/ubikclient.o \
-	$(PICOBJ)/user.o \
-	$(PICOBJ)/hostparse.o \
 	$(PICOBJ)/Krxstat.ss.o \
 	$(PICOBJ)/Krxstat.xdr.o \
 	$(PICOBJ)/rxstat.o \
@@ -515,37 +463,11 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/dirpath.o \
 	$(WEBOBJ)/fileutil.o \
 	$(WEBOBJ)/netrestrict.o \
-	$(WEBOBJ)/et_name.o \
-	$(WEBOBJ)/com_err.o \
-	$(WEBOBJ)/error_msg.o \
-	$(WEBOBJ)/uerrors.o \
-	$(WEBOBJ)/kaerrors.o \
-	$(WEBOBJ)/ktc_errors.o \
-	$(WEBOBJ)/rxkad_errs.o \
-	$(WEBOBJ)/authclient.o \
-	$(WEBOBJ)/authcon.o \
 	$(WEBOBJ)/cellconfig.o \
-	$(WEBOBJ)/client.o \
 	$(WEBOBJ)/keys.o \
 	$(WEBOBJ)/realms.o \
-	$(WEBOBJ)/acfg_errors.o \
-	$(WEBOBJ)/kaaux.o \
-	$(WEBOBJ)/kalocalcell.o \
-	$(WEBOBJ)/kauth.cs.o \
-	$(WEBOBJ)/kauth.xdr.o \
 	$(WEBOBJ)/ktc.o \
-	$(WEBOBJ)/ptint.cs.o \
-	$(WEBOBJ)/ptint.xdr.o \
-	$(WEBOBJ)/ptuser.o \
-	$(WEBOBJ)/pterror.o \
 	$(WEBOBJ)/securehash.o \
-	$(WEBOBJ)/ticket.o \
-	$(WEBOBJ)/katoken.o \
-	$(WEBOBJ)/ubik_int.cs.o \
-	$(WEBOBJ)/ubik_int.xdr.o \
-	$(WEBOBJ)/ubikclient.o \
-	$(WEBOBJ)/user.o \
-	$(WEBOBJ)/hostparse.o \
 	$(WEBOBJ)/nsafs.o \
 	$(WEBOBJ)/Krxstat.ss.o \
 	$(WEBOBJ)/Krxstat.xdr.o \
@@ -658,36 +580,11 @@ AFSWEBOBJKRB = \
 	$(WEBOBJ)/dirpath.o \
 	$(WEBOBJ)/fileutil.o \
 	$(WEBOBJ)/netrestrict.o \
-	$(WEBOBJ)/et_name.o \
-	$(WEBOBJ)/com_err.o \
-	$(WEBOBJ)/error_msg.o \
-	$(WEBOBJ)/uerrors.o \
-	$(WEBOBJ)/kaerrors.o \
-	$(WEBOBJ)/ktc_errors.o \
-	$(WEBOBJ)/rxkad_errs.o \
-	$(WEBOBJ)/authclient.o \
-	$(WEBOBJ)/authcon.o \
 	$(WEBOBJ)/cellconfig.o \
-	$(WEBOBJ)/client.o \
 	$(WEBOBJ)/keys.o \
 	$(WEBOBJ)/realms.o \
-	$(WEBOBJ)/acfg_errors.o \
-	$(WEBOBJ)/kaaux.o \
-	$(WEBOBJ)/kalocalcell.o \
-	$(WEBOBJ)/kauth.cs.o \
-	$(WEBOBJ)/kauth.xdr.o \
 	$(WEBOBJ)/ktc.krb.o \
-	$(WEBOBJ)/ptint.cs.o \
-	$(WEBOBJ)/ptint.xdr.o \
-	$(WEBOBJ)/ptuser.o \
-	$(WEBOBJ)/pterror.o \
 	$(WEBOBJ)/securehash.o \
-	$(WEBOBJ)/ticket.o \
-	$(WEBOBJ)/katoken.o \
-	$(WEBOBJ)/ubik_int.cs.o \
-	$(WEBOBJ)/ubik_int.xdr.o \
-	$(WEBOBJ)/ubikclient.o \
-	$(WEBOBJ)/user.o \
 	$(WEBOBJ)/nsafs.o \
 	$(WEBOBJ)/Krxstat.ss.o \
 	$(WEBOBJ)/Krxstat.xdr.o \
@@ -805,36 +702,10 @@ JUAFSOBJ = \
 	$(JUAFS)/dirpath.o \
 	$(JUAFS)/fileutil.o \
 	$(JUAFS)/netrestrict.o \
-	$(JUAFS)/et_name.o \
-	$(JUAFS)/com_err.o \
-	$(JUAFS)/error_msg.o \
-	$(JUAFS)/uerrors.o \
-	$(JUAFS)/kaerrors.o \
-	$(JUAFS)/ktc_errors.o \
-	$(JUAFS)/rxkad_errs.o \
-	$(JUAFS)/authclient.o \
-	$(JUAFS)/authcon.o \
 	$(JUAFS)/cellconfig.o \
 	$(JUAFS)/keys.o \
 	$(JUAFS)/realms.o \
-	$(JUAFS)/client.o \
-	$(JUAFS)/acfg_errors.o \
-	$(JUAFS)/kaaux.o \
-	$(JUAFS)/kalocalcell.o \
-	$(JUAFS)/kauth.cs.o \
-	$(JUAFS)/kauth.xdr.o \
 	$(JUAFS)/ktc.o \
-	$(JUAFS)/ptint.cs.o \
-	$(JUAFS)/ptint.xdr.o \
-	$(JUAFS)/ptuser.o \
-	$(JUAFS)/pterror.o \
-	$(JUAFS)/ticket.o \
-	$(JUAFS)/katoken.o \
-	$(JUAFS)/ubik_int.cs.o \
-	$(JUAFS)/ubik_int.xdr.o \
-	$(JUAFS)/ubikclient.o \
-	$(JUAFS)/user.o \
-	$(JUAFS)/hostparse.o \
 	$(JUAFS)/Krxstat.ss.o \
 	$(JUAFS)/Krxstat.xdr.o \
 	$(JUAFS)/rxstat.o \
@@ -1068,42 +939,6 @@ $(UOBJ)/osi_vfsops.o: $(TOP_SRC_AFS)/UKERNEL/osi_vfsops.c
 	$(CRULE1) -DAFS_NONFSTRANS
 $(UOBJ)/ktc.o: 	$(TOP_SRCDIR)/auth/ktc.c
 	$(CRULE1) @CFLAGS_NOERROR@
-$(UOBJ)/ticket.o: $(TOP_SRCDIR)/rxkad/ticket.c
-	$(CRULE1)
-$(UOBJ)/rxkad_server.o: $(TOP_SRCDIR)/rxkad/rxkad_server.c
-	$(CRULE1)
-$(UOBJ)/ptint.cs.o: $(TOP_OBJDIR)/src/ptserver/ptint.cs.c
-	$(CRULE1)
-$(UOBJ)/ptint.xdr.o: $(TOP_OBJDIR)/src/ptserver/ptint.xdr.c
-	$(CRULE1)
-$(UOBJ)/ptuser.o: $(TOP_SRCDIR)/ptserver/ptuser.c
-	$(CRULE1)
-$(UOBJ)/pterror.o: $(TOP_OBJDIR)/src/ptserver/pterror.c
-	$(CRULE1)
-$(UOBJ)/ubikclient.o: $(TOP_SRCDIR)/ubik/ubikclient.c
-	$(CRULE1)
-$(UOBJ)/ubik_int.cs.o: $(TOP_OBJDIR)/src/ubik/ubik_int.cs.c
-	$(CRULE1)
-$(UOBJ)/ubik_int.xdr.o: $(TOP_OBJDIR)/src/ubik/ubik_int.xdr.c
-	$(CRULE1)
-$(UOBJ)/authclient.o: $(TOP_SRCDIR)/kauth/authclient.c
-	$(CRULE1)
-$(UOBJ)/kalocalcell.o: $(TOP_SRCDIR)/kauth/kalocalcell.c
-	$(CRULE1)
-$(UOBJ)/client.o: $(TOP_SRCDIR)/kauth/client.c
-	$(CRULE1)
-$(UOBJ)/user.o: $(TOP_SRCDIR)/kauth/user.c
-	$(CRULE1)
-$(UOBJ)/hostparse.o: $(TOP_SRCDIR)/util/hostparse.c
-	$(CRULE1)
-$(UOBJ)/katoken.o: $(TOP_SRCDIR)/kauth/katoken.c
-	$(CRULE1)
-$(UOBJ)/acfg_errors.o: $(TOP_OBJDIR)/src/auth/acfg_errors.c
-	$(CRULE1)
-$(UOBJ)/kaaux.o: $(TOP_SRCDIR)/kauth/kaaux.c
-	$(CRULE1)
-$(UOBJ)/authcon.o: $(TOP_SRCDIR)/auth/authcon.c
-	$(CRULE1)
 $(UOBJ)/cellconfig.o: $(TOP_SRCDIR)/auth/cellconfig.c
 	$(CRULE1)
 $(UOBJ)/keys.o: $(TOP_SRCDIR)/auth/keys.c
@@ -1117,24 +952,6 @@ $(UOBJ)/dirpath.o: $(TOP_SRCDIR)/util/dirpath.c
 $(UOBJ)/fileutil.o: $(TOP_SRCDIR)/util/fileutil.c
 	$(CRULE1)
 $(UOBJ)/netrestrict.o: $(TOP_SRCDIR)/auth/netrestrict.c
-	$(CRULE1)
-$(UOBJ)/et_name.o: $(TOP_SRCDIR)/comerr/et_name.c
-	$(CRULE1)
-$(UOBJ)/com_err.o: $(TOP_SRCDIR)/comerr/com_err.c
-	$(CRULE1)
-$(UOBJ)/error_msg.o: $(TOP_SRCDIR)/comerr/error_msg.c
-	$(CRULE1)
-$(UOBJ)/uerrors.o: $(TOP_OBJDIR)/src/ubik/uerrors.c
-	$(CRULE1)
-$(UOBJ)/kaerrors.o: $(TOP_OBJDIR)/src/kauth/kaerrors.c
-	$(CRULE1)
-$(UOBJ)/ktc_errors.o: $(TOP_OBJDIR)/src/auth/ktc_errors.c
-	$(CRULE1)
-$(UOBJ)/rxkad_errs.o: $(TOP_OBJDIR)/src/rxkad/rxkad_errs.c
-	$(CRULE1)
-$(UOBJ)/kauth.cs.o: $(TOP_OBJDIR)/src/kauth/kauth.cs.c
-	$(CRULE1)
-$(UOBJ)/kauth.xdr.o: $(TOP_OBJDIR)/src/kauth/kauth.xdr.c
 	$(CRULE1)
 $(UOBJ)/rxstat.o: $(TOP_SRC_RXSTAT)/rxstat.c
 	$(CRULE1)
@@ -1373,42 +1190,6 @@ $(PICOBJ)/osi_vfsops.o: $(TOP_SRC_AFS)/UKERNEL/osi_vfsops.c
 	$(CRULEPIC) -DAFS_NONFSTRANS
 $(PICOBJ)/ktc.o: 	$(TOP_SRCDIR)/auth/ktc.c
 	$(CRULEPIC) @CFLAGS_NOERROR@
-$(PICOBJ)/ticket.o: $(TOP_SRCDIR)/rxkad/ticket.c
-	$(CRULEPIC)
-$(PICOBJ)/rxkad_server.o: $(TOP_SRCDIR)/rxkad/rxkad_server.c
-	$(CRULEPIC)
-$(PICOBJ)/ptint.cs.o: $(TOP_OBJDIR)/src/ptserver/ptint.cs.c
-	$(CRULEPIC)
-$(PICOBJ)/ptint.xdr.o: $(TOP_OBJDIR)/src/ptserver/ptint.xdr.c
-	$(CRULEPIC)
-$(PICOBJ)/ptuser.o: $(TOP_SRCDIR)/ptserver/ptuser.c
-	$(CRULEPIC)
-$(PICOBJ)/pterror.o: $(TOP_OBJDIR)/src/ptserver/pterror.c
-	$(CRULEPIC)
-$(PICOBJ)/ubikclient.o: $(TOP_SRCDIR)/ubik/ubikclient.c
-	$(CRULEPIC)
-$(PICOBJ)/ubik_int.cs.o: $(TOP_OBJDIR)/src/ubik/ubik_int.cs.c
-	$(CRULEPIC)
-$(PICOBJ)/ubik_int.xdr.o: $(TOP_OBJDIR)/src/ubik/ubik_int.xdr.c
-	$(CRULEPIC)
-$(PICOBJ)/authclient.o: $(TOP_SRCDIR)/kauth/authclient.c
-	$(CRULEPIC)
-$(PICOBJ)/kalocalcell.o: $(TOP_SRCDIR)/kauth/kalocalcell.c
-	$(CRULEPIC)
-$(PICOBJ)/client.o: $(TOP_SRCDIR)/kauth/client.c
-	$(CRULEPIC)
-$(PICOBJ)/user.o: $(TOP_SRCDIR)/kauth/user.c
-	$(CRULEPIC)
-$(PICOBJ)/hostparse.o: $(TOP_SRCDIR)/util/hostparse.c
-	$(CRULEPIC)
-$(PICOBJ)/katoken.o: $(TOP_SRCDIR)/kauth/katoken.c
-	$(CRULEPIC)
-$(PICOBJ)/acfg_errors.o: $(TOP_OBJDIR)/src/auth/acfg_errors.c
-	$(CRULEPIC)
-$(PICOBJ)/kaaux.o: $(TOP_SRCDIR)/kauth/kaaux.c
-	$(CRULEPIC)
-$(PICOBJ)/authcon.o: $(TOP_SRCDIR)/auth/authcon.c
-	$(CRULEPIC)
 $(PICOBJ)/cellconfig.o: $(TOP_SRCDIR)/auth/cellconfig.c
 	$(CRULEPIC)
 $(PICOBJ)/keys.o: $(TOP_SRCDIR)/auth/keys.c
@@ -1422,24 +1203,6 @@ $(PICOBJ)/dirpath.o: $(TOP_SRCDIR)/util/dirpath.c
 $(PICOBJ)/fileutil.o: $(TOP_SRCDIR)/util/fileutil.c
 	$(CRULEPIC)
 $(PICOBJ)/netrestrict.o: $(TOP_SRCDIR)/auth/netrestrict.c
-	$(CRULEPIC)
-$(PICOBJ)/et_name.o: $(TOP_SRCDIR)/comerr/et_name.c
-	$(CRULEPIC)
-$(PICOBJ)/com_err.o: $(TOP_SRCDIR)/comerr/com_err.c
-	$(CRULEPIC)
-$(PICOBJ)/error_msg.o: $(TOP_SRCDIR)/comerr/error_msg.c
-	$(CRULEPIC)
-$(PICOBJ)/uerrors.o: $(TOP_OBJDIR)/src/ubik/uerrors.c
-	$(CRULEPIC)
-$(PICOBJ)/kaerrors.o: $(TOP_OBJDIR)/src/kauth/kaerrors.c
-	$(CRULEPIC)
-$(PICOBJ)/ktc_errors.o: $(TOP_OBJDIR)/src/auth/ktc_errors.c
-	$(CRULEPIC)
-$(PICOBJ)/rxkad_errs.o: $(TOP_OBJDIR)/src/rxkad/rxkad_errs.c
-	$(CRULEPIC)
-$(PICOBJ)/kauth.cs.o: $(TOP_OBJDIR)/src/kauth/kauth.cs.c
-	$(CRULEPIC)
-$(PICOBJ)/kauth.xdr.o: $(TOP_OBJDIR)/src/kauth/kauth.xdr.c
 	$(CRULEPIC)
 $(PICOBJ)/rxstat.o: $(TOP_SRC_RXSTAT)/rxstat.c
 	$(CRULEPIC)
@@ -1683,46 +1446,6 @@ $(WEBOBJ)/securehash.o: $(TOP_SRCDIR)/afsweb/securehash.c
 	$(CRULE2)
 $(WEBOBJ)/nsafs.o: $(TOP_SRCDIR)/afsweb/nsafs.c
 	$(CRULE2)
-$(WEBOBJ)/ticket.o: $(TOP_SRCDIR)/rxkad/ticket.c
-	$(CRULE2)
-$(WEBOBJ)/rxkad_server.o: $(TOP_SRCDIR)/rxkad/rxkad_server.c
-	$(CRULE2)
-$(WEBOBJ)/ptint.cs.o: $(TOP_OBJDIR)/src/ptserver/ptint.cs.c
-	$(CRULE2)
-$(WEBOBJ)/ptint.xdr.o: $(TOP_OBJDIR)/src/ptserver/ptint.xdr.c
-	$(CRULE2)
-$(WEBOBJ)/ptuser.o: $(TOP_SRCDIR)/ptserver/ptuser.c
-	$(CRULE2)
-$(WEBOBJ)/pterror.o: $(TOP_OBJDIR)/src/ptserver/pterror.c
-	$(CRULE2)
-$(WEBOBJ)/ubikclient.o: $(TOP_SRCDIR)/ubik/ubikclient.c
-	$(CRULE2)
-$(WEBOBJ)/ubik_int.cs.o: $(TOP_OBJDIR)/src/ubik/ubik_int.cs.c
-	$(CRULE2)
-$(WEBOBJ)/ubik_int.xdr.o: $(TOP_OBJDIR)/src/ubik/ubik_int.xdr.c
-	$(CRULE2)
-$(WEBOBJ)/authclient.o: $(TOP_SRCDIR)/kauth/authclient.c
-	$(CRULE2)
-$(WEBOBJ)/kalocalcell.o: $(TOP_SRCDIR)/kauth/kalocalcell.c
-	$(CRULE2)
-$(WEBOBJ)/client.o: $(TOP_SRCDIR)/kauth/client.c
-	$(CRULE2)
-$(WEBOBJ)/user.o: $(TOP_SRCDIR)/kauth/user.c
-	$(CRULE2)
-$(WEBOBJ)/hostparse.o: $(TOP_SRCDIR)/util/hostparse.c
-	$(CRULE2)
-$(WEBOBJ)/katoken.o: $(TOP_SRCDIR)/kauth/katoken.c
-	$(CRULE2)
-$(WEBOBJ)/acfg_errors.o: $(TOP_OBJDIR)/src/auth/acfg_errors.c
-	$(CRULE2)
-$(WEBOBJ)/kaaux.o: $(TOP_SRCDIR)/kauth/kaaux.c
-	$(CRULE2)
-$(WEBOBJ)/kauth.cs.o: $(TOP_OBJDIR)/src/kauth/kauth.cs.c
-	$(CRULE2)
-$(WEBOBJ)/kauth.xdr.o: $(TOP_OBJDIR)/src/kauth/kauth.xdr.c
-	$(CRULE2)
-$(WEBOBJ)/authcon.o: $(TOP_SRCDIR)/auth/authcon.c
-	$(CRULE2)
 $(WEBOBJ)/cellconfig.o: $(TOP_SRCDIR)/auth/cellconfig.c
 	$(CRULE2)
 $(WEBOBJ)/keys.o: $(TOP_SRCDIR)/auth/keys.c
@@ -1737,20 +1460,6 @@ $(WEBOBJ)/fileutil.o: $(TOP_SRCDIR)/util/fileutil.c
 	$(CRULE1)
 $(WEBOBJ)/netrestrict.o: $(TOP_SRCDIR)/auth/netrestrict.c
 	$(CRULE1)
-$(WEBOBJ)/et_name.o: $(TOP_SRCDIR)/comerr/et_name.c
-	$(CRULE2)
-$(WEBOBJ)/com_err.o: $(TOP_SRCDIR)/comerr/com_err.c
-	$(CRULE2)
-$(WEBOBJ)/error_msg.o: $(TOP_SRCDIR)/comerr/error_msg.c
-	$(CRULE2)
-$(WEBOBJ)/uerrors.o: $(TOP_OBJDIR)/src/ubik/uerrors.c
-	$(CRULE2)
-$(WEBOBJ)/kaerrors.o: $(TOP_OBJDIR)/src/kauth/kaerrors.c
-	$(CRULE2)
-$(WEBOBJ)/ktc_errors.o: $(TOP_OBJDIR)/src/auth/ktc_errors.c
-	$(CRULE2)
-$(WEBOBJ)/rxkad_errs.o: $(TOP_OBJDIR)/src/rxkad/rxkad_errs.c
-	$(CRULE2)
 $(WEBOBJ)/rxstat.o: $(TOP_SRC_RXSTAT)/rxstat.c
 	$(CRULE2)
 $(WEBOBJ)/Krxstat.ss.o: $(TOP_OBJ_RXSTAT)/Krxstat.ss.c
@@ -1987,42 +1696,6 @@ $(JUAFS)/osi_vfsops.o: $(TOP_SRC_AFS)/UKERNEL/osi_vfsops.c
 	$(CRULE1) -DAFS_NONFSTRANS
 $(JUAFS)/ktc.o: 	$(TOP_SRCDIR)/auth/ktc.c
 	$(CRULE1) @CFLAGS_NOERROR@
-$(JUAFS)/ticket.o: $(TOP_SRCDIR)/rxkad/ticket.c
-	$(CRULE1)
-$(JUAFS)/rxkad_server.o: $(TOP_SRCDIR)/rxkad/rxkad_server.c
-	$(CRULE1)
-$(JUAFS)/ptint.cs.o: $(TOP_OBJDIR)/src/ptserver/ptint.cs.c
-	$(CRULE1)
-$(JUAFS)/ptint.xdr.o: $(TOP_OBJDIR)/src/ptserver/ptint.xdr.c
-	$(CRULE1)
-$(JUAFS)/ptuser.o: $(TOP_SRCDIR)/ptserver/ptuser.c
-	$(CRULE1)
-$(JUAFS)/pterror.o: $(TOP_OBJDIR)/src/ptserver/pterror.c
-	$(CRULE1)
-$(JUAFS)/ubikclient.o: $(TOP_SRCDIR)/ubik/ubikclient.c
-	$(CRULE1)
-$(JUAFS)/ubik_int.cs.o: $(TOP_OBJDIR)/src/ubik/ubik_int.cs.c
-	$(CRULE1)
-$(JUAFS)/ubik_int.xdr.o: $(TOP_OBJDIR)/src/ubik/ubik_int.xdr.c
-	$(CRULE1)
-$(JUAFS)/authclient.o: $(TOP_SRCDIR)/kauth/authclient.c
-	$(CRULE1)
-$(JUAFS)/kalocalcell.o: $(TOP_SRCDIR)/kauth/kalocalcell.c
-	$(CRULE1)
-$(JUAFS)/client.o: $(TOP_SRCDIR)/kauth/client.c
-	$(CRULE1)
-$(JUAFS)/user.o: $(TOP_SRCDIR)/kauth/user.c
-	$(CRULE1)
-$(JUAFS)/hostparse.o: $(TOP_SRCDIR)/util/hostparse.c
-	$(CRULE1)
-$(JUAFS)/katoken.o: $(TOP_SRCDIR)/kauth/katoken.c
-	$(CRULE1)
-$(JUAFS)/acfg_errors.o: $(TOP_OBJDIR)/src/auth/acfg_errors.c
-	$(CRULE1)
-$(JUAFS)/kaaux.o: $(TOP_SRCDIR)/kauth/kaaux.c
-	$(CRULE1)
-$(JUAFS)/authcon.o: $(TOP_SRCDIR)/auth/authcon.c
-	$(CRULE1)
 $(JUAFS)/cellconfig.o: $(TOP_SRCDIR)/auth/cellconfig.c
 	$(CRULE1)
 $(JUAFS)/keys.o: $(TOP_SRCDIR)/auth/keys.c
@@ -2036,24 +1709,6 @@ $(JUAFS)/dirpath.o: $(TOP_SRCDIR)/util/dirpath.c
 $(JUAFS)/fileutil.o: $(TOP_SRCDIR)/util/fileutil.c
 	$(CRULE1)
 $(JUAFS)/netrestrict.o: $(TOP_SRCDIR)/auth/netrestrict.c
-	$(CRULE1)
-$(JUAFS)/et_name.o: $(TOP_SRCDIR)/comerr/et_name.c
-	$(CRULE1)
-$(JUAFS)/com_err.o: $(TOP_SRCDIR)/comerr/com_err.c
-	$(CRULE1)
-$(JUAFS)/error_msg.o: $(TOP_SRCDIR)/comerr/error_msg.c
-	$(CRULE1)
-$(JUAFS)/uerrors.o: $(TOP_OBJDIR)/src/ubik/uerrors.c
-	$(CRULE1)
-$(JUAFS)/kaerrors.o: $(TOP_OBJDIR)/src/kauth/kaerrors.c
-	$(CRULE1)
-$(JUAFS)/ktc_errors.o: $(TOP_OBJDIR)/src/auth/ktc_errors.c
-	$(CRULE1)
-$(JUAFS)/rxkad_errs.o: $(TOP_OBJDIR)/src/rxkad/rxkad_errs.c
-	$(CRULE1)
-$(JUAFS)/kauth.cs.o: $(TOP_OBJDIR)/src/kauth/kauth.cs.c
-	$(CRULE1)
-$(JUAFS)/kauth.xdr.o: $(TOP_OBJDIR)/src/kauth/kauth.xdr.c
 	$(CRULE1)
 $(JUAFS)/rxstat.o: $(TOP_SRC_RXSTAT)/rxstat.c
 	$(CRULE1)

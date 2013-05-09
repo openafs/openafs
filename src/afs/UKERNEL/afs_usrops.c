@@ -3591,34 +3591,6 @@ uafs_closedir_r(usr_DIR * dirp)
 }
 
 /*
- * Do AFS authentication
- */
-int
-uafs_klog(char *user, char *cell, char *passwd, char **reason)
-{
-    int code;
-    afs_int32 password_expires = -1;
-
-    usr_mutex_lock(&osi_authenticate_lock);
-    code =
-	ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION +
-				   KA_USERAUTH_DOSETPAG2, user, NULL, cell,
-				   passwd, 0, &password_expires, 0, reason);
-    usr_mutex_unlock(&osi_authenticate_lock);
-    return code;
-}
-
-int
-uafs_klog_r(char *user, char *cell, char *passwd, char **reason)
-{
-    int retval;
-    AFS_GUNLOCK();
-    retval = uafs_klog(user, cell, passwd, reason);
-    AFS_GLOCK();
-    return retval;
-}
-
-/*
  * Destroy AFS credentials from the kernel cache
  */
 int
@@ -3679,25 +3651,6 @@ uafs_afsPathName(char *path)
 	return p;
     }
     return NULL;
-}
-
-/*
- * uafs_klog_nopag
- * klog but don't allocate a new pag
- */
-int
-uafs_klog_nopag(char *user, char *cell, char *passwd, char **reason)
-{
-    int code;
-    afs_int32 password_expires = -1;
-
-    usr_mutex_lock(&osi_authenticate_lock);
-    code = ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION
-				      /*+KA_USERAUTH_DOSETPAG2 */ , user,
-				      NULL, cell, passwd, 0,
-				      &password_expires, 0, reason);
-    usr_mutex_unlock(&osi_authenticate_lock);
-    return code;
 }
 
 /*
