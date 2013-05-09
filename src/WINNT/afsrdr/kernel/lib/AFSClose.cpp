@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2008, 2009, 2010, 2011 Kernel Drivers, LLC.
- * Copyright (c) 2009, 2010, 2011 Your File System, Inc.
+ * Copyright (c) 2008, 2009, 2010, 2011, 2012, 2013 Kernel Drivers, LLC.
+ * Copyright (c) 2009, 2010, 2011, 2012, 2013 Your File System, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -10,10 +10,8 @@
  * - Redistributions of source code must retain the above copyright notice,
  *   this list of conditions and the following disclaimer.
  * - Redistributions in binary form must reproduce the above copyright
- *   notice,
- *   this list of conditions and the following disclaimer in the
- *   documentation
- *   and/or other materials provided with the distribution.
+ *   notice, this list of conditions and the following disclaimer in the
+ *   documentation and/or other materials provided with the distribution.
  * - Neither the names of Kernel Drivers, LLC and Your File System, Inc.
  *   nor the names of their contributors may be used to endorse or promote
  *   products derived from this software without specific prior written
@@ -115,6 +113,8 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
 
                 pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
 
+		pIrpSp->FileObject->FsContext2 = NULL;
+
                 //
                 // Send the close to the CM
                 //
@@ -181,6 +181,8 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
 
                 AFSReleaseResource( &pFcb->NPFcb->Resource);
 
+		pIrpSp->FileObject->FsContext = NULL;
+
                 lCount = InterlockedDecrement( &pFcb->OpenReferenceCount);
 
                 AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
@@ -208,6 +210,8 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
 
                 pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
 
+		pIrpSp->FileObject->FsContext2;
+
                 //
                 // Remove the Ccb and de-allocate it
                 //
@@ -216,6 +220,8 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                               pCcb);
 
                 AFSReleaseResource( &pFcb->NPFcb->Resource);
+
+		pIrpSp->FileObject->FsContext = NULL;
 
                 lCount = InterlockedDecrement( &pFcb->OpenReferenceCount);
 
@@ -244,6 +250,8 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
             {
 
                 pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
+
+		pIrpSp->FileObject->FsContext2 = NULL;
 
                 //
                 // We may be performing some cleanup on the Fcb so grab it exclusive to ensure no collisions
@@ -485,6 +493,8 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                                   pParentObjectInfo->Specific.Directory.ChildOpenReferenceCount));
                 }
 
+		pIrpSp->FileObject->FsContext = NULL;
+
                 //
                 // Decrement the reference count on the Fcb. this is protecting it from teardown.
                 //
@@ -508,6 +518,8 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                 AFSPipeOpenCloseRequestCB stPipeClose;
 
                 pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
+
+		pIrpSp->FileObject->FsContext2 = NULL;
 
                 //
                 // Object the Parent ObjectInformationCB
@@ -563,6 +575,8 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
 
                 AFSReleaseResource( &pFcb->NPFcb->Resource);
 
+		pIrpSp->FileObject->FsContext = NULL;
+
                 lCount = InterlockedDecrement( &pFcb->OpenReferenceCount);
 
                 AFSDbgTrace(( AFS_SUBSYSTEM_FCB_REF_COUNTING,
@@ -577,6 +591,7 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
             }
 
             default:
+	    {
 
                 AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
@@ -584,6 +599,7 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                               pFcb->Header.NodeTypeCode));
 
                 break;
+	    }
         }
 
 try_exit:
