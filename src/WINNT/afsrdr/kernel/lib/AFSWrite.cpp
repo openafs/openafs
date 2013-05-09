@@ -597,6 +597,11 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
 
                     if (!bLockOK)
                     {
+
+			AFSReleaseResource( &pNPFcb->SectionObjectResource);
+
+			bReleaseSectionObject = FALSE;
+
                         AFSReleaseResource( &pNPFcb->Resource);
 
                         bReleaseMain = FALSE;
