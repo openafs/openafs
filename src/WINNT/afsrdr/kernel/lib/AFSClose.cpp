@@ -538,24 +538,6 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                 stPipeClose.RootId = pObjectInfo->VolumeCB->ObjectInformation.FileId;
 
                 //
-                // Issue the open request to the service
-                //
-
-                /*
-                AFSProcessRequest( AFS_REQUEST_TYPE_PIPE_CLOSE,
-                                   AFS_REQUEST_FLAG_SYNCHRONOUS,
-                                   &pFcb->AuthGroup,
-                                   &pDirCB->NameInformation.FileName,
-                                   NULL,
-                                   NULL,
-                                   0,
-                                   (void *)&stPipeClose,
-                                   sizeof( AFSPipeOpenCloseRequestCB),
-                                   NULL,
-                                   NULL);
-                */
-
-                //
                 // Remove the Ccb and de-allocate it
                 //
 
