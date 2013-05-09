@@ -1,6 +1,8 @@
 openafs (1.6.2.1-2) UNRELEASED; urgency=low
 
   * Upload to unstable.
+  * Translation updates:
+    - Brazilian Portuguese, thanks Albino B Neto.  (Closes: #706627)
 
  -- Russ Allbery <rra@debian.org>  Thu, 09 May 2013 08:37:05 -0700
 
