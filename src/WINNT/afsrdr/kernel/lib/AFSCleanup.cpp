@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2008, 2009, 2010, 2011 Kernel Drivers, LLC.
- * Copyright (c) 2009, 2010, 2011 Your File System, Inc.
+ * Copyright (c) 2008, 2009, 2010, 2011, 2012, 2013 Kernel Drivers, LLC.
+ * Copyright (c) 2009, 2010, 2011, 2012, 2013 Your File System, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -10,10 +10,8 @@
  * - Redistributions of source code must retain the above copyright notice,
  *   this list of conditions and the following disclaimer.
  * - Redistributions in binary form must reproduce the above copyright
- *   notice,
- *   this list of conditions and the following disclaimer in the
- *   documentation
- *   and/or other materials provided with the distribution.
+ *   notice, this list of conditions and the following disclaimer in the
+ *   documentation and/or other materials provided with the distribution.
  * - Neither the names of Kernel Drivers, LLC and Your File System, Inc.
  *   nor the names of their contributors may be used to endorse or promote
  *   products derived from this software without specific prior written
@@ -245,15 +243,15 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                 AFSAcquireExcl( &pFcb->NPFcb->SectionObjectResource,
                                 TRUE);
 
-                //
-                // If the handle has write permission ...
-                //
-
-                if( ((pCcb->GrantedAccess & FILE_WRITE_DATA) || pFcb->OpenHandleCount == 1) &&
-                    CcIsFileCached( pIrpSp->FileObject))
+		__try
                 {
 
-                    __try
+		    //
+		    // If the handle has write permission ...
+		    //
+
+		    if( ((pCcb->GrantedAccess & FILE_WRITE_DATA) || pFcb->OpenHandleCount == 1) &&
+			CcIsFileCached( pIrpSp->FileObject))
                     {
 
                         CcFlushCache( &pFcb->NPFcb->SectionObjectPointers,
@@ -305,22 +303,22 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                             }
                         }
                     }
-                    __except( EXCEPTION_EXECUTE_HANDLER)
-                    {
+		}
+		__except( EXCEPTION_EXECUTE_HANDLER)
+		{
 
-                        ntStatus = GetExceptionCode();
+		    ntStatus = GetExceptionCode();
 
-                        AFSDbgTrace(( 0,
-                                      0,
-                                      "EXCEPTION - AFSCleanup Cc FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
-                                      pObjectInfo->FileId.Cell,
-                                      pObjectInfo->FileId.Volume,
-                                      pObjectInfo->FileId.Vnode,
-                                      pObjectInfo->FileId.Unique,
-                                      ntStatus));
+		    AFSDbgTrace(( 0,
+				  0,
+				  "EXCEPTION - AFSCleanup Cc FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
+				  pObjectInfo->FileId.Cell,
+				  pObjectInfo->FileId.Volume,
+				  pObjectInfo->FileId.Vnode,
+				  pObjectInfo->FileId.Unique,
+				  ntStatus));
 
-                        SetFlag( pObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
-                    }
+		    SetFlag( pObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
                 }
 
                 //
