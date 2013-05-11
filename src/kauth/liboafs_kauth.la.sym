@@ -1,9 +1,9 @@
 initialize_KA_error_table
-ka_VerifyUserPassword
-ka_UserAuthenticateGeneral
+ka_AuthServerConn
+ka_ChangePassword
+ka_GetAdminToken
 ka_Init
 ka_LocalCell
 ka_StringToKey
-ka_GetAdminToken
-ka_AuthServerConn
-ka_ChangePassword
+ka_UserAuthenticateGeneral
+ka_VerifyUserPassword

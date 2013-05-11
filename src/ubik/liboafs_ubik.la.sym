@@ -1,3 +1,5 @@
+EndDISK_GetFile
+StartDISK_GetFile
 VOTE_Debug
 VOTE_DebugOld
 VOTE_GetSyncSite
@@ -5,8 +7,6 @@ VOTE_SDebug
 VOTE_SDebugOld
 VOTE_XDebug
 VOTE_XSDebug
-StartDISK_GetFile
-EndDISK_GetFile
 initialize_U_error_table
 ubik_AbortTrans
 ubik_BeginTrans

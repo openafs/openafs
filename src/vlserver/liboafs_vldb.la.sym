@@ -1,4 +1,7 @@
+EndVL_ProbeServer
+StartVL_ProbeServer
 VL_GetEntryByNameO
+VL_ProbeServer
 initialize_VL_error_table
 ubik_VL_ChangeAddr
 ubik_VL_CreateEntry
@@ -19,6 +22,7 @@ ubik_VL_ListAttributes
 ubik_VL_ListAttributesN
 ubik_VL_ListAttributesN2
 ubik_VL_ListEntry
+ubik_VL_ProbeServer
 ubik_VL_RegisterAddrs
 ubik_VL_ReleaseLock
 ubik_VL_ReplaceEntry
@@ -28,7 +32,3 @@ ubik_VL_UpdateEntry
 ubik_VL_UpdateEntryByName
 xdr_bulkaddrs
 xdr_bulkentries
-VL_ProbeServer
-EndVL_ProbeServer
-StartVL_ProbeServer
-ubik_VL_ProbeServer

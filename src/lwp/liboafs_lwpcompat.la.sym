@@ -1,9 +1,9 @@
-FT_ApproxTime
-FT_GetTimeOfDay
-Lock_Init
 Afs_Lock_Obtain
 Afs_Lock_ReleaseR
 Afs_Lock_ReleaseW
 Afs_Lock_WakeupR
-LWP_WaitForKeystroke
+FT_ApproxTime
+FT_GetTimeOfDay
 LWP_GetResponseKey
+LWP_WaitForKeystroke
+Lock_Init
