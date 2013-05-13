@@ -3518,7 +3518,13 @@ unlocked_error:
 locked_error:
 #ifdef AFS_DEMAND_ATTACH_FS
     if (!VIsErrorState(V_attachState(vp))) {
-	if (VIsErrorState(error_state)) {
+	if (programType != fileServer && *ec == VNOVOL) {
+	    /* do not log anything in this case; it is common for
+	     * non-fileserver programs to fail here with VNOVOL, since that
+	     * is what happens when they simply try to use a volume, but that
+	     * volume doesn't exist. */
+
+	} else if (VIsErrorState(error_state)) {
 	    Log("attach2: forcing vol %" AFS_VOLID_FMT " to error state (state %u flags 0x%x ec %d)\n",
 	        afs_printable_VolumeId_lu(vp->hashid), V_attachState(vp),
 		V_attachFlags(vp), *ec);
