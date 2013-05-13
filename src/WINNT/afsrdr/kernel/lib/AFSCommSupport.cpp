@@ -2421,16 +2421,20 @@ try_exit:
         if ( TargetDirectoryCB != NULL)
         {
 
-            lCount = InterlockedIncrement( &pDirNode->DirOpenReferenceCount);
+	    if ( pDirNode != NULL)
+	    {
 
-            AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSNotifyHardLink Increment count on %wZ DE %p Cnt %d\n",
-                          &pDirNode->NameInformation.FileName,
-                          pDirNode,
-                          lCount));
+		lCount = InterlockedIncrement( &pDirNode->DirOpenReferenceCount);
 
-            ASSERT( lCount >= 0);
+		AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+			      AFS_TRACE_LEVEL_VERBOSE,
+			      "AFSNotifyHardLink Increment count on %wZ DE %p Cnt %d\n",
+			      &pDirNode->NameInformation.FileName,
+			      pDirNode,
+			      lCount));
+
+		ASSERT( lCount >= 0);
+	    }
 
             *TargetDirectoryCB = pDirNode;
         }
