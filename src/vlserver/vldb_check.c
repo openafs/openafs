@@ -244,6 +244,8 @@ InvalidVolname(char *volname)
     slen = strlen(volname);
     if (slen >= VL_MAXNAMELEN)
 	return 1;
+    if (slen == 0)
+	return 1;
     return (slen != strspn(volname, map));
 }
 
@@ -1520,6 +1522,21 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		char oldNameBuffer[10 + VL_MAXNAMELEN];
 		char newNameBuffer[10 + VL_MAXNAMELEN];
 		char *oldname, *newname;
+
+		/* Fix broken names and numbers so entries can be inspected and deleted. */
+		if (InvalidVolname(vlentry.name)) {
+		    char bogus[VL_MAXNAMELEN];
+		    memset(bogus, 0, sizeof(bogus));
+		    snprintf(bogus, sizeof(bogus)-1, ".bogus.%ld", record[i].addr);
+		    strcpy(vlentry.name, bogus);
+		    quiet_println("FIX: Record %ld invalid volume name set to '%s'\n", record[i].addr, bogus);
+		}
+		if (vlentry.volumeId[0] == 0) {
+		    afs_uint32 next_volid = header.vital_header.MaxVolumeId++;
+		    vlentry.volumeId[0] = next_volid;
+		    quiet_println("FIX: Record %ld invalid volume id set to %ld. New max volid is %ld\n",
+			record[i].addr, next_volid, header.vital_header.MaxVolumeId);
+		}
 
 		/*
 		 * Put the current hash table contexts into our 'next'
