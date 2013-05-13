@@ -979,7 +979,7 @@ VnLoad(Error * ec, Volume * vp, Vnode * vnp,
 	    if (LogLevel >= 5)
 		Log("VnLoad: Couldn't read vnode %u, volume %" AFS_VOLID_FMT " (%s); read %d bytes, errno %d\n",
 		    Vn_id(vnp), afs_printable_VolumeId_lu(V_id(vp)), V_name(vp), (int)nBytes, errno);
-	    *ec = VIO;
+	    *ec = VNOVNODE;
 	    dosalv = 0;
 	}
 	goto error_encountered_nolock;
