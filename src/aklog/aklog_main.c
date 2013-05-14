@@ -1503,17 +1503,12 @@ static krb5_error_code get_credv5(krb5_context context,
 	get_creds_enctype((&increds)) = ENCTYPE_DES_CBC_CRC;
     
     if (keytab) {
-	int allowed_enctypes[] = {
-	    ENCTYPE_DES_CBC_CRC, 0
-	};
-
 	r = get_credv5_akimpersonate(context,
 				     keytab,
 				     increds.server,
 				     increds.client,
-				     300, ((~0U)>>1),
-				     allowed_enctypes,
-				     0 /* paddress */,
+				     0, 0x7fffffff,
+				     NULL,
 				     creds /* out */);
     } else {
 	r = krb5_get_credentials(context, 0, _krb425_ccache, &increds, creds);

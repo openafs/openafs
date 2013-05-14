@@ -9,15 +9,15 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
 OBJS= cellconfig.o ktc.o userok.o writeconfig.o authcon.o \
-    acfg_errors.o ktc_errors.o @MAKE_KRB5@ akimpersonate.o
+    acfg_errors.o ktc_errors.o @MAKE_KRB5@ akimpersonate.o akimpersonate_v5gen.o
 KOBJS= cellconfig.o ktc.krb.o userok.o writeconfig.o authcon.o \
-    acfg_errors.o ktc_errors.o @MAKE_KRB5@ akimpersonate.o
+    acfg_errors.o ktc_errors.o @MAKE_KRB5@ akimpersonate.o akimpersonate_v5gen.o
 
 LIBS=libauth.a \
       ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libdes.a \
       ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/libsys.a \
       ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a
-INCLS=cellconfig.h auth.h keys.h akimpersonate.h
+INCLS=cellconfig.h auth.h keys.h akimpersonate.h akimpersonate_v5gen.h
 KSRCS=auth.h
 UKSRCS=${KSRCS} cellconfig.h acfg_errors.c keys.h cellconfig.c \
        ktc.c authcon.c ktc_errors.c
@@ -43,6 +43,9 @@ authcon.o: authcon.c ${INCLS}
 
 akimpersonate.o: akimpersonate.c ${INCLS}
 	${CCOBJ} ${CFLAGS} -c ${srcdir}/akimpersonate.c @KRB5CFLAGS@
+
+akimpersonate_v5gen.o: akimpersonate_v5gen.c ${INCLS}
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/akimpersonate_v5gen.c @KRB5CFLAGS@ -I${srcdir}/../rxkad
 
 userok.o: userok.c ${INCLS}
 cellconfig.o: cellconfig.c ${INCLS}
