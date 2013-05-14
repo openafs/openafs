@@ -14,15 +14,15 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 OBJS= cellconfig.o ktc.o userok.o writeconfig.o authcon.o \
-    acfg_errors.o ktc_errors.o
+    acfg_errors.o ktc_errors.o @MAKE_KRB5@ akimpersonate.o
 KOBJS= cellconfig.o ktc.krb.o userok.o writeconfig.o authcon.o \
-    acfg_errors.o ktc_errors.o
+    acfg_errors.o ktc_errors.o @MAKE_KRB5@ akimpersonate.o
 
 LIBS=libauth.a \
       ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libdes.a \
       ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/libsys.a \
       ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a
-INCLS=cellconfig.h auth.h keys.h
+INCLS=cellconfig.h auth.h keys.h akimpersonate.h
 KSRCS=auth.h
 UKSRCS=${KSRCS} cellconfig.h acfg_errors.c keys.h cellconfig.c \
        ktc.c authcon.c ktc_errors.c
@@ -31,6 +31,7 @@ all: ${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/libauth.krb.a depinstall
 
 depinstall: ${TOP_INCDIR}/afs/keys.h \
 	${TOP_INCDIR}/afs/cellconfig.h \
+	${TOP_INCDIR}/afs/akimpersonate.h \
 	${TOP_INCDIR}/afs/auth.h \
 	${TOP_INCDIR}/afs/ktc.h
 
@@ -41,6 +42,9 @@ ${TOP_INCDIR}/afs/keys.h: keys.h
 
 ${TOP_INCDIR}/afs/cellconfig.h: cellconfig.h
 	${INSTALL_DATA} cellconfig.h $@
+
+${TOP_INCDIR}/afs/akimpersonate.h: akimpersonate.h
+	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/auth.h: auth.h
 	${INSTALL_DATA} $? $@
@@ -60,6 +64,9 @@ writeconfig.o: writeconfig.c ${INCLS}
 
 authcon.o: authcon.c ${INCLS}
 	${CCOBJ} ${CFLAGS} -c ${srcdir}/authcon.c @KRB5_CPPFLAGS@
+
+akimpersonate.o: akimpersonate.c ${INCLS}
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/akimpersonate.c @KRB5_CPPFLAGS@
 
 userok.o: userok.c ${INCLS}
 cellconfig.o: cellconfig.c ${INCLS}

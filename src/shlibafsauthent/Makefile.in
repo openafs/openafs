@@ -44,7 +44,7 @@ AUTHOBJS = \
 	writeconfig.o \
 	authcon.o \
 	ktc_errors.o \
-	acfg_errors.o
+	acfg_errors.o @MAKE_KRB5@ akimpersonate.o
 
 CMDOBJS = \
 	cmd.o \
@@ -200,6 +200,9 @@ writeconfig.o: ${AUTH}/writeconfig.c
 	${CCRULE}
 
 authcon.o: ${AUTH}/authcon.c
+	${CCRULE} @KRB5_CPPFLAGS@
+
+akimpersonate.o: ${AUTH}/akimpersonate.c
 	${CCRULE} @KRB5_CPPFLAGS@
 
 ktc_errors.o: ${AUTH}/ktc_errors.c
