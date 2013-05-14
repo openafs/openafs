@@ -93,7 +93,7 @@ fcrypt.o: fcrypt.c fcrypt.h sboxes.h rxkad.h rxkad_prototypes.h
 crypt_conn.o: crypt_conn.c fcrypt.h private_data.h ${INCLS}
 
 ticket5_keytab.o: ticket5_keytab.c ${INCLS}
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/ticket5_keytab.c @KRB5_CPPFLAGS@
+	${CC} ${CFLAGS} -c ${srcdir}/ticket5_keytab.c @KRB5_CPPFLAGS@
 
 tcrypt.o: tcrypt.c AFS_component_version_number.o
 

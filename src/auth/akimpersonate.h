@@ -16,6 +16,6 @@
 /* The caller must include krb5.h to get prototypes for the types used. */
 krb5_error_code
 get_credv5_akimpersonate(krb5_context, char*, krb5_principal, krb5_principal,
-			 time_t, time_t, int *, int *, krb5_creds**);
+			 time_t, time_t, const int *, krb5_creds**);
 
 #endif

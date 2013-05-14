@@ -153,6 +153,10 @@
 	rx_SetBusyChannelError;
 	rx_KeepAliveOn;
 	rx_KeepAliveOff;
+	_rxkad_v5_encode_EncTicketPart;
+	_rxkad_v5_encode_Ticket;
+	_rxkad_v5_length_EncTicketPart;
+	_rxkad_v5_length_Ticket;
     local:
 	*;
 };

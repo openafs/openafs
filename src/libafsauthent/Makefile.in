@@ -38,7 +38,7 @@ AUTHOBJS = \
 	writeconfig.o \
 	authcon.o \
 	ktc_errors.o \
-	acfg_errors.o @MAKE_KRB5@ akimpersonate.o
+	acfg_errors.o @MAKE_KRB5@ akimpersonate.o akimpersonate_v5gen.o
 
 KAUTHOBJS = \
 	kauth.xdr.o \
@@ -152,6 +152,9 @@ authcon.o: ${AUTH}/authcon.c
 
 akimpersonate.o: ${AUTH}/akimpersonate.c
 	${CCRULE} -I../auth @KRB5_CPPFLAGS@
+
+akimpersonate_v5gen.o: ${AUTH}/akimpersonate_v5gen.c
+	${CCRULE} -I../auth @KRB5_CPPFLAGS@ -I../rxkad
 
 ktc_errors.o: ${AUTH}/ktc_errors.c
 	${CCRULE}

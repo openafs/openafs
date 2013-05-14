@@ -26,14 +26,19 @@
 #include <des.h>
 #include <des_prototypes.h>
 #include <rx/rxkad.h>
-#ifdef USE_RXKAD_KEYTAB
+#if defined(USE_RXKAD_KEYTAB) && !defined(UKERNEL)
 #include <afs/dirpath.h>
+#include <krb5.h>
 #endif
 #include <rx/rx.h>
+#include <errno.h>
 #include <afs/afsutil.h>
 #include "cellconfig.h"
 #include "keys.h"
 #include "auth.h"
+#if defined(USE_RXKAD_KEYTAB) && !defined(UKERNEL)
+#include "akimpersonate.h"
+#endif
 
 /* return a null security object if nothing else can be done */
 static afs_int32
@@ -88,6 +93,76 @@ afsconf_ServerAuth(void *arock,
 }
 #endif /* !defined(UKERNEL) */
 
+#if defined(USE_RXKAD_KEYTAB) && !defined(UKERNEL)
+static afs_int32
+K5Auth(struct afsconf_dir *adir,
+       struct rx_securityClass **astr,
+       afs_int32 *aindex,
+       rxkad_level enclevel)
+{
+    struct rx_securityClass *tclass;
+    krb5_context context = NULL;
+    krb5_creds* fake_princ = NULL;
+    krb5_principal client_princ = NULL;
+    krb5_error_code r = 0;
+    struct ktc_encryptionKey session;
+    char *keytab_name = NULL;
+    size_t ktlen;
+
+    ktlen = 5 + strlen(adir->name) + 1 + strlen(AFSDIR_RXKAD_KEYTAB_FILE) + 1;
+    keytab_name = malloc(ktlen);
+    if (!keytab_name) {
+	return errno;
+    }
+    strcompose(keytab_name, ktlen, "FILE:", adir->name, "/",
+	       AFSDIR_RXKAD_KEYTAB_FILE, (char *)NULL);
+
+    r = krb5_init_context(&context);
+    if (r)
+	goto cleanup;
+
+    r = krb5_build_principal(context, &client_princ, 1, "\0", "afs", NULL);
+    if (r)
+	goto cleanup;
+
+    r = get_credv5_akimpersonate(context, keytab_name,
+				 NULL, client_princ,
+				 0, 0x7fffffff,
+				 NULL,
+				 &fake_princ);
+
+    if (r == 0) {
+	if (tkt_DeriveDesKey(get_creds_enctype(fake_princ),
+			     get_cred_keydata(fake_princ),
+			     get_cred_keylen(fake_princ),
+			     &session) != 0) {
+	    r = RXKADBADKEY;
+	    goto cleanup;
+	}
+	tclass = (struct rx_securityClass *)
+            rxkad_NewClientSecurityObject(enclevel, &session,
+					  RXKAD_TKT_TYPE_KERBEROS_V5,
+					  fake_princ->ticket.length,
+					  fake_princ->ticket.data);
+	if (tclass != NULL) {
+	    *astr = tclass;
+	    *aindex = RX_SECIDX_KAD;
+	    r = 0;
+	    goto cleanup;
+	}
+	r = 1;
+    }
+
+cleanup:
+    free(keytab_name);
+    if (fake_princ != NULL)
+	krb5_free_creds(context, fake_princ);
+    if (context != NULL)
+	krb5_free_context(context);
+    return r;
+}
+#endif
+
 static afs_int32
 GenericAuth(struct afsconf_dir *adir,
 	    struct rx_securityClass **astr,
@@ -100,6 +175,13 @@ GenericAuth(struct afsconf_dir *adir,
     afs_int32 kvno;
     afs_int32 ticketLen;
     afs_int32 code;
+
+#if defined(USE_RXKAD_KEYTAB) && !defined(UKERNEL)
+    /* Try to do things the v5 way, before switching down to v4 */
+    code = K5Auth(adir, astr, aindex, enclevel);
+    if (code == 0)
+	return 0;
+#endif
 
     /* first, find the right key and kvno to use */
     code = afsconf_GetLatestKey(adir, &kvno, &key);
@@ -347,10 +429,6 @@ afsconf_PickClientSecObj(struct afsconf_dir *dir, afsconf_secflags flags,
 	    return AFSCONF_NOCELLDB;
 
 	if (flags & AFSCONF_SECOPTS_LOCALAUTH) {
-	    code = afsconf_GetLatestKey(dir, 0, 0);
-	    if (code)
-		goto out;
-
 	    if (flags & AFSCONF_SECOPTS_ALWAYSENCRYPT)
 		code = afsconf_ClientAuthSecure(dir, sc, scIndex);
 	    else
