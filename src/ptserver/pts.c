@@ -31,8 +31,6 @@
 #include "pterror.h"
 #include "ptprototypes.h"
 
-#undef FOREIGN
-
 char *whoami;
 int force = 0;
 
@@ -793,9 +791,6 @@ CheckEntry(struct cmd_syndesc *as, void *arock)
 	    printf(", group quota: unlimited");
 	else
 	    printf(", group quota: %d", aentry.ngroups);
-#if FOREIGN
-	printf(", foreign user quota=%d", aentry.nusers);
-#endif
 	printf(".\n");
     }
 
@@ -1003,17 +998,6 @@ SetFields(struct cmd_syndesc *as, void *arock)
 	}
 	mask |= PR_SF_NGROUPS;
     }
-#if FOREIGN
-    if (as->parms[3].items) {	/* limitgroups */
-	code = util_GetInt32(as->parms[3].items->data, &nusers);
-	if (code) {
-	    afs_com_err(whoami, code, "because nusers was: '%s'",
-		    as->parms[3].items->data);
-	    return code;
-	}
-	mask |= PR_SF_NUSERS;
-    }
-#endif
 
     for (i = 0; i < ids.idlist_len; i++) {
 	afs_int32 id = ids.idlist_val[i];
@@ -1226,10 +1210,6 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-access", CMD_SINGLE, CMD_OPTIONAL, "set privacy flags");
     cmd_AddParm(ts, "-groupquota", CMD_SINGLE, CMD_OPTIONAL,
 		"set limit on group creation");
-#if FOREIGN
-    cmd_AddParm(ts, "-userquota", CMD_SINGLE, CMD_OPTIONAL,
-		"set limit on foreign user creation");
-#endif
     add_std_args(ts);
 
     ts = cmd_CreateSyntax("listowned", ListOwned, NULL, 0,
