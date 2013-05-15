@@ -74,12 +74,14 @@ All UNIX client platforms
       supposedly persistent disk cache to be discarded upon client start.
       (RT #131655)
 
-Linux
+Linux clients
 
     * Support Linux kernels up to 3.9
 
     * Fixed two bugs making it impossible to unmount a disk cache filesystem
       after it has been used by the client. (RT #131613)
+
+    * Fixed a bug that could cause an oops with kernels 3.6 and later
 
 OpenBSD
 
