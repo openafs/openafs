@@ -32,6 +32,7 @@
 #include <linux/pagemap.h>
 #include <linux/writeback.h>
 #include <linux/pagevec.h>
+#include <linux/aio.h>
 #include "afs/lock.h"
 #include "afs/afs_bypasscache.h"
 
