@@ -49,3 +49,4 @@ EXPORTS
         rk_strdup               @53
         rk_wcsdup               @54
 	rk_rename		@55
+	rk_vasprintf		@56
