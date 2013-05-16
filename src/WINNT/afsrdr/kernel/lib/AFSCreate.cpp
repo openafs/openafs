@@ -629,7 +629,6 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
 	    else
             {
 		AFSNameArrayHdr    *pNameArrayClone = NULL;
-		UNICODE_STRING      uniRootFileNameClone;
 
 		//
 		// The FILE_OPEN_REPARSE_POINT flag has been specified and a ReparsePointPolicy
@@ -681,29 +680,6 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
 		    try_return( ntStatus);
 		}
 
-		uniRootFileNameClone = uniRootFileName;
-
-		uniRootFileNameClone.Buffer = (WCHAR *)AFSExAllocatePoolWithTag( PagedPool,
-										 uniRootFileNameClone.MaximumLength,
-										 AFS_NAME_BUFFER_ELEVEN_TAG);
-
-		if( uniRootFileNameClone.Buffer == NULL)
-		{
-
-		    AFSFreeNameArray( pNameArrayClone);
-
-		    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
-				  AFS_TRACE_LEVEL_ERROR,
-				  "AFSCommonCreate (%p) Failed to allocate uniRootFileNameClone\n",
-				  Irp));
-
-		    try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
-		}
-
-		RtlCopyMemory( uniRootFileNameClone.Buffer,
-			       uniRootFileName.Buffer,
-			       uniRootFileNameClone.Length);
-
                 //
 		// Now that the data is saved perform the lookup to determine
 		// what the target resolves to.
@@ -748,12 +724,6 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
 			AFSFreeNameArray( pNameArrayClone);
 
 			pNameArrayClone = NULL;
-
-			AFSExFreePoolWithTag( uniRootFileNameClone.Buffer,
-					      AFS_NAME_BUFFER_ELEVEN_TAG);
-
-			RtlZeroMemory( &uniRootFileNameClone,
-				       sizeof( UNICODE_STRING));
 
 			ClearFlag( ulOptions, FILE_OPEN_REPARSE_POINT);
 		    }
