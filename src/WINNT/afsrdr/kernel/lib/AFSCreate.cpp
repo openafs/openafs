@@ -819,6 +819,13 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
 						       &uniComponentName);
 		    }
 		}
+		else
+		{
+
+		    AFSFreeNameArray( pNameArrayClone);
+
+		    pNameArrayClone = NULL;
+		}
 
 		if ( pNewVolumeCB != NULL)
 		{
