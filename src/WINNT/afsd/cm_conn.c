@@ -832,6 +832,12 @@ cm_Analyze(cm_conn_t *connp,
             reqp->vnovolError++;
         }
 
+        /* Remember that the VIO error occurred */
+        if (errorCode == VIO) {
+            reqp->errorServp = serverp;
+            reqp->vioCount++;
+        }
+
         /* Free the server list before cm_ForceUpdateVolume is called */
         if (free_svr_list) {
             cm_FreeServerList(volServerspp, 0);
@@ -839,7 +845,7 @@ cm_Analyze(cm_conn_t *connp,
             free_svr_list = 0;
         }
 
-        if ( timeLeft > 2 )
+        if ( timeLeft > 2 && reqp->vioCount < 100)
             retry = 1;
     } else if ( errorCode == VNOVNODE ) {
 	if (connp)
