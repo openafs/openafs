@@ -1564,6 +1564,11 @@ VolRestore(struct rx_call *acid, afs_int32 atrans, afs_int32 aflags,
 	TRELE(tt);
 	return ENOENT;
     }
+    if (DoLogging) {
+	char buffer[16];
+	Log("%s on %s is executing Restore %u\n", caller,
+	    callerAddress(acid, buffer), tt->volid);
+    }
     TSetRxCall(tt, acid, "Restore");
 
     DFlushVolume(V_parentId(tt->volume)); /* Ensure dir buffers get dropped */
