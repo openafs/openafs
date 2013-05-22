@@ -47,6 +47,8 @@
 #define MAX_ERRNO 1000L
 #endif
 
+int cachefs_noreadpage = 0;
+
 extern struct backing_dev_info *afs_backing_dev_info;
 
 extern struct vcache *afs_globalVp;
@@ -1877,6 +1879,10 @@ afs_linux_readpage_fastpath(struct file *fp, struct page *pp, int *codep)
     if (cacheDiskType != AFS_FCACHE_TYPE_UFS)
 	return 0;
 
+    /* No readpage (ex: tmpfs) , skip */
+    if (cachefs_noreadpage)
+	return 0;
+
     /* Can't do anything if the vcache isn't statd , or if the read
      * crosses a chunk boundary.
      */
@@ -1936,12 +1942,8 @@ afs_linux_readpage_fastpath(struct file *fp, struct page *pp, int *codep)
 
     /* Is the dcache we've been given currently up to date */
     if (!hsame(avc->f.m.DataVersion, tdc->f.versionNo) ||
-	(tdc->dflags & DFFetching)) {
-	ReleaseWriteLock(&avc->lock);
-	ReleaseReadLock(&tdc->lock);
-	afs_PutDCache(tdc);
-	return 0;
-    }
+	(tdc->dflags & DFFetching))
+	goto out;
 
     /* Update our hint for future abuse */
     avc->dchint = tdc;
@@ -1951,6 +1953,11 @@ afs_linux_readpage_fastpath(struct file *fp, struct page *pp, int *codep)
     /* XXX - I suspect we should be locking the inodes before we use them! */
     AFS_GUNLOCK();
     cacheFp = afs_linux_raw_open(&tdc->f.inode);
+    if (!cacheFp->f_dentry->d_inode->i_mapping->a_ops->readpage) {
+	cachefs_noreadpage = 1;
+	AFS_GLOCK();
+	goto out;
+    }
     pagevec_init(&lrupv, 0);
 
     code = afs_linux_read_cache(cacheFp, pp, tdc->f.chunk, &lrupv, NULL);
@@ -1967,6 +1974,12 @@ afs_linux_readpage_fastpath(struct file *fp, struct page *pp, int *codep)
 
     *codep = code;
     return 1;
+
+out:
+    ReleaseWriteLock(&avc->lock);
+    ReleaseReadLock(&tdc->lock);
+    afs_PutDCache(tdc);
+    return 0;
 }
 
 /* afs_linux_readpage
@@ -2308,6 +2321,10 @@ afs_linux_readpages(struct file *fp, struct address_space *mapping,
     if (cacheDiskType == AFS_FCACHE_TYPE_MEM)
 	return 0;
 
+    /* No readpage (ex: tmpfs) , skip */
+    if (cachefs_noreadpage)
+	return 0;
+
     AFS_GLOCK();
     if ((code = afs_linux_VerifyVCache(avc, NULL))) {
 	AFS_GUNLOCK();
@@ -2342,14 +2359,20 @@ afs_linux_readpages(struct file *fp, struct address_space *mapping,
 		ObtainReadLock(&tdc->lock);
 		if (!hsame(avc->f.m.DataVersion, tdc->f.versionNo) ||
 		    (tdc->dflags & DFFetching)) {
+		    goto out;
 		    ReleaseReadLock(&tdc->lock);
 		    afs_PutDCache(tdc);
 		    tdc = NULL;
 		}
 	    }
 	    AFS_GUNLOCK();
-	    if (tdc)
+	    if (tdc) {
 		cacheFp = afs_linux_raw_open(&tdc->f.inode);
+		if (!cacheFp->f_dentry->d_inode->i_mapping->a_ops->readpage) {
+		    cachefs_noreadpage = 1;
+		    goto out;
+		}
+	    }
 	}
 
 	if (tdc && !add_to_page_cache(page, mapping, page->index,
@@ -2365,6 +2388,7 @@ afs_linux_readpages(struct file *fp, struct address_space *mapping,
     if (pagevec_count(&lrupv))
        __pagevec_lru_add_file(&lrupv);
 
+out:
     if (tdc)
 	filp_close(cacheFp, NULL);
 
