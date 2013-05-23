@@ -2222,7 +2222,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
  * a provided buffer.  Called with scp locked. The scp is locked on return.
  */
 long cm_GetData(cm_scache_t *scp, osi_hyper_t *offsetp, char *datap, int data_length,
-                cm_user_t *userp, cm_req_t *reqp)
+                int * bytes_readp, cm_user_t *userp, cm_req_t *reqp)
 {
     long code=0, code1=0;
     afs_uint32 nbytes;			/* bytes in transfer */
@@ -2246,6 +2246,9 @@ long cm_GetData(cm_scache_t *scp, osi_hyper_t *offsetp, char *datap, int data_le
     int fs_fetchdata_offset_bug = 0;
     int first_read = 1;
     int scp_locked = 1;
+
+    if (bytes_readp)
+        *bytes_readp = 0;
 
     memset(&afsStatus, 0, sizeof(afsStatus));
     memset(&callback, 0, sizeof(callback));
@@ -2570,6 +2573,8 @@ long cm_GetData(cm_scache_t *scp, osi_hyper_t *offsetp, char *datap, int data_le
         code = cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, reqp, CM_MERGEFLAG_FETCHDATA);
     else
         InterlockedDecrement(&scp->activeRPCs);
+
+    *bytes_readp = (long) (bufferp - datap);
 
     return code;
 }
