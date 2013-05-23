@@ -860,10 +860,11 @@ long cm_ReadMountPoint(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     {
         char temp[MOUNTPOINTLEN];
         osi_hyper_t offset;
+        afs_uint32 bytesRead = 0;
 
         /* otherwise, we have to read it in */
         offset.LowPart = offset.HighPart = 0;
-        code = cm_GetData(scp, &offset, temp, MOUNTPOINTLEN, userp, reqp);
+        code = cm_GetData(scp, &offset, temp, MOUNTPOINTLEN, &bytesRead, userp, reqp);
         if (code)
             goto done;
 
@@ -1789,10 +1790,11 @@ long cm_HandleLink(cm_scache_t *linkScp, cm_user_t *userp, cm_req_t *reqp)
         {
             char temp[MOUNTPOINTLEN];
             osi_hyper_t offset;
+            afs_uint32 bytesRead = 0;
 
             /* read the link data from the file server */
             offset.LowPart = offset.HighPart = 0;
-            code = cm_GetData(linkScp, &offset, temp, MOUNTPOINTLEN, userp, reqp);
+            code = cm_GetData(linkScp, &offset, temp, MOUNTPOINTLEN, &bytesRead, userp, reqp);
             if (code)
                 return code;
 
