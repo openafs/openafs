@@ -24,8 +24,6 @@
 #include "afs_lhash.h"
 
 #define MAX_KMALLOC_SIZE PAGE_SIZE	/* Max we should alloc with kmalloc */
-#define MAX_BUCKET_LEN 30	/* max. no. of entries per buckets we expect to see */
-#define STAT_INTERVAL 8192	/* we collect stats once every STAT_INTERVAL allocs */
 
 /* types of alloc */
 #define KM_TYPE 1		/* kmalloc */
@@ -46,8 +44,6 @@ unsigned int allocator_init = 0;	/* has the allocator been initialized? */
 unsigned int afs_linux_cur_allocs = 0;
 unsigned int afs_linux_total_allocs = 0;
 unsigned int afs_linux_hash_verify_count = 0;	/* used by hash_verify */
-struct afs_lhash_stat afs_linux_lsb;	/* hash table statistics */
-unsigned int afs_linux_hash_bucket_dist[MAX_BUCKET_LEN];	/* bucket population distribution in our hash table */
 
 #include <linux/vmalloc.h>
 
@@ -230,46 +226,6 @@ linux_alloc_init(void)
 
 }
 
-/* hash_bucket_stat() : Counts the no. of elements in each bucket and
- *   stores results in our bucket stats vector.
- */
-static unsigned int cur_bucket, cur_bucket_len;
-static void
-hash_bucket_stat(size_t index, unsigned key, void *data)
-{
-    if (index == cur_bucket) {
-	/* while still on the same bucket, inc len & return */
-	cur_bucket_len++;
-	return;
-    } else {			/* if we're on the next bucket, store the distribution */
-	if (cur_bucket_len < MAX_BUCKET_LEN)
-	    afs_linux_hash_bucket_dist[cur_bucket_len]++;
-	else
-	    printf
-		("afs_get_hash_stats: Warning! exceeded max bucket len %d\n",
-		 cur_bucket_len);
-	cur_bucket = index;
-	cur_bucket_len = 1;
-    }
-}
-
-/* get_hash_stats() : get hash table statistics */
-static void
-get_hash_stats(void)
-{
-    int i;
-
-    afs_lhash_stat(lh_mem_htab, &afs_linux_lsb);
-
-    /* clear out the bucket stat vector */
-    for (i = 0; i < MAX_BUCKET_LEN; i++)
-	afs_linux_hash_bucket_dist[i] = 0;
-    cur_bucket = cur_bucket_len = 00;
-
-    /* populate the bucket stat vector */
-    afs_lhash_iter(lh_mem_htab, hash_bucket_stat);
-}
-
 /************** Linux memory allocator interface functions **********/
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
@@ -317,9 +273,6 @@ osi_linux_alloc(unsigned int asize, int drop_glock)
     }
     afs_linux_cur_allocs++;	/* no. of current allocations */
     afs_linux_total_allocs++;	/* total no. of allocations done so far */
-    if ((afs_linux_cur_allocs % STAT_INTERVAL) == 0) {
-	get_hash_stats();
-    }
   error:
     mutex_unlock(&afs_linux_alloc_sem);
     return MEMADDR(new);
