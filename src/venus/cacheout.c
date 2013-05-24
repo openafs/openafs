@@ -240,10 +240,15 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
     struct rx_connection *serverconns[MAXSERVERS];
     afs_int32 code, i;
     struct rx_securityClass *scnull;
+    rxkad_level sclevel = rxkad_auth;
 
     sprintf(confdir, "%s", AFSDIR_CLIENT_ETC_DIRPATH);
     if (as->parms[4].items) { /* -localauth */
 	sprintf(confdir, "%s", AFSDIR_SERVER_ETC_DIRPATH);
+    }
+
+    if (as->parms[5].items) { /* -encrypt */
+	sclevel = rxkad_crypt;
     }
 
     /* setup to talk to servers */
@@ -271,7 +276,11 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
     }
 
     if (as->parms[4].items) { /* -localauth */
-	code = afsconf_ClientAuth(tdir, &sc, &scindex);
+	if (sclevel == rxkad_crypt) {
+	    code = afsconf_ClientAuthSecure(tdir, &sc, &scindex);
+	} else {
+	    code = afsconf_ClientAuth(tdir, &sc, &scindex);
+	}
 	if (code || scindex == 0) {
 	    afsconf_Close(tdir);
 	    fprintf(stderr, "Could not get security object for -localauth (code: %d)\n",
@@ -292,7 +301,7 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 	    fprintf(stderr, "Could not get afs tokens, running unauthenticated\n");
 	} else {
 	    scindex = 2;
-	    sc = rxkad_NewClientSecurityObject(rxkad_auth, &ttoken.sessionKey,
+	    sc = rxkad_NewClientSecurityObject(sclevel, &ttoken.sessionKey,
 	                                       ttoken.kvno, ttoken.ticketLen,
 	                                       ttoken.ticket);
 	}
@@ -343,6 +352,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
     cmd_AddParm(ts, "-noauth", CMD_FLAG, CMD_OPTIONAL, "don't authenticate");
     cmd_AddParm(ts, "-localauth", CMD_FLAG, CMD_OPTIONAL, "user server tickets");
+    cmd_AddParm(ts, "-encrypt", CMD_FLAG, CMD_OPTIONAL, "encrypt commands");
 
     ts = cmd_CreateSyntax("listservers", GetServerList, NULL,
 			  "list servers in the cell");
