@@ -1,3 +1,23 @@
+Release 1.7.2500; Changes since 1.7.2400
+
+ * Fix kernel memory leaks using the AFAR and AFNB tags.
+
+ * Avoid AFSFcb SectionObjectResource leak if a race occurs
+   between a non-extendeding non-cached write and a file truncation.
+
+ * Avoid Null pointer reference when a hard link create request
+   fails due to a cross-directory reference.
+
+ * As a result of the demand attach file service rewrite, the
+   file servers can return the error VIO when the VNOVNODE error
+   is appropriate.  VIO errors are treated as transient errors
+   which are always retried.  Install a hard cap of 100 retries
+   on the number of retry attempts.
+
+ * Fix a bug in afsd_service which can result in a Null pointer
+   reference when file reads from the file server are performed
+   in cache bypass mode.
+
 Release 1.7.2400; Changes since 1.7.2300
 
  * Optimize btree enumerations by avoiding unnecessary bulk stat
