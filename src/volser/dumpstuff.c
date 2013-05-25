@@ -86,7 +86,9 @@ static int SizeDumpVnode(struct iod *iodp, struct VnodeDiskObject *v,
 			 struct volintSize *size);
 
 #define MAX_SECTIONS    3
-#define MIN_TLV_TAG     5
+
+/* The TLV range must start above D_MAX */
+#define MIN_TLV_TAG     21
 #define MAX_TLV_TAG     0x60
 #define MAX_STANDARD_TAG 0x7a
 static afs_uint32 oldtags[MAX_SECTIONS][16];
