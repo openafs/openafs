@@ -6811,6 +6811,13 @@ rxi_ChallengeEvent(struct rxevent *event,
     if (event)
 	rxevent_Put(&conn->challengeEvent);
 
+    /* If there are no active calls it is not worth re-issuing the
+     * challenge.  If the client issues another call on this connection
+     * the challenge can be requested at that time.
+     */
+    if (!rxi_HasActiveCalls(conn))
+        return;
+
     if (RXS_CheckAuthentication(conn->securityObject, conn) != 0) {
 	struct rx_packet *packet;
 	struct clock when, now;
