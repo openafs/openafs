@@ -262,6 +262,7 @@ PODS = \
         pod8\bos_getdate.pod           \
         pod8\bos_getlog.pod            \
         pod8\bos_getrestart.pod        \
+        pod8\bos_getrestricted.pod     \
         pod8\bos_help.pod              \
         pod8\bos_install.pod           \
         pod8\bos_listhosts.pod         \
@@ -276,6 +277,7 @@ PODS = \
         pod8\bos_setauth.pod           \
         pod8\bos_setcellname.pod       \
         pod8\bos_setrestart.pod        \
+        pod8\bos_setrestricted.pod     \
         pod8\bos_shutdown.pod          \
         pod8\bos_start.pod             \
         pod8\bos_startup.pod           \
