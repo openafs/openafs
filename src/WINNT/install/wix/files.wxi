@@ -591,6 +591,7 @@
                             <File Id="file_CmdRef_8_bos_getdate_html"  Name="bos_getd.htm"  LongName="bos_getdate.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_bos_getlog_html"  Name="bos_getl.htm"  LongName="bos_getlog.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_bos_getrestart_html"  Name="bos_getr.htm"  LongName="bos_getrestart.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_getrestricted_html"  Name="bos_get1.htm"  LongName="bos_getrestricted.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_bos_help_html"  Name="bos_help.htm"  LongName="bos_help.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_bos_install_html"  Name="bos_inst.htm"  LongName="bos_install.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_bos_listhosts_html"  Name="bos_lsho.htm"  LongName="bos_listhosts.html"  DiskId="1"  />
@@ -605,6 +606,7 @@
                             <File Id="file_CmdRef_8_bos_setauth_html"  Name="bos_seta.htm"  LongName="bos_setauth.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_bos_setcellname_html"  Name="bos_setc.htm"  LongName="bos_setcellname.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_bos_setrestart_html"  Name="bos_setr.htm"  LongName="bos_setrestart.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_bos_setrestricted_html"  Name="bos_set1.htm"  LongName="bos_setrestricted.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_bos_shutdown_html"  Name="bos_shut.htm"  LongName="bos_shutdown.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_bos_start_html"  Name="bos_star.htm"  LongName="bos_start.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_bos_startup_html"  Name="bos_stup.htm"  LongName="bos_startup.html"  DiskId="1"  />
