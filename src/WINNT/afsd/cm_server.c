@@ -1593,7 +1593,7 @@ int cm_DumpServers(FILE *outputFile, char *cookie, int lock)
                  cookie, tsp, tsp->cellp ? tsp->cellp->name : "", hoststr,
                  ntohs(tsp->addr.sin_port), uuidstr, type,
                  tsp->capabilities, tsp->flags, tsp->waitCount, tsp->activeRank,
-                 (tsp->flags & CM_SERVERFLAG_DOWN) ?  down : "up",
+                 (tsp->flags & CM_SERVERFLAG_DOWN) ?  "down" : "up",
                  tsp->refCount);
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
     }
