@@ -273,8 +273,11 @@ psprocdef(definition * defp)
     if (!(!multi_flag && split_flag))
         psproc1(defp, 0, "int", "", 0xFFFFFFFF);
 
-    if (uflag && !kflag)
+    if (uflag && !kflag) {
+	f_print(fout, "\n#ifndef KERNEL");
 	psproc1(defp, 2, "int", "ubik_", 0xFFFFFFFF);
+	f_print(fout, "#endif /* KERNEL */\n");
+    }
 
     if (*ServerPrefix)
 	psproc1(defp, 3, "afs_int32", ServerPrefix, 0xFFFFFFFF);

@@ -461,14 +461,11 @@ h_output(char *infile, char *define, int extend, char *outfile, int append)
     if (brief_flag) {
 	f_print(fout, "#include \"rx/rx_opaque.h\"\n");
     }
-    if (uflag)
-	f_print(fout, "#include <ubik.h>\n");
     f_print(fout, "#else	/* UKERNEL */\n");
     f_print(fout, "#include \"h/types.h\"\n");
     f_print(fout, "#ifndef	SOCK_DGRAM  /* XXXXX */\n");
     f_print(fout, "#include \"h/socket.h\"\n");
     f_print(fout, "#endif\n");
-    f_print(fout, "struct ubik_client;\n");
     f_print(fout, "#ifndef	DTYPE_SOCKET  /* XXXXX */\n");
     f_print(fout, "#ifndef AFS_LINUX22_ENV\n");
     f_print(fout, "#include \"h/file.h\"\n");
