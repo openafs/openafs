@@ -115,6 +115,7 @@
                 <ComponentRef Id="cmf_afsclientadmin_DLL" />
                 <ComponentRef Id="cmf_afsvosadmin_DLL" />
                 <ComponentRef Id="cmf_afsrpc_DLL" />
+                <ComponentRef Id="cmf_afsrfc3961_DLL" />
                 <ComponentRef Id="cmf_afshcrypto_DLL" />
                 <ComponentRef Id="cmf_afsroken_DLL" />
                 <ComponentRef Id="cmf_afsauthent2_DLL" />
@@ -179,6 +180,7 @@
                 <ComponentRef Id="cmf_afsadminutil_DLL" />
 
                 <ComponentRef Id="cmf_afsrpc_DLL" />
+                <ComponentRef Id="cmf_afsrfc3961_DLL" />
                 <ComponentRef Id="cmf_afshcrypto_DLL" />
                 <ComponentRef Id="cmf_afsroken_DLL" />
                 <ComponentRef Id="cmf_afsauthent2_DLL" />
@@ -241,6 +243,7 @@
                 <ComponentRef Id="cmf_afsvosadmin_DLL" />
                 <ComponentRef Id="cmf_afsadminutil_DLL" />
                 <ComponentRef Id="cmf_afsrpc_DLL" />
+                <ComponentRef Id="cmf_afsrfc3961_DLL" />
                 <ComponentRef Id="cmf_afshcrypto_DLL" />
                 <ComponentRef Id="cmf_afsroken_DLL" />
                 <ComponentRef Id="cmf_afsauthent2_DLL" />
@@ -361,6 +364,7 @@
 		<ComponentRef Id="cmp_CommonDir" />
 
                 <ComponentRef Id="cmf_afsrpc_DLL" />
+                <ComponentRef Id="cmf_afsrfc3961_DLL" />
                 <ComponentRef Id="cmf_afshcrypto_DLL" />
                 <ComponentRef Id="cmf_afsroken_DLL" />
                 <ComponentRef Id="cmf_afsadminutil_DLL" />

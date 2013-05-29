@@ -50,6 +50,9 @@
                 <Component Win64="$(var.Win64)" Id="cmf_afsrpc_DLL" Guid="$(var.cmf_afsrpc_DLL_guid)">
                     <File Id="fileafsrpc_DLL" Name="afsrpc.dll" LongName="afsrpc.dll" KeyPath="yes" DiskId="1" src="$(var.LibDir)\afsrpc.dll"/>
                 </Component>
+                <Component Win64="$(var.Win64)" Id="cmf_afsrfc3961_DLL" Guid="$(var.cmf_afsrfc3961_DLL_guid)">
+                    <File Id="fileafsrfc3961_DLL" Name="afsrfc39.dll" LongName="afsrfc3961.dll" KeyPath="yes" DiskId="1" src="$(var.LibDir)\afsrfc3961.dll"/>
+                </Component>
                 <Component Win64="$(var.Win64)" Id="cmf_afshcrypto_DLL" Guid="$(var.cmf_afshcrypto_DLL_guid)">
                     <File Id="fileafshcrypto_DLL" Name="afshcryp.dll" LongName="afshcrypto.dll" KeyPath="yes" DiskId="1" src="$(var.LibDir)\afshcrypto.dll"/>
                 </Component>
@@ -88,6 +91,7 @@
               <?endif?>
                 <Component Win64="$(var.Win64)" Id="cmp_CommonCommonDebug" Guid="$(var.cmp_CommonCommonDebug_guid)">
                     <File Id="fileafsrpc_PDB" Name="afsrpc.pdb" LongName="afsrpc.pdb" KeyPath="yes" DiskId="1" src="$(var.LibDir)\afsrpc.pdb"/>
+                    <File Id="fileafsrfc3961_PDB" Name="afsrfc39.pdb" LongName="afsrfc3961.pdb" DiskId="1" src="$(var.LibDir)\afsrfc3961.pdb"/>
                     <File Id="fileafshcrypto_PDB" Name="afshcryp.pdb" LongName="afshcrypto.pdb" DiskId="1" src="$(var.LibDir)\afshcrypto.pdb"/>
                     <File Id="fileafsroken_PDB" Name="afsroken.pdb" LongName="afsroken.pdb" DiskId="1" src="$(var.LibDir)\afsroken.pdb"/>
                     <File Id="filelibafsconf_PDB" Name="libafscf.pdb" LongName="libafsconf.pdb" DiskId="1" src="$(var.LibDir)\libafsconf.pdb"/>
@@ -1501,6 +1505,7 @@
                                 <File Id="fileafsint_H" Name="afsint.h" LongName="afsint.h" DiskId="1" src="$(var.IncDir)afs\afsint.h" /> 
                                 <File Id="fileafskfw_H" Name="afskfw.h" LongName="afskfw.h" DiskId="1" src="$(var.IncDir)afs\afskfw.h" /> 
                                 <File Id="fileafsrpc_H" Name="afsrpc.h" LongName="afsrpc.h" DiskId="1" src="$(var.IncDir)afs\afsrpc.h" /> 
+                                <File Id="filerfc3961_H" Name="rfc3961.h" LongName="rfc3961.h" DiskId="1" src="$(var.IncDir)afs\rfc3961.h" />
                                 <File Id="fileafssyscalls_H" Name="AFSSYSCL.h" LongName="afssyscalls.h" DiskId="1" src="$(var.IncDir)afs\afssyscalls.h" />
                                 <File Id="fileafsutil_H" Name="afsutil.h" LongName="afsutil.h" DiskId="1" src="$(var.IncDir)afs\afsutil.h" /> 
                                 <File Id="fileafsutil_prototypes_H" Name="AFSUTILP.h" LongName="afsutil_prototypes.h" DiskId="1" src="$(var.IncDir)afs\afsutil_prototypes.h" />
@@ -1762,6 +1767,7 @@
                             <File Id="fileafslwp_LIB" Name="afslwp.lib" LongName="afslwp.lib" DiskId="1" src="$(var.LibDir)afslwp.lib" /> 
                             <File Id="fileafspthread_LIB" Name="AFSPTHRD.lib" LongName="afspthread.lib" DiskId="1" src="$(var.LibDir)afspthread.lib" />
                             <File Id="fileafsrpc_LIB" Name="afsrpc.lib" LongName="afsrpc.lib" DiskId="1" src="$(var.LibDir)afsrpc.lib" /> 
+                            <File Id="fileafsrfc3961_LIB" Name="afsrfc39.lib" LongName="afsrfc3961.lib" DiskId="1" src="$(var.LibDir)afsrfc3961.lib" />
                             <File Id="fileafshcrypto_LIB" Name="afshcryp.lib" LongName="afshcrypto.lib" DiskId="1" src="$(var.LibDir)afshcrypto.lib" /> 
                             <File Id="fileafsroken_LIB" Name="afsroken.lib" LongName="afsroken.lib" DiskId="1" src="$(var.LibDir)afsroken.lib" /> 
                             <File Id="fileafsrx_LIB" Name="afsrx.lib" LongName="afsrx.lib" DiskId="1" src="$(var.LibDir)afsrx.lib" /> 
@@ -1777,6 +1783,7 @@
                           <File Id="fileafsauthent_A" Name="afsauth.a" LongName="afsauthent.a" DiskId="1" src="$(var.LibDir)afsauthent.a" />
                           <File Id="fileafspthread_A" Name="afspthrd.a" LongName="afspthread.a" DiskId="1" src="$(var.LibDir)afspthread.a" />
                           <File Id="fileafsrpc_A" Name="afsrpc.a" LongName="afsrpc.a" DiskId="1" src="$(var.LibDir)afsrpc.a" />
+                          <File Id="fileafsrfc3961_A" Name="afsrfc39.a" LongName="afsrfc3961.a" DiskId="1" src="$(var.LibDir)afsrfc3961.a" />
                           <File Id="fileafshcrypto_A" Name="afshcryp.a" LongName="afshcrypto.a" DiskId="1" src="$(var.LibDir)afshcrypto.a" />
                           <File Id="filelibafsconf_A" Name="libafscf.a" LongName="libafsconf.a" DiskId="1" src="$(var.LibDir)libafsconf.a" />
                           <File Id="filelibosi_A" Name="libosi.a" LongName="libosi.a" DiskId="1" src="$(var.ClientDir)libosi.a" /> 
