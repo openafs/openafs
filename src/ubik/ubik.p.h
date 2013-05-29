@@ -121,11 +121,7 @@ struct ubik_stat {
     afs_int32 mtime;
 };
 
-#if defined(UKERNEL)
-#include "afs/lock.h"
-#else /* defined(UKERNEL) */
 #include <lock.h>		/* just to make sure we've got this */
-#endif /* defined(UKERNEL) */
 
 /*!
  * \brief representation of a ubik database.
@@ -139,11 +135,9 @@ struct ubik_dbase {
     struct ubik_version version;	/*!< version number */
 #ifdef AFS_PTHREAD_ENV
     pthread_mutex_t versionLock;	/*!< lock on version number */
-#elif defined(UKERNEL)
-    struct afs_lock versionLock;	/*!< lock on version number */
-#else				/* defined(UKERNEL) */
+#else
     struct Lock versionLock;	/*!< lock on version number */
-#endif				/* defined(UKERNEL) */
+#endif
     afs_int32 tidCounter;	/*!< last RW or RO trans tid counter */
     afs_int32 writeTidCounter;	/*!< last write trans tid counter */
     afs_int32 flags;		/*!< flags */
@@ -163,11 +157,7 @@ struct ubik_dbase {
     int (*getnfiles) (struct ubik_dbase * adbase);	/*!< find out number of files */
     short readers;		/*!< number of current read transactions */
     struct ubik_version cachedVersion;	/*!< version of caller's cached data */
-#ifdef UKERNEL
-    struct afs_lock cache_lock;
-#else
     struct Lock cache_lock; /*!< protects cached application data */
-#endif
 #ifdef AFS_PTHREAD_ENV
     pthread_cond_t version_cond;    /*!< condition variable to manage changes to version */
     pthread_cond_t flags_cond;      /*!< condition variable to manage changes to flags */

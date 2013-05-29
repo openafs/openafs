@@ -36,10 +36,6 @@
 #include "kauth.h"
 #include "kautils.h"
 
-#ifdef UKERNEL
-#include "afs_usrops.h"
-#endif
-
 static struct afsconf_dir *conf = 0;
 static struct afsconf_cell explicit_cell_server_list;
 static struct afsconf_cell debug_cell_server_list;
@@ -110,11 +106,7 @@ ka_GetServers(char *cell, struct afsconf_cell * cellinfo)
 	cell = lcstring(cellname, cell, sizeof(cellname));
 
     if (!conf) {
-#ifdef UKERNEL
-	conf = afs_cdir;
-#else /* UKERNEL */
 	conf = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH);
-#endif /* UKERNEL */
 	if (!conf) {
 	    UNLOCK_GLOBAL_MUTEX;
 	    return KANOCELLS;

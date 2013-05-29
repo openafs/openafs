@@ -21,10 +21,6 @@
 # pragma GCC diagnostic warning "-Wstrict-prototypes"
 #endif
 
-#ifdef UKERNEL
-#include "afsincludes.h"
-#endif
-
 #include <afs/pthread_glock.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
@@ -103,7 +99,6 @@ afs_random_once(void)
 
 #endif
 
-#if !defined(UKERNEL)
 /*!
  * \brief use time and pid to try to get some initial randomness.
  */
@@ -179,7 +174,6 @@ afs_randomMod15(void)
 
     return temp;
 }
-#endif /* !defined(UKERNEL) */
 
 #ifdef abs
 #undef abs

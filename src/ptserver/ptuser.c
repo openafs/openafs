@@ -25,10 +25,6 @@
 #include "ptuser.h"
 #include "pterror.h"
 
-#ifdef UKERNEL
-# include "afs_usrops.h"
-#endif
-
 struct ubik_client *pruclient = 0;
 static afs_int32 lastLevel;	/* security level pruclient, if any */
 
@@ -188,9 +184,7 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
     afs_int32 secFlags;
     static struct afsconf_cell info;
     afs_int32 i;
-#if !defined(UKERNEL)
     char cellstr[64];
-#endif
     afs_int32 gottdir = 0;
     afs_int32 refresh = 0;
 
@@ -199,11 +193,6 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
     initialize_ACFG_error_table();
     initialize_KTC_error_table();
 
-#if defined(UKERNEL)
-    if (!cell) {
-        cell = afs_LclCellName;
-    }
-#else /* defined(UKERNEL) */
     if (!cell) {
         if (!tdir)
             tdir = afsconf_Open(confDir);
@@ -228,7 +217,6 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
         }
         cell = cellstr;
     }
-#endif /* defined(UKERNEL) */
 
     if (tdir == NULL || strcmp(confDir, tconfDir) || strcmp(cell, tcell)) {
 	/*
@@ -247,9 +235,6 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 	strncpy(tconfDir, confDir, sizeof(tconfDir));
         strncpy(tcell, cell, sizeof(tcell));
 
-#if defined(UKERNEL)
-	tdir = afs_cdir;
-#else /* defined(UKERNEL) */
         if (!gottdir)
             tdir = afsconf_Open(confDir);
 	if (!tdir) {
@@ -262,7 +247,6 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 			"libprot: No configuration directory specified.\n");
 	    return -1;
 	}
-#endif /* defined(UKERNEL) */
 
 	code = afsconf_GetCellInfo(tdir, cell, "afsprot", &info);
 	if (code) {

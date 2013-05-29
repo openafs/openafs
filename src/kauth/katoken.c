@@ -18,10 +18,6 @@
 #include <roken.h>
 #include <afs/opr.h>
 
-#ifdef UKERNEL
-# include "afsincludes.h"
-#endif
-
 #include <rx/xdr.h>
 #include <afs/pthread_glock.h>
 #include <afs/cellconfig.h>

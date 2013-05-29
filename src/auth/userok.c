@@ -46,7 +46,6 @@ UserListFileName(struct afsconf_dir *adir,
     strcompose(buffer, len, adir->name, "/", AFSDIR_ULIST_FILE, (char *)NULL);
 }
 
-#if !defined(UKERNEL)
 int
 afsconf_CheckAuth(void *arock, struct rx_call *acall)
 {
@@ -57,7 +56,6 @@ afsconf_CheckAuth(void *arock, struct rx_call *acall)
     UNLOCK_GLOBAL_MUTEX;
     return rc;
 }
-#endif /* !defined(UKERNEL) */
 
 static int
 GetNoAuthFlag(struct afsconf_dir *adir)

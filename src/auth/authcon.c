@@ -42,7 +42,6 @@ QuickAuth(struct rx_securityClass **astr, afs_int32 *aindex)
     return 0;
 }
 
-#if !defined(UKERNEL)
 static int _afsconf_GetRxkadKrb5Key(void *arock, int kvno, int enctype, void *outkey,
 				    size_t *keylen)
 {
@@ -91,7 +90,6 @@ afsconf_ServerAuth(void *arock,
 	return 2;
     }
 }
-#endif /* !defined(UKERNEL) */
 
 static afs_int32
 GenericAuth(struct afsconf_dir *adir,
@@ -99,9 +97,6 @@ GenericAuth(struct afsconf_dir *adir,
 	    afs_int32 *aindex,
 	    rxkad_level enclevel)
 {
-#ifdef UKERNEL
-    return QuickAuth(astr, aindex);
-#else
     int enctype_preflist[]={18, 17, 23, 16, 0};
     char tbuffer[512];
     struct ktc_encryptionKey key, session;
@@ -179,7 +174,6 @@ GenericAuth(struct afsconf_dir *adir,
     *astr = tclass;
     *aindex = RX_SECIDX_KAD;
     return 0;
-#endif
 }
 
 /* build a fake ticket for 'afs' using keys from adir, returning an
@@ -302,7 +296,6 @@ afsconf_SetSecurityFlags(struct afsconf_dir *dir,
  * Build a set of security classes suitable for a server accepting
  * incoming connections
  */
-#if !defined(UKERNEL)
 void
 afsconf_BuildServerSecurityObjects(void *rock,
 			           struct rx_securityClass ***classes,
@@ -328,7 +321,6 @@ afsconf_BuildServerSecurityObjects(void *rock,
 	    rxkad_NewKrb5ServerSecurityObject(rxkad_crypt, dir, afsconf_GetKey,
 					      _afsconf_GetRxkadKrb5Key, NULL);
 }
-#endif
 
 /*!
  * Pick a security class to use for an outgoing connection

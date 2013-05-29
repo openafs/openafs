@@ -27,10 +27,7 @@
 #include <afs/ptuser.h>
 #include <afs/ptserver.h>
 #include <afs/afsutil.h>
-
-#ifndef UKERNEL
 #include <afs/sys_prototypes.h>
-#endif
 
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
@@ -186,7 +183,7 @@ ka_UserAuthenticateGeneral(afs_int32 flags, char *name, char *instance,
 	if (flags & KA_USERAUTH_DOSETPAG)
 	    afs_setpag();
 #else
-#if !defined(UKERNEL) && !defined(AFS_NT40_ENV)
+#if !defined(AFS_NT40_ENV)
 	if (flags & KA_USERAUTH_DOSETPAG)
 	    setpag();
 #endif
@@ -244,7 +241,6 @@ ka_UserAuthenticate(char *name, char *instance, char *realm, char *password,
 				      reasonP);
 }
 
-#if !defined(UKERNEL)
 afs_int32
 ka_UserReadPassword(char *prompt, char *password, int plen, char **reasonP)
 {
@@ -268,7 +264,6 @@ ka_UserReadPassword(char *prompt, char *password, int plen, char **reasonP)
     }
     return code;
 }
-#endif /* !defined(UKERNEL) */
 
 afs_int32
 ka_VerifyUserPassword(afs_int32 version, char *name, char *instance,
