@@ -2358,7 +2358,6 @@ afs_linux_readpages(struct file *fp, struct address_space *mapping,
 		ObtainReadLock(&tdc->lock);
 		if (!hsame(avc->f.m.DataVersion, tdc->f.versionNo) ||
 		    (tdc->dflags & DFFetching)) {
-		    goto out;
 		    ReleaseReadLock(&tdc->lock);
 		    afs_PutDCache(tdc);
 		    tdc = NULL;
