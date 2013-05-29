@@ -26,8 +26,6 @@
 #include "afs/auth.h"
 #include "afs/cellconfig.h"
 #include "afs/vice.h"
-#include "afs/kauth.h"
-#include "afs/kautils.h"
 #include "afs/afsutil.h"
 #include "afs/afs_bypasscache.h"
 #include "rx/rx_globals.h"
