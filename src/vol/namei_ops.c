@@ -1004,7 +1004,8 @@ bad:
 }
 #else /* !AFS_NT40_ENV */
 Inode
-namei_icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4)
+icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4,
+        FD_t *afd, Inode *ainode)
 {
     namei_t name;
     int fd = INVALID_FD;
@@ -1094,10 +1095,6 @@ namei_icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint
     }
 
   bad:
-    if (fd >= 0)
-	close(fd);
-
-
     if (code || (fd < 0)) {
 	if (p2 != -1) {
 	    fdP = IH_OPEN(lh);
@@ -1107,7 +1104,56 @@ namei_icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint
 	    }
 	}
     }
-    return (code || (fd < 0)) ? (Inode) - 1 : tmp.ih_ino;
+
+    *afd = fd;
+    *ainode = tmp.ih_ino;
+
+    return code;
+}
+
+Inode
+namei_icreate(IHandle_t * lh, char *part,
+              afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4)
+{
+    Inode ino = 0;
+    int fd = INVALID_FD;
+    int code;
+
+    code = icreate(lh, part, p1, p2, p3, p4, &fd, &ino);
+    if (fd >= 0) {
+	close(fd);
+    }
+    return (code || (fd < 0)) ? (Inode) - 1 : ino;
+}
+
+IHandle_t *
+namei_icreate_init(IHandle_t * lh, int dev, char *part,
+                   afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4)
+{
+    Inode ino = 0;
+    int fd = INVALID_FD;
+    int code;
+    IHandle_t *ihP;
+    FdHandle_t *fdP;
+
+    code = icreate(lh, part, p1, p2, p3, p4, &fd, &ino);
+    if (fd == INVALID_FD) {
+	return NULL;
+    }
+    if (code) {
+	close(fd);
+	return NULL;
+    }
+
+    IH_INIT(ihP, dev, p1, ino);
+    fdP = ih_attachfd(ihP, fd);
+    if (!fdP) {
+	close(fd);
+    } else {
+	FDH_CLOSE(fdP);
+    }
+
+    return ihP;
 }
 #endif
 

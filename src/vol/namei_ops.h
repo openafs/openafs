@@ -22,6 +22,9 @@ extern int namei_unlink(char *name);
 extern Inode namei_MakeSpecIno(int volid, int type);
 extern Inode namei_icreate(IHandle_t * lh, char *part, afs_uint32 p1,
 			   afs_uint32 p2, afs_uint32 p3, afs_uint32 p4);
+extern IHandle_t *namei_icreate_init(IHandle_t *lh, int dev, char *part,
+                                     afs_uint32 p1, afs_uint32 p2,
+                                     afs_uint32 p3, afs_uint32 p4);
 extern FD_t namei_iopen(IHandle_t * h);
 extern int namei_irelease(IHandle_t * h);
 afs_sfsize_t namei_iread(IHandle_t * h, afs_foff_t offset, char *buf,
