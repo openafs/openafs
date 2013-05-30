@@ -395,6 +395,9 @@ ih_open_retry:
 	    fdP->fd_fd = INVALID_FD;
 	    IH_UNLOCK;
 	    OS_CLOSE(closeFd);
+	    IH_LOCK;
+	    fdInUseCount -= 1;
+	    IH_UNLOCK;
 	    goto ih_open_retry;
 	}
     } else {
