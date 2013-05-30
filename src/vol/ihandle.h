@@ -420,6 +420,11 @@ extern int ih_isunlinked(FD_t fd);
 # define OS_DIRSEPC '/'
 #endif
 
+#if defined(AFS_NT40_ENV) || !defined(AFS_NAMEI_ENV)
+# define  IH_CREATE_INIT(H, D, P, N, P1, P2, P3, P4) \
+         ih_icreate_init(H, D, P, N, P1, P2, P3, P4)
+#endif
+
 #ifdef AFS_NAMEI_ENV
 
 # ifdef AFS_NT40_ENV
@@ -485,6 +490,8 @@ extern int OS_TRUNC(FD_t FD, OFFT L);
 #  endif /* !O_LARGEFILE */
 
 #  define OS_SYNC(FD) fsync(FD)
+#  define IH_CREATE_INIT(H, D, P, N, P1, P2, P3, P4) \
+          namei_icreate_init(H, D, P, P1, P2, P3, P4)
 
 /*@=fcnmacros =macrofcndecl@*/
 # endif /* AFS_NT40_ENV */

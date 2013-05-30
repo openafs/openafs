@@ -1051,6 +1051,23 @@ ih_icreate(IHandle_t * ih, int dev, char *part, Inode nI, int p1, int p2,
 }
 #endif /* AFS_NAMEI_ENV */
 
+#if defined(AFS_NT40_ENV) || !defined(AFS_NAMEI_ENV)
+/* Unix namei implements its own more efficient IH_CREATE_INIT; this wrapper
+ * is for everyone else */
+IHandle_t *
+ih_icreate_init(IHandle_t *lh, int dev, char *part, Inode nearInode,
+                afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4)
+{
+    IHandle_t *ihP;
+    Inode ino = IH_CREATE(lh, dev, part, nearInode, p1, p2, p3, p4);
+    if (!VALID_INO(ino)) {
+        return NULL;
+    }
+    IH_INIT(ihP, dev, p1, ino);
+    return ihP;
+}
+#endif
+
 afs_sfsize_t
 ih_size(FD_t fd)
 {
