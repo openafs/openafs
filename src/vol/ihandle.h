@@ -342,6 +342,7 @@ extern int stream_close(StreamHandle_t * streamP, int reallyClose);
 extern int ih_reallyclose(IHandle_t * ihP);
 extern int ih_release(IHandle_t * ihP);
 extern int ih_condsync(IHandle_t * ihP);
+extern FdHandle_t *ih_attachfd(IHandle_t * ihP, FD_t fd);
 
 /* Macros common to user space and inode API's. */
 #define IH_INIT(H, D, V, I) ((H) = ih_init((D), (V), (I)))
