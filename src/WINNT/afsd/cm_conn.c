@@ -508,7 +508,8 @@ cm_Analyze(cm_conn_t *connp,
                     if (code == 0)
                         free_svr_list = 1;
                 }
-                cm_ResetServerBusyStatus(volServerspp);
+                if (volServerspp)
+                    cm_ResetServerBusyStatus(volServerspp);
                 if (free_svr_list) {
                     cm_FreeServerList(volServerspp, 0);
                     free_svr_list = 0;
@@ -559,7 +560,8 @@ cm_Analyze(cm_conn_t *connp,
                     if (code == 0)
                         free_svr_list = 1;
                 }
-                cm_ResetServerBusyStatus(volServerspp);
+                if (volServerspp)
+                    cm_ResetServerBusyStatus(volServerspp);
                 if (free_svr_list) {
                     cm_FreeServerList(volServerspp, 0);
                     free_svr_list = 0;
@@ -651,7 +653,8 @@ cm_Analyze(cm_conn_t *connp,
             osi_Log3(afsd_logp, format, osi_LogSaveString(afsd_logp,addr), fidp->volume, cellp->name);
             LogEvent(EVENTLOG_WARNING_TYPE, msgID, addr, fidp->volume, cellp->name);
 
-            cm_SetServerBusyStatus(volServerspp, serverp);
+            if (volServerspp)
+                cm_SetServerBusyStatus(volServerspp, serverp);
         }
 
         if (free_svr_list) {
