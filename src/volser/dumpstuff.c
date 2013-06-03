@@ -1423,20 +1423,20 @@ ReadVnodes(struct iod *iodp, Volume * vp, int incremental,
 		    }
 		    saw_f = 1;
 
-		    ino =
-			IH_CREATE(V_linkHandle(vp), V_device(vp),
+		    tmpH =
+			IH_CREATE_INIT(V_linkHandle(vp), V_device(vp),
 				  VPartitionPath(V_partition(vp)), nearInode,
 				  V_parentId(vp), vnodeNumber,
 				  vnode->uniquifier, vnode->dataVersion);
-		    if (!VALID_INO(ino)) {
+		    if (!tmpH) {
 			Log("1 Volser: ReadVnodes: IH_CREATE: %s - restore aborted\n",
                             afs_error_message(errno));
 			V_needsSalvaged(vp) = 1;
 			return VOLSERREAD_DUMPERROR;
 		    }
+		    ino = tmpH->ih_ino;
 		    nearInode = ino;
 		    VNDISK_SET_INO(vnode, ino);
-		    IH_INIT(tmpH, vp->device, V_parentId(vp), ino);
 		    fdP = IH_OPEN(tmpH);
 		    if (fdP == NULL) {
 			Log("1 Volser: ReadVnodes: IH_OPEN: %s - restore aborted\n",
