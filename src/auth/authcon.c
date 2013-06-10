@@ -167,7 +167,8 @@ static afs_int32
 GenericAuth(struct afsconf_dir *adir,
 	    struct rx_securityClass **astr,
 	    afs_int32 *aindex,
-	    rxkad_level enclevel)
+	    rxkad_level enclevel,
+	    int noauth_fallback)
 {
     char tbuffer[256];
     struct ktc_encryptionKey key, session;
@@ -186,14 +187,14 @@ GenericAuth(struct afsconf_dir *adir,
     /* first, find the right key and kvno to use */
     code = afsconf_GetLatestKey(adir, &kvno, &key);
     if (code) {
-	return QuickAuth(astr, aindex);
+	goto error;
     }
 
     /* next create random session key, using key for seed to good random */
     des_init_random_number_generator(ktc_to_cblock(&key));
     code = des_random_key(ktc_to_cblock(&session));
     if (code) {
-	return QuickAuth(astr, aindex);
+	goto error;
     }
 
     /* now create the actual ticket */
@@ -206,7 +207,7 @@ GenericAuth(struct afsconf_dir *adir,
      * name, instance and cell, start time, end time, session key to seal
      * in ticket, inet host, server name and server instance */
     if (code) {
-	return QuickAuth(astr, aindex);
+	goto error;
     }
 
     /* Next, we have ticket, kvno and session key, authenticate the connection.
@@ -219,6 +220,12 @@ GenericAuth(struct afsconf_dir *adir,
     *astr = tclass;
     *aindex = RX_SECIDX_KAD;
     return 0;
+
+ error:
+    if (noauth_fallback) {
+	return QuickAuth(astr, aindex);
+    }
+    return code;
 }
 
 /* build a fake ticket for 'afs' using keys from adir, returning an
@@ -232,7 +239,7 @@ afsconf_ClientAuth(void *arock, struct rx_securityClass ** astr,
     afs_int32 rc;
 
     LOCK_GLOBAL_MUTEX;
-    rc = GenericAuth(adir, astr, aindex, rxkad_clear);
+    rc = GenericAuth(adir, astr, aindex, rxkad_clear, 1);
     UNLOCK_GLOBAL_MUTEX;
     return rc;
 }
@@ -250,7 +257,7 @@ afsconf_ClientAuthSecure(void *arock,
     afs_int32 rc;
 
     LOCK_GLOBAL_MUTEX;
-    rc = GenericAuth(adir, astr, aindex, rxkad_crypt);
+    rc = GenericAuth(adir, astr, aindex, rxkad_crypt, 1);
     UNLOCK_GLOBAL_MUTEX;
     return rc;
 }
@@ -429,10 +436,16 @@ afsconf_PickClientSecObj(struct afsconf_dir *dir, afsconf_secflags flags,
 	    return AFSCONF_NOCELLDB;
 
 	if (flags & AFSCONF_SECOPTS_LOCALAUTH) {
+	    int fallback = 0;
+	    if (flags & AFSCONF_SECOPTS_FALLBACK_NULL)
+		fallback = 1;
+
+	    LOCK_GLOBAL_MUTEX;
 	    if (flags & AFSCONF_SECOPTS_ALWAYSENCRYPT)
-		code = afsconf_ClientAuthSecure(dir, sc, scIndex);
+		code = GenericAuth(dir, sc, scIndex, rxkad_crypt, fallback);
 	    else
-		code = afsconf_ClientAuth(dir, sc, scIndex);
+		code = GenericAuth(dir, sc, scIndex, rxkad_clear, fallback);
+	    UNLOCK_GLOBAL_MUTEX;
 
 	    if (code)
 		goto out;
