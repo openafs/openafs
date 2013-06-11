@@ -12,6 +12,7 @@
 
 #include <roken.h>
 
+#include <afs/afsint.h>
 #include <afs/ihandle.h>
 #include <afs/partition.h>
 

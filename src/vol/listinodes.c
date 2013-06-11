@@ -96,6 +96,8 @@ ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
 #include <sys/ino.h>
 #endif
 
+#include <rx/rx_queue.h>
+
 #include "lock.h"
 #include "ihandle.h"
 #include "vnode.h"

@@ -49,7 +49,7 @@ extern void FilepathNormalize(char *path);
 /* flipbase64.c */
 extern char *int_to_base32(b32_string_t s, int a);
 extern int base32_to_int(char *s);
-#if defined(AFS_NAMEI_ENV) && !defined(AFS_NT40_ENV)
+#if !defined(AFS_NT40_ENV)
 /* base 64 converters for namei interface. Flip bits to differences are
  * early in name.
  */

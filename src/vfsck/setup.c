@@ -916,7 +916,7 @@ is_root(rdev_num)
     return (1);
 }
 
-getline(fp, loc, maxlen)
+vfsck_getline(fp, loc, maxlen)
      FILE *fp;
      char *loc;
 {
@@ -947,7 +947,7 @@ freply(s)
     if (!isatty(0))
 	errexit("exiting\n");
     printf("\n%s? ", s);
-    if (getline(stdin, line, sizeof(line)) == EOF)
+    if (vfsck_getline(stdin, line, sizeof(line)) == EOF)
 	errexit("\n");
     if (line[0] == 'y' || line[0] == 'Y')
 	return (1);

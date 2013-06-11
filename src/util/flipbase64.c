@@ -14,7 +14,6 @@
 
 #include <roken.h>
 
-#if defined(AFS_NAMEI_ENV)
 #include "afsutil.h"
 
 /* This version of base64 gets it right and starts converting from the low
@@ -111,6 +110,3 @@ flipbase64_to_int64(char *s)
     }
     return result;
 }
-
-
-#endif /* AFS_NAMEI_ENV */
