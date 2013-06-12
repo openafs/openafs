@@ -9,10 +9,11 @@ pts_removeuser - Removes a user from a Protection Database group
 
 B<pts removeuser> S<<< B<-user> <I<user name>>+ >>> S<<< B<-group> <I<group name>>+ >>>
     S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>] [B<-force>] 
-    [B<-help>]
+    [B<-help>] [B<-auth>] [B<-encrypt>] S<<< [B<-config> <I<config directory>>] >>>
 
 B<pts rem> S<<< B<-u> <I<user name>>+ >>> S<<< B<-g> <I<group name>>+ >>>
     S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>] [B<-f>] [B<-h>]
+    [B<-a>] [B<-e>] S<<< [B<-co> <I<config directory>>] >>>
 
 =for html
 </div>
@@ -38,7 +39,7 @@ tokens or reauthenticate.
 
 =over 4
 
-=item B<-name> <I<user name>>+
+=item B<-user> <I<user name>>+
 
 Specifies the name of each user entry or the IP address (complete or
 wildcard-style) of each machine entry to remove.

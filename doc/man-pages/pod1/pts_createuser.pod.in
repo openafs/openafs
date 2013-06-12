@@ -9,13 +9,15 @@ pts_createuser - Creates a user or machine entry in the Protection Database
 
 B<pts createuser> S<<< B<-name> <I<user name>>+ >>> S<<< [B<-id> <I<user id>>+] >>>
     S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>] [B<-force>] 
-    [B<-help>]
+    [B<-help>] [B<-auth>] [B<-encrypt>] S<<< [B<-config> <I<config directory>>] >>>
 
 B<pts createu> S<<< B<-na> <I<user name>>+ >>> S<<< [B<-i> <I<user id>>+] >>>
     S<<< [B<-c> <I<cell name>>] >>> [B<-no>] [B<-l>] [B<-f>] [B<-h>]
+    [B<-a>] [B<-e>] S<<< [B<-co> <I<config directory>>] >>>
 
 B<pts cu> S<<< B<-na> <I<user name>>+ >>> S<<< [B<-i> <I<user id>>+] >>>
     S<<< [B<-c> <I<cell name>>] >>> [B<-no>] [B<-l>] [B<-f>] [B<-h>]
+    [B<-a>] [B<-e>] S<<< [B<-co> <I<config directory>>] >>>
 
 =for html
 </div>

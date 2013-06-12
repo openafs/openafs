@@ -10,15 +10,19 @@ pts_examine - Displays a Protection Database entry
 B<pts examine> S<<< B<-nameorid> <I<user or group name or id>>+ >>>
     S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>] 
     [B<-force>] [B<-auth>] [B<-help>]
+    [B<-encrypt>] S<<< [B<-config> <I<config directory>>] >>>
 
 B<pts e> S<<< B<-na> <I<user or group name or id>>+ >>> S<<< [B<-c> <I<cell name>>] >>>
     [B<-no>] [B<-l>] [B<-f>] [B<-a>] [B<-h>]
+    [B<-e>] S<<< [B<-co> <I<config directory>>] >>>
 
 B<pts check> S<<< B<-na> <I<user or group name or id>>+ >>> S<<< [B<-c> <I<cell name>>] >>>
     [B<-no>] [B<-l>] [B<-f>] [B<-a>] [B<-h>]
+    [B<-e>] S<<< [B<-co> <I<config directory>>] >>>
 
 B<pts che> S<<< B<-na> <I<user or group name or id>>+ >>> S<<< [B<-c> <I<cell name>>] >>>
     [B<-no>] [B<-l>] [B<-f>] [B<-a>] [B<-h>]
+    [B<-e>] S<<< [B<-co> <I<config directory>>] >>>
 
 =for html
 </div>
@@ -41,11 +45,6 @@ machine for which to display the Protection Database entry. It is
 acceptable to mix users, machines, and groups on the same command line, as
 well as names (IP addresses for machines) and IDs. Precede the GID of each
 group with a hyphen to indicate that it is negative.
-
-=item B<-auth>
-
-Run using the user's current authentication. This is the default unless
-the B<-noauth> or B<-localauth> options are used.
 
 =include fragments/pts-common.pod
 

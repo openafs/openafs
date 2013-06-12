@@ -8,10 +8,11 @@ pts_source - Read pts commands from a file
 <div class="synopsis">
 
 B<pts source> S<<< [B<-file>] <I<file name>> >>> S<<< [B<-cell>] <I<cell name>> >>>
-   [B<-noauth>] [B<-localauth>] [B<-force>]
+   [B<-noauth>] [B<-localauth>] [B<-force>] [B<-auth>] [B<-encrypt>] [B<-help>]
+   S<<< [B<-config> <I<config directory>>] >>>
 
 B<pts so> S<<< [B<-f>] <I<file name>> >>> S<<< [B<-c>] <I<cell name>> >>>
-   [B<-n>] [B<-l>] [B<-f>]
+   [B<-n>] [B<-l>] [B<-f>] [B<-h>] [B<-a>] [B<-e>] S<<< [B<-co> <I<config directory>>] >>>
 
 =for html
 </div>
@@ -34,6 +35,11 @@ it is always available.
 B<pts source> takes the following options:
 
 =over 4
+
+=item B<-file> <I<file name>>
+
+Specifies the file name to read commands from. The commands in the given file
+are run as if they were typed in pts interactive mode.
 
 =include fragments/pts-common.pod
 

@@ -9,10 +9,12 @@ pts_rename - Changes the name of a Protection Database entry
 
 B<pts rename> S<<< B<-oldname> <I<old name>> >>> S<<< B<-newname> <I<new name>> >>>
     S<<< [B<-cell> <I<cell name>>] >>>  [B<-noauth>]  [B<-localauth>]  
-    [B<-force>]  [B<-help>]
+    [B<-force>] [B<-help>] [B<-auth>] [B<-encrypt>]
+    S<<< [B<-config> <I<config directory>>] >>>
 
 B<pts ren> S<<< B<-o> <I<old name>> >>> S<<< B<-ne> <I<new name>> >>> S<<< [B<-c> <I<cell name>>] >>>
-    [B<-no>] [B<-l>] [B<-f>] [B<-h>]
+    [B<-no>] [B<-l>] [B<-f>] [B<-h>] [B<-a>] [B<-e>]
+    S<<< [B<-co> <I<config directory>>] >>>
 
 =for html
 </div>

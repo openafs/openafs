@@ -10,18 +10,22 @@ pts_membership - Displays the membership list for a user or group
 B<pts membership> S<<< B<-nameorid> <I<user or group name or id>>+ >>>
     [B<-supergroups>] [B<-expandgroups>] S<<< [B<-cell> <I<cell name>>] >>>
     [B<-localauth>] [B<-noauth>] [B<-force>] [B<-help>]
+    [B<-auth>] [B<-encrypt>] S<<< [B<-config> <I<config directory>>] >>>
 
 B<pts m> S<<< B<-na> <I<user or group name or id>>+ >>>
     [B<-s>] [B<-ex>] S<<< [B<-c> <I<cell name>>] >>>
     [B<-no>] [B<-l>] [B<-f>] [B<-h>]
+    [B<-a>] [B<-en>] S<<< [B<-co> <I<config directory>>] >>>
 
 B<pts groups> S<<< B<-na> <I<user or group name or id>>+ >>>
     [B<-s>] [B<-ex>] S<<< [B<-c> <I<cell name>>] >>>
     [B<-no>] [B<-l>] [B<-f>] [B<-h>]
+    [B<-a>] [B<-en>] S<<< [B<-co> <I<config directory>>] >>>
 
 B<pts g> S<<< B<-na> <I<user or group name or id>>+ >>>
     [B<-s>] [B<-ex>] S<<< [B<-c> <I<cell name>>] >>>
     [B<-no>] [B<-l>] [B<-f>] [B<-h>]
+    [B<-a>] [B<-en>] S<<< [B<-co> <I<config directory>>] >>>
 
 =for html
 </div>

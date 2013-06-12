@@ -8,9 +8,11 @@ pts_quit - Exit from pts interactive mode
 <div class="synopsis">
 
 B<pts quit> S<<< [B<-cell>] <I<cell name>> >>> [B<-noauth>] [B<-localauth>] 
-    [B<-force>]
+    [B<-force>] [B<-help>] [B<-auth>] [B<-encrypt>]
+    S<<< [B<-config> <I<config directory>>] >>>
 
-B<pts q> S<<< [B<-c>] <I<cell name>> >>> [B<-n>] [B<-l>] [B<-f>]
+B<pts q> S<<< [B<-c>] <I<cell name>> >>> [B<-n>] [B<-l>] [B<-f>] [B<-h>]
+    [B<-a>] [B<-e>] S<<< [B<-co> <I<config directory>>] >>>
 
 =for html
 </div>
