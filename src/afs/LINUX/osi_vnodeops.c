@@ -392,10 +392,8 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 	if (code) {
 	    afs_warn("Corrupt directory (inode %lx, dirpos %d)",
 		     (unsigned long)&tdc->f.inode, dirpos);
-	    ReleaseSharedLock(&avc->lock);
-	    afs_PutDCache(tdc);
 	    code = -ENOENT;
-	    goto out;
+	    goto unlock_out;
         }
 
 	ino = afs_calc_inum(avc->f.fid.Cell, avc->f.fid.Fid.Volume,
@@ -461,7 +459,9 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 #else
     fp->f_pos = (loff_t) offset;
 #endif
+    code = 0;
 
+unlock_out:
     ReleaseReadLock(&tdc->lock);
     afs_PutDCache(tdc);
     UpgradeSToWLock(&avc->lock, 813);
@@ -469,7 +469,6 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
     avc->dcreaddir = 0;
     avc->readdir_pid = 0;
     ReleaseSharedLock(&avc->lock);
-    code = 0;
 
 out:
     afs_PutFakeStat(&fakestat);
