@@ -39,6 +39,14 @@ the local machine.
 
 Indicates the server machine to restrict.
 
+=item B<-mode> <I<mode>>
+
+Indicates whether to turn restricted mode off or on. Pass a 1 to turn
+restricted mode on, and pass a 0 to turn restricted mode off. However, since
+you cannot turn off restricted mode remotely on a server where restricted mode
+is already on, trying to turn off restricted mode will always either fail, or
+do nothing. So the only option that makes sense here is 1.
+
 =item B<-cell> <I<cell name>>
 
 Names the cell in which to run the command. Do not combine this argument
