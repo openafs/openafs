@@ -44,28 +44,6 @@ static int DoStat(char *aname, struct rx_connection *aconn,
 #define MRAFS_OFFSET  10
 #define ADDPARMOFFSET 27
 
-/* MR-AFS salvage parameters */
-struct MRAFSSalvageParms {
-    afs_int32 Optdebug;
-    afs_int32 Optnowrite;
-    afs_int32 Optforce;
-    afs_int32 Optoktozap;
-    afs_int32 Optrootfiles;
-    afs_int32 Optsalvagedirs;
-    afs_int32 Optblockreads;
-    afs_int32 OptListResidencies;
-    afs_int32 OptSalvageRemote;
-    afs_int32 OptSalvageArchival;
-    afs_int32 OptIgnoreCheck;
-    afs_int32 OptForceOnLine;
-    afs_int32 OptUseRootDirACL;
-    afs_int32 OptTraceBadLinkCounts;
-    afs_int32 OptDontAskFS;
-    afs_int32 OptLogLevel;
-    afs_int32 OptRxDebug;
-    afs_uint32 OptResidencies;
-};
-
 /* dummy routine for the audit work.  It should do nothing since audits */
 /* occur at the server level and bos is not a server. */
 int osi_audit(void )
@@ -467,38 +445,6 @@ Shutdown(struct cmd_syndesc *as, void *arock)
 	    printf("bos: can't wait for processes to shutdown (%s)\n",
 		   em(code));
     }
-    return 0;
-}
-
-static int
-BlockScannerCmd(struct cmd_syndesc *as, void *arock)
-{
-    afs_int32 code;
-    struct rx_connection *tconn;
-    char BlockCommand[] = "/usr/afs/bin/scanner -block";
-
-    tconn = GetConn(as, 0);
-    code = BOZO_Exec(tconn, BlockCommand);
-    if (code)
-	printf
-	    ("bos: failed to block scanner from making migration requests (%s)\n",
-	     em(code));
-    return 0;
-}
-
-static int
-UnBlockScannerCmd(struct cmd_syndesc *as, void *arock)
-{
-    afs_int32 code;
-    struct rx_connection *tconn;
-    char UnBlockCommand[] = "/usr/afs/bin/scanner -unblock";
-
-    tconn = GetConn(as, 0);
-    code = BOZO_Exec(tconn, UnBlockCommand);
-    if (code)
-	printf
-	    ("bos: failed to allow scanner daemon to make migration requests again (%s)\n",
-	     em(code));
     return 0;
 }
 
@@ -1096,8 +1042,7 @@ StopServer(struct cmd_syndesc *as, void *arock)
 static afs_int32
 DoSalvage(struct rx_connection * aconn, char * aparm1, char * aparm2,
 	  char * aoutName, afs_int32 showlog, char * parallel,
-	  char * atmpDir, char * orphans, int dafs,
-	  struct MRAFSSalvageParms * mrafsParm)
+	  char * atmpDir, char * orphans, int dafs)
 {
     afs_int32 code;
     char *parms[6];
@@ -1109,7 +1054,6 @@ DoSalvage(struct rx_connection * aconn, char * aparm1, char * aparm2,
     FILE *outFile;
     int closeIt;
     char partName[20];		/* canonical name for partition */
-    char pbuffer[PARMBUFFERSSIZE];
     afs_int32 partNumber;
     char *notifier = NONOTIFIER;
     int count;
@@ -1228,48 +1172,6 @@ DoSalvage(struct rx_connection * aconn, char * aparm1, char * aparm2,
 	    }
 	    strcat(tbuffer, " -orphans ");
 	    strcat(tbuffer, orphans);
-	}
-
-	if (mrafsParm->Optdebug)
-	    strcat(tbuffer, " -debug");
-	if (mrafsParm->Optnowrite)
-	    strcat(tbuffer, " -nowrite");
-	if (mrafsParm->Optforce)
-	    strcat(tbuffer, " -force");
-	if (mrafsParm->Optoktozap)
-	    strcat(tbuffer, " -oktozap");
-	if (mrafsParm->Optrootfiles)
-	    strcat(tbuffer, " -rootfiles");
-	if (mrafsParm->Optsalvagedirs)
-	    strcat(tbuffer, " -salvagedirs");
-	if (mrafsParm->Optblockreads)
-	    strcat(tbuffer, " -blockreads");
-	if (mrafsParm->OptListResidencies)
-	    strcat(tbuffer, " -ListResidencies");
-	if (mrafsParm->OptSalvageRemote)
-	    strcat(tbuffer, " -SalvageRemote");
-	if (mrafsParm->OptSalvageArchival)
-	    strcat(tbuffer, " -SalvageArchival");
-	if (mrafsParm->OptIgnoreCheck)
-	    strcat(tbuffer, " -IgnoreCheck");
-	if (mrafsParm->OptForceOnLine)
-	    strcat(tbuffer, " -ForceOnLine");
-	if (mrafsParm->OptUseRootDirACL)
-	    strcat(tbuffer, " -UseRootDirACL");
-	if (mrafsParm->OptTraceBadLinkCounts)
-	    strcat(tbuffer, " -TraceBadLinkCounts");
-	if (mrafsParm->OptDontAskFS)
-	    strcat(tbuffer, " -DontAskFS");
-	if (mrafsParm->OptLogLevel) {
-	    sprintf(pbuffer, " -LogLevel %ld", afs_printable_int32_ld(mrafsParm->OptLogLevel));
-	    strcat(tbuffer, pbuffer);
-	}
-	if (mrafsParm->OptRxDebug)
-	    strcat(tbuffer, " -rxdebug");
-	if (mrafsParm->OptResidencies) {
-	    sprintf(pbuffer, " -Residencies %lu",
-		    afs_printable_uint32_lu(mrafsParm->OptResidencies));
-	    strcat(tbuffer, pbuffer);
 	}
     }
 
@@ -1402,40 +1304,26 @@ static int
 SalvageCmd(struct cmd_syndesc *as, void *arock)
 {
     struct rx_connection *tconn;
-    afs_int32 code, rc, i;
+    afs_int32 code, rc;
     char *outName;
     char tname[BOZO_BSSIZE];
     afs_int32 newID;
     extern struct ubik_client *cstruct;
-    afs_int32 curGoal, showlog = 0, dafs = 0, mrafs = 0;
+    afs_int32 curGoal, showlog = 0, dafs = 0;
     char *parallel;
     char *tmpDir;
     char *orphans;
-    char *tp;
     char * serviceName;
-    struct MRAFSSalvageParms mrafsParm;
-
-    memset(&mrafsParm, 0, sizeof(mrafsParm));
 
     /* parm 0 is machine name, 1 is partition, 2 is volume, 3 is -all flag */
     tconn = GetConn(as, 0);
-
-    tp = &tname[0];
 
     /* find out whether fileserver is running demand attach fs */
     if (IsDAFS(tconn)) {
 	dafs = 1;
 	serviceName = "dafs";
-	/* Find out whether fileserver is running MR-AFS (has a scanner instance) */
-	/* XXX this should really be done some other way, potentially by RPC */
-	if ((code = BOZO_GetInstanceParm(tconn, serviceName, 4, &tp) == 0))
-	    mrafs = 1;
     } else {
 	serviceName = "fs";
-	/* Find out whether fileserver is running MR-AFS (has a scanner instance) */
-	/* XXX this should really be done some other way, potentially by RPC */
-	if ((code = BOZO_GetInstanceParm(tconn, serviceName, 3, &tp) == 0))
-	    mrafs = 1;
     }
 
     /* we can do a volume, a partition or the whole thing, but not mixtures
@@ -1475,10 +1363,6 @@ SalvageCmd(struct cmd_syndesc *as, void *arock)
     /* -orphans option */
     orphans = NULL;
     if (as->parms[8].items) {
-	if (mrafs) {
-	    printf("Can't specify -orphans for MR-AFS fileserver\n");
-	    return EINVAL;
-	}
 	orphans = as->parms[8].items->data;
     }
 
@@ -1488,72 +1372,6 @@ SalvageCmd(struct cmd_syndesc *as, void *arock)
 	    printf("must specify -forceDAFS flag in order to proceed.\n");
 	    return EINVAL;
 	}
-    }
-
-    if (mrafs) {
-	if (as->parms[MRAFS_OFFSET].items)
-	    mrafsParm.Optdebug = 1;
-	if (as->parms[MRAFS_OFFSET + 1].items)
-	    mrafsParm.Optnowrite = 1;
-	if (as->parms[MRAFS_OFFSET + 2].items)
-	    mrafsParm.Optforce = 1;
-	if (as->parms[MRAFS_OFFSET + 3].items)
-	    mrafsParm.Optoktozap = 1;
-	if (as->parms[MRAFS_OFFSET + 4].items)
-	    mrafsParm.Optrootfiles = 1;
-	if (as->parms[MRAFS_OFFSET + 5].items)
-	    mrafsParm.Optsalvagedirs = 1;
-	if (as->parms[MRAFS_OFFSET + 6].items)
-	    mrafsParm.Optblockreads = 1;
-	if (as->parms[MRAFS_OFFSET + 7].items)
-	    mrafsParm.OptListResidencies = 1;
-	if (as->parms[MRAFS_OFFSET + 8].items)
-	    mrafsParm.OptSalvageRemote = 1;
-	if (as->parms[MRAFS_OFFSET + 9].items)
-	    mrafsParm.OptSalvageArchival = 1;
-	if (as->parms[MRAFS_OFFSET + 10].items)
-	    mrafsParm.OptIgnoreCheck = 1;
-	if (as->parms[MRAFS_OFFSET + 11].items)
-	    mrafsParm.OptForceOnLine = 1;
-	if (as->parms[MRAFS_OFFSET + 12].items)
-	    mrafsParm.OptUseRootDirACL = 1;
-	if (as->parms[MRAFS_OFFSET + 13].items)
-	    mrafsParm.OptTraceBadLinkCounts = 1;
-	if (as->parms[MRAFS_OFFSET + 14].items)
-	    mrafsParm.OptDontAskFS = 1;
-	if (as->parms[MRAFS_OFFSET + 15].items)
-	    mrafsParm.OptLogLevel =
-		atoi(as->parms[MRAFS_OFFSET + 15].items->data);
-	if (as->parms[MRAFS_OFFSET + 16].items)
-	    mrafsParm.OptRxDebug = 1;
-	if (as->parms[MRAFS_OFFSET + 17].items) {
-	    if (as->parms[MRAFS_OFFSET + 8].items
-		|| as->parms[MRAFS_OFFSET + 9].items) {
-		printf
-		    ("Can't specify -Residencies with -SalvageRemote or -SalvageArchival\n");
-		return EINVAL;
-	    }
-	    code =
-		util_GetUInt32(as->parms[MRAFS_OFFSET + 17].items->data,
-			       &mrafsParm.OptResidencies);
-	    if (code) {
-		printf("bos: '%s' is not a valid residency mask.\n",
-		       as->parms[MRAFS_OFFSET + 17].items->data);
-		return code;
-	    }
-	}
-    } else {
-	int stop = 0;
-
-	for (i = MRAFS_OFFSET; i < ADDPARMOFFSET; i++) {
-	    if (as->parms[i].items) {
-		printf(" %s only possible for MR-AFS fileserver.\n",
-		       as->parms[i].name);
-		stop = 1;
-	    }
-	}
-	if (stop)
-	    exit(1);
     }
 
     if (as->parms[4].items) {
@@ -1574,7 +1392,7 @@ SalvageCmd(struct cmd_syndesc *as, void *arock)
 	/* now do the salvage operation */
 	printf("Starting salvage.\n");
 	rc = DoSalvage(tconn, NULL, NULL, outName, showlog, parallel, tmpDir,
-		       orphans, dafs, &mrafsParm);
+		       orphans, dafs);
 	if (curGoal == BSTAT_NORMAL) {
 	    printf("bos: restarting %s.\n", serviceName);
 	    code = BOZO_SetTStatus(tconn, serviceName, BSTAT_NORMAL);
@@ -1616,7 +1434,7 @@ SalvageCmd(struct cmd_syndesc *as, void *arock)
 	/* now do the salvage operation */
 	printf("Starting salvage.\n");
 	rc = DoSalvage(tconn, as->parms[1].items->data, NULL, outName,
-		       showlog, parallel, tmpDir, orphans, dafs, &mrafsParm);
+		       showlog, parallel, tmpDir, orphans, dafs);
 	if (curGoal == BSTAT_NORMAL) {
 	    printf("bos: restarting '%s'.\n", serviceName);
 	    code = BOZO_SetTStatus(tconn, serviceName, BSTAT_NORMAL);
@@ -1675,7 +1493,7 @@ SalvageCmd(struct cmd_syndesc *as, void *arock)
 	}
 	printf("Starting salvage.\n");
 	rc = DoSalvage(tconn, as->parms[1].items->data, tname, outName,
-		       showlog, parallel, tmpDir, orphans, dafs, &mrafsParm);
+		       showlog, parallel, tmpDir, orphans, dafs);
 	if (rc)
 	    return rc;
     }
@@ -2103,52 +1921,6 @@ main(int argc, char **argv)
 		"ignore | remove | attach");
     cmd_AddParm(ts, "-forceDAFS", CMD_FLAG, CMD_OPTIONAL,
 		"(DAFS) force salvage of demand attach fileserver");
-    cmd_AddParm(ts, "-debug", CMD_FLAG, CMD_OPTIONAL,
-		"(MR-AFS) Run in Debugging mode");
-    cmd_AddParm(ts, "-nowrite", CMD_FLAG, CMD_OPTIONAL,
-		"(MR-AFS) Run readonly/test mode");
-    cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL,
-		"(MR-AFS) Force full salvaging");
-    cmd_AddParm(ts, "-oktozap", CMD_FLAG, CMD_OPTIONAL,
-		"(MR-AFS) Give permission to destroy bogus file residencies/volumes - debugging flag");
-    cmd_AddParm(ts, "-rootfiles", CMD_FLAG, CMD_OPTIONAL,
-		"(MR-AFS) Show files owned by root - debugging flag");
-    cmd_AddParm(ts, "-salvagedirs", CMD_FLAG, CMD_OPTIONAL,
-		"(MR-AFS) Force rebuild/salvage of all directories");
-    cmd_AddParm(ts, "-blockreads", CMD_FLAG, CMD_OPTIONAL,
-		"(MR-AFS) Read smaller blocks to handle IO/bad blocks");
-    cmd_AddParm(ts, "-ListResidencies", CMD_FLAG, CMD_OPTIONAL,
-		"(MR-AFS) Just list affected file residencies - debugging flag");
-    cmd_AddParm(ts, "-SalvageRemote", CMD_FLAG, CMD_OPTIONAL,
-		"(MR-AFS) Salvage storage systems that are not directly attached");
-    cmd_AddParm(ts, "-SalvageArchival", CMD_FLAG, CMD_OPTIONAL,
-		"(MR-AFS) Salvage HSM storage systems");
-    cmd_AddParm(ts, "-IgnoreCheck", CMD_FLAG, CMD_OPTIONAL,
-		"(MR-AFS) Don't perform VLDB safety check when deleting unreferenced files.  Only a good idea in single server cell.");
-    cmd_AddParm(ts, "-ForceOnLine", CMD_FLAG, CMD_OPTIONAL,
-		"(MR-AFS) Force the volume to come online, even if it hasn't salvaged cleanly.");
-    cmd_AddParm(ts, "-UseRootDirACL", CMD_FLAG, CMD_OPTIONAL,
-		"(MR-AFS) Use the root directory ACL for lost+found directory if it is created.");
-    cmd_AddParm(ts, "-TraceBadLinkCounts", CMD_FLAG, CMD_OPTIONAL,
-		"(MR-AFS) Print out lines about volume reference count changes.");
-    cmd_AddParm(ts, "-DontAskFS", CMD_FLAG, CMD_OPTIONAL,
-		"(MR-AFS) Don't ask fileserver to take volume offline.  THIS IS VERY DANGEROUS.");
-    cmd_AddParm(ts, "-LogLevel", CMD_SINGLE, CMD_OPTIONAL,
-		"(MR-AFS) log level");
-    cmd_AddParm(ts, "-rxdebug", CMD_FLAG, CMD_OPTIONAL,
-		"(MR-AFS) Write out rx debug information.");
-    cmd_AddParm(ts, "-Residencies", CMD_SINGLE, CMD_OPTIONAL,
-		"(MR-AFS) Numeric mask of residencies to be included in the salvage.  Do not use with -SalvageRemote or -SalvageArchival");
-    add_std_args(ts);
-
-    ts = cmd_CreateSyntax("blockscanner", BlockScannerCmd, NULL,
-			  "block scanner daemon from making migration requests");
-    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "machine name");
-    add_std_args(ts);
-
-    ts = cmd_CreateSyntax("unblockscanner", UnBlockScannerCmd, NULL,
-			  "allow scanner daemon to make migration requests again");
-    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "machine name");
     add_std_args(ts);
 
     ts = cmd_CreateSyntax("getrestricted", GetRestrict, NULL,
