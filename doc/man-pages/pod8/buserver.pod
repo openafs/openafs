@@ -8,11 +8,14 @@ buserver - Initializes the Backup Server
 <div class="synopsis">
 
 B<buserver> S<<< [B<-database> <I<database directory>>] >>>
-    S<<< [B<-auditlog> <I<log path>>] >>> [B<-audit-interface> (file | sysvmq)]
+    S<<< [B<-auditlog> <I<log path>>] >>>
+    S<<< [B<-audit-interface> (file | sysvmq)] >>>
     S<<< [B<-cellservdb> <I<cell configuration directory>>] >>> [B<-resetdb>]
-    [B<-noauth>] [B<-smallht>] [B<-servers> <I<list of ubik database servers>>+]
-    [B<-enable_peer_stats>]  [B<-enable_process_stats>] [B<-rxbind>]
-    [B<-p> <I<number of threads>>] [B<-help>]
+    [B<-noauth>] [B<-smallht>]
+    S<<< [B<-servers> <I<list of ubik database servers>>+] >>>
+    [B<-rxbind>]
+    [B<-p> <I<number of threads>>] [B<-ubikbuffers> <I<# of buffers>>]
+    [B<-help>]
 
 =for html
 </div>
@@ -93,13 +96,10 @@ operations.
 
 =item B<-noauth>
 
-Establishes an unauthenticated connection between the issuer and the
-Backup Server, in which the Backup Server treats the issuer as the
-unprivileged user C<anonymous>. It is useful only when authorization
-checking is disabled on the database server machine. In normal
-circumstances, the Backup Server allows only authorized (privileged) users
-to issue commands that affect or contact the Backup Database, and refuses
-to perform such an action even if the B<-noauth> flag is used.
+Turns off all authorization checks, and allows all connecting users to act as
+administrators, even unauthenticated users. The use of this option is
+inherently insecure, and should only be used in controlled environments for
+experimental or debug purposes. See L<NoAuth(5)>.
 
 =item B<-smallht>
 
@@ -114,22 +114,6 @@ Server. Use this argument if running the Backup Server on a subset of the
 database server machines that is not a majority of the machines listed in
 the F</usr/afs/etc/CellServDB> file.
 
-=item B<-enable_peer_stats>
-
-Activates the collection of Rx statistics and allocates memory for their
-storage. For each connection with a specific UDP port on another machine,
-a separate record is kept for each type of RPC (FetchFile, GetStatus, and
-so on) sent or received. To display or otherwise access the records, use
-the Rx Monitoring API.
-
-=item B<-enable_process_stats>
-
-Activates the collection of Rx statistics and allocates memory for their
-storage. A separate record is kept for each type of RPC (FetchFile,
-GetStatus, and so on) sent or received, aggregated over all connections to
-other machines. To display or otherwise access the records, use the Rx
-Monitoring API.
-
 =item B<-rxbind>
 
 Bind the Rx socket to the primary interface only.  (If not specified, the
@@ -139,6 +123,12 @@ Rx socket will listen on all interfaces.)
 
 Sets the number of server lightweight processes (LWPs or pthreads) to run.
 Provide a positive integer from the range 3 to 16. The default value is 3.
+
+=item B<-ubikbuffers> <I<# of buffers>>
+
+Sets the number of internal buffers used for maintaining the ubik database.
+The default is 400. If the buserver runs out of free buffers, errors can occur
+while trying to modify ubik data. It is not recommended to change this setting.
 
 =item B<-help>
 
