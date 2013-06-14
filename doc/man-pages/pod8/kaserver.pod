@@ -8,10 +8,11 @@ kaserver - Initializes the Authentication Server
 <div class="synopsis">
 
 B<kaserver> [B<-noAuth>] [B<-database> <I<dbpath>>]
-    S<<< [B<-auditlog> <I<log path>>] >>> [B<-audit-interface> (file | sysvmq)]
+    S<<< [B<-auditlog> <I<log path>>] >>>
+    S<<< [B<-audit-interface> (file | sysvmq)] >>>
     S<<< [B<-localfiles> <I<lclpath>>] >>> S<<< [B<-minhours> <I<n>>] >>>
     S<<< [B<-servers> <I<serverlist>>] >>> [B<-enable_peer_stats>]
-    [B<-enable_process_stats>] [B<-help>]
+    [B<-enable_process_stats>] [B<-rxbind>] [B<-crossrealm>] [B<-help>]
 
 =for html
 </div>
@@ -159,6 +160,16 @@ storage. A separate record is kept for each type of RPC (FetchFile,
 GetStatus, and so on) sent or received, aggregated over all connections to
 other machines. To display or otherwise access the records, use the Rx
 Monitoring API.
+
+=item B<-rxbind>
+
+Bind the Rx socket to the primary interface only. (If not specified, the Rx
+socket will listen on all interfaces.)
+
+=item B<-crossrealm>
+
+Enable cross-realm authentication. The use of this option is considered
+insecure, and thus strongly discouraged. See OPENAFS-SA-2003-001.
 
 =item B<-help>
 
