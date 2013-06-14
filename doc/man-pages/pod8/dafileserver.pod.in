@@ -63,6 +63,12 @@ be specified is 6 (64 hash buckets). In OpenAFS 1.5.77 and earlier, the
 maximum that can be specified is 14 (16384 buckets). After 1.5.77, the
 maximum that can be specified is 28 (268435456 buckets).
 
+=item B<-vlrudisable>
+
+This option completely disables the VLRU mechanism, which means volumes will
+never "soft detach". The use of this option is only intended for debugging use
+or if you find a serious bug in the VLRU mechanism you wish to work around.
+
 =item B<-vlruthresh <I<minutes>>
 
 The number of minutes of inactivity before a volume is eligible for soft

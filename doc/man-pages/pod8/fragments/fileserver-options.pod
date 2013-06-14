@@ -94,6 +94,25 @@ hold on a volume that the File Server is reattaching after the volume was
 offline (as a result of the B<vos restore> command, for example). Use of
 this flag is strongly discouraged.
 
+=item B<-nobusy>
+
+This option slightly changes the error codes reported to clients when an
+unattached volume is accessed by a client during fileserver startup.
+
+Normally, non-DAFS fileservers start accepting requests immediately on startup,
+but attachment of volumes can take a while. So if a client tries to access a
+volume that is not attached simply because the fileserver hasn't attached it
+yet, that client will get an error. With the B<-nobusy> option present, the
+fileserver will immediately respond with an error code that indicates the
+server is starting up. However, some older clients (before OpenAFS 1.0) don't
+understand this error code, and may not function optimally. So the default
+behavior, without the B<-nobusy> option, is to at first respond with a
+different error code that is understood by more clients, but is
+indistinguishable from other scenarios where the volume is busy and not
+attached for other reasons.
+
+There is usually no reason to use this option under normal operation.
+
 =item B<-implicit> <I<admin mode bits>>
 
 Defines the set of permissions granted by default to the
@@ -241,7 +260,7 @@ GetStatus, and so on) sent or received, aggregated over all connections to
 other machines. To display or otherwise access the records, use the Rx
 Monitoring API.
 
-=item B<-syslog [<loglevel>]
+=item B<-syslog> [<loglevel>]
 
 Use syslog instead of the normal logging location for the fileserver
 process.  If provided, log messages are at <loglevel> instead of the
