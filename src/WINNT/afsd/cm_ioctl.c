@@ -2063,6 +2063,13 @@ cm_IoctlCreateMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scac
 
     /* Extract the possibly partial cell name */
     mpp = cm_ParseIoctlStringAlloc(ioctlp, NULL);
+
+    len = cm_ClientStrLen(mpp);
+    if (len <= 1 || mpp[len-1] != L'.') {
+        code = CM_ERROR_INVAL;
+        goto done;
+    }
+
     cell = cm_ClientCharNext(mpp);
     if (cp = cm_ClientStrChr(cell, ':')) {
 
@@ -2080,7 +2087,8 @@ cm_IoctlCreateMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scac
             goto done;
         }
 
-        StringCbPrintfA(mpInfo, sizeof(mpInfo), "%c%s:%s.", (char) *mpp,
+        /* fsvolume includes the trailing dot */
+        StringCbPrintfA(mpInfo, sizeof(mpInfo), "%c%s:%s", (char) *mpp,
                         fullCell, fsvolume);
 
     } else {
@@ -2090,10 +2098,9 @@ cm_IoctlCreateMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scac
         cellp = cm_FindCellByID(dscp->fid.cell, CM_FLAG_NOPROBE);
     }
 
-    /* remove the trailing dot if it is present */
+    /* remove the trailing dot */
     len = strlen(fsvolume);
-    if (len > 1 && fsvolume[len-1] == '.')
-        fsvolume[len-1] = '\0';
+    fsvolume[len-1] = '\0';
 
     /* validate the target info */
     if (cm_VolNameIsID(fsvolume)) {
