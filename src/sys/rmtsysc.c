@@ -70,8 +70,8 @@ GetAfsServerAddr(char *syscall)
 	} else {
 	    char *pathname;
 
-	    asprintf(&pathname, "%s/%s", home_dir, ".AFSSERVER");
-	    if (pathname == NULL)
+	    len = asprintf(&pathname, "%s/%s", home_dir, ".AFSSERVER");
+	    if (len < 0 || pathname == NULL)
 		return 0;
 	    fp = fopen(pathname, "r");
 	    free(pathname);

@@ -362,12 +362,17 @@ main(int argc, char **argv)
     /* Now, try adding a configuration file into the mix */
     if (getenv("SOURCE") == NULL)
 	path = strdup("test1.conf");
-    else
-	asprintf(&path, "%s/cmd/test1.conf", getenv("SOURCE"));
-
-    cmd_SetCommandName("test");
-    code = cmd_OpenConfigFile(path);
-    is_int(0, code, "cmd_OpenConfigFile succeeds");
+    else {
+	if (asprintf(&path, "%s/cmd/test1.conf", getenv("SOURCE")) < 0)
+	    path = NULL;
+    }
+    if (path != NULL) {
+	cmd_SetCommandName("test");
+	code = cmd_OpenConfigFile(path);
+	is_int(0, code, "cmd_OpenConfigFile succeeds");
+    } else {
+	skip("no memory to build config file path");
+    }
 
     code = cmd_ParseLine("-first 1", tv, &tc, 100);
     is_int(0, code, "cmd_ParseLine succeeds");

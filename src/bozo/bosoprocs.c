@@ -427,9 +427,14 @@ SBOZO_GetCellHost(struct rx_call *acall, afs_uint32 awhich, char **aname)
 
     tp = tcell.hostName[awhich];
     if (clones[awhich]) {
-	asprintf(aname, "[%s]", tp);
+	if (asprintf(aname, "[%s]", tp) < 0)
+	    *aname = NULL;
     } else
 	*aname = strdup(tp);
+    if (*aname == NULL) {
+	code = BZIO;
+	goto fail;
+    }
     goto done;
 
   fail:

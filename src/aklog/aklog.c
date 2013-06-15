@@ -881,7 +881,12 @@ rxkad_get_token(krb5_context context, struct afsconf_cell *cell, char *realm,
 	username = NULL;
 	*foreign = 0;
     } else {
-	asprintf(authuser, "%s@%s", username, realmUsed);
+	if (asprintf(authuser, "%s@%s", username, realmUsed) < 0) {
+	    fprintf(stderr, "%s: Out of memory building PTS name\n", progname);
+	    *authuser = NULL;
+	    status = AKLOG_MISC;
+	    goto out;
+	}
 	*foreign = 1;
     }
 
@@ -1492,20 +1497,25 @@ main(int argc, char *argv[])
 	filepath = getenv("KRB5_CONFIG");
 
 	/* only fiddle with KRB5_CONFIG if krb5-weak.conf actually exists */
-	asprintf(&newpath, "%s/krb5-weak.conf", AFSDIR_CLIENT_ETC_DIRPATH);
-	if (access(newpath, R_OK) == 0) {
+	if (asprintf(&newpath, "%s/krb5-weak.conf",
+		     AFSDIR_CLIENT_ETC_DIRPATH) < 0)
+	    newpath = NULL;
+	if (newpath != NULL && access(newpath, R_OK) == 0) {
 	    free(newpath);
 	    newpath = NULL;
-	    asprintf(&newpath, "%s:%s/krb5-weak.conf",
-	             filepath ? filepath : defaultpath,
-	             AFSDIR_CLIENT_ETC_DIRPATH);
-	    setenv("KRB5_CONFIG", newpath, 1);
+	    if (asprintf(&newpath, "%s:%s/krb5-weak.conf",
+			 filepath ? filepath : defaultpath,
+			 AFSDIR_CLIENT_ETC_DIRPATH) < 0)
+		newpath = NULL;
+	    else
+		setenv("KRB5_CONFIG", newpath, 1);
 	}
 #endif
 	krb5_init_context(&context);
 
 #if defined(KRB5_PROG_ETYPE_NOSUPP) && !(defined(HAVE_KRB5_ENCTYPE_ENABLE) || defined(HAVE_KRB5_ALLOW_WEAK_CRYPTO))
-	free(newpath);
+	if (newpath)
+	    free(newpath);
 	if (filepath)
 	    setenv("KRB5_CONFIG", filepath, 1);
 	else

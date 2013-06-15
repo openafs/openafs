@@ -98,7 +98,8 @@ afs_plugin_init(int tokenExpiration, char *weblogPath, char *error_fname,
 		module_name);
 	exit(-1);
     }
-    asprintf(&afs_weblog_pidfile, "%s.afs", httpd_pid_fname);
+    if (asprintf(&afs_weblog_pidfile, "%s.afs", httpd_pid_fname) < 0)
+	afs_weblog_pidfile == NULL;
     if (afs_weblog_pidfile == NULL) {
 	fprintf(stderr,
 		"%s: malloc failed - out of memory while allocating space for afs_weblog_pidfile\n",

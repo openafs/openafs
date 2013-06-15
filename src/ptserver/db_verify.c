@@ -958,7 +958,8 @@ QuoteName(char *s)
 {
     char *qs;
     if (strpbrk(s, " \t")) {
-	asprintf(&qs, "\"%s\"", s);
+	if (asprintf(&qs, "\"%s\"", s) < 0)
+	    qs = "<<-OUT-OF-MEMORY->>";
     } else
 	qs = s;
     return qs;

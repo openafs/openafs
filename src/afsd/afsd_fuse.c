@@ -77,7 +77,8 @@ afs_path(const char *apath)
     static const char prefix[] = "/afs/";
     char *path;
 
-    asprintf(&path, "%s%s", prefix, apath);
+    if (asprintf(&path, "%s%s", prefix, apath) < 0)
+	path = NULL;
 
     return path;
 }
@@ -100,6 +101,9 @@ fuafsd_getattr(const char *apath, struct stat *stbuf)
 	int code;
 	char *path = afs_path(apath);
 
+	if (path == NULL)
+	    return -ENOMEM;
+
 	code = uafs_lstat(path, stbuf);
 
 	free(path);
@@ -115,6 +119,9 @@ fuafsd_opendir(const char *apath, struct fuse_file_info * fi)
 {
 	usr_DIR * dirp;
 	char *path = afs_path(apath);
+
+	if (path == NULL)
+	    return -ENOMEM;
 
 	dirp = uafs_opendir(path);
 
@@ -161,6 +168,9 @@ fuafsd_create(const char *apath, mode_t mode, struct fuse_file_info * fi)
 	int fd;
 	char *path = afs_path(apath);
 
+	if (path == NULL)
+	    return -ENOMEM;
+
 	fd = uafs_open(path, fi->flags, mode);
 
 	free(path);
@@ -202,6 +212,9 @@ fuafsd_readlink(const char *apath, char * buf, size_t len)
 	int code;
 	char *path = afs_path(apath);
 
+	if (path == NULL)
+	    return -ENOMEM;
+
 	code = uafs_readlink(path, buf, len);
 
 	free(path);
@@ -221,6 +234,9 @@ fuafsd_mkdir(const char *apath, mode_t mode)
 	int code;
 	char *path = afs_path(apath);
 
+	if (path == NULL)
+	    return -ENOMEM;
+
 	code = uafs_mkdir(path, mode);
 
 	free(path);
@@ -236,6 +252,9 @@ fuafsd_unlink(const char *apath)
 {
 	int code;
 	char *path = afs_path(apath);
+
+	if (path == NULL)
+	    return -ENOMEM;
 
 	code = uafs_unlink(path);
 
@@ -253,6 +272,9 @@ fuafsd_rmdir(const char *apath)
 	int code;
 	char *path = afs_path(apath);
 
+	if (path == NULL)
+	    return -ENOMEM;
+
 	code = uafs_rmdir(path);
 
 	free(path);
@@ -269,6 +291,12 @@ fuafsd_symlink(const char *atarget, const char *asource)
 	int code;
 	char *target = afs_path(atarget);
 	char *source = afs_path(asource);
+
+	if (target == NULL || source == NULL) {
+	    if (target) free(target);
+	    if (source) free(source);
+	    return -ENOMEM;
+	}
 
 	code = uafs_symlink(target, source);
 
@@ -288,6 +316,12 @@ fuafsd_rename(const char *aold, const char *anew)
 	char *old = afs_path(aold);
 	char *new = afs_path(anew);
 
+	if (old == NULL || new == NULL) {
+	    if (old) free(old);
+	    if (new) free(new);
+	    return -ENOMEM;
+	}
+
 	code = uafs_rename(old, new);
 
 	free(old);
@@ -306,6 +340,12 @@ fuafsd_link(const char *aexisting, const char *anew)
 	char *existing = afs_path(aexisting);
 	char *new = afs_path(anew);
 
+	if (existing == NULL || new == NULL) {
+	    if (existing) free(existing);
+	    if (new) free(new);
+	    return -ENOMEM;
+	}
+
 	code = uafs_link(existing, new);
 
 	free(existing);
@@ -323,6 +363,9 @@ fuafsd_chmod(const char *apath, mode_t mode)
 	int code;
 	char *path = afs_path(apath);
 
+	if (path == NULL)
+	    return -ENOMEM;
+
 	code = uafs_chmod(path, mode);
 
 	free(path);
@@ -338,6 +381,9 @@ fuafsd_truncate(const char *apath, off_t length)
 {
 	int code;
 	char *path = afs_path(apath);
+
+	if (path == NULL)
+	    return -ENOMEM;
 
 	code = uafs_truncate(path, length);
 

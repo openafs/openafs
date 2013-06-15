@@ -322,13 +322,13 @@ truncateDatabase(void)
 {
     char *path;
     afs_int32 code = 0;
-    int fd;
+    int fd,r;
 
-    asprintf(&path, "%s%s%s",
-	     globalConfPtr->databaseDirectory,
-	     globalConfPtr->databaseName,
-	     globalConfPtr->databaseExtension);
-    if (path == NULL)
+    r = asprintf(&path, "%s%s%s",
+		 globalConfPtr->databaseDirectory,
+		 globalConfPtr->databaseName,
+		 globalConfPtr->databaseExtension);
+    if (r < 0 || path == NULL)
 	ERROR(-1);
 
     fd = open(path, O_RDWR, 0755);
@@ -362,6 +362,7 @@ main(int argc, char **argv)
     time_t currentTime;
     afs_int32 code = 0;
     afs_uint32 host = ntohl(INADDR_ANY);
+    int r;
 
     char  clones[MAXHOSTSPERCELL];
 
@@ -495,9 +496,9 @@ main(int argc, char **argv)
 
     LogError(0, "Will allocate %d ubik buffers\n", ubik_nBuffers);
 
-    asprintf(&dbNamePtr, "%s%s", globalConfPtr->databaseDirectory,
-	     globalConfPtr->databaseName);
-    if (dbNamePtr == 0)
+    r = asprintf(&dbNamePtr, "%s%s", globalConfPtr->databaseDirectory,
+		 globalConfPtr->databaseName);
+    if (r < 0 || dbNamePtr == 0)
 	ERROR(-1);
 
     rx_SetRxDeadTime(60);	/* 60 seconds inactive before timeout */

@@ -126,8 +126,10 @@ SaveCore(struct bnode *abnode, struct bnode_proc
                 continue;
             pid = atol(file->d_name + 5);
             if (pid == aproc->pid) {
-                asprintf(&corefile, "%s/%s", coredir, file->d_name);
-                if (corefile == NULL) {
+                int r;
+
+                r = asprintf(&corefile, "%s/%s", coredir, file->d_name);
+                if (r < 0 || corefile == NULL) {
                     closedir(logdir);
                     return;
                 }

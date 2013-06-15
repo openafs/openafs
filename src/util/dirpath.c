@@ -649,7 +649,8 @@ ConstructLocalPath(const char *cpath, const char *relativeTo,
     if (*cpath == '/') {
 	newPath = strdup(cpath);
     } else {
-	asprintf(&newPath, "%s/%s", relativeTo, cpath);
+	if (asprintf(&newPath, "%s/%s", relativeTo, cpath) < 0)
+	    newPath = NULL;
     }
     if (newPath == NULL)
 	status = ENOMEM;

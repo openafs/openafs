@@ -327,13 +327,17 @@ _afsconf_CellServDBPath(struct afsconf_dir *adir, char **path)
     /* NT client CellServDB has different file name than NT server or Unix */
     if (_afsconf_IsClientConfigDirectory(adir->name)) {
 	if (!afssw_GetClientCellServDBDir(&p)) {
-	    asprintf(path, "%s/%s", p, AFSDIR_CELLSERVDB_FILE_NTCLIENT);
+	    if (asprintf(path, "%s/%s", p, AFSDIR_CELLSERVDB_FILE_NTCLIENT) < 0)
+		*path = NULL;
 	    free(p);
 	} else {
-	    asprintf(path, "%s/%s", adir->name, AFSDIR_CELLSERVDB_FILE_NTCLIENT);
+	    if (asprintf(path, "%s/%s", adir->name,
+			 AFSDIR_CELLSERVDB_FILE_NTCLIENT) < 0)
+		*path = NULL;
 	}
     } else {
-	asprintf(path, "%s/%s", adir->name, AFSDIR_CELLSERVDB_FILE);
+	if (asprintf(path, "%s/%s", adir->name, AFSDIR_CELLSERVDB_FILE) < 0)
+	    *path = NULL;
     }
     return;
 }
@@ -341,7 +345,8 @@ _afsconf_CellServDBPath(struct afsconf_dir *adir, char **path)
 static void
 _afsconf_CellServDBPath(struct afsconf_dir *adir, char **path)
 {
-    asprintf(path, "%s/%s", adir->name, AFSDIR_CELLSERVDB_FILE);
+    if (asprintf(path, "%s/%s", adir->name, AFSDIR_CELLSERVDB_FILE) < 0)
+	*path = NULL;
 }
 #endif /* AFS_NT40_ENV */
 
@@ -449,6 +454,7 @@ afsconf_Open(const char *adir)
 	    char *home_dir;
 	    afsconf_FILE *fp;
 	    size_t len;
+	    int r;
 
 	    if (!(home_dir = getenv("HOME"))) {
 		/* Our last chance is the "/.AFSCONF" file */
@@ -461,8 +467,8 @@ afsconf_Open(const char *adir)
 	    } else {
 		char *pathname = NULL;
 
-		asprintf(&pathname, "%s/%s", home_dir, ".AFSCONF");
-		if (pathname == NULL)
+		r = asprintf(&pathname, "%s/%s", home_dir, ".AFSCONF");
+		if (r < 0 || pathname == NULL)
 		    goto fail;
 
 		fp = fopen(pathname, "r");
@@ -965,6 +971,7 @@ afsconf_LookupServer(const char *service, const char *protocol,
 		     int *numServers, int *ttl, char **arealCellName)
 {
     int code = 0;
+    int r;
     int len;
     unsigned char answer[4096];
     unsigned char *p;
@@ -1002,25 +1009,26 @@ afsconf_LookupServer(const char *service, const char *protocol,
 #endif
 
  retryafsdb:
+    r = -1;
     switch (pass) {
     case 0:
 	dnstype = T_SRV;
-	asprintf(&dotcellname, "_%s._%s.%s.", IANAname, protocol, cellName);
+	r = asprintf(&dotcellname, "_%s._%s.%s.", IANAname, protocol, cellName);
 	break;
     case 1:
 	dnstype = T_AFSDB;
-	asprintf(&dotcellname, "%s.", cellName);
+	r = asprintf(&dotcellname, "%s.", cellName);
 	break;
     case 2:
 	dnstype = T_SRV;
-	asprintf(&dotcellname, "_%s._%s.%s", IANAname, protocol, cellName);
+	r = asprintf(&dotcellname, "_%s._%s.%s", IANAname, protocol, cellName);
 	break;
     case 3:
 	dnstype = T_AFSDB;
-	asprintf(&dotcellname, "%s", cellName);
+	r = asprintf(&dotcellname, "%s", cellName);
 	break;
     }
-    if (dotcellname == NULL)
+    if (r < 0 || dotcellname == NULL)
 	goto findservererror;
 
     LOCK_GLOBAL_MUTEX;

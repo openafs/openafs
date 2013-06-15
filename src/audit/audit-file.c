@@ -38,7 +38,7 @@ append_msg(const char *format, ...)
 static int
 open_file(const char *fileName)
 {
-    int tempfd, flags;
+    int tempfd, flags, r;
     char *oldName;
 
 #ifndef AFS_NT40_ENV
@@ -50,8 +50,8 @@ open_file(const char *fileName)
     } else
 #endif
     {
-	asprintf(&oldName, "%s.old", fileName);
-	if (oldName == NULL) {
+	r = asprintf(&oldName, "%s.old", fileName);
+	if (r < 0 || oldName == NULL) {
 	    printf("Warning: Unable to create backup filename. Auditing ignored\n");
 	    return 1;
 	}

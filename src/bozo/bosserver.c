@@ -645,15 +645,16 @@ static char *
 make_pid_filename(char *ainst, char *aname)
 {
     char *buffer = NULL;
+    int r;
 
     if (aname && *aname) {
-	asprintf(&buffer, "%s/%s.%s.pid", DoPidFiles, ainst, aname);
-	if (buffer == NULL)
+	r = asprintf(&buffer, "%s/%s.%s.pid", DoPidFiles, ainst, aname);
+	if (r < 0 || buffer == NULL)
 	    bozo_Log("Failed to alloc pid filename buffer for %s.%s.\n",
 		     ainst, aname);
     } else {
-	asprintf(&buffer, "%s/%s.pid", DoPidFiles, ainst);
-	if (buffer == NULL)
+	r = asprintf(&buffer, "%s/%s.pid", DoPidFiles, ainst);
+	if (r < 0 || buffer == NULL)
 	    bozo_Log("Failed to alloc pid filename buffer for %s.\n", ainst);
     }
 

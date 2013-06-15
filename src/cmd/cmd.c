@@ -171,11 +171,12 @@ ParmHelpString(struct cmd_parmdesc *aparm)
     if (aparm->type == CMD_FLAG) {
 	return strdup("");
     } else {
-	asprintf(&str, " %s<%s>%s%s",
-	         aparm->type == CMD_SINGLE_OR_FLAG?"[":"",
-		 aparm->help?aparm->help:"arg",
-		 aparm->type == CMD_LIST?"+":"",
-		 aparm->type == CMD_SINGLE_OR_FLAG?"]":"");
+	if (asprintf(&str, " %s<%s>%s%s",
+		     aparm->type == CMD_SINGLE_OR_FLAG?"[":"",
+		     aparm->help?aparm->help:"arg",
+		     aparm->type == CMD_LIST?"+":"",
+		     aparm->type == CMD_SINGLE_OR_FLAG?"]":"") < 0)
+	    return "<< OUT OF MEMORY >>";
 	return str;
     }
 }
@@ -201,17 +202,13 @@ PrintSyntax(struct cmd_syndesc *as)
 
     /* now print usage, from syntax table */
     if (noOpcodes)
-	asprintf(&str, "Usage: %s", as->a0name);
+	len = printf("Usage: %s", as->a0name);
     else {
 	if (!strcmp(as->name, initcmd_opcode))
-	    asprintf(&str, "Usage: %s[%s]", NName(as->a0name, " "), as->name);
+	    len = printf("Usage: %s[%s]", NName(as->a0name, " "), as->name);
 	else
-	    asprintf(&str, "Usage: %s%s", NName(as->a0name, " "), as->name);
+	    len = printf("Usage: %s%s", NName(as->a0name, " "), as->name);
     }
-
-    len = strlen(str);
-    printf("%s", str);
-    free(str);
 
     for (i = 0; i < CMD_MAXPARMS; i++) {
 	tp = &as->parms[i];
@@ -1272,7 +1269,8 @@ _get_file_string(struct cmd_syndesc *syn, int pos, const char **str)
 
     /* First, try the command_subcommand form */
     if (syn->name != NULL && commandName != NULL) {
-	asprintf(&section, "%s_%s", commandName, syn->name);
+	if (asprintf(&section, "%s_%s", commandName, syn->name) < 0)
+	    return ENOMEM;
 	*str = cmd_RawConfigGetString(globalConfig, NULL, section,
 				      optionName, NULL);
 	free(section);

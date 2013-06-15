@@ -70,7 +70,10 @@ TestListAddrs(struct ubik_client *client, char *dirname)
 	if (build == NULL)
 	    build = "..";
 
-	asprintf(&binPath, "%s/../src/volser/vos", build);
+	if (asprintf(&binPath, "%s/../src/volser/vos", build) < 0) {
+	    fprintf(stderr, "Out of memory building vos arguments\n");
+	    exit(1);
+	}
 	execl(binPath, "vos",
 	      "listaddrs", "-config", dirname, "-noauth", NULL);
 	exit(1);

@@ -84,8 +84,8 @@ krb_write_ticket_file(char *realm)
     if ((tf_name = (char *)getenv("KRBTKFILE")))
 	fd = open(tf_name, O_WRONLY | O_CREAT | O_TRUNC, 0700);
     else {
-	asprintf(&tf_name, "%s/tkt%d", gettmpdir(), getuid());
-	if (tf_name == NULL)
+	count = asprintf(&tf_name, "%s/tkt%d", gettmpdir(), getuid());
+	if (count < 0 || tf_name == NULL)
 	    return ENOMEM;
 	fd = open(tf_name, O_WRONLY | O_CREAT | O_TRUNC, 0700);
 	free(tf_name);
