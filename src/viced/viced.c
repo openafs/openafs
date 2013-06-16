@@ -2102,7 +2102,8 @@ main(int argc, char *argv[])
 	plock(PROCLOCK);
 #else
 #ifndef AFS_NT40_ENV
-    nice(-5);			/* TODO: */
+    if (nice(-5) < 0)
+	; /* don't care */
 #endif
 #endif
     osi_Assert(DInit(buffs) == 0);

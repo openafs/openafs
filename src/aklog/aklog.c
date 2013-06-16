@@ -1104,8 +1104,11 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 	 * this routine, it will not add the token. It is not clear what
 	 * is going on here! So we will do the following operation.
 	 * On AIX 5, it causes the parent program to die, so we won't.
+	 * We don't care about the return value, but need to collect it
+	 * to avoid compiler warnings.
 	 */
-	write(2,"",0); /* dummy write */
+	if (write(2,"",0) < 0) /* dummy write */
+	    ; /* don't care */
 #endif
 	status = set_kernel_token(&cellconf, username, token, afssetpag);
 	if (status) {

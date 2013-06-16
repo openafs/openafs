@@ -56,9 +56,13 @@ struct rx_trace {
 void
 rxi_flushtrace(void)
 {
-    if (rxi_logfd >= 0)
-	write(rxi_logfd, rxi_tracebuf, rxi_tracepos);
+    afs_uint32 len = rxi_tracepos;
+
     rxi_tracepos = 0;
+    if (rxi_logfd < 0)
+	return;
+    if (write(rxi_logfd, rxi_tracebuf, len) < 0)
+	; /* don't care */
 }
 
 void
