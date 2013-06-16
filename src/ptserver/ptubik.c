@@ -31,6 +31,7 @@ ubik_BeginTrans(struct ubik_dbase *dbase, afs_int32 transMode,
 {
     static int init = 0;
     struct ubik_hdr thdr;
+    ssize_t count;
 
     if (!init) {
 	memset(&thdr, 0, sizeof(thdr));
@@ -38,9 +39,15 @@ ubik_BeginTrans(struct ubik_dbase *dbase, afs_int32 transMode,
 	thdr.version.counter = htonl(0);
 	thdr.magic = htonl(UBIK_MAGIC);
 	thdr.size = htons(HDRSIZE);
-	lseek(dbase_fd, 0, 0);
-	write(dbase_fd, &thdr, sizeof(thdr));
-	fsync(dbase_fd);
+	if (lseek(dbase_fd, 0, 0) == (off_t)-1)
+	    return errno;
+	count = write(dbase_fd, &thdr, sizeof(thdr));
+	if (count < 0)
+	    return errno;
+	else if (count != sizeof(thdr))
+	    return UIOERROR;
+	if (fsync(dbase_fd))
+	    return errno;
 	init = 1;
     }
     return (0);

@@ -253,32 +253,46 @@ CreateDirs(const char *coredir)
 	(!strncmp
 	 (AFSDIR_USR_DIRPATH, AFSDIR_SERVER_BIN_DIRPATH,
 	  strlen(AFSDIR_USR_DIRPATH)))) {
-	MakeDir(AFSDIR_USR_DIRPATH);
+	if (MakeDir(AFSDIR_USR_DIRPATH))
+	    return errno;
     }
     if (!strncmp
 	(AFSDIR_SERVER_AFS_DIRPATH, AFSDIR_SERVER_BIN_DIRPATH,
 	 strlen(AFSDIR_SERVER_AFS_DIRPATH))) {
-	MakeDir(AFSDIR_SERVER_AFS_DIRPATH);
+	if (MakeDir(AFSDIR_SERVER_AFS_DIRPATH))
+	    return errno;
     }
-    MakeDir(AFSDIR_SERVER_BIN_DIRPATH);
-    MakeDir(AFSDIR_SERVER_ETC_DIRPATH);
-    MakeDir(AFSDIR_SERVER_LOCAL_DIRPATH);
-    MakeDir(AFSDIR_SERVER_DB_DIRPATH);
-    MakeDir(AFSDIR_SERVER_LOGS_DIRPATH);
+    if (MakeDir(AFSDIR_SERVER_BIN_DIRPATH))
+	return errno;
+    if (MakeDir(AFSDIR_SERVER_ETC_DIRPATH))
+	return errno;
+    if (MakeDir(AFSDIR_SERVER_LOCAL_DIRPATH))
+	return errno;
+    if (MakeDir(AFSDIR_SERVER_DB_DIRPATH))
+	return errno;
+    if (MakeDir(AFSDIR_SERVER_LOGS_DIRPATH))
+	return errno;
 #ifndef AFS_NT40_ENV
     if (!strncmp
 	(AFSDIR_CLIENT_VICE_DIRPATH, AFSDIR_CLIENT_ETC_DIRPATH,
 	 strlen(AFSDIR_CLIENT_VICE_DIRPATH))) {
-	MakeDir(AFSDIR_CLIENT_VICE_DIRPATH);
+	if (MakeDir(AFSDIR_CLIENT_VICE_DIRPATH))
+	    return errno;
     }
-    MakeDir(AFSDIR_CLIENT_ETC_DIRPATH);
+    if (MakeDir(AFSDIR_CLIENT_ETC_DIRPATH))
+	return errno;
 
-    symlink(AFSDIR_SERVER_THISCELL_FILEPATH, AFSDIR_CLIENT_THISCELL_FILEPATH);
-    symlink(AFSDIR_SERVER_CELLSERVDB_FILEPATH,
-	    AFSDIR_CLIENT_CELLSERVDB_FILEPATH);
+    if (symlink(AFSDIR_SERVER_THISCELL_FILEPATH,
+	    AFSDIR_CLIENT_THISCELL_FILEPATH))
+	return errno;
+    if (symlink(AFSDIR_SERVER_CELLSERVDB_FILEPATH,
+	    AFSDIR_CLIENT_CELLSERVDB_FILEPATH))
+	return errno;
 #endif /* AFS_NT40_ENV */
-    if (coredir)
-	MakeDir(coredir);
+    if (coredir) {
+	if (MakeDir(coredir))
+	    return errno;
+    }
     return 0;
 }
 
@@ -975,21 +989,32 @@ main(int argc, char **argv, char **envp)
      */
 
 #ifndef AFS_NT40_ENV
-    if (!nofork)
-	daemon(1, 0);
+    if (!nofork) {
+	if (daemon(1, 0))
+	    printf("bosserver: warning - daemon() returned code %d\n", errno);
+    }
 #endif /* ! AFS_NT40_ENV */
 
     /* create useful dirs */
-    CreateDirs(DoCore);
+    i = CreateDirs(DoCore);
+    if (i) {
+	printf("bosserver: could not set up directories, code %d\n", i);
+	exit(1);
+    }
 
     /* Write current state of directory permissions to log file */
     DirAccessOK();
 
     /* chdir to AFS log directory */
     if (DoCore)
-	chdir(DoCore);
+	i = chdir(DoCore);
     else
-	chdir(AFSDIR_SERVER_LOGS_DIRPATH);
+	i = chdir(AFSDIR_SERVER_LOGS_DIRPATH);
+    if (i) {
+	printf("bosserver: could not change to %s, code %d\n",
+	       DoCore ? DoCore : AFSDIR_SERVER_LOGS_DIRPATH, errno);
+	exit(1);
+    }
 
     /* try to read the key from the config file */
     tdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);

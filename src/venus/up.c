@@ -184,8 +184,10 @@ MakeParent(char *file, afs_int32 owner)
 	    fflush(stdout);
 	}
 
-	mkdir(parent, 0777);
-	chown(parent, owner, -1);
+	if (mkdir(parent, 0777))
+	    return (0);
+	if (chown(parent, owner, -1))
+	    return (0);
     }
     return (1);
 }				/*MakeParent */

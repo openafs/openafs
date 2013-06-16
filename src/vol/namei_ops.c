@@ -326,7 +326,7 @@ int
 namei_ViceREADME(char *partition)
 {
     char filename[32];
-    int fd;
+    int fd, len, e = 0;
 
     /* Create the inode directory if we're starting for the first time */
     snprintf(filename, sizeof filename, "%s" OS_DIRSEP "%s", partition,
@@ -338,8 +338,12 @@ namei_ViceREADME(char *partition)
              partition, INODEDIR);
     fd = OS_OPEN(filename, O_WRONLY | O_CREAT | O_TRUNC, 0444);
     if (fd != INVALID_FD) {
-	(void)OS_WRITE(fd, VICE_README, strlen(VICE_README));
+	len = strlen(VICE_README);
+	if (OS_WRITE(fd, VICE_README, len) != len)
+	    e = errno;
 	OS_CLOSE(fd);
+	if (e)
+	    errno = e;
     }
     return (errno);
 }
@@ -1568,7 +1572,10 @@ namei_GetLinkCount(FdHandle_t * h, Inode ino, int lockit, int fixup, int nowrite
 	    NAMEI_GLC_UNLOCK;
 	    goto bad_getLinkByte;
 	}
-        FDH_TRUNC(h, offset+sizeof(row));
+        if (FDH_TRUNC(h, offset+sizeof(row))) {
+	    NAMEI_GLC_UNLOCK;
+	    goto bad_getLinkByte;
+	}
         row = 1 << index;
 	rc = FDH_PWRITE(h, (char *)&row, sizeof(row), offset);
 	NAMEI_GLC_UNLOCK;
@@ -3165,7 +3172,11 @@ namei_ConvertROtoRWvolume(char *pname, VolumeId volumeId)
 #ifdef AFS_NT40_ENV
     MoveFileEx(n.n_path, newpath, MOVEFILE_WRITE_THROUGH);
 #else
-    link(newpath, n.n_path);
+    if (link(newpath, n.n_path)) {
+	Log("1 namei_ConvertROtoRWvolume: could not move SmallIndex file: %s\n", n.n_path);
+	code = -1;
+	goto done;
+    }
     OS_UNLINK(newpath);
 #endif
 
@@ -3184,7 +3195,11 @@ namei_ConvertROtoRWvolume(char *pname, VolumeId volumeId)
 #ifdef AFS_NT40_ENV
     MoveFileEx(n.n_path, newpath, MOVEFILE_WRITE_THROUGH);
 #else
-    link(newpath, n.n_path);
+    if (link(newpath, n.n_path)) {
+	Log("1 namei_ConvertROtoRWvolume: could not move LargeIndex file: %s\n", n.n_path);
+	code = -1;
+	goto done;
+    }
     OS_UNLINK(newpath);
 #endif
 

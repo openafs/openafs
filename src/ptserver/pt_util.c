@@ -394,7 +394,11 @@ static int
 display_entry(int offset)
 {
     lseek(dbase_fd, offset + HDRSIZE, L_SET);
-    read(dbase_fd, &pre, sizeof(struct prentry));
+    if (read(dbase_fd, &pre, sizeof(struct prentry)) < 0) {
+	fprintf(stderr, "pt_util: error reading entry %d: %s\n",
+		offset, strerror(errno));
+	exit(1);
+    }
 
     fix_pre(&pre);
 
@@ -493,7 +497,11 @@ display_group(int id)
 	offset = pre.next;
 	while (offset) {
 	    lseek(dbase_fd, offset + HDRSIZE, L_SET);
-	    read(dbase_fd, &prco, sizeof(struct contentry));
+	    if (read(dbase_fd, &prco, sizeof(struct contentry)) < 0) {
+		fprintf(stderr, "pt_util: read i/o error: %s\n",
+			strerror(errno));
+		exit(1);
+	    }
 	    prco.next = ntohl(prco.next);
 	    for (i = 0; i < COSIZE; i++) {
 		prco.entries[i] = ntohl(prco.entries[i]);
