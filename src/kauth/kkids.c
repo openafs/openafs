@@ -396,8 +396,10 @@ init_child(char *myname)
      * reads from the latter, the child reads from the former, and
      * writes to the latter.
      */
-    pipe(pipe1);
-    pipe(pipe2);
+    if (pipe(pipe1) || pipe(pipe2)) {
+	using_child = 0;
+	return 0;
+    }
 
     /* fork a child */
     pid = fork();
@@ -438,7 +440,8 @@ password_bad(char *pw)
     if (using_child) {
 	fprintf(childin, "%s\n", pw);
 	fflush(childin);
-	fscanf(childout, "%d", &rc);
+	if (fscanf(childout, "%d", &rc) < 1)
+	    rc = -1;
     }
 
     return (rc);

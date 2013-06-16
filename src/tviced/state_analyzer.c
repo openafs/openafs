@@ -368,7 +368,8 @@ prompt(void)
 		fprintf(stderr, "prompt state broken; aborting\n");
 		return;
 	    }
-	    fgets(input, 256, stdin);
+	    if (fgets(input, 256, stdin) == NULL)
+		return;
 
 	    if (!strcmp(input, "")) {
 		/* repeat last command */

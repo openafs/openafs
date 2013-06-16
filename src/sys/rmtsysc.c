@@ -74,7 +74,7 @@ GetAfsServerAddr(char *syscall)
     if (!(afs_server = getenv("AFSSERVER"))) {
 	char *home_dir;
 	FILE *fp;
-	int len;
+	int len = 0;
 
 	if (!(home_dir = getenv("HOME"))) {
 	    /* Our last chance is the "/.AFSSERVER" file */
@@ -82,8 +82,6 @@ GetAfsServerAddr(char *syscall)
 	    if (fp == 0) {
 		return 0;
 	    }
-	    fgets(server_name, 128, fp);
-	    fclose(fp);
 	} else {
 	    char *pathname;
 
@@ -100,10 +98,10 @@ GetAfsServerAddr(char *syscall)
 		    return 0;
 		}
 	    }
-	    fgets(server_name, 128, fp);
-	    fclose(fp);
 	}
-	len = strlen(server_name);
+	if (fgets(server_name, 128, fp) != NULL)
+	    len = strlen(server_name);
+	fclose(fp);
 	if (len == 0) {
 	    return 0;
 	}

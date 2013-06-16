@@ -660,6 +660,7 @@ ReadVNode(afs_int32 count)
 		int fid;
 		int lfile;
 		afs_sfsize_t size, s;
+		ssize_t count;
 
 		/* Check if its vnode-file-link exists. If not,
 		 * then the file will be an orphaned file.
@@ -683,14 +684,14 @@ ReadVNode(afs_int32 count)
 
 		/* Write the file out */
 		fid = open(filename, (O_CREAT | O_WRONLY | O_TRUNC), mode);
+		if (fid < 0) {
+		    fprintf(stderr, "Open %s: Errno = %d\n", filename, errno);
+		    goto open_fail;
+		}
 		size = vn.dataSize;
 		while (size > 0) {
 		    s = (afs_int32) ((size > BUFSIZE) ? BUFSIZE : size);
 		    code = fread(buf, 1, s, dumpfile);
-		    if (code > 0) {
-			(void)write(fid, buf, code);
-			size -= code;
-		    }
 		    if (code != s) {
 			if (code < 0)
 			    fprintf(stderr, "Code = %d; Errno = %d\n", code,
@@ -706,6 +707,20 @@ ReadVNode(afs_int32 count)
 			}
 			break;
 		    }
+		    if (code > 0) {
+			count = write(fid, buf, code);
+			if (count < 0) {
+			    fprintf(stderr, "Count = %ld, Errno = %d\n",
+				    (long)count, errno);
+			    break;
+			} else if (count != code) {
+			    fprintf(stderr, "Wrote %llu bytes out of %llu\n",
+				    (afs_uintmax_t) count,
+				    (afs_uintmax_t) code);
+			    break;
+			}
+			size -= code;
+		    }
 		}
 		close(fid);
 		if (size != 0) {
@@ -713,6 +728,7 @@ ReadVNode(afs_int32 count)
 			    filename, fname);
 		}
 
+open_fail:
 		/* Remove the link to the file */
 		if (lfile) {
 		    unlink(filename);

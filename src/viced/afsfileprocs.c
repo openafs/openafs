@@ -7686,13 +7686,17 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	     (afs_uintmax_t) Pos, (afs_uintmax_t) DataLength,
 	     (afs_uintmax_t) FileLength, (afs_uintmax_t) Length));
 
-    /* truncate the file iff it needs it (ftruncate is slow even when its a noop) */
-    if (FileLength < DataLength)
-	FDH_TRUNC(fdP, FileLength);
     bytesTransfered = 0;
 #ifndef HAVE_PIOV
     tbuffer = AllocSendBuffer();
 #endif /* HAVE_PIOV */
+    /* truncate the file iff it needs it (ftruncate is slow even when its a noop) */
+    if (FileLength < DataLength) {
+	errorCode = FDH_TRUNC(fdP, FileLength);
+	if (errorCode)
+	    goto done;
+    }
+
     /* if length == 0, the loop below isn't going to do anything, including
      * extend the length of the inode, which it must do, since the file system
      * assumes that the inode length == vnode's file length.  So, we extend

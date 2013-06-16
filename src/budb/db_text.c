@@ -466,23 +466,29 @@ saveTextToFile(struct ubik_trans *ut, struct textBlock *tbPtr)
     afs_int32 blockAddr;
     struct block block;
     char filename[128];
-    afs_int32 size, chunkSize;
+    afs_int32 size, totalSize, chunkSize;
     int fid;
 
     sprintf(filename, "%s/%s", gettmpdir(), "dbg_XXXXXX");
 
     fid = mkstemp(filename);
-    size = ntohl(tbPtr->size);
+    totalSize = size = ntohl(tbPtr->size);
     blockAddr = ntohl(tbPtr->textAddr);
     while (size) {
 	chunkSize = MIN(BLOCK_DATA_SIZE, size);
 	dbread(ut, blockAddr, (char *)&block, sizeof(block));
-	write(fid, &block.a[0], chunkSize);
+	if (write(fid, &block.a[0], chunkSize) < 0)
+	    break;
 	blockAddr = ntohl(block.h.next);
 	size -= chunkSize;
     }
     close(fid);
-    printf("wrote debug file %s\n", filename);
+    if (size) {
+	printf("Wrote partial debug file (%ld bytes out of %ld)\n",
+	       (long)(totalSize - size), (long)totalSize);
+    } else {
+	printf("wrote debug file %s\n", filename);
+    }
 }
 
 
