@@ -204,8 +204,13 @@ ForkIoctl(usd_handle_t fd, int op, int count)
 	/* do the ioctl call */
 	ioctl_rc = USD_IOCTL(fd, USD_IOCTL_TAPEOPERATION, (void *)&tapeop);
 
-	/* send the return code back to the parent */
-	write(pipefd[1], &ioctl_rc, sizeof(int));
+	/*
+	 * Send the return code back to the parent.
+	 * If this fails, there's nothing we can do, but we must test
+	 * it in order to avoid complier warnings on some platforms.
+	 */
+	if (write(pipefd[1], &ioctl_rc, sizeof(int)) < 0)
+	    ; /* don't care */
 
 	exit(0);
     } else {			/* parent process */
@@ -327,8 +332,13 @@ ForkOpen(char *device)
 	    USD_CLOSE(fd);
 	}
 
-	/* send the return code back to the parent */
-	write(pipefd[1], &open_rc, sizeof(open_rc));
+	/*
+	 * Send the return code back to the parent.
+	 * If this fails, there's nothing we can do, but we must test
+	 * it in order to avoid complier warnings on some platforms.
+	 */
+	if (write(pipefd[1], &open_rc, sizeof(open_rc)) < 0)
+	    ; /* don't care */
 
 	exit(0);
     } else {			/* parent process */
@@ -452,15 +462,26 @@ ForkClose(usd_handle_t fd)
 	    }
 	}
 
-	/* the parent writes the control pipe after it closes the device */
-	read(ctlpipe[0], &close_rc, sizeof(int));
+	/*
+	 * The parent writes the control pipe after it closes the device.
+	 * We don't actually care about the read; we're just using it to
+	 * block until the parent is ready.  But we must do something
+	 * with the result, to avoid complier warnings on some platforms.
+	 */
+	if (read(ctlpipe[0], &close_rc, sizeof(int)) < 0)
+	    ; /* don't care */
 	close(ctlpipe[0]);
 
 	/* do the close */
 	close_rc = USD_CLOSE(fd);
 
-	/* send the return code back to the parent */
-	write(pipefd[1], &close_rc, sizeof(int));
+	/*
+	 * Send the return code back to the parent.
+	 * If this fails, there's nothing we can do, but we must test
+	 * it in order to avoid complier warnings on some platforms.
+	 */
+	if (write(pipefd[1], &close_rc, sizeof(int)) < 0)
+	    ; /* don't care */
 
 	exit(0);
     } else {			/* parent process */
