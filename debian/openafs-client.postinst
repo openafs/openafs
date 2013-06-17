@@ -2,96 +2,102 @@
 
 set -e
 
-if [ "$1" = configure ] || [ "$1" = reconfigure ] ; then
-    update-alternatives --install /usr/bin/pagsh pagsh \
-        /usr/bin/pagsh.openafs 100  \
-        --slave /usr/share/man/man1/pagsh.1.gz pagsh.1.gz \
-        /usr/share/man/man1/pagsh.openafs.1.gz
-    update-alternatives --install /usr/bin/klog klog \
-        /usr/bin/klog.afs 10 \
-        --slave /usr/share/man/man1/klog.1.gz klog.1.gz \
-        /usr/share/man/man1/klog.afs.1.gz
+# Load debconf.
+. /usr/share/debconf/confmodule
+db_version 2.0
 
-    test -d /afs || mkdir /afs
+# Create the standard AFS mount point if it doesn't exist.
+test -d /afs || mkdir /afs
 
-    . /usr/share/debconf/confmodule
-    db_version 2.0
+# Configure alternatives for pagsh and klog.
+update-alternatives --install /usr/bin/pagsh pagsh \
+    /usr/bin/pagsh.openafs 100  \
+    --slave /usr/share/man/man1/pagsh.1.gz pagsh.1.gz \
+    /usr/share/man/man1/pagsh.openafs.1.gz
+update-alternatives --install /usr/bin/klog klog \
+    /usr/bin/klog.afs 10 \
+    --slave /usr/share/man/man1/klog.1.gz klog.1.gz \
+    /usr/share/man/man1/klog.afs.1.gz
 
-    db_get openafs-client/thiscell
-    THISCELL="$RET"
-    if [ -n "$THISCELL" ] ; then
-        echo "$THISCELL" > /etc/openafs/ThisCell
-    fi
+# Set the local cell.  If ThisCell already exists, the config script will have
+# set the debconf database parameter accordingly.
+db_get openafs-client/thiscell
+THISCELL="$RET"
+if [ -n "$THISCELL" ] ; then
+    echo "$THISCELL" > /etc/openafs/ThisCell
+fi
 
+# On initial installation, or when afsdb is not configured, ensure that we
+# have a CellServDB file.
+db_get openafs-client/afsdb
+afsdb="$RET"
+if [ "$afsdb" = 'false' ] || { [ "$1" = 'configure' ] && [ -z "$2" ] ; } ; then
     if [ ! -f /etc/openafs/CellServDB ] ; then
         cp /usr/share/openafs/CellServDB /etc/openafs
     fi
+fi
 
-    # If ThisCell is not in CellServDB, we have to prompt the user for the
-    # VLDB servers.  Unfortunately, we can't do this in config because we
-    # need the CellServDB file, which is part of the package.
-    #
-    # If the user is using afsdb for cell location, don't worry about
-    # prompting them for cells for their local system.
-    db_get openafs-client/afsdb
-    afsdb="$RET"
-    if grep -q -F "$THISCELL" /etc/openafs/CellServDB \
-           && [ "x$THISCELL" != "x" ] ; then
-        :
-    elif [ x"$afsdb" != xtrue ] ; then
-        db_input critical openafs-client/cell-info || true
-        db_input high openafs-client/run-client || true
-        db_go
-        db_get openafs-client/cell-info
-        if [ "x$RET" != "x" ] ; then
-            echo ">$THISCELL" > /etc/openafs/CellServDB.new
-            perl -MSocket -e 'foreach (@ARGV) {' \
-                -e '@a=gethostbyname($_) and ' \
-                -e 'printf("%s\t\t# %s\n",inet_ntoa($a[4]),$a[0]) }' $RET \
-                    >>/etc/openafs/CellServDB.new
-            if [ `wc -l </etc/openafs/CellServDB.new` -eq 1 ] ; then
-                echo None of the hostnames resolved to an address 2>&1
-                db_reset openafs-client/cell-info || true
-                rm /etc/openafs/CellServDB.new
-            else
-                cat /etc/openafs/CellServDB.new /etc/openafs/CellServDB \
-                    > /etc/openafs/CellServDB.tmp
-                mv /etc/openafs/CellServDB.tmp /etc/openafs/CellServDB
-                rm /etc/openafs/CellServDB.new
-            fi
+# If ThisCell is not in CellServDB and the user is not using afsdb, we want to
+# prompt the user for the VLDB servers.  Unfortunately, we can't do this in
+# config because we need the CellServDB file, which is part of the package.
+havecell=
+if [ -n "$THISCELL" ] && grep -qF "$THISCELL" /etc/openafs/CellServDB ; then
+    havecell=true
+fi
+if [ "$afsdb" = 'false' ] && [ -z "$havecell" ] ; then
+    db_input critical openafs-client/cell-info || true
+    db_input high openafs-client/run-client || true
+    db_go
+    db_get openafs-client/cell-info
+    if [ "x$RET" != "x" ] ; then
+        echo ">$THISCELL" > /etc/openafs/CellServDB.new
+        perl -MSocket -e 'foreach (@ARGV) {' \
+            -e '@a=gethostbyname($_) and ' \
+            -e 'printf("%s\t\t# %s\n",inet_ntoa($a[4]),$a[0]) }' $RET \
+                >>/etc/openafs/CellServDB.new
+        if [ `wc -l </etc/openafs/CellServDB.new` -eq 1 ] ; then
+            echo 'None of the hostnames resolved to an address' 2>&1
+            db_reset openafs-client/cell-info || true
+            rm /etc/openafs/CellServDB.new
+        else
+            cat /etc/openafs/CellServDB.new /etc/openafs/CellServDB \
+                > /etc/openafs/CellServDB.tmp
+            mv /etc/openafs/CellServDB.tmp /etc/openafs/CellServDB
+            rm /etc/openafs/CellServDB.new
         fi
     fi
+fi
                     
-    # Our config script will have already taken care of extracting the cache
-    # size from the cacheinfo file and using it as the default for the debconf
-    # prompt, but the mount point and cache directory have no debconf prompts.
-    # For those, we need to get the default from the file.
-    mountpoint=/afs
-    cachedir=/var/cache/openafs
-    if [ -r /etc/openafs/cacheinfo ] ; then
-        IFS=: read mountpoint cachedir cachesize < /etc/openafs/cacheinfo
-    fi
-    db_get openafs-client/cachesize
-    echo "${mountpoint}:${cachedir}:${RET}" > /etc/openafs/cacheinfo
+# Our config script will have already taken care of extracting the cache size
+# from the cacheinfo file and using it as the default for the debconf prompt,
+# but the mount point and cache directory have no debconf prompts.  For those,
+# we need to get the default from the file.
+mountpoint=/afs
+cachedir=/var/cache/openafs
+if [ -r /etc/openafs/cacheinfo ] ; then
+    IFS=: read mountpoint cachedir cachesize < /etc/openafs/cacheinfo
+fi
+db_get openafs-client/cachesize
+echo "${mountpoint}:${cachedir}:${RET}" > /etc/openafs/cacheinfo
 
-    echo <<'EOF' > /etc/openafs/afs.conf.client
+# Create the /etc/openafs/afs.conf.client configuration file, which stores
+# most of the debconf results.
+echo <<'EOF' > /etc/openafs/afs.conf.client
 # This file is managed by debconf.  You may change the parameters set below,
 # but any additional lines or comments will be lost when the package is
 # upgraded or reconfigured.  Local modifications other than setting the
 # following parameters should be made in /etc/openafs/afs.conf instead.
 
 EOF
-
-    db_get openafs-client/run-client
-    echo AFS_CLIENT="$RET" > /etc/openafs/afs.conf.client
-    echo AFS_AFSDB="$afsdb" >> /etc/openafs/afs.conf.client
-    db_get openafs-client/crypt
-    echo AFS_CRYPT="$RET" >> /etc/openafs/afs.conf.client
-    db_get openafs-client/dynroot
-    echo AFS_DYNROOT="$RET" >> /etc/openafs/afs.conf.client
-    db_get openafs-client/fakestat
-    echo AFS_FAKESTAT="$RET" >> /etc/openafs/afs.conf.client
-fi
+db_get openafs-client/run-client
+echo AFS_CLIENT="$RET" > /etc/openafs/afs.conf.client
+echo AFS_AFSDB="$afsdb" >> /etc/openafs/afs.conf.client
+db_get openafs-client/crypt
+echo AFS_CRYPT="$RET" >> /etc/openafs/afs.conf.client
+db_get openafs-client/dynroot
+echo AFS_DYNROOT="$RET" >> /etc/openafs/afs.conf.client
+db_get openafs-client/fakestat
+echo AFS_FAKESTAT="$RET" >> /etc/openafs/afs.conf.client
 
 #DEBHELPER#
 

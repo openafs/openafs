@@ -27,6 +27,11 @@ openafs (1.6.3-1) UNRELEASED; urgency=low
     will still have to be installed for the openafs-fileserver init
     script, which uses the bos binary, so will still be pulled in by
     dependencies.)
+  * Cleanup of the openafs-client postinst script.
+    - Perform all work unconditionally to handle various rare error
+      recovery cases properly.
+    - Only force creation of CellServDB on initial installation or if
+      AFSDB/SRV records are not being used.
 
  -- Russ Allbery <rra@debian.org>  Mon, 17 Jun 2013 10:50:14 -0700
 
