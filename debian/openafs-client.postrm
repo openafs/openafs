@@ -2,20 +2,13 @@
 
 set -e
 
-case "$1" in
-purge)
+# Remove configuration files and the /afs mount point that are created by the
+# normal postinst action.
+if [ "$1" = 'purge' ] ; then
     rmdir /afs 2>/dev/null || true
     for file in cacheinfo CellServDB ThisCell afs.conf.client ; do
         rm -f "/etc/openafs/$file"
     done
-    ;;
-
-remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
-    ;;
-
-*)
-    echo "postrm called with unknown argument $1" >&2
-    exit 0
-esac
+fi
 
 #DEBHELPER#

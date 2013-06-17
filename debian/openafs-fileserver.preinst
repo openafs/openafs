@@ -6,6 +6,9 @@ set -e
 # openafs-client.  This was changed in 1.4.12+dfsg-1, but the symlink was
 # never removed, and dpkg won't remove symlinks to a directory.  Belatedly
 # clean up so that we don't overwrite doc files in openafs-client.
+#
+# This cleanup was added in 1.6.2~pre2-1 and can be removed after the jessie
+# release.
 test ! -L /usr/share/doc/openafs-fileserver \
     || rm /usr/share/doc/openafs-fileserver
 

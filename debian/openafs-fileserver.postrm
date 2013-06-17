@@ -1,7 +1,8 @@
-#! /bin/sh
-# postrm script for openafs-fileserver
-#
-# Purges various extra configuration files and data files created by the
+#!/bin/sh
+
+set -e
+
+# Purge various extra configuration files and data files created by the
 # package.  Whether to purge KeyFile is a bit iffy since the user created it
 # with asetkey or with bos addkey, but it always exists for any running server
 # and we shouldn't be losing any critical data.
@@ -9,11 +10,7 @@
 # We intentionally don't remove NetInfo and NetRestrict in
 # /var/lib/openafs/local since those are created separately by the user and
 # may contain information not stored elsewhere.
-
-set -e
-
-case "$1" in
-purge)
+if [ "$1" = 'purge' ] ; then
     for file in CellServDB CellServDB.old KeyFile ThisCell UserList ; do
         rm -f "/etc/openafs/server/$file"
     done
@@ -25,14 +22,6 @@ purge)
         rm -f "/var/log/openafs/$file"
         rm -f "/var/log/openafs/$file.old"
     done
-    ;;
-
-remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
-    ;;
-
-*)
-    echo "postrm called with unknown argument \`$1'" >&2
-    exit 0
-esac
+fi
 
 #DEBHELPER#
