@@ -1,4 +1,4 @@
-openafs (1.6.3-1) UNRELEASED; urgency=low
+openafs (1.6.3-1) unstable; urgency=low
 
   * New upstream release.
     - Support for Linux 3.9 and 3.10.  (Closes: #711920)
@@ -36,7 +36,7 @@ openafs (1.6.3-1) UNRELEASED; urgency=low
     versions (1.4.4.dfsg1-4 and 1.4.11+dfsg-3).
   * General coding style cleanup of maintainer scripts.
 
- -- Russ Allbery <rra@debian.org>  Mon, 17 Jun 2013 10:50:14 -0700
+ -- Russ Allbery <rra@debian.org>  Mon, 17 Jun 2013 14:53:41 -0700
 
 openafs (1.6.2.1-2) unstable; urgency=low
 
