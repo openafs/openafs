@@ -64,7 +64,7 @@ Description: AFS distributed filesystem old password changing
 
 Package: openafs-fileserver
 Architecture: alpha amd64 arm armel armhf i386 ia64 powerpc powerpcspe ppc64 s390 s390x sparc
-Depends: ${shlibs:Depends}, ${misc:Depends}, openafs-client, lsb-base
+Depends: ${shlibs:Depends}, ${misc:Depends}, lsb-base, openafs-client
 Recommends: ntp | time-daemon
 Suggests: openafs-doc
 Description: AFS distributed filesystem file server
@@ -78,7 +78,8 @@ Description: AFS distributed filesystem file server
 Package: openafs-dbserver
 Architecture: alpha amd64 arm armel armhf i386 ia64 powerpc powerpcspe ppc64 s390 s390x sparc
 Depends: ${shlibs:Depends}, ${perl:Depends}, ${misc:Depends},
- openafs-fileserver, openafs-client (= ${binary:Version})
+ openafs-fileserver
+Recommends: openafs-client
 Suggests: openafs-doc
 Description: AFS distributed filesystem database server
  AFS is a distributed filesystem allowing cross-platform sharing of

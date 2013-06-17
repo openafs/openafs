@@ -1,0 +1,15 @@
+#!/bin/sh
+
+set -e
+
+# In version 1.6.3-1, we switched from symlinking the doc directory to
+# openafs-client to having our own doc directory so that we could weaken the
+# versioned dependency.  dpkg doesn't remove symlinks on upgrade, so we need
+# to remove the symlink in preinst to avoid overwriting the old files.
+if [ "$1" = 'upgrade' ] && dpkg --compare-versions "$2" lt 1.6.3 ; then
+    if [ -L '/usr/share/doc/openafs-dbserver' ] ; then
+        rm /usr/share/doc/openafs-dbserver
+    fi
+fi
+
+#DEBHELPER#

@@ -48,8 +48,7 @@ HTML_XSL   = /usr/share/xml/docbook/stylesheet/nwalsh/html/chunk.xsl
 # /usr/share/doc/openafs-client.  Any package on this list must depend on
 # openafs-client.  This variable is used as options to dh_installdocs with
 # the --link-doc option.
-DOC_PACKAGES = -plibpam-openafs-kaserver -popenafs-dbserver -popenafs-fuse \
-	-popenafs-kpasswd
+DOC_PACKAGES = -plibpam-openafs-kaserver -popenafs-fuse -popenafs-kpasswd
 
 # These are files that we know we don't want to install.  List them so that we
 # can use dh_install --fail-missing and catch anything new that shows up.
