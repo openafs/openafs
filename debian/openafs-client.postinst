@@ -41,8 +41,10 @@ fi
 # prompt the user for the VLDB servers.  Unfortunately, we can't do this in
 # config because we need the CellServDB file, which is part of the package.
 havecell=
-if [ -n "$THISCELL" ] && grep -qF "$THISCELL" /etc/openafs/CellServDB ; then
-    havecell=true
+if [ -n "$THISCELL" ] ; then
+    if grep -qF "$THISCELL" /etc/openafs/CellServDB 2>/dev/null ; then
+        havecell=true
+    fi
 fi
 if [ "$afsdb" = 'false' ] && [ -z "$havecell" ] ; then
     db_input critical openafs-client/cell-info || true
