@@ -1,3 +1,29 @@
+openafs (1.6.3-1) UNRELEASED; urgency=low
+
+  * New upstream release.
+    - Support for Linux 3.9 and 3.10.  (Closes: #711920)
+    - Multiple fixes for use after free, use of uninitialized memory,
+      and similar C memory management bugs found via code analysis.
+    - Obey jumbo/nojumbo settings for Ubik (database) servers.
+    - General improvements in diagnostic and log messages.
+    - Avoid incorrectly sending small amounts of data over the wire
+      unencrypted in some situations and report the correct error message
+      in this case.
+    - Avoid generating duplicate IDs for readonly and backup volumes.
+    - Return quota and free space information without an access check.
+    - Improve client bookkeeping in the file server, fixing several
+      potential corruption and segfault issues.
+    - Avoid known cases of silent data corruption in background syncs in
+      the file server.
+    - Run-time configuration support for fileserver synchronization.
+    - Fix transient network error interference with establishing a ubik
+      quorum.
+    - Do not discard the persistent client disk cache on restart.
+    - Fix bugs that made it impossible to unmount a disk cache file system
+      after it had been used by the client.
+
+ -- Russ Allbery <rra@debian.org>  Mon, 17 Jun 2013 10:50:14 -0700
+
 openafs (1.6.2.1-2) unstable; urgency=low
 
   * Upload to unstable.
