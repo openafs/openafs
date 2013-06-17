@@ -25,14 +25,6 @@ purge)
         rm -f "/var/log/openafs/$file"
         rm -f "/var/log/openafs/$file.old"
     done
-
-    # Clean up after files left behind from older versions of the package.
-    if [ -d /etc/openafs/server-local ] ; then
-        for file in SALVAGE.fs fssync.sock salvage.lock sysid sysid.old ; do
-            rm -f "/etc/openafs/server-local/$file"
-        done
-        rmdir --ignore-fail-on-non-empty /etc/openafs/server-local
-    fi
     ;;
 
 remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
