@@ -6,10 +6,9 @@ set -e
 # openafs-client to having our own doc directory so that we could weaken the
 # versioned dependency.  dpkg doesn't remove symlinks on upgrade, so we need
 # to remove the symlink in preinst to avoid overwriting the old files.
-if [ "$1" = 'upgrade' ] && dpkg --compare-versions "$2" lt 1.6.3 ; then
-    if [ -L '/usr/share/doc/openafs-dbserver' ] ; then
-        rm /usr/share/doc/openafs-dbserver
-    fi
-fi
+#
+# This cleanup can be removed after the jessie release.
+test ! -L /usr/share/doc/openafs-dbserver \
+    || rm /usr/share/doc/openafs-dbserver
 
 #DEBHELPER#
