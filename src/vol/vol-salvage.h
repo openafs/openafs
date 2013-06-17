@@ -223,7 +223,6 @@ extern void ObtainSalvageLock(void);
 extern void ObtainSharedSalvageLock(void);
 extern void PrintInodeList(struct SalvInfo *salvinfo);
 extern void PrintInodeSummary(struct SalvInfo *salvinfo);
-extern void PrintVolumeSummary(struct SalvInfo *salvinfo);
 extern int QuickCheck(struct SalvInfo *salvinfo, struct InodeSummary *isp,
                       int nVols);
 extern void RemoveTheForce(char *path);

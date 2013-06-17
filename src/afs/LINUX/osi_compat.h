@@ -473,10 +473,11 @@ afs_dentry_open(struct dentry *dp, struct vfsmount *mnt, int flags, const struct
     struct file *filp;
     path.mnt = mnt;
     path.dentry = dp;
+    /* note that dentry_open will path_get for us */
     filp = dentry_open(&path, flags, creds);
     return filp;
 #else
-    return dentry_open(dp, mntget(mnt), flags, creds);
+    return dentry_open(dget(dp), mntget(mnt), flags, creds);
 #endif
 }
 #endif
@@ -549,6 +550,19 @@ afs_truncate(struct inode *inode, int len)
         truncate_setsize(inode, len);
 #endif
     return code;
+}
+
+static inline struct proc_dir_entry *
+afs_proc_create(char *name, umode_t mode, struct proc_dir_entry *parent, struct file_operations *fops) {
+#if defined(HAVE_LINUX_PROC_CREATE)
+    return proc_create(name, mode, parent, fops);
+#else
+    struct proc_dir_entry *entry;
+    entry = create_proc_entry(name, mode, parent);
+    if (entry)
+	entry->proc_fops = fops;
+    return entry;
+#endif
 }
 
 #endif /* AFS_LINUX_OSI_COMPAT_H */

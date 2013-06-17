@@ -244,7 +244,7 @@ handleit(struct cmd_syndesc *as, void *arock)
     }
     if ((ti = as->parms[12].items))	/* -showlog */
 	ShowLog = 1;
-    if ((ti = as->parms[13].items)) {	/* -log */
+    if ((ti = as->parms[13].items)) {	/* -showsuid */
 	Testing = 1;
 	ShowSuid = 1;
 	Showmode = 1;

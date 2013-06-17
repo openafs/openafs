@@ -1486,12 +1486,11 @@ inccount(struct idused **idmapp, int id)
 	idmapp = &idmap->idnext;
     }
     if (!idmap) {
-	idmap = (struct idused *)malloc(sizeof *idmap);
+	idmap = calloc(1, sizeof *idmap);
 	if (!idmap) {
 	    perror("idmap");
 	    exit(1);
 	}
-	memset(idmap, 0, sizeof idmap);
 	idmap->idstart = id & ~(IDCOUNT - 1);
 	idmap->idnext = *idmapp;
 	*idmapp = idmap;

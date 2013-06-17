@@ -29,11 +29,12 @@
 #include <linux/ioctl32.h>
 #endif
 
-#include <linux/proc_fs.h>
 #include <linux/slab.h>
 #include <linux/init.h>
 #include <linux/sched.h>
 #include <linux/kernel.h>
+
+#include "osi_compat.h"
 
 extern struct proc_dir_entry *openafs_procfs;
 #if defined(NEED_IOCTL32) && !defined(HAVE_COMPAT_IOCTL)
@@ -107,10 +108,10 @@ osi_ioctl_init(void)
 {
     struct proc_dir_entry *entry;
 
-    entry = create_proc_entry(PROC_SYSCALL_NAME, 0666, openafs_procfs);
-    entry->proc_fops = &afs_syscall_fops;
+    entry = afs_proc_create(PROC_SYSCALL_NAME, 0666, openafs_procfs, &afs_syscall_fops);
 #if defined(STRUCT_PROC_DIR_ENTRY_HAS_OWNER)
-    entry->owner = THIS_MODULE;
+    if (entry)
+	entry->owner = THIS_MODULE;
 #endif
 
 #if defined(NEED_IOCTL32) && !defined(HAVE_COMPAT_IOCTL)

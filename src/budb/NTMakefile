@@ -113,14 +113,13 @@ $(INCFILEDIR)\budb.h: budb.h
 
 ############################################################################
 # compile_et on budb_errs.et
-$(INCFILEDIR)\budb_errs.h : budb_errs.et
-	$(COMPILE_ET) budb_errs -h budb_errs
+
+$(INCFILEDIR)\budb_errs.h: budb_errs.c
 	$(COPY) budb_errs.h $(INCFILEDIR)\budb_errs.h
 
-budb_errs.c $(INCFILEDIR)\budb_client.h: budb_errs.et budb_client.p.h
-	$(DEL) budb_client.h budb_errs.c
-	$(COMPILE_ET) budb_errs -h budb_client
-	$(COPY) budb_client.h $(INCFILEDIR)\budb_client.h
+budb_errs.c: budb_errs.et
+	$(DEL) budb_errs.c
+	$(COMPILE_ET) budb_errs
 
 ############################################################################
 # install 
@@ -133,7 +132,7 @@ install: $(INCFILES) $(LIBFILE) $(EXEFILE)
 
 clean::
         $(DEL) $(INCFILES)
-	$(DEL) budb_errs.c budb_errs.h budb.h budb_client.h	
+	$(DEL) budb_errs.c budb_errs.h budb.h
 	$(DEL) budb.cs.c budb.ss.c budb.xdr.c
 
 mkdir:

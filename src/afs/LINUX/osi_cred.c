@@ -117,7 +117,7 @@ crset(cred_t * cr)
     new_creds = prepare_creds();
     /* Drop the reference to group_info - we'll overwrite it in afs_copy_creds */
     put_group_info(new_creds->group_info);
-    afs_copy_creds(new_creds, current_cred());
+    afs_copy_creds(new_creds, cr);
 
     commit_creds(new_creds);
 #else

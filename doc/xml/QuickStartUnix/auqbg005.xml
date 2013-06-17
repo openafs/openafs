@@ -502,7 +502,7 @@
             examples. Once you have unpacked the distribution, 
             change directory as indicated.
 <programlisting>
-   # <emphasis role="bold">cd /tmp/afsdist/rs_aix42/root.client/usr/vice/etc</emphasis>
+   # <emphasis role="bold">cd /tmp/afsdist/rs_aix42/dest/root.client/usr/vice/etc</emphasis>
 </programlisting></para>
           </listitem>
 
@@ -679,7 +679,7 @@
 <programlisting>
    # <emphasis role="bold">cd /sbin/helpers</emphasis>
    # <emphasis role="bold">mv v3fshelper v3fshelper.noafs</emphasis>
-   # <emphasis role="bold">cp -p /tmp/afsdist/rs_aix42/root.server/etc/v3fshelper v3fshelper</emphasis>
+   # <emphasis role="bold">cp -p /tmp/afsdist/rs_aix42/dest/root.server/etc/v3fshelper v3fshelper</emphasis>
 </programlisting></para>
           </listitem>
 
@@ -812,7 +812,7 @@
             examples. Once you have unpacked the distribution, change directory 
             as indicated.
             <programlisting>
-   # <emphasis role="bold">cd /tmp/afsdist/hp_ux110/root.client</emphasis>
+   # <emphasis role="bold">cd /tmp/afsdist/hp_ux110/dest/root.client</emphasis>
 </programlisting></para>
           </listitem>
 
@@ -1053,7 +1053,7 @@
             <para>Copy the AFS-modified version of the <emphasis role="bold">fsck</emphasis> program (the <emphasis
             role="bold">vfsck</emphasis> binary) and related files from the distribution directory to the new AFS-specific command
             directory. <programlisting>
-   # <emphasis role="bold">cp -p /tmp/afsdist/hp_ux110/root.server/etc/*  .</emphasis>
+   # <emphasis role="bold">cp -p /tmp/afsdist/hp_ux110/dest/root.server/etc/*  .</emphasis>
 </programlisting></para>
           </listitem>
 
@@ -1253,7 +1253,7 @@
           examples. Once you have unpacked the distribution, change directory
           as indicated.
 <programlisting>
-   # <emphasis role="bold">cd  /tmp/afsdist/sgi_65/root.client</emphasis>
+   # <emphasis role="bold">cd  /tmp/afsdist/sgi_65/dest/root.client</emphasis>
 </programlisting></para>
         </listitem>
 
@@ -1817,7 +1817,7 @@
             examples. Once you have unpacked the distribution,
             change directory as indicated.
 <programlisting>
-  # <emphasis role="bold">cd /tmp/afsdist/linux/root.client/usr/vice/etc</emphasis>
+  # <emphasis role="bold">cd /tmp/afsdist/linux/dest/root.client/usr/vice/etc</emphasis>
 </programlisting></para>
           </listitem>
           
@@ -2125,7 +2125,7 @@ auth  required                pam_unix.so try_first_pass</literallayout>
             exmaples. Once you have unpacked the distribution, change directory
             as indicated. 
 <programlisting>
-   # <emphasis role="bold">cd  /tmp/afsdist/sun4x_56/root.client/usr/vice/etc</emphasis>
+   # <emphasis role="bold">cd  /tmp/afsdist/sun4x_56/dest/root.client/usr/vice/etc</emphasis>
 </programlisting></para>
           </listitem>
 
@@ -2140,6 +2140,18 @@ auth  required                pam_unix.so try_first_pass</literallayout>
           <listitem>
             <para>Copy the appropriate AFS kernel library file to the local file <emphasis
             role="bold">/kernel/fs/afs</emphasis>.</para>
+
+            <para>If the machine is running Solaris 11 on the x86_64 platform:</para>
+
+            <programlisting>
+   # <emphasis role="bold">cp -p modload/libafs64.o /kernel/drv/amd64/afs</emphasis>
+</programlisting>
+
+            <para>If the machine is running Solaris 10 on the x86_64 platform:</para>
+
+            <programlisting>
+   # <emphasis role="bold">cp -p modload/libafs64.o /kernel/fs/amd64/afs</emphasis>
+</programlisting>
 
             <para>If the machine is running Solaris 2.6 or the 32-bit version of Solaris 7, its kernel supports NFS server
             functionality, and the <emphasis role="bold">nfsd</emphasis> process is running:</para>
@@ -2244,7 +2256,7 @@ auth  required                pam_unix.so try_first_pass</literallayout>
           <listitem>
             <para>Copy the <emphasis role="bold">vfsck</emphasis> binary to the newly created directory, changing the name as you do
             so. <programlisting>
-   # <emphasis role="bold">cp  /tmp/afsdist/sun4x_56/root.server/etc/vfsck  fsck</emphasis>
+   # <emphasis role="bold">cp  /tmp/afsdist/sun4x_56/dest/root.server/etc/vfsck  fsck</emphasis>
 </programlisting></para>
           </listitem>
 

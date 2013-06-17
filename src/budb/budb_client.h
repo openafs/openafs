@@ -17,6 +17,7 @@
 #include <afs/budb.h>
 #endif
 
+#include <afs/budb_errs.h>
 
 /* for ubik_Call_SingleServer */
 

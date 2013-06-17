@@ -2184,7 +2184,9 @@ h_GetHost_r(struct rx_connection *tcon)
 		    /* the new host is held and locked */
 		} else {
 		    /* This really is a new host */
-		    h_AddHostToUuidHashTable_r(&identP->uuid, host);
+		    osi_Assert(interfValid == 1);
+		    initInterfaceAddr_r(host, &interf);
+
 		    cb_conn = host->callback_rxcon;
 		    rx_GetConnection(cb_conn);
 		    H_UNLOCK;
@@ -2199,8 +2201,6 @@ h_GetHost_r(struct rx_connection *tcon)
 				("InitCallBackState3 success on host %" AFS_PTR_FMT " (%s:%d)\n",
 				 host, afs_inet_ntoa_r(host->host, hoststr),
 				 ntohs(host->port)));
-			osi_Assert(interfValid == 1);
-			initInterfaceAddr_r(host, &interf);
 		    }
 		}
 	    }
@@ -2462,8 +2462,10 @@ h_FindClient_r(struct rx_connection *tcon)
 		     tname, tinst, tcell, expTime, kvno));
 	    strncpy(uname, tname, sizeof(uname));
 	    if (ilen) {
-		if (strlen(uname) + 1 + ilen >= sizeof(uname))
+		if (strlen(uname) + 1 + ilen >= sizeof(uname)) {
+		    code = -1;
 		    goto bad_name;
+		}
 		strcat(uname, ".");
 		strcat(uname, tinst);
 	    }
@@ -4121,7 +4123,7 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
 
     /*
      * Convert IP addresses to network byte order, and remove
-     * duplicate IP addresses from the interface list, and
+     * duplicate and loopback IP addresses from the interface list, and
      * determine whether or not the incoming addr/port is
      * listed.  Note that if the address matches it is not
      * truly a match because the port number for the entries
@@ -4129,6 +4131,9 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
      * for this connection might not be 7001.
      */
     for (i = 0, count = 0, found = 0; i < number; i++) {
+	if (rx_IsLoopbackAddr(interf->addr_in[i])) {
+	    continue;
+	}
 	interf->addr_in[i] = htonl(interf->addr_in[i]);
 	for (j = 0; j < count; j++) {
 	    if (interf->addr_in[j] == interf->addr_in[i])
@@ -4184,6 +4189,8 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
 
     osi_Assert(!host->interface);
     host->interface = interface;
+
+    h_AddHostToUuidHashTable_r(&interface->uuid, host);
 
     if (LogLevel >= 125) {
 	afsUUID_to_string(&interface->uuid, uuidstr, 127);

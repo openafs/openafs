@@ -6,3 +6,4 @@ B<volserver>
     [B<-nojumbo>] [B<-jumbo>] 
     [B<-enable_peer_stats>] [B<-enable_process_stats>] 
     [B<-allow-dotted-principals>] [B<-help>]
+    [B<-sync> <I<sync behavior>>]

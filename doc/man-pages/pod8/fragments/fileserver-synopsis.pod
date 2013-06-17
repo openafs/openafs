@@ -45,3 +45,4 @@ B<fileserver>
     S<<< [B<-vattachpar> <I<number of volume attach threads>>] >>>
     S<<< [B<-m> <I<min percentage spare in partition>>] >>>
     S<<< [B<-lock>] >>>
+    S<<< [B<-sync> <I<sync behavior>>] >>>

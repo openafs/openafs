@@ -759,6 +759,11 @@ case $AFS_SYSNAME in
     *_obsd46)   AFS_PARAM_COMMON=param.obsd46.h  ;;
     *_obsd47)   AFS_PARAM_COMMON=param.obsd47.h  ;;
     *_obsd48)   AFS_PARAM_COMMON=param.obsd48.h  ;;
+    *_obsd49)   AFS_PARAM_COMMON=param.obsd49.h  ;;
+    *_obsd50)   AFS_PARAM_COMMON=param.obsd50.h  ;;
+    *_obsd51)   AFS_PARAM_COMMON=param.obsd51.h  ;;
+    *_obsd52)   AFS_PARAM_COMMON=param.obsd52.h  ;;
+    *_obsd53)   AFS_PARAM_COMMON=param.obsd53.h  ;;
     *_linux22)  AFS_PARAM_COMMON=param.linux22.h ;;
     *_linux24)  AFS_PARAM_COMMON=param.linux24.h ;;
     *_linux26)  AFS_PARAM_COMMON=param.linux26.h ;;
@@ -915,6 +920,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 				     [#include <linux/fs.h>
 				      #include <linux/namei.h>],
 				     [path_lookup(NULL, 0, NULL);])
+		 AC_CHECK_LINUX_FUNC([proc_create],
+				     [#include <linux/proc_fs.h>],
+				     [proc_create(NULL, 0, NULL, NULL);])
 		 AC_CHECK_LINUX_FUNC([rcu_read_lock],
 				     [#include <linux/rcupdate.h>],
 				     [rcu_read_lock();])
@@ -945,6 +953,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 				  [define to disable the nfs translator])])
 
 		 dnl Assorted more complex tests
+		 LINUX_AIO_NONVECTOR
 		 LINUX_EXPORTS_PROC_ROOT_FS
                  LINUX_KMEM_CACHE_INIT
 		 LINUX_HAVE_KMEM_CACHE_T
@@ -991,6 +1000,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_KMAP_ATOMIC_TAKES_NO_KM_TYPE
 		 LINUX_DENTRY_OPEN_TAKES_PATH
 		 LINUX_D_ALIAS_IS_HLIST
+		 LINUX_HLIST_ITERATOR_NO_NODE
 		 LINUX_IOP_I_CREATE_TAKES_BOOL
 		 LINUX_DOP_D_REVALIDATE_TAKES_UNSIGNED
 		 LINUX_IOP_LOOKUP_TAKES_UNSIGNED
@@ -1292,16 +1302,47 @@ dnl checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_HEADER_DIRENT
-AC_CHECK_HEADERS(stdlib.h string.h unistd.h fcntl.h sys/time.h sys/file.h grp.h)
-AC_CHECK_HEADERS(netinet/in.h netdb.h sys/fcntl.h sys/mnttab.h sys/mntent.h)
-AC_CHECK_HEADERS(mntent.h sys/vfs.h sys/param.h sys/fs_types.h sys/fstyp.h)
-AC_CHECK_HEADERS(sys/mount.h strings.h termios.h signal.h sys/pag.h)
-AC_CHECK_HEADERS(windows.h direct.h sys/ipc.h sys/resource.h)
-AC_CHECK_HEADERS(security/pam_modules.h ucontext.h regex.h sys/statvfs.h sys/statfs.h sys/bitypes.h)
+AC_CHECK_HEADERS([ \
+	curses.h \
+	direct.h \
+	et/com_err.h \
+	fcntl.h \
+	grp.h \
+	mntent.h \
+	ncurses.h \
+	ncurses/ncurses.h \
+	netinet/in.h \
+	netdb.h \
+	regex.h \
+	search.h \
+	security/pam_modules.h \
+	signal.h \
+	stdlib.h \
+	string.h \
+	strings.h \
+	sys/bitypes.h \
+	sys/fcntl.h \
+	sys/file.h \
+	sys/fs_types.h \
+	sys/fstyp.h \
+	sys/ipc.h \
+	sys/mntent.h \
+	sys/mnttab.h \
+	sys/mount.h \
+	sys/pag.h \
+	sys/param.h \
+	sys/resource.h \
+	sys/statfs.h \
+	sys/statvfs.h \
+	sys/time.h \
+	sys/vfs.h \
+	termios.h \
+	ucontext.h \
+	unistd.h \
+	windows.h \
+])
+
 AC_CHECK_HEADERS(linux/errqueue.h,,,[#include <linux/types.h>])
-AC_CHECK_HEADERS(et/com_err.h)
-AC_CHECK_HEADERS(ncurses.h ncurses/ncurses.h curses.h)
-AC_CHECK_HEADERS(search.h)
 
 AC_CHECK_TYPES([fsblkcnt_t],,,[
 #include <sys/types.h>
@@ -1354,12 +1395,41 @@ else
 fi
 AC_SUBST(BUILD_LOGIN)
 
-AC_CHECK_FUNCS(snprintf strlcat strlcpy flock getrlimit strnlen tsearch)
-AC_CHECK_FUNCS(setprogname getprogname sigaction mkstemp vsnprintf strerror strcasestr)
-AC_CHECK_FUNCS(setvbuf vsyslog getcwd)
-AC_CHECK_FUNCS(regcomp regexec regerror)
-AC_CHECK_FUNCS(fseeko64 ftello64 poll pread preadv pwrite pwritev preadv64 pwritev64)
-AC_CHECK_FUNCS([setenv unsetenv])
+AC_CHECK_FUNCS([ \
+	daemon \
+	flock \
+	fseeko64 \
+	ftello64 \
+	getcwd \
+	getprogname \
+	getrlimit \
+	mkstemp \
+	poll \
+	pread \
+	preadv \
+	preadv64 \
+	pwrite \
+	pwritev \
+	pwritev64 \
+	regcomp \
+	regerror \
+	regexec \
+	setenv \
+	setprogname \
+	setvbuf \
+	sigaction \
+	snprintf \
+	strcasestr \
+	strerror \
+	strlcat \
+	strlcpy \
+	strnlen \
+	timegm \
+	tsearch \
+	unsetenv \
+	vsnprintf \
+	vsyslog \
+])
 
 case $AFS_SYSNAME in
 *hp_ux* | *hpux*)
@@ -1419,8 +1489,6 @@ AC_SIZEOF_TYPE(long)
 
 AC_HEADER_PAM_CONST
 
-AC_CHECK_FUNCS(timegm)
-AC_CHECK_FUNCS(daemon)
 
 dnl Directory PATH handling
 if test "x$enable_transarc_paths" = "xyes"  ; then 

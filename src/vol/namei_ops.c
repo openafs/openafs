@@ -806,11 +806,11 @@ namei_icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint
     p++;
     for (tag = 0; tag < NAMEI_MAXVOLS; tag++) {
         *p = *int_to_base32(str1, tag);
-        fd = afs_open((char *)&name.n_path, O_CREAT | O_RDWR | O_TRUNC | O_EXCL, 0666);
+        fd = afs_open((char *)&name.n_path, O_CREAT | O_RDWR | O_EXCL, 0666);
         if (fd == INVALID_FD) {
             if (errno == ENOTDIR || errno == ENOENT) {
                 if (namei_CreateDataDirectories(&name, &created_dir) == 0)
-                    fd = afs_open((char *)&name.n_path, O_CREAT | O_RDWR | O_TRUNC | O_EXCL, 0666);
+                    fd = afs_open((char *)&name.n_path, O_CREAT | O_RDWR | O_EXCL, 0666);
             }
         }
 
@@ -942,12 +942,12 @@ namei_icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint
     }
 
     namei_HandleToName(&name, &tmp);
-    fd = afs_open(name.n_path, O_CREAT | O_EXCL | O_TRUNC | O_RDWR, 0);
+    fd = afs_open(name.n_path, O_CREAT | O_EXCL | O_RDWR, 0);
     if (fd < 0) {
 	if (errno == ENOTDIR || errno == ENOENT) {
 	    if (namei_CreateDataDirectories(&name, &created_dir) < 0)
 		goto bad;
-	    fd = afs_open(name.n_path, O_CREAT | O_EXCL | O_TRUNC | O_RDWR,
+	    fd = afs_open(name.n_path, O_CREAT | O_EXCL | O_RDWR,
 			  0);
 	    if (fd < 0)
 		goto bad;
@@ -1198,7 +1198,7 @@ namei_copy_on_write(IHandle_t *h)
 	if (!fdP)
 	    return EIO;
 	afs_snprintf(path, sizeof(path), "%s-tmp", name.n_path);
-	fd = afs_open(path, O_CREAT | O_EXCL | O_TRUNC | O_RDWR, 0);
+	fd = afs_open(path, O_CREAT | O_EXCL | O_RDWR, 0);
 	if (fd < 0) {
 	    FDH_CLOSE(fdP);
 	    return EIO;
@@ -2977,7 +2977,7 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     }
     t_ih.ih_ino = namei_MakeSpecIno(ih->ih_vid, VI_VOLINFO);
     namei_HandleToName(&n, &t_ih);
-    fd2 = afs_open(n.n_path, O_CREAT | O_EXCL | O_TRUNC | O_RDWR, 0);
+    fd2 = afs_open(n.n_path, O_CREAT | O_EXCL | O_RDWR, 0);
     if (fd2 == INVALID_FD) {
 	Log("1 namei_ConvertROtoRWvolume: could not create RW info file: %s\n", n.n_path);
 	OS_CLOSE(fd);

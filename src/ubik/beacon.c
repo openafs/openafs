@@ -428,6 +428,28 @@ ubeacon_Interact(void *dummy)
 		ts = servers[multi_i];
 		ts->lastBeaconSent = temp;
 		code = multi_error;
+
+		if (code > 0 && ((code < temp && code < temp - 3600) ||
+		                 (code > temp && code > temp + 3600))) {
+		    /* if we reached here, supposedly the remote host voted
+		     * for us based on a computation from over an hour ago in
+		     * the past, or over an hour in the future. this is
+		     * unlikely; what actually probably happened is that the
+		     * call generated some error and was aborted. this can
+		     * happen due to errors with the rx security class in play
+		     * (rxkad, rxgk, etc). treat the host as if we got a
+		     * timeout, since this is not a valid vote. */
+		    ubik_print("assuming distant vote time %d from %s is an error; marking host down\n",
+		               (int)code, afs_inet_ntoa_r(ts->addr[0], hoststr));
+		    code = -1;
+		}
+		if (code > 0 && rx_ConnError(connections[multi_i])) {
+		    ubik_print("assuming vote from %s is invalid due to conn error %d; marking host down\n",
+		               afs_inet_ntoa_r(ts->addr[0], hoststr),
+		               (int)rx_ConnError(connections[multi_i]));
+		    code = -1;
+		}
+
 		/* note that the vote time (the return code) represents the time
 		 * the vote was computed, *not* the time the vote expires.  We compute
 		 * the latter down below if we got enough votes to go with */
@@ -556,7 +578,7 @@ verifyInterfaceAddress(afs_uint32 *ame, struct afsconf_cell *info,
     }
 
     if (count <= 0) {		/* no address found */
-	ubik_print("ubik: No network addresses found, aborting..");
+	ubik_print("ubik: No network addresses found, aborting..\n");
 	return UBADHOST;
     }
 
@@ -580,7 +602,7 @@ verifyInterfaceAddress(afs_uint32 *ame, struct afsconf_cell *info,
 	    *ame = myAddr[0];
 	    tcount = rx_getAllAddr(myAddr2, UBIK_MAX_INTERFACE_ADDR);
 	    if (tcount <= 0) {	/* no address found */
-		ubik_print("ubik: No network addresses found, aborting..");
+		ubik_print("ubik: No network addresses found, aborting..\n");
 		return UBADHOST;
 	    }
 
@@ -707,10 +729,9 @@ updateUbikNetworkAddress(afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR])
 		     afs_inet_ntoa_r(ts->addr[0], hoststr));
 	    } else if (multi_error == UBADHOST) {
 		code = UBADHOST;	/* remote CellServDB inconsistency */
-		ubik_print("Inconsistent Cell Info on server: ");
+		ubik_print("Inconsistent Cell Info on server:\n");
 		for (j = 0; j < UBIK_MAX_INTERFACE_ADDR && ts->addr[j]; j++)
-		    ubik_print("%s ", afs_inet_ntoa_r(ts->addr[j], hoststr));
-		ubik_print("\n");
+		    ubik_print("... %s\n", afs_inet_ntoa_r(ts->addr[j], hoststr));
 	    } else {
 		ts->up = 0;	/* mark the remote server as down */
 	    }

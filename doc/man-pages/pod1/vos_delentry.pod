@@ -12,13 +12,13 @@ B<vos delentry> S<<< [B<-id> <I<volume name or ID>>+] >>>
     S<<< [B<-server> <I<machine name>>] >>>
     S<<< [B<-partition> <I<partition name>>] >>>
     S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>]
-    [B<-verbose>] [B<-encrypt>] [B<-noresolve>] [B<-help>]
+    [B<-dryrun>] [B<-verbose>] [B<-encrypt>] [B<-noresolve>] [B<-help>]
 
 B<vos de> S<<< [B<-i> <I<volume name or ID>>+] >>>
     S<<< [B<-pr> <I<prefix of volume whose VLDB entry is to be deleted>>] >>>
     S<<< [B<-s> <I<machine name>>] >>> S<<< [B<-pa> <I<partition name>>] >>>
     S<<< [B<-c> <I<cell name>>] >>> [B<-noa>] [B<-l>]
-    [B<-v>] [B<-e>] [B<-nor>] [B<-h>]
+    [B<-d>] [B<-v>] [B<-e>] [B<-nor>] [B<-h>]
 
 =for html
 </div>
@@ -140,6 +140,10 @@ F</usr/afs/etc/KeyFile> file. The B<vos> command interpreter presents it
 to the Volume Server and Volume Location Server during mutual
 authentication. Do not combine this flag with the B<-cell> argument or
 B<-noauth> flag. For more details, see L<vos(1)>.
+
+=item B<-dryrun>
+
+Show the actions which would be taken, but do not make changes.
 
 =item B<-verbose>
 

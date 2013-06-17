@@ -21,7 +21,7 @@ way to do this?)
 
 -- Prototyping and Style --
 Prototypes for all source files in a given dir DDD should be placed
-int the file DDD/DDD_prototypes.h. All externally used (either API
+in the file DDD/DDD_prototypes.h. All externally used (either API
 or used by other source files) routines and variables should be
 prototyped in this file.
 
@@ -34,7 +34,7 @@ Format of the prototype files should look like:
 
 	#ifndef AFS_SRC_DDD_PROTO_H
 	#define AFS_SRC_DDD_PROTO_H
-	
+
 	/* filename.c */
 	prototypes
 
@@ -47,10 +47,10 @@ In most of the existing prototypes, the define is DDD_PROTOTYPES_H, which is
 probably ok as well.
 
 The declaration of the routines should be done in ANSI style. If at some
-later date, it is determined that prototypes don't work on some platform 
+later date, it is determined that prototypes don't work on some platform
 properly, we can use ansi2knr during the compile.
 
-	rettype 
+	rettype
 	routine(argtype arg)
 	{
 
@@ -62,13 +62,13 @@ and should have (void) if no arguments are taken.
 Header files should not contain macros or other definitions unless they
 are used across multiple source files.
 
-All routines should be declared static if they are not used outside that 
+All routines should be declared static if they are not used outside that
 source file.
 
 Compiles on gcc-using machines should strive to handle using
 -Wstrict-prototypes -Werror. (this may take a while)
 
-Routines shall be defined in source prior to use if possible, and 
+Routines shall be defined in source prior to use if possible, and
 prototyped in block at top of file if static.
 
 API documentation in the code should be done using Qt-style Doxygen

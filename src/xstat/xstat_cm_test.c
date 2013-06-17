@@ -191,6 +191,8 @@ print_cmCallStats(void)
     printf("\t%10u afs_gn_lookup\n", cmp->callInfo.C_afs_gn_lookup);
     printf("\t%10u afs_gn_open\n", cmp->callInfo.C_afs_gn_open);
     printf("\t%10u afs_gn_create\n", cmp->callInfo.C_afs_gn_create);
+    printf("\t%10u afs_gn_close\n", cmp->callInfo.C_afs_gn_close);
+    printf("\t%10u afs_gn_map\n", cmp->callInfo.C_afs_gn_map);
     printf("\t%10u afs_gn_hold\n", cmp->callInfo.C_afs_gn_hold);
     printf("\t%10u afs_gn_rele\n", cmp->callInfo.C_afs_gn_rele);
     printf("\t%10u afs_gn_unmap\n", cmp->callInfo.C_afs_gn_unmap);
@@ -209,6 +211,9 @@ print_cmCallStats(void)
     printf("\t%10u DFlushEntry\n", cmp->callInfo.C_DFlushEntry);
     printf("\t%10u DVOffset\n", cmp->callInfo.C_DVOffset);
     printf("\t%10u DZap\n", cmp->callInfo.C_DZap);
+    printf("\t%10u shutdown_bufferpackage\n",
+	   cmp->callInfo.C_shutdown_bufferpackage);
+    printf("\t%10u afs_CheckKnownBad\n", cmp->callInfo.C_afs_CheckKnownBad);
     printf("\t%10u DNew\n", cmp->callInfo.C_DNew);
     printf("\t%10u afs_RemoveVCB\n", cmp->callInfo.C_afs_RemoveVCB);
     printf("\t%10u afs_NewVCache\n", cmp->callInfo.C_afs_NewVCache);
@@ -243,6 +248,7 @@ print_cmCallStats(void)
     printf("\t%10u afs_MemGetDSlot\n", cmp->callInfo.C_afs_MemGetDSlot);
     printf("\t%10u afs_UFSGetDSlot\n", cmp->callInfo.C_afs_UFSGetDSlot);
     printf("\t%10u afs_StoreDCache\n", cmp->callInfo.C_afs_StoreDCache);
+    printf("\t%10u shutdown_cache\n", cmp->callInfo.C_shutdown_cache);
     printf("\t%10u afs_StoreMini\n", cmp->callInfo.C_afs_StoreMini);
     printf("\t%10u afs_StoreAllSegments\n",
 	   cmp->callInfo.C_afs_StoreAllSegments);
@@ -262,17 +268,22 @@ print_cmCallStats(void)
     printf("\t%10u afs_GetDownV\n", cmp->callInfo.C_afs_GetDownV);
     printf("\t%10u afs_QueueVCB\n", cmp->callInfo.C_afs_QueueVCB);
     printf("\t%10u afs_call\n", cmp->callInfo.C_afs_call);
+    printf("\t%10u syscall\n", cmp->callInfo.C_syscall);
     printf("\t%10u afs_syscall_call\n", cmp->callInfo.C_afs_syscall_call);
     printf("\t%10u afs_syscall_icreate\n",
 	   cmp->callInfo.C_afs_syscall_icreate);
     printf("\t%10u afs_syscall_iopen\n", cmp->callInfo.C_afs_syscall_iopen);
     printf("\t%10u afs_syscall_iincdec\n",
 	   cmp->callInfo.C_afs_syscall_iincdec);
+    printf("\t%10u iincdec\n", cmp->callInfo.C_iincdec);
     printf("\t%10u afs_syscall_ireadwrite\n",
 	   cmp->callInfo.C_afs_syscall_ireadwrite);
     printf("\t%10u afs_syscall\n", cmp->callInfo.C_afs_syscall);
     printf("\t%10u lpioctl\n", cmp->callInfo.C_lpioctl);
     printf("\t%10u lsetpag\n", cmp->callInfo.C_lsetpag);
+    printf("\t%10u afs_shutdown\n", cmp->callInfo.C_afs_shutdown);
+    printf("\t%10u shutdown_BKG\n", cmp->callInfo.C_shutdown_BKG);
+    printf("\t%10u shutdown_afstest\n", cmp->callInfo.C_shutdown_afstest);
     printf("\t%10u afs_CheckInit\n", cmp->callInfo.C_afs_CheckInit);
     printf("\t%10u ClearCallback\n", cmp->callInfo.C_ClearCallBack);
     printf("\t%10u SRXAFSCB_GetCE\n", cmp->callInfo.C_SRXAFSCB_GetCE);
@@ -280,6 +291,9 @@ print_cmCallStats(void)
     printf("\t%10u SRXAFSCB_CallBack\n", cmp->callInfo.C_SRXAFSCB_CallBack);
     printf("\t%10u SRXAFSCB_InitCallBackState\n",
 	   cmp->callInfo.C_SRXAFSCB_InitCallBackState);
+    printf("\t%10u afs_RXCallBackServer\n",
+	   cmp->callInfo.C_afs_RXCallBackServer);
+    printf("\t%10u shutdown_CB\n", cmp->callInfo.C_shutdown_CB);
     printf("\t%10u SRXAFSCB_Probe\n", cmp->callInfo.C_SRXAFSCB_Probe);
     printf("\t%10u afs_Chunk\n", cmp->callInfo.C_afs_Chunk);
     printf("\t%10u afs_ChunkBase\n", cmp->callInfo.C_afs_ChunkBase);
@@ -290,6 +304,18 @@ print_cmCallStats(void)
     printf("\t%10u afs_SetChunkSize\n", cmp->callInfo.C_afs_SetChunkSize);
     printf("\t%10u afs_config\n", cmp->callInfo.C_afs_config);
     printf("\t%10u mem_freebytes\n", cmp->callInfo.C_mem_freebytes);
+    printf("\t%10u fpalloc\n", cmp->callInfo.C_fpalloc);
+    printf("\t%10u kluge_init\n", cmp->callInfo.C_kluge_init);
+    printf("\t%10u ufdalloc\n", cmp->callInfo.C_ufdalloc);
+    printf("\t%10u ufdfree\n", cmp->callInfo.C_ufdfree);
+    printf("\t%10u commit\n", cmp->callInfo.C_commit);
+    printf("\t%10u dev_ialloc\n", cmp->callInfo.C_dev_ialloc);
+    printf("\t%10u ffree\n", cmp->callInfo.C_ffree);
+    printf("\t%10u iget\n", cmp->callInfo.C_iget);
+    printf("\t%10u iptovp\n", cmp->callInfo.C_iptovp);
+    printf("\t%10u ilock\n", cmp->callInfo.C_ilock);
+    printf("\t%10u irele\n", cmp->callInfo.C_irele);
+    printf("\t%10u iput\n", cmp->callInfo.C_iput);
     printf("\t%10u mem_getbytes\n", cmp->callInfo.C_mem_getbytes);
     printf("\t%10u afs_Daemon\n", cmp->callInfo.C_afs_Daemon);
     printf("\t%10u afs_CheckRootVolume\n",
@@ -300,12 +326,17 @@ print_cmCallStats(void)
     printf("\t%10u afs_BBusy\n", cmp->callInfo.C_afs_BBusy);
     printf("\t%10u afs_BQueue\n", cmp->callInfo.C_afs_BQueue);
     printf("\t%10u afs_BRelease\n", cmp->callInfo.C_afs_BRelease);
+    printf("\t%10u shutdown_daemons\n", cmp->callInfo.C_shutdown_daemons);
     printf("\t%10u afs_BackgroundDaemon\n",
 	   cmp->callInfo.C_afs_BackgroundDaemon);
     printf("\t%10u exporter_add\n", cmp->callInfo.C_exporter_add);
     printf("\t%10u exporter_find\n", cmp->callInfo.C_exporter_find);
+    printf("\t%10u IsAfsVnode\n", cmp->callInfo.C_IsAfsVnode);
+    printf("\t%10u SetAfsVnode\n", cmp->callInfo.C_SetAfsVnode);
     printf("\t%10u afs_gfs_kalloc\n", cmp->callInfo.C_afs_gfs_kalloc);
     printf("\t%10u afs_gfs_kfree\n", cmp->callInfo.C_afs_gfs_kfree);
+    printf("\t%10u gfsvop_getattr\n", cmp->callInfo.C_gfsvop_getattr);
+    printf("\t%10u gfsvop_rdwr\n", cmp->callInfo.C_gfsvop_rdwr);
     printf("\t%10u gop_lookupname\n", cmp->callInfo.C_gop_lookupname);
     printf("\t%10u afs_uniqtime\n", cmp->callInfo.C_afs_uniqtime);
     printf("\t%10u gfs_vattr_null\n", cmp->callInfo.C_gfs_vattr_null);
@@ -319,10 +350,17 @@ print_cmCallStats(void)
     printf("\t%10u afs_gbmap\n", cmp->callInfo.C_afs_gbmap);
     printf("\t%10u afs_getfsdata\n", cmp->callInfo.C_afs_getfsdata);
     printf("\t%10u afs_gsymlink\n", cmp->callInfo.C_afs_gsymlink);
+    printf("\t%10u printgnode\n", cmp->callInfo.C_printgnode);
+    printf("\t%10u HaveGFSLock\n", cmp->callInfo.C_HaveGFSLock);
     printf("\t%10u afs_namei\n", cmp->callInfo.C_afs_namei);
+    printf("\t%10u AddGFSLock\n", cmp->callInfo.C_AddGFSLock);
+    printf("\t%10u RemoveGFSLock\n", cmp->callInfo.C_RemoveGFSLock);
+    printf("\t%10u afs_grlock\n", cmp->callInfo.C_afs_grlock);
+    printf("\t%10u afs_gumount\n", cmp->callInfo.C_afs_gumount);
     printf("\t%10u afs_gmount\n", cmp->callInfo.C_afs_gmount);
     printf("\t%10u afs_gget\n", cmp->callInfo.C_afs_gget);
     printf("\t%10u afs_glink\n", cmp->callInfo.C_afs_glink);
+    printf("\t%10u afs_sbupdate\n", cmp->callInfo.C_afs_sbupdate);
     printf("\t%10u afs_gmkdir\n", cmp->callInfo.C_afs_gmkdir);
     printf("\t%10u afs_unlink\n", cmp->callInfo.C_afs_unlink);
     printf("\t%10u afs_grmdir\n", cmp->callInfo.C_afs_grmdir);
@@ -330,25 +368,67 @@ print_cmCallStats(void)
     printf("\t%10u afs_grename\n", cmp->callInfo.C_afs_grename);
     printf("\t%10u afs_rele\n", cmp->callInfo.C_afs_rele);
     printf("\t%10u afs_syncgp\n", cmp->callInfo.C_afs_syncgp);
+    printf("\t%10u afs_gfshack\n", cmp->callInfo.C_afs_gfshack);
     printf("\t%10u afs_getval\n", cmp->callInfo.C_afs_getval);
     printf("\t%10u afs_trunc\n", cmp->callInfo.C_afs_trunc);
     printf("\t%10u afs_rwgp\n", cmp->callInfo.C_afs_rwgp);
     printf("\t%10u afs_stat\n", cmp->callInfo.C_afs_stat);
+    printf("\t%10u hpsobind\n", cmp->callInfo.C_hpsobind);
+    printf("\t%10u hpsoclose\n", cmp->callInfo.C_hpsoclose);
+    printf("\t%10u hpsocreate\n", cmp->callInfo.C_hpsocreate);
+    printf("\t%10u hpsoreserve\n", cmp->callInfo.C_hpsoreserve);
     printf("\t%10u afsc_link\n", cmp->callInfo.C_afsc_link);
+    printf("\t%10u devtovfs\n", cmp->callInfo.C_devtovfs);
     printf("\t%10u afs_vfs_mount\n", cmp->callInfo.C_afs_vfs_mount);
     printf("\t%10u afs_uniqtime\n", cmp->callInfo.C_afs_uniqtime);
     printf("\t%10u iopen\n", cmp->callInfo.C_iopen);
     printf("\t%10u idec\n", cmp->callInfo.C_idec);
     printf("\t%10u iinc\n", cmp->callInfo.C_iinc);
+    printf("\t%10u oiread\n", cmp->callInfo.C_oiread);
+    printf("\t%10u AHash\n", cmp->callInfo.C_AHash);
+    printf("\t%10u QTOA\n", cmp->callInfo.C_QTOA);
+    printf("\t%10u afs_FindPartByDev\n", cmp->callInfo.C_afs_FindPartByDev);
+    printf("\t%10u aux_init\n", cmp->callInfo.C_aux_init);
+    printf("\t%10u afs_GetNewPart\n", cmp->callInfo.C_afs_GetNewPart);
+    printf("\t%10u afs_InitAuxVolFile\n",
+	   cmp->callInfo.C_afs_InitAuxVolFile);
+    printf("\t%10u afs_CreateAuxEntry\n",
+	   cmp->callInfo.C_afs_CreateAuxEntry);
+    printf("\t%10u afs_GetAuxSlot\n", cmp->callInfo.C_afs_GetAuxSlot);
+    printf("\t%10u afs_GetDownAux\n", cmp->callInfo.C_afs_GetDownAux);
+    printf("\t%10u afs_FlushAuxCache\n", cmp->callInfo.C_afs_FlushAuxCache);
+    printf("\t%10u afs_GetAuxInode\n", cmp->callInfo.C_afs_GetAuxInode);
+    printf("\t%10u afs_PutAuxInode\n", cmp->callInfo.C_afs_PutAuxInode);
+    printf("\t%10u afs_ReadAuxInode\n", cmp->callInfo.C_afs_ReadAuxInode);
+    printf("\t%10u afs_WriteAuxInode\n", cmp->callInfo.C_afs_WriteAuxInode);
+    printf("\t%10u afs_auxcall\n", cmp->callInfo.C_afs_auxcall);
+    printf("\t%10u tmpdbg_auxtbl\n", cmp->callInfo.C_tmpdbg_auxtbl);
+    printf("\t%10u tmpdbg_parttbl\n", cmp->callInfo.C_tmpdbg_parttbl);
     printf("\t%10u ireadwrite\n", cmp->callInfo.C_ireadwrite);
     printf("\t%10u iread\n", cmp->callInfo.C_iread);
+    printf("\t%10u getinode\n", cmp->callInfo.C_getinode);
+    printf("\t%10u trygetfs\n", cmp->callInfo.C_trygetfs);
     printf("\t%10u iwrite\n", cmp->callInfo.C_iwrite);
     printf("\t%10u iforget\n", cmp->callInfo.C_iforget);
+    printf("\t%10u Lock_Init\n", cmp->callInfo.C_Lock_Init);
+    printf("\t%10u Lock_Obtain\n", cmp->callInfo.C_Lock_Obtain);
+    printf("\t%10u Lock_ReleaseR\n", cmp->callInfo.C_Lock_ReleaseR);
+    printf("\t%10u Lock_ReleaseW\n", cmp->callInfo.C_Lock_ReleaseW);
+    printf("\t%10u afs_BozonLock\n", cmp->callInfo.C_afs_BozonLock);
+    printf("\t%10u afs_BozonUnlock\n", cmp->callInfo.C_afs_BozonUnlock);
     printf("\t%10u icreate\n", cmp->callInfo.C_icreate);
     printf("\t%10u igetinode\n", cmp->callInfo.C_igetinode);
     printf("\t%10u osi_SleepR\n", cmp->callInfo.C_osi_SleepR);
     printf("\t%10u osi_SleepS\n", cmp->callInfo.C_osi_SleepS);
     printf("\t%10u osi_SleepW\n", cmp->callInfo.C_osi_SleepW);
+    printf("\t%10u afs_BozonInit\n", cmp->callInfo.C_afs_BozonInit);
+    printf("\t%10u afs_CheckBozonLock\n",
+	   cmp->callInfo.C_afs_CheckBozonLock);
+    printf("\t%10u afs_CheckBozonLockBlocking\n",
+	   cmp->callInfo.C_afs_CheckBozonLockBlocking);
+    printf("\t%10u xxxinit\n", cmp->callInfo.C_xxxinit);
+    printf("\t%10u KernelEntry\n", cmp->callInfo.C_KernelEntry);
+    printf("\t%10u afs_InitMemCache\n", cmp->callInfo.C_afs_InitMemCache);
     printf("\t%10u osi_Sleep\n", cmp->callInfo.C_osi_Sleep);
     printf("\t%10u afs_LookupMCE\n", cmp->callInfo.C_afs_LookupMCE);
     printf("\t%10u afs_MemReadBlk\n", cmp->callInfo.C_afs_MemReadBlk);
@@ -357,6 +437,9 @@ print_cmCallStats(void)
     printf("\t%10u afs_MemWriteUIO\n", cmp->callInfo.C_afs_MemWriteUIO);
     printf("\t%10u afs_MemCacheStoreProc\n",
 	   cmp->callInfo.C_afs_MemCacheStoreProc);
+    printf("\t%10u afs_vnode_pager_create\n",
+	   cmp->callInfo.C_afs_vnode_pager_create);
+    printf("\t%10u next_KernelEntry\n", cmp->callInfo.C_next_KernelEntry);
     printf("\t%10u afs_MemCacheFetchProc\n",
 	   cmp->callInfo.C_afs_MemCacheFetchProc);
     printf("\t%10u afs_MemCacheTruncate\n",
@@ -375,8 +458,19 @@ print_cmCallStats(void)
     printf("\t%10u afs_nfsclient_hold\n", cmp->callInfo.C_afs_nfsclient_hold);
     printf("\t%10u afs_nfsclient_stats\n",
 	   cmp->callInfo.C_afs_nfsclient_stats);
+    printf("\t%10u afs_nfsclient_shutdown\n",
+	   cmp->callInfo.C_afs_nfsclient_shutdown);
+    printf("\t%10u afs_rfs_readdir_fixup\n",
+	   cmp->callInfo.C_afs_rfs_readdir_fixup);
     printf("\t%10u afs_nfsclient_sysname\n",
 	   cmp->callInfo.C_afs_nfsclient_sysname);
+    printf("\t%10u afs_xnfs_svc\n", cmp->callInfo.C_afs_xnfs_svc);
+    printf("\t%10u afs_xdr_putrddirres\n",
+	   cmp->callInfo.C_afs_xdr_putrddirres);
+    printf("\t%10u afs_rfs_readdir\n", cmp->callInfo.C_afs_rfs_readdir);
+    printf("\t%10u afs_rfs_rddirfree\n", cmp->callInfo.C_afs_rfs_rddirfree);
+    printf("\t%10u rfs_dupcreate\n", cmp->callInfo.C_rfs_dupcreate);
+    printf("\t%10u rfs_dupsetattr\n", cmp->callInfo.C_rfs_dupsetattr);
     printf("\t%10u afs_rfs_dispatch\n", cmp->callInfo.C_afs_rfs_dispatch);
     printf("\t%10u afs_nfs2afscall\n", cmp->callInfo.C_Nfs2AfsCall);
     printf("\t%10u afs_sun_xuntext\n", cmp->callInfo.C_afs_sun_xuntext);
@@ -390,6 +484,7 @@ print_cmCallStats(void)
     printf("\t%10u osi_Alloc\n", cmp->callInfo.C_osi_Alloc);
     printf("\t%10u osi_SetTime\n", cmp->callInfo.C_osi_SetTime);
     printf("\t%10u osi_Dump\n", cmp->callInfo.C_osi_Dump);
+    printf("\t%10u shutdown_osi\n", cmp->callInfo.C_shutdown_osi);
     printf("\t%10u osi_Free\n", cmp->callInfo.C_osi_Free);
     printf("\t%10u osi_UFSOpen\n", cmp->callInfo.C_osi_UFSOpen);
     printf("\t%10u osi_Close\n", cmp->callInfo.C_osi_Close);
@@ -397,30 +492,43 @@ print_cmCallStats(void)
     printf("\t%10u osi_Truncate\n", cmp->callInfo.C_osi_Truncate);
     printf("\t%10u osi_Read\n", cmp->callInfo.C_osi_Read);
     printf("\t%10u osi_Write\n", cmp->callInfo.C_osi_Write);
+    printf("\t%10u shutdown_osifile\n", cmp->callInfo.C_shutdown_osifile);
     printf("\t%10u osi_MapStrategy\n", cmp->callInfo.C_osi_MapStrategy);
     printf("\t%10u osi_AllocLargeSpace\n",
 	   cmp->callInfo.C_osi_AllocLargeSpace);
     printf("\t%10u osi_FreeLargeSpace\n", cmp->callInfo.C_osi_FreeLargeSpace);
     printf("\t%10u osi_AllocSmallSpace\n",
 	   cmp->callInfo.C_osi_AllocSmallSpace);
+    printf("\t%10u pkt_iodone\n", cmp->callInfo.C_pkt_iodone);
+    printf("\t%10u shutdown_osinet\n", cmp->callInfo.C_shutdown_osinet);
+    printf("\t%10u afs_cs\n", cmp->callInfo.C_afs_cs);
     printf("\t%10u osi_FreeSmallSpace\n", cmp->callInfo.C_osi_FreeSmallSpace);
     printf("\t%10u osi_CloseToTheEdge\n", cmp->callInfo.C_osi_CloseToTheEdge);
     printf("\t%10u osi_xgreedy\n", cmp->callInfo.C_osi_xgreedy);
     printf("\t%10u osi_FreeSocket\n", cmp->callInfo.C_osi_FreeSocket);
+    printf("\t%10u trysblock\n", cmp->callInfo.C_trysblock);
     printf("\t%10u osi_NewSocket\n", cmp->callInfo.C_osi_NewSocket);
     printf("\t%10u osi_NetSend\n", cmp->callInfo.C_osi_NetSend);
     printf("\t%10u WaitHack\n", cmp->callInfo.C_WaitHack);
+    printf("\t%10u osi_InitWaitHandle\n",
+	   cmp->callInfo.C_osi_InitWaitHandle);
     printf("\t%10u osi_CancelWait\n", cmp->callInfo.C_osi_CancelWait);
     printf("\t%10u osi_Wakeup\n", cmp->callInfo.C_osi_Wakeup);
     printf("\t%10u osi_Wait\n", cmp->callInfo.C_osi_Wait);
+    printf("\t%10u dirp_SetCacheDev\n", cmp->callInfo.C_dirp_SetCacheDev);
+    printf("\t%10u Die\n", cmp->callInfo.C_Die);
     printf("\t%10u dirp_Read\n", cmp->callInfo.C_dirp_Read);
     printf("\t%10u dirp_Cpy\n", cmp->callInfo.C_dirp_Cpy);
     printf("\t%10u dirp_Eq\n", cmp->callInfo.C_dirp_Eq);
     printf("\t%10u dirp_Write\n", cmp->callInfo.C_dirp_Write);
     printf("\t%10u dirp_Zap\n", cmp->callInfo.C_dirp_Zap);
     printf("\t%10u afs_ioctl\n", cmp->callInfo.C_afs_ioctl);
+    printf("\t%10u _AFSIOCTL\n", cmp->callInfo.C__AFSIOCTL);
+    printf("\t%10u _VALIDAFSIOCTL\n", cmp->callInfo.C__VALIDAFSIOCTL);
     printf("\t%10u handleIoctl\n", cmp->callInfo.C_HandleIoctl);
     printf("\t%10u afs_xioctl\n", cmp->callInfo.C_afs_xioctl);
+    printf("\t%10u afs_syscall_pioctl\n",
+	   cmp->callInfo.C_afs_syscall_pioctl);
     printf("\t%10u afs_pioctl\n", cmp->callInfo.C_afs_pioctl);
     printf("\t%10u HandlePioctl\n", cmp->callInfo.C_HandlePioctl);
     printf("\t%10u PGetVolumeStatus\n", cmp->callInfo.C_PGetVolumeStatus);
@@ -431,6 +539,7 @@ print_cmCallStats(void)
     printf("\t%10u PGetTokens\n", cmp->callInfo.C_PGetTokens);
     printf("\t%10u PSetTokens\n", cmp->callInfo.C_PSetTokens);
     printf("\t%10u PUnlog\n", cmp->callInfo.C_PUnlog);
+    printf("\t%10u PMariner\n", cmp->callInfo.C_PMariner);
     printf("\t%10u PCheckServers\n", cmp->callInfo.C_PCheckServers);
     printf("\t%10u PCheckAuth\n", cmp->callInfo.C_PCheckAuth);
     printf("\t%10u PCheckVolNames\n", cmp->callInfo.C_PCheckVolNames);
@@ -454,19 +563,26 @@ print_cmCallStats(void)
     printf("\t%10u PVenusLogging\n", cmp->callInfo.C_PVenusLogging);
     printf("\t%10u PGetAcl\n", cmp->callInfo.C_PGetAcl);
     printf("\t%10u PGetFID\n", cmp->callInfo.C_PGetFID);
+    printf("\t%10u PBogus\n", cmp->callInfo.C_PBogus);
     printf("\t%10u PSetAcl\n", cmp->callInfo.C_PSetAcl);
     printf("\t%10u PGetFileCell\n", cmp->callInfo.C_PGetFileCell);
+    printf("\t%10u PNoop\n", cmp->callInfo.C_PNoop);
     printf("\t%10u PGetWSCell\n", cmp->callInfo.C_PGetWSCell);
+    printf("\t%10u afs_warn\n", cmp->callInfo.C_afs_warn);
+    printf("\t%10u afs_warnuser\n", cmp->callInfo.C_afs_warnuser);
     printf("\t%10u PGetSPrefs\n", cmp->callInfo.C_PGetSPrefs);
     printf("\t%10u PSetSPrefs\n", cmp->callInfo.C_PSetSPrefs);
     printf("\t%10u afs_ResetAccessCache\n",
 	   cmp->callInfo.C_afs_ResetAccessCache);
     printf("\t%10u afs_FindUser\n", cmp->callInfo.C_afs_FindUser);
     printf("\t%10u afs_GetUser\n", cmp->callInfo.C_afs_GetUser);
+    printf("\t%10u VSleep\n", cmp->callInfo.C_VSleep);
     printf("\t%10u afs_GCUserData\n", cmp->callInfo.C_afs_GCUserData);
     printf("\t%10u afs_PutUser\n", cmp->callInfo.C_afs_PutUser);
     printf("\t%10u afs_SetPrimary\n", cmp->callInfo.C_afs_SetPrimary);
     printf("\t%10u afs_ResetUserConns\n", cmp->callInfo.C_afs_ResetUserConns);
+    printf("\t%10u afs_MarinerLog\n", cmp->callInfo.C_afs_MarinerLog);
+    printf("\t%10u afs_vtoi\n", cmp->callInfo.C_afs_vtoi);
     printf("\t%10u afs_RemoveUserConns\n", cmp->callInfo.C_RemoveUserConns);
     printf("\t%10u afs_ResourceInit\n", cmp->callInfo.C_afs_ResourceInit);
     printf("\t%10u afs_GetCell\n", cmp->callInfo.C_afs_GetCell);
@@ -480,14 +596,24 @@ print_cmCallStats(void)
     printf("\t%10u afs_PutVolume\n", cmp->callInfo.C_afs_PutVolume);
     printf("\t%10u afs_GetVolumeByName\n",
 	   cmp->callInfo.C_afs_GetVolumeByName);
+    printf("\t%10u ranstage\n", cmp->callInfo.C_ranstage);
     printf("\t%10u afs_random\n", cmp->callInfo.C_afs_random);
     printf("\t%10u InstallVolumeEntry\n", cmp->callInfo.C_InstallVolumeEntry);
     printf("\t%10u InstallVolumeInfo\n", cmp->callInfo.C_InstallVolumeInfo);
+    printf("\t%10u StartLogFile\n", cmp->callInfo.C_StartLogFile);
+    printf("\t%10u afs_SetLogFile\n", cmp->callInfo.C_afs_SetLogFile);
+    printf("\t%10u EndLogFile\n", cmp->callInfo.C_EndLogFile);
+    printf("\t%10u afs_dp\n", cmp->callInfo.C_afs_dp);
+    printf("\t%10u fprf\n", cmp->callInfo.C_fprf);
+    printf("\t%10u fprint\n", cmp->callInfo.C_fprint);
+    printf("\t%10u fprintn\n", cmp->callInfo.C_fprintn);
     printf("\t%10u afs_ResetVolumeInfo\n",
 	   cmp->callInfo.C_afs_ResetVolumeInfo);
     printf("\t%10u afs_FindServer\n", cmp->callInfo.C_afs_FindServer);
     printf("\t%10u afs_GetServer\n", cmp->callInfo.C_afs_GetServer);
     printf("\t%10u afs_SortServers\n", cmp->callInfo.C_afs_SortServers);
+    printf("\t%10u afs_AddToMean\n", cmp->callInfo.C_afs_AddToMean);
+    printf("\t%10u afs_GetCMStat\n", cmp->callInfo.C_afs_GetCMStat);
     printf("\t%10u afs_CheckServers\n", cmp->callInfo.C_afs_CheckServers);
     printf("\t%10u ServerDown\n", cmp->callInfo.C_ServerDown);
     printf("\t%10u afs_Conn\n", cmp->callInfo.C_afs_Conn);
@@ -495,7 +621,10 @@ print_cmCallStats(void)
     printf("\t%10u afs_ConnByHost\n", cmp->callInfo.C_afs_ConnByHost);
     printf("\t%10u afs_ConnByMHosts\n", cmp->callInfo.C_afs_ConnByMHosts);
     printf("\t%10u afs_Analyze\n", cmp->callInfo.C_afs_Analyze);
+    printf("\t%10u puttofile\n", cmp->callInfo.C_puttofile);
+    printf("\t%10u shutdown_AFS\n", cmp->callInfo.C_shutdown_AFS);
     printf("\t%10u afs_CheckLocks\n", cmp->callInfo.C_afs_CheckLocks);
+    printf("\t%10u haveCallBacksFrom\n", cmp->callInfo.C_HaveCallBacksFrom);
     printf("\t%10u CheckVLServer\n", cmp->callInfo.C_CheckVLServer);
     printf("\t%10u afs_CheckCacheResets\n",
 	   cmp->callInfo.C_afs_CheckCacheResets);
@@ -503,10 +632,14 @@ print_cmCallStats(void)
 	   cmp->callInfo.C_afs_CheckVolumeNames);
     printf("\t%10u afs_CheckCode\n", cmp->callInfo.C_afs_CheckCode);
     printf("\t%10u afs_CopyError\n", cmp->callInfo.C_afs_CopyError);
+    printf("\t%10u afs_cv2string\n", cmp->callInfo.C_afs_cv2string);
+    printf("\t%10u afs_FindVolCache\n", cmp->callInfo.C_afs_FindVolCache);
     printf("\t%10u afs_FinalizeReq\n", cmp->callInfo.C_afs_FinalizeReq);
     printf("\t%10u afs_GetVolCache\n", cmp->callInfo.C_afs_GetVolCache);
     printf("\t%10u afs_GetVolSlot\n", cmp->callInfo.C_afs_GetVolSlot);
     printf("\t%10u afs_UFSGetVolSlot\n", cmp->callInfo.C_afs_UFSGetVolSlot);
+    printf("\t%10u print_internet_address\n",
+	   cmp->callInfo.C_print_internet_address);
     printf("\t%10u afs_MemGetVolSlot\n", cmp->callInfo.C_afs_MemGetVolSlot);
     printf("\t%10u afs_WriteVolCache\n", cmp->callInfo.C_afs_WriteVolCache);
     printf("\t%10u haveCallbacksfrom\n", cmp->callInfo.C_HaveCallBacksFrom);
@@ -514,19 +647,27 @@ print_cmCallStats(void)
     printf("\t%10u afs_putpage\n", cmp->callInfo.C_afs_putpage);
     printf("\t%10u afs_nfsrdwr\n", cmp->callInfo.C_afs_nfsrdwr);
     printf("\t%10u afs_map\n", cmp->callInfo.C_afs_map);
+    printf("\t%10u afs_cntl\n", cmp->callInfo.C_afs_cntl);
+    printf("\t%10u afs_dump\n", cmp->callInfo.C_afs_dump);
+    printf("\t%10u afs_realvp\n", cmp->callInfo.C_afs_realvp);
     printf("\t%10u afs_cmp\n", cmp->callInfo.C_afs_cmp);
+    printf("\t%10u afsinit\n", cmp->callInfo.C_afsinit);
     printf("\t%10u afs_PageLeft\n", cmp->callInfo.C_afs_PageLeft);
     printf("\t%10u afs_mount\n", cmp->callInfo.C_afs_mount);
     printf("\t%10u afs_unmount\n", cmp->callInfo.C_afs_unmount);
     printf("\t%10u afs_root\n", cmp->callInfo.C_afs_root);
     printf("\t%10u afs_statfs\n", cmp->callInfo.C_afs_statfs);
     printf("\t%10u afs_sync\n", cmp->callInfo.C_afs_sync);
+    printf("\t%10u afs_mountroot\n", cmp->callInfo.C_afs_mountroot);
+    printf("\t%10u afs_swapvp\n", cmp->callInfo.C_afs_swapvp);
     printf("\t%10u afs_vget\n", cmp->callInfo.C_afs_vget);
+    printf("\t%10u afs_noop\n", cmp->callInfo.C_afs_noop);
     printf("\t%10u afs_index\n", cmp->callInfo.C_afs_index);
     printf("\t%10u afs_setpag\n", cmp->callInfo.C_afs_setpag);
     printf("\t%10u genpag\n", cmp->callInfo.C_genpag);
     printf("\t%10u getpag\n", cmp->callInfo.C_getpag);
     printf("\t%10u genpag\n", cmp->callInfo.C_genpag);
+    printf("\t%10u afs_badop\n", cmp->callInfo.C_afs_badop);
     printf("\t%10u afs_GetMariner\n", cmp->callInfo.C_afs_GetMariner);
     printf("\t%10u afs_AddMarinerName\n", cmp->callInfo.C_afs_AddMarinerName);
     printf("\t%10u afs_open\n", cmp->callInfo.C_afs_open);
@@ -536,10 +677,15 @@ print_cmCallStats(void)
     printf("\t%10u afs_UFSwrite\n", cmp->callInfo.C_afs_UFSWrite);
     printf("\t%10u afs_Memwrite\n", cmp->callInfo.C_afs_MemWrite);
     printf("\t%10u afs_rdwr\n", cmp->callInfo.C_afs_rdwr);
+    printf("\t%10u FIXUPSTUPIDINODE\n", cmp->callInfo.C_FIXUPSTUPIDINODE);
     printf("\t%10u afs_read\n", cmp->callInfo.C_afs_read);
     printf("\t%10u afs_UFSread\n", cmp->callInfo.C_afs_UFSRead);
     printf("\t%10u afs_Memread\n", cmp->callInfo.C_afs_MemRead);
     printf("\t%10u afs_CopyOutAttrs\n", cmp->callInfo.C_afs_CopyOutAttrs);
+    printf("\t%10u ENameOK\n", cmp->callInfo.C_ENameOK);
+    printf("\t%10u HandleAtName\n", cmp->callInfo.C_HandleAtName);
+    printf("\t%10u getsysname\n", cmp->callInfo.C_getsysname);
+    printf("\t%10u strcat\n", cmp->callInfo.C_strcat);
     printf("\t%10u afs_access\n", cmp->callInfo.C_afs_access);
     printf("\t%10u afs_getattr\n", cmp->callInfo.C_afs_getattr);
     printf("\t%10u afs_setattr\n", cmp->callInfo.C_afs_setattr);
@@ -547,12 +693,20 @@ print_cmCallStats(void)
     printf("\t%10u EvalMountPoint\n", cmp->callInfo.C_EvalMountPoint);
     printf("\t%10u afs_lookup\n", cmp->callInfo.C_afs_lookup);
     printf("\t%10u afs_create\n", cmp->callInfo.C_afs_create);
+    printf("\t%10u FetchWholeEnchilada\n",
+	   cmp->callInfo.C_FetchWholeEnchilada);
     printf("\t%10u afs_LocalHero\n", cmp->callInfo.C_afs_LocalHero);
     printf("\t%10u afs_remove\n", cmp->callInfo.C_afs_remove);
     printf("\t%10u afs_link\n", cmp->callInfo.C_afs_link);
     printf("\t%10u afs_rename\n", cmp->callInfo.C_afs_rename);
     printf("\t%10u afs_InitReq\n", cmp->callInfo.C_afs_InitReq);
+    printf("\t%10u BlobScan\n", cmp->callInfo.C_BlobScan);
     printf("\t%10u afs_mkdir\n", cmp->callInfo.C_afs_mkdir);
+    printf("\t%10u RecLen\n", cmp->callInfo.C_RecLen);
+    printf("\t%10u RoundToInt\n", cmp->callInfo.C_RoundToInt);
+    printf("\t%10u afs_readdir_with_offlist\n",
+	   cmp->callInfo.C_afs_readdir_with_offlist);
+    printf("\t%10u DIRSIZ_LEN\n", cmp->callInfo.C_DIRSIZ_LEN);
     printf("\t%10u afs_rmdir\n", cmp->callInfo.C_afs_rmdir);
     printf("\t%10u afs_readdir\n", cmp->callInfo.C_afs_readdir);
     printf("\t%10u afs_read1dir\n", cmp->callInfo.C_afs_read1dir);
@@ -576,6 +730,7 @@ print_cmCallStats(void)
     printf("\t%10u afs_FakeClose\n", cmp->callInfo.C_afs_FakeClose);
     printf("\t%10u afs_StoreOnLastReference\n",
 	   cmp->callInfo.C_afs_StoreOnLastReference);
+    printf("\t%10u shutdown_vnodeops\n", cmp->callInfo.C_shutdown_vnodeops);
     printf("\t%10u afs_AccessOK\n", cmp->callInfo.C_afs_AccessOK);
     printf("\t%10u afs_GetAccessBits\n", cmp->callInfo.C_afs_GetAccessBits);
     printf("\t%10u afsio_copy\n", cmp->callInfo.C_afsio_copy);
@@ -590,22 +745,30 @@ print_cmCallStats(void)
 	   cmp->callInfo.C_afs_get_pag_from_groups);
     printf("\t%10u AddPag\n", cmp->callInfo.C_AddPag);
     printf("\t%10u PagInCred\n", cmp->callInfo.C_PagInCred);
+    printf("\t%10u setpag\n", cmp->callInfo.C_setpag);
+    printf("\t%10u afs_setgroups\n", cmp->callInfo.C_afs_setgroups);
     printf("\t%10u afs_getgroups\n", cmp->callInfo.C_afs_getgroups);
     printf("\t%10u afs_page_in\n", cmp->callInfo.C_afs_page_in);
     printf("\t%10u afs_page_out\n", cmp->callInfo.C_afs_page_out);
     printf("\t%10u afs_AdvanceFD\n", cmp->callInfo.C_afs_AdvanceFD);
     printf("\t%10u afs_lockf\n", cmp->callInfo.C_afs_lockf);
     printf("\t%10u afs_xsetgroups\n", cmp->callInfo.C_afs_xsetgroups);
+    printf("\t%10u DoLockWarning\n", cmp->callInfo.C_DoLockWarning);
     printf("\t%10u afs_nlinks\n", cmp->callInfo.C_afs_nlinks);
     printf("\t%10u afs_lockctl\n", cmp->callInfo.C_afs_lockctl);
     printf("\t%10u afs_xflock\n", cmp->callInfo.C_afs_xflock);
     printf("\t%10u PGetCPrefs\n", cmp->callInfo.C_PGetCPrefs);
+    printf("\t%10u SRXAFSCB_WhoAreYou\n",
+	   cmp->callInfo.C_SRXAFSCB_WhoAreYou);
+    printf("\t%10u afs_DiscardDCache\n", cmp->callInfo.C_afs_DiscardDCache);
+    printf("\t%10u afs_FreeDiscardedDCache\n",
+	   cmp->callInfo.C_afs_FreeDiscardedDCache);
+    printf("\t%10u afs_MaybeFreeDiscardedDCache\n",
+	   cmp->callInfo.C_afs_MaybeFreeDiscardedDCache);
     printf("\t%10u PSetCPrefs\n", cmp->callInfo.C_PSetCPrefs);
-#ifdef	AFS_HPUX_ENV
     printf("\t%10u afs_pagein\n", cmp->callInfo.C_afs_pagein);
     printf("\t%10u afs_pageout\n", cmp->callInfo.C_afs_pageout);
     printf("\t%10u afs_hp_strategy\n", cmp->callInfo.C_afs_hp_strategy);
-#endif
     printf("\t%10u PFlushMount\n", cmp->callInfo.C_PFlushMount);
     printf("\t%10u SRXAFSCB_GetServerPrefs\n",
 	   cmp->callInfo.C_SRXAFSCB_GetServerPrefs);
@@ -621,6 +784,8 @@ print_cmCallStats(void)
     printf("\t%10u SRXAFSCB_GetCellByNum\n",
 	   cmp->callInfo.C_SRXAFSCB_GetCellByNum);
     printf("\t%10u BPrefetchNoCache\n", cmp->callInfo.C_BPrefetchNoCache);
+    printf("\t%10u PSetTokens2\n", cmp->callInfo.C_PSetTokens2);
+    printf("\t%10u PPrefetchFromTape\n", cmp->callInfo.C_PPrefetchFromTape);
     printf("\t%10u afs_ReadNoCache\n", cmp->callInfo.C_afs_ReadNoCache);
 }
 
@@ -1123,6 +1288,19 @@ CM_Handler(void)
 	       xstat_cm_Results.collectionNumber,
 	       xstat_cm_Results.connP->hostName, xstat_cm_Results.probeOK);
 	return (0);
+    }
+
+    if (debugging_on) {
+        int i;
+        int numInt32s = xstat_cm_Results.data.AFSCB_CollData_len;
+        afs_int32 *entry = xstat_cm_Results.data.AFSCB_CollData_val;
+
+        printf("debug: got collection number %d\n", xstat_cm_Results.collectionNumber);
+        printf("debug: collection data length is %d\n", numInt32s);
+        for (i = 0; i < numInt32s; i++) {
+            printf("debug: entry %d %u\n", i, entry[i]);
+        }
+        printf("\n");
     }
 
     switch (xstat_cm_Results.collectionNumber) {

@@ -46,29 +46,29 @@ int main(int argc, char *argv[])
 
     CFArrayRef arrayRef;
     if (!CFDictionaryGetValueIfPresent(login_dict, CFSTR("mechanisms"),
-    	&arrayRef))
+	&arrayRef))
         exit(1);
 
     CFMutableArrayRef newMechanisms = CFArrayCreateMutableCopy(NULL, 0,
-    	arrayRef);
+	arrayRef);
     if (!newMechanisms)
         exit(1);
 
     CFIndex index = CFArrayGetFirstIndexOfValue(newMechanisms,
-    	CFRangeMake(0, CFArrayGetCount(newMechanisms)), CFSTR("authinternal"));
+	CFRangeMake(0, CFArrayGetCount(newMechanisms)), CFSTR("authinternal"));
 
     if (index == -1)
         exit(1);
 
     CFArraySetValueAtIndex(newMechanisms, index, CFSTR("newmech"));
 
-    CFMutableDictionaryRef new_login_dict 
-    	= CFDictionaryCreateMutableCopy(NULL, 0, login_dict);
+    CFMutableDictionaryRef new_login_dict
+	= CFDictionaryCreateMutableCopy(NULL, 0, login_dict);
 
     CFDictionarySetValue(new_login_dict, CFSTR("mechanisms"), newMechanisms);
 
     status = AuthorizationRightSet(authRef, LOGIN_RIGHT, new_login_dict,
-    	NULL, NULL, NULL);
+	NULL, NULL, NULL);
 
     if (status) exit(1);
 }

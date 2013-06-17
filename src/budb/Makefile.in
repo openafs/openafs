@@ -25,6 +25,8 @@ INCLS=\
 	${TOP_INCDIR}/afs/cellconfig.h \
 	${TOP_INCDIR}/afs/com_err.h \
 	${TOP_INCDIR}/afs/bubasics.h \
+	${TOP_INCDIR}/afs/budb_client.h \
+	${TOP_INCDIR}/afs/budb_errs.h \
 	budb.h budb_client.h database.h
 
 # library ordering defined by top level makefile
@@ -52,7 +54,7 @@ SERVER_OBJS = ${COMMON_OBJS} budb.ss.o budb.xdr.o dbs_dump.o db_lock.o db_text.o
 all: ${TOP_LIBDIR}/libbudb.a ${TOP_INCDIR}/afs/budb.h ${TOP_INCDIR}/afs/budb_errs.h ${TOP_INCDIR}/afs/budb_prototypes.h budb_server
 
 generated: \
-	budb_errs.c budb_errs.h budb_client.h \
+	budb_errs.c budb_errs.h \
 	budb.cs.c budb.ss.c budb.xdr.c budb.h
 
 ${TOP_LIBDIR}/libbudb.a: libbudb.a
@@ -62,7 +64,7 @@ ${TOP_INCDIR}/afs/budb.h: budb.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/budb_errs.h: budb_errs.h
-	${INSTALL_DATA} $? $@
+	${INSTALL_DATA} budb_errs.h $@
 
 ${TOP_INCDIR}/afs/budb_client.h: budb_client.h
 	${INSTALL_DATA} $? $@
@@ -70,18 +72,10 @@ ${TOP_INCDIR}/afs/budb_client.h: budb_client.h
 ${TOP_INCDIR}/afs/budb_prototypes.h: budb_prototypes.h
 	${INSTALL_DATA} $? $@
 
-#
-# budb_errs.o actually depends on neither budb_client.h nor budb_errs.h
-# but generating either of them will rebuild budb_errs.c
-#
-budb_errs.o: budb_errs.c budb_client.h budb_errs.h
+budb_errs.h: budb_errs.c
 
-budb_client.h: budb_errs.c
-
-budb_errs.c: budb_errs.et budb_client.p.h
-	$(RM) -f budb_client.h budb_errs.c; ${COMPILE_ET} -p ${srcdir} budb_errs -h budb_client
-
-budb_errs.h: budb_errs.et
+budb_errs.c: budb_errs.et
+	$(RM) -f budb_errs.c
 	${COMPILE_ET} -p ${srcdir} budb_errs
 
 database.o: database.c budb_errs.h globals.h ${INCLS}
@@ -92,7 +86,7 @@ db_text.o:  db_text.c budb_errs.h ${INCLS}
 db_hash.o: db_hash.c budb_errs.h ${INCLS}
 ol_verify.o:	ol_verify.c budb_errs.h ${INCLS}
 procs.o: procs.c budb_errs.h globals.h ${INCLS}
-struct_ops.o: budb_errs.h ${TOP_INCDIR}/afs/budb_client.h
+struct_ops.o: budb_errs.h ${INCLS}
 server.o: server.c budb_errs.h ${INCLS} AFS_component_version_number.c
 
 budb_server: $(SERVER_OBJS) ${LIBS} ${TOP_INCDIR}/afs/budb_client.h
@@ -146,7 +140,7 @@ dest: libbudb.a budb.h budb_errs.h budb_client.h budb_server
 # Misc targets
 #
 clean:
-	$(RM) -f *.o *~ budb_errs.[ch] budb.h budb_client.h *.a *.xdr.c \
+	$(RM) -f *.o *~ budb_errs.[ch] budb.h *.a *.xdr.c \
 		*.ss.c *.cs.c core budb_server AFS_component_version_number.c
 
 include ../config/Makefile.version

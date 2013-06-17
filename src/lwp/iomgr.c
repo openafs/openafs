@@ -709,7 +709,7 @@ static int SignalSignals (void)
 	sigProc[i] = 0;
     }
 
-    for (i = 1; i <= NSIG; ++i)  /* forall !badsig(i) */
+    for (i = 1; i < NSIG; ++i)  /* forall !badsig(i) */
 	if ((sigsHandled & mysigmask(i)) && sigDelivered[i] == TRUE) {
 	    sigDelivered[i] = FALSE;
 	    LWP_NoYieldSignal (sigEvents[i]);

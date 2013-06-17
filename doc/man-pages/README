@@ -26,11 +26,16 @@ Overview
 
   The OpenAFS man pages are discussed on the openafs-doc mailing list at
   openafs.org.  If you plan on contributing to the man page project,
-  please join that mailing list and send suggestions, patches, and
+  please join that mailing list and send suggestions, patches*, and
   contributions there.  The coordinator of the OpenAFS man page project is
   Russ Allbery <rra@stanford.edu>; feel free to contact me directly with
   questions (although using the mailing list is generally better and will
   probably result in a faster response).
+
+  * Although we still accept patch submissions to the list, it is
+    greatly preferred that you make your submission through Git to
+    the OpenAFS Gerrit instance (code review system).  Information
+    can be found at <http://wiki.openafs.org/GitDevelopers/>
 
 POD and Man Page Generation
 
@@ -267,16 +272,10 @@ Known Problems
 
    * Document vos restore -creation/-lastupdate and -nodelete
 
-   * Document vos delentry -noexecute. Should this option also be renamed
-     to -dryrun like others?
-
    Man section 8 suite commands:
 
    * Mention bos (un)blockscanner in bos.pod text, not just in See Also
      at the end
-
-   * Update fstrace source to include option descriptions (for content,
-     use existing manpage information "condensed" to half line of text)
 
    * Update backup source to include option descriptions (for content,
      use existing manpage information "condensed" to half line of text)

@@ -494,6 +494,11 @@ main(int argc, char **argv)
 
 	code = afsconf_GetExtendedCellInfo (BU_conf, lcell, 0, &cellinfo,
 					    clones);
+	if (code) {
+	    LogError(0, "Can't read cell information\n");
+	    ERROR(code);
+	}
+
 	code =
 	    convert_cell_to_ubik(&cellinfo, &globalConfPtr->myHost,
 				 globalConfPtr->serverList);
@@ -547,6 +552,9 @@ main(int argc, char **argv)
 	}
     }
 
+    /* Disable jumbograms */
+    rx_SetNoJumbo();
+
     code = ubik_ServerInitByInfo (globalConfPtr->myHost,
 				  htons(AFSCONF_BUDBPORT),
 				  &cellinfo,
@@ -562,9 +570,6 @@ main(int argc, char **argv)
 
     afsconf_BuildServerSecurityObjects(BU_conf, 0,
 				       &securityClasses, &numClasses);
-
-    /* Disable jumbograms */
-    rx_SetNoJumbo();
 
     tservice =
 	rx_NewServiceHost(host, 0, BUDB_SERVICE, "BackupDatabase",

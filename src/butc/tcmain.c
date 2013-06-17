@@ -831,11 +831,20 @@ GetConfigParams(char *filename, afs_int32 port)
     return (code);
 }
 
+#ifdef xbsa
+static void
+xbsa_shutdown(int x)
+{
+    xbsa_Finalize(&butxInfo);
+    exit(0);
+}
+#endif
+
 static int
 WorkerBee(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
-    struct rx_securityClass *(securityObjects[3]);
+    struct rx_securityClass *(securityObjects[1]);
     struct rx_service *service;
     time_t tokenExpires;
     char cellName[64];
@@ -1019,6 +1028,8 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	rc = InitToServer(0 /*taskid */ , &butxInfo, adsmServerName);
 	if (rc != XBSA_SUCCESS)
 	    return (1);
+	(void)signal(SIGINT, xbsa_shutdown);
+	(void)signal(SIGHUP, xbsa_shutdown);
     }
 #endif /*xbsa */
 
@@ -1084,14 +1095,13 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
      */
 
     securityObjects[0] = rxnull_NewServerSecurityObject();
-    securityObjects[1] = (struct rx_securityClass *)0;	/* don't bother with rxvab */
     if (!securityObjects[0]) {
 	TLog(0, "rxnull_NewServerSecurityObject");
 	exit(1);
     }
 
     service =
-	rx_NewServiceHost(host, 0, 1, "BUTC", securityObjects, 3, TC_ExecuteRequest);
+	rx_NewServiceHost(host, 0, 1, "BUTC", securityObjects, 1, TC_ExecuteRequest);
     if (!service) {
 	TLog(0, "rx_NewService");
 	exit(1);

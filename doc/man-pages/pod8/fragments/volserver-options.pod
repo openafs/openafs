@@ -74,6 +74,11 @@ user.admin PTS entry. Sites whose Kerberos realms don't have these collisions
 between principal names may disable this check by starting the server
 with this option.
 
+=item B<-sync> <I<sync behavior>>
+
+This is the same as the B<-sync> option in L<fileserver(8)>. See
+L<fileserver(8)>.
+
 =item B<-help>
 
 Prints the online help for this command. All other valid options are

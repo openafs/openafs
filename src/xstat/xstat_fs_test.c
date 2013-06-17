@@ -537,6 +537,19 @@ FS_Handler(void)
 	return (0);
     }
 
+    if (debugging_on) {
+        int i;
+        int numInt32s = xstat_fs_Results.data.AFS_CollData_len;
+        afs_int32 *entry = xstat_fs_Results.data.AFS_CollData_val;
+
+        printf("debug: got collection number %d\n", xstat_fs_Results.collectionNumber);
+        printf("debug: collection data length is %d\n", numInt32s);
+        for (i = 0; i < numInt32s; i++) {
+            printf("debug: entry %d %u\n", i, entry[i]);
+        }
+        printf("\n");
+    }
+
     switch (xstat_fs_Results.collectionNumber) {
     case AFS_XSTATSCOLL_CALL_INFO:
 	PrintCallInfo();

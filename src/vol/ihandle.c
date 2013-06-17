@@ -114,6 +114,34 @@ void ih_PkgDefaults(void)
     /* fd cache size that will be used if/when ih_UseLargeCache()
      * is called */
     vol_io_params.fd_max_cachesize = FD_MAX_CACHESIZE;
+
+    vol_io_params.sync_behavior = IH_SYNC_DELAYED;
+}
+
+int
+ih_SetSyncBehavior(const char *behavior)
+{
+    int val;
+
+    if (strcmp(behavior, "always") == 0) {
+	val = IH_SYNC_ALWAYS;
+
+    } else if (strcmp(behavior, "delayed") == 0) {
+	val = IH_SYNC_DELAYED;
+
+    } else if (strcmp(behavior, "onclose") == 0) {
+	val = IH_SYNC_ONCLOSE;
+
+    } else if (strcmp(behavior, "never") == 0) {
+	val = IH_SYNC_NEVER;
+
+    } else {
+	/* invalid behavior name */
+	return -1;
+    }
+
+    vol_io_params.sync_behavior = val;
+    return 0;
 }
 
 #ifdef AFS_PTHREAD_ENV
@@ -173,7 +201,7 @@ ih_Initialize(void)
 #endif
     fdCacheSize = MIN(fdMaxCacheSize, vol_io_params.fd_initial_cachesize);
 
-    {
+    if (vol_io_params.sync_behavior == IH_SYNC_DELAYED) {
 #ifdef AFS_PTHREAD_ENV
 	pthread_t syncer;
 	pthread_attr_t tattr;
@@ -886,6 +914,8 @@ ih_reallyclose(IHandle_t * ihP)
     ihP->ih_refcnt++;   /* must not disappear over unlock */
     if (ihP->ih_synced) {
 	FdHandle_t *fdP;
+	osi_Assert(vol_io_params.sync_behavior != IH_SYNC_ALWAYS);
+	osi_Assert(vol_io_params.sync_behavior != IH_SYNC_NEVER);
         ihP->ih_synced = 0;
 	IH_UNLOCK;
 
@@ -1089,3 +1119,38 @@ ih_pwrite(int fd, const void * buf, size_t count, afs_foff_t offset)
 	return OS_WRITE(fd, buf, count);
 }
 #endif /* !HAVE_PIO */
+
+#ifndef AFS_NT40_ENV
+int
+ih_isunlinked(int fd)
+{
+    struct afs_stat status;
+    if (afs_fstat(fd, &status) < 0) {
+	return -1;
+    }
+    if (status.st_nlink < 1) {
+	return 1;
+    }
+    return 0;
+}
+#endif /* !AFS_NT40_ENV */
+
+int
+ih_fdsync(FdHandle_t *fdP)
+{
+    switch (vol_io_params.sync_behavior) {
+    case IH_SYNC_ALWAYS:
+	return OS_SYNC(fdP->fd_fd);
+    case IH_SYNC_DELAYED:
+    case IH_SYNC_ONCLOSE:
+	if (fdP->fd_ih) {
+	    fdP->fd_ih->ih_synced = 1;
+	    return 0;
+	}
+	return 1;
+    case IH_SYNC_NEVER:
+	return 0;
+    default:
+	osi_Assert(0);
+    }
+}

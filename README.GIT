@@ -48,7 +48,7 @@ release series. Use git branch -a to see a full list of branches.
 OpenAFS uses the Gerrit code review system to review and merge all changes
 to OpenAFS. More details are at:
 
-    http://wiki.openafs.org/AFSLore/GitDevelopers/
+    http://wiki.openafs.org/GitDevelopers/
 
 including more detailed Git instructions.
 
@@ -58,3 +58,24 @@ that way. Do this by sending mail to openafs-bugs@openafs.org with the
 patch attached. But please use Gerrit if you can; patches sent in as bugs
 will have to be forwarded to Gerrit by someone else, and it's easier for
 everyone if you can enter them into Gerrit yourself.
+
+Backport policy
+------------
+All patches should land on master first, unless the patch fixes a bug
+that only exists in the stable branch.
+
+Once a patch has been accepted into master, anyone can propose
+backports to stable branches.
+
+When cherry-picking a commit from another branch, please append a
+"cherry picked from" section in your commit message. You'll also need
+a separate Change-ID for Gerrit to recognize this as a separate
+change. One workflow to do this:
+
+1) Use "git cherry-pick -ex" to pick your commits onto another branch.
+   The -x option will append the appropriate "cherry picked from"
+   message, and the -e option will open your editor for you to edit
+   the commit message.
+2) In your editor, delete the existing Change-ID line. Save and quit.
+3) Run "git commit --amend", saving and quitting again. Git will run
+   the commit hook and generate a new Change-ID for Gerrit.

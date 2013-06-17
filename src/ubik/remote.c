@@ -494,7 +494,11 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
 
     /* send the file back to the requester */
 
+    dbase = ubik_dbase;
+    pbuffer[0] = '\0';
+
     if ((code = ubik_CheckAuth(rxcall))) {
+	DBHOLD(dbase);
 	goto failed;
     }
 
@@ -515,10 +519,10 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
     if (offset && offset != otherHost) {
 	/* we *know* this is the wrong guy */
 	code = USYNC;
+	DBHOLD(dbase);
 	goto failed;
     }
 
-    dbase = ubik_dbase;
     DBHOLD(dbase);
 
     /* abort any active trans that may scribble over the database */
@@ -559,7 +563,6 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
 #endif
 	code = rx_Read(rxcall, tbuffer, tlen);
 	if (code != tlen) {
-	    DBRELE(dbase);
 	    ubik_dprint("Rx-read length error=%d\n", code);
 	    code = BULK_ERROR;
 	    close(fd);
@@ -572,7 +575,6 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
 	pass++;
 #endif
 	if (code != tlen) {
-	    DBRELE(dbase);
 	    ubik_dprint("write failed error=%d\n", code);
 	    code = UIOERROR;
 	    close(fd);
@@ -620,11 +622,12 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
 #else
     LWP_NoYieldSignal(&dbase->version);
 #endif
-    DBRELE(dbase);
-  failed:
+
+failed:
     if (code) {
 #ifndef OLD_URECOVERY
-	unlink(pbuffer);
+	if (pbuffer[0] != '\0')
+	    unlink(pbuffer);
 	/* Failed to sync. Allow reads again for now. */
 	if (dbase != NULL) {
 	    tversion.epoch = epoch;
@@ -637,6 +640,7 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
     } else {
 	ubik_print("Ubik: Synchronize database completed\n");
     }
+    DBRELE(dbase);
     return code;
 }
 
@@ -697,10 +701,9 @@ SDISK_UpdateInterfaceAddr(struct rx_call *rxcall,
     /* if (probableMatch) */
     /* inconsistent addresses in CellServDB */
     if (!probableMatch || found) {
-	ubik_print("Inconsistent Cell Info from server: ");
+	ubik_print("Inconsistent Cell Info from server:\n");
 	for (i = 0; i < UBIK_MAX_INTERFACE_ADDR && inAddr->hostAddr[i]; i++)
-	    ubik_print("%s ", afs_inet_ntoa_r(htonl(inAddr->hostAddr[i]), hoststr));
-	ubik_print("\n");
+	    ubik_print("... %s\n", afs_inet_ntoa_r(htonl(inAddr->hostAddr[i]), hoststr));
 	fflush(stdout);
 	fflush(stderr);
 	printServerInfo();
@@ -711,10 +714,9 @@ SDISK_UpdateInterfaceAddr(struct rx_call *rxcall,
     for (i = 1; i < UBIK_MAX_INTERFACE_ADDR; i++)
 	ts->addr[i] = htonl(inAddr->hostAddr[i]);
 
-    ubik_print("ubik: A Remote Server has addresses: ");
+    ubik_print("ubik: A Remote Server has addresses:\n");
     for (i = 0; i < UBIK_MAX_INTERFACE_ADDR && ts->addr[i]; i++)
-	ubik_print("%s ", afs_inet_ntoa_r(ts->addr[i], hoststr));
-    ubik_print("\n");
+	ubik_print("... %s\n", afs_inet_ntoa_r(ts->addr[i], hoststr));
 
     return 0;
 }
@@ -726,13 +728,12 @@ printServerInfo(void)
     int i, j = 1;
     char hoststr[16];
 
-    ubik_print("Local CellServDB:");
+    ubik_print("Local CellServDB:\n");
     for (ts = ubik_servers; ts; ts = ts->next, j++) {
-	ubik_print("Server %d: ", j);
+	ubik_print("  Server %d:\n", j);
 	for (i = 0; (i < UBIK_MAX_INTERFACE_ADDR) && ts->addr[i]; i++)
-	    ubik_print("%s ", afs_inet_ntoa_r(ts->addr[i], hoststr));
+	    ubik_print("  ... %s\n", afs_inet_ntoa_r(ts->addr[i], hoststr));
     }
-    ubik_print("\n");
 }
 
 afs_int32

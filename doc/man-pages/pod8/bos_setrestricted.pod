@@ -15,12 +15,12 @@ B<bos setrestricted> S<<< B<-server> <I<machine name>> >>> S<<< B<-mode> 1 >>>
 
 =head1 DESCRIPTION
 
-The B<bos restricted> command places the server in restricted mode. This
+The B<bos setrestricted> command places the server in restricted mode. This
 mode increases the security of the bos server by removing access to a
 number of bos commands that are only used whilst configuring a system.
 
 When a server is in restricted mode, access to B<bos_exec>, B<bos uninstall>,
-B<bos install>, B<bos create>, B<bos install>, B<bos delete>, B<bos prune>
+B<bos install>, B<bos create>, B<bos delete>, B<bos prune>
 is denied, and the use of B<bos getlog> is limited.
 
 =head1 CAUTIONS

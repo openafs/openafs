@@ -969,7 +969,7 @@ main(int argc, char **argv, char **envp)
 #ifndef AFS_NT40_ENV
 	    printf("Usage: bosserver [-noauth] [-log] "
 		   "[-auditlog <log path>] "
-		   "[-audit-interafce <file|sysvmq> (default is file)] "
+		   "[-audit-interface <file|sysvmq> (default is file)] "
 		   "[-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals]"
 		   "[-syslog[=FACILITY]] "
 		   "[-restricted] "
@@ -980,7 +980,7 @@ main(int argc, char **argv, char **envp)
 #else
 	    printf("Usage: bosserver [-noauth] [-log] "
 		   "[-auditlog <log path>] "
-		   "[-audit-interafce <file|sysvmq> (default is file)] "
+		   "[-audit-interface <file|sysvmq> (default is file)] "
 		   "[-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals]"
 		   "[-restricted] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
@@ -1111,6 +1111,13 @@ main(int argc, char **argv, char **envp)
 	exit(code);
     }
 
+    /* Disable jumbograms */
+    rx_SetNoJumbo();
+
+    if (rxMaxMTU != -1) {
+	rx_SetMaxMTU(rxMaxMTU);
+    }
+
     code = LWP_CreateProcess(BozoDaemon, BOZO_LWP_STACKSIZE, /* priority */ 1,
 			     /* param */ NULL , "bozo-the-clown",
 			     &bozo_pid);
@@ -1171,13 +1178,6 @@ main(int argc, char **argv, char **envp)
 
     if (DoPidFiles) {
 	bozo_CreatePidFile("bosserver", NULL, getpid());
-    }
-
-    /* Disable jumbograms */
-    rx_SetNoJumbo();
-
-    if (rxMaxMTU != -1) {
-	rx_SetMaxMTU(rxMaxMTU);
     }
 
     tservice = rx_NewServiceHost(host, 0, /* service id */ 1,
