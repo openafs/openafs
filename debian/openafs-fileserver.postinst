@@ -18,34 +18,6 @@ configure)
         fi
     fi
     db_stop
-
-    # Move the contents of the old /etc/openafs/server-local directory into
-    # /var/lib/openafs/local.  Most of the files in this directory are
-    # automatically generated, so it didn't belong in /etc.
-    #
-    # Change the paths to upserver and upclient in BosConfig from older
-    # versions that had the binaries in /usr/sbin.
-    if [ x"$2" != x ] && dpkg --compare-versions "$2" lt 1.4.4.dfsg1-4 ; then
-        for f in sysid sysid.old NetInfo NetRestrict ; do
-            if [ -e "/etc/openafs/server-local/$f" ] ; then
-                cp "/etc/openafs/server-local/$f" "/var/lib/openafs/local/$f"
-            fi
-        done
-        if [ -e /etc/openafs/BosConfig ] ; then
-            sed -i -e 's,/usr/sbin/upserver,/usr/lib/openafs/upserver,' \
-                   -e 's,/usr/sbin/upclient,/usr/lib/openafs/upclient,' \
-                       /etc/openafs/BosConfig
-        fi
-    fi
-
-    # Previous versions of the package set the permissions on
-    # /var/lib/openafs/local to 755, but upstream prefers 700 to protect the
-    # fssync.sock socket.  Probably doesn't matter on Linux, but if we
-    # diverge, either bosserver complains or we have to patch it.  dpkg won't
-    # change the permissions of existing directories.
-    if [ x"$2" != x ] && dpkg --compare-versions "$2" lt 1.4.11+dfsg-3 ; then
-        chmod 700 /var/lib/openafs/local
-    fi
     ;;
 
 abort-upgrade|abort-remove|abort-deconfigure)

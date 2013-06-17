@@ -32,6 +32,8 @@ openafs (1.6.3-1) UNRELEASED; urgency=low
       recovery cases properly.
     - Only force creation of CellServDB on initial installation or if
       AFSDB/SRV records are not being used.
+  * Remove openafs-fileserver postinst support for upgrades from ancient
+    versions (1.4.4.dfsg1-4 and 1.4.11+dfsg-3).
 
  -- Russ Allbery <rra@debian.org>  Mon, 17 Jun 2013 10:50:14 -0700
 
