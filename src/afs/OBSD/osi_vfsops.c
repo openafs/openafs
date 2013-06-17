@@ -245,8 +245,13 @@ afs_mount(mp, path, data, ndp, p)
     mp->osi_vfs_fsid.val[0] = AFS_VFSMAGIC;	/* magic */
     mp->osi_vfs_fsid.val[1] = (int)AFS_VFSFSID;
 
+#if defined(AFS_OBSD53_ENV)
+    bzero(mp->mnt_stat.f_mntonname, MNAMELEN);
+    strlcpy(mp->mnt_stat.f_mntonname, path, MNAMELEN);
+#else
     (void)copyinstr(path, mp->mnt_stat.f_mntonname, MNAMELEN - 1, &size);
     bzero(mp->mnt_stat.f_mntonname + size, MNAMELEN - size);
+#endif
     bzero(mp->mnt_stat.f_mntfromname, MNAMELEN);
     strcpy(mp->mnt_stat.f_mntfromname, "AFS");
     /* null terminated string "AFS" will fit, just leave it be. */
@@ -309,10 +314,18 @@ afs_badcall(struct proc *p, void *xx, register_t * yy)
     return ENOSYS;
 }
 
+#if defined(AFS_OBSD49_ENV)
+extern struct vops afs_vops;
+#endif
+
 void
 afs_obsd_getnewvnode(struct vcache *tvc)
 {
+#if defined(AFS_OBSD49_ENV)
+    while (getnewvnode(VT_AFS, afs_globalVFS, &afs_vops, &tvc->v)) {
+#else
     while (getnewvnode(VT_AFS, afs_globalVFS, afs_vnodeop_p, &tvc->v)) {
+#endif
 	/* no vnodes available, force an alloc (limits be damned)! */
 	desiredvnodes++;
     }
@@ -441,8 +454,10 @@ afs_vfs_load(struct lkm_table *lkmtp, int cmd)
 {
     extern char *memname[];
 
+#if ! defined(AFS_OBSD49_ENV)
     vfs_opv_init_explicit(&afs_vnodeop_opv_desc);
     vfs_opv_init_default(&afs_vnodeop_opv_desc);
+#endif
     if (memname[M_AFSGENERIC] == NULL)
 	memname[M_AFSGENERIC] = afsgenmem;
     if (memname[M_AFSFID] == NULL)

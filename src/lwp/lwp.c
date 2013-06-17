@@ -418,7 +418,8 @@ LWP_CreateProcess(void *(*ep) (void *), int stacksize, int priority, void *parm,
 	/* End of gross hack */
 
 	Set_LWP_RC();
-	*pid = temp;
+	if (pid)
+	    *pid = temp;
 	return 0;
     } else
 	return LWP_EINIT;
@@ -484,7 +485,8 @@ LWP_CreateProcess2(void *(*ep) (void *), int stacksize, int priority, void *parm
 	/* End of gross hack */
 
 	Set_LWP_RC();
-	*pid = temp;
+	if (pid)
+	    *pid = temp;
 	return 0;
     } else
 	return LWP_EINIT;
@@ -641,7 +643,8 @@ LWP_InitializeProcessSupport(int priority, PROCESS * pid)
     savecontext(Dispatcher, &temp->context, NULL);
     LWPANCHOR.outersp = temp->context.topstack;
     Set_LWP_RC();
-    *pid = temp;
+    if (pid)
+	*pid = temp;
 
     /* get minimum stack size from the environment. this allows the  administrator
      * to change the lwp stack dynamically without getting a new binary version.
@@ -1443,7 +1446,8 @@ LWP_CreateProcess(pthread_startroutine_t ep, int stacksize, int priority,
 	free(lp);
 	return LWP_ENOMEM;
     }
-    *pid = lp;
+    if (pid)
+	*pid = lp;
     return LWP_SUCCESS;
 }
 
@@ -1494,7 +1498,8 @@ LWP_InitializeProcessSupport(int priority, PROCESS * pid)
     int state;
 
     if (initialized) {
-	*pid = lp;
+	if (pid)
+	    *pid = lp;
 	return LWP_SUCCESS;
     }
 #ifndef LWP_NO_PRIORITIES
@@ -1519,7 +1524,8 @@ LWP_InitializeProcessSupport(int priority, PROCESS * pid)
     MUTEX_INIT(&lwp_mutex, "lwp", MUTEX_DEFAULT, 0);
     MUTEX_ENTER(&lwp_mutex);
     initialized = 1;
-    *pid = lp;
+    if (pid)
+	*pid = lp;
     return LWP_SUCCESS;
 }
 

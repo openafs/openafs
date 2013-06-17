@@ -1,3 +1,17 @@
+
+AC_DEFUN([LINUX_AIO_NONVECTOR],
+ [AC_CHECK_LINUX_BUILD([for non-vectorized aio kernel functions],
+                       [ac_cv_linux_aio_nonvector],
+                       [#include <linux/fs.h>],
+                       [extern ssize_t
+                        generic_file_aio_read(struct kiocb *, char __user *,
+                                              size_t, loff_t);],
+                       [LINUX_HAS_NONVECTOR_AIO],
+                       [define if kernel functions like generic_file_aio_read use
+                        non-vectorized i/o],
+                       [])
+ ])
+
 AC_DEFUN([LINUX_EXPORTS_TASKLIST_LOCK], [
   AC_CHECK_LINUX_BUILD([for exported tasklist_lock],
 		       [ac_cv_linux_exports_tasklist_lock],
@@ -710,6 +724,21 @@ AC_DEFUN([LINUX_D_ALIAS_IS_HLIST], [
 			d->d_alias = *hn;],
 			[D_ALIAS_IS_HLIST],
 			[define if dentry->d_alias is an hlist],
+			[])
+])
+
+
+AC_DEFUN([LINUX_HLIST_ITERATOR_NO_NODE], [
+  AC_CHECK_LINUX_BUILD([whether hlist iterators don't need a node parameter],
+			[ac_cv_linux_hlist_takes_no_node],
+			[#include <linux/list.h>
+			#include <linux/fs.h>],
+			[struct dentry *d = NULL, *cur;
+			struct inode *ip;
+			hlist_for_each_entry(cur, &ip->i_dentry, d_alias) { }
+			],
+			[HLIST_ITERATOR_NO_NODE],
+			[define if hlist iterators don't need a node parameter],
 			[])
 ])
 

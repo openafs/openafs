@@ -463,6 +463,7 @@ afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
 {
     int *shouldwake = NULL;
     unsigned int i;
+    int stored = 0;
     afs_int32 code = 0;
     afs_size_t bytesXferred;
 
@@ -473,7 +474,6 @@ afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
     XSTATS_DECLS;
 
     for (i = 0; i < nchunks && !code; i++) {
-	int stored = 0;
 	struct dcache *tdc = dclist[i];
 	afs_int32 size = tdc->f.chunkBytes;
 	if (!tdc) {

@@ -321,9 +321,13 @@ main(int argc, char *argv[])
 	    "Migrating to a Kerberos 5 KDC is advised.  "
 	    "http://www.openafs.org/no-more-des.html\n"));
 
-    code =
-	afsconf_GetExtendedCellInfo(KA_conf, cell, AFSCONF_KAUTHSERVICE,
-				    &cellinfo, clones);
+    code = afsconf_GetExtendedCellInfo(KA_conf, cell, AFSCONF_KAUTHSERVICE,
+				       &cellinfo, clones);
+    if (code) {
+	afs_com_err(whoami, code, "Couldn't read cell configuration");
+	exit(1);
+    }
+
     if (servers) {
 	if ((code = ubik_ParseServerList(argc, argv, &myHost, serverList))) {
 	    afs_com_err(whoami, code, "Couldn't parse server list");
@@ -333,6 +337,11 @@ main(int argc, char *argv[])
 	for (i = 1; i < MAXSERVERS; i++) {
 	    if (!serverList[i])
 		break;
+	    if (i >= MAXHOSTSPERCELL) {
+		fprintf(stderr,
+			"Too many ubik servers specified on command line\n");
+		exit(1);
+	    }
 	    cellinfo.hostAddr[i].sin_addr.s_addr = serverList[i];
 	}
 	cellinfo.numServers = i;
@@ -382,6 +391,9 @@ main(int argc, char *argv[])
 	}
     }
 
+    /* Disable jumbograms */
+    rx_SetNoJumbo();
+
     if (servers)
 	code =
 	    ubik_ServerInit(myHost, htons(AFSCONF_KAUTHPORT), serverList,
@@ -397,9 +409,6 @@ main(int argc, char *argv[])
     }
 
     sca[RX_SCINDEX_NULL] = rxnull_NewServerSecurityObject();
-
-    /* Disable jumbograms */
-    rx_SetNoJumbo();
 
     tservice =
 	rx_NewServiceHost(host, 0, KA_AUTHENTICATION_SERVICE,

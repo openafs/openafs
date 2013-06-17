@@ -926,10 +926,9 @@ bc_WaitForNoJobs(void)
 {
     int i;
     int usefulJobRunning = 1;
+    int printWaiting = 1;
 
     extern dlqlinkT statusHead;
-
-    afs_com_err(whoami, 0, "waiting for job termination");
 
     while (usefulJobRunning) {
 	usefulJobRunning = (dlqEmpty(&statusHead) ? 0 : 1);
@@ -941,8 +940,13 @@ bc_WaitForNoJobs(void)
 	}
 
 	/* Wait 5 seconds and check again */
-	if (usefulJobRunning)
+	if (usefulJobRunning) {
+            if (printWaiting) {
+                afs_com_err(whoami, 0, "waiting for job termination");
+                printWaiting = 0;
+            }
 	    IOMGR_Sleep(5);
+        }
     }
     return (lastTaskCode);
 }

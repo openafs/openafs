@@ -1,6 +1,6 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
- *$All Rights Reserved.
+ * All Rights Reserved.
  *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
@@ -2800,7 +2800,15 @@ afs_UFSGetDSlot(afs_int32 aslot, int indexvalid, int datavalid)
 	          (int)aslot, off);
     }
 
-    if (!entryok || !datavalid) {
+    if (indexvalid && !datavalid) {
+	/* we know that the given dslot does exist, but the data in it is not
+	 * valid. this only occurs when we pull a dslot from the free or
+	 * discard list, so be sure not to re-use the data; force invalidation.
+	 */
+	entryok = 0;
+    }
+
+    if (!entryok) {
 	tdc->f.fid.Cell = 0;
 	tdc->f.fid.Fid.Volume = 0;
 	tdc->f.chunk = -1;

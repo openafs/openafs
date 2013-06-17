@@ -52,25 +52,25 @@ There are four acceptable values:
 
 =over 4
 
-=item 0
+=item C<0>
 
 Provides profiling information about the numbers of times different
 internal File Server routines were called since the File Server
 started. This value is not currently implemented; it returns no data.
 
-=item 1
+=item C<1>
 
 Reports various internal performance statistics related to the File Server
 (for example, vnode cache entries and Rx protocol activity).
 
-=item 2
+=item C<2>
 
 Reports all of the internal performance statistics provided by the C<1>
 setting, plus some additional, detailed performance figures about the File
 Server (for example, minimum, maximum, and cumulative statistics regarding
 File Server RPCs, how long they take to complete, and how many succeed).
 
-=item 3
+=item C<3>
 
 Reports File Server callback processing statistics since the File Server
 started, including the number of call of callbacks added (AddCallBack), the

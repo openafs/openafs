@@ -850,7 +850,7 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
 	 * retry in case there is another server.  However, if we find
 	 * no connection (aconn == 0) we set the networkError flag.
 	 */
-	afs_MarkServerUpOrDown(sa, SRVR_ISDOWN);
+	afs_ServerDown(sa, acode);
 	if (aerrP)
 	    (aerrP->err_Server)++;
 	VSleep(1);		/* Just a hack for desperate times. */

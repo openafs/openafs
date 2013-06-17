@@ -389,7 +389,7 @@ syscall.o: ${SYS}/syscall.s
 	        ${CC} ${AFS_CFLAGS} -c syscall.c;; \
 	 *) \
 		$(PATH_CPP) ${SFLAGS} ${SYS}/syscall.s > syscall.ss; \
-		as -o syscall.o syscall.ss;		\
+		as $(ASFLAGS) -o syscall.o syscall.ss;		\
 		$(RM) syscall.ss;;				\
 	esac
 

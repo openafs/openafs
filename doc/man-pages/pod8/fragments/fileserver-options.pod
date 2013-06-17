@@ -296,3 +296,108 @@ consequences.  This option is not supported on platforms other than AIX.
 Prevents any portion of the fileserver binary from being paged (swapped)
 out of memory on a file server machine running the IRIX operating system.
 This option is not supported on platforms other than IRIX.
+
+=item B<-sync> <always | delayed | onclose | never>
+
+This option changes how hard the fileserver tries to ensure that data written
+to volumes actually hits the physical disk.
+
+Normally, when the fileserver writes to disk, the underlying filesystem or
+Operating System may delay writes from actually going to disk, and reorder
+which writes hit the disk first. So, during an unclean shutdown of the machine
+(if the power goes out, or the machine crashes, etc), or if the physical disk
+backing store becomes unavailable, file data may become lost that the server
+previously told clients was already successfully written.
+
+To try to mitigate this, the fileserver will try to "sync" file data to the
+physical disk at numerous points during various I/O. However, this can result
+in significantly reduced performance. Depending on the usage patterns, this may
+or may not be acceptable. This option dictates specifically what the fileserver
+does when it wants to perform a "sync".
+
+There are several options; pass one of these as the argument to -sync. The
+default is C<delayed>.
+
+=over 4
+
+=item always
+
+This causes a sync operation to always sync immediately and synchronously.
+This is the slowest option that provides the greatest protection against data
+loss in the event of a crash or backing store unavailability.
+
+Note that this is still not a 100% guarantee that data will not be lost or
+corrupted during a crash. The underlying filesystem itself may cause data to
+be lost or corrupt in such a situation. And OpenAFS itself does not (yet) even
+guarantee that all data is consistent at any point in time; so even if the
+filesystem and OS do not buffer or reorder any writes, you are not guaranteed
+that all data will be okay after a crash.
+
+This option may be appropriate if you have reason to believe a server is prone
+to data loss failures, such as if the server encounters frequent power failures
+or connectivity issues with network attached storage. Or if the backend storage
+is temporarily degraded in some way (for example, a battery on a caching
+controller fails), it may make sense to temporarily use the C<always> option
+until the situation is fixed. Some servers may also allow for sync operations
+to occur very quickly, such that the C<always> option is not noticeably slower
+than any other option. In such a case, there is no downside to specifying
+C<always>.
+
+This was the only behavior allowed in OpenAFS releases prior to 1.4.5.
+
+=item delayed
+
+This causes a sync to do nothing immediately, but the sync will happen sometime
+in the background, within approximately the next 10 seconds. This works by
+having a separate thread that goes through all open file handles every 10
+seconds, and it syncs the ones that have been marked as needing a sync. File
+handles flagged for sync may also get synced on volume detachment, according to
+the same behavior as with the C<onclose> option.
+
+This option is currently not recommended, since in the past the code
+implementing this option has caused rare data corruption during normal
+operation. However, it is currently the default option to allow consistent
+behavior from previous OpenAFS releases.
+
+This was the only behavior allowed in OpenAFS releases starting from 1.4.5 up
+to and including 1.6.2. It is the default starting in OpenAFS 1.6.3. This
+option will be removed in a future version of OpenAFS, and the default behavior
+will likely change to the C<onclose> behavior.
+
+=item onclose
+
+This causes a sync to do nothing immediately, but causes the relevant file to
+be flagged as potentially needing a sync. When a volume is detached, flagged
+volume metadata files are synced, as well as data files that have been accessed
+recently. Events that cause a volume to detach include: performing certain
+volume operations (restore, salvage, offline, et al), detection of volume
+consistency errors, a clean shutdown of the fileserver, or during DAFS "soft
+detachment".
+
+Effectively this option is the same as C<never> while a volume is attached and
+actively being used, but if a volume is detached, there is an additional
+guarantee for the data's consistency.
+
+=item never
+
+This causes all syncs to never do anything. This is the fastest option, with
+the weakest guarantees for data consistency.
+
+Depending on the underlying filesystem and Operating System, there may be
+guarantees that any data written to disk will hit the physical media after a
+certain amount of time. For example, Linux's pdflush process usually makes this
+guarantee, and ext3 can make certain various consistency guarantees according
+to the options given. ZFS on Solaris can also provide similar guarantees, as
+can various other platforms and filesystems. Consult the documentation for
+your platform if you are unsure.
+
+=back
+
+Which option you choose is not an easy decision to make. Various developers and
+experts sometimes disagree on which option is the most reasonable, and it may
+depend on the specific scenario and workload involved. Some argue that the
+C<always> option does not provide significantly greater guarantees over any
+other option, whereas others argue that choosing anything besides the C<always>
+option allows for an unacceptable risk of data loss. This may depend on your
+usage patterns, your hardware, your platform and filesystem, and who you talk
+to about this topic.

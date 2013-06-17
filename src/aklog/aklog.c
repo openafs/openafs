@@ -1520,15 +1520,22 @@ main(int argc, char *argv[])
     {
 	char *filepath = NULL, *newpath = NULL;
 #ifndef AFS_DARWIN_ENV
-	char *defaultpath = "/etc/krb5.conf";
+	char *defaultpath = "/etc/krb5.conf:/etc/krb5/krb5.conf";
 #else
 	char *defaultpath = "~/Library/Preferences/edu.mit.Kerberos:/Library/Preferences/edu.mit.Kerberos";
 #endif
 	filepath = getenv("KRB5_CONFIG");
-	afs_asprintf(&newpath, "%s:%s/krb5-weak.conf",
-		 filepath ? filepath : defaultpath,
-		 AFSDIR_CLIENT_ETC_DIRPATH);
-	setenv("KRB5_CONFIG", newpath, 1);
+
+	/* only fiddle with KRB5_CONFIG if krb5-weak.conf actually exists */
+	afs_asprintf(&newpath, "%s/krb5-weak.conf", AFSDIR_CLIENT_ETC_DIRPATH);
+	if (access(newpath, R_OK) == 0) {
+	    free(newpath);
+	    newpath = NULL;
+	    afs_asprintf(&newpath, "%s:%s/krb5-weak.conf",
+	                 filepath ? filepath : defaultpath,
+	                 AFSDIR_CLIENT_ETC_DIRPATH);
+	    setenv("KRB5_CONFIG", newpath, 1);
+	}
 #endif
 	krb5_init_context(&context);
 

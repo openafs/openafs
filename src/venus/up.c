@@ -440,7 +440,7 @@ Copy(char *file1, char *file2, short recursive, int level)
 	    fflush(stdout);
 	}
 
-	n = readlink(file1, linkvalue, sizeof(linkvalue));
+	n = readlink(file1, linkvalue, sizeof(linkvalue)-1);
 	if (n == -1) {
 	    fprintf(stderr, "Could not read symbolic link %s\n", file1);
 	    perror("read link ");

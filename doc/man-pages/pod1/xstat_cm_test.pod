@@ -54,19 +54,19 @@ There are three acceptable values:
 
 =over 4
 
-=item 0
+=item C<0>
 
 Provides profiling information about the numbers of times different
 internal Cache Manager routines were called since the Cache Manager
 started.
 
-=item 1
+=item C<1>
 
 Reports various internal performance statistics related to the Cache
 Manager (for example, statistics about how effectively the cache is being
 used and the quantity of intracell and intercell data access).
 
-=item 2
+=item C<2>
 
 Reports all of the internal performance statistics provided by the C<1>
 setting, plus some additional, detailed performance figures (for example,

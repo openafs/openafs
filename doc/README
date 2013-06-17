@@ -1,20 +1,20 @@
 What's in the "doc" subdirectory
 
 ** doc/html
-original ibm html doc, no longer used
+original IBM html doc, no longer used
 
 ** doc/man-pages
-pod sources for man pages (converted from original ibm html source).
+pod sources for man pages (converted from original IBM html source).
 
 ** doc/xml
-xml sources for manuals (converted from original ibm html source).  there is
+xml sources for manuals (converted from original IBM html source).  there is
 some generated pdf/html content as well for the curious.
 
 Note that doc/xml/AdminReference uses doc/xml/AdminReference/pod2refentry to
 convert the pod man pages to xml for printing.  pod goes directly to html
 just fine.
 
-The reference guide is now built by converting the existing pod documention
+The reference guide is now built by converting the existing pod documentation
 to xml.  however, the indexing information was lost during the initial pod
 conversion.  Someone we will need to try to get that back.
 
@@ -36,7 +36,7 @@ current behavior of OpenAFS (for example, there's no documentation of
 dynroot, no mention of Kerberos v5, many fileserver options are
 undocumented, the afsd switch documentation is out of date, and so forth).
 I've collected as many of those deficiencies as I know of in
-doc/man-pages/README.  Any contributions to correct any of those deficiences
+doc/man-pages/README.  Any contributions to correct any of those deficiencies
 are very welcome.  This is one easy place to start.
 
 The other reference manuals (the Administrator's Guide, the Quick Start

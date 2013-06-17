@@ -2985,17 +2985,8 @@ CopyAndSalvage(struct SalvInfo *salvinfo, struct DirSummary *dir)
 		  vnodeIndexOffset(vcp, dir->vnodeNumber), (char *)&vnode,
 		  sizeof(vnode));
     osi_Assert(lcode == sizeof(vnode));
-#if 0
-#ifdef AFS_NT40_ENV
-    nt_sync(salvinfo->fileSysDevice);
-#else
-    sync();			/* this is slow, but hopefully rarely called.  We don't have
-				 * an open FD on the file itself to fsync.
-				 */
-#endif
-#else
-    salvinfo->vnodeInfo[vLarge].handle->ih_synced = 1;
-#endif
+    IH_CONDSYNC(salvinfo->vnodeInfo[vLarge].handle);
+
     /* make sure old directory file is really closed */
     fdP = IH_OPEN(dir->dirHandle.dirh_handle);
     FDH_REALLYCLOSE(fdP);
@@ -3322,7 +3313,7 @@ DistilVnodeEssence(struct SalvInfo *salvinfo, VolumeId rwVId,
 		if (class != vLarge) {
 		    VnodeId vnodeNumber = bitNumberToVnodeNumber(vnodeIndex, class);
 		    vip->nAllocatedVnodes--;
-		    memset(vnode, 0, sizeof(vnode));
+		    memset(vnode, 0, sizeof(*vnode));
 		    IH_IWRITE(salvinfo->vnodeInfo[vSmall].handle,
 			      vnodeIndexOffset(vcp, vnodeNumber),
 			      (char *)&vnode, sizeof(vnode));
@@ -4618,17 +4609,6 @@ PrintInodeSummary(struct SalvInfo *salvinfo)
     }
 }
 
-void
-PrintVolumeSummary(struct SalvInfo *salvinfo)
-{
-    int i;
-    struct VolumeSummary *vsp;
-
-    for (i = 0, vsp = salvinfo->volumeSummaryp; i < salvinfo->nVolumes; vsp++, i++) {
-	Log("fileName:%s, header, wouldNeedCallback\n", vsp->fileName);
-    }
-}
-
 int
 Fork(void)
 {
@@ -4662,12 +4642,12 @@ Exit(int code)
 
 #ifdef AFS_DEMAND_ATTACH_FS
     if (programType == salvageServer) {
-#ifdef SALVSYNC_BUILD_CLIENT
+# ifdef SALVSYNC_BUILD_CLIENT
 	VDisconnectSALV();
-#endif
-#ifdef FSSYNC_BUILD_CLIENT
+# endif
+# ifdef FSSYNC_BUILD_CLIENT
 	VDisconnectFS();
-#endif
+# endif
     }
 #endif /* AFS_DEMAND_ATTACH_FS */
 

@@ -81,6 +81,9 @@ GetMeAnEntry(void)
 	    break;
     }
 
+    if (nameptr >= NHSIZE)
+	nameptr = 0;
+
     TRACE(ScavengeEntryT, nameptr);
     tnc = nameHash[nameptr];
     if (!tnc)			/* May want to consider changing this to return 0 */

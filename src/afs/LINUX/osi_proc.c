@@ -29,11 +29,12 @@
 # include <asm/ia32_unistd.h>
 #endif
 
-#include <linux/proc_fs.h>
 #include <linux/slab.h>
 #include <linux/init.h>
 #include <linux/sched.h>
 #include <linux/kernel.h>
+
+#include "osi_compat.h"
 
 struct proc_dir_entry *openafs_procfs;
 
@@ -367,21 +368,18 @@ osi_proc_init(void)
     openafs_procfs = proc_mkdir(path, NULL);
 #endif
 #ifdef HAVE_LINUX_SEQ_FILE_H
-    entry = create_proc_entry("unixusers", 0, openafs_procfs);
-    if (entry) {
-	entry->proc_fops = &afs_unixuser_fops;
+    entry = afs_proc_create("unixusers", 0, openafs_procfs, &afs_unixuser_fops);
 # if defined(STRUCT_PROC_DIR_ENTRY_HAS_OWNER)
+    if (entry)
 	entry->owner = THIS_MODULE;
 # endif
-    }
-    entry = create_proc_entry(PROC_CELLSERVDB_NAME, 0, openafs_procfs);
-    if (entry)
-	entry->proc_fops = &afs_csdb_operations;
+    entry = afs_proc_create(PROC_CELLSERVDB_NAME, 0, openafs_procfs, &afs_csdb_operations);
 #else
     entry = create_proc_info_entry(PROC_CELLSERVDB_NAME, (S_IFREG|S_IRUGO), openafs_procfs, csdbproc_info);
 #endif
 #if defined(STRUCT_PROC_DIR_ENTRY_HAS_OWNER)
-    entry->owner = THIS_MODULE;
+    if (entry)
+	entry->owner = THIS_MODULE;
 #endif
 }
 

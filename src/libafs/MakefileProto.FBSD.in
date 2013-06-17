@@ -71,12 +71,14 @@ setup:
 	ln -fs ../Makefile.common $(KOBJ)/Makefile.common
 	-$(RM) -f  h net netinet rpc ufs nfs  machine sys vm
 	-ln -fs ${KSRC}/net net
-	-ln -fs ${KSRC}/@HOST_CPU@/include machine
+<amd64 i386>
+	-ln -fs ${KSRC}/x86/include machine
+<all>
 	-ln -fs ${KSRC}/netinet netinet
 	-ln -fs ${KSRC}/nfs nfs
-<all -fbsd_71 -fbsd_72 -fbsd_72 -fbsd_73 -fbsd_74 -fbsd_80 -fbsd_81 -fbsd_82 -fbsd_90>
+<fbsd_50 fbsd_51 fbsd_52 fbsd_53 fbsd_60 fbsd_61 fbsd_62 fbsd_70>
 	-ln -fs /usr/include/rpc rpc
-<fbsd_71 fbsd_72 fbsd_73 fbsd_74 fbsd_80 fbsd_81 fbsd_82 fbsd_90>
+<all -fbsd_50 -fbsd_51 -fbsd_52 -fbsd_53 -fbsd_60 -fbsd_61 -fbsd_62 -fbsd_70>
 	-ln -fs ${KSRC}/rpc rpc
 <all>
 	-ln -fs ${KSRC}/sys sys

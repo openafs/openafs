@@ -3024,7 +3024,7 @@ vlentry_to_nvldbentry(struct nvlentry *VlEntry, struct nvldbentry *VldbEntry)
 {
     int i, j;
 
-    memset(VldbEntry, 0, sizeof(struct vldbentry));
+    memset(VldbEntry, 0, sizeof(struct nvldbentry));
     strncpy(VldbEntry->name, VlEntry->name, sizeof(VldbEntry->name));
     for (i = 0; i < NMAXNSERVERS; i++) {
 	if (VlEntry->serverNumber[i] == BADSERVERID)
@@ -3062,7 +3062,7 @@ vlentry_to_uvldbentry(struct nvlentry *VlEntry, struct uvldbentry *VldbEntry)
 {
     int i, j;
 
-    memset(VldbEntry, 0, sizeof(struct vldbentry));
+    memset(VldbEntry, 0, sizeof(struct uvldbentry));
     strncpy(VldbEntry->name, VlEntry->name, sizeof(VldbEntry->name));
     for (i = 0; i < NMAXNSERVERS; i++) {
 	if (VlEntry->serverNumber[i] == BADSERVERID)
