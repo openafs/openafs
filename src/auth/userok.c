@@ -127,8 +127,8 @@ afsconf_SetNoAuthFlag(struct afsconf_dir *adir, int aflag)
 int
 afsconf_DeleteIdentity(struct afsconf_dir *adir, struct rx_identity *user)
 {
-    char tbuffer[1024];
-    char nbuffer[1024];
+    char *filename, *nfilename;
+    char *buffer;
     char *copy;
     FILE *tf;
     FILE *nf;
@@ -141,8 +141,17 @@ afsconf_DeleteIdentity(struct afsconf_dir *adir, struct rx_identity *user)
 
     memset(&identity, 0, sizeof(struct rx_identity));
 
+    buffer = malloc(AFSDIR_PATH_MAX);
+    if (buffer == NULL)
+	return ENOMEM;
+    filename = malloc(AFSDIR_PATH_MAX);
+    if (filename == NULL) {
+	free(buffer);
+	return ENOMEM;
+    }
+
     LOCK_GLOBAL_MUTEX;
-    UserListFileName(adir, tbuffer, sizeof tbuffer);
+    UserListFileName(adir, filename, AFSDIR_PATH_MAX);
 #ifndef AFS_NT40_ENV
     {
 	/*
@@ -150,40 +159,61 @@ afsconf_DeleteIdentity(struct afsconf_dir *adir, struct rx_identity *user)
 	 * of the temporary file will work even if UserList is a symlink
 	 * into a different filesystem.
 	 */
-	char resolved_path[1024];
-
-	if (realpath(tbuffer, resolved_path)) {
-	    strcpy(tbuffer, resolved_path);
+	nfilename = malloc(AFSDIR_PATH_MAX);
+	if (nfilename == NULL) {
+	    UNLOCK_GLOBAL_MUTEX;
+	    free(filename);
+	    free(buffer);
+	    return ENOMEM;
+	}
+	if (realpath(filename, nfilename)) {
+	    free(filename);
+	    filename = nfilename;
+	} else {
+	    free(nfilename);
 	}
     }
 #endif /* AFS_NT40_ENV */
-    tf = fopen(tbuffer, "r");
-    if (!tf) {
+    if (asprintf(&nfilename, "%s.NXX", filename) < 0) {
 	UNLOCK_GLOBAL_MUTEX;
+	free(filename);
+	free(buffer);
 	return -1;
     }
-    code = stat(tbuffer, &tstat);
+    tf = fopen(filename, "r");
+    if (!tf) {
+	UNLOCK_GLOBAL_MUTEX;
+	free(filename);
+	free(nfilename);
+	free(buffer);
+	return -1;
+    }
+    code = stat(filename, &tstat);
     if (code < 0) {
 	UNLOCK_GLOBAL_MUTEX;
+	free(filename);
+	free(nfilename);
+	free(buffer);
 	return code;
     }
-    strcpy(nbuffer, tbuffer);
-    strcat(nbuffer, ".NXX");
-    nf = fopen(nbuffer, "w+");
+    nf = fopen(nfilename, "w+");
     if (!nf) {
 	fclose(tf);
 	UNLOCK_GLOBAL_MUTEX;
+	free(filename);
+	free(nfilename);
+	free(buffer);
 	return EIO;
     }
     flag = 0;
     found = 0;
     while (1) {
 	/* check for our user id */
-	tp = fgets(nbuffer, sizeof(nbuffer), tf);
+	tp = fgets(buffer, AFSDIR_PATH_MAX, tf);
 	if (tp == NULL)
 	    break;
 
-	copy = strdup(nbuffer);
+	copy = strdup(buffer);
 	if (copy == NULL) {
 	    flag = 1;
 	    break;
@@ -194,28 +224,29 @@ afsconf_DeleteIdentity(struct afsconf_dir *adir, struct rx_identity *user)
 	    found = 1;
 	} else {
 	    /* otherwise copy original line to output */
-	    fprintf(nf, "%s", nbuffer);
+	    fprintf(nf, "%s", buffer);
 	}
 	free(copy);
 	rx_identity_freeContents(&identity);
     }
     fclose(tf);
+    free(buffer);
     if (ferror(nf))
 	flag = 1;
     if (fclose(nf) == EOF)
 	flag = 1;
-    strcpy(nbuffer, tbuffer);
-    strcat(nbuffer, ".NXX");	/* generate new file name again */
     if (flag == 0) {
 	/* try the rename */
-	flag = rk_rename(nbuffer, tbuffer);
+	flag = rk_rename(nfilename, filename);
 	if (flag == 0)
-	    flag = chmod(tbuffer, tstat.st_mode);
+	    flag = chmod(filename, tstat.st_mode);
     } else
-	unlink(nbuffer);
+	unlink(nfilename);
 
     /* finally, decide what to return to the caller */
     UNLOCK_GLOBAL_MUTEX;
+    free(filename);
+    free(nfilename);
     if (flag)
 	return EIO;		/* something mysterious went wrong */
     if (!found)
@@ -269,19 +300,24 @@ GetNthIdentityOrUser(struct afsconf_dir *dir, int count,
 		     struct rx_identity **identity, int id)
 {
     bufio_p bp;
-    char tbuffer[1024];
+    char *tbuffer;
     struct rx_identity fileUser;
     afs_int32 code;
 
+    tbuffer = malloc(AFSDIR_PATH_MAX);
+    if (tbuffer == NULL)
+	return ENOMEM;
+
     LOCK_GLOBAL_MUTEX;
-    UserListFileName(dir, tbuffer, sizeof(tbuffer));
+    UserListFileName(dir, tbuffer, AFSDIR_PATH_MAX);
     bp = BufioOpen(tbuffer, O_RDONLY, 0);
     if (!bp) {
 	UNLOCK_GLOBAL_MUTEX;
+	free(tbuffer);
 	return EIO;
     }
     while (1) {
-	code = BufioGets(bp, tbuffer, sizeof(tbuffer));
+	code = BufioGets(bp, tbuffer, AFSDIR_PATH_MAX);
 	if (code < 0)
 	    break;
 
@@ -305,6 +341,7 @@ GetNthIdentityOrUser(struct afsconf_dir *dir, int count,
     BufioClose(bp);
 
     UNLOCK_GLOBAL_MUTEX;
+    free(tbuffer);
     return code;
 }
 
@@ -456,18 +493,24 @@ afsconf_IsSuperIdentity(struct afsconf_dir *adir,
 			struct rx_identity *user)
 {
     bufio_p bp;
-    char tbuffer[1024];
+    char *tbuffer;
     struct rx_identity fileUser;
     int match;
     afs_int32 code;
 
-    UserListFileName(adir, tbuffer, sizeof tbuffer);
-    bp = BufioOpen(tbuffer, O_RDONLY, 0);
-    if (!bp)
+    tbuffer = malloc(AFSDIR_PATH_MAX);
+    if (tbuffer == NULL)
 	return 0;
+
+    UserListFileName(adir, tbuffer, AFSDIR_PATH_MAX);
+    bp = BufioOpen(tbuffer, O_RDONLY, 0);
+    if (!bp) {
+	free(tbuffer);
+	return 0;
+    }
     match = 0;
     while (!match) {
-	code = BufioGets(bp, tbuffer, sizeof(tbuffer));
+	code = BufioGets(bp, tbuffer, AFSDIR_PATH_MAX);
         if (code < 0)
 	    break;
 
@@ -480,6 +523,7 @@ afsconf_IsSuperIdentity(struct afsconf_dir *adir,
 	rx_identity_freeContents(&fileUser);
     }
     BufioClose(bp);
+    free(tbuffer);
     return match;
 }
 
@@ -490,7 +534,7 @@ afsconf_AddIdentity(struct afsconf_dir *adir, struct rx_identity *user)
     FILE *tf;
     afs_int32 code;
     char *ename;
-    char tbuffer[256];
+    char *tbuffer;
 
     LOCK_GLOBAL_MUTEX;
     if (afsconf_IsSuperIdentity(adir, user)) {
@@ -498,8 +542,10 @@ afsconf_AddIdentity(struct afsconf_dir *adir, struct rx_identity *user)
 	return EEXIST;		/* already in the list */
     }
 
-    UserListFileName(adir, tbuffer, sizeof tbuffer);
+    tbuffer = malloc(AFSDIR_PATH_MAX);
+    UserListFileName(adir, tbuffer, AFSDIR_PATH_MAX);
     tf = fopen(tbuffer, "a+");
+    free(tbuffer);
     if (!tf) {
 	UNLOCK_GLOBAL_MUTEX;
 	return EIO;
