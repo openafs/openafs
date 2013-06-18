@@ -1,3 +1,9 @@
+openafs (1.6.4-1) UNRELEASED; urgency=low
+
+  * New upstream release.
+
+ -- Russ Allbery <rra@debian.org>  Tue, 18 Jun 2013 11:07:24 -0700
+
 openafs (1.6.3-1) unstable; urgency=low
 
   * New upstream release.
