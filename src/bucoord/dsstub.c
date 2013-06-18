@@ -62,13 +62,11 @@ afs_int32 ScanVolClone(FILE *, char *, afs_int32 *);
 
 static char * TapeName(char *atapeName)
 {
-    static char tbuffer[AFSDIR_PATH_MAX];
+    char *tbuffer;
 
-    /* construct the backup dir path */
-    strcpy(tbuffer, AFSDIR_SERVER_BACKUP_DIRPATH);
-    strcat(tbuffer, "/T");
-    strcat(tbuffer + 1, atapeName);
-    strcat(tbuffer, ".db");
+    if (asprintf(&tbuffer, "%s/T%s.db", AFSDIR_SERVER_BACKUP_DIRPATH,
+		 atapeName) < 0)
+	return NULL;
     return tbuffer;
 }
 
@@ -76,13 +74,11 @@ static char * TapeName(char *atapeName)
 
 static char * DumpName(afs_int32 adumpID)
 {
-    static char tbuffer[AFSDIR_PATH_MAX];
-    char buf[AFSDIR_PATH_MAX];
+    char *tbuffer;
 
-    /* construct the backup dir path */
-    strcpy(buf, AFSDIR_SERVER_BACKUP_DIRPATH);
-    strcat(buf, "/D%d.db");
-    sprintf(tbuffer, buf, adumpID);
+    if (asprintf(&tbuffer, "%s/D%d.db", AFSDIR_SERVER_BACKUP_DIRPATH,
+		 adumpID) < 0)
+	return NULL;
     return tbuffer;
 }
 
@@ -92,7 +88,10 @@ static FILE * OpenDump(afs_int32 adumpID, char * awrite)
     FILE *tfile;
 
     tp = DumpName(adumpID);
+    if (tp == NULL)
+	return NULL;
     tfile = fopen(tp, awrite);
+    free(tp);
     return tfile;
 }
 
@@ -105,8 +104,12 @@ FILE * OpenTape(char * atapeName, char * awrite)
 {
     char *tp;
     FILE *tfile;
+
     tp = TapeName(atapeName);
+    if (tp == NULL)
+	return NULL;
     tfile = fopen(tp, awrite);
+    free(tp);
     return tfile;
 }
 
@@ -159,8 +162,12 @@ static afs_int32 DeleteDump(afs_int32 adumpID)
 {
     char *tp;
     afs_int32 code;
+
     tp = DumpName(adumpID);
+    if (tp == NULL)
+	return ENOMEM;
     code = unlink(tp);
+    free(tp);
     if (code)
 	return code;
     code = ScanForChildren(adumpID);
@@ -172,8 +179,12 @@ static afs_int32 DeleteTape(char * atapeName)
 {
     char *tp;
     afs_int32 code;
+
     tp = TapeName(atapeName);
+    if (tp == NULL)
+	return ENOMEM;
     code = unlink(tp);
+    free(tp);
     return code;
 }
 #endif

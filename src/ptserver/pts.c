@@ -1071,9 +1071,12 @@ ListOwned(struct cmd_syndesc *as, void *arock)
 static void
 add_std_args(struct cmd_syndesc *ts)
 {
-    char test_help[AFSDIR_PATH_MAX];
+    char *test_help;
 
-    sprintf(test_help, "use config file in %s", AFSDIR_SERVER_ETC_DIRPATH);
+    if (asprintf(&test_help, "use config file in %s",
+		 AFSDIR_SERVER_ETC_DIRPATH) < 0) {
+	test_help = strdup("use server config file");
+    }
 
     cmd_Seek(ts, 16);
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
@@ -1088,6 +1091,7 @@ add_std_args(struct cmd_syndesc *ts)
     cmd_AddParm(ts, "-encrypt", CMD_FLAG, CMD_OPTIONAL,
 		"encrypt commands");
     cmd_AddParm(ts, "-config", CMD_SINGLE, CMD_OPTIONAL, "config location");
+    free(test_help);
 }
 
 /*

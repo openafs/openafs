@@ -62,29 +62,46 @@ update_rxstat_userok(struct rx_call *call)
 
 /*
  * PathInDirectory() -- determine if path is in directory (or is directory)
+ * Returns 1 if yes, 0 if no, -1 on error.
  */
 static int
 PathInDirectory(char *dir, char *path)
 {
-    int inDir = 0;
+    int inDir = 0, code;
     size_t dirLen;
-    char dirNorm[AFSDIR_PATH_MAX], pathNorm[AFSDIR_PATH_MAX];
+    char *dirNorm, *pathNorm;
 
 #ifdef AFS_NT40_ENV
     /* case-insensitive comparison of normalized, same-flavor (short) paths */
     DWORD status;
 
+    dirNorm = malloc(AFSDIR_PATH_MAX);
+    if (dirNorm == NULL)
+	return -1;
     status = GetShortPathName(dir, dirNorm, AFSDIR_PATH_MAX);
     if (status == 0 || status > AFSDIR_PATH_MAX) {
 	/* can't convert path to short version; just use long version */
-	strcpy(dirNorm, dir);
+	free(dirNorm);
+	dirNorm = strdup(dir);
+	if (dirNorm == NULL)
+	    return -1;
     }
     FilepathNormalize(dirNorm);
 
+    pathNorm = malloc(AFSDIR_PATH_MAX);
+    if (pathNorm == NULL) {
+	code = -1;
+	goto out;
+    }
     status = GetShortPathName(path, pathNorm, AFSDIR_PATH_MAX);
     if (status == 0 || status > AFSDIR_PATH_MAX) {
 	/* can't convert path to short version; just use long version */
-	strcpy(pathNorm, path);
+	free(pathNorm);
+	pathNorm = strdup(path);
+	if (pathNorm == NULL) {
+	    code = -1;
+	    goto out;
+	}
     }
     FilepathNormalize(pathNorm);
 
@@ -98,10 +115,16 @@ PathInDirectory(char *dir, char *path)
     }
 #else
     /* case-sensitive comparison of normalized paths */
-    strcpy(dirNorm, dir);
+    dirNorm = strdup(dir);
+    if (dirNorm == NULL)
+	return -1;
     FilepathNormalize(dirNorm);
 
-    strcpy(pathNorm, path);
+    pathNorm = strdup(path);
+    if (pathNorm == NULL) {
+	code = -1;
+	goto out;
+    }
     FilepathNormalize(pathNorm);
 
     dirLen = strlen(dirNorm);
@@ -113,13 +136,17 @@ PathInDirectory(char *dir, char *path)
 	}
     }
 #endif /* AFS_NT40_ENV */
-    return inDir;
+    code = 0;
+out:
+    free(dirNorm);
+    free(pathNorm);
+    return (code != 0) ? code : inDir;
 }
 
 int
 AuthOkay(struct rx_call *call, char *name)
 {
-    int i;
+    int i, r;
     rxkad_level level;
     afs_int32 code;
     int matches;
@@ -137,7 +164,10 @@ AuthOkay(struct rx_call *call, char *name)
 
     matches = 0;
     for (i = 0; i < nDirs; i++) {
-	if (PathInDirectory(dirName[i], name)) {
+	r = PathInDirectory(dirName[i], name);
+	if (r < 0)
+	    return 0;
+	if (r) {
 	    if (dirLevel[i] > level)
 		return 0;
 	    matches++;

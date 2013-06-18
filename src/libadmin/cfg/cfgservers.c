@@ -1165,37 +1165,27 @@ cfg_UpdateServerStart(void *hostHandle,	/* host config handle */
     /* create and start update server instance */
 
     if (tst == 0) {
-	char argsBuf[AFSDIR_PATH_MAX], *args;
-	size_t argsLen = 0;
+	char *args = NULL;
+	int r;
 
 	if (exportClear != NULL && *exportClear != '\0') {
-	    argsLen += strlen("-clear ") + strlen(exportClear) + 1;
-	}
-	if (exportCrypt != NULL && *exportCrypt != '\0') {
-	    argsLen += strlen("-crypt ") + strlen(exportCrypt) + 1;
-	}
-
-	if (argsLen == 0) {
-	    args = NULL;
+	    if (exportCrypt != NULL && *exportCrypt != '\0') {
+		r = asprintf(&args, "-clear %s -crypt %s",
+			     exportClear, exportCrypt);
+	    } else {
+		r = asprintf(&args, "-clear %s", exportClear);
+	    }
 	} else {
-	    if (argsLen <= AFSDIR_PATH_MAX) {
-		args = argsBuf;
+	    if (exportCrypt != NULL && *exportCrypt != '\0') {
+		r = asprintf(&args, "-crypt %s", exportCrypt);
 	    } else {
-		args = malloc(argsLen);
+		args = NULL;
+		r = 0;
 	    }
-
-	    if (args == NULL) {
-		tst = ADMNOMEM;
-	    } else {
-		if (exportClear == NULL) {
-		    sprintf(args, "-crypt %s", exportCrypt);
-		} else if (exportCrypt == NULL) {
-		    sprintf(args, "-clear %s", exportClear);
-		} else {
-		    sprintf(args, "-clear %s -crypt %s", exportClear,
-			    exportCrypt);
-		}
-	    }
+	}
+	if (r < 0) {
+	    tst = ADMNOMEM;
+	    args = NULL;
 	}
 
 	if (tst == 0) {
@@ -1204,11 +1194,8 @@ cfg_UpdateServerStart(void *hostHandle,	/* host config handle */
 		 args, &tst2)) {
 		tst = tst2;
 	    }
-
-	    if (args != NULL && args != argsBuf) {
-			free(args);
-	    }
 	}
+	free(args);
     }
 
     if (tst != 0) {
@@ -1424,55 +1411,28 @@ cfg_UpdateClientStart(void *hostHandle,	/* host config handle */
     /* create and start update client instance */
 
     if (tst == 0) {
-	char argsBuf[AFSDIR_PATH_MAX], *args;
-	size_t argsLen = 0;
+	char *args = NULL;
+	int r;
 
-	argsLen += strlen(upserver) + 1;
+	if (frequency != 0)
+	    r = asprintf(&args, "%s %s -t %u %s", upserver,
+			 crypt ? "-crypt" : "-clear", frequency, import);
+	else
+	    r = asprintf(&args, "%s %s %s", upserver,
+			 crypt ? "-crypt" : "-clear", import);
 
-	if (crypt) {
-	    argsLen += strlen("-crypt ");
-	} else {
-	    argsLen += strlen("-clear ");
-	}
-
-	if (frequency != 0) {
-	    argsLen += strlen("-t ") + 10 /* max uint */  + 1;
-	}
-
-	argsLen += strlen(import) + 1;
-
-	if (argsLen <= AFSDIR_PATH_MAX) {
-	    args = argsBuf;
-	} else {
-	    args = malloc(argsLen);
-	}
-
-	if (args == NULL) {
+	if (r < 0) {
 	    tst = ADMNOMEM;
+	    args = NULL;
 	} else {
-	    /* set up argument buffer */
-	    if (crypt) {
-		sprintf(args, "%s -crypt ", upserver);
-	    } else {
-		sprintf(args, "%s -clear ", upserver);
-	    }
-	    if (frequency != 0) {
-		char *strp = args + strlen(args);
-		sprintf(strp, "-t %u ", frequency);
-	    }
-	    strcat(args, import);
-
 	    /* create and start instance */
 	    if (!SimpleProcessStart
 		(cfg_host->bosHandle, upclientInstance, UPCLIENT_EXEPATH,
 		 args, &tst2)) {
 		tst = tst2;
 	    }
-
-	    if (args != argsBuf) {
-			free(args);
-	    }
 	}
+	free(args);
     }
 
     if (tst != 0) {
@@ -1767,26 +1727,18 @@ SimpleProcessStart(void *bosHandle, const char *instance,
 {
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    char cmdBuf[AFSDIR_PATH_MAX], *cmd;
-    size_t cmdLen;
+    char *cmd;
 
-    cmdLen = strlen(executable) + 1 + (args == NULL ? 0 : (strlen(args) + 1));
-
-    if (cmdLen <= AFSDIR_PATH_MAX) {
-	cmd = cmdBuf;
+    if (args == NULL) {
+	cmd = strdup(executable);
     } else {
-	cmd = malloc(cmdLen);
+	if (asprintf(&cmd, "%s %s", executable, args) < 0)
+	    cmd = NULL;
     }
 
     if (cmd == NULL) {
 	tst = ADMNOMEM;
     } else {
-	if (args == NULL) {
-	    strcpy(cmd, executable);
-	} else {
-	    sprintf(cmd, "%s %s", executable, args);
-	}
-
 	if (!bos_ProcessCreate
 	    (bosHandle, (char *)instance, BOS_PROCESS_SIMPLE, cmd, NULL, NULL, &tst2)
 	    && tst2 != BZEXISTS) {
@@ -1798,10 +1750,7 @@ SimpleProcessStart(void *bosHandle, const char *instance,
 	    /* failed to set instance state to running */
 	    tst = tst2;
 	}
-
-	if (cmd != cmdBuf) {
-	    free(cmd);
-	}
+	free(cmd);
     }
 
     if (tst != 0) {

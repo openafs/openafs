@@ -4832,7 +4832,7 @@ TimeStamp(time_t clock, int precision)
 void
 CheckLogFile(char * log_path)
 {
-    char oldSlvgLog[AFSDIR_PATH_MAX];
+    char *oldSlvgLog;
 
 #ifndef AFS_NT40_ENV
     if (useSyslog) {
@@ -4841,10 +4841,11 @@ CheckLogFile(char * log_path)
     }
 #endif
 
-    strcpy(oldSlvgLog, log_path);
-    strcat(oldSlvgLog, ".old");
     if (!logFile) {
-	rk_rename(log_path, oldSlvgLog);
+	if (asprintf(&oldSlvgLog, "%s.old", log_path) >= 0) {
+	    rk_rename(log_path, oldSlvgLog);
+	    free(oldSlvgLog);
+	}
 	logFile = afs_fopen(log_path, "a");
 
 	if (!logFile) {		/* still nothing, use stdout */
@@ -4861,21 +4862,22 @@ CheckLogFile(char * log_path)
 void
 TimeStampLogFile(char * log_path)
 {
-    char stampSlvgLog[AFSDIR_PATH_MAX];
+    char *stampSlvgLog;
     struct tm *lt;
     time_t now;
 
     now = time(0);
     lt = localtime(&now);
-    snprintf(stampSlvgLog, sizeof stampSlvgLog,
-	     "%s.%04d-%02d-%02d.%02d:%02d:%02d", log_path,
-	     lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour,
-	     lt->tm_min, lt->tm_sec);
-
-    /* try to link the logfile to a timestamped filename */
-    /* if it fails, oh well, nothing we can do */
-    if (link(log_path, stampSlvgLog))
-	; /* oh well */
+    if (asprintf(&stampSlvgLog,
+		 "%s.%04d-%02d-%02d.%02d:%02d:%02d", log_path,
+		 lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour,
+		 lt->tm_min, lt->tm_sec) >= 0) {
+	/* try to link the logfile to a timestamped filename */
+	/* if it fails, oh well, nothing we can do */
+	if (link(log_path, stampSlvgLog))
+	    ; /* oh well */
+	free(stampSlvgLog);
+    }
 }
 #endif
 
@@ -5039,7 +5041,7 @@ int
 nt_SetupPartitionSalvage(void *datap, int len)
 {
     childJob_t *jobp = (childJob_t *) datap;
-    char logname[AFSDIR_PATH_MAX];
+    char *logname;
 
     if (len != sizeof(childJob_t))
 	return -1;
@@ -5048,9 +5050,11 @@ nt_SetupPartitionSalvage(void *datap, int len)
     myjob = *jobp;
 
     /* Open logFile */
-    (void)sprintf(logname, "%s.%d", AFSDIR_SERVER_SLVGLOG_FILEPATH,
-		  myjob.cj_number);
+    if (asprintf(&logname, "%s.%d", AFSDIR_SERVER_SLVGLOG_FILEPATH,
+		 myjob.cj_number) < 0)
+	return -1;
     logFile = afs_fopen(logname, "w");
+    free(logname);
     if (!logFile)
 	logFile = stdout;
 

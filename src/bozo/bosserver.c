@@ -530,17 +530,21 @@ int
 WriteBozoFile(char *aname)
 {
     FILE *tfile;
-    char tbuffer[AFSDIR_PATH_MAX];
+    char *tbuffer = NULL;
     afs_int32 code;
     struct bztemp btemp;
+    int ret = 0;
 
     if (!aname)
 	aname = (char *)bozo_fileName;
-    strcpy(tbuffer, aname);
-    strcat(tbuffer, ".NBZ");
-    tfile = fopen(tbuffer, "w");
-    if (!tfile)
+    if (asprintf(&tbuffer, "%s.NBZ", aname) < 0)
 	return -1;
+
+    tfile = fopen(tbuffer, "w");
+    if (!tfile) {
+	ret = -1;
+	goto out;
+    }
     btemp.file = tfile;
 
     fprintf(tfile, "restrictmode %d\n", bozo_isrestricted);
@@ -554,19 +558,25 @@ WriteBozoFile(char *aname)
     if (code || (code = ferror(tfile))) {	/* something went wrong */
 	fclose(tfile);
 	unlink(tbuffer);
-	return code;
+	ret = code;
+	goto out;
     }
     /* close the file, check for errors and snap new file into place */
     if (fclose(tfile) == EOF) {
 	unlink(tbuffer);
-	return -1;
+	ret = -1;
+	goto out;
     }
     code = rk_rename(tbuffer, aname);
     if (code) {
 	unlink(tbuffer);
-	return -1;
+	ret = -1;
+	goto out;
     }
-    return 0;
+    ret = 0;
+out:
+    free(tbuffer);
+    return ret;
 }
 
 static int
@@ -777,7 +787,7 @@ main(int argc, char **argv, char **envp)
     struct afsconf_dir *tdir;
     int noAuth = 0;
     int i;
-    char namebuf[AFSDIR_PATH_MAX];
+    char *oldlog;
     int rxMaxMTU = -1;
     afs_uint32 host = htonl(INADDR_ANY);
     char *auditFileName = NULL;
@@ -972,9 +982,12 @@ main(int argc, char **argv, char **envp)
 	!(S_ISFIFO(sb.st_mode)))
 #endif
 	) {
-	strcpy(namebuf, AFSDIR_BOZLOG_FILE);
-	strcat(namebuf, ".old");
-	rk_rename(AFSDIR_BOZLOG_FILE, namebuf);	/* try rename first */
+	if (asprintf(&oldlog, "%s.old", AFSDIR_BOZLOG_FILE) < 0) {
+	    printf("bosserver: out of memory\n");
+	    exit(1);
+	}
+	rk_rename(AFSDIR_BOZLOG_FILE, oldlog);	/* try rename first */
+	free(oldlog);
 	bozo_logFile = fopen(AFSDIR_BOZLOG_FILE, "a");
 	if (!bozo_logFile) {
 	    printf("bosserver: can't initialize log file (%s).\n",

@@ -104,10 +104,11 @@ main(int argc, char **argv)
 {
     struct cmd_syndesc *ts;
     afs_int32 code;
-    char dbmfile_help[AFSDIR_PATH_MAX];
+    char *dbmfile_help;
 
-    sprintf(dbmfile_help, "dbmfile to use (default %s)",
-	    AFSDIR_SERVER_KALOGDB_FILEPATH);
+    if (asprintf(&dbmfile_help, "dbmfile to use (default %s)",
+		 AFSDIR_SERVER_KALOGDB_FILEPATH) < 0)
+	dbmfile_help = "dbmfile to use";
     dbmfile = AFSDIR_SERVER_KALOGDB_FILEPATH;
     ts = cmd_CreateSyntax(NULL, cmdproc, NULL, 0, "Dump contents of dbm database");
     cmd_AddParm(ts, "-dbmfile", CMD_SINGLE, CMD_OPTIONAL, dbmfile_help);

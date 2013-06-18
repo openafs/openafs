@@ -954,7 +954,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	struct stat sbuf;
 	afs_int32 statcode;
 #ifndef AFS_NT40_ENV
-	char path[AFSDIR_PATH_MAX];
+	char *path;
 #endif
 
 	statcode = stat(centralLogFile, &sbuf);
@@ -966,7 +966,8 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	}
 #ifndef AFS_NT40_ENV
 	/* Make sure it is not in AFS, has to have been created first */
-	if (!realpath(centralLogFile, path)) {
+	path = malloc(AFSDIR_PATH_MAX);
+	if (path == NULL || !realpath(centralLogFile, path)) {
 	    fprintf(stderr,
 		    "Warning: can't determine real path of '%s' (%d)\n",
 		    centralLogFile, errno);
@@ -977,6 +978,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		exit(1);
 	    }
 	}
+	free(path);
 #endif
 
 	/* Write header if created it */

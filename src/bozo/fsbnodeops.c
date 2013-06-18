@@ -112,9 +112,9 @@ static void SetNeedsClock(struct fsbnode *);
 static int NudgeProcs(struct fsbnode *);
 
 #ifdef AFS_NT40_ENV
-static void AppendExecutableExtension(char *cmd);
+static char *AppendExecutableExtension(char *cmd);
 #else
-#define AppendExecutableExtension(x)
+#define AppendExecutableExtension(x) strdup(x)
 #endif
 
 struct bnode_ops fsbnode_ops = {
@@ -286,20 +286,22 @@ fs_restartp(struct bnode *bn)
 static int
 SetSalFlag(struct fsbnode *abnode, int aflag)
 {
-    char tbuffer[AFSDIR_PATH_MAX];
+    char *filepath;
     int fd;
 
     /* don't use the salvage flag for demand attach fs */
     if (abnode->salsrvcmd == NULL) {
 	abnode->needsSalvage = aflag;
-	strcompose(tbuffer, AFSDIR_PATH_MAX, AFSDIR_SERVER_LOCAL_DIRPATH, "/",
-		   SALFILE, abnode->b.name, (char *)NULL);
+	if (asprintf(&filepath, "%s/%s%s", AFSDIR_SERVER_LOCAL_DIRPATH,
+		   SALFILE, abnode->b.name) < 0)
+	    return ENOMEM;
 	if (aflag) {
-	    fd = open(tbuffer, O_CREAT | O_TRUNC | O_RDWR, 0666);
+	    fd = open(filepath, O_CREAT | O_TRUNC | O_RDWR, 0666);
 	    close(fd);
 	} else {
-	    unlink(tbuffer);
+	    unlink(filepath);
 	}
+	free(filepath);
     }
     return 0;
 }
@@ -308,20 +310,22 @@ SetSalFlag(struct fsbnode *abnode, int aflag)
 static int
 RestoreSalFlag(struct fsbnode *abnode)
 {
-    char tbuffer[AFSDIR_PATH_MAX];
+    char *filepath;
 
     /* never set needs salvage flag for demand attach fs */
     if (abnode->salsrvcmd != NULL) {
 	abnode->needsSalvage = 0;
     } else {
-	strcompose(tbuffer, AFSDIR_PATH_MAX, AFSDIR_SERVER_LOCAL_DIRPATH, "/",
-		   SALFILE, abnode->b.name, (char *)NULL);
-	if (access(tbuffer, 0) == 0) {
+	if (asprintf(&filepath, "%s/%s%s", AFSDIR_SERVER_LOCAL_DIRPATH,
+		     SALFILE, abnode->b.name) < 0)
+	    return ENOMEM;
+	if (access(filepath, 0) == 0) {
 	    /* file exists, so need to salvage */
 	    abnode->needsSalvage = 1;
 	} else {
 	    abnode->needsSalvage = 0;
 	}
+	free(filepath);
     }
     return 0;
 }
@@ -344,16 +348,19 @@ fs_delete(struct bnode *bn)
 
 
 #ifdef AFS_NT40_ENV
-static void
+static char *
 AppendExecutableExtension(char *cmd)
 {
     char cmdext[_MAX_EXT];
+    char *cmdexe;
 
     _splitpath(cmd, NULL, NULL, NULL, cmdext);
     if (*cmdext == '\0') {
-	/* no filename extension supplied for cmd; append .exe */
-	strcat(cmd, ".exe");
+	if (asprintf(&cmdexe, "%s.exe", cmd) < 0)
+	    return NULL;
+	return cmdexe;
     }
+    return strdup(cmd);
 }
 #endif /* AFS_NT40_ENV */
 
@@ -364,7 +371,7 @@ fs_create(char *ainstance, char *afilecmd, char *avolcmd, char *asalcmd,
 {
     struct stat tstat;
     struct fsbnode *te;
-    char cmdname[AFSDIR_PATH_MAX];
+    char *cmdname = NULL;
     char *fileCmdpath, *volCmdpath, *salCmdpath, *scanCmdpath;
     int bailout = 0;
 
@@ -397,24 +404,38 @@ fs_create(char *ainstance, char *afilecmd, char *avolcmd, char *asalcmd,
     }
 
     if (!bailout) {
-	sscanf(fileCmdpath, "%s", cmdname);
-	AppendExecutableExtension(cmdname);
+	cmdname = AppendExecutableExtension(fileCmdpath);
+	if (cmdname == NULL) {
+	    bozo_Log("Out of memory constructing binary filename\n");
+	    bailout = 1;
+	    goto done;
+	}
 	if (stat(cmdname, &tstat)) {
 	    bozo_Log("BNODE: file server binary '%s' not found\n", cmdname);
 	    bailout = 1;
 	    goto done;
 	}
+	free(cmdname);
 
-	sscanf(volCmdpath, "%s", cmdname);
-	AppendExecutableExtension(cmdname);
+	cmdname = AppendExecutableExtension(volCmdpath);
+	if (cmdname == NULL) {
+	    bozo_Log("Out of memory constructing binary filename\n");
+	    bailout = 1;
+	    goto done;
+	}
 	if (stat(cmdname, &tstat)) {
 	    bozo_Log("BNODE: volume server binary '%s' not found\n", cmdname);
 	    bailout = 1;
 	    goto done;
 	}
+	free(cmdname);
 
-	sscanf(salCmdpath, "%s", cmdname);
-	AppendExecutableExtension(cmdname);
+	cmdname = AppendExecutableExtension(salCmdpath);
+	if (cmdname == NULL) {
+	    bozo_Log("Out of memory constructing binary filename\n");
+	    bailout = 1;
+	    goto done;
+	}
 	if (stat(cmdname, &tstat)) {
 	    bozo_Log("BNODE: salvager binary '%s' not found\n", cmdname);
 	    bailout = 1;
@@ -422,8 +443,13 @@ fs_create(char *ainstance, char *afilecmd, char *avolcmd, char *asalcmd,
 	}
 
 	if (ascancmd && strlen(ascancmd)) {
-	    sscanf(scanCmdpath, "%s", cmdname);
-	    AppendExecutableExtension(cmdname);
+	    free(cmdname);
+	    cmdname = AppendExecutableExtension(scanCmdpath);
+	    if (cmdname == NULL) {
+		bozo_Log("Out of memory constructing binary filename\n");
+		bailout = 1;
+		goto done;
+	    }
 	    if (stat(cmdname, &tstat)) {
 		bozo_Log("BNODE: scanner binary '%s' not found\n", cmdname);
 		bailout = 1;
@@ -455,6 +481,7 @@ fs_create(char *ainstance, char *afilecmd, char *avolcmd, char *asalcmd,
     SetNeedsClock(te);		/* compute needsClock field */
 
  done:
+    free(cmdname);
     if (bailout) {
 	if (te)
 	    free(te);
@@ -479,7 +506,7 @@ dafs_create(char *ainstance, char *afilecmd, char *avolcmd,
 {
     struct stat tstat;
     struct fsbnode *te;
-    char cmdname[AFSDIR_PATH_MAX];
+    char *cmdname = NULL;
     char *fileCmdpath, *volCmdpath, *salsrvCmdpath, *salCmdpath, *scanCmdpath;
     int bailout = 0;
 
@@ -517,32 +544,51 @@ dafs_create(char *ainstance, char *afilecmd, char *avolcmd,
     }
 
     if (!bailout) {
-	sscanf(fileCmdpath, "%s", cmdname);
-	AppendExecutableExtension(cmdname);
+	cmdname = AppendExecutableExtension(fileCmdpath);
+	if (cmdname == NULL) {
+	    bozo_Log("Out of memory constructing binary filename\n");
+	    bailout = 1;
+	    goto done;
+	}
 	if (stat(cmdname, &tstat)) {
 	    bozo_Log("BNODE: file server binary '%s' not found\n", cmdname);
 	    bailout = 1;
 	    goto done;
 	}
+	free(cmdname);
 
-	sscanf(volCmdpath, "%s", cmdname);
-	AppendExecutableExtension(cmdname);
+	cmdname = AppendExecutableExtension(volCmdpath);
+	if (cmdname == NULL) {
+	    bozo_Log("Out of memory constructing binary filename\n");
+	    bailout = 1;
+	    goto done;
+	}
 	if (stat(cmdname, &tstat)) {
 	    bozo_Log("BNODE: volume server binary '%s' not found\n", cmdname);
 	    bailout = 1;
 	    goto done;
 	}
+	free(cmdname);
 
-	sscanf(salsrvCmdpath, "%s", cmdname);
-	AppendExecutableExtension(cmdname);
+	cmdname = AppendExecutableExtension(salsrvCmdpath);
+	if (cmdname == NULL) {
+	    bozo_Log("Out of memory constructing binary filename\n");
+	    bailout = 1;
+	    goto done;
+	}
 	if (stat(cmdname, &tstat)) {
 	    bozo_Log("BNODE: salvageserver binary '%s' not found\n", cmdname);
 	    bailout = 1;
 	    goto done;
 	}
+	free(cmdname);
 
-	sscanf(salCmdpath, "%s", cmdname);
-	AppendExecutableExtension(cmdname);
+	cmdname = AppendExecutableExtension(salCmdpath);
+	if (cmdname == NULL) {
+	    bozo_Log("Out of memory constructing binary filename\n");
+	    bailout = 1;
+	    goto done;
+	}
 	if (stat(cmdname, &tstat)) {
 	    bozo_Log("BNODE: salvager binary '%s' not found\n", cmdname);
 	    bailout = 1;
@@ -550,8 +596,13 @@ dafs_create(char *ainstance, char *afilecmd, char *avolcmd,
 	}
 
 	if (ascancmd && strlen(ascancmd)) {
-	    sscanf(scanCmdpath, "%s", cmdname);
-	    AppendExecutableExtension(cmdname);
+	    free(cmdname);
+	    cmdname = AppendExecutableExtension(scanCmdpath);
+	    if (cmdname == NULL) {
+		bozo_Log("Out of memory constructing binary filename\n");
+		bailout = 1;
+		goto done;
+	    }
 	    if (stat(cmdname, &tstat)) {
 		bozo_Log("BNODE: scanner binary '%s' not found\n", cmdname);
 		bailout = 1;
@@ -583,6 +634,7 @@ dafs_create(char *ainstance, char *afilecmd, char *avolcmd,
     SetNeedsClock(te);		/* compute needsClock field */
 
  done:
+    free(cmdname);
     if (bailout) {
 	if (te)
 	    free(te);

@@ -145,13 +145,17 @@ static int DoDirSet(struct cmd_syndesc *as, void *arock)
 
 static int DoBosCfg(struct cmd_syndesc *as, void *arock)
 {
-    char bosSvcPath[AFSDIR_PATH_MAX];
-    SC_HANDLE scmHandle, svcHandle;
+    char *bosSvcPath = NULL;
+    SC_HANDLE scmHandle = NULL, svcHandle = NULL;
+    int code;
 
     /* determine if using specified or default service binary path */
     if (as->parms[0].items) {
 	/* BOS control service binary path specified */
-	sprintf(bosSvcPath, "\"%s\"", as->parms[0].items->data);
+	if (asprintf(&bosSvcPath, "\"%s\"", as->parms[0].items->data) < 0) {
+	    afs_com_err(whoami, 0, "out of memory building binary path");
+	    return 1;
+	}
     } else {
 	/* no BOS control service binary path specified; check for default */
 	char *dirBuf;
@@ -161,10 +165,13 @@ static int DoBosCfg(struct cmd_syndesc *as, void *arock)
 		    "binary path not specified and AFS server installation directory not set");
 	    return 1;
 	}
-	sprintf(bosSvcPath, "\"%s%s/%s\"",
-		dirBuf,
-		AFSDIR_CANONICAL_SERVER_BIN_DIRPATH,
-		AFSREG_SVR_SVC_IMAGENAME_DATA);
+	if (asprintf(&bosSvcPath, "\"%s%s/%s\"",
+		     dirBuf,
+		     AFSDIR_CANONICAL_SERVER_BIN_DIRPATH,
+		     AFSREG_SVR_SVC_IMAGENAME_DATA) < 0) {
+	    afs_com_err(whoami, 0, "out of memory building binary path");
+	    return 1;
+	}
     }
 
     /* create BOS control service */
@@ -178,7 +185,8 @@ static int DoBosCfg(struct cmd_syndesc *as, void *arock)
 	    reason = "(insufficient privilege)";
 	}
 	afs_com_err(whoami, 0, "unable to connect to the SCM %s", reason);
-	return 1;
+	code = 1;
+	goto out;
     }
 
     svcHandle = CreateService(scmHandle,
@@ -203,13 +211,18 @@ static int DoBosCfg(struct cmd_syndesc *as, void *arock)
 	    reason = "(service or display name already exists)";
 	}
 	afs_com_err(whoami, 0, "unable to create service %s", reason);
-	CloseServiceHandle(scmHandle);
-	return 1;
+	code = 1;
+    } else {
+	code = 0;
     }
 
-    CloseServiceHandle(svcHandle);
-    CloseServiceHandle(scmHandle);
-    return (0);
+out:
+    free(bosSvcPath);
+    if (svcHandle != NULL)
+	CloseServiceHandle(svcHandle);
+    if (scmHandle != NULL)
+	CloseServiceHandle(scmHandle);
+    return code;
 }
 
 

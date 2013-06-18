@@ -163,7 +163,7 @@ main(int argc, char *argv[])
     const char *cellservdb, *dbpath, *lclpath;
     int a;
     char arg[32];
-    char default_lclpath[AFSDIR_PATH_MAX];
+    char *default_lclpath;
     int servers;
     int initFlags;
     int level;			/* security level for Ubik */
@@ -225,8 +225,12 @@ main(int argc, char *argv[])
 
     cellservdb = AFSDIR_SERVER_ETC_DIRPATH;
     dbpath = AFSDIR_SERVER_KADB_FILEPATH;
-    strcompose(default_lclpath, AFSDIR_PATH_MAX, AFSDIR_SERVER_LOCAL_DIRPATH,
-	       "/", AFSDIR_KADB_FILE, (char *)NULL);
+
+    if (asprintf(&default_lclpath, "%s/%s", AFSDIR_SERVER_LOCAL_DIRPATH,
+		 AFSDIR_KADB_FILE) < 0) {
+	fprintf(stderr, "%s: No memory for default local dir path\n", argv[0]);
+	exit(2);
+    }
     lclpath = default_lclpath;
 
     debugOutput = 0;

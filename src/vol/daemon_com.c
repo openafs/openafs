@@ -81,17 +81,13 @@ static int SYNC_ask_internal(SYNC_client_state * state, SYNC_command * com, SYNC
 void
 SYNC_getAddr(SYNC_endpoint_t * endpoint, SYNC_sockaddr_t * addr)
 {
-#ifdef USE_UNIX_SOCKETS
-    char tbuffer[AFSDIR_PATH_MAX];
-#endif /* USE_UNIX_SOCKETS */
-
     memset(addr, 0, sizeof(*addr));
 
 #ifdef USE_UNIX_SOCKETS
-    strcompose(tbuffer, AFSDIR_PATH_MAX, AFSDIR_SERVER_LOCAL_DIRPATH, "/",
-               endpoint->un, (char *)NULL);
     addr->sun_family = AF_UNIX;
-    strncpy(addr->sun_path, tbuffer, (sizeof(struct sockaddr_un) - sizeof(short)));
+    snprintf(addr->sun_path, sizeof(addr->sun_path), "%s/%s",
+	     AFSDIR_SERVER_LOCAL_DIRPATH, endpoint->un);
+    addr->sun_path[sizeof(addr->sun_path) - 1] = '\0';
 #else  /* !USE_UNIX_SOCKETS */
 #ifdef STRUCT_SOCKADDR_HAS_SA_LEN
     addr->sin_len = sizeof(struct sockaddr_in);

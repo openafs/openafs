@@ -135,41 +135,46 @@ SBOZO_GetDates(struct rx_call *acall, char *aname, afs_int32 *atime,
 	       afs_int32 *abakTime, afs_int32 *aoldTime)
 {
     struct stat tstat;
-    char *strp;
-    char tbuffer[AFSDIR_PATH_MAX];
+    char *filepath = NULL, *fpBak = NULL, *fpOld = NULL;
 
     *atime = *abakTime = *aoldTime = 0;
 
     /* construct local path from canonical (wire-format) path */
-    if (ConstructLocalBinPath(aname, &strp)) {
+    if (ConstructLocalBinPath(aname, &filepath)) {
 	return 0;
     }
-    strcpy(tbuffer, strp);
-    free(strp);
+    if (asprintf(&fpBak, "%s.BAK", filepath) < 0) {
+	fpBak = NULL;
+	goto out;
+    }
+    if (asprintf(&fpOld, "%s.OLD", filepath) < 0) {
+	fpOld = NULL;
+	goto out;
+    }
 
-    strp = tbuffer + strlen(tbuffer);
-
-    if (!stat(tbuffer, &tstat)) {
+    if (!stat(filepath, &tstat)) {
 	*atime = tstat.st_mtime;
     }
 
-    strcpy(strp, ".BAK");
-    if (!stat(tbuffer, &tstat)) {
+    if (!stat(fpBak, &tstat)) {
 	*abakTime = tstat.st_mtime;
     }
 
-    strcpy(strp, ".OLD");
-    if (!stat(tbuffer, &tstat)) {
+    if (!stat(fpOld, &tstat)) {
 	*aoldTime = tstat.st_mtime;
     }
+out:
+    free(fpOld);
+    free(fpBak);
+    free(filepath);
     return 0;
 }
 
 afs_int32
 SBOZO_UnInstall(struct rx_call *acall, char *aname)
 {
-    char *filepath;
-    char fpOld[AFSDIR_PATH_MAX], fpBak[AFSDIR_PATH_MAX];
+    char *filepath = NULL;
+    char *fpOld = NULL, *fpBak = NULL;
     afs_int32 code;
     char caller[MAXKTCNAMELEN];
     struct stat tstat;
@@ -193,10 +198,16 @@ SBOZO_UnInstall(struct rx_call *acall, char *aname)
     if (DoLogging)
 	bozo_Log("%s is executing UnInstall '%s'\n", caller, filepath);
 
-    strcpy(fpBak, filepath);
-    strcat(fpBak, ".BAK");
-    strcpy(fpOld, filepath);
-    strcat(fpOld, ".OLD");
+    if (asprintf(&fpBak, "%s.BAK", filepath) < 0) {
+	code = BZIO;
+	fpBak = NULL;
+	goto out;
+    }
+    if (asprintf(&fpOld, "%s.OLD", filepath) < 0) {
+	code = BZIO;
+	fpOld = NULL;
+	goto out;
+    }
 
     code = rk_rename(fpBak, filepath);
     if (code) {
@@ -212,7 +223,10 @@ SBOZO_UnInstall(struct rx_call *acall, char *aname)
     if (code)
 	code = errno;
 
+out:
     osi_auditU(acall, BOS_UnInstallEvent, code, AUD_STR, filepath, AUD_END);
+    free(fpBak);
+    free(fpOld);
     free(filepath);
 
     return code;
@@ -223,20 +237,24 @@ static void
 SaveOldFiles(char *aname)
 {
     afs_int32 code;
-    char bbuffer[AFSDIR_PATH_MAX], obuffer[AFSDIR_PATH_MAX];
+    char *bbuffer = NULL, *obuffer = NULL;
     struct stat tstat;
     afs_int32 now;
     afs_int32 oldTime, bakTime;
 
-    strcpy(bbuffer, aname);
-    strcat(bbuffer, ".BAK");
-    strcpy(obuffer, aname);
-    strcat(obuffer, ".OLD");
     now = FT_ApproxTime();
 
     code = stat(aname, &tstat);
     if (code < 0)
 	return;			/* can't stat file */
+
+    if (asprintf(&bbuffer, "%s.BAK", aname) < 0)
+	return;
+
+    if (asprintf(&obuffer, "%s.OLD", aname) < 0) {
+	obuffer = NULL;
+	goto out;
+    }
 
     code = stat(obuffer, &tstat);	/* discover old file's time */
     if (code)
@@ -257,13 +275,17 @@ SaveOldFiles(char *aname)
 
     /* finally rename to .BAK extension */
     rk_rename(aname, bbuffer);
+
+out:
+    free(bbuffer);
+    free(obuffer);
 }
 
 afs_int32
 SBOZO_Install(struct rx_call *acall, char *aname, afs_int32 asize, afs_int32 mode, afs_int32 amtime)
 {
-    afs_int32 code;
-    int fd;
+    afs_int32 code, ret = 0;
+    int fd = -1;
     afs_int32 len;
     afs_int32 total;
 #ifdef AFS_NT40_ENV
@@ -271,7 +293,7 @@ SBOZO_Install(struct rx_call *acall, char *aname, afs_int32 asize, afs_int32 mod
 #else
     struct timeval tvb[2];
 #endif
-    char filepath[AFSDIR_PATH_MAX], tbuffer[AFSDIR_PATH_MAX], *fpp;
+    char *filepath = NULL, *fpNew = NULL, *tbuffer = NULL;
     char caller[MAXKTCNAMELEN];
 
     if (!afsconf_SuperUser(bozo_confdir, acall, caller))
@@ -280,53 +302,58 @@ SBOZO_Install(struct rx_call *acall, char *aname, afs_int32 asize, afs_int32 mod
 	return BZACCESS;
 
     /* construct local path from canonical (wire-format) path */
-    if (ConstructLocalBinPath(aname, &fpp)) {
+    if (ConstructLocalBinPath(aname, &filepath)) {
 	return BZNOENT;
     }
-    strcpy(filepath, fpp);
-    free(fpp);
+    if (asprintf(&fpNew, "%s.NEW", filepath) < 0) {
+	ret = ENOMEM;
+	fpNew = NULL;
+	goto out;
+    }
+    tbuffer = malloc(AFSDIR_PATH_MAX);
+    if (tbuffer == NULL) {
+	ret =  ENOMEM;
+	goto out;
+    }
 
     if (DoLogging)
 	bozo_Log("%s is executing Install '%s'\n", caller, filepath);
 
     /* open file */
-    fpp = filepath + strlen(filepath);
-    strcpy(fpp, ".NEW");	/* append ".NEW" to end of filepath */
-    fd = open(filepath, O_CREAT | O_RDWR | O_TRUNC, 0777);
-    if (fd < 0)
-	return errno;
+    fd = open(fpNew, O_CREAT | O_RDWR | O_TRUNC, 0777);
+    if (fd < 0) {
+	ret =  errno;
+	goto out;
+    }
     total = 0;
     while (1) {
 	len = rx_Read(acall, tbuffer, sizeof(tbuffer));
 	if (len < 0) {
-	    close(fd);
-	    unlink(filepath);
-	    return 102;
+	    unlink(fpNew);
+	    ret =  102;
+	    goto out;
 	}
 	if (len == 0)
 	    break;		/* no more input */
 	code = write(fd, tbuffer, len);
 	if (code != len) {
-	    close(fd);
-	    unlink(filepath);
-	    return 100;
+	    unlink(fpNew);
+	    ret =  100;
+	    goto out;
 	}
 	total += len;		/* track total written for safety check at end */
     }
-    close(fd);
     if (asize != total) {
-	unlink(filepath);
-	return 101;		/* wrong size */
+	unlink(fpNew);
+	ret =  101;		/* wrong size */
+	goto out;
     }
 
     /* save old files */
-    *fpp = '\0';		/* remove ".NEW" from end of filepath */
     SaveOldFiles(filepath);	/* don't care if it works, still install */
 
     /* all done, rename to final name */
-    strcpy(tbuffer, filepath);
-    strcat(tbuffer, ".NEW");
-    code = (rk_rename(tbuffer, filepath) ? errno : 0);
+    code = (rk_rename(fpNew, filepath) ? errno : 0);
 
     /* label file with same time for our sanity */
 #ifdef AFS_NT40_ENV
@@ -343,9 +370,17 @@ SBOZO_Install(struct rx_call *acall, char *aname, afs_int32 asize, afs_int32 mod
 
     if (code < 0) {
 	osi_auditU(acall, BOS_InstallEvent, code, AUD_STR, filepath, AUD_END);
-	return errno;
-    } else
-	return 0;
+	ret = errno;
+	goto out;
+    }
+    ret = 0;
+out:
+    if (fd >= 0)
+	close(fd);
+    free(filepath);
+    free(fpNew);
+    free(tbuffer);
+    return ret;
 }
 
 afs_int32

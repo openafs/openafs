@@ -603,7 +603,7 @@ SalvageServer(int argc, char **argv)
 static int
 DoSalvageVolume(struct SalvageQueueNode * node, int slot)
 {
-    char childLog[AFSDIR_PATH_MAX];
+    char *childLog;
     struct DiskPartition64 * partP;
 
     /* do not allow further forking inside salvager */
@@ -613,13 +613,17 @@ DoSalvageVolume(struct SalvageQueueNode * node, int slot)
      * another thread may have held the lock on the FILE
      * structure when fork was called! */
 
-    snprintf(childLog, sizeof(childLog), "%s.%d",
-	     AFSDIR_SERVER_SLVGLOG_FILEPATH, getpid());
-
-    logFile = afs_fopen(childLog, "a");
-    if (!logFile) {		/* still nothing, use stdout */
+    if (asprintf(&childLog, "%s.%d",
+		 AFSDIR_SERVER_SLVGLOG_FILEPATH, getpid()) < 0) {
 	logFile = stdout;
 	ShowLog = 0;
+    } else {
+	logFile = afs_fopen(childLog, "a");
+	if (!logFile) {		/* still nothing, use stdout */
+	    logFile = stdout;
+	    ShowLog = 0;
+	}
+	free(childLog);
     }
 
     if (node->command.sop.parent <= 0) {
@@ -754,15 +758,15 @@ static int
 SalvageLogCleanup(int pid)
 {
     int pidlog, len;
-    char fn[AFSDIR_PATH_MAX];
+    char *fn;
     static char buf[LOG_XFER_BUF_SIZE];
 
-    snprintf(fn, sizeof(fn), "%s.%d",
-	     AFSDIR_SERVER_SLVGLOG_FILEPATH, pid);
-
+    if (asprintf(&fn, "%s.%d", AFSDIR_SERVER_SLVGLOG_FILEPATH, pid) < 0)
+	return 1;
 
     pidlog = open(fn, O_RDONLY);
     unlink(fn);
+    free(fn);
     if (pidlog < 0)
 	return 1;
 
@@ -794,17 +798,15 @@ static void *
 SalvageLogScanningThread(void * arg)
 {
     struct rx_queue log_watch_queue;
+    char *prefix;
+    int prefix_len;
 
     queue_Init(&log_watch_queue);
 
-    {
+    prefix_len = asprintf(&prefix, "%s.", AFSDIR_SLVGLOG_FILE);
+    if (prefix_len >= 0) {
 	DIR *dp;
 	struct dirent *dirp;
-	char prefix[AFSDIR_PATH_MAX];
-	size_t prefix_len;
-
-	snprintf(prefix, sizeof(prefix), "%s.", AFSDIR_SLVGLOG_FILE);
-	prefix_len = strlen(prefix);
 
 	dp = opendir(AFSDIR_LOGS_DIR);
 	opr_Assert(dp);
@@ -846,7 +848,7 @@ SalvageLogScanningThread(void * arg)
 
 	    queue_Append(&log_watch_queue, cleanup);
 	}
-
+	free(prefix);
 	closedir(dp);
     }
 
