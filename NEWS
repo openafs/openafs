@@ -1,6 +1,6 @@
                        User-Visible OpenAFS Changes
 
-OpenAFS 1.6.3
+OpenAFS 1.6.4
 
 All platforms
 
@@ -86,6 +86,10 @@ Linux clients
 OpenBSD
 
     * Improved support for OpenBSD 4.9 to 5.3
+
+OpenAFS 1.6.3
+
+  This release number had to be skipped for technical reasons.
 
 OpenAFS 1.6.2.1
 
