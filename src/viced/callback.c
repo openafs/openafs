@@ -2674,6 +2674,8 @@ cb_OldToNew(struct fs_dump_state * state, afs_uint32 old, afs_uint32 * new)
 }
 #endif /* AFS_DEMAND_ATTACH_FS */
 
+#define DumpBytes(fd,buf,req) if (write(fd, buf, req) < 0) ; /* don't care */
+
 static int
 DumpCallBackState_r(void)
 {
@@ -2691,19 +2693,23 @@ DumpCallBackState_r(void)
 		 AFSDIR_SERVER_CBKDUMP_FILEPATH));
 	return 0;
     }
-    (void)write(fd, &magic, sizeof(magic));
-    (void)write(fd, &now, sizeof(now));
-    (void)write(fd, &cbstuff, sizeof(cbstuff));
-    (void)write(fd, TimeOuts, sizeof(TimeOuts));
-    (void)write(fd, timeout, sizeof(timeout));
-    (void)write(fd, &tfirst, sizeof(tfirst));
+    /*
+     * Collect but ignoring the return value of write(2) here,
+     * to avoid compiler warnings on some platforms.
+     */
+    DumpBytes(fd, &magic, sizeof(magic));
+    DumpBytes(fd, &now, sizeof(now));
+    DumpBytes(fd, &cbstuff, sizeof(cbstuff));
+    DumpBytes(fd, TimeOuts, sizeof(TimeOuts));
+    DumpBytes(fd, timeout, sizeof(timeout));
+    DumpBytes(fd, &tfirst, sizeof(tfirst));
     freelisthead = cbtoi((struct CallBack *)CBfree);
-    (void)write(fd, &freelisthead, sizeof(freelisthead));	/* This is a pointer */
+    DumpBytes(fd, &freelisthead, sizeof(freelisthead));	/* This is a pointer */
     freelisthead = fetoi((struct FileEntry *)FEfree);
-    (void)write(fd, &freelisthead, sizeof(freelisthead));	/* This is a pointer */
-    (void)write(fd, HashTable, sizeof(HashTable));
-    (void)write(fd, &CB[1], sizeof(CB[1]) * cbstuff.nblks);	/* CB stuff */
-    (void)write(fd, &FE[1], sizeof(FE[1]) * cbstuff.nblks);	/* FE stuff */
+    DumpBytes(fd, &freelisthead, sizeof(freelisthead));	/* This is a pointer */
+    DumpBytes(fd, HashTable, sizeof(HashTable));
+    DumpBytes(fd, &CB[1], sizeof(CB[1]) * cbstuff.nblks);	/* CB stuff */
+    DumpBytes(fd, &FE[1], sizeof(FE[1]) * cbstuff.nblks);	/* FE stuff */
     close(fd);
 
     return 0;
