@@ -1344,8 +1344,10 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
                 osi_Log1(afsd_logp, "CM SyncOp getting callback on scp 0x%p",
                           scp);
 
-                if (cm_EAccesFindEntry(userp, &scp->fid))
-                    return CM_ERROR_NOACCESS;
+		if (cm_EAccesFindEntry(userp, &scp->fid)) {
+		    code = CM_ERROR_NOACCESS;
+		    goto on_error;
+		}
 
                 if (bufLocked)
 		    lock_ReleaseMutex(&bufp->mx);
@@ -1356,7 +1358,8 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
                     lock_ObtainWrite(&scp->rw);
                 }
                 if (code)
-                    return code;
+		    goto on_error;
+
 		flags &= ~CM_SCACHESYNC_FORCECB;	/* only force once */
                 continue;
             }
@@ -1366,12 +1369,16 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
             /* can't check access rights without a callback */
             osi_assertx(flags & CM_SCACHESYNC_NEEDCALLBACK, "!CM_SCACHESYNC_NEEDCALLBACK");
 
-            if ((rights & (PRSFS_WRITE|PRSFS_DELETE)) && (scp->flags & CM_SCACHEFLAG_RO))
-                return CM_ERROR_READONLY;
+	    if ((rights & (PRSFS_WRITE|PRSFS_DELETE)) && (scp->flags & CM_SCACHEFLAG_RO)) {
+		code = CM_ERROR_READONLY;
+		goto on_error;
+	    }
 
             if (cm_HaveAccessRights(scp, userp, reqp, rights, &outRights)) {
-                if (~outRights & rights)
-		    return CM_ERROR_NOACCESS;
+		if (~outRights & rights) {
+		    code = CM_ERROR_NOACCESS;
+		    goto on_error;
+		}
             }
             else {
                 /* we don't know the required access rights */
@@ -1383,7 +1390,7 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
                     lock_ObtainWrite(&scp->rw);
                 }
                 if (code)
-                    return code;
+		    goto on_error;
                 continue;
             }
         }
@@ -1403,8 +1410,10 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
         /* first check if we're not supposed to wait: fail
          * in this case, returning with everything still locked.
          */
-        if (flags & CM_SCACHESYNC_NOWAIT)
-            return CM_ERROR_WOULDBLOCK;
+	if (flags & CM_SCACHESYNC_NOWAIT) {
+	    code = CM_ERROR_WOULDBLOCK;
+	    goto on_error;
+	}
 
         /* These are used for minidump debugging */
 	sleep_scp_flags = scp->flags;		/* so we know why we slept */
@@ -1507,7 +1516,23 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
         _InterlockedOr(&bufp->cmFlags, CM_BUF_CMWRITING);
     }
 
-    return 0;
+    return 0;   /* Success */
+
+  on_error:
+    /*
+     * This thread may have been a waiter that was woken up.
+     * If cm_SyncOp completes due to an error, cm_SyncOpDone() will
+     * never be called.  If there are additional threads waiting on
+     * scp those threads will never be woken.  Make sure we wake the
+     * next waiting thread before we leave.
+     */
+    if ((scp->flags & CM_SCACHEFLAG_WAITING) ||
+	 !osi_QIsEmpty(&scp->waitQueueH)) {
+	osi_Log3(afsd_logp, "CM SyncOp 0x%x Waking scp 0x%p bufp 0x%p",
+		 flags, scp, bufp);
+	osi_Wakeup((LONG_PTR) &scp->flags);
+    }
+    return code;
 }
 
 /* for those syncops that setup for RPCs.
