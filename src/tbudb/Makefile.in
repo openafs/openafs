@@ -64,7 +64,7 @@ database.o: ${BUDB}/database.c budb_errs.h ${INCLS}
 db_alloc.o: ${BUDB}/db_alloc.c budb_errs.h ${INCLS}
 	$(AFS_CCRULE) $(BUDB)/db_alloc.c
 
-db_dump.o: ${BUDB}/db_dump.c
+db_dump.o: ${BUDB}/db_dump.c budb_errs.h ${INCLS}
 	$(AFS_CCRULE) $(BUDB)/db_dump.c
 
 dbs_dump.o: ${BUDB}/dbs_dump.c budb_errs.h ${INCLS}
