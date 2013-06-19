@@ -23,7 +23,7 @@ main(int argc, char **argv)
     int version;
     struct opr_uuid_unpacked raw;
 
-    plan(16);
+    plan(18);
 
     memset(&uuidC, 0, sizeof(opr_uuid_t));
 
@@ -37,9 +37,10 @@ main(int argc, char **argv)
     is_int(1187447773, opr_uuid_hash(&uuidA), "opr_uuid_hash(A) works");
     is_int(1251907497, opr_uuid_hash(&uuidB), "opr_uuid_hash(B) works");
 
-    opr_uuid_toString(&uuidA, &str);
+    ok(!opr_uuid_toString(&uuidA, &str), "opr_uuid_toString(uuidA) works");
+    ok(str != NULL, "... and result is not NULL");
     is_string("4f449447-76ba-472c-971a-866bc0101a4b", str,
-	      "opr_uuid_toString(uuidA) works");
+	      "... and string is correct");
     opr_uuid_freeString(str);
 
     is_int(0, opr_uuid_fromString(&uuidC, "4F449447-76BA-472C-971A-866BC0101A4B"),

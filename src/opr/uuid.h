@@ -27,7 +27,7 @@ extern int opr_uuid_equal(const opr_uuid_t *uuid1, const opr_uuid_t *uuid2);
 extern unsigned int opr_uuid_hash(const opr_uuid_t *uuid);
 
 #if !defined(KERNEL)
-extern void opr_uuid_toString(const opr_uuid_t *uuid, char **string);
+extern int opr_uuid_toString(const opr_uuid_t *uuid, char **string);
 extern void opr_uuid_freeString(char *string);
 extern int opr_uuid_fromString(opr_uuid_t *uuid, const char *string);
 #endif
