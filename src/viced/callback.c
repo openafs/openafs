@@ -2730,6 +2730,22 @@ DumpCallBackState(void) {
 
 #ifdef INTERPRET_DUMP
 
+static void
+ReadBytes(int fd, void *buf, size_t req)
+{
+    ssize_t count;
+
+    count = read(fd, buf, req);
+    if (count < 0) {
+	perror("read");
+	exit(-1);
+    } else if (count != req) {
+	fprintf(stderr, "read: premature EOF (expected %lu, got %lu)\n",
+		(unsigned long)req, (unsigned long)count);
+	exit(-1);
+    }
+}
+
 /* This is only compiled in for the callback analyzer program */
 /* Returns the time of the dump */
 time_t
@@ -2751,7 +2767,7 @@ ReadDump(char *file, int timebits)
 	fprintf(stderr, "Couldn't read dump file %s\n", file);
 	exit(1);
     }
-    read(fd, &magic, sizeof(magic));
+    ReadBytes(fd, &magic, sizeof(magic));
     if (magic == MAGICV2) {
 	timebits = 32;
     } else {
@@ -2766,26 +2782,27 @@ ReadDump(char *file, int timebits)
     }
 #ifdef AFS_64BIT_ENV
     if (timebits == 64) {
-	read(fd, &now64, sizeof(afs_int64));
+	ReadBytes(fd, &now64, sizeof(afs_int64));
 	now = (afs_int32) now64;
     } else
 #endif
-	read(fd, &now, sizeof(afs_int32));
-    read(fd, &cbstuff, sizeof(cbstuff));
-    read(fd, TimeOuts, sizeof(TimeOuts));
-    read(fd, timeout, sizeof(timeout));
-    read(fd, &tfirst, sizeof(tfirst));
-    read(fd, &freelisthead, sizeof(freelisthead));
+	ReadBytes(fd, &now, sizeof(afs_int32));
+
+    ReadBytes(fd, &cbstuff, sizeof(cbstuff));
+    ReadBytes(fd, TimeOuts, sizeof(TimeOuts));
+    ReadBytes(fd, timeout, sizeof(timeout));
+    ReadBytes(fd, &tfirst, sizeof(tfirst));
+    ReadBytes(fd, &freelisthead, sizeof(freelisthead));
     CB = ((struct CallBack
 	   *)(calloc(cbstuff.nblks, sizeof(struct CallBack)))) - 1;
     FE = ((struct FileEntry
 	   *)(calloc(cbstuff.nblks, sizeof(struct FileEntry)))) - 1;
     CBfree = (struct CallBack *)itocb(freelisthead);
-    read(fd, &freelisthead, sizeof(freelisthead));
+    ReadBytes(fd, &freelisthead, sizeof(freelisthead));
     FEfree = (struct FileEntry *)itofe(freelisthead);
-    read(fd, HashTable, sizeof(HashTable));
-    read(fd, &CB[1], sizeof(CB[1]) * cbstuff.nblks);	/* CB stuff */
-    read(fd, &FE[1], sizeof(FE[1]) * cbstuff.nblks);	/* FE stuff */
+    ReadBytes(fd, HashTable, sizeof(HashTable));
+    ReadBytes(fd, &CB[1], sizeof(CB[1]) * cbstuff.nblks);	/* CB stuff */
+    ReadBytes(fd, &FE[1], sizeof(FE[1]) * cbstuff.nblks);	/* FE stuff */
     if (close(fd)) {
 	perror("Error reading dumpfile");
 	exit(1);
