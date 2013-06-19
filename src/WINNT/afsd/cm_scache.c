@@ -899,7 +899,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_fid_t *parentFidp, cm_scache_t **outScpp, c
         if (!cellp) {
             /* put back newScp so it can be reused */
             lock_ObtainWrite(&cm_scacheLock);
-            newScp->flags |= CM_SCACHEFLAG_DELETED;
+	    _InterlockedOr(&newScp->flags, CM_SCACHEFLAG_DELETED);
             cm_AdjustScacheLRU(newScp);
             lock_ReleaseWrite(&newScp->rw);
             lock_ReleaseWrite(&cm_scacheLock);
@@ -910,7 +910,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_fid_t *parentFidp, cm_scache_t **outScpp, c
         if (code) {
             /* put back newScp so it can be reused */
             lock_ObtainWrite(&cm_scacheLock);
-            newScp->flags |= CM_SCACHEFLAG_DELETED;
+	    _InterlockedOr(&newScp->flags, CM_SCACHEFLAG_DELETED);
             cm_AdjustScacheLRU(newScp);
             lock_ReleaseWrite(&newScp->rw);
             lock_ReleaseWrite(&cm_scacheLock);
@@ -941,7 +941,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_fid_t *parentFidp, cm_scache_t **outScpp, c
             cm_AdjustScacheLRU(scp);
 
             /* put back newScp so it can be reused */
-            newScp->flags |= CM_SCACHEFLAG_DELETED;
+	    _InterlockedOr(&newScp->flags, CM_SCACHEFLAG_DELETED);
             cm_AdjustScacheLRU(newScp);
             lock_ReleaseWrite(&newScp->rw);
             lock_ReleaseWrite(&cm_scacheLock);
