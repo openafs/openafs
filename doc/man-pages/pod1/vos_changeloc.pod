@@ -11,13 +11,17 @@ B<vos changeloc> S<<< [B<-server>] <I<new server name>> >>>
    S<<< [B<-partition>] <I<new partition location>> >>>
    S<<< [B<-id>] <I<volume name or ID>> >>>
    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>]
-   [B<-verbose>] [B<-encrypt>] [B<-noresolve>] [B<-help>]
+   [B<-verbose>] [B<-encrypt>] [B<-noresolve>]
+   S<<< [B<-config> <I<config directory>>] >>>
+   [B<-help>]
 
 B<vos changel> S<<< [B<-s>] <I<new server name>> >>>
    S<<< [B<-p>] <I<new partition location>> >>>
    S<<< [B<-i>] <I<volume name or ID>> >>>
    S<<< [B<-c> <I<cell name>>] >>>
-   [B<-noa>] [B<-l>] [B<-v>] [B<-e>] [B<-nor>] [B<-h>]
+   [B<-noa>] [B<-l>] [B<-v>] [B<-e>] [B<-nor>]
+   S<<< [B<-co> <I<config directory>>] >>>
+   [B<-h>]
 
 =for html
 </div>

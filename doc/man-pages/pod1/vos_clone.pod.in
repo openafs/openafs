@@ -12,17 +12,22 @@ B<vos clone> S<<< [B<-id>] <I<volume name or ID>> >>>
     S<<< [B<-partition>] <I<partition name>> >>>
     S<<< [B<-toname> <I<volume name on destination>>] >>>
     S<<< [B<-toid> <I<volume ID on destination>>] >>>
-    [B<-offline>] [B<-readonly>]
+    [B<-offline>] [B<-readonly>] [B<-readwrite>]
     S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>]
-    [B<-verbose>] [B<-encrypt>] [B<-noresolve>] [B<-help>]
+    [B<-verbose>] [B<-encrypt>] [B<-noresolve>]
+    S<<< [B<-config> <I<config directory>>] >>>
+    [B<-help>]
 
 B<vos cl> S<<< [B<-i>] <I<volume name or ID>> >>>
     S<<< [B<-s>] <I<server name>> >>>
     S<<< [B<-p>] <I<partition name>> >>>
     S<<< [B<-ton> <I<volume name on destination>>] >>>
-    S<<< [B<-toi> <I<volume ID on destination>>] >>> [B<-o>] [B<-r>]
+    S<<< [B<-toi> <I<volume ID on destination>>] >>> [B<-o>]
+    [B<-reado>] [B<-readw>]
     S<<< [B<-c> <I<cell name>>] >>> [B<-noa>]
-    [B<-l>] [B<-v>] [B<-e>] [B<-nor>] [B<-h>]
+    [B<-l>] [B<-v>] [B<-e>] [B<-nor>]
+    S<<< [B<-co> <I<config directory>>] >>>
+    [B<-h>]
 
 =for html
 </div>
@@ -64,18 +69,18 @@ such command.
 
 =over 4
 
-=item [B<-id>] <I<volume name or ID>>
+=item B<-id> <I<volume name or ID>>
 
 Specifies either the complete name or volume ID number of a read/write
 volume.
 
-=item [B<-server>] <I<machine name>>
+=item B<-server> <I<machine name>>
 
 Identifies the file server machine where the source volume resides. Provide
 the machine's IP address or its host name (either fully qualified or using
 an unambiguous abbreviation). For details, see L<vos(1)>.
 
-=item [B<-partition>] <I<partition name>>
+=item B<-partition> <I<partition name>>
 
 Names the partition where the source volume resides. Provide the full
 partition name (for, example, B</vicepa>) or one of the abbreviated forms
@@ -96,6 +101,10 @@ Leaves the new volume flagged as off-line in the volume database.
 =item B<-readonly>
 
 Flags the new volume as read-only in the volume database.
+
+=item B<-readwrite>
+
+Flags the new volume as read-write in the volume database.
 
 =item B<-cell> <I<cell name>>
 

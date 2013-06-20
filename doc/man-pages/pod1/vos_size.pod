@@ -13,7 +13,9 @@ B<vos size> S<<< [B<-id>] <I<volume name or id>> >>>
     [B<-dump>] S<<< [B<-time> <I<dump from time>>] >>>
     S<<< [B<-cell> <I<cell name>>] >>>
     [B<-noauth>] [B<-localauth>] 
-    [B<-verbose>] [B<-encrypt>] [B<-noresolve>] [B<-help>] 
+    [B<-verbose>] [B<-encrypt>] [B<-noresolve>]
+    S<<< [B<-config> <I<config directory>>] >>>
+    [B<-help>]
 
 B<vos si> S<<< [B<-i>] <I<volume name or id>> >>>
     S<<< [B<-p> <I<partition name>>] >>>
@@ -21,7 +23,9 @@ B<vos si> S<<< [B<-i>] <I<volume name or id>> >>>
     [B<-d>] S<<< [B<-t> <I<dump from time>>] >>>
     S<<< [B<-c> <I<cell name>>] >>>
     [B<-no>] [B<-l>] 
-    [B<-v>] [B<-e>] [B<-nor>] [B<-h>] 
+    [B<-v>] [B<-e>] [B<-nor>]
+    S<<< [B<-co> <I<config directory>>] >>>
+    [B<-h>]
 
 =for html
 </div>

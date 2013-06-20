@@ -12,13 +12,17 @@ B<vos delentry> S<<< [B<-id> <I<volume name or ID>>+] >>>
     S<<< [B<-server> <I<machine name>>] >>>
     S<<< [B<-partition> <I<partition name>>] >>>
     S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>]
-    [B<-dryrun>] [B<-verbose>] [B<-encrypt>] [B<-noresolve>] [B<-help>]
+    [B<-dryrun>] [B<-verbose>] [B<-encrypt>] [B<-noresolve>]
+    S<<< [B<-config> <I<config directory>>] >>>
+    [B<-help>]
 
 B<vos de> S<<< [B<-i> <I<volume name or ID>>+] >>>
     S<<< [B<-pr> <I<prefix of volume whose VLDB entry is to be deleted>>] >>>
     S<<< [B<-s> <I<machine name>>] >>> S<<< [B<-pa> <I<partition name>>] >>>
     S<<< [B<-c> <I<cell name>>] >>> [B<-noa>] [B<-l>]
-    [B<-d>] [B<-v>] [B<-e>] [B<-nor>] [B<-h>]
+    [B<-d>] [B<-v>] [B<-e>] [B<-nor>]
+    S<<< [B<-co> <I<config directory>>] >>>
+    [B<-h>]
 
 =for html
 </div>

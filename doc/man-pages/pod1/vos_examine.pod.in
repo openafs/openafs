@@ -10,20 +10,28 @@ vos_examine - Shows volume header and VLDB entry information for a volume
 B<vos examine> S<<< B<-id> <I<volume name or ID>> >>> [B<-extended>]
     [B<-format>] S<<< [B<-cell> <I<cell name>>] >>>
     [B<-noauth>] [B<-localauth>] [B<-verbose>]
-    [B<-encrypt>] [B<-noresolve>] [B<-help>]
+    [B<-encrypt>] [B<-noresolve>]
+    S<<< [B<-config> <I<config directory>>] >>>
+    [B<-help>]
 
 B<vos e> S<<< B<-i> <I<volume name or ID>> >>> [B<-ex>] [B<-f>]
     S<<< [B<-c> <I<cell name>>] >>>
-    [B<-noa>] [B<-l>] [B<-v>] [B<-e>] [B<-nor>] [B<-h>]
+    [B<-noa>] [B<-l>] [B<-v>] [B<-e>] [B<-nor>]
+    S<<< [B<-co> <I<config directory>>] >>>
+    [B<-h>]
 
 B<vos volinfo> S<<< B<-id> <I<volume name or ID>> >>> [B<-extended>]
     [B<-format>] S<<< [B<-cell> <I<cell name>>] >>>
     [B<-noauth>] [B<-localauth>] [B<-verbose>]
-    [B<-encrypt>] [B<-noresolve>] [B<-help>]
+    [B<-encrypt>] [B<-noresolve>]
+    S<<< [B<-config> <I<config directory>>] >>>
+    [B<-help>]
 
 B<vos v> S<<< B<-i> <I<volume name or ID>> >>> [B<-ex>] [B<-f>]
     S<<< [B<-c> <I<cell name>>] >>>
-    [B<-noa>] [B<-l>] [B<-v>] [B<-e>] [B<-nor>] [B<-h>]
+    [B<-noa>] [B<-l>] [B<-v>] [B<-e>] [B<-nor>]
+    S<<< [B<-co> <I<config directory>>] >>>
+    [B<-h>]
 
 =for html
 </div>

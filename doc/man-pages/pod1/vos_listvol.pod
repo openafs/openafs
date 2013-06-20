@@ -12,13 +12,17 @@ B<vos listvol> S<<< B<-server> <I<machine name>> >>>
     [B<-fast>] [B<-long>] [B<-quiet>]
     [B<-extended>] [B<-format>]
     S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>]
-    [B<-verbose>] [B<-encrypt>] [B<-noresolve>] [B<-help>]
+    [B<-verbose>] [B<-encrypt>] [B<-noresolve>]
+    S<<< [B<-config> <I<config directory>>] >>>
+    [B<-help>]
 
 B<vos listvo> S<<< B<-s> <I<machine name>> >>>
     S<<< [B<-p> <I<partition name>>] >>>
     [B<-fa>] [-lon] [B<-q>] [B<-ex>] [B<-fo>]
     S<<< [B<-c> <I<cell name>>] >>>
-    [B<-noa>] [B<-loc>] [B<-v>] [B<-en>] [B<-nor>] [B<-h>]
+    [B<-noa>] [B<-loc>] [B<-v>] [B<-en>] [B<-nor>]
+    S<<< [B<-co> <I<config directory>>] >>>
+    [B<-h>]
 
 =for html
 </div>

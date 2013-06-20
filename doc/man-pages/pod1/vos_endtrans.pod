@@ -11,12 +11,16 @@ B<vos endtrans> S<<< B<-server> <I<machine name>> >>>
     S<<< B<-transaction> <I<transaction iD>> >>>
     S<<< [B<-cell> <I<cell name>>] >>>
     [B<-noauth>] [B<-localauth>]
-    [B<-verbose>] [B<-encrypt>] [B<-noresolve>] [B<-help>]
+    [B<-verbose>] [B<-encrypt>] [B<-noresolve>]
+    S<<< [B<-config> <I<config directory>>] >>>
+    [B<-help>]
 
 B<vos st> S<<< B<-s> <I<machine name>> >>>
     S<<< B<-t> <I<transaction iD>> >>>
     S<<< [B<-c> <I<cell name>>] >>>
-    [B<-noa>] [B<-l>] [B<-v>] [B<-e>] [B<-nor>] [B<-h>]
+    [B<-noa>] [B<-l>] [B<-v>] [B<-e>] [B<-nor>]
+    S<<< [B<-co> <I<config directory>>] >>>
+    [B<-h>]
 
 =for html
 </div>

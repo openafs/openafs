@@ -12,13 +12,17 @@ B<vos listvldb> S<<< [B<-name> <I<volume name or ID>>] >>>
     S<<< [B<-partition> <I<partition name>>] >>>
     [B<-locked>] [B<-quiet>] [B<-nosort>]
     S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>]
-    [B<-verbose>] [B<-encrypt>] [B<-noresolve>] [B<-help>]
+    [B<-verbose>] [B<-encrypt>] [B<-noresolve>]
+    S<<< [B<-config> <I<config directory>>] >>>
+    [B<-help>]
 
 B<vos listvl> S<<< [B<-na> <I<volume name or ID>>] >>>
     S<<< [B<-s> <I<machine name>>] >>>
     S<<< [B<-p> <I<partition name>>] >>>
     [B<-lock>] [B<-q>] [B<-nos>] S<<< [B<-c> <I<cell name>>] >>>
-    [B<-noa>] [B<-loca>] [B<-v>] [B<-e>] [B<-nor>] [B<-h>]
+    [B<-noa>] [B<-loca>] [B<-v>] [B<-e>] [B<-nor>]
+    S<<< [B<-co> <I<config directory>>] >>>
+    [B<-h>]
 
 =for html
 </div>

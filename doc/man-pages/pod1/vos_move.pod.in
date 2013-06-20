@@ -13,7 +13,9 @@ B<vos move> S<<< B<-id> <I<volume name or ID>> >>>
     S<<< B<-toserver> <I<machine name on destination>> >>>
     S<<< B<-topartition> <I<partition name on destination>> >>>
     [B<-live>] S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>]
-    [B<-verbose>] [B<-encrypt>] [B<-noresolve>] [B<-help>]
+    [B<-verbose>] [B<-encrypt>] [B<-noresolve>]
+    S<<< [B<-config> <I<config directory>>] >>>
+    [B<-help>]
 
 B<vos m> S<<< B<-i> <I<volume name or ID>> >>>
     S<<< B<-froms> <I<machine name on source>> >>>
@@ -21,7 +23,9 @@ B<vos m> S<<< B<-i> <I<volume name or ID>> >>>
     S<<< B<-tos> <I<machine name on destination>> >>>
     S<<< B<-top> <I<partition name on destination>> >>>
     [B<-li>] S<<< [B<-c> <I<cell name>>] >>> [B<-noa>]
-    [B<-lo>] [B<-v>] [B<-e>] [B<-nor>] [B<-h>]
+    [B<-lo>] [B<-v>] [B<-e>] [B<-nor>]
+    S<<< [B<-co> <I<config directory>>] >>>
+    [B<-h>]
 
 =for html
 </div>

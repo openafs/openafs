@@ -36,6 +36,13 @@ useful when the server address is registered as 127.0.0.1 or when dealing
 with multi-homed servers. This option is available in OpenAFS
 versions 1.4.8 or later and 1.5.35 or later.
 
+=item B<-config> <I<configuration directory>>
+
+Set the location of the configuration directory to be used. This defaults to
+F</usr/vice/etc>, except if B<-localauth> is specified, in which case the
+default is F</usr/afs/etc>. This option allows the use of alternative
+configuration locations for testing purposes.
+
 =item B<-help>
 
 Prints the online help for this command. All other valid options are

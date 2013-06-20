@@ -11,11 +11,15 @@ B<vos rename> S<<< B<-oldname> <I<old volume name>> >>>
     S<<< B<-newname> <I<new volume name>> >>>
     S<<< [B<-cell> <I<cell name>>] >>>
     [B<-noauth>] [B<-localauth>]
-    [B<-verbose>] [B<-encrypt>] [B<-noresolve>] [B<-help>]
+    [B<-verbose>] [B<-encrypt>] [B<-noresolve>]
+    S<<< [B<-config> <I<config directory>>] >>>
+    [B<-help>]
 
 B<vos ren> S<<< B<-o> <I<old volume name>> >>>
     S<<< B<-ne> <I<new volume name>> >>>
-    [-c <I<cell name>>] [B<-noa>] [B<-l>] [B<-v>] [B<-e>] [B<-nor>] [B<-h>]
+    [-c <I<cell name>>] [B<-noa>] [B<-l>] [B<-v>] [B<-e>] [B<-nor>]
+    S<<< [B<-co> <I<config directory>>] >>>
+    [B<-h>]
 
 =for html
 </div>

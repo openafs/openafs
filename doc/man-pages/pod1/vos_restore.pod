@@ -18,7 +18,9 @@ B<vos restore> S<<< B<-server> <I<machine name>> >>>
     S<<< [B<-lastupdate> (dump | keep | new)] >>>
     [B<-nodelete>] S<<< [B<-cell> <I<cell name>>] >>>
     [B<-noauth>] [B<-localauth>]
-    [-verbose] [B<-encrypt>] [B<-noresolve>] [B<-help>]
+    [-verbose] [B<-encrypt>] [B<-noresolve>]
+    S<<< [B<-config> <I<config directory>>] >>>
+    [B<-help>]
 
 B<vos res> S<<< B<-s> <I<machine name>> >>>
     S<<< B<-p> <I<partition name>> >>>
@@ -30,7 +32,9 @@ B<vos res> S<<< B<-s> <I<machine name>> >>>
     S<<< [B<-cr> (d | k | n)] >>>
     S<<< [B<-la> (d | k | n)] >>>
     [B<-nod>] S<<< [B<-c> <I<cell name>>] >>>
-    [B<-noa>] [B<-lo>] [B<-v>] [B<-e>] [B<-nor>] [B<-h>]
+    [B<-noa>] [B<-lo>] [B<-v>] [B<-e>] [B<-nor>]
+    S<<< [B<-co> <I<config directory>>] >>>
+    [B<-h>]
 
 =for html
 </div>
