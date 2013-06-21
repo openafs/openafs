@@ -290,6 +290,8 @@ extern void afs_PopulateDCache(struct vcache *avc, afs_size_t apos,
 /* afs_disconnected.c */
 
 /* afs_dynroot.c */
+extern afs_rwlock_t afs_dynrootDirLock;
+extern afs_rwlock_t afs_dynSymlinkLock;
 extern int afs_IsDynrootFid(struct VenusFid *fid);
 extern int afs_IsDynrootMountFid(struct VenusFid *fid);
 extern int afs_IsDynrootAnyFid(struct VenusFid *fid);

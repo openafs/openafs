@@ -65,6 +65,8 @@ static struct ltable {
     { "afs_discon_lock", (char *)&afs_discon_lock},
     { "afs_disconDirtyLock", (char *)&afs_disconDirtyLock},
     { "afs_discon_vc_dirty", (char *)&afs_xvcdirty},
+    { "afs_dynrootDirLock", (char *)&afs_dynrootDirLock},
+    { "afs_dynSymlinkLock", (char *)&afs_dynSymlinkLock},
 };
 unsigned long lastCallBack_vnode;
 unsigned int lastCallBack_dv;
