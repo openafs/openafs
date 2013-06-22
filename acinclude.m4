@@ -280,10 +280,22 @@ AC_ARG_WITH([docbook-stylesheets],
 	AS_HELP_STRING([--with-docbook-stylesheets=ARG],
 	[location of DocBook stylesheets (default is to search a set of likely paths)]),
 	[DOCBOOK_STYLESHEETS="$withval"],
-	[OPENAFS_SEARCH_DIRLIST([DOCBOOK_STYLESHEETS], [/usr/share/xml/docbook/stylesheet/nwalsh/current /usr/share/xml/docbook/stylesheet/nwalsh /usr/share/xml/docbook/xsl-stylesheets /usr/share/sgml/docbook/docbook-xsl-stylesheets /usr/share/sgml/docbook/xsl-stylesheets /usr/share/docbook-xsl /usr/share/sgml/docbkxsl /usr/local/share/xsl/docbook /sw/share/xml/xsl/docbook-xsl /opt/local/share/xsl/docbook-xsl], [$HTML_XSL])
-	if test "x$DOCBOOK_STYLESHEETS" = "x"; then
-		AC_WARN([Docbook stylesheets not found; some documentation can't be built])
-	fi])
+	[OPENAFS_SEARCH_DIRLIST([DOCBOOK_STYLESHEETS],
+		[/usr/share/xml/docbook/stylesheet/nwalsh/current \
+		 /usr/share/xml/docbook/stylesheet/nwalsh \
+		 /usr/share/xml/docbook/xsl-stylesheets \
+		 /usr/share/sgml/docbook/docbook-xsl-stylesheets \
+		 /usr/share/sgml/docbook/xsl-stylesheets \
+		 /usr/share/docbook-xsl \
+		 /usr/share/sgml/docbkxsl \
+		 /usr/local/share/xsl/docbook \
+		 /sw/share/xml/xsl/docbook-xsl \
+		 /opt/local/share/xsl/docbook-xsl],
+		[$HTML_XSL])
+	   AS_IF([test "x$DOCBOOK_STYLESHEETS" = "x"],
+		[AC_WARN([Docbook stylesheets not found; some documentation can't be built])
+	   ])
+	])
 
 AC_ARG_WITH([dot],
 	AS_HELP_STRING([--with-dot@<:@=PATH@:>@],
