@@ -14,7 +14,7 @@ AH_BOTTOM([
 #   include <sys/types.h>
 #   include <sys/param.h>
 #   if BYTE_ORDER == BIG_ENDIAN
-#   define WORDS_BIGENDIAN 1
+#    define WORDS_BIGENDIAN 1
 #   endif
 #  else
 #   if defined(AUTOCONF_FOUND_BIGENDIAN)
@@ -44,8 +44,8 @@ AH_BOTTOM([
  * need to define this when building for such interfaces, but set it always to
  * try and reduce potential confusion. 
  */
-#define _FILE_OFFSET_BITS 64
-#define AFS_CACHE_VNODE_PATH
+# define _FILE_OFFSET_BITS 64
+# define AFS_CACHE_VNODE_PATH
 #endif
 
 #undef AFS_NAMEI_ENV
@@ -62,7 +62,7 @@ AH_BOTTOM([
 /* glue for RedHat kernel bug */
 #undef ENABLE_REDHAT_BUILDSYS
 #if defined(ENABLE_REDHAT_BUILDSYS) && defined(KERNEL) && defined(REDHAT_FIX)
-#include "redhat-fix.h"
+# include "redhat-fix.h"
 #endif])
 
 AC_CANONICAL_HOST
