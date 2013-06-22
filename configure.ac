@@ -6,7 +6,7 @@ AC_INIT([OpenAFS],
 AC_CONFIG_AUX_DIR([build-tools])
 AC_CONFIG_MACRO_DIR([src/cf])
 AC_CONFIG_SRCDIR([src/config/stds.h])
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([foreign])
 
 AC_CONFIG_HEADER(src/config/afsconfig.h)
 MACOS_VERSION=1.5.76
