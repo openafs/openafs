@@ -16,15 +16,14 @@ LINUX_PKGREL=1.1
 dnl Debian wants the release candidate version in the main upstream version,
 dnl and wants ~ before it.
 DEB_PKGVER=m4_esyscmd([build-tools/git-version .])
-if echo "$LINUX_PKGREL" | grep pre >/dev/null 2>/dev/null ; then
-    DEB_PKGVER="$DEB_PKGVER"`echo "$LINUX_PKGREL" | sed 's/0.pre/~rc/'`
-fi
+AS_IF([echo "$LINUX_PKGREL" | grep pre >/dev/null 2>/dev/null],
+    [DEB_PKGVER="$DEB_PKGVER"`echo "$LINUX_PKGREL" | sed 's/0.pre/~rc/'`])
 
 AC_SUBST([MACOS_VERSION])
 AC_SUBST([DEB_PKGVER])
 
 dnl If the user hasn't specified CFLAGS don't let configure pick -g -O2
-AS_IF([test -z "$CFLAGS"], [CFLAGS=" "], [])
+AS_IF([test -z "$CFLAGS"], [CFLAGS=" "])
 
 AC_USE_SYSTEM_EXTENSIONS
 
@@ -101,36 +100,24 @@ AC_SUBST([AKLOG_KRB5_LIBS])
 dnl Probe for GSSAPI
 RRA_LIB_GSSAPI
 
-if test -d 'doc/man-pages' ; then
-    MAN_MAKEFILE="doc/man-pages/Makefile doc/man-pages/install-man"
-else
-    MAN_MAKEFILE=
-fi
-if test -f 'doc/xml/AdminGuide/Makefile.in' ; then
-   ADMINGUIDE_MAKEFILE="doc/xml/AdminGuide/Makefile"
-else
-   ADMINGUIDE_MAKEFILE=
-fi
-if test -f 'doc/xml/QuickStartUnix/Makefile.in' ; then
-   QSUNIX_MAKEFILE="doc/xml/QuickStartUnix/Makefile"
-else
-   QSUNIX_MAKEFILE=
-fi
-if test -f 'doc/xml/UserGuide/Makefile.in' ; then
-   USERGUIDE_MAKEFILE="doc/xml/UserGuide/Makefile"
-else
-   USERGUIDE_MAKEFILE=
-fi
-if test -f 'doc/xml/AdminRef/Makefile.in' ; then
-   ADMINREF_MAKEFILE="doc/xml/AdminRef/Makefile"
-else
-   ADMINREF_MAKEFILE=
-fi
-if test -f 'doc/xml/mobi-fixup.xsl.in' ; then
-   MOBI_FIXUP_XSL="doc/xml/mobi-fixup.xsl"
-else
-   MOBI_FIXUP_XSL=
-fi
+AS_IF([test -d 'doc/man-pages'],
+    [MAN_MAKEFILE="doc/man-pages/Makefile doc/man-pages/install-man"],
+    [MAN_MAKEFILE=])
+AS_IF([test -f 'doc/xml/AdminGuide/Makefile.in'],
+    [ADMINGUIDE_MAKEFILE="doc/xml/AdminGuide/Makefile"],
+    [ADMINGUIDE_MAKEFILE=])
+AS_IF([test -f 'doc/xml/QuickStartUnix/Makefile.in'],
+    [QSUNIX_MAKEFILE="doc/xml/QuickStartUnix/Makefile"],
+    [QSUNIX_MAKEFILE=])
+AS_IF([test -f 'doc/xml/UserGuide/Makefile.in'],
+    [USERGUIDE_MAKEFILE="doc/xml/UserGuide/Makefile"],
+    [USERGUIDE_MAKEFILE=])
+AS_IF([test -f 'doc/xml/AdminRef/Makefile.in'],
+    [ADMINREF_MAKEFILE="doc/xml/AdminRef/Makefile"],
+    [ADMINREF_MAKEFILE=])
+AS_IF([test -f 'doc/xml/mobi-fixup.xsl.in'],
+    [MOBI_FIXUP_XSL="doc/xml/mobi-fixup.xsl"],
+    [MOBI_FIXUP_XSL=])
 
 AC_OUTPUT([
     Makefile
