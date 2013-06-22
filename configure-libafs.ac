@@ -1,16 +1,16 @@
 AC_PRERQ([2.60])
 AC_INIT([OpenAFS],
 	m4_esyscmd([build-tools/git-version .]),
-	[openafs-bugs@openafs.org],,
+	[openafs-bugs@openafs.org], [],
 	[http://www.openafs.org/])
 AC_CONFIG_AUX_DIR([build-tools])
-AC_CONFIG_SRCDIR(src/libafs/Makefile.common.in)
+AC_CONFIG_SRCDIR([src/libafs/Makefile.common.in])
 AM_INIT_AUTOMAKE([foreign])
 
-AC_CONFIG_HEADER(src/config/afsconfig.h)
+AC_CONFIG_HEADER([src/config/afsconfig.h])
 MACOS_VERSION=1.5.76
 
-AC_SUBST(MACOS_VERSION)
+AC_SUBST([MACOS_VERSION])
 
 dnl If the user hasn't specified CFLAGS don't let configure pick -g -O2
 AS_IF([test -z "$CFLAGS"], [CFLAGS=" "], [])
@@ -18,13 +18,13 @@ AC_PROG_CC
 
 OPENAFS_CONFIGURE_COMMON
 
-AC_OUTPUT(             \
-Makefile               \
-src/config/Makefile    \
-src/config/Makefile.config \
-src/config/Makefile.lwp \
-src/config/Makefile.version-CML \
-src/config/Makefile.version-NOCML \
-src/libafs/Makefile.common \
-src/libafs/MakefileProto \
-)
+AC_OUTPUT([
+	Makefile
+	src/config/Makefile
+	src/config/Makefile.config
+	src/config/Makefile.lwp
+	src/config/Makefile.version-CML
+	src/config/Makefile.version-NOCML
+	src/libafs/Makefile.common
+	src/libafs/MakefileProto
+])
