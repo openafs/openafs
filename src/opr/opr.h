@@ -16,7 +16,7 @@ extern void opr_NTAbort(void);
 # define opr_abort() abort()
 #endif
 
-extern void opr_AssertionFailed(char *, int) AFS_NORETURN;
+extern void opr_AssertionFailed(const char *, int) AFS_NORETURN;
 extern void opr_AssertFailU(const char *, const char *, int) AFS_NORETURN;
 
 /* opr_Assert is designed to work in a similar way to the operating

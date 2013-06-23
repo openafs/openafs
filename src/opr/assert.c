@@ -14,7 +14,7 @@ opr_NTAbort(void)
 
 #define TIMESTAMP_BUFFER_SIZE 26  /* including the null */
 void
-opr_AssertionFailed(char *file, int line)
+opr_AssertionFailed(const char *file, int line)
 {
     char tdate[TIMESTAMP_BUFFER_SIZE];
     time_t when;
