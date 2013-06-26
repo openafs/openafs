@@ -23,14 +23,16 @@ REM     SYS_NAME = AFS system name
 REM Choose one of "i386_w2k", "amd64_w2k", or "i64_w2k"
 SET SYS_NAME=i386_w2k
 
-REM Specify the minimum version of Windows and IE:
+REM Specify the minimum version of IE:
 REM   0x500 for Windows 2000 and above
 REM   0x501 for Windows XP 32 and above
 REM   0x502 for Windows XP 64 and Server 2003 and above
 REM   0x600 for Windows Vista and Server 2008 and above
 REM   0x700 for Windows 7 and Server 2008 R2 and above
-SET APPVER=0x500
 SET _WIN32_IE=0x500
+
+REM Specify the minimum version of the Windows SDK:
+SET APPVER=5.1
 
 REM ########################################################################
 REM Location of base folder where source lies, build directory
@@ -45,6 +47,8 @@ REM                  "1300" for VC7 (.NET)
 REM                  "1310" for .NET 2003
 REM                  "1400" for VC8 (VS2005)
 REM                  "1500" for VC9 (VS2008)
+REM                  "1600" for VC10 (VS2010)
+REM                  "1700" for VC11 (VS2012)
 set AFSVER_CL=1400
 
 REM ########################################################################
@@ -139,6 +143,9 @@ REM Location of Microsoft Code Signing Tool
 SET SIGNTOOL=C:\winddk\7600.16385.0\bin\amd64\signtool.exe
 
 set AFSDEV_INCLUDE=%MSSDKDIR%\include;%MSVCDIR%\include;%MSIDNNLS%\include
+IF "%AFSVER_CL%" == "1700" set AFSDEV_INCLUDE=%AFSDEV_INCLUDE%;%MSVCDIR%\atlmfc\include
+IF "%AFSVER_CL%" == "1600" set AFSDEV_INCLUDE=%AFSDEV_INCLUDE%;%MSVCDIR%\atlmfc\include
+IF "%AFSVER_CL%" == "1500" set AFSDEV_INCLUDE=%AFSDEV_INCLUDE%;%MSVCDIR%\atlmfc\include
 IF "%AFSVER_CL%" == "1400" set AFSDEV_INCLUDE=%AFSDEV_INCLUDE%;%MSVCDIR%\atlmfc\include
 IF "%AFSVER_CL%" == "1310" set AFSDEV_INCLUDE=%AFSDEV_INCLUDE%;%MSVCDIR%\atlmfc\include
 IF "%AFSVER_CL%" == "1300" set AFSDEV_INCLUDE=%AFSDEV_INCLUDE%;%MSVCDIR%\atlmfc\include
@@ -146,6 +153,9 @@ IF "%AFSVER_CL%" == "1200" set AFSDEV_INCLUDE=%AFSDEV_INCLUDE%;%MSVCDIR%\atl\inc
 set AFSDEV_INCLUDE=%AFSDEV_INCLUDE%;%NTDDKDIR%\INC\DDK;%NTDDKDIR%\INC\API;
 
 set AFSDEV_LIB=%MSSDKDIR%\lib;%MSVCDIR%\lib
+IF "%AFSVER_CL%" == "1700" set AFSDEV_LIB=%AFSDEV_LIB%;%MSVCDIR%\atlmfc\lib
+IF "%AFSVER_CL%" == "1600" set AFSDEV_LIB=%AFSDEV_LIB%;%MSVCDIR%\atlmfc\lib
+IF "%AFSVER_CL%" == "1500" set AFSDEV_LIB=%AFSDEV_LIB%;%MSVCDIR%\atlmfc\lib
 IF "%AFSVER_CL%" == "1400" set AFSDEV_LIB=%AFSDEV_LIB%;%MSVCDIR%\atlmfc\lib
 IF "%AFSVER_CL%" == "1310" set AFSDEV_LIB=%AFSDEV_LIB%;%MSVCDIR%\atlmfc\lib
 IF "%AFSVER_CL%" == "1300" set AFSDEV_LIB=%AFSDEV_LIB%;%MSVCDIR%\atlmfc\lib
