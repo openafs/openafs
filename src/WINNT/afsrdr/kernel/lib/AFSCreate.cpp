@@ -3025,8 +3025,28 @@ AFSProcessOpen( IN PIRP Irp,
                 AFSAcquireExcl( &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
                                 TRUE);
 
-                bMmFlushed = MmFlushImageSection( &pObjectInfo->Fcb->NPFcb->SectionObjectPointers,
-                                                  MmFlushForWrite);
+		__try
+		{
+
+		    bMmFlushed = MmFlushImageSection( &pObjectInfo->Fcb->NPFcb->SectionObjectPointers,
+						      MmFlushForWrite);
+		}
+		__except( EXCEPTION_EXECUTE_HANDLER)
+		{
+
+		    bMmFlushed = FALSE;
+
+		    ntStatus = GetExceptionCode();
+
+		    AFSDbgTrace(( 0,
+				  0,
+				  "EXCEPTION - AFSProcessOpen MmFlushImageSection failed FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
+				  pObjectInfo->FileId.Cell,
+				  pObjectInfo->FileId.Volume,
+				  pObjectInfo->FileId.Vnode,
+				  pObjectInfo->FileId.Unique,
+				  ntStatus));
+		}
 
                 AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
@@ -3504,13 +3524,33 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
         AFSAcquireExcl( &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
                         TRUE);
 
-        //
-        //  Before we actually truncate, check to see if the purge
-        //  is going to fail.
-        //
+	__try
+	{
 
-        bUserMapped = !MmCanFileBeTruncated( &pObjectInfo->Fcb->NPFcb->SectionObjectPointers,
-                                             &liZero);
+	    //
+	    //  Before we actually truncate, check to see if the purge
+	    //  is going to fail.
+	    //
+
+	    bUserMapped = !MmCanFileBeTruncated( &pObjectInfo->Fcb->NPFcb->SectionObjectPointers,
+						 &liZero);
+	}
+	__except( EXCEPTION_EXECUTE_HANDLER)
+	{
+
+	    bUserMapped = FALSE;
+
+	    ntStatus = GetExceptionCode();
+
+	    AFSDbgTrace(( 0,
+			  0,
+			  "EXCEPTION - AFSProcessOverwriteSupercede MmCanFileBeTruncated failed FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
+			  pObjectInfo->FileId.Cell,
+			  pObjectInfo->FileId.Volume,
+			  pObjectInfo->FileId.Vnode,
+			  pObjectInfo->FileId.Unique,
+			  ntStatus));
+	}
 
         AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,

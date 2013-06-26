@@ -3188,12 +3188,30 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                     AFSAcquireExcl( &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
                                     TRUE);
 
-                    pCCFileObject = CcGetFileObjectFromSectionPtrs( &pObjectInfo->Fcb->NPFcb->SectionObjectPointers);
+		    __try
+		    {
 
-                    if ( pCCFileObject != NULL)
+			pCCFileObject = CcGetFileObjectFromSectionPtrs( &pObjectInfo->Fcb->NPFcb->SectionObjectPointers);
+
+			if ( pCCFileObject != NULL)
+			{
+			    CcSetFileSizes( pCCFileObject,
+					    (PCC_FILE_SIZES)&pObjectInfo->Fcb->Header.AllocationSize);
+			}
+		    }
+		    __except( EXCEPTION_EXECUTE_HANDLER)
                     {
-                        CcSetFileSizes( pCCFileObject,
-                                        (PCC_FILE_SIZES)&pObjectInfo->Fcb->Header.AllocationSize);
+
+			ntStatus = GetExceptionCode();
+
+			AFSDbgTrace(( 0,
+				      0,
+				      "EXCEPTION - AFSVerifyEntry CcSetFileSized failed FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
+				      pObjectInfo->FileId.Cell,
+				      pObjectInfo->FileId.Volume,
+				      pObjectInfo->FileId.Vnode,
+				      pObjectInfo->FileId.Unique,
+				      ntStatus));
                     }
 
                     AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
@@ -4347,16 +4365,34 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                         AFSAcquireExcl( &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
                                         TRUE);
 
-                        pCCFileObject = CcGetFileObjectFromSectionPtrs( &pObjectInfo->Fcb->NPFcb->SectionObjectPointers);
+			__try
+			{
 
-                        pObjectInfo->Fcb->Header.AllocationSize.QuadPart  = pObjectInfo->AllocationSize.QuadPart;
-                        pObjectInfo->Fcb->Header.FileSize.QuadPart        = pObjectInfo->EndOfFile.QuadPart;
-                        pObjectInfo->Fcb->Header.ValidDataLength.QuadPart = pObjectInfo->EndOfFile.QuadPart;
+			    pCCFileObject = CcGetFileObjectFromSectionPtrs( &pObjectInfo->Fcb->NPFcb->SectionObjectPointers);
 
-                        if ( pCCFileObject != NULL)
+			    pObjectInfo->Fcb->Header.AllocationSize.QuadPart  = pObjectInfo->AllocationSize.QuadPart;
+			    pObjectInfo->Fcb->Header.FileSize.QuadPart        = pObjectInfo->EndOfFile.QuadPart;
+			    pObjectInfo->Fcb->Header.ValidDataLength.QuadPart = pObjectInfo->EndOfFile.QuadPart;
+
+			    if ( pCCFileObject != NULL)
+			    {
+				CcSetFileSizes( pCCFileObject,
+						(PCC_FILE_SIZES)&pObjectInfo->Fcb->Header.AllocationSize);
+			    }
+			}
+			__except( EXCEPTION_EXECUTE_HANDLER)
                         {
-                            CcSetFileSizes( pCCFileObject,
-                                            (PCC_FILE_SIZES)&pObjectInfo->Fcb->Header.AllocationSize);
+
+			    ntStatus = GetExceptionCode();
+
+			    AFSDbgTrace(( 0,
+					  0,
+					  "EXCEPTION - AFSValidateEntry CcSetFileSizes failed FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
+					  pObjectInfo->FileId.Cell,
+					  pObjectInfo->FileId.Volume,
+					  pObjectInfo->FileId.Vnode,
+					  pObjectInfo->FileId.Unique,
+					  ntStatus));
                         }
 
                         AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,

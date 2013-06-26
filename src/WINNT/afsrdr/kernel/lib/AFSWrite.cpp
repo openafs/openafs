@@ -759,19 +759,39 @@ try_exit:
                 bReleaseMain = FALSE;
             }
 
-            if ( !CcPurgeCacheSection( &pNPFcb->SectionObjectPointers,
-                                       &liStartingByte,
-                                       ulByteCount,
-                                       FALSE))
+	    __try
             {
 
-                AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
-                              AFS_TRACE_LEVEL_WARNING,
-                              "AFSCommonWrite CcPurgeCacheSection failure FID %08lX-%08lX-%08lX-%08lX\n",
+		if ( !CcPurgeCacheSection( &pNPFcb->SectionObjectPointers,
+					   &liStartingByte,
+					   ulByteCount,
+					   FALSE))
+		{
+
+		    AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
+				  AFS_TRACE_LEVEL_WARNING,
+				  "AFSCommonWrite CcPurgeCacheSection failure FID %08lX-%08lX-%08lX-%08lX\n",
+				  pFcb->ObjectInformation->FileId.Cell,
+				  pFcb->ObjectInformation->FileId.Volume,
+				  pFcb->ObjectInformation->FileId.Vnode,
+				  pFcb->ObjectInformation->FileId.Unique));
+
+		    SetFlag( pFcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
+		}
+	    }
+	    __except( EXCEPTION_EXECUTE_HANDLER)
+	    {
+
+		DWORD ntStatus2 = GetExceptionCode();
+
+		AFSDbgTrace(( 0,
+			      0,
+			      "EXCEPTION - AFSProcessOverwriteSupercede MmCanFileBeTruncated failed FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
                               pFcb->ObjectInformation->FileId.Cell,
                               pFcb->ObjectInformation->FileId.Volume,
                               pFcb->ObjectInformation->FileId.Vnode,
-                              pFcb->ObjectInformation->FileId.Unique));
+			      pFcb->ObjectInformation->FileId.Unique,
+			      ntStatus2));
 
                 SetFlag( pFcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
             }
