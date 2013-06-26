@@ -303,6 +303,20 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                             }
                         }
                     }
+
+		    //
+		    // Uninitialize the cache map. This call is unconditional.
+		    //
+
+		    AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
+				  AFS_TRACE_LEVEL_VERBOSE,
+				  "AFSCleanup Tearing down cache map for Fcb %p FileObject %p\n",
+				  pFcb,
+				  pFileObject));
+
+		    CcUninitializeCacheMap( pFileObject,
+					    NULL,
+					    NULL);
 		}
 		__except( EXCEPTION_EXECUTE_HANDLER)
 		{
@@ -320,21 +334,6 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
 		    SetFlag( pObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
                 }
-
-                //
-                // Uninitialize the cache map. This call is unconditional.
-                //
-
-                AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCleanup Tearing down cache map for Fcb %p FileObject %p\n",
-                              pFcb,
-                              pFileObject));
-
-                CcUninitializeCacheMap( pFileObject,
-                                        NULL,
-                                        NULL);
-
 
                 AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,

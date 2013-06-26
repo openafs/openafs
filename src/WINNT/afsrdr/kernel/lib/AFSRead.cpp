@@ -1137,20 +1137,40 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
 
             bReleaseSectionObject = TRUE;
 
-            AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSCommonRead (%p) IRP_MN_COMPLETE being processed\n",
-                          Irp));
+	    __try
+	    {
 
-            CcMdlReadComplete(pIrpSp->FileObject, Irp->MdlAddress);
+		AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
+			      AFS_TRACE_LEVEL_VERBOSE,
+			      "AFSCommonRead (%p) IRP_MN_COMPLETE being processed\n",
+			      Irp));
 
-            //
-            // Mdl is now Deallocated
-            //
+		CcMdlReadComplete(pIrpSp->FileObject, Irp->MdlAddress);
 
-            Irp->MdlAddress = NULL;
+		//
+		// Mdl is now Deallocated
+		//
 
-            try_return( ntStatus = STATUS_SUCCESS );
+		Irp->MdlAddress = NULL;
+
+		try_return( ntStatus = STATUS_SUCCESS );
+	    }
+	    __except( EXCEPTION_EXECUTE_HANDLER)
+	    {
+
+		ntStatus = GetExceptionCode();
+
+		AFSDbgTrace(( 0,
+			      0,
+			      "EXCEPTION - AFSCommonRead CcMdlReadComplete failed FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
+			      pFcb->ObjectInformation->FileId.Cell,
+			      pFcb->ObjectInformation->FileId.Volume,
+			      pFcb->ObjectInformation->FileId.Vnode,
+			      pFcb->ObjectInformation->FileId.Unique,
+			      ntStatus));
+
+		try_return( ntStatus);
+	    }
         }
 
         //

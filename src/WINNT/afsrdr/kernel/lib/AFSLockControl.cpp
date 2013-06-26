@@ -177,10 +177,28 @@ AFSLockControl( IN PDEVICE_OBJECT LibDeviceObject,
                 AFSAcquireShared( &pFcb->NPFcb->SectionObjectResource,
                                   TRUE);
 
-                CcFlushCache( &pFcb->NPFcb->SectionObjectPointers,
-                              NULL,
-                              0,
-                              &stIoStatus);
+		__try
+		{
+
+		    CcFlushCache( &pFcb->NPFcb->SectionObjectPointers,
+				  NULL,
+				  0,
+				  &stIoStatus);
+		}
+		__except( EXCEPTION_EXECUTE_HANDLER)
+		{
+
+		    ntStatus = GetExceptionCode();
+
+		    AFSDbgTrace(( 0,
+				  0,
+				  "EXCEPTION - AFSLockControl CcFlushCache failed FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
+				  pFcb->ObjectInformation->FileId.Cell,
+				  pFcb->ObjectInformation->FileId.Volume,
+				  pFcb->ObjectInformation->FileId.Vnode,
+				  pFcb->ObjectInformation->FileId.Unique,
+				  ntStatus));
+		}
 
                 if( !NT_SUCCESS( stIoStatus.Status))
                 {
@@ -244,10 +262,29 @@ AFSLockControl( IN PDEVICE_OBJECT LibDeviceObject,
 
                 AFSAcquireShared( &pFcb->NPFcb->SectionObjectResource,
                                   TRUE);
-                CcFlushCache( &pFcb->NPFcb->SectionObjectPointers,
-                              &pIrpSp->Parameters.LockControl.ByteOffset,
-                              pIrpSp->Parameters.LockControl.Length->LowPart,
-                              &stIoStatus);
+
+		__try
+		{
+
+		    CcFlushCache( &pFcb->NPFcb->SectionObjectPointers,
+				  &pIrpSp->Parameters.LockControl.ByteOffset,
+				  pIrpSp->Parameters.LockControl.Length->LowPart,
+				  &stIoStatus);
+		}
+		__except( EXCEPTION_EXECUTE_HANDLER)
+		{
+
+		    ntStatus = GetExceptionCode();
+
+		    AFSDbgTrace(( 0,
+				  0,
+				  "EXCEPTION - AFSLockControl CcFlushCache failed FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
+				  pFcb->ObjectInformation->FileId.Cell,
+				  pFcb->ObjectInformation->FileId.Volume,
+				  pFcb->ObjectInformation->FileId.Vnode,
+				  pFcb->ObjectInformation->FileId.Unique,
+				  ntStatus));
+		}
 
                 AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,

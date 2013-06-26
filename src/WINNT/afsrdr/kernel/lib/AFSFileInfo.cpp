@@ -2209,47 +2209,67 @@ AFSSetDispositionInfo( IN PIRP Irp,
                 AFSAcquireExcl( &pFcb->NPFcb->SectionObjectResource,
                                 TRUE);
 
-                //
-                // Attempt to flush any outstanding data
-                //
-
-                bMmFlushed = MmFlushImageSection( &pFcb->NPFcb->SectionObjectPointers,
-                                                  MmFlushForDelete);
-
-                if ( bMmFlushed)
+		__try
                 {
 
                     //
-                    // Set PENDING_DELETE before CcPurgeCacheSection to avoid a
-                    // deadlock with Trend Micro's Enterprise anti-virus product
-                    // which attempts to open the file which is being deleted.
+		    // Attempt to flush any outstanding data
                     //
 
-                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSSetDispositionInfo Setting PENDING_DELETE on DirEntry %p Name %wZ\n",
-                                  DirectoryCB,
-                                  &DirectoryCB->NameInformation.FileName));
+		    bMmFlushed = MmFlushImageSection( &pFcb->NPFcb->SectionObjectPointers,
+						      MmFlushForDelete);
 
-                    SetFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE);
+		    if ( bMmFlushed)
+		    {
 
-                    //
-                    // Purge the cache as well
-                    //
+			//
+			// Set PENDING_DELETE before CcPurgeCacheSection to avoid a
+			// deadlock with Trend Micro's Enterprise anti-virus product
+			// which attempts to open the file which is being deleted.
+			//
 
-                    if( pFcb->NPFcb->SectionObjectPointers.DataSectionObject != NULL)
-                    {
+			AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+				      AFS_TRACE_LEVEL_VERBOSE,
+				      "AFSSetDispositionInfo Setting PENDING_DELETE on DirEntry %p Name %wZ\n",
+				      DirectoryCB,
+				      &DirectoryCB->NameInformation.FileName));
 
-                        if ( !CcPurgeCacheSection( &pFcb->NPFcb->SectionObjectPointers,
-                                                   NULL,
-                                                   0,
-                                                   TRUE))
+			SetFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE);
+
+			//
+			// Purge the cache as well
+			//
+
+			if( pFcb->NPFcb->SectionObjectPointers.DataSectionObject != NULL)
                         {
 
-                            SetFlag( pFcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
+			    if ( !CcPurgeCacheSection( &pFcb->NPFcb->SectionObjectPointers,
+						       NULL,
+						       0,
+						       TRUE))
+			    {
+
+				SetFlag( pFcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
+			    }
                         }
                     }
                 }
+		__except( EXCEPTION_EXECUTE_HANDLER)
+		{
+
+		    bMmFlushed = FALSE;
+
+		    ntStatus = GetExceptionCode();
+
+		    AFSDbgTrace(( 0,
+				  0,
+				  "EXCEPTION - AFSSetDispositionInfo MmFlushImageSection failed FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
+				  pFcb->ObjectInformation->FileId.Cell,
+				  pFcb->ObjectInformation->FileId.Volume,
+				  pFcb->ObjectInformation->FileId.Vnode,
+				  pFcb->ObjectInformation->FileId.Unique,
+				  ntStatus));
+		}
 
                 AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
@@ -3450,18 +3470,36 @@ AFSSetRenameInfo( IN PIRP Irp)
                 AFSAcquireExcl( &pTargetFcb->NPFcb->SectionObjectResource,
                                 TRUE);
 
-                //
-                // Close the section in the event it was mapped
-                //
+		__try
+		{
 
-                if( !MmForceSectionClosed( &pTargetFcb->NPFcb->SectionObjectPointers,
-                                           TRUE))
+		    //
+		    // Close the section in the event it was mapped
+		    //
+
+		    if( !MmForceSectionClosed( &pTargetFcb->NPFcb->SectionObjectPointers,
+					       TRUE))
+		    {
+
+			AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+				      AFS_TRACE_LEVEL_ERROR,
+				      "AFSSetRenameInfo Failed to delete section for target file %wZ\n",
+				      &uniTargetName));
+		    }
+		}
+		__except( EXCEPTION_EXECUTE_HANDLER)
                 {
 
-                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_ERROR,
-                                  "AFSSetRenameInfo Failed to delete section for target file %wZ\n",
-                                  &uniTargetName));
+		    ntStatus = GetExceptionCode();
+
+		    AFSDbgTrace(( 0,
+				  0,
+				  "EXCEPTION - AFSSetRenameInfo MmForceSectionClosed failed FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
+				  pTargetFcb->ObjectInformation->FileId.Cell,
+				  pTargetFcb->ObjectInformation->FileId.Volume,
+				  pTargetFcb->ObjectInformation->FileId.Vnode,
+				  pTargetFcb->ObjectInformation->FileId.Unique,
+				  ntStatus));
                 }
 
                 AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
@@ -3615,8 +3653,28 @@ AFSSetAllocationInfo( IN PIRP Irp,
         AFSAcquireExcl( &pFcb->NPFcb->SectionObjectResource,
                         TRUE);
 
-        bUserMapped = !MmCanFileBeTruncated( pFileObject->SectionObjectPointer,
-                                             &pBuffer->AllocationSize);
+	__try
+	{
+
+	    bUserMapped = !MmCanFileBeTruncated( pFileObject->SectionObjectPointer,
+						 &pBuffer->AllocationSize);
+	}
+	__except( EXCEPTION_EXECUTE_HANDLER)
+	{
+
+	    bUserMapped = FALSE;
+
+	    ntStatus = GetExceptionCode();
+
+	    AFSDbgTrace(( 0,
+			  0,
+			  "EXCEPTION - AFSSetAllocationInfo MmCanFileBeTruncated failed FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
+			  pFcb->ObjectInformation->FileId.Cell,
+			  pFcb->ObjectInformation->FileId.Volume,
+			  pFcb->ObjectInformation->FileId.Vnode,
+			  pFcb->ObjectInformation->FileId.Unique,
+			  ntStatus));
+	}
 
         AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
@@ -3821,8 +3879,28 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
             AFSAcquireExcl( &pFcb->NPFcb->SectionObjectResource,
                             TRUE);
 
-            bUserMapped = !MmCanFileBeTruncated( pFileObject->SectionObjectPointer,
-                                                 &pBuffer->EndOfFile);
+	    __try
+	    {
+
+		bUserMapped = !MmCanFileBeTruncated( pFileObject->SectionObjectPointer,
+						     &pBuffer->EndOfFile);
+	    }
+	    __except( EXCEPTION_EXECUTE_HANDLER)
+	    {
+
+		bUserMapped = FALSE;
+
+		ntStatus = GetExceptionCode();
+
+		AFSDbgTrace(( 0,
+			      0,
+			      "EXCEPTION - AFSSetEndOfFileInfo MmCanFileBeTruncated failed FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
+			      pFcb->ObjectInformation->FileId.Cell,
+			      pFcb->ObjectInformation->FileId.Volume,
+			      pFcb->ObjectInformation->FileId.Vnode,
+			      pFcb->ObjectInformation->FileId.Unique,
+			      ntStatus));
+	    }
 
             AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
