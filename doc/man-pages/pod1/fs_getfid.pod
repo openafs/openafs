@@ -7,7 +7,7 @@ fs_getfid - Display the fid for a given path in AFS
 =for html
 <div class="synopsis">
 
-B<fs getfid> S<<< [B<-path>] I<path> >>> [B<-help>]
+B<fs getfid> S<<< [B<-path>] I<path> >>> [B<-literal>] [B<-help>]
 
 =for html
 </div>
