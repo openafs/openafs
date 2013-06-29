@@ -162,6 +162,11 @@ ReadDumpHeader(struct DumpHeader *dh)
 
 	case 't':
 	    dh->nDumpTimes = ntohl(readvalue(2)) >> 1;
+	    if (dh->nDumpTimes > MAXDUMPTIMES) {
+		fprintf(stderr, "Too many dump times in header (%d > %d)\n",
+			dh->nDumpTimes, MAXDUMPTIMES);
+		dh->nDumpTimes = MAXDUMPTIMES;
+	    }
 	    for (i = 0; i < dh->nDumpTimes; i++) {
 		dh->dumpTimes[i].from = ntohl(readvalue(4));
 		dh->dumpTimes[i].to = ntohl(readvalue(4));
