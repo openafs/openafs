@@ -77,8 +77,8 @@ readvalue(int size)
     ptr = (char *)&value;
 
     s = sizeof(value) - size;
-    if (size < 0) {
-	fprintf(stderr, "Too much data in afs_int32\n");
+    if (s < 0) {
+	fprintf(stderr, "Too much data for afs_int32\n");
 	return 0;
     }
 
