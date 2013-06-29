@@ -348,6 +348,14 @@ buf_ValidateBuffers(void)
     }
 
     for (bp = cm_data.buf_freeListEndp; bp; bp=(cm_buf_t *) osi_QPrev(&bp->q)) {
+
+	if ( bp < (cm_buf_t *)cm_data.bufHeaderBaseAddress ||
+	     bp >= (cm_buf_t *)cm_data.bufDataBaseAddress) {
+	    afsi_log("cm_ValidateBuffers failure: out of range cm_buf_t pointers");
+	    fprintf(stderr, "cm_ValidateBuffers failure: out of range cm_buf_t pointers\n");
+	    return -11;
+	}
+
         if (bp->magic != CM_BUF_MAGIC) {
             afsi_log("cm_ValidateBuffers failure: bp->magic != CM_BUF_MAGIC");
             fprintf(stderr, "cm_ValidateBuffers failure: bp->magic != CM_BUF_MAGIC\n");
@@ -364,6 +372,14 @@ buf_ValidateBuffers(void)
     }
 
     for (bp = cm_data.buf_freeListp; bp; bp=(cm_buf_t *) osi_QNext(&bp->q)) {
+
+	if ( bp < (cm_buf_t *)cm_data.bufHeaderBaseAddress ||
+	     bp >= (cm_buf_t *)cm_data.bufDataBaseAddress) {
+	    afsi_log("cm_ValidateBuffers failure: out of range cm_buf_t pointers");
+	    fprintf(stderr, "cm_ValidateBuffers failure: out of range cm_buf_t pointers\n");
+	    return -12;
+	}
+
         if (bp->magic != CM_BUF_MAGIC) {
             afsi_log("cm_ValidateBuffers failure: bp->magic != CM_BUF_MAGIC");
             fprintf(stderr, "cm_ValidateBuffers failure: bp->magic != CM_BUF_MAGIC\n");
@@ -380,6 +396,14 @@ buf_ValidateBuffers(void)
     }
 
     for ( bp = cm_data.buf_redirListp; bp; bp = (cm_buf_t *) osi_QNext(&bp->q)) {
+
+	if ( bp < (cm_buf_t *)cm_data.bufHeaderBaseAddress ||
+	     bp >= (cm_buf_t *)cm_data.bufDataBaseAddress) {
+	    afsi_log("cm_ValidateBuffers failure: out of range cm_buf_t pointers");
+	    fprintf(stderr, "cm_ValidateBuffers failure: out of range cm_buf_t pointers\n");
+	    return -13;
+	}
+
         if (!(bp->qFlags & CM_BUF_QREDIR)) {
             afsi_log("CM_BUF_QREDIR not set on cm_buf_t in buf_redirListp");
             fprintf(stderr, "CM_BUF_QREDIR not set on cm_buf_t in buf_redirListp");
@@ -394,11 +418,27 @@ buf_ValidateBuffers(void)
     }
 
     for (bp = cm_data.buf_allp; bp; bp=bp->allp) {
+
+	if ( bp < (cm_buf_t *)cm_data.bufHeaderBaseAddress ||
+	     bp >= (cm_buf_t *)cm_data.bufDataBaseAddress) {
+	    afsi_log("cm_ValidateBuffers failure: out of range cm_buf_t pointers");
+	    fprintf(stderr, "cm_ValidateBuffers failure: out of range cm_buf_t pointers\n");
+	    return -14;
+	}
+
         if (bp->magic != CM_BUF_MAGIC) {
             afsi_log("cm_ValidateBuffers failure: bp->magic != CM_BUF_MAGIC");
             fprintf(stderr, "cm_ValidateBuffers failure: bp->magic != CM_BUF_MAGIC\n");
             return -3;
         }
+
+	if ( bp->datap < cm_data.bufDataBaseAddress ||
+	     bp->datap >= cm_data.bufEndOfData) {
+	    afsi_log("cm_ValidateBuffers failure: out of range data pointers");
+	    fprintf(stderr, "cm_ValidateBuffers failure: out of range data pointers\n");
+	    return -15;
+	}
+
         counta++;
         bpa = bp;
 

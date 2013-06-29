@@ -32,21 +32,46 @@ cm_ValidateVolume(void)
     afs_uint32 count;
 
     for (volp = cm_data.allVolumesp, count = 0; volp; volp=volp->allNextp, count++) {
+
+	if ( volp < (cm_volume_t *)cm_data.volumeBaseAddress ||
+	     volp >= (cm_volume_t *)cm_data.cellBaseAddress) {
+	    afsi_log("cm_ValidateVolume failure: out of range cm_volume_t pointers");
+	    fprintf(stderr, "cm_ValidateVolume failure: out of range cm_volume_t pointers\n");
+	    return -10;
+	}
+
         if ( volp->magic != CM_VOLUME_MAGIC ) {
             afsi_log("cm_ValidateVolume failure: volp->magic != CM_VOLUME_MAGIC");
             fprintf(stderr, "cm_ValidateVolume failure: volp->magic != CM_VOLUME_MAGIC\n");
             return -1;
         }
+
+	if ( volp->cellp < (cm_cell_t *)cm_data.cellBaseAddress ||
+	     volp->cellp >= (cm_cell_t *)cm_data.aclBaseAddress) {
+	    afsi_log("cm_ValidateVolume failure: out of range cm_cell_t pointers");
+	    fprintf(stderr, "cm_ValidateVolume failure: out of range cm_cell_t pointers\n");
+	    return -11;
+	}
+
         if ( volp->cellp && volp->cellp->magic != CM_CELL_MAGIC ) {
             afsi_log("cm_ValidateVolume failure: volp->cellp->magic != CM_CELL_MAGIC");
             fprintf(stderr, "cm_ValidateVolume failure: volp->cellp->magic != CM_CELL_MAGIC\n");
             return -2;
         }
+
+	if ( volp->allNextp < (cm_volume_t *)cm_data.volumeBaseAddress ||
+	     volp->allNextp >= (cm_volume_t *)cm_data.cellBaseAddress) {
+	    afsi_log("cm_ValidateVolume failure: out of range cm_volume_t pointers");
+	    fprintf(stderr, "cm_ValidateVolume failure: out of range cm_volume_t pointers\n");
+	    return -12;
+	}
+
         if ( volp->allNextp && volp->allNextp->magic != CM_VOLUME_MAGIC ) {
             afsi_log("cm_ValidateVolume failure: volp->allNextp->magic != CM_VOLUME_MAGIC");
             fprintf(stderr, "cm_ValidateVolume failure: volp->allNextp->magic != CM_VOLUME_MAGIC\n");
             return -3;
         }
+
         if ( count != 0 && volp == cm_data.allVolumesp ||
              count > cm_data.maxVolumes ) {
             afsi_log("cm_ValidateVolume failure: cm_data.allVolumep loop detected");

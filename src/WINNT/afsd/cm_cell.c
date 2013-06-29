@@ -469,6 +469,14 @@ cm_ValidateCell(void)
     afs_uint32 count1, count2;
 
     for (cellp = cm_data.allCellsp, count1 = 0; cellp; cellp=cellp->allNextp, count1++) {
+
+	if ( cellp < (cm_cell_t *)cm_data.cellBaseAddress ||
+	     cellp >= (cm_cell_t *)cm_data.aclBaseAddress) {
+	    afsi_log("cm_ValidateCell failure: out of range cm_cell_t pointers");
+	    fprintf(stderr, "cm_ValidateCell failure: out of range cm_cell_t pointers\n");
+	    return -10;
+	}
+
         if ( cellp->magic != CM_CELL_MAGIC ) {
             afsi_log("cm_ValidateCell failure: cellp->magic != CM_CELL_MAGIC");
             fprintf(stderr, "cm_ValidateCell failure: cellp->magic != CM_CELL_MAGIC\n");
@@ -483,6 +491,14 @@ cm_ValidateCell(void)
     }
 
     for (cellp = cm_data.freeCellsp, count2 = 0; cellp; cellp=cellp->freeNextp, count2++) {
+
+	if ( cellp < (cm_cell_t *)cm_data.cellBaseAddress ||
+	     cellp >= (cm_cell_t *)cm_data.aclBaseAddress) {
+	    afsi_log("cm_ValidateCell failure: out of range cm_cell_t pointers");
+	    fprintf(stderr, "cm_ValidateCell failure: out of range cm_cell_t pointers\n");
+	    return -11;
+	}
+
         if ( count2 != 0 && cellp == cm_data.freeCellsp ||
              count2 > cm_data.maxCells ) {
             afsi_log("cm_ValidateCell failure: cm_data.freeCellsp infinite loop");
