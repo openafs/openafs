@@ -212,6 +212,12 @@ main(int argc, char **argv)
 		got_prefix = arg;
 	    } else if (strcmp(arg, "v") == 0) {
 		arg = *++argv, argc--;
+		if (arg == NULL) {
+		    fprintf(stderr, "%s: -v option requires an argument\n",
+			    whoami);
+		    usage();
+		    exit(1);
+		}
 		version = atoi(arg);
 		if (version != 1 && version != 2) {
 		    fprintf(stderr, "%s: unknown control argument -`%s'\n",
