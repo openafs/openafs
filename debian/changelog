@@ -1,3 +1,10 @@
+openafs (1.6.4-2) UNRELEASED; urgency=low
+
+  * Translation updates:
+    - Japanese, thanks victory.  (Closes: #714223)
+
+ -- Russ Allbery <rra@debian.org>  Sat, 29 Jun 2013 15:10:31 -0700
+
 openafs (1.6.4-1) unstable; urgency=low
 
   * New upstream release.
