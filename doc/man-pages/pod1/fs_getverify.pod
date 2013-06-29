@@ -54,7 +54,7 @@ There is only one way to invoke B<fs getverify>:
 
 =head1 PRIVILEGE REQUIRED
 
-No special priviledges are required for this command.
+No special privileges are required for this command.
 
 =head1 SEE ALSO
 
