@@ -305,14 +305,14 @@ main(int argc, char **argv)
 /* ptserver specific options */
     cmd_AddParmAtOffset(opts, OPT_database, "-database", CMD_SINGLE,
 		        CMD_OPTIONAL, "database file");
-    cmd_AddParmAlias(opts, OPT_database, "db");
+    cmd_AddParmAlias(opts, OPT_database, "-db");
 
     cmd_AddParmAtOffset(opts, OPT_access, "-default_access", CMD_SINGLE,
 		        CMD_OPTIONAL, "default access flags for new entries");
 #if defined(SUPERGROUPS)
     cmd_AddParmAtOffset(opts, OPT_groupdepth, "-groupdepth", CMD_SINGLE,
 		        CMD_OPTIONAL, "max search depth for supergroups");
-    cmd_AddParmAlias(opts, OPT_groupdepth, "depth");
+    cmd_AddParmAlias(opts, OPT_groupdepth, "-depth");
 #endif
     cmd_AddParmAtOffset(opts, OPT_restricted, "-restricted", CMD_FLAG,
 		        CMD_OPTIONAL, "enable restricted mode");
