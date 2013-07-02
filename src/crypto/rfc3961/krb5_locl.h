@@ -40,6 +40,9 @@
 #define HEIM_CRYPTO_NO_ARCFOUR
 #define HEIM_CRYPTO_NO_PK
 
+#define NO_RAND_EGD_METHOD
+#define NO_RANDFILE
+
 #define ALLOC(X, N) (X) = calloc((N), sizeof(*(X)))
 
 #ifndef max
