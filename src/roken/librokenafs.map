@@ -23,6 +23,7 @@
 		rk_getprogname;
 		rk_hex_encode;
 		rk_localtime_r;
+		rk_mkdir;
 		rk_mkstemp;
 		rk_print_version;
 		rk_setenv;

@@ -50,3 +50,4 @@ EXPORTS
         rk_wcsdup               @54
 	rk_rename		@55
 	rk_vasprintf		@56
+	rk_mkdir		@57
