@@ -38,7 +38,7 @@ clean:
 
 OBJECTS = $(ROKEN_LIBOBJS) \
 	  base64.o \
-	  cloexec.o ct.o hex.o issuid.o net_read.o net_write.o \
+	  cloexec.o ct.o hex.o issuid.o mkdir.o net_read.o net_write.o \
 	  rename.o socket.o snprintf.o warnerr.o
 
 $(TOP_LIBDIR)/$(SHLIBOBJ): $(SHLIBOBJ)
@@ -117,6 +117,9 @@ issuid.o: ${UPSTREAM}/issuid.c
 
 mkstemp.o: ${UPSTREAM}/mkstemp.c
 	$(AFS_CCRULE) $(UPSTREAM)/mkstemp.c
+
+mkdir.o: ${UPSTREAM}/mkdir.c
+	$(AFS_CCRULE) $(UPSTREAM)/mkdir.c
 
 net_read.o: ${UPSTREAM}/net_read.c
 	$(AFS_CCRULE) $(UPSTREAM)/net_read.c
