@@ -171,7 +171,11 @@ GetConn(struct cmd_syndesc *as, int aencrypt)
     }
     memcpy(&addr, th->h_addr, sizeof(afs_int32));
 
-    secFlags = AFSCONF_SECOPTS_FALLBACK_NULL;
+    if (aencrypt)
+	secFlags = AFSCONF_SECOPTS_ALWAYSENCRYPT;
+    else
+	secFlags = AFSCONF_SECOPTS_FALLBACK_NULL;
+
 
     if (as->parms[ADDPARMOFFSET + 2].items) { /* -localauth */
 	secFlags |= AFSCONF_SECOPTS_LOCALAUTH;
