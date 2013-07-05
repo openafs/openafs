@@ -83,7 +83,7 @@ unix_seed(const void *indata, int size)
 	return;
 
     if (write(fd, indata, size) != size)
-        ; /* don't care */
+	; /* don't care */
     close(fd);
 
 }
