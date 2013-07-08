@@ -10,6 +10,7 @@
 	hc_DES_cbc_cksum;
 	hc_DES_ecb_encrypt;
 	hc_DES_init_random_number_generator;
+	hc_DES_is_weak_key;
 	hc_DES_key_sched;
 	hc_DES_new_random_key;
 	hc_DES_pcbc_encrypt;
