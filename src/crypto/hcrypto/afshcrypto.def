@@ -39,3 +39,4 @@ EXPORTS
 	hc_RAND_file_name			@38
 	hc_RAND_add				@39
 	hc_RAND_write_file			@40
+	hc_RAND_bytes				@41
