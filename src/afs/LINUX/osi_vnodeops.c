@@ -271,7 +271,11 @@ extern int BlobScan(struct dcache * afile, afs_int32 ablob);
  * handling and use of bulkstats will need to be reflected here as well.
  */
 static int
+#if defined(STRUCT_FILE_OPERATIONS_HAS_ITERATE)
+afs_linux_readdir(struct file *fp, struct dir_context *ctx)
+#else
 afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
+#endif
 {
     struct vcache *avc = VTOAFS(FILE_INODE(fp));
     struct vrequest treq;
@@ -350,7 +354,11 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
      * takes an offset in units of blobs, rather than bytes.
      */
     code = 0;
+#if defined(STRUCT_FILE_OPERATIONS_HAS_ITERATE)
+    offset = ctx->pos;
+#else
     offset = (int) fp->f_pos;
+#endif
     while (1) {
 	dirpos = BlobScan(tdc, offset);
 	if (!dirpos)
@@ -408,7 +416,13 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 	     * holding the GLOCK.
 	     */
 	    AFS_GUNLOCK();
+#if defined(STRUCT_FILE_OPERATIONS_HAS_ITERATE)
+	    /* dir_emit returns a bool - true when it succeeds.
+	     * Inverse the result to fit with how we check "code" */
+	    code = !dir_emit(ctx, de->name, len, ino, type);
+#else
 	    code = (*filldir) (dirbuf, de->name, len, offset, ino, type);
+#endif
 	    AFS_GLOCK();
 	}
 	DRelease(&entry, 0);
@@ -419,7 +433,11 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
     /* If filldir didn't fill in the last one this is still pointing to that
      * last attempt.
      */
+#if defined(STRUCT_FILE_OPERATIONS_HAS_ITERATE)
+    ctx->pos = (loff_t) offset;
+#else
     fp->f_pos = (loff_t) offset;
+#endif
 
     ReleaseReadLock(&tdc->lock);
     afs_PutDCache(tdc);
@@ -748,7 +766,11 @@ out:
 
 struct file_operations afs_dir_fops = {
   .read =	generic_read_dir,
+#if defined(STRUCT_FILE_OPERATIONS_HAS_ITERATE)
+  .iterate =	afs_linux_readdir,
+#else
   .readdir =	afs_linux_readdir,
+#endif
 #ifdef HAVE_UNLOCKED_IOCTL
   .unlocked_ioctl = afs_unlocked_xioctl,
 #else
