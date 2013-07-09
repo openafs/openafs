@@ -94,6 +94,7 @@ DLLLIBS =\
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\opr.lib \
 	$(DESTDIR)\lib\afshcrypto.lib \
+	$(DESTDIR)\lib\afsrfc3961.lib \
 	$(DESTDIR)\lib\afsroken.lib
 
 $(LIBFILE): $(DLLOBJS) $(DLLLIBS)
