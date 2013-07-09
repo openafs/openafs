@@ -339,6 +339,7 @@ EXPORTS
 ;       RXAFS_OpCodeIndex                       @344
 	initialize_RXK_error_table		@345
 	rx_GetNetworkError                      @346
+        afs_set_com_err_hook                    @347
 
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA
