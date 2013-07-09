@@ -1907,6 +1907,9 @@ main(int argc, char **argv)
 {
     afs_int32 code;
     struct cmd_syndesc *ts;
+#ifdef AFS_NT40_ENV
+    __declspec(dllimport)
+#endif
     extern int afsconf_SawCell;
 
 #ifdef	AFS_AIX32_ENV

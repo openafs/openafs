@@ -157,6 +157,6 @@ EXPORTS
 	afsconf_ParseNetFiles				@156
 	afsconf_SetExtendedCellInfo			@157
 	afsconf_PickClientSecObj			@158
-	afsconf_SawCell					@159
+	afsconf_SawCell					@159    DATA
 	ka_PrintBytes					@160
 	ka_KeyIsZero					@161
