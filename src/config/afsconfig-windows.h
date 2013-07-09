@@ -267,6 +267,7 @@ typedef int errno_t;
 #define HAVE_GETCWD 1
 #define HAVE_STRUPR 1
 #define HAVE_UINTPTR_T 1
+#define HAVE_TIMEGM 1
 
 #define HAVE_KRB5_CREDS_KEYBLOCK_ENCTYPE 1
 
