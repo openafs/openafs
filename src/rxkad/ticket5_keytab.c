@@ -30,6 +30,7 @@
 #include <rx/rxkad.h>
 
 #include <string.h>
+#include <errno.h>
 
 #include <krb5.h>
 
@@ -167,10 +168,14 @@ krb5_c_decrypt(krb5_context context, const krb5_keyblock *key,
 {
     krb5_ticket tkt;
     krb5_error_code code;
-    krb5_data *tout;
+    krb5_data *tout = NULL;
 
-    osi_Assert(cipher_state == NULL);
-    osi_Assert(usage == KRB5_KEYUSAGE_KDC_REP_TICKET);
+    /* We only handle a subset of possible arguments; if we somehow get passed
+     * something else, bail out with EINVAL. */
+    if (cipher_state != NULL)
+	return EINVAL;
+    if (usage != KRB5_KEYUSAGE_KDC_REP_TICKET)
+	return EINVAL;
 
     memset(&tkt, 0, sizeof(tkt));
 
@@ -184,13 +189,20 @@ krb5_c_decrypt(krb5_context context, const krb5_keyblock *key,
     if (code != 0)
 	return code;
 
-    osi_Assert(tout->length <= output->length);
+    if (tout->length > output->length) {
+	/* This should never happen, but don't assert since we may be dealing
+	 * with untrusted user data. */
+	code = EINVAL;
+	goto error;
+    }
 
     memcpy(output->data, tout->data, tout->length);
     output->length = tout->length;
 
-    krb5_free_data(context, tout);
-    return 0;
+ error:
+    if (tout)
+	krb5_free_data(context, tout);
+    return code;
 }
 #endif /* HAVE_KRB5_DECRYPT_TKT_PART && !HAVE_KRB5_C_DECRYPT */
 
@@ -238,9 +250,17 @@ retry:
 		krb5_crypto_destroy(k5ctx, kcrypto);
 	    }
 	    if (code == 0) {
+		if (outd.length > *outlen) {
+		    /* This should never happen, but don't assert since we may
+		     * be dealing with untrusted user data. */
+		    code = EINVAL;
+		    krb5_data_free(&outd);
+		    outd.data = NULL;
+		}
+	    }
+	    if (code == 0) {
 		/* heimdal allocates new memory for the decrypted data; put
 		 * the data back into the requested 'out' buffer */
-		osi_Assert(outd.length <= *outlen);
 		*outlen = outd.length;
 		memcpy(out, outd.data, outd.length);
 		krb5_data_free(&outd);
