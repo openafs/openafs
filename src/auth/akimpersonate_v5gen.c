@@ -89,7 +89,7 @@ akv5gen_encode_krb5_ticket(int kvno,
     ASN1_MALLOC_ENCODE(Ticket, outdata, outlen,
                        &v5gen_tkt, &dummy, code);
     if (code == 0 && dummy != outlen)
-	code = EINVAL; /* XXX what error should this be? */
+	code = EINVAL;
     if (code)
 	goto cleanup;
 
@@ -160,7 +160,7 @@ akv5gen_encode_krb5_enc_tkt_part(int enctype,
     ASN1_MALLOC_ENCODE(EncTicketPart, outdata, outlen,
                        &v5gen_enc, &dummy, code);
     if (code == 0 && dummy != outlen)
-	code = EINVAL; /* XXX what error should this be? */
+	code = EINVAL;
     if (code)
 	goto cleanup;
 

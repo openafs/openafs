@@ -239,7 +239,8 @@ encode_krb5_enc_tkt_part(krb5_enc_tkt_part *encpart, krb5_data **a_out)
     return code;
 
  invalid:
-    /* XXX or assert, or ...? */
+    /* We don't handle all possible ticket options, features, etc. If we are
+     * given a ticket we can't handle, bail out with EINVAL. */
     code = EINVAL;
     goto cleanup;
 }
