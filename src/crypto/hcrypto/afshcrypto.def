@@ -40,3 +40,10 @@ EXPORTS
 	hc_RAND_add				@39
 	hc_RAND_write_file			@40
 	hc_RAND_bytes				@41
+	hc_HMAC					@42
+	hc_HMAC_CTX_cleanup			@43
+	hc_HMAC_CTX_init			@44
+	hc_HMAC_Final				@45
+	hc_HMAC_Init_ex				@46
+	hc_HMAC_Update				@47
+	hc_HMAC_size				@48

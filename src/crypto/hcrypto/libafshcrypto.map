@@ -45,6 +45,13 @@
 	hc_RAND_file_name;
 	hc_RAND_add;
 	hc_RAND_write_file;
+	hc_HMAC;
+	hc_HMAC_CTX_cleanup;
+	hc_HMAC_CTX_init;
+	hc_HMAC_Final;
+	hc_HMAC_Init_ex;
+	hc_HMAC_Update;
+	hc_HMAC_size;
     local:
 	*;
 };
