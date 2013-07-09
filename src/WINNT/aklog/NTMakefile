@@ -29,12 +29,14 @@ $(PTERROBJS): $(AFSROOT)\src\ptserver\pterror.c
 
 ASETKEY = $(DESTDIR)\root.server\usr\afs\bin\asetkey.exe
 
+UNIX = ..\..\aklog
+
 ASETKEYOBJS = \
 	$(OUT)\asetkey.obj
 
 EXELIBS = \
+        $(DESTDIR)\lib\afsrpc.lib \
         $(DESTDIR)\lib\afsauthent.lib \
-        $(DESTDIR)\lib\afs\afscom_err.lib \
 	$(DESTDIR)\lib\opr.lib \
 	$(DESTDIR)\lib\afsroken.lib
 
@@ -43,8 +45,8 @@ OTHERLIBS = dnsapi.lib mpr.lib
 $(AKLOGOBJS): $$(@B).c
 	$(C2OBJ) $**
 
-$(ASETKEYOBJS): $$(@B).c
-	$(C2OBJ) $**
+$(ASETKEYOBJS): $(UNIX)\$$(@B).c
+	$(C2OBJ) $** -I$(UNIX)
 
 ############################################################################
 
