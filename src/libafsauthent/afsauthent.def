@@ -160,3 +160,8 @@ EXPORTS
 	afsconf_SawCell					@159
 	ka_PrintBytes					@160
 	ka_KeyIsZero					@161
+        afsconf_typedKey_new                            @162
+        afsconf_typedKey_put                            @163
+        afsconf_AddTypedKey                             @164
+        afsconf_typedKey_values                         @165
+        afsconf_GetAllKeys                              @166
