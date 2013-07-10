@@ -26,11 +26,13 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 #include <afs/stds.h>
+#include <afs/dirpath.h>
 #include <rx/rx.h>
 #include <rx/rxkad.h>
 
 #include <string.h>
 #include <errno.h>
+#include <sys/stat.h>
 
 #include <krb5.h>
 
@@ -95,8 +97,22 @@ reload_keys(void)
     krb5_keytab_entry kte;
     int i, n_nkeys, o_nkeys;
     krb5_keytab_entry *n_ktent = NULL, *o_ktent;
+    struct stat tstat;
 
-    time(&last_reload);
+    if (stat(AFSDIR_SERVER_CELLSERVDB_FILEPATH, &tstat) == 0) {
+	if (have_keytab_keys && tstat.st_mtime == last_reload) {
+	    /* We haven't changed since the last time we loaded our keys, so
+	     * there's nothing to do. */
+	    ret = 0;
+	    goto cleanup;
+	}
+	last_reload = tstat.st_mtime;
+    } else if (have_keytab_keys) {
+	/* stat() failed, but we already have keys, so don't do anything. */
+	ret = 0;
+	goto cleanup;
+    }
+
     if (keytab_name != NULL)
 	ret = krb5_kt_resolve(k5ctx, keytab_name, &fkeytab);
     else
@@ -219,21 +235,15 @@ rxkad_keytab_decrypt(int kvno, int et, void *in, size_t inlen,
     krb5_enc_data ind;
 #endif
     krb5_data outd;
-    int retried, i, foundkey;
+    int i, foundkey;
     MUTEX_ENTER(&krb5_lock);
+    reload_keys();
     if (have_keytab_keys == 0) {
-	if (time(NULL) - last_reload > 600) {
-	    reload_keys();
-	}
-	if (have_keytab_keys == 0) {
-	    MUTEX_EXIT(&krb5_lock);
-	    return RXKADUNKNOWNKEY;
-	}
+	MUTEX_EXIT(&krb5_lock);
+	return RXKADUNKNOWNKEY;
     }
     foundkey = 0;
     code = -1;
-    retried = 0;
-retry:
     for (i = 0; i < nkeys; i++) {
 	/* foundkey determines what error code we return for failure */
 	if (ktent[i].vno == kvno)
@@ -282,11 +292,6 @@ retry:
 	    }
 #endif
 	}
-    }
-    if (code != 0 && time(NULL) - last_reload > 600 && !retried) {
-	reload_keys();
-	retried = 1;
-	goto retry;
     }
     MUTEX_EXIT(&krb5_lock);
     if (code == 0)
