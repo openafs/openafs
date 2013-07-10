@@ -6169,6 +6169,7 @@ main(int argc, char **argv)
 		"machine readable format");
     COMMONPARMS;
     cmd_CreateAlias(ts, "volinfo");
+    cmd_CreateAlias(ts, "e");
 
     ts = cmd_CreateSyntax("setfields", SetFields, NULL,
 			  "change volume info fields");
