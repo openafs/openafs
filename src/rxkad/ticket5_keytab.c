@@ -277,7 +277,7 @@ retry:
 }
 
 #ifdef RX_ENABLE_LOCKS
-static int
+static void
 init_krb5_lock(void)
 {
     MUTEX_INIT(&krb5_lock, "krb5 api", MUTEX_DEFAULT, 0);
