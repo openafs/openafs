@@ -170,7 +170,7 @@ extern int tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 extern int tkt_DeriveDesKey(int enctype, void *keydata, size_t keylen, struct ktc_encryptionKey
 			    *output);
 /* ticket5_keytab.c */
-extern int rxkad_InitKeytabDecrypt(const char *);
+extern int rxkad_InitKeytabDecrypt(const char *, const char *);
 extern int rxkad_BindKeytabDecrypt(struct rx_securityClass *);
 
 #if !defined(NO_DES_H_INCLUDE)

@@ -62,17 +62,24 @@ afsconf_ServerAuth(void *arock,
     struct rx_securityClass *tclass;
 #ifdef USE_RXKAD_KEYTAB
     int keytab_enable = 0;
+    char *csdb_name;
+    size_t csdblen;
     char *keytab_name;
     size_t ktlen;
+    csdblen = strlen(adir->name) + 1 + strlen(AFSDIR_CELLSERVDB_FILE) + 1;
+    csdb_name = malloc(csdblen);
     ktlen = 5 + strlen(adir->name) + 1 + strlen(AFSDIR_RXKAD_KEYTAB_FILE) + 1;
     keytab_name = malloc(ktlen);
-    if (keytab_name != NULL) {
+    if (csdb_name != NULL && keytab_name != NULL) {
+	strcompose(csdb_name, csdblen, adir->name, "/",
+	           AFSDIR_CELLSERVDB_FILE, (char *)NULL);
 	strcompose(keytab_name, ktlen, "FILE:", adir->name, "/",
 		   AFSDIR_RXKAD_KEYTAB_FILE, (char *)NULL);
-	if (rxkad_InitKeytabDecrypt(keytab_name) == 0)
+	if (rxkad_InitKeytabDecrypt(csdb_name, keytab_name) == 0)
 	    keytab_enable = 1;
-	free(keytab_name);
     }
+    free(csdb_name);
+    free(keytab_name);
 #endif
     LOCK_GLOBAL_MUTEX;
     tclass = (struct rx_securityClass *)
@@ -343,17 +350,24 @@ afsconf_BuildServerSecurityObjects(struct afsconf_dir *dir,
 {
 #ifdef USE_RXKAD_KEYTAB
     int keytab_enable = 0;
+    char *csdb_name;
+    size_t csdblen;
     char *keytab_name;
     size_t ktlen;
+    csdblen = strlen(dir->name) + 1 + strlen(AFSDIR_CELLSERVDB_FILE) + 1;
+    csdb_name = malloc(csdblen);
     ktlen = 5 + strlen(dir->name) + 1 + strlen(AFSDIR_RXKAD_KEYTAB_FILE) + 1;
     keytab_name = malloc(ktlen);
-    if (keytab_name != NULL) {
+    if (csdb_name != NULL && keytab_name != NULL) {
+	strcompose(csdb_name, csdblen, dir->name, "/",
+	           AFSDIR_CELLSERVDB_FILE, (char *)NULL);
 	strcompose(keytab_name, ktlen, "FILE:", dir->name, "/",
 		   AFSDIR_RXKAD_KEYTAB_FILE, (char *)NULL);
-	if (rxkad_InitKeytabDecrypt(keytab_name) == 0)
+	if (rxkad_InitKeytabDecrypt(csdb_name, keytab_name) == 0)
 	    keytab_enable = 1;
-	free(keytab_name);
     }
+    free(csdb_name);
+    free(keytab_name);
 #endif
     if (flags & AFSCONF_SEC_OBJS_RXKAD_CRYPT)
 	*numClasses = 4;
