@@ -197,13 +197,24 @@ addKey(struct afsconf_dir *dir, int argc, char **argv) {
 	kvno = atoi(argv[3]);
 	if (type == afsconf_rxkad) {
 	    typedKey = keyFromCommandLine(afsconf_rxkad, kvno, 0, argv[5], 8);
+	} else if (type == afsconf_rxkad_krb5){
+	    fprintf(stderr, "Raw keys for afsconf_rxkad_krb5 are unsupported");
+	    exit(1);
 	} else {
 	    fprintf(stderr, "Unknown key type %s\n", argv[2]);
 	    exit(1);
 	}
 	break;
       case 7:
-	  typedKey = keyFromKeytab(atoi(argv[3]), atoi(argv[2]), atoi(argv[4]), argv[5], argv[6]);
+	type = stringToType(argv[2]);
+	kvno = atoi(argv[3]);
+	if (type == afsconf_rxkad || type == afsconf_rxkad_krb5) {
+	    typedKey = keyFromKeytab(kvno, type, atoi(argv[4]), argv[5],
+				     argv[6]);
+	} else {
+	    fprintf(stderr, "Unknown key type %s\n", argv[2]);
+	    exit(1);
+	}
 	break;
       default:
 	fprintf(stderr, "%s add: usage is '%s add <kvno> <keyfile> "
