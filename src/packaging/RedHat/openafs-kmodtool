@@ -40,9 +40,10 @@ get_verrel ()
   verrel=${1:-$(uname -r)}
   verrel=${verrel%%$knownvariants}
   case "$verrel" in
-    *.el6*)  verrel="`echo ${verrel} | sed -e 's/^\(.*.el6[^\.]*\)\.[^\.]\+.\?$/\1/'`" ;;
-    *.fc9*)  verrel="`echo ${verrel} | sed -e 's/^\(.*.fc9[^\.]*\)\.[^\.]\+.\?$/\1/'`" ;;
-    *.fc1?*) verrel="`echo ${verrel} | sed -e 's/^\(.*.fc1[0-9][^\.]*\)\.[^\.]\+.\?$/\1/'`" ;;
+    *.el6.elrepo*) verrel="`echo ${verrel} | sed -e 's/^\(.*.el6.elrepo[^\.]*\)\.[^\.]\+.\?$/\1/'`" ;;
+    *.el6*)        verrel="`echo ${verrel} | sed -e 's/^\(.*.el6[^\.]*\)\.[^\.]\+.\?$/\1/'`" ;;
+    *.fc9*)        verrel="`echo ${verrel} | sed -e 's/^\(.*.fc9[^\.]*\)\.[^\.]\+.\?$/\1/'`" ;;
+    *.fc1?*)       verrel="`echo ${verrel} | sed -e 's/^\(.*.fc1[0-9][^\.]*\)\.[^\.]\+.\?$/\1/'`" ;;
   esac
 }
 
