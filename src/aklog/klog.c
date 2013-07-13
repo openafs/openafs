@@ -701,8 +701,15 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	}
 	atoken->startTime = afscred->times.starttime;
 	atoken->endTime = afscred->times.endtime;
-	memcpy(&atoken->sessionKey, get_cred_keydata(afscred),
-	    get_cred_keylen(afscred));
+	if (tkt_DeriveDesKey(get_creds_enctype(afscred),
+			     get_cred_keydata(afscred),
+			     get_cred_keylen(afscred), &atoken->sessionKey)) {
+	    afs_com_err(rn, 0,
+			"Cannot derive DES key from enctype %i of length %u",
+			get_creds_enctype(afscred),
+			(unsigned)get_cred_keylen(afscred));
+	    KLOGEXIT(1);
+	}
 	memcpy(atoken->ticket, enc_part->data,
 	    atoken->ticketLen = enc_part->length);
 	memset(aserver, 0, sizeof *aserver);
