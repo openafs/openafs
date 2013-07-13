@@ -667,9 +667,6 @@ CommandProc(struct cmd_syndesc *as, void *arock)
     for (service = service_temp;;service = "afs") {
         memset(mcred, 0, sizeof *mcred);
         mcred->client = princ;
-        /* Ask for DES since that is what rxkad understands */
-        if (service && !strncmp(service, "afs", 3))
-            get_creds_enctype(mcred) = ENCTYPE_DES_CBC_CRC;
         code = krb5_parse_name(k5context, service, &mcred->server);
         if (code) {
             afs_com_err(rn, code, "Unable to parse service <%s>\n", service);
@@ -713,13 +710,6 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	struct ktc_principal aserver[1], aclient[1];
 	struct ktc_token atoken[1];
 
-        if (get_cred_keylen(afscred) != sizeof(atoken->sessionKey)) {
-            afs_com_err(rn, 0, "Invalid rxkad key length (%u != 8) key type (%u)",
-                        get_cred_keylen(afscred),
-                        get_creds_enctype(afscred));
-            KLOGEXIT(1);
-        }
-
 	memset(atoken, 0, sizeof *atoken);
 	if (evil) {
 	    size_t elen = enc_part->length;
@@ -737,8 +727,15 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	}
 	atoken->startTime = afscred->times.starttime;
 	atoken->endTime = afscred->times.endtime;
-	memcpy(&atoken->sessionKey, get_cred_keydata(afscred),
-	    get_cred_keylen(afscred));
+	if (tkt_DeriveDesKey(get_creds_enctype(afscred),
+			     get_cred_keydata(afscred),
+			     get_cred_keylen(afscred), &atoken->sessionKey)) {
+	    afs_com_err(rn, 0,
+			"Cannot derive DES key from enctype %i of length %u",
+			get_creds_enctype(afscred),
+			(unsigned)get_cred_keylen(afscred));
+	    KLOGEXIT(1);
+	}
 	memcpy(atoken->ticket, enc_part->data,
 	    atoken->ticketLen = enc_part->length);
 	memset(aserver, 0, sizeof *aserver);
