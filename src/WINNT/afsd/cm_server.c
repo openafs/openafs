@@ -1629,7 +1629,7 @@ int cm_ServerEqual(cm_server_t *srv1, cm_server_t *srv2)
         if (UuidEqual((UUID *)&srv1->uuid, (UUID *)&srv2->uuid, &status))
             return 1;
     } else {
-        if (srv1->flags & CM_SERVERFLAG_UUID)
+        if (srv2->flags & CM_SERVERFLAG_UUID)
             return 0;
 
         /* Neither support UUID so perform an addr/port comparison */
