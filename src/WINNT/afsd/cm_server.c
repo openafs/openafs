@@ -263,19 +263,16 @@ cm_PingServer(cm_server_t *tsp)
     cm_req_t req;
 
     lock_ObtainMutex(&tsp->mx);
-    if (tsp->flags & CM_SERVERFLAG_PINGING) {
+    if (InterlockedIncrement(&tsp->pingCount) > 1) {
 	tsp->waitCount++;
 	osi_SleepM((LONG_PTR)tsp, &tsp->mx);
 	lock_ObtainMutex(&tsp->mx);
-	tsp->waitCount--;
-	if (tsp->waitCount == 0)
-	    _InterlockedAnd(&tsp->flags, ~CM_SERVERFLAG_PINGING);
-	else
+	InterlockedDecrement(&tsp->pingCount);
+	if (--tsp->waitCount > 0)
 	    osi_Wakeup((LONG_PTR)tsp);
 	lock_ReleaseMutex(&tsp->mx);
 	return;
     }
-    _InterlockedOr(&tsp->flags, CM_SERVERFLAG_PINGING);
     wasDown = tsp->flags & CM_SERVERFLAG_DOWN;
     afs_inet_ntoa_r(tsp->addr.sin_addr.S_un.S_addr, hoststr);
     lock_ReleaseMutex(&tsp->mx);
@@ -366,9 +363,8 @@ cm_PingServer(cm_server_t *tsp)
 		  tsp->capabilities);
     }
 
-    if (tsp->waitCount == 0)
-	_InterlockedAnd(&tsp->flags, ~CM_SERVERFLAG_PINGING);
-    else
+    InterlockedDecrement(&tsp->pingCount);
+    if (tsp->waitCount > 0)
 	osi_Wakeup((LONG_PTR)tsp);
     lock_ReleaseMutex(&tsp->mx);
 }
@@ -519,7 +515,7 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
             lock_ObtainMutex(&tsp->mx);
             isDown = tsp->flags & CM_SERVERFLAG_DOWN;
 
-            if ((tsp->flags & CM_SERVERFLAG_PINGING) ||
+	    if (tsp->pingCount > 0 ||
                 !((isDown && (flags & CM_FLAG_CHECKDOWNSERVERS)) ||
                    (!isDown && (flags & CM_FLAG_CHECKUPSERVERS)))) {
                 lock_ReleaseMutex(&tsp->mx);
@@ -528,7 +524,7 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
                 continue;
             }
 
-            _InterlockedOr(&tsp->flags, CM_SERVERFLAG_PINGING);
+	    InterlockedIncrement(&tsp->pingCount);
             lock_ReleaseMutex(&tsp->mx);
 
             serversp[nconns] = tsp;
@@ -633,9 +629,8 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
                           tsp->capabilities);
             }
 
-            if (tsp->waitCount == 0)
-                _InterlockedAnd(&tsp->flags, ~CM_SERVERFLAG_PINGING);
-            else
+	    InterlockedDecrement(&tsp->pingCount);
+	    if (tsp->waitCount > 0)
                 osi_Wakeup((LONG_PTR)tsp);
 
             lock_ReleaseMutex(&tsp->mx);
@@ -662,7 +657,7 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
             lock_ObtainMutex(&tsp->mx);
             isDown = tsp->flags & CM_SERVERFLAG_DOWN;
 
-            if ((tsp->flags & CM_SERVERFLAG_PINGING) ||
+	    if (tsp->pingCount > 0 ||
                 !((isDown && (flags & CM_FLAG_CHECKDOWNSERVERS)) ||
                    (!isDown && (flags & CM_FLAG_CHECKUPSERVERS)))) {
                 lock_ReleaseMutex(&tsp->mx);
@@ -671,7 +666,7 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
                 continue;
             }
 
-            _InterlockedOr(&tsp->flags, CM_SERVERFLAG_PINGING);
+	    InterlockedIncrement(&tsp->pingCount);
             lock_ReleaseMutex(&tsp->mx);
 
             serversp[nconns] = tsp;
@@ -745,9 +740,8 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
                           tsp->capabilities);
             }
 
-            if (tsp->waitCount == 0)
-                _InterlockedAnd(&tsp->flags, ~CM_SERVERFLAG_PINGING);
-            else
+	    InterlockedDecrement(&tsp->pingCount);
+	    if (tsp->waitCount > 0)
                 osi_Wakeup((LONG_PTR)tsp);
 
             lock_ReleaseMutex(&tsp->mx);
@@ -1635,10 +1629,12 @@ int cm_DumpServers(FILE *outputFile, char *cookie, int lock)
 
         sprintf(output,
                  "%s - tsp=0x%p cell=%s addr=%-15s port=%u uuid=%s type=%s caps=0x%x "
-                 "flags=0x%x waitCount=%u rank=%u downTime=\"%s\" refCount=%u\r\n",
+		 "flags=0x%x waitCount=%u pingCount=%d rank=%u downTime=\"%s\" "
+		 "refCount=%u pingCount=%\r\n",
                  cookie, tsp, tsp->cellp ? tsp->cellp->name : "", hoststr,
                  ntohs(tsp->addr.sin_port), uuidstr, type,
-                 tsp->capabilities, tsp->flags, tsp->waitCount, tsp->activeRank,
+		 tsp->capabilities, tsp->flags, tsp->waitCount, tsp->pingCount,
+		 tsp->activeRank,
                  (tsp->flags & CM_SERVERFLAG_DOWN) ?  "down" : "up",
                  tsp->refCount);
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);

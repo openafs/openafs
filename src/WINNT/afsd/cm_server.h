@@ -33,6 +33,7 @@ typedef struct cm_server {
     afs_int32 capabilities;		/* by mx */
     struct cm_cell *cellp;		/* cell containing this server */
     afs_int32 refCount;		        /* Interlocked with cm_serverLock */
+    afs_int32 pingCount;		/* Interlocked by mx */
     osi_mutex_t mx;
     unsigned short ipRank;		/* network class rank */
     unsigned short adminRank;		/* set if admin sets a rank
@@ -63,7 +64,7 @@ typedef struct cm_serverRef {
 /* flags */
 #define CM_SERVERFLAG_DOWN	0x1	/* server is down */
 #define CM_SERVERFLAG_PREF_SET	0x2     /* server preference set by user */
-#define CM_SERVERFLAG_PINGING 	0x4 	/* a ping against this server in progress */
+
 #define CM_SERVERFLAG_NO64BIT   0x8     /* server has no support for
                                            64-bit operations. */
 #define CM_SERVERFLAG_NOINLINEBULK 0x10	/* server has no support for inline bulk */
