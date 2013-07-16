@@ -310,7 +310,7 @@ ParseArgs(int argc, char **argv) {
 	    CMD_OPTIONAL, "maximum MTU for RX");
     cmd_AddParmAtOffset(opts, OPT_udpsize, "-udpsize", CMD_SINGLE,
 	    CMD_OPTIONAL, "size of socket buffer in bytes");
-    cmd_AddParmAtOffset(opts, OPT_udpsize, "-sleep", CMD_SINGLE,
+    cmd_AddParmAtOffset(opts, OPT_sleep, "-sleep", CMD_SINGLE,
 	    CMD_OPTIONAL, "make background daemon sleep (LWP only)");
     cmd_AddParmAtOffset(opts, OPT_peer, "-enable_peer_stats", CMD_FLAG,
 	    CMD_OPTIONAL, "enable RX transport statistics");
