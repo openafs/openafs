@@ -340,7 +340,8 @@ AllocID(struct ubik_trans *at, afs_int32 flag, afs_int32 *aid)
 
     if (flag & PRGRP) {
 	*aid = ntohl(cheader.maxGroup);
-	while (code && i < maxcount) {
+	/* Check for PRBADID to avoid wrap-around. */
+	while (code && i < maxcount && *aid != PRBADID) {
 	    --(*aid);
 	    code = FindByID(at, *aid);
 	    i++;
@@ -372,7 +373,7 @@ AllocID(struct ubik_trans *at, afs_int32 flag, afs_int32 *aid)
 	return PRSUCCESS;
     } else {
 	*aid = ntohl(cheader.maxID);
-	while (code && i < maxcount) {
+	while (code && i < maxcount && *aid != 0x7fffffff) {
 	    ++(*aid);
 	    code = FindByID(at, *aid);
 	    i++;
