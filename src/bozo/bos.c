@@ -85,50 +85,6 @@ em(afs_int32 acode)
 	return (char *)afs_error_message(acode);
 }
 
-/* get partition id from a name */
-/* XXX - unused code - could be removed? */
-#if 0
-static afs_int32
-GetPartitionID(char *aname)
-{
-    char tc;
-    char ascii[3];
-
-    tc = *aname;
-    if (tc == 0)
-	return -1;		/* unknown */
-    /* numbers go straight through */
-    if (tc >= '0' && tc <= '9') {
-	return atoi(aname);
-    }
-    /* otherwise check for vicepa or /vicepa, or just plain "a" */
-    ascii[2] = 0;
-    if (strlen(aname) <= 2) {
-	strcpy(ascii, aname);
-    } else if (!strncmp(aname, "/vicep", 6)) {
-	strncpy(ascii, aname + 6, 2);
-    } else if (!strncmp(aname, "vicep", 5)) {
-	strncpy(ascii, aname + 5, 2);
-    } else
-	return -1;		/* bad partition name */
-    /* now partitions are named /vicepa ... /vicepz, /vicepaa, /vicepab,
-     * .../vicepzz, and are numbered from 0.  Do the appropriate conversion */
-    if (ascii[1] == 0) {
-	/* one char name, 0..25 */
-	if (ascii[0] < 'a' || ascii[0] > 'z')
-	    return -1;		/* wrongo */
-	return ascii[0] - 'a';
-    } else {
-	/* two char name, 26 .. <whatever> */
-	if (ascii[0] < 'a' || ascii[0] > 'z')
-	    return -1;		/* wrongo */
-	if (ascii[1] < 'a' || ascii[1] > 'z')
-	    return -1;		/* just as bad */
-	return (ascii[0] - 'a') * 26 + (ascii[1] - 'a') + 26;
-    }
-}
-#endif
-
 /* make ctime easier to use */
 static char *
 DateOf(time_t atime)
