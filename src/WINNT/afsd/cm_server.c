@@ -1029,7 +1029,7 @@ cm_FindServerByUuid(afsUUID *serverUuid, int type, int locked)
         lock_ObtainRead(&cm_serverLock);
 
     for (tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
-        if (tsp->type == type && !afs_uuid_equal(&tsp->uuid, serverUuid))
+	if (tsp->type == type && afs_uuid_equal(&tsp->uuid, serverUuid))
             break;
     }
 
