@@ -142,3 +142,9 @@ libafsrpc.so.1 libafsrpc1 #MINVER#
  afs_xdr_alloc@Base 1.6.2~pre3
  afs_xdr_pointer@Base 1.6.2~pre3
  afs_xdr_u_char@Base 1.6.2~pre3
+ _rxkad_v5_encode_EncTicketPart@Base 1.6.5
+ _rxkad_v5_encode_Ticket@Base 1.6.5
+ _rxkad_v5_length_EncTicketPart@Base 1.6.5
+ _rxkad_v5_length_Ticket@Base 1.6.5
+ rxkad_SetAltDecryptProc@Base 1.6.5
+ tkt_DeriveDesKey@Base 1.6.5
