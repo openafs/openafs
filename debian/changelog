@@ -1,5 +1,16 @@
-openafs (1.6.4-2) UNRELEASED; urgency=low
+openafs (1.6.5-1) UNRELEASED; urgency=low
 
+  * New upstream release.
+    - OPENAFS-SA-2013-003: New support for non-DES enctypes in the
+      long-lived AFS key.  This requires deploying rxkad.keytab files on
+      each server containing all of the encryption types for the cell AFS
+      key.  Once this is deployed on servers, DES will only be used for
+      the session key.  Once deployed on all clients, a stronger security
+      mechanism will be used that allows the DES keys to be removed from
+      the AFS principal in the Kerberos KDC (but still uses DES for some
+      session encryption purposes).  (CVE-2013-4134)
+    - OPENAFS-SA-2013-004: Properly support the -encrypt option in vos,
+      including with -localauth.  (CVE-2013-4135)
   * Translation updates:
     - Japanese, thanks victory.  (Closes: #714223)
 
