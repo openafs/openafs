@@ -11,6 +11,8 @@ openafs (1.6.5-1) UNRELEASED; urgency=low
       session encryption purposes).  (CVE-2013-4134)
     - OPENAFS-SA-2013-004: Properly support the -encrypt option in vos,
       including with -localauth.  (CVE-2013-4135)
+  * Drop the sequence numbers from the openafs-client init script
+    registration.  Debian now always uses dependency-based boot ordering.
   * Translation updates:
     - Japanese, thanks victory.  (Closes: #714223)
 

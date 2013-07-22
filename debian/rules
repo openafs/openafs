@@ -227,9 +227,9 @@ override_dh_install:
 	install -m 644 debian/openafs-client.NEWS \
 	    debian/$(srcpkg)/usr/share/doc/$(srcpkg)/NEWS.Debian
 
-# We have multiple init scripts with some non-standard defaults.
+# We don't want to stop the init scripts on upgrade.
 override_dh_installinit:
-	dh_installinit -popenafs-client -r -- defaults 25 20
+	dh_installinit -popenafs-client -r
 	dh_installinit -popenafs-fileserver -r
 
 # Create the documentation symlinks.
