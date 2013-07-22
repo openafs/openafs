@@ -114,8 +114,9 @@ override_dh_auto_configure:
 	    --with-html-xsl=$(HTML_XSL)					   \
 	    $(DEBIAN_OPT_FLAGS) $(SYSTEM)
 
-# Also build a libafs_tree and build the XML documentation.
-override_dh_auto_build:
+# Also build a libafs_tree and build the XML documentation if building
+# architecture-independent packages.
+override_dh_auto_build-indep:
 	dh_auto_build
 	$(MAKE) libafs_tree
 	set -e; for d in AdminGuide QuickStartUnix UserGuide ; do	\
@@ -145,15 +146,42 @@ override_dh_auto_install:
 	rm -f debian/tmp/usr/bin/klog.krb
 	rm -f debian/tmp/usr/share/man/man1/klog.krb.1
 
-# Override dh_install to handle installation of all the extra documentation
-# that upstream doesn't install by default, install the source required for
-# the kernel source package and the DKMS package, move some files about and
-# do some manually installation of additional things like PAM modules, and
-# to ensure that the extra scripts we install are executable.
-override_dh_install:
+# Override dh_install for architecture-dependent builds to move some files
+# around, do some manual installation of things like PAM modules, and ensure
+# that scripts we install are executable
+override_dh_install-arch:
 	chmod +x debian/afs-rootvol debian/afs-newcell
 	dh_install --fail-missing $(IGNORE)
 
+	mv debian/openafs-client/usr/bin/pagsh \
+	    debian/openafs-client/usr/bin/pagsh.openafs
+	mv debian/openafs-client/usr/share/man/man1/pagsh.1 \
+	    debian/openafs-client/usr/share/man/man1/pagsh.openafs.1
+	mv debian/openafs-client/usr/bin/klog \
+	    debian/openafs-client/usr/bin/klog.afs
+	mv debian/openafs-client/usr/share/man/man1/klog.1 \
+	    debian/openafs-client/usr/share/man/man1/klog.afs.1
+	mv debian/openafs-client/usr/bin/up \
+	    debian/openafs-client/usr/bin/afs-up
+
+	install -m 644 -c debian/tmp/usr/lib/pam_afs.so.1 \
+	    debian/libpam-openafs-kaserver/lib/security/pam_afs.so
+	install -m 644 -c debian/tmp/usr/lib/pam_afs.krb.so.1 \
+	    debian/libpam-openafs-kaserver/lib/security/pam_afs.krb.so
+
+	install -d debian/openafs-dbserver/usr/share/man/man8
+	( cd debian && pod2man --section 8 --center "Debian GNU/Linux"	\
+	    afs-rootvol )						\
+	    >debian/openafs-dbserver/usr/share/man/man8/afs-rootvol.8
+	( cd debian && pod2man --section 8 --center "Debian GNU/Linux"	\
+	    afs-newcell )						\
+	    >debian/openafs-dbserver/usr/share/man/man8/afs-newcell.8
+
+# Override dh_install for architecture-independent builds to handle
+# installation of all the extra documentation that upstream doesn't install
+# by default and install the source required for the kernel source package
+# and the DKMS package.
+override_dh_install-indep:
 	mkdir -p $(DOCS)/html
 	cp doc/xml/*.gif doc/xml/*.html $(DOCS)/html/
 	set -e; for d in AdminGuide QuickStartUnix UserGuide ; do	\
@@ -199,30 +227,6 @@ override_dh_install:
 	rmdir debian/$(srcpkg)/usr/src/modules
 	dh_dkms -V $(VERSION)
 
-	mv debian/openafs-client/usr/bin/pagsh \
-	    debian/openafs-client/usr/bin/pagsh.openafs
-	mv debian/openafs-client/usr/share/man/man1/pagsh.1 \
-	    debian/openafs-client/usr/share/man/man1/pagsh.openafs.1
-	mv debian/openafs-client/usr/bin/klog \
-	    debian/openafs-client/usr/bin/klog.afs
-	mv debian/openafs-client/usr/share/man/man1/klog.1 \
-	    debian/openafs-client/usr/share/man/man1/klog.afs.1
-	mv debian/openafs-client/usr/bin/up \
-	    debian/openafs-client/usr/bin/afs-up
-
-	install -m 644 -c debian/tmp/usr/lib/pam_afs.so.1 \
-	    debian/libpam-openafs-kaserver/lib/security/pam_afs.so
-	install -m 644 -c debian/tmp/usr/lib/pam_afs.krb.so.1 \
-	    debian/libpam-openafs-kaserver/lib/security/pam_afs.krb.so
-
-	install -d debian/openafs-dbserver/usr/share/man/man8
-	( cd debian && pod2man --section 8 --center "Debian GNU/Linux"	\
-	    afs-rootvol )						\
-	    >debian/openafs-dbserver/usr/share/man/man8/afs-rootvol.8
-	( cd debian && pod2man --section 8 --center "Debian GNU/Linux"	\
-	    afs-newcell )						\
-	    >debian/openafs-dbserver/usr/share/man/man8/afs-newcell.8
-
 	install -d debian/$(srcpkg)/usr/share/doc/$(srcpkg)
 	install -m 644 debian/openafs-client.NEWS \
 	    debian/$(srcpkg)/usr/share/doc/$(srcpkg)/NEWS.Debian
@@ -232,20 +236,10 @@ override_dh_installinit:
 	dh_installinit -popenafs-client -r
 	dh_installinit -popenafs-fileserver -r
 
-# Create the documentation symlinks.
-override_dh_installdocs:
+# Symlink /usr/share/doc for some packages.
+override_dh_installdocs-indep:
 	dh_installdocs $(DOC_PACKAGES) --link-doc=openafs-client
 	dh_installdocs --remaining-packages
-	set -e; if [ -d "$(DOCS)" ] ; then				\
-	    for d in arch-overview bos-spec fs-cm-spec rx-spec		\
-		     vldb-vol-spec ; do					\
-		if [ -f "$(DOCS)/html/$$d/jquery.js" ] ; then		\
-		    rm $(DOCS)/html/$$d/jquery.js ;			\
-		    ln -s /usr/share/javascript/jquery/jquery.min.js	\
-			$(DOCS)/html/$$d/jquery.js ;			\
-		fi ;							\
-	    done ;							\
-	fi
 
 # Install the upstream NEWS file as the upstream changelog.
 override_dh_installchangelogs:
