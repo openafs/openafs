@@ -109,26 +109,26 @@ get_krbrlm.o: ${UTIL}/get_krbrlm.c
 
 
 vldb_check: vldb_check.o ${LIBS} AFS_component_version_number.o
-	$(CC) ${LDFLAGS} -o vldb_check vldb_check.o AFS_component_version_number.o ${LIBS} ${MT_LIBS} ${XLIBS} 
+	$(CC) ${LDFLAGS} -o vldb_check vldb_check.o AFS_component_version_number.o ${LIBS} ${MT_LIBS} ${XLIBS} ${KRB5_LIBS}
 
 vldb_check.o: ${VLSERVER}/vldb_check.c 
 	${CCRULE} ${srcdir}/${VLSERVER}/vldb_check.c
 
 cnvldb: cnvldb.o ${LIBS} 
-	$(CC) ${LDFLAGS} -o cnvldb cnvldb.o ${LIBS} ${MT_LIBS} ${XLIBS}
+	$(CC) ${LDFLAGS} -o cnvldb cnvldb.o ${LIBS} ${MT_LIBS} ${XLIBS} ${KRB5_LIBS}
 
 cnvldb.o: ${VLSERVER}/cnvldb.c
 	${CCRULE} ${srcdir}/${VLSERVER}/cnvldb.c
 
 sascnvldb: sascnvldb.o ${LIBS} 
-	$(CC) ${LDFLAGS} -o sascnvldb sascnvldb.o ${LIBS} ${MT_LIBS} ${XLIBS}
+	$(CC) ${LDFLAGS} -o sascnvldb sascnvldb.o ${LIBS} ${MT_LIBS} ${XLIBS} ${KRB5_LIBS}
 
 sascnvldb.o: ${VLSERVER}/sascnvldb.c
 	${CCRULE} ${srcdir}/${VLSERVER}/sascnvldb.c
 
 vlserver: vlserver.o vlutils.o vlprocs.o vldbint.ss.o vldbint.xdr.o $(LIBS)
 	$(CC) ${LDFLAGS} -o vlserver vlserver.o vlutils.o vlprocs.o vldbint.ss.o \
-		vldbint.xdr.o $(LIBS) ${MT_LIBS} ${XLIBS} ${TOP_LIBDIR}/libaudit.a
+		vldbint.xdr.o $(LIBS) ${MT_LIBS} ${XLIBS} ${TOP_LIBDIR}/libaudit.a ${KRB5_LIBS}
 
 vlserver.o: ${VLSERVER}/vlserver.c ${INCLS} AFS_component_version_number.o
 	${CCRULE} ${srcdir}/${VLSERVER}/vlserver.c
@@ -171,7 +171,7 @@ Kvldbint.xdr.c: ${VLSERVER}/vldbint.xg
 	${RXGEN} -A -x -k -c -o $@ ${srcdir}/${VLSERVER}/vldbint.xg
 
 vlclient: vlclient.o $(OBJS) $(LIBS) ${INCLS}
-	$(CC) ${LDFLAGS} -o vlclient vlclient.o $(OBJS) $(LIBS) ${MT_LIBS} ${XLIBS} ${TOP_LIBDIR}/libcmd.a
+	$(CC) ${LDFLAGS} -o vlclient vlclient.o $(OBJS) $(LIBS) ${MT_LIBS} ${XLIBS} ${TOP_LIBDIR}/libcmd.a ${KRB5_LIBS}
 
 vlclient.o: ${VLSERVER}/vlclient.c
 	${CCRULE} ${srcdir}/${VLSERVER}/vlclient.c

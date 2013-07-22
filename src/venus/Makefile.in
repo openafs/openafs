@@ -68,7 +68,7 @@ all: fs up fstrace cmdebug livesys kdump-build cacheout afsio
 # Build targets
 #
 cacheout: cacheout.o
-	$(CC) ${CFLAGS} -o cacheout cacheout.o ${LIBS} ${XLIBS} ${CMLIBS}
+	$(CC) ${CFLAGS} -o cacheout cacheout.o ${LIBS} ${XLIBS} ${CMLIBS} ${KRB5_LIBS}
 
 cacheout.o: cacheout.c
 
@@ -84,7 +84,7 @@ up: up.o
 fs.o: fs.c ${INCLS} AFS_component_version_number.c
 
 fs: fs.o $(LIBS)
-	${CC} ${CFLAGS} -o fs fs.o ${TOP_LIBDIR}/libprot.a $(LIBS) ${XLIBS}
+	${CC} ${CFLAGS} -o fs fs.o ${TOP_LIBDIR}/libprot.a $(LIBS) ${XLIBS} ${KRB5_LIBS}
 
 afsio.o: ${srcdir}/afsio.c ${AFSIO_INCLS} AFS_component_version_number.c
 	${PTH_CCRULE} ${srcdir}/afsio.c
@@ -102,10 +102,10 @@ afsio: afsio.o vldbint.cs.o afscbint.ss.o vldbint.xdr.o ${AFSIO_LIBS}
 livesys.o: livesys.c ${INCLS} AFS_component_version_number.c
 
 livesys: livesys.c $(LIBS)
-	${CC} ${CFLAGS} -o livesys ${srcdir}/livesys.c $(LIBS) ${XLIBS}
+	${CC} ${CFLAGS} -o livesys ${srcdir}/livesys.c $(LIBS) ${XLIBS} ${KRB5_LIBS}
 
 twiddle: twiddle.c $(LIBS)
-	${CC} ${CFLAGS} -o twiddle ${srcdir}/twiddle.c $(LIBS) ${XLIBS}
+	${CC} ${CFLAGS} -o twiddle ${srcdir}/twiddle.c $(LIBS) ${XLIBS} ${KRB5_LIBS}
 
 gcpags: gcpags.c $(LIBS)
 	${CC} ${CFLAGS} -o gcpags ${srcdir}/gcpags.c $(LIBS) ${XLIBS}
@@ -113,7 +113,7 @@ gcpags: gcpags.c $(LIBS)
 whatfid.o: whatfid.c ${INCLS} AFS_component_version_number.c
 
 whatfid: whatfid.o ${LIBS}
-	${CC} ${CFLAGS} -o whatfid whatfid.o ${LIBS} ${XLIBS}
+	${CC} ${CFLAGS} -o whatfid whatfid.o ${LIBS} ${XLIBS} ${KRB5_LIBS}
 
 fstrace.o: fstrace.c AFS_component_version_number.c
 	case ${SYS_NAME} in \
@@ -140,12 +140,12 @@ fstrace: fstrace.o
 cmdebug.o: cmdebug.c ${INCLS} AFS_component_version_number.c
 
 cmdebug: cmdebug.o ${CMLIBS}
-	$(CC) -o cmdebug cmdebug.o ${CFLAGS} ${CMLIBS} ${XLIBS}
+	$(CC) -o cmdebug cmdebug.o ${CFLAGS} ${CMLIBS} ${XLIBS} ${KRB5_LIBS}
 
 dedebug.o: dedebug.c ${INCLS} AFS_component_version_number.c
 
 dedebug: dedebug.o ${CMLIBS}
-	$(CC) -o dedebug dedebug.o ${CFLAGS} ${CMLIBS} ${XLIBS}
+	$(CC) -o dedebug dedebug.o ${CFLAGS} ${CMLIBS} ${XLIBS} ${KRB5_LIBS}
 
 
 

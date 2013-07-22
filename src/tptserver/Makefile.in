@@ -157,7 +157,7 @@ display.o: ${PTSERVER}/display.c ${INCLS}
 	${CCRULE} ${srcdir}/${PTSERVER}/display.c
 
 ptserver: ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o $(LIBS) ${TOP_LIBDIR}/libaudit.a map.o
-	${CC} ${LDFLAGS} -o ptserver ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o map.o $(LIBS) ${MT_LIBS} ${XLIBS} ${TOP_LIBDIR}/libaudit.a
+	${CC} ${LDFLAGS} -o ptserver ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o map.o $(LIBS) ${MT_LIBS} ${XLIBS} ${TOP_LIBDIR}/libaudit.a ${KRB5_LIBS}
 
 db_verify.o: ${PTSERVER}/db_verify.c ${INCLS}
 	${CCRULE} ${srcdir}/${PTSERVER}/db_verify.c
@@ -166,7 +166,7 @@ db_verify: db_verify.o pterror.o display.o $(LIBS)
 	$(CC) ${LDFLAGS} -o db_verify db_verify.o display.o pterror.o $(LIBS) ${MT_LIBS} ${XLIBS}
 
 ptclient: ptclient.o display.o ptuser.o pterror.o ptint.cs.o ptint.xdr.o AFS_component_version_number.o $(LIBS)
-	$(CC) ${LDFLAGS} -o ptclient ptclient.o display.o $(PTOBJS) $(LIBS) ${MT_LIBS} ${XLIBS}
+	$(CC) ${LDFLAGS} -o ptclient ptclient.o display.o $(PTOBJS) $(LIBS) ${MT_LIBS} ${XLIBS} ${KRB5_LIBS}
 
 ptclient.o: ${PTSERVER}/ptclient.c ${INCLS}
 	${CCRULE} ${srcdir}/${PTSERVER}/ptclient.c
@@ -179,31 +179,31 @@ pterror.h pterror.c: ${PTSERVER}/pterror.et
 	${COMPILE_ET} -p ${srcdir}/${PTSERVER} pterror
 
 pts: pts.o $(PTOBJS) ${TOP_LIBDIR}/libcmd.a $(LIBS) ${INCLS}
-	$(CC) ${LDFLAGS} -o pts pts.o ${TOP_LIBDIR}/libcmd.a $(PTOBJS) ${LIBS} ${MT_LIBS} ${XLIBS}
+	$(CC) ${LDFLAGS} -o pts pts.o ${TOP_LIBDIR}/libcmd.a $(PTOBJS) ${LIBS} ${MT_LIBS} ${XLIBS} ${KRB5_LIBS}
 
 pts.o: ${PTSERVER}/pts.c
 	${CCRULE} ${srcdir}/${PTSERVER}/pts.c
 
 readgroup: readgroup.o $(PTOBJS) $(LIBS)
-	$(CC) ${CFLAGS} -o readgroup readgroup.o $(PTOBJS) ${LIBS} ${MT_LIBS} ${XLIBS}
+	$(CC) ${CFLAGS} -o readgroup readgroup.o $(PTOBJS) ${LIBS} ${MT_LIBS} ${XLIBS} ${KRB5_LIBS}
 
 readgroup.o: ${PTSERVER}/readgroup.c ${INCLS}
 	${CCRULE} ${srcdir}/${PTSERVER}/readgroup.c
 
 readpwd: readpwd.o $(PTOBJS) $(LIBS)
-	$(CC) ${CFLAGS} -o readpwd readpwd.o $(PTOBJS) ${LIBS} ${MT_LIBS} ${XLIBS}
+	$(CC) ${CFLAGS} -o readpwd readpwd.o $(PTOBJS) ${LIBS} ${MT_LIBS} ${XLIBS} ${KRB5_LIBS}
 
 readpwd.o: ${PTSERVER}/readpwd.c ${INCLS}
 	${CCRULE} ${srcdir}/${PTSERVER}/readpwd.c
 
 testpt: testpt.o $(PTOBJS) ${TOP_LIBDIR}/libcmd.a $(LIBS)
-	$(CC) ${CFLAGS} -o testpt testpt.o -lm ${TOP_LIBDIR}/libcmd.a $(PTOBJS) $(LIBS) ${MT_LIBS} ${XLIBS}
+	$(CC) ${CFLAGS} -o testpt testpt.o -lm ${TOP_LIBDIR}/libcmd.a $(PTOBJS) $(LIBS) ${MT_LIBS} ${XLIBS} ${KRB5_LIBS}
 
 testpt.o: ${PTSERVER}/testpt.c ${INCLS}
 	${CCRULE} ${srcdir}/${PTSERVER}/testpt.c
 
 pt_util: pt_util.o ptutils.o ubik.o utils.o map.o $(PTOBJS) $(LIBS)
-	$(CC) ${CFLAGS} -o pt_util pt_util.o ptutils.o ubik.o utils.o map.o $(PTOBJS) ${TOP_LIBDIR}/libcmd.a $(LIBS) ${MT_LIBS} ${XLIBS}
+	$(CC) ${CFLAGS} -o pt_util pt_util.o ptutils.o ubik.o utils.o map.o $(PTOBJS) ${TOP_LIBDIR}/libcmd.a $(LIBS) ${MT_LIBS} ${XLIBS} ${KRB5_LIBS}
 
 pt_util.o: ${PTSERVER}/pt_util.c
 	${CCRULE} ${srcdir}/${PTSERVER}/pt_util.c
