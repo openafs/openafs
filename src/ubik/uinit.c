@@ -80,6 +80,9 @@ ugen_ClientInit(int noAuthFlag, const char *confDir, char *cellName, afs_int32 s
 	secFlags |= AFSCONF_SECOPTS_NOAUTH;
     }
 
+    if (gen_rxkad_level == rxkad_crypt)
+	secFlags |= AFSCONF_SECOPTS_ALWAYSENCRYPT;
+
     tdir = afsconf_Open(confdir);
     if (!tdir) {
 	fprintf(stderr,

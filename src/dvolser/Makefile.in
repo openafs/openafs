@@ -218,7 +218,7 @@ afsint.xdr.o: ${FSINT}/afsint.xdr.c
 	${COMPILE}
 
 davolserver: ${objects} ${LIBS}
-	${CC} ${LDFLAGS} -o davolserver ${objects} ${LIBS} ${MT_LIBS} ${XLIBS}
+	${CC} ${LDFLAGS} -o davolserver ${objects} ${LIBS} ${MT_LIBS} ${XLIBS} ${KRB5_LIBS}
 
 install: davolserver
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}

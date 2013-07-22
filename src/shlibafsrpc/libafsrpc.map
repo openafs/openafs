@@ -48,12 +48,14 @@
 	rxkad_GetServerInfo;
 	rxkad_NewClientSecurityObject;
 	rxkad_NewServerSecurityObject;
+	rxkad_SetAltDecryptProc;
 	rxnull_NewClientSecurityObject;
 	rxnull_NewServerSecurityObject;
 	rxs_Release;
 	time_to_life;
 	tkt_CheckTimes;
 	tkt_DecodeTicket;
+	tkt_DeriveDesKey;
 	tkt_MakeTicket;
 	xdrrx_create;
 	hton_syserr_conv;
@@ -151,6 +153,10 @@
 	rx_SetBusyChannelError;
 	rx_KeepAliveOn;
 	rx_KeepAliveOff;
+	_rxkad_v5_encode_EncTicketPart;
+	_rxkad_v5_encode_Ticket;
+	_rxkad_v5_length_EncTicketPart;
+	_rxkad_v5_length_Ticket;
     local:
 	*;
 };

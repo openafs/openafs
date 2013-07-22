@@ -5,8 +5,8 @@ AC_CONFIG_SRCDIR([src/config/stds.h])
 AM_INIT_AUTOMAKE
 
 AC_CONFIG_HEADER(src/config/afsconfig.h)
-MACOS_VERSION=1.6.4
-LINUX_PKGVER=1.6.4
+MACOS_VERSION=1.6.5
+LINUX_PKGVER=1.6.5
 
 dnl Debian wants the release candidate version in the main upstream version,
 dnl and wants ~ before it.
@@ -50,6 +50,8 @@ MAKE_KRB5="#"
 AS_IF([test x"$KRB5_LIBS" != x],
     [BUILD_KRB5=yes
      MAKE_KRB5=
+     AC_DEFINE([USE_RXKAD_KEYTAB], 1,
+	       [Define to 1 if krb5 libraries are available and rxkad can use keytabs])
      RRA_LIB_KRB5_SWITCH
      AC_CHECK_FUNCS([add_error_table \
         add_to_error_table \
@@ -57,8 +59,12 @@ AS_IF([test x"$KRB5_LIBS" != x],
         encode_krb5_ticket \
 	krb5_524_conv_principal \
         krb5_allow_weak_crypto \
+        krb5_c_decrypt \
         krb5_c_encrypt \
+        krb5_crypto_init \
         krb5_decode_ticket \
+        krb5_decrypt_tkt_part \
+        krb5_encrypt_tkt_part \
         krb5_enctype_enable \
         krb5_get_init_creds_opt_alloc \
         krb5_get_prompt_types \
@@ -76,8 +82,13 @@ AS_IF([test x"$KRB5_LIBS" != x],
                      [Define to 1 if you have the `krb524_convert_creds_kdc' function.])])])])
      AC_CHECK_HEADERS([kerberosIV/krb.h])
      AC_CHECK_HEADERS([kerberosV/heim_err.h])
-     AC_CHECK_MEMBERS([krb5_creds.keyblock, krb5_creds.keyblock.enctype, krb5_creds.session,
-                       krb5_prompt.type], , , [#include <krb5.h>])
+     AC_CHECK_MEMBERS([krb5_creds.keyblock, krb5_creds.keyblock.enctype,
+		       krb5_creds.session, krb5_keytab_entry.key,
+		       krb5_keytab_entry.keyblock, krb5_keyblock.enctype,
+		       krb5_keyblock.keytype, krb5_prompt.type], , ,
+		       [#include <krb5.h>])
+     AC_CHECK_DECLS([krb5_free_keytab_entry_contents, krb5_kt_free_entry,
+		    KRB5_KU_TICKET], [], [], [#include <krb5.h>])
      RRA_LIB_KRB5_RESTORE])
 AC_SUBST([BUILD_KRB5])
 AC_SUBST([MAKE_KRB5])

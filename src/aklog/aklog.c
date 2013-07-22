@@ -91,6 +91,7 @@
 #include <afs/pterror.h>
 #include <afs/dirpath.h>
 #include <afs/afsutil.h>
+#include <afs/akimpersonate.h>
 
 #include "aklog.h"
 #include "linked_list.h"
@@ -186,60 +187,6 @@ static int get_user_realm(krb5_context, char **);
 
 #else
 #error "Must have either krb5_princ_size or krb5_principal_get_comp_string"
-#endif
-
-#if !defined(HAVE_KRB5_ENCRYPT_TKT_PART) && defined(HAVE_ENCODE_KRB5_ENC_TKT_PART) && defined(HAVE_KRB5_C_ENCRYPT)
-extern krb5_error_code encode_krb5_enc_tkt_part (const krb5_enc_tkt_part *rep,
-						 krb5_data **code);
-
-krb5_error_code
-krb5_encrypt_tkt_part(krb5_context context,
-		      const krb5_keyblock *key,
-		      krb5_ticket *ticket)
-{
-    krb5_data *data = 0;
-    int code;
-    size_t enclen;
-
-    if ((code = encode_krb5_enc_tkt_part(ticket->enc_part2, &data)))
-	goto Done;
-    if ((code = krb5_c_encrypt_length(context, key->enctype,
-				      data->length, &enclen)))
-	goto Done;
-    ticket->enc_part.ciphertext.length = enclen;
-    if (!(ticket->enc_part.ciphertext.data = malloc(enclen))) {
-	code = ENOMEM;
-	goto Done;
-    }
-    if ((code = krb5_c_encrypt(context, key, KRB5_KEYUSAGE_KDC_REP_TICKET,
-			       0, data, &ticket->enc_part))) {
-	free(ticket->enc_part.ciphertext.data);
-	ticket->enc_part.ciphertext.data = 0;
-    }
-Done:
-    if (data) {
-	if (data->data)
-	    free(data->data);
-	free(data);
-    }
-    return code;
-}
-#endif
-
-#if defined(HAVE_KRB5_CREDS_KEYBLOCK)
-
-#define get_cred_keydata(c) c->keyblock.contents
-#define get_cred_keylen(c) c->keyblock.length
-#define get_creds_enctype(c) c->keyblock.enctype
-
-#elif defined(HAVE_KRB5_CREDS_SESSION)
-
-#define get_cred_keydata(c) c->session.keyvalue.data
-#define get_cred_keylen(c) c->session.keyvalue.length
-#define get_creds_enctype(c) c->session.keytype
-
-#else
-#error "Must have either keyblock or session member of krb5_creds"
 #endif
 
 /* MITKerberosShim logs but returns success */
@@ -691,6 +638,8 @@ rxkad_build_native_token(krb5_context context, krb5_creds *v5cred,
     char k4inst[INST_SZ];
     char k4realm[REALM_SZ];
 #endif
+    void *inkey = get_cred_keydata(v5cred);
+    size_t inkey_sz = get_cred_keylen(v5cred);
 
     afs_dprintf("Using Kerberos V5 ticket natively\n");
 
@@ -738,8 +687,11 @@ rxkad_build_native_token(krb5_context context, krb5_creds *v5cred,
     token->kvno = RXKAD_TKT_TYPE_KERBEROS_V5;
     token->startTime = v5cred->times.starttime;;
     token->endTime = v5cred->times.endtime;
-    memcpy(&token->sessionKey, get_cred_keydata(v5cred),
-	   get_cred_keylen(v5cred));
+    if (tkt_DeriveDesKey(get_creds_enctype(v5cred), inkey, inkey_sz,
+			 &token->sessionKey) != 0) {
+	free(token);
+	return RXKADBADKEY;
+    }
     token->ticketLen = v5cred->ticket.length;
     memcpy(token->ticket, v5cred->ticket.data, token->ticketLen);
 
@@ -1814,327 +1766,6 @@ isdir(char *path, unsigned char *val)
 }
 
 static krb5_error_code
-get_credv5_akimpersonate(krb5_context context,
-			 char* keytab,
-			 krb5_principal service_principal,
-			 krb5_principal client_principal,
-			 time_t starttime,
-			 time_t endtime,
-			 int *allowed_enctypes,
-			 int *paddress,
-			 krb5_creds** out_creds /* out */ )
-{
-#if defined(USING_HEIMDAL) || (defined(HAVE_ENCODE_KRB5_ENC_TKT) && defined(HAVE_ENCODE_KRB5_TICKET) && defined(HAVE_KRB5_C_ENCRYPT))
-    krb5_error_code code;
-    krb5_keytab kt = 0;
-    krb5_kt_cursor cursor[1];
-    krb5_keytab_entry entry[1];
-    krb5_ccache cc = 0;
-    krb5_creds *creds = 0;
-    krb5_enctype enctype;
-    krb5_kvno kvno;
-    krb5_keyblock session_key[1];
-#if USING_HEIMDAL
-    Ticket ticket_reply[1];
-    EncTicketPart enc_tkt_reply[1];
-    krb5_address address[30];
-    krb5_addresses faddr[1];
-    int temp_vno[1];
-    time_t temp_time[2];
-#else
-    krb5_ticket ticket_reply[1];
-    krb5_enc_tkt_part enc_tkt_reply[1];
-    krb5_address address[30], *faddr[30];
-    krb5_data * temp;
-#endif
-    int i;
-    static int any_enctype[] = {0};
-    *out_creds = 0;
-    if (!(creds = malloc(sizeof *creds))) {
-        code = ENOMEM;
-        goto cleanup;
-    }
-    if (!allowed_enctypes)
-        allowed_enctypes = any_enctype;
-
-    cc = 0;
-    enctype = 0; /* AKIMPERSONATE_IGNORE_ENCTYPE */
-    kvno = 0; /* AKIMPERSONATE_IGNORE_VNO */
-    memset((char*)creds, 0, sizeof *creds);
-    memset((char*)entry, 0, sizeof *entry);
-    memset((char*)session_key, 0, sizeof *session_key);
-    memset((char*)ticket_reply, 0, sizeof *ticket_reply);
-    memset((char*)enc_tkt_reply, 0, sizeof *enc_tkt_reply);
-    code = krb5_kt_resolve(context, keytab, &kt);
-    if (code) {
-        if (keytab)
-            afs_com_err(progname, code, "while resolving keytab %s", keytab);
-        else
-            afs_com_err(progname, code, "while resolving default keytab");
-        goto cleanup;
-    }
-
-    if (service_principal) {
-        for (i = 0; (enctype = allowed_enctypes[i]) || !i; ++i) {
-	    code = krb5_kt_get_entry(context,
-				     kt,
-				     service_principal,
-				     kvno,
-				     enctype,
-				     entry);
-	    if (!code) {
-		if (allowed_enctypes[i])
-		    deref_keyblock_enctype(session_key) = allowed_enctypes[i];
-		break;
-	    }
-        }
-        if (code) {
-	    afs_com_err(progname, code,"while scanning keytab entries");
-	    goto cleanup;
-        }
-    } else {
-        krb5_keytab_entry new[1];
-        int best = -1;
-        memset(new, 0, sizeof *new);
-        if ((code == krb5_kt_start_seq_get(context, kt, cursor))) {
-            afs_com_err(progname, code, "while starting keytab scan");
-            goto cleanup;
-        }
-        while (!(code = krb5_kt_next_entry(context, kt, new, cursor))) {
-            for (i = 0;
-                    allowed_enctypes[i] && allowed_enctypes[i]
-		     != deref_entry_enctype(new); ++i)
-                ;
-            if ((!i || allowed_enctypes[i]) &&
-		(best < 0 || best > i)) {
-                krb5_free_keytab_entry_contents(context, entry);
-                *entry = *new;
-                memset(new, 0, sizeof *new);
-            } else krb5_free_keytab_entry_contents(context, new);
-        }
-        if ((i = krb5_kt_end_seq_get(context, kt, cursor))) {
-            afs_com_err(progname, i, "while ending keytab scan");
-            code = i;
-            goto cleanup;
-        }
-        if (best < 0) {
-            afs_com_err(progname, code, "while scanning keytab");
-            goto cleanup;
-        }
-        deref_keyblock_enctype(session_key) = deref_entry_enctype(entry);
-    }
-
-    /* Make Ticket */
-
-#if USING_HEIMDAL
-    if ((code = krb5_generate_random_keyblock(context,
-					      deref_keyblock_enctype(session_key), session_key))) {
-        afs_com_err(progname, code, "while making session key");
-        goto cleanup;
-    }
-    enc_tkt_reply->flags.initial = 1;
-    enc_tkt_reply->transited.tr_type = DOMAIN_X500_COMPRESS;
-    enc_tkt_reply->cname = client_principal->name;
-    enc_tkt_reply->crealm = client_principal->realm;
-    enc_tkt_reply->key = *session_key;
-    {
-        static krb5_data empty_string;
-        enc_tkt_reply->transited.contents = empty_string;
-    }
-    enc_tkt_reply->authtime = starttime;
-    enc_tkt_reply->starttime = temp_time;
-    *enc_tkt_reply->starttime = starttime;
-#if 0
-    enc_tkt_reply->renew_till = temp_time + 1;
-    *enc_tkt_reply->renew_till = endtime;
-#endif
-    enc_tkt_reply->endtime = endtime;
-#else
-    if ((code = krb5_c_make_random_key(context,
-				       deref_keyblock_enctype(session_key), session_key))) {
-        afs_com_err(progname, code, "while making session key");
-        goto cleanup;
-    }
-    enc_tkt_reply->magic = KV5M_ENC_TKT_PART;
-#define DATACAST        (unsigned char *)
-    enc_tkt_reply->flags |= TKT_FLG_INITIAL;
-    enc_tkt_reply->transited.tr_type = KRB5_DOMAIN_X500_COMPRESS;
-    enc_tkt_reply->session = session_key;
-    enc_tkt_reply->client = client_principal;
-    {
-        static krb5_data empty_string;
-        enc_tkt_reply->transited.tr_contents = empty_string;
-    }
-    enc_tkt_reply->times.authtime = starttime;
-    enc_tkt_reply->times.starttime = starttime; /* krb524init needs this */
-    enc_tkt_reply->times.endtime = endtime;
-#endif  /* USING_HEIMDAL */
-    /* NB:  We will discard address for now--ignoring caddr field
-       in any case.  MIT branch does what it always did. */
-
-    if (paddress && *paddress) {
-        deref_enc_tkt_addrs(enc_tkt_reply) = faddr;
-#if USING_HEIMDAL
-        faddr->len = 0;
-        faddr->val = address;
-#endif
-        for (i = 0; paddress[i]; ++i) {
-#if USING_HEIMDAL
-            address[i].addr_type = KRB5_ADDRESS_INET;
-            address[i].address.data = (void*)(paddress+i);
-            address[i].address.length = sizeof(paddress[i]);
-#else
-#if !USING_SSL
-            address[i].magic = KV5M_ADDRESS;
-            address[i].addrtype = ADDRTYPE_INET;
-#else
-            address[i].addrtype = AF_INET;
-#endif
-            address[i].contents = (void*)(paddress+i);
-            address[i].length = sizeof(int);
-            faddr[i] = address+i;
-#endif
-        }
-#if USING_HEIMDAL
-        faddr->len = i;
-#else
-        faddr[i] = 0;
-#endif
-    }
-
-#if USING_HEIMDAL
-    ticket_reply->sname = service_principal->name;
-    ticket_reply->realm = service_principal->realm;
-
-    { /* crypto block */
-        krb5_crypto crypto = 0;
-        unsigned char *buf = 0;
-        size_t buf_size, buf_len;
-        char *what;
-
-        ASN1_MALLOC_ENCODE(EncTicketPart, buf, buf_size,
-			   enc_tkt_reply, &buf_len, code);
-        if(code) {
-            afs_com_err(progname, code, "while encoding ticket");
-            goto cleanup;
-        }
-
-        if(buf_len != buf_size) {
-            afs_com_err(progname, code,
-		    "%u != %u while encoding ticket (internal ASN.1 encoder error",
-		    (unsigned int)buf_len, (unsigned int)buf_size);
-            goto cleanup;
-        }
-        what = "krb5_crypto_init";
-        code = krb5_crypto_init(context,
-				&deref_entry_keyblock(entry),
-				deref_entry_enctype(entry),
-				&crypto);
-        if(!code) {
-            what = "krb5_encrypt";
-            code = krb5_encrypt_EncryptedData(context, crypto, KRB5_KU_TICKET,
-					      buf, buf_len, entry->vno, &(ticket_reply->enc_part));
-        }
-        if (buf) free(buf);
-        if (crypto) krb5_crypto_destroy(context, crypto);
-        if(code) {
-            afs_com_err(progname, code, "while %s", what);
-            goto cleanup;
-        }
-    } /* crypto block */
-    ticket_reply->enc_part.etype = deref_entry_enctype(entry);
-    ticket_reply->enc_part.kvno = temp_vno;
-    *ticket_reply->enc_part.kvno = entry->vno;
-    ticket_reply->tkt_vno = 5;
-#else
-    ticket_reply->server = service_principal;
-    ticket_reply->enc_part2 = enc_tkt_reply;
-    if ((code = krb5_encrypt_tkt_part(context, &deref_entry_keyblock(entry), ticket_reply))) {
-        afs_com_err(progname, code, "while making ticket");
-        goto cleanup;
-    }
-    ticket_reply->enc_part.kvno = entry->vno;
-#endif
-
-    /* Construct Creds */
-
-    if ((code = krb5_copy_principal(context, service_principal,
-				    &creds->server))) {
-        afs_com_err(progname, code, "while copying service principal");
-        goto cleanup;
-    }
-    if ((code = krb5_copy_principal(context, client_principal,
-				    &creds->client))) {
-        afs_com_err(progname, code, "while copying client principal");
-        goto cleanup;
-    }
-    if ((code = krb5_copy_keyblock_contents(context, session_key,
-					    &deref_session_key(creds)))) {
-        afs_com_err(progname, code, "while copying session key");
-        goto cleanup;
-    }
-
-#if USING_HEIMDAL
-    creds->times.authtime = enc_tkt_reply->authtime;
-    creds->times.starttime = *(enc_tkt_reply->starttime);
-    creds->times.endtime = enc_tkt_reply->endtime;
-    creds->times.renew_till = 0; /* *(enc_tkt_reply->renew_till) */
-    creds->flags.b = enc_tkt_reply->flags;
-#else
-    creds->times = enc_tkt_reply->times;
-    creds->ticket_flags = enc_tkt_reply->flags;
-#endif
-    if (!deref_enc_tkt_addrs(enc_tkt_reply))
-        ;
-    else if ((code = krb5_copy_addresses(context,
-					 deref_enc_tkt_addrs(enc_tkt_reply), &creds->addresses))) {
-        afs_com_err(progname, code, "while copying addresses");
-        goto cleanup;
-    }
-
-#if USING_HEIMDAL
-    {
-	size_t creds_tkt_len;
-	ASN1_MALLOC_ENCODE(Ticket, creds->ticket.data, creds->ticket.length,
-			   ticket_reply, &creds_tkt_len, code);
-	if(code) {
-	    afs_com_err(progname, code, "while encoding ticket");
-	    goto cleanup;
-	}
-    }
-#else
-    if ((code = encode_krb5_ticket(ticket_reply, &temp))) {
-	afs_com_err(progname, code, "while encoding ticket");
-	goto cleanup;
-    }
-    creds->ticket = *temp;
-    free(temp);
-#endif
-    /* return creds */
-    *out_creds = creds;
-    creds = 0;
-cleanup:
-    if (deref_enc_data(&ticket_reply->enc_part))
-        free(deref_enc_data(&ticket_reply->enc_part));
-    krb5_free_keytab_entry_contents(context, entry);
-    if (client_principal)
-        krb5_free_principal(context, client_principal);
-    if (service_principal)
-        krb5_free_principal(context, service_principal);
-    if (cc)
-        krb5_cc_close(context, cc);
-    if (kt)
-        krb5_kt_close(context, kt);
-    if (creds) krb5_free_creds(context, creds);
-    krb5_free_keyblock_contents(context, session_key);
-    return code;
-#else
-    return -1;
-#endif
-}
-
-
-static krb5_error_code
 get_credv5(krb5_context context, char *name, char *inst, char *realm,
 	   krb5_creds **creds)
 {
@@ -2173,21 +1804,17 @@ get_credv5(krb5_context context, char *name, char *inst, char *realm,
 
     increds.client = client_principal;
     increds.times.endtime = 0;
-    /* Ask for DES since that is what V4 understands */
-    get_creds_enctype((&increds)) = ENCTYPE_DES_CBC_CRC;
+    if (do524)
+	/* Ask for DES since that is what V4 understands */
+	get_creds_enctype((&increds)) = ENCTYPE_DES_CBC_CRC;
 
     if (keytab) {
-	int allowed_enctypes[] = {
-	    ENCTYPE_DES_CBC_CRC, 0
-	};
-
 	r = get_credv5_akimpersonate(context,
 				     keytab,
 				     increds.server,
 				     increds.client,
-				     300, ((~0U)>>1),
-				     allowed_enctypes,
-				     0 /* paddress */,
+				     0, 0x7fffffff,
+				     NULL,
 				     creds /* out */);
     } else {
 	r = krb5_get_credentials(context, 0, _krb425_ccache, &increds, creds);

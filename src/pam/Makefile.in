@@ -22,9 +22,10 @@ AFSLIBS = ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libsys.a \
 
 LDFLAGS = ${SHLIB_LDFLAGS}
    LIBS = ${TOP_LIBDIR}/libafsauthent_pic.a ${TOP_LIBDIR}/libafsrpc_pic.a \
-	  ${PAM_LIBS} @LIB_AFSDB@ ${MT_LIBS}
+	  ${PAM_LIBS} ${KRB5_LIBS} @LIB_AFSDB@ ${MT_LIBS}
   KLIBS = ktc_krb.o ${TOP_LIBDIR}/libafsauthent_pic.a \
-	  ${TOP_LIBDIR}/libafsrpc_pic.a ${PAM_LIBS} @LIB_AFSDB@ ${MT_LIBS}
+	  ${TOP_LIBDIR}/libafsrpc_pic.a ${PAM_LIBS} ${KRB5_LIBS} \
+	  @LIB_AFSDB@ ${MT_LIBS}
  SHOBJS = afs_account.o afs_session.o afs_password.o \
 	  afs_pam_msg.o afs_message.o AFS_component_version_number.o
    OBJS = $(SHOBJS) test_pam.o

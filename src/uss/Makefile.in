@@ -47,7 +47,7 @@ OBJS =  uss_procs.o \
 	y.tab.o 
 
 uss: uss.o ${OBJS} 
-	${CC} ${CFLAGS} -o uss uss.o ${OBJS} ${LIBS}
+	${CC} ${CFLAGS} -o uss uss.o ${OBJS} ${LIBS} ${KRB5_LIBS}
 
 uss.o:  uss.c AFS_component_version_number.c
 	${CC} -c ${CFLAGS} ${srcdir}/uss.c

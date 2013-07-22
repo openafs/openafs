@@ -336,7 +336,8 @@ rxkad_CheckResponse(struct rx_securityClass *aobj,
 	    tkt_DecodeTicket5(tix, tlen, tsp->get_key, tsp->get_key_rock,
 			      kvno, client.name, client.instance, client.cell,
 			      &sessionkey, &host, &start, &end,
-			      tsp->flags & RXS_CONFIG_FLAGS_DISABLE_DOTCHECK);
+			      tsp->flags & RXS_CONFIG_FLAGS_DISABLE_DOTCHECK,
+			      tsp->alt_decrypt);
 	if (code)
 	    return code;
     }
@@ -482,5 +483,15 @@ afs_int32 rxkad_SetConfiguration(struct rx_securityClass *aobj,
     default:
         break;
     }
+    return 0;
+}
+
+int rxkad_SetAltDecryptProc(struct rx_securityClass *aobj,
+			    rxkad_alt_decrypt_func alt_decrypt)
+{
+    struct rxkad_sprivate *private =
+    (struct rxkad_sprivate *)aobj->privateData;
+
+    private->alt_decrypt = alt_decrypt;
     return 0;
 }

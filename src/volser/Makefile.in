@@ -90,11 +90,11 @@ restorevol: restorevol.c
 		${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a ${XLIBS}
 
 vos: vos.o ${VSOBJS} libvolser.a ${LIBS}
-	${CC} ${LDFLAGS} -o vos vos.o $(VSOBJS) libvolser.a ${LIBS} ${XLIBS}
+	${CC} ${LDFLAGS} -o vos vos.o $(VSOBJS) libvolser.a ${LIBS} ${XLIBS} ${KRB5_LIBS}
 
 volserver: $(SOBJS) $(LIBS) ${TOP_LIBDIR}/libdir.a
 	${CC} ${DBUG} -o volserver $(SOBJS) ${TOP_LIBDIR}/libdir.a \
-		${LDFLAGS} $(LIBS) ${XLIBS}
+		${LDFLAGS} $(LIBS) ${XLIBS} ${KRB5_LIBS}
 
 voldump: vol-dump.o ${VOLDUMP_LIBS}
 	${CC} ${CFLAGS} -o voldump vol-dump.o ${VOLDUMP_LIBS} ${XLIBS}
