@@ -10,7 +10,6 @@
 #ifndef _VOLSER_
 #define _VOLSER_ 1
 
-#include <afs/afs_assert.h>
 #ifdef AFS_PTHREAD_ENV
 #include <pthread.h>
 #endif

@@ -75,7 +75,6 @@
 #define	CFLastFailed	    1	/*!< last call failed to this guy (to detect down hosts) */
 /*\}*/
 
-#include <afs/afs_assert.h>
 #ifdef AFS_PTHREAD_ENV
 #include <pthread.h>
 #else
