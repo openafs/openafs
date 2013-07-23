@@ -505,11 +505,11 @@ VTimedWaitStateChange_r(Volume * vp, const struct timespec *ts, int *atimedout)
 
     state_save = V_attachState(vp);
 
-    assert(vp->nWaiters || vp->nUsers);
+    opr_Assert(vp->nWaiters || vp->nUsers);
     do {
 	VOL_CV_TIMEDWAIT(&V_attachCV(vp), ts, &timeout);
     } while (V_attachState(vp) == state_save && !timeout);
-    assert(V_attachState(vp) != VOL_STATE_FREED);
+    opr_Assert(V_attachState(vp) != VOL_STATE_FREED);
 
     if (atimedout && timeout) {
 	*atimedout = 1;
