@@ -1,3 +1,28 @@
+Release 1.7.2600; Changes since 1.7.2500
+
+ * Fixes for OpenAFS-SA-2013-0003 and OpenAFS-SA-2013-0004
+
+ * In cm_Analyze, if cm_GetVolServerList() fails volServerpp will be
+   NULL which will trigger an exception if passed to either
+   cm_SetServerBusyStatus or cm_ResetServerBusyStatus.
+
+ * If cm_SyncOp exits due to failure and there are threads waiting
+   to use the cm_scache object, wake them before exiting because there
+   will be no cm_SyncOpDone() operation to wake them later.
+
+ * Ensure that all mountpoint input strings contain a trailing dot
+   and do not add extra.
+
+ * Wrap all Memory Manager and Cache Manager operations in a try..except
+   block to protect against leaking the SectionObjectResource if an exception
+   is thrown.  Failure to release the SectionObjectResource will result in
+   subsequent deadlocks.
+
+ * When cm_ValidateCache() is executed validate pointers to ensure
+   that they are in the valid range for the class of pointer.
+
+ * Replace the Windows asetkey with the UNIX version.
+
 Release 1.7.2500; Changes since 1.7.2400
 
  * Fix kernel memory leaks using the AFAR and AFNB tags.
