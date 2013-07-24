@@ -1,3 +1,35 @@
+openafs (1.6.5-1) unstable; urgency=high
+
+  The DES keys used by all previous versions of OpenAFS are not
+  sufficiently strong to be secure.  As of this release, all OpenAFS
+  servers support using stronger long-term keys than DES.  All sites are
+  strongly encouraged to rekey their AFS cells after deploying the new
+  version of the AFS server software on all AFS file server and AFS
+  database server machines.
+
+  To do so, generate a new set of keys for the afs/<cell> principal for
+  your site and store those keys in /etc/openafs/server/rxkad.keytab on
+  all file server and database server machines and then restart the server
+  processes to upgrade the strength of server-to-server connections.
+  After all existing AFS tokens have expired, you can then move the
+  KeyFile aside, which will invalidate all old, existing DES tokens.
+
+  If you are using Heimdal as your Kerberos KDC, you need to ensure that
+  the afs/<cell> key includes a des-cbc-crc enctype (to allow for session
+  keys), but you should remove all DES keys from the keytab before
+  deploying it as rxkad.keytab.
+
+  These are only abbreviated instructions and don't include some relevant
+  details.  If possible, please study and follow the more comprehensive
+  instructions available at:
+
+      http://www.openafs.org/pages/security/install-rxkad-k5-1.6.txt
+      http://www.openafs.org/pages/security/how-to-rekey.txt
+
+  linked from <http://www.openafs.org/security/>.
+
+ -- Russ Allbery <rra@debian.org>  Wed, 24 Jul 2013 12:08:46 -0700
+
 openafs (1.5.77-1) experimental; urgency=low
 
   This version of the OpenAFS file server includes a version built with
