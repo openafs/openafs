@@ -691,7 +691,7 @@ idToName(call, aid, aname)
     size = aid->idlist_len;
     if (size == 0)
 	return 0;
-    if (size < 0)
+    if (size < 0 || size > INT_MAX / PR_MAXNAMELEN)
 	return PRTOOMANY;
     aname->namelist_val = (prname *) malloc(size * PR_MAXNAMELEN);
     aname->namelist_len = 0;

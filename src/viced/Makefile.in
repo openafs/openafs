@@ -72,23 +72,23 @@ fileserver: ${objects} ${headers} ${LIBS}
 	case ${SYS_NAME} in \
 	rs_aix*) \
 	    ${CC} -K ${LDFLAGS} -o fileserver ${objects} \
-	    ${TOP_LIBDIR}/libaudit.a ${LIBS} ${XLIBS} ;; \
+	    ${TOP_LIBDIR}/libaudit.a ${LIBS} ${XLIBS} ${KRB5_LIBS} ;; \
 	*) \
 	    ${CC} ${LDFLAGS} -o fileserver ${objects} \
-	    ${TOP_LIBDIR}/libaudit.a ${LIBS} ${XLIBS} ;; \
+	    ${TOP_LIBDIR}/libaudit.a ${LIBS} ${XLIBS} ${KRB5_LIBS} ;; \
 	esac
 
 fsprobe.o: fsprobe.c AFS_component_version_number.c
 	${CC} ${CFLAGS} -DINTERPRET_DUMP -c ${srcdir}/fsprobe.c
 
 fsprobe: fsprobe.o
-	${CC} ${CFLAGS} -o fsprobe fsprobe.o ${LIBS} ${XLIBS} 
+	${CC} ${CFLAGS} -o fsprobe fsprobe.o ${LIBS} ${XLIBS} ${KRB5_LIBS}
 
 cbd.o: callback.c AFS_component_version_number.c
 	${CC} ${CFLAGS} -DINTERPRET_DUMP -c -o cbd.o ${srcdir}/callback.c
 
 cbd: cbd.o
-	${CC} ${CFLAGS} -DINTERPRET_DUMP -o cbd cbd.o ${LIBS} ${XLIBS} 
+	${CC} ${CFLAGS} -DINTERPRET_DUMP -o cbd cbd.o ${LIBS} ${XLIBS} ${KRB5_LIBS}
 
 ${DEST}/root.server/usr/afs/bin/fileserver: fileserver
 	@case ${SYS_NAME} in \

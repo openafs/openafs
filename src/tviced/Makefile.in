@@ -186,7 +186,7 @@ afsint.xdr.o: ${FSINT}/afsint.xdr.c
 	${CCRULE}
 
 fileserver: ${objects} ${LIBS}
-	${CC} ${LDFLAGS} -o fileserver ${objects} ${LIBS} ${MT_LIBS} ${XLIBS}
+	${CC} ${LDFLAGS} -o fileserver ${objects} ${LIBS} ${MT_LIBS} ${XLIBS} ${KRB5_LIBS}
 
 ${DEST}/root.server/usr/afs/bin/fileserver: fileserver
 	${INSTALL} -ns $? $@

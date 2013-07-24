@@ -93,6 +93,11 @@ typedef char rxkad_level;
 
 extern int rxkad_EpochWasSet;	/* TRUE => we called rx_SetEpoch */
 
+/* An alternate decryption function for rxkad.  Using the given kvno and
+ * enctype, decrypt the input data + length to output data + length. */
+typedef int (*rxkad_alt_decrypt_func)(int, int, void *, size_t, void *,
+				      size_t *);
+
 #include "rxkad_prototypes.h"
 
 #endif /* OPENAFS_RXKAD_RXKAD_H */

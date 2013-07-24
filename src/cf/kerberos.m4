@@ -56,11 +56,13 @@ if test X$conf_krb5 = XYES; then
 	AC_MSG_RESULT([Configuring support for Kerberos 5 utilities])
 	BUILD_KRB5=yes
 	MAKE_KRB5=
+	AC_DEFINE([USE_RXKAD_KEYTAB], 1,
+		  [Define to 1 if krb5 libraries are available and rxkad can use keytabs])
 	save_CPPFLAGS="$CPPFLAGS"
 	CPPFLAGS="$CPPFLAGS $KRB5CFLAGS"
 	save_LIBS="$LIBS"
 	LIBS="$LIBS $KRB5LIBS"
-	AC_CHECK_FUNCS([add_to_error_table add_error_table krb5_princ_size krb5_principal_get_comp_string encode_krb5_enc_tkt_part encode_krb5_ticket krb5_c_encrypt krb5_c_encrypt_length krb5_cc_register krb5_decode_ticket krb5_get_prompt_types krb5_allow_weak_crypto krb5_enctype_enable])
+	AC_CHECK_FUNCS([add_to_error_table add_error_table krb5_princ_size krb5_principal_get_comp_string encode_krb5_enc_tkt_part encode_krb5_ticket krb5_c_encrypt krb5_c_encrypt_length krb5_c_decrypt krb5_cc_register krb5_decode_ticket krb5_get_prompt_types krb5_allow_weak_crypto krb5_enctype_enable krb5_crypto_init krb5_encrypt_tkt_part krb5_decrypt_tkt_part])
 	AC_CHECK_FUNCS([krb5_524_convert_creds], ,
 	    [AC_CHECK_FUNCS([krb524_convert_creds_kdc], ,
 		[AC_CHECK_LIB([krb524], [krb524_convert_creds_kdc],
@@ -71,54 +73,17 @@ if test X$conf_krb5 = XYES; then
 	AC_CHECK_HEADERS([kerberosIV/krb.h])
 	AC_CHECK_HEADERS([kerberosV/heim_err.h])
 
-AC_MSG_CHECKING(for krb5_creds.keyblock existence)
-AC_CACHE_VAL(ac_cv_krb5_creds_keyblock_exists,
-[
-AC_TRY_COMPILE(
-[#include <krb5.h>],
-[krb5_creds _c;
-printf("%x\n", _c.keyblock);], 
-ac_cv_krb5_creds_keyblock_exists=yes,
-ac_cv_krb5_creds_keyblock_exists=no)])
-AC_MSG_RESULT($ac_cv_krb5_creds_keyblock_exists)
-	
-AC_MSG_CHECKING(for krb5_creds.session existence)
-AC_CACHE_VAL(ac_cv_krb5_creds_session_exists,
-[
-AC_TRY_COMPILE(
-[#include <krb5.h>],
-[krb5_creds _c;
-printf("%x\n", _c.session);], 
-ac_cv_krb5_creds_session_exists=yes,
-ac_cv_krb5_creds_session_exists=no)])
-AC_MSG_RESULT($ac_cv_krb5_creds_session_exists)
 
-AC_MSG_CHECKING(for krb5_prompt.type existence)
-AC_CACHE_VAL(ac_cv_krb5_prompt_type_exists,
-[
-AC_TRY_COMPILE(
-[#include <krb5.h>],
-[krb5_prompt _p;
-printf("%x\n", _p.type);], 
-ac_cv_krb5_prompt_type_exists=yes,
-ac_cv_krb5_prompt_type_exists=no)])
-AC_MSG_RESULT($ac_cv_krb5_prompt_type_exists)
-	
-if test "x$ac_cv_krb5_creds_keyblock_exists" = "xyes"; then
-	AC_DEFINE(HAVE_KRB5_CREDS_KEYBLOCK, 1, [define if krb5_creds has keyblock])
-fi
-if test "x$ac_cv_krb5_creds_session_exists" = "xyes"; then
-	AC_DEFINE(HAVE_KRB5_CREDS_SESSION, 1, [define if krb5_creds has session])
-fi
-if test "x$ac_cv_krb5_prompt_type_exists" = "xyes"; then
-	AC_DEFINE(HAVE_KRB5_PROMPT_TYPE, 1, [define if krb5_prompt has type])
-fi
-	
-dnl	AC_CHECK_MEMBERS([krb5_creds.keyblock, krb5_creds.session],,, [#include <krb5.h>])
+	AC_CHECK_MEMBERS([krb5_creds.keyblock, krb5_creds.keyblock.enctype,
+			 krb5_creds.session, krb5_keytab_entry.key,
+			krb5_keytab_entry.keyblock, krb5_keyblock.enctype,
+			 krb5_keyblock.keytype, krb5_prompt.type], , ,
+			 [#include <krb5.h>])
+	AC_CHECK_DECLS([krb5_free_keytab_entry_contents, krb5_kt_free_entry,
+		       KRB5_KU_TICKET], [], [], [#include <krb5.h>])
 	CPPFLAGS="$save_CPPFLAGS"
 	LIBS="$save_LIBS"
 fi
-
 if test "x$ac_cv_krb5_cc_register_exists" = "xyes"; then
         AC_DEFINE(HAVE_KRB5_CC_REGISTER, 1, [define if krb5_cc_register exists])
 fi

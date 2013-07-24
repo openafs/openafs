@@ -52,15 +52,15 @@ SOBJS=dbentries.o tcprocs.o lwps.o tcmain.o list.o recoverDb.o tcudbprocs.o \
 all: butc read_tape
 
 butc_test: ${TESTOBJS} ${LIBS} ${INCLS} ${HACKS}
-	${CC} ${CFLAGS} ${TESTOBJS} ${LIBS} ${XLIBS} -o butc_test
+	${CC} ${CFLAGS} ${TESTOBJS} ${LIBS} ${XLIBS} ${KRB5_LIBS} -o butc_test
 
 tdump: tdump.c AFS_component_version_number.c
 	${CC} ${CFLAGS} ${srcdir}/tdump.c -o tdump
 
 butc: ${SOBJS} ${LIBS} ${INCLS} ${HACKS}
 	@case ${SYS_NAME} in \
-	  rs_aix*) ${CC} ${CFLAGS} ${SOBJS} ${LIBS} ${XLIBS} /usr/lib/libc_r.a -o butc;; \
-	  *)        ${CC} ${CFLAGS} ${SOBJS} ${LIBS} ${XLIBS} -o butc;; \
+	  rs_aix*) ${CC} ${CFLAGS} ${SOBJS} ${LIBS} ${XLIBS} ${KRB5_LIBS} /usr/lib/libc_r.a -o butc;; \
+	  *)        ${CC} ${CFLAGS} ${SOBJS} ${LIBS} ${XLIBS} ${KRB5_LIBS} -o butc;; \
 	esac
 
 tcmain.o: tcmain.c ${INCLS} AFS_component_version_number.c

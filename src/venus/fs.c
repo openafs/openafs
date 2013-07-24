@@ -561,7 +561,7 @@ EmptyAcl(char *astr)
     tp->nplus = tp->nminus = 0;
     tp->pluslist = tp->minuslist = 0;
     tp->dfs = 0;
-    sscanf(astr, "%d dfs:%d %s", &junk, &tp->dfs, tp->cell);
+    sscanf(astr, "%d dfs:%d %1024s", &junk, &tp->dfs, tp->cell);
     return tp;
 }
 
@@ -576,7 +576,7 @@ ParseAcl(char *astr)
     ta = (struct Acl *)malloc(sizeof(struct Acl));
     assert(ta);
     ta->dfs = 0;
-    sscanf(astr, "%d dfs:%d %s", &ta->nplus, &ta->dfs, ta->cell);
+    sscanf(astr, "%d dfs:%d %1024s", &ta->nplus, &ta->dfs, ta->cell);
     astr = SkipLine(astr);
     sscanf(astr, "%d", &ta->nminus);
     astr = SkipLine(astr);
@@ -587,7 +587,7 @@ ParseAcl(char *astr)
     last = 0;
     first = 0;
     for (i = 0; i < nplus; i++) {
-	sscanf(astr, "%100s %d", tname, &trights);
+	sscanf(astr, "%99s %d", tname, &trights);
 	astr = SkipLine(astr);
 	tl = (struct AclEntry *)malloc(sizeof(struct AclEntry));
 	assert(tl);
@@ -605,7 +605,7 @@ ParseAcl(char *astr)
     last = 0;
     first = 0;
     for (i = 0; i < nminus; i++) {
-	sscanf(astr, "%100s %d", tname, &trights);
+	sscanf(astr, "%99s %d", tname, &trights);
 	astr = SkipLine(astr);
 	tl = (struct AclEntry *)malloc(sizeof(struct AclEntry));
 	assert(tl);

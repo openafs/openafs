@@ -78,6 +78,7 @@ struct rxkad_sprivate {
     int (*get_key) ();		/* func. of kvno and server key ptr */
     int (*user_ok) ();		/* func called with new client name */
     afs_uint32 flags;		/* configuration flags */
+    rxkad_alt_decrypt_func alt_decrypt;
 };
 
 /* private data in server-side connection */

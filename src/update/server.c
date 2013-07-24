@@ -314,7 +314,10 @@ main(int argc, char *argv[])
 	rxkad_NewServerSecurityObject(rxkad_clear, cdir, afsconf_GetKey, 0);
     if (securityObjects[2] == (struct rx_securityClass *)0)
 	Quit("rxkad_NewServerSecurityObject");
-
+#ifdef USE_RXKAD_KEYTAB
+    if (rxkad_InitKeytabDecrypt(AFSDIR_SERVER_RXKAD_KEYTAB_FILEPATH) == 0)
+        rxkad_BindKeytabDecrypt(securityObjects[2]);
+#endif
     /* Instantiate a single UPDATE service.  The rxgen-generated procedure
      * which is called to decode requests is passed in here
      * (UPDATE_ExecuteRequest). */

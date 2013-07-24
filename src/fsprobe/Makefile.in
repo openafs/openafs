@@ -41,7 +41,7 @@ fsprobe_callback.o: fsprobe_callback.c ${INCLS}
 
 fsprobe_test: fsprobe_test.o libfsprobe.a ${LIBS}
 	${CC} ${CFLAGS} -o fsprobe_test fsprobe_test.o libfsprobe.a \
-		${LIBS} ${XLIBS}
+		${LIBS} ${XLIBS} ${KRB5_LIBS}
 
 #
 # Install targets
