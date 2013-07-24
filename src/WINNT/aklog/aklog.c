@@ -513,7 +513,7 @@ static int get_v5cred(krb5_context context,
     increds.times.endtime = 0;
 	/* Ask for DES since that is what V4 understands */
     if (c != NULL)
-	increds.keyblock.enctype = ENCTYPE_DES_CBC_CRC;
+	increds.session.keytype = ENCTYPE_DES_CBC_CRC;
 
     r = krb5_get_credentials(context, 0, _krb425_ccache, &increds, creds);
     if (r) {
