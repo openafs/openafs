@@ -18,6 +18,7 @@ AFSLIBS = \
 		${TOP_LIBDIR}/libauth.a \
 		${TOP_LIBDIR}/librxkad.a \
 		${TOP_LIBDIR}/libsys.a \
+		${TOP_LIBDIR}/libafsrfc3961.a \
 		${TOP_LIBDIR}/libafshcrypto_lwp.a \
 		${TOP_LIBDIR}/librx.a \
 		${TOP_LIBDIR}/liblwp.a \

@@ -78,6 +78,7 @@ struct rxkad_sprivate {
     int (*get_key) (void *, int,
 		    struct ktc_encryptionKey *);
 				/* func. of kvno and server key ptr */
+    rxkad_get_key_enctype_func get_key_enctype;
     int (*user_ok) (char *, char *,
 		    char *, afs_int32);
 				/* func called with new client name */

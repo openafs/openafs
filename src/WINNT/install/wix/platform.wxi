@@ -28,6 +28,7 @@
 	<?define cmf_afsvosadmin_DLL_guid="8955900E-E743-41A9-9C54-FCEB91A72ADE"?>
 	<?define cmf_afsadminutil_DLL_guid="72495728-0024-4AAC-81F6-6E826BFFED86"?>
 	<?define cmf_afsrpc_DLL_guid="AE9350B3-21AA-4204-A0A8-3D58C57EB178"?>
+	<?define cmf_afsrfc3961_DLL_guid="FBC41858-4EB1-4EAA-9FD7-AB1029602A70"?>
         <?define cmf_afshcrypto_DLL_guid="4C35B73D-7477-44AA-8763-8C09F570C7BD"?>
         <?define cmf_afsroken_DLL_guid="A9BB2D83-26A4-44BF-8235-F305E59393EA"?>
 	<?define cmf_afsauthent2_DLL_guid="7BD58D90-B600-44B7-BBCB-545861E878EB"?>
@@ -146,6 +147,7 @@
 	<?define cmf_afsvosadmin_DLL_guid="A97E0801-06A5-465C-99E1-E5F0E07166F0"?>
 	<?define cmf_afsadminutil_DLL_guid="A9782D0F-768F-40F4-A600-A7240EFBEC8C"?>
 	<?define cmf_afsrpc_DLL_guid="E75E2FC0-D011-494A-8142-670B3286C5C2"?>
+	<?define cmf_afsrfc3961_DLL_guid="8504A69A-84A1-47BB-9D3C-4A35592BB4CA"?>
         <?define cmf_afshcrypto_DLL_guid="5FB93926-07D4-4BFB-9532-726233D256CA"?>
         <?define cmf_afsroken_DLL_guid="9586EDB5-C1DE-4666-994C-5D2F4FC4D55E"?>
 	<?define cmf_afsauthent2_DLL_guid="7B806F96-0542-4BCC-865B-E126CE3BCDA6"?>

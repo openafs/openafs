@@ -19,6 +19,7 @@
 
 #define HC_DEPRECATED
 #include <hcrypto/des.h>
+#include <hcrypto/rand.h>
 
 #include <rx/rxkad.h>
 #include <rx/rx.h>
@@ -42,6 +43,31 @@ QuickAuth(struct rx_securityClass **astr, afs_int32 *aindex)
 }
 
 #if !defined(UKERNEL)
+static int _afsconf_GetRxkadKrb5Key(void *arock, int kvno, int enctype, void *outkey,
+				    size_t *keylen)
+{
+    struct afsconf_dir *adir = arock;
+    struct afsconf_typedKey *kobj;
+    struct rx_opaque *keymat;
+    afsconf_keyType tktype;
+    int tkvno, tenctype;
+    int code;
+
+    code = afsconf_GetKeyByTypes(adir, afsconf_rxkad_krb5, kvno, enctype, &kobj);
+    if (code != 0)
+	return code;
+    afsconf_typedKey_values(kobj, &tktype, &tkvno, &tenctype, &keymat);
+    if (*keylen < keymat->len) {
+	afsconf_typedKey_put(&kobj);
+	return AFSCONF_BADKEY;
+    }
+    memcpy(outkey, keymat->val, keymat->len);
+    *keylen = keymat->len;
+    afsconf_typedKey_put(&kobj);
+    return 0;
+}
+
+
 /* Return an appropriate security class and index */
 afs_int32
 afsconf_ServerAuth(void *arock,
@@ -53,7 +79,8 @@ afsconf_ServerAuth(void *arock,
 
     LOCK_GLOBAL_MUTEX;
     tclass = (struct rx_securityClass *)
-	rxkad_NewServerSecurityObject(0, adir, afsconf_GetKey, NULL);
+	rxkad_NewKrb5ServerSecurityObject(0, adir, afsconf_GetKey,
+					  _afsconf_GetRxkadKrb5Key, NULL);
     if (tclass) {
 	*astr = tclass;
 	*aindex = RX_SECIDX_KAD;
@@ -72,35 +99,72 @@ GenericAuth(struct afsconf_dir *adir,
 	    afs_int32 *aindex,
 	    rxkad_level enclevel)
 {
-    char tbuffer[256];
+#ifdef UKERNEL
+    return QuickAuth(astr, aindex);
+#else
+    int enctype_preflist[]={18, 17, 23, 16, 0};
+    char tbuffer[512];
     struct ktc_encryptionKey key, session;
     struct rx_securityClass *tclass;
     afs_int32 kvno;
     afs_int32 ticketLen;
     afs_int32 code;
+    int use_krb5=0;
+    struct afsconf_typedKey *kobj;
+    struct rx_opaque *keymat;
+    int *et;
 
     /* first, find the right key and kvno to use */
-    code = afsconf_GetLatestKey(adir, &kvno, &key);
-    if (code) {
-	return QuickAuth(astr, aindex);
+
+    et = enctype_preflist;
+    while(*et != 0) {
+	code = afsconf_GetLatestKeyByTypes(adir, afsconf_rxkad_krb5, *et,
+					   &kobj);
+	if (code == 0) {
+	    afsconf_keyType tktype;
+	    int tenctype;
+	    afsconf_typedKey_values(kobj, &tktype, &kvno, &tenctype, &keymat);
+	    RAND_add(keymat->val, keymat->len, 0.0);
+	    use_krb5 = 1;
+	    break;
+	}
+	et++;
     }
 
-    /* next create random session key, using key for seed to good random */
-    DES_init_random_number_generator((DES_cblock *) &key);
+    if (use_krb5 == 0) {
+	code = afsconf_GetLatestKey(adir, &kvno, &key);
+	if (code) {
+	    return QuickAuth(astr, aindex);
+	}
+	/* next create random session key, using key for seed to good random */
+	DES_init_random_number_generator((DES_cblock *) &key);
+    }
     code = DES_new_random_key((DES_cblock *) &session);
     if (code) {
+	if (use_krb5)
+	    afsconf_typedKey_put(&kobj);
 	return QuickAuth(astr, aindex);
     }
 
-    /* now create the actual ticket */
-    ticketLen = sizeof(tbuffer);
-    memset(tbuffer, '\0', sizeof(tbuffer));
-    code =
-	tkt_MakeTicket(tbuffer, &ticketLen, &key, AUTH_SUPERUSER, "", "", 0,
-		       0xffffffff, &session, 0, "afs", "");
-    /* parms were buffer, ticketlen, key to seal ticket with, principal
-     * name, instance and cell, start time, end time, session key to seal
-     * in ticket, inet host, server name and server instance */
+    if (use_krb5) {
+	ticketLen = sizeof(tbuffer);
+	memset(tbuffer, '\0', sizeof(tbuffer));
+	code =
+	    tkt_MakeTicket5(tbuffer, &ticketLen, *et, &kvno, keymat->val,
+			    keymat->len, AUTH_SUPERUSER, "", "", 0, 0x7fffffff,
+			    &session, "afs", "");
+	afsconf_typedKey_put(&kobj);
+    } else {
+	/* now create the actual ticket */
+	ticketLen = sizeof(tbuffer);
+	memset(tbuffer, '\0', sizeof(tbuffer));
+	code =
+	    tkt_MakeTicket(tbuffer, &ticketLen, &key, AUTH_SUPERUSER, "", "", 0,
+			   0xffffffff, &session, 0, "afs", "");
+	/* parms were buffer, ticketlen, key to seal ticket with, principal
+	 * name, instance and cell, start time, end time, session key to seal
+	 * in ticket, inet host, server name and server instance */
+    }
     if (code) {
 	return QuickAuth(astr, aindex);
     }
@@ -115,6 +179,7 @@ GenericAuth(struct afsconf_dir *adir,
     *astr = tclass;
     *aindex = RX_SECIDX_KAD;
     return 0;
+#endif
 }
 
 /* build a fake ticket for 'afs' using keys from adir, returning an
@@ -254,12 +319,16 @@ afsconf_BuildServerSecurityObjects(void *rock,
 
     (*classes)[0] = rxnull_NewServerSecurityObject();
     (*classes)[1] = NULL;
-    (*classes)[2] = rxkad_NewServerSecurityObject(0, dir,
-						  afsconf_GetKey, NULL);
+    (*classes)[2] = rxkad_NewKrb5ServerSecurityObject(0, dir,
+						      afsconf_GetKey,
+						      _afsconf_GetRxkadKrb5Key,
+						      NULL);
 
     if (dir->securityFlags & AFSCONF_SECOPTS_ALWAYSENCRYPT)
-	(*classes)[3] = rxkad_NewServerSecurityObject(rxkad_crypt, dir,
-						      afsconf_GetKey, NULL);
+	(*classes)[3] = rxkad_NewKrb5ServerSecurityObject(rxkad_crypt, dir,
+							  afsconf_GetKey,
+							  _afsconf_GetRxkadKrb5Key,
+							  NULL);
 }
 #endif
 

@@ -2631,8 +2631,6 @@ KFW_AFS_klog(
 
     increds.client = client_principal;
     increds.times.endtime = 0;
-    /* Ask for DES since that is what V4 understands */
-    increds.session.keytype = ENCTYPE_DES_CBC_CRC;
 
     /* ALWAYS first try service/cell@CLIENT_REALM */
     if (code = krb5_build_principal(context, &increds.server,
@@ -2740,9 +2738,9 @@ KFW_AFS_klog(
     atoken.kvno = RXKAD_TKT_TYPE_KERBEROS_V5;
     atoken.startTime = k5creds->times.starttime;
     atoken.endTime = k5creds->times.endtime;
-    memcpy(&atoken.sessionKey,
-            k5creds->session.keyvalue.data,
-            k5creds->session.keyvalue.length);
+    if (tkt_DeriveDesKey(k5creds->session.keytype, k5creds->session.keyvalue.data,
+			 k5creds->session.keyvalue.length, &atoken.sessionKey))
+	goto cleanup;
     atoken.ticketLen = k5creds->ticket.length;
     memcpy(atoken.ticket, k5creds->ticket.data, atoken.ticketLen);
 

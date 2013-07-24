@@ -512,7 +512,8 @@ static int get_v5cred(krb5_context context,
     increds.client = client_principal;
     increds.times.endtime = 0;
 	/* Ask for DES since that is what V4 understands */
-    increds.session.keytype = ENCTYPE_DES_CBC_CRC;
+    if (c != NULL)
+	increds.keyblock.enctype = ENCTYPE_DES_CBC_CRC;
 
     r = krb5_get_credentials(context, 0, _krb425_ccache, &increds, creds);
     if (r) {
@@ -1001,7 +1002,12 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
         atoken.kvno = RXKAD_TKT_TYPE_KERBEROS_V5;
         atoken.startTime = v5cred->times.starttime;
         atoken.endTime = v5cred->times.endtime;
-        memcpy(&atoken.sessionKey, v5cred->session.keyvalue.data, v5cred->session.keyvalue.length);
+	if (tkt_DeriveDesKey(v5cred->session.keytype,
+			     v5cred->session.keyvalue.data,
+			     v5cred->session.keyvalue.length, &atoken.sessionKey)) {
+	    status = AKLOG_MISC;
+	    goto done;
+	}
         atoken.ticketLen = v5cred->ticket.length;
         memcpy(atoken.ticket, v5cred->ticket.data, atoken.ticketLen);
     } else {

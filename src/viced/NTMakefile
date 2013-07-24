@@ -82,7 +82,8 @@ EXELIBS = \
         $(DESTDIR)\lib\afs\mtafsdir.lib \
 	$(DESTDIR)\lib\opr.lib \
 	$(DESTDIR)\lib\afspthread.lib \
-	$(DESTDIR)\lib\afsroken.lib
+	$(DESTDIR)\lib\afsroken.lib \
+	$(DESTDIR)\lib\afsrfc3961.lib
 
 $(EXEFILE): $(EXEOBJS) $(EXELIBS)
 	$(EXECONLINK)

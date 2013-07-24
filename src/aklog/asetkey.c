@@ -32,6 +32,8 @@ static int
 stringToType(const char *string) {
     if (strcmp(string, "rxkad") == 0)
 	return afsconf_rxkad;
+    if (strcmp(string, "rxkad_krb5") == 0)
+	return afsconf_rxkad_krb5;
 
     return atoi(string);
 }
@@ -103,7 +105,7 @@ keyFromCommandLine(afsconf_keyType type, int kvno, int subType,
 #endif
 
 static struct afsconf_typedKey *
-keyFromKeytab(int kvno, const char *keytab, const char *princ)
+keyFromKeytab(int kvno, afsconf_keyType type, int subtype, const char *keytab, const char *princ)
 {
     int retval;
     krb5_principal principal;
@@ -120,26 +122,38 @@ keyFromKeytab(int kvno, const char *keytab, const char *princ)
 	exit(1);
     }
 
-    retval = krb5_kt_read_service_key(context, (char *)keytab, principal,
-				      kvno, ENCTYPE_DES_CBC_CRC, &key);
-    if (retval == KRB5_KT_NOTFOUND)
-	retval = krb5_kt_read_service_key(context, (char *)keytab,
-					  principal, kvno,
-					  ENCTYPE_DES_CBC_MD5, &key);
-    if (retval == KRB5_KT_NOTFOUND)
-	retval = krb5_kt_read_service_key(context, (char *)keytab,
-					  principal, kvno,
-					  ENCTYPE_DES_CBC_MD4, &key);
-
+    if (type == afsconf_rxkad) {
+	retval = krb5_kt_read_service_key(context, (char *)keytab, principal,
+					  kvno, ENCTYPE_DES_CBC_CRC, &key);
+	if (retval == KRB5_KT_NOTFOUND)
+	    retval = krb5_kt_read_service_key(context, (char *)keytab,
+					      principal, kvno,
+					      ENCTYPE_DES_CBC_MD5, &key);
+	if (retval == KRB5_KT_NOTFOUND)
+	    retval = krb5_kt_read_service_key(context, (char *)keytab,
+					      principal, kvno,
+					      ENCTYPE_DES_CBC_MD4, &key);
+    } else if (type == afsconf_rxkad_krb5) {
+	retval = krb5_kt_read_service_key(context, (char *)keytab, principal,
+					  kvno, subtype, &key);
+    } else {
+	retval=AFSCONF_BADKEY;
+    }
     if (retval == KRB5_KT_NOTFOUND) {
 	char * princname = NULL;
 
 	krb5_unparse_name(context, principal, &princname);
 
-	afs_com_err("asetkey", retval,
-		    "for keytab entry with Principal %s, kvno %u, "
-		    "DES-CBC-CRC/MD5/MD4",
-		    princname ? princname : princ, kvno);
+	if (type == afsconf_rxkad) {
+	    afs_com_err("asetkey", retval,
+			"for keytab entry with Principal %s, kvno %u, "
+			"DES-CBC-CRC/MD5/MD4",
+			princname ? princname : princ, kvno);
+	} else {
+	    afs_com_err("asetkey", retval,
+			"for keytab entry with Principal %s, kvno %u",
+			princname ? princname : princ, kvno);
+	}
 	exit(1);
     }
 
@@ -148,7 +162,7 @@ keyFromKeytab(int kvno, const char *keytab, const char *princ)
 	exit(1);
     }
 
-    if (deref_key_length(key) != 8) {
+    if (type == afsconf_rxkad && deref_key_length(key) != 8) {
 	fprintf(stderr, "Key length should be 8, but is really %u!\n",
 		(unsigned int)deref_key_length(key));
 	exit(1);
@@ -156,7 +170,7 @@ keyFromKeytab(int kvno, const char *keytab, const char *princ)
 
     rx_opaque_populate(&buffer, deref_key_contents(key), deref_key_length(key));
 
-    typedKey = afsconf_typedKey_new(afsconf_rxkad, kvno, 0, &buffer);
+    typedKey = afsconf_typedKey_new(type, kvno, subtype, &buffer);
     rx_opaque_freeContents(&buffer);
     krb5_free_principal(context, principal);
     krb5_free_keyblock(context, key);
@@ -176,13 +190,27 @@ addKey(struct afsconf_dir *dir, int argc, char **argv) {
 				      argv[3], 8);
 	break;
       case 5:
-	typedKey = keyFromKeytab(atoi(argv[2]), argv[3], argv[4]);
+	typedKey = keyFromKeytab(atoi(argv[2]), afsconf_rxkad, 0, argv[3], argv[4]);
 	break;
       case 6:
 	type = stringToType(argv[2]);
 	kvno = atoi(argv[3]);
 	if (type == afsconf_rxkad) {
 	    typedKey = keyFromCommandLine(afsconf_rxkad, kvno, 0, argv[5], 8);
+	} else if (type == afsconf_rxkad_krb5){
+	    fprintf(stderr, "Raw keys for afsconf_rxkad_krb5 are unsupported");
+	    exit(1);
+	} else {
+	    fprintf(stderr, "Unknown key type %s\n", argv[2]);
+	    exit(1);
+	}
+	break;
+      case 7:
+	type = stringToType(argv[2]);
+	kvno = atoi(argv[3]);
+	if (type == afsconf_rxkad || type == afsconf_rxkad_krb5) {
+	    typedKey = keyFromKeytab(kvno, type, atoi(argv[4]), argv[5],
+				     argv[6]);
 	} else {
 	    fprintf(stderr, "Unknown key type %s\n", argv[2]);
 	    exit(1);
@@ -194,6 +222,8 @@ addKey(struct afsconf_dir *dir, int argc, char **argv) {
 	fprintf(stderr, "\tOR\n\t%s add <kvno> <key>\n", argv[0]);
 	fprintf(stderr, "\tOR\n\t%s add <type> <kvno> <subtype> <key>\n",
 		argv[0]);
+	fprintf(stderr, "\tOR\n\t%s add <type> <kvno> <subtype> <keyfile> <princ>\n",
+	        argv[0]);
 	fprintf(stderr, "\t\tEx: %s add 0 \"80b6a7cd7a9dadb6\"\n", argv[0]);
 		exit(1);
     }
@@ -251,8 +281,15 @@ listKey(struct afsconf_dir *dir, int argc, char **argv)
 		printKey(keyMaterial);
 	    }
 	    break;
+	  case afsconf_rxkad_krb5:
+	    if (kvno != -1) {
+		printf("rxkad_krb5\tkvno %4d enctype %d; key is: ",
+		       kvno, minorType);
+		printKey(keyMaterial);
+	    }
+	    break;
 	  default:
-	    printf("unknown(%d)\tkvno %4d subtype %d key is: ", type,
+	    printf("unknown(%d)\tkvno %4d subtype %d; key is: ", type,
 	           kvno, minorType);
 	    printKey(keyMaterial);
 	    break;
@@ -273,6 +310,8 @@ main(int argc, char *argv[])
 	fprintf(stderr, "\t%s add <kvno> <keyfile> <princ>\n", argv[0]);
 	fprintf(stderr, "\tOR\n\t%s add <kvno> <key>\n", argv[0]);
 	fprintf(stderr, "\tOR\n\t%s add <type> <kvno> <subtype> <key>\n",
+	        argv[0]);
+	fprintf(stderr, "\tOR\n\t%s add <type> <kvno> <subtype> <keyfile> <princ>\n",
 	        argv[0]);
 	fprintf(stderr, "\t\tEx: %s add 0 \"80b6a7cd7a9dadb6\"\n", argv[0]);
 	fprintf(stderr, "\t%s delete <kvno>\n", argv[0]);

@@ -11,6 +11,10 @@ B<asetkey> add <I<kvno>> <I<keyfile>> <I<principal>>
 
 B<asetkey> add <I<kvno>> <I<key>>
 
+B<asetkey> add <I<type>> <I<kvno>> <I<subtype>> <I<key>>
+
+B<asetkey> add <I<type>> <I<kvno>> <I<subtype>> <I<keyfile>> <I<princ>>
+
 B<asetkey> delete <I<kvno>>
 
 B<asetkey> list
@@ -20,8 +24,8 @@ B<asetkey> list
 
 =head1 DESCRIPTION
 
-The B<asetkey> command is used to add a key to an AFS KeyFile from a
-Kerberos keytab.  It is similar to B<bos addkey> except that it must be
+The B<asetkey> command is used to add a key to an AFS KeyFile or KeyFileExt
+from a Kerberos keytab.  It is similar to B<bos addkey> except that it must be
 run locally on the system where the KeyFile is located and it takes the
 new key from the command line or a Kerberos 5 keytab rather than prompting
 for the password.
@@ -51,8 +55,9 @@ KeyFile to all other systems.
 
 =head1 CAUTIONS
 
-AFS currently only supports des-cbc-crc:v4 Kerberos keys.  Make sure, when
-creating the keytab with C<ktadd>, you pass C<-e des-cbc-crc:v4> to force
+Historically, AFS only supported des-cbc-crc:v4 Kerberos keys.  In environments
+which have not been upgraded to use the rxkad-k5 extension, when
+creating the keytab with C<ktadd>, you must pass C<-e des-cbc-crc:v4> to force
 the encryption type.  Otherwise, AFS authentication may not work.
 
 As soon as a new keytab is created with C<ktadd>, new AFS service tickets
@@ -65,14 +70,36 @@ work properly.
 
 All of the KeyFile entries must match the key in the Kerberos KDC, but
 each time C<ktadd> is run, it creates a new key.  Either the Update Server
-must be used to distribute the KeyFile to all servers or the same keytab
-must be used with B<asetkey> on each server.
+or some other mechanism must be used to distribute the KeyFile to all servers,
+or the same keytab must be used with B<asetkey> on each server.
 
 =head1 EXAMPLES
 
-The following commands create a new keytab for the principal C<afs> and
-then import the key into the KeyFile.  Note the kvno in the output from
-C<ktadd>.
+In a cell which is using the rxkad-k5 extension, the following commands
+create a new keytab for the principal C<afs/I<cell name>> and then import
+its keys into the KeyFileExt.  Note the kvno in the output from C<ktadd>.
+The values 18, 17, and 16 are the assigned numbers corresponding to the
+kerberos enctypes in the keytab.  These numbers can be determined from your
+system's krb5 headers.
+
+    % kadmin
+    Authenticating as principal kaduk/admin@ZONE.MIT.EDU with password.
+    Password for kaduk/admin@ZONE.MIT.EDU:
+    kadmin:  ktadd -k /tmp/afs.keytab afs/disarray.mit.edu
+    Entry for principal afs/disarray.mit.edu with kvno 4, encryption type
+    aes256-cts-hmac-sha1-96 added to keytab WRFILE:/tmp/afs.keytab.
+    Entry for principal afs/disarray.mit.edu with kvno 4, encryption type
+    aes128-cts-hmac-sha1-96 added to keytab WRFILE:/tmp/afs.keytab.
+    Entry for principal afs/disarray.mit.edu with kvno 4, encryption type
+    des3-cbc-sha1 added to keytab WRFILE:/tmp/afs.keytab.
+    kadmin:  exit
+    % asetkey add rxkad_krb5 4 18 /tmp/afs.keytab afs/disarray.mit.edu
+    % asetkey add rxkad_krb5 4 17 /tmp/afs.keytab afs/disarray.mit.edu
+    % asetkey add rxkad_krb5 4 16 /tmp/afs.keytab afs/disarray.mit.edu
+
+In a cell which is <B<not>> using the rxkad-k5 extension, the following
+commands create a new keytab for the principal C<afs> and then import the
+key into the KeyFile.  Note the kvno in the output from C<ktadd>.
 
     % kadmin
     Authenticating as principal rra/admin@stanford.edu with password.

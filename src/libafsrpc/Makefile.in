@@ -13,6 +13,7 @@ LT_objs = \
 	$(top_builddir)/src/fsint/libafsrpc_fsint.la \
 	$(top_builddir)/src/rx/libafsrpc_rx.la \
 	$(top_builddir)/src/rxkad/libafsrpc_rxkad.la \
+	$(top_builddir)/src/crypto/rfc3961/libafsrpc_rfc3961.la \
 	$(top_builddir)/src/comerr/libafsrpc_comerr.la \
 	$(top_builddir)/src/util/libafsrpc_util.la \
 	$(top_builddir)/src/rxstat/libafsrpc_rxstat.la \
