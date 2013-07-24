@@ -1,4 +1,4 @@
-openafs (1.6.5-1) unstable; urgency=low
+openafs (1.6.5-1) unstable; urgency=high
 
   * New upstream release.
     - OPENAFS-SA-2013-003: New support for non-DES enctypes in the
@@ -19,7 +19,7 @@ openafs (1.6.5-1) unstable; urgency=low
   * Translation updates:
     - Japanese, thanks victory.  (Closes: #714223)
 
- -- Russ Allbery <rra@debian.org>  Wed, 24 Jul 2013 12:13:25 -0700
+ -- Russ Allbery <rra@debian.org>  Wed, 24 Jul 2013 14:32:22 -0700
 
 openafs (1.6.4-1) unstable; urgency=low
 
