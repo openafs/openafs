@@ -67,7 +67,7 @@ main.o: AFS_component_version_number.c
 $(BACKOBJS): bc.h ${TOP_INCDIR}/afs/butc.h
 
 backup:  $(BACKOBJS) ${LIBS}
-	${CC} ${CFLAGS} -o backup $(BACKOBJS) ${LIBS} ${XLIBS}
+	${CC} ${CFLAGS} -o backup $(BACKOBJS) ${LIBS} ${XLIBS} ${KRB5_LIBS}
 
 bc.h: bucoord_errs.c
 

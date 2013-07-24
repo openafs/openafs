@@ -53,7 +53,7 @@ all: scout
 scout.o: scout.c ${INCLS} AFS_component_version_number.c
 
 scout: scout.o $(LIBS)
-	${CC} ${LDFLAGS} -o scout scout.o $(LIBS) ${LIB_curses} ${XLIBS}
+	${CC} ${LDFLAGS} -o scout scout.o $(LIBS) ${LIB_curses} ${XLIBS} ${KRB5_LIBS}
 
 #
 # Installation targets
