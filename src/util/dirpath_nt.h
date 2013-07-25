@@ -139,6 +139,7 @@ extern int
 #define AFSDIR_VOLSERLOG_FILE   "VolserLog"
 #define AFSDIR_AUDIT_FILE       "Audit"
 #define AFSDIR_KRB_EXCL_FILE    "krb.excl"
+#define AFSDIR_RXKAD_KEYTAB_FILE "rxkad.keytab"
 
 #define AFSDIR_ROOTVOL_FILE     "RootVolume"
 #define AFSDIR_HOSTDUMP_FILE    "hosts.dump"
@@ -274,6 +275,7 @@ typedef enum afsdir_id {
     AFSDIR_SERVER_SALSRV_FILEPATH_ID,
     AFSDIR_SERVER_SALSRVLOG_FILEPATH_ID,
     AFSDIR_SERVER_FSSTATE_FILEPATH_ID,
+    AFSDIR_SERVER_RXKAD_KEYTAB_FILEPATH_ID,
     AFSDIR_PATHSTRING_MAX
 } afsdir_id_t;
 
