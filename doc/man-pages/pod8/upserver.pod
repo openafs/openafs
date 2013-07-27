@@ -8,7 +8,8 @@ upserver - Initializes the server portion of the Update Server
 <div class="synopsis">
 
 B<upserver> [<I<directory>>+] S<<< [B<-crypt> <I<directory>>+] >>>
-    S<<< [B<-clear> <I<directory>>+] >>> S<<< [B<-auth> <I<directory>>+] >>> [B<-help>]
+    S<<< [B<-clear> <I<directory>>+] >>> S<<< [B<-auth> <I<directory>>+] >>>
+    [B<-rxbind>] [B<-help>]
 
 =for html
 </div>
@@ -83,6 +84,11 @@ and security between the unencrypted and encrypted levels set by the
 B<-clear> and B<-crypt> arguments. Do not use this argument, because the
 B<upclient> process does not have a corresponding argument that it can use
 to request data transfer at this level.
+
+=item B<-rxbind>
+
+Bind the Rx socket to the primary interface only. (If not specified, the Rx
+socket will listen on all interfaces.)
 
 =item B<-help>
 
