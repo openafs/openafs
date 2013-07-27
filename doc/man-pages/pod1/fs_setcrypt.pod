@@ -22,7 +22,11 @@ authentication, which uses Kerberos 5 or klog/kaserver. The complement of
 this command is B<fs getcrypt>, which shows the status of encryption on
 the client.
 
-The default encryption status is enabled.
+The default encryption status is enabled on Windows. It is disabled on all
+non-Windows clients by default. You may enable encryption by default on
+non-Windows platforms by executing B<fs setcrypt -crypt on> immediately
+after the client daemon starts. For example, on Linux, you can do this
+within the SysV init script, or with systemd's ExecStartPost parameter.
 
 This is a global setting and applies to all subsequent connections to an
 AFS File Server from this Cache Manager. There is no way to enable or
