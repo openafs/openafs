@@ -12,12 +12,12 @@ B<rxdebug> S<<< B<-servers> <I<server machine>> >>> S<<< [B<-port> <I<IP port>>]
     [B<-onlyclient>] S<<< [B<-onlyport> <I<show only port>>] >>>
     S<<< [B<-onlyhost> <I<show only host>>] >>>
     S<<< [B<-onlyauth> <I<show only auth level>>] >>> [B<-version>]
-    [B<-noconns>] [B<-peers>] [B<-help>]
+    [B<-noconns>] [B<-peers>] [B<-long>] [B<-help>]
 
 B<rxdebug> S<<< B<-s> <I<server machine>> >>> S<<< [B<-po> <I<IP port>>] >>> [B<-nod>]
     [B<-a>] [B<-r>] [B<-onlys>] [B<-onlyc>] S<<< [B<-onlyp> <I<show only port>>] >>>
     S<<< [B<-onlyh> <I<show only host>>] >>> S<<< [B<-onlya> <I<show only auth level>>] >>>
-    [B<-v>] [B<-noc>] [B<-pe>] [B<-h>]
+    [B<-v>] [B<-noc>] [B<-pe>] [B<-l>] [B<-h>]
 
 =for html
 </div>
@@ -164,6 +164,12 @@ Outputs information from the I<peer structure> maintained for each port on
 another machine to which the process designated by the B<-port> argument
 has a connection. There is information about roundtrip time and numbers of
 packets sent and received, for example.
+
+=item B<-long>
+
+When combined with B<-peers>, show more information about each peer. This
+includes information about the packet skew, congestion window, MTU, and
+allowable jumbogram size.
 
 =item B<-help>
 
