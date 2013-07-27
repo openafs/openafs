@@ -94,6 +94,10 @@ F<.DB0>.
 Specify the file to which to dump (or B<-w> from which to read) textual
 database records.
 
+=item B<-help>
+
+Prints the online help for this command. All other valid options are ignored.
+
 =back
 
 =head1 CAUTIONS
