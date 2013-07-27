@@ -116,7 +116,7 @@ main(int argc, char *argv[])
 #define aK5 12
 #define aK4 13
 
-    cmd_AddParm(ts, "-x", CMD_FLAG, CMD_OPTIONAL|CMD_HIDDEN, 0);
+    cmd_AddParm(ts, "-x", CMD_FLAG, CMD_OPTIONAL, "obsolete, noop");
     cmd_Seek(ts, aPRINCIPAL);
     cmd_AddParm(ts, "-principal", CMD_SINGLE, CMD_OPTIONAL, "user name");
     cmd_AddParm(ts, "-password", CMD_SINGLE, CMD_OPTIONAL, "user's password");
