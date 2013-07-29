@@ -762,6 +762,8 @@ main(int argc, char **argv, char **envp)
     char *auditFileName = NULL;
     struct rx_securityClass **securityClasses;
     afs_int32 numClasses;
+    int DoPeerRPCStats = 0;
+    int DoProcessRPCStats = 0;
 #ifndef AFS_NT40_ENV
     int nofork = 0;
     struct stat sb;
@@ -866,9 +868,9 @@ main(int argc, char **argv, char **envp)
 	}
 #endif
 	else if (strcmp(argv[code], "-enable_peer_stats") == 0) {
-	    rx_enablePeerRPCStats();
+	    DoPeerRPCStats = 1;
 	} else if (strcmp(argv[code], "-enable_process_stats") == 0) {
-	    rx_enableProcessRPCStats();
+	    DoProcessRPCStats = 1;
 	}
 	else if (strcmp(argv[code], "-restricted") == 0) {
 	    bozo_isrestricted = 1;
@@ -943,35 +945,6 @@ main(int argc, char **argv, char **envp)
     }
 #endif
 
-    code = bnode_Init();
-    if (code) {
-	printf("bosserver: could not init bnode package, code %d\n", code);
-	exit(1);
-    }
-
-    bnode_Register("fs", &fsbnode_ops, 3);
-    bnode_Register("dafs", &dafsbnode_ops, 4);
-    bnode_Register("simple", &ezbnode_ops, 1);
-    bnode_Register("cron", &cronbnode_ops, 2);
-
-    /* create useful dirs */
-    CreateDirs(DoCore);
-
-    /* chdir to AFS log directory */
-    if (DoCore)
-	chdir(DoCore);
-    else
-	chdir(AFSDIR_SERVER_LOGS_DIRPATH);
-
-    /* go into the background and remove our controlling tty, close open
-       file desriptors
-     */
-
-#ifndef AFS_NT40_ENV
-    if (!nofork)
-	daemon(1, 0);
-#endif /* ! AFS_NT40_ENV */
-
     if ((!DoSyslog)
 #ifndef AFS_NT40_ENV
 	&& ((lstat(AFSDIR_BOZLOG_FILE, &sb) == 0) &&
@@ -995,72 +968,27 @@ main(int argc, char **argv, char **envp)
 #endif
     }
 
-#if defined(RLIMIT_CORE) && defined(HAVE_GETRLIMIT)
-    {
-      struct rlimit rlp;
-      getrlimit(RLIMIT_CORE, &rlp);
-      if (!DoCore)
-	  rlp.rlim_cur = 0;
-      else
-	  rlp.rlim_max = rlp.rlim_cur = RLIM_INFINITY;
-      setrlimit(RLIMIT_CORE, &rlp);
-      getrlimit(RLIMIT_CORE, &rlp);
-      bozo_Log("Core limits now %d %d\n",(int)rlp.rlim_cur,(int)rlp.rlim_max);
-    }
-#endif
+    /*
+     * go into the background and remove our controlling tty, close open
+     * file desriptors
+     */
+
+#ifndef AFS_NT40_ENV
+    if (!nofork)
+	daemon(1, 0);
+#endif /* ! AFS_NT40_ENV */
+
+    /* create useful dirs */
+    CreateDirs(DoCore);
 
     /* Write current state of directory permissions to log file */
     DirAccessOK();
 
-    if (rxBind) {
-	afs_int32 ccode;
-	if (AFSDIR_SERVER_NETRESTRICT_FILEPATH ||
-	    AFSDIR_SERVER_NETINFO_FILEPATH) {
-	    char reason[1024];
-	    ccode = afsconf_ParseNetFiles(SHostAddrs, NULL, NULL,
-			                  ADDRSPERSITE, reason,
-	                                  AFSDIR_SERVER_NETINFO_FILEPATH,
-	                                  AFSDIR_SERVER_NETRESTRICT_FILEPATH);
-        } else {
-            ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
-        }
-        if (ccode == 1)
-            host = SHostAddrs[0];
-    }
-
-    for (i = 0; i < 10; i++) {
-	if (rxBind) {
-	    code = rx_InitHost(host, htons(AFSCONF_NANNYPORT));
-	} else {
-	    code = rx_Init(htons(AFSCONF_NANNYPORT));
-	}
-	if (code) {
-	    bozo_Log("can't initialize rx: code=%d\n", code);
-	    sleep(3);
-	} else
-	    break;
-    }
-    if (i >= 10) {
-	bozo_Log("Bos giving up, can't initialize rx\n");
-	exit(code);
-    }
-
-    /* Disable jumbograms */
-    rx_SetNoJumbo();
-
-    if (rxMaxMTU != -1) {
-	if (rx_SetMaxMTU(rxMaxMTU) != 0) {
-	    bozo_Log("bosserver: rxMaxMTU %d is invalid\n", rxMaxMTU);
-	    exit(1);
-	}
-    }
-
-    code = LWP_CreateProcess(BozoDaemon, BOZO_LWP_STACKSIZE, /* priority */ 1,
-			     /* param */ NULL , "bozo-the-clown", &bozo_pid);
-    if (code) {
-	bozo_Log("Failed to create daemon thread\n");
-        exit(1);
-    }
+    /* chdir to AFS log directory */
+    if (DoCore)
+	chdir(DoCore);
+    else
+	chdir(AFSDIR_SERVER_LOGS_DIRPATH);
 
     /* try to read the key from the config file */
     tdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
@@ -1081,7 +1009,7 @@ main(int argc, char **argv, char **envp)
 	}
 	memset(tcell.hostAddr, 0, sizeof(tcell.hostAddr));	/* not computed */
 	code =
-	    afsconf_SetCellInfo(bozo_confdir, AFSDIR_SERVER_ETC_DIRPATH,
+	    afsconf_SetCellInfo(NULL, AFSDIR_SERVER_ETC_DIRPATH,
 				&tcell);
 	if (code) {
 	    bozo_Log
@@ -1096,11 +1024,35 @@ main(int argc, char **argv, char **envp)
 	    exit(1);
 	}
     }
+    /* opened the cell databse */
+    bozo_confdir = tdir;
 
-    /* initialize audit user check */
-    osi_audit_set_user_check(tdir, bozo_IsLocalRealmMatch);
+    code = bnode_Init();
+    if (code) {
+	printf("bosserver: could not init bnode package, code %d\n", code);
+	exit(1);
+    }
 
-    /* read init file, starting up programs */
+    bnode_Register("fs", &fsbnode_ops, 3);
+    bnode_Register("dafs", &dafsbnode_ops, 4);
+    bnode_Register("simple", &ezbnode_ops, 1);
+    bnode_Register("cron", &cronbnode_ops, 2);
+
+#if defined(RLIMIT_CORE) && defined(HAVE_GETRLIMIT)
+    {
+      struct rlimit rlp;
+      getrlimit(RLIMIT_CORE, &rlp);
+      if (!DoCore)
+	  rlp.rlim_cur = 0;
+      else
+	  rlp.rlim_max = rlp.rlim_cur = RLIM_INFINITY;
+      setrlimit(RLIMIT_CORE, &rlp);
+      getrlimit(RLIMIT_CORE, &rlp);
+      bozo_Log("Core limits now %d %d\n",(int)rlp.rlim_cur,(int)rlp.rlim_max);
+    }
+#endif
+
+    /* Read init file, starting up programs. Also starts watcher threads. */
     if ((code = ReadBozoFile(0))) {
 	bozo_Log
 	    ("bosserver: Something is wrong (%d) with the bos configuration file %s; aborting\n",
@@ -1108,10 +1060,65 @@ main(int argc, char **argv, char **envp)
 	exit(code);
     }
 
-    bozo_CreateRxBindFile(host);	/* for local scripts */
+    if (rxBind) {
+	afs_int32 ccode;
+	if (AFSDIR_SERVER_NETRESTRICT_FILEPATH ||
+	    AFSDIR_SERVER_NETINFO_FILEPATH) {
+	    char reason[1024];
+	    ccode = afsconf_ParseNetFiles(SHostAddrs, NULL, NULL,
+			                  ADDRSPERSITE, reason,
+	                                  AFSDIR_SERVER_NETINFO_FILEPATH,
+	                                  AFSDIR_SERVER_NETRESTRICT_FILEPATH);
+        } else {
+            ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
+        }
+        if (ccode == 1)
+            host = SHostAddrs[0];
+    }
+    for (i = 0; i < 10; i++) {
+	if (rxBind) {
+	    code = rx_InitHost(host, htons(AFSCONF_NANNYPORT));
+	} else {
+	    code = rx_Init(htons(AFSCONF_NANNYPORT));
+	}
+	if (code) {
+	    bozo_Log("can't initialize rx: code=%d\n", code);
+	    sleep(3);
+	} else
+	    break;
+    }
+    if (i >= 10) {
+	bozo_Log("Bos giving up, can't initialize rx\n");
+	exit(code);
+    }
 
-    /* opened the cell databse */
-    bozo_confdir = tdir;
+    /* Set some rx config */
+    if (DoPeerRPCStats)
+	rx_enablePeerRPCStats();
+    if (DoProcessRPCStats)
+	rx_enableProcessRPCStats();
+
+    /* Disable jumbograms */
+    rx_SetNoJumbo();
+
+    if (rxMaxMTU != -1) {
+	if (rx_SetMaxMTU(rxMaxMTU) != 0) {
+	    bozo_Log("bosserver: rxMaxMTU %d is invalid\n", rxMaxMTU);
+	    exit(1);
+	}
+    }
+
+    code = LWP_CreateProcess(BozoDaemon, BOZO_LWP_STACKSIZE, /* priority */ 1,
+			     /* param */ NULL , "bozo-the-clown", &bozo_pid);
+    if (code) {
+	bozo_Log("Failed to create daemon thread\n");
+        exit(1);
+    }
+
+    /* initialize audit user check */
+    osi_audit_set_user_check(bozo_confdir, bozo_IsLocalRealmMatch);
+
+    bozo_CreateRxBindFile(host);	/* for local scripts */
 
     /* allow super users to manage RX statistics */
     rx_SetRxStatUserOk(bozo_rxstat_userok);
