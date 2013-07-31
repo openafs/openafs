@@ -1321,7 +1321,7 @@ osi_Panic(char *msg, ...)
 # ifdef AFS_LINUX20_ENV
     * ((char *) 0) = 0;
 # else
-    panic(msg);
+    panic("%s", msg);
 # endif
 #endif
 }
