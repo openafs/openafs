@@ -1,12 +1,14 @@
 #!/usr/bin/perl
+use warnings;
+use strict;
 
 use Getopt::Long;
 use Pod::Usage;
 use File::Path;
 use File::Temp;
 
-my $tag;
-my $last;
+my $help;
+my $man;
 my $tagPoint;
 my $last;
 my $outDir = ".";
@@ -63,6 +65,9 @@ system("git describe --abbrev=4 $tagName > $tempDir/$name/.version");
 # Run regen.sh to create the rest of the tree
 system ("cd $tempDir/$name && ./regen.sh") == 0
     or die $!;
+
+# A list of files to compress
+my @toCompress;
 
 # Create the documentation tarball
 system("tar -cf $outDir/$name-doc.tar -C $tempDir $name/doc") == 0
