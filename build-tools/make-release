@@ -89,9 +89,10 @@ if ($last) {
     push @toCompress, "$outDir/$name.diff";
 }
 
-my @toMD5 = @toCompress;
+my @toMD5;
 
-# Compress everything that needs squashing 
+# Compress everything that needs squashing,
+# and also set up a list for md5 checksumming.
 foreach my $file (@toCompress) {
     system("gzip < $file > $file.gz") == 0
 	or die "Unable to create gzip file of '$file' : $!";
@@ -100,6 +101,14 @@ foreach my $file (@toCompress) {
     system("bzip2 < $file > $file.bz2") == 0
 	or die "Unable to create bzip file of '$file' : $!";
     push @toMD5, "$file.bz2";
+
+    # Delete the uncompressed tar files.
+    if ($file =~ /\.tar$/) {
+      unlink($file);
+    } else {
+      # Otherwise, queue this file for md5 checksumming.
+      push @toMD5, $file;
+    }
 }
 
 foreach my $file (@toMD5) {
