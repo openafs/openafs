@@ -33,7 +33,7 @@
 #endif
 
 #include "lock.h"
-#if defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
+#ifdef AFS_DEMAND_ATTACH_FS
 # include <pthread.h>
 #endif
 
@@ -63,12 +63,12 @@ struct VLockFile {
     char *path;             /**< path to the lock file */
     int refcount;           /**< how many locks we have on the file */
 
-#if defined(AFS_PTHREAD_ENV) || defined(AFS_DEMAND_ATTACH_UTIL)
+#ifdef AFS_PTHREAD_ENV
     pthread_mutex_t mutex;  /**< lock for the VLockFile struct */
-#endif /* AFS_PTHREAD_ENV || AFS_DEMAND_ATTACH_UTIL */
+#endif /* AFS_PTHREAD_ENV */
 };
 
-#if defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
+#ifdef AFS_DEMAND_ATTACH_FS
 /*
  * flag bits for 'flags' in struct VDiskLock.
  */
@@ -90,7 +90,7 @@ struct VDiskLock {
 
     unsigned int flags;         /**< see above for flag bits */
 };
-#endif /* AFS_DEMAND_ATTACH_FS || AFS_DEMAND_ATTACH_UTIL */
+#endif /* AFS_DEMAND_ATTACH_FS */
 
 
 /* For NT, the roles of "name" and "devName" are reversed. That is, "name"
@@ -131,7 +131,7 @@ struct DiskPartition64 {
 				 * from the superblock */
     int flags;
     afs_int64 f_files;		/* total number of files in this partition */
-#if defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
+#ifdef AFS_DEMAND_ATTACH_FS
     struct {
 	struct rx_queue head;   /* list of volumes on this partition (VByPList) */
 	afs_uint32 len;         /* length of volume list */
@@ -142,7 +142,7 @@ struct DiskPartition64 {
     struct VDiskLock headerLock; /* lock for the collective headers on the partition */
 
     struct VLockFile volLockFile; /* lock file for individual volume locks */
-#endif /* AFS_DEMAND_ATTACH_FS || AFS_DEMAND_ATTACH_UTIL */
+#endif /* AFS_DEMAND_ATTACH_FS */
 };
 
 struct DiskPartitionStats64 {
