@@ -851,7 +851,7 @@ NPAddConnection3( HWND            hwndOwner,
 #ifdef AFS_DEBUG_TRACE
             AFSDbgPrint( L"NPAddConnection3 Failed to add connection to file system %d\n", GetLastError());
 #endif
-            try_return( dwStatus = WN_OUT_OF_MEMORY);
+	    try_return( dwStatus = WN_NET_ERROR);
         }
 
         //
