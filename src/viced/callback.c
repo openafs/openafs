@@ -627,6 +627,7 @@ AddCallBack1_r(struct host *host, AFSFid * fid, afs_uint32 * thead, int type,
 	cb->cnext = 0;
 	cb->fhead = fetoi(fe);
 	cb->status = type;
+	cb->flags = 0;
 	HAdd(cb, host);
 	TAdd(cb, Thead);
     }
@@ -836,13 +837,31 @@ BreakCallBack(struct host *xhost, AFSFid * fid, int flag)
     tf.AFSCBFids_len = 1;
     tf.AFSCBFids_val = fid;
 
+    /* Set CBFLAG_BREAKING flag on all CBs we're looking at. We do this so we
+     * can loop through all relevant CBs while dropping H_LOCK, and not lose
+     * track of which CBs we want to look at. If we look at all CBs over and
+     * over again, we can loop indefinitely as new CBs are added. */
+    for (; cb; cb = nextcb) {
+	nextcb = itocb(cb->cnext);
+
+	if ((cb->hhead != hostindex || flag)
+	    && (cb->status == CB_BULK || cb->status == CB_NORMAL
+	        || cb->status == CB_VOLUME)) {
+	    cb->flags |= CBFLAG_BREAKING;
+	}
+    }
+
+    cb = itocb(fe->firstcb);
+    opr_Assert(cb);
+
+    /* loop through all CBs, only looking at ones with the CBFLAG_BREAKING
+     * flag set */
     for (; cb;) {
 	for (ncbas = 0; cb && ncbas < MAX_CB_HOSTS; cb = nextcb) {
 	    nextcb = itocb(cb->cnext);
-	    if ((cb->hhead != hostindex || flag)
-		&& (cb->status == CB_BULK || cb->status == CB_NORMAL
-		    || cb->status == CB_VOLUME)) {
+	    if ((cb->flags & CBFLAG_BREAKING)) {
 		struct host *thishost = h_itoh(cb->hhead);
+		cb->flags &= ~CBFLAG_BREAKING;
 		if (!thishost) {
 		    ViceLog(0, ("BCB: BOGUS! cb->hhead is NULL!\n"));
 		} else if (thishost->hostFlags & VENUSDOWN) {
