@@ -866,7 +866,7 @@ cm_Analyze(cm_conn_t *connp,
 		    pscp = cm_FindSCacheParent(scp);
 
 		lock_ObtainWrite(&scp->rw);
-		scp->flags |= CM_SCACHEFLAG_DELETED;
+		_InterlockedOr(&scp->flags, CM_SCACHEFLAG_DELETED);
 		lock_ObtainWrite(&cm_scacheLock);
                 cm_AdjustScacheLRU(scp);
                 cm_RemoveSCacheFromHashTable(scp);
