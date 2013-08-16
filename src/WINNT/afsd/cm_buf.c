@@ -859,13 +859,17 @@ afs_uint32 buf_CleanLocked(cm_scache_t *scp, cm_buf_t *bp, cm_req_t *reqp,
     {
         release_scp = 1;
 
-        lock_ObtainWrite(&scp->rw);
-        code = cm_SyncOp(scp, NULL, bp->userp ? bp->userp : cm_rootUserp, reqp, 0,
-                         CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-        if (code == 0) {
-            cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+	if (scp->flags & CM_SCACHEFLAG_DELETED) {
+	    code = CM_ERROR_NOSUCHFILE;
+	} else {
+	    lock_ObtainWrite(&scp->rw);
+	    code = cm_SyncOp(scp, NULL, bp->userp ? bp->userp : cm_rootUserp, reqp, 0,
+			    CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+	    if (code == 0) {
+		cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+	    }
+	    lock_ReleaseWrite(&scp->rw);
         }
-        lock_ReleaseWrite(&scp->rw);
     }
 
     if (scp && (scp->flags & CM_SCACHEFLAG_DELETED)) {
