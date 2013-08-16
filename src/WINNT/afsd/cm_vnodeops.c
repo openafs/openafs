@@ -1747,7 +1747,6 @@ long cm_Unlink(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t * cnamep,
 		_InterlockedOr(&scp->flags, CM_SCACHEFLAG_DELETED);
 		lock_ObtainWrite(&cm_scacheLock);
                 cm_AdjustScacheLRU(scp);
-                cm_RemoveSCacheFromHashTable(scp);
 		lock_ReleaseWrite(&cm_scacheLock);
             }
             cm_DiscardSCache(scp);
@@ -3754,7 +3753,6 @@ long cm_RemoveDir(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t *cnamep, cm_
 	    _InterlockedOr(&scp->flags, CM_SCACHEFLAG_DELETED);
             lock_ObtainWrite(&cm_scacheLock);
             cm_AdjustScacheLRU(scp);
-            cm_RemoveSCacheFromHashTable(scp);
             lock_ReleaseWrite(&cm_scacheLock);
 	    lock_ReleaseWrite(&scp->rw);
             if (RDR_Initialized && !(reqp->flags & CM_REQ_SOURCE_REDIR))
