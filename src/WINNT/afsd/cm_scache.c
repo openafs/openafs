@@ -2212,34 +2212,6 @@ void cm_ReleaseSCacheNoLock(cm_scache_t *scp)
     osi_Log2(afsd_logp,"cm_ReleaseSCacheNoLock scp 0x%p ref %d",scp, refCount);
     afsi_log("%s:%d cm_ReleaseSCacheNoLock scp 0x%p ref %d", file, line, scp, refCount);
 #endif
-
-    if (refCount == 0 && (scp->flags & CM_SCACHEFLAG_DELETED)) {
-        int deleted = 0;
-        long      lockstate;
-
-        lockstate = lock_GetRWLockState(&cm_scacheLock);
-        if (lockstate != OSI_RWLOCK_WRITEHELD)
-            lock_ReleaseRead(&cm_scacheLock);
-        else
-            lock_ReleaseWrite(&cm_scacheLock);
-
-        lock_ObtainWrite(&scp->rw);
-        if (scp->flags & CM_SCACHEFLAG_DELETED)
-            deleted = 1;
-
-        if (refCount == 0 && deleted) {
-            lock_ObtainWrite(&cm_scacheLock);
-            cm_RecycleSCache(scp, 0);
-            if (lockstate != OSI_RWLOCK_WRITEHELD)
-                lock_ConvertWToR(&cm_scacheLock);
-        } else {
-            if (lockstate != OSI_RWLOCK_WRITEHELD)
-                lock_ObtainRead(&cm_scacheLock);
-            else
-                lock_ObtainWrite(&cm_scacheLock);
-        }
-        lock_ReleaseWrite(&scp->rw);
-    }
 }
 
 #ifdef DEBUG_REFCOUNT
@@ -2263,19 +2235,6 @@ void cm_ReleaseSCache(cm_scache_t *scp)
     afsi_log("%s:%d cm_ReleaseSCache scp 0x%p ref %d", file, line, scp, refCount);
 #endif
     lock_ReleaseRead(&cm_scacheLock);
-
-    if (scp->flags & CM_SCACHEFLAG_DELETED) {
-        int deleted = 0;
-        lock_ObtainWrite(&scp->rw);
-        if (scp->flags & CM_SCACHEFLAG_DELETED)
-            deleted = 1;
-        if (deleted) {
-            lock_ObtainWrite(&cm_scacheLock);
-            cm_RecycleSCache(scp, 0);
-            lock_ReleaseWrite(&cm_scacheLock);
-        }
-        lock_ReleaseWrite(&scp->rw);
-    }
 }
 
 /* just look for the scp entry to get filetype */
