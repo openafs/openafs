@@ -732,6 +732,19 @@ afsd_InitCM(char **reasonP)
     if (code != ERROR_SUCCESS)
         cacheSize = CM_CONFIGDEFAULT_CACHESIZE;
 
+#if defined(_X86)
+    /*
+     * For 32-bit systems the max process space is 2GB and the
+     * max cache size is the max contiguous free address space.
+     * Since it is too hard to calculate what that is simply
+     * cap the value at 716800.
+     */
+    if (cacheSize > 716800) {
+	afsi_log("Requested Cache size %u", cacheSize);
+	cacheSize = 716800;
+    }
+#endif
+
     if (cm_virtualCache) {
         MEMORYSTATUSEX memStatus;
         DWORD maxCacheSize;
