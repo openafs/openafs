@@ -642,7 +642,7 @@ GetVersionInfo( CHAR * filename, CHAR * szOutput, DWORD dwOutput )
     DWORD size = GetFileVersionInfoSize(filename, &dwVersionHandle);
 
     if (!size) {
-        afsi_log("GetFileVersionInfoSize failed");
+	afsi_log("GetFileVersionInfoSize(%s) failed", filename);
         return GetLastError();
     }
 
