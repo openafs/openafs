@@ -258,7 +258,8 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                                 TRUE);
 
                 ntStatus = AFSVerifyEntry( AuthGroup,
-                                           pDirEntry);
+					   pDirEntry,
+					   FALSE);
 
                 AFSReleaseResource( pCurrentObject->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
@@ -438,7 +439,8 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                         //
 
                         ntStatus = AFSVerifyEntry( AuthGroup,
-                                                   pDirEntry);
+						   pDirEntry,
+						   FALSE);
 
                         AFSReleaseResource( pCurrentObject->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
@@ -1879,7 +1881,8 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                                         TRUE);
 
                         ntStatus = AFSVerifyEntry( AuthGroup,
-                                                   pParentDirEntry);
+						   pParentDirEntry,
+						   FALSE);
 
                         AFSReleaseResource( pParentDirEntry->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
@@ -2451,7 +2454,8 @@ AFSCreateDirEntry( IN GUID            *AuthGroup,
                           ParentObjectInfo->FileId.Unique));
 
             ntStatus = AFSVerifyEntry( AuthGroup,
-                                       ParentDirCB);
+				       ParentDirCB,
+				       FALSE);
 
             if( !NT_SUCCESS( ntStatus))
             {
@@ -3236,7 +3240,8 @@ AFSParseName( IN PIRP Irp,
                                 TRUE);
 
                 ntStatus = AFSVerifyEntry( AuthGroup,
-                                           pDirEntry);
+					   pDirEntry,
+					   FALSE);
 
                 AFSReleaseResource( pDirEntry->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
 

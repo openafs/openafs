@@ -103,7 +103,8 @@ AFSQueryFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
                                      &stAuthGroup);
 
             ntStatus = AFSVerifyEntry( &stAuthGroup,
-                                       pCcb->DirectoryCB);
+				       pCcb->DirectoryCB,
+				       FALSE);
 
             if ( NT_SUCCESS( ntStatus))
             {

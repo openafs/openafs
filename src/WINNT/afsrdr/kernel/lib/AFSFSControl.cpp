@@ -410,7 +410,8 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                                   pFcb->ObjectInformation->FileId.Unique));
 
                     ntStatus = AFSVerifyEntry( &pCcb->AuthGroup,
-                                               pCcb->DirectoryCB);
+					       pCcb->DirectoryCB,
+					       FALSE);
 
                     if( !NT_SUCCESS( ntStatus))
                     {

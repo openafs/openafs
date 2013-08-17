@@ -2883,7 +2883,8 @@ AFSInvalidateAllVolumes( VOID)
 
 NTSTATUS
 AFSVerifyEntry( IN GUID *AuthGroup,
-                IN AFSDirectoryCB *DirEntry)
+		IN AFSDirectoryCB *DirEntry,
+		IN BOOLEAN bFollowMountPoint)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
@@ -2905,7 +2906,7 @@ AFSVerifyEntry( IN GUID *AuthGroup,
 
         ntStatus = AFSEvaluateTargetByID( pObjectInfo,
                                           AuthGroup,
-                                          FALSE,
+					  bFollowMountPoint ? FALSE : TRUE,
                                           &pDirEnumEntry);
 
         if( !NT_SUCCESS( ntStatus))

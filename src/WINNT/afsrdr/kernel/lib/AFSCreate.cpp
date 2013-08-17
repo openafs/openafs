@@ -1347,6 +1347,7 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                                    pVolumeCB,
                                    pParentDirectoryCB,
                                    pDirectoryCB,
+				   bOpenedReparsePoint,
                                    &pFcb,
                                    &pCcb);
 
@@ -2824,6 +2825,7 @@ AFSProcessOpen( IN PIRP Irp,
                 IN AFSVolumeCB *VolumeCB,
                 IN AFSDirectoryCB *ParentDirCB,
                 IN AFSDirectoryCB *DirectoryCB,
+		IN BOOLEAN bOpenedReparsePoint,
                 OUT AFSFcb **Fcb,
                 OUT AFSCcb **Ccb)
 {
@@ -2890,7 +2892,7 @@ AFSProcessOpen( IN PIRP Irp,
 
         ntStatus = AFSValidateEntry( DirectoryCB,
                                      AuthGroup,
-                                     FALSE,
+				     bOpenedReparsePoint,
                                      TRUE);
 
         if( !NT_SUCCESS( ntStatus))
