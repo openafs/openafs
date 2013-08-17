@@ -591,7 +591,7 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
     else
     switch (scp->fileType) {
     case CM_SCACHETYPE_MOUNTPOINT:
-        if (dwFlags & RDR_POP_FOLLOW_MOUNTPOINTS) {
+	{
             if ((code2 = cm_ReadMountPoint(scp, userp, reqp)) == 0) {
                 cm_scache_t *targetScp = NULL;
 
@@ -609,23 +609,24 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
 #endif
                 pCurrentEntry->TargetNameLength = (ULONG)(sizeof(WCHAR) * len);
 
-                code2 = cm_FollowMountPoint(scp, dscp, userp, reqp, &targetScp);
+		if (dwFlags & RDR_POP_FOLLOW_MOUNTPOINTS) {
+		    code2 = cm_FollowMountPoint(scp, dscp, userp, reqp, &targetScp);
+		    if (code2 == 0) {
+			pCurrentEntry->TargetFileId.Cell = targetScp->fid.cell;
+			pCurrentEntry->TargetFileId.Volume = targetScp->fid.volume;
+			pCurrentEntry->TargetFileId.Vnode = targetScp->fid.vnode;
+			pCurrentEntry->TargetFileId.Unique = targetScp->fid.unique;
+			pCurrentEntry->TargetFileId.Hash = targetScp->fid.hash;
 
-                if (code2 == 0) {
-                    pCurrentEntry->TargetFileId.Cell = targetScp->fid.cell;
-                    pCurrentEntry->TargetFileId.Volume = targetScp->fid.volume;
-                    pCurrentEntry->TargetFileId.Vnode = targetScp->fid.vnode;
-                    pCurrentEntry->TargetFileId.Unique = targetScp->fid.unique;
-                    pCurrentEntry->TargetFileId.Hash = targetScp->fid.hash;
+			osi_Log4(afsd_logp, "RDR_PopulateCurrentEntry target FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+				  pCurrentEntry->TargetFileId.Cell, pCurrentEntry->TargetFileId.Volume,
+				  pCurrentEntry->TargetFileId.Vnode, pCurrentEntry->TargetFileId.Unique);
 
-                    osi_Log4(afsd_logp, "RDR_PopulateCurrentEntry target FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
-                              pCurrentEntry->TargetFileId.Cell, pCurrentEntry->TargetFileId.Volume,
-                              pCurrentEntry->TargetFileId.Vnode, pCurrentEntry->TargetFileId.Unique);
-
-                    cm_ReleaseSCache(targetScp);
-                } else {
-                    osi_Log2(afsd_logp, "RDR_PopulateCurrentEntry cm_FollowMountPoint failed scp=0x%p code=0x%x",
-                              scp, code2);
+			cm_ReleaseSCache(targetScp);
+		    } else {
+			osi_Log2(afsd_logp, "RDR_PopulateCurrentEntry cm_FollowMountPoint failed scp=0x%p code=0x%x",
+				  scp, code2);
+		    }
                 }
             } else {
                 osi_Log2(afsd_logp, "RDR_PopulateCurrentEntry cm_ReadMountPoint failed scp=0x%p code=0x%x",
@@ -1043,7 +1044,8 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
                                                      entryp->name,
                                                      cm_shortNames && cm_Is8Dot3(entryp->name) ? NULL : entryp->shortName,
                                                      (bWow64 ? RDR_POP_WOW64 : 0) |
-                                                     (bSkipStatus ? RDR_POP_NO_GETSTATUS : 0),
+						     (bSkipStatus ? RDR_POP_NO_GETSTATUS : 0) |
+						     RDR_POP_EVALUATE_SYMLINKS,
                                                      code,
                                                      &pCurrentEntry, &dwMaxEntryLength);
                     cm_ReleaseSCache(scp);
