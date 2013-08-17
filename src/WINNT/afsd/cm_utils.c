@@ -216,7 +216,7 @@ long cm_MapRPCError(long error, cm_req_t *reqp)
         error == RX_CALL_BUSY ||
         error == RX_MSGSIZE ||
         error == VNOSERVICE)
-        error = CM_ERROR_RETRY;
+	error = CM_ERROR_TIMEDOUT;
     else if (error == RX_CALL_IDLE)
         error = EIO;
     else if (error == RX_INVALID_OPERATION)
@@ -287,7 +287,7 @@ long cm_MapRPCErrorRmdir(long error, cm_req_t *reqp)
         error == RX_CALL_IDLE ||
         error == RX_MSGSIZE ||
         error == VNOSERVICE)
-        error = CM_ERROR_RETRY;
+	error = CM_ERROR_TIMEDOUT;
     else if (error == VNOVNODE)
         error = CM_ERROR_BADFD;
     else if (error == VSALVAGE || error == VOFFLINE)
@@ -341,7 +341,7 @@ long cm_MapVLRPCError(long error, cm_req_t *reqp)
         error == RX_CALL_IDLE ||
         error == RX_MSGSIZE ||
         error == VNOSERVICE)
-        error = CM_ERROR_RETRY;
+	error = CM_ERROR_TIMEDOUT;
     else if (error == RX_INVALID_OPERATION)
         error = CM_ERROR_INVAL_NET_RESP;
     else if (error == RX_RESTARTING)
