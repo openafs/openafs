@@ -491,7 +491,8 @@ AFSQueryDirectory( IN PIRP Irp)
                           pFcb->ObjectInformation->FileId.Unique));
 
             ntStatus = AFSVerifyEntry( &pCcb->AuthGroup,
-                                       pCcb->DirectoryCB);
+				       pCcb->DirectoryCB,
+				       FALSE);
 
             if( !NT_SUCCESS( ntStatus))
             {
@@ -886,7 +887,7 @@ AFSQueryDirectory( IN PIRP Irp)
 
                 ntStatus = AFSValidateEntry( pDirEntry,
                                              &pCcb->AuthGroup,
-                                             FALSE,
+					     TRUE,
                                              FALSE);
                 if ( NT_SUCCESS( ntStatus))
                 {

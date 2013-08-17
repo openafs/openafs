@@ -1277,7 +1277,8 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
                                         dscp, scp, userp, &req,
                                         FileName, shortName,
                                         (bWow64 ? RDR_POP_WOW64 : 0) |
-                                        (bNoFollow ? 0 : (RDR_POP_FOLLOW_MOUNTPOINTS | RDR_POP_EVALUATE_SYMLINKS)),
+					(bNoFollow ? 0 : RDR_POP_FOLLOW_MOUNTPOINTS) |
+					RDR_POP_EVALUATE_SYMLINKS,
                                         0, NULL, &dwRemaining);
         if (bHoldFid)
             RDR_FlagScpInUse( scp, FALSE );
@@ -1433,7 +1434,8 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
     code = RDR_PopulateCurrentEntry(pCurrentEntry, dwRemaining,
                                     dscp, scp, userp, &req, NULL, NULL,
                                     (bWow64 ? RDR_POP_WOW64 : 0) |
-                                    (bNoFollow ? 0 : (RDR_POP_FOLLOW_MOUNTPOINTS | RDR_POP_EVALUATE_SYMLINKS)),
+				    (bNoFollow ? 0 : RDR_POP_FOLLOW_MOUNTPOINTS) |
+				    RDR_POP_EVALUATE_SYMLINKS,
                                     0, NULL, &dwRemaining);
 
     if (bHoldFid)

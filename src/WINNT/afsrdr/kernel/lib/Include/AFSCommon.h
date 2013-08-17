@@ -326,6 +326,7 @@ AFSProcessOpen( IN PIRP Irp,
                 IN AFSVolumeCB *VolumeCB,
                 IN AFSDirectoryCB *ParentDirCB,
                 IN AFSDirectoryCB *DirectoryCB,
+		IN BOOLEAN bOpenedReparsePoint,
                 OUT AFSFcb **Fcb,
                 OUT AFSCcb **Ccb);
 
@@ -1233,7 +1234,8 @@ AFSInvalidateAllVolumes( VOID);
 
 NTSTATUS
 AFSVerifyEntry( IN GUID *AuthGroup,
-                IN AFSDirectoryCB *DirectoryCB);
+		IN AFSDirectoryCB *DirectoryCB,
+		IN BOOLEAN bFollowMountPoint);
 
 NTSTATUS
 AFSSetVolumeState( IN AFSVolumeStatusCB *VolumeStatus);
