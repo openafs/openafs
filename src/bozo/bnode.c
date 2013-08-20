@@ -47,6 +47,7 @@
 
 #define BNODE_LWP_STACKSIZE	(16 * 1024)
 #define BNODE_ERROR_COUNT_MAX   16   /* maximum number of retries */
+#define BNODE_ERROR_DELAY_MAX   60   /* maximum retry delay (seconds) */
 
 int bnode_waiting = 0;
 static PROCESS bproc_pid;	/* pid of waker-upper */
@@ -694,9 +695,12 @@ bproc(void *unused)
 			} else {
 			    tb->errorStopCount++;
 			    if (!tb->errorStopDelay) {
-				tb->errorStopDelay = 1;
+				tb->errorStopDelay = 1;   /* wait a second, then retry */
 			    } else {
-			        tb->errorStopDelay *= 2;
+			        tb->errorStopDelay *= 2;  /* ramp up the retry delays */
+			    }
+			    if (tb->errorStopDelay > BNODE_ERROR_DELAY_MAX) {
+			        tb->errorStopDelay = BNODE_ERROR_DELAY_MAX; /* cap the delay */
 			    }
 			}
 			tb->flags |= BNODE_ERRORSTOP;
