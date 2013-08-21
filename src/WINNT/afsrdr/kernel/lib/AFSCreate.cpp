@@ -3033,7 +3033,7 @@ AFSProcessOpen( IN PIRP Irp,
 		    bMmFlushed = MmFlushImageSection( &pObjectInfo->Fcb->NPFcb->SectionObjectPointers,
 						      MmFlushForWrite);
 		}
-		__except( EXCEPTION_EXECUTE_HANDLER)
+		__except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
 		{
 
 		    bMmFlushed = FALSE;
@@ -3537,7 +3537,7 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
 	    bUserMapped = !MmCanFileBeTruncated( &pObjectInfo->Fcb->NPFcb->SectionObjectPointers,
 						 &liZero);
 	}
-	__except( EXCEPTION_EXECUTE_HANDLER)
+	__except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
 	{
 
 	    bUserMapped = FALSE;

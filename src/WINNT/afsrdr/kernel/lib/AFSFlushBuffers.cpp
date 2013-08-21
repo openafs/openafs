@@ -124,7 +124,7 @@ AFSFlushBuffers( IN PDEVICE_OBJECT LibDeviceObject,
                 try_return( ntStatus = iosb.Status );
             }
         }
-        __except( EXCEPTION_EXECUTE_HANDLER)
+	__except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
         {
 
             try_return( ntStatus = GetExceptionCode());
