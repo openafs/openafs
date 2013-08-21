@@ -185,7 +185,7 @@ AFSLockControl( IN PDEVICE_OBJECT LibDeviceObject,
 				  0,
 				  &stIoStatus);
 		}
-		__except( EXCEPTION_EXECUTE_HANDLER)
+		__except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
 		{
 
 		    ntStatus = GetExceptionCode();
@@ -271,7 +271,7 @@ AFSLockControl( IN PDEVICE_OBJECT LibDeviceObject,
 				  pIrpSp->Parameters.LockControl.Length->LowPart,
 				  &stIoStatus);
 		}
-		__except( EXCEPTION_EXECUTE_HANDLER)
+		__except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
 		{
 
 		    ntStatus = GetExceptionCode();

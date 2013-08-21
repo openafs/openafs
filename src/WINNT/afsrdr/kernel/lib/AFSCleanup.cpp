@@ -318,7 +318,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 					    NULL,
 					    NULL);
 		}
-		__except( EXCEPTION_EXECUTE_HANDLER)
+		__except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
 		{
 
 		    ntStatus = GetExceptionCode();

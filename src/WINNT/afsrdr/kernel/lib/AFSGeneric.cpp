@@ -1919,7 +1919,7 @@ AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
                         }
                     }
                 }
-                __except( EXCEPTION_EXECUTE_HANDLER)
+		__except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
                 {
 
                     ntStatus = GetExceptionCode();
@@ -3111,7 +3111,7 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                             }
                         }
                     }
-                    __except( EXCEPTION_EXECUTE_HANDLER)
+		    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
                     {
                         ntStatus = GetExceptionCode();
 
@@ -3200,7 +3200,7 @@ AFSVerifyEntry( IN GUID *AuthGroup,
 					    (PCC_FILE_SIZES)&pObjectInfo->Fcb->Header.AllocationSize);
 			}
 		    }
-		    __except( EXCEPTION_EXECUTE_HANDLER)
+		    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
                     {
 
 			ntStatus = GetExceptionCode();
@@ -4264,7 +4264,7 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                                     }
                                 }
                             }
-                            __except( EXCEPTION_EXECUTE_HANDLER)
+			    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
                             {
                                 ntStatus = GetExceptionCode();
 
@@ -4381,7 +4381,7 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
 						(PCC_FILE_SIZES)&pObjectInfo->Fcb->Header.AllocationSize);
 			    }
 			}
-			__except( EXCEPTION_EXECUTE_HANDLER)
+			__except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
                         {
 
 			    ntStatus = GetExceptionCode();
@@ -6926,7 +6926,7 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
                             }
                         }
                     }
-                    __except( EXCEPTION_EXECUTE_HANDLER)
+		    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
                     {
 
                         ntStatus = GetExceptionCode();
@@ -7093,7 +7093,7 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
                         }
                     }
                 }
-                __except( EXCEPTION_EXECUTE_HANDLER)
+		__except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
                 {
 
                     ntStatus = GetExceptionCode();
@@ -9146,7 +9146,7 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                                 bCleanExtents = TRUE;
                             }
                         }
-                        __except( EXCEPTION_EXECUTE_HANDLER)
+			__except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
                         {
 
                             ntStatus = GetExceptionCode();
@@ -9265,7 +9265,7 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                                             bCleanExtents = TRUE;
                                         }
                                     }
-                                    __except( EXCEPTION_EXECUTE_HANDLER)
+				    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
                                     {
 
                                         ntStatus = GetExceptionCode();
@@ -9507,7 +9507,7 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                                         }
                                     }
                                 }
-                                __except( EXCEPTION_EXECUTE_HANDLER)
+				__except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
                                 {
 
                                     ntStatus = GetExceptionCode();

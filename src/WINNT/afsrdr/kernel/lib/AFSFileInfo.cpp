@@ -2255,7 +2255,7 @@ AFSSetDispositionInfo( IN PIRP Irp,
                         }
                     }
                 }
-		__except( EXCEPTION_EXECUTE_HANDLER)
+		__except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
 		{
 
 		    bMmFlushed = FALSE;
@@ -3488,7 +3488,7 @@ AFSSetRenameInfo( IN PIRP Irp)
 				      &uniTargetName));
 		    }
 		}
-		__except( EXCEPTION_EXECUTE_HANDLER)
+		__except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
                 {
 
 		    ntStatus = GetExceptionCode();
@@ -3660,7 +3660,7 @@ AFSSetAllocationInfo( IN PIRP Irp,
 	    bUserMapped = !MmCanFileBeTruncated( pFileObject->SectionObjectPointer,
 						 &pBuffer->AllocationSize);
 	}
-	__except( EXCEPTION_EXECUTE_HANDLER)
+	__except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
 	{
 
 	    bUserMapped = FALSE;
@@ -3886,7 +3886,7 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
 		bUserMapped = !MmCanFileBeTruncated( pFileObject->SectionObjectPointer,
 						     &pBuffer->EndOfFile);
 	    }
-	    __except( EXCEPTION_EXECUTE_HANDLER)
+	    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
 	    {
 
 		bUserMapped = FALSE;

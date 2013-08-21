@@ -128,7 +128,7 @@ AFSCachedRead( IN PDEVICE_OBJECT DeviceObject,
                     try_return( ntStatus = Irp->IoStatus.Status);
                 }
             }
-            __except( EXCEPTION_EXECUTE_HANDLER)
+	    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
             {
                 ntStatus = GetExceptionCode();
 
@@ -1155,7 +1155,7 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
 
 		try_return( ntStatus = STATUS_SUCCESS );
 	    }
-	    __except( EXCEPTION_EXECUTE_HANDLER)
+	    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
 	    {
 
 		ntStatus = GetExceptionCode();
@@ -1339,7 +1339,7 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
                     CcSetDirtyPageThreshold( pFileObject,
                                              AFS_DIRTY_CHUNK_THRESHOLD * pDeviceExt->Specific.RDR.MaximumRPCLength / 4096);
                 }
-                __except( EXCEPTION_EXECUTE_HANDLER)
+		__except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
                 {
 
                     ntStatus = GetExceptionCode();
@@ -1376,7 +1376,7 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
                                &Irp->IoStatus);
                     ntStatus = Irp->IoStatus.Status;
                 }
-                __except( EXCEPTION_EXECUTE_HANDLER)
+		__except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
                 {
                     ntStatus = GetExceptionCode();
 
