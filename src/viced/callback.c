@@ -683,7 +683,20 @@ MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
 
     opr_Assert(ncbas <= MAX_CB_HOSTS);
 
-    /* sort cba list to avoid makecall issues */
+    /*
+     * When we issue a multi_Rx callback break, we must rx_NewCall a call for
+     * each host before we do anything. If there are no call channels
+     * available on the conn, we must wait for one of the existing calls to
+     * finish. If another thread is breaking callbacks at the same time, it is
+     * possible for us to be waiting on NewCall for one of their multi_Rx
+     * CallBack calls to finish, but they are waiting on NewCall for one of
+     * our calls to finish. So we deadlock.
+     *
+     * This can be thought of as similar to obtaining multiple locks at the
+     * same time. So if we establish an ordering, the possibility of deadlock
+     * goes away. Here we provide such an ordering, by sorting our CBAs
+     * according to CompareCBA.
+     */
     qsort(cba, ncbas, sizeof(struct cbstruct), CompareCBA);
 
     /* set up conns for multi-call */
