@@ -168,7 +168,7 @@ AFSLockControl( IN PDEVICE_OBJECT LibDeviceObject,
                 // Flush data and then release the locks on the file server
                 //
 
-                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+		AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSLockControl Acquiring Fcb SectionObject lock %p SHARED %08lX\n",
                               &pFcb->NPFcb->SectionObjectResource,
@@ -216,7 +216,7 @@ AFSLockControl( IN PDEVICE_OBJECT LibDeviceObject,
                     ntStatus = stIoStatus.Status;
                 }
 
-                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+		AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSLockControl Releasing Fcb SectionObject lock %p SHARED %08lX\n",
                               &pFcb->NPFcb->SectionObjectResource,
@@ -254,7 +254,7 @@ AFSLockControl( IN PDEVICE_OBJECT LibDeviceObject,
                 // Flush the data and then release the file server locks
                 //
 
-                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+		AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSLockControl Acquiring Fcb SectionObject lock %p SHARED %08lX\n",
                               &pFcb->NPFcb->SectionObjectResource,
@@ -286,7 +286,7 @@ AFSLockControl( IN PDEVICE_OBJECT LibDeviceObject,
 				  ntStatus));
 		}
 
-                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+		AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSLockControl Releasing Fcb SectionObject lock %p SHARED %08lX\n",
                               &pFcb->NPFcb->SectionObjectResource,

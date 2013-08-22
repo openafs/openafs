@@ -87,7 +87,7 @@ AFSFlushBuffers( IN PDEVICE_OBJECT LibDeviceObject,
             try_return( ntStatus = STATUS_INVALID_PARAMETER);
         }
 
-        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+	AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSFlushBuffers Acquiring Fcb SectionObject lock %p SHARED %08lX\n",
                       &pFcb->NPFcb->SectionObjectResource,
@@ -130,7 +130,7 @@ AFSFlushBuffers( IN PDEVICE_OBJECT LibDeviceObject,
             try_return( ntStatus = GetExceptionCode());
         }
 
-        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+	AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSFlushBuffers Releasing Fcb SectionObject lock %p SHARED %08lX\n",
                       &pFcb->NPFcb->SectionObjectResource,
@@ -162,7 +162,7 @@ try_exit:
         if ( bReleaseSectionObject)
         {
 
-            AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+	    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSFlushBuffers Releasing Fcb SectionObject lock %p SHARED %08lX\n",
                           &pFcb->NPFcb->SectionObjectResource,

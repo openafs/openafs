@@ -3018,7 +3018,7 @@ AFSProcessOpen( IN PIRP Irp,
 
                 BOOLEAN bMmFlushed;
 
-                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+		AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSProcessOpen Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                               &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
@@ -3050,7 +3050,7 @@ AFSProcessOpen( IN PIRP Irp,
 				  ntStatus));
 		}
 
-                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+		AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSProcessOpen Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                               &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
@@ -3517,7 +3517,7 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
             }
         }
 
-        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+	AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessOverwriteSupercede Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                       &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
@@ -3554,7 +3554,7 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
 			  ntStatus));
 	}
 
-        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+	AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessOverwriteSupercede Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                       &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
