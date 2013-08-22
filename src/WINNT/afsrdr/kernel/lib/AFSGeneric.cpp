@@ -1870,6 +1870,12 @@ AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
                               (*ppObjectInfo)->FileId.Vnode,
                               (*ppObjectInfo)->FileId.Unique));
 
+		AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
+			      AFS_TRACE_LEVEL_VERBOSE,
+			      "AFSInvalidateObject Flush/purge Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
+			      &(*ppObjectInfo)->Fcb->NPFcb->SectionObjectResource,
+			      PsGetCurrentThread()));
+
                 AFSAcquireExcl( &(*ppObjectInfo)->Fcb->NPFcb->SectionObjectResource,
                                 TRUE);
 
@@ -1935,6 +1941,12 @@ AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
 
                     SetFlag( (*ppObjectInfo)->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
                 }
+
+		AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
+			      AFS_TRACE_LEVEL_VERBOSE,
+			      "AFSInvalidateObject Flush/purge Releasing Fcb SectionObject lock %p EXCL %08lX\n",
+			      &(*ppObjectInfo)->Fcb->NPFcb->SectionObjectResource,
+			      PsGetCurrentThread()));
 
                 AFSReleaseResource( &(*ppObjectInfo)->Fcb->NPFcb->SectionObjectResource);
 
@@ -3060,6 +3072,12 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                                   pObjectInfo->FileId.Vnode,
                                   pObjectInfo->FileId.Unique));
 
+		    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
+				  AFS_TRACE_LEVEL_VERBOSE,
+				  "AFSVerifyEntry Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
+				  &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
+				  PsGetCurrentThread()));
+
                     AFSAcquireExcl( &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
                                     TRUE);
 
@@ -3128,6 +3146,12 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                         SetFlag( pObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
                     }
 
+		    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
+				  AFS_TRACE_LEVEL_VERBOSE,
+				  "AFSVerifyEntry Releasing Fcb SectionObject lock %p EXCL %08lX\n",
+				  &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
+				  PsGetCurrentThread()));
+
                     AFSReleaseResource( &pObjectInfo->Fcb->NPFcb->SectionObjectResource);
 
                     if ( bPurgeExtents)
@@ -3137,7 +3161,7 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                     }
 
                     //
-                    // Reacquire the Fcb to purge the cache
+		    // Acquire the Fcb to purge the cache
                     //
 
                     AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
@@ -4357,7 +4381,7 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                     {
                         FILE_OBJECT *pCCFileObject;
 
-                        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+			AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                                       AFS_TRACE_LEVEL_VERBOSE,
                                       "AFSValidateEntry Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                                       &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
@@ -4396,7 +4420,7 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
 					  ntStatus));
                         }
 
-                        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+			AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                                       AFS_TRACE_LEVEL_VERBOSE,
                                       "AFSValidateEntry Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                                       &pObjectInfo->Fcb->NPFcb->SectionObjectResource,
@@ -6872,7 +6896,7 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
                 if( Fcb->OpenReferenceCount > 0)
                 {
 
-                    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+		    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCleanupEntry Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                                   &Fcb->NPFcb->SectionObjectResource,
@@ -6943,7 +6967,7 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
                         SetFlag( Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
                     }
 
-                    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+		    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCleanupFcb Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                                   &Fcb->NPFcb->SectionObjectResource,
@@ -7038,7 +7062,7 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
                                         (AFS_SERVER_PURGE_SLEEP * pControlDeviceExt->Specific.Control.FcbPurgeTimeCount.QuadPart))))
         {
 
-            AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+	    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSCleanupFcb Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                           &Fcb->NPFcb->SectionObjectResource,
@@ -7108,7 +7132,7 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
                                   ntStatus));
                 }
 
-                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+		AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCleanupFcb Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                               &Fcb->NPFcb->SectionObjectResource,
@@ -7129,6 +7153,12 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
             }
             else
             {
+
+		AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
+			      AFS_TRACE_LEVEL_VERBOSE,
+			      "AFSCleanupFcb Failed to Acquire Fcb SectionObject lock %p EXCL %08lX\n",
+			      &Fcb->NPFcb->SectionObjectResource,
+			      PsGetCurrentThread()));
 
                 ntStatus = STATUS_RETRY;
             }
@@ -9107,7 +9137,7 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                     if( BooleanFlagOn( pRDRDevExt->DeviceFlags, AFS_DEVICE_FLAG_DIRECT_SERVICE_IO))
                     {
 
-                        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+			AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                                       AFS_TRACE_LEVEL_VERBOSE,
                                       "AFSPerformObjectInvalidation DirectIO Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                                       &ObjectInfo->Fcb->NPFcb->SectionObjectResource,
@@ -9163,7 +9193,7 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                             SetFlag( ObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
                         }
 
-                        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+			AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                                       AFS_TRACE_LEVEL_VERBOSE,
                                       "AFSPerformObjectInvalidation DirectIO Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                                       &ObjectInfo->Fcb->NPFcb->SectionObjectResource,
@@ -9226,7 +9256,7 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                                 else
                                 {
 
-                                    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+				    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                                                   AFS_TRACE_LEVEL_VERBOSE,
                                                   "AFSPerformObjectInvalidation Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                                                   &ObjectInfo->Fcb->NPFcb->SectionObjectResource,
@@ -9282,7 +9312,7 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                                         SetFlag( ObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
                                     }
 
-                                    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+				    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                                                   AFS_TRACE_LEVEL_VERBOSE,
                                                   "AFSPerformObjectInvalidation Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                                                   &ObjectInfo->Fcb->NPFcb->SectionObjectResource,
@@ -9298,7 +9328,7 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 
                                 bExtentsLocked = FALSE;
 
-                                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+				AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                                               AFS_TRACE_LEVEL_VERBOSE,
                                               "AFSPerformObjectInvalidation Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                                               &ObjectInfo->Fcb->NPFcb->SectionObjectResource,
@@ -9522,7 +9552,7 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                                                   ntStatus));
                                 }
 
-                                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+				AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                                               AFS_TRACE_LEVEL_VERBOSE,
                                               "AFSPerformObjectInvalidation Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                                               &ObjectInfo->Fcb->NPFcb->SectionObjectResource,

@@ -2201,7 +2201,7 @@ AFSSetDispositionInfo( IN PIRP Irp,
             {
                 BOOLEAN bMmFlushed;
 
-                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+		AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSSetDispositionInfo Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                               &pFcb->NPFcb->SectionObjectResource,
@@ -2272,7 +2272,7 @@ AFSSetDispositionInfo( IN PIRP Irp,
 				  ntStatus));
 		}
 
-                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+		AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSSetDispositionInfo Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                               &pFcb->NPFcb->SectionObjectResource,
@@ -3453,7 +3453,7 @@ AFSSetRenameInfo( IN PIRP Irp)
                 // permit the locks to be obtained out of order risking a deadlock.
                 //
 
-                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+		AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSSetRenameInfo Acquiring Fcb lock %p EXCL %08lX\n",
                               &pTargetFcb->NPFcb->Resource,
@@ -3462,7 +3462,7 @@ AFSSetRenameInfo( IN PIRP Irp)
                 AFSAcquireExcl( &pTargetFcb->NPFcb->Resource,
                                 TRUE);
 
-                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+		AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSSetRenameInfo Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                               &pTargetFcb->NPFcb->SectionObjectResource,
@@ -3503,7 +3503,7 @@ AFSSetRenameInfo( IN PIRP Irp)
 				  ntStatus));
                 }
 
-                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+		AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSSetRenameInfo Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                               &pTargetFcb->NPFcb->SectionObjectResource,
@@ -3645,7 +3645,7 @@ AFSSetAllocationInfo( IN PIRP Irp,
     if( pFcb->Header.AllocationSize.QuadPart > pBuffer->AllocationSize.QuadPart)
     {
 
-        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+	AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSSetAllocationInfo Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                       &pFcb->NPFcb->SectionObjectResource,
@@ -3677,7 +3677,7 @@ AFSSetAllocationInfo( IN PIRP Irp,
 			  ntStatus));
 	}
 
-        AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+	AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSSetAllocationInfo Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                       &pFcb->NPFcb->SectionObjectResource,
@@ -3871,7 +3871,7 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
         if( pBuffer->EndOfFile.QuadPart < pFcb->Header.FileSize.QuadPart)
         {
 
-            AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+	    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSSetEndOfFileInfo Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                           &pFcb->NPFcb->SectionObjectResource,
@@ -3903,7 +3903,7 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
 			      ntStatus));
 	    }
 
-            AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+	    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSSetEndOfFileInfo Releasing Fcb SectionObject lock %p EXCL %08lX\n",
                           &pFcb->NPFcb->SectionObjectResource,

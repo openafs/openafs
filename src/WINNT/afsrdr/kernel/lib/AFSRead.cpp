@@ -1126,7 +1126,7 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
         if ( FlagOn(pIrpSp->MinorFunction, IRP_MN_COMPLETE) )
         {
 
-            AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+	    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSCommonRead Acquiring Fcb SectionObject lock %p SHARED %08lX\n",
                           &pFcb->NPFcb->SectionObjectResource,
@@ -1202,7 +1202,7 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
 
             bReleasePaging = TRUE;
 
-            AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+	    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSCommonRead Acquiring Fcb SectionObject lock %p SHARED %08lX\n",
                           &pFcb->NPFcb->SectionObjectResource,
@@ -1217,7 +1217,7 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
         else
         {
 
-            AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+	    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSCommonRead Acquiring Fcb SectionObject lock %p SHARED %08lX\n",
                           &pFcb->NPFcb->SectionObjectResource,
@@ -1446,6 +1446,12 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
             if( bReleaseSectionObject)
             {
 
+		AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
+			      AFS_TRACE_LEVEL_VERBOSE,
+			      "AFSCommonRead Releasing Fcb SectionObject lock %p SHARED %08lX\n",
+			      &pFcb->NPFcb->SectionObjectResource,
+			      PsGetCurrentThread()));
+
                 AFSReleaseResource( &pFcb->NPFcb->SectionObjectResource);
 
                 bReleaseSectionObject = FALSE;
@@ -1493,6 +1499,12 @@ try_exit:
 
         if( bReleaseSectionObject)
         {
+
+	    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
+			  AFS_TRACE_LEVEL_VERBOSE,
+			  "AFSCommonRead (exit) Releasing Fcb SectionObject lock %p SHARED %08lX\n",
+			  &pFcb->NPFcb->SectionObjectResource,
+			  PsGetCurrentThread()));
 
             AFSReleaseResource( &pFcb->NPFcb->SectionObjectResource);
         }
