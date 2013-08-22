@@ -786,7 +786,7 @@ try_exit:
 
 		AFSDbgTrace(( 0,
 			      0,
-			      "EXCEPTION - AFSProcessOverwriteSupercede MmCanFileBeTruncated failed FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
+			      "EXCEPTION - AFSCommonWrite CcPurgeCacheSection failed FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
                               pFcb->ObjectInformation->FileId.Cell,
                               pFcb->ObjectInformation->FileId.Volume,
                               pFcb->ObjectInformation->FileId.Vnode,
