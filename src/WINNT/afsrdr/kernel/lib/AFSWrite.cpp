@@ -1925,31 +1925,49 @@ AFSCachedWrite( IN PDEVICE_OBJECT DeviceObject,
                 BooleanFlagOn(pFileObject->Flags, (FO_NO_INTERMEDIATE_BUFFERING + FO_WRITE_THROUGH)))
             {
 
-                //
-                // We have detected a file we do a write through with.
-                //
+		__try
+		{
+		    //
+		    // We have detected a file we do a write through with.
+		    //
 
-                CcFlushCache(&pFcb->NPFcb->SectionObjectPointers,
-                             &liCurrentOffset,
-                             ulCurrentIO,
-                             &iosbFlush);
+		    CcFlushCache(&pFcb->NPFcb->SectionObjectPointers,
+				  &liCurrentOffset,
+				  ulCurrentIO,
+				  &iosbFlush);
 
-                if( !NT_SUCCESS( iosbFlush.Status))
+		    if( !NT_SUCCESS( iosbFlush.Status))
+		    {
+
+			AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
+				      AFS_TRACE_LEVEL_ERROR,
+				      "AFSCachedWrite (%p) CcFlushCache failure %wZ FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX Bytes 0x%08lX\n",
+				      Irp,
+				      &pFileObject->FileName,
+				      pFcb->ObjectInformation->FileId.Cell,
+				      pFcb->ObjectInformation->FileId.Volume,
+				      pFcb->ObjectInformation->FileId.Vnode,
+				      pFcb->ObjectInformation->FileId.Unique,
+				      iosbFlush.Status,
+				      iosbFlush.Information));
+
+			try_return( ntStatus = iosbFlush.Status);
+		    }
+		}
+		__except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
                 {
+
+		    ntStatus = GetExceptionCode();
 
                     AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
-                                  "AFSCachedWrite (%p) CcFlushCache failure %wZ FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX Bytes 0x%08lX\n",
+				  "AFSCachedWrite (%p) CcFlushCache Threw exception %wZ @ %0I64X Status %08lX\n",
                                   Irp,
                                   &pFileObject->FileName,
-                                  pFcb->ObjectInformation->FileId.Cell,
-                                  pFcb->ObjectInformation->FileId.Volume,
-                                  pFcb->ObjectInformation->FileId.Vnode,
-                                  pFcb->ObjectInformation->FileId.Unique,
-                                  iosbFlush.Status,
-                                  iosbFlush.Information));
+				  liCurrentOffset.QuadPart,
+				  ntStatus));
 
-                    try_return( ntStatus = iosbFlush.Status);
+		    try_return( ntStatus);
                 }
             }
 
