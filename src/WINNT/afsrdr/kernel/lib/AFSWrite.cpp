@@ -522,6 +522,11 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
                     // Check for lock inversion
                     //
 
+		    //
+		    // For bExtendingWrite the PagingResource is needed to protect
+		    // the CcSetFileSizes call in AFSExtendingWrite
+		    //
+
                     ASSERT( !ExIsResourceAcquiredLite( &pNPFcb->PagingResource ));
 
                     AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
@@ -641,6 +646,10 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
 
                 ntStatus = AFSExtendingWrite( pFcb, pFileObject, (liStartingByte.QuadPart + ulByteCount));
 
+		//
+		// Fcb->NPFcb->Resource is now held SHARED
+		//
+
                 if( !NT_SUCCESS(ntStatus))
                 {
 
@@ -665,7 +674,8 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
         {
 
             //
-            // Main and SectionObject resources held Shared
+	    // Main resource held Shared
+	    // SectionObject resource held exclusive if extending write
             //
 
             AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
@@ -2008,6 +2018,10 @@ try_exit:
     return ntStatus;
 }
 
+//
+// Called with Fcb->NPFcb->SectionObjectResource and Fcb->NPFcb->Resource held
+//
+
 static
 NTSTATUS
 AFSExtendingWrite( IN AFSFcb *Fcb,
@@ -2053,6 +2067,9 @@ AFSExtendingWrite( IN AFSFcb *Fcb,
         //
         // If the file is currently cached, then let the MM know about the extension
         //
+	// The CcSetFileSizes call should be made with only the PagingResource held
+	// which we are currently not holding.
+	//
 
         if( CcIsFileCached( FileObject))
         {
