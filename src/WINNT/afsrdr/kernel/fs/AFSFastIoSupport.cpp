@@ -442,61 +442,6 @@ AFSFastIoMdlWriteComplete( IN struct _FILE_OBJECT *FileObject,
 }
 
 NTSTATUS
-AFSFastIoAcquireForModWrite( IN struct _FILE_OBJECT *FileObject,
-                             IN PLARGE_INTEGER EndingOffset,
-                             OUT struct _ERESOURCE **ResourceToRelease,
-                             IN struct _DEVICE_OBJECT *DeviceObject)
-{
-    UNREFERENCED_PARAMETER(DeviceObject);
-    UNREFERENCED_PARAMETER(EndingOffset);
-
-    NTSTATUS ntStatus = STATUS_FILE_LOCK_CONFLICT;
-    AFSFcb *pFcb = (AFSFcb *)FileObject->FsContext;
-
-    __Enter
-    {
-
-        if( AFSAcquireExcl( &pFcb->NPFcb->Resource,
-                            BooleanFlagOn( FileObject->Flags, FO_SYNCHRONOUS_IO)))
-        {
-
-            AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSFastIoAcquireForModWrite Acquired Fcb SectionObject lock %p EXCL %08lX\n",
-                          &pFcb->NPFcb->SectionObjectResource,
-                          PsGetCurrentThread()));
-
-            ntStatus = STATUS_SUCCESS;
-
-            *ResourceToRelease = &pFcb->NPFcb->SectionObjectResource;
-        }
-    }
-
-    return ntStatus;
-}
-
-NTSTATUS
-AFSFastIoReleaseForModWrite( IN struct _FILE_OBJECT *FileObject,
-                             IN struct _ERESOURCE *ResourceToRelease,
-                             IN struct _DEVICE_OBJECT *DeviceObject)
-{
-    UNREFERENCED_PARAMETER(FileObject);
-    UNREFERENCED_PARAMETER(DeviceObject);
-
-    NTSTATUS ntStatus = STATUS_SUCCESS;
-
-    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                  AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSFastIoReleaseForModWrite Releasing lock %p EXCL %08lX\n",
-                  ResourceToRelease,
-                  PsGetCurrentThread()));
-
-    AFSReleaseResource( ResourceToRelease);
-
-    return ntStatus;
-}
-
-NTSTATUS
 AFSFastIoAcquireForCCFlush( IN struct _FILE_OBJECT *FileObject,
                             IN struct _DEVICE_OBJECT *DeviceObject)
 {

@@ -659,17 +659,6 @@ AFSFastIoMdlWriteComplete( IN struct _FILE_OBJECT *FileObject,
                            IN struct _DEVICE_OBJECT *DeviceObject);
 
 NTSTATUS
-AFSFastIoAcquireForModWrite( IN struct _FILE_OBJECT *FileObject,
-                             IN PLARGE_INTEGER EndingOffset,
-                             OUT struct _ERESOURCE **ResourceToRelease,
-                             IN struct _DEVICE_OBJECT *DeviceObject);
-
-NTSTATUS
-AFSFastIoReleaseForModWrite( IN struct _FILE_OBJECT *FileObject,
-                             IN struct _ERESOURCE *ResourceToRelease,
-                             IN struct _DEVICE_OBJECT *DeviceObject);
-
-NTSTATUS
 AFSFastIoAcquireForCCFlush( IN struct _FILE_OBJECT *FileObject,
                             IN struct _DEVICE_OBJECT *DeviceObject);
 
