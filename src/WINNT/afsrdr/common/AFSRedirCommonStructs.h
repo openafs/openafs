@@ -391,6 +391,13 @@ typedef struct AFS_FCB
 
             LONG                ExtentLength; // in KBs
 
+	    //
+	    // We pin the Cc File Object between AcquireFileForNtCreateSection
+	    // and ReleaseFileForNtCreateSection.  Protected by SOP lock
+	    //
+
+	    PFILE_OBJECT        SectionCreateFO;
+
         } File;
 
         struct
