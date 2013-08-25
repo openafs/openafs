@@ -264,6 +264,15 @@ AFSFastIoAcquireFile( IN struct _FILE_OBJECT *FileObject)
 
     AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
+		  "AFSFastIoAcquireFile Acquiring Fcb lock %p EXCL %08lX\n",
+		  &pFcb->NPFcb->Resource,
+		  PsGetCurrentThread()));
+
+    AFSAcquireExcl( &pFcb->NPFcb->Resource,
+		    TRUE);
+
+    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+		  AFS_TRACE_LEVEL_VERBOSE,
                   "AFSFastIoAcquireFile Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
                   &pFcb->NPFcb->SectionObjectResource,
                   PsGetCurrentThread()));
@@ -292,6 +301,17 @@ AFSFastIoReleaseFile( IN struct _FILE_OBJECT *FileObject)
 {
 
     AFSFcb *pFcb = (AFSFcb *)FileObject->FsContext;
+
+    if( ExIsResourceAcquiredExclusiveLite( &pFcb->NPFcb->Resource))
+    {
+	AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+		      AFS_TRACE_LEVEL_VERBOSE,
+		      "AFSFastIoReleaseFile Releasing Fcb Lock %p EXCL %08lX\n",
+		      &pFcb->NPFcb->Resource,
+		      PsGetCurrentThread()));
+
+	AFSReleaseResource( &pFcb->NPFcb->Resource);
+    }
 
     if( ExIsResourceAcquiredExclusiveLite( &pFcb->NPFcb->SectionObjectResource))
     {
