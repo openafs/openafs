@@ -271,6 +271,19 @@ AFSFastIoAcquireFile( IN struct _FILE_OBJECT *FileObject)
     AFSAcquireExcl( &pFcb->NPFcb->SectionObjectResource,
                     TRUE);
 
+    if( NULL == pFcb->Specific.File.SectionCreateFO )
+    {
+	//
+	// If not re-entrant then save and reference
+	//
+	pFcb->Specific.File.SectionCreateFO =
+	  CcGetFileObjectFromSectionPtrs( &pFcb->NPFcb->SectionObjectPointers );
+	if( NULL !=  pFcb->Specific.File.SectionCreateFO )
+	{
+	    ObReferenceObject( pFcb->Specific.File.SectionCreateFO);
+	}
+    }
+
     return;
 }
 
@@ -282,6 +295,8 @@ AFSFastIoReleaseFile( IN struct _FILE_OBJECT *FileObject)
 
     if( ExIsResourceAcquiredExclusiveLite( &pFcb->NPFcb->SectionObjectResource))
     {
+	PFILE_OBJECT fileObject = pFcb->Specific.File.SectionCreateFO;
+	pFcb->Specific.File.SectionCreateFO = NULL;
 
         AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
@@ -290,6 +305,15 @@ AFSFastIoReleaseFile( IN struct _FILE_OBJECT *FileObject)
                       PsGetCurrentThread()));
 
         AFSReleaseResource( &pFcb->NPFcb->SectionObjectResource);
+
+	//
+	// Now defer the Cc file object (if there was one) now that we are lock free
+	//
+
+	if( NULL != fileObject )
+	{
+	    ObDereferenceObject( fileObject );
+	}
     }
 
     return;
