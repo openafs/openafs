@@ -393,8 +393,6 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
         AFSFastIoDispatch.AcquireFileForNtCreateSection = AFSFastIoAcquireFile;
         AFSFastIoDispatch.ReleaseFileForNtCreateSection = AFSFastIoReleaseFile;
         AFSFastIoDispatch.FastIoDetachDevice           = AFSFastIoDetachDevice;
-        //AFSFastIoDispatch.AcquireForModWrite           = AFSFastIoAcquireForModWrite;
-        //AFSFastIoDispatch.ReleaseForModWrite           = AFSFastIoReleaseForModWrite;
         AFSFastIoDispatch.MdlRead                      = AFSFastIoMdlRead;
         AFSFastIoDispatch.MdlReadComplete              = AFSFastIoMdlReadComplete;
         AFSFastIoDispatch.PrepareMdlWrite              = AFSFastIoPrepareMdlWrite;
