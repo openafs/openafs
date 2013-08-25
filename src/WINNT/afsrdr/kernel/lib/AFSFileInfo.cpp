@@ -3926,7 +3926,7 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
                 //
                 AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSSetAllocationInfo Acquiring Fcb PagingIo lock %p EXCL %08lX\n",
+			      "AFSSetEndOfFileInfo Acquiring Fcb PagingIo lock %p EXCL %08lX\n",
                               &pFcb->NPFcb->PagingResource,
                               PsGetCurrentThread()));
 
@@ -3975,7 +3975,7 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
             //
             AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSSetAllocationInfo Acquiring Fcb PagingIo lock %p EXCL %08lX\n",
+			  "AFSSetEndOfFileInfo Acquiring Fcb PagingIo lock %p EXCL %08lX\n",
                           &pFcb->NPFcb->PagingResource,
                           PsGetCurrentThread()));
 
