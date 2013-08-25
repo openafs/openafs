@@ -2941,29 +2941,27 @@ AFSVerifyEntry( IN GUID *AuthGroup,
         // Check the data version of the file
         //
 
-        if( pObjectInfo->DataVersion.QuadPart == pDirEnumEntry->DataVersion.QuadPart)
-        {
-            if ( !BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA))
-            {
+	if( pObjectInfo->DataVersion.QuadPart == pDirEnumEntry->DataVersion.QuadPart &&
+	    !BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA))
+	{
 
-                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSVerifyEntry No DV change %I64X for Fcb %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                              pObjectInfo->DataVersion.QuadPart,
-                              &DirEntry->NameInformation.FileName,
-                              pObjectInfo->FileId.Cell,
-                              pObjectInfo->FileId.Volume,
-                              pObjectInfo->FileId.Vnode,
-                              pObjectInfo->FileId.Unique));
+	    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+			  AFS_TRACE_LEVEL_VERBOSE,
+			  "AFSVerifyEntry No DV change %I64X for Fcb %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+			  pObjectInfo->DataVersion.QuadPart,
+			  &DirEntry->NameInformation.FileName,
+			  pObjectInfo->FileId.Cell,
+			  pObjectInfo->FileId.Volume,
+			  pObjectInfo->FileId.Vnode,
+			  pObjectInfo->FileId.Unique));
 
-                //
-                // We are ok, just get out
-                //
+	    //
+	    // We are ok, just get out
+	    //
 
-                ClearFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
+	    ClearFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
 
-                try_return( ntStatus = STATUS_SUCCESS);
-            }
+	    try_return( ntStatus = STATUS_SUCCESS);
         }
 
         //
@@ -3024,29 +3022,9 @@ AFSVerifyEntry( IN GUID *AuthGroup,
             case AFS_FILE_TYPE_FILE:
             {
                 FILE_OBJECT * pCCFileObject = NULL;
-                BOOLEAN bPurgeExtents = FALSE;
-
-                if ( pObjectInfo->DataVersion.QuadPart != pDirEnumEntry->DataVersion.QuadPart)
-                {
-
-                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSVerifyEntry DV Change %wZ FID %08lX-%08lX-%08lX-%08lX (%08lX != %08lX)\n",
-                                  &DirEntry->NameInformation.FileName,
-                                  pObjectInfo->FileId.Cell,
-                                  pObjectInfo->FileId.Volume,
-                                  pObjectInfo->FileId.Vnode,
-                                  pObjectInfo->FileId.Unique,
-                                  pObjectInfo->DataVersion.LowPart,
-                                  pDirEnumEntry->DataVersion.LowPart));
-
-                    bPurgeExtents = TRUE;
-                }
 
                 if ( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA))
                 {
-
-                    bPurgeExtents = TRUE;
 
                     AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
@@ -3106,8 +3084,7 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                             ntStatus = stIoStatus.Status;
                         }
 
-                        if ( bPurgeExtents &&
-                             pObjectInfo->Fcb->NPFcb->SectionObjectPointers.DataSectionObject != NULL)
+			if ( pObjectInfo->Fcb->NPFcb->SectionObjectPointers.DataSectionObject != NULL)
                         {
 
                             if ( !CcPurgeCacheSection( &pObjectInfo->Fcb->NPFcb->SectionObjectPointers,
@@ -3154,11 +3131,8 @@ AFSVerifyEntry( IN GUID *AuthGroup,
 
                     AFSReleaseResource( &pObjectInfo->Fcb->NPFcb->SectionObjectResource);
 
-                    if ( bPurgeExtents)
-                    {
-                        AFSFlushExtents( pObjectInfo->Fcb,
-                                         AuthGroup);
-                    }
+		    AFSFlushExtents( pObjectInfo->Fcb,
+				     AuthGroup);
 
                     //
 		    // Acquire the Fcb to purge the cache
