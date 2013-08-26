@@ -234,6 +234,16 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                 // We may be performing some cleanup on the Fcb so grab it exclusive to ensure no collisions
                 //
 
+
+		AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+			      AFS_TRACE_LEVEL_VERBOSE,
+			      "AFSCleanup Acquiring Fcb lock %p EXCL %08lX\n",
+			      &pFcb->NPFcb->Resource,
+			      PsGetCurrentThread()));
+
+		AFSAcquireExcl( &pFcb->NPFcb->Resource,
+				TRUE);
+
 		AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCleanup Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
@@ -342,15 +352,6 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                               PsGetCurrentThread()));
 
                 AFSReleaseResource( &pFcb->NPFcb->SectionObjectResource);
-
-                AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCleanup Acquiring Fcb lock %p EXCL %08lX\n",
-                              &pFcb->NPFcb->Resource,
-                              PsGetCurrentThread()));
-
-                AFSAcquireExcl( &pFcb->NPFcb->Resource,
-                                TRUE);
 
                 //
                 // Unlock all outstanding locks on the file, again, unconditionally

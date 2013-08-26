@@ -1870,6 +1870,15 @@ AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
                               (*ppObjectInfo)->FileId.Vnode,
                               (*ppObjectInfo)->FileId.Unique));
 
+		AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+			      AFS_TRACE_LEVEL_VERBOSE,
+			      "AFSInvalidateObject Flush/purge Acquiring Fcb lock %p EXCL %08lX\n",
+			      &(*ppObjectInfo)->Fcb->NPFcb->Resource,
+			      PsGetCurrentThread()));
+
+		AFSAcquireExcl( &(*ppObjectInfo)->Fcb->NPFcb->Resource,
+				TRUE);
+
 		AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
 			      AFS_TRACE_LEVEL_VERBOSE,
 			      "AFSInvalidateObject Flush/purge Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
@@ -1949,6 +1958,14 @@ AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
 			      PsGetCurrentThread()));
 
                 AFSReleaseResource( &(*ppObjectInfo)->Fcb->NPFcb->SectionObjectResource);
+
+		AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+			      AFS_TRACE_LEVEL_VERBOSE,
+			      "AFSInvalidateObject Flush/purge Releasing Fcb lock %p EXCL %08lX\n",
+			      &(*ppObjectInfo)->Fcb->NPFcb->Resource,
+			      PsGetCurrentThread()));
+
+		AFSReleaseResource( &(*ppObjectInfo)->Fcb->NPFcb->Resource);
 
                 //
                 // Clear out the extents
@@ -3050,6 +3067,15 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                                   pObjectInfo->FileId.Vnode,
                                   pObjectInfo->FileId.Unique));
 
+		    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+				  AFS_TRACE_LEVEL_VERBOSE,
+				  "AFSVerifyEntry Acquiring Fcb lock %p EXCL %08lX\n",
+				  &pObjectInfo->Fcb->NPFcb->Resource,
+				  PsGetCurrentThread()));
+
+		    AFSAcquireExcl( &pObjectInfo->Fcb->NPFcb->Resource,
+				    TRUE);
+
 		    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
 				  AFS_TRACE_LEVEL_VERBOSE,
 				  "AFSVerifyEntry Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
@@ -3130,6 +3156,14 @@ AFSVerifyEntry( IN GUID *AuthGroup,
 				  PsGetCurrentThread()));
 
                     AFSReleaseResource( &pObjectInfo->Fcb->NPFcb->SectionObjectResource);
+
+		    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+				  AFS_TRACE_LEVEL_VERBOSE,
+				  "AFSVerifyEntry Releasing Fcb lock %p EXCL %08lX\n",
+				  &pObjectInfo->Fcb->NPFcb->Resource,
+				  PsGetCurrentThread()));
+
+		    AFSReleaseResource( &pObjectInfo->Fcb->NPFcb->Resource);
 
 		    AFSFlushExtents( pObjectInfo->Fcb,
 				     AuthGroup);
@@ -4214,14 +4248,6 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
 			AFSAcquireExcl( &pCurrentFcb->NPFcb->SectionObjectResource,
 					TRUE);
 
-			//
-			// Release Fcb->Resource to avoid Trend Micro deadlock
-			//
-
-			AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
-
-			bReleaseFcb = FALSE;
-
 			__try
 			{
 
@@ -4305,7 +4331,10 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
 
 			    SetFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA);
 			}
+		    }
 
+		    if (bReleaseFcb)
+		    {
 			AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
 
 			bReleaseFcb = FALSE;
@@ -6865,11 +6894,11 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
 
                 AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCleanupEntry Acquiring Fcb lock %p SHARED %08lX\n",
+			      "AFSCleanupEntry Acquiring Fcb lock %p EXCL %08lX\n",
                               &Fcb->NPFcb->Resource,
                               PsGetCurrentThread()));
 
-                AFSAcquireShared( &Fcb->NPFcb->Resource,
+		AFSAcquireExcl( &Fcb->NPFcb->Resource,
                                   TRUE);
 
                 if( Fcb->OpenReferenceCount > 0)
@@ -6957,7 +6986,7 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
 
                 AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCleanupEntry Releasing Fcb lock %p SHARED %08lX\n",
+			      "AFSCleanupEntry Releasing Fcb lock %p EXCL %08lX\n",
                               &Fcb->NPFcb->Resource,
                               PsGetCurrentThread()));
 
@@ -7041,6 +7070,24 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
                                         (AFS_SERVER_PURGE_SLEEP * pControlDeviceExt->Specific.Control.FcbPurgeTimeCount.QuadPart))))
         {
 
+	    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+			  AFS_TRACE_LEVEL_VERBOSE,
+			  "AFSCleanupFcb Acquiring Fcb lock %p EXCL %08lX\n",
+			  &Fcb->NPFcb->Resource,
+			  PsGetCurrentThread()));
+
+	    if ( AFSAcquireExcl( &Fcb->NPFcb->Resource, ForceFlush) == FALSE)
+	    {
+
+		AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+			      AFS_TRACE_LEVEL_VERBOSE,
+			      "AFSCleanupFcb Failed to Acquire Fcb lock %p EXCL %08lX\n",
+			      &Fcb->NPFcb->Resource,
+			      PsGetCurrentThread()));
+
+		try_return( ntStatus = STATUS_RETRY);
+	    }
+
 	    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSCleanupFcb Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
@@ -7119,6 +7166,14 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
 
                 AFSReleaseResource( &Fcb->NPFcb->SectionObjectResource);
 
+		AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+			      AFS_TRACE_LEVEL_VERBOSE,
+			      "AFSCleanupFcb Releasing Fcb lock %p EXCL %08lX\n",
+			      &Fcb->NPFcb->Resource,
+			      PsGetCurrentThread()));
+
+		AFSReleaseResource( &Fcb->NPFcb->Resource);
+
                 if( Fcb->OpenReferenceCount <= 0)
                 {
 
@@ -7138,6 +7193,14 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
 			      "AFSCleanupFcb Failed to Acquire Fcb SectionObject lock %p EXCL %08lX\n",
 			      &Fcb->NPFcb->SectionObjectResource,
 			      PsGetCurrentThread()));
+
+		AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+			      AFS_TRACE_LEVEL_VERBOSE,
+			      "AFSCleanupFcb Releasing Fcb lock %p EXCL %08lX\n",
+			      &Fcb->NPFcb->Resource,
+			      PsGetCurrentThread()));
+
+		AFSReleaseResource( &Fcb->NPFcb->Resource);
 
                 ntStatus = STATUS_RETRY;
             }
@@ -9118,7 +9181,7 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                         AFSAcquireExcl( &ObjectInfo->Fcb->NPFcb->SectionObjectResource,
                                         TRUE);
 
-                        __try
+			__try
                         {
 
                             if( ObjectInfo->Fcb->NPFcb->SectionObjectPointers.DataSectionObject != NULL &&
@@ -9257,10 +9320,6 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                                     AFSAcquireExcl( &ObjectInfo->Fcb->NPFcb->SectionObjectResource,
                                                     TRUE);
 
-                                    AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->Resource);
-
-                                    bLocked = FALSE;
-
                                     __try
                                     {
 
@@ -9311,6 +9370,10 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                                                   PsGetCurrentThread()));
 
                                     AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->SectionObjectResource);
+
+				    AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->Resource);
+
+				    bLocked = FALSE;
                                 }
                             }
                             else
@@ -9328,10 +9391,6 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 
                                 AFSAcquireExcl( &ObjectInfo->Fcb->NPFcb->SectionObjectResource,
                                                 TRUE);
-
-                                AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->Resource);
-
-                                bLocked = FALSE;
 
                                 //
                                 // Must build a list of non-dirty ranges from the beginning of the file
@@ -9551,6 +9610,10 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                                               PsGetCurrentThread()));
 
                                 AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->SectionObjectResource);
+
+				AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->Resource);
+
+				bLocked = FALSE;
                             }
                         }
 
