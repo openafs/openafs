@@ -9049,10 +9049,6 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 
     AFSDeviceExt       *pRDRDevExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     NTSTATUS            ntStatus = STATUS_SUCCESS;
-    LIST_ENTRY         *le;
-    AFSExtent          *pEntry;
-    ULONG               ulProcessCount = 0;
-    ULONG               ulCount = 0;
     LONG                lCount;
 
     __Enter
@@ -9097,24 +9093,21 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
             case AFS_INVALIDATE_DATA_VERSION:
             {
 
-                LARGE_INTEGER liCurrentOffset = {0,0};
-                LARGE_INTEGER liFlushLength = {0,0};
-                ULONG ulFlushLength = 0;
-                BOOLEAN bLocked = FALSE;
-                BOOLEAN bExtentsLocked = FALSE;
-                BOOLEAN bCleanExtents = FALSE;
-
                 if( ObjectInfo->FileType == AFS_FILE_TYPE_FILE &&
                     ObjectInfo->Fcb != NULL)
                 {
 
-                    AFSAcquireExcl( &ObjectInfo->Fcb->NPFcb->Resource,
-                                    TRUE);
-
-                    bLocked = TRUE;
-
                     if( BooleanFlagOn( pRDRDevExt->DeviceFlags, AFS_DEVICE_FLAG_DIRECT_SERVICE_IO))
                     {
+
+			AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+				      AFS_TRACE_LEVEL_VERBOSE,
+				      "AFSPerformObjectInvalidate Acquiring Fcb lock %p EXCL %08lX\n",
+				      &ObjectInfo->Fcb->NPFcb->Resource,
+				      PsGetCurrentThread()));
+
+			AFSAcquireExcl( &ObjectInfo->Fcb->NPFcb->Resource,
+					TRUE);
 
 			AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                                       AFS_TRACE_LEVEL_VERBOSE,
@@ -9124,10 +9117,6 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 
                         AFSAcquireExcl( &ObjectInfo->Fcb->NPFcb->SectionObjectResource,
                                         TRUE);
-
-                        AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->Resource);
-
-                        bLocked = FALSE;
 
                         __try
                         {
@@ -9148,11 +9137,6 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                                               ObjectInfo->FileId.Unique));
 
                                 SetFlag( ObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
-                            }
-                            else
-                            {
-
-                                bCleanExtents = TRUE;
                             }
                         }
 			__except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
@@ -9179,9 +9163,38 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                                       PsGetCurrentThread()));
 
                         AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->SectionObjectResource);
-                    }
+
+			AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+				      AFS_TRACE_LEVEL_VERBOSE,
+				      "AFSPerformObjectInvalidation DirectIO Releasing Fcb lock %p EXCL %08lX\n",
+				      &ObjectInfo->Fcb->NPFcb->Resource,
+				      PsGetCurrentThread()));
+
+			AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->Resource);
+		    }
                     else
                     {
+			LIST_ENTRY         *le;
+			AFSExtent          *pEntry;
+			ULONG               ulProcessCount = 0;
+			ULONG               ulCount = 0;
+			LARGE_INTEGER liCurrentOffset = {0,0};
+			LARGE_INTEGER liFlushLength = {0,0};
+			ULONG ulFlushLength = 0;
+			BOOLEAN bLocked = FALSE;
+			BOOLEAN bExtentsLocked = FALSE;
+			BOOLEAN bCleanExtents = FALSE;
+
+			AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+				      AFS_TRACE_LEVEL_VERBOSE,
+				      "AFSPerformObjectInvalidate Acquiring Fcb lock %p EXCL %08lX\n",
+				      &ObjectInfo->Fcb->NPFcb->Resource,
+				      PsGetCurrentThread()));
+
+			AFSAcquireExcl( &ObjectInfo->Fcb->NPFcb->Resource,
+					TRUE);
+
+			bLocked = TRUE;
 
                         AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
@@ -9546,20 +9559,20 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 
                             AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource );
                         }
-                    }
 
-                    if ( bLocked)
-                    {
+			if ( bLocked)
+			{
 
-                        AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->Resource);
-                    }
+			    AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->Resource);
+			}
 
-                    if ( bCleanExtents)
-                    {
+			if ( bCleanExtents)
+			{
 
-                        AFSReleaseCleanExtents( ObjectInfo->Fcb,
-                                                NULL);
-                    }
+			    AFSReleaseCleanExtents( ObjectInfo->Fcb,
+						    NULL);
+			}
+		    }
                 }
 
                 break;
