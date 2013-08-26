@@ -2201,6 +2201,15 @@ AFSSetDispositionInfo( IN PIRP Irp,
             {
                 BOOLEAN bMmFlushed;
 
+		AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+			      AFS_TRACE_LEVEL_VERBOSE,
+			      "AFSSetDispositionInfo Acquiring Fcb lock %p EXCL %08lX\n",
+			      &pFcb->NPFcb->Resource,
+			      PsGetCurrentThread()));
+
+		AFSAcquireExcl( &pFcb->NPFcb->Resource,
+				TRUE);
+
 		AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSSetDispositionInfo Acquiring Fcb SectionObject lock %p EXCL %08lX\n",
@@ -2279,6 +2288,14 @@ AFSSetDispositionInfo( IN PIRP Irp,
                               PsGetCurrentThread()));
 
                 AFSReleaseResource( &pFcb->NPFcb->SectionObjectResource);
+
+		AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+			      AFS_TRACE_LEVEL_VERBOSE,
+			      "AFSSetDispositionInfo Releasing Fcb lock %p EXCL %08lX\n",
+			      &pFcb->NPFcb->Resource,
+			      PsGetCurrentThread()));
+
+		AFSReleaseResource( &pFcb->NPFcb->Resource);
 
                 if ( !bMmFlushed)
                 {
