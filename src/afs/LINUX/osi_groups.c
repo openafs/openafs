@@ -253,7 +253,7 @@ setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
 	    key = afs_linux_key_alloc(&key_type_afs_pag, "_pag", 0, 0, perm, KEY_ALLOC_NOT_IN_QUOTA);
 
 	    if (!IS_ERR(key)) {
-		key_instantiate_and_link(key, (void *) newpag, sizeof(afs_uint32),
+		code = key_instantiate_and_link(key, (void *) newpag, sizeof(afs_uint32),
 					 current_session_keyring(), NULL);
 		key_put(key);
 	    } else {
