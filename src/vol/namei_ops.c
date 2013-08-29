@@ -1182,6 +1182,15 @@ namei_dec(IHandle_t * ih, Inode ino, int p1)
 	    namei_UnlockLinkCount(fdP, (Inode) 0);
 	}
 
+	/* We should IH_REALLYCLOSE right before deleting the special file from
+	 * disk, to ensure that somebody else cannot create a special inode,
+	 * then IH_OPEN that special inode and get back a cached fd for the
+	 * file we are deleting here (instead of an fd for the file they just
+	 * created). */
+	IH_REALLYCLOSE(tmp);
+	FDH_REALLYCLOSE(fdP);
+	IH_RELEASE(tmp);
+
 	if ((code = OS_UNLINK(name.n_path)) == 0) {
 	    if (type == VI_LINKTABLE) {
 		/* Try to remove directory. If it fails, that's ok.
@@ -1195,8 +1204,6 @@ namei_dec(IHandle_t * ih, Inode ino, int p1)
 		(void)namei_RemoveDataDirectories(&name);
 	    }
 	}
-	FDH_REALLYCLOSE(fdP);
-	IH_RELEASE(tmp);
     } else {
 	/* Get a file descriptor handle for this Inode */
 	fdP = IH_OPEN(ih);

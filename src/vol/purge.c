@@ -217,13 +217,16 @@ PurgeHeader(Volume * vp)
 static void
 PurgeHeader_r(Volume * vp)
 {
+#ifndef AFS_NAMEI_ENV
+    /* namei opens and closes the given ihandle during IH_DEC, so don't try to
+     * also close it here */
     IH_REALLYCLOSE(V_diskDataHandle(vp));
+#endif
     IH_DEC(V_linkHandle(vp), vp->vnodeIndex[vLarge].handle->ih_ino, V_id(vp));
     IH_DEC(V_linkHandle(vp), vp->vnodeIndex[vSmall].handle->ih_ino, V_id(vp));
     IH_DEC(V_linkHandle(vp), vp->diskDataHandle->ih_ino, V_id(vp));
 #ifdef AFS_NAMEI_ENV
     /* And last, but not least, the link count table itself. */
-    IH_REALLYCLOSE(V_linkHandle(vp));
     IH_DEC(V_linkHandle(vp), vp->linkHandle->ih_ino, V_parentId(vp));
 #endif
 }
