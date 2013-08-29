@@ -70,6 +70,7 @@
 
 int Testing=0;
 
+static void namei_UnlockLinkCount(FdHandle_t * fdP, Inode ino);
 
 afs_sfsize_t
 namei_iread(IHandle_t * h, afs_foff_t offset, char *buf, afs_fsize_t size)
@@ -1162,18 +1163,23 @@ namei_dec(IHandle_t * ih, Inode ino, int p1)
 	    }
 
 	    count--;
-	    if (namei_SetLinkCount(fdP, (Inode) 0, count < 0 ? 0 : count, 1) <
-		0) {
-		FDH_REALLYCLOSE(fdP);
-		IH_RELEASE(tmp);
-		return -1;
-	    }
-
 	    if (count > 0) {
+		/* if our count is non-zero, we just set our new linkcount and
+		 * return. But if our count is 0, don't bother updating the
+		 * linktable, since we're about to delete the link table,
+		 * below. */
+		if (namei_SetLinkCount(fdP, (Inode) 0, count < 0 ? 0 : count, 1) < 0) {
+		    FDH_REALLYCLOSE(fdP);
+		    IH_RELEASE(tmp);
+		    return -1;
+		}
+
 		FDH_CLOSE(fdP);
 		IH_RELEASE(tmp);
 		return 0;
 	    }
+
+	    namei_UnlockLinkCount(fdP, (Inode) 0);
 	}
 
 	if ((code = OS_UNLINK(name.n_path)) == 0) {
@@ -1714,6 +1720,17 @@ namei_SetLinkCount(FdHandle_t * fdP, Inode ino, int count, int locked)
 
     /* disallowed above 7, so... */
     return (int)nBytes;
+}
+
+static void
+namei_UnlockLinkCount(FdHandle_t * fdP, Inode ino)
+{
+    afs_foff_t offset;
+    int index;
+
+    namei_GetLCOffsetAndIndexFromIno(ino, &offset, &index);
+
+    FDH_UNLOCKFILE(fdP, offset);
 }
 
 
