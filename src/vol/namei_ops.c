@@ -954,20 +954,19 @@ bad:
 #else /* !AFS_NT40_ENV */
 Inode
 icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4,
-        FD_t *afd, Inode *ainode)
+        IHandle_t **a_ih)
 {
     namei_t name;
     int fd = INVALID_FD;
     int code = 0;
     int created_dir = 0;
     IHandle_t tmp;
+    IHandle_t *realh = NULL;
     FdHandle_t *fdP;
-    FdHandle_t tfd;
     int tag;
     int ogm_parm;
 
     memset((void *)&tmp, 0, sizeof(IHandle_t));
-    memset(&tfd, 0, sizeof(FdHandle_t));
 
     tmp.ih_dev = volutil_GetPartitionID(part);
     if (tmp.ih_dev == -1) {
@@ -1035,13 +1034,18 @@ icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3,
 	goto bad;
     }
 
+    IH_INIT(realh, tmp.ih_dev, tmp.ih_vid, tmp.ih_ino);
+    fdP = ih_attachfd(realh, fd);
+
+    /* ih_attachfd can only return NULL if we give it an invalid fd; our fd
+     * must be valid by this point. */
+    opr_Assert(fdP);
+
     if (p2 == (afs_uint32)-1 && p3 == VI_LINKTABLE) {
-	/* hack at tmp to setup for set link count call. */
-	memset((void *)&tfd, 0, sizeof(FdHandle_t));	/* minimalistic still, but a little cleaner */
-	tfd.fd_ih = &tmp;
-	tfd.fd_fd = fd;
-	code = namei_SetLinkCount(&tfd, (Inode) 0, 1, 0);
+	code = namei_SetLinkCount(fdP, (Inode) 0, 1, 0);
     }
+
+    FDH_CLOSE(fdP);
 
   bad:
     if (code || (fd == INVALID_FD)) {
@@ -1052,10 +1056,10 @@ icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3,
 		FDH_CLOSE(fdP);
 	    }
 	}
+	IH_RELEASE(realh);
     }
 
-    *afd = fd;
-    *ainode = tmp.ih_ino;
+    *a_ih = realh;
 
     return code;
 }
@@ -1064,44 +1068,32 @@ Inode
 namei_icreate(IHandle_t * lh, char *part,
               afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4)
 {
-    Inode ino = 0;
-    int fd = INVALID_FD;
+    Inode ino;
+    IHandle_t *ihP = NULL;
     int code;
 
-    code = icreate(lh, part, p1, p2, p3, p4, &fd, &ino);
-    if (fd != INVALID_FD) {
-	close(fd);
+    code = icreate(lh, part, p1, p2, p3, p4, &ihP);
+    if (code || !ihP) {
+	opr_Assert(!ihP);
+	ino = -1;
+    } else {
+	ino = ihP->ih_ino;
+	IH_RELEASE(ihP);
     }
-    return (code || (fd == INVALID_FD)) ? (Inode) - 1 : ino;
+    return ino;
 }
 
 IHandle_t *
 namei_icreate_init(IHandle_t * lh, int dev, char *part,
                    afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4)
 {
-    Inode ino = 0;
-    int fd = INVALID_FD;
     int code;
-    IHandle_t *ihP;
-    FdHandle_t *fdP;
+    IHandle_t *ihP = NULL;
 
-    code = icreate(lh, part, p1, p2, p3, p4, &fd, &ino);
-    if (fd == INVALID_FD) {
-	return NULL;
-    }
+    code = icreate(lh, part, p1, p2, p3, p4, &ihP);
     if (code) {
-	close(fd);
-	return NULL;
+	opr_Assert(!ihP);
     }
-
-    IH_INIT(ihP, dev, p1, ino);
-    fdP = ih_attachfd(ihP, fd);
-    if (!fdP) {
-	close(fd);
-    } else {
-	FDH_CLOSE(fdP);
-    }
-
     return ihP;
 }
 #endif
