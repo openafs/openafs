@@ -109,6 +109,14 @@ AFSQueryFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
             if ( NT_SUCCESS( ntStatus))
             {
 
+		AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+			      AFS_TRACE_LEVEL_VERBOSE,
+			      "AFSQueryFileInfo FID %08lX-%08lX-%08lX-%08lX Clearing Verify Flag\n",
+			      pFcb->ObjectInformation->FileId.Cell,
+			      pFcb->ObjectInformation->FileId.Volume,
+			      pFcb->ObjectInformation->FileId.Vnode,
+			      pFcb->ObjectInformation->FileId.Unique));
+
                 ClearFlag( pFcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY);
             }
             else

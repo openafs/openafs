@@ -1146,10 +1146,18 @@ AFSInitDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
 
             pObjectInfoCB->Expiration = DirEnumEntry->Expiration;
 
-            pObjectInfoCB->DataVersion = DirEnumEntry->DataVersion;
+	    pObjectInfoCB->DataVersion = DirEnumEntry->DataVersion;
 
-            ClearFlag( pObjectInfoCB->Flags, AFS_OBJECT_FLAGS_VERIFY);
-        }
+	    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+			  AFS_TRACE_LEVEL_VERBOSE,
+			  "AFSInitDirEntry FID %08lX-%08lX-%08lX-%08lX Clearing Verify Flag\n",
+			  pObjectInfoCB->FileId.Cell,
+			  pObjectInfoCB->FileId.Volume,
+			  pObjectInfoCB->FileId.Vnode,
+			  pObjectInfoCB->FileId.Unique));
+
+	    ClearFlag( pObjectInfoCB->Flags, AFS_OBJECT_FLAGS_VERIFY);
+	}
 
         //
         // This reference count is either stored into the return DirectoryCB
@@ -2970,7 +2978,7 @@ AFSVerifyEntry( IN GUID *AuthGroup,
 
 	    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
 			  AFS_TRACE_LEVEL_VERBOSE,
-			  "AFSVerifyEntry No DV change %I64X for Fcb %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+			  "AFSVerifyEntry No DV change %I64X for Fcb %wZ FID %08lX-%08lX-%08lX-%08lX Clearing Verify Flag\n",
 			  pObjectInfo->DataVersion.QuadPart,
 			  &DirEntry->NameInformation.FileName,
 			  pObjectInfo->FileId.Cell,
@@ -3017,6 +3025,14 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                 if( NT_SUCCESS( ntStatus))
                 {
 
+		    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+				  AFS_TRACE_LEVEL_VERBOSE,
+				  "AFSVerifyEntry MountPoint FID %08lX-%08lX-%08lX-%08lX Clearing Verify Flag\n",
+				  pObjectInfo->FileId.Cell,
+				  pObjectInfo->FileId.Volume,
+				  pObjectInfo->FileId.Vnode,
+				  pObjectInfo->FileId.Unique));
+
                     ClearFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
                 }
 
@@ -3035,6 +3051,14 @@ AFSVerifyEntry( IN GUID *AuthGroup,
 
                 if( NT_SUCCESS( ntStatus))
                 {
+
+		    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+				  AFS_TRACE_LEVEL_VERBOSE,
+				  "AFSVerifyEntry Symlink FID %08lX-%08lX-%08lX-%08lX Clearing Verify Flag\n",
+				  pObjectInfo->FileId.Cell,
+				  pObjectInfo->FileId.Volume,
+				  pObjectInfo->FileId.Vnode,
+				  pObjectInfo->FileId.Unique));
 
                     ClearFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
                 }
@@ -3314,6 +3338,14 @@ AFSVerifyEntry( IN GUID *AuthGroup,
 		if ( NT_SUCCESS( ntStatus))
 		{
 
+		    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+				  AFS_TRACE_LEVEL_VERBOSE,
+				  "AFSVerifyEntry File FID %08lX-%08lX-%08lX-%08lX Clearing Verify Flag\n",
+				  pObjectInfo->FileId.Cell,
+				  pObjectInfo->FileId.Volume,
+				  pObjectInfo->FileId.Vnode,
+				  pObjectInfo->FileId.Unique));
+
 		    ClearFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
 		}
                 break;
@@ -3363,6 +3395,14 @@ AFSVerifyEntry( IN GUID *AuthGroup,
 
                 if( NT_SUCCESS( ntStatus))
                 {
+
+		    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+				  AFS_TRACE_LEVEL_VERBOSE,
+				  "AFSVerifyEntry Directory FID %08lX-%08lX-%08lX-%08lX Clearing Verify Flag\n",
+				  pObjectInfo->FileId.Cell,
+				  pObjectInfo->FileId.Volume,
+				  pObjectInfo->FileId.Vnode,
+				  pObjectInfo->FileId.Unique));
 
                     ClearFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
                 }
@@ -3423,6 +3463,14 @@ AFSVerifyEntry( IN GUID *AuthGroup,
 
                 if( NT_SUCCESS( ntStatus))
                 {
+
+		    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+				  AFS_TRACE_LEVEL_VERBOSE,
+				  "AFSVerifyEntry DFSLink FID %08lX-%08lX-%08lX-%08lX Clearing Verify Flag\n",
+				  pObjectInfo->FileId.Cell,
+				  pObjectInfo->FileId.Volume,
+				  pObjectInfo->FileId.Vnode,
+				  pObjectInfo->FileId.Unique));
 
                     ClearFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
                 }
@@ -4146,6 +4194,14 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                 if( NT_SUCCESS( ntStatus))
                 {
 
+		    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+				  AFS_TRACE_LEVEL_VERBOSE,
+				  "AFSValidateEntry MountPoint FID %08lX-%08lX-%08lX-%08lX Clearing Verify Flag\n",
+				  pObjectInfo->FileId.Cell,
+				  pObjectInfo->FileId.Volume,
+				  pObjectInfo->FileId.Vnode,
+				  pObjectInfo->FileId.Unique));
+
                     ClearFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY | AFS_OBJECT_FLAGS_NOT_EVALUATED);
                 }
 
@@ -4165,6 +4221,14 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
 
                 if( NT_SUCCESS( ntStatus))
                 {
+
+		    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+				  AFS_TRACE_LEVEL_VERBOSE,
+				  "AFSValidateEntry Symlink FID %08lX-%08lX-%08lX-%08lX Clearing Verify Flag\n",
+				  pObjectInfo->FileId.Cell,
+				  pObjectInfo->FileId.Volume,
+				  pObjectInfo->FileId.Vnode,
+				  pObjectInfo->FileId.Unique));
 
                     ClearFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY | AFS_OBJECT_FLAGS_NOT_EVALUATED);
                 }
@@ -4394,6 +4458,14 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                         break;
                     }
 
+		    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+				  AFS_TRACE_LEVEL_VERBOSE,
+				  "AFSValidateEntry File FID %08lX-%08lX-%08lX-%08lX No Purge Clearing Verify Flag\n",
+				  pObjectInfo->FileId.Cell,
+				  pObjectInfo->FileId.Volume,
+				  pObjectInfo->FileId.Vnode,
+				  pObjectInfo->FileId.Unique));
+
                     ClearFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY | AFS_OBJECT_FLAGS_NOT_EVALUATED);
 
                     //
@@ -4519,6 +4591,14 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
 
                 if( NT_SUCCESS( ntStatus))
                 {
+
+		    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+				  AFS_TRACE_LEVEL_VERBOSE,
+				  "AFSValidateEntry Directory FID %08lX-%08lX-%08lX-%08lX Clearing Verify Flag\n",
+				  pObjectInfo->FileId.Cell,
+				  pObjectInfo->FileId.Volume,
+				  pObjectInfo->FileId.Vnode,
+				  pObjectInfo->FileId.Unique));
 
                     ClearFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY | AFS_OBJECT_FLAGS_NOT_EVALUATED);
                 }
@@ -9203,6 +9283,16 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                     ObjectInfo->Fcb != NULL)
                 {
 
+		    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+				  AFS_TRACE_LEVEL_VERBOSE,
+				  "AFSPerformObjectInvalidation on node type %d for FID %08lX-%08lX-%08lX-%08lX Reason DATA_VERSION FCB %0p\n",
+				  ObjectInfo->FileType,
+				  ObjectInfo->FileId.Cell,
+				  ObjectInfo->FileId.Volume,
+				  ObjectInfo->FileId.Vnode,
+				  ObjectInfo->FileId.Unique,
+				  ObjectInfo->Fcb));
+
                     if( BooleanFlagOn( pRDRDevExt->DeviceFlags, AFS_DEVICE_FLAG_DIRECT_SERVICE_IO))
                     {
 
@@ -9683,7 +9773,7 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 
                 break;
             }
-        }
+	}
 
         //
         // Destroy the reference passed in by the caller to AFSInvalidateObject
