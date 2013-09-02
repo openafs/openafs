@@ -274,51 +274,60 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
 
                     SetFlag( pFcb->Flags, AFS_FCB_FILE_CLOSED);
 
-                    //
-                    // Attempt to tear down our extent list for the file
-                    // If there are remaining dirty extents then attempt to
-                    // flush them as well
-                    //
+		    if( !BooleanFlagOn( pDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_DIRECT_SERVICE_IO))
+		    {
 
-                    if( pFcb->Specific.File.ExtentsDirtyCount)
-                    {
+			//
+			// Attempt to tear down our extent list for the file
+			// If there are remaining dirty extents then attempt to
+			// flush them as well
+			//
 
-                        AFSFlushExtents( pFcb,
-                                         &pCcb->AuthGroup);
-                    }
+			if( pFcb->Specific.File.ExtentsDirtyCount)
+			{
 
-                    //
-                    // Wait for any outstanding queued flushes to complete
-                    //
+			    AFSFlushExtents( pFcb,
+					     &pCcb->AuthGroup);
+			}
 
-                    AFSWaitOnQueuedFlushes( pFcb);
+			//
+			// Wait for any outstanding queued flushes to complete
+			//
 
-                    ASSERT( pFcb->Specific.File.ExtentsDirtyCount == 0 &&
-                            pFcb->Specific.File.QueuedFlushCount == 0);
+			AFSWaitOnQueuedFlushes( pFcb);
 
-                    AFSReleaseResource( &pFcb->NPFcb->Resource);
+			ASSERT( pFcb->Specific.File.ExtentsDirtyCount == 0 &&
+				pFcb->Specific.File.QueuedFlushCount == 0);
 
-                    //
-                    // Tear 'em down, we'll not be needing them again
-                    //
+			AFSReleaseResource( &pFcb->NPFcb->Resource);
 
-                    AFSTearDownFcbExtents( pFcb,
-                                           &pCcb->AuthGroup);
-                }
-                else
-                {
+			//
+			// Tear 'em down, we'll not be needing them again
+			//
 
-                    if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB &&
-                        pFcb->Specific.File.ExtentsDirtyCount &&
-                        (pCcb->GrantedAccess & FILE_WRITE_DATA))
-                    {
+			AFSTearDownFcbExtents( pFcb,
+					       &pCcb->AuthGroup);
+		    }
+		    else
+		    {
 
-                        AFSFlushExtents( pFcb,
-                                         &pCcb->AuthGroup);
-                    }
+			if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB &&
+			    pFcb->Specific.File.ExtentsDirtyCount &&
+			    (pCcb->GrantedAccess & FILE_WRITE_DATA))
+			{
 
-                    AFSReleaseResource( &pFcb->NPFcb->Resource);
-                }
+			    AFSFlushExtents( pFcb,
+					     &pCcb->AuthGroup);
+			}
+
+			AFSReleaseResource( &pFcb->NPFcb->Resource);
+		    }
+		}
+		else
+		{
+
+		    AFSReleaseResource( &pFcb->NPFcb->Resource);
+		}
 
                 pDirCB = pCcb->DirectoryCB;
 
