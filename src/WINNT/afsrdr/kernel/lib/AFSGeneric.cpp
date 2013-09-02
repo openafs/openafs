@@ -1695,6 +1695,7 @@ AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSDeviceExt *pRDRDevExt = (AFSDeviceExt *) AFSRDRDeviceObject->DeviceExtension;
     IO_STATUS_BLOCK stIoStatus;
     ULONG ulFilter = 0;
     AFSObjectInfoCB * pParentObjectInfo = NULL;
@@ -1967,14 +1968,18 @@ AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
 
 		AFSReleaseResource( &(*ppObjectInfo)->Fcb->NPFcb->Resource);
 
-                //
-                // Clear out the extents
-                // Get rid of them (note this involves waiting
-                // for any writes or reads to the cache to complete)
-                //
+		if( !BooleanFlagOn( pRDRDevExt->DeviceFlags, AFS_DEVICE_FLAG_DIRECT_SERVICE_IO))
+		{
 
-                AFSTearDownFcbExtents( (*ppObjectInfo)->Fcb,
-                                       NULL);
+		    //
+		    // Clear out the extents
+		    // Get rid of them (note this involves waiting
+		    // for any writes or reads to the cache to complete)
+		    //
+
+		    AFSTearDownFcbExtents( (*ppObjectInfo)->Fcb,
+					   NULL);
+		}
             }
 
             (*ppObjectInfo)->DataVersion.QuadPart = (ULONGLONG)-1;
@@ -2917,6 +2922,7 @@ AFSVerifyEntry( IN GUID *AuthGroup,
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSDeviceExt *pRDRDevExt = (AFSDeviceExt *) AFSRDRDeviceObject->DeviceExtension;
     AFSDirEnumEntry *pDirEnumEntry = NULL;
     AFSObjectInfoCB *pObjectInfo = DirEntry->ObjectInformation;
     IO_STATUS_BLOCK stIoStatus;
@@ -3157,29 +3163,33 @@ AFSVerifyEntry( IN GUID *AuthGroup,
 
                     AFSReleaseResource( &pObjectInfo->Fcb->NPFcb->SectionObjectResource);
 
-		    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
-				  AFS_TRACE_LEVEL_VERBOSE,
-				  "AFSVerifyEntry Releasing Fcb lock %p EXCL %08lX\n",
-				  &pObjectInfo->Fcb->NPFcb->Resource,
-				  PsGetCurrentThread()));
+		    if( !BooleanFlagOn( pRDRDevExt->DeviceFlags, AFS_DEVICE_FLAG_DIRECT_SERVICE_IO))
+		    {
 
-		    AFSReleaseResource( &pObjectInfo->Fcb->NPFcb->Resource);
+			AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+				      AFS_TRACE_LEVEL_VERBOSE,
+				      "AFSVerifyEntry Releasing Fcb lock %p EXCL %08lX\n",
+				      &pObjectInfo->Fcb->NPFcb->Resource,
+				      PsGetCurrentThread()));
 
-		    AFSFlushExtents( pObjectInfo->Fcb,
-				     AuthGroup);
+			AFSReleaseResource( &pObjectInfo->Fcb->NPFcb->Resource);
 
-                    //
-		    // Acquire the Fcb to purge the cache
-                    //
+			AFSFlushExtents( pObjectInfo->Fcb,
+					 AuthGroup);
 
-                    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSVerifyEntry Acquiring Fcb lock %p EXCL %08lX\n",
-                                  &pObjectInfo->Fcb->NPFcb->Resource,
-                                  PsGetCurrentThread()));
+			//
+			// Acquire the Fcb to purge the cache
+			//
 
-                    AFSAcquireExcl( &pObjectInfo->Fcb->NPFcb->Resource,
-                                    TRUE);
+			AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING,
+				      AFS_TRACE_LEVEL_VERBOSE,
+				      "AFSVerifyEntry Acquiring Fcb lock %p EXCL %08lX\n",
+				      &pObjectInfo->Fcb->NPFcb->Resource,
+				      PsGetCurrentThread()));
+
+			AFSAcquireExcl( &pObjectInfo->Fcb->NPFcb->Resource,
+					TRUE);
+		    }
 
                     //
                     // Update the metadata for the entry
@@ -4010,6 +4020,7 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSDeviceExt *pRDRDevExt = (AFSDeviceExt *) AFSRDRDeviceObject->DeviceExtension;
     LARGE_INTEGER liSystemTime;
     AFSDirEnumEntry *pDirEnumEntry = NULL;
     AFSFcb *pCurrentFcb = NULL;
@@ -4343,8 +4354,12 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
 		    if ( bPurgeExtents &&
 			 bSafeToPurge)
 		    {
-			AFSFlushExtents( pCurrentFcb,
-					 AuthGroup);
+
+			if( !BooleanFlagOn( pRDRDevExt->DeviceFlags, AFS_DEVICE_FLAG_DIRECT_SERVICE_IO))
+			{
+			    AFSFlushExtents( pCurrentFcb,
+					     AuthGroup);
+			}
 		    }
 		}
 
@@ -6992,70 +7007,81 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
 
                 AFSReleaseResource( &Fcb->NPFcb->Resource);
 
-                //
-                // Wait for any currently running flush or release requests to complete
-                //
+		if( !BooleanFlagOn( pRDRDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_DIRECT_SERVICE_IO))
+		{
+		    //
+		    // Wait for any currently running flush or release requests to complete
+		    //
 
-                AFSWaitOnQueuedFlushes( Fcb);
+		    AFSWaitOnQueuedFlushes( Fcb);
 
-                //
-                // Now perform another flush on the file
-                //
+		    //
+		    // Now perform another flush on the file
+		    //
 
-                if( !NT_SUCCESS( AFSFlushExtents( Fcb,
-                                                  NULL)))
-                {
+		    if( !NT_SUCCESS( AFSFlushExtents( Fcb,
+						      NULL)))
+		    {
 
-                    AFSReleaseExtentsWithFlush( Fcb,
-                                                NULL,
-                                                TRUE);
-                }
-            }
+			AFSReleaseExtentsWithFlush( Fcb,
+						    NULL,
+						    TRUE);
+		    }
+		}
+	    }
 
-            if( Fcb->OpenReferenceCount == 0 ||
-                BooleanFlagOn( Fcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_OBJECT_INVALID) ||
-                BooleanFlagOn( Fcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_DELETED))
-            {
+	    if( !BooleanFlagOn( pRDRDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_DIRECT_SERVICE_IO))
+	    {
 
-                AFSTearDownFcbExtents( Fcb,
-                                       NULL);
-            }
+		if( Fcb->OpenReferenceCount == 0 ||
+		    BooleanFlagOn( Fcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_OBJECT_INVALID) ||
+		    BooleanFlagOn( Fcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_DELETED))
+		{
+
+		    AFSTearDownFcbExtents( Fcb,
+					   NULL);
+		}
+	    }
 
             try_return( ntStatus);
         }
 
         KeQueryTickCount( &liTime);
 
-        //
-        // First up are there dirty extents in the cache to flush?
-        //
+	if( !BooleanFlagOn( pRDRDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_DIRECT_SERVICE_IO))
+	{
+	    //
+	    // First up are there dirty extents in the cache to flush?
+	    //
 
-        if( BooleanFlagOn( Fcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_OBJECT_INVALID) ||
-            BooleanFlagOn( Fcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_DELETED))
-        {
+	    if( BooleanFlagOn( Fcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_OBJECT_INVALID) ||
+		BooleanFlagOn( Fcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_DELETED))
+	    {
 
-            //
-            // The file has been marked as invalid.  Dump it
-            //
+		//
+		// The file has been marked as invalid.  Dump it
+		//
 
-            AFSTearDownFcbExtents( Fcb,
-                                   NULL);
-        }
-        else if( ForceFlush ||
-            ( ( Fcb->Specific.File.ExtentsDirtyCount ||
-                Fcb->Specific.File.ExtentCount) &&
-              (liTime.QuadPart - Fcb->Specific.File.LastServerFlush.QuadPart)
-                                                    >= pControlDeviceExt->Specific.Control.FcbFlushTimeCount.QuadPart))
-        {
-            if( !NT_SUCCESS( AFSFlushExtents( Fcb,
-                                              NULL)) &&
-                Fcb->OpenReferenceCount == 0)
-            {
+		AFSTearDownFcbExtents( Fcb,
+				       NULL);
+	    }
+	    else if( ForceFlush ||
+		     ( ( Fcb->Specific.File.ExtentsDirtyCount ||
+			 Fcb->Specific.File.ExtentCount) &&
+		       (liTime.QuadPart - Fcb->Specific.File.LastServerFlush.QuadPart)
+		       >= pControlDeviceExt->Specific.Control.FcbFlushTimeCount.QuadPart))
+	    {
 
-                AFSReleaseExtentsWithFlush( Fcb,
-                                            NULL,
-                                            TRUE);
-            }
+		if( !NT_SUCCESS( AFSFlushExtents( Fcb,
+						  NULL)) &&
+		    Fcb->OpenReferenceCount == 0)
+		{
+
+		    AFSReleaseExtentsWithFlush( Fcb,
+						NULL,
+						TRUE);
+		}
+	    }
         }
 
         //
@@ -7174,16 +7200,20 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
 
 		AFSReleaseResource( &Fcb->NPFcb->Resource);
 
-                if( Fcb->OpenReferenceCount <= 0)
-                {
+		if( !BooleanFlagOn( pRDRDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_DIRECT_SERVICE_IO))
+		{
 
-                    //
-                    // Tear em down we'll not be needing them again
-                    //
+		    if( Fcb->OpenReferenceCount <= 0)
+		    {
 
-                    AFSTearDownFcbExtents( Fcb,
-                                           NULL);
-                }
+			//
+			// Tear em down we'll not be needing them again
+			//
+
+			AFSTearDownFcbExtents( Fcb,
+					       NULL);
+		    }
+		}
             }
             else
             {
@@ -9117,38 +9147,51 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
     __Enter
     {
 
-        switch( InvalidateReason)
+	switch( InvalidateReason)
         {
 
             case AFS_INVALIDATE_DELETED:
             {
 
-                if( ObjectInfo->FileType == AFS_FILE_TYPE_FILE &&
+		AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+			      AFS_TRACE_LEVEL_VERBOSE,
+			      "AFSPerformObjectInvalidation on node type %d for FID %08lX-%08lX-%08lX-%08lX Reason DELETED\n",
+			      ObjectInfo->FileType,
+			      ObjectInfo->FileId.Cell,
+			      ObjectInfo->FileId.Volume,
+			      ObjectInfo->FileId.Vnode,
+			      ObjectInfo->FileId.Unique));
+
+		if( ObjectInfo->FileType == AFS_FILE_TYPE_FILE &&
                     ObjectInfo->Fcb != NULL)
                 {
 
-                    AFSAcquireExcl( &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource,
-                                    TRUE);
+		    if( !BooleanFlagOn( pRDRDevExt->DeviceFlags, AFS_DEVICE_FLAG_DIRECT_SERVICE_IO))
+		    {
 
-                    ObjectInfo->Links = 0;
+			AFSAcquireExcl( &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource,
+					TRUE);
 
-                    ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsRequestStatus = STATUS_FILE_DELETED;
+			ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsRequestStatus = STATUS_FILE_DELETED;
 
-                    KeSetEvent( &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsRequestComplete,
-                                0,
-                                FALSE);
+			KeSetEvent( &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsRequestComplete,
+				    0,
+				    FALSE);
 
-                    //
-                    // Clear out the extents
-                    // And get rid of them (note this involves waiting
-                    // for any writes or reads to the cache to complete)
-                    //
+			//
+			// Clear out the extents
+			// And get rid of them (note this involves waiting
+			// for any writes or reads to the cache to complete)
+			//
 
-                    AFSTearDownFcbExtents( ObjectInfo->Fcb,
-                                           NULL);
+			AFSTearDownFcbExtents( ObjectInfo->Fcb,
+					       NULL);
 
-                    AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource);
-                }
+			AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource);
+		    }
+		}
+
+		ObjectInfo->Links = 0;
 
                 break;
             }

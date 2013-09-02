@@ -44,6 +44,7 @@ AFSFlushBuffers( IN PDEVICE_OBJECT LibDeviceObject,
 {
 
     UNREFERENCED_PARAMETER(LibDeviceObject);
+    AFSDeviceExt *pRDRDevExt = (AFSDeviceExt *) AFSRDRDeviceObject->DeviceExtension;
     NTSTATUS           ntStatus = STATUS_SUCCESS;
     IO_STACK_LOCATION *pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     PFILE_OBJECT       pFileObject = pIrpSp->FileObject;
@@ -130,32 +131,36 @@ AFSFlushBuffers( IN PDEVICE_OBJECT LibDeviceObject,
             try_return( ntStatus = GetExceptionCode());
         }
 
-	AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSFlushBuffers Releasing Fcb SectionObject lock %p SHARED %08lX\n",
-                      &pFcb->NPFcb->SectionObjectResource,
-                      PsGetCurrentThread()));
+	if( !BooleanFlagOn( pRDRDevExt->DeviceFlags, AFS_DEVICE_FLAG_DIRECT_SERVICE_IO))
+	{
 
-        AFSReleaseResource( &pFcb->NPFcb->SectionObjectResource);
+	    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
+			  AFS_TRACE_LEVEL_VERBOSE,
+			  "AFSFlushBuffers Releasing Fcb SectionObject lock %p SHARED %08lX\n",
+			  &pFcb->NPFcb->SectionObjectResource,
+			  PsGetCurrentThread()));
 
-        bReleaseSectionObject = FALSE;
+	    AFSReleaseResource( &pFcb->NPFcb->SectionObjectResource);
 
-        //
-        // Now, flush to the server - if there is stuff to do
-        //
+	    bReleaseSectionObject = FALSE;
 
-        ntStatus = AFSFlushExtents( pFcb,
-                                    &pCcb->AuthGroup);
+	    //
+	    // Now, flush to the server - if there is stuff to do
+	    //
 
-        if( !NT_SUCCESS( ntStatus))
-        {
+	    ntStatus = AFSFlushExtents( pFcb,
+					&pCcb->AuthGroup);
 
-            AFSReleaseExtentsWithFlush( pFcb,
-                                        &pCcb->AuthGroup,
-                                        TRUE);
+	    if( !NT_SUCCESS( ntStatus))
+	    {
 
-            ntStatus = STATUS_SUCCESS;
-        }
+		AFSReleaseExtentsWithFlush( pFcb,
+					    &pCcb->AuthGroup,
+					    TRUE);
+
+		ntStatus = STATUS_SUCCESS;
+	    }
+	}
 
 try_exit:
 
