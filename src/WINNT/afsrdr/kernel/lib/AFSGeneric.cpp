@@ -1747,8 +1747,6 @@ AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
             {
 
                 (*ppObjectInfo)->DataVersion.QuadPart = (ULONGLONG)-1;
-
-                SetFlag( (*ppObjectInfo)->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA);
             }
 
             (*ppObjectInfo)->Expiration.QuadPart = 0;
@@ -9333,6 +9331,8 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                                               ObjectInfo->FileId.Unique));
 
                                 SetFlag( ObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
+
+				SetFlag( ObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA);
                             }
                         }
 			__except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
@@ -9350,7 +9350,9 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                                           ntStatus));
 
                             SetFlag( ObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
-                        }
+
+			    SetFlag( ObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA);
+			}
 
 			AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
                                       AFS_TRACE_LEVEL_VERBOSE,
@@ -9471,8 +9473,10 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                                                           ObjectInfo->FileId.Vnode,
                                                           ObjectInfo->FileId.Unique));
 
-                                            SetFlag( ObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
-                                        }
+					    SetFlag( ObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
+
+					    SetFlag( ObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA);
+					}
                                         else
                                         {
 
@@ -9494,6 +9498,8 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                                                       ntStatus));
 
                                         SetFlag( ObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
+
+					SetFlag( ObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA);
                                     }
 
 				    AFSDbgTrace(( AFS_SUBSYSTEM_LOCK_PROCESSING|AFS_SUBSYSTEM_SECTION_OBJECT,
@@ -9770,6 +9776,20 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 			}
 		    }
                 }
+		else if ( ObjectInfo->FileType == AFS_FILE_TYPE_FILE)
+		{
+
+		    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+				  AFS_TRACE_LEVEL_VERBOSE,
+				  "AFSPerformObjectInvalidation on node type %d for FID %08lX-%08lX-%08lX-%08lX Reason DATA_VERSION FCB NULL\n",
+				  ObjectInfo->FileType,
+				  ObjectInfo->FileId.Cell,
+				  ObjectInfo->FileId.Volume,
+				  ObjectInfo->FileId.Vnode,
+				  ObjectInfo->FileId.Unique));
+
+		    SetFlag( ObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA);
+		}
 
                 break;
             }
