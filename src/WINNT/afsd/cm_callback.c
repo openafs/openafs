@@ -1880,8 +1880,11 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
         lock_ObtainWrite(&scp->rw);
         if (code == 0) {
             int lostRace = cm_EndCallbackGrantingCall(scp, &cbr, &callback, &volSync, 0);
-            if (!lostRace)
+	    if (lostRace) {
+		InterlockedDecrement(&scp->activeRPCs);
+	    } else {
                 code = cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, reqp, 0);
+	    }
         } else {
             cm_EndCallbackGrantingCall(NULL, &cbr, NULL, NULL, 0);
             InterlockedDecrement(&scp->activeRPCs);
