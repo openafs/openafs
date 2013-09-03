@@ -897,6 +897,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_FUNC([d_alloc_anon],
 				     [#include <linux/fs.h>],
 				     [d_alloc_anon(NULL);])
+		 AC_CHECK_LINUX_FUNC([d_count],
+				     [#include <linux/dcache.h>],
+				     [d_count(NULL);])
 		 AC_CHECK_LINUX_FUNC([d_make_root],
 				     [#include <linux/fs.h>],
 				     [d_make_root(NULL);])
