@@ -2639,9 +2639,10 @@ cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp, cm_user_t *userp, cm_re
                                                           &bbp->callbacks[j],
                                                           &volSync,
                                                           CM_CALLBACK_MAINTAINCOUNT|CM_CALLBACK_BULKSTAT);
-                    InterlockedIncrement(&scp->activeRPCs);
-                    if (!lostRace)
+		    if (!lostRace) {
+			InterlockedIncrement(&scp->activeRPCs);
                         code = cm_MergeStatus(dscp, scp, &bbp->stats[j], &volSync, userp, reqp, CM_MERGEFLAG_BULKSTAT);
+		    }
                     lock_ReleaseWrite(&scp->rw);
                 } else {
                     lock_ReleaseRead(&scp->rw);
@@ -3162,10 +3163,11 @@ long cm_Create(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *a
             if (!cm_HaveCallback(scp)) {
                 lostRace = cm_EndCallbackGrantingCall(scp, &cbReq,
                                                       &newFileCallback, &volSync, 0);
-                InterlockedIncrement(&scp->activeRPCs);
-                if (!lostRace)
+		if (!lostRace) {
+		    InterlockedIncrement(&scp->activeRPCs);
                     code = cm_MergeStatus( dscp, scp, &newFileStatus, &volSync,
                                            userp, reqp, 0);
+		}
                 didEnd = 1;
             }
             lock_ReleaseWrite(&scp->rw);
@@ -3353,10 +3355,11 @@ long cm_MakeDir(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *
             if (!cm_HaveCallback(scp)) {
                 lostRace = cm_EndCallbackGrantingCall(scp, &cbReq,
                                                       &newDirCallback, &volSync, 0);
-                InterlockedIncrement(&scp->activeRPCs);
-                if (!lostRace)
+		if (!lostRace) {
+		    InterlockedIncrement(&scp->activeRPCs);
                     code = cm_MergeStatus( dscp, scp, &newDirStatus, &volSync,
                                            userp, reqp, 0);
+		}
                 didEnd = 1;
             }
             lock_ReleaseWrite(&scp->rw);
