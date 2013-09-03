@@ -1478,8 +1478,8 @@ KFW_AFS_get_cred( char * username,
             StringCbPrintf(message, sizeof(message), "KFW_AFS_klog() returns: %d\n", code);
             OutputDebugString(message);
         }
-        if ( code ) goto cleanup;
     }
+    if ( code ) goto cleanup;
 
     KFW_AFS_update_cell_princ_map(ctx, cell, pname, TRUE);
 
