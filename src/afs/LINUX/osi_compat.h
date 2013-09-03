@@ -565,4 +565,32 @@ afs_proc_create(char *name, umode_t mode, struct proc_dir_entry *parent, struct 
 #endif
 }
 
+static inline int
+afs_dentry_count(struct dentry *dp)
+{
+#if defined(HAVE_LINUX_D_COUNT)
+    return d_count(dp);
+#elif defined(D_COUNT_INT)
+    return dp->d_count;
+#else
+    return atomic_read(&dp->d_count);
+#endif
+}
+
+static inline void
+afs_maybe_shrink_dcache(struct dentry *dp)
+{
+#if defined(HAVE_LINUX_D_COUNT) || defined(D_COUNT_INT)
+    spin_lock(&dp->d_lock);
+    if (afs_dentry_count(dp) > 1) {
+	spin_unlock(&dp->d_lock);
+	shrink_dcache_parent(dp);
+    } else
+	spin_unlock(&dp->d_lock);
+#else
+    if (afs_dentry_count(dp) > 1)
+	shrink_dcache_parent(dp);
+#endif
+}
+
 #endif /* AFS_LINUX_OSI_COMPAT_H */
