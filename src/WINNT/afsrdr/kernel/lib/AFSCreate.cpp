@@ -4128,13 +4128,15 @@ AFSOpenSpecialShareFcb( IN PIRP Irp,
 
             pParentObjectInfo = AFSFindObjectInfo( pObjectInfo->VolumeCB,
                                                    &pObjectInfo->ParentFileId,
-                                                   TRUE);
-        }
+						   TRUE);
+	}
 
-        if( DirectoryCB->ObjectInformation->Fcb == NULL)
-        {
+	*Fcb = pObjectInfo->Fcb;
 
-            //
+	if( *Fcb == NULL)
+	{
+
+	    //
             // Allocate and initialize the Fcb for the file.
             //
 
@@ -4164,8 +4166,6 @@ AFSOpenSpecialShareFcb( IN PIRP Irp,
         }
         else
         {
-
-            *Fcb = pObjectInfo->Fcb;
 
             AFSAcquireExcl( &(*Fcb)->NPFcb->Resource,
                             TRUE);
