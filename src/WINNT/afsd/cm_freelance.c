@@ -1211,13 +1211,13 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
         if (cm_getLocalMountPointChange()) {	// check for changes
             cm_clearLocalMountPointChange();    // clear the changefile
             cm_reInitLocalMountPoints();	// start reinit
-        }
+	}
 
-        code = cm_NameI(cm_RootSCachep(cm_rootUserp, &req), cpath,
-                        CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD | CM_FLAG_DFS_REFERRAL,
-                        cm_rootUserp, NULL, &req, &scp);
-        free(cpath);
-        if (code)
+	code = cm_NameI(cm_RootSCachep(cm_rootUserp, &req), cpath,
+			CM_FLAG_DIRSEARCH | CM_FLAG_CASEFOLD,
+			cm_rootUserp, NULL, &req, &scp);
+	free(cpath);
+	if (code)
             return code;
         *fidp = scp->fid;
         cm_ReleaseSCache(scp);
@@ -1455,13 +1455,13 @@ long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
             if (cm_getLocalMountPointChange()) {	// check for changes
                 cm_clearLocalMountPointChange();    // clear the changefile
                 cm_reInitLocalMountPoints();	// start reinit
-            }
+	    }
 
-            code = cm_NameI(cm_RootSCachep(cm_rootUserp, &req), cpath,
-                             CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD | CM_FLAG_DFS_REFERRAL,
-                             cm_rootUserp, NULL, &req, &scp);
-            free(cpath);
-            if (code == 0) {
+	    code = cm_NameI(cm_RootSCachep(cm_rootUserp, &req), cpath,
+			     CM_FLAG_DIRSEARCH | CM_FLAG_CASEFOLD,
+			     cm_rootUserp, NULL, &req, &scp);
+	    free(cpath);
+	    if (code == 0) {
                 *fidp = scp->fid;
                 cm_ReleaseSCache(scp);
             }
