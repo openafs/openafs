@@ -2495,7 +2495,7 @@ PrintColumns(struct VnodeDetails *vdp, const char *desc)
 	    break;
 	case col_mcell:
 	    printf("%s",
-		   (vdp->t == VNODE_U_MOUNT ? vdp->u.mnt.cell : PLACEHOLDER));
+		   (vdp->t == VNODE_U_MOUNT && vdp->u.mnt.cell ? vdp->u.mnt.cell : PLACEHOLDER));
 	    break;
 	case col_mvol:
 	    printf("%s",
