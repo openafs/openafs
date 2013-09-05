@@ -8,10 +8,10 @@ butc - Initializes the Tape Coordinator process
 <div class="synopsis">
 
 B<butc> S<<< [B<-port> <I<port offset>>] >>> S<<< [B<-debuglevel> (0 | 1 | 2)] >>>
-    S<<< [B<-cell> <I<cell name>>] >>> [B<-noautoquery>] [B<-localauth>] [B<-help>]
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noautoquery>] [B<-rxbind>] [B<-localauth>] [B<-help>]
 
 B<butc> S<<< [B<-p> <I<port offset>>] >>> S<<< [B<-d> (0 | 1 | 2)] >>>
-    S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>] [B<-h>]
+    S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-r>] [B<-l>] [B<-h>]
 
 =for html
 </div>
@@ -166,6 +166,11 @@ flag with the B<-localauth> argument.
 Suppresses the Tape Coordinator's prompt for insertion of the first tape
 needed for an operation. The operator must insert the tape into the drive
 before issuing the B<backup> command that initializes the operation.
+
+=item B<-rxbind>
+
+Bind the Rx socket to the primary interface only. If not specified, the Rx
+socket will listen on all interfaces.
 
 =item B<-localauth>
 
