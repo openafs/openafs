@@ -12,6 +12,9 @@ html:
 	perl generate-html
 
 LINKEDPAGES = klog pagsh tokens
+FSSYNCDEBUG_PAGES = attach callback detach error header leaveoff list mode \
+                    move offline online query stats vgcadd vgcdel vgcquery \
+                    vgcscan vgcscanall vnode volop
 
 dest:
 	chmod +x install-man
@@ -26,6 +29,10 @@ dest:
 	done
 	test -h $(DEST)/man/man8/dafssync-debug.8 \
 	    || ln -s fssync-debug.8 $(DEST)/man/man8/dafssync-debug.8
+	set -e; for M in ${FSSYNCDEBUG_PAGES} ; do \
+	    test -h $(DEST)/man/man8/dafssync-debug_$$M.8 \
+		|| ln -s fssync-debug_$$M.8 $(DEST)/man/man8/dafssync-debug_$$M.8 ; \
+	done
 	set -e; if [ -n "@ENABLE_FUSE_CLIENT@" ] ; then \
 	    test -h $(DEST)/man/man8/afsd.fuse.8 \
 		|| ln -s afsd.8 $(DEST)/man/man8/afsd.fuse.8; \
@@ -44,6 +51,10 @@ install: $(MAN1) $(MAN8)
 	done
 	test -h $(DESTDIR)/$(mandir)/man8/dafssync-debug.8 \
 	    || ln -s fssync-debug.8 $(DESTDIR)/$(mandir)/man8/dafssync-debug.8
+	set -e; for M in ${FSSYNCDEBUG_PAGES} ; do \
+	    test -h $(DESTDIR)/$(mandir)/man8/dafssync-debug_$$M.8 \
+		|| ln -s fssync-debug_$$M.8 $(DESTDIR)/$(mandir)/man8/dafssync-debug_$$M.8 ; \
+	done
 	set -e; if [ -n "@ENABLE_FUSE_CLIENT@" ] ; then \
 	    test -h $(DESTDIR)$(mandir)/man8/afsd.fuse.8 \
 		|| ln -s afsd.8 $(DESTDIR)$(mandir)/man8/afsd.fuse.8; \
