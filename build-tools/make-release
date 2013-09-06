@@ -79,7 +79,7 @@ File::Path::rmtree("$tempDir/$name/doc");
 
 # Create the source tarball (both .gz and .bz2)
 system("tar -cf $outDir/$name-src.tar -C $tempDir $name") == 0
-    or die "Unable to create documentation tarball : $!";
+    or die "Unable to create source code tarball : $!";
 push @toCompress, "$outDir/$name-src.tar";
 
 # Construct the diffs, and zip them
