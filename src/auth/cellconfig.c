@@ -353,7 +353,7 @@ _afsconf_UpToDate(struct afsconf_dir *adir)
     int code;
     time_t now = time(0);
 
-    if (adir->timeCheck == now) {
+    if (adir->timeRead && (adir->timeCheck == now)) {
 	return 1; /* stat no more than once a second */
     }
     adir->timeCheck = now;
