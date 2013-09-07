@@ -989,7 +989,7 @@ afs_FlushDCache(struct dcache *adc)
     }
 
     if (afs_WaitForCacheDrain) {
-	if (afs_blocksUsed <=
+	if ((afs_blocksUsed - afs_blocksDiscarded) <=
 	    PERCENT(CM_CACHESIZEDRAINEDPCT, afs_cacheBlocks)) {
 	    afs_WaitForCacheDrain = 0;
 	    afs_osi_Wakeup(&afs_WaitForCacheDrain);
