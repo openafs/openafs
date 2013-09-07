@@ -1413,7 +1413,7 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
 
 #define afs_CacheIsTooFull() \
     (afs_blocksUsed - afs_blocksDiscarded > \
-	PERCENT(CM_DCACHECOUNTFREEPCT, afs_cacheBlocks) || \
+	PERCENT(CM_DCACHESPACEFREEPCT, afs_cacheBlocks) || \
      afs_freeDCCount - afs_discardDCCount < \
 	PERCENT(100 - CM_DCACHECOUNTFREEPCT, afs_cacheFiles))
 
