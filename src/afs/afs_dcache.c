@@ -457,8 +457,10 @@ afs_CacheTruncateDaemon(void)
 		if (afs_termState == AFSOP_STOP_TRUNCDAEMON)
 		    break;
 	    }
-	    if (!afs_CacheIsTooFull())
+	    if (!afs_CacheIsTooFull()) {
 		afs_CacheTooFull = 0;
+		afs_WakeCacheWaitersIfDrained();
+	    }
 	}	/* end of cache cleanup */
 	ReleaseWriteLock(&afs_xdcache);
 
