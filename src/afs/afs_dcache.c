@@ -1007,8 +1007,6 @@ afs_FlushDCache(struct dcache *adc)
     } else {
 	afs_FreeDCache(adc);
     }
-
-    afs_WakeCacheWaitersIfDrained();
 }				/*afs_FlushDCache */
 
 
