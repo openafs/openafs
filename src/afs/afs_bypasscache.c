@@ -434,6 +434,7 @@ afs_NoCacheFetchProc(struct rx_call *acall,
 			goto done;
 		    }
 		    size -= bytes;
+		    auio->uio_resid -= bytes;
 		    iovno = 0;
 		}
 		pp = (bypass_page_t)auio->uio_iov[curpage].iov_base;
