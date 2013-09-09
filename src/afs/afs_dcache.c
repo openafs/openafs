@@ -396,6 +396,26 @@ static struct CTD_stats {
 u_int afs_min_cache = 0;
 
 /*!
+ * If there are waiters for the cache to drain, wake them if
+ * the number of free cache blocks reaches the CM_CACHESIZEDDRAINEDPCT.
+ *
+ * \note Environment:
+ *	This routine must be called with the afs_xdcache lock held
+ *	(in write mode).
+ */
+static void
+afs_WakeCacheWaitersIfDrained(void)
+{
+    if (afs_WaitForCacheDrain) {
+	if ((afs_blocksUsed - afs_blocksDiscarded) <=
+	    PERCENT(CM_CACHESIZEDRAINEDPCT, afs_cacheBlocks)) {
+	    afs_WaitForCacheDrain = 0;
+	    afs_osi_Wakeup(&afs_WaitForCacheDrain);
+	}
+    }
+}
+
+/*!
  * Keeps the cache clean and free by truncating uneeded files, when used.
  * \param
  * \return
@@ -988,13 +1008,7 @@ afs_FlushDCache(struct dcache *adc)
 	afs_FreeDCache(adc);
     }
 
-    if (afs_WaitForCacheDrain) {
-	if ((afs_blocksUsed - afs_blocksDiscarded) <=
-	    PERCENT(CM_CACHESIZEDRAINEDPCT, afs_cacheBlocks)) {
-	    afs_WaitForCacheDrain = 0;
-	    afs_osi_Wakeup(&afs_WaitForCacheDrain);
-	}
-    }
+    afs_WakeCacheWaitersIfDrained();
 }				/*afs_FlushDCache */
 
 
@@ -1019,13 +1033,7 @@ afs_FreeDCache(struct dcache *adc)
     afs_indexFlags[adc->index] |= IFFree;
     adc->dflags |= DFEntryMod;
 
-    if (afs_WaitForCacheDrain) {
-	if ((afs_blocksUsed - afs_blocksDiscarded) <=
-	    PERCENT(CM_CACHESIZEDRAINEDPCT, afs_cacheBlocks)) {
-	    afs_WaitForCacheDrain = 0;
-	    afs_osi_Wakeup(&afs_WaitForCacheDrain);
-	}
-    }
+    afs_WakeCacheWaitersIfDrained();
 }				/* afs_FreeDCache */
 
 /*!
@@ -1065,14 +1073,7 @@ afs_DiscardDCache(struct dcache *adc)
     adc->dflags |= DFEntryMod;
     afs_indexFlags[adc->index] |= IFDiscarded;
 
-    if (afs_WaitForCacheDrain) {
-	if ((afs_blocksUsed - afs_blocksDiscarded) <=
-	    PERCENT(CM_CACHESIZEDRAINEDPCT, afs_cacheBlocks)) {
-	    afs_WaitForCacheDrain = 0;
-	    afs_osi_Wakeup(&afs_WaitForCacheDrain);
-	}
-    }
-
+    afs_WakeCacheWaitersIfDrained();
 }				/*afs_DiscardDCache */
 
 /**
