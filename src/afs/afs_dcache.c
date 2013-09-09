@@ -436,7 +436,7 @@ afs_CacheTruncateDaemon(void)
     while (1) {
 	cb_lowat = PERCENT((CM_DCACHESPACEFREEPCT - CM_DCACHEEXTRAPCT), afs_cacheBlocks);
 	ObtainWriteLock(&afs_xdcache, 266);
-	if (afs_CacheTooFull) {
+	if (afs_CacheTooFull || afs_WaitForCacheDrain) {
 	    int space_needed, slots_needed;
 	    /* if we get woken up, we should try to clean something out */
 	    for (counter = 0; counter < 10; counter++) {
