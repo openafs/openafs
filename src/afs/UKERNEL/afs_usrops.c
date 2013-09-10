@@ -1657,12 +1657,13 @@ uafs_RPCStatsClearPeer(void)
  * Lookup the target of a symbolic link
  * Call VN_HOLD on the output vnode if successful.
  * Returns zero on success, error code on failure.
+ * If provided, use a path for confirming we are not linked to ourself.
  *
  * Note: Caller must hold the AFS global lock.
  */
-int
-uafs_LookupLink(struct usr_vnode *vp, struct usr_vnode *parentVp,
-		struct usr_vnode **vpp)
+static int
+uafs_LookupLinkPath(struct usr_vnode *vp, struct usr_vnode *parentVp,
+		    char *ppathP, struct usr_vnode **vpp)
 {
     int code;
     int len;
@@ -1698,6 +1699,16 @@ uafs_LookupLink(struct usr_vnode *vp, struct usr_vnode *parentVp,
     }
     len = MAX_OSI_PATH + 1 - uio.uio_resid;
     pathP[len] = '\0';
+
+    /* are we linked to ourname or ./ourname? ELOOP */
+    if (ppathP) {
+	if ((strcmp(pathP, ppathP) == 0) ||
+	    ((pathP[0] == '.') &&
+	     (pathP[1] == '/') &&
+	     (strcmp(&(pathP[2]), ppathP) == 0))) {
+	    return ELOOP;
+	}
+    }
 
     /*
      * Find the target of the symbolic link
@@ -1829,7 +1840,7 @@ uafs_LookupName(char *path, struct usr_vnode *parentVp,
 		    afs_osi_Free(tmpPath, strlen(path) + 1);
 		    return code;
 		}
-		code = uafs_LookupLink(nextVp, vp, &linkVp);
+		code = uafs_LookupLinkPath(nextVp, vp, NULL, &linkVp);
 		if (code) {
 		    VN_RELE(vp);
 		    VN_RELE(nextVp);
@@ -1858,6 +1869,13 @@ uafs_LookupName(char *path, struct usr_vnode *parentVp,
     afs_osi_Free(tmpPath, strlen(path) + 1);
     *vpp = vp;
     return 0;
+}
+
+int
+uafs_LookupLink(struct usr_vnode *vp, struct usr_vnode *parentVp,
+		struct usr_vnode **vpp)
+{
+    return uafs_LookupLinkPath(vp, parentVp, NULL, vpp);
 }
 
 /*
