@@ -1654,6 +1654,66 @@ uafs_RPCStatsClearPeer(void)
 }
 
 /*
+ * Lookup the target of a symbolic link
+ * Call VN_HOLD on the output vnode if successful.
+ * Returns zero on success, error code on failure.
+ *
+ * Note: Caller must hold the AFS global lock.
+ */
+int
+uafs_LookupLink(struct usr_vnode *vp, struct usr_vnode *parentVp,
+		struct usr_vnode **vpp)
+{
+    int code;
+    int len;
+    char *pathP;
+    struct usr_vnode *linkVp;
+    struct usr_uio uio;
+    struct iovec iov[1];
+
+    AFS_ASSERT_GLOCK();
+
+    pathP = afs_osi_Alloc(MAX_OSI_PATH + 1);
+    usr_assert(pathP != NULL);
+
+    /*
+     * set up the uio buffer
+     */
+    iov[0].iov_base = pathP;
+    iov[0].iov_len = MAX_OSI_PATH + 1;
+    uio.uio_iov = &iov[0];
+    uio.uio_iovcnt = 1;
+    uio.uio_offset = 0;
+    uio.uio_segflg = 0;
+    uio.uio_fmode = FREAD;
+    uio.uio_resid = MAX_OSI_PATH + 1;
+
+    /*
+     * Read the link data
+     */
+    code = afs_readlink(VTOAFS(vp), &uio, get_user_struct()->u_cred);
+    if (code) {
+	afs_osi_Free(pathP, MAX_OSI_PATH + 1);
+	return code;
+    }
+    len = MAX_OSI_PATH + 1 - uio.uio_resid;
+    pathP[len] = '\0';
+
+    /*
+     * Find the target of the symbolic link
+     */
+    code = uafs_LookupName(pathP, parentVp, &linkVp, 1, 0);
+    if (code) {
+	afs_osi_Free(pathP, MAX_OSI_PATH + 1);
+	return code;
+    }
+
+    afs_osi_Free(pathP, MAX_OSI_PATH + 1);
+    *vpp = linkVp;
+    return 0;
+}
+
+/*
  * Lookup a file or directory given its path.
  * Call VN_HOLD on the output vnode if successful.
  * Returns zero on success, error code on failure.
@@ -1797,66 +1857,6 @@ uafs_LookupName(char *path, struct usr_vnode *parentVp,
 
     afs_osi_Free(tmpPath, strlen(path) + 1);
     *vpp = vp;
-    return 0;
-}
-
-/*
- * Lookup the target of a symbolic link
- * Call VN_HOLD on the output vnode if successful.
- * Returns zero on success, error code on failure.
- *
- * Note: Caller must hold the AFS global lock.
- */
-int
-uafs_LookupLink(struct usr_vnode *vp, struct usr_vnode *parentVp,
-		struct usr_vnode **vpp)
-{
-    int code;
-    int len;
-    char *pathP;
-    struct usr_vnode *linkVp;
-    struct usr_uio uio;
-    struct iovec iov[1];
-
-    AFS_ASSERT_GLOCK();
-
-    pathP = afs_osi_Alloc(MAX_OSI_PATH + 1);
-    usr_assert(pathP != NULL);
-
-    /*
-     * set up the uio buffer
-     */
-    iov[0].iov_base = pathP;
-    iov[0].iov_len = MAX_OSI_PATH + 1;
-    uio.uio_iov = &iov[0];
-    uio.uio_iovcnt = 1;
-    uio.uio_offset = 0;
-    uio.uio_segflg = 0;
-    uio.uio_fmode = FREAD;
-    uio.uio_resid = MAX_OSI_PATH + 1;
-
-    /*
-     * Read the link data
-     */
-    code = afs_readlink(VTOAFS(vp), &uio, get_user_struct()->u_cred);
-    if (code) {
-	afs_osi_Free(pathP, MAX_OSI_PATH + 1);
-	return code;
-    }
-    len = MAX_OSI_PATH + 1 - uio.uio_resid;
-    pathP[len] = '\0';
-
-    /*
-     * Find the target of the symbolic link
-     */
-    code = uafs_LookupName(pathP, parentVp, &linkVp, 1, 0);
-    if (code) {
-	afs_osi_Free(pathP, MAX_OSI_PATH + 1);
-	return code;
-    }
-
-    afs_osi_Free(pathP, MAX_OSI_PATH + 1);
-    *vpp = linkVp;
     return 0;
 }
 
