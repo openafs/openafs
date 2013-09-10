@@ -111,6 +111,7 @@ uerrors.o: uerrors.c
 uerrors.c ubik.h: uerrors.et ubik.p.h
 	$(RM) -f ubik.h uerrors.c
 	${COMPILE_ET} -p ${srcdir} uerrors -h ubik
+ubik.h: uerrors.c
 
 libubik.a: ${LIBOBJS} AFS_component_version_number.o
 	-$(RM) -f $@

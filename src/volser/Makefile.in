@@ -104,11 +104,10 @@ libvolser.a: volint.cs.o  $(VSOBJS) volint.ss.o AFS_component_version_number.o
 	$(AR) crv $@ volint.cs.o $(VSOBJS) volint.ss.o AFS_component_version_number.o 
 	$(RANLIB) $@
 
-volser.h: volerr.c
-
-volerr.c: volerr.et volser.p.h
+volerr.c volser.h: volerr.et volser.p.h
 	$(RM) -f volser.h volerr.c
 	${COMPILE_ET} -p ${srcdir} volerr -h volser
+volser.h: volerr.c
 
 volint.cs.c: volint.xg
 	${RXGEN} -A -x -C -o $@ ${srcdir}/volint.xg

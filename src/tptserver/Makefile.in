@@ -174,9 +174,10 @@ ptclient.o: ${PTSERVER}/ptclient.c ${INCLS}
 ptuser.o: ${PTSERVER}/ptuser.c ${INCLS}
 	${CCRULE} ${srcdir}/${PTSERVER}/ptuser.c
 
-pterror.h pterror.c: ${PTSERVER}/pterror.et
+pterror.c pterror.h: ${PTSERVER}/pterror.et
 	$(RM) -f pterror.h pterror.c
 	${COMPILE_ET} -p ${srcdir}/${PTSERVER} pterror
+pterror.h: pterror.c
 
 pts: pts.o $(PTOBJS) ${TOP_LIBDIR}/libcmd.a $(LIBS) ${INCLS}
 	$(CC) ${LDFLAGS} -o pts pts.o ${TOP_LIBDIR}/libcmd.a $(PTOBJS) ${LIBS} ${MT_LIBS} ${XLIBS} ${KRB5_LIBS}
