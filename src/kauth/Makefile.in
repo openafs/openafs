@@ -124,11 +124,10 @@ kadatabase.o: kadatabase.c ${INCLS}
 
 kaprocs.o: kaprocs.c ${INCLS} kaport.h
 
-kautils.h: kaerrors.c
-
-kaerrors.c: kaerrors.et kautils.p.h
+kaerrors.c kautils.h: kaerrors.et kautils.p.h
 	$(RM) -f kautils.h kaerrors.c
 	${COMPILE_ET} -p ${srcdir} kaerrors -h kautils
+kautils.h: kaerrors.c
 
 kauth.xdr.lo: kauth.xdr.c kauth.h
 

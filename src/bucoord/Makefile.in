@@ -70,11 +70,10 @@ $(BACKOBJS): bc.h ${TOP_INCDIR}/afs/butc.h
 backup:  $(BACKOBJS) ${LIBS}
 	$(AFS_LDRULE) $(BACKOBJS) ${LIBS} $(LIB_roken) ${XLIBS}
 
-bc.h: bucoord_errs.c
-
-bucoord_errs.c:	bucoord_errs.et bc.p.h
+bucoord_errs.c bc.h: bucoord_errs.et bc.p.h
 	$(RM) -f bc.h bucoord_errs.c
 	${COMPILE_ET} -p ${srcdir} bucoord_errs -h bc
+bc.h: bucoord_errs.c
 
 #
 # Errors

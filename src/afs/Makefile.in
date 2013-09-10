@@ -16,12 +16,14 @@ all: depinstall
 
 generated: afs_trace.h afs_trace.msf unified_afs.c unified_afs.h
 
-afs_trace.h afs_trace.msf: afs_trace.et
+afs_trace.msf afs_trace.h: afs_trace.et
 	${COMPILE_ET} -v 2 -p ${srcdir} afs_trace.et
+afs_trace.h: afs_trace.msf
 
 unified_afs.c unified_afs.h: unified_afs.et
 	$(RM) -f unified_afs.c unified_afs.h
 	${COMPILE_ET} -p ${srcdir} unified_afs -h unified_afs
+unified_afs.h: unified_afs.c
 
 afszcm.cat: afs_trace.msf
 	-$(RM) -f afszcm.cat

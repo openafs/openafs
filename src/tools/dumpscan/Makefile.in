@@ -72,10 +72,14 @@ libdumpscan.a: $(OBJS_libdumpscan.a)
 	$(RANLIB) libdumpscan.a
 
 xf_errs.c xf_errs.h: ${srcdir}/xf_errs.et
+	$(RM) -f xf_errs.c xf_errs.h
 	$(COMPILE_ET) ${srcdir}/xf_errs.et
+xf_errs.h: xf_errs.c
 
 dumpscan_errs.c dumpscan_errs.h: ${srcdir}/dumpscan_errs.et
+	$(RM) -f dumpscan_errs.c dumpscan_errs.h
 	$(COMPILE_ET) ${srcdir}/dumpscan_errs.et
+dumpscan_errs.h: dumpscan_errs.c
 
 util.o xfiles.o xf_files.o: xf_errs.h
 backuphdr.o directory.o parsedump.o parsetag.o: dumpscan_errs.h

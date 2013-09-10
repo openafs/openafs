@@ -35,11 +35,11 @@ ${TOP_LIBDIR}/libcmd64.a: libcmd64.a
 ${TOP_INCDIR}/afs/cmd.h: cmd.h
 	${INSTALL_DATA} $? $@
 
-cmd.h: cmd_errors.et cmd.p.h
+cmd_errors.c cmd.h: cmd_errors.et cmd.p.h
 	$(RM) -f cmd.h cmd_errors.c
 	${COMPILE_ET} -p ${srcdir} cmd_errors -h cmd
+cmd.h: cmd_errors.c
 
-cmd_errors.c: cmd.h 
 cmd.lo: cmd.h
 
 config_file.lo: $(TOP_SRCDIR)/external/heimdal/krb5/config_file.c krb5_locl.h

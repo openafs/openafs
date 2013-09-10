@@ -80,23 +80,20 @@ bumon.xdr.c: bumon.h
 bumon.ss.c: bumon.h
 bumon.cs.c: bumon.h
 
-butm.h: butm_errs.c
-
-butm_errs.c: butm_errs.et butm.p.h
+butm_errs.c butm.h: butm_errs.et butm.p.h
 	$(RM) -f butm.h butm_errs.c
 	${COMPILE_ET} -p ${srcdir} butm_errs -h butm
+butm.h: butm_errs.c
 
-tcdata.h: butc_errs.c
-
-butc_errs.c: butc_errs.et tcdata.p.h butm.h
+butc_errs.c tcdata.h: butc_errs.et tcdata.p.h butm.h
 	$(RM) -f tcdata.h butc_errs.c
 	${COMPILE_ET} -p ${srcdir} butc_errs -h tcdata
+tcdata.h: butc_errs.c
 
-butx.h: butx_errs.c
-
-butx_errs.c: butx_errs.et
+butx_errs.c butx.h: butx_errs.et
 	$(RM) -f butx.h butx_errs.c
 	${COMPILE_ET} -p ${srcdir} butx_errs -h butx
+butx.h: butx_errs.c
 
 #
 # Installation targets

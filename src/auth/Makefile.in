@@ -113,10 +113,12 @@ setkey: setkey.o ${LIBS}
 acfg_errors.c cellconfig.h: acfg_errors.et cellconfig.p.h
 	$(RM) -f cellconfig.h acfg_errors.c
 	${COMPILE_ET} -p ${srcdir} acfg_errors -h cellconfig
+cellconfig.h: acfg_errors.c
 
 ktc_errors.c auth.h: ktc_errors.et auth.p.h
 	$(RM) -f auth.h ktc_errors.c
 	${COMPILE_ET} -p ${srcdir} ktc_errors -h auth
+auth.h: ktc_errors.c
 
 Ktoken.xdr.c: token.xg
 	$(RXGEN) -A -x -k -c -o $@ $(srcdir)/token.xg

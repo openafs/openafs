@@ -160,9 +160,10 @@ ptclient: ptclient.o libprot.a $(LIBS)
 
 ptclient.o: ptclient.c ${INCLS} AFS_component_version_number.c
 
-pterror.h pterror.c: pterror.et
+pterror.c pterror.h: pterror.et
 	$(RM) -f pterror.h pterror.c
 	${COMPILE_ET} -p ${srcdir} pterror
+pterror.h: pterror.c
 
 display.lo: $(INCLS)
 ptuser.lo: $(LINCLS)

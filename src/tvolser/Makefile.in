@@ -89,8 +89,10 @@ volint.xdr.o: ../volser/volint.xdr.c
 lockprocs.o: ${VOLSER}/lockprocs.c
 	$(AFS_CCRULE) -I../volser $(VOLSER)/lockprocs.c
 
-vlserver.h vl_errors.c: ${VLSERVER}/vl_errors.et ${VLSERVER}/vlserver.p.h
-	$(RM) -f vlserver.h vl_errors.c; ${COMPILE_ET} -p ${VLSERVER} vl_errors -h vlserver
+vl_errors.c vlserver.h: ${VLSERVER}/vl_errors.et ${VLSERVER}/vlserver.p.h
+	$(RM) -f vlserver.h vl_errors.c
+	${COMPILE_ET} -p ${VLSERVER} vl_errors -h vlserver
+vlserver.h: vl_errors.c
 
 vldbint.cs.o: ../vlserver/vldbint.cs.c
 	$(AFS_CCRULE) -I$(VLSERVER) ../vlserver/vldbint.cs.c

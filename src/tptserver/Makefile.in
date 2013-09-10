@@ -146,10 +146,10 @@ pt_util.o: ${PTSERVER}/pt_util.c
 ptubik.o: ${PTSERVER}/ptubik.c ${INCLS}
 	$(AFS_CCRULE) $(PTSERVER)/ptubik.c
 
-pterror.h: pterror.c
-pterror.c: ${PTSERVER}/pterror.et
+pterror.c pterror.h: ${PTSERVER}/pterror.et
 	$(RM) -f pterror.h pterror.c
 	${COMPILE_ET} -p ${PTSERVER} pterror
+pterror.h: pterror.c
 
 prerror.h: pterror.h
 	${INSTALL} $? $@
