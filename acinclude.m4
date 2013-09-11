@@ -1335,7 +1335,6 @@ AC_CHECK_HEADERS([ \
 		   arpa/nameser.h \
 		   curses.h\
 		   direct.h \
-		   et/com_err.h \
 		   errno.h \
 		   fcntl.h \
 		   grp.h \

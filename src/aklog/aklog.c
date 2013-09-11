@@ -46,10 +46,14 @@
 #include <afs/token.h>
 
 #include <krb5.h>
-#if defined(HAVE_ET_COM_ERR_H)
-#include <et/com_err.h>
+#ifdef HAVE_COM_ERR_H
+# include <com_err.h>
+#elif HAVE_ET_COM_ERR_H
+# include <et/com_err.h>
+#elif HAVE_KRB5_COM_ERR_H
+# include <krb5/com_err.h>
 #else
-#include <com_err.h>
+# error No com_err.h? We need some kind of com_err.h
 #endif
 
 #ifndef HAVE_KERBEROSV_HEIM_ERR_H
