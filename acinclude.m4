@@ -1310,7 +1310,6 @@ AC_HEADER_DIRENT
 AC_CHECK_HEADERS([ \
 	curses.h \
 	direct.h \
-	et/com_err.h \
 	fcntl.h \
 	grp.h \
 	mntent.h \

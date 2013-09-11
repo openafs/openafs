@@ -82,6 +82,11 @@ AS_IF([test x"$KRB5_LIBS" != x],
                      [Define to 1 if you have the `krb524_convert_creds_kdc' function.])])])])
      AC_CHECK_HEADERS([kerberosIV/krb.h])
      AC_CHECK_HEADERS([kerberosV/heim_err.h])
+     AC_CHECK_HEADERS([com_err.h et/com_err.h krb5/com_err.h])
+     AS_IF([test x"$ac_cv_header_com_err_h" != xyes \
+             && test x"$ac_cv_header_et_com_err_h" != xyes \
+             && test x"$ac_cv_header_krb5_com_err_h" != xyes],
+       [AC_MSG_ERROR([Cannot find a usable com_err.h])])
      AC_CHECK_MEMBERS([krb5_creds.keyblock, krb5_creds.keyblock.enctype,
 		       krb5_creds.session, krb5_keytab_entry.key,
 		       krb5_keytab_entry.keyblock, krb5_keyblock.enctype,
