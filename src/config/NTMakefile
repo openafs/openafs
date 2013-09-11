@@ -163,6 +163,9 @@ idirs: doclink
 !	IF (!EXIST($(OJT)\libafsauthent))
 		$(MKDIR) $(OJT)\libafsauthent
 !	ENDIF
+!	IF (!EXIST($(OJT)\libafscp))
+		$(MKDIR) $(OJT)\libafscp
+!	ENDIF
 !	IF (!EXIST($(OJT)\libafsrpc))
 		$(MKDIR) $(OJT)\libafsrpc
 !	ENDIF
