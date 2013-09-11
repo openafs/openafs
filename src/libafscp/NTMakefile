@@ -6,7 +6,7 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 
 AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV
-RELDIR=libacl
+RELDIR=libafscp
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
 
