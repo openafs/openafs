@@ -349,7 +349,7 @@ afsconf_Check(struct afsconf_dir *adir)
     afs_int32 code;
     time_t now = time(0);
 
-    if (adir->timeCheck == now) {
+    if (adir->timeRead && (adir->timeCheck == now)) {
 	return 0; /* stat no more than once a second */
     }
     adir->timeCheck = now;
