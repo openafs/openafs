@@ -29,6 +29,7 @@
 #include "rx/rx_globals.h"
 #include "token.h"
 
+extern int afs_rmtsys_enable;
 struct VenusFid afs_rootFid;
 afs_int32 afs_waitForever = 0;
 short afs_waitForeverCount = 0;
@@ -3809,8 +3810,8 @@ DECL_PIOCTL(PSetSysName)
 	    return EINVAL;
 	num = count;
     }
-    if (afs_cr_gid(*acred) == RMTUSER_REQ ||
-	afs_cr_gid(*acred) == RMTUSER_REQ_PRIV) {   /* Handles all exporters */
+    if (afs_rmtsys_enable && (afs_cr_gid(*acred) == RMTUSER_REQ ||
+	afs_cr_gid(*acred) == RMTUSER_REQ_PRIV)) {   /* Handles all exporters */
 	if (allpags && afs_cr_gid(*acred) != RMTUSER_REQ_PRIV) {
 	    return EPERM;
 	}
