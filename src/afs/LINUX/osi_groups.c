@@ -520,7 +520,12 @@ struct key_type key_type_afs_pag =
 {
     .name        = "afs_pag",
     .describe    = afs_pag_describe,
+#if defined(STRUCT_KEY_TYPE_HAS_INSTANTIATE_PREP)
+    .instantiate_prep = afs_pag_instantiate,
+    .instantiate = NULL,
+#else
     .instantiate = afs_pag_instantiate,
+#endif
     .match       = afs_pag_match,
     .destroy     = afs_pag_destroy,
 };
