@@ -78,6 +78,7 @@ static int afs_InitSetup_done = 0;
 afs_int32 afs_numcachefiles = -1;
 afs_int32 afs_numfilesperdir = -1;
 char afs_cachebasedir[1024];
+afs_int32 afs_rmtsys_enable = 0;
 
 afs_int32 afs_rx_deadtime = AFS_RXDEADTIME;
 afs_int32 afs_rx_harddead = AFS_HARDDEADTIME;
@@ -1300,6 +1301,9 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	rx_MyMaxSendSize = rx_maxReceiveSizeUser = rx_maxReceiveSize = parm2;
     } else if (parm == AFSOP_SET_RXMAXFRAGS) {
 	rxi_nSendFrags = rxi_nRecvFrags = parm2;
+    } else if (parm == AFSOP_SET_RMTSYS_FLAG) {
+	afs_rmtsys_enable = parm2;
+	code = 0;
     } else {
 	code = EINVAL;
     }

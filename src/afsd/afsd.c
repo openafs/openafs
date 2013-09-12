@@ -2496,6 +2496,9 @@ afsd_run(void)
 	if (afsd_verbose)
 	    printf("%s: Forking 'rmtsys' daemon.\n", rn);
 	afsd_fork(0, rmtsysd_thread, NULL);
+	code = afsd_call_syscall(AFSOP_SET_RMTSYS_FLAG, 1);
+	if (code)
+	    printf("%s: Error enabling rmtsys support.\n", rn);
     }
 #endif /* !UKERNEL */
     /*
