@@ -320,16 +320,22 @@ streamHandleAllocateChunk(void)
 /*
  * Get a file descriptor handle given an Inode handle
  * Takes the given file descriptor, and creates a new FdHandle_t for it,
- * attached to the given IHandle_t. fd can be INVALID_FD, indicating that the
- * caller failed to open the relevant file because we had too many FDs open;
- * ih_attachfd_r will then just evict/close an existing fd in the cache, and
- * return NULL.
+ * attached to the given IHandle_t. If fdLruHead is not NULL, fd can be
+ * INVALID_FD, indicating that the caller failed to open the relevant file
+ * because we had too many FDs open; ih_attachfd_r will then just evict/close
+ * an existing fd in the cache, and return NULL. You must not call this
+ * function with an invalid fd while fdLruHead is NULL; instead, error out.
  */
 static FdHandle_t *
 ih_attachfd_r(IHandle_t *ihP, FD_t fd)
 {
     FD_t closeFd;
     FdHandle_t *fdP;
+
+    /* If the given fd is invalid, we must have an available fd to close.
+     * Otherwise, the caller must have realized this before calling
+     * ih_attachfd_r and yielded an error before getting here. */
+    opr_Assert(fd != INVALID_FD || fdLruHead != NULL);
 
     /* fdCacheSize limits the size of the descriptor cache, but
      * we permit the number of open files to exceed fdCacheSize.
@@ -390,14 +396,16 @@ ih_attachfd(IHandle_t *ihP, FD_t fd)
 {
     FdHandle_t *fdP;
 
+    if (fd == INVALID_FD) {
+	return NULL;
+    }
+
     IH_LOCK;
 
     fdInUseCount += 1;
 
     fdP = ih_attachfd_r(ihP, fd);
-    if (!fdP) {
-	fdInUseCount -= 1;
-    }
+    opr_Assert(fdP);
 
     IH_UNLOCK;
 
