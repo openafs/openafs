@@ -791,10 +791,8 @@ struct file_operations afs_file_fops = {
 #ifdef HAVE_LINUX_GENERIC_FILE_AIO_READ
   .aio_read =	afs_linux_aio_read,
   .aio_write =	afs_linux_aio_write,
-#ifdef STRUCT_FILE_OPERATIONS_HAS_WRITEV
   .read =	do_sync_read,
   .write =	do_sync_write,
-#endif
 #else
   .read =	afs_linux_read,
   .write =	afs_linux_write,
