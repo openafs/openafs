@@ -555,6 +555,9 @@ afsd_check_mount(const char *rn, const char *mountdir)
     } else if (!S_ISDIR(statbuf.st_mode)) {
 	printf("%s: Mountpoint %s is not a directory.\n", rn, mountdir);
 	return -1;
+    } else if (mountdir[0] != '/') {
+	printf("%s: Mountpoint %s is not an absolute path.\n", rn, mountdir);
+	return -1;
     }
     return 0;
 }
