@@ -48,7 +48,6 @@ struct ilist {
 
 /* called with a structure specifying info about the inode, and our rock (which
  * is the volume ID.  Returns true if we should keep this inode, otherwise false.
- * Note that ainfo->u.param[0] is always the volume ID, for any vice inode.
  */
 static int
 NukeProc(struct ViceInodeInfo *ainfo, VolumeId avolid, void *arock)
@@ -62,8 +61,21 @@ NukeProc(struct ViceInodeInfo *ainfo, VolumeId avolid, void *arock)
 #endif /* !AFS_PTHREAD_ENV */
 
     /* check if this is the volume we're looking for */
-    if (ainfo->u.param[0] != avolid)
-	return 0;		/* don't want this one */
+    if (ainfo->u.vnode.vnodeNumber == INODESPECIAL) {
+	/* For special inodes, look at both the volume id and the parent id.
+	 * If we were given an RW vol id to nuke, we should delete the special
+	 * inodes for all volumes in the VG, since we're deleting all of the
+	 * regular inodes, too. If we don't do this, on namei would be
+	 * impossible to nuke the special inodes for a non-RW volume. */
+	if (ainfo->u.special.volumeId != avolid && ainfo->u.special.parentId != avolid) {
+	    return 0;
+	}
+    } else {
+	if (ainfo->u.vnode.volumeId != avolid) {
+	    return 0;		/* don't want this one */
+	}
+    }
+
     /* record the info */
     if (!*allInodes || (*allInodes)->freePtr >= MAXATONCE) {
 	ti = calloc(1, sizeof(struct ilist));
