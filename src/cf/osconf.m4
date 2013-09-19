@@ -182,7 +182,7 @@ case $AFS_SYSNAME in
 		XCFLAGS="-O2 -pipe -fPIC"
 		;;
 
-	*nbsd2*|*nbsd3*|*nbsd4*|*nbsd5*|*nbsd6*)
+	*nbsd2*|*nbsd3*|*nbsd4*|*nbsd5*|*nbsd6*|*nbsd7*)
 		MT_CFLAGS='-pthread -D_REENTRANT'
 		PAM_OPTMZ=-O2
 		PAM_CFLAGS="-pipe -fPIC"

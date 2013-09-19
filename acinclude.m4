@@ -755,6 +755,7 @@ case $AFS_SYSNAME in
     *_nbsd40)   AFS_PARAM_COMMON=param.nbsd40.h  ;;
     *_nbsd50)   AFS_PARAM_COMMON=param.nbsd50.h  ;;
     *_nbsd60)   AFS_PARAM_COMMON=param.nbsd60.h  ;;
+    *_nbsd70)   AFS_PARAM_COMMON=param.nbsd70.h  ;;
     *_obsd31)   AFS_PARAM_COMMON=param.obsd31.h  ;;
     *_obsd32)   AFS_PARAM_COMMON=param.obsd32.h  ;;
     *_obsd33)   AFS_PARAM_COMMON=param.obsd33.h  ;;

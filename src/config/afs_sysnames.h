@@ -257,6 +257,8 @@
 #define SYS_NAME_ID_macppc_nbsd50       2541
 #define SYS_NAME_ID_amd64_nbsd60        2542
 #define SYS_NAME_ID_i386_nbsd60         2543
+#define SYS_NAME_ID_amd64_nbsd70        2544
+#define SYS_NAME_ID_i386_nbsd70         2545
 
 #define SYS_NAME_ID_i386_obsd31		2600
 #define SYS_NAME_ID_i386_obsd32		2601
