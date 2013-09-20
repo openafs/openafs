@@ -373,8 +373,6 @@ static token tokstrings[] = {
     {TOK_OPAQUE, "opaque"},
     {TOK_BOOL, "bool"},
     {TOK_VOID, "void"},
-    {TOK_PROGRAM, "program"},
-    {TOK_VERSION, "version"},
     {TOK_PACKAGE, "package"},
     {TOK_PREFIX, "prefix"},
     {TOK_STATINDEX, "statindex"},

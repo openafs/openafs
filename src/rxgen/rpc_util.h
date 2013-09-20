@@ -102,9 +102,6 @@ extern void tabify(FILE * f, int tab);
 #define FINDVAL(list,item,finder) \
 	findval(list, (char *) item, finder)
 
-/* rpc_clntout.c */
-extern void write_stubs(void);
-
 /* rpc_cout.c */
 extern void emit(definition * def);
 extern void print_param(declaration * dec);
@@ -112,7 +109,6 @@ extern void print_param(declaration * dec);
 /* rpc_hout.c */
 extern void print_datadef(definition * def);
 extern void pdefine(char *name, char *num);
-extern void pprocdef(proc_list * proc, version_list * vp);
 
 /* rpc_parse.c */
 extern list *proc_defined[MAX_PACKAGES], *special_defined, *typedef_defined,
@@ -153,13 +149,6 @@ extern int IsRxgenDefinition(definition * def);
 
 extern proc1_list *Proc_list, **Proc_listp;
 
-
-/* rpc_svcout.c */
-extern int nullproc(proc_list * proc);
-extern void write_programs(char *storage);
-extern void write_rest(void);
-extern void write_most(void);
-extern void write_register(char *transp);
 
 /* rpc_scan.c */
 extern int pushed;

@@ -47,9 +47,6 @@
 static void pconstdef(definition * def);
 static void pstructdef(definition * def);
 static void puniondef(definition * def);
-static void puldefine(char *name, char *num);
-static int define_printed(proc_list * stop, version_list * start);
-static void pprogramdef(definition * def);
 static void psproc1(definition * defp, int callTconnF, char *type,
 		    char *prefix, int iomask);
 static void psprocdef(definition * defp);
@@ -83,9 +80,6 @@ print_datadef(definition * def)
     case DEF_TYPEDEF:
 	ptypedef(def);
 	break;
-    case DEF_PROGRAM:
-	pprogramdef(def);
-	break;
     case DEF_PROC:
 	psprocdef(def);
 	break;
@@ -95,8 +89,7 @@ print_datadef(definition * def)
     default:
 	break;
     }
-    if (def->def_kind != DEF_PROGRAM && def->def_kind != DEF_CONST
-	&& (!IsRxgenDefinition(def))) {
+    if (def->def_kind != DEF_CONST && (!IsRxgenDefinition(def))) {
 	f_print(fout, "bool_t xdr_%s(XDR *xdrs, %s *objp);\n", def->def_name,
 		def->def_name);
     }
@@ -164,50 +157,6 @@ void
 pdefine(char *name, char *num)
 {
     f_print(fout, "#define %s %s\n", name, num);
-}
-
-static void
-puldefine(char *name, char *num)
-{
-    f_print(fout, "#define %s ((afs_uint32)%s)\n", name, num);
-}
-
-static int
-define_printed(proc_list * stop, version_list * start)
-{
-    version_list *vers;
-    proc_list *proc;
-
-    for (vers = start; vers != NULL; vers = vers->next) {
-	for (proc = vers->procs; proc != NULL; proc = proc->next) {
-	    if (proc == stop) {
-		return (0);
-	    } else if (streq(proc->proc_name, stop->proc_name)) {
-		return (1);
-	    }
-	}
-    }
-    abort();
-    return 0;/* NOTREACHED */
-}
-
-
-static void
-pprogramdef(definition * def)
-{
-    version_list *vers;
-    proc_list *proc;
-
-    puldefine(def->def_name, def->def.pr.prog_num);
-    for (vers = def->def.pr.versions; vers != NULL; vers = vers->next) {
-	puldefine(vers->vers_name, vers->vers_num);
-	for (proc = vers->procs; proc != NULL; proc = proc->next) {
-	    if (!define_printed(proc, def->def.pr.versions)) {
-		puldefine(proc->proc_name, proc->proc_num);
-	    }
-	    pprocdef(proc, vers);
-	}
-    }
 }
 
 static void
@@ -281,29 +230,6 @@ psprocdef(definition * defp)
 
     if (*ServerPrefix)
 	psproc1(defp, 3, "afs_int32", ServerPrefix, 0xFFFFFFFF);
-}
-
-
-void
-pprocdef(proc_list * proc, version_list * vp)
-{
-    f_print(fout, "extern ");
-    if (proc->res_prefix) {
-	if (streq(proc->res_prefix, "enum")) {
-	    f_print(fout, "enum ");
-	} else {
-	    f_print(fout, "struct ");
-	}
-    }
-    if (streq(proc->res_type, "bool")) {
-	f_print(fout, "bool_t *");
-    } else if (streq(proc->res_type, "string")) {
-	f_print(fout, "char **");
-    } else {
-	f_print(fout, "%s *", fixtype(proc->res_type));
-    }
-    pvname(proc->proc_name, vp->vers_num);
-    f_print(fout, "();\n");
 }
 
 static void
@@ -472,12 +398,10 @@ undefined2(char *type, char *stop)
 
     for (l = defined; l != NULL; l = l->next) {
 	def = (definition *) l->val;
-	if (def->def_kind != DEF_PROGRAM) {
-	    if (streq(def->def_name, stop)) {
-		return (1);
-	    } else if (streq(def->def_name, type)) {
-		return (0);
-	    }
+	if (streq(def->def_name, stop)) {
+	    return (1);
+	} else if (streq(def->def_name, type)) {
+	    return (0);
 	}
     }
     return (1);

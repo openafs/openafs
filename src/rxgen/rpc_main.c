@@ -52,9 +52,6 @@ struct commandline {
     int brief_flag;
     int cflag;
     int hflag;
-    int lflag;
-    int sflag;
-    int mflag;
     int Cflag;
     int Sflag;
     int rflag;
@@ -121,10 +118,6 @@ static void c_output(char *infile, char *define, int extend, char *outfile,
 		     int append);
 static void h_output(char *infile, char *define, int extend, char *outfile,
 		     int append);
-static void s_output(int argc, char *argv[], char *infile, char *define,
-		     int extend, char *outfile, int nomain);
-static void l_output(char *infile, char *define, int extend, char *outfile);
-static void do_registers(int argc, char *argv[]);
 static int parseargs(int argc, char *argv[], struct commandline *cmd);
 static void C_output(char *infile, char *define, int extend, char *outfile,
 		     int append);
@@ -159,9 +152,9 @@ main(int argc, char *argv[])
     if (!parseargs(argc, argv, &cmd)) {
 	f_print(stderr, "usage: %s infile\n", cmdname);
 	f_print(stderr,
-		"       %s [-c | -h | -l | -m | -C | -S | -r | -b | -k | -R | -p | -d | -z | -u] [-Pprefix] [-Idir] [-o outfile] [infile]\n",
+		"       %s [-c | -h | -C | -S | -r | -b | -k | -p | -d | -z | -u] [-Pprefix] [-Idir] [-o outfile] [infile]\n",
 		cmdname);
-	f_print(stderr, "       %s [-s udp|tcp]* [-o outfile] [infile]\n",
+	f_print(stderr, "       %s [-o outfile] [infile]\n",
 		cmdname);
 	exit(1);
     }
@@ -173,11 +166,6 @@ main(int argc, char *argv[])
 	c_output(cmd.infile, "-DRPC_XDR", !EXTEND, cmd.outfile, 0);
     } else if (cmd.hflag) {
 	h_output(cmd.infile, "-DRPC_HDR", !EXTEND, cmd.outfile, 0);
-    } else if (cmd.lflag) {
-	l_output(cmd.infile, "-DRPC_CLNT", !EXTEND, cmd.outfile);
-    } else if (cmd.sflag || cmd.mflag) {
-	s_output(argc, argv, cmd.infile, "-DRPC_SVC", !EXTEND, cmd.outfile,
-		 cmd.mflag);
     } else if (cmd.Cflag) {
 	OutFileFlag = NULL;
 	C_output(cmd.infile, "-DRPC_CLIENT", !EXTEND, cmd.outfile, 1);
@@ -541,90 +529,6 @@ h_output(char *infile, char *define, int extend, char *outfile, int append)
     }
 }
 
-/*
- * Compile into an RPC service
- */
-static void
-s_output(int argc, char *argv[], char *infile, char *define, int extend,
-	 char *outfile, int nomain)
-{
-    char *include;
-    definition *def;
-    int foundprogram;
-    char *outfilename;
-
-    open_input(infile, define);
-    outfilename = extend ? extendfile(infile, outfile) : outfile;
-    open_output(infile, outfilename);
-    f_print(fout, "#include <stdio.h>\n");
-    f_print(fout, "#include <rpc/rpc.h>\n");
-    if (infile && (include = extendfile(infile, ".h"))) {
-	f_print(fout, "#include \"%s\"\n", include);
-	free(include);
-    }
-    foundprogram = 0;
-    while ((def = get_definition())) {
-	foundprogram |= (def->def_kind == DEF_PROGRAM);
-    }
-    if (extend && !foundprogram) {
-	(void)unlink(outfilename);
-	return;
-    }
-    if (nomain) {
-	write_programs(NULL);
-    } else {
-	write_most();
-	do_registers(argc, argv);
-	write_rest();
-	write_programs("static");
-    }
-}
-
-static void
-l_output(char *infile, char *define, int extend, char *outfile)
-{
-    char *include;
-    definition *def;
-    int foundprogram;
-    char *outfilename;
-
-    open_input(infile, define);
-    outfilename = extend ? extendfile(infile, outfile) : outfile;
-    open_output(infile, outfilename);
-    f_print(fout, "#include <rpc/rpc.h>\n");
-    f_print(fout, "#include <sys/time.h>\n");
-    if (infile && (include = extendfile(infile, ".h"))) {
-	f_print(fout, "#include \"%s\"\n", include);
-	free(include);
-    }
-    foundprogram = 0;
-    while ((def = get_definition())) {
-	foundprogram |= (def->def_kind == DEF_PROGRAM);
-    }
-    if (extend && !foundprogram) {
-	(void)unlink(outfilename);
-	return;
-    }
-    write_stubs();
-}
-
-/*
- * Perform registrations for service output
- */
-static void
-do_registers(int argc, char *argv[])
-{
-    int i;
-
-    for (i = 1; i < argc; i++) {
-	if (streq(argv[i], "-s")) {
-	    write_register(argv[i + 1]);
-	    i++;
-	}
-    }
-}
-
-
 static void
 C_output(char *infile, char *define, int extend, char *outfile, int append)
 {
@@ -827,13 +731,10 @@ parseargs(int argc, char *argv[], struct commandline *cmd)
 		case 'A':
 		case 'c':
 		case 'h':
-		case 'l':
-		case 'm':
 		case 'C':
 		case 'S':
 		case 'b':
 		case 'r':
-		case 'R':
 		case 'k':
 		case 'p':
 		case 'd':
@@ -847,7 +748,6 @@ parseargs(int argc, char *argv[], struct commandline *cmd)
 		    flag[(int)c] = 1;
 		    break;
 		case 'o':
-		case 's':
 		    if (argv[i][j - 1] != '-' || argv[i][j + 1] != 0) {
 			return (0);
 		    }
@@ -855,16 +755,10 @@ parseargs(int argc, char *argv[], struct commandline *cmd)
 		    if (++i == argc) {
 			return (0);
 		    }
-		    if (c == 's') {
-			if (!streq(argv[i], "udp") && !streq(argv[i], "tcp")) {
-			    return (0);
-			}
-		    } else if (c == 'o') {
-			if (cmd->outfile) {
-			    return (0);
-			}
-			cmd->outfile = argv[i];
+		    if (cmd->outfile) {
+			return (0);
 		    }
+		    cmd->outfile = argv[i];
 		    goto nextarg;
 		case 'P':
 		    if (argv[i][j - 1] != '-')
@@ -892,9 +786,6 @@ parseargs(int argc, char *argv[], struct commandline *cmd)
     cmd->brief_flag = brief_flag = flag['b'];
     cmd->cflag = cflag = flag['c'];
     cmd->hflag = hflag = flag['h'];
-    cmd->sflag = flag['s'];
-    cmd->lflag = flag['l'];
-    cmd->mflag = flag['m'];
     cmd->xflag = xflag = flag['x'];
     cmd->yflag = yflag = flag['y'];
     cmd->Cflag = Cflag = flag['C'];
@@ -908,8 +799,7 @@ parseargs(int argc, char *argv[], struct commandline *cmd)
     if (cmd->pflag)
 	combinepackages = 1;
     nflags =
-	cmd->cflag + cmd->hflag + cmd->sflag + cmd->lflag + cmd->mflag +
-	cmd->Cflag + cmd->Sflag + cmd->rflag;
+	cmd->cflag + cmd->hflag + cmd->Cflag + cmd->Sflag + cmd->rflag;
     if (nflags == 0) {
 	if (cmd->outfile != NULL || cmd->infile == NULL) {
 	    return (0);

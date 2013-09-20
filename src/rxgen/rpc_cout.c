@@ -72,7 +72,7 @@ static void print_rxifsizeof(char *prefix, char *type);
 void
 emit(definition * def)
 {
-    if (def->def_kind == DEF_PROGRAM || def->def_kind == DEF_CONST) {
+    if (def->def_kind == DEF_CONST) {
 	return;
     }
     print_header(def);
@@ -98,7 +98,7 @@ emit(definition * def)
 static int
 findtype(definition * def, char *type)
 {
-    if (def->def_kind == DEF_PROGRAM || def->def_kind == DEF_CONST) {
+    if (def->def_kind == DEF_CONST) {
 	return (0);
     } else {
 	return (streq(def->def_name, type));

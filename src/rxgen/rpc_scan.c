@@ -403,8 +403,6 @@ static token symbols[] = {
     {TOK_FLOAT, "float"},
     {TOK_DOUBLE, "double"},
     {TOK_STRING, "string"},
-    {TOK_PROGRAM, "program"},
-    {TOK_VERSION, "version"},
     {TOK_PACKAGE, "package"},
     {TOK_PREFIX, "prefix"},
     {TOK_STATINDEX, "statindex"},

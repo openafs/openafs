@@ -82,7 +82,6 @@ int function_list_index;
 /* static prototypes */
 static void isdefined(definition * defp);
 static void def_struct(definition * defp);
-static void def_program(definition * defp);
 static void def_enum(definition * defp);
 static void def_const(definition * defp);
 static void def_union(definition * defp);
@@ -176,9 +175,6 @@ get_definition(void)
 	break;
     case TOK_ENUM:
 	def_enum(defp);
-	break;
-    case TOK_PROGRAM:
-	def_program(defp);
 	break;
     case TOK_CONST:
 	def_const(defp);
@@ -279,64 +275,6 @@ def_struct(definition * defp)
 
     if (special)
 	STOREVAL(&complex_defined, defp);
-}
-
-static void
-def_program(definition * defp)
-{
-    token tok;
-    version_list *vlist;
-    version_list **vtailp;
-    proc_list *plist;
-    proc_list **ptailp;
-
-    defp->def_kind = DEF_PROGRAM;
-    scan(TOK_IDENT, &tok);
-    defp->def_name = tok.str;
-    scan(TOK_LBRACE, &tok);
-    vtailp = &defp->def.pr.versions;
-    scan(TOK_VERSION, &tok);
-    do {
-	scan(TOK_IDENT, &tok);
-	vlist = ALLOC(version_list);
-	vlist->vers_name = tok.str;
-	scan(TOK_LBRACE, &tok);
-	ptailp = &vlist->procs;
-	do {
-	    plist = ALLOC(proc_list);
-	    get_type(&plist->res_prefix, &plist->res_type, DEF_PROGRAM);
-	    if (streq(plist->res_type, "opaque")) {
-		error("illegal result type");
-	    }
-	    scan(TOK_IDENT, &tok);
-	    plist->proc_name = tok.str;
-	    scan(TOK_LPAREN, &tok);
-	    get_type(&plist->arg_prefix, &plist->arg_type, DEF_PROGRAM);
-	    if (streq(plist->arg_type, "opaque")) {
-		error("illegal argument type");
-	    }
-	    scan(TOK_RPAREN, &tok);
-	    scan(TOK_EQUAL, &tok);
-	    scan_num(&tok);
-	    scan(TOK_SEMICOLON, &tok);
-	    plist->proc_num = tok.str;
-	    *ptailp = plist;
-	    ptailp = &plist->next;
-	    peek(&tok);
-	} while (tok.kind != TOK_RBRACE);
-	*vtailp = vlist;
-	vtailp = &vlist->next;
-	scan(TOK_RBRACE, &tok);
-	scan(TOK_EQUAL, &tok);
-	scan_num(&tok);
-	vlist->vers_num = tok.str;
-	scan(TOK_SEMICOLON, &tok);
-	scan2(TOK_VERSION, TOK_RBRACE, &tok);
-    } while (tok.kind == TOK_VERSION);
-    scan(TOK_EQUAL, &tok);
-    scan_num(&tok);
-    defp->def.pr.prog_num = tok.str;
-    *vtailp = NULL;
 }
 
 static void
@@ -522,8 +460,8 @@ get_type(char **prefixp, char **typep, defkind dkind)
 	(void)peekscan(TOK_INT, &tok);
 	break;
     case TOK_VOID:
-	if (dkind != DEF_UNION && dkind != DEF_PROGRAM) {
-	    error("voids allowed only inside union and program definitions");
+	if (dkind != DEF_UNION) {
+	    error("voids allowed only inside union definitions");
 	}
 	*typep = tok.str;
 	break;

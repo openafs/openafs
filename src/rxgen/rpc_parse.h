@@ -51,7 +51,6 @@ enum defkind {
     DEF_UNION,
     DEF_ENUM,
     DEF_TYPEDEF,
-    DEF_PROGRAM
 };
 typedef enum defkind defkind;
 
@@ -123,34 +122,6 @@ struct union_def {
 };
 typedef struct union_def union_def;
 
-
-
-struct proc_list {
-    char *proc_name;
-    char *proc_num;
-    char *arg_type;
-    char *arg_prefix;
-    char *res_type;
-    char *res_prefix;
-    struct proc_list *next;
-};
-typedef struct proc_list proc_list;
-
-
-struct version_list {
-    char *vers_name;
-    char *vers_num;
-    proc_list *procs;
-    struct version_list *next;
-};
-typedef struct version_list version_list;
-
-struct program_def {
-    char *prog_num;
-    version_list *versions;
-};
-typedef struct program_def program_def;
-
 struct param_list {
     defkind param_kind;
     char *param_name;
@@ -220,7 +191,6 @@ struct definition {
 	union_def un;
 	enum_def en;
 	typedef_def ty;
-	program_def pr;
 	spec_def sd;
     } def;
     procedure_def pc;

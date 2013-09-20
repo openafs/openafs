@@ -28,9 +28,7 @@ EXEOBJS =\
 	$(OUT)\rpc_cout.obj \
 	$(OUT)\rpc_parse.obj \
 	$(OUT)\rpc_scan.obj \
-	$(OUT)\rpc_util.obj \
-	$(OUT)\rpc_svcout.obj \
-	$(OUT)\rpc_clntout.obj
+	$(OUT)\rpc_util.obj
 
 $(EXEOBJS): $$(@B).c
     $(C2OBJ) $**
