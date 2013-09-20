@@ -275,7 +275,7 @@ print_ifstat(int indent, char *prefix, char *type, relation rel, char *amax,
 	break;
     case REL_ALIAS:
 	print_ifopen(indent, type);
-        print_ifarg_with_cast(1, type, objname);
+	print_ifarg(objname);
 	break;
     }
     print_ifclose(indent);
