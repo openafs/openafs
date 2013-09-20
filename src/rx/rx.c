@@ -622,11 +622,9 @@ rx_InitHost(u_int host, u_int port)
     rx_GetIFInfo();
 #endif
 
-#if defined(RXK_LISTENER_ENV) || !defined(KERNEL)
     /* Start listener process (exact function is dependent on the
      * implementation environment--kernel or user space) */
     rxi_StartListener();
-#endif
 
     USERPRI;
     tmp_status = rxinit_status = 0;
