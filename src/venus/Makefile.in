@@ -362,6 +362,7 @@ dest: kdump-build fs livesys up fstrace cmdebug afsio
 #
 
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o *.a up fs kdump-* kdump kdump64 core cmdebug \
 		AFS_component_version_number.c fstrace gcpags livesys dedebug \
 		cacheout afsio

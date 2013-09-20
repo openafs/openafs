@@ -317,6 +317,7 @@ dest: kaserver kas kpwvalid kas klog klog.krb knfs kpasswd libkauth.a \
 # Misc. targets
 #
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o *.a *.xdr.c *.cs.c *.ss.c core \
 		kaserver kas klog multiklog kpasswd klogin rebuild \
 		ka-forwarder \

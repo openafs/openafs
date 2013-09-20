@@ -67,7 +67,7 @@ $(TOP_INCDIR)/opr/uuid.h: ${srcdir}/uuid.h
 
 clean:
 	$(LT_CLEAN)
-	rm -f libopr.a
+	rm -f libopr.a *.o
 
 install: libopr.a
 	$(INSTALL_DATA) libopr.a $(DESTDIR)$(libdir)/libopr.a

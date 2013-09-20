@@ -63,6 +63,7 @@ afsd_fuse.o: afsd_fuse.c AFS_component_version_number.c
 vsys.o: vsys.c AFS_component_version_number.c
 
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o vsys afsd afsd.fuse core AFS_component_version_number.c
 
 system: install
