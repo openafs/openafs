@@ -161,7 +161,11 @@ print_ifarg(char *arg)
 static void
 print_ifarg_with_cast(int ptr_to, char *type, char *arg)
 {
-    f_print(fout, ptr_to ? ", (%s *) %s" : ", (%s) %s", type, arg);
+    if (streq(type, "bool")) {
+	f_print(fout, ptr_to ? ", (bool_t *) %s" : ", (bool_t) %s", arg);
+    } else {
+	f_print(fout, ptr_to ? ", (%s *) %s" : ", (%s) %s", type, arg);
+    }
 }
 
 static void
