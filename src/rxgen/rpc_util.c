@@ -59,7 +59,6 @@ list *defined;			/* list of defined things */
 /* static prototypes */
 static int findit(definition * def, char *type);
 static char *fixit(char *type, char *orig);
-static int typedefed(definition * def, char *type);
 static char *locase(char *str);
 static char *toktostr(tok_kind kind);
 static void printbuf(void);
@@ -189,21 +188,9 @@ ptype(char *prefix, char *type, int follow)
 }
 
 
-static int
-typedefed(definition * def, char *type)
-{
-    if (def->def_kind != DEF_TYPEDEF || def->def.ty.old_prefix != NULL) {
-	return (0);
-    } else {
-	return (streq(def->def_name, type));
-    }
-}
-
 int
 isvectordef(char *type, relation rel)
 {
-    definition *def;
-
     for (;;) {
 	switch (rel) {
 	case REL_VECTOR:
@@ -213,12 +200,7 @@ isvectordef(char *type, relation rel)
 	case REL_POINTER:
 	    return (0);
 	case REL_ALIAS:
-	    def = (definition *) FINDVAL(defined, type, typedefed);
-	    if (def == NULL) {
-		return (0);
-	    }
-	    type = def->def.ty.old_type;
-	    rel = def->def.ty.rel;
+	    return (0);
 	}
     }
 }
