@@ -117,7 +117,7 @@ multi_Finalize(struct multi_handle *mh)
     MUTEX_DESTROY(&mh->lock);
     CV_DESTROY(&mh->cv);
     osi_Free(mh->calls, sizeof(struct rx_call *) * nCalls);
-    osi_Free(mh->ready, sizeof(short *) * nCalls);
+    osi_Free(mh->ready, sizeof(short) * nCalls);
     osi_Free(mh, sizeof(struct multi_handle));
 }
 
@@ -135,6 +135,6 @@ multi_Finalize_Ignore(struct multi_handle *mh)
     MUTEX_DESTROY(&mh->lock);
     CV_DESTROY(&mh->cv);
     osi_Free(mh->calls, sizeof(struct rx_call *) * nCalls);
-    osi_Free(mh->ready, sizeof(short *) * nCalls);
+    osi_Free(mh->ready, sizeof(short) * nCalls);
     osi_Free(mh, sizeof(struct multi_handle));
 }
