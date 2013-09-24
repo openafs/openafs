@@ -1714,6 +1714,7 @@ SetFields(struct cmd_syndesc *as, void *arock)
     afs_uint32 aserver;
     afs_int32 apart;
     int previdx = -1;
+    int have_field = 0;
 
     volid = vsu_GetVolumeID(as->parms[0].items->data, cstruct, &err);	/* -id */
     if (volid == 0) {
@@ -1747,6 +1748,7 @@ SetFields(struct cmd_syndesc *as, void *arock)
 
     if (as->parms[1].items) {
 	/* -max <quota> */
+	have_field = 1;
 	code = util_GetHumanInt32(as->parms[1].items->data, &info.maxquota);
 	if (code) {
 	    fprintf(STDERR, "invalid quota value\n");
@@ -1755,11 +1757,17 @@ SetFields(struct cmd_syndesc *as, void *arock)
     }
     if (as->parms[2].items) {
 	/* -clearuse */
+	have_field = 1;
 	info.dayUse = 0;
     }
     if (as->parms[3].items) {
 	/* -clearVolUpCounter */
+	have_field = 1;
 	info.spare2 = 0;
+    }
+    if (!have_field) {
+	fprintf(STDERR,"Nothing to set.\n");
+	return (1);
     }
     code = UV_SetVolumeInfo(aserver, apart, volid, &info);
     if (code)
