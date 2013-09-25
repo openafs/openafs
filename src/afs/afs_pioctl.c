@@ -815,9 +815,15 @@ afs_xioctl(afs_proc_t *p, struct ioctl_args *uap, register_t *retval)
 #   else
     fdp = p->p_fd;
 #endif
+#if defined(AFS_FBSD100_ENV)
+    if ((uap->fd >= fdp->fd_nfiles)
+	|| ((fd = fdp->fd_ofiles[uap->fd].fde_file) == NULL))
+	return EBADF;
+#else
     if ((u_int) uap->fd >= fdp->fd_nfiles
 	|| (fd = fdp->fd_ofiles[uap->fd]) == NULL)
 	return EBADF;
+#endif
     if ((fd->f_flag & (FREAD | FWRITE)) == 0)
 	return EBADF;
     /* first determine whether this is any sort of vnode */
