@@ -568,6 +568,9 @@ main(int argc, char **argv)
 		   "1.0",
 #endif
 		   "Starting AFS", FSLog);
+    if (afsconf_GetLatestKey(prdir, NULL, NULL) == 0) {
+	LogDesWarning();
+    }
 
     rx_StartServer(1);
     osi_audit(PTS_FinishEvent, -1, AUD_END);

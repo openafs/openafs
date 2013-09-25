@@ -469,6 +469,9 @@ main(int argc, char **argv)
     rx_SetMaxProcs(tservice, 4);
 
     LogCommandLine(argc, argv, "vlserver", VldbVersion, "Starting AFS", FSLog);
+    if (afsconf_GetLatestKey(tdir, NULL, NULL) == 0) {
+	LogDesWarning();
+    }
     VLog(0, ("%s\n", cml_version_number));
 
     /* allow super users to manage RX statistics */
