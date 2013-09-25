@@ -564,6 +564,9 @@ main(int argc, char **argv)
 
     LogCommandLine(argc, argv, "Volserver", VolserVersion, "Starting AFS",
 		   Log);
+    if (afsconf_GetLatestKey(tdir, NULL, NULL) == 0) {
+	LogDesWarning();
+    }
     if (TTsleep) {
 	Log("Will sleep %d second%s every %d second%s\n", TTsleep,
 	    (TTsleep > 1) ? "s" : "", TTrun + TTsleep,

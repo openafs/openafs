@@ -178,6 +178,7 @@ extern int LogThreadNum(void);
 extern void LogCommandLine(int argc, char **argv, const char *progname,
 			   const char *version, const char *logstring,
 			   void (*log) (const char *format, ...));
+extern void LogDesWarning(void);
 
 /* snprintf.c */
 
