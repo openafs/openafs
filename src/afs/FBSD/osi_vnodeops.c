@@ -54,12 +54,12 @@
 #include <sys/malloc.h>
 #include <sys/namei.h>
 #include <sys/unistd.h>
-#include <vm/vm_page.h>
-#include <vm/vm_object.h>
-#include <vm/vm_pager.h>
 #if __FreeBSD_version >= 1000030
 #include <sys/rwlock.h>
 #endif
+#include <vm/vm_page.h>
+#include <vm/vm_object.h>
+#include <vm/vm_pager.h>
 #include <vm/vnode_pager.h>
 extern int afs_pbuf_freecnt;
 
@@ -904,6 +904,9 @@ afs_vop_getpages(struct vop_getpages_args *ap)
 	}
 
 	if (i != ap->a_reqpage) {
+#if __FreeBSD_version >= 1000042
+	    vm_page_readahead_finish(m);
+#else
 	    /*
 	     * Whether or not to leave the page activated is up in
 	     * the air, but we should put the page on a page queue
@@ -937,6 +940,7 @@ afs_vop_getpages(struct vop_getpages_args *ap)
 		vm_page_free(m);
 		ma_vm_page_unlock(m);
 	    }
+#endif	/* __FreeBSD_version 1000042 */
 	}
     }
     ma_vm_page_unlock_queues();

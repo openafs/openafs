@@ -29,7 +29,7 @@
 #include "afs/afs_stats.h"	/* statistics */
 #include <vm/vm_object.h>
 #include <vm/vm_map.h>
-#include <limits.h>
+#include <sys/limits.h>
 #if __FreeBSD_version >= 1000030
 #include <sys/rwlock.h>
 #endif

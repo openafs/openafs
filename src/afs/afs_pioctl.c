@@ -820,6 +820,10 @@ afs_xioctl(afs_proc_t *p, const struct ioctl_args *uap, register_t *retval)
 #if defined(AFS_NBSD50_ENV)
     if ((fd = fd_getfile(SCARG(uap, fd))) == NULL)
 	return (EBADF);
+#elif defined(AFS_FBSD100_ENV)
+    if ((uap->fd >= fdp->fd_nfiles)
+	|| ((fd = fdp->fd_ofiles[uap->fd].fde_file) == NULL))
+	return EBADF;
 #else
     if ((uap->fd >= fdp->fd_nfiles)
 	|| ((fd = fdp->fd_ofiles[uap->fd]) == NULL))
