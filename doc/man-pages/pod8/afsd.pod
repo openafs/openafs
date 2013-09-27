@@ -541,10 +541,12 @@ When the dynamic root (B<-dynroot>, B<-dynroot-sparse>) and the fake stat
 provides a special directory named F</afs/.:mount> which allows access to
 volumes by volume name or ID.  The F</afs/.:mount> directory appears to be
 empty, but any name in the form of I<cell>:I<volume> will be resolved as a
-read-write mount point to the specified volume.  This dynamic mount feature is
-recommended only for temporary access to a volume.  Linux-based cache managers
-provide this dynamic mount feature even when dynamic root (B<-dynroot>,
-B<-dynroot-sparse>) is not in effect.
+read-write mount point to the specified volume.  For example, the
+I<user.jdoe> volume in the I<example.com> cell would be accessible at the
+following path: F</afs/.:mount/example.com:user.jdoe>.  This dynamic mount
+feature is recommended only for temporary access to a volume.  Linux-based
+cache managers provide this dynamic mount feature even when dynamic root
+(B<-dynroot>, B<-dynroot-sparse>) is not in effect.
 
 =item B<-dynroot-sparse>
 
