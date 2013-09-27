@@ -1975,7 +1975,8 @@ long cm_MergeStatus(cm_scache_t *dscp,
              * so leave it in place.
              */
             if (cm_FidCmp(&scp->fid, &bp->fid) == 0 &&
-                 lock_TryMutex(&bp->mx)) {
+                bp->refCount == 0 &&
+                lock_TryMutex(&bp->mx)) {
                 if (bp->refCount == 0 &&
                     !(bp->flags & (CM_BUF_READING | CM_BUF_WRITING | CM_BUF_DIRTY)) &&
                     !(bp->qFlags & CM_BUF_QREDIR)) {
