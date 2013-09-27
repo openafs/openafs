@@ -53,6 +53,7 @@
 # include "afs/param.h"
 #endif
 
+#include <linux/version.h>
 #if defined(ENABLE_LINUX_SYSCALL_PROBING)
 #include <linux/module.h> /* early to avoid printf->printk mapping */
 #include <scsi/scsi.h> /* for scsi_command_size */
@@ -64,7 +65,6 @@
 # include "afs/sysincludes.h"
 # include "afsincludes.h"
 #endif
-#include <linux/version.h>
 #include <linux/sched.h>
 #ifdef HAVE_LINUX_CONFIG_H
 # include <linux/config.h>
