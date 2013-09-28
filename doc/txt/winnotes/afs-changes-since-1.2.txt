@@ -1,3 +1,98 @@
+Release 1.7.2700; Changes since 1.7.2600
+
+ * If the cm_scache flags indicate the object is CM_SCACHEFLAG_DELETED,
+   do not request a callback.  Simply invalidate the data in the buffer
+   and move on.
+
+ * If the CM_SCACHEFLAG_DELETED flag is going to have any benefit, the
+   cm_scache object must not be removed from the hash table in response
+   to a VNOVNODE error.  Otherwise, a new cm_scache object is allocated,
+   the CM_SCACHEFLAG_DELETED is not found, and a new callback request
+   is issued to the file server which in response returns VNOVNODE.
+
+   Do this enough times and the abort threshold is triggered and then
+   the application becomes very unhappy with performance.
+
+ * If the scache object with CM_SCACHEFLAG_DELETED set is recycled
+   then the deleted state is lost and the cache manager cannot prevent
+   unnecessary FetchStatus queries to the file server.
+
+ * If AddConnection fails because DeviceIOcontrol fails, do not
+   return out of memory which is an unsupported error code.  Report
+   a network failure.
+
+ * Do not return STATUS_RETRY for rx timeouts.  Report the RPC server
+   unavailable instead.
+
+ * Since we know the cache size cannot be arbitrary size because it
+   must fit into contiguous process memory and because it is difficult
+   to compute the actual size limit, cap the size to 716800KB.
+
+ * Modify PopulateCurrentEntry follow mp rules.  It is always safe to
+   read the mount point target data, it is not always safe to evaluate
+   the volume id since the VLDB might not be reachable.  For directory
+   enumerations do not evaluate the target Fid.  Only do so for eval
+   by name and by id requests.
+
+ * Delay MP Target evaluation until required.  Do not evaluate the
+   Target FID of a mount point until such time as the target directory
+   must be accessed.
+
+ * Call AFSExeceptionFilter for all exceptions.  In many cases we
+   capture exceptions record and the Exception Code as ntStatus and move
+   on with life.   This patchset changes that.  All exceptions are passed
+   to AFSExceptionFilter so we do not miss anything.
+
+ * Section Object Resource acquires and releases are lost in the noise
+   of all of the rest of the locks.  Introduce a dedicated subsystem
+   just for Section Objects.
+
+ * The most recent fixes for Trend Micro AV deadlocks resulted in an
+   out of order lock acquisition.  Instead, pin the Cc FileObject during
+   section create.  This means that if we purge the data cache while the
+   section is being created then the MJ_CLOSE will not happen until we
+   unpin the FileObject. Thus we can drop any embarsssing locks prior to
+   the close and meddling antivirus products can do odd stuff in the
+   close path.
+
+ * Take FCB resource in presection create.  Fix a lock inversion in the
+   paging query file information path (called from within section create).
+   The query file takes the FCB resource, but that is a lower rank lock
+   than the SOP resource which is taken in AcquireFileForNtCreateSection.
+   We fix the inversion by grabbing the FCB resource in
+   AcquireFileForNtCreateSection.
+
+ * Now that the Fcb Resource and SectionObjectResource are held in
+   the FastIo pathway and the Trend Micro deadlock has been addressed
+   by holding a reference on the FileObject it is time to fix the
+   lock acquisition ordering.   For each CcPurgeSection call the
+   Fcb Resource will be held exclusive before the SectionObjectResource.
+
+ * If the CcPurge operation fails or cannot be performed, in addition
+   to setting the purge on close flag, set the verify data flag.  This
+   ensures that the next attempt to access the file will retry the purge.
+
+ * Do not leak cm_scache.activeRPC count.  If a callback race has been
+   lost cm_MergeStatus is not executed.  In that case either the
+   activeRPC count should not be incremented or must be decremented to
+   indicate that the current call has been completed.
+
+ * AFSCreate avoid race leading to NULL dereference.  If a test for NULL
+   is performed ahead of an assignment and then use of the assigned value,
+   there is a race which can result in the assigned value being NULL if
+   the value being assigned is altered by another thread.  Perform the
+   assignment first then test based upon that.
+
+ * It is possible for cm_MergeStatus() to be called while the
+   cm_buf_t.mx is already held.  If it is a panic occurs.  Test for
+   refcount == 0 before acquiring the lock in addition to afterwards.
+   If the refcount is not zero, then we do not need to acquire the
+   lock in any case.
+
+ * Freelance Do not chase mount points.  When adding mount points or
+   symlinks do not chase mount points when attempting to determine the
+   FID of the added object.
+
 Release 1.7.2600; Changes since 1.7.2500
 
  * Fixes for OpenAFS-SA-2013-0003 and OpenAFS-SA-2013-0004
