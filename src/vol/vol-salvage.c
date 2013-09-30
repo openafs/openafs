@@ -2013,18 +2013,18 @@ DoSalvageVolumeGroup(struct SalvInfo *salvinfo, struct InodeSummary *isp, int nV
 	if (Testing) {
 	    IH_INIT(salvinfo->VGLinkH, salvinfo->fileSysDevice, -1, -1);
 	} else {
-            int i, j;
-            struct ViceInodeInfo *ip;
+	    int i, j;
+	    struct ViceInodeInfo *ip;
 	    CreateLinkTable(salvinfo, isp, ino);
 	    fdP = IH_OPEN(salvinfo->VGLinkH);
-            /* Sync fake 1 link counts to the link table, now that it exists */
-            if (fdP) {
-            	for (i = 0; i < nVols; i++) {
-            		ip = allInodes + isp[i].index;
-		         for (j = isp[i].nSpecialInodes; j < isp[i].nInodes; j++) {
-				 namei_SetLinkCount(fdP, ip[j].inodeNumber, 1, 1);
+	    /* Sync fake 1 link counts to the link table, now that it exists */
+	    if (fdP) {
+		for (i = 0; i < nVols; i++) {
+		    ip = allInodes + isp[i].index;
+		    for (j = isp[i].nSpecialInodes; j < isp[i].nInodes; j++) {
+			namei_SetLinkCount(fdP, ip[j].inodeNumber, 1, 1);
 		    }
-            	}
+		}
 	    }
 	}
     }
