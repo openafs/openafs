@@ -2062,8 +2062,20 @@ DoSalvageVolumeGroup(struct SalvInfo *salvinfo, struct InodeSummary *isp, int nV
 		TraceBadLinkCounts--;	/* Limit reports, per volume */
 		Log("#### DEBUG #### Link count incorrect by %d; inode %s, size %llu, p=(%u,%u,%u,%u)\n", ip->linkCount, PrintInode(stmp, ip->inodeNumber), (afs_uintmax_t) ip->byteCount, ip->u.param[0], ip->u.param[1], ip->u.param[2], ip->u.param[3]); /* VolumeId in param */
 	    }
+
+	    /* If ip->linkCount is non-zero at this point, then the linkcount
+	     * for the inode on disk is wrong. Initially linkCount is set to
+	     * the actual link count of the inode on disk, and then we (the
+	     * salvager) decrement it for every reference to that inode that we
+	     * find. So if linkCount is still positive by this point, it means
+	     * that the linkcount on disk is too high, so we should DEC the
+	     * inode. If linkCount is negative, it means the linkcount is too
+	     * low, so we should INC the inode.
+	     *
+	     * If we get an error while INC'ing or DEC'ing, that's a little
+	     * odd and indicates a bug, but try to continue anyway, so the
+	     * volume may still be made accessible. */
 	    while (ip->linkCount > 0) {
-		/* below used to assert, not break */
 		if (!Testing) {
 		    if (IH_DEC(salvinfo->VGLinkH, ip->inodeNumber, ip->u.param[0])) {
 			Log("idec failed. inode %s errno %d\n",
@@ -2074,7 +2086,6 @@ DoSalvageVolumeGroup(struct SalvInfo *salvinfo, struct InodeSummary *isp, int nV
 		ip->linkCount--;
 	    }
 	    while (ip->linkCount < 0) {
-		/* these used to be asserts */
 		if (!Testing) {
 		    if (IH_INC(salvinfo->VGLinkH, ip->inodeNumber, ip->u.param[0])) {
 			Log("iinc failed. inode %s errno %d\n",
