@@ -1986,6 +1986,7 @@ DoSalvageVolumeGroup(struct SalvInfo *salvinfo, struct InodeSummary *isp, int nV
 		    ip = allInodes + isp[i].index;
 		    for (j = isp[i].nSpecialInodes; j < isp[i].nInodes; j++) {
 			namei_SetLinkCount(fdP, ip[j].inodeNumber, 1, 1);
+			ip[j].linkCount = 1;
 		    }
 		}
 	    }
