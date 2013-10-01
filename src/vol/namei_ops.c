@@ -1997,6 +1997,11 @@ _namei_examine_special(char * path1,
 	    "(dir_vgid=%" AFS_VOLID_FMT ", inode_vgid=%" AFS_VOLID_FMT ")\n",
 	    path1, dname, afs_printable_VolumeId_lu(myIH->ih_vid),
 	    afs_printable_VolumeId_lu(info.u.param[0]));
+	/* We need to set the linkCount to _something_, so linkCount
+	 * doesn't just contain stack garbage. Set it to 0, so in case
+	 * the salvager or whatever our caller is does try to process
+	 * this like a normal file, we won't try to INC or DEC it. */
+	info.linkCount = 0;
     } else {
 	char path2[512];
 	/* Open this handle */
