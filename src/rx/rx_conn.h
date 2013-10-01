@@ -63,6 +63,7 @@ struct rx_connection {
     void *securityData;		/* Private data for this conn's security class */
     u_short securityHeaderSize;	/* Length of security module's packet header data */
     u_short securityMaxTrailerSize;	/* Length of security module's packet trailer data */
+    int securityChallengeSent;	/* Have we ever sent a challenge? */
 
     int timeout;		/* Overall timeout per call (seconds) for this conn */
     int lastSendTime;		/* Last send time for this connection */

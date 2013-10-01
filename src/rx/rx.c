@@ -4806,6 +4806,16 @@ rxi_ReceiveResponsePacket(struct rx_connection *conn,
     if (RXS_CheckAuthentication(conn->securityObject, conn) == 0)
 	return np;
 
+    if (!conn->securityChallengeSent) {
+	/* We've never sent out a challenge for this connection, so this
+	 * response cannot possibly be correct; ignore it. This can happen
+	 * if we sent a challenge to the client, then we were restarted, and
+	 * then the client sent us a response. If we ignore the response, the
+	 * client will eventually resend a data packet, causing us to send a
+	 * new challenge and the client to send a new response. */
+	return np;
+    }
+
     /* Otherwise, have the security object evaluate the response packet */
     error = RXS_CheckResponse(conn->securityObject, conn, np);
     if (error) {
@@ -6868,6 +6878,7 @@ rxi_ChallengeEvent(struct rxevent *event,
 	    rxi_SendSpecial((struct rx_call *)0, conn, packet,
 			    RX_PACKET_TYPE_CHALLENGE, NULL, -1, 0);
 	    rxi_FreePacket(packet);
+	    conn->securityChallengeSent = 1;
 	}
 	clock_GetTime(&now);
 	when = now;
