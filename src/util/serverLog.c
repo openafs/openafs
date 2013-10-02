@@ -24,8 +24,6 @@
 
 #include <roken.h>		/* Must come after procmgmt.h */
 #include <afs/opr.h>
-
-#include <afs/opr.h>
 #include "afsutil.h"
 #include "fileutil.h"
 #include <lwp.h>
