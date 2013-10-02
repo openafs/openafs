@@ -13,7 +13,6 @@
 
 #include <stdio.h>
 #include <sys/time.h>
-#include <potpourri.h>
 #include "lwp.h"
 
 char semaphore;

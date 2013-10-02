@@ -119,9 +119,6 @@ ${TOP_INCDIR}/afs/thread_pool_types.h: ${srcdir}/thread_pool_types.h
 ${TOP_INCDIR}/afs/tabular_output.h: ${srcdir}/tabular_output.h
 	${INSTALL_DATA} $? $@
 
-${TOP_INCDIR}/potpourri.h: ${srcdir}/potpourri.h
-	${INSTALL_DATA} $? $@
-
 ${TOP_LIBDIR}/util.a: util.a
 	${INSTALL_DATA} $? $@
 
