@@ -1,5 +1,25 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.6.5.1
+
+Linux clients
+
+    * Support Linux kernels up to 3.12-rc3
+
+    * Fixed a bug that made core dumps and readv/writev calls in AFS space
+      fail with Linux kernels where generic_file_aio_read exists but not all
+      read/write operations have been switched to using aio_read/aio_write.
+      This affected at least RHEL 5.9 kernels. (RT #131729)
+
+    * Enhanced the keyring code to make PAGs work correctly on kernels with a
+      distribution specific change to the Linux keyring code. This affected at
+      least SLES 11 SP3 kernels.
+
+AIX clients
+
+    * Fixed a bug that caused the 1.6 AIX client to never receive any RX
+      packets in the kernel. (RT #131725)
+
 OpenAFS 1.6.5
 
 All platforms
