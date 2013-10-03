@@ -2043,15 +2043,33 @@ DoSalvageVolumeGroup(struct SalvInfo *salvinfo, struct InodeSummary *isp, int nV
 	int rw = (i == 0);
 	struct InodeSummary *lisp = &isp[i];
 #ifdef AFS_NAMEI_ENV
-	/* If only the RO is present on this partition, the link table
-	 * shows up as a RW volume special file. Need to make sure the
-	 * salvager doesn't try to salvage the non-existent RW.
-	 */
-	if (rw && nVols > 1 && isp[i].nSpecialInodes == 1) {
-	    /* If this only special inode is the link table, continue */
-	    if (inodes->u.special.type == VI_LINKTABLE) {
-		haveRWvolume = 0;
-		continue;
+	if (rw && (nVols > 1 || isp[i].nSpecialInodes == isp[i].nInodes)) {
+	    /* If nVols > 1, we have more than one vol in this volgroup, so
+	     * the RW inodes we detected may just be for the linktable, and
+	     * there is no actual RW volume.
+	     *
+	     * Additionally, if we only have linktable inodes (no other
+	     * special inodes, no data inodes), there is also no actual RW
+	     * volume to salvage; this is just cruft left behind by something
+	     * else. In that case nVols will only be 1, though, so also
+	     * perform this linktables-only check if we don't have any
+	     * non-special inodes. */
+	    int inode_i;
+	    int all_linktables = 1;
+	    for (inode_i = 0; inode_i < isp[i].nSpecialInodes; inode_i++) {
+		if (inodes[inode_i].u.special.type != VI_LINKTABLE) {
+		    all_linktables = 0;
+		    break;
+		}
+	    }
+	    if (all_linktables) {
+		/* All we have are linktable special inodes, so skip salvaging
+		 * the RW; there was never an RW volume here. If we don't do
+		 * this, we risk creating a new "phantom" RW that the VLDB
+		 * doesn't know about, which is confusing and can cause
+		 * problems. */
+		 haveRWvolume = 0;
+		 continue;
 	    }
 	}
 #endif
