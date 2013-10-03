@@ -111,6 +111,9 @@ AC_SUBST([AKLOG_KRB5_LIBS])
 dnl Probe for GSSAPI
 RRA_LIB_GSSAPI
 
+dnl Checks for summary
+OPENAFS_SUMMARY_CHECK_NAMEI
+
 AS_IF([test -d 'doc/man-pages'],
     [MAN_MAKEFILE="doc/man-pages/Makefile doc/man-pages/install-man"],
     [MAN_MAKEFILE=])
@@ -284,4 +287,4 @@ AC_OUTPUT([
  chmod a+x src/config/shlib-install])
 
 # print a final summary
-SUMMARY
+OPENAFS_SUMMARY
