@@ -632,6 +632,9 @@ afsconf_OpenInternal(struct afsconf_dir *adir, char *cell,
     cm_enumCellRegistry_t enumCellRegistry = {0, 0};
 #endif /* AFS_NT40_ENV */
 
+    /* init the keys queue before any call to afsconf_CloseInternal() */
+    _afsconf_InitKeys(adir);
+
     /* figure out the local cell name */
 #ifdef AFS_NT40_ENV
     i = GetCellNT(adir);
@@ -666,9 +669,6 @@ afsconf_OpenInternal(struct afsconf_dir *adir, char *cell,
     if (!tf) {
 	return -1;
     }
-
-    /* init the keys queue before any call to afsconf_CloseInternal() */
-    _afsconf_InitKeys(adir);
 
     /* The CellServDB file is now open.
      * The following code parses the contents of the
