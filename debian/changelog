@@ -1,3 +1,13 @@
+openafs (1.6.5-2) UNRELEASED; urgency=low
+
+  * Ignore errors when reading ThisCell in the openafs-client config
+    script.  If the file doesn't end in a newline, read will still succeed
+    and set the variable, but will exit with a non-zero status.  This
+    would abort configuration of the package without a useful error
+    message.
+
+ -- Russ Allbery <rra@debian.org>  Sat, 05 Oct 2013 11:27:07 -0700
+
 openafs (1.6.5-1) unstable; urgency=high
 
   * New upstream release.
