@@ -48,6 +48,17 @@ util_GetHumanInt32
 util_GetInt32
 util_GetInt64
 util_GetUInt32
+util_addTableBodyRow
+util_freeTable
+util_newCellContents
+util_newTable
+util_printTable
+util_printTableBody
+util_printTableFooter
+util_printTableHeader
+util_setTableBodyRow
+util_setTableFooter
+util_setTableHeader
 vFSLog
 volutil_GetPartitionID
 volutil_PartitionName
