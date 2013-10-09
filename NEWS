@@ -15,6 +15,10 @@ Linux clients
       distribution specific change to the Linux keyring code. This affected at
       least SLES 11 SP3 kernels.
 
+    * Fixed a bug that made compilation fail for Linux kernels without
+      keyring support. This affected at least the SLE 10 SDK and an
+      OEM version of SLES 11 SP1.
+
 AIX clients
 
     * Fixed a bug that caused the 1.6 AIX client to never receive any RX
