@@ -142,6 +142,22 @@ extern void LogDesWarning(void);
 
 /* sys.c */
 
+/* tabular_output.c */
+struct util_Table;
+extern struct util_Table* util_newTable(int Type, int numColumns,
+		char **ColumnHeaders, int *ColumnContentTypes,
+		int *ColumnWidths, int sortByColumn);
+extern char ** util_newCellContents(struct util_Table*);
+extern int util_printTableHeader(struct util_Table *Table);
+extern int util_printTableBody(struct util_Table *Table);
+extern int util_printTableFooter(struct util_Table *Table);
+extern int util_printTable(struct util_Table *Table);
+extern int util_addTableBodyRow(struct util_Table *Table, char **Contents);
+extern int util_setTableBodyRow(struct util_Table *Table, int RowIndex,
+				char **Contents);
+extern int util_setTableHeader(struct util_Table *Table, char **Contents);
+extern int util_setTableFooter(struct util_Table *Table, char **Contents);
+extern int util_freeTable(struct util_Table* Table);
 
 /* uuid.c */
 extern afs_int32 afs_uuid_equal(afsUUID * u1, afsUUID * u2);
