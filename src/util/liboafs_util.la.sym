@@ -12,6 +12,7 @@ OpenLog
 ReOpenLog
 SetLogThreadNumProgram
 SetupLogSignals
+WriteLogBuffer
 afsUUID_from_string
 afsUUID_to_string
 afs_htonuuid

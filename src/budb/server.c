@@ -424,16 +424,6 @@ main(int argc, char **argv)
     strcpy(cellConfDir, AFSDIR_SERVER_ETC_DIRPATH);
     globalConfPtr->cellConfigdir = cellConfDir;
 
-    /* open the log file */
-/*
-    globalConfPtr->log = fopen(DEFAULT_LOGNAME,"a");
-    if ( globalConfPtr->log == NULL )
-    {
-	printf("Can't open log file %s - aborting\n", DEFAULT_LOGNAME);
-	BUDB_EXIT(-1);
-    }
-*/
-
     srandom(1);
 
 #ifdef AFS_PTHREAD_ENV
@@ -451,16 +441,7 @@ main(int argc, char **argv)
 	BUDB_EXIT(0);
 
     /* open the log file */
-    globalConfPtr->log = fopen(AFSDIR_SERVER_BUDBLOG_FILEPATH, "a");
-    if (globalConfPtr->log == NULL) {
-	printf("Can't open log file %s - aborting\n",
-	       AFSDIR_SERVER_BUDBLOG_FILEPATH);
-	BUDB_EXIT(-1);
-    }
-
-    /* keep log closed so can remove it */
-
-    fclose(globalConfPtr->log);
+    OpenLog(AFSDIR_SERVER_BUDBLOG_FILEPATH);
 
     /* open the cell's configuration directory */
     LogDebug(4, "opening %s\n", globalConfPtr->cellConfigdir);
@@ -622,49 +603,21 @@ consistencyCheckDb(void)
 void
 LogDebug(int level, char *fmt, ... )
 {
-    va_list ap;
-
-    va_start(ap, fmt);
-
     if (debugging >= level) {
-	/* log normally closed so can remove it */
-	globalConfPtr->log = fopen(AFSDIR_SERVER_BUDBLOG_FILEPATH, "a");
-	if (globalConfPtr->log != NULL) {
-	    vfprintf(globalConfPtr->log, fmt, ap);
-	    fflush(globalConfPtr->log);
-	    fclose(globalConfPtr->log);
-	}
+	va_list ap;
+	va_start(ap, fmt);
+	vFSLog(fmt, ap);
+	va_end(ap);
     }
-    va_end(ap);
-}
-
-static char *
-TimeStamp(time_t t)
-{
-    struct tm *lt;
-    static char timestamp[20];
-
-    lt = localtime(&t);
-    strftime(timestamp, 20, "%m/%d/%Y %H:%M:%S", lt);
-    return timestamp;
 }
 
 void
 Log(char *fmt, ...)
 {
     va_list ap;
-    time_t now;
 
     va_start(ap, fmt);
-    globalConfPtr->log = fopen(AFSDIR_SERVER_BUDBLOG_FILEPATH, "a");
-    if (globalConfPtr->log != NULL) {
-	now = time(0);
-	fprintf(globalConfPtr->log, "%s ", TimeStamp(now));
-
-	vfprintf(globalConfPtr->log, fmt, ap);
-	fflush(globalConfPtr->log);
-	fclose(globalConfPtr->log);
-    }
+    vFSLog(fmt, ap);
     va_end(ap);
 }
 
@@ -672,42 +625,21 @@ void
 LogError(long code, char *fmt, ... )
 {
     va_list ap;
-    time_t now;
+    int len;
+    char buffer[1024];
 
     va_start(ap, fmt);
-    globalConfPtr->log = fopen(AFSDIR_SERVER_BUDBLOG_FILEPATH, "a");
-
-    if (globalConfPtr->log != NULL) {
-	now = time(0);
-	fprintf(globalConfPtr->log, "%s ", TimeStamp(now));
-
-	if (code)
-	    fprintf(globalConfPtr->log, "%s: %s\n", afs_error_table_name(code),
-		    afs_error_message(code));
-	vfprintf(globalConfPtr->log, fmt, ap );
-	fflush(globalConfPtr->log);
-	fclose(globalConfPtr->log);
+    len = vsnprintf(buffer, sizeof(buffer), fmt, ap);
+    va_end(ap);
+    if (len >= 1024) {
+	len = 1023;
+	buffer[1023] = '\0';
+    }
+    /* Be consistent with (unintentional?) historic behavior. */
+    if (code) {
+	FSLog("%s: %s\n", afs_error_table_name(code), afs_error_message(code));
+	WriteLogBuffer(buffer, len);
+    } else {
+	FSLog("%s", buffer);
     }
 }
-
-
-/*  ----------------
- * debug
- * ----------------
- */
-
-void
-LogNetDump(struct dump *dumpPtr)
-{
-    struct dump hostDump;
-    extern buServerConfP globalConfPtr;
-
-    dump_ntoh(dumpPtr, &hostDump);
-
-    globalConfPtr->log = fopen(AFSDIR_SERVER_BUDBLOG_FILEPATH, "a");
-    if (globalConfPtr->log != NULL) {
-	printDump(globalConfPtr->log, &hostDump);
-	fclose(globalConfPtr->log);
-    }
-}
-

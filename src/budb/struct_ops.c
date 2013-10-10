@@ -96,23 +96,6 @@ printDumpEntry(struct budb_dumpEntry *deptr)
     printPrincipal(&deptr->dumper);
 }
 
-/* printHashTable
- *	print the hash table structure, i.e. the header structure.
- */
-
-void
-printHashTable(FILE *fid, struct hashTable *htptr)
-{
-    fprintf(fid, "functionType = %d\n", htptr->functionType);
-    fprintf(fid, "threadOffset = %d\n", htptr->threadOffset);
-    fprintf(fid, "entries = %d\n", htptr->entries);
-    fprintf(fid, "length = %d\n", htptr->length);
-    fprintf(fid, "table = %d\n", htptr->table);
-    fprintf(fid, "progress = %d\n", htptr->progress);
-    fprintf(fid, "oldLength = %d\n", htptr->oldLength);
-    fprintf(fid, "oldTable = %d\n", htptr->oldTable);
-}
-
 /* printMemoryHashTable
  *	print the hash table structure, i.e. the header structure.
  */

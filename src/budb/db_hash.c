@@ -728,8 +728,6 @@ ht_HashInList(struct ubik_trans *ut, struct memoryHashTable *mht,
 	if (dbread(ut, ea, e, e_size))
 	    return BUDB_IO;
 
-	/* LogNetDump((struct dump *) e); */
-
 	/* get the address of the next item on the list */
 	next_ea = ntohl(*(dbadr *) (e + mht->threadOffset));
 
