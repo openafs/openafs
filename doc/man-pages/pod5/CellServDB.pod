@@ -217,6 +217,23 @@ F<CellServDB> file and illustrates the required format.
    192.12.108.57        #testdb1.example.com
    192.12.108.55        #testdb2.example.com
 
+The following example shows entries for two linked cells in a client
+F<CellServDB> file. The a.example.com cell is linked to the b.example.com
+cell.
+
+   >b.example.com # B cell
+   192.12.108.57 # db1.b.example.com
+   >a.example.com b.example.com # A cell
+   192.12.105.2 # db1.a.example.com
+
+In such a setup, if a client is looking for a volume in cell a.example.com
+and that volume doesn't exist, the client will try to find that volume
+again in cell b.example.com. The order is important. You must list the
+cell being linked before the cell doing the linking.
+
+The Windows client supports linking in two directions. The UNIX client
+does not allow bidirectional linkage.
+
 =head1 SEE ALSO
 
 L<afsd(8)>,

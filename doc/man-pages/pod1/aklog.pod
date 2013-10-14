@@ -106,7 +106,7 @@ normally won't be necessary.
 
 =item B<-linked>
 
-If the AFS cell is linked to a DCE cell, get tokens for both.
+If the AFS cell is linked to another AFS cell, get tokens for both.
 
 =item B<-noauth>
 

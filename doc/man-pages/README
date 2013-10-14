@@ -235,10 +235,6 @@ Known Problems
   don't just report the deficiency again, but any contributions towards
   fixing it are greatly appreciated.
 
-   * Linked cells are currently documented in fs newcell as being only
-     for DCE, which is not correct.  That documentation, aklog, and the
-     CellServDB documentation needs to be updated.
-
    * We need a way to add links to other man pages (kinit most notably)
      without creating dangling links in the HTML output.  This probably
      means that the HTML conversion script needs to generate at startup
