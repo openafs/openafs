@@ -8,11 +8,6 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-# rx_event is miscompiled by gcc at -O0, causing panic on startup
-.if empty(${CFLAGS:M-O})
-CFLAGS+=	-O
-.endif
-
 # tell bsd.kmod.mk to build us vnode_if*
 SRCS=	vnode_if.h
 
