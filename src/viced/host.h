@@ -207,7 +207,7 @@ extern struct host *h_LookupUuid_r(afsUUID * uuidp);
 extern void h_Enumerate(int (*proc) (struct host *, void *), void *param);
 extern void h_Enumerate_r(int (*proc) (struct host *, void *), struct host *enumstart, void *param);
 extern struct host *h_GetHost_r(struct rx_connection *tcon);
-extern struct client *h_FindClient_r(struct rx_connection *tcon);
+extern struct client *h_FindClient_r(struct rx_connection *tcon, afs_int32 *viceid);
 extern int h_ReleaseClient_r(struct client *client);
 extern void h_TossStuff_r(struct host *host);
 extern void h_EnumerateClients(VolumeId vid,

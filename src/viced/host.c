@@ -2377,9 +2377,12 @@ getPeerDetails(struct rx_connection *conn,
  *
  * The refCount on client->host is returned incremented.  h_ReleaseClient_r
  * does not decrement the refCount on client->host.
+ *
+ * *a_viceid is set to the user's ViceId, even if we don't return a client
+ * struct.
  */
 struct client *
-h_FindClient_r(struct rx_connection *tcon)
+h_FindClient_r(struct rx_connection *tcon, afs_int32 *a_viceid)
 {
     struct client *client;
     struct host *host = NULL;
@@ -2398,6 +2401,9 @@ h_FindClient_r(struct rx_connection *tcon)
 	&& !(client->host->hostFlags & HOSTDELETED)
 	&& !client->deleted) {
 
+	if (a_viceid) {
+	    *a_viceid = client->ViceId;
+	}
 	client->refCount++;
 	h_Hold_r(client->host);
 	if (client->prfail != 2) {
@@ -2421,6 +2427,10 @@ h_FindClient_r(struct rx_connection *tcon)
     code = getPeerDetails(tcon, &viceid, &expTime, authClass);
     if (code)
 	fail = 1;
+
+    if (a_viceid) {
+	*a_viceid = viceid;
+    }
 
     if (!client) { /* loop */
 	host = h_GetHost_r(tcon);	/* Returns with incremented refCount  */
