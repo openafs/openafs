@@ -373,15 +373,22 @@ cm_GetNewSCache(afs_uint32 locked)
                         fileType = scp->fileType;
 
                         if (!cm_RecycleSCache(scp, 0)) {
-                            /* we found an entry, so return it.
-                             * remove from the LRU queue and put it back at the
-                             * head of the LRU queue.
-                             */
-                            cm_AdjustScacheLRU(scp);
+			    if (!(scp->flags & CM_SCACHEFLAG_INHASH)) {
+				/* we found an entry, so return it.
+				* remove from the LRU queue and put it back at the
+				* head of the LRU queue.
+				*/
+				cm_AdjustScacheLRU(scp);
 
-                            /* and we're done - SUCCESS */
-                            osi_assertx(!(scp->flags & CM_SCACHEFLAG_INHASH), "CM_SCACHEFLAG_INHASH set");
-                            goto done;
+				/* and we're done - SUCCESS */
+				goto done;
+			    }
+
+			    /*
+			     * Something went wrong. Could we have raced with another thread?
+			     * Instead of panicking, just skip it.
+			     */
+			    osi_Log1(afsd_logp, "GetNewSCache cm_RecycleSCache returned in hash scp 0x%p", scp);
                         }
                         lock_ReleaseWrite(&scp->rw);
                     } else {
