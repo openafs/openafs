@@ -72,28 +72,61 @@ void cm_AdjustScacheLRU(cm_scache_t *scp)
     }
 }
 
-/* call with cm_scacheLock write-locked and scp rw held */
-void cm_RemoveSCacheFromHashTable(cm_scache_t *scp)
+static int
+cm_RemoveSCacheFromHashChain(cm_scache_t *scp, int index)
 {
     cm_scache_t **lscpp;
     cm_scache_t *tscp;
-    int i;
+    int found = 0;
 
+    for (lscpp = &cm_data.scacheHashTablep[index], tscp = cm_data.scacheHashTablep[index];
+	  tscp;
+	  lscpp = &tscp->nextp, tscp = tscp->nextp) {
+	if (tscp == scp) {
+	    *lscpp = scp->nextp;
+	    scp->nextp = NULL;
+	    found = 1;
+	    break;
+	}
+    }
+
+    return found;
+}
+
+/* call with cm_scacheLock write-locked and scp rw held */
+void cm_RemoveSCacheFromHashTable(cm_scache_t *scp)
+{
     lock_AssertWrite(&cm_scacheLock);
     lock_AssertWrite(&scp->rw);
     if (scp->flags & CM_SCACHEFLAG_INHASH) {
+	int h,i;
+	int found = 0;
+
 	/* hash it out first */
-	i = CM_SCACHE_HASH(&scp->fid);
-	for (lscpp = &cm_data.scacheHashTablep[i], tscp = cm_data.scacheHashTablep[i];
-	     tscp;
-	     lscpp = &tscp->nextp, tscp = tscp->nextp) {
-	    if (tscp == scp) {
-		*lscpp = scp->nextp;
-                scp->nextp = NULL;
-		_InterlockedAnd(&scp->flags, ~CM_SCACHEFLAG_INHASH);
-		break;
+	h = CM_SCACHE_HASH(&scp->fid);
+	found = cm_RemoveSCacheFromHashChain(scp, h);
+
+	if (!found) {
+	    /*
+	     * The CM_SCACHEFLAG_INHASH is set on the cm_scache_t but
+	     * we didn't find the entry in the expected hash chain.
+	     * Did the fid change?
+	     * In any case, we will search the entire hashtable for
+	     * the object.  If we don't find it, then we know it is
+	     * safe to remove the flag.
+	     */
+	    for (i=0; !found && i<cm_data.scacheHashTableSize; i++) {
+		if (i != h)
+		    found = cm_RemoveSCacheFromHashChain(scp, i);
 	    }
+
+	    if (found)
+		osi_Log1(afsd_logp,"cm_RemoveSCacheFromHashTable scp 0x%p found in wrong hash chain", scp);
+	    else
+		osi_Log1(afsd_logp,"cm_RemoveSCacheFromHashTable scp 0x%p not found in hash table", scp);
 	}
+
+	_InterlockedAnd(&scp->flags, ~CM_SCACHEFLAG_INHASH);
     }
 }
 
