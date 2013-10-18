@@ -353,17 +353,44 @@ CheckLength(struct Volume *vp, struct Vnode *vnp, afs_sfsize_t alen)
     return 0;
 }
 
+static void
+LogClientError(const char *message, struct rx_connection *tcon, afs_int32 viceid, struct AFSFid *Fid)
+{
+    char hoststr[16];
+    if (Fid) {
+	ViceLog(0, ("%s while handling request from host %s:%d viceid %d "
+	            "fid %lu.%lu.%lu, failing request\n",
+	            message,
+	            afs_inet_ntoa_r(rx_HostOf(rx_PeerOf(tcon)), hoststr),
+	            (int)ntohs(rx_PortOf(rx_PeerOf(tcon))),
+	            viceid,
+	            afs_printable_uint32_lu(Fid->Volume),
+	            afs_printable_uint32_lu(Fid->Vnode),
+	            afs_printable_uint32_lu(Fid->Unique)));
+    } else {
+	ViceLog(0, ("%s while handling request from host %s:%d viceid %d "
+	            "fid (none), failing request\n",
+	            message,
+	            afs_inet_ntoa_r(rx_HostOf(rx_PeerOf(tcon)), hoststr),
+	            (int)ntohs(rx_PortOf(rx_PeerOf(tcon))),
+	            viceid));
+    }
+}
+
 /*
  * Note that this function always returns a held host, so
  * that CallPostamble can block without the host's disappearing.
  * Call returns rx connection in passed in *tconn
+ *
+ * 'Fid' is optional, and is just used for printing log messages.
  */
 static int
-CallPreamble(struct rx_call *acall, int activecall,
+CallPreamble(struct rx_call *acall, int activecall, struct AFSFid *Fid,
 	     struct rx_connection **tconn, struct host **ahostp)
 {
     struct host *thost;
     struct client *tclient;
+    afs_int32 viceid = -1;
     int retry_flag = 1;
     int code = 0;
     char hoststr[16], hoststr2[16];
@@ -380,13 +407,10 @@ CallPreamble(struct rx_call *acall, int activecall,
 
     H_LOCK;
   retry:
-    tclient = h_FindClient_r(*tconn);
+    tclient = h_FindClient_r(*tconn, &viceid);
     if (!tclient) {
-	ViceLog(0, ("CallPreamble: Couldn't get client struct for host "
-	            "%s:%d, sending busy signal\n",
-	            afs_inet_ntoa_r(rx_HostOf(rx_PeerOf(*tconn)), hoststr),
-	            (int)ntohs(rx_PortOf(rx_PeerOf(*tconn)))));
 	H_UNLOCK;
+	LogClientError("Client host too busy", *tconn, viceid, Fid);
 	return VBUSY;
     }
     thost = tclient->host;
@@ -394,11 +418,8 @@ CallPreamble(struct rx_call *acall, int activecall,
 	if (!retry_flag) {
 	    h_ReleaseClient_r(tclient);
 	    h_Release_r(thost);
-	    ViceLog(0, ("CallPreamble: Couldn't get CPS for client from host "
-	                "%s:%d, failing request\n",
-	                afs_inet_ntoa_r(thost->host, hoststr),
-	                (int)ntohs(thost->port)));
 	    H_UNLOCK;
+	    LogClientError("Cannot get CPS for client", *tconn, viceid, Fid);
 	    return -1001;
 	}
 	retry_flag = 0;		/* Retry once */
@@ -427,10 +448,7 @@ CallPreamble(struct rx_call *acall, int activecall,
 	    h_ReleaseClient_r(tclient);
 	    h_Release_r(thost);
 	    H_UNLOCK;
-	    ViceLog(0, ("CallPreamble: couldn't reconnect to ptserver while "
-	                "handling request for %s:%d\n",
-	                afs_inet_ntoa_r(thost->host, hoststr),
-	                (int)ntohs(thost->port)));
+	    LogClientError("Cannot reconnect to ptserver", *tconn, viceid, Fid);
 	    return -1001;
 	}
 
@@ -499,7 +517,7 @@ CallPostamble(struct rx_connection *aconn, afs_int32 ret,
     int translate = 0;
 
     H_LOCK;
-    tclient = h_FindClient_r(aconn);
+    tclient = h_FindClient_r(aconn, NULL);
     if (!tclient)
 	goto busyout;
     thost = tclient->host;
@@ -2349,7 +2367,7 @@ common_FetchData64(struct rx_call *acall, struct AFSFid *Fid,
     FS_LOCK;
     AFSCallStats.FetchData++, AFSCallStats.TotalCalls++;
     FS_UNLOCK;
-    if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
+    if ((errorCode = CallPreamble(acall, ACTIVECALL, Fid, &tcon, &thost)))
 	goto Bad_FetchData;
 
     /* Get ptr to client data for user Id for logging */
@@ -2609,7 +2627,7 @@ SRXAFS_FetchACL(struct rx_call * acall, struct AFSFid * Fid,
     FS_LOCK;
     AFSCallStats.FetchACL++, AFSCallStats.TotalCalls++;
     FS_UNLOCK;
-    if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
+    if ((errorCode = CallPreamble(acall, ACTIVECALL, Fid, &tcon, &thost)))
 	goto Bad_FetchACL;
 
     /* Get ptr to client data for user Id for logging */
@@ -2826,10 +2844,11 @@ SRXAFS_BulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
     }
     CallBacks->AFSCBs_len = nfiles;
 
-    if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
+    tfid = Fids->AFSCBFids_val;
+
+    if ((errorCode = CallPreamble(acall, ACTIVECALL, tfid, &tcon, &thost)))
 	goto Bad_BulkStatus;
 
-    tfid = Fids->AFSCBFids_val;
     for (i = 0; i < nfiles; i++, tfid++) {
 	/*
 	 * Get volume/vnode for the fetched file; caller's rights to it
@@ -2985,11 +3004,12 @@ SRXAFS_InlineBulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
     memset(CallBacks->AFSCBs_val, 0, nfiles * sizeof(struct AFSCallBack));
     memset(Sync, 0, sizeof(*Sync));
 
-    if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon, &thost))) {
+    tfid = Fids->AFSCBFids_val;
+
+    if ((errorCode = CallPreamble(acall, ACTIVECALL, tfid, &tcon, &thost))) {
 	goto Bad_InlineBulkStatus;
     }
 
-    tfid = Fids->AFSCBFids_val;
     for (i = 0; i < nfiles; i++, tfid++) {
 	/*
 	 * Get volume/vnode for the fetched file; caller's rights to it
@@ -3136,7 +3156,7 @@ SRXAFS_FetchStatus(struct rx_call * acall, struct AFSFid * Fid,
     FT_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
+    if ((code = CallPreamble(acall, ACTIVECALL, Fid, &tcon, &thost)))
 	goto Bad_FetchStatus;
 
     code = SAFSS_FetchStatus(acall, Fid, OutStatus, CallBack, Sync);
@@ -3218,7 +3238,7 @@ common_StoreData64(struct rx_call *acall, struct AFSFid *Fid,
     FS_LOCK;
     AFSCallStats.StoreData++, AFSCallStats.TotalCalls++;
     FS_UNLOCK;
-    if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
+    if ((errorCode = CallPreamble(acall, ACTIVECALL, Fid, &tcon, &thost)))
 	goto Bad_StoreData;
 
     /* Get ptr to client data for user Id for logging */
@@ -3473,7 +3493,7 @@ SRXAFS_StoreACL(struct rx_call * acall, struct AFSFid * Fid,
     FS_UNLOCK;
     FT_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
-    if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
+    if ((errorCode = CallPreamble(acall, ACTIVECALL, Fid, &tcon, &thost)))
 	goto Bad_StoreACL;
 
     /* Get ptr to client data for user Id for logging */
@@ -3673,7 +3693,7 @@ SRXAFS_StoreStatus(struct rx_call * acall, struct AFSFid * Fid,
     FT_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
+    if ((code = CallPreamble(acall, ACTIVECALL, Fid, &tcon, &thost)))
 	goto Bad_StoreStatus;
 
     code = SAFSS_StoreStatus(acall, Fid, InStatus, OutStatus, Sync);
@@ -3838,7 +3858,7 @@ SRXAFS_RemoveFile(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
     FT_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
+    if ((code = CallPreamble(acall, ACTIVECALL, DirFid, &tcon, &thost)))
 	goto Bad_RemoveFile;
 
     code = SAFSS_RemoveFile(acall, DirFid, Name, OutDirStatus, Sync);
@@ -4009,7 +4029,7 @@ SRXAFS_CreateFile(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
 
     memset(OutFid, 0, sizeof(struct AFSFid));
 
-    if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
+    if ((code = CallPreamble(acall, ACTIVECALL, DirFid, &tcon, &thost)))
 	goto Bad_CreateFile;
 
     code =
@@ -4548,7 +4568,7 @@ SRXAFS_Rename(struct rx_call * acall, struct AFSFid * OldDirFid,
     FT_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
+    if ((code = CallPreamble(acall, ACTIVECALL, OldDirFid, &tcon, &thost)))
 	goto Bad_Rename;
 
     code =
@@ -4761,7 +4781,7 @@ SRXAFS_Symlink(struct rx_call *acall,	/* Rx call */
     FT_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
+    if ((code = CallPreamble(acall, ACTIVECALL, DirFid, &tcon, &thost)))
 	goto Bad_Symlink;
 
     code =
@@ -4971,7 +4991,7 @@ SRXAFS_Link(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
     FT_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
+    if ((code = CallPreamble(acall, ACTIVECALL, DirFid, &tcon, &thost)))
 	goto Bad_Link;
 
     code =
@@ -5173,7 +5193,7 @@ SRXAFS_MakeDir(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
     FS_UNLOCK;
     FT_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
-    if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
+    if ((code = CallPreamble(acall, ACTIVECALL, DirFid, &tcon, &thost)))
 	goto Bad_MakeDir;
 
     code =
@@ -5336,7 +5356,7 @@ SRXAFS_RemoveDir(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
     FT_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
+    if ((code = CallPreamble(acall, ACTIVECALL, DirFid, &tcon, &thost)))
 	goto Bad_RemoveDir;
 
     code = SAFSS_RemoveDir(acall, DirFid, Name, OutDirStatus, Sync);
@@ -5468,7 +5488,7 @@ SRXAFS_SetLock(struct rx_call * acall, struct AFSFid * Fid, ViceLockType type,
     FT_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
+    if ((code = CallPreamble(acall, ACTIVECALL, Fid, &tcon, &thost)))
 	goto Bad_SetLock;
 
     code = SAFSS_SetLock(acall, Fid, type, Sync);
@@ -5594,7 +5614,7 @@ SRXAFS_ExtendLock(struct rx_call * acall, struct AFSFid * Fid,
     FT_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
+    if ((code = CallPreamble(acall, ACTIVECALL, Fid, &tcon, &thost)))
 	goto Bad_ExtendLock;
 
     code = SAFSS_ExtendLock(acall, Fid, Sync);
@@ -5731,7 +5751,7 @@ SRXAFS_ReleaseLock(struct rx_call * acall, struct AFSFid * Fid,
     FT_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
+    if ((code = CallPreamble(acall, ACTIVECALL, Fid, &tcon, &thost)))
 	goto Bad_ReleaseLock;
 
     code = SAFSS_ReleaseLock(acall, Fid, Sync);
@@ -5866,7 +5886,7 @@ SRXAFS_GetStatistics(struct rx_call *acall, struct ViceStatistics *Statistics)
     FT_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    if ((code = CallPreamble(acall, NOTACTIVECALL, &tcon, &thost)))
+    if ((code = CallPreamble(acall, NOTACTIVECALL, NULL, &tcon, &thost)))
 	goto Bad_GetStatistics;
 
     ViceLog(1, ("SAFS_GetStatistics Received\n"));
@@ -5933,7 +5953,7 @@ SRXAFS_GetStatistics64(struct rx_call *acall, afs_int32 statsVersion, ViceStatis
     FT_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    if ((code = CallPreamble(acall, NOTACTIVECALL, &tcon, &thost)))
+    if ((code = CallPreamble(acall, NOTACTIVECALL, NULL, &tcon, &thost)))
 	goto Bad_GetStatistics64;
 
     ViceLog(1, ("SAFS_GetStatistics64 Received\n"));
@@ -6460,7 +6480,7 @@ common_GiveUpCallBacks(struct rx_call *acall, struct AFSCBFids *FidArray,
     FS_LOCK;
     AFSCallStats.GiveUpCallBacks++, AFSCallStats.TotalCalls++;
     FS_UNLOCK;
-    if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
+    if ((errorCode = CallPreamble(acall, ACTIVECALL, NULL, &tcon, &thost)))
 	goto Bad_GiveUpCallBacks;
 
     if (!FidArray && !CallBackArray) {
@@ -6574,7 +6594,7 @@ SRXAFS_GetCapabilities(struct rx_call * acall, Capabilities * capabilities)
     FS_UNLOCK;
     ViceLog(2, ("SAFS_GetCapabilties\n"));
 
-    if ((code = CallPreamble(acall, NOTACTIVECALL, &tcon, &thost)))
+    if ((code = CallPreamble(acall, NOTACTIVECALL, NULL, &tcon, &thost)))
 	goto Bad_GetCaps;
 
     dataBytes = 1 * sizeof(afs_int32);
@@ -6805,7 +6825,7 @@ SRXAFS_GetVolumeInfo(struct rx_call * acall, char *avolid,
     FS_UNLOCK;
     FT_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
-    if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
+    if ((code = CallPreamble(acall, ACTIVECALL, NULL, &tcon, &thost)))
 	goto Bad_GetVolumeInfo;
 
     FS_LOCK;
@@ -6877,7 +6897,7 @@ SRXAFS_GetVolumeStatus(struct rx_call * acall, afs_int32 avolid,
 #endif /* FS_STATS_DETAILED */
 
     ViceLog(1, ("SAFS_GetVolumeStatus for volume %u\n", avolid));
-    if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
+    if ((errorCode = CallPreamble(acall, ACTIVECALL, NULL, &tcon, &thost)))
 	goto Bad_GetVolumeStatus;
 
     FS_LOCK;
@@ -6978,7 +6998,7 @@ SRXAFS_SetVolumeStatus(struct rx_call * acall, afs_int32 avolid,
 #endif /* FS_STATS_DETAILED */
 
     ViceLog(1, ("SAFS_SetVolumeStatus for volume %u\n", avolid));
-    if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
+    if ((errorCode = CallPreamble(acall, ACTIVECALL, NULL, &tcon, &thost)))
 	goto Bad_SetVolumeStatus;
 
     FS_LOCK;
@@ -7076,7 +7096,7 @@ SRXAFS_GetRootVolume(struct rx_call * acall, char **VolumeName)
     return FSERR_EOPNOTSUPP;
 
 #ifdef	notdef
-    if (errorCode = CallPreamble(acall, ACTIVECALL, &tcon, &thost))
+    if (errorCode = CallPreamble(acall, ACTIVECALL, NULL, &tcon, &thost))
 	goto Bad_GetRootVolume;
     FS_LOCK;
     AFSCallStats.GetRootVolume++, AFSCallStats.TotalCalls++;
@@ -7155,7 +7175,7 @@ SRXAFS_CheckToken(struct rx_call * acall, afs_int32 AfsId,
     FT_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
+    if ((code = CallPreamble(acall, ACTIVECALL, NULL, &tcon, &thost)))
 	goto Bad_CheckToken;
 
     code = FSERR_ECONNREFUSED;
@@ -7209,7 +7229,7 @@ SRXAFS_GetTime(struct rx_call * acall, afs_uint32 * Seconds,
     FT_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    if ((code = CallPreamble(acall, NOTACTIVECALL, &tcon, &thost)))
+    if ((code = CallPreamble(acall, NOTACTIVECALL, NULL, &tcon, &thost)))
 	goto Bad_GetTime;
 
     FS_LOCK;
@@ -7946,18 +7966,20 @@ SRXAFS_CallBackRxConnAddr (struct rx_call * acall, afs_int32 *addr)
     static struct rx_securityClass *sc = 0;
     int i,j;
     struct rx_connection *conn;
+    afs_int32 viceid = -1;
 #endif
 
-    if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon, &tcallhost)))
+    if ((errorCode = CallPreamble(acall, ACTIVECALL, NULL, &tcon, &tcallhost)))
 	    goto Bad_CallBackRxConnAddr1;
 
 #ifndef __EXPERIMENTAL_CALLBACK_CONN_MOVING
     errorCode = 1;
 #else
     H_LOCK;
-    tclient = h_FindClient_r(tcon);
+    tclient = h_FindClient_r(tcon, &viceid);
     if (!tclient) {
 	errorCode = VBUSY;
+	LogClientError("Client host too busy (CallBackRxConnAddr)", tcon, viceid, NULL);
 	goto Bad_CallBackRxConnAddr;
     }
     thost = tclient->host;
