@@ -826,11 +826,13 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_STRUCT([inode], [i_mutex], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([inode], [i_security], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([file_operations], [flock], [fs.h])
+		 AC_CHECK_LINUX_STRUCT([file_operations], [iterate], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([file_operations], [sendfile], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([file_system_type], [mount], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([filename], [name], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([inode_operations], [truncate], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([key_type], [preparse], [key-type.h])
+		 AC_CHECK_LINUX_STRUCT([key_type], [instantiate_prep], [key-type.h])
 		 AC_CHECK_LINUX_STRUCT([nameidata], [path], [namei.h])
 		 AC_CHECK_LINUX_STRUCT([proc_dir_entry], [owner], [proc_fs.h])
 		 AC_CHECK_LINUX_STRUCT([super_block], [s_bdi], [fs.h])
@@ -880,6 +882,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_FUNC([d_alloc_anon],
 				     [#include <linux/fs.h>],
 				     [d_alloc_anon(NULL);])
+		 AC_CHECK_LINUX_FUNC([d_count],
+				     [#include <linux/dcache.h>],
+				     [d_count(NULL);])
 		 AC_CHECK_LINUX_FUNC([d_make_root],
 				     [#include <linux/fs.h>],
 				     [d_make_root(NULL);])
