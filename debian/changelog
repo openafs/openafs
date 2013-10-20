@@ -15,6 +15,7 @@ openafs (1.6.5.1-1) UNRELEASED; urgency=low
   * Drop Recommends of libjs-jquery in openafs-doc.  We're no longer
     replacing the embedded jQuery, pending a better fix in the Doxygen
     packaging.
+  * Optimize the get-orig-source target.  Thanks, Anders Kaseorg.
   * Translation updates:
     - German, thanks Erik Pfannenstein.  (Closes: #719154)
 
