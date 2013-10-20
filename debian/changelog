@@ -1,5 +1,6 @@
-openafs (1.6.5-2) UNRELEASED; urgency=low
+openafs (1.6.5.1-1) UNRELEASED; urgency=low
 
+  * New upstream release.
   * Ignore errors when reading ThisCell in the openafs-client config
     script.  If the file doesn't end in a newline, read will still succeed
     and set the variable, but will exit with a non-zero status.  This
