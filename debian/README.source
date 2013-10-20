@@ -69,7 +69,7 @@ Importing a New Upstream Release
 
     6. Import the upstream source from the tarball with:
 
-           git-import-orig --upstream-vcs-tag <tag> <tarball>
+           gbp import-orig --upstream-vcs-tag <tag> <tarball>
 
        where <tarball> is the tarball created by get-orig-source above and
        <tag> is the corresponding tag from the upstream Git repository.
@@ -115,4 +115,4 @@ Pulling Upstream Changes
        edited as necessary to keep the length of the changelog lines
        down.
 
- -- Russ Allbery <rra@debian.org>, Wed,  2 Jan 2013 21:38:50 -0800
+ -- Russ Allbery <rra@debian.org>, Sun, 20 Oct 2013 08:59:17 -0700
