@@ -415,39 +415,73 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
                 }
             }
 
-            if (!CcCanIWrite( pFileObject,
-                              ulByteCount,
-                              FALSE,
-                              bRetry))
-            {
+	    //
+	    // On versions of Microsoft Windows older than Vista the IO Manager
+	    // will issue multiple outstanding writes on a synchronous file object
+	    // if one of the cached writes completes with STATUS_PENDING.  This can
+	    // result in the writes being completed out of order which can corrupt
+	    // the end of file marker.  On OS versions older than Vista use a spin
+	    // loop instead of deferring the write.
+	    //
 
-                AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
-                              AFS_TRACE_LEVEL_WARNING,
-                              "AFSCommonWrite (FO: %p) CcCanIWrite says No room for Offset %0I64X Length %08lX bytes! Deferring%s\n",
-                              pFileObject,
-                              liStartingByte.QuadPart,
-                              ulByteCount,
-                              bRetry ? " RETRY" : ""));
+	    if ( bSynchronousFo &&
+		 AFSRtlSysVersion.dwMajorVersion < 6)
+	    {
 
-                ntStatus = AFSDeferWrite( DeviceObject, pFileObject, hCallingUser, Irp, ulByteCount, bRetry);
+		while (!CcCanIWrite( pFileObject,
+				     ulByteCount,
+				     FALSE,
+				     bRetry))
+		{
+		    static const LONGLONG llWriteDelay = (LONGLONG)-100000;
+		    bRetry = TRUE;
 
-                if ( STATUS_PENDING == ntStatus)
-                {
+		    AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+				  AFS_TRACE_LEVEL_WARNING,
+				  "AFSCommonWrite (FO: %p) CcCanIWrite says No room for %u bytes! Retry in 10ms\n",
+				  pFileObject,
+				  ulByteCount);
 
-                    bCompleteIrp = FALSE;
-                }
-                else
-                {
+		    KeDelayExecutionThread(KernelMode, FALSE, (PLARGE_INTEGER)&llWriteDelay);
+		}
+	    }
+	    else
+	    {
 
-                    AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
-                                  AFS_TRACE_LEVEL_ERROR,
-                                  "AFSCommonWrite (FO: %p) AFSDeferWrite failure Status %08lX\n",
-                                  pFileObject,
-                                  ntStatus));
-                }
+		if (!CcCanIWrite( pFileObject,
+				  ulByteCount,
+				  FALSE,
+				  bRetry))
+		{
 
-                try_return( ntStatus);
-            }
+		    AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
+				  AFS_TRACE_LEVEL_WARNING,
+				  "AFSCommonWrite (FO: %p) CcCanIWrite says No room for Offset %0I64X Length %08lX bytes! Deferring%s\n",
+				  pFileObject,
+				  liStartingByte.QuadPart,
+				  ulByteCount,
+				  bRetry ? " RETRY" : ""));
+
+		    ntStatus = AFSDeferWrite( DeviceObject, pFileObject, hCallingUser, Irp, ulByteCount, bRetry);
+
+		    if ( STATUS_PENDING == ntStatus)
+		    {
+
+			bCompleteIrp = FALSE;
+		    }
+		    else
+		    {
+
+			AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
+				      AFS_TRACE_LEVEL_ERROR,
+				      "AFSCommonWrite (FO: %p) AFSDeferWrite failure Status %08lX\n",
+				      pFileObject,
+				      ntStatus));
+		    }
+
+		    try_return( ntStatus);
+		}
+	    }
         }
 
         //
@@ -723,7 +757,7 @@ try_exit:
             if ( !bPagingIo)
             {
 
-                if( bSynchronousFo)
+		if( bSynchronousFo)
                 {
 
                     pFileObject->CurrentByteOffset.QuadPart = liStartingByte.QuadPart + ulByteCount;
