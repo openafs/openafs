@@ -95,7 +95,6 @@ Package: openafs-doc
 Section: doc
 Architecture: all
 Depends: ${misc:Depends}
-Recommends: libjs-jquery
 Description: AFS distributed filesystem documentation
  AFS is a distributed filesystem allowing cross-platform sharing of files
  among multiple computers.  Facilities are provided for access control,

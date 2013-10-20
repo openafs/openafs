@@ -8,6 +8,9 @@ openafs (1.6.5.1-1) UNRELEASED; urgency=low
     and set the variable, but will exit with a non-zero status.  This
     would abort configuration of the package without a useful error
     message.
+  * Drop Recommends of libjs-jquery in openafs-doc.  We're no longer
+    replacing the embedded jQuery, pending a better fix in the Doxygen
+    packaging.
 
  -- Russ Allbery <rra@debian.org>  Sat, 05 Oct 2013 11:27:07 -0700
 
