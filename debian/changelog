@@ -3,6 +3,8 @@ openafs (1.6.5.1-1) UNRELEASED; urgency=low
   * New upstream release.
     - Support for Linux 3.11 and 3.12 (up to 3.12-rc3).
     - Fixed core dumps into AFS with some Linux kernels.
+  * Apply upstream deltas needed by Ubuntu.
+    - [7242e25a] Fix library ordering when building aklog.
   * Ignore errors when reading ThisCell in the openafs-client config
     script.  If the file doesn't end in a newline, read will still succeed
     and set the variable, but will exit with a non-zero status.  This
