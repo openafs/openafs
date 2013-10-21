@@ -103,6 +103,8 @@ extern PAFSRtlSetGroupSecurityDescriptor AFSRtlSetGroupSecurityDescriptor;
 
 extern SID_IDENTIFIER_AUTHORITY SeWorldSidAuthority;
 
+extern RTL_OSVERSIONINFOW AFSRtlSysVersion;
+
 }
 
 #endif /* _AFS_EXTERN_H */

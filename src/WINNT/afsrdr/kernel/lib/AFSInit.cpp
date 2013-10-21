@@ -63,7 +63,6 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
     UNICODE_STRING uniDeviceName;
     ULONG ulIndex = 0;
     UNICODE_STRING uniRoutine;
-    RTL_OSVERSIONINFOW sysVersion;
 
     BOOLEAN bExit = FALSE;
 
@@ -116,12 +115,12 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
                        RegistryPath->Buffer,
                        RegistryPath->Length);
 
-        RtlZeroMemory( &sysVersion,
+	RtlZeroMemory( &AFSRtlSysVersion,
                        sizeof( RTL_OSVERSIONINFOW));
 
-        sysVersion.dwOSVersionInfoSize = sizeof( RTL_OSVERSIONINFOW);
+	AFSRtlSysVersion.dwOSVersionInfoSize = sizeof( RTL_OSVERSIONINFOW);
 
-        RtlGetVersion( &sysVersion);
+	RtlGetVersion( &AFSRtlSysVersion);
 
 #if 0
         //
@@ -139,7 +138,7 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
         // Mandatory Labels only exist on those operating systems.
         //
 
-        if( sysVersion.dwMajorVersion >= 6)
+	if( AFSRtlSysVersion.dwMajorVersion >= 6)
         {
             RtlInitUnicodeString( &uniRoutine,
                                   L"RtlSetSaclSecurityDescriptor");
