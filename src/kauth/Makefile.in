@@ -109,10 +109,11 @@ kaauxdb.o: kaauxdb.c
 
 kaerrors.o: kaerrors.c
 
-kaerrors.c kautils.h: kaerrors.et kautils.p.h
+kautils.h: kaerrors.c
+
+kaerrors.c: kaerrors.et kautils.p.h
 	$(RM) -f kautils.h kaerrors.c
 	${COMPILE_ET} -p ${srcdir} kaerrors -h kautils
-kautils.h: kaerrors.c
 
 kauth.ss.o: kauth.ss.c
 kauth.cs.o: kauth.cs.c

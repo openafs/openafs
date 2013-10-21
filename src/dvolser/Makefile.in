@@ -130,10 +130,8 @@ aclprocs.o: ${LIBACL}/aclprocs.c
 netprocs.o: ${LIBACL}/netprocs.c
 	${COMPILE}
 
-vl_errors.c vlserver.h: ${VLSERVER}/vl_errors.et ${VLSERVER}/vlserver.p.h
-	$(RM) -f vlserver.h vl_errors.c
-	${COMPILE_ET} -p ${VLSERVER} vl_errors -h vlserver
-vlserver.h: vl_errors.c
+vlserver.h vl_errors.c: ${VLSERVER}/vl_errors.et ${VLSERVER}/vlserver.p.h
+	$(RM) -f vlserver.h vl_errors.c; ${COMPILE_ET} -p ${VLSERVER} vl_errors -h vlserver
 
 vl_errors.o: vl_errors.c
 	${COMPILE}

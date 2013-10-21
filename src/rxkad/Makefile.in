@@ -75,7 +75,6 @@ rxkad_errs.o: rxkad_errs.c
 rxkad_errs.c rxkad.h: rxkad_errs.et rxkad.p.h
 	$(RM) -f rxkad.h rxkad_errs.c
 	${COMPILE_ET} -p ${srcdir} rxkad_errs -h rxkad
-rxkad.h: rxkad_errs.c
 
 ticket.o: ticket.c lifetimes.h ${INCLS}
 	$(CC) $(CFLAGS) -c ${srcdir}/ticket.c
