@@ -120,4 +120,10 @@ PAFSRtlSetGroupSecurityDescriptor AFSRtlSetGroupSecurityDescriptor = NULL;
 
 SID_IDENTIFIER_AUTHORITY SeWorldSidAuthority = {SECURITY_WORLD_SID_AUTHORITY};
 
+//
+// System State Information
+//
+
+RTL_OSVERSIONINFOW AFSRtlSysVersion;
+
 }
