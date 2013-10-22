@@ -545,7 +545,7 @@ afs_InvalidateAllSegments(struct vcache *avc)
 		 * invalidate all of the relevant chunks. Otherwise, the chunks
 		 * will be left with the 'new' data that was never successfully
 		 * written to the server, but the DV in the dcache is still the
-		 * old DV. So, we may indefintely serve serve applications data
+		 * old DV. So, we may indefinitely serve data to applications
 		 * that is not actually in the file on the fileserver. If we
 		 * cannot afs_GetValidDSlot the appropriate entries, currently
 		 * there is no way to ensure the dcache is invalidated. So for
