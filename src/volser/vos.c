@@ -290,16 +290,15 @@ SendFile(usd_handle_t ufd, struct rx_call *call, long blksize)
     }
 
     while (!error) {
-#ifndef AFS_NT40_ENV		/* NT csn't select on non-socket fd's */
+#if !defined(AFS_NT40_ENV) && !defined(AFS_PTHREAD_ENV)
+	/* Only for this for non-NT, non-pthread. For NT, we can't select on
+	 * non-socket FDs. For pthread environments, we don't need to select at
+	 * all, since the following read() will block. */
 	fd_set in;
 	FD_ZERO(&in);
 	FD_SET((intptr_t)(ufd->handle), &in);
 	/* don't timeout if read blocks */
-#if defined(AFS_PTHREAD_ENV)
-	select(((intptr_t)(ufd->handle)) + 1, &in, 0, 0, 0);
-#else
 	IOMGR_Select(((intptr_t)(ufd->handle)) + 1, &in, 0, 0, 0);
-#endif
 #endif
 	error = USD_READ(ufd, buffer, blksize, &nbytes);
 	if (error) {
@@ -401,16 +400,15 @@ ReceiveFile(usd_handle_t ufd, struct rx_call *call, long blksize)
 
     while ((bytesread = rx_Read(call, buffer, blksize)) > 0) {
 	for (bytesleft = bytesread; bytesleft; bytesleft -= w) {
-#ifndef AFS_NT40_ENV		/* NT csn't select on non-socket fd's */
+#if !defined(AFS_NT40_ENV) && !defined(AFS_PTHREAD_ENV)
+	    /* Only for this for non-NT, non-pthread. For NT, we can't select
+	     * on non-socket FDs. For pthread environments, we don't need to
+	     * select at all, since the following write() will block. */
 	    fd_set out;
 	    FD_ZERO(&out);
 	    FD_SET((intptr_t)(ufd->handle), &out);
 	    /* don't timeout if write blocks */
-#if defined(AFS_PTHREAD_ENV)
-	    select(((intptr_t)(ufd->handle)) + 1, &out, 0, 0, 0);
-#else
 	    IOMGR_Select(((intptr_t)(ufd->handle)) + 1, 0, &out, 0, 0);
-#endif
 #endif
 	    error =
 		USD_WRITE(ufd, &buffer[bytesread - bytesleft], bytesleft, &w);
