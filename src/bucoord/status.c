@@ -13,6 +13,7 @@
 
 #include <roken.h>
 
+#include <afs/cmd.h>
 #include <afs/opr.h>
 #include <afs/com_err.h>
 #include <afs/bubasics.h>

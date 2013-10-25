@@ -18,6 +18,7 @@
 # pragma GCC diagnostic warning "-Wstrict-prototypes"
 #endif
 
+#include <afs/cmd.h>
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <ubik.h>
