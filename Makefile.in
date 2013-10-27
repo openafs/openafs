@@ -506,7 +506,7 @@ libuafs_setup: config export
 libuafs: libuafs_setup vlserver_depinstall tvlserver_depinstall rx_depinstall fsint_depinstall \
 		auth_depinstall dir_depinstall libacl_depinstall rxkad_depinstall \
 		ubik_depinstall afs_depinstall kauth_depinstall ptserver_depinstall \
-		rxstat_depinstall lwp_depinstall sys_depinstall des cmd
+		rxstat_depinstall lwp_depinstall sys_depinstall des cmd ubik
 	+set -x; \
 	case ${SYS_NAME} in \
 	hp_ux102* | *_obsd* | sun*_4* | *_nbsd*| hp_ux11i | hp_ux112* | ia64_hpux112*) \

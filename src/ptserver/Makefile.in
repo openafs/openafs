@@ -155,9 +155,22 @@ ptclient.o: ptclient.c ${INCLS} AFS_component_version_number.c
 
 ptuser.o: ptuser.c ${LINCLS}
 
-pterror.h pterror.c: pterror.et
-	$(RM) -f pterror.h pterror.c
-	${COMPILE_ET} -p ${srcdir} pterror
+pterror.c: pterror.et
+	${COMPILE_ET_C} -p ${srcdir} pterror
+
+pterror.h: pterror.et
+	${COMPILE_ET_H} -p ${srcdir} pterror
+
+db_verify.o: pterror.h
+ptclient.o: pterror.h
+ptprocs.o: pterror.h
+pts.o: pterror.h
+ptuser.o: pterror.h
+pt_util.o: pterror.h
+ptutils.o: pterror.h
+readgroup.o: pterror.h
+testpt.o: pterror.h
+utils.o: pterror.h
 
 libprot.a: ptuser.o pterror.o ptint.cs.o ptint.xdr.o AFS_component_version_number.o
 	$(RM) -f $@

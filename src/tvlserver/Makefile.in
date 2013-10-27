@@ -179,8 +179,18 @@ vlclient.o: ${VLSERVER}/vlclient.c
 vl_errors.o: vl_errors.c
 	${CCRULE} vl_errors.c
 
-vlserver.h vl_errors.c: ${VLSERVER}/vl_errors.et ${VLSERVER}/vlserver.p.h
-	$(RM) -f vlserver.h vl_errors.c; ${COMPILE_ET} -p ${srcdir}/${VLSERVER} vl_errors -h vlserver
+vl_errors.c: ${VLSERVER}/vl_errors.et
+	${COMPILE_ET_C} -p ${VLSERVER} vl_errors
+
+vlserver.h: ${VLSERVER}/vl_errors.et ${VLSERVER}/vlserver.p.h
+	${COMPILE_ET_H} -p ${VLSERVER} vl_errors -h vlserver
+
+cnvldb.o: vlserver.h
+vlclient.o: vlserver.h
+vldb_check.o: vlserver.h
+vlprocs.o: vlserver.h
+vlserver.o: vlserver.h
+vlutils.o: vlserver.h
 
 system: install
 
