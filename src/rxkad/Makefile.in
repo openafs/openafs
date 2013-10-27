@@ -93,10 +93,22 @@ rxkad_errs.lo: rxkad_errs.c
 ticket.lo: ticket.c lifetimes.h ${INCLS}
 ticket5.lo: ticket5.c v5gen.c v5der.c v5gen-rewrite.h ${INCLS}
 
-rxkad_errs.c rxkad.h: rxkad_errs.et rxkad.p.h
-	$(RM) -f rxkad.h rxkad_errs.c
-	${COMPILE_ET} -p ${srcdir} rxkad_errs -h rxkad
-rxkad.h: rxkad_errs.c
+rxkad_errs.c: rxkad_errs.et
+	${COMPILE_ET_C} -p ${srcdir} rxkad_errs
+
+rxkad.h: rxkad_errs.et rxkad.p.h
+	${COMPILE_ET_H} -p ${srcdir} rxkad_errs -h rxkad
+
+bg-fcrypt.o bg-fcrypt.lo: rxkad.h
+crc.o crc.lo: rxkad.h
+crypt_conn.o crypt_conn.lo: rxkad.h
+fcrypt.o fcrypt.lo: rxkad.h
+fc_test.o fc_test.lo: rxkad.h
+rxkad_client.o rxkad_client.lo: rxkad.h
+rxkad_common.o rxkad_common.lo: rxkad.h
+rxkad_server.o rxkad_server.lo: rxkad.h
+ticket5.o ticket5.lo: rxkad.h
+ticket.o ticket.lo: rxkad.h
 
 tcrypt.o: tcrypt.c AFS_component_version_number.o
 

@@ -124,10 +124,31 @@ kadatabase.o: kadatabase.c ${INCLS}
 
 kaprocs.o: kaprocs.c ${INCLS} kaport.h
 
-kaerrors.c kautils.h: kaerrors.et kautils.p.h
-	$(RM) -f kautils.h kaerrors.c
-	${COMPILE_ET} -p ${srcdir} kaerrors -h kautils
-kautils.h: kaerrors.c
+kaerrors.c: kaerrors.et
+	${COMPILE_ET_C} -p ${srcdir} kaerrors
+
+kautils.h: kaerrors.et kautils.p.h
+	${COMPILE_ET_H} -p ${srcdir} kaerrors -h kautils
+
+admin_tools.o admin_tools.lo: kautils.h
+authclient.o authclient.lo: kautils.h
+client.o client.lo: kautils.h
+decode_ticket.o decode_ticket.lo: kautils.h
+kadatabase.o kadatabase.lo: kautils.h
+kalocalcell.o kalocalcell.lo: kautils.h
+kaprocs.o kaprocs.lo: kautils.h
+kas.o kas.lo: kautils.h
+kaserver.o kaserver.lo: kautils.h
+katoken.o katoken.lo: kautils.h
+ka_util.o ka_util.lo: kautils.h
+kautils.o kautils.lo: kautils.h
+klog.o klog.lo: kautils.h
+kpasswd.o kpasswd.lo: kautils.h
+krb_tf.o krb_tf.lo: kautils.h
+krb_udp.o krb_udp.lo: kautils.h
+manyklog.o manyklog.lo: kautils.h
+rebuild.o rebuild.lo: kautils.h
+user.o user.lo: kautils.h
 
 kauth.xdr.lo: kauth.xdr.c kauth.h
 

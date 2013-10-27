@@ -110,15 +110,34 @@ copyauth: copyauth.o ${LIBS}
 setkey: setkey.o ${LIBS}
 	$(AFS_LDRULE) setkey.o ${LIBS} ${XLIBS}
 
-acfg_errors.c cellconfig.h: acfg_errors.et cellconfig.p.h
-	$(RM) -f cellconfig.h acfg_errors.c
-	${COMPILE_ET} -p ${srcdir} acfg_errors -h cellconfig
-cellconfig.h: acfg_errors.c
+acfg_errors.c: acfg_errors.et
+	${COMPILE_ET_C} -p ${srcdir} acfg_errors
 
-ktc_errors.c auth.h: ktc_errors.et auth.p.h
-	$(RM) -f auth.h ktc_errors.c
-	${COMPILE_ET} -p ${srcdir} ktc_errors -h auth
-auth.h: ktc_errors.c
+cellconfig.h: acfg_errors.et cellconfig.p.h
+	${COMPILE_ET_H} -p ${srcdir} acfg_errors -h cellconfig
+
+authcon.lo: cellconfig.h
+cellconfig.lo: cellconfig.h
+copyauth.o: cellconfig.h
+keys.lo: cellconfig.h
+ktc.lo: cellconfig.h
+netrestrict.lo: cellconfig.h
+realms.lo: cellconfig.h
+setkey.o: cellconfig.h
+userok.lo: cellconfig.h
+writeconfig.lo: cellconfig.h
+
+ktc_errors.c: ktc_errors.et
+	${COMPILE_ET_C} -p ${srcdir} ktc_errors
+
+auth.h: ktc_errors.et auth.p.h
+	${COMPILE_ET_H} -p ${srcdir} ktc_errors -h auth
+
+authcon.lo: auth.h
+copyauth.o: auth.h
+ktc.lo: auth.h
+token.lo: auth.h
+userok.lo: auth.h
 
 Ktoken.xdr.c: token.xg
 	$(RXGEN) -A -x -k -c -o $@ $(srcdir)/token.xg

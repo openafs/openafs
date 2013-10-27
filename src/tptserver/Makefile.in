@@ -146,10 +146,22 @@ pt_util.o: ${PTSERVER}/pt_util.c
 ptubik.o: ${PTSERVER}/ptubik.c ${INCLS}
 	$(AFS_CCRULE) $(PTSERVER)/ptubik.c
 
-pterror.c pterror.h: ${PTSERVER}/pterror.et
-	$(RM) -f pterror.h pterror.c
-	${COMPILE_ET} -p ${PTSERVER} pterror
-pterror.h: pterror.c
+pterror.c: ${PTSERVER}/pterror.et
+	${COMPILE_ET_C} -p ${PTSERVER} pterror
+
+pterror.h: ${PTSERVER}/pterror.et
+	${COMPILE_ET_H} -p ${PTSERVER} pterror
+
+db_verify.o db_verify.lo: pterror.h
+ptclient.o ptclient.lo: pterror.h
+ptprocs.o ptprocs.lo: pterror.h
+pts.o pts.lo: pterror.h
+ptuser.o ptuser.lo: pterror.h
+pt_util.o pt_util.lo: pterror.h
+ptutils.o ptutils.lo: pterror.h
+readgroup.o readgroup.lo: pterror.h
+testpt.o testpt.lo: pterror.h
+utils.o utils.lo: pterror.h
 
 prerror.h: pterror.h
 	${INSTALL} $? $@

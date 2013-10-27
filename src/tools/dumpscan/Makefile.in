@@ -71,15 +71,43 @@ libdumpscan.a: $(OBJS_libdumpscan.a)
 	$(AR) r libdumpscan.a $(OBJS_libdumpscan.a)
 	$(RANLIB) libdumpscan.a
 
-xf_errs.c xf_errs.h: ${srcdir}/xf_errs.et
-	$(RM) -f xf_errs.c xf_errs.h
-	$(COMPILE_ET) ${srcdir}/xf_errs.et
-xf_errs.h: xf_errs.c
+xf_errs.c: ${srcdir}/xf_errs.et
+	$(COMPILE_ET_C) ${srcdir}/xf_errs.et
 
-dumpscan_errs.c dumpscan_errs.h: ${srcdir}/dumpscan_errs.et
-	$(RM) -f dumpscan_errs.c dumpscan_errs.h
-	$(COMPILE_ET) ${srcdir}/dumpscan_errs.et
-dumpscan_errs.h: dumpscan_errs.c
+xf_errs.h: ${srcdir}/xf_errs.et
+	$(COMPILE_ET_H) ${srcdir}/xf_errs.et
+
+afsdump_dirlist.o: xf_errs.h
+afsdump_extract.o: xf_errs.h
+afsdump_scan.o: xf_errs.h
+directory.o: xf_errs.h
+stagehdr.o: xf_errs.h
+util.o: xf_errs.h
+xf_files.o: xf_errs.h
+xfiles.o: xf_errs.h
+xf_printf.o: xf_errs.h
+xf_profile.o: xf_errs.h
+xf_rxcall.o: xf_errs.h
+
+dumpscan_errs.h: ${srcdir}/dumpscan_errs.et
+	$(COMPILE_ET_H) ${srcdir}/dumpscan_errs.et
+
+dumpscan_errs.c: ${srcdir}/dumpscan_errs.et
+	$(COMPILE_ET_C) ${srcdir}/dumpscan_errs.et
+
+afsdump_dirlist.o: dumpscan_errs.h
+afsdump_extract.o: dumpscan_errs.h
+afsdump_scan.o: dumpscan_errs.h
+backuphdr.o: dumpscan_errs.h
+directory.o: dumpscan_errs.h
+parsedump.o: dumpscan_errs.h
+parsetag.o: dumpscan_errs.h
+parsevnode.o: dumpscan_errs.h
+parsevol.o: dumpscan_errs.h
+pathname.o: dumpscan_errs.h
+repair.o: dumpscan_errs.h
+stagehdr.o: dumpscan_errs.h
+util.o: dumpscan_errs.h
 
 util.o xfiles.o xf_files.o: xf_errs.h
 backuphdr.o directory.o parsedump.o parsetag.o: dumpscan_errs.h

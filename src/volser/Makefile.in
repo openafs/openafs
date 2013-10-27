@@ -124,10 +124,23 @@ liboafs_volser.la: liboafs_volser.la.sym $(LT_objs) $(LT_deps)
 libauthent_volser.la: $(LT_objs)
 	$(LT_LDLIB_pic) $(LT_objs)
 
-volerr.c volser.h: volerr.et volser.p.h
-	$(RM) -f volser.h volerr.c
-	${COMPILE_ET} -p ${srcdir} volerr -h volser
-volser.h: volerr.c
+volerr.c: volerr.et
+	${COMPILE_ET_C} -p ${srcdir} volerr
+
+volser.h: volerr.et volser.p.h
+	${COMPILE_ET_H} -p ${srcdir} volerr -h volser
+
+common.o common.lo: volser.h
+dumpstuff.o dumpstuff.lo: volser.h
+lockprocs.o lockprocs.lo: volser.h
+vol-dump.o vol-dump.lo: volser.h
+volmain.o volmain.lo: volser.h
+volprocs.o volprocs.lo: volser.h
+vol_split.o vol_split.lo: volser.h
+voltrans.o voltrans.lo: volser.h
+vos.o vos.lo: volser.h
+vsprocs.o vsprocs.lo: volser.h
+vsutils.o vsutils.lo: volser.h
 
 volint.cs.c: volint.xg
 	${RXGEN} -A -x -C -o $@ ${srcdir}/volint.xg
