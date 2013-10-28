@@ -790,13 +790,13 @@ AFSWorkerThread( IN PVOID Context)
         }
     } // worker thread loop
 
-    ClearFlag( pPoolContext->State, AFS_WORKER_INITIALIZED);
-
     // Wake up another worker so they too can exit
 
     KeSetEvent( &pControlDevExt->Specific.Control.WorkerQueueHasItems,
                 0,
                 FALSE);
+
+    ClearFlag( pPoolContext->State, AFS_WORKER_INITIALIZED);
 
     PsTerminateSystemThread( 0);
 
@@ -940,13 +940,13 @@ AFSIOWorkerThread( IN PVOID Context)
         }
     } // worker thread loop
 
-    ClearFlag( pPoolContext->State, AFS_WORKER_INITIALIZED);
-
     // Wake up another IOWorker so they too can exit
 
     KeSetEvent( &pControlDevExt->Specific.Control.IOWorkerQueueHasItems,
                 0,
                 FALSE);
+
+    ClearFlag( pPoolContext->State, AFS_WORKER_INITIALIZED);
 
     PsTerminateSystemThread( 0);
 
