@@ -584,11 +584,9 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
     if (!(dwFlags & RDR_POP_NO_GETSTATUS))
         cm_SyncOpDone( scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 
-    if ((dwFlags & RDR_POP_NO_GETSTATUS) || !cm_HaveCallback(scp)) {
-        pCurrentEntry->TargetNameOffset = 0;
-        pCurrentEntry->TargetNameLength = 0;
-    }
-    else
+    pCurrentEntry->TargetNameOffset = 0;
+    pCurrentEntry->TargetNameLength = 0;
+    if (!(dwFlags & RDR_POP_NO_GETSTATUS) && cm_HaveCallback(scp)) {
     switch (scp->fileType) {
     case CM_SCACHETYPE_MOUNTPOINT:
 	{
@@ -644,12 +642,11 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
 
                 code2 = cm_HandleLink(scp, userp, reqp);
                 if (code2 == 0) {
-                    size_t wtarget_len = 0;
-
                     if (scp->mountPointStringp[0]) {
                         char * mp;
                         char * s;
                         size_t offset = 0;
+			size_t wtarget_len = 0;
 
                         len = strlen(scp->mountPointStringp) + 1;
                         mp = strdup(scp->mountPointStringp);
@@ -742,9 +739,9 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
                         }
 
                         free(mp);
-                    }
 
-                    pCurrentEntry->TargetNameLength = (ULONG)(sizeof(WCHAR) * (wtarget_len - 1));
+			pCurrentEntry->TargetNameLength = (ULONG)(sizeof(WCHAR) * (wtarget_len - 1));
+		    }
                 } else {
                     osi_Log2(afsd_logp, "RDR_PopulateCurrentEntry cm_HandleLink failed scp=0x%p code=0x%x",
                              scp, code2);
@@ -757,6 +754,7 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
     default:
         pCurrentEntry->TargetNameOffset = 0;
         pCurrentEntry->TargetNameLength = 0;
+    }
     }
     lock_ReleaseWrite(&scp->rw);
 
