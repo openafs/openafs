@@ -445,7 +445,9 @@ main(int argc, char **argv)
     configDir = strdup(AFSDIR_SERVER_ETC_DIRPATH);
     logFile = strdup(AFSDIR_SERVER_VOLSERLOG_FILEPATH);
 
-    ParseArgs(argc, argv);
+    if (ParseArgs(argc, argv)) {
+	exit(1);
+    }
 
     if (auditFileName) {
 	osi_audit_file(auditFileName);
