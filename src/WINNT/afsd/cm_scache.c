@@ -689,7 +689,8 @@ cm_SuspendSCache(void)
     cm_scache_t * scp;
     time_t now;
 
-    cm_GiveUpAllCallbacksAllServersMulti(TRUE);
+    if (!lana_OnlyLoopback())
+	cm_GiveUpAllCallbacksAllServersMulti(TRUE);
 
     /*
      * After this call all servers are marked down.
@@ -725,7 +726,8 @@ cm_ShutdownSCache(void)
 {
     cm_scache_t * scp, * nextp;
 
-    cm_GiveUpAllCallbacksAllServersMulti(FALSE);
+    if (!lana_OnlyLoopback())
+	cm_GiveUpAllCallbacksAllServersMulti(FALSE);
 
     lock_ObtainWrite(&cm_scacheLock);
 
