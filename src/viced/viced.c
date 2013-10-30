@@ -1165,6 +1165,9 @@ ParseArgs(int argc, char *argv[])
 	    CMD_OPTIONAL, "configuration location");
 
     code = cmd_Parse(argc, argv, &opts);
+    if (code == CMD_HELP) {
+	exit(0);
+    }
     if (code)
 	return -1;
 

@@ -351,6 +351,9 @@ main(int argc, char **argv)
 		        "permit Kerberos 5 principals with dots");
 
     code = cmd_Parse(argc, argv, &opts);
+    if (code == CMD_HELP) {
+	PT_EXIT(0);
+    }
     if (code)
 	PT_EXIT(1);
 
