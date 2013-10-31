@@ -292,7 +292,7 @@ ParseArgs(int argc, char **argv) {
 	   "log vos users");
     cmd_AddParmAtOffset(opts, OPT_rxbind, "-rxbind", CMD_FLAG, CMD_OPTIONAL,
 	   "bind only to the primary interface");
-    cmd_AddParmAtOffset(opts, OPT_dotted, "-dotted", CMD_FLAG, CMD_OPTIONAL,
+    cmd_AddParmAtOffset(opts, OPT_dotted, "-allow-dotted-principals", CMD_FLAG, CMD_OPTIONAL,
 	   "permit Kerberos 5 principals with dots");
     cmd_AddParmAtOffset(opts, OPT_debug, "-d", CMD_SINGLE, CMD_OPTIONAL,
 	   "debug level");
