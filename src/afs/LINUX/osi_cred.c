@@ -21,10 +21,18 @@
 /* Copy one credential structure to another, being careful about references */
 static inline void
 afs_copy_creds(cred_t *to_cred, const cred_t *from_cred) {
+#if defined(STRUCT_TASK_STRUCT_HAS_CRED)
+    /* Skip afs_from_kuid/afs_make_kuid round trip */
+    to_cred->fsuid = from_cred->fsuid;
+    to_cred->fsgid = from_cred->fsgid;
+    to_cred->uid = from_cred->uid;
+    to_cred->gid = from_cred->gid;
+#else
     afs_set_cr_uid(to_cred, afs_cr_uid(from_cred));
     afs_set_cr_gid(to_cred, afs_cr_gid(from_cred));
     afs_set_cr_ruid(to_cred, afs_cr_ruid(from_cred));
     afs_set_cr_rgid(to_cred, afs_cr_rgid(from_cred));
+#endif
     get_group_info(afs_cr_group_info(from_cred));
     afs_set_cr_group_info(to_cred, afs_cr_group_info(from_cred));
 }

@@ -38,7 +38,7 @@ afs_linux_pag_from_groups(struct group_info *group_info) {
 	return NOPAG;
 
     for (i = 0; i < group_info->ngroups; i++) {
-	g0 = GROUP_AT(group_info, i);
+	g0 = afs_from_kgid(GROUP_AT(group_info, i));
 	if (((g0 >> 24) & 0xff) == 'A')
 	    return g0;
     }
@@ -51,6 +51,7 @@ afs_linux_pag_to_groups(afs_uint32 newpag,
     int need_space = 0;
     int i;
     int j;
+    afs_kgid_t newkgid = afs_make_kgid(newpag);
 
     if (afs_linux_pag_from_groups(old) == NOPAG)
 	need_space = NUMPAGGROUPS;
@@ -58,19 +59,19 @@ afs_linux_pag_to_groups(afs_uint32 newpag,
     *new = groups_alloc(old->ngroups + need_space);
 
     for (i = 0, j = 0; i < old->ngroups; ++i) {
-	int ths = GROUP_AT(old, i);
-	int last = i > 0 ? GROUP_AT(old, i-1) : 0;
-	if ((ths >> 24) == 'A')
+	afs_kgid_t ths = GROUP_AT(old, i);
+	if ((afs_from_kgid(ths) >> 24) == 'A')
 	    continue;
-	if (last <= newpag && ths > newpag) {
-	   GROUP_AT(*new, j) = newpag;
+	if ((i == 0 || !gid_lt(newkgid, GROUP_AT(old, i-1))) &&
+	    gid_lt(newkgid, ths)) {
+	   GROUP_AT(*new, j) = newkgid;
 	   j++;
 	}
 	GROUP_AT(*new, j) = ths;
 	j++;
     }
     if (j != i + need_space)
-        GROUP_AT(*new, j) = newpag;
+        GROUP_AT(*new, j) = newkgid;
 }
 
 #else
@@ -190,7 +191,7 @@ install_session_keyring(struct key *keyring)
 	/* if we're root, don't count the keyring against our quota. This
 	 * avoids starvation issues when dealing with PAM modules that always
 	 * setpag() as root */
-	if (current_uid() == 0)
+	if (capable(CAP_SYS_ADMIN))
 	    flags = KEY_ALLOC_NOT_IN_QUOTA;
 	else
 	    flags = KEY_ALLOC_IN_QUOTA;
@@ -250,7 +251,7 @@ setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
 	    perm = KEY_POS_VIEW | KEY_POS_SEARCH;
 	    perm |= KEY_USR_VIEW | KEY_USR_SEARCH;
 
-	    key = afs_linux_key_alloc(&key_type_afs_pag, "_pag", 0, 0, perm, KEY_ALLOC_NOT_IN_QUOTA);
+	    key = afs_linux_key_alloc(&key_type_afs_pag, "_pag", GLOBAL_ROOT_UID, GLOBAL_ROOT_GID, perm, KEY_ALLOC_NOT_IN_QUOTA);
 
 	    if (!IS_ERR(key)) {
 		code = key_instantiate_and_link(key, (void *) newpag, sizeof(afs_uint32),
@@ -461,7 +462,7 @@ static int afs_pag_instantiate(struct key *key, const void *data, size_t datalen
     int code;
     afs_uint32 *userpag, pag = NOPAG;
 
-    if (key->uid != 0 || key->gid != 0)
+    if (!uid_eq(key->uid, GLOBAL_ROOT_UID) || !gid_eq(key->gid, GLOBAL_ROOT_GID))
 	return -EPERM;
 
     code = -EINVAL;
@@ -597,7 +598,7 @@ osi_get_keyring_pag(afs_ucred_t *cred)
 	key = afs_linux_search_keyring(cred, &key_type_afs_pag);
 
 	if (!IS_ERR(key)) {
-	    if (key_validate(key) == 0 && key->uid == 0) {      /* also verify in the session keyring? */
+	    if (key_validate(key) == 0 && uid_eq(key->uid, GLOBAL_ROOT_UID)) {      /* also verify in the session keyring? */
 		keyring_pag = key->payload.value;
 		/* Only set PAG in groups if needed,
 		 * and the creds are from the current process */

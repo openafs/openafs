@@ -143,33 +143,76 @@ static inline long copyinstr(char *from, char *to, int count, int *length) {
 
 typedef struct task_struct afs_proc_t;
 
+#ifdef HAVE_LINUX_KUID_T
+
+typedef kuid_t afs_kuid_t;
+typedef kgid_t afs_kgid_t;
+extern struct user_namespace *afs_ns;
+# ifdef CONFIG_USER_NS
+#  define afs_current_user_ns() current_user_ns()
+# else
+/* Here current_user_ns() expands to GPL-only init_user_ns symbol! */
+#  define afs_current_user_ns() ((struct user_namespace *)NULL)
+# endif
+
+static inline kuid_t afs_make_kuid(uid_t uid) {
+    return make_kuid(afs_ns, uid);
+}
+static inline kgid_t afs_make_kgid(gid_t gid) {
+    return make_kgid(afs_ns, gid);
+}
+static inline uid_t afs_from_kuid(kuid_t kuid) {
+    return from_kuid(afs_ns, kuid);
+}
+static inline uid_t afs_from_kgid(kgid_t kgid) {
+    return from_kgid(afs_ns, kgid);
+}
+
+#else
+
+typedef uid_t afs_kuid_t;
+typedef gid_t afs_kgid_t;
+
+static inline afs_kuid_t afs_make_kuid(uid_t uid) {return uid;}
+static inline afs_kgid_t afs_make_kgid(gid_t gid) {return gid;}
+static inline uid_t afs_from_kuid(afs_kuid_t kuid) {return kuid;}
+static inline gid_t afs_from_kgid(afs_kgid_t kgid) {return kgid;}
+static inline bool uid_eq(uid_t a, uid_t b) {return a == b;}
+static inline bool gid_eq(gid_t a, gid_t b) {return a == b;}
+static inline bool uid_lt(uid_t a, uid_t b) {return a < b;}
+static inline bool gid_lt(gid_t a, gid_t b) {return a < b;}
+#define GLOBAL_ROOT_UID ((afs_kuid_t) 0)
+#define GLOBAL_ROOT_GID ((afs_kgid_t) 0)
+
+#endif
+
 /* Credentials.  For newer kernels we use the kernel structure directly. */
 #if defined(STRUCT_TASK_STRUCT_HAS_CRED)
 
 typedef struct cred afs_ucred_t;
 typedef struct cred cred_t;
 
-# define afs_cr_uid(cred) ((cred)->fsuid)
-# define afs_cr_gid(cred) ((cred)->fsgid)
-# define afs_cr_ruid(cred) ((cred)->uid)
-# define afs_cr_rgid(cred) ((cred)->gid)
+# define afs_cr_uid(cred) (afs_from_kuid((cred)->fsuid))
+# define afs_cr_gid(cred) (afs_from_kgid((cred)->fsgid))
+# define afs_cr_ruid(cred) (afs_from_kuid((cred)->uid))
+# define afs_cr_rgid(cred) (afs_from_kgid((cred)->gid))
 # define afs_cr_group_info(cred) ((cred)->group_info)
 # define crhold(c) (get_cred(c))
 static inline void
 afs_set_cr_uid(cred_t *cred, uid_t uid) {
-    cred->fsuid = uid;
+    cred->fsuid = afs_make_kuid(uid);
 }
 static inline void
 afs_set_cr_gid(cred_t *cred, gid_t gid) {
-    cred->fsgid = gid;
+    cred->fsgid = afs_make_kgid(gid);
 }
 static inline void
 afs_set_cr_ruid(cred_t *cred, uid_t uid) {
-    cred->uid = uid;
+    cred->uid = afs_make_kuid(uid);
 }
 static inline void
 afs_set_cr_rgid(cred_t *cred, gid_t gid) {
-    cred->gid = gid;
+    cred->gid = afs_make_kgid(gid);
 }
 static inline void
 afs_set_cr_group_info(cred_t *cred, struct group_info *group_info) {
