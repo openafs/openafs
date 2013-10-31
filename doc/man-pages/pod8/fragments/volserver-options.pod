@@ -100,6 +100,36 @@ service.  In a typical configuration this will be F</usr/afs/etc> - this
 option allows the use of alternative configuration locations for testing
 purposes.
 
+=item B<-rxmaxmtu> <I<bytes>>
+
+Defines the maximum size of an MTU.  The value must be between the
+minimum and maximum packet data sizes for Rx.
+
+=item B<-rxbind>
+
+Bind the Rx socket to the primary interface only. (If not specified, the Rx
+socket will listen on all interfaces.)
+
+=item B<-syslog>[=<I<syslog facility>>]
+
+Specifies that logging output should go to syslog instead of the normal
+log file. B<-syslog>=I<FACILITY> can be used to specify to which facility
+the log message should be sent.
+
+=item B<-sleep> <I<sleep_time>/I<run_time>>
+
+This option only applies to the LWP version of the volserver, and has no effect
+on the pthreaded version of the volserver. Note that OpenAFS no longer ships an
+LWP version of the volserver; the last version series where the LWP volserver
+was even built was the 1.6.x series of OpenAFS.
+
+For the LWP version of the volserver, specifying this option forces the
+volserver to sleep during certain volume operations, so the volserver does not
+become I/O bound. Approximately every I<run_time> seconds, the volserver is
+forced to sleep for I<sleep_time> seconds if any volume transactions are active
+that are performing certain operations. This includes operations involving
+deleting, cloning, moving, releasing, copying, or restoring a volume.
+
 =item B<-help>
 
 Prints the online help for this command. All other valid options are
