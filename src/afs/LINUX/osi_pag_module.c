@@ -54,6 +54,10 @@ DECLARE_MUTEX(afs_global_lock);
 struct proc_dir_entry *openafs_procfs;
 int afs_global_owner = 0;
 
+#ifdef HAVE_LINUX_KUID_T
+struct user_namespace *afs_ns;
+#endif
+
 int __init
 afspag_init(void)
 {
@@ -61,6 +65,10 @@ afspag_init(void)
     char path[64];
 #endif
     int err;
+
+#ifdef HAVE_LINUX_KUID_T
+    afs_ns = afs_current_user_ns();
+#endif
 
     osi_Init();
 

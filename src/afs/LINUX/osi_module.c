@@ -42,11 +42,19 @@ DECLARE_MUTEX(afs_global_lock);
 #endif
 int afs_global_owner = 0;
 
+#ifdef HAVE_LINUX_KUID_T
+struct user_namespace *afs_ns;
+#endif
+
 int __init
 afs_init(void)
 {
     int err;
     AFS_RWLOCK_INIT(&afs_xosi, "afs_xosi");
+
+#ifdef HAVE_LINUX_KUID_T
+    afs_ns = afs_current_user_ns();
+#endif
 
     osi_Init();
 #if !defined(AFS_NONFSTRANS)

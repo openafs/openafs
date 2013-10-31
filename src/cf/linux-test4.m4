@@ -353,7 +353,8 @@ AC_DEFUN([LINUX_KEY_ALLOC_NEEDS_STRUCT_TASK], [
 			[#include <linux/rwsem.h>
 			#include <linux/key.h> ],
 			[struct task_struct *t=NULL;
-			(void) key_alloc(NULL, NULL, 0, 0, t, 0, 0);],
+			struct key k = {};
+			(void) key_alloc(NULL, NULL, k.uid, k.gid, t, 0, 0);],
 			[KEY_ALLOC_NEEDS_STRUCT_TASK],
 			[define if key_alloc takes a struct task *],
 			[-Werror -Wno-pointer-arith])
@@ -366,10 +367,23 @@ AC_DEFUN([LINUX_KEY_ALLOC_NEEDS_CRED], [
 			[#include <linux/rwsem.h>
 			#include <linux/key.h>],
 			[struct cred *c = NULL;
-			(void) key_alloc(NULL, NULL, 0, 0, c, 0, 0);],
+			struct key k = {};
+			(void) key_alloc(NULL, NULL, k.uid, k.gid, c, 0, 0);],
 			[KEY_ALLOC_NEEDS_CRED],
 			[define if key_alloc takes credentials],
 			[-Werror -Wno-pointer-arith])
+])
+
+
+AC_DEFUN([LINUX_STRUCT_KEY_UID_IS_KUID_T], [
+  AC_CHECK_LINUX_BUILD([if struct key.uid is kuid_t],
+			[ac_cv_struct_key_uid_is_kuid_t],
+			[#include <linux/rwsem.h>
+			#include <linux/key.h>],
+			[struct key k = {};
+			kuid_t *kuid = &k.uid;],
+			[STRUCT_KEY_UID_IS_KUID_T],
+			[define if struct key.uid is kuid_t])
 ])
 
 

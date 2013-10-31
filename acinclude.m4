@@ -828,6 +828,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 
 		 dnl Type existence checks
 		 AC_CHECK_LINUX_TYPE([struct vfs_path], [dcache.h])
+		 AC_CHECK_LINUX_TYPE([kuid_t], [uidgid.h])
 
 		 dnl Check for structure elements
 		 AC_CHECK_LINUX_STRUCT([address_space_operations],
@@ -1011,6 +1012,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_LINUX_KEYRING_SUPPORT
 		 LINUX_KEY_ALLOC_NEEDS_STRUCT_TASK
 		 LINUX_KEY_ALLOC_NEEDS_CRED
+		 LINUX_STRUCT_KEY_UID_IS_KUID_T
 		 LINUX_INIT_WORK_HAS_DATA
 		 LINUX_REGISTER_SYSCTL_TABLE_NOFLAG
 		 LINUX_HAVE_DCACHE_LOCK

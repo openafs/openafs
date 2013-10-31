@@ -1009,9 +1009,9 @@ iattr2vattr(struct vattr *vattrp, struct iattr *iattrp)
     if (iattrp->ia_valid & ATTR_MODE)
 	vattrp->va_mode = iattrp->ia_mode;
     if (iattrp->ia_valid & ATTR_UID)
-	vattrp->va_uid = iattrp->ia_uid;
+	vattrp->va_uid = afs_from_kuid(iattrp->ia_uid);
     if (iattrp->ia_valid & ATTR_GID)
-	vattrp->va_gid = iattrp->ia_gid;
+	vattrp->va_gid = afs_from_kgid(iattrp->ia_gid);
     if (iattrp->ia_valid & ATTR_SIZE)
 	vattrp->va_size = iattrp->ia_size;
     if (iattrp->ia_valid & ATTR_ATIME) {
@@ -1049,8 +1049,8 @@ vattr2inode(struct inode *ip, struct vattr *vp)
 #endif
     ip->i_rdev = vp->va_rdev;
     ip->i_mode = vp->va_mode;
-    ip->i_uid = vp->va_uid;
-    ip->i_gid = vp->va_gid;
+    ip->i_uid = afs_make_kuid(vp->va_uid);
+    ip->i_gid = afs_make_kgid(vp->va_gid);
     i_size_write(ip, vp->va_size);
     ip->i_atime.tv_sec = vp->va_atime.tv_sec;
     ip->i_atime.tv_nsec = 0;
