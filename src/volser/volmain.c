@@ -154,46 +154,6 @@ BKGLoop(void *unused)
     return NULL;
 }
 
-/* Background daemon for sleeping so the volserver does not become I/O bound */
-afs_int32 TTsleep, TTrun;
-#ifndef AFS_PTHREAD_ENV
-static void *
-BKGSleep(void *unused)
-{
-    struct volser_trans *tt;
-
-    if (TTsleep) {
-	while (1) {
-#ifdef AFS_PTHREAD_ENV
-	    sleep(TTrun);
-#else /* AFS_PTHREAD_ENV */
-	    IOMGR_Sleep(TTrun);
-#endif
-	    VTRANS_LOCK;
-	    for (tt = TransList(); tt; tt = tt->next) {
-                VTRANS_OBJ_LOCK(tt);
-		if ((strcmp(tt->lastProcName, "DeleteVolume") == 0)
-		    || (strcmp(tt->lastProcName, "Clone") == 0)
-		    || (strcmp(tt->lastProcName, "ReClone") == 0)
-		    || (strcmp(tt->lastProcName, "Forward") == 0)
-		    || (strcmp(tt->lastProcName, "Restore") == 0)
-		    || (strcmp(tt->lastProcName, "ForwardMulti") == 0)) {
-                    VTRANS_OBJ_UNLOCK(tt);
-		    break;
-                }
-                VTRANS_OBJ_UNLOCK(tt);
-	    }
-	    if (tt) {
-	        VTRANS_UNLOCK;
-		sleep(TTsleep);
-	    } else
-	        VTRANS_UNLOCK;
-	}
-    }
-    return NULL;
-}
-#endif
-
 #ifdef AFS_NT40_ENV
 /* no volser_syscall */
 #elif defined(AFS_SUN511_ENV)
@@ -380,13 +340,7 @@ ParseArgs(int argc, char **argv) {
 	}
     }
     if (cmd_OptionAsString(opts, OPT_sleep, &sleepSpec) == 0) {
-	sscanf(sleepSpec, "%d/%d", &TTsleep, &TTrun);
-	if ((TTsleep < 0) || (TTrun <= 0)) {
-	    printf("Warning: '-sleep %d/%d' is incorrect; ignoring\n",
-		    TTsleep, TTrun);
-	    TTsleep = TTrun = 0;
-	}
-
+	printf("Warning: -sleep option ignored; this option is obsolete\n");
     }
     if (cmd_OptionAsString(opts, OPT_sync, &sync_behavior) == 0) {
 	if (ih_SetSyncBehavior(sync_behavior)) {
@@ -439,8 +393,6 @@ main(int argc, char **argv)
 		argv[0]);
 	exit(2);
     }
-
-    TTsleep = TTrun = 0;
 
     configDir = strdup(AFSDIR_SERVER_ETC_DIRPATH);
     logFile = strdup(AFSDIR_SERVER_VOLSERLOG_FILEPATH);
@@ -544,7 +496,6 @@ main(int argc, char **argv)
 #else
 	PROCESS pid;
 	LWP_CreateProcess(BKGLoop, 16*1024, 3, 0, "vol bkg daemon", &pid);
-	LWP_CreateProcess(BKGSleep,16*1024, 3, 0, "vol slp daemon", &pid);
 #endif
     }
 
@@ -599,11 +550,6 @@ main(int argc, char **argv)
 		   Log);
     if (afsconf_GetLatestKey(tdir, NULL, NULL) == 0) {
 	LogDesWarning();
-    }
-    if (TTsleep) {
-	Log("Will sleep %d second%s every %d second%s\n", TTsleep,
-	    (TTsleep > 1) ? "s" : "", TTrun + TTsleep,
-	    (TTrun + TTsleep > 1) ? "s" : "");
     }
 
     /* allow super users to manage RX statistics */
