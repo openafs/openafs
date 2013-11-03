@@ -43,17 +43,25 @@ issued.
 
 Identifies the database server process for which to display status
 information, either by its process name or port number. Provide one of the
-following values.
+following values:
 
 =over 4
 
-=item B<buserver> or 7021 for the Backup Server
+=item
 
-=item B<kaserver> or 7004 for the Authentication Server
+B<buserver> or 7021 for the Backup Server
 
-=item B<ptserver> or 7002 for the Protection Server
+=item
 
-=item B<vlserver> or 7003 for the Volume Location Server
+B<kaserver> or 7004 for the Authentication Server
+
+=item
+
+B<ptserver> or 7002 for the Protection Server
+
+=item
+
+B<vlserver> or 7003 for the Volume Location Server
 
 =back
 
