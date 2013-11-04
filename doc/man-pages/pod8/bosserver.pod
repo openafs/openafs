@@ -119,9 +119,10 @@ suites. Provide the command name and all option names in full.
 
 =item B<-noauth>
 
-Assigns the unprivileged identity C<anonymous> to the issuer, which is
-useful only when authorization checking is disabled on the server machine
-(for instance, during the installation of a file server machine.)
+Turns off all authorization checks, and allows all connecting users to act as
+administrators, even unauthenticated users. The use of this option is
+inherently insecure, and should only be used in controlled environments for
+experimental or debug purposes. See L<NoAuth(5)>.
 
 =item B<-log>
 
