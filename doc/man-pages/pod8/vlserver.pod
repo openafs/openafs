@@ -7,13 +7,21 @@ vlserver - Initializes the Volume Location Server
 =for html
 <div class="synopsis">
 
-vlserver S<<< [B<-p> <I<number of threads>>] >>> [B<-nojumbo>]
-[B<-jumbo>] [B<-rxbind>] S<<< [B<-d> <I<debug level>>] >>>
-[B<-allow-dotted-principals>] S<<< [B<-database <I<database path>>] >>>
-S<<< [B<-logfile <I<log file>>] >>> S<<< [B<-config <I<configuration path>>] >>>
-[B<-enable_peer_stats>] [B<-enable_process_stats>]
-S<<< [B<-auditlog> <I<log path>>] >>> S<<< [B<-audit-interface> (file | sysvmq)] >>>
-[B<-help>]
+vlserver [B<-noauth>] [B<-smallmem>]
+    S<<< [B<-p> <I<number of threads>>] >>> [B<-nojumbo>]
+    [B<-jumbo>] [B<-rxbind>]
+    S<<< [B<-d> <I<debug level>>] >>>
+    S<<< [B<-rxmaxmtu> <I<bytes>>] >>>
+    S<<< [B<-trace> <I<trace file>>] >>>
+    [B<-allow-dotted-principals>]
+    S<<< [B<-database> | B<-db> <I<database path>>] >>>
+    S<<< [B<-logfile> <I<log file>>] >>>
+    S<<< [B<-config> <I<configuration path>>] >>>
+    S<<< [B<-syslog>[=<I<facility>>]>] >>>
+    [B<-enable_peer_stats>] [B<-enable_process_stats>]
+    S<<< [B<-auditlog> <I<log path>>] >>>
+    S<<< [B<-audit-interface> (file | sysvmq)] >>>
+    [B<-help>]
 
 =for html
 </div>
@@ -126,6 +134,40 @@ L<fileserver(8)> for an explanation of each interface.
 Bind the Rx socket to the primary interface only.  (If not specified, the
 Rx socket will listen on all interfaces.)
 
+=item B<-syslog>[=<I<syslog facility>>]
+
+Specifies that logging output should go to syslog instead of the normal log
+file. B<-syslog>=I<FACILITY> can be used to specify to which facility the log
+message should be sent. Logging message sent to syslog are tagged with the
+string "vlserver".
+
+=item B<-noauth>
+
+Turns off all authorization checks, and allows all connecting users to act as
+administrators, even unauthenticated users. The use of this option is
+inherently insecure, and should only be used in controlled environments for
+experimental or debug purposes. See L<NoAuth(5)>.
+
+=item B<-smallmem>
+
+Specifies that the vlserver should limit its memory usage during certain
+operations, and return an error to the calling client instead of allocating
+more memory. This option is only useful on systems where memory is severely
+limited, and should not be needed on any remotely modern system.
+
+=item B<-rxmaxmtu> <I<bytes>>
+
+Sets the maximum transmission unit for the RX protocol.
+
+=item B<-trace> <I<trace file>>
+
+Turns on low-level Rx packet tracing, and logs the trace information to the
+specified file. The trace file can be later dumped into a human-readable form
+with a tool called B<dumptrace>.
+
+It is not recommended to turn on this option during normal operation, since the
+detailed tracing may cause performance issues and use up a lot of disk space.
+
 =item B<-logfile> <I<log file>>
 
 Sets the file to use for server logging. If logfile is not specified, and
@@ -134,7 +176,7 @@ Note that this option is intended for debugging and testing purposes.
 Changing the location of the log file from the command line may result
 in undesirable interactions with tools such as B<bos>.
 
-=item B<-database> <I<database path>>
+=item B<-database> | B<-db> <I<database path>>
 
 Set the location of the database used by this program. This option is
 intended primarily for testing purposes.
