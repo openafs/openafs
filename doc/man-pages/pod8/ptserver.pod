@@ -8,18 +8,19 @@ ptserver - Initializes the Protection Server
 <div class="synopsis">
 
 ptserver S<<< [B<-database> | B<-db> <I<db path>>] >>>
-S<<< [B<-p> <I<number of threads>>] >>> S<<< [B<-d> <I<debug level>>] >>>
-S<<< [B<-groupdepth> <I<# of nested groups>>] >>>
-S<<< [B<-default_access> <I<user access mask>> <I<group access mask>>] >>>
-[B<-restricted>] [B<-enable_peer_stats>]
-[B<-enable_process_stats>] [B<-allow-dotted-principals>]
-[B<-rxbind>] S<<< [B<-auditlog> <I<file path>>] >>>
-S<<< [B<-audit-interface> (file | sysvmq)] >>>
-S<<< [B<-syslog>[=<I<FACILITY>>]] >>>
-S<<< [B<-logfile <I<log file>>] >>>
-S<<< [B<-config <I<configuration path>>] >>>
-S<<< [B<-rxmaxmtu> <I<bytes>>] >>>
-[B<-help>]
+    S<<< [B<-p> <I<number of threads>>] >>>
+    S<<< [B<-d> <I<debug level>>] >>>
+    S<<< [B<-groupdepth> | B<-depth> <I<# of nested groups>>] >>>
+    S<<< [B<-default_access> <I<user access mask>> <I<group access mask>>] >>>
+    [B<-restricted>] [B<-enable_peer_stats>]
+    [B<-enable_process_stats>] [B<-allow-dotted-principals>]
+    [B<-rxbind>] S<<< [B<-auditlog> <I<file path>>] >>>
+    S<<< [B<-audit-interface> (file | sysvmq)] >>>
+    S<<< [B<-syslog>[=<I<FACILITY>>]] >>>
+    S<<< [B<-logfile <I<log file>>] >>>
+    S<<< [B<-config <I<configuration path>>] >>>
+    S<<< [B<-rxmaxmtu> <I<bytes>>] >>>
+    [B<-help>]
 
 =for html
 </div>
@@ -80,7 +81,7 @@ F</usr/afs/logs/PtLog> file. Provide one of the following values, each
 of which produces an increasingly detailed trace: C<0>, C<1>, C<5>, C<25>,
 and C<125>. 
 
-=item B<-database> <I<db path>>, B<-db> <I<db path>>
+=item B<-database> | B<-db> <I<db path>>
 
 Specifies the pathname of an alternate directory in which the Protection
 Database files reside. Provide the complete pathname, ending in the base
@@ -94,11 +95,11 @@ Sets the number of server lightweight processes (LWPs or pthreads) to run.
 Provide a positive integer from the range C<3> to C<64>. The default
 value is C<3>.
 
-=item B<-groupdepth> <I<# of nested groups>>, B<-depth> <I<# of nested groups>>
+=item B<-groupdepth> | B<-depth> <I<# of nested groups>>
 
 Specifies the group depth for nested groups when B<ptserver> is compiled
 with the SUPERGROUPS option enabled.  The default depth for nested groups
-is 5.  This option may be shortened to B<-depth>.
+is 5.
 
 =item B<-default_access> <I<user access>> <I<group access>>
 
