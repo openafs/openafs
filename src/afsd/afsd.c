@@ -2507,11 +2507,9 @@ afsd_init(void)
     cmd_AddParmAtOffset(ts, OPT_shutdown, "-shutdown", CMD_FLAG,
 		        CMD_OPTIONAL, "Shutdown all afs state");
     cmd_AddParmAtOffset(ts, OPT_peerstats, "-enable_peer_stats", CMD_FLAG,
-			CMD_OPTIONAL | CMD_HIDE,
-			"Collect rpc statistics by peer");
+			CMD_OPTIONAL, "Collect rpc statistics by peer");
     cmd_AddParmAtOffset(ts, OPT_processstats, "-enable_process_stats",
-		        CMD_FLAG, CMD_OPTIONAL | CMD_HIDE,
-			"Collect rpc statistics for this process");
+		        CMD_FLAG, CMD_OPTIONAL, "Collect rpc statistics for this process");
     cmd_AddParmAtOffset(ts, OPT_memallocsleep, "-mem_alloc_sleep",
 			CMD_FLAG, CMD_OPTIONAL | CMD_HIDE,
 			"Allow sleeps when allocating memory cache");

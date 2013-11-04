@@ -201,7 +201,7 @@ main(int argc, char *argv[])
 	       "[-auditlog <log path>] [-audit-interface <file|sysvmq>] "
 	       "[-rxbind] [-localfiles <lclpath>] [-minhours <n>] "
 	       "[-servers <serverlist>] [-crossrealm] "
-	       /*" [-enable_peer_stats] [-enable_process_stats] " */
+	       "[-enable_peer_stats] [-enable_process_stats] "
 	       "[-help]\n");
 	exit(1);
     }
