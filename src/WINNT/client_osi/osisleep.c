@@ -197,7 +197,6 @@ void osi_Init(void)
     static osi_once_t once;
     unsigned long remainder;		/* for division output */
     osi_fdType_t *typep;
-    SYSTEMTIME sysTime;
     FILETIME fileTime;
     osi_hyper_t bootTime;
 
@@ -206,8 +205,7 @@ void osi_Init(void)
         return;
 
     /* setup boot time values */
-    GetSystemTime(&sysTime);
-    SystemTimeToFileTime(&sysTime, &fileTime);
+    GetSystemTimeAsFileTime(&fileTime);
 
     /* change the base of the time so it won't be negative for a long time */
     fileTime.dwHighDateTime -= 28000000;
@@ -708,13 +706,11 @@ void osi_panic(char *msgp, char *filep, long line)
 time_t osi_Time(void)
 {
     FILETIME fileTime;
-    SYSTEMTIME sysTime;
     unsigned long remainder;
     LARGE_INTEGER bootTime;
 
     /* setup boot time values */
-    GetSystemTime(&sysTime);
-    SystemTimeToFileTime(&sysTime, &fileTime);
+    GetSystemTimeAsFileTime(&fileTime);
 
     /* change the base of the time so it won't be negative for a long time */
     fileTime.dwHighDateTime -= 28000000;
@@ -737,13 +733,11 @@ time_t osi_Time(void)
 void osi_GetTime(long *timesp)
 {
     FILETIME fileTime;
-    SYSTEMTIME sysTime;
     unsigned long remainder;
     LARGE_INTEGER bootTime;
 
     /* setup boot time values */
-    GetSystemTime(&sysTime);
-    SystemTimeToFileTime(&sysTime, &fileTime);
+    GetSystemTimeAsFileTime(&fileTime);
 
     /* change the base of the time so it won't be negative for a long time */
     fileTime.dwHighDateTime -= 28000000;
