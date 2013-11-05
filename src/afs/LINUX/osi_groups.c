@@ -37,8 +37,8 @@ afs_linux_pag_from_groups(struct group_info *group_info) {
     if (group_info->ngroups < NUMPAGGROUPS)
 	return NOPAG;
 
-    for (i = 0; (i < group_info->ngroups &&
-		 (g0 = GROUP_AT(group_info, i)) != (gid_t) NOGROUP); i++) {
+    for (i = 0; i < group_info->ngroups; i++) {
+	g0 = GROUP_AT(group_info, i);
 	if (((g0 >> 24) & 0xff) == 'A')
 	    return g0;
     }
