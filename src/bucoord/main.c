@@ -464,7 +464,17 @@ main(int argc, char **argv)
     /* setup the default backup dir */
     DefaultConfDir = AFSDIR_SERVER_BACKUP_DIRPATH;
     /* Get early warning if the command is interacive mode or not */
-    interact = (((argc < 2) || (argv[1][0] == '-')) ? 1 : 0);
+    if (argc < 2) {
+	interact = 1;
+    } else {
+	interact = 0;
+	if (argv[1][0] == '-') {
+	    interact = 1;
+	    if (strcmp(argv[1], "-help") == 0) {
+		interact = 0;
+	    }
+	}
+    }
 
     cmd_SetBeforeProc(MyBeforeProc, NULL);
 
