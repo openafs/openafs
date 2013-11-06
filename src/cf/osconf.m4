@@ -525,37 +525,29 @@ case $AFS_SYSNAME in
 		LWP_OPTMZ="-g"
 		;;
 
-	sunx86_58|sunx86_59)
-		CC=$SOLARISCC
-		LD="/usr/ccs/bin/ld"
-		MT_CFLAGS='-mt'
-		PAM_CFLAGS="-KPIC"
-		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
-		SHLIB_CFLAGS="-KPIC"
-		SHLIB_LDFLAGS="-G -Bsymbolic"
-		XCFLAGS64='${XCFLAGS} -xarch=amd64'
-		XCFLAGS="-dy -Bdynamic"
-		XLIBELFA="-lelf"
-		XLIBKVM="-lkvm"
-		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
-		SHLIB_LINKER="${CC} -G -dy -Bsymbolic -z text"
-		;;
+	sunx86_5*)
+		case $AFS_SYSNAME in
+			sunx86_58|sunx86_59)
+				XARCHFLAGS=""
+				;;
+			*)
+				if test "x`echo "${ARCHFLAGS}" | grep m32`" != "x" ; then
+					CURRENTBUILDARCH=i386
+				fi
+				if test "x`echo "${ARCHFLAGS}" | grep m64`" != "x" ; then
+					CURRENTBUILDARCH=amd64
+				fi
+				if test "x${CURRENTBUILDARCH}" = "x" ; then
+					CURRENTBUILDARCH=`isainfo -k`
+				fi
+				if test "${CURRENTBUILDARCH}" = "amd64" ; then
+					XARCHFLAGS="-m64"
+				fi
+				;;
+		esac
 
-	sunx86_510|sunx86_511)
-		if test "x`echo "${ARCHFLAGS}" | grep m32`" != "x" ; then
-			CURRENTBUILDARCH=i386
-		fi
-		if test "x`echo "${ARCHFLAGS}" | grep m64`" != "x" ; then
-			CURRENTBUILDARCH=amd64
-		fi
-		if test "x${CURRENTBUILDARCH}" = "x" ; then
-			CURRENTBUILDARCH=`isainfo -k`
-		fi
-		if test "${CURRENTBUILDARCH}" = "amd64" ; then
-			XARCHFLAGS="-m64"
-		fi
 		CC=$SOLARISCC
-		CFLAGS="$CFLAGS $XARCHFLAGS"
+		CFLAGS="$CFLAGS ${XARCHFLAGS}"
 		LD="/usr/ccs/bin/ld"
 		MT_CFLAGS='-mt'
 		PAM_CFLAGS="-KPIC"
@@ -571,7 +563,7 @@ case $AFS_SYSNAME in
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
-		SHLIB_LINKER="${CC} ${XCFLAGS} -G -z text"
+		SHLIB_LINKER="${CC} ${XARCHFLAGS} -G -dy -Bsymbolic -z text"
 		;;
 
 esac
