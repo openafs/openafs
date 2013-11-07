@@ -2445,7 +2445,7 @@ bc_deleteDumpCmd(struct cmd_syndesc *as, void *arock)
 	havetime = 1;
     }
 
-    port = (as->parms[3].items ? getPortOffset(as->parms[3].items->data) : 0);	/* -port */
+    port = (as->parms[3].items ? getPortOffset(as->parms[3].items->data) : 0);	/* -portoffset */
     if (as->parms[5].items)	/* -dbonly */
 	port = -1;
 
