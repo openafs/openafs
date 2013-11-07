@@ -375,18 +375,6 @@ AC_DEFUN([LINUX_KEY_ALLOC_NEEDS_CRED], [
 ])
 
 
-AC_DEFUN([LINUX_STRUCT_KEY_UID_IS_KUID_T], [
-  AC_CHECK_LINUX_BUILD([if struct key.uid is kuid_t],
-			[ac_cv_struct_key_uid_is_kuid_t],
-			[#include <linux/rwsem.h>
-			#include <linux/key.h>],
-			[struct key k = {};
-			kuid_t *kuid = &k.uid;],
-			[STRUCT_KEY_UID_IS_KUID_T],
-			[define if struct key.uid is kuid_t])
-])
-
-
 AC_DEFUN([LINUX_INIT_WORK_HAS_DATA], [
   AC_CHECK_LINUX_BUILD([whether INIT_WORK has a _data argument],
 		       [ac_cv_linux_init_work_has_data],

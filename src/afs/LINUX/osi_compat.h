@@ -178,14 +178,6 @@ afs_linux_key_alloc(struct key_type *type, const char *desc, afs_kuid_t uid,
 {
 # if defined(KEY_ALLOC_NEEDS_STRUCT_TASK)
     return key_alloc(type, desc, uid, gid, current, perm, flags);
-# elif defined(KEY_ALLOC_NEEDS_CRED) && defined(HAVE_LINUX_KUID_T) && \
-    !defined(STRUCT_KEY_UID_IS_KUID_T)
-    /* In this case, uid and gid are specified relative to
-     * current_cred() */
-    return key_alloc(type, desc,
-		     from_kuid(afs_current_user_ns(), uid),
-		     from_guid(afs_current_user_ns(), gid),
-		     current_cred(), perm, flags);
 # elif defined(KEY_ALLOC_NEEDS_CRED)
     return key_alloc(type, desc, uid, gid, current_cred(), perm, flags);
 # else
