@@ -12,7 +12,7 @@ B<backup volrestore> S<<< B<-server> <I<destination machine>> >>>
     S<<< B<-volume> <I<volume(s) to restore>>+ >>>
     S<<< [B<-extension> <I<new volume name extension>>] >>>
     S<<< [B<-date> <I<date from which to restore>>+] >>>
-    S<<< [B<-portoffset> <I<TC port offsets>>+] >>> [B<-dryrun>]
+    S<<< [B<-portoffset> <I<TC port offsets>>+] >>> [B<-dryrun> | B<-n>]
     S<<< [B<-usedump> <I<specify the dumpID to restore from>>] >>>
     [B<-localauth>] S<<< [B<-cell> <I<cell name>>] >>> [B<-help>]
 
@@ -23,7 +23,7 @@ B<backup volr> S<<< B<-s> <I<destination machine>> >>>
     S<<< [B<-d> <I<date from which to restore>>+] >>>
     S<<< [B<-po> <I<TC port offsets>>+] >>>
     S<<< [B<-u> <I<specify the dumpID to restore from>>] >>>
-    [B<-dryrun>] [B<-l>] S<<< [B<-c> <I<cell name>>] >>> [B<-h>]
+    [B<-dryrun> | B<-n>] [B<-l>] S<<< [B<-c> <I<cell name>>] >>> [B<-h>]
 
 =for html
 </div>
@@ -216,6 +216,12 @@ reduces any later date to the maximum value.
 If this argument is omitted, the Backup System restores all possible dumps
 including the most recently created.
 
+=item B<-usedump> <I<dumpID>>
+
+Specifies the dumpID of the specific dump to use to restore the volume. If this
+option is not specified, we will find the appropriate dump to restore,
+according to the logic in the B<-date> option.
+
 =item B<-portoffset> <I<TC port offest>>+
 
 Specifies one or more port offset numbers (up to a maximum of 128), each
@@ -230,7 +236,7 @@ Provide this argument unless the default value of 0 (zero) is appropriate
 for all dumps. If C<0> is just one of the values in the list, provide it
 explicitly in the appropriate order.
 
-=item B<-dryrun>
+=item B<-dryrun> | B<-n>
 
 Displays the list of tapes that contain the dumps required by the restore
 operation, without actually performing the operation.

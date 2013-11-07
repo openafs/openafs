@@ -11,14 +11,14 @@ B<backup dump> S<<< [B<-volumeset> <I<volume set name>>] >>>
     S<<< [B<-dump> <I<dump level name>>] >>> 
     S<<< [B<-portoffset> <I<TC port offset>>] >>>
     S<<< [B<-at> <I<date/time to start dump>>+] >>>
-    [B<-append>] [B<-n>]
+    [B<-append>] [B<-dryrun> | B<-n>]
     S<<< [B<-file> <I<load file>>] >>> [B<-localauth>] 
     S<<< [B<-cell> <I<cell name>>] >>> [B<-help>]
 
 B<backup dump> S<<< [B<-v> <I<volume set name>>] >>>
     S<<< [B<-d> <I<dump level name>>] >>>
     S<<< [B<-p> <I<TC port offset>>] >>>
-    S<<< [B<-at> <I<Date/time to start dump>>+] >>> [B<-ap>] [B<-n>]
+    S<<< [B<-at> <I<Date/time to start dump>>+] >>> [B<-ap>] [B<-dryrun> | B<-n>]
     S<<< [B<-f> <I<load file>>] >>> [B<-l>] S<<< [B<-c> <I<cell name>>] >>>
     [B<-h>]
 
@@ -110,13 +110,13 @@ To schedule multiple dump operations, list the operations in the file
 named by the B<-file> argument. Optionally include the B<-at> argument to
 specify when the B<backup> command interpreter reads the file; otherwise
 it reads it immediately. Do not combine the B<-file> argument with the
-command's first three arguments or the B<-append> or B<-n> flags. The
+command's first three arguments or the B<-append> or B<-dryrun> flags. The
 commands in the file can include any of the B<backup dump> command's
 arguments, including the B<-at> argument to schedule them to run even
 later in the future.
 
 To generate a list of the volumes included in a dump, without actually
-dumping them, combine the B<-n> flag with the options to be used on the
+dumping them, combine the B<-dryrun> flag with the options to be used on the
 actual command.
 
 =head2 How the Backup System executes a dump operation
@@ -381,7 +381,7 @@ dump. If the tape is not the last tape in the dump set, the Tape
 Coordinator prompts for insertion of the appropriate tape. Do not combine
 this argument with the B<-file> argument.
 
-=item B<-n>
+=item B<-dryrun> | B<-n>
 
 Displays the names of volumes to be included in the indicated dump,
 without actually performing the dump operation. Do not combine this
@@ -410,7 +410,7 @@ date and time at which the Backup System reads the file.
    dump sun4x_55 /sunday1/friday -port 2 -at 04/08/1999 02:00 -append
 
 Do not combine this argument with the B<-volumeset>, B<-dump>,
-B<-portoffset>, B<-append>, or B<-n> options.
+B<-portoffset>, B<-append>, or B<-dryrun> options.
 
 =item B<-localauth>
 
@@ -447,7 +447,7 @@ processing:
 
    Starting dump.
 
-If the issuer includes the B<-n> flag, the output is of the following
+If the issuer includes the B<-dryrun> flag, the output is of the following
 form:
 
    Starting dump of volume set '<volume set>' (dump set '<dump level>')
@@ -479,7 +479,7 @@ tapes in the device with port offset 5.
 The following command displays the list of volumes to be dumped when the
 user dumps the C<sys_sun> volume set at the C</full> dump level.
 
-   % backup dump -volumeset sys_sun -dump /full -n
+   % backup dump -volumeset sys_sun -dump /full -dryrun
    Starting dump of volume set 'sys_sun' (dump set '/full')
    Total number of volumes: 24
    Would have dumped the following volumes:

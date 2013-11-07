@@ -13,14 +13,14 @@ B<backup diskrestore> S<<< B<-server> <I<machine to restore>> >>>
     S<<< [B<-newserver> <I<destination machine>>] >>>
     S<<< [B<-newpartition> <I<destination partition>>] >>>
     S<<< [B<-extension> <I<new volume name extension>>] >>>
-    [B<-dryrun>] [B<-localauth>] S<<< [B<-cell> <I<cell name>>] >>> [B<-help>]
+    [B<-dryrun> | B<-n>] [B<-localauth>] S<<< [B<-cell> <I<cell name>>] >>> [B<-help>]
 
 B<backup di> S<<< B<-s> <I<machine to restore>> >>>
     S<<< B<-pa> <I<partition to restore>> >>>
     S<<< [B<-po> <I<TC port offset>>+] >>>
     S<<< [B<-news> <I<destination machine>>] >>>
     S<<< [B<-newp> <I<destination partition>>] >>>
-    S<<< [B<-e> <I<new volume name extension>>] >>> [B<-dryrun>] [B<-l>]
+    S<<< [B<-e> <I<new volume name extension>>] >>> [B<-dryrun> | B<-n>] [B<-l>]
     S<<< [B<-c> <I<cell name>>] >>> [B<-h>]
 
 =for html
@@ -179,7 +179,7 @@ name and extension cannot exceed 22 characters in length. To use a period
 to separate the extension from the name, specify it as the first character
 of the string (as in C<.rst>, for example).
 
-=item B<-dryrun>
+=item B<-dryrun> | B<-n>
 
 Displays a list of the tapes necessary to perform the requested restore,
 without actually performing the operation.

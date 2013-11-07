@@ -10,14 +10,14 @@ backup_volsetrestore - Restores all volumes in a volume set
 B<backup volsetrestore> S<<< [B<-name> <I<volume set name>>] >>>
     S<<< [B<-file> <I<file name>>] >>>
     S<<< [B<-portoffset> <I<TC port offset>>+] >>>
-    S<<< [B<-extension> <I<new volume name extension>>] >>> [B<-dryrun>]
+    S<<< [B<-extension> <I<new volume name extension>>] >>> [B<-dryrun> | B<-n>]
     [B<-localauth>] S<<< [B<-cell> <I<cell name>>] >>> [B<-help>]
 
 B<backup vols> S<<< [B<-na> <I<volume set name>>] >>>
     S<<< [B<-f> <I<file name>>] >>>
     S<<< [B<-p> <I<TC port offset>>+] >>>
     S<<< [B<-e> <I<new volume name extension>>] >>>
-    [B<-dryrun>] [B<-l>] S<<< [B<-c> <I<cell name>>] >>> [B<-h>]
+    [B<-dryrun> | B<-n>] [B<-l>] S<<< [B<-c> <I<cell name>>] >>> [B<-h>]
 
 =for html
 </div>
@@ -225,7 +225,7 @@ Provide this argument unless the default value of 0 (zero) is appropriate
 for all dumps. If C<0> is just one of the values in the list, provide it
 explicitly in the appropriate order.
 
-=item B<-dryrun>
+=item B<-dryrun> | B<-n>
 
 Displays a list of the volumes to be restored if the flag were not
 included, without actually restoring them. L</OUTPUT> details the format of
