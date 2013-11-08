@@ -77,7 +77,7 @@ my $msgsize = 2048;
 my ($msg, $msgtype, $msgtext);
 while (1) {
     if (msgrcv($mqid, $msg, $msgsize, 0, 0)) {
-        ($msgtype, $msgtext) = unpack("i! a*", $msg);
+        ($msgtype, $msgtext) = unpack("l! a*", $msg);
         print $msgtext, "\n";
     }
 }
