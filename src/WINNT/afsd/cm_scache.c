@@ -538,31 +538,35 @@ cm_ValidateSCache(void)
             return -1;
         }
 
-	if ( scp->nextp < (cm_scache_t *)cm_data.scacheBaseAddress ||
-	     scp->nextp >= (cm_scache_t *)cm_data.dnlcBaseAddress) {
-	    afsi_log("cm_ValidateSCache failure: out of range cm_scache_t pointers");
-	    fprintf(stderr, "cm_ValidateSCache failure: out of range cm_scache_t pointers\n");
-	    return -21;
+	if ( scp->nextp) {
+	    if ( scp->nextp < (cm_scache_t *)cm_data.scacheBaseAddress ||
+		 scp->nextp >= (cm_scache_t *)cm_data.dnlcBaseAddress) {
+		afsi_log("cm_ValidateSCache failure: out of range cm_scache_t pointers");
+		fprintf(stderr, "cm_ValidateSCache failure: out of range cm_scache_t pointers\n");
+		return -21;
+	    }
+
+	    if ( scp->nextp->magic != CM_SCACHE_MAGIC) {
+		afsi_log("cm_ValidateSCache failure: scp->nextp->magic != CM_SCACHE_MAGIC");
+		fprintf(stderr, "cm_ValidateSCache failure: scp->nextp->magic != CM_SCACHE_MAGIC\n");
+		return -2;
+	    }
 	}
 
-        if (scp->nextp && scp->nextp->magic != CM_SCACHE_MAGIC) {
-            afsi_log("cm_ValidateSCache failure: scp->nextp->magic != CM_SCACHE_MAGIC");
-            fprintf(stderr, "cm_ValidateSCache failure: scp->nextp->magic != CM_SCACHE_MAGIC\n");
-            return -2;
-        }
+	if ( scp->randomACLp) {
+	    if ( scp->randomACLp < (cm_aclent_t *)cm_data.aclBaseAddress ||
+		 scp->randomACLp >= (cm_aclent_t *)cm_data.scacheBaseAddress) {
+		afsi_log("cm_ValidateSCache failure: out of range cm_aclent_t pointers");
+		fprintf(stderr, "cm_ValidateSCache failure: out of range cm_aclent_t pointers\n");
+		return -32;
+	    }
 
-	if ( scp->randomACLp < (cm_aclent_t *)cm_data.aclBaseAddress ||
-	     scp->randomACLp >= (cm_aclent_t *)cm_data.scacheBaseAddress) {
-	    afsi_log("cm_ValidateSCache failure: out of range cm_aclent_t pointers");
-	    fprintf(stderr, "cm_ValidateSCache failure: out of range cm_aclent_t pointers\n");
-	    return -32;
+	    if ( scp->randomACLp->magic != CM_ACLENT_MAGIC) {
+		afsi_log("cm_ValidateSCache failure: scp->randomACLp->magic != CM_ACLENT_MAGIC");
+		fprintf(stderr, "cm_ValidateSCache failure: scp->randomACLp->magic != CM_ACLENT_MAGIC\n");
+		return -3;
+	    }
 	}
-
-        if (scp->randomACLp && scp->randomACLp->magic != CM_ACLENT_MAGIC) {
-            afsi_log("cm_ValidateSCache failure: scp->randomACLp->magic != CM_ACLENT_MAGIC");
-            fprintf(stderr, "cm_ValidateSCache failure: scp->randomACLp->magic != CM_ACLENT_MAGIC\n");
-            return -3;
-        }
         if (i > cm_data.currentSCaches ) {
             afsi_log("cm_ValidateSCache failure: LRU First queue loops");
             fprintf(stderr, "cm_ValidateSCache failure: LUR First queue loops\n");
@@ -591,32 +595,37 @@ cm_ValidateSCache(void)
             return -5;
         }
 
-	if ( scp->nextp < (cm_scache_t *)cm_data.scacheBaseAddress ||
-	     scp->nextp >= (cm_scache_t *)cm_data.dnlcBaseAddress) {
-	    afsi_log("cm_ValidateSCache failure: out of range cm_scache_t pointers");
-	    fprintf(stderr, "cm_ValidateSCache failure: out of range cm_scache_t pointers\n");
-	    return -22;
+	if ( scp->nextp) {
+	    if ( scp->nextp < (cm_scache_t *)cm_data.scacheBaseAddress ||
+		 scp->nextp >= (cm_scache_t *)cm_data.dnlcBaseAddress) {
+		afsi_log("cm_ValidateSCache failure: out of range cm_scache_t pointers");
+		fprintf(stderr, "cm_ValidateSCache failure: out of range cm_scache_t pointers\n");
+		return -22;
+	    }
+
+	    if ( scp->nextp->magic != CM_SCACHE_MAGIC) {
+		afsi_log("cm_ValidateSCache failure: scp->nextp->magic != CM_SCACHE_MAGIC");
+		fprintf(stderr, "cm_ValidateSCache failure: scp->nextp->magic != CM_SCACHE_MAGIC\n");
+		return -6;
+	    }
 	}
 
-        if (scp->nextp && scp->nextp->magic != CM_SCACHE_MAGIC) {
-            afsi_log("cm_ValidateSCache failure: scp->nextp->magic != CM_SCACHE_MAGIC");
-            fprintf(stderr, "cm_ValidateSCache failure: scp->nextp->magic != CM_SCACHE_MAGIC\n");
-            return -6;
-        }
+	if ( scp->randomACLp) {
+	    if ( scp->randomACLp < (cm_aclent_t *)cm_data.aclBaseAddress ||
+		 scp->randomACLp >= (cm_aclent_t *)cm_data.scacheBaseAddress) {
+		afsi_log("cm_ValidateSCache failure: out of range cm_aclent_t pointers");
+		fprintf(stderr, "cm_ValidateSCache failure: out of range cm_aclent_t pointers\n");
+		return -31;
+	    }
 
-	if ( scp->randomACLp < (cm_aclent_t *)cm_data.aclBaseAddress ||
-	     scp->randomACLp >= (cm_aclent_t *)cm_data.scacheBaseAddress) {
-	    afsi_log("cm_ValidateSCache failure: out of range cm_aclent_t pointers");
-	    fprintf(stderr, "cm_ValidateSCache failure: out of range cm_aclent_t pointers\n");
-	    return -31;
+	    if ( scp->randomACLp->magic != CM_ACLENT_MAGIC) {
+		afsi_log("cm_ValidateSCache failure: scp->randomACLp->magic != CM_ACLENT_MAGIC");
+		fprintf(stderr, "cm_ValidateSCache failure: scp->randomACLp->magic != CM_ACLENT_MAGIC\n");
+		return -7;
+	    }
 	}
 
-        if (scp->randomACLp && scp->randomACLp->magic != CM_ACLENT_MAGIC) {
-            afsi_log("cm_ValidateSCache failure: scp->randomACLp->magic != CM_ACLENT_MAGIC");
-            fprintf(stderr, "cm_ValidateSCache failure: scp->randomACLp->magic != CM_ACLENT_MAGIC\n");
-            return -7;
-        }
-        if (i > cm_data.currentSCaches ) {
+	if (i > cm_data.currentSCaches ) {
             afsi_log("cm_ValidateSCache failure: LRU Last queue loops");
             fprintf(stderr, "cm_ValidateSCache failure: LUR Last queue loops\n");
             return -14;
@@ -647,32 +656,37 @@ cm_ValidateSCache(void)
                 return -9;
             }
 
-	    if ( scp->nextp < (cm_scache_t *)cm_data.scacheBaseAddress ||
-		 scp->nextp >= (cm_scache_t *)cm_data.dnlcBaseAddress) {
-		afsi_log("cm_ValidateSCache failure: out of range cm_scache_t pointers");
-		fprintf(stderr, "cm_ValidateSCache failure: out of range cm_scache_t pointers\n");
-		return -23;
+	    if ( scp->nextp) {
+		if ( scp->nextp < (cm_scache_t *)cm_data.scacheBaseAddress ||
+		     scp->nextp >= (cm_scache_t *)cm_data.dnlcBaseAddress) {
+		    afsi_log("cm_ValidateSCache failure: out of range cm_scache_t pointers");
+		    fprintf(stderr, "cm_ValidateSCache failure: out of range cm_scache_t pointers\n");
+		    return -23;
+		}
+
+		if ( scp->nextp->magic != CM_SCACHE_MAGIC) {
+		    afsi_log("cm_ValidateSCache failure: scp->nextp->magic != CM_SCACHE_MAGIC");
+		    fprintf(stderr, "cm_ValidateSCache failure: scp->nextp->magic != CM_SCACHE_MAGIC\n");
+		    return -10;
+		}
 	    }
 
-            if (scp->nextp && scp->nextp->magic != CM_SCACHE_MAGIC) {
-                afsi_log("cm_ValidateSCache failure: scp->nextp->magic != CM_SCACHE_MAGIC");
-                fprintf(stderr, "cm_ValidateSCache failure: scp->nextp->magic != CM_SCACHE_MAGIC\n");
-                return -10;
-            }
+	    if ( scp->randomACLp) {
+		if ( scp->randomACLp < (cm_aclent_t *)cm_data.aclBaseAddress ||
+		     scp->randomACLp >= (cm_aclent_t *)cm_data.scacheBaseAddress) {
+		    afsi_log("cm_ValidateSCache failure: out of range cm_aclent_t pointers");
+		    fprintf(stderr, "cm_ValidateSCache failure: out of range cm_aclent_t pointers\n");
+		    return -30;
+		}
 
-	    if ( scp->randomACLp < (cm_aclent_t *)cm_data.aclBaseAddress ||
-		 scp->randomACLp >= (cm_aclent_t *)cm_data.scacheBaseAddress) {
-		afsi_log("cm_ValidateSCache failure: out of range cm_aclent_t pointers");
-		fprintf(stderr, "cm_ValidateSCache failure: out of range cm_aclent_t pointers\n");
-		return -30;
+		if ( scp->randomACLp->magic != CM_ACLENT_MAGIC) {
+		    afsi_log("cm_ValidateSCache failure: scp->randomACLp->magic != CM_ACLENT_MAGIC");
+		    fprintf(stderr, "cm_ValidateSCache failure: scp->randomACLp->magic != CM_ACLENT_MAGIC\n");
+		    return -11;
+		}
 	    }
 
-            if (scp->randomACLp && scp->randomACLp->magic != CM_ACLENT_MAGIC) {
-                afsi_log("cm_ValidateSCache failure: scp->randomACLp->magic != CM_ACLENT_MAGIC");
-                fprintf(stderr, "cm_ValidateSCache failure: scp->randomACLp->magic != CM_ACLENT_MAGIC\n");
-                return -11;
-            }
-            if (hash != i) {
+	    if (hash != i) {
                 afsi_log("cm_ValidateSCache failure: scp hash != hash index");
                 fprintf(stderr, "cm_ValidateSCache failure: scp hash != hash index\n");
                 return -13;
