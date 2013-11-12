@@ -59,18 +59,20 @@ cm_ValidateVolume(void)
             return -2;
         }
 
-	if ( volp->allNextp < (cm_volume_t *)cm_data.volumeBaseAddress ||
-	     volp->allNextp >= (cm_volume_t *)cm_data.cellBaseAddress) {
-	    afsi_log("cm_ValidateVolume failure: out of range cm_volume_t pointers");
-	    fprintf(stderr, "cm_ValidateVolume failure: out of range cm_volume_t pointers\n");
-	    return -12;
-	}
+	if ( volp->allNextp) {
+	    if ( volp->allNextp < (cm_volume_t *)cm_data.volumeBaseAddress ||
+		 volp->allNextp >= (cm_volume_t *)cm_data.cellBaseAddress) {
+		afsi_log("cm_ValidateVolume failure: out of range cm_volume_t pointers");
+		fprintf(stderr, "cm_ValidateVolume failure: out of range cm_volume_t pointers\n");
+		return -12;
+	    }
 
-        if ( volp->allNextp && volp->allNextp->magic != CM_VOLUME_MAGIC ) {
-            afsi_log("cm_ValidateVolume failure: volp->allNextp->magic != CM_VOLUME_MAGIC");
-            fprintf(stderr, "cm_ValidateVolume failure: volp->allNextp->magic != CM_VOLUME_MAGIC\n");
-            return -3;
-        }
+	    if ( volp->allNextp->magic != CM_VOLUME_MAGIC ) {
+		afsi_log("cm_ValidateVolume failure: volp->allNextp->magic != CM_VOLUME_MAGIC");
+		fprintf(stderr, "cm_ValidateVolume failure: volp->allNextp->magic != CM_VOLUME_MAGIC\n");
+		return -3;
+	    }
+	}
 
         if ( count != 0 && volp == cm_data.allVolumesp ||
              count > cm_data.maxVolumes ) {

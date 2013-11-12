@@ -263,32 +263,37 @@ long cm_ValidateACLCache(void)
             return -1;
         }
 
-	if ( aclp->nextp < (cm_aclent_t *)cm_data.aclBaseAddress ||
-	     aclp->nextp >= (cm_aclent_t *)cm_data.scacheBaseAddress) {
-	    afsi_log("cm_ValidateACLCache failure: out of range cm_aclent_t pointers");
-	    fprintf(stderr, "cm_ValidateACLCache failure: out of range cm_aclent_t pointers\n");
-	    return -11;
+	if ( aclp->nextp) {
+	    if ( aclp->nextp < (cm_aclent_t *)cm_data.aclBaseAddress ||
+		 aclp->nextp >= (cm_aclent_t *)cm_data.scacheBaseAddress) {
+		afsi_log("cm_ValidateACLCache failure: out of range cm_aclent_t pointers");
+		fprintf(stderr, "cm_ValidateACLCache failure: out of range cm_aclent_t pointers\n");
+		return -11;
+	    }
+
+	    if (aclp->nextp->magic != CM_ACLENT_MAGIC) {
+		afsi_log("cm_ValidateACLCache failure: acpl->nextp->magic != CM_ACLENT_MAGIC");
+		fprintf(stderr,"cm_ValidateACLCache failure: acpl->nextp->magic != CM_ACLENT_MAGIC\n");
+		return -2;
+	    }
 	}
 
-        if (aclp->nextp && aclp->nextp->magic != CM_ACLENT_MAGIC) {
-            afsi_log("cm_ValidateACLCache failure: acpl->nextp->magic != CM_ACLENT_MAGIC");
-            fprintf(stderr,"cm_ValidateACLCache failure: acpl->nextp->magic != CM_ACLENT_MAGIC\n");
-            return -2;
-        }
+	if ( aclp->backp) {
+	    if ( aclp->backp < (cm_scache_t *)cm_data.scacheBaseAddress ||
+		 aclp->backp >= (cm_scache_t *)cm_data.dnlcBaseAddress) {
+		afsi_log("cm_ValidateACLCache failure: out of range cm_scache_t pointers");
+		fprintf(stderr, "cm_ValidateACLCache failure: out of range cm_scache_t pointers\n");
+		return -12;
+	    }
 
-	if ( aclp->backp < (cm_scache_t *)cm_data.scacheBaseAddress ||
-	     aclp->backp >= (cm_scache_t *)cm_data.dnlcBaseAddress) {
-	    afsi_log("cm_ValidateACLCache failure: out of range cm_scache_t pointers");
-	    fprintf(stderr, "cm_ValidateACLCache failure: out of range cm_scache_t pointers\n");
-	    return -12;
+	    if (aclp->backp->magic != CM_SCACHE_MAGIC) {
+		afsi_log("cm_ValidateACLCache failure: acpl->backp->magic != CM_SCACHE_MAGIC");
+		fprintf(stderr,"cm_ValidateACLCache failure: acpl->backp->magic != CM_SCACHE_MAGIC\n");
+		return -3;
+	    }
 	}
 
-        if (aclp->backp && aclp->backp->magic != CM_SCACHE_MAGIC) {
-            afsi_log("cm_ValidateACLCache failure: acpl->backp->magic != CM_SCACHE_MAGIC");
-            fprintf(stderr,"cm_ValidateACLCache failure: acpl->backp->magic != CM_SCACHE_MAGIC\n");
-            return -3;
-        }
-        if (count != 0 && aclp == cm_data.aclLRUp || count > size) {
+	if (count != 0 && aclp == cm_data.aclLRUp || count > size) {
             afsi_log("cm_ValidateACLCache failure: loop in cm_data.aclLRUp list");
             fprintf(stderr, "cm_ValidateACLCache failure: loop in cm_data.aclLRUp list\n");
             return -4;
@@ -311,31 +316,35 @@ long cm_ValidateACLCache(void)
             return -5;
         }
 
-	if ( aclp->nextp < (cm_aclent_t *)cm_data.aclBaseAddress ||
-	     aclp->nextp >= (cm_aclent_t *)cm_data.scacheBaseAddress) {
-	    afsi_log("cm_ValidateACLCache failure: out of range cm_aclent_t pointers");
-	    fprintf(stderr, "cm_ValidateACLCache failure: out of range cm_aclent_t pointers\n");
-	    return -14;
+	if ( aclp->nextp) {
+	    if ( aclp->nextp < (cm_aclent_t *)cm_data.aclBaseAddress ||
+		 aclp->nextp >= (cm_aclent_t *)cm_data.scacheBaseAddress) {
+		afsi_log("cm_ValidateACLCache failure: out of range cm_aclent_t pointers");
+		fprintf(stderr, "cm_ValidateACLCache failure: out of range cm_aclent_t pointers\n");
+		return -14;
+	    }
+
+	    if ( aclp->nextp->magic != CM_ACLENT_MAGIC) {
+		afsi_log("cm_ValidateACLCache failure: aclp->nextp->magic != CM_ACLENT_MAGIC");
+		fprintf(stderr, "cm_ValidateACLCache failure: aclp->nextp->magic != CM_ACLENT_MAGIC\n");
+		return -6;
+	    }
 	}
 
-        if (aclp->nextp && aclp->nextp->magic != CM_ACLENT_MAGIC) {
-            afsi_log("cm_ValidateACLCache failure: aclp->nextp->magic != CM_ACLENT_MAGIC");
-            fprintf(stderr, "cm_ValidateACLCache failure: aclp->nextp->magic != CM_ACLENT_MAGIC\n");
-            return -6;
-        }
+	if ( aclp->backp) {
+	    if ( aclp->backp < (cm_scache_t *)cm_data.scacheBaseAddress ||
+		 aclp->backp >= (cm_scache_t *)cm_data.dnlcBaseAddress) {
+		afsi_log("cm_ValidateACLCache failure: out of range cm_scache_t pointers");
+		fprintf(stderr, "cm_ValidateACLCache failure: out of range cm_scache_t pointers\n");
+		return -15;
+	    }
 
-	if ( aclp->backp < (cm_scache_t *)cm_data.scacheBaseAddress ||
-	     aclp->backp >= (cm_scache_t *)cm_data.dnlcBaseAddress) {
-	    afsi_log("cm_ValidateACLCache failure: out of range cm_scache_t pointers");
-	    fprintf(stderr, "cm_ValidateACLCache failure: out of range cm_scache_t pointers\n");
-	    return -15;
+	    if ( aclp->backp->magic != CM_SCACHE_MAGIC) {
+		afsi_log("cm_ValidateACLCache failure: aclp->backp->magic != CM_SCACHE_MAGIC");
+		fprintf(stderr, "cm_ValidateACLCache failure: aclp->backp->magic != CM_SCACHE_MAGIC\n");
+		return -7;
+	    }
 	}
-
-        if (aclp->backp && aclp->backp->magic != CM_SCACHE_MAGIC) {
-            afsi_log("cm_ValidateACLCache failure: aclp->backp->magic != CM_SCACHE_MAGIC");
-            fprintf(stderr, "cm_ValidateACLCache failure: aclp->backp->magic != CM_SCACHE_MAGIC\n");
-            return -7;
-        }
 
         if (count != 0 && aclp == cm_data.aclLRUEndp || count > size) {
             afsi_log("cm_ValidateACLCache failure: loop in cm_data.aclLRUEndp list");
