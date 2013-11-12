@@ -147,6 +147,10 @@ afs_fill_super(struct super_block *sb, void *data, int silent)
     if (code) {
 	afs_globalVFS = NULL;
 	afs_FlushAllVCaches();
+#if defined(HAVE_LINUX_BDI_INIT)
+	bdi_destroy(afs_backing_dev_info);
+#endif
+	osi_Free(afs_backing_dev_info, sizeof(struct backing_dev_info));
         module_put(THIS_MODULE);
     }
 
