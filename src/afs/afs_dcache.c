@@ -397,7 +397,8 @@ u_int afs_min_cache = 0;
 
 /*!
  * If there are waiters for the cache to drain, wake them if
- * the number of free cache blocks reaches the CM_CACHESIZEDDRAINEDPCT.
+ * the number of free or discarded cache blocks reaches the
+ * CM_CACHESIZEDDRAINEDPCT limit.
  *
  * \note Environment:
  *	This routine must be called with the afs_xdcache lock held

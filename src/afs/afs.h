@@ -1392,9 +1392,14 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
     (((rw) == UIO_WRITE) ? afs_write(avc, uio, io, cred, 1) : afs_read(avc, uio, cred, 1))
 
 /* Cache size truncation uses the following low and high water marks:
- * If the cache is more than 95% full (CM_DCACHECOUNTFREEPCT), the cache
- * truncation daemon is awakened and will free up space until the cache is 85%
- * (CM_DCACHESPACEFREEPCT - CM_DCACHEEXTRAPCT) full.
+ * If the cache is more than 90% full by space (CM_DCACHESPACEFREEPCT) or
+ * 95% full by # of chunks (CM_DCACHECOUNTFREEPCT), the cache truncation
+ * daemon is awakened and will start freeing space. The cache truncation
+ * daemon will continue to free space until the cache is at most 85% full
+ * by space (CM_DCACHESPACEFREEPCT - CM_DCACHEEXTRAPCT). The cache truncation
+ * daemon will also try to free space until the cache is at most 90% full by
+ * chunks (CM_DCACHECOUNTFREEPCT - CM_DCACHEEXTRAPCT), but the 85% space limit
+ * is the only limit that we must hit.
  * afs_UFSWrite and afs_GetDCache (when it needs to fetch data) will wait on
  * afs_WaitForCacheDrain if the cache is 98% (CM_WAITFORDRAINPCT) full.
  * afs_GetDownD wakes those processes once the cache is 95% full
