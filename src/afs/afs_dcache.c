@@ -452,7 +452,6 @@ afs_CacheTruncateDaemon(void)
 		if (slots_needed || space_needed)
 		    afs_GetDownD(slots_needed, &space_needed, 0);
 		if ((space_needed <= 0) && (slots_needed <= 0)) {
-		    afs_CacheTooFull = 0;
 		    break;
 		}
 		if (afs_termState == AFSOP_STOP_TRUNCDAEMON)
