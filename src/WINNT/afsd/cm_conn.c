@@ -941,7 +941,7 @@ cm_Analyze(cm_conn_t *connp,
             if (!fidp) { /* vldb */
                 retry = 1;
             } else { /* file */
-                cm_volume_t *volp = cm_GetVolumeByFID(fidp);
+		cm_volume_t *volp = cm_FindVolumeByFID(fidp, userp, reqp);
                 if (volp) {
                     if (fidp->volume == cm_GetROVolumeID(volp))
                         retry = 1;

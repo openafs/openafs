@@ -5918,11 +5918,12 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
         if ( pResultCB->CellLength )
             pResultCB->CellLength--;
     } else {
-        volp = cm_GetVolumeByFID(&scp->fid);
-        if (!volp) {
+	volp = cm_FindVolumeByFID(&scp->fid, userp, &req);
+	if (!volp) {
             code = CM_ERROR_NOSUCHVOLUME;
             goto _done;
         }
+
         volType = cm_VolumeType(volp, scp->fid.volume);
 
         if (cm_volumeInfoReadOnlyFlag && (volType == ROVOL || volType == BACKVOL))
@@ -6152,8 +6153,8 @@ RDR_GetVolumeSizeInfo( IN cm_user_t     *userp,
         pResultCB->TotalAllocationUnits.QuadPart = 100;
         pResultCB->AvailableAllocationUnits.QuadPart = 0;
     } else {
-        volp = cm_GetVolumeByFID(&scp->fid);
-        if (!volp) {
+	volp = cm_FindVolumeByFID(&scp->fid, userp, &req);
+	if (!volp) {
             code = CM_ERROR_NOSUCHVOLUME;
             goto _done;
         }

@@ -2762,7 +2762,7 @@ cm_IsSpaceAvailable(cm_fid_t * fidp, osi_hyper_t *sizep, cm_user_t *userp, cm_re
         goto _done;
     }
 
-    volp = cm_GetVolumeByFID(fidp);
+    volp = cm_FindVolumeByFID(fidp, userp, reqp);
     if (!volp) {
         spaceAvail = 0;
         goto _done;
