@@ -43,7 +43,7 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, cm_req_t *
     int didLock;
     long trights;
     int release = 0;    /* Used to avoid a call to cm_HoldSCache in the directory case */
-    cm_volume_t *volp = cm_GetVolumeByFID(&scp->fid);
+    cm_volume_t *volp = cm_FindVolumeByFID(&scp->fid, userp, reqp);
 
     didLock = 0;
     if (scp->fileType == CM_SCACHETYPE_DIRECTORY ||
@@ -160,7 +160,7 @@ long cm_GetAccessRights(struct cm_scache *scp, struct cm_user *userp,
     cm_fid_t tfid;
     cm_scache_t *aclScp = NULL;
     int got_cb = 0;
-    cm_volume_t * volp = cm_GetVolumeByFID(&scp->fid);
+    cm_volume_t * volp = cm_FindVolumeByFID(&scp->fid, userp, reqp);
 
     /* pretty easy: just force a pass through the fetch status code */
 

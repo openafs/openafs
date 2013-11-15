@@ -795,6 +795,24 @@ cm_volume_t *cm_GetVolumeByFID(cm_fid_t *fidp)
     return volp;
 }
 
+cm_volume_t *cm_FindVolumeByFID(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
+{
+    cm_volume_t *volp = NULL;
+    cm_cell_t   *cellp;
+    long         code;
+
+    cellp = cm_FindCellByID(fidp->cell, CM_FLAG_NOPROBE);
+    if (!cellp) {
+	return NULL;
+    }
+
+    code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp, CM_GETVOL_FLAG_CREATE, &volp);
+    if (code)
+	return NULL;
+
+    return volp;
+}
+
 long cm_FindVolumeByID(cm_cell_t *cellp, afs_uint32 volumeID, cm_user_t *userp,
                       cm_req_t *reqp, afs_uint32 flags, cm_volume_t **outVolpp)
 {

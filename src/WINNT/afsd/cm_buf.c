@@ -236,7 +236,7 @@ buf_Sync(int quitOnShutdown)
             afs_uint32 dirty;
             cm_volume_t * volp;
 
-            volp = cm_GetVolumeByFID(&bp->fid);
+	    volp = cm_FindVolumeByFID(&bp->fid, bp->userp, &req);
             switch (cm_GetVolumeStatus(volp, bp->fid.volume)) {
             case vl_online:
             case vl_unknown:
@@ -277,7 +277,7 @@ buf_Sync(int quitOnShutdown)
                 char volstr[VL_MAXNAMELEN+12]="";
                 char *ext = "";
 
-                volp = cm_GetVolumeByFID(&bp->fid);
+		volp = cm_GetVolumeByFID(&bp->fid);
                 if (volp) {
                     cellp = volp->cellp;
                     if (bp->fid.volume == volp->vol[RWVOL].ID)

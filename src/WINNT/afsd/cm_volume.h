@@ -81,6 +81,9 @@ extern long cm_FindVolumeByID(struct cm_cell *cellp, afs_uint32 volumeID,
                              cm_user_t *userp, cm_req_t *reqp,
                              afs_uint32 flags, cm_volume_t **outVolpp);
 
+extern cm_volume_t *cm_FindVolumeByFID(cm_fid_t *fidp,
+				       cm_user_t *userp, cm_req_t *reqp);
+
 #define CM_GETVOL_FLAG_CREATE               1
 #define CM_GETVOL_FLAG_NO_LRU_UPDATE        2
 #define CM_GETVOL_FLAG_NO_RESET		    4
