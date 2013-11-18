@@ -969,7 +969,7 @@ cm_Analyze(cm_conn_t *connp,
         osi_Log1(afsd_logp, "cm_Analyze: Path MTU may have been exceeded addr[%s]",
                  osi_LogSaveString(afsd_logp,addr));
 
-        retry = 1;
+        retry = 2;
     }
     else if (errorCode == RX_CALL_BUSY) {
         /*
@@ -990,7 +990,7 @@ cm_Analyze(cm_conn_t *connp,
         LogEvent(EVENTLOG_WARNING_TYPE, MSG_RX_BUSY_CALL_CHANNEL, addr);
         osi_Log1(afsd_logp, "cm_Analyze: Retry RPC due to busy call channel addr[%s]",
                  osi_LogSaveString(afsd_logp,addr));
-        retry = 1;
+        retry = 2;
     }
     else if (errorCode == VNOSERVICE) {
         /*
@@ -1020,8 +1020,7 @@ cm_Analyze(cm_conn_t *connp,
                      osi_LogSaveString(afsd_logp,addr), fidp->volume, cellp->name);
         }
 
-        if (timeLeft > 2)
-            retry = 1;
+	retry = 2;
     }
     else if (errorCode == RX_CALL_IDLE) {
         /*
@@ -1095,8 +1094,7 @@ cm_Analyze(cm_conn_t *connp,
             reqp->errorServp = serverp;
             reqp->tokenError = errorCode;
 
-            if (timeLeft > 2)
-                retry = 1;
+	    retry = 2;
         }
 
         LogEvent(EVENTLOG_WARNING_TYPE, MSG_RX_IDLE_DEAD_TIMEOUT, addr, retry);
@@ -1200,8 +1198,8 @@ cm_Analyze(cm_conn_t *connp,
             forcing_new = 1;
             cm_ForceNewConnections(serverp);
 
-            if ( timeLeft > 2 )
-                retry = 1;
+	    if ( timeLeft > 2 )
+		retry = 2;
         }
     } else if (errorCode >= ERROR_TABLE_BASE_RXK && errorCode < ERROR_TABLE_BASE_RXK + 256) {
         char * s = "unknown error";
@@ -1251,8 +1249,7 @@ cm_Analyze(cm_conn_t *connp,
         reqp->flags |= CM_REQ_NEW_CONN_FORCED;
         forcing_new = 1;
         cm_ForceNewConnections(serverp);
-        if ( timeLeft > 2 )
-            retry = 1;
+	retry = 2;
     } else {
 	if (connp)
 	    _InterlockedAnd(&connp->flags, ~CM_CONN_FLAG_NEW);
