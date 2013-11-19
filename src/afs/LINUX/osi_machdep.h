@@ -145,6 +145,7 @@ typedef struct task_struct afs_proc_t;
 
 #ifdef HAVE_LINUX_KUID_T
 
+#include<linux/uidgid.h>
 typedef kuid_t afs_kuid_t;
 typedef kgid_t afs_kgid_t;
 extern struct user_namespace *afs_ns;
