@@ -274,6 +274,7 @@ dafs_prolog(void)
     /* LISTVOLUMES is a no-op; we just want to get the response header flags
      * to see if the server reports itself as DAFS or not */
     code = FSYNC_VolOp(0, NULL, FSYNC_VOL_LISTVOLUMES, FSYNC_WHATEVER, &res);
+    VDisconnectFS();	/* disconnect before continuing */
     if (code) {
 	/* probably failed to contact the fileserver; later code will provide
 	 * some warning/error indication */
