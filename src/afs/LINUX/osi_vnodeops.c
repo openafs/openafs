@@ -1568,7 +1568,8 @@ afs_linux_symlink(struct inode *dip, struct dentry *dp, const char *target)
 
     VATTR_NULL(&vattr);
     AFS_GLOCK();
-    code = afs_symlink(VTOAFS(dip), (char *)name, &vattr, (char *)target, credp);
+    code = afs_symlink(VTOAFS(dip), (char *)name, &vattr, (char *)target, NULL,
+    		       credp);
     AFS_GUNLOCK();
     crfree(credp);
     return afs_convert_code(code);

@@ -1420,7 +1420,7 @@ afs_gn_symlink(struct vnode *vp,
     AFS_STATCNT(afs_gn_symlink);
     VATTR_NULL(&va);
     va.va_mode = 0777;
-    error = afs_symlink(vp, link, &va, target, cred);
+    error = afs_symlink(vp, link, &va, target, NULL, cred);
     afs_Trace4(afs_iclSetp, CM_TRACE_GSYMLINK, ICL_TYPE_POINTER, vp,
 	       ICL_TYPE_STRING, link, ICL_TYPE_STRING, target, ICL_TYPE_LONG,
 	       error);

@@ -1291,7 +1291,7 @@ extern int afs_UFSHandleLink(struct vcache *avc,
 			     struct vrequest *areq);
 extern int afs_symlink(OSI_VC_DECL(adp), char *aname,
 		       struct vattr *attrs, char *atargetName,
-		       afs_ucred_t *acred);
+		       struct vcache **tvcp, afs_ucred_t *acred);
 extern int afs_readlink(OSI_VC_DECL(avc), struct uio *auio,
 			afs_ucred_t *acred);
 
