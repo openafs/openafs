@@ -242,10 +242,10 @@ static int
 ParseArgs(int argc, char **argv) {
     int code;
     int optval;
-    char *optstring;
+    char *optstring = NULL;
     struct cmd_syndesc *opts;
-    char *sleepSpec;
-    char *sync_behavior;
+    char *sleepSpec = NULL;
+    char *sync_behavior = NULL;
 
     opts = cmd_CreateSyntax(NULL, NULL, NULL, NULL);
     cmd_AddParmAtOffset(opts, OPT_log, "-log", CMD_FLAG, CMD_OPTIONAL,
