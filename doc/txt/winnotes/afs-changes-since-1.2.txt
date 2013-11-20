@@ -1,3 +1,34 @@
+Release 1.7.2800; Changes since 1.7.2700
+
+ * Fix for data corrupting bug in Windows Server XP/2003 IO Manager.
+   The IO Manager will issue multiple outstanding cached writes on
+   a synchronous file object which is not supposed to occur.  Add
+   protection for this scenario only on Server 2003 and older.
+
+ * Fix afsd_service panic condition when CM_SCACHEFLAG_INHASH is set
+   on a cm_scache_t object after successful recycling.
+
+ * Prevent the afsd_service from delivering uninitialized target name
+   data to the redirector which can result in a BSOD.
+
+ * Prevent a race condition when unloading AFSRedirLib.sys that can
+   result in a BSOD.
+
+ * Avoid unnecessary delays during system suspend and shutdown by
+   not issuing a GiveUpAllCallBacks RPC if there is no network
+   adapter with a non-loopback IP address.
+
+ * Fix out of range pointer checks during AFSCache validations
+   that prevented re-use of persistent cache data.
+
+ * In about a half dozen cases it was possible for a "no such volume"
+   to be returned if the volume group was not present in the AFSCache.
+   A query to the vldb server should have been issued in these cases.
+
+ * Force RPC retries for RX_CALL_BUSY, VNOSERVICE and related errors
+   even on threads that have explicitly requested no retries.  This
+   prevents undesirable IO errors.
+
 Release 1.7.2700; Changes since 1.7.2600
 
  * If the cm_scache flags indicate the object is CM_SCACHEFLAG_DELETED,
