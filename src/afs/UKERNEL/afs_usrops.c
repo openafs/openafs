@@ -3059,7 +3059,8 @@ uafs_symlink_r(char *target, char *source)
     attrs.va_mode = 0777;
     attrs.va_uid = afs_cr_uid(get_user_struct()->u_cred);
     attrs.va_gid = afs_cr_gid(get_user_struct()->u_cred);
-    code = afs_symlink(VTOAFS(dirP), nameP, &attrs, target, get_user_struct()->u_cred);
+    code = afs_symlink(VTOAFS(dirP), nameP, &attrs, target, NULL,
+    		       get_user_struct()->u_cred);
     VN_RELE(dirP);
     if (code != 0) {
 	errno = code;

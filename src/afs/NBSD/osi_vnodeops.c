@@ -1076,7 +1076,7 @@ afs_nbsd_symlink(void *v)
     name = cnstrdup(cnp);
     AFS_GLOCK();
     code =
-	afs_symlink(VTOAFS(dvp), name, ap->a_vap, ap->a_target,
+	afs_symlink(VTOAFS(dvp), name, ap->a_vap, ap->a_target, NULL,
 		    cnp->cn_cred);
     if (code == 0) {
 	code = afs_lookup(VTOAFS(dvp), name, &vcp, cnp->cn_cred);

@@ -1622,7 +1622,7 @@ gafs_symlink(struct vcache *adp, char *aname, struct vattr *attrs,
     int code;
 
     AFS_GLOCK();
-    code = afs_symlink(adp, aname, attrs, atargetName, acred);
+    code = afs_symlink(adp, aname, attrs, atargetName, NULL, acred);
     AFS_GUNLOCK();
     return (code);
 }
