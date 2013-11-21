@@ -178,10 +178,10 @@ static inline afs_kuid_t afs_make_kuid(uid_t uid) {return uid;}
 static inline afs_kgid_t afs_make_kgid(gid_t gid) {return gid;}
 static inline uid_t afs_from_kuid(afs_kuid_t kuid) {return kuid;}
 static inline gid_t afs_from_kgid(afs_kgid_t kgid) {return kgid;}
-static inline bool uid_eq(uid_t a, uid_t b) {return a == b;}
-static inline bool gid_eq(gid_t a, gid_t b) {return a == b;}
-static inline bool uid_lt(uid_t a, uid_t b) {return a < b;}
-static inline bool gid_lt(gid_t a, gid_t b) {return a < b;}
+static inline unsigned char uid_eq(uid_t a, uid_t b) {return a == b;}
+static inline unsigned char gid_eq(gid_t a, gid_t b) {return a == b;}
+static inline unsigned char uid_lt(uid_t a, uid_t b) {return a < b;}
+static inline unsigned char gid_lt(gid_t a, gid_t b) {return a < b;}
 #define GLOBAL_ROOT_UID ((afs_kuid_t) 0)
 #define GLOBAL_ROOT_GID ((afs_kgid_t) 0)
 
