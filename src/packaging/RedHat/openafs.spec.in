@@ -509,8 +509,8 @@ allowing cross-platform sharing of files among multiple computers.
 Facilities are provided for access control, authentication, backup and
 administrative management.
 
-This package provides the compatibility symlink for kpasswd, in case
-you are using KAserver instead of Krb5.
+This package provides the kpasswd executable, renamed to kapasswd to avoid
+clashes, for sites still using KAserver instead of Krb5.
 
 %if %{krb5support}
 %package krb5
@@ -1054,8 +1054,8 @@ chmod +x $RPM_BUILD_ROOT%{_libdir}/*.so*
 # any user in /usr/bin
 mv $RPM_BUILD_ROOT%{_prefix}/afs/bin/restorevol $RPM_BUILD_ROOT%{_bindir}/restorevol
 
-# Link kpasswd to kapasswd
-ln -f $RPM_BUILD_ROOT%{_bindir}/kpasswd $RPM_BUILD_ROOT%{_bindir}/kapasswd
+# Rename kpasswd to kapasswd
+mv -f $RPM_BUILD_ROOT%{_bindir}/kpasswd $RPM_BUILD_ROOT%{_bindir}/kapasswd
 
 # Copy root.client config files
 install -m 755 src/packaging/RedHat/openafs.sysconfig $RPM_BUILD_ROOT/etc/sysconfig/openafs
@@ -1156,7 +1156,7 @@ gzip -9 $RPM_BUILD_ROOT%{_mandir}/man*/*
 
 # create list of man pages that go in the 'openafs' package
 /bin/ls $RPM_BUILD_ROOT%{_mandir}/man1 \
-	|egrep '^afs|^fs|^kas|^klog|kapasswd|pagsh|^pts|^restorevol|^rxdebug|scout|^sys|tokens|translate|^xstat|udebug|unlog|^uss|^vos' \
+	|egrep '^afs|^fs|^kas|^klog|pagsh|^pts|^restorevol|^rxdebug|scout|^sys|tokens|translate|^xstat|udebug|unlog|^uss|^vos' \
 	|egrep -v '^afs_compile_et' \
 	>openafs-man1files
 
@@ -1175,7 +1175,6 @@ grep -v "^#" >openafs-file-list <<EOF-openafs-file-list
 %{_bindir}/afsmonitor
 %{_bindir}/bos
 %{_bindir}/fs
-%{_bindir}/kapasswd
 %{_bindir}/klog
 %{_bindir}/klog.krb
 %{_bindir}/pagsh
@@ -1718,8 +1717,10 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 
 %files kpasswd
 %defattr(-,root,root)
-%{_bindir}/kpasswd
+%{_bindir}/kapasswd
 %{_bindir}/kpwvalid
+%{_mandir}/man1/kapasswd.*
+%{_mandir}/man8/kpwvalid.*
 
 %if %{krb5support}
 %files krb5
