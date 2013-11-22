@@ -42,7 +42,7 @@ afs_AdminBosErrors.c afs_AdminBosErrors.h: afs_AdminBosErrors.et
 	${COMPILE_ET} -p ${srcdir} afs_AdminBosErrors.et -h afs_AdminBosErrors
 
 ${TOP_INCDIR}/afs/afs_AdminBosErrors.h: afs_AdminBosErrors.h
-	cp afs_AdminBosErrors.h ${TOP_INCDIR}/afs/afs_AdminBosErrors.h
+	${INSTALL_DATA} $? $@
 
 afs_AdminCfgErrors.h: afs_AdminCfgErrors.c
 afs_AdminCfgErrors.c: afs_AdminCfgErrors.et
@@ -50,7 +50,7 @@ afs_AdminCfgErrors.c: afs_AdminCfgErrors.et
 	${COMPILE_ET} -p ${srcdir} afs_AdminCfgErrors.et -h afs_AdminCfgErrors
 
 ${TOP_INCDIR}/afs/afs_AdminCfgErrors.h: afs_AdminCfgErrors.h
-	cp afs_AdminCfgErrors.h ${TOP_INCDIR}/afs/afs_AdminCfgErrors.h
+	${INSTALL_DATA} $? $@
 
 afs_AdminClientErrors.h: afs_AdminClientErrors.c
 afs_AdminClientErrors.c: afs_AdminClientErrors.et
@@ -58,7 +58,7 @@ afs_AdminClientErrors.c: afs_AdminClientErrors.et
 	${COMPILE_ET} -p ${srcdir} afs_AdminClientErrors.et -h afs_AdminClientErrors
 
 ${TOP_INCDIR}/afs/afs_AdminClientErrors.h: afs_AdminClientErrors.h
-	cp afs_AdminClientErrors.h ${TOP_INCDIR}/afs/afs_AdminClientErrors.h
+	${INSTALL_DATA} $? $@
 
 afs_AdminMiscErrors.h: afs_AdminMiscErrors.c
 afs_AdminMiscErrors.c: afs_AdminMiscErrors.et
@@ -66,7 +66,7 @@ afs_AdminMiscErrors.c: afs_AdminMiscErrors.et
 	${COMPILE_ET} -p ${srcdir} afs_AdminMiscErrors.et -h afs_AdminMiscErrors
 
 ${TOP_INCDIR}/afs/afs_AdminMiscErrors.h: afs_AdminMiscErrors.h
-	cp afs_AdminMiscErrors.h ${TOP_INCDIR}/afs/afs_AdminMiscErrors.h
+	${INSTALL_DATA} $? $@
 
 afs_AdminCommonErrors.h: afs_AdminCommonErrors.c
 afs_AdminCommonErrors.c: afs_AdminCommonErrors.et
@@ -74,7 +74,7 @@ afs_AdminCommonErrors.c: afs_AdminCommonErrors.et
 	${COMPILE_ET} -p ${srcdir} afs_AdminCommonErrors.et -h afs_AdminCommonErrors
 
 ${TOP_INCDIR}/afs/afs_AdminCommonErrors.h: afs_AdminCommonErrors.h
-	cp afs_AdminCommonErrors.h ${TOP_INCDIR}/afs/afs_AdminCommonErrors.h
+	${INSTALL_DATA} $? $@
 
 afs_AdminKasErrors.h: afs_AdminKasErrors.c
 afs_AdminKasErrors.c: afs_AdminKasErrors.et
@@ -82,7 +82,7 @@ afs_AdminKasErrors.c: afs_AdminKasErrors.et
 	${COMPILE_ET} -p ${srcdir} afs_AdminKasErrors.et -h afs_AdminKasErrors
 
 ${TOP_INCDIR}/afs/afs_AdminKasErrors.h: afs_AdminKasErrors.h
-	cp afs_AdminKasErrors.h ${TOP_INCDIR}/afs/afs_AdminKasErrors.h
+	${INSTALL_DATA} $? $@
 
 afs_AdminPtsErrors.h: afs_AdminPtsErrors.c
 afs_AdminPtsErrors.c: afs_AdminPtsErrors.et
@@ -90,7 +90,7 @@ afs_AdminPtsErrors.c: afs_AdminPtsErrors.et
 	${COMPILE_ET} -p ${srcdir} afs_AdminPtsErrors.et -h afs_AdminPtsErrors
 
 ${TOP_INCDIR}/afs/afs_AdminPtsErrors.h: afs_AdminPtsErrors.h
-	cp afs_AdminPtsErrors.h ${TOP_INCDIR}/afs/afs_AdminPtsErrors.h
+	${INSTALL_DATA} $? $@
 
 afs_AdminUtilErrors.h:	afs_AdminUtilErrors.c
 afs_AdminUtilErrors.c: afs_AdminUtilErrors.et
@@ -98,7 +98,7 @@ afs_AdminUtilErrors.c: afs_AdminUtilErrors.et
 	${COMPILE_ET} -p ${srcdir} afs_AdminUtilErrors.et -h afs_AdminUtilErrors
 
 ${TOP_INCDIR}/afs/afs_AdminUtilErrors.h: afs_AdminUtilErrors.h
-	cp afs_AdminUtilErrors.h ${TOP_INCDIR}/afs/afs_AdminUtilErrors.h
+	${INSTALL_DATA} $? $@
 
 afs_AdminVosErrors.c: afs_AdminVosErrors.et
 	$(RM) -f ${srcdir}/afs_AdminVosErrors.c afs_AdminVosErrors.h
@@ -107,7 +107,7 @@ afs_AdminVosErrors.c: afs_AdminVosErrors.et
 afs_AdminVosErrors.h:	afs_AdminVosErrors.c
 
 ${TOP_INCDIR}/afs/afs_AdminVosErrors.h: afs_AdminVosErrors.h
-	cp afs_AdminVosErrors.h ${TOP_INCDIR}/afs/afs_AdminVosErrors.h
+	${INSTALL_DATA} $? $@
 
 ERROROBJS = \
 	rxkad_errs.o \
