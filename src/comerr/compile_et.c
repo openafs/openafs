@@ -169,8 +169,8 @@ main(int argc, char **argv)
     p = strrchr(whoami, '/');
     if (p)
 	whoami = p + 1;
-    while (argv++, --argc) {
-	char *arg = *argv;
+    while (--argc) {
+	char *arg = *++argv;
 	if (arg[0] != '-') {
 	    if (filename)
 		dup_err("filenames", filename, arg);
@@ -181,7 +181,8 @@ main(int argc, char **argv)
 		debug++;
 	    else if (check_arg(lang_args, arg)) {
 		got_language++;
-		arg = *++argv, argc--;
+		arg = *++argv;
+		argc--;
 		if (!arg)
 		    usage();
 		if (language)
@@ -208,17 +209,26 @@ main(int argc, char **argv)
 		    exit(1);
 		}
 	    } else if (strcmp(arg, "h") == 0) {
-		arg = *++argv, argc--;
+		arg = *++argv;
+		argc--;
 		if (!arg)
 		    usage();
 		got_include = arg;
 	    } else if (strcmp(arg, "p") == 0) {
-		arg = *++argv, argc--;
+		arg = *++argv;
+		argc--;
 		if (!arg)
 		    usage();
 		got_prefix = arg;
 	    } else if (strcmp(arg, "v") == 0) {
-		arg = *++argv, argc--;
+		arg = *++argv;
+		argc--;
+		if (arg == NULL) {
+		    fprintf(stderr, "%s: -v option requires an argument\n",
+			    whoami);
+		    usage();
+		    exit(1);
+		}
 		version = atoi(arg);
 		if (version != 1 && version != 2) {
 		    fprintf(stderr, "%s: unknown control argument -`%s'\n",
