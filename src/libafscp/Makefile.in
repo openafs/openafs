@@ -49,13 +49,13 @@ install: all
 	${INSTALL} -d ${DESTDIR}${libdir}
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
 	${INSTALL_DATA} libafscp.a ${DESTDIR}${libdir}/libafscp.a
-	${INSTALL_DATA} ${TOP_INCDIR}/afs/afscp.h ${DESTDIR}${includedir}/afs/afscp.h
+	${INSTALL_DATA} afscp.h ${DESTDIR}${includedir}/afs/afscp.h
 
 dest: all
 	${INSTALL} -d ${DEST}/lib
 	${INSTALL} -d ${DEST}/include/afs
 	${INSTALL_DATA} libafscp.a ${DEST}/lib/libafscp.a
-	${INSTALL_DATA} ${TOP_INCDIR}/afs/afscp.h ${DEST}/include/afs/afscp.h
+	${INSTALL_DATA} afscp.h ${DEST}/include/afs/afscp.h
 
 #
 # Misc targets
