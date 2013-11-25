@@ -194,8 +194,8 @@ exc_handling.o	: exc_handling.c
 #
 # tests
 #
-rw: rw.o liblwp.a $(TOP_LIBDIR)/util.a
-	$(AFS_LDRULE) rw.o liblwp.a $(TOP_LIBDIR)/util.a
+rw: rw.o liblwp.a $(TOP_LIBDIR)/util.a $(TOP_LIBDIR)/libopr.a
+	$(AFS_LDRULE) rw.o liblwp.a $(TOP_LIBDIR)/util.a $(TOP_LIBDIR)/libopr.a
 
 #
 # Install targets
