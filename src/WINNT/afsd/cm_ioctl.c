@@ -104,8 +104,7 @@ cm_FlushFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 
 #ifdef AFS_FREELANCE_CLIENT
     if ( scp->fid.cell == AFS_FAKE_ROOT_CELL_ID && scp->fid.volume == AFS_FAKE_ROOT_VOL_ID ) {
-	cm_noteLocalMountPointChange(FALSE);
-	return 0;
+	return CM_ERROR_NOACCESS;
     }
 #endif
 
@@ -171,8 +170,7 @@ cm_FlushVolume(cm_user_t *userp, cm_req_t *reqp, afs_uint32 cell, afs_uint32 vol
 
 #ifdef AFS_FREELANCE_CLIENT
     if ( cell == AFS_FAKE_ROOT_CELL_ID && volume == AFS_FAKE_ROOT_VOL_ID ) {
-	cm_noteLocalMountPointChange(FALSE);
-	return 0;
+	return CM_ERROR_NOACCESS;
     }
 #endif
 
@@ -192,7 +190,7 @@ cm_FlushVolume(cm_user_t *userp, cm_req_t *reqp, afs_uint32 cell, afs_uint32 vol
     }
     lock_ReleaseWrite(&cm_scacheLock);
 
-    return code;
+    return 0;
 }
 
 /*
@@ -584,7 +582,11 @@ cm_IoctlFlushAllVolumes(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_req_t
     }
     lock_ReleaseWrite(&cm_scacheLock);
 
-    return code;
+#ifdef AFS_FREELANCE_CLIENT
+    cm_noteLocalMountPointChange(FALSE);
+#endif
+
+    return 0;
 }
 
 /*
@@ -596,21 +598,15 @@ cm_IoctlFlushAllVolumes(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_req_t
 afs_int32
 cm_IoctlFlushVolume(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp, cm_req_t *reqp)
 {
-    afs_int32 code;
-    afs_uint32 volume;
-    afs_uint32 cell;
 
 #ifdef AFS_FREELANCE_CLIENT
     if ( scp->fid.cell == AFS_FAKE_ROOT_CELL_ID && scp->fid.volume == AFS_FAKE_ROOT_VOL_ID ) {
-	code = CM_ERROR_NOACCESS;
-    } else
-#endif
-    {
-        volume = scp->fid.volume;
-        cell = scp->fid.cell;
-        code = cm_FlushVolume(userp, reqp, cell, volume);
+	cm_noteLocalMountPointChange(FALSE);
+	return 0;
     }
-    return code;
+#endif
+
+    return cm_FlushVolume(userp, reqp, scp->fid.cell, scp->fid.volume);
 }
 
 /*
@@ -626,13 +622,11 @@ cm_IoctlFlushFile(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *s
 
 #ifdef AFS_FREELANCE_CLIENT
     if ( scp->fid.cell == AFS_FAKE_ROOT_CELL_ID && scp->fid.volume == AFS_FAKE_ROOT_VOL_ID ) {
-	code = CM_ERROR_NOACCESS;
-    } else
-#endif
-    {
-        cm_FlushFile(scp, userp, reqp);
+	return CM_ERROR_NOACCESS;
     }
-    return 0;
+#endif
+
+    return cm_FlushFile(scp, userp, reqp);
 }
 
 
