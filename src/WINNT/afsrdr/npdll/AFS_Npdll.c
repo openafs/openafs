@@ -2246,6 +2246,7 @@ NPOpenEnum( DWORD          dwScope,
 
     DWORD   dwStatus = WN_SUCCESS;
     AFSEnumerationCB *pEnumCB = NULL;
+    HANDLE   hControlDevice = NULL;
 
 #ifdef AFS_DEBUG_TRACE
     if ( lpNetResource == NULL)
@@ -2281,6 +2282,21 @@ NPOpenEnum( DWORD          dwScope,
         dwType |= RESOURCETYPE_DISK | RESOURCETYPE_PRINT;
     }
 #endif
+
+    hControlDevice = OpenRedirector();
+
+    if( hControlDevice == NULL)
+    {
+
+#ifdef AFS_DEBUG_TRACE
+	AFSDbgPrint( L"NPOpenEnum OpenRedirector failure, returning WN_NET_ERROR\n");
+#endif
+
+	return WN_NO_NETWORK;
+    }
+
+    CloseHandle( hControlDevice);
+
 
     *lphEnum = HeapAlloc( GetProcessHeap( ), HEAP_ZERO_MEMORY, sizeof( AFSEnumerationCB));
 
