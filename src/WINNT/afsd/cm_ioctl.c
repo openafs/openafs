@@ -124,6 +124,11 @@ cm_FlushFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
         lock_ObtainWrite(&scp->dirlock);
     lock_ObtainWrite(&scp->rw);
     cm_DiscardSCache(scp);
+    if (scp->fileType == CM_SCACHETYPE_MOUNTPOINT ||
+	scp->fileType == CM_SCACHETYPE_SYMLINK) {
+	scp->mpDataVersion = CM_SCACHE_VERSION_BAD;
+	scp->mountPointStringp[0] = '\0';
+    }
     if (scp->fileType == CM_SCACHETYPE_DIRECTORY) {
         cm_ResetSCacheDirectory(scp, 1);
         lock_ReleaseWrite(&scp->dirlock);
