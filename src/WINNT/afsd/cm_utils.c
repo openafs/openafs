@@ -1053,26 +1053,29 @@ void cm_UpdateServerPriority()
 void cm_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, time_t unixTime)
 {
     // Note that LONGLONG is a 64-bit value
-    LONGLONG ll;
+    LARGE_INTEGER ll;
 
-    ll = Int32x32To64(unixTime, 10000000) + 116444736000000000;
-    largeTimep->dwLowDateTime = (DWORD)(ll & 0xFFFFFFFF);
-    largeTimep->dwHighDateTime = (DWORD)(ll >> 32);
+#ifdef _USE_32BIT_TIME_T
+    ll.QuadPart = UInt32x32To64(unixTime, 10000000) + 116444736000000000;
+#else
+    ll.QuadPart = unixTime * 10000000 + 116444736000000000;
+#endif
+    largeTimep->dwLowDateTime = ll.LowPart;
+    largeTimep->dwHighDateTime = ll.HighPart;
 }
 
 void cm_UnixTimeFromLargeSearchTime(time_t *unixTimep, FILETIME *largeTimep)
 {
     // Note that LONGLONG is a 64-bit value
-    LONGLONG ll;
+    LARGE_INTEGER ll;
 
-    ll = largeTimep->dwHighDateTime;
-    ll <<= 32;
-    ll += largeTimep->dwLowDateTime;
+    ll.HighPart = largeTimep->dwHighDateTime;
+    ll.LowPart  = largeTimep->dwLowDateTime;
 
-    ll -= 116444736000000000;
-    ll /= 10000000;
+    ll.QuadPart -= 116444736000000000;
+    ll.QuadPart /= 10000000;
 
-    *unixTimep = (DWORD)ll;
+    *unixTimep = (time_t)ll.QuadPart;
 }
 
 void cm_SearchTimeFromUnixTime(afs_uint32 *searchTimep, time_t unixTime)
