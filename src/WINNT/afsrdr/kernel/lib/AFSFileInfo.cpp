@@ -2272,7 +2272,7 @@ AFSSetDispositionInfo( IN PIRP Irp,
                         }
                     }
                 }
-		__except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
+		__except( EXCEPTION_EXECUTE_HANDLER)
 		{
 
 		    bMmFlushed = FALSE;
