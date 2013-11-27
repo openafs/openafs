@@ -521,8 +521,20 @@ typedef enum {
     RX_SECIDX_K5   = 5,		/** kerberos 5 tickets as tokens. */
 } rx_securityIndex;
 
+/*
+ * We use an enum for the symbol definitions but have no need for a typedef
+ * because the enum is at least as wide as 'int' and these have to fit into
+ * a field of type 'char'.  Direct assigment will do the right thing if the
+ * enum value fits into that type.
+ */
+enum {
+    RX_SECTYPE_UNK = 0,
+    RX_SECTYPE_NULL = 1,
+    RX_SECTYPE_VAB = 2,
+    RX_SECTYPE_KAD = 3,
+};
 struct rx_securityObjectStats {
-    char type;			/* 0:unk 1:null,2:vab 3:kad */
+    char type;			/* An RX_SECTYPE_* value */
     char level;
     char sparec[10];		/* force correct alignment */
     afs_int32 flags;		/* 1=>unalloc, 2=>auth, 4=>expired */

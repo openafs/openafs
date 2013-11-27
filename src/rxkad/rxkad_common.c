@@ -597,7 +597,7 @@ rxkad_GetStats(struct rx_securityClass *aobj, struct rx_connection *aconn,
 {
     void *securityData;
 
-    astats->type = 3;
+    astats->type = RX_SECTYPE_KAD;
     astats->level = ((struct rxkad_cprivate *)aobj->privateData)->level;
 
     securityData = rx_GetSecurityData(aconn);
