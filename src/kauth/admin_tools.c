@@ -1037,7 +1037,7 @@ GetPassword(struct cmd_syndesc *as, void *arock)
 	if (code)
 	    goto abort;
 	sc = rxnull_NewClientSecurityObject();
-	si = RX_SCINDEX_NULL;
+	si = RX_SECIDX_NULL;
 	conns[0] =
 	    rx_NewConnection(htonl(INADDR_LOOPBACK), htons(AFSCONF_KAUTHPORT),
 			     KA_MAINTENANCE_SERVICE, sc, si);

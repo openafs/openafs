@@ -515,10 +515,12 @@ struct rx_ackPacket {
 #define RX_RESTARTING		    (-100)
 
 typedef enum {
-    RX_SECIDX_NULL = 0,
-    RX_SECIDX_KAD  = 2,
-    RX_SECIDX_GK   = 4,
-    RX_SECIDX_K5   = 5,
+    RX_SECIDX_NULL = 0,		/** rxnull, no security. */
+    RX_SECIDX_VAB  = 1,		/** vice tokens with bcrypt.  Unused. */
+    RX_SECIDX_KAD  = 2,		/** kerberos/DES. */
+    RX_SECIDX_KAE  = 3,		/** rxkad, but always encrypt. */
+    RX_SECIDX_GK   = 4,		/** rxgk, RFC 3961 crypto. */
+    RX_SECIDX_K5   = 5,		/** kerberos 5 tickets as tokens. */
 } rx_securityIndex;
 
 struct rx_securityObjectStats {

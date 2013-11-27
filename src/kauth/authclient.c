@@ -136,7 +136,7 @@ ka_GetSecurity(int service, struct ktc_token * token,
     case KA_TICKET_GRANTING_SERVICE:
       no_security:
 	*scP = rxnull_NewClientSecurityObject();
-	*siP = RX_SCINDEX_NULL;
+	*siP = RX_SECIDX_NULL;
 	break;
     case KA_MAINTENANCE_SERVICE:
 	if (!token)
@@ -145,7 +145,7 @@ ka_GetSecurity(int service, struct ktc_token * token,
 	    rxkad_NewClientSecurityObject(rxkad_crypt, &token->sessionKey,
 					  token->kvno, token->ticketLen,
 					  token->ticket);
-	*siP = RX_SCINDEX_KAD;
+	*siP = RX_SECIDX_KAD;
 	break;
     default:
 	UNLOCK_GLOBAL_MUTEX;

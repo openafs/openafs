@@ -125,7 +125,7 @@ rx_connection(afs_int32 * errorcode, char *syscall)
     null_securityObject = rxnull_NewClientSecurityObject();
     conn =
 	rx_NewConnection(host, htons(AFSCONF_RMTSYSPORT), RMTSYS_SERVICEID,
-			 null_securityObject, 0);
+			 null_securityObject, RX_SECIDX_NULL);
     if (!conn) {
 	printf("Unable to make a new connection\n");
 	*errorcode = -1;

@@ -744,14 +744,14 @@ afsconf_SuperIdentity(struct afsconf_dir *adir, struct rx_call *acall,
 
     tconn = rx_ConnectionOf(acall);
     code = rx_SecurityClassOf(tconn);
-    if (code == 0) {
+    if (code == RX_SECIDX_NULL) {
 	UNLOCK_GLOBAL_MUTEX;
 	return 0;		/* not authenticated at all, answer is no */
-    } else if (code == 1) {
+    } else if (code == RX_SECIDX_VAB) {
 	/* bcrypt tokens */
 	UNLOCK_GLOBAL_MUTEX;
 	return 0;		/* not supported any longer */
-    } else if (code == 2) {
+    } else if (code == RX_SECIDX_KAD) {
 	flag = rxkadSuperUser(adir, acall, identity);
 	UNLOCK_GLOBAL_MUTEX;
 	return flag;

@@ -41,9 +41,12 @@ static int CopyTapeSetDesc(struct tc_tapeSet *, struct tc_tapeSet *);
 int
 callPermitted(struct rx_call *call)
 {
-    /* before this code can be used, the rx connection, on the bucoord side, must */
-    /* be changed so that it will set up for token passing instead of using  a    */
-    /* simple rx connection that, below, returns a value of 0 from rx_SecurityClassOf */
+    /*
+     * Before this code can be used, the rx connection, on the bucoord side,
+     * must be changed so that it will set up for token passing instead of
+     * using a simple rx connection that, below, returns a value of
+     * RX_SECIDX_NULL from rx_SecurityClassOf.
+     */
     return 1;
 }
 

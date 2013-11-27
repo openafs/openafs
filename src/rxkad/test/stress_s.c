@@ -126,15 +126,15 @@ CheckAuth(struct rx_call *call)
     unsigned int expiration;		/* checked by Security Module */
 
     si = rx_SecurityClassOf(rx_ConnectionOf(call));
-    if (si == 1) {
+    if (si == RX_SECIDX_VAB) {
 	printf("No support for VAB security module.\n");
 	return -1;
-    } else if (si == 0) {
+    } else if (si == RX_SECIDX_NULL) {
 	if (minAuth > -1)
 	    return RXKST_UNAUTH;
 	else
 	    return 0;
-    } else if (si != 2) {
+    } else if (si != RX_SECIDX_KAD) {
 	fprintf(stderr, "Unknown security index %d\n", si);
 	return -1;
     }

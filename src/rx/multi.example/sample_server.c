@@ -31,8 +31,8 @@ main()
 	Quit("rx_init");
 
     /* Create a single security object, in this case the null security object, for unauthenticated connections, which will be used to control security on connections made to this server */
-    securityObjects[SAMPLE_NULL] = rxnull_NewServerSecurityObject();
-    if (securityObjects[SAMPLE_NULL] == (struct rx_securityClass *)0)
+    securityObjects[RX_SECIDX_NULL] = rxnull_NewServerSecurityObject();
+    if (securityObjects[RX_SECIDX_NULL] == (struct rx_securityClass *)0)
 	Quit("rxnull_NewServerSecurityObject");
 
     /* Instantiate a single sample service.  The rxgen-generated procedure which is called to decode requests is passed in here (TEST_ExecuteRequest). */

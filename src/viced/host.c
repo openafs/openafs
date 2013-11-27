@@ -2546,13 +2546,13 @@ getPeerDetails(struct rx_connection *conn,
     ViceLog(5,
 	    ("FindClient: authenticating connection: authClass=%d\n",
 	     authClass));
-    if (authClass == 1) {
+    if (authClass == RX_SECIDX_VAB) {
 	/* A bcrypt tickets, no longer supported */
 	ViceLog(1, ("FindClient: bcrypt ticket, using AnonymousID\n"));
 	return 0;
     }
 
-    if (authClass == 2) {
+    if (authClass == RX_SECIDX_KAD) {
 	/* an rxkad ticket */
 	afs_int32 kvno;
 	afs_int32 islocal;

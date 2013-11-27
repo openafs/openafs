@@ -128,7 +128,7 @@ AuthOkay(struct rx_call *call, char *name)
     if (!afsconf_SuperUser(cdir, call, NULL))
 	return 0;
 
-    if (rx_SecurityClassOf(rx_ConnectionOf(call)) == 2) {
+    if (rx_SecurityClassOf(rx_ConnectionOf(call)) == RX_SECIDX_KAD) {
 	code = rxkad_GetServerInfo(rx_ConnectionOf(call), &level, 0, 0, 0, 0, 0);
 	if (code)
 	    return 0;

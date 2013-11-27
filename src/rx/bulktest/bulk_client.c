@@ -211,7 +211,7 @@ main(argc, argv)
 		host = GetIpAddress(hostname);
 		conn =
 		    rx_NewConnection(host, BULK_SERVER_PORT, BULK_SERVICE_ID,
-				     null_securityObject, BULK_NULL);
+				     null_securityObject, RX_SECIDX_NULL);
 	    } else if (strcmp(*argv, "-f") == 0)
 		store = 0;
 	    else if (strcmp(*argv, "-s") == 0)

@@ -362,10 +362,10 @@ MainCommand(struct cmd_syndesc *as, void *arock)
 		continue;
 	    if (onlyAuth != 999) {
 		if (onlyAuth == -1) {
-		    if (tconn.securityIndex != 0)
+		    if (tconn.securityIndex != RX_SECIDX_NULL)
 			continue;
 		} else {
-		    if (tconn.securityIndex != 2)
+		    if (tconn.securityIndex != RX_SECIDX_KAD)
 			continue;
 		    if (withSecStats && (tconn.secStats.type == 3)
 			&& (tconn.secStats.level != onlyAuth))
@@ -414,7 +414,7 @@ MainCommand(struct cmd_syndesc *as, void *arock)
 	    if (withSecStats) {
 		switch ((int)tconn.secStats.type) {
 		case 0:
-		    if (tconn.securityIndex == 2)
+		    if (tconn.securityIndex == RX_SECIDX_KAD)
 			printf
 			    ("  no GetStats procedure for security object\n");
 		    break;

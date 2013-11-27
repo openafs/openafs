@@ -196,10 +196,6 @@ extern afs_int32 ka_VerifyUserPassword(afs_int32 version, char *name,
 #define KA_TICKET_GRANTING_SERVICE 732
 #define KA_MAINTENANCE_SERVICE 733
 
-#define RX_SCINDEX_NULL	0	/* No security */
-#define RX_SCINDEX_VAB 	1	/* vice tokens, with bcrypt */
-#define RX_SCINDEX_KAD	2	/* Kerberos/DES */
-
 #define KA_TGS_NAME "krbtgt"
 	/* realm is TGS instance */
 #define KA_ADMIN_NAME "AuthServer"

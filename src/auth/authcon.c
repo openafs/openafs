@@ -317,18 +317,16 @@ afsconf_BuildServerSecurityObjects(void *rock,
 
     *classes = calloc(*numClasses, sizeof(**classes));
 
-    (*classes)[0] = rxnull_NewServerSecurityObject();
-    (*classes)[1] = NULL;
-    (*classes)[2] = rxkad_NewKrb5ServerSecurityObject(0, dir,
-						      afsconf_GetKey,
-						      _afsconf_GetRxkadKrb5Key,
-						      NULL);
+    (*classes)[RX_SECIDX_NULL] = rxnull_NewServerSecurityObject();
+    (*classes)[RX_SECIDX_VAB] = NULL;
+    (*classes)[RX_SECIDX_KAD] =
+	rxkad_NewKrb5ServerSecurityObject(0, dir, afsconf_GetKey,
+					  _afsconf_GetRxkadKrb5Key, NULL);
 
     if (dir->securityFlags & AFSCONF_SECOPTS_ALWAYSENCRYPT)
-	(*classes)[3] = rxkad_NewKrb5ServerSecurityObject(rxkad_crypt, dir,
-							  afsconf_GetKey,
-							  _afsconf_GetRxkadKrb5Key,
-							  NULL);
+	(*classes)[RX_SECIDX_KAE] =
+	    rxkad_NewKrb5ServerSecurityObject(rxkad_crypt, dir, afsconf_GetKey,
+					      _afsconf_GetRxkadKrb5Key, NULL);
 }
 #endif
 

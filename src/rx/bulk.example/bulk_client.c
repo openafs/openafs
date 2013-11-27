@@ -90,7 +90,7 @@ main(int argc, char **argv)
     null_securityObject = rxnull_NewClientSecurityObject();
     conn =
 	rx_NewConnection(host, BULK_SERVER_PORT, BULK_SERVICE_ID,
-			 null_securityObject, BULK_NULL);
+			 null_securityObject, RX_SECIDX_NULL);
 
     clock_NewTime();
     clock_GetTime(&startTime);

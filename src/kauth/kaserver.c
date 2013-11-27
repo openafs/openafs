@@ -419,7 +419,7 @@ main(int argc, char *argv[])
 	exit(2);
     }
 
-    sca[RX_SCINDEX_NULL] = rxnull_NewServerSecurityObject();
+    sca[RX_SECIDX_NULL] = rxnull_NewServerSecurityObject();
 
     tservice =
 	rx_NewServiceHost(host, 0, KA_AUTHENTICATION_SERVICE,
@@ -442,9 +442,9 @@ main(int argc, char *argv[])
     rx_SetMinProcs(tservice, 1);
     rx_SetMaxProcs(tservice, 1);
 
-    scm[RX_SCINDEX_NULL] = sca[RX_SCINDEX_NULL];
-    scm[RX_SCINDEX_VAB] = 0;
-    scm[RX_SCINDEX_KAD] =
+    scm[RX_SECIDX_NULL] = sca[RX_SECIDX_NULL];
+    scm[RX_SECIDX_VAB] = 0;
+    scm[RX_SECIDX_KAD] =
 	rxkad_NewServerSecurityObject(rxkad_crypt, 0, kvno_admin_key, 0);
     tservice =
 	rx_NewServiceHost(host, 0, KA_MAINTENANCE_SERVICE, "Maintenance", scm, 3,

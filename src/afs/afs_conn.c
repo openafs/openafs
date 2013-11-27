@@ -461,7 +461,7 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	 * bad, but that's somewhat trickier, due to locking
 	 * constraints (though not impossible).
 	 */
-	if (tc->id && (rx_SecurityClassOf(tc->id) != 0)) {
+	if (tc->id && (rx_SecurityClassOf(tc->id) != RX_SECIDX_NULL)) {
 	    tc->forceConnectFS = 1;	/* force recreation of connection */
 	}
 	tu->states &= ~UHasTokens;      /* remove the authentication info */

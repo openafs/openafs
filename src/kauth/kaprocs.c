@@ -371,13 +371,13 @@ check_auth(struct rx_call *call,
 	noAuthenticationRequired = afsconf_GetNoAuthFlag(KA_conf);
 
     si = rx_SecurityClassOf(rx_ConnectionOf(call));
-    if (si == RX_SCINDEX_VAB) {
+    if (si == RX_SECIDX_VAB) {
 	printf("No support for VAB security module yet.\n");
 	return -1;
-    } else if (si == RX_SCINDEX_NULL) {
+    } else if (si == RX_SECIDX_NULL) {
 	code = KANOAUTH;
 	goto no_auth;
-    } else if (si != RX_SCINDEX_KAD) {
+    } else if (si != RX_SECIDX_KAD) {
 	es_Report("Unknown security index %d\n", si);
 	return -1;
     }

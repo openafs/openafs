@@ -416,10 +416,10 @@ osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...)
 	conn = rx_ConnectionOf(call);	/* call -> conn) */
 	if (conn) {
             secClass = rx_SecurityClassOf(conn);	/* conn -> securityIndex */
-	    if (secClass == 0) {	/* unauthenticated */
+	    if (secClass == RX_SECIDX_NULL) {	/* unauthenticated */
 		osi_audit("AFS_Aud_Unauth", (-1), AUD_STR, audEvent, AUD_END);
 		strcpy(afsName, "--UnAuth--");
-	    } else if (secClass == 2) {	/* authenticated */
+	    } else if (secClass == RX_SECIDX_KAD) {	/* authenticated */
                 char tcell[MAXKTCREALMLEN];
                 char name[MAXKTCNAMELEN];
                 char inst[MAXKTCNAMELEN];

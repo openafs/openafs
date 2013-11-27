@@ -1081,8 +1081,8 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
      * security on connections made to this server
      */
 
-    securityObjects[0] = rxnull_NewServerSecurityObject();
-    if (!securityObjects[0]) {
+    securityObjects[RX_SECIDX_NULL] = rxnull_NewServerSecurityObject();
+    if (!securityObjects[RX_SECIDX_NULL]) {
 	TLog(0, "rxnull_NewServerSecurityObject");
 	exit(1);
     }
