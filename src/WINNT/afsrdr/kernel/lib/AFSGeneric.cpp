@@ -1941,7 +1941,7 @@ AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
                         }
                     }
                 }
-		__except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
+		__except( EXCEPTION_EXECUTE_HANDLER)
                 {
 
                     ntStatus = GetExceptionCode();
@@ -3160,7 +3160,7 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                             }
                         }
                     }
-		    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
+		    __except( EXCEPTION_EXECUTE_HANDLER)
                     {
                         ntStatus = GetExceptionCode();
 
@@ -4371,7 +4371,7 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
 				}
 			    }
 			}
-			__except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
+			__except( EXCEPTION_EXECUTE_HANDLER)
 			{
 			    ntStatus = GetExceptionCode();
 
@@ -7051,7 +7051,7 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
                             }
                         }
                     }
-		    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
+		    __except( EXCEPTION_EXECUTE_HANDLER)
                     {
 
                         ntStatus = GetExceptionCode();
@@ -7247,7 +7247,7 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
                         }
                     }
                 }
-		__except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
+		__except( EXCEPTION_EXECUTE_HANDLER)
                 {
 
                     ntStatus = GetExceptionCode();
@@ -9335,7 +9335,7 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 				SetFlag( ObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA);
                             }
                         }
-			__except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
+			__except( EXCEPTION_EXECUTE_HANDLER)
                         {
 
                             ntStatus = GetExceptionCode();
@@ -9483,7 +9483,7 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                                             bCleanExtents = TRUE;
                                         }
                                     }
-				    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
+				    __except( EXCEPTION_EXECUTE_HANDLER)
                                     {
 
                                         ntStatus = GetExceptionCode();
@@ -9564,28 +9564,46 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 
                                                 ulSize = ByteRangeList[ulIndex].Length.QuadPart > DWORD_MAX ? DWORD_MAX : ByteRangeList[ulIndex].Length.LowPart;
 
-                                                if( ObjectInfo->Fcb->NPFcb->SectionObjectPointers.DataSectionObject != NULL &&
-                                                    !CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
-                                                                          &ByteRangeList[ulIndex].FileOffset,
-                                                                          ulSize,
-                                                                          FALSE))
-                                                {
+						__try
+						{
 
-                                                    AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
-                                                                  AFS_TRACE_LEVEL_WARNING,
-                                                                  "AFSPerformObjectInvalidation [1] CcPurgeCacheSection failure FID %08lX-%08lX-%08lX-%08lX\n",
-                                                                  ObjectInfo->FileId.Cell,
-                                                                  ObjectInfo->FileId.Volume,
-                                                                  ObjectInfo->FileId.Vnode,
-                                                                  ObjectInfo->FileId.Unique));
+						    if( ObjectInfo->Fcb->NPFcb->SectionObjectPointers.DataSectionObject != NULL &&
+							!CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
+									      &ByteRangeList[ulIndex].FileOffset,
+									      ulSize,
+									      FALSE))
+						    {
 
-                                                    bPurgeOnClose = TRUE;
-                                                }
-                                                else
-                                                {
+							AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
+								      AFS_TRACE_LEVEL_WARNING,
+								      "AFSPerformObjectInvalidation [1] CcPurgeCacheSection failure FID %08lX-%08lX-%08lX-%08lX\n",
+								      ObjectInfo->FileId.Cell,
+								      ObjectInfo->FileId.Volume,
+								      ObjectInfo->FileId.Vnode,
+								      ObjectInfo->FileId.Unique));
 
-                                                    bCleanExtents = TRUE;
-                                                }
+							bPurgeOnClose = TRUE;
+						    }
+						    else
+						    {
+
+							bCleanExtents = TRUE;
+						    }
+						}
+						__except( EXCEPTION_EXECUTE_HANDLER)
+						{
+
+						    ntStatus = GetExceptionCode();
+
+						    AFSDbgTrace(( 0,
+								  0,
+								  "EXCEPTION - AFSPerformObjectInvalidation CcPurgeCacheSection (1) FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+								  ObjectInfo->FileId.Cell,
+								  ObjectInfo->FileId.Volume,
+								  ObjectInfo->FileId.Vnode,
+								  ObjectInfo->FileId.Unique,
+								  ntStatus));
+						}
 
                                                 ByteRangeList[ulIndex].Length.QuadPart -= ulSize;
 
@@ -9623,27 +9641,44 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 
                                                 if( !BooleanFlagOn( pEntry->Flags, AFS_EXTENT_DIRTY))
                                                 {
-                                                    if( !CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
-                                                                              &pEntry->FileOffset,
-                                                                              pEntry->Size,
-                                                                              FALSE))
-                                                    {
+						    __try
+						    {
+							if( !CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
+										  &pEntry->FileOffset,
+										  pEntry->Size,
+										  FALSE))
+							{
 
-                                                        AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
-                                                                      AFS_TRACE_LEVEL_WARNING,
-                                                                      "AFSPerformObjectInvalidation [2] CcPurgeCacheSection failure FID %08lX-%08lX-%08lX-%08lX\n",
-                                                                      ObjectInfo->FileId.Cell,
-                                                                      ObjectInfo->FileId.Volume,
-                                                                      ObjectInfo->FileId.Vnode,
-                                                                      ObjectInfo->FileId.Unique));
+							    AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
+									  AFS_TRACE_LEVEL_WARNING,
+									  "AFSPerformObjectInvalidation [2] CcPurgeCacheSection failure FID %08lX-%08lX-%08lX-%08lX\n",
+									  ObjectInfo->FileId.Cell,
+									  ObjectInfo->FileId.Volume,
+									  ObjectInfo->FileId.Vnode,
+									  ObjectInfo->FileId.Unique));
 
-                                                        bPurgeOnClose = TRUE;
-                                                    }
-                                                    else
-                                                    {
+							    bPurgeOnClose = TRUE;
+							}
+							else
+							{
 
-                                                        bCleanExtents = TRUE;
-                                                    }
+							    bCleanExtents = TRUE;
+							}
+						    }
+						    __except( EXCEPTION_EXECUTE_HANDLER)
+						    {
+
+							ntStatus = GetExceptionCode();
+
+							AFSDbgTrace(( 0,
+								      0,
+								      "EXCEPTION - AFSPerformObjectInvalidation CcPurgeCacheSection (2) FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+								      ObjectInfo->FileId.Cell,
+								      ObjectInfo->FileId.Volume,
+								      ObjectInfo->FileId.Vnode,
+								      ObjectInfo->FileId.Unique,
+								      ntStatus));
+						    }
                                                 }
 
                                                 if( liCurrentOffset.QuadPart < pEntry->FileOffset.QuadPart)
@@ -9663,27 +9698,44 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                                                             ulFlushLength = liFlushLength.LowPart;
                                                         }
 
-                                                        if( !CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
-                                                                                  &liCurrentOffset,
-                                                                                  ulFlushLength,
-                                                                                  FALSE))
-                                                        {
+							__try
+							{
+							    if( !CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
+										      &liCurrentOffset,
+										      ulFlushLength,
+										      FALSE))
+							    {
 
-                                                            AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
-                                                                          AFS_TRACE_LEVEL_WARNING,
-                                                                          "AFSPerformObjectInvalidation [3] CcPurgeCacheSection failure FID %08lX-%08lX-%08lX-%08lX\n",
-                                                                          ObjectInfo->FileId.Cell,
-                                                                          ObjectInfo->FileId.Volume,
-                                                                          ObjectInfo->FileId.Vnode,
-                                                                          ObjectInfo->FileId.Unique));
+								AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
+									      AFS_TRACE_LEVEL_WARNING,
+									      "AFSPerformObjectInvalidation [3] CcPurgeCacheSection failure FID %08lX-%08lX-%08lX-%08lX\n",
+									      ObjectInfo->FileId.Cell,
+									      ObjectInfo->FileId.Volume,
+									      ObjectInfo->FileId.Vnode,
+									      ObjectInfo->FileId.Unique));
 
-                                                            bPurgeOnClose = TRUE;
-                                                        }
-                                                        else
-                                                        {
+								bPurgeOnClose = TRUE;
+							    }
+							    else
+							    {
 
-                                                            bCleanExtents = TRUE;
-                                                        }
+								bCleanExtents = TRUE;
+							    }
+							}
+							__except( EXCEPTION_EXECUTE_HANDLER)
+							{
+
+							    ntStatus = GetExceptionCode();
+
+							    AFSDbgTrace(( 0,
+									  0,
+									  "EXCEPTION - AFSPerformObjectInvalidation CcPurgeCacheSection (3) FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+									  ObjectInfo->FileId.Cell,
+									  ObjectInfo->FileId.Volume,
+									  ObjectInfo->FileId.Vnode,
+									  ObjectInfo->FileId.Unique,
+									  ntStatus));
+							}
 
                                                         liFlushLength.QuadPart -= ulFlushLength;
                                                     }
@@ -9697,27 +9749,44 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                                         }
                                         else
                                         {
-                                            if( !CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
-                                                                      NULL,
-                                                                      0,
-                                                                      FALSE))
-                                            {
+					    __try
+					    {
+						if( !CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
+									  NULL,
+									  0,
+									  FALSE))
+						{
 
-                                                AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
-                                                              AFS_TRACE_LEVEL_WARNING,
-                                                              "AFSPerformObjectInvalidation [4] CcPurgeCacheSection failure FID %08lX-%08lX-%08lX-%08lX\n",
-                                                              ObjectInfo->FileId.Cell,
-                                                              ObjectInfo->FileId.Volume,
-                                                              ObjectInfo->FileId.Vnode,
-                                                              ObjectInfo->FileId.Unique));
+						    AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
+								  AFS_TRACE_LEVEL_WARNING,
+								  "AFSPerformObjectInvalidation [4] CcPurgeCacheSection failure FID %08lX-%08lX-%08lX-%08lX\n",
+								  ObjectInfo->FileId.Cell,
+								  ObjectInfo->FileId.Volume,
+								  ObjectInfo->FileId.Vnode,
+								  ObjectInfo->FileId.Unique));
 
-                                                bPurgeOnClose = TRUE;
-                                            }
-                                            else
-                                            {
+						    bPurgeOnClose = TRUE;
+						}
+						else
+						{
 
-                                                bCleanExtents = TRUE;
-                                            }
+						    bCleanExtents = TRUE;
+						}
+					    }
+					    __except( EXCEPTION_EXECUTE_HANDLER)
+					    {
+
+						ntStatus = GetExceptionCode();
+
+						AFSDbgTrace(( 0,
+							      0,
+							      "EXCEPTION - AFSPerformObjectInvalidation CcPurgeCacheSection (4) FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+							      ObjectInfo->FileId.Cell,
+							      ObjectInfo->FileId.Volume,
+							      ObjectInfo->FileId.Vnode,
+							      ObjectInfo->FileId.Unique,
+							      ntStatus));
+					    }
                                         }
 
                                         if ( bPurgeOnClose)

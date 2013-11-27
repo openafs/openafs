@@ -386,7 +386,7 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
                     CcSetDirtyPageThreshold( pFileObject,
                                              AFS_DIRTY_CHUNK_THRESHOLD * pDeviceExt->Specific.RDR.MaximumRPCLength / 4096);
                 }
-		__except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
+		__except( EXCEPTION_EXECUTE_HANDLER)
                 {
 
                     ntStatus = GetExceptionCode();
@@ -829,7 +829,7 @@ try_exit:
 		    SetFlag( pFcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
 		}
 	    }
-	    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
+	    __except( EXCEPTION_EXECUTE_HANDLER)
 	    {
 
 		DWORD ntStatus2 = GetExceptionCode();
@@ -1848,7 +1848,7 @@ AFSCachedWrite( IN PDEVICE_OBJECT DeviceObject,
 
                 ntStatus = Irp->IoStatus.Status;
             }
-	    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
+	    __except( EXCEPTION_EXECUTE_HANDLER)
             {
                 ntStatus = GetExceptionCode();
 
@@ -1946,7 +1946,7 @@ AFSCachedWrite( IN PDEVICE_OBJECT DeviceObject,
                     try_return( ntStatus = STATUS_UNSUCCESSFUL);
                 }
             }
-	    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
+	    __except( EXCEPTION_EXECUTE_HANDLER)
             {
 
                 ntStatus = GetExceptionCode();
@@ -1998,7 +1998,7 @@ AFSCachedWrite( IN PDEVICE_OBJECT DeviceObject,
 			try_return( ntStatus = iosbFlush.Status);
 		    }
 		}
-		__except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
+		__except( EXCEPTION_EXECUTE_HANDLER)
                 {
 
 		    ntStatus = GetExceptionCode();
