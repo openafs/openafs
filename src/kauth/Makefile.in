@@ -192,17 +192,6 @@ knfs: kauth.h kautils.h libkauth.a $(LIBS) knfs.o
 
 knfs.o: knfs.c AFS_component_version_number.o
 
-CFLAGS_klogin.o = -DKAUTH
-klogin.o: klogin.c ${INCLS} AFS_component_version_number.o
-
-klogin: libkauth.a $(LIBS) klogin.o
-	$(AFS_LDRULE) klogin.o libkauth.a \
-		${LIBS} $(LIB_roken) $(LIB_crypt) ${XLIBS}
-
-klogin.krb: libkauth.a $(KLIBS) klogin.o
-	$(AFS_LDRULE) klogin.o libkauth.krb.a \
-		${KLIBS} $(LIB_roken) $(LIB_crypt) ${XLIBS}
-
 kpasswd.o: kauth.h kautils.h ${INCLS} kpasswd.c AFS_component_version_number.o
 
 kpasswd: kauth.h kautils.h libkauth.a $(LIBS) kpasswd.o kkids.o
@@ -318,10 +307,10 @@ dest: kaserver kas kpwvalid kas klog klog.krb knfs kpasswd libkauth.a \
 clean:
 	$(LT_CLEAN)
 	$(RM) -f *.o *.a *.xdr.c *.cs.c *.ss.c core \
-		kaserver kas klog multiklog kpasswd klogin rebuild \
+		kaserver kas klog multiklog kpasswd rebuild \
 		ka-forwarder \
 		kauth.h kautils.h kaerrors.c kpwvalid \
 		AFS_component_version_number.c \
-		klog.krb knfs klogin.krb kdb Kkauth.h
+		klog.krb knfs kdb Kkauth.h
 
 include ../config/Makefile.version

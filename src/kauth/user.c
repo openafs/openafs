@@ -152,7 +152,7 @@ ka_UserAuthenticateGeneral(afs_int32 flags, char *name, char *instance,
     ka_StringToKey(password, realm, &key);
 
 /*
- * alarm is set by klogin and kpasswd only so ignore for
+ * alarm is set by kpasswd only so ignore for
  * NT
  */
 
