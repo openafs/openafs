@@ -288,7 +288,7 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     ReleaseWriteLock(&tvc->lock);
     ReleaseWriteLock(&afs_xvcache);
     if (tvcp)
-    	*tvcp = tvc;
+	*tvcp = tvc;
     else
 	afs_PutVCache(tvc);
     code = 0;

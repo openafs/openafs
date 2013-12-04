@@ -1655,12 +1655,12 @@ afs_vop_symlink(ap)
 				 * } */ *ap;
 {
     struct vnode *dvp = ap->a_dvp;
-    struct vcache *vpp = NULL;
+    struct vcache *pvc = NULL;
     int error = 0;
 
     GETNAME();
     AFS_GLOCK();
-    error = afs_symlink(VTOAFS(dvp), name, ap->a_vap, ap->a_target, &vpp,
+    error = afs_symlink(VTOAFS(dvp), name, ap->a_vap, ap->a_target, &pvc,
 			vop_cn_cred);
     AFS_GUNLOCK();
 #ifndef AFS_DARWIN80_ENV
@@ -1669,9 +1669,9 @@ afs_vop_symlink(ap)
 #endif
     *ap->a_vpp = NULL;
     if (!error) {
-	error = afs_darwin_finalizevnode(vpp, dvp, ap->a_cnp, 0, 0);
-	if (! error)
-	    *ap->a_vpp = AFSTOV(vpp);
+	error = afs_darwin_finalizevnode(pvc, dvp, ap->a_cnp, 0, 0);
+	if (!error)
+	    *ap->a_vpp = AFSTOV(pvc);
     }
     DROPNAME();
     return error;
