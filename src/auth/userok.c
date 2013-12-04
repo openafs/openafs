@@ -513,6 +513,9 @@ afsconf_IsSuperIdentity(struct afsconf_dir *adir,
     int match;
     afs_int32 code;
 
+    if (user->kind == RX_ID_SUPERUSER)
+	return 1;
+
     tbuffer = malloc(AFSDIR_PATH_MAX);
     if (tbuffer == NULL)
 	return 0;
