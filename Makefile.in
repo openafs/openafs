@@ -228,7 +228,7 @@ rxgk: cmd comerr hcrypto rfc3961 rx rxgk_depinstall
 rxkad: cmd comerr hcrypto rfc3961 rx rxkad_depinstall
 	+${COMPILE_PART1} rxkad ${COMPILE_PART2}
 
-auth: cmd comerr hcrypto lwp rx rxkad audit sys auth_depinstall
+auth: cmd comerr hcrypto lwp rx rxkad audit sys auth_depinstall rxgk
 	+${COMPILE_PART1} auth ${COMPILE_PART2}
 
 ubik: cmd comerr auth ubik_depinstall sys
