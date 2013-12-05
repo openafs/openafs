@@ -138,23 +138,23 @@ struct kadstats {
     afs_int32 hashTableUtilization;		/* utilization of non-empty hash table
 					   entries in parts per 10,000 */
     /* count of requests and aborts for each RPC */
-    declare_stat (Authenticate);
-    declare_stat (ChangePassword);
-    declare_stat (GetTicket);
-    declare_stat (CreateUser);
-    declare_stat (SetPassword);
-    declare_stat (SetFields);
-    declare_stat (DeleteUser);
-    declare_stat (GetEntry);
-    declare_stat (ListEntry);
-    declare_stat (GetStats);
-    declare_stat (GetPassword);
-    declare_stat (GetRandomKey);
-    declare_stat (Debug);
-    declare_stat (UAuthenticate);
-    declare_stat (UGetTicket);
-    declare_stat (Unlock);
-    declare_stat (LockStatus);
+    declare_stat(Authenticate);
+    declare_stat(ChangePassword);
+    declare_stat(GetTicket);
+    declare_stat(CreateUser);
+    declare_stat(SetPassword);
+    declare_stat(SetFields);
+    declare_stat(DeleteUser);
+    declare_stat(GetEntry);
+    declare_stat(ListEntry);
+    declare_stat(GetStats);
+    declare_stat(GetPassword);
+    declare_stat(GetRandomKey);
+    declare_stat(Debug);
+    declare_stat(UAuthenticate);
+    declare_stat(UGetTicket);
+    declare_stat(Unlock);
+    declare_stat(LockStatus);
     afs_int32 string_checks;			/* errors detected in name.inst strs */
     afs_int32 reserved1;
     afs_int32 reserved2;
