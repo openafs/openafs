@@ -781,13 +781,6 @@ cm_IoctlGetVolumeStatus(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scach
         if (code)
             return code;
 
-        lock_ObtainWrite(&vscp->rw);
-        code = cm_SyncOp(vscp, NULL, userp, reqp, PRSFS_READ,
-                          CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-        lock_ReleaseWrite(&vscp->rw);
-        if (code)
-            return code;
-
         Name = volName;
         OfflineMsg = offLineMsg;
         MOTD = motd;
@@ -803,9 +796,6 @@ cm_IoctlGetVolumeStatus(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scach
         } while (cm_Analyze(connp, userp, reqp, &vfid, NULL, 0, NULL, NULL, NULL, NULL, code));
         code = cm_MapRPCError(code, reqp);
 
-        lock_ObtainWrite(&vscp->rw);
-        cm_SyncOpDone(vscp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-        lock_ReleaseWrite(&vscp->rw);
         cm_ReleaseSCache(vscp);
     }
 

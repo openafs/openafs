@@ -1391,37 +1391,27 @@ cm_CheckOfflineVolumeState(cm_volume_t *volp, cm_vol_state_t *statep, afs_uint32
 
                 code = cm_GetSCache(&vfid, NULL, &vscp, cm_rootUserp, &req);
                 if (code = 0) {
-                    lock_ObtainWrite(&vscp->rw);
-                    code = cm_SyncOp(vscp, NULL, cm_rootUserp, &req, PRSFS_READ,
-                                     CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-                    lock_ReleaseWrite(&vscp->rw);
-                    if (code == 0) {
-                        do {
-                            code = cm_ConnFromVolume(volp, statep->ID, cm_rootUserp, &req, &connp);
-                            if (code)
-                                continue;
+		    do {
+			code = cm_ConnFromVolume(volp, statep->ID, cm_rootUserp, &req, &connp);
+			if (code)
+			   continue;
 
-                            rxconnp = cm_GetRxConn(connp);
-                            code = RXAFS_GetVolumeStatus(rxconnp, statep->ID,
-                                                         &volStat, &Name, &OfflineMsg, &MOTD);
-                            rx_PutConnection(rxconnp);
-                        } while (cm_Analyze(connp, cm_rootUserp, &req, &vfid, NULL, 0, NULL, NULL, NULL, NULL, code));
-                        code = cm_MapRPCError(code, &req);
+			rxconnp = cm_GetRxConn(connp);
+			code = RXAFS_GetVolumeStatus(rxconnp, statep->ID,
+						     &volStat, &Name, &OfflineMsg, &MOTD);
+			rx_PutConnection(rxconnp);
+		    } while (cm_Analyze(connp, cm_rootUserp, &req, &vfid, NULL, 0, NULL, NULL, NULL, NULL, code));
+		    code = cm_MapRPCError(code, &req);
 
-                        if (code == 0 && volType == ROVOL)
-                        {
+		    if (code == 0 && volType == ROVOL)
+		    {
+			lock_ObtainWrite(&volp->rw);
+			volp->volumeSizeRO = volStat.BlocksInUse * 1024;
+			_InterlockedOr(&volp->flags, CM_VOLUMEFLAG_RO_SIZE_VALID);
+			lock_ReleaseWrite(&volp->rw);
+		    }
 
-                            lock_ObtainWrite(&volp->rw);
-                            volp->volumeSizeRO = volStat.BlocksInUse * 1024;
-                            _InterlockedOr(&volp->flags, CM_VOLUMEFLAG_RO_SIZE_VALID);
-                            lock_ReleaseWrite(&volp->rw);
-                        }
-                    }
-
-                    lock_ObtainWrite(&vscp->rw);
-                    cm_SyncOpDone(vscp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-                    lock_ReleaseWrite(&vscp->rw);
-                    cm_ReleaseSCache(vscp);
+		    cm_ReleaseSCache(vscp);
                 }
                 lock_ObtainWrite(&volp->rw);
                 if (code == 0 && volStat.Online) {
