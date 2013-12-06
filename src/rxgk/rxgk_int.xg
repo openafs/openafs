@@ -1,0 +1,163 @@
+/*
+ * Protocol descriptions for core RXGK structures and RPCs.
+ */
+
+package RXGK_
+prefix S
+
+/* constants for RXGK RPC numbers */
+#define	RXGK_GSSNEGOTIATE	1
+#define	RXGK_COMBINETOKENS	2
+#define	RXGK_AFSCOMBINETOKENS	3
+
+/* RPC-L from draft-wilkinson-afs3-rxgk */
+
+/* General values */
+
+typedef afs_int64 rxgkTime;
+
+/* key usage values */
+const RXGK_CLIENT_ENC_PACKET            = 1026;
+const RXGK_CLIENT_MIC_PACKET            = 1027;
+const RXGK_SERVER_ENC_PACKET            = 1028;
+const RXGK_SERVER_MIC_PACKET            = 1029;
+const RXGK_CLIENT_ENC_RESPONSE          = 1030;
+const RXGK_SERVER_ENC_TOKEN             = 1036;
+
+/* Security levels */
+enum RXGK_Level {
+    RXGK_LEVEL_CLEAR = 0,
+    RXGK_LEVEL_AUTH = 1,
+    RXGK_LEVEL_CRYPT = 2
+};
+
+/* limits for variable-length arrays */
+const RXGK_MAXENCTYPES = 255;
+const RXGK_MAXLEVELS = 255;
+const RXGK_MAXMIC = 1024;
+const RXGK_MAXNONCE = 1024;
+const RXGK_MAXDATA = 1048576;
+
+typedef afs_int32 RXGK_Enctypes<RXGK_MAXENCTYPES>;
+typedef opaque RXGK_Data<RXGK_MAXDATA>;
+
+/* Begin definitions for RXGK_GSSNegotiate. */
+
+struct RXGK_StartParams {
+   RXGK_Enctypes enctypes;
+   RXGK_Level levels<RXGK_MAXLEVELS>;
+   afs_uint32 lifetime;
+   afs_uint32 bytelife;
+   opaque client_nonce<RXGK_MAXNONCE>;
+};
+
+struct RXGK_ClientInfo {
+   afs_int32 errorcode;
+   afs_int32 enctype;
+   RXGK_Level level;
+   afs_uint32 lifetime;
+   afs_uint32 bytelife;
+   rxgkTime expiration;
+   opaque mic<RXGK_MAXMIC>;
+   RXGK_Data token;
+   opaque server_nonce<RXGK_MAXNONCE>;
+};
+
+GSSNegotiate(IN RXGK_StartParams *client_start,
+    IN RXGK_Data *input_token_buffer,
+    IN RXGK_Data *opaque_in,
+    OUT RXGK_Data *output_token_buffer,
+    OUT RXGK_Data *opaque_out,
+    OUT afs_uint32 *gss_major_status,
+    OUT afs_uint32 *gss_minor_status,
+    OUT RXGK_Data *rxgk_info) = RXGK_GSSNEGOTIATE;
+
+/* Begin definitions for RXGK_CombineTokens. */
+
+struct RXGK_CombineOptions {
+    RXGK_Enctypes enctypes;
+    RXGK_Level levels<RXGK_MAXLEVELS>;
+};
+
+struct RXGK_TokenInfo {
+    afs_int32 enctype;
+    RXGK_Level level;
+    afs_uint32 lifetime;
+    afs_uint32 bytelife;
+    rxgkTime expiration;
+};
+
+CombineTokens(IN RXGK_Data *token0, IN RXGK_Data *token1,
+	     IN RXGK_CombineOptions *options,
+	     OUT RXGK_Data *new_token,
+	     OUT RXGK_TokenInfo *info) = RXGK_COMBINETOKENS;
+
+/* Begin definitions for security class operation. */
+
+/* RX challenge and response structures */
+struct RXGK_Challenge {
+    opaque nonce[20];
+};
+const RXGK_MAXAUTHENTICATOR = 1416;	/* better fit in a packet! */
+struct RXGK_Response {
+    rxgkTime start_time;
+    RXGK_Data token;
+    opaque authenticator<RXGK_MAXAUTHENTICATOR>;
+};
+
+struct RXGK_Authenticator {
+    opaque nonce[20];
+    opaque appdata<>;
+    RXGK_Level level;
+    afs_uint32 epoch;
+    afs_uint32 cid;
+    afs_uint32 call_numbers<>;
+};
+
+/* RPC-L from draft-brashear-afs3-pts-extended-names-09 (final). */
+
+#define AUTHDATAMAX 2048
+#define AUTHPRINTABLEMAX 2048
+struct PrAuthName {
+    afs_int32 kind;
+    opaque data<AUTHDATAMAX>;
+    opaque display<AUTHPRINTABLEMAX>;
+};
+
+/* RPC-L from draft-wilkinson-afs3-rxgk-afs. */
+
+/* Begin authenticator appdata definition. */
+
+struct RXGK_Authenticator_AFSAppData {
+    afsUUID client_uuid;
+    RXGK_Data cb_tok;
+    RXGK_Data cb_key;
+    afs_int32 enctype;
+    afsUUID target_uuid;
+};
+
+/* Begin token definitions. */
+
+struct RXGK_TokenContainer {
+    afs_int32 kvno;
+    afs_int32 enctype;
+    opaque    encrypted_token<>;
+};
+struct RXGK_Token {
+    afs_int32 enctype;
+    opaque K0<>;
+    RXGK_Level level;
+    afs_uint32 lifetime;
+    afs_uint32 bytelife;
+    rxgkTime expirationtime;
+    struct PrAuthName identities<>;
+};
+
+/* Begin definitions for AFSCombineTokens. */
+
+AFSCombineTokens(IN RXGK_Data *user_tok,
+    IN RXGK_Data *cm_tok,
+    IN RXGK_CombineOptions *options,
+    IN afsUUID destination,
+    OUT RXGK_Data *new_token,
+    OUT RXGK_TokenInfo *token_info) = RXGK_AFSCOMBINETOKENS;
