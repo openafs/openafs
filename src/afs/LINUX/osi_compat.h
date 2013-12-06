@@ -555,32 +555,6 @@ afs_dentry_open(struct dentry *dp, struct vfsmount *mnt, int flags, const struct
 }
 #endif
 
-#if !defined(STRUCT_FILENAME_HAS_NAME)
-typedef char *afs_name_t;
-
-static inline char *
-afs_name_to_string(afs_name_t s) {
-    return (char *)s;
-}
-
-static inline void
-afs_putname(afs_name_t name) {
-    putname((char *)name);
-}
-#else
-typedef struct filename *afs_name_t;
-
-static inline char *
-afs_name_to_string(afs_name_t s) {
-    return (char *)s->name;
-}
-
-static inline void
-afs_putname(afs_name_t name) {
-    kmem_cache_free(names_cachep, (void *)name);
-}
-#endif
-
 static inline int
 afs_truncate(struct inode *inode, int len)
 {
