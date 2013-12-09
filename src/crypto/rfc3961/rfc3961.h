@@ -155,7 +155,7 @@ void krb5_free_keyblock_contents(krb5_context context,
 #define krb5_crypto_prf oafs_h_krb5_crypto_prf
 #define krb5_crypto_fx_cf2 oafs_h_krb5_crypto_fx_cf2
 #define krb5_generate_random_block oafs_h_krb5_generate_random_block
-#define krb5_random_to_key oafs_h_krb5_random_ro_key
+#define krb5_random_to_key oafs_h_krb5_random_to_key
 #define krb5_crypto_overhead oafs_h_krb5_crypto_overhead
 
 krb5_error_code krb5_crypto_prf(krb5_context context,
