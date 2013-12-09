@@ -127,4 +127,9 @@ struct rxgk_cconn {
 /* rxgk_crypto_IMPL.c (currently rfc3961 is the only IMPL) */
 ssize_t rxgk_etype_to_len(int etype);
 
+/* rxgk_token.c */
+afs_int32 rxgk_extract_token(RXGK_Data *tc, RXGK_Token *out,
+			     rxgk_getkey_func getkey, void *rock)
+			    AFS_NONNULL((1,2,3));
+
 #endif /* RXGK_PRIVATE_H */

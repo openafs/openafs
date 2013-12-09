@@ -42,6 +42,9 @@
 /* Pull in the protocol description */
 #include <rx/rxgk_int.h>
 
+/* RX-internal headers we depend on. */
+#include <rx/rx_opaque.h>
+
 /* rxgkTime is defined in rxgk_int.xg. rxgkTime values are unix timestamps, but
  * in 100-nanosecond units. */
 
@@ -97,5 +100,18 @@ afs_int32 rxgk_derive_tk(rxgk_key *tk, rxgk_key k0, afs_uint32 epoch,
 			 afs_uint32 key_number) AFS_NONNULL();
 afs_int32 rxgk_cipher_expansion(rxgk_key k0, afs_uint32 *len_out) AFS_NONNULL();
 afs_int32 rxgk_nonce(RXGK_Data *nonce, afs_uint32 len) AFS_NONNULL();
+
+/* rxgk_token.c */
+afs_int32 rxgk_make_token(struct rx_opaque *out, RXGK_TokenInfo *info,
+			  struct rx_opaque *k0, PrAuthName *identities,
+			  int nids, rxgk_key key, afs_int32 kvno,
+			  afs_int32 enctype) AFS_NONNULL((1,2,3,6));
+afs_int32 rxgk_print_token(struct rx_opaque *out, RXGK_TokenInfo *input_info,
+			   struct rx_opaque *k0, rxgk_key key, afs_int32 kvno,
+			   afs_int32 enctype) AFS_NONNULL();
+afs_int32 rxgk_print_token_and_key(struct rx_opaque *out,
+                                   RXGK_TokenInfo *input_info, rxgk_key key,
+                                   afs_int32 kvno, afs_int32 enctype,
+                                   rxgk_key *k0_out) AFS_NONNULL();
 
 #endif /* OPENAFS_RXGK_H */
