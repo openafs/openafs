@@ -124,4 +124,7 @@ struct rxgk_cconn {
     struct rxgkStats stats;
 };
 
+/* rxgk_crypto_IMPL.c (currently rfc3961 is the only IMPL) */
+ssize_t rxgk_etype_to_len(int etype);
+
 #endif /* RXGK_PRIVATE_H */

@@ -217,7 +217,7 @@ afs: config export comerr afs_depinstall
 sys: cmd comerr afs hcrypto rx rxstat fsint sys_depinstall
 	+${COMPILE_PART1} sys ${COMPILE_PART2}
 
-rxgk: cmd comerr hcrypto rx rxgk_depinstall
+rxgk: cmd comerr hcrypto rfc3961 rx rxgk_depinstall
 	+set -x; \
 	if test "@BUILD_RXGK@" = "yes"; then \
 		${COMPILE_PART1} rxgk ${COMPILE_PART2} ; \

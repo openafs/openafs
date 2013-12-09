@@ -63,7 +63,7 @@ static_inline rxgkTime RXGK_NOW(void)
 
 /* rxgk_key is an opaque type to wrap our RFC3961 implementation's concept
  * of a key.  It has (at least) the keyblock and length, and enctype. */
-typedef void * rxgk_key;
+typedef struct rxgk_key_s * rxgk_key;
 
 typedef afs_int32 (*rxgk_getkey_func)(void *rock, afs_int32 *kvno,
 				      afs_int32 *enctype, rxgk_key *key);
@@ -76,5 +76,26 @@ struct rx_securityClass *rxgk_NewClientSecurityObject(RXGK_Level level,
 						      rxgk_key k0,
 						      RXGK_Data *token,
 						      afsUUID *uuid);
+
+/* rxgk_crypto_IMPL.c (currently rfc3961 is the only IMPL) */
+afs_int32 rxgk_make_key(rxgk_key *key_out, void *raw_key, afs_uint32 length,
+			afs_int32 enctype) AFS_NONNULL();
+afs_int32 rxgk_copy_key(rxgk_key key_in, rxgk_key *key_out) AFS_NONNULL();
+afs_int32 rxgk_random_key(afs_int32 *enctype, rxgk_key *key_out) AFS_NONNULL();
+void rxgk_release_key(rxgk_key *key) AFS_NONNULL();
+afs_int32 rxgk_mic_length(rxgk_key key, size_t *out) AFS_NONNULL();
+afs_int32 rxgk_mic_in_key(rxgk_key key, afs_int32 usage, RXGK_Data *in,
+			  RXGK_Data *out) AFS_NONNULL();
+afs_int32 rxgk_check_mic_in_key(rxgk_key key, afs_int32 usage, RXGK_Data *in,
+				RXGK_Data *mic) AFS_NONNULL();
+afs_int32 rxgk_encrypt_in_key(rxgk_key key, afs_int32 usage, RXGK_Data *in,
+			      RXGK_Data *out) AFS_NONNULL();
+afs_int32 rxgk_decrypt_in_key(rxgk_key key, afs_int32 usage, RXGK_Data *in,
+			      RXGK_Data *out) AFS_NONNULL();
+afs_int32 rxgk_derive_tk(rxgk_key *tk, rxgk_key k0, afs_uint32 epoch,
+			 afs_uint32 cid, rxgkTime start_time,
+			 afs_uint32 key_number) AFS_NONNULL();
+afs_int32 rxgk_cipher_expansion(rxgk_key k0, afs_uint32 *len_out) AFS_NONNULL();
+afs_int32 rxgk_nonce(RXGK_Data *nonce, afs_uint32 len) AFS_NONNULL();
 
 #endif /* OPENAFS_RXGK_H */
