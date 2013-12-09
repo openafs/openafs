@@ -42,6 +42,25 @@
 /* Pull in the protocol description */
 #include <rx/rxgk_int.h>
 
+/* rxgkTime is defined in rxgk_int.xg. rxgkTime values are unix timestamps, but
+ * in 100-nanosecond units. */
+
+/* Helpers to avoid having to count zeros. */
+static_inline rxgkTime secondsToRxgkTime(afs_uint64 seconds) {
+    return seconds * (rxgkTime)10000000;
+}
+static_inline afs_uint64 rxgkTimeToSeconds(rxgkTime atime) {
+    return (afs_uint64)atime / 10000000;
+}
+
+/** Get the current timestamp as an rxgkTime. */
+static_inline rxgkTime RXGK_NOW(void)
+{
+    struct timeval tv;
+    osi_GetTime(&tv);
+    return secondsToRxgkTime(tv.tv_sec) + (rxgkTime)tv.tv_usec * 10;
+}
+
 /* rxgk_key is an opaque type to wrap our RFC3961 implementation's concept
  * of a key.  It has (at least) the keyblock and length, and enctype. */
 typedef void * rxgk_key;
