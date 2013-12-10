@@ -103,13 +103,10 @@ struct rxgk_sconn {
  * or tied to a particular file server (which does have a UUID).
  */
 struct rxgk_cprivate {
-    afs_int32 flags;
     rxgk_key k0;
     afs_int32 enctype;
     RXGK_Level level;
     RXGK_Data token;
-    afsUUID *client_uuid;
-    afsUUID *target_uuid;
 };
 /**
  * Per-connection security data for client.
@@ -122,9 +119,6 @@ struct rxgk_cprivate {
 struct rxgk_cconn {
     rxgkTime start_time;
     afs_uint32 key_number;
-    RXGK_Data cb_tok;
-    RXGK_Data cb_k0;
-    afs_int32 cb_enctype;
     struct rxgkStats stats;
 };
 

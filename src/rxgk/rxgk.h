@@ -86,8 +86,7 @@ afs_int32 rxgk_GetServerInfo(struct rx_connection *conn, RXGK_Level *level,
 struct rx_securityClass *rxgk_NewClientSecurityObject(RXGK_Level level,
 						      afs_int32 enctype,
 						      rxgk_key k0,
-						      RXGK_Data *token,
-						      afsUUID *uuid);
+						      RXGK_Data *token);
 
 /* rxgk_crypto_IMPL.c (currently rfc3961 is the only IMPL) */
 afs_int32 rxgk_make_key(rxgk_key *key_out, void *raw_key, afs_uint32 length,
