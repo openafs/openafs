@@ -1296,7 +1296,7 @@ afsconf_GetAfsdbInfo(char *acellName, char *aservice,
 
     for (i = 0; i < numServers; i++) {
 	memcpy(&acellInfo->hostAddr[i].sin_addr.s_addr, &cellHostAddrs[i],
-	       sizeof(long));
+	       sizeof(afs_uint32));
 	memcpy(acellInfo->hostName[i], cellHostNames[i], MAXHOSTCHARS);
 	acellInfo->hostAddr[i].sin_family = AF_INET;
         if (aservice)
@@ -1415,8 +1415,11 @@ afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName, char *aservice,
                         /* check to see if this is a new address; if so insert it into the list */
                         int k, dup;
                         for (k=0, dup=0; !dup && k < numServers; k++) {
-                            if (hostAddr[k].sin_addr.s_addr == *(u_long *)he->h_addr_list[i])
+			    afs_uint32 addr;
+			    memcpy(&addr, he->h_addr_list[i], sizeof(addr));
+                            if (hostAddr[k].sin_addr.s_addr == addr) {
                                 dup = 1;
+			    }
                         }
                         if (dup)
                             continue;
@@ -1426,7 +1429,7 @@ afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName, char *aservice,
 #ifdef STRUCT_SOCKADDR_HAS_SA_LEN
                         hostAddr[numServers].sin_len = sizeof(struct sockaddr_in);
 #endif
-                        memcpy(&hostAddr[numServers].sin_addr.s_addr, he->h_addr_list[i], sizeof(long));
+                        memcpy(&hostAddr[numServers].sin_addr.s_addr, he->h_addr_list[i], sizeof(afs_uint32));
                         strcpy(hostName[numServers], acellInfo->hostName[j]);
                         foundAddr = 1;
                         numServers++;
