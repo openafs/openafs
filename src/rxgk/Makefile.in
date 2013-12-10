@@ -8,7 +8,7 @@ INCLS=	${TOP_INCDIR}/rx/rx.h ${TOP_INCDIR}/rx/rxgk.h ${TOP_INCDIR}/rx/rxgk_errs.
 
 LT_objs = rxgk_client.lo rxgk_server.lo rxgk_errs.lo rxgk_int.cs.lo \
 	rxgk_int.xdr.lo rxgk_int.ss.lo rxgk_procs.lo rxgk_token.lo \
-	rxgk_crypto_rfc3961.lo
+	rxgk_packet.lo rxgk_crypto_rfc3961.lo
 
 LT_deps =   $(top_builddir)/src/opr/liboafs_opr.la \
 	    $(top_builddir)/src/comerr/liboafs_comerr.la \

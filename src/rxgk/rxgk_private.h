@@ -47,6 +47,16 @@ struct rxgkStats {
     afs_uint32 psent;
 };
 
+/* The packet pseudoheader used for auth and crypt connections. */
+struct rxgk_header {
+    afs_uint32 epoch;
+    afs_uint32 cid;
+    afs_uint32 callNumber;
+    afs_uint32 seq;
+    afs_uint32 index;
+    afs_uint32 length;
+} __attribute__((packed));
+
 /*
  * rgxk_server.c
  */
@@ -131,5 +141,16 @@ ssize_t rxgk_etype_to_len(int etype);
 afs_int32 rxgk_extract_token(RXGK_Data *tc, RXGK_Token *out,
 			     rxgk_getkey_func getkey, void *rock)
 			    AFS_NONNULL((1,2,3));
+
+/* rxgk_packet.c */
+int rxgk_check_mic_packet(rxgk_key tk, afs_int32 keyusage,
+			  struct rx_connection *aconn,
+			  struct rx_packet *apacket);
+int rxgk_decrypt_packet(rxgk_key tk, afs_int32 keyusage,
+			struct rx_connection *aconn, struct rx_packet *apacket);
+int rxgk_mic_packet(rxgk_key tk, afs_int32 keyusage,
+		    struct rx_connection *aconn, struct rx_packet *apacket);
+int rxgk_enc_packet(rxgk_key tk, afs_int32 keyusage,
+		    struct rx_connection *aconn, struct rx_packet *apacket);
 
 #endif /* RXGK_PRIVATE_H */
