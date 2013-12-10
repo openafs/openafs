@@ -142,6 +142,11 @@ afs_int32 rxgk_extract_token(RXGK_Data *tc, RXGK_Token *out,
 			     rxgk_getkey_func getkey, void *rock)
 			    AFS_NONNULL((1,2,3));
 
+/* rxgk_util.c */
+afs_int32 rxgk_security_overhead(struct rx_connection *aconn, RXGK_Level level,
+				 rxgk_key k0);
+afs_int32 rxgk_key_number(afs_uint16 wire, afs_uint32 local, afs_uint32 *real);
+
 /* rxgk_packet.c */
 int rxgk_check_mic_packet(rxgk_key tk, afs_int32 keyusage,
 			  struct rx_connection *aconn,
