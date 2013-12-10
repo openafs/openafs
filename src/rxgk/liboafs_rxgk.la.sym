@@ -1,5 +1,6 @@
 RXGK_CombineTokens
 RXGK_GSSNegotiate
+rxgk_GetServerInfo
 rxgk_NewClientSecurityObject
 rxgk_NewServerSecurityObject
 rxgk_check_mic_in_key

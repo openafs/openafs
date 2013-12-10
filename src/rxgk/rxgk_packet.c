@@ -90,7 +90,7 @@ populate_header(struct rxgk_header *header, struct rx_packet *apacket,
  * @param[in,out] apacket	The packet to be processed.
  * @return rxgk error codes.  An error is returned if the MIC is invalid.
  */
-int
+static int
 rxgk_check_mic_packet(rxgk_key tk, afs_int32 keyusage,
 		      struct rx_connection *aconn, struct rx_packet *apacket)
 {
@@ -151,7 +151,7 @@ rxgk_check_mic_packet(rxgk_key tk, afs_int32 keyusage,
  * @param[in,out] apacket	The packet being decrypted.
  * @return rxgk and system error codes.
  */
-int
+static int
 rxgk_decrypt_packet(rxgk_key tk, afs_int32 keyusage,
 		    struct rx_connection *aconn, struct rx_packet *apacket)
 {
@@ -347,5 +347,73 @@ rxgk_enc_packet(rxgk_key tk, afs_int32 keyusage, struct rx_connection *aconn,
  done:
     rx_opaque_freeContents(&plain);
     rx_opaque_freeContents(&crypt);
+    return ret;
+}
+
+/*
+ * Server/client common bits for the packet receipt routine.
+ * Wrap the appropriate check_mic/decrypt routines for the given level
+ * and client/server role, using the given start_time/kvno/k0 to generate
+ * the transport key needed.  Since the kvno may have been updated by the
+ * peer, 'a_kvno' is set to the new kvno on return, if it has changed.
+ */
+int
+rxgk_check_packet(int server, struct rx_connection *aconn,
+		  struct rx_packet *apacket, RXGK_Level level,
+		  rxgkTime start_time, afs_uint32 *a_kvno, rxgk_key k0)
+{
+    afs_uint16 wkvno;
+    afs_uint32 lkvno;
+    int ret;
+
+    wkvno = rx_GetPacketCksum(apacket);
+    lkvno = *a_kvno;
+    ret = rxgk_key_number(wkvno, lkvno, a_kvno);
+    if (ret != 0 && level == RXGK_LEVEL_CLEAR) {
+	/*
+	 * We ignore kvno errors for RXGK_LEVEL_CLEAR connections, since the
+	 * peer is not required to process kvno changes accurately for CLEAR
+	 * connections. We still call rxgk_key_number to try to track when then
+	 * kvno is updated properly, but if we got an error, just pretend
+	 * nothing happened and nobody tried to change the kvno.
+	 */
+	ret = 0;
+	*a_kvno = lkvno;
+    }
+    if (ret != 0)
+	return ret;
+
+    if (level != RXGK_LEVEL_CLEAR) {
+	/* We only need to deal with per-packet encryption stuff for non-CLEAR
+	 * connections. */
+	rxgk_key tk;
+	afs_uint32 keyusage;
+
+	ret = rxgk_derive_tk(&tk, k0, rx_GetConnectionEpoch(aconn),
+			     rx_GetConnectionId(aconn), start_time, *a_kvno);
+	if (ret != 0)
+	    return ret;
+
+	switch (level) {
+	    case RXGK_LEVEL_AUTH:
+		keyusage = server ? RXGK_CLIENT_MIC_PACKET :
+				    RXGK_SERVER_MIC_PACKET;
+
+		ret = rxgk_check_mic_packet(tk, keyusage, aconn, apacket);
+		break;
+
+	    case RXGK_LEVEL_CRYPT:
+		keyusage = server ? RXGK_CLIENT_ENC_PACKET :
+				    RXGK_SERVER_ENC_PACKET;
+
+		ret = rxgk_decrypt_packet(tk, keyusage, aconn, apacket);
+		break;
+
+	    default:
+		ret = RXGK_INCONSISTENCY;
+	}
+	rxgk_release_key(&tk);
+    }
+
     return ret;
 }

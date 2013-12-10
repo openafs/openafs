@@ -28,7 +28,13 @@ const RXGK_SERVER_ENC_TOKEN             = 1036;
 enum RXGK_Level {
     RXGK_LEVEL_CLEAR = 0,
     RXGK_LEVEL_AUTH = 1,
-    RXGK_LEVEL_CRYPT = 2
+    RXGK_LEVEL_CRYPT = 2,
+
+    /* RXGK_LEVEL_BOGUS is an invalid level we only use internally for objects
+     * that are not yet initialized. This can be used to make sure we don't
+     * accidentally treat an uninitialized context as an RXGK_LEVEL_CLEAR
+     * connection. This level should never be used on the wire. */
+    RXGK_LEVEL_BOGUS = 71
 };
 
 /* limits for variable-length arrays */
@@ -127,6 +133,7 @@ struct PrAuthName {
 };
 
 /* PrAuthName 'kind' values */
+const PRAUTHTYPE_KRB4 = 1;
 const PRAUTHTYPE_GSS = 2;
 
 /* RPC-L from draft-wilkinson-afs3-rxgk-afs. */

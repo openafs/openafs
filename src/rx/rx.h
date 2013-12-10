@@ -523,6 +523,7 @@ enum {
     RX_SECTYPE_NULL = 1,
     RX_SECTYPE_VAB = 2,
     RX_SECTYPE_KAD = 3,
+    RX_SECTYPE_GK = 4,
 };
 struct rx_securityObjectStats {
     char type;			/* An RX_SECTYPE_* value */

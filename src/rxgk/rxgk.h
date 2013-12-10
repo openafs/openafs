@@ -44,6 +44,7 @@
 
 /* RX-internal headers we depend on. */
 #include <rx/rx_opaque.h>
+#include <rx/rx_identity.h>
 
 /* rxgkTime is defined in rxgk_int.xg. rxgkTime values are unix timestamps, but
  * in 100-nanosecond units. */
@@ -70,9 +71,17 @@ typedef struct rxgk_key_s * rxgk_key;
 
 typedef afs_int32 (*rxgk_getkey_func)(void *rock, afs_int32 *kvno,
 				      afs_int32 *enctype, rxgk_key *key);
+
+/* Flags for our rx security stats */
+#define RXGK_STATS_UNALLOC 0x1
+#define RXGK_STATS_AUTH    0x2
+
 /* rxgk_server.c */
 struct rx_securityClass * rxgk_NewServerSecurityObject(void *getkey_rock,
 						       rxgk_getkey_func getkey);
+afs_int32 rxgk_GetServerInfo(struct rx_connection *conn, RXGK_Level *level,
+			     rxgkTime *expiry, struct rx_identity **identity);
+
 /* rxgk_client.c */
 struct rx_securityClass *rxgk_NewClientSecurityObject(RXGK_Level level,
 						      afs_int32 enctype,

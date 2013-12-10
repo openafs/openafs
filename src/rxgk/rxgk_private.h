@@ -36,9 +36,6 @@
 #ifndef RXGK_PRIVATE_H
 #define RXGK_PRIVATE_H
 
-/* RX-internal headers we depend on. */
-#include <rx/rx_identity.h>
-
 /** Statistics about a connection.  Bytes and packets sent/received. */
 struct rxgkStats {
     afs_uint32 brecv;
@@ -68,7 +65,6 @@ struct rxgk_header {
  * sends us.
  */
 struct rxgk_sprivate {
-    afs_int32 flags;
     void *rock;
     rxgk_getkey_func getkey;
 };
@@ -82,8 +78,8 @@ struct rxgk_sprivate {
  */
 struct rxgk_sconn {
     RXGK_Level level;
-    unsigned char tried_auth;
     unsigned char auth;
+    unsigned char challenge_valid;
     rxgkTime expiration;
     unsigned char challenge[RXGK_CHALLENGE_NONCE_LEN];
     struct rxgkStats stats;
@@ -91,8 +87,6 @@ struct rxgk_sconn {
     struct rx_identity *client;
     afs_uint32 key_number;
     rxgk_key k0;
-    RXGK_Data cb_tok;
-    rxgk_key cb_key;
 };
 
 /*
@@ -148,14 +142,12 @@ afs_int32 rxgk_security_overhead(struct rx_connection *aconn, RXGK_Level level,
 afs_int32 rxgk_key_number(afs_uint16 wire, afs_uint32 local, afs_uint32 *real);
 
 /* rxgk_packet.c */
-int rxgk_check_mic_packet(rxgk_key tk, afs_int32 keyusage,
-			  struct rx_connection *aconn,
-			  struct rx_packet *apacket);
-int rxgk_decrypt_packet(rxgk_key tk, afs_int32 keyusage,
-			struct rx_connection *aconn, struct rx_packet *apacket);
 int rxgk_mic_packet(rxgk_key tk, afs_int32 keyusage,
 		    struct rx_connection *aconn, struct rx_packet *apacket);
 int rxgk_enc_packet(rxgk_key tk, afs_int32 keyusage,
 		    struct rx_connection *aconn, struct rx_packet *apacket);
+int rxgk_check_packet(int server, struct rx_connection *aconn,
+                      struct rx_packet *apacket, RXGK_Level level,
+                      rxgkTime start_time, afs_uint32 *a_kvno, rxgk_key k0);
 
 #endif /* RXGK_PRIVATE_H */
