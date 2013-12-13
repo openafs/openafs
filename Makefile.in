@@ -565,7 +565,7 @@ afsmonitor: cmd comerr gtx xstat
 tests: rxtests ubiktests rpctestlib viced
 
 # pthread based user space RX library
-libafsrpc: comerr fsint hcrypto lwp rx rxkad rxstat sys util
+libafsrpc: comerr fsint hcrypto lwp rx rxkad rxstat sys util rxgk
 	+case ${SYS_NAME} in \
 	sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*) \
 	${COMPILE_PART1} libafsrpc ${COMPILE_PART2} ;; \

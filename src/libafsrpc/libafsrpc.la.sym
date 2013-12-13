@@ -156,6 +156,7 @@ rx_tranquil
 rxevent_Init
 rxevent_Post
 rxevent_debugFile
+rxgk_GetServerInfo
 rxi_Alloc
 rxi_AllocDataBuf
 rxi_Free

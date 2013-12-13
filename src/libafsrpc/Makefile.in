@@ -25,11 +25,10 @@ LT_objs = \
 	$(top_builddir)/src/rxstat/librxstat_pic.la \
 	$(top_builddir)/src/sys/libafsrpc_sys.la \
 	$(top_builddir)/src/lwp/liblwpcompat_pic.la \
-	$(top_builddir)/src/opr/libopr_pic.la
+	$(top_builddir)/src/opr/libopr_pic.la \
+	@RXGK_LIBS_RPC@
 
-LT_deps =
-
-LT_libs = $(LIB_hcrypto) $(LIB_roken) $(MT_LIBS)
+LT_libs = $(LIB_hcrypto) $(LIB_roken) $(MT_LIBS) $(RXGK_GSSAPI_LIBS)
 
 all: libafsrpc.la libafsrpc.a libafsrpc_pic.la \
 	$(TOP_LIBDIR)/libafsrpc.a \
