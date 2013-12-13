@@ -1378,6 +1378,7 @@ fi
 %preun
 if [ $1 = 0 ] ; then
 	[ -d /afs ] && rmdir /afs
+	:
 fi
 
 %preun client
