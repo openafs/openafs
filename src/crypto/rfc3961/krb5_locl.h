@@ -193,7 +193,6 @@ typedef struct krb5_crypto_iov {
 #define krb5_crypto_getpadsize _oafs_h_krb5_crypto_getpadsize
 #define krb5_crypto_length _oafs_h_krb5_crypto_length
 #define krb5_crypto_length_iov _oafs_h_krb5_crypto_length_iov
-#define krb5_crypto_prf_length _oafs_h_krb5_crypto_prf_length
 #define krb5_decrypt_EncryptedData _oafs_h_krb5_decrypt_EncryptedData
 #define krb5_decrypt_iov_ivec _oafs_h_krb5_decrypt_iov_ivec
 #define krb5_decrypt_ivec _oafs_h_krb5_decrypt_ivec
@@ -206,7 +205,6 @@ typedef struct krb5_crypto_iov {
 #define _krb5_enctype_arcfour_hmac_md5 _oafs_h__krb5_enctype_arcfour_hmac_md5
 #define krb5_enctype_disable _oafs_h_krb5_enctype_disable
 #define krb5_enctype_enable _oafs_h_krb5_enctype_enable
-#define krb5_enctype_keysize _oafs_h_krb5_enctype_keysize
 #define krb5_enctype_to_keytype _oafs_h_krb5_enctype_to_keytype
 #define krb5_enctype_to_string _oafs_h_krb5_enctype_to_string
 #define krb5_generate_random_keyblock _oafs_h_krb5_generate_random_keyblock
@@ -254,9 +252,6 @@ krb5_error_code krb5_derive_key(krb5_context context, const krb5_keyblock *key,
 				krb5_enctype etype, const void *constant,
 				size_t constant_len,
 				krb5_keyblock **derived_key);
-krb5_error_code krb5_enctype_keysize(krb5_context context,
-				     krb5_enctype type,
-				     size_t *keysize);
 krb5_ssize_t _krb5_put_int(void *buffer, unsigned long value, size_t size);
 void krb5_data_zero(krb5_data *p);
 krb5_error_code krb5_data_copy(krb5_data *p, const void *data, size_t len);
