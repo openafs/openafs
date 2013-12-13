@@ -103,6 +103,7 @@ typedef int krb5_enctype;
 #define krb5_encrypt oafs_h_krb5_encrypt
 #define krb5_decrypt oafs_h_krb5_decrypt
 #define krb5_enctype_keybits oafs_h_krb5_enctype_keybits
+#define krb5_enctype_keysize oafs_h_krb5_enctype_keysize
 #define krb5_data_free oafs_h_krb5_data_free
 #define krb5_data_alloc oafs_h_krb5_data_alloc
 #define krb5_keyblock_init oafs_h_krb5_keyblock_init
@@ -144,6 +145,9 @@ krb5_error_code krb5_decrypt(krb5_context context,
 krb5_error_code krb5_enctype_keybits(krb5_context context,
 				     krb5_enctype type,
 				     size_t *keybits);
+krb5_error_code krb5_enctype_keysize(krb5_context context,
+				     krb5_enctype type,
+				     size_t *keysize);
 
 void krb5_data_free(krb5_data *p);
 
@@ -153,6 +157,7 @@ void krb5_free_keyblock_contents(krb5_context context,
 				 krb5_keyblock *keyblock);
 
 #define krb5_crypto_prf oafs_h_krb5_crypto_prf
+#define krb5_crypto_prf_length oafs_h_krb5_crypto_prf_length
 #define krb5_crypto_fx_cf2 oafs_h_krb5_crypto_fx_cf2
 #define krb5_generate_random_block oafs_h_krb5_generate_random_block
 #define krb5_random_to_key oafs_h_krb5_random_to_key
@@ -162,6 +167,10 @@ krb5_error_code krb5_crypto_prf(krb5_context context,
 				const krb5_crypto crypto,
 				const krb5_data *input,
 				krb5_data *output);
+
+krb5_error_code krb5_crypto_prf_length(krb5_context context,
+				       krb5_enctype type,
+				       size_t *length);
 
 krb5_error_code krb5_crypto_fx_cf2(krb5_context context,
 				   const krb5_crypto crypto1,
