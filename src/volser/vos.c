@@ -208,7 +208,7 @@ GetServerNoresolve(char *aname)
 	return 0;
 }
 /*
- * Parse a server name/address and return the address in network byte order
+ * Parse a server name/address and return a non-loopback address in network byte order
  */
 afs_uint32
 GetServer(char *aname)
@@ -217,25 +217,50 @@ GetServer(char *aname)
     afs_uint32 addr; /* in network byte order */
     afs_int32 code;
     char hostname[MAXHOSTCHARS];
+    int i;
 
-    if ((addr = GetServerNoresolve(aname)) == 0) {
-	th = gethostbyname(aname);
-	if (!th)
+    addr = GetServerNoresolve(aname);
+    if (addr != 0) {
+	if (!rx_IsLoopbackAddr(ntohl(addr)))
+	    return addr;
+	else
 	    return 0;
-	memcpy(&addr, th->h_addr, sizeof(addr));
     }
 
-    if (rx_IsLoopbackAddr(ntohl(addr))) {	/* local host */
+    th = gethostbyname(aname);
+    if (th != NULL) {
+	for (i=0; i < th->h_length; i++) {
+	    if (!rx_IsLoopbackAddr(ntohl(*(afs_uint32 *)th->h_addr_list[i]))) {
+		memcpy(&addr, th->h_addr_list[i], sizeof(addr));
+		return addr;
+	    }
+	}
+
+	/*
+	 * If we reach this point all of the addresses returned by
+	 * gethostbyname() are loopback addresses.  We assume that means
+	 * that the name is supposed to describe the machine this code
+	 * is executing on.  Try gethostname() to and check to see if
+	 * that name can provide us a non-loopback address.
+	 */
 	code = gethostname(hostname, MAXHOSTCHARS);
-	if (code)
-	    return 0;
-	th = gethostbyname(hostname);
-	if (!th)
-	    return 0;
-	memcpy(&addr, th->h_addr, sizeof(addr));
+	if (code == 0) {
+	    th = gethostbyname(hostname);
+	    if (th != NULL) {
+		for (i=0; i < th->h_length; i++) {
+		    if (!rx_IsLoopbackAddr(ntohl(*(afs_uint32 *)th->h_addr_list[i]))) {
+			memcpy(&addr, th->h_addr_list[i], sizeof(addr));
+			return addr;
+		    }
+		}
+	    }
+	}
     }
 
-    return (addr);
+    /*
+     * No non-loopback address could be obtained for 'aname'.
+     */
+    return 0;
 }
 
 afs_int32
