@@ -1870,6 +1870,7 @@ fs_FullPerfs_ltoa(struct fs_Display_Data *a_fsData,
     int i, j;
     afs_int32 *tmpbuf;
     int code;
+    int large_time;
 
     /* there are two parts to the xstat FS statistics
      * - fullPerfP->overall which give the overall performance statistics, and
@@ -1906,6 +1907,15 @@ fs_FullPerfs_ltoa(struct fs_Display_Data *a_fsData,
 
     srcbuf = (afs_int32 *) (fullPerfP->det.rpcOpTimes);
 
+    /*
+     * For every time value below, we'll have to skip an additional
+     * 64 bits of input if struct timeval uses 64-bit values
+     */
+    if (sizeof(struct timeval) == 16)
+	large_time = 1;
+    else
+	large_time = 0;
+
     for (i = 0; i < FS_STATS_NUM_RPC_OPS; i++) {
 	sprintf(a_fsData->data[idx], "%d", *srcbuf);	/* numOps */
 	idx++;
@@ -1917,18 +1927,26 @@ fs_FullPerfs_ltoa(struct fs_Display_Data *a_fsData,
 	sprintf(a_fsData->data[idx], "%d.%06d", *tmpbuf, *srcbuf);
 	idx++;
 	srcbuf++;
+	if (large_time)
+	    srcbuf += 2;
 	tmpbuf = srcbuf++;	/* sqr time */
 	sprintf(a_fsData->data[idx], "%d.%06d", *tmpbuf, *srcbuf);
 	idx++;
 	srcbuf++;
+	if (large_time)
+	    srcbuf += 2;
 	tmpbuf = srcbuf++;	/* min time */
 	sprintf(a_fsData->data[idx], "%d.%06d", *tmpbuf, *srcbuf);
 	idx++;
 	srcbuf++;
+	if (large_time)
+	    srcbuf += 2;
 	tmpbuf = srcbuf++;	/* max time */
 	sprintf(a_fsData->data[idx], "%d.%06d", *tmpbuf, *srcbuf);
 	idx++;
 	srcbuf++;
+	if (large_time)
+	    srcbuf += 2;
     }
 
     /* copy fs transfer timings */
@@ -1945,18 +1963,26 @@ fs_FullPerfs_ltoa(struct fs_Display_Data *a_fsData,
 	sprintf(a_fsData->data[idx], "%d.%06d", *tmpbuf, *srcbuf);
 	idx++;
 	srcbuf++;
+	if (large_time)
+	    srcbuf += 2;
 	tmpbuf = srcbuf++;	/* sqr time */
 	sprintf(a_fsData->data[idx], "%d.%06d", *tmpbuf, *srcbuf);
 	idx++;
 	srcbuf++;
+	if (large_time)
+	    srcbuf += 2;
 	tmpbuf = srcbuf++;	/* min time */
 	sprintf(a_fsData->data[idx], "%d.%06d", *tmpbuf, *srcbuf);
 	idx++;
 	srcbuf++;
+	if (large_time)
+	    srcbuf += 2;
 	tmpbuf = srcbuf++;	/* max time */
 	sprintf(a_fsData->data[idx], "%d.%06d", *tmpbuf, *srcbuf);
 	idx++;
 	srcbuf++;
+	if (large_time)
+	    srcbuf += 2;
 	sprintf(a_fsData->data[idx], "%d", *srcbuf);	/* sum bytes */
 	idx++;
 	srcbuf++;
