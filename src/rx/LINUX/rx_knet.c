@@ -48,7 +48,9 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     int pmtu = IP_PMTUDISC_DONT;
 #endif
 
-#ifdef LINUX_KERNEL_SOCK_CREATE_V
+#ifdef HAVE_LINUX_SOCK_CREATE_KERN
+    code = sock_create_kern(AF_INET, SOCK_DGRAM, IPPROTO_UDP, &sockp);
+#elif defined(LINUX_KERNEL_SOCK_CREATE_V)
     code = sock_create(AF_INET, SOCK_DGRAM, IPPROTO_UDP, &sockp, 0);
 #else
     code = sock_create(AF_INET, SOCK_DGRAM, IPPROTO_UDP, &sockp);
