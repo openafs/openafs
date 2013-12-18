@@ -28,7 +28,7 @@
 extern int buf_cacheType;
 
 #define BUF_HASH(fidp, offsetp) \
-    (opr_jhash((uint32_t *)(offsetp), 2, (fidp)->hash) & (cm_data.buf_hashSize - 1))
+    (opr_jhash_int2((offsetp)->LowPart, (offsetp)->HighPart, (fidp)->hash) & (cm_data.buf_hashSize - 1))
 
 #define BUF_FILEHASH(fidp) ((fidp)->hash & (cm_data.buf_hashSize - 1))
 
