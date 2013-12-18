@@ -144,7 +144,12 @@ OpenAFS 1.6.6 (in progress)
 
     * Fixed build for kernels with user namespace support enabled. Likely
       to be required for Ubuntu 14.04 and eventually other distributions.
-      (10456 10457 10458)
+      (10456 10457 10458 10518 10472)
+
+    * Support RHEL 6.5 kernels, and possibly others with changes backported
+      from recent mainline kernels that touch getname/putname, by no longer
+      using those functions. Previously, the client could cause a kernel
+      panic when syscall auditing was enabled. (10578)
 
     * Make tmpfs usable as the cache filesystem again. This had been broken
       since kernel 3.1 (9950 10193)
@@ -152,6 +157,10 @@ OpenAFS 1.6.6 (in progress)
     * When starting the client fails, clean up the backing device information
       created in sysfs, to avoid error messages during a subsequent start
       and possible system instability later on (10454)
+
+  OS X Clients
+
+    * Support OS X 10.9 "Mavericks" (10519 10541 10542 10543 10548 10549)
 
   AIX clients
 
