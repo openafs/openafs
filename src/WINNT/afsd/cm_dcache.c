@@ -1015,9 +1015,13 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
     osi_hyper_t scanStart;		/* where to start scan for dirty pages */
     osi_hyper_t scanEnd;		/* where to stop scan for dirty pages */
     osi_hyper_t firstModOffset;	/* offset of first modified page in range */
+    osi_hyper_t tblocksize;
     long temp;
     long code;
     long flags;			/* flags to cm_SyncOp */
+    int blockSize = cm_data.blockSize;	/* need a signed version */
+
+    tblocksize = ConvertLongToLargeInteger(cm_data.buf_blockSize);
 
     /* clear things out */
     biop->scp = scp;			/* do not hold; held by caller */
@@ -1031,12 +1035,12 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
 
     /* reserve a chunk's worth of buffers */
     lock_ReleaseWrite(&scp->rw);
-    biop->reserved = (cm_chunkSize / cm_data.buf_blockSize);
+    biop->reserved = (cm_chunkSize / blockSize);
     buf_ReserveBuffers(biop->reserved);
     lock_ObtainWrite(&scp->rw);
 
     bufp = NULL;
-    for (temp = 0; temp < inSize; temp += cm_data.buf_blockSize) {
+    for (temp = 0; temp < inSize; temp += blockSize) {
         thyper = ConvertLongToLargeInteger(temp);
         tbase = LargeIntegerAdd(*inOffsetp, thyper);
 
@@ -1060,7 +1064,7 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
                 lock_ReleaseMutex(&bufp->mx);
                 buf_Release(bufp);
                 bufp = NULL;
-                buf_UnreserveBuffers(cm_chunkSize / cm_data.buf_blockSize);
+		buf_UnreserveBuffers(cm_chunkSize / blockSize);
                 return code;
             }
 
@@ -1101,7 +1105,7 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
     osi_QAddH((osi_queue_t **) &biop->bufListp,
               (osi_queue_t **) &biop->bufListEndp,
               &qdp->q);
-    biop->length = cm_data.buf_blockSize;
+    biop->length = blockSize;
     firstModOffset = bufp->offset;
     biop->offset = firstModOffset;
     bufp = NULL;	/* this buffer and reference added to the queue */
@@ -1112,14 +1116,25 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
     thyper = ConvertLongToLargeInteger(cm_chunkSize);
     scanEnd = LargeIntegerAdd(scanStart, thyper);
 
+    /* do not scan beyond the end of the file */
+    if (scanEnd.QuadPart > scp->length.QuadPart) {
+	scanEnd = scp->length;
+	scanEnd.LowPart &= (-blockSize);
+	if (scanEnd.LowPart < scp->length.LowPart)
+	    scanEnd.LowPart += blockSize;
+    }
+
+    /* do not leave out a requested portion of the range */
+    if (scanEnd.QuadPart < inOffsetp->QuadPart + inSize) {
+	scanEnd.QuadPart = inOffsetp->QuadPart + inSize;
+    }
+
     flags = CM_SCACHESYNC_GETSTATUS
         | CM_SCACHESYNC_STOREDATA
         | CM_SCACHESYNC_BUFLOCKED;
 
     /* start by looking backwards until scanStart */
-    /* hyper version of cm_data.buf_blockSize */
-    thyper = ConvertLongToLargeInteger(cm_data.buf_blockSize);
-    tbase = LargeIntegerSubtract(firstModOffset, thyper);
+    tbase = LargeIntegerSubtract(firstModOffset, tblocksize);
     while(LargeIntegerGreaterThanOrEqualTo(tbase, scanStart)) {
         /* see if we can find the buffer */
         bufp = buf_Find(&scp->fid, &tbase);
@@ -1173,17 +1188,15 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
 	bufp = NULL;		/* added to the queue */
 
         /* update biod info describing the transfer */
-        biop->offset = LargeIntegerSubtract(biop->offset, thyper);
-        biop->length += cm_data.buf_blockSize;
+	biop->offset = LargeIntegerSubtract(biop->offset, tblocksize);
+	biop->length += blockSize;
 
         /* update loop pointer */
-        tbase = LargeIntegerSubtract(tbase, thyper);
+	tbase = LargeIntegerSubtract(tbase, tblocksize);
     }	/* while loop looking for pages preceding the one we found */
 
     /* now, find later dirty, contiguous pages, and add them to the list */
-    /* hyper version of cm_data.buf_blockSize */
-    thyper = ConvertLongToLargeInteger(cm_data.buf_blockSize);
-    tbase = LargeIntegerAdd(firstModOffset, thyper);
+    tbase = LargeIntegerAdd(firstModOffset, tblocksize);
     while(LargeIntegerLessThan(tbase, scanEnd)) {
         /* see if we can find the buffer */
         bufp = buf_Find(&scp->fid, &tbase);
@@ -1237,10 +1250,10 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
 	bufp = NULL;
 
         /* update biod info describing the transfer */
-        biop->length += cm_data.buf_blockSize;
+	biop->length += blockSize;
 
         /* update loop pointer */
-        tbase = LargeIntegerAdd(tbase, thyper);
+	tbase = LargeIntegerAdd(tbase, tblocksize);
     }	/* while loop looking for pages following the first page we found */
 
     /* finally, we're done */
