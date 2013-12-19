@@ -151,6 +151,13 @@ pthread_mutex_t fileproc_glock_mutex;
 
 #define CREATE_SGUID_ADMIN_ONLY 1
 
+
+/**
+ * Abort the fileserver on fatal errors returned from vnode operations.
+ */
+#define assert_vnode_success_or_salvaging(code) \
+    opr_Assert((code) == 0 || (code) == VSALVAGE || (code) == VSALVAGING)
+
 extern struct afsconf_dir *confDir;
 extern afs_int32 dataVersionHigh;
 
@@ -651,7 +658,7 @@ CheckVnodeWithCall(AFSFid * fid, Volume ** volptr, struct VCallByVol *cbv,
 	return (errorCode);
     if ((*vptr)->disk.uniquifier != fid->Unique) {
 	VPutVnode(&fileCode, *vptr);
-	opr_Assert(fileCode == 0);
+	assert_vnode_success_or_salvaging(fileCode);
 	*vptr = 0;
 	return (VNOVNODE);	/* return the right error code, at least */
     }
@@ -953,15 +960,15 @@ PutVolumePackageWithCall(struct rx_call *acall, Vnode *
     rx_KeepAliveOff(acall);
     if (parentwhentargetnotdir) {
 	VPutVnode(&fileCode, parentwhentargetnotdir);
-	opr_Assert(!fileCode || (fileCode == VSALVAGE));
+	assert_vnode_success_or_salvaging(fileCode);
     }
     if (targetptr) {
 	VPutVnode(&fileCode, targetptr);
-	opr_Assert(!fileCode || (fileCode == VSALVAGE));
+	assert_vnode_success_or_salvaging(fileCode);
     }
     if (parentptr) {
 	VPutVnode(&fileCode, parentptr);
-	opr_Assert(!fileCode || (fileCode == VSALVAGE));
+	assert_vnode_success_or_salvaging(fileCode);
     }
     if (volptr) {
 	VPutVolumeWithCall(volptr, cbv);
@@ -2332,7 +2339,7 @@ common_FetchData64(struct rx_call *acall, struct AFSFid *Fid,
     if (parentwhentargetnotdir != NULL) {
 	tparentwhentargetnotdir = *parentwhentargetnotdir;
 	VPutVnode(&fileCode, parentwhentargetnotdir);
-	opr_Assert(!fileCode || (fileCode == VSALVAGE));
+	assert_vnode_success_or_salvaging(fileCode);
 	parentwhentargetnotdir = NULL;
     }
 
@@ -2967,7 +2974,7 @@ common_StoreData64(struct rx_call *acall, struct AFSFid *Fid,
 	rx_KeepAliveOff(acall);
 	VPutVnode(&fileCode, parentwhentargetnotdir);
 	rx_KeepAliveOn(acall);
-	opr_Assert(!fileCode || (fileCode == VSALVAGE));
+	assert_vnode_success_or_salvaging(fileCode);
 	parentwhentargetnotdir = NULL;
     }
 
@@ -3111,7 +3118,7 @@ SRXAFS_StoreACL(struct rx_call * acall, struct AFSFid * Fid,
 
     /* convert the write lock to a read lock before breaking callbacks */
     VVnodeWriteToRead(&errorCode, targetptr);
-    opr_Assert(!errorCode || errorCode == VSALVAGE);
+    assert_vnode_success_or_salvaging(errorCode);
 
     rx_KeepAliveOn(acall);
 
@@ -3205,7 +3212,7 @@ SAFSS_StoreStatus(struct rx_call *acall, struct AFSFid *Fid,
 
     /* convert the write lock to a read lock before breaking callbacks */
     VVnodeWriteToRead(&errorCode, targetptr);
-    opr_Assert(!errorCode || errorCode == VSALVAGE);
+    assert_vnode_success_or_salvaging(errorCode);
 
     /* Break call backs on Fid */
     BreakCallBack(client->z.host, Fid, 0);
@@ -3331,14 +3338,14 @@ SAFSS_RemoveFile(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
 	DeleteFileCallBacks(&fileFid);
 	/* convert the parent lock to a read lock before breaking callbacks */
 	VVnodeWriteToRead(&errorCode, parentptr);
-	opr_Assert(!errorCode || errorCode == VSALVAGE);
+	assert_vnode_success_or_salvaging(errorCode);
     } else {
 	/* convert the parent lock to a read lock before breaking callbacks */
 	VVnodeWriteToRead(&errorCode, parentptr);
-	opr_Assert(!errorCode || errorCode == VSALVAGE);
+	assert_vnode_success_or_salvaging(errorCode);
 	/* convert the target lock to a read lock before breaking callbacks */
 	VVnodeWriteToRead(&errorCode, targetptr);
-	opr_Assert(!errorCode || errorCode == VSALVAGE);
+	assert_vnode_success_or_salvaging(errorCode);
 	/* tell all the file has changed */
 	BreakCallBack(client->z.host, &fileFid, 1);
     }
@@ -3472,7 +3479,7 @@ SAFSS_CreateFile(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
 
     /* convert the write lock to a read lock before breaking callbacks */
     VVnodeWriteToRead(&errorCode, parentptr);
-    opr_Assert(!errorCode || errorCode == VSALVAGE);
+    assert_vnode_success_or_salvaging(errorCode);
 
     /* break call back on parent dir */
     BreakCallBack(client->z.host, DirFid, 0);
@@ -3799,7 +3806,7 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
 	    }
 	    if (testnode == 1) top = 1;
 	    testvptr = VGetVnode(&errorCode, volptr, testnode, READ_LOCK);
-	    opr_Assert(errorCode == 0);
+	    assert_vnode_success_or_salvaging(errorCode);
 	    testnode = testvptr->disk.parent;
 	    VPutVnode(&errorCode, testvptr);
 	    if ((top == 1) && (testnode != 0)) {
@@ -3810,7 +3817,7 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
 		errorCode = EIO;
 		goto Bad_Rename;
 	    }
-	    opr_Assert(errorCode == 0);
+	    assert_vnode_success_or_salvaging(errorCode);
 	}
     }
 
@@ -3942,15 +3949,15 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
 
     /* convert the write locks to a read locks before breaking callbacks */
     VVnodeWriteToRead(&errorCode, newvptr);
-    opr_Assert(!errorCode || errorCode == VSALVAGE);
+    assert_vnode_success_or_salvaging(errorCode);
     if (oldvptr != newvptr) {
 	VVnodeWriteToRead(&errorCode, oldvptr);
-	opr_Assert(!errorCode || errorCode == VSALVAGE);
+	assert_vnode_success_or_salvaging(errorCode);
     }
     if (newfileptr && !doDelete) {
 	/* convert the write lock to a read lock before breaking callbacks */
 	VVnodeWriteToRead(&errorCode, newfileptr);
-	opr_Assert(!errorCode || errorCode == VSALVAGE);
+	assert_vnode_success_or_salvaging(errorCode);
     }
 
     rx_KeepAliveOn(acall);
@@ -3983,7 +3990,7 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
     if (newfileptr) {
 	rx_KeepAliveOff(acall);
 	VPutVnode(&fileCode, newfileptr);
-	opr_Assert(fileCode == 0);
+	assert_vnode_success_or_salvaging(fileCode);
     }
     (void)PutVolumePackage(acall, fileptr, (newvptr && newvptr != oldvptr ?
 				     newvptr : 0), oldvptr, volptr, &client);
@@ -4155,7 +4162,7 @@ SAFSS_Symlink(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
 
     /* convert the write lock to a read lock before breaking callbacks */
     VVnodeWriteToRead(&errorCode, parentptr);
-    opr_Assert(!errorCode || errorCode == VSALVAGE);
+    assert_vnode_success_or_salvaging(errorCode);
 
     rx_KeepAliveOn(acall);
 
@@ -4331,9 +4338,9 @@ SAFSS_Link(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
 
     /* convert the write locks to read locks before breaking callbacks */
     VVnodeWriteToRead(&errorCode, targetptr);
-    opr_Assert(!errorCode || errorCode == VSALVAGE);
+    assert_vnode_success_or_salvaging(errorCode);
     VVnodeWriteToRead(&errorCode, parentptr);
-    opr_Assert(!errorCode || errorCode == VSALVAGE);
+    assert_vnode_success_or_salvaging(errorCode);
 
     rx_KeepAliveOn(acall);
 
@@ -4502,7 +4509,7 @@ SAFSS_MakeDir(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
 
     /* convert the write lock to a read lock before breaking callbacks */
     VVnodeWriteToRead(&errorCode, parentptr);
-    opr_Assert(!errorCode || errorCode == VSALVAGE);
+    assert_vnode_success_or_salvaging(errorCode);
 
     rx_KeepAliveOn(acall);
 
@@ -4638,7 +4645,7 @@ SAFSS_RemoveDir(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
 
     /* convert the write lock to a read lock before breaking callbacks */
     VVnodeWriteToRead(&errorCode, parentptr);
-    opr_Assert(!errorCode || errorCode == VSALVAGE);
+    assert_vnode_success_or_salvaging(errorCode);
 
     rx_KeepAliveOn(acall);
 
@@ -4942,7 +4949,7 @@ SAFSS_ReleaseLock(struct rx_call *acall, struct AFSFid *Fid,
 	rx_KeepAliveOn(acall);
 	/* convert the write lock to a read lock before breaking callbacks */
 	VVnodeWriteToRead(&errorCode, targetptr);
-	opr_Assert(!errorCode || errorCode == VSALVAGE);
+	assert_vnode_success_or_salvaging(errorCode);
 	BreakCallBack(client->z.host, Fid, 0);
     }
 
