@@ -105,7 +105,7 @@ enum vcexcl { EXCL, NONEXCL };
 #define crref kauth_cred_get_with_ref
 #define crhold kauth_cred_ref
 #ifdef AFS_DARWIN100_ENV
-static inline void crfree(kauth_cred_t X) { kauth_cred_unref(&X); }
+#define crfree(X) kauth_cred_unref(&X)
 #else
 #define crfree kauth_cred_rele
 #endif

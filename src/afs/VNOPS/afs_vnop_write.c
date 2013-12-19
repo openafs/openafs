@@ -47,6 +47,8 @@ afs_StoreOnLastReference(struct vcache *avc,
      * flag will already be clear, so we don't have to worry about
      * clearing it twice. */
     if (avc->f.states & CCore) {
+	afs_ucred_t *cred;
+
 	avc->f.states &= ~CCore;
 #if defined(AFS_SGI_ENV)
 	osi_Assert(avc->opens > 0 && avc->execsOrWriters > 0);
@@ -58,7 +60,8 @@ afs_StoreOnLastReference(struct vcache *avc,
 	avc->opens--;
 	avc->execsOrWriters--;
 	AFS_RELE(AFSTOV(avc));	/* VN_HOLD at set CCore(afs_FakeClose) */
-	crfree((afs_ucred_t *)avc->linkData);	/* "crheld" in afs_FakeClose */
+	cred = (afs_ucred_t *)avc->linkData;	/* "crheld" in afs_FakeClose */
+	crfree(cred);
 	avc->linkData = NULL;
     }
 
