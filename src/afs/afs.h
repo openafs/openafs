@@ -152,7 +152,8 @@ struct brequest {
     afs_ucred_t *cred;	/* credentials to use for operation */
     afs_size_t size_parm[BPARMS];	/* random parameters */
     void *ptr_parm[BPARMS];	/* pointer parameters */
-    afs_int32 code;		/* return code */
+    afs_int32 code_raw;		/* return code from AFS routines */
+    afs_int32 code_checkcode;	/* the afs_CheckCode-translated code */
     short refCount;		/* use counter for this structure */
     char opcode;		/* what to do (store, fetch, etc) */
     char flags;			/* free, etc */
