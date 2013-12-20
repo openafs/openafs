@@ -599,7 +599,17 @@ BStore(struct brequest *ab)
 #endif
     /* now set final return code, and wakeup anyone waiting */
     if ((ab->flags & BUVALID) == 0) {
-	ab->code = afs_CheckCode(code, &treq, 43);	/* set final code, since treq doesn't go across processes */
+
+	/* To explain code_raw/code_checkcode:
+	 * Anyone that's waiting won't have our treq, so they won't be able to
+	 * call afs_CheckCode themselves on the return code we provide here.
+	 * But if we give back only the afs_CheckCode value, they won't know
+	 * what the "raw" value was. So give back both values, so the waiter
+	 * can know the "raw" value for interpreting the value internally, as
+	 * well as the afs_CheckCode value to give to the OS. */
+	ab->code_raw = code;
+	ab->code_checkcode = afs_CheckCode(code, &treq, 43);
+
 	ab->flags |= BUVALID;
 	if (ab->flags & BUWAIT) {
 	    ab->flags &= ~BUWAIT;
@@ -635,7 +645,8 @@ BPartialStore(struct brequest *ab)
     /* now set final return code, and wakeup anyone waiting */
     if ((ab->flags & BUVALID) == 0) {
 	/* set final code, since treq doesn't go across processes */
-	ab->code = afs_CheckCode(code, &treq, 43);
+	ab->code_raw = code;
+	ab->code_checkcode = afs_CheckCode(code, &treq, 43);
 	ab->flags |= BUVALID;
 	if (ab->flags & BUWAIT) {
 	    ab->flags &= ~BUWAIT;
@@ -702,7 +713,7 @@ afs_BQueue(short aopcode, struct vcache *avc,
 	    tb->ptr_parm[1] = apparm1;
 	    tb->ptr_parm[2] = apparm2;
 	    tb->flags = 0;
-	    tb->code = 0;
+	    tb->code_raw = tb->code_checkcode = 0;
 	    tb->ts = afs_brs_count++;
 	    /* if daemons are waiting for work, wake them up */
 	    if (afs_brsDaemons > 0) {

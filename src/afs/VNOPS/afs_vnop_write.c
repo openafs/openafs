@@ -470,6 +470,7 @@ afs_close(OSI_VC_DECL(avc), afs_int32 aflags, afs_ucred_t *acred)
 #endif
 {
     afs_int32 code;
+    afs_int32 code_checkcode = 0;
     struct brequest *tb;
     struct vrequest treq;
 #ifdef AFS_SGI65_ENV
@@ -555,7 +556,8 @@ afs_close(OSI_VC_DECL(avc), afs_int32 aflags, afs_ucred_t *acred)
 		tb->flags |= BUWAIT;
 		afs_osi_Sleep(tb);
 	    }
-	    code = tb->code;
+	    code = tb->code_raw;
+	    code_checkcode = tb->code_checkcode;
 	    afs_BRelease(tb);
 	}
 
@@ -576,6 +578,7 @@ afs_close(OSI_VC_DECL(avc), afs_int32 aflags, afs_ucred_t *acred)
 #endif
 	    /* printf("avc->vc_error=%d\n", avc->vc_error); */
 	    code = avc->vc_error;
+	    code_checkcode = 0;
 	    avc->vc_error = 0;
 	}
 	ReleaseWriteLock(&avc->lock);
@@ -637,7 +640,12 @@ afs_close(OSI_VC_DECL(avc), afs_int32 aflags, afs_ucred_t *acred)
     }
     AFS_DISCON_UNLOCK();
     afs_PutFakeStat(&fakestat);
-    code = afs_CheckCode(code, &treq, 5);
+
+    if (code_checkcode) {
+	code = code_checkcode;
+    } else {
+	code = afs_CheckCode(code, &treq, 5);
+    }
     return code;
 }
 
