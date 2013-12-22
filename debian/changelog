@@ -1,4 +1,4 @@
-openafs (1.6.5.2-1) UNRELEASED; urgency=medium
+openafs (1.6.5.2-1) unstable; urgency=medium
 
   * New upstream release.
     - Fix support for tmpfs as the cache filesystem.
@@ -9,7 +9,7 @@ openafs (1.6.5.2-1) UNRELEASED; urgency=medium
     first step towards upstart or systemd support.
   * Update standards version to 3.9.5 (no changes required).
 
- -- Russ Allbery <rra@debian.org>  Sun, 22 Dec 2013 12:54:32 -0800
+ -- Russ Allbery <rra@debian.org>  Sun, 22 Dec 2013 13:40:10 -0800
 
 openafs (1.6.5.1-1) unstable; urgency=low
 
