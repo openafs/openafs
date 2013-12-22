@@ -3,6 +3,7 @@ openafs (1.6.5.2-1) UNRELEASED; urgency=medium
   * New upstream release.
     - Fix support for tmpfs as the cache filesystem.
     - Support kernels with backported changes affecting getname/putname.
+  * Update standards version to 3.9.5 (no changes required).
 
  -- Russ Allbery <rra@debian.org>  Sun, 22 Dec 2013 12:54:32 -0800
 
