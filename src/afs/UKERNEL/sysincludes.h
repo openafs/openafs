@@ -1246,7 +1246,7 @@ struct usr_vnodeops {
     int (*vn_rmdir) (struct vcache *adp, char *, afs_ucred_t *);
     int (*vn_readdir) (struct vcache *avc, struct uio *, afs_ucred_t *);
     int (*vn_symlink) (struct vcache *adp, char *, struct vattr *, char *,
-		       afs_ucred_t *);
+		       struct vcache **vpp, afs_ucred_t *);
     int (*vn_readlink) (struct vcache *avc, struct uio *, afs_ucred_t *);
     int (*vn_fsync) (struct vcache *avc, afs_ucred_t *);
     int (*vn_inactive) (struct vcache *avc, afs_ucred_t *acred);

@@ -77,26 +77,53 @@ osi_lookupname_internal(char *aname, int followlink, struct vfsmount **mnt,
     return code;
 }
 
+static char *
+afs_getname(char *aname)
+{
+    int len;
+    char *name = kmem_cache_alloc(names_cachep, GFP_KERNEL);
+
+    if (!name)
+	return ERR_PTR(-ENOMEM);
+
+    len = strncpy_from_user(name, aname, PATH_MAX);
+    if (len < 0)
+	goto error;
+    if (len >= PATH_MAX) {
+	len = -ENAMETOOLONG;
+	goto error;
+    }
+    return name;
+
+error:
+    kmem_cache_free(names_cachep, name);
+    return ERR_PTR(len);
+}
+
+static void
+afs_putname(char *name)
+{
+    kmem_cache_free(names_cachep, name);
+}
+
 int
 osi_lookupname(char *aname, uio_seg_t seg, int followlink,
 	       struct dentry **dpp)
 {
     int code;
-    afs_name_t tname = NULL;
     char *name;
 
     code = ENOENT;
     if (seg == AFS_UIOUSER) {
-	tname = getname(aname);
-	if (IS_ERR(tname))
-	    return PTR_ERR(tname);
-	name = afs_name_to_string(tname);
+	name = afs_getname(aname);
+	if (IS_ERR(name))
+	    return -PTR_ERR(name);
     } else {
 	name = aname;
     }
     code = osi_lookupname_internal(name, followlink, NULL, dpp);
     if (seg == AFS_UIOUSER) {
-	afs_putname(tname);
+	afs_putname(name);
     }
     return code;
 }
@@ -106,15 +133,14 @@ int osi_abspath(char *aname, char *buf, int buflen,
 {
     struct dentry *dp = NULL;
     struct vfsmount *mnt = NULL;
-    afs_name_t tname;
-    char *path;
+    char *name, *path;
     int code;
 
     code = ENOENT;
-    tname = getname(aname);
-    if (IS_ERR(tname))
-	return -PTR_ERR(tname);
-    code = osi_lookupname_internal(afs_name_to_string(tname), followlink, &mnt, &dp);
+    name = afs_getname(aname);
+    if (IS_ERR(name))
+	return -PTR_ERR(name);
+    code = osi_lookupname_internal(name, followlink, &mnt, &dp);
     if (!code) {
 #if defined(D_PATH_TAKES_STRUCT_PATH)
 	afs_linux_path_t p = { mnt, dp };
@@ -133,7 +159,7 @@ int osi_abspath(char *aname, char *buf, int buflen,
 	mntput(mnt);
     }
 
-    afs_putname(tname);
+    afs_putname(name);
     return code;
 }
 

@@ -1,5 +1,26 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.6.5.2
+
+  Linux clients
+
+    * Support RHEL 6.5 kernels, and possibly others with changes backported
+      from recent mainline kernels that touch getname/putname, by no longer
+      using those functions. Previously, the client could cause a kernel
+      panic when syscall auditing was enabled.
+
+      Note there's another known problem with this kernel, where a certain
+      anti-virus software prevents the client from accessing its disk
+      cache. The workaround is to disable virus scanning for the disk cache.
+
+    * Make tmpfs usable as the cache filesystem again. This had been broken
+      since kernel 3.1
+
+  OS X clients
+
+    * Support OS X 10.9 "Mavericks". Previously, attempting to create a
+      symbolic link on this platform resulted in a kernel panic.
+
 OpenAFS 1.6.5.1
 
 Linux clients
