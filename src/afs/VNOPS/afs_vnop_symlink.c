@@ -66,7 +66,7 @@ afs_DisconCreateSymlink(struct vcache *avc, char *aname,
 /* don't set CDirty in here because RPC is called synchronously */
 int 
 afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs, 
-	    char *atargetName, afs_ucred_t *acred)
+	    char *atargetName, struct vcache **tvcp, afs_ucred_t *acred)
 {
     afs_uint32 now = 0;
     struct vrequest treq;
@@ -284,7 +284,10 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     }
     ReleaseWriteLock(&tvc->lock);
     ReleaseWriteLock(&afs_xvcache);
-    afs_PutVCache(tvc);
+    if (tvcp)
+    	*tvcp = tvc;
+    else
+	afs_PutVCache(tvc);
     code = 0;
   done:
     afs_PutFakeStat(&fakestate);

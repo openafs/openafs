@@ -1655,19 +1655,25 @@ afs_vop_symlink(ap)
 				 * } */ *ap;
 {
     struct vnode *dvp = ap->a_dvp;
+    struct vcache *vpp = NULL;
     int error = 0;
-    /* NFS ignores a_vpp; so do we. */
 
     GETNAME();
     AFS_GLOCK();
-    error =
-	afs_symlink(VTOAFS(dvp), name, ap->a_vap, ap->a_target, vop_cn_cred);
+    error = afs_symlink(VTOAFS(dvp), name, ap->a_vap, ap->a_target, &vpp,
+			vop_cn_cred);
     AFS_GUNLOCK();
-    DROPNAME();
 #ifndef AFS_DARWIN80_ENV
     FREE_ZONE(cnp->cn_pnbuf, cnp->cn_pnlen, M_NAMEI);
     vput(dvp);
 #endif
+    *ap->a_vpp = NULL;
+    if (!error) {
+	error = afs_darwin_finalizevnode(vpp, dvp, ap->a_cnp, 0, 0);
+	if (! error)
+	    *ap->a_vpp = AFSTOV(vpp);
+    }
+    DROPNAME();
     return error;
 }
 

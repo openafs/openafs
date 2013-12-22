@@ -847,7 +847,8 @@ afs_obsd_symlink(void *v)
     GETNAME();
     AFS_GLOCK();
     code =
-	afs_symlink(VTOAFS(dvp), name, ap->a_vap, ap->a_target, cnp->cn_cred);
+	afs_symlink(VTOAFS(dvp), name, ap->a_vap, ap->a_target, NULL,
+		    cnp->cn_cred);
     AFS_GUNLOCK();
     DROPCNP(cnp);
     DROPNAME();

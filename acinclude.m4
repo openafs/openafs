@@ -579,6 +579,14 @@ else
 			AFS_SYSNAME="x86_darwin_120"
 			OSXSDK="macosx10.8"
 			;;
+                x86_64-apple-darwin13.*)
+                        AFS_SYSNAME="x86_darwin_130"
+                        OSXSDK="macosx10.9"
+                        ;;
+                i?86-apple-darwin13.*)
+                        AFS_SYSNAME="x86_darwin_130"
+                        OSXSDK="macosx10.9"
+                        ;;
 		sparc-sun-solaris2.5*)
 			AFS_SYSNAME="sun4x_55"
 			enable_login="yes"
@@ -829,7 +837,6 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_STRUCT([file_operations], [iterate], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([file_operations], [sendfile], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([file_system_type], [mount], [fs.h])
-		 AC_CHECK_LINUX_STRUCT([filename], [name], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([inode_operations], [truncate], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([key_type], [preparse], [key-type.h])
 		 AC_CHECK_LINUX_STRUCT([key_type], [instantiate_prep], [key-type.h])
