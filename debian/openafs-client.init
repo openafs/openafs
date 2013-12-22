@@ -33,6 +33,12 @@ MODULEROOT=${MODULEROOT:-/lib/modules/`uname -r`}
 MODULEDIR=${MODULEDIR:-$MODULEROOT/fs}
 DKMSDIR=${DKMSDIR:-$MODULEROOT/updates/dkms}
 
+# Exit if the package is not installed.
+[ -x /sbin/afsd ] || exit 0
+
+# Define LSB log_* functions and get other support infrastructure.
+. /lib/lsb/init-functions
+
 exec 3>/dev/null
 exec </dev/null
 

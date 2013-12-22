@@ -3,6 +3,10 @@ openafs (1.6.5.2-1) UNRELEASED; urgency=medium
   * New upstream release.
     - Fix support for tmpfs as the cache filesystem.
     - Support kernels with backported changes affecting getname/putname.
+  * Exit successfully in the openafs-client init script if /sbin/afsd
+    doesn't exist, indicating that openafs-client is not installed.
+  * Load /lib/lsdb/init-functions in the openafs-client init script as the
+    first step towards upstart or systemd support.
   * Update standards version to 3.9.5 (no changes required).
 
  -- Russ Allbery <rra@debian.org>  Sun, 22 Dec 2013 12:54:32 -0800
