@@ -895,6 +895,13 @@ export KRB5_CONFIG
 # Build the libafs tree
 make only_libafs_tree || exit 1
 
+%if %{krb5support}
+%if %{?krb5config:1}%{!?krb5config:0}
+KRB5_CONFIG="%{krb5config}"
+export KRB5_CONFIG
+%endif
+%endif
+
 # Configure each of our kernel modules
 
 %if %{fedorakmod} && %{build_modules}
@@ -923,9 +930,8 @@ for kvariant in %{kvariants} ; do
 	--sbindir=%{_sbindir} \
         --with-linux-kernel-packaging \
 	--with-linux-kernel-headers=${ksrc} \
-	--enable-disconnected \
 %if %{krb5support}
-	--with-krb5-conf=/usr/kerberos/bin/krb5-config \
+	--with-krb5 \
 %endif
 	$config_opts \
 	|| exit 1
