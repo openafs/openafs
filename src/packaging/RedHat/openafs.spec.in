@@ -1780,7 +1780,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 * Wed Dec 12 2007  Simon Wilkinson <simon@sxw.org.uk> 1.4.5
 - Make the RPM mockable
 
-* Tue Oct 29 2007  Simon Wilkinson <simon@sxw.org.uk> 1.4.5
+* Mon Oct 29 2007  Simon Wilkinson <simon@sxw.org.uk> 1.4.5
 - Update to match the shipped 1.4.5 RPMS
 - Fix the kvariant stuff to only configure the 'standard' case once
 - Add openafs-kvers.sh back in
