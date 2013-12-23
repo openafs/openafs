@@ -40,10 +40,12 @@ get_verrel ()
   verrel=${1:-$(uname -r)}
   verrel=${verrel%%$knownvariants}
   case "$verrel" in
-    *.el6.elrepo*) verrel="`echo ${verrel} | sed -e 's/^\(.*.el6.elrepo[^\.]*\)\.[^\.]\+.\?$/\1/'`" ;;
-    *.el6*)        verrel="`echo ${verrel} | sed -e 's/^\(.*.el6[^\.]*\)\.[^\.]\+.\?$/\1/'`" ;;
+    *.el[6-9].elrepo*)
+                   verrel="`echo ${verrel} | sed -e 's/^\(.*.el[6-9].elrepo[^\.]*\)\.[^\.]\+.\?$/\1/'`" ;;
+    *.el[6-9]*)    verrel="`echo ${verrel} | sed -e 's/^\(.*.el[6-9][^\.]*\)\.[^\.]\+.\?$/\1/'`" ;;
+    *.fc[1-9][0-9]*)
+                   verrel="`echo ${verrel} | sed -e 's/^\(.*.fc[1-9][0-9][^\.]*\)\.[^\.]\+.\?$/\1/'`" ;;
     *.fc9*)        verrel="`echo ${verrel} | sed -e 's/^\(.*.fc9[^\.]*\)\.[^\.]\+.\?$/\1/'`" ;;
-    *.fc1?*)       verrel="`echo ${verrel} | sed -e 's/^\(.*.fc1[0-9][^\.]*\)\.[^\.]\+.\?$/\1/'`" ;;
   esac
 }
 
@@ -73,14 +75,17 @@ get_rpmtemplate ()
     local variant="${1}"
     local dashvariant="${variant:+-${variant}}"
     case "$verrel" in
-        *.el6*) kdep="kernel-%{_target_cpu} = ${verrel}${variant}"     ;;
+        *.el[6-9]*)
+	       kdep="kernel-%{_target_cpu} = ${verrel}${variant}"     ;;
         *.EL*) kdep="kernel${dashvariant}-%{_target_cpu} = ${verrel}" ;;
         *)     kdep="kernel-%{_target_cpu} = ${verrel}${variant}"     ;;
     esac
     case "$verrel" in
-        *.el6*)   kname="${verrel}.%{_target_cpu}${variant:+.${variant}}" ;;
+        *.el[6-9]*)
+	          kname="${verrel}.%{_target_cpu}${variant:+.${variant}}" ;;
+        *.fc[1-9][0-9]*)
+	          kname="${verrel}.%{_target_cpu}${variant:+.${variant}}" ;;
         *.fc9*)   kname="${verrel}.%{_target_cpu}${variant:+.${variant}}" ;;
-        *.fc1?*)  kname="${verrel}.%{_target_cpu}${variant:+.${variant}}" ;;
         *)        kname="${verrel}${variant}"                             ;;
     esac
 
