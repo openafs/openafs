@@ -651,11 +651,16 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type, VnodeId in_vnode, Unique 
      */
 
     if (!in_vnode) {
-	unique = vp->nextVnodeUnique++;
-	if (!unique)
-	    unique = vp->nextVnodeUnique++;
+	int rollover = 0;
 
-	if (vp->nextVnodeUnique > V_uniquifier(vp)) {
+	unique = vp->nextVnodeUnique++;
+	if (unique == 0) {
+	    rollover = 1;	/* nextVnodeUnique rolled over */
+	    vp->nextVnodeUnique = 2;	/* 1 is reserved for the root vnode */
+	    unique = vp->nextVnodeUnique++;
+	}
+
+	if (vp->nextVnodeUnique > V_uniquifier(vp) || rollover) {
 	    VUpdateVolume_r(ec, vp, 0);
 	    if (*ec)
 		return NULL;
