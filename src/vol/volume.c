@@ -249,6 +249,12 @@ pthread_t vol_glock_holder = 0;
  */
 #define VOLUME_HASH_REORDER_CHAIN_THRESH (VOLUME_HASH_REORDER_THRESHOLD / 2)
 
+/*
+ * The per volume uniquifier is bumped by 200 and and written to disk
+ * every 200 file creates.
+ */
+#define VOLUME_UPDATE_UNIQUIFIER_BUMP 200
+
 #include "rx/rx_queue.h"
 
 
@@ -4720,10 +4726,20 @@ VUpdateVolume_r(Error * ec, Volume * vp, int flags)
 #endif
 
     *ec = 0;
-    if (programType == fileServer)
-	V_uniquifier(vp) =
-	    (V_inUse(vp) ? V_nextVnodeUnique(vp) +
-	     200 : V_nextVnodeUnique(vp));
+    if (programType == fileServer) {
+	if (!V_inUse(vp)) {
+	    V_uniquifier(vp) = V_nextVnodeUnique(vp);
+	} else {
+	    V_uniquifier(vp) =
+		V_nextVnodeUnique(vp) + VOLUME_UPDATE_UNIQUIFIER_BUMP;
+	    if (V_uniquifier(vp) < V_nextVnodeUnique(vp)) {
+		/* uniquifier rolled over; reset the counters */
+		V_nextVnodeUnique(vp) = 2;	/* 1 is reserved for the root vnode */
+		V_uniquifier(vp) =
+		    V_nextVnodeUnique(vp) + VOLUME_UPDATE_UNIQUIFIER_BUMP;
+	    }
+	}
+    }
 
 #ifdef AFS_DEMAND_ATTACH_FS
     state_save = VChangeState_r(vp, VOL_STATE_UPDATING);
