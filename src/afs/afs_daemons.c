@@ -608,7 +608,7 @@ BStore(struct brequest *ab)
 	 * can know the "raw" value for interpreting the value internally, as
 	 * well as the afs_CheckCode value to give to the OS. */
 	ab->code_raw = code;
-	ab->code_checkcode = afs_CheckCode(code, &treq, 43);
+	ab->code_checkcode = afs_CheckCode(code, &treq, 430);
 
 	ab->flags |= BUVALID;
 	if (ab->flags & BUWAIT) {
