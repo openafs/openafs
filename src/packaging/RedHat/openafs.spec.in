@@ -848,6 +848,8 @@ ksrc=""
     if [ -z "${kvariant}" -o -z "$ksrc" ] ; then
       if [ -d %{_usrsrc}/kernels/%{kverrel}${kvariant:+-$kvariant}-%{_target_cpu} ] ; then
         ksrc=%{_usrsrc}/kernels/%{kverrel}${kvariant:+-$kvariant}-%{_target_cpu}
+      elif [ -d %{_usrsrc}/kernels/%{kverrel}.%{_target_cpu}${kvariant:++$kvariant} ] ; then
+        ksrc=%{_usrsrc}/kernels/%{kverrel}.%{_target_cpu}${kvariant:++$kvariant}
       else
         ksrc=%{_usrsrc}/kernels/%{kverrel}.%{_target_cpu}${kvariant:+.$kvariant}
       fi
@@ -892,8 +894,16 @@ make only_libafs_tree || exit 1
 %if %{fedorakmod} && %{build_modules}
 for kvariant in %{kvariants} ; do
   if [ -n "${kvariant}" ] ; then
+
     if [ -d %{_usrsrc}/kernels/%{kverrel}${kvariant:+-$kvariant}-%{_target_cpu} ] ; then
       ksrc=%{_usrsrc}/kernels/%{kverrel}${kvariant:+-$kvariant}-%{_target_cpu}
+
+    elif [ -d %{_usrsrc}/kernels/%{kverrel}.%{_target_cpu}${kvariant:++$kvariant} ] ; then
+      # Fedora 20 started putting kernel sources in e.g.
+      # 3.12.5-302.fc20.i686+PAE, instead of:
+      # 3.12.5-302.fc20.i686.PAE
+      ksrc=%{_usrsrc}/kernels/%{kverrel}.%{_target_cpu}${kvariant:++$kvariant}
+
     else
       ksrc=%{_usrsrc}/kernels/%{kverrel}.%{_target_cpu}${kvariant:+.$kvariant}
     fi
@@ -1267,6 +1277,9 @@ do
     if [ -d _kmod_build_$kvariant/src/libafs/MODLOAD-%{kverrel}${kvariant}-SP ] ; then
       srcdir=_kmod_build_$kvariant/src/libafs/MODLOAD-%{kverrel}${kvariant}-SP
       dstdir=$RPM_BUILD_ROOT/lib/modules/%{kverrel}${kvariant}/extra/openafs
+    elif [ -d _kmod_build_$kvariant/src/libafs/MODLOAD-%{kverrel}.%{_target_cpu}+${kvariant}-SP ] ; then
+      srcdir=_kmod_build_$kvariant/src/libafs/MODLOAD-%{kverrel}.%{_target_cpu}+${kvariant}-SP
+      dstdir=$RPM_BUILD_ROOT/lib/modules/%{kverrel}.%{_target_cpu}+${kvariant}/extra/openafs
     else
       srcdir=_kmod_build_$kvariant/src/libafs/MODLOAD-%{kverrel}.%{_target_cpu}.${kvariant}-SP
       dstdir=$RPM_BUILD_ROOT/lib/modules/%{kverrel}.%{_target_cpu}.${kvariant}/extra/openafs
