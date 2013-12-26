@@ -787,9 +787,13 @@ afs_close(OSI_VC_DECL(avc), afs_int32 aflags, afs_ucred_t *acred)
 #ifdef AFS_AIX32_ENV
 	    osi_ReleaseVM(avc, acred);
 #endif
-	    /* printf("avc->vc_error=%d\n", avc->vc_error); */
-	    code = avc->vc_error;
-	    code_checkcode = 0;
+	    /* We don't know what the original raw error code was, so set
+	     * 'code' to 0. But we have the afs_CheckCode-translated error
+	     * code, so put that in code_checkcode. We cannot just set code
+	     * to avc->vc_error, since vc_error is a checkcode-translated
+	     * error code, and 'code' is supposed to be a raw error code. */
+	    code = 0;
+	    code_checkcode = avc->vc_error;
 	    avc->vc_error = 0;
 	}
 	ReleaseWriteLock(&avc->lock);
@@ -799,19 +803,19 @@ afs_close(OSI_VC_DECL(avc), afs_int32 aflags, afs_ucred_t *acred)
 	    afs_warnuser("afs: failed to store file (network problems)\n");
 	}
 #ifdef	AFS_SUN5_ENV
-	else if (code == ENOSPC) {
+	else if (code == ENOSPC || code_checkcode == ENOSPC) {
 	    afs_warnuser
 		("afs: failed to store file (over quota or partition full)\n");
 	}
 #else
-	else if (code == ENOSPC) {
+	else if (code == ENOSPC || code_checkcode == ENOSPC) {
 	    afs_warnuser("afs: failed to store file (partition full)\n");
-	} else if (code == EDQUOT) {
+	} else if (code == EDQUOT || code_checkcode == EDQUOT) {
 	    afs_warnuser("afs: failed to store file (over quota)\n");
 	}
 #endif
-	else if (code != 0)
-	    afs_warnuser("afs: failed to store file (%d)\n", code);
+	else if (code || code_checkcode)
+	    afs_warnuser("afs: failed to store file (%d/%d)\n", code, code_checkcode);
 
 	/* finally, we flush any text pages lying around here */
 	hzero(avc->flushDV);
@@ -827,7 +831,8 @@ afs_close(OSI_VC_DECL(avc), afs_int32 aflags, afs_ucred_t *acred)
 #ifdef AFS_AIX32_ENV
 	    osi_ReleaseVM(avc, acred);
 #endif
-	    code = avc->vc_error;
+	    code = 0;
+	    code_checkcode = avc->vc_error;
 	    avc->vc_error = 0;
 	}
 #if defined(AFS_FBSD80_ENV)

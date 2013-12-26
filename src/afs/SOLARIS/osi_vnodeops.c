@@ -676,6 +676,7 @@ afs_nfsrdwr(struct vcache *avc, struct uio *auio, enum uio_rw arw,
 {
     afs_int32 code;
     afs_int32 code2;
+    afs_int32 code_checkcode = 0;
     int counter;
     afs_int32 mode, sflags;
     char *data;
@@ -1008,7 +1009,7 @@ afs_nfsrdwr(struct vcache *avc, struct uio *auio, enum uio_rw arw,
     }
 
     if (!code && avc->vc_error) {
-	code = avc->vc_error;
+	code = code_checkcode = avc->vc_error;
     }
     ReleaseWriteLock(&avc->lock);
     afs_BozonUnlock(&avc->pvnLock, avc);
@@ -1031,7 +1032,11 @@ afs_nfsrdwr(struct vcache *avc, struct uio *auio, enum uio_rw arw,
     if (code == 0 && extraResid > 0)
 	auio->uio_resid += extraResid;
 #endif
-    return afs_CheckCode(code, &treq, 46);
+    if (code_checkcode) {
+	return code_checkcode;
+    } else {
+	return afs_CheckCode(code, &treq, 46);
+    }
 }
 
 int
