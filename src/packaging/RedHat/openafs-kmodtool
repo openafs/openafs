@@ -83,7 +83,9 @@ get_rpmtemplate ()
     case "$verrel" in
         *.el[6-9]*)
 	          kname="${verrel}.%{_target_cpu}${variant:+.${variant}}" ;;
-        *.fc[1-9][0-9]*)
+        *.fc[2-9][0-9]*)
+	          kname="${verrel}.%{_target_cpu}${variant:++${variant}}" ;;
+        *.fc1[0-9]*)
 	          kname="${verrel}.%{_target_cpu}${variant:+.${variant}}" ;;
         *.fc9*)   kname="${verrel}.%{_target_cpu}${variant:+.${variant}}" ;;
         *)        kname="${verrel}${variant}"                             ;;
