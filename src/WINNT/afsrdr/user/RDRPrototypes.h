@@ -79,7 +79,7 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
                         IN BOOL      CaseSensitive,
                         IN BOOL      LastComponent,
                         IN BOOL      bWow64,
-                        IN BOOL      bQueryStatus,
+                        IN BOOL      bFollowMount,
                         IN BOOL      bHoldFid,
                         IN DWORD     ResultBufferLength,
                         IN OUT AFSCommResult **ResultCB);
