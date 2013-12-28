@@ -1,4 +1,4 @@
-openafs (1.6.6~pre2-1) UNRELEASED; urgency=low
+openafs (1.6.6~pre2-1) unstable; urgency=low
 
   * New upstream pre-release.
     - Linux kernels up to 3.12 are now supported, including kernels with
@@ -37,7 +37,7 @@ openafs (1.6.6~pre2-1) UNRELEASED; urgency=low
     - Avoid redefining assert in public header files.
     - Documentation, diagnostics, and error message improvements.
 
- -- Russ Allbery <rra@debian.org>  Sat, 28 Dec 2013 11:00:17 -0800
+ -- Russ Allbery <rra@debian.org>  Sat, 28 Dec 2013 11:38:19 -0800
 
 openafs (1.6.5.2-1) unstable; urgency=medium
 
