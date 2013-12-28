@@ -51,7 +51,7 @@ process.s:
 	@echo Nothing to be done for process.s
 
 # Making process.o for $(SYS_NAME)
-process.o	: process.s process.i386.s process.c lwp.o
+process.o	: process.s process.i386.s process.amd64.s process.c lwp.o
 	@set -x; case "$(SYS_NAME)" in \
 	sun4c_51 | sun4c_52 | sun4m_51 | sun4m_52 | sun4c_53 | sun4m_53  | sun4_53 | sun4_52 | sun4_54 | sun4c_54 | sun4m_54 | sun4x_5* | arm_linux* ) \
 		$(PATH_CPP) -P -I${TOP_INCDIR} ${srcdir}/process.s > process.ss; \

@@ -77,7 +77,7 @@ static char *opcode_names[VL_NUMBER_OPCODESX] = {
     "ListAttributes",
     "LinkedList",
     "GetStats",
-    "Probe",
+    "Probe",	/* RPC is ProbeServer */
     "GetAddrs",
     "ChangeAddr",
     "CreateEntryN",
@@ -220,7 +220,42 @@ handleit(struct cmd_syndesc *as, void *arock)
 	exit(1);
     }
 
-    if (as->parms[5].items) {	/* -gstats */
+    if (as->parms[6].items) {	/* -probe */
+	int nconns = 0;
+	int status = 0;
+	int i;
+	char hoststr[16];
+	afs_uint32 addr;
+
+	for (i = 0; cstruct->conns[i]; i++, nconns++) {
+	    rx_SetConnDeadTime(cstruct->conns[i], 6);
+	    addr = rx_HostOf(rx_PeerOf(cstruct->conns[i]));
+	    if (!nconns) {
+		printf("probing");
+	    }
+	    printf(" %s", afs_inet_ntoa_r(addr, hoststr));
+	}
+	if (nconns == 0) {
+	    printf("no connections\n");
+	    return 255;
+	}
+	printf("\n");
+	multi_Rx(cstruct->conns, nconns) {
+	    multi_VL_ProbeServer();
+	    addr = rx_HostOf(rx_PeerOf(cstruct->conns[multi_i]));
+	    if (!multi_error) {
+		printf(" ok: %s\n", afs_inet_ntoa_r(addr, hoststr));
+	    } else {
+		status = 255;
+		printf(" not ok (%d): %s\n", multi_error,
+		       afs_inet_ntoa_r(addr, hoststr));
+	    }
+	}
+	multi_End;
+	return status;
+    }
+
+    if (as->parms[5].items) {	/* -getstats */
 	vldstats stats;
 	vital_vlheader vital_header;
 	code = ubik_VL_GetStats(cstruct, 0, &stats, &vital_header);
@@ -1036,6 +1071,8 @@ main(int argc, char **argv)
 		"cellname '-host' belongs to (required for auth conns)");
     cmd_AddParm(ts, "-getstats", CMD_FLAG, CMD_OPTIONAL,
 		"print vldb statistics (non interactive)");
+    cmd_AddParm(ts, "-probe", CMD_FLAG, CMD_OPTIONAL,
+		"probe vldb servers, use with -host to probe only one. (non interactive)");
     code = cmd_Dispatch(argc, argv);
     exit(code);
 }

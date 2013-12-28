@@ -2559,11 +2559,14 @@ afs_PutVCache(struct vcache *avc)
  *
  * \param avc Pointer to the cache entry to reset
  * \param acred
+ * \param skipdnlc  skip the dnlc purge for this vnode
  *
  * \note avc must be write locked on entry
+ *
+ * \note The caller should purge the dnlc when skipdnlc is set.
  */
 void
-afs_ResetVCache(struct vcache *avc, afs_ucred_t *acred)
+afs_ResetVCache(struct vcache *avc, afs_ucred_t *acred, afs_int32 skipdnlc)
 {
     ObtainWriteLock(&afs_xcbhash, 456);
     afs_DequeueCallback(avc);
@@ -2571,7 +2574,9 @@ afs_ResetVCache(struct vcache *avc, afs_ucred_t *acred)
     ReleaseWriteLock(&afs_xcbhash);
     /* now find the disk cache entries */
     afs_TryToSmush(avc, acred, 1);
-    osi_dnlc_purgedp(avc);
+    if (!skipdnlc) {
+	osi_dnlc_purgedp(avc);
+    }
     if (avc->linkData && !(avc->f.states & CCore)) {
 	afs_osi_Free(avc->linkData, strlen(avc->linkData) + 1);
 	avc->linkData = NULL;

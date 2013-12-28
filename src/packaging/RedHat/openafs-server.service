@@ -4,7 +4,7 @@ After=syslog.target network.target
 
 [Service]
 EnvironmentFile=-/etc/sysconfig/openafs
-ExecStart=/usr/afs/bin/bosserver $BOSSERVER_ARGS
+ExecStart=/usr/afs/bin/bosserver -nofork $BOSSERVER_ARGS
 ExecStop=/usr/bin/bos shutdown localhost -wait -localauth
 
 [Install]

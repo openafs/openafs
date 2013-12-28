@@ -3,6 +3,7 @@
 #ifndef	AFS_PARAM_COMMON_H
 #define	AFS_PARAM_COMMON_H 1
 
+#define AFS_64BIT_ENV  1
 #define AFS_NAMEI_ENV  1	/* User space interface to file system */
 #define AFS_64BIT_IOPS_ENV 1	/* Needed for NAMEI */
 #define AFS_64BIT_CLIENT 1
@@ -157,7 +158,7 @@ enum vcexcl { NONEXCL, EXCL };
 #define CMSERVERPREF
 #endif
 
-#if	!defined(ASSEMBLER) && !defined(__LANGUAGE_ASSEMBLY__) && !defined(IGNORE_STDS_H) && !defined()
+#if	!defined(ASSEMBLER) && !defined(__LANGUAGE_ASSEMBLY__) && !defined(IGNORE_STDS_H)
 #include <limits.h>
 #include <sys/param.h>
 #include <sys/types.h>

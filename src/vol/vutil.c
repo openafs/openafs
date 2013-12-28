@@ -71,7 +71,6 @@
 #define afs_open	open
 #endif /* !O_LARGEFILE */
 
-#define nFILES	(sizeof (stuff)/sizeof(struct stuff))
 
 #ifndef AFS_NT40_ENV
 # ifdef O_LARGEFILE
@@ -91,7 +90,8 @@
 
 #ifdef FSSYNC_BUILD_CLIENT
 static void
-RemoveInodes(Device dev, VolumeId parent, VolumeId vid)
+RemoveInodes(struct afs_inode_info *stuff, Device dev, VolumeId parent,
+             VolumeId vid)
 {
     int i;
     IHandle_t *handle;
@@ -100,7 +100,7 @@ RemoveInodes(Device dev, VolumeId parent, VolumeId vid)
      * needs the dev and vid to decrement volume special files.
      */
     IH_INIT(handle, dev, parent, -1);
-    for (i = 0; i < nFILES; i++) {
+    for (i = 0; i < MAXINODETYPE; i++) {
 	Inode inode = *stuff[i].inode;
 	if (VALID_INO(inode)) {
 	    if (stuff[i].inodeType == VI_LINKTABLE) {
@@ -140,9 +140,13 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
     char *part, *name;
     struct stat st;
     afs_ino_str_t stmp;
+    struct VolumeHeader tempHeader;
+    struct afs_inode_info stuff[MAXINODETYPE];
 # ifdef AFS_DEMAND_ATTACH_FS
     int locktype = 0;
 # endif /* AFS_DEMAND_ATTACH_FS */
+
+    init_inode_info(&tempHeader, stuff);
 
     *ec = 0;
     memset(&vol, 0, sizeof(vol));
@@ -220,8 +224,8 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
     }
     device = partition->device;
 
-    for (i = 0; i < nFILES; i++) {
-	struct stuff *p = &stuff[i];
+    for (i = 0; i < MAXINODETYPE; i++) {
+	struct afs_inode_info *p = &stuff[i];
 	if (p->obsolete)
 	    continue;
 #ifdef AFS_NAMEI_ENV
@@ -261,7 +265,7 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
 	  bad:
 	    if (handle)
 		IH_RELEASE(handle);
-	    RemoveInodes(device, vol.parentId, vol.id);
+	    RemoveInodes(stuff, device, vol.parentId, vol.id);
 	    if (!*ec) {
 		*ec = VNOVOL;
 	    }
@@ -402,6 +406,34 @@ ClearVolumeStats_r(VolumeDiskData * vol)
     memset(vol->weekUse, 0, sizeof(vol->weekUse));
     vol->dayUse = 0;
     vol->dayUseDate = 0;
+}
+
+void
+CopyVolumeStats_r(VolumeDiskData * from, VolumeDiskData * to)
+{
+    memcpy(to->weekUse, from->weekUse, sizeof(to->weekUse));
+    to->dayUse = from->dayUse;
+    to->dayUseDate = from->dayUseDate;
+    if (from->stat_initialized) {
+	memcpy(to->stat_reads, from->stat_reads, sizeof(to->stat_reads));
+	memcpy(to->stat_writes, from->stat_writes, sizeof(to->stat_writes));
+	memcpy(to->stat_fileSameAuthor, from->stat_fileSameAuthor,
+	       sizeof(to->stat_fileSameAuthor));
+	memcpy(to->stat_fileDiffAuthor, from->stat_fileDiffAuthor,
+	       sizeof(to->stat_fileDiffAuthor));
+	memcpy(to->stat_dirSameAuthor, from->stat_dirSameAuthor,
+	       sizeof(to->stat_dirSameAuthor));
+	memcpy(to->stat_dirDiffAuthor, from->stat_dirDiffAuthor,
+	       sizeof(to->stat_dirDiffAuthor));
+    }
+}
+
+void
+CopyVolumeStats(VolumeDiskData * from, VolumeDiskData * to)
+{
+    VOL_LOCK;
+    CopyVolumeStats_r(from, to);
+    VOL_UNLOCK;
 }
 
 /**

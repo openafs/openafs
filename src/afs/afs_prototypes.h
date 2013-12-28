@@ -855,14 +855,10 @@ extern afs_int32 afs_ServerDown(struct srvAddr *sa, int code);
 extern void afs_CountServers(void);
 extern void afs_CheckServers(int adown, struct cell *acellp);
 extern void afs_LoopServers(int adown, struct cell *acellp, int vlalso,
-			    void (*func1) (struct rx_connection **rxconns,
-					   int nconns, int nservers,
-					   struct afs_conn **conns,
-					   struct srvAddr **addrs),
-			    void (*func2) (struct rx_connection **rxconns,
-					   int nconns, int nservers,
-					   struct afs_conn **conns,
-					   struct srvAddr **addrs));
+			    void (*func1) (int nconns, struct rx_connection **rxconns,
+					   struct afs_conn **conns),
+			    void (*func2) (int nconns, struct rx_connection **rxconns,
+					   struct afs_conn **conns));
 extern unsigned int afs_random(void);
 extern int afs_randomMod15(void);
 extern int afs_randomMod127(void);
@@ -1087,7 +1083,7 @@ extern int afs_RemoteLookup(struct VenusFid *afid,
 			    struct AFSCallBack *CallBackp,
 			    struct server **serverp,
 			    struct AFSVolSync *tsyncp);
-extern void afs_ResetVCache(struct vcache *, afs_ucred_t *);
+extern void afs_ResetVCache(struct vcache *, afs_ucred_t *, afs_int32 skipdnlc);
 extern afs_int32 afs_NFSFindVCache(struct vcache **avcp,
 				   struct VenusFid *afid);
 extern void afs_vcacheInit(int astatSize);

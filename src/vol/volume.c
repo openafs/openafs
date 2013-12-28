@@ -412,6 +412,13 @@ static void VVByPListEndExclusive_r(struct DiskPartition64 * dp);
 static void VVByPListWait_r(struct DiskPartition64 * dp);
 
 /* online salvager */
+typedef enum {
+    VCHECK_SALVAGE_OK = 0,         /**< no pending salvage */
+    VCHECK_SALVAGE_SCHEDULED = 1,  /**< salvage has been scheduled */
+    VCHECK_SALVAGE_ASYNC = 2,      /**< salvage being scheduled */
+    VCHECK_SALVAGE_DENIED = 3,     /**< salvage not scheduled; denied */
+    VCHECK_SALVAGE_FAIL = 4        /**< salvage not scheduled; failed */
+} vsalvage_check;
 static int VCheckSalvage(Volume * vp);
 #if defined(SALVSYNC_BUILD_CLIENT) || defined(FSSYNC_BUILD_CLIENT)
 static int VScheduleSalvage_r(Volume * vp);
@@ -2146,10 +2153,25 @@ VPreAttachVolumeById_r(Error * ec,
 	return NULL;
     }
 
+    /* ensure that any vp we pass to VPreAttachVolumeByVp_r
+     * is NOT in exclusive state.
+     */
+ retry:
     vp = VLookupVolume_r(ec, volumeId, NULL);
+
     if (*ec) {
 	return NULL;
     }
+
+    if (vp && VIsExclusiveState(V_attachState(vp))) {
+	VCreateReservation_r(vp);
+	VWaitExclusiveState_r(vp);
+	VCancelReservation_r(vp);
+	vp = NULL;
+	goto retry;    /* look up volume again */
+    }
+
+    /* vp == NULL or vp not exclusive both OK */
 
     return VPreAttachVolumeByVp_r(ec, partp, vp, volumeId);
 }
@@ -2165,6 +2187,8 @@ VPreAttachVolumeById_r(Error * ec,
  * @return volume object pointer
  *
  * @pre VOL_LOCK is held.
+ *
+ * @pre vp (if specified) must not be in exclusive state.
  *
  * @warning Returned volume object pointer does not have to
  *          equal the pointer passed in as argument vp.  There
@@ -2189,6 +2213,11 @@ VPreAttachVolumeByVp_r(Error * ec,
     Volume *nvp = NULL;
 
     *ec = 0;
+
+    /* don't proceed unless it's safe */
+    if (vp) {
+	osi_Assert(!VIsExclusiveState(V_attachState(vp)));
+    }
 
     /* check to see if pre-attach already happened */
     if (vp &&
@@ -3172,8 +3201,7 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
     if (*ec == VNOVOL) {
 	/* if the volume doesn't exist, skip straight to 'error' so we don't
 	 * request a salvage */
-	VOL_LOCK;
-	goto error_notbroken;
+	goto unlocked_error;
     }
 
     if (!*ec) {
@@ -3268,6 +3296,9 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
     } else if (*ec) {
 	/* volume operation in progress */
 	VOL_LOCK;
+	/* we have already transitioned the vp away from ATTACHING state, so we
+	 * can go right to the end of attach2, and we do not need to transition
+	 * to ERROR. */
 	goto error_notbroken;
     }
 #else /* AFS_DEMAND_ATTACH_FS */
@@ -3411,15 +3442,21 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	    V_inUse(vp) = fileServer;
 	    V_offlineMessage(vp)[0] = '\0';
 	}
+#ifdef AFS_DEMAND_ATTACH_FS
+	/* check if the volume is actually usable. only do this for DAFS; for
+	 * non-DAFS, volumes that are not inService/blessed can still be
+	 * attached, even if clients cannot access them. this is relevant
+	 * because for non-DAFS, we try to attach the volume when e.g.
+	 * volserver gives us back then vol when its done with it, but
+	 * volserver may give us back a volume that is not inService/blessed. */
+
 	if (!V_inUse(vp)) {
 	    *ec = VNOVOL;
-#ifdef AFS_DEMAND_ATTACH_FS
 	    /* Put the vol into PREATTACHED state, so if someone tries to
 	     * access it again, we try to attach, see that we're not blessed,
 	     * and give a VNOVOL error again. Putting it into UNATTACHED state
 	     * would result in a VOFFLINE error instead. */
 	    error_state = VOL_STATE_PREATTACHED;
-#endif /* AFS_DEMAND_ATTACH_FS */
 
 	    /* mimic e.g. GetVolume errors */
 	    if (!V_blessed(vp)) {
@@ -3431,17 +3468,14 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	    } else {
 		Log("Volume %lu offline: needs salvage\n", afs_printable_uint32_lu(V_id(vp)));
 		*ec = VSALVAGE;
-#ifdef AFS_DEMAND_ATTACH_FS
 		error_state = VOL_STATE_ERROR;
 		/* see if we can recover */
-		VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, 0 /*flags*/);
-#endif
+		VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, VOL_SALVAGE_NO_OFFLINE);
 	    }
-#ifdef AFS_DEMAND_ATTACH_FS
 	    vp->nUsers = 0;
-#endif
 	    goto locked_error;
 	}
+#endif /* AFS_DEMAND_ATTACH_FS */
     } else {
 #ifdef AFS_DEMAND_ATTACH_FS
 	if ((mode != V_PEEK) && (mode != V_SECRETLY) && (mode != V_READONLY))
@@ -3467,10 +3501,7 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 
     return vp;
 
-#ifndef AFS_DEMAND_ATTACH_FS
 unlocked_error:
-#endif
-
     VOL_LOCK;
 locked_error:
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -3487,9 +3518,16 @@ locked_error:
 	VReleaseVolumeHandles_r(vp);
     }
 
- error_notbroken:
 #ifdef AFS_DEMAND_ATTACH_FS
-    VCheckSalvage(vp);
+ error_notbroken:
+    if (VCheckSalvage(vp) == VCHECK_SALVAGE_FAIL) {
+	/* The salvage could not be scheduled with the salvage server
+	 * due to a hard error. Reset the error code to prevent retry loops by
+	 * callers. */
+	if (*ec == VSALVAGING) {
+	    *ec = VSALVAGE;
+	}
+    }
     if (forcefree) {
 	FreeVolume(vp);
     } else {
@@ -4591,9 +4629,9 @@ VCloseVolumeHandles_r(Volume * vp)
 	IH_CONDSYNC(vp->vnodeIndex[vLarge].handle);
 	IH_CONDSYNC(vp->vnodeIndex[vSmall].handle);
 	IH_CONDSYNC(vp->diskDataHandle);
-#ifdef AFS_NT40_ENV
+#ifdef AFS_NAMEI_ENV
 	IH_CONDSYNC(vp->linkHandle);
-#endif /* AFS_NT40_ENV */
+#endif /* AFS_NAMEI_ENV */
     }
 
     IH_REALLYCLOSE(vp->vnodeIndex[vLarge].handle);
@@ -4644,9 +4682,9 @@ VReleaseVolumeHandles_r(Volume * vp)
 	IH_CONDSYNC(vp->vnodeIndex[vLarge].handle);
 	IH_CONDSYNC(vp->vnodeIndex[vSmall].handle);
 	IH_CONDSYNC(vp->diskDataHandle);
-#ifdef AFS_NT40_ENV
+#ifdef AFS_NAMEI_ENV
 	IH_CONDSYNC(vp->linkHandle);
-#endif /* AFS_NT40_ENV */
+#endif /* AFS_NAMEI_ENV */
     }
 
     IH_RELEASE(vp->vnodeIndex[vLarge].handle);
@@ -4958,11 +4996,14 @@ VCheckOffline(Volume * vp)
 	VUpdateVolume_r(&error, vp, 0);
 	VCloseVolumeHandles_r(vp);
 	if (LogLevel) {
-	    Log("VOffline: Volume %u (%s) is now offline", V_id(vp),
-		V_name(vp));
-	    if (V_offlineMessage(vp)[0])
-		Log(" (%s)", V_offlineMessage(vp));
-	    Log("\n");
+	    if (V_offlineMessage(vp)[0]) {
+		Log("VOffline: Volume %lu (%s) is now offline (%s)\n",
+		    afs_printable_uint32_lu(V_id(vp)), V_name(vp),
+		    V_offlineMessage(vp));
+	    } else {
+		Log("VOffline: Volume %lu (%s) is now offline\n",
+		    afs_printable_uint32_lu(V_id(vp)), V_name(vp));
+	    }
 	}
 	FreeVolumeHeader(vp);
 #ifdef AFS_PTHREAD_ENV
@@ -5270,8 +5311,11 @@ VOfflineForSalvage_r(struct Volume *vp)
  * @param[in] vp   pointer to volume object
  *
  * @return status code
- *    @retval 0 no salvage scheduled
- *    @retval 1 a salvage has been scheduled with the salvageserver
+ *    @retval VCHECK_SALVAGE_OK (0)         no pending salvage
+ *    @retval VCHECK_SALVAGE_SCHEDULED (1)  salvage has been scheduled
+ *    @retval VCHECK_SALVAGE_ASYNC (2)      salvage being scheduled
+ *    @retval VCHECK_SALVAGE_DENIED (3)     salvage not scheduled; denied
+ *    @retval VCHECK_SALVAGE_FAIL (4)       salvage not scheduled; failed
  *
  * @pre VOL_LOCK is held
  *
@@ -5291,31 +5335,32 @@ VOfflineForSalvage_r(struct Volume *vp)
 static int
 VCheckSalvage(Volume * vp)
 {
-    int ret = 0;
+    int ret = VCHECK_SALVAGE_OK;
+
 #if defined(SALVSYNC_BUILD_CLIENT) || defined(FSSYNC_BUILD_CLIENT)
-    if (vp->nUsers)
-	return ret;
     if (!vp->salvage.requested) {
-	return ret;
+	return VCHECK_SALVAGE_OK;
+    }
+    if (vp->nUsers) {
+	return VCHECK_SALVAGE_ASYNC;
     }
 
     /* prevent recursion; some of the code below creates and removes
      * lightweight refs, which can call VCheckSalvage */
     if (vp->salvage.scheduling) {
-	return ret;
+	return VCHECK_SALVAGE_ASYNC;
     }
     vp->salvage.scheduling = 1;
 
     if (V_attachState(vp) == VOL_STATE_SALVAGE_REQ) {
 	if (!VOfflineForSalvage_r(vp)) {
 	    vp->salvage.scheduling = 0;
-	    return ret;
+	    return VCHECK_SALVAGE_FAIL;
 	}
     }
 
     if (vp->salvage.requested) {
-	VScheduleSalvage_r(vp);
-	ret = 1;
+	ret = VScheduleSalvage_r(vp);
     }
     vp->salvage.scheduling = 0;
 #endif /* SALVSYNC_BUILD_CLIENT || FSSYNC_BUILD_CLIENT */
@@ -5540,8 +5585,11 @@ try_FSSYNC(Volume *vp, char *partName, int *code) {
  * @param[in] vp  pointer to volume object
  *
  * @return operation status
- *    @retval 0 salvage scheduled successfully
- *    @retval 1 salvage not scheduled, or SALVSYNC/FSSYNC com error
+ *    @retval VCHECK_SALVAGE_OK (0)         no pending salvage
+ *    @retval VCHECK_SALVAGE_SCHEDULED (1)  salvage has been scheduled
+ *    @retval VCHECK_SALVAGE_ASYNC (2)      salvage being scheduled
+ *    @retval VCHECK_SALVAGE_DENIED (3)     salvage not scheduled; denied
+ *    @retval VCHECK_SALVAGE_FAIL (4)       salvage not scheduled; failed
  *
  * @pre
  *    @arg VOL_LOCK is held.
@@ -5564,8 +5612,8 @@ try_FSSYNC(Volume *vp, char *partName, int *code) {
 static int
 VScheduleSalvage_r(Volume * vp)
 {
-    int ret=0;
-    int code;
+    int ret = VCHECK_SALVAGE_SCHEDULED;
+    int code = 0;
     VolState state_save;
     VThreadOptions_t * thread_opts;
     char partName[16];
@@ -5573,12 +5621,13 @@ VScheduleSalvage_r(Volume * vp)
     osi_Assert(VCanUseSALVSYNC() || VCanUseFSSYNC());
 
     if (vp->nWaiters || vp->nUsers) {
-	return 1;
+	return VCHECK_SALVAGE_ASYNC;
     }
 
     /* prevent endless salvage,attach,salvage,attach,... loops */
-    if (vp->stats.salvages >= SALVAGE_COUNT_MAX)
-	return 1;
+    if (vp->stats.salvages >= SALVAGE_COUNT_MAX) {
+	return VCHECK_SALVAGE_FAIL;
+    }
 
     /*
      * don't perform salvsync ops on certain threads
@@ -5588,11 +5637,11 @@ VScheduleSalvage_r(Volume * vp)
 	thread_opts = &VThread_defaults;
     }
     if (thread_opts->disallow_salvsync || vol_disallow_salvsync) {
-	return 1;
+	return VCHECK_SALVAGE_ASYNC;
     }
 
     if (vp->salvage.scheduled) {
-	return ret;
+	return VCHECK_SALVAGE_SCHEDULED;
     }
 
     VCreateReservation_r(vp);
@@ -5602,7 +5651,9 @@ VScheduleSalvage_r(Volume * vp)
      * XXX the scheduling process should really be done asynchronously
      *     to avoid fssync deadlocks
      */
-    if (!vp->salvage.scheduled) {
+    if (vp->salvage.scheduled) {
+	ret = VCHECK_SALVAGE_SCHEDULED;
+    } else {
 	/* if we haven't previously scheduled a salvage, do so now
 	 *
 	 * set the volume to an exclusive state and drop the lock
@@ -5619,6 +5670,7 @@ VScheduleSalvage_r(Volume * vp)
 	VChangeState_r(vp, state_save);
 
 	if (code == SYNC_OK) {
+	    ret = VCHECK_SALVAGE_SCHEDULED;
 	    vp->salvage.scheduled = 1;
 	    vp->stats.last_salvage_req = FT_ApproxTime();
 	    if (VCanUseSALVSYNC()) {
@@ -5628,20 +5680,23 @@ VScheduleSalvage_r(Volume * vp)
 		IncUInt64(&VStats.salvages);
 	    }
 	} else {
-	    ret = 1;
 	    switch(code) {
 	    case SYNC_BAD_COMMAND:
 	    case SYNC_COM_ERROR:
+	        ret = VCHECK_SALVAGE_FAIL;
 		break;
 	    case SYNC_DENIED:
+	        ret = VCHECK_SALVAGE_DENIED;
 		Log("VScheduleSalvage_r: Salvage request for volume %lu "
 		    "denied\n", afs_printable_uint32_lu(vp->hashid));
 		break;
 	    case SYNC_FAILED:
+	        ret = VCHECK_SALVAGE_FAIL;
 		Log("VScheduleSalvage_r: Salvage request for volume %lu "
 		    "failed\n", afs_printable_uint32_lu(vp->hashid));
 		break;
 	    default:
+	        ret = VCHECK_SALVAGE_FAIL;
 		Log("VScheduleSalvage_r: Salvage request for volume %lu "
 		    "received unknown protocol error %d\n",
 		    afs_printable_uint32_lu(vp->hashid), code);

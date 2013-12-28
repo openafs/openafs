@@ -69,7 +69,9 @@
 #include <afs/afsutil.h>
 #include <afs/cmd.h>
 
-#define ADDR(x) (x/sizeof(struct nvlentry))
+#define HDRSIZE 64
+#define ADDR(x) ((x)/sizeof(struct nvlentry))
+#define OFFSET(addr) ((addr) + HDRSIZE)
 
 int fd;
 int listentries, listservers, listheader, listuheader, verbose, quiet;
@@ -129,7 +131,6 @@ writeUbikHeader()
 }
 #endif
 
-#define HDRSIZE 64
 int
 readUbikHeader(void)
 {
@@ -179,7 +180,7 @@ vldbio(int position, void *buffer, int size, int rdwr)
     int offset, r, p;
 
     /* seek to the correct spot. skip ubik stuff */
-    p = position + HDRSIZE;
+    p = OFFSET(position);
     offset = lseek(fd, p, 0);
     if (offset != p) {
 	log_error(VLDB_CHECK_FATAL,"error: lseek to %d failed: %d %d\n", p, offset, errno);
@@ -243,6 +244,8 @@ InvalidVolname(char *volname)
     map = LEGALCHARS;
     slen = strlen(volname);
     if (slen >= VL_MAXNAMELEN)
+	return 1;
+    if (slen == 0)
 	return 1;
     return (slen != strspn(volname, map));
 }
@@ -418,7 +421,7 @@ readentry(afs_int32 addr, struct nvlentry *vlentryp, afs_int32 *type)
     }
 
     if (listentries) {
-	quiet_println("address %u: ", addr);
+	quiet_println("address %u (offset 0x%0x): ", addr, OFFSET(addr));
 	if (vlentryp->flags == VLCONTBLOCK) {
 	    quiet_println("mh extension block\n");
 	} else if (vlentryp->flags == VLFREE) {
@@ -607,9 +610,6 @@ ReadAllEntries(struct vlheader *header)
 	/* Remember the highest volume id */
 	readentry(addr, &vlentry, &type);
 	if (type == VL) {
-	    if (!(vlentry.flags & VLF_RWEXISTS))
-		log_error(VLDB_CHECK_WARNING,"VLDB_CHECK_WARNING: VLDB entry '%s' has no RW volume\n",
-		       vlentry.name);
 
 	    for (i = 0; i < MAXTYPES; i++)
 		if (maxvolid < vlentry.volumeId[i])
@@ -635,8 +635,8 @@ ReadAllEntries(struct vlheader *header)
  		}
 		if (e) {
 		   log_error
-			(VLDB_CHECK_ERROR,"VLDB entry '%s' contains an unknown RW/RO index serverFlag\n",
-			 vlentry.name);
+			(VLDB_CHECK_ERROR,"address %u (offset 0x%0x): VLDB entry '%s' contains an unknown RW/RO index serverFlag\n",
+			addr, OFFSET(addr), vlentry.name);
 		    e = 0;
 		}
 		quiet_println
@@ -666,7 +666,7 @@ ReadAllEntries(struct vlheader *header)
 	    entrysize = VL_ADDREXTBLK_SIZE;
 	    mhcount++;
 	} else {
-	    log_error(VLDB_CHECK_ERROR, "Unknown entry at %u. Aborting\n", addr);
+	    log_error(VLDB_CHECK_ERROR, "address %u (offset 0x%0x): Unknown entry. Aborting\n", addr, OFFSET(addr));
 	    break;
 	}
     }
@@ -703,7 +703,7 @@ FollowNameHash(struct vlheader *header)
 	chainlength = 0;
 
 	if (!validVolumeAddr(header->VolnameHash[i])) {
-	    log_error(VLDB_CHECK_ERROR,"Name Hash %d: Bad entry %u is out of range\n",
+	    log_error(VLDB_CHECK_ERROR,"Name Hash index %d is out of range: %u\n",
 		      i, header->VolnameHash[i]);
 	    continue;
 	}
@@ -711,8 +711,8 @@ FollowNameHash(struct vlheader *header)
 	for (addr = header->VolnameHash[i]; addr; addr = vlentry.nextNameHash) {
 	    readentry(addr, &vlentry, &type);
 	    if (type != VL) {
-		log_error(VLDB_CHECK_ERROR,"Name Hash %d: Bad entry at %u: Not a valid vlentry\n",
-		       i, addr);
+		log_error(VLDB_CHECK_ERROR,"address %u (offset 0x%0x): Name Hash %d: Not a vlentry\n",
+		       addr, OFFSET(addr), i);
 		continue;
 	    }
 
@@ -729,15 +729,15 @@ FollowNameHash(struct vlheader *header)
 	    }
 	    if (record[rindex].type & NH) {
 	        log_error
-		    (VLDB_CHECK_ERROR,"Name Hash %d: Bad entry '%s': Already in the name hash\n",
-		     i, vlentry.name);
+		    (VLDB_CHECK_ERROR,"address %u (offset 0x%0x): Name Hash %d: volume name '%s' is already in the name hash\n",
+		     addr, OFFSET(addr), i, vlentry.name);
 		record[rindex].type |= MULTN;
 		break;
 	    }
 
 	    if (!validVolumeAddr(vlentry.nextNameHash)) {
-		log_error(VLDB_CHECK_ERROR,"Name Hash forward link of '%s' is out of range\n",
-			  vlentry.name);
+		log_error(VLDB_CHECK_ERROR,"address %u (offset 0x%0x): Name Hash forward link of '%s' is out of range\n",
+			  addr, OFFSET(addr), vlentry.name);
 		record[rindex].type |= MULTN;
 		break;
 	    }
@@ -751,8 +751,8 @@ FollowNameHash(struct vlheader *header)
 	    /* Hash the name and check if in correct hash table */
 	    if (NameHash(vlentry.name) != i) {
 	        log_error
-		    (VLDB_CHECK_ERROR,"Name Hash %d: Bad entry '%s': Incorrect name hash chain (should be in %d)\n",
-		     i, vlentry.name, NameHash(vlentry.name));
+		    (VLDB_CHECK_ERROR,"address %u (offset 0x%0x): Name Hash %d: volume name '%s': Incorrect name hash chain (should be in %d)\n",
+		     addr, OFFSET(addr), i, vlentry.name, NameHash(vlentry.name));
 		record[rindex].type |= MULTN;
 	    }
 	}
@@ -795,7 +795,7 @@ FollowIdHash(struct vlheader *header)
 	for (j = 0; j < HASHSIZE; j++) {
 	    chainlength = 0;
 	    if (!validVolumeAddr(header->VolidHash[i][j])) {
-		log_error(VLDB_CHECK_ERROR,"%s Hash %d: Bad entry %u is out of range\n",
+		log_error(VLDB_CHECK_ERROR,"%s Hash index %d is out of range: %u\n",
 			  vtype(i), j, header->VolidHash[i][j]);
 		continue;
 	    }
@@ -805,8 +805,8 @@ FollowIdHash(struct vlheader *header)
 		readentry(addr, &vlentry, &type);
 		if (type != VL) {
 		    log_error
-			(VLDB_CHECK_ERROR,"%s Id Hash %d: Bad entry at %u: Not a valid vlentry\n",
-			 vtype(i), j, addr);
+			(VLDB_CHECK_ERROR,"address %u (offset 0x%0x): %s Id Hash %d: Not a vlentry\n",
+			 addr, OFFSET(addr), vtype(i), j);
 		    continue;
 		}
 
@@ -818,15 +818,15 @@ FollowIdHash(struct vlheader *header)
 		}
 		if (record[rindex].type & hash) {
 		    log_error
-			(VLDB_CHECK_ERROR,"%s Id Hash %d: Bad entry '%s': Already in the hash table\n",
-			 vtype(i), j, vlentry.name);
+			(VLDB_CHECK_ERROR,"address %u (offset 0x%0x): %s Id Hash %d: volume name '%s': Already in the hash table\n",
+			 addr, OFFSET(addr), vtype(i), j, vlentry.name);
 		    record[rindex].type |= badref;
 		    break;
 		}
 
 		if (!validVolumeAddr(vlentry.nextIdHash[i])) {
-		    log_error(VLDB_CHECK_ERROR,"%s Id Hash forward link of '%s' is out of range\n",
-			      vtype(i), vlentry.name);
+		    log_error(VLDB_CHECK_ERROR,"address %u (offset 0x%0x): %s Id Hash forward link of '%s' is out of range\n",
+			      addr, OFFSET(addr), vtype(i), vlentry.name);
 		    record[rindex].type |= badref;
 		    break;
 		}
@@ -840,8 +840,8 @@ FollowIdHash(struct vlheader *header)
 		/* Hash the id and check if in correct hash table */
 		if (IdHash(vlentry.volumeId[i]) != j) {
 		   log_error
-			(VLDB_CHECK_ERROR,"%s Id Hash %d: Bad entry '%s': Incorrect Id hash chain (should be in %d)\n",
-			 vtype(i), j, vlentry.name,
+			(VLDB_CHECK_ERROR,"address %u (offset 0x%0x): %s Id Hash %d: volume name '%s': Incorrect Id hash chain (should be in %d)\n",
+			 addr, OFFSET(addr), vtype(i), j, vlentry.name,
 			 IdHash(vlentry.volumeId[i]));
 		    record[rindex].type |= badhash;
 		}
@@ -880,20 +880,20 @@ FollowFreeChain(struct vlheader *header)
 	readentry(addr, &vlentry, &type);
 	if (type != FR) {
 	   log_error
-		(VLDB_CHECK_ERROR,"Free Chain %d: Bad entry at %u: Not a valid free vlentry (0x%x)\n",
-		 count, addr, type);
+		(VLDB_CHECK_ERROR,"address %u (offset 0%0x): Free Chain %d: Not a free vlentry (0x%x)\n",
+		 addr, OFFSET(addr), count, type);
 	    continue;
 	}
 
 	rindex = addr / sizeof(vlentry);
 	if (record[rindex].addr != addr && record[rindex].addr) {
 	   log_error
-		(VLDB_CHECK_ERROR,"INTERNAL VLDB_CHECK_ERROR: addresses %u and %ld use same record slot %d\n",
-		 record[rindex].addr, addr, rindex);
+		(VLDB_CHECK_ERROR,"INTERNAL VLDB_CHECK_ERROR: addresses %u (0x%0x) and %ld (0x%0x) use same record slot %d\n",
+		 record[rindex].addr, OFFSET(record[rindex].addr), addr, OFFSET(addr), rindex);
 	}
 	if (record[rindex].type & FRC) {
-	    log_error(VLDB_CHECK_ERROR,"Free Chain: Bad entry at %u: Already in the free chain\n",
-		   addr);
+	    log_error(VLDB_CHECK_ERROR,"address %u (offset 0x%0x): Free Chain: Already in the free chain\n",
+		   addr, OFFSET(addr));
 	    break;
 	}
 	record[rindex].type |= FRC;
@@ -945,8 +945,8 @@ CheckIpAddrs(struct vlheader *header)
 	readMH(header->SIT, 0, MHblock);
 	if (MHblock->ex_flags != VLCONTBLOCK) {
 	   log_error
-		(VLDB_CHECK_ERROR,"Multihomed Block 0: Bad entry at %u: Not a valid multihomed block\n",
-		 header->SIT);
+		(VLDB_CHECK_ERROR,"address %u (offset 0x%0x): Multihomed Block 0: Not a multihomed block\n",
+		 header->SIT, OFFSET(header->SIT));
 	}
 
 	for (i = 0; i < VL_MAX_ADDREXTBLKS; i++) {
@@ -955,8 +955,8 @@ CheckIpAddrs(struct vlheader *header)
 
 	if (header->SIT != mhinfo[0].addr) {
 	   log_error
-		(VLDB_CHECK_ERROR,"MH block does not point to self %u in header, %u in block\n",
-		 header->SIT, mhinfo[0].addr);
+		(VLDB_CHECK_ERROR,"address %u (offset 0x%0x): MH block does not point to self in header, %u in block\n",
+		 header->SIT, OFFSET(header->SIT), mhinfo[0].addr);
 	}
 
 	/* Now read each MH block and record it in the record array */
@@ -967,20 +967,20 @@ CheckIpAddrs(struct vlheader *header)
 	    readMH(mhinfo[i].addr, i, MHblock);
 	    if (MHblock->ex_flags != VLCONTBLOCK) {
 	        log_error
-		    (VLDB_CHECK_ERROR,"Multihomed Block 0: Bad entry at %u: Not a valid multihomed block\n",
-		     header->SIT);
+		    (VLDB_CHECK_ERROR,"address %u (offset 0x%0x): Multihomed Block 0: Not a multihomed block\n",
+		     header->SIT, OFFSET(header->SIT));
 	    }
 
 	    rindex = mhinfo[i].addr / sizeof(vlentry);
 	    if (record[rindex].addr != mhinfo[i].addr && record[rindex].addr) {
 	        log_error
-		    (VLDB_CHECK_ERROR,"INTERNAL VLDB_CHECK_ERROR: addresses %u and %u use same record slot %d\n",
-		     record[rindex].addr, mhinfo[i].addr, rindex);
+		    (VLDB_CHECK_ERROR,"INTERNAL VLDB_CHECK_ERROR: addresses %u (0x%0x) and %u (0x%0x) use same record slot %d\n",
+		     record[rindex].addr, OFFSET(record[rindex].addr), mhinfo[i].addr, OFFSET(mhinfo[i].addr), rindex);
 	    }
 	    if (record[rindex].type & FRC) {
 	        log_error
-		    (VLDB_CHECK_ERROR,"MH Blocks Chain %d: Bad entry at %ld: Already a MH block\n",
-		     i, record[rindex].addr);
+		    (VLDB_CHECK_ERROR,"address %u (offset 0x%0x): MH Blocks Chain %d: Already a MH block\n",
+		     record[rindex].addr, OFFSET(record[rindex].addr), i);
 		break;
 	    }
 	    record[rindex].type |= MHC;
@@ -1334,9 +1334,17 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 
 	    readentry(record[i].addr, &vlentry, &type);
 
+	    if (!(vlentry.flags & VLF_RWEXISTS))
+		log_error(VLDB_CHECK_ERROR,"address %u (offset 0x%0x): Volume '%s' (%u) has no RW volume\n",
+		       record[i].addr, OFFSET(record[i].addr), vlentry.name, vlentry.volumeId[0]);
+
 	    if (InvalidVolname(vlentry.name))
-		log_error(VLDB_CHECK_ERROR,"Volume '%s' at addr %ld has an invalid name\n",
-		       vlentry.name, record[i].addr);
+		log_error(VLDB_CHECK_ERROR,"address %u (offset 0x%0x): Volume '%s' (%u) has an invalid name\n",
+		       record[i].addr, OFFSET(record[i].addr), vlentry.name, vlentry.volumeId[0]);
+
+	    if (vlentry.volumeId[0] == 0)
+		log_error(VLDB_CHECK_ERROR,"address %u (offset 0x%0x): Volume '%s' (%u) has an invalid volume id\n",
+		       record[i].addr, OFFSET(record[i].addr), vlentry.name, vlentry.volumeId[0]);
 
 	    if (!(record[i].type & NH)) {
 		hash = NameHash(vlentry.name);
@@ -1427,11 +1435,15 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	    }
 
 	    if (foundbroken) {
-		log_error(VLDB_CHECK_ERROR, "%d: Volume '%s' %s forward link in %s hash chain is broken (hash %d != %d)\n", i,
-			  vlentry.name, volidbuf, which, hash, nexthash);
+		log_error(VLDB_CHECK_ERROR,
+			"address %u (offset 0x%0x): Volume '%s' %s forward link in %s hash chain is broken (hash %d != %d)\n",
+			record[i].addr, OFFSET(record[i].addr),
+			vlentry.name, volidbuf, which, hash, nexthash);
 	    } else if (foundbad) {
-		log_error(VLDB_CHECK_ERROR, "%d: Volume '%s' %snot found in %s hash %d\n", i,
-		       vlentry.name, volidbuf, which, hash);
+		log_error(VLDB_CHECK_ERROR,
+			"address %u (offset 0x%0x): Volume '%s' %snot found in %s hash %d\n",
+			record[i].addr, OFFSET(record[i].addr),
+			vlentry.name, volidbuf, which, hash);
 	    }
 
 	    for (j = 0; j < NMAXNSERVERS; j++) {
@@ -1439,46 +1451,46 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		    serverref[vlentry.serverNumber[j]] = 1;
 		    if (serveraddrs[vlentry.serverNumber[j]] == 0) {
 			log_error
-			    (VLDB_CHECK_ERROR,"Volume '%s', index %d points to empty server entry %d\n",
-			     vlentry.name, j, vlentry.serverNumber[j]);
+			    (VLDB_CHECK_ERROR,"address %u (offset 0x%0x): Volume '%s', index %d points to empty server entry %d\n",
+			     record[i].addr, OFFSET(record[i].addr), vlentry.name, j, vlentry.serverNumber[j]);
 		    } else if (serverxref[vlentry.serverNumber[j]] != BADSERVERID) {
 			    log_error
-			    (VLDB_CHECK_ERROR,"Volume '%s', index %d points to server entry %d, which is cross-linked by %d\n",
-			     vlentry.name, j, vlentry.serverNumber[j], serverxref[vlentry.serverNumber[j]]);
+			    (VLDB_CHECK_ERROR,"address %u (offset 0x%0x): Volume '%s', index %d points to server entry %d, which is cross-linked by %d\n",
+			     record[i].addr, OFFSET(record[i].addr), vlentry.name, j, vlentry.serverNumber[j], serverxref[vlentry.serverNumber[j]]);
 		    }
 		}
 	    }
 
 	    if (record[i].type & 0xffff0f00)
 	        log_error
-		    (VLDB_CHECK_ERROR,"Volume '%s' id %u also found on other chains (0x%x)\n",
-		     vlentry.name, vlentry.volumeId[0], record[i].type);
+		    (VLDB_CHECK_ERROR,"address %u (offset 0x%0x): Volume '%s' id %u also found on other chains (0x%x)\n",
+		     record[i].addr, OFFSET(record[i].addr), vlentry.name, vlentry.volumeId[0], record[i].type);
 
 	    /* A free entry */
 	} else if (record[i].type & FR) {
 	    if (!(record[i].type & FRC))
-		log_error(VLDB_CHECK_ERROR,"Free vlentry at %ld not on free chain\n",
-		       record[i].addr);
+		log_error(VLDB_CHECK_ERROR,"address %u (offset 0x%0x): Free vlentry not on free chain\n",
+		       record[i].addr, OFFSET(record[i].addr));
 
 	    if (record[i].type & 0xfffffdf0)
 	        log_error
-		    (VLDB_CHECK_ERROR,"Free vlentry at %ld also found on other chains (0x%x)\n",
-		     record[i].addr, record[i].type);
+		    (VLDB_CHECK_ERROR,"address %u (offset 0x%0x): Free vlentry also found on other chains (0x%x)\n",
+		     record[i].addr, OFFSET(record[i].addr), record[i].type);
 
 	    /* A multihomed entry */
 	} else if (record[i].type & MH) {
 	    if (!(record[i].type & MHC))
-		log_error(VLDB_CHECK_ERROR,"Multihomed block at %ld is orphaned\n",
-		       record[i].addr);
+		log_error(VLDB_CHECK_ERROR,"address %u (offset 0x%0x): Multihomed block is orphaned\n",
+		       record[i].addr, OFFSET(record[i].addr));
 
 	    if (record[i].type & 0xfffffef0)
 	        log_error
-		    (VLDB_CHECK_ERROR,"Multihomed block at %ld also found on other chains (0x%x)\n",
-		     record[i].addr, record[i].type);
+		    (VLDB_CHECK_ERROR,"address %u (offset 0x%0x): Multihomed block also found on other chains (0x%x)\n",
+		     record[i].addr, OFFSET(record[i].addr), record[i].type);
 
 	} else {
-	    log_error(VLDB_CHECK_ERROR,"Unknown entry type at %u (0x%x)\n", record[i].addr,
-		   record[i].type);
+	    log_error(VLDB_CHECK_ERROR,"address %u (offset 0x%0x): Unknown entry type 0x%x\n",
+		   record[i].addr, OFFSET(record[i].addr), record[i].type);
 	}
     }
 
@@ -1500,26 +1512,41 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	if (record[i].type & VL) {
 	    readentry(record[i].addr, &vlentry, &type);
 	    if (!(record[i].type & REFN)) {
-		log_error(VLDB_CHECK_ERROR,"%d: Record %ld (type 0x%x) not in a name chain\n", i,
-		       record[i].addr, record[i].type);
+		log_error(VLDB_CHECK_ERROR,"address %u (offset 0x%0x): Record is not in a name chain (type 0x%0x)\n",
+		       record[i].addr, OFFSET(record[i].addr), record[i].type);
 	    }
 	    if (vlentry.volumeId[0] && !(record[i].type & REFRW)) {
-		log_error(VLDB_CHECK_ERROR,"%d: Record %ld (type 0x%x) not in a RW chain\n", i,
-		       record[i].addr, record[i].type);
+		log_error(VLDB_CHECK_ERROR,"address %u (offset 0x%0x): Record not in a RW chain (type 0x%0x)\n",
+		       record[i].addr, OFFSET(record[i].addr), record[i].type);
 	    }
 	    if (vlentry.volumeId[1] && !(record[i].type & REFRO)) {
-		log_error(VLDB_CHECK_ERROR,"%d: Record %ld (type 0x%x) not in a RO chain\n", i,
-		       record[i].addr, record[i].type);
+		log_error(VLDB_CHECK_ERROR,"address %u (offset 0x%0x): Record not in a RO chain (type 0x%0x)\n",
+		       record[i].addr, OFFSET(record[i].addr), record[i].type);
 	    }
 	    if (vlentry.volumeId[2] && !(record[i].type & REFBK)) {
-		log_error(VLDB_CHECK_ERROR,"%d: Record %ld (type 0x%x) not in a BK chain\n", i,
-		       record[i].addr, record[i].type);
+		log_error(VLDB_CHECK_ERROR,"address %u (offset 0x%0x): Record not in a BK chain (type 0x%0x)\n",
+		       record[i].addr, OFFSET(record[i].addr), record[i].type);
 	    }
 	    if (fix) {
 		afs_uint32 oldhash, newhash;
 		char oldNameBuffer[10 + VL_MAXNAMELEN];
 		char newNameBuffer[10 + VL_MAXNAMELEN];
 		char *oldname, *newname;
+
+		/* Fix broken names and numbers so entries can be inspected and deleted. */
+		if (InvalidVolname(vlentry.name)) {
+		    char bogus[VL_MAXNAMELEN];
+		    memset(bogus, 0, sizeof(bogus));
+		    snprintf(bogus, sizeof(bogus)-1, ".bogus.%ld", record[i].addr);
+		    strcpy(vlentry.name, bogus);
+		    quiet_println("FIX: Record %ld invalid volume name set to '%s'\n", record[i].addr, bogus);
+		}
+		if (vlentry.volumeId[0] == 0) {
+		    afs_uint32 next_volid = header.vital_header.MaxVolumeId++;
+		    vlentry.volumeId[0] = next_volid;
+		    quiet_println("FIX: Record %ld invalid volume id set to %ld. New max volid is %ld\n",
+			record[i].addr, next_volid, header.vital_header.MaxVolumeId);
+		}
 
 		/*
 		 * Put the current hash table contexts into our 'next'

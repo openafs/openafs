@@ -12,7 +12,6 @@
 
 #ifdef AFS_PTHREAD_ENV
 #include <pthread.h>
-#include <afs/afs_assert.h>
 
 typedef struct {
     pthread_mutex_t mut;

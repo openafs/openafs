@@ -173,8 +173,8 @@ init_once_func(void * foo) {
 
 #ifdef LINUX_KEYRING_SUPPORT
 static inline struct key *
-afs_linux_key_alloc(struct key_type *type, const char *desc, uid_t uid,
-		    gid_t gid, key_perm_t perm, unsigned long flags)
+afs_linux_key_alloc(struct key_type *type, const char *desc, afs_kuid_t uid,
+		    afs_kgid_t gid, key_perm_t perm, unsigned long flags)
 {
 # if defined(KEY_ALLOC_NEEDS_STRUCT_TASK)
     return key_alloc(type, desc, uid, gid, current, perm, flags);

@@ -33,50 +33,78 @@ ${TOP_LIBDIR}/libafsadminutil.a: libafsadminutil.a
 ${TOP_INCDIR}/afs/afs_utilAdmin.h: afs_utilAdmin.h
 	${INSTALL_DATA} $? $@
 
-afs_AdminBosErrors.c ${DESTDIR}/include/afs/afs_AdminBosErrors.h: afs_AdminBosErrors.et
+afs_AdminBosErrors.h: afs_AdminBosErrors.c
+afs_AdminBosErrors.c: afs_AdminBosErrors.et
 	${INSTALL_DATA} ${srcdir}/afs_AdminErrors.h ${TOP_INCDIR}/afs
 	$(RM) -f afs_AdminBosErrors.c afs_AdminBosErrors.h
 	${COMPILE_ET} -p ${srcdir} afs_AdminBosErrors.et -h afs_AdminBosErrors
+
+${TOP_INCDIR}/afs/afs_AdminBosErrors.h: afs_AdminBosErrors.h
 	cp afs_AdminBosErrors.h ${TOP_INCDIR}/afs/afs_AdminBosErrors.h
 
-afs_AdminCfgErrors.c ${DESTDIR}/include/afs/afs_AdminCfgErrors.h: afs_AdminCfgErrors.et
+afs_AdminCfgErrors.h: afs_AdminCfgErrors.c
+afs_AdminCfgErrors.c: afs_AdminCfgErrors.et
 	$(RM) -f ${srcdir}/afs_AdminCfgErrors.c afs_AdminCfgErrors.h
 	${COMPILE_ET} -p ${srcdir} afs_AdminCfgErrors.et -h afs_AdminCfgErrors
+
+${TOP_INCDIR}/afs/afs_AdminCfgErrors.h: afs_AdminCfgErrors.h
 	cp afs_AdminCfgErrors.h ${TOP_INCDIR}/afs/afs_AdminCfgErrors.h
 
-afs_AdminClientErrors.c ${DESTDIR}/include/afs/afs_AdminClientErrors.h: afs_AdminClientErrors.et
+afs_AdminClientErrors.h: afs_AdminClientErrors.c
+afs_AdminClientErrors.c: afs_AdminClientErrors.et
 	$(RM) -f ${srcdir}/afs_AdminClientErrors.c afs_AdminClientErrors.h
 	${COMPILE_ET} -p ${srcdir} afs_AdminClientErrors.et -h afs_AdminClientErrors
+
+${TOP_INCDIR}/afs/afs_AdminClientErrors.h: afs_AdminClientErrors.h
 	cp afs_AdminClientErrors.h ${TOP_INCDIR}/afs/afs_AdminClientErrors.h
 
-afs_AdminMiscErrors.c ${DESTDIR}/include/afs/afs_AdminMiscErrors.h: afs_AdminMiscErrors.et
+afs_AdminMiscErrors.h: afs_AdminMiscErrors.c
+afs_AdminMiscErrors.c: afs_AdminMiscErrors.et
 	$(RM) -f ${srcdir}/afs_AdminMiscErrors.c afs_AdminMiscErrors.h
 	${COMPILE_ET} -p ${srcdir} afs_AdminMiscErrors.et -h afs_AdminMiscErrors
+
+${TOP_INCDIR}/afs/afs_AdminMiscErrors.h: afs_AdminMiscErrors.h
 	cp afs_AdminMiscErrors.h ${TOP_INCDIR}/afs/afs_AdminMiscErrors.h
 
-afs_AdminCommonErrors.c ${DESTDIR}/include/afs/afs_AdminCommonErrors.h: afs_AdminCommonErrors.et
+afs_AdminCommonErrors.h: afs_AdminCommonErrors.c
+afs_AdminCommonErrors.c: afs_AdminCommonErrors.et
 	$(RM) -f ${srcdir}/afs_AdminCommonErrors.c afs_AdminCommonErrors.h
 	${COMPILE_ET} -p ${srcdir} afs_AdminCommonErrors.et -h afs_AdminCommonErrors
+
+${TOP_INCDIR}/afs/afs_AdminCommonErrors.h: afs_AdminCommonErrors.h
 	cp afs_AdminCommonErrors.h ${TOP_INCDIR}/afs/afs_AdminCommonErrors.h
 
-afs_AdminKasErrors.c ${DESTDIR}/include/afs/afs_AdminKasErrors.h: afs_AdminKasErrors.et
+afs_AdminKasErrors.h: afs_AdminKasErrors.c
+afs_AdminKasErrors.c: afs_AdminKasErrors.et
 	$(RM) -f ${srcdir}/afs_AdminKasErrors.c afs_AdminKasErrors.h
 	${COMPILE_ET} -p ${srcdir} afs_AdminKasErrors.et -h afs_AdminKasErrors
+
+${TOP_INCDIR}/afs/afs_AdminKasErrors.h: afs_AdminKasErrors.h
 	cp afs_AdminKasErrors.h ${TOP_INCDIR}/afs/afs_AdminKasErrors.h
 
-afs_AdminPtsErrors.c ${DESTDIR}/include/afs/afs_AdminPtsErrors.h: afs_AdminPtsErrors.et
+afs_AdminPtsErrors.h: afs_AdminPtsErrors.c
+afs_AdminPtsErrors.c: afs_AdminPtsErrors.et
 	$(RM) -f ${srcdir}/afs_AdminPtsErrors.c afs_AdminPtsErrors.h
 	${COMPILE_ET} -p ${srcdir} afs_AdminPtsErrors.et -h afs_AdminPtsErrors
+
+${TOP_INCDIR}/afs/afs_AdminPtsErrors.h: afs_AdminPtsErrors.h
 	cp afs_AdminPtsErrors.h ${TOP_INCDIR}/afs/afs_AdminPtsErrors.h
 
-afs_AdminUtilErrors.c ${DESTDIR}/include/afs/afs_AdminUtilErrors.h: afs_AdminUtilErrors.et
+afs_AdminUtilErrors.h:	afs_AdminUtilErrors.c
+afs_AdminUtilErrors.c: afs_AdminUtilErrors.et
 	$(RM) -f ${srcdir}/afs_AdminUtilErrors.c afs_AdminUtilErrors.h
 	${COMPILE_ET} -p ${srcdir} afs_AdminUtilErrors.et -h afs_AdminUtilErrors
+
+${TOP_INCDIR}/afs/afs_AdminUtilErrors.h: afs_AdminUtilErrors.h
 	cp afs_AdminUtilErrors.h ${TOP_INCDIR}/afs/afs_AdminUtilErrors.h
 
-afs_AdminVosErrors.c ${DESTDIR}/include/afs/afs_AdminVosErrors.h: afs_AdminVosErrors.et
+afs_AdminVosErrors.c: afs_AdminVosErrors.et
 	$(RM) -f ${srcdir}/afs_AdminVosErrors.c afs_AdminVosErrors.h
 	${COMPILE_ET} -p ${srcdir} afs_AdminVosErrors.et -h afs_AdminVosErrors
+
+afs_AdminVosErrors.h:	afs_AdminVosErrors.c
+
+${TOP_INCDIR}/afs/afs_AdminVosErrors.h: afs_AdminVosErrors.h
 	cp afs_AdminVosErrors.h ${TOP_INCDIR}/afs/afs_AdminVosErrors.h
 
 ERROROBJS = \
@@ -122,7 +150,11 @@ libafsadminutil.a: ${LIBOBJS}
 	$(AR) crv $@ ${LIBOBJS}
 	${RANLIB} $@
 
-afs_utilAdmin.o: afs_utilAdmin.h
+afs_utilAdmin.o: afs_utilAdmin.h ${TOP_INCDIR}/afs/afs_AdminBosErrors.h ${TOP_INCDIR}/afs/afs_AdminUtilErrors.h \
+				${TOP_INCDIR}/afs/afs_AdminVosErrors.h ${TOP_INCDIR}/afs/afs_AdminClientErrors.h \
+				${TOP_INCDIR}/afs/afs_AdminCommonErrors.h ${TOP_INCDIR}/afs/afs_AdminKasErrors.h \
+				${TOP_INCDIR}/afs/afs_AdminMiscErrors.h ${TOP_INCDIR}/afs/afs_AdminPtsErrors.h \
+				${TOP_INCDIR}/afs/afs_AdminCfgErrors.h ${TOP_INCDIR}/afs/afs_AdminPtsErrors.h
 
 ktc_errors.o: ${AUTH}/ktc_errors.c
 	${CCRULE}

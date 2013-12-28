@@ -854,7 +854,7 @@ GetVolumePackage(struct rx_call *acall, AFSFid * Fid, Volume ** volptr,
 		 struct client **client, int locktype, afs_int32 * rights,
 		 afs_int32 * anyrights)
 {
-    struct acl_accessList *aCL;	/* Internal access List */
+    struct acl_accessList *aCL = NULL;	/* Internal access List */
     int aCLSize;		/* size of the access list */
     Error errorCode = 0;		/* return code to caller */
     struct rx_connection *tcon = rx_ConnectionOf(acall);
@@ -2956,7 +2956,13 @@ SRXAFS_InlineBulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
 			      &parentwhentargetnotdir, &client, READ_LOCK,
 			      &rights, &anyrights))) {
 	    tstatus = &OutStats->AFSBulkStats_val[i];
-	    tstatus->errorCode = errorCode;
+
+	    if (thost->hostFlags & HERRORTRANS) {
+		tstatus->errorCode = sys_error_to_et(errorCode);
+	    } else {
+		tstatus->errorCode = errorCode;
+	    }
+
 	    PutVolumePackage(acall, parentwhentargetnotdir, targetptr,
 			     (Vnode *) 0, volptr, &client);
 	    parentwhentargetnotdir = (Vnode *) 0;
@@ -2980,7 +2986,13 @@ SRXAFS_InlineBulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
 		 Check_PermissionRights(targetptr, client, rights,
 					CHK_FETCHSTATUS, 0))) {
 		tstatus = &OutStats->AFSBulkStats_val[i];
-		tstatus->errorCode = errorCode;
+
+		if (thost->hostFlags & HERRORTRANS) {
+		    tstatus->errorCode = sys_error_to_et(errorCode);
+		} else {
+		    tstatus->errorCode = errorCode;
+		}
+
 		(void)PutVolumePackage(acall, parentwhentargetnotdir,
 				       targetptr, (Vnode *) 0, volptr,
 				       &client);
@@ -6540,6 +6552,25 @@ SRXAFS_GetCapabilities(struct rx_call * acall, Capabilities * capabilities)
     return code;
 }
 
+/* client is held, but not locked */
+static int
+FlushClientCPS(struct client *client, void *arock)
+{
+    ObtainWriteLock(&client->lock);
+
+    client->prfail = 2;	/* Means re-eval client's cps */
+
+    if ((client->ViceId != ANONYMOUSID) && client->CPS.prlist_val) {
+	free(client->CPS.prlist_val);
+	client->CPS.prlist_val = NULL;
+	client->CPS.prlist_len = 0;
+    }
+
+    ReleaseWriteLock(&client->lock);
+
+    return 0;
+}
+
 afs_int32
 SRXAFS_FlushCPS(struct rx_call * acall, struct ViceIds * vids,
 		struct IPAddrs * addrs, afs_int32 spare1, afs_int32 * spare2,
@@ -6549,12 +6580,17 @@ SRXAFS_FlushCPS(struct rx_call * acall, struct ViceIds * vids,
     afs_int32 nids, naddrs;
     afs_int32 *vd, *addr;
     Error errorCode = 0;		/* return code to caller */
-    struct client *client = 0;
 
     ViceLog(1, ("SRXAFS_FlushCPS\n"));
     FS_LOCK;
     AFSCallStats.TotalCalls++;
     FS_UNLOCK;
+
+    if (!viced_SuperUser(acall)) {
+	errorCode = EPERM;
+	goto Bad_FlushCPS;
+    }
+
     nids = vids->ViceIds_len;	/* # of users in here */
     naddrs = addrs->IPAddrs_len;	/* # of hosts in here */
     if (nids < 0 || naddrs < 0) {
@@ -6566,23 +6602,7 @@ SRXAFS_FlushCPS(struct rx_call * acall, struct ViceIds * vids,
     for (i = 0; i < nids; i++, vd++) {
 	if (!*vd)
 	    continue;
-	client = h_ID2Client(*vd);	/* returns write locked and refCounted, or NULL */
-	if (!client)
-	    continue;
-
-	client->prfail = 2;	/* Means re-eval client's cps */
-#ifdef	notdef
-	if (client->tcon) {
-	    rx_SetRock(((struct rx_connection *)client->tcon), 0);
-	}
-#endif
-	if ((client->ViceId != ANONYMOUSID) && client->CPS.prlist_val) {
-	    free(client->CPS.prlist_val);
-	    client->CPS.prlist_val = NULL;
-	    client->CPS.prlist_len = 0;
-	}
-	ReleaseWriteLock(&client->lock);
-	PutClient(&client);
+	h_EnumerateClients(*vd, FlushClientCPS, NULL);
     }
 
     addr = addrs->IPAddrs_val;

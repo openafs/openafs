@@ -17,17 +17,18 @@
 #ifndef __volinodes_h_
 #define __volinodes_h_
 
-/* Used by vutil.c and salvager.c */
+#include <stddef.h>
 
-private struct VolumeHeader tempHeader;
+/* Used by vutil.c and salvager.c */
 
 #ifdef AFS_NAMEI_ENV
 #define NO_LINK_TABLE 0
 #else
 #define NO_LINK_TABLE 1
 #endif
-AFS_UNUSED
-private struct stuff {
+
+#define MAXINODETYPE VI_LINKTABLE
+static struct afs_inode_info {
     struct versionStamp stamp;
     bit32 inodeType;
     int size;			/* size of any fixed size portion of the header */
@@ -37,26 +38,76 @@ private struct stuff {
      * salvager may delete it, and shouldn't complain
      * if it isn't there; create can not bother to create it */
     int obsolete;
-} stuff[] = {
-    { {
-    VOLUMEINFOMAGIC, VOLUMEINFOVERSION}, VI_VOLINFO, sizeof(VolumeDiskData),
-	&tempHeader.volumeInfo, "Volume information", 0}
-    , { {
-    SMALLINDEXMAGIC, SMALLINDEXVERSION}
-    , VI_SMALLINDEX, sizeof(struct versionStamp), &tempHeader.smallVnodeIndex,
-	"small inode index", 0}, { {
-    LARGEINDEXMAGIC, LARGEINDEXVERSION}, VI_LARGEINDEX,
-	sizeof(struct versionStamp), &tempHeader.largeVnodeIndex,
-	"large inode index", 0}, { {
-    ACLMAGIC, ACLVERSION}, VI_ACL, sizeof(struct versionStamp),
-	&tempHeader.volumeAcl, "access control list", 1}, { {
-    MOUNTMAGIC, MOUNTVERSION}, VI_MOUNTTABLE, sizeof(struct versionStamp),
-	&tempHeader.volumeMountTable, "mount table", 1}, { {
-LINKTABLEMAGIC, LINKTABLEVERSION}, VI_LINKTABLE,
-	sizeof(struct versionStamp), &tempHeader.linkTable, "link table",
-	NO_LINK_TABLE},};
+} afs_common_inode_info[MAXINODETYPE] = {
+    {
+	{VOLUMEINFOMAGIC, VOLUMEINFOVERSION},
+	VI_VOLINFO,
+	sizeof(VolumeDiskData),
+	(Inode*)offsetof(struct VolumeHeader, volumeInfo),
+	"Volume information",
+	0
+    },
+    {
+	{SMALLINDEXMAGIC, SMALLINDEXVERSION},
+	VI_SMALLINDEX,
+	sizeof(struct versionStamp),
+	(Inode*)offsetof(struct VolumeHeader, smallVnodeIndex),
+	"small inode index",
+	0
+    },
+    {
+	{LARGEINDEXMAGIC, LARGEINDEXVERSION},
+	VI_LARGEINDEX,
+	sizeof(struct versionStamp),
+	(Inode*)offsetof(struct VolumeHeader, largeVnodeIndex),
+	"large inode index",
+	0
+    },
+    {
+	{ACLMAGIC, ACLVERSION},
+	VI_ACL,
+	sizeof(struct versionStamp),
+	(Inode*)offsetof(struct VolumeHeader, volumeAcl),
+	"access control list",
+	1
+    },
+    {
+	{MOUNTMAGIC, MOUNTVERSION},
+	VI_MOUNTTABLE,
+	sizeof(struct versionStamp),
+	(Inode*)offsetof(struct VolumeHeader, volumeMountTable),
+	"mount table",
+	1
+    },
+    {
+	{LINKTABLEMAGIC, LINKTABLEVERSION},
+	VI_LINKTABLE,
+	sizeof(struct versionStamp),
+	(Inode*)offsetof(struct VolumeHeader, linkTable),
+	"link table",
+	NO_LINK_TABLE
+    },
+};
 /* inodeType is redundant in the above table;  it used to be useful, but now
    we require the table to be ordered */
-#define MAXINODETYPE VI_LINKTABLE
+
+/**
+ * initialize a struct afs_inode_info
+ *
+ * @param[in] header  the volume header struct to use when referencing volume
+ *                    header fields in 'stuff'
+ * @param[out] stuff  the struct afs_inode_info to initialize
+ *
+ */
+static_inline void
+init_inode_info(struct VolumeHeader *header,
+                struct afs_inode_info *stuff)
+{
+    int i;
+    memcpy(stuff, afs_common_inode_info, sizeof(afs_common_inode_info));
+    for (i = 0; i < MAXINODETYPE; i++) {
+	stuff[i].inode = (Inode*)((char*)header + (uintptr_t)stuff[i].inode);
+    }
+}
 
 #endif /* __volinodes_h_ */

@@ -590,6 +590,16 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
 #endif /* F_GETLK64 && F_GETLK != F_GETLK64 */
 
     AFS_GLOCK();
+    if ((vcp->f.states & CRO)) {
+	if (flp->fl_type == F_WRLCK) {
+	    code = EBADF;
+	} else {
+	    code = 0;
+	}
+	AFS_GUNLOCK();
+	crfree(credp);
+	return code;
+    }
     code = afs_convert_code(afs_lockctl(vcp, &flock, cmd, credp));
     AFS_GUNLOCK();
 
@@ -992,9 +1002,9 @@ iattr2vattr(struct vattr *vattrp, struct iattr *iattrp)
     if (iattrp->ia_valid & ATTR_MODE)
 	vattrp->va_mode = iattrp->ia_mode;
     if (iattrp->ia_valid & ATTR_UID)
-	vattrp->va_uid = iattrp->ia_uid;
+	vattrp->va_uid = afs_from_kuid(iattrp->ia_uid);
     if (iattrp->ia_valid & ATTR_GID)
-	vattrp->va_gid = iattrp->ia_gid;
+	vattrp->va_gid = afs_from_kgid(iattrp->ia_gid);
     if (iattrp->ia_valid & ATTR_SIZE)
 	vattrp->va_size = iattrp->ia_size;
     if (iattrp->ia_valid & ATTR_ATIME) {
@@ -1032,8 +1042,8 @@ vattr2inode(struct inode *ip, struct vattr *vp)
 #endif
     ip->i_rdev = vp->va_rdev;
     ip->i_mode = vp->va_mode;
-    ip->i_uid = vp->va_uid;
-    ip->i_gid = vp->va_gid;
+    ip->i_uid = afs_make_kuid(vp->va_uid);
+    ip->i_gid = afs_make_kgid(vp->va_gid);
     i_size_write(ip, vp->va_size);
     ip->i_atime.tv_sec = vp->va_atime.tv_sec;
     ip->i_atime.tv_nsec = 0;
@@ -1414,25 +1424,7 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
     AFS_GUNLOCK();
 
     if (ip && S_ISDIR(ip->i_mode)) {
-	int retry = 1;
-	struct dentry *alias;
-	int safety;
-
-	for (safety = 0; retry && safety < 64; safety++) {
-	    retry = 0;
-
-	    /* Try to invalidate an existing alias in favor of our new one */
-	    alias = d_find_alias(ip);
-	    /* But not if it's disconnected; then we want d_splice_alias below */
-	    if (alias && !(alias->d_flags & DCACHE_DISCONNECTED)) {
-		if (d_invalidate(alias) == 0) {
-		    /* there may be more aliases; try again until we run out */
-		    retry = 1;
-		}
-	    }
-
-	    dput(alias);
-	}
+	d_prune_aliases(ip);
 
 #ifdef STRUCT_DENTRY_OPERATIONS_HAS_D_AUTOMOUNT
 	ip->i_flags |= S_AUTOMOUNT;
