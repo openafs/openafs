@@ -1,6 +1,41 @@
 openafs (1.6.6~pre2-1) UNRELEASED; urgency=low
 
   * New upstream pre-release.
+    - Linux kernels up to 3.12 are now supported, including kernels with
+      user namespace support enabled (which affects Debian's 3.12-1 kernel
+      and newer).
+    - Fixed core dumps into AFS with current kernels.
+    - When starting the client fails, backing device information created
+      in sysfs is now properly cleared.
+    - The AFS mountpoint specified in the cacheinfo file must now be an
+      absolute path.
+    - Stop tracking file locks on read-only volumes.  Write locks always
+      fail and read locks always succeed.
+    - New fs flushall command to discard all cached data.
+    - Fixed a bug that could cause the client to incorrectly believe its
+      cache was up to date.
+    - New -rxmaxfrags switch to afsd to limit the number of UDP fragments
+      sent or received per RX packet.
+    - Fixed afsd threads entering an infinite loop.
+    - The file server now ignores any vice partitions with a NeverAttach
+      flag file present in the root directory.
+    - Enabled server-side NAT pings to refresh NAT timeouts.
+    - Forcing file server CPS recalculation (for IP ACLs) is now
+      restricted to administrators.
+    - vos examine of a volume in a transaction is now shown as busy again
+      rather than off-line.
+    - Multiple bug fixes to the salvager.
+    - Fixed a bug that could cause state information to be discarded when
+      restarting a large or busy file server.
+    - Fixed a vlserver bug during file server address registration.
+    - volserver supports a new -preserve-vol-stats option, which preserves
+      access statistics across volume restore and reclone operations.
+    - Releasing a volume after adding a new RO site no longer touches the
+      existing RO sites if the volume has not changed since the last
+      release.
+    - Fixed undefined ptserver behavior with too many allocated PTS ids.
+    - Avoid redefining assert in public header files.
+    - Documentation, diagnostics, and error message improvements.
 
  -- Russ Allbery <rra@debian.org>  Sat, 28 Dec 2013 11:00:17 -0800
 
