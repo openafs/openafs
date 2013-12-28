@@ -25,15 +25,14 @@
 #include "vlserver.h"
 #include "vlserver_internal.h"
 
-extern struct vlheader cheader;
 struct vlheader xheader;
-extern afs_uint32 HostAddress[];
 extern int maxnservers;
 struct extentaddr extentaddr;
-extern struct extentaddr *ex_addr[];
+struct extentaddr *rd_ex_addr[VL_MAX_ADDREXTBLKS] = { 0, 0, 0, 0 };
+struct vlheader rd_cheader;	/* kept in network byte order */
 int vldbversion = 0;
 
-static int index_OK(struct ubik_trans *trans, afs_int32 blockindex);
+static int index_OK(struct vl_ctx *ctx, afs_int32 blockindex);
 
 #define ERROR_EXIT(code) do { \
     error = (code); \
@@ -191,10 +190,10 @@ vlentryread(struct ubik_trans *trans, afs_int32 offset, char *buffer,
 
 /* Convenient write of small critical vldb header info to the database. */
 int
-write_vital_vlheader(struct ubik_trans *trans)
+write_vital_vlheader(struct vl_ctx *ctx)
 {
     if (vlwrite
-	(trans, 0, (char *)&cheader.vital_header, sizeof(vital_vlheader)))
+	(ctx->trans, 0, (char *)&ctx->cheader->vital_header, sizeof(vital_vlheader)))
 	return VL_IO;
     return 0;
 }
@@ -218,20 +217,20 @@ readExtents(struct ubik_trans *trans)
     int i;
 
     extent_mod = 0;
-    extentAddr = ntohl(cheader.SIT);
+    extentAddr = ntohl(rd_cheader.SIT);
     if (!extentAddr)
 	return 0;
 
     /* Read the first extension block */
-    if (!ex_addr[0]) {
-	ex_addr[0] = (struct extentaddr *)malloc(VL_ADDREXTBLK_SIZE);
-	if (!ex_addr[0])
+    if (!rd_ex_addr[0]) {
+	rd_ex_addr[0] = (struct extentaddr *)malloc(VL_ADDREXTBLK_SIZE);
+	if (!rd_ex_addr[0])
 	    ERROR_EXIT(VL_NOMEM);
     }
-    code = vlread(trans, extentAddr, (char *)ex_addr[0], VL_ADDREXTBLK_SIZE);
+    code = vlread(trans, extentAddr, (char *)rd_ex_addr[0], VL_ADDREXTBLK_SIZE);
     if (code) {
-	free(ex_addr[0]);	/* Not the place to create it */
-	ex_addr[0] = 0;
+	free(rd_ex_addr[0]);	/* Not the place to create it */
+	rd_ex_addr[0] = 0;
 	ERROR_EXIT(VL_IO);
     }
 
@@ -239,47 +238,47 @@ readExtents(struct ubik_trans *trans)
      * continuation blocks
      */
     for (i = 1; i < VL_MAX_ADDREXTBLKS; i++) {
-	if (!ex_addr[0]->ex_contaddrs[i])
+	if (!rd_ex_addr[0]->ex_contaddrs[i])
 	    continue;
 
 	/* Before reading it in, check to see if the address is good */
-	if ((ntohl(ex_addr[0]->ex_contaddrs[i]) <
-	     ntohl(ex_addr[0]->ex_contaddrs[i - 1]) + VL_ADDREXTBLK_SIZE)
-	    || (ntohl(ex_addr[0]->ex_contaddrs[i]) >
-		ntohl(cheader.vital_header.eofPtr) - VL_ADDREXTBLK_SIZE)) {
+	if ((ntohl(rd_ex_addr[0]->ex_contaddrs[i]) <
+	     ntohl(rd_ex_addr[0]->ex_contaddrs[i - 1]) + VL_ADDREXTBLK_SIZE)
+	    || (ntohl(rd_ex_addr[0]->ex_contaddrs[i]) >
+		ntohl(rd_cheader.vital_header.eofPtr) - VL_ADDREXTBLK_SIZE)) {
 	    extent_mod = 1;
-	    ex_addr[0]->ex_contaddrs[i] = 0;
+	    rd_ex_addr[0]->ex_contaddrs[i] = 0;
 	    continue;
 	}
 
 
 	/* Read the continuation block */
-	if (!ex_addr[i]) {
-	    ex_addr[i] = (struct extentaddr *)malloc(VL_ADDREXTBLK_SIZE);
-	    if (!ex_addr[i])
+	if (!rd_ex_addr[i]) {
+	    rd_ex_addr[i] = (struct extentaddr *)malloc(VL_ADDREXTBLK_SIZE);
+	    if (!rd_ex_addr[i])
 		ERROR_EXIT(VL_NOMEM);
 	}
 	code =
-	    vlread(trans, ntohl(ex_addr[0]->ex_contaddrs[i]),
-		   (char *)ex_addr[i], VL_ADDREXTBLK_SIZE);
+	    vlread(trans, ntohl(rd_ex_addr[0]->ex_contaddrs[i]),
+		   (char *)rd_ex_addr[i], VL_ADDREXTBLK_SIZE);
 	if (code) {
-	    free(ex_addr[i]);	/* Not the place to create it */
-	    ex_addr[i] = 0;
+	    free(rd_ex_addr[i]);	/* Not the place to create it */
+	    rd_ex_addr[i] = 0;
 	    ERROR_EXIT(VL_IO);
 	}
 
 	/* After reading it in, check to see if its a real continuation block */
-	if (ntohl(ex_addr[i]->ex_flags) != VLCONTBLOCK) {
+	if (ntohl(rd_ex_addr[i]->ex_flags) != VLCONTBLOCK) {
 	    extent_mod = 1;
-	    ex_addr[0]->ex_contaddrs[i] = 0;
-	    free(ex_addr[i]);	/* Not the place to create it */
-	    ex_addr[i] = 0;
+	    rd_ex_addr[0]->ex_contaddrs[i] = 0;
+	    free(rd_ex_addr[i]);	/* Not the place to create it */
+	    rd_ex_addr[i] = 0;
 	    continue;
 	}
     }
 
     if (extent_mod) {
-	code = vlwrite(trans, extentAddr, ex_addr[0], VL_ADDREXTBLK_SIZE);
+	code = vlwrite(trans, extentAddr, rd_ex_addr[0], VL_ADDREXTBLK_SIZE);
 	if (!code) {
 	    VLog(0, ("Multihome server support modification\n"));
 	}
@@ -310,15 +309,16 @@ UpdateCache(struct ubik_trans *trans, void *rock)
     int *builddb_rock = rock;
     int builddb = *builddb_rock;
     afs_int32 error = 0, i, code, ubcode;
+    extern afs_uint32 rd_HostAddress[];
 
     /* if version changed (or first call), read the header */
-    ubcode = vlread(trans, 0, (char *)&cheader, sizeof(cheader));
-    vldbversion = ntohl(cheader.vital_header.vldbversion);
+    ubcode = vlread(trans, 0, (char *)&rd_cheader, sizeof(rd_cheader));
+    vldbversion = ntohl(rd_cheader.vital_header.vldbversion);
 
     if (!ubcode && (vldbversion != 0)) {
-	memcpy(HostAddress, cheader.IpMappedAddr, sizeof(cheader.IpMappedAddr));
+	memcpy(rd_HostAddress, rd_cheader.IpMappedAddr, sizeof(rd_cheader.IpMappedAddr));
 	for (i = 0; i < MAXSERVERID + 1; i++) {	/* cvt HostAddress to host order */
-	    HostAddress[i] = ntohl(HostAddress[i]);
+	    rd_HostAddress[i] = ntohl(rd_HostAddress[i]);
 	}
 
 	code = readExtents(trans);
@@ -332,22 +332,22 @@ UpdateCache(struct ubik_trans *trans, void *rock)
 	    VLog(0, ("Can't read VLDB header, re-initialising...\n"));
 
 	    /* try to write a good header */
-	    memset(&cheader, 0, sizeof(cheader));
-	    cheader.vital_header.vldbversion = htonl(VLDBVERSION);
-	    cheader.vital_header.headersize = htonl(sizeof(cheader));
+	    memset(&rd_cheader, 0, sizeof(rd_cheader));
+	    rd_cheader.vital_header.vldbversion = htonl(VLDBVERSION);
+	    rd_cheader.vital_header.headersize = htonl(sizeof(rd_cheader));
 	    /* DANGER: Must get this from a master place!! */
-	    cheader.vital_header.MaxVolumeId = htonl(0x20000000);
-	    cheader.vital_header.eofPtr = htonl(sizeof(cheader));
+	    rd_cheader.vital_header.MaxVolumeId = htonl(0x20000000);
+	    rd_cheader.vital_header.eofPtr = htonl(sizeof(rd_cheader));
 	    for (i = 0; i < MAXSERVERID + 1; i++) {
-		cheader.IpMappedAddr[i] = 0;
-		HostAddress[i] = 0;
+		rd_cheader.IpMappedAddr[i] = 0;
+		rd_HostAddress[i] = 0;
 	    }
-	    code = vlwrite(trans, 0, (char *)&cheader, sizeof(cheader));
+	    code = vlwrite(trans, 0, (char *)&rd_cheader, sizeof(rd_cheader));
 	    if (code) {
 		VLog(0, ("Can't write VLDB header (error = %d)\n", code));
 		ERROR_EXIT(VL_IO);
 	    }
-	    vldbversion = ntohl(cheader.vital_header.vldbversion);
+	    vldbversion = ntohl(rd_cheader.vital_header.vldbversion);
 	} else {
 	    ERROR_EXIT(VL_EMPTY);
 	}
@@ -394,53 +394,53 @@ CheckInit(struct ubik_trans *trans, int builddb)
 
 
 afs_int32
-GetExtentBlock(struct ubik_trans *trans, afs_int32 base)
+GetExtentBlock(struct vl_ctx *ctx, register afs_int32 base)
 {
     afs_int32 blockindex, code, error = 0;
 
     /* Base 0 must exist before any other can be created */
-    if ((base != 0) && !ex_addr[0])
+    if ((base != 0) && !ctx->ex_addr[0])
 	ERROR_EXIT(VL_CREATEFAIL);	/* internal error */
 
-    if (!ex_addr[0] || !ex_addr[0]->ex_contaddrs[base]) {
+    if (!ctx->ex_addr[0] || !ctx->ex_addr[0]->ex_contaddrs[base]) {
 	/* Create a new extension block */
-	if (!ex_addr[base]) {
-	    ex_addr[base] = (struct extentaddr *)malloc(VL_ADDREXTBLK_SIZE);
-	    if (!ex_addr[base])
+	if (!ctx->ex_addr[base]) {
+	    ctx->ex_addr[base] = (struct extentaddr *)malloc(VL_ADDREXTBLK_SIZE);
+	    if (!ctx->ex_addr[base])
 		ERROR_EXIT(VL_NOMEM);
 	}
-	memset(ex_addr[base], 0, VL_ADDREXTBLK_SIZE);
+	memset(ctx->ex_addr[base], 0, VL_ADDREXTBLK_SIZE);
 
 	/* Write the full extension block at end of vldb */
-	ex_addr[base]->ex_flags = htonl(VLCONTBLOCK);
-	blockindex = ntohl(cheader.vital_header.eofPtr);
+	ctx->ex_addr[base]->ex_flags = htonl(VLCONTBLOCK);
+	blockindex = ntohl(ctx->cheader->vital_header.eofPtr);
 	code =
-	    vlwrite(trans, blockindex, (char *)ex_addr[base],
+	    vlwrite(ctx->trans, blockindex, (char *)ctx->ex_addr[base],
 		    VL_ADDREXTBLK_SIZE);
 	if (code)
 	    ERROR_EXIT(VL_IO);
 
 	/* Update the cheader.vitalheader structure on disk */
-	cheader.vital_header.eofPtr = blockindex + VL_ADDREXTBLK_SIZE;
-	cheader.vital_header.eofPtr = htonl(cheader.vital_header.eofPtr);
-	code = write_vital_vlheader(trans);
+	ctx->cheader->vital_header.eofPtr = blockindex + VL_ADDREXTBLK_SIZE;
+	ctx->cheader->vital_header.eofPtr = htonl(ctx->cheader->vital_header.eofPtr);
+	code = write_vital_vlheader(ctx);
 	if (code)
 	    ERROR_EXIT(VL_IO);
 
 	/* Write the address of the base extension block in the vldb header */
 	if (base == 0) {
-	    cheader.SIT = htonl(blockindex);
+	    ctx->cheader->SIT = htonl(blockindex);
 	    code =
-		vlwrite(trans, DOFFSET(0, &cheader, &cheader.SIT),
-			(char *)&cheader.SIT, sizeof(cheader.SIT));
+		vlwrite(ctx->trans, DOFFSET(0, ctx->cheader, &ctx->cheader->SIT),
+			(char *)&ctx->cheader->SIT, sizeof(ctx->cheader->SIT));
 	    if (code)
 		ERROR_EXIT(VL_IO);
 	}
 
 	/* Write the address of this extension block into the base extension block */
-	ex_addr[0]->ex_contaddrs[base] = htonl(blockindex);
+	ctx->ex_addr[0]->ex_contaddrs[base] = htonl(blockindex);
 	code =
-	    vlwrite(trans, ntohl(cheader.SIT), ex_addr[0],
+	    vlwrite(ctx->trans, ntohl(ctx->cheader->SIT), ctx->ex_addr[0],
 		    sizeof(struct extentaddr));
 	if (code)
 	    ERROR_EXIT(VL_IO);
@@ -452,7 +452,7 @@ GetExtentBlock(struct ubik_trans *trans, afs_int32 base)
 
 
 afs_int32
-FindExtentBlock(struct ubik_trans *trans, afsUUID *uuidp,
+FindExtentBlock(struct vl_ctx *ctx, afsUUID *uuidp,
 		afs_int32 createit, afs_int32 hostslot,
 		struct extentaddr **expp, afs_int32 *basep)
 {
@@ -464,21 +464,21 @@ FindExtentBlock(struct ubik_trans *trans, afsUUID *uuidp,
     *basep = 0;
 
     /* Create the first extension block if it does not exist */
-    if (!cheader.SIT) {
-	code = GetExtentBlock(trans, 0);
+    if (!ctx->cheader->SIT) {
+	code = GetExtentBlock(ctx, 0);
 	if (code)
 	    ERROR_EXIT(code);
     }
 
     for (i = 0; i < MAXSERVERID + 1; i++) {
-	if ((HostAddress[i] & 0xff000000) == 0xff000000) {
-	    if ((base = (HostAddress[i] >> 16) & 0xff) > VL_MAX_ADDREXTBLKS) {
+	if ((ctx->hostaddress[i] & 0xff000000) == 0xff000000) {
+	    if ((base = (ctx->hostaddress[i] >> 16) & 0xff) > VL_MAX_ADDREXTBLKS) {
 		ERROR_EXIT(VL_INDEXERANGE);
 	    }
-	    if ((index = HostAddress[i] & 0x0000ffff) > VL_MHSRV_PERBLK) {
+	    if ((index = ctx->hostaddress[i] & 0x0000ffff) > VL_MHSRV_PERBLK) {
 		ERROR_EXIT(VL_INDEXERANGE);
 	    }
-	    exp = &ex_addr[base][index];
+	    exp = &ctx->ex_addr[base][index];
 	    tuuid = exp->ex_hostuuid;
 	    afs_ntohuuid(&tuuid);
 	    if (afs_uuid_equal(uuidp, &tuuid)) {
@@ -492,7 +492,7 @@ FindExtentBlock(struct ubik_trans *trans, afsUUID *uuidp,
     if (createit) {
 	if (hostslot == -1) {
 	    for (i = 0; i < MAXSERVERID + 1; i++) {
-		if (!HostAddress[i])
+		if (!ctx->hostaddress[i])
 		    break;
 	    }
 	    if (i > MAXSERVERID)
@@ -502,13 +502,13 @@ FindExtentBlock(struct ubik_trans *trans, afsUUID *uuidp,
 	}
 
 	for (base = 0; base < VL_MAX_ADDREXTBLKS; base++) {
-	    if (!ex_addr[0]->ex_contaddrs[base]) {
-		code = GetExtentBlock(trans, base);
+	    if (!ctx->ex_addr[0]->ex_contaddrs[base]) {
+		code = GetExtentBlock(ctx, base);
 		if (code)
 		    ERROR_EXIT(code);
 	    }
 	    for (j = 1; j < VL_MHSRV_PERBLK; j++) {
-		exp = &ex_addr[base][j];
+		exp = &ctx->ex_addr[base][j];
 		tuuid = exp->ex_hostuuid;
 		afs_ntohuuid(&tuuid);
 		if (afs_uuid_is_nil(&tuuid)) {
@@ -516,29 +516,29 @@ FindExtentBlock(struct ubik_trans *trans, afsUUID *uuidp,
 		    afs_htonuuid(&tuuid);
 		    exp->ex_hostuuid = tuuid;
 		    code =
-			vlwrite(trans,
-				DOFFSET(ntohl(ex_addr[0]->ex_contaddrs[base]),
-					(char *)ex_addr[base], (char *)exp),
+			vlwrite(ctx->trans,
+				DOFFSET(ntohl(ctx->ex_addr[0]->ex_contaddrs[base]),
+					(char *)ctx->ex_addr[base], (char *)exp),
 				(char *)&tuuid, sizeof(tuuid));
 		    if (code)
 			ERROR_EXIT(VL_IO);
-		    HostAddress[i] =
+		    ctx->hostaddress[i] =
 			0xff000000 | ((base << 16) & 0xff0000) | (j & 0xffff);
 		    *expp = exp;
 		    *basep = base;
 		    if (vldbversion != VLDBVERSION_4) {
-			cheader.vital_header.vldbversion =
+			ctx->cheader->vital_header.vldbversion =
 			    htonl(VLDBVERSION_4);
-			code = write_vital_vlheader(trans);
+			code = write_vital_vlheader(ctx);
 			if (code)
 			    ERROR_EXIT(VL_IO);
 		    }
-		    cheader.IpMappedAddr[i] = htonl(HostAddress[i]);
+		    ctx->cheader->IpMappedAddr[i] = htonl(ctx->hostaddress[i]);
 		    code =
-			vlwrite(trans,
-				DOFFSET(0, &cheader,
-					&cheader.IpMappedAddr[i]),
-				(char *)&cheader.IpMappedAddr[i],
+			vlwrite(ctx->trans,
+				DOFFSET(0, ctx->cheader,
+					&ctx->cheader->IpMappedAddr[i]),
+				(char *)&ctx->cheader->IpMappedAddr[i],
 				sizeof(afs_int32));
 		    if (code)
 			ERROR_EXIT(VL_IO);
@@ -556,23 +556,23 @@ FindExtentBlock(struct ubik_trans *trans, afsUUID *uuidp,
 /* Allocate a free block of storage for entry, returning address of a new
    zeroed entry (or zero if something is wrong).  */
 afs_int32
-AllocBlock(struct ubik_trans *trans, struct nvlentry *tentry)
+AllocBlock(struct vl_ctx *ctx, struct nvlentry *tentry)
 {
     afs_int32 blockindex;
 
-    if (cheader.vital_header.freePtr) {
+    if (ctx->cheader->vital_header.freePtr) {
 	/* allocate this dude */
-	blockindex = ntohl(cheader.vital_header.freePtr);
-	if (vlentryread(trans, blockindex, (char *)tentry, sizeof(vlentry)))
+	blockindex = ntohl(ctx->cheader->vital_header.freePtr);
+	if (vlentryread(ctx->trans, blockindex, (char *)tentry, sizeof(vlentry)))
 	    return 0;
-	cheader.vital_header.freePtr = htonl(tentry->nextIdHash[0]);
+	ctx->cheader->vital_header.freePtr = htonl(tentry->nextIdHash[0]);
     } else {
 	/* hosed, nothing on free list, grow file */
-	blockindex = ntohl(cheader.vital_header.eofPtr);	/* remember this guy */
-	cheader.vital_header.eofPtr = htonl(blockindex + sizeof(vlentry));
+	blockindex = ntohl(ctx->cheader->vital_header.eofPtr);	/* remember this guy */
+	ctx->cheader->vital_header.eofPtr = htonl(blockindex + sizeof(vlentry));
     }
-    cheader.vital_header.allocs++;
-    if (write_vital_vlheader(trans))
+    ctx->cheader->vital_header.allocs++;
+    if (write_vital_vlheader(ctx))
 	return 0;
     memset(tentry, 0, sizeof(nvlentry));	/* zero new entry */
     return blockindex;
@@ -581,21 +581,21 @@ AllocBlock(struct ubik_trans *trans, struct nvlentry *tentry)
 
 /* Free a block given its index.  It must already have been unthreaded. Returns zero for success or an error code on failure. */
 int
-FreeBlock(struct ubik_trans *trans, afs_int32 blockindex)
+FreeBlock(struct vl_ctx *ctx, afs_int32 blockindex)
 {
     struct nvlentry tentry;
 
     /* check validity of blockindex just to be on the safe side */
-    if (!index_OK(trans, blockindex))
+    if (!index_OK(ctx, blockindex))
 	return VL_BADINDEX;
     memset(&tentry, 0, sizeof(nvlentry));
-    tentry.nextIdHash[0] = cheader.vital_header.freePtr;	/* already in network order */
+    tentry.nextIdHash[0] = ctx->cheader->vital_header.freePtr;	/* already in network order */
     tentry.flags = htonl(VLFREE);
-    cheader.vital_header.freePtr = htonl(blockindex);
-    if (vlwrite(trans, blockindex, (char *)&tentry, sizeof(nvlentry)))
+    ctx->cheader->vital_header.freePtr = htonl(blockindex);
+    if (vlwrite(ctx->trans, blockindex, (char *)&tentry, sizeof(nvlentry)))
 	return VL_IO;
-    cheader.vital_header.frees++;
-    if (write_vital_vlheader(trans))
+    ctx->cheader->vital_header.frees++;
+    if (write_vital_vlheader(ctx))
 	return VL_IO;
     return 0;
 }
@@ -607,7 +607,7 @@ FreeBlock(struct ubik_trans *trans, afs_int32 blockindex)
  * pointed to by tentry and return the block's index.  If not found return 0.
  */
 afs_int32
-FindByID(struct ubik_trans *trans, afs_uint32 volid, afs_int32 voltype,
+FindByID(struct vl_ctx *ctx, afs_uint32 volid, afs_int32 voltype,
 	 struct nvlentry *tentry, afs_int32 *error)
 {
     afs_int32 typeindex, hashindex, blockindex;
@@ -617,11 +617,11 @@ FindByID(struct ubik_trans *trans, afs_uint32 volid, afs_int32 voltype,
     if (voltype == -1) {
 /* Should we have one big hash table for volids as opposed to the three ones? */
 	for (typeindex = 0; typeindex < MAXTYPES; typeindex++) {
-	    for (blockindex = ntohl(cheader.VolidHash[typeindex][hashindex]);
+	    for (blockindex = ntohl(ctx->cheader->VolidHash[typeindex][hashindex]);
 		 blockindex != NULLO;
 		 blockindex = tentry->nextIdHash[typeindex]) {
 		if (vlentryread
-		    (trans, blockindex, (char *)tentry, sizeof(nvlentry))) {
+		    (ctx->trans, blockindex, (char *)tentry, sizeof(nvlentry))) {
 		    *error = VL_IO;
 		    return 0;
 		}
@@ -630,10 +630,10 @@ FindByID(struct ubik_trans *trans, afs_uint32 volid, afs_int32 voltype,
 	    }
 	}
     } else {
-	for (blockindex = ntohl(cheader.VolidHash[voltype][hashindex]);
+	for (blockindex = ntohl(ctx->cheader->VolidHash[voltype][hashindex]);
 	     blockindex != NULLO; blockindex = tentry->nextIdHash[voltype]) {
 	    if (vlentryread
-		(trans, blockindex, (char *)tentry, sizeof(nvlentry))) {
+		(ctx->trans, blockindex, (char *)tentry, sizeof(nvlentry))) {
 		*error = VL_IO;
 		return 0;
 	    }
@@ -650,7 +650,7 @@ FindByID(struct ubik_trans *trans, afs_uint32 volid, afs_int32 voltype,
  * found return 0.
  */
 afs_int32
-FindByName(struct ubik_trans *trans, char *volname, struct nvlentry *tentry,
+FindByName(struct vl_ctx *ctx, char *volname, struct nvlentry *tentry,
 	   afs_int32 *error)
 {
     afs_int32 hashindex;
@@ -675,9 +675,9 @@ FindByName(struct ubik_trans *trans, char *volname, struct nvlentry *tentry,
 
     *error = 0;
     hashindex = NameHash(tname);
-    for (blockindex = ntohl(cheader.VolnameHash[hashindex]);
+    for (blockindex = ntohl(ctx->cheader->VolnameHash[hashindex]);
 	 blockindex != NULLO; blockindex = tentry->nextNameHash) {
-	if (vlentryread(trans, blockindex, (char *)tentry, sizeof(nvlentry))) {
+	if (vlentryread(ctx->trans, blockindex, (char *)tentry, sizeof(nvlentry))) {
 	    *error = VL_IO;
 	    return 0;
 	}
@@ -691,7 +691,7 @@ FindByName(struct ubik_trans *trans, char *volname, struct nvlentry *tentry,
  * Returns whether or not any of the supplied volume IDs already exist
  * in the vldb.
  *
- * @param trans    the ubik transaction
+ * @param ctx      transaction context
  * @param ids      an array of volume IDs
  * @param ids_len  the number of elements in the 'ids' array
  * @param error    filled in with an error code in case of error
@@ -701,7 +701,7 @@ FindByName(struct ubik_trans *trans, char *volname, struct nvlentry *tentry,
  *  @retval 0  none of the volume IDs are used, or an error occurred
  */
 int
-EntryIDExists(struct ubik_trans *trans, const afs_uint32 *ids,
+EntryIDExists(struct vl_ctx *ctx, const afs_uint32 *ids,
 	      afs_int32 ids_len, afs_int32 *error)
 {
     afs_int32 typeindex;
@@ -711,7 +711,7 @@ EntryIDExists(struct ubik_trans *trans, const afs_uint32 *ids,
 
     for (typeindex = 0; typeindex < ids_len; typeindex++) {
 	if (ids[typeindex]
-	    && FindByID(trans, ids[typeindex], -1, &tentry, error)) {
+	    && FindByID(ctx, ids[typeindex], -1, &tentry, error)) {
 
 	    return 1;
 	} else if (*error) {
@@ -725,7 +725,7 @@ EntryIDExists(struct ubik_trans *trans, const afs_uint32 *ids,
 /**
  * Finds the next range of unused volume IDs in the vldb.
  *
- * @param trans     the ubik transaction
+ * @param ctx       transaction context
  * @param maxvolid  the current max vol ID, and where to start looking
  *                  for an unused volume ID range
  * @param bump      how many volume IDs we need to be unused
@@ -736,7 +736,7 @@ EntryIDExists(struct ubik_trans *trans, const afs_uint32 *ids,
  *         an error
  */
 afs_uint32
-NextUnusedID(struct ubik_trans *trans, afs_uint32 maxvolid, afs_uint32 bump,
+NextUnusedID(struct vl_ctx *ctx, afs_uint32 maxvolid, afs_uint32 bump,
 	     afs_int32 *error)
 {
     struct nvlentry tentry;
@@ -749,7 +749,7 @@ NextUnusedID(struct ubik_trans *trans, afs_uint32 maxvolid, afs_uint32 bump,
       * how many free volume IDs we've seen in a row, and return when
       * we've seen 'bump' unused IDs in a row */
     for (id = maxvolid, nfree = 0; nfree < bump; ++id) {
-	if (FindByID(trans, id, -1, &tentry, error)) {
+	if (FindByID(ctx, id, -1, &tentry, error)) {
 	    nfree = 0;
 	} else if (*error) {
 	    return 0;
@@ -765,15 +765,15 @@ NextUnusedID(struct ubik_trans *trans, afs_uint32 maxvolid, afs_uint32 bump,
 }
 
 int
-HashNDump(struct ubik_trans *trans, int hashindex)
+HashNDump(struct vl_ctx *ctx, int hashindex)
 {
     int i = 0;
     int blockindex;
     struct nvlentry tentry;
 
-    for (blockindex = ntohl(cheader.VolnameHash[hashindex]);
+    for (blockindex = ntohl(ctx->cheader->VolnameHash[hashindex]);
 	 blockindex != NULLO; blockindex = tentry.nextNameHash) {
-	if (vlentryread(trans, blockindex, (char *)&tentry, sizeof(nvlentry)))
+	if (vlentryread(ctx->trans, blockindex, (char *)&tentry, sizeof(nvlentry)))
 	    return 0;
 	i++;
 	VLog(0,
@@ -785,15 +785,15 @@ HashNDump(struct ubik_trans *trans, int hashindex)
 
 
 int
-HashIdDump(struct ubik_trans *trans, int hashindex)
+HashIdDump(struct vl_ctx *ctx, int hashindex)
 {
     int i = 0;
     int blockindex;
     struct nvlentry tentry;
 
-    for (blockindex = ntohl(cheader.VolidHash[0][hashindex]);
+    for (blockindex = ntohl(ctx->cheader->VolidHash[0][hashindex]);
 	 blockindex != NULLO; blockindex = tentry.nextIdHash[0]) {
-	if (vlentryread(trans, blockindex, (char *)&tentry, sizeof(nvlentry)))
+	if (vlentryread(ctx->trans, blockindex, (char *)&tentry, sizeof(nvlentry)))
 	    return 0;
 	i++;
 	VLog(0,
@@ -809,38 +809,38 @@ HashIdDump(struct ubik_trans *trans, int hashindex)
  * routine returns zero if there were no errors.
  */
 int
-ThreadVLentry(struct ubik_trans *trans, afs_int32 blockindex,
+ThreadVLentry(struct vl_ctx *ctx, afs_int32 blockindex,
 	      struct nvlentry *tentry)
 {
     int errorcode;
 
-    if (!index_OK(trans, blockindex))
+    if (!index_OK(ctx, blockindex))
 	return VL_BADINDEX;
     /* Insert into volid's hash linked list */
-    if ((errorcode = HashVolid(trans, RWVOL, blockindex, tentry)))
+    if ((errorcode = HashVolid(ctx, RWVOL, blockindex, tentry)))
 	return errorcode;
 
     /* For rw entries we also enter the RO and BACK volume ids (if they
      * exist) in the hash tables; note all there volids (RW, RO, BACK)
      * should not be hashed yet! */
     if (tentry->volumeId[ROVOL]) {
-	if ((errorcode = HashVolid(trans, ROVOL, blockindex, tentry)))
+	if ((errorcode = HashVolid(ctx, ROVOL, blockindex, tentry)))
 	    return errorcode;
     }
     if (tentry->volumeId[BACKVOL]) {
-	if ((errorcode = HashVolid(trans, BACKVOL, blockindex, tentry)))
+	if ((errorcode = HashVolid(ctx, BACKVOL, blockindex, tentry)))
 	    return errorcode;
     }
 
     /* Insert into volname's hash linked list */
-    HashVolname(trans, blockindex, tentry);
+    HashVolname(ctx, blockindex, tentry);
 
     /* Update cheader entry */
-    if (write_vital_vlheader(trans))
+    if (write_vital_vlheader(ctx))
 	return VL_IO;
 
     /* Update hash list pointers in the entry itself */
-    if (vlentrywrite(trans, blockindex, (char *)tentry, sizeof(nvlentry)))
+    if (vlentrywrite(ctx->trans, blockindex, (char *)tentry, sizeof(nvlentry)))
 	return VL_IO;
     return 0;
 }
@@ -849,52 +849,52 @@ ThreadVLentry(struct ubik_trans *trans, afs_int32 blockindex,
 /* Remove a block from both the hash tables.  If success return 0, else
  * return an error code. */
 int
-UnthreadVLentry(struct ubik_trans *trans, afs_int32 blockindex,
+UnthreadVLentry(struct vl_ctx *ctx, afs_int32 blockindex,
 		struct nvlentry *aentry)
 {
     afs_int32 errorcode, typeindex;
 
-    if (!index_OK(trans, blockindex))
+    if (!index_OK(ctx, blockindex))
 	return VL_BADINDEX;
-    if ((errorcode = UnhashVolid(trans, RWVOL, blockindex, aentry)))
+    if ((errorcode = UnhashVolid(ctx, RWVOL, blockindex, aentry)))
 	return errorcode;
 
     /* Take the RO/RW entries of their respective hash linked lists. */
     for (typeindex = ROVOL; typeindex <= BACKVOL; typeindex++) {
-	if ((errorcode = UnhashVolid(trans, typeindex, blockindex, aentry)))
+	if ((errorcode = UnhashVolid(ctx, typeindex, blockindex, aentry)))
 	    return errorcode;
     }
 
     /* Take it out of the Volname hash list */
-    if ((errorcode = UnhashVolname(trans, blockindex, aentry)))
+    if ((errorcode = UnhashVolname(ctx, blockindex, aentry)))
 	return errorcode;
 
     /* Update cheader entry */
-    write_vital_vlheader(trans);
+    write_vital_vlheader(ctx);
 
     return 0;
 }
 
 /* cheader must have be read before this routine is called. */
 int
-HashVolid(struct ubik_trans *trans, afs_int32 voltype, afs_int32 blockindex,
+HashVolid(struct vl_ctx *ctx, afs_int32 voltype, afs_int32 blockindex,
           struct nvlentry *tentry)
 {
     afs_int32 hashindex, errorcode;
     struct nvlentry ventry;
 
     if (FindByID
-	(trans, tentry->volumeId[voltype], voltype, &ventry, &errorcode))
+	(ctx, tentry->volumeId[voltype], voltype, &ventry, &errorcode))
 	return VL_IDALREADYHASHED;
     else if (errorcode)
 	return errorcode;
     hashindex = IDHash(tentry->volumeId[voltype]);
     tentry->nextIdHash[voltype] =
-	ntohl(cheader.VolidHash[voltype][hashindex]);
-    cheader.VolidHash[voltype][hashindex] = htonl(blockindex);
+	ntohl(ctx->cheader->VolidHash[voltype][hashindex]);
+    ctx->cheader->VolidHash[voltype][hashindex] = htonl(blockindex);
     if (vlwrite
-	(trans, DOFFSET(0, &cheader, &cheader.VolidHash[voltype][hashindex]),
-	 (char *)&cheader.VolidHash[voltype][hashindex], sizeof(afs_int32)))
+	(ctx->trans, DOFFSET(0, ctx->cheader, &ctx->cheader->VolidHash[voltype][hashindex]),
+	 (char *)&ctx->cheader->VolidHash[voltype][hashindex], sizeof(afs_int32)))
 	return VL_IO;
     return 0;
 }
@@ -902,7 +902,7 @@ HashVolid(struct ubik_trans *trans, afs_int32 voltype, afs_int32 blockindex,
 
 /* cheader must have be read before this routine is called. */
 int
-UnhashVolid(struct ubik_trans *trans, afs_int32 voltype, afs_int32 blockindex,
+UnhashVolid(struct vl_ctx *ctx, afs_int32 voltype, afs_int32 blockindex,
 	    struct nvlentry *aentry)
 {
     int hashindex, nextblockindex, prevblockindex;
@@ -914,16 +914,16 @@ UnhashVolid(struct ubik_trans *trans, afs_int32 voltype, afs_int32 blockindex,
 	return 0;
     /* Take it out of the VolId[voltype] hash list */
     hashindex = IDHash(aentry->volumeId[voltype]);
-    nextblockindex = ntohl(cheader.VolidHash[voltype][hashindex]);
+    nextblockindex = ntohl(ctx->cheader->VolidHash[voltype][hashindex]);
     if (nextblockindex == blockindex) {
 	/* First on the hash list; just adjust pointers */
-	cheader.VolidHash[voltype][hashindex] =
+	ctx->cheader->VolidHash[voltype][hashindex] =
 	    htonl(aentry->nextIdHash[voltype]);
 	code =
-	    vlwrite(trans,
-		    DOFFSET(0, &cheader,
-			    &cheader.VolidHash[voltype][hashindex]),
-		    (char *)&cheader.VolidHash[voltype][hashindex],
+	    vlwrite(ctx->trans,
+		    DOFFSET(0, ctx->cheader,
+			    &ctx->cheader->VolidHash[voltype][hashindex]),
+		    (char *)&ctx->cheader->VolidHash[voltype][hashindex],
 		    sizeof(afs_int32));
 	if (code)
 	    return VL_IO;
@@ -931,7 +931,7 @@ UnhashVolid(struct ubik_trans *trans, afs_int32 voltype, afs_int32 blockindex,
 	while (nextblockindex != blockindex) {
 	    prevblockindex = nextblockindex;	/* always done once */
 	    if (vlentryread
-		(trans, nextblockindex, (char *)&tentry, sizeof(nvlentry)))
+		(ctx->trans, nextblockindex, (char *)&tentry, sizeof(nvlentry)))
 		return VL_IO;
 	    if ((nextblockindex = tentry.nextIdHash[voltype]) == NULLO)
 		return VL_NOENT;
@@ -939,7 +939,7 @@ UnhashVolid(struct ubik_trans *trans, afs_int32 voltype, afs_int32 blockindex,
 	temp = tentry.nextIdHash[voltype] = aentry->nextIdHash[voltype];
 	temp = htonl(temp);	/* convert to network byte order before writing */
 	if (vlwrite
-	    (trans,
+	    (ctx->trans,
 	     DOFFSET(prevblockindex, &tentry, &tentry.nextIdHash[voltype]),
 	     (char *)&temp, sizeof(afs_int32)))
 	    return VL_IO;
@@ -950,7 +950,7 @@ UnhashVolid(struct ubik_trans *trans, afs_int32 voltype, afs_int32 blockindex,
 
 
 int
-HashVolname(struct ubik_trans *trans, afs_int32 blockindex,
+HashVolname(struct vl_ctx *ctx, afs_int32 blockindex,
 	    struct nvlentry *aentry)
 {
     afs_int32 hashindex;
@@ -958,11 +958,11 @@ HashVolname(struct ubik_trans *trans, afs_int32 blockindex,
 
     /* Insert into volname's hash linked list */
     hashindex = NameHash(aentry->name);
-    aentry->nextNameHash = ntohl(cheader.VolnameHash[hashindex]);
-    cheader.VolnameHash[hashindex] = htonl(blockindex);
+    aentry->nextNameHash = ntohl(ctx->cheader->VolnameHash[hashindex]);
+    ctx->cheader->VolnameHash[hashindex] = htonl(blockindex);
     code =
-	vlwrite(trans, DOFFSET(0, &cheader, &cheader.VolnameHash[hashindex]),
-		(char *)&cheader.VolnameHash[hashindex], sizeof(afs_int32));
+	vlwrite(ctx->trans, DOFFSET(0, ctx->cheader, &ctx->cheader->VolnameHash[hashindex]),
+		(char *)&ctx->cheader->VolnameHash[hashindex], sizeof(afs_int32));
     if (code)
 	return VL_IO;
     return 0;
@@ -970,7 +970,7 @@ HashVolname(struct ubik_trans *trans, afs_int32 blockindex,
 
 
 int
-UnhashVolname(struct ubik_trans *trans, afs_int32 blockindex,
+UnhashVolname(struct vl_ctx *ctx, afs_int32 blockindex,
 	      struct nvlentry *aentry)
 {
     afs_int32 hashindex, nextblockindex, prevblockindex;
@@ -979,19 +979,19 @@ UnhashVolname(struct ubik_trans *trans, afs_int32 blockindex,
 
     /* Take it out of the Volname hash list */
     hashindex = NameHash(aentry->name);
-    nextblockindex = ntohl(cheader.VolnameHash[hashindex]);
+    nextblockindex = ntohl(ctx->cheader->VolnameHash[hashindex]);
     if (nextblockindex == blockindex) {
 	/* First on the hash list; just adjust pointers */
-	cheader.VolnameHash[hashindex] = htonl(aentry->nextNameHash);
+	ctx->cheader->VolnameHash[hashindex] = htonl(aentry->nextNameHash);
 	if (vlwrite
-	    (trans, DOFFSET(0, &cheader, &cheader.VolnameHash[hashindex]),
-	     (char *)&cheader.VolnameHash[hashindex], sizeof(afs_int32)))
+	    (ctx->trans, DOFFSET(0, ctx->cheader, &ctx->cheader->VolnameHash[hashindex]),
+	     (char *)&ctx->cheader->VolnameHash[hashindex], sizeof(afs_int32)))
 	    return VL_IO;
     } else {
 	while (nextblockindex != blockindex) {
 	    prevblockindex = nextblockindex;	/* always done at least once */
 	    if (vlentryread
-		(trans, nextblockindex, (char *)&tentry, sizeof(nvlentry)))
+		(ctx->trans, nextblockindex, (char *)&tentry, sizeof(nvlentry)))
 		return VL_IO;
 	    if ((nextblockindex = tentry.nextNameHash) == NULLO)
 		return VL_NOENT;
@@ -999,7 +999,7 @@ UnhashVolname(struct ubik_trans *trans, afs_int32 blockindex,
 	tentry.nextNameHash = aentry->nextNameHash;
 	temp = htonl(tentry.nextNameHash);
 	if (vlwrite
-	    (trans, DOFFSET(prevblockindex, &tentry, &tentry.nextNameHash),
+	    (ctx->trans, DOFFSET(prevblockindex, &tentry, &tentry.nextNameHash),
 	     (char *)&temp, sizeof(afs_int32)))
 	    return VL_IO;
     }
@@ -1014,24 +1014,24 @@ UnhashVolname(struct ubik_trans *trans, afs_int32 blockindex,
  */
 
 afs_int32
-NextEntry(struct ubik_trans *trans, afs_int32 blockindex,
+NextEntry(struct vl_ctx *ctx, afs_int32 blockindex,
 	  struct nvlentry *tentry, afs_int32 *remaining)
 {
     afs_int32 lastblockindex;
 
     if (blockindex == 0)	/* get first one */
-	blockindex = sizeof(cheader);
+	blockindex = sizeof(*ctx->cheader);
     else {
-	if (!index_OK(trans, blockindex)) {
+	if (!index_OK(ctx, blockindex)) {
 	    *remaining = -1;	/* error */
 	    return 0;
 	}
 	blockindex += sizeof(nvlentry);
     }
     /* now search for the first entry that isn't free */
-    for (lastblockindex = ntohl(cheader.vital_header.eofPtr);
+    for (lastblockindex = ntohl(ctx->cheader->vital_header.eofPtr);
 	 blockindex < lastblockindex;) {
-	if (vlentryread(trans, blockindex, (char *)tentry, sizeof(nvlentry))) {
+	if (vlentryread(ctx->trans, blockindex, (char *)tentry, sizeof(nvlentry))) {
 	    *remaining = -1;
 	    return 0;
 	}
@@ -1059,10 +1059,21 @@ NextEntry(struct ubik_trans *trans, afs_int32 blockindex,
  * table
  */
 static int
-index_OK(struct ubik_trans *trans, afs_int32 blockindex)
+index_OK(struct vl_ctx *ctx, afs_int32 blockindex)
 {
-    if ((blockindex < sizeof(cheader))
-	|| (blockindex >= ntohl(cheader.vital_header.eofPtr)))
+    if ((blockindex < sizeof(*ctx->cheader))
+	|| (blockindex >= ntohl(ctx->cheader->vital_header.eofPtr)))
 	return 0;
     return 1;
+}
+
+int
+vlsetcache(struct vl_ctx *ctx, int locktype)
+{
+    extern afs_uint32 rd_HostAddress[];
+
+    ctx->hostaddress = rd_HostAddress;
+    ctx->ex_addr = rd_ex_addr;
+    ctx->cheader = &rd_cheader;
+    return 0;
 }

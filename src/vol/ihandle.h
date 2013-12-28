@@ -342,6 +342,7 @@ extern int stream_close(StreamHandle_t * streamP, int reallyClose);
 extern int ih_reallyclose(IHandle_t * ihP);
 extern int ih_release(IHandle_t * ihP);
 extern int ih_condsync(IHandle_t * ihP);
+extern FdHandle_t *ih_attachfd(IHandle_t * ihP, FD_t fd);
 
 /* Macros common to user space and inode API's. */
 #define IH_INIT(H, D, V, I) ((H) = ih_init((D), (V), (I)))
@@ -424,6 +425,11 @@ extern int ih_isunlinked(FD_t fd);
 # define OS_DIRSEPC '/'
 #endif
 
+#if defined(AFS_NT40_ENV) || !defined(AFS_NAMEI_ENV)
+# define  IH_CREATE_INIT(H, D, P, N, P1, P2, P3, P4) \
+         ih_icreate_init(H, D, P, N, P1, P2, P3, P4)
+#endif
+
 #ifdef AFS_NAMEI_ENV
 
 # ifdef AFS_NT40_ENV
@@ -489,6 +495,8 @@ extern int OS_TRUNC(int FD, OFFT L);
 #  endif /* !O_LARGEFILE */
 
 #  define OS_SYNC(FD) fsync(FD)
+#  define IH_CREATE_INIT(H, D, P, N, P1, P2, P3, P4) \
+          namei_icreate_init(H, D, P, P1, P2, P3, P4)
 
 /*@=fcnmacros =macrofcndecl@*/
 # endif /* AFS_NT40_ENV */

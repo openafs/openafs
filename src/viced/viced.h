@@ -254,5 +254,6 @@ extern struct fs_state fs_state;
 #define FS_MODE_SHUTDOWN  1
 #endif /* AFS_DEMAND_ATTACH_FS */
 
+extern int viced_SuperUser(struct rx_call *call);
 
 #endif /* _AFS_VICED_VICED_H */

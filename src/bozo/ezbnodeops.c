@@ -43,6 +43,7 @@ static int ez_getparm(struct bnode *bnode, afs_int32, char *, afs_int32);
 static int ez_procstarted(struct bnode *bnode, struct bnode_proc *proc);
 
 #define	SDTIME		60	/* time in seconds given to a process to evaporate */
+#define ERROR_RESET_TIME 60	/* time in seconds to wait before resetting error count state */
 
 struct bnode_ops ezbnode_ops = {
     ez_create,
@@ -128,18 +129,27 @@ ez_create(char *ainstance, char *acommand, char *unused1, char *unused2,
     return (struct bnode *)te;
 }
 
-/* called to SIGKILL a process if it doesn't terminate normally */
+/* called to SIGKILL a process if it doesn't terminate normally
+ * or to retry start after an error stop. */
 static int
 ez_timeout(struct bnode *bn)
 {
     struct ezbnode *abnode = (struct ezbnode *)bn;
 
-    if (!abnode->waitingForShutdown)
-	return 0;		/* spurious */
-    /* send kill and turn off timer */
-    bnode_StopProc(abnode->proc, SIGKILL);
-    abnode->killSent = 1;
-    bnode_SetTimeout((struct bnode *)abnode, 0);
+    if (abnode->waitingForShutdown) {
+	/* send kill and turn off timer */
+	bnode_StopProc(abnode->proc, SIGKILL);
+	abnode->killSent = 1;
+	bnode_SetTimeout((struct bnode *)abnode, 0);
+    } else if (!abnode->running && abnode->b.flags & BNODE_ERRORSTOP) {
+	/* was stopped for too many errors, retrying */
+	/* reset error count after running for a bit */
+	bnode_SetTimeout(bn, ERROR_RESET_TIME);
+	bnode_SetStat(bn, BSTAT_NORMAL);
+    } else {
+	bnode_SetTimeout(bn, 0); /* one shot timer */
+	bnode_ResetErrorCount(bn);
+    }
     return 0;
 }
 
@@ -153,6 +163,8 @@ ez_getstat(struct bnode *bn, afs_int32 * astatus)
 	temp = BSTAT_SHUTTINGDOWN;
     else if (abnode->running)
 	temp = BSTAT_NORMAL;
+    else if (abnode->b.flags & BNODE_ERRORSTOP)
+	temp = BSTAT_STARTINGUP;
     else
 	temp = BSTAT_SHUTDOWN;
     *astatus = temp;
@@ -205,7 +217,7 @@ ez_procexit(struct bnode *bn, struct bnode_proc *aproc)
     struct ezbnode *abnode = (struct ezbnode *)bn;
 
     /* process has exited */
-    afs_int32 code;
+    afs_int32 code = 0;
 
     if (DoPidFiles) {
 	bozo_DeletePidFile(bn->name, NULL);
@@ -218,8 +230,11 @@ ez_procexit(struct bnode *bn, struct bnode_proc *aproc)
     bnode_SetTimeout((struct bnode *) abnode, 0);	/* clear timer */
     if (abnode->b.goal)
 	code = ez_setstat((struct bnode *) abnode, BSTAT_NORMAL);
-    else
-	code = 0;
+    else if (abnode->b.flags & BNODE_ERRORSTOP && abnode->b.errorStopDelay) {
+	bozo_Log("%s will retry start in %d seconds\n", abnode->b.name,
+		 abnode->b.errorStopDelay);
+	bnode_SetTimeout(bn, abnode->b.errorStopDelay);
+    }
     return code;
 }
 

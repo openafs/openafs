@@ -60,7 +60,7 @@ int lwps = 9;
 
 struct vldstats dynamic_statistics;
 struct ubik_dbase *VL_dbase;
-afs_uint32 HostAddress[MAXSERVERID + 1];
+afs_uint32 rd_HostAddress[MAXSERVERID + 1];
 
 static void *CheckSignal(void*);
 int LogLevel = 0;
@@ -88,20 +88,20 @@ static void *
 CheckSignal(void *unused)
 {
     int i, errorcode;
-    struct ubik_trans *trans;
+    struct vl_ctx ctx;
 
     if ((errorcode =
-	Init_VLdbase(&trans, LOCKREAD, VLGETSTATS - VL_LOWEST_OPCODE)))
+	Init_VLdbase(&ctx, LOCKREAD, VLGETSTATS - VL_LOWEST_OPCODE)))
 	return (void *)(intptr_t)errorcode;
     VLog(0, ("Dump name hash table out\n"));
     for (i = 0; i < HASHSIZE; i++) {
-	HashNDump(trans, i);
+	HashNDump(&ctx, i);
     }
     VLog(0, ("Dump id hash table out\n"));
     for (i = 0; i < HASHSIZE; i++) {
-	HashIdDump(trans, i);
+	HashIdDump(&ctx, i);
     }
-    return ((void *)(intptr_t)ubik_EndTrans(trans));
+    return ((void *)(intptr_t)ubik_EndTrans(ctx.trans));
 }				/*CheckSignal */
 
 
@@ -365,7 +365,7 @@ main(int argc, char **argv)
     }
     rx_SetRxDeadTime(50);
 
-    memset(HostAddress, 0, sizeof(HostAddress));
+    memset(rd_HostAddress, 0, sizeof(rd_HostAddress));
     initialize_dstats();
 
     afsconf_BuildServerSecurityObjects(tdir, 0, &securityClasses, &numClasses);
@@ -400,6 +400,9 @@ main(int argc, char **argv)
     rx_SetMaxProcs(tservice, 4);
 
     LogCommandLine(argc, argv, "vlserver", VldbVersion, "Starting AFS", FSLog);
+    if (afsconf_GetLatestKey(tdir, NULL, NULL) == 0) {
+	LogDesWarning();
+    }
     printf("%s\n", cml_version_number);	/* Goes to the log */
 
     /* allow super users to manage RX statistics */

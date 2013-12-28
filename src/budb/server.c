@@ -369,7 +369,8 @@ main(int argc, char **argv)
 {
     char *whoami = argv[0];
     char *dbNamePtr = 0;
-    struct afsconf_cell cellinfo;
+    struct afsconf_cell cellinfo_s;
+    struct afsconf_cell *cellinfo = NULL;
     time_t currentTime;
     afs_int32 code = 0;
     afs_uint32 host = ntohl(INADDR_ANY);
@@ -406,6 +407,10 @@ main(int argc, char **argv)
     sigaction(SIGSEGV, &nsa, NULL);
     sigaction(SIGABRT, &nsa, NULL);
 #endif
+
+    memset(&cellinfo_s, 0, sizeof(cellinfo_s));
+    memset(clones, 0, sizeof(clones));
+
     osi_audit_init();
     osi_audit(BUDB_StartEvent, 0, AUD_END);
 
@@ -490,9 +495,11 @@ main(int argc, char **argv)
 	 * list from the cell's database
 	 */
 
+	cellinfo = &cellinfo_s;
+
 	LogDebug(1, "Using server list from %s cell database.\n", lcell);
 
-	code = afsconf_GetExtendedCellInfo (BU_conf, lcell, 0, &cellinfo,
+	code = afsconf_GetExtendedCellInfo (BU_conf, lcell, 0, cellinfo,
 					    clones);
 	if (code) {
 	    LogError(0, "Can't read cell information\n");
@@ -500,7 +507,7 @@ main(int argc, char **argv)
 	}
 
 	code =
-	    convert_cell_to_ubik(&cellinfo, &globalConfPtr->myHost,
+	    convert_cell_to_ubik(cellinfo, &globalConfPtr->myHost,
 				 globalConfPtr->serverList);
 	if (code)
 	    ERROR(code);
@@ -555,12 +562,19 @@ main(int argc, char **argv)
     /* Disable jumbograms */
     rx_SetNoJumbo();
 
-    code = ubik_ServerInitByInfo (globalConfPtr->myHost,
-				  htons(AFSCONF_BUDBPORT),
-				  &cellinfo,
-				  clones,
-				  dbNamePtr,           /* name prefix */
-				  &BU_dbase);
+    if (cellinfo) {
+	code = ubik_ServerInitByInfo(globalConfPtr->myHost,
+	                             htons(AFSCONF_BUDBPORT),
+	                             cellinfo,
+	                             clones,
+	                             dbNamePtr,           /* name prefix */
+	                             &BU_dbase);
+    } else {
+	code = ubik_ServerInit(globalConfPtr->myHost, htons(AFSCONF_BUDBPORT),
+	                       globalConfPtr->serverList,
+	                       dbNamePtr,  /* name prefix */
+	                       &BU_dbase);
+    }
 
     if (code) {
 	LogError(code, "Ubik init failed\n");

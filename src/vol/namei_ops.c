@@ -135,7 +135,10 @@ namei_iread(IHandle_t * h, afs_foff_t offset, char *buf, afs_fsize_t size)
 	return -1;
 
     nBytes = FDH_PREAD(fdP, buf, size, offset);
-    FDH_CLOSE(fdP);
+    if (nBytes < 0)
+	FDH_REALLYCLOSE(fdP);
+    else
+	FDH_CLOSE(fdP);
     return nBytes;
 }
 
@@ -150,7 +153,10 @@ namei_iwrite(IHandle_t * h, afs_foff_t offset, char *buf, afs_fsize_t size)
 	return -1;
 
     nBytes = FDH_PWRITE(fdP, buf, size, offset);
-    FDH_CLOSE(fdP);
+    if (nBytes < 0)
+	FDH_REALLYCLOSE(fdP);
+    else
+	FDH_CLOSE(fdP);
     return nBytes;
 }
 
@@ -669,26 +675,76 @@ SetOGM(FD_t fd, int parm, int tag)
 }
 
 static int
-CheckOGM(namei_t *name, FdHandle_t *fdP, int p1)
+SetWinOGM(FD_t fd, int p1, int p2)
 {
-    WIN32_FIND_DATA info;
-    HANDLE dirH;
+    BOOL code;
+    FILETIME ftime;
 
-    dirH =
-	FindFirstFileEx(name->n_path, FindExInfoStandard, &info,
-			FindExSearchNameMatch, NULL,
-			FIND_FIRST_EX_CASE_SENSITIVE);
+    ftime.dwHighDateTime = p1;
+    ftime.dwLowDateTime = p2;
 
-    if (!dirH)
-	return -1;          /* Can't get info, leave alone */
-
-    FindClose(dirH);
-
-    if (info.ftCreationTime.dwHighDateTime != (unsigned int)p1)
+    code = SetFileTime(fd, &ftime, NULL /*access*/, NULL /*write*/);
+    if (!code)
 	return -1;
+    return 0;
+}
+
+static int
+GetWinOGM(FD_t fd, int *p1, int *p2)
+{
+    BOOL code;
+    FILETIME ftime;
+
+    code = GetFileTime(fd, &ftime, NULL /*access*/, NULL /*write*/);
+    if (!code)
+	return -1;
+
+    *p1 = ftime.dwHighDateTime;
+    *p2 = ftime.dwLowDateTime;
 
     return 0;
 }
+
+static int
+CheckOGM(FdHandle_t *fdP, int p1)
+{
+    int ogm_p1, ogm_p2;
+
+    if (GetWinOGM(fdP->fd_fd, &ogm_p1, &ogm_p2)) {
+	return -1;
+    }
+
+    if (ogm_p1 != p1) {
+	return -1;
+    }
+
+    return 0;
+}
+
+static int
+FixSpecialOGM(FdHandle_t *fdP, int check)
+{
+    Inode ino = fdP->fd_ih->ih_ino;
+    VnodeId vno = NAMEI_VNODESPECIAL, ogm_vno;
+    int ogm_volid;
+
+    if (GetWinOGM(fdP->fd_fd, &ogm_volid, &ogm_vno)) {
+	return -1;
+    }
+
+    /* the only thing we can check is the vnode number; for the volid we have
+     * nothing else to compare against */
+    if (vno != ogm_vno) {
+	if (check) {
+	    return -1;
+	}
+	if (SetWinOGM(fdP->fd_fd, ogm_volid, vno)) {
+	    return -1;
+	}
+    }
+    return 0;
+}
+
 #else /* AFS_NT40_ENV */
 /* SetOGM - set owner group and mode bits from parm and tag */
 static int
@@ -723,20 +779,88 @@ GetOGMFromStat(struct afs_stat *status, int *parm, int *tag)
 }
 
 static int
-CheckOGM(namei_t *name, FdHandle_t *fdP, int p1)
+GetOGM(FdHandle_t *fdP, int *parm, int *tag)
 {
     struct afs_stat status;
-    int parm, tag;
     if (afs_fstat(fdP->fd_fd, &status) < 0)
 	return -1;
+    GetOGMFromStat(&status, parm, tag);
+    return 0;
+}
 
-    GetOGMFromStat(&status, &parm, &tag);
+static int
+CheckOGM(FdHandle_t *fdP, int p1)
+{
+    int parm, tag;
+
+    if (GetOGM(fdP, &parm, &tag) < 0)
+	return -1;
     if (parm != p1)
 	return -1;
 
     return 0;
 }
+
+static int
+FixSpecialOGM(FdHandle_t *fdP, int check)
+{
+    int inode_volid, ogm_volid;
+    int inode_type, ogm_type;
+    Inode ino = fdP->fd_ih->ih_ino;
+
+    inode_volid = ((ino >> NAMEI_UNIQSHIFT) & NAMEI_UNIQMASK);
+    inode_type = (int)((ino >> NAMEI_TAGSHIFT) & NAMEI_TAGMASK);
+
+    if (GetOGM(fdP, &ogm_volid, &ogm_type) < 0) {
+	Log("Error retrieving OGM info\n");
+	return -1;
+    }
+
+    if (inode_volid != ogm_volid || inode_type != ogm_type) {
+	Log("%sIncorrect OGM data (ino: vol %u type %d) (ogm: vol %u type %d)\n",
+	    check?"":"Fixing ", inode_volid, inode_type, ogm_volid, ogm_type);
+
+	if (check) {
+	    return -1;
+	}
+
+	if (SetOGM(fdP->fd_fd, inode_volid, inode_type) < 0) {
+	    Log("Error setting OGM data\n");
+	    return -1;
+	}
+    }
+    return 0;
+}
+
 #endif /* !AFS_NT40_ENV */
+
+/**
+ * Check/fix the OGM data for an inode
+ *
+ * @param[in] fdP   Open file handle for the inode to check
+ * @param[in] check 1 to just check the OGM data, and return an error if it
+ *                  is incorrect. 0 to fix the OGM data if it is incorrect.
+ *
+ * @pre fdP must be for a special inode
+ *
+ * @return status
+ *  @retval 0 success
+ *  @retval -1 error
+ */
+int
+namei_FixSpecialOGM(FdHandle_t *fdP, int check)
+{
+    int vnode;
+    Inode ino = fdP->fd_ih->ih_ino;
+
+    vnode = (int)(ino & NAMEI_VNODEMASK);
+    if (vnode != NAMEI_VNODESPECIAL) {
+	Log("FixSpecialOGM: non-special vnode %u\n", vnode);
+	return -1;
+    }
+
+    return FixSpecialOGM(fdP, check);
+}
 
 int big_vno = 0;		/* Just in case we ever do 64 bit vnodes. */
 
@@ -755,7 +879,7 @@ namei_icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint
     FdHandle_t *fdP;
     FdHandle_t tfd;
     int type, tag;
-    FILETIME ftime;
+    int ogm_p1, ogm_p2;
     char *p;
     b32_string_t str1;
 
@@ -775,8 +899,8 @@ namei_icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint
 	 * p3 - type
 	 * p4 - parent volume id
 	 */
-        ftime.dwHighDateTime = p1;
-        ftime.dwLowDateTime = p2;
+        ogm_p1 = p1;
+        ogm_p2 = p2;
 	type = p3;
 	tmp.ih_vid = p4;	/* Use parent volume id, where this file will be. */
 	tmp.ih_ino = namei_MakeSpecIno(p1, p3);
@@ -797,8 +921,8 @@ namei_icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint
 
 	tmp.ih_vid = p1;
 	tmp.ih_ino = (Inode) p2;
-	ftime.dwHighDateTime = p3;
-        ftime.dwLowDateTime = p4;
+	ogm_p1 = p3;
+        ogm_p2 = p4;
     }
 
     namei_HandleToName(&name, &tmp);
@@ -827,7 +951,7 @@ namei_icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint
     tmp.ih_ino |= (((Inode) tag) << NAMEI_TAGSHIFT);
 
     if (!code) {
-        if (!SetFileTime((HANDLE) fd, &ftime, NULL, NULL)) {
+        if (SetWinOGM(fd, ogm_p1, ogm_p2)) {
 	    errno = OS_ERROR(EBADF);
             code = -1;
         }
@@ -880,7 +1004,8 @@ bad:
 }
 #else /* !AFS_NT40_ENV */
 Inode
-namei_icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4)
+icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4,
+        FD_t *afd, Inode *ainode)
 {
     namei_t name;
     int fd = INVALID_FD;
@@ -970,10 +1095,6 @@ namei_icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint
     }
 
   bad:
-    if (fd >= 0)
-	close(fd);
-
-
     if (code || (fd < 0)) {
 	if (p2 != -1) {
 	    fdP = IH_OPEN(lh);
@@ -983,7 +1104,56 @@ namei_icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint
 	    }
 	}
     }
-    return (code || (fd < 0)) ? (Inode) - 1 : tmp.ih_ino;
+
+    *afd = fd;
+    *ainode = tmp.ih_ino;
+
+    return code;
+}
+
+Inode
+namei_icreate(IHandle_t * lh, char *part,
+              afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4)
+{
+    Inode ino = 0;
+    int fd = INVALID_FD;
+    int code;
+
+    code = icreate(lh, part, p1, p2, p3, p4, &fd, &ino);
+    if (fd >= 0) {
+	close(fd);
+    }
+    return (code || (fd < 0)) ? (Inode) - 1 : ino;
+}
+
+IHandle_t *
+namei_icreate_init(IHandle_t * lh, int dev, char *part,
+                   afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4)
+{
+    Inode ino = 0;
+    int fd = INVALID_FD;
+    int code;
+    IHandle_t *ihP;
+    FdHandle_t *fdP;
+
+    code = icreate(lh, part, p1, p2, p3, p4, &fd, &ino);
+    if (fd == INVALID_FD) {
+	return NULL;
+    }
+    if (code) {
+	close(fd);
+	return NULL;
+    }
+
+    IH_INIT(ihP, dev, p1, ino);
+    fdP = ih_attachfd(ihP, fd);
+    if (!fdP) {
+	close(fd);
+    } else {
+	FDH_CLOSE(fdP);
+    }
+
+    return ihP;
 }
 #endif
 
@@ -1028,7 +1198,7 @@ namei_dec(IHandle_t * ih, Inode ino, int p1)
 	    return -1;
 	}
 
-	if (CheckOGM(&name, fdP, p1) < 0) {
+	if (CheckOGM(fdP, p1) < 0) {
 	    FDH_REALLYCLOSE(fdP);
 	    IH_RELEASE(tmp);
 	    errno = OS_ERROR(EINVAL);
@@ -1871,30 +2041,21 @@ _namei_examine_special(char * path1,
 {
     int ret = 0;
     struct ViceInodeInfo info;
-    afs_uint32 inode_vgid;
 
     if (DecodeInode(path1, dname, &info, myIH->ih_vid) < 0) {
 	ret = 0;
 	goto error;
     }
 
-#ifdef AFS_NT40_ENV
-    inode_vgid = myIH->ih_vid;
-#else
-    inode_vgid = (info.inodeNumber >> NAMEI_UNIQSHIFT) & NAMEI_UNIQMASK;
-#endif
-
     if (info.u.param[2] != VI_LINKTABLE) {
 	info.linkCount = 1;
-    } else if ((info.u.param[0] != myIH->ih_vid) ||
-	       (inode_vgid != myIH->ih_vid)) {
+    } else if (info.u.param[0] != myIH->ih_vid) {
 	/* VGID encoded in linktable filename and/or OGM data isn't
 	 * consistent with VGID encoded in namei path */
 	Log("namei_ListAFSSubDirs: warning: inconsistent linktable "
 	    "filename \"%s" OS_DIRSEP "%s\"; salvager will delete it "
-	    "(dir_vgid=%u, inode_vgid=%u, ogm_vgid=%u)\n",
+	    "(dir_vgid=%u, inode_vgid=%u)\n",
 	    path1, dname, myIH->ih_vid,
-	    (unsigned int)inode_vgid,
 	    info.u.param[0]);
     } else {
 	char path2[512];
@@ -2721,14 +2882,17 @@ DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info,
     if (strcmp(name, check))
 	return -1;
 
-    GetOGMFromStat(&status, &parm, &tag);
     if ((info->inodeNumber & NAMEI_INODESPECIAL) == NAMEI_INODESPECIAL) {
+	parm = ((info->inodeNumber >> NAMEI_UNIQSHIFT) & NAMEI_UNIQMASK);
+	tag = (int)((info->inodeNumber >> NAMEI_TAGSHIFT) & NAMEI_TAGMASK);
+
 	/* p1 - vid, p2 - -1, p3 - type, p4 - rwvid */
 	info->u.param[0] = parm;
 	info->u.param[1] = -1;
 	info->u.param[2] = tag;
 	info->u.param[3] = volid;
     } else {
+	GetOGMFromStat(&status, &parm, &tag);
 	/* p1 - vid, p2 - vno, p3 - uniq, p4 - dv */
 	info->u.param[0] = volid;
 	info->u.param[1] = (int)(info->inodeNumber & NAMEI_VNODEMASK);

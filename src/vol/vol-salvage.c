@@ -182,6 +182,7 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #include "volume.h"
 #include "partition.h"
 #include "daemon_com.h"
+#include "daemon_com_inline.h"
 #include "fssync.h"
 #include "fssync_inline.h"
 #include "volume_inline.h"
@@ -320,10 +321,11 @@ static int IsVnodeOrphaned(struct SalvInfo *salvinfo, VnodeId vnode);
 static int AskVolumeSummary(struct SalvInfo *salvinfo,
                             VolumeId singleVolumeNumber);
 static void MaybeAskOnline(struct SalvInfo *salvinfo, VolumeId volumeId);
+static void AskError(struct SalvInfo *salvinfo, VolumeId volumeId);
 
-#if defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
+#ifdef AFS_DEMAND_ATTACH_FS
 static int LockVolume(struct SalvInfo *salvinfo, VolumeId volumeId);
-#endif /* AFS_DEMAND_ATTACH_FS || AFS_DEMAND_ATTACH_UTIL */
+#endif /* AFS_DEMAND_ATTACH_FS */
 
 /* Uniquifier stored in the Inode */
 static Unique
@@ -752,13 +754,13 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 	Abort("Raced too many times with fileserver restarts while trying to "
 	      "checkout/lock volumes; Aborted\n");
     }
-#if defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
+#ifdef AFS_DEMAND_ATTACH_FS
     if (tries > 1) {
 	/* unlock all previous volume locks, since we're about to lock them
 	 * again */
 	VLockFileReinit(&partP->volLockFile);
     }
-#endif /* AFS_DEMAND_ATTACH_FS || AFS_DEMAND_ATTACH_UTIL */
+#endif /* AFS_DEMAND_ATTACH_FS */
 
     salvinfo->fileSysPartition = partP;
     salvinfo->fileSysDevice = salvinfo->fileSysPartition->device;
@@ -777,11 +779,11 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 #endif
 
     if (singleVolumeNumber) {
-#if !(defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL))
+#ifndef AFS_DEMAND_ATTACH_FS
 	/* only non-DAFS locks the partition when salvaging a single volume;
 	 * DAFS will lock the individual volumes in the VG */
 	VLockPartition(partP->name);
-#endif /* !(AFS_DEMAND_ATTACH_FS || AFS_DEMAND_ATTACH_UTIL) */
+#endif /* !AFS_DEMAND_ATTACH_FS */
 
 	ForceSalvage = 1;
 
@@ -792,11 +794,11 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 
 	salvinfo->useFSYNC = 1;
 	AskOffline(salvinfo, singleVolumeNumber);
-#if defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
+#ifdef AFS_DEMAND_ATTACH_FS
 	if (LockVolume(salvinfo, singleVolumeNumber)) {
 	    goto retry;
 	}
-#endif /* AFS_DEMAND_ATTACH_FS || AFS_DEMAND_ATTACH_UTIL */
+#endif /* AFS_DEMAND_ATTACH_FS */
 
     } else {
 	salvinfo->useFSYNC = 0;
@@ -904,6 +906,16 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 	goto retry;
     }
 
+    if (singleVolumeNumber) {
+	/* If we delete a volume during the salvage, we indicate as such by
+	 * setting the volsummary->deleted field. We need to know if we
+	 * deleted a volume or not in order to know which volumes to bring
+	 * back online after the salvage. If we fork, we will lose this
+	 * information, since volsummary->deleted will not get set in the
+	 * parent. So, don't fork. */
+	canfork = 0;
+    }
+
     for (i = j = 0, vsp = salvinfo->volumeSummaryp, esp = vsp + salvinfo->nVolumes;
 	 i < salvinfo->nVolumesInInodeFile; i = j) {
 	VolumeId rwvid = salvinfo->inodeSummary[i].RWvolumeId;
@@ -917,7 +929,7 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 	     * If there is one here that is not in the inode volume list,
 	     * delete it now. */
 	    for (; vsp < esp && (vsp->header.parent < rwvid); vsp++) {
-		if (vsp->fileName)
+		if (vsp->unused)
 		    DeleteExtraVolumeHeaderFile(salvinfo, vsp);
 	    }
 	    /* Now match up the volume summary info from the root directory with the
@@ -926,7 +938,7 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 	    for (tsp = vsp; tsp < esp && (tsp->header.parent == rwvid); tsp++) {
 		if (tsp->header.id == vid) {
 		    salvinfo->inodeSummary[j].volSummary = tsp;
-		    tsp->fileName = 0;
+		    tsp->unused = 0;
 		    break;
 		}
 	    }
@@ -939,7 +951,7 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 
     /* Delete any additional volumes that were listed in the partition but which didn't have any corresponding inodes */
     for (; vsp < esp; vsp++) {
-	if (vsp->fileName)
+	if (vsp->unused)
 	    DeleteExtraVolumeHeaderFile(salvinfo, vsp);
     }
 
@@ -948,10 +960,10 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 
     if (!Testing && singleVolumeNumber) {
 	int foundSVN = 0;
-#if defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
+#ifdef AFS_DEMAND_ATTACH_FS
 	/* unlock vol headers so the fs can attach them when we AskOnline */
 	VLockFileReinit(&salvinfo->fileSysPartition->volLockFile);
-#endif /* AFS_DEMAND_ATTACH_FS || AFS_DEMAND_ATTACH_UTIL */
+#endif /* AFS_DEMAND_ATTACH_FS */
 
 	/* Step through the volumeSummary list and set all volumes on-line.
 	 * Most volumes were taken off-line in GetVolumeSummary.
@@ -998,7 +1010,14 @@ void
 DeleteExtraVolumeHeaderFile(struct SalvInfo *salvinfo, struct VolumeSummary *vsp)
 {
     char path[64];
-    sprintf(path, "%s" OS_DIRSEP "%s", salvinfo->fileSysPath, vsp->fileName);
+    char filename[VMAXPATHLEN];
+
+    if (vsp->deleted) {
+	return;
+    }
+
+    VolumeExternalName_r(vsp->header.id, filename, sizeof(filename));
+    sprintf(path, "%s" OS_DIRSEP "%s", salvinfo->fileSysPath, filename);
 
     if (!Showmode)
 	Log("The volume header file %s is not associated with any actual data (%sdeleted)\n", path, (Testing ? "would have been " : ""));
@@ -1011,7 +1030,7 @@ DeleteExtraVolumeHeaderFile(struct SalvInfo *salvinfo, struct VolumeSummary *vsp
 	        afs_printable_uint32_lu(vsp->header.id));
 	}
 
-	/* make sure we actually delete the fileName file; ENOENT
+	/* make sure we actually delete the header file; ENOENT
 	 * is fine, since VDestroyVolumeDiskHeader probably already
 	 * unlinked it */
 	if (unlink(path) && errno != ENOENT) {
@@ -1022,7 +1041,6 @@ DeleteExtraVolumeHeaderFile(struct SalvInfo *salvinfo, struct VolumeSummary *vsp
 	}
 	vsp->deleted = 1;
     }
-    vsp->fileName = 0;
 }
 
 int
@@ -1186,6 +1204,8 @@ GetInodeSummary(struct SalvInfo *salvinfo, FILE *inodeFile, VolumeId singleVolum
     char *part = salvinfo->fileSysPath;
     char *tdir;
     int i;
+    int retcode = 0;
+    int deleted = 0;
 
     /* This file used to come from vfsck; cobble it up ourselves now... */
     if ((err =
@@ -1194,7 +1214,8 @@ GetInodeSummary(struct SalvInfo *salvinfo, FILE *inodeFile, VolumeId singleVolum
 			singleVolumeNumber, &forceSal, forceR, wpath, NULL)) < 0) {
 	if (err == -2) {
 	    Log("*** I/O error %d when writing a tmp inode file; Not salvaged %s ***\nIncrease space on partition or use '-tmpdir'\n", errno, dev);
-	    return -1;
+	    retcode = -1;
+	    goto error;
 	}
 	Abort("Unable to get inodes for \"%s\"; not salvaged\n", dev);
     }
@@ -1248,17 +1269,38 @@ GetInodeSummary(struct SalvInfo *salvinfo, FILE *inodeFile, VolumeId singleVolum
 	    else {
 		struct VolumeSummary *vsp;
 		int i;
+		int foundSVN = 0;
 
 		GetVolumeSummary(salvinfo, singleVolumeNumber);
 
 		for (i = 0, vsp = salvinfo->volumeSummaryp; i < salvinfo->nVolumes; i++) {
-		    if (vsp->fileName)
+		    if (vsp->unused) {
+			if (vsp->header.id == singleVolumeNumber) {
+			    foundSVN = 1;
+			}
 			DeleteExtraVolumeHeaderFile(salvinfo, vsp);
+		    }
+		}
+
+		if (!foundSVN) {
+		    if (Testing) {
+			MaybeAskOnline(salvinfo, singleVolumeNumber);
+		    } else {
+			/* make sure we get rid of stray .vol headers, even if
+			 * they're not in our volume summary (might happen if
+			 * e.g. something else created them and they're not in the
+			 * fileserver VGC) */
+			VDestroyVolumeDiskHeader(salvinfo->fileSysPartition,
+			                         singleVolumeNumber, 0 /*parent*/);
+			AskDelete(salvinfo, singleVolumeNumber);
+		    }
 		}
 	    }
 	    Log("%s vice inodes on %s; not salvaged\n",
 		singleVolumeNumber ? "No applicable" : "No", dev);
-	    return -1;
+	    retcode = -1;
+	    deleted = 1;
+	    goto error;
 	}
 	ip = (struct ViceInodeInfo *)malloc(nInodes*sizeof(struct ViceInodeInfo));
 	if (ip == NULL) {
@@ -1284,7 +1326,8 @@ GetInodeSummary(struct SalvInfo *salvinfo, FILE *inodeFile, VolumeId singleVolum
 	    if (fwrite(&summary, sizeof(summary), 1, summaryFile) != 1) {
 		Log("Difficulty writing summary file (errno = %d); %s not salvaged\n", errno, dev);
 		fclose(summaryFile);
-		return -1;
+		retcode = -1;
+		goto error;
 	    }
 	    summary.index += (summary.nInodes);
 	    nInodes -= summary.nInodes;
@@ -1296,7 +1339,8 @@ GetInodeSummary(struct SalvInfo *salvinfo, FILE *inodeFile, VolumeId singleVolum
 	if (fflush(summaryFile) == EOF || fsync(fileno(summaryFile)) == -1) {
 	    Log("Unable to write summary file (errno = %d); %s not salvaged\n", errno, dev);
 	    fclose(summaryFile);
-	    return -1;
+	    retcode = -1;
+	    goto error;
 	}
 	if (canfork && !debug) {
 	    ShowLog = 0;
@@ -1325,7 +1369,13 @@ GetInodeSummary(struct SalvInfo *salvinfo, FILE *inodeFile, VolumeId singleVolum
     }
     Log("%d nVolumesInInodeFile %lu \n",salvinfo->nVolumesInInodeFile,(unsigned long)(status.st_size));
     fclose(summaryFile);
-    return 0;
+
+ error:
+    if (retcode && singleVolumeNumber && !deleted) {
+	AskError(salvinfo, singleVolumeNumber);
+    }
+
+    return retcode;
 }
 
 /* Comparison routine for volume sort.
@@ -1473,7 +1523,7 @@ AskVolumeSummary(struct SalvInfo *salvinfo, VolumeId singleVolumeNumber)
 
 		DiskToVolumeHeader(&vsp->header, &diskHdr);
 		VolumeExternalName_r(q_res.children[i], name, sizeof(name));
-		vsp->fileName = ToString(name);
+		vsp->unused = 1;
 		salvinfo->nVolumes++;
 		vsp++;
 	    }
@@ -1622,7 +1672,7 @@ RecordHeader(struct DiskPartition64 *dp, const char *name,
 
 	        AskOffline(salvinfo, summary.header.id);
 
-#if defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
+#ifdef AFS_DEMAND_ATTACH_FS
 		if (!badname) {
 		    /* don't lock the volume if the header is bad, since we're
 		     * about to delete it anyway. */
@@ -1631,7 +1681,7 @@ RecordHeader(struct DiskPartition64 *dp, const char *name,
 			return -1;
 		    }
 		}
-#endif /* AFS_DEMAND_ATTACH_FS || AFS_DEMAND_ATTACH_UTIL */
+#endif /* AFS_DEMAND_ATTACH_FS */
 	    }
 	}
 	if (badname) {
@@ -1644,7 +1694,7 @@ RecordHeader(struct DiskPartition64 *dp, const char *name,
 	    return 1;
 	}
 
-	summary.fileName = ToString(base);
+	summary.unused = 1;
 	params->nVolumes++;
 
 	if (params->nVolumes > params->totalVolumes) {
@@ -2161,6 +2211,8 @@ SalvageVolumeHeaderFile(struct SalvInfo *salvinfo, struct InodeSummary *isp,
     struct VolumeDiskHeader diskHeader;
     afs_int32 (*writefunc)(VolumeDiskHeader_t *, struct DiskPartition64 *) = NULL;
     int *skip;
+    struct VolumeHeader tempHeader;
+    struct afs_inode_info stuff[MAXINODETYPE];
 
     /* keeps track of special inodes that are probably 'good'; they are
      * referenced in the vol header, and are included in the given inodes
@@ -2185,6 +2237,8 @@ SalvageVolumeHeaderFile(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 	/* still try to perform the salvage; the skip array only does anything
 	 * if we detect duplicate special inodes */
     }
+
+    init_inode_info(&tempHeader, stuff);
 
     /*
      * First, look at the special inodes and see if any are referenced by
@@ -2342,7 +2396,6 @@ SalvageVolumeHeaderFile(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 		isp->volumeId, (Testing ? "it would have been " : ""),
 		path);
 	isp->volSummary = calloc(1, sizeof(struct VolumeSummary));
-	isp->volSummary->fileName = ToString(headerName);
 
 	writefunc = VCreateVolumeDiskHeader;
     } else {
@@ -2355,13 +2408,7 @@ SalvageVolumeHeaderFile(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 	if (memcmp
 	    (&isp->volSummary->header, &tempHeader,
 	     sizeof(struct VolumeHeader))) {
-	    /* We often remove the name before calling us, so we make a fake one up */
-	    if (isp->volSummary->fileName) {
-		strcpy(headerName, isp->volSummary->fileName);
-	    } else {
-		(void)afs_snprintf(headerName, sizeof headerName, VFORMAT, afs_printable_uint32_lu(isp->volumeId));
-		isp->volSummary->fileName = ToString(headerName);
-	    }
+	    VolumeExternalName_r(isp->volumeId, headerName, sizeof(headerName));
 	    (void)afs_snprintf(path, sizeof path, "%s" OS_DIRSEP "%s", salvinfo->fileSysPath, headerName);
 
 	    Log("Header file %s is damaged or no longer valid%s\n", path,
@@ -2397,7 +2444,7 @@ SalvageVolumeHeaderFile(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 }
 
 int
-SalvageHeader(struct SalvInfo *salvinfo, struct stuff *sp,
+SalvageHeader(struct SalvInfo *salvinfo, struct afs_inode_info *sp,
               struct InodeSummary *isp, int check, int *deleteMe)
 {
     union {
@@ -2466,6 +2513,14 @@ SalvageHeader(struct SalvInfo *salvinfo, struct stuff *sp,
 	 * it below */
 	memset(&header, 0, sizeof(header));
     }
+#ifdef AFS_NAMEI_ENV
+    if (namei_FixSpecialOGM(fdP, check)) {
+	Log("Error with namei header OGM data (%s)\n", sp->description);
+	FDH_REALLYCLOSE(fdP);
+	IH_RELEASE(specH);
+	return -1;
+    }
+#endif
     if (sp->inodeType == VI_VOLINFO
 	&& header.volumeInfo.destroyMe == DESTROY_ME) {
 	if (deleteMe)
@@ -3066,31 +3121,42 @@ JudgeEntry(void *arock, char *name, afs_int32 vnodeNumber,
      * or if the directory is orphaned.
      */
     if (!vnodeEssence->unique || (vnodeEssence->unique) != unique) {
-	if (!vnodeEssence->unique
-	    && ((strcmp(name, "..") == 0) || (strcmp(name, ".") == 0))) {
-	    /* This is an orphaned directory. Don't delete the . or ..
-	     * entry. Otherwise, it will get created in the next
-	     * salvage and deleted again here. So Just skip it.
-	     */
-	    return 0;
-	}
-
 	todelete = ((!vnodeEssence->unique || dirOrphaned) ? 1 : 0);
 
-	if (!Showmode) {
-	    Log("dir vnode %u: %s" OS_DIRSEP "%s (vnode %u): unique changed from %u to %u %s\n", dir->vnodeNumber, (dir->name ? dir->name : "??"), name, vnodeNumber, unique, vnodeEssence->unique, (!todelete ? "" : (Testing ? "-- would have deleted" : "-- deleted")));
+	if (todelete
+	    && ((strcmp(name, "..") == 0) || (strcmp(name, ".") == 0))) {
+		if (dirOrphaned) {
+		    /* This is an orphaned directory. Don't delete the . or ..
+		     * entry. Otherwise, it will get created in the next
+		     * salvage and deleted again here. So Just skip it.
+		     * */
+		    return 0;
+		}
+		/* (vnodeEssence->unique == 0 && ('.' || '..'));
+		 * Entries arriving here should be deleted, but the directory
+		 * is not orphaned. Therefore, the entry must be pointing at
+		 * the wrong vnode.  Skip the 'else' clause and fall through;
+		 * the code below will repair the entry so it correctly points
+		 * at the vnode of the current directory (if '.') or the parent
+		 * directory (if '..'). */
+	} else {
+	    if (!Showmode) {
+		Log("dir vnode %u: %s" OS_DIRSEP "%s (vnode %u): unique changed from %u to %u %s\n",
+		    dir->vnodeNumber, (dir->name ? dir->name : "??"), name, vnodeNumber, unique,
+		    vnodeEssence->unique, (!todelete ? "" : (Testing ? "-- would have deleted" : "-- deleted")));
+	    }
+	    if (!Testing) {
+		AFSFid fid;
+		fid.Vnode = vnodeNumber;
+		fid.Unique = vnodeEssence->unique;
+		CopyOnWrite(salvinfo, dir);
+		osi_Assert(Delete(&dir->dirHandle, name) == 0);
+		if (!todelete)
+		    osi_Assert(Create(&dir->dirHandle, name, &fid) == 0);
+	    }
+	    if (todelete)
+		return 0;		/* no need to continue */
 	}
-	if (!Testing) {
-	    AFSFid fid;
-	    fid.Vnode = vnodeNumber;
-	    fid.Unique = vnodeEssence->unique;
-	    CopyOnWrite(salvinfo, dir);
-	    osi_Assert(Delete(&dir->dirHandle, name) == 0);
-	    if (!todelete)
-		osi_Assert(Create(&dir->dirHandle, name, &fid) == 0);
-	}
-	if (todelete)
-	    return 0;		/* no need to continue */
     }
 
     if (strcmp(name, ".") == 0) {
@@ -4167,7 +4233,7 @@ SalvageVolume(struct SalvInfo *salvinfo, struct InodeSummary *rwIsp, IHandle_t *
 	}
 #endif /* FSSYNC_BUILD_CLIENT */
 
-#if defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
+#ifdef AFS_DEMAND_ATTACH_FS
 	if (!salvinfo->useFSYNC) {
 	    /* A volume's contents have changed, but the fileserver will not
 	     * break callbacks on the volume until it tries to load the vol
@@ -4239,7 +4305,7 @@ MaybeZapVolume(struct SalvInfo *salvinfo, struct InodeSummary *isp,
                char *message, int deleteMe, int check)
 {
     if (readOnly(isp) || deleteMe) {
-	if (isp->volSummary && isp->volSummary->fileName) {
+	if (isp->volSummary && !isp->volSummary->deleted) {
 	    if (deleteMe) {
 		if (!Showmode)
 		    Log("Volume %u (is only a partial volume--probably an attempt was made to move/restore it when a machine crash occured.\n", isp->volumeId);
@@ -4254,7 +4320,9 @@ MaybeZapVolume(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 	    if (!Testing) {
 		afs_int32 code;
 		char path[64];
-		sprintf(path, "%s" OS_DIRSEP "%s", salvinfo->fileSysPath, isp->volSummary->fileName);
+		char filename[VMAXPATHLEN];
+		VolumeExternalName_r(isp->volumeId, filename, sizeof(filename));
+		sprintf(path, "%s" OS_DIRSEP "%s", salvinfo->fileSysPath, filename);
 
 		code = VDestroyVolumeDiskHeader(salvinfo->fileSysPartition, isp->volumeId, isp->RWvolumeId);
 		if (code) {
@@ -4263,7 +4331,7 @@ MaybeZapVolume(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 		        afs_printable_uint32_lu(isp->volumeId));
 		}
 
-		/* make sure we actually delete the fileName file; ENOENT
+		/* make sure we actually delete the header file; ENOENT
 		 * is fine, since VDestroyVolumeDiskHeader probably already
 		 * unlinked it */
 		if (unlink(path) && errno != ENOENT) {
@@ -4282,7 +4350,7 @@ MaybeZapVolume(struct SalvInfo *salvinfo, struct InodeSummary *isp,
     }
 }
 
-#if defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
+#ifdef AFS_DEMAND_ATTACH_FS
 /**
  * Locks a volume on disk for salvaging.
  *
@@ -4368,7 +4436,22 @@ LockVolume(struct SalvInfo *salvinfo, VolumeId volumeId)
 
     return 0;
 }
+#endif /* AFS_DEMAND_ATTACH_FS */
+
+static void
+AskError(struct SalvInfo *salvinfo, VolumeId volumeId)
+{
+#if defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
+    afs_int32 code;
+    code = FSYNC_VolOp(volumeId, salvinfo->fileSysPartition->name,
+                       FSYNC_VOL_FORCE_ERROR, FSYNC_WHATEVER, NULL);
+    if (code != SYNC_OK) {
+	Log("AskError: failed to force volume %lu into error state; "
+	    "SYNC error code %ld (%s)\n", (long unsigned)volumeId,
+	    (long)code, SYNC_res2string(code));
+    }
 #endif /* AFS_DEMAND_ATTACH_FS || AFS_DEMAND_ATTACH_UTIL */
+}
 
 void
 AskOffline(struct SalvInfo *salvinfo, VolumeId volumeId)
@@ -4394,13 +4477,13 @@ AskOffline(struct SalvInfo *salvinfo, VolumeId volumeId)
 	    Log("AskOffline:  fssync protocol mismatch (bad command word '%d'); salvage aborting.\n",
 		FSYNC_VOL_OFF);
 	    if (AskDAFS()) {
-#if defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
+#ifdef AFS_DEMAND_ATTACH_FS
 		Log("AskOffline:  please make sure dafileserver, davolserver, salvageserver and dasalvager binaries are same version.\n");
 #else
 		Log("AskOffline:  fileserver is DAFS but we are not.\n");
 #endif
 	    } else {
-#if defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
+#ifdef AFS_DEMAND_ATTACH_FS
 		Log("AskOffline:  fileserver is not DAFS but we are.\n");
 #else
 		Log("AskOffline:  please make sure fileserver, volserver and salvager binaries are same version.\n");
@@ -4518,13 +4601,13 @@ AskDelete(struct SalvInfo *salvinfo, VolumeId volumeId)
 	    Log("AskOnline:  fssync protocol mismatch (bad command word '%d')\n",
 		FSYNC_VOL_DONE);
 	    if (AskDAFS()) {
-#if defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
+#ifdef AFS_DEMAND_ATTACH_FS
 		Log("AskOnline:  please make sure dafileserver, davolserver, salvageserver and dasalvager binaries are same version.\n");
 #else
 		Log("AskOnline:  fileserver is DAFS but we are not.\n");
 #endif
 	    } else {
-#if defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
+#ifdef AFS_DEMAND_ATTACH_FS
 		Log("AskOnline:  fileserver is not DAFS but we are.\n");
 #else
 		Log("AskOnline:  please make sure fileserver, volserver and salvager binaries are same version.\n");
@@ -4642,6 +4725,18 @@ Exit(int code)
 
 #ifdef AFS_DEMAND_ATTACH_FS
     if (programType == salvageServer) {
+	/* release all volume locks before closing down our SYNC channels.
+	 * the fileserver may try to online volumes we have checked out when
+	 * we close down FSSYNC, so we should make sure we don't have those
+	 * volumes locked when it does */
+	struct DiskPartition64 *dp;
+	int i;
+	for (i = 0; i <= VOLMAXPARTS; i++) {
+	    dp = VGetPartitionById(i, 0);
+	    if (dp) {
+		VLockFileReinit(&dp->volLockFile);
+	    }
+	}
 # ifdef SALVSYNC_BUILD_CLIENT
 	VDisconnectSALV();
 # endif

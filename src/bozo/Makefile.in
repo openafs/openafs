@@ -43,7 +43,8 @@ LIBS=${TOP_LIBDIR}/librx.a \
 OBJS=bosserver.o bnode.o ezbnodeops.o fsbnodeops.o bosint.ss.o bosint.xdr.o \
 bosoprocs.o cronbnodeops.o
 
-all: bosserver ${TOP_INCDIR}/afs/bosint.h bos ${TOP_LIBDIR}/libbos.a bos_util
+all: bosserver ${TOP_INCDIR}/afs/bosint.h bos ${TOP_LIBDIR}/libbos.a bos_util \
+    smail-notifier
 
 generated: bosint.ss.c bosint.xdr.c bosint.cs.c bosint.h bnode.h boserr.c
 
@@ -116,6 +117,11 @@ libbos.a: bosint.xdr.o bosint.cs.o boserr.o AFS_component_version_number.o
 bosserver: $(OBJS) $(LIBS)
 	${CC} $(CFLAGS) -o bosserver $(OBJS) ${TOP_LIBDIR}/libaudit.a $(LIBS)  ${XLIBS} ${KRB5_LIBS}
 
+smail-notifier.o: smail-notifier.c ${INCLS}
+
+smail-notifier: smail-notifier.o $(LIBS)
+	${CC} $(CFLAGS) -o smail-notifier smail-notifier.o $(LIBS) ${XLIBS}
+
 #
 # Install targets
 #
@@ -150,7 +156,7 @@ dest: bosserver bos bos_util libbos.a bosint.h bnode.h
 # Misc. targets
 #
 clean:
-	$(RM) -f  *.a *.o bos bosserver testproc bos_util \
+	$(RM) -f  *.a *.o bos bosserver smail-notifier bos_util \
 		bosint.cs.c bosint.ss.c bosint.xdr.c bosint.h \
 		core boserr.c bnode.h AFS_component_version_number.c 
 

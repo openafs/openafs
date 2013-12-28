@@ -22,6 +22,8 @@ extern void AssignVolumeName(VolumeDiskData * vol, char *name, char *ext);
 extern void AssignVolumeName_r(VolumeDiskData * vol, char *name, char *ext);
 extern void ClearVolumeStats(VolumeDiskData * vol);
 extern void ClearVolumeStats_r(VolumeDiskData * vol);
+extern void CopyVolumeStats(VolumeDiskData * from, VolumeDiskData * to);
+extern void CopyVolumeStats_r(VolumeDiskData * from, VolumeDiskData * to);
 extern afs_int32 CopyVolumeHeader(VolumeDiskData *, VolumeDiskData *);
 
 #endif

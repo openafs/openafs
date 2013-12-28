@@ -71,6 +71,7 @@
 
 extern int DoLogging;
 extern struct afsconf_dir *tdir;
+extern int DoPreserveVolumeStats;
 
 extern void LogError(afs_int32 errcode);
 
@@ -907,6 +908,7 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
     afs_int32 newType;
     struct volser_trans *tt, *ttc;
     char caller[MAXKTCNAMELEN];
+    VolumeDiskData saved_header;
 
     /*not a super user */
     if (!afsconf_SuperUser(tdir, acid, caller))
@@ -963,6 +965,10 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
 	goto fail;
     }
 
+    if (DoPreserveVolumeStats) {
+	CopyVolumeStats(&V_disk(clonevp), &saved_header);
+    }
+
     error = 0;
     Log("1 Volser: Clone: Recloning volume %u to volume %u\n", tt->volid,
 	cloneId);
@@ -985,15 +991,20 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
     }
     /* don't do strcpy onto diskstuff.name, it's still OK from 1st clone */
 
-    /* pretend recloned volume is a totally new instance */
-    V_copyDate(clonevp) = time(0);
-    V_creationDate(clonevp) = V_copyDate(clonevp);
-    ClearVolumeStats(&V_disk(clonevp));
+    /* update the creationDate, since this represents the last cloning date
+     * for ROs. But do not update copyDate; let it stay so we can identify
+     * when the clone was first created. */
+    V_creationDate(clonevp) = time(0);
+    if (DoPreserveVolumeStats) {
+	CopyVolumeStats(&saved_header, &V_disk(clonevp));
+    } else {
+	ClearVolumeStats(&V_disk(clonevp));
+    }
     V_destroyMe(clonevp) = 0;
     V_inService(clonevp) = 0;
     if (newType == backupVolume) {
-	V_backupDate(originalvp) = V_copyDate(clonevp);
-	V_backupDate(clonevp) = V_copyDate(clonevp);
+	V_backupDate(originalvp) = V_creationDate(clonevp);
+	V_backupDate(clonevp) = V_creationDate(clonevp);
     }
     V_inUse(clonevp) = 0;
     VUpdateVolume(&error, clonevp);
@@ -2220,7 +2231,7 @@ GetVolInfo(afs_uint32 partId,
     ttc = NewTrans(volumeId, partId);
     if (!ttc) {
 	code = -3;
-	VOLINT_INFO_STORE(handle, status, VOLSERVOLBUSY);
+	VOLINT_INFO_STORE(handle, status, VBUSY);
 	VOLINT_INFO_STORE(handle, volid, volumeId);
 	goto drop;
     }
@@ -2345,7 +2356,6 @@ VolListOneVolume(struct rx_call *acid, afs_int32 partid,
     DIR *dirp;
     afs_uint32 volid;
     int found = 0;
-    int code;
     volint_info_handle_t handle;
 
     volumeInfo->volEntries_val = (volintInfo *) malloc(sizeof(volintInfo));
@@ -2387,19 +2397,20 @@ VolListOneVolume(struct rx_call *acid, afs_int32 partid,
 	handle.volinfo_type = VOLINT_INFO_TYPE_BASE;
 	handle.volinfo_ptr.base = volumeInfo->volEntries_val;
 
-	code = GetVolInfo(partid,
-			  volid,
-			  pname,
-			  volname,
-			  &handle,
-			  VOL_INFO_LIST_SINGLE);
+	/* The return code from GetVolInfo is ignored; there is no error from
+	 * it that results in the whole call being aborted. Any volume
+	 * attachment failures are reported in 'status' field in the
+	 * volumeInfo payload. */
+	GetVolInfo(partid,
+	           volid,
+	           pname,
+	           volname,
+	           &handle,
+	           VOL_INFO_LIST_SINGLE);
     }
 
     closedir(dirp);
-    if (found)
-        return code ? ENODEV: 0;
-    else
-        return ENODEV;
+    return (found) ? 0 : ENODEV;
 }
 
 /*------------------------------------------------------------------------
@@ -2446,7 +2457,6 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
     DIR *dirp;			/*Partition directory ptr */
     afs_uint32 currVolID;	        /*Current volume ID */
     int found = 0;		/*Did we find the volume we need? */
-    int code;
     volint_info_handle_t handle;
 
     /*
@@ -2460,7 +2470,6 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
     memset(a_volumeXInfoP->volXEntries_val, 0, sizeof(volintXInfo)); /* Clear structure */
 
     a_volumeXInfoP->volXEntries_len = 1;
-    code = ENODEV;
 
     /*
      * If the partition name we've been given is bad, bogue out.
@@ -2516,13 +2525,16 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
 	handle.volinfo_type = VOLINT_INFO_TYPE_EXT;
 	handle.volinfo_ptr.ext = a_volumeXInfoP->volXEntries_val;
 
-	code = GetVolInfo(a_partID,
-			  a_volID,
-			  pname,
-			  volname,
-			  &handle,
-			  VOL_INFO_LIST_SINGLE);
-
+	/* The return code from GetVolInfo is ignored; there is no error from
+	 * it that results in the whole call being aborted. Any volume
+	 * attachment failures are reported in 'status' field in the
+	 * volumeInfo payload. */
+	GetVolInfo(a_partID,
+	           a_volID,
+	           pname,
+	           volname,
+	           &handle,
+	           VOL_INFO_LIST_SINGLE);
     }
 
     /*
@@ -2530,10 +2542,7 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
      * return the proper value.
      */
     closedir(dirp);
-    if (found)
-        return code ? ENODEV: 0;
-    else
-        return ENODEV;
+    return (found) ? 0 : ENODEV;
 }				/*SAFSVolXListOneVolume */
 
 /*returns all the volumes on partition partid. If flags = 1 then all the

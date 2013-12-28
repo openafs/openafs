@@ -67,6 +67,8 @@ struct bnode {
     short flags;		/* random flags */
     char goal;			/* 1=running or 0=not running */
     char fileGoal;		/* same, but to be stored in file */
+    afs_int32 errorStopCount;	/* number of recent error stops */
+    afs_int32 errorStopDelay;	/* seconds to wait before retrying start */
 };
 
 struct bnode_proc {
@@ -140,3 +142,4 @@ extern int bnode_WaitStatus(struct bnode *abnode, int astatus);
 extern int bnode_SetStat(struct bnode *abnode, int agoal);
 extern int bnode_CreatePidFile(struct bnode *abnode, struct bnode_proc *aproc, char *name);
 extern int bnode_DestroyPidFile(struct bnode *abnode, struct bnode_proc *aproc);
+extern int bnode_ResetErrorCount(struct bnode *abnode);

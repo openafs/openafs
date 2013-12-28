@@ -143,6 +143,9 @@ physio.o: physio.c ${VINCLS}
 common.o: common.c ${VINCLS}
 lockprocs.o: lockprocs.c ${VINCLS} ${INTINCLS} ${RINCLS}
 vol_split.o: vol_split.c ${VINCLS} ${INTINCLS} ${RINCLS}
+restorevol.o: restorevol.c ${VINCLS} ${INTINCLS}
+voltrans.o: voltrans.c ${VINCLS} ${INTINCLS} ${RINCLS}
+vol-dump.o: vol-dump.c ${VINCLS} ${INTINCLS} ${RINCLS}
 
 #
 # Installation targets

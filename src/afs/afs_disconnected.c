@@ -1234,7 +1234,7 @@ afs_ResyncDisconFiles(struct vrequest *areq, afs_ucred_t *acred)
 	} else if (afs_ConflictPolicy == SERVER_WINS) {
 	    /* DV mismatch, apply collision resolution policy. */
 	    /* Discard this files chunks and remove from current dir. */
-	    afs_ResetVCache(tvc, acred);
+	    afs_ResetVCache(tvc, acred, 0);
 	    tvc->f.truncPos = AFS_NOTRUNC;
 	} else {
 	    /* printf("afs_ResyncDisconFiles: no resolution policy selected.\n"); */
@@ -1327,7 +1327,7 @@ afs_DisconDiscardAllShadows(int squash, afs_ucred_t *acred)
 	ObtainWriteLock(&tvc->lock, 706);
 
 	if (squash)
-	   afs_ResetVCache(tvc, acred);
+	   afs_ResetVCache(tvc, acred, 0);
 
 	afs_DeleteShadowDir(tvc);
 
@@ -1356,7 +1356,7 @@ afs_DisconDiscardAll(afs_ucred_t *acred)
 	ReleaseWriteLock(&afs_disconDirtyLock);
 
 	ObtainWriteLock(&tvc->lock, 718);
-	afs_ResetVCache(tvc, acred);
+	afs_ResetVCache(tvc, acred, 0);
 	tvc->f.truncPos = AFS_NOTRUNC;
 	ReleaseWriteLock(&tvc->lock);
 	ObtainWriteLock(&afs_disconDirtyLock, 719);

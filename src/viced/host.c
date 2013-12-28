@@ -86,6 +86,13 @@ int rxcon_client_key;
 
 static struct rx_securityClass *sc = NULL;
 
+/* arguments for PerHost_EnumerateClient enumeration */
+struct enumclient_args {
+    afs_int32 vid;
+    int (*proc)(struct client *client, void *rock);
+    void *rock;
+};
+
 static void h_SetupCallbackConn_r(struct host * host);
 static int h_threadquota(int);
 
@@ -759,6 +766,7 @@ h_SetupCallbackConn_r(struct host * host)
 	rx_NewConnection(host->host, host->port, 1, sc, 0);
     rx_SetConnDeadTime(host->callback_rxcon, 50);
     rx_SetConnHardDeadTime(host->callback_rxcon, AFS_HARDDEADTIME);
+    rx_SetConnSecondsUntilNatPing(host->callback_rxcon, 20);
 }
 
 /* h_Lookup_r
@@ -1340,12 +1348,7 @@ removeAddress_r(struct host *host, afs_uint32 addr, afs_uint16 port)
                     rxconn = NULL;
                 }
 
-                if (!sc)
-                    sc = rxnull_NewClientSecurityObject();
-                host->callback_rxcon =
-                    rx_NewConnection(host->host, host->port, 1, sc, 0);
-                rx_SetConnDeadTime(host->callback_rxcon, 50);
-                rx_SetConnHardDeadTime(host->callback_rxcon, AFS_HARDDEADTIME);
+		h_SetupCallbackConn_r(host);
             }
         } else {
             /* not the primary addr/port, just invalidate it */
@@ -1766,6 +1769,7 @@ h_GetHost_r(struct rx_connection *tcon)
             cb_in = rx_NewConnection(haddr, hport, 1, sc, 0);
             rx_SetConnDeadTime(cb_in, 50);
             rx_SetConnHardDeadTime(cb_in, AFS_HARDDEADTIME);
+	    rx_SetConnSecondsUntilNatPing(cb_in, 20);
 
             code =
                 RXAFSCB_TellMeAboutYourself(cb_in, &interf, &caps);
@@ -2347,36 +2351,46 @@ MapName_r(char *aname, char *acell, afs_int32 * aval)
 /*MapName*/
 
 
-/* NOTE: this returns the client with a Write lock and a refCount */
-struct client *
-h_ID2Client(afs_int32 vid)
+static int
+PerHost_EnumerateClient(struct host *host, void *arock)
 {
+    struct enumclient_args *args = arock;
     struct client *client;
-    struct host *host;
-    int count;
+    int code;
 
-    H_LOCK;
-    for (count = 0, host = hostList; host && count < hostCount; host = host->next, count++) {
-	if (host->hostFlags & HOSTDELETED)
-	    continue;
-	for (client = host->FirstClient; client; client = client->next) {
-	    if (!client->deleted && client->ViceId == vid) {
-		client->refCount++;
-		H_UNLOCK;
-		ObtainWriteLock(&client->lock);
-		return client;
+    for (client = host->FirstClient; client; client = client->next) {
+	if (!client->deleted && client->ViceId == args->vid) {
+
+	    client->refCount++;
+	    H_UNLOCK;
+
+	    code = (*args->proc)(client, args->rock);
+
+	    H_LOCK;
+	    h_ReleaseClient_r(client);
+
+	    if (code) {
+		return H_ENUMERATE_BAIL(0);
 	    }
 	}
     }
-    if (count != hostCount) {
-	ViceLog(0, ("h_ID2Client found %d of %d hosts\n", count, hostCount));
-    } else if (host != NULL) {
-	ViceLog(0, ("h_ID2Client found more than %d hosts\n", hostCount));
-	ShutDownAndCore(PANIC);
-    }
 
+    return 0;
+}
+
+void
+h_EnumerateClients(afs_int32 vid,
+                   int (*proc)(struct client *client, void *rock),
+                   void *rock)
+{
+    struct enumclient_args args;
+    args.vid = vid;
+    args.proc = proc;
+    args.rock = rock;
+
+    H_LOCK;
+    h_Enumerate_r(PerHost_EnumerateClient, hostList, &args);
     H_UNLOCK;
-    return NULL;
 }
 
 /*

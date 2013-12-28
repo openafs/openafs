@@ -30,6 +30,7 @@
 #include <lock.h>
 #define UBIK_LEGACY_CALLITER 1
 #include <ubik.h>
+#include <afs/afs_assert.h>
 #ifndef AFS_NT40_ENV
 #include <pwd.h>
 #endif

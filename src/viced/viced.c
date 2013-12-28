@@ -2028,6 +2028,9 @@ main(int argc, char *argv[])
 	exit(-1);
     }
     LogCommandLine(argc, argv, "starting", "", "File server", FSLog);
+    if (afsconf_GetLatestKey(confDir, NULL, NULL) == 0) {
+	LogDesWarning();
+    }
 
 #if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
     /* initialize the pthread soft signal handler thread */

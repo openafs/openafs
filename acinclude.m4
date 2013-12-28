@@ -819,6 +819,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 
 		 dnl Type existence checks
 		 AC_CHECK_LINUX_TYPE([struct vfs_path], [dcache.h])
+		 AC_CHECK_LINUX_TYPE([kuid_t], [uidgid.h])
 
 		 dnl Check for structure elements
 		 AC_CHECK_LINUX_STRUCT([address_space_operations],
@@ -1317,7 +1318,6 @@ AC_HEADER_DIRENT
 AC_CHECK_HEADERS([ \
 	curses.h \
 	direct.h \
-	et/com_err.h \
 	fcntl.h \
 	grp.h \
 	mntent.h \
@@ -1329,6 +1329,7 @@ AC_CHECK_HEADERS([ \
 	search.h \
 	security/pam_modules.h \
 	signal.h \
+	stdio_ext.h \
 	stdlib.h \
 	string.h \
 	strings.h \

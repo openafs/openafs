@@ -103,14 +103,16 @@ init_afs_cb(void)
 }				/* init_afs_cb */
 
 int
-afscp_FindCallBack(const struct afscp_venusfid *f, const struct afscp_server *server, struct afscp_callback *ret)
+afscp_FindCallBack(const struct afscp_venusfid *f,
+		   const struct afscp_server *server,
+		   struct afscp_callback **ret)
 {
     int i;
     struct afscp_callback *use = NULL, *cb;
     time_t now;
     struct afscp_venusfid fid;
 
-    ret = NULL;
+    *ret = NULL;
 
     time(&now);
     for (i = 0; i < afscp_maxcallbacks; i++) {
@@ -137,7 +139,7 @@ afscp_FindCallBack(const struct afscp_venusfid *f, const struct afscp_server *se
     }
 
     if (use->valid)
-	ret = use;
+	*ret = use;
     else
 	return -1;
 
