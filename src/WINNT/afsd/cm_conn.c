@@ -1669,8 +1669,10 @@ long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, afs_uint32 replicat
     if (!tcp) {
         lock_ConvertRToW(&cm_connLock);
         for (tcp = serverp->connsp; tcp; tcp=tcp->nextp) {
-            if (tcp->userp == userp)
-                break;
+	    if (tcp->userp == userp &&
+		 (replicated && (tcp->flags & CM_CONN_FLAG_REPLICATION) ||
+		  !replicated && !(tcp->flags & CM_CONN_FLAG_REPLICATION)))
+		break;
         }
         if (tcp) {
             InterlockedIncrement(&tcp->refCount);
