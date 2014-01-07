@@ -1655,6 +1655,9 @@ long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, afs_uint32 replicat
         userp = cm_rootUserp;
 
     lock_ObtainMutex(&userp->mx);
+    /* find ucell structure */
+    ucellp = cm_GetUCell(userp, serverp->cellp);
+
     lock_ObtainRead(&cm_connLock);
     for (tcp = serverp->connsp; tcp; tcp=tcp->nextp) {
         if (tcp->userp == userp &&
@@ -1663,8 +1666,6 @@ long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, afs_uint32 replicat
             break;
     }
 
-    /* find ucell structure */
-    ucellp = cm_GetUCell(userp, serverp->cellp);
     if (!tcp) {
         lock_ConvertRToW(&cm_connLock);
         for (tcp = serverp->connsp; tcp; tcp=tcp->nextp) {
