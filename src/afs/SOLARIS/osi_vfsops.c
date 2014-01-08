@@ -459,7 +459,7 @@ static vfsdef_t afs_vfsdef = {
     VFSDEF_VERSION,
     "afs",
     afsinit,
-    0,
+    VSW_STATS,
     NULL
 };
 #else
@@ -467,7 +467,7 @@ static struct vfsdef_v3 afs_vfsdef = {
     VFSDEF_VERSION,
     "afs",
     afsinit,
-    0
+    VSW_STATS
 };
 #endif
 #else
