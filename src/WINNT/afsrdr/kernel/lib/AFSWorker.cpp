@@ -2750,9 +2750,9 @@ AFSDeferWrite( IN PDEVICE_OBJECT DeviceObject,
                       __FUNCTION__,
                       pWorkItem));
 
-        CcDeferWrite( FileObject, AFSPostedDeferredWrite, pWorkItem, NULL, BytesToWrite, bRetrying);
-
         IoMarkIrpPending(Irp);
+
+	CcDeferWrite( FileObject, AFSPostedDeferredWrite, pWorkItem, NULL, BytesToWrite, bRetrying);
 
         ntStatus = STATUS_PENDING;
     }
