@@ -752,7 +752,8 @@ try_exit:
                       Irp,
                       ntStatus));
 
-        if ( NT_SUCCESS( ntStatus))
+	if ( NT_SUCCESS( ntStatus) &&
+	     ntStatus != STATUS_PENDING)
         {
             if ( !bPagingIo)
             {
@@ -784,7 +785,8 @@ try_exit:
             }
         }
 
-        if ( !bPagingIo && bNonCachedIo && CcIsFileCached( pFileObject) &&
+	if ( ntStatus != STATUS_PENDING &&
+	     !bPagingIo && bNonCachedIo && CcIsFileCached( pFileObject) &&
              pNPFcb->SectionObjectPointers.DataSectionObject != NULL &&
              bReleaseSectionObject)
         {
