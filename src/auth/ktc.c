@@ -145,11 +145,7 @@ static struct {
     struct ktc_principal server;
     struct ktc_principal client;
     struct ktc_token token;
-} local_tokens[MAXLOCALTOKENS] = { {
-0}, {
-0}, {
-0}, {
-0}};
+} local_tokens[MAXLOCALTOKENS];
 
 static int
 GetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
