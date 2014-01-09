@@ -40,6 +40,7 @@
 #else
 # include <roken.h>
 #endif
+#include <afs/opr.h>
 
 #include "rbtree.h"
 
@@ -422,8 +423,10 @@ opr_rbtree_remove(struct opr_rbtree *head, struct opr_rbtree_node *node)
 
     if (node->left == NULL)
         child = node->right;
-    else if (node->right == NULL)
+    else {
+	opr_Assert(node->right == NULL);
 	child = node->left;
+    }
 
     child->parent = node->parent;
 
