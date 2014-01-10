@@ -1791,9 +1791,14 @@ ShutdownVByPForPass_r(struct DiskPartition64 * dp, int pass)
 {
     struct rx_queue * q = queue_First(&dp->vol_list, rx_queue);
     int i = 0;
+    const char *pass_strs[4] = {"{un/pre}attached vols", "vols w/ vol header loaded", "vols w/o vol header loaded", "vols with exclusive state"};
 
-    while (ShutdownVolumeWalk_r(dp, pass, &q))
+    while (ShutdownVolumeWalk_r(dp, pass, &q)) {
 	i++;
+	if (0 == i%100) {
+	    Log("VShutdownByPartition:  ... shut down %d volumes on %s in pass %d (%s)\n", i, VPartitionPath(dp), pass, pass_strs[pass]);
+	}
+    }
 
     return i;
 }
