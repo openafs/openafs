@@ -2668,7 +2668,7 @@ cb_OldToNew(struct fs_dump_state * state, afs_uint32 old, afs_uint32 * new)
 }
 #endif /* AFS_DEMAND_ATTACH_FS */
 
-#define DumpBytes(fd,buf,req) if (write(fd, buf, req) < 0) ; /* don't care */
+#define DumpBytes(fd,buf,req) if (write(fd, buf, req) < 0) {} /* don't care */
 
 static int
 DumpCallBackState_r(void)
