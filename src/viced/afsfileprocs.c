@@ -76,6 +76,7 @@
 #include <afs/opr.h>
 #include <rx/rx_queue.h>
 #include <opr/lock.h>
+#include <opr/proc.h>
 #include <afs/nfs.h>
 #include <afs/afsint.h>
 #include <afs/vldbint.h>
@@ -5039,11 +5040,7 @@ SetAFSStats(struct AFSStatistics *stats)
     if (seconds <= 0)
 	seconds = 1;
     stats->StoreDataRate = AFSCallStats.TotalStoredBytes / seconds;
-#ifdef AFS_NT40_ENV
-    stats->ProcessSize = -1;	/* TODO: */
-#else
-    stats->ProcessSize = (afs_int32) ((long)sbrk(0) >> 10);
-#endif
+    stats->ProcessSize = opr_procsize();
     FS_UNLOCK;
     h_GetWorkStats((int *)&(stats->WorkStations),
 		   (int *)&(stats->ActiveWorkStations), (int *)0,
@@ -5160,12 +5157,7 @@ SRXAFS_GetStatistics64(struct rx_call *acall, afs_int32 statsVersion, ViceStatis
         seconds = 1;
     Statistics->ViceStatistics64_val[STATS64_STOREDATARATE] =
 	AFSCallStats.TotalStoredBytes / seconds;
-#ifdef AFS_NT40_ENV
-    Statistics->ViceStatistics64_val[STATS64_PROCESSSIZE] = -1;
-#else
-    Statistics->ViceStatistics64_val[STATS64_PROCESSSIZE] =
-	(afs_int32) ((long)sbrk(0) >> 10);
-#endif
+    Statistics->ViceStatistics64_val[STATS64_PROCESSSIZE] = opr_procsize();
     FS_UNLOCK;
     h_GetWorkStats64(&(Statistics->ViceStatistics64_val[STATS64_WORKSTATIONS]),
                      &(Statistics->ViceStatistics64_val[STATS64_ACTIVEWORKSTATIONS]),

@@ -45,6 +45,7 @@
 #include <rx/rx_queue.h>
 #include <lwp.h>
 #include <opr/lock.h>
+#include <opr/proc.h>
 #include <afs/cmd.h>
 #include <afs/ptclient.h>
 #include <afs/afsint.h>
@@ -670,11 +671,7 @@ PrintCounters(void)
     audit_PrintStats(stderr);
     h_PrintStats();
     PrintCallBackStats();
-#ifdef AFS_NT40_ENV
-    processSize = -1;		/* TODO: */
-#else
-    processSize = (int)((long)sbrk(0) >> 10);
-#endif
+    processSize = opr_procsize();
     ViceLog(0,
 	    ("There are %d connections, process size %d\n",
 	     CurrentConnections, processSize));
