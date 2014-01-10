@@ -968,7 +968,9 @@ rxfs_fetchInit(struct afs_conn *tc, struct rx_connection *rxconn,
 	    }
 	    afs_serverSetNo64Bit(tc);
 	}
-	if (!code) {
+	if (code) {
+	    goto err;
+	} else {
 	    RX_AFS_GUNLOCK();
 	    bytes = rx_Read(v->call, (char *)&length, sizeof(afs_int32));
 	    RX_AFS_GLOCK();
@@ -1026,6 +1028,7 @@ rxfs_fetchInit(struct afs_conn *tc, struct rx_connection *rxconn,
 	code = EIO;
     }
 
+err:
     if (!code && code1)
 	code = code1;
 
