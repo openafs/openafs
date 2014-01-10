@@ -735,7 +735,7 @@ PrintCounters(void)
     audit_PrintStats(stderr);
     h_PrintStats();
     PrintCallBackStats();
-#ifdef AFS_NT40_ENV
+#if defined(AFS_NT40_ENV) || defined(AFS_DARWIN_ENV)
     processSize = -1;		/* TODO: */
 #else
     processSize = (int)((long)sbrk(0) >> 10);

@@ -5765,7 +5765,7 @@ SetAFSStats(struct AFSStatistics *stats)
     if (seconds <= 0)
 	seconds = 1;
     stats->StoreDataRate = AFSCallStats.TotalStoredBytes / seconds;
-#ifdef AFS_NT40_ENV
+#if defined(AFS_NT40_ENV) || defined(AFS_DARWIN_ENV)
     stats->ProcessSize = -1;	/* TODO: */
 #else
     stats->ProcessSize = (afs_int32) ((long)sbrk(0) >> 10);
@@ -5927,7 +5927,7 @@ SRXAFS_GetStatistics64(struct rx_call *acall, afs_int32 statsVersion, ViceStatis
         seconds = 1;
     Statistics->ViceStatistics64_val[STATS64_STOREDATARATE] =
 	AFSCallStats.TotalStoredBytes / seconds;
-#ifdef AFS_NT40_ENV
+#if defined(AFS_NT40_ENV) || defined(AFS_DARWIN_ENV)
     Statistics->ViceStatistics64_val[STATS64_PROCESSSIZE] = -1;
 #else
     Statistics->ViceStatistics64_val[STATS64_PROCESSSIZE] =
