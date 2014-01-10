@@ -1944,6 +1944,11 @@ OPENAFS_HAVE_STRUCT_FIELD(DIR, dd_fd, [#include <sys/types.h>
 #include <dirent.h>
 #endif])
 
+OPENAFS_HAVE_STRUCT_FIELD(struct rusage, ru_idrss,
+[#ifdef HAVE_SYS_RESOURCE_H
+#include <sys/resource.h>
+#endif])
+
 dnl Eventually, this will look for the system one, or for OpenSSL
 LIB_hcrypto="-lafshcrypto"
 LDFLAGS_hcrypto="-L\$(TOP_LIBDIR)"
