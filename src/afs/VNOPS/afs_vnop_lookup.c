@@ -861,7 +861,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 		    else
 			tvcp->f.m.Type = VREG;
 		    /* finalize to a best guess */
-		    afs_darwin_finalizevnode(tvcp, VTOAFS(adp), NULL, 0, 1);
+		    afs_darwin_finalizevnode(tvcp, AFSTOV(adp), NULL, 0, 1);
 		    /* re-acquire usecount that finalizevnode disposed of */
 		    vnode_ref(AFSTOV(tvcp));
 #endif
