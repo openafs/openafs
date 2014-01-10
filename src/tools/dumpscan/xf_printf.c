@@ -457,7 +457,7 @@ vxfprintf(XFILE * X, char *fmt, va_list ap)
 		len = strlen(x);
 		if (haveprec && precision < len)
 		    len = precision;
-		if (altform)
+		if (altform) {
 		    for (y = x; *y; y++)
 			if (isupper(*y))
 			    *y = tolower(*y);
@@ -465,6 +465,7 @@ vxfprintf(XFILE * X, char *fmt, va_list ap)
 			    for (y = x; *y; y++)
 				if (islower(*y))
 				    *y = toupper(*y);
+		}
 	    } else {
 		UVAL = ntohl(UVAL);
 		if (zfill)
