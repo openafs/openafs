@@ -12,6 +12,7 @@
 
 #include <roken.h>
 
+#define KERBEROS_APPLE_DEPRECATED(x)
 #include <krb5.h>
 
 #ifndef HAVE_KERBEROSV_HEIM_ERR_H

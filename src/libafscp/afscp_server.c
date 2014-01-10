@@ -39,6 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 #include <rx/rx.h>
 #ifdef HAVE_KERBEROS
+# define KERBEROS_APPLE_DEPRECATED(x)
 # include <krb5.h>
 #endif
 #include "afscp.h"

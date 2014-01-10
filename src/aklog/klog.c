@@ -24,6 +24,7 @@
 #include <afs/cmd.h>
 #include <afs/ptuser.h>
 
+#define KERBEROS_APPLE_DEPRECATED(x)
 #include <krb5.h>
 
 #ifdef HAVE_KRB5_CREDS_KEYBLOCK
