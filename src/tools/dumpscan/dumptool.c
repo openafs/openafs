@@ -918,7 +918,7 @@ ScanVnodes(FILE * f, VolumeDiskData * vol, int sizescan)
 
 	offset = 0;
 	length = 0;
-	vnode->type = -1;
+	vnode->type = vNull;
 	vnode->length = -1;
 
 	if (ReadInt32(f, (uint32_t *) & vnodeNumber)) {
@@ -1064,7 +1064,7 @@ ScanVnodes(FILE * f, VolumeDiskData * vol, int sizescan)
 	 * just skip it (because we can't do anything with it.
 	 */
 
-	if (vnode->type == -1)
+	if (vnode->type == vNull)
 	    continue;
 
 #ifdef RESIDENCY
