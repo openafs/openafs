@@ -191,7 +191,7 @@ enum optionsList {
 static int
 handleit(struct cmd_syndesc *opts, void *arock)
 {
-    char pname[100], *temp;
+    char pname[100];
     afs_int32 seenpart = 0, seenvol = 0;
     VolumeId vid = 0;
     struct cmdline_rock *rock = (struct cmdline_rock *)arock;
@@ -214,7 +214,6 @@ handleit(struct cmd_syndesc *opts, void *arock)
     if (cmd_OptionAsString(opts, OPT_parallel, &optstring) == 0) {
 	if (strncmp(optstring, "all", 3) == 0) {
 	    PartsPerDisk = 1;
-	    temp += 3;
 	}
 	if (strlen(optstring) != 0) {
 	    Parallel = atoi(optstring);
