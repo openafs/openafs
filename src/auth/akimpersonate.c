@@ -65,6 +65,7 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
+#define KERBEROS_APPLE_DEPRECATED(x)
 #include <krb5.h>
 
 #include "akimpersonate.h"

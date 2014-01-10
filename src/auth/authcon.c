@@ -28,6 +28,7 @@
 #include <rx/rxkad.h>
 #if defined(USE_RXKAD_KEYTAB) && !defined(UKERNEL)
 #include <afs/dirpath.h>
+#define KERBEROS_APPLE_DEPRECATED(x)
 #include <krb5.h>
 #endif
 #include <rx/rx.h>
