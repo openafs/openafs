@@ -1597,7 +1597,11 @@ AC_REPLACE_FUNCS([ \
 	err \
 	errx \
 	flock \
+	freeaddrinfo \
+	gai_strerror \
+	getaddrinfo \
 	getdtablesize \
+	getnameinfo \
 	getopt \
 	getprogname \
 	gettimeofday \
