@@ -75,7 +75,11 @@ lib/roken/err.c			roken/err.c
 lib/roken/err.hin		roken/err.hin
 lib/roken/errx.c		roken/errx.c
 lib/roken/flock.c		roken/flock.c
+lib/roken/freeaddrinfo.c	roken/freeaddrinfo.c
+lib/roken/gai_strerror.c	roken/gai_strerror.c
+lib/roken/getaddrinfo.c		roken/getaddinfo.c
 lib/roken/getdtablesize.c	roken/getdtablesize.c
+lib/roken/getnameinfo.c		roken/getnameinfo.c
 lib/roken/getopt.c		roken/getopt.c
 lib/roken/getprogname.c		roken/getprogname.c
 lib/roken/gettimeofday.c	roken/gettimeofday.c
