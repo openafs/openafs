@@ -1,3 +1,68 @@
+Release 1.7.2900; Changes since 1.7.2800
+
+ * "fs flush*" commands flush status information but not data.
+   However, the Windows client stores mount point and symlink
+   target information in the status object so clear that data
+   as well when an "fs flush*" command is executed.
+
+ * "fs flush <file>" is no longer permitted against Freelance
+   objects.
+
+ * "fs flushvolume <path>" and "fs flushall" can operate on
+   Freelance objects.
+
+ * Reduce the risk of a race between the Freelance volume data
+   regeneration in the service and the queries for that data
+   from the afs redirector.  If the race is lost the Freelance
+   mount point and symlink entries can be considered invalid
+   by the afs redirector when evaluating paths.
+
+ * If the redirector device is not present, return WN_NO_NETWORK
+   from network provider browse requests to indicate the redirector
+   network is not ready for browsing.
+
+ * Change the try..except wrappers around Cc and Mm functions
+   in the redirector so that they do not trigger a debug
+   breakpoint if the AFS_DBG_BUGCHECK_EXCEPTION bit is set.
+   Instead just return the exception code as the ntStatus value.
+
+ * Recent file server updates revmoved the PSRFS_READ access
+   check for the RXAFS_GetVolumeStatus RPC.  The cache manager
+   should no longer optimize failures to this RPC if the user
+   does not have read permission.
+
+ * Fix the cm_buffer_t hash algorithm use of jhashes.  Previous
+   to this release the hash was constructed taking into account
+   random stack data.  As a result incorrect lookups from the
+   data buffer hash table could occur.  At best this resulted
+   in a cache miss.  At worst file data corruption.
+
+ * When storing data to the file server the background daemon
+   threads would attempt to store beyond the end of the file
+   and fail.  This would result in the dirty data being stored
+   within the cache and it only being flushed to the file server
+   when the last handle to the file was closed.
+
+ * Fix a bug in the service function that evaluates FileId
+   status information on behalf of the afs redirector.  In the
+   case of mount points it would evaluate the target even though
+   doing so was not requested by the afs redirector. As a result
+   unnecessary VLDB lookups and file server queries were issued.
+
+ * Recent Windows cache manager releases track whether the volume
+   a file server request is being sent to has multiple up to date
+   replicas or not.  This information is used to select an RX
+   connection with an appropriate timeout policy.  This algorithm
+   for searching for an RX connection to a file server based upon
+   the replication state was broken.
+
+ * Fix two bugs in the afs redirector related to Write IRP Deferrals.
+   It was possible for an IRP to be deferred and then lost by
+   the Windows Cc (cache) manager.  The symptom would be a thread
+   with a call blocked in the Windows Filter Manager with a
+   pending write IRP and no evidence that it had been delivered
+   to the afs redirector.
+
 Release 1.7.2800; Changes since 1.7.2700
 
  * Fix for data corrupting bug in Windows Server XP/2003 IO Manager.
