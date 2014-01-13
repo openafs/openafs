@@ -518,7 +518,7 @@ xstat_cm_Init(int a_numServers, struct sockaddr_in *a_socketArray,
 	 */
 	if (xstat_cm_debug) {
 	    printf("[%s] Copying in the following socket info:\n", rn);
-	    printf("[%s] IP addr 0s, port %d\n",
+	    printf("[%s] IP addr %s, port %d\n", rn,
 		   afs_inet_ntoa_r((a_socketArray + curr_srv)->sin_addr.s_addr,hoststr),
 		   ntohs((a_socketArray + curr_srv)->sin_port));
 	}
