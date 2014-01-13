@@ -512,7 +512,7 @@ static struct dentry *get_dentry_from_fid(cred_t *credp, struct VenusFid *afid)
 	       code);
 #endif
 	afs_PutVCache(vcp);
-	return ERR_PTR(-afs_CheckCode(code, &treq, 101));
+	return ERR_PTR(-afs_CheckCode(code, &treq, 103));
     }
 
     ip = AFSTOV(vcp);

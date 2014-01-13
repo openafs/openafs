@@ -349,7 +349,7 @@ afs_getRights(OSI_VC_DECL(avc), afs_int32 arights,
 
     code = afs_VerifyVCache(avc, &treq);
     if (code) {
-	code = afs_CheckCode(code, &treq, 16);
+	code = afs_CheckCode(code, &treq, 18);
 	return code;
     }
 
