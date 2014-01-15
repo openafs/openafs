@@ -719,7 +719,6 @@ h_SetupCallbackConn_r(struct host * host)
 	rx_NewConnection(host->host, host->port, 1, sc, 0);
     rx_SetConnDeadTime(host->callback_rxcon, 50);
     rx_SetConnHardDeadTime(host->callback_rxcon, AFS_HARDDEADTIME);
-    rx_SetConnSecondsUntilNatPing(host->callback_rxcon, 20);
 }
 
 /* h_Lookup_r
@@ -1940,7 +1939,6 @@ h_GetHost_r(struct rx_connection *tcon)
             cb_in = rx_NewConnection(haddr, hport, 1, sc, 0);
             rx_SetConnDeadTime(cb_in, 50);
             rx_SetConnHardDeadTime(cb_in, AFS_HARDDEADTIME);
-	    rx_SetConnSecondsUntilNatPing(cb_in, 20);
 
             code =
                 RXAFSCB_TellMeAboutYourself(cb_in, &interf, &caps);
