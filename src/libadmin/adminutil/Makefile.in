@@ -25,6 +25,16 @@ UBIK = ../../ubik
 VLSERVER = ../../vlserver
 VOLSER = ../../volser
 
+INCLS=afs_AdminBosErrors.h \
+	afs_AdminCfgErrors.h \
+	afs_AdminClientErrors.h \
+	afs_AdminMiscErrors.h \
+	afs_AdminCommonErrors.h \
+	afs_AdminKasErrors.h \
+	afs_AdminPtsErrors.h \
+	afs_AdminUtilErrors.h \
+	afs_AdminVosErrors.h
+
 all: ${TOP_LIBDIR}/libafsadminutil.a ${TOP_INCDIR}/afs/afs_utilAdmin.h \
 	${TOP_INCDIR}/afs/afs_AdminErrors.h
 
@@ -187,6 +197,8 @@ vl_errors.o: ${VLSERVER}/vl_errors.c
 
 volerr.o: ${VOLSER}/volerr.c
 	${CCRULE} ${VOLSER}/volerr.c
+
+${LIBOBJS}: ${INCLS}
 
 clean:
 	$(RM) -f *.o libafsadminutil*
