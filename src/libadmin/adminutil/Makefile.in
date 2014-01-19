@@ -148,7 +148,7 @@ afs_utilAdmin.o: afs_utilAdmin.h ${TOP_INCDIR}/afs/afs_AdminBosErrors.h ${TOP_IN
 				${TOP_INCDIR}/afs/afs_AdminVosErrors.h ${TOP_INCDIR}/afs/afs_AdminClientErrors.h \
 				${TOP_INCDIR}/afs/afs_AdminCommonErrors.h ${TOP_INCDIR}/afs/afs_AdminKasErrors.h \
 				${TOP_INCDIR}/afs/afs_AdminMiscErrors.h ${TOP_INCDIR}/afs/afs_AdminPtsErrors.h \
-				${TOP_INCDIR}/afs/afs_AdminCfgErrors.h ${TOP_INCDIR}/afs/afs_AdminPtsErrors.h
+				${TOP_INCDIR}/afs/afs_AdminCfgErrors.h
 
 ktc_errors.o: ${AUTH}/ktc_errors.c
 	$(AFS_CCRULE) $(AUTH)/ktc_errors.c
