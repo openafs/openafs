@@ -25,7 +25,8 @@ UBIK = ../../ubik
 VLSERVER = ../../vlserver
 VOLSER = ../../volser
 
-all: ${TOP_LIBDIR}/libafsadminutil.a ${TOP_INCDIR}/afs/afs_utilAdmin.h
+all: ${TOP_LIBDIR}/libafsadminutil.a ${TOP_INCDIR}/afs/afs_utilAdmin.h \
+	${TOP_INCDIR}/afs/afs_AdminErrors.h
 
 ${TOP_LIBDIR}/libafsadminutil.a: libafsadminutil.a
 	${INSTALL_DATA} $? $@
@@ -33,9 +34,10 @@ ${TOP_LIBDIR}/libafsadminutil.a: libafsadminutil.a
 ${TOP_INCDIR}/afs/afs_utilAdmin.h: afs_utilAdmin.h
 	${INSTALL_DATA} $? $@
 
-afs_AdminBosErrors.h: afs_AdminBosErrors.c
-afs_AdminBosErrors.c: afs_AdminBosErrors.et
-	${INSTALL_DATA} ${srcdir}/afs_AdminErrors.h ${TOP_INCDIR}/afs
+${TOP_INCDIR}/afs/afs_AdminErrors.h: afs_AdminErrors.h
+	${INSTALL_DATA} $? $@
+
+afs_AdminBosErrors.c afs_AdminBosErrors.h: afs_AdminBosErrors.et
 	$(RM) -f afs_AdminBosErrors.c afs_AdminBosErrors.h
 	${COMPILE_ET} -p ${srcdir} afs_AdminBosErrors.et -h afs_AdminBosErrors
 
@@ -154,7 +156,7 @@ afs_utilAdmin.o: afs_utilAdmin.h ${TOP_INCDIR}/afs/afs_AdminBosErrors.h ${TOP_IN
 				${TOP_INCDIR}/afs/afs_AdminVosErrors.h ${TOP_INCDIR}/afs/afs_AdminClientErrors.h \
 				${TOP_INCDIR}/afs/afs_AdminCommonErrors.h ${TOP_INCDIR}/afs/afs_AdminKasErrors.h \
 				${TOP_INCDIR}/afs/afs_AdminMiscErrors.h ${TOP_INCDIR}/afs/afs_AdminPtsErrors.h \
-				${TOP_INCDIR}/afs/afs_AdminCfgErrors.h
+				${TOP_INCDIR}/afs/afs_AdminCfgErrors.h ${TOP_INCDIR}/afs/afs_AdminErrors.h
 
 ktc_errors.o: ${AUTH}/ktc_errors.c
 	${CCRULE}
