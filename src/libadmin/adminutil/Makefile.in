@@ -14,7 +14,7 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 CC = ${MT_CC}
 CFLAGS=${COMMON_CFLAGS} ${MT_CFLAGS}
-CCRULE = ${CC} ${CFLAGS} -c $?
+CCRULE = ${CC} ${CFLAGS} -c
 RXKAD = ../../rxkad
 AUTH = ../../auth
 BOZO = ../../bozo
@@ -159,34 +159,34 @@ afs_utilAdmin.o: afs_utilAdmin.h ${TOP_INCDIR}/afs/afs_AdminBosErrors.h ${TOP_IN
 				${TOP_INCDIR}/afs/afs_AdminCfgErrors.h ${TOP_INCDIR}/afs/afs_AdminErrors.h
 
 ktc_errors.o: ${AUTH}/ktc_errors.c
-	${CCRULE}
+	${CCRULE} ${AUTH}/ktc_errors.c
 
 acfg_errors.o: ${AUTH}/acfg_errors.c
-	${CCRULE}
+	${CCRULE} ${AUTH}/acfg_errors.c
 
 boserr.o: ${BOZO}/boserr.c
-	${CCRULE}
+	${CCRULE} ${BOZO}/boserr.c
 
 cmd_errors.o: ${CMD}/cmd_errors.c
-	${CCRULE}
+	${CCRULE} ${CMD}/cmd_errors.c
 
 kaerrors.o: ${KAUTH}/kaerrors.c
-	${CCRULE}
+	${CCRULE} ${KAUTH}/kaerrors.c
 
 pterror.o: ${PTSERVER}/pterror.c
-	${CCRULE}
+	${CCRULE} ${PTSERVER}/pterror.c
 
 rxkad_errs.o: ${RXKAD}/rxkad_errs.c
-	${CCRULE}
+	${CCRULE} ${RXKAD}/rxkad_errs.c
 
 uerrors.o: ${UBIK}/uerrors.c
-	${CCRULE}
+	${CCRULE} ${UBIK}/uerrors.c
 
 vl_errors.o: ${VLSERVER}/vl_errors.c
-	${CCRULE}
+	${CCRULE} ${VLSERVER}/vl_errors.c
 
 volerr.o: ${VOLSER}/volerr.c
-	${CCRULE}
+	${CCRULE} ${VOLSER}/volerr.c
 
 clean:
 	$(RM) -f *.o libafsadminutil*
