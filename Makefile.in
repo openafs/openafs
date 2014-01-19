@@ -635,7 +635,7 @@ libadmin_real:
 	+${COMPILE_PART1} libadmin/test ${COMPILE_PART2}
 	+${COMPILE_PART1} libadmin/samples ${COMPILE_PART2}
 
-libadmin: libafsauthent bozo
+libadmin: libafsauthent bozo bubasics
 	+case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
 			$(MAKE) libadmin_real ;; \
