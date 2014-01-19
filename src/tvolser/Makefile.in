@@ -186,6 +186,7 @@ dest: volserver
 
 clean:
 	$(LT_CLEAN)
-	$(RM) -f *.o volserver core AFS_component_version_number.c
+	$(RM) -f *.o volserver core AFS_component_version_number.c \
+		vl_errors.c vlserver.h
 
 include ../config/Makefile.version
