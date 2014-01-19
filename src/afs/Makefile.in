@@ -18,12 +18,17 @@ all: depinstall
 
 generated: afs_trace.h afs_trace.msf unified_afs.c unified_afs.h
 
-afs_trace.h afs_trace.msf: afs_trace.et
-	${COMPILE_ET} -v 2 -p ${srcdir} afs_trace.et
+afs_trace.h: afs_trace.et
+	${COMPILE_ET_H} -v 2 -p ${srcdir} afs_trace.et
 
-unified_afs.c unified_afs.h: unified_afs.et
-	$(RM) -f unified_afs.c unified_afs.h
-	${COMPILE_ET} -p ${srcdir} unified_afs -h unified_afs
+afs_trace.msf: afs_trace.et
+	${COMPILE_ET_C} -v 2 -p ${srcdir} afs_trace.et
+
+unified_afs.h: unified_afs.et unified_afs.p.h
+	${COMPILE_ET_H} -p ${srcdir} unified_afs -h unified_afs
+
+unified_afs.c: unified_afs.et
+	${COMPILE_ET_C} -p ${srcdir} unified_afs
 
 afszcm.cat: afs_trace.msf
 	-$(RM) -f afszcm.cat
@@ -48,7 +53,8 @@ depinstall: afszcm.cat AFS_component_version_number.c \
 	${TOP_INCDIR}/afs/exporter.h \
 	${TOP_INCDIR}/afs/nfsclient.h \
 	${TOP_INCDIR}/afs/unified_afs.h \
-	${TOP_INCDIR}/afs/sysctl.h
+	${TOP_INCDIR}/afs/sysctl.h \
+	${TOP_INCDIR}/afs/afs_trace.h
 
 ${TOP_INCDIR}/afs/afs_consts.h: afs_consts.h
 	${INSTALL_DATA} $? $@
@@ -74,7 +80,10 @@ ${TOP_INCDIR}/afs/sysctl.h: sysctl.h
 ${TOP_INCDIR}/afs/unified_afs.h: unified_afs.h
 	${INSTALL_DATA} $? $@
 
-install: unified_afs.h
+${TOP_INCDIR}/afs/afs_trace.h: afs_trace.h
+	${INSTALL_DATA} $? $@
+
+install: unified_afs.h afs_trace.h
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
 	${INSTALL_DATA} ${srcdir}/afs.h ${DESTDIR}${includedir}/afs/afs.h
 	${INSTALL_DATA} ${srcdir}/afs_consts.h ${DESTDIR}${includedir}/afs/afs_consts.h
@@ -85,6 +94,7 @@ install: unified_afs.h
 	    ${DESTDIR}${includedir}/afs/osi_inode.h
 	${INSTALL_DATA} ${srcdir}/sysctl.h ${DESTDIR}${includedir}/afs/sysctl.h
 	${INSTALL_DATA} unified_afs.h ${DESTDIR}${includedir}/afs/unified_afs.h
+	${INSTALL_DATA} afs_trace.h ${DESTDIR}${includedir}/afs/afs_trace.h
 	${INSTALL_DATA} afszcm.cat ${DESTDIR}${afsdatadir}/C/afszcm.cat
 	case ${SYS_NAME} in \
 	    *linux*) \
@@ -94,7 +104,7 @@ install: unified_afs.h
 		echo No vfs headers to install for ${SYS_NAME};; \
 	esac
 
-dest: unified_afs.h
+dest: unified_afs.h afs_trace.h
 	${INSTALL} -d ${DEST}/include/afs
 	${INSTALL_DATA} ${srcdir}/afs.h ${DEST}/include/afs/afs.h
 	${INSTALL_DATA} ${srcdir}/afs_consts.h ${DEST}/include/afs/afs_consts.h
@@ -104,6 +114,7 @@ dest: unified_afs.h
 	${INSTALL_DATA} ${srcdir}/${MKAFS_OSTYPE}/osi_inode.h ${DEST}/include/afs/osi_inode.h
 	${INSTALL_DATA} ${srcdir}/sysctl.h ${DEST}/include/afs/sysctl.h
 	${INSTALL_DATA} unified_afs.h ${DEST}/include/afs/unified_afs.h
+	${INSTALL_DATA} afs_trace.h ${DEST}/include/afs/afs_trace.h
 	${INSTALL_DATA} afszcm.cat ${DEST}/root.client/usr/vice/etc/C/afszcm.cat
 	case ${SYS_NAME} in \
 	    *linux*) \
