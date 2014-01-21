@@ -3024,7 +3024,11 @@ try_exit:
                 AFSExFreePoolWithTag( pDirEnumCB, AFS_GENERIC_MEMORY_3_TAG);
             }
 
-            *DirEnumEntry = NULL;
+	    if( DirEnumEntry != NULL)
+	    {
+
+		*DirEnumEntry = NULL;
+	    }
         }
     }
 
