@@ -72,6 +72,12 @@ static const char *const lang_args[] = {
     0,
 };
 
+static const char *const prefix_args[] = {
+    "p",
+    "prefix",
+    0,
+};
+
 static const char *const language_names[] = {
     "C",
     "K&R C",
@@ -207,7 +213,7 @@ main(int argc, char **argv)
 		if (!arg)
 		    usage();
 		got_include = arg;
-	    } else if (strcmp(arg, "p") == 0) {
+	    } else if (check_arg(prefix_args, arg)) {
 		arg = *++argv;
 		argc--;
 		if (!arg)
