@@ -54,6 +54,7 @@ The B<-lang> <I<lang>> option is a synonym for B<-language> <I<lang>>>.
 =item B<-prefix> <I<prefix>>
 
 Specifies the directory to search for the F<error_table.et> file.
+The B<-p> <I<prefix>> option is a synonym for B<-prefix> <I<prefix>>.
 
 =item B<-v> <I<version>>
 
