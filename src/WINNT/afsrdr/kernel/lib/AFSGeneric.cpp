@@ -2474,7 +2474,7 @@ AFSSubstituteSysName( IN UNICODE_STRING *ComponentName,
             AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE_2,
                           "AFSSubstituteSysName No sysname %wZ Status %08lX\n",
-                          &ComponentName,
+			  ComponentName,
                           STATUS_OBJECT_NAME_NOT_FOUND));
 
             try_return( ntStatus = STATUS_OBJECT_NAME_NOT_FOUND);
