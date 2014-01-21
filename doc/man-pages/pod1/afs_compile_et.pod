@@ -8,7 +8,7 @@ afs_compile_et - Produce error text tables for compilation
 <div class="synopsis">
 
 B<afs_compile_et> [B<-debug>] S<<< [B<-language> <I<lang>>] >>>
-    S<<< [B<-prefix> <I<prefix>>] >>> [B<-v> <I<version>>] <I<error_table>>
+    S<<< [B<-prefix> <I<prefix>>] >>> S<<< [B<-v> <I<version>>] >>> <I<error_table>>
 
 =for html
 </div>
@@ -49,7 +49,7 @@ are supported values (via the B<c> and B<k&r-c> values, respectively).
 The default is ANSI C.  There is some support for C++ started, but that is
 not yet supported.
 
-=item B<-prefix <I<prefix>>
+=item B<-prefix> <I<prefix>>
 
 Specifies the directory to search for the F<error_table.et> file.
 
@@ -62,7 +62,7 @@ files) or 2, for B<.msf> file generation.
 
 =head1 EXAMPLES
 
-The following command generates the files F<pterror.h> and F<pterror.c>, 
+The following command generates the files F<pterror.h> and F<pterror.c>,
 suitable for use with C programs:
 
    % afs_compile_et -p path/to/src/ptserver pterror
