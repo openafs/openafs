@@ -206,7 +206,7 @@ akimpersonate.o: ${AUTH}/akimpersonate.c
 	${CCRULE} @KRB5_CPPFLAGS@
 
 akimpersonate_v5gen.o: ${AUTH}/akimpersonate_v5gen.c
-	${CCRULE} @KRB5_CPPFLAGS@ -I../rxkad
+	${CCRULE} @KRB5_CPPFLAGS@ -I${srcdir}/../rxkad -I../rxkad
 
 ktc_errors.o: ${AUTH}/ktc_errors.c
 	${CCRULE}
