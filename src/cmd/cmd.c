@@ -43,8 +43,7 @@ NName(char *a1, char *a2)
         return "";
     } else {
         strncpy(tbuffer, a1, sizeof(tbuffer));
-        strncat(tbuffer, a2, sizeof(tbuffer));
-        tbuffer[sizeof(tbuffer)-1]='\0';
+        strncat(tbuffer, a2, sizeof(tbuffer) - strlen(tbuffer) - 1);
         return tbuffer;
     }
 }
