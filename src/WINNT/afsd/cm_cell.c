@@ -342,6 +342,8 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
         }
 
         if (cp2) {
+	    cm_server_t *tsp;
+
             if (!hasMutex) {
                 lock_ObtainMutex(&cp->mx);
                 hasMutex = 1;
@@ -352,7 +354,24 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
             cm_RemoveCellFromNameHashTable(cp);
             lock_ReleaseMutex(&cp->mx);
             hasMutex = 0;
-            cm_FreeCell(cp);
+
+	    /* Replace cells references in servers */
+	    lock_ObtainRead(&cm_serverLock);
+	    for (tsp = cm_serversAllFirstp;
+		  tsp;
+		  tsp = (cm_server_t *)osi_QNext(&tsp->allq)) {
+		if (tsp->cellp == cp) {
+		    osi_Log4(afsd_logp, "cm_GetCell_gen race: replacing cell (%u) %s with cell (%u) %s",
+			      cp->cellID,
+			      osi_LogSaveString(afsd_logp,cp->name),
+			      cp2->cellID,
+			      osi_LogSaveString(afsd_logp,cp2->name));
+		    tsp->cellp = cp2;
+		}
+	    }
+	    lock_ReleaseRead(&cm_serverLock);
+
+	    cm_FreeCell(cp);
             cp = cp2;
             goto done;
         }
