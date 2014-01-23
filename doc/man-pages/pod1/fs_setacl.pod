@@ -210,7 +210,7 @@ ignored.
 
 =head1 DROPBOXES
 
-If an accessing user has the C<l> (read) and C<i> (insert) permissions
+If an accessing user has the C<l> (lookup) and C<i> (insert) permissions
 on a directory, but not the C<w> (write) and/or C<r> (read) permissions,
 the user is implicitly granted the ability to write and/or read any file
 they create in that directory, until they close the file. This is to
