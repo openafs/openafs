@@ -1,6 +1,7 @@
 openafs (1.6.6-1) UNRELEASED; urgency=low
 
   * New upstream release.
+    - Remove server-side NAT pings since there's no evidence they help.
 
  -- Russ Allbery <rra@debian.org>  Thu, 23 Jan 2014 19:18:37 -0800
 
