@@ -125,7 +125,7 @@ choose_afsd_options() {
     if is_on $AFS_AFSDB ; then
         AFSD_OPTIONS="$AFSD_OPTIONS -afsdb"
     fi
-    if [ "$AFS_DYNROOT" = 'Yes' ] ; then
+    if [ "$AFS_DYNROOT" = 'Yes' ] || [ "$AFS_DYNROOT" = 'true' ] ; then
         AFSD_OPTIONS="$AFSD_OPTIONS -dynroot"
     elif [ "$AFS_DYNROOT" = 'Sparse' ] ; then
         AFSD_OPTIONS="$AFSD_OPTIONS -dynroot-sparse"
