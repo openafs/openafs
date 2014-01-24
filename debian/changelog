@@ -1,4 +1,4 @@
-openafs (1.6.6-1) UNRELEASED; urgency=low
+openafs (1.6.6-1) unstable; urgency=low
 
   * New upstream release.
     - Remove server-side NAT pings since there's no evidence they help.
@@ -9,7 +9,7 @@ openafs (1.6.6-1) UNRELEASED; urgency=low
   * Accept AFS_DYNROOT=true as an alias for Yes in afs.conf.client,
     matching behavior of releases prior to 1.6.2.1-1.  (Closes: #729353)
 
- -- Russ Allbery <rra@debian.org>  Thu, 23 Jan 2014 19:18:37 -0800
+ -- Russ Allbery <rra@debian.org>  Thu, 23 Jan 2014 20:43:05 -0800
 
 openafs (1.6.6~pre2-1) unstable; urgency=low
 
