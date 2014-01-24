@@ -2,6 +2,10 @@ openafs (1.6.6-1) UNRELEASED; urgency=low
 
   * New upstream release.
     - Remove server-side NAT pings since there's no evidence they help.
+  * Fix linking of /usr/share/doc directories for libpam-openafs-kaserver,
+    openafs-fuse, and openafs-kpasswd.  This was broken in previous
+    releases by a miswritten debian/rules override.  Thanks to Andreas
+    Beckmann for finding the problem and solution.  (Closes: #736305)
 
  -- Russ Allbery <rra@debian.org>  Thu, 23 Jan 2014 19:18:37 -0800
 

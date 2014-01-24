@@ -235,7 +235,7 @@ override_dh_installinit:
 	dh_installinit -popenafs-fileserver -r
 
 # Symlink /usr/share/doc for some packages.
-override_dh_installdocs-indep:
+override_dh_installdocs:
 	dh_installdocs $(DOC_PACKAGES) --link-doc=openafs-client
 	dh_installdocs --remaining-packages
 
