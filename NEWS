@@ -1,6 +1,6 @@
                        User-Visible OpenAFS Changes
 
-OpenAFS 1.6.6 (in progress)
+OpenAFS 1.6.6
 
   All platforms
 
@@ -8,7 +8,7 @@ OpenAFS 1.6.6 (in progress)
       Tarballs are still shipped with both compression formats, gzip and bzip2.
       (10131)
 
-    * Documentation improvements (10136 10314)
+    * Documentation improvements (10136 10314 10601)
 
     * Improved diagnostics and error messages (9412 10085 10274)
 
@@ -26,12 +26,6 @@ OpenAFS 1.6.6 (in progress)
   All server platforms
     * The fileserver now ignores any vice partitions with a NeverAttach flag
       file present in the root directory. (RT #130561) (9470 9471)
-
-    * Enabled server side NAT pings. Since 1.6.0, client side NAT pings were
-      enabled to help keep up mappings for NATed clients. This change aims to
-      further improve on this by sending version packets from the server to its
-      clients as well. This may be backed out if there is no positive feedback
-      during prerelease testing. (9420)
 
     * Restrict forcing CPS ("Current Protection Subdomain") recalculation in
       the fileserver to administrators. Also fixed a bug that could cause this
@@ -83,6 +77,10 @@ OpenAFS 1.6.6 (in progress)
     * Fixed potentially undefined behaviour in ptserver when too many pts
       ids are allocated. (10124)
 
+    * Note that the server side NAT pings feature present in the prereleases
+      was removed before the final release, since no positive feedback
+      was provided during prerelease testing. (9420 10135)
+
   Linux servers
 
     * Start bosserver with -nofork in the systemd unit file, to allow systemd
@@ -114,12 +112,12 @@ OpenAFS 1.6.6 (in progress)
       an absolute path. Relative paths result in a client that basically
       works but is not fully functional. (10253)
 
-    * Fixed a bug that could cause one of the afs threads to enter an infinite
+    * Fixed a bug that could cause one of the afsd threads to enter an infinite
       loop (10431 .. 10436)
 
   Linux clients
 
-    * Support Linux kernels up to 3.12 (10241)
+    * Support Linux kernels up to 3.13 (10241)
 
     * Fixed a bug that made readv/writev calls in AFS space fail with Linux
       kernels where generic_file_aio_read exists but those operations have
@@ -157,6 +155,9 @@ OpenAFS 1.6.6 (in progress)
     * When starting the client fails, clean up the backing device information
       created in sysfs, to avoid error messages during a subsequent start
       and possible system instability later on (10454)
+
+    * Update Red Hat packaging to support Fedora >= 20, RHEL >= 7 and
+      ELrepo kernels (10597 10619 10622 10703 10704)
 
   OS X Clients
 

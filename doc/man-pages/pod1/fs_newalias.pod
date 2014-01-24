@@ -34,7 +34,7 @@ names to be created under client control.
 
 =head1 CAUTIONS
 
-Aliases created with B<fs newcell> are only temporary and will be lost
+Aliases created with B<fs newalias> are only temporary and will be lost
 when the AFS Cache Manager is restarted or the client machine is
 rebooted. In order to make the alias permanent, it must be put into the
 F<CellAlias> file.
