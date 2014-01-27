@@ -24,7 +24,7 @@ typedef struct cm_server_vols {
  * at the appropriate times to change the pointers to these servers.
  */
 typedef struct cm_server {
-    struct cm_server *allNextp;		/* locked by cm_serverLock */
+    osi_queue_t allq;			/* locked by cm_serverLock */
     struct sockaddr_in addr;		/* by mx */
     int type;				/* by mx */
     struct cm_conn *connsp;		/* locked by cm_connLock */
@@ -168,7 +168,8 @@ extern int cm_NetFlags[CM_MAXINTERFACE_ADDR];  /* network flags */
 extern int cm_LanAdapterChangeDetected;
 
 /* Protected by cm_serverLock */
-extern cm_server_t *cm_allServersp;
+extern cm_server_t *cm_serversAllFirstp;
+extern cm_server_t *cm_serversAllLastp;
 extern afs_uint32   cm_numFileServers;
 extern afs_uint32   cm_numVldbServers;
 #endif /*  OPENAFS_WINNT_AFSD_CM_SERVER_H */

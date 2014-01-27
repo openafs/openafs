@@ -1297,7 +1297,9 @@ cm_IoctlCheckServers(struct cm_ioctl *ioctlp, struct cm_user *userp)
     /* now return the current down server list */
     cp = ioctlp->outDatap;
     lock_ObtainRead(&cm_serverLock);
-    for (tsp = cm_allServersp; tsp; tsp=tsp->allNextp) {
+    for (tsp = cm_serversAllFirstp;
+	 tsp;
+	 tsp = (cm_server_t *)osi_QNext(&tsp->allq)) {
         if (cellp && tsp->cellp != cellp)
             continue;	/* cell spec'd and wrong */
         if (tsp->flags & CM_SERVERFLAG_DOWN) {
@@ -1306,7 +1308,9 @@ cm_IoctlCheckServers(struct cm_ioctl *ioctlp, struct cm_user *userp)
              * is up, do not report the server as down.
              */
             if (tsp->type == CM_SERVER_FILE) {
-                for (csp = cm_allServersp; csp; csp=csp->allNextp) {
+                for (csp = cm_serversAllFirstp;
+		     csp;
+		     csp = (cm_server_t *)osi_QNext(&csp->allq)) {
                     if (csp->type == CM_SERVER_FILE &&
                         !(csp->flags & CM_SERVERFLAG_DOWN) &&
                         afs_uuid_equal(&tsp->uuid, &csp->uuid)) {
@@ -1993,7 +1997,9 @@ cm_IoctlGetSPrefs(struct cm_ioctl *ioctlp, struct cm_user *userp)
 
     lock_ObtainRead(&cm_serverLock); /* get server lock */
 
-    for (tsp=cm_allServersp, i=0; tsp && noServers; tsp=tsp->allNextp,i++){
+    for (tsp = cm_serversAllFirstp, i=0;
+	 tsp && noServers;
+	 tsp = (cm_server_t *)osi_QNext(&tsp->allq),i++){
         if (spin->offset > i) {
             continue;    /* catch up to where we left off */
         }

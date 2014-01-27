@@ -30,7 +30,9 @@
 osi_rwlock_t cm_serverLock;
 osi_rwlock_t cm_syscfgLock;
 
-cm_server_t *cm_allServersp;
+cm_server_t *cm_serversAllFirstp = NULL;
+cm_server_t *cm_serversAllLastp = NULL;
+
 afs_uint32   cm_numFileServers = 0;
 afs_uint32   cm_numVldbServers = 0;
 
@@ -40,7 +42,9 @@ cm_ForceNewConnectionsAllServers(void)
     cm_server_t *tsp;
 
     lock_ObtainRead(&cm_serverLock);
-    for (tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
+    for (tsp = cm_serversAllFirstp;
+	 tsp;
+	 tsp = (cm_server_t *)osi_QNext(&tsp->allq)) {
         cm_GetServerNoLock(tsp);
         lock_ReleaseRead(&cm_serverLock);
 	cm_ForceNewConnections(tsp);
@@ -56,7 +60,9 @@ cm_ServerClearRPCStats(void) {
     afs_uint16 port;
 
     lock_ObtainRead(&cm_serverLock);
-    for (tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
+    for (tsp = cm_serversAllFirstp;
+	 tsp;
+	 tsp = (cm_server_t *)osi_QNext(&tsp->allq)) {
         switch (tsp->type) {
         case CM_SERVER_VLDB:
 	    port = htons(7003);
@@ -359,7 +365,9 @@ cm_RankUpServers()
     cm_server_t * tsp;
 
     lock_ObtainRead(&cm_serverLock);
-    for (tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
+    for (tsp = cm_serversAllFirstp;
+	 tsp;
+	 tsp = (cm_server_t *)osi_QNext(&tsp->allq)) {
 	cm_GetServerNoLock(tsp);
 	lock_ReleaseRead(&cm_serverLock);
 
@@ -390,7 +398,9 @@ static void cm_CheckServersSingular(afs_uint32 flags, cm_cell_t *cellp)
     int isVLDB;
 
     lock_ObtainRead(&cm_serverLock);
-    for (tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
+    for (tsp = cm_serversAllFirstp;
+	 tsp;
+	 tsp = (cm_server_t *)osi_QNext(&tsp->allq)) {
         cm_GetServerNoLock(tsp);
         lock_ReleaseRead(&cm_serverLock);
 
@@ -481,7 +491,9 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
         !(flags & (CM_FLAG_CHECKFILESERVERS|CM_FLAG_CHECKVLDBSERVERS)))
     {
         lock_ObtainRead(&cm_serverLock);
-        for (nconns=0, tsp = cm_allServersp; tsp && nconns < maxconns; tsp = tsp->allNextp) {
+	for (nconns=0, tsp = cm_serversAllFirstp;
+	      tsp != NULL && nconns < maxconns;
+	      tsp = (cm_server_t *)osi_QNext(&tsp->allq)) {
             if (tsp->type != CM_SERVER_FILE ||
                 tsp->cellp == NULL ||           /* SetPref only */
                 cellp && cellp != tsp->cellp)
@@ -649,7 +661,9 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
         !(flags & (CM_FLAG_CHECKFILESERVERS|CM_FLAG_CHECKVLDBSERVERS)))
     {
         lock_ObtainRead(&cm_serverLock);
-        for (nconns=0, tsp = cm_allServersp; tsp && nconns < maxconns; tsp = tsp->allNextp) {
+	for (nconns=0, tsp = cm_serversAllFirstp;
+	     tsp != NULL && nconns < maxconns;
+	     tsp = (cm_server_t *)osi_QNext(&tsp->allq)) {
             if (tsp->type != CM_SERVER_VLDB ||
                 tsp->cellp == NULL ||           /* SetPref only */
                 cellp && cellp != tsp->cellp)
@@ -954,8 +968,8 @@ cm_server_t *cm_NewServer(struct sockaddr_in *socketp, int type, cm_cell_t *cell
         lock_InitializeMutex(&tsp->mx, "cm_server_t mutex", LOCK_HIERARCHY_SERVER);
         tsp->addr = *socketp;
 
-        tsp->allNextp = cm_allServersp;
-        cm_allServersp = tsp;
+        osi_QAddH((osi_queue_t **)&cm_serversAllFirstp,
+		  (osi_queue_t **)&cm_serversAllLastp, &tsp->allq);
 
         switch (type) {
         case CM_SERVER_VLDB:
@@ -1003,7 +1017,9 @@ cm_FindServerByIP(afs_uint32 ipaddr, unsigned short port, int type, int locked)
     if (!locked)
         lock_ObtainRead(&cm_serverLock);
 
-    for (tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
+    for (tsp = cm_serversAllFirstp;
+	 tsp;
+	 tsp = (cm_server_t *)osi_QNext(&tsp->allq)) {
         if (tsp->type == type &&
             tsp->addr.sin_addr.S_un.S_addr == ipaddr &&
             (tsp->addr.sin_port == port || tsp->addr.sin_port == 0))
@@ -1028,7 +1044,9 @@ cm_FindServerByUuid(afsUUID *serverUuid, int type, int locked)
     if (!locked)
         lock_ObtainRead(&cm_serverLock);
 
-    for (tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
+    for (tsp = cm_serversAllFirstp;
+	 tsp;
+	 tsp = (cm_server_t *)osi_QNext(&tsp->allq)) {
 	if (tsp->type == type && afs_uuid_equal(&tsp->uuid, serverUuid))
             break;
     }
@@ -1422,6 +1440,10 @@ void cm_FreeServer(cm_server_t* serverp)
      */
     if (serverp->refCount == 0) {
 	if (!(serverp->flags & CM_SERVERFLAG_PREF_SET)) {
+	    osi_QRemoveHT((osi_queue_t **)&cm_serversAllFirstp,
+			  (osi_queue_t **)&cm_serversAllLastp,
+			  &serverp->allq);
+
             switch (serverp->type) {
             case CM_SERVER_VLDB:
                 cm_numVldbServers--;
@@ -1432,18 +1454,6 @@ void cm_FreeServer(cm_server_t* serverp)
             }
 
 	    lock_FinalizeMutex(&serverp->mx);
-	    if ( cm_allServersp == serverp )
-		cm_allServersp = serverp->allNextp;
-	    else {
-		cm_server_t *tsp;
-
-		for(tsp = cm_allServersp; tsp->allNextp; tsp=tsp->allNextp) {
-		    if ( tsp->allNextp == serverp ) {
-			tsp->allNextp = serverp->allNextp;
-			break;
-		    }
-		}
-            }
 
             /* free the volid list */
             for ( tsrvp = serverp->vols; tsrvp; tsrvp = nextp) {
@@ -1566,7 +1576,9 @@ int cm_DumpServers(FILE *outputFile, char *cookie, int lock)
             cookie, cm_numFileServers, cm_numVldbServers);
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
 
-    for (tsp = cm_allServersp; tsp; tsp=tsp->allNextp)
+    for (tsp = cm_serversAllFirstp;
+	 tsp;
+	 tsp = (cm_server_t *)osi_QNext(&tsp->allq))
     {
         char * type;
         char * down;
