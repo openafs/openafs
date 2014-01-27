@@ -31,12 +31,16 @@
 #ifndef _CM_GETADDRS_H_
 #define _CM_GETADDRS_H_
 
-#include <opr/uuid.h>
-
 extern afs_uint32
 cm_GetAddrsU(cm_cell_t *cellp, cm_user_t *userp, cm_req_t *reqp,
 	     afsUUID *Uuid, afs_int32 Unique, afs_int32 Flags, int *index,
 	     afs_int32 serverFlags[], afs_int32 serverNumber[], afsUUID serverUUID[],
 	     afs_int32 serverUnique[]);
+
+extern void
+cm_getaddrsInit(void);
+
+extern void
+cm_getaddrsShutdown(void);
 
 #endif /* _CM_GETADDRS_H_ */

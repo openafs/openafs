@@ -112,6 +112,8 @@ cm_ShutdownVolume(void)
         lock_FinalizeRWLock(&volp->rw);
     }
 
+    cm_getaddrsShutdown();
+
     return 0;
 }
 
@@ -154,7 +156,10 @@ void cm_InitVolume(int newFile, long maxVols)
                 _InterlockedAnd(&volp->flags, ~CM_VOLUMEFLAG_RO_SIZE_VALID);
             }
         }
-        osi_EndOnce(&once);
+
+	cm_getaddrsInit();
+
+	osi_EndOnce(&once);
     }
 }
 
