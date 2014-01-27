@@ -31,6 +31,7 @@ INCFILES =\
 	$(INCFILEDIR)\cm_conn.h \
 	$(INCFILEDIR)\cm_error.h \
 	$(INCFILEDIR)\cm_ioctl.h \
+	$(INCFILEDIR)\cm_getaddrs.h \
 	$(INCFILEDIR)\cm_scache.h \
 	$(INCFILEDIR)\cm_server.h \
 	$(INCFILEDIR)\cm_user.h \
@@ -126,6 +127,7 @@ AFSDOBJS=\
         $(OUT)\cm_direct.obj \
 	$(OUT)\cm_access.obj \
 	$(OUT)\cm_eacces.obj \
+	$(OUT)\cm_getaddrs.obj \
 	$(OUT)\cm_callback.obj \
 	$(OUT)\cm_vnodeops.obj \
 	$(OUT)\cm_dir.obj \

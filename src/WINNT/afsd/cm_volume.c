@@ -20,6 +20,7 @@
 #include <strsafe.h>
 #include <malloc.h>
 #include "afsd.h"
+#include "cm_getaddrs.h"
 #include <osi.h>
 #include <rx/rx.h>
 
@@ -268,10 +269,8 @@ cm_GetEntryByID( struct cm_cell *cellp, afs_uint32 id,
 long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
 		     cm_volume_t *volp)
 {
-    struct rx_connection *rxconnp;
-    cm_conn_t *connp;
     int i;
-    afs_uint32 j, k;
+    afs_uint32 j;
     cm_serverRef_t *tsrp;
     cm_server_t *tsp;
     struct sockaddr_in tsockAddr;
@@ -401,6 +400,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
         afs_int32 roID;
         afs_int32 bkID;
         afs_int32 serverNumber[NMAXNSERVERS];
+	afs_int32 serverUnique[NMAXNSERVERS];
         afs_int32 serverFlags[NMAXNSERVERS];
         afsUUID   serverUUID[NMAXNSERVERS];
         afs_int32 rwServers_alldown = 1;
@@ -420,6 +420,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
         }
 
         memset(serverUUID, 0, sizeof(serverUUID));
+	memset(serverUnique, 0, sizeof(serverUnique));
 
         switch ( method ) {
         case 0:
@@ -460,46 +461,14 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
                     serverNumber[j] = uvldbEntry.serverNumber[i].time_low;
                     j++;
                 } else {
-                    afs_uint32 * addrp, nentries, code, unique;
-                    bulkaddrs  addrs;
-                    ListAddrByAttributes attrs;
-                    afsUUID uuid;
-
-                    memset(&attrs, 0, sizeof(attrs));
-                    attrs.Mask = VLADDR_UUID;
-                    attrs.uuid = uvldbEntry.serverNumber[i];
-                    memset(&uuid, 0, sizeof(uuid));
-                    memset(&addrs, 0, sizeof(addrs));
-
-                    do {
-                        code = cm_ConnByMServers(cellp->vlServersp, FALSE, userp, reqp, &connp);
-                        if (code)
-                            continue;
-
-                        rxconnp = cm_GetRxConn(connp);
-                        code = VL_GetAddrsU(rxconnp, &attrs, &uuid, &unique, &nentries, &addrs);
-                        rx_PutConnection(rxconnp);
-                    } while (cm_Analyze(connp, userp, reqp, NULL, cellp, 0, NULL, NULL, &cellp->vlServersp, NULL, code));
-
-                    if ( code ) {
-                        code = cm_MapVLRPCError(code, reqp);
-                        osi_Log2(afsd_logp, "CALL VL_GetAddrsU serverNumber %u FAILURE, code 0x%x",
-                                 i, code);
-                        continue;
-                    }
-                    osi_Log1(afsd_logp, "CALL VL_GetAddrsU serverNumber %u SUCCESS", i);
-
-                    addrp = addrs.bulkaddrs_val;
-                    for (k = 0; k < nentries && j < NMAXNSERVERS; j++, k++) {
-                        serverFlags[j] = uvldbEntry.serverFlags[i];
-                        serverNumber[j] = addrp[k];
-                        serverUUID[j] = uuid;
-                    }
-
-                    xdr_free((xdrproc_t) xdr_bulkaddrs, &addrs);
-
-                    if (nentries == 0)
-                        code = CM_ERROR_INVAL;
+		    code = cm_GetAddrsU(cellp, userp, reqp,
+					&uvldbEntry.serverNumber[i],
+					uvldbEntry.serverUnique[i],
+					uvldbEntry.serverFlags[i], &j,
+					serverFlags, serverNumber,
+					serverUUID, serverUnique);
+		    if (code == CM_ERROR_RETRY)
+			continue;
                 }
             }
             nServers = j;					/* update the server count */
