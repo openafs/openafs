@@ -241,12 +241,6 @@ rx_IsLoopbackAddr(afs_uint32 addr)
 /* Define procedure to set service dead time */
 #define rx_SetIdleDeadTime(service,time) ((service)->idleDeadTime = (time))
 
-/*
- * Define error to return in server connections when failing to answer.
- * (server only) For example, AFS viced sends VNOSERVICE.
- */
-#define rx_SetServerIdleDeadErr(service,err) ((service)->idleDeadErr = (err))
-
 /* Define procedures for getting and setting before and after execute-request procs */
 #define rx_SetAfterProc(service,proc) ((service)->afterProc = (proc))
 #define rx_SetBeforeProc(service,proc) ((service)->beforeProc = (proc))
@@ -347,7 +341,6 @@ struct rx_service {
     u_short connDeadTime;	/* Seconds until a client of this service will be declared dead, if it is not responding */
     u_short idleDeadTime;	/* Time a server will wait for I/O to start up again */
     u_char checkReach;		/* Check for asymmetric clients? */
-    afs_int32 idleDeadErr;
     int nSpecific;		/* number entries in specific data */
     void **specific;		/* pointer to connection specific data */
 #ifdef	RX_ENABLE_LOCKS

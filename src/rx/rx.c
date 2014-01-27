@@ -1803,7 +1803,6 @@ rx_NewServiceHost(afs_uint32 host, u_short port, u_short serviceId,
 	    service->minProcs = 0;
 	    service->maxProcs = 1;
 	    service->idleDeadTime = 60;
-	    service->idleDeadErr = 0;
 	    service->connDeadTime = rx_connDeadTime;
 	    service->executeRequestProc = serviceProc;
 	    service->checkReach = 0;
@@ -3159,8 +3158,7 @@ rxi_FindConnection(osi_socket socket, afs_uint32 host,
 	conn->nSpecific = 0;
 	conn->specific = NULL;
 	rx_SetConnDeadTime(conn, service->connDeadTime);
-	conn->idleDeadTime = service->idleDeadTime;
-	conn->idleDeadDetection = service->idleDeadErr ? 1 : 0;
+	rx_SetConnIdleDeadTime(conn, service->idleDeadTime);
 	for (i = 0; i < RX_MAXCALLS; i++) {
 	    conn->twind[i] = rx_initSendWindow;
 	    conn->rwind[i] = rx_initReceiveWindow;
@@ -5425,7 +5423,6 @@ rxi_ResetCall(struct rx_call *call, int newcall)
     call->rprev = 0;
     call->lastAcked = 0;
     call->localStatus = call->remoteStatus = 0;
-    call->lastSendData = 0;
 
     if (flags & RX_CALL_READER_WAIT) {
 #ifdef	RX_ENABLE_LOCKS
@@ -5861,9 +5858,6 @@ rxi_SendList(struct rx_call *call, struct xmitlist *xmit,
      * processing), and for the connection (so that we can discover
      * idle connections) */
     conn->lastSendTime = call->lastSendTime = clock_Sec();
-    /* Let a set of retransmits trigger an idle timeout */
-    if (!xmit->resending)
-	call->lastSendData = call->lastSendTime;
 }
 
 /* When sending packets we need to follow these rules:
@@ -6299,12 +6293,6 @@ rxi_Send(struct rx_call *call, struct rx_packet *p,
 	(p->length <= (rx_AckDataSize(call->rwind) + 4 * sizeof(afs_int32))))
     {
 	conn->lastSendTime = call->lastSendTime = clock_Sec();
-	/* Don't count keepalive ping/acks here, so idleness can be tracked. */
-	if ((p->header.type != RX_PACKET_TYPE_ACK) ||
-	    ((((struct rx_ackPacket *)rx_DataOf(p))->reason != RX_ACK_PING) &&
-	     (((struct rx_ackPacket *)rx_DataOf(p))->reason !=
-	      RX_ACK_PING_RESPONSE)))
-	    call->lastSendData = call->lastSendTime;
     }
 }
 
@@ -6409,18 +6397,9 @@ rxi_CheckCall(struct rx_call *call, int haveCTLock)
 
         if (idleDeadTime) {
             /* see if we have a non-activity timeout */
-            if (call->startWait && ((call->startWait + idleDeadTime) < now) &&
-                (call->flags & RX_CALL_READER_WAIT)) {
+            if (call->startWait && ((call->startWait + idleDeadTime) < now)) {
                 if (call->state == RX_STATE_ACTIVE) {
                     cerror = RX_CALL_TIMEOUT;
-                    goto mtuout;
-                }
-            }
-
-            if (call->lastSendData && ((call->lastSendData + idleDeadTime) < now)) {
-                if (call->state == RX_STATE_ACTIVE) {
-                    cerror = conn->service ? conn->service->idleDeadErr : RX_CALL_IDLE;
-                    idle_timeout = 1;
                     goto mtuout;
                 }
             }
@@ -6718,22 +6697,6 @@ rxi_KeepAliveOn(struct rx_call *call)
      * keep-alive is sent within the ping time */
     call->lastReceiveTime = call->lastSendTime = clock_Sec();
     rxi_ScheduleKeepAliveEvent(call);
-}
-
-void
-rx_KeepAliveOff(struct rx_call *call)
-{
-    MUTEX_ENTER(&call->lock);
-    rxi_CancelKeepAliveEvent(call);
-    MUTEX_EXIT(&call->lock);
-}
-
-void
-rx_KeepAliveOn(struct rx_call *call)
-{
-    MUTEX_ENTER(&call->lock);
-    rxi_KeepAliveOn(call);
-    MUTEX_EXIT(&call->lock);
 }
 
 static void
@@ -9341,7 +9304,7 @@ int rx_DumpCalls(FILE *outputFile, char *cookie)
                 "rqc=%u,%u, tqc=%u,%u, iovqc=%u,%u, "
                 "lstatus=%u, rstatus=%u, error=%d, timeout=%u, "
                 "resendEvent=%d, keepAliveEvt=%d, delayedAckEvt=%d, delayedAbortEvt=%d, abortCode=%d, abortCount=%d, "
-                "lastSendTime=%u, lastRecvTime=%u, lastSendData=%u"
+                "lastSendTime=%u, lastRecvTime=%u"
 #ifdef RX_ENABLE_LOCKS
                 ", refCount=%u"
 #endif
@@ -9355,7 +9318,7 @@ int rx_DumpCalls(FILE *outputFile, char *cookie)
                 (afs_uint32)c->rqc, (afs_uint32)rqc, (afs_uint32)c->tqc, (afs_uint32)tqc, (afs_uint32)c->iovqc, (afs_uint32)iovqc,
                 (afs_uint32)c->localStatus, (afs_uint32)c->remoteStatus, c->error, c->timeout,
                 c->resendEvent?1:0, c->keepAliveEvent?1:0, c->delayedAckEvent?1:0, c->delayedAbortEvent?1:0,
-                c->abortCode, c->abortCount, c->lastSendTime, c->lastReceiveTime, c->lastSendData
+                c->abortCode, c->abortCount, c->lastSendTime, c->lastReceiveTime
 #ifdef RX_ENABLE_LOCKS
                 , (afs_uint32)c->refCount
 #endif

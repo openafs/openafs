@@ -326,8 +326,8 @@ EXPORTS
         rx_GetCallAbortCode                     @332
         rx_SetCallAbortCode                     @333
         rx_RecordCallStatistics                 @334
-	rx_KeepAliveOn				@335
-	rx_KeepAliveOff				@336
+;	rx_KeepAliveOn				@335
+;	rx_KeepAliveOff				@336
 	rx_HostOf				@337
         rx_PortOf                               @338
 

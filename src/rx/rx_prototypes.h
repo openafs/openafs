@@ -84,8 +84,6 @@ extern void rxi_Free(void *addr, size_t size);
 extern void rxi_CallError(struct rx_call *call, afs_int32 error);
 extern void rx_SetConnSecondsUntilNatPing(struct rx_connection *conn,
 					  afs_int32 seconds);
-extern void rx_KeepAliveOn(struct rx_call *call);
-extern void rx_KeepAliveOff(struct rx_call *call);
 extern int rxs_Release(struct rx_securityClass *aobj);
 #ifndef KERNEL
 extern void rx_PrintTheseStats(FILE * file, struct rx_statistics *s, int size,

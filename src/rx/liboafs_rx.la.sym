@@ -50,8 +50,6 @@ rx_InitHost
 rx_InterruptCall
 rx_IsServerConn
 rx_IsUsingPktCksum
-rx_KeepAliveOff
-rx_KeepAliveOn
 rx_KeyCreate
 rx_MyMaxSendSize
 rx_NewCall

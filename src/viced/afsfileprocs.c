@@ -851,8 +851,6 @@ GetVolumePackageWithCall(struct rx_call *acall, struct VCallByVol *cbv,
     Error errorCode = 0;		/* return code to caller */
     struct rx_connection *tcon = rx_ConnectionOf(acall);
 
-    rx_KeepAliveOff(acall);
-
     if ((errorCode = CheckVnodeWithCall(Fid, volptr, cbv, targetptr, locktype)))
 	goto gvpdone;
 
@@ -904,8 +902,6 @@ GetVolumePackageWithCall(struct rx_call *acall, struct VCallByVol *cbv,
 #endif /* ADMIN_IMPLICIT_LOOKUP */
     }
 gvpdone:
-    if (errorCode)
-	rx_KeepAliveOn(acall);
     return errorCode;
 
 }				/*GetVolumePackage */
@@ -957,7 +953,6 @@ PutVolumePackageWithCall(struct rx_call *acall, Vnode *
 {
     Error fileCode = 0;		/* Error code returned by the volume package */
 
-    rx_KeepAliveOff(acall);
     if (parentwhentargetnotdir) {
 	VPutVnode(&fileCode, parentwhentargetnotdir);
 	assert_vnode_success_or_salvaging(fileCode);
@@ -973,7 +968,6 @@ PutVolumePackageWithCall(struct rx_call *acall, Vnode *
     if (volptr) {
 	VPutVolumeWithCall(volptr, cbv);
     }
-    rx_KeepAliveOn(acall);
 
     if (*client) {
 	PutClient(client);
@@ -2360,8 +2354,6 @@ common_FetchData64(struct rx_call *acall, struct AFSFid *Fid,
     GetStatus(targetptr, OutStatus, rights, anyrights,
 	      &tparentwhentargetnotdir);
 
-    rx_KeepAliveOn(acall); /* I/O done */
-
     /* if a r/w volume, promise a callback to the caller */
     if (VolumeWriteable(volptr))
 	SetCallBackStruct(AddCallBack(client->z.host, Fid), CallBack);
@@ -2540,8 +2532,6 @@ SAFSS_FetchStatus(struct rx_call *acall, struct AFSFid *Fid,
 			  &rights, &anyrights)))
 	goto Bad_FetchStatus;
 
-    rx_KeepAliveOn(acall);
-
     /* set volume synchronization information */
     SetVolumeSync(Sync, volptr);
 
@@ -2638,8 +2628,6 @@ SRXAFS_BulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
 			      &parentwhentargetnotdir, &client, READ_LOCK,
 			      &rights, &anyrights)))
 	    goto Bad_BulkStatus;
-
-	rx_KeepAliveOn(acall);
 
 	/* set volume synchronization information, but only once per call */
 	if (i == 0)
@@ -2780,8 +2768,6 @@ SRXAFS_InlineBulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
 	    client = (struct client *)0;
 	    continue;
 	}
-
-	rx_KeepAliveOn(acall);
 
 	/* set volume synchronization information, but only once per call */
 	if (!VolSync_set) {
@@ -2947,8 +2933,6 @@ common_StoreData64(struct rx_call *acall, struct AFSFid *Fid,
 	goto Bad_StoreData;
     }
 
-    rx_KeepAliveOn(acall);
-
     /* set volume synchronization information */
     SetVolumeSync(Sync, volptr);
 
@@ -2971,9 +2955,7 @@ common_StoreData64(struct rx_call *acall, struct AFSFid *Fid,
      */
     if (parentwhentargetnotdir != NULL) {
 	tparentwhentargetnotdir = *parentwhentargetnotdir;
-	rx_KeepAliveOff(acall);
 	VPutVnode(&fileCode, parentwhentargetnotdir);
-	rx_KeepAliveOn(acall);
 	assert_vnode_success_or_salvaging(fileCode);
 	parentwhentargetnotdir = NULL;
     }
@@ -2991,11 +2973,9 @@ common_StoreData64(struct rx_call *acall, struct AFSFid *Fid,
     if (errorCode && (!targetptr->changed_newTime))
 	goto Bad_StoreData;
 
-    rx_KeepAliveOff(acall);
     /* Update the status of the target's vnode */
     Update_TargetVnodeStatus(targetptr, TVS_SDATA, client, InStatus,
 			     targetptr, volptr, 0, 0);
-    rx_KeepAliveOn(acall);
 
     /* Get the updated File's status back to the caller */
     GetStatus(targetptr, OutStatus, rights, anyrights,
@@ -3120,8 +3100,6 @@ SRXAFS_StoreACL(struct rx_call * acall, struct AFSFid * Fid,
     VVnodeWriteToRead(&errorCode, targetptr);
     assert_vnode_success_or_salvaging(errorCode);
 
-    rx_KeepAliveOn(acall);
-
     /* break call backs on the directory  */
     BreakCallBack(client->z.host, Fid, 0);
 
@@ -3207,8 +3185,6 @@ SAFSS_StoreStatus(struct rx_call *acall, struct AFSFid *Fid,
     Update_TargetVnodeStatus(targetptr, TVS_SSTATUS, client, InStatus,
 			     (parentwhentargetnotdir ? parentwhentargetnotdir
 			      : targetptr), volptr, 0, 0);
-
-    rx_KeepAliveOn(acall);
 
     /* convert the write lock to a read lock before breaking callbacks */
     VVnodeWriteToRead(&errorCode, targetptr);
@@ -3326,8 +3302,6 @@ SAFSS_RemoveFile(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     Update_ParentVnodeStatus(parentptr, volptr, &dir, client->z.ViceId,
 			     parentptr->disk.linkCount,
 			     client->z.InSameNetwork);
-
-    rx_KeepAliveOn(acall);
 
     /* Return the updated parent dir's status back to caller */
     GetStatus(parentptr, OutDirStatus, rights, anyrights, 0);
@@ -3470,8 +3444,6 @@ SAFSS_CreateFile(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     /* update the status of the new file's vnode */
     Update_TargetVnodeStatus(targetptr, TVS_CFILE, client, InStatus,
 			     parentptr, volptr, 0, 0);
-
-    rx_KeepAliveOn(acall);
 
     /* set up the return status for the parent dir and the newly created file, and since the newly created file is owned by the creator, give it PRSFS_ADMINISTER to tell the client its the owner of the file */
     GetStatus(targetptr, OutFidStatus, rights | PRSFS_ADMINISTER, anyrights, parentptr);
@@ -3960,8 +3932,6 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
 	assert_vnode_success_or_salvaging(errorCode);
     }
 
-    rx_KeepAliveOn(acall);
-
     /* break call back on NewDirFid, OldDirFid, NewDirFid and newFileFid  */
     BreakCallBack(client->z.host, NewDirFid, 0);
     if (oldvptr != newvptr) {
@@ -3988,7 +3958,6 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
 
   Bad_Rename:
     if (newfileptr) {
-	rx_KeepAliveOff(acall);
 	VPutVnode(&fileCode, newfileptr);
 	assert_vnode_success_or_salvaging(fileCode);
     }
@@ -4163,8 +4132,6 @@ SAFSS_Symlink(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     /* convert the write lock to a read lock before breaking callbacks */
     VVnodeWriteToRead(&errorCode, parentptr);
     assert_vnode_success_or_salvaging(errorCode);
-
-    rx_KeepAliveOn(acall);
 
     /* break call back on the parent dir */
     BreakCallBack(client->z.host, DirFid, 0);
@@ -4342,8 +4309,6 @@ SAFSS_Link(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     VVnodeWriteToRead(&errorCode, parentptr);
     assert_vnode_success_or_salvaging(errorCode);
 
-    rx_KeepAliveOn(acall);
-
     /* break call back on DirFid */
     BreakCallBack(client->z.host, DirFid, 0);
     /*
@@ -4511,8 +4476,6 @@ SAFSS_MakeDir(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     VVnodeWriteToRead(&errorCode, parentptr);
     assert_vnode_success_or_salvaging(errorCode);
 
-    rx_KeepAliveOn(acall);
-
     /* break call back on DirFid */
     BreakCallBack(client->z.host, DirFid, 0);
 
@@ -4646,8 +4609,6 @@ SAFSS_RemoveDir(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     /* convert the write lock to a read lock before breaking callbacks */
     VVnodeWriteToRead(&errorCode, parentptr);
     assert_vnode_success_or_salvaging(errorCode);
-
-    rx_KeepAliveOn(acall);
 
     /* break call back on DirFid and fileFid */
     BreakCallBack(client->z.host, DirFid, 0);
@@ -4946,7 +4907,6 @@ SAFSS_ReleaseLock(struct rx_call *acall, struct AFSFid *Fid,
 
     /* if no more locks left, a callback would be triggered here */
     if (targetptr->disk.lock.lockCount <= 0) {
-	rx_KeepAliveOn(acall);
 	/* convert the write lock to a read lock before breaking callbacks */
 	VVnodeWriteToRead(&errorCode, targetptr);
 	assert_vnode_success_or_salvaging(errorCode);
@@ -6454,7 +6414,6 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 		 inet_ntoa(logHostAddr), ntohs(rxr_PortOf(rx_ConnectionOf(Call)))));
 	return ENOENT;		/* is this proper error code? */
     } else {
-	rx_KeepAliveOff(Call);
 	/*
 	 * See if the file has several links (from other volumes).  If it
 	 * does, then we have to make a copy before changing it to avoid

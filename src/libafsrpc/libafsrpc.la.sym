@@ -70,8 +70,6 @@ rx_IncrementTimeAndCount
 rx_Init
 rx_InitHost
 rx_InterruptCall
-rx_KeepAliveOff
-rx_KeepAliveOn
 rx_KeyCreate
 rx_MyMaxSendSize
 rx_NewCall
