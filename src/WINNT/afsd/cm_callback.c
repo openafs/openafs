@@ -2143,7 +2143,9 @@ cm_GiveUpAllCallbacksAllServers(afs_int32 markDown)
         return;
 
     lock_ObtainRead(&cm_serverLock);
-    for (tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
+    for (tsp = cm_serversAllFirstp;
+	 tsp;
+	 tsp = (cm_server_t *)osi_QNext(&tsp->allq)) {
         cm_GetServerNoLock(tsp);
         lock_ReleaseRead(&cm_serverLock);
         cm_GiveUpAllCallbacks(tsp, markDown);
@@ -2175,7 +2177,9 @@ cm_GiveUpAllCallbacksAllServersMulti(afs_int32 markDown)
     serversp = (cm_server_t **)malloc(maxconns * sizeof(cm_server_t *));
 
     lock_ObtainRead(&cm_serverLock);
-    for (nconns=0, tsp = cm_allServersp; tsp && nconns < maxconns; tsp = tsp->allNextp) {
+    for (nconns=0, tsp = cm_serversAllFirstp;
+	 tsp && nconns < maxconns;
+	 tsp = (cm_server_t *)osi_QNext(&tsp->allq)) {
         if (tsp->type != CM_SERVER_FILE ||
             (tsp->flags & CM_SERVERFLAG_DOWN) ||
             tsp->cellp == NULL          /* SetPrefs only */)
