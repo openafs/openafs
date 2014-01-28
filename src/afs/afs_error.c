@@ -289,6 +289,9 @@ afs_CheckCode(afs_int32 acode, struct vrequest *areq, int where)
 	    ENOSPC
 #endif
 	    ;
+    /* Some fileservers kill overly-idle calls with VNOSERVICE. */
+    if (acode == VNOSERVICE)
+	return ETIMEDOUT;
 
     return acode;
 
