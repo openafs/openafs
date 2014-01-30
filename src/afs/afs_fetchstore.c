@@ -1169,7 +1169,7 @@ afs_CacheFetchProc(struct afs_conn *tc, struct rx_connection *rxconn,
     if (!code)
 	code = (*ops->close)(rock, avc, adc, tsmall);
     if (ops)
-	(*ops->destroy)(&rock, code);
+	code = (*ops->destroy)(&rock, code);
 
 #ifndef AFS_NOSTATS
     FillStoreStats(code, AFS_STATS_FS_XFERIDX_FETCHDATA, xferStartTime,
