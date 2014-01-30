@@ -161,18 +161,6 @@ afscp_PWrite(const struct afscp_venusfid * fid, const void *buffer,
 			code = rx_EndCall(c, code);
 			continue;
 		    }
-		    /*
-		     * seems to write file length to beginning of file -- why?
-		     */
-		    /*
-		     * bytesremaining = htonl(count);
-		     * bytes = rx_Write(c, (char *)&bytesremaining,
-		     *                  sizeof(afs_int32));
-		     * if (bytes != sizeof(afs_int32)) {
-		     *  code = rx_EndCall(c, bytes);
-		     *  continue;
-		     * }
-		     */
 		    bytesremaining = count;
 		    totalbytes = 0;
 		    while (bytesremaining > 0) {
