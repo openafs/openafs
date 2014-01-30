@@ -1234,10 +1234,9 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
     if (credp)
 	crfree(credp);
 
-    if (!valid) {
-	shrink_dcache_parent(dp);
-	d_drop(dp);
-    }
+    if (!valid)
+	d_invalidate(dp);
+
     return valid;
 
   bad_dentry:
