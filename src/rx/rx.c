@@ -1137,7 +1137,6 @@ void
 rx_SetConnIdleDeadTime(struct rx_connection *conn, int seconds)
 {
     conn->idleDeadTime = seconds;
-    conn->idleDeadDetection = (seconds ? 1 : 0);
     rxi_CheckConnTimeouts(conn);
 }
 
@@ -6390,20 +6389,18 @@ rxi_CheckCall(struct rx_call *call, int haveCTLock)
 	 * attached process can die reasonably gracefully. */
     }
 
-    if (conn->idleDeadDetection) {
-        if (conn->idleDeadTime) {
-            idleDeadTime = conn->idleDeadTime + fudgeFactor;
-        }
+    if (conn->idleDeadTime) {
+	idleDeadTime = conn->idleDeadTime + fudgeFactor;
+    }
 
-        if (idleDeadTime) {
-            /* see if we have a non-activity timeout */
-            if (call->startWait && ((call->startWait + idleDeadTime) < now)) {
-                if (call->state == RX_STATE_ACTIVE) {
-                    cerror = RX_CALL_TIMEOUT;
-                    goto mtuout;
-                }
-            }
-        }
+    if (idleDeadTime) {
+	/* see if we have a non-activity timeout */
+	if (call->startWait && ((call->startWait + idleDeadTime) < now)) {
+	    if (call->state == RX_STATE_ACTIVE) {
+		cerror = RX_CALL_TIMEOUT;
+		goto mtuout;
+	    }
+	}
     }
 
     if (conn->hardDeadTime) {
@@ -6614,7 +6611,7 @@ rxi_GrowMTUEvent(struct rxevent *event, void *arg1, void *dummy, int dummy2)
      */
     if ((conn->peer->maxPacketSize != 0) &&
 	(conn->peer->natMTU < RX_MAX_PACKET_SIZE) &&
-	conn->idleDeadDetection)
+	conn->idleDeadTime)
 	(void)rxi_SendAck(call, NULL, 0, RX_ACK_MTU, 0);
     rxi_ScheduleGrowMTUEvent(call, 0);
     MUTEX_EXIT(&call->lock);

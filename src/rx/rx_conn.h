@@ -72,7 +72,6 @@ struct rx_connection {
     u_short idleDeadTime;	/* max time a call can be idle (no data) */
     u_char ackRate;		/* how many packets between ack requests */
     u_char makeCallWaiters;	/* how many rx_NewCalls are waiting */
-    u_char idleDeadDetection;   /* detect idle dead timeouts? */
     afs_int32 secondsUntilNatPing;	/* how often to ping conn */
     struct rxevent *natKeepAliveEvent; /* Scheduled to keep connection open */
     afs_int32 msgsizeRetryErr;
