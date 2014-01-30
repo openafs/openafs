@@ -1022,85 +1022,6 @@ cm_Analyze(cm_conn_t *connp,
 
 	retry = 2;
     }
-    else if (errorCode == RX_CALL_IDLE) {
-        /*
-         * RPC failed because the server failed to respond with data
-         * within the idle dead timeout period.  This could be for a variety
-         * of reasons:
-         *  1. The server could have a bad partition such as a failed
-         *     disk or iSCSI target and all I/O to that partition is
-         *     blocking on the server and will never complete.
-         *
-         *  2. The server vnode may be locked by another client request
-         *     that is taking a very long time.
-         *
-         *  3. The server may have a very long queue of requests
-         *     pending and is unable to process this request.
-         *
-         *  4. The server could be malicious and is performing a denial
-         *     of service attack against the client.
-         *
-         * If this is a request against a .readonly with alternate sites
-         * the server should be marked down for this request and the
-         * client should fail over to another server.  If this is a
-         * request against a single source, the client may retry once.
-         */
-	if (connp)
-	    _InterlockedAnd(&connp->flags, ~CM_CONN_FLAG_NEW);
-
-        if (serverp)
-            sprintf(addr, "%d.%d.%d.%d",
-                    ((serverp->addr.sin_addr.s_addr & 0xff)),
-                    ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
-                    ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
-                    ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24));
-
-        if (fidp) {
-            code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp,
-                                     CM_GETVOL_FLAG_NO_LRU_UPDATE,
-                                     &volp);
-            if (code == 0) {
-                statep = cm_VolumeStateByID(volp, fidp->volume);
-
-                if (statep)
-                    replicated = (statep->flags & CM_VOL_STATE_FLAG_REPLICATED);
-
-                lock_ObtainRead(&cm_volumeLock);
-                cm_PutVolume(volp);
-                lock_ReleaseRead(&cm_volumeLock);
-                volp = NULL;
-            }
-
-            if (storeOp)
-                scp = cm_FindSCache(fidp);
-	    if (scp) {
-                if (cm_HaveCallback(scp)) {
-                    lock_ObtainWrite(&scp->rw);
-                    cm_DiscardSCache(scp);
-                    lock_ReleaseWrite(&scp->rw);
-
-                    /*
-                     * We really should notify the redirector that we discarded
-                     * the status information but doing so in this case is not
-                     * safe as it can result in a deadlock with extent release
-                     * processing.
-                     */
-                }
-                cm_ReleaseSCache(scp);
-            }
-        }
-
-        if (replicated && serverp) {
-            reqp->errorServp = serverp;
-            reqp->tokenError = errorCode;
-
-	    retry = 2;
-        }
-
-        LogEvent(EVENTLOG_WARNING_TYPE, MSG_RX_IDLE_DEAD_TIMEOUT, addr, retry);
-        osi_Log2(afsd_logp, "cm_Analyze: RPC failed due to idle dead timeout addr[%s] retry=%u",
-                 osi_LogSaveString(afsd_logp,addr), retry);
-    }
     else if (errorCode == RX_CALL_DEAD) {
         /* mark server as down */
         if (serverp)
@@ -1610,7 +1531,8 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
         rx_SetConnHardDeadTime(tcp->rxconnp, HardDeadtimeout);
 
     /*
-     * Setting idle dead timeout to a non-zero value activates RX_CALL_IDLE errors
+     * Setting idle dead timeout to a non-zero value activates RX_CALL_TIMEOUT
+     * errors if the call is idle for a certain amount of time.
      */
     if (replicated) {
 	_InterlockedOr(&tcp->flags, CM_CONN_FLAG_REPLICATION);

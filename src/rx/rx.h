@@ -489,11 +489,8 @@ struct rx_ackPacket {
 /* EMSGSIZE returned from network.  Packet too big, must fragment */
 #define RX_MSGSIZE		    (-8)
 
-/*
- * Idle dead timeout error.  This error is never sent on the wire.
- * rxi_SendCallAbort() translates RX_CALL_IDLE to RX_CALL_TIMEOUT.
- */
-#define RX_CALL_IDLE                (-9)
+/* The value -9 was previously used for RX_CALL_IDLE but is now free for
+ * reuse. */
 
 /*
  * Busy call channel error.  This error is never sent on the wire.

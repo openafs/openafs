@@ -513,7 +513,8 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	    rx_SetConnHardDeadTime(tc->id, afs_rx_harddead);
 	}
 
-        /* Setting idle dead time to non-zero activates RX_CALL_IDLE errors. */
+        /* Setting idle dead time to non-zero activates idle-dead
+	 * RX_CALL_TIMEOUT errors. */
 	if (isrep)
 	    rx_SetConnIdleDeadTime(tc->id, afs_rx_idledead_rep);
 	else

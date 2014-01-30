@@ -5157,7 +5157,6 @@ rxi_SendCallAbort(struct rx_call *call, struct rx_packet *packet,
 	return packet;
 
     switch (call->error) {
-    case RX_CALL_IDLE:
     case RX_CALL_BUSY:
         cerror = RX_CALL_TIMEOUT;
         break;
