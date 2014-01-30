@@ -293,7 +293,7 @@ EXPORTS
 	rx_identity_freeContents                @302
 	rx_identity_free                        @303
 
-	rx_SetBusyChannelError                  @304
+;	rx_SetBusyChannelError                  @304
 	rx_GetThreadNum				@305
 	rx_SetThreadNum				@306
 

@@ -204,16 +204,6 @@ static unsigned int rxi_rpc_peer_stat_cnt;
 
 static unsigned int rxi_rpc_process_stat_cnt;
 
-/*
- * rxi_busyChannelError is a boolean.  It indicates whether or not RX_CALL_BUSY
- * errors should be reported to the application when a call channel appears busy
- * (inferred from the receipt of RX_PACKET_TYPE_BUSY packets on the channel),
- * and there are other call channels in the connection that are not busy.
- * If 0, we do not return errors upon receiving busy packets; we just keep
- * trying on the same call channel until we hit a timeout.
- */
-static afs_int32 rxi_busyChannelError = 0;
-
 rx_atomic_t rx_nWaiting = RX_ATOMIC_INIT(0);
 rx_atomic_t rx_nWaited = RX_ATOMIC_INIT(0);
 
@@ -767,20 +757,6 @@ rxi_rto_packet_acked(struct rx_call *call, int istack)
 void
 rx_rto_setPeerTimeoutSecs(struct rx_peer *peer, int secs) {
     peer->rtt = secs * 8000;
-}
-
-/**
- * Enables or disables the busy call channel error (RX_CALL_BUSY).
- *
- * @param[in] onoff Non-zero to enable busy call channel errors.
- *
- * @pre Neither rx_Init nor rx_InitHost have been called yet
- */
-void
-rx_SetBusyChannelError(afs_int32 onoff)
-{
-    osi_Assert(rx_atomic_test_bit(&rxinit_status, 0));
-    rxi_busyChannelError = onoff ? 1 : 0;
 }
 
 /**
@@ -1571,7 +1547,6 @@ rx_NewCall(struct rx_connection *conn)
 	}
 	if (i < RX_MAXCALLS) {
 	    conn->lastBusy[i] = 0;
-	    call->flags &= ~RX_CALL_PEER_BUSY;
 	    break;
 	}
         if (!wait)
@@ -2436,7 +2411,12 @@ rx_EndCall(struct rx_call *call, afs_int32 rc)
         MUTEX_ENTER(&conn->conn_call_lock);
         MUTEX_ENTER(&call->lock);
 
-	if (!(call->flags & RX_CALL_PEER_BUSY)) {
+	if (!call->error) {
+	    /* While there are some circumstances where a call with an error is
+	     * obviously not on a "busy" channel, be conservative (clearing
+	     * lastBusy is just best-effort to possibly speed up rx_NewCall).
+	     * The call channel is definitely not busy if we just successfully
+	     * completed a call on it. */
 	    conn->lastBusy[call->channel] = 0;
 	}
 
@@ -3180,84 +3160,6 @@ rxi_FindConnection(osi_socket socket, afs_uint32 host,
     return conn;
 }
 
-/**
- * Timeout a call on a busy call channel if appropriate.
- *
- * @param[in] call The busy call.
- *
- * @pre 'call' is marked as busy (namely,
- *      call->conn->lastBusy[call->channel] != 0)
- *
- * @pre call->lock is held
- * @pre rxi_busyChannelError is nonzero
- *
- * @note call->lock is dropped and reacquired
- */
-static void
-rxi_CheckBusy(struct rx_call *call)
-{
-    struct rx_connection *conn = call->conn;
-    int channel = call->channel;
-    int freechannel = 0;
-    int i;
-
-    MUTEX_EXIT(&call->lock);
-
-    MUTEX_ENTER(&conn->conn_call_lock);
-
-    /* Are there any other call slots on this conn that we should try? Look for
-     * slots that are empty and are either non-busy, or were marked as busy
-     * longer than conn->secondsUntilDead seconds before this call started. */
-
-    for (i = 0; i < RX_MAXCALLS && !freechannel; i++) {
-	if (i == channel) {
-	    /* only look at channels that aren't us */
-	    continue;
-	}
-
-	if (conn->lastBusy[i]) {
-	    /* if this channel looked busy too recently, don't look at it */
-	    if (conn->lastBusy[i] >= call->startTime.sec) {
-		continue;
-	    }
-	    if (call->startTime.sec - conn->lastBusy[i] < conn->secondsUntilDead) {
-		continue;
-	    }
-	}
-
-	if (conn->call[i]) {
-	    struct rx_call *tcall = conn->call[i];
-	    MUTEX_ENTER(&tcall->lock);
-	    if (tcall->state == RX_STATE_DALLY) {
-		freechannel = 1;
-	    }
-	    MUTEX_EXIT(&tcall->lock);
-	} else {
-	    freechannel = 1;
-	}
-    }
-
-    MUTEX_ENTER(&call->lock);
-
-    /* Since the call->lock has been released it is possible that the call may
-     * no longer be busy (the call channel cannot have been reallocated as we
-     * haven't dropped the conn_call_lock) Therefore, we must confirm
-     * that the call state has not changed when deciding whether or not to
-     * force this application thread to retry by forcing a Timeout error. */
-
-    if (freechannel && (call->flags & RX_CALL_PEER_BUSY)) {
-	/* Since 'freechannel' is set, there exists another channel in this
-	 * rx_conn that the application thread might be able to use. We know
-	 * that we have the correct call since callNumber is unchanged, and we
-	 * know that the call is still busy. So, set the call error state to
-	 * rxi_busyChannelError so the application can retry the request,
-	 * presumably on a less-busy call channel. */
-
-	rxi_CallError(call, RX_CALL_BUSY);
-    }
-    MUTEX_EXIT(&conn->conn_call_lock);
-}
-
 /*!
  * Abort the call if the server is over the busy threshold. This
  * can be used without requiring a call structure be initialised,
@@ -3288,6 +3190,9 @@ rxi_ReceiveClientCall(struct rx_packet *np, struct rx_connection *conn)
     channel = np->header.cid & RX_CHANNELMASK;
     MUTEX_ENTER(&conn->conn_call_lock);
     call = conn->call[channel];
+    if (np->header.type == RX_PACKET_TYPE_BUSY) {
+	conn->lastBusy[channel] = clock_Sec();
+    }
     if (!call || conn->callNumber[channel] != np->header.callNumber) {
 	MUTEX_EXIT(&conn->conn_call_lock);
 	if (rx_stats_active)
@@ -3635,23 +3540,13 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	putConnection(conn);
 	return np;		/* xmitting; drop packet */
     }
-    case RX_PACKET_TYPE_BUSY: {
-	struct clock busyTime;
-	clock_NewTime();
-	clock_GetTime(&busyTime);
-
-	MUTEX_EXIT(&call->lock);
-
-	MUTEX_ENTER(&conn->conn_call_lock);
-	MUTEX_ENTER(&call->lock);
-	conn->lastBusy[call->channel] = busyTime.sec;
-	call->flags |= RX_CALL_PEER_BUSY;
-	MUTEX_EXIT(&call->lock);
-	MUTEX_EXIT(&conn->conn_call_lock);
-
-	putConnection(conn);
-	return np;
-    }
+    case RX_PACKET_TYPE_BUSY:
+	/* Mostly ignore BUSY packets. We will update lastReceiveTime below,
+	 * so we don't think the endpoint is completely dead, but otherwise
+	 * just act as if we never saw anything. If all we get are BUSY packets
+	 * back, then we will eventually error out with RX_CALL_TIMEOUT if the
+	 * connection is configured with idle/hard timeouts. */
+	break;
 
     case RX_PACKET_TYPE_ACKALL:
 	/* All packets acknowledged, so we can drop all packets previously
@@ -3670,8 +3565,6 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
      * the packet will be delivered to the user before any get time is required
      * (if not, then the time won't actually be re-evaluated here). */
     call->lastReceiveTime = clock_Sec();
-    /* we've received a legit packet, so the channel is not busy */
-    call->flags &= ~RX_CALL_PEER_BUSY;
     MUTEX_EXIT(&call->lock);
     putConnection(conn);
     return np;
@@ -5150,33 +5043,25 @@ static struct rx_packet *
 rxi_SendCallAbort(struct rx_call *call, struct rx_packet *packet,
 		  int istack, int force)
 {
-    afs_int32 error, cerror;
+    afs_int32 error;
     struct clock when, now;
 
     if (!call->error)
 	return packet;
 
-    switch (call->error) {
-    case RX_CALL_BUSY:
-        cerror = RX_CALL_TIMEOUT;
-        break;
-    default:
-        cerror = call->error;
-    }
-
     /* Clients should never delay abort messages */
     if (rx_IsClientConn(call->conn))
 	force = 1;
 
-    if (call->abortCode != cerror) {
-	call->abortCode = cerror;
+    if (call->abortCode != call->error) {
+	call->abortCode = call->error;
 	call->abortCount = 0;
     }
 
     if (force || rxi_callAbortThreshhold == 0
 	|| call->abortCount < rxi_callAbortThreshhold) {
 	rxi_CancelDelayedAbortEvent(call);
-	error = htonl(cerror);
+	error = htonl(call->error);
 	call->abortCount++;
 	packet =
 	    rxi_SendSpecial(call, call->conn, packet, RX_PACKET_TYPE_ABORT,
@@ -5390,16 +5275,6 @@ rxi_ResetCall(struct rx_call *call, int newcall)
         dpf(("rcall %"AFS_PTR_FMT" has %d waiters and flags %d\n", call, call->tqWaiters, call->flags));
     }
     call->flags = 0;
-
-    if (!newcall && (flags & RX_CALL_PEER_BUSY)) {
-	/* The call channel is still busy; resetting the call doesn't change
-	 * that. However, if 'newcall' is set, we are processing a call
-	 * structure that has either been recycled from the free list, or has
-	 * been newly allocated. So, RX_CALL_PEER_BUSY is not relevant if
-	 * 'newcall' is set, since it describes a completely different call
-	 * channel which we do not care about. */
-	call->flags |= RX_CALL_PEER_BUSY;
-    }
 
     rxi_ClearReceiveQueue(call);
     /* why init the queue if you just emptied it? queue_Init(&call->rq); */
@@ -6041,10 +5916,6 @@ rxi_Resend(struct rxevent *event, void *arg0, void *arg1, int istack)
     }
 
     rxi_CheckPeerDead(call);
-
-    if (rxi_busyChannelError && (call->flags & RX_CALL_PEER_BUSY)) {
-	rxi_CheckBusy(call);
-    }
 
     if (opr_queue_IsEmpty(&call->tq)) {
 	/* Nothing to do. This means that we've been raced, and that an

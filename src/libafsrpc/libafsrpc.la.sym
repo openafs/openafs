@@ -90,7 +90,6 @@ rx_SecurityObjectOf
 rx_ServerProc
 rx_ServiceIdOf
 rx_ServiceOf
-rx_SetBusyChannelError
 rx_SetConnDeadTime
 rx_SetConnHardDeadTime
 rx_SetConnIdleDeadTime

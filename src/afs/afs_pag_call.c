@@ -98,7 +98,6 @@ afspag_Init(afs_int32 nfs_server_addr)
     AFS_GLOCK();
 
     afs_InitStats();
-    rx_SetBusyChannelError(1);  /* turn on busy call error reporting */
     rx_Init(htons(7001));
 
     AFS_STATCNT(afs_ResourceInit);

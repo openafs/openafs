@@ -213,7 +213,6 @@ long cm_MapRPCError(long error, cm_req_t *reqp)
 
     if (error == RX_CALL_DEAD ||
         error == RX_CALL_TIMEOUT ||
-        error == RX_CALL_BUSY ||
         error == RX_MSGSIZE ||
         error == VNOSERVICE)
 	error = CM_ERROR_TIMEDOUT;
@@ -281,7 +280,6 @@ long cm_MapRPCErrorRmdir(long error, cm_req_t *reqp)
 
     if (error == RX_CALL_DEAD ||
         error == RX_CALL_TIMEOUT ||
-        error == RX_CALL_BUSY ||
         error == RX_MSGSIZE ||
         error == VNOSERVICE)
 	error = CM_ERROR_TIMEDOUT;
@@ -334,7 +332,6 @@ long cm_MapVLRPCError(long error, cm_req_t *reqp)
 
     if (error == RX_CALL_DEAD ||
         error == RX_CALL_TIMEOUT ||
-        error == RX_CALL_BUSY ||
         error == RX_MSGSIZE ||
         error == VNOSERVICE)
 	error = CM_ERROR_TIMEDOUT;

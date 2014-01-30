@@ -165,8 +165,7 @@ extern u_short rx_PortOf(struct rx_peer *peer);
 #define RX_CALL_IOVEC_WAIT	16384	/* waiting thread is using an iovec */
 #define RX_CALL_HAVE_LAST	32768	/* Last packet has been received */
 #define RX_CALL_NEED_START	0x10000	/* tells rxi_Start to start again */
-#define RX_CALL_PEER_BUSY	0x20000 /* the last packet we received on this call was a
-                                         * BUSY packet; i.e. the channel for this call is busy */
+/* 0x20000 was RX_CALL_PEER_BUSY */
 #define RX_CALL_ACKALL_SENT     0x40000 /* ACKALL has been sent on the call */
 #define RX_CALL_FLUSH		0x80000 /* Transmit queue should be flushed to peer */
 #endif
@@ -492,11 +491,8 @@ struct rx_ackPacket {
 /* The value -9 was previously used for RX_CALL_IDLE but is now free for
  * reuse. */
 
-/*
- * Busy call channel error.  This error is never sent on the wire.
- * rxi_SendCallAbort() translates RX_CALL_BUSY to RX_CALL_TIMEOUT.
- */
-#define RX_CALL_BUSY                (-10)
+/* The value -10 was previously used for RX_CALL_BUSY but is now free for
+ * reuse. */
 
 /* transient failure detected ( possibly the server is restarting ) */
 /* this should be equal to VRESTARTING ( util/errors.h ) for old clients to work */

@@ -971,27 +971,6 @@ cm_Analyze(cm_conn_t *connp,
 
         retry = 2;
     }
-    else if (errorCode == RX_CALL_BUSY) {
-        /*
-         * RPC failed because the selected call channel
-         * is currently busy on the server.  Unconditionally
-         * retry the request so an alternate call channel can be used.
-         */
-	if (connp)
-	    _InterlockedAnd(&connp->flags, ~CM_CONN_FLAG_NEW);
-
-        if (serverp)
-            sprintf(addr, "%d.%d.%d.%d",
-                    ((serverp->addr.sin_addr.s_addr & 0xff)),
-                    ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
-                    ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
-                    ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24));
-
-        LogEvent(EVENTLOG_WARNING_TYPE, MSG_RX_BUSY_CALL_CHANNEL, addr);
-        osi_Log1(afsd_logp, "cm_Analyze: Retry RPC due to busy call channel addr[%s]",
-                 osi_LogSaveString(afsd_logp,addr));
-        retry = 2;
-    }
     else if (errorCode == VNOSERVICE) {
         /*
          * The server did not service the RPC.

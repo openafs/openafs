@@ -621,7 +621,7 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
     if (acode == -455)
 	acode = 455;
 #endif /* AFS_64BIT_CLIENT */
-    if (acode == RX_MSGSIZE || acode == RX_CALL_BUSY) {
+    if (acode == RX_MSGSIZE) {
 	shouldRetry = 1;
 	goto out;
     }
