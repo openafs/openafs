@@ -2418,6 +2418,11 @@ rx_EndCall(struct rx_call *call, afs_int32 rc)
 	     * The call channel is definitely not busy if we just successfully
 	     * completed a call on it. */
 	    conn->lastBusy[call->channel] = 0;
+
+	} else if (call->error == RX_CALL_TIMEOUT) {
+	    /* The call is still probably running on the server side, so try to
+	     * avoid this call channel in the future. */
+	    conn->lastBusy[call->channel] = clock_Sec();
 	}
 
 	MUTEX_ENTER(&conn->conn_data_lock);
