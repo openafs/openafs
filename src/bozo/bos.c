@@ -1207,7 +1207,7 @@ DoSalvage(struct rx_connection * aconn, char * aparm1, char * aparm2,
 	code =
 	    StartBOZO_GetLog(tcall, AFSDIR_CANONICAL_SERVER_SLVGLOG_FILEPATH);
 	if (code) {
-	    rx_EndCall(tcall, code);
+	    code = rx_EndCall(tcall, code);
 	    goto done;
 	}
 	/* copy data */
@@ -1243,7 +1243,7 @@ GetLogCmd(struct cmd_syndesc *as, void *arock)
     tcall = rx_NewCall(tconn);
     code = StartBOZO_GetLog(tcall, as->parms[1].items->data);
     if (code) {
-	rx_EndCall(tcall, code);
+	code = rx_EndCall(tcall, code);
 	goto done;
     }
     /* copy data */

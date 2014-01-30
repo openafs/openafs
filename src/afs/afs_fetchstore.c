@@ -240,18 +240,15 @@ rxfs_storeClose(void *r, struct AFSFetchStatus *OutStatus, int *doProcessFS)
 }
 
 afs_int32
-rxfs_storeDestroy(void **r, afs_int32 error)
+rxfs_storeDestroy(void **r, afs_int32 code)
 {
-    afs_int32 code = error;
     struct rxfs_storeVariables *v = (struct rxfs_storeVariables *)*r;
 
     *r = NULL;
     if (v->call) {
 	RX_AFS_GUNLOCK();
-	code = rx_EndCall(v->call, error);
+	code = rx_EndCall(v->call, code);
 	RX_AFS_GLOCK();
-	if (!code && error)
-	    code = error;
     }
     if (v->tbuffer)
 	osi_FreeLargeSpace(v->tbuffer);
@@ -811,7 +808,7 @@ afs_int32
 rxfs_fetchClose(void *r, struct vcache *avc, struct dcache * adc,
 		struct afs_FetchOutput *o)
 {
-    afs_int32 code, code1 = 0;
+    afs_int32 code;
     struct rxfs_fetchVariables *v = (struct rxfs_fetchVariables *)r;
 
     if (!v->call)
@@ -826,10 +823,8 @@ rxfs_fetchClose(void *r, struct vcache *avc, struct dcache * adc,
 #endif
         code = EndRXAFS_FetchData(v->call, &o->OutStatus, &o->CallBack,
 				&o->tsync);
-    code1 = rx_EndCall(v->call, code);
+    code = rx_EndCall(v->call, code);
     RX_AFS_GLOCK();
-    if (!code && code1)
-	code = code1;
 
     v->call = NULL;
 
@@ -837,18 +832,15 @@ rxfs_fetchClose(void *r, struct vcache *avc, struct dcache * adc,
 }
 
 afs_int32
-rxfs_fetchDestroy(void **r, afs_int32 error)
+rxfs_fetchDestroy(void **r, afs_int32 code)
 {
-    afs_int32 code = error;
     struct rxfs_fetchVariables *v = (struct rxfs_fetchVariables *)*r;
 
     *r = NULL;
     if (v->call) {
         RX_AFS_GUNLOCK();
-	code = rx_EndCall(v->call, error);
+	code = rx_EndCall(v->call, code);
         RX_AFS_GLOCK();
-	if (error)
-	    code = error;
     }
     if (v->tbuffer)
 	osi_FreeLargeSpace(v->tbuffer);
@@ -914,7 +906,7 @@ rxfs_fetchInit(struct afs_conn *tc, struct rx_connection *rxconn,
 	       struct osi_file *fP, struct fetchOps **ops, void **rock)
 {
     struct rxfs_fetchVariables *v;
-    int code = 0, code1 = 0;
+    int code = 0;
 #ifdef AFS_64BIT_CLIENT
     afs_uint32 length_hi = 0;
 #endif
@@ -948,9 +940,8 @@ rxfs_fetchInit(struct afs_conn *tc, struct rx_connection *rxconn,
 		if (bytes == sizeof(afs_int32)) {
 		    length_hi = ntohl(length_hi);
 		} else {
-		    code = rx_Error(v->call);
 		    RX_AFS_GUNLOCK();
-		    code1 = rx_EndCall(v->call, code);
+		    code = rx_EndCall(v->call, RX_PROTOCOL_ERROR);
 		    RX_AFS_GLOCK();
 		    v->call = NULL;
 		}
@@ -982,8 +973,7 @@ rxfs_fetchInit(struct afs_conn *tc, struct rx_connection *rxconn,
 		length = ntohl(length);
 	    else {
 		RX_AFS_GUNLOCK();
-		code = rx_Error(v->call);
-                code1 = rx_EndCall(v->call, code);
+                code = rx_EndCall(v->call, RX_PROTOCOL_ERROR);
 		v->call = NULL;
 		length = 0;
 		RX_AFS_GLOCK();
@@ -1009,8 +999,7 @@ rxfs_fetchInit(struct afs_conn *tc, struct rx_connection *rxconn,
 	    if (bytes == sizeof(afs_int32)) {
                 *alength = ntohl(length);
 	    } else {
-		code = rx_Error(v->call);
-                code1 = rx_EndCall(v->call, code);
+                code = rx_EndCall(v->call, RX_PROTOCOL_ERROR);
 		v->call = NULL;
 	    }
 	}
@@ -1026,16 +1015,12 @@ rxfs_fetchInit(struct afs_conn *tc, struct rx_connection *rxconn,
 	 * requested. It shouldn't do that, and accepting that much data
 	 * can make us take up more cache space than we're supposed to,
 	 * so error. */
-	code = rx_Error(v->call);
 	RX_AFS_GUNLOCK();
-	code1 = rx_EndCall(v->call, code);
+	code = rx_EndCall(v->call, RX_PROTOCOL_ERROR);
 	RX_AFS_GLOCK();
 	v->call = NULL;
 	code = EIO;
     }
-
-    if (!code && code1)
-	code = code1;
 
     if (code) {
 	osi_FreeSmallSpace(v);

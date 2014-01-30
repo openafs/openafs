@@ -2689,7 +2689,7 @@ bos_ExecutableCreate(const void *serverHandle, const char *sourceFile,
 			  (afs_int32) estat.st_mode, estat.st_mtime);
 
     if (tst) {
-	rx_EndCall(tcall, tst);
+	tst = rx_EndCall(tcall, tst);
 	goto fail_bos_ExecutableCreate;
     }
 
@@ -3184,7 +3184,7 @@ bos_LogGet(const void *serverHandle, const char *log,
   fail_bos_LogGet:
 
     if (have_call) {
-	rx_EndCall(tcall, 0);
+	tst = rx_EndCall(tcall, 0);
     }
 
     if (st != NULL) {

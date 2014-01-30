@@ -4542,7 +4542,7 @@ UV_DumpVolume(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
     struct rx_connection * volatile fromconn = NULL;
     afs_int32 volatile fromtid = 0;
 
-    afs_int32 rxError = 0, rcode = 0;
+    afs_int32 rcode = 0;
     afs_int32 code, error = 0;
     afs_int32 tmp;
     time_t tmv = fromdate;
@@ -4592,7 +4592,7 @@ UV_DumpVolume(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
 
   error_exit:
     if (fromcall) {
-	code = rx_EndCall(fromcall, rxError);
+	code = rx_EndCall(fromcall, 0);
 	if (code && code != RXGEN_OPCODE)
 	    fprintf(STDERR, "Error in rx_EndCall\n");
 	if (code && !error)
@@ -4637,7 +4637,7 @@ UV_DumpClonedVolume(afs_uint32 afromvol, afs_uint32 afromserver,
     afs_uint32 volatile clonevol = 0;
 
     afs_int32 tmp;
-    afs_int32 fromtid = 0, rxError = 0, rcode = 0;
+    afs_int32 fromtid = 0, rcode = 0;
     afs_int32 code = 0, error = 0;
     afs_uint32 tmpVol;
     char vname[64];
@@ -4745,7 +4745,7 @@ UV_DumpClonedVolume(afs_uint32 afromvol, afs_uint32 afromserver,
     }
 
     if (fromcall) {
-	code = rx_EndCall(fromcall, rxError);
+	code = rx_EndCall(fromcall, 0);
 	if (code) {
 	    fprintf(STDERR, "Error in rx_EndCall\n");
 	    if (!error)
@@ -4787,7 +4787,6 @@ UV_RestoreVolume2(afs_uint32 toserver, afs_int32 topart, afs_uint32 tovolid,
     struct rx_connection *toconn, *tempconn;
     struct rx_call *tocall;
     afs_int32 totid, code, rcode, vcode, terror = 0;
-    afs_int32 rxError = 0;
     struct volser_status tstatus;
     struct volintInfo vinfo;
     char partName[10];
@@ -4933,7 +4932,7 @@ UV_RestoreVolume2(afs_uint32 toserver, afs_int32 topart, afs_uint32 tovolid,
 	error = code;
 	goto refail;
     }
-    terror = rx_EndCall(tocall, rxError);
+    terror = rx_EndCall(tocall, 0);
     tocall = (struct rx_call *)0;
     if (terror) {
 	fprintf(STDERR, "rx_EndCall Failed \n");
@@ -5157,7 +5156,7 @@ UV_RestoreVolume2(afs_uint32 toserver, afs_int32 topart, afs_uint32 tovolid,
     }
   refail:
     if (tocall) {
-	code = rx_EndCall(tocall, rxError);
+	code = rx_EndCall(tocall, 0);
 	if (!error)
 	    error = code;
     }

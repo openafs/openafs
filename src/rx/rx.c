@@ -2510,6 +2510,10 @@ rx_EndCall(struct rx_call *call, afs_int32 rc)
      * Map errors to the local host's errno.h format.
      */
     error = ntoh_syserr_conv(error);
+
+    /* If the caller said the call failed with some error, we had better
+     * return an error code. */
+    osi_Assert(!rc || error);
     return error;
 }
 

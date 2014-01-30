@@ -63,7 +63,7 @@ int_DirectWrite( IN cm_scache_t *scp,
                  IN void        *memoryRegionp,
                  OUT afs_uint32 *bytesWritten)
 {
-    long code, code1;
+    long code;
     long temp;
     AFSFetchStatus outStatus;
     AFSStoreStatus inStatus;
@@ -178,16 +178,12 @@ int_DirectWrite( IN cm_scache_t *scp,
             }
         }
 
-        code1 = rx_EndCall(rxcallp, code);
+        code = rx_EndCall(rxcallp, code);
 
-        if ((code == RXGEN_OPCODE || code1 == RXGEN_OPCODE) && SERVERHAS64BIT(connp)) {
+        if (code == RXGEN_OPCODE && SERVERHAS64BIT(connp)) {
             SET_SERVERHASNO64BIT(connp);
             goto retry;
         }
-
-        /* Prefer StoreData error over rx_EndCall error */
-        if (code1 != 0)
-            code = code1;
     } while (cm_Analyze(connp, userp, reqp, &scp->fid, NULL, 1, &outStatus, &volSync, NULL, NULL, code));
 
     code = cm_MapRPCError(code, reqp);

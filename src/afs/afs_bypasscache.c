@@ -596,9 +596,8 @@ afs_PrefetchNoCache(struct vcache *avc,
 
 		    if (bytes != sizeof(afs_int32)) {
 			length_hi = 0;
-			code = rx_Error(tcall);
 			COND_GUNLOCK(locked);
-			code = rx_EndCall(tcall, code);
+			code = rx_EndCall(tcall, RX_PROTOCOL_ERROR);
 			COND_RE_GLOCK(locked);
 			tcall = NULL;
 		    }
