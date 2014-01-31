@@ -535,6 +535,9 @@ DoLockWarning(struct vcache *avc, afs_ucred_t * acred)
     if ((now < lastWarnTime + 120) && (lastWarnPid == pid)) {
 	return;
     }
+    if (now < avc->lastBRLWarnTime + 120) {
+	return;
+    }
 
     procname = afs_osi_Alloc(256);
 
@@ -545,7 +548,7 @@ DoLockWarning(struct vcache *avc, afs_ucred_t * acred)
     osi_procname(procname, 256);
     procname[255] = '\0';
 
-    lastWarnTime = now;
+    lastWarnTime = avc->lastBRLWarnTime = now;
     lastWarnPid = pid;
 
 #ifdef AFS_LINUX26_ENV

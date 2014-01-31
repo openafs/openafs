@@ -895,6 +895,7 @@ struct vcache {
 #ifdef AFS_SUN5_ENV
     struct afs_q multiPage;	/* list of multiPage_range structs */
 #endif
+    afs_uint32 lastBRLWarnTime; /* last time we warned about byte-range locks */
 };
 
 #define	DONT_CHECK_MODE_BITS	0
