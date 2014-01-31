@@ -645,7 +645,7 @@ void * cm_Daemon(void *vparm)
 
         if (configureFirewall) {
 	    /* Open Microsoft Firewall to allow in port 7001 */
-	    switch (icf_CheckAndAddAFSPorts(AFS_PORTSET_CLIENT)) {
+	    switch (icf_CheckAndAddAFSPorts(cm_callbackport)) {
 	    case 0:
 		afsi_log("Windows Firewall Configuration succeeded");
 		configureFirewall = 0;

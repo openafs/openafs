@@ -32,6 +32,7 @@
 #include <objbase.h>
 #include <oleauto.h>
 #include "afsicf.h"
+#include <wchar.h>
 
 #ifdef TESTMAIN
 #include<stdio.h>
@@ -225,6 +226,30 @@ HRESULT icf_CheckAndAddPorts2(WCHAR * wServiceName, global_afs_port_t * ports, i
             {
                 DEBUGOUT(("INetFwRule Interface Types Updated\n"));
             }
+
+	    hr = pFwRule->put_Protocol(ports[i].protocol);
+	    if (SUCCEEDED(hr))
+	    {
+		DEBUGOUT(("INetFwRule Interface Protocol Updated\n"));
+	    }
+
+	    hr = pFwRule->put_LocalPorts(bstrRuleLPorts);
+	    if (SUCCEEDED(hr))
+	    {
+		DEBUGOUT(("INetFwRule Interface Local Ports Updated\n"));
+	    }
+
+	    hr = pFwRule->put_Grouping(bstrRuleGroup);
+	    if (SUCCEEDED(hr))
+	    {
+		DEBUGOUT(("INetFwRule Interface Grouping Updated\n"));
+	    }
+
+	    hr = pFwRule->put_Action(NET_FW_ACTION_ALLOW);
+	    if (SUCCEEDED(hr))
+	    {
+		DEBUGOUT(("INetFwRule Interface Action Updated\n"));
+	    }
         }
 
         SysFreeString(bstrRuleName);
@@ -451,7 +476,7 @@ HRESULT icf_CheckAndAddPorts(INetFwProfile * fwProfile, global_afs_port_t * port
     return rhr;
 }
 
-long icf_CheckAndAddAFSPorts(int portset) {
+long icf_CheckAndAddAFSPorts(int port) {
     HRESULT hr;
     BOOL coInitialized = FALSE;
     INetFwProfile * fwProfile = NULL;
@@ -460,17 +485,24 @@ long icf_CheckAndAddAFSPorts(int portset) {
     int nports;
     long code = 0;
 
-    if (portset == AFS_PORTSET_CLIENT) {
-	ports = afs_clientPorts;
-	nports = sizeof(afs_clientPorts) / sizeof(*afs_clientPorts);
-        wServiceName = L"TransarcAFSDaemon";
-    } else if (portset == AFS_PORTSET_SERVER) {
+    if (port == AFS_PORTSET_SERVER) {
 	ports = afs_serverPorts;
 	nports = sizeof(afs_serverPorts) / sizeof(*afs_serverPorts);
-        wServiceName = L"TransarcAFSServer";
-    } else {
-        DEBUGOUT(("Invalid port set\n"));
-	return 1; /* Invalid port set */
+	wServiceName = L"TransarcAFSServer";;
+    } else /* an actual client port */ {
+	WCHAR str_port[32];
+
+	if (_snwprintf_s(str_port, 32, 31, L"%u", port) < 0) {
+	    DEBUGOUT(("Invalid port set\n"));
+	    return 1; /* Invalid port set */
+	}
+
+	ports = afs_clientPorts;
+	nports = sizeof(afs_clientPorts) / sizeof(*afs_clientPorts);
+
+	afs_clientPorts[0].n_port = port;
+	afs_clientPorts[0].str_port = str_port;
+	wServiceName = L"TransarcAFSDaemon";
     }
     hr = CoInitializeEx( NULL,
 			 COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE
@@ -516,7 +548,7 @@ long icf_CheckAndAddAFSPorts(int portset) {
 #ifdef TESTMAIN
 int main(int argc, char **argv) {
     printf("Starting...\n");
-    if (icf_CheckAndAddAFSPorts(AFS_PORTSET_CLIENT))
+    if (icf_CheckAndAddAFSPorts(7001))
 	printf("Failed\n");
     else
 	printf("Succeeded\n");
