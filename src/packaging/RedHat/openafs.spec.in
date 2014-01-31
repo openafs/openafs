@@ -1167,7 +1167,7 @@ gzip -9 $RPM_BUILD_ROOT%{_mandir}/man*/*
 	>openafs-man5files
 
 /bin/ls $RPM_BUILD_ROOT%{_mandir}/man8 \
-	|egrep '^aklog_dynamic_auth|^backup|^bos|^butc|^fms|^fssync-debug|^fstrace|^kas|^read_tape|^uss' \
+	|egrep '^backup|^bos|^butc|^fms|^fssync-debug|^fstrace|^kas|^read_tape|^uss' \
 	>openafs-man8files
 
 #
@@ -1253,7 +1253,7 @@ done
 rm -rf $RPM_BUILD_ROOT%{_sbindir}/kdump*
 
 # remove man pages from programs deleted above
-for f in 1/dlog 1/dpass 1/livesys 8/kdb 8/kpwvalid 8/xfs_size_check 1/package_test 5/package 8/package ; do
+for f in 1/dlog 1/copyauth 1/dpass 1/livesys 8/rmtsysd 8/aklog_dynamic_auth 8/kdb 8/kpwvalid 8/xfs_size_check 1/package_test 5/package 8/package ; do
   rm -f $RPM_BUILD_ROOT%{_mandir}/man$f.*
 done
 
@@ -1552,7 +1552,6 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_sysconfdir}/sysconfig/modules/openafs-client.modules
 %endif
 %{_mandir}/man1/cmdebug.*
-%{_mandir}/man1/copyauth.*
 %{_mandir}/man1/up.*
 %{_mandir}/man5/afs.5.gz
 %{_mandir}/man5/afs_cache.5.gz
@@ -1560,7 +1559,6 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man5/afszcm.cat.5.gz
 %{_mandir}/man5/cacheinfo.*
 %{_mandir}/man8/afsd.*
-%{_mandir}/man8/rmtsysd.*
 %{_mandir}/man8/vsys.*
 %{_mandir}/man5/CellAlias.*
 
