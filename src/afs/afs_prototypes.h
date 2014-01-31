@@ -1203,8 +1203,6 @@ int afs_fid(OSI_VC_DECL(avc), struct fid **fidpp);
 #endif                          /* AFS_AIX41_ENV */
 
 /* VNOPS/afs_vnop_flock.c */
-extern afs_int32 lastWarnTime;
-
 extern void lockIdSet(struct AFS_FLOCK *flock, struct SimpleLocks *slp,
 		      int clid);
 extern int HandleFlock(struct vcache *avc, int acom,
