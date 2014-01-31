@@ -507,7 +507,7 @@ HandleFlock(struct vcache *avc, int acom, struct vrequest *areq,
 
 /* warn a user that a lock has been ignored */
 static void
-DoLockWarning(afs_ucred_t * acred)
+DoLockWarning(struct vcache *avc, afs_ucred_t * acred)
 {
     static afs_uint32 lastWarnTime;
     static pid_t lastWarnPid;
@@ -544,8 +544,11 @@ DoLockWarning(afs_ucred_t * acred)
     message = "byte-range lock/unlock ignored; make sure no one else is running this program";
 #endif
 
-    afs_warnuser("afs: %s (pid %d (%s), user %ld).\n",
-                 message, pid, procname, (long)afs_cr_uid(acred));
+    afs_warnuser("afs: %s (pid %d (%s), user %ld, fid %lu.%lu.%lu).\n",
+                 message, pid, procname, (long)afs_cr_uid(acred),
+                 (unsigned long)avc->f.fid.Fid.Volume,
+                 (unsigned long)avc->f.fid.Fid.Vnode,
+                 (unsigned long)avc->f.fid.Fid.Unique);
 
     afs_osi_Free(procname, 256);
 }
@@ -611,7 +614,7 @@ int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
     /* next line makes byte range locks always succeed,
      * even when they should block */
     if (af->l_whence != 0 || af->l_start != 0 || af->l_len != 0) {
-	DoLockWarning(acred);
+	DoLockWarning(avc, acred);
 	code = 0;
 	goto done;
     }
