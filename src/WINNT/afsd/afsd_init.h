@@ -19,6 +19,7 @@ void afsd_ForceTrace(BOOL flush);
 void afsd_SetUnhandledExceptionFilter();
 
 extern char cm_HostName[];
+extern unsigned short cm_callbackport;
 extern char cm_NetbiosName[];
 extern clientchar_t cm_NetbiosNameC[];
 

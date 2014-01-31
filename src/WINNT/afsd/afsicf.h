@@ -34,6 +34,4 @@ long icf_CheckAndAddAFSPorts(int portset);
 }
 #endif
 
-#define AFS_PORTSET_CLIENT 1
-#define AFS_PORTSET_SERVER 2
-
+#define AFS_PORTSET_SERVER 0
