@@ -44,20 +44,8 @@ long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *hostnamep, uns
     cellp = cellrockp->cellp;
     probe = !(cellrockp->flags & CM_FLAG_NOPROBE);
 
-    /* if this server was previously created by fs setserverprefs */
-    if ( tsp = cm_FindServer(addrp, CM_SERVER_VLDB, FALSE))
-    {
-        if ( !tsp->cellp )
-            tsp->cellp = cellp;
-        else if (tsp->cellp != cellp) {
-            osi_Log3(afsd_logp, "found a vlserver %s associated with two cells named %s and %s",
-                     osi_LogSaveString(afsd_logp,hostnamep),
-                     osi_LogSaveString(afsd_logp,tsp->cellp->name),
-                     osi_LogSaveString(afsd_logp,cellp->name));
-        }
-    }
-    else
-        tsp = cm_NewServer(addrp, CM_SERVER_VLDB, cellp, NULL, probe ? 0 : CM_FLAG_NOPROBE);
+    tsp = cm_NewServer(addrp, CM_SERVER_VLDB, cellp, NULL,
+		       probe ? 0 : CM_FLAG_NOPROBE);
 
     if (adminRank)
         tsp->adminRank = adminRank;
