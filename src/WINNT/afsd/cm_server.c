@@ -938,6 +938,7 @@ void cm_SetServerIPRank(cm_server_t * serverp)
 
 cm_server_t *cm_NewServer(struct sockaddr_in *socketp, int type, cm_cell_t *cellp, afsUUID *uuidp, afs_uint32 flags) {
     cm_server_t *tsp;
+    char hoststr[16];
 
     osi_assertx(socketp->sin_family == AF_INET, "unexpected socket family");
 
@@ -951,7 +952,26 @@ cm_server_t *cm_NewServer(struct sockaddr_in *socketp, int type, cm_cell_t *cell
             tsp->uuid = *uuidp;
             _InterlockedOr(&tsp->flags, CM_SERVERFLAG_UUID);
         }
-        lock_ReleaseWrite(&cm_serverLock);
+
+	if (cellp != NULL && tsp->cellp == NULL) {
+	    tsp->cellp = cellp;
+	    afs_inet_ntoa_r(tsp->addr.sin_addr.s_addr, hoststr);
+	    osi_Log3(afsd_logp, "cm_NewServer assigning server %s to cell (%u) %s",
+		     osi_LogSaveString(afsd_logp,hoststr),
+		     cellp->cellID,
+		     osi_LogSaveString(afsd_logp,cellp->name));
+	}
+	else if (tsp->cellp != cellp) {
+	    afs_inet_ntoa_r(tsp->addr.sin_addr.s_addr, hoststr);
+	    osi_Log5(afsd_logp,
+		     "cm_NewServer found a server %s associated with two cells (%u) %s and (%u) %s",
+		     osi_LogSaveString(afsd_logp,hoststr),
+		     tsp->cellp->cellID,
+		     osi_LogSaveString(afsd_logp,tsp->cellp->name),
+		     cellp->cellID,
+		     osi_LogSaveString(afsd_logp,cellp->name));
+ 	}
+	lock_ReleaseWrite(&cm_serverLock);
         return tsp;
     }
 
@@ -959,7 +979,6 @@ cm_server_t *cm_NewServer(struct sockaddr_in *socketp, int type, cm_cell_t *cell
     if (tsp) {
         memset(tsp, 0, sizeof(*tsp));
         tsp->type = type;
-        tsp->cellp = cellp;
         if (uuidp && !afs_uuid_is_nil(uuidp)) {
             tsp->uuid = *uuidp;
             _InterlockedOr(&tsp->flags, CM_SERVERFLAG_UUID);
@@ -979,6 +998,15 @@ cm_server_t *cm_NewServer(struct sockaddr_in *socketp, int type, cm_cell_t *cell
             cm_numFileServers++;
             break;
         }
+
+	if (cellp != NULL) {
+	    tsp->cellp = cellp;
+	    afs_inet_ntoa_r(tsp->addr.sin_addr.s_addr, hoststr);
+	    osi_Log3(afsd_logp, "cm_NewServer new server %s in cell (%u) %s",
+		     osi_LogSaveString(afsd_logp,hoststr),
+		     cellp->cellID,
+		     osi_LogSaveString(afsd_logp,cellp->name));
+	}
     }
     lock_ReleaseWrite(&cm_serverLock); 	/* release server lock */
 
