@@ -41,8 +41,7 @@ static int DoStat(char *aname, struct rx_connection *aconn,
 #include "bosprototypes.h"
 
 /* command offsets for bos salvage command */
-#define MRAFS_OFFSET  10
-#define ADDPARMOFFSET 27
+#define ADDPARMOFFSET 10
 
 /* dummy routine for the audit work.  It should do nothing since audits */
 /* occur at the server level and bos is not a server. */
@@ -1036,8 +1035,6 @@ StopServer(struct cmd_syndesc *as, void *arock)
     }
     return code;
 }
-
-#define PARMBUFFERSSIZE 32
 
 static afs_int32
 DoSalvage(struct rx_connection * aconn, char * aparm1, char * aparm2,
