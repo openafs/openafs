@@ -1382,6 +1382,7 @@ cmd_OptionAsList(struct cmd_syndesc *syn, int pos, struct cmd_item **value)
     const char *str;
     struct cmd_item *item, **last;
     const char *start, *end;
+    size_t len;
     int code;
 
     if (pos > syn->nParms)
@@ -1406,8 +1407,9 @@ cmd_OptionAsList(struct cmd_syndesc *syn, int pos, struct cmd_item **value)
     start = str;
     while ((end = strchr(start, ' '))) {
 	item = calloc(1, sizeof(struct cmd_item));
-	item->data = malloc(end - start + 1);
-	strlcpy(item->data, start, end - start + 1);
+	len = end - start + 1;
+	item->data = malloc(len);
+	strlcpy(item->data, start, len);
 	*last = item;
 	last = &item->next;
 	for (start = end; *start == ' '; start++); /* skip any whitespace */
@@ -1416,8 +1418,9 @@ cmd_OptionAsList(struct cmd_syndesc *syn, int pos, struct cmd_item **value)
     /* Catch the final element */
     if (*start != '\0') {
 	item = calloc(1, sizeof(struct cmd_item));
-	item->data = malloc(strlen(start) + 1);
-	strlcpy(item->data, start, strlen(start) + 1);
+	len = strlen(start) + 1;
+	item->data = malloc(len);
+	strlcpy(item->data, start, len);
 	*last = item;
     }
 
