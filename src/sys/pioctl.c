@@ -30,8 +30,7 @@
  * need to do anything!
  */
 
-#else
-#if defined(AFS_SGI_ENV)
+#elif defined(AFS_SGI_ENV)
 
 #pragma weak xlpioctl = lpioctl
 
@@ -41,46 +40,47 @@ lpioctl(char *path, int cmd, void *cmarg, int follow)
     return (syscall(AFS_PIOCTL, path, cmd, cmarg, follow));
 }
 
-#else /* AFS_SGI_ENV */
+#elif defined(AFS_LINUX20_ENV)
 
 int
 lpioctl(char *path, int cmd, void *cmarg, int follow)
 {
-    int errcode, rval;
-#ifndef AFS_LINUX20_ENV
-    /* As kauth/user.c says, handle smoothly the case where no AFS system call
-     * exists (yet). */
-    void (*old)(int) = signal(SIGSYS, SIG_IGN);
-#endif
+    int errcode = 0;
+    int rval;
 
-#if defined(AFS_LINUX20_ENV)
     rval = proc_afs_syscall(AFSCALL_PIOCTL, (long)path, cmd, (long)cmarg,
 			    follow, &errcode);
 
     if(rval)
 	errcode = syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, cmd, cmarg,
 			  follow);
-#elif defined(AFS_DARWIN80_ENV)
-    rval = ioctl_afs_syscall(AFSCALL_PIOCTL, (long)path, cmd, (long)cmarg,
-			     follow, 0, 0, &errcode);
-    if (rval)
-	errcode = rval;
-#elif defined(AFS_SUN511_ENV)
-    rval = ioctl_sun_afs_syscall(AFSCALL_PIOCTL, (uintptr_t)path, cmd,
-                                 (uintptr_t)cmarg, follow, 0, 0, &errcode);
-    if (rval) {
-	errcode = rval;
-    }
-#else
-    errcode = syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, cmd, cmarg, follow);
-#endif
-
-#ifndef AFS_LINUX20_ENV
-    signal(SIGSYS, old);
-#endif
 
     return (errcode);
 }
 
-#endif /* !AFS_SGI_ENV */
+#else /* AFS_AIX32_ENV */
+
+int
+lpioctl(char *path, int cmd, void *cmarg, int follow)
+{
+    int errcode = 0;
+    /* As kauth/user.c says, handle smoothly the case where no AFS system call
+     * exists (yet). */
+    void (*old)(int) = signal(SIGSYS, SIG_IGN);
+
+#if defined(AFS_DARWIN80_ENV)
+    errcode = ioctl_afs_syscall(AFSCALL_PIOCTL, (long)path, cmd, (long)cmarg,
+				follow, 0, 0, &errcode);
+#elif defined(AFS_SUN511_ENV)
+    errcode = ioctl_sun_afs_syscall(AFSCALL_PIOCTL, (uintptr_t)path, cmd,
+				    (uintptr_t)cmarg, follow, 0, 0, &errcode);
+#else
+    errcode = syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, cmd, cmarg, follow);
+#endif
+
+    signal(SIGSYS, old);
+
+    return (errcode);
+}
+
 #endif /* !AFS_AIX32_ENV */
