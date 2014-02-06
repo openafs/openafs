@@ -1856,7 +1856,7 @@ get_credv5_akimpersonate(krb5_context context,
         krb5_keytab_entry new[1];
         int best = -1;
         memset(new, 0, sizeof *new);
-        if ((code == krb5_kt_start_seq_get(context, kt, cursor))) {
+        if ((code = krb5_kt_start_seq_get(context, kt, cursor))) {
             afs_com_err(progname, code, "while starting keytab scan");
             goto cleanup;
         }
