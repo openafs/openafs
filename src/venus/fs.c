@@ -3960,6 +3960,9 @@ Die(int errnum, char *filename)
 		    "%s: You do not have the required rights to do this operation\n",
 		    pn);
 	break;
+    case ESRCH: /* hack: pioctls stole ESRCH for cell name not available errors. */
+	fprintf(stderr, "%s: Cell name not recognized.\n", pn);
+	break;
     default:
 	if (filename)
 	    fprintf(stderr, "%s:'%s'", pn, filename);
