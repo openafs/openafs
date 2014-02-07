@@ -2078,6 +2078,7 @@ rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
     taddr.sin_family = AF_INET;
     taddr.sin_port = aport;
     taddr.sin_addr.s_addr = ahost;
+    memset(&taddr.sin_zero, 0, sizeof(taddr.sin_zero));
 #ifdef STRUCT_SOCKADDR_HAS_SA_LEN
     taddr.sin_len = sizeof(struct sockaddr_in);
 #endif
@@ -2178,6 +2179,7 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
     addr.sin_family = AF_INET;
     addr.sin_port = peer->port;
     addr.sin_addr.s_addr = peer->host;
+    memset(&addr.sin_zero, 0, sizeof(addr.sin_zero));
 
     /* This stuff should be revamped, I think, so that most, if not
      * all, of the header stuff is always added here.  We could
@@ -2331,6 +2333,7 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
     addr.sin_family = AF_INET;
     addr.sin_port = peer->port;
     addr.sin_addr.s_addr = peer->host;
+    memset(&addr.sin_zero, 0, sizeof(addr.sin_zero));
 
     if (len + 1 > RX_MAXIOVECS) {
 	osi_Panic("rxi_SendPacketList, len > RX_MAXIOVECS\n");
@@ -2536,6 +2539,7 @@ rxi_SendRawAbort(osi_socket socket, afs_uint32 host, u_short port,
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = host;
     addr.sin_port = port;
+    memset(&addr.sin_zero, 0, sizeof(addr.sin_zero));
 #ifdef STRUCT_SOCKADDR_HAS_SA_LEN
     addr.sin_len = sizeof(struct sockaddr_in);
 #endif

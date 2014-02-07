@@ -132,6 +132,7 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
     taddr.sin_addr.s_addr = ahost;
     taddr.sin_family = AF_INET;
     taddr.sin_port = (u_short) port;
+    memset(&taddr.sin_zero, 0, sizeof(taddr.sin_zero));
 #ifdef STRUCT_SOCKADDR_HAS_SA_LEN
     taddr.sin_len = sizeof(struct sockaddr_in);
 #endif
@@ -724,6 +725,7 @@ rxi_InitPeerParams(struct rx_peer *pp)
         addr.sin_family = AF_INET;
         addr.sin_addr.s_addr = pp->host;
         addr.sin_port = pp->port;
+        memset(&addr.sin_zero, 0, sizeof(addr.sin_zero));
         if (connect(sock, (struct sockaddr *)&addr, sizeof(addr)) == 0) {
             int mtu=0;
             socklen_t s = sizeof(mtu);

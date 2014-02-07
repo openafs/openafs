@@ -3494,6 +3494,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	addr.sin_family = AF_INET;
 	addr.sin_port = port;
 	addr.sin_addr.s_addr = host;
+	memset(&addr.sin_zero, 0, sizeof(addr.sin_zero));
 #ifdef STRUCT_SOCKADDR_HAS_SA_LEN
 	addr.sin_len = sizeof(addr);
 #endif /* AFS_OSF_ENV */
@@ -6506,6 +6507,7 @@ rxi_NatKeepAliveEvent(struct rxevent *event, void *arg1,
     taddr.sin_family = AF_INET;
     taddr.sin_port = rx_PortOf(rx_PeerOf(conn));
     taddr.sin_addr.s_addr = rx_HostOf(rx_PeerOf(conn));
+    memset(&taddr.sin_zero, 0, sizeof(taddr.sin_zero));
 #ifdef STRUCT_SOCKADDR_HAS_SA_LEN
     taddr.sin_len = sizeof(struct sockaddr_in);
 #endif
@@ -7516,6 +7518,7 @@ MakeDebugCall(osi_socket socket, afs_uint32 remoteAddr, afs_uint16 remotePort,
     taddr.sin_family = AF_INET;
     taddr.sin_port = remotePort;
     taddr.sin_addr.s_addr = remoteAddr;
+    memset(&taddr.sin_zero, 0, sizeof(taddr.sin_zero));
 #ifdef STRUCT_SOCKADDR_HAS_SA_LEN
     taddr.sin_len = sizeof(struct sockaddr_in);
 #endif
