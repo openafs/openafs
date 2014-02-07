@@ -253,7 +253,7 @@ acl_Internalize_pr(int (*func)(namelist *names, idlist *ids), char *elist, struc
 	return 0;
     }
     lnames.namelist_len = (*acl)->total;
-    lnames.namelist_val = malloc(lnames.namelist_len * PR_MAXNAMELEN);
+    lnames.namelist_val = calloc(lnames.namelist_len, PR_MAXNAMELEN);
     if (lnames.namelist_val == 0) {
 	return -1;
     }
