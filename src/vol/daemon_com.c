@@ -440,7 +440,10 @@ SYNC_ask_internal(SYNC_client_state * state, SYNC_command * com, SYNC_response *
 
     if (res->hdr.response_len != n) {
 	Log("SYNC_ask:  length field in response inconsistent "
-	    "on circuit '%s'\n", state->proto_name);
+	    "on circuit '%s' command %ld, %d != %lu\n", state->proto_name,
+	    afs_printable_int32_ld(com->hdr.command),
+	    n,
+	    afs_printable_uint32_lu(res->hdr.response_len));
 	res->hdr.response = SYNC_COM_ERROR;
 	goto done;
     }
