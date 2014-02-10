@@ -1152,7 +1152,7 @@ main(int argc, char **argv, char **envp)
 }
 
 void
-bozo_Log(char *format, ...)
+bozo_Log(const char *format, ...)
 {
     char tdate[27];
     time_t myTime;

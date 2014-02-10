@@ -39,7 +39,7 @@ int bnode_NewProc(struct bnode *abnode, char *aexecString, char *coreName,
 int bnode_StopProc(struct bnode_proc *aproc, int asignal);
 
 /* bosserver.c */
-void bozo_Log(char *format, ... );
+void bozo_Log(const char *format, ... );
 int bozo_ReBozo(void);
 int WriteBozoFile(char *aname);
 int bozo_CreatePidFile(char *ainst, char *aname, pid_t apid);
