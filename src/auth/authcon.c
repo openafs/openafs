@@ -30,6 +30,7 @@
 #include "keys.h"
 #include "ktc.h"
 #include "auth.h"
+#include "authcon.h"
 
 /* return a null security object if nothing else can be done */
 static afs_int32
@@ -292,16 +293,67 @@ afsconf_SetSecurityFlags(struct afsconf_dir *dir,
     dir->securityFlags = flags;
 }
 
+static void
+LogDesWarning(struct afsconf_bsso_info *info)
+{
+    if (info->logger == NULL) {
+	return;
+    }
+    /* The blank newlines help this stand out a bit more in the log. */
+    (*info->logger)("\n");
+    (*info->logger)("WARNING: You are using single-DES keys in a KeyFile. Using "
+		    "single-DES\n");
+    (*info->logger)("WARNING: long-term keys is considered insecure, and it is "
+		    "strongly\n");
+    (*info->logger)("WARNING: recommended that you migrate to stronger "
+		    "encryption. See\n");
+    (*info->logger)("WARNING: OPENAFS-SA-2013-003 on "
+		    "http://www.openafs.org/security/\n");
+    (*info->logger)("WARNING: for details.\n");
+    (*info->logger)("\n");
+}
+
+static void
+LogNoKeysWarning(struct afsconf_bsso_info *info)
+{
+    if (info->logger == NULL) {
+	return;
+    }
+    (*info->logger)("WARNING: No encryption keys found! "
+		    "All authenticated accesses will fail. "
+		    "Run akeyconvert or asetkey to import encryption keys.\n");
+}
+
+/* Older version of afsconf_BuildServerSecurityObjects_int. In-tree callers
+ * should use afsconf_BuildServerSecurityObjects_int where possible. */
+void
+afsconf_BuildServerSecurityObjects(void *rock,
+				   struct rx_securityClass ***classes,
+				   afs_int32 *numClasses)
+{
+    struct afsconf_bsso_info info;
+    memset(&info, 0, sizeof(info));
+    info.dir = rock;
+    afsconf_BuildServerSecurityObjects_int(&info, classes, numClasses);
+}
+
 /*!
  * Build a set of security classes suitable for a server accepting
  * incoming connections
  */
 void
-afsconf_BuildServerSecurityObjects(void *rock,
-			           struct rx_securityClass ***classes,
-			           afs_int32 *numClasses)
+afsconf_BuildServerSecurityObjects_int(struct afsconf_bsso_info *info,
+				       struct rx_securityClass ***classes,
+				       afs_int32 *numClasses)
 {
-    struct afsconf_dir *dir = rock;
+    struct afsconf_dir *dir = info->dir;
+
+    if (afsconf_GetLatestKey(dir, NULL, NULL) == 0) {
+	LogDesWarning(info);
+    }
+    if (afsconf_CountKeys(dir) == 0) {
+	LogNoKeysWarning(info);
+    }
 
     if (dir->securityFlags & AFSCONF_SECOPTS_ALWAYSENCRYPT)
 	*numClasses = 4;

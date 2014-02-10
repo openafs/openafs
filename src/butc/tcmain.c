@@ -37,6 +37,7 @@
 #include <lwp.h>
 #include <lock.h>
 #include <afs/afsutil.h>
+#include <afs/authcon.h>
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 #include <afs/volser.h>
@@ -997,12 +998,6 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	exit(1);
     }
 
-    if (afsconf_CountKeys(butc_confdir) == 0) {
-	TLog(0, "WARNING: No encryption keys found! "
-		"All authenticated accesses will fail. "
-		"Run akeyconvert or asetkey to import encryption keys.\n");
-    }
-
     /* Start auditing */
     osi_audit_init();
     if (as->parms[9].items) {
@@ -1147,7 +1142,10 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	secObjs = nullObjects;
     } else {
 	/* Must be -localauth, so the cell keys are available. */
-	afsconf_BuildServerSecurityObjects(butc_confdir, &allObjs, &numClasses);
+	struct afsconf_bsso_info bsso;
+	memset(&bsso, 0, sizeof(bsso));
+	bsso.dir = butc_confdir;
+	afsconf_BuildServerSecurityObjects_int(&bsso, &allObjs, &numClasses);
 	secObjs = allObjs;
     }
 

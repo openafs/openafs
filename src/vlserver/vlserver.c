@@ -29,6 +29,7 @@
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
 #include <rx/rxstat.h>
+#include <afs/authcon.h>
 #include <afs/cmd.h>
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
@@ -179,6 +180,7 @@ main(int argc, char **argv)
     afs_uint32 host = ntohl(INADDR_ANY);
     struct cmd_syndesc *opts;
     struct logOptions logopts;
+    struct afsconf_bsso_info bsso;
 
     char *vl_dbaseName;
     char *configDir;
@@ -208,6 +210,7 @@ main(int argc, char **argv)
     osi_audit_init();
 
     memset(&logopts, 0, sizeof(logopts));
+    memset(&bsso, 0, sizeof(bsso));
 
     /* Initialize dirpaths */
     if (!(initAFSDirPath() & AFSDIR_SERVER_PATHS_OK)) {
@@ -502,7 +505,10 @@ main(int argc, char **argv)
     memset(wr_HostAddress, 0, sizeof(wr_HostAddress));
     initialize_dstats();
 
-    afsconf_BuildServerSecurityObjects(tdir, &securityClasses, &numClasses);
+    bsso.dir = tdir;
+    bsso.logger = FSLog;
+    afsconf_BuildServerSecurityObjects_int(&bsso, &securityClasses,
+					   &numClasses);
 
     tservice =
 	rx_NewServiceHost(host, 0, USER_SERVICE_ID, "Vldb server",
@@ -539,13 +545,6 @@ main(int argc, char **argv)
     rx_SetMaxProcs(tservice, 4);
 
     LogCommandLine(argc, argv, "vlserver", VldbVersion, "Starting AFS", FSLog);
-    if (afsconf_CountKeys(tdir) == 0) {
-	VLog(0, ("WARNING: No encryption keys found! "
-		 "All authenticated accesses will fail."
-		 "Run akeyconvert or asetkey to import encryption keys.\n"));
-    } else if (afsconf_GetLatestKey(tdir, NULL, NULL) == 0) {
-	LogDesWarning();
-    }
     VLog(0, ("%s\n", cml_version_number));
 
     /* allow super users to manage RX statistics */

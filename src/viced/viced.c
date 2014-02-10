@@ -57,6 +57,7 @@
 #include <afs/vnode.h>
 #include <afs/volume.h>
 #include <afs/auth.h>
+#include <afs/authcon.h>
 #include <afs/cellconfig.h>
 #include <afs/acl.h>
 #include <afs/prs_fs.h>
@@ -1844,6 +1845,7 @@ main(int argc, char *argv[])
     struct tm tm;
     afs_uint32 rx_bindhost;
     VolumePackageOptions opts;
+    struct afsconf_bsso_info bsso;
 
 #ifdef	AFS_AIX32_ENV
     struct sigaction nsa;
@@ -1855,6 +1857,8 @@ main(int argc, char *argv[])
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
     osi_audit_init();
+
+    memset(&bsso, 0, sizeof(bsso));
 
     /* Initialize dirpaths */
     if (!(initAFSDirPath() & AFSDIR_SERVER_PATHS_OK)) {
@@ -1900,14 +1904,6 @@ main(int argc, char *argv[])
     OpenLog(&logopts);
 
     LogCommandLine(argc, argv, "starting", "", "File server", FSLog);
-
-    if (afsconf_CountKeys(confDir) == 0) {
-	ViceLog(0, ("WARNING: No encryption keys found! "
-		    "All authenticated accesses will fail. "
-		    "Run akeyconvert or asetkey to import encryption keys.\n"));
-    } else if (afsconf_GetLatestKey(confDir, NULL, NULL) == 0) {
-	LogDesWarning();
-    }
 
     /* initialize the pthread soft signal handler thread */
     opr_softsig_Init();
@@ -2032,7 +2028,11 @@ main(int argc, char *argv[])
     rx_GetIFInfo();
     rx_SetRxDeadTime(30);
     afsconf_SetSecurityFlags(confDir, AFSCONF_SECOPTS_ALWAYSENCRYPT);
-    afsconf_BuildServerSecurityObjects(confDir, &securityClasses, &numClasses);
+
+    bsso.dir = confDir;
+    bsso.logger = FSLog;
+    afsconf_BuildServerSecurityObjects_int(&bsso, &securityClasses,
+					   &numClasses);
 
     tservice = rx_NewServiceHost(rx_bindhost,  /* port */ 0, /* service id */
 				 1,	/*service name */

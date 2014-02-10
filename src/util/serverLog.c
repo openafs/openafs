@@ -275,22 +275,6 @@ LogCommandLine(int argc, char **argv, const char *progname,
 }
 
 /*!
- * Write the single-DES deprecation warning to the log.
- */
-void
-LogDesWarning(void)
-{
-    /* The blank newlines help this stand out a bit more in the log. */
-    ViceLog(0, ("\n"));
-    ViceLog(0, ("WARNING: You are using single-DES keys in a KeyFile. Using single-DES\n"));
-    ViceLog(0, ("WARNING: long-term keys is considered insecure, and it is strongly\n"));
-    ViceLog(0, ("WARNING: recommended that you migrate to stronger encryption. See\n"));
-    ViceLog(0, ("WARNING: OPENAFS-SA-2013-003 on http://www.openafs.org/security/\n"));
-    ViceLog(0, ("WARNING: for details.\n"));
-    ViceLog(0, ("\n"));
-}
-
-/*!
  * Move the current log file out of the way so a new one can be started.
  *
  * The format of the new name depends on the logging style.  The traditional

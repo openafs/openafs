@@ -5,7 +5,6 @@ BufioOpen
 FSLog
 Int32To_ktimeRelDate
 LogCommandLine
-LogDesWarning
 LogLevel
 LogThreadNum
 OpenLog

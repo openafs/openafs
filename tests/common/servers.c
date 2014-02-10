@@ -9,6 +9,7 @@
 
 #include <rx/rx.h>
 
+#include <afs/authcon.h>
 #include <afs/cellconfig.h>
 
 #include "common.h"
@@ -83,6 +84,9 @@ afstest_StartTestRPCService(const char *configPath,
     afs_int32 numClasses;
     int code;
     struct rx_service *service;
+    struct afsconf_bsso_info bsso;
+
+    memset(&bsso, 0, sizeof(bsso));
 
     dir = afsconf_Open(configPath);
     if (dir == NULL) {
@@ -100,7 +104,8 @@ afstest_StartTestRPCService(const char *configPath,
 	kill(signal_pid, SIGUSR1);
     }
 
-    afsconf_BuildServerSecurityObjects(dir, &classes, &numClasses);
+    bsso.dir = dir;
+    afsconf_BuildServerSecurityObjects_int(&bsso, &classes, &numClasses);
     service = rx_NewService(0, serviceId, "test", classes, numClasses,
                             proc);
     if (service == NULL) {

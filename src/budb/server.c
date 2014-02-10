@@ -24,6 +24,7 @@
 #include <rx/rxkad.h>
 #include <rx/rx_globals.h>
 #include <afs/cellconfig.h>
+#include <afs/authcon.h>
 #include <afs/bubasics.h>
 #include <afs/afsutil.h>
 #include <afs/com_err.h>
@@ -378,6 +379,7 @@ main(int argc, char **argv)
     struct rx_service *tservice;
     struct rx_securityClass **securityClasses;
     afs_int32 numClasses;
+    struct afsconf_bsso_info bsso;
 
     extern int rx_stackSize;
 
@@ -408,6 +410,7 @@ main(int argc, char **argv)
 
     memset(&cellinfo_s, 0, sizeof(cellinfo_s));
     memset(clones, 0, sizeof(clones));
+    memset(&bsso, 0, sizeof(bsso));
 
     memset(&logopts, 0, sizeof(logopts));
     logopts.lopt_dest = logDest_file;
@@ -465,12 +468,6 @@ main(int argc, char **argv)
 	LogError(code, "Failed getting cell info\n");
 	afs_com_err(whoami, code, "Failed getting cell info");
 	ERROR(BUDB_NOCELLS);
-    }
-
-    if (afsconf_CountKeys(BU_conf) == 0) {
-	LogError(0, "WARNING: No encryption keys found! "
-		    "All authenticated accesses will fail. "
-		    "Run akeyconvert or asetkey to import encryption keys.\n");
     }
 
     code = afsconf_GetLocalCell(BU_conf, lcell, sizeof(lcell));
@@ -564,7 +561,10 @@ main(int argc, char **argv)
 	ERROR(code);
     }
 
-    afsconf_BuildServerSecurityObjects(BU_conf, &securityClasses, &numClasses);
+    bsso.dir = BU_conf;
+    bsso.logger = FSLog;
+    afsconf_BuildServerSecurityObjects_int(&bsso, &securityClasses,
+					   &numClasses);
 
     tservice =
 	rx_NewServiceHost(host, 0, BUDB_SERVICE, "BackupDatabase",

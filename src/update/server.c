@@ -26,6 +26,7 @@
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rxkad.h>
+#include <afs/authcon.h>
 #include <afs/cellconfig.h>
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
@@ -203,6 +204,7 @@ main(int argc, char *argv[])
     int a = 0;
     rxkad_level level;
     rxkad_level newLevel;
+    struct afsconf_bsso_info bsso;
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -219,6 +221,8 @@ main(int argc, char *argv[])
     sigaction(SIGABRT, &nsa, NULL);
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
+
+    memset(&bsso, 0, sizeof(bsso));
 
     whoami = argv[0];
 
@@ -289,12 +293,6 @@ main(int argc, char *argv[])
 	exit(1);
     }
 
-    if (afsconf_CountKeys(cdir) == 0) {
-	fprintf(stderr, "WARNING: No encryption keys found! "
-			"All authenticated accesses will fail."
-			"Run akeyconvert or asetkey to import encryption keys.\n");
-    }
-
     if (rxBind) {
 	afs_int32 ccode;
         if (AFSDIR_SERVER_NETRESTRICT_FILEPATH ||
@@ -317,7 +315,8 @@ main(int argc, char *argv[])
     if (rx_InitHost(host, htons(AFSCONF_UPDATEPORT)) < 0)
 	Quit("rx_init");
 
-    afsconf_BuildServerSecurityObjects(cdir, &securityClasses, &numClasses);
+    bsso.dir = cdir;
+    afsconf_BuildServerSecurityObjects_int(&bsso, &securityClasses, &numClasses);
 
     if (securityClasses[2] == NULL)
 	Quit("rxkad_NewServerSecurityObject");

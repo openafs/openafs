@@ -80,6 +80,7 @@ VOLSERVER_EXEOBJS = $(VOLSEROBJS) \
         $(OUT)\davolserver.res
 
 VOLSERVER_EXELIBS = \
+	$(DESTDIR)\lib\afs\afsauth.lib \
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
         $(LIBFILE) \
@@ -91,6 +92,8 @@ VOLSERVER_EXELIBS = \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
 	$(DESTDIR)\lib\afs\mtafsutil.lib \
+	$(DESTDIR)\lib\afshcrypto.lib \
+	$(DESTDIR)\lib\libafsconf.lib \
 	$(DESTDIR)\lib\opr.lib \
 	$(DESTDIR)\lib\afspthread.lib \
 	$(DESTDIR)\lib\afsroken.lib
