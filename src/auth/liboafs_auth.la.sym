@@ -1,5 +1,6 @@
 afsconf_AddTypedKey
 afsconf_BuildServerSecurityObjects
+afsconf_BuildServerSecurityObjects_int
 afsconf_CellAliasApply
 afsconf_CellApply
 afsconf_CheckAuth

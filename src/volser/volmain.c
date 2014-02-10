@@ -40,6 +40,7 @@
 #include <rx/rxstat.h>
 #include <rx/rx_globals.h>
 #include <afs/auth.h>
+#include <afs/authcon.h>
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 #include <afs/dir.h>
@@ -438,6 +439,7 @@ main(int argc, char **argv)
     char hoststr[16];
     afs_uint32 host = ntohl(INADDR_ANY);
     VolumePackageOptions opts;
+    struct afsconf_bsso_info bsso;
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -455,6 +457,8 @@ main(int argc, char **argv)
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
     osi_audit_init();
+
+    memset(&bsso, 0, sizeof(bsso));
 
     /* Initialize dirpaths */
     if (!(initAFSDirPath() & AFSDIR_SERVER_PATHS_OK)) {
@@ -593,7 +597,9 @@ main(int argc, char **argv)
     /* initialize audit user check */
     osi_audit_set_user_check(tdir, vol_IsLocalRealmMatch);
 
-    afsconf_BuildServerSecurityObjects(tdir, &securityClasses, &numClasses);
+    bsso.dir = tdir;
+    bsso.logger = FSLog;
+    afsconf_BuildServerSecurityObjects_int(&bsso, &securityClasses, &numClasses);
     if (securityClasses[0] == NULL)
 	Abort("rxnull_NewServerSecurityObject");
     service =
@@ -636,13 +642,6 @@ main(int argc, char **argv)
 
     LogCommandLine(argc, argv, "Volserver", VolserVersion, "Starting AFS",
 		   Log);
-    if (afsconf_CountKeys(tdir) == 0) {
-	Log("WARNING: No encryption keys found! "
-	    "All authenticated accesses will fail. "
-	    "Run akeyconvert or asetkey to import encryption keys.\n");
-    } else if (afsconf_GetLatestKey(tdir, NULL, NULL) == 0) {
-	LogDesWarning();
-    }
 
     /* allow super users to manage RX statistics */
     rx_SetRxStatUserOk(vol_rxstat_userok);

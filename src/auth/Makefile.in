@@ -36,7 +36,7 @@ LIBS=libauth.a \
       ${TOP_LIBDIR}/liblwp.a \
       ${TOP_LIBDIR}/util.a
 
-INCLS=cellconfig.h auth.h keys.h internal.h token.h
+INCLS=cellconfig.h auth.h authcon.h keys.h internal.h token.h
 
 all: liboafs_auth.la libauth_pic.la libpam_auth.la \
      ${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/libauth.krb.a \
@@ -45,6 +45,7 @@ all: liboafs_auth.la libauth_pic.la libpam_auth.la \
 depinstall: ${TOP_INCDIR}/afs/keys.h \
 	${TOP_INCDIR}/afs/cellconfig.h \
 	${TOP_INCDIR}/afs/auth.h \
+	${TOP_INCDIR}/afs/authcon.h \
 	${TOP_INCDIR}/afs/ktc.h \
 	${TOP_INCDIR}/afs/token.h \
 	token.h \
@@ -63,6 +64,9 @@ ${TOP_INCDIR}/afs/cellconfig.h: cellconfig.h
 	${INSTALL_DATA} cellconfig.h $@
 
 ${TOP_INCDIR}/afs/auth.h: auth.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/authcon.h: authcon.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/ktc.h: ktc.h

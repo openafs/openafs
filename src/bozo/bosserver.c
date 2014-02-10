@@ -44,6 +44,7 @@
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
 #include <afs/audit.h>
+#include <afs/authcon.h>
 #include <afs/cellconfig.h>
 #include <afs/cmd.h>
 
@@ -883,6 +884,7 @@ main(int argc, char **argv, char **envp)
     int DoPeerRPCStats = 0;
     int DoProcessRPCStats = 0;
     struct stat sb;
+    struct afsconf_bsso_info bsso;
 #ifndef AFS_NT40_ENV
     int nofork = 0;
 #endif
@@ -909,6 +911,8 @@ main(int argc, char **argv, char **envp)
 #endif
     osi_audit_init();
     signal(SIGFPE, bozo_insecureme);
+
+    memset(&bsso, 0, sizeof(bsso));
 
 #ifdef AFS_NT40_ENV
     /* Initialize winsock */
@@ -1145,12 +1149,6 @@ main(int argc, char **argv, char **envp)
     /* opened the cell databse */
     bozo_confdir = tdir;
 
-    if (afsconf_CountKeys(bozo_confdir) == 0) {
-	bozo_Log("WARNING: No encryption keys found! "
-		 "All authenticated accesses will fail. "
-		 "Run akeyconvert or asetkey to import encryption keys.\n");
-    }
-
     code = bnode_Init();
     if (code) {
 	printf("bosserver: could not init bnode package, code %d\n", code);
@@ -1235,7 +1233,10 @@ main(int argc, char **argv, char **envp)
     rx_SetRxStatUserOk(bozo_rxstat_userok);
 
     afsconf_SetNoAuthFlag(tdir, noAuth);
-    afsconf_BuildServerSecurityObjects(tdir, &securityClasses, &numClasses);
+
+    bsso.dir = tdir;
+    bsso.logger = bozo_Log;
+    afsconf_BuildServerSecurityObjects_int(&bsso, &securityClasses, &numClasses);
 
     if (DoPidFiles) {
 	bozo_CreatePidFile("bosserver", NULL, getpid());

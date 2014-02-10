@@ -128,6 +128,7 @@
 #include <rx/rxstat.h>
 #include <lock.h>
 #include <ubik.h>
+#include <afs/authcon.h>
 #include <afs/cmd.h>
 #include <afs/cellconfig.h>
 #include <afs/auth.h>
@@ -263,6 +264,7 @@ main(int argc, char **argv)
     char *auditIface = NULL;
     struct cmd_item *auditLogList = NULL;
     char *s2s_crypt_behavior = NULL;
+    struct afsconf_bsso_info bsso;
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -280,6 +282,8 @@ main(int argc, char **argv)
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
     osi_audit_init();
+
+    memset(&bsso, 0, sizeof(bsso));
 
     /* Initialize dirpaths */
     if (!(initAFSDirPath() & AFSDIR_SERVER_PATHS_OK)) {
@@ -598,7 +602,10 @@ main(int argc, char **argv)
     pt_hook_write();
 #endif
 
-    afsconf_BuildServerSecurityObjects(prdir, &securityClasses, &numClasses);
+    bsso.dir = prdir;
+    bsso.logger = FSLog;
+    afsconf_BuildServerSecurityObjects_int(&bsso, &securityClasses,
+					   &numClasses);
 
     tservice =
 	rx_NewServiceHost(host, 0, PRSRV, "Protection Server", securityClasses,
@@ -638,13 +645,6 @@ main(int argc, char **argv)
 		   "1.0",
 #endif
 		   "Starting AFS", FSLog);
-    if (afsconf_CountKeys(prdir) == 0) {
-	ViceLog(0, ("WARNING: No encryption keys found! "
-		    "All authenticated accesses will fail. "
-		    "Run akeyconvert or asetkey to import encryption keys.\n"));
-    } else if (afsconf_GetLatestKey(prdir, NULL, NULL) == 0) {
-	LogDesWarning();
-    }
 
     rx_StartServer(1);
     osi_audit(PTS_FinishEvent, -1, AUD_END);

@@ -62,6 +62,7 @@ $(FSINTOBJS): $(FSINT)\$$(@B).C
 	$(C2OBJ) -I$(FSINT) $**
 
 EXELIBS = \
+	$(DESTDIR)\lib\afs\afsauth.lib \
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
 	$(DESTDIR)\lib\afs\afscmd.lib \
@@ -74,11 +75,13 @@ EXELIBS = \
         $(DESTDIR)\lib\afs\daafsvol.lib \
         $(DESTDIR)\lib\afs\mtafsvldb.lib \
 	$(DESTDIR)\lib\afspthread.lib \
+	$(DESTDIR)\lib\afshcrypto.lib \
+	$(DESTDIR)\lib\libafsconf.lib \
 	$(DESTDIR)\lib\opr.lib \
 	$(DESTDIR)\lib\afsroken.lib
 
 $(EXEFILE): $(EXEOBJS) $(EXELIBS)
-	$(EXECONLINK)
+	$(EXECONLINK) shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
         $(CODESIGN_USERLAND)

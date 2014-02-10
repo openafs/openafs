@@ -34,6 +34,7 @@
 
 #include <rx/rx.h>
 #include <rx/rxkad.h>
+#include <afs/authcon.h>
 #include <afs/cellconfig.h>
 
 #include <tests/tap/basic.h>
@@ -50,6 +51,9 @@ main(int argc, char **argv)
     int numClasses;
     struct afsconf_typedKey *key;
     int code = 0;
+    struct afsconf_bsso_info bsso;
+
+    memset(&bsso, 0, sizeof(bsso));
 
     afstest_SkipTestsIfBadHostname();
 
@@ -67,7 +71,8 @@ main(int argc, char **argv)
 
     /* Server Security objects */
 
-    afsconf_BuildServerSecurityObjects(dir, &classes, &numClasses);
+    bsso.dir = dir;
+    afsconf_BuildServerSecurityObjects_int(&bsso, &classes, &numClasses);
     is_int(5, numClasses, "5 security classes are returned, as expected");
     ok(classes[1] == NULL, "The rxvab class is undefined, as requested");
     free(classes);
