@@ -2145,8 +2145,6 @@ AFSShareWrite( IN PDEVICE_OBJECT DeviceObject,
     __Enter
     {
 
-        pFcb = (AFSFcb *)pIrpSp->FileObject->FsContext;
-
         pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
 
         AFSDbgTrace(( AFS_SUBSYSTEM_PIPE_PROCESSING,
@@ -2182,6 +2180,8 @@ AFSShareWrite( IN PDEVICE_OBJECT DeviceObject,
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
+
+	pFcb = (AFSFcb *)pIrpSp->FileObject->FsContext;
 
         AFSAcquireShared( &pFcb->NPFcb->Resource,
                           TRUE);
