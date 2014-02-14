@@ -82,3 +82,24 @@ Suggested compiler flags:
 	Solaris Workshop CC: -fd -v
 		(You might not want the -fd, it isn't really useful, just complains about the
 		K&R style functions, but -v gives useful info.)
+
+
+Dependencies required to build OpenAFS from source
+--------------------------------------------------
+The following packages are required to build all of the OpenAFS code
+from source on various operating systems:
+
+On Debian:
+- autoconf, automake, bison, comerr-dev, cpio, flex, libkrb5-dev,
+  libncurses5-dev, libpam0g-dev, libxml2-utils, perl, pkg-config;
+- libfuse-dev (for the FUSE-based user-mode client);
+- dblatex, docbook-xsl, doxygen, xsltproc (for documentation);
+- debhelper, hardening-wrapper, dkms (to build the Debian packages)
+
+On FreeBSD:
+- autoconf, automake, libtool;
+- fusefs-libs, pkgconf (for the FUSE-based user-mode client);
+- perl, dblatex, docbook-xsl, libxslt, python, ruby, zip (for documentation)
+
+In addition, FreeBSD systems require kernel sources and a configured kernel
+build directory (see section "FreeBSD Notes" in the README file).
