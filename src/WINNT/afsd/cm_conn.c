@@ -1827,6 +1827,9 @@ void cm_ForceNewConnections(cm_server_t *serverp)
 {
     cm_conn_t *tcp;
 
+    if (serverp == NULL)
+	return;
+
     lock_ObtainWrite(&cm_connLock);
     for (tcp = serverp->connsp; tcp; tcp=tcp->nextp) {
 	lock_ObtainMutex(&tcp->mx);
