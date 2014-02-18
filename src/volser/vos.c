@@ -5852,13 +5852,20 @@ EndTrans(struct cmd_syndesc *as, void *arock)
 int
 PrintDiagnostics(char *astring, afs_int32 acode)
 {
-    if (acode == EACCES) {
+    switch (acode) {
+    case EACCES:
 	fprintf(STDERR,
 		"You are not authorized to perform the 'vos %s' command (%d)\n",
 		astring, acode);
-    } else {
+	break;
+    case EXDEV:
+	fprintf(STDERR, "Error in vos %s command.\n", astring);
+	fprintf(STDERR, "Clone volume is not in the same partition as the read-write volume.\n");
+	break;
+    default:
 	fprintf(STDERR, "Error in vos %s command.\n", astring);
 	PrintError("", acode);
+	break;
     }
     return 0;
 }
