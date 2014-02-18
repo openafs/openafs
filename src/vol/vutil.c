@@ -173,9 +173,13 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
     if (*ec == VNOVOL || !strcmp(partition->name, part)) {
 	/* this case is ok */
     } else {
-	/* return EXDEV if it's a clone to an alternate partition
+	/* return EXDEV if it's a clone or read-only to an alternate partition
 	 * otherwise assume it's a move */
 	if (vol.parentId != vol.id) {
+	    Log("VCreateVolume: volume %lu for parent %lu"
+		" found on %s; unable to create volume on %s.\n",
+		afs_printable_uint32_lu(vol.id),
+		afs_printable_uint32_lu(vol.parentId), part, partition->name);
 	    *ec = EXDEV;
 	    return NULL;
 	}
