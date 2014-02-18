@@ -794,7 +794,8 @@ VolClone(struct rx_call *acid, afs_int32 atrans, VolumeId purgeId,
 	    VCreateVolume(&error, originalvp->partition->name, newId,
 			  V_parentId(originalvp));
 	if (error) {
-	    Log("1 Volser: Clone: Couldn't create new volume; clone aborted\n");
+	    Log("1 Volser: Clone: Couldn't create new volume %" AFS_VOLID_FMT " for parent %" AFS_VOLID_FMT "; clone aborted\n",
+		afs_printable_VolumeId_lu(newId), afs_printable_VolumeId_lu(V_parentId(originalvp)));
 	    newvp = (Volume *) 0;
 	    goto fail;
 	}
