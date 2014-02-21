@@ -4816,13 +4816,12 @@ rxi_ReceiveResponsePacket(struct rx_connection *conn,
     error = RXS_CheckResponse(conn->securityObject, conn, np);
     if (error) {
 	/* If the response is invalid, reset the connection, sending
-	 * an abort to the peer */
-#ifndef KERNEL
-	rxi_Delay(1);
-#endif
+	 * an abort to the peer. Send the abort with a 1 second delay,
+	 * to avoid a peer hammering us by constantly recreating a
+	 * connection with bad credentials. */
 	rxi_ConnectionError(conn, error);
 	MUTEX_ENTER(&conn->conn_data_lock);
-	np = rxi_SendConnectionAbort(conn, np, istack, 0);
+	rxi_SendConnectionAbortLater(conn, 1000);
 	MUTEX_EXIT(&conn->conn_data_lock);
 	return np;
     } else {
