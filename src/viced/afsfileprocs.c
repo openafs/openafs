@@ -410,7 +410,7 @@ CallPreamble(struct rx_call *acall, int activecall, struct AFSFid *Fid,
     tclient = h_FindClient_r(*tconn, &viceid);
     if (!tclient) {
 	H_UNLOCK;
-	LogClientError("Client host too busy", *tconn, viceid, Fid);
+	LogClientError("CallPreamble: Couldn't get client", *tconn, viceid, Fid);
 	return VBUSY;
     }
     thost = tclient->host;
@@ -419,7 +419,7 @@ CallPreamble(struct rx_call *acall, int activecall, struct AFSFid *Fid,
 	    h_ReleaseClient_r(tclient);
 	    h_Release_r(thost);
 	    H_UNLOCK;
-	    LogClientError("Cannot get CPS for client", *tconn, viceid, Fid);
+	    LogClientError("CallPreamble: Couldn't get CPS", *tconn, viceid, Fid);
 	    return -1001;
 	}
 	retry_flag = 0;		/* Retry once */
@@ -448,7 +448,7 @@ CallPreamble(struct rx_call *acall, int activecall, struct AFSFid *Fid,
 	    h_ReleaseClient_r(tclient);
 	    h_Release_r(thost);
 	    H_UNLOCK;
-	    LogClientError("Cannot reconnect to ptserver", *tconn, viceid, Fid);
+	    LogClientError("CallPreamble: couldn't reconnect to ptserver", *tconn, viceid, Fid);
 	    return -1001;
 	}
 
