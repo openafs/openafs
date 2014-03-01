@@ -196,6 +196,13 @@ RUN_CC_NOQ=$(RUN_CC_NOQ_V$(V))
 RUN_LD_NOQ=$(RUN_LD_NOQ_V$(V))
 
 #
+# Generate error table header and the source files independently for
+# parallel make.
+#
+COMPILE_ET_H=${COMPILE_ET} -emit h
+COMPILE_ET_C=${COMPILE_ET} -emit c
+
+#
 # Common/standard cflags/paths/etc
 # Cflags defaults, will be overridden later if necessary
 #
