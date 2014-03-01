@@ -126,6 +126,13 @@ RXGEN = ${TOP_OBJDIR}/src/rxgen/rxgen
 SHELL = /bin/sh
 
 #
+# Generate error table header and the source files independently for
+# parallel make.
+#
+COMPILE_ET_H=${COMPILE_ET} -emit h
+COMPILE_ET_C=${COMPILE_ET} -emit c
+
+#
 # Common/standard cflags/paths/etc
 # Cflags defaults, will be overridden later if necessary
 #
