@@ -27,7 +27,7 @@
 
 #include <roken.h>
 
-#include <afs/auth.h>
+#include "auth.h"
 #include <rx/rxkad.h>
 
 #include "ktc.h"

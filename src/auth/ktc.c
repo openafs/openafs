@@ -42,7 +42,7 @@
 #endif
 
 #include <afs/vice.h>
-#include <afs/auth.h>
+#include "auth.h"
 #include <afs/venus.h>
 #include <afs/afsutil.h>
 
@@ -62,7 +62,7 @@
 #include "ktc.h"
 
 #ifdef AFS_KERBEROS_ENV
-#include <afs/cellconfig.h>
+#include "cellconfig.h"
 static char lcell[MAXCELLCHARS];
 
 #define TKT_ROOT "/tmp/tkt"
