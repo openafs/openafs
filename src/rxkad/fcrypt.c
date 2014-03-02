@@ -42,7 +42,7 @@
 
 #include "sboxes.h"
 #include "fcrypt.h"
-#include <rxkad.h>
+#include "rxkad.h"
 #include <rx/rxkad_stats.h>
 
 #ifdef TCRYPT
