@@ -47,7 +47,7 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#include <afs/auth.h>
+#include "auth.h"
 #include <afs/venus.h>
 #include <afs/afsutil.h>
 
@@ -72,7 +72,7 @@
 #ifdef AFS_KERBEROS_ENV
 #include <fcntl.h>
 #include <sys/file.h>
-#include <afs/cellconfig.h>
+#include "cellconfig.h"
 static char lcell[MAXCELLCHARS];
 
 #define TKT_ROOT "/tmp/tkt"
