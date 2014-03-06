@@ -702,7 +702,9 @@ afs_BQueue(short aopcode, struct vcache *avc,
 	    tb->opcode = aopcode;
 	    tb->vc = avc;
 	    tb->cred = acred;
-	    crhold(tb->cred);
+	    if (tb->cred) {
+		crhold(tb->cred);
+	    }
 	    if (avc) {
 		AFS_FAST_HOLD(avc);
 	    }
