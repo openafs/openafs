@@ -15,7 +15,7 @@ B<ka-forwarder> S<<< [B<-p> <I<port>>] >>> <I<server>>[/<I<port>>] [...]
 =head1 DESCRIPTION
 
 B<ka-forwarder> listens for requests for an AFS Authentication Server and
-forwards them to a remove B<fakeka> server.  B<fakeka> is a server that
+forwards them to a remote B<fakeka> server.  B<fakeka> is a server that
 answers AFS Authentication Server protocol requests using a regular
 Kerberos KDC and is provided with some Kerberos 5 implementations.
 B<fakeka> has to run on the same host as the Kerberos KDC, however, and
