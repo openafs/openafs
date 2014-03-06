@@ -1414,9 +1414,9 @@ afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName, char *aservice,
                     for (i=0 ; he->h_addr_list[i] && numServers < MAXHOSTSPERCELL; i++) {
                         /* check to see if this is a new address; if so insert it into the list */
                         int k, dup;
+			afs_uint32 addr;
+			memcpy(&addr, he->h_addr_list[i], sizeof(addr));
                         for (k=0, dup=0; !dup && k < numServers; k++) {
-			    afs_uint32 addr;
-			    memcpy(&addr, he->h_addr_list[i], sizeof(addr));
                             if (hostAddr[k].sin_addr.s_addr == addr) {
                                 dup = 1;
 			    }
