@@ -93,11 +93,12 @@ B<bos adduser>, B<bos listusers>, and B<bos removeuser>.
 The F</usr/afs/local/BosConfig> file defines which AFS server processes
 run on the server machine, and whether the BOS Server restarts them
 automatically if they fail. It also defines when all processes restart
-automatically (by default once per week), and when the BOS Server restarts
-processes that have new binary files (by default once per day). To
+automatically (by default once per week), when the BOS Server restarts
+processes that have new binary files (by default once per day), and
+whether the BOS Server will start in restricted mode. To
 administer the F<BosConfig> file, use the following commands: B<bos
-create>, B<bos delete>, B<bos getrestart>, B<bos setrestart>, B<bos
-start>, and B<bos stop>.
+create>, B<bos delete>, B<bos getrestart>, B<bos getrestricted>, B<bos
+setrestart>, B<bos setrestricted>, B<bos start>, and B<bos stop>.
 
 =item *
 

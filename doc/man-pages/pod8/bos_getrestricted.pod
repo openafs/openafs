@@ -74,9 +74,9 @@ None
 
 =head1 SEE ALSO
 
-L<KeyFile(5)>,
+L<BosConfig(5)>,
 L<bos(8)>,
-L<bos_setrestricted(8)>,
+L<bos_setrestricted(8)>
 
 =head1 COPYRIGHT
 

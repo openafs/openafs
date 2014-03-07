@@ -84,7 +84,9 @@ already in restricted mode.
 
 =head1 SEE ALSO
 
-L<bos(8)>
+L<BosConfig(5)>,
+L<bos(8)>,
+L<bos_getrestricted(8)>
 
 =head1 COPYRIGHT
 
