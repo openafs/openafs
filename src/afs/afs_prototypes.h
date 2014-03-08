@@ -1388,7 +1388,7 @@ extern void LockAndInstallUVolumeEntry(struct volume *av, struct uvldbentry *ve,
 				       int acell, struct cell *tcell,
 				       struct vrequest *areq);
 extern void afs_ResetVolumeInfo(struct volume *tv);
-extern struct volume *afs_MemGetVolSlot(void);
+extern struct volume *afs_MemGetVolSlot(afs_int32 volid, struct cell *cell);
 extern void afs_ResetVolumes(struct server *srvp, struct volume *tv);
 extern struct volume *afs_GetVolume(struct VenusFid *afid,
 				    struct vrequest *areq,
@@ -1397,7 +1397,7 @@ extern struct volume *afs_GetVolumeByName(char *aname,
 					  afs_int32 acell, int agood,
 					  struct vrequest *areq,
 					  afs_int32 locktype);
-extern struct volume *afs_UFSGetVolSlot(void);
+extern struct volume *afs_UFSGetVolSlot(afs_int32 volid, struct cell *cell);
 extern void afs_CheckVolumeNames(int flags);
 
 /* Prototypes for generated files that aren't really in src/afs/ */

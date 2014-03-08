@@ -144,7 +144,7 @@ afs_InitVolSlot(struct volume *tv, struct fvolume *tf, afs_int32 volid,
  * @return
  */
 struct volume *
-afs_UFSGetVolSlot(void)
+afs_UFSGetVolSlot(afs_int32 volid, struct cell *tcell)
 {
     struct volume *tv = NULL, **lv;
     struct osi_file *tfile;
@@ -153,6 +153,8 @@ afs_UFSGetVolSlot(void)
     struct volume *bestVp, *oldLp = NULL, **bestLp = NULL;
     char *oldname = NULL;
     afs_int32 oldvtix = -2; /* Initialize to a value that doesn't occur */
+    struct fvolume *tf = NULL;
+    int j = 0;
 
     AFS_STATCNT(afs_UFSGetVolSlot);
     if (!afs_freeVolList) {
@@ -236,6 +238,36 @@ afs_UFSGetVolSlot(void)
 	tv = afs_freeVolList;
 	afs_freeVolList = tv->next;
     }
+
+    /* read volume item data from disk for the gotten slot */
+    for (j = fvTable[FVHash(tcell->cellNum, volid)]; j != 0; j = tf->next) {
+	if (afs_FVIndex != j) {
+	    tfile = osi_UFSOpen(&volumeInode);
+	    code =
+		afs_osi_Read(tfile, sizeof(struct fvolume) * j,
+			     &staticFVolume, sizeof(struct fvolume));
+	    osi_UFSClose(tfile);
+	    if (code != sizeof(struct fvolume)) {
+		afs_warn("afs_SetupVolume: error %d reading volumeinfo\n",
+			 (int)code);
+		/* put tv back on the free list; the data in it is not valid */
+		tv->next = afs_freeVolList;
+		afs_freeVolList = tv;
+		/* staticFVolume contents are not valid */
+		afs_FVIndex = -1;
+		return NULL;
+	    }
+	    afs_FVIndex = j;
+	}
+	if (j != 0) {		/* volume items record 0 is not used */
+	    tf = &staticFVolume;
+	    if (tf->cell == tcell->cellNum && tf->volume == volid) {
+		break;
+	    }
+	}
+    }
+
+    afs_InitVolSlot(tv, tf, volid, tcell);
     return tv;
 
  error:
@@ -270,7 +302,7 @@ afs_UFSGetVolSlot(void)
  * @return
  */
 struct volume *
-afs_MemGetVolSlot(void)
+afs_MemGetVolSlot(afs_int32 volid, struct cell *tcell)
 {
     struct volume *tv;
 
@@ -286,6 +318,8 @@ afs_MemGetVolSlot(void)
     }
     tv = afs_freeVolList;
     afs_freeVolList = tv->next;
+
+    afs_InitVolSlot(tv, NULL, volid, tcell);
     return tv;
 
 }				/*afs_MemGetVolSlot */
@@ -576,7 +610,7 @@ afs_SetupVolume(afs_int32 volid, char *aname, void *ve, struct cell *tcell,
     struct uvldbentry *uve = (struct uvldbentry *)ve;
 
     int whichType;		/* which type of volume to look for */
-    int i, j, err = 0;
+    int i;
 
     if (!volid) {
 	int len;
@@ -611,44 +645,11 @@ afs_SetupVolume(afs_int32 volid, char *aname, void *ve, struct cell *tcell,
 	}
     }
     if (!tv) {
-	struct fvolume *tf = 0;
-
-	tv = afs_GetVolSlot();
+	tv = afs_GetVolSlot(volid, tcell);
 	if (!tv) {
 	    ReleaseWriteLock(&afs_xvolume);
 	    return NULL;
 	}
-
-	for (j = fvTable[FVHash(tcell->cellNum, volid)]; j != 0; j = tf->next) {
-	    if (afs_FVIndex != j) {
-		struct osi_file *tfile;
-	        tfile = osi_UFSOpen(&volumeInode);
-		err =
-		    afs_osi_Read(tfile, sizeof(struct fvolume) * j,
-				 &staticFVolume, sizeof(struct fvolume));
-		osi_UFSClose(tfile);
-		if (err != sizeof(struct fvolume)) {
-		    afs_warn("afs_SetupVolume: error %d reading volumeinfo\n",
-		             (int)err);
-		    /* put tv back on the free list; the data in it is not valid */
-		    tv->next = afs_freeVolList;
-		    afs_freeVolList = tv;
-		    /* staticFVolume contents are not valid */
-		    afs_FVIndex = -1;
-		    ReleaseWriteLock(&afs_xvolume);
-		    return NULL;
-		}
-		afs_FVIndex = j;
-	    }
-	    if (j != 0) { /* volume items record 0 is not used */
-		tf = &staticFVolume;
-		if (tf->cell == tcell->cellNum && tf->volume == volid) {
-		    break;
-		}
-	    }
-	}
-
-	afs_InitVolSlot(tv, tf, volid, tcell);
 	tv->next = afs_volumes[i];	/* thread into list */
 	afs_volumes[i] = tv;
     }
