@@ -104,6 +104,41 @@ afs_vtoi(char *aname)
 static struct fvolume staticFVolume;
 afs_int32 afs_FVIndex = -1;
 
+/*!
+ * Initialize a newly gotten volume slot.
+ *
+ * \param tv volume slot to be initialized
+ * \param tf volume item data; null if none
+ * \param volid volume id for this volume slot
+ * \param cell cell for this volume slot
+ * \return none
+ */
+static void
+afs_InitVolSlot(struct volume *tv, struct fvolume *tf, afs_int32 volid,
+		struct cell *tcell)
+{
+    AFS_STATCNT(afs_InitVolSlot);
+    memset(tv, 0, sizeof(struct volume));
+    tv->cell = tcell->cellNum;
+    AFS_RWLOCK_INIT(&tv->lock, "volume lock");
+    tv->volume = volid;
+    if (tf) {
+	tv->vtix = afs_FVIndex;
+	tv->mtpoint = tf->mtpoint;
+	tv->dotdot = tf->dotdot;
+	tv->rootVnode = tf->rootVnode;
+	tv->rootUnique = tf->rootUnique;
+    } else {
+	tv->vtix = -1;
+	tv->rootVnode = tv->rootUnique = 0;
+	afs_GetDynrootMountFid(&tv->dotdot);
+	afs_GetDynrootMountFid(&tv->mtpoint);
+	tv->mtpoint.Fid.Vnode =
+	    VNUM_FROM_TYPEID(VN_TYPE_MOUNT, tcell->cellIndex << 2);
+	tv->mtpoint.Fid.Unique = volid;
+    }
+}
+
 /**
  * UFS specific version of afs_GetVolSlot
  * @return
@@ -583,7 +618,6 @@ afs_SetupVolume(afs_int32 volid, char *aname, void *ve, struct cell *tcell,
 	    ReleaseWriteLock(&afs_xvolume);
 	    return NULL;
 	}
-	memset(tv, 0, sizeof(struct volume));
 
 	for (j = fvTable[FVHash(tcell->cellNum, volid)]; j != 0; j = tf->next) {
 	    if (afs_FVIndex != j) {
@@ -606,32 +640,17 @@ afs_SetupVolume(afs_int32 volid, char *aname, void *ve, struct cell *tcell,
 		}
 		afs_FVIndex = j;
 	    }
-	    tf = &staticFVolume;
-	    if (tf->cell == tcell->cellNum && tf->volume == volid)
-		break;
+	    if (j != 0) { /* volume items record 0 is not used */
+		tf = &staticFVolume;
+		if (tf->cell == tcell->cellNum && tf->volume == volid) {
+		    break;
+		}
+	    }
 	}
 
-	tv->cell = tcell->cellNum;
-	AFS_RWLOCK_INIT(&tv->lock, "volume lock");
+	afs_InitVolSlot(tv, tf, volid, tcell);
 	tv->next = afs_volumes[i];	/* thread into list */
 	afs_volumes[i] = tv;
-	tv->volume = volid;
-
-	if (tf && (j != 0)) {
-	    tv->vtix = afs_FVIndex;
-	    tv->mtpoint = tf->mtpoint;
-	    tv->dotdot = tf->dotdot;
-	    tv->rootVnode = tf->rootVnode;
-	    tv->rootUnique = tf->rootUnique;
-	} else {
-	    tv->vtix = -1;
-	    tv->rootVnode = tv->rootUnique = 0;
-            afs_GetDynrootMountFid(&tv->dotdot);
-            afs_GetDynrootMountFid(&tv->mtpoint);
-            tv->mtpoint.Fid.Vnode =
-              VNUM_FROM_TYPEID(VN_TYPE_MOUNT, tcell->cellIndex << 2);
-            tv->mtpoint.Fid.Unique = volid;
-	}
     }
     tv->refCount++;
     tv->states &= ~VRecheck;	/* just checked it */
