@@ -325,6 +325,46 @@ afs_MemGetVolSlot(afs_int32 volid, struct cell *tcell)
 }				/*afs_MemGetVolSlot */
 
 /*!
+ * Setup a volume slot for cell:volume.
+ *
+ * Find the volume slot for the cell:volume, otherwise get
+ * and initialize a new slot.
+ *
+ * \param volid volume id
+ * \param cell  cell
+ * \return volume
+ */
+static struct volume *
+afs_SetupVolSlot(afs_int32 volid, struct cell *tcell)
+{
+    struct volume *tv;
+    int i;
+
+    AFS_STATCNT(afs_SetupVolSlot);
+    ObtainWriteLock(&afs_xvolume, 108);
+    i = VHash(volid);
+    for (tv = afs_volumes[i]; tv; tv = tv->next) {
+	if (tv->volume == volid && tv->cell == tcell->cellNum) {
+	    break;
+	}
+    }
+    if (!tv) {
+	tv = afs_GetVolSlot(volid, tcell);
+	if (!tv) {
+	    ReleaseWriteLock(&afs_xvolume);
+	    return NULL;
+	}
+	tv->next = afs_volumes[i];	/* thread into list */
+	afs_volumes[i] = tv;
+    }
+    tv->refCount++;
+    tv->states &= ~VRecheck;	/* just checked it */
+    tv->accessTime = osi_Time();
+    ReleaseWriteLock(&afs_xvolume);
+    return tv;
+}
+
+/*!
  * Reset volume information for all volume structs that
  * point to a speicific server, skipping a given volume if provided.
  *
@@ -636,27 +676,11 @@ afs_SetupVolume(afs_int32 volid, char *aname, void *ve, struct cell *tcell,
 	} /* end of if (volid == 0) */
     } /* end of if (!volid) */
 
-
-    ObtainWriteLock(&afs_xvolume, 108);
-    i = VHash(volid);
-    for (tv = afs_volumes[i]; tv; tv = tv->next) {
-	if (tv->volume == volid && tv->cell == tcell->cellNum) {
-	    break;
-	}
-    }
+    tv = afs_SetupVolSlot(volid, tcell);
     if (!tv) {
-	tv = afs_GetVolSlot(volid, tcell);
-	if (!tv) {
-	    ReleaseWriteLock(&afs_xvolume);
-	    return NULL;
-	}
-	tv->next = afs_volumes[i];	/* thread into list */
-	afs_volumes[i] = tv;
+	return NULL;
     }
-    tv->refCount++;
-    tv->states &= ~VRecheck;	/* just checked it */
-    tv->accessTime = osi_Time();
-    ReleaseWriteLock(&afs_xvolume);
+
     if (type == 2) {
 	LockAndInstallUVolumeEntry(tv, uve, tcell->cellNum, tcell, areq);
     } else if (type == 1)
