@@ -1836,7 +1836,11 @@ SizeDumpVnode(struct iod *iodp, struct VnodeDiskObject *v, int volid,
     }
 
     if (VNDISK_GET_INO(v)) {
-	FillInt64(addvar,0, (v->length + 5));
+	VNDISK_GET_LEN(addvar, v);
+	if (v->vn_length_hi)
+	    addvar += 9;
+	else
+	    addvar += 5;
 	AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
     }
     return code;
