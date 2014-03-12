@@ -548,6 +548,17 @@ AFSGetConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
     __Enter
     {
 
+	if( ConnectCB->AuthenticationId.QuadPart == 0)
+	{
+
+	    ConnectCB->AuthenticationId = AFSGetAuthenticationId();
+
+	    AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
+			  AFS_TRACE_LEVEL_VERBOSE,
+			  "AFSGetConnection Retrieved authentication id %I64X\n",
+			  ConnectCB->AuthenticationId.QuadPart));
+	}
+
         if( ConnectCB->LocalName != L'\0')
         {
 
@@ -571,17 +582,6 @@ AFSGetConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
                       "AFSGetConnection Acquiring AFSProviderListLock lock %p SHARED %08lX\n",
                       &pRDRDevExt->Specific.RDR.ProviderListLock,
                       PsGetCurrentThread()));
-
-        if( ConnectCB->AuthenticationId.QuadPart == 0)
-        {
-
-            ConnectCB->AuthenticationId = AFSGetAuthenticationId();
-
-            AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSGetConnection Retrieved authentication id %I64X\n",
-                          ConnectCB->AuthenticationId.QuadPart));
-        }
 
         AFSAcquireShared( &pRDRDevExt->Specific.RDR.ProviderListLock,
                           TRUE);
