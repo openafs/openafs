@@ -7,7 +7,7 @@ bos_setrestricted - place a server in restricted mode
 =for html
 <div class="synopsis">
 
-B<bos setrestricted> S<<< B<-server> <I<machine name>> >>> S<<< B<-mode> 1 >>>
+B<bos setrestricted> S<<< B<-server> <I<machine name>> >>> S<<< B<-mode> (0 | 1) >>>
     S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>] [B<-help>]
 
 =for html
@@ -27,9 +27,9 @@ is denied, and the use of B<bos getlog> is limited.
 
 Once a server has been placed in restricted mode, it may not be opened up
 again using a remote command. That is, B<bos setrestricted> has no method
-of setting an unrestricted mode. Once a server is restricted, it can only
-be opened up again by sending it a SIGFPE, which must be done as root on
-the local machine.
+of placing the server in unrestricted mode. Once a server is restricted,
+it can only be opened up again by sending it a SIGFPE, which must be done
+as root on the local machine.
 
 =head1 OPTIONS
 
@@ -42,10 +42,10 @@ Indicates the server machine to restrict.
 =item B<-mode> <I<mode>>
 
 Indicates whether to turn restricted mode off or on. Pass a 1 to turn
-restricted mode on, and pass a 0 to turn restricted mode off. However, since
-you cannot turn off restricted mode remotely on a server where restricted mode
-is already on, trying to turn off restricted mode will always either fail, or
-do nothing. So the only option that makes sense here is 1.
+restricted mode on, and pass a 0 to turn restricted mode off. The latter
+will only work if the server is already running in unrestricted mode, and
+thus won't do anything immediately, but can be used to change the
+corresponding entry in L<BosConfig(5)>.
 
 =item B<-cell> <I<cell name>>
 
