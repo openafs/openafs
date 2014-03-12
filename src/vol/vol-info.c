@@ -42,76 +42,12 @@
 #include "salvage.h"
 #include "daemon_com_inline.h"
 #include "fssync_inline.h"
+#include "vol-info.h"
 
-#ifndef AFS_NT40_ENV
-#include "AFS_component_version_number.c"
-#endif
-
-static const char *progname = NULL;
+static int volinfo_init = 0;
+static const char *progname = "";
 static const char *PLACEHOLDER = "-";
 
-/* Command line options */
-typedef enum {
-    P_CHECKOUT,
-    P_VNODE,
-    P_DATE,
-    P_INODE,
-    P_ITIME,
-    P_PART,
-    P_VOLUMEID,
-    P_HEADER,
-    P_SIZEONLY,
-    P_FIXHEADER,
-    P_SAVEINODES,
-    P_ORPHANED,
-    P_FILENAMES,
-    P_TYPE,
-    P_FIND,
-    P_MASK,
-    P_OUTPUT,
-    P_DELIM,
-    P_NOHEADING,
-    P_NOMAGIC,
-} volinfo_parm_t;
-
-/*
- * volscan output columns
- */
-#define VOLSCAN_COLUMNS \
-    c(host) \
-    c(desc) \
-    c(vid) \
-    c(offset) \
-    c(vtype) \
-    c(vname) \
-    c(part) \
-    c(partid) \
-    c(fid) \
-    c(path) \
-    c(target) \
-    c(mount) \
-    c(mtype) \
-    c(mcell) \
-    c(mvol) \
-    c(aid) \
-    c(arights) \
-    c(vntype) \
-    c(cloned) \
-    c(mode) \
-    c(links) \
-    c(length) \
-    c(uniq) \
-    c(dv) \
-    c(inode) \
-    c(namei) \
-    c(modtime) \
-    c(author) \
-    c(owner) \
-    c(parent) \
-    c(magic) \
-    c(lock) \
-    c(smodtime) \
-    c(group)
 
 /* Numeric column type ids */
 typedef enum columnType {
@@ -133,12 +69,6 @@ struct columnName ColumnName[] = {
 #undef c
     {max_column_type, NULL}
 };
-
-/* All columns names as a single string. */
-#define c(x) #x " "
-static char *ColumnNames = VOLSCAN_COLUMNS;
-#undef c
-#undef VOLSCAN_COLUMNS
 
 
 /* VnodeDetails union descriminator */
@@ -170,45 +100,12 @@ struct VnodeDetails {
     } u;
 };
 
-struct VolInfoOpt {
-    int checkout;            /**< Use FSSYNC to checkout volumes from the fileserver. */
-    int dumpInfo;            /**< Dump volume information */
-    int dumpHeader;          /**< Dump volume header files info */
-    int dumpVnodes;          /**< Dump vnode info */
-    int dumpInodeNumber;     /**< Dump inode numbers with vnodes */
-    int dumpDate;            /**< Dump vnode date (server modify date) with vnode */
-    int dumpInodeTimes;      /**< Dump some of the dates associated with inodes */
-    int dumpFileNames;       /**< Dump vnode and special file name filenames */
-    int showOrphaned;        /**< Show "orphaned" vnodes (vnodes with parent of 0) */
-    int showSizes;           /**< Show volume size summary */
-    int saveInodes;          /**< Save vnode data to files */
-    int fixHeader;           /**< Repair header files magic and version fields. */
-    char hostname[64];       /**< This hostname, for volscan output. */
-    char columnDelim[16];    /**< Column delimiter char(s) */
-    char printHeading;       /**< Print column heading */
-    int checkMagic;          /**< Check directory vnode magic when looking up paths */
-    unsigned int modeMask[64]; /**< unix mode bit pattern for searching for specific modes */
-    int scanVolType;	     /**< volume types to scan; zero means do not check */
-    int findVnType;	     /**< types of objects to find */
-};
 
 static int NeedDirIndex;        /**< Large vnode index handle is needed for path lookups. */
 static FdHandle_t *DirIndexFd = NULL; /**< Current large vnode index handle for path lookups. */
 
 static int NumOutputColumns = 0;
 static columnType OutputColumn[max_column_type];
-
-/* scanVolType flags */
-#define SCAN_RW  0x01		/**< scan read-write volumes vnodes */
-#define SCAN_RO  0x02		/**< scan read-only volume vnodes */
-#define SCAN_BK  0x04		/**< scan backup volume vnodes */
-
-/* findVnType flags */
-#define FIND_FILE       0x01	/**< find regular files */
-#define FIND_DIR        0x02	/**< find directories */
-#define FIND_MOUNT      0x04	/**< find afs mount points */
-#define FIND_SYMLINK    0x08	/**< find symlinks */
-#define FIND_ACL        0x10	/**< find access entiries */
 
 /**
  * Volume size running totals
@@ -238,19 +135,14 @@ struct VnodeScanProc {
 static struct opr_queue VnodeScanLists[nVNODECLASSES];
 
 /* Forward Declarations */
-void PrintHeader(Volume * vp);
-void HandleAllPart(struct VolInfoOpt *opt);
-void HandlePart(struct VolInfoOpt *opt, struct DiskPartition64 *partP);
-void HandleVolume(struct VolInfoOpt *opt, struct DiskPartition64 *partP, char *name);
-struct DiskPartition64 *FindCurrentPartition(void);
-Volume *AttachVolume(struct VolInfoOpt *opt, struct DiskPartition64 *dp, char *volname,
+static void PrintHeader(Volume * vp);
+static void HandleAllPart(struct VolInfoOpt *opt);
+static void HandlePart(struct VolInfoOpt *opt, struct DiskPartition64 *partP);
+static void HandleVolume(struct VolInfoOpt *opt, struct DiskPartition64 *partP, char *name);
+static struct DiskPartition64 *FindCurrentPartition(void);
+static Volume *AttachVolume(struct VolInfoOpt *opt, struct DiskPartition64 *dp, char *volname,
 		     struct VolumeHeader *header);
-void HandleVnodes(struct VolInfoOpt *opt, Volume * vp, VnodeClass class);
-static void AddVnodeToSizeTotals(struct VolInfoOpt *opt, struct VnodeDetails *vdp);
-static void SaveInode(struct VolInfoOpt *opt, struct VnodeDetails *vdp);
-static void PrintVnode(struct VolInfoOpt *opt, struct VnodeDetails *vdp);
-static void PrintVnodeDetails(struct VolInfoOpt *opt, struct VnodeDetails *vdp);
-static void ScanAcl(struct VolInfoOpt *opt, struct VnodeDetails *vdp);
+static void HandleVnodes(struct VolInfoOpt *opt, Volume * vp, VnodeClass class);
 static void PrintColumnHeading(struct VolInfoOpt *opt);
 static void PrintColumns(struct VolInfoOpt *opt, struct VnodeDetails *vdp, const char *desc);
 
@@ -272,7 +164,7 @@ extern void FidZap(DirHandle * file);
  *       caller must not reference the returned string after
  *       seven additional calls to this function.
  */
-char *
+static char *
 date(time_t date)
 {
 #define MAX_DATE_RESULT	100
@@ -300,7 +192,7 @@ date(time_t date)
  *       caller must not reference the returned string after
  *       seven additional calls to this function.
  */
-char *
+static char *
 NT_date(FILETIME * ft)
 {
     static char result[8][64];
@@ -326,8 +218,8 @@ NT_date(FILETIME * ft)
  *
  * @return none
  */
-static void
-AddVnodeToSizeTotals(struct VolInfoOpt *opt, struct VnodeDetails *vdp)
+void
+volinfo_AddVnodeToSizeTotals(struct VolInfoOpt *opt, struct VnodeDetails *vdp)
 {
     afs_fsize_t fileLength;
 
@@ -432,7 +324,7 @@ PrintServerTotals(void)
  *   @retval 0 success
  *   @retval -1 failed to read file
  */
-int
+static int
 ReadHdr1(struct VolInfoOpt *opt, IHandle_t * ih, char *to, afs_sfsize_t size,
 	 u_int magic, u_int version)
 {
@@ -487,7 +379,7 @@ ReadHdr1(struct VolInfoOpt *opt, IHandle_t * ih, char *to, afs_sfsize_t size,
  *
  * @return volume object or null on error
  */
-Volume *
+static Volume *
 AttachVolume(struct VolInfoOpt *opt, struct DiskPartition64 *dp,
 	     char *volname, struct VolumeHeader *header)
 {
@@ -659,19 +551,12 @@ GetPartitionName(afs_uint32 partId, char *partName, afs_size_t partNameSize)
  *
  * @return 0 if successful
  */
-static int
-ScanPartitions(struct VolInfoOpt *opt, char *partNameOrId, VolumeId volumeId)
+int
+volinfo_ScanPartitions(struct VolInfoOpt *opt, char *partNameOrId, VolumeId volumeId)
 {
     int err = 0;
     char partName[64] = "";
     struct DiskPartition64 *partP = NULL;
-
-#ifndef AFS_NT40_ENV
-    if (geteuid() != 0) {
-	fprintf(stderr, "%s: Must be run as root; sorry\n", progname);
-	return 1;
-    }
-#endif
 
     if (opt->checkout) {
 	if (!FSYNC_clientInit()) {
@@ -681,9 +566,6 @@ ScanPartitions(struct VolInfoOpt *opt, char *partNameOrId, VolumeId volumeId)
 	}
     }
 
-    DInit(1024);
-    VInitVnodes(vLarge, 0);
-    VInitVnodes(vSmall, 0);
 
     /* Allow user to specify partition by name or id. */
     if (partNameOrId) {
@@ -768,130 +650,65 @@ ScanPartitions(struct VolInfoOpt *opt, char *partNameOrId, VolumeId volumeId)
  *
  * @return none
  */
-static void
-AddVnodeHandler(VnodeClass class,
+void
+volinfo_AddVnodeHandler(int vnodeClass,
 		void (*proc) (struct VolInfoOpt * opt,
 			      struct VnodeDetails * vdp), const char *heading)
 {
     struct VnodeScanProc *entry = malloc(sizeof(struct VnodeScanProc));
     entry->proc = proc;
     entry->heading = heading;
-    opr_queue_Append(&VnodeScanLists[class], (struct opr_queue *)entry);
+    opr_queue_Append(&VnodeScanLists[vnodeClass], (struct opr_queue *)entry);
 }
 
-static int
-VolInfoOptions(struct VolInfoOpt **optp)
+/**
+ * Initialize the vol-info module.
+ */
+int
+volinfo_Init(const char *aprogname)
+{
+    if (!volinfo_init) {
+	progname = aprogname;  /* for error messages */
+#ifndef AFS_NT40_ENV
+	if (geteuid() != 0) {
+	    fprintf(stderr, "%s: Must be run as root.\n", progname);
+	    return EPERM;
+	}
+#endif
+	DInit(1024);
+	VInitVnodes(vLarge, 0);
+	VInitVnodes(vSmall, 0);
+	opr_queue_Init(&VnodeScanLists[vLarge]);
+	opr_queue_Init(&VnodeScanLists[vSmall]);
+        volinfo_init = 1;
+    }
+    return 0;
+}
+
+/**
+ * Alloc an options structure with default values.
+ *
+ * The caller must free the options pointer after use.
+ *
+ * @param[out] optp address of options pointer
+ * @return 0 on success
+ */
+int
+volinfo_Options(struct VolInfoOpt **optp)
 {
     struct VolInfoOpt *opt;
 
     opt = calloc(1, sizeof(struct VolInfoOpt));
     if (!opt) {
+	fprintf(stderr, "%s: Failed to allocate options (%d).\n", progname, ENOMEM);
         return ENOMEM;
     }
-    opt->dumpInfo = 1;		/* volinfo default mode */
+    opt->dumpInfo = 1;
     gethostname(opt->hostname, sizeof(opt->hostname));
     opt->columnDelim[0] = ' ';
     opt->checkMagic = 1;
     *optp = opt;
     return 0;
-}
-
-/**
- * Process command line options and start scanning
- *
- * @param[in] as     command syntax object
- * @param[in] arock  opaque object; not used
- *
- * @return error code
- */
-static int
-VolInfo(struct cmd_syndesc *as, void *arock)
-{
-    int code;
-    struct cmd_item *ti;
-    VolumeId volumeId = 0;
-    char *partNameOrId = NULL;
-    struct VolInfoOpt *opt;
-
-    code = VolInfoOptions(&opt);
-    if (code) {
-	fprintf(stderr, "%s: Failed to initialize options (%d).\n", progname, code);
-	return code;
-    }
-
-    if (as->parms[P_CHECKOUT].items) {
-	opt->checkout = 1;
-    }
-    if (as->parms[P_VNODE].items) {
-	opt->dumpVnodes = 1;
-    }
-    if (as->parms[P_DATE].items) {
-	opt->dumpDate = 1;
-    }
-    if (as->parms[P_INODE].items) {
-	opt->dumpInodeNumber = 1;
-    }
-    if (as->parms[P_ITIME].items) {
-	opt->dumpInodeTimes = 1;
-    }
-    if ((ti = as->parms[P_PART].items)) {
-	partNameOrId = ti->data;
-    }
-    if ((ti = as->parms[P_VOLUMEID].items)) {
-	volumeId = strtoul(ti->data, NULL, 10);
-    }
-    if (as->parms[P_HEADER].items) {
-	opt->dumpHeader = 1;
-    }
-    if (as->parms[P_SIZEONLY].items) {
-	opt->showSizes = 1;
-    }
-    if (as->parms[P_FIXHEADER].items) {
-	opt->fixHeader = 1;
-    }
-    if (as->parms[P_SAVEINODES].items) {
-	opt->saveInodes = 1;
-    }
-    if (as->parms[P_ORPHANED].items) {
-	opt->showOrphaned = 1;
-    }
-    if (as->parms[P_FILENAMES].items) {
-	opt->dumpFileNames = 1;
-    }
-
-    /* -saveinodes and -sizeOnly override the default mode.
-     * For compatibility with old versions of volinfo, -orphaned
-     * and -filename options imply -vnodes */
-    if (opt->saveInodes || opt->showSizes) {
-	opt->dumpInfo = 0;
-	opt->dumpHeader = 0;
-	opt->dumpVnodes = 0;
-	opt->dumpInodeTimes = 0;
-	opt->showOrphaned = 0;
-    } else if (opt->showOrphaned) {
-	opt->dumpVnodes = 1;		/* implied */
-    } else if (opt->dumpFileNames) {
-	opt->dumpVnodes = 1;		/* implied */
-    }
-
-    if (opt->saveInodes) {
-	AddVnodeHandler(vSmall, SaveInode,
-			"Saving all volume files to current directory ...\n");
-    }
-    if (opt->showSizes) {
-	AddVnodeHandler(vLarge, AddVnodeToSizeTotals, NULL);
-	AddVnodeHandler(vSmall, AddVnodeToSizeTotals, NULL);
-    }
-    if (opt->dumpVnodes) {
-	AddVnodeHandler(vLarge, PrintVnode, "\nLarge vnodes (directories)\n");
-	AddVnodeHandler(vSmall, PrintVnode,
-			"\nSmall vnodes(files, symbolic links)\n");
-    }
-    code = ScanPartitions(opt, partNameOrId, volumeId);
-    if (opt) {
-        free(opt);
-    }
-    return code;
 }
 
 /**
@@ -904,8 +721,8 @@ VolInfo(struct cmd_syndesc *as, void *arock)
  *   @retval 1 too many columns
  *   @retval 2 invalid column name
  */
-static int
-AddOutputColumn(char *name)
+int
+volinfo_AddOutputColumn(char *name)
 {
     int i;
 
@@ -928,148 +745,6 @@ AddOutputColumn(char *name)
     return 2;
 }
 
-/**
- * Process command line options and start scanning
- *
- * @param[in] as     command syntax object
- * @param[in] arock  opaque object; not used
- *
- * @return error code
- *    @retval 0 success
- *    @retvol 1 failure
- */
-static int
-VolScan(struct cmd_syndesc *as, void *arock)
-{
-    int code;
-    struct cmd_item *ti;
-    VolumeId volumeId = 0;
-    char *partNameOrId = NULL;
-    int i;
-    struct VolInfoOpt *opt;
-
-    code = VolInfoOptions(&opt);
-    if (code) {
-	fprintf(stderr, "%s: Failed to initialize options (%d).\n", progname, code);
-	return code;
-    }
-
-    if (as->parms[P_CHECKOUT].items) {
-	opt->checkout = 1;
-    }
-    if ((ti = as->parms[P_PART].items)) {
-	partNameOrId = ti->data;
-    }
-    if ((ti = as->parms[P_VOLUMEID].items)) {
-	volumeId = strtoul(ti->data, NULL, 10);
-    }
-    if (as->parms[P_NOHEADING].items) {
-	opt->printHeading = 0;
-    } else {
-	opt->printHeading = 1;
-    }
-    if (as->parms[P_NOMAGIC].items) {
-        opt->checkMagic = 0;
-    }
-    if ((ti = as->parms[P_DELIM].items)) {
-	strncpy(opt->columnDelim, ti->data, 15);
-	opt->columnDelim[15] = '\0';
-    }
-
-    /* Limit types of volumes to scan. */
-    if (!as->parms[P_TYPE].items) {
-	opt->scanVolType = (SCAN_RW | SCAN_RO | SCAN_BK);
-    } else {
-	opt->scanVolType = 0;
-	for (ti = as->parms[P_TYPE].items; ti; ti = ti->next) {
-	    if (strcmp(ti->data, "rw") == 0) {
-		opt->scanVolType |= SCAN_RW;
-	    } else if (strcmp(ti->data, "ro") == 0) {
-		opt->scanVolType |= SCAN_RO;
-	    } else if (strcmp(ti->data, "bk") == 0) {
-		opt->scanVolType |= SCAN_BK;
-	    } else {
-		fprintf(stderr, "%s: Unknown -type value: %s\n", progname,
-			ti->data);
-		return 1;
-	    }
-	}
-    }
-
-    /* Limit types of vnodes to find (plus access entries) */
-    if (!as->parms[P_FIND].items) {
-	opt->findVnType = (FIND_FILE | FIND_DIR | FIND_MOUNT | FIND_SYMLINK);
-    } else {
-	opt->findVnType = 0;
-	for (ti = as->parms[P_FIND].items; ti; ti = ti->next) {
-	    if (strcmp(ti->data, "file") == 0) {
-		opt->findVnType |= FIND_FILE;
-	    } else if (strcmp(ti->data, "dir") == 0) {
-		opt->findVnType |= FIND_DIR;
-	    } else if (strcmp(ti->data, "mount") == 0) {
-		opt->findVnType |= FIND_MOUNT;
-	    } else if (strcmp(ti->data, "symlink") == 0) {
-		opt->findVnType |= FIND_SYMLINK;
-	    } else if (strcmp(ti->data, "acl") == 0) {
-		opt->findVnType |= FIND_ACL;
-	    } else {
-		fprintf(stderr, "%s: Unknown -find value: %s\n", progname,
-			ti->data);
-		return 1;
-	    }
-	}
-    }
-
-    /* Show vnodes matching one of the mode masks */
-    for (i = 0, ti = as->parms[P_MASK].items; ti; i++, ti = ti->next) {
-	if (i >= (sizeof(opt->modeMask) / sizeof(*opt->modeMask))) {
-	    fprintf(stderr, "Too many -mask values\n");
-	    return -1;
-	}
-	opt->modeMask[i] = strtol(ti->data, NULL, 8);
-	if (!opt->modeMask[i]) {
-	    fprintf(stderr, "Invalid -mask value: %s\n", ti->data);
-	    return 1;
-	}
-    }
-
-    /* Set which columns to be printed. */
-    if (!as->parms[P_OUTPUT].items) {
-	AddOutputColumn("host");
-	AddOutputColumn("desc");
-	AddOutputColumn("fid");
-	AddOutputColumn("dv");
-	if (opt->findVnType & FIND_ACL) {
-	    AddOutputColumn("aid");
-	    AddOutputColumn("arights");
-	}
-	AddOutputColumn("path");
-    } else {
-	for (ti = as->parms[P_OUTPUT].items; ti; ti = ti->next) {
-	    if (AddOutputColumn(ti->data) != 0) {;
-		fprintf(stderr, "%s: Unknown -output value: %s\n", progname,
-			ti->data);
-		return 1;
-	    }
-	}
-    }
-
-    if (opt->findVnType & FIND_DIR) {
-	AddVnodeHandler(vLarge, PrintVnodeDetails, NULL);
-    }
-    if (opt->findVnType & (FIND_FILE | FIND_MOUNT | FIND_SYMLINK)) {
-	AddVnodeHandler(vSmall, PrintVnodeDetails, NULL);
-    }
-    if (opt->findVnType & FIND_ACL) {
-	AddVnodeHandler(vLarge, ScanAcl, NULL);
-    }
-
-    code = ScanPartitions(opt, partNameOrId, volumeId);
-    if (opt) {
-	free(opt);
-    }
-    return code;
-}
 
 /**
  * Determine if the current directory is a vice partition
@@ -1078,7 +753,7 @@ VolScan(struct cmd_syndesc *as, void *arock)
  */
 #ifdef AFS_NT40_ENV
 #include <direct.h>
-struct DiskPartition64 *
+static struct DiskPartition64 *
 FindCurrentPartition(void)
 {
     int dr = _getdrive();
@@ -1096,7 +771,7 @@ FindCurrentPartition(void)
     return dp;
 }
 #else
-struct DiskPartition64 *
+static struct DiskPartition64 *
 FindCurrentPartition(void)
 {
     char partName[1024];
@@ -1131,7 +806,7 @@ FindCurrentPartition(void)
  *
  * @return none
  */
-void
+static void
 HandleAllPart(struct VolInfoOpt *opt)
 {
     struct DiskPartition64 *partP;
@@ -1158,7 +833,7 @@ HandleAllPart(struct VolInfoOpt *opt)
  *
  * @return none
  */
-void
+static void
 HandlePart(struct VolInfoOpt *opt, struct DiskPartition64 *partP)
 {
     afs_int64 nvols = 0;
@@ -1204,7 +879,7 @@ HandlePart(struct VolInfoOpt *opt, struct DiskPartition64 *partP)
  *
  * @return none
  */
-void
+static void
 HandleSpecialFile(struct VolInfoOpt *opt, const char *name, struct DiskPartition64 *dp,
 		  struct VolumeHeader *header, Inode inode,
 		  afs_sfsize_t * psize)
@@ -1267,7 +942,7 @@ HandleSpecialFile(struct VolInfoOpt *opt, const char *name, struct DiskPartition
  *
  * @return none
  */
-void
+static void
 HandleHeaderFiles(struct VolInfoOpt *opt, struct DiskPartition64 *dp, FD_t header_fd,
 		  struct VolumeHeader *header)
 {
@@ -1343,7 +1018,7 @@ IsScannable(struct VolInfoOpt *opt, Volume * vp)
  *
  * @return none
  */
-void
+static void
 HandleVolume(struct VolInfoOpt *opt, struct DiskPartition64 *dp, char *name)
 {
     struct VolumeHeader header;
@@ -1430,131 +1105,6 @@ HandleVolume(struct VolInfoOpt *opt, struct DiskPartition64 *dp, char *name)
 }
 
 /**
- * Declare volinfo command line syntax
- *
- * @returns none
- */
-static void
-VolInfoSyntax(void)
-{
-    struct cmd_syndesc *ts;
-
-    ts = cmd_CreateSyntax(NULL, VolInfo, NULL,
-			  "Dump volume's internal state");
-    cmd_AddParmAtOffset(ts, P_CHECKOUT, "-checkout", CMD_FLAG, CMD_OPTIONAL,
-			"Checkout volumes from running fileserver");
-    cmd_AddParmAtOffset(ts, P_VNODE, "-vnode", CMD_FLAG, CMD_OPTIONAL,
-			"Dump vnode info");
-    cmd_AddParmAtOffset(ts, P_DATE, "-date", CMD_FLAG, CMD_OPTIONAL,
-			"Also dump vnode's mod date");
-    cmd_AddParmAtOffset(ts, P_INODE, "-inode", CMD_FLAG, CMD_OPTIONAL,
-			"Also dump vnode's inode number");
-    cmd_AddParmAtOffset(ts, P_ITIME, "-itime", CMD_FLAG, CMD_OPTIONAL,
-			"Dump special inode's mod times");
-    cmd_AddParmAtOffset(ts, P_PART, "-part", CMD_LIST, CMD_OPTIONAL,
-			"AFS partition name or id (default current partition)");
-    cmd_AddParmAtOffset(ts, P_VOLUMEID, "-volumeid", CMD_LIST, CMD_OPTIONAL,
-			"Volume id");
-    cmd_AddParmAtOffset(ts, P_HEADER, "-header", CMD_FLAG, CMD_OPTIONAL,
-			"Dump volume's header info");
-    cmd_AddParmAtOffset(ts, P_SIZEONLY, "-sizeonly", CMD_FLAG, CMD_OPTIONAL,
-			"Dump volume's size");
-    cmd_AddParmAtOffset(ts, P_FIXHEADER, "-fixheader", CMD_FLAG,
-			CMD_OPTIONAL, "Try to fix header");
-    cmd_AddParmAtOffset(ts, P_SAVEINODES, "-saveinodes", CMD_FLAG,
-			CMD_OPTIONAL, "Try to save all inodes");
-    cmd_AddParmAtOffset(ts, P_ORPHANED, "-orphaned", CMD_FLAG, CMD_OPTIONAL,
-			"List all dir/files without a parent");
-#if defined(AFS_NAMEI_ENV)
-    cmd_AddParmAtOffset(ts, P_FILENAMES, "-filenames", CMD_FLAG,
-			CMD_OPTIONAL, "Also dump vnode's namei filename");
-#endif
-
-    /* For compatibility with older versions. */
-    cmd_AddParmAlias(ts, P_SIZEONLY, "-sizeOnly");
-}
-
-/**
- * Declare volscan command line syntax
- *
- * @returns none
- */
-static void
-VolScanSyntax(void)
-{
-    struct cmd_syndesc *ts;
-
-    ts = cmd_CreateSyntax(NULL, VolScan, NULL,
-			  "Print volume vnode information");
-
-    cmd_AddParmAtOffset(ts, P_CHECKOUT, "-checkout", CMD_FLAG, CMD_OPTIONAL,
-			"Checkout volumes from running fileserver");
-    cmd_AddParmAtOffset(ts, P_PART, "-partition", CMD_SINGLE, CMD_OPTIONAL,
-			"AFS partition name or id (default current partition)");
-    cmd_AddParmAtOffset(ts, P_VOLUMEID, "-volumeid", CMD_SINGLE, CMD_OPTIONAL,
-			"Volume id (-partition required)");
-    cmd_AddParmAtOffset(ts, P_TYPE, "-type", CMD_LIST, CMD_OPTIONAL,
-			"Volume types: rw, ro, bk");
-    cmd_AddParmAtOffset(ts, P_FIND, "-find", CMD_LIST, CMD_OPTIONAL,
-			"Objects to find: file, dir, mount, symlink, acl");
-    cmd_AddParmAtOffset(ts, P_MASK, "-mask", CMD_LIST, (CMD_OPTIONAL | CMD_HIDE),
-                        "Unix mode mask (example: 06000)");
-    cmd_AddParmAtOffset(ts, P_OUTPUT, "-output", CMD_LIST, CMD_OPTIONAL,
-			ColumnNames);
-    cmd_AddParmAtOffset(ts, P_DELIM, "-delim", CMD_SINGLE, CMD_OPTIONAL,
-			"Output field delimiter");
-    cmd_AddParmAtOffset(ts, P_NOHEADING, "-noheading", CMD_FLAG, CMD_OPTIONAL,
-			"Do not print the heading line");
-    cmd_AddParmAtOffset(ts, P_NOMAGIC, "-ignore-magic", CMD_FLAG, CMD_OPTIONAL,
-			"Skip directory vnode magic checks when looking up paths.");
-}
-
-/**
- * volinfo/volscan program entry
- */
-int
-main(int argc, char **argv)
-{
-    afs_int32 code;
-    char *base;
-
-    opr_queue_Init(&VnodeScanLists[vLarge]);
-    opr_queue_Init(&VnodeScanLists[vSmall]);
-
-    base = strrchr(argv[0], '/');
-#ifdef AFS_NT40_ENV
-    if (!base) {
-	base = strrchr(argv[0], '\\');
-    }
-#endif /* AFS_NT40_ENV */
-    if (!base) {
-	base = argv[0];
-    }
-#ifdef AFS_NT40_ENV
-    if ((base[0] == '/' || base[0] == '\\') && base[1] != '\0') {
-#else /* AFS_NT40_ENV */
-    if (base[0] == '/' && base[1] != '\0') {
-#endif /* AFS_NT40_ENV */
-	base++;
-    }
-    progname = base;
-
-#ifdef AFS_NT40_ENV
-    if (stricmp(progname, "volscan") == 0
-	|| stricmp(progname, "volscan.exe") == 0) {
-#else /* AFS_NT40_ENV */
-    if (strcmp(progname, "volscan") == 0) {
-#endif /* AFS_NT40_ENV */
-	VolScanSyntax();
-    } else {
-	VolInfoSyntax();
-    }
-
-    code = cmd_Dispatch(argc, argv);
-    return code;
-}
-
-/**
  * Return a display string for the volume type.
  *
  * @param[in]  type  volume type
@@ -1592,7 +1142,7 @@ volumeTypeShortString(int type)
  *
  * @return none
  */
-void
+static void
 PrintHeader(Volume * vp)
 {
     printf("Volume header for volume %" AFS_VOLID_FMT " (%s)\n", afs_printable_VolumeId_lu(V_id(vp)), V_name(vp));
@@ -1682,8 +1232,8 @@ GetFileInfo(FD_t fd, afs_sfsize_t * size, char **ctime, char **mtime,
  *
  * @return none
  */
-static void
-SaveInode(struct VolInfoOpt *opt, struct VnodeDetails *vdp)
+void
+volinfo_SaveInode(struct VolInfoOpt *opt, struct VnodeDetails *vdp)
 {
     IHandle_t *ih;
     FdHandle_t *fdP;
@@ -1766,7 +1316,7 @@ SaveInode(struct VolInfoOpt *opt, struct VnodeDetails *vdp)
  *   @retval 0   success
  *   @retval -1  failure
  */
-int
+static int
 GetDirVnode(struct VolInfoOpt *opt, Volume * vp, VnodeId parent, VnodeDiskObject * pvn)
 {
     afs_int32 code;
@@ -1862,7 +1412,7 @@ GetDirEntry(Volume * vp, VnodeDiskObject * pvnode, VnodeId cvnid,
  *   @retval 0 success
  *   @retval -1 error
  */
-int
+static int
 LookupPath(struct VolInfoOpt *opt, struct VnodeDetails *vdp)
 {
 #define MAX_PATH_LEN 1023
@@ -2068,8 +1618,8 @@ ReadSymlinkTarget(struct VnodeDetails *vdp)
  *
  * @return none
  */
-static void
-PrintVnodeDetails(struct VolInfoOpt *opt, struct VnodeDetails *vdp)
+void
+volinfo_PrintVnodeDetails(struct VolInfoOpt *opt, struct VnodeDetails *vdp)
 {
     switch (vdp->vnode->type) {
     case vNull:
@@ -2112,8 +1662,8 @@ PrintVnodeDetails(struct VolInfoOpt *opt, struct VnodeDetails *vdp)
  *
  * @return none
  */
-static void
-ScanAcl(struct VolInfoOpt *opt, struct VnodeDetails *vdp)
+void
+volinfo_ScanAcl(struct VolInfoOpt *opt, struct VnodeDetails *vdp)
 {
     int i;
     struct acl_accessList *acl;
@@ -2167,7 +1717,7 @@ ModeMaskMatch(struct VolInfoOpt *opt, unsigned int modeBits)
  *
  * @return none
  */
-void
+static void
 HandleVnodes(struct VolInfoOpt *opt, Volume * vp, VnodeClass class)
 {
     afs_int32 diskSize =
@@ -2265,7 +1815,7 @@ HandleVnodes(struct VolInfoOpt *opt, Volume * vp, VnodeClass class)
  * @return none
  */
 void
-PrintVnode(struct VolInfoOpt *opt, struct VnodeDetails *vdp)
+volinfo_PrintVnode(struct VolInfoOpt *opt, struct VnodeDetails *vdp)
 {
 #if defined(AFS_NAMEI_ENV)
     IHandle_t *ihtmpp;
@@ -2339,7 +1889,7 @@ PrintPartitionId(Volume * vp)
  * @return none
  */
 static void
-PrintVnodeType(int type)
+volinfo_PrintVnodeType(int type)
 {
     switch (type) {
     case vNull:
@@ -2553,7 +2103,7 @@ PrintColumns(struct VolInfoOpt *opt, struct VnodeDetails *vdp, const char *desc)
 	    }
 	    break;
 	case col_vntype:
-	    PrintVnodeType(vdp->vnode->type);
+	    volinfo_PrintVnodeType(vdp->vnode->type);
 	    break;
 	case col_cloned:
 	    printf("%c", vdp->vnode->cloned ? 'y' : 'n');

@@ -234,21 +234,35 @@ $(FSSYNC_DEBUG): $(FSSYNC_DEBUG_EXEOBJS) $(EXEC_LIBS)
         $(SYMSTORE_IMPORT)
 
 ############################################################################
-# build volinfo
+# build volinfo and volscan
 VOLINFO = $(DESTDIR)\root.server\usr\afs\bin\volinfo.exe
+VOLSCAN = $(DESTDIR)\root.server\usr\afs\bin\volscan.exe
 
 $(OUT)\vol-info.obj: vol-info.c
 	$(C2OBJ) $** -DAFS_PTHREAD_ENV
 
-$(VOLINFO): $(OUT)\vol-info.obj $(OUT)\physio.obj $(OUT)\volinfo.res $(EXEC_LIBS)
+$(OUT)\volinfo-main.obj: volinfo-main.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\volscan-main.obj: volscan-main.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(VOLINFO): $(OUT)\volinfo-main.obj $(OUT)\vol-info.obj $(OUT)\physio.obj $(OUT)\volinfo.res $(EXEC_LIBS)
 	$(EXECONLINK) shell32.lib
-        $(_VC_MANIFEST_EMBED_EXE)
+	$(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
-        $(CODESIGN_USERLAND)
-        $(SYMSTORE_IMPORT)
+	$(CODESIGN_USERLAND)
+	$(SYMSTORE_IMPORT)
+
+$(VOLSCAN): $(OUT)\volscan-main.obj $(OUT)\vol-info.obj $(OUT)\physio.obj $(OUT)\volinfo.res $(EXEC_LIBS)
+	$(EXECONLINK) shell32.lib
+	$(_VC_MANIFEST_EMBED_EXE)
+	$(EXEPREP)
+	$(CODESIGN_USERLAND)
+	$(SYMSTORE_IMPORT)
 
 ############################################################################
-# build volinfo
+# build vol-bless
 VOLBLESS = $(DESTDIR)\root.server\usr\afs\bin\vol-bless.exe
 
 $(OUT)\vol-bless.obj: vol-bless.c
@@ -269,7 +283,7 @@ $(OUT)\volinfo.res: AFS_component_version_number.h
 
 ############################################################################
 # Install targets
-install: $(INCFILES) $(LIBFILE) $(MT_LIBFILE) $(DAFS_LIBFILE) $(SALVAGER) $(VOLINFO)
+install: $(INCFILES) $(LIBFILE) $(MT_LIBFILE) $(DAFS_LIBFILE) $(SALVAGER) $(VOLINFO) $(VOLSCAN)
 
 mkdir:
 	
