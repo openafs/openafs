@@ -63,6 +63,16 @@ AFSAddConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
 
             ConnectCB->AuthenticationId = AFSGetAuthenticationId();
 
+	    if ( ConnectCB->AuthenticationId.QuadPart == 0)
+	    {
+
+		AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
+			      AFS_TRACE_LEVEL_ERROR,
+			      "AFSAddConnection Unable to retrieve authentication id\n"));
+
+		return STATUS_ACCESS_DENIED;
+	    }
+
             AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSAddConnection Retrieved authentication id %I64X\n",
@@ -428,6 +438,16 @@ AFSCancelConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
 
             ConnectCB->AuthenticationId = AFSGetAuthenticationId();
 
+	    if ( ConnectCB->AuthenticationId.QuadPart == 0)
+	    {
+
+		AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
+			      AFS_TRACE_LEVEL_ERROR,
+			      "AFSCancelConnection Unable to retrieve authentication id\n"));
+
+		return STATUS_ACCESS_DENIED;
+	    }
+
             AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSCancelConnection Retrieved authentication id %I64X\n",
@@ -552,6 +572,16 @@ AFSGetConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
 	{
 
 	    ConnectCB->AuthenticationId = AFSGetAuthenticationId();
+
+	    if ( ConnectCB->AuthenticationId.QuadPart == 0)
+	    {
+
+		AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
+			      AFS_TRACE_LEVEL_ERROR,
+			      "AFSGetConnection Unable to retrieve authentication id\n"));
+
+		return STATUS_ACCESS_DENIED;
+	    }
 
 	    AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
 			  AFS_TRACE_LEVEL_VERBOSE,
@@ -692,6 +722,16 @@ AFSListConnections( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
         {
 
             ConnectCB->AuthenticationId = AFSGetAuthenticationId();
+
+	    if ( ConnectCB->AuthenticationId.QuadPart == 0)
+	    {
+
+		AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
+			      AFS_TRACE_LEVEL_ERROR,
+			      "AFSListConnections Unable to retrieve authentication id\n"));
+
+		return STATUS_ACCESS_DENIED;
+	    }
 
             AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -1470,6 +1510,16 @@ AFSGetConnectionInfo( IN AFSNetworkProviderConnectionCB *ConnectCB,
 	{
 
 	    ConnectCB->AuthenticationId = AFSGetAuthenticationId();
+
+	    if ( ConnectCB->AuthenticationId.QuadPart == 0)
+	    {
+
+		AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
+			      AFS_TRACE_LEVEL_ERROR,
+			      "AFSGetConnectionInfo Unable to retrieve authentication id\n"));
+
+		return STATUS_ACCESS_DENIED;
+	    }
 
 	    AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
 			  AFS_TRACE_LEVEL_VERBOSE,
