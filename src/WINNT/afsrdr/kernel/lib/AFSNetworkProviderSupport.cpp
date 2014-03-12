@@ -1466,6 +1466,17 @@ AFSGetConnectionInfo( IN AFSNetworkProviderConnectionCB *ConnectCB,
         uniRemoteName.MaximumLength = uniRemoteName.Length + sizeof( WCHAR);
         uniRemoteName.Buffer = (WCHAR *)ConnectCB->RemoteName;
 
+	if( ConnectCB->AuthenticationId.QuadPart == 0)
+	{
+
+	    ConnectCB->AuthenticationId = AFSGetAuthenticationId();
+
+	    AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
+			  AFS_TRACE_LEVEL_VERBOSE,
+			  "AFSGetConnectionInfo Retrieved authentication id %I64X\n",
+			  ConnectCB->AuthenticationId.QuadPart));
+	}
+
         if( ConnectCB->LocalName != L'\0')
         {
 
