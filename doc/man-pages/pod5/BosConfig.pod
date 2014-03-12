@@ -169,8 +169,6 @@ performs automatic process restarts.
 =item *
 
 The B<bos setrestricted> command to place the BOS Server in restricted mode.
-Since there is no command to revert this, setting the C<restrictmode>
-parameter back to 0 is only possible with an editor.
 
 =item *
 
