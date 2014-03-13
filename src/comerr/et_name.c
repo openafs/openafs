@@ -13,11 +13,6 @@
 #include "mit-sipb-cr.h"
 #include "internal.h"
 
-#ifndef	lint
-static const char copyright[] =
-    "Copyright 1987,1988 by Student Information Processing Board, Massachusetts Institute of Technology";
-#endif
-
 static const char char_set[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_";
 
