@@ -338,6 +338,7 @@ PODS = \
         pod8\vlserver.pod              \
         pod8\voldump.pod               \
         pod8\volinfo.pod               \
+        pod8\volscan.pod               \
         pod8\volserver.pod             \
         pod8\vsys.pod                  \
         pod8\xfs_size_check.pod
