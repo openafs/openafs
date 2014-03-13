@@ -161,13 +161,6 @@ opr_rbtree_prev(struct opr_rbtree_node *node)
 }
 
 static_inline void
-initnode(struct opr_rbtree_node *node)
-{
-    node->left = node->right = node->parent = NULL;
-    node->red = 1;
-}
-
-static_inline void
 rotateright(struct opr_rbtree *head, struct opr_rbtree_node *node)
 {
     struct opr_rbtree_node *left = node->left;
