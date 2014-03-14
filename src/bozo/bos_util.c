@@ -125,7 +125,7 @@ main(int argc, char **argv)
 	    exit(1);
 	}
 	des_string_to_key(buf, ktc_to_cblockptr(&tkey));
-	code = afsconf_AddKey(tdir, kvno, ktc_to_charptr(&tkey), 0);
+	code = afsconf_AddKey(tdir, kvno, (char *)(&tkey), 0);
 	if (code) {
 	    printf("bos_util: failed to set key, code %d.\n", code);
 	    exit(1);
