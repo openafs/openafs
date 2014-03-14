@@ -360,7 +360,7 @@ operation.
 
 This was the only behavior allowed in OpenAFS releases starting from 1.4.5 up
 to and including 1.6.2. It was the default starting from OpenAFS 1.6.3 up to
-and including OpenAFS 1.6.6. This option will be removed in a future version of
+and including OpenAFS 1.6.7. This option will be removed in a future version of
 OpenAFS.
 
 =item onclose
@@ -377,7 +377,7 @@ Effectively this option is the same as C<never> while a volume is attached and
 actively being used, but if a volume is detached, there is an additional
 guarantee for the data's consistency.
 
-This option is the default starting with OpenAFS 1.6.7.
+This option is the default starting with OpenAFS 1.6.8.
 
 =item never
 
