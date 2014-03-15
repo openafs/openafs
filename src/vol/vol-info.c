@@ -1460,7 +1460,7 @@ VolScanSyntax(void)
 			"Volume types: rw, ro, bk");
     cmd_AddParmAtOffset(ts, P_FIND, "-find", CMD_LIST, CMD_OPTIONAL,
 			"Objects to find: file, dir, mount, symlink, acl");
-    cmd_AddParmAtOffset(ts, P_MASK, "-mask", CMD_LIST, CMD_OPTIONAL,
+    cmd_AddParmAtOffset(ts, P_MASK, "-mask", CMD_LIST, (CMD_OPTIONAL | CMD_HIDE),
                         "Unix mode mask (example: 06000)");
     cmd_AddParmAtOffset(ts, P_OUTPUT, "-output", CMD_LIST, CMD_OPTIONAL,
 			ColumnNames);
