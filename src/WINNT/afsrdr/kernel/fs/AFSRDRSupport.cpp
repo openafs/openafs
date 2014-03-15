@@ -48,9 +48,18 @@ AFSInitRDRDevice()
     AFSDeviceExt  *pDeviceExt = NULL;
     UNICODE_STRING uniFsRtlRegisterUncProviderEx;
     FsRtlRegisterUncProviderEx_t pFsRtlRegisterUncProviderEx = NULL;
+    RTL_OSVERSIONINFOW sysVersion;
+    ULONG ulDeviceCharacteristics = FILE_REMOTE_DEVICE;
 
     __Enter
     {
+
+	RtlZeroMemory( &sysVersion,
+		       sizeof( RTL_OSVERSIONINFOW));
+
+	sysVersion.dwOSVersionInfoSize = sizeof( RTL_OSVERSIONINFOW);
+
+	RtlGetVersion( &sysVersion);
 
         RtlInitUnicodeString( &uniDeviceName,
                               AFS_RDR_DEVICE_NAME);
@@ -60,11 +69,24 @@ AFSInitRDRDevice()
 
         pFsRtlRegisterUncProviderEx = (FsRtlRegisterUncProviderEx_t)MmGetSystemRoutineAddress(&uniFsRtlRegisterUncProviderEx);
 
+	//
+	// On 32-bit Windows XP, do not set FILE_DEVICE_SECURE_OPEN
+	// flag as it interferes with initial access to \\afs from
+	// limited user accounts.
+	//
+
+	if(!(sysVersion.dwMajorVersion == 5 &&
+	     sysVersion.dwMinorVersion == 1))
+	{
+
+	    ulDeviceCharacteristics |= FILE_DEVICE_SECURE_OPEN;
+	}
+
         ntStatus = IoCreateDevice( AFSDriverObject,
                                    sizeof( AFSDeviceExt),
                                    pFsRtlRegisterUncProviderEx ? NULL : &uniDeviceName,
                                    FILE_DEVICE_NETWORK_FILE_SYSTEM,
-                                   FILE_DEVICE_SECURE_OPEN | FILE_REMOTE_DEVICE,
+				   ulDeviceCharacteristics,
                                    FALSE,
                                    &AFSRDRDeviceObject);
 
