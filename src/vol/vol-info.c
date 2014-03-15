@@ -1486,7 +1486,7 @@ VolScanSyntax(void)
 			"Volume types: rw, ro, bk");
     cmd_AddParm(ts, "-find", CMD_LIST, CMD_OPTIONAL,
 			"Objects to find: file, dir, mount, symlink, acl");
-    cmd_AddParm(ts, "-mask", CMD_LIST, CMD_OPTIONAL,
+    cmd_AddParm(ts, "-mask", CMD_LIST, (CMD_OPTIONAL | CMD_HIDE),
                         "Unix mode mask (example: 06000)");
     cmd_AddParm(ts, "-output", CMD_LIST, CMD_OPTIONAL,
 			ColumnNames);
