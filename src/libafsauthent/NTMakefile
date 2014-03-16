@@ -74,7 +74,7 @@ SYSOBJS = \
 	$(OUT)\pioctl_nt.obj
 
 WINNTAFSDOBJS =\
-	$(OUT)\afsrpc_c.obj
+	$(OUT)\afsrpc_$(CPU)_c.obj
 
 DLLOBJS =\
 	$(AUTHOBJS) \

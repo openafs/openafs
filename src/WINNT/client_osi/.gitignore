@@ -3,5 +3,5 @@
 # to check that you haven't inadvertently ignored any tracked files.
 
 /dbrpc.h
-/dbrpc_c.c
-/dbrpc_s.c
+/dbrpc_*_c.c
+/dbrpc_*_s.c

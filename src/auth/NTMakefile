@@ -51,7 +51,7 @@ AFSAUTH_LIBOBJS =\
 	$(OUT)\AFS_component_version_number.obj
 
 AFSDOBJS =\
-	$(OUT)\$(AFSD)\afsrpc_c.obj
+	$(OUT)\$(AFSD)\afsrpc_$(CPU)_c.obj
 
 $(AFSDOBJS): $(AFSD)\$$(@B).c
 	$(C2OBJ) -I$*(*D) $**
