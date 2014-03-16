@@ -58,7 +58,7 @@ DLLFILE = $(DESTDIR)\root.client\usr\vice\etc\libosi.dll
 ILIBDIR = $(DESTDIR)\lib
 
 DLLOBJS =\
-	$(OUT)\dbrpc_s.obj \
+	$(OUT)\dbrpc_$(CPU)_s.obj \
 	$(OUT)\osistatl.obj \
 	$(OUT)\osibasel.obj \
 	$(OUT)\osisleep.obj \
@@ -116,8 +116,8 @@ $(EXEFILE) : $(EXEOBJS)
 ############################################################################
 # midl on dbrpc.idl
 
-dbrpc.h dbrpc_c.c dbrpc_s.c: dbrpc.idl
-	$(MIDL) $(AFSDEV_AUXMIDLFLAGS) -Zp4 -cpp_cmd $(cc) -cpp_opt "-E" $**
+dbrpc.h dbrpc_$(CPU)_c.c dbrpc_$(CPU)_s.c: dbrpc.idl
+	$(MIDL) $(AFSDEV_AUXMIDLFLAGS) -cstub dbrpc_$(CPU)_c.c -sstub dbrpc_$(CPU)_s.c -Zp4 -cpp_cmd $(cc) -cpp_opt "-E" $**
 ############################################################################
 # generate versioninfo resources
 
@@ -140,7 +140,7 @@ install_debug: $(OUT)\osidebug.res $(EXEFILE)
 # Local clean target; augments predefined clean target
 
 clean::
-	$(DEL) dbrpc_s.c dbrpc_c.c dbrpc.h $(DLLFILE) $(INCFILES) $(OSIEVENTDLL)
+	$(DEL) dbrpc_$(CPU)_s.c dbrpc_$(CPU)_c.c dbrpc.h $(DLLFILE) $(INCFILES) $(OSIEVENTDLL)
 	$(DEL) $(EXEOBJS) $(EXEFILE) $(OUT)\*.res $(OUT)\*.DLL
 
 

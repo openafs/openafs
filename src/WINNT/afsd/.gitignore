@@ -6,11 +6,11 @@
 /afsd_eventmessages.h
 /afsd_eventmessages.rc
 /afsrpc.h
-/afsrpc_c.c
-/afsrpc_s.c
+/afsrpc_*_c.c
+/afsrpc_*_s.c
 /ms-srvsvc.h
-/ms-srvsvc_c.c
-/ms-srvsvc_s.c
+/ms-srvsvc_*_c.c
+/ms-srvsvc_*_s.c
 /ms-wkssvc.h
-/ms-wkssvc_c.c
-/ms-wkssvc_s.c
+/ms-wkssvc_*_c.c
+/ms-wkssvc_*_s.c

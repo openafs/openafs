@@ -52,7 +52,7 @@ LIBOBJS = \
 	$(OUT)\TaAfsAdmSvrClientPing.obj \
 	$(OUT)\TaAfsAdmSvrClientUser.obj \
 	$(OUT)\TaAfsAdmSvrCommon.obj \
-	$(OUT)\iTaAfsAdmSvr_c.obj
+	$(OUT)\iTaAfsAdmSvr_$(CPU)_c.obj
 
 EXERES = $(OUT)\AfsAdmSvr.res
 
@@ -71,12 +71,11 @@ EXEOBJS = \
 	$(OUT)\TaAfsAdmSvrProperties.obj \
 	$(OUT)\TaAfsAdmSvrSearch.obj \
 	$(OUT)\TaAfsAdmSvrUser.obj \
-	$(OUT)\iTaAfsAdmSvr_s.obj
+	$(OUT)\iTaAfsAdmSvr_$(CPU)_s.obj
 
 VCLIBS =\
 	gdi32.lib \
 	user32.lib \
-#	rpcns4.lib \
 	rpcrt4.lib \
 	comctl32.lib \
 	gdi32.lib
@@ -106,11 +105,11 @@ MIDL_FLAGS=/ms_ext \
            /WX \
            /nologo
 
-.SUFFIXES: .h .idl
+ITaAfsAdmSvr.h ITaAfsAdmSvr_$(CPU)_c.c ITaAfsAdmSvr_$(CPU)_s.c: ITaAfsAdmSvr.idl
+	midl $(MIDL_FLAGS) $(AFSDEV_AUXMIDLFLAGS) -cstub ITaAfsAdmSvr_$(CPU)_c.c -sstub ITaAfsAdmSvr_$(CPU)_s.c $**
 
-.idl.h:
-	echo [$<]
-	midl $(MIDL_FLAGS) $(AFSDEV_AUXMIDLFLAGS) $<
+ITaAfsAdmSvrTypes.h ITaAfsAdmSvrTypes_$(CPU)_c.c ITaAfsAdmSvrTypes_$(CPU)_s.c: ITaAfsAdmSvrTypes.idl
+	midl $(MIDL_FLAGS) $(AFSDEV_AUXMIDLFLAGS) -cstub ITaAfsAdmSvrTypes_$(CPU)_c.c -sstub ITaAfsAdmSvrTypes_$(CPU)_s.c $**
 
 ############################################################################
 
@@ -159,9 +158,8 @@ install : \
 	$(EXEFILE)
 
 clean:: afsclass_clean afsapplib_clean
-	if exist ITaAfsAdmSvr*.cpp del ITaAfsAdmSvr*.cpp
-	if exist ITaAfsAdmSvr*.c del ITaAfsAdmSvr*.c
-	if exist ITaAfsAdmSvr*.h del ITaAfsAdmSvr*.h
+	$(DEL) ITaAfsAdmSvr_$(CPU)_c.c ITaAfsAdmSvr_$(CPU)_s.c ITaAfsAdmSvr.h
+	$(DEL) ITaAfsAdmSvrTypes_$(CPU)_c.c ITaAfsAdmSvrTypes_$(CPU)_s.c ITaAfsAdmSvrTypes.h
 	$(DEL) AFS_component_version_number.h
 	$(DEL) $(EXERES)
 

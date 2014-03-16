@@ -78,7 +78,7 @@ INCFILES =\
         $(INCFILEDIR)\afsicf.h
 
 IDLFILES =\
-	afsrpc.h $(OUT)\afsrpc_c.obj
+	afsrpc.h $(OUT)\afsrpc_$(CPU)_c.obj
 
 CONFOBJS=$(OUT)\cm_config.obj \
          $(OUT)\cm_dns.obj \
@@ -96,18 +96,18 @@ $(RXOBJS): $(RX)\$$(@B).c
 	$(C2OBJ) -I$(RX) $**
 
 $(IDLFILES):afsrpc.idl
-	midl $(MIDL_FLAGS) $(AFSDEV_AUXMIDLFLAGS) /app_config $?
+	midl $(MIDL_FLAGS) $(AFSDEV_AUXMIDLFLAGS) /app_config /cstub afsrpc_$(CPU)_c.c /sstub afsrpc_$(CPU)_s.c $?
 
-ms-srvsvc.h ms-srvsvc_s.c: ms-srvsvc.idl
-	midl $(MIDL_FLAGS) $(AFSDEV_AUXMIDLFLAGS) /Os ms-srvsvc.idl
+ms-srvsvc.h ms-srvsvc_$(CPU)_s.c: ms-srvsvc.idl
+	midl $(MIDL_FLAGS) $(AFSDEV_AUXMIDLFLAGS) /Os /cstub ms-srvsvc_$(CPU)_c.c /sstub ms-srvsvc_$(CPU)_s.c ms-srvsvc.idl
 
-ms-wkssvc.h ms-wkssvc_s.c: ms-wkssvc.idl
-	midl $(MIDL_FLAGS) $(AFSDEV_AUXMIDLFLAGS) /Os ms-wkssvc.idl
+ms-wkssvc.h ms-wkssvc_$(CPU)_s.c: ms-wkssvc.idl
+	midl $(MIDL_FLAGS) $(AFSDEV_AUXMIDLFLAGS) /Os /cstub ms-wkssvc_$(CPU)_c.c /sstub ms-wkssvc_$(CPU)_s.c ms-wkssvc.idl
 
-$(OUT)\ms-srvsvc_s.obj: ms-srvsvc_s.c
+$(OUT)\ms-srvsvc_$(CPU)_s.obj: ms-srvsvc_$(CPU)_s.c
 	$(C2OBJ) /FImsrpc.h /Fo$@ $**
 
-$(OUT)\ms-wkssvc_s.obj: ms-wkssvc_s.c
+$(OUT)\ms-wkssvc_$(CPU)_s.obj: ms-wkssvc_$(CPU)_s.c
 	$(C2OBJ) /FImsrpc.h /Fo$@ $**
 
 AFSDOBJS=\
@@ -146,7 +146,7 @@ AFSDOBJS=\
         $(OUT)\cm_memmap.obj \
         $(OUT)\cm_performance.obj \
         $(OUT)\cm_nls.obj \
-	$(OUT)\afsrpc_s.obj \
+	$(OUT)\afsrpc_$(CPU)_s.obj \
 !IFDEF OSICRASH
 	$(OUT)\afsdcrash.obj \
 !ENDIF
@@ -154,8 +154,8 @@ AFSDOBJS=\
         $(OUT)\afsd_eventlog.obj \
         $(OUT)\afsd_flushvol.obj \
         $(OUT)\afsicf.obj \
-	$(OUT)\ms-srvsvc_s.obj \
-	$(OUT)\ms-wkssvc_s.obj \
+	$(OUT)\ms-srvsvc_$(CPU)_s.obj \
+	$(OUT)\ms-wkssvc_$(CPU)_s.obj \
 	$(OUT)\rpc_wkssvc.obj \
 	$(OUT)\rpc_srvsvc.obj \
         $(OUT)\AFS_component_version_number.obj \
@@ -632,11 +632,11 @@ $(OUT)\libafsconf.res: libafsconf.rc AFS_component_version_number.h
 clean::
 	$(DEL) $(OUT)\*.res
 	$(DEL) afsrpc.h
-	$(DEL) afsrpc_?.*
+	$(DEL) afsrpc_$(CPU)_?.*
 	$(DEL) ms-srvsvc.h
-	$(DEL) ms-srvsvc_?.*
+	$(DEL) ms-srvsvc_$(CPU)_?.*
 	$(DEL) ms-wkssvc.h
-	$(DEL) ms-wkssvc_?.*
+	$(DEL) ms-wkssvc_$(CPU)_?.*
         $(DEL) afsd_eventmessages.h
         $(DEL) afsd_eventmessages.rc
         $(DEL) MSG?????.bin
