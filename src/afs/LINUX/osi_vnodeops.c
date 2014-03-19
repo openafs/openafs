@@ -1125,6 +1125,7 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
     int valid;
     struct afs_fakestat_state fakestate;
     int locked = 0;
+    int force_drop = 0;
 
 #ifdef LOOKUP_RCU
     /* We don't support RCU path walking */
@@ -1209,9 +1210,14 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 	}
 
 	if (locked && (hgetlo(pvcp->f.m.DataVersion) > dp->d_time || !(vcp->f.states & CStatd))) {
-	    afs_lookup(pvcp, (char *)dp->d_name.name, &tvc, credp);
+	    int code;
+
+	    code = afs_lookup(pvcp, (char *)dp->d_name.name, &tvc, credp);
 	    if (!tvc || tvc != vcp) {
 		dput(parent);
+		/* Force unhash if name is known not to exist. */
+		if (code == ENOENT)
+		    force_drop = 1;
 		goto bad_dentry;
 	    }
 
@@ -1262,8 +1268,18 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
     if (credp)
 	crfree(credp);
 
-    if (!valid)
-	d_invalidate(dp);
+    if (!valid) {
+	/*
+	 * If we had a negative lookup for the name we want to forcibly
+	 * unhash the dentry.
+	 * Otherwise use d_invalidate which will not unhash it if still in use.
+	 */
+	if (force_drop) {
+	    shrink_dcache_parent(dp);
+	    d_drop(dp);
+	} else
+	    d_invalidate(dp);
+    }
 
     return valid;
 
