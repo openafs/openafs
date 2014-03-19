@@ -122,6 +122,13 @@ This option is obsolete, and is now only accepted for compatibility with older
 releases. All it does now is log a warning message about how the option is
 obsolete.
 
+=item B<-restricted_query> (anyuser | admin)
+
+Restrict RPCs that query information about volumes to a specific group
+of users. You can use C<admin> to restrict to AFS administrators.  The
+C<anyuser> option doesn't restrict the RPCs and leaves it open for all
+users including unauthenticated users, this is the default.
+
 =item B<-help>
 
 Prints the online help for this command. All other valid options are

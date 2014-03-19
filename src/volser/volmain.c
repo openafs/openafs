@@ -70,6 +70,7 @@ int debuglevel = 0;
 #define MAXLWP 128
 int lwps = 9;
 int udpBufSize = 0;		/* UDP buffer size for receive */
+int restrictedQueryLevel = RESTRICTED_QUERY_ANYUSER;
 
 int rxBind = 0;
 int rxkadDisableDotCheck = 0;
@@ -235,7 +236,8 @@ enum optionsList {
     OPT_sync,
     OPT_syslog,
     OPT_logfile,
-    OPT_config
+    OPT_config,
+    OPT_restricted_query
 };
 
 static int
@@ -246,6 +248,7 @@ ParseArgs(int argc, char **argv) {
     struct cmd_syndesc *opts;
     char *sleepSpec = NULL;
     char *sync_behavior = NULL;
+    char *restricted_query_parameter = NULL;
 
     opts = cmd_CreateSyntax(NULL, NULL, NULL, NULL);
     cmd_AddParmAtOffset(opts, OPT_log, "-log", CMD_FLAG, CMD_OPTIONAL,
@@ -288,6 +291,8 @@ ParseArgs(int argc, char **argv) {
 	   CMD_OPTIONAL, "location of log file");
     cmd_AddParmAtOffset(opts, OPT_config, "-config", CMD_SINGLE,
 	   CMD_OPTIONAL, "configuration location");
+    cmd_AddParmAtOffset(opts, OPT_restricted_query, "-restricted_query",
+	    CMD_SINGLE, CMD_OPTIONAL, "anyuser | admin");
 
     code = cmd_Parse(argc, argv, &opts);
     if (code == CMD_HELP) {
@@ -350,6 +355,19 @@ ParseArgs(int argc, char **argv) {
     }
     cmd_OptionAsString(opts, OPT_logfile, &logFile);
     cmd_OptionAsString(opts, OPT_config, &configDir);
+    if (cmd_OptionAsString(opts, OPT_restricted_query,
+			   &restricted_query_parameter) == 0) {
+	if (strcmp(restricted_query_parameter, "anyuser") == 0)
+	    restrictedQueryLevel = RESTRICTED_QUERY_ANYUSER;
+	else if (strcmp(restricted_query_parameter, "admin") == 0)
+	    restrictedQueryLevel = RESTRICTED_QUERY_ADMIN;
+	else {
+	    printf("invalid argument for -restricted_query: %s\n",
+		   restricted_query_parameter);
+	    return -1;
+	}
+	free(restricted_query_parameter);
+    }
 
     return 0;
 }

@@ -13,4 +13,5 @@ B<volserver>
     [B<-rxbind>]
     [B<-syslog>[=<I<FACILITY>]]
     [B<-sleep> <I<sleep time>/I<run time>>]
+    [B<-restricted_query> (anyuser | admin)]
     [B<-help>]

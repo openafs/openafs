@@ -21,6 +21,7 @@ vlserver [B<-noauth>] [B<-smallmem>]
     [B<-enable_peer_stats>] [B<-enable_process_stats>]
     S<<< [B<-auditlog> <I<log path>>] >>>
     S<<< [B<-audit-interface> (file | sysvmq)] >>>
+    S<<< [B<-restricted_query> (anyuser | admin)] >>>
     [B<-help>]
 
 =for html
@@ -187,6 +188,16 @@ Set the location of the configuration directory used to configure this
 service. In a typical configuration this will be F</usr/afs/etc> - this
 option allows the use of alternative configuration locations for testing
 purposes.
+
+=item B<-restricted_query> (anyuser | admin)
+
+Restrict RPCs that query information about volumes to a specific group
+of users. Only the RPCs that are not used by cache managers will be
+restricted, since cache manager connections to the Volume Server are
+always unauthenticated. You can use C<admin> to restrict to AFS
+administrators.  The C<anyuser> option doesn't restrict the RPCs and
+leaves it open for all users including unauthenticated users, this is
+the default.
 
 =item B<-help>
 

@@ -60,6 +60,7 @@
 extern int DoLogging;
 extern struct afsconf_dir *tdir;
 extern int DoPreserveVolumeStats;
+extern int restrictedQueryLevel;
 
 extern void LogError(afs_int32 errcode);
 
@@ -447,6 +448,9 @@ VolPartitionInfo(struct rx_call *acid, char *pname, struct diskPartition64
 		 *partition)
 {
     struct DiskPartition64 *dp;
+
+    if (!afsconf_CheckRestrictedQuery(tdir, acid, restrictedQueryLevel))
+        return VOLSERBAD_ACCESS;
 
     VResetDiskUsage();
     dp = VGetPartition(pname, 0);
@@ -1123,6 +1127,9 @@ static afs_int32
 VolGetNthVolume(struct rx_call *acid, afs_int32 aindex, afs_uint32 *avolume,
 		    afs_int32 *apart)
 {
+    if (!afsconf_CheckRestrictedQuery(tdir, acid, restrictedQueryLevel))
+        return VOLSERBAD_ACCESS;
+
     Log("1 Volser: GetNthVolume: Not yet implemented\n");
     return VOLSERNO_OP;
 }
@@ -1144,6 +1151,9 @@ static afs_int32
 VolGetFlags(struct rx_call *acid, afs_int32 atid, afs_int32 *aflags)
 {
     struct volser_trans *tt;
+
+    if (!afsconf_CheckRestrictedQuery(tdir, acid, restrictedQueryLevel))
+        return VOLSERBAD_ACCESS;
 
     tt = FindTrans(atid);
     if (!tt)
@@ -1650,6 +1660,8 @@ VolGetStatus(struct rx_call *acid, afs_int32 atrans,
     struct VolumeDiskData *td;
     struct volser_trans *tt;
 
+    if (!afsconf_CheckRestrictedQuery(tdir, acid, restrictedQueryLevel))
+        return VOLSERBAD_ACCESS;
 
     tt = FindTrans(atrans);
     if (!tt)
@@ -1771,6 +1783,9 @@ VolGetName(struct rx_call *acid, afs_int32 atrans, char **aname)
     struct volser_trans *tt;
     int len;
 
+    if (!afsconf_CheckRestrictedQuery(tdir, acid, restrictedQueryLevel))
+        return VOLSERBAD_ACCESS;
+
     /* We need to at least fill it in */
     *aname = malloc(1);
     if (!*aname)
@@ -1835,6 +1850,9 @@ VolListPartitions(struct rx_call *acid, struct pIDs *partIds)
     char namehead[9];
     int i;
 
+    if (!afsconf_CheckRestrictedQuery(tdir, acid, restrictedQueryLevel))
+        return VOLSERBAD_ACCESS;
+
     strcpy(namehead, "/vicep");	/*7 including null terminator */
 
     /* Just return attached partitions. */
@@ -1866,6 +1884,9 @@ XVolListPartitions(struct rx_call *acid, struct partEntries *pEntries)
     struct partList partList;
     struct DiskPartition64 *dp;
     int i, j = 0;
+
+    if (!afsconf_CheckRestrictedQuery(tdir, acid, restrictedQueryLevel))
+        return VOLSERBAD_ACCESS;
 
     strcpy(namehead, "/vicep");	/*7 including null terminator */
 
@@ -2342,6 +2363,9 @@ VolListOneVolume(struct rx_call *acid, afs_int32 partid,
     int found = 0;
     volint_info_handle_t handle;
 
+    if (!afsconf_CheckRestrictedQuery(tdir, acid, restrictedQueryLevel))
+        return VOLSERBAD_ACCESS;
+
     volumeInfo->volEntries_val = calloc(1, sizeof(volintInfo));
     if (!volumeInfo->volEntries_val)
 	return ENOMEM;
@@ -2431,6 +2455,9 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
     VolumeId currVolID;	        /*Current volume ID */
     int found = 0;		/*Did we find the volume we need? */
     volint_info_handle_t handle;
+
+    if (!afsconf_CheckRestrictedQuery(tdir, a_rxCidP, restrictedQueryLevel))
+        return VOLSERBAD_ACCESS;
 
     /*
      * Set up our pointers for action, marking our structure to hold exactly
@@ -2529,6 +2556,9 @@ VolListVolumes(struct rx_call *acid, afs_int32 partid, afs_int32 flags,
     VolumeId volid;
     int code;
     volint_info_handle_t handle;
+
+    if (!afsconf_CheckRestrictedQuery(tdir, acid, restrictedQueryLevel))
+        return VOLSERBAD_ACCESS;
 
     volumeInfo->volEntries_val = calloc(allocSize, sizeof(volintInfo));
     if (!volumeInfo->volEntries_val)
@@ -2639,6 +2669,9 @@ VolXListVolumes(struct rx_call *a_rxCidP, afs_int32 a_partID,
     VolumeId volid;		/*Current volume ID */
     int code;
     volint_info_handle_t handle;
+
+    if (!afsconf_CheckRestrictedQuery(tdir, a_rxCidP, restrictedQueryLevel))
+        return VOLSERBAD_ACCESS;
 
     /*
      * Allocate a large array of extended volume info structures, then
@@ -2755,6 +2788,9 @@ VolMonitor(struct rx_call *acid, transDebugEntries *transInfo)
     transDebugInfo *pntr;
     afs_int32 allocSize = 50;
     struct volser_trans *tt, *nt, *allTrans;
+
+    if (!afsconf_CheckRestrictedQuery(tdir, acid, restrictedQueryLevel))
+        return VOLSERBAD_ACCESS;
 
     transInfo->transDebugEntries_val =
 	malloc(allocSize * sizeof(transDebugInfo));

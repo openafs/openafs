@@ -6,6 +6,7 @@ afsconf_CheckAuth
 afsconf_ClientAuth
 afsconf_ClientAuthSecure
 afsconf_Close
+afsconf_CheckRestrictedQuery
 afsconf_DeleteKey
 afsconf_DeleteUser
 afsconf_GetCellInfo

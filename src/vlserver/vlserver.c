@@ -50,6 +50,7 @@ afs_uint32 wr_HostAddress[MAXSERVERID + 1];
 static void *CheckSignal(void*);
 int LogLevel = 0;
 int smallMem = 0;
+int restrictedQueryLevel = RESTRICTED_QUERY_ANYUSER;
 int rxJumbograms = 0;		/* default is to not send and receive jumbo grams */
 int rxMaxMTU = -1;
 afs_int32 rxBind = 0;
@@ -150,7 +151,8 @@ enum optionsList {
     OPT_rxbind,
     OPT_rxmaxmtu,
     OPT_trace,
-    OPT_dotted
+    OPT_dotted,
+    OPT_restricted_query
 };
 
 int
@@ -178,6 +180,8 @@ main(int argc, char **argv)
     char *auditFileName = NULL;
     char *interface = NULL;
     char *optstring = NULL;
+
+    char *restricted_query_parameter = NULL;
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -257,6 +261,9 @@ main(int argc, char **argv)
 		        CMD_OPTIONAL, "maximum MTU for RX");
     cmd_AddParmAtOffset(opts, OPT_trace, "-trace", CMD_SINGLE,
 		        CMD_OPTIONAL, "rx trace file");
+    cmd_AddParmAtOffset(opts, OPT_restricted_query, "-restricted_query",
+			CMD_SINGLE, CMD_OPTIONAL, "anyuser | admin");
+
 
     /* rxkad options */
     cmd_AddParmAtOffset(opts, OPT_dotted, "-allow-dotted-principals",
@@ -331,6 +338,21 @@ main(int argc, char **argv)
 
     /* rxkad options */
     cmd_OptionAsFlag(opts, OPT_dotted, &rxkadDisableDotCheck);
+
+    /* restricted query */
+    if (cmd_OptionAsString(opts, OPT_restricted_query,
+			   &restricted_query_parameter) == 0) {
+	if (strcmp(restricted_query_parameter, "anyuser") == 0)
+	    restrictedQueryLevel = RESTRICTED_QUERY_ANYUSER;
+	else if (strcmp(restricted_query_parameter, "admin") == 0)
+	    restrictedQueryLevel = RESTRICTED_QUERY_ADMIN;
+	else {
+	    printf("invalid argument for -restricted_query: %s\n",
+		   restricted_query_parameter);
+	    return -1;
+	}
+	free(restricted_query_parameter);
+    }
 
     if (auditFileName) {
 	osi_audit_file(auditFileName);

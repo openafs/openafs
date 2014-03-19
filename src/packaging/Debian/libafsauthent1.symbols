@@ -6,6 +6,7 @@ libafsauthent.so.1 libafsauthent1 #MINVER#
  afsconf_ClientAuth@Base 1.5.75
  afsconf_ClientAuthSecure@Base 1.5.75
  afsconf_Close@Base 1.5.75
+ afsconf_CheckRestrictedQuery@Base 1.5.75
  afsconf_DeleteKey@Base 1.5.75
  afsconf_DeleteUser@Base 1.5.75
  afsconf_GetCellInfo@Base 1.5.75
