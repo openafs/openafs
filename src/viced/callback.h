@@ -66,8 +66,8 @@ struct CallBack {
     afs_uint32 fhead;		/* index of associated FE */
     u_byte thead;		/* Head of timeout chain */
     u_byte status;		/* Call back status; see definitions, below */
-    u_byte flags;	/* see CBFLAG_* definitions below */
-    u_byte spare;	/* ensure proper alignment */
+    u_byte flags;		/* see CBFLAG_* definitions below */
+    u_byte spare;		/* ensure proper alignment */
     afs_uint32 hhead;		/* Head of host table chain */
     afs_uint32 tprev, tnext;	/* per-timeout circular list of callbacks */
     afs_uint32 hprev, hnext;	/* per-host circular list of callbacks */
