@@ -1193,7 +1193,7 @@ SVL_ListEntry(struct rx_call *rxcall, afs_int32 previous_index,
 
     countRequest(this_op);
     if ((code = Init_VLdbase(&ctx, LOCKREAD, this_op)))
-	return code;
+	goto end;
     VLog(25, ("OListEntry index=%d %s\n", previous_index,
               rxinfo(rxstr, rxcall)));
     *next_index = NextEntry(&ctx, previous_index, &tentry, count);
@@ -1202,10 +1202,13 @@ SVL_ListEntry(struct rx_call *rxcall, afs_int32 previous_index,
 	if (code) {
 	    countAbort(this_op);
 	    ubik_AbortTrans(ctx.trans);
-	    return code;
+	    goto end;
 	}
     }
-    return (ubik_EndTrans(ctx.trans));
+    code = ubik_EndTrans(ctx.trans);
+  end:
+    osi_auditU(rxcall, VLListEntryEvent, code, AUD_LONG, previous_index, AUD_END);
+    return code;
 }
 
 /* ListEntry returns a single vldb entry, aentry, with offset previous_index;
@@ -1225,7 +1228,7 @@ SVL_ListEntryN(struct rx_call *rxcall, afs_int32 previous_index,
 
     countRequest(this_op);
     if ((code = Init_VLdbase(&ctx, LOCKREAD, this_op)))
-	return code;
+	goto end;
     VLog(25, ("ListEntry index=%d %s\n", previous_index, rxinfo(rxstr, rxcall)));
     *next_index = NextEntry(&ctx, previous_index, &tentry, count);
     if (*next_index) {
@@ -1233,11 +1236,14 @@ SVL_ListEntryN(struct rx_call *rxcall, afs_int32 previous_index,
 	if (code) {
 	    countAbort(this_op);
 	    ubik_AbortTrans(ctx.trans);
-	    return code;
+	    goto end;
 	}
     }
 
-    return (ubik_EndTrans(ctx.trans));
+    code = ubik_EndTrans(ctx.trans);
+  end:
+    osi_auditU(rxcall, VLListEntryEventN, code, AUD_LONG, previous_index, AUD_END);
+    return code;
 }
 
 
@@ -1265,7 +1271,7 @@ SVL_ListAttributes(struct rx_call *rxcall,
     vldbentries->bulkentries_val = 0;
     vldbentries->bulkentries_len = *nentries = 0;
     if ((code = Init_VLdbase(&ctx, LOCKREAD, this_op)))
-	return code;
+	goto end;
     allocCount = VLDBALLOCCOUNT;
     Vldbentry = VldbentryFirst = vldbentries->bulkentries_val =
 	malloc(allocCount * sizeof(vldbentry));
@@ -1363,7 +1369,10 @@ SVL_ListAttributes(struct rx_call *rxcall,
     VLog(5,
 	 ("ListAttrs nentries=%d %s\n", vldbentries->bulkentries_len,
 	  rxinfo(rxstr, rxcall)));
-    return (ubik_EndTrans(ctx.trans));
+    code = ubik_EndTrans(ctx.trans);
+  end:
+    osi_auditU(rxcall, VLListAttributesEvent, code, AUD_END);
+    return code;
 
 abort:
     if (vldbentries->bulkentries_val)
@@ -1374,7 +1383,7 @@ abort:
     countAbort(this_op);
     ubik_AbortTrans(ctx.trans);
 
-    return code;
+    goto end;
 }
 
 afs_int32
@@ -1395,7 +1404,7 @@ SVL_ListAttributesN(struct rx_call *rxcall,
     vldbentries->nbulkentries_val = 0;
     vldbentries->nbulkentries_len = *nentries = 0;
     if ((code = Init_VLdbase(&ctx, LOCKREAD, this_op)))
-	return code;
+	goto end;
     allocCount = VLDBALLOCCOUNT;
     Vldbentry = VldbentryFirst = vldbentries->nbulkentries_val =
 	malloc(allocCount * sizeof(nvldbentry));
@@ -1494,7 +1503,10 @@ SVL_ListAttributesN(struct rx_call *rxcall,
     VLog(5,
 	 ("NListAttrs nentries=%d %s\n", vldbentries->nbulkentries_len,
 	  rxinfo(rxstr, rxcall)));
-    return (ubik_EndTrans(ctx.trans));
+    code = ubik_EndTrans(ctx.trans);
+  end:
+    osi_auditU(rxcall, VLListAttributesNEvent, code, AUD_END);
+    return code;
 
 abort:
     countAbort(this_op);
@@ -1503,7 +1515,7 @@ abort:
 	free(vldbentries->nbulkentries_val);
     vldbentries->nbulkentries_val = 0;
     vldbentries->nbulkentries_len = 0;
-    return code;
+    goto end;
 }
 
 
@@ -1545,14 +1557,15 @@ SVL_ListAttributesN2(struct rx_call *rxcall,
 
     code = Init_VLdbase(&ctx, LOCKREAD, this_op);
     if (code)
-	return code;
+	goto end;
 
     Vldbentry = VldbentryFirst = vldbentries->nbulkentries_val =
 	malloc(maxCount * sizeof(nvldbentry));
     if (Vldbentry == NULL) {
 	countAbort(this_op);
 	ubik_AbortTrans(ctx.trans);
-	return VL_NOMEM;
+	code = VL_NOMEM;
+        goto end;
     }
 
     VldbentryLast = VldbentryFirst + maxCount;
@@ -1767,13 +1780,16 @@ SVL_ListAttributesN2(struct rx_call *rxcall,
 	vldbentries->nbulkentries_val = 0;
 	vldbentries->nbulkentries_len = 0;
 	*nextstartindex = -1;
-	return code;
     } else {
 	VLog(5,
 	     ("N2ListAttrs nentries=%d %s\n", vldbentries->nbulkentries_len,
 	      rxinfo(rxstr, rxcall)));
-	return (ubik_EndTrans(ctx.trans));
+	code = ubik_EndTrans(ctx.trans);
     }
+
+  end:
+    osi_auditU(rxcall, VLListAttributesN2Event, code, AUD_END);
+    return code;
 }
 
 
@@ -1801,7 +1817,7 @@ SVL_LinkedList(struct rx_call *rxcall,
 
     countRequest(this_op);
     if ((code = Init_VLdbase(&ctx, LOCKREAD, this_op)))
-	return code;
+	goto end;
 
     *nentries = 0;
     vldbentries->node = NULL;
@@ -1911,12 +1927,15 @@ SVL_LinkedList(struct rx_call *rxcall,
 	}
     }
     *vllistptr = NULL;
-    return (ubik_EndTrans(ctx.trans));
+    code = ubik_EndTrans(ctx.trans);
+  end:
+    osi_auditU(rxcall, VLLinkedListEvent, code, AUD_END);
+    return code;
 
 abort:
     countAbort(this_op);
     ubik_AbortTrans(ctx.trans);
-    return code;
+    goto end;
 }
 
 afs_int32
@@ -1937,7 +1956,7 @@ SVL_LinkedListN(struct rx_call *rxcall,
 
     countRequest(this_op);
     if ((code = Init_VLdbase(&ctx, LOCKREAD, this_op)))
-	return code;
+	goto end;
 
     *nentries = 0;
     vldbentries->node = NULL;
@@ -2047,12 +2066,15 @@ SVL_LinkedListN(struct rx_call *rxcall,
 	}
     }
     *vllistptr = NULL;
-    return (ubik_EndTrans(ctx.trans));
+    code = ubik_EndTrans(ctx.trans);
+  end:
+    osi_auditU(rxcall, VLLinkedListNEvent, code, AUD_END);
+    return code;
 
 abort:
     countAbort(this_op);
     ubik_AbortTrans(ctx.trans);
-    return code;
+    goto end;
 }
 
 /* Get back vldb header statistics (allocs, frees, maxvolumeid,
@@ -2072,16 +2094,21 @@ SVL_GetStats(struct rx_call *rxcall,
     countRequest(this_op);
 #ifdef	notdef
     /* Allow users to get statistics freely */
-    if (!afsconf_SuperUser(vldb_confdir, rxcall, NULL))	/* Must be in 'UserList' to use */
-	return VL_PERM;
+    if (!afsconf_SuperUser(vldb_confdir, rxcall, NULL)) {	/* Must be in 'UserList' to use */
+	code = VL_PERM;
+	goto end;
+    }
 #endif
     if ((code = Init_VLdbase(&ctx, LOCKREAD, this_op)))
-	return code;
+	goto end;
     VLog(5, ("GetStats %s\n", rxinfo(rxstr, rxcall)));
     memcpy((char *)vital_header, (char *)&ctx.cheader->vital_header,
 	   sizeof(vital_vlheader));
     memcpy((char *)stats, (char *)&dynamic_statistics, sizeof(vldstats));
-    return (ubik_EndTrans(ctx.trans));
+    code = ubik_EndTrans(ctx.trans);
+  end:
+    osi_auditU(rxcall, VLGetStatsEvent, code, AUD_END);
+    return code;
 }
 
 /* Get the list of file server addresses from the VLDB.  Currently it's pretty
