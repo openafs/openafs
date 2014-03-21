@@ -462,9 +462,6 @@ VolPartitionInfo(struct rx_call *acid, char *pname, struct diskPartition64
 {
     struct DiskPartition64 *dp;
 
-/*
-    if (!afsconf_SuperUser(tdir, acid, caller)) return VOLSERBAD_ACCESS;
-*/
     VResetDiskUsage();
     dp = VGetPartition(pname, 0);
     if (dp) {
