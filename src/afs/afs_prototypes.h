@@ -1007,10 +1007,13 @@ extern afs_int32 afs_data_pointer_to_int32(const void *p);
 /* AIX doesn't have usable va_args support in its kernel */
 extern void afs_warn();
 extern void afs_warnuser();
+extern void afs_warnall();
 #else
 extern void afs_warn(char *fmt, ...)
 	AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
 extern void afs_warnuser(char *fmt, ...)
+	AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
+extern void afs_warnall(char *fmt, ...)
 	AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
 #endif
 

@@ -210,3 +210,48 @@ afs_warnuser(char *fmt, ...)
 }
 
 #endif /* AFS_AIX_ENV */
+
+
+#ifdef AFS_AIX_ENV
+void
+afs_warnall(fmt, a, b, c, d, e, f, g, h, i)
+    char *fmt;
+    void *a, *b, *c, *d, *e, *f, *g, *h, *i;
+{
+    afs_warn(fmt, a, b, c, d, e, f, g, h, i);
+    afs_warnuser(fmt, a, b, c, d, e, f, g, h, i);
+
+}
+#else /* AFS_AIX_ENV */
+/*  On Linux both afs_warn and afs_warnuser go to the same
+ *  place.  Suppress one of them if we're running on Linux.
+ */
+void
+afs_warnall(char *fmt, ...)
+{
+    va_list ap;
+
+# ifdef AFS_LINUX20_ENV
+    AFS_STATCNT(afs_warn);
+    if ((afs_showflags & GAGCONSOLE) || (afs_showflags & GAGUSER)) {
+	va_start(ap, fmt);
+	afs_vwarn(fmt, ap);
+	va_end(ap);
+    }
+# else /* AFS_LINUX20_ENV */
+    AFS_STATCNT(afs_warn);
+    if (afs_showflags & GAGCONSOLE) {
+	va_start(ap, fmt);
+	afs_vwarn(fmt, ap);
+	va_end(ap);
+    }
+
+    AFS_STATCNT(afs_warnuser);
+    if (afs_showflags & GAGUSER) {
+	va_start(ap, fmt);
+	afs_vwarnuser(fmt, ap);
+	va_end(ap);
+    }
+# endif /* AFS_LINUX20_ENV */
+}
+#endif /* AFS_AIX_ENV */
