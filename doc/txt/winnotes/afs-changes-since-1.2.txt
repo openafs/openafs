@@ -1,3 +1,33 @@
+Release 1.7.3000; Changes since 1.7.2900
+
+ * Add caching of VL_GetAddrsU RPC responses to avoid
+   duplicate VL queries.
+
+ * Reconfigure the advanced firewall to support callback ports
+   other than port 7001.
+
+ * If a race occurs during the instantiation of a new cm_cell_t object,
+   the created servers will point at the wrong cm_cell_t object after
+   the race is detected.  Before cm_GetCell_gen completes the cm_server_t
+   objects must be fixed to point to the correct cm_cell_t.
+
+ * Avoid potential null pointer dereference after RXKADEXPIRED error is
+   received by the cache manager.
+
+ * During the processing of a network provider GetConnectionInfo request
+   if the provided Authentication Logon Session Id is zero, the redirector
+   should attempt to obtain the Logon Session Id in kernel.  This was
+   not performed within AFSGetConnectionInfo().
+
+ * On XP do not specify the secure device characteristic when registering
+   the afs redirector with MUP as it prevents initial access from limited
+   users.
+
+ * In AFSShareWrite the value of pFcb is used to determine whether
+   or not the pfcb->NPFcb->Resource must be released upon exit.
+   Therefore, it must not be assigned a value until just before the
+   resource is acquired.
+
 Release 1.7.2900; Changes since 1.7.2800
 
  * "fs flush*" commands flush status information but not data.
