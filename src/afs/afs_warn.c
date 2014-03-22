@@ -79,15 +79,10 @@ void
 afs_warn(fmt, a, b, c, d, e, f, g, h, i)
     char *fmt;
     void *a, *b, *c, *d, *e, *f, *g, *h, *i;
-#else
-void
-afs_warn(char *fmt, ...)
-#endif
 {
     AFS_STATCNT(afs_warn);
 
     if (afs_showflags & GAGCONSOLE) {
-#if defined(AFS_AIX_ENV)
 	struct file *fd;
 
 	/* cf. console_printf() in oncplus/kernext/nfs/serv/shared.c */
@@ -103,76 +98,115 @@ afs_warn(char *fmt, ...)
 	    fp_write(fd, buf, len, 0, UIO_SYSSPACE, &count);
 	    fp_close(fd);
 	}
-#else
+    }
+}
+#else /* AFS_AIX_ENV */
+static_inline void
+afs_vwarn(char *fmt, va_list ap)
+{
+    afs_vprintf(fmt, ap);
+}
+
+
+void
+afs_warn(char *fmt, ...)
+{
+    AFS_STATCNT(afs_warn);
+
+    if (afs_showflags & GAGCONSOLE) {
 	va_list ap;
 
 	va_start(ap, fmt);
-	afs_vprintf(fmt, ap);
+	afs_vwarn(fmt, ap);
 	va_end(ap);
-#endif
     }
 }
+#endif /* AFS_AIX_ENV */
+
 
 #ifdef AFS_AIX_ENV
 void
 afs_warnuser(fmt, a, b, c, d, e, f, g, h, i)
     char *fmt;
     void *a, *b, *c, *d, *e, *f, *g, *h, *i;
-#else
-void
-afs_warnuser(char *fmt, ...)
-#endif
 {
-#if defined(AFS_WARNUSER_MARINER_ENV)
-    char buf[256];
-#endif
     AFS_STATCNT(afs_warnuser);
     if (afs_showflags & GAGUSER) {
-#if !defined(AFS_AIX_ENV)
-	va_list ap;
-#endif
-#ifdef AFS_GLOBAL_SUNLOCK
+# ifdef AFS_GLOBAL_SUNLOCK
 	int haveGlock = ISAFS_GLOCK();
-#if defined(AFS_WARNUSER_MARINER_ENV)
-	/* gain GLOCK for mariner */
-	if (!haveGlock)
-	    AFS_GLOCK();
-#else
 	/* drop GLOCK for uprintf */
 	if (haveGlock)
 	    AFS_GUNLOCK();
-#endif
-#endif /* AFS_GLOBAL_SUNLOCK */
-
-#if defined(AFS_AIX_ENV)
+# endif /* AFS_GLOBAL_SUNLOCK */
 	uprintf(fmt, a, b, c, d, e, f, g, h, i);
-#else
-	va_start(ap, fmt);
-#if defined(AFS_WARNUSER_MARINER_ENV)
-	/* mariner log the warning */
-	snprintf(buf, sizeof(buf), "warn$");
-	vsnprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), fmt, ap);
-	if (afs_mariner)
-	    afs_MarinerLog(buf, NULL);
-	va_end(ap);
-	va_start(ap, fmt);
-	vprintf(fmt, ap);
-#else
-	afs_vprintf(fmt, ap);
-#endif
-	va_end(ap);
-#endif
-
-#ifdef AFS_GLOBAL_SUNLOCK
-#if defined(AFS_WARNUSER_MARINER_ENV)
-	/* drop GLOCK we got for mariner */
-	if (!haveGlock)
-	    AFS_GUNLOCK();
-#else
+# ifdef AFS_GLOBAL_SUNLOCK
 	/* regain GLOCK we dropped for uprintf */
 	if (haveGlock)
 	    AFS_GLOCK();
-#endif
-#endif /* AFS_GLOBAL_SUNLOCK */
+# endif /* AFS_GLOBAL_SUNLOCK */
     }
 }
+#else  /* AFS_AIX_ENV */
+# ifdef AFS_WARNUSER_MARINER_ENV
+static void
+afs_vwarnuser (char *fmt, va_list ap)
+{
+#  ifdef AFS_GLOBAL_SUNLOCK
+    int haveGlock = ISAFS_GLOCK();
+    /* gain GLOCK for mariner */
+    if (!haveGlock)
+	AFS_GLOCK();
+#  endif /* AFS_GLOBAL_SUNLOCK */
+
+    if (afs_mariner) {
+	char buf[256];
+	va_list aq;
+	va_copy(aq, ap);
+	/* mariner log the warning */
+	snprintf(buf, sizeof(buf), "warn$");
+	vsnprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), fmt, aq);
+	afs_MarinerLog(buf, NULL);
+    }
+    vprintf(fmt, ap);
+
+#  ifdef AFS_GLOBAL_SUNLOCK
+    /* drop GLOCK we got for mariner */
+    if (!haveGlock)
+	AFS_GUNLOCK();
+#  endif /* AFS_GLOBAL_SUNLOCK */
+}
+# else /* AFS_WARNUSER_MARINER_ENV */
+static void
+afs_vwarnuser (char *fmt, va_list ap)
+{
+#  ifdef AFS_GLOBAL_SUNLOCK
+    int haveGlock = ISAFS_GLOCK();
+    /* drop GLOCK */
+    if (haveGlock)
+	AFS_GUNLOCK();
+#  endif /* AFS_GLOBAL_SUNLOCK */
+
+    afs_vprintf(fmt, ap);
+
+#  ifdef AFS_GLOBAL_SUNLOCK
+    /* regain GLOCK we dropped */
+    if (haveGlock)
+	AFS_GLOCK();
+#  endif /* AFS_GLOBAL_SUNLOCK */
+}
+# endif /* AFS_WARNUSER_MARINER_ENV */
+
+void
+afs_warnuser(char *fmt, ...)
+{
+    AFS_STATCNT(afs_warnuser);
+    if (afs_showflags & GAGUSER) {
+	va_list ap;
+
+	va_start(ap, fmt);
+	afs_vwarnuser(fmt, ap);
+	va_end(ap);
+    }
+}
+
+#endif /* AFS_AIX_ENV */
