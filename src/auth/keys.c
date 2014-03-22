@@ -930,7 +930,7 @@ pickBestKvno(struct afsconf_dir *dir, afsconf_keyType type)
     /* Except, if we're in the rxkad list, we might have a bcrypt entry that
      * has a kvno of 999. So we need to skip that one
      */
-    while (type == afsconf_rxgk && kvnoEntry->kvno == 999) {
+    while (type == afsconf_rxkad && kvnoEntry->kvno == 999) {
 	kvnoEntry = opr_queue_Prev(&typeEntry->kvnoList, struct kvnoList,
 				   link);
 	if (opr_queue_IsEnd(&typeEntry->kvnoList, &kvnoEntry->link))
