@@ -800,3 +800,58 @@ rxgk_nonce(RXGK_Data *nonce, afs_uint32 len)
     krb5_generate_random_block(nonce->val, len);
     return 0;
 }
+
+/* Returns the "score" of an enctype, giving a rough ordering of enctypes by
+ * strength. Higher scores are better. */
+static_inline int
+etype_score(afs_int32 etype)
+{
+    switch (etype) {
+	case ETYPE_ARCFOUR_HMAC_MD5_56: return 0;
+	case ETYPE_DES_CBC_MD4:         return 1;
+	case ETYPE_DES_CBC_CRC:         return 2;
+	case ETYPE_DES_CBC_MD5:         return 3;
+	case ETYPE_ARCFOUR_HMAC_MD5:    return 4;
+	case ETYPE_DES3_CBC_SHA1:       return 5;
+
+	case 25 /* camellia128 */:          return 6;
+	case ETYPE_AES128_CTS_HMAC_SHA1_96: return 7;
+
+	/* aes128-cts-hmac-sha256-128 */
+	case 19:                            return 8;
+
+	case 26 /* camellia256 */:          return 9;
+	case ETYPE_AES256_CTS_HMAC_SHA1_96: return 10;
+
+	/* aes256-cts-hmac-sha384-192 */
+	case 20:                            return 11;
+    }
+    return -1;
+}
+
+/**
+ * Determines which of the two given enctypes is "stronger".
+ *
+ * @param[in] old_enctype	An enctype to compare.
+ * @param[in] new_enctype	Another enctype to compare.
+ *
+ * @return 1 if new_enctype is better/stronger than old_enctype. 0 otherwise.
+ */
+int
+rxgk_enctype_better(afs_int32 old_enctype, afs_int32 new_enctype)
+{
+    int old_score, new_score;
+
+    /* Negative enctypes are reserved for local use. */
+    if (new_enctype < 0) return 1;
+    if (old_enctype < 0) return 0;
+
+    old_score = etype_score(old_enctype);
+    new_score = etype_score(new_enctype);
+
+    if (old_score < new_score) {
+	/* 'new' enctype is better */
+	return 1;
+    }
+    return 0;
+}

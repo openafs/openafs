@@ -3,8 +3,8 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.pthread
 include @TOP_OBJDIR@/src/config/Makefile.libtool
 
-INCLS=	${TOP_INCDIR}/rx/rx.h ${TOP_INCDIR}/rx/rxgk.h ${TOP_INCDIR}/rx/rxgk_errs.h \
-	${TOP_INCDIR}/rx/rxgk_int.h
+INCLS=	${TOP_INCDIR}/rx/rx.h ${TOP_INCDIR}/rx/rxgk.h ${TOP_INCDIR}/rx/rxgk_types.h \
+	${TOP_INCDIR}/rx/rxgk_errs.h ${TOP_INCDIR}/rx/rxgk_int.h
 
 LT_objs = rxgk_client.lo rxgk_server.lo rxgk_errs.lo rxgk_int.cs.lo \
 	rxgk_int.xdr.lo rxgk_int.ss.lo rxgk_procs.lo rxgk_token.lo \
@@ -26,12 +26,16 @@ generated: \
 
 depinstall: \
 	${TOP_INCDIR}/rx/rxgk.h \
+	${TOP_INCDIR}/rx/rxgk_types.h \
 	${TOP_INCDIR}/rx/rxgk_errs.h \
 	${TOP_INCDIR}/rx/rxgk_int.h
 
 ${TOP_INCDIR}/rx/rxgk.h: ${srcdir}/rxgk.h ${TOP_INCDIR}/rx/rxgk_errs.h \
-		${TOP_INCDIR}/rx/rxgk_int.h
+		${TOP_INCDIR}/rx/rxgk_int.h ${TOP_INCDIR}/rx/rxgk_types.h
 	${INSTALL_DATA} ${srcdir}/rxgk.h $@
+
+${TOP_INCDIR}/rx/rxgk_types.h: ${srcdir}/rxgk_types.h
+	${INSTALL_DATA} ${srcdir}/rxgk_types.h $@
 
 ${TOP_INCDIR}/rx/rxgk_errs.h: rxgk_errs.h
 	${INSTALL_DATA} $? $@
@@ -73,18 +77,20 @@ rxgk_errs.c: rxgk_errs.et
 #
 test: all
 
-install: liboafs_rxgk.la rxgk.h rxgk_errs.h rxgk_int.h
+install: liboafs_rxgk.la rxgk.h rxgk_types.h rxgk_errs.h rxgk_int.h
 	if [ "@ENABLE_RXGK@" = yes ]; then \
 		${INSTALL} -d ${DESTDIR}${includedir}/rx; \
 		${INSTALL_DATA} ${srcdir}/rxgk.h ${DESTDIR}${includedir}/rx/rxgk.h ; \
+		${INSTALL_DATA} ${srcdir}/rxgk_types.h ${DESTDIR}${includedir}/rx/rxgk_types.h ; \
 		${INSTALL_DATA} rxgk_errs.h ${DESTDIR}${includedir}/rx/rxgk_errs.h ; \
 		${INSTALL_DATA} rxgk_int.h ${DESTDIR}${includedir}/rx/rxgk_int.h ; \
 	fi
 
-dest: liboafs_rxgk.la rxgk.h rxgk_errs.h rxgk_int.h
+dest: liboafs_rxgk.la rxgk.h rxgk_types.h rxgk_errs.h rxgk_int.h
 	if [ "@ENABLE_RXGK@" = yes ]; then \
 		${INSTALL} -d ${DEST}${includedir}/rx; \
 		${INSTALL_DATA} ${srcdir}/rxgk.h ${DEST}/include/rx/rxgk.h ; \
+		${INSTALL_DATA} ${srcdir}/rxgk_types.h ${DEST}/include/rx/rxgk_types.h ; \
 		${INSTALL_DATA} rxgk_errs.h ${DEST}/include/rx/rxgk_errs.h ; \
 		${INSTALL_DATA} rxgk_int.h ${DEST}/include/rx/rxgk_int.h ; \
 	fi

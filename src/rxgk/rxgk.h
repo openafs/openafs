@@ -42,6 +42,9 @@
 /* Pull in the protocol description */
 #include <rx/rxgk_int.h>
 
+/* Pull in our basic type definitions */
+#include <rx/rxgk_types.h>
+
 /* RX-internal headers we depend on. */
 #include <rx/rx_opaque.h>
 #include <rx/rx_identity.h>
@@ -64,10 +67,6 @@ static_inline rxgkTime RXGK_NOW(void)
     osi_GetTime(&tv);
     return secondsToRxgkTime(tv.tv_sec) + (rxgkTime)tv.tv_usec * 10;
 }
-
-/* rxgk_key is an opaque type to wrap our RFC3961 implementation's concept
- * of a key.  It has (at least) the keyblock and length, and enctype. */
-typedef struct rxgk_key_s * rxgk_key;
 
 typedef afs_int32 (*rxgk_getkey_func)(void *rock, afs_int32 *kvno,
 				      afs_int32 *enctype, rxgk_key *key);
@@ -108,6 +107,7 @@ afs_int32 rxgk_derive_tk(rxgk_key *tk, rxgk_key k0, afs_uint32 epoch,
 			 afs_uint32 key_number) AFS_NONNULL();
 afs_int32 rxgk_cipher_expansion(rxgk_key k0, afs_uint32 *len_out) AFS_NONNULL();
 afs_int32 rxgk_nonce(RXGK_Data *nonce, afs_uint32 len) AFS_NONNULL();
+int rxgk_enctype_better(afs_int32 old_enctype, afs_int32 new_enctype);
 
 /* rxgk_token.c */
 afs_int32 rxgk_make_token(struct rx_opaque *out, RXGK_TokenInfo *info,

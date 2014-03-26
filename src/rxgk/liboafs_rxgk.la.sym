@@ -9,6 +9,7 @@ rxgk_copy_key
 rxgk_decrypt_in_key
 rxgk_derive_tk
 rxgk_encrypt_in_key
+rxgk_enctype_better
 rxgk_make_key
 rxgk_make_token
 rxgk_mic_in_key

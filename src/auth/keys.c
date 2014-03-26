@@ -32,7 +32,11 @@
 /* Need rx/rx.h to get working assert(), used by LOCK_GLOBAL_MUTEX */
 #include <rx/rx.h>
 #include <rx/rx_atomic.h>
+#ifdef AFS_RXGK_ENV
+#include <rx/rxgk.h>
+#endif
 
+#include <afs/opr.h>
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
 #include <afs/afsutil.h>
@@ -766,6 +770,117 @@ afsconf_GetKey(void *rock, int kvno, struct ktc_encryptionKey *key)
     afsconf_typedKey_put(&typedKey);
 
     return 0;
+}
+
+static int
+_afsconf_GetLatestRXGKKey(afsconf_keyType type, struct afsconf_dir *rock,
+			  afs_int32 *avno, afs_int32 *enctype, rxgk_key *key)
+{
+#ifdef AFS_RXGK_ENV
+    struct afsconf_typedKeyList *list = NULL;
+    struct afsconf_typedKey *typedKey = NULL;
+    afs_int32 code;
+    int key_i;
+
+    code = afsconf_GetLatestKeysByType(rock, type, &list);
+    if (code != 0)
+	goto done;
+
+    for (key_i = 0; key_i < list->nkeys; key_i++) {
+	if (typedKey == NULL)
+	    typedKey = list->keys[key_i];
+	else if (rxgk_enctype_better(typedKey->subType, list->keys[key_i]->subType))
+	    typedKey = list->keys[key_i];
+    }
+
+    opr_Assert(typedKey != NULL);
+
+    /* We picked a key; copy to the output parameters */
+    code = rxgk_make_key(key, typedKey->key.val, typedKey->key.len,
+			 typedKey->subType);
+    if (code != 0)
+	goto done;
+    if (avno != NULL)
+	*avno = typedKey->kvno;
+    if (enctype != NULL)
+	*enctype = typedKey->subType;
+
+ done:
+    afsconf_PutTypedKeyList(&list);
+    return code;
+#else	/* AFS_RXGK_ENV */
+    return AFSCONF_NOTFOUND;
+#endif
+}
+
+/**
+ * Obtain the "best" rxgk key from KeyFileExt
+ *
+ * Return the key and its enctype and kvno, for encrypting outgoing tokens.
+ *
+ * @param[in] rock	The configuration directory to be used.
+ * @param[out] avno	The key version number of key.
+ * @param[out] enctype	The RFC 3961 enctype of key.
+ * @param[out] key	The returned rxgk key.
+ */
+int
+afsconf_GetLatestRXGKKey(struct afsconf_dir *rock, afs_int32 *avno,
+			 afs_int32 *enctype, rxgk_key *key)
+{
+    return _afsconf_GetLatestRXGKKey(afsconf_rxgk, rock, avno, enctype, key);
+}
+
+static int
+_afsconf_GetRXGKKey(afsconf_keyType type, void *rock, afs_int32 *avno,
+		    afs_int32 *enctype, rxgk_key *key)
+{
+#ifdef AFS_RXGK_ENV
+    struct afsconf_dir *dir = rock;
+    struct afsconf_typedKey *typedKey;
+    afs_int32 code;
+
+    /* No information at all means "pick the best/newest one". */
+    if (*avno == 0 && *enctype == 0)
+	return _afsconf_GetLatestRXGKKey(type, dir, avno, enctype, key);
+
+    code = afsconf_GetKeyByTypes(dir, type, *avno, *enctype, &typedKey);
+    if (code != 0)
+	return code;
+
+    code = rxgk_make_key(key, typedKey->key.val, typedKey->key.len,
+			 typedKey->subType);
+    afsconf_typedKey_put(&typedKey);
+
+    return code;
+#else	/* AFS_RXGK_ENV */
+    return AFSCONF_NOTFOUND;
+#endif
+}
+
+/**
+ * Obtain a particular RXGK key from KeyFileExt
+ *
+ * Use the specified kvno and enctype to fetch an rxgk key from KeyFileExt
+ * and return it as an rxgk_key.  Specifying the kvno/enctype pair as both
+ * zeros causes the "best" rxgk key to be returned, and the kvno/enctype
+ * of that key returned to the caller.
+ *
+ * @param[in] rock      An afsconf_dir* for the configuration directory. This
+ *			is a void* just so this can be easily used as a
+ *			callback function that uses a void* rock.
+ * @param[inout] avno	The requested kvno (if non-zero), or zero to request
+ *			the latest key and have its kvno returned in this
+ *			parameter.
+ * @param[inout] enctype	The requested enctype (if non-zero), or zero
+ *				to request the latest key and have its
+ *				enctype returned in this parameter.
+ * @param[out] key	The returned rxgk key.
+ */
+int
+afsconf_GetRXGKKey(void *rock, afs_int32 *avno,
+		   afs_int32 *enctype, rxgk_key *key)
+{
+    return _afsconf_GetRXGKKey(afsconf_rxgk, rock, avno, enctype, key);
 }
 
 int

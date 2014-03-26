@@ -15,8 +15,10 @@ afsconf_GetCellInfo
 afsconf_GetExtendedCellInfo
 afsconf_GetKey
 afsconf_GetLatestKey
+afsconf_GetLatestRXGKKey
 afsconf_GetLocalCell
 afsconf_GetNoAuthFlag
+afsconf_GetRXGKKey
 afsconf_IsLocalRealmMatch
 afsconf_Open
 afsconf_ParseNetFiles
