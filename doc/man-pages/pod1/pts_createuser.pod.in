@@ -52,8 +52,9 @@ creator and the group system:administrators as its owner.
 
 =head1 CAUTIONS
 
-The Protection Server reserves AFS UID 0 (zero) and returns an error if
-the B<-id> argument has that value.
+The Protection Server reserves several AFS UIDs, including 0 (zero) and
+32766 (anonymous) for internal use, and returns an error if
+the B<-id> argument has a reserved value.
 
 =head1 OPTIONS
 

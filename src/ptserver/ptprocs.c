@@ -161,6 +161,8 @@ CreateOK(struct ubik_trans *ut, afs_int32 cid, afs_int32 oid, afs_int32 flag,
 		return 0;
 	}
     } else {			/* creating a user */
+	if (oid == ANONYMOUSID)
+	    return 0;
 	if (!admin && !pr_noAuth)
 	    return 0;
     }
