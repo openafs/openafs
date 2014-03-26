@@ -768,7 +768,7 @@ initSyntax(void)
 	cmd_AddParm(ts, "-topic", CMD_SINGLE, CMD_REQUIRED, "help string");
 
 	cmd_CreateSyntax("version", VersionProc, NULL,
-			 (char *)CMD_HIDDEN);
+			 "show version");
 	cmd_CreateSyntax("-version", VersionProc, NULL,
 			 (char *)CMD_HIDDEN);
 	cmd_CreateSyntax("-help", HelpProc, NULL,
