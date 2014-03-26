@@ -12,7 +12,7 @@ ptserver S<<< [B<-database> | B<-db> <I<db path>>] >>>
     S<<< [B<-d> <I<debug level>>] >>>
     S<<< [B<-groupdepth> | B<-depth> <I<# of nested groups>>] >>>
     S<<< [B<-default_access> <I<user access mask>> <I<group access mask>>] >>>
-    [B<-restricted>] [B<-enable_peer_stats>]
+    [B<-restricted>] [B<-restrict_anonymous>] [B<-enable_peer_stats>]
     [B<-enable_process_stats>] [B<-allow-dotted-principals>]
     [B<-rxbind>] S<<< [B<-auditlog> <I<file path>>] >>>
     S<<< [B<-audit-interface> (file | sysvmq)] >>>
@@ -112,6 +112,11 @@ information on the flags.
 
 Run the PT Server in restricted mode. While in restricted mode, only
 members of the system:administrators PTS group may make any PTS changes.
+
+=item B<-restrict_anonymous>
+
+Run the PT Server in restricted anonymous access mode. While in this mode,
+only authenticated users will be able to access the PTS database.
 
 =item B<-enable_peer_stats>
 

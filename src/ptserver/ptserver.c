@@ -147,6 +147,7 @@ extern afs_int32 depthsg;
 #endif
 
 int restricted = 0;
+int restrict_anonymous = 0;
 int rxMaxMTU = -1;
 int rxBind = 0;
 int rxkadDisableDotCheck = 0;
@@ -214,6 +215,7 @@ enum optionsList {
     OPT_access,
     OPT_groupdepth,
     OPT_restricted,
+    OPT_restrict_anonymous,
     OPT_auditlog,
     OPT_auditiface,
     OPT_config,
@@ -316,6 +318,8 @@ main(int argc, char **argv)
 #endif
     cmd_AddParmAtOffset(opts, OPT_restricted, "-restricted", CMD_FLAG,
 		        CMD_OPTIONAL, "enable restricted mode");
+    cmd_AddParmAtOffset(opts, OPT_restrict_anonymous, "-restrict_anonymous",
+			CMD_FLAG, CMD_OPTIONAL, "enable restricted anonymous mode");
 
     /* general server options */
     cmd_AddParmAtOffset(opts, OPT_auditlog, "-auditlog", CMD_SINGLE,
@@ -376,6 +380,7 @@ main(int argc, char **argv)
 #endif
 
     cmd_OptionAsFlag(opts, OPT_restricted, &restricted);
+    cmd_OptionAsFlag(opts, OPT_restrict_anonymous, &restrict_anonymous);
 
     /* general server options */
     cmd_OptionAsString(opts, OPT_auditlog, &auditFileName);

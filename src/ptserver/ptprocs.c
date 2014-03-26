@@ -71,6 +71,7 @@
 #include "afs/audit.h"
 
 extern int restricted;
+extern int restrict_anonymous;
 extern struct ubik_dbase *dbase;
 extern int pr_noAuth;
 extern int prp_group_default;
@@ -88,7 +89,7 @@ static afs_int32 dumpEntry(struct rx_call *call, afs_int32 apos,
 static afs_int32 addToGroup(struct rx_call *call, afs_int32 aid, afs_int32 gid,
 			    afs_int32 *cid);
 static afs_int32 nameToID(struct rx_call *call, namelist *aname, idlist *aid);
-static afs_int32 idToName(struct rx_call *call, idlist *aid, namelist *aname);
+static afs_int32 idToName(struct rx_call *call, idlist *aid, namelist *aname, afs_int32 *cid);
 static afs_int32 Delete(struct rx_call *call, afs_int32 aid, afs_int32 *cid);
 static afs_int32 UpdateEntry(struct rx_call *call, afs_int32 aid, char *name,
 			     struct PrUpdateEntry *uentry, afs_int32 *cid);
@@ -99,8 +100,8 @@ static afs_int32 getCPS(struct rx_call *call, afs_int32 aid, prlist *alist,
 static afs_int32 getCPS2(struct rx_call *call, afs_int32 aid, afs_uint32 ahost,
 			 prlist *alist, afs_int32 *over, afs_int32 *cid);
 static afs_int32 getHostCPS(struct rx_call *call, afs_uint32 ahost,
-			    prlist *alist, afs_int32 *over);
-static afs_int32 listMax(struct rx_call *call, afs_int32 *uid, afs_int32 *gid);
+			    prlist *alist, afs_int32 *over, afs_int32 *cid);
+static afs_int32 listMax(struct rx_call *call, afs_int32 *uid, afs_int32 *gid, afs_int32 *cid);
 static afs_int32 setMax(struct rx_call *call, afs_int32 aid, afs_int32 gflag,
 			afs_int32 *cid);
 static afs_int32 listEntry(struct rx_call *call, afs_int32 aid,
@@ -373,6 +374,8 @@ whereIsIt(struct rx_call *call, afs_int32 aid, afs_int32 *apos, afs_int32 *cid)
     code = WhoIsThis(call, tt, cid);
     if (code)
 	ABORT_WITH(tt, PRPERM);
+    if (!pr_noAuth && restrict_anonymous && *cid == ANONYMOUSID)
+	ABORT_WITH(tt, PRPERM);
 
     temp = FindByID(tt, aid);
     if (!temp)
@@ -609,15 +612,16 @@ afs_int32
 SPR_IDToName(struct rx_call *call, idlist *aid, namelist *aname)
 {
     afs_int32 code;
+    afs_int32 cid = ANONYMOUSID;
 
-    code = idToName(call, aid, aname);
+    code = idToName(call, aid, aname, &cid);
     osi_auditU(call, PTS_IdToNmEvent, code, AUD_END);
     ViceLog(125, ("PTS_IDToName: code %d\n", code));
     return code;
 }
 
 static afs_int32
-idToName(struct rx_call *call, idlist *aid, namelist *aname)
+idToName(struct rx_call *call, idlist *aid, namelist *aname, afs_int32 *cid)
 {
     afs_int32 code;
     struct ubik_trans *tt;
@@ -643,6 +647,12 @@ idToName(struct rx_call *call, idlist *aid, namelist *aname)
     code = ReadPreamble(&tt);
     if (code)
 	return code;
+
+    code = WhoIsThis(call, tt, cid);
+    if (code)
+	ABORT_WITH(tt, PRPERM);
+    if (!pr_noAuth && restrict_anonymous && *cid == ANONYMOUSID)
+	ABORT_WITH(tt, PRPERM);
 
     for (i = 0; i < aid->idlist_len; i++) {
 	code = IDToName(tt, aid->idlist_val[i], aname->namelist_val[i]);
@@ -1088,6 +1098,12 @@ getCPS(struct rx_call *call, afs_int32 aid, prlist *alist, afs_int32 *over,
     if (code)
 	return code;
 
+    code = WhoIsThis(call, tt, cid);
+    if (code)
+	ABORT_WITH(tt, PRPERM);
+    if (!pr_noAuth && restrict_anonymous && *cid == ANONYMOUSID)
+	ABORT_WITH(tt, PRPERM);
+
     temp = FindByID(tt, aid);
     if (!temp)
 	ABORT_WITH(tt, PRNOENT);
@@ -1095,9 +1111,7 @@ getCPS(struct rx_call *call, afs_int32 aid, prlist *alist, afs_int32 *over,
     if (code)
 	ABORT_WITH(tt, code);
 
-    /* afs does authenticate now */
-    code = WhoIsThis(call, tt, cid);
-    if (code || !AccessOK(tt, *cid, &tentry, PRP_MEMBER_MEM, PRP_MEMBER_ANY))
+    if (!AccessOK(tt, *cid, &tentry, PRP_MEMBER_MEM, PRP_MEMBER_ANY))
 	ABORT_WITH(tt, PRPERM);
 
     code = GetList(tt, &tentry, alist, 1);
@@ -1204,8 +1218,9 @@ SPR_GetHostCPS(struct rx_call *call, afs_int32 ahost, prlist *alist,
 	       afs_int32 *over)
 {
     afs_int32 code;
+    afs_int32 cid = ANONYMOUSID;
 
-    code = getHostCPS(call, ahost, alist, over);
+    code = getHostCPS(call, ahost, alist, over, &cid);
     osi_auditU(call, PTS_GetHCPSEvent, code, AUD_HOST, htonl(ahost), AUD_END);
     ViceLog(125, ("PTS_GetHostCPS: code %d ahost %d\n", code, ahost));
     return code;
@@ -1213,7 +1228,7 @@ SPR_GetHostCPS(struct rx_call *call, afs_int32 ahost, prlist *alist,
 
 afs_int32
 getHostCPS(struct rx_call *call, afs_uint32 ahost, prlist *alist,
-	   afs_int32 *over)
+	   afs_int32 *over, afs_int32 *cid)
 {
     afs_int32 code, temp;
     struct ubik_trans *tt;
@@ -1230,6 +1245,12 @@ getHostCPS(struct rx_call *call, afs_uint32 ahost, prlist *alist,
     code = ReadPreamble(&tt);
     if (code)
 	return code;
+
+    code = WhoIsThis(call, tt, cid);
+    if (code)
+	ABORT_WITH(tt, PRPERM);
+    if (!pr_noAuth && restrict_anonymous && *cid == ANONYMOUSID)
+	ABORT_WITH(tt, PRPERM);
 
     code = NameToID(tt, afs_inet_ntoa_r(iaddr.s_addr, hoststr), &hostid);
     if (code == PRSUCCESS && hostid != 0) {
@@ -1259,15 +1280,16 @@ afs_int32
 SPR_ListMax(struct rx_call *call, afs_int32 *uid, afs_int32 *gid)
 {
     afs_int32 code;
+    afs_int32 cid = ANONYMOUSID;
 
-    code = listMax(call, uid, gid);
+    code = listMax(call, uid, gid, &cid);
     osi_auditU(call, PTS_LstMaxEvent, code, AUD_END);
     ViceLog(125, ("PTS_ListMax: code %d\n", code));
     return code;
 }
 
 afs_int32
-listMax(struct rx_call *call, afs_int32 *uid, afs_int32 *gid)
+listMax(struct rx_call *call, afs_int32 *uid, afs_int32 *gid, afs_int32 *cid)
 {
     afs_int32 code;
     struct ubik_trans *tt;
@@ -1275,6 +1297,12 @@ listMax(struct rx_call *call, afs_int32 *uid, afs_int32 *gid)
     code = ReadPreamble(&tt);
     if (code)
 	return code;
+
+    code = WhoIsThis(call, tt, cid);
+    if (code)
+	ABORT_WITH(tt, PRPERM);
+    if (!pr_noAuth && restrict_anonymous && *cid == ANONYMOUSID)
+	ABORT_WITH(tt, PRPERM);
 
     code = GetMax(tt, uid, gid);
     if (code != PRSUCCESS)
@@ -1354,6 +1382,8 @@ listEntry(struct rx_call *call, afs_int32 aid, struct prcheckentry *aentry,
 
     code = WhoIsThis(call, tt, cid);
     if (code)
+	ABORT_WITH(tt, PRPERM);
+    if (!pr_noAuth && restrict_anonymous && *cid == ANONYMOUSID)
 	ABORT_WITH(tt, PRPERM);
     temp = FindByID(tt, aid);
     if (!temp)
@@ -1739,12 +1769,15 @@ listSuperGroups(struct rx_call *call, afs_int32 aid, prlist *alist,
     if (code)
 	return code;
 
-    code = ubik_SetLock(tt, 1, 1, LOCKREAD);
-    if (code)
-	ABORT_WITH(tt, code);
     code = WhoIsThis(call, tt, cid);
     if (code)
 	ABORT_WITH(tt, PRPERM);
+    if (!pr_noAuth && restrict_anonymous && *cid == ANONYMOUSID)
+	ABORT_WITH(tt, PRPERM);
+
+    code = ubik_SetLock(tt, 1, 1, LOCKREAD);
+    if (code)
+	ABORT_WITH(tt, code);
 
     temp = FindByID(tt, aid);
     if (!temp)
