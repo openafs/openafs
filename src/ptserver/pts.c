@@ -539,12 +539,13 @@ GetNameOrId(struct cmd_syndesc *as, struct idlist *lids,
 	code = pr_IdToName(&ids, &tnames);
 	if (code)
 	    afs_com_err(whoami, code, "translating ids");
-	else
+	else {
 	    goodCount++;
-	if (lnames) {
-	    for (x = 0; x < ids.idlist_len; x++)
-		strcpy(lnames->namelist_val[nd + x], tnames.namelist_val[x]);
-	    lnames->namelist_len = nd + x;
+	    if (lnames) {
+		for (x = 0; x < ids.idlist_len; x++)
+		    strcpy(lnames->namelist_val[nd + x], tnames.namelist_val[x]);
+		lnames->namelist_len = nd + x;
+	    }
 	}
     }
     /* treat things as working if any of the lookups worked */
