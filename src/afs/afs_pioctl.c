@@ -1287,7 +1287,7 @@ afs_HandlePioctl(struct vnode *avp, afs_int32 acom,
 		 afs_ucred_t **acred)
 {
     struct vcache *avc;
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     afs_int32 code;
     afs_int32 function, device;
     struct afs_pdata input, output;
@@ -1305,13 +1305,13 @@ afs_HandlePioctl(struct vnode *avp, afs_int32 acom,
 	       ICL_TYPE_POINTER, avc, ICL_TYPE_INT32, afollow);
     AFS_STATCNT(HandlePioctl);
 
-    code = afs_InitReq(&treq, *acred);
+    code = afs_CreateReq(&treq, *acred);
     if (code)
 	return code;
 
     afs_InitFakeStat(&fakestate);
     if (avc) {
-	code = afs_EvalFakeStat(&avc, &fakestate, &treq);
+	code = afs_EvalFakeStat(&avc, &fakestate, treq);
 	if (code)
 	    goto out;
     }
@@ -1370,7 +1370,7 @@ afs_HandlePioctl(struct vnode *avp, afs_int32 acom,
     copyOutput = output;
 
     code =
-	(*pioctlSw[function]) (avc, function, &treq, &copyInput,
+	(*pioctlSw[function]) (avc, function, treq, &copyInput,
 			       &copyOutput, acred);
 
     outSize = copyOutput.ptr - output.ptr;
@@ -1388,7 +1388,9 @@ out:
     afs_pd_free(&output);
 
     afs_PutFakeStat(&fakestate);
-    return afs_CheckCode(code, &treq, 41);
+    code = afs_CheckCode(code, treq, 41);
+    afs_DestroyReq(treq);
+    return code;
 }
 
 /*!
@@ -1871,7 +1873,7 @@ DECL_PIOCTL(PSetTokens)
     char *stp;
     char *cellName;
     int stLen;
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     afs_int32 flag, set_parent_pag = 0;
 
     AFS_STATCNT(PSetTokens);
@@ -1928,11 +1930,11 @@ DECL_PIOCTL(PSetTokens)
 
     if (set_parent_pag) {
 	if (_settok_setParentPag(acred) == 0) {
-	    code = afs_InitReq(&treq, *acred);
+	    code = afs_CreateReq(&treq, *acred);
 	    if (code) {
 		return code;
 	    }
-	    areq = &treq;
+	    areq = treq;
 	}
     }
 
@@ -1952,6 +1954,7 @@ DECL_PIOCTL(PSetTokens)
     afs_ResetUserConns(tu);
     afs_NotifyUser(tu, UTokensObtained);
     afs_PutUser(tu, WRITE_LOCK);
+    afs_DestroyReq(treq);
 
     return 0;
 }
@@ -5342,7 +5345,7 @@ DECL_PIOCTL(PSetTokens2)
     int i, cellNum, primaryFlag;
     XDR xdrs;
     struct unixuser *tu;
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     struct ktc_setTokenData tokenSet;
     struct ktc_tokenUnion decodedToken;
 
@@ -5386,12 +5389,12 @@ DECL_PIOCTL(PSetTokens2)
 	    *acred = crref();
 	    crfree(old_cred);
 #endif
-	    code = afs_InitReq(&treq, *acred);
+	    code = afs_CreateReq(&treq, *acred);
 	    if (code) {
 		xdr_free((xdrproc_t) xdr_ktc_setTokenData, &tokenSet);
 		return code;
 	    }
-	    areq = &treq;
+	    areq = treq;
 	}
     }
 
@@ -5446,6 +5449,7 @@ DECL_PIOCTL(PSetTokens2)
 out:
     afs_ResetUserConns(tu);
     afs_PutUser(tu, WRITE_LOCK);
+    afs_DestroyReq(treq);
 
     return code;
 }

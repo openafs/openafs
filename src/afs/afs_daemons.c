@@ -364,7 +364,7 @@ afs_CheckRootVolume(void)
 		 */
 #ifdef AFS_LINUX20_ENV
 		{
-		    struct vrequest treq;
+		    struct vrequest *treq = NULL;
 		    struct vattr vattr;
 		    cred_t *credp;
 		    struct dentry *dp;
@@ -375,9 +375,9 @@ afs_CheckRootVolume(void)
 		    afs_rootFid.Fid.Unique = 1;
 
 		    credp = crref();
-		    if (afs_InitReq(&treq, credp))
+		    if (afs_CreateReq(&treq, credp))
 			goto out;
-		    vcp = afs_GetVCache(&afs_rootFid, &treq, NULL, NULL);
+		    vcp = afs_GetVCache(&afs_rootFid, treq, NULL, NULL);
 		    if (!vcp)
 			goto out;
 		    afs_getattr(vcp, &vattr, credp);
@@ -419,6 +419,7 @@ afs_CheckRootVolume(void)
 		    afs_globalVp = vcp;
 		out:
 		    crfree(credp);
+		    afs_DestroyReq(treq);
 		}
 #else
 #ifdef AFS_DARWIN80_ENV
@@ -456,12 +457,13 @@ BPath(struct brequest *ab)
     struct dentry *dp = NULL;
 #endif
     afs_size_t offset, len;
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     afs_int32 code;
 
     AFS_STATCNT(BPath);
-    if ((code = afs_InitReq(&treq, ab->cred)))
+    if ((code = afs_CreateReq(&treq, ab->cred))) {
 	return;
+    }
     AFS_GUNLOCK();
 #ifdef AFS_LINUX22_ENV
     code = gop_lookupname((char *)ab->ptr_parm[0], AFS_UIOSYS, 1, &dp);
@@ -472,8 +474,10 @@ BPath(struct brequest *ab)
 #endif
     AFS_GLOCK();
     osi_FreeLargeSpace((char *)ab->ptr_parm[0]);	/* free path name buffer here */
-    if (code)
+    if (code) {
+	afs_DestroyReq(treq);
 	return;
+    }
     /* now path may not have been in afs, so check that before calling our cache manager */
     if (!tvn || !IsAfsVnode(tvn)) {
 	/* release it and give up */
@@ -484,11 +488,12 @@ BPath(struct brequest *ab)
 	    AFS_RELE(tvn);
 #endif
 	}
+	afs_DestroyReq(treq);
 	return;
     }
     tvc = VTOAFS(tvn);
     /* here we know its an afs vnode, so we can get the data for the chunk */
-    tdc = afs_GetDCache(tvc, ab->size_parm[0], &treq, &offset, &len, 1);
+    tdc = afs_GetDCache(tvc, ab->size_parm[0], treq, &offset, &len, 1);
     if (tdc) {
 	afs_PutDCache(tdc);
     }
@@ -497,6 +502,7 @@ BPath(struct brequest *ab)
 #else
     AFS_RELE(tvn);
 #endif
+    afs_DestroyReq(treq);
 }
 
 /* size_parm 0 to the fetch is the chunk number,
@@ -509,15 +515,16 @@ BPrefetch(struct brequest *ab)
     struct dcache *tdc;
     struct vcache *tvc;
     afs_size_t offset, len, abyte, totallen = 0;
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
+    int code;
 
     AFS_STATCNT(BPrefetch);
-    if ((len = afs_InitReq(&treq, ab->cred)))
+    if ((code = afs_CreateReq(&treq, ab->cred)))
 	return;
     abyte = ab->size_parm[0];
     tvc = ab->vc;
     do {
-	tdc = afs_GetDCache(tvc, abyte, &treq, &offset, &len, 1);
+	tdc = afs_GetDCache(tvc, abyte, treq, &offset, &len, 1);
 	if (tdc) {
 	    afs_PutDCache(tdc);
 	}
@@ -541,22 +548,24 @@ BPrefetch(struct brequest *ab)
     if (ab->size_parm[1]) {
 	afs_PutDCache(tdc);	/* put this one back, too */
     }
+    afs_DestroyReq(treq);
 }
 
 #if defined(AFS_CACHE_BYPASS)
 static void
 BPrefetchNoCache(struct brequest *ab)
 {
-    struct vrequest treq;
-    afs_size_t len;
+    struct vrequest *treq = NULL;
+    int code;
 
-    if ((len = afs_InitReq(&treq, ab->cred)))
+    if ((code = afs_CreateReq(&treq, ab->cred)))
 	return;
 
 #ifndef UKERNEL
     /* OS-specific prefetch routine */
     afs_PrefetchNoCache(ab->vc, ab->cred, (struct nocache_read_request *) ab->ptr_parm[0]);
 #endif
+    afs_DestroyReq(treq);
 }
 #endif
 
@@ -565,13 +574,13 @@ BStore(struct brequest *ab)
 {
     struct vcache *tvc;
     afs_int32 code;
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
 #if defined(AFS_SGI_ENV)
     struct cred *tmpcred;
 #endif
 
     AFS_STATCNT(BStore);
-    if ((code = afs_InitReq(&treq, ab->cred)))
+    if ((code = afs_CreateReq(&treq, ab->cred)))
 	return;
     tvc = ab->vc;
 #if defined(AFS_SGI_ENV)
@@ -591,7 +600,7 @@ BStore(struct brequest *ab)
     AFS_RWLOCK((vnode_t *) tvc, 1);
 #endif
     ObtainWriteLock(&tvc->lock, 209);
-    code = afs_StoreOnLastReference(tvc, &treq);
+    code = afs_StoreOnLastReference(tvc, treq);
     ReleaseWriteLock(&tvc->lock);
 #if defined(AFS_SGI_ENV)
     OSI_SET_CURRENT_CRED(tmpcred);
@@ -608,7 +617,7 @@ BStore(struct brequest *ab)
 	 * can know the "raw" value for interpreting the value internally, as
 	 * well as the afs_CheckCode value to give to the OS. */
 	ab->code_raw = code;
-	ab->code_checkcode = afs_CheckCode(code, &treq, 430);
+	ab->code_checkcode = afs_CheckCode(code, treq, 430);
 
 	ab->flags |= BUVALID;
 	if (ab->flags & BUWAIT) {
@@ -616,6 +625,7 @@ BStore(struct brequest *ab)
 	    afs_osi_Wakeup(ab);
 	}
     }
+    afs_DestroyReq(treq);
 }
 
 static void
@@ -623,11 +633,11 @@ BPartialStore(struct brequest *ab)
 {
     struct vcache *tvc;
     afs_int32 code;
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     int locked, shared_locked = 0;
 
     AFS_STATCNT(BStore);
-    if ((code = afs_InitReq(&treq, ab->cred)))
+    if ((code = afs_CreateReq(&treq, ab->cred)))
 	return;
     tvc = ab->vc;
     locked = tvc->lock.excl_locked? 1:0;
@@ -637,7 +647,7 @@ BPartialStore(struct brequest *ab)
 	shared_locked = 1;
 	ConvertSToRLock(&tvc->lock);
     }
-    code = afs_StoreAllSegments(tvc, &treq, AFS_ASYNC);
+    code = afs_StoreAllSegments(tvc, treq, AFS_ASYNC);
     if (!locked)
 	ReleaseWriteLock(&tvc->lock);
     else if (shared_locked)
@@ -646,13 +656,14 @@ BPartialStore(struct brequest *ab)
     if ((ab->flags & BUVALID) == 0) {
 	/* set final code, since treq doesn't go across processes */
 	ab->code_raw = code;
-	ab->code_checkcode = afs_CheckCode(code, &treq, 43);
+	ab->code_checkcode = afs_CheckCode(code, treq, 43);
 	ab->flags |= BUVALID;
 	if (ab->flags & BUWAIT) {
 	    ab->flags &= ~BUWAIT;
 	    afs_osi_Wakeup(ab);
 	}
     }
+    afs_DestroyReq(treq);
 }
 
 /* release a held request buffer */

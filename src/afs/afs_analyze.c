@@ -92,7 +92,7 @@ int lastcode;
 static int
 VLDB_Same(struct VenusFid *afid, struct vrequest *areq)
 {
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     struct afs_conn *tconn;
     int i, type = 0;
     union {
@@ -110,7 +110,7 @@ VLDB_Same(struct VenusFid *afid, struct vrequest *areq)
     AFS_STATCNT(CheckVLDB);
     afs_FinalizeReq(areq);
 
-    if ((i = afs_InitReq(&treq, afs_osi_credp)))
+    if ((i = afs_CreateReq(&treq, afs_osi_credp)))
 	return DUNNO;
     v = afs_osi_Alloc(sizeof(*v));
     osi_Assert(v != NULL);
@@ -120,7 +120,7 @@ VLDB_Same(struct VenusFid *afid, struct vrequest *areq)
 	VSleep(2);		/* Better safe than sorry. */
 	tconn =
 	    afs_ConnByMHosts(tcell->cellHosts, tcell->vlport, tcell->cellNum,
-			     &treq, SHARED_LOCK, 0, &rxconn);
+			     treq, SHARED_LOCK, 0, &rxconn);
 	if (tconn) {
 	    if ( tconn->parent->srvr->server->flags & SNO_LHOSTS) {
 		type = 0;
@@ -158,7 +158,7 @@ VLDB_Same(struct VenusFid *afid, struct vrequest *areq)
 	    }
 	} else
 	    i = -1;
-    } while (afs_Analyze(tconn, rxconn, i, NULL, &treq, -1,	/* no op code for this */
+    } while (afs_Analyze(tconn, rxconn, i, NULL, treq, -1,	/* no op code for this */
 			 SHARED_LOCK, tcell));
 
     afs_PutCell(tcell, READ_LOCK);
@@ -166,6 +166,7 @@ VLDB_Same(struct VenusFid *afid, struct vrequest *areq)
 	       ICL_TYPE_INT32, i);
 
     if (i) {
+	afs_DestroyReq(treq);
 	afs_osi_Free(v, sizeof(*v));
 	return DUNNO;
     }
@@ -180,7 +181,7 @@ VLDB_Same(struct VenusFid *afid, struct vrequest *areq)
 	ReleaseWriteLock(&tvp->lock);
 
 	if (type == 2) {
-	    LockAndInstallUVolumeEntry(tvp, &v->utve, afid->Cell, tcell, &treq);
+	    LockAndInstallUVolumeEntry(tvp, &v->utve, afid->Cell, tcell, treq);
 	} else if (type == 1) {
 	    LockAndInstallNVolumeEntry(tvp, &v->ntve, afid->Cell);
 	} else {
@@ -199,17 +200,20 @@ VLDB_Same(struct VenusFid *afid, struct vrequest *areq)
 	ReleaseWriteLock(&tvp->lock);
 	afs_PutVolume(tvp, WRITE_LOCK);
     } else {			/* can't find volume */
-	tvp = afs_GetVolume(afid, &treq, WRITE_LOCK);
+	tvp = afs_GetVolume(afid, treq, WRITE_LOCK);
 	if (tvp) {
 	    afs_PutVolume(tvp, WRITE_LOCK);
+	    afs_DestroyReq(treq);
 	    afs_osi_Free(v, sizeof(*v));
 	    return DIFFERENT;
 	} else {
+	    afs_DestroyReq(treq);
 	    afs_osi_Free(v, sizeof(*v));
 	    return DUNNO;
 	}
     }
 
+    afs_DestroyReq(treq);
     afs_osi_Free(v, sizeof(*v));
     return (changed ? DIFFERENT : SAME);
 }				/*VLDB_Same */

@@ -29,7 +29,7 @@ afs_osi_vget(struct vcache **avcpp, struct fid *afidp, struct vrequest *areqp)
     struct VenusFid vfid;
     struct SmallFid Sfid;
     struct cell *tcell;
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     afs_int32 code = 0, cellindex;
     afs_int32 ret;
 
@@ -60,7 +60,11 @@ afs_osi_vget(struct vcache **avcpp, struct fid *afidp, struct vrequest *areqp)
 	code = ENOENT;
     } else if (ret == 0) {
 	/* didn't find an entry. */
-	*avcpp = afs_GetVCache(&vfid, &treq, NULL, NULL);
+	code = afs_CreateReq(&treq, NULL);
+	if (code == 0) {
+	    *avcpp = afs_GetVCache(&vfid, treq, NULL, NULL);
+	    afs_DestroyReq(treq);
+	}
     }
     if (!*avcpp) {
 	code = ENOENT;
