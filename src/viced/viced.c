@@ -2055,13 +2055,6 @@ main(int argc, char *argv[])
     rx_SetMinProcs(tservice, 2);
     rx_SetMaxProcs(tservice, 4);
 
-    /*
-     * Enable RX hot threads, which allows the listener thread to trade
-     * places with an idle thread and moves the context switch from listener
-     * to worker out of the critical path.
-     */
-    rx_EnableHotThread();
-
     /* Some rx debugging */
     if (rxlog || eventlog) {
 	debugFile = afs_fopen("rx_dbg", "w");
