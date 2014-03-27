@@ -128,7 +128,6 @@ afs_TransitionToBypass(struct vcache *avc,
 {
 
     afs_int32 code;
-    struct vrequest treq;
     int setDesire = 0;
     int setManual = 0;
 
@@ -162,9 +161,13 @@ afs_TransitionToBypass(struct vcache *avc,
 
     /* cg2v, try to store any chunks not written 20071204 */
     if (avc->execsOrWriters > 0) {
-	code = afs_InitReq(&treq, acred);
-	if (!code)
-	    code = afs_StoreAllSegments(avc, &treq, AFS_SYNC | AFS_LASTSTORE);
+	struct vrequest *treq = NULL;
+
+	code = afs_CreateReq(&treq, acred);
+	if (!code) {
+	    code = afs_StoreAllSegments(avc, treq, AFS_SYNC | AFS_LASTSTORE);
+	    afs_DestroyReq(treq);
+	}
     }
 
 #if 0
@@ -480,28 +483,29 @@ afs_ReadNoCache(struct vcache *avc,
     afs_int32 code;
     afs_int32 bcnt;
     struct brequest *breq;
-    struct vrequest *areq;
-
-    /* the reciever will free this */
-    areq = osi_Alloc(sizeof(struct vrequest));
+    struct vrequest *areq = NULL;
 
     if (avc && avc->vc_error) {
 	code = EIO;
 	afs_warn("afs_ReadNoCache VCache Error!\n");
 	goto cleanup;
     }
-    if ((code = afs_InitReq(areq, acred))) {
-	afs_warn("afs_ReadNoCache afs_InitReq error!\n");
-	goto cleanup;
-    }
 
     AFS_GLOCK();
-    code = afs_VerifyVCache(avc, areq);
+    /* the receiver will free areq */
+    code = afs_CreateReq(&areq, acred);
+    if (code) {
+	afs_warn("afs_ReadNoCache afs_CreateReq error!\n");
+    } else {
+	code = afs_VerifyVCache(avc, areq);
+	if (code) {
+	    afs_warn("afs_ReadNoCache Failed to verify VCache!\n");
+	}
+    }
     AFS_GUNLOCK();
 
     if (code) {
 	code = afs_CheckCode(code, areq, 11);	/* failed to get it */
-	afs_warn("afs_ReadNoCache Failed to verify VCache!\n");
 	goto cleanup;
     }
 
@@ -534,7 +538,9 @@ cleanup:
      * processed, like unlocking the pages and freeing memory.
      */
     unlock_and_release_pages(bparms->auio);
-    osi_Free(areq, sizeof(struct vrequest));
+    AFS_GLOCK();
+    afs_DestroyReq(areq);
+    AFS_GUNLOCK();
     osi_Free(bparms->auio->uio_iov,
 	     bparms->auio->uio_iovcnt * sizeof(struct iovec));
     osi_Free(bparms->auio, sizeof(struct uio));

@@ -754,7 +754,7 @@ afs_NewVolumeByName(char *aname, afs_int32 acell, int agood,
     struct cell *tcell;
     char *tbuffer, *ve;
     struct afs_conn *tconn;
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     struct rx_connection *rxconn;
 
     if (strlen(aname) > VL_MAXNAMELEN)	/* Invalid volume name */
@@ -765,14 +765,14 @@ afs_NewVolumeByName(char *aname, afs_int32 acell, int agood,
 	return NULL;
     }
 
-    code = afs_InitReq(&treq, afs_osi_credp);	/* *must* be unauth for vldb */
+    code = afs_CreateReq(&treq, afs_osi_credp);	/* *must* be unauth for vldb */
     if (code) {
 	return NULL;
     }
 
     /* allow null request if we don't care about ENODEV/ETIMEDOUT distinction */
     if (!areq)
-	areq = &treq;
+	areq = treq;
 
 
     afs_Trace2(afs_iclSetp, CM_TRACE_GETVOL, ICL_TYPE_STRING, aname,
@@ -781,10 +781,11 @@ afs_NewVolumeByName(char *aname, afs_int32 acell, int agood,
     tve = (struct vldbentry *)(tbuffer + 1024);
     ntve = (struct nvldbentry *)tve;
     utve = (struct uvldbentry *)tve;
+
     do {
 	tconn =
 	    afs_ConnByMHosts(tcell->cellHosts, tcell->vlport, tcell->cellNum,
-			     &treq, SHARED_LOCK, 0, &rxconn);
+			     treq, SHARED_LOCK, 0, &rxconn);
 	if (tconn) {
 	    if (tconn->srvr->server->flags & SNO_LHOSTS) {
 		type = 0;
@@ -822,7 +823,7 @@ afs_NewVolumeByName(char *aname, afs_int32 acell, int agood,
 	    }
 	} else
 	    code = -1;
-    } while (afs_Analyze(tconn, rxconn, code, NULL, &treq, -1,	/* no op code for this */
+    } while (afs_Analyze(tconn, rxconn, code, NULL, treq, -1,	/* no op code for this */
 			 SHARED_LOCK, tcell));
 
     if (code) {
@@ -845,9 +846,10 @@ afs_NewVolumeByName(char *aname, afs_int32 acell, int agood,
 	    }
 	}
 #endif
-	afs_CopyError(&treq, areq);
+	afs_CopyError(treq, areq);
 	osi_FreeLargeSpace(tbuffer);
 	afs_PutCell(tcell, READ_LOCK);
+	afs_DestroyReq(treq);
 	return NULL;
     }
     /*
@@ -867,14 +869,14 @@ afs_NewVolumeByName(char *aname, afs_int32 acell, int agood,
 	ve = (char *)ntve;
     else
 	ve = (char *)tve;
-    tv = afs_SetupVolume(0, aname, ve, tcell, agood, type, &treq);
+    tv = afs_SetupVolume(0, aname, ve, tcell, agood, type, treq);
     if ((agood == 3) && tv && tv->backVol) {
 	/*
 	 * This means that very soon we'll ask for the BK volume so
 	 * we'll prefetch it (well we did already.)
 	 */
 	tv1 =
-	    afs_SetupVolume(tv->backVol, (char *)0, ve, tcell, 0, type, &treq);
+	    afs_SetupVolume(tv->backVol, (char *)0, ve, tcell, 0, type, treq);
 	if (tv1) {
 	    tv1->refCount--;
 	}
@@ -884,13 +886,14 @@ afs_NewVolumeByName(char *aname, afs_int32 acell, int agood,
 	 * This means that very soon we'll ask for the RO volume so
 	 * we'll prefetch it (well we did already.)
 	 */
-	tv1 = afs_SetupVolume(tv->roVol, NULL, ve, tcell, 0, type, &treq);
+	tv1 = afs_SetupVolume(tv->roVol, NULL, ve, tcell, 0, type, treq);
 	if (tv1) {
 	    tv1->refCount--;
 	}
     }
     osi_FreeLargeSpace(tbuffer);
     afs_PutCell(tcell, READ_LOCK);
+    afs_DestroyReq(treq);
     return tv;
 
 }				/*afs_NewVolumeByName */

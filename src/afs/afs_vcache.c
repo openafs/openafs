@@ -403,7 +403,7 @@ afs_FlushVCBs(afs_int32 lockit)
     int tcount;
     struct server *tsp;
     int i;
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     struct afs_conn *tc;
     int safety1, safety2, safety3;
     XSTATS_DECLS;
@@ -411,9 +411,9 @@ afs_FlushVCBs(afs_int32 lockit)
     if (AFS_IS_DISCONNECTED)
 	return ENETDOWN;
 
-    if ((code = afs_InitReq(&treq, afs_osi_credp)))
+    if ((code = afs_CreateReq(&treq, afs_osi_credp)))
 	return code;
-    treq.flags |= O_NONBLOCK;
+    treq->flags |= O_NONBLOCK;
     tfids = afs_osi_Alloc(sizeof(struct AFSFid) * AFS_MAXCBRSCALL);
     osi_Assert(tfids != NULL);
 
@@ -456,7 +456,7 @@ afs_FlushVCBs(afs_int32 lockit)
 		    callBacks[0].CallBackType = CB_EXCLUSIVE;
 		    for (safety3 = 0; safety3 < AFS_MAXHOSTS * 2; safety3++) {
 			tc = afs_ConnByHost(tsp, tsp->cell->fsport,
-					    tsp->cell->cellNum, &treq, 0,
+					    tsp->cell->cellNum, treq, 0,
 					    SHARED_LOCK, 0, &rxconn);
 			if (tc) {
 			    XSTATS_START_TIME
@@ -470,7 +470,7 @@ afs_FlushVCBs(afs_int32 lockit)
 			} else
 			    code = -1;
 			if (!afs_Analyze
-			    (tc, rxconn, code, 0, &treq,
+			    (tc, rxconn, code, 0, treq,
 			     AFS_STATS_FS_RPCIDX_GIVEUPCALLBACKS, SHARED_LOCK,
 			     tsp->cell)) {
 			    break;
@@ -515,6 +515,7 @@ afs_FlushVCBs(afs_int32 lockit)
     if (lockit)
 	ReleaseWriteLock(&afs_xvcb);
     afs_osi_Free(tfids, sizeof(struct AFSFid) * AFS_MAXCBRSCALL);
+    afs_DestroyReq(treq);
     return 0;
 }
 
@@ -995,11 +996,18 @@ afs_FlushActiveVcaches(afs_int32 doflocks)
     struct afs_conn *tc;
     afs_int32 code;
     afs_ucred_t *cred = NULL;
-    struct vrequest treq, ureq;
+    struct vrequest *treq = NULL;
     struct AFSVolSync tsync;
     int didCore;
     XSTATS_DECLS;
     AFS_STATCNT(afs_FlushActiveVcaches);
+
+    code = afs_CreateReq(&treq, NULL);
+    if (code) {
+	afs_warn("unable to alloc treq\n");
+	return;
+    }
+
     ObtainReadLock(&afs_xvcache);
     for (i = 0; i < VCSIZE; i++) {
 	for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
@@ -1016,14 +1024,14 @@ afs_FlushActiveVcaches(afs_int32 doflocks)
 		ReleaseReadLock(&afs_xvcache);
 		ObtainWriteLock(&tvc->lock, 51);
 		do {
-		    code = afs_InitReq(&treq, afs_osi_credp);
+		    code = afs_InitReq(treq, afs_osi_credp);
 		    if (code) {
 			code = -1;
 			break; /* shutting down: do not try to extend the lock */
 		    }
-		    treq.flags |= O_NONBLOCK;
+		    treq->flags |= O_NONBLOCK;
 
-		    tc = afs_Conn(&tvc->f.fid, &treq, SHARED_LOCK, &rxconn);
+		    tc = afs_Conn(&tvc->f.fid, treq, SHARED_LOCK, &rxconn);
 		    if (tc) {
 			XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_EXTENDLOCK);
 			RX_AFS_GUNLOCK();
@@ -1036,7 +1044,7 @@ afs_FlushActiveVcaches(afs_int32 doflocks)
 		    } else
 			code = -1;
 		} while (afs_Analyze
-			 (tc, rxconn, code, &tvc->f.fid, &treq,
+			 (tc, rxconn, code, &tvc->f.fid, treq,
 			  AFS_STATS_FS_RPCIDX_EXTENDLOCK, SHARED_LOCK, NULL));
 
 		ReleaseWriteLock(&tvc->lock);
@@ -1073,12 +1081,12 @@ afs_FlushActiveVcaches(afs_int32 doflocks)
 		    /* XXXX Find better place-holder for cred XXXX */
 		    cred = (afs_ucred_t *)tvc->linkData;
 		    tvc->linkData = NULL;	/* XXX */
-		    code = afs_InitReq(&ureq, cred);
+		    code = afs_InitReq(treq, cred);
 		    afs_Trace2(afs_iclSetp, CM_TRACE_ACTCCORE,
 			       ICL_TYPE_POINTER, tvc, ICL_TYPE_INT32,
 			       tvc->execsOrWriters);
 		    if (!code) {  /* avoid store when shutting down */
-		        code = afs_StoreOnLastReference(tvc, &ureq);
+		        code = afs_StoreOnLastReference(tvc, treq);
 		    }
 		    ReleaseWriteLock(&tvc->lock);
 #ifdef AFS_BOZONLOCK_ENV
@@ -1137,6 +1145,7 @@ afs_FlushActiveVcaches(afs_int32 doflocks)
 	}
     }
     ReleaseReadLock(&afs_xvcache);
+    afs_DestroyReq(treq);
 }
 
 
