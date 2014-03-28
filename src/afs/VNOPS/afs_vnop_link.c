@@ -43,7 +43,7 @@ afs_link(struct vcache *avc, OSI_VC_DECL(adp), char *aname,
     afs_int32 code;
     struct afs_conn *tc;
     afs_size_t offset, len;
-    struct AFSFetchStatus OutFidStatus, OutDirStatus;
+    struct AFSFetchStatus *OutFidStatus, *OutDirStatus;
     struct AFSVolSync tsync;
     struct afs_fakestat_state vfakestate, dfakestate;
     struct rx_connection *rxconn;
@@ -53,13 +53,17 @@ afs_link(struct vcache *avc, OSI_VC_DECL(adp), char *aname,
     AFS_STATCNT(afs_link);
     afs_Trace3(afs_iclSetp, CM_TRACE_LINK, ICL_TYPE_POINTER, adp,
 	       ICL_TYPE_POINTER, avc, ICL_TYPE_STRING, aname);
+
+    OutFidStatus = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+    OutDirStatus = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+
     /* create a hard link; new entry is aname in dir adp */
     if ((code = afs_InitReq(&treq, acred)))
 	goto done2;
 
     afs_InitFakeStat(&vfakestate);
     afs_InitFakeStat(&dfakestate);
-    
+
     AFS_DISCON_LOCK();
 
     code = afs_EvalFakeStat(&avc, &vfakestate, &treq);
@@ -89,7 +93,7 @@ afs_link(struct vcache *avc, OSI_VC_DECL(adp), char *aname,
 	code = EROFS;
 	goto done;
     }
-    
+
     if (AFS_IS_DISCONNECTED) {
         code = ENETDOWN;
         goto done;
@@ -104,8 +108,8 @@ afs_link(struct vcache *avc, OSI_VC_DECL(adp), char *aname,
 	    RX_AFS_GUNLOCK();
 	    code =
 		RXAFS_Link(rxconn, (struct AFSFid *)&adp->f.fid.Fid, aname,
-			   (struct AFSFid *)&avc->f.fid.Fid, &OutFidStatus,
-			   &OutDirStatus, &tsync);
+			   (struct AFSFid *)&avc->f.fid.Fid, OutFidStatus,
+			   OutDirStatus, &tsync);
 	    RX_AFS_GLOCK();
 	    XSTATS_END_TIME;
 
@@ -130,7 +134,7 @@ afs_link(struct vcache *avc, OSI_VC_DECL(adp), char *aname,
     }
     if (tdc)
 	ObtainWriteLock(&tdc->lock, 635);
-    if (afs_LocalHero(adp, tdc, &OutDirStatus, 1)) {
+    if (afs_LocalHero(adp, tdc, OutDirStatus, 1)) {
 	/* we can do it locally */
 	ObtainWriteLock(&afs_xdcache, 290);
 	code = afs_dir_Create(tdc, aname, &avc->f.fid.Fid);
@@ -168,5 +172,7 @@ afs_link(struct vcache *avc, OSI_VC_DECL(adp), char *aname,
     afs_PutFakeStat(&dfakestate);
     AFS_DISCON_UNLOCK();
   done2:
+    osi_FreeSmallSpace(OutFidStatus);
+    osi_FreeSmallSpace(OutDirStatus);
     return code;
 }

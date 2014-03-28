@@ -79,7 +79,7 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     struct server *hostp = 0;
     struct vcache *tvc;
     struct AFSStoreStatus InStatus;
-    struct AFSFetchStatus OutFidStatus, OutDirStatus;
+    struct AFSFetchStatus *OutFidStatus, *OutDirStatus;
     struct AFSCallBack CallBack;
     struct AFSVolSync tsync;
     struct volume *volp = 0;
@@ -91,6 +91,9 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     AFS_STATCNT(afs_symlink);
     afs_Trace2(afs_iclSetp, CM_TRACE_SYMLINK, ICL_TYPE_POINTER, adp,
 	       ICL_TYPE_STRING, aname);
+
+    OutFidStatus = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+    OutDirStatus = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
 
     if ((code = afs_InitReq(&treq, acred)))
 	goto done2;
@@ -169,7 +172,7 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 					 (struct AFSFid *)&adp->f.fid.Fid,
 					 aname, atargetName, &InStatus,
 					 (struct AFSFid *)&newFid.Fid,
-					 &OutFidStatus, &OutDirStatus, 
+					 OutFidStatus, OutDirStatus,
 					 &CallBack, &tsync);
 		    RX_AFS_GLOCK();
 		} else {
@@ -178,7 +181,7 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 			RXAFS_Symlink(rxconn, (struct AFSFid *)&adp->f.fid.Fid,
 				      aname, atargetName, &InStatus,
 				      (struct AFSFid *)&newFid.Fid, 
-				      &OutFidStatus, &OutDirStatus, &tsync);
+				      OutFidStatus, OutDirStatus, &tsync);
 		    RX_AFS_GLOCK();
 	    	}
 		XSTATS_END_TIME;
@@ -211,7 +214,7 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	goto done;
     }
     /* otherwise, we should see if we can make the change to the dir locally */
-    if (AFS_IS_DISCON_RW || afs_LocalHero(adp, tdc, &OutDirStatus, 1)) {
+    if (AFS_IS_DISCON_RW || afs_LocalHero(adp, tdc, OutDirStatus, 1)) {
 	/* we can do it locally */
 	ObtainWriteLock(&afs_xdcache, 293);
 	/* If the following fails because the name has been created in the meantime, the
@@ -273,7 +276,7 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	}
 	afs_DisconAddDirty(tvc, VDisconCreate, 0);
     } else {
-	afs_ProcessFS(tvc, &OutFidStatus, &treq);
+	afs_ProcessFS(tvc, OutFidStatus, &treq);
     }
 
     if (!tvc->linkData) {
@@ -296,6 +299,8 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     AFS_DISCON_UNLOCK();
     code = afs_CheckCode(code, &treq, 31);
   done2:
+    osi_FreeSmallSpace(OutFidStatus);
+    osi_FreeSmallSpace(OutDirStatus);
     return code;
 }
 
