@@ -164,11 +164,11 @@ AC_ARG_ENABLE([transarc-paths],
 
 dnl Deprecated crypto
 AC_ARG_ENABLE([kauth],
-    [AS_HELP_STRING([--disable-kauth],
-        [do not install the deprecated kauth server and utilities (defaults to
-         enabled)])],
+    [AS_HELP_STRING([--enable-kauth],
+        [install the deprecated kauth server and utilities (defaults to
+         disabled)])],
     ,
-    [enable_kauth="yes"])
+    [enable_kauth="no"])
 
 dnl Optimization and debugging flags.
 AC_ARG_ENABLE([strip-binaries],
