@@ -3216,11 +3216,6 @@ GetTrans(struct nvldbentry *vldbEntryPtr, afs_int32 index,
 	    goto fail;
 	}
 
-	if (tmpVolId)
-	    strcat(volname, ".roclone");
-	else
-	    strcat(volname, ".readonly");
-
 	if (verbose) {
 	    fprintf(STDOUT,
 		    "Creating new volume %lu on replication site %s: ",
