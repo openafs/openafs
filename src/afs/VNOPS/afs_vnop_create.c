@@ -46,7 +46,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     struct afs_conn *tc;
     struct VenusFid newFid;
     struct AFSStoreStatus InStatus;
-    struct AFSFetchStatus OutFidStatus, OutDirStatus;
+    struct AFSFetchStatus *OutFidStatus, *OutDirStatus;
     struct AFSVolSync tsync;
     struct AFSCallBack CallBack;
     afs_int32 now;
@@ -60,8 +60,11 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     XSTATS_DECLS;
     OSI_VC_CONVERT(adp);
 
-
     AFS_STATCNT(afs_create);
+
+    OutFidStatus = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+    OutDirStatus = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+
     if ((code = afs_InitReq(&treq, acred)))
 	goto done2;
 
@@ -307,7 +310,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	    	code =
 		    RXAFS_CreateFile(rxconn, (struct AFSFid *)&adp->f.fid.Fid,
 				 aname, &InStatus, (struct AFSFid *)
-				 &newFid.Fid, &OutFidStatus, &OutDirStatus,
+				 &newFid.Fid, OutFidStatus, OutDirStatus,
 				 &CallBack, &tsync);
 	    	RX_AFS_GLOCK();
 	    	XSTATS_END_TIME;
@@ -372,7 +375,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     /* otherwise, we should see if we can make the change to the dir locally */
     if (tdc)
 	UpgradeSToWLock(&tdc->lock, 631);
-    if (AFS_IS_DISCON_RW || afs_LocalHero(adp, tdc, &OutDirStatus, 1)) {
+    if (AFS_IS_DISCON_RW || afs_LocalHero(adp, tdc, OutDirStatus, 1)) {
 	/* we can do it locally */
 	ObtainWriteLock(&afs_xdcache, 291);
 	code = afs_dir_Create(tdc, aname, &newFid.Fid);
@@ -454,7 +457,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 		afs_DisconAddDirty(tvc, VDisconCreate, 0);
 		afs_GenDisconStatus(adp, tvc, &newFid, attrs, &treq, VREG);
 	    } else {
-		afs_ProcessFS(tvc, &OutFidStatus, &treq);
+		afs_ProcessFS(tvc, OutFidStatus, &treq);
 	    }
 
 	    tvc->f.parent.vnode = adp->f.fid.Fid.Vnode;
@@ -498,6 +501,8 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     code = afs_CheckCode(code, &treq, 20);
 
   done2:
+    osi_FreeSmallSpace(OutFidStatus);
+    osi_FreeSmallSpace(OutDirStatus);
     return code;
 }
 
