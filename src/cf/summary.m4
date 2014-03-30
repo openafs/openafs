@@ -45,10 +45,16 @@ AC_DEFUN([OPENAFS_SUMMARY],[
   AS_IF([test "x${DOCBOOK_STYLESHEETS}" = "x"],
     [summary_docbook_stylesheets="no"],
     [summary_docbook_stylesheets="yes"])
+  AS_IF([test "x${DOXYGEN}" = "x"],
+    [summary_doxygen="no"],
+    [summary_doxygen="yes"])
+  AS_IF([test "${summary_doxygen}" = "yes" -a "${HAVE_DOT}" = "yes"],
+    [summary_doxygen_graphs="yes"],
+    [summary_doxygen_graphs="no"])
 
   cat <<EOF
 ***************************************************************
-configure summary
+OpenAFS configure summary
 
   version : ${VERSION}
   sysname : ${AFS_SYSNAME}
@@ -56,7 +62,6 @@ configure summary
 debug:
   userspace              : ${enable_debug}
   kernel                 : ${enable_debug_kernel}
-
 options:
   transarc paths         : ${enable_transarc_paths}
   namei fileserver       : ${openafs_cv_summary_check_namei}
@@ -64,14 +69,15 @@ options:
   ptserver supergroups   : ${enable_supergroups}
   pthreaded ubik         : ${enable_pthreaded_ubik}
   install kauth          : ${INSTALL_KAUTH}
-  docbook stylesheets    : ${summary_docbook_stylesheets}
-
 build:
   scout/afsmonitor       : ${summary_build_scout}
   pam                    : ${HAVE_PAM}
   login                  : ${BUILD_LOGIN}
   uss                    : ${BUILD_USS}
-
+doc generation:
+  docbook stylesheets    : ${summary_docbook_stylesheets}
+  doxygen                : ${summary_doxygen}
+  doxygen graphs         : ${summary_doxygen_graphs}
 libraries:
   krb5    : ${KRB5_LIBS}
   curses  : ${LIB_curses}

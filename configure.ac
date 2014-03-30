@@ -132,6 +132,9 @@ AS_IF([test -f 'doc/xml/AdminRef/Makefile.in'],
 AS_IF([test -f 'doc/xml/mobi-fixup.xsl.in'],
     [MOBI_FIXUP_XSL="doc/xml/mobi-fixup.xsl"],
     [MOBI_FIXUP_XSL=])
+AS_IF([test -f 'doc/doxygen/Doxyfile.in'],
+    [DOXYFILE="doc/doxygen/Doxyfile"],
+    [DOXYFILE=])
 
 AC_OUTPUT([
     Makefile
@@ -141,6 +144,7 @@ AC_OUTPUT([
     ${USERGUIDE_MAKEFILE}
     ${ADMINREF_MAKEFILE}
     ${MOBI_FIXUP_XSL}
+    ${DOXYFILE}
     src/afs/Makefile
     src/afsd/Makefile
     src/afsmonitor/Makefile
