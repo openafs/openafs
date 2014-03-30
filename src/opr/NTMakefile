@@ -14,6 +14,7 @@ INCFILES = \
 	$(INCFILEDIR)\opr.h \
 	$(INCFILEDIR)\opr_assert.h \
 	$(DESTDIR)\include\opr\dict.h \
+	$(DESTDIR)\include\opr\fmt.h \
 	$(DESTDIR)\include\opr\jhash.h \
 	$(DESTDIR)\include\opr\proc.h \
 	$(DESTDIR)\include\opr\queue.h \
@@ -35,6 +36,7 @@ LIBOBJS = \
 	$(OUT)\assert.obj \
 	$(OUT)\casestrcpy.obj \
 	$(OUT)\dict.obj \
+	$(OUT)\fmt.obj \
 	$(OUT)\proc.obj \
 	$(OUT)\rbtree.obj \
 	$(OUT)\uuid.obj \

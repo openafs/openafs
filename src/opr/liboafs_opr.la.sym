@@ -2,6 +2,7 @@ opr_AssertionFailed
 opr_dict_Free
 opr_dict_Init
 opr_lcstring
+opr_fmt
 opr_procsize
 opr_rbtree_first
 opr_rbtree_init
