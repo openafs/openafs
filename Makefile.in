@@ -659,8 +659,6 @@ rpctestlib: util fsint rx opr libafsrpc libafsauthent
 check test: finale
 	cd tests && $(MAKE) check
 
-# Use washtool to ensure MakefileProto is current and obj/libafs exists.
-
 force:
 
 TARGET=finale
