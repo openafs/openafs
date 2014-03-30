@@ -283,10 +283,8 @@ dnl Check whether kindlegen exists.  If not, we'll suppress that part of the
 dnl documentation build.
 AC_CHECK_PROGS([KINDLEGEN], [kindlegen])
 
-dnl weird ass systems
-dnl AC_AIX
+dnl Checks for UNIX variants.
 AC_ISC_POSIX
-dnl AC_MINIX
 
 dnl Various compiler setup.
 AC_TYPE_PID_T
