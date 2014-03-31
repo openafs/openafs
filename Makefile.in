@@ -81,15 +81,15 @@ install_only_libafs: only_libafs install_dirs
 
 dest: all dest_dirs
 	$(MAKE) build COMPILE_PART2B=dest
-	-${INSTALL_DATA} ${srcdir}/src/LICENSE ${DEST}/LICENSE
+	-${INSTALL_DATA} ${srcdir}/LICENSE ${DEST}/LICENSE
 
 dest_nolibafs: all_nolibafs dest_dirs
 	$(MAKE) build TARGET=finale_nolibafs COMPILE_PART2B=dest
-	-${INSTALL_DATA} ${srcdir}/src/LICENSE ${DEST}/LICENSE
+	-${INSTALL_DATA} ${srcdir}/LICENSE ${DEST}/LICENSE
 
 dest_only_libafs: only_libafs dest_dirs
 	$(MAKE) build TARGET=libafs COMPILE_PART2B=dest
-	-${INSTALL_DATA} ${srcdir}/src/LICENSE ${DEST}/LICENSE
+	-${INSTALL_DATA} ${srcdir}/LICENSE ${DEST}/LICENSE
 
 packages: dest
 	@case ${SYS_NAME} in \

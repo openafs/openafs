@@ -780,7 +780,7 @@ tar cf - -C libafs_tree . | \
 	tar xf - -C $RPM_BUILD_ROOT%{_prefix}/src/openafs-kernel-%{afsvers}/src
 
 # Next, copy the LICENSE Files, README
-install -m 644 src/LICENSE $RPM_BUILD_ROOT%{_prefix}/src/openafs-kernel-%{afsvers}/LICENSE.IBM
+install -m 644 LICENSE $RPM_BUILD_ROOT%{_prefix}/src/openafs-kernel-%{afsvers}/LICENSE.IBM
 install -m 644 src/packaging/RedHat/openafs-LICENSE.Sun $RPM_BUILD_ROOT%{_prefix}/src/openafs-kernel-%{afsvers}/LICENSE.Sun
 install -m 644 src/packaging/RedHat/openafs-README $RPM_BUILD_ROOT%{_prefix}/src/openafs-kernel-%{afsvers}/README
 
