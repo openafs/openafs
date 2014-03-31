@@ -214,12 +214,9 @@ print_internet_address(char *preamble, struct srvAddr *sa, char *postamble,
 		" (multi-homed address; other same-host interfaces may still be down)\n";
 	}
     }
-    afs_warn("%s%d.%d.%d.%d in cell %s%s (code %d)%s", preamble, (address >> 24),
+    afs_warnall("%s%d.%d.%d.%d in cell %s%s (code %d)%s", preamble, (address >> 24),
 	     (address >> 16) & 0xff, (address >> 8) & 0xff, (address) & 0xff,
 	     aserver->cell->cellName, postamble, code, ptr);
-    afs_warnuser("%s%d.%d.%d.%d in cell %s%s (code %d)%s", preamble, (address >> 24),
-		 (address >> 16) & 0xff, (address >> 8) & 0xff,
-		 (address) & 0xff, aserver->cell->cellName, postamble, code, ptr);
 
     if (flag == 1 && rxconn) {
 	/* server was marked down, check Rx to see if this was possibly due to
@@ -232,14 +229,7 @@ print_internet_address(char *preamble, struct srvAddr *sa, char *postamble,
 	    if (!errmsg) {
 		errmsg = str1 = str2 = "";
 	    }
-	    afs_warn("afs: network error for %d.%d.%d.%d:%d: origin %d type %d code %d%s%s%s\n",
-	             (address >> 24),
-	             (address >> 16) & 0xff,
-	             (address >> 8) & 0xff,
-	             (address) & 0xff,
-	             (int)ntohs(sa->sa_portal),
-	             errorigin, errtype, errcode, str1, errmsg, str2);
-	    afs_warnuser("afs: network error for %d.%d.%d.%d:%d: origin %d type %d code %d%s%s%s\n",
+	    afs_warnall("afs: network error for %d.%d.%d.%d:%d: origin %d type %d code %d%s%s%s\n",
 	             (address >> 24),
 	             (address >> 16) & 0xff,
 	             (address >> 8) & 0xff,
