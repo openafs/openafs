@@ -329,11 +329,6 @@ I  Other configure options
        Forces the namei fileserver on platforms (like Solaris 8 and 9)
        where the inode fileserver is the default.
 
-   --enable-pthreaded-ubik
-       Enable the threaded version of Ubik and install the threaded
-       versions of Ubik servers.  See README.PTHREADED_UBIK for more
-       information.  (EXPERIMENTAL)
-
    --enable-redhat-buildsys
        Enable compilation of the kernel module for the Red Hat build
        system kernel.  Use this configure flag when building kernel
@@ -401,6 +396,10 @@ I  Other configure options
        harmless, but the PAM modules that come with OpenAFS are deprecated
        and should not be used unless you're still using the OpenAFS
        kaserver (which is itself deprecated and should not be used).
+
+   --disable-pthreaded-ubik
+       Disable the threaded version of Ubik and install the LWP
+       versions of Ubik servers.
 
    --disable-strip-binaries
        Disable stripping of binaries on installation.  You probably want
