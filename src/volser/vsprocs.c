@@ -2925,8 +2925,6 @@ UV_BackupVolume(afs_uint32 aserver, afs_int32 apart, afs_uint32 avolid)
 	goto bfail;
     }
 
-    VDONE;
-
     /* Will update the vldb below */
 
   bfail:
@@ -3085,8 +3083,6 @@ UV_CloneVolume(afs_uint32 aserver, afs_int32 apart, afs_uint32 avolid,
 	    goto bfail;
 	}
     }
-
-    VDONE;
 
   bfail:
     if (ttid) {
