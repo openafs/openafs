@@ -1,5 +1,13 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.6.7
+
+  All server platforms
+
+    * Fix for OPENAFS-SA-2014-001
+
+    * Fix for a potential DOS attack against RX servers
+
 OpenAFS 1.6.6
 
   All platforms
