@@ -50,7 +50,7 @@ struct unixuser *afs_users[NUSERS];
 
 #ifndef AFS_PAG_MANAGER
 /* Forward declarations */
-void afs_ResetAccessCache(afs_int32 uid, int alock);
+void afs_ResetAccessCache(afs_int32 uid, afs_int32 cell, int alock);
 #endif /* !AFS_PAG_MANAGER */
 
 
@@ -218,8 +218,13 @@ done:
 }				/*afs_CheckTokenCache */
 
 
+/* Remove any access caches associated with this uid+cell
+ * by scanning the entire vcache table.  Specify cell=-1
+ * to remove all access caches associated with this uid
+ * regardless of cell.
+ */
 void
-afs_ResetAccessCache(afs_int32 uid, int alock)
+afs_ResetAccessCache(afs_int32 uid, afs_int32 cell, int alock)
 {
     int i;
     struct vcache *tvc;
@@ -232,8 +237,11 @@ afs_ResetAccessCache(afs_int32 uid, int alock)
 	for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
 	    /* really should do this under cache write lock, but that.
 	     * is hard to under locking hierarchy */
-	    if (tvc->Access && (ac = afs_FindAxs(tvc->Access, uid))) {
-		afs_RemoveAxs(&tvc->Access, ac);
+	    if (tvc->Access && (cell == -1 || tvc->f.fid.Cell == cell)) {
+		ac = afs_FindAxs(tvc->Access, uid);
+		if (ac) {
+		    afs_RemoveAxs(&tvc->Access, ac);
+		}
 	    }
 	}
     }
@@ -272,7 +280,7 @@ afs_ResetUserConns(struct unixuser *auser)
 
     ReleaseWriteLock(&afs_xconn);
     ReleaseReadLock(&afs_xsrvAddr);
-    afs_ResetAccessCache(auser->uid, 1);
+    afs_ResetAccessCache(auser->uid, auser->cell, 1);
     auser->states &= ~UNeedsReset;
 }				/*afs_ResetUserConns */
 #endif /* !AFS_PAG_MANAGER */
