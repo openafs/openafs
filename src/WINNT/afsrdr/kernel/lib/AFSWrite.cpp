@@ -260,7 +260,7 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
                           "AFSCommonWrite (%p) Request failed due to read only volume\n",
                           Irp));
 
-            try_return( ntStatus = STATUS_ACCESS_DENIED);
+            try_return( ntStatus = STATUS_MEDIA_WRITE_PROTECTED);
         }
 
         //

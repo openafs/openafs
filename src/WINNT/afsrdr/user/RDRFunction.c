@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2008 Secure Endpoints, Inc.
- * Copyright (c) 2009-2013 Your File System, Inc.
+ * Copyright (c) 2009-2014 Your File System, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -6860,7 +6860,14 @@ RDR_WriteFile( IN cm_user_t     *userp,
 
     /* Ensure that the caller can access this file */
     lock_ObtainWrite(&scp->rw);
-    code = cm_SyncOp(scp, NULL, userp, &req, PRSFS_WRITE,
+    /*
+     * Request PRSFS_WRITE | PRSFS_LOCK in order to bypass the unix mode
+     * check in cm_HaveAccessRights().   By the time RDR_WriteFile is called
+     * it is already too late to deny the write due to the readonly attribute.
+     * The Windows cache may have already accepted the data.  Only if the
+     * user does not have real write permission should the write be denied.
+     */
+    code = cm_SyncOp(scp, NULL, userp, &req, PRSFS_WRITE | PRSFS_LOCK,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code == CM_ERROR_NOACCESS && scp->creator == userp) {
         code = cm_SyncOp(scp, NULL, userp, &req, PRSFS_INSERT,

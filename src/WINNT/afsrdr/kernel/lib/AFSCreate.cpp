@@ -3453,6 +3453,18 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
             try_return( ntStatus);
         }
 
+	if ( BooleanFlagOn( pObjectInfo->FileAttributes, FILE_ATTRIBUTE_READONLY))
+	{
+
+	    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+			  AFS_TRACE_LEVEL_WARNING,
+			  "AFSProcessOverwriteSupersede Request failed on %wZ due to read only file attribute\n",
+			  Irp,
+			  &DirectoryCB->NameInformation.FileName));
+
+	    try_return( ntStatus = STATUS_ACCESS_DENIED);
+	}
+
         //
         // Be sure we have an Fcb for the object block
         //
