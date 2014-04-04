@@ -477,13 +477,8 @@ cmd_CreateSyntax(char *aname,
 	noOpcodes = 1;
     }
     if (ahelp) {
-	/* Piggy-back the hidden option onto the help string. */
-	if (ahelp == (char *)CMD_HIDDEN) {
-	    td->flags |= CMD_HIDDEN;
-	} else {
-	    td->help = strdup(ahelp);
-	    assert(td->help);
-	}
+	td->help = strdup(ahelp);
+	assert(td->help);
     } else
 	td->help = NULL;
     td->proc = aproc;
@@ -781,14 +776,10 @@ initSyntax(void)
 
 	cmd_CreateSyntax("version", VersionProc, NULL, 0,
 			 "show version");
-	cmd_CreateSyntax("-version", VersionProc, NULL, 0,
-			 (char *)CMD_HIDDEN);
-	cmd_CreateSyntax("-help", HelpProc, NULL, 0,
-			 (char *)CMD_HIDDEN);
-	cmd_CreateSyntax("--version", VersionProc, NULL, 0,
-		         (char *)CMD_HIDDEN);
-	cmd_CreateSyntax("--help", HelpProc, NULL, 0,
-			 (char *)CMD_HIDDEN);
+	cmd_CreateSyntax("-version", VersionProc, NULL, CMD_HIDDEN, NULL);
+	cmd_CreateSyntax("-help", HelpProc, NULL, CMD_HIDDEN, NULL);
+	cmd_CreateSyntax("--version", VersionProc, NULL, CMD_HIDDEN, NULL);
+	cmd_CreateSyntax("--help", HelpProc, NULL, CMD_HIDDEN, NULL);
     }
 }
 

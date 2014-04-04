@@ -1751,8 +1751,7 @@ ka_AdminInteractive(int cmd_argc, char *cmd_argv[])
     cmd_CreateAlias(ts, "setpasswd");
 #endif
 
-    /* set a user's key */
-    ts = cmd_CreateSyntax("setkey", SetPassword, NULL, 0, (char *)CMD_HIDDEN);
+    ts = cmd_CreateSyntax("setkey", SetPassword, NULL, CMD_HIDDEN, "set a user's key");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "name of user");
     cmd_Seek(ts, 2);
     cmd_AddParm(ts, "-new_key", CMD_SINGLE, 0, "eight byte new key");
@@ -1760,8 +1759,7 @@ ka_AdminInteractive(int cmd_argc, char *cmd_argv[])
     cmd_AddParm(ts, "-kvno", CMD_SINGLE, CMD_OPTIONAL, "key version number");
     add_std_args(ts);
 
-    /* get a user's password */
-    ts = cmd_CreateSyntax("getpassword", GetPassword, NULL, 0, (char *)CMD_HIDDEN);
+    ts = cmd_CreateSyntax("getpassword", GetPassword, NULL, CMD_HIDDEN, "get a user's password");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "name of user");
     /* don't take standard args */
     /* add_std_args (ts); */
@@ -1769,13 +1767,10 @@ ka_AdminInteractive(int cmd_argc, char *cmd_argv[])
     cmd_CreateAlias(ts, "getpasswd");
 #endif
 
-    /* get a random key */
-    ts = cmd_CreateSyntax("getrandomkey", GetRandomKey, NULL, 0,
-			  (char *)CMD_HIDDEN);
+    ts = cmd_CreateSyntax("getrandomkey", GetRandomKey, NULL, CMD_HIDDEN, "get a random key");
     add_std_args(ts);
 
-    /* get a ticket for a specific server */
-    ts = cmd_CreateSyntax("getticket", GetTicket, NULL, 0, (char *)CMD_HIDDEN);
+    ts = cmd_CreateSyntax("getticket", GetTicket, NULL, CMD_HIDDEN, "get a ticket for a specific server");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "name of server");
     cmd_AddParm(ts, "-lifetime", CMD_SINGLE, CMD_OPTIONAL, "ticket lifetime");
     add_std_args(ts);
@@ -1784,8 +1779,7 @@ ka_AdminInteractive(int cmd_argc, char *cmd_argv[])
 			  "show statistics for AuthServer");
     add_std_args(ts);
 
-    /* show debugging info from AuthServer */
-    ts = cmd_CreateSyntax("debuginfo", DebugInfo, NULL, 0, (char *)CMD_HIDDEN);
+    ts = cmd_CreateSyntax("debuginfo", DebugInfo, NULL, CMD_HIDDEN, "show debugging info from AuthServer");
     cmd_AddParm(ts, "-hostname", CMD_SINGLE, CMD_OPTIONAL,
 		"authentication server host name");
     add_std_args(ts);

@@ -3873,8 +3873,7 @@ defect 3069
     ts = cmd_CreateSyntax("primarycell", PrimaryCellCmd, NULL, "obsolete (listed primary cell)");
 */
 
-    /* set cache monitor host address */
-    ts = cmd_CreateSyntax("monitor", MonitorCmd, NULL, 0, (char *)CMD_HIDDEN);
+    ts = cmd_CreateSyntax("monitor", MonitorCmd, NULL, CMD_HIDDEN, "set cache monitor host address");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_OPTIONAL,
 		"host name or 'off'");
     cmd_CreateAlias(ts, "mariner");

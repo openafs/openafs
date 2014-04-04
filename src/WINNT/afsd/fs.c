@@ -5448,7 +5448,7 @@ int wmain(int argc, wchar_t **wargv)
 
     ts = cmd_CreateSyntax("minidump", MiniDumpCmd, NULL, 0, "Generate MiniDump of current service state");
 
-    ts = cmd_CreateSyntax("test_volstat", TestVolStatCmd, NULL, 0, (char *)CMD_HIDDEN);
+    ts = cmd_CreateSyntax("test_volstat", TestVolStatCmd, NULL, CMD_HIDDEN, "check or update volume state");
     cmd_AddParm(ts, "-network", CMD_SINGLE, CMD_OPTIONAL, "set network state up or down");
     cmd_AddParm(ts, "-check",   CMD_FLAG,   CMD_OPTIONAL, "check state of offline volumes");
     cmd_AddParm(ts, "-cell",    CMD_SINGLE, CMD_OPTIONAL, "cell name or number");
