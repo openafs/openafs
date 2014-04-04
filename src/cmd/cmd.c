@@ -357,11 +357,35 @@ HelpProc(struct cmd_syndesc *as, void *arock)
     int code = 0;
 
     if (as->parms[0].items == 0) {
-	printf("%sCommands are:\n", NName(as->a0name, ": "));
+	struct cmd_syndesc *initcmd = NULL;
+	int count = 0;
+
+	/*
+	 * Print the usage of the initcmd command when it is the only
+	 * non-hidden, explicit command, otherwise, list the all the commands.
+	 */
 	for (ts = allSyntax; ts; ts = ts->next) {
-	    if ((ts->flags & CMD_ALIAS) || (ts->flags & CMD_HIDDEN))
+	    if (ts->flags & (CMD_ALIAS | CMD_HIDDEN | CMD_IMPLICIT)) {
+		continue; /* skip aliases, hidden, and implied commands */
+	    }
+	    if (strcmp(ts->name, initcmd_opcode) == 0) {
+		initcmd = ts; /* save the initcmd */
 		continue;
-	    printf("%-15s %s\n", ts->name, (ts->help ? ts->help : ""));
+	    }
+	    count++;
+	}
+	if (initcmd && count == 0) {
+	    initcmd->a0name = as->a0name;
+	    PrintAliases(initcmd);
+	    PrintSyntax(initcmd);
+	    PrintFlagHelp(initcmd);
+	} else {
+	    printf("%sCommands are:\n", NName(as->a0name, ": "));
+	    for (ts = allSyntax; ts; ts = ts->next) {
+		if ((ts->flags & CMD_ALIAS) || (ts->flags & CMD_HIDDEN))
+		    continue;
+		printf("%-15s %s\n", ts->name, (ts->help ? ts->help : ""));
+	    }
 	}
     } else {
 	/* print out individual help topics */
@@ -439,7 +463,7 @@ SortSyntax(struct cmd_syndesc *as)
  * \param[in] aname  name used to invoke the command
  * \param[in] aproc  procedure to be called when command is invoked
  * \param[in] arock  opaque data pointer to be passed to aproc
- * \param[in] aflags command option flags (CMD_HIDDEN)
+ * \param[in] aflags command option flags
  * \param[in] ahelp  help string to display for this command
  *
  * \return a pointer to the cmd_syndesc or NULL if error.
@@ -456,7 +480,7 @@ cmd_CreateSyntax(char *aname,
 	return NULL;
 
     /* Allow only valid cmd flags. */
-    if (aflags & ~CMD_HIDDEN) {
+    if (aflags & ~(CMD_HIDDEN | CMD_IMPLICIT)) {
 	return NULL;
     }
 
@@ -763,20 +787,20 @@ initSyntax(void)
     struct cmd_syndesc *ts;
 
     if (!noOpcodes) {
-	ts = cmd_CreateSyntax("help", HelpProc, NULL, 0,
+	ts = cmd_CreateSyntax("help", HelpProc, NULL, CMD_IMPLICIT,
 			      "get help on commands");
 	cmd_AddParm(ts, "-topic", CMD_LIST, CMD_OPTIONAL, "help string");
 
-	ts = cmd_CreateSyntax("apropos", AproposProc, NULL, 0,
+	ts = cmd_CreateSyntax("apropos", AproposProc, NULL, CMD_IMPLICIT,
 			      "search by help text");
 	cmd_AddParm(ts, "-topic", CMD_SINGLE, CMD_REQUIRED, "help string");
 
-	cmd_CreateSyntax("version", VersionProc, NULL, 0,
+	cmd_CreateSyntax("version", VersionProc, NULL, CMD_IMPLICIT,
 			 "show version");
-	cmd_CreateSyntax("-version", VersionProc, NULL, CMD_HIDDEN, NULL);
-	cmd_CreateSyntax("-help", HelpProc, NULL, CMD_HIDDEN, NULL);
-	cmd_CreateSyntax("--version", VersionProc, NULL, CMD_HIDDEN, NULL);
-	cmd_CreateSyntax("--help", HelpProc, NULL, CMD_HIDDEN, NULL);
+	cmd_CreateSyntax("-version", VersionProc, NULL, (CMD_HIDDEN | CMD_IMPLICIT), NULL);
+	cmd_CreateSyntax("-help", HelpProc, NULL, (CMD_HIDDEN | CMD_IMPLICIT), NULL);
+	cmd_CreateSyntax("--version", VersionProc, NULL, (CMD_HIDDEN | CMD_IMPLICIT), NULL);
+	cmd_CreateSyntax("--help", HelpProc, NULL, (CMD_HIDDEN | CMD_IMPLICIT), NULL);
     }
 }
 
