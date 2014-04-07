@@ -456,18 +456,32 @@ afs_ComputePAGStats(void)
 
 }				/*afs_ComputePAGStats */
 
+/*!
+ * Obtain a unixuser for the specified uid and cell;
+ * if no existing match found, allocate a new one.
+ *
+ * \param[in] auid	uid/PAG value
+ * \param[in] acell	cell number; if -1, match on auid only
+ * \param[in] locktype  locktype desired on returned unixuser
+ *
+ * \post unixuser is chained in afs_users[], returned with <locktype> held
+ *
+ * \note   Maintain unixusers in sorted order within hash bucket to enable
+ *         small lookup optimizations.
+ */
 
 struct unixuser *
 afs_GetUser(afs_int32 auid, afs_int32 acell, afs_int32 locktype)
 {
-    struct unixuser *tu, *pu = 0;
+    struct unixuser *tu, *xu = 0, *pu = 0;
     afs_int32 i;
     afs_int32 RmtUser = 0;
 
     AFS_STATCNT(afs_GetUser);
     i = UHash(auid);
     ObtainWriteLock(&afs_xuser, 104);
-    for (tu = afs_users[i]; tu; tu = tu->next) {
+    /* unixusers are sorted by uid in each hash bucket */
+    for (tu = afs_users[i]; tu && (tu->uid <= auid) ; xu = tu, tu = tu->next) {
 	if (tu->uid == auid) {
 	    RmtUser = 0;
 	    pu = NULL;
@@ -486,6 +500,10 @@ afs_GetUser(afs_int32 auid, afs_int32 acell, afs_int32 locktype)
 	    }
 	}
     }
+    /* no matching unixuser found; repurpose the tu pointer to
+     * allocate a new unixuser.
+     * xu will be insertion point for our new unixuser.
+     */
     tu = afs_osi_Alloc(sizeof(struct unixuser));
     osi_Assert(tu != NULL);
 #ifndef AFS_NOSTATS
@@ -493,8 +511,14 @@ afs_GetUser(afs_int32 auid, afs_int32 acell, afs_int32 locktype)
 #endif /* AFS_NOSTATS */
     memset(tu, 0, sizeof(struct unixuser));
     AFS_RWLOCK_INIT(&tu->lock, "unixuser lock");
-    tu->next = afs_users[i];
-    afs_users[i] = tu;
+    /* insert new nu in sorted order after xu */
+    if (xu == NULL) {
+	tu->next = afs_users[i];
+	afs_users[i] = tu;
+    } else {
+	tu->next = xu->next;
+	xu->next = tu;
+    }
     if (RmtUser) {
 	/*
 	 * This is for the case where an additional unixuser struct is
@@ -512,6 +536,7 @@ afs_GetUser(afs_int32 auid, afs_int32 acell, afs_int32 locktype)
     tu->viceId = UNDEFVID;
     tu->refCount = 1;
     tu->tokenTime = osi_Time();
+    /* fall through to return the new one */
 
  done:
     ReleaseWriteLock(&afs_xuser);
