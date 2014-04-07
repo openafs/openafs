@@ -220,12 +220,12 @@ gi: ${TOP_LIBDIR}/libsys.a
 namei_map: ${TOP_LIBDIR}/libsys.a namei_map.o
 	${CC} ${CFLAGS} -o namei_map namei_map.o ${TOP_LIBDIR}/libafsutil.a ${LIBS} ${XLIBS}
 
-volinfo: volinfo-main.c vol-info.o physio.o ihandle.o ${LIBS}
-	${CC} ${CFLAGS} -o volinfo volinfo-main.c vol-info.o physio.o \
+volinfo: volinfo-main.o vol-info.o physio.o ihandle.o ${LIBS}
+	${CC} ${CFLAGS} -o volinfo volinfo-main.o vol-info.o physio.o \
 		ihandle.o ${LIBS} ${XLIBS}
 
-volscan: volscan-main.c vol-info.o physio.o ihandle.o ${LIBS}
-	${CC} ${CFLAGS} -o volscan volscan-main.c vol-info.o physio.o \
+volscan: volscan-main.o vol-info.o physio.o ihandle.o ${LIBS}
+	${CC} ${CFLAGS} -o volscan volscan-main.o vol-info.o physio.o \
 		ihandle.o ${LIBS} ${XLIBS}
 
 fssync-debug: fssync-debug.o physio.o AFS_component_version_number.c ${LIBS}
