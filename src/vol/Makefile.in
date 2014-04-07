@@ -218,12 +218,12 @@ namei_map: ${TOP_LIBDIR}/libsys.a namei_map.o
 	$(AFS_LDRULE) namei_map.o ${TOP_LIBDIR}/libafsutil.a \
 		${LIBS} $(LIB_roken) ${XLIBS}
 
-volinfo: volinfo-main.c vol-info.o physio.o ihandle.o ${LIBS}
-	$(AFS_LDRULE) volinfo-main.c vol-info.o physio.o ihandle.o \
+volinfo: volinfo-main.o vol-info.o physio.o ihandle.o ${LIBS}
+	$(AFS_LDRULE) volinfo-main.o vol-info.o physio.o ihandle.o \
 		${LIBS} $(LIB_roken) ${XLIBS}
 
-volscan: volscan-main.c vol-info.o physio.o ihandle.o ${LIBS}
-	$(AFS_LDRULE) volscan-main.c vol-info.o physio.o ihandle.o \
+volscan: volscan-main.o vol-info.o physio.o ihandle.o ${LIBS}
+	$(AFS_LDRULE) volscan-main.o vol-info.o physio.o ihandle.o \
 		${LIBS} $(LIB_roken) ${XLIBS}
 
 fssync-debug: fssync-debug.o physio.o AFS_component_version_number.c ${LIBS}
