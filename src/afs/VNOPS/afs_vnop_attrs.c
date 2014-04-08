@@ -194,7 +194,7 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, afs_ucred_t *acred)
 #endif
 {
     afs_int32 code;
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     struct unixuser *au;
     int inited = 0;
     OSI_VC_CONVERT(avc);
@@ -205,19 +205,23 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, afs_ucred_t *acred)
 
     if (afs_fakestat_enable && avc->mvstat == 1) {
 	struct afs_fakestat_state fakestat;
+	struct vrequest *ureq = NULL;
 
-	code = afs_InitReq(&treq, acred);
-	if (code)
+	code = afs_CreateReq(&ureq, acred);
+	if (code) {
 	    return code;
+	}
 	afs_InitFakeStat(&fakestat);
-	code = afs_TryEvalFakeStat(&avc, &fakestat, &treq);
+	code = afs_TryEvalFakeStat(&avc, &fakestat, ureq);
 	if (code) {
 	    afs_PutFakeStat(&fakestat);
+	    afs_DestroyReq(ureq);
 	    return code;
 	}
 
 	code = afs_CopyOutAttrs(avc, attrs);
 	afs_PutFakeStat(&fakestat);
+	afs_DestroyReq(ureq);
 	return code;
     }
 #if defined(AFS_SUN5_ENV)
@@ -243,8 +247,8 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, afs_ucred_t *acred)
 	return EIO;
 
     if (!(avc->f.states & CStatd)) {
-	if (!(code = afs_InitReq(&treq, acred))) {
-	    code = afs_VerifyVCache2(avc, &treq);
+	if (!(code = afs_CreateReq(&treq, acred))) {
+	    code = afs_VerifyVCache2(avc, treq);
 	    inited = 1;
 	}
     } else
@@ -263,19 +267,21 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, afs_ucred_t *acred)
 
 	if (afs_nfsexporter) {
 	    if (!inited) {
-		if ((code = afs_InitReq(&treq, acred)))
+		if ((code = afs_CreateReq(&treq, acred))) {
 		    return code;
+		}
 		inited = 1;
 	    }
 	    if (AFS_NFSXLATORREQ(acred)) {
 		if ((vType(avc) != VDIR)
-		    && !afs_AccessOK(avc, PRSFS_READ, &treq,
+		    && !afs_AccessOK(avc, PRSFS_READ, treq,
 				     CHECK_MODE_BITS |
 				     CMB_ALLOW_EXEC_AS_READ)) {
+		    afs_DestroyReq(treq);
 		    return EACCES;
 		}
 	    }
-	    if ((au = afs_FindUser(treq.uid, -1, READ_LOCK))) {
+	    if ((au = afs_FindUser(treq->uid, -1, READ_LOCK))) {
 		struct afs_exporter *exporter = au->exporter;
 
 		if (exporter && !(afs_nfsexporter->exp_states & EXP_UNIXMODE)) {
@@ -336,9 +342,12 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, afs_ucred_t *acred)
 
     AFS_DISCON_UNLOCK();
 
-    if (!code)
+    if (!code) {
+	afs_DestroyReq(treq);
 	return 0;
-    code = afs_CheckCode(code, &treq, 14);
+    }
+    code = afs_CheckCode(code, treq, 14);
+    afs_DestroyReq(treq);
     return code;
 }
 
@@ -450,7 +459,7 @@ afs_setattr(OSI_VC_DECL(avc), struct vattr *attrs,
 	    afs_ucred_t *acred)
 #endif
 {
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     struct AFSStoreStatus astat;
     afs_int32 code;
 #if defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV)
@@ -471,13 +480,13 @@ afs_setattr(OSI_VC_DECL(avc), struct vattr *attrs,
 	       ICL_HANDLE_OFFSET(attrs->va_size), ICL_TYPE_OFFSET,
 	       ICL_HANDLE_OFFSET(avc->f.m.Length));
 #endif
-    if ((code = afs_InitReq(&treq, acred)))
+    if ((code = afs_CreateReq(&treq, acred)))
 	return code;
 
     AFS_DISCON_LOCK();
 
     afs_InitFakeStat(&fakestate);
-    code = afs_EvalFakeStat(&avc, &fakestate, &treq);
+    code = afs_EvalFakeStat(&avc, &fakestate, treq);
     if (code)
 	goto done;
 
@@ -509,7 +518,7 @@ afs_setattr(OSI_VC_DECL(avc), struct vattr *attrs,
 #else
     if (attrs->va_size != ~0) {
 #endif
-	if (!afs_AccessOK(avc, PRSFS_WRITE, &treq, DONT_CHECK_MODE_BITS)) {
+	if (!afs_AccessOK(avc, PRSFS_WRITE, treq, DONT_CHECK_MODE_BITS)) {
 	    code = EACCES;
 	    goto done;
 	}
@@ -554,9 +563,9 @@ afs_setattr(OSI_VC_DECL(avc), struct vattr *attrs,
         if (AFS_IS_DISCONNECTED && tsize >=avc->f.m.Length) {
 	    /* If we're growing the file, and we're disconnected, we need
  	     * to make the relevant dcache chunks appear ourselves. */
-	    code = afs_ExtendSegments(avc, tsize, &treq);
+	    code = afs_ExtendSegments(avc, tsize, treq);
 	} else {
-	    code = afs_TruncateAllSegments(avc, tsize, &treq, acred);
+	    code = afs_TruncateAllSegments(avc, tsize, treq, acred);
 	}
 #ifdef AFS_LINUX26_ENV
 	/* We must update the Linux kernel's idea of file size as soon as
@@ -582,7 +591,7 @@ afs_setattr(OSI_VC_DECL(avc), struct vattr *attrs,
 		/* Store files now if not disconnected. */
 		/* XXX: AFS_IS_DISCON_RW handled. */
 		if (!AFS_IS_DISCONNECTED) {
-			code = afs_StoreAllSegments(avc, &treq, AFS_ASYNC);
+			code = afs_StoreAllSegments(avc, treq, AFS_ASYNC);
 			if (!code)
 		    		avc->f.states &= ~CDirty;
 		}
@@ -598,7 +607,7 @@ afs_setattr(OSI_VC_DECL(avc), struct vattr *attrs,
     if (!AFS_IS_DISCONNECTED) {
         if (code == 0) {
 	    ObtainSharedLock(&avc->lock, 16);	/* lock entry */
-	    code = afs_WriteVCache(avc, &astat, &treq);	/* send request */
+	    code = afs_WriteVCache(avc, &astat, treq);	/* send request */
 	    ReleaseSharedLock(&avc->lock);	/* release lock */
         }
         if (code) {
@@ -632,6 +641,7 @@ afs_setattr(OSI_VC_DECL(avc), struct vattr *attrs,
     afs_PutFakeStat(&fakestate);
 
     AFS_DISCON_UNLOCK();
-    code = afs_CheckCode(code, &treq, 15);
+    code = afs_CheckCode(code, treq, 15);
+    afs_DestroyReq(treq);
     return code;
 }

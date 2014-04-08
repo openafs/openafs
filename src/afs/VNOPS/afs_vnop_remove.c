@@ -176,7 +176,7 @@ char *Tnam1;
 int
 afs_remove(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 {
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     struct dcache *tdc;
     struct VenusFid unlinkFid;
     afs_int32 code;
@@ -190,13 +190,13 @@ afs_remove(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 	       ICL_TYPE_STRING, aname);
 
 
-    if ((code = afs_InitReq(&treq, acred))) {
+    if ((code = afs_CreateReq(&treq, acred))) {
 	return code;
     }
 
     afs_InitFakeStat(&fakestate);
     AFS_DISCON_LOCK();
-    code = afs_EvalFakeStat(&adp, &fakestate, &treq);
+    code = afs_EvalFakeStat(&adp, &fakestate, treq);
     if (code)
 	goto done;
 
@@ -215,10 +215,10 @@ afs_remove(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 	goto done;
     }
   tagain:
-    code = afs_VerifyVCache(adp, &treq);
+    code = afs_VerifyVCache(adp, treq);
     tvc = NULL;
     if (code) {
-	code = afs_CheckCode(code, &treq, 23);
+	code = afs_CheckCode(code, treq, 23);
 	goto done;
     }
 
@@ -236,7 +236,7 @@ afs_remove(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 	goto done;
     }
     
-    tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &offset, &len, 1);	/* test for error below */
+    tdc = afs_GetDCache(adp, (afs_size_t) 0, treq, &offset, &len, 1);	/* test for error below */
     ObtainWriteLock(&adp->lock, 142);
     if (tdc)
 	ObtainSharedLock(&tdc->lock, 638);
@@ -272,7 +272,7 @@ afs_remove(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 		unlinkFid.Fid.Volume = adp->f.fid.Fid.Volume;
 		if (unlinkFid.Fid.Unique == 0) {
 		    tvc =
-			afs_LookupVCache(&unlinkFid, &treq, &cached, adp,
+			afs_LookupVCache(&unlinkFid, treq, &cached, adp,
 					 aname);
 		} else {
 		    ObtainReadLock(&afs_xvcache);
@@ -316,7 +316,7 @@ afs_remove(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 	if (tdc)
 	    ReleaseSharedLock(&tdc->lock);
 	ObtainWriteLock(&tvc->lock, 143);
-	FetchWholeEnchilada(tvc, &treq);
+	FetchWholeEnchilada(tvc, treq);
 	ReleaseWriteLock(&tvc->lock);
 	ObtainWriteLock(&adp->lock, 144);
 	/* Technically I don't think we need this back, but let's hold it 
@@ -350,7 +350,7 @@ afs_remove(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 	ReleaseWriteLock(&adp->lock);
 	if (tdc)
 	    ReleaseSharedLock(&tdc->lock);
-	code = afsrename(adp, aname, adp, unlname, acred, &treq);
+	code = afsrename(adp, aname, adp, unlname, acred, treq);
 	Tnam1 = unlname;
 	if (!code) {
 	    struct VenusFid *oldmvid = NULL;
@@ -378,7 +378,7 @@ afs_remove(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 	    afs_PutDCache(tdc);
 	afs_PutVCache(tvc);
     } else {
-	code = afsremove(adp, tdc, tvc, aname, acred, &treq);
+	code = afsremove(adp, tdc, tvc, aname, acred, treq);
     }
     done:
     afs_PutFakeStat(&fakestate);
@@ -388,6 +388,7 @@ afs_remove(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
     osi_Assert(!WriteLocked(&adp->lock) || (adp->lock.pid_writer != MyPidxx));
 #endif
     AFS_DISCON_UNLOCK();
+    afs_DestroyReq(treq);
     return code;
 }
 
@@ -403,7 +404,6 @@ afs_remunlink(struct vcache *avc, int doit)
     afs_ucred_t *cred;
     char *unlname;
     struct vcache *adp;
-    struct vrequest treq;
     struct VenusFid dirFid;
     struct dcache *tdc;
     afs_int32 code = 0;
@@ -418,7 +418,9 @@ afs_remunlink(struct vcache *avc, int doit)
 #endif
 
     if (avc->mvid && (doit || (avc->f.states & CUnlinkedDel))) {
-	if ((code = afs_InitReq(&treq, avc->uncred))) {
+	struct vrequest *treq = NULL;
+
+	if ((code = afs_CreateReq(&treq, avc->uncred))) {
 	    ReleaseWriteLock(&avc->lock);
 	} else {
 	    /* Must bump the refCount because GetVCache may block.
@@ -446,7 +448,7 @@ afs_remunlink(struct vcache *avc, int doit)
 	    dirFid.Fid.Volume = avc->f.fid.Fid.Volume;
 	    dirFid.Fid.Vnode = avc->f.parent.vnode;
 	    dirFid.Fid.Unique = avc->f.parent.unique;
-	    adp = afs_GetVCache(&dirFid, &treq, NULL, NULL);
+	    adp = afs_GetVCache(&dirFid, treq, NULL, NULL);
 
 	    if (adp) {
 		tdc = afs_FindDCache(adp, (afs_size_t) 0);
@@ -455,7 +457,7 @@ afs_remunlink(struct vcache *avc, int doit)
 		    ObtainSharedLock(&tdc->lock, 639);
 
 		/* afsremove releases the adp & tdc locks, and does vn_rele(avc) */
-		code = afsremove(adp, tdc, avc, unlname, cred, &treq);
+		code = afsremove(adp, tdc, avc, unlname, cred, treq);
 		afs_PutVCache(adp);
 	    } else {
 		/* we failed - and won't be back to try again. */
@@ -463,6 +465,7 @@ afs_remunlink(struct vcache *avc, int doit)
 	    }
 	    osi_FreeSmallSpace(unlname);
 	    crfree(cred);
+	    afs_DestroyReq(treq);
 	}
     } else {
 #if defined(AFS_DARWIN80_ENV)

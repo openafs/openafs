@@ -454,30 +454,32 @@ afs_rename(OSI_VC_DECL(aodp), char *aname1, struct vcache *andp, char *aname2, a
     afs_int32 code;
     struct afs_fakestat_state ofakestate;
     struct afs_fakestat_state nfakestate;
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     OSI_VC_CONVERT(aodp);
 
-    code = afs_InitReq(&treq, acred);
+    code = afs_CreateReq(&treq, acred);
     if (code)
 	return code;
+
     afs_InitFakeStat(&ofakestate);
     afs_InitFakeStat(&nfakestate);
 
     AFS_DISCON_LOCK();
     
-    code = afs_EvalFakeStat(&aodp, &ofakestate, &treq);
+    code = afs_EvalFakeStat(&aodp, &ofakestate, treq);
     if (code)
 	goto done;
-    code = afs_EvalFakeStat(&andp, &nfakestate, &treq);
+    code = afs_EvalFakeStat(&andp, &nfakestate, treq);
     if (code)
 	goto done;
-    code = afsrename(aodp, aname1, andp, aname2, acred, &treq);
+    code = afsrename(aodp, aname1, andp, aname2, acred, treq);
   done:
     afs_PutFakeStat(&ofakestate);
     afs_PutFakeStat(&nfakestate);
 
     AFS_DISCON_UNLOCK();
     
-    code = afs_CheckCode(code, &treq, 25);
+    code = afs_CheckCode(code, treq, 25);
+    afs_DestroyReq(treq);
     return code;
 }
