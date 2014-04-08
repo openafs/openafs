@@ -41,7 +41,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 #endif				/* AFS_SGI64_ENV */
 {
     afs_int32 origCBs, origZaps, finalZaps;
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     afs_int32 code;
     struct afs_conn *tc;
     struct VenusFid newFid;
@@ -65,7 +65,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     OutFidStatus = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
     OutDirStatus = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
 
-    if ((code = afs_InitReq(&treq, acred)))
+    if ((code = afs_CreateReq(&treq, acred)))
 	goto done2;
 
     afs_Trace3(afs_iclSetp, CM_TRACE_CREATE, ICL_TYPE_POINTER, adp,
@@ -108,11 +108,11 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     }
     AFS_DISCON_LOCK();
 
-    code = afs_EvalFakeStat(&adp, &fakestate, &treq);
+    code = afs_EvalFakeStat(&adp, &fakestate, treq);
     if (code)
 	goto done;
   tagain:
-    code = afs_VerifyVCache(adp, &treq);
+    code = afs_VerifyVCache(adp, treq);
     if (code)
 	goto done;
 
@@ -129,7 +129,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
         goto done;
     }
 
-    tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &offset, &len, 1);
+    tdc = afs_GetDCache(adp, (afs_size_t) 0, treq, &offset, &len, 1);
     ObtainWriteLock(&adp->lock, 135);
     if (tdc)
 	ObtainSharedLock(&tdc->lock, 630);
@@ -168,10 +168,10 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	    newFid.Fid.Volume = adp->f.fid.Fid.Volume;
 	    tvc = NULL;
 	    if (newFid.Fid.Unique == 0) {
-		tvc = afs_LookupVCache(&newFid, &treq, NULL, adp, aname);
+		tvc = afs_LookupVCache(&newFid, treq, NULL, adp, aname);
 	    }
 	    if (!tvc)		/* lookup failed or wasn't called */
-		tvc = afs_GetVCache(&newFid, &treq, NULL, NULL);
+		tvc = afs_GetVCache(&newFid, treq, NULL, NULL);
 
 	    if (tvc) {
 		/* if the thing exists, we need the right access to open it.
@@ -184,7 +184,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 		 * has mode -w-w-w, which is wrong.
 		 */
 		if ((amode & VREAD)
-		    && !afs_AccessOK(tvc, PRSFS_READ, &treq, CHECK_MODE_BITS)) {
+		    && !afs_AccessOK(tvc, PRSFS_READ, treq, CHECK_MODE_BITS)) {
 		    afs_PutVCache(tvc);
 		    code = EACCES;
 		    goto done;
@@ -202,7 +202,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 		    tvc->f.parent.unique = adp->f.fid.Fid.Unique;
 		    /* need write mode for these guys */
 		    if (!afs_AccessOK
-			(tvc, PRSFS_WRITE, &treq, CHECK_MODE_BITS)) {
+			(tvc, PRSFS_WRITE, treq, CHECK_MODE_BITS)) {
 			afs_PutVCache(tvc);
 			code = EACCES;
 			goto done;
@@ -301,7 +301,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 
     	InStatus.UnixModeBits = attrs->va_mode & 0xffff;	/* only care about protection bits */
     	do {
-	    tc = afs_Conn(&adp->f.fid, &treq, SHARED_LOCK, &rxconn);
+	    tc = afs_Conn(&adp->f.fid, treq, SHARED_LOCK, &rxconn);
 	    if (tc) {
 	    	hostp = tc->parent->srvr->server; /* remember for callback processing */
 	    	now = osi_Time();
@@ -318,7 +318,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	    } else
 	    	code = -1;
     	} while (afs_Analyze
-	         (tc, rxconn, code, &adp->f.fid, &treq, AFS_STATS_FS_RPCIDX_CREATEFILE,
+	         (tc, rxconn, code, &adp->f.fid, treq, AFS_STATS_FS_RPCIDX_CREATEFILE,
 	          SHARED_LOCK, NULL));
 
 	if ((code == EEXIST || code == UAEEXIST) &&
@@ -455,9 +455,9 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	    ReleaseWriteLock(&afs_xcbhash);
 	    if (AFS_IS_DISCON_RW) {
 		afs_DisconAddDirty(tvc, VDisconCreate, 0);
-		afs_GenDisconStatus(adp, tvc, &newFid, attrs, &treq, VREG);
+		afs_GenDisconStatus(adp, tvc, &newFid, attrs, treq, VREG);
 	    } else {
-		afs_ProcessFS(tvc, OutFidStatus, &treq);
+		afs_ProcessFS(tvc, OutFidStatus, treq);
 	    }
 
 	    tvc->f.parent.vnode = adp->f.fid.Fid.Vnode;
@@ -498,7 +498,8 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     }
 
     afs_PutFakeStat(&fakestate);
-    code = afs_CheckCode(code, &treq, 20);
+    code = afs_CheckCode(code, treq, 20);
+    afs_DestroyReq(treq);
 
   done2:
     osi_FreeSmallSpace(OutFidStatus);

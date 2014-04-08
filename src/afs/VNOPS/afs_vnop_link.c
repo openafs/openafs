@@ -38,7 +38,7 @@ afs_link(struct vcache *avc, OSI_VC_DECL(adp), char *aname,
 	 afs_ucred_t *acred)
 #endif
 {
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     struct dcache *tdc;
     afs_int32 code;
     struct afs_conn *tc;
@@ -58,7 +58,7 @@ afs_link(struct vcache *avc, OSI_VC_DECL(adp), char *aname,
     OutDirStatus = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
 
     /* create a hard link; new entry is aname in dir adp */
-    if ((code = afs_InitReq(&treq, acred)))
+    if ((code = afs_CreateReq(&treq, acred)))
 	goto done2;
 
     afs_InitFakeStat(&vfakestate);
@@ -66,10 +66,10 @@ afs_link(struct vcache *avc, OSI_VC_DECL(adp), char *aname,
 
     AFS_DISCON_LOCK();
 
-    code = afs_EvalFakeStat(&avc, &vfakestate, &treq);
+    code = afs_EvalFakeStat(&avc, &vfakestate, treq);
     if (code)
 	goto done;
-    code = afs_EvalFakeStat(&adp, &dfakestate, &treq);
+    code = afs_EvalFakeStat(&adp, &dfakestate, treq);
     if (code)
 	goto done;
 
@@ -82,7 +82,7 @@ afs_link(struct vcache *avc, OSI_VC_DECL(adp), char *aname,
 	code = ENAMETOOLONG;
 	goto done;
     }
-    code = afs_VerifyVCache(adp, &treq);
+    code = afs_VerifyVCache(adp, treq);
     if (code)
 	goto done;
 
@@ -99,10 +99,10 @@ afs_link(struct vcache *avc, OSI_VC_DECL(adp), char *aname,
         goto done;
     }
 
-    tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &offset, &len, 1);	/* test for error below */
+    tdc = afs_GetDCache(adp, (afs_size_t) 0, treq, &offset, &len, 1);	/* test for error below */
     ObtainWriteLock(&adp->lock, 145);
     do {
-	tc = afs_Conn(&adp->f.fid, &treq, SHARED_LOCK, &rxconn);
+	tc = afs_Conn(&adp->f.fid, treq, SHARED_LOCK, &rxconn);
 	if (tc) {
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_LINK);
 	    RX_AFS_GUNLOCK();
@@ -116,7 +116,7 @@ afs_link(struct vcache *avc, OSI_VC_DECL(adp), char *aname,
 	} else
 	    code = -1;
     } while (afs_Analyze
-	     (tc, rxconn, code, &adp->f.fid, &treq, AFS_STATS_FS_RPCIDX_LINK,
+	     (tc, rxconn, code, &adp->f.fid, treq, AFS_STATS_FS_RPCIDX_LINK,
 	      SHARED_LOCK, NULL));
 
     if (code) {
@@ -167,7 +167,8 @@ afs_link(struct vcache *avc, OSI_VC_DECL(adp), char *aname,
     ReleaseWriteLock(&avc->lock);
     code = 0;
   done:
-    code = afs_CheckCode(code, &treq, 24);
+    code = afs_CheckCode(code, treq, 24);
+    afs_DestroyReq(treq);
     afs_PutFakeStat(&vfakestate);
     afs_PutFakeStat(&dfakestate);
     AFS_DISCON_UNLOCK();

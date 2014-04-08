@@ -198,7 +198,7 @@ afs_access(OSI_VC_DECL(avc), afs_int32 amode,
 #endif
 {
     afs_int32 code;
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     struct afs_fakestat_state fakestate;
     OSI_VC_CONVERT(avc);
 
@@ -206,35 +206,40 @@ afs_access(OSI_VC_DECL(avc), afs_int32 amode,
     afs_Trace3(afs_iclSetp, CM_TRACE_ACCESS, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_INT32, amode, ICL_TYPE_OFFSET,
 	       ICL_HANDLE_OFFSET(avc->f.m.Length));
+
     afs_InitFakeStat(&fakestate);
-    if ((code = afs_InitReq(&treq, acred)))
+    if ((code = afs_CreateReq(&treq, acred))) {
 	return code;
+    }
 
     AFS_DISCON_LOCK();
 
     if (afs_fakestat_enable && avc->mvstat == 1) {
-	code = afs_TryEvalFakeStat(&avc, &fakestate, &treq);
+	code = afs_TryEvalFakeStat(&avc, &fakestate, treq);
         if (code == 0 && avc->mvstat == 1) {
 	    afs_PutFakeStat(&fakestate);
 	    AFS_DISCON_UNLOCK();
+	    afs_DestroyReq(treq);
 	    return 0;
         }
     } else {
-	code = afs_EvalFakeStat(&avc, &fakestate, &treq);
+	code = afs_EvalFakeStat(&avc, &fakestate, treq);
     }
 
     if (code) {
 	afs_PutFakeStat(&fakestate);
 	AFS_DISCON_UNLOCK();
+	afs_DestroyReq(treq);
 	return code;
     }
 
     if (vType(avc) != VDIR || !afs_InReadDir(avc)) {
-	code = afs_VerifyVCache(avc, &treq);
+	code = afs_VerifyVCache(avc, treq);
 	if (code) {
 	    afs_PutFakeStat(&fakestate);
 	    AFS_DISCON_UNLOCK();
-	    code = afs_CheckCode(code, &treq, 16);
+	    code = afs_CheckCode(code, treq, 16);
+	    afs_DestroyReq(treq);
 	    return code;
 	}
     }
@@ -243,6 +248,7 @@ afs_access(OSI_VC_DECL(avc), afs_int32 amode,
     if ((amode & VWRITE) && (avc->f.states & CRO)) {
 	afs_PutFakeStat(&fakestate);
 	AFS_DISCON_UNLOCK();
+	afs_DestroyReq(treq);
 	return EROFS;
     }
     
@@ -251,6 +257,7 @@ afs_access(OSI_VC_DECL(avc), afs_int32 amode,
         afs_PutFakeStat(&fakestate);
 	AFS_DISCON_UNLOCK();
 	/* printf("Network is down in afs_vnop_access\n"); */
+	afs_DestroyReq(treq);
         return ENETDOWN;
     }
     
@@ -258,41 +265,41 @@ afs_access(OSI_VC_DECL(avc), afs_int32 amode,
     if (avc->f.states & CForeign) {
 	/* In the dfs xlator the EXEC bit is mapped to LOOKUP */
 	if (amode & VEXEC)
-	    code = afs_AccessOK(avc, PRSFS_LOOKUP, &treq, CHECK_MODE_BITS);
+	    code = afs_AccessOK(avc, PRSFS_LOOKUP, treq, CHECK_MODE_BITS);
 	if (code && (amode & VWRITE)) {
-	    code = afs_AccessOK(avc, PRSFS_WRITE, &treq, CHECK_MODE_BITS);
+	    code = afs_AccessOK(avc, PRSFS_WRITE, treq, CHECK_MODE_BITS);
 	    if (code && (vType(avc) == VDIR)) {
 		if (code)
 		    code =
-			afs_AccessOK(avc, PRSFS_INSERT, &treq,
+			afs_AccessOK(avc, PRSFS_INSERT, treq,
 				     CHECK_MODE_BITS);
 		if (!code)
 		    code =
-			afs_AccessOK(avc, PRSFS_DELETE, &treq,
+			afs_AccessOK(avc, PRSFS_DELETE, treq,
 				     CHECK_MODE_BITS);
 	    }
 	}
 	if (code && (amode & VREAD))
-	    code = afs_AccessOK(avc, PRSFS_READ, &treq, CHECK_MODE_BITS);
+	    code = afs_AccessOK(avc, PRSFS_READ, treq, CHECK_MODE_BITS);
     } else {
 	if (vType(avc) == VDIR) {
 	    if (amode & VEXEC)
 		code =
-		    afs_AccessOK(avc, PRSFS_LOOKUP, &treq, CHECK_MODE_BITS);
+		    afs_AccessOK(avc, PRSFS_LOOKUP, treq, CHECK_MODE_BITS);
 	    if (code && (amode & VWRITE)) {
 		code =
-		    afs_AccessOK(avc, PRSFS_INSERT, &treq, CHECK_MODE_BITS);
+		    afs_AccessOK(avc, PRSFS_INSERT, treq, CHECK_MODE_BITS);
 		if (!code)
 		    code =
-			afs_AccessOK(avc, PRSFS_DELETE, &treq,
+			afs_AccessOK(avc, PRSFS_DELETE, treq,
 				     CHECK_MODE_BITS);
 	    }
 	    if (code && (amode & VREAD))
 		code =
-		    afs_AccessOK(avc, PRSFS_LOOKUP, &treq, CHECK_MODE_BITS);
+		    afs_AccessOK(avc, PRSFS_LOOKUP, treq, CHECK_MODE_BITS);
 	} else {
 	    if (amode & VEXEC) {
-		code = afs_AccessOK(avc, PRSFS_READ, &treq, CHECK_MODE_BITS);
+		code = afs_AccessOK(avc, PRSFS_READ, treq, CHECK_MODE_BITS);
 		if (code) {
 			if ((avc->f.m.Mode & 0100) == 0)
 			    code = 0;
@@ -300,7 +307,7 @@ afs_access(OSI_VC_DECL(avc), afs_int32 amode,
 		    code = 1;
 	    }
 	    if (code && (amode & VWRITE)) {
-		code = afs_AccessOK(avc, PRSFS_WRITE, &treq, CHECK_MODE_BITS);
+		code = afs_AccessOK(avc, PRSFS_WRITE, treq, CHECK_MODE_BITS);
 
 		/* The above call fails when the NFS translator tries to copy
 		 ** a file with r--r--r-- permissions into a directory which
@@ -312,11 +319,11 @@ afs_access(OSI_VC_DECL(avc), afs_int32 amode,
 		if (!code && AFS_NFSXLATORREQ(acred)
 		    && avc->f.m.Owner == ANONYMOUSID)
 		    code =
-			afs_AccessOK(avc, PRSFS_WRITE, &treq,
+			afs_AccessOK(avc, PRSFS_WRITE, treq,
 				     DONT_CHECK_MODE_BITS);
 	    }
 	    if (code && (amode & VREAD))
-		code = afs_AccessOK(avc, PRSFS_READ, &treq, CHECK_MODE_BITS);
+		code = afs_AccessOK(avc, PRSFS_READ, treq, CHECK_MODE_BITS);
 	}
     }
     afs_PutFakeStat(&fakestate);
@@ -324,9 +331,11 @@ afs_access(OSI_VC_DECL(avc), afs_int32 amode,
     AFS_DISCON_UNLOCK();
     
     if (code) {
+	afs_DestroyReq(treq);
 	return 0;		/* if access is ok */
     } else {
-	code = afs_CheckCode(EACCES, &treq, 17);	/* failure code */
+	code = afs_CheckCode(EACCES, treq, 17);	/* failure code */
+	afs_DestroyReq(treq);
 	return code;
     }
 }
@@ -341,18 +350,21 @@ afs_getRights(OSI_VC_DECL(avc), afs_int32 arights,
 	      afs_ucred_t *acred)
 {
     afs_int32 code;
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     OSI_VC_CONVERT(avc);
 
-    if ((code = afs_InitReq(&treq, acred)))
+    if ((code = afs_CreateReq(&treq, acred)))
 	return code;
 
-    code = afs_VerifyVCache(avc, &treq);
+    code = afs_VerifyVCache(avc, treq);
     if (code) {
-	code = afs_CheckCode(code, &treq, 18);
+	code = afs_CheckCode(code, treq, 18);
+	afs_DestroyReq(treq);
 	return code;
     }
 
-    return afs_GetAccessBits(avc, arights, &treq);
+    code = afs_GetAccessBits(avc, arights, treq);
+    afs_DestroyReq(treq);
+    return code;
 }
 #endif /* defined(UKERNEL) */

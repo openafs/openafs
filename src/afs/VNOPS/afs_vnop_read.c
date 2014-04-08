@@ -55,7 +55,7 @@ afs_read(struct vcache *avc, struct uio *auio, afs_ucred_t *acred,
     afs_int32 error, trybusy = 1;
     struct uio *tuiop = NULL;
     afs_int32 code;
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
 
     AFS_STATCNT(afs_read);
 
@@ -65,25 +65,25 @@ afs_read(struct vcache *avc, struct uio *auio, afs_ucred_t *acred,
     AFS_DISCON_LOCK();
 
     /* check that we have the latest status info in the vnode cache */
-    if ((code = afs_InitReq(&treq, acred)))
+    if ((code = afs_CreateReq(&treq, acred)))
 	goto out;
 
     if (!noLock) {
 	if (!avc)
 	    osi_Panic("null avc in afs_GenericRead");
 
-	code = afs_VerifyVCache(avc, &treq);
+	code = afs_VerifyVCache(avc, treq);
 	if (code) {
-	    code = afs_CheckCode(code, &treq, 8);	/* failed to get it */
+	    code = afs_CheckCode(code, treq, 8);	/* failed to get it */
 	    goto out;
 	}
     }
 #ifndef	AFS_VM_RDWR_ENV
     if (AFS_NFSXLATORREQ(acred)) {
 	if (!afs_AccessOK
-	    (avc, PRSFS_READ, &treq,
+	    (avc, PRSFS_READ, treq,
 	     CHECK_MODE_BITS | CMB_ALLOW_EXEC_AS_READ)) {
-	    code = afs_CheckCode(EACCES, &treq, 9);
+	    code = afs_CheckCode(EACCES, treq, 9);
 	    goto out;
 	}
     }
@@ -178,7 +178,7 @@ afs_read(struct vcache *avc, struct uio *auio, afs_ucred_t *acred,
 		ReleaseReadLock(&tdc->lock);
 		afs_PutDCache(tdc);	/* before reusing tdc */
 	    }
-	    tdc = afs_GetDCache(avc, filePos, &treq, &offset, &len, 2);
+	    tdc = afs_GetDCache(avc, filePos, treq, &offset, &len, 2);
 	    if (!tdc) {
 		error = ENETDOWN;
 		break;
@@ -291,7 +291,7 @@ afs_read(struct vcache *avc, struct uio *auio, afs_ucred_t *acred,
 		 * does the FetchData rpc synchronously.
 		 */
 		ReleaseReadLock(&avc->lock);
-		tdc = afs_GetDCache(avc, filePos, &treq, &offset, &len, 1);
+		tdc = afs_GetDCache(avc, filePos, treq, &offset, &len, 1);
 		ObtainReadLock(&avc->lock);
 		if (tdc)
 		    ObtainReadLock(&tdc->lock);
@@ -379,7 +379,7 @@ afs_read(struct vcache *avc, struct uio *auio, afs_ucred_t *acred,
 	/* try to queue prefetch, if needed */
 	if (!noLock) {
 	    if (!(tdc->mflags &DFNextStarted))
-	        afs_PrefetchChunk(avc, tdc, acred, &treq);
+	        afs_PrefetchChunk(avc, tdc, acred, treq);
 	}
 #endif
 	afs_PutDCache(tdc);
@@ -387,13 +387,14 @@ afs_read(struct vcache *avc, struct uio *auio, afs_ucred_t *acred,
     if (!noLock)
 	ReleaseReadLock(&avc->lock);
 
-    code = afs_CheckCode(error, &treq, 10);
+    code = afs_CheckCode(error, treq, 10);
 
     if (tuiop)
        afsio_free(tuiop);
 
 out:
     AFS_DISCON_UNLOCK();
+    afs_DestroyReq(treq);
     return code;
 }
 

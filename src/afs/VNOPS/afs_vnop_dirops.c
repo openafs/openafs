@@ -37,7 +37,7 @@ int
 afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs, 
      struct vcache **avcp, afs_ucred_t *acred)
 {
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     afs_int32 code;
     struct afs_conn *tc;
     struct rx_connection *rxconn;
@@ -62,7 +62,7 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     OutFidStatus = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
     OutDirStatus = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
 
-    if ((code = afs_InitReq(&treq, acred)))
+    if ((code = afs_CreateReq(&treq, acred)))
 	goto done2;
     afs_InitFakeStat(&fakestate);
 
@@ -78,10 +78,10 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     
     AFS_DISCON_LOCK();
 
-    code = afs_EvalFakeStat(&adp, &fakestate, &treq);
+    code = afs_EvalFakeStat(&adp, &fakestate, treq);
     if (code)
 	goto done;
-    code = afs_VerifyVCache(adp, &treq);
+    code = afs_VerifyVCache(adp, treq);
     if (code)
 	goto done;
 
@@ -102,12 +102,12 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     InStatus.ClientModTime = osi_Time();
     InStatus.UnixModeBits = attrs->va_mode & 0xffff;	/* only care about protection bits */
     InStatus.Group = (afs_int32) afs_cr_gid(acred);
-    tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &offset, &len, 1);
+    tdc = afs_GetDCache(adp, (afs_size_t) 0, treq, &offset, &len, 1);
     ObtainWriteLock(&adp->lock, 153);
 
     if (!AFS_IS_DISCON_RW) {
     	do {
-	    tc = afs_Conn(&adp->f.fid, &treq, SHARED_LOCK, &rxconn);
+	    tc = afs_Conn(&adp->f.fid, treq, SHARED_LOCK, &rxconn);
 	    if (tc) {
 	    	XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_MAKEDIR);
 	    	now = osi_Time();
@@ -129,7 +129,7 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	    } else
 	    	code = -1;
     	} while (afs_Analyze
-		    (tc, rxconn, code, &adp->f.fid, &treq, AFS_STATS_FS_RPCIDX_MAKEDIR,
+		    (tc, rxconn, code, &adp->f.fid, treq, AFS_STATS_FS_RPCIDX_MAKEDIR,
 		     SHARED_LOCK, NULL));
 
     	if (code) {
@@ -202,12 +202,12 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	}
 
 	ObtainWriteLock(&tvc->lock, 738);
-	afs_GenDisconStatus(adp, tvc, &newFid, attrs, &treq, VDIR);
+	afs_GenDisconStatus(adp, tvc, &newFid, attrs, treq, VDIR);
 	ReleaseWriteLock(&tvc->lock);
 
 	/* And now make an empty dir, containing . and .. : */
 	/* Get a new dcache for it first. */
-	new_dc = afs_GetDCache(tvc, (afs_size_t) 0, &treq, &offset, &len, 1);
+	new_dc = afs_GetDCache(tvc, (afs_size_t) 0, treq, &offset, &len, 1);
 	if (!new_dc) {
 	    /* printf("afs_mkdir: can't get new dcache for dir.\n"); */
 	    code = ENOENT;
@@ -231,7 +231,7 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	ReleaseWriteLock(&tvc->lock);
     } else {
     	/* now we're done with parent dir, create the real dir's cache entry */
-    	tvc = afs_GetVCache(&newFid, &treq, NULL, NULL);
+	tvc = afs_GetVCache(&newFid, treq, NULL, NULL);
     	if (tvc) {
 	    code = 0;
 	    *avcp = tvc;
@@ -243,7 +243,8 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     AFS_DISCON_UNLOCK();
   done3:
     afs_PutFakeStat(&fakestate);
-    code = afs_CheckCode(code, &treq, 26);
+    code = afs_CheckCode(code, treq, 26);
+    afs_DestroyReq(treq);
   done2:
     osi_FreeSmallSpace(OutFidStatus);
     osi_FreeSmallSpace(OutDirStatus);
@@ -260,7 +261,7 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, struct vnode *cdirp,
 afs_rmdir(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 #endif
 {
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     struct dcache *tdc;
     struct vcache *tvc = NULL;
     afs_int32 code;
@@ -278,7 +279,7 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
     afs_Trace2(afs_iclSetp, CM_TRACE_RMDIR, ICL_TYPE_POINTER, adp,
 	       ICL_TYPE_STRING, aname);
 
-    if ((code = afs_InitReq(&treq, acred)))
+    if ((code = afs_CreateReq(&treq, acred)))
 	goto done2;
     afs_InitFakeStat(&fakestate);
 
@@ -289,11 +290,11 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 
     AFS_DISCON_LOCK();
 
-    code = afs_EvalFakeStat(&adp, &fakestate, &treq);
+    code = afs_EvalFakeStat(&adp, &fakestate, treq);
     if (code)
 	goto done;
 
-    code = afs_VerifyVCache(adp, &treq);
+    code = afs_VerifyVCache(adp, treq);
     if (code)
 	goto done;
 
@@ -311,7 +312,7 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
         goto done;
     }
 
-    tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &offset, &len, 1);	/* test for error below */
+    tdc = afs_GetDCache(adp, (afs_size_t) 0, treq, &offset, &len, 1);	/* test for error below */
     ObtainWriteLock(&adp->lock, 154);
     if (tdc)
 	ObtainSharedLock(&tdc->lock, 633);
@@ -327,7 +328,7 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 	    unlinkFid.Fid.Volume = adp->f.fid.Fid.Volume;
 	    if (unlinkFid.Fid.Unique == 0) {
 		tvc =
-		    afs_LookupVCache(&unlinkFid, &treq, &cached, adp, aname);
+		    afs_LookupVCache(&unlinkFid, treq, &cached, adp, aname);
 	    } else {
 		ObtainReadLock(&afs_xvcache);
 		tvc = afs_FindVCache(&unlinkFid, 0, 1 /* do xstats */ );
@@ -339,7 +340,7 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
     if (!AFS_IS_DISCON_RW) {
 	/* Not disconnected, can connect to server. */
     	do {
-	    tc = afs_Conn(&adp->f.fid, &treq, SHARED_LOCK, &rxconn);
+	    tc = afs_Conn(&adp->f.fid, treq, SHARED_LOCK, &rxconn);
 	    if (tc) {
 	    	XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_REMOVEDIR);
 	    	RX_AFS_GUNLOCK();
@@ -354,7 +355,7 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 	    } else
 	    	code = -1;
     	} while (afs_Analyze
-	         (tc, rxconn, code, &adp->f.fid, &treq, AFS_STATS_FS_RPCIDX_REMOVEDIR,
+	         (tc, rxconn, code, &adp->f.fid, treq, AFS_STATS_FS_RPCIDX_REMOVEDIR,
 	         SHARED_LOCK, NULL));
 
     	if (code) {
@@ -474,7 +475,8 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
   done:
     AFS_DISCON_UNLOCK();
     afs_PutFakeStat(&fakestate);
-    code = afs_CheckCode(code, &treq, 27);
+    code = afs_CheckCode(code, treq, 27);
+    afs_DestroyReq(treq);
   done2:
     return code;
 }
