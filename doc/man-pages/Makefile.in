@@ -3,7 +3,7 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-all:
+all: prep-noinstall
 
 maintclean:
 	rm -rf html man1 man3 man5 man8
@@ -16,16 +16,42 @@ FSSYNCDEBUG_PAGES = attach callback detach error header leaveoff list mode \
                     move offline online query stats vgcadd vgcdel vgcquery \
                     vgcscan vgcscanall vnode volop
 
-dest:
+KAUTH_MAN = man1/klog.1 man1/knfs.1 man1/kpasswd.1 man5/kaserver.DB0.5 \
+	man5/kaserverauxdb.5 man8/ka-forwarder.8 man8/kadb_check.8 man8/kas.8 \
+	man8/kas_apropos.8 man8/kas_create.8 man8/kas_delete.8 \
+	man8/kas_examine.8 man8/kas_forgetticket.8 man8/kas_help.8 \
+	man8/kas_interactive.8 man8/kas_list.8 man8/kas_listtickets.8 \
+	man8/kas_noauthentication.8 man8/kas_quit.8 man8/kas_setfields.8 \
+	man8/kas_setpassword.8 man8/kas_statistics.8 man8/kas_stringtokey.8 \
+	man8/kas_unlock.8 man8/kaserver.8 man8/kdb.8 man8/kpwvalid.8 \
+	man1/klog.krb.1
+
+INSTALL_KAUTH = @INSTALL_KAUTH@
+
+# This really depends on the options to configure, but configure will
+# regenerate the Makefile so this is a reasonable proxy.
+prep-noinstall: Makefile
+	rm -f man*/*.noinstall
+	if [ "$(INSTALL_KAUTH)" = "no" ] ; then \
+		for M in $(KAUTH_MAN); do \
+			touch $$M.noinstall; \
+		done; \
+	fi
+
+dest: prep-noinstall
 	chmod +x install-man
 	mkdir -p $(DEST)/man/man1 $(DEST)/man/man3 \
 	         $(DEST)/man/man5 $(DEST)/man/man8
 	set -e; for M in man1/*.1 man3/*.3 man5/*.5 man8/*.8 ; do \
-	    ./install-man $$M $(DEST)/man/$$M ; \
+	    if ! [ -e $$M.noinstall ] ; then \
+		./install-man $$M $(DEST)/man/$$M ; \
+	    fi ; \
 	done
 	set -e; for M in ${LINKEDPAGES}; do \
-	    test -h $(DEST)/man/man1/$$M.krb.1 \
-		|| ln -s $$M.1 $(DEST)/man/man1/$$M.krb.1 ; \
+	    if ! [ -e man1/$$M.1.noinstall ] ; then \
+		test -h $(DEST)/man/man1/$$M.krb.1 \
+		    || ln -s $$M.1 $(DEST)/man/man1/$$M.krb.1 ; \
+	    fi ; \
 	done
 	test -h $(DEST)/man/man8/dafssync-debug.8 \
 	    || ln -s fssync-debug.8 $(DEST)/man/man8/dafssync-debug.8
@@ -38,16 +64,20 @@ dest:
 		|| ln -s afsd.8 $(DEST)/man/man8/afsd.fuse.8; \
 	fi
 
-install: $(MAN1) $(MAN8)
+install: prep-noinstall $(MAN1) $(MAN8)
 	chmod +x install-man
 	mkdir -p $(DESTDIR)$(mandir)/man1 $(DESTDIR)$(mandir)/man3 \
 	    $(DESTDIR)$(mandir)/man5 $(DESTDIR)$(mandir)/man8
 	set -e; for M in man1/*.1 man3/*.3 man5/*.5 man8/*.8 ; do \
-	    ./install-man $$M $(DESTDIR)$(mandir)/$$M ; \
+	    if ! [ -e $$M.noinstall ] ; then \
+		./install-man $$M $(DESTDIR)$(mandir)/$$M ; \
+	    fi; \
 	done
 	set -e; for M in ${LINKEDPAGES}; do \
-	    test -h $(DESTDIR)$(mandir)/man1/$$M.krb.1 \
-		|| ln -s $$M.1 $(DESTDIR)$(mandir)/man1/$$M.krb.1 ; \
+	    if ! [ -e man1/$$M.1.noinstall ] ; then \
+		test -h $(DESTDIR)$(mandir)/man1/$$M.krb.1 \
+		    || ln -s $$M.1 $(DESTDIR)$(mandir)/man1/$$M.krb.1 ; \
+	    fi ; \
 	done
 	test -h $(DESTDIR)/$(mandir)/man8/dafssync-debug.8 \
 	    || ln -s fssync-debug.8 $(DESTDIR)/$(mandir)/man8/dafssync-debug.8
