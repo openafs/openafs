@@ -447,6 +447,15 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                     BooleanFlagOn( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE))
                 {
 
+		    //
+		    // Release the Fcb Resource while processing the pending delete
+		    // to avoid an out of order lock acquisition
+		    //
+
+		    ClearFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE);
+
+		    AFSReleaseResource( &pFcb->NPFcb->Resource);
+
                     ntStatus = STATUS_SUCCESS;
 
                     ulNotificationFlags |= AFS_REQUEST_FLAG_FILE_DELETED;
@@ -484,8 +493,6 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                       ntStatus));
 
                         ntStatus = STATUS_SUCCESS;
-
-                        ClearFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE);
                     }
                     else
                     {
@@ -536,8 +543,6 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                       pCcb->DirectoryCB));
 
                         SetFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_DELETED);
-
-                        ClearFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE);
 
                         ASSERT( pParentObjectInfo != NULL);
 
@@ -607,6 +612,13 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                             }
                         }
                     }
+
+		    //
+		    // Regain exclusive access to the Fcb
+		    //
+
+		    AFSAcquireExcl( &pFcb->NPFcb->Resource,
+				    TRUE);
                 }
                 else
                 {
@@ -888,6 +900,15 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                     BooleanFlagOn( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE))
                 {
 
+		    //
+		    // Release the Fcb Resource while processing the pending delete
+		    // to avoid an out of order lock acquisition
+		    //
+
+		    ClearFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE);
+
+		    AFSReleaseResource( &pFcb->NPFcb->Resource);
+
                     //
                     // Try to notify the service about the delete
                     //
@@ -927,8 +948,6 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                       ntStatus));
 
                         ntStatus = STATUS_SUCCESS;
-
-                        ClearFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE);
                     }
                     else
                     {
@@ -942,8 +961,6 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                       pCcb->DirectoryCB));
 
                         SetFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_DELETED);
-
-                        ClearFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE);
 
                         ASSERT( pParentObjectInfo != NULL);
 
@@ -1007,6 +1024,13 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                             }
                         }
                     }
+
+		    //
+		    // Regain exclusive access to the Fcb
+		    //
+
+		    AFSAcquireExcl( &pFcb->NPFcb->Resource,
+				    TRUE);
                 }
 
                 //
@@ -1206,6 +1230,15 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                     BooleanFlagOn( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE))
                 {
 
+		    //
+		    // Release the Fcb Resource while processing the pending delete
+		    // to avoid an out of order lock acquisition
+		    //
+
+		    ClearFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE);
+
+		    AFSReleaseResource( &pFcb->NPFcb->Resource);
+
                     //
                     // Try to notify the service about the delete
                     //
@@ -1245,8 +1278,6 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                       ntStatus));
 
                         ntStatus = STATUS_SUCCESS;
-
-                        ClearFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE);
                     }
                     else
                     {
@@ -1260,8 +1291,6 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                       pCcb->DirectoryCB));
 
                         SetFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_DELETED);
-
-                        ClearFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE);
 
                         ASSERT( pParentObjectInfo != NULL);
 
@@ -1325,7 +1354,14 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                             }
                         }
                     }
-                }
+
+		    //
+		    // Regain exclusive access to the Fcb
+		    //
+
+		    AFSAcquireExcl( &pFcb->NPFcb->Resource,
+				    TRUE);
+		}
 
                 //
                 // If there have been any updates to the node then push it to
