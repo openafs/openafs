@@ -76,7 +76,7 @@ afs_convert_code(int code) {
 static inline int
 afs_linux_VerifyVCache(struct vcache *avc, cred_t **retcred) {
     cred_t *credp = NULL;
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     int code;
 
     if (avc->f.states & CStatd) {
@@ -87,9 +87,11 @@ afs_linux_VerifyVCache(struct vcache *avc, cred_t **retcred) {
 
     credp = crref();
 
-    code = afs_InitReq(&treq, credp);
-    if (code == 0)
-        code = afs_VerifyVCache2(avc, &treq);
+    code = afs_CreateReq(&treq, credp);
+    if (code == 0) {
+        code = afs_VerifyVCache2(avc, treq);
+	afs_DestroyReq(treq);
+    }
 
     if (retcred != NULL)
         *retcred = credp;
@@ -278,7 +280,7 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 #endif
 {
     struct vcache *avc = VTOAFS(FILE_INODE(fp));
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     struct dcache *tdc;
     int code;
     int offset;
@@ -294,24 +296,24 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
     AFS_GLOCK();
     AFS_STATCNT(afs_readdir);
 
-    code = afs_convert_code(afs_InitReq(&treq, credp));
+    code = afs_convert_code(afs_CreateReq(&treq, credp));
     crfree(credp);
     if (code)
 	goto out1;
 
     afs_InitFakeStat(&fakestat);
-    code = afs_convert_code(afs_EvalFakeStat(&avc, &fakestat, &treq));
+    code = afs_convert_code(afs_EvalFakeStat(&avc, &fakestat, treq));
     if (code)
 	goto out;
 
     /* update the cache entry */
   tagain:
-    code = afs_convert_code(afs_VerifyVCache2(avc, &treq));
+    code = afs_convert_code(afs_VerifyVCache2(avc, treq));
     if (code)
 	goto out;
 
     /* get a reference to the entire directory */
-    tdc = afs_GetDCache(avc, (afs_size_t) 0, &treq, &origOffset, &tlen, 1);
+    tdc = afs_GetDCache(avc, (afs_size_t) 0, treq, &origOffset, &tlen, 1);
     len = tlen;
     if (!tdc) {
 	code = -ENOENT;
@@ -459,6 +461,7 @@ unlock_out:
 
 out:
     afs_PutFakeStat(&fakestat);
+    afs_DestroyReq(treq);
 out1:
     AFS_GUNLOCK();
     return code;
@@ -714,7 +717,7 @@ afs_linux_flush(struct file *fp, fl_owner_t id)
 afs_linux_flush(struct file *fp)
 #endif
 {
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     struct vcache *vcp;
     cred_t *credp;
     int code;
@@ -732,7 +735,7 @@ afs_linux_flush(struct file *fp)
     credp = crref();
     vcp = VTOAFS(FILE_INODE(fp));
 
-    code = afs_InitReq(&treq, credp);
+    code = afs_CreateReq(&treq, credp);
     if (code)
 	goto out;
     /* If caching is bypassed for this file, or globally, just return 0 */
@@ -755,17 +758,18 @@ afs_linux_flush(struct file *fp)
 	UpgradeSToWLock(&vcp->lock, 536);
 	if (!AFS_IS_DISCONNECTED) {
 		code = afs_StoreAllSegments(vcp,
-				&treq,
+				treq,
 				AFS_SYNC | AFS_LASTSTORE);
 	} else {
 		afs_DisconAddDirty(vcp, VDisconWriteOsiFlush, 1);
 	}
 	ConvertWToSLock(&vcp->lock);
     }
-    code = afs_CheckCode(code, &treq, 54);
+    code = afs_CheckCode(code, treq, 54);
     ReleaseSharedLock(&vcp->lock);
 
 out:
+    afs_DestroyReq(treq);
     AFS_DISCON_UNLOCK();
     AFS_GUNLOCK();
 
@@ -1190,17 +1194,21 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 	    if (vcp->mvid && (vcp->f.states & CMValid)) {
 		int tryEvalOnly = 0;
 		int code = 0;
-		struct vrequest treq;
+		struct vrequest *treq = NULL;
 
-		code = afs_InitReq(&treq, credp);
-		if (
-		    (strcmp(dp->d_name.name, ".directory") == 0)) {
+		code = afs_CreateReq(&treq, credp);
+		if (code) {
+		    dput(parent);
+		    goto bad_dentry;
+		}
+		if ((strcmp(dp->d_name.name, ".directory") == 0)) {
 		    tryEvalOnly = 1;
 		}
 		if (tryEvalOnly)
-		    code = afs_TryEvalFakeStat(&vcp, &fakestate, &treq);
+		    code = afs_TryEvalFakeStat(&vcp, &fakestate, treq);
 		else
-		    code = afs_EvalFakeStat(&vcp, &fakestate, &treq);
+		    code = afs_EvalFakeStat(&vcp, &fakestate, treq);
+		afs_DestroyReq(treq);
 		if ((tryEvalOnly && vcp->mvstat == 1) || code) {
 		    /* a mount point, not yet replaced by its directory */
 		    dput(parent);
@@ -2129,21 +2137,22 @@ afs_linux_prefetch(struct file *fp, struct page *pp)
 
     if (AFS_CHUNKOFFSET(offset) == 0) {
 	struct dcache *tdc;
-	struct vrequest treq;
+	struct vrequest *treq = NULL;
 	cred_t *credp;
 
 	credp = crref();
 	AFS_GLOCK();
-	code = afs_InitReq(&treq, credp);
+	code = afs_CreateReq(&treq, credp);
 	if (!code && !NBObtainWriteLock(&avc->lock, 534)) {
 	    tdc = afs_FindDCache(avc, offset);
 	    if (tdc) {
 		if (!(tdc->mflags & DFNextStarted))
-		    afs_PrefetchChunk(avc, tdc, credp, &treq);
+		    afs_PrefetchChunk(avc, tdc, credp, treq);
 		    afs_PutDCache(tdc);
 	    }
 	    ReleaseWriteLock(&avc->lock);
 	}
+	afs_DestroyReq(treq);
 	AFS_GUNLOCK();
 	crfree(credp);
     }
@@ -2487,11 +2496,13 @@ afs_linux_prepare_writeback(struct vcache *avc) {
 
 static inline int
 afs_linux_dopartialwrite(struct vcache *avc, cred_t *credp) {
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     int code = 0;
 
-    if (!afs_InitReq(&treq, credp))
-	code = afs_DoPartialWrite(avc, &treq);
+    if (!afs_CreateReq(&treq, credp)) {
+	code = afs_DoPartialWrite(avc, treq);
+	afs_DestroyReq(treq);
+    }
 
     return afs_convert_code(code);
 }
