@@ -1,4 +1,4 @@
-openafs (1.6.7-1) UNRELEASED; urgency=high
+openafs (1.6.7-1) unstable; urgency=high
 
   * New upstream security release.
     - OPENAFS-SA-2014-001: Fix potential buffer overflow in the
@@ -6,7 +6,7 @@ openafs (1.6.7-1) UNRELEASED; urgency=high
     - Fix a potential DoS attack against Rx servers by avoiding suspending
       the listener thread when delaying connection abort messages.
 
- -- Russ Allbery <rra@debian.org>  Wed, 09 Apr 2014 10:02:33 -0700
+ -- Russ Allbery <rra@debian.org>  Wed, 09 Apr 2014 10:33:38 -0700
 
 openafs (1.6.6-1) unstable; urgency=low
 
