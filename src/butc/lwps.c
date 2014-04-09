@@ -24,6 +24,9 @@
 #ifdef HAVE_STDINT_H
 # include <stdint.h>
 #endif
+#ifdef HAVE_STDIO_EXT_H
+#include <stdio_ext.h>
+#endif
 
 #include <afs/procmgmt.h>
 #include <rx/xdr.h>
@@ -386,6 +389,9 @@ WaitForKeystroke(int seconds)
 
 #ifdef AFS_LINUX20_ENV
     if (stdin->_IO_read_ptr < stdin->_IO_read_end)
+	return 1;
+#elif defined(HAVE_STDIO_EXT_H)
+    if (__fbufsize(stdin) > 0)
 	return 1;
 #else
     if (stdin->_cnt > 0)

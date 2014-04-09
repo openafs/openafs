@@ -347,6 +347,12 @@ afsconf_Check(struct afsconf_dir *adir)
 #endif
     struct stat tstat;
     afs_int32 code;
+    time_t now = time(0);
+
+    if (adir->timeRead && (adir->timeCheck == now)) {
+	return 0; /* stat no more than once a second */
+    }
+    adir->timeCheck = now;
 
 #ifdef AFS_NT40_ENV
     /* NT client CellServDB has different file name than NT server or Unix */
@@ -398,6 +404,7 @@ afsconf_Touch(struct afsconf_dir *adir)
 #endif
 
     adir->timeRead = 0;		/* just in case */
+    adir->timeCheck = 0;
 
 #ifdef AFS_NT40_ENV
     /* NT client CellServDB has different file name than NT server or Unix */

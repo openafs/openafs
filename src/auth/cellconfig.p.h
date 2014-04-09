@@ -83,6 +83,7 @@ struct afsconf_dir {
     struct afsconf_entry *entries;	/* list of cell entries */
     struct afsconf_keys *keystr;	/* structure containing keys */
     afs_int32 timeRead;		/* time stamp of file last read */
+    afs_int32 timeCheck;	/* time of last check for update */
     struct afsconf_aliasentry *alias_entries;	/* cell aliases */
 };
 

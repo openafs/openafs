@@ -1,49 +1,196 @@
                        User-Visible OpenAFS Changes
 
-OpenAFS 1.6.5.2
+OpenAFS 1.6.7
+
+  All server platforms
+
+    * Fix for OPENAFS-SA-2014-001
+
+    * Fix for a potential DOS attack against RX servers
+
+OpenAFS 1.6.6
+
+  All platforms
+
+    * As of this release, OpenAFS no longer ships uncompressed source tarballs.
+      Tarballs are still shipped with both compression formats, gzip and bzip2.
+      (10131)
+
+    * Documentation improvements (10136 10314 10601)
+
+    * Improved diagnostics and error messages (9412 10085 10274)
+
+    * Avoid redefining "assert" in our public header files, which could
+      cause failures when building some applications using them. (10096)
+
+    * Fixes for parallel builds (10005 10309 10337)
+
+    * Added a -s switch to afscp (not installed by default) to help simulate
+      a slow client. (9416 9417)
+
+    * Added a -probe switch to vlclient test program (not installed by default)
+      to ping all vlservers in a cell in parallel. (9570)
+
+  All server platforms
+    * The fileserver now ignores any vice partitions with a NeverAttach flag
+      file present in the root directory. (RT #130561) (9470 9471)
+
+    * Restrict forcing CPS ("Current Protection Subdomain") recalculation in
+      the fileserver to administrators. Also fixed a bug that could cause this
+      operation to be incomplete. (9485 9487)
+
+    * Allow non-DAFS fileservers to attach unusable volumes, restoring pre-1.6
+      behaviour. (RT #131505) (9499)
+
+    * Restored the pre-1.6 behaviour when running vos examine for a volume
+      currently in a transaction, showing the volume as busy again rather than
+      offline. (9685 9915 9916)
+
+    * Reduced the minimum time a bos salvage takes from 5 seconds to 1. (9476)
+
+    * Fixed buserver to not segfault when started with the -servers option.
+      (RT #131706) (10166)
+
+    * Salvager fixes, addressing a wide variety of possible problems from
+      unnecessary salvaging to aborts (9282 9283 9457 9458 9459 9461 9462 9480
+      9481 10165 10167)
+
+    * Fixed a bug that could cause saved state information to be discarded
+      when restarting a large or busy fileserver, which negatively impacted
+      performance. (9683)
+
+    * Fixed a bug that could have caused undefined behaviour in the vlserver
+      in rare cases when a fileserver registered its addresses in the VLDB.
+      (9429)
+
+    * Added the -preserve-vol-stats switch to volserver, allowing it to keep
+      the access statistics across volume restore and reclone operations
+      instead of resetting them. (9477)
+
+    * Inserted an exponential delay between retries when bosserver attempts to
+      restart a server process. (9571 10199)
+
+    * Improved vldb_check (not installed by default) to cope with broken
+      vlentry names and volids, and provide more output to aid debugging.
+      (10268)
+
+    * Releasing a volume after adding a new RO site no longer touches any of
+      the existing RO sites, if the RW data hasn't changed since the last
+      release. (10174)
+
+    * Make the copyDate field for RO clones have the same meaning as for
+      remote RO volumes. Previously, the copyDate field for clones was updated
+      every time we released. (9451)
+
+    * Fixed potentially undefined behaviour in ptserver when too many pts
+      ids are allocated. (10124)
+
+    * Note that the server side NAT pings feature present in the prereleases
+      was removed before the final release, since no positive feedback
+      was provided during prerelease testing. (9420 10135)
+
+  Linux servers
+
+    * Start bosserver with -nofork in the systemd unit file, to allow systemd
+      to track its state (10093)
+
+  All client platforms
+
+    * No longer track file locks on read-only volumes. Write locks can't
+      succeed, read locks always will. Avoids log messages about this kind
+      of lock. (8910)
+
+    * Added the "fs flushall" subcommand, which makes the client discard all
+      cached data. This was previously available on Windows only. (9065 9388
+      9389 9390)
+
+    * Fixed a bug that could make the client incorrectly believe its cache
+      is up to date. This change could negatively impact AFS <-> DFS
+      translators, should those still be running anywhere. (8898)
+
+    * Several changes to avoid panicing in certain error conditions.
+      (9131 9287 10354 10355 10356 10357) (partially addressing RT #131747)
+
+    * Added the -rxmaxfrags switch to afsd, allowing to limit the number
+      of UDP fragments sent or received per RX packet. (9430)
+
+    * Build fixes for aklog on several platforms (RT #131716) (9917 10107 10275)
+
+    * Require that the AFS mountpoint specified in the cacheinfo file is
+      an absolute path. Relative paths result in a client that basically
+      works but is not fully functional. (10253)
+
+    * Fixed a bug that could cause one of the afsd threads to enter an infinite
+      loop (10431 .. 10436)
 
   Linux clients
+
+    * Support Linux kernels up to 3.13 (10241)
+
+    * Fixed a bug that made readv/writev calls in AFS space fail with Linux
+      kernels where generic_file_aio_read exists but those operations have
+      not been switched to using aio_read/aio_write. This was a regression
+      introduced with release 1.6.3 and affected at least RHEL 5.9 kernels.
+      (10248)
+
+    * Fixed a similar bug making core dumps fail in AFS space, affecting
+      a much wider range of kernels including the most recent ones.
+      (RT #131729) (10254)
+
+    * Enhanced the keyring code to make PAGs work correctly on kernels with a
+      distribution specific change to the Linux keyring code. This affected at
+      least SLES 11 SP3 kernels. (10252)
+
+    * Fixed a bug that could make failures during PAG instantiation go
+      unnoticed. (10255)
+
+    * Fixed a bug that made compilation fail for Linux kernels without
+      keyring support. This affected at least the SLE 10 SDK and an
+      OEM version of SLES 11 SP1. (10325)
+
+    * Fixed build for kernels with user namespace support enabled. Likely
+      to be required for Ubuntu 14.04 and eventually other distributions.
+      (10456 10457 10458 10518 10472)
 
     * Support RHEL 6.5 kernels, and possibly others with changes backported
       from recent mainline kernels that touch getname/putname, by no longer
       using those functions. Previously, the client could cause a kernel
-      panic when syscall auditing was enabled.
-
-      Note there's another known problem with this kernel, where a certain
-      anti-virus software prevents the client from accessing its disk
-      cache. The workaround is to disable virus scanning for the disk cache.
+      panic when syscall auditing was enabled. (10578)
 
     * Make tmpfs usable as the cache filesystem again. This had been broken
-      since kernel 3.1
+      since kernel 3.1 (9950 10193)
 
-  OS X clients
+    * When starting the client fails, clean up the backing device information
+      created in sysfs, to avoid error messages during a subsequent start
+      and possible system instability later on (10454)
 
-    * Support OS X 10.9 "Mavericks". Previously, attempting to create a
-      symbolic link on this platform resulted in a kernel panic.
+    * Update Red Hat packaging to support Fedora >= 20, RHEL >= 7 and
+      ELrepo kernels (10597 10619 10622 10703 10704)
 
-OpenAFS 1.6.5.1
+  OS X Clients
 
-Linux clients
+    * Support OS X 10.9 "Mavericks" (10519 10541 10542 10543 10548 10549)
 
-    * Support Linux kernels up to 3.12-rc3
-
-    * Fixed a bug that made core dumps and readv/writev calls in AFS space
-      fail with Linux kernels where generic_file_aio_read exists but not all
-      read/write operations have been switched to using aio_read/aio_write.
-      This affected at least RHEL 5.9 kernels. (RT #131729)
-
-    * Enhanced the keyring code to make PAGs work correctly on kernels with a
-      distribution specific change to the Linux keyring code. This affected at
-      least SLES 11 SP3 kernels.
-
-    * Fixed a bug that made compilation fail for Linux kernels without
-      keyring support. This affected at least the SLE 10 SDK and an
-      OEM version of SLES 11 SP1.
-
-AIX clients
+  AIX clients
 
     * Fixed a bug that caused the 1.6 AIX client to never receive any RX
       packets in the kernel. (RT #131725)
+
+  FUSE client
+
+    * Support Solaris 11 (9454 9455)
+
+    * Allow other users to access filesystems mounted by root. (9452)
+
+  FreeBSD
+
+    * Build tvolser and dvolser on this platform (10122)
+    * Several fixes to catch up with newer releases (10374 .. 10381)
+
+  NetBSD
+
+    * Build tsalvaged, tvolser and dvolser on this platform (10121)
+    * Fixed build on NetBSD 5 and newer. (10138)
 
 OpenAFS 1.6.5
 

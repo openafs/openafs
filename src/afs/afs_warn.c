@@ -25,6 +25,8 @@
 # include <net/if.h>
 # if defined(AFS_SUN58_ENV)
 #  include <sys/varargs.h>
+# elif defined(AFS_FBSD_ENV)
+#  include <machine/stdarg.h>
 # else
 #  include <stdarg.h>
 # endif

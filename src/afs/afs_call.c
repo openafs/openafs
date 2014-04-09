@@ -1328,6 +1328,8 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	afscall_set_rxpck_received = 1;
     } else if (parm == AFSOP_SET_RXMAXMTU) {
 	rx_MyMaxSendSize = rx_maxReceiveSizeUser = rx_maxReceiveSize = parm2;
+    } else if (parm == AFSOP_SET_RXMAXFRAGS) {
+	rxi_nSendFrags = rxi_nRecvFrags = parm2;
     } else {
 	code = EINVAL;
     }

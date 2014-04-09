@@ -5,8 +5,8 @@ AC_CONFIG_SRCDIR([src/config/stds.h])
 AM_INIT_AUTOMAKE
 
 AC_CONFIG_HEADER(src/config/afsconfig.h)
-MACOS_VERSION=1.6.6d2
-LINUX_PKGVER=1.6.5.2
+MACOS_VERSION=1.6.7
+LINUX_PKGVER=1.6.7
 
 dnl Debian wants the release candidate version in the main upstream version,
 dnl and wants ~ before it.
@@ -82,16 +82,29 @@ AS_IF([test x"$KRB5_LIBS" != x],
                      [Define to 1 if you have the `krb524_convert_creds_kdc' function.])])])])
      AC_CHECK_HEADERS([kerberosIV/krb.h])
      AC_CHECK_HEADERS([kerberosV/heim_err.h])
+     AC_CHECK_HEADERS([com_err.h et/com_err.h krb5/com_err.h])
+     AS_IF([test x"$ac_cv_header_com_err_h" != xyes \
+             && test x"$ac_cv_header_et_com_err_h" != xyes \
+             && test x"$ac_cv_header_krb5_com_err_h" != xyes],
+       [AC_MSG_ERROR([Cannot find a usable com_err.h])])
      AC_CHECK_MEMBERS([krb5_creds.keyblock, krb5_creds.keyblock.enctype,
 		       krb5_creds.session, krb5_keytab_entry.key,
 		       krb5_keytab_entry.keyblock, krb5_keyblock.enctype,
 		       krb5_keyblock.keytype, krb5_prompt.type], , ,
 		       [#include <krb5.h>])
+dnl If we have krb5_creds.session, we are using heimdal
+dnl If we're using heimdal, aklog needs libasn1 for encode_EncTicketPart and a
+dnl few other functions. But just aklog; not any of the other stuff that uses
+dnl krb5.
+     AS_IF([test x"$ac_cv_member_krb5_creds_session" = xyes],
+           [AC_CHECK_LIB([asn1], [encode_EncTicketPart],
+	                [AKLOG_KRB5_LIBS="-lasn1"])])
      AC_CHECK_DECLS([krb5_free_keytab_entry_contents, krb5_kt_free_entry,
 		    KRB5_KU_TICKET], [], [], [#include <krb5.h>])
      RRA_LIB_KRB5_RESTORE])
 AC_SUBST([BUILD_KRB5])
 AC_SUBST([MAKE_KRB5])
+AC_SUBST([AKLOG_KRB5_LIBS])
 
 if test -d 'doc/man-pages' ; then
     MAN_MAKEFILE="doc/man-pages/Makefile doc/man-pages/install-man"

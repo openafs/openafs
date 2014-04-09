@@ -50,6 +50,7 @@
 #define AFSOP_BUCKETPCT          39     /* bucket percentage */
 #define AFSOP_SET_RXMAXMTU       40     /* set rx_MyMaxSendSize,rx_maxReceiveSizeUser,rx_maxReceiveSize */
 #define AFSOP_BKG_HANDLER        41     /* userspace-capable Bkg daemon */
+#define AFSOP_SET_RXMAXFRAGS     43     /* set rxi_nSendFrags, rxi_nRecvFrags */
 
 /* The range 20-30 is reserved for AFS system offsets in the afs_syscall */
 #define	AFSCALL_PIOCTL		20

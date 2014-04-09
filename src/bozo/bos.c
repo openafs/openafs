@@ -1160,6 +1160,7 @@ DoSalvage(struct rx_connection * aconn, char * aparm1, char * aparm2,
     char pbuffer[PARMBUFFERSSIZE];
     afs_int32 partNumber;
     char *notifier = NONOTIFIER;
+    int count;
 
     /* if a partition was specified, canonicalize the name, since
      * the salvager has a stupid partition ID parser */
@@ -1330,13 +1331,15 @@ DoSalvage(struct rx_connection * aconn, char * aparm1, char * aparm2,
 	goto done;
     }
     /* now wait for bnode to disappear */
+    count = 0;
     while (1) {
-	IOMGR_Sleep(5);
+	IOMGR_Sleep(1);
 	tp = tbuffer;
 	code = BOZO_GetInstanceInfo(aconn, "salvage-tmp", &tp, &istatus);
 	if (code)
 	    break;
-	printf("bos: waiting for salvage to complete.\n");
+	if ((count++ % 5) == 0)
+	    printf("bos: waiting for salvage to complete.\n");
     }
     if (code != BZNOENT) {
 	printf("bos: salvage failed (%s)\n", em(code));

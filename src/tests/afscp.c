@@ -218,6 +218,7 @@ main(int argc, char **argv)
     int code = 0, fetchcode, storecode, printcallerrs = 0;
     int slcl = 0, dlcl = 0, unlock = 0;
     int sfd = 0, dfd = 0, unauth = 0;
+    int sleeptime = 0;
 
     struct AFSCBFids theFids;
     struct AFSCBs theCBs;
@@ -225,7 +226,7 @@ main(int argc, char **argv)
 
     blksize = 8 * 1024;
 
-    while ((ch = getopt(argc, argv, "iouUb:")) != -1) {
+    while ((ch = getopt(argc, argv, "iouUb:s:")) != -1) {
 	switch (ch) {
 	case 'b':
 	    blksize = atoi(optarg);
@@ -235,6 +236,9 @@ main(int argc, char **argv)
 	    break;
 	case 'o':
 	    dlcl = 1;
+	    break;
+	case 's':
+	    sleeptime = atoi(optarg);
 	    break;
 	case 'u':
 	    unauth = 1;
@@ -251,10 +255,11 @@ main(int argc, char **argv)
 
     if (argc - optind + unlock < 2) {
 	fprintf(stderr,
-		"Usage: afscp [-i|-o]] [-b xfersz] [-u] [-U] source [dest]\n");
+		"Usage: afscp [-i|-o]] [-b xfersz] [-s time] [-u] [-U] source [dest]\n");
 	fprintf(stderr, "  -b   Set block size\n");
 	fprintf(stderr, "  -i   Source is local (copy into AFS)\n");
 	fprintf(stderr, "  -o   Dest is local (copy out of AFS)\n");
+	fprintf(stderr, "  -s   Set the seconds to sleep before reading/writing data\n");
 	fprintf(stderr, "  -u   Run unauthenticated\n");
 	fprintf(stderr, "  -U   Send an unlock request for source. (dest path not required)\n");
 	fprintf(stderr, "source and dest can be paths or specified as:\n");
@@ -502,6 +507,17 @@ main(int argc, char **argv)
 	    if (rx_Write(dcall, databuffer, bytes) != bytes)
 		break;
 	}
+
+	if (sleeptime > 0) {
+#ifdef AFS_PTHREAD_ENV
+	    sleep(sleeptime);
+#else
+	    IOMGR_Sleep(sleeptime);
+#endif
+	    /* only sleep once */
+	    sleeptime = 0;
+	}
+
 	bytesremaining -= bytes;
 	/*printf("%d bytes copied\n",bytes); */
     }

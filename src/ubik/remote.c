@@ -28,6 +28,7 @@
 #include <rx/rx.h>
 #include <errno.h>
 #include <afs/afsutil.h>
+#include <afs/afs_assert.h>
 
 #define UBIK_INTERNALS
 #include "ubik.h"

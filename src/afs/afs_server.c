@@ -562,8 +562,8 @@ CkSrv_MarkUpDown(struct afs_conn **conns, int nconns, afs_int32 *results)
 }
 
 void
-CkSrv_SetTime(struct rx_connection **rxconns, int nconns, int nservers,
-	      struct afs_conn **conns, struct srvAddr **addrs)
+CkSrv_SetTime(int nconns, struct rx_connection **rxconns,
+              struct afs_conn **conns)
 {
     struct afs_conn *tc;
     afs_int32 start, end = 0, delta;
@@ -573,11 +573,11 @@ CkSrv_SetTime(struct rx_connection **rxconns, int nconns, int nservers,
     afs_int32 i = 0;
     char tbuffer[CVBS];
 
-    conntimer = afs_osi_Alloc(nservers * sizeof (afs_int32));
+    conntimer = afs_osi_Alloc(nconns * sizeof (afs_int32));
     osi_Assert(conntimer != NULL);
-    results = afs_osi_Alloc(nservers * sizeof (afs_int32));
+    results = afs_osi_Alloc(nconns * sizeof (afs_int32));
     osi_Assert(results != NULL);
-    deltas = afs_osi_Alloc(nservers * sizeof (afs_int32));
+    deltas = afs_osi_Alloc(nconns * sizeof (afs_int32));
     osi_Assert(deltas != NULL);
 
     /* make sure we're starting from zero */
@@ -601,7 +601,7 @@ CkSrv_SetTime(struct rx_connection **rxconns, int nconns, int nservers,
 		deltas[multi_i] = end - tv.tv_sec;
 	} multi_End;
     } else {			/* find and query setTimeHost only */
-	for ( i = 0 ; i < nservers ; i++ ) {
+	for ( i = 0 ; i < nconns ; i++ ) {
 	    if ( conns[i] == NULL || conns[i]->srvr == NULL )
 		continue;
 	    if ( conns[i]->srvr->server == afs_setTimeHost ) {
@@ -688,25 +688,25 @@ CkSrv_SetTime(struct rx_connection **rxconns, int nconns, int nservers,
 	    }
 	}
     }
-    afs_osi_Free(conntimer, nservers * sizeof(afs_int32));
-    afs_osi_Free(deltas, nservers * sizeof(afs_int32));
-    afs_osi_Free(results, nservers * sizeof(afs_int32));
+    afs_osi_Free(conntimer, nconns * sizeof(afs_int32));
+    afs_osi_Free(deltas, nconns * sizeof(afs_int32));
+    afs_osi_Free(results, nconns * sizeof(afs_int32));
 }
 
 void
-CkSrv_GetCaps(struct rx_connection **rxconns, int nconns, int nservers,
-	      struct afs_conn **conns, struct srvAddr **addrs)
+CkSrv_GetCaps(int nconns, struct rx_connection **rxconns,
+	      struct afs_conn **conns)
 {
     Capabilities *caps;
     afs_int32 *results;
     afs_int32 i;
     struct server *ts;
 
-    caps = afs_osi_Alloc(nservers * sizeof (Capabilities));
+    caps = afs_osi_Alloc(nconns * sizeof (Capabilities));
     osi_Assert(caps != NULL);
-    memset(caps, 0, nservers * sizeof(Capabilities));
+    memset(caps, 0, nconns * sizeof(Capabilities));
 
-    results = afs_osi_Alloc(nservers * sizeof (afs_int32));
+    results = afs_osi_Alloc(nconns * sizeof (afs_int32));
     osi_Assert(results != NULL);
 
     AFS_GUNLOCK();
@@ -718,7 +718,7 @@ CkSrv_GetCaps(struct rx_connection **rxconns, int nconns, int nservers,
     AFS_GLOCK();
 
     for ( i = 0 ; i < nconns ; i++ ) {
-	ts = addrs[i]->server;
+	ts = conns[i]->srvr->server;
 	if ( !ts )
 	    continue;
 	ts->capabilities = 0;
@@ -739,8 +739,8 @@ CkSrv_GetCaps(struct rx_connection **rxconns, int nconns, int nservers,
     }
     CkSrv_MarkUpDown(conns, nconns, results);
 
-    afs_osi_Free(caps, nservers * sizeof(Capabilities));
-    afs_osi_Free(results, nservers * sizeof(afs_int32));
+    afs_osi_Free(caps, nconns * sizeof(Capabilities));
+    afs_osi_Free(results, nconns * sizeof(afs_int32));
 }
 
 /* check down servers (if adown), or running servers (if !adown) */
@@ -756,12 +756,10 @@ afs_CheckServers(int adown, struct cell *acellp)
  *        AFS_LS_ALL  - check all */
 void
 afs_LoopServers(int adown, struct cell *acellp, int vlalso,
-		void (*func1) (struct rx_connection **rxconns, int nconns,
-			       int nservers, struct afs_conn **conns,
-			       struct srvAddr **addrs),
-		void (*func2) (struct rx_connection **rxconns, int nconns,
-			       int nservers, struct afs_conn **conns,
-			       struct srvAddr **addrs))
+		void (*func1) (int nservers, struct rx_connection **rxconns,
+		               struct afs_conn **conns),
+		void (*func2) (int nservers, struct rx_connection **rxconns,
+			       struct afs_conn **conns))
 {
     struct vrequest treq;
     struct server *ts;
@@ -775,7 +773,7 @@ afs_LoopServers(int adown, struct cell *acellp, int vlalso,
     struct afs_conn **conns;
     int nconns;
     struct rx_connection **rxconns;
-    afs_int32 *conntimer, *results;
+    afs_int32 *conntimer;
 
     AFS_STATCNT(afs_CheckServers);
 
@@ -823,8 +821,6 @@ afs_LoopServers(int adown, struct cell *acellp, int vlalso,
     osi_Assert(rxconns != NULL);
     conntimer = afs_osi_Alloc(j * sizeof (afs_int32));
     osi_Assert(conntimer != NULL);
-    results = afs_osi_Alloc(j * sizeof (afs_int32));
-    osi_Assert(results != NULL);
 
     for (i = 0; i < j; i++) {
 	struct rx_connection *rxconn;
@@ -878,10 +874,13 @@ afs_LoopServers(int adown, struct cell *acellp, int vlalso,
 	    afs_PutConn(tc, rxconn, SHARED_LOCK);
     } /* Outer loop over addrs */
 
-    (*func1)(rxconns, nconns, j, conns, addrs);
+    afs_osi_Free(addrs, srvAddrCount * sizeof(*addrs));
+    addrs = NULL;
+
+    (*func1)(nconns, rxconns, conns);
 
     if (func2) {
-	(*func2)(rxconns, nconns, j, conns, addrs);
+	(*func2)(nconns, rxconns, conns);
     }
 
     for (i = 0; i < nconns; i++) {
@@ -890,11 +889,9 @@ afs_LoopServers(int adown, struct cell *acellp, int vlalso,
 	afs_PutConn(conns[i], rxconns[i], SHARED_LOCK);     /* done with it now */
     }
 
-    afs_osi_Free(addrs, srvAddrCount * sizeof(*addrs));
     afs_osi_Free(conns, j * sizeof(struct afs_conn *));
     afs_osi_Free(rxconns, j * sizeof(struct rx_connection *));
     afs_osi_Free(conntimer, j * sizeof(afs_int32));
-    afs_osi_Free(results, j * sizeof(afs_int32));
 
 } /*afs_CheckServers*/
 

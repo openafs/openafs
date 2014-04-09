@@ -24,6 +24,9 @@
 
 
 #include <stdio.h>
+#ifdef HAVE_STDIO_EXT_H
+#include <stdio_ext.h>
+#endif
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
 #include <time.h>
@@ -181,8 +184,13 @@ LWP_WaitForKeystroke(int seconds)
 	return 1;
 #endif
 #else
+#if defined(HAVE_STDIO_EXT_H)
+    if (__fbufsize(stdin) > 0)
+	return 1;
+#else /* HAVE_STDIO_EXT_H */
     if (stdin->_cnt > 0)
 	return 1;
+#endif /* HAVE_STDIO_EXT_H */
 #endif
 #endif
 

@@ -586,27 +586,39 @@ afs_SetupVolume(afs_int32 volid, char *aname, void *ve, struct cell *tcell,
 	    return NULL;
 	}
 	memset(tv, 0, sizeof(struct volume));
-	tv->cell = tcell->cellNum;
-	AFS_RWLOCK_INIT(&tv->lock, "volume lock");
-	tv->next = afs_volumes[i];	/* thread into list */
-	afs_volumes[i] = tv;
-	tv->volume = volid;
-	for (j = fvTable[FVHash(tv->cell, volid)]; j != 0; j = tf->next) {
+
+	for (j = fvTable[FVHash(tcell->cellNum, volid)]; j != 0; j = tf->next) {
 	    if (afs_FVIndex != j) {
 		struct osi_file *tfile;
 	        tfile = osi_UFSOpen(&volumeInode);
 		err =
 		    afs_osi_Read(tfile, sizeof(struct fvolume) * j,
 				 &staticFVolume, sizeof(struct fvolume));
-		if (err != sizeof(struct fvolume))
-		    osi_Panic("read volumeinfo2");
 		osi_UFSClose(tfile);
+		if (err != sizeof(struct fvolume)) {
+		    afs_warn("afs_SetupVolume: error %d reading volumeinfo\n",
+		             (int)err);
+		    /* put tv back on the free list; the data in it is not valid */
+		    tv->next = afs_freeVolList;
+		    afs_freeVolList = tv;
+		    /* staticFVolume contents are not valid */
+		    afs_FVIndex = -1;
+		    ReleaseWriteLock(&afs_xvolume);
+		    return NULL;
+		}
 		afs_FVIndex = j;
 	    }
 	    tf = &staticFVolume;
-	    if (tf->cell == tv->cell && tf->volume == volid)
+	    if (tf->cell == tcell->cellNum && tf->volume == volid)
 		break;
 	}
+
+	tv->cell = tcell->cellNum;
+	AFS_RWLOCK_INIT(&tv->lock, "volume lock");
+	tv->next = afs_volumes[i];	/* thread into list */
+	afs_volumes[i] = tv;
+	tv->volume = volid;
+
 	if (tf && (j != 0)) {
 	    tv->vtix = afs_FVIndex;
 	    tv->mtpoint = tf->mtpoint;

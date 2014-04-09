@@ -61,6 +61,7 @@
 /*@printflike@*/ extern void Log(const char *format, ...);
 
 extern int DoLogging;
+extern int DoPreserveVolumeStats;
 
 
 /* Forward Declarations */
@@ -1216,10 +1217,15 @@ RestoreVolume(struct rx_call *call, Volume * avp, int incremental,
     afs_foff_t *b1 = NULL, *b2 = NULL;
     int s1 = 0, s2 = 0, delo = 0, tdelo;
     int tag;
+    VolumeDiskData saved_header;
 
     iod_Init(iodp, call);
 
     vp = avp;
+
+    if (DoPreserveVolumeStats) {
+	CopyVolumeStats(&V_disk(vp), &saved_header);
+    }
 
     if (!ReadDumpHeader(iodp, &header)) {
 	Log("1 Volser: RestoreVolume: Error reading header file for dump; aborted\n");
@@ -1289,7 +1295,11 @@ RestoreVolume(struct rx_call *call, Volume * avp, int incremental,
     }
 
   clean:
-    ClearVolumeStats(&vol);
+    if (DoPreserveVolumeStats) {
+	CopyVolumeStats(&saved_header, &vol);
+    } else {
+	ClearVolumeStats(&vol);
+    }
     if (V_needsSalvaged(vp)) {
 	/* needsSalvaged may have been set while we tried to write volume data.
 	 * prevent it from getting overwritten. */
@@ -1413,20 +1423,20 @@ ReadVnodes(struct iod *iodp, Volume * vp, int incremental,
 		    }
 		    saw_f = 1;
 
-		    ino =
-			IH_CREATE(V_linkHandle(vp), V_device(vp),
+		    tmpH =
+			IH_CREATE_INIT(V_linkHandle(vp), V_device(vp),
 				  VPartitionPath(V_partition(vp)), nearInode,
 				  V_parentId(vp), vnodeNumber,
 				  vnode->uniquifier, vnode->dataVersion);
-		    if (!VALID_INO(ino)) {
+		    if (!tmpH) {
 			Log("1 Volser: ReadVnodes: IH_CREATE: %s - restore aborted\n",
                             afs_error_message(errno));
 			V_needsSalvaged(vp) = 1;
 			return VOLSERREAD_DUMPERROR;
 		    }
+		    ino = tmpH->ih_ino;
 		    nearInode = ino;
 		    VNDISK_SET_INO(vnode, ino);
-		    IH_INIT(tmpH, vp->device, V_parentId(vp), ino);
 		    fdP = IH_OPEN(tmpH);
 		    if (fdP == NULL) {
 			Log("1 Volser: ReadVnodes: IH_OPEN: %s - restore aborted\n",

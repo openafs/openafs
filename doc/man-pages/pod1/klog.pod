@@ -31,6 +31,10 @@ B<klog.krb> [B<-x>] S<<< [B<-principal> <I<user name>>] >>>
 
 =head1 DESCRIPTION
 
+The B<klog> and B<klog.krb> commands are obsolete and should not be used.
+Instead, use B<kinit> followed by B<aklog> or B<klog.krb5>. See L<aklog(1)> and
+L<klog.krb5(1)> for more information.
+
 The B<klog> command obtains an AFS token from the obsolete Authentication
 Server or a Kerberos KDC that speaks the same protocol, such as B<fakeka>
 or a Heimdal Kerberos KDC. The Cache Manager on the local machine stores
@@ -38,9 +42,12 @@ the token in a credential structure in kernel memory and uses it when
 obtaining authenticated access to the AFS filespace. This command does not
 affect the issuer's identity (UNIX UID) in the local file system.
 
-The B<klog> command is obsolete and should not be used. Instead, use
-B<kinit> followed by B<aklog> or B<klog.krb5>. See L<aklog(1)> and
-L<klog.krb5(1)> for more information.
+The B<klog.krb> command obtains an AFS token from the obsolete Authentication
+Server or a Kerberos v4 KDC and also places the issuer's Kerberos v4 tickets
+in the file named by the KRBTKFILE environment variable. The Kerberos v4 ticket
+may used by Kerberos v4 aware programs.  The B<pagsh.krb> command defines the
+KRBTKFILE environment variable as F</tmp/tktpI<X>> where I<X> is the number of
+the user's PAG.
 
 By default, the command interpreter obtains a token for the AFS user name
 that matches the issuer's identity in the local file system. To specify an
@@ -60,17 +67,6 @@ A user can have tokens in multiple cells simultaneously, but only one
 token per cell per connection to the client machine. If the user's
 credential structure already contains a token for the requested cell, the
 token resulting from this command replaces it.
-
-Sites that employ Kerberos version 5 authentication instead of the
-Authentication Server (strongly recommended) should normally use the
-combination of B<kinit> and B<aklog> instead of B<klog>.
-
-Sites using Kerberos v4 authentication (perhaps with the Authentication
-Server) may wish to use the Kerberos version of this command, B<klog.krb>,
-on all client machines. It automatically places the issuer's Kerberos
-tickets in the file named by the KRBTKFILE environment variable, which the
-B<pagsh.krb> command defines automatically as F</tmp/tktpI<X>> where I<X>
-is the number of the user's PAG.
 
 The lifetime of the token resulting from this command is the smallest of
 the following.

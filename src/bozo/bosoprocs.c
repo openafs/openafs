@@ -869,6 +869,7 @@ stproc(struct bnode *abnode, void *arock)
 	return 0;		/* don't do these guys */
 
     bnode_Hold(abnode);
+    bnode_ResetErrorCount(abnode);
     bnode_SetStat(abnode, BSTAT_NORMAL);
     bnode_Release(abnode);
     return 0;
@@ -1027,6 +1028,7 @@ SBOZO_Restart(struct rx_call *acall, char *ainstance)
     bnode_Hold(tb);
     bnode_SetStat(tb, BSTAT_SHUTDOWN);
     code = bnode_WaitStatus(tb, BSTAT_SHUTDOWN);	/* this can fail */
+    bnode_ResetErrorCount(tb);
     bnode_SetStat(tb, BSTAT_NORMAL);
     bnode_Release(tb);
 
@@ -1056,6 +1058,7 @@ SBOZO_SetTStatus(struct rx_call *acall, char *ainstance, afs_int32 astatus)
 	goto fail;
     }
     bnode_Hold(tb);
+    bnode_ResetErrorCount(tb);
     code = bnode_SetStat(tb, astatus);
     bnode_Release(tb);
 
