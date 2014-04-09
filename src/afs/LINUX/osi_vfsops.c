@@ -164,13 +164,13 @@ static int
 afs_root(struct super_block *afsp)
 {
     afs_int32 code = 0;
-    struct vrequest treq;
     struct vcache *tvp = 0;
 
     AFS_STATCNT(afs_root);
     if (afs_globalVp && (afs_globalVp->f.states & CStatd)) {
 	tvp = afs_globalVp;
     } else {
+	struct vrequest *treq = NULL;
 	cred_t *credp = crref();
 
 	if (afs_globalVp) {
@@ -178,8 +178,8 @@ afs_root(struct super_block *afsp)
 	    afs_globalVp = NULL;
 	}
 
-	if (!(code = afs_InitReq(&treq, credp)) && !(code = afs_CheckInit())) {
-	    tvp = afs_GetVCache(&afs_rootFid, &treq, NULL, NULL);
+	if (!(code = afs_CreateReq(&treq, credp)) && !(code = afs_CheckInit())) {
+	    tvp = afs_GetVCache(&afs_rootFid, treq, NULL, NULL);
 	    if (tvp) {
 		struct inode *ip = AFSTOV(tvp);
 		struct vattr vattr;
@@ -201,6 +201,7 @@ afs_root(struct super_block *afsp)
 		code = ENOENT;
 	}
 	crfree(credp);
+	afs_DestroyReq(treq);
     }
 
     afs_Trace2(afs_iclSetp, CM_TRACE_VFSROOT, ICL_TYPE_POINTER, afs_globalVp,

@@ -464,28 +464,29 @@ static int UnEvalFakeStat(struct vrequest *areq, struct vcache **vcpp)
  */
 static struct dentry *get_dentry_from_fid(cred_t *credp, struct VenusFid *afid)
 {
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     struct vcache *vcp;
     struct vattr vattr;
     struct inode *ip;
     struct dentry *dp;
     afs_int32 code;
 
-    code = afs_InitReq(&treq, credp);
+    code = afs_CreateReq(&treq, credp);
     if (code) {
 #ifdef OSI_EXPORT_DEBUG
-	printk("afs: get_dentry_from_fid(0x%08x/%d/%d.%d): afs_InitReq: %d\n",
+	printk("afs: get_dentry_from_fid(0x%08x/%d/%d.%d): afs_CreateReq: %d\n",
 	       afid->Cell, afid->Fid.Volume, afid->Fid.Vnode, afid->Fid.Unique,
 	       code);
 #endif
-	return ERR_PTR(-afs_CheckCode(code, &treq, 101));
+	return ERR_PTR(-afs_CheckCode(code, NULL, 101));
     }
-    vcp = afs_GetVCache(afid, &treq, NULL, NULL);
+    vcp = afs_GetVCache(afid, treq, NULL, NULL);
     if (vcp == NULL) {
 #ifdef OSI_EXPORT_DEBUG
 	printk("afs: get_dentry_from_fid(0x%08x/%d/%d.%d): no vcache\n",
 	       afid->Cell, afid->Fid.Volume, afid->Fid.Vnode, afid->Fid.Unique);
 #endif
+	afs_DestroyReq(treq);
 	return NULL;
     }
 
@@ -498,13 +499,13 @@ static struct dentry *get_dentry_from_fid(cred_t *credp, struct VenusFid *afid)
      * So, if this fails, we don't really care very much.
      */
     if (vType(vcp) == VDIR && vcp->mvstat != 2 && !vcp->f.parent.vnode)
-	update_dir_parent(&treq, vcp);
+	update_dir_parent(treq, vcp);
 
     /*
      * If this is a volume root directory and fakestat is enabled,
      * we might need to replace the directory by a mount point.
      */
-    code = UnEvalFakeStat(&treq, &vcp);
+    code = UnEvalFakeStat(treq, &vcp);
     if (code) {
 #ifdef OSI_EXPORT_DEBUG
 	printk("afs: get_dentry_from_fid(0x%08x/%d/%d.%d): UnEvalFakeStat: %d\n",
@@ -512,7 +513,9 @@ static struct dentry *get_dentry_from_fid(cred_t *credp, struct VenusFid *afid)
 	       code);
 #endif
 	afs_PutVCache(vcp);
-	return ERR_PTR(-afs_CheckCode(code, &treq, 101));
+	code = afs_CheckCode(code, treq, 101);
+	afs_DestroyReq(treq);
+	return ERR_PTR(-code);
     }
 
     ip = AFSTOV(vcp);
@@ -530,10 +533,12 @@ static struct dentry *get_dentry_from_fid(cred_t *credp, struct VenusFid *afid)
 	printk("afs: get_dentry_from_fid(0x%08x/%d/%d.%d): out of memory\n",
 	       afid->Cell, afid->Fid.Volume, afid->Fid.Vnode, afid->Fid.Unique);
 #endif
+	afs_DestroyReq(treq);
 	return ERR_PTR(-ENOMEM);
     }
 
     dp->d_op = &afs_dentry_operations;
+    afs_DestroyReq(treq);
     return dp;
 }
 
@@ -576,7 +581,7 @@ static int afs_export_get_name(struct dentry *parent, char *name,
 {
     struct afs_fakestat_state fakestate;
     struct get_name_data data;
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     struct volume *tvp;
     struct vcache *vcp;
     struct dcache *tdc;
@@ -654,11 +659,10 @@ static int afs_export_get_name(struct dentry *parent, char *name,
 	   vcp->f.fid.Cell,      vcp->f.fid.Fid.Volume,
 	   vcp->f.fid.Fid.Vnode, vcp->f.fid.Fid.Unique);
 #endif
-
-    code = afs_InitReq(&treq, credp);
+    code = afs_CreateReq(&treq, credp);
     if (code) {
 #ifdef OSI_EXPORT_DEBUG
-	printk("afs: get_name(%s, 0x%08x/%d/%d.%d): afs_InitReq: %d\n",
+	printk("afs: get_name(%s, 0x%08x/%d/%d.%d): afs_CreateReq: %d\n",
 	       parent->d_name.name ? (char *)parent->d_name.name : "?",
 	       data.fid.Cell,      data.fid.Fid.Volume,
 	       data.fid.Fid.Vnode, data.fid.Fid.Unique, code);
@@ -675,7 +679,7 @@ static int afs_export_get_name(struct dentry *parent, char *name,
 	       data.fid.Cell,      data.fid.Fid.Volume,
 	       data.fid.Fid.Vnode, data.fid.Fid.Unique);
 #endif
-	vcp = afs_GetVCache(&data.fid, &treq, NULL, NULL);
+	vcp = afs_GetVCache(&data.fid, treq, NULL, NULL);
 	if (vcp) {
 	    ObtainReadLock(&vcp->lock);
 	    if (strlen(vcp->linkData + 1) <= NAME_MAX)
@@ -696,7 +700,7 @@ static int afs_export_get_name(struct dentry *parent, char *name,
 	goto done;
     }
 
-    code = afs_EvalFakeStat(&vcp, &fakestate, &treq);
+    code = afs_EvalFakeStat(&vcp, &fakestate, treq);
     if (code)
 	goto done;
 
@@ -718,7 +722,7 @@ static int afs_export_get_name(struct dentry *parent, char *name,
 
 redo:
     if (!(vcp->f.states & CStatd)) {
-	if ((code = afs_VerifyVCache2(vcp, &treq))) {
+	if ((code = afs_VerifyVCache2(vcp, treq))) {
 #ifdef OSI_EXPORT_DEBUG
 	    printk("afs: get_name(%s, 0x%08x/%d/%d.%d): VerifyVCache2(0x%08x/%d/%d.%d): %d\n",
 		   parent->d_name.name ? (char *)parent->d_name.name : "?",
@@ -731,7 +735,7 @@ redo:
 	}
     }
 
-    tdc = afs_GetDCache(vcp, (afs_size_t) 0, &treq, &dirOffset, &dirLen, 1);
+    tdc = afs_GetDCache(vcp, (afs_size_t) 0, treq, &dirOffset, &dirLen, 1);
     if (!tdc) {
 #ifdef OSI_EXPORT_DEBUG
 	printk("afs: get_name(%s, 0x%08x/%d/%d.%d): GetDCache(0x%08x/%d/%d.%d): %d\n",
@@ -813,9 +817,10 @@ done:
 	       data.fid.Fid.Vnode, data.fid.Fid.Unique, name);
     }
     afs_PutFakeStat(&fakestate);
+    code = afs_CheckCode(code, treq, 102);
+    afs_DestroyReq(treq);
     AFS_GUNLOCK();
     crfree(credp);
-    code = afs_CheckCode(code, &treq, 102);
     return -code;
 }
 
@@ -823,7 +828,7 @@ done:
 static struct dentry *afs_export_get_parent(struct dentry *child)
 {
     struct VenusFid tfid;
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     struct cell *tcell;
     struct vcache *vcp;
     struct dentry *dp = NULL;
@@ -884,17 +889,17 @@ static struct dentry *afs_export_get_parent(struct dentry *child)
     } else {
 	/* any other vnode */
 	if (vType(vcp) == VDIR && !vcp->f.parent.vnode && vcp->mvstat != 1) {
-	    code = afs_InitReq(&treq, credp);
+	    code = afs_CreateReq(&treq, credp);
 	    if (code) {
 #ifdef OSI_EXPORT_DEBUG
-		printk("afs: get_parent(0x%08x/%d/%d.%d): InitReq: %d\n",
+		printk("afs: get_parent(0x%08x/%d/%d.%d): afs_CreateReq: %d\n",
 		       vcp->f.fid.Cell, vcp->f.fid.Fid.Volume,
 		       vcp->f.fid.Fid.Vnode, vcp->f.fid.Fid.Unique, code);
 #endif
 		dp = ERR_PTR(-ENOENT);
 		goto done;
 	    } else {
-		code = update_dir_parent(&treq, vcp);
+		code = update_dir_parent(treq, vcp);
 		if (code) {
 #ifdef OSI_EXPORT_DEBUG
 		    printk("afs: get_parent(0x%08x/%d/%d.%d): update_dir_parent: %d\n",
@@ -931,6 +936,7 @@ static struct dentry *afs_export_get_parent(struct dentry *child)
     }
 
 done:
+    afs_DestroyReq(treq);
     AFS_GUNLOCK();
     crfree(credp);
 
