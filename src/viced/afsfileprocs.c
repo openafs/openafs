@@ -5122,6 +5122,11 @@ SRXAFS_GetStatistics64(struct rx_call *acall, afs_int32 statsVersion, ViceStatis
     if ((code = CallPreamble(acall, NOTACTIVECALL, NULL, &tcon, &thost)))
 	goto Bad_GetStatistics64;
 
+    if (statsVersion != STATS64_VERSION) {
+	code = EINVAL;
+	goto Bad_GetStatistics64;
+    }
+
     ViceLog(1, ("SAFS_GetStatistics64 Received\n"));
     Statistics->ViceStatistics64_val =
 	malloc(statsVersion*sizeof(afs_uint64));
