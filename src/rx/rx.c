@@ -4773,6 +4773,30 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
     return np;
 }
 
+/**
+ * Schedule a connection abort to be sent after some delay.
+ *
+ * @param[in] conn The connection to send the abort on.
+ * @param[in] msec The number of milliseconds to wait before sending.
+ *
+ * @pre conn_data_lock must be held
+ */
+static void
+rxi_SendConnectionAbortLater(struct rx_connection *conn, int msec)
+{
+    struct clock when, now;
+    if (!conn->error) {
+	return;
+    }
+    if (!conn->delayedAbortEvent) {
+	clock_GetTime(&now);
+	when = now;
+	clock_Addmsec(&when, msec);
+	conn->delayedAbortEvent =
+	    rxevent_PostNow(&when, &now, rxi_SendDelayedConnAbort, conn, 0);
+    }
+}
+
 /* Received a response to a challenge packet */
 struct rx_packet *
 rxi_ReceiveResponsePacket(struct rx_connection *conn,
@@ -4792,13 +4816,12 @@ rxi_ReceiveResponsePacket(struct rx_connection *conn,
     error = RXS_CheckResponse(conn->securityObject, conn, np);
     if (error) {
 	/* If the response is invalid, reset the connection, sending
-	 * an abort to the peer */
-#ifndef KERNEL
-	rxi_Delay(1);
-#endif
+	 * an abort to the peer. Send the abort with a 1 second delay,
+	 * to avoid a peer hammering us by constantly recreating a
+	 * connection with bad credentials. */
 	rxi_ConnectionError(conn, error);
 	MUTEX_ENTER(&conn->conn_data_lock);
-	np = rxi_SendConnectionAbort(conn, np, istack, 0);
+	rxi_SendConnectionAbortLater(conn, 1000);
 	MUTEX_EXIT(&conn->conn_data_lock);
 	return np;
     } else {
@@ -5187,7 +5210,6 @@ rxi_SendConnectionAbort(struct rx_connection *conn,
 			struct rx_packet *packet, int istack, int force)
 {
     afs_int32 error;
-    struct clock when, now;
 
     if (!conn->error)
 	return packet;
@@ -5209,12 +5231,8 @@ rxi_SendConnectionAbort(struct rx_connection *conn,
 			    RX_PACKET_TYPE_ABORT, (char *)&error,
 			    sizeof(error), istack);
 	MUTEX_ENTER(&conn->conn_data_lock);
-    } else if (!conn->delayedAbortEvent) {
-	clock_GetTime(&now);
-	when = now;
-	clock_Addmsec(&when, rxi_connAbortDelay);
-	conn->delayedAbortEvent =
-	    rxevent_PostNow(&when, &now, rxi_SendDelayedConnAbort, conn, 0);
+    } else {
+	rxi_SendConnectionAbortLater(conn, rxi_connAbortDelay);
     }
     return packet;
 }
