@@ -51,7 +51,13 @@ OpenAFS 1.6.8 (in progress)
 
     * Red Hat packaging improvements (10600 10767 10807)
 
-OpenAFS 1.6.7 (reserved for a security only release)
+OpenAFS 1.6.7
+
+  All server platforms
+
+    * Fix for OPENAFS-SA-2014-001
+
+    * Fix for a potential DOS attack against RX servers
 
 OpenAFS 1.6.6
 
