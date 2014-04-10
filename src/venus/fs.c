@@ -1742,7 +1742,7 @@ ListMountCmd(struct cmd_syndesc *as, void *arock)
 	    /*
 	     * Read name of resolved file.
 	     */
-	    link_chars_read = readlink(orig_name, true_name, 1024);
+	    link_chars_read = readlink(orig_name, true_name, 1024 - 1);
 	    if (link_chars_read <= 0) {
 		fprintf(stderr,
 			"%s: Can't read target name for '%s' symbolic link!\n",
@@ -4129,7 +4129,7 @@ FlushMountCmd(struct cmd_syndesc *as, void *arock)
 	    /*
 	     * Read name of resolved file.
 	     */
-	    link_chars_read = readlink(orig_name, true_name, 1024);
+	    link_chars_read = readlink(orig_name, true_name, 1024 - 1);
 	    if (link_chars_read <= 0) {
 		fprintf(stderr,
 			"%s: Can't read target name for '%s' symbolic link!\n",
