@@ -592,7 +592,8 @@ AFSSetFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
             try_return( ntStatus);
         }
 
-        if( BooleanFlagOn( pFcb->ObjectInformation->VolumeCB->VolumeInformation.FileSystemAttributes, FILE_READ_ONLY_VOLUME))
+	if( FileInformationClass != FilePositionInformation &&
+	    BooleanFlagOn( pFcb->ObjectInformation->VolumeCB->VolumeInformation.FileSystemAttributes, FILE_READ_ONLY_VOLUME))
         {
 
             AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
