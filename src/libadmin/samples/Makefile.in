@@ -39,9 +39,11 @@ SAMPLELIBS =\
 	${TOP_LIBDIR}/libclientadmin.a \
 	${TOP_LIBDIR}/libvosadmin.a \
 	${TOP_LIBDIR}/libbosadmin.a \
-	${TOP_LIBDIR}/libafsauthent.a \
 	${TOP_LIBDIR}/libafsrpc.a \
+	$(top_builddir)/src/auth/liboafs_auth.la \
+	$(top_builddir)/src/kauth/liboafs_kauth.la \
 	$(top_builddir)/src/util/liboafs_util.la \
+	$(top_builddir)/src/ubik/liboafs_ubik.la \
 	$(top_builddir)/src/opr/liboafs_opr.la \
 	${TOP_LIBDIR}/libafshcrypto_lwp.a
 
