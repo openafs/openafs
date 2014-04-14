@@ -591,18 +591,23 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
                     bReleaseSectionObject = TRUE;
 
 		    if ( bWriteToEndOfFile)
-                    {
-                        if (pFcb->Header.ValidDataLength.QuadPart > pFcb->Header.FileSize.QuadPart)
-                        {
-                            liStartingByte = pFcb->Header.ValidDataLength;
-                        }
-                        else
-                        {
-                            liStartingByte = pFcb->Header.FileSize;
-                        }
-                    }
+		    {
 
-                    //
+			if (pFcb->Header.ValidDataLength.QuadPart > pFcb->Header.FileSize.QuadPart)
+			{
+
+			    liStartingByte = pFcb->Header.ValidDataLength;
+			}
+			else
+			{
+
+			    liStartingByte = pFcb->Header.FileSize;
+			}
+
+			pIrpSp->Parameters.Write.ByteOffset = liStartingByte;
+		    }
+
+		    //
                     // We have the correct lock - even if we don't end up truncating
                     //
                     bLockOK = TRUE;
