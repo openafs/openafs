@@ -15,6 +15,8 @@
 /* ptuser.c */
 extern afs_int32 pr_Initialize(afs_int32 secLevel, const char *confDir,
  			       char *cell);
+extern afs_int32 pr_Initialize2(afs_int32 secLevel, const char *confDir,
+				char *cell, int rxgk_level);
 extern int pr_End(void);
 extern int pr_CreateUser(prname name, afs_int32 *id) AFS_NONNULL();
 extern int pr_CreateGroup(prname name, prname owner,

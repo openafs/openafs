@@ -234,7 +234,8 @@ enum optionsList {
     OPT_rxbind,
     OPT_rxmaxmtu,
     OPT_dotted,
-    OPT_transarc_logs
+    OPT_transarc_logs,
+    OPT_s2s_crypt
 };
 
 int
@@ -253,6 +254,7 @@ main(int argc, char **argv)
     afs_uint32 host = htonl(INADDR_ANY);
     struct cmd_syndesc *opts;
     struct cmd_item *list;
+    int s2s_rxgk = 0;
 
     char *pr_dbaseName;
     char *configDir;
@@ -261,6 +263,7 @@ main(int argc, char **argv)
 
     char *auditFileName = NULL;
     char *interface = NULL;
+    char *s2s_crypt_behavior = NULL;
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -364,6 +367,11 @@ main(int argc, char **argv)
 		        CMD_FLAG, CMD_OPTIONAL,
 		        "permit Kerberos 5 principals with dots");
 
+    /* rxgk options */
+    cmd_AddParmAtOffset(opts, OPT_s2s_crypt, "-s2scrypt", CMD_SINGLE,
+			CMD_OPTIONAL,
+			"rxgk-crypt | never");
+
     code = cmd_Parse(argc, argv, &opts);
     if (code == CMD_HELP) {
 	PT_EXIT(0);
@@ -460,6 +468,20 @@ main(int argc, char **argv)
     /* rxkad options */
     cmd_OptionAsFlag(opts, OPT_dotted, &rxkadDisableDotCheck);
 
+    /* rxgk options */
+    if (cmd_OptionAsString(opts, OPT_s2s_crypt, &s2s_crypt_behavior) == 0) {
+	if (strcmp(s2s_crypt_behavior, "never") == 0) {
+	    /* noop; this is the default */
+	} else if (strcmp(s2s_crypt_behavior, "rxgk-crypt") == 0) {
+	    s2s_rxgk = 1;
+	} else {
+	    fprintf(stderr, "Invalid argument for -s2scrypt: %s\n", s2s_crypt_behavior);
+	    PT_EXIT(1);
+	}
+	free(s2s_crypt_behavior);
+	s2s_crypt_behavior = NULL;
+    }
+
     cmd_FreeOptions(&opts);
 
     if (auditFileName) {
@@ -513,7 +535,13 @@ main(int argc, char **argv)
     osi_audit_set_user_check(prdir, pr_IsLocalRealmMatch);
 
     /* initialize ubik */
-    ubik_SetClientSecurityProcs(afsconf_ClientAuth, afsconf_UpToDate, prdir);
+    if (s2s_rxgk) {
+	ubik_SetClientSecurityProcs(afsconf_ClientAuthRXGKCrypt,
+				    afsconf_UpToDate, prdir);
+    } else {
+	ubik_SetClientSecurityProcs(afsconf_ClientAuth, afsconf_UpToDate,
+				    prdir);
+    }
     ubik_SetServerSecurityProcs(afsconf_BuildServerSecurityObjects,
 				afsconf_CheckAuth, prdir);
 

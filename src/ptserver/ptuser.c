@@ -20,6 +20,7 @@
 #include <afs/cellconfig.h>
 #include <afs/afsutil.h>
 #include <afs/com_err.h>
+#include <rx/rxgk_int.h>
 
 #include "ptclient.h"
 #include "ptuser.h"
@@ -174,6 +175,13 @@ CreateIdList(struct idhash *idhash, idlist * alist, afs_int32 select)
 afs_int32
 pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 {
+    return pr_Initialize2(secLevel, confDir, cell, RXGK_LEVEL_BOGUS);
+}
+
+afs_int32
+pr_Initialize2(IN afs_int32 secLevel, IN const char *confDir, IN char *cell,
+	       int rxgk_level)
+{
     afs_int32 code;
     struct rx_connection *serverconns[MAXSERVERS];
     struct rx_securityClass *sc = NULL;
@@ -187,6 +195,7 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
     char cellstr[64];
     afs_int32 gottdir = 0;
     afs_int32 refresh = 0;
+    int use_rxgk = 0;
 
     initialize_PT_error_table();
     initialize_RXK_error_table();
@@ -270,10 +279,31 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 	return code;
     }
 
+    switch (rxgk_level) {
+    case RXGK_LEVEL_CLEAR:
+    case RXGK_LEVEL_AUTH:
+    case RXGK_LEVEL_CRYPT:
+	use_rxgk = 1;
+	if (secLevel != 2) {
+	    fprintf(stderr, "libprot: Cannot use rxgk with non-localauth right now\n");
+	    return EINVAL;
+	}
+    }
+
     /* Most callers use secLevel==1, however, the fileserver uses secLevel==2
      * to force use of the KeyFile.  secLevel == 0 implies -noauth was
      * specified. */
-    if (secLevel == 2) {
+    if (use_rxgk) {
+	switch (rxgk_level) {
+	case RXGK_LEVEL_CLEAR: code = afsconf_ClientAuthRXGKClear(tdir, &sc, &scIndex);
+			       break;
+	case RXGK_LEVEL_AUTH:  code = afsconf_ClientAuthRXGKAuth(tdir, &sc, &scIndex);
+			       break;
+	case RXGK_LEVEL_CRYPT: code = afsconf_ClientAuthRXGKCrypt(tdir, &sc, &scIndex);
+	}
+	if (code)
+	    afs_com_err(whoami, code, "(calling client rxgk)");
+    } else if (secLevel == 2) {
 	/* If secLevel is two assume we're on a file server and use
 	 * ClientAuthSecure if possible. */
 	code = afsconf_ClientAuthSecure(tdir, &sc, &scIndex);

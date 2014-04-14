@@ -80,6 +80,7 @@ enum {
     COMMONPARM_OFFSET_ENCRYPT   = 29,
     COMMONPARM_OFFSET_NORESOLVE = 30,
     COMMONPARM_OFFSET_CONFIG    = 31,
+    COMMONPARM_OFFSET_RXGK      = 32,
 };
 
 #define COMMONPARMS \
@@ -98,6 +99,8 @@ cmd_AddParmAtOffset(ts, COMMONPARM_OFFSET_NORESOLVE, \
     "-noresolve", CMD_FLAG, CMD_OPTIONAL, "don't resolve addresses"); \
 cmd_AddParmAtOffset(ts, COMMONPARM_OFFSET_CONFIG, \
     "-config", CMD_SINGLE, CMD_OPTIONAL, "config location"); \
+cmd_AddParmAtOffset(ts, COMMONPARM_OFFSET_RXGK, \
+    "-rxgk", CMD_SINGLE, CMD_OPTIONAL, "rxgk security level to use"); \
 
 #define ERROR_EXIT(code) do { \
     error = (code); \
@@ -5930,6 +5933,7 @@ static int
 MyBeforeProc(struct cmd_syndesc *as, void *arock)
 {
     char *tcell;
+    char *rxgk_seclevel_str = NULL;
     afs_int32 code;
     int secFlags;
 
@@ -5959,6 +5963,23 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 
     if (as->parms[COMMONPARM_OFFSET_CONFIG].items)   /* -config flag set */
 	confdir = as->parms[COMMONPARM_OFFSET_CONFIG].items->data;
+
+    if (cmd_OptionAsString(as, COMMONPARM_OFFSET_RXGK, &rxgk_seclevel_str) == 0) {
+	if (strcmp(rxgk_seclevel_str, "clear") == 0)
+	    secFlags |= AFSCONF_SECOPTS_ALWAYSCLEAR;
+	else if (strcmp(rxgk_seclevel_str, "auth") == 0)
+	    secFlags |= AFSCONF_SECOPTS_NEVERENCRYPT;
+	else if (strcmp(rxgk_seclevel_str, "crypt") == 0) {
+	    /* don't need to set any flags; this is the default for rxgk */
+	} else {
+	    fprintf(STDERR, "Invalid argument to -rxgk: %s\n", rxgk_seclevel_str);
+	    exit(1);
+	}
+	secFlags |= AFSCONF_SECOPTS_RXGK;
+
+	free(rxgk_seclevel_str);
+	rxgk_seclevel_str = NULL;
+    }
 
     if ((code = vsu_ClientInit(confdir, tcell, secFlags, UV_SetSecurity,
 			       &cstruct))) {

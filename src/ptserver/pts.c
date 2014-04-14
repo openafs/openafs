@@ -25,6 +25,7 @@
 #include <afs/cmd.h>
 #include <rx/rx.h>
 #include <rx/xdr.h>
+#include <rx/rxgk_int.h>
 
 #include "ptclient.h"
 #include "ptuser.h"
@@ -167,6 +168,7 @@ GetGlobals(struct cmd_syndesc *as, void *arock)
     afs_int32 sec;
     int changed = 0;
     const char* confdir;
+    RXGK_Level rxgk_level = RXGK_LEVEL_BOGUS;
 
     whoami = as->a0name;
 
@@ -221,9 +223,26 @@ GetGlobals(struct cmd_syndesc *as, void *arock)
 	confdir = as->parms[23].items->data;
     }
 
+    if (as->parms[24].items) { /* -rxgk */
+	char *rxgk_seclevel_str = as->parms[24].items->data;
+	changed = 1;
+
+	if (strcmp(rxgk_seclevel_str, "clear") == 0)
+	    rxgk_level = RXGK_LEVEL_CLEAR;
+	else if (strcmp(rxgk_seclevel_str, "auth") == 0)
+	    rxgk_level = RXGK_LEVEL_AUTH;
+	else if (strcmp(rxgk_seclevel_str, "crypt") == 0)
+	    rxgk_level = RXGK_LEVEL_CRYPT;
+	else {
+	    fprintf(stderr, "Invalid argument to -rxgk: %s\n", rxgk_seclevel_str);
+	    return 1;
+	}
+
+    }
+
     if (changed) {
 	CleanUp(as, arock);
-	code = pr_Initialize(sec, confdir, cell);
+	code = pr_Initialize2(sec, confdir, cell, rxgk_level);
     } else {
 	code = 0;
     }
@@ -1091,6 +1110,7 @@ add_std_args(struct cmd_syndesc *ts)
     cmd_AddParm(ts, "-encrypt", CMD_FLAG, CMD_OPTIONAL,
 		"encrypt commands");
     cmd_AddParm(ts, "-config", CMD_SINGLE, CMD_OPTIONAL, "config location");
+    cmd_AddParm(ts, "-rxgk", CMD_SINGLE, CMD_OPTIONAL, "rxgk security level to use");
     free(test_help);
 }
 

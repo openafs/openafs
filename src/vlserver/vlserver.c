@@ -158,7 +158,8 @@ enum optionsList {
     OPT_trace,
     OPT_dotted,
     OPT_restricted_query,
-    OPT_transarc_logs
+    OPT_transarc_logs,
+    OPT_s2s_crypt
 };
 
 int
@@ -180,6 +181,7 @@ main(int argc, char **argv)
     afs_uint32 host = ntohl(INADDR_ANY);
     struct cmd_syndesc *opts;
     struct logOptions logopts;
+    int s2s_rxgk = 0;
 
     char *vl_dbaseName;
     char *configDir;
@@ -187,6 +189,7 @@ main(int argc, char **argv)
     char *auditFileName = NULL;
     char *interface = NULL;
     char *optstring = NULL;
+    char *s2s_crypt_behavior = NULL;
 
     char *restricted_query_parameter = NULL;
 
@@ -279,6 +282,11 @@ main(int argc, char **argv)
     cmd_AddParmAtOffset(opts, OPT_dotted, "-allow-dotted-principals",
 		        CMD_FLAG, CMD_OPTIONAL,
 		        "permit Kerberos 5 principals with dots");
+
+    /* rxgk options */
+    cmd_AddParmAtOffset(opts, OPT_s2s_crypt, "-s2scrypt", CMD_SINGLE,
+			CMD_OPTIONAL,
+			"rxgk-crypt | never");
 
     code = cmd_Parse(argc, argv, &opts);
     if (code == CMD_HELP) {
@@ -387,6 +395,20 @@ main(int argc, char **argv)
 	free(restricted_query_parameter);
     }
 
+    /* rxgk options */
+    if (cmd_OptionAsString(opts, OPT_s2s_crypt, &s2s_crypt_behavior) == 0) {
+	if (strcmp(s2s_crypt_behavior, "never") == 0) {
+	    /* noop; this is the default */
+	} else if (strcmp(s2s_crypt_behavior, "rxgk-crypt") == 0) {
+	    s2s_rxgk = 1;
+	} else {
+	    printf("Invalid argument for -s2scrypt: %s\n", s2s_crypt_behavior);
+	    return -1;
+	}
+	free(s2s_crypt_behavior);
+	s2s_crypt_behavior = NULL;
+    }
+
     if (auditFileName) {
 	osi_audit_file(auditFileName);
     }
@@ -487,7 +509,12 @@ main(int argc, char **argv)
     rx_SetRxDeadTime(50);
 
     ubik_nBuffers = 512;
-    ubik_SetClientSecurityProcs(afsconf_ClientAuth, afsconf_UpToDate, tdir);
+    if (s2s_rxgk) {
+	ubik_SetClientSecurityProcs(afsconf_ClientAuthRXGKCrypt,
+				    afsconf_UpToDate, tdir);
+    } else {
+	ubik_SetClientSecurityProcs(afsconf_ClientAuth, afsconf_UpToDate, tdir);
+    }
     ubik_SetServerSecurityProcs(afsconf_BuildServerSecurityObjects,
 				afsconf_CheckAuth, tdir);
 
