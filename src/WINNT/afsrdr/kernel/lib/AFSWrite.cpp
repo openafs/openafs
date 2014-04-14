@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2008, 2009, 2010, 2011 Kernel Drivers, LLC.
- * Copyright (c) 2009, 2010, 2011 Your File System, Inc.
+ * Copyright (c) 2009, 2010, 2011, 2012, 2013, 2014 Your File System, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -121,6 +121,7 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
     BOOLEAN            bReleasePaging = FALSE;
     BOOLEAN            bExtendingWrite = FALSE;
     BOOLEAN            bSynchronousFo = FALSE;
+    BOOLEAN	       bWait = FALSE;
     BOOLEAN            bCompleteIrp = TRUE;
     BOOLEAN            bForceFlush = FALSE;
     BOOLEAN            bLockOK;
@@ -177,6 +178,7 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
         liStartingByte = pIrpSp->Parameters.Write.ByteOffset;
         bPagingIo      = BooleanFlagOn( Irp->Flags, IRP_PAGING_IO);
         bNonCachedIo   = BooleanFlagOn( Irp->Flags, IRP_NOCACHE);
+	bWait	       = IoIsOperationSynchronous( Irp);
         ulByteCount    = pIrpSp->Parameters.Write.Length;
         bSynchronousFo = BooleanFlagOn( pFileObject->Flags, FO_SYNCHRONOUS_IO);
 
@@ -430,7 +432,7 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
 
 		while (!CcCanIWrite( pFileObject,
 				     ulByteCount,
-				     FALSE,
+				     bWait && !bRetry,
 				     bRetry))
 		{
 		    static const LONGLONG llWriteDelay = (LONGLONG)-100000;
@@ -450,7 +452,7 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
 
 		if (!CcCanIWrite( pFileObject,
 				  ulByteCount,
-				  FALSE,
+				  bWait && !bRetry,
 				  bRetry))
 		{
 
