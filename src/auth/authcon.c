@@ -211,6 +211,90 @@ afsconf_ClientAuthSecure(void *arock,
     return rc;
 }
 
+/**
+ * Print an rxgk token and make a security class with it
+ *
+ * Print an rxgk token and build a security class from it, returning the
+ * correct index along with the class.
+ *
+ * As with the other ClientAuth variants, fall back to rxnull on errors.
+ * The caller can check the returned aindex if necessary.
+ *
+ * If 'crypt' is nonzero, use the _CRYPT security level. Otherwise, if 'auth'
+ * is nonzero, use the _AUTH security level. Otherwise, use _CLEAR.
+ */
+static afs_int32
+_ClientAuthRXGK(void *arock, struct rx_securityClass **aclass,
+		afs_int32 *aindex, int crypt, int auth)
+{
+#ifdef AFS_RXGK_ENV
+    struct rx_securityClass *tclass;
+    struct rx_opaque token = RX_EMPTY_OPAQUE;
+    RXGK_Level level;
+    RXGK_TokenInfo tokeninfo;
+    rxgk_key cell_key = NULL, k0 = NULL;
+    afs_int32 code, kvno, cell_enctype, k0_enctype;
+
+    memset(&tokeninfo, 0, sizeof(tokeninfo));
+
+    if (crypt)
+	level = RXGK_LEVEL_CRYPT;
+    else if (auth)
+	level = RXGK_LEVEL_AUTH;
+    else
+	level = RXGK_LEVEL_CLEAR;
+
+    code = afsconf_GetLatestRXGKKey(arock, &kvno, &cell_enctype, &cell_key);
+    if (code != 0)
+	goto done;
+
+    /* assume that cell_key's enctype works for the our token's k0, too */
+    k0_enctype = cell_enctype;
+
+    tokeninfo.enctype = k0_enctype;
+    tokeninfo.level = level;
+    code = rxgk_print_token_and_key(&token, &tokeninfo, cell_key, kvno,
+				    cell_enctype, &k0);
+    if (code != 0)
+	goto done;
+    tclass = rxgk_NewClientSecurityObject(level, k0_enctype, k0, &token);
+    if (tclass == NULL)
+	code = RXGK_INCONSISTENCY;
+ done:
+    rxgk_release_key(&cell_key);
+    rxgk_release_key(&k0);
+    rx_opaque_freeContents(&token);
+    if (code != 0)
+	return QuickAuth(aclass, aindex);
+    *aclass = tclass;
+    *aindex = RX_SECIDX_GK;
+    return code;
+#else	/* AFS_RXGK_ENV */
+    return QuickAuth(aclass, aindex);
+#endif	/* !AFS_RXGK_ENV */
+}
+
+afs_int32
+afsconf_ClientAuthRXGKClear(void *arock, struct rx_securityClass **aclass,
+			    afs_int32 *aindex)
+{
+    return _ClientAuthRXGK(arock, aclass, aindex, 0, 0);
+}
+
+afs_int32
+afsconf_ClientAuthRXGKAuth(void *arock, struct rx_securityClass **aclass,
+			    afs_int32 *aindex)
+{
+    return _ClientAuthRXGK(arock, aclass, aindex, 0, 1);
+}
+
+afs_int32
+afsconf_ClientAuthRXGKCrypt(void *arock, struct rx_securityClass **aclass,
+			    afs_int32 *aindex)
+{
+    return _ClientAuthRXGK(arock, aclass, aindex, 1, 0);
+}
+
 /*!
  * Build a security class from the user's current tokens
  *
@@ -247,6 +331,12 @@ afsconf_ClientAuthToken(struct afsconf_cell *info,
 
     *sc = NULL;
     *scIndex = RX_SECIDX_NULL;
+
+    if ((flags & AFSCONF_SECOPTS_RXGK)) {
+	/* We don't support non-printed rxgk tokens yet */
+	code = AFSCONF_NO_SECURITY_CLASS;
+	goto out;
+    }
 
     code = ktc_GetTokenEx(info->name, &tokenSet);
     if (code)
@@ -342,6 +432,13 @@ afsconf_BuildServerSecurityObjects(void *rock,
  * 	 	than authentication or integrity modes.
  * 	- AFSCONF_SECOPTS_FALLBACK_NULL - if no suitable class can be found,
  * 		then fallback to the rxnull security class.
+ * 	- AFSCONF_SECOPTS_NEVERENCRYPT - avoid encrypting classes (currently
+ * 		only valid with _RXGK)
+ * 	- AFSCONF_SECOPTS_ALWAYSCLEAR - avoid encrypting or authenticating
+ * 		classes (always use "clear" security classes) (currently
+ * 		only valid with _RXGK)
+ * 	- AFSCONF_SECOPTS_RXGK - only use rxgk security classes (currently
+ * 		only valid with _LOCALAUTH)
  * @param[in] info
  * 	The cell information structure for the current cell. If this is NULL,
  * 	then use a version locally obtained using the cellName.
@@ -378,7 +475,15 @@ afsconf_PickClientSecObj(struct afsconf_dir *dir, afsconf_secflags flags,
 	    return AFSCONF_NOCELLDB;
 
 	if (flags & AFSCONF_SECOPTS_LOCALAUTH) {
-	    if (flags & AFSCONF_SECOPTS_ALWAYSENCRYPT)
+	    if ((flags & AFSCONF_SECOPTS_RXGK)) {
+		if ((flags & AFSCONF_SECOPTS_ALWAYSCLEAR))
+		    code = afsconf_ClientAuthRXGKClear(dir, sc, scIndex);
+		else if ((flags & AFSCONF_SECOPTS_NEVERENCRYPT))
+		    code = afsconf_ClientAuthRXGKAuth(dir, sc, scIndex);
+		else
+		    code = afsconf_ClientAuthRXGKCrypt(dir, sc, scIndex);
+
+	    } else if (flags & AFSCONF_SECOPTS_ALWAYSENCRYPT)
 		code = afsconf_ClientAuthSecure(dir, sc, scIndex);
 	    else
 		code = afsconf_ClientAuth(dir, sc, scIndex);

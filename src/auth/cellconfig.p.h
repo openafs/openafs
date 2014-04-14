@@ -89,6 +89,9 @@ struct afsconf_aliasentry {
 #define AFSCONF_SECOPTS_LOCALAUTH     0x2
 #define AFSCONF_SECOPTS_ALWAYSENCRYPT 0x4
 #define AFSCONF_SECOPTS_FALLBACK_NULL 0x8
+#define AFSCONF_SECOPTS_NEVERENCRYPT  0x10
+#define AFSCONF_SECOPTS_ALWAYSCLEAR   0x20
+#define AFSCONF_SECOPTS_RXGK          0x40
 typedef afs_uint32 afsconf_secflags;
 
 struct afsconf_dir {
@@ -212,6 +215,15 @@ extern afs_int32 afsconf_ClientAuth(void *arock,
 extern afs_int32 afsconf_ClientAuthSecure(void *arock,
 				          struct rx_securityClass **astr,
 				          afs_int32 * aindex);
+extern afs_int32 afsconf_ClientAuthRXGKClear(void *arock,
+					     struct rx_securityClass **aclass,
+					     afs_int32 *aindex);
+extern afs_int32 afsconf_ClientAuthRXGKAuth(void *arock,
+					    struct rx_securityClass **aclass,
+					    afs_int32 *aindex);
+extern afs_int32 afsconf_ClientAuthRXGKCrypt(void *arock,
+					     struct rx_securityClass **aclass,
+					     afs_int32 *aindex);
 
 
 extern afs_int32 afsconf_ClientAuthToken(struct afsconf_cell *info,
