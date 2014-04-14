@@ -121,6 +121,7 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
     BOOLEAN            bReleasePaging = FALSE;
     BOOLEAN            bExtendingWrite = FALSE;
     BOOLEAN            bSynchronousFo = FALSE;
+    BOOLEAN	       bWriteToEndOfFile = FALSE;
     BOOLEAN	       bWait = FALSE;
     BOOLEAN            bCompleteIrp = TRUE;
     BOOLEAN            bForceFlush = FALSE;
@@ -547,10 +548,12 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
             else
             {
 
-                bExtendingWrite = (((liStartingByte.QuadPart + ulByteCount) >=
-                                     pFcb->Header.FileSize.QuadPart) ||
-                                    (liStartingByte.LowPart == FILE_WRITE_TO_END_OF_FILE &&
-                                      liStartingByte.HighPart == -1)) ;
+		bWriteToEndOfFile = liStartingByte.LowPart == FILE_WRITE_TO_END_OF_FILE &&
+				    liStartingByte.HighPart == -1;
+
+		bExtendingWrite = ( bWriteToEndOfFile ||
+				    ((liStartingByte.QuadPart + ulByteCount) >=
+				      pFcb->Header.FileSize.QuadPart));
 
                 if( bExtendingWrite || bNonCachedIo)
                 {
@@ -587,8 +590,7 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
 
                     bReleaseSectionObject = TRUE;
 
-                    if (liStartingByte.LowPart == FILE_WRITE_TO_END_OF_FILE &&
-                         liStartingByte.HighPart == -1)
+		    if ( bWriteToEndOfFile)
                     {
                         if (pFcb->Header.ValidDataLength.QuadPart > pFcb->Header.FileSize.QuadPart)
                         {
