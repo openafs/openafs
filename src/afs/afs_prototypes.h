@@ -601,6 +601,8 @@ extern int AddPag(afs_proc_t *p, afs_int32 aval, afs_ucred_t **credpp);
 extern int AddPag(afs_int32 aval, afs_ucred_t **credpp);
 #endif
 extern int afs_InitReq(struct vrequest *av, afs_ucred_t *acred);
+extern int afs_CreateReq(struct vrequest **avpp, afs_ucred_t *acred);
+extern void afs_DestroyReq(struct vrequest *av);
 extern afs_uint32 afs_get_pag_from_groups(gid_t g0a, gid_t g1a);
 extern void afs_get_groups_from_pag(afs_uint32 pag, gid_t * g0p, gid_t * g1p);
 extern afs_int32 PagInCred(afs_ucred_t *cred);
