@@ -647,10 +647,9 @@ AFSSetFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
             case FileBasicInformation:
             {
 
-                bUpdateFileInfo = TRUE;
-
                 ntStatus = AFSSetBasicInfo( Irp,
-                                            pCcb->DirectoryCB);
+					    pCcb->DirectoryCB,
+					    &bUpdateFileInfo);
 
                 break;
             }
@@ -1912,7 +1911,8 @@ AFSQueryPhysicalNameInfo( IN PIRP Irp,
 
 NTSTATUS
 AFSSetBasicInfo( IN PIRP Irp,
-                 IN AFSDirectoryCB *DirectoryCB)
+		 IN AFSDirectoryCB *DirectoryCB,
+		 OUT BOOLEAN *bUpdateFileInfo)
 {
     NTSTATUS ntStatus = STATUS_SUCCESS;
     PFILE_BASIC_INFORMATION pBuffer;
@@ -1932,26 +1932,92 @@ AFSSetBasicInfo( IN PIRP Irp,
         if( pBuffer->FileAttributes != (ULONGLONG)0)
         {
 
-            if( DirectoryCB->ObjectInformation->Fcb->Header.NodeTypeCode == AFS_FILE_FCB &&
-                BooleanFlagOn( pBuffer->FileAttributes, FILE_ATTRIBUTE_DIRECTORY))
-            {
+	    //
+	    // Make sure that the reparse point attribute is not modified.
+	    // Fail if the RP attribute is requested but it is not
+	    // already a RP.  Otherwise, ignore it.
+	    //
 
-                try_return( ntStatus = STATUS_INVALID_PARAMETER);
-            }
+	    if ( !BooleanFlagOn( DirectoryCB->ObjectInformation->FileAttributes,
+				 FILE_ATTRIBUTE_REPARSE_POINT) &&
+		 BooleanFlagOn( pBuffer->FileAttributes,
+				FILE_ATTRIBUTE_REPARSE_POINT))
+	    {
 
-            if( DirectoryCB->ObjectInformation->Fcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
-            {
+		try_return( ntStatus = STATUS_INVALID_PARAMETER);
+	    }
 
-                pBuffer->FileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
-            }
+	    //
+	    // Make sure that the directory attribute is not modified.
+	    // Fail if the D attribute is requested but it is not
+	    // already a directory.  Otherwise, ignore it.
+	    //
 
-            pCcb->FileUnwindInfo.FileAttributes = DirectoryCB->ObjectInformation->FileAttributes;
+	    if ( !BooleanFlagOn( DirectoryCB->ObjectInformation->FileAttributes,
+				 FILE_ATTRIBUTE_DIRECTORY) &&
+		 BooleanFlagOn( pBuffer->FileAttributes,
+				FILE_ATTRIBUTE_DIRECTORY))
+	    {
 
-            DirectoryCB->ObjectInformation->FileAttributes = pBuffer->FileAttributes;
+		try_return( ntStatus = STATUS_INVALID_PARAMETER);
+	    }
 
-            ulNotifyFilter |= FILE_NOTIFY_CHANGE_ATTRIBUTES;
+	    //
+	    // Save the original value
+	    //
 
-            SetFlag( DirectoryCB->ObjectInformation->Fcb->Flags, AFS_FCB_FLAG_FILE_MODIFIED);
+	    pCcb->FileUnwindInfo.FileAttributes = DirectoryCB->ObjectInformation->FileAttributes;
+
+	    if( BooleanFlagOn( pBuffer->FileAttributes, FILE_ATTRIBUTE_READONLY))
+	    {
+
+		//
+		// Set the readonly flag.
+		//
+
+		if ( !BooleanFlagOn( DirectoryCB->ObjectInformation->FileAttributes,
+				     FILE_ATTRIBUTE_READONLY))
+		{
+
+		    if ( DirectoryCB->ObjectInformation->FileAttributes == FILE_ATTRIBUTE_NORMAL)
+		    {
+
+			DirectoryCB->ObjectInformation->FileAttributes = FILE_ATTRIBUTE_READONLY;
+		    }
+		    else
+		    {
+
+			DirectoryCB->ObjectInformation->FileAttributes |= FILE_ATTRIBUTE_READONLY;
+		    }
+
+		    ulNotifyFilter |= FILE_NOTIFY_CHANGE_ATTRIBUTES;
+
+		    SetFlag( DirectoryCB->ObjectInformation->Fcb->Flags, AFS_FCB_FLAG_FILE_MODIFIED);
+		}
+	    }
+	    else
+	    {
+		//
+		// Reset the readonly flag.
+		//
+
+		if ( BooleanFlagOn( DirectoryCB->ObjectInformation->FileAttributes,
+				    FILE_ATTRIBUTE_READONLY))
+		{
+
+		    DirectoryCB->ObjectInformation->FileAttributes &= ~FILE_ATTRIBUTE_READONLY;
+
+		    if ( DirectoryCB->ObjectInformation->FileAttributes == 0)
+		    {
+
+			DirectoryCB->ObjectInformation->FileAttributes = FILE_ATTRIBUTE_NORMAL;
+		    }
+
+		    ulNotifyFilter |= FILE_NOTIFY_CHANGE_ATTRIBUTES;
+
+		    SetFlag( DirectoryCB->ObjectInformation->Fcb->Flags, AFS_FCB_FLAG_FILE_MODIFIED);
+		}
+	    }
         }
 
         pCcb->FileUnwindInfo.CreationTime.QuadPart = (ULONGLONG)-1;
@@ -2016,6 +2082,8 @@ AFSSetBasicInfo( IN PIRP Irp,
 
         if( ulNotifyFilter > 0)
         {
+
+	    *bUpdateFileInfo = TRUE;
 
             if( BooleanFlagOn( DirectoryCB->ObjectInformation->Flags, AFS_OBJECT_FLAGS_PARENT_FID))
             {
