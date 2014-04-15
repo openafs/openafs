@@ -837,7 +837,8 @@ AFSSetFileInfo( IN PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS
 AFSSetBasicInfo( IN PIRP Irp,
-                 IN AFSDirectoryCB *DirectoryCB);
+		 IN AFSDirectoryCB *DirectoryCB,
+		 OUT BOOLEAN *bUpdateFileInfo);
 
 NTSTATUS
 AFSSetDispositionInfo( IN PIRP Irp,
