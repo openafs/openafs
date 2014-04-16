@@ -68,6 +68,9 @@
 #define KERBEROS_APPLE_DEPRECATED(x)
 #include <krb5.h>
 
+#include <string.h>
+#include <sys/stat.h>
+
 #include "akimpersonate.h"
 #include "akimpersonate_v5gen.h"
 
@@ -680,6 +683,9 @@ get_credv5_akimpersonate(krb5_context context, char* keytab,
 			 time_t endtime, const int *allowed_enctypes,
 			 krb5_creds** out_creds /* out */ )
 {
+    char *tmpkt = NULL;
+    struct stat tstat;
+    char *ktname = NULL;
     krb5_error_code code;
     krb5_keytab kt = 0;
     krb5_keytab_entry entry[1];
@@ -719,10 +725,31 @@ get_credv5_akimpersonate(krb5_context context, char* keytab,
     if (allowed_enctypes == NULL)
         allowed_enctypes = any_enctype;
 
-    if (keytab != NULL)
-      code = krb5_kt_resolve(context, keytab, &kt);
-    else
-      code = krb5_kt_default(context, &kt);
+    if (keytab != NULL) {
+	tmpkt = strdup(keytab);
+	if (!tmpkt)
+	    code = ENOMEM;
+    } else {
+	tmpkt = malloc(256);
+	if (!tmpkt)
+	    code = ENOMEM;
+	else
+	    code = krb5_kt_default_name(context, tmpkt, 256);
+    }
+    if (code)
+	goto cleanup;
+
+    if (strncmp(tmpkt, "WRFILE:", 7) == 0)
+	ktname = &(tmpkt[7]);
+    else if (strncmp(tmpkt, "FILE:", 5) == 0)
+	ktname = &(tmpkt[5]);
+
+    if (ktname && (stat(ktname, &tstat) != 0)) {
+	code = KRB5_KT_NOTFOUND;
+	goto cleanup;
+    }
+
+    code = krb5_kt_resolve(context, tmpkt, &kt);
     if (code != 0)
         goto cleanup;
 
@@ -758,6 +785,8 @@ get_credv5_akimpersonate(krb5_context context, char* keytab,
     *out_creds = creds;
     creds = NULL;
 cleanup:
+    if (tmpkt)
+	free(tmpkt);
     if (deref_enc_data(&ticket_reply->enc_part) != NULL)
         free(deref_enc_data(&ticket_reply->enc_part));
     krb5_free_keytab_entry_contents(context, entry);
