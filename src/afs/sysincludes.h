@@ -52,7 +52,7 @@
 # include <sys/timeout.h>
 
 #elif defined(AFS_NBSD40_ENV)
-# ifdef AFS_NBSD50_ENV
+# if defined(AFS_NBSD50_ENV) && !defined(AFS_NBSD70_ENV)
 #  include <sys/simplelock.h>
 # endif
 # include <sys/errno.h>
