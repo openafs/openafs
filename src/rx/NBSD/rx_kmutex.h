@@ -53,7 +53,7 @@ int afs_cv_wait(afs_kcondvar_t *, afs_kmutex_t *, int);
 #define CV_SIGNAL(a) cv_signal(a)
 #define CV_BROADCAST(a) cv_broadcast(a)
 #define CV_WAIT(a, b) afs_cv_wait(a, b, 0)
-#define CV_WAIT_SIG  afs_cv_wait(a, b, 1)
+#define CV_WAIT_SIG(a, b)  afs_cv_wait(a, b, 1)
 
 #else
 
