@@ -25,10 +25,20 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
+#ifdef AFS_NBSD70_ENV
+#include <sys/cprng.h>
+#else
 #include <sys/rnd.h>
+#include <dev/rnd_private.h>
+#endif
 
 int
 osi_readRandom(void *data, afs_size_t len) {
+#ifdef AFS_NBSD70_ENV
+    osi_Assert(len <= CPRNG_MAX_LEN);
+    cprng_strong(kern_cprng, data, len, 0);
+#else
     rnd_extract_data(data, len, RND_EXTRACT_ANY);
+#endif
     return 0;
 }
