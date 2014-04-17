@@ -66,6 +66,14 @@ static sy_call_t *old_ioctl;
 
 MODULE(MODULE_CLASS_VFS, openafs, NULL);
 
+#if defined(AFS_NBSD70_ENV)
+#define SYS_NOSYSCALL sys_nomodule
+#elif defined(AFS_NBSD60_ENV)
+#define SYS_NOSYSCALL sys_nosys
+#else
+#define SYS_NOSYSCALL sys_lkmnosys
+#endif
+
 static int
 openafs_modcmd(modcmd_t cmd, void *arg)
 {
@@ -86,14 +94,11 @@ openafs_modcmd(modcmd_t cmd, void *arg)
 		old_sysent = se[AFS_SYSCALL];
 		old_setgroups = se[SYS_setgroups].sy_call;
 		old_ioctl = se[SYS_ioctl].sy_call;
-#if defined(AFS_NBSD60_ENV)
-# ifndef RUMP
-		if (old_sysent.sy_call == sys_nosys) {
-# else
+
+#if defined(RUMP)
 		if (true) {
-# endif
 #else
-		if (old_sysent.sy_call == sys_lkmnosys) {
+		if (old_sysent.sy_call == SYS_NOSYSCALL) {
 #endif
 #if defined(AFS_NBSD60_ENV)
 			kernconfig_lock();
@@ -124,6 +129,11 @@ openafs_modcmd(modcmd_t cmd, void *arg)
 		if (error != 0)
 			break;
 		break;
+#if defined(AFS_NBSD70_ENV)
+	case MODULE_CMD_AUTOUNLOAD:
+		error = EBUSY;
+		break;
+#endif
 	default:
 		error = ENOTTY;
 		break;
