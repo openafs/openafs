@@ -151,9 +151,10 @@ uu_start(struct seq_file *m, loff_t *pos)
 
     for (i = 0; i < NUSERS; i++) {
 	for (tu = afs_users[i]; tu; tu = tu->next) {
-	    if (++n == *pos)
+	    if (++n == *pos) {
 		ret = tu;
 		goto done;
+	    }
 	}
     }
 
