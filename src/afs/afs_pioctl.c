@@ -1805,6 +1805,7 @@ DECL_PIOCTL(PSetTokens)
     int stLen, stLenOld;
     struct vrequest treq;
     afs_int32 flag, set_parent_pag = 0;
+    int code;
 
     AFS_STATCNT(PSetTokens);
     if (!afs_resourceinit_flag) {
@@ -1880,7 +1881,10 @@ DECL_PIOCTL(PSetTokens)
 	    *acred = crref();
 	    crfree(old_cred);
 #endif
-	    afs_InitReq(&treq, *acred);
+	    code = afs_InitReq(&treq, *acred);
+	    if (code) {
+		return code;
+	    }
 	    areq = &treq;
 	}
     }

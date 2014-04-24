@@ -384,7 +384,10 @@ afsrwvp(struct vcache *avc, struct uio *uio, enum uio_rw rw,
 	       ICL_TYPE_INT32, ioflag, ICL_TYPE_INT32, rw, ICL_TYPE_INT32, 0);
 
     /* get a validated vcache entry */
-    afs_InitReq(&treq, cr);
+    error = afs_InitReq(&treq, cr);
+    if (error)
+	return afs_CheckCode(error, NULL, 63);
+
     error = afs_VerifyVCache(avc, &treq);
     if (error)
 	return afs_CheckCode(error, &treq, 51);
@@ -953,8 +956,11 @@ OSI_VC_DECL(avc);
 	/*
 	 * mimic afs_close
 	 */
-	afs_InitReq(&treq, acred);
-	if (afs_BBusy()) {
+	code = afs_InitReq(&treq, acred);
+	if (code) {
+	    code = afs_CheckCode(code, NULL, 64);
+	    AFS_RWUNLOCK(vp, VRWLOCK_WRITE);
+	} else if (afs_BBusy()) {
 	    /* do it yourself if daemons are all busy */
 	    ObtainWriteLock(&avc->lock, 239);
 	    code = afs_StoreOnLastReference(avc, &treq);
@@ -1027,7 +1033,10 @@ OSI_VC_DECL(avc);
     int error;
 
     /* get a validated vcache entry */
-    afs_InitReq(&treq, cr);
+    error = afs_InitReq(&treq, cr);
+    if (error)
+	return afs_CheckCode(error, NULL, 65);
+
     error = afs_VerifyVCache(avc, &treq);
     if (error)
 	return afs_CheckCode(error, &treq, 53);

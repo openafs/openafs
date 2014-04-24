@@ -1144,6 +1144,9 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 
 		credp = crref();
 		code = afs_InitReq(&treq, credp);
+		if (code) {
+		    goto bad_dentry;
+		}
 		if (
 		    (strcmp(dp->d_name.name, ".directory") == 0)) {
 		    tryEvalOnly = 1;
