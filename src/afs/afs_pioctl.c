@@ -1928,7 +1928,10 @@ DECL_PIOCTL(PSetTokens)
 
     if (set_parent_pag) {
 	if (_settok_setParentPag(acred) == 0) {
-	    afs_InitReq(&treq, *acred);
+	    code = afs_InitReq(&treq, *acred);
+	    if (code) {
+		return code;
+	    }
 	    areq = &treq;
 	}
     }
@@ -5383,7 +5386,11 @@ DECL_PIOCTL(PSetTokens2)
 	    *acred = crref();
 	    crfree(old_cred);
 #endif
-	    afs_InitReq(&treq, *acred);
+	    code = afs_InitReq(&treq, *acred);
+	    if (code) {
+		xdr_free((xdrproc_t) xdr_ktc_setTokenData, &tokenSet);
+		return code;
+	    }
 	    areq = &treq;
 	}
     }

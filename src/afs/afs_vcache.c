@@ -1015,7 +1015,11 @@ afs_FlushActiveVcaches(afs_int32 doflocks)
 		ReleaseReadLock(&afs_xvcache);
 		ObtainWriteLock(&tvc->lock, 51);
 		do {
-		    afs_InitReq(&treq, afs_osi_credp);
+		    code = afs_InitReq(&treq, afs_osi_credp);
+		    if (code) {
+			code = -1;
+			break; /* shutting down: do not try to extend the lock */
+		    }
 		    treq.flags |= O_NONBLOCK;
 
 		    tc = afs_Conn(&tvc->f.fid, &treq, SHARED_LOCK, &rxconn);
@@ -1068,11 +1072,13 @@ afs_FlushActiveVcaches(afs_int32 doflocks)
 		    /* XXXX Find better place-holder for cred XXXX */
 		    cred = (afs_ucred_t *)tvc->linkData;
 		    tvc->linkData = NULL;	/* XXX */
-		    afs_InitReq(&ureq, cred);
+		    code = afs_InitReq(&ureq, cred);
 		    afs_Trace2(afs_iclSetp, CM_TRACE_ACTCCORE,
 			       ICL_TYPE_POINTER, tvc, ICL_TYPE_INT32,
 			       tvc->execsOrWriters);
-		    code = afs_StoreOnLastReference(tvc, &ureq);
+		    if (!code) {  /* avoid store when shutting down */
+		        code = afs_StoreOnLastReference(tvc, &ureq);
+		    }
 		    ReleaseWriteLock(&tvc->lock);
 #ifdef AFS_BOZONLOCK_ENV
 		    afs_BozonUnlock(&tvc->pvnLock, tvc);

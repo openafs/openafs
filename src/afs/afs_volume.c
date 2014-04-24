@@ -807,6 +807,11 @@ afs_NewVolumeByName(char *aname, afs_int32 acell, int agood,
 	return NULL;
     }
 
+    code = afs_InitReq(&treq, afs_osi_credp);	/* *must* be unauth for vldb */
+    if (code) {
+	return NULL;
+    }
+
     /* allow null request if we don't care about ENODEV/ETIMEDOUT distinction */
     if (!areq)
 	areq = &treq;
@@ -818,7 +823,6 @@ afs_NewVolumeByName(char *aname, afs_int32 acell, int agood,
     tve = (struct vldbentry *)(tbuffer + 1024);
     ntve = (struct nvldbentry *)tve;
     utve = (struct uvldbentry *)tve;
-    afs_InitReq(&treq, afs_osi_credp);	/* *must* be unauth for vldb */
     do {
 	tconn =
 	    afs_ConnByMHosts(tcell->cellHosts, tcell->vlport, tcell->cellNum,
