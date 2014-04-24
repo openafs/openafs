@@ -332,7 +332,7 @@ OpenLog(const char *fileName)
 	/* don't check error */
 	if (!isfifo)
 	    rk_rename(fileName, oldName);
-	tempfd = open(fileName, O_WRONLY | O_TRUNC | O_CREAT | (isfifo?O_NONBLOCK:0), 0666);
+	tempfd = open(fileName, O_WRONLY | O_TRUNC | O_CREAT | O_APPEND | (isfifo?O_NONBLOCK:0), 0666);
     }
 
     if (tempfd < 0) {
