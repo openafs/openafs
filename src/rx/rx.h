@@ -69,17 +69,17 @@ struct rx_packet;
 
 /* Connection management */
 
-extern void rx_SetConnectionEpoch(struct rx_connection *conn, int epoch);
-extern int  rx_GetConnectionEpoch(struct rx_connection *conn);
-extern void rx_SetConnectionId(struct rx_connection *conn, int id);
-extern int  rx_GetConnectionId(struct rx_connection *conn);
+extern void rx_SetConnectionEpoch(struct rx_connection *conn, afs_uint32 epoch);
+extern afs_uint32  rx_GetConnectionEpoch(struct rx_connection *conn);
+extern void rx_SetConnectionId(struct rx_connection *conn, afs_uint32 id);
+extern afs_uint32  rx_GetConnectionId(struct rx_connection *conn);
 extern void *rx_GetSecurityData(struct rx_connection *conn);
 extern void  rx_SetSecurityData(struct rx_connection *conn, void *data);
 extern int  rx_IsUsingPktCksum(struct rx_connection *conn);
-extern void rx_SetSecurityHeaderSize(struct rx_connection *conn, int size);
-extern int  rx_GetSecurityHeaderSize(struct rx_connection *conn);
-extern void rx_SetSecurityMaxTrailerSize(struct rx_connection *conn, int size);
-extern int  rx_GetSecurityMaxTrailerSize(struct rx_connection *conn);
+extern void rx_SetSecurityHeaderSize(struct rx_connection *conn, afs_uint32 size);
+extern afs_uint32  rx_GetSecurityHeaderSize(struct rx_connection *conn);
+extern void rx_SetSecurityMaxTrailerSize(struct rx_connection *conn, afs_uint32 size);
+extern afs_uint32  rx_GetSecurityMaxTrailerSize(struct rx_connection *conn);
 extern void rx_SetMsgsizeRetryErr(struct rx_connection *conn, int err);
 extern int  rx_IsServerConn(struct rx_connection *conn);
 extern int  rx_IsClientConn(struct rx_connection *conn);

@@ -17,21 +17,21 @@
 #include "rx_conn.h"
 
 void
-rx_SetConnectionEpoch(struct rx_connection *conn, afs_int32 epoch) {
+rx_SetConnectionEpoch(struct rx_connection *conn, afs_uint32 epoch) {
     conn->epoch = epoch;
 }
 
-int
+afs_uint32
 rx_GetConnectionEpoch(struct rx_connection *conn) {
     return conn->epoch;
 }
 
 void
-rx_SetConnectionId(struct rx_connection *conn, int cid) {
+rx_SetConnectionId(struct rx_connection *conn, afs_uint32 cid) {
     conn->cid = cid;
 }
 
-int
+afs_uint32
 rx_GetConnectionId(struct rx_connection *conn) {
     return conn->cid;
 }
@@ -54,24 +54,24 @@ rx_IsUsingPktCksum(struct rx_connection *conn)
 }
 
 void
-rx_SetSecurityHeaderSize(struct rx_connection *conn, int size)
+rx_SetSecurityHeaderSize(struct rx_connection *conn, afs_uint32 size)
 {
     conn->securityHeaderSize = size;
 }
 
-int
+afs_uint32
 rx_GetSecurityHeaderSize(struct rx_connection *conn)
 {
     return conn->securityHeaderSize;
 }
 
 void
-rx_SetSecurityMaxTrailerSize(struct rx_connection *conn, int size)
+rx_SetSecurityMaxTrailerSize(struct rx_connection *conn, afs_uint32 size)
 {
     conn->securityMaxTrailerSize = size;
 }
 
-int
+afs_uint32
 rx_GetSecurityMaxTrailerSize(struct rx_connection *conn)
 {
     return conn->securityMaxTrailerSize;

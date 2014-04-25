@@ -506,8 +506,8 @@ EXT afs_int32 rxi_availProcs GLOBALSINIT(0);	/* number of threads in the pool */
 EXT afs_int32 rxi_totalMin GLOBALSINIT(0);	/* Sum(minProcs) forall services */
 EXT afs_int32 rxi_minDeficit GLOBALSINIT(0);	/* number of procs needed to handle all minProcs */
 
-EXT int rx_nextCid;		/* Next connection call id */
-EXT int rx_epoch;		/* Initialization time of rx */
+EXT afs_uint32 rx_nextCid;		/* Next connection call id */
+EXT afs_uint32 rx_epoch;		/* Initialization time of rx */
 #ifdef	RX_ENABLE_LOCKS
 EXT afs_kcondvar_t rx_waitingForPackets_cv;
 #endif
