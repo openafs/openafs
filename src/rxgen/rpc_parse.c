@@ -473,7 +473,7 @@ get_declaration(declaration * dec, defkind dkind)
 	}
 	dec->rel = REL_ARRAY;
 	if (peekscan(TOK_RANGLE, &tok)) {
-	    dec->array_max = "~0";	/* unspecified size, use max */
+	    dec->array_max = "~0u";	/* unspecified size, use max */
 	} else {
 	    scan_num(&tok);
 	    dec->array_max = tok.str;
