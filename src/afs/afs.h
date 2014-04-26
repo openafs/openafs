@@ -856,9 +856,6 @@ struct vcache {
     krwlock_t rwlock;
     struct cred *credp;
 #endif
-#ifdef AFS_BOZONLOCK_ENV
-    afs_bozoLock_t pvnLock;	/* see locks.x */
-#endif
 #ifdef	AFS_AIX32_ENV
     afs_lock_t pvmlock;
     vmhandle_t vmh;

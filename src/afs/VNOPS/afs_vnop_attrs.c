@@ -241,14 +241,7 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, afs_ucred_t *acred)
 
     AFS_DISCON_LOCK();
 
-#ifdef AFS_BOZONLOCK_ENV
-    afs_BozonLock(&avc->pvnLock, avc);
-#endif
-
     if (afs_shuttingdown) {
-#ifdef AFS_BOZONLOCK_ENV
-	afs_BozonUnlock(&avc->pvnLock, avc);
-#endif
 	AFS_DISCON_UNLOCK();
 	return EIO;
     }
@@ -261,14 +254,10 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, afs_ucred_t *acred)
     } else
 	code = 0;
 
-#if defined(AFS_SUN5_ENV) || defined(AFS_BOZONLOCK_ENV)
+#if defined(AFS_SUN5_ENV)
     if (code == 0)
 	osi_FlushPages(avc, acred);
 #endif
-#ifdef AFS_BOZONLOCK_ENV
-    afs_BozonUnlock(&avc->pvnLock, avc);
-#endif
-
 
     if (code == 0) {
 	osi_FlushText(avc);	/* only needed to flush text if text locked last time */
@@ -542,9 +531,6 @@ afs_setattr(OSI_VC_DECL(avc), struct vattr *attrs,
 
     afs_VAttrToAS(avc, attrs, &astat);	/* interpret request */
     code = 0;
-#ifdef AFS_BOZONLOCK_ENV
-    afs_BozonLock(&avc->pvnLock, avc);
-#endif
 #if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (AFS_NFSXLATORREQ(acred)) {
 	avc->execsOrWriters++;
@@ -641,9 +627,6 @@ afs_setattr(OSI_VC_DECL(avc), struct vattr *attrs,
     if (AFS_NFSXLATORREQ(acred)) {
 	avc->execsOrWriters--;
     }
-#endif
-#ifdef AFS_BOZONLOCK_ENV
-    afs_BozonUnlock(&avc->pvnLock, avc);
 #endif
 #if defined(AFS_SGI_ENV)
     AFS_RWUNLOCK((vnode_t *) avc, VRWLOCK_WRITE);

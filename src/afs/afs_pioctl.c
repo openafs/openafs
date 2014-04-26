@@ -2158,15 +2158,9 @@ DECL_PIOCTL(PFlush)
     AFS_STATCNT(PFlush);
     if (!avc)
 	return EINVAL;
-#ifdef AFS_BOZONLOCK_ENV
-    afs_BozonLock(&avc->pvnLock, avc);	/* Since afs_TryToSmush will do a pvn_vptrunc */
-#endif
     ObtainWriteLock(&avc->lock, 225);
     afs_ResetVCache(avc, *acred, 0);
     ReleaseWriteLock(&avc->lock);
-#ifdef AFS_BOZONLOCK_ENV
-    afs_BozonUnlock(&avc->pvnLock, avc);
-#endif
     return 0;
 }
 
@@ -3508,15 +3502,9 @@ FlushVolumeData(struct VenusFid *afid, afs_ucred_t * acred)
 		AFS_FAST_HOLD(tvc);
 #endif
 		ReleaseReadLock(&afs_xvcache);
-#ifdef AFS_BOZONLOCK_ENV
-		afs_BozonLock(&tvc->pvnLock, tvc);	/* Since afs_TryToSmush will do a pvn_vptrunc */
-#endif
 		ObtainWriteLock(&tvc->lock, 232);
 		afs_ResetVCache(tvc, acred, 1);
 		ReleaseWriteLock(&tvc->lock);
-#ifdef AFS_BOZONLOCK_ENV
-		afs_BozonUnlock(&tvc->pvnLock, tvc);
-#endif
 #ifdef AFS_DARWIN80_ENV
 		vnode_put(AFSTOV(tvc));
 #endif
@@ -4859,9 +4847,6 @@ DECL_PIOCTL(PFlushMount)
 	code = EINVAL;
 	goto out;
     }
-#ifdef AFS_BOZONLOCK_ENV
-    afs_BozonLock(&tvc->pvnLock, tvc);	/* Since afs_TryToSmush will do a pvn_vptrunc */
-#endif
     ObtainWriteLock(&tvc->lock, 649);
     ObtainWriteLock(&afs_xcbhash, 650);
     afs_DequeueCallback(tvc);
@@ -4875,9 +4860,6 @@ DECL_PIOCTL(PFlushMount)
 	tvc->linkData = NULL;
     }
     ReleaseWriteLock(&tvc->lock);
-#ifdef AFS_BOZONLOCK_ENV
-    afs_BozonUnlock(&tvc->pvnLock, tvc);
-#endif
     afs_PutVCache(tvc);
   out:
     if (sysState.allocked)

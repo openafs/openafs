@@ -333,15 +333,15 @@ struct afs_MeanStats {
     AFS_CS(Lock_Obtain)		/* afs_lock.c */ \
     AFS_CS(Lock_ReleaseR)	/* afs_lock.c */ \
     AFS_CS(Lock_ReleaseW)	/* afs_lock.c */ \
-    AFS_CS(afs_BozonLock)	/* afs_lock.c */ \
-    AFS_CS(afs_BozonUnlock)	/* afs_lock.c */ \
+    AFS_CS(afs_BozonLock)	/* UNUSED */ \
+    AFS_CS(afs_BozonUnlock)	/* UNUSED */ \
     AFS_CS(osi_SleepR)		/* afs_lock.c */ \
     AFS_CS(osi_SleepS)		/* afs_lock.c */ \
     AFS_CS(osi_SleepW)		/* afs_lock.c */ \
     AFS_CS(osi_Sleep)		/* afs_lock */ \
-    AFS_CS(afs_BozonInit)	/* afs_lock.c */ \
-    AFS_CS(afs_CheckBozonLock)	/* afs_lock.c */ \
-    AFS_CS(afs_CheckBozonLockBlocking)	/* afs_lock.c */ \
+    AFS_CS(afs_BozonInit)	/* UNUSED */ \
+    AFS_CS(afs_CheckBozonLock)	/* UNUSED */ \
+    AFS_CS(afs_CheckBozonLockBlocking)	/* UNUSED */ \
     AFS_CS(xxxinit)		/* afs_main.c */ \
     AFS_CS(KernelEntry)		/* afs_main.c */ \
     AFS_CS(afs_InitMemCache)	/* afs_memcache.c */ \

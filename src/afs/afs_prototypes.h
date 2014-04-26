@@ -469,13 +469,6 @@ extern void afs_osi_SleepW(char *addr,
 			   struct afs_lock *alock);
 extern void afs_osi_SleepS(char *addr,
 			   struct afs_lock *alock);
-#ifdef AFS_BOZONLOCK_ENV
-extern void afs_BozonLock(struct afs_bozoLock *alock, struct vcache *avc);
-extern void afs_BozonUnlock(struct afs_bozoLock *alock, struct vcache *avc);
-extern void afs_BozonInit(struct afs_bozoLock *alock, struct vcache *avc);
-extern int afs_CheckBozonLock(struct afs_bozoLock *alock);
-extern int afs_CheckBozonLockBlocking(struct afs_bozoLock *alock);
-#endif
 
 
 

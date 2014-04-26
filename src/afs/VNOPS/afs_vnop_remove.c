@@ -126,10 +126,6 @@ afsremove(struct vcache *adp, struct dcache *tdc,
     if (tvc) {
 	if (afs_mariner)
 	    afs_MarinerLog("store$Removing", tvc);
-#ifdef AFS_BOZONLOCK_ENV
-	afs_BozonLock(&tvc->pvnLock, tvc);
-	/* Since afs_TryToSmush will do a pvn_vptrunc */
-#endif
 	ObtainWriteLock(&tvc->lock, 141);
 	/* note that callback will be broken on the deleted file if there are
 	 * still >0 links left to it, so we'll get the stat right */
@@ -140,9 +136,6 @@ afsremove(struct vcache *adp, struct dcache *tdc,
 		afs_TryToSmush(tvc, acred, 0);
 	}
 	ReleaseWriteLock(&tvc->lock);
-#ifdef AFS_BOZONLOCK_ENV
-	afs_BozonUnlock(&tvc->pvnLock, tvc);
-#endif
 	afs_PutVCache(tvc);
     }
     return (0);

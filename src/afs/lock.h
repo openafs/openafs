@@ -25,18 +25,6 @@
  */
 #define MAX_LOCK_NUMBER 780
 
-#ifdef AFS_BOZONLOCK_ENV
-struct afs_bozoLock {
-    short count;		/* count of excl locks */
-    char flags;			/* bit 1: is anyone waiting? */
-    char spare;			/* for later */
-    char *proc;			/* process holding the lock, really an afs_proc_t * */
-};
-typedef struct afs_bozoLock afs_bozoLock_t;
-
-#define	AFS_BOZONWAITING    1	/* someone is waiting for this lock */
-#endif
-
 #define	AFS_RWLOCK_INIT(lock, nm)	Lock_Init(lock)
 #undef	LOCK_INIT
 #define	LOCK_INIT(lock, nm)	Lock_Init(lock)

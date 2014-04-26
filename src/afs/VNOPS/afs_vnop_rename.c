@@ -371,9 +371,6 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	    tvc = afs_GetVCache(&unlinkFid, areq, NULL, NULL);
 
 	if (tvc) {
-#ifdef AFS_BOZONLOCK_ENV
-	    afs_BozonLock(&tvc->pvnLock, tvc);	/* Since afs_TryToSmush will do a pvn_vptrunc */
-#endif
 	    ObtainWriteLock(&tvc->lock, 151);
 	    tvc->f.m.LinkCount--;
 	    tvc->f.states &= ~CUnique;	/* For the dfs xlator */
@@ -390,9 +387,6 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 		    afs_TryToSmush(tvc, acred, 0);
 	    }
 	    ReleaseWriteLock(&tvc->lock);
-#ifdef AFS_BOZONLOCK_ENV
-	    afs_BozonUnlock(&tvc->pvnLock, tvc);
-#endif
 	    afs_PutVCache(tvc);
 	}
     }

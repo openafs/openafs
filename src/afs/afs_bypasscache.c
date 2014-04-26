@@ -139,11 +139,7 @@ afs_TransitionToBypass(struct vcache *avc,
     if (aflags & TRANSSetManualBit)
 	setManual = 1;
 
-#ifdef AFS_BOZONLOCK_ENV
-    afs_BozonLock(&avc->pvnLock, avc);	/* Since afs_TryToSmush will do a pvn_vptrunc */
-#else
     AFS_GLOCK();
-#endif
 
     ObtainWriteLock(&avc->lock, 925);
     /*
@@ -194,11 +190,7 @@ afs_TransitionToBypass(struct vcache *avc,
 
 done:
     ReleaseWriteLock(&avc->lock);
-#ifdef AFS_BOZONLOCK_ENV
-    afs_BozonUnlock(&avc->pvnLock, avc);
-#else
     AFS_GUNLOCK();
-#endif
 }
 
 /*
@@ -224,11 +216,7 @@ afs_TransitionToCaching(struct vcache *avc,
     if (aflags & TRANSSetManualBit)
 	setManual = 1;
 
-#ifdef AFS_BOZONLOCK_ENV
-    afs_BozonLock(&avc->pvnLock, avc);	/* Since afs_TryToSmush will do a pvn_vptrunc */
-#else
     AFS_GLOCK();
-#endif
     ObtainWriteLock(&avc->lock, 926);
     /*
      * Someone may have beat us to doing the transition - we had no lock
@@ -259,11 +247,7 @@ afs_TransitionToCaching(struct vcache *avc,
 
 done:
     ReleaseWriteLock(&avc->lock);
-#ifdef AFS_BOZONLOCK_ENV
-    afs_BozonUnlock(&avc->pvnLock, avc);
-#else
     AFS_GUNLOCK();
-#endif
 }
 
 /* In the case where there's an error in afs_NoCacheFetchProc or

@@ -1064,9 +1064,6 @@ afs_FlushActiveVcaches(afs_int32 doflocks)
 		 */
 		osi_vnhold(tvc, 0);
 		ReleaseReadLock(&afs_xvcache);
-#ifdef AFS_BOZONLOCK_ENV
-		afs_BozonLock(&tvc->pvnLock, tvc);
-#endif
 #if defined(AFS_SGI_ENV)
 		/*
 		 * That's because if we come in via the CUnlinkedDel bit state path we'll be have 0 refcnt
@@ -1088,9 +1085,6 @@ afs_FlushActiveVcaches(afs_int32 doflocks)
 		        code = afs_StoreOnLastReference(tvc, treq);
 		    }
 		    ReleaseWriteLock(&tvc->lock);
-#ifdef AFS_BOZONLOCK_ENV
-		    afs_BozonUnlock(&tvc->pvnLock, tvc);
-#endif
 		    hzero(tvc->flushDV);
 		    osi_FlushText(tvc);
 		    didCore = 1;
@@ -1103,9 +1097,6 @@ afs_FlushActiveVcaches(afs_int32 doflocks)
 		     * Ignore errors
 		     */
 		    ReleaseWriteLock(&tvc->lock);
-#ifdef AFS_BOZONLOCK_ENV
-		    afs_BozonUnlock(&tvc->pvnLock, tvc);
-#endif
 #if defined(AFS_SGI_ENV)
 		    AFS_RWUNLOCK((vnode_t *) tvc, VRWLOCK_WRITE);
 #endif
@@ -1116,9 +1107,6 @@ afs_FlushActiveVcaches(afs_int32 doflocks)
 		} else {
 		    /* lost (or won, perhaps) the race condition */
 		    ReleaseWriteLock(&tvc->lock);
-#ifdef AFS_BOZONLOCK_ENV
-		    afs_BozonUnlock(&tvc->pvnLock, tvc);
-#endif
 		}
 #if defined(AFS_SGI_ENV)
 		AFS_RWUNLOCK((vnode_t *) tvc, VRWLOCK_WRITE);

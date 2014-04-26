@@ -704,7 +704,7 @@ afs_vop_close(ap)
 	code = afs_close(avc, ap->a_fflag, ap->a_cred);
     else
 	code = afs_close(avc, ap->a_fflag, afs_osi_credp);
-    osi_FlushPages(avc, ap->a_cred);	/* hold bozon lock, but not basic vnode lock */
+    osi_FlushPages(avc, ap->a_cred);	/* hold GLOCK, but not basic vnode lock */
     AFS_GUNLOCK();
     return code;
 }
@@ -774,7 +774,7 @@ afs_vop_read(ap)
     int code;
     struct vcache *avc = VTOAFS(ap->a_vp);
     AFS_GLOCK();
-    osi_FlushPages(avc, ap->a_cred);	/* hold bozon lock, but not basic vnode lock */
+    osi_FlushPages(avc, ap->a_cred);	/* hold GLOCK, but not basic vnode lock */
     code = afs_read(avc, ap->a_uio, ap->a_cred, 0);
     AFS_GUNLOCK();
     return code;
@@ -854,7 +854,7 @@ afs_vop_getpages(struct vop_getpages_args *ap)
     uio.uio_td = curthread;
 
     AFS_GLOCK();
-    osi_FlushPages(avc, osi_curcred());	/* hold bozon lock, but not basic vnode lock */
+    osi_FlushPages(avc, osi_curcred());	/* hold GLOCK, but not basic vnode lock */
     code = afs_read(avc, &uio, osi_curcred(), 0);
     AFS_GUNLOCK();
     pmap_qremove(kva, npages);
@@ -960,7 +960,7 @@ afs_vop_write(ap)
     int code;
     struct vcache *avc = VTOAFS(ap->a_vp);
     AFS_GLOCK();
-    osi_FlushPages(avc, ap->a_cred);	/* hold bozon lock, but not basic vnode lock */
+    osi_FlushPages(avc, ap->a_cred);	/* hold GLOCK, but not basic vnode lock */
     code =
 	afs_write(VTOAFS(ap->a_vp), ap->a_uio, ap->a_ioflag, ap->a_cred, 0);
     AFS_GUNLOCK();

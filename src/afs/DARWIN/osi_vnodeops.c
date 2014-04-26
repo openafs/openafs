@@ -530,7 +530,7 @@ afs_vop_close(ap)
 	code = afs_close(avc, ap->a_fflag, vop_cred);
     else
 	code = afs_close(avc, ap->a_fflag, &afs_osi_cred);
-    osi_FlushPages(avc, vop_cred);	/* hold bozon lock, but not basic vnode lock */
+    osi_FlushPages(avc, vop_cred);	/* hold GLOCK, but not basic vnode lock */
     /* This is legit; it just forces the fstrace event to happen */
     code = afs_CheckCode(code, NULL, 60);
     AFS_GUNLOCK();
@@ -811,7 +811,7 @@ afs_vop_read(ap)
     }
 #endif
     AFS_GLOCK();
-    osi_FlushPages(avc, vop_cred);	/* hold bozon lock, but not basic vnode lock */
+    osi_FlushPages(avc, vop_cred);	/* hold GLOCK, but not basic vnode lock */
     code = afs_read(avc, ap->a_uio, vop_cred, 0);
     AFS_GUNLOCK();
     return code;
@@ -897,7 +897,7 @@ afs_vop_pagein(ap)
     aiov.iov_base = (caddr_t) ioaddr;
 #endif
     AFS_GLOCK();
-    osi_FlushPages(tvc, vop_cred);	/* hold bozon lock, but not basic vnode lock */
+    osi_FlushPages(tvc, vop_cred);	/* hold GLOCK, but not basic vnode lock */
     code = afs_read(tvc, uio, cred, 0);
     if (code == 0) {
 	ObtainWriteLock(&tvc->lock, 2);
@@ -955,7 +955,7 @@ afs_vop_write(ap)
 			 AFS_UIO_RESID(ap->a_uio));
 #endif
     AFS_GLOCK();
-    osi_FlushPages(avc, vop_cred);	/* hold bozon lock, but not basic vnode lock */
+    osi_FlushPages(avc, vop_cred);	/* hold GLOCK, but not basic vnode lock */
     code =
 	afs_write(VTOAFS(ap->a_vp), ap->a_uio, ap->a_ioflag, vop_cred, 0);
     AFS_GUNLOCK();
@@ -1103,7 +1103,7 @@ afs_vop_pageout(ap)
     }
 
     AFS_GLOCK();
-    osi_FlushPages(tvc, vop_cred);	/* hold bozon lock, but not basic vnode lock */
+    osi_FlushPages(tvc, vop_cred);	/* hold GLOCK, but not basic vnode lock */
     ObtainWriteLock(&tvc->lock, 1);
     afs_FakeOpen(tvc);
     ReleaseWriteLock(&tvc->lock);
