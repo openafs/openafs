@@ -1100,6 +1100,36 @@ afs_linux_getattr(struct vfsmount *mnt, struct dentry *dentry, struct kstat *sta
         return err;
 }
 
+static afs_uint32
+parent_vcache_dv(struct inode *inode, cred_t *credp)
+{
+    int free_cred = 0;
+    struct vcache *pvcp;
+
+    /*
+     * If parent is a mount point and we are using fakestat, we may need
+     * to look at the fake vcache entry instead of what the vfs is giving
+     * us.  The fake entry is the one with the useful DataVersion.
+     */
+    pvcp = VTOAFS(inode);
+    if (pvcp->mvstat == 1 && afs_fakestat_enable) {
+	struct vrequest treq;
+	struct afs_fakestat_state fakestate;
+
+	if (!credp) {
+	    credp = crref();
+	    free_cred = 1;
+	}
+	afs_InitReq(&treq, credp);
+	afs_InitFakeStat(&fakestate);
+	afs_TryEvalFakeStat(&pvcp, &fakestate, &treq);
+	if (free_cred)
+	    crfree(credp);
+	afs_PutFakeStat(&fakestate);
+    }
+    return hgetlo(pvcp->f.m.DataVersion);
+}
+
 /* Validate a dentry. Return 1 if unchanged, 0 if VFS layer should re-evaluate.
  * In kernels 2.2.10 and above, we are passed an additional flags var which
  * may have either the LOOKUP_FOLLOW OR LOOKUP_DIRECTORY set in which case
@@ -1126,6 +1156,7 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
     struct afs_fakestat_state fakestate;
     int locked = 0;
     int force_drop = 0;
+    afs_uint32 parent_dv;
 
 #ifdef LOOKUP_RCU
     /* We don't support RCU path walking */
@@ -1148,7 +1179,8 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 	parent = dget_parent(dp);
 	pvcp = VTOAFS(parent->d_inode);
 
-	if ((vcp->mvstat == 1) || (vcp->mvstat == 2)) {	/* need to lock */
+	if ((vcp->mvstat == 1) || (vcp->mvstat == 2) ||
+		(pvcp->mvstat == 1 && afs_fakestat_enable)) {	/* need to lock */
 	    credp = crref();
 	    AFS_GLOCK();
 	    locked = 1;
@@ -1197,19 +1229,20 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 	}
 #endif
 
+	parent_dv = parent_vcache_dv(parent->d_inode, credp);
 
 	/* If the parent's DataVersion has changed or the vnode
 	 * is longer valid, we need to do a full lookup.  VerifyVCache
 	 * isn't enough since the vnode may have been renamed.
 	 */
 
-	if ((!locked) && (hgetlo(pvcp->f.m.DataVersion) > dp->d_time || !(vcp->f.states & CStatd)) ) {
+	if ((!locked) && (parent_dv > dp->d_time || !(vcp->f.states & CStatd)) ) {
 	    credp = crref();
 	    AFS_GLOCK();
 	    locked = 1;
 	}
 
-	if (locked && (hgetlo(pvcp->f.m.DataVersion) > dp->d_time || !(vcp->f.states & CStatd))) {
+	if (locked && (parent_dv > dp->d_time || !(vcp->f.states & CStatd))) {
 	    int code;
 
 	    code = afs_lookup(pvcp, (char *)dp->d_name.name, &tvc, credp);
@@ -1227,7 +1260,7 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 	    }
 
 	    vattr2inode(AFSTOV(vcp), &vattr);
-	    dp->d_time = hgetlo(pvcp->f.m.DataVersion);
+	    dp->d_time = parent_dv;
 	}
 
 	/* should we always update the attributes at this point? */
@@ -1408,7 +1441,7 @@ afs_linux_create(struct inode *dip, struct dentry *dp, int mode)
 #if !defined(STRUCT_SUPER_BLOCK_HAS_S_D_OP)
 	dp->d_op = &afs_dentry_operations;
 #endif
-	dp->d_time = hgetlo(VTOAFS(dip)->f.m.DataVersion);
+	dp->d_time = parent_vcache_dv(dip, credp);
 	d_instantiate(dp, ip);
     }
     AFS_GUNLOCK();
@@ -1463,7 +1496,8 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 #if !defined(STRUCT_SUPER_BLOCK_HAS_S_D_OP)
     dp->d_op = &afs_dentry_operations;
 #endif
-    dp->d_time = hgetlo(VTOAFS(dip)->f.m.DataVersion);
+    dp->d_time = parent_vcache_dv(dip, credp);
+
     AFS_GUNLOCK();
 
     if (ip && S_ISDIR(ip->i_mode)) {
