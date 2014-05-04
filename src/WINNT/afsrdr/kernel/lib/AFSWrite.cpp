@@ -784,13 +784,10 @@ try_exit:
                     pFcb->Header.ValidDataLength.QuadPart = liStartingByte.QuadPart + ulByteCount;
                 }
 
-                if( !BooleanFlagOn( pFcb->Flags, AFS_FCB_FLAG_UPDATE_LAST_WRITE_TIME))
-                {
-
-                    SetFlag( pFcb->Flags, AFS_FCB_FLAG_UPDATE_WRITE_TIME);
-
-                    KeQuerySystemTime( &pFcb->ObjectInformation->LastWriteTime);
-                }
+		//
+		// Register the File Object as having modified the file.
+		//
+		SetFlag( pFileObject->Flags, FO_FILE_MODIFIED);
             }
         }
 

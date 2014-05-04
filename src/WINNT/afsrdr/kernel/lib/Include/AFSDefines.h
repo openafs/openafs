@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2008, 2009, 2010, 2011 Kernel Drivers, LLC.
- * Copyright (c) 2009, 2010, 2011 Your File System, Inc.
+ * Copyright (c) 2009, 2010, 2011, 2014 Your File System, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -132,7 +132,6 @@ NTSTATUS
 
 #define AFS_FCB_FLAG_FILE_MODIFIED                           0x00000001
 #define AFS_FCB_FILE_CLOSED                                  0x00000002
-#define AFS_FCB_FLAG_UPDATE_WRITE_TIME                       0x00000004
 #define AFS_FCB_FLAG_UPDATE_CHANGE_TIME                      0x00000008
 #define AFS_FCB_FLAG_UPDATE_ACCESS_TIME                      0x00000010
 #define AFS_FCB_FLAG_UPDATE_CREATE_TIME                      0x00000020
@@ -267,6 +266,7 @@ NTSTATUS
 #define CCB_FLAG_MASK_OPENED_REPARSE_POINT  0x00000080
 #define CCB_FLAG_INSERTED_CCB_LIST          0x00000100
 #define CCB_FLAG_DIRECTORY_QUERY_DIRECT_QUERY 0x00000200
+#define CCB_FLAG_LAST_WRITE_TIME_SET        0x00000800
 
 //
 // DirEntry flags
