@@ -163,7 +163,7 @@ GetTokens(afs_int32 ahost, afs_int32 auid)
 		maxLen =
 		    sizeof(token) - sizeof(struct ktc_token) +
 		    MAXKTCTICKETLEN;
-		if (maxLen < tktLen)
+		if (tktLen < 0 || tktLen > maxLen)
 		    return KTC_TOOBIG;
 		memcpy(token.ticket, stp, tktLen);
 		token.startTime = ct.BeginTimestamp;
