@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2008, 2009, 2010, 2011 Kernel Drivers, LLC.
- * Copyright (c) 2009, 2010, 2011 Your File System, Inc.
+ * Copyright (c) 2009, 2010, 2011, 2014 Your File System, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -2063,6 +2063,12 @@ AFSSetBasicInfo( IN PIRP Irp,
             ulNotifyFilter |= FILE_NOTIFY_CHANGE_LAST_WRITE;
 
             SetFlag( DirectoryCB->ObjectInformation->Fcb->Flags, AFS_FCB_FLAG_FILE_MODIFIED | AFS_FCB_FLAG_UPDATE_LAST_WRITE_TIME);
+
+	    SetFlag( pCcb->Flags, CCB_FLAG_LAST_WRITE_TIME_SET);
+
+	} else if ( pBuffer->LastWriteTime.QuadPart == (ULONGLONG)-1) {
+
+	    SetFlag( pCcb->Flags, CCB_FLAG_LAST_WRITE_TIME_SET);
         }
 
         pCcb->FileUnwindInfo.ChangeTime.QuadPart = (ULONGLONG)-1;
@@ -3904,6 +3910,11 @@ AFSSetAllocationInfo( IN PIRP Irp,
             CcSetFileSizes( pFileObject,
                             (PCC_FILE_SIZES)&pFcb->Header.AllocationSize);
         }
+
+	//
+	// Mark the file as modified so as to reflect the change into the last write on close.
+	//
+	SetFlag( pFileObject->Flags, FO_FILE_MODIFIED);
     }
     else
     {
@@ -4138,6 +4149,11 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
                 AFSTrimExtents( pFcb,
                                 &pFcb->Header.FileSize);
             }
+
+	    //
+	    // Mark the file as modified so as to reflect the change into the last write on close.
+	    //
+	    SetFlag( pFileObject->Flags, FO_FILE_MODIFIED);
         }
         else
         {

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2008, 2009, 2010, 2011, 2012, 2013 Kernel Drivers, LLC.
- * Copyright (c) 2009, 2010, 2011, 2012, 2013 Your File System, Inc.
+ * Copyright (c) 2009, 2010, 2011, 2012, 2013, 2014 Your File System, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -382,6 +382,21 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                 stFileCleanup.LastAccessTime = pObjectInfo->LastAccessTime;
 
+		//
+		// If the file has been modified set the last write time in ObjectInfo to 'now'
+		// unless the last write time was set via this File Object.  Then tell the
+		// following code to write the time.
+		//
+		if ( BooleanFlagOn( pFileObject->Flags, FO_FILE_MODIFIED) &&
+		     !BooleanFlagOn( pCcb->Flags, CCB_FLAG_LAST_WRITE_TIME_SET)) {
+
+		    SetFlag( pFcb->Flags, AFS_FCB_FLAG_FILE_MODIFIED);
+
+		    SetFlag( pFcb->Flags, AFS_FCB_FLAG_UPDATE_LAST_WRITE_TIME);
+
+		    KeQuerySystemTime(&pFcb->ObjectInformation->LastWriteTime);
+		}
+
                 if( BooleanFlagOn( pFcb->Flags, AFS_FCB_FLAG_FILE_MODIFIED))
                 {
 
@@ -418,14 +433,8 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                         stFileCleanup.LastWriteTime = pObjectInfo->LastWriteTime;
 
-                        ClearFlag( pFcb->Flags, AFS_FCB_FLAG_UPDATE_LAST_WRITE_TIME | AFS_FCB_FLAG_UPDATE_WRITE_TIME);
+			ClearFlag( pFcb->Flags, AFS_FCB_FLAG_UPDATE_LAST_WRITE_TIME);
                     }
-                }
-
-                if( BooleanFlagOn( pFcb->Flags, AFS_FCB_FLAG_UPDATE_WRITE_TIME))
-                {
-
-                    stFileCleanup.LastWriteTime = pObjectInfo->LastWriteTime;
                 }
 
                 //
