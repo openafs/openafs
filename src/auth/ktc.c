@@ -524,7 +524,7 @@ ktc_GetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
 		/* got token for cell; check that it will fit */
 		maxLen =
 		    atokenLen - sizeof(struct ktc_token) + MAXKTCTICKETLEN;
-		if (maxLen < tktLen) {
+		if (tktLen < 0 || tktLen > maxLen) {
 		    UNLOCK_GLOBAL_MUTEX;
 		    return KTC_TOOBIG;
 		}
