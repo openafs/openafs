@@ -2803,11 +2803,6 @@ afs_linux_writepage(struct page *pp)
     int code = 0;
     int code1 = 0;
 
-    if (PageReclaim(pp)) {
-	return AOP_WRITEPAGE_ACTIVATE;
-	/* XXX - Do we need to redirty the page here? */
-    }
-
     get_page(pp);
 
     inode = mapping->host;
