@@ -1,3 +1,47 @@
+Release 1.7.3100; Changes since 1.7.3000
+
+ * Setting File Position Information on a handle can be
+   performed on readonly objects.  Do not perform the
+   RO volume check.
+
+ * Do not defer synchronous write operations.  While it
+   is supposed to be safe to do so there is no benefit
+   and IO Manager has bugs on Server 2012 R2.  Block the
+   call in CcCopyWrite() until sufficient space is available.
+
+ * When deferring writes if the write position is
+   FILE_WRITE_TO_END_OF_FILE compute the absolute position
+   for the write before the deferral.
+
+ * Fix set attribute processing in SetBasicInformation
+   operations.  No longer permit the reparse point
+   attribute to be modified.   No longer permit the
+   directory attribute to be modified.  Allow the
+   readonly attribute to be modified.  Ignore everything
+   else as they are not supported by AFS.  This follows
+   the behavior of the FAT sample.
+
+ * If a file has the DOS readonly attribute set, deny
+   all writes, truncations, and overwrites in the
+   redirector and not the afsd_service.  Waiting for the
+   afsd_service to see the store operation is too late.
+   The Windows cache manager has already accepted the data.
+
+ * Fix crash in debug trace processing of UNICODE_STRING
+   in AFSSubstituteName().  Requires that trace be turned
+   on.
+
+ * Modify Last Write timestamp processing.  Permit
+   timestamp processing to be set on a per handle basis
+   instead of a per file basis.  Also do our best to
+   follow the timestamp = -1 behavior which is supposed
+   to leave the timestamp of the file unaltered even
+   though it has been modified.
+
+ * Set the stIoStatus variable when AFSLockControl() catches
+   an exception.  Otherwise, the variable will be used
+   in an uninitialized state.
+
 Release 1.7.3000; Changes since 1.7.2900
 
  * Add caching of VL_GetAddrsU RPC responses to avoid
