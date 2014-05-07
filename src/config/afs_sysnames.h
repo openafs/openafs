@@ -288,6 +288,7 @@
 #define SYS_NAME_ID_i386_obsd51         2620
 #define SYS_NAME_ID_i386_obsd52         2621
 #define SYS_NAME_ID_i386_obsd53         2622
+#define SYS_NAME_ID_i386_obsd54         2623
 
 #define SYS_NAME_ID_amd64_linux2        2700
 #define SYS_NAME_ID_amd64_linux22       2701
@@ -355,6 +356,7 @@
 #define SYS_NAME_ID_amd64_obsd51        4020
 #define SYS_NAME_ID_amd64_obsd52        4021
 #define SYS_NAME_ID_amd64_obsd53        4022
+#define SYS_NAME_ID_amd64_obsd54        4023
 
 
 #define	AFS_REALM_SZ	64
