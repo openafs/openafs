@@ -1378,7 +1378,7 @@ cm_Analyze(cm_conn_t *connp,
 
     /* If not allowed to retry, don't */
     if (dead_session ||
-        !forcing_new && (reqp->flags & CM_REQ_NORETRY) &&
+        !forcing_new && (retry < 2) && (reqp->flags & CM_REQ_NORETRY) &&
         !(errorCode > -64 && errorCode <= RX_INVALID_OPERATION))
         retry = 0;
 
