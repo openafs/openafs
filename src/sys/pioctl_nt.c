@@ -1137,6 +1137,10 @@ Transceive(HANDLE handle, fs_ioctlRequest_t * reqp)
             fprintf(stderr, "pioctl Transceive ReadFile failed: 0x%X\r\n",gle);
             errno = save;
         }
+	if (gle == ERROR_NOT_SUPPORTED) {
+	    errno = EINVAL;
+	    return -1;
+	}
         return gle;
     }
 
