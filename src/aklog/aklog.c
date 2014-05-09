@@ -569,9 +569,9 @@ rxkad_get_ticket(krb5_context context, char *realm,
 		    }
 		    afs_dprintf("We've deduced that we need to authenticate"
 			    " to realm %s.\n", realm_of_cell);
+		    status = get_credv5(context, AFSKEY, cell->name,
+					realm_of_cell, v5cred);
 		}
-		status = get_credv5(context, AFSKEY, cell->name,
-				    realm_of_cell, v5cred);
 	    }
 
 	    /* If the realm and cell name match, then try without an
