@@ -54,20 +54,6 @@ char *rawname(), *unrawname(), *vol_DevName(), *blockcheck();
 int force = 0, verbose = 0, unconv = 0;
 
 static int
-ConvCmd(struct cmd_syndesc *as, void *arock)
-{
-    unconv = 0;
-    handleit(as);
-}
-
-static int
-UnConvCmd(struct cmd_syndesc *as, void *arock)
-{
-    unconv = 1;
-    handleit(as);
-}
-
-static int
 handleit(struct cmd_syndesc *as)
 {
     struct cmd_item *ti;
@@ -177,6 +163,20 @@ handleit(struct cmd_syndesc *as)
 		("No file system partitions named %s* found; not processed\n",
 		 VICE_PARTITION_PREFIX);
     }
+}
+
+static int
+ConvCmd(struct cmd_syndesc *as, void *arock)
+{
+    unconv = 0;
+    handleit(as);
+}
+
+static int
+UnConvCmd(struct cmd_syndesc *as, void *arock)
+{
+    unconv = 1;
+    handleit(as);
 }
 
 
