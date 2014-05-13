@@ -268,6 +268,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	    foundExplicitCell = 1;
 	    strncpy(realm, cell, sizeof(realm));
 	}
+	pw->pw_name = name;
     } else {
 	/* No explicit name provided: use Unix uid. */
 	pw = getpwuid(getuid());
