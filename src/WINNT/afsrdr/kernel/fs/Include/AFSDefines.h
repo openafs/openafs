@@ -251,7 +251,7 @@ DEFINE_GUID (GUID_SD_AFS_REDIRECTOR_CONTROL_OBJECT,
 // Debug log length
 //
 
-#define AFS_DBG_LOG_LENGTH              256
+#define AFS_DBG_LOG_MAXLENGTH		10240	//KBs
 
 //
 // Debug log flags

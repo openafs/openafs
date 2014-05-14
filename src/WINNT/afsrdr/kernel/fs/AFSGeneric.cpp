@@ -417,10 +417,10 @@ AFSReadRegistry( IN PUNICODE_STRING RegistryPath)
             // Let's limit things a bit ...
             //
 
-            if( AFSDbgBufferLength > 10240)
+	    if( AFSDbgBufferLength > AFS_DBG_LOG_MAXLENGTH)
             {
 
-                AFSDbgBufferLength = 1024;
+		AFSDbgBufferLength = AFS_DBG_LOG_MAXLENGTH;
             }
         }
         else

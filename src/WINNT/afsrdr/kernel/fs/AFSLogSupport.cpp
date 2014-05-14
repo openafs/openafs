@@ -361,7 +361,16 @@ AFSConfigureTrace( IN AFSTraceConfigCB *TraceInfo)
                 DbgPrint("AFSConfigureTrace Failed to set debug buffer length in registry Status %08lX\n", ntStatus);
             }
 
-            AFSDbgBufferLength = TraceInfo->TraceBufferLength * 1024;
+	    if ( TraceInfo->TraceBufferLength > AFS_DBG_LOG_MAXLENGTH)
+	    {
+
+		AFSDbgBufferLength = AFS_DBG_LOG_MAXLENGTH * 1024;
+	    }
+	    else
+	    {
+
+		AFSDbgBufferLength = TraceInfo->TraceBufferLength * 1024;
+	    }
 
             ClearFlag( AFSDbgLogFlags, AFS_DBG_LOG_WRAPPED);
 
