@@ -537,13 +537,8 @@ loop:
 #endif
 		    ReleaseReadLock(&afs_xvcache);
 
-		    ObtainWriteLock(&afs_xcbhash, 485);
 		    /* LOCKXXX: We aren't holding tvc write lock? */
-		    afs_DequeueCallback(tvc);
-		    tvc->f.states &= ~CStatd;
-		    ReleaseWriteLock(&afs_xcbhash);
-		    if (tvc->f.fid.Fid.Vnode & 1 || (vType(tvc) == VDIR))
-			osi_dnlc_purgedp(tvc);
+		    afs_StaleVCache(tvc);
 
 #ifdef AFS_DARWIN80_ENV
 		    vnode_put(AFSTOV(tvc));

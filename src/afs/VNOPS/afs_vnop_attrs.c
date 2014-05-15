@@ -611,13 +611,8 @@ afs_setattr(OSI_VC_DECL(avc), struct vattr *attrs,
 	    ReleaseSharedLock(&avc->lock);	/* release lock */
         }
         if (code) {
-	    ObtainWriteLock(&afs_xcbhash, 487);
-	    afs_DequeueCallback(avc);
-	    avc->f.states &= ~CStatd;
-	    ReleaseWriteLock(&afs_xcbhash);
-	    if (avc->f.fid.Fid.Vnode & 1 || (vType(avc) == VDIR))
-	        osi_dnlc_purgedp(avc);
 	    /* error?  erase any changes we made to vcache entry */
+	    afs_StaleVCache(avc);
         }
     } else {
 	ObtainSharedLock(&avc->lock, 712);

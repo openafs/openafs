@@ -1109,6 +1109,38 @@ extern struct vcache *afs_GetVCache(struct VenusFid *afid,
 				    struct vcache *avc);
 extern void afs_PutVCache(struct vcache *avc);
 extern int afs_RefVCache(struct vcache *avc);
+
+/* Flags for afs_StaleVCacheFlags */
+
+/* afs_xcbhash is already locked by the caller */
+#define AFS_STALEVC_CBLOCKED (0x01)
+
+/* Normally we assume we only need to invalidate cached
+ * name -> vcache mappings for entries where the given
+ * vcache is the parent dir. This flag says to also clear
+ * entries for the vcache itself. */
+#define AFS_STALEVC_FILENAME (0x02)
+
+/* Do not touch the DNLC; the caller will deal with it. */
+#define AFS_STALEVC_NODNLC   (0x04)
+
+/* Do not run afs_DequeueCallback; the caller will take
+ * care of callback management. */
+#define AFS_STALEVC_NOCB     (0x08)
+
+/* NULL-out the callback field of the vcache, to save code at the callsite. */
+#define AFS_STALEVC_CLEARCB	(0x10)
+
+/* Skip the DNLC purge if CVInit or CVFlushed is set, for efficiency.
+ * A transitional flag used to reduce the logic change during refactoring
+ * that is expected to be removed and the purge behavior standardized. */
+#define AFS_STALEVC_SKIP_DNLC_FOR_INIT_FLUSHED	(0x20)
+typedef unsigned int afs_stalevc_flags_t;
+
+#define afs_StaleVCache(avc) afs_StaleVCacheFlags(avc, 0, 0)
+extern void afs_StaleVCacheFlags(struct vcache *avc, afs_stalevc_flags_t flags,
+				 afs_uint32 cflags);
+
 extern void afs_ProcessFS(struct vcache *avc,
 			  struct AFSFetchStatus *astat,
 			  struct vrequest *areq);

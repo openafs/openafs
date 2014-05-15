@@ -135,11 +135,7 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 
     	if (code) {
 	    if (code < 0) {
-	    	ObtainWriteLock(&afs_xcbhash, 490);
-	    	afs_DequeueCallback(adp);
-	    	adp->f.states &= ~CStatd;
-	    	ReleaseWriteLock(&afs_xcbhash);
-	    	osi_dnlc_purgedp(adp);
+		afs_StaleVCache(adp);
 	    }
 	    ReleaseWriteLock(&adp->lock);
 	    if (tdc)
@@ -370,11 +366,7 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 	    }
 
 	    if (code < 0) {
-	    	ObtainWriteLock(&afs_xcbhash, 491);
-	    	afs_DequeueCallback(adp);
-	    	adp->f.states &= ~CStatd;
-	    	ReleaseWriteLock(&afs_xcbhash);
-	    	osi_dnlc_purgedp(adp);
+		afs_StaleVCache(adp);
 	    }
 	    ReleaseWriteLock(&adp->lock);
 	    goto done;

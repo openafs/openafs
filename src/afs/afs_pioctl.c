@@ -1478,15 +1478,10 @@ DECL_PIOCTL(PSetAcl)
 	      SHARED_LOCK, NULL));
 
     /* now we've forgotten all of the access info */
-    ObtainWriteLock(&afs_xcbhash, 455);
-    avc->callback = 0;
-    afs_DequeueCallback(avc);
-    avc->f.states &= ~(CStatd | CUnique);
-    ReleaseWriteLock(&afs_xcbhash);
-    if (avc->f.fid.Fid.Vnode & 1 || (vType(avc) == VDIR))
-	osi_dnlc_purgedp(avc);
+    afs_StaleVCacheFlags(avc, AFS_STALEVC_CLEARCB, CUnique);
 
     /* SXW - Should we flush metadata here? */
+
     return code;
 }
 
@@ -3022,13 +3017,7 @@ DECL_PIOCTL(PRemoveCallBack)
 		 (tc, rxconn, code, &avc->f.fid, areq,
 		  AFS_STATS_FS_RPCIDX_GIVEUPCALLBACKS, SHARED_LOCK, NULL));
 
-	ObtainWriteLock(&afs_xcbhash, 457);
-	afs_DequeueCallback(avc);
-	avc->callback = 0;
-	avc->f.states &= ~(CStatd | CUnique);
-	ReleaseWriteLock(&afs_xcbhash);
-	if (avc->f.fid.Fid.Vnode & 1 || (vType(avc) == VDIR))
-	    osi_dnlc_purgedp(avc);
+	afs_StaleVCacheFlags(avc, AFS_STALEVC_CLEARCB, CUnique);
     }
     ReleaseWriteLock(&avc->lock);
     return 0;
@@ -4859,13 +4848,10 @@ DECL_PIOCTL(PFlushMount)
 	goto out;
     }
     ObtainWriteLock(&tvc->lock, 649);
-    ObtainWriteLock(&afs_xcbhash, 650);
-    afs_DequeueCallback(tvc);
-    tvc->f.states &= ~(CStatd | CDirty); /* next reference will re-stat cache entry */
-    ReleaseWriteLock(&afs_xcbhash);
+    /* next reference will re-stat cache entry */
+    afs_StaleVCacheFlags(tvc, 0, CDirty);
     /* now find the disk cache entries */
     afs_TryToSmush(tvc, *acred, 1);
-    osi_dnlc_purgedp(tvc);
     if (tvc->linkData && !(tvc->f.states & CCore)) {
 	afs_osi_Free(tvc->linkData, strlen(tvc->linkData) + 1);
 	tvc->linkData = NULL;

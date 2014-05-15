@@ -93,11 +93,7 @@ afsremove(struct vcache *adp, struct dcache *tdc,
 	    afs_PutVCache(tvc);
 
 	if (code < 0) {
-	    ObtainWriteLock(&afs_xcbhash, 497);
-	    afs_DequeueCallback(adp);
-	    adp->f.states &= ~CStatd;
-	    ReleaseWriteLock(&afs_xcbhash);
-	    osi_dnlc_purgedp(adp);
+	    afs_StaleVCache(adp);
 	}
 	ReleaseWriteLock(&adp->lock);
 	code = afs_CheckCode(code, treqp, 21);

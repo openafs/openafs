@@ -306,8 +306,7 @@ afs_DynrootInvalidate(void)
 	ReleaseReadLock(&afs_xvcache);
     } while (retry);
     if (tvc) {
-	tvc->f.states &= ~(CStatd | CUnique);
-	osi_dnlc_purgedp(tvc);
+	afs_StaleVCacheFlags(tvc, AFS_STALEVC_NOCB, CUnique);
 	afs_PutVCache(tvc);
     }
 }

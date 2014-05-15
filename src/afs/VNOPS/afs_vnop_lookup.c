@@ -1266,11 +1266,9 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	    tvcp->f.states |= CStatd;
 	    afs_QueueCallback(tvcp, CBHash(3600), volp);
 	} else {
-	    tvcp->callback = 0;
-	    tvcp->f.states &= ~(CStatd | CUnique);
-	    afs_DequeueCallback(tvcp);
-	    if ((tvcp->f.states & CForeign) || (vType(tvcp) == VDIR))
-		osi_dnlc_purgedp(tvcp);	/* if it (could be) a directory */
+	    afs_StaleVCacheFlags(tvcp,
+				 AFS_STALEVC_CBLOCKED | AFS_STALEVC_CLEARCB,
+				 CUnique);
 	}
 #ifdef AFS_DARWIN80_ENV
 	/* reclaim->FlushVCache will need xcbhash */
@@ -1280,11 +1278,9 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	    code = afs_darwin_finalizevnode(tvcp, NULL, NULL, 0, 1);
 	    if (code) {
 		/* It's gonna get recycled - shouldn't happen */
-		tvcp->callback = 0;
-		tvcp->f.states &= ~(CStatd | CUnique);
-		afs_DequeueCallback(tvcp);
-		if ((tvcp->f.states & CForeign) || (vType(tvcp) == VDIR))
-		    osi_dnlc_purgedp(tvcp); /* if it (could be) a directory */
+		afs_StaleVCacheFlags(tvcp,
+				     AFS_STALEVC_CBLOCKED | AFS_STALEVC_CLEARCB,
+				     CUnique);
 	    } else
 		/* re-acquire the usecount that finalizevnode disposed of */
 		vnode_ref(AFSTOV(tvcp));
@@ -1890,12 +1886,8 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	        if (tv) {
 		    if (tv->states & VRO) {
 		        pass = 1;	/* try this *once* */
-		        ObtainWriteLock(&afs_xcbhash, 495);
-		        afs_DequeueCallback(adp);
-		        /* re-stat to get later version */
-		        adp->f.states &= ~CStatd;
-		        ReleaseWriteLock(&afs_xcbhash);
-		        osi_dnlc_purgedp(adp);
+			/* re-stat to get later version */
+			afs_StaleVCache(adp);
 		        afs_PutVolume(tv, READ_LOCK);
 		        goto redo;
 		    }

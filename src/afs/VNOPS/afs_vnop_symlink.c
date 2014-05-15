@@ -200,11 +200,7 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     ObtainWriteLock(&afs_xvcache, 40);
     if (code) {
 	if (code < 0) {
-	    ObtainWriteLock(&afs_xcbhash, 499);
-	    afs_DequeueCallback(adp);
-	    adp->f.states &= ~CStatd;
-	    ReleaseWriteLock(&afs_xcbhash);
-	    osi_dnlc_purgedp(adp);
+	    afs_StaleVCache(adp);
 	}
 	ReleaseWriteLock(&adp->lock);
 	ReleaseWriteLock(&afs_xvcache);

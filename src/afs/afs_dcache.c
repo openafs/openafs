@@ -2423,13 +2423,7 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 		    afs_CFileTruncate(file, size);	/* prune it */
 		} else {
 		    if (!setLocks || slowPass) {
-			ObtainWriteLock(&afs_xcbhash, 453);
-			afs_DequeueCallback(avc);
-			avc->f.states &= ~(CStatd | CUnique);
-			avc->callback = NULL;
-			ReleaseWriteLock(&afs_xcbhash);
-			if (avc->f.fid.Fid.Vnode & 1 || (vType(avc) == VDIR))
-			    osi_dnlc_purgedp(avc);
+			afs_StaleVCacheFlags(avc, AFS_STALEVC_CLEARCB, CUnique);
 		    } else {
 			/* Something lost.  Forget about performance, and go
 			 * back with a vcache write lock.
@@ -2504,12 +2498,7 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 	    ReleaseWriteLock(&tdc->lock);
 	    afs_PutDCache(tdc);
 	    if (!afs_IsDynroot(avc)) {
-		ObtainWriteLock(&afs_xcbhash, 454);
-		afs_DequeueCallback(avc);
-		avc->f.states &= ~(CStatd | CUnique);
-		ReleaseWriteLock(&afs_xcbhash);
-		if (avc->f.fid.Fid.Vnode & 1 || (vType(avc) == VDIR))
-		    osi_dnlc_purgedp(avc);
+		afs_StaleVCacheFlags(avc, 0, CUnique);
 		/*
 		 * Locks held:
 		 * avc->lock(W); assert(!setLocks || slowPass)

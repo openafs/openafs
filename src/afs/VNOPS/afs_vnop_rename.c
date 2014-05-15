@@ -320,13 +320,9 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	    /* if failed, server might have done something anyway, and 
 	     * assume that we know about it */
 	    ObtainWriteLock(&afs_xcbhash, 498);
-	    afs_DequeueCallback(aodp);
-	    afs_DequeueCallback(andp);
-	    andp->f.states &= ~CStatd;
-	    aodp->f.states &= ~CStatd;
+	    afs_StaleVCacheFlags(aodp, AFS_STALEVC_CBLOCKED, 0);
+	    afs_StaleVCacheFlags(andp, AFS_STALEVC_CBLOCKED, 0);
 	    ReleaseWriteLock(&afs_xcbhash);
-	    osi_dnlc_purgedp(andp);
-	    osi_dnlc_purgedp(aodp);
 	}
     }
 

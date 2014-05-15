@@ -356,11 +356,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 
 	if (code) {
 	    if (code < 0) {
-	    	ObtainWriteLock(&afs_xcbhash, 488);
-	    	afs_DequeueCallback(adp);
-	    	adp->f.states &= ~CStatd;
-	    	ReleaseWriteLock(&afs_xcbhash);
-	    	osi_dnlc_purgedp(adp);
+		afs_StaleVCache(adp);
 	    }
 	    ReleaseWriteLock(&adp->lock);
 	    if (tdc) {
@@ -451,11 +447,9 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 		    afs_QueueCallback(tvc, CBHash(CallBack.ExpirationTime), volp);
 		}
 	    } else {
-		afs_DequeueCallback(tvc);
-		tvc->f.states &= ~(CStatd | CUnique);
-		tvc->callback = 0;
-		if (tvc->f.fid.Fid.Vnode & 1 || (vType(tvc) == VDIR))
-		    osi_dnlc_purgedp(tvc);
+		afs_StaleVCacheFlags(tvc,
+				     AFS_STALEVC_CBLOCKED | AFS_STALEVC_CLEARCB,
+				     CUnique);
 	    }
 	    ReleaseWriteLock(&afs_xcbhash);
 	    if (AFS_IS_DISCON_RW) {

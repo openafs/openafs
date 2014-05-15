@@ -166,16 +166,11 @@ afs_TransitionToBypass(struct vcache *avc,
 	}
     }
 
-#if 0
     /* also cg2v, don't dequeue the callback */
-    ObtainWriteLock(&afs_xcbhash, 956);
-    afs_DequeueCallback(avc);
-    ReleaseWriteLock(&afs_xcbhash);
-#endif
-    avc->f.states &= ~(CStatd | CDirty);      /* next reference will re-stat */
+    /* next reference will re-stat */
+    afs_StaleVCacheFlags(avc, AFS_STALEVC_NOCB, CDirty);
     /* now find the disk cache entries */
     afs_TryToSmush(avc, acred, 1);
-    osi_dnlc_purgedp(avc);
     if (avc->linkData && !(avc->f.states & CCore)) {
 	afs_osi_Free(avc->linkData, strlen(avc->linkData) + 1);
 	avc->linkData = NULL;
@@ -226,13 +221,11 @@ afs_TransitionToCaching(struct vcache *avc,
 	goto done;
 
     /* Ok, we actually do need to flush */
-    ObtainWriteLock(&afs_xcbhash, 957);
-    afs_DequeueCallback(avc);
-    avc->f.states &= ~(CStatd | CDirty);	/* next reference will re-stat cache entry */
-    ReleaseWriteLock(&afs_xcbhash);
+    /* next reference will re-stat cache entry */
+    afs_StaleVCacheFlags(avc, 0, CDirty);
+
     /* now find the disk cache entries */
     afs_TryToSmush(avc, acred, 1);
-    osi_dnlc_purgedp(avc);
     if (avc->linkData && !(avc->f.states & CCore)) {
 	afs_osi_Free(avc->linkData, strlen(avc->linkData) + 1);
 	avc->linkData = NULL;
