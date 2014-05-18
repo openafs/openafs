@@ -985,7 +985,7 @@ check_bad_parent(struct dentry *dp)
 static int
 afs_linux_revalidate(struct dentry *dp)
 {
-    struct vattr vattr;
+    struct vattr *vattr = NULL;
     struct vcache *vcp = VTOAFS(dp->d_inode);
     cred_t *credp;
     int code;
@@ -995,6 +995,11 @@ afs_linux_revalidate(struct dentry *dp)
 
     AFS_GLOCK();
 
+    code = afs_CreateAttr(&vattr);
+    if (code) {
+	goto out;
+    }
+
 #ifdef notyet
     /* Make this a fast path (no crref), since it's called so often. */
     if (vcp->f.states & CStatd) {
@@ -1003,6 +1008,7 @@ afs_linux_revalidate(struct dentry *dp)
 	    check_bad_parent(dp);	/* check and correct mvid */
 
 	AFS_GUNLOCK();
+	afs_DestroyAttr(vattr);
 	return 0;
     }
 #endif
@@ -1014,15 +1020,18 @@ afs_linux_revalidate(struct dentry *dp)
         (!afs_fakestat_enable || vcp->mvstat != 1) &&
 	!afs_nfsexporter &&
 	(vType(vcp) == VDIR || vType(vcp) == VLNK)) {
-	code = afs_CopyOutAttrs(vcp, &vattr);
+	code = afs_CopyOutAttrs(vcp, vattr);
     } else {
         credp = crref();
-	code = afs_getattr(vcp, &vattr, credp);
+	code = afs_getattr(vcp, vattr, credp);
 	crfree(credp);
     }
     if (!code)
-        afs_fill_inode(AFSTOV(vcp), &vattr);
+        afs_fill_inode(AFSTOV(vcp), vattr);
 
+    afs_DestroyAttr(vattr);
+
+out:
     AFS_GUNLOCK();
 
     return afs_convert_code(code);
@@ -1100,20 +1109,27 @@ vattr2inode(struct inode *ip, struct vattr *vp)
 static int
 afs_notify_change(struct dentry *dp, struct iattr *iattrp)
 {
-    struct vattr vattr;
+    struct vattr *vattr = NULL;
     cred_t *credp = crref();
     struct inode *ip = dp->d_inode;
     int code;
 
-    VATTR_NULL(&vattr);
-    iattr2vattr(&vattr, iattrp);	/* Convert for AFS vnodeops call. */
-
     AFS_GLOCK();
-    code = afs_setattr(VTOAFS(ip), &vattr, credp);
-    if (!code) {
-	afs_getattr(VTOAFS(ip), &vattr, credp);
-	vattr2inode(ip, &vattr);
+    code = afs_CreateAttr(&vattr);
+    if (code) {
+	goto out;
     }
+
+    iattr2vattr(vattr, iattrp);	/* Convert for AFS vnodeops call. */
+
+    code = afs_setattr(VTOAFS(ip), vattr, credp);
+    if (!code) {
+	afs_getattr(VTOAFS(ip), vattr, credp);
+	vattr2inode(ip, vattr);
+    }
+    afs_DestroyAttr(vattr);
+
+out:
     AFS_GUNLOCK();
     crfree(credp);
     return afs_convert_code(code);
@@ -1145,7 +1161,6 @@ afs_linux_dentry_revalidate(struct dentry *dp, struct nameidata *nd)
 afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 #endif
 {
-    struct vattr vattr;
     cred_t *credp = NULL;
     struct vcache *vcp, *pvcp, *tvc = NULL;
     struct dentry *parent;
@@ -1223,6 +1238,7 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 	 */
 
 	if (hgetlo(pvcp->f.m.DataVersion) > dp->d_time || !(vcp->f.states & CStatd)) {
+	    struct vattr *vattr = NULL;
 	    int code;
 
 	    credp = crref();
@@ -1235,13 +1251,22 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 		goto bad_dentry;
 	    }
 
-	    if (afs_getattr(vcp, &vattr, credp)) {
+	    code = afs_CreateAttr(&vattr);
+	    if (code) {
 		dput(parent);
 		goto bad_dentry;
 	    }
 
-	    vattr2inode(AFSTOV(vcp), &vattr);
+	    if (afs_getattr(vcp, vattr, credp)) {
+		dput(parent);
+		afs_DestroyAttr(vattr);
+		goto bad_dentry;
+	    }
+
+	    vattr2inode(AFSTOV(vcp), vattr);
 	    dp->d_time = hgetlo(pvcp->f.m.DataVersion);
+
+	    afs_DestroyAttr(vattr);
 	}
 
 	/* should we always update the attributes at this point? */
@@ -1396,25 +1421,29 @@ afs_linux_create(struct inode *dip, struct dentry *dp, int mode,
 afs_linux_create(struct inode *dip, struct dentry *dp, int mode)
 #endif
 {
-    struct vattr vattr;
+    struct vattr *vattr = NULL;
     cred_t *credp = crref();
     const char *name = dp->d_name.name;
     struct vcache *vcp;
     int code;
 
-    VATTR_NULL(&vattr);
-    vattr.va_mode = mode;
-    vattr.va_type = mode & S_IFMT;
-
     AFS_GLOCK();
-    code = afs_create(VTOAFS(dip), (char *)name, &vattr, NONEXCL, mode,
+
+    code = afs_CreateAttr(&vattr);
+    if (code) {
+	goto out;
+    }
+    vattr->va_mode = mode;
+    vattr->va_type = mode & S_IFMT;
+
+    code = afs_create(VTOAFS(dip), (char *)name, vattr, NONEXCL, mode,
 		      &vcp, credp);
 
     if (!code) {
 	struct inode *ip = AFSTOV(vcp);
 
-	afs_getattr(vcp, &vattr, credp);
-	afs_fill_inode(ip, &vattr);
+	afs_getattr(vcp, vattr, credp);
+	afs_fill_inode(ip, vattr);
 	insert_inode_hash(ip);
 #if !defined(STRUCT_SUPER_BLOCK_HAS_S_D_OP)
 	dp->d_op = &afs_dentry_operations;
@@ -1422,6 +1451,10 @@ afs_linux_create(struct inode *dip, struct dentry *dp, int mode)
 	dp->d_time = hgetlo(VTOAFS(dip)->f.m.DataVersion);
 	d_instantiate(dp, ip);
     }
+
+    afs_DestroyAttr(vattr);
+
+out:
     AFS_GUNLOCK();
 
     crfree(credp);
@@ -1451,7 +1484,7 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
     code = afs_lookup(VTOAFS(dip), (char *)comp, &vcp, credp);
     
     if (vcp) {
-	struct vattr vattr;
+	struct vattr *vattr = NULL;
 	struct vcache *parent_vc = VTOAFS(dip);
 
 	if (parent_vc == vcp) {
@@ -1465,11 +1498,20 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 	    goto done;
 	}
 
+	code = afs_CreateAttr(&vattr);
+	if (code) {
+	    afs_PutVCache(vcp);
+	    AFS_GUNLOCK();
+	    goto done;
+	}
+
 	ip = AFSTOV(vcp);
-	afs_getattr(vcp, &vattr, credp);
-	afs_fill_inode(ip, &vattr);
+	afs_getattr(vcp, vattr, credp);
+	afs_fill_inode(ip, vattr);
 	if (hlist_unhashed(&ip->i_hash))
 	    insert_inode_hash(ip);
+
+	afs_DestroyAttr(vattr);
     }
 #if !defined(STRUCT_SUPER_BLOCK_HAS_S_D_OP)
     dp->d_op = &afs_dentry_operations;
@@ -1612,7 +1654,7 @@ afs_linux_symlink(struct inode *dip, struct dentry *dp, const char *target)
 {
     int code;
     cred_t *credp = crref();
-    struct vattr vattr;
+    struct vattr *vattr = NULL;
     const char *name = dp->d_name.name;
 
     /* If afs_symlink returned the vnode, we could instantiate the
@@ -1620,10 +1662,17 @@ afs_linux_symlink(struct inode *dip, struct dentry *dp, const char *target)
      */
     d_drop(dp);
 
-    VATTR_NULL(&vattr);
     AFS_GLOCK();
-    code = afs_symlink(VTOAFS(dip), (char *)name, &vattr, (char *)target, NULL,
-    		       credp);
+    code = afs_CreateAttr(&vattr);
+    if (code) {
+	goto out;
+    }
+
+    code = afs_symlink(VTOAFS(dip), (char *)name, vattr, (char *)target, NULL,
+			credp);
+    afs_DestroyAttr(vattr);
+
+out:
     AFS_GUNLOCK();
     crfree(credp);
     return afs_convert_code(code);
@@ -1639,20 +1688,25 @@ afs_linux_mkdir(struct inode *dip, struct dentry *dp, int mode)
     int code;
     cred_t *credp = crref();
     struct vcache *tvcp = NULL;
-    struct vattr vattr;
+    struct vattr *vattr = NULL;
     const char *name = dp->d_name.name;
 
-    VATTR_NULL(&vattr);
-    vattr.va_mask = ATTR_MODE;
-    vattr.va_mode = mode;
     AFS_GLOCK();
-    code = afs_mkdir(VTOAFS(dip), (char *)name, &vattr, &tvcp, credp);
+    code = afs_CreateAttr(&vattr);
+    if (code) {
+	goto out;
+    }
+
+    vattr->va_mask = ATTR_MODE;
+    vattr->va_mode = mode;
+
+    code = afs_mkdir(VTOAFS(dip), (char *)name, vattr, &tvcp, credp);
 
     if (tvcp) {
 	struct inode *ip = AFSTOV(tvcp);
 
-	afs_getattr(tvcp, &vattr, credp);
-	afs_fill_inode(ip, &vattr);
+	afs_getattr(tvcp, vattr, credp);
+	afs_fill_inode(ip, vattr);
 
 #if !defined(STRUCT_SUPER_BLOCK_HAS_S_D_OP)
 	dp->d_op = &afs_dentry_operations;
@@ -1660,6 +1714,9 @@ afs_linux_mkdir(struct inode *dip, struct dentry *dp, int mode)
 	dp->d_time = hgetlo(VTOAFS(dip)->f.m.DataVersion);
 	d_instantiate(dp, ip);
     }
+    afs_DestroyAttr(vattr);
+
+out:
     AFS_GUNLOCK();
 
     crfree(credp);

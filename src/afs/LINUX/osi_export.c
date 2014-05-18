@@ -466,10 +466,15 @@ static struct dentry *get_dentry_from_fid(cred_t *credp, struct VenusFid *afid)
 {
     struct vrequest *treq = NULL;
     struct vcache *vcp;
-    struct vattr vattr;
+    struct vattr *vattr = NULL;
     struct inode *ip;
     struct dentry *dp;
     afs_int32 code;
+
+    code = afs_CreateAttr(&vattr);
+    if (code) {
+	return ERR_PTR(-afs_CheckCode(code, NULL, xxx));
+    }
 
     code = afs_CreateReq(&treq, credp);
     if (code) {
@@ -478,6 +483,7 @@ static struct dentry *get_dentry_from_fid(cred_t *credp, struct VenusFid *afid)
 	       afid->Cell, afid->Fid.Volume, afid->Fid.Vnode, afid->Fid.Unique,
 	       code);
 #endif
+	afs_DestroyAttr(vattr);
 	return ERR_PTR(-afs_CheckCode(code, NULL, 101));
     }
     vcp = afs_GetVCache(afid, treq, NULL, NULL);
@@ -487,6 +493,7 @@ static struct dentry *get_dentry_from_fid(cred_t *credp, struct VenusFid *afid)
 	       afid->Cell, afid->Fid.Volume, afid->Fid.Vnode, afid->Fid.Unique);
 #endif
 	afs_DestroyReq(treq);
+	afs_DestroyAttr(vattr);
 	return NULL;
     }
 
@@ -515,12 +522,13 @@ static struct dentry *get_dentry_from_fid(cred_t *credp, struct VenusFid *afid)
 	afs_PutVCache(vcp);
 	code = afs_CheckCode(code, treq, 101);
 	afs_DestroyReq(treq);
+	afs_DestroyAttr(vattr);
 	return ERR_PTR(-code);
     }
 
     ip = AFSTOV(vcp);
-    afs_getattr(vcp, &vattr, credp);
-    afs_fill_inode(ip, &vattr);
+    afs_getattr(vcp, vattr, credp);
+    afs_fill_inode(ip, vattr);
 
     /* d_alloc_anon might block, so we shouldn't hold the glock */
     AFS_GUNLOCK();
@@ -534,11 +542,13 @@ static struct dentry *get_dentry_from_fid(cred_t *credp, struct VenusFid *afid)
 	       afid->Cell, afid->Fid.Volume, afid->Fid.Vnode, afid->Fid.Unique);
 #endif
 	afs_DestroyReq(treq);
+	afs_DestroyAttr(vattr);
 	return ERR_PTR(-ENOMEM);
     }
 
     dp->d_op = &afs_dentry_operations;
     afs_DestroyReq(treq);
+    afs_DestroyAttr(vattr);
     return dp;
 }
 
