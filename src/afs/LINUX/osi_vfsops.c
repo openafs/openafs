@@ -189,21 +189,25 @@ afs_root(struct super_block *afsp)
 	    tvp = afs_GetVCache(&afs_rootFid, treq, NULL, NULL);
 	    if (tvp) {
 		struct inode *ip = AFSTOV(tvp);
-		struct vattr vattr;
+		struct vattr *vattr = NULL;
 
-		afs_getattr(tvp, &vattr, credp);
-		afs_fill_inode(ip, &vattr);
+		code = afs_CreateAttr(&vattr);
+		if (!code) {
+		    afs_getattr(tvp, vattr, credp);
+		    afs_fill_inode(ip, vattr);
 
-		/* setup super_block and mount point inode. */
-		afs_globalVp = tvp;
+		    /* setup super_block and mount point inode. */
+		    afs_globalVp = tvp;
 #if defined(HAVE_LINUX_D_MAKE_ROOT)
-		afsp->s_root = d_make_root(ip);
+		    afsp->s_root = d_make_root(ip);
 #else
-		afsp->s_root = d_alloc_root(ip);
+		    afsp->s_root = d_alloc_root(ip);
 #endif
 #if !defined(STRUCT_SUPER_BLOCK_HAS_S_D_OP)
-		afsp->s_root->d_op = &afs_dentry_operations;
+		    afsp->s_root->d_op = &afs_dentry_operations;
 #endif
+		    afs_DestroyAttr(vattr);
+		}
 	    } else
 		code = ENOENT;
 	}
