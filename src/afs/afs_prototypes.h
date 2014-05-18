@@ -1171,6 +1171,8 @@ extern int afs_setattr(OSI_VC_DECL(avc), struct vattr *attrs,
 extern int afs_setattr(OSI_VC_DECL(avc), struct vattr *attrs,
 		       afs_ucred_t *acred);
 #endif
+extern int afs_CreateAttr(struct vattr **out);
+extern void afs_DestroyAttr(struct vattr *vattr);
 
 /* VNOPS/afs_vnop_create.c */
 #ifdef AFS_SGI64_ENV

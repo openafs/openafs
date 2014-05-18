@@ -17,6 +17,8 @@
  * afs_getattr
  * afs_VAttrToAS
  * afs_setattr
+ * afs_CreateAttr
+ * afs_DestroyAttr
  *
  */
 
@@ -654,3 +656,49 @@ afs_setattr(OSI_VC_DECL(avc), struct vattr *attrs,
     afs_DestroyReq(treq);
     return code;
 }
+
+/*!
+ * Allocate a vattr.
+ *
+ * \note The caller must free the allocated vattr with
+ *       afs_DestroyAttr() if this function returns successfully (zero).
+ *
+ * \note The GLOCK must be held on platforms which require the GLOCK
+ *       for osi_AllocSmallSpace() and osi_FreeSmallSpace().
+ *
+ * \param[out] out   address of the vattr pointer
+ * \return     0 on success
+ */
+int
+afs_CreateAttr(struct vattr **out)
+{
+    struct vattr *vattr = NULL;
+
+    if (!out) {
+	return EINVAL;
+    }
+    vattr = osi_AllocSmallSpace(sizeof(struct vattr));
+    if (!vattr) {
+	return ENOMEM;
+    }
+    memset(vattr, 0, sizeof(struct vattr));
+    *out = vattr;
+    return 0;
+}
+
+/*!
+ * Deallocate a vattr.
+ *
+ * \note The GLOCK must be held on platforms which require the GLOCK
+ *       for osi_FreeSmallSpace().
+ *
+ * \param[in]  vattr  pointer to the vattr to free; may be NULL
+ */
+void
+afs_DestroyAttr(struct vattr *vattr)
+{
+    if (vattr) {
+	osi_FreeSmallSpace(vattr);
+    }
+}
+
