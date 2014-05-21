@@ -79,6 +79,10 @@ Commands to obtain help:
 L<B<pts apropos>|pts_apropos(1)>
 and L<B<pts help>|pts_help(1)>.
 
+=item *
+
+A command to display the OpenAFS command suite version: B<pts version>.
+
 =back
 
 =head1 OPTIONS

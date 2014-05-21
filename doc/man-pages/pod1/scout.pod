@@ -13,13 +13,13 @@ B<scout> [B<initcmd>] S<<< B<-server> <I<servers to monitor>>+ >>>
       S<<< [B<-attention> <I<specify attention (highlighting) level>>+] >>>
       S<<< [B<-columnwidths> <I<number of characters>>+] >>>
       S<<< [B<-debug> <I<turn debugging output on to the named file>>] >>>
-      [B<-help>]
+      [B<-version>] [B<-help>]
 
 B<scout> [B<i>] S<<< B<-s> <I<servers to monitor>>+ >>>
       S<<< [B<-b> <I<base server name>>] >>> S<<< [B<-f> <I<poll frequency, in seconds>>] >>>
       [B<-ho>] S<<< [B<-a> <I<specify attention (highlighting) level>>+] >>>
       S<<< [B<-c> <I<number of characters>+>] >>>
-      S<<< [B<-d> <I<turn debugging output on to the named file>>] >>> [B<-he>]
+      S<<< [B<-d> <I<turn debugging output on to the named file>>] >>> [B<-version>] [B<-he>]
 
 =for html
 </div>
@@ -175,6 +175,11 @@ directory.
 
 Prints the online help for this command. All other valid options are
 ignored.
+
+=item B<-version>
+
+Prints the program version and then exits. All other valid options
+are ignored.
 
 =back
 

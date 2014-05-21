@@ -97,6 +97,10 @@ Precedes a line of text that the afsmonitor program ignores because of the
 initial number (C<#>) sign, which must appear in the very first column of
 the line.
 
+=item B<version>
+
+Print the OpenAFS command suite version and then exit.
+
 =back
 
 For a list of the values that can appear in the I<field/group/section>

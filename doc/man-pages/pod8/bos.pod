@@ -47,6 +47,10 @@ A command to restore file system consistency: B<bos salvage>.
 
 Commands to obtain help: B<bos apropos> and B<bos help>.
 
+=item *
+
+A command to display the OpenAFS command suite version: B<bos version>.
+
 =back
 
 The BOS Server and the B<bos> commands use and maintain the following

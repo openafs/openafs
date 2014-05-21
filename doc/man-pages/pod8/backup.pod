@@ -72,6 +72,10 @@ Commands to obtain help:
 L<B<backup apropos>|backup_apropos(8)>
 and L<B<backup help>|backup_help(8)>.
 
+=item *
+
+A command to display the OpenAFS command suite version: B<backup version>.
+
 =back
 
 The backup command interpreter interacts with two other processes:

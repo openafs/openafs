@@ -53,6 +53,10 @@ Commands to obtain help:
 L<B<kas apropos>|kas_apropos(8)>
 and L<B<kas help>|kas_help(8)>.
 
+=item *
+
+A command to display the OpenAFS command suite version: B<kas version>.
+
 =back
 
 Because of the sensitivity of information in the Authentication Database,
