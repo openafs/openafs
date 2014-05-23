@@ -51,8 +51,8 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	       ICL_TYPE_STRING, aname1, ICL_TYPE_POINTER, andp,
 	       ICL_TYPE_STRING, aname2);
 
-    OutOldDirStatus = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
-    OutNewDirStatus = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+    OutOldDirStatus = osi_AllocSmallSpace(sizeof(struct AFSFetchStatus));
+    OutNewDirStatus = osi_AllocSmallSpace(sizeof(struct AFSFetchStatus));
 
     if (strlen(aname1) > AFSNAMEMAX || strlen(aname2) > AFSNAMEMAX) {
 	code = ENAMETOOLONG;

@@ -62,8 +62,8 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 
     AFS_STATCNT(afs_create);
 
-    OutFidStatus = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
-    OutDirStatus = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+    OutFidStatus = osi_AllocSmallSpace(sizeof(struct AFSFetchStatus));
+    OutDirStatus = osi_AllocSmallSpace(sizeof(struct AFSFetchStatus));
 
     if ((code = afs_CreateReq(&treq, acred)))
 	goto done2;
