@@ -59,8 +59,8 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     afs_Trace2(afs_iclSetp, CM_TRACE_MKDIR, ICL_TYPE_POINTER, adp,
 	       ICL_TYPE_STRING, aname);
 
-    OutFidStatus = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
-    OutDirStatus = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+    OutFidStatus = osi_AllocSmallSpace(sizeof(struct AFSFetchStatus));
+    OutDirStatus = osi_AllocSmallSpace(sizeof(struct AFSFetchStatus));
 
     if ((code = afs_InitReq(&treq, acred)))
 	goto done2;

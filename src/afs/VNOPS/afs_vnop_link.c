@@ -54,8 +54,8 @@ afs_link(struct vcache *avc, OSI_VC_DECL(adp), char *aname,
     afs_Trace3(afs_iclSetp, CM_TRACE_LINK, ICL_TYPE_POINTER, adp,
 	       ICL_TYPE_POINTER, avc, ICL_TYPE_STRING, aname);
 
-    OutFidStatus = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
-    OutDirStatus = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+    OutFidStatus = osi_AllocSmallSpace(sizeof(struct AFSFetchStatus));
+    OutDirStatus = osi_AllocSmallSpace(sizeof(struct AFSFetchStatus));
 
     /* create a hard link; new entry is aname in dir adp */
     if ((code = afs_InitReq(&treq, acred)))
