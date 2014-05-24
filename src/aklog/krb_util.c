@@ -15,6 +15,7 @@
 #include <kerberosIV/mit-copyright.h>
 #endif
 #include <afs/stds.h>
+#define KERBEROS_APPLE_DEPRECATED(x)
 #include "aklog.h"
 #include <krb5.h>
 

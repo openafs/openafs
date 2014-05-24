@@ -1770,7 +1770,7 @@ namei_SetLinkCount(FdHandle_t * fdP, Inode ino, int count, int locked)
 
 /* ListViceInodes - write inode data to a results file. */
 static int DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info,
-		       unsigned int volid);
+		       IHandle_t *myIH);
 static int DecodeVolumeName(char *name, unsigned int *vid);
 static int namei_ListAFSSubDirs(IHandle_t * dirIH,
 				int (*write_fun) (FILE *,
@@ -2042,7 +2042,7 @@ _namei_examine_special(char * path1,
     int ret = 0;
     struct ViceInodeInfo info;
 
-    if (DecodeInode(path1, dname, &info, myIH->ih_vid) < 0) {
+    if (DecodeInode(path1, dname, &info, myIH) < 0) {
 	ret = 0;
 	goto error;
     }
@@ -2057,6 +2057,11 @@ _namei_examine_special(char * path1,
 	    "(dir_vgid=%u, inode_vgid=%u)\n",
 	    path1, dname, myIH->ih_vid,
 	    info.u.param[0]);
+	/* We need to set the linkCount to _something_, so linkCount
+	 * doesn't just contain stack garbage. Set it to 0, so in case
+	 * the salvager or whatever our caller is does try to process
+	 * this like a normal file, we won't try to INC or DEC it. */
+	info.linkCount = 0;
     } else {
 	char path2[512];
 	/* Open this handle */
@@ -2128,7 +2133,7 @@ _namei_examine_reg(char * path3,
     int dirl; /* Windows-only (one level hash dir) */
 #endif
 
-    if (DecodeInode(path3, dname, &info, myIH->ih_vid) < 0) {
+    if (DecodeInode(path3, dname, &info, myIH) < 0) {
 	goto error;
     }
 
@@ -2786,7 +2791,7 @@ DecodeVolumeName(char *name, unsigned int *vid)
 #ifdef AFS_NT40_ENV
 static int
 DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info,
-	    unsigned int volid)
+	    IHandle_t *myIH)
 {
     char fpath[512];
     int tag, vno;
@@ -2796,6 +2801,7 @@ DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info,
     char stmp[16];
     FdHandle_t linkHandle;
     char dirl;
+    VolumeId volid = myIH->ih_vid;
 
     afs_snprintf(fpath, sizeof(fpath), "%s" OS_DIRSEP "%s", dpath, name);
 
@@ -2862,12 +2868,16 @@ DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info,
 #else
 static int
 DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info,
-	    unsigned int volid)
+	    IHandle_t *myIH)
 {
     char fpath[512];
     struct afs_stat status;
+    struct afs_stat checkstatus;
     int parm, tag;
     lb64_string_t check;
+    VolumeId volid = myIH->ih_vid;
+    IHandle_t tmpih;
+    namei_t nameiname;
 
     afs_snprintf(fpath, sizeof(fpath), "%s" OS_DIRSEP "%s", dpath, name);
 
@@ -2881,6 +2891,36 @@ DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info,
     int64_to_flipbase64(check, info->inodeNumber);
     if (strcmp(name, check))
 	return -1;
+
+    /* Check if the _full_ path is correct, to ensure we can actually open this
+     * file later. Otherwise, the salvager can choke. */
+    memset(&tmpih, 0, sizeof(tmpih));
+    tmpih.ih_dev = myIH->ih_dev;
+    tmpih.ih_vid = myIH->ih_vid;
+    tmpih.ih_ino = info->inodeNumber;
+    namei_HandleToName(&nameiname, &tmpih);
+    if ((afs_stat(nameiname.n_path, &checkstatus) < 0) ||
+        checkstatus.st_ino != status.st_ino ||
+        checkstatus.st_size != status.st_size) {
+	static int logged;
+	/* log something for this case, since this means the filename looks
+	 * like a valid inode, but it's just in the wrong place. That's pretty
+	 * strange. */
+	if (!logged) {
+	    logged = 1;
+	    Log("Note:\n");
+	    Log("  Seemingly-misplaced files have been found, which I am\n");
+	    Log("  ignoring for now. If you cannot salvage the relevant volume,\n");
+	    Log("  you may try manually moving them to their correct location.\n");
+	    Log("  If the relevant volume seems fine, and these files do not\n");
+	    Log("  appear to contain important data, you can probably manually\n");
+	    Log("  delete them, or leave them alone. Contact your local OpenAFS\n");
+	    Log("  expert if you are unsure.\n");
+	}
+	Log("Ignoring misplaced file in volume group %u: %s (should be %s)\n",
+	    (unsigned)myIH->ih_vid, fpath, nameiname.n_path);
+	return -1;
+    }
 
     if ((info->inodeNumber & NAMEI_INODESPECIAL) == NAMEI_INODESPECIAL) {
 	parm = ((info->inodeNumber >> NAMEI_UNIQSHIFT) & NAMEI_UNIQMASK);
@@ -3070,7 +3110,7 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 	if (*dp->d_name == '.')
 	    continue;
 #endif
-	if (DecodeInode(dir_name, dp->d_name, &info, ih->ih_vid) < 0) {
+	if (DecodeInode(dir_name, dp->d_name, &info, ih) < 0) {
 	    Log("1 namei_ConvertROtoRWvolume: DecodeInode failed for %s" OS_DIRSEP "%s\n",
 		dir_name, dp->d_name);
 	    closedir(dirp);

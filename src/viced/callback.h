@@ -66,7 +66,8 @@ struct CallBack {
     afs_uint32 fhead;		/* index of associated FE */
     u_byte thead;		/* Head of timeout chain */
     u_byte status;		/* Call back status; see definitions, below */
-    unsigned short spare;	/* ensure proper alignment */
+    u_byte flags;		/* see CBFLAG_* definitions below */
+    u_byte spare;		/* ensure proper alignment */
     afs_uint32 hhead;		/* Head of host table chain */
     afs_uint32 tprev, tnext;	/* per-timeout circular list of callbacks */
     afs_uint32 hprev, hnext;	/* per-host circular list of callbacks */
@@ -97,6 +98,9 @@ struct VCBParams {
 				 * the (consecutive)host. delayed call back entries */
 #define CB_VOLUME   3		/* Callback for a volume */
 #define CB_BULK     4		/* Normal callbacks, handed out from FetchBulkStatus */
+
+/* values for the 'flags' field of CallBack structure */
+#define CBFLAG_BREAKING	0x1	/* this CB is marked for breaking / is getting broken */
 
 /* call back indices to pointers, and vice-versa */
 #define itocb(i)    ((i)?CB+(i):0)

@@ -2714,7 +2714,7 @@ bos_ExecutableCreate(const void *serverHandle, const char *sourceFile,
 
     while (1) {
 	char tbuffer[512];
-	size_t len;
+	ssize_t len;
 	len = read(fd, tbuffer, sizeof(tbuffer));
 	if (len < 0) {
 	    tst = ADMBOSCANTREADSOURCEFILE;

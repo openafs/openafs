@@ -46,3 +46,5 @@ B<fileserver>
     S<<< [B<-m> <I<min percentage spare in partition>>] >>>
     S<<< [B<-lock>] >>>
     S<<< [B<-sync> <I<sync behavior>>] >>>
+    S<<< [B<-offline-timeout> <I<timeout in seconds>>] >>>
+    S<<< [B<-offline-shutdown-timeout> <I<timeout in seconds>>] >>>

@@ -1838,8 +1838,8 @@ GetVolumeSummary(struct SalvInfo *salvinfo, VolumeId singleVolumeNumber)
     return 0;
 }
 
-/* Find the link table. This should be associated with the RW volume or, if
- * a RO only site, then the RO volume. For now, be cautious and hunt carefully.
+/* Find the link table. This should be associated with the RW volume, even
+ * if there is only an RO volume at this site.
  */
 Inode
 FindLinkHandle(struct InodeSummary *isp, int nVols,
@@ -1851,12 +1851,65 @@ FindLinkHandle(struct InodeSummary *isp, int nVols,
     for (i = 0; i < nVols; i++) {
 	ip = allInodes + isp[i].index;
 	for (j = 0; j < isp[i].nSpecialInodes; j++) {
-	    if (ip[j].u.special.type == VI_LINKTABLE)
+	    if (ip[j].u.special.volumeId == isp->RWvolumeId &&
+	        ip[j].u.special.parentId == isp->RWvolumeId &&
+	        ip[j].u.special.type == VI_LINKTABLE) {
 		return ip[j].inodeNumber;
+	    }
 	}
     }
     return (Inode) - 1;
 }
+
+#ifdef AFS_NAMEI_ENV
+static int
+CheckDupLinktable(struct SalvInfo *salvinfo, struct InodeSummary *isp, struct ViceInodeInfo *ip)
+{
+    afs_ino_str_t stmp;
+    if (ip->u.vnode.vnodeNumber != INODESPECIAL) {
+	/* not a linktable; process as a normal file */
+	return 0;
+    }
+    if (ip->u.special.type != VI_LINKTABLE) {
+	/* not a linktable; process as a normal file */
+	return 0;
+    }
+
+    /* make sure nothing inc/decs it */
+    ip->linkCount = 0;
+
+    if (ip->u.special.volumeId == ip->u.special.parentId) {
+	/* This is a little weird, but shouldn't break anything, and there is
+	 * no known way that this can happen; just do nothing, in case deleting
+	 * it would screw something up. */
+	Log("Inode %s appears to be a valid linktable for id (%u), but it's not\n",
+	    PrintInode(stmp, ip->inodeNumber), ip->u.special.parentId);
+	Log("the linktable for our volume group (%u). This is unusual, since\n",
+	    isp->RWvolumeId);
+	Log("there should only be one linktable per volume group. I'm leaving\n");
+	Log("it alone, just to be safe.\n");
+	return -1;
+    }
+
+    Log("Linktable %s appears to be invalid (parentid/volumeid mismatch: %u != %u)\n",
+        PrintInode(stmp, ip->inodeNumber), ip->u.special.parentId, ip->u.special.volumeId);
+    if (Testing) {
+	Log("Would have deleted linktable inode %s\n", PrintInode(stmp, ip->inodeNumber));
+    } else {
+	IHandle_t *tmpH;
+	namei_t ufs_name;
+
+	Log("Deleting linktable inode %s\n", PrintInode(stmp, ip->inodeNumber));
+	IH_INIT(tmpH, salvinfo->fileSysDevice, isp->RWvolumeId, ip->inodeNumber);
+	namei_HandleToName(&ufs_name, tmpH);
+	if (unlink(ufs_name.n_path) < 0) {
+	    Log("Error %d unlinking path %s\n", errno, ufs_name.n_path);
+	}
+    }
+
+    return -1;
+}
+#endif
 
 int
 CreateLinkTable(struct SalvInfo *salvinfo, struct InodeSummary *isp, Inode ino)
@@ -2013,18 +2066,19 @@ DoSalvageVolumeGroup(struct SalvInfo *salvinfo, struct InodeSummary *isp, int nV
 	if (Testing) {
 	    IH_INIT(salvinfo->VGLinkH, salvinfo->fileSysDevice, -1, -1);
 	} else {
-            int i, j;
-            struct ViceInodeInfo *ip;
+	    int i, j;
+	    struct ViceInodeInfo *ip;
 	    CreateLinkTable(salvinfo, isp, ino);
 	    fdP = IH_OPEN(salvinfo->VGLinkH);
-            /* Sync fake 1 link counts to the link table, now that it exists */
-            if (fdP) {
-            	for (i = 0; i < nVols; i++) {
-            		ip = allInodes + isp[i].index;
-		         for (j = isp[i].nSpecialInodes; j < isp[i].nInodes; j++) {
-				 namei_SetLinkCount(fdP, ip[j].inodeNumber, 1, 1);
+	    /* Sync fake 1 link counts to the link table, now that it exists */
+	    if (fdP) {
+		for (i = 0; i < nVols; i++) {
+		    ip = allInodes + isp[i].index;
+		    for (j = isp[i].nSpecialInodes; j < isp[i].nInodes; j++) {
+			namei_SetLinkCount(fdP, ip[j].inodeNumber, 1, 1);
+			ip[j].linkCount = 1;
 		    }
-            	}
+		}
 	    }
 	}
     }
@@ -2042,15 +2096,33 @@ DoSalvageVolumeGroup(struct SalvInfo *salvinfo, struct InodeSummary *isp, int nV
 	int rw = (i == 0);
 	struct InodeSummary *lisp = &isp[i];
 #ifdef AFS_NAMEI_ENV
-	/* If only the RO is present on this partition, the link table
-	 * shows up as a RW volume special file. Need to make sure the
-	 * salvager doesn't try to salvage the non-existent RW.
-	 */
-	if (rw && nVols > 1 && isp[i].nSpecialInodes == 1) {
-	    /* If this only special inode is the link table, continue */
-	    if (inodes->u.special.type == VI_LINKTABLE) {
-		haveRWvolume = 0;
-		continue;
+	if (rw && (nVols > 1 || isp[i].nSpecialInodes == isp[i].nInodes)) {
+	    /* If nVols > 1, we have more than one vol in this volgroup, so
+	     * the RW inodes we detected may just be for the linktable, and
+	     * there is no actual RW volume.
+	     *
+	     * Additionally, if we only have linktable inodes (no other
+	     * special inodes, no data inodes), there is also no actual RW
+	     * volume to salvage; this is just cruft left behind by something
+	     * else. In that case nVols will only be 1, though, so also
+	     * perform this linktables-only check if we don't have any
+	     * non-special inodes. */
+	    int inode_i;
+	    int all_linktables = 1;
+	    for (inode_i = 0; inode_i < isp[i].nSpecialInodes; inode_i++) {
+		if (inodes[inode_i].u.special.type != VI_LINKTABLE) {
+		    all_linktables = 0;
+		    break;
+		}
+	    }
+	    if (all_linktables) {
+		/* All we have are linktable special inodes, so skip salvaging
+		 * the RW; there was never an RW volume here. If we don't do
+		 * this, we risk creating a new "phantom" RW that the VLDB
+		 * doesn't know about, which is confusing and can cause
+		 * problems. */
+		 haveRWvolume = 0;
+		 continue;
 	    }
 	}
 #endif
@@ -2092,6 +2164,9 @@ DoSalvageVolumeGroup(struct SalvInfo *salvinfo, struct InodeSummary *isp, int nV
 		dec_VGLinkH = ip->linkCount - salvinfo->VGLinkH_cnt;
 		VGLinkH_p1 = ip->u.param[0];
 		continue;	/* Deal with this last. */
+	    } else if (CheckDupLinktable(salvinfo, isp, ip)) {
+		/* Don't touch this inode; CheckDupLinktable has handled it */
+		continue;
 	    }
 #endif
 	    if (ip->linkCount != 0 && TraceBadLinkCounts) {

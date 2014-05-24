@@ -130,6 +130,9 @@ is 5:00 a.m.
 
 =back
 
+Finally, there is an entry specifying whether the BOS Server will start in
+restricted mode.
+
 Although the F<BosConfig> file is in ASCII format, it is normally best not
 to use a text editor to alter it.  The parser is very picky, and
 incorrectly formatted entries can prevent server startup in ways that are
@@ -155,8 +158,17 @@ performs automatic restarts.
 
 =item *
 
+The B<bos getrestricted> command to display whether the BOS Server is running
+in restricted mode.
+
+=item *
+
 The B<bos setrestart> command to set the times at which the BOS Server
 performs automatic process restarts.
+
+=item *
+
+The B<bos setrestricted> command to place the BOS Server in restricted mode.
 
 =item *
 
@@ -209,8 +221,10 @@ file to F<BosConfig> before reading its configuration.
 L<bos_create(8)>,
 L<bos_delete(8)>,
 L<bos_getrestart(8)>,
+L<bos_getrestricted(8)>,
 L<bos_restart(8)>,
 L<bos_setrestart(8)>,
+L<bos_setrestricted(8)>,
 L<bos_shutdown(8)>,
 L<bos_start(8)>,
 L<bos_startup(8)>,

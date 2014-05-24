@@ -33,6 +33,7 @@
 #endif
 #include <afs/ptclient.h>
 #include <afs/cmd.h>
+#define KERBEROS_APPLE_DEPRECATED(x)
 #include <krb5.h>
 
 #ifdef HAVE_KRB5_CREDS_KEYBLOCK

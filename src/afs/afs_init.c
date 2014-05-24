@@ -726,9 +726,6 @@ shutdown_vnodeops(void)
 {
     AFS_STATCNT(shutdown_vnodeops);
     if (afs_cold_shutdown) {
-#ifndef	AFS_SUN5_ENV		/* XXX */
-	lastWarnTime = 0;
-#endif
 #ifndef AFS_LINUX20_ENV
 	afs_rd_stash_i = 0;
 #endif

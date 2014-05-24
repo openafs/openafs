@@ -36,7 +36,6 @@ static int GetFlockCount(struct vcache *avc, struct vrequest *areq);
 static int lockIdcmp2(struct AFS_FLOCK *flock1, struct vcache *vp,
 		      struct SimpleLocks *alp, int onlymine,
 		      int clid);
-static void DoLockWarning(afs_ucred_t * acred);
 
 /* int clid;  * non-zero on SGI, OSF, SunOS, Darwin, xBSD ** XXX ptr type */
 
@@ -517,42 +516,54 @@ HandleFlock(struct vcache *avc, int acom, struct vrequest *areq,
 
 
 /* warn a user that a lock has been ignored */
-afs_int32 lastWarnTime = 0;	/* this is used elsewhere */
-static afs_int32 lastWarnPid = 0;
 static void
-DoLockWarning(afs_ucred_t * acred)
+DoLockWarning(struct vcache *avc, afs_ucred_t * acred)
 {
-    afs_int32 now;
+    static afs_uint32 lastWarnTime;
+    static pid_t lastWarnPid;
+
+    afs_uint32 now;
     pid_t pid = MyPidxx2Pid(MyPidxx);
     char *procname;
+    const char *message;
 
     now = osi_Time();
 
     AFS_STATCNT(DoLockWarning);
+
     /* check if we've already warned this user recently */
-    if (!((now < lastWarnTime + 120) && (lastWarnPid == pid))) {
-	procname = afs_osi_Alloc(256);
-
-	if (!procname)
-	    return;
-
-	/* Copies process name to allocated procname, see osi_machdeps for details of macro */
-	osi_procname(procname, 256);
-	procname[255] = '\0';
-
-	/* otherwise, it is time to nag the user */
-	lastWarnTime = now;
-	lastWarnPid = pid;
-#ifdef AFS_LINUX26_ENV
-	afs_warnuser
-	    ("afs: byte-range locks only enforced for processes on this machine (pid %d (%s), user %ld).\n", pid, procname, (long)afs_cr_uid(acred));
-#else
-	afs_warnuser
-	    ("afs: byte-range lock/unlock ignored; make sure no one else is running this program (pid %d (%s), user %ld).\n", pid, procname, afs_cr_uid(acred));
-#endif
-	afs_osi_Free(procname, 256);
+    if ((now < lastWarnTime + 120) && (lastWarnPid == pid)) {
+	return;
     }
-    return;
+    if (now < avc->lastBRLWarnTime + 120) {
+	return;
+    }
+
+    procname = afs_osi_Alloc(256);
+
+    if (!procname)
+	return;
+
+    /* Copies process name to allocated procname, see osi_machdeps for details of macro */
+    osi_procname(procname, 256);
+    procname[255] = '\0';
+
+    lastWarnTime = avc->lastBRLWarnTime = now;
+    lastWarnPid = pid;
+
+#ifdef AFS_LINUX26_ENV
+    message = "byte-range locks only enforced for processes on this machine";
+#else
+    message = "byte-range lock/unlock ignored; make sure no one else is running this program";
+#endif
+
+    afs_warnuser("afs: %s (pid %d (%s), user %ld, fid %lu.%lu.%lu).\n",
+                 message, pid, procname, (long)afs_cr_uid(acred),
+                 (unsigned long)avc->f.fid.Fid.Volume,
+                 (unsigned long)avc->f.fid.Fid.Vnode,
+                 (unsigned long)avc->f.fid.Fid.Unique);
+
+    afs_osi_Free(procname, 256);
 }
 
 
@@ -616,7 +627,7 @@ int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
     /* next line makes byte range locks always succeed,
      * even when they should block */
     if (af->l_whence != 0 || af->l_start != 0 || af->l_len != 0) {
-	DoLockWarning(acred);
+	DoLockWarning(avc, acred);
 	code = 0;
 	goto done;
     }

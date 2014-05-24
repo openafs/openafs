@@ -115,7 +115,7 @@ void ih_PkgDefaults(void)
      * is called */
     vol_io_params.fd_max_cachesize = FD_MAX_CACHESIZE;
 
-    vol_io_params.sync_behavior = IH_SYNC_DELAYED;
+    vol_io_params.sync_behavior = IH_SYNC_ONCLOSE;
 }
 
 int

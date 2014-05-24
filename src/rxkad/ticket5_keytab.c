@@ -33,6 +33,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 
+#define KERBEROS_APPLE_DEPRECATED(x)
 #include <krb5.h>
 
 #ifdef  RX_ENABLE_LOCKS

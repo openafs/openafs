@@ -88,6 +88,12 @@ struct host {
      * the index fields isn't zeroed. XXX
      */
     afs_uint32 index;		/* Host table index, for vicecb.c */
+    unsigned int n_tmays;       /* how many successful TellMeAboutYourself calls
+                                 * have we made against this host? */
+    /* cache of the result of the last successful TMAY call to this host */
+    struct interfaceAddr tmay_interf;
+    Capabilities tmay_caps;
+
     struct Lock lock;		/* Write lock for synchronization of
 				 * VenusDown flag */
 #ifdef AFS_PTHREAD_ENV
@@ -221,7 +227,7 @@ extern struct host *h_LookupUuid_r(afsUUID * uuidp);
 extern void h_Enumerate(int (*proc) (struct host *, void *), void *param);
 extern void h_Enumerate_r(int (*proc) (struct host *, void *), struct host *enumstart, void *param);
 extern struct host *h_GetHost_r(struct rx_connection *tcon);
-extern struct client *h_FindClient_r(struct rx_connection *tcon);
+extern struct client *h_FindClient_r(struct rx_connection *tcon, afs_int32 *viceid);
 extern int h_ReleaseClient_r(struct client *client);
 extern void h_TossStuff_r(struct host *host);
 extern void h_EnumerateClients(afs_int32 vid,
@@ -239,7 +245,7 @@ extern void h_GetHostNetStats(afs_int32 * a_numHostsP, afs_int32 * a_sameNetOrSu
 		  afs_int32 * a_diffSubnetP, afs_int32 * a_diffNetworkP);
 extern int h_NBLock_r(struct host *host);
 extern void h_DumpHosts(void);
-extern void h_InitHostPackage(void);
+extern void h_InitHostPackage(int hquota);
 extern void h_CheckHosts(void );
 extern int initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf);
 extern void h_AddHostToAddrHashTable_r(afs_uint32 addr, afs_uint16 port, struct host * host);
