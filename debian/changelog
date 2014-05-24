@@ -1,6 +1,25 @@
 openafs (1.6.8-1) UNRELEASED; urgency=medium
 
   * New upstream release.
+    - Change the default fileserver sync behavior from delayed to
+      onclose so that explicit syncing only happens when a volume is
+      detached.
+    - Add -offline-timeout and -offline-shutdown-timeout options to the
+      fileserver, allowing interrupting of clients accessing volumes that
+      the fileserver is trying to take off-line.
+    - Fix RX bug that could hide errors during packet reception.
+    - Fix vos size -dump display for large volumes.
+    - Give up callbacks when the client is shut down.  This can cause
+      crashes in old fileservers (prior to 1.4.6).
+    - Restore vos e alias for vos examine.
+    - Throttle byte-range lock warnings per file, and include the FID of
+      the file that the client is trying to lock.
+    - Avoid a possible panic during shutdown while tracing.
+    - Fix a bug that could cause getcwd to fail to find parent
+      directories.
+    - Avoid a delay when accessing uncached data in AFS in a confined
+      context under SELinux.
+    - Documentation, diagnostics, and error message improvements.
 
  -- Russ Allbery <rra@debian.org>  Fri, 23 May 2014 21:36:09 -0700
 
