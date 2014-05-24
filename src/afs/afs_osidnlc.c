@@ -456,7 +456,7 @@ osi_dnlc_purgevp(struct vcache *avc)
     writelocked = (0 == NBObtainWriteLock(&afs_xdnlc, 3));
 
     for (i = 0; i < NCSIZE; i++) {
-	if ((nameCache[i].vp == avc)) {
+	if (nameCache[i].vp == avc) {
 	    nameCache[i].dirp = nameCache[i].vp = NULL;
 	    /* can't simply break; because of hard links -- might be two */
 	    /* different entries with same vnode */

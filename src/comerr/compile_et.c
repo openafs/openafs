@@ -30,11 +30,6 @@
 #include "internal.h"
 #include "compiler.h"
 
-#ifndef lint
-static const char copyright[] =
-    "Copyright 1987,1988 by MIT Student Information Processing Board";
-#endif
-
 extern char *current_token;
 extern int table_number, current;
 char buffer[BUFSIZ];

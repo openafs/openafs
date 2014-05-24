@@ -63,6 +63,7 @@
 #include <pwd.h>
 
 #include <afs/stds.h>
+#define KERBEROS_APPLE_DEPRECATED(x)
 #include <krb5.h>
 #ifdef HAVE_COM_ERR_H
 # include <com_err.h>

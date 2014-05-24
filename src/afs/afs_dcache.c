@@ -3045,7 +3045,7 @@ afs_wakeup(struct vcache *avc)
 	     * is already being handled by the higher-level code.
 	     */
 	    if ((avc->f.states & CSafeStore) == 0) {
-		tb->code = 0;
+		tb->code_raw = tb->code_checkcode = 0;
 		tb->flags |= BUVALID;
 		if (tb->flags & BUWAIT) {
 		    tb->flags &= ~BUWAIT;

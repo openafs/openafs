@@ -55,16 +55,14 @@ shutdown_icl(void)
     struct afs_icl_log *logp;
     struct afs_icl_set *setp;
 
-    setp = afs_icl_FindSet("cm");
-    if (setp) {
-	/* Release the reference from Find, and the initial one */
-	afs_icl_SetFree(setp);
+    if (afs_iclSetp) {
+	setp = afs_iclSetp;  /* "cm" */
+	afs_iclSetp = NULL;
 	afs_icl_SetFree(setp);
     }
-    setp = afs_icl_FindSet("cmlongterm");
-    if (setp) {
-	/* Release the reference from Find, and the initial one */
-	afs_icl_SetFree(setp);
+    if (afs_iclLongTermSetp) {
+	setp = afs_iclLongTermSetp; /* "cmlongterm" */
+	afs_iclLongTermSetp = NULL;
 	afs_icl_SetFree(setp);
     }
     logp = afs_icl_FindLog("cmfx");

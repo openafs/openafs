@@ -8,7 +8,7 @@
  */
 
 #ifndef _VOL_PROTOTYPES_H
-#define _VOL_PROTOTYPES_h
+#define _VOL_PROTOTYPES_H
 
 /* clone.c */
 extern void CloneVolume(Error *, Volume *, Volume *, Volume *);

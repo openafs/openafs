@@ -146,14 +146,13 @@ GetPartitionID(char *aname)
 
 /* make ctime easier to use */
 static char *
-DateOf(afs_int32 atime)
+DateOf(time_t atime)
 {
     static char tbuffer[30];
     char *tp;
-    time_t t = (time_t) atime;
-    tp = ctime(&t);
+    tp = ctime(&atime);
     if (tp) {
-	strcpy(tbuffer, tp);
+	strlcpy(tbuffer, tp, sizeof(tbuffer));
 	tbuffer[24] = 0;	/* get rid of new line */
     } else
 	strcpy(tbuffer, "BAD TIME");
@@ -187,7 +186,11 @@ GetConn(struct cmd_syndesc *as, int aencrypt)
     }
     memcpy(&addr, th->h_addr, sizeof(afs_int32));
 
-    secFlags = AFSCONF_SECOPTS_FALLBACK_NULL;
+    if (aencrypt)
+	secFlags = AFSCONF_SECOPTS_ALWAYSENCRYPT;
+    else
+	secFlags = AFSCONF_SECOPTS_FALLBACK_NULL;
+
 
     if (as->parms[ADDPARMOFFSET + 2].items) { /* -localauth */
 	secFlags |= AFSCONF_SECOPTS_LOCALAUTH;
@@ -803,16 +806,17 @@ AddKey(struct cmd_syndesc *as, void *arock)
     afs_int32 code;
     struct ktc_encryptionKey tkey;
     afs_int32 temp;
-    char *tcell;
-    char cellBuffer[256];
     char buf[BUFSIZ], ver[BUFSIZ];
 
     tconn = GetConn(as, 1);
     memset(&tkey, 0, sizeof(struct ktc_encryptionKey));
 
-    if (as->parms[1].items)
-	strcpy(buf, as->parms[1].items->data);
-    else {
+    if (as->parms[1].items) {
+	if (strlcpy(buf, as->parms[1].items->data, sizeof(buf)) >= sizeof(buf)) {
+	    fprintf(stderr, "Key data too long for buffer\n");
+	    exit(1);
+	}
+    } else {
 	/* prompt for key */
 	code = des_read_pw_string(buf, sizeof(buf), "input key: ", 0);
 	if (code || strlen(buf) == 0) {
@@ -839,24 +843,30 @@ AddKey(struct cmd_syndesc *as, void *arock)
 */
 	strcpy((char *)&tkey, buf);
     } else {			/* kerberos key */
+	char *tcell;
 	if (as->parms[ADDPARMOFFSET].items) {
-	    strcpy(cellBuffer, as->parms[ADDPARMOFFSET].items->data);
+	    tcell = strdup(as->parms[ADDPARMOFFSET].items->data);
+	    if (tcell == NULL) {
+		fprintf(stderr, "bos: Unable to allocate memory for cellname\n");
+		exit(1);
+	    }
 
 	    /* string to key needs upper-case cell names */
 
 	    /* I don't believe this is true.  The string to key function
 	     * actually expands the cell name, then LOWER-CASES it.  Perhaps it
 	     * didn't use to??? */
-	    ucstring(cellBuffer, cellBuffer, strlen(cellBuffer));
-	    tcell = cellBuffer;
+	    ucstring(tcell, tcell, strlen(tcell));
 	} else
 	    tcell = NULL;	/* no cell specified, use current */
 /*
 	ka_StringToKey(as->parms[1].items->data, tcell, &tkey);
 */
 	ka_StringToKey(buf, tcell, &tkey);
+
+	if (tcell)
+	    free(tcell);
     }
-    tconn = GetConn(as, 1);
     code = BOZO_AddKey(tconn, temp, ktc_to_bozoptr(&tkey));
     if (code) {
 	printf("bos: failed to set key %d (%s)\n", temp, em(code));

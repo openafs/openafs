@@ -69,7 +69,7 @@ akimpersonate.o: akimpersonate.c ${INCLS}
 	${CCOBJ} ${CFLAGS} -c ${srcdir}/akimpersonate.c @KRB5_CPPFLAGS@
 
 akimpersonate_v5gen.o: akimpersonate_v5gen.c ${INCLS}
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/akimpersonate_v5gen.c @KRB5_CPPFLAGS@ -I${srcdir}/../rxkad
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/akimpersonate_v5gen.c @KRB5_CPPFLAGS@ -I${srcdir}/../rxkad -I../rxkad
 
 userok.o: userok.c ${INCLS}
 cellconfig.o: cellconfig.c ${INCLS}

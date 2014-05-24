@@ -418,7 +418,7 @@ VIsOfflineState(VolState state)
 static_inline int
 VIsValidState(VolState state)
 {
-    if ((state >= 0) &&
+    if (((int) state >= 0) &&
 	(state < VOL_STATE_COUNT)) {
 	return 1;
     }

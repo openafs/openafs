@@ -26,9 +26,6 @@
 #include <string.h>
 #include "com_err.h"
 
-static const char copyright[] =
-    "Copyright 1986, 1987, 1988 by the Student Information Processing Board\nand the department of Information Systems\nof the Massachusetts Institute of Technology";
-
 static char buffer[64];
 
 static struct et_list *_et_list = (struct et_list *)NULL;

@@ -255,6 +255,22 @@ typedef struct VolumePackageOptions {
     void (*interrupt_rxcall) (struct rx_call *call, afs_int32 error);
                                   /**< callback to interrupt RX calls accessing
                                    *   a going-offline volume */
+    afs_int32 offline_timeout;    /**< how long (in seconds) to wait before
+                                   *   interrupting RX calls accessing a
+                                   *   going-offline volume. -1 disables,
+                                   *   0 means immediately. */
+    afs_int32 offline_shutdown_timeout;
+                                  /**< how long (in seconds) to wait before
+                                   *   interrupting RX calls accessing a
+                                   *   going-offline volume during shutdown.
+                                   *   -1 disables, 0 means immediately.
+                                   *   Note that the timeout time is calculated
+                                   *   once, when we encounter the first going-
+                                   *   offline volume during shutdown. So if we
+                                   *   encounter multiple going-offline volumes
+                                   *   during shutdown, we will still only wait
+                                   *   for this amount of time in total, not e.g.
+                                   *   for each going-offline volume encountered. */
     afs_int32 usage_threshold;    /*< number of accesses before writing volume header */
     afs_int32 usage_rate_limit;   /*< minimum number of seconds before writing volume
                                    *  header, after usage_threshold is exceeded */
@@ -788,8 +804,6 @@ struct volHeader {
 extern char *VSalvageMessage;	/* Canonical message when a volume is forced
 				 * offline */
 extern Volume *VGetVolume(Error * ec, Error * client_ec, VolId volumeId);
-extern Volume *VGetVolumeTimed(Error * ec, Error * client_ec, VolId volumeId,
-                               const struct timespec *ts);
 extern Volume *VGetVolumeWithCall(Error * ec, Error * client_ec, VolId volumeId,
                                   const struct timespec *ts, struct VCallByVol *cbv);
 extern Volume *VGetVolume_r(Error * ec, VolId volumeId);

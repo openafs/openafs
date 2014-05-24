@@ -189,7 +189,7 @@ xdrmem_inline(XDR *xdrs, u_int len)
 {
     afs_int32 *buf = 0;
 
-    if (len >= 0 && xdrs->x_handy >= len) {
+    if (xdrs->x_handy >= len) {
 	xdrs->x_handy -= len;
 	buf = (afs_int32 *) xdrs->x_private;
 	xdrs->x_private += len;

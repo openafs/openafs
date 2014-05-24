@@ -622,7 +622,7 @@ rx_GetIFInfo(void)
 		fudge_netmask(rxi_NetAddrs[rxi_numNetAddrs]);
 #ifdef SIOCGIFNETMASK
 	    res = ioctl(s, SIOCGIFNETMASK, ifr);
-	    if ((res == 0)) {
+	    if (res == 0) {
 		a = (struct sockaddr_in *)&ifr->ifr_addr;
 		myNetMasks[rxi_numNetAddrs] = ntohl(a->sin_addr.s_addr);
 		/* fprintf(stderr, "if %s subnetmask=0x%x\n",

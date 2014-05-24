@@ -1427,7 +1427,7 @@ rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
 	       u_short * port)
 {
     struct sockaddr_in from;
-    unsigned int nbytes;
+    int nbytes;
     afs_int32 rlen;
     afs_uint32 tlen, savelen;
     struct msghdr msg;
@@ -1466,7 +1466,7 @@ rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
     p->wirevec[p->niovecs - 1].iov_len = savelen;
 
     p->length = (u_short)(nbytes - RX_HEADER_SIZE);
-    if ((nbytes > tlen) || (p->length & 0x8000)) {	/* Bogus packet */
+    if (nbytes < 0 || (nbytes > tlen) || (p->length & 0x8000)) { /* Bogus packet */
 	if (nbytes < 0 && errno == EWOULDBLOCK) {
             if (rx_stats_active)
                 rx_MutexIncrement(rx_stats.noPacketOnRead, rx_stats_mutex);

@@ -85,6 +85,7 @@ int rxcon_ident_key;
 int rxcon_client_key;
 
 static struct rx_securityClass *sc = NULL;
+static int h_quota_limit;
 
 /* arguments for PerHost_EnumerateClient enumeration */
 struct enumclient_args {
@@ -953,6 +954,9 @@ h_TossStuff_r(struct host *host)
 	    free(host->hcps.prlist_val);
 	host->hcps.prlist_val = NULL;
 	host->hcps.prlist_len = 0;
+	free(host->tmay_caps.Capabilities_val);
+	host->tmay_caps.Capabilities_val = NULL;
+	host->tmay_caps.Capabilities_len = 0;
 	DeleteAllCallBacks_r(host, 1);
 	host->hostFlags &= ~RESETDONE;	/* just to be safe */
 
@@ -1652,23 +1656,216 @@ removeInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
     return 0;
 }
 
+/*
+ * The following few functions deal with caching TellMeAboutYourself calls
+ * that we issued to clients. Why do we do this? Well:
+ *
+ * Q: First, why do we need to issue a TMAY against a client on an incoming new
+ * Rx connection?
+ *
+ * A: We must verify that the incoming Rx connection is the same host that
+ * we have a 'host' structure for. On new calls for existing connections, we
+ * can remember which host corresponds to that connection, but for new
+ * connections, we have no way to find what host it is for, except by looking
+ * up the host by IP address. Since hosts can change IP addresses, we need to
+ * contact the IP address to see if it's the host we think it is.
+ *
+ * Q: Okay, then why cache the results?
+ *
+ * A: The TMAY calls to a single host are serialized, because they are issued
+ * with the host's host->lock held. If we get 4 Rx calls each on new
+ * connections to the same host at the same time, the 1st call will lock the
+ * host, and issue a TMAY. Once that's done, the second call will issue a
+ * TMAY, then the 3rd and then the 4th. However, the 3rd and 4th calls have
+ * been waiting to issue a TMAY since before the 2nd call even _started_ to
+ * issue a TMAY. So, we can just effectively give the results of the 2nd
+ * call's TMAY to the 3rd and 4th, too. Since it is nondeterministic which of
+ * those calls gets to issue a TMAY "first", we can just assume they all got
+ * the same result.
+ *
+ * Note that in the above example, we cannot reuse the results of the 1st TMAY
+ * for the 2nd, 3rd, and 4th calls (we only reuse the results of the 2nd).
+ * This is because by the time the 2nd call starts waiting for the host lock,
+ * it doesn't know how long the 1st TMAY has been running, so the 2nd call
+ * might indeed get a different TMAY result (though this probably would be
+ * extremely rare).
+ *
+ * Anyway, so, if we don't cache the results, we are issuing TMAYs that are
+ * pure overhead. In an environment with clients that create a lot of
+ * connections to a fileserver (keep in mind each new PAG on OpenAFS clients
+ * creates a new connection), this can mean a significant amount of overhead.
+ * So, we use this "TMAY cache" to avoid this overhead for the common case.
+ */
 
+/**
+ * Should we skip calling TellMeAboutYourself on this host, and instead rely
+ * on cached TMAY results?
+ *
+ * @param[in] host  The host we are dealing with
+ * @param[in] prewait_tmays  What the value of host->n_tmays was _before_ we
+ *                           locked 'host'
+ * @param[in] prewait_host   What the primary IP address for 'host' was before
+ *                           we locked 'host'
+ * @param[in] prewait_port   What the primary port was for 'host' before we
+ *                           locked 'host'
+ *
+ * @return Whether we should skip calling TMAY, and instead rely on cached
+ *         results in host
+ */
+static int
+ShouldSkipTMAY(struct host *host, int prewait_tmays, afs_uint32 prewait_host,
+               afs_uint16 prewait_port)
+{
+    int skiptmay = 0;
+    if (host->n_tmays > prewait_tmays + 1) {
+	/* while we were waiting for the host lock, the in-progress TMAY
+	 * call finished, someone else started a new TMAY call, and that
+	 * finished. so, calling TMAY again won't give us any information
+	 * or additional guarantees. */
+	skiptmay = 1;
+    }
+    if (host->host != prewait_host || host->port != prewait_port) {
+	/* ...but don't skip it if the host has changed */
+	skiptmay = 0;
+    }
+    return skiptmay;
+}
+
+/**
+ * If appropriate, simulate a TellMeAboutYourself call on 'host' by extracting
+ * cached interfaceAddr and Capabilities information from 'host' itself.
+ *
+ * @param[in] host  The host we're dealing with
+ * @param[inout] askiptmay  On entering this function, this should contain the
+ *                          result of ShouldSkipTMAY. On return, it is 1 if we
+ *                          actually did use cached TMAY results, or 0 if we
+ *                          did not.
+ * @param[out] interf  The interfaceAddr result of the simulated TMAY call
+ * @param[out] caps    The Capabilities result of the simulated TMAY call
+ *
+ * @return status
+ * @retval 0 We used the cached TMAY results; do NOT make a real TMAY request
+ * @retval otherwise We did not use cached TMAY results; issue a real TMAY request
+ */
+static int
+SimulateTMAY(struct host *host, int *askiptmay, struct interfaceAddr *interf,
+             Capabilities *caps)
+{
+    size_t capsize;
+
+    if (!*askiptmay) {
+	/* we're not supposed to skip the actual TMAY call */
+	return -1;
+    }
+
+    *interf = host->tmay_interf;
+
+    free(caps->Capabilities_val);
+    caps->Capabilities_val = NULL;
+    caps->Capabilities_len = 0;
+
+    if (!host->tmay_caps.Capabilities_val) {
+	return 0;
+    }
+
+    capsize = sizeof(caps->Capabilities_val[0]) * host->tmay_caps.Capabilities_len;
+
+    caps->Capabilities_val = malloc(capsize);
+    if (!caps->Capabilities_val) {
+	/* we should/did _not_ skip the real TMAY call, since we couldn't
+	 * alloc memory to use the cached results */
+	*askiptmay = 0;
+	return -1;
+    }
+    caps->Capabilities_len = host->tmay_caps.Capabilities_len;
+    memcpy(caps->Capabilities_val, host->tmay_caps.Capabilities_val, capsize);
+
+    return 0;
+}
+
+/**
+ * If appropriate, store the given results from a real TellmeAboutYourself
+ * call, and cache them in the given host structure.
+ *
+ * @param[in] host  The host we're dealing with
+ * @param[in] skiptmay  1 if we skipped making a real TMAY call, 0 otherwise
+ * @param[in] didtmay  1 if we issued a successful real TMAY call, 0 otherwise
+ * @param[in] interf  The interfaceAddr result from the real TMAY call
+ * @param[in] caps    The Capabilities result from the real TMAY call
+ */
+static void
+CacheTMAY(struct host *host, int skiptmay, int didtmay,
+          struct interfaceAddr *interf, Capabilities *caps)
+{
+    size_t capsize;
+
+    if (skiptmay) {
+	/* we simulated the TMAY call, so the state of the world hasn't
+	 * changed; don't touch anything */
+	return;
+    }
+    if (!didtmay) {
+	/* we did not perform a successful TMAY, so we don't have valid
+	 * results to cache. blow away the existing cache so we don't use
+	 * stale results */
+	goto resetcache;
+    }
+    if (host->n_tmays == INT_MAX) {
+	/* make sure int rollover doesn't screw up our ordering */
+	goto resetcache;
+    }
+    if (host->lock.num_waiting == 0) {
+	/* nobody is waiting for this host, so no reason to cache anything */
+	goto resetcache;
+    }
+
+    /* okay, if we got here, everything looks good; let's cache the given
+     * 'interf' and 'caps' */
+
+    host->tmay_interf = *interf;
+
+    if (!caps->Capabilities_val) {
+	free(host->tmay_caps.Capabilities_val);
+	host->tmay_caps.Capabilities_val = NULL;
+	host->tmay_caps.Capabilities_len = 0;
+
+    } else {
+	if (caps->Capabilities_len != host->tmay_caps.Capabilities_len) {
+	    free(host->tmay_caps.Capabilities_val);
+	    host->tmay_caps.Capabilities_val = NULL;
+	    host->tmay_caps.Capabilities_len = 0;
+	}
+
+	capsize = sizeof(caps->Capabilities_val[0]) * caps->Capabilities_len;
+
+	if (!host->tmay_caps.Capabilities_val) {
+	    host->tmay_caps.Capabilities_val = malloc(capsize);
+	    if (!host->tmay_caps.Capabilities_val) {
+		goto resetcache;
+	    }
+	}
+
+	host->tmay_caps.Capabilities_len = caps->Capabilities_len;
+	memcpy(host->tmay_caps.Capabilities_val, caps->Capabilities_val, capsize);
+    }
+    host->n_tmays++;
+    return;
+
+ resetcache:
+    /* blow away the cached TMAY data; pretend we never saw anything */
+    free(host->tmay_caps.Capabilities_val);
+    host->tmay_caps.Capabilities_val = NULL;
+    host->tmay_caps.Capabilities_len = 0;
+    memset(&host->tmay_interf, 0, sizeof(host->tmay_interf));
+
+    host->n_tmays = 0;
+}
 
 static int
 h_threadquota(int waiting)
 {
-    if (lwps > 64) {
-	if (waiting > 5)
-	    return 1;
-    } else if (lwps > 32) {
-	if (waiting > 4)
-	    return 1;
-    } else if (lwps > 16) {
-	if (waiting > 3)
-	    return 1;
-    } else {
-	if (waiting > 2)
-	    return 1;
+    if (waiting > h_quota_limit) {
+	return 1;
     }
     return 0;
 }
@@ -1713,12 +1910,24 @@ h_GetHost_r(struct rx_connection *tcon)
 	 * structure for this address. Verify that the identity
 	 * of the caller matches the identity in the host structure.
 	 */
+
+	int didtmay = 0; /* did we make a successful TMAY call against host->host? */
+	unsigned int prewait_tmays;
+	afs_uint32 prewait_host;
+	afs_uint16 prewait_port;
+	int skiptmay;
+
 	if ((host->hostFlags & HWHO_INPROGRESS) &&
 	    h_threadquota(host->lock.num_waiting)) {
 		h_Release_r(host);
 	    host = NULL;
 	    goto gethost_out;
 	}
+
+	prewait_tmays = host->n_tmays;
+	prewait_host = host->host;
+	prewait_port = host->port;
+
 	h_Lock_r(host);
 	if (!(host->hostFlags & ALTADDR) ||
             (host->hostFlags & HOSTDELETED)) {
@@ -1749,15 +1958,29 @@ h_GetHost_r(struct rx_connection *tcon)
 
 	cb_conn = host->callback_rxcon;
 	rx_GetConnection(cb_conn);
+
+	skiptmay = ShouldSkipTMAY(host, prewait_tmays, prewait_host, prewait_port);
+
 	H_UNLOCK;
         if (haddr == host->host && hport == host->port) {
             /* The existing callback connection matches the
              * incoming connection so just use it.
              */
-	    code =
-		RXAFSCB_TellMeAboutYourself(cb_conn, &interf, &caps);
-	    if (code == RXGEN_OPCODE)
-		code = RXAFSCB_WhoAreYou(cb_conn, &interf);
+
+	    if (SimulateTMAY(host, &skiptmay, &interf, &caps) == 0) {
+		/* noop; we don't need to call TellMeAboutYourself; we can
+		 * trust the results from the last TMAY call */
+		code = 0;
+
+	    } else {
+		code =
+		    RXAFSCB_TellMeAboutYourself(cb_conn, &interf, &caps);
+		if (code == RXGEN_OPCODE)
+		    code = RXAFSCB_WhoAreYou(cb_conn, &interf);
+		if (code == 0) {
+		    didtmay = 1;
+		}
+	    }
 	} else {
             /* We do not have a match.  Create a new connection
              * for the new addr/port and use multi_Rx to probe
@@ -1777,6 +2000,9 @@ h_GetHost_r(struct rx_connection *tcon)
 	rx_PutConnection(cb_conn);
 	cb_conn=NULL;
 	H_LOCK;
+
+	CacheTMAY(host, skiptmay, didtmay, &interf, &caps);
+
 	if ((code == RXGEN_OPCODE) ||
 	    ((code == 0) && (afs_uuid_equal(&interf.uuid, &nulluuid)))) {
 	    identP = (struct Identity *)malloc(sizeof(struct Identity));
@@ -2245,8 +2471,11 @@ int  num_lrealms = -1;
 
 /* not reentrant */
 void
-h_InitHostPackage(void)
+h_InitHostPackage(int hquota)
 {
+    osi_Assert(hquota > 0);
+    h_quota_limit = hquota;
+
     memset(&nulluuid, 0, sizeof(afsUUID));
     afsconf_GetLocalCell(confDir, localcellname, PR_MAXNAMELEN);
     if (num_lrealms == -1) {
@@ -2400,9 +2629,12 @@ h_EnumerateClients(afs_int32 vid,
  *
  * The refCount on client->host is returned incremented.  h_ReleaseClient_r
  * does not decrement the refCount on client->host.
+ *
+ * *a_viceid is set to the user's ViceId, even if we don't return a client
+ * struct.
  */
 struct client *
-h_FindClient_r(struct rx_connection *tcon)
+h_FindClient_r(struct rx_connection *tcon, afs_int32 *a_viceid)
 {
     struct client *client;
     struct host *host = NULL;
@@ -2427,6 +2659,9 @@ h_FindClient_r(struct rx_connection *tcon)
 	&& !(client->host->hostFlags & HOSTDELETED)
 	&& !client->deleted) {
 
+	if (a_viceid) {
+	    *a_viceid = client->ViceId;
+	}
 	client->refCount++;
 	h_Hold_r(client->host);
 	if (client->prfail != 2) {
@@ -2493,6 +2728,10 @@ h_FindClient_r(struct rx_connection *tcon)
     } else {
 	viceid = AnonymousID;	/* unknown security class */
 	expTime = 0x7fffffff;
+    }
+
+    if (a_viceid) {
+	*a_viceid = viceid;
     }
 
     if (!client) { /* loop */
@@ -3828,112 +4067,6 @@ static struct AFSFid zerofid;
  * Since it can serialize them, and pile up, it should be a separate LWP
  * from other events.
  */
-#if 0
-static int
-CheckHost(struct host *host, int flags, void *rock)
-{
-    struct client *client;
-    struct rx_connection *cb_conn = NULL;
-    int code;
-
-#ifdef AFS_DEMAND_ATTACH_FS
-    /* kill the checkhost lwp ASAP during shutdown */
-    FS_STATE_RDLOCK;
-    if (fs_state.mode == FS_MODE_SHUTDOWN) {
-	FS_STATE_UNLOCK;
-	return H_ENUMERATE_BAIL(flags);
-    }
-    FS_STATE_UNLOCK;
-#endif
-
-    /* Host is held by h_Enumerate */
-    H_LOCK;
-    for (client = host->FirstClient; client; client = client->next) {
-	if (client->refCount == 0 && client->LastCall < clientdeletetime) {
-	    client->deleted = 1;
-	    host->hostFlags |= CLIENTDELETED;
-	}
-    }
-    if (host->LastCall < checktime) {
-	h_Lock_r(host);
-	if (!(host->hostFlags & HOSTDELETED)) {
-            host->hostFlags |= HWHO_INPROGRESS;
-	    cb_conn = host->callback_rxcon;
-	    rx_GetConnection(cb_conn);
-	    if (host->LastCall < clientdeletetime) {
-		host->hostFlags |= HOSTDELETED;
-		if (!(host->hostFlags & VENUSDOWN)) {
-		    host->hostFlags &= ~ALTADDR;	/* alternate address invalid */
-		    if (host->interface) {
-			H_UNLOCK;
-			code =
-			    RXAFSCB_InitCallBackState3(cb_conn,
-						       &FS_HostUUID);
-			H_LOCK;
-		    } else {
-			H_UNLOCK;
-			code =
-			    RXAFSCB_InitCallBackState(cb_conn);
-			H_LOCK;
-		    }
-		    host->hostFlags |= ALTADDR;	/* alternate addresses valid */
-		    if (code) {
-			char hoststr[16];
-			(void)afs_inet_ntoa_r(host->host, hoststr);
-			ViceLog(0,
-				("CB: RCallBackConnectBack (host.c) failed for host %s:%d\n",
-				 hoststr, ntohs(host->port)));
-			host->hostFlags |= VENUSDOWN;
-		    }
-		    /* Note:  it's safe to delete hosts even if they have call
-		     * back state, because break delayed callbacks (called when a
-		     * message is received from the workstation) will always send a
-		     * break all call backs to the workstation if there is no
-		     * callback.
-		     */
-		}
-	    } else {
-		if (!(host->hostFlags & VENUSDOWN) && host->cblist) {
-		    char hoststr[16];
-		    (void)afs_inet_ntoa_r(host->host, hoststr);
-		    if (host->interface) {
-			afsUUID uuid = host->interface->uuid;
-			H_UNLOCK;
-			code = RXAFSCB_ProbeUuid(cb_conn, &uuid);
-			H_LOCK;
-			if (code) {
-			    if (MultiProbeAlternateAddress_r(host)) {
-				ViceLog(0,("CheckHost: Probing all interfaces of host %s:%d failed, code %d\n",
-					    hoststr, ntohs(host->port), code));
-				host->hostFlags |= VENUSDOWN;
-			    }
-			}
-		    } else {
-			H_UNLOCK;
-			code = RXAFSCB_Probe(cb_conn);
-			H_LOCK;
-			if (code) {
-			    ViceLog(0,
-				    ("CheckHost: Probe failed for host %s:%d, code %d\n",
-				     hoststr, ntohs(host->port), code));
-			    host->hostFlags |= VENUSDOWN;
-			}
-		    }
-		}
-	    }
-	    H_UNLOCK;
-	    rx_PutConnection(cb_conn);
-	    cb_conn=NULL;
-	    H_LOCK;
-            host->hostFlags &= ~HWHO_INPROGRESS;
-	}
-	h_Unlock_r(host);
-    }
-    H_UNLOCK;
-    return held;
-
-}				/*CheckHost */
-#endif
 
 int
 CheckHost_r(struct host *host, void *dummy)

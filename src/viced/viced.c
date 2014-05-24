@@ -184,6 +184,7 @@ static int panic_timeout = 2 * 60;
 static int panic_timeout = 30 * 60;
 #endif
 
+static int host_thread_quota;
 int rxpackets = 150;		/* 100 */
 int nSmallVns = 400;		/* 200 */
 int large = 400;		/* 200 */
@@ -198,6 +199,8 @@ int udpBufSize = 0;		/* UDP buffer size for receive */
 int sendBufSize = 16384;	/* send buffer size */
 int saneacls = 0;		/* Sane ACLs Flag */
 static int unsafe_attach = 0;   /* avoid inUse check on vol attach? */
+static int offline_timeout = -1; /* -offline-timeout option */
+static int offline_shutdown_timeout = -1; /* -offline-shutdown-timeout option */
 
 struct timeval tp;
 
@@ -735,7 +738,7 @@ PrintCounters(void)
     audit_PrintStats(stderr);
     h_PrintStats();
     PrintCallBackStats();
-#ifdef AFS_NT40_ENV
+#if defined(AFS_NT40_ENV) || defined(AFS_DARWIN_ENV)
     processSize = -1;		/* TODO: */
 #else
     processSize = (int)((long)sbrk(0) >> 10);
@@ -965,6 +968,8 @@ FlagMsg(void)
     fputs("[-nojumbo (disable jumbogram network packets - deprecated)] ", stdout);
     fputs("[-jumbo (enable jumbogram network packets)] ", stdout);
     fputs("[-sync <always | delayed | onclose | never>]", stdout);
+    fputs("[-offline-timeout <client RX timeout for offlining volumes>]", stdout);
+    fputs("[-offline-shutdown-timeout <RX timeout for offlining volumes during shutdown>]", stdout);
 /*   fputs("[-enable_peer_stats] ", stdout); */
 /*   fputs("[-enable_process_stats] ", stdout); */
     fputs("[-help]\n", stdout);
@@ -1447,6 +1452,45 @@ ParseArgs(int argc, char *argv[])
 		return -1;
 	    }
 	}
+	else if (strcmp(argv[i], "-offline-timeout") == 0) {
+	    if (i + 1 >= argc) {
+		printf("You have to specify -offline-timeout <integer>\n");
+		return -1;
+	    }
+	    offline_timeout = atoi(argv[++i]);
+#ifndef AFS_PTHREAD_ENV
+	    if (offline_timeout != -1) {
+		printf("The only valid -offline-timeout value for the LWP "
+		       "fileserver is -1\n");
+		return -1;
+	    }
+#endif /* AFS_PTHREAD_ENV */
+	    if (offline_timeout < -1) {
+		printf("Invalid -offline-timeout value %s; the only valid "
+		       "negative value is -1\n", argv[i]);
+		return -1;
+	    }
+	}
+	else if (strcmp(argv[i], "-offline-shutdown-timeout") == 0) {
+	    if (i + 1 >= argc) {
+		printf("You have to specify -offline-shutdown-timeout "
+		       "<integer>\n");
+		return -1;
+	    }
+	    offline_shutdown_timeout = atoi(argv[++i]);
+#ifndef AFS_PTHREAD_ENV
+	    if (offline_shutdown_timeout != -1) {
+		printf("The only valid -offline-shutdown-timeout value for the "
+		       "LWP fileserver is -1\n");
+		return -1;
+	    }
+#endif /* AFS_PTHREAD_ENV */
+	    if (offline_shutdown_timeout < -1) {
+		printf("Invalid -offline-timeout value %s; the only valid "
+		       "negative value is -1\n", argv[i]);
+		return -1;
+	    }
+	}
 	else {
 	    return (-1);
 	}
@@ -1497,6 +1541,16 @@ ParseArgs(int argc, char *argv[])
 	lwps = lwps_max;
     else if (lwps < 6)
 	lwps = 6;
+
+    if (lwps > 64) {
+	host_thread_quota = 5;
+    } else if (lwps > 32) {
+	host_thread_quota = 4;
+    } else if (lwps > 16) {
+	host_thread_quota = 3;
+    } else {
+	host_thread_quota = 2;
+    }
 
     return (0);
 
@@ -2207,7 +2261,7 @@ main(int argc, char *argv[])
     }
 
     init_sys_error_to_et();	/* Set up error table translation */
-    h_InitHostPackage();	/* set up local cellname and realmname */
+    h_InitHostPackage(host_thread_quota); /* set up local cellname and realmname */
     InitCallBack(numberofcbs);
     ClearXStatValues();
 
@@ -2271,6 +2325,18 @@ main(int argc, char *argv[])
     opts.nSmallVnodes = nSmallVns;
     opts.volcache = volcache;
     opts.unsafe_attach = unsafe_attach;
+    if (offline_timeout != -1) {
+	opts.interrupt_rxcall = rx_InterruptCall;
+	opts.offline_timeout = offline_timeout;
+    }
+    if (offline_shutdown_timeout == -1) {
+	/* default to -offline-timeout, if shutdown-specific timeout is not
+	 * specified */
+	opts.offline_shutdown_timeout = offline_timeout;
+    } else {
+	opts.interrupt_rxcall = rx_InterruptCall;
+	opts.offline_shutdown_timeout = offline_shutdown_timeout;
+    }
 
     if (VInitVolumePackage2(fileServer, &opts)) {
 	ViceLog(0,

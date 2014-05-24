@@ -508,7 +508,7 @@ GetNameOrId(struct cmd_syndesc *as, struct idlist *lids,
 	afs_com_err(whoami, code, "so couldn't look up names");
     else {
 	for (n = 0; n < tids.idlist_len; n++) {
-	    if ((tids.idlist_val[n] == ANONYMOUSID)) {
+	    if (tids.idlist_val[n] == ANONYMOUSID) {
 		afs_com_err(whoami, PRNOENT, "so couldn't look up id for %s",
 			names.namelist_val[n]);
 	    } else

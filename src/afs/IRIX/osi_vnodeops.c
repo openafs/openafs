@@ -983,7 +983,6 @@ OSI_VC_DECL(avc);
 		tb->flags |= BUWAIT;
 		afs_osi_Sleep(tb);
 	    }
-	    code = tb->code;
 	    afs_BRelease(tb);
 	}
     } else {

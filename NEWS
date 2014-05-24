@@ -1,5 +1,56 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.6.8
+
+  All platforms
+
+    * Documentation improvements (10751 10875 10931 10897 10883 10954 10955)
+
+    * Improved diagnostics and error messages (10756 10814 10949)
+
+    * Fixed a bug in RX that could make errors during packet reception go
+      unnoticed. (10733)
+
+    * Fixed a bug that made "vos size -dump" display the wrong size for
+      large volumes. (10933)  (RT #131819)
+
+  All server platforms
+
+    * Change the default fileserver sync behavior from "delayed" to "onclose".
+      This means that explicit syncing only happens when a volume is detached.
+      (10809)
+
+    * Added the -offline-timeout and -offline-shutdown-timeout options to the
+      fileserver, to implement interrupting clients accessing volumes we are
+      trying to take offline. (6266 10799)
+
+  All client platforms
+
+    * When a client is shut down, it will give up its callbacks. The Windows
+      client has been doing this since 2007. Note that older fileservers
+      (1.3.50 to 1.4.5 and 1.5.0 to 1.5.27) had a bug in the implementation of
+      the relevant RPC that could cause crashes or other undefined behavior
+      when this happens. (6272 8840 10855)
+
+    * Restored the pre-1.6 behavior of "vos e" being an alias for "vos examine".
+      (10886)
+
+    * Avoid flooding logs with warnings about byte-range locks, by throttling
+      them per file. Also, make the messages more useful by including the
+      FID. (10836..10839)
+
+    * Avoid a possible panic during shutdown while tracing. (10932)
+
+  Linux clients
+
+    * Fixed a bug that could cause the "getcwd: cannot access parent
+      directories" problem (10804 10984)
+
+    * Avoid a delay when accessing uncached data in AFS in a confined
+      context under SELinux. (10598)
+
+    * Red Hat packaging improvements (10600 10767 10807)
+
 OpenAFS 1.6.7
 
   All server platforms

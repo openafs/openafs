@@ -32,6 +32,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 #include <stdio.h>
+#define KERBEROS_APPLE_DEPRECATED(x)
 #include "aklog.h"
 #include <krb5.h>
 #include "skipwrap.h"

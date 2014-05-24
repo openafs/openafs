@@ -50,7 +50,7 @@ KOPTS_DBUG=-gdwarf-2
 <all -ppc_darwin_70>
 KOPTS_ppc=-static -nostdinc -fno-builtin -finline -fno-keep-inline-functions -msoft-float -mlong-branch -fsigned-bitfields -arch ppc -Dppc -DPPC -D__PPC__ -DPAGE_SIZE_FIXED -mcpu=750 -mmultiple -fschedule-insns -force_cpusubtype_ALL
 KOPTS_x86=-static -nostdinc -fmessage-length=0 -pipe -nostdinc -fno-builtin -Wno-trigraphs -force_cpusubtype_ALL -msoft-float -O0 -fno-common -mkernel -finline -fno-keep-inline-functions -fasm-blocks -arch i386 -Di386 -DI386 -D__I386__ -DPAGE_SIZE_FIXED
-KOPTS_amd64=-static -nostdinc -fno-builtin -finline -fno-keep-inline-functions -msoft-float -mlong-branch -fsigned-bitfields -arch x86_64 -Damd64 -DAMD64 -D__AMD64__ -DPAGE_SIZE_FIXED -march=x86-64 -mpreferred-stack-boundary=4 -falign-functions=4 -m64 -mkernel -mno-red-zone
+KOPTS_amd64=-static -nostdinc -fno-builtin -finline -fno-keep-inline-functions -msoft-float -fsigned-bitfields -arch x86_64 -Damd64 -DAMD64 -D__AMD64__ -DPAGE_SIZE_FIXED -march=x86-64 -falign-functions=4 -m64 -mkernel -mno-red-zone
 ARCH_ppc=$(shell echo "${ARCHFLAGS}" | grep -q -w ppc && echo yes || echo ${ARCHFLAGS} | egrep -q -w -v 'ppc|i386|x86_64' && arch | grep -q -w ppc && echo yes)
 ARCH_x86=$(shell echo "${ARCHFLAGS}" | grep -q -w i386 && echo yes || echo ${ARCHFLAGS} | egrep -q -w -v 'ppc|i386|x86_64' && arch | grep -q -w i386 && echo yes)
 ARCH_amd64=$(shell echo "${ARCHFLAGS}" | grep -q -w x86_64 && echo yes || echo ${ARCHFLAGS} | egrep -q -w -v 'ppc|i386|x86_64' && arch | grep -q -w x86_64 && echo yes)
