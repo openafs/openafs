@@ -20,6 +20,8 @@ openafs (1.6.8-1) UNRELEASED; urgency=medium
     - Avoid a delay when accessing uncached data in AFS in a confined
       context under SELinux.
     - Documentation, diagnostics, and error message improvements.
+  * Add Lintian override for the copy of RFC 5864, which has been
+    dual-licensed by the author.
 
  -- Russ Allbery <rra@debian.org>  Fri, 23 May 2014 21:36:09 -0700
 
