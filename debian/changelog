@@ -1,4 +1,4 @@
-openafs (1.6.8-1) UNRELEASED; urgency=medium
+openafs (1.6.8-1) unstable; urgency=medium
 
   * New upstream release.
     - Change the default fileserver sync behavior from delayed to
@@ -23,7 +23,7 @@ openafs (1.6.8-1) UNRELEASED; urgency=medium
   * Add Lintian override for the copy of RFC 5864, which has been
     dual-licensed by the author.
 
- -- Russ Allbery <rra@debian.org>  Fri, 23 May 2014 21:36:09 -0700
+ -- Russ Allbery <rra@debian.org>  Sat, 24 May 2014 17:55:20 -0700
 
 openafs (1.6.7-1) unstable; urgency=high
 
