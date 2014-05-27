@@ -49,7 +49,7 @@ struct rx_call {
     struct opr_queue rq;	/* Receive packet queue */
     struct rx_call_appl app;	/* Data private to the application thread */
     u_char channel;		/* Index of call, within connection */
-    u_char state;		/* Current call state as defined below */
+    u_char state;		/* Current call state as defined in rx.h */
 #ifdef	RX_ENABLE_LOCKS
     afs_kmutex_t lock;		/* lock covers data as well as mutexes. */
     afs_kmutex_t *call_queue_lock;	/* points to lock for queue we're on,
