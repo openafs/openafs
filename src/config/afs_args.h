@@ -185,6 +185,7 @@ struct afs_cacheParams {
 #else
 #define	AFS_SMALLOCSIZ 	(64*sizeof(void *))	/*  "Small" allocated size */
 #endif
+#define AFS_LRALLOCSIZ  4096    /* "Large" allocated size */
 
 /* Cache configuration available through the client callback interface */
 typedef struct cm_initparams_v1 {
