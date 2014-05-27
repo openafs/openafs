@@ -95,7 +95,6 @@ extern int afs_shuttingdown;
 
 
 #define AFS_MAXCBRSCALL	32	/* max to return in a given call (must be <= AFSCBMAX) */
-#define	AFS_SALLOC_LOW_WATER	250	/* Min free blocks before allocating more */
 #define	AFS_LRALLOCSIZ 	4096	/* "Large" allocated size */
 #define	VCACHE_FREE	5
 #define	AFS_NRXPACKETS	80
