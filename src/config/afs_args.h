@@ -175,8 +175,6 @@ struct afs_cacheParams {
 /* Used in rx.c as well as afs directory. */
 #if	defined(AFS_AIX32_ENV) || defined(AFS_HPUX_ENV)
 /* XXX Because of rxkad_cprivate... XXX */
-#define	AFS_MDALLOCSIZ 	(127*sizeof(void *))	/* "Medium" allocated size */
-#define	AFS_MALLOC_LOW_WATER	50	/* Min free blocks before allocating more */
 #define	AFS_SMALLOCSIZ 	(38*sizeof(void *))	/* "Small" allocated size */
 #else
 #define	AFS_SMALLOCSIZ 	(64*sizeof(void *))	/*  "Small" allocated size */
