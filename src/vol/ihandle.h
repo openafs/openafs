@@ -348,9 +348,9 @@ extern FdHandle_t *ih_attachfd(IHandle_t * ihP, FD_t fd);
 
 #define IH_OPEN(H) ih_open(H)
 
-#define FDH_CLOSE(H) (fd_close(H), (H)=NULL, 0)
+#define FDH_CLOSE(H) (fd_close(H), (H)=NULL)
 
-#define FDH_REALLYCLOSE(H) (fd_reallyclose(H), (H)=NULL, 0)
+#define FDH_REALLYCLOSE(H) (fd_reallyclose(H), (H)=NULL)
 
 #define FDH_FDOPEN(H, A) stream_fdopen((H)->fd_fd)
 
@@ -374,7 +374,7 @@ extern FdHandle_t *ih_attachfd(IHandle_t * ihP, FD_t fd);
 
 #define STREAM_REALLYCLOSE(H) stream_close(H, 1)
 
-#define IH_RELEASE(H) (ih_release(H), (H)=NULL, 0)
+#define IH_RELEASE(H) (ih_release(H), (H)=NULL)
 
 #define IH_REALLYCLOSE(H) ih_reallyclose(H)
 
