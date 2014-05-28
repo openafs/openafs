@@ -137,7 +137,8 @@ dest_dirs: force
 	mkdir -p ${DEST}/root.server/etc
 	mkdir -p ${DEST}/root.server/usr/afs/bin
 
-prelude: ${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_INCDIR}/hcrypto ${TOP_INCDIR}/opr ${TOP_LIBDIR}
+prelude: ${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_INCDIR}/hcrypto \
+	${TOP_INCDIR}/opr ${TOP_LIBDIR}
 
 project: cmd comerr
 
@@ -251,7 +252,8 @@ tptserver: cmd comerr ptserver tubik libafsrpc libafsauthent
 		echo Not building MT ptserver for ${SYS_NAME} ;; \
 	esac
 
-kauth: cmd comerr ubik cmd auth comerr ptserver audit libacl kauth_depinstall sys_depinstall
+kauth: cmd comerr ubik cmd auth comerr ptserver audit libacl kauth_depinstall \
+	sys_depinstall
 	+${COMPILE_PART1} kauth ${COMPILE_PART2}
 
 libacl: cmd comerr ptserver libacl_depinstall
@@ -287,7 +289,8 @@ tsalvaged: vol libafsrpc libafsauthent cmd util
 vlserver: cmd comerr vol audit vlserver_depinstall
 	+${COMPILE_PART1} vlserver ${COMPILE_PART2}
 
-tvlserver: cmd comerr vol audit tubik libafsrpc libafsauthent tvlserver_depinstall
+tvlserver: cmd comerr vol audit tubik libafsrpc libafsauthent \
+	tvlserver_depinstall
 	+case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*|*_darwin_*) \
 		${COMPILE_PART1} tvlserver ${COMPILE_PART2} ;; \
@@ -422,7 +425,8 @@ man-pages: config
 	fi
 
 #
-# _depinstall targets - only build and install headers/sources that are needed by libafs/libuafs
+# _depinstall targets - only build and install headers/sources that are
+#			needed by libafs/libuafs
 #
 # encode dependencies within the _depinstall targets as required
 #
@@ -490,8 +494,10 @@ libafs: config export rfc3961 hcrypto lwp_depinstall \
 	${CONFIGTOOL} src/libafs/MakefileProto.${MKAFS_OSTYPE} src/libafs/Makefile ${SYS_NAME}
 	+${COMPILE_PART1} libafs ${COMPILE_PART2}
 
-libafs_tree: export lwp_depinstall rx_depinstall vlserver_depinstall tvlserver_depinstall rxkad_depinstall fsint_depinstall \
-		libacl_depinstall afs_depinstall dir_depinstall rxstat_depinstall sys_depinstall auth_depinstall
+libafs_tree: export lwp_depinstall rx_depinstall vlserver_depinstall \
+		tvlserver_depinstall rxkad_depinstall fsint_depinstall \
+		libacl_depinstall afs_depinstall dir_depinstall \
+		rxstat_depinstall sys_depinstall auth_depinstall
 	${TOP_SRCDIR}/config/make_libafs_tree.pl \
 		-sn $(SYS_NAME) \
 		-os $(MKAFS_OSTYPE) \
@@ -506,9 +512,10 @@ libafs_tree: export lwp_depinstall rx_depinstall vlserver_depinstall tvlserver_d
 libuafs_setup: config export
 	${CONFIGTOOL} src/libuafs/MakefileProto.${MKAFS_OSTYPE} src/libuafs/Makefile ${SYS_NAME}
 
-libuafs: libuafs_setup vlserver_depinstall tvlserver_depinstall rx_depinstall fsint_depinstall \
-		auth_depinstall dir_depinstall libacl_depinstall rxkad_depinstall \
-		ubik_depinstall afs_depinstall kauth_depinstall ptserver_depinstall \
+libuafs: libuafs_setup vlserver_depinstall tvlserver_depinstall rx_depinstall \
+		fsint_depinstall auth_depinstall dir_depinstall \
+		libacl_depinstall rxkad_depinstall ubik_depinstall \
+		afs_depinstall kauth_depinstall ptserver_depinstall \
 		rxstat_depinstall lwp_depinstall sys_depinstall cmd hcrypto
 	+set -x; \
 	case ${SYS_NAME} in \
@@ -646,20 +653,20 @@ jafsadm: libjafsadm
 build_tools: config comerr rxgen
 	+${COMPILE_PART1} util ${COMPILE_PART2A} buildtools_clean
 
-finale: project cmd comerr afsd butc tbutc tbudb @ENABLE_KERNEL_MODULE@ libuafs audit kauth log \
-	ptserver tptserver scout bu_utils ubik uss bozo @VFSCK@ volser tvolser tsalvaged \
-	dviced dvolser libafscp\
-	venus venustests update xstat afsmonitor rxdebug libafsrpc rfc3961 hcrypto \
-	libafsauthent libadmin man-pages \
-	tools platform kopenafs authtools $(DIR_roken)
+finale: project cmd comerr afsd butc tbutc tbudb @ENABLE_KERNEL_MODULE@ \
+	libuafs audit kauth log ptserver tptserver scout bu_utils ubik uss \
+	bozo @VFSCK@ volser tvolser tsalvaged dviced dvolser libafscp \
+	venus venustests update xstat afsmonitor rxdebug libafsrpc rfc3961 \
+	hcrypto libafsauthent libadmin man-pages tools platform kopenafs \
+	authtools $(DIR_roken)
 	+${COMPILE_PART1} finale ${COMPILE_PART2}
 
-finale_nolibafs: project cmd comerr afsd butc tbutc tbudb libuafs audit kauth log \
-	ptserver tptserver scout bu_utils ubik tubik uss bozo @VFSCK@ volser tvolser tsalvaged \
-	dviced dvolser libafscp\
-	venus venustests update xstat afsmonitor rxdebug libafsrpc rfc3961 hcrypto \
-	libafsauthent libadmin man-pages \
-	tools platform kopenafs authtools $(DIR_roken)
+finale_nolibafs: project cmd comerr afsd butc tbutc tbudb libuafs audit kauth \
+	log ptserver tptserver scout bu_utils ubik tubik uss bozo @VFSCK@ \
+	volser tvolser tsalvaged dviced dvolser libafscp venus venustests \
+	update xstat afsmonitor rxdebug libafsrpc rfc3961 hcrypto \
+	libafsauthent libadmin man-pages tools platform kopenafs \
+	authtools $(DIR_roken)
 	+${COMPILE_PART1} finale ${COMPILE_PART2}
 
 rpctestlib: util fsint rx opr libafsrpc libafsauthent
