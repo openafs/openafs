@@ -338,6 +338,7 @@ dvolser: project tviced usd libafsrpc libafsauthent volser
 
 venus: cmd comerr volser ptserver libafscp libafsauthent
 	+${COMPILE_PART1} venus ${COMPILE_PART2}
+venustests: venus
 	+${COMPILE_PART1} venus/test ${COMPILE_PART2}
 
 afsd: cmd comerr sys kauth @CLIENT_UAFS_DEP@
@@ -666,7 +667,7 @@ build_tools: config des comerr rxgen
 finale: project cmd comerr afsd butc tbutc tbudb @ENABLE_KERNEL_MODULE@ libuafs audit kauth log \
 	ptserver tptserver scout bu_utils ubik uss bozo @VFSCK@ volser tvolser tsalvaged \
 	dviced dvolser libafscp \
-	venus update xstat afsmonitor rxdebug libafsrpc \
+	venus venustests update xstat afsmonitor rxdebug libafsrpc \
 	libafsauthent shlibafsrpc shlibafsauthent libadmin man-pages \
 	platform kopenafs authtools
 	+${COMPILE_PART1} finale ${COMPILE_PART2}
@@ -674,7 +675,7 @@ finale: project cmd comerr afsd butc tbutc tbudb @ENABLE_KERNEL_MODULE@ libuafs 
 finale_nolibafs: project cmd comerr afsd butc tbutc tbudb libuafs audit kauth log \
 	ptserver tptserver scout bu_utils ubik tubik uss bozo @VFSCK@ volser tvolser tsalvaged \
 	dviced dvolser libafscp\
-	venus update xstat afsmonitor rxdebug libafsrpc \
+	venus venustests update xstat afsmonitor rxdebug libafsrpc \
 	libafsauthent shlibafsrpc shlibafsauthent libadmin man-pages \
 	platform kopenafs authtools
 	+${COMPILE_PART1} finale ${COMPILE_PART2}
