@@ -3115,6 +3115,13 @@ afs_InitCacheFile(char *afile, ino_t ainode)
 	if ((tdc->f.states & DWriting) || tdc->f.fid.Fid.Volume == 0)
 	    fileIsBad = 1;
 	tfile = osi_UFSOpen(&tdc->f.inode);
+	if (!tfile) {
+	    ReleaseWriteLock(&afs_xdcache);
+	    ReleaseWriteLock(&tdc->lock);
+	    afs_PutDCache(tdc);
+	    return ENOENT;
+	}
+
 	code = afs_osi_Stat(tfile, &tstat);
 	if (code)
 	    osi_Panic("initcachefile stat");

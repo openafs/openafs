@@ -349,7 +349,7 @@ afs_InitVolumeInfo(char *afile)
  *
  * Environment:
  *	This function is called only during initialization.  The given
- *	file should NOT be truncated to 0 lenght; its contents descrebe
+ *	file should NOT be truncated to 0 length; its contents describe
  *	what data is really in the cache.
  *
  *	WARNING: data will be written to this file over time by AFS.
@@ -472,6 +472,9 @@ afs_InitCacheInfo(char *afile)
 	afs_fsfragsize = AFS_MIN_FRAGSIZE;
     }
     tfile = osi_UFSOpen(&cacheInode);
+    if (!tfile)
+	return ENOENT;
+
     afs_osi_Stat(tfile, &tstat);
     cacheInfoModTime = tstat.mtime;
     code = afs_osi_Read(tfile, -1, &theader, sizeof(theader));

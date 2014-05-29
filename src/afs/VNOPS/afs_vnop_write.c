@@ -104,6 +104,9 @@ afs_UFSWriteUIO(struct vcache *avc, afs_dcache_id_t *inode, struct uio *tuiop)
     int code;
 
     tfile = (struct osi_file *)osi_UFSOpen(inode);
+    if (!tfile)
+	return -1;
+
 #if defined(AFS_AIX41_ENV)
     AFS_GUNLOCK();
     code = VNOP_RDWR(tfile->vnode, UIO_WRITE, FWRITE, tuiop, NULL, NULL,

@@ -394,6 +394,12 @@ afs_UFSHandleLink(struct vcache *avc, struct vrequest *areq)
 	tlen = len;
 	ObtainReadLock(&tdc->lock);
 	tfile = osi_UFSOpen(&tdc->f.inode);
+	if (!tfile) {
+	    ReleaseReadLock(&tdc->lock);
+	    afs_PutDCache(tdc);
+	    osi_FreeLargeSpace(rbuf);
+	    return ENOENT;
+	}
 	code = afs_osi_Read(tfile, -1, rbuf, tlen);
 	osi_UFSClose(tfile);
 	ReleaseReadLock(&tdc->lock);

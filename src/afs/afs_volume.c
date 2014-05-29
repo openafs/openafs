@@ -201,6 +201,10 @@ afs_UFSGetVolSlot(afs_int32 volid, struct cell *tcell)
 	     */
 	    if (afs_FVIndex != tv->vtix) {
 		tfile = osi_UFSOpen(&volumeInode);
+		if (!tfile) {
+		    afs_warn("afs_UFSGetVolSlot: unable to open volumeinfo\n");
+		    goto error;
+		}
 		code =
 		    afs_osi_Read(tfile, sizeof(struct fvolume) * tv->vtix,
 				 &staticFVolume, sizeof(struct fvolume));
@@ -210,7 +214,6 @@ afs_UFSGetVolSlot(afs_int32 volid, struct cell *tcell)
 		             (int)code);
 		    goto error;
 		}
-		afs_FVIndex = tv->vtix;
 	    }
 	}
 	afs_FVIndex = tv->vtix;
@@ -221,6 +224,10 @@ afs_UFSGetVolSlot(afs_int32 volid, struct cell *tcell)
 	staticFVolume.rootVnode = tv->rootVnode;
 	staticFVolume.rootUnique = tv->rootUnique;
 	tfile = osi_UFSOpen(&volumeInode);
+	if (!tfile) {
+	    afs_warn("afs_UFSGetVolSlot: unable to open volumeinfo\n");
+	    goto error;
+	}
 	code =
 	    afs_osi_Write(tfile, sizeof(struct fvolume) * afs_FVIndex,
 			  &staticFVolume, sizeof(struct fvolume));
@@ -243,13 +250,20 @@ afs_UFSGetVolSlot(afs_int32 volid, struct cell *tcell)
     for (j = fvTable[FVHash(tcell->cellNum, volid)]; j != 0; j = tf->next) {
 	if (afs_FVIndex != j) {
 	    tfile = osi_UFSOpen(&volumeInode);
-	    code =
-		afs_osi_Read(tfile, sizeof(struct fvolume) * j,
-			     &staticFVolume, sizeof(struct fvolume));
-	    osi_UFSClose(tfile);
+	    if (!tfile) {
+		afs_warn("afs_UFSGetVolSlot: unable to open volumeinfo\n");
+		code = -1;   /* indicate error */
+	    } else {
+		code =
+		    afs_osi_Read(tfile, sizeof(struct fvolume) * j,
+				 &staticFVolume, sizeof(struct fvolume));
+		osi_UFSClose(tfile);
+		if (code != sizeof(struct fvolume)) {
+		    afs_warn("afs_SetupVolume: error %d reading volumeinfo\n",
+			     (int)code);
+		}
+	    }
 	    if (code != sizeof(struct fvolume)) {
-		afs_warn("afs_SetupVolume: error %d reading volumeinfo\n",
-			 (int)code);
 		/* put tv back on the free list; the data in it is not valid */
 		tv->next = afs_freeVolList;
 		afs_freeVolList = tv;
