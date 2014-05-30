@@ -381,8 +381,6 @@ vos_BackupVolumeCreateMultiple(const void *cellHandle,
 	prefix_len = strlen(volumePrefix);
     }
 
-    memset((void *)&arrayEntries, 0, sizeof(arrayEntries));
-
     /*
      * Get a list of all the volumes in the cell
      */
