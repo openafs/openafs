@@ -32,16 +32,6 @@
 
 #include <afs/afsutil.h>
 
-/* C99 requires va_copy.  Older versions of GCC provide __va_copy.  Per t
-   Autoconf manual, memcpy is a generally portable fallback. */
-#ifndef va_copy
-# ifdef __va_copy
-#  define va_copy(d, s)         __va_copy((d), (s))
-# else
-#  define va_copy(d, s)         memcpy(&(d), &(s), sizeof(va_list))
-# endif
-#endif
-
 extern struct osi_audit_ops audit_file_ops;
 #ifdef HAVE_SYS_IPC_H
 extern struct osi_audit_ops audit_sysvmq_ops;
