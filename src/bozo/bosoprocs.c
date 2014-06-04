@@ -629,9 +629,10 @@ SBOZO_ListKeys(struct rx_call *acall, afs_int32 an, afs_int32 *akvno,
 	akeyinfo->mod_sec = tstat.st_mtime;
     }
 
-    /* If the key is bad, this will produce an error. Should never happen,
-     * but ... */
-    code = ka_KeyCheckSum(tkeys.key[an].key, &akeyinfo->keyCheckSum);
+    /* This will return an error if the key is 'bad' (bad checksum, weak DES
+     * key, etc). But we don't care, since we can still return the other
+     * information about the key, so ignore the result. */
+    (void)ka_KeyCheckSum(tkeys.key[an].key, &akeyinfo->keyCheckSum);
 
   fail:
     if (noauth)
