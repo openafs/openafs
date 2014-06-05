@@ -710,8 +710,10 @@ rxi_rto_startTimer(struct rx_call *call, int lastPacket, int istack)
 static_inline void
 rxi_rto_cancel(struct rx_call *call)
 {
-    rxevent_Cancel(&call->resendEvent);
-    CALL_RELE(call, RX_CALL_REFCOUNT_RESEND);
+    if (call->resendEvent != NULL) {
+	rxevent_Cancel(&call->resendEvent);
+	CALL_RELE(call, RX_CALL_REFCOUNT_RESEND);
+    }
 }
 
 /*!
