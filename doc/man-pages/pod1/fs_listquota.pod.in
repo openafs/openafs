@@ -90,6 +90,15 @@ volume. Although not directly related to how much of the user's quota is
 used, it is reported because a full partition can cause writing of data
 back to the volume to fail even when the volume has not reached its quota.
 
+Note that due to limitations in the current wire protocol, OpenAFS cannot
+accurately calculate this field for partitions over 2 terabytes (2^41 bytes)
+in size. As a result, the percentage displayed in this field may be smaller
+than reality. For example, if the partition has over 2 terabytes (2^41 bytes)
+free, B<fs listquota> will report the partition usage as 0%. If the partition
+has less than 2 terabytes (2^41 bytes) free, but is larger than 2 terabytes
+(2^41 bytes) in size, the reported partition usage will be larger than
+0%, but will still be less than the actual usage.
+
 =back
 
 =head1 EXAMPLES
