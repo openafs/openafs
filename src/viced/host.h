@@ -73,16 +73,19 @@ struct host {
     afs_uint32 cpsCall;		/* time of last cps call from this host */
     struct Interface *interface;	/* all alternate addr for client */
     afs_uint32 cblist;		/* index of a cb in the per-host circular CB list */
-    /*
-     * These don't get zeroed, keep them at the end.
-     */
-    afs_uint32 index;		/* Host table index, for vicecb.c */
+
     unsigned int n_tmays;       /* how many successful TellMeAboutYourself calls
                                  * have we made against this host? */
     /* cache of the result of the last successful TMAY call to this host */
     struct interfaceAddr tmay_interf;
     Capabilities tmay_caps;
 
+    /*
+     * These don't get zeroed, keep them at the end. If index doesn't
+     * follow an unsigned short then we need to pad to ensure that
+     * the index fields isn't zeroed. XXX
+     */
+    afs_uint32 index;		/* Host table index, for vicecb.c */
     struct Lock lock;		/* Write lock for synchronization of
 				 * VenusDown flag */
     pthread_cond_t cond;	/* used to wait on hcpsValid */
