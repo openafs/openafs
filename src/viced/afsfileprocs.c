@@ -418,38 +418,38 @@ CallPreamble(struct rx_call *acall, int activecall, struct AFSFid *Fid,
 	goto retry;
     }
 
-    tclient->LastCall = thost->LastCall = time(NULL);
+    tclient->LastCall = thost->z.LastCall = time(NULL);
     if (activecall)		/* For all but "GetTime", "GetStats", and "GetCaps" calls */
-	thost->ActiveCall = thost->LastCall;
+	thost->z.ActiveCall = thost->z.LastCall;
 
     h_Lock_r(thost);
-    if (thost->hostFlags & HOSTDELETED) {
+    if (thost->z.hostFlags & HOSTDELETED) {
 	ViceLog(3,
 		("Discarded a packet for deleted host %s:%d\n",
-		 afs_inet_ntoa_r(thost->host, hoststr), ntohs(thost->port)));
+		 afs_inet_ntoa_r(thost->z.host, hoststr), ntohs(thost->z.port)));
 	code = VBUSY;		/* raced, so retry */
-    } else if ((thost->hostFlags & VENUSDOWN)
-	       || (thost->hostFlags & HFE_LATER)) {
+    } else if ((thost->z.hostFlags & VENUSDOWN)
+	       || (thost->z.hostFlags & HFE_LATER)) {
 	if (BreakDelayedCallBacks_r(thost)) {
 	    ViceLog(0,
 		    ("BreakDelayedCallbacks FAILED for host %s:%d which IS UP.  Connection from %s:%d.  Possible network or routing failure.\n",
-		     afs_inet_ntoa_r(thost->host, hoststr), ntohs(thost->port), afs_inet_ntoa_r(rxr_HostOf(*tconn), hoststr2),
+		     afs_inet_ntoa_r(thost->z.host, hoststr), ntohs(thost->z.port), afs_inet_ntoa_r(rxr_HostOf(*tconn), hoststr2),
 		     ntohs(rxr_PortOf(*tconn))));
 	    if (MultiProbeAlternateAddress_r(thost)) {
 		ViceLog(0,
 			("MultiProbe failed to find new address for host %s:%d\n",
-			 afs_inet_ntoa_r(thost->host, hoststr),
-			 ntohs(thost->port)));
+			 afs_inet_ntoa_r(thost->z.host, hoststr),
+			 ntohs(thost->z.port)));
 		code = -1;
 	    } else {
 		ViceLog(0,
 			("MultiProbe found new address for host %s:%d\n",
-			 afs_inet_ntoa_r(thost->host, hoststr),
-			 ntohs(thost->port)));
+			 afs_inet_ntoa_r(thost->z.host, hoststr),
+			 ntohs(thost->z.port)));
 		if (BreakDelayedCallBacks_r(thost)) {
 		    ViceLog(0,
 			    ("BreakDelayedCallbacks FAILED AGAIN for host %s:%d which IS UP.  Connection from %s:%d.  Possible network or routing failure.\n",
-			      afs_inet_ntoa_r(thost->host, hoststr), ntohs(thost->port), afs_inet_ntoa_r(rxr_HostOf(*tconn), hoststr2),
+			      afs_inet_ntoa_r(thost->z.host, hoststr), ntohs(thost->z.port), afs_inet_ntoa_r(rxr_HostOf(*tconn), hoststr2),
 			      ntohs(rxr_PortOf(*tconn))));
 		    code = -1;
 		}
@@ -481,7 +481,7 @@ CallPostamble(struct rx_connection *aconn, afs_int32 ret,
     if (!tclient)
 	goto busyout;
     thost = tclient->host;
-    if (thost->hostFlags & HERRORTRANS)
+    if (thost->z.hostFlags & HERRORTRANS)
 	translate = 1;
     h_ReleaseClient_r(tclient);
 
@@ -491,11 +491,11 @@ CallPostamble(struct rx_connection *aconn, afs_int32 ret,
 		    char hoststr[16], hoststr2[16];
 		    ViceLog(0, ("CallPostamble: ahost %s:%d (%p) != thost "
 				"%s:%d (%p)\n",
-				afs_inet_ntoa_r(ahost->host, hoststr),
-				ntohs(ahost->port),
+				afs_inet_ntoa_r(ahost->z.host, hoststr),
+				ntohs(ahost->z.port),
 				ahost,
-				afs_inet_ntoa_r(thost->host, hoststr2),
-				ntohs(thost->port),
+				afs_inet_ntoa_r(thost->z.host, hoststr2),
+				ntohs(thost->z.port),
 				thost));
 	    }
 	    /* return the reference taken in CallPreamble */
@@ -503,8 +503,8 @@ CallPostamble(struct rx_connection *aconn, afs_int32 ret,
     } else {
 	    char hoststr[16];
 	    ViceLog(0, ("CallPostamble: null ahost for thost %s:%d (%p)\n",
-			afs_inet_ntoa_r(thost->host, hoststr),
-			ntohs(thost->port),
+			afs_inet_ntoa_r(thost->z.host, hoststr),
+			ntohs(thost->z.port),
 			thost));
     }
 
@@ -718,7 +718,7 @@ client_CheckRights(struct client *client, struct acl_accessList *ACL,
     *rights = 0;
     ObtainReadLock(&client->lock);
     if (client->CPS.prlist_len > 0 && !client->deleted &&
-	client->host &&	!(client->host->hostFlags & HOSTDELETED))
+	client->host && !(client->host->z.hostFlags & HOSTDELETED))
 	acl_CheckRights(ACL, &client->CPS, rights);
     ReleaseReadLock(&client->lock);
 }
@@ -731,7 +731,7 @@ client_HasAsMember(struct client *client, afs_int32 id)
 
     ObtainReadLock(&client->lock);
     if (client->CPS.prlist_len > 0 && !client->deleted &&
-	client->host &&	!(client->host->hostFlags & HOSTDELETED))
+	client->host && !(client->host->z.hostFlags & HOSTDELETED))
 	code = acl_IsAMember(id, &client->CPS);
     ReleaseReadLock(&client->lock);
     return code;
@@ -759,20 +759,20 @@ GetRights(struct client *client, struct acl_accessList *ACL,
 
     /* wait if somebody else is already doing the getCPS call */
     H_LOCK;
-    while (client->host->hostFlags & HCPS_INPROGRESS) {
-	client->host->hostFlags |= HCPS_WAITING;	/* I am waiting */
+    while (client->host->z.hostFlags & HCPS_INPROGRESS) {
+	client->host->z.hostFlags |= HCPS_WAITING;	/* I am waiting */
 	opr_cv_wait(&client->host->cond, &host_glock_mutex);
     }
 
-    if (!client->host->hcps.prlist_len || !client->host->hcps.prlist_val) {
+    if (!client->host->z.hcps.prlist_len || !client->host->z.hcps.prlist_val) {
 	char hoststr[16];
 	ViceLog(5,
 		("CheckRights: len=%u, for host=%s:%d\n",
-		 client->host->hcps.prlist_len,
-		 afs_inet_ntoa_r(client->host->host, hoststr),
-		 ntohs(client->host->port)));
+		 client->host->z.hcps.prlist_len,
+		 afs_inet_ntoa_r(client->host->z.host, hoststr),
+		 ntohs(client->host->z.port)));
     } else
-	acl_CheckRights(ACL, &client->host->hcps, &hrights);
+	acl_CheckRights(ACL, &client->host->z.hcps, &hrights);
     H_UNLOCK;
     /* Allow system:admin the rights given with the -implicit option */
     if (client_HasAsMember(client, SystemId))
@@ -2759,7 +2759,7 @@ SRXAFS_InlineBulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
 			      &rights, &anyrights))) {
 	    tstatus = &OutStats->AFSBulkStats_val[i];
 
-	    if (thost->hostFlags & HERRORTRANS) {
+	    if (thost->z.hostFlags & HERRORTRANS) {
 		tstatus->errorCode = sys_error_to_et(errorCode);
 	    } else {
 		tstatus->errorCode = errorCode;
@@ -2789,7 +2789,7 @@ SRXAFS_InlineBulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
 					CHK_FETCHSTATUS, 0))) {
 		tstatus = &OutStats->AFSBulkStats_val[i];
 
-		if (thost->hostFlags & HERRORTRANS) {
+		if (thost->z.hostFlags & HERRORTRANS) {
 		    tstatus->errorCode = sys_error_to_et(errorCode);
 		} else {
 		    tstatus->errorCode = errorCode;
@@ -6845,42 +6845,42 @@ SRXAFS_CallBackRxConnAddr (struct rx_call * acall, afs_int32 *addr)
     thost = tclient->host;
 
     /* nothing more can be done */
-    if ( !thost->interface )
+    if ( !thost->z.interface )
 	goto Bad_CallBackRxConnAddr;
 
     /* the only address is the primary interface */
     /* can't change when there's only 1 address, anyway */
-    if ( thost->interface->numberOfInterfaces <= 1 )
+    if ( thost->z.interface->numberOfInterfaces <= 1 )
 	goto Bad_CallBackRxConnAddr;
 
     /* initialise a security object only once */
     if ( !sc )
 	sc = (struct rx_securityClass *) rxnull_NewClientSecurityObject();
 
-    for ( i=0; i < thost->interface->numberOfInterfaces; i++)
+    for ( i=0; i < thost->z.interface->numberOfInterfaces; i++)
     {
-	    if ( *addr == thost->interface->addr[i] ) {
+	    if ( *addr == thost->z.interface->addr[i] ) {
 		    break;
 	    }
     }
 
-    if ( *addr != thost->interface->addr[i] )
+    if ( *addr != thost->z.interface->addr[i] )
 	goto Bad_CallBackRxConnAddr;
 
-    conn = rx_NewConnection (thost->interface->addr[i],
-			     thost->port, 1, sc, 0);
+    conn = rx_NewConnection (thost->z.interface->addr[i],
+			     thost->z.port, 1, sc, 0);
     rx_SetConnDeadTime(conn, 2);
     rx_SetConnHardDeadTime(conn, AFS_HARDDEADTIME);
     H_UNLOCK;
     errorCode = RXAFSCB_Probe(conn);
     H_LOCK;
     if (!errorCode) {
-	if ( thost->callback_rxcon )
-	    rx_DestroyConnection(thost->callback_rxcon);
-	thost->callback_rxcon = conn;
-	thost->host           = addr;
-	rx_SetConnDeadTime(thost->callback_rxcon, 50);
-	rx_SetConnHardDeadTime(thost->callback_rxcon, AFS_HARDDEADTIME);
+	if ( thost->z.callback_rxcon )
+	    rx_DestroyConnection(thost->z.callback_rxcon);
+	thost->z.callback_rxcon = conn;
+	thost->z.host           = addr;
+	rx_SetConnDeadTime(thost->z.callback_rxcon, 50);
+	rx_SetConnHardDeadTime(thost->z.callback_rxcon, AFS_HARDDEADTIME);
 	h_ReleaseClient_r(tclient);
 	/* The hold on thost will be released by CallPostamble */
 	H_UNLOCK;
