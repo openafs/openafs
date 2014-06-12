@@ -1,3 +1,9 @@
+openafs (1.6.9-1) unstable; urgency=high
+
+  * New upstream release.
+
+ -- Russ Allbery <rra@debian.org>  Thu, 12 Jun 2014 12:39:25 -0700
+
 openafs (1.6.8-1) unstable; urgency=medium
 
   * New upstream release.
