@@ -1,5 +1,11 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.6.9
+
+  All server platforms
+
+    * Fix for OPENAFS-SA-2014-002
+
 OpenAFS 1.6.8
 
   All platforms
