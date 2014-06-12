@@ -64,7 +64,6 @@ struct host {
     unsigned short hostFlags;		/*  bit map */
     char InSameNetwork;		/*Is host's addr in the same network as
 				 * the File Server's? */
-    char dummy[3];		/* for padding */
     char hcpsfailed;		/* Retry the cps call next time */
     prlist hcps;		/* cps for hostip acls */
     afs_uint32 LastCall;	/* time of last call from host */
@@ -75,9 +74,7 @@ struct host {
     struct Interface *interface;	/* all alternate addr for client */
     afs_uint32 cblist;		/* index of a cb in the per-host circular CB list */
     /*
-     * These don't get zeroed, keep them at the end. If index doesn't
-     * follow an unsigned short then we need to pad to ensure that
-     * the index fields isn't zeroed. XXX
+     * These don't get zeroed, keep them at the end.
      */
     afs_uint32 index;		/* Host table index, for vicecb.c */
     unsigned int n_tmays;       /* how many successful TellMeAboutYourself calls
