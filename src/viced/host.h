@@ -104,7 +104,7 @@ struct h_UuidHashChain {
     struct h_UuidHashChain *next;
 };
 
-struct client {
+struct client_to_zero {
     struct client *next;	/* next client entry for host */
     struct host *host;		/* ptr to parent host entry */
     afs_int32 sid;		/* Connection number from this host */
@@ -124,12 +124,13 @@ struct client {
     char prfail;		/* True if prserver couldn't be contacted */
     char InSameNetwork;		/* Is client's IP address in the same
 				 * network as ours? */
+};
+
+struct client {
+    struct client_to_zero z;
     struct Lock lock;		/* lock to ensure CPS valid if entry
 				 * on host's clients list. */
 };
-
-/* Don't zero the lock */
-#define CLIENT_TO_ZERO(C)	((int)(((char *)(&((C)->lock))-(char *)(C))))
 
 
 /*

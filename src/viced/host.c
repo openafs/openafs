@@ -124,9 +124,9 @@ GetCEBlock(void)
 
     for (i = 0; i < (CESPERBLOCK - 1); i++) {
 	Lock_Init(&block->entry[i].lock);
-	block->entry[i].next = &(block->entry[i + 1]);
+	block->entry[i].z.next = &(block->entry[i + 1]);
     }
-    block->entry[CESPERBLOCK - 1].next = 0;
+    block->entry[CESPERBLOCK - 1].z.next = 0;
     Lock_Init(&block->entry[CESPERBLOCK - 1].lock);
     CEFree = (struct client *)block;
     CEBlocks++;
@@ -148,9 +148,9 @@ GetCE(void)
     }
 
     entry = CEFree;
-    CEFree = entry->next;
+    CEFree = entry->z.next;
     CEs++;
-    memset(entry, 0, CLIENT_TO_ZERO(entry));
+    memset(&entry->z, 0, sizeof(struct client_to_zero));
     return (entry);
 
 }				/*GetCE */
@@ -160,9 +160,9 @@ GetCE(void)
 static void
 FreeCE(struct client *entry)
 {
-    entry->VenusEpoch = 0;
-    entry->sid = 0;
-    entry->next = CEFree;
+    entry->z.VenusEpoch = 0;
+    entry->z.sid = 0;
+    entry->z.next = CEFree;
     CEFree = entry;
     CEs--;
 
@@ -798,7 +798,7 @@ h_LookupUuid_r(afsUUID * uuidp)
 
 /* h_TossStuff_r:  Toss anything in the host structure (the host or
  * clients marked for deletion.  Called from h_Release_r ONLY.
- * To be called, there must be no holds, and either host->deleted
+ * To be called, there must be no holds, and either host->z.deleted
  * or host->clientDeleted must be set.
  */
 void
@@ -852,7 +852,7 @@ h_TossStuff_r(struct host *host)
 
     /* ASSUMPTION: rxi_FreeConnection() does not yield */
     for (cp = &host->z.FirstClient; (client = *cp);) {
-	if ((host->z.hostFlags & HOSTDELETED) || client->deleted) {
+	if ((host->z.hostFlags & HOSTDELETED) || client->z.deleted) {
 	    int code;
 	    ObtainWriteLockNoBlock(&client->lock, code);
 	    if (code < 0) {
@@ -865,27 +865,27 @@ h_TossStuff_r(struct host *host)
 		return;
 	    }
 
-	    if (client->refCount) {
+	    if (client->z.refCount) {
 		char hoststr[16];
 		ViceLog(0,
 			("Warning: h_TossStuff_r failed: Host %p (%s:%d) "
 			 "client %p refcount %d.\n",
 			 host, afs_inet_ntoa_r(host->z.host, hoststr),
-			 ntohs(host->z.port), client, client->refCount));
+			 ntohs(host->z.port), client, client->z.refCount));
 		/* This is the same thing we do if the host is locked */
 		ReleaseWriteLock(&client->lock);
 		return;
 	    }
-	    client->CPS.prlist_len = 0;
-	    if ((client->ViceId != ANONYMOUSID) && client->CPS.prlist_val)
-		free(client->CPS.prlist_val);
-	    client->CPS.prlist_val = NULL;
+	    client->z.CPS.prlist_len = 0;
+	    if ((client->z.ViceId != ANONYMOUSID) && client->z.CPS.prlist_val)
+		free(client->z.CPS.prlist_val);
+	    client->z.CPS.prlist_val = NULL;
 	    CurrentConnections--;
-	    *cp = client->next;
+	    *cp = client->z.next;
 	    ReleaseWriteLock(&client->lock);
 	    FreeCE(client);
 	} else
-	    cp = &client->next;
+	    cp = &client->z.next;
     }
 
     /* We've just cleaned out all the deleted clients; clear the flag */
@@ -2464,10 +2464,10 @@ PerHost_EnumerateClient(struct host *host, void *arock)
     struct client *client;
     int code;
 
-    for (client = host->z.FirstClient; client; client = client->next) {
-	if (!client->deleted && client->ViceId == args->vid) {
+    for (client = host->z.FirstClient; client; client = client->z.next) {
+	if (!client->z.deleted && client->z.ViceId == args->vid) {
 
-	    client->refCount++;
+	    client->z.refCount++;
 	    H_UNLOCK;
 
 	    code = (*args->proc)(client, args->rock);
@@ -2602,8 +2602,8 @@ getPeerDetails(struct rx_connection *conn,
  * by one. The caller must call h_ReleaseClient_r when finished with
  * the client.
  *
- * The refCount on client->host is returned incremented.  h_ReleaseClient_r
- * does not decrement the refCount on client->host.
+ * The refCount on client->z.host is returned incremented.  h_ReleaseClient_r
+ * does not decrement the refCount on client->z.host.
  *
  * *a_viceid is set to the user's ViceId, even if we don't return a client
  * struct.
@@ -2623,17 +2623,17 @@ h_FindClient_r(struct rx_connection *tcon, afs_int32 *a_viceid)
     int created = 0;
 
     client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
-    if (client && client->sid == rx_GetConnectionId(tcon)
-	&& client->VenusEpoch == rx_GetConnectionEpoch(tcon)
-	&& !(client->host->z.hostFlags & HOSTDELETED)
-	&& !client->deleted) {
+    if (client && client->z.sid == rx_GetConnectionId(tcon)
+	&& client->z.VenusEpoch == rx_GetConnectionEpoch(tcon)
+	&& !(client->z.host->z.hostFlags & HOSTDELETED)
+	&& !client->z.deleted) {
 
 	if (a_viceid) {
-	    *a_viceid = client->ViceId;
+	    *a_viceid = client->z.ViceId;
 	}
-	client->refCount++;
-	h_Hold_r(client->host);
-	if (client->prfail != 2) {
+	client->z.refCount++;
+	h_Hold_r(client->z.host);
+	if (client->z.prfail != 2) {
 	    /* Could add shared lock on client here */
 	    /* note that we don't have to lock entry in this path to
 	     * ensure CPS is initialized, since we don't call rx_SetSpecific
@@ -2667,10 +2667,10 @@ h_FindClient_r(struct rx_connection *tcon, afs_int32 *a_viceid)
 
     retryfirstclient:
 	/* First try to find the client structure */
-	for (client = host->z.FirstClient; client; client = client->next) {
-	    if (!client->deleted && (client->sid == rx_GetConnectionId(tcon))
-		&& (client->VenusEpoch == rx_GetConnectionEpoch(tcon))) {
-		client->refCount++;
+	for (client = host->z.FirstClient; client; client = client->z.next) {
+	    if (!client->z.deleted && (client->z.sid == rx_GetConnectionId(tcon))
+		&& (client->z.VenusEpoch == rx_GetConnectionEpoch(tcon))) {
+		client->z.refCount++;
 		H_UNLOCK;
 		ObtainWriteLock(&client->lock);
 		H_LOCK;
@@ -2687,9 +2687,9 @@ h_FindClient_r(struct rx_connection *tcon, afs_int32 *a_viceid)
                 return NULL;
             }
 	    /* Retry to find the client structure */
-	    for (client = host->z.FirstClient; client; client = client->next) {
-		if (!client->deleted && (client->sid == rx_GetConnectionId(tcon))
-		    && (client->VenusEpoch == rx_GetConnectionEpoch(tcon))) {
+	    for (client = host->z.FirstClient; client; client = client->z.next) {
+		if (!client->z.deleted && (client->z.sid == rx_GetConnectionId(tcon))
+		    && (client->z.VenusEpoch == rx_GetConnectionEpoch(tcon))) {
 		    h_Unlock_r(host);
 		    goto retryfirstclient;
 		}
@@ -2697,43 +2697,43 @@ h_FindClient_r(struct rx_connection *tcon, afs_int32 *a_viceid)
 	    created = 1;
 	    client = GetCE();
 	    ObtainWriteLock(&client->lock);
-	    client->refCount = 1;
-	    client->host = host;
-	    client->InSameNetwork = host->z.InSameNetwork;
-	    client->ViceId = viceid;
-	    client->expTime = expTime;	/* rx only */
-	    client->authClass = authClass;	/* rx only */
-	    client->sid = rx_GetConnectionId(tcon);
-	    client->VenusEpoch = rx_GetConnectionEpoch(tcon);
-	    client->CPS.prlist_val = NULL;
-	    client->CPS.prlist_len = 0;
+	    client->z.refCount = 1;
+	    client->z.host = host;
+	    client->z.InSameNetwork = host->z.InSameNetwork;
+	    client->z.ViceId = viceid;
+	    client->z.expTime = expTime;	/* rx only */
+	    client->z.authClass = authClass;	/* rx only */
+	    client->z.sid = rx_GetConnectionId(tcon);
+	    client->z.VenusEpoch = rx_GetConnectionEpoch(tcon);
+	    client->z.CPS.prlist_val = NULL;
+	    client->z.CPS.prlist_len = 0;
 	    h_Unlock_r(host);
 	}
     }
-    client->prfail = fail;
+    client->z.prfail = fail;
 
-    if (!(client->CPS.prlist_val) || (viceid != client->ViceId)) {
-	client->CPS.prlist_len = 0;
-	if (client->CPS.prlist_val && (client->ViceId != ANONYMOUSID))
-	    free(client->CPS.prlist_val);
-	client->CPS.prlist_val = NULL;
-	client->ViceId = viceid;
-	client->expTime = expTime;
+    if (!(client->z.CPS.prlist_val) || (viceid != client->z.ViceId)) {
+	client->z.CPS.prlist_len = 0;
+	if (client->z.CPS.prlist_val && (client->z.ViceId != ANONYMOUSID))
+	    free(client->z.CPS.prlist_val);
+	client->z.CPS.prlist_val = NULL;
+	client->z.ViceId = viceid;
+	client->z.expTime = expTime;
 
 	if (viceid == ANONYMOUSID) {
-	    client->CPS.prlist_len = AnonCPS.prlist_len;
-	    client->CPS.prlist_val = AnonCPS.prlist_val;
+	    client->z.CPS.prlist_len = AnonCPS.prlist_len;
+	    client->z.CPS.prlist_val = AnonCPS.prlist_val;
 	} else {
 	    H_UNLOCK;
-	    code = hpr_GetCPS(viceid, &client->CPS);
+	    code = hpr_GetCPS(viceid, &client->z.CPS);
 	    H_LOCK;
 	    if (code) {
 		char hoststr[16];
 		ViceLog(0,
 			("pr_GetCPS failed(%d) for user %d, host %" AFS_PTR_FMT " (%s:%d)\n",
-			 code, viceid, client->host,
-			 afs_inet_ntoa_r(client->host->z.host,hoststr),
-			 ntohs(client->host->z.port)));
+			 code, viceid, client->z.host,
+			 afs_inet_ntoa_r(client->z.host->z.host,hoststr),
+			 ntohs(client->z.host->z.port)));
 
 		/* Although ubik_Call (called by pr_GetCPS) traverses thru
 		 * all protection servers and reevaluates things if no
@@ -2749,14 +2749,14 @@ h_FindClient_r(struct rx_connection *tcon, afs_int32 *a_viceid)
 		 * want to retry and we don't know the whole code list!
 		 */
 		if (code < 0 || code == UNOQUORUM || code == UNOTSYNC)
-		    client->prfail = 1;
+		    client->z.prfail = 1;
 	    }
 	}
 	/* the disabling of system:administrators is so iffy and has so many
 	 * possible failure modes that we will disable it again */
 	/* Turn off System:Administrator for safety
-	 * if (AL_IsAMember(SystemId, client->CPS) == 0)
-	 * osi_Assert(AL_DisableGroup(SystemId, client->CPS) == 0); */
+	 * if (AL_IsAMember(SystemId, client->z.CPS) == 0)
+	 * osi_Assert(AL_DisableGroup(SystemId, client->z.CPS) == 0); */
     }
 
     /* Now, tcon may already be set to a rock, since we blocked with no host
@@ -2766,51 +2766,51 @@ h_FindClient_r(struct rx_connection *tcon, afs_int32 *a_viceid)
      */
     oldClient = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
     if (oldClient && oldClient != client
-	&& oldClient->sid == rx_GetConnectionId(tcon)
-	&& oldClient->VenusEpoch == rx_GetConnectionEpoch(tcon)
-	&& !(oldClient->host->z.hostFlags & HOSTDELETED)) {
+	&& oldClient->z.sid == rx_GetConnectionId(tcon)
+	&& oldClient->z.VenusEpoch == rx_GetConnectionEpoch(tcon)
+	&& !(oldClient->z.host->z.hostFlags & HOSTDELETED)) {
 	char hoststr[16];
-	if (!oldClient->deleted) {
+	if (!oldClient->z.deleted) {
 	    /* if we didn't create it, it's not ours to put back */
 	    if (created) {
 		ViceLog(0, ("FindClient: stillborn client %p(%x); "
 			    "conn %p (host %s:%d) had client %p(%x)\n",
-			    client, client->sid, tcon,
+			    client, client->z.sid, tcon,
 			    afs_inet_ntoa_r(rxr_HostOf(tcon), hoststr),
 			    ntohs(rxr_PortOf(tcon)),
-			    oldClient, oldClient->sid));
-		if ((client->ViceId != ANONYMOUSID) && client->CPS.prlist_val)
-		    free(client->CPS.prlist_val);
-		client->CPS.prlist_val = NULL;
-		client->CPS.prlist_len = 0;
+			    oldClient, oldClient->z.sid));
+		if ((client->z.ViceId != ANONYMOUSID) && client->z.CPS.prlist_val)
+		    free(client->z.CPS.prlist_val);
+		client->z.CPS.prlist_val = NULL;
+		client->z.CPS.prlist_len = 0;
 	    }
 	    /* We should perhaps check for 0 here */
-	    client->refCount--;
+	    client->z.refCount--;
 	    ReleaseWriteLock(&client->lock);
 	    if (created) {
 		FreeCE(client);
 		created = 0;
 	    }
-	    oldClient->refCount++;
+	    oldClient->z.refCount++;
 
-	    h_Hold_r(oldClient->host);
-	    h_Release_r(client->host);
+	    h_Hold_r(oldClient->z.host);
+	    h_Release_r(client->z.host);
 
 	    H_UNLOCK;
 	    ObtainWriteLock(&oldClient->lock);
 	    H_LOCK;
 	    client = oldClient;
-	    host = oldClient->host;
+	    host = oldClient->z.host;
 	} else {
 	    ViceLog(0, ("FindClient: deleted client %p(%x ref %d host %p href "
 			"%d) already had conn %p (host %s:%d, cid %x), stolen "
 			"by client %p(%x, ref %d host %p href %d)\n",
-			oldClient, oldClient->sid, oldClient->refCount,
-			oldClient->host, oldClient->host->z.refCount, tcon,
+			oldClient, oldClient->z.sid, oldClient->z.refCount,
+			oldClient->z.host, oldClient->z.host->z.refCount, tcon,
 			afs_inet_ntoa_r(rxr_HostOf(tcon), hoststr),
 			ntohs(rxr_PortOf(tcon)), rx_GetConnectionId(tcon),
-			client, client->sid, client->refCount,
-			client->host, client->host->z.refCount));
+			client, client->z.sid, client->z.refCount,
+			client->z.host, client->z.host->z.refCount));
 	    /* rx_SetSpecific will be done immediately below */
 	}
     }
@@ -2823,20 +2823,20 @@ h_FindClient_r(struct rx_connection *tcon, afs_int32 *a_viceid)
             h_Release_r(host);
 
             host = NULL;
-            client->host = NULL;
+	    client->z.host = NULL;
 
-            if ((client->ViceId != ANONYMOUSID) && client->CPS.prlist_val)
-                free(client->CPS.prlist_val);
-            client->CPS.prlist_val = NULL;
-            client->CPS.prlist_len = 0;
+	    if ((client->z.ViceId != ANONYMOUSID) && client->z.CPS.prlist_val)
+		free(client->z.CPS.prlist_val);
+	    client->z.CPS.prlist_val = NULL;
+	    client->z.CPS.prlist_len = 0;
 
-            client->refCount--;
+	    client->z.refCount--;
             ReleaseWriteLock(&client->lock);
             FreeCE(client);
             return NULL;
         }
 
-	client->next = host->z.FirstClient;
+	client->z.next = host->z.FirstClient;
 	host->z.FirstClient = client;
 	h_Unlock_r(host);
 	CurrentConnections++;	/* increment number of connections */
@@ -2851,8 +2851,8 @@ h_FindClient_r(struct rx_connection *tcon, afs_int32 *a_viceid)
 int
 h_ReleaseClient_r(struct client *client)
 {
-    opr_Assert(client->refCount > 0);
-    client->refCount--;
+    opr_Assert(client->z.refCount > 0);
+    client->z.refCount--;
     return 0;
 }
 
@@ -2881,34 +2881,34 @@ GetClient(struct rx_connection *tcon, struct client **cp)
 	H_UNLOCK;
 	return VBUSY;
     }
-    if (rx_GetConnectionId(tcon) != client->sid
-	|| rx_GetConnectionEpoch(tcon) != client->VenusEpoch) {
+    if (rx_GetConnectionId(tcon) != client->z.sid
+	|| rx_GetConnectionEpoch(tcon) != client->z.VenusEpoch) {
 	ViceLog(0,
 		("GetClient: tcon %p tcon sid %d client sid %d\n",
-		 tcon, rx_GetConnectionId(tcon), client->sid));
+		 tcon, rx_GetConnectionId(tcon), client->z.sid));
 	H_UNLOCK;
 	return VBUSY;
     }
-    if (client && client->LastCall > client->expTime && client->expTime) {
+    if (client && client->z.LastCall > client->z.expTime && client->z.expTime) {
 	ViceLog(1,
 		("Token for %s at %s:%d expired %d\n", h_UserName(client),
-		 afs_inet_ntoa_r(client->host->z.host, hoststr),
-		 ntohs(client->host->z.port), client->expTime));
+		 afs_inet_ntoa_r(client->z.host->z.host, hoststr),
+		 ntohs(client->z.host->z.port), client->z.expTime));
 	H_UNLOCK;
 	return VICETOKENDEAD;
     }
-    if (client->deleted) {
+    if (client->z.deleted) {
 	ViceLog(0, ("GetClient: got deleted client, connection will appear "
-	            "anonymous; tcon %p cid %x client %p ref %d host %p "
-	            "(%s:%d) href %d ViceId %d\n",
-	            tcon, rx_GetConnectionId(tcon), client, client->refCount,
-	            client->host,
-		    afs_inet_ntoa_r(client->host->z.host, hoststr),
-		    (int)ntohs(client->host->z.port), client->host->z.refCount,
-	            (int)client->ViceId));
+		    "anonymous; tcon %p cid %x client %p ref %d host %p "
+		    "(%s:%d) href %d ViceId %d\n",
+		    tcon, rx_GetConnectionId(tcon), client, client->z.refCount,
+		    client->z.host,
+		    afs_inet_ntoa_r(client->z.host->z.host, hoststr),
+		    (int)ntohs(client->z.host->z.port), client->z.host->z.refCount,
+		    (int)client->z.ViceId));
     }
 
-    client->refCount++;
+    client->z.refCount++;
     *cp = client;
     H_UNLOCK;
     return 0;
@@ -2943,7 +2943,7 @@ h_UserName(struct client *client)
     }
     lnames.namelist_len = 0;
     lnames.namelist_val = (prname *) 0;
-    lids.idlist_val[0] = client->ViceId;
+    lids.idlist_val[0] = client->z.ViceId;
     if (hpr_IdToName(&lids, &lnames)) {
 	/* We need to free id we alloced above! */
 	free(lids.idlist_val);
@@ -2991,25 +2991,25 @@ h_PrintClient(struct host *host, void *rock)
 	     ntohs(host->z.port), (host->z.hostFlags & VENUSDOWN),
 	     tbuffer);
     (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
-    for (client = host->z.FirstClient; client; client = client->next) {
-	if (!client->deleted) {
-	    expTime = client->expTime;
+    for (client = host->z.FirstClient; client; client = client->z.next) {
+	if (!client->z.deleted) {
+	    expTime = client->z.expTime;
 	    strftime(tbuffer, sizeof(tbuffer), "%a %b %d %H:%M:%S %Y",
 		     localtime_r(&expTime, &tm));
 	    snprintf(tmpStr, sizeof tmpStr,
 		     "    user id=%d,  name=%s, sl=%s till %s\n",
-		     client->ViceId, h_UserName(client),
-		     client->authClass ? "Authenticated"
+		     client->z.ViceId, h_UserName(client),
+		     client->z.authClass ? "Authenticated"
 				       : "Not authenticated",
-		     client->authClass ? tbuffer : "No Limit");
+		     client->z.authClass ? tbuffer : "No Limit");
 	    (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 	    snprintf(tmpStr, sizeof tmpStr, "      CPS-%d is [",
-			 client->CPS.prlist_len);
+			 client->z.CPS.prlist_len);
 	    (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
-	    if (client->CPS.prlist_val) {
-		for (i = 0; i < client->CPS.prlist_len; i++) {
+	    if (client->z.CPS.prlist_val) {
+		for (i = 0; i < client->z.CPS.prlist_len; i++) {
 		    snprintf(tmpStr, sizeof tmpStr, " %d",
-			     client->CPS.prlist_val[i]);
+			     client->z.CPS.prlist_val[i]);
 		    (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 		}
 	    }
@@ -4010,9 +4010,9 @@ CheckHost_r(struct host *host, void *dummy)
 #endif
 
     /* Host is held by h_Enumerate_r */
-    for (client = host->z.FirstClient; client; client = client->next) {
-	if (client->refCount == 0 && client->LastCall < clientdeletetime) {
-	    client->deleted = 1;
+    for (client = host->z.FirstClient; client; client = client->z.next) {
+	if (client->z.refCount == 0 && client->z.LastCall < clientdeletetime) {
+	    client->z.deleted = 1;
 	    host->z.hostFlags |= CLIENTDELETED;
 	}
     }
