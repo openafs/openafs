@@ -1,6 +1,8 @@
 openafs (1.6.9-1) unstable; urgency=high
 
   * New upstream release.
+    - OPENAFS-SA-2014-002: Fix use of uninitialized memory in the host
+      object in the fileserver.
 
  -- Russ Allbery <rra@debian.org>  Thu, 12 Jun 2014 12:39:25 -0700
 
