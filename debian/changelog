@@ -1,8 +1,15 @@
+openafs (1.6.9-2) UNRELEASED; urgency=medium
+
+  * Retroactively add the CVE for OPENAFS-SA-2014-002 to the changelog for
+    1.6.9-1.  It was assigned after the release was uploaded.
+
+ -- Russ Allbery <rra@debian.org>  Fri, 13 Jun 2014 16:02:57 -0700
+
 openafs (1.6.9-1) unstable; urgency=high
 
   * New upstream release.
     - OPENAFS-SA-2014-002: Fix use of uninitialized memory in the host
-      object in the fileserver.
+      object in the fileserver.  (CVE-2014-4044)
 
  -- Russ Allbery <rra@debian.org>  Thu, 12 Jun 2014 12:39:25 -0700
 
