@@ -840,15 +840,16 @@ long cm_EnumerateCellRegistry(afs_uint32 client, cm_enumCellProc_t *procp, void 
     LONG code;
     FILETIME ftLastWriteTime;
     char szCellName[CELL_MAXNAMELEN];
+	char * subkey = AFSREG_CLT_OPENAFS_SUBKEY "\\CellServDB";
 
     /* No server CellServDB in the registry. */
     if (!client || procp == NULL)
         return 0;
 
     if (RegOpenKeyEx( HKEY_LOCAL_MACHINE,
-                      AFSREG_CLT_OPENAFS_SUBKEY "\\CellServDB",
+		      subkey,
                       0,
-                      KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
+		      KEY_READ|KEY_QUERY_VALUE,
                       &hkCellServDB) != ERROR_SUCCESS)
         return 0;
 
