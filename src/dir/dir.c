@@ -577,7 +577,7 @@ afs_dir_DirHash(char *string)
     tval = hval & (NHASHENT - 1);
     if (tval == 0)
 	return tval;
-    else if (hval >= 1<<31)
+    else if (hval >= 1u<<31)
 	tval = NHASHENT - tval;
     return tval;
 }

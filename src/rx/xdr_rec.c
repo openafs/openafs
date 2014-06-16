@@ -61,7 +61,7 @@
  * meet the needs of xdr and rpc based on tcp.
  */
 
-#define LAST_FRAG ((afs_uint32)(1 << 31))
+#define LAST_FRAG ((afs_uint32)(1u << 31))
 
 typedef struct rec_strm {
     caddr_t tcp_handle;

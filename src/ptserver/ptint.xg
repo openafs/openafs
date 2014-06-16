@@ -99,8 +99,8 @@ const	PRUPDATE_IDHASH =	0x0010;
 
 /* These bits are used when calling SetFieldsEntry. */
 %#define PR_SF_ALLBITS   0xff		/* set all access bits */
-%#define PR_SF_NGROUPS (1<<31)		/* set field limiting group creation */
-%#define PR_SF_NUSERS  (1<<30)		/*  "  "  foreign users  "  */
+%#define PR_SF_NGROUPS (1u<<31)		/* set field limiting group creation */
+%#define PR_SF_NUSERS  (1u<<30)		/*  "  "  foreign users  "  */
 
 typedef char prname[PR_MAXNAMELEN];
 typedef prname namelist<>;
