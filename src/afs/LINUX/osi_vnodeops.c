@@ -812,7 +812,11 @@ struct file_operations afs_file_fops = {
   .sendfile =   generic_file_sendfile,
 #endif
 #if defined(STRUCT_FILE_OPERATIONS_HAS_SPLICE)
+# if defined(HAVE_LINUX_ITER_FILE_SPLICE_WRITE)
+  .splice_write = iter_file_splice_write,
+# else
   .splice_write = generic_file_splice_write,
+# endif
   .splice_read = generic_file_splice_read,
 #endif
   .release =	afs_linux_release,
