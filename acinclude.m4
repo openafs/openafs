@@ -958,6 +958,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_FUNC([inode_setattr],
 				     [#include <linux/fs.h>],
 				     [inode_setattr(NULL, NULL);])
+		 AC_CHECK_LINUX_FUNC([iter_file_splice_write],
+				     [#include <linux/fs.h>],
+				     [iter_file_splice_write(NULL,NULL,NULL,0,0);])
 		 AC_CHECK_LINUX_FUNC([kernel_setsockopt],
 				     [#include <linux/net.h>],
 				     [kernel_setsockopt(NULL, 0, 0, NULL, 0);])
