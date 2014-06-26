@@ -1507,6 +1507,7 @@ afs_GenDisconStatus(struct vcache *adp, struct vcache *avc,
 		    struct VenusFid *afid, struct vattr *attrs,
 		    struct vrequest *areq, int file_type)
 {
+    afs_hyper_t zero;
     memcpy(&avc->f.fid, afid, sizeof(struct VenusFid));
     avc->f.m.Mode = attrs->va_mode;
     /* Used to do this:
@@ -1517,7 +1518,8 @@ afs_GenDisconStatus(struct vcache *adp, struct vcache *avc,
      */
     avc->f.m.Group = adp->f.m.Group;
     avc->f.m.Owner = adp->f.m.Owner;
-    hset64(avc->f.m.DataVersion, 0, 0);
+    hzero(zero);
+    afs_SetDataVersion(avc, &zero);
     avc->f.m.Length = attrs->va_size;
     avc->f.m.Date = osi_Time();
     switch(file_type) {

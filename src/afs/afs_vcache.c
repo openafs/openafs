@@ -853,6 +853,7 @@ afs_PrePopulateVCache(struct vcache *avc, struct VenusFid *afid,
 		      struct server *serverp) {
 
     afs_uint32 slot;
+    afs_hyper_t zero;
     slot = avc->diskSlot;
 
     osi_PrePopulateVCache(avc);
@@ -876,7 +877,8 @@ afs_PrePopulateVCache(struct vcache *avc, struct VenusFid *afid,
 
     hzero(avc->mapDV);
     avc->f.truncPos = AFS_NOTRUNC;   /* don't truncate until we need to */
-    hzero(avc->f.m.DataVersion);     /* in case we copy it into flushDV */
+    hzero(zero);
+    afs_SetDataVersion(avc, &zero);  /* in case we copy it into flushDV */
     avc->Access = NULL;
     avc->callback = serverp;         /* to minimize chance that clear
 				      * request is lost */
@@ -1495,6 +1497,7 @@ afs_ProcessFS(struct vcache *avc,
 	      struct AFSFetchStatus *astat, struct vrequest *areq)
 {
     afs_size_t length;
+    afs_hyper_t newDV;
     AFS_STATCNT(afs_ProcessFS);
 
 #ifdef AFS_64BIT_CLIENT
@@ -1523,7 +1526,8 @@ afs_ProcessFS(struct vcache *avc,
 	avc->f.m.Length = length;
 	avc->f.m.Date = astat->ClientModTime;
     }
-    hset64(avc->f.m.DataVersion, astat->dataVersionHigh, astat->DataVersion);
+    hset64(newDV, astat->dataVersionHigh, astat->DataVersion);
+    afs_SetDataVersion(avc, &newDV);
     avc->f.m.Owner = astat->Owner;
     avc->f.m.Mode = astat->UnixModeBits;
     avc->f.m.Group = astat->Group;
@@ -3257,4 +3261,10 @@ afs_StaleVCacheFlags(struct vcache *avc, afs_stalevc_flags_t flags,
 	    osi_dnlc_purgevp(avc);
 	}
     }
+}
+
+void
+afs_SetDataVersion(struct vcache *avc, afs_hyper_t *avers)
+{
+    hset(avc->f.m.DataVersion, *avers);
 }

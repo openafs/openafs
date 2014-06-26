@@ -1141,6 +1141,8 @@ typedef unsigned int afs_stalevc_flags_t;
 extern void afs_StaleVCacheFlags(struct vcache *avc, afs_stalevc_flags_t flags,
 				 afs_uint32 cflags);
 
+extern void afs_SetDataVersion(struct vcache *avc, afs_hyper_t *avers);
+
 extern void afs_ProcessFS(struct vcache *avc,
 			  struct AFSFetchStatus *astat,
 			  struct vrequest *areq);

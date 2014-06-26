@@ -554,7 +554,7 @@ afs_LocalHero(struct vcache *avc, struct dcache *adc,
     /* The bulk status code used the length as a sequence number.  */
     /* Don't update the vcache entry unless the stats are current. */
     if (avc->f.states & CStatd) {
-	hset(avc->f.m.DataVersion, avers);
+	afs_SetDataVersion(avc, &avers);
 #ifdef AFS_64BIT_CLIENT
 	FillInt64(avc->f.m.Length, astat->Length_hi, astat->Length);
 #else /* AFS_64BIT_CLIENT */
