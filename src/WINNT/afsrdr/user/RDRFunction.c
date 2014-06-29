@@ -2150,7 +2150,7 @@ RDR_CleanupFileEntry( IN cm_user_t *userp,
             bScpLocked = TRUE;
         }
         code = cm_SyncOp(scp, NULL, userp, &req, 0,
-                          CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_LOCK);
+			 CM_SCACHESYNC_LOCK);
         if (code) {
             osi_Log2(afsd_logp, "RDR_CleanupFileEntry cm_SyncOp (2) failure scp=0x%p code=0x%x",
                      scp, code);
@@ -2164,7 +2164,7 @@ RDR_CleanupFileEntry( IN cm_user_t *userp,
                               bDeleteFile ? CM_UNLOCK_FLAG_BY_FID : 0,
                               userp, &req);
 
-        cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_LOCK);
+	cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_LOCK);
 
         if (code)
             goto on_error;
@@ -2364,7 +2364,7 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
     if (!bCheckOnly) {
         /* Drop all locks since the file is being deleted */
         code = cm_SyncOp(scp, NULL, userp, &req, 0,
-                         CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_LOCK);
+			 CM_SCACHESYNC_LOCK);
         if (code) {
             smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
             (*ResultCB)->ResultStatus = status;
@@ -2383,7 +2383,7 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
                               CM_UNLOCK_FLAG_BY_FID,
                               userp, &req);
 
-        cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_LOCK);
+	cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_LOCK);
         lock_ReleaseWrite(&scp->rw);
 
         if (scp->fileType == CM_SCACHETYPE_DIRECTORY)
@@ -5558,7 +5558,7 @@ RDR_ByteRangeLockSync( IN cm_user_t     *userp,
 
     /* start by looking up the file's end */
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
-                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_LOCK);
+		     CM_SCACHESYNC_LOCK);
     if (code) {
         lock_ReleaseWrite(&scp->rw);
         smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
@@ -5606,7 +5606,7 @@ RDR_ByteRangeLockSync( IN cm_user_t     *userp,
         }
     }
 
-    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_LOCK);
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_LOCK);
     lock_ReleaseWrite(&scp->rw);
     cm_ReleaseSCache(scp);
 
@@ -5684,7 +5684,7 @@ RDR_ByteRangeUnlock( IN cm_user_t     *userp,
 
     /* start by looking up the file's end */
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
-                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_LOCK);
+		     CM_SCACHESYNC_LOCK);
     if (code) {
         lock_ReleaseWrite(&scp->rw);
         smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
@@ -5722,7 +5722,7 @@ RDR_ByteRangeUnlock( IN cm_user_t     *userp,
         pResultCB->Result[i].Status = status;
     }
 
-    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_LOCK);
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_LOCK);
     lock_ReleaseWrite(&scp->rw);
     cm_ReleaseSCache(scp);
 
@@ -5785,7 +5785,7 @@ RDR_ByteRangeUnlockAll( IN cm_user_t     *userp,
 
     /* start by looking up the file's end */
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
-                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_LOCK);
+		     CM_SCACHESYNC_LOCK);
     if (code) {
         lock_ReleaseWrite(&scp->rw);
         smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
@@ -5801,7 +5801,7 @@ RDR_ByteRangeUnlockAll( IN cm_user_t     *userp,
 
     code = cm_UnlockByKey(scp, key, 0, userp, &req);
 
-    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_LOCK);
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_LOCK);
     lock_ReleaseWrite(&scp->rw);
     cm_ReleaseSCache(scp);
 
