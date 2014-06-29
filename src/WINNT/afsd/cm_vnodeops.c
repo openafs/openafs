@@ -5778,9 +5778,7 @@ void cm_CheckLocks()
                     goto post_syncopdone;
 
                 code = cm_SyncOp(scp, NULL, fileLock->userp, &req, 0,
-                                 CM_SCACHESYNC_NEEDCALLBACK
-                                 | CM_SCACHESYNC_GETSTATUS
-                                 | CM_SCACHESYNC_LOCK);
+				 CM_SCACHESYNC_LOCK);
 
                 if (code) {
                     osi_Log1(afsd_logp,
@@ -6105,9 +6103,7 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
         cm_user_t * userp;
 
         code = cm_SyncOp(scp, NULL, oldFileLock->userp, &req, 0,
-                         CM_SCACHESYNC_NEEDCALLBACK
-			 | CM_SCACHESYNC_GETSTATUS
-			 | CM_SCACHESYNC_LOCK);
+			 CM_SCACHESYNC_LOCK);
         if (code) {
             osi_Log1(afsd_logp, "cm_RetryLock SyncOp failure code 0x%x", code);
             lock_ReleaseWrite(&cm_scacheLock);
