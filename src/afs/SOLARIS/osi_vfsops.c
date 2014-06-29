@@ -72,9 +72,6 @@ afs_mount(struct vfs *afsp, struct vnode *amvp, struct mounta *uap,
 static void
 afs_freevfs(void)
 {
-    int i;
-    struct vcache *vc, *nvc;
-    extern struct vcache *afs_vhashT[VCSIZE];
 
     afs_globalVFS = 0;
 
