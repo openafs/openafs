@@ -10,8 +10,9 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.lwp
 
 
-LIBS= ../libauth.a ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/libsys.a \
-	${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a ${XLIBS}
+LIBS= ../libauth.a ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a ${XLIBS} \
+	$(TOP_LIBDIR)/libopr.a $(TOP_LIBDIR)/librokenafs.a
 
 tests all: testcellconf ktctest
 
