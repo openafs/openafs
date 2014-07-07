@@ -5218,9 +5218,9 @@
 
         <listitem>
           <para>Using a text editor, open the <emphasis role="bold">/usr/afs/local/NetRestrict</emphasis> file. Place one IP address
-          in dotted decimal format on each line. The order of the addresses is not significant. Use the value <emphasis
-          role="bold">255</emphasis> as a wildcard that represents all possible addresses in that field. For example, the entry
-          <computeroutput>192.12.105.255</computeroutput> indicates that the Cache Manager does not register any of the addresses in
+          in dotted decimal format on each line. The order of the addresses is not significant. Use a slash (<emphasis
+          role="bold">/</emphasis>) followed by a subnet length to represent all possible addresses in a range. For example, the entry
+          <computeroutput>192.12.105.0/24</computeroutput> indicates that the Cache Manager does not register any of the addresses in
           the 192.12.105 subnet.</para>
         </listitem>
 

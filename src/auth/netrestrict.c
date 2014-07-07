@@ -25,28 +25,46 @@
 
 #include "cellconfig.h"
 
-#define AFS_IPINVALID        0xffffffff	/* invalid IP address */
-#define AFS_IPINVALIDIGNORE  0xfffffffe	/* no input given to extractAddr */
-#define MAX_NETFILE_LINE       2048	/* length of a line in the netrestrict file */
+#define AFS_IPINVALID		 -1	/* invalid IP address */
+#define AFS_IPINVALIDIGNORE	 -2	/* no input given to extractAddr */
+#define MAX_NETFILE_LINE       2048	/* length of a line in the NetRestrict file */
 #define MAXIPADDRS             1024	/* from afsd.c */
 
 static int ParseNetInfoFile_int(afs_uint32 *, afs_uint32 *, afs_uint32 *,
                          int, char reason[], const char *,
                          int);
-/*
+
+/**
  * The line parameter is a pointer to a buffer containing a string of
- * bytes of the form
-** w.x.y.z 	# machineName
- * returns the network interface IP Address in NBO
+ * bytes of the form:
+ *
+ * w.x.y.z[/n] 	# machineName
+ *
+ * Returns an IPv4 address and mask in network byte order.  Optionally,
+ * a '/' may be used to specify a subnet mask length.
+ *
+ * @param[in] line
+ *     Pointer to a string of bytes
+ * @param[out] maxSize
+ *     Length to search in line for addresses
+ * @param[out] addr
+ *     IPv4 address in network byte order
+ * @param[out] mask
+ *     IPv4 subnet mask in network byte order, default to 0xffffffff
+ *
+ * @return
+ *      @retval 0 success
+ *      @retval AFS_IPINVALID the address is invalid or parsing failed
+ *      @retval AFS_IPINVALIDIGNORE blank line that can be ignored
  */
-afs_uint32
-extract_Addr(char *line, int maxSize)
+static int
+extract_Addr(char *line, int maxSize, afs_uint32 *addr, afs_uint32 *mask)
 {
     char bytes[4][32];
     int i = 0, n = 0;
     char *endPtr;
     afs_uint32 val[4];
-    afs_uint32 retval = 0;
+    int subnet_len = 32;
 
     /* skip empty spaces */
     while (isspace(*line) && maxSize) {
@@ -57,8 +75,15 @@ extract_Addr(char *line, int maxSize)
     if (!maxSize || !*line)
 	return AFS_IPINVALIDIGNORE;
 
+    /* init to 0.0.0.0 for strtol() */
     for (n = 0; n < 4; n++) {
-	while ((*line != '.') && !isspace(*line) && maxSize) {	/* extract nth byte */
+	bytes[n][0] = '0';
+	bytes[n][1] = '\0';
+    }
+
+    for (n = 0; n < 4; n++) {
+	while ((*line != '.') && !isspace(*line)
+	       && (*line != '/') && maxSize) {	/* extract nth byte */
 	    if (!isdigit(*line))
 		return AFS_IPINVALID;
 	    if (i > 31)
@@ -68,16 +93,47 @@ extract_Addr(char *line, int maxSize)
 	}			/* while */
 	if (!maxSize)
 	    return AFS_IPINVALID;
-	bytes[n][i] = 0;
-	i = 0, line++;
+	bytes[n][i] = '\0';
+	if (*line == '/')
+	    break;
+	i = 0;
+	line++;
+    }
+
+    if (*line == '.')
+	++line;			/* single trailing . allowed */
+
+    if (*line == '/') {		/* have a subnet length */
+	line++;
+        subnet_len = 0;
+	while (isdigit(*line)) {
+	    subnet_len = subnet_len * 10 + (*line - '0');
+	    if (subnet_len > 32)
+		    return AFS_IPINVALID;	/* subnet length too long */
+	    ++line;
+	}
+	if (subnet_len == 0)
+	    return AFS_IPINVALID;	/* subnet length too short */
+    }
+
+    if (!isspace(*line) && (*line != '\0'))
+	    return AFS_IPINVALID;	/* improperly formed comment */
+
+    for (n = 0; n < 4; n++) {
 	errno = 0;
 	val[n] = strtol(bytes[n], &endPtr, 10);
-	if ((val[n] == 0) && (errno != 0 || bytes[n] == endPtr))	/* no conversion */
+	if ((val[n] == 0) && (errno != 0 || bytes[n] == endPtr)) /* no conversion */
 	    return AFS_IPINVALID;
-    }				/* for */
+    }
 
-    retval = (val[0] << 24) | (val[1] << 16) | (val[2] << 8) | val[3];
-    return htonl(retval);
+    *mask = 0;
+    while (subnet_len--) {
+	*mask = (*mask >> 1) | 0x80000000;
+    }
+
+    *mask = htonl(*mask);
+    *addr = htonl((val[0] << 24) | (val[1] << 16) | (val[2] << 8) | val[3]);
+    return 0;
 }
 
 /**
@@ -124,7 +180,8 @@ parseNetRestrictFile_int(afs_uint32 outAddrs[], afs_uint32 outMask[],
     char line[MAX_NETFILE_LINE];
     int lineNo, usedfile = 0;
     afs_uint32 i, neaddrs, nOutaddrs;
-    afs_uint32 addr, eAddrs[MAXIPADDRS], eMask[MAXIPADDRS], eMtu[MAXIPADDRS];
+    afs_uint32 addr, mask, eAddrs[MAXIPADDRS], eMask[MAXIPADDRS], eMtu[MAXIPADDRS];
+    int retval;
 
     opr_Assert(outAddrs);
     opr_Assert(reason);
@@ -165,13 +222,13 @@ parseNetRestrictFile_int(afs_uint32 outAddrs[], afs_uint32 outMask[],
     usedfile = 0;
     while (fgets(line, MAX_NETFILE_LINE, fp) != NULL) {
 	lineNo++;		/* input line number */
-	addr = extract_Addr(line, strlen(line));
-	if (addr == AFS_IPINVALID) {	/* syntactically invalid */
+	retval = extract_Addr(line, strlen(line), &addr, &mask);
+	if (retval == AFS_IPINVALID) {	/* syntactically invalid */
 	    fprintf(stderr, "%s : line %d : parse error - invalid IP\n",
 		    fileName, lineNo);
 	    continue;
 	}
-	if (addr == AFS_IPINVALIDIGNORE) {	/* ignore error */
+	if (retval == AFS_IPINVALIDIGNORE) {	/* ignore error */
 	    fprintf(stderr, "%s : line %d : invalid address ... ignoring\n",
 		    fileName, lineNo);
 	    continue;
@@ -180,7 +237,7 @@ parseNetRestrictFile_int(afs_uint32 outAddrs[], afs_uint32 outMask[],
 
 	/* Check if we need to exclude this address */
 	for (i = 0; i < neaddrs; i++) {
-	    if (eAddrs[i] && (eAddrs[i] == addr)) {
+	    if (eAddrs[i] && ((eAddrs[i] & mask) == (addr & mask))) {
 		eAddrs[i] = 0;	/* Yes - exclude it by zeroing it for now */
 	    }
 	}
@@ -261,9 +318,10 @@ ParseNetInfoFile_int(afs_uint32 outAddrs[], afs_uint32 outMask[], afs_uint32 out
     char line[MAX_NETFILE_LINE];
     FILE *fp;
     int i, existNu, count = 0;
-    afs_uint32 addr;
+    afs_uint32 addr, mask;
     int lineNo = 0;
     int l;
+    int retval;
 
     opr_Assert(fileName);
     opr_Assert(outAddrs);
@@ -310,20 +368,25 @@ ParseNetInfoFile_int(afs_uint32 outAddrs[], afs_uint32 outMask[], afs_uint32 out
 	}
 
 	lineNo++;		/* input line number */
-	addr = extract_Addr(&line[fake], strlen(&line[fake]));
+	retval = extract_Addr(&line[fake], strlen(&line[fake]), &addr, &mask);
 
-	if (addr == AFS_IPINVALID) {	/* syntactically invalid */
+	if (retval == AFS_IPINVALID) {	/* syntactically invalid */
 	    fprintf(stderr, "afs:%s : line %d : parse error\n", fileName,
 		    lineNo);
 	    continue;
 	}
-	if (addr == AFS_IPINVALIDIGNORE) {	/* ignore error */
+	if (fake && ntohl(mask) != 0xffffffff) {
+	    fprintf(stderr, "afs:%s : line %d : bad fake address\n", fileName,
+		    lineNo);
+	    continue;
+	}
+	if (retval == AFS_IPINVALIDIGNORE) {	/* ignore error */
 	    continue;
 	}
 
 	/* See if it is an address that really exists */
 	for (i = 0; i < existNu; i++) {
-	    if (existingAddr[i] == addr)
+	    if ((existingAddr[i] & mask) == (addr & mask))
 		break;
 	}
 	if ((i >= existNu) && (!fake))
@@ -331,12 +394,12 @@ ParseNetInfoFile_int(afs_uint32 outAddrs[], afs_uint32 outMask[], afs_uint32 out
 
 	/* Check if it is a duplicate address we alread have */
 	for (l = 0; l < count; l++) {
-	    if (outAddrs[l] == addr)
+	    if ((outAddrs[l] & mask) == (addr & mask))
 		break;
 	}
 	if (l < count) {
-	    fprintf(stderr, "afs:%x specified twice in NetInfo file\n",
-		    ntohl(addr));
+	    fprintf(stderr, "afs:%x matched more than once in NetInfo file\n",
+		    ntohl(outAddrs[l]));
 	    continue;		/* duplicate addr - ignore */
 	}
 

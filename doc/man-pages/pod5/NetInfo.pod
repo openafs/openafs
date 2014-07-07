@@ -30,10 +30,11 @@ File Server initiates RPCs: when it breaks callbacks and when it pings the
 client machine to verify that the Cache Manager is still accessible.
 
 The F<NetInfo> file is in ASCII format. One of the machine's IP addresses
-appears on each line, in dotted decimal format. The File Server initially
-uses the address that appears first in the list. The order of the
-remaining addresses is not significant: if an RPC to the first interface
-fails, the File Server simultaneously sends RPCs to all of the other
+appears on each line, in dotted decimal format.  To match a network instead
+of an individual address, use a slash (C</>) followed a subnet length.  The
+File Server initially uses the address that matches first in the list. The
+order of the remaining addresses is not significant: if an RPC to the first
+interface fails, the File Server simultaneously sends RPCs to all of the other
 interfaces in the list.  Whichever interface replies first is the one to
 which the File Server then sends pings and RPCs to break callbacks.
 
@@ -77,8 +78,9 @@ to use for communication with the peer processes on other database
 machines in the cell.
 
 The F<NetInfo> file is in ASCII format. One of the machine's IP addresses
-appears on each line, in dotted decimal format. The order of the addresses
-is not significant.
+appears on each line, in dotted decimal format.  To match a network
+instead of an individual address, use a slash (C</>) followed a subnet
+length.  The order of the addresses is not significant.
 
 Optionally, the File Server can be forced to use an IP address that does
 not belong to one of the server interfaces. To do this, add a line to the
