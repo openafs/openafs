@@ -253,6 +253,7 @@ rx_opaque_cmp(const struct rx_opaque *buf_a, const struct rx_opaque *buf_b)
     return 0;
 }
 
+#if !defined(KERNEL)
 /*!
  * Format an opaque object into a human-readable string.
  *
@@ -322,3 +323,4 @@ rx_opaque_stringify(const struct rx_opaque *buf, struct rx_opaque_stringbuf *str
  done:
     return &strbuf->sbuf[0];
 }
+#endif /* !KERNEL */

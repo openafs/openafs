@@ -15,6 +15,9 @@
 #include <rx/xdr.h>
 #include <afs/auth.h>
 #include <afs/ktc.h>
+#include <afs/token.h>
+#include <rx/rxgk.h>
+#include <opr/time.h>
 
 #define VIRTUE
 #define VICE
@@ -27,6 +30,28 @@
 #undef VICE
 
 #include "AFS_component_version_number.c"
+
+/*
+ * Get the given expiration time as a string, specifically as an abbreviated
+ * ctime() string, like "Feb  3 04:09".
+ */
+static char *
+ctime_expires(struct afs_time64 exp)
+{
+    char *expireString = opr_time64_ctime(exp);
+    if (expireString[0] != '[') {
+	/*
+	 * Transform, e.g.,
+	 * "Tue Feb  3 04:09:05 2009" into:
+	 *     "Feb  3 04:09"
+	 * Unless ctime() failed and we got back a timestamp like
+	 * "[12345]".
+	 */
+	expireString += 4; /* Move past the day of week */
+	expireString[12] = '\0';
+    }
+    return expireString;
+}
 
 int
 main(int argc, char **argv)
@@ -41,6 +66,8 @@ main(int argc, char **argv)
     struct ktc_principal clientName;	/* service name for ticket */
     struct ktc_token token;	/* the token we're printing */
     struct ktc_setTokenData *tokenSet;
+    struct ktc_tokenUnion tokenU;
+    token_rxgk *rxgkToken;
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -112,6 +139,24 @@ main(int argc, char **argv)
 		    expireString[12] = '\0';
 		    printf("[Expires %s]\n", expireString);
 	        }
+	    }
+	    rc = token_findByType(tokenSet, AFSTOKEN_UNION_GK, &tokenU);
+	    if (rc == 0) {
+		rxgkToken = &tokenU.ktc_tokenUnion_u.at_gk;
+		if (rxgkToken->gk_viceid != 0) {
+		    printf("rxgk tokens for pts id %lld",
+			   rxgkToken->gk_viceid);
+		} else {
+		    printf("rxgk tokens");
+		}
+		printf(" for %s ", tokenSet->cell);
+
+		expireString = ctime_expires(rxgkToken->gk_expiration);
+		if (opr_time64_lt(rxgkToken->gk_expiration, opr_time64_now())) {
+		    printf("[>> Expired << at %s]\n", expireString);
+		} else {
+		    printf("[Expires %s]\n", expireString);
+		}
 	    }
 	    token_FreeSet(&tokenSet);
 	}

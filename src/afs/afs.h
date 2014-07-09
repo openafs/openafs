@@ -207,6 +207,16 @@ struct ClearToken {
     afs_int32 EndTimestamp;
 };
 
+struct ClearTokenRXGK {
+    afs_int64 ViceId;
+    afs_int32 enctype;
+    afs_int32 level;
+    afs_uint32 lifetime;
+    afs_uint32 bytelife;
+    struct afs_time64 expiration;
+    struct rx_opaque k0;
+};
+
 struct VenusFid {
     afs_int32 Cell;		/* better sun packing if at end of structure */
     struct AFSFid Fid;
@@ -397,8 +407,14 @@ struct rxkadToken {
     struct ClearToken clearToken;
 };
 
+struct rxgkToken {
+    struct rx_opaque token;
+    struct ClearTokenRXGK clearToken;
+};
+
 union tokenUnion {
     struct rxkadToken rxkad;
+    struct rxgkToken rxgk;
 };
 
 struct tokenJar {

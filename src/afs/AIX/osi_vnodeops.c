@@ -42,6 +42,7 @@
 #include "vldbint.h"
 #include "afs/lock.h"
 #include "afs/exporter.h"
+#include "afsincludes.h"
 #include "afs/afs.h"
 #include "afs/afs_chunkops.h"
 #include "afs/afs_stats.h"
@@ -49,7 +50,6 @@
 #include "afs/icl.h"
 #include "afs/prs_fs.h"
 #include "h/flock.h"
-#include "afsincludes.h"
 
 static int afs_vm_rdwr(struct vnode *vp, struct uio *uiop, enum uio_rw rw,
 		       int ioflag, struct ucred *credp);

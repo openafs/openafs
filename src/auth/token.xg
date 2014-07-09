@@ -7,6 +7,7 @@
 /* this file is in the public domain.  Do what thou wilt. */
 
 const AFSTOKEN_RK_TIX_MAX = 12000; 	/* Matches entry in rxkad.h */
+const AFSTOKEN_GK_TOK_MAX = 1048576;	/* Matches RXGK_MAXDATA in rxgk_int.xg */
 
 struct token_rxkad {
     afs_int32 rk_viceid;
@@ -18,11 +19,25 @@ struct token_rxkad {
     opaque rk_ticket<AFSTOKEN_RK_TIX_MAX>;
 };
 
+struct token_rxgk {
+    afs_int64 gk_viceid;	/* 64-bits to be future-proof. */
+    afs_int32 gk_enctype;
+    afs_int32 gk_level;		/* rxgk_int.xg has this as an enum. */
+    afs_uint32 gk_lifetime;
+    afs_uint32 gk_bytelife;
+    struct afs_time64 gk_expiration;
+    opaque gk_token<AFSTOKEN_GK_TOK_MAX>;
+    opaque gk_k0<AFSTOKEN_GK_TOK_MAX>;
+};
+
 const AFSTOKEN_UNION_NOAUTH = 0;
 const AFSTOKEN_UNION_KAD = 2;
+const AFSTOKEN_UNION_GK = 4;
 union ktc_tokenUnion switch (afs_int32 at_type) {
     case AFSTOKEN_UNION_KAD:
 	token_rxkad at_kad;
+    case AFSTOKEN_UNION_GK:
+	token_rxgk at_gk;
 };
 
 const AFSTOKEN_LENGTH_MAX = 16384;

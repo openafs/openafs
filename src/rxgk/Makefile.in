@@ -22,13 +22,18 @@ all: depinstall rxgk_int.cs.c rxgk_int.ss.c rxgk_int.xdr.c rxgk_int.h \
 
 generated: \
 	rxgk_errs.h rxgk_errs.c rxgk_int.h rxgk_int.cs.c rxgk_int.xdr.c \
-	rxgk_int.ss.c
+	rxgk_int.ss.c Krxgk_int.cs.c Krxgk_int.xdr.c
 
 depinstall: \
 	${TOP_INCDIR}/rx/rxgk.h \
 	${TOP_INCDIR}/rx/rxgk_types.h \
 	${TOP_INCDIR}/rx/rxgk_errs.h \
-	${TOP_INCDIR}/rx/rxgk_int.h
+	${TOP_INCDIR}/rx/rxgk_int.h \
+	rxgk_int.cs.c \
+	rxgk_int.ss.c \
+	rxgk_int.xdr.c \
+	Krxgk_int.cs.c \
+	Krxgk_int.xdr.c
 
 ${TOP_INCDIR}/rx/rxgk.h: ${srcdir}/rxgk.h ${TOP_INCDIR}/rx/rxgk_errs.h \
 		${TOP_INCDIR}/rx/rxgk_int.h ${TOP_INCDIR}/rx/rxgk_types.h
@@ -54,6 +59,12 @@ rxgk_int.xdr.c: rxgk_int.xg
 
 rxgk_int.h: rxgk_int.xg
 	${RXGEN} -b -A -x -h -o $@ ${srcdir}/rxgk_int.xg
+
+Krxgk_int.cs.c: rxgk_int.xg
+	${RXGEN} -b -k -A -x -C -o $@ ${srcdir}/rxgk_int.xg
+
+Krxgk_int.xdr.c: rxgk_int.xg
+	${RXGEN} -b -k -A -x -c -o $@ ${srcdir}/rxgk_int.xg
 
 rxgk_int.ss.o: rxgk_int.ss.c rxgk_int.xdr.c rxgk_int.h
 rxgk_int.cs.o: rxgk_int.cs.c rxgk_int.xdr.c rxgk_int.h

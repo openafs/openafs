@@ -36,12 +36,12 @@
 #include <rx/rx.h>
 
 #include "afs/sysincludes.h"
+#include "afs/afsincludes.h"
 #include "afsint.h"
 #include "vldbint.h"
 #include "afs/lock.h"
 #include "afs/afs_stats.h"
 #include "afs/afs.h"
-#include "afs/afsincludes.h"
 #include "afs/afs_prototypes.h"
 #include "rx/rx_atomic.h"
 #include "rx/rx_stats.h"

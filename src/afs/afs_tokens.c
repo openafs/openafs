@@ -1,5 +1,7 @@
 /*
  * Copyright (c) 2010 Your Filesystem Inc. All rights reserved.
+ * Copyright (c) 2014 the Massachusetts Institute of Technology.
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,6 +29,8 @@
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "token.h"
+#include <rx/rxgk.h>
+#include <opr/time.h>
 
 /* A jar for storing tokens in */
 
@@ -86,6 +90,10 @@ afs_FreeFirstToken(struct tokenJar **tokenPtr)
 	    afs_osi_Free(token->content.rxkad.ticket,
 			 token->content.rxkad.ticketLen);
 	}
+	break;
+      case RX_SECIDX_GK:
+	rx_opaque_zeroFreeContents(&token->content.rxgk.token);
+	rx_opaque_zeroFreeContents(&token->content.rxgk.clearToken.k0);
 	break;
       default:
 	break;
@@ -163,6 +171,11 @@ afs_IsTokenExpired(struct tokenJar *token, afs_int32 now)
 	if (token->content.rxkad.clearToken.EndTimestamp < now - NOTOKTIMEOUT)
 	    return 1;
 	break;
+      case RX_SECIDX_GK:
+	if (opr_time64_toSecs(token->content.rxgk.clearToken.expiration) < now) {
+	    return 1;
+	}
+	break;
       default:
 	return 0;
     }
@@ -192,6 +205,9 @@ afs_IsTokenUsable(struct tokenJar *token, afs_int32 now)
 
     switch (token->type) {
       case RX_SECIDX_KAD:
+	/* We assume that all non-expired rxkad tokens are usable by us */
+	return 1;
+      case RX_SECIDX_GK:
 	/* We assume that all non-expired rxkad tokens are usable by us */
 	return 1;
       default :
@@ -373,6 +389,117 @@ rxkad_extractTokenForPioctl(struct tokenJar *token,
     return 0;
 }
 
+#ifdef AFS_RXGK_ENV
+/*!
+ * Add an rxgk token to the token jar
+ *
+ * @param[inout] tokens
+ * 	A pointer to the address of the jar to add the token to
+ * @param[inout] token
+ * 	An rx_opaque containing the opaque rxgk token. Zeroed before returning,
+ * 	since the memory is donated to the new token.
+ * @param[inout] clearToken
+ * 	The cleartext token information, including token master key. Zeroed
+ * 	before returning, since the memory in clearToken.k0 is donated to the
+ * 	new token.
+ */
+static void
+afs_AddRxgkToken(struct tokenJar **tokens, struct rx_opaque *token,
+		 struct ClearTokenRXGK *clearToken)
+{
+    union tokenUnion *tokenU;
+    struct rxgkToken *rxgk;
+
+    tokenU = afs_AddToken(tokens, RX_SECIDX_GK);
+    rxgk = &tokenU->rxgk;
+
+    rxgk->token = *token;
+    /* 'token' is donated; make sure the caller doesn't free it. */
+    memset(token, 0, sizeof(*token));
+
+    rxgk->clearToken = *clearToken;
+
+    /*
+     * clearToken.k0 is donated from the incoming clearToken; make sure the
+     * caller doesn't free it.
+     */
+    memset(clearToken, 0, sizeof(*clearToken));
+}
+
+static int
+afs_AddRxgkTokenFromPioctl(struct tokenJar **tokens,
+			   struct ktc_tokenUnion *pioctlToken)
+{
+    struct token_rxgk *rxgkPioctl;
+    struct rx_opaque token;
+    struct ClearTokenRXGK clear;
+    int code;
+
+    memset(&clear, 0, sizeof(clear));
+    memset(&token, 0, sizeof(token));
+
+    rxgkPioctl = &pioctlToken->ktc_tokenUnion_u.at_gk;
+
+    clear.ViceId = rxgkPioctl->gk_viceid;
+    clear.enctype = rxgkPioctl->gk_enctype;
+    clear.level = rxgkPioctl->gk_level;
+    clear.lifetime = rxgkPioctl->gk_lifetime;
+    clear.bytelife = rxgkPioctl->gk_bytelife;
+    clear.expiration = rxgkPioctl->gk_expiration;
+    code = rx_opaque_populate(&clear.k0, rxgkPioctl->gk_k0.gk_k0_val,
+			      rxgkPioctl->gk_k0.gk_k0_len);
+    if (code != 0) {
+	goto done;
+    }
+
+    code = rx_opaque_populate(&token, rxgkPioctl->gk_token.gk_token_val,
+			      rxgkPioctl->gk_token.gk_token_len);
+    if (code != 0) {
+	goto done;
+    }
+
+    afs_AddRxgkToken(tokens, &token, &clear);
+
+ done:
+    rx_opaque_zeroFreeContents(&token);
+    rx_opaque_zeroFreeContents(&clear.k0);
+    return code;
+}
+
+static int
+rxgk_extractTokenForPioctl(struct tokenJar *token,
+			   struct ktc_tokenUnion *pioctlToken)
+{
+    struct token_rxgk *rxgkPioctl;
+    struct rxgkToken *rxgk;
+
+    rxgkPioctl = &pioctlToken->ktc_tokenUnion_u.at_gk;
+    rxgk = &token->content.rxgk;
+    rxgkPioctl->gk_viceid = rxgk->clearToken.ViceId;
+    rxgkPioctl->gk_enctype = rxgk->clearToken.enctype;
+    rxgkPioctl->gk_level = rxgk->clearToken.level;
+    rxgkPioctl->gk_lifetime = rxgk->clearToken.lifetime;
+    rxgkPioctl->gk_bytelife = rxgk->clearToken.bytelife;
+    rxgkPioctl->gk_expiration = rxgk->clearToken.expiration;
+    rxgkPioctl->gk_token.gk_token_val = xdr_alloc(rxgk->token.len);
+    if (rxgkPioctl->gk_token.gk_token_val == NULL) {
+	return ENOMEM;
+    }
+    memcpy(rxgkPioctl->gk_token.gk_token_val, rxgk->token.val,
+	   rxgk->token.len);
+    rxgkPioctl->gk_token.gk_token_len = rxgk->token.len;
+
+    rxgkPioctl->gk_k0.gk_k0_val = xdr_alloc(rxgk->clearToken.k0.len);
+    if (rxgkPioctl->gk_k0.gk_k0_val == NULL) {
+	return ENOMEM;
+    }
+    memcpy(rxgkPioctl->gk_k0.gk_k0_val, rxgk->clearToken.k0.val,
+	   rxgk->clearToken.k0.len);
+    rxgkPioctl->gk_k0.gk_k0_len = rxgk->clearToken.k0.len;
+    return 0;
+}
+#endif /* AFS_RXGK_ENV */
+
 /*!
  * Add a token to a token jar based on the input from a new-style
  * SetToken pioctl
@@ -394,6 +521,10 @@ afs_AddTokenFromPioctl(struct tokenJar **tokens,
     switch (pioctlToken->at_type) {
       case RX_SECIDX_KAD:
 	return afs_AddRxkadTokenFromPioctl(tokens, pioctlToken);
+#ifdef AFS_RXGK_ENV
+      case RX_SECIDX_GK:
+	return afs_AddRxgkTokenFromPioctl(tokens, pioctlToken);
+#endif
     }
 
     return EINVAL;
@@ -419,6 +550,11 @@ extractPioctlToken(struct tokenJar *token,
       case RX_SECIDX_KAD:
 	code = rxkad_extractTokenForPioctl(token, pioctlToken);
 	break;
+#ifdef AFS_RXGK_ENV
+      case RX_SECIDX_GK:
+	code = rxgk_extractTokenForPioctl(token, pioctlToken);
+	break;
+#endif
       default:
 	code = EINVAL;;
     }

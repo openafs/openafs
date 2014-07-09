@@ -15,6 +15,7 @@
 #include "roken.h"
 #include "afs/opr.h"
 #include "rx/rx.h"
+#include "rx/rx_opaque.h"
 #include "afs/afs_osi.h"
 #include "afs/lock.h"
 #include "afs/volerrors.h"

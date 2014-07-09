@@ -48,6 +48,7 @@
 #include "vldbint.h"
 #include "afs/lock.h"
 #include "afs/exporter.h"
+#include "afsincludes.h"
 #include "afs/afs.h"
 #include "afs/afs_stats.h"
 
