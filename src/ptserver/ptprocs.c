@@ -572,7 +572,7 @@ nameToID(struct rx_call *call, namelist *aname, idlist *aid)
 
 	if (cell && *cell) {
 	    code = afsconf_IsLocalRealmMatch(prdir, &islocal, nameinst, NULL, cell);
-	    ViceLog(0,
+	    ViceLog(125,
 		    ("PTS_NameToID: afsconf_IsLocalRealmMatch(); code=%d, nameinst=%s, cell=%s\n",
 		     code, nameinst, cell));
 	}
