@@ -616,16 +616,6 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
 #endif /* F_GETLK64 && F_GETLK != F_GETLK64 */
 
     AFS_GLOCK();
-    if ((vcp->f.states & CRO)) {
-	if (flp->fl_type == F_WRLCK) {
-	    code = EBADF;
-	} else {
-	    code = 0;
-	}
-	AFS_GUNLOCK();
-	crfree(credp);
-	return code;
-    }
     code = afs_convert_code(afs_lockctl(vcp, &flock, cmd, credp));
     AFS_GUNLOCK();
 
