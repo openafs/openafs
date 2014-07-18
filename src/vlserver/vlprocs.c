@@ -1729,6 +1729,10 @@ ListAttributesN2(struct rx_call *rxcall,
 	findpartition = ((attributes->Mask & VLLIST_PARTITION) ? 1 : 0);
 	findflag = ((attributes->Mask & VLLIST_FLAG) ? 1 : 0);
 	if (name && (strcmp(name, ".*") != 0) && (strcmp(name, "") != 0)) {
+	    if (!afsconf_SuperUser(vldb_confdir, rxcall, NULL)) {
+		code = VL_PERM;
+		goto done;
+	    }
 	    sprintf(volumename, "^%s$", name);
 #ifdef HAVE_POSIX_REGEX
 	    if (regcomp(&re, volumename, REG_NOSUB) != 0) {
