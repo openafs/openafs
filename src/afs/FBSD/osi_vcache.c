@@ -77,7 +77,9 @@ osi_PrePopulateVCache(struct vcache *avc) {
 void
 osi_AttachVnode(struct vcache *avc, int seq) {
     struct vnode *vp;
+#if !defined(AFS_FBSD80_ENV)
     struct thread *p = curthread;
+#endif
 
     ReleaseWriteLock(&afs_xvcache);
     AFS_GUNLOCK();
