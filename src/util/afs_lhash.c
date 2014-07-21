@@ -406,7 +406,7 @@ afs_lhash_remove(afs_lhash * lh, unsigned key, const void *data)
 	 pprev = &cur->next, cur = cur->next) {
 	lh->remove_tests++;
 	if (lh->equal(data, cur->data)) {
-	    void *data = cur->data;
+	    void *ptr = cur->data;
 
 	    if (pprev) {
 		*pprev = cur->next;
@@ -418,7 +418,7 @@ afs_lhash_remove(afs_lhash * lh, unsigned key, const void *data)
 
 	    lh->ndata--;
 
-	    return data;
+	    return ptr;
 	}
     }
 
