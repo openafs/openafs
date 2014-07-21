@@ -1428,8 +1428,8 @@ VPutVnode_r(Error * ec, Vnode * vnp)
 	    if (vnp->changed_newTime)
 	    {
 		V_updateDate(vp) = vp->updateTime = now;
-		if(V_volUpCounter(vp)< UINT_MAX)
-			V_volUpCounter(vp)++;
+		if(V_volUpdateCounter(vp)< UINT_MAX)
+			V_volUpdateCounter(vp)++;
 	    }
 
 	    /* The vnode has been changed. Write it out to disk */

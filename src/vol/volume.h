@@ -776,7 +776,7 @@ struct volHeader {
 #define V_stat_fileDiffAuthor(vp, idx) (((vp)->header->diskstuff.stat_fileDiffAuthor)[idx])
 #define V_stat_dirSameAuthor(vp, idx)  (((vp)->header->diskstuff.stat_dirSameAuthor)[idx])
 #define V_stat_dirDiffAuthor(vp, idx)  (((vp)->header->diskstuff.stat_dirDiffAuthor)[idx])
-#define V_volUpCounter(vp)		((vp)->header->diskstuff.volUpdateCounter)
+#define V_volUpdateCounter(vp)		((vp)->header->diskstuff.volUpdateCounter)
 
 /* File offset computations.  The offset values in the volume header are
    computed with these macros -- when the file is written only!! */
