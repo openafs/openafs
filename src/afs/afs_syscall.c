@@ -476,7 +476,8 @@ afs3_syscall(struct thread *p, void *args)
 	long parm5;
 	long parm6;
     } *uap = (struct a *)args;
-    long *retval;
+    long fbsd_ret = 0;
+    long *retval = &fbsd_ret;
 #elif defined(AFS_NBSD40_ENV)
 int
 afs3_syscall(struct lwp *p, const void *args, register_t *retval)
