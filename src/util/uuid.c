@@ -98,7 +98,7 @@ void uuid__get_os_time(uuid_time_t * os_time);
  * +--------------------------...-----+
  */
 
-afsUUID afs_uuid_g_nil_uuid = { 0 };
+afsUUID afs_uuid_g_nil_uuid;
 static uuid_time_t time_now, time_last;
 static u_short uuid_time_adjust, clock_seq;
 static afs_uint32 rand_m, rand_ia, rand_ib, rand_irand, uuid_init_done = 0;

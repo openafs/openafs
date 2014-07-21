@@ -60,11 +60,11 @@
 /* variable initialization for the benefit of darwin compiler; if it causes
    problems elsewhere, conditionalize for darwin or fc_test compile breaks */
 #ifdef AFS_PTHREAD_ENV
-struct rxkad_global_stats rxkad_global_stats = { 0 };
+struct rxkad_global_stats rxkad_global_stats;
 pthread_mutex_t rxkad_global_stats_lock;
 pthread_key_t rxkad_stats_key;
 #else /* AFS_PTHREAD_ENV */
-struct rxkad_stats rxkad_stats = { { 0 } };
+struct rxkad_stats rxkad_stats;
 #endif /* AFS_PTHREAD_ENV */
 
 #ifdef AFS_PTHREAD_ENV
