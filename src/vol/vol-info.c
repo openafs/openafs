@@ -871,11 +871,11 @@ HandlePart(struct VolInfoOpt *opt, struct DiskPartition64 *partP)
 /**
  * Inspect a volume header special file.
  *
- * @param[in]  name       descriptive name of the type of header special file
- * @param[in]  dp         partition object for this volume
- * @param[in]  header     header object for this volume
- * @param[in]  inode      fileserver inode number for this header special file
- * @param[out] psize      total of the header special file
+ * @param[in]    name       descriptive name of the type of header special file
+ * @param[in]    dp         partition object for this volume
+ * @param[in]    header     header object for this volume
+ * @param[in]    inode      fileserver inode number for this header special file
+ * @param[inout] psize      total of the header special file sizes
  *
  * @return none
  */
@@ -938,7 +938,6 @@ HandleSpecialFile(struct VolInfoOpt *opt, const char *name, struct DiskPartition
  * @param[in]  dp         partition object for this volume
  * @param[in]  header_fd  volume header file descriptor
  * @param[in]  header     volume header object
- * @param[out] psize      total of the header special file
  *
  * @return none
  */
