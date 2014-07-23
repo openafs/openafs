@@ -1304,9 +1304,14 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 	    code = afs_lookup(pvcp, (char *)dp->d_name.name, &tvc, credp);
 	    if (!tvc || tvc != vcp) {
 		dput(parent);
-		/* Force unhash if name is known not to exist. */
-		if (code == ENOENT)
-		    force_drop = 1;
+		/* Force unhash; the name doesn't point to this file
+		 * anymore. */
+		force_drop = 1;
+		if (code && code != ENOENT) {
+		    /* ...except if we couldn't perform the actual lookup,
+		     * we don't know if the name points to this file or not. */
+		    force_drop = 0;
+		}
 		goto bad_dentry;
 	    }
 
