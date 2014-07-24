@@ -28,8 +28,13 @@ void *
 _afscrypto_calloc(int num, size_t len)
 {
     void *ptr;
+    size_t total;
 
-    ptr = afs_osi_Alloc(num * len);
+    total = num * len;
+    ptr = afs_osi_Alloc(total);
+    /* In practice, callers assume the afs_osi_Alloc() will not fail. */
+    if (ptr != NULL)
+	memset(ptr, 0, total);
 
     return ptr;
 }
