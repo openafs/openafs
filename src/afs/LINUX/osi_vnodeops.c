@@ -964,10 +964,11 @@ static inline void
 fix_bad_parent(struct dentry *dp, cred_t *credp, struct vcache *vcp, struct vcache *pvc) 
 {
     struct vcache *avc = NULL;
+    int code;
 
     /* force a lookup, so vcp->mvid is fixed up */
-    afs_lookup(pvc, (char *)dp->d_name.name, &avc, credp);
-    if (!avc || vcp != avc) {	/* bad, very bad.. */
+    code = afs_lookup(pvc, (char *)dp->d_name.name, &avc, credp);
+    if (code || vcp != avc) {	/* bad, very bad.. */
 	afs_Trace4(afs_iclSetp, CM_TRACE_TMP_1S3L, ICL_TYPE_STRING,
 		   "check_bad_parent: bad pointer returned from afs_lookup origvc newvc dentry",
 		   ICL_TYPE_POINTER, vcp, ICL_TYPE_POINTER, avc,
@@ -1302,7 +1303,7 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 	    int code;
 
 	    code = afs_lookup(pvcp, (char *)dp->d_name.name, &tvc, credp);
-	    if (!tvc || tvc != vcp) {
+	    if (code || tvc != vcp) {
 		dput(parent);
 		/* Force unhash; the name doesn't point to this file
 		 * anymore. */
@@ -1550,7 +1551,7 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
     AFS_GLOCK();
     code = afs_lookup(VTOAFS(dip), (char *)comp, &vcp, credp);
     
-    if (vcp) {
+    if (!code) {
 	struct vattr *vattr = NULL;
 	struct vcache *parent_vc = VTOAFS(dip);
 
