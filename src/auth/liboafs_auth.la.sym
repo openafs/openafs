@@ -3,11 +3,11 @@ afsconf_BuildServerSecurityObjects
 afsconf_CellAliasApply
 afsconf_CellApply
 afsconf_CheckAuth
+afsconf_CheckRestrictedQuery
 afsconf_ClientAuth
 afsconf_ClientAuthSecure
 afsconf_ClientAuthToken
 afsconf_Close
-afsconf_CheckRestrictedQuery
 afsconf_DeleteKey
 afsconf_GetAfsdbInfo
 afsconf_GetAllKeys
