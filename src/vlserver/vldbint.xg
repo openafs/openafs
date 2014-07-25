@@ -182,6 +182,14 @@ const VLOP_BACKUP      = 0x40;
 const VLOP_DELETE      = 0x80;
 const VLOP_DUMP        = 0x100;
 
+/*
+ * Additional VLOP_xxxx constants cannot be added without breaking
+ * compatibility so must reuse values. New names are added for
+ * code readability.
+ */
+%#define VLOP_ADDSITE   VLOP_DELETE
+%#define VLOP_RESTORE   VLOP_DUMP
+
 %#define VLOP_ALLOPERS ( VLOP_MOVE | VLOP_RELEASE | VLOP_BACKUP | VLOP_DELETE | VLOP_DUMP)
 
 /* defines for convenience of vl users */

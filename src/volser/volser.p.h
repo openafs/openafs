@@ -156,8 +156,6 @@ struct partList {		/*used by the backup system */
 #define ITSRWREPL   0x10
 #define RO_DONTUSE  0x20
 
-#define VLOP_RESTORE 0x100	/*this is bogus, clashes with VLOP_DUMP */
-#define VLOP_ADDSITE 0x80	/*this is bogus, clashes with VLOP_DELETE */
 #define PARTVALID 0x01
 #define CLONEVALID 0x02
 #define CLONEZAPPED 0x04
