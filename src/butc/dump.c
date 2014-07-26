@@ -869,7 +869,7 @@ dumpPass(struct dumpRock * dparamsPtr, int passNumber)
 
 	    switch (curDump->vtype) {
 	    case BACKVOL:
-		if (!(vldbEntry.flags & BACK_EXISTS)) {
+		if (!(vldbEntry.flags & VLF_BACKEXISTS)) {
 		    ErrorLog(0, taskId, 0, 0,
 			     "Volume %s (%u) failed - Backup volume no longer exists\n",
 			     curDump->name, curDump->vid);
@@ -881,7 +881,7 @@ dumpPass(struct dumpRock * dparamsPtr, int passNumber)
 
 	    case RWVOL:
 		for (e = 0; e < vldbEntry.nServers; e++) {	/* Find the RW volume */
-		    if (vldbEntry.serverFlags[e] & ITSRWVOL)
+		    if (vldbEntry.serverFlags[e] & VLSF_RWVOL)
 			break;
 		}
 		break;
@@ -899,7 +899,7 @@ dumpPass(struct dumpRock * dparamsPtr, int passNumber)
 
 		if (e >= vldbEntry.nServers) {	/* Didn't find RO volume */
 		    for (e = 0; e < vldbEntry.nServers; e++) {	/* Find the first RO volume */
-			if (vldbEntry.serverFlags[e] & ITSROVOL)
+			if (vldbEntry.serverFlags[e] & VLSF_ROVOL)
 			    break;
 		    }
 		}

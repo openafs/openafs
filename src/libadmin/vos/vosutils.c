@@ -428,8 +428,8 @@ GetVolumeInfo(afs_cell_handle_p cellHandle, afs_uint32 volid,
     if (volid == rentry->volumeId[ROVOL]) {
 	*voltype = ROVOL;
 	for (i = 0; i < rentry->nServers; i++) {
-	    if ((index == -1) && (rentry->serverFlags[i] & ITSROVOL)
-		&& !(rentry->serverFlags[i] & RO_DONTUSE))
+	    if ((index == -1) && (rentry->serverFlags[i] & VLSF_ROVOL)
+		&& !(rentry->serverFlags[i] & VLSF_DONTUSE))
 		index = i;
 	}
 	if (index == -1) {

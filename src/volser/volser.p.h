@@ -143,19 +143,6 @@ struct partList {		/*used by the backup system */
 
 #define ISNAMEVALID(name) (strlen(name) < (VOLSER_OLDMAXVOLNAME - 9))
 
-/* values for flags in struct nvldbEntry */
-#define RW_EXISTS 0x1000
-#define RO_EXISTS 0x2000
-#define BACK_EXISTS 0x4000
-
-/* values for serverFlags in struct nvldbEntry */
-#define NEW_REPSITE 0x01
-#define ITSROVOL    0x02
-#define ITSRWVOL    0x04
-#define ITSBACKVOL  0x08
-#define ITSRWREPL   0x10
-#define RO_DONTUSE  0x20
-
 #define PARTVALID 0x01
 #define CLONEVALID 0x02
 #define CLONEZAPPED 0x04

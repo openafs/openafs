@@ -150,10 +150,10 @@ GetServerAndPart(struct nvldbentry *entry, int voltype, afs_int32 * server,
 
     /* Doesn't check for non-existance of backup volume */
     if ((voltype == RWVOL) || (voltype == BACKVOL)) {
-	vtype = ITSRWVOL;
+	vtype = VLSF_RWVOL;
 	istart = 0;		/* seach the entire entry */
     } else {
-	vtype = ITSROVOL;
+	vtype = VLSF_ROVOL;
 	/* Seach from beginning of entry or pick up where we left off */
 	istart = ((*previdx < 0) ? 0 : *previdx + 1);
     }
@@ -240,7 +240,7 @@ vos_BackupVolumeCreate(const void *cellHandle, vos_MessageCallBack_t callBack,
      * same server as volumeId
      */
 
-    if (rw_vol_entry.flags & BACK_EXISTS) {
+    if (rw_vol_entry.flags & VLF_BACKEXISTS) {
 	if (!GetVolumeInfo
 	    (c_handle, rw_vol_entry.volumeId[BACKVOL], &bk_vol_entry,
 	     &bk_server, &bk_partition, &bk_vol_type, &tst)) {
@@ -392,7 +392,7 @@ vos_BackupVolumeCreateMultiple(const void *cellHandle,
 	 * Skip entries that don't have a RW volume
 	 */
 
-	if (!(entry->flags & RW_EXISTS)) {
+	if (!(entry->flags & VLF_RWEXISTS)) {
 	    if (callBack != NULL) {
 		const char *messageText;
 		if (util_AdminErrorCodeTranslate
@@ -1879,19 +1879,19 @@ copyVLDBEntry(struct nvldbentry *source, vos_vldbEntry_p dest,
 	dest->volumeSites[i].serverPartition = source->serverPartition[i];
 	dest->volumeSites[i].serverFlags = 0;
 
-	if (source->serverFlags[i] & NEW_REPSITE) {
+	if (source->serverFlags[i] & VLSF_NEWREPSITE) {
 	    dest->volumeSites[i].serverFlags |= VOS_VLDB_NEW_REPSITE;
 	}
-	if (source->serverFlags[i] & ITSROVOL) {
+	if (source->serverFlags[i] & VLSF_ROVOL) {
 	    dest->volumeSites[i].serverFlags |= VOS_VLDB_READ_ONLY;
 	}
-	if (source->serverFlags[i] & ITSRWVOL) {
+	if (source->serverFlags[i] & VLSF_RWVOL) {
 	    dest->volumeSites[i].serverFlags |= VOS_VLDB_READ_WRITE;
 	}
-	if (source->serverFlags[i] & ITSBACKVOL) {
+	if (source->serverFlags[i] & VLSF_BACKVOL) {
 	    dest->volumeSites[i].serverFlags |= VOS_VLDB_BACKUP;
 	}
-	if (source->serverFlags[i] & RO_DONTUSE) {
+	if (source->serverFlags[i] & VLSF_DONTUSE) {
 	    dest->volumeSites[i].serverFlags |= VOS_VLDB_DONT_USE;
 	}
 

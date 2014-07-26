@@ -1414,10 +1414,10 @@ GetServerAndPart(struct nvldbentry *entry, int voltype, afs_uint32 *server,
 
     /* Doesn't check for non-existance of backup volume */
     if ((voltype == RWVOL) || (voltype == BACKVOL)) {
-	vtype = ITSRWVOL;
+	vtype = VLSF_RWVOL;
 	istart = 0;		/* seach the entire entry */
     } else {
-	vtype = ITSROVOL;
+	vtype = VLSF_ROVOL;
 	/* Seach from beginning of entry or pick up where we left off */
 	istart = ((*previdx < 0) ? 0 : *previdx + 1);
     }
@@ -1677,7 +1677,7 @@ ExamineVolume(struct cmd_syndesc *as, void *arock)
 	if (code) {
 	    error = code;
 	    if (code == ENODEV) {
-		if ((voltype == BACKVOL) && !(entry.flags & BACK_EXISTS)) {
+		if ((voltype == BACKVOL) && !(entry.flags & VLF_BACKEXISTS)) {
 		    /* The VLDB says there is no backup volume and its not on disk */
 		    fprintf(STDERR, "Volume %s does not exist\n",
 			    as->parms[0].items->data);
@@ -1702,7 +1702,7 @@ ExamineVolume(struct cmd_syndesc *as, void *arock)
 	    } else
 		VolumeStats_int(pntr, &entry, aserver, apart, voltype);
 
-	    if ((voltype == BACKVOL) && !(entry.flags & BACK_EXISTS)) {
+	    if ((voltype == BACKVOL) && !(entry.flags & VLF_BACKEXISTS)) {
 		/* The VLDB says there is no backup volume yet we found one on disk */
 		fprintf(STDERR, "Volume %s does not exist in VLDB\n",
 			as->parms[0].items->data);
@@ -2081,7 +2081,7 @@ DeleteAll(struct nvldbentry *entry)
     for (i = 0; i < entry->nServers; i++) {
 	curserver = entry->serverNumber[i];
 	curpart = entry->serverPartition[i];
-	if (entry->serverFlags[i] & ITSROVOL) {
+	if (entry->serverFlags[i] & VLSF_ROVOL) {
 	    volid = entry->volumeId[ROVOL];
 	} else {
 	    volid = entry->volumeId[RWVOL];
@@ -2158,9 +2158,9 @@ DeleteVolume(struct cmd_syndesc *as, void *arock)
 	    return (code);
 	}
 
-	if (((volid == entry.volumeId[RWVOL]) && (entry.flags & RW_EXISTS))
+	if (((volid == entry.volumeId[RWVOL]) && (entry.flags & VLF_RWEXISTS))
 	    || ((volid == entry.volumeId[BACKVOL])
-		&& (entry.flags & BACK_EXISTS))) {
+		&& (entry.flags & VLF_BACKEXISTS))) {
 	    idx = Lp_GetRwIndex(&entry);
 	    if ((idx == -1) || (server && (server != entry.serverNumber[idx]))
 		|| ((partition != -1)
@@ -2170,9 +2170,9 @@ DeleteVolume(struct cmd_syndesc *as, void *arock)
 		return ENOENT;
 	    }
 	} else if ((volid == entry.volumeId[ROVOL])
-		   && (entry.flags & RO_EXISTS)) {
+		   && (entry.flags & VLF_ROEXISTS)) {
 	    for (idx = -1, j = 0; j < entry.nServers; j++) {
-		if (!(entry.serverFlags[j] & ITSROVOL))
+		if (!(entry.serverFlags[j] & VLSF_ROVOL))
 		    continue;
 
 		if (((server == 0) || (server == entry.serverNumber[j]))
@@ -2845,7 +2845,7 @@ BackupVolume(struct cmd_syndesc *as, void *arock)
 
     /* is there a backup volume already? */
 
-    if (entry.flags & BACK_EXISTS) {
+    if (entry.flags & VLF_BACKEXISTS) {
 	/* yep, where is it? */
 
 	buvolid = entry.volumeId[BACKVOL];
@@ -4262,8 +4262,8 @@ GetVolumeInfo(afs_uint32 volid, afs_uint32 *server, afs_int32 *part, afs_int32 *
     if (volid == rentry->volumeId[ROVOL]) {
 	*voltype = ROVOL;
 	for (i = 0; i < rentry->nServers; i++) {
-	    if ((index == -1) && (rentry->serverFlags[i] & ITSROVOL)
-		&& !(rentry->serverFlags[i] & RO_DONTUSE))
+	    if ((index == -1) && (rentry->serverFlags[i] & VLSF_ROVOL)
+		&& !(rentry->serverFlags[i] & VLSF_DONTUSE))
 		index = i;
 	}
 	if (index == -1) {
@@ -4506,9 +4506,9 @@ static int CompareVldbEntry(char *p1, char *p2)
     pos2 = -1;
 
     for(i = 0; i < arg1->nServers; i++)
-	if(arg1->serverFlags[i] & ITSRWVOL) pos1 = i;
+	if(arg1->serverFlags[i] & VLSF_RWVOL) pos1 = i;
     for(i = 0; i < arg2->nServers; i++)
-	if(arg2->serverFlags[i] & ITSRWVOL) pos2 = i;
+	if(arg2->serverFlags[i] & VLSF_RWVOL) pos2 = i;
     if(pos1 == -1 || pos2 == -1){
 	pos1 = 0;
 	pos2 = 0;
@@ -4966,7 +4966,7 @@ BackSys(struct cmd_syndesc *as, void *arock)
 	    continue;
 	}
 
-	if (!(vllist->flags & RW_EXISTS)) {
+	if (!(vllist->flags & VLF_RWEXISTS)) {
 	    if (verbose) {
 		fprintf(STDOUT,
 			"Omitting to backup %s since RW volume does not exist \n",
@@ -5609,12 +5609,12 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
 
     MapHostToNetwork(&entry);
     for (i = 0; i < entry.nServers; i++) {
-	if (entry.serverFlags[i] & ITSRWVOL) {
+	if (entry.serverFlags[i] & VLSF_RWVOL) {
 	    rwserver = entry.serverNumber[i];
 	    rwpartition = entry.serverPartition[i];
 	    if (roserver)
 		break;
-	} else if ((entry.serverFlags[i] & ITSROVOL) && !roserver) {
+	} else if ((entry.serverFlags[i] & VLSF_ROVOL) && !roserver) {
 	    same = VLDB_IsSameAddrs(server, entry.serverNumber[i], &code);
 	    if (code) {
 		fprintf(STDERR,

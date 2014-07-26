@@ -50,7 +50,7 @@ FindIndex(struct nvldbentry *entry, afs_uint32 server, afs_int32 part, afs_int32
 		    || VLDB_IsSameAddrs(entry->serverNumber[e], server,
 					&error)))
 		break;
-	    if (type == ITSRWVOL)
+	    if (type == VLSF_RWVOL)
 		return -1;	/* quit when we are looking for RW entry (there's only 1) */
 	}
     }
@@ -97,7 +97,7 @@ void
 Lp_SetRWValue(struct nvldbentry *entry, afs_uint32 oserver, afs_int32 opart,
               afs_uint32 nserver, afs_int32 npart)
 {
-    SetAValue(entry, oserver, opart, nserver, npart, ITSRWVOL);
+    SetAValue(entry, oserver, opart, nserver, npart, VLSF_RWVOL);
 }
 
 /* Changes the RO site only */
@@ -105,7 +105,7 @@ void
 Lp_SetROValue(struct nvldbentry *entry, afs_uint32 oserver,
               afs_int32 opart, afs_uint32 nserver, afs_int32 npart)
 {
-    SetAValue(entry, oserver, opart, nserver, npart, ITSROVOL);
+    SetAValue(entry, oserver, opart, nserver, npart, VLSF_ROVOL);
 }
 
 /* Returns success if this server and partition matches the RW entry */
@@ -113,7 +113,7 @@ int
 Lp_Match(afs_uint32 server, afs_int32 part,
          struct nvldbentry *entry)
 {
-    if (FindIndex(entry, server, part, ITSRWVOL) == -1)
+    if (FindIndex(entry, server, part, VLSF_RWVOL) == -1)
 	return 0;
     return 1;
 }
@@ -122,14 +122,14 @@ Lp_Match(afs_uint32 server, afs_int32 part,
 int
 Lp_ROMatch(afs_uint32 server, afs_int32 part, struct nvldbentry *entry)
 {
-    return (FindIndex(entry, server, part, ITSROVOL) + 1);
+    return (FindIndex(entry, server, part, VLSF_ROVOL) + 1);
 }
 
 /* Return the index of the RW entry if it exists, else return -1 */
 int
 Lp_GetRwIndex(struct nvldbentry *entry)
 {
-    return (FindIndex(entry, 0, 0, ITSRWVOL));
+    return (FindIndex(entry, 0, 0, VLSF_RWVOL));
 }
 
 /*initialize queue pointed by <ahead>*/

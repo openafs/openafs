@@ -35,7 +35,7 @@ FindIndex(afs_cell_handle_p cellHandle, struct nvldbentry *entry,
 		&& (!server || equal)) {
 		break;
 	    }
-	    if (type == ITSRWVOL) {
+	    if (type == VLSF_RWVOL) {
 		/* quit when we are looking for RW entry (there's only 1) */
 		return -1;
 	    }
@@ -80,7 +80,7 @@ Lp_SetRWValue(afs_cell_handle_p cellHandle, struct nvldbentry *entry,
 	      afs_int32 oserver, afs_int32 opart, afs_int32 nserver,
 	      afs_int32 npart)
 {
-    SetAValue(cellHandle, entry, oserver, opart, nserver, npart, ITSRWVOL);
+    SetAValue(cellHandle, entry, oserver, opart, nserver, npart, VLSF_RWVOL);
 }
 
 /* Changes the RO site only */
@@ -89,7 +89,7 @@ Lp_SetROValue(afs_cell_handle_p cellHandle, struct nvldbentry *entry,
 	      afs_int32 oserver, afs_int32 opart, afs_int32 nserver,
 	      afs_int32 npart)
 {
-    SetAValue(cellHandle, entry, oserver, opart, nserver, npart, ITSROVOL);
+    SetAValue(cellHandle, entry, oserver, opart, nserver, npart, VLSF_ROVOL);
 }
 
 /* Returns success if this server and partition matches the RW entry */
@@ -97,7 +97,7 @@ int
 Lp_Match(afs_cell_handle_p cellHandle, struct nvldbentry *entry,
 	 afs_int32 server, afs_int32 part, afs_status_p st)
 {
-    if (FindIndex(cellHandle, entry, server, part, ITSRWVOL) == -1)
+    if (FindIndex(cellHandle, entry, server, part, VLSF_RWVOL) == -1)
 	return 0;
     return 1;
 }
@@ -107,7 +107,7 @@ int
 Lp_ROMatch(afs_cell_handle_p cellHandle, struct nvldbentry *entry,
 	   afs_int32 server, afs_int32 part, afs_status_p st)
 {
-    return (FindIndex(cellHandle, entry, server, part, ITSROVOL) + 1);
+    return (FindIndex(cellHandle, entry, server, part, VLSF_ROVOL) + 1);
 }
 
 /* Return the index of the RW entry if it exists, else return -1 */
@@ -115,7 +115,7 @@ int
 Lp_GetRwIndex(afs_cell_handle_p cellHandle, struct nvldbentry *entry,
 	      afs_status_p st)
 {
-    return (FindIndex(cellHandle, entry, 0, 0, ITSRWVOL));
+    return (FindIndex(cellHandle, entry, 0, 0, VLSF_RWVOL));
 }
 
 /*initialize queue pointed by <ahead>*/
