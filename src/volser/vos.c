@@ -72,15 +72,32 @@ struct tqHead {
     struct tqElem *next;
 };
 
-#define COMMONPARMS     cmd_Seek(ts, 12);\
-cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");\
-cmd_AddParmAlias(ts, 12, "-c");   /* original -cell option */ \
-cmd_AddParm(ts, "-noauth", CMD_FLAG, CMD_OPTIONAL, "don't authenticate");\
-cmd_AddParm(ts, "-localauth",CMD_FLAG,CMD_OPTIONAL,"use server tickets");\
-cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, "verbose");\
-cmd_AddParm(ts, "-encrypt", CMD_FLAG, CMD_OPTIONAL, "encrypt commands");\
-cmd_AddParm(ts, "-noresolve", CMD_FLAG, CMD_OPTIONAL, "don't resolve addresses"); \
-cmd_AddParm(ts, "-config", CMD_SINGLE, CMD_OPTIONAL, "config location"); \
+enum {
+    COMMONPARM_OFFSET_CELL      = 25,
+    COMMONPARM_OFFSET_NOAUTH    = 26,
+    COMMONPARM_OFFSET_LOCALAUTH = 27,
+    COMMONPARM_OFFSET_VERBOSE   = 28,
+    COMMONPARM_OFFSET_ENCRYPT   = 29,
+    COMMONPARM_OFFSET_NORESOLVE = 30,
+    COMMONPARM_OFFSET_CONFIG    = 31,
+};
+
+#define COMMONPARMS \
+cmd_AddParmAtOffset(ts, COMMONPARM_OFFSET_CELL, \
+    "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");\
+cmd_AddParmAlias(ts, COMMONPARM_OFFSET_CELL, "-c");   /* original -cell option */ \
+cmd_AddParmAtOffset(ts, COMMONPARM_OFFSET_NOAUTH, \
+    "-noauth", CMD_FLAG, CMD_OPTIONAL, "don't authenticate");\
+cmd_AddParmAtOffset(ts, COMMONPARM_OFFSET_LOCALAUTH, \
+    "-localauth",CMD_FLAG,CMD_OPTIONAL,"use server tickets");\
+cmd_AddParmAtOffset(ts, COMMONPARM_OFFSET_VERBOSE, \
+    "-verbose", CMD_FLAG, CMD_OPTIONAL, "verbose");\
+cmd_AddParmAtOffset(ts, COMMONPARM_OFFSET_ENCRYPT, \
+    "-encrypt", CMD_FLAG, CMD_OPTIONAL, "encrypt commands");\
+cmd_AddParmAtOffset(ts, COMMONPARM_OFFSET_NORESOLVE, \
+    "-noresolve", CMD_FLAG, CMD_OPTIONAL, "don't resolve addresses"); \
+cmd_AddParmAtOffset(ts, COMMONPARM_OFFSET_CONFIG, \
+    "-config", CMD_SINGLE, CMD_OPTIONAL, "config location"); \
 
 #define ERROR_EXIT(code) do { \
     error = (code); \
@@ -5815,26 +5832,26 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
     secFlags = AFSCONF_SECOPTS_FALLBACK_NULL;
 
     tcell = NULL;
-    if (as->parms[12].items)	/* if -cell specified */
-	tcell = as->parms[12].items->data;
+    if (as->parms[COMMONPARM_OFFSET_CELL].items)	/* if -cell specified */
+	tcell = as->parms[COMMONPARM_OFFSET_CELL].items->data;
 
-    if (as->parms[13].items)
+    if (as->parms[COMMONPARM_OFFSET_NOAUTH].items)
 	secFlags |= AFSCONF_SECOPTS_NOAUTH;
 
-    if (as->parms[14].items) {	/* -localauth specified */
+    if (as->parms[COMMONPARM_OFFSET_LOCALAUTH].items) {	/* -localauth specified */
 	secFlags |= AFSCONF_SECOPTS_LOCALAUTH;
 	confdir = AFSDIR_SERVER_ETC_DIRPATH;
     }
 
-    if (as->parms[16].items     /* -encrypt specified */
+    if (as->parms[COMMONPARM_OFFSET_ENCRYPT].items     /* -encrypt specified */
 #ifdef AFS_NT40_ENV
         || win32_enableCrypt()
 #endif /* AFS_NT40_ENV */
          )
 	secFlags |= AFSCONF_SECOPTS_ALWAYSENCRYPT;
 
-    if (as->parms[18].items)   /* -config flag set */
-	confdir = as->parms[18].items->data;
+    if (as->parms[COMMONPARM_OFFSET_CONFIG].items)   /* -config flag set */
+	confdir = as->parms[COMMONPARM_OFFSET_CONFIG].items->data;
 
     if ((code = vsu_ClientInit(confdir, tcell, secFlags, UV_SetSecurity,
 			       &cstruct))) {
@@ -5843,11 +5860,11 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 	exit(1);
     }
     rxInitDone = 1;
-    if (as->parms[15].items)	/* -verbose flag set */
+    if (as->parms[COMMONPARM_OFFSET_VERBOSE].items)	/* -verbose flag set */
 	verbose = 1;
     else
 	verbose = 0;
-    if (as->parms[17].items)	/* -noresolve flag set */
+    if (as->parms[COMMONPARM_OFFSET_NORESOLVE].items)	/* -noresolve flag set */
 	noresolve = 1;
     else
 	noresolve = 0;
