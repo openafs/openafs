@@ -1002,7 +1002,7 @@ afs_FlushActiveVcaches(afs_int32 doflocks)
     XSTATS_DECLS;
     AFS_STATCNT(afs_FlushActiveVcaches);
 
-    code = afs_CreateReq(&treq, NULL);
+    code = afs_CreateReq(&treq, afs_osi_credp);
     if (code) {
 	afs_warn("unable to alloc treq\n");
 	return;

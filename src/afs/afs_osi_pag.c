@@ -497,7 +497,8 @@ afs_InitReq(struct vrequest *av, afs_ucred_t *acred)
  *       for osi_AllocSmallSpace() and osi_FreeSmallSpace().
  *
  * \param[out] avpp   address of the vrequest pointer
- * \param[in]  acred  user credentials to setup the vrequest; may be NULL
+ * \param[in]  acred  user credentials to setup the vrequest
+ *                    afs_osi_credp should be used for anonymous connections
  * \return     0 on success
  */
 int
@@ -509,21 +510,17 @@ afs_CreateReq(struct vrequest **avpp, afs_ucred_t *acred)
     if (afs_shuttingdown) {
 	return EIO;
     }
-    if (!avpp) {
+    if (!avpp || !acred) {
 	return EINVAL;
     }
     treq = osi_AllocSmallSpace(sizeof(struct vrequest));
     if (!treq) {
 	return ENOMEM;
     }
-    if (!acred) {
-	memset(treq, 0, sizeof(struct vrequest));
-    } else {
-	code = afs_InitReq(treq, acred);
-	if (code != 0) {
-	    osi_FreeSmallSpace(treq);
-	    return code;
-	}
+    code = afs_InitReq(treq, acred);
+    if (code != 0) {
+	osi_FreeSmallSpace(treq);
+	return code;
     }
     *avpp = treq;
     return 0;
