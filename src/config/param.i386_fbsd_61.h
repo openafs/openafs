@@ -176,10 +176,4 @@ enum vcexcl { NONEXCL, EXCL };
 
 #endif /* !defined(UKERNEL) */
 
-/* general user-space compiles */
-
-#if defined(UKERNEL) || !defined(KERNEL)
-#define STDLIB_HAS_MALLOC_PROTOS 1
-#endif
-
 #endif /* AFS_PARAM_H */
