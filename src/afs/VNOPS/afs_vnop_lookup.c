@@ -1932,6 +1932,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 		code = afs_VerifyVCache(tvc, treq);
 #else
 		afs_PutFakeStat(&fakestate);
+		afs_DestroyReq(treq);
 		AFS_DISCON_UNLOCK();
 		return 0;	/* can't have been any errors if hit and !code */
 #endif
