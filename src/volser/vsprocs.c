@@ -6214,7 +6214,7 @@ CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver, afs_int32 apart,
 
 	    entry.serverNumber[idx] = aserver;
 	    entry.serverPartition[idx] = apart;
-	    entry.serverFlags[idx] = ITSBACKVOL;
+	    entry.serverFlags[idx] = ITSRWVOL;
 
 	    modified++;
 	}
