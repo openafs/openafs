@@ -818,6 +818,7 @@ case $AFS_SYSNAME in
     *_linux_22) AFS_PARAM_COMMON=param.linux22.h ;;
     *_linux_24) AFS_PARAM_COMMON=param.linux24.h ;;
     *_linux_26) AFS_PARAM_COMMON=param.linux26.h ;;
+    *_fbsd_*)   AFS_PARAM_COMMON=param.generic_fbsd.h ;;
 esac
 
 OPENAFS_OSCONF
