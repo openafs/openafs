@@ -50,7 +50,6 @@
 /* Extra kernel definitions (from kdefs file) */
 #ifdef _KERNEL
 #define AFS_GLOBAL_SUNLOCK	1
-#define	AFS_SHORTGID		0	/* are group id's short? */
 
 #if	!defined(ASSEMBLER) && !defined(__LANGUAGE_ASSEMBLY__)
 enum vcexcl { NONEXCL, EXCL };

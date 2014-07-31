@@ -58,7 +58,6 @@
 
 /* Extra kernel definitions (from kdefs file) */
 #ifdef _KERNEL
-#define	AFS_SHORTGID	1
 #define	AFS_UIOFMODE	1
 #define	afsio_iov	uio_iov
 #define	afsio_iovcnt	uio_iovcnt
