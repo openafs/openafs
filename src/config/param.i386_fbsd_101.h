@@ -7,7 +7,7 @@
 
 #define AFSLITTLE_ENDIAN    1
 #define AFS_HAVE_FFS        1	/* Use system's ffs. */
-#define AFS_HAVE_STATVFS    1	/* System doesn't support statvfs */
+#define AFS_HAVE_STATVFS    1	/* System does support statvfs */
 #define AFS_VM_RDWR_ENV	    1	/* read/write implemented via VM */
 #define AFS_FAKEOPEN_ENV    1   /* call afs_FakeOpen as if !AFS_VM_RDWR */
 

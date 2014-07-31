@@ -57,7 +57,6 @@
 #define SYS_NAME_ID	SYS_NAME_ID_i386_fbsd_52
 
 #define AFS_HAVE_FFS            1	/* Use system's ffs. */
-#define AFS_HAVE_STATVFS	0	/* System doesn't supports statvfs */
 
 #define RXK_LISTENER_ENV 1
 #define AFS_GCPAGS	        0	/* if nonzero, garbage collect PAGs */
@@ -152,7 +151,7 @@ enum vcexcl { NONEXCL, EXCL };
 #define SYS_NAME_ID	SYS_NAME_ID_i386_fbsd_52
 #define AFSLITTLE_ENDIAN    1
 #define AFS_HAVE_FFS        1	/* Use system's ffs. */
-#define AFS_HAVE_STATVFS    1	/* System doesn't support statvfs */
+#define AFS_HAVE_STATVFS    1	/* System does support statvfs */
 #define AFS_VM_RDWR_ENV	    1	/* read/write implemented via VM */
 
 #define	afsio_iov	uio_iov
