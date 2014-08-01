@@ -85,6 +85,8 @@ lib/roken/getprogname.c		roken/getprogname.c
 lib/roken/gettimeofday.c	roken/gettimeofday.c
 lib/roken/hex.c			roken/hex.c
 lib/roken/hex.h			roken/hex.h
+lib/roken/inet_ntop.c		roken/inet_ntop.c
+lib/roken/inet_pton.c		roken/inet_pton.c
 lib/roken/issuid.c		roken/issuid.c
 lib/roken/localtime_r.c		roken/localtime_r.c
 lib/roken/mkdir.c		roken/mkdir.c
