@@ -473,7 +473,7 @@ static struct dentry *get_dentry_from_fid(cred_t *credp, struct VenusFid *afid)
 
     code = afs_CreateAttr(&vattr);
     if (code) {
-	return ERR_PTR(-afs_CheckCode(code, NULL, xxx));
+	return ERR_PTR(-afs_CheckCode(code, NULL, 104));
     }
 
     code = afs_CreateReq(&treq, credp);
