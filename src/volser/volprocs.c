@@ -61,6 +61,7 @@ extern int DoLogging;
 extern struct afsconf_dir *tdir;
 extern int DoPreserveVolumeStats;
 extern int restrictedQueryLevel;
+extern enum vol_s2s_crypt doCrypt;
 
 extern void LogError(afs_int32 errcode);
 
@@ -1261,6 +1262,35 @@ SAFSVolForward(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate,
     return code;
 }
 
+static_inline afs_int32
+MakeClient(struct rx_call *acid, struct rx_securityClass **securityObject,
+	   afs_int32 *securityIndex)
+{
+    rxkad_level enc_level = rxkad_clear;
+    int docrypt;
+    int code;
+
+    switch (doCrypt) {
+    case VS2SC_ALWAYS:
+	docrypt = 1;
+	break;
+    case VS2SC_INHERIT:
+	rxkad_GetServerInfo(rx_ConnectionOf(acid), &enc_level, 0, 0, 0, 0, 0);
+	docrypt = (enc_level == rxkad_crypt ? 1 : 0);
+	break;
+    case VS2SC_NEVER:
+	docrypt = 0;
+	break;
+    default:
+	opr_Assert(0 && "doCrypt corrupt?");
+    }
+    if (docrypt)
+	code = afsconf_ClientAuthSecure(tdir, securityObject, securityIndex);
+    else
+	code = afsconf_ClientAuth(tdir, securityObject, securityIndex);
+    return code;
+}
+
 static afs_int32
 VolForward(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate,
 	       struct destServer *destination, afs_int32 destTrans,
@@ -1291,7 +1321,7 @@ VolForward(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate,
     TSetRxCall(tt, NULL, "Forward");
 
     /* get auth info for the this connection (uses afs from ticket file) */
-    code = afsconf_ClientAuth(tdir, &securityObject, &securityIndex);
+    code = MakeClient(acid, &securityObject, &securityIndex);
     if (code) {
 	TRELE(tt);
 	return code;
@@ -1406,7 +1436,7 @@ SAFSVolForwardMultiple(struct rx_call *acid, afs_int32 fromTrans, afs_int32
     }
 
     /* get auth info for this connection (uses afs from ticket file) */
-    code = afsconf_ClientAuth(tdir, &securityObject, &securityIndex);
+    code = MakeClient(acid, &securityObject, &securityIndex);
     if (code) {
 	goto fail;		/* in order to audit each failure */
     }

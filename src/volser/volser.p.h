@@ -186,4 +186,10 @@ extern afs_int32 vsu_ClientInit(const char *confDir, char *cellName,
 				int (*secproc)(struct rx_securityClass *,
 					       afs_int32),
 				struct ubik_client **uclientp);
+enum vol_s2s_crypt {
+    VS2SC_NEVER = 0,
+    VS2SC_INHERIT,
+    VS2SC_ALWAYS
+};
+
 #endif /* _VOLSER_ */

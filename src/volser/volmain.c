@@ -83,6 +83,8 @@ char *auditFileName = NULL;
 static struct logOptions logopts;
 char *configDir = NULL;
 
+enum vol_s2s_crypt doCrypt = VS2SC_NEVER;
+
 #define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
 afs_uint32 SHostAddrs[ADDRSPERSITE];
 
@@ -242,7 +244,8 @@ enum optionsList {
     OPT_logfile,
     OPT_config,
     OPT_restricted_query,
-    OPT_transarc_logs
+    OPT_transarc_logs,
+    OPT_s2s_crypt
 };
 
 static int
@@ -254,6 +257,7 @@ ParseArgs(int argc, char **argv) {
     char *sleepSpec = NULL;
     char *sync_behavior = NULL;
     char *restricted_query_parameter = NULL;
+    char *s2s_crypt_behavior = NULL;
 
     opts = cmd_CreateSyntax(NULL, NULL, NULL, 0, NULL);
     cmd_AddParmAtOffset(opts, OPT_log, "-log", CMD_FLAG, CMD_OPTIONAL,
@@ -300,6 +304,8 @@ ParseArgs(int argc, char **argv) {
 	   CMD_OPTIONAL, "configuration location");
     cmd_AddParmAtOffset(opts, OPT_restricted_query, "-restricted_query",
 	    CMD_SINGLE, CMD_OPTIONAL, "anyuser | admin");
+    cmd_AddParmAtOffset(opts, OPT_s2s_crypt, "-s2scrypt",
+	    CMD_SINGLE, CMD_OPTIONAL, "always | inherit | never");
 
     code = cmd_Parse(argc, argv, &opts);
     if (code == CMD_HELP) {
@@ -396,6 +402,19 @@ ParseArgs(int argc, char **argv) {
 	    return -1;
 	}
 	free(restricted_query_parameter);
+    }
+    if (cmd_OptionAsString(opts, OPT_s2s_crypt, &s2s_crypt_behavior) == 0) {
+	if (strcmp(s2s_crypt_behavior, "always") == 0)
+	    doCrypt = VS2SC_ALWAYS;
+	else if (strcmp(s2s_crypt_behavior, "never") == 0)
+	    doCrypt = VS2SC_NEVER;
+	else if (strcmp(s2s_crypt_behavior, "inherit") == 0)
+	    doCrypt = VS2SC_INHERIT;
+	else {
+	    printf("invalid argument for -s2scrypt: %s\n", s2s_crypt_behavior);
+	    return -1;
+	}
+	free(s2s_crypt_behavior);
     }
 
     return 0;

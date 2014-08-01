@@ -135,6 +135,29 @@ of users. You can use C<admin> to restrict to AFS administrators.  The
 C<anyuser> option doesn't restrict the RPCs and leaves it open for all
 users including unauthenticated users, this is the default.
 
+=item B<-s2scrypt> (never | always | inherit)
+
+Set the cryptographic disposition of inter-volserver traffic.
+
+=over 4
+
+=item B<never>
+
+All inter-volserver traffic is unencrypted.  This is the default behavior.
+
+=item B<always>
+
+All inter-volserver traffic is encrypted (using rxkad).
+
+=item B<inherit>
+
+Inter-volserver traffic will be encrypted if the client connection triggering
+the server-to-server traffic is encrypted.  This has the effect of encrypting
+inter-server traffic if the "-encrypt" option is provided to
+L<B<vos release>|vos_release(1)>, for example.
+
+=back
+
 =item B<-help>
 
 Prints the online help for this command. All other valid options are
