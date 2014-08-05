@@ -2889,8 +2889,12 @@ long cm_SetLength(cm_scache_t *scp, osi_hyper_t *sizep, cm_user_t *userp,
          * than where we're truncating the file, set truncPos to this
          * new value.
          */
-        if (!shrinking)
+	if (!shrinking) {
+	    cm_SyncOpDone(scp, NULL,
+			  CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS
+			  | CM_SCACHESYNC_SETSTATUS | CM_SCACHESYNC_SETSIZE);
             goto startover;
+	}
         if (!(scp->mask & CM_SCACHEMASK_TRUNCPOS)
              || LargeIntegerLessThan(*sizep, scp->length)) {
             /* set trunc pos */
