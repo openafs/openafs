@@ -342,7 +342,8 @@ L<volserver(8)>
 
 =head1 COPYRIGHT
 
-IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
-Sine Nomine Associates 2014.  All Rights Reserved.
+Copyright 2014 Sine Nomine Associates.  All Rights Reserved.
 
-This documentation is covered by the IBM Public License Version 1.0.
+This documentation is covered by the BSD License as written in the
+doc/LICENSE file. This man page was written by Michael Meffie for
+OpenAFS.
