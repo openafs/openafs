@@ -1596,6 +1596,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_prefix}/afs/bin/upserver
 %{_prefix}/afs/bin/vlserver
 %{_prefix}/afs/bin/volinfo
+%{_prefix}/afs/bin/volscan
 %{_prefix}/afs/bin/volserver
 %{_sbindir}/kadb_check
 %{_sbindir}/prdb_check
@@ -1653,6 +1654,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man8/vlserver.*
 %{_mandir}/man8/voldump.*
 %{_mandir}/man8/volinfo.*
+%{_mandir}/man8/volscan.*
 %{_mandir}/man8/volserver.*
 
 %if %{build_authlibs}
