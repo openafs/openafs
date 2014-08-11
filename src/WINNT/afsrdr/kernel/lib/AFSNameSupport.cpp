@@ -3118,7 +3118,7 @@ AFSParseRelatedName( IN PIRP Irp,
 	 // On error, FileName indicates the path on which the failure occurred.
 	 //
 
-	 *FileName = pIrpSp->FileObject->FileName;
+	 *FileName = pRelatedCcb->FullFileName;
 
 	 //
 	 // No wild cards in the name
@@ -3126,23 +3126,23 @@ AFSParseRelatedName( IN PIRP Irp,
 
 	 AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
 		       AFS_TRACE_LEVEL_VERBOSE_2,
-		       "AFSParseNameRelated (%p) Relative open for %wZ FID %08lX-%08lX-%08lX-%08lX component %wZ\n",
+		       "AFSParseRelatedName (%p) %wZ FID %08lX-%08lX-%08lX-%08lX %wZ\n",
 		       Irp,
 		       &pRelatedCcb->DirectoryCB->NameInformation.FileName,
 		       pRelatedFcb->ObjectInformation->FileId.Cell,
 		       pRelatedFcb->ObjectInformation->FileId.Volume,
 		       pRelatedFcb->ObjectInformation->FileId.Vnode,
 		       pRelatedFcb->ObjectInformation->FileId.Unique,
-		       &uniFullName));
+		       &pRelatedCcb->FullFileName));
 
-	 if( FsRtlDoesNameContainWildCards( &uniFullName))
+	 if( FsRtlDoesNameContainWildCards( &pRelatedCcb->FullFileName))
 	 {
 
 	     AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
 			   AFS_TRACE_LEVEL_ERROR,
 			   "AFSParseNameRelated (%p) Component %wZ contains wild cards\n",
 			   Irp,
-			   &uniFullName));
+			   &pRelatedCcb->FullFileName));
 
 	     try_return( ntStatus = STATUS_OBJECT_NAME_INVALID);
 	 }
