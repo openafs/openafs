@@ -3076,16 +3076,403 @@ AFSFixupTargetName( IN OUT PUNICODE_STRING FileName,
     return ntStatus;
 }
 
+static NTSTATUS
+AFSParseRelatedName( IN PIRP Irp,
+		     IN GUID *AuthGroup,
+		     OUT PUNICODE_STRING FileName,
+		     OUT PUNICODE_STRING ParsedFileName,
+		     OUT PUNICODE_STRING RootFileName,
+		     OUT ULONG *ParseFlags,
+		     OUT AFSVolumeCB   **VolumeCB,
+		     OUT AFSDirectoryCB **ParentDirectoryCB,
+		     OUT AFSNameArrayHdr **NameArray)
+{
+    NTSTATUS            ntStatus = STATUS_SUCCESS;
+    PIO_STACK_LOCATION  pIrpSp = IoGetCurrentIrpStackLocation( Irp);
+    AFSDeviceExt       *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
+    AFSCcb             *pRelatedCcb = NULL;
+    AFSFcb             *pRelatedFcb = NULL;
+    AFSNameArrayHdr    *pRelatedNameArray = NULL;
+    UNICODE_STRING      uniFullName;
+    AFSDirectoryCB     *pDirEntry = NULL;
+    AFSNameArrayHdr    *pNameArray = NULL;
+    USHORT              usComponentIndex = 0;
+    USHORT              usComponentLength = 0;
+    AFSVolumeCB        *pVolumeCB = NULL;
+     LONG                lCount;
+
+     __Enter
+     {
+
+	 pRelatedFcb = (AFSFcb *)pIrpSp->FileObject->RelatedFileObject->FsContext;
+
+	 pRelatedCcb = (AFSCcb *)pIrpSp->FileObject->RelatedFileObject->FsContext2;
+
+	 pRelatedNameArray = pRelatedCcb->NameArray;
+
+	 uniFullName = pIrpSp->FileObject->FileName;
+
+	 ASSERT( pRelatedFcb != NULL);
+
+	 //
+	 // No wild cards in the name
+	 //
+
+	 AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+		       AFS_TRACE_LEVEL_VERBOSE_2,
+		       "AFSParseNameRelated (%p) Relative open for %wZ FID %08lX-%08lX-%08lX-%08lX component %wZ\n",
+		       Irp,
+		       &pRelatedCcb->DirectoryCB->NameInformation.FileName,
+		       pRelatedFcb->ObjectInformation->FileId.Cell,
+		       pRelatedFcb->ObjectInformation->FileId.Volume,
+		       pRelatedFcb->ObjectInformation->FileId.Vnode,
+		       pRelatedFcb->ObjectInformation->FileId.Unique,
+		       &uniFullName));
+
+	 if( FsRtlDoesNameContainWildCards( &uniFullName))
+	 {
+
+	     AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+			   AFS_TRACE_LEVEL_ERROR,
+			   "AFSParseNameRelated (%p) Component %wZ contains wild cards\n",
+			   Irp,
+			   &uniFullName));
+
+	     try_return( ntStatus = STATUS_OBJECT_NAME_INVALID);
+	 }
+
+	 pVolumeCB = pRelatedFcb->ObjectInformation->VolumeCB;
+
+	 pDirEntry = pRelatedCcb->DirectoryCB;
+
+	 *FileName = pIrpSp->FileObject->FileName;
+
+	 //
+	 // Grab the root node while checking state
+	 //
+
+	 AFSAcquireShared( pVolumeCB->VolumeLock,
+			   TRUE);
+
+	 if( BooleanFlagOn( pVolumeCB->ObjectInformation.Flags, AFS_OBJECT_FLAGS_OBJECT_INVALID) ||
+	     BooleanFlagOn( pVolumeCB->Flags, AFS_VOLUME_FLAGS_OFFLINE))
+	 {
+
+	     //
+	     // The volume has been taken off line so fail the access
+	     //
+
+	     AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+			   AFS_TRACE_LEVEL_ERROR,
+			   "AFSParseNameRelated (%p) Volume %08lX:%08lX OFFLINE/INVALID\n",
+			   Irp,
+			   pVolumeCB->ObjectInformation.FileId.Cell,
+			   pVolumeCB->ObjectInformation.FileId.Volume));
+
+	     AFSReleaseResource( pVolumeCB->VolumeLock);
+
+	     try_return( ntStatus = STATUS_DEVICE_NOT_READY);
+	 }
+
+	 if( BooleanFlagOn( pVolumeCB->ObjectInformation.Flags, AFS_OBJECT_FLAGS_VERIFY))
+	 {
+
+	     AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+			   AFS_TRACE_LEVEL_VERBOSE,
+			   "AFSParseNameRelated (%p) Verifying root of volume %08lX:%08lX\n",
+			   Irp,
+			   pVolumeCB->ObjectInformation.FileId.Cell,
+			   pVolumeCB->ObjectInformation.FileId.Volume));
+
+	     ntStatus = AFSVerifyVolume( (ULONGLONG)PsGetCurrentProcessId(),
+					 pVolumeCB);
+
+	     if( !NT_SUCCESS( ntStatus))
+	     {
+
+		 AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+			       AFS_TRACE_LEVEL_ERROR,
+			       "AFSParseNameRelated (%p) Failed verification of root Status %08lX\n",
+			       Irp,
+			       ntStatus));
+
+		 AFSReleaseResource( pVolumeCB->VolumeLock);
+
+		 try_return( ntStatus);
+	     }
+	 }
+
+	 AFSReleaseResource( pVolumeCB->VolumeLock);
+
+	 if( BooleanFlagOn( pDirEntry->ObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY))
+	 {
+
+	     AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+			   AFS_TRACE_LEVEL_VERBOSE,
+			   "AFSParseNameRelated (%p) Verifying parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+			   Irp,
+			   &pDirEntry->NameInformation.FileName,
+			   pDirEntry->ObjectInformation->FileId.Cell,
+			   pDirEntry->ObjectInformation->FileId.Volume,
+			   pDirEntry->ObjectInformation->FileId.Vnode,
+			   pDirEntry->ObjectInformation->FileId.Unique));
+
+	     //
+	     // Directory TreeLock should be exclusively held
+	     //
+
+	     AFSAcquireExcl( pDirEntry->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock,
+			     TRUE);
+
+	     ntStatus = AFSVerifyEntry( AuthGroup,
+					pDirEntry,
+					FALSE);
+
+	     AFSReleaseResource( pDirEntry->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
+
+	     if( !NT_SUCCESS( ntStatus))
+	     {
+
+		 AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+			       AFS_TRACE_LEVEL_VERBOSE,
+			       "AFSParseNameRelated (%p) Failed verification of parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+			       Irp,
+			       &pDirEntry->NameInformation.FileName,
+			       pDirEntry->ObjectInformation->FileId.Cell,
+			       pDirEntry->ObjectInformation->FileId.Volume,
+			       pDirEntry->ObjectInformation->FileId.Vnode,
+			       pDirEntry->ObjectInformation->FileId.Unique,
+			       ntStatus));
+
+		 try_return( ntStatus);
+	     }
+	 }
+
+	 //
+	 // Create our full path name buffer
+	 //
+
+	 uniFullName.MaximumLength = pRelatedCcb->FullFileName.Length
+	     + sizeof( WCHAR) + pIrpSp->FileObject->FileName.Length
+	     + sizeof( WCHAR);
+
+	 uniFullName.Length = 0;
+
+	 uniFullName.Buffer = (WCHAR *)AFSExAllocatePoolWithTag( PagedPool,
+								 uniFullName.MaximumLength,
+								 AFS_NAME_BUFFER_THREE_TAG);
+
+	 if( uniFullName.Buffer == NULL)
+	 {
+
+	     AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+			   AFS_TRACE_LEVEL_ERROR,
+			   "AFSParseNameRelated (%p) Failed to allocate full name buffer\n",
+			   Irp));
+
+	     try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+	 }
+
+	 SetFlag( *ParseFlags, AFS_PARSE_FLAG_FREE_FILE_BUFFER);
+
+	 RtlZeroMemory( uniFullName.Buffer,
+			uniFullName.MaximumLength);
+
+	 RtlCopyMemory( uniFullName.Buffer,
+			pRelatedCcb->FullFileName.Buffer,
+			pRelatedCcb->FullFileName.Length);
+
+	 uniFullName.Length = pRelatedCcb->FullFileName.Length;
+
+	 usComponentIndex = (USHORT)(uniFullName.Length/sizeof( WCHAR));
+
+	 usComponentLength = pIrpSp->FileObject->FileName.Length;
+
+	 if( uniFullName.Buffer[ (uniFullName.Length/sizeof( WCHAR)) - 1] != L'\\' &&
+	     pIrpSp->FileObject->FileName.Length > 0 &&
+	     pIrpSp->FileObject->FileName.Buffer[ 0] != L'\\' &&
+	     pIrpSp->FileObject->FileName.Buffer[ 0] != L':')
+	 {
+
+	     uniFullName.Buffer[ (uniFullName.Length/sizeof( WCHAR))] = L'\\';
+
+	     uniFullName.Length += sizeof( WCHAR);
+
+	     usComponentLength += sizeof( WCHAR);
+	 }
+
+	 if( pIrpSp->FileObject->FileName.Length > 0)
+	 {
+
+	     RtlCopyMemory( &uniFullName.Buffer[ uniFullName.Length/sizeof( WCHAR)],
+			    pIrpSp->FileObject->FileName.Buffer,
+			    pIrpSp->FileObject->FileName.Length);
+
+	     uniFullName.Length += pIrpSp->FileObject->FileName.Length;
+	 }
+
+	 *RootFileName = uniFullName;
+
+	 //
+	 // We populate up to the current parent
+	 //
+
+	 if( pRelatedNameArray == NULL)
+	 {
+
+	     //
+	     // Init and populate our name array
+	     //
+
+	     pNameArray = AFSInitNameArray( NULL,
+					    0);
+
+	     if( pNameArray == NULL)
+	     {
+
+		 AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+			       AFS_TRACE_LEVEL_VERBOSE,
+			       "AFSParseNameRelated (%p) Failed to initialize name array\n",
+			       Irp));
+
+		 AFSExFreePoolWithTag( uniFullName.Buffer, 0);
+
+		 ClearFlag( *ParseFlags, AFS_PARSE_FLAG_FREE_FILE_BUFFER);
+
+		 try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+	     }
+
+	     ntStatus = AFSPopulateNameArray( pNameArray,
+					      NULL,
+					      pRelatedCcb->DirectoryCB);
+	 }
+	 else
+	 {
+
+	     //
+	     // Init and populate our name array
+	     //
+
+	     pNameArray = AFSInitNameArray( NULL,
+					    pRelatedNameArray->MaxElementCount);
+
+	     if( pNameArray == NULL)
+	     {
+
+		 AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+			       AFS_TRACE_LEVEL_VERBOSE,
+			       "AFSParseNameRelated (%p) Failed to initialize name array\n",
+			       Irp));
+
+		 AFSExFreePoolWithTag( uniFullName.Buffer, 0);
+
+		 ClearFlag( *ParseFlags, AFS_PARSE_FLAG_FREE_FILE_BUFFER);
+
+		 try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+	     }
+
+	     ntStatus = AFSPopulateNameArrayFromRelatedArray( pNameArray,
+							      pRelatedNameArray,
+							      pRelatedCcb->DirectoryCB);
+	 }
+
+	 if( !NT_SUCCESS( ntStatus))
+	 {
+
+	     AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+			   AFS_TRACE_LEVEL_VERBOSE,
+			   "AFSParseNameRelated (%p) Failed to populate name array\n",
+			   Irp));
+
+	     AFSExFreePoolWithTag( uniFullName.Buffer, 0);
+
+	     ClearFlag( *ParseFlags, AFS_PARSE_FLAG_FREE_FILE_BUFFER);
+
+	     try_return( ntStatus);
+	 }
+
+	 ParsedFileName->Length = usComponentLength;
+
+	 ParsedFileName->MaximumLength = uniFullName.MaximumLength;
+
+	 ParsedFileName->Buffer = &uniFullName.Buffer[ usComponentIndex];
+
+	 *NameArray = pNameArray;
+
+	 //
+	 // Increment our volume reference count
+	 //
+
+	 lCount = AFSVolumeIncrement( pVolumeCB,
+				      AFS_VOLUME_REFERENCE_PARSE_NAME);
+
+	 AFSDbgTrace(( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+		       AFS_TRACE_LEVEL_VERBOSE,
+		       "AFSParseNameRelated Increment count on volume %p Cnt %d\n",
+		       pVolumeCB,
+		       lCount));
+
+	 *VolumeCB = pVolumeCB;
+
+	 *ParentDirectoryCB = pDirEntry;
+
+	 AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+		       AFS_TRACE_LEVEL_VERBOSE_2,
+		       "AFSParseNameRelated (%p) Returning full name %wZ\n",
+		       Irp,
+		       &uniFullName));
+
+	 try_return( ntStatus);
+
+try_exit:
+
+	 if( NT_SUCCESS( ntStatus))
+	 {
+
+	     if( *ParentDirectoryCB != NULL)
+	     {
+
+		 lCount = InterlockedIncrement( &(*ParentDirectoryCB)->DirOpenReferenceCount);
+
+		 AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+			       AFS_TRACE_LEVEL_VERBOSE,
+			       "AFSParseRelatedName Increment1 count on %wZ DE %p Ccb %p Cnt %d\n",
+			       &(*ParentDirectoryCB)->NameInformation.FileName,
+			       (*ParentDirectoryCB),
+			       NULL,
+			       lCount));
+	     }
+	 }
+
+	 if( *VolumeCB != NULL)
+	 {
+	     ASSERT( (*VolumeCB)->VolumeReferenceCount > 0);
+	 }
+
+	 if( ntStatus != STATUS_SUCCESS)
+	 {
+
+	     if( pNameArray != NULL)
+	     {
+
+		 AFSFreeNameArray( pNameArray);
+	     }
+	 }
+     }
+
+    return ntStatus;
+}
+
 NTSTATUS
 AFSParseName( IN PIRP Irp,
-              IN GUID *AuthGroup,
-              OUT PUNICODE_STRING FileName,
-              OUT PUNICODE_STRING ParsedFileName,
-              OUT PUNICODE_STRING RootFileName,
-              OUT ULONG *ParseFlags,
-              OUT AFSVolumeCB   **VolumeCB,
-              OUT AFSDirectoryCB **ParentDirectoryCB,
-              OUT AFSNameArrayHdr **NameArray)
+	      IN GUID *AuthGroup,
+	      OUT PUNICODE_STRING FileName,
+	      OUT PUNICODE_STRING ParsedFileName,
+	      OUT PUNICODE_STRING RootFileName,
+	      OUT ULONG *ParseFlags,
+	      OUT AFSVolumeCB   **VolumeCB,
+	      OUT AFSDirectoryCB **ParentDirectoryCB,
+	      OUT AFSNameArrayHdr **NameArray)
 {
 
     NTSTATUS            ntStatus = STATUS_SUCCESS;
@@ -3095,12 +3482,10 @@ AFSParseName( IN PIRP Irp,
     ULONG               ulCRC = 0;
     AFSDirectoryCB     *pDirEntry = NULL;
     USHORT              usIndex = 0, usDriveIndex = 0;
-    AFSCcb             *pRelatedCcb = NULL;
-    AFSNameArrayHdr    *pNameArray = NULL, *pRelatedNameArray = NULL;
+    AFSNameArrayHdr    *pNameArray = NULL;
     USHORT              usComponentIndex = 0;
     USHORT              usComponentLength = 0;
     AFSVolumeCB        *pVolumeCB = NULL;
-    AFSFcb             *pRelatedFcb = NULL;
     BOOLEAN             bReleaseTreeLock = FALSE;
     BOOLEAN             bIsAllShare = FALSE;
     LONG                lCount;
@@ -3108,335 +3493,22 @@ AFSParseName( IN PIRP Irp,
     __Enter
     {
 
-        //
-        // Indicate we are opening a root ...
-        //
-
-        *ParseFlags = AFS_PARSE_FLAG_ROOT_ACCESS;
-
-        *ParentDirectoryCB = NULL;
-
-        if( pIrpSp->FileObject->RelatedFileObject != NULL)
-        {
-
-            pRelatedFcb = (AFSFcb *)pIrpSp->FileObject->RelatedFileObject->FsContext;
-
-            pRelatedCcb = (AFSCcb *)pIrpSp->FileObject->RelatedFileObject->FsContext2;
-
-            pRelatedNameArray = pRelatedCcb->NameArray;
-
-            uniFullName = pIrpSp->FileObject->FileName;
-
-            ASSERT( pRelatedFcb != NULL);
-
-            //
-            // No wild cards in the name
-            //
-
-            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE_2,
-                          "AFSParseName (%p) Relative open for %wZ FID %08lX-%08lX-%08lX-%08lX component %wZ\n",
-                          Irp,
-                          &pRelatedCcb->DirectoryCB->NameInformation.FileName,
-                          pRelatedFcb->ObjectInformation->FileId.Cell,
-                          pRelatedFcb->ObjectInformation->FileId.Volume,
-                          pRelatedFcb->ObjectInformation->FileId.Vnode,
-                          pRelatedFcb->ObjectInformation->FileId.Unique,
-                          &uniFullName));
-
-            if( FsRtlDoesNameContainWildCards( &uniFullName))
-            {
-
-                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_ERROR,
-                              "AFSParseName (%p) Component %wZ contains wild cards\n",
-                              Irp,
-                              &uniFullName));
-
-                try_return( ntStatus = STATUS_OBJECT_NAME_INVALID);
-            }
-
-            pVolumeCB = pRelatedFcb->ObjectInformation->VolumeCB;
-
-            pDirEntry = pRelatedCcb->DirectoryCB;
-
-            *FileName = pIrpSp->FileObject->FileName;
-
-            //
-            // Grab the root node while checking state
-            //
-
-            AFSAcquireShared( pVolumeCB->VolumeLock,
-                              TRUE);
-
-            if( BooleanFlagOn( pVolumeCB->ObjectInformation.Flags, AFS_OBJECT_FLAGS_OBJECT_INVALID) ||
-                BooleanFlagOn( pVolumeCB->Flags, AFS_VOLUME_FLAGS_OFFLINE))
-            {
-
-                //
-                // The volume has been taken off line so fail the access
-                //
-
-                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_ERROR,
-                              "AFSParseName (%p) Volume %08lX:%08lX OFFLINE/INVALID\n",
-                              Irp,
-                              pVolumeCB->ObjectInformation.FileId.Cell,
-                              pVolumeCB->ObjectInformation.FileId.Volume));
-
-                AFSReleaseResource( pVolumeCB->VolumeLock);
-
-                try_return( ntStatus = STATUS_DEVICE_NOT_READY);
-            }
-
-            if( BooleanFlagOn( pVolumeCB->ObjectInformation.Flags, AFS_OBJECT_FLAGS_VERIFY))
-            {
-
-                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSParseName (%p) Verifying root of volume %08lX:%08lX\n",
-                              Irp,
-                              pVolumeCB->ObjectInformation.FileId.Cell,
-                              pVolumeCB->ObjectInformation.FileId.Volume));
-
-                ntStatus = AFSVerifyVolume( (ULONGLONG)PsGetCurrentProcessId(),
-                                            pVolumeCB);
-
-                if( !NT_SUCCESS( ntStatus))
-                {
-
-                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_ERROR,
-                                  "AFSParseName (%p) Failed verification of root Status %08lX\n",
-                                  Irp,
-                                  ntStatus));
-
-                    AFSReleaseResource( pVolumeCB->VolumeLock);
-
-                    try_return( ntStatus);
-                }
-            }
-
-            AFSReleaseResource( pVolumeCB->VolumeLock);
-
-            if( BooleanFlagOn( pDirEntry->ObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY))
-            {
-
-                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSParseName (%p) Verifying parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                              Irp,
-                              &pDirEntry->NameInformation.FileName,
-                              pDirEntry->ObjectInformation->FileId.Cell,
-                              pDirEntry->ObjectInformation->FileId.Volume,
-                              pDirEntry->ObjectInformation->FileId.Vnode,
-                              pDirEntry->ObjectInformation->FileId.Unique));
-
-                //
-                // Directory TreeLock should be exclusively held
-                //
-
-                AFSAcquireExcl( pDirEntry->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock,
-                                TRUE);
-
-                ntStatus = AFSVerifyEntry( AuthGroup,
-					   pDirEntry,
-					   FALSE);
-
-                AFSReleaseResource( pDirEntry->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
-
-                if( !NT_SUCCESS( ntStatus))
-                {
-
-                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSParseName (%p) Failed verification of parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
-                                  Irp,
-                                  &pDirEntry->NameInformation.FileName,
-                                  pDirEntry->ObjectInformation->FileId.Cell,
-                                  pDirEntry->ObjectInformation->FileId.Volume,
-                                  pDirEntry->ObjectInformation->FileId.Vnode,
-                                  pDirEntry->ObjectInformation->FileId.Unique,
-                                  ntStatus));
-
-                    try_return( ntStatus);
-                }
-            }
-
-            //
-            // Create our full path name buffer
-            //
-
-            uniFullName.MaximumLength = pRelatedCcb->FullFileName.Length +
-                                                    sizeof( WCHAR) +
-                                                    pIrpSp->FileObject->FileName.Length +
-                                                    sizeof( WCHAR);
-
-            uniFullName.Length = 0;
-
-            uniFullName.Buffer = (WCHAR *)AFSExAllocatePoolWithTag( PagedPool,
-                                                                    uniFullName.MaximumLength,
-                                                                    AFS_NAME_BUFFER_THREE_TAG);
-
-            if( uniFullName.Buffer == NULL)
-            {
-
-                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_ERROR,
-                              "AFSParseName (%p) Failed to allocate full name buffer\n",
-                              Irp));
-
-                try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
-            }
-
-            RtlZeroMemory( uniFullName.Buffer,
-                           uniFullName.MaximumLength);
-
-            RtlCopyMemory( uniFullName.Buffer,
-                           pRelatedCcb->FullFileName.Buffer,
-                           pRelatedCcb->FullFileName.Length);
-
-            uniFullName.Length = pRelatedCcb->FullFileName.Length;
-
-            usComponentIndex = (USHORT)(uniFullName.Length/sizeof( WCHAR));
-
-            usComponentLength = pIrpSp->FileObject->FileName.Length;
-
-            if( uniFullName.Buffer[ (uniFullName.Length/sizeof( WCHAR)) - 1] != L'\\' &&
-                pIrpSp->FileObject->FileName.Length > 0 &&
-                pIrpSp->FileObject->FileName.Buffer[ 0] != L'\\' &&
-                pIrpSp->FileObject->FileName.Buffer[ 0] != L':')
-            {
-
-                uniFullName.Buffer[ (uniFullName.Length/sizeof( WCHAR))] = L'\\';
-
-                uniFullName.Length += sizeof( WCHAR);
-
-                usComponentLength += sizeof( WCHAR);
-            }
-
-            if( pIrpSp->FileObject->FileName.Length > 0)
-            {
-
-                RtlCopyMemory( &uniFullName.Buffer[ uniFullName.Length/sizeof( WCHAR)],
-                               pIrpSp->FileObject->FileName.Buffer,
-                               pIrpSp->FileObject->FileName.Length);
-
-                uniFullName.Length += pIrpSp->FileObject->FileName.Length;
-            }
-
-            *RootFileName = uniFullName;
-
-            //
-            // We populate up to the current parent
-            //
-
-            if( pRelatedNameArray == NULL)
-            {
-
-                //
-                // Init and populate our name array
-                //
-
-                pNameArray = AFSInitNameArray( NULL,
-                                               0);
-
-                if( pNameArray == NULL)
-                {
-
-                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSParseName (%p) Failed to initialize name array\n",
-                                  Irp));
-
-                    AFSExFreePoolWithTag( uniFullName.Buffer, 0);
-
-                    try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
-                }
-
-                ntStatus = AFSPopulateNameArray( pNameArray,
-                                                 NULL,
-                                                 pRelatedCcb->DirectoryCB);
-            }
-            else
-            {
-
-                //
-                // Init and populate our name array
-                //
-
-                pNameArray = AFSInitNameArray( NULL,
-                                               pRelatedNameArray->MaxElementCount);
-
-                if( pNameArray == NULL)
-                {
-
-                    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSParseName (%p) Failed to initialize name array\n",
-                                  Irp));
-
-                    AFSExFreePoolWithTag( uniFullName.Buffer, 0);
-
-                    try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
-                }
-
-                ntStatus = AFSPopulateNameArrayFromRelatedArray( pNameArray,
-                                                                 pRelatedNameArray,
-                                                                 pRelatedCcb->DirectoryCB);
-            }
-
-            if( !NT_SUCCESS( ntStatus))
-            {
-
-                AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSParseName (%p) Failed to populate name array\n",
-                              Irp));
-
-                AFSExFreePoolWithTag( uniFullName.Buffer, 0);
-
-                try_return( ntStatus);
-            }
-
-            ParsedFileName->Length = usComponentLength;
-            ParsedFileName->MaximumLength = uniFullName.MaximumLength;
-
-            ParsedFileName->Buffer = &uniFullName.Buffer[ usComponentIndex];
-
-            //
-            // Indicate to caller that RootFileName must be freed
-            //
-
-            SetFlag( *ParseFlags, AFS_PARSE_FLAG_FREE_FILE_BUFFER);
-
-            *NameArray = pNameArray;
-
-            //
-            // Increment our volume reference count
-            //
-
-            lCount = AFSVolumeIncrement( pVolumeCB,
-                                         AFS_VOLUME_REFERENCE_PARSE_NAME);
-
-            AFSDbgTrace(( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSParseName Increment count on volume %p Cnt %d\n",
-                          pVolumeCB,
-                          lCount));
-
-            *VolumeCB = pVolumeCB;
-
-            *ParentDirectoryCB = pDirEntry;
-
-            AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE_2,
-                          "AFSParseName (%p) Returning full name %wZ\n",
-                          Irp,
-                          &uniFullName));
-
-            try_return( ntStatus);
+	if( pIrpSp->FileObject->RelatedFileObject != NULL)
+	{
+
+	    return AFSParseRelatedName( Irp, AuthGroup, FileName,
+					ParsedFileName, RootFileName,
+					ParseFlags, VolumeCB,
+					ParentDirectoryCB, NameArray);
         }
+
+	//
+	// Indicate we are opening a root ...
+	//
+
+	*ParseFlags = AFS_PARSE_FLAG_ROOT_ACCESS;
+
+	*ParentDirectoryCB = NULL;
 
         //
         // No wild cards in the name
