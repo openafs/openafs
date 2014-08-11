@@ -3115,6 +3115,12 @@ AFSParseRelatedName( IN PIRP Irp,
 	 ASSERT( pRelatedFcb != NULL);
 
 	 //
+	 // On error, FileName indicates the path on which the failure occurred.
+	 //
+
+	 *FileName = pIrpSp->FileObject->FileName;
+
+	 //
 	 // No wild cards in the name
 	 //
 
@@ -3144,8 +3150,6 @@ AFSParseRelatedName( IN PIRP Irp,
 	 pVolumeCB = pRelatedFcb->ObjectInformation->VolumeCB;
 
 	 pDirEntry = pRelatedCcb->DirectoryCB;
-
-	 *FileName = pIrpSp->FileObject->FileName;
 
 	 //
 	 // Grab the root node while checking state
@@ -3510,9 +3514,15 @@ AFSParseName( IN PIRP Irp,
 
 	*ParentDirectoryCB = NULL;
 
-        //
-        // No wild cards in the name
-        //
+	//
+	// On error, FileName indicates the path on which the failure occurred
+	//
+
+	*FileName = pIrpSp->FileObject->FileName;
+
+	//
+	// No wild cards in the name
+	//
 
         uniFullName = pIrpSp->FileObject->FileName;
 
