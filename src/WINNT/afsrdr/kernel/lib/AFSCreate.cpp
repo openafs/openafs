@@ -700,7 +700,6 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
 					       &uniComponentName);
 
 		if ( ntStatus == STATUS_SUCCESS ||
-		     ntStatus == STATUS_REPARSE ||
 		     ntStatus == STATUS_OBJECT_NAME_NOT_FOUND ||
 		     ntStatus == STATUS_ACCESS_DENIED)
 		{
