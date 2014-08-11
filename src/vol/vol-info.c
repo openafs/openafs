@@ -1331,15 +1331,7 @@ GetDirVnode(struct VolInfoOpt *opt, Volume * vp, VnodeId parent, VnodeDiskObject
 		afs_printable_uint32_lu(V_id(vp)));
     }
     offset = vnodeIndexOffset(&VnodeClassInfo[vLarge], parent);
-    code = FDH_SEEK(DirIndexFd, offset, 0);
-    if (code == -1) {
-	fprintf(stderr,
-		"%s: GetDirVnode: seek failed for %lu.%lu to offset %llu\n",
-		progname, afs_printable_uint32_lu(V_id(vp)),
-		afs_printable_uint32_lu(parent), (long long unsigned)offset);
-	return -1;
-    }
-    code = FDH_READ(DirIndexFd, pvn, SIZEOF_LARGEDISKVNODE);
+    code = FDH_PREAD(DirIndexFd, pvn, SIZEOF_LARGEDISKVNODE, offset);
     if (code != SIZEOF_LARGEDISKVNODE) {
 	fprintf(stderr,
 		"%s: GetDirVnode: read failed for %lu.%lu at offset %llu\n",
@@ -1548,11 +1540,7 @@ ReadSymlinkTarget(struct VnodeDetails *vdp)
 	code = -1;
 	goto cleanup;
     }
-    if (FDH_SEEK(fdP, 0, SEEK_SET) < 0) {
-	code = -1;
-	goto cleanup;
-    }
-    readLength = FDH_READ(fdP, buffer, fileLength);
+    readLength = FDH_PREAD(fdP, buffer, fileLength, 0);
     if (readLength < 0) {
 	fprintf(stderr,
 		"%s: Error reading symlink contents for fid (%lu.%lu.%lu.%lu); "
