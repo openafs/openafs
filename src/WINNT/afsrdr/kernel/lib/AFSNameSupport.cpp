@@ -1122,7 +1122,8 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                 case AFS_FILE_TYPE_DFSLINK:
                 {
 
-                    if( BooleanFlagOn( Flags, AFS_LOCATE_FLAGS_NO_DFS_LINK_EVAL))
+		    if( BooleanFlagOn( Flags, AFS_LOCATE_FLAGS_NO_DFS_LINK_EVAL) &&
+			uniRemainingPath.Length == 0)
                     {
 
                         //
