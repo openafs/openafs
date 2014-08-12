@@ -71,8 +71,8 @@ physio.o: ${VOLSER}/physio.c
 voltrans.o: ${VOLSER}/voltrans.c
 	$(AFS_CCRULE) -I../volser $(VOLSER)/voltrans.c
 
-volerr.o: ../volser/volerr.c
-	$(AFS_CCRULE) ../volser/volerr.c
+volerr.o: volerr.c
+	$(AFS_CCRULE) volerr.c
 
 volint.cs.o: ../volser/volint.cs.c
 	$(AFS_CCRULE) ../volser/volint.cs.c
@@ -92,15 +92,23 @@ lockprocs.o: ${VOLSER}/lockprocs.c
 vl_errors.c: ${VLSERVER}/vl_errors.et
 	${COMPILE_ET_C} -p ${VLSERVER} vl_errors
 
-vlserver.h: ${VLSERVER}/vl_errors.et ${VLSERVER}/vlserver.p.h
-	${COMPILE_ET_H} -p ${VLSERVER} vl_errors -h vlserver
+volerr.c: ${VOLSER}/volerr.et
+	${COMPILE_ET_C} -p ${VOLSER} volerr
 
-cnvldb.o cnvldb.lo: vlserver.h
-vlclient.o vlclient.lo: vlserver.h
-vldb_check.o vldb_check.lo: vlserver.h
-vlprocs.o vlprocs.lo: vlserver.h
-vlserver.o vlserver.lo: vlserver.h
-vlutils.o vlutils.lo: vlserver.h
+volser.h: ${VOLSER}/volerr.et ${VOLSER}/volser.p.h
+	${COMPILE_ET_H} -p ${VOLSER} volerr -h volser
+
+common.o: volser.h
+dumpstuff.o: volser.h
+lockprocs.o: volser.h
+vol-dump.o.lo: volser.h
+volmain.o: volser.h
+volprocs.o: volser.h
+vol_split.o: volser.h
+voltrans.o: volser.h
+vos.o: volser.h
+vsprocs.o: volser.h
+vsutils.o: volser.h
 
 vldbint.cs.o: ../vlserver/vldbint.cs.c
 	$(AFS_CCRULE) -I$(VLSERVER) ../vlserver/vldbint.cs.c
@@ -195,6 +203,6 @@ dest: volserver
 clean:
 	$(LT_CLEAN)
 	$(RM) -f *.o vos volserver core AFS_component_version_number.c \
-		vl_errors.c vlserver.h
+		vl_errors.c volerr.c volser.h
 
 include ../config/Makefile.version

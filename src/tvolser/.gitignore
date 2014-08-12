@@ -3,7 +3,6 @@
 # to check that you haven't inadvertently ignored any tracked files.
 
 /vl_errors.c
-/vlserver.h
 /volserver
 /vos
 /volerr.c
