@@ -2087,7 +2087,8 @@ afsd_run(void)
     }
     if (afsd_debug)
 	printf("%s: %d inode_for_V entries at %p, %lu bytes\n", rn,
-	       cacheFiles, inode_for_V, (cacheFiles * sizeof(AFSD_INO_T)));
+	       cacheFiles, inode_for_V,
+	       (unsigned long)cacheFiles * sizeof(AFSD_INO_T));
 #endif
 
     if (!(cacheFlags & AFSCALL_INIT_MEMCACHE)) {
