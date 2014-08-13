@@ -2961,7 +2961,7 @@ PrintCB(struct CallBack *cb, afs_uint32 now)
 
     printf("vol=%u vn=%u cbs=%d hi=%d st=%d fest=%d, exp in %lu secs at %s",
 	   fe->volid, fe->vnode, fe->ncbs, cb->hhead, cb->status, fe->status,
-	   expires - now, ctime(&expires));
+	   (unsigned long)(expires - now), ctime(&expires));
 }
 
 #endif
