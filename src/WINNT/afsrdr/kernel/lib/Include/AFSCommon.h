@@ -574,7 +574,8 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                     OUT LONG *OutVolumeReferenceReason,
                     OUT AFSDirectoryCB **OutParentDirectoryCB,
                     OUT AFSDirectoryCB **OutDirectoryCB,
-                    OUT PUNICODE_STRING ComponentName);
+                    OUT PUNICODE_STRING ComponentName,
+		    OUT PUNICODE_STRING TargetName);
 
 NTSTATUS
 AFSCreateDirEntry( IN GUID            *AuthGroup,
@@ -632,8 +633,9 @@ AFSBuildRootVolume( IN GUID *AuthGroup,
 NTSTATUS
 AFSProcessDFSLink( IN AFSDirectoryCB *DirEntry,
                    IN PFILE_OBJECT FileObject,
-                   IN UNICODE_STRING *RemainingPath,
-                   IN GUID *AuthGroup);
+                   IN PUNICODE_STRING RemainingPath,
+                   IN GUID *AuthGroup,
+		   OUT PUNICODE_STRING TargetName);
 
 //
 // AFSNetworkProviderSupport.cpp
@@ -1455,6 +1457,10 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 
 BOOLEAN
 AFSIgnoreReparsePointToFile( void);
+
+NTSTATUS
+AFSRetrieveTargetFileInfo( IN PUNICODE_STRING TargetName,
+			   OUT AFSFileInfoCB *FileInfo);
 
 //
 // AFSNameArray.cpp Prototypes

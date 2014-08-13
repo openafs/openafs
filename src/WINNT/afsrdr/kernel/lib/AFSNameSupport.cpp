@@ -65,7 +65,8 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                     OUT LONG *OutVolumeReferenceReason,
                     OUT AFSDirectoryCB **OutParentDirectoryCB,
                     OUT AFSDirectoryCB **OutDirectoryCB,
-                    OUT PUNICODE_STRING ComponentName)
+                    OUT PUNICODE_STRING ComponentName,
+		    OUT PUNICODE_STRING TargetName)
 {
 
     NTSTATUS          ntStatus = STATUS_SUCCESS;
@@ -1154,13 +1155,15 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                     // system for it to reevaluate it
                     //
 
-                    if( FileObject != NULL)
+                    if( FileObject != NULL ||
+			TargetName != NULL)
                     {
 
                         ntStatus = AFSProcessDFSLink( pDirEntry,
                                                       FileObject,
                                                       &uniRemainingPath,
-                                                      AuthGroup);
+                                                      AuthGroup,
+						      TargetName);
                     }
                     else
                     {
@@ -4992,7 +4995,8 @@ NTSTATUS
 AFSProcessDFSLink( IN AFSDirectoryCB *DirEntry,
                    IN PFILE_OBJECT FileObject,
                    IN UNICODE_STRING *RemainingPath,
-                   IN GUID *AuthGroup)
+                   IN GUID *AuthGroup,
+		   OUT PUNICODE_STRING TargetName)
 {
 
     NTSTATUS ntStatus = STATUS_INVALID_DEVICE_REQUEST;
@@ -5004,7 +5008,14 @@ AFSProcessDFSLink( IN AFSDirectoryCB *DirEntry,
     __Enter
     {
 
-        //
+	if ( FileObject != NULL && TargetName != NULL ||
+	     FileObject == NULL && TargetName == NULL)
+	{
+
+	    try_return( ntStatus = STATUS_INVALID_PARAMETER);
+	}
+
+	//
         // Build up the name to reparse
         //
 
@@ -5103,8 +5114,8 @@ AFSProcessDFSLink( IN AFSDirectoryCB *DirEntry,
         }
 
         //
-        // Allocate the reparse buffer
-        //
+	// Allocate the reparse buffer (from FS because might be returned in FileObject)
+	//
 
         uniReparseName.Buffer = (WCHAR *)AFSExAllocatePoolWithTag( PagedPool,
                                                                    uniReparseName.MaximumLength,
@@ -5188,17 +5199,29 @@ AFSProcessDFSLink( IN AFSDirectoryCB *DirEntry,
             uniReparseName.Length += RemainingPath->Length;
         }
 
-        //
-        // Update the name in the file object
-        //
-
-        if( FileObject->FileName.Buffer != NULL)
+	if( FileObject != NULL)
         {
+	    //
+	    // Update the name in the file object
+	    //
 
-            AFSExFreePoolWithTag( FileObject->FileName.Buffer, 0);
+	    if( FileObject->FileName.Buffer != NULL)
+	    {
+
+		//
+		// original FileObject buffer was not allocated by AFS
+		//
+
+		ExFreePoolWithTag( FileObject->FileName.Buffer, 0);
+	    }
+
+	    FileObject->FileName = uniReparseName;
         }
+	else
+	{
 
-        FileObject->FileName = uniReparseName;
+	    *TargetName = uniReparseName;
+	}
 
         AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,

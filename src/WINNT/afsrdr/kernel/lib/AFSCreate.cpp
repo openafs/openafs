@@ -464,7 +464,8 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
 					       &NewVolumeReferenceReason,
 					       &pNewParentDirectoryCB,
 					       &pDirectoryCB,
-					       &uniComponentName);
+					       &uniComponentName,
+					       NULL);
 
 		if ( pNewVolumeCB != NULL)
 		{
@@ -697,7 +698,8 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
 					       &NewVolumeReferenceReason,
 					       &pNewParentDirectoryCB,
 					       &pDirectoryCB,
-					       &uniComponentName);
+					       &uniComponentName,
+					       NULL);
 
 		if ( ntStatus == STATUS_SUCCESS ||
 		     ntStatus == STATUS_OBJECT_NAME_NOT_FOUND ||
@@ -815,7 +817,8 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
 						       &NewVolumeReferenceReason,
 						       &pNewParentDirectoryCB,
 						       &pDirectoryCB,
-						       &uniComponentName);
+						       &uniComponentName,
+						       NULL);
 		    }
 		}
 		else
