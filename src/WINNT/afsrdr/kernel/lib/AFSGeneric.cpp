@@ -5683,11 +5683,16 @@ AFSRetrieveFileAttributes( IN AFSDirectoryCB *ParentDirectoryCB,
     UNICODE_STRING uniComponentName, uniRemainingPath, uniParsedName;
     ULONG ulNameDifference = 0;
     LONG lCount;
+    UNICODE_STRING uniDFSTargetName;
 
     __Enter
     {
 
-        //
+	uniDFSTargetName.Length = 0;
+	uniDFSTargetName.MaximumLength = 0;
+	uniDFSTargetName.Buffer = NULL;
+
+	//
         // Retrieve a target name for the entry
         //
 
@@ -5964,7 +5969,8 @@ AFSRetrieveFileAttributes( IN AFSDirectoryCB *ParentDirectoryCB,
                                        &NewVolumeReferenceReason,
                                        &pNewParentDirEntry,
                                        &pDirectoryEntry,
-                                       NULL);
+                                       NULL,
+				       &uniDFSTargetName);
 
         if ( pNewVolumeCB != NULL)
         {
@@ -6014,9 +6020,20 @@ AFSRetrieveFileAttributes( IN AFSDirectoryCB *ParentDirectoryCB,
 
         pNewParentDirEntry = NULL;
 
-        if( !NT_SUCCESS( ntStatus) ||
-            ntStatus == STATUS_REPARSE)
+	if( !NT_SUCCESS( ntStatus))
+	{
+	    try_return( ntStatus);
+	}
+
+	//
+	// If the status is STATUS_REPARSE then attempt to retrieve the attributes from the target name returned
+	//
+
+	if( ntStatus == STATUS_REPARSE)
         {
+
+	    ntStatus = AFSRetrieveTargetFileInfo( &uniDFSTargetName,
+						  FileInfo);
 
             try_return( ntStatus);
         }
@@ -6144,6 +6161,13 @@ try_exit:
 
             AFSExFreePoolWithTag( pwchBuffer, 0);
         }
+
+	if ( uniDFSTargetName.Buffer != NULL)
+	{
+
+	    AFSExFreePoolWithTag( uniDFSTargetName.Buffer,
+				  AFS_REPARSE_NAME_TAG);
+	}
     }
 
     return ntStatus;
@@ -6808,7 +6832,8 @@ AFSEvaluateRootEntry( IN AFSDirectoryCB *DirectoryCB,
                                        &VolumeReferenceReason,
                                        &pNewParentDirEntry,
                                        &pDirectoryEntry,
-                                       NULL);
+                                       NULL,
+				       NULL);
 
         if ( pNewVolumeCB != NULL)
         {
@@ -8402,7 +8427,8 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
                                            &NewVolumeReferenceReason,
                                            &pNewParentDirEntry,
                                            &pDirectoryEntry,
-                                           NULL);
+                                           NULL,
+					   NULL);
 
             if ( pNewVolumeCB != NULL)
             {
@@ -9900,4 +9926,79 @@ AFSIgnoreReparsePointToFile( void)
     }
 
     return bIgnoreReparsePoint;
+}
+
+NTSTATUS
+AFSRetrieveTargetFileInfo( IN PUNICODE_STRING TargetName,
+			   OUT AFSFileInfoCB *FileInfo)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    OBJECT_ATTRIBUTES stObjectAttribs;
+    HANDLE hFile = NULL;
+    IO_STATUS_BLOCK stIoStatus;
+    FILE_NETWORK_OPEN_INFORMATION stFileInfo;
+
+    __Enter
+    {
+
+	InitializeObjectAttributes( &stObjectAttribs,
+				    TargetName,
+				    OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
+				    NULL,
+				    NULL);
+
+	ntStatus = ZwCreateFile( &hFile,
+				 FILE_READ_ATTRIBUTES,
+				 &stObjectAttribs,
+				 &stIoStatus,
+				 NULL,
+				 0,
+				 FILE_SHARE_READ | FILE_SHARE_WRITE,
+				 FILE_OPEN,
+				 FILE_SYNCHRONOUS_IO_NONALERT,
+				 NULL,
+				 0);
+
+	if( !NT_SUCCESS( ntStatus))
+	{
+
+	    try_return( ntStatus);
+	}
+
+	ntStatus = ZwQueryInformationFile( hFile,
+					   &stIoStatus,
+					   &stFileInfo,
+					   sizeof( FILE_NETWORK_OPEN_INFORMATION),
+					   FileNetworkOpenInformation);
+
+	if( !NT_SUCCESS( ntStatus))
+	{
+
+	    try_return( ntStatus);
+	}
+
+	FileInfo->FileAttributes = stFileInfo.FileAttributes;
+
+	FileInfo->AllocationSize = stFileInfo.AllocationSize;
+
+	FileInfo->EndOfFile = stFileInfo.EndOfFile;
+
+	FileInfo->CreationTime = stFileInfo.CreationTime;
+
+	FileInfo->LastAccessTime = stFileInfo.LastAccessTime;
+
+	FileInfo->LastWriteTime = stFileInfo.LastWriteTime;
+
+	FileInfo->ChangeTime = stFileInfo.ChangeTime;
+
+try_exit:
+
+	if( hFile != NULL)
+	{
+	    ZwClose( hFile);
+	}
+    }
+
+    return ntStatus;
 }
