@@ -90,8 +90,8 @@ main(int argc, char **argv)
 
     code = RXAFS_GetTime(cstruct->conns[0], (afs_uint32 *)&tv.tv_sec, (afs_uint32 *)&tv.tv_usec);
     if (!code)
-	printf("AFS_GetTime on %s sec=%ld, usec=%ld\n", av[0], tv.tv_sec,
-	       (long int)tv.tv_usec);
+	printf("AFS_GetTime on %s sec=%ld, usec=%ld\n", av[0], (long)tv.tv_sec,
+	       (long)tv.tv_usec);
     else
 	printf("return code is %d\n", code);
 

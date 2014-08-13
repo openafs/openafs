@@ -2970,7 +2970,8 @@ PrintCB(struct CallBack *cb, afs_uint32 now)
 
     printf("vol=%" AFS_VOLID_FMT " vn=%u cbs=%d hi=%d st=%d fest=%d, exp in %lu secs at %s",
 	   afs_printable_VolumeId_lu(fe->volid), fe->vnode, fe->ncbs,
-	   cb->hhead, cb->status, fe->status, expires - now, ctime(&expires));
+	   cb->hhead, cb->status, fe->status, (unsigned long)(expires - now),
+	   ctime(&expires));
 }
 
 #endif
