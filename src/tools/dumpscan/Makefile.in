@@ -73,10 +73,10 @@ libdumpscan.a: $(OBJS_libdumpscan.a)
 	$(RANLIB) libdumpscan.a
 
 xf_errs.c: ${srcdir}/xf_errs.et
-	$(COMPILE_ET_C) ${srcdir}/xf_errs.et
+	$(COMPILE_ET_C) -p ${srcdir} xf_errs
 
 xf_errs.h: ${srcdir}/xf_errs.et
-	$(COMPILE_ET_H) ${srcdir}/xf_errs.et
+	$(COMPILE_ET_H) -p ${srcdir} xf_errs
 
 afsdump_dirlist.o: xf_errs.h
 afsdump_extract.o: xf_errs.h
@@ -91,10 +91,10 @@ xf_profile.o: xf_errs.h
 xf_rxcall.o: xf_errs.h
 
 dumpscan_errs.h: ${srcdir}/dumpscan_errs.et
-	$(COMPILE_ET_H) ${srcdir}/dumpscan_errs.et
+	$(COMPILE_ET_H) -p ${srcdir} dumpscan_errs
 
 dumpscan_errs.c: ${srcdir}/dumpscan_errs.et
-	$(COMPILE_ET_C) ${srcdir}/dumpscan_errs.et
+	$(COMPILE_ET_C) -p ${srcdir} dumpscan_errs
 
 afsdump_dirlist.o: dumpscan_errs.h
 afsdump_extract.o: dumpscan_errs.h
