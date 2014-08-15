@@ -55,7 +55,7 @@ afs_util_krb.o: afs_util.c afs_pam_msg.h afs_message.h afs_util.h
 ktc_krb.o: ${srcdir}/../auth/ktc.c ${TOP_INCDIR}/afs/cellconfig.h \
 		${TOP_INCDIR}/afs/auth.h ${srcdir}/../auth/keys.h \
 		${TOP_INCDIR}/afs/vice.h
-	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c ${srcdir}/../auth/ktc.c -o $@
+	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c ${srcdir}/../auth/ktc.c -o $@ -I../auth
 
 pam_afs.so.1: $(SHOBJS) afs_setcred.o afs_auth.o afs_util.o \
 		${TOP_LIBDIR}/libafsauthent_pic.a \

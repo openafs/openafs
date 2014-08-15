@@ -308,7 +308,7 @@ rxkad_errs.o: ${RXKAD}/rxkad_errs.c
 	${CCRULE}
 
 ticket5_keytab.o: ${RXKAD}/ticket5_keytab.c
-	${CCRULE} @KRB5_CPPFLAGS@
+	${CCRULE} -I../rxkad @KRB5_CPPFLAGS@
 
 ptclient.o: ${PTSERVER}/ptclient.c
 	${CCRULE}
