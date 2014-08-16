@@ -2,6 +2,7 @@ openafs (1.6.9-2) UNRELEASED; urgency=medium
 
   * Retroactively add the CVE for OPENAFS-SA-2014-002 to the changelog for
     1.6.9-1.  It was assigned after the release was uploaded.
+  * Add Benjamin Kaduk as Maintainer and move myself to Uploaders.
 
  -- Russ Allbery <rra@debian.org>  Fri, 13 Jun 2014 16:02:57 -0700
 
