@@ -405,9 +405,8 @@ int cm_noteLocalMountPointChange(afs_int32 locked) {
     if (RDR_Initialized) {
         cm_fid_t fid;
         cm_FakeRootFid(&fid);
-        RDR_InvalidateObject( fid.cell, fid.volume, fid.vnode, fid.unique, fid.hash,
-                              CM_SCACHETYPE_DIRECTORY,
-                              AFS_INVALIDATE_DATA_VERSION);
+	RDR_InvalidateVolume(AFS_FAKE_ROOT_CELL_ID, AFS_FAKE_ROOT_VOL_ID,
+			     AFS_INVALIDATE_DATA_VERSION);
     }
     return 1;
 }
@@ -469,11 +468,6 @@ int cm_reInitLocalMountPoints() {
                 lock_ReleaseWrite(&scp->rw);
                 lock_ReleaseWrite(&cm_scacheLock);
                 cm_CallbackNotifyChange(scp);
-
-                if (RDR_Initialized)
-                    RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique,
-                                         scp->fid.hash, scp->fileType, AFS_INVALIDATE_CALLBACK);
-
                 lock_ObtainWrite(&cm_scacheLock);
                 cm_ReleaseSCacheNoLock(scp);
                 lock_ObtainMutex(&cm_Freelance_Lock);
@@ -508,6 +502,10 @@ int cm_reInitLocalMountPoints() {
 
     cm_GetCallback(cm_data.rootSCachep, cm_rootUserp, &req, 0);
     lock_ReleaseWrite(&cm_data.rootSCachep->rw);
+
+    if (RDR_Initialized)
+	RDR_InvalidateVolume(AFS_FAKE_ROOT_CELL_ID, AFS_FAKE_ROOT_VOL_ID,
+			     AFS_INVALIDATE_DATA_VERSION);
 
     osi_Log0(afsd_logp,"----- freelance reinit complete -----");
     return 0;
