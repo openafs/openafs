@@ -250,7 +250,7 @@ cm_PingServer(cm_server_t *tsp)
 
         rxconnp = cm_GetRxConn(connp);
 	if (wasDown)
-	    rx_SetConnDeadTime(rxconnp, 10);
+	    rx_SetConnHardDeadTime(rxconnp, 10);
 	if (tsp->type == CM_SERVER_VLDB) {
 	    code = VL_ProbeServer(rxconnp);
 	}
@@ -259,7 +259,7 @@ cm_PingServer(cm_server_t *tsp)
 	    code = RXAFS_GetCapabilities(rxconnp, &caps);
 	}
 	if (wasDown)
-	    rx_SetConnDeadTime(rxconnp, ConnDeadtimeout);
+	    rx_SetConnHardDeadTime(rxconnp, HardDeadtimeout);
         rx_PutConnection(rxconnp);
 	cm_PutConn(connp);
     }	/* got an unauthenticated connection to this server */
@@ -527,7 +527,7 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
             lock_ObtainRead(&cm_serverLock);
             rxconns[nconns] = cm_GetRxConn(conns[nconns]);
             if (conntimer[nconns] = (isDown ? 1 : 0))
-                rx_SetConnDeadTime(rxconns[nconns], 10);
+                rx_SetConnHardDeadTime(rxconns[nconns], 10);
 
             nconns++;
         }
@@ -546,7 +546,7 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
         /* Process results of servers that support RXAFS_GetCapabilities */
         for (i=0; i<nconns; i++) {
             if (conntimer[i])
-                rx_SetConnDeadTime(rxconns[i], ConnDeadtimeout);
+                rx_SetConnHardDeadTime(rxconns[i], HardDeadtimeout);
             rx_PutConnection(rxconns[i]);
             cm_PutConn(conns[i]);
 
@@ -698,7 +698,7 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
             rxconns[nconns] = cm_GetRxConn(conns[nconns]);
             conntimer[nconns] = (isDown ? 1 : 0);
             if (isDown)
-                rx_SetConnDeadTime(rxconns[nconns], 10);
+                rx_SetConnHardDeadTime(rxconns[nconns], 10);
 
             nconns++;
         }
@@ -717,7 +717,7 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
         /* Process results of servers that support VL_ProbeServer */
         for (i=0; i<nconns; i++) {
             if (conntimer[i])
-                rx_SetConnDeadTime(rxconns[i], ConnDeadtimeout);
+                rx_SetConnHardDeadTime(rxconns[i], HardDeadtimeout);
             rx_PutConnection(rxconns[i]);
             cm_PutConn(conns[i]);
 
