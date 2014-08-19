@@ -2,6 +2,31 @@ openafs (1.6.10~pre1-1) UNRELEASED; urgency=low
 
   [ Benjamin Kaduk ]
   * New upstream pre-release.
+    - Linux kernels up to 3.16 are now supported.
+    - The amount of free space and reported for /afs is now 2 TiB, up
+      from the previous reported value of around 9 GiB.
+    - Fix 'pts removeuser' behavior in the ptserver for some supergroups
+      over a certain membership size.
+    - Fix logging behavior when rotating logs via the "copy and truncate"
+      approach.
+    - Add new log messages in the volserver log and the vlserver audit log.
+    - Reduce the amount of kernel stack space used in the client.
+    - Improve error handling for a wide variety of cases for various tools.
+    - Improve periodic hanging in the client when a large number of PAGs
+      and files are in use.
+    - Fix 'afs-up' to handle large ACLs correctly.
+    - Fix a crash in 'aklog' when retrying ticket acquisition.
+    - Fix a crash in xstat_fs_test and scout when their local port is
+      already in use.
+    - Fix an error in the client lock handling that prevented checking
+      for the existence of write locks on readonly volumes.
+    - Fix an error in the client that could cause cache inconsistencies
+      if another client removed a directory entry, and recreated a
+      different entry with the same name.
+    - Avoid ignoring build failures during the client kernel module build
+      process, hopefully leading to better error messages in some cases
+      when building the kernel module.
+    - Fix various possible problems when building with parallel make.
 
   [ Russ Allbery ]
   * Retroactively add the CVE for OPENAFS-SA-2014-002 to the changelog for
