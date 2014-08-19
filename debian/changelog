@@ -28,6 +28,9 @@ openafs (1.6.10~pre1-1) UNRELEASED; urgency=low
       when building the kernel module.
     - Fix various possible problems when building with parallel make.
 
+  [ Andrew Deason ]
+  * Include the new volscan tool in openafs-fileserver.
+
   [ Russ Allbery ]
   * Retroactively add the CVE for OPENAFS-SA-2014-002 to the changelog for
     1.6.9-1.  It was assigned after the release was uploaded.

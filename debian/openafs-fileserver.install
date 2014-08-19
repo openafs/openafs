@@ -6,6 +6,7 @@ debian/tmp/usr/sbin/salvsync-debug                 usr/sbin
 debian/tmp/usr/sbin/state_analyzer                 usr/sbin
 debian/tmp/usr/sbin/voldump                        usr/sbin
 debian/tmp/usr/sbin/volinfo                        usr/sbin
+debian/tmp/usr/sbin/volscan                        usr/sbin
 
 debian/tmp/usr/lib/openafs/dafileserver            usr/lib/openafs
 debian/tmp/usr/lib/openafs/dasalvager              usr/lib/openafs
@@ -68,4 +69,5 @@ debian/tmp/usr/share/man/man8/upclient.8                usr/share/man/man8
 debian/tmp/usr/share/man/man8/upserver.8                usr/share/man/man8
 debian/tmp/usr/share/man/man8/voldump.8                 usr/share/man/man8
 debian/tmp/usr/share/man/man8/volinfo.8                 usr/share/man/man8
+debian/tmp/usr/share/man/man8/volscan.8                 usr/share/man/man8
 debian/tmp/usr/share/man/man8/volserver.8               usr/share/man/man8
