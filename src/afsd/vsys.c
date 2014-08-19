@@ -33,6 +33,8 @@ main(int argc, char **argv)
     afs_int32 parms[6];
     int numberFlag;
 
+    memset(&parms, 0, sizeof(parms));
+
     if (argc < 2) {
 	printf("use: vsys <call number> <parms>\n");
 	exit(1);

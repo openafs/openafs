@@ -69,7 +69,7 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	    char *atargetName, struct vcache **tvcp, afs_ucred_t *acred)
 {
     afs_uint32 now = 0;
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     afs_int32 code = 0;
     struct afs_conn *tc;
     struct VenusFid newFid;
@@ -79,7 +79,7 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     struct server *hostp = 0;
     struct vcache *tvc;
     struct AFSStoreStatus InStatus;
-    struct AFSFetchStatus OutFidStatus, OutDirStatus;
+    struct AFSFetchStatus *OutFidStatus, *OutDirStatus;
     struct AFSCallBack CallBack;
     struct AFSVolSync tsync;
     struct volume *volp = 0;
@@ -92,14 +92,17 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     afs_Trace2(afs_iclSetp, CM_TRACE_SYMLINK, ICL_TYPE_POINTER, adp,
 	       ICL_TYPE_STRING, aname);
 
-    if ((code = afs_InitReq(&treq, acred)))
+    OutFidStatus = osi_AllocSmallSpace(sizeof(struct AFSFetchStatus));
+    OutDirStatus = osi_AllocSmallSpace(sizeof(struct AFSFetchStatus));
+
+    if ((code = afs_CreateReq(&treq, acred)))
 	goto done2;
 
     afs_InitFakeStat(&fakestate);
 
     AFS_DISCON_LOCK();
     
-    code = afs_EvalFakeStat(&adp, &fakestate, &treq);
+    code = afs_EvalFakeStat(&adp, &fakestate, treq);
     if (code)
 	goto done;
 
@@ -117,9 +120,9 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	goto done;
     }
 
-    code = afs_VerifyVCache(adp, &treq);
+    code = afs_VerifyVCache(adp, treq);
     if (code) {
-	code = afs_CheckCode(code, &treq, 30);
+	code = afs_CheckCode(code, treq, 30);
 	goto done;
     }
 
@@ -147,7 +150,7 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	InStatus.UnixModeBits = 0755;
 	alen++;			/* add in the null */
     }
-    tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &offset, &len, 1);
+    tdc = afs_GetDCache(adp, (afs_size_t) 0, treq, &offset, &len, 1);
     volp = afs_FindVolume(&adp->f.fid, READ_LOCK);	/*parent is also in same vol */
     ObtainWriteLock(&adp->lock, 156);
     if (tdc)
@@ -157,7 +160,7 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
      * the copy will be invalidated */
     if (!AFS_IS_DISCON_RW) {
 	do {
-	    tc = afs_Conn(&adp->f.fid, &treq, SHARED_LOCK, &rxconn);
+	    tc = afs_Conn(&adp->f.fid, treq, SHARED_LOCK, &rxconn);
 	    if (tc) {
 		hostp = tc->srvr->server;
 		XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_SYMLINK);
@@ -169,7 +172,7 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 					 (struct AFSFid *)&adp->f.fid.Fid,
 					 aname, atargetName, &InStatus,
 					 (struct AFSFid *)&newFid.Fid,
-					 &OutFidStatus, &OutDirStatus, 
+					 OutFidStatus, OutDirStatus,
 					 &CallBack, &tsync);
 		    RX_AFS_GLOCK();
 		} else {
@@ -178,14 +181,14 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 			RXAFS_Symlink(rxconn, (struct AFSFid *)&adp->f.fid.Fid,
 				      aname, atargetName, &InStatus,
 				      (struct AFSFid *)&newFid.Fid, 
-				      &OutFidStatus, &OutDirStatus, &tsync);
+				      OutFidStatus, OutDirStatus, &tsync);
 		    RX_AFS_GLOCK();
 	    	}
 		XSTATS_END_TIME;
 	    } else
 		code = -1;
 	} while (afs_Analyze
-		 (tc, rxconn, code, &adp->f.fid, &treq, AFS_STATS_FS_RPCIDX_SYMLINK,
+		 (tc, rxconn, code, &adp->f.fid, treq, AFS_STATS_FS_RPCIDX_SYMLINK,
 		     SHARED_LOCK, NULL));
     } else {
 	newFid.Cell = adp->f.fid.Cell;
@@ -211,7 +214,7 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	goto done;
     }
     /* otherwise, we should see if we can make the change to the dir locally */
-    if (AFS_IS_DISCON_RW || afs_LocalHero(adp, tdc, &OutDirStatus, 1)) {
+    if (AFS_IS_DISCON_RW || afs_LocalHero(adp, tdc, OutDirStatus, 1)) {
 	/* we can do it locally */
 	ObtainWriteLock(&afs_xdcache, 293);
 	/* If the following fails because the name has been created in the meantime, the
@@ -261,8 +264,8 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 
     if (AFS_IS_DISCON_RW) {
 	attrs->va_mode = InStatus.UnixModeBits;
-	afs_GenDisconStatus(adp, tvc, &newFid, attrs, &treq, VLNK);
-	code = afs_DisconCreateSymlink(tvc, atargetName, &treq);
+	afs_GenDisconStatus(adp, tvc, &newFid, attrs, treq, VLNK);
+	code = afs_DisconCreateSymlink(tvc, atargetName, treq);
 	if (code) {
 	    /* XXX - When this goes wrong, we need to tidy up the changes we made to
 	     * the parent, and get rid of the vcache we just created */
@@ -273,7 +276,7 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	}
 	afs_DisconAddDirty(tvc, VDisconCreate, 0);
     } else {
-	afs_ProcessFS(tvc, &OutFidStatus, &treq);
+	afs_ProcessFS(tvc, OutFidStatus, treq);
     }
 
     if (!tvc->linkData) {
@@ -294,8 +297,11 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     if (volp)
 	afs_PutVolume(volp, READ_LOCK);
     AFS_DISCON_UNLOCK();
-    code = afs_CheckCode(code, &treq, 31);
+    code = afs_CheckCode(code, treq, 31);
+    afs_DestroyReq(treq);
   done2:
+    osi_FreeSmallSpace(OutFidStatus);
+    osi_FreeSmallSpace(OutDirStatus);
     return code;
 }
 
@@ -411,23 +417,23 @@ int
 afs_readlink(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 {
     afs_int32 code;
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     char *tp;
     struct afs_fakestat_state fakestat;
     OSI_VC_CONVERT(avc);
 
     AFS_STATCNT(afs_readlink);
     afs_Trace1(afs_iclSetp, CM_TRACE_READLINK, ICL_TYPE_POINTER, avc);
-    if ((code = afs_InitReq(&treq, acred)))
+    if ((code = afs_CreateReq(&treq, acred)))
 	return code;
     afs_InitFakeStat(&fakestat);
 
     AFS_DISCON_LOCK();
     
-    code = afs_EvalFakeStat(&avc, &fakestat, &treq);
+    code = afs_EvalFakeStat(&avc, &fakestat, treq);
     if (code)
 	goto done;
-    code = afs_VerifyVCache(avc, &treq);
+    code = afs_VerifyVCache(avc, treq);
     if (code)
 	goto done;
     if (vType(avc) != VLNK) {
@@ -435,7 +441,7 @@ afs_readlink(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 	goto done;
     }
     ObtainWriteLock(&avc->lock, 158);
-    code = afs_HandleLink(avc, &treq);
+    code = afs_HandleLink(avc, treq);
     /* finally uiomove it to user-land */
     if (code == 0) {
 	tp = avc->linkData;
@@ -449,6 +455,7 @@ afs_readlink(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
   done:
     afs_PutFakeStat(&fakestat);
     AFS_DISCON_UNLOCK();
-    code = afs_CheckCode(code, &treq, 32);
+    code = afs_CheckCode(code, treq, 32);
+    afs_DestroyReq(treq);
     return code;
 }

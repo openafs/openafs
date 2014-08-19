@@ -4,6 +4,7 @@
 
 /salvager
 /volinfo
+/volscan
 /gi
 /fs_conv_sol26
 /fssync-debug

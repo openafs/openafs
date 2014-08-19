@@ -91,7 +91,7 @@ main(int argc, char **argv)
 	    exit(1);
 	}
 	ka_StringToKey(buf, tcell, &tkey);
-	code = afsconf_AddKey(tdir, kvno, ktc_to_charptr(&tkey), 0);
+	code = afsconf_AddKey(tdir, kvno, (char *)&tkey, 0);
 	if (code) {
 	    printf("bos_util: failed to set key, code %d.\n", code);
 	    exit(1);
@@ -125,7 +125,7 @@ main(int argc, char **argv)
 	    exit(1);
 	}
 	des_string_to_key(buf, ktc_to_cblockptr(&tkey));
-	code = afsconf_AddKey(tdir, kvno, ktc_to_charptr(&tkey), 0);
+	code = afsconf_AddKey(tdir, kvno, (char *)(&tkey), 0);
 	if (code) {
 	    printf("bos_util: failed to set key, code %d.\n", code);
 	    exit(1);
@@ -185,13 +185,11 @@ main(int argc, char **argv)
 	for (i = 0; i < tkeys.nkeys; i++) {
 	    if (tkeys.key[i].kvno != -1) {
 		int count;
-		unsigned char x[8];
 		memcpy(tbuffer, tkeys.key[i].key, 8);
 		tbuffer[8] = 0;
 		printf("kvno %4d: key is '%s' '", tkeys.key[i].kvno, tbuffer);
-		strcpy((char *)x, (char *)tbuffer);
 		for (count = 0; count < 8; count++)
-		    printf("\\%03o", x[count]);
+		    printf("\\%03o", tbuffer[count]);
 		printf("'\n");
 	    }
 	}

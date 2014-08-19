@@ -72,7 +72,8 @@ static char *fsOpNames[] = {
     "BulkStatus",
     "XStatsVersion",
     "GetXStats",
-    "XLookup"
+    "XLookup",
+    "ResidencyRpc"
 };
 
 static char *cmOpNames[] = {

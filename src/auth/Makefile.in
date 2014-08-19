@@ -97,15 +97,32 @@ setkey: setkey.o ${LIBS}
 
 acfg_errors.o: acfg_errors.c
 
-acfg_errors.c cellconfig.h: acfg_errors.et cellconfig.p.h
-	$(RM) -f cellconfig.h acfg_errors.c
-	${COMPILE_ET} -p ${srcdir} acfg_errors -h cellconfig
+acfg_errors.c: acfg_errors.et
+	${COMPILE_ET_C} -p ${srcdir} acfg_errors
+
+cellconfig.h: acfg_errors.et cellconfig.p.h
+	${COMPILE_ET_H} -p ${srcdir} acfg_errors -h cellconfig
+
+authcon.o: cellconfig.h
+cellconfig.o: cellconfig.h
+copyauth.o: cellconfig.h
+ktc.o: cellconfig.h
+setkey.o: cellconfig.h
+userok.o: cellconfig.h
+writeconfig.o: cellconfig.h
 
 ktc_errors.o: ktc_errors.c
 
-ktc_errors.c auth.h: ktc_errors.et auth.p.h
-	$(RM) -f auth.h ktc_errors.c
-	${COMPILE_ET} -p ${srcdir} ktc_errors -h auth
+ktc_errors.c: ktc_errors.et
+	${COMPILE_ET_C} -p ${srcdir} ktc_errors
+
+auth.h: ktc_errors.et auth.p.h
+	${COMPILE_ET_H} -p ${srcdir} ktc_errors -h auth
+
+authcon.o: auth.h
+copyauth.o: auth.h
+ktc.o: auth.h
+userok.o: auth.h
 
 #
 # Install targets

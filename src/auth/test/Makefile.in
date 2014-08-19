@@ -12,7 +12,7 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
-LIBS= ../libauth.a ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/libsys.a \
+LIBS= ../libauth.a ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a ${XLIBS}
 
 tests all: testcellconf ktctest

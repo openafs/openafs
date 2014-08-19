@@ -47,7 +47,7 @@
 #include <string.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
-#include <rx/rxkad.h>
+#include "rxkad.h"
 #include <des.h>
 #include "lifetimes.h"
 

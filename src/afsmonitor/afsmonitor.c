@@ -24,6 +24,7 @@
 #include <string.h>
 #include <errno.h>
 #include <afs/cmd.h>
+#include <afs/afsutil.h>
 #include <signal.h>
 #undef IN
 #include <sys/types.h>
@@ -481,22 +482,22 @@ afsmon_Exit(int a_exitVal)	/* exit code */
 
 
     /* deallocate FS & CM Print buffers */
-    if (curr_fsData != (struct fs_Display_Data *)0) {
+    if (curr_fsData != NULL) {
 	if (afsmon_debug)
 	    fprintf(debugFD, "Deallocating FS Print Buffers .... curr");
 	free(curr_fsData);
     }
-    if (prev_fsData != (struct fs_Display_Data *)0) {
+    if (prev_fsData != NULL) {
 	if (afsmon_debug)
 	    fprintf(debugFD, ", prev \n");
 	free(prev_fsData);
     }
-    if (prev_cmData != (struct cm_Display_Data *)0) {
+    if (curr_cmData != NULL) {
 	if (afsmon_debug)
 	    fprintf(debugFD, "Deallocating CM Print Buffers .... curr");
 	free(curr_cmData);
     }
-    if (prev_cmData != (struct cm_Display_Data *)0) {
+    if (prev_cmData != NULL) {
 	if (afsmon_debug)
 	    fprintf(debugFD, ", prev \n");
 	free(prev_cmData);
@@ -1001,10 +1002,12 @@ store_threshold(int a_type,		/* 1 = fs , 2 = cm */
 	    for (j = 0; j < tmp_host->numThresh; j++) {
 		if ((threshP->itemName[0] == '\0')
 		    || (strcasecmp(threshP->itemName, a_varName) == 0)) {
-		    strncpy(threshP->itemName, a_varName,
-			    THRESH_VAR_NAME_LEN);
-		    strncpy(threshP->threshVal, a_value, THRESH_VAR_LEN);
-		    strcpy(threshP->handler, a_handler);
+		    strlcpy(threshP->itemName, a_varName,
+			    sizeof(threshP->itemName));
+		    strlcpy(threshP->threshVal, a_value,
+			    sizeof(threshP->threshVal));
+		    strlcpy(threshP->handler, a_handler,
+			    sizeof(threshP->handler));
 		    threshP->index = index;
 		    done = 1;
 		    break;
@@ -1056,9 +1059,9 @@ store_threshold(int a_type,		/* 1 = fs , 2 = cm */
     for (i = 0; i < tmp_host->numThresh; i++) {
 	if ((threshP->itemName[0] == '\0')
 	    || (strcasecmp(threshP->itemName, a_varName) == 0)) {
-	    strncpy(threshP->itemName, a_varName, THRESH_VAR_NAME_LEN);
-	    strncpy(threshP->threshVal, a_value, THRESH_VAR_LEN);
-	    strcpy(threshP->handler, a_handler);
+	    strlcpy(threshP->itemName, a_varName, sizeof(threshP->itemName));
+	    strlcpy(threshP->threshVal, a_value, sizeof(threshP->threshVal));
+	    strlcpy(threshP->handler, a_handler, sizeof(threshP->handler));
 	    threshP->index = index;
 	    done = 1;
 	    break;
@@ -1186,8 +1189,8 @@ parse_showEntry(char *a_line)
 
 	if (strcasestr(arg2, "_group") != (char *)NULL) {
 
-	    if (fromIdx < 0 || toIdx < 0 || fromIdx > NUM_FS_STAT_ENTRIES
-		|| toIdx > NUM_FS_STAT_ENTRIES)
+	    if (fromIdx < 0 || toIdx < 0 || fromIdx >= NUM_FS_STAT_ENTRIES
+		|| toIdx >= NUM_FS_STAT_ENTRIES)
 		return (-2);
 	    for (j = fromIdx; j <= toIdx; j++) {
 		if (!fs_showFlags[j]) {
@@ -1195,7 +1198,7 @@ parse_showEntry(char *a_line)
 		    fs_DisplayItems_count++;
 		    fs_showFlags[j] = 1;
 		}
-		if (fs_DisplayItems_count > NUM_FS_STAT_ENTRIES) {
+		if (fs_DisplayItems_count >= NUM_FS_STAT_ENTRIES) {
 		    fprintf(stderr, "[ %s ] fs_DisplayItems_count ovf\n", rn);
 		    return (-3);
 		}
@@ -1214,8 +1217,8 @@ parse_showEntry(char *a_line)
 
 		if (strcasestr(catName, "_group") != NULL) {
 		    if (fromIdx < 0 || toIdx < 0
-			|| fromIdx > NUM_FS_STAT_ENTRIES
-			|| toIdx > NUM_FS_STAT_ENTRIES)
+			|| fromIdx >= NUM_FS_STAT_ENTRIES
+			|| toIdx >= NUM_FS_STAT_ENTRIES)
 			return (-4);
 		    for (j = fromIdx; j <= toIdx; j++) {
 			if (!fs_showFlags[j]) {
@@ -1223,7 +1226,7 @@ parse_showEntry(char *a_line)
 			    fs_DisplayItems_count++;
 			    fs_showFlags[j] = 1;
 			}
-			if (fs_DisplayItems_count > NUM_FS_STAT_ENTRIES) {
+			if (fs_DisplayItems_count >= NUM_FS_STAT_ENTRIES) {
 			    fprintf(stderr,
 				    "[ %s ] fs_DisplayItems_count ovf\n", rn);
 			    return (-5);
@@ -1301,8 +1304,8 @@ parse_showEntry(char *a_line)
 
 	if (strcasestr(arg2, "_group") != (char *)NULL) {
 
-	    if (fromIdx < 0 || toIdx < 0 || fromIdx > NUM_CM_STAT_ENTRIES
-		|| toIdx > NUM_CM_STAT_ENTRIES)
+	    if (fromIdx < 0 || toIdx < 0 || fromIdx >= NUM_CM_STAT_ENTRIES
+		|| toIdx >= NUM_CM_STAT_ENTRIES)
 		return (-10);
 	    for (j = fromIdx; j <= toIdx; j++) {
 		if (!cm_showFlags[j]) {
@@ -1310,7 +1313,7 @@ parse_showEntry(char *a_line)
 		    cm_DisplayItems_count++;
 		    cm_showFlags[j] = 1;
 		}
-		if (cm_DisplayItems_count > NUM_CM_STAT_ENTRIES) {
+		if (cm_DisplayItems_count >= NUM_CM_STAT_ENTRIES) {
 		    fprintf(stderr, "[ %s ] cm_DisplayItems_count ovf\n", rn);
 		    return (-11);
 		}
@@ -1329,8 +1332,8 @@ parse_showEntry(char *a_line)
 
 		if (strcasestr(catName, "_group") != NULL) {
 		    if (fromIdx < 0 || toIdx < 0
-			|| fromIdx > NUM_CM_STAT_ENTRIES
-			|| toIdx > NUM_CM_STAT_ENTRIES)
+			|| fromIdx >= NUM_CM_STAT_ENTRIES
+			|| toIdx >= NUM_CM_STAT_ENTRIES)
 			return (-12);
 		    for (j = fromIdx; j <= toIdx; j++) {
 			if (!cm_showFlags[j]) {
@@ -1338,7 +1341,7 @@ parse_showEntry(char *a_line)
 			    cm_DisplayItems_count++;
 			    cm_showFlags[j] = 1;
 			}
-			if (cm_DisplayItems_count > NUM_CM_STAT_ENTRIES) {
+			if (cm_DisplayItems_count >= NUM_CM_STAT_ENTRIES) {
 			    fprintf(stderr,
 				    "[ %s ] cm_DisplayItems_count ovf\n", rn);
 			    return (-13);

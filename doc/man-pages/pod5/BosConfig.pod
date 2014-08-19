@@ -213,8 +213,11 @@ The B<bos startup> command starts a process.
 When the BOS Server shuts down, it rewrites F<BosConfig>, discarding any
 changes made manually to that file.  To change the configuration for the
 next BOS Server restart, instead write a new file to F<BosConfig.new>.  If
-F<BosConfig.new> exists when the BOS Server starts, it will rename that
-file to F<BosConfig> before reading its configuration.
+F<BosConfig.new> exists when the BOS Server starts, F<BosConfig> will be
+replaced by F<BosConfig.new> before the BOS Server reads its configuration.
+Note that the BOS Server will notice a new F<BosConfig.new> file whenever the
+I<general restart> time is reached, if one is configured, since the BOS Server
+restarts itself at that time.
 
 =head1 SEE ALSO
 

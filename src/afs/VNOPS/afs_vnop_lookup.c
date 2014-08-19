@@ -1376,7 +1376,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acred)
 #endif
 {
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     char *tname = NULL;
     struct vcache *tvc = 0;
     afs_int32 code;
@@ -1396,8 +1396,8 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
     afs_InitFakeStat(&fakestate);
 
     AFS_DISCON_LOCK();
-    
-    if ((code = afs_InitReq(&treq, acred)))
+
+    if ((code = afs_CreateReq(&treq, acred)))
 	goto done;
 
     if (afs_fakestat_enable && adp->mvstat == 1) {
@@ -1422,9 +1422,9 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 #endif
 
     if (tryEvalOnly)
-	code = afs_TryEvalFakeStat(&adp, &fakestate, &treq);
+	code = afs_TryEvalFakeStat(&adp, &fakestate, treq);
     else
-	code = afs_EvalFakeStat(&adp, &fakestate, &treq);
+	code = afs_EvalFakeStat(&adp, &fakestate, treq);
 
     /*printf("Code is %d\n", code);*/
     
@@ -1443,7 +1443,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
     bulkcode = 0;
 
     if (!(adp->f.states & CStatd) && !afs_InReadDir(adp)) {
-	if ((code = afs_VerifyVCache2(adp, &treq))) {
+	if ((code = afs_VerifyVCache2(adp, treq))) {
 	    goto done;
 	}
     } else
@@ -1458,7 +1458,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	}
 	/* otherwise we have the fid here, so we use it */
 	/*printf("Getting vcache\n");*/
-	tvc = afs_GetVCache(adp->mvid, &treq, NULL, NULL);
+	tvc = afs_GetVCache(adp->mvid, treq, NULL, NULL);
 	afs_Trace3(afs_iclSetp, CM_TRACE_GETVCDOTDOT, ICL_TYPE_FID, adp->mvid,
 		   ICL_TYPE_POINTER, tvc, ICL_TYPE_INT32, code);
 	*avcp = tvc;
@@ -1474,18 +1474,18 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
     }
 
     /* now check the access */
-    if (treq.uid != adp->last_looker) {
-	if (!afs_AccessOK(adp, PRSFS_LOOKUP, &treq, CHECK_MODE_BITS)) {
+    if (treq->uid != adp->last_looker) {
+	if (!afs_AccessOK(adp, PRSFS_LOOKUP, treq, CHECK_MODE_BITS)) {
 	    *avcp = NULL;
 	    code = EACCES;
 	    goto done;
 	} else
-	    adp->last_looker = treq.uid;
+	    adp->last_looker = treq->uid;
     }
 
     /* Check for read access as well.  We need read access in order to
      * stat files, but not to stat subdirectories. */
-    if (!afs_AccessOK(adp, PRSFS_READ, &treq, CHECK_MODE_BITS))
+    if (!afs_AccessOK(adp, PRSFS_READ, treq, CHECK_MODE_BITS))
 	no_read_access = 1;
 
     /* special case lookup of ".".  Can we check for it sooner in this code,
@@ -1538,7 +1538,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	struct VenusFid tfid;
 	afs_uint32 cellidx, volid, vnoid, uniq;
 
-	code = EvalMountData('%', aname, 0, 0, NULL, &treq, &cellidx, &volid, &vnoid, &uniq);
+	code = EvalMountData('%', aname, 0, 0, NULL, treq, &cellidx, &volid, &vnoid, &uniq);
 	if (code)
 	    goto done;
 	/* If a vnode was returned, it's not a real mount point */
@@ -1554,7 +1554,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	    tfid.Fid.Vnode = VNUM_FROM_TYPEID(VN_TYPE_MOUNT, cellidx << 2);
 	    tfid.Fid.Unique = volid;
 	}
-	*avcp = tvc = afs_GetVCache(&tfid, &treq, NULL, NULL);
+	*avcp = tvc = afs_GetVCache(&tfid, treq, NULL, NULL);
 	code = (tvc ? 0 : ENOENT);
 	hit = 1;
 	goto done;
@@ -1570,14 +1570,14 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	struct VenusFid tfid;
 
 	afs_GetDynrootMountFid(&tfid);
-	*avcp = tvc = afs_GetVCache(&tfid, &treq, NULL, NULL);
+	*avcp = tvc = afs_GetVCache(&tfid, treq, NULL, NULL);
 	code = 0;
 	hit = 1;
 	goto done;
     }
 #endif
 
-    Check_AtSys(adp, aname, &sysState, &treq);
+    Check_AtSys(adp, aname, &sysState, treq);
     tname = sysState.name;
 
     /* 1st Check_AtSys and lookup by tname is required here, for now,
@@ -1622,7 +1622,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	if (afs_InReadDir(adp))
 	    tdc = adp->dcreaddir;
 	else
-	    tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq,
+	    tdc = afs_GetDCache(adp, (afs_size_t) 0, treq,
 				&dirOffset, &dirLen, 1);
 	if (!tdc) {
 	    *avcp = NULL;	/* redundant, but harmless */
@@ -1687,7 +1687,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 				 &dirCookie);
 
 	/* If the first lookup doesn't succeed, maybe it's got @sys in the name */
-	while (code == ENOENT && Next_AtSys(adp, &treq, &sysState))
+	while (code == ENOENT && Next_AtSys(adp, treq, &sysState))
 	    code =
 		afs_dir_LookupOffset(tdc, sysState.name, &tfid.Fid,
 				     &dirCookie);
@@ -1756,7 +1756,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	    } while (tvc && retry);
 
 	    if (!tvc || !(tvc->f.states & CStatd))
-		bulkcode = afs_DoBulkStat(adp, dirCookie, &treq);
+		bulkcode = afs_DoBulkStat(adp, dirCookie, treq);
 	    else
 		bulkcode = 0;
 
@@ -1780,10 +1780,10 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	if (!tvc) {
 	    afs_int32 cached = 0;
 	    if (!tfid.Fid.Unique && (adp->f.states & CForeign)) {
-		tvc = afs_LookupVCache(&tfid, &treq, &cached, adp, tname);
+		tvc = afs_LookupVCache(&tfid, treq, &cached, adp, tname);
 	    }
 	    if (!tvc && !bulkcode) {	/* lookup failed or wasn't called */
-		tvc = afs_GetVCache(&tfid, &treq, &cached, NULL);
+		tvc = afs_GetVCache(&tfid, treq, &cached, NULL);
 	    }
 	}			/* if !tvc */
     }				/* sub-block just to reduce stack usage */
@@ -1799,7 +1799,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	    ObtainSharedLock(&tvc->lock, 680);
 	    if (!tvc->linkData) {
 		UpgradeSToWLock(&tvc->lock, 681);
-		code = afs_HandleLink(tvc, &treq);
+		code = afs_HandleLink(tvc, treq);
 		ConvertWToRLock(&tvc->lock);
 	    } else {
 		ConvertSToRLock(&tvc->lock);
@@ -1821,7 +1821,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 		struct volume *tvolp;
 
 		ObtainWriteLock(&tvc->lock, 133);
-		code = EvalMountPoint(tvc, adp, &tvolp, &treq);
+		code = EvalMountPoint(tvc, adp, &tvolp, treq);
 		ReleaseWriteLock(&tvc->lock);
 
 		if (code) {
@@ -1843,9 +1843,9 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 		    if (tvolp && (tvolp->states & VForeign)) {
 			/* XXXX tvolp has ref cnt on but not locked! XXX */
 			tvc =
-			    afs_GetRootVCache(tvc->mvid, &treq, NULL, tvolp);
+			    afs_GetRootVCache(tvc->mvid, treq, NULL, tvolp);
 		    } else {
-			tvc = afs_GetVCache(tvc->mvid, &treq, NULL, NULL);
+			tvc = afs_GetVCache(tvc->mvid, treq, NULL, NULL);
 		    }
 		    afs_PutVCache(uvc);	/* we're done with it */
 
@@ -1892,7 +1892,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	if (!AFS_IS_DISCONNECTED) {
 	    if (pass == 0) {
 	        struct volume *tv;
-	        tv = afs_GetVolume(&adp->f.fid, &treq, READ_LOCK);
+	        tv = afs_GetVolume(&adp->f.fid, treq, READ_LOCK);
 	        if (tv) {
 		    if (tv->states & VRO) {
 		        pass = 1;	/* try this *once* */
@@ -1935,9 +1935,10 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	    } else {
 #ifdef AFS_LINUX20_ENV
 		/* So Linux inode cache is up to date. */
-		code = afs_VerifyVCache(tvc, &treq);
+		code = afs_VerifyVCache(tvc, treq);
 #else
 		afs_PutFakeStat(&fakestate);
+		afs_DestroyReq(treq);
 		AFS_DISCON_UNLOCK();
 		return 0;	/* can't have been any errors if hit and !code */
 #endif
@@ -1949,7 +1950,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
     if (bulkcode)
 	code = bulkcode;
 
-    code = afs_CheckCode(code, &treq, 19);
+    code = afs_CheckCode(code, treq, 19);
     if (code) {
 	/* If there is an error, make sure *avcp is null.
 	 * Alphas panic otherwise - defect 10719.
@@ -1958,6 +1959,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
     }
 
     afs_PutFakeStat(&fakestate);
+    afs_DestroyReq(treq);
     AFS_DISCON_UNLOCK();
     return code;
 }

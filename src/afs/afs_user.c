@@ -43,6 +43,7 @@
 #include <inet/ip.h>
 #endif
 
+#include "afs/afs_axscache.h"
 
 /* Exported variables */
 afs_rwlock_t afs_xuser;
@@ -163,6 +164,23 @@ afs_GCUserData(int aforce)
 
 }				/*afs_GCUserData */
 
+static struct unixuser *
+afs_FindUserNoLock(afs_int32 auid, afs_int32 acell)
+{
+    struct unixuser *tu;
+    afs_int32 i;
+
+    AFS_STATCNT(afs_FindUser);
+    i = UHash(auid);
+    for (tu = afs_users[i]; tu; tu = tu->next) {
+	if (tu->uid == auid && ((tu->cell == acell) || (acell == -1))) {
+	    tu->refCount++;
+	    return tu;
+	}
+    }
+    return NULL;
+
+}
 
 #ifndef AFS_PAG_MANAGER
 /*
@@ -176,6 +194,9 @@ afs_CheckTokenCache(void)
     int i;
     struct unixuser *tu;
     afs_int32 now;
+    struct vcache *tvc;
+    struct axscache *tofreelist;
+    int do_scan = 0;
 
     AFS_STATCNT(afs_CheckCacheResets);
     ObtainReadLock(&afs_xvcache);
@@ -183,8 +204,6 @@ afs_CheckTokenCache(void)
     now = osi_Time();
     for (i = 0; i < NUSERS; i++) {
 	for (tu = afs_users[i]; tu; tu = tu->next) {
-	    afs_int32 uid;
-
 	    /*
 	     * If tokens are still good and user has Kerberos tickets,
 	     * check expiration
@@ -204,13 +223,48 @@ afs_CheckTokenCache(void)
 		    tu->states |= (UTokensBad | UNeedsReset);
 		}
 	    }
-	    if (tu->states & UNeedsReset) {
-		tu->states &= ~UNeedsReset;
-		uid = tu->uid;
-		afs_ResetAccessCache(uid, 0);
+	    if (tu->states & UNeedsReset)
+		do_scan = 1;
+	}
+    }
+    /* Skip the potentially expensive scan if nothing to do */
+    if (!do_scan)
+	goto done;
+
+    tofreelist = NULL;
+    for (i = 0; i < VCSIZE; i++) {
+	for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
+	    /* really should do this under cache write lock, but that.
+	     * is hard to under locking hierarchy */
+	    if (tvc->Access) {
+		struct axscache **ac, **nac;
+
+		for ( ac = &tvc->Access; *ac;)  {
+		    nac = &(*ac)->next;
+		    tu = afs_FindUserNoLock((*ac)->uid, tvc->f.fid.Cell);
+		    if (tu == NULL || (tu->states & UNeedsReset)) {
+			struct axscache *tmp;
+			tmp = *ac;
+			*ac = *nac;
+			tmp->next = tofreelist;
+			tofreelist = tmp;
+		    } else
+			ac = nac;
+		    if (tu != NULL)
+			tu->refCount--;
+		}
 	    }
 	}
     }
+    afs_FreeAllAxs(&tofreelist);
+    for (i = 0; i < NUSERS; i++) {
+	for (tu = afs_users[i]; tu; tu = tu->next) {
+	    if (tu->states & UNeedsReset)
+		tu->states &= ~UNeedsReset;
+	}
+    }
+
+done:
     ReleaseReadLock(&afs_xuser);
     ReleaseReadLock(&afs_xvcache);
 
@@ -279,21 +333,11 @@ struct unixuser *
 afs_FindUser(afs_int32 auid, afs_int32 acell, afs_int32 locktype)
 {
     struct unixuser *tu;
-    afs_int32 i;
 
-    AFS_STATCNT(afs_FindUser);
-    i = UHash(auid);
     ObtainWriteLock(&afs_xuser, 99);
-    for (tu = afs_users[i]; tu; tu = tu->next) {
-	if (tu->uid == auid && ((tu->cell == acell) || (acell == -1))) {
-	    tu->refCount++;
-	    ReleaseWriteLock(&afs_xuser);
-	    return tu;
-	}
-    }
+    tu = afs_FindUserNoLock(auid, acell);
     ReleaseWriteLock(&afs_xuser);
-    return NULL;
-
+    return tu;
 }				/*afs_FindUser */
 
 

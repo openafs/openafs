@@ -671,7 +671,7 @@ cmd_Dispatch(int argc, char **argv)
 	    cmd_AddParm(ts, "-topic", CMD_SINGLE, CMD_REQUIRED,
 			"help string");
 	    ts = cmd_CreateSyntax("version", VersionProc, (char *)0,
-				  (char *)CMD_HIDDEN);
+				  "show version");
 	    ts = cmd_CreateSyntax("-version", VersionProc, (char *)0,
 				  (char *)CMD_HIDDEN);
 	    ts = cmd_CreateSyntax("-help", HelpProc, (char *)0,

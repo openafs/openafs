@@ -106,7 +106,7 @@ GetTokens(afs_int32 ahost, afs_int32 auid)
     int maxLen;			/* biggest ticket we can copy */
     int tktLen;			/* server ticket length */
     time_t tokenExpireTime;
-    char UserName[16];
+    char UserName[MAXKTCNAMELEN + MAXKTCNAMELEN];
     struct ktc_token token;
     struct ktc_principal clientName;
     time_t current_time;
@@ -170,7 +170,7 @@ GetTokens(afs_int32 ahost, afs_int32 auid)
 		maxLen =
 		    sizeof(token) - sizeof(struct ktc_token) +
 		    MAXKTCTICKETLEN;
-		if (maxLen < tktLen)
+		if (tktLen < 0 || tktLen > maxLen)
 		    return KTC_TOOBIG;
 		memcpy(token.ticket, stp, tktLen);
 		token.startTime = ct.BeginTimestamp;
@@ -190,13 +190,13 @@ GetTokens(afs_int32 ahost, afs_int32 auid)
 		    sprintf(clientName.name, "Unix UID %d", ct.ViceId);
 		    clientName.instance[0] = 0;
 		}
-		strcpy(clientName.cell, tp);
+		strlcpy(clientName.cell, tp, sizeof(clientName.cell));
 
 		tokenExpireTime = token.endTime;
-		strcpy(UserName, clientName.name);
+		strlcpy(UserName, clientName.name, sizeof(UserName));
 		if (clientName.instance[0] != 0) {
-		    strcat(UserName, ".");
-		    strcat(UserName, clientName.instance);
+		    strlcat(UserName, ".", sizeof(UserName));
+		    strlcat(UserName, clientName.instance, sizeof(UserName));
 		}
 		if (UserName[0] == 0)
 		    printf("Tokens");

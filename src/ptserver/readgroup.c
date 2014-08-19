@@ -74,6 +74,8 @@ main(int argc, char **argv)
     afs_int32 i;
     afs_int32 fail = 0;
 
+    buf[0] = '\0';
+
     if (argc < 2) {
 	fprintf(stderr, "Usage: readgroup [-v] [-c cellname] groupfile.\n");
 	exit(0);
@@ -90,6 +92,13 @@ main(int argc, char **argv)
 		strncpy(buf, argv[i], 150);
 	}
     }
+
+    /* Catch missing filename */
+    if (buf[0] == '\0') {
+	fprintf(stderr, "Usage: readgroup [-v] [-c cellname] groupfile.\n");
+	exit(0);
+    }
+
     code = pr_Initialize(2, AFSDIR_CLIENT_ETC_DIRPATH, cellname);
     free(cellname);
     if (code) {

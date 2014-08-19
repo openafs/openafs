@@ -561,130 +561,6 @@ tweak_config(void)
 }
 #endif
 
-#if 0
-/*
- * This routine causes the calling process to go into the background and
- * to lose its controlling tty.
- *
- * It does not close or otherwise alter the standard file descriptors.
- *
- * It writes warning messages to the standard error output if certain
- * fundamental errors occur.
- *
- * This routine requires
- *
- * #include <sys/types.h>
- * #include <sys/stat.h>
- * #include <fcntl.h>
- * #include <unistd.h>
- * #include <stdlib.h>
- *
- * and has been tested on:
- *
- * AIX 4.2
- * Digital Unix 4.0D
- * HP-UX 11.0
- * IRIX 6.5
- * Linux 2.1.125
- * Solaris 2.5
- * Solaris 2.6
- */
-
-#ifndef AFS_NT40_ENV
-static void
-background(void)
-{
-    /*
-     * A process is a process group leader if its process ID
-     * (getpid()) and its process group ID (getpgrp()) are the same.
-     */
-
-    /*
-     * To create a new session (and thereby lose our controlling
-     * terminal) we cannot be a process group leader.
-     *
-     * To guarantee we are not a process group leader, we fork and
-     * let the parent process exit.
-     */
-
-    if (getpid() == getpgrp()) {
-	pid_t pid;
-	pid = fork();
-	switch (pid) {
-	case -1:
-	    abort();		/* leave footprints */
-	    break;
-	case 0:		/* child */
-	    break;
-	default:		/* parent */
-	    exit(0);
-	    break;
-	}
-    }
-
-    /*
-     * By here, we are not a process group leader, so we can make a
-     * new session and become the session leader.
-     */
-
-    {
-	pid_t sid = setsid();
-
-	if (sid == -1) {
-	    static char err[] = "bosserver: WARNING: setsid() failed\n";
-	    write(STDERR_FILENO, err, sizeof err - 1);
-	}
-    }
-
-    /*
-     * Once we create a new session, the current process is a
-     * session leader without a controlling tty.
-     *
-     * On some systems, the first tty device the session leader
-     * opens automatically becomes the controlling tty for the
-     * session.
-     *
-     * So, to guarantee we do not acquire a controlling tty, we fork
-     * and let the parent process exit.  The child process is not a
-     * session leader, and so it will not acquire a controlling tty
-     * even if it should happen to open a tty device.
-     */
-
-    if (getpid() == getpgrp()) {
-	pid_t pid;
-	pid = fork();
-	switch (pid) {
-	case -1:
-	    abort();		/* leave footprints */
-	    break;
-	case 0:		/* child */
-	    break;
-	default:		/* parent */
-	    exit(0);
-	    break;
-	}
-    }
-
-    /*
-     * check that we no longer have a controlling tty
-     */
-
-    {
-	int fd;
-
-	fd = open("/dev/tty", O_RDONLY);
-
-	if (fd >= 0) {
-	    static char err[] =
-		"bosserver: WARNING: /dev/tty still attached\n";
-	    close(fd);
-	    write(STDERR_FILENO, err, sizeof err - 1);
-	}
-    }
-}
-#endif /* ! AFS_NT40_ENV */
-#endif
-
 static char *
 make_pid_filename(char *ainst, char *aname)
 {
@@ -1024,11 +900,6 @@ main(int argc, char **argv, char **envp)
     else
 	chdir(AFSDIR_SERVER_LOGS_DIRPATH);
 
-#if 0
-    fputs(AFS_GOVERNMENT_MESSAGE, stdout);
-    fflush(stdout);
-#endif
-
     /* go into the background and remove our controlling tty, close open
        file desriptors
      */
@@ -1121,6 +992,10 @@ main(int argc, char **argv, char **envp)
     code = LWP_CreateProcess(BozoDaemon, BOZO_LWP_STACKSIZE, /* priority */ 1,
 			     /* param */ NULL , "bozo-the-clown",
 			     &bozo_pid);
+    if (code) {
+	bozo_Log("Failed to create daemon thread\n");
+        exit(1);
+    }
 
     /* try to read the key from the config file */
     tdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);

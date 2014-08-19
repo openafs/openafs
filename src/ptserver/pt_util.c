@@ -243,13 +243,26 @@ CommandProc(struct cmd_syndesc *a_as, void *arock)
     if (wflag) {
 	struct usr_list *u;
 	int id = 0, flags = 0;
+	int seenGroup = 0;
 
 	while (fgets(buffer, sizeof(buffer), dfp)) {
 	    int oid, cid, quota, uid;
 	    char name[PR_MAXNAMELEN], mem[PR_MAXNAMELEN];
 
 	    if (isspace(*buffer)) {
-		sscanf(buffer, "%s %d", mem, &uid);
+		code = sscanf(buffer, "%s %d", mem, &uid);
+		if (code != 2) {
+		    fprintf(stderr,
+			    "Insuffient data provided for group membership\n");
+		    exit(1);
+		}
+
+		if (!seenGroup) {
+		    fprintf(stderr,
+			    "Group member %s listed outside of group\n",
+			    mem);
+		    exit(1);
+		}
 
 		for (u = usr_head; u; u = u->next)
 		    if (u->uid && u->uid == uid)
@@ -299,8 +312,15 @@ CommandProc(struct cmd_syndesc *a_as, void *arock)
 		    fprintf(stderr, "Error while adding %s to %s: %s\n", mem,
 			    name, afs_error_message(code));
 	    } else {
-		sscanf(buffer, "%s %d/%d %d %d %d", name, &flags, &quota, &id,
-		       &oid, &cid);
+		code = sscanf(buffer, "%s %d/%d %d %d %d", name, &flags, &quota, &id,
+			      &oid, &cid);
+		if (code != 6) {
+		    fprintf(stderr,
+			    "Insufficient data provided for user/group\n");
+		    exit(1);
+		}
+
+		seenGroup = 1;
 
 		if (FindByID(0, id))
 		    code = PRIDEXIST;

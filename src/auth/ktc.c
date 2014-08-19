@@ -47,7 +47,7 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#include <afs/auth.h>
+#include "auth.h"
 #include <afs/venus.h>
 #include <afs/afsutil.h>
 
@@ -72,7 +72,7 @@
 #ifdef AFS_KERBEROS_ENV
 #include <fcntl.h>
 #include <sys/file.h>
-#include <afs/cellconfig.h>
+#include "cellconfig.h"
 static char lcell[MAXCELLCHARS];
 
 #define TKT_ROOT "/tmp/tkt"
@@ -524,7 +524,7 @@ ktc_GetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
 		/* got token for cell; check that it will fit */
 		maxLen =
 		    atokenLen - sizeof(struct ktc_token) + MAXKTCTICKETLEN;
-		if (maxLen < tktLen) {
+		if (tktLen < 0 || tktLen > maxLen) {
 		    UNLOCK_GLOBAL_MUTEX;
 		    return KTC_TOOBIG;
 		}
@@ -542,7 +542,7 @@ ktc_GetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
 		atoken->ticketLen = tktLen;
 
 		if (aclient) {
-		    strcpy(aclient->cell, cellp);
+		    strlcpy(aclient->cell, cellp, sizeof(aclient->cell));
 		    aclient->instance[0] = 0;
 
 		    if ((atoken->kvno == 999) ||	/* old style bcrypt ticket */
@@ -726,7 +726,7 @@ ktc_ListTokens(int aprevIndex,
     tp += temp;			/* skip clear token itself */
     tp += sizeof(afs_int32);	/* skip primary flag */
     /* tp now points to the cell name */
-    strcpy(aserver->cell, tp);
+    strlcpy(aserver->cell, tp, sizeof(aserver->cell));
     aserver->instance[0] = 0;
     strcpy(aserver->name, "afs");
 #endif /* NO_AFS_CLIENT */

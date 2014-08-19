@@ -581,7 +581,7 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 #endif
 #endif
 {
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     struct dcache *tdc;
     afs_size_t origOffset, tlen;
     afs_int32 len;
@@ -644,7 +644,7 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 	return EFBIG;
 #endif
 
-    if ((code = afs_InitReq(&treq, acred))) {
+    if ((code = afs_CreateReq(&treq, acred))) {
 #ifdef	AFS_HPUX_ENV
 	osi_FreeSmallSpace((char *)sdirEntry);
 #endif
@@ -655,15 +655,15 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 
     AFS_DISCON_LOCK();
 
-    code = afs_EvalFakeStat(&avc, &fakestate, &treq);
+    code = afs_EvalFakeStat(&avc, &fakestate, treq);
     if (code)
 	goto done;
   tagain:
-    code = afs_VerifyVCache(avc, &treq);
+    code = afs_VerifyVCache(avc, treq);
     if (code)
 	goto done;
     /* get a reference to the entire directory */
-    tdc = afs_GetDCache(avc, (afs_size_t) 0, &treq, &origOffset, &tlen, 1);
+    tdc = afs_GetDCache(avc, (afs_size_t) 0, treq, &origOffset, &tlen, 1);
     len = tlen;
     if (!tdc) {
 	code = ENOENT;
@@ -922,7 +922,8 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 #endif
     AFS_DISCON_UNLOCK();
     afs_PutFakeStat(&fakestate);
-    code = afs_CheckCode(code, &treq, 28);
+    code = afs_CheckCode(code, treq, 28);
+    afs_DestroyReq(treq);
     return code;
 }
 

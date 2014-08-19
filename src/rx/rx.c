@@ -403,7 +403,6 @@ static int rxdb_fileID = RXDB_FILE_RX;
 #define CLEAR_CALL_QUEUE_LOCK(C)
 #endif /* RX_ENABLE_LOCKS */
 struct rx_serverQueueEntry *rx_waitForPacket = 0;
-struct rx_serverQueueEntry *rx_waitingForPacket = 0;
 
 /* ------------Exported Interfaces------------- */
 
@@ -2076,8 +2075,6 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 	    queue_Append(&rx_idleServerQueue, sq);
 #ifndef AFS_AIX41_ENV
 	    rx_waitForPacket = sq;
-#else
-	    rx_waitingForPacket = sq;
 #endif /* AFS_AIX41_ENV */
 	    do {
 		CV_WAIT(&sq->cv, &rx_serverPool_lock);

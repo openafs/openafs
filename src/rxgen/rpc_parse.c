@@ -569,8 +569,11 @@ def_package(definition * defp)
     scan(TOK_IDENT, &tok);
     defp->def_name = tok.str;
     no_of_stat_funcs = 0;
-    if (PackageIndex++ >= MAX_PACKAGES)
+
+    PackageIndex++;
+    if (PackageIndex >= MAX_PACKAGES)
 	error("Exceeded upper limit of package statements\n");
+
     function_list_index = 0;
     PackagePrefix[PackageIndex] = tok.str;
     if (MasterPrefix == NULL)

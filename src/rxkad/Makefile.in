@@ -72,9 +72,22 @@ rxkad_common.o: fcrypt.h private_data.h rxkad_common.c ${INCLS}
 
 rxkad_errs.o: rxkad_errs.c
 
-rxkad_errs.c rxkad.h: rxkad_errs.et rxkad.p.h
-	$(RM) -f rxkad.h rxkad_errs.c
-	${COMPILE_ET} -p ${srcdir} rxkad_errs -h rxkad
+rxkad_errs.c: rxkad_errs.et
+	${COMPILE_ET_C} -p ${srcdir} rxkad_errs
+
+rxkad.h: rxkad_errs.et rxkad.p.h
+	${COMPILE_ET_H} -p ${srcdir} rxkad_errs -h rxkad
+
+bg-fcrypt.o: rxkad.h
+crc.o: rxkad.h
+fcrypt.o: rxkad.h
+fc_test.o: rxkad.h
+md4.o: rxkad.h
+md5.o: rxkad.h
+rxkad_client.o: rxkad.h
+ticket5.o: rxkad.h
+ticket5_keytab.o: rxkad.h
+ticket.o: rxkad.h
 
 ticket.o: ticket.c lifetimes.h ${INCLS}
 	$(CC) $(CFLAGS) -c ${srcdir}/ticket.c

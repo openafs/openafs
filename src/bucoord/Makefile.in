@@ -71,9 +71,31 @@ backup:  $(BACKOBJS) ${LIBS}
 
 bc.h: bucoord_errs.c
 
-bucoord_errs.c:	bucoord_errs.et bc.p.h
-	$(RM) -f bc.h bucoord_errs.c
-	${COMPILE_ET} -p ${srcdir} bucoord_errs -h bc
+bucoord_errs.c: bucoord_errs.et
+	${COMPILE_ET_C} -p ${srcdir} bucoord_errs
+
+bc.h: bucoord_errs.et bc.p.h
+	${COMPILE_ET_H} -p ${srcdir} bucoord_errs -h bc
+
+
+bc_status.o: bc.h
+btest.o: bc.h
+commands.o: bc.h
+config.o: bc.h
+dlq.o: bc.h
+dsstub.o: bc.h
+dsvs.o: bc.h
+dump.o: bc.h
+dump_sched.o: bc.h
+expire.o: bc.h
+main.o: bc.h
+restore.o: bc.h
+status.o: bc.h
+tape_hosts.o: bc.h
+ttest.o: bc.h
+ubik_db_if.o: bc.h
+vol_sets.o: bc.h
+volstub.o: bc.h
 
 #
 # Errors

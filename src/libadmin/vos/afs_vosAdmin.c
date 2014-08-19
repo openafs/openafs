@@ -334,7 +334,8 @@ vos_BackupVolumeCreateMultiple(const void *cellHandle,
     int equal = 0;
     char backbuf[1024];
 
-    memset((void *)&attr, 0, sizeof(attr));
+    memset(&attr, 0, sizeof(attr));
+    memset(&arrayEntries, 0, sizeof(arrayEntries));
 
     /*
      * Validate arguments
@@ -379,8 +380,6 @@ vos_BackupVolumeCreateMultiple(const void *cellHandle,
 	prefix = 1;
 	prefix_len = strlen(volumePrefix);
     }
-
-    memset((void *)&arrayEntries, 0, sizeof(arrayEntries));
 
     /*
      * Get a list of all the volumes in the cell
