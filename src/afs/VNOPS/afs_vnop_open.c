@@ -40,13 +40,13 @@ afs_open(struct vcache **avcp, afs_int32 aflags, afs_ucred_t *acred)
 #endif
 {
     afs_int32 code;
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     struct vcache *tvc;
     int writing;
     struct afs_fakestat_state fakestate;
 
     AFS_STATCNT(afs_open);
-    if ((code = afs_InitReq(&treq, acred)))
+    if ((code = afs_CreateReq(&treq, acred)))
 	return code;
 #ifdef AFS_SGI64_ENV
     /* avcpp can be, but is not necesarily, bhp's vnode. */
@@ -60,10 +60,10 @@ afs_open(struct vcache **avcp, afs_int32 aflags, afs_ucred_t *acred)
 
     AFS_DISCON_LOCK();
 
-    code = afs_EvalFakeStat(&tvc, &fakestate, &treq);
+    code = afs_EvalFakeStat(&tvc, &fakestate, treq);
     if (code)
 	goto done;
-    code = afs_VerifyVCache(tvc, &treq);
+    code = afs_VerifyVCache(tvc, treq);
     if (code)
 	goto done;
 
@@ -90,7 +90,7 @@ afs_open(struct vcache **avcp, afs_int32 aflags, afs_ucred_t *acred)
 	} else {
 	    if (!afs_AccessOK
 		(tvc, ((tvc->f.states & CForeign) ? PRSFS_READ : PRSFS_LOOKUP),
-		 &treq, CHECK_MODE_BITS)) {
+		 treq, CHECK_MODE_BITS)) {
 		code = EACCES;
 		/* printf("afs_Open: no access for dir\n"); */
 		goto done;
@@ -100,7 +100,7 @@ afs_open(struct vcache **avcp, afs_int32 aflags, afs_ucred_t *acred)
 #ifdef	AFS_SUN5_ENV
 	if (AFS_NFSXLATORREQ(acred) && (aflags & FREAD)) {
 	    if (!afs_AccessOK
-		(tvc, PRSFS_READ, &treq,
+		(tvc, PRSFS_READ, treq,
 		 CHECK_MODE_BITS | CMB_ALLOW_EXEC_AS_READ)) {
 		code = EACCES;
 		goto done;
@@ -169,7 +169,7 @@ afs_open(struct vcache **avcp, afs_int32 aflags, afs_ucred_t *acred)
 	struct dcache *tdc;
 	afs_size_t offset, len;
 
-	tdc = afs_GetDCache(tvc, 0, &treq, &offset, &len, 1);
+	tdc = afs_GetDCache(tvc, 0, treq, &offset, &len, 1);
 	if (tdc) {
 	    ObtainSharedLock(&tdc->mflock, 865);
 	    if (!(tdc->mflags & DFFetchReq)) {
@@ -199,7 +199,8 @@ afs_open(struct vcache **avcp, afs_int32 aflags, afs_ucred_t *acred)
     afs_PutFakeStat(&fakestate);
     AFS_DISCON_UNLOCK();
 
-    code = afs_CheckCode(code, &treq, 4);	/* avoid AIX -O bug */
+    code = afs_CheckCode(code, treq, 4);	/* avoid AIX -O bug */
+    afs_DestroyReq(treq);
 
     afs_Trace2(afs_iclSetp, CM_TRACE_OPEN, ICL_TYPE_POINTER, tvc,
 	       ICL_TYPE_INT32, 999999);

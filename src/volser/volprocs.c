@@ -462,9 +462,6 @@ VolPartitionInfo(struct rx_call *acid, char *pname, struct diskPartition64
 {
     struct DiskPartition64 *dp;
 
-/*
-    if (!afsconf_SuperUser(tdir, acid, caller)) return VOLSERBAD_ACCESS;
-*/
     VResetDiskUsage();
     dp = VGetPartition(pname, 0);
     if (dp) {
@@ -1566,6 +1563,11 @@ VolRestore(struct rx_call *acid, afs_int32 atrans, afs_int32 aflags,
 	Log("1 Volser: VolRestore: volume %u has been deleted \n", tt->volid);
 	TRELE(tt);
 	return ENOENT;
+    }
+    if (DoLogging) {
+	char buffer[16];
+	Log("%s on %s is executing Restore %u\n", caller,
+	    callerAddress(acid, buffer), tt->volid);
     }
     TSetRxCall(tt, acid, "Restore");
 

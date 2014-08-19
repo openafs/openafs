@@ -79,11 +79,19 @@ bosint.cs.c: bosint.h
 bosint.ss.c: bosint.h
 bosint.xdr.c: bosint.h
 
-bnode.h: boserr.c
+boserr.c: boserr.et
+	${COMPILE_ET_C} -p ${srcdir} boserr
 
-boserr.c: bnode.p.h boserr.et
-	$(RM) -f boserr.c bnode.h
-	${COMPILE_ET} -p ${srcdir} boserr -h bnode
+bnode.h: bnode.p.h boserr.et
+	${COMPILE_ET_H} -p ${srcdir} boserr -h bnode
+
+bnode.o: bnode.h
+bos.o: bnode.h
+bosoprocs.o: bnode.h
+bosserver.o: bnode.h
+cronbnodeops.o: bnode.h
+ezbnodeops.o: bnode.h
+fsbnodeops.o: bnode.h
 
 bosserver.o: bosserver.c ${INCLS} AFS_component_version_number.o
 

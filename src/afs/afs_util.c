@@ -216,12 +216,9 @@ print_internet_address(char *preamble, struct srvAddr *sa, char *postamble,
 		" (multi-homed address; other same-host interfaces may still be down)\n";
 	}
     }
-    afs_warn("%s%d.%d.%d.%d in cell %s%s (code %d)%s", preamble, (address >> 24),
+    afs_warnall("%s%d.%d.%d.%d in cell %s%s (code %d)%s", preamble, (address >> 24),
 	     (address >> 16) & 0xff, (address >> 8) & 0xff, (address) & 0xff,
 	     aserver->cell->cellName, postamble, code, ptr);
-    afs_warnuser("%s%d.%d.%d.%d in cell %s%s (code %d)%s", preamble, (address >> 24),
-		 (address >> 16) & 0xff, (address >> 8) & 0xff,
-		 (address) & 0xff, aserver->cell->cellName, postamble, code, ptr);
 
 }				/*print_internet_address */
 

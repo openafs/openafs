@@ -41,7 +41,6 @@ int bnode_ParseLine(char *aline, struct bnode_token **alist);
 int bnode_NewProc(struct bnode *abnode, char *aexecString, char *coreName,
 		  struct bnode_proc **aproc);
 int bnode_StopProc(struct bnode_proc *aproc, int asignal);
-int bnode_Deactivate(struct bnode *abnode);
 
 /* bosserver.c */
 void bozo_Log(char *format, ... );
@@ -59,9 +58,7 @@ int DirAccessOK(void);
 /* fsbnodeops.c */
 char *copystr(char *a);
 
-/* bosoprocs.c */
-void *bozo_ShutdownAndExit(void *arock /* really int asignal */);
-
+/* inline functions */
 static_inline struct bozo_key *
 ktc_to_bozoptr(struct ktc_encryptionKey *key) {
     return (struct bozo_key *)key;

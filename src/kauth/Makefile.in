@@ -109,11 +109,32 @@ kaauxdb.o: kaauxdb.c
 
 kaerrors.o: kaerrors.c
 
-kautils.h: kaerrors.c
+kaerrors.c: kaerrors.et
+	${COMPILE_ET_C} -p ${srcdir} kaerrors
 
-kaerrors.c: kaerrors.et kautils.p.h
-	$(RM) -f kautils.h kaerrors.c
-	${COMPILE_ET} -p ${srcdir} kaerrors -h kautils
+kautils.h: kaerrors.et kautils.p.h
+	${COMPILE_ET_H} -p ${srcdir} kaerrors -h kautils
+
+
+admin_tools.o: kautils.h
+authclient.o: kautils.h
+client.o: kautils.h
+decode_ticket.o: kautils.h
+kadatabase.o: kautils.h
+kalocalcell.o: kautils.h
+kaprocs.o: kautils.h
+kas.o: kautils.h
+kaserver.o: kautils.h
+ka_util.o: kautils.h
+kautils.o: kautils.h
+klog.o: kautils.h
+kpasswd.o: kautils.h
+krb_tf.o: kautils.h
+krb_udp.o: kautils.h
+manyklog.o: kautils.h
+rebuild.o: kautils.h
+token.o: kautils.h
+user.o: kautils.h
 
 kauth.ss.o: kauth.ss.c
 kauth.cs.o: kauth.cs.c

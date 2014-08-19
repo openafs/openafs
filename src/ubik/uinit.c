@@ -37,7 +37,7 @@
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
-#include <ubik.h>
+#include "ubik.h"
 #include <afs/afsint.h>
 #include <afs/cmd.h>
 

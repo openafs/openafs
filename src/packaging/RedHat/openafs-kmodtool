@@ -100,17 +100,17 @@ Provides:         ${kmod_name}-kmod = %{?epoch:%{epoch}:}%{version}-%{release}
 Provides:         openafs-kernel = %{PACKAGE_VERSION}
 Requires:         ${kdep}
 Requires:         ${kmod_name}-kmod-common >= %{?epoch:%{epoch}:}%{version}
-Requires(post):   /sbin/depmod
-Requires(postun): /sbin/depmod
+Requires(post):   ${depmod}
+Requires(postun): ${depmod}
 Release:          %{pkgrel}.%(echo ${verrel} | tr - _)
 BuildRequires:    kernel${dashvariant}-devel-%{_target_cpu} = ${verrel}
 %description   -n kmod-${kmod_name}${dashvariant}
 This package provides the ${kmod_name} kernel modules built for the Linux
 kernel ${kname} for the %{_target_cpu} family of processors.
 %post          -n kmod-${kmod_name}${dashvariant}
-/sbin/depmod -aeF /boot/System.map-${kname} ${kname} > /dev/null || :
+${depmod} -aeF /boot/System.map-${kname} ${kname} > /dev/null || :
 %postun        -n kmod-${kmod_name}${dashvariant}
-/sbin/depmod -aF /boot/System.map-${kname} ${kname} &> /dev/null || :
+${depmod} -aF /boot/System.map-${kname} ${kname} &> /dev/null || :
 %files         -n kmod-${kmod_name}${dashvariant}
 %defattr(644,root,root,755)
 /lib/modules/${kname}/extra/${kmod_name}/
@@ -125,11 +125,16 @@ print_rpmtemplate ()
   kver="${1}"
   get_verrel "${1}"
   shift
+  depmod="${1}"
+  shift
   if [ -z "${kmod_name}" ] ; then
     echo "Please provide the kmodule-name as first parameter." >&2
     exit 2
   elif [ -z "${kver}" ] ; then
     echo "Please provide the kver as second parameter." >&2
+    exit 2
+  elif [ -z "${depmod}" ] ; then
+    echo "Please provide the full path to depmod as third parameter." >&2
     exit 2
   elif [ -z "${verrel}" ] ; then
     echo "Couldn't find out the verrel." >&2
@@ -152,7 +157,7 @@ Usage: ${myprog} <command> <option>+
     - Get "base" version-release.
   variant <uname>                               
     - Get variant from uname.
-  rpmtemplate <mainpgkname> <uname> <variants> 
+  rpmtemplate <mainpgkname> <uname> </path/to/depmod> <variants> 
     - Return a template for
   version  
     - Output version number and exit.

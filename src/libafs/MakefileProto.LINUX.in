@@ -340,9 +340,11 @@ ${LIBAFS} ${LIBAFS_MP} ${LIBAFS_EP} ${LIBAFS_BM}: ${LINUX_LIBAFS_NAME}.ko
 .FORCE:
 ${LINUX_LIBAFS_NAME}.ko afspag.ko: .FORCE
 	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" @TOP_SRCDIR@/libafs/make_kbuild_makefile.pl ${KDIR} $@ @TOP_OBJDIR@/src/config/Makefile.config Makefile.afs Makefile.common
-	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" $(MAKE) -C ${LINUX_KERNEL_BUILD} M=@TOP_OBJDIR@/src/libafs/${KDIR} modules 2>&1 | tee .makelog
-	@if [ `grep ^WARNING .makelog | wc -l` -ne 0 ]; then \
-		echo Error: Undefined symbols in modules ; \
+	( env EXTRA_CFLAGS="${EXTRA_CFLAGS}" \
+		$(MAKE) -C ${LINUX_KERNEL_BUILD} M=@TOP_OBJDIR@/src/libafs/${KDIR} modules 2>&1 \
+		|| echo "FAILURE: make exit code $$?" ) | tee .makelog
+	@if grep -E -q '^(FAILURE|WARNING)' .makelog; then \
+		grep -q '^WARNING' .makelog && echo "Error: Undefined symbols in modules" ; \
 		rm .makelog ; \
 		exit 1 ; \
 	fi

@@ -3065,7 +3065,7 @@ GetTrans(struct nvldbentry *vldbEntryPtr, afs_int32 index,
 
     /* If the volume does not exist, create it */
     if (!volid || code) {
-	char volname[64];
+	char volname[VL_MAXNAMELEN];
         char hoststr[16];
 
 	if (volid && (code != VNOVOL)) {
@@ -3074,11 +3074,15 @@ GetTrans(struct nvldbentry *vldbEntryPtr, afs_int32 index,
 	    goto fail;
 	}
 
-	strcpy(volname, vldbEntryPtr->name);
-	if (tmpVolId)
-	    strcat(volname, ".roclone");
-	else
-	    strcat(volname, ".readonly");
+	strlcpy(volname, vldbEntryPtr->name, sizeof(volname));
+
+	if (strlcat(volname,
+		    tmpVolId?".roclone":".readonly",
+		    sizeof(volname)) >= sizeof(volname)) {
+	    code = ENOMEM;
+	    PrintError("Volume name is too long\n", code);
+	    goto fail;
+	}
 
 	if (verbose) {
 	    fprintf(STDOUT,

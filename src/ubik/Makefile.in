@@ -108,9 +108,26 @@ udebug.o: udebug.c ${INCLS} AFS_component_version_number.c
 
 uerrors.o: uerrors.c
 
-uerrors.c ubik.h: uerrors.et ubik.p.h
-	$(RM) -f ubik.h uerrors.c
-	${COMPILE_ET} -p ${srcdir} uerrors -h ubik
+uerrors.c: uerrors.et
+	${COMPILE_ET_C} -p ${srcdir} uerrors
+
+ubik.h: uerrors.et ubik.p.h
+	${COMPILE_ET_H} -p ${srcdir} uerrors -h ubik
+
+beacon.o: ubik.h
+disk.o: ubik.h
+lock.o: ubik.h
+phys.o: ubik.h
+recovery.o: ubik.h
+remote.o: ubik.h
+ubik.o: ubik.h
+ubikclient.o: ubik.h
+ubikcmd.o: ubik.h
+udebug.o: ubik.h
+uinit.o: ubik.h
+utst_client.o: ubik.h
+utst_server.o: ubik.h
+vote.o: ubik.h
 
 libubik.a: ${LIBOBJS} AFS_component_version_number.o
 	-$(RM) -f $@

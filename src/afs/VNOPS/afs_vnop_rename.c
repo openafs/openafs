@@ -42,7 +42,7 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
     struct VenusFid unlinkFid, fileFid;
     struct vcache *tvc;
     struct dcache *tdc1, *tdc2;
-    struct AFSFetchStatus OutOldDirStatus, OutNewDirStatus;
+    struct AFSFetchStatus *OutOldDirStatus, *OutNewDirStatus;
     struct AFSVolSync tsync;
     struct rx_connection *rxconn;
     XSTATS_DECLS;
@@ -50,6 +50,9 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
     afs_Trace4(afs_iclSetp, CM_TRACE_RENAME, ICL_TYPE_POINTER, aodp,
 	       ICL_TYPE_STRING, aname1, ICL_TYPE_POINTER, andp,
 	       ICL_TYPE_STRING, aname2);
+
+    OutOldDirStatus = osi_AllocSmallSpace(sizeof(struct AFSFetchStatus));
+    OutNewDirStatus = osi_AllocSmallSpace(sizeof(struct AFSFetchStatus));
 
     if (strlen(aname1) > AFSNAMEMAX || strlen(aname2) > AFSNAMEMAX) {
 	code = ENAMETOOLONG;
@@ -179,8 +182,8 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 					aname1,
 					(struct AFSFid *)&andp->f.fid.Fid,
 					aname2,
-					&OutOldDirStatus,
-					&OutNewDirStatus,
+					OutOldDirStatus,
+					OutNewDirStatus,
 					&tsync);
 	        RX_AFS_GLOCK();
 	        XSTATS_END_TIME;
@@ -246,14 +249,14 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	if (!AFS_IS_DISCON_RW) {
 	    if (oneDir) {
 	    	/* number increases by 1 for whole rename operation */
-	    	if (!afs_LocalHero(aodp, tdc1, &OutOldDirStatus, 1)) {
+	    	if (!afs_LocalHero(aodp, tdc1, OutOldDirStatus, 1)) {
 		    doLocally = 0;
 	    	}
 	    } else {
 	    	/* two separate dirs, each increasing by 1 */
-	    	if (!afs_LocalHero(aodp, tdc1, &OutOldDirStatus, 1))
+	    	if (!afs_LocalHero(aodp, tdc1, OutOldDirStatus, 1))
 		    doLocally = 0;
-	    	if (!afs_LocalHero(andp, tdc2, &OutNewDirStatus, 1))
+	    	if (!afs_LocalHero(andp, tdc2, OutNewDirStatus, 1))
 		    doLocally = 0;
 	    	if (!doLocally) {
 		    if (tdc1) {
@@ -307,9 +310,9 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	    }
 	    /* If we're in the same directory, link count doesn't change */
 	} else {
-	    aodp->f.m.LinkCount = OutOldDirStatus.LinkCount;
+	    aodp->f.m.LinkCount = OutOldDirStatus->LinkCount;
 	    if (!oneDir)
-		andp->f.m.LinkCount = OutNewDirStatus.LinkCount;
+		andp->f.m.LinkCount = OutNewDirStatus->LinkCount;
 	}
 
     } else {			/* operation failed (code != 0) */
@@ -436,6 +439,8 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
     }
     code = returnCode;
   done:
+    osi_FreeSmallSpace(OutOldDirStatus);
+    osi_FreeSmallSpace(OutNewDirStatus);
     return code;
 }
 
@@ -449,30 +454,32 @@ afs_rename(OSI_VC_DECL(aodp), char *aname1, struct vcache *andp, char *aname2, a
     afs_int32 code;
     struct afs_fakestat_state ofakestate;
     struct afs_fakestat_state nfakestate;
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     OSI_VC_CONVERT(aodp);
 
-    code = afs_InitReq(&treq, acred);
+    code = afs_CreateReq(&treq, acred);
     if (code)
 	return code;
+
     afs_InitFakeStat(&ofakestate);
     afs_InitFakeStat(&nfakestate);
 
     AFS_DISCON_LOCK();
     
-    code = afs_EvalFakeStat(&aodp, &ofakestate, &treq);
+    code = afs_EvalFakeStat(&aodp, &ofakestate, treq);
     if (code)
 	goto done;
-    code = afs_EvalFakeStat(&andp, &nfakestate, &treq);
+    code = afs_EvalFakeStat(&andp, &nfakestate, treq);
     if (code)
 	goto done;
-    code = afsrename(aodp, aname1, andp, aname2, acred, &treq);
+    code = afsrename(aodp, aname1, andp, aname2, acred, treq);
   done:
     afs_PutFakeStat(&ofakestate);
     afs_PutFakeStat(&nfakestate);
 
     AFS_DISCON_UNLOCK();
     
-    code = afs_CheckCode(code, &treq, 25);
+    code = afs_CheckCode(code, treq, 25);
+    afs_DestroyReq(treq);
     return code;
 }

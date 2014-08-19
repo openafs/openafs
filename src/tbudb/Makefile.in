@@ -58,11 +58,23 @@ SERVER_OBJS = ${COMMON_OBJS} budb.ss.o budb.xdr.o dbs_dump.o db_lock.o db_text.o
 
 all: ${TOP_LIBDIR}/libbudb.a ${TOP_INCDIR}/afs/budb.h ${TOP_INCDIR}/afs/budb_errs.h ${TOP_INCDIR}/afs/budb_client.h budb_server ${INCLS}
 
-budb_errs.h: budb_errs.c
-
 budb_errs.c: ${BUDB}/budb_errs.et
-	$(RM) -f budb_errs.c
-	${COMPILE_ET} -p ${srcdir}/${BUDB} budb_errs
+	${COMPILE_ET_C} -p ${BUDB} budb_errs
+
+budb_errs.h: ${BUDB}/budb_errs.et
+	${COMPILE_ET_H} -p ${BUDB} budb_errs
+
+database.o: budb_errs.h
+db_alloc.o: budb_errs.h
+db_dump.o: budb_errs.h
+db_hash.o: budb_errs.h
+db_lock.o: budb_errs.h
+dbs_dump.o: budb_errs.h
+db_text.o: budb_errs.h
+ol_verify.o: budb_errs.h
+procs.o: budb_errs.h
+server.o: budb_errs.h
+struct_ops.o: budb_errs.h
 
 #
 # Build targets

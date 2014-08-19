@@ -27,7 +27,7 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 #include <rx/rx.h>
-#include <rx/rxkad.h>
+#include "rxkad.h"
 
 #include <string.h>
 #include <errno.h>

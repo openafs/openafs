@@ -106,9 +106,23 @@ libvolser.a: volint.cs.o  $(VSOBJS) volint.ss.o AFS_component_version_number.o
 
 volser.h: volerr.c
 
-volerr.c: volerr.et volser.p.h
-	$(RM) -f volser.h volerr.c
-	${COMPILE_ET} -p ${srcdir} volerr -h volser
+volerr.c: volerr.et
+	${COMPILE_ET_C} -p ${srcdir} volerr
+
+volser.h: volerr.et volser.p.h
+	${COMPILE_ET_H} -p ${srcdir} volerr -h volser
+
+common.o: volser.h
+dumpstuff.o: volser.h
+lockprocs.o: volser.h
+vol-dump.o: volser.h
+volmain.o: volser.h
+volprocs.o: volser.h
+vol_split.o: volser.h
+voltrans.o: volser.h
+vos.o: volser.h
+vsprocs.o: volser.h
+vsutils.o: volser.h
 
 volint.cs.c: volint.xg
 	${RXGEN} -A -x -C -o $@ ${srcdir}/volint.xg

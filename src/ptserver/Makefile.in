@@ -155,9 +155,22 @@ ptclient.o: ptclient.c ${INCLS} AFS_component_version_number.c
 
 ptuser.o: ptuser.c ${LINCLS}
 
-pterror.h pterror.c: pterror.et
-	$(RM) -f pterror.h pterror.c
-	${COMPILE_ET} -p ${srcdir} pterror
+pterror.c: pterror.et
+	${COMPILE_ET_C} -p ${srcdir} pterror
+
+pterror.h: pterror.et
+	${COMPILE_ET_H} -p ${srcdir} pterror
+
+db_verify.o: pterror.h
+ptclient.o: pterror.h
+ptprocs.o: pterror.h
+pts.o: pterror.h
+ptuser.o: pterror.h
+pt_util.o: pterror.h
+ptutils.o: pterror.h
+readgroup.o: pterror.h
+testpt.o: pterror.h
+utils.o: pterror.h
 
 libprot.a: ptuser.o pterror.o ptint.cs.o ptint.xdr.o AFS_component_version_number.o
 	$(RM) -f $@
@@ -189,10 +202,10 @@ testpt: testpt.o libprot.a ${TOP_LIBDIR}/libcmd.a $(LIBS)
 
 testpt.o: testpt.c ${INCLS} ${TOP_INCDIR}/afs/cmd.h AFS_component_version_number.c
 
-pt_util: pt_util.o ptutils.o ubik.o utils.o map.o libprot.a $(LIBS)
-	$(CC) ${CFLAGS} -o pt_util pt_util.o ptutils.o ubik.o utils.o map.o libprot.a ${TOP_LIBDIR}/libcmd.a $(LIBS) ${XLIBS} ${KRB5_LIBS}
+pt_util: pt_util.o ptutils.o ptubik.o utils.o map.o libprot.a $(LIBS)
+	$(CC) ${CFLAGS} -o pt_util pt_util.o ptutils.o ptubik.o utils.o map.o libprot.a ${TOP_LIBDIR}/libcmd.a $(LIBS) ${XLIBS} ${KRB5_LIBS}
 
-ubik.o: ubik.c ${INCLS}
+ptubik.o: ptubik.c ${INCLS}
 
 prerror.h: pterror.h
 	${INSTALL_DATA} $? $@

@@ -51,14 +51,6 @@ static PROCESS probeLWP_ID;	/*Probe LWP process ID */
 static int fsprobe_statsBytes;	/*Num bytes in stats block */
 static int fsprobe_probeOKBytes;	/*Num bytes in probeOK block */
 
-/*
- * We have to pass a port to Rx to start up our callback listener
- * service, but 7001 is already taken up by the Cache Manager.  So,
- * we make up our own.
- */
-#define FSPROBE_CBPORT	7101
-
-
 /*------------------------------------------------------------------------
  * [private] fsprobe_CleanupInit
  *
@@ -491,7 +483,6 @@ fsprobe_Init(int a_numServers, struct sockaddr_in *a_socketArray,
     struct fsprobe_ConnectionInfo *curr_conn;	/*Ptr to current conn */
     char *hostNameFound;	/*Ptr to returned host name */
     int conn_err;		/*Connection error? */
-    int PortToUse;		/*Callback port to use */
 
     /*
      * If we've already been called, snicker at the bozo, gently
@@ -596,24 +587,13 @@ fsprobe_Init(int a_numServers, struct sockaddr_in *a_socketArray,
      */
     if (fsprobe_debug)
 	fprintf(stderr, "[%s] Initializing Rx\n", rn);
-    PortToUse = FSPROBE_CBPORT;
-    do {
-	code = rx_Init(htons(PortToUse));
-	if (code) {
-	    if (code == RX_ADDRINUSE) {
-		if (fsprobe_debug)
-		    fprintf(stderr,
-			    "[%s] Callback port %d in use, advancing\n", rn,
-			    PortToUse);
-		PortToUse++;
-	    } else {
-		fprintf(stderr, "[%s] Fatal error in rx_Init()\n", rn);
-		return (-1);
-	    }
-	}
-    } while (code);
+    code = rx_Init(0);
+    if (code) {
+	fprintf(stderr, "[%s] Fatal error in rx_Init()\n", rn);
+	return (-1);
+    }
     if (fsprobe_debug)
-	fprintf(stderr, "[%s] Rx initialized on port %d\n", rn, PortToUse);
+	fprintf(stderr, "[%s] Rx initialized.\n", rn);
 
     /*
      * Create a null Rx server security object, to be used by the

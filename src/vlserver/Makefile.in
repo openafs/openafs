@@ -129,8 +129,19 @@ vlclient: vlclient.o libvldb.a $(LIBS)
 vlclient.o: vlclient.c ${INCLS} AFS_component_version_number.o
 
 vl_errors.o: vl_errors.c
-vlserver.h vl_errors.c: vl_errors.et vlserver.p.h
-	$(RM) -f vlserver.h vl_errors.c; ${COMPILE_ET} -p ${srcdir} vl_errors -h vlserver
+
+vl_errors.c: vl_errors.et
+	${COMPILE_ET_C} -p ${srcdir} vl_errors
+
+vlserver.h : vl_errors.et vlserver.p.h
+	${COMPILE_ET_H} -p ${srcdir} vl_errors -h vlserver
+
+cnvldb.o: vlserver.h
+vlclient.o: vlserver.h
+vldb_check.o: vlserver.h
+vlprocs.o: vlserver.h
+vlserver.o: vlserver.h
+vlutils.o: vlserver.h
 
 vlserver.o: vlserver.c
 

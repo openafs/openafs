@@ -338,6 +338,7 @@ dvolser: project tviced usd libafsrpc libafsauthent volser
 
 venus: cmd comerr volser ptserver libafscp libafsauthent
 	+${COMPILE_PART1} venus ${COMPILE_PART2}
+venustests: venus
 	+${COMPILE_PART1} venus/test ${COMPILE_PART2}
 
 afsd: cmd comerr sys kauth @CLIENT_UAFS_DEP@
@@ -505,7 +506,7 @@ libuafs_setup: config export
 libuafs: libuafs_setup vlserver_depinstall tvlserver_depinstall rx_depinstall fsint_depinstall \
 		auth_depinstall dir_depinstall libacl_depinstall rxkad_depinstall \
 		ubik_depinstall afs_depinstall kauth_depinstall ptserver_depinstall \
-		rxstat_depinstall lwp_depinstall sys_depinstall des cmd
+		rxstat_depinstall lwp_depinstall sys_depinstall des cmd ubik
 	+set -x; \
 	case ${SYS_NAME} in \
 	hp_ux102* | *_obsd* | sun*_4* | *_nbsd*| hp_ux11i | hp_ux112* | ia64_hpux112*) \
@@ -634,7 +635,7 @@ libadmin_real:
 	+${COMPILE_PART1} libadmin/test ${COMPILE_PART2}
 	+${COMPILE_PART1} libadmin/samples ${COMPILE_PART2}
 
-libadmin: libafsauthent bozo
+libadmin: libafsauthent bozo bubasics
 	+case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
 			$(MAKE) libadmin_real ;; \
@@ -666,7 +667,7 @@ build_tools: config des comerr rxgen
 finale: project cmd comerr afsd butc tbutc tbudb @ENABLE_KERNEL_MODULE@ libuafs audit kauth log \
 	ptserver tptserver scout bu_utils ubik uss bozo @VFSCK@ volser tvolser tsalvaged \
 	dviced dvolser libafscp \
-	venus update xstat afsmonitor rxdebug libafsrpc \
+	venus venustests update xstat afsmonitor rxdebug libafsrpc \
 	libafsauthent shlibafsrpc shlibafsauthent libadmin man-pages \
 	platform kopenafs authtools
 	+${COMPILE_PART1} finale ${COMPILE_PART2}
@@ -674,7 +675,7 @@ finale: project cmd comerr afsd butc tbutc tbudb @ENABLE_KERNEL_MODULE@ libuafs 
 finale_nolibafs: project cmd comerr afsd butc tbutc tbudb libuafs audit kauth log \
 	ptserver tptserver scout bu_utils ubik tubik uss bozo @VFSCK@ volser tvolser tsalvaged \
 	dviced dvolser libafscp\
-	venus update xstat afsmonitor rxdebug libafsrpc \
+	venus venustests update xstat afsmonitor rxdebug libafsrpc \
 	libafsauthent shlibafsrpc shlibafsauthent libadmin man-pages \
 	platform kopenafs authtools
 	+${COMPILE_PART1} finale ${COMPILE_PART2}

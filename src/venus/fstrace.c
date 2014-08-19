@@ -171,7 +171,7 @@ CheckTypes(char *bufferp, int *typesp, int typeCount, char *outMsgBuffer)
 	     * check the type descriptor.
 	     */
 	    inPercent = 0;
-	    if (tix > typeCount)
+	    if (tix >= typeCount)
 		return 0;	/* no more type descriptors left */
 	    if (tc == 's') {
 		if (typesp[tix] != 1)	/* not a string descriptor */
@@ -237,7 +237,7 @@ CheckTypes(char *bufferp, int *typesp, int typeCount)
 	     * check the type descriptor.
 	     */
 	    inPercent = 0;
-	    if (tix > typeCount)
+	    if (tix >= typeCount)
 		return 0;	/* no more type descriptors left */
 	    if (tc == 's' && typesp[tix] != 1)	/* not a string descriptor */
 		return 0;

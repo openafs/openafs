@@ -38,6 +38,7 @@
 #include <grp.h>
 #endif
 #include <rx/xdr.h>
+#include <afs/afsutil.h>
 #include "rmtsys.h"
 #include "sys_prototypes.h"
 
@@ -84,10 +85,14 @@ GetAfsServerAddr(char *syscall)
 	    fgets(server_name, 128, fp);
 	    fclose(fp);
 	} else {
-	    char pathname[256];
+	    char *pathname;
 
-	    sprintf(pathname, "%s/%s", home_dir, ".AFSSERVER");
+	    afs_asprintf(&pathname, "%s/%s", home_dir, ".AFSSERVER");
+	    if (pathname == NULL)
+		return 0;
 	    fp = fopen(pathname, "r");
+	    free(pathname);
+
 	    if (fp == 0) {
 		/* Our last chance is the "/.AFSSERVER" file */
 		fp = fopen("/.AFSSERVER", "r");

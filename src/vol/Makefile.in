@@ -30,13 +30,15 @@ VLIBOBJS=vnode.o volume.o vutil.o partition.o fssync-server.o fssync-client.o \
 	 clone.o nuke.o devname.o listinodes.o common.o ihandle.o purge.o \
 	 namei_ops.o salvsync-server.o salvsync-client.o daemon_com.o
 
-OBJECTS=${VLIBOBJS} physio.o vol-salvage.o vol-info.o vol-dump.o vol-bless.o fssync-debug.o
+OBJECTS=${VLIBOBJS} physio.o vol-salvage.o vol-info.o vol-dump.o vol-bless.o fssync-debug.o \
+	volinfo-main.o volscan-main.o
 
 all: gi \
 	${TOP_LIBDIR}/vlib.a \
 	${TOP_LIBDIR}/libvlib.a \
 	salvager \
 	volinfo \
+	volscan \
 	fssync-debug \
 	$(XFS_SIZE_CHECK) \
 	${TOP_INCDIR}/afs/nfs.h \
@@ -111,7 +113,7 @@ ${TOP_INCDIR}/afs/vol_prototypes.h: vol_prototypes.h
 #
 # Installation targets
 #
-install: vlib.a salvager volinfo fssync-debug
+install: vlib.a salvager volinfo volscan fssync-debug
 	${INSTALL} -d ${DESTDIR}${libdir}/afs
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
 	${INSTALL} -d ${DESTDIR}${afssrvsbindir}
@@ -120,6 +122,7 @@ install: vlib.a salvager volinfo fssync-debug
 	${INSTALL_DATA} vlib.a ${DESTDIR}${libdir}/afs/libvlib.a
 	${INSTALL_PROGRAM} salvager ${DESTDIR}${afssrvlibexecdir}/salvager
 	${INSTALL_PROGRAM} volinfo ${DESTDIR}${afssrvsbindir}/volinfo
+	${INSTALL_PROGRAM} volscan ${DESTDIR}${afssrvsbindir}/volscan
 	${INSTALL_PROGRAM} fssync-debug ${DESTDIR}${afssrvsbindir}/fssync-debug
 	${INSTALL_DATA} ${srcdir}/nfs.h ${DESTDIR}${includedir}/afs/nfs.h
 	${INSTALL_DATA} ${srcdir}/vnode.h ${DESTDIR}${includedir}/afs/vnode.h
@@ -139,7 +142,7 @@ install: vlib.a salvager volinfo fssync-debug
 			${DESTDIR}${afssrvsbindir}/xfs_size_check ; \
 	fi
 
-dest: vlib.a salvager volinfo fssync-debug
+dest: vlib.a salvager volinfo volscan fssync-debug
 	${INSTALL} -d ${DEST}/lib/afs
 	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
 	${INSTALL} -d ${DEST}/include/afs
@@ -147,6 +150,7 @@ dest: vlib.a salvager volinfo fssync-debug
 	${INSTALL_DATA} vlib.a ${DEST}/lib/afs/libvlib.a
 	${INSTALL_PROGRAM} salvager ${DEST}/root.server/usr/afs/bin/salvager
 	${INSTALL_PROGRAM} volinfo ${DEST}/root.server/usr/afs/bin/volinfo
+	${INSTALL_PROGRAM} volscan ${DEST}/root.server/usr/afs/bin/volscan
 	${INSTALL_PROGRAM} fssync-debug ${DEST}/root.server/usr/afs/bin/fssync-debug
 	${INSTALL_DATA} ${srcdir}/nfs.h ${DEST}/include/afs/nfs.h
 	${INSTALL_DATA} ${srcdir}/vnode.h ${DEST}/include/afs/vnode.h
@@ -216,8 +220,12 @@ gi: ${TOP_LIBDIR}/libsys.a
 namei_map: ${TOP_LIBDIR}/libsys.a namei_map.o
 	${CC} ${CFLAGS} -o namei_map namei_map.o ${TOP_LIBDIR}/libafsutil.a ${LIBS} ${XLIBS}
 
-volinfo: vol-info.o physio.o ihandle.o ${LIBS}
-	${CC} ${CFLAGS} -o volinfo vol-info.o physio.o \
+volinfo: volinfo-main.o vol-info.o physio.o ihandle.o ${LIBS}
+	${CC} ${CFLAGS} -o volinfo volinfo-main.o vol-info.o physio.o \
+		ihandle.o ${LIBS} ${XLIBS}
+
+volscan: volscan-main.o vol-info.o physio.o ihandle.o ${LIBS}
+	${CC} ${CFLAGS} -o volscan volscan-main.o vol-info.o physio.o \
 		ihandle.o ${LIBS} ${XLIBS}
 
 fssync-debug: fssync-debug.o physio.o AFS_component_version_number.c ${LIBS}
@@ -234,7 +242,7 @@ xfs_size_check: xfs_size_check.c
 #
 clean:
 	$(RM) -f *.o *.a AFS_component_version_number.c
-	$(RM) -f ${SCMPROGS} ${STAGEPROGS} core salvager volinfo gi fssync-debug
+	$(RM) -f ${SCMPROGS} ${STAGEPROGS} core salvager volinfo volscan gi fssync-debug
 
 test:
 	cd test; $(MAKE)
@@ -246,4 +254,5 @@ check-splint::
 	    vnode.c volume.c vutil.c partition.c fssync-server.c fssync-client.c \
 	    clone.c nuke.c devname.c listinodes.c common.c ihandle.c \
 	    namei_ops.c salvsync-server.c salvsync-client.c daemon_com.c purge.c \
-	    physio.c vol-salvage.c vol-info.c vol-bless.c fssync-debug.c
+	    physio.c vol-salvage.c vol-info.c vol-bless.c fssync-debug.c \
+	    volinfo-main.c volscan-main.c

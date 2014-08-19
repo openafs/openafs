@@ -538,9 +538,9 @@ rxkad_get_ticket(krb5_context context, char *realm,
 		    }
 		    afs_dprintf("We've deduced that we need to authenticate"
 			    " to realm %s.\n", realm_of_cell);
+		    status = get_credv5(context, AFSKEY, cell->name,
+					realm_of_cell, v5cred);
 		}
-		status = get_credv5(context, AFSKEY, cell->name,
-				    realm_of_cell, v5cred);
 	    }
 
 	    /* If the realm and cell name match, then try without an
@@ -1125,8 +1125,7 @@ get_afs_mountpoint(char *file, char *mountpoint, int size)
     struct ViceIoctl vio;
     char cellname[BUFSIZ];
 
-    memset(our_file, 0, sizeof(our_file));
-    strcpy(our_file, file);
+    strlcpy(our_file, file, sizeof(our_file));
 
     if ((last_component = strrchr(our_file, DIR))) {
 	*last_component++ = 0;
@@ -1152,8 +1151,8 @@ get_afs_mountpoint(char *file, char *mountpoint, int size)
 	    vio.out = cellname;
 
 	    if (!pioctl(file, VIOC_FILE_CELL_NAME, &vio, 1)) {
-		strcat(cellname, VOLMARKERSTRING);
-		strcat(cellname, mountpoint + 1);
+		strlcat(cellname, VOLMARKERSTRING, sizeof(cellname));
+		strlcat(cellname, mountpoint + 1, sizeof(cellname));
 		memset(mountpoint + 1, 0, size - 1);
 		strcpy(mountpoint + 1, cellname);
 	    }
@@ -1192,7 +1191,7 @@ next_path(char *origpath)
     if (origpath) {
 	memset(path, 0, sizeof(path));
 	memset(pathtocheck, 0, sizeof(pathtocheck));
-	strcpy(path, origpath);
+	strlcpy(path, origpath, sizeof(path));
 	last_comp = path;
 	symlinkcount = 0;
 	return(NULL);
@@ -1211,15 +1210,19 @@ next_path(char *origpath)
 	    ? elast_comp - last_comp : strlen(last_comp);
 	strncat(pathtocheck, last_comp, len);
 	memset(linkbuf, 0, sizeof(linkbuf));
-	if ((link = (readlink(pathtocheck, linkbuf,
-				    sizeof(linkbuf)) > 0))) {
+	link = readlink(pathtocheck, linkbuf, sizeof(linkbuf)-1);
+
+	if (link > 0) {
+	    linkbuf[link] = '\0'; /* NUL terminate string */
+
 	    if (++symlinkcount > MAXSYMLINKS) {
 		fprintf(stderr, "%s: %s\n", progname, strerror(ELOOP));
 		exit(AKLOG_BADPATH);
 	    }
+
 	    memset(tmpbuf, 0, sizeof(tmpbuf));
 	    if (elast_comp)
-		strcpy(tmpbuf, elast_comp);
+		strlcpy(tmpbuf, elast_comp, sizeof(tmpbuf));
 	    if (linkbuf[0] == DIR) {
 		/*
 		 * If this is a symbolic link to an absolute path,
@@ -1332,7 +1335,7 @@ auth_to_path(krb5_context context, char *path)
 
     /* Initialize */
     if (path[0] == DIR)
-	strcpy(pathtocheck, path);
+	strlcpy(pathtocheck, path, sizeof(pathtocheck));
     else {
 	if (getcwd(pathtocheck, sizeof(pathtocheck)) == NULL) {
 	    fprintf(stderr, "Unable to find current working directory:\n");
@@ -1341,15 +1344,15 @@ auth_to_path(krb5_context context, char *path)
 	    exit(AKLOG_BADPATH);
 	}
 	else {
-	    strcat(pathtocheck, DIRSTRING);
-	    strcat(pathtocheck, path);
+	    strlcat(pathtocheck, DIRSTRING, sizeof(pathtocheck));
+	    strlcat(pathtocheck, path, sizeof(pathtocheck));
 	}
     }
     next_path(pathtocheck);
 
     /* Go on to the next level down the path */
     while ((nextpath = next_path(NULL))) {
-	strcpy(pathtocheck, nextpath);
+	strlcpy(pathtocheck, nextpath, sizeof(pathtocheck));
 	afs_dprintf("Checking directory %s\n", pathtocheck);
 	/*
 	 * If this is an afs mountpoint, determine what cell from
@@ -1553,7 +1556,7 @@ main(int argc, char *argv[])
 		  (strcmp(argv[i], "-c") == 0)) && !pmode)
 	    if (++i < argc) {
 		cmode++;
-		strcpy(cell, argv[i]);
+		strlcpy(cell, argv[i], sizeof(cell));
 	    }
 	    else
 		usage();
@@ -1573,7 +1576,7 @@ main(int argc, char *argv[])
 		  (strcmp(argv[i], "-p") == 0)) && !cmode)
 	    if (++i < argc) {
 		pmode++;
-		strcpy(path, argv[i]);
+		strlcpy(path, argv[i], sizeof(path));
 	    }
 	    else
 		usage();
@@ -1584,11 +1587,11 @@ main(int argc, char *argv[])
 	    if (strchr(argv[i], DIR) || (strcmp(argv[i], ".") == 0) ||
 		(strcmp(argv[i], "..") == 0)) {
 		pmode++;
-		strcpy(path, argv[i]);
+		strlcpy(path, argv[i], sizeof(path));
 	    }
 	    else {
 		cmode++;
-		strcpy(cell, argv[i]);
+		strlcpy(cell, argv[i], sizeof(path));
 	    }
 	}
 	else
@@ -1598,7 +1601,7 @@ main(int argc, char *argv[])
 	    if (((i + 1) < argc) && (strcmp(argv[i + 1], "-k") == 0)) {
 		i+=2;
 		if (i < argc)
-		    strcpy(realm, argv[i]);
+		    strlcpy(realm, argv[i], sizeof(realm));
 		else
 		    usage();
 	    }
@@ -1678,8 +1681,8 @@ main(int argc, char *argv[])
 	    FILE *f;
 	    char fcell[100], xlog_path[512];
 
-	    strcpy(xlog_path, pwd->pw_dir);
-	    strcat(xlog_path, "/.xlog");
+	    strlcpy(xlog_path, pwd->pw_dir, sizeof(xlog_path));
+	    strlcat(xlog_path, "/.xlog", sizeof(xlog_path));
 
 	    if ((stat(xlog_path, &sbuf) == 0) &&
 		((f = fopen(xlog_path, "r")) != NULL)) {

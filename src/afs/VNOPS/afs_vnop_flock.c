@@ -576,18 +576,18 @@ int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
 		afs_ucred_t * acred)
 #endif
 {
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     afs_int32 code;
     struct afs_fakestat_state fakestate;
 
     AFS_STATCNT(afs_lockctl);
-    if ((code = afs_InitReq(&treq, acred)))
+    if ((code = afs_CreateReq(&treq, acred)))
 	return code;
     afs_InitFakeStat(&fakestate);
 
     AFS_DISCON_LOCK();
 
-    code = afs_EvalFakeStat(&avc, &fakestate, &treq);
+    code = afs_EvalFakeStat(&avc, &fakestate, treq);
     if (code) {
 	goto done;
     }
@@ -600,8 +600,8 @@ int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
 	    code = 0;
 	    goto done;
 	}
-	code = HandleGetLock(avc, af, &treq, clid);
-	code = afs_CheckCode(code, &treq, 2);	/* defeat buggy AIX optimz */
+	code = HandleGetLock(avc, af, treq, clid);
+	code = afs_CheckCode(code, treq, 2);	/* defeat buggy AIX optimz */
 	goto done;
     } else if ((acmd == F_SETLK) || (acmd == F_SETLKW)
 #if (defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)) && !defined(AFS_SUN58_ENV)
@@ -639,8 +639,8 @@ int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
     else if (af->l_type == F_UNLCK)
 	code = LOCK_UN;
     else {
-	afs_PutFakeStat(&fakestate);
-	return EINVAL;		/* unknown lock type */
+	code = EINVAL;		/* unknown lock type */
+	goto done;
     }
     if (((acmd == F_SETLK)
 #if 	(defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)) && !defined(AFS_SUN58_ENV)
@@ -649,21 +649,22 @@ int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
 	) && code != LOCK_UN)
 	code |= LOCK_NB;	/* non-blocking, s.v.p. */
 #if defined(AFS_DARWIN_ENV)
-    code = HandleFlock(avc, code, &treq, clid, 0 /*!onlymine */ );
+    code = HandleFlock(avc, code, treq, clid, 0 /*!onlymine */ );
 #elif defined(AFS_SGI_ENV)
     AFS_RWLOCK((vnode_t *) avc, VRWLOCK_WRITE);
-    code = HandleFlock(avc, code, &treq, clid, 0 /*!onlymine */ );
+    code = HandleFlock(avc, code, treq, clid, 0 /*!onlymine */ );
     AFS_RWUNLOCK((vnode_t *) avc, VRWLOCK_WRITE);
 #else
-    code = HandleFlock(avc, code, &treq, 0, 0 /*!onlymine */ );
+    code = HandleFlock(avc, code, treq, 0, 0 /*!onlymine */ );
 #endif
-    code = afs_CheckCode(code, &treq, 3);	/* defeat AIX -O bug */
+    code = afs_CheckCode(code, treq, 3);	/* defeat AIX -O bug */
     goto done;
     }
     code = EINVAL;
 done:
     afs_PutFakeStat(&fakestate);
     AFS_DISCON_UNLOCK();
+    afs_DestroyReq(treq);
     return code;
 }
 

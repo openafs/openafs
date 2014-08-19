@@ -23,6 +23,12 @@
 %define fedorakmod 1
 %endif
 
+%if 0%{?fedora} >= 17 || 0%{?rhel} >= 7
+%define depmod /usr/sbin/depmod
+%else
+%define depmod /sbin/depmod
+%endif
+
 %if !%{fedorakmod}
 # Determine the version of the kernel to build against
 # - automatically select running kernel if there are sources in /lib/modules
@@ -541,7 +547,7 @@ krb4 lookalike services.
 %if %{build_modules}
 
 %if %{fedorakmod}
-%{expand:%(%{kmodtool} rpmtemplate %{kmod_name} %{kverrel} %{kvariants} 2>/dev/null)}
+%{expand:%(%{kmodtool} rpmtemplate %{kmod_name} %{kverrel} %{depmod} %{kvariants} 2>/dev/null)}
 
 %else
 
@@ -1446,43 +1452,43 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %if !%{fedorakmod}
 %if %{up_package}
 %post kernel
-/sbin/depmod -ae %{kernvers}
+%{depmod} -ae %{kernvers}
 
 %postun kernel
-/sbin/depmod -ae %{kernvers}
+%{depmod} -ae %{kernvers}
 
 %endif
 
 %if %{smp_package}
 %post kernel-smp
-/sbin/depmod -ae %{kernvers}%{?smp_ext:%{smp_ext}}
+%{depmod} -ae %{kernvers}%{?smp_ext:%{smp_ext}}
 
 %postun kernel-smp
-/sbin/depmod -ae %{kernvers}%{?smp_ext:%{smp_ext}}
+%{depmod} -ae %{kernvers}%{?smp_ext:%{smp_ext}}
 %endif
 
 %if %{largesmp_package}
 %post kernel-largesmp
-/sbin/depmod -ae %{kernvers}%{?largesmp_ext:%{largesmp_ext}}
+%{depmod} -ae %{kernvers}%{?largesmp_ext:%{largesmp_ext}}
 
 %postun kernel-largesmp
-/sbin/depmod -ae %{kernvers}%{?largesmp_ext:%{largesmp_ext}}
+%{depmod} -ae %{kernvers}%{?largesmp_ext:%{largesmp_ext}}
 %endif
  
 %if %{bigmem_package}
 %post kernel-bigmem
-/sbin/depmod -ae %{kernvers}%{?bigmem_ext:%{bigmem_ext}}
+%{depmod} -ae %{kernvers}%{?bigmem_ext:%{bigmem_ext}}
 
 %postun kernel-bigmem
-/sbin/depmod -ae %{kernvers}%{?bigmem_ext:%{bigmem_ext}}
+%{depmod} -ae %{kernvers}%{?bigmem_ext:%{bigmem_ext}}
 %endif
 
 %if %{hugemem_package}
 %post kernel-hugemem
-/sbin/depmod -ae %{kernvers}%{?hugemem_ext:%{hugemem_ext}}
+%{depmod} -ae %{kernvers}%{?hugemem_ext:%{hugemem_ext}}
 
 %postun kernel-hugemem
-/sbin/depmod -ae %{kernvers}%{?hugemem_ext:%{hugemem_ext}}
+%{depmod} -ae %{kernvers}%{?hugemem_ext:%{hugemem_ext}}
 %endif
 %endif
 %endif
@@ -1590,6 +1596,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_prefix}/afs/bin/upserver
 %{_prefix}/afs/bin/vlserver
 %{_prefix}/afs/bin/volinfo
+%{_prefix}/afs/bin/volscan
 %{_prefix}/afs/bin/volserver
 %{_sbindir}/kadb_check
 %{_sbindir}/prdb_check
@@ -1647,6 +1654,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man8/vlserver.*
 %{_mandir}/man8/voldump.*
 %{_mandir}/man8/volinfo.*
+%{_mandir}/man8/volscan.*
 %{_mandir}/man8/volserver.*
 
 %if %{build_authlibs}
