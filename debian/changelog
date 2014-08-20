@@ -1,4 +1,4 @@
-openafs (1.6.10~pre1-1) UNRELEASED; urgency=low
+openafs (1.6.10~pre1-1) experimental; urgency=low
 
   [ Benjamin Kaduk ]
   * New upstream pre-release.
