@@ -515,13 +515,6 @@ cmd_DisableAbbreviations(void)
 }
 
 int
-cmd_IsAdministratorCommand(struct cmd_syndesc *as)
-{
-    as->flags |= CMD_ADMIN;
-    return 0;
-}
-
-int
 cmd_Seek(struct cmd_syndesc *as, int apos)
 {
     if (apos >= CMD_MAXPARMS)
@@ -761,7 +754,6 @@ initSyntax(void)
 	ts = cmd_CreateSyntax("help", HelpProc, NULL,
 			      "get help on commands");
 	cmd_AddParm(ts, "-topic", CMD_LIST, CMD_OPTIONAL, "help string");
-	cmd_AddParm(ts, "-admin", CMD_FLAG, CMD_OPTIONAL, NULL);
 
 	ts = cmd_CreateSyntax("apropos", AproposProc, NULL,
 			      "search by help text");

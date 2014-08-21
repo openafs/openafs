@@ -8,7 +8,6 @@ cmd_DisablePositionalCommands
 cmd_Dispatch
 cmd_FreeArgv
 cmd_FreeOptions
-cmd_IsAdministratorCommand
 cmd_OpenConfigFile
 cmd_OptionAsFlag
 cmd_OptionAsInt

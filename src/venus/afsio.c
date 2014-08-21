@@ -311,7 +311,6 @@ main(int argc, char **argv)
 
     ts = cmd_CreateSyntax("fidlock", lockFile, (void *)LockWrite,
 			  "lock by FID a file from AFS");
-    cmd_IsAdministratorCommand(ts);
     cmd_AddParm(ts, "-fid", CMD_SINGLE, CMD_REQUIRED,
 		"volume.vnode.uniquifier");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
@@ -336,7 +335,6 @@ main(int argc, char **argv)
 
     ts = cmd_CreateSyntax("fidunlock", lockFile, (void *)LockRelease,
 			  "unlock by FID a file from AFS");
-    cmd_IsAdministratorCommand(ts);
     cmd_AddParm(ts, "-fid", CMD_SINGLE, CMD_REQUIRED,
 		"volume.vnode.uniquifier");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
@@ -359,7 +357,6 @@ main(int argc, char **argv)
 
     ts = cmd_CreateSyntax("fidread", readFile, CMD_REQUIRED,
 			  "read on a non AFS-client a file from AFS");
-    cmd_IsAdministratorCommand(ts);
     cmd_AddParm(ts, "-fid", CMD_SINGLE, CMD_REQUIRED,
 		"volume.vnode.uniquifier");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
@@ -384,7 +381,6 @@ main(int argc, char **argv)
 
     ts = cmd_CreateSyntax("fidwrite", writeFile, CMD_REQUIRED,
 			  "write a file into AFS");
-    cmd_IsAdministratorCommand(ts);
     cmd_AddParm(ts, "-vnode", CMD_SINGLE, CMD_REQUIRED,
 		"volume.vnode.uniquifier");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
@@ -407,7 +403,6 @@ main(int argc, char **argv)
 
     ts = cmd_CreateSyntax("fidappend", writeFile, NULL,
 			  "append to a file in AFS");
-    cmd_IsAdministratorCommand(ts);
     cmd_AddParm(ts, "-vnode", CMD_SINGLE, CMD_REQUIRED,
 		"volume.vnode.uniquifier");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
