@@ -393,14 +393,14 @@ wmain(int argc, wchar_t **wargv)
 
     osi_Init();
 
-    ts = cmd_CreateSyntax("list", ListLinkCmd, NULL, "list symlink");
+    ts = cmd_CreateSyntax("list", ListLinkCmd, NULL, 0, "list symlink");
     cmd_AddParm(ts, "-name", CMD_LIST, 0, "name");
 
-    ts = cmd_CreateSyntax("make", MakeLinkCmd, NULL, "make symlink");
+    ts = cmd_CreateSyntax("make", MakeLinkCmd, NULL, 0, "make symlink");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "name");
     cmd_AddParm(ts, "-to", CMD_SINGLE, 0, "target");
 
-    ts = cmd_CreateSyntax("remove", RemoveLinkCmd, NULL, "remove symlink");
+    ts = cmd_CreateSyntax("remove", RemoveLinkCmd, NULL, 0, "remove symlink");
     cmd_AddParm(ts, "-name", CMD_LIST, 0, "name");
     cmd_CreateAlias(ts, "rm");
 

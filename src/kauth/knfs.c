@@ -440,7 +440,7 @@ main(int argc, char **argv)
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
 
-    ts = cmd_CreateSyntax(NULL, cmdproc, NULL, "copy tickets for NFS");
+    ts = cmd_CreateSyntax(NULL, cmdproc, NULL, 0, "copy tickets for NFS");
     cmd_AddParm(ts, "-host", CMD_SINGLE, CMD_REQUIRED, "host name");
     cmd_AddParm(ts, "-id", CMD_SINGLE, CMD_OPTIONAL, "user ID (decimal)");
     cmd_AddParm(ts, "-sysname", CMD_SINGLE, CMD_OPTIONAL,

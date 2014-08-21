@@ -597,7 +597,7 @@ main(int argc, char **argv)
     }
 #endif
 
-    ts = cmd_CreateSyntax(NULL, MainCommand, NULL, "probe RX server");
+    ts = cmd_CreateSyntax(NULL, MainCommand, NULL, 0, "probe RX server");
     cmd_AddParm(ts, "-servers", CMD_SINGLE, CMD_REQUIRED, "server machine");
     cmd_AddParm(ts, "-port", CMD_SINGLE, CMD_OPTIONAL, "IP port");
     cmd_AddParm(ts, "-nodally", CMD_FLAG, CMD_OPTIONAL,

@@ -1814,7 +1814,7 @@ main(int argc, char *argv[])
 
     /* ----------------------------- add ----------------------------- */
 
-    cs = cmd_CreateSyntax("add", AddUser, NULL, "create a new user account");
+    cs = cmd_CreateSyntax("add", AddUser, NULL, 0, "create a new user account");
     cmd_AddParm(cs, "-user", CMD_SINGLE, 0, "login name");
     cmd_AddParm(cs, "-realname", CMD_SINGLE, CMD_OPTIONAL,
 		"full name in quotes");
@@ -1849,7 +1849,7 @@ main(int argc, char *argv[])
 
     /* ---------------------------- bulk ----------------------------- */
 
-    cs = cmd_CreateSyntax("bulk", HandleBulk, NULL, "bulk input mode");
+    cs = cmd_CreateSyntax("bulk", HandleBulk, NULL, 0, "bulk input mode");
     cmd_AddParm(cs, "-file", CMD_SINGLE, 0, "bulk input file");
     cmd_Seek(cs, AUSS_TEMPLATE);
     cmd_AddParm(cs, "-template", CMD_SINGLE, CMD_OPTIONAL,
@@ -1874,7 +1874,7 @@ main(int argc, char *argv[])
 
     /* ---------------------------- delete --------------------------- */
 
-    cs = cmd_CreateSyntax("delete", DelUser, NULL, "delete a user account");
+    cs = cmd_CreateSyntax("delete", DelUser, NULL, 0, "delete a user account");
     cmd_AddParm(cs, "-user", CMD_SINGLE, 0, "login name");
     cmd_AddParm(cs, "-mountpoint", CMD_SINGLE, CMD_OPTIONAL,
 		"mountpoint for user's volume");
@@ -1908,7 +1908,7 @@ main(int argc, char *argv[])
 #if USS_DONT_HIDE_SOME_FEATURES
     /* ------------------------- purgevolumes ------------------------ */
 
-    cs = cmd_CreateSyntax("purgevolumes", PurgeVolumes, NULL,
+    cs = cmd_CreateSyntax("purgevolumes", PurgeVolumes, NULL, 0,
 			  "destroy a deleted user's volume");
     cmd_AddParm(cs, "-volname", CMD_LIST, CMD_OPTIONAL | CMD_EXPANDS,
 		"Name(s) of volume(s) to destroy");
@@ -1931,7 +1931,7 @@ main(int argc, char *argv[])
 #if USS_DONT_HIDE_SOME_FEATURES
     /* ---------------------------- restore -------------------------- */
 
-    cs = cmd_CreateSyntax("restore", RestoreUser, NULL,
+    cs = cmd_CreateSyntax("restore", RestoreUser, NULL, 0,
 			  "restore a deleted user account");
     cmd_AddParm(cs, "-user", CMD_SINGLE, 0, "login name to restore");
     cmd_AddParm(cs, "-uid", CMD_SINGLE, 0, "user id number");

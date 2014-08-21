@@ -996,7 +996,7 @@ ParseArgs(int argc, char *argv[])
     extern int aixlow_water;
 #endif
 
-    opts = cmd_CreateSyntax(NULL, NULL, NULL, NULL);
+    opts = cmd_CreateSyntax(NULL, NULL, NULL, 0, NULL);
 
     /* fileserver options */
     cmd_AddParmAtOffset(opts, OPT_large, "-L", CMD_FLAG,

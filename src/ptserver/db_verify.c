@@ -1431,7 +1431,7 @@ main(int argc, char *argv[])
 
     setlinebuf(stdout);
 
-    ts = cmd_CreateSyntax(NULL, WorkerBee, NULL, "PRDB check");
+    ts = cmd_CreateSyntax(NULL, WorkerBee, NULL, 0, "PRDB check");
     cmd_AddParm(ts, "-database", CMD_SINGLE, CMD_REQUIRED, "ptdb_file");
     cmd_AddParm(ts, "-uheader", CMD_FLAG, CMD_OPTIONAL,
 		"Display UBIK header");

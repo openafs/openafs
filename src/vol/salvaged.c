@@ -381,7 +381,7 @@ main(int argc, char **argv)
 
     logFileName = strdup(AFSDIR_SERVER_SALSRVLOG_FILEPATH);
 
-    ts = cmd_CreateSyntax("initcmd", handleit, &arock, "initialize the program");
+    ts = cmd_CreateSyntax("initcmd", handleit, &arock, 0, "initialize the program");
     cmd_AddParmAtOffset(ts, OPT_partition, "-partition", CMD_SINGLE,
 	    CMD_OPTIONAL, "Name of partition to salvage");
     cmd_AddParmAtOffset(ts, OPT_volumeid, "-volumeid", CMD_SINGLE, CMD_OPTIONAL,

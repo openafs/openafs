@@ -1156,7 +1156,7 @@ main(int argc, char **argv)
     memset(&state, 0, sizeof(state));
     state.sec = 1; /* default is auth */
 
-    ts = cmd_CreateSyntax("creategroup", CreateGroup, NULL,
+    ts = cmd_CreateSyntax("creategroup", CreateGroup, NULL, 0,
 			  "create a new group");
     cmd_AddParm(ts, "-name", CMD_LIST, 0, "group name");
     cmd_AddParm(ts, "-owner", CMD_SINGLE, CMD_OPTIONAL, "owner of the group");
@@ -1165,24 +1165,24 @@ main(int argc, char **argv)
     add_std_args(ts);
     cmd_CreateAlias(ts, "cg");
 
-    ts = cmd_CreateSyntax("createuser", CreateUser, NULL, "create a new user");
+    ts = cmd_CreateSyntax("createuser", CreateUser, NULL, 0, "create a new user");
     cmd_AddParm(ts, "-name", CMD_LIST, 0, "user name");
     cmd_AddParm(ts, "-id", CMD_LIST, CMD_OPTIONAL, "user id");
     add_std_args(ts);
     cmd_CreateAlias(ts, "cu");
 
-    ts = cmd_CreateSyntax("adduser", AddToGroup, NULL, "add a user to a group");
+    ts = cmd_CreateSyntax("adduser", AddToGroup, NULL, 0, "add a user to a group");
     cmd_AddParm(ts, "-user", CMD_LIST, 0, "user name");
     cmd_AddParm(ts, "-group", CMD_LIST, 0, "group name");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("removeuser", RemoveFromGroup, NULL,
+    ts = cmd_CreateSyntax("removeuser", RemoveFromGroup, NULL, 0,
 			  "remove a user from a group");
     cmd_AddParm(ts, "-user", CMD_LIST, 0, "user name");
     cmd_AddParm(ts, "-group", CMD_LIST, 0, "group name");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("membership", ListMembership, NULL,
+    ts = cmd_CreateSyntax("membership", ListMembership, NULL, 0,
 			  "list membership of a user or group");
     cmd_AddParm(ts, "-nameorid", CMD_LIST, 0, "user or group name or id");
     cmd_AddParm(ts, "-supergroups", CMD_FLAG, CMD_OPTIONAL, "show supergroups");
@@ -1190,37 +1190,37 @@ main(int argc, char **argv)
     add_std_args(ts);
     cmd_CreateAlias(ts, "groups");
 
-    ts = cmd_CreateSyntax("delete", Delete, NULL,
+    ts = cmd_CreateSyntax("delete", Delete, NULL, 0,
 			  "delete a user or group from database");
     cmd_AddParm(ts, "-nameorid", CMD_LIST, 0, "user or group name or id");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("examine", CheckEntry, NULL, "examine an entry");
+    ts = cmd_CreateSyntax("examine", CheckEntry, NULL, 0, "examine an entry");
     cmd_AddParm(ts, "-nameorid", CMD_LIST, 0, "user or group name or id");
     add_std_args(ts);
     cmd_CreateAlias(ts, "check");
 
-    ts = cmd_CreateSyntax("chown", ChownGroup, NULL,
+    ts = cmd_CreateSyntax("chown", ChownGroup, NULL, 0,
 			  "change ownership of a group");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "group name");
     cmd_AddParm(ts, "-owner", CMD_SINGLE, 0, "new owner");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("rename", ChangeName, NULL, "rename user or group");
+    ts = cmd_CreateSyntax("rename", ChangeName, NULL, 0, "rename user or group");
     cmd_AddParm(ts, "-oldname", CMD_SINGLE, 0, "old name");
     cmd_AddParm(ts, "-newname", CMD_SINGLE, 0, "new name");
     add_std_args(ts);
     cmd_CreateAlias(ts, "chname");
 
-    ts = cmd_CreateSyntax("listmax", ListMax, NULL, "list max id");
+    ts = cmd_CreateSyntax("listmax", ListMax, NULL, 0, "list max id");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("setmax", SetMaxCommand, NULL, "set max id");
+    ts = cmd_CreateSyntax("setmax", SetMaxCommand, NULL, 0, "set max id");
     cmd_AddParm(ts, "-group", CMD_SINGLE, CMD_OPTIONAL, "group max");
     cmd_AddParm(ts, "-user", CMD_SINGLE, CMD_OPTIONAL, "user max");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("setfields", SetFields, NULL,
+    ts = cmd_CreateSyntax("setfields", SetFields, NULL, 0,
 			  "set fields for an entry");
     cmd_AddParm(ts, "-nameorid", CMD_LIST, 0, "user or group name or id");
     cmd_AddParm(ts, "-access", CMD_SINGLE, CMD_OPTIONAL, "set privacy flags");
@@ -1232,30 +1232,30 @@ main(int argc, char **argv)
 #endif
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("listowned", ListOwned, NULL,
+    ts = cmd_CreateSyntax("listowned", ListOwned, NULL, 0,
 			  "list groups owned by an entry or zero id gets orphaned groups");
     cmd_AddParm(ts, "-nameorid", CMD_LIST, 0, "user or group name or id");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("listentries", ListEntries, NULL,
+    ts = cmd_CreateSyntax("listentries", ListEntries, NULL, 0,
 			  "list users/groups in the protection database");
     cmd_AddParm(ts, "-users", CMD_FLAG, CMD_OPTIONAL, "list user entries");
     cmd_AddParm(ts, "-groups", CMD_FLAG, CMD_OPTIONAL, "list group entries");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("interactive", pts_Interactive, NULL,
+    ts = cmd_CreateSyntax("interactive", pts_Interactive, NULL, 0,
 			  "enter interactive mode");
     add_std_args(ts);
     cmd_CreateAlias(ts, "in");
 
-    ts = cmd_CreateSyntax("quit", pts_Quit, NULL, "exit program");
+    ts = cmd_CreateSyntax("quit", pts_Quit, NULL, 0, "exit program");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("source", pts_Source, NULL, "read commands from file");
+    ts = cmd_CreateSyntax("source", pts_Source, NULL, 0, "read commands from file");
     cmd_AddParm(ts, "-file", CMD_SINGLE, 0, "filename");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("sleep", pts_Sleep, NULL, "pause for a bit");
+    ts = cmd_CreateSyntax("sleep", pts_Sleep, NULL, 0, "pause for a bit");
     cmd_AddParm(ts, "-delay", CMD_SINGLE, 0, "seconds");
     add_std_args(ts);
 

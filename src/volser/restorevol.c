@@ -960,7 +960,7 @@ main(int argc, char **argv)
 
     setlinebuf(stdout);
 
-    ts = cmd_CreateSyntax(NULL, WorkerBee, NULL, "vldb check");
+    ts = cmd_CreateSyntax(NULL, WorkerBee, NULL, 0, "vldb check");
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_OPTIONAL, "dump file");
     cmd_AddParm(ts, "-dir", CMD_SINGLE, CMD_OPTIONAL, "restore dir");
     cmd_AddParm(ts, "-extension", CMD_SINGLE, CMD_OPTIONAL, "name extension");

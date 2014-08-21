@@ -40,7 +40,7 @@ SetupCmd(void)
 {
     struct cmd_syndesc	*ts;
 
-    ts = cmd_CreateSyntax("client34", DoClient34, NULL,
+    ts = cmd_CreateSyntax("client34", DoClient34, NULL, 0,
 			  "remove AFS 3.4a client");
 }
 

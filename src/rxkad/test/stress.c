@@ -305,7 +305,7 @@ main(int argc, char **argv)
 	exit(1);
     }
 #endif
-    ts = cmd_CreateSyntax(NULL, CommandProc, NULL,
+    ts = cmd_CreateSyntax(NULL, CommandProc, NULL, 0,
 			  "run Rx authentication stress test");
     cmd_AddParm(ts, "-server", CMD_FLAG, CMD_OPTIONAL, "start server");
     cmd_AddParm(ts, "-client", CMD_SINGLE, CMD_OPTIONAL, "start client");

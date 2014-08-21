@@ -99,7 +99,7 @@ main(int argc, char **argv)
 
     initialize_CMD_error_table();
 
-    opts = cmd_CreateSyntax(NULL, testproc, NULL, NULL);
+    opts = cmd_CreateSyntax(NULL, testproc, NULL, 0, NULL);
     cmd_AddParm(opts, "-flag", CMD_FLAG, CMD_OPTIONAL, "a flag");
     cmd_AddParm(opts, "-first", CMD_SINGLE, CMD_REQUIRED, "first option");
     cmd_AddParm(opts, "-second", CMD_LIST, CMD_OPTIONAL, "second option");

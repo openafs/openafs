@@ -290,20 +290,20 @@ main(argc, argv)
 #endif
     cmd_SetBeforeProc(MyBeforeProc, NULL);
 
-    ts = cmd_CreateSyntax("dump", PerformDump, NULL, "perform a dump");
+    ts = cmd_CreateSyntax("dump", PerformDump, NULL, 0, "perform a dump");
 
-    ts = cmd_CreateSyntax("restore", PerformRestore, NULL, "perform a restore");
+    ts = cmd_CreateSyntax("restore", PerformRestore, NULL, 0, "perform a restore");
 
-    ts = cmd_CreateSyntax("check", CheckDump, NULL, "check a dump");
+    ts = cmd_CreateSyntax("check", CheckDump, NULL, 0, "check a dump");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "dump id");
 
-    ts = cmd_CreateSyntax("abort", AbortDump, NULL, "abort a dump");
+    ts = cmd_CreateSyntax("abort", AbortDump, NULL, 0, "abort a dump");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "dump id");
 
-    ts = cmd_CreateSyntax("wait", WaitForDump, NULL, "wait for a dump");
+    ts = cmd_CreateSyntax("wait", WaitForDump, NULL, 0, "wait for a dump");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "dump id");
 
-    ts = cmd_CreateSyntax("end", EndDump, NULL, "end a dump");
+    ts = cmd_CreateSyntax("end", EndDump, NULL, 0, "end a dump");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "dump id");
 
     code = cmd_Dispatch(argc, argv);

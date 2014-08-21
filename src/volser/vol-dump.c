@@ -272,7 +272,7 @@ main(int argc, char **argv)
 	                "trying to continue anyway\n");
     }
 
-    ts = cmd_CreateSyntax(NULL, handleit, NULL,
+    ts = cmd_CreateSyntax(NULL, handleit, NULL, 0,
 			  "Dump a volume to a 'vos dump' format file without using volserver");
     cmd_AddParm(ts, "-part", CMD_LIST, CMD_OPTIONAL, "AFS partition name");
     cmd_AddParm(ts, "-volumeid", CMD_LIST, CMD_OPTIONAL, "Volume id");

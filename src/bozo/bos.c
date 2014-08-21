@@ -1720,12 +1720,12 @@ main(int argc, char **argv)
     initialize_CMD_error_table();
     initialize_BZ_error_table();
 
-    ts = cmd_CreateSyntax("start", StartServer, NULL, "start running a server");
+    ts = cmd_CreateSyntax("start", StartServer, NULL, 0, "start running a server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-instance", CMD_LIST, 0, "server process name");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("stop", StopServer, NULL, "halt a server instance");
+    ts = cmd_CreateSyntax("stop", StopServer, NULL, 0, "halt a server instance");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-instance", CMD_LIST, 0, "server process name");
     cmd_Seek(ts, 8);
@@ -1733,7 +1733,7 @@ main(int argc, char **argv)
 		"wait for process to stop");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("status", StatServer, NULL,
+    ts = cmd_CreateSyntax("status", StatServer, NULL, 0,
 			  "show server instance status");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-instance", CMD_LIST, CMD_OPTIONAL,
@@ -1741,7 +1741,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-long", CMD_FLAG, CMD_OPTIONAL, "long status");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("shutdown", Shutdown, NULL, "shutdown all processes");
+    ts = cmd_CreateSyntax("shutdown", Shutdown, NULL, 0, "shutdown all processes");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-instance", CMD_LIST, CMD_OPTIONAL, "instances");
     cmd_Seek(ts, 8);
@@ -1749,12 +1749,12 @@ main(int argc, char **argv)
 		"wait for process to stop");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("startup", Startup, NULL, "start all processes");
+    ts = cmd_CreateSyntax("startup", Startup, NULL, 0, "start all processes");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-instance", CMD_LIST, CMD_OPTIONAL, "instances");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("restart", Restart, NULL, "restart processes");
+    ts = cmd_CreateSyntax("restart", Restart, NULL, 0, "restart processes");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-instance", CMD_LIST, CMD_OPTIONAL, "instances");
     cmd_AddParm(ts, "-bosserver", CMD_FLAG, CMD_OPTIONAL,
@@ -1764,7 +1764,7 @@ main(int argc, char **argv)
 
 #ifndef OPBOS
 
-    ts = cmd_CreateSyntax("create", CreateServer, NULL,
+    ts = cmd_CreateSyntax("create", CreateServer, NULL, 0,
 			  "create a new server instance");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-instance", CMD_SINGLE, 0, "server process name");
@@ -1774,105 +1774,105 @@ main(int argc, char **argv)
 		"Notifier program");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("delete", DeleteServer, NULL,
+    ts = cmd_CreateSyntax("delete", DeleteServer, NULL, 0,
 			  "delete a server instance");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-instance", CMD_LIST, 0, "server process name");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("adduser", AddSUser, NULL,
+    ts = cmd_CreateSyntax("adduser", AddSUser, NULL, 0,
 			  "add users to super-user list");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-user", CMD_LIST, 0, "user names");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("removeuser", RemoveSUser, NULL,
+    ts = cmd_CreateSyntax("removeuser", RemoveSUser, NULL, 0,
 			  "remove users from super-user list");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-user", CMD_LIST, 0, "user names");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("listusers", ListSUsers, NULL, "list super-users");
+    ts = cmd_CreateSyntax("listusers", ListSUsers, NULL, 0, "list super-users");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("addkey", AddKey, NULL,
+    ts = cmd_CreateSyntax("addkey", AddKey, NULL, 0,
 			  "add keys to key dbase (kvno 999 is bcrypt)");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-key", CMD_SINGLE, CMD_OPTIONAL, "key");
     cmd_AddParm(ts, "-kvno", CMD_SINGLE, 0, "key version number");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("removekey", RemoveKey, NULL,
+    ts = cmd_CreateSyntax("removekey", RemoveKey, NULL, 0,
 			  "remove keys from key dbase");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-kvno", CMD_LIST, 0, "key version number");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("listkeys", ListKeys, NULL, "list keys");
+    ts = cmd_CreateSyntax("listkeys", ListKeys, NULL, 0, "list keys");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-showkey", CMD_FLAG, CMD_OPTIONAL,
 		"show the actual key rather than the checksum");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("listhosts", ListHosts, NULL, "get cell host list");
+    ts = cmd_CreateSyntax("listhosts", ListHosts, NULL, 0, "get cell host list");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     add_std_args(ts);
     cmd_CreateAlias(ts, "getcell");
 
-    ts = cmd_CreateSyntax("setcellname", SetCellName, NULL, "set cell name");
+    ts = cmd_CreateSyntax("setcellname", SetCellName, NULL, 0, "set cell name");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "cell name");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("addhost", AddHost, NULL, "add host to cell dbase");
+    ts = cmd_CreateSyntax("addhost", AddHost, NULL, 0, "add host to cell dbase");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-host", CMD_LIST, 0, "host name");
     cmd_AddParm(ts, "-clone", CMD_FLAG, CMD_OPTIONAL, "vote doesn't count");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("removehost", RemoveHost, NULL,
+    ts = cmd_CreateSyntax("removehost", RemoveHost, NULL, 0,
 			  "remove host from cell dbase");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-host", CMD_LIST, 0, "host name");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("setauth", SetAuth, NULL,
+    ts = cmd_CreateSyntax("setauth", SetAuth, NULL, 0,
 			  "set authentication required flag");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-authrequired", CMD_SINGLE, 0,
 		"on or off: authentication required for admin requests");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("install", Install, NULL, "install program");
+    ts = cmd_CreateSyntax("install", Install, NULL, 0, "install program");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-file", CMD_LIST, 0, "files to install");
     cmd_AddParm(ts, "-dir", CMD_SINGLE, CMD_OPTIONAL, "destination dir");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("uninstall", UnInstall, NULL, "uninstall program");
+    ts = cmd_CreateSyntax("uninstall", UnInstall, NULL, 0, "uninstall program");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-file", CMD_LIST, 0, "files to uninstall");
     cmd_AddParm(ts, "-dir", CMD_SINGLE, CMD_OPTIONAL, "destination dir");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("getlog", GetLogCmd, NULL, "examine log file");
+    ts = cmd_CreateSyntax("getlog", GetLogCmd, NULL, 0, "examine log file");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-file", CMD_SINGLE, 0, "log file to examine");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("getdate", GetDate, NULL, "get dates for programs");
+    ts = cmd_CreateSyntax("getdate", GetDate, NULL, 0, "get dates for programs");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-file", CMD_LIST, 0, "files to check");
     cmd_AddParm(ts, "-dir", CMD_SINGLE, CMD_OPTIONAL, "destination dir");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("exec", Exec, NULL, "execute shell command on server");
+    ts = cmd_CreateSyntax("exec", Exec, NULL, 0, "execute shell command on server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-cmd", CMD_SINGLE, 0, "command to execute");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("prune", Prune, NULL, "prune server files");
+    ts = cmd_CreateSyntax("prune", Prune, NULL, 0, "prune server files");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-bak", CMD_FLAG, CMD_OPTIONAL, "delete .BAK files");
     cmd_AddParm(ts, "-old", CMD_FLAG, CMD_OPTIONAL, "delete .OLD files");
@@ -1880,7 +1880,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-all", CMD_FLAG, CMD_OPTIONAL, "delete all junk files");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("setrestart", SetRestartCmd, NULL,
+    ts = cmd_CreateSyntax("setrestart", SetRestartCmd, NULL, 0,
 			  "set restart times");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "machine name");
     cmd_AddParm(ts, "-time", CMD_SINGLE, CMD_REQUIRED,
@@ -1892,13 +1892,13 @@ main(int argc, char **argv)
     add_std_args(ts);
     cmd_CreateAlias(ts, "setr");
 
-    ts = cmd_CreateSyntax("getrestart", GetRestartCmd, NULL,
+    ts = cmd_CreateSyntax("getrestart", GetRestartCmd, NULL, 0,
 			  "get restart times");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "machine name");
     add_std_args(ts);
     cmd_CreateAlias(ts, "getr");
 
-    ts = cmd_CreateSyntax("salvage", SalvageCmd, NULL,
+    ts = cmd_CreateSyntax("salvage", SalvageCmd, NULL, 0,
 			  "salvage partition or volumes");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_OPTIONAL,
@@ -1920,12 +1920,12 @@ main(int argc, char **argv)
 		"(DAFS) force salvage of demand attach fileserver");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("getrestricted", GetRestrict, NULL,
+    ts = cmd_CreateSyntax("getrestricted", GetRestrict, NULL, 0,
 			  "get restrict mode");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("setrestricted", SetRestrict, NULL,
+    ts = cmd_CreateSyntax("setrestricted", SetRestrict, NULL, 0,
 			  "set restrict mode");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-mode", CMD_SINGLE, 0, "mode to set");

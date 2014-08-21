@@ -1175,7 +1175,7 @@ main(int argc, char **argv)
 
     setlinebuf(stdout);
 
-    ts = cmd_CreateSyntax(NULL, WorkerBee, NULL, "tape coordinator");
+    ts = cmd_CreateSyntax(NULL, WorkerBee, NULL, 0, "tape coordinator");
     cmd_AddParm(ts, "-port", CMD_SINGLE, CMD_OPTIONAL, "port offset");
     cmd_AddParm(ts, "-debuglevel", CMD_SINGLE, CMD_OPTIONAL, "0 | 1 | 2");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");

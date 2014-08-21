@@ -276,7 +276,7 @@ main(argc, argv)
      * There really aren't any opcodes here, but we do want to interpret switches
      * from the command line.  So, all we need do is set up the initcmd ``opcode''.
      */
-    ts = cmd_CreateSyntax("initcmd", screen_testInit, NULL,
+    ts = cmd_CreateSyntax("initcmd", screen_testInit, NULL, 0,
 			  "Initialize, interpret command line");
     cmd_AddParm(ts, "-package", CMD_SINGLE, CMD_REQUIRED,
 		"Graphics package to use");

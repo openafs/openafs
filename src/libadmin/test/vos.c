@@ -1817,13 +1817,13 @@ SetupVosAdminCmd(void)
 {
     struct cmd_syndesc *ts;
 
-    ts = cmd_CreateSyntax("VosBackupVolumeCreate", DoVosBackupVolumeCreate, NULL,
+    ts = cmd_CreateSyntax("VosBackupVolumeCreate", DoVosBackupVolumeCreate, NULL, 0,
 			  "create a backup volume");
     cmd_AddParm(ts, "-volume", CMD_SINGLE, CMD_REQUIRED, "volume to back up");
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("VosBackupVolumeCreateMultiple",
-			  DoVosBackupVolumeCreateMultiple, NULL,
+			  DoVosBackupVolumeCreateMultiple, NULL, 0,
 			  "create a backup volume");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_OPTIONAL,
 		"server housing volumes to back up");
@@ -1835,7 +1835,7 @@ SetupVosAdminCmd(void)
 		"exclude volumes from backup that match prefix");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("VosPartitionGet", DoVosPartitionGet, NULL,
+    ts = cmd_CreateSyntax("VosPartitionGet", DoVosPartitionGet, NULL, 0,
 			  "get information about a partition");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server housing partition of interest");
@@ -1843,13 +1843,13 @@ SetupVosAdminCmd(void)
 		"partition to query");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("VosPartitionList", DoVosPartitionList, NULL,
+    ts = cmd_CreateSyntax("VosPartitionList", DoVosPartitionList, NULL, 0,
 			  "list information about all partitions at a server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server housing partitions of interest");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("VosServerSync", DoVosServerSync, NULL,
+    ts = cmd_CreateSyntax("VosServerSync", DoVosServerSync, NULL, 0,
 			  "sync server with vldb");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to sync");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_OPTIONAL,
@@ -1857,7 +1857,7 @@ SetupVosAdminCmd(void)
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("VosFileServerAddressChange",
-			  DoVosFileServerAddressChange, NULL,
+			  DoVosFileServerAddressChange, NULL, 0,
 			  "change a server's address in the vldb");
     cmd_AddParm(ts, "-oldaddress", CMD_SINGLE, CMD_REQUIRED,
 		"old address to change");
@@ -1865,29 +1865,29 @@ SetupVosAdminCmd(void)
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("VosFileServerAddressRemove",
-			  DoVosFileServerAddressRemove, NULL,
+			  DoVosFileServerAddressRemove, NULL, 0,
 			  "remove a server's address from the vldb");
     cmd_AddParm(ts, "-address", CMD_SINGLE, CMD_REQUIRED,
 		"address to remove");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("VosFileServerList", DoVosFileServerList, NULL,
+    ts = cmd_CreateSyntax("VosFileServerList", DoVosFileServerList, NULL, 0,
 			  "list the file servers in a cell");
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("VosServerTransactionStatusList",
-			  DoVosServerTransactionStatusList, NULL,
+			  DoVosServerTransactionStatusList, NULL, 0,
 			  "list the active transactions at a server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to query");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("VosVLDBGet", DoVosVLDBGet, NULL,
+    ts = cmd_CreateSyntax("VosVLDBGet", DoVosVLDBGet, NULL, 0,
 			  "get a vldb entry for a volume");
     cmd_AddParm(ts, "-volume", CMD_SINGLE, CMD_REQUIRED,
 		"volume to retrieve");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("VosVLDBList", DoVosVLDBList, NULL,
+    ts = cmd_CreateSyntax("VosVLDBList", DoVosVLDBList, NULL, 0,
 			  "list a group of vldb entries");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_OPTIONAL,
 		"limit entries to a particular server");
@@ -1895,7 +1895,7 @@ SetupVosAdminCmd(void)
 		"limit entries to a particular partition");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("VosVLDBEntryRemove", DoVosVLDBEntryRemove, NULL,
+    ts = cmd_CreateSyntax("VosVLDBEntryRemove", DoVosVLDBEntryRemove, NULL, 0,
 			  "remove vldb entries");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_OPTIONAL,
 		"limit entries to a particular server");
@@ -1904,7 +1904,7 @@ SetupVosAdminCmd(void)
     cmd_AddParm(ts, "-volume", CMD_SINGLE, CMD_OPTIONAL, "volume to remove");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("VosVLDBUnlock", DoVosVLDBUnlock, NULL,
+    ts = cmd_CreateSyntax("VosVLDBUnlock", DoVosVLDBUnlock, NULL, 0,
 			  "unlock a group of vldb entries");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_OPTIONAL,
 		"limit entries to a particular server");
@@ -1912,18 +1912,18 @@ SetupVosAdminCmd(void)
 		"limit entries to a particular partition");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("VosVLDBEntryLock", DoVosVLDBList, NULL,
+    ts = cmd_CreateSyntax("VosVLDBEntryLock", DoVosVLDBList, NULL, 0,
 			  "lock a single vldb entry");
     cmd_AddParm(ts, "-volume", CMD_SINGLE, CMD_REQUIRED, "volume to lock");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("VosVLDBEntryUnlock", DoVosVLDBEntryUnlock, NULL,
+    ts = cmd_CreateSyntax("VosVLDBEntryUnlock", DoVosVLDBEntryUnlock, NULL, 0,
 			  "unlock a single vldb entry");
     cmd_AddParm(ts, "-volume", CMD_SINGLE, CMD_REQUIRED, "volume to unlock");
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("VosVLDBReadOnlySiteCreate",
-			  DoVosVLDBReadOnlySiteCreate, NULL,
+			  DoVosVLDBReadOnlySiteCreate, NULL, 0,
 			  "create a read only site");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where read only will be created");
@@ -1934,7 +1934,7 @@ SetupVosAdminCmd(void)
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("VosVLDBReadOnlySiteDelete",
-			  DoVosVLDBReadOnlySiteDelete, NULL,
+			  DoVosVLDBReadOnlySiteDelete, NULL, 0,
 			  "delete a read only site before initial replication");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_OPTIONAL,
 		"server where read only will be deleted");
@@ -1943,7 +1943,7 @@ SetupVosAdminCmd(void)
     cmd_AddParm(ts, "-volume", CMD_SINGLE, CMD_REQUIRED, "volume to delete");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("VosVLDBSync", DoVosVLDBSync, NULL,
+    ts = cmd_CreateSyntax("VosVLDBSync", DoVosVLDBSync, NULL, 0,
 			  "sync vldb with server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to sync");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_OPTIONAL,
@@ -1951,7 +1951,7 @@ SetupVosAdminCmd(void)
     cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL, "force sync to occur");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("VosVolumeCreate", DoVosVolumeCreate, NULL,
+    ts = cmd_CreateSyntax("VosVolumeCreate", DoVosVolumeCreate, NULL, 0,
 			  "create a read write volume");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where volume will be created");
@@ -1963,7 +1963,7 @@ SetupVosAdminCmd(void)
 		"size quota of new volume in 1kb units");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("VosVolumeDelete", DoVosVolumeDelete, NULL,
+    ts = cmd_CreateSyntax("VosVolumeDelete", DoVosVolumeDelete, NULL, 0,
 			  "delete a volume");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where volume exists");
@@ -1972,13 +1972,13 @@ SetupVosAdminCmd(void)
     cmd_AddParm(ts, "-volume", CMD_SINGLE, CMD_REQUIRED, "volume to delete");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("VosVolumeRename", DoVosVolumeRename, NULL,
+    ts = cmd_CreateSyntax("VosVolumeRename", DoVosVolumeRename, NULL, 0,
 			  "rename a volume");
     cmd_AddParm(ts, "-oldname", CMD_SINGLE, CMD_REQUIRED, "old volume name");
     cmd_AddParm(ts, "-newname", CMD_SINGLE, CMD_REQUIRED, "new volume name");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("VosVolumeDump", DoVosVolumeDump, NULL,
+    ts = cmd_CreateSyntax("VosVolumeDump", DoVosVolumeDump, NULL, 0,
 			  "dump a volume to a file");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_OPTIONAL,
 		"dump volume at a particular server");
@@ -1991,7 +1991,7 @@ SetupVosAdminCmd(void)
 		"file to contain dump results");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("VosVolumeRestore", DoVosVolumeRestore, NULL,
+    ts = cmd_CreateSyntax("VosVolumeRestore", DoVosVolumeRestore, NULL, 0,
 			  "restore a volume from a dumpfile");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server that houses volume to restore");
@@ -2006,7 +2006,7 @@ SetupVosAdminCmd(void)
 		"does a full restore of volume");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("VosVolumeOnline", DoVosVolumeOnline, NULL,
+    ts = cmd_CreateSyntax("VosVolumeOnline", DoVosVolumeOnline, NULL, 0,
 			  "bring a volume online");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server that houses volume");
@@ -2018,7 +2018,7 @@ SetupVosAdminCmd(void)
     cmd_AddParm(ts, "-busy", CMD_FLAG, CMD_OPTIONAL, "mark volume busy");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("VosVolumeOffline", DoVosVolumeOffline, NULL,
+    ts = cmd_CreateSyntax("VosVolumeOffline", DoVosVolumeOffline, NULL, 0,
 			  "take a volume offline");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server that houses volume");
@@ -2028,7 +2028,7 @@ SetupVosAdminCmd(void)
 		"volume to bring offline");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("VosVolumeGet", DoVosVolumeGet, NULL,
+    ts = cmd_CreateSyntax("VosVolumeGet", DoVosVolumeGet, NULL, 0,
 			  "get a volume entry");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server that houses volume");
@@ -2038,7 +2038,7 @@ SetupVosAdminCmd(void)
 		"volume to retrieve");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("VosVolumeList", DoVosVolumeList, NULL,
+    ts = cmd_CreateSyntax("VosVolumeList", DoVosVolumeList, NULL, 0,
 			  "list a group of volumes");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"limit volumes to a particular server");
@@ -2046,7 +2046,7 @@ SetupVosAdminCmd(void)
 		"limit volumes to a particular partition");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("VosVolumeMove", DoVosVolumeMove, NULL,
+    ts = cmd_CreateSyntax("VosVolumeMove", DoVosVolumeMove, NULL, 0,
 			  "move a volume");
     cmd_AddParm(ts, "-volume", CMD_SINGLE, CMD_REQUIRED, "volume to move");
     cmd_AddParm(ts, "-fromserver", CMD_SINGLE, CMD_REQUIRED, "source server");
@@ -2058,7 +2058,7 @@ SetupVosAdminCmd(void)
 		"destination partition");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("VosVolumeRelease", DoVosVolumeRelease, NULL,
+    ts = cmd_CreateSyntax("VosVolumeRelease", DoVosVolumeRelease, NULL, 0,
 			  "release updates to read only");
     cmd_AddParm(ts, "-volume", CMD_SINGLE, CMD_REQUIRED,
 		"volume to replicate");
@@ -2066,7 +2066,7 @@ SetupVosAdminCmd(void)
 		"force release to occur");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("VosVolumeZap", DoVosVolumeZap, NULL, "zap a volume");
+    ts = cmd_CreateSyntax("VosVolumeZap", DoVosVolumeZap, NULL, 0, "zap a volume");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server that houses the volume to zap");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_REQUIRED,
@@ -2075,18 +2075,18 @@ SetupVosAdminCmd(void)
     cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL, "force zap");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("VosPartitionNameToId", DoVosPartitionNameToId, NULL,
+    ts = cmd_CreateSyntax("VosPartitionNameToId", DoVosPartitionNameToId, NULL, 0,
 			  "convert a partition name to a number");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_REQUIRED,
 		"partition to convert");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("VosPartitionIdToName", DoVosPartitionIdToName, NULL,
+    ts = cmd_CreateSyntax("VosPartitionIdToName", DoVosPartitionIdToName, NULL, 0,
 			  "convert a number to a partition");
     cmd_AddParm(ts, "-id", CMD_SINGLE, CMD_REQUIRED, "number to convert");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("VosVolumeQuotaChange", DoVosVolumeQuotaChange, NULL,
+    ts = cmd_CreateSyntax("VosVolumeQuotaChange", DoVosVolumeQuotaChange, NULL, 0,
 			  "change the quota for a partition");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server that houses the volume");
@@ -2097,7 +2097,7 @@ SetupVosAdminCmd(void)
 		"new quota in 1kb units");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("VosVolumeGet2", DoVosVolumeGet2, NULL,
+    ts = cmd_CreateSyntax("VosVolumeGet2", DoVosVolumeGet2, NULL, 0,
 			  "get a volume entry");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server that houses volume");
@@ -2107,7 +2107,7 @@ SetupVosAdminCmd(void)
 		"volume to retrieve");
     SetupCommonCmdArgs(ts);
     
-    ts = cmd_CreateSyntax("ClearVolUpdateCounter", DoVos_ClearVolUpdateCounter, NULL,
+    ts = cmd_CreateSyntax("ClearVolUpdateCounter", DoVos_ClearVolUpdateCounter, NULL, 0,
 			  "clear volUpdateCounter");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server that houses volume");

@@ -297,7 +297,7 @@ main(int argc, char **argv)
     opr_Verify(pthread_key_create(&uclient_key, NULL) == 0);
 #endif
 
-    ts = cmd_CreateSyntax("lock", lockFile, (void *)LockWrite,
+    ts = cmd_CreateSyntax("lock", lockFile, (void *)LockWrite, 0,
 			  "lock a file in AFS");
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_REQUIRED, "AFS-filename");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
@@ -309,7 +309,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-waitseconds", CMD_SINGLE, CMD_OPTIONAL, "seconds to wait before giving up");
     cmd_AddParm(ts, "-readlock", CMD_FLAG, CMD_OPTIONAL, "read lock only");
 
-    ts = cmd_CreateSyntax("fidlock", lockFile, (void *)LockWrite,
+    ts = cmd_CreateSyntax("fidlock", lockFile, (void *)LockWrite, 0,
 			  "lock by FID a file from AFS");
     cmd_AddParm(ts, "-fid", CMD_SINGLE, CMD_REQUIRED,
 		"volume.vnode.uniquifier");
@@ -322,7 +322,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-waitseconds", CMD_SINGLE, CMD_OPTIONAL, "seconds to wait before giving up");
     cmd_AddParm(ts, "-readlock", CMD_FLAG, CMD_OPTIONAL, "read lock only");
 
-    ts = cmd_CreateSyntax("unlock", lockFile, (void *)LockRelease,
+    ts = cmd_CreateSyntax("unlock", lockFile, (void *)LockRelease, 0,
 			  "unlock a file in AFS");
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_REQUIRED, "AFS-filename");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
@@ -333,7 +333,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
     cmd_AddParm(ts, "-waitseconds", CMD_SINGLE, CMD_OPTIONAL, "seconds to wait before giving up");
 
-    ts = cmd_CreateSyntax("fidunlock", lockFile, (void *)LockRelease,
+    ts = cmd_CreateSyntax("fidunlock", lockFile, (void *)LockRelease, 0,
 			  "unlock by FID a file from AFS");
     cmd_AddParm(ts, "-fid", CMD_SINGLE, CMD_REQUIRED,
 		"volume.vnode.uniquifier");
@@ -345,7 +345,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
     cmd_AddParm(ts, "-waitseconds", CMD_SINGLE, CMD_OPTIONAL, "seconds to wait before giving up");
 
-    ts = cmd_CreateSyntax("read", readFile, NULL,
+    ts = cmd_CreateSyntax("read", readFile, NULL, 0,
 			  "read a file from AFS");
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_REQUIRED, "AFS-filename");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
@@ -355,7 +355,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-md5", CMD_FLAG, CMD_OPTIONAL, "calculate md5 checksum");
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
 
-    ts = cmd_CreateSyntax("fidread", readFile, CMD_REQUIRED,
+    ts = cmd_CreateSyntax("fidread", readFile, CMD_REQUIRED, 0,
 			  "read on a non AFS-client a file from AFS");
     cmd_AddParm(ts, "-fid", CMD_SINGLE, CMD_REQUIRED,
 		"volume.vnode.uniquifier");
@@ -365,7 +365,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-md5", CMD_FLAG, CMD_OPTIONAL, "calculate md5 checksum");
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
 
-    ts = cmd_CreateSyntax("write", writeFile, NULL,
+    ts = cmd_CreateSyntax("write", writeFile, NULL, 0,
 			  "write a file into AFS");
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_REQUIRED, "AFS-filename");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
@@ -379,7 +379,7 @@ main(int argc, char **argv)
 		"create data pattern of specified length instead reading from stdin");
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
 
-    ts = cmd_CreateSyntax("fidwrite", writeFile, CMD_REQUIRED,
+    ts = cmd_CreateSyntax("fidwrite", writeFile, CMD_REQUIRED, 0,
 			  "write a file into AFS");
     cmd_AddParm(ts, "-vnode", CMD_SINGLE, CMD_REQUIRED,
 		"volume.vnode.uniquifier");
@@ -392,7 +392,7 @@ main(int argc, char **argv)
 		"overwrite existing file");
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
 
-    ts = cmd_CreateSyntax("append", writeFile, NULL,
+    ts = cmd_CreateSyntax("append", writeFile, NULL, 0,
 			  "append to a file in AFS");
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_REQUIRED, "AFS-filename");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
@@ -401,7 +401,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
 
-    ts = cmd_CreateSyntax("fidappend", writeFile, NULL,
+    ts = cmd_CreateSyntax("fidappend", writeFile, NULL, 0,
 			  "append to a file in AFS");
     cmd_AddParm(ts, "-vnode", CMD_SINGLE, CMD_REQUIRED,
 		"volume.vnode.uniquifier");

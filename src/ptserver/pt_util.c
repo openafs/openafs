@@ -108,7 +108,7 @@ main(int argc, char **argv)
     struct cmd_syndesc *cs;	/*Command line syntax descriptor */
     afs_int32 code;	/*Return code */
 
-    cs = cmd_CreateSyntax(NULL, CommandProc, NULL,
+    cs = cmd_CreateSyntax(NULL, CommandProc, NULL, 0,
 			  "access protection database");
     cmd_AddParm(cs, "-w", CMD_FLAG, CMD_OPTIONAL,
 		"update prdb with contents of data file");

@@ -2472,7 +2472,7 @@ afsd_init(void)
 {
     struct cmd_syndesc *ts;
 
-    ts = cmd_CreateSyntax(NULL, mainproc, NULL, "start AFS");
+    ts = cmd_CreateSyntax(NULL, mainproc, NULL, 0, "start AFS");
 
     /* 0 - 10 */
     cmd_AddParmAtOffset(ts, OPT_blocks, "-blocks", CMD_SINGLE,

@@ -5176,32 +5176,32 @@ int wmain(int argc, wchar_t **wargv)
     osi_Init();
 
 #ifndef WIN32
-    ts = cmd_CreateSyntax("getclientaddrs", GetClientAddrsCmd, NULL,
+    ts = cmd_CreateSyntax("getclientaddrs", GetClientAddrsCmd, NULL, 0,
 			  "get client network interface addresses");
     cmd_CreateAlias(ts, "gc");
 
-    ts = cmd_CreateSyntax("setclientaddrs", SetClientAddrsCmd, NULL,
+    ts = cmd_CreateSyntax("setclientaddrs", SetClientAddrsCmd, NULL, 0,
 			  "set client network interface addresses");
     cmd_AddParm(ts, "-address", CMD_LIST, CMD_OPTIONAL | CMD_EXPANDS,
                 "client network interfaces");
     cmd_CreateAlias(ts, "sc");
 #endif /* WIN32 */
 
-    ts = cmd_CreateSyntax("setserverprefs", SetPrefCmd, NULL, "set server ranks");
+    ts = cmd_CreateSyntax("setserverprefs", SetPrefCmd, NULL, 0, "set server ranks");
     cmd_AddParm(ts, "-servers", CMD_LIST, CMD_OPTIONAL|CMD_EXPANDS, "fileserver names and ranks");
     cmd_AddParm(ts, "-vlservers", CMD_LIST, CMD_OPTIONAL|CMD_EXPANDS, "VL server names and ranks");
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_OPTIONAL, "input from named file");
     cmd_AddParm(ts, "-stdin", CMD_FLAG, CMD_OPTIONAL, "input from stdin");
     cmd_CreateAlias(ts, "sp");
 
-    ts = cmd_CreateSyntax("getserverprefs", GetPrefCmd, NULL, "get server ranks");
+    ts = cmd_CreateSyntax("getserverprefs", GetPrefCmd, NULL, 0, "get server ranks");
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_OPTIONAL, "output to named file");
     cmd_AddParm(ts, "-numeric", CMD_FLAG, CMD_OPTIONAL, "addresses only");
     cmd_AddParm(ts, "-vlservers", CMD_FLAG, CMD_OPTIONAL, "VL servers");
     /* cmd_AddParm(ts, "-cell", CMD_FLAG, CMD_OPTIONAL, "cellname"); */
     cmd_CreateAlias(ts, "gp");
 
-    ts = cmd_CreateSyntax("setacl", SetACLCmd, NULL, "set access control list");
+    ts = cmd_CreateSyntax("setacl", SetACLCmd, NULL, 0, "set access control list");
     cmd_AddParm(ts, "-dir", CMD_LIST, 0, "directory");
     cmd_AddParm(ts, "-acl", CMD_LIST, 0, "access list entries");
     cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, "clear access list");
@@ -5211,7 +5211,7 @@ int wmain(int argc, wchar_t **wargv)
     cmd_AddParm(ts, "-if", CMD_FLAG, CMD_OPTIONAL, "initial file acl (DFS only)");
     cmd_CreateAlias(ts, "sa");
 
-    ts = cmd_CreateSyntax("listacl", ListACLCmd, NULL, "list access control list");
+    ts = cmd_CreateSyntax("listacl", ListACLCmd, NULL, 0, "list access control list");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
     parm_listacl_id = ts->nParms;
     cmd_AddParm(ts, "-id", CMD_FLAG, CMD_OPTIONAL, "initial directory acl");
@@ -5219,16 +5219,16 @@ int wmain(int argc, wchar_t **wargv)
     cmd_AddParm(ts, "-cmd", CMD_FLAG, CMD_OPTIONAL, "output as 'fs setacl' command");
     cmd_CreateAlias(ts, "la");
 
-    ts = cmd_CreateSyntax("getcalleraccess", GetCallerAccess, NULL,
+    ts = cmd_CreateSyntax("getcalleraccess", GetCallerAccess, NULL, 0,
                           "list callers access");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
     cmd_AddParm(ts, "-literal", CMD_FLAG, CMD_OPTIONAL, "literal evaluation of mountpoints and symlinks");
     cmd_CreateAlias(ts, "gca");
 
-    ts = cmd_CreateSyntax("cleanacl", CleanACLCmd, NULL, "clean up access control list");
+    ts = cmd_CreateSyntax("cleanacl", CleanACLCmd, NULL, 0, "clean up access control list");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
 
-    ts = cmd_CreateSyntax("copyacl", CopyACLCmd, NULL, "copy access control list");
+    ts = cmd_CreateSyntax("copyacl", CopyACLCmd, NULL, 0, "copy access control list");
     cmd_AddParm(ts, "-fromdir", CMD_SINGLE, 0, "source directory (or DFS file)");
     cmd_AddParm(ts, "-todir", CMD_LIST, 0, "destination directory (or DFS file)");
     cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, "first clear dest access list");
@@ -5238,17 +5238,17 @@ int wmain(int argc, wchar_t **wargv)
 
     cmd_CreateAlias(ts, "ca");
 
-    ts = cmd_CreateSyntax("flush", FlushCmd, NULL, "flush file from cache");
+    ts = cmd_CreateSyntax("flush", FlushCmd, NULL, 0, "flush file from cache");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
     cmd_AddParm(ts, "-literal", CMD_FLAG, CMD_OPTIONAL, "literal evaluation of mountpoints and symlinks");
 
 #ifndef WIN32
-    ts = cmd_CreateSyntax("flushmount", FlushMountCmd, NULL,
+    ts = cmd_CreateSyntax("flushmount", FlushMountCmd, NULL, 0,
                            "flush mount symlink from cache");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
 #endif
 
-    ts = cmd_CreateSyntax("setvol", SetVolCmd, NULL, "set volume status");
+    ts = cmd_CreateSyntax("setvol", SetVolCmd, NULL, 0, "set volume status");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
     cmd_AddParm(ts, "-max", CMD_SINGLE, CMD_OPTIONAL, "disk space quota in 1K units");
 #ifdef notdef
@@ -5258,30 +5258,30 @@ int wmain(int argc, wchar_t **wargv)
     cmd_AddParm(ts, "-offlinemsg", CMD_SINGLE, CMD_OPTIONAL, "offline message");
     cmd_CreateAlias(ts, "sv");
 
-    ts = cmd_CreateSyntax("messages", MessagesCmd, NULL, "control Cache Manager messages");
+    ts = cmd_CreateSyntax("messages", MessagesCmd, NULL, 0, "control Cache Manager messages");
     cmd_AddParm(ts, "-show", CMD_SINGLE, CMD_OPTIONAL, "[user|console|all|none]");
 
-    ts = cmd_CreateSyntax("examine", ExamineCmd, NULL, "display file/volume status");
+    ts = cmd_CreateSyntax("examine", ExamineCmd, NULL, 0, "display file/volume status");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
     cmd_AddParm(ts, "-literal", CMD_FLAG, CMD_OPTIONAL, "literal evaluation of mountpoints and symlinks");
     cmd_CreateAlias(ts, "lv");
     cmd_CreateAlias(ts, "listvol");
 
-    ts = cmd_CreateSyntax("listquota", ListQuotaCmd, NULL, "list volume quota");
+    ts = cmd_CreateSyntax("listquota", ListQuotaCmd, NULL, 0, "list volume quota");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
     cmd_CreateAlias(ts, "lq");
 
-    ts = cmd_CreateSyntax("diskfree", DiskFreeCmd, NULL, "show server disk space usage");
+    ts = cmd_CreateSyntax("diskfree", DiskFreeCmd, NULL, 0, "show server disk space usage");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
     cmd_CreateAlias(ts, "df");
 
-    ts = cmd_CreateSyntax("quota", QuotaCmd, NULL, "show volume quota usage");
+    ts = cmd_CreateSyntax("quota", QuotaCmd, NULL, 0, "show volume quota usage");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
 
-    ts = cmd_CreateSyntax("lsmount", ListMountCmd, NULL, "list mount point");
+    ts = cmd_CreateSyntax("lsmount", ListMountCmd, NULL, 0, "list mount point");
     cmd_AddParm(ts, "-dir", CMD_LIST, 0, "directory");
 
-    ts = cmd_CreateSyntax("mkmount", MakeMountCmd, NULL, "make mount point");
+    ts = cmd_CreateSyntax("mkmount", MakeMountCmd, NULL, 0, "make mount point");
     cmd_AddParm(ts, "-dir", CMD_SINGLE, 0, "directory");
     cmd_AddParm(ts, "-vol", CMD_SINGLE, 0, "volume name");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
@@ -5296,31 +5296,31 @@ int wmain(int argc, wchar_t **wargv)
     */
 
 
-    ts = cmd_CreateSyntax("rmmount", RemoveMountCmd, NULL, "remove mount point");
+    ts = cmd_CreateSyntax("rmmount", RemoveMountCmd, NULL, 0, "remove mount point");
     cmd_AddParm(ts, "-dir", CMD_LIST, 0, "directory");
 
-    ts = cmd_CreateSyntax("checkservers", CheckServersCmd, NULL, "check local cell's servers");
+    ts = cmd_CreateSyntax("checkservers", CheckServersCmd, NULL, 0, "check local cell's servers");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell to check");
     cmd_AddParm(ts, "-all", CMD_FLAG, CMD_OPTIONAL, "check all cells");
     cmd_AddParm(ts, "-fast", CMD_FLAG, CMD_OPTIONAL, "just list, don't check");
     cmd_AddParm(ts,"-interval",CMD_SINGLE,CMD_OPTIONAL,"seconds between probes");
 
-    ts = cmd_CreateSyntax("checkvolumes", CheckVolumesCmd, NULL, "check volumeID/name mappings");
+    ts = cmd_CreateSyntax("checkvolumes", CheckVolumesCmd, NULL, 0, "check volumeID/name mappings");
     cmd_CreateAlias(ts, "checkbackups");
 
 
-    ts = cmd_CreateSyntax("setcachesize", SetCacheSizeCmd, NULL, "set cache size");
+    ts = cmd_CreateSyntax("setcachesize", SetCacheSizeCmd, NULL, 0, "set cache size");
     cmd_AddParm(ts, "-blocks", CMD_SINGLE, CMD_OPTIONAL, "size in 1K byte blocks (0 => reset)");
     cmd_CreateAlias(ts, "cachesize");
 
     cmd_AddParm(ts, "-reset", CMD_FLAG, CMD_OPTIONAL, "reset size back to boot value");
 
-    ts = cmd_CreateSyntax("getcacheparms", GetCacheParmsCmd, NULL, "get cache usage info");
+    ts = cmd_CreateSyntax("getcacheparms", GetCacheParmsCmd, NULL, 0, "get cache usage info");
 
-    ts = cmd_CreateSyntax("listcells", ListCellsCmd, NULL, "list configured cells");
+    ts = cmd_CreateSyntax("listcells", ListCellsCmd, NULL, 0, "list configured cells");
     cmd_AddParm(ts, "-numeric", CMD_FLAG, CMD_OPTIONAL, "addresses only");
 
-    ts = cmd_CreateSyntax("setquota", SetQuotaCmd, NULL, "set volume quota");
+    ts = cmd_CreateSyntax("setquota", SetQuotaCmd, NULL, 0, "set volume quota");
     cmd_AddParm(ts, "-path", CMD_SINGLE, CMD_OPTIONAL, "dir/file path");
     cmd_AddParm(ts, "-max", CMD_SINGLE, 0, "max quota in kbytes");
 #ifdef notdef
@@ -5328,7 +5328,7 @@ int wmain(int argc, wchar_t **wargv)
 #endif
     cmd_CreateAlias(ts, "sq");
 
-    ts = cmd_CreateSyntax("newcell", NewCellCmd, NULL, "configure new cell");
+    ts = cmd_CreateSyntax("newcell", NewCellCmd, NULL, 0, "configure new cell");
     cmd_AddParm(ts, "-name", CMD_SINGLE, CMD_OPTIONAL, "cell name");
     cmd_AddParm(ts, "-servers", CMD_LIST, CMD_OPTIONAL, "primary servers");
     cmd_AddParm(ts, "-linkedcell", CMD_SINGLE, CMD_OPTIONAL, "linked cell name");
@@ -5345,50 +5345,50 @@ int wmain(int argc, wchar_t **wargv)
     cmd_AddParm(ts, "-dns",    CMD_FLAG, CMD_OPTIONAL,   "force use of dns");
 
 #ifndef WIN32
-    ts = cmd_CreateSyntax("newalias", NewAliasCmd, NULL,
+    ts = cmd_CreateSyntax("newalias", NewAliasCmd, NULL, 0,
 			  "configure new cell alias");
     cmd_AddParm(ts, "-alias", CMD_SINGLE, 0, "alias name");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "real name of cell");
 #endif
 
-    ts = cmd_CreateSyntax("whichcell", WhichCellCmd, NULL, "list file's cell");
+    ts = cmd_CreateSyntax("whichcell", WhichCellCmd, NULL, 0, "list file's cell");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
     cmd_AddParm(ts, "-literal", CMD_FLAG, CMD_OPTIONAL, "literal evaluation of mountpoints and symlinks");
 
-    ts = cmd_CreateSyntax("whereis", WhereIsCmd, NULL, "list file's location");
+    ts = cmd_CreateSyntax("whereis", WhereIsCmd, NULL, 0, "list file's location");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
     cmd_AddParm(ts, "-literal", CMD_FLAG, CMD_OPTIONAL, "literal evaluation of mountpoints and symlinks");
 
-    ts = cmd_CreateSyntax("wscell", WSCellCmd, NULL, "list workstation's cell");
+    ts = cmd_CreateSyntax("wscell", WSCellCmd, NULL, 0, "list workstation's cell");
 
     /*
-     ts = cmd_CreateSyntax("primarycell", PrimaryCellCmd, 0, "obsolete (listed primary cell)");
+     ts = cmd_CreateSyntax("primarycell", PrimaryCellCmd, 0, 0, "obsolete (listed primary cell)");
      */
 
 #ifndef AFS_NT40_ENV
-    ts = cmd_CreateSyntax("monitor", MonitorCmd, NULL, "set cache monitor host address");
+    ts = cmd_CreateSyntax("monitor", MonitorCmd, NULL, 0, "set cache monitor host address");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_OPTIONAL, "host name or 'off'");
     cmd_CreateAlias(ts, "mariner");
 #endif
 
-    ts = cmd_CreateSyntax("getcellstatus", GetCellCmd, NULL, "get cell status");
+    ts = cmd_CreateSyntax("getcellstatus", GetCellCmd, NULL, 0, "get cell status");
     cmd_AddParm(ts, "-cell", CMD_LIST, 0, "cell name");
 
-    ts = cmd_CreateSyntax("setcell", SetCellCmd, NULL, "set cell status");
+    ts = cmd_CreateSyntax("setcell", SetCellCmd, NULL, 0, "set cell status");
     cmd_AddParm(ts, "-cell", CMD_LIST, 0, "cell name");
     cmd_AddParm(ts, "-suid", CMD_FLAG, CMD_OPTIONAL, "allow setuid programs");
     cmd_AddParm(ts, "-nosuid", CMD_FLAG, CMD_OPTIONAL, "disallow setuid programs");
 
-    ts = cmd_CreateSyntax("flushall", FlushAllCmd, NULL, "flush all data");
+    ts = cmd_CreateSyntax("flushall", FlushAllCmd, NULL, 0, "flush all data");
 
-    ts = cmd_CreateSyntax("flushvolume", FlushVolumeCmd, NULL, "flush all data in volume");
+    ts = cmd_CreateSyntax("flushvolume", FlushVolumeCmd, NULL, 0, "flush all data in volume");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
 
-    ts = cmd_CreateSyntax("sysname", SysNameCmd, NULL, "get/set sysname (i.e. @sys) value");
+    ts = cmd_CreateSyntax("sysname", SysNameCmd, NULL, 0, "get/set sysname (i.e. @sys) value");
     cmd_AddParm(ts, "-newsys", CMD_LIST, CMD_OPTIONAL, "new sysname");
 
 #ifndef AFS_NT40_ENV
-    ts = cmd_CreateSyntax("exportafs", ExportAfsCmd, NULL, "enable/disable translators to AFS");
+    ts = cmd_CreateSyntax("exportafs", ExportAfsCmd, NULL, 0, "enable/disable translators to AFS");
     cmd_AddParm(ts, "-type", CMD_SINGLE, 0, "exporter name");
     cmd_AddParm(ts, "-start", CMD_SINGLE, CMD_OPTIONAL, "start/stop translator ('on' or 'off')");
     cmd_AddParm(ts, "-convert", CMD_SINGLE, CMD_OPTIONAL, "convert from afs to unix mode ('on or 'off')");
@@ -5396,92 +5396,92 @@ int wmain(int argc, wchar_t **wargv)
     cmd_AddParm(ts, "-submounts", CMD_SINGLE, CMD_OPTIONAL, "allow nfs mounts to subdirs of /afs/.. ('on' or 'off')");
 #endif
 
-    ts = cmd_CreateSyntax("storebehind", StoreBehindCmd, NULL,
+    ts = cmd_CreateSyntax("storebehind", StoreBehindCmd, NULL, 0,
 			  "store to server after file close");
     cmd_AddParm(ts, "-kbytes", CMD_SINGLE, CMD_OPTIONAL, "asynchrony for specified names");
     cmd_AddParm(ts, "-files", CMD_LIST, CMD_OPTIONAL, "specific pathnames");
     cmd_AddParm(ts, "-allfiles", CMD_SINGLE, CMD_OPTIONAL, "new default (KB)");
     cmd_CreateAlias(ts, "sb");
 
-    ts = cmd_CreateSyntax("setcrypt", SetCryptCmd, NULL, "set cache manager encryption flag");
+    ts = cmd_CreateSyntax("setcrypt", SetCryptCmd, NULL, 0, "set cache manager encryption flag");
     cmd_AddParm(ts, "-crypt", CMD_SINGLE, 0, "on, auth or off");
 
-    ts = cmd_CreateSyntax("getcrypt", GetCryptCmd, NULL, "get cache manager encryption flag");
+    ts = cmd_CreateSyntax("getcrypt", GetCryptCmd, NULL, 0, "get cache manager encryption flag");
 
-    ts = cmd_CreateSyntax("rxstatproc", RxStatProcCmd, NULL,
+    ts = cmd_CreateSyntax("rxstatproc", RxStatProcCmd, NULL, 0,
 			  "Manage per process RX statistics");
     cmd_AddParm(ts, "-enable", CMD_FLAG, CMD_OPTIONAL, "Enable RX stats");
     cmd_AddParm(ts, "-disable", CMD_FLAG, CMD_OPTIONAL, "Disable RX stats");
     cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, "Clear RX stats");
 
-    ts = cmd_CreateSyntax("rxstatpeer", RxStatPeerCmd, NULL,
+    ts = cmd_CreateSyntax("rxstatpeer", RxStatPeerCmd, NULL, 0,
 			  "Manage per peer RX statistics");
     cmd_AddParm(ts, "-enable", CMD_FLAG, CMD_OPTIONAL, "Enable RX stats");
     cmd_AddParm(ts, "-disable", CMD_FLAG, CMD_OPTIONAL, "Disable RX stats");
     cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, "Clear RX stats");
 
 #ifndef WIN32
-    ts = cmd_CreateSyntax("setcbaddr", CallBackRxConnCmd, NULL, "configure callback connection address");
+    ts = cmd_CreateSyntax("setcbaddr", CallBackRxConnCmd, NULL, 0, "configure callback connection address");
     cmd_AddParm(ts, "-addr", CMD_SINGLE, CMD_OPTIONAL, "host name or address");
 #endif
 
-    ts = cmd_CreateSyntax("trace", TraceCmd, NULL, "enable or disable CM tracing");
+    ts = cmd_CreateSyntax("trace", TraceCmd, NULL, 0, "enable or disable CM tracing");
     cmd_AddParm(ts, "-on", CMD_FLAG, CMD_OPTIONAL, "enable tracing");
     cmd_AddParm(ts, "-off", CMD_FLAG, CMD_OPTIONAL, "disable tracing");
     cmd_AddParm(ts, "-reset", CMD_FLAG, CMD_OPTIONAL, "reset log contents");
     cmd_AddParm(ts, "-dump", CMD_FLAG, CMD_OPTIONAL, "dump log contents");
     cmd_CreateAlias(ts, "tr");
 
-    ts = cmd_CreateSyntax("uuid", UuidCmd, NULL, "manage the UUID for the cache manager");
+    ts = cmd_CreateSyntax("uuid", UuidCmd, NULL, 0, "manage the UUID for the cache manager");
     cmd_AddParm(ts, "-generate", CMD_FLAG, CMD_OPTIONAL, "generate a new UUID");
 
-    ts = cmd_CreateSyntax("memdump", MemDumpCmd, NULL, "dump memory allocs in debug builds");
+    ts = cmd_CreateSyntax("memdump", MemDumpCmd, NULL, 0, "dump memory allocs in debug builds");
     cmd_AddParm(ts, "-begin", CMD_FLAG, CMD_OPTIONAL, "set a memory checkpoint");
     cmd_AddParm(ts, "-end", CMD_FLAG, CMD_OPTIONAL, "dump memory allocs");
 
-    ts = cmd_CreateSyntax("cscpolicy", CSCPolicyCmd, NULL, "change client side caching policy for AFS shares");
+    ts = cmd_CreateSyntax("cscpolicy", CSCPolicyCmd, NULL, 0, "change client side caching policy for AFS shares");
     cmd_AddParm(ts, "-share", CMD_SINGLE, CMD_OPTIONAL, "AFS share");
     cmd_AddParm(ts, "-manual", CMD_FLAG, CMD_OPTIONAL, "manual caching of documents");
     cmd_AddParm(ts, "-programs", CMD_FLAG, CMD_OPTIONAL, "automatic caching of programs and documents");
     cmd_AddParm(ts, "-documents", CMD_FLAG, CMD_OPTIONAL, "automatic caching of documents");
     cmd_AddParm(ts, "-disable", CMD_FLAG, CMD_OPTIONAL, "disable caching");
 
-    ts = cmd_CreateSyntax("minidump", MiniDumpCmd, NULL, "Generate MiniDump of current service state");
+    ts = cmd_CreateSyntax("minidump", MiniDumpCmd, NULL, 0, "Generate MiniDump of current service state");
 
-    ts = cmd_CreateSyntax("test_volstat", TestVolStatCmd, NULL, (char *)CMD_HIDDEN);
+    ts = cmd_CreateSyntax("test_volstat", TestVolStatCmd, NULL, 0, (char *)CMD_HIDDEN);
     cmd_AddParm(ts, "-network", CMD_SINGLE, CMD_OPTIONAL, "set network state up or down");
     cmd_AddParm(ts, "-check",   CMD_FLAG,   CMD_OPTIONAL, "check state of offline volumes");
     cmd_AddParm(ts, "-cell",    CMD_SINGLE, CMD_OPTIONAL, "cell name or number");
     cmd_AddParm(ts, "-volume",  CMD_SINGLE, CMD_OPTIONAL, "volume name or number");
     cmd_AddParm(ts, "-state",   CMD_SINGLE, CMD_OPTIONAL, "new volume state: online, busy, offline, down");
 
-    ts = cmd_CreateSyntax("smbunicode", SmbUnicodeCmd, NULL, "enable or disable Unicode on new SMB connections");
+    ts = cmd_CreateSyntax("smbunicode", SmbUnicodeCmd, NULL, 0, "enable or disable Unicode on new SMB connections");
     cmd_AddParm(ts, "-on", CMD_FLAG, CMD_OPTIONAL, "enable Unicode on new connections");
     cmd_AddParm(ts, "-off", CMD_FLAG, CMD_OPTIONAL, "disable Unicode on new connections");
 
-    ts = cmd_CreateSyntax("getfid", GetFidCmd, NULL, "get file id for object(s) in afs");
+    ts = cmd_CreateSyntax("getfid", GetFidCmd, NULL, 0, "get file id for object(s) in afs");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
     cmd_AddParm(ts, "-literal", CMD_FLAG, CMD_OPTIONAL, "literal evaluation of mountpoints and symlinks");
 
-    ts = cmd_CreateSyntax("chown", ChOwnCmd, NULL, "set owner for object(s) in afs");
+    ts = cmd_CreateSyntax("chown", ChOwnCmd, NULL, 0, "set owner for object(s) in afs");
     cmd_AddParm(ts, "-owner", CMD_SINGLE, 0, "user name or id");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
     cmd_AddParm(ts, "-literal", CMD_FLAG, CMD_OPTIONAL, "literal evaluation of mountpoints and symlinks");
 
-    ts = cmd_CreateSyntax("chgrp", ChGrpCmd, NULL, "set owner for object(s) in afs");
+    ts = cmd_CreateSyntax("chgrp", ChGrpCmd, NULL, 0, "set owner for object(s) in afs");
     cmd_AddParm(ts, "-group", CMD_SINGLE, 0, "user/group name or id");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
     cmd_AddParm(ts, "-literal", CMD_FLAG, CMD_OPTIONAL, "literal evaluation of mountpoints and symlinks");
 
-    ts = cmd_CreateSyntax("chmod", ChModCmd, NULL, "set UNIX mode for object(s) in afs");
+    ts = cmd_CreateSyntax("chmod", ChModCmd, NULL, 0, "set UNIX mode for object(s) in afs");
     cmd_AddParm(ts, "-mode", CMD_SINGLE, 0, "UNIX mode bits");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
     cmd_AddParm(ts, "-literal", CMD_FLAG, CMD_OPTIONAL, "literal evaluation of mountpoints and symlinks");
 
-    ts = cmd_CreateSyntax("setverify", SetDataVerifyCmd, NULL, "set cache manager data verify mode");
+    ts = cmd_CreateSyntax("setverify", SetDataVerifyCmd, NULL, 0, "set cache manager data verify mode");
     cmd_AddParm(ts, "-verify", CMD_SINGLE, 0, "on or off");
 
-    ts = cmd_CreateSyntax("getverify", GetDataVerifyCmd, NULL, "get cache manager data verify mode");
+    ts = cmd_CreateSyntax("getverify", GetDataVerifyCmd, NULL, 0, "get cache manager data verify mode");
 
     code = cmd_Dispatch(argc, argv);
 

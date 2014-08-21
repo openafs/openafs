@@ -543,7 +543,7 @@ main(int argc, char **argv)
 
     setlinebuf(stdout);
 
-    ts = cmd_CreateSyntax(NULL, WorkerBee, NULL,
+    ts = cmd_CreateSyntax(NULL, WorkerBee, NULL, 0,
 			  "Restore volumes from backup tape");
     cmd_AddParm(ts, "-tape", CMD_SINGLE, CMD_REQUIRED, "tape device");
     cmd_AddParm(ts, "-restore", CMD_SINGLE, CMD_OPTIONAL,

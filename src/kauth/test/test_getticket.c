@@ -506,7 +506,7 @@ main(argc, argv)
     initialize_ACFG_error_table();
     initialize_KA_error_table();
 
-    ts = cmd_CreateSyntax(NULL, Main, NULL, "Main program");
+    ts = cmd_CreateSyntax(NULL, Main, NULL, 0, "Main program");
     /* 0 */ cmd_AddParm(ts, "-patient", CMD_FLAG, CMD_OPTIONAL,
 			"wait for TGS ticket to age");
     cmd_Seek(ts, 12);

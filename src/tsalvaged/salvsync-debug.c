@@ -135,25 +135,25 @@ main(int argc, char **argv)
     }
 
 
-    ts = cmd_CreateSyntax("stats", OpStats, NULL, "get salvageserver statistics (SALVSYNC_NOP opcode)");
+    ts = cmd_CreateSyntax("stats", OpStats, NULL, 0, "get salvageserver statistics (SALVSYNC_NOP opcode)");
     COMMON_PARMS_DECL(ts);
     cmd_CreateAlias(ts, "nop");
 
-    ts = cmd_CreateSyntax("salvage", OpSalvage, NULL, "schedule a salvage (SALVSYNC_SALVAGE opcode)");
+    ts = cmd_CreateSyntax("salvage", OpSalvage, NULL, 0, "schedule a salvage (SALVSYNC_SALVAGE opcode)");
     SALV_PARMS_DECL(ts);
 
-    ts = cmd_CreateSyntax("cancel", OpCancel, NULL, "cancel a salvage (SALVSYNC_CANCEL opcode)");
+    ts = cmd_CreateSyntax("cancel", OpCancel, NULL, 0, "cancel a salvage (SALVSYNC_CANCEL opcode)");
     SALV_PARMS_DECL(ts);
 
-    ts = cmd_CreateSyntax("raiseprio", OpRaisePrio, NULL, "raise a salvage priority (SALVSYNC_RAISEPRIO opcode)");
+    ts = cmd_CreateSyntax("raiseprio", OpRaisePrio, NULL, 0, "raise a salvage priority (SALVSYNC_RAISEPRIO opcode)");
     SALV_PARMS_DECL(ts);
     cmd_CreateAlias(ts, "rp");
 
-    ts = cmd_CreateSyntax("query", OpQuery, NULL, "query salvage status (SALVSYNC_QUERY opcode)");
+    ts = cmd_CreateSyntax("query", OpQuery, NULL, 0, "query salvage status (SALVSYNC_QUERY opcode)");
     SALV_PARMS_DECL(ts);
     cmd_CreateAlias(ts, "qry");
 
-    ts = cmd_CreateSyntax("kill", OpCancelAll, NULL, "cancel all scheduled salvages (SALVSYNC_CANCELALL opcode)");
+    ts = cmd_CreateSyntax("kill", OpCancelAll, NULL, 0, "cancel all scheduled salvages (SALVSYNC_CANCELALL opcode)");
     COMMON_PARMS_DECL(ts);
 
     err = cmd_Dispatch(argc, argv);

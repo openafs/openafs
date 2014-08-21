@@ -157,52 +157,52 @@ main(int argc, char **argv)
     fssd_argc = argc;
 #endif
 
-    ts = cmd_CreateSyntax("online", VolOnline, NULL, "bring a volume online (FSYNC_VOL_ON opcode)");
+    ts = cmd_CreateSyntax("online", VolOnline, NULL, 0, "bring a volume online (FSYNC_VOL_ON opcode)");
     VOLOP_PARMS_DECL(ts);
 
-    ts = cmd_CreateSyntax("offline", VolOffline, NULL, "take a volume offline (FSYNC_VOL_OFF opcode)");
+    ts = cmd_CreateSyntax("offline", VolOffline, NULL, 0, "take a volume offline (FSYNC_VOL_OFF opcode)");
     VOLOP_PARMS_DECL(ts);
 
-    ts = cmd_CreateSyntax("mode", VolMode, NULL, "change volume attach mode (FSYNC_VOL_NEEDVOLUME opcode)");
+    ts = cmd_CreateSyntax("mode", VolMode, NULL, 0, "change volume attach mode (FSYNC_VOL_NEEDVOLUME opcode)");
     VOLOP_PARMS_DECL(ts);
     cmd_CreateAlias(ts, "needvolume");
 
-    ts = cmd_CreateSyntax("detach", VolDetach, NULL, "detach a volume (FSYNC_VOL_DONE opcode)");
+    ts = cmd_CreateSyntax("detach", VolDetach, NULL, 0, "detach a volume (FSYNC_VOL_DONE opcode)");
     VOLOP_PARMS_DECL(ts);
 
-    ts = cmd_CreateSyntax("callback", VolBreakCBKs, NULL, "break callbacks for volume (FSYNC_VOL_BREAKCBKS opcode)");
+    ts = cmd_CreateSyntax("callback", VolBreakCBKs, NULL, 0, "break callbacks for volume (FSYNC_VOL_BREAKCBKS opcode)");
     VOLOP_PARMS_DECL(ts);
     cmd_CreateAlias(ts, "cbk");
 
-    ts = cmd_CreateSyntax("move", VolMove, NULL, "set volume moved flag (FSYNC_VOL_MOVE opcode)");
+    ts = cmd_CreateSyntax("move", VolMove, NULL, 0, "set volume moved flag (FSYNC_VOL_MOVE opcode)");
     VOLOP_PARMS_DECL(ts);
 
-    ts = cmd_CreateSyntax("list", VolList, NULL, "sync local volume list (FSYNC_VOL_LISTVOLUMES opcode)");
+    ts = cmd_CreateSyntax("list", VolList, NULL, 0, "sync local volume list (FSYNC_VOL_LISTVOLUMES opcode)");
     VOLOP_PARMS_DECL(ts);
     cmd_CreateAlias(ts, "ls");
 
-    ts = cmd_CreateSyntax("leaveoff", VolLeaveOff, 0, "leave volume offline (FSYNC_VOL_LEAVE_OFF opcode)");
+    ts = cmd_CreateSyntax("leaveoff", VolLeaveOff, 0, 0, "leave volume offline (FSYNC_VOL_LEAVE_OFF opcode)");
     VOLOP_PARMS_DECL(ts);
 
-    ts = cmd_CreateSyntax("attach", VolForceAttach, 0, "force full attachment (FSYNC_VOL_ATTACH opcode)");
+    ts = cmd_CreateSyntax("attach", VolForceAttach, 0, 0, "force full attachment (FSYNC_VOL_ATTACH opcode)");
     VOLOP_PARMS_DECL(ts);
 
-    ts = cmd_CreateSyntax("error", VolForceError, 0, "force into hard error state (FSYNC_VOL_FORCE_ERROR opcode)");
+    ts = cmd_CreateSyntax("error", VolForceError, 0, 0, "force into hard error state (FSYNC_VOL_FORCE_ERROR opcode)");
     VOLOP_PARMS_DECL(ts);
 
-    ts = cmd_CreateSyntax("query", VolQuery, NULL, "get volume structure (FSYNC_VOL_QUERY opcode)");
+    ts = cmd_CreateSyntax("query", VolQuery, NULL, 0, "get volume structure (FSYNC_VOL_QUERY opcode)");
     VOLOP_PARMS_DECL(ts);
     cmd_CreateAlias(ts, "qry");
 
-    ts = cmd_CreateSyntax("header", VolHdrQuery, NULL, "get volume disk data structure (FSYNC_VOL_QUERY_HDR opcode)");
+    ts = cmd_CreateSyntax("header", VolHdrQuery, NULL, 0, "get volume disk data structure (FSYNC_VOL_QUERY_HDR opcode)");
     VOLOP_PARMS_DECL(ts);
     cmd_CreateAlias(ts, "hdr");
 
-    ts = cmd_CreateSyntax("volop", VolOpQuery, NULL, "get pending volume operation info (FSYNC_VOL_QUERY_VOP opcode)");
+    ts = cmd_CreateSyntax("volop", VolOpQuery, NULL, 0, "get pending volume operation info (FSYNC_VOL_QUERY_VOP opcode)");
     VOLOP_PARMS_DECL(ts);
     cmd_CreateAlias(ts, "vop");
 
-    ts = cmd_CreateSyntax("vnode", VnQuery, NULL, "get vnode structure (FSYNC_VOL_QUERY_VNODE opcode)");
+    ts = cmd_CreateSyntax("vnode", VnQuery, NULL, 0, "get vnode structure (FSYNC_VOL_QUERY_VNODE opcode)");
     cmd_Seek(ts, CUSTOM_PARMS_OFFSET);
     cmd_AddParm(ts, "-volumeid", CMD_SINGLE, 0, "volume id");
     cmd_AddParm(ts, "-vnodeid", CMD_SINGLE, 0, "vnode id");
@@ -210,42 +210,42 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-partition", CMD_SINGLE, 0, "partition name");
     COMMON_PARMS_DECL(ts);
 
-    ts = cmd_CreateSyntax("stats", StatsQuery, NULL, "see 'stats help' for more information");
+    ts = cmd_CreateSyntax("stats", StatsQuery, NULL, 0, "see 'stats help' for more information");
     cmd_Seek(ts, CUSTOM_PARMS_OFFSET);
     cmd_AddParm(ts, "-cmd", CMD_SINGLE, 0, "subcommand");
     cmd_AddParm(ts, "-arg1", CMD_SINGLE, CMD_OPTIONAL, "arg1");
     cmd_AddParm(ts, "-arg2", CMD_SINGLE, CMD_OPTIONAL, "arg2");
     COMMON_PARMS_DECL(ts);
 
-    ts = cmd_CreateSyntax("vgcquery", VGCQuery, 0, "query volume group cache (FSYNC_VG_QUERY opcode)");
+    ts = cmd_CreateSyntax("vgcquery", VGCQuery, 0, 0, "query volume group cache (FSYNC_VG_QUERY opcode)");
     cmd_Seek(ts, CUSTOM_PARMS_OFFSET);
     cmd_AddParm(ts, "-partition", CMD_SINGLE, 0, "partition name");
     cmd_AddParm(ts, "-volumeid", CMD_SINGLE, 0, "volume id");
     COMMON_PARMS_DECL(ts);
     cmd_CreateAlias(ts, "vgcqry");
 
-    ts = cmd_CreateSyntax("vgcadd", VGCAdd, 0, "add entry to volume group cache (FSYNC_VG_ADD opcode)");
+    ts = cmd_CreateSyntax("vgcadd", VGCAdd, 0, 0, "add entry to volume group cache (FSYNC_VG_ADD opcode)");
     cmd_Seek(ts, CUSTOM_PARMS_OFFSET);
     cmd_AddParm(ts, "-partition", CMD_SINGLE, 0, "partition name");
     cmd_AddParm(ts, "-parent", CMD_SINGLE, 0, "parent volume id");
     cmd_AddParm(ts, "-child", CMD_SINGLE, 0, "child volume id");
     COMMON_PARMS_DECL(ts);
 
-    ts = cmd_CreateSyntax("vgcdel", VGCDel, 0, "delete entry from volume group cache (FSYNC_VG_DEL opcode)");
+    ts = cmd_CreateSyntax("vgcdel", VGCDel, 0, 0, "delete entry from volume group cache (FSYNC_VG_DEL opcode)");
     cmd_Seek(ts, CUSTOM_PARMS_OFFSET);
     cmd_AddParm(ts, "-partition", CMD_SINGLE, 0, "partition name");
     cmd_AddParm(ts, "-parent", CMD_SINGLE, 0, "parent volume id");
     cmd_AddParm(ts, "-child", CMD_SINGLE, 0, "child volume id");
     COMMON_PARMS_DECL(ts);
 
-    ts = cmd_CreateSyntax("vgcscan", VGCScan, 0,
+    ts = cmd_CreateSyntax("vgcscan", VGCScan, 0, 0,
 			  "start volume group cache re-scan"
 			  " (FSYNC_VG_SCAN opcode)");
     cmd_Seek(ts, CUSTOM_PARMS_OFFSET);
     cmd_AddParm(ts, "-partition", CMD_SINGLE, 0, "partition name");
     COMMON_PARMS_DECL(ts);
 
-    ts = cmd_CreateSyntax("vgcscanall", VGCScanAll, 0,
+    ts = cmd_CreateSyntax("vgcscanall", VGCScanAll, 0, 0,
 			  "start whole-server volume group cache re-scan"
 			  " (FSYNC_VG_SCAN_ALL opcode)");
     COMMON_PARMS_DECL(ts);

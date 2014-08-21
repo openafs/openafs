@@ -1085,7 +1085,7 @@ main(int argc, char *argv[])
     cmd_SetBeforeProc(MyBeforeProc, NULL);
     cmd_SetAfterProc(MyAfterProc, NULL);
 
-    ts = cmd_CreateSyntax("usedIds", ListUsedIds, NULL,
+    ts = cmd_CreateSyntax("usedIds", ListUsedIds, NULL, 0,
 			  "Find used (or unused) user (or group) ids");
     cmd_AddParm(ts, "-startId", CMD_SINGLE, CMD_OPTIONAL,
 		"id to start checking");
@@ -1094,10 +1094,10 @@ main(int argc, char *argv[])
     cmd_AddParm(ts, "-unused", CMD_FLAG, CMD_OPTIONAL, "print unused ids");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("initcmd", TestPrServ, NULL, "test the prserver");
+    ts = cmd_CreateSyntax("initcmd", TestPrServ, NULL, 0, "test the prserver");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("testmanymembers", TestManyMembers, NULL,
+    ts = cmd_CreateSyntax("testmanymembers", TestManyMembers, NULL, 0,
 			  "test creating users and groups w/ many members");
     cmd_AddParm(ts, "-number", CMD_SINGLE, 0,
 		"number of users/groups to create");

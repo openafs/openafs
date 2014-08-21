@@ -433,10 +433,24 @@ SortSyntax(struct cmd_syndesc *as)
     return 0;
 }
 
+/*!
+ * Create a command syntax.
+ *
+ * \note Use cmd_AddParm() or cmd_AddParmAtOffset() to set the
+ *       parameters for the new command.
+ *
+ * \param[in] aname  name used to invoke the command
+ * \param[in] aproc  procedure to be called when command is invoked
+ * \param[in] arock  opaque data pointer to be passed to aproc
+ * \param[in] aflags command option flags (CMD_HIDDEN)
+ * \param[in] ahelp  help string to display for this command
+ *
+ * \return a pointer to the cmd_syndesc or NULL if error.
+ */
 struct cmd_syndesc *
 cmd_CreateSyntax(char *aname,
 		 int (*aproc) (struct cmd_syndesc * ts, void *arock),
-		 void *arock, char *ahelp)
+		 void *arock, afs_uint32 aflags, char *ahelp)
 {
     struct cmd_syndesc *td;
 
@@ -444,9 +458,15 @@ cmd_CreateSyntax(char *aname,
     if (noOpcodes)
 	return NULL;
 
+    /* Allow only valid cmd flags. */
+    if (aflags & ~CMD_HIDDEN) {
+	return NULL;
+    }
+
     td = calloc(1, sizeof(struct cmd_syndesc));
     assert(td);
     td->aliasOf = td;		/* treat aliasOf as pointer to real command, no matter what */
+    td->flags = aflags;
 
     /* copy in name, etc */
     if (aname) {
@@ -457,7 +477,7 @@ cmd_CreateSyntax(char *aname,
 	noOpcodes = 1;
     }
     if (ahelp) {
-	/* Piggy-back the hidden option onto the help string */
+	/* Piggy-back the hidden option onto the help string. */
 	if (ahelp == (char *)CMD_HIDDEN) {
 	    td->flags |= CMD_HIDDEN;
 	} else {
@@ -751,23 +771,23 @@ initSyntax(void)
     struct cmd_syndesc *ts;
 
     if (!noOpcodes) {
-	ts = cmd_CreateSyntax("help", HelpProc, NULL,
+	ts = cmd_CreateSyntax("help", HelpProc, NULL, 0,
 			      "get help on commands");
 	cmd_AddParm(ts, "-topic", CMD_LIST, CMD_OPTIONAL, "help string");
 
-	ts = cmd_CreateSyntax("apropos", AproposProc, NULL,
+	ts = cmd_CreateSyntax("apropos", AproposProc, NULL, 0,
 			      "search by help text");
 	cmd_AddParm(ts, "-topic", CMD_SINGLE, CMD_REQUIRED, "help string");
 
-	cmd_CreateSyntax("version", VersionProc, NULL,
+	cmd_CreateSyntax("version", VersionProc, NULL, 0,
 			 "show version");
-	cmd_CreateSyntax("-version", VersionProc, NULL,
+	cmd_CreateSyntax("-version", VersionProc, NULL, 0,
 			 (char *)CMD_HIDDEN);
-	cmd_CreateSyntax("-help", HelpProc, NULL,
+	cmd_CreateSyntax("-help", HelpProc, NULL, 0,
 			 (char *)CMD_HIDDEN);
-	cmd_CreateSyntax("--version", VersionProc, NULL,
+	cmd_CreateSyntax("--version", VersionProc, NULL, 0,
 		         (char *)CMD_HIDDEN);
-	cmd_CreateSyntax("--help", HelpProc, NULL,
+	cmd_CreateSyntax("--help", HelpProc, NULL, 0,
 			 (char *)CMD_HIDDEN);
     }
 }

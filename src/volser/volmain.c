@@ -250,7 +250,7 @@ ParseArgs(int argc, char **argv) {
     char *sync_behavior = NULL;
     char *restricted_query_parameter = NULL;
 
-    opts = cmd_CreateSyntax(NULL, NULL, NULL, NULL);
+    opts = cmd_CreateSyntax(NULL, NULL, NULL, 0, NULL);
     cmd_AddParmAtOffset(opts, OPT_log, "-log", CMD_FLAG, CMD_OPTIONAL,
 	   "log vos users");
     cmd_AddParmAtOffset(opts, OPT_rxbind, "-rxbind", CMD_FLAG, CMD_OPTIONAL,

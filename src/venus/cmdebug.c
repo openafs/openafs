@@ -607,7 +607,7 @@ main(int argc, char **argv)
 
     rx_Init(0);
 
-    ts = cmd_CreateSyntax(NULL, CommandProc, NULL, "query afs cache manager");
+    ts = cmd_CreateSyntax(NULL, CommandProc, NULL, 0, "query afs cache manager");
     cmd_AddParm(ts, "-servers", CMD_SINGLE, CMD_REQUIRED, "server machine");
     cmd_AddParm(ts, "-port", CMD_SINGLE, CMD_OPTIONAL, "IP port");
     cmd_AddParm(ts, "-long", CMD_FLAG, CMD_OPTIONAL, "print all info");

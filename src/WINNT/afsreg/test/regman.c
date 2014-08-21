@@ -286,15 +286,15 @@ SetupVptCmd(void)
 {
     struct cmd_syndesc	*ts;
 
-    ts = cmd_CreateSyntax("vptlist", DoVptList, NULL,
+    ts = cmd_CreateSyntax("vptlist", DoVptList, NULL, 0,
 			  "list vice partition table");
 
-    ts = cmd_CreateSyntax("vptadd", DoVptAdd, NULL,
+    ts = cmd_CreateSyntax("vptadd", DoVptAdd, NULL, 0,
 			  "add entry to vice partition table");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_REQUIRED, "partition name");
     cmd_AddParm(ts, "-dev", CMD_SINGLE, CMD_REQUIRED, "device name");
 
-    ts = cmd_CreateSyntax("vptdel", DoVptDel, NULL,
+    ts = cmd_CreateSyntax("vptdel", DoVptDel, NULL, 0,
 			  "remove entry from vice partition table");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_REQUIRED, "partition name");
 }
@@ -304,10 +304,10 @@ SetupDirCmd(void)
 {
     struct cmd_syndesc	*ts;
 
-    ts = cmd_CreateSyntax("dirget", DoDirGet, NULL,
+    ts = cmd_CreateSyntax("dirget", DoDirGet, NULL, 0,
 			  "display the AFS server installation directory");
 
-    ts = cmd_CreateSyntax("dirset", DoDirSet, NULL,
+    ts = cmd_CreateSyntax("dirset", DoDirSet, NULL, 0,
 			  "set the AFS server installation directory");
     cmd_AddParm(ts, "-path", CMD_SINGLE, CMD_REQUIRED, "directory path");
 }
@@ -317,11 +317,11 @@ SetupBosCmd(void)
 {
     struct cmd_syndesc	*ts;
 
-    ts = cmd_CreateSyntax("boscfg", DoBosCfg, NULL,
+    ts = cmd_CreateSyntax("boscfg", DoBosCfg, NULL, 0,
 			  "configure the AFS BOS control service");
     cmd_AddParm(ts, "-path", CMD_SINGLE, CMD_OPTIONAL, "service binary path");
 
-    ts = cmd_CreateSyntax("bosdel", DoBosDel, NULL,
+    ts = cmd_CreateSyntax("bosdel", DoBosDel, NULL, 0,
 			  "delete (unconfigure) the AFS BOS control service");
 }
 
@@ -330,7 +330,7 @@ SetupVersionCmd(void)
 {
     struct cmd_syndesc	*ts;
 
-    ts = cmd_CreateSyntax("version", DoVersionGet, NULL,
+    ts = cmd_CreateSyntax("version", DoVersionGet, NULL, 0,
 			  "display AFS version information");
 }
 

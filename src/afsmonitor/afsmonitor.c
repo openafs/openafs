@@ -4229,7 +4229,7 @@ main(int argc, char **argv)
     /*
      * Set up the commands we understand.
      */
-    ts = cmd_CreateSyntax("initcmd", afsmonInit, NULL, "initialize the program");
+    ts = cmd_CreateSyntax("initcmd", afsmonInit, NULL, 0, "initialize the program");
     cmd_AddParm(ts, "-config", CMD_SINGLE, CMD_OPTIONAL,
 		"configuration file");
     cmd_AddParm(ts, "-frequency", CMD_SINGLE, CMD_OPTIONAL,

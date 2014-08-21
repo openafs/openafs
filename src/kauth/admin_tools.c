@@ -1665,14 +1665,14 @@ ka_AdminInteractive(int cmd_argc, char *cmd_argv[])
     cmd_SetBeforeProc(MyBeforeProc, NULL);
     cmd_SetAfterProc(MyAfterProc, NULL);
 
-    ts = cmd_CreateSyntax("interactive", Interactive, NULL,
+    ts = cmd_CreateSyntax("interactive", Interactive, NULL, 0,
 			  "enter interactive mode");
     add_std_args(ts);
 
-    cmd_CreateSyntax("noauthentication", NoAuth, NULL,
+    cmd_CreateSyntax("noauthentication", NoAuth, NULL, 0,
 		     "connect to AuthServer w/o using token");
 
-    ts = cmd_CreateSyntax("list", ListUsers, NULL,
+    ts = cmd_CreateSyntax("list", ListUsers, NULL, 0,
 			  "list all users in database");
     cmd_AddParm(ts, "-long", CMD_FLAG, CMD_OPTIONAL,
 		"show detailed info about each user");
@@ -1683,26 +1683,26 @@ ka_AdminInteractive(int cmd_argc, char *cmd_argv[])
     add_std_args(ts);
     cmd_CreateAlias(ts, "ls");
 
-    ts = cmd_CreateSyntax("examine", ExamineUser, NULL,
+    ts = cmd_CreateSyntax("examine", ExamineUser, NULL, 0,
 			  "examine the entry for a user");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "name of user");
     cmd_AddParm(ts, "-showkey", CMD_FLAG, CMD_OPTIONAL,
 		"show the user's actual key rather than the checksum");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("create", CreateUser, NULL,
+    ts = cmd_CreateSyntax("create", CreateUser, NULL, 0,
 			  "create an entry for a user");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "name of user");
     cmd_AddParm(ts, "-initial_password", CMD_SINGLE, CMD_OPTIONAL,
 		"initial password");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("delete", DeleteUser, NULL, "delete a user");
+    ts = cmd_CreateSyntax("delete", DeleteUser, NULL, 0, "delete a user");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "name of user");
     add_std_args(ts);
     cmd_CreateAlias(ts, "rm");
 
-    ts = cmd_CreateSyntax("setfields", SetFields, NULL,
+    ts = cmd_CreateSyntax("setfields", SetFields, NULL, 0,
 			  "set various fields in a user's entry");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "name of user");
     cmd_AddParm(ts, "-flags", CMD_SINGLE, CMD_OPTIONAL,
@@ -1727,18 +1727,18 @@ ka_AdminInteractive(int cmd_argc, char *cmd_argv[])
     cmd_CreateAlias(ts, "sf");
 
 
-    ts = cmd_CreateSyntax("unlock", Unlock, NULL,
+    ts = cmd_CreateSyntax("unlock", Unlock, NULL, 0,
 			  "Enable authentication ID after max failed attempts exceeded");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "authentication ID");
     add_std_args(ts);
 
 
-    ts = cmd_CreateSyntax("stringtokey", StringToKey, NULL,
+    ts = cmd_CreateSyntax("stringtokey", StringToKey, NULL, 0,
 			  "convert a string to a key");
     cmd_AddParm(ts, "-string", CMD_SINGLE, 0, "password string");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
 
-    ts = cmd_CreateSyntax("setpassword", SetPassword, NULL,
+    ts = cmd_CreateSyntax("setpassword", SetPassword, NULL, 0,
 			  "set a user's password");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "name of user");
     cmd_AddParm(ts, "-new_password", CMD_SINGLE, CMD_OPTIONAL,
@@ -1752,7 +1752,7 @@ ka_AdminInteractive(int cmd_argc, char *cmd_argv[])
 #endif
 
     /* set a user's key */
-    ts = cmd_CreateSyntax("setkey", SetPassword, NULL, (char *)CMD_HIDDEN);
+    ts = cmd_CreateSyntax("setkey", SetPassword, NULL, 0, (char *)CMD_HIDDEN);
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "name of user");
     cmd_Seek(ts, 2);
     cmd_AddParm(ts, "-new_key", CMD_SINGLE, 0, "eight byte new key");
@@ -1761,7 +1761,7 @@ ka_AdminInteractive(int cmd_argc, char *cmd_argv[])
     add_std_args(ts);
 
     /* get a user's password */
-    ts = cmd_CreateSyntax("getpassword", GetPassword, NULL, (char *)CMD_HIDDEN);
+    ts = cmd_CreateSyntax("getpassword", GetPassword, NULL, 0, (char *)CMD_HIDDEN);
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "name of user");
     /* don't take standard args */
     /* add_std_args (ts); */
@@ -1770,27 +1770,27 @@ ka_AdminInteractive(int cmd_argc, char *cmd_argv[])
 #endif
 
     /* get a random key */
-    ts = cmd_CreateSyntax("getrandomkey", GetRandomKey, NULL,
+    ts = cmd_CreateSyntax("getrandomkey", GetRandomKey, NULL, 0,
 			  (char *)CMD_HIDDEN);
     add_std_args(ts);
 
     /* get a ticket for a specific server */
-    ts = cmd_CreateSyntax("getticket", GetTicket, NULL, (char *)CMD_HIDDEN);
+    ts = cmd_CreateSyntax("getticket", GetTicket, NULL, 0, (char *)CMD_HIDDEN);
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "name of server");
     cmd_AddParm(ts, "-lifetime", CMD_SINGLE, CMD_OPTIONAL, "ticket lifetime");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("statistics", Statistics, NULL,
+    ts = cmd_CreateSyntax("statistics", Statistics, NULL, 0,
 			  "show statistics for AuthServer");
     add_std_args(ts);
 
     /* show debugging info from AuthServer */
-    ts = cmd_CreateSyntax("debuginfo", DebugInfo, NULL, (char *)CMD_HIDDEN);
+    ts = cmd_CreateSyntax("debuginfo", DebugInfo, NULL, 0, (char *)CMD_HIDDEN);
     cmd_AddParm(ts, "-hostname", CMD_SINGLE, CMD_OPTIONAL,
 		"authentication server host name");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("forgetticket", ForgetTicket, NULL,
+    ts = cmd_CreateSyntax("forgetticket", ForgetTicket, NULL, 0,
 			  "delete user's tickets");
 #ifdef notdef
     cmd_AddParm(ts, "-name", CMD_SINGLE, (CMD_OPTIONAL | CMD_HIDE),
@@ -1798,13 +1798,13 @@ ka_AdminInteractive(int cmd_argc, char *cmd_argv[])
 #endif
     cmd_AddParm(ts, "-all", CMD_FLAG, CMD_OPTIONAL, "delete all tickets");
 
-    ts = cmd_CreateSyntax("listtickets", ListTickets, NULL,
+    ts = cmd_CreateSyntax("listtickets", ListTickets, NULL, 0,
 			  "show all cache manager tickets");
     cmd_AddParm(ts, "-name", CMD_SINGLE, CMD_OPTIONAL, "name of server");
     cmd_AddParm(ts, "-long", CMD_FLAG, CMD_OPTIONAL,
 		"show session key and ticket");
 
-    cmd_CreateSyntax("quit", Quit, NULL, "exit program");
+    cmd_CreateSyntax("quit", Quit, NULL, 0, "exit program");
 
     finished = 1;
     conn = 0;			/* no connection yet */

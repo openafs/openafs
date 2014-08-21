@@ -103,7 +103,7 @@ main(int argc, char *argv[], char **envp)
     zero_argv = argv;
 
     init_child(*argv);
-    ts = cmd_CreateSyntax(NULL, CommandProc, 0, "change user's password");
+    ts = cmd_CreateSyntax(NULL, CommandProc, 0, 0, "change user's password");
 
 #define aXFLAG 0
 #define aPRINCIPAL 1

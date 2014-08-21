@@ -56,14 +56,14 @@ struct cmd_syndesc {
     int (*proc) (struct cmd_syndesc * ts, void *arock);
     void *rock;
     int nParms;			/* number of parms */
-    afs_int32 flags;		/* random flags */
+    afs_uint32 flags;		/* random flags */
     struct cmd_parmdesc parms[CMD_MAXPARMS];	/* parms themselves */
 };
 
 extern struct cmd_syndesc *cmd_CreateSyntax(char *namep,
 					    int (*aprocp) (struct cmd_syndesc
 							   * ts, void *arock),
-					    void *rockp, char *helpp);
+					    void *rockp, afs_uint32 aflags, char *helpp);
 extern int
   cmd_SetBeforeProc(int (*aproc) (struct cmd_syndesc * ts, void *beforeRock),
 		    void *arock);

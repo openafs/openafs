@@ -221,7 +221,7 @@ main(int argc, char **argv)
     afs_int32 code;
     struct cmd_syndesc *ts;
 
-    ts = cmd_CreateSyntax(NULL, VolScan, NULL,
+    ts = cmd_CreateSyntax(NULL, VolScan, NULL, 0,
 			  "Print volume vnode information");
 
     cmd_AddParmAtOffset(ts, P_CHECKOUT, "-checkout", CMD_FLAG, CMD_OPTIONAL,

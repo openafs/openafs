@@ -437,7 +437,7 @@ main(argc, argv)
     /*
      * Set up the commands we understand.
      */
-    ts = cmd_CreateSyntax("initcmd", object_testInit, NULL,
+    ts = cmd_CreateSyntax("initcmd", object_testInit, NULL, 0,
 			  "Initialize the program");
     cmd_AddParm(ts, "-package", CMD_SINGLE, CMD_REQUIRED,
 		"Graphics package to use");

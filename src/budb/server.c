@@ -139,7 +139,7 @@ initializeArgHandler(void)
 
     cmd_SetBeforeProc(MyBeforeProc, NULL);
 
-    cptr = cmd_CreateSyntax(NULL, argHandler, NULL, "Backup database server");
+    cptr = cmd_CreateSyntax(NULL, argHandler, NULL, 0, "Backup database server");
 
     cmd_AddParm(cptr, "-database", CMD_SINGLE, CMD_OPTIONAL,
 		"database directory");

@@ -302,7 +302,7 @@ main(int argc, char **argv)
 
     cmd_DisableAbbreviations();
     cmd_DisablePositionalCommands();
-    opts = cmd_CreateSyntax(NULL, NULL, NULL, NULL);
+    opts = cmd_CreateSyntax(NULL, NULL, NULL, 0, NULL);
 
 /* ptserver specific options */
     cmd_AddParmAtOffset(opts, OPT_database, "-database", CMD_SINGLE,

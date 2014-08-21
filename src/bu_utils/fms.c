@@ -59,7 +59,7 @@ main(int argc, char **argv)
     sigaction(SIGINT, &intaction, &oldaction);
 
     cptr =
-	cmd_CreateSyntax(NULL, tt_fileMarkSize, NULL,
+	cmd_CreateSyntax(NULL, tt_fileMarkSize, NULL, 0,
 			 "write a tape full of file marks");
     cmd_AddParm(cptr, "-tape", CMD_SINGLE, CMD_REQUIRED, "tape special file");
 

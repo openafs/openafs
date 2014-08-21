@@ -154,7 +154,7 @@ main(int argc, char **argv)
     afs_int32 code;
     struct cmd_syndesc *ts;
 
-    ts = cmd_CreateSyntax(NULL, VolInfo, NULL,
+    ts = cmd_CreateSyntax(NULL, VolInfo, NULL, 0,
 			  "Dump volume's internal state");
     cmd_AddParmAtOffset(ts, P_CHECKOUT, "-checkout", CMD_FLAG, CMD_OPTIONAL,
 			"Checkout volumes from running fileserver");

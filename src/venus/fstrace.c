@@ -1746,7 +1746,7 @@ SetUpDump(void)
     struct cmd_syndesc *dumpSyntax;
 
     dumpSyntax =
-	cmd_CreateSyntax("dump", DoDump, NULL, "dump AFS trace logs");
+	cmd_CreateSyntax("dump", DoDump, NULL, 0, "dump AFS trace logs");
     (void)cmd_AddParm(dumpSyntax, "-set", CMD_LIST, CMD_OPTIONAL,
 		      "event set name");
     (void)cmd_AddParm(dumpSyntax, "-follow", CMD_SINGLE, CMD_OPTIONAL,
@@ -1822,7 +1822,7 @@ SetUpShowLog(void)
     struct cmd_syndesc *showSyntax;
 
     showSyntax =
-	cmd_CreateSyntax("lslog", DoShowLog, NULL,
+	cmd_CreateSyntax("lslog", DoShowLog, NULL, 0,
 			 "list available logs");
     (void)cmd_AddParm(showSyntax, "-set", CMD_LIST, CMD_OPTIONAL,
 		      "event set name");
@@ -1881,7 +1881,7 @@ SetUpShowSet(void)
     struct cmd_syndesc *showSyntax;
 
     showSyntax =
-	cmd_CreateSyntax("lsset", DoShowSet, NULL,
+	cmd_CreateSyntax("lsset", DoShowSet, NULL, 0,
 			 "list available event sets");
     (void)cmd_AddParm(showSyntax, "-set", CMD_LIST, CMD_OPTIONAL,
 		      "event set name");
@@ -1939,7 +1939,7 @@ SetUpClear(void)
     struct cmd_syndesc *clearSyntax;
 
     clearSyntax =
-	cmd_CreateSyntax("clear", DoClear, NULL,
+	cmd_CreateSyntax("clear", DoClear, NULL, 0,
 			 "clear logs by logname or by event set");
     (void)cmd_AddParm(clearSyntax, "-set", CMD_LIST, CMD_OPTIONAL,
 		      "event set name");
@@ -2026,7 +2026,7 @@ SetUpSet(void)
     struct cmd_syndesc *setSyntax;
 
     setSyntax =
-	cmd_CreateSyntax("setset", DoSet, NULL,
+	cmd_CreateSyntax("setset", DoSet, NULL, 0,
 			 "set state of event sets");
     (void)cmd_AddParm(setSyntax, "-set", CMD_LIST, CMD_OPTIONAL,
 		      "event set name");
@@ -2087,7 +2087,7 @@ SetUpResize(void)
     struct cmd_syndesc *setsizeSyntax;
 
     setsizeSyntax =
-	cmd_CreateSyntax("setlog", DoResize, NULL,
+	cmd_CreateSyntax("setlog", DoResize, NULL, 0,
 			 "set the size of a log");
     (void)cmd_AddParm(setsizeSyntax, "-log", CMD_LIST, CMD_OPTIONAL,
 		      "trace log name");

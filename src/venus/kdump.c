@@ -922,7 +922,7 @@ main(int argc, char **argv)
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
 
-    ts = cmd_CreateSyntax(NULL, cmdproc, NULL,
+    ts = cmd_CreateSyntax(NULL, cmdproc, NULL, 0,
 			  "Read internal cache manager structs");
     cmd_AddParm(ts, "-kobj", CMD_SINGLE, CMD_OPTIONAL,
 		"kernel object (default /vmunix)");

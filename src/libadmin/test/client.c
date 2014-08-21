@@ -1207,12 +1207,12 @@ SetupClientAdminCmd(void)
 {
     struct cmd_syndesc *ts;
 
-    ts = cmd_CreateSyntax("ClientLocalCellGet", DoClientLocalCellGet, NULL,
+    ts = cmd_CreateSyntax("ClientLocalCellGet", DoClientLocalCellGet, NULL, 0,
 			  "get the name of this machine's cell");
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("ClientMountPointCreate", DoClientMountPointCreate,
-			  NULL, "create a mount point");
+			  NULL, 0, "create a mount point");
     cmd_AddParm(ts, "-directory", CMD_SINGLE, CMD_REQUIRED,
 		"directory where mount point will be created");
     cmd_AddParm(ts, "-volume", CMD_SINGLE, CMD_REQUIRED,
@@ -1223,12 +1223,12 @@ SetupClientAdminCmd(void)
 		"check that the volume exists before mounting");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("ClientAFSServerGet", DoClientAFSServerGet, NULL,
+    ts = cmd_CreateSyntax("ClientAFSServerGet", DoClientAFSServerGet, NULL, 0,
 			  "retrieve information about an afs server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to query");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("ClientAFSServerList", DoClientAFSServerList, NULL,
+    ts = cmd_CreateSyntax("ClientAFSServerList", DoClientAFSServerList, NULL, 0,
 			  "retrieve information about all afs "
 			  "servers in a cell");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
@@ -1241,7 +1241,7 @@ SetupClientAdminCmd(void)
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("ClientRPCStatsStateGet", DoClientRPCStatsStateGet,
-			  NULL, "retrieve the rpc stat collection state");
+			  NULL, 0, "retrieve the rpc stat collection state");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where command will execute");
     cmd_AddParm(ts, "-process", CMD_SINGLE, CMD_REQUIRED,
@@ -1252,7 +1252,7 @@ SetupClientAdminCmd(void)
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("ClientRPCStatsStateEnable",
-			  DoClientRPCStatsStateEnable, NULL,
+			  DoClientRPCStatsStateEnable, NULL, 0,
 			  "set the rpc stat collection state to on");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where command will execute");
@@ -1264,7 +1264,7 @@ SetupClientAdminCmd(void)
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("ClientRPCStatsStateDisable",
-			  DoClientRPCStatsStateDisable, NULL,
+			  DoClientRPCStatsStateDisable, NULL, 0,
 			  "set the rpc stat collection state to off");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where command will execute");
@@ -1275,7 +1275,7 @@ SetupClientAdminCmd(void)
 		"stats to retrieve <peer or process>");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("ClientRPCStatsList", DoClientRPCStatsList, NULL,
+    ts = cmd_CreateSyntax("ClientRPCStatsList", DoClientRPCStatsList, NULL, 0,
 			  "list the rpc stats");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where command will execute");
@@ -1286,7 +1286,7 @@ SetupClientAdminCmd(void)
 		"stats to retrieve <peer or process>");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("ClientRPCStatsClear", DoClientRPCStatsClear, NULL,
+    ts = cmd_CreateSyntax("ClientRPCStatsClear", DoClientRPCStatsClear, NULL, 0,
 			  "reset rpc stat counters");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where command will execute");
@@ -1322,7 +1322,7 @@ SetupClientAdminCmd(void)
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("ClientRPCStatsVersionGet",
-			  DoClientRPCStatsVersionGet, NULL,
+			  DoClientRPCStatsVersionGet, NULL, 0,
 			  "list the server's rpc stats version");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where command will execute");
@@ -1332,27 +1332,27 @@ SetupClientAdminCmd(void)
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("ClientCMGetServerPrefs", DoClientCMGetServerPrefs,
-			  NULL, "list a client's server preferences ");
+			  NULL, 0, "list a client's server preferences ");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where command will execute");
     cmd_AddParm(ts, "-port", CMD_SINGLE, CMD_OPTIONAL, "UDP port to query");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("ClientCMListCells", DoClientCMListCells, NULL,
+    ts = cmd_CreateSyntax("ClientCMListCells", DoClientCMListCells, NULL, 0,
 			  "list a client's CellServDB ");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where command will execute");
     cmd_AddParm(ts, "-port", CMD_SINGLE, CMD_OPTIONAL, "UDP port to query");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("ClientCMLocalCell", DoClientCMLocalCell, NULL,
+    ts = cmd_CreateSyntax("ClientCMLocalCell", DoClientCMLocalCell, NULL, 0,
 			  "get the name of the client's local cell");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where command will execute");
     cmd_AddParm(ts, "-port", CMD_SINGLE, CMD_OPTIONAL, "UDP port to query");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("ClientCMClientConfig", DoClientCMClientConfig, NULL,
+    ts = cmd_CreateSyntax("ClientCMClientConfig", DoClientCMClientConfig, NULL, 0,
 			  "get the client's cache configuration");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where command will execute");

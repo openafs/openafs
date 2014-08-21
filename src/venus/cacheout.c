@@ -345,7 +345,7 @@ main(int argc, char **argv)
     cmd_SetBeforeProc(MyBeforeProc, NULL);
 
     ts = cmd_CreateSyntax("initcmd" /*"invalidatecache" */ , InvalidateCache,
-			  NULL, "invalidate server ACL cache");
+			  NULL, 0, "invalidate server ACL cache");
     cmd_AddParm(ts, "-id", CMD_LIST, CMD_OPTIONAL, "user identifier");
     cmd_AddParm(ts, "-ip", CMD_LIST, CMD_OPTIONAL, "IP address");
     cmd_CreateAlias(ts, "ic");
@@ -354,7 +354,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-localauth", CMD_FLAG, CMD_OPTIONAL, "user server tickets");
     cmd_AddParm(ts, "-encrypt", CMD_FLAG, CMD_OPTIONAL, "encrypt commands");
 
-    ts = cmd_CreateSyntax("listservers", GetServerList, NULL,
+    ts = cmd_CreateSyntax("listservers", GetServerList, NULL, 0,
 			  "list servers in the cell");
     cmd_CreateAlias(ts, "ls");
 

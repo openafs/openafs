@@ -724,7 +724,7 @@ SetupKasAdminCmd(void)
 {
     struct cmd_syndesc *ts;
 
-    ts = cmd_CreateSyntax("KasPrincipalCreate", DoKasPrincipalCreate, NULL,
+    ts = cmd_CreateSyntax("KasPrincipalCreate", DoKasPrincipalCreate, NULL, 0,
 			  "create a new principal");
     cmd_AddParm(ts, "-principal", CMD_SINGLE, CMD_REQUIRED,
 		"principal to create");
@@ -734,7 +734,7 @@ SetupKasAdminCmd(void)
 		"initial principal password");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("KasPrincipalDelete", DoKasPrincipalDelete, NULL,
+    ts = cmd_CreateSyntax("KasPrincipalDelete", DoKasPrincipalDelete, NULL, 0,
 			  "delete a principal");
     cmd_AddParm(ts, "-principal", CMD_SINGLE, CMD_REQUIRED,
 		"principal to delete");
@@ -742,7 +742,7 @@ SetupKasAdminCmd(void)
 		"principal instance");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("KasPrincipalGet", DoKasPrincipalGet, NULL,
+    ts = cmd_CreateSyntax("KasPrincipalGet", DoKasPrincipalGet, NULL, 0,
 			  "get information about a principal");
     cmd_AddParm(ts, "-principal", CMD_SINGLE, CMD_REQUIRED,
 		"principal to get");
@@ -750,11 +750,11 @@ SetupKasAdminCmd(void)
 		"principal instance");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("KasPrincipalList", DoKasPrincipalList, NULL,
+    ts = cmd_CreateSyntax("KasPrincipalList", DoKasPrincipalList, NULL, 0,
 			  "list all principals");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("KasPrincipalKeySet", DoKasPrincipalKeySet, NULL,
+    ts = cmd_CreateSyntax("KasPrincipalKeySet", DoKasPrincipalKeySet, NULL, 0,
 			  "set the password for a principal");
     cmd_AddParm(ts, "-principal", CMD_SINGLE, CMD_REQUIRED,
 		"principal to modify");
@@ -767,7 +767,7 @@ SetupKasAdminCmd(void)
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("KasPrincipalLockStatusGet",
-			  DoKasPrincipalLockStatusGet, NULL,
+			  DoKasPrincipalLockStatusGet, NULL, 0,
 			  "get the lock status of a principal");
     cmd_AddParm(ts, "-principal", CMD_SINGLE, CMD_REQUIRED,
 		"principal to query");
@@ -775,7 +775,7 @@ SetupKasAdminCmd(void)
 		"principal instance");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("KasPrincipalUnlock", DoKasPrincipalUnlock, NULL,
+    ts = cmd_CreateSyntax("KasPrincipalUnlock", DoKasPrincipalUnlock, NULL, 0,
 			  "unlock a principal");
     cmd_AddParm(ts, "-principal", CMD_SINGLE, CMD_REQUIRED,
 		"principal to unlock");
@@ -783,7 +783,7 @@ SetupKasAdminCmd(void)
 		"principal instance");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("KasPrincipalFieldsSet", DoKasPrincipalFieldsSet, NULL,
+    ts = cmd_CreateSyntax("KasPrincipalFieldsSet", DoKasPrincipalFieldsSet, NULL, 0,
 			  "modify a principal");
     cmd_AddParm(ts, "-principal", CMD_SINGLE, CMD_REQUIRED,
 		"principal to modify");
@@ -823,17 +823,17 @@ SetupKasAdminCmd(void)
 		"maximum failed password attempts is exceeded");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("KasServerStatsGet", DoKasServerStatsGet, NULL,
+    ts = cmd_CreateSyntax("KasServerStatsGet", DoKasServerStatsGet, NULL, 0,
 			  "get stats on a kaserver");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to query");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("KasServerDebugGet", DoKasServerDebugGet, NULL,
+    ts = cmd_CreateSyntax("KasServerDebugGet", DoKasServerDebugGet, NULL, 0,
 			  "get debug info from a kaserver");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to query");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("KasServerRandomKeyGet", DoKasServerRandomKeyGet, NULL,
+    ts = cmd_CreateSyntax("KasServerRandomKeyGet", DoKasServerRandomKeyGet, NULL, 0,
 			  "create a random key");
     SetupCommonCmdArgs(ts);
 

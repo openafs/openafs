@@ -978,7 +978,7 @@ main(int argc, char **argv)
     struct cmd_syndesc *ts;
     afs_int32 code;
 
-    ts = cmd_CreateSyntax("initcmd", handleit, NULL, "optional");
+    ts = cmd_CreateSyntax("initcmd", handleit, NULL, 0, "optional");
     cmd_AddParm(ts, "-to", CMD_SINGLE, CMD_OPTIONAL, "goal version");
     cmd_AddParm(ts, "-from", CMD_SINGLE, CMD_OPTIONAL, "current version");
     cmd_AddParm(ts, "-path", CMD_SINGLE, CMD_OPTIONAL, "pathname");

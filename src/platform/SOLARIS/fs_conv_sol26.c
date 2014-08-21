@@ -192,14 +192,14 @@ main(argc, argv)
 	printf("must be run as root; sorry\n");
 	exit(1);
     }
-    ts = cmd_CreateSyntax("convert", ConvCmd, NULL,
+    ts = cmd_CreateSyntax("convert", ConvCmd, NULL, 0,
 			  "Convert to AFS SunOS 5.6 format");
     cmd_AddParm(ts, "-part", CMD_LIST, CMD_OPTIONAL, "AFS partition name");
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, "verbose mode");
     cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL,
 		"Safeguard enforce switch");
     cmd_AddParm(ts, "-device", CMD_LIST, CMD_OPTIONAL, "AFS raw device name");
-    ts = cmd_CreateSyntax("unconvert", UnConvCmd, NULL,
+    ts = cmd_CreateSyntax("unconvert", UnConvCmd, NULL, 0,
 			  "Convert back from AFS SunOS 5.6 to earlier formats");
     cmd_AddParm(ts, "-part", CMD_LIST, CMD_OPTIONAL, "AFS partition name");
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, "verbose mode");

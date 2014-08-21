@@ -57,7 +57,7 @@ main(argc, argv)
 
   WSAStartup(0x0101, &WSAjunk);
 
-  ts = cmd_CreateSyntax(NULL, CommandProc, NULL, "Release Kerberos authentication");
+  ts = cmd_CreateSyntax(NULL, CommandProc, NULL, 0, "Release Kerberos authentication");
   cmd_AddParm(ts, "-cell", CMD_LIST, CMD_OPTIONAL, "cell name");
 
   code = cmd_Dispatch(argc, argv);

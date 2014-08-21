@@ -942,7 +942,7 @@ main(int argc, char **argv)
     /*
      * Set up the commands we understand.
      */
-    ts = cmd_CreateSyntax("initcmd", RunTheTest, NULL, "initialize the program");
+    ts = cmd_CreateSyntax("initcmd", RunTheTest, NULL, 0, "initialize the program");
     cmd_AddParm(ts, "-cmname", CMD_LIST, CMD_REQUIRED,
 		"Cache Manager name(s) to monitor");
     cmd_AddParm(ts, "-collID", CMD_LIST, CMD_REQUIRED,

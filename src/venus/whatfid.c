@@ -93,7 +93,7 @@ main(argc, argv)
 
     pn = argv[0];
 
-    ts = cmd_CreateSyntax("initcmd", WhatFidCmd, NULL, "list fid for file(s)");
+    ts = cmd_CreateSyntax("initcmd", WhatFidCmd, NULL, 0, "list fid for file(s)");
     WhatFidCmd_FileParm = cmd_AddParm(ts, "-path", CMD_LIST, 0, "pathnames");
     WhatFidCmd_FollowLinkParm =
 	cmd_AddParm(ts, "-link", CMD_FLAG, CMD_OPTIONAL,

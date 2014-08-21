@@ -217,7 +217,7 @@ main(int argc, char **argv)
 
     cmd_DisableAbbreviations();
     cmd_DisablePositionalCommands();
-    opts = cmd_CreateSyntax(NULL, NULL, NULL, NULL);
+    opts = cmd_CreateSyntax(NULL, NULL, NULL, 0, NULL);
 
     /* vlserver specific options */
     cmd_AddParmAtOffset(opts, OPT_noauth, "-noauth", CMD_FLAG,
