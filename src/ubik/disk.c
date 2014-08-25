@@ -881,8 +881,11 @@ udisk_commit(struct ubik_trans *atrans)
 	    newversion.counter = 1;
 
 	    code = (*dbase->setlabel) (dbase, 0, &newversion);
-	    if (code)
-		return (code);
+	    if (code) {
+		UBIK_VERSION_UNLOCK;
+		return code;
+	    }
+
 	    version_globals.ubik_epochTime = newversion.epoch;
 	    dbase->version = newversion;
 	    UBIK_VERSION_UNLOCK;
