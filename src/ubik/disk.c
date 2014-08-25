@@ -910,7 +910,8 @@ udisk_commit(struct ubik_trans *atrans)
 	code = udisk_LogEnd(dbase, &dbase->version);
 	if (code) {
 	    dbase->version.counter--;
-	    return (code);
+	    UBIK_VERSION_UNLOCK;
+	    return code;
 	}
 	UBIK_VERSION_UNLOCK;
 
