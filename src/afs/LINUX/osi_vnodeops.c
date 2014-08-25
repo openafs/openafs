@@ -1299,23 +1299,21 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 	/* unlikely--the vcache entry hasn't changed */
 
 	dput(parent);
+
     } else {
-#ifdef notyet
-	/* If this code is ever enabled, we should use dget_parent to handle
-	 * getting the parent, and dput() to dispose of it. See above for an
-	 * example ... */
-	pvcp = VTOAFS(dp->d_parent->d_inode);
-	if (hgetlo(pvcp->f.m.DataVersion) > dp->d_time)
+
+	/* 'dp' represents a cached negative lookup. */
+
+	parent = dget_parent(dp);
+	pvcp = VTOAFS(parent->d_inode);
+	parent_dv = parent_vcache_dv(parent->d_inode, credp);
+
+	if (parent_dv > dp->d_time || !(pvcp->f.states & CStatd)) {
+	    dput(parent);
 	    goto bad_dentry;
-#endif
+	}
 
-	/* No change in parent's DataVersion so this negative
-	 * lookup is still valid.  BUT, if a server is down a
-	 * negative lookup can result so there should be a
-	 * liftime as well.  For now, always expire.
-	 */
-
-	goto bad_dentry;
+	dput(parent);
     }
 
   good_dentry:
