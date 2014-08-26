@@ -3036,7 +3036,7 @@ UV_CloneVolume(afs_uint32 aserver, afs_int32 apart, afs_uint32 avolid,
 	type = backupVolume;
 
     code = DoVolClone(aconn, avolid, apart, type, acloneid, "clone",
-		      NULL, ".clone", NULL, NULL, NULL);
+		      NULL, aname, NULL, NULL, NULL);
     if (code) {
 	error = code;
 	goto bfail;
