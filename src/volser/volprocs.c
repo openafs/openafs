@@ -814,10 +814,8 @@ VolClone(struct rx_call *acid, afs_int32 atrans, VolumeId purgeId,
 	goto fail;
     }
     if (newType == readonlyVolume) {
-	AssignVolumeName(&V_disk(newvp), V_name(originalvp), ".readonly");
 	V_type(newvp) = readonlyVolume;
     } else if (newType == backupVolume) {
-	AssignVolumeName(&V_disk(newvp), V_name(originalvp), ".backup");
 	V_type(newvp) = backupVolume;
 	V_backupId(originalvp) = newId;
     }
