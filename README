@@ -33,20 +33,18 @@ A  Configuring
       alpha_dux40, alpha_dux50, alpha_dux51 (client does not work)
       alpha_linux22, alpha_linux24, alpha_linux26
       alpha_nbsd15, alpha_nbsd16
-      amd64_fbsd_53 (client does not work)
+      amd64_fbsd_80, amd64_fbsd_81, amd64_fbsd_82, amd64_fbsd_83,
+         amd64_fbsd_84, amd64_fbsd_90, amd64_fbsd_91, amd64_fbsd_92,
+         amd64_fbsd_93, amd64_fbsd_100, amd64_fbsd_101
       amd64_linux24, amd64_linux26
       amd64_nbsd20, amd64_nbsd30, amd64_nbsd40
       arm_linux24, arm_linux26
       hp_ux11i, hp_ux110, hp_ux1123 (See notes below for information on
          getting missing header)
       hp_ux102 (Client port possible, but db servers and utilities work)
-      i386_fbsd_50, i386_fbsd_51, i386_fbsd_52, i386_fbsd_53,
-         i386_fbsd_60, i386_fbsd_61, i386_fbsd_62, i386_fbsd_70,
-         i386_fbsd_80, i386_fbsd_81, i386_fbsd_90, amd64_fbsd_50,
-         amd64_fbsd_51, amd64_fbsd_52, amd64_fbsd_53, amd64_fbsd_60,
-         amd64_fbsd_61, amd64_fbsd_62, amd64_fbsd_70, amd64_fbsd_80,
-         amd64_fbsd_81, amd64_fbsd_90
-         (client may work on 70 and later)
+      i386_fbsd_80, i386_fbsd_81, i386_fbsd_82, i386_fbsd_83,
+         i386_fbsd_84, i386_fbsd_90, i386_fbsd_91, i386_fbsd_92,
+         i386_fbsd_93, i386_fbsd_100, i386_fbsd_101
       i386_linux22, i386_linux24, i386_linux26
       i386_nbsd15, i386_nbsd16, i386_nbsd20, i386_nbsd21, i386_nbsd30,
          i386_nbsd40
@@ -236,8 +234,11 @@ F  OpenBSD Notes
 
 G  FreeBSD Notes
 
-   The FreeBSD client may now work; It is tested on 7.0 and on current
-   as of the commit date.
+   The FreeBSD client supports FreeBSD 8.x and later, but does not receive
+   regular testing on versions older than FreeBSD 9.x at this time.  Only
+   the amd64 and i386 architectures are supported, but it should not be
+   hard to port to other processors if they are already supported under
+   another operating system.
 
    You need kernel source installed to build OpenAFS.  Use the
    --with-bsd-kernel-headers= configure option if your kernel source is
@@ -249,11 +250,6 @@ G  FreeBSD Notes
    /usr/src/sys/${CPUARCH}/compile/GENERIC does not point to
    /usr/obj/usr/src/sys/GENERIC you may need to resolve that and retry the
    build.
-
-   There is no server package, but I am told that "make install" will put
-   server binaries in /usr/afs.
-
-   You can't run arla and OpenAFS at the same time.
 
 H  AIX notes
 
