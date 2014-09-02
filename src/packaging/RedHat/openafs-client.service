@@ -6,6 +6,7 @@ Before=remote-fs.target
 
 [Service]
 Type=forking
+RemainAfterExit=true
 EnvironmentFile=/etc/sysconfig/openafs
 ExecStartPre=/bin/sed -n 'w/usr/vice/etc/CellServDB' /usr/vice/etc/CellServDB.local /usr/vice/etc/CellServDB.dist
 ExecStartPre=/bin/chmod 0644 /usr/vice/etc/CellServDB
