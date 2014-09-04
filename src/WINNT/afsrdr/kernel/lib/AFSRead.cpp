@@ -1374,7 +1374,8 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
                                ulByteCount,
                                &Irp->MdlAddress,
                                &Irp->IoStatus);
-                    ntStatus = Irp->IoStatus.Status;
+
+		    ntStatus = Irp->IoStatus.Status;
                 }
 		__except( EXCEPTION_EXECUTE_HANDLER)
                 {
@@ -1396,7 +1397,19 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
                                   Irp,
                                   ntStatus));
 
-                    try_return( ntStatus);
+		    if( Irp->IoStatus.Information > 0)
+		    {
+
+			CcMdlReadComplete(pFileObject, Irp->MdlAddress);
+
+			//
+			// Mdl is now Deallocated
+			//
+
+			Irp->MdlAddress = NULL;
+		    }
+
+		    try_return( ntStatus);
                 }
 
                 //
