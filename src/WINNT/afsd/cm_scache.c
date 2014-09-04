@@ -703,7 +703,7 @@ cm_SuspendSCache(void)
     cm_scache_t * scp;
     time_t now;
 
-    if (!lana_OnlyLoopback())
+    if (cm_noIPAddr > 0)
 	cm_GiveUpAllCallbacksAllServersMulti(TRUE);
 
     /*
@@ -740,7 +740,7 @@ cm_ShutdownSCache(void)
 {
     cm_scache_t * scp, * nextp;
 
-    if (!lana_OnlyLoopback())
+    if (cm_noIPAddr > 0)
 	cm_GiveUpAllCallbacksAllServersMulti(FALSE);
 
     lock_ObtainWrite(&cm_scacheLock);

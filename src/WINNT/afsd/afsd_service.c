@@ -200,7 +200,7 @@ afsd_ServiceControlHandler(DWORD ctrlCode)
             afsi_log("SERVICE_CONTROL_SHUTDOWN");
 
         /* Write all dirty buffers back to server */
-	if ( !lana_OnlyLoopback() )
+	if (cm_noIPAddr > 0)
 	    buf_CleanAndReset();
 
         /* Force trace if requested */
@@ -282,7 +282,7 @@ afsd_ServiceControlHandlerEx(
 
         /* Write all dirty buffers back to server */
 	if (dwCurrentState == SERVICE_RUNNING &&
-            !lana_OnlyLoopback() )
+	     cm_noIPAddr > 0)
 	    buf_CleanAndReset();
 
         /* Force trace if requested */
@@ -342,7 +342,7 @@ afsd_ServiceControlHandlerEx(
                     afsi_log("SERVICE_CONTROL_APMQUERYSUSPEND");
                     osi_Log0(afsd_logp,"SERVICE_CONTROL_APMQUERYSUSPEND");
                     /* Write all dirty buffers back to server */
-		    if ( !lana_OnlyLoopback() )
+		    if (cm_noIPAddr > 0)
 			buf_CleanAndReset();
                     afsi_log("SERVICE_CONTROL_APMQUERYSUSPEND buf_CleanAndReset complete");
                     osi_Log0(afsd_logp,"SERVICE_CONTROL_APMQUERYSUSPEND buf_CleanAndReset complete");
@@ -352,7 +352,7 @@ afsd_ServiceControlHandlerEx(
                     afsi_log("SERVICE_CONTROL_APMQUERYSTANDBY");
                     osi_Log0(afsd_logp,"SERVICE_CONTROL_APMQUERYSTANDBY");
                     /* Write all dirty buffers back to server */
-		    if ( !lana_OnlyLoopback() )
+		    if (cm_noIPAddr > 0)
 			buf_CleanAndReset();
                     afsi_log("SERVICE_CONTROL_APMQUERYSTANDBY buf_CleanAndReset complete");
                     osi_Log0(afsd_logp,"SERVICE_CONTROL_APMQUERYSTANDBY buf_CleanAndReset complete");
