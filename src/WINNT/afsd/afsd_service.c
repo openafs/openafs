@@ -336,7 +336,9 @@ afsd_ServiceControlHandlerEx(
             **	i.e. as if returning BROADCAST_QUERY_DENY
             */
             if (powerEventsRegistered) {
-                switch((int) dwEventType)
+		cm_UpdateIFInfo();
+
+		switch((int) dwEventType)
                 {
                 case PBT_APMQUERYSUSPEND:
                     afsi_log("SERVICE_CONTROL_APMQUERYSUSPEND");
@@ -363,14 +365,15 @@ afsd_ServiceControlHandlerEx(
                 case PBT_APMSUSPEND:
                     afsi_log("SERVICE_CONTROL_APMSUSPEND");
                     osi_Log0(afsd_logp,"SERVICE_CONTROL_APMSUSPEND");
-		    powerStateSuspended = 1;
-		    if (osVersion.dwMajorVersion >= 6)
-			smb_StopListeners(0);
+		    if (!powerStateSuspended) {
+			powerStateSuspended = 1;
+			if (osVersion.dwMajorVersion >= 6)
+			    smb_StopListeners(0);
 
-                    if (RDR_Initialized)
-                        RDR_Suspend();
-                    cm_SuspendSCache();
-
+			if (RDR_Initialized)
+			    RDR_Suspend();
+			cm_SuspendSCache();
+		    }
                     dwRet = NO_ERROR;
                     afsi_log("SERVICE_CONTROL_APMSUSPEND complete");
                     osi_Log0(afsd_logp,"SERVICE_CONTROL_APMSUSPEND complete");
@@ -378,12 +381,14 @@ afsd_ServiceControlHandlerEx(
                 case PBT_APMSTANDBY:
                     afsi_log("SERVICE_CONTROL_APMSTANDBY");
                     osi_Log0(afsd_logp,"SERVICE_CONTROL_APMSTANDBY");
-		    powerStateSuspended = 1;
-		    if (osVersion.dwMajorVersion >= 6)
-			smb_StopListeners(0);
-                    if (RDR_Initialized)
-                        RDR_Suspend();
-                    cm_SuspendSCache();
+		    if (!powerStateSuspended) {
+			powerStateSuspended = 1;
+			if (osVersion.dwMajorVersion >= 6)
+			    smb_StopListeners(0);
+			if (RDR_Initialized)
+			    RDR_Suspend();
+			cm_SuspendSCache();
+		    }
                     dwRet = NO_ERROR;
                     afsi_log("SERVICE_CONTROL_APMSTANDBY complete");
                     osi_Log0(afsd_logp,"SERVICE_CONTROL_APMSTANDBY complete");
@@ -391,11 +396,15 @@ afsd_ServiceControlHandlerEx(
                 case PBT_APMRESUMECRITICAL:
                     afsi_log("SERVICE_CONTROL_APMRESUMECRITICAL");
                     osi_Log0(afsd_logp,"SERVICE_CONTROL_APMRESUMECRITICAL");
-		    if (osVersion.dwMajorVersion >= 6)
-			smb_RestartListeners(0);
-                    cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS, NULL);
-                    if (RDR_Initialized)
-                        RDR_Resume();
+		    if (powerStateSuspended) {
+			powerStateSuspended = 0;
+			if (osVersion.dwMajorVersion >= 6)
+			    smb_RestartListeners(0);
+			cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS
+					 | CM_FLAG_CHECKUPSERVERS, NULL);
+			if (RDR_Initialized)
+			    RDR_Resume();
+		    }
                     dwRet = NO_ERROR;
                     afsi_log("SERVICE_CONTROL_APMRESUMECRITICAL complete");
                     osi_Log0(afsd_logp,"SERVICE_CONTROL_APMRESUMECRITICAL complete");
@@ -404,15 +413,18 @@ afsd_ServiceControlHandlerEx(
 		    /* User logged in after suspend */
                     afsi_log("SERVICE_CONTROL_APMRESUMESUSPEND");
                     osi_Log0(afsd_logp,"SERVICE_CONTROL_APMRESUMESUSPEND");
-		    powerStateSuspended = 0;
-                    cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS, NULL);
-		    if (osVersion.dwMajorVersion >= 6)
-			smb_RestartListeners(0);
-		    if (smb_Enabled && osVersion.dwMajorVersion >= 6) {
-			smb_SetLanAdapterChangeDetected();
-                    }
-                    if (RDR_Initialized)
-                        RDR_Resume();
+		    if (powerStateSuspended) {
+			powerStateSuspended = 0;
+			cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS
+					 | CM_FLAG_CHECKUPSERVERS, NULL);
+			if (osVersion.dwMajorVersion >= 6)
+			    smb_RestartListeners(0);
+			if (smb_Enabled && osVersion.dwMajorVersion >= 6) {
+			    smb_SetLanAdapterChangeDetected();
+			}
+			if (RDR_Initialized)
+			    RDR_Resume();
+		    }
                     dwRet = NO_ERROR;
                     afsi_log("SERVICE_CONTROL_APMRESUMESUSPEND complete");
                     osi_Log0(afsd_logp,"SERVICE_CONTROL_APMRESUMESUSPEND complete");
@@ -421,15 +433,18 @@ afsd_ServiceControlHandlerEx(
 		    /* User logged in after standby */
                     afsi_log("SERVICE_CONTROL_APMRESUMESTANDBY");
                     osi_Log0(afsd_logp,"SERVICE_CONTROL_APMRESUMESTANDBY");
-		    powerStateSuspended = 0;
-                    cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS, NULL);
-		    if (osVersion.dwMajorVersion >= 6)
-			smb_RestartListeners(0);
-		    if (smb_Enabled && osVersion.dwMajorVersion >= 6) {
-			smb_SetLanAdapterChangeDetected();
-                    }
-                    if (RDR_Initialized)
-                        RDR_Resume();
+		    if (powerStateSuspended) {
+			powerStateSuspended = 0;
+			cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS
+					 | CM_FLAG_CHECKUPSERVERS, NULL);
+			if (osVersion.dwMajorVersion >= 6)
+			    smb_RestartListeners(0);
+			if (smb_Enabled && osVersion.dwMajorVersion >= 6) {
+			    smb_SetLanAdapterChangeDetected();
+			}
+			if (RDR_Initialized)
+			    RDR_Resume();
+		    }
                     dwRet = NO_ERROR;
                     afsi_log("SERVICE_CONTROL_APMRESUMESTANDBY complete");
                     osi_Log0(afsd_logp,"SERVICE_CONTROL_APMRESUMESTANDBY complete");
@@ -457,10 +472,18 @@ afsd_ServiceControlHandlerEx(
 		    /* This is the message delivered once all devices are up */
                     afsi_log("SERVICE_CONTROL_APMRESUMEAUTOMATIC");
                     osi_Log0(afsd_logp,"SERVICE_CONTROL_APMRESUMEAUTOMATIC");
-		    if (smb_Enabled && osVersion.dwMajorVersion >= 6) {
-			smb_SetLanAdapterChangeDetected();
-                    }
-                    cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS, NULL);
+		    if (powerStateSuspended) {
+			powerStateSuspended = 0;
+			cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS
+					 | CM_FLAG_CHECKUPSERVERS, NULL);
+			if (osVersion.dwMajorVersion >= 6)
+			    smb_RestartListeners(0);
+			if (smb_Enabled && osVersion.dwMajorVersion >= 6) {
+			    smb_SetLanAdapterChangeDetected();
+			}
+			if (RDR_Initialized)
+			    RDR_Resume();
+		    }
                     dwRet = NO_ERROR;
                     afsi_log("SERVICE_CONTROL_APMRESUMEAUTOMATIC complete");
                     osi_Log0(afsd_logp,"SERVICE_CONTROL_APMRESUMEAUTOMATIC complete");
