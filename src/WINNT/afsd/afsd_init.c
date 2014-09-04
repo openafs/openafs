@@ -533,11 +533,6 @@ afsd_InitCM(char **reasonP)
     /*int freelanceEnabled;*/
     WSADATA WSAjunk;
     int i;
-    int cm_noIPAddr;         /* number of client network interfaces */
-    int cm_IPAddr[CM_MAXINTERFACE_ADDR];    /* client's IP address in host order */
-    int cm_SubnetMask[CM_MAXINTERFACE_ADDR];/* client's subnet mask in host order*/
-    int cm_NetMtu[CM_MAXINTERFACE_ADDR];    /* client's MTU sizes */
-    int cm_NetFlags[CM_MAXINTERFACE_ADDR];  /* network flags */
     DWORD dwPriority;
     OSVERSIONINFO osVersion;
 
@@ -1444,11 +1439,7 @@ afsd_InitCM(char **reasonP)
     cacheBlocks = ((afs_uint64)cacheSize * 1024) / blockSize;
 
     /* get network related info */
-    cm_noIPAddr = CM_MAXINTERFACE_ADDR;
-    code = syscfg_GetIFInfo(&cm_noIPAddr,
-                             cm_IPAddr, cm_SubnetMask,
-                             cm_NetMtu, cm_NetFlags);
-
+    code = cm_UpdateIFInfo();
     if ( (cm_noIPAddr <= 0) || (code <= 0 ) )
         afsi_log("syscfg_GetIFInfo error code %d", code);
     else

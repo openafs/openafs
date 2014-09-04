@@ -874,25 +874,32 @@ void cm_SetServerNoInlineBulk(cm_server_t * serverp, int no)
     lock_ReleaseMutex(&serverp->mx);
 }
 
+afs_int32 cm_UpdateIFInfo(void)
+{
+    afs_int32 code;
+    /* get network related info */
+    cm_noIPAddr = CM_MAXINTERFACE_ADDR;
+    code = syscfg_GetIFInfo(&cm_noIPAddr,
+			     cm_IPAddr, cm_SubnetMask,
+			     cm_NetMtu, cm_NetFlags);
+    cm_LanAdapterChangeDetected = 0;
+    return code;
+}
+
 void cm_SetServerIPRank(cm_server_t * serverp)
 {
     unsigned long	serverAddr; 	/* in host byte order */
     unsigned long	myAddr, myNet, mySubnet;/* in host byte order */
     unsigned long	netMask;
     int 		i;
-    long code;
+    afs_int32		code;
 
     lock_ObtainRead(&cm_syscfgLock);
     if (cm_LanAdapterChangeDetected) {
         lock_ConvertRToW(&cm_syscfgLock);
         if (cm_LanAdapterChangeDetected) {
-            /* get network related info */
-            cm_noIPAddr = CM_MAXINTERFACE_ADDR;
-            code = syscfg_GetIFInfo(&cm_noIPAddr,
-                                     cm_IPAddr, cm_SubnetMask,
-                                     cm_NetMtu, cm_NetFlags);
-            cm_LanAdapterChangeDetected = 0;
-        }
+	    code = cm_UpdateIFInfo();
+	}
         lock_ConvertWToR(&cm_syscfgLock);
     }
 

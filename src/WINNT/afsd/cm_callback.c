@@ -948,14 +948,9 @@ SRXAFSCB_WhoAreYou(struct rx_call *callp, struct interfaceAddr* addr)
     lock_ObtainRead(&cm_syscfgLock);
     if (cm_LanAdapterChangeDetected) {
         lock_ConvertRToW(&cm_syscfgLock);
-        if (cm_LanAdapterChangeDetected) {
-            /* get network related info */
-            cm_noIPAddr = CM_MAXINTERFACE_ADDR;
-            code = syscfg_GetIFInfo(&cm_noIPAddr,
-                                     cm_IPAddr, cm_SubnetMask,
-                                     cm_NetMtu, cm_NetFlags);
-            cm_LanAdapterChangeDetected = 0;
-        }
+	if (cm_LanAdapterChangeDetected) {
+	    code = cm_UpdateIFInfo();
+	}
         lock_ConvertWToR(&cm_syscfgLock);
     }
 
@@ -1255,12 +1250,7 @@ SRXAFSCB_TellMeAboutYourself( struct rx_call *callp,
     if (cm_LanAdapterChangeDetected) {
         lock_ConvertRToW(&cm_syscfgLock);
         if (cm_LanAdapterChangeDetected) {
-            /* get network related info */
-            cm_noIPAddr = CM_MAXINTERFACE_ADDR;
-            code = syscfg_GetIFInfo(&cm_noIPAddr,
-                                     cm_IPAddr, cm_SubnetMask,
-                                     cm_NetMtu, cm_NetFlags);
-            cm_LanAdapterChangeDetected = 0;
+	    code = cm_UpdateIFInfo();
         }
         lock_ConvertWToR(&cm_syscfgLock);
     }

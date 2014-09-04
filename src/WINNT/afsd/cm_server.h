@@ -123,6 +123,8 @@ extern void cm_RankUpServers();
 
 extern void cm_SetServerIPRank(cm_server_t * serverp);
 
+extern afs_int32 cm_UpdateIFInfo(void);
+
 extern void cm_InsertServerList(cm_serverRef_t** list,cm_serverRef_t* element);
 
 extern long cm_ChangeRankServer(cm_serverRef_t** list, cm_server_t* server);
