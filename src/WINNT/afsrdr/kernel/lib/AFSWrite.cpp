@@ -1870,21 +1870,25 @@ AFSCachedWrite( IN PDEVICE_OBJECT DeviceObject,
             if( !NT_SUCCESS( ntStatus))
             {
 
-                //
-                // Free up any potentially allocated mdl's
-                //
-
-                CcMdlWriteComplete( pFileObject,
-                                    &StartingByte,
-                                    Irp->MdlAddress);
-
-                Irp->MdlAddress = NULL;
-
                 AFSDbgTrace(( AFS_SUBSYSTEM_IO_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSCachedWrite (%p) Failed to process MDL write Status %08lX\n",
                               Irp,
                               ntStatus));
+
+		if ( Irp->IoStatus.Information > 0)
+		{
+
+		    CcMdlWriteComplete( pFileObject,
+					&StartingByte,
+					Irp->MdlAddress);
+
+		    //
+		    // Mdl is now Deallocated
+		    //
+
+		    Irp->MdlAddress = NULL;
+		}
             }
 
             try_return( ntStatus);
