@@ -280,7 +280,10 @@ cm_PingServer(cm_server_t *tsp)
     afs_inet_ntoa_r(tsp->addr.sin_addr.S_un.S_addr, hoststr);
     lock_ReleaseMutex(&tsp->mx);
 
-    code = cm_ConnByServer(tsp, cm_rootUserp, FALSE, &connp);
+    if (cm_noIPAddr > 0)
+	code = cm_ConnByServer(tsp, cm_rootUserp, FALSE, &connp);
+    else
+	code = RX_CALL_DEAD;	/* No network */
     if (code == 0) {
 	/* now call the appropriate ping call.  Drop the timeout if
 	* the server is known to be down, so that we don't waste a
@@ -530,10 +533,18 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
             lock_ReleaseMutex(&tsp->mx);
 
             serversp[nconns] = tsp;
-            code = cm_ConnByServer(tsp, cm_rootUserp, FALSE, &conns[nconns]);
+	    if (cm_noIPAddr > 0)
+		code = cm_ConnByServer(tsp, cm_rootUserp, FALSE, &conns[nconns]);
+	    else
+		code = RX_CALL_DEAD;
             if (code) {
-                lock_ObtainRead(&cm_serverLock);
-                cm_PutServerNoLock(tsp);
+		if (code == RX_CALL_DEAD) {
+		    lock_ObtainMutex(&tsp->mx);
+		    cm_MarkServerDown(tsp, code, isDown);
+		    lock_ReleaseMutex(&tsp->mx);
+		}
+		lock_ObtainRead(&cm_serverLock);
+		cm_PutServerNoLock(tsp);
                 continue;
             }
             lock_ObtainRead(&cm_serverLock);
@@ -667,9 +678,17 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
             lock_ReleaseMutex(&tsp->mx);
 
             serversp[nconns] = tsp;
-            code = cm_ConnByServer(tsp, cm_rootUserp, FALSE, &conns[nconns]);
+	    if (cm_noIPAddr > 0)
+		code = cm_ConnByServer(tsp, cm_rootUserp, FALSE, &conns[nconns]);
+	    else
+		code = RX_CALL_DEAD;
             if (code) {
-                lock_ObtainRead(&cm_serverLock);
+		if (code == RX_CALL_DEAD) {
+		    lock_ObtainMutex(&tsp->mx);
+		    cm_MarkServerDown(tsp, code, isDown);
+		    lock_ReleaseMutex(&tsp->mx);
+		}
+		lock_ObtainRead(&cm_serverLock);
                 cm_PutServerNoLock(tsp);
                 continue;
             }
