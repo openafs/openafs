@@ -2,8 +2,10 @@
 #     git ls-files -i --exclude-standard
 # to check that you haven't inadvertently ignored any tracked files.
 
+/fmt-t
+/dict-t
 /jhash-t
-/rbtree-t
 /queues-t
+/rbtree-t
 /time-t
 /uuid-t
