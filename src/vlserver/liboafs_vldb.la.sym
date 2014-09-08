@@ -32,3 +32,4 @@ ubik_VL_UpdateEntry
 ubik_VL_UpdateEntryByName
 xdr_bulkaddrs
 xdr_bulkentries
+xdr_nbulkentries
