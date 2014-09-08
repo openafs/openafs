@@ -11,6 +11,12 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.libtool
 
+# Increment these according to libtool's versioning rules (look them up!)
+# The output library looks like libafsauthen.<current - age>.<revision>
+LT_current = 2
+LT_revision = 0
+LT_age = 0
+
 LT_objs = \
 	$(top_builddir)/src/audit/libaudit_pic.la \
 	$(top_builddir)/src/auth/libauth_pic.la   \
@@ -38,6 +44,8 @@ libafsauthent.la: libafsauthent.la.sym $(LT_objs) $(LT_deps) libafsauthent_pic.l
 libafsauthent_pic.la: $(LT_objs)
 	$(LT_LDLIB_pic) $(LT_objs)
 
+# On AIX, libtool can only produce one of shared and static libraries in a
+# given invocation, so we need separate rules.
 libafsauthent.a: $(LT_objs) libafsauthent.la
 	$(LT_LDLIB_static) $(LT_objs)
 
@@ -51,8 +59,10 @@ clean:
 	$(LT_CLEAN)
 	$(RM) -f *.o libafsauthent.a
 
-install: libafsauthent.a libafsauthent_pic.la
+install: libafsauthent.la libafsauthent.a libafsauthent_pic.la
 	${INSTALL} -d ${DESTDIR}${libdir}
+	${LT_INSTALL_DATA} libafsauthent.la ${DESTDIR}${libdir}/libafsauthent.la
+	${RM} ${DESTDIR}${libdir}/libafsauthent.la
 	${INSTALL_DATA}  libafsauthent.a ${DESTDIR}${libdir}/libafsauthent.a
 	${INSTALL_DATA}  .libs/libafsauthent_pic.a ${DESTDIR}${libdir}/libafsauthent_pic.a
 
