@@ -919,7 +919,7 @@ long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
     rc = getAFSServer("afs3-vlserver", "udp", cellNamep, htons(7003),
                       cellHostAddrs, cellHostNames, ports, adminRanks, &numServers, ttl);
     if (rc == 0 && numServers > 0) {     /* found the cell */
-        for (i = 0; i < numServers; i++) {
+	for (i = 0; i < numServers; i++) {
             memcpy(&vlSockAddr.sin_addr.s_addr, &cellHostAddrs[i],
                    sizeof(long));
             vlSockAddr.sin_port = ports[i];

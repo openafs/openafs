@@ -1528,6 +1528,20 @@ int cm_IsServerListEmpty(cm_serverRef_t *serversp)
     return ( allDeleted ? CM_ERROR_EMPTY : 0 );
 }
 
+void cm_AppendServerList(cm_serverRef_t *dest, cm_serverRef_t **src)
+{
+    cm_serverRef_t *ref;
+
+    if (dest == NULL | src == NULL || *src == NULL)
+	return;
+
+    for (ref = dest; ref->next != NULL; ref = ref->next);
+
+    ref->next = *src;
+
+    *src = NULL;
+}
+
 void cm_FreeServerList(cm_serverRef_t** list, afs_uint32 flags)
 {
     cm_serverRef_t  **current;
