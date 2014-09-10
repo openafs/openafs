@@ -139,6 +139,8 @@ extern afs_uint32 cm_ServerListSize(cm_serverRef_t* list);
 
 extern void cm_FreeServerList(cm_serverRef_t** list, afs_uint32 flags);
 
+extern void cm_AppendServerList(cm_serverRef_t *dest, cm_serverRef_t **src);
+
 extern void cm_ForceNewConnectionsAllServers(void);
 
 extern void cm_SetServerNo64Bit(cm_server_t * serverp, int no64bit);

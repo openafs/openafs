@@ -747,16 +747,27 @@ cm_CreateCellWithInfo( char * cellname,
     rock.cellp = cm_GetCell(cellname, CM_FLAG_CREATE | CM_FLAG_NOPROBE);
     rock.flags = 0;
 
-    cm_FreeServerList(&rock.cellp->vlServersp, CM_FREESERVERLIST_DELETE);
-
     if (!(flags & CM_CELLFLAG_DNS)) {
+	int first = 1;
+
         for (i = 0; i < host_count; i++) {
             thp = gethostbyname(hostname[i]);
+	    if (first) {
+		/*
+		 * If there is at least one resolved vlserver or an authoritative,
+		 * host not found response, destroy the prior list.
+		 */
+		if (thp != NULL || WSAGetLastError() == WSAHOST_NOT_FOUND) {
+		    cm_FreeServerList(&rock.cellp->vlServersp, CM_FREESERVERLIST_DELETE);
+		    first = 0;
+		}
+	    }
+
             if (thp) {
-                int foundAddr = 0;
+		if (thp->h_addrtype != AF_INET)
+		    continue;
+
                 for (j=0 ; thp->h_addr_list[j]; j++) {
-                    if (thp->h_addrtype != AF_INET)
-                        continue;
                     memcpy(&vlSockAddr.sin_addr.s_addr,
                            thp->h_addr_list[j],
                            sizeof(long));
@@ -770,6 +781,12 @@ cm_CreateCellWithInfo( char * cellname,
         _InterlockedAnd(&rock.cellp->flags, ~CM_CELLFLAG_DNS);
     } else if (cm_dnsEnabled) {
         int ttl;
+	cm_serverRef_t * vlServersp = NULL;
+
+	lock_ObtainWrite(&cm_serverLock);
+	vlServersp = rock.cellp->vlServersp;
+	rock.cellp->vlServersp = NULL;
+	lock_ReleaseWrite(&cm_serverLock);
 
         code = cm_SearchCellByDNS(rock.cellp->name, NULL, &ttl, cm_AddCellProc, &rock);
         lock_ObtainMutex(&rock.cellp->mx);
@@ -779,8 +796,29 @@ cm_CreateCellWithInfo( char * cellname,
 #ifdef DEBUG
             fprintf(stderr, "cell %s: ttl=%d\n", rock.cellp->name, ttl);
 #endif
-        }
+	} else {
+	    lock_ObtainWrite(&cm_serverLock);
+	    if (rock.cellp->vlServersp == NULL) {
+		rock.cellp->vlServersp = vlServersp;
+		vlServersp = NULL;
+	    }
+	    lock_ReleaseWrite(&cm_serverLock);
+	}
+
+	cm_FreeServerList(&vlServersp, CM_FREESERVERLIST_DELETE);
+	if (vlServersp != NULL) {
+	    /*
+	     * We moved the vlServer list out of the way and
+	     * in the meantime it was replaced.  If the vlServerp
+	     * list is non-Empty after cm_FreeServerList was called
+	     * it means that there are deleted entries with active
+	     * references.  Must put them back onto the list to
+	     * avoid leaking the memory.
+	     */
+	    cm_AppendServerList(rock.cellp->vlServersp, &vlServersp);
+	}
     } else {
+	cm_FreeServerList(&rock.cellp->vlServersp, CM_FREESERVERLIST_DELETE);
         lock_ObtainMutex(&rock.cellp->mx);
         rock.cellp->flags &= ~CM_CELLFLAG_DNS;
     }
