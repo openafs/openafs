@@ -29,7 +29,7 @@ generated: update.cs.c update.ss.c update.xdr.c update.h
 #
 # Build targets
 #
-upclient: client.o update.cs.o utils.o ${LIBS} 
+upclient: client.o update.cs.o utils.o ${LIBS}
 	$(AFS_LDRULE) client.o update.cs.o utils.o \
 		${LIBS} $(LIB_roken) ${XLIBS}
 
@@ -73,7 +73,7 @@ dest: upserver upclient
 #
 # Misc. targets
 #
-clean: 
+clean:
 	$(RM) -f *.o upclient upserver update.ss.c update.cs.c update.xdr.c update.h core \
 	AFS_component_version_number.c
 

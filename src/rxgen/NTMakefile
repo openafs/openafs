@@ -9,7 +9,7 @@ RELDIR=rxgen
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
 
-INCFILEDIR = $(DESTDIR)\include\afs 
+INCFILEDIR = $(DESTDIR)\include\afs
 
 INCFILES =\
 	$(INCFILEDIR)\rxgen_consts.h
@@ -31,7 +31,7 @@ EXEOBJS =\
 	$(OUT)\rpc_util.obj \
 	$(OUT)\rpc_svcout.obj \
 	$(OUT)\rpc_clntout.obj
-	
+
 $(EXEOBJS): $$(@B).c
     $(C2OBJ) $**
 
@@ -40,7 +40,7 @@ $(EXERES): rxgen.rc AFS_component_version_number.h
 $(EXEFILE): $(EXEOBJS) $(EXERES) $(EXELIBS)
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
-	$(EXEPREP) 
+	$(EXEPREP)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 
@@ -51,4 +51,4 @@ clean::
 	$(DEL) $(EXERES)
 
 mkdir:
-	
+

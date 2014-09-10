@@ -66,4 +66,4 @@ $(BOZOOBJS): $(BOZO)\$$(@B).c
 $(OUT)\afsbosadmin.res: AFS_component_version_number.h
 
 mkdir:
-	
+

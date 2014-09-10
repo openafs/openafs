@@ -40,8 +40,8 @@ LIBOBJS =\
 	$(OUT)\butx_errs.obj \
 	$(OUT)\AFS_component_version_number.obj
 
-$(LIBFILE): $(LIBOBJS) 
-	$(LIBARCH) 
+$(LIBFILE): $(LIBOBJS)
+	$(LIBARCH)
 
 ############################################################################
 # rxgen on butc.xg and bumon.xg
@@ -71,12 +71,12 @@ bumon.h: bumon.xg
 	$(RXGEN) -A -h -o $@ bumon.xg
 
 ############################################################################
-# compile_et on butm_errs.et and butc_errs.et 
+# compile_et on butm_errs.et and butc_errs.et
 
 butm.h butm_errs.c: butm_errs.et butm.p.h
 	$(DEL) butm.h butm_errs.c
 	$(COMPILE_ET) butm_errs -h butm
-	
+
 tcdata.h butc_errs.c: butc_errs.et tcdata.p.h butm.h
 	$(DEL) tcdata.h butc_errs.c
 	$(COMPILE_ET) butc_errs -h tcdata
@@ -99,4 +99,4 @@ clean::
 		butc_errs.c butm_errs.c	butx_errs.c
 
 mkdir:
-	
+

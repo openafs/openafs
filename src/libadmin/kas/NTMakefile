@@ -63,4 +63,4 @@ $(RXOBJS): $(RX)\$$(@B).c
 $(OUT)\afskasadmin.res: AFS_component_version_number.h
 
 mkdir:
-	
+

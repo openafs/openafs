@@ -17,4 +17,4 @@ $(OUT)\dtest.exe: $(OUT)\dtest.obj $(DESTDIR)\lib\afs\afsdir.lib
         $(SYMSTORE_IMPORT)
 
 mkdir:
-	
+

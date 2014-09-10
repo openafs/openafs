@@ -23,8 +23,8 @@ LIBOBJS =\
 	$(OUT)\audit.obj \
         $(OUT)\audit-file.obj
 
-$(LIBFILE): $(LIBOBJS) 
-	$(LIBARCH)  
+$(LIBFILE): $(LIBOBJS)
+	$(LIBARCH)
 
 install:  $(INCFILES)  $(LIBFILE)
 

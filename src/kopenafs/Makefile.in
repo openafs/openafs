@@ -12,7 +12,7 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.shared
 
 
-# API version. When something changes, increment as appropriate. 
+# API version. When something changes, increment as appropriate.
 # Ignore at your own risk.
 MAJOR		= 1
 MINOR		= 1

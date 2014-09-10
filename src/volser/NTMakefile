@@ -43,7 +43,7 @@ LIBOBJS =\
 	$(OUT)\volint.xdr.obj \
 	$(OUT)\vsprocs.obj \
 	$(OUT)\vsutils.obj \
-	$(OUT)\AFS_component_version_number.obj 
+	$(OUT)\AFS_component_version_number.obj
 
 $(LIBFILE): $(LIBOBJS)
 	$(LIBARCH)
@@ -105,7 +105,7 @@ VOLSERVER_EXELIBS = \
 $(VOLSERVER_EXEFILE): $(VOLSERVER_EXEOBJS) $(VOLSERVER_EXELIBS) $(EXEC_LIBS) $(HEIMDEPS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib $(HEIMLINKOPTS)
         $(_VC_MANIFEST_EMBED_EXE)
-	$(EXEPREP) 
+	$(EXEPREP)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 
@@ -133,7 +133,7 @@ VOS_EXELIBS = \
 $(RS_VOS_EXEFILE): $(VOS_EXEOBJS) $(VOS_EXELIBS) $(EXEC_LIBS) $(HEIMDEPS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib $(HEIMLINKOPTS)
         $(_VC_MANIFEST_EMBED_EXE)
-	$(EXEPREP) 
+	$(EXEPREP)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 

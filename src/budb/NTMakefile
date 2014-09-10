@@ -34,8 +34,8 @@ LIBOBJS =\
 	$(OUT)\struct_ops.obj \
 	$(OUT)\AFS_component_version_number.obj
 
-$(LIBFILE): $(LIBOBJS) 
-	$(LIBARCH) 
+$(LIBFILE): $(LIBOBJS)
+	$(LIBARCH)
 
 
 ############################################################################
@@ -87,7 +87,7 @@ EXELIBS =\
 $(EXEFILE): $(EXEOBJS)  $(EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
-	$(EXEPREP) 
+	$(EXEPREP)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 
@@ -112,7 +112,7 @@ budb.h: budb.rg
 	$(RXGEN) -A -u -h -o budb.h budb.rg
 
 $(INCFILEDIR)\budb.h: budb.h
-	$(COPY) budb.h $(INCFILEDIR)\budb.h 
+	$(COPY) budb.h $(INCFILEDIR)\budb.h
 
 ############################################################################
 # compile_et on budb_errs.et
@@ -125,7 +125,7 @@ budb_errs.c: budb_errs.et
 	$(COMPILE_ET) budb_errs
 
 ############################################################################
-# install 
+# install
 
 install: $(INCFILES) $(LIBFILE) $(EXEFILE)
 

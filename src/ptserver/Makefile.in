@@ -117,7 +117,7 @@ CFLAGS_ptprocs.o = @CFLAGS_NOSTRICT@
 
 ptutils.o: ptutils.c ${INCLS}
 ptprocs.o: ptprocs.c ${INCLS}
-utils.o: utils.c ${INCLS} 
+utils.o: utils.c ${INCLS}
 map.o: map.c ${INCLS}
 ptint.ss.o: ptint.ss.c ptint.xdr.c ptint.xg
 ptint.cs.lo: ptint.cs.c ptint.xdr.c ptint.xg

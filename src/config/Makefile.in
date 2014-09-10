@@ -74,16 +74,16 @@ ${DEST}/include/afs/afs_sysnames.h ${DESTDIR}${includedir}/afs/afs_sysnames.h ${
 ${DEST}/include/afs/stds.h ${DESTDIR}${includedir}/afs/stds.h ${TOP_INCDIR}/afs/stds.h: ${srcdir}/stds.h
 	${INSTALL_DATA} $? $@
 
-${DEST}/include/afs/icl.h ${DESTDIR}${includedir}/afs/icl.h ${TOP_INCDIR}/afs/icl.h: ${srcdir}/icl.h 
+${DEST}/include/afs/icl.h ${DESTDIR}${includedir}/afs/icl.h ${TOP_INCDIR}/afs/icl.h: ${srcdir}/icl.h
 	${INSTALL_DATA} $? $@
 
-${DEST}/include/afs/afs_args.h ${DESTDIR}${includedir}/afs/afs_args.h ${TOP_INCDIR}/afs/afs_args.h: ${srcdir}/afs_args.h 
+${DEST}/include/afs/afs_args.h ${DESTDIR}${includedir}/afs/afs_args.h ${TOP_INCDIR}/afs/afs_args.h: ${srcdir}/afs_args.h
 	${INSTALL_DATA} $? $@
 
-${DEST}/include/afs/venus.h ${DESTDIR}${includedir}/afs/venus.h ${TOP_INCDIR}/afs/venus.h: ${srcdir}/venus.h 
+${DEST}/include/afs/venus.h ${DESTDIR}${includedir}/afs/venus.h ${TOP_INCDIR}/afs/venus.h: ${srcdir}/venus.h
 	${INSTALL_DATA} $? $@
 
-${DEST}/include/afs/vioc.h ${DESTDIR}${includedir}/afs/vioc.h ${TOP_INCDIR}/afs/vioc.h: ${srcdir}/vioc.h 
+${DEST}/include/afs/vioc.h ${DESTDIR}${includedir}/afs/vioc.h ${TOP_INCDIR}/afs/vioc.h: ${srcdir}/vioc.h
 	${INSTALL_DATA} $? $@
 
 # these are needed to compile the kernel.  Config is necessary to

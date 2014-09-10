@@ -162,7 +162,7 @@ cfgafs64: cfgafs64.o
 	  $(CC) $(LDFLAGS) -g ${INCS} -q64 -o cfgafs64 cfgafs64.o ; \
 	fi
 
-CFLAGS_cfgexport64.o = -g -q64 -D__XCOFF64__ 
+CFLAGS_cfgexport64.o = -g -q64 -D__XCOFF64__
 cfgexport64.o: ${srcdir}/cfgexport.c AFS_component_version_number.c
 	$(Q)if [ "x$(AIX64)" = "xyes" ]; then  \
 	  $(AFS_CCRULE_NOQ) $(srcdir)/cfgexport.c ; \

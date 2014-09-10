@@ -150,7 +150,7 @@ $(LT_objs): ${includes}
 
 sys.o: sys.c AFS_component_version_number.c ${includes}
 
-sys: sys.o 
+sys: sys.o
 	$(AFS_LDRULE) sys.o
 
 #

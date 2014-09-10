@@ -34,7 +34,7 @@ $(OUT)\rxperf.exe: $(OUT)\rxperf.obj $(OUT)\rxperf.res $(LIBS)
         $(SYMSTORE_IMPORT)
 
 mkdir:
-	
+
 install: all
 
 clean::

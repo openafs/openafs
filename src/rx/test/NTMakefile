@@ -54,7 +54,7 @@ $(OUT)\generator.exe: $(OUT)\generator.obj $(LIBS)
 $(RXTESTOBJS): ..\rx_clock.h ..\rx_queue.h ..\rx_event.h ..\rx.h
 
 mkdir:
-	
+
 install: tests
 
 clean::

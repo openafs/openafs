@@ -22,15 +22,15 @@ INCFILES =\
 ############################################################################
 # build afsacl.lib
 
-LIBFILE = $(DESTDIR)\lib\afs\afsacl.lib 
+LIBFILE = $(DESTDIR)\lib\afs\afsacl.lib
 
 LIBOBJS =\
 	$(OUT)\aclprocs.obj \
 	$(OUT)\netprocs.obj \
 	$(OUT)\AFS_component_version_number.obj
 
-$(LIBFILE): $(LIBOBJS) 
-	$(LIBARCH) 
+$(LIBFILE): $(LIBOBJS)
+	$(LIBARCH)
 
 
 ############################################################################
@@ -52,4 +52,4 @@ test:
 
 
 mkdir:
-	
+

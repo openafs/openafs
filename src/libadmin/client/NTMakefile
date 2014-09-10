@@ -48,4 +48,4 @@ install: $(DLLFILE) $(LIBINCLUDES)
 $(OUT)\afsclientadmin.res: AFS_component_version_number.h
 
 mkdir:
-	
+

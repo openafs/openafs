@@ -29,8 +29,8 @@ DIR_LIBOBJS =\
 	$(OUT)\salvage.obj \
 	$(OUT)\AFS_component_version_number.obj
 
-$(DIR_LIBFILE): $(DIR_LIBOBJS) 
-	$(LIBARCH)  
+$(DIR_LIBFILE): $(DIR_LIBOBJS)
+	$(LIBARCH)
 
 
 ############################################################################
@@ -68,4 +68,4 @@ install: $(DIR_LIBFILE) $(MT_DIR_LIBFILE) $(INCFILES)
 clean::
 
 mkdir:
-	
+

@@ -24,7 +24,7 @@ FSINT=../fsint
 
 CLIENTOBJS=osd.o
 
-RXOSDOBJS=rxosd.o rxosd.ss.o rxosd.cs.o rxosd.xdr.o rxosd_hpss.o rxosd_dcache.o	
+RXOSDOBJS=rxosd.o rxosd.ss.o rxosd.cs.o rxosd.xdr.o rxosd_hpss.o rxosd_dcache.o
 
 LWPOBJS=lock.o threadname.o
 
@@ -52,7 +52,7 @@ ${TOP_INCDIR}/afs/rxosd.h: rxosd.h
 osd: osd.o rxosd.cs.o osddbuser.o policy_parser.o
 	${AFS_LDRULE} osd.o rxosd.cs.o rxosd.xdr.o policy_parser.o \
 		${OSDDBOBJS} ${LIBS} ${MT_LIBS} ${XLIBS}
-	
+
 CFLAGS_rxosd.o = ${HSM_INC} ${PNFS_OPT} -DBUILDING_RXOSD
 
 CFLAGS_hpss.o = ${HSM_INC} ${PNFS_OPT} -DBUILDING_RXOSD
@@ -172,7 +172,7 @@ librxosd.a: rxosd.xdr.o rxosd.cs.o
 ${TOP_LIBDIR}/librxosd.a: librxosd.a
 	${INSTALL} $? $@
 
-install: 
+install:
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
 	${INSTALL} -d ${DESTDIR}${bindir}
 	${INSTALL_PROGRAM} rxosd ${DESTDIR}}${afssrvlibexecdir}/rxosd
@@ -185,7 +185,7 @@ dest:
 	${INSTALL_PROGRAM} rxosd ${DEST}/root.server/usr/afs/bin/rxosd
 	${INSTALL_PROGRAM} readabyte ${DEST}/root.server/usr/afs/bin/readabyte
 	${INSTALL_PROGRAM} osd ${DEST}/bin/osd
-	
+
 clean:
 	$(RM) -f *.o rxosd.*.* rxosd.[oh] Krxo* osd core AFS_component_version_number.c osddb* policy_parser.c
 

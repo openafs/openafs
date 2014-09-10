@@ -24,7 +24,7 @@ all: \
 
 depinstall: \
 	${TOP_INCDIR}/afs/acl.h \
-	${TOP_INCDIR}/afs/prs_fs.h 
+	${TOP_INCDIR}/afs/prs_fs.h
 
 ${TOP_LIBDIR}/libacl.a: libacl.a
 	${INSTALL_DATA} $? $@
@@ -67,7 +67,7 @@ dest: libacl.a acl.h prs_fs.h
 test:
 	cd test; $(MAKE)
 
-clean: 
+clean:
 	$(LT_CLEAN)
 	$(RM) -f acltest *.o *.a core AFS_component_version_number.c
 

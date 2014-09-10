@@ -12,12 +12,12 @@ MODULE_CFLAGS=$(LDIRS) $(LIBS)
 
 all: testproc
 
-install:  
+install:
 
 #
 # Build targets
 #
-testproc: testproc.c 
+testproc: testproc.c
 	$(CC) $(AFS_LDFLAGS) $(AFS_CFLAGS) -o testproc testproc.c
 
 #
@@ -26,5 +26,5 @@ testproc: testproc.c
 clean:
 	$(RM) -f  *.a *.o testproc core
 
-dest:  
+dest:
 

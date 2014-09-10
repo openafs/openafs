@@ -68,4 +68,4 @@ $(PTSERVEROBJS): $(PTSERVER)\$$(@B).c
 $(OUT)\afsptsadmin.res: AFS_component_version_number.h
 
 mkdir:
-	
+

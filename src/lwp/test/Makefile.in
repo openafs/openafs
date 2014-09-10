@@ -10,7 +10,7 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.lwp
 
 
-INCDIRS= -I.. -I${DESTDIR}/include 
+INCDIRS= -I.. -I${DESTDIR}/include
 LIBS= ../liblwp.a
 
 system noversion: test

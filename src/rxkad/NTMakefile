@@ -29,7 +29,7 @@ LIBOBJS =\
 	$(OUT)\bg-fcrypt.obj \
 	$(OUT)\ticket5.obj \
 	$(OUT)\crc.obj \
-	$(OUT)\crypt_conn.obj 
+	$(OUT)\crypt_conn.obj
 
 $(LIBOBJS):
 
@@ -37,7 +37,7 @@ $(LIBOBJS):
 LIBFILE = $(DESTDIR)\lib\afsrxkad.lib
 
 $(LIBFILE): $(LIBOBJS)
-	$(LIBARCH)  
+	$(LIBARCH)
 
 # generate rxkad.h and rxkad_errs.c from rxkad_errs.et
 
@@ -47,7 +47,7 @@ $(INCFILES):$$(@F)
 	 $(COPY)  stats.h $(INCFILEDIR)\rxkad_stats.h
 
 rxkad.h rxkad_errs.c : rxkad_errs.et rxkad.p.h
-	$(DEL) rxkad_errs.c 
+	$(DEL) rxkad_errs.c
 	$(COMPILE_ET) rxkad_errs -h rxkad
 
 $(OUT)\fcrypt.obj: fcrypt.c fcrypt.h sboxes.h rxkad.h rxkad_prototypes.h
@@ -63,4 +63,4 @@ clean::
 	$(DEL) $(LIBFILE)
 
 mkdir:
-	
+

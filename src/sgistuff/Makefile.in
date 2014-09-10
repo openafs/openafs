@@ -48,7 +48,7 @@ KAFSLIBS=${TOP_LIBDIR}/libkauth.krb.a \
 
 AUTHFILES=ta-rauth.o rcmd.o herror.o
 AUTHLIBS=afsauthlib.so afskauthlib.so
-TARGETS=$(AUTHLIBS) 
+TARGETS=$(AUTHLIBS)
 
 all: ${TOP_LIBDIR}/afsauthlib.so ${TOP_LIBDIR}/afskauthlib.so
 
@@ -71,7 +71,7 @@ dest: afsauthlib.so afskauthlib.so
 		${DEST}/root.client/usr/vice/etc/afskauthlib.so
 
 clean:
-	$(RM) -f $(AUTHLIBS) $(AUTHFILES) 
+	$(RM) -f $(AUTHLIBS) $(AUTHFILES)
 
 afsauthlib.so: sgi_auth.o ${AFSLIBS} ${AUTHFILES}
 	$(LD) ${AFS_LDFLAGS} -shared -all -o afsauthlib.so sgi_auth.o $(AFSLIBS) ${AUTHFILES}

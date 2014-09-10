@@ -63,7 +63,7 @@ CMLIBS=${TOP_LIBDIR}/libsys.a \
 	 $(TOP_LIBDIR)/libopr.a \
 	 $(TOP_LIBDIR)/libafsutil.a
 
-LIBS = ${FSLIBS} 
+LIBS = ${FSLIBS}
 
 all: fs up fstrace cmdebug livesys kdump-build cacheout afsio
 
@@ -181,7 +181,7 @@ kdump: kdump.o
 	* )     ${CC} -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a ${XLIBS} ;; \
 	esac
 
-kdump64: 
+kdump64:
 	-set -x; \
 	case ${SYS_NAME} in \
 	sun4x_5[789] | sun4x_510 | hp_ux11* | sunx86_5[789] | sunx86_510 )  \

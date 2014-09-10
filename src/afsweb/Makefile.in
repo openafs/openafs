@@ -25,11 +25,11 @@ SRC_MODULE=afs_module.c
 ## This module is made compatible with Apache 1.3.1 by including a file called
 ## ap_compat.h provided by Apache (basically all they do is #define all the old API calls
 ## as the new ones with ap_ prepended to the old API calls. The makefile takes care of this
-## while building afs_module.c and adding the AFS_component_version_number.c file's contents 
-## in comments. 
+## while building afs_module.c and adding the AFS_component_version_number.c file's contents
+## in comments.
 
 APACHEAFS_DOC=README
-APACHE_INSTALL_SCRIPT=afswsApache_config.sh 
+APACHE_INSTALL_SCRIPT=afswsApache_config.sh
 NETSCAPE_INSTALL_SCRIPT=afswsNetscape_config.sh
 
 system apache_afs_web_secure:
@@ -133,13 +133,13 @@ netscape_afs_web_secure:
 	${INSTALL} -d ${DEST}/root.afsweb/install
 	${INSTALL} -m 755 ${NETSCAPE_INSTALL_SCRIPT} ${DEST}/root.afsweb/install
 
-all: 
+all:
 
-install:  
+install:
 
 ##
 ## For Apache Afs Web Secure libraries and binaries
-## NOTE: APACHE_INCLUDES should point to the Apache src directory where 
+## NOTE: APACHE_INCLUDES should point to the Apache src directory where
 ## httpd.h and all it's included files reside which right now is src/afsweb/include
 ## and we have Apache versions as subdirectories but these are taken care of by the
 ## code. Be sure to compile with the VERSION_CFLAG=-DAPACHE_1_3 option for Apache 1.3
@@ -191,8 +191,8 @@ OBJS=$(LIBOBJS) apache_afs_weblog.o weblog.o
 weblog: weblog.o $(APACHE_AFS_COMMON_LIB)
 	$(CC) -o $@ weblog.o $(APACHE_AFS_COMMON_LIB) $(LIBS) $(XLIBS)
 
-weblog_starter: apache_afs_weblog.o weblog_errors.h 
-	$(CC) -o $@ apache_afs_weblog.o 
+weblog_starter: apache_afs_weblog.o weblog_errors.h
+	$(CC) -o $@ apache_afs_weblog.o
 
 $(APACHE_AFS_COMMON_LIB):$(LIBCOMMON_OBJS)
 	- /bin/rm -f $@
@@ -200,9 +200,9 @@ $(APACHE_AFS_COMMON_LIB):$(LIBCOMMON_OBJS)
 
 $(APACHE_AFS_LIB): $(LIBOBJS) AFS_component_version_number.o
 	- /bin/rm -f $@
-	$(AR) $(ARFLAGS) $@ $(LIBOBJS) 
+	$(AR) $(ARFLAGS) $@ $(LIBOBJS)
 
-afs_module.c: apache_afs_module.c 
+afs_module.c: apache_afs_module.c
 	-/bin/rm -f afs_module.c \
 	; echo "/*" > afs_module.c \
 	; cat AFS_component_version_number.c >> afs_module.c \
@@ -236,5 +236,5 @@ libclean:
 
 include ../config/Makefile.version
 
-dest:  
+dest:
 

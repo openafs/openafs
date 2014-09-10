@@ -30,7 +30,7 @@ RXDLIBS = $(LIBDIR)\afs\afscmd.lib \
 	  $(LIBDIR)\opr.lib
 
 $(OUT)\rxdebug.res: rxdebug.rc $(VERSFILE).h
-	$(RC) /Fo$*.RES $(*F).rc 
+	$(RC) /Fo$*.RES $(*F).rc
 
 $(OUT)\rxdebug.obj: rxdebug.c
 
@@ -47,4 +47,4 @@ clean::
 	$(DEL) $(RXDOBJS) $(RXDEBUG)
 
 mkdir:
-	
+

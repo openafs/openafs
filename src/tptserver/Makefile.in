@@ -48,7 +48,7 @@ all: ptserver pts pt_util db_verify \
 generated: \
 	pterror.h pterror.c
 
-depinstall: 
+depinstall:
 
 # When supergroups is enabled, some parts of ptserver cast between
 # incompatible structs.

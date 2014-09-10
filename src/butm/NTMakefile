@@ -23,8 +23,8 @@ LIBOBJS =\
 	$(OUT)\file_tm.obj \
 	$(OUT)\AFS_component_version_number.obj
 
-$(LIBFILE): $(LIBOBJS) 
-	$(LIBARCH) 
+$(LIBFILE): $(LIBOBJS)
+	$(LIBARCH)
 
 ############################################################################
 # Install target; primary makefile target
@@ -36,7 +36,7 @@ install: $(INCFILES) $(LIBFILE) $(OUT)\test_ftm.exe
 # Local clean target; augments predefined clean target
 
 clean::
-	$(DEL) test_ftm.exe 
+	$(DEL) test_ftm.exe
 
 ############################################################################
 # Auxiliary build targets not built by default; e.g. test programs
@@ -56,4 +56,4 @@ $(OUT)\test_ftm.exe: $(OUT)\test_ftm.obj $(LIBFILE) $(TESTLIBS)
         $(SYMSTORE_IMPORT)
 
 mkdir:
-	
+

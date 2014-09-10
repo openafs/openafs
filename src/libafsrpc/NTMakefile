@@ -65,7 +65,7 @@ DLLOBJS = $(MULTIOBJS) $(RXOBJS) $(XDROBJS) $(RXSTATBJS) $(LIBRXKAD_OBJS) \
         $(LWPOBJS) $(OUT)\afsrpc.res
 
 $(MULTIOBJS) $(RXOBJS) $(XDROBJS):$(RX)\$$(@B).c
-	$(C2OBJ) $** -I$(RX) 
+	$(C2OBJ) $** -I$(RX)
 
 $(RXSTATBJS):$(RXSTAT)\$$(@B).c
 	$(C2OBJ) $** -I$(RXSTAT)

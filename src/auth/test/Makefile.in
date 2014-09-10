@@ -16,10 +16,10 @@ LIBS= ../libauth.a ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/librx.a \
 
 tests all: testcellconf ktctest
 
-testcellconf: testcellconf.o 
+testcellconf: testcellconf.o
 	$(AFS_LDRULE) testcellconf.o  ${LIBS}
 
-ktctest: ktctest.o 
+ktctest: ktctest.o
 	$(AFS_LDRULE) ktctest.o  ${LIBS}
 
 clean:

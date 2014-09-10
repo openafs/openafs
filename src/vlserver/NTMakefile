@@ -23,7 +23,7 @@ INCFILES = \
 
 $(INCFILEDIR)\vl_opcodes.h: vl_opcodes.h
 	$(COPY) vl_opcodes.h $(INCFILEDIR)\vl_opcodes.h
-        
+
 ############################################################################
 # build afsvldb.lib
 
@@ -35,8 +35,8 @@ LIBOBJS =\
 	$(OUT)\vldbint.xdr.obj \
 	$(OUT)\AFS_component_version_number.obj
 
-$(LIBFILE): $(LIBOBJS)  
-	$(LIBARCH) 
+$(LIBFILE): $(LIBOBJS)
+	$(LIBARCH)
 
 ############################################################################
 # build mtafsvldb.lib
@@ -58,8 +58,8 @@ $(OUT)\vldbint.cs_mt.obj:vldbint.cs.c
 $(OUT)\vldbint.xdr_mt.obj:vldbint.xdr.c
 	$(C2OBJ) $** -DAFS_PTHREAD_ENV
 
-$(MT_LIBFILE): $(MT_LIBOBJS)  
-	$(LIBARCH) 
+$(MT_LIBFILE): $(MT_LIBOBJS)
+	$(LIBARCH)
 
 ############################################################################
 # build vlserver.exe
@@ -98,7 +98,7 @@ VLSERVER_EXECLIBS = \
 $(VLSERVER): $(VLSERVER_EXEOBJS) $(LIBFILE) $(VLSERVER_EXECLIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
-	$(EXEPREP) 
+	$(EXEPREP)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 

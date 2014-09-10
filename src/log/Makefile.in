@@ -98,7 +98,7 @@ dest: unlog tokens tokens.krb pagsh pagsh.krb
 #
 # Misc. targets
 #
-clean:	
+clean:
 	$(RM) -f *.o unlog tokens kseal pagsh pagsh.krb \
 		core AFS_component_version_number.c tokens.krb
 

@@ -91,13 +91,13 @@ BOZOOBJS=\
 	$(OUT)\boserr.obj
 
 KAUTHOBJS=\
-	$(OUT)\kaerrors.obj 
+	$(OUT)\kaerrors.obj
 
 CMDOBJS=\
-	$(OUT)\cmd_errors.obj 
+	$(OUT)\cmd_errors.obj
 
 PTSERVEROBJS=\
-	$(OUT)\pterror.obj 
+	$(OUT)\pterror.obj
 
 UBIKOBJS=\
 	$(OUT)\uerrors.obj

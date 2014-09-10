@@ -60,13 +60,13 @@ install: fsprobe.h libfsprobe.a
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
 	${INSTALL} -d ${DESTDIR}${libdir}/afs
 	${INSTALL_DATA} ${srcdir}/fsprobe.h ${DESTDIR}${includedir}/afs/fsprobe.h
-	${INSTALL_DATA} libfsprobe.a ${DESTDIR}${libdir}/afs/libfsprobe.a 
+	${INSTALL_DATA} libfsprobe.a ${DESTDIR}${libdir}/afs/libfsprobe.a
 
 dest: fsprobe.h libfsprobe.a
 	${INSTALL} -d ${DEST}/include/afs
 	${INSTALL} -d ${DEST}/lib/afs
 	${INSTALL_DATA} ${srcdir}/fsprobe.h ${DEST}/include/afs/fsprobe.h
-	${INSTALL_DATA} libfsprobe.a ${DEST}/lib/afs/libfsprobe.a 
+	${INSTALL_DATA} libfsprobe.a ${DEST}/lib/afs/libfsprobe.a
 
 #
 # Misc others

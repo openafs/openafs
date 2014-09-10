@@ -12,11 +12,11 @@ RELDIR=ubik
 ############################################################################
 # Install header files
 
-INCFILEDIR = $(DESTDIR)\include 
+INCFILEDIR = $(DESTDIR)\include
 
 INCFILES =\
 	$(INCFILEDIR)\ubik.h \
-	$(INCFILEDIR)\ubik_int.h 
+	$(INCFILEDIR)\ubik_int.h
 
 install_headers: $(INCFILES)
 
@@ -45,7 +45,7 @@ LIBOBJS =\
 
 
 $(LIBFILE): $(LIBOBJS)
-	$(LIBARCH) 
+	$(LIBARCH)
 
 ############################################################################
 # build mtafsubik.lib
@@ -115,8 +115,8 @@ $(OUT)\ubikcmd_mt.obj:ubikcmd.c
 $(OUT)\ubikclient_mt.obj:ubikclient.c
 	$(C2OBJ) $** -DAFS_PTHREAD_ENV
 
-$(MT_LIBFILE): $(MT_LIBOBJS)  
-	$(LIBARCH) 
+$(MT_LIBFILE): $(MT_LIBOBJS)
+	$(LIBARCH)
 
 ############################################################################
 # Definitions for building a EXE.
@@ -141,10 +141,10 @@ UDBG_EXELIBS =\
 	$(DESTDIR)\lib\afsroken.lib
 
 
-$(RS_UDBG_EXEFILE): $(UDBG_EXEOBJS) $(UDBG_EXELIBS)  
+$(RS_UDBG_EXEFILE): $(UDBG_EXEOBJS) $(UDBG_EXELIBS)
 	$(EXECONLINK) iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
-	$(EXEPREP)  
+	$(EXEPREP)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 
@@ -188,32 +188,32 @@ uerrors.c ubik.h: uerrors.et ubik.p.h
 install: $(INCFILES) $(LIBFILE) $(MT_LIBFILE) $(CL_UDBG_EXEFILE)
 
 clean::
-	$(DEL) ubik_int.ss.c ubik_int.cs.c ubik_int.xdr.c 
+	$(DEL) ubik_int.ss.c ubik_int.cs.c ubik_int.xdr.c
 	$(DEL) uerrors.c $(INCFILES)
 	$(DEL) ubik_int.h ubik.h
 
 ############################################################################
 # test ubik
 
-test tests: utst_server utst_client $(EXEFILE) 
+test tests: utst_server utst_client $(EXEFILE)
 
 utst_server: $(OUT)\utst_server.obj $(OUT)\utst_int.ss.obj $(OUT)\utst_int.xdr.obj  $(EXELIBS)
-	$(EXECONLINK) 
+	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
-	
+
 utst_client: $(OUT)\utst_client.obj $(OUT)\utst_int.cs.obj $(OUT)\utst_int.xdr.obj $(EXELIBS)
-	$(EXECONLINK) 
+	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
-	
+
 # rxgen on utst_int.xg
 utst_int.ss.c utst_int.cs.c utst_int.xdr.c utst_int.h: utst_int.xg
 	$(RXGEN)  utst_int.xg
 
-$(OUT)\utst_server.obj $(OUT)\utst_client.obj : utst_int.h 
+$(OUT)\utst_server.obj $(OUT)\utst_client.obj : utst_int.h
 
 mkdir:
-	
+

@@ -57,7 +57,7 @@ USVR_OBJS = \
 $(UPSERVER):  $(USVR_OBJS) $(LIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
-	$(EXEPREP) 
+	$(EXEPREP)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 
@@ -75,7 +75,7 @@ UCLNT_OBJS = \
 $(UPCLIENT):  $(UCLNT_OBJS)  $(LIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
-	$(EXEPREP) 
+	$(EXEPREP)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 

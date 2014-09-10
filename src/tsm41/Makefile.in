@@ -52,7 +52,7 @@ AUTH_OBJS = \
 		aix_ktc_null.o
 
 AUTH_KRB5_OBJS = \
-		aix_aklog.o 
+		aix_aklog.o
 
 AUTH_KRB_OBJS = \
 		aix_auth.o \
@@ -63,7 +63,7 @@ AUTH_KRB_OBJS = \
 AUTHLIBS= \
 		afs_dynamic_auth afs_dynamic_kerbauth @MAKE_KRB5@ aklog_dynamic_auth
 
-IMPORTS = -bI:/lib/aio.exp -bI:/lib/netinet.exp -bI:/lib/sockets.exp -bI:/lib/statcmd.exp 
+IMPORTS = -bI:/lib/aio.exp -bI:/lib/netinet.exp -bI:/lib/sockets.exp -bI:/lib/statcmd.exp
 LDFLAGS = -eafs_initialize ${IMPORTS} -lsys -lcsys -lc
 AKLDFLAGS = -eaklog_initialize ${IMPORTS} -lsys -lcsys -lc
 
@@ -116,7 +116,7 @@ aix_ident.o: ${srcdir}/aix41_ident.c
 	$(AFS_CCRULE) ${srcdir}/aix41_ident.c
 
 dest: afs_dynamic_auth afs_dynamic_kerbauth @MAKE_KRB5@ aklog_dynamic_auth
-	${INSTALL} -d ${DEST}/root.client/usr/vice/etc 
+	${INSTALL} -d ${DEST}/root.client/usr/vice/etc
 	${INSTALL_PROGRAM} afs_dynamic_auth \
 		${DEST}/root.client/usr/vice/etc/afs_dynamic_auth
 	${INSTALL_PROGRAM} afs_dynamic_kerbauth \

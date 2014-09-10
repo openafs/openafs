@@ -53,7 +53,7 @@ $(OUT)\test_interim_ktc.exe: $(OUT)\test_interim_ktc.obj
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 
-$(OUT)\test_rxkad_free: test_rxkad_free.o 
+$(OUT)\test_rxkad_free: test_rxkad_free.o
 	$(EXECONLINK) $(EXELIBS)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
@@ -116,4 +116,4 @@ runtest: background multiklog test_badtix test_interim_ktc test_rxkad_free
 clean::
 
 mkdir:
-	
+

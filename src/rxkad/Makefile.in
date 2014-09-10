@@ -112,7 +112,7 @@ ticket.o ticket.lo: rxkad.h
 
 tcrypt.o: tcrypt.c AFS_component_version_number.o
 
-tcrypt: tcrypt.o librxkad.a 
+tcrypt: tcrypt.o librxkad.a
 	$(AFS_LDRULE) tcrypt.o librxkad.a
 
 fc_test: ${fc_test_OBJS} ${fc_test_LIBS}
@@ -144,7 +144,7 @@ dest: librxkad.a fcrypt.h rxkad.h rxkad_prototypes.h
 #
 # Misc. targets
 #
-clean: 
+clean:
 	$(LT_CLEAN)
 	$(RM) -f *.o *.a tcrypt core rxkad_errs.c rxkad.h \
 		AFS_component_version_number.c fc_test

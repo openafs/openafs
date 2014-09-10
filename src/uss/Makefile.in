@@ -41,7 +41,7 @@ OBJS =  uss_procs.o \
 	uss_kauth.o \
 	uss_fs.o \
 	lex.yy.o \
-	y.tab.o 
+	y.tab.o
 
 uss: uss.o ${OBJS} $(LIBS)
 	$(AFS_LDRULE) uss.o ${OBJS} ${LIBS} $(LIB_roken) $(LIB_crypt) $(XLIBS)

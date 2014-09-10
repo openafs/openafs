@@ -56,7 +56,7 @@ vldb_check: vldb_check.o AFS_component_version_number.o $(LIBS_client)
 	$(LT_LDRULE_static) vldb_check.o AFS_component_version_number.o \
 		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
-vldb_check.o: ${VLSERVER}/vldb_check.c 
+vldb_check.o: ${VLSERVER}/vldb_check.c
 	$(AFS_CCRULE) $(VLSERVER)/vldb_check.c
 
 cnvldb: cnvldb.o $(LIBS_client)
@@ -87,8 +87,8 @@ vlutils.o: ${VLSERVER}/vlutils.c ${INCLS}
 vlprocs.o: ${VLSERVER}/vlprocs.c ${INCLS}
 	$(AFS_CCRULE) $(VLSERVER)/vlprocs.c
 
-vldbint.ss.o: vldbint.ss.c 
-vldbint.xdr.o: vldbint.xdr.c 
+vldbint.ss.o: vldbint.ss.c
+vldbint.xdr.o: vldbint.xdr.c
 
 
 vldbint.ss.c: ${VLSERVER}/vldbint.xg
@@ -106,7 +106,7 @@ vldbint.xdr.c: vldbint.h
 vlclient: vlclient.o $(LIBS_client)
 	$(LT_LDRULE_static) vlclient.o $(LIBS_client) \
 		$(LIB_roken) ${MT_LIBS} ${XLIBS}
-		
+
 vlclient.o: ${VLSERVER}/vlclient.c
 	$(AFS_CCRULE) $(VLSERVER)/vlclient.c
 

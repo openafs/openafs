@@ -9,8 +9,8 @@ RELDIR=cmd
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
 
-# install include files 
-INCFILEDIR = $(DESTDIR)\include\afs 
+# install include files
+INCFILEDIR = $(DESTDIR)\include\afs
 
 INCFILES =\
 	$(INCFILEDIR)\cmd.h
@@ -40,7 +40,7 @@ $(OUT)\config_file.obj: $(HEIMDAL)\$$(@B).c
         $(C2OBJ) -I$(HEIMDAL) -DKRB5_USE_PATH_TOKENS $**
 
 $(LIBFILE): $(LIBOBJS) $(HEIMOBJS)
-	$(LIBARCH) 
+	$(LIBARCH)
 
 $(INCFILES):$$(@F)
 	 $(COPY)  $** $(INCFILEDIR)\.
@@ -59,4 +59,4 @@ clean::
 test tests:
 
 mkdir:
-	
+

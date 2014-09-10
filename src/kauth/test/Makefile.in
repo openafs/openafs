@@ -14,7 +14,7 @@ LIBS= -llwp -ldes -lrxkad -lauth -lcmd -lubik -lprot -lsys -lrx -lafscom_err -lk
 
 # the only tests _known_ to work are multiklog and the tcl scripts.
 
-all test tests: multiklog 
+all test tests: multiklog
 
 install:
 dest:
@@ -37,10 +37,10 @@ decode_ticket: decode_ticket.o
 test_interim_ktc: test_interim_ktc.o
 	$(AFS_LDRULE) test_interim_ktc.o ${LDIRS} ${LIBS}
 
-test_rxkad_free: test_rxkad_free.o 
+test_rxkad_free: test_rxkad_free.o
 	$(AFS_LDRULE) test_rxkad_free.o ${LDIRS} ${LIBS}
 
-test_getticket: test_getticket.o 
+test_getticket: test_getticket.o
 	$(AFS_LDRULE) test_getticket.o ${LDIRS} ${LIBS}
 
 background: background.c

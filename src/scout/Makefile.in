@@ -22,7 +22,7 @@ INCLS=${TOP_INCDIR}/afs/gtxobjects.h \
 	${TOP_INCDIR}/afs/keys.h \
 	${TOP_INCDIR}/afs/cellconfig.h \
 	${TOP_INCDIR}/afs/cmd.h
- 
+
 LIBS=${TOP_LIBDIR}/libgtx.a \
 	${TOP_LIBDIR}/libfsprobe.a \
 	${TOP_LIBDIR}/libvolser.a \

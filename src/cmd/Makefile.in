@@ -14,7 +14,7 @@ LT_objs=cmd_errors.lo cmd.lo config_file.lo AFS_component_version_number.lo
 LT_deps=$(top_builddir)/src/comerr/liboafs_comerr.la
 LT_libs=
 
-LIB64OBJS=cmd_errors64.o cmd64.o 
+LIB64OBJS=cmd_errors64.o cmd64.o
 
 all: ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libcmd_pic.a \
      ${TOP_INCDIR}/afs/cmd.h liboafs_cmd.la
@@ -86,7 +86,7 @@ install: libcmd.a cmd.h
 install64: install libcmd64.a
 	${INSTALL_DATA} libcmd64.a ${DESTDIR}${libdir}/afs/libcmd64.a
 
-dest: libcmd.a cmd.h 
+dest: libcmd.a cmd.h
 	${INSTALL} -d ${DEST}/lib/afs
 	${INSTALL} -d ${DEST}/include/afs
 	${INSTALL_DATA} libcmd.a ${DEST}/lib/afs/libcmd.a
@@ -98,7 +98,7 @@ dest64: dest libcmd64.a
 #
 # Misc targets
 #
-test tests: 
+test tests:
 	(cd test; $(MAKE) )
 
 clean:

@@ -34,10 +34,10 @@ LIBOBJS =\
 	$(OUT)\AFS_component_version_number.obj
 
 $(LIBFILE): $(LIBOBJS)
-	$(LIBARCH)  
+	$(LIBARCH)
 
 # use rxgen on afscbint.xg and afsint.xg
-afscbint.cs.c: common.xg afscbint.xg afsint.h afscbint.h 
+afscbint.cs.c: common.xg afscbint.xg afsint.h afscbint.h
 	$(RXGEN) -x -C -o afscbint.cs.c afscbint.xg
 
 afscbint.ss.c: common.xg afscbint.xg afsint.h afscbint.h
@@ -78,28 +78,28 @@ MT_LIBOBJS =\
 
 
 $(OUT)\afscbint.cs_mt.obj:afscbint.cs.c
-	$(C2OBJ) $** -DAFS_PTHREAD_ENV 
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
 
 $(OUT)\afscbint.ss_mt.obj:afscbint.ss.c
-	$(C2OBJ) $** -DAFS_PTHREAD_ENV 
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
 
 $(OUT)\afscbint.xdr_mt.obj:afscbint.xdr.c
-	$(C2OBJ) $** -DAFS_PTHREAD_ENV 
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
 
 $(OUT)\afsint.cs_mt.obj:afsint.cs.c
-	$(C2OBJ) $** -DAFS_PTHREAD_ENV 
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
 
 $(OUT)\afsint.ss_mt.obj:afsint.ss.c
-	$(C2OBJ) $** -DAFS_PTHREAD_ENV 
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
 
 $(OUT)\afsint.xdr_mt.obj:afsint.xdr.c
-	$(C2OBJ) $** -DAFS_PTHREAD_ENV 
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
 
 $(OUT)\afsaux_mt.obj:afsaux.c
-	$(C2OBJ) $** -DAFS_PTHREAD_ENV 
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
 
 $(MT_LIBFILE): $(MT_LIBOBJS)
-	$(LIBARCH)  
+	$(LIBARCH)
 
 install: $(LIBFILE) $(INCFILES) $(MT_LIBFILE)
 
@@ -107,4 +107,4 @@ clean::
 	$(DEL) *.cs.c *.ss.c *.xdr.c afsint.h afscbint.h
 	$(DEL) $(LIBFILE) $(MT_LIBFILE)
 mkdir:
-	
+

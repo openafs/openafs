@@ -6,7 +6,7 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 
 # # Auditing is currently only supported for AIX32 machines.  It is
-# # integrated with the AIX auditing facility.  The objects, events, 
+# # integrated with the AIX auditing facility.  The objects, events,
 # # and config files are AIX specific.  The Audit file is not but is
 # # included in the rs_aix32 case since other platforms are not
 # # supported (if not supported, don't show it).

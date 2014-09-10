@@ -67,7 +67,7 @@ INCFILES  = \
 
 $(LIBOBJS): $(INCFILES)
 
-$(MULTIOBJS):  rx_multi.h 
+$(MULTIOBJS):  rx_multi.h
 
 $(XDROBJS): xdr.h
 
@@ -85,4 +85,4 @@ clean::
 	$(DEL) $(LIBFILE) $(INCFILES)
 
 mkdir:
-	
+

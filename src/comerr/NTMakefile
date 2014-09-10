@@ -10,12 +10,12 @@ RELDIR=comerr
 !INCLUDE ..\config\NTMakefile.version
 
 ####################################################################
-# install  comerr header files 
+# install  comerr header files
 INCFILEDIR = $(DESTDIR)\include\afs
 INCFILES =\
 	$(INCFILEDIR)\com_err.h \
 	$(INCFILEDIR)\error_table.h \
-	$(INCFILEDIR)\mit-sipb-cr.h 
+	$(INCFILEDIR)\mit-sipb-cr.h
 
 ####################################################################
 # build and install  afscom_err.lib static lib
@@ -26,12 +26,12 @@ COMERR_LIBOBJS =\
 		$(OUT)\et_name.obj  \
 		$(OUT)\com_err.obj \
 		$(OUT)\AFS_component_version_number.obj
-		
+
 $(COMERR_LIBOBJS): $$(@B).c
     $(C2OBJ) $**
 
 $(COMERR_LIBFILE): $(COMERR_LIBOBJS)
-	$(LIBARCH)  
+	$(LIBARCH)
 
 ####################################################################
 # build and install the compile_et executable
@@ -42,10 +42,10 @@ COMPILE_ET_EXERES  = $(OUT)\compile_et.res
 prep:
 	$(DESTDIR)\bin\touch et_lex.lex_nt.c
 	$(DESTDIR)\bin\touch error_table_nt.c
-	@echo If you update et_lex.lex.l, to build correctly, you should delete error_table_nt.c 
+	@echo If you update et_lex.lex.l, to build correctly, you should delete error_table_nt.c
 
 et_lex.lex_nt.c:   et_lex.lex.l
-    $(LEX) -t et_lex.lex.l > $@	
+    $(LEX) -t et_lex.lex.l > $@
 
 error_table_nt.c:  et_lex.lex_nt.c error_table.y
     $(YACC) -d -o $@ error_table.y
@@ -64,15 +64,15 @@ COMPILE_ET_EXELIBS =\
 	$(DESTDIR)\lib\opr.lib \
 	$(DESTDIR)\lib\afsroken.lib
 
-$(COMPILE_ET_EXEFILE): $(COMPILE_ET_EXEOBJS) $(COMPILE_ET_EXERES) $(COMPILE_ET_EXELIBS)  
+$(COMPILE_ET_EXEFILE): $(COMPILE_ET_EXEOBJS) $(COMPILE_ET_EXERES) $(COMPILE_ET_EXELIBS)
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
-	$(EXEPREP) 
+	$(EXEPREP)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 
 ####################################################################
-install: prep $(INCFILES) $(COMERR_LIBFILE) $(COMPILE_ET_EXEFILE) 
+install: prep $(INCFILES) $(COMERR_LIBFILE) $(COMPILE_ET_EXEFILE)
 
 clean::
 	$(DEL) $(COMERR_LIBFILE) $(OUT)\AFS_component_version_number.obj

@@ -16,11 +16,11 @@ OBJS=test-salvage.o physio.o dtest.o
 
 all:	dtest
 
-install:	dtest 
+install:	dtest
 
 clean:
 	$(RM) -f *.o *.a test dtest core
 
-dtest:		dtest.o 
+dtest:		dtest.o
 	$(AFS_LDRULE) dtest.o $(LIBS)
 

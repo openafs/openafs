@@ -535,7 +535,7 @@ $(DESTDIR)\bin\NTBUILD.bat:..\NTBUILD.bat
 	$(COPY) $? $@
 	$(UTIL_CR) + $@
 
-$(DESTDIR)\bin\NTLang.bat: NTLang.bat $(DESTDIR)\bin\util_cr.exe 
+$(DESTDIR)\bin\NTLang.bat: NTLang.bat $(DESTDIR)\bin\util_cr.exe
 	$(COPY) NTLang.bat $(DESTDIR)\bin
 	$(UTIL_CR) + $(DESTDIR)\bin\NTLang.bat
 
@@ -552,7 +552,7 @@ doclink:
 	- symlink make $(DESTDIR)\doc doc-pathname
 
 
-version: $(DESTDIR)\bin\mkvers.exe NTMakefile.version 
+version: $(DESTDIR)\bin\mkvers.exe NTMakefile.version
 
 NTMakefile.version: NTMakefile.version-CML NTMakefile.version-NOCML
 	$(DEL) NTMakefile.version

@@ -246,7 +246,7 @@ dest: restorevol voldump volser.h volint.h vos volserver libvolser.a
 
 #
 # Misc targets
-# 
+#
 clean:
 	$(LT_CLEAN)
 	$(RM) -f *.o *.a core volserver volint.ss.c volint.cs.c volint.h \

@@ -131,7 +131,7 @@ ${TOP_INCDIR}/rx/xdr.h: xdr.h
 ${TOP_INCDIR}/rx/xdr_prototypes.h: xdr_prototypes.h
 	${INSTALL_DATA} $? $@
 
-${TOP_INCDIR}/rx/rx_xmit_nt.h: rx_xmit_nt.h 
+${TOP_INCDIR}/rx/rx_xmit_nt.h: rx_xmit_nt.h
 	${INSTALL_DATA} $? $@
 
 install: librx.a

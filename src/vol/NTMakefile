@@ -286,4 +286,4 @@ $(OUT)\volinfo.res: AFS_component_version_number.h
 install: $(INCFILES) $(LIBFILE) $(MT_LIBFILE) $(DAFS_LIBFILE) $(SALVAGER) $(VOLINFO) $(VOLSCAN)
 
 mkdir:
-	
+

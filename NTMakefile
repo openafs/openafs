@@ -318,14 +318,14 @@ auth: sys
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
-	$(CD) ..\..	
+	$(CD) ..\..
 
 ubik: auth
      @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
-	$(CD) ..\..	
+	$(CD) ..\..
 
 ptserver: ubik
      @echo ***** $@
@@ -738,7 +738,7 @@ finale: netidmgr_plugin
 
 install: finale afsrdr tools rpctestlib extra
 	@echo Build Finished Successfully
-        
+
 
 # Clean target for obj tree
 clean:
@@ -759,8 +759,8 @@ mkdir:
     -mkdir $(DESTDIR)
     -mkdir $(AFS_OBJDIR)\checked
     -mkdir $(AFS_OBJDIR)\free
-	-xcopy /q /t /e $(SRC)\*.* $(AFS_OBJDIR)\checked\ 
-	-xcopy /q /t /e $(SRC)\*.* $(AFS_OBJDIR)\free\ 
+	-xcopy /q /t /e $(SRC)\*.* $(AFS_OBJDIR)\checked\
+	-xcopy /q /t /e $(SRC)\*.* $(AFS_OBJDIR)\free\
     -mkdir $(DESTDIR)\checked
 	-mkdir $(DESTDIR)\free
     -mkdir $(DESTDIR)\checked\bin

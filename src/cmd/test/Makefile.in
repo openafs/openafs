@@ -15,8 +15,8 @@ LIBS=-lcmd $(TOP_LIBDIR)/libafscom_err.a -lafsutil $(LIB_roken) $(XLIBS)
 all: test
 test tests: ctest dtest itest
 
-itest: itest.o 
-	$(AFS_LDRULE) itest.o $(LDIRS) $(LIBS) 
+itest: itest.o
+	$(AFS_LDRULE) itest.o $(LDIRS) $(LIBS)
 
 ctest: ctest.o
 	$(AFS_LDRULE) ctest.o $(LDIRS) $(LIBS)

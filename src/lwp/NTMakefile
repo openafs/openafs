@@ -5,7 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-# nmake Makefile for NT build of LWP. 
+# nmake Makefile for NT build of LWP.
 
 RELDIR=lwp
 !include ..\config\NTMakefile.$(SYS_NAME)
@@ -33,7 +33,7 @@ INCFILES = \
 
 install_headers: $(INCFILES)
 
-install: install_headers $(LIBFILE) 
+install: install_headers $(LIBFILE)
 
 $(LIBFILE): $(LIBOBJS)
 	$(LIBARCH)
@@ -50,4 +50,4 @@ clean::
 	$(DEL) $(LIBFILE)
 
 mkdir:
-	
+

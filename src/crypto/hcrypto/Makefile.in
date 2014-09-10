@@ -31,7 +31,7 @@ HEADERS= ${TOP_INCDIR}/hcrypto/aes.h \
 
 UPSTREAM= ${TOP_SRCDIR}/external/heimdal
 
-MODULE_INCLUDE=-I${srcdir} -I${TOP_INCDIR}/hcrypto -I$(UPSTREAM)/hcrypto 
+MODULE_INCLUDE=-I${srcdir} -I${TOP_INCDIR}/hcrypto -I$(UPSTREAM)/hcrypto
 
 SHLIBOBJ= libafshcrypto.${SHLIB_SUFFIX}.${LIBMAJOR}.${LIBMINOR}
 
@@ -175,13 +175,13 @@ camellia-ntt.o: ${UPSTREAM}/hcrypto/camellia-ntt.c ${HEADERS}
 
 des.o: ${UPSTREAM}/hcrypto/des.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/des.c
-	
+
 evp.o: ${UPSTREAM}/hcrypto/evp.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/evp.c
-	
+
 evp-hcrypto.o: ${UPSTREAM}/hcrypto/evp-hcrypto.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/evp-hcrypto.c
-	
+
 evp-cc.o: ${UPSTREAM}/hcrypto/evp-cc.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/evp-cc.c
 

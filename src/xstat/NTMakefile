@@ -70,7 +70,7 @@ $(LIBDIR)\afs_xstat_cm.lib: $(OUT)\xstat_cm.obj $(OUT)\AFS_component_version_num
 $(OUT)\xstat_cm_test.res: xstat_cm_test.rc AFS_component_version_number.h
 
 $(BINDIR)\xstat_cm_test.exe: $(OUT)\xstat_cm_test.obj $(OUT)\xstat_cm_test.res $(LIBDIR)\afs_xstat_cm.lib $(LIBS)
-	$(EXECONLINK) 
+	$(EXECONLINK)
 	$(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
         $(CODESIGN_USERLAND)

@@ -41,4 +41,4 @@ $(OUT)\afscp.exe: $(OUT)\afscp.obj $(AFSCP_EXEOBJS) $(AFSCP_EXELIBS)
         $(SYMSTORE_IMPORT)
 
 mkdir:
-	
+

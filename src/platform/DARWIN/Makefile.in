@@ -18,7 +18,7 @@ all: OpenAFS.prefPane afssettings afscell growlagent aklog.bundle
 
 AFSPreference/build/Release/OpenAFS.prefPane: OpenAFS.prefPane
 afscell/build/Release/afscell.bundle: afscell
-afscell/InstallerSections.plist: afscell 
+afscell/InstallerSections.plist: afscell
 
 OpenAFS.prefPane:
 	@case ${OSXSDK} in \
@@ -47,7 +47,7 @@ afscell:
 		echo Not building afscell.bundle for ${OSXSDK} ;; \
 	esac
 
-afssettings: afssettings.m 
+afssettings: afssettings.m
 	${CC} ${AFS_CFLAGS} -o afssettings $? -framework Foundation
 
 install: \

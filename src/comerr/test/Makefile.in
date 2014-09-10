@@ -5,12 +5,12 @@ LDIRS=-L${TOP_LIBDIR} -L${DESTDIR}/lib/afs -L..
 
 all: test
 
-install: 
+install:
 
 #
 # Build targets
 #
-test:	test.o test1.o test2.o 
+test:	test.o test1.o test2.o
 	$(AFS_LDRULE) ${LDIRS} -lafscom_err test.o test1.o test2.o
 
 test.o:	test1.h test2.h
@@ -33,5 +33,5 @@ clean:
 		test1.h test1.c test2.h test2.c test \
 		eddep makedep core
 
-dest: 
+dest:
 

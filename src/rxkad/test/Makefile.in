@@ -49,7 +49,7 @@ th_stress.ss.o: stress.ss.c
 
 th_stress.cs.o: stress.cs.c
 	${THRULE} -c stress.cs.c -o th_stress.cs.o
-	
+
 th_stress.xdr.o: stress.xdr.c stress.h
 	${THRULE} -c stress.xdr.c -o th_stress.xdr.o
 
@@ -94,7 +94,7 @@ th_stress_s.o: stress_s.c ${HEADERS}
 	${THRULE} -c $(srcdir)/stress_s.c -o th_stress_s.o
 
 stress: stress.o stress.xdr.o stress_c.o stress_s.o stress.cs.o \
-		stress.ss.o stress_errs.o 
+		stress.ss.o stress_errs.o
 	$(AFS_LDRULE) stress.o stress.xdr.o stress_c.o \
 		stress_s.o stress.cs.o stress.ss.o stress_errs.o \
 		${LIBS} ${XLIBS}

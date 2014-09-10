@@ -71,7 +71,7 @@ des.h: $(HCRYPTO)\des.h
         $(COPY) $** $@
 
 $(HCRYPTO_OBJS):$(HCRYPTO)\$$(@B).c
-	$(C2OBJ) $** -I$(HCRYPTO) 
+	$(C2OBJ) $** -I$(HCRYPTO)
 
 $(HCRYPTO_INCFILES):$(HCRYPTO)\$$(@B).h
 	$(COPY) $** $(INCFILEDIR)

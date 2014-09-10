@@ -56,7 +56,7 @@ AFSDOBJS =\
 $(AFSDOBJS): $(AFSD)\$$(@B).c
 	$(C2OBJ) -I$*(*D) $**
 
-$(AFSAUTH_LIBFILE): $(AFSAUTH_LIBOBJS) $(AFSDOBJS) 
+$(AFSAUTH_LIBFILE): $(AFSAUTH_LIBOBJS) $(AFSDOBJS)
 	$(LIBARCH) rpcrt4.lib
 
 ############################################################################
@@ -74,8 +74,8 @@ AFSAUTH_KRB_LIBOBJS =\
 	$(OUT)\ktc_errors.obj \
 	$(OUT)\ktc_nt.obj \
 	$(OUT)\AFS_component_version_number.obj
-	
-$(AFSAUTH_KRB_LIBFILE): $(AFSAUTH_KRB_LIBOBJS)  
+
+$(AFSAUTH_KRB_LIBFILE): $(AFSAUTH_KRB_LIBOBJS)
 	$(LIBARCH) rpcrt4.lib
 
 ############################################################################
@@ -84,7 +84,7 @@ $(AFSAUTH_KRB_LIBFILE): $(AFSAUTH_KRB_LIBOBJS)
 SETKEY_EXEFILE = $(OUT)\setkey.exe
 
 SETKEY_EXEOBJS =\
-	$(OUT)\setkey.obj 
+	$(OUT)\setkey.obj
 
 EXELIBDIR = $(DESTDIR)\lib
 
@@ -105,7 +105,7 @@ EXELIBS =\
 $(SETKEY_EXEFILE): $(SETKEY_EXEOBJS) $(EXELIBS)
 	$(EXECONLINK) dnsapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
-	$(EXEPREP) 
+	$(EXEPREP)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 
@@ -115,10 +115,10 @@ COPYAUTH_EXEFILE = $(DESTDIR)\etc\copyauth.exe
 COPYAUTH_EXEOBJS =\
 	$(OUT)\copyauth.obj
 
-$(COPYAUTH_EXEFILE): $(COPYAUTH_EXEOBJS) $(EXELIBS) 
+$(COPYAUTH_EXEFILE): $(COPYAUTH_EXEOBJS) $(EXELIBS)
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
-	$(EXEPREP) 
+	$(EXEPREP)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 
@@ -146,4 +146,4 @@ clean::
 setkey: $(SETKEY_EXEFILE)
 
 mkdir:
-	
+

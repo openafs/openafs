@@ -205,7 +205,7 @@ listinodes.o: listinodes.c AFS_component_version_number.c
 				;;			\
 	esac
 
-gi: ${TOP_LIBDIR}/libsys.a 
+gi: ${TOP_LIBDIR}/libsys.a
 	$(Q)case ${SYS_NAME} in \
 	        *linux* | sgi_* | *fbsd* ) \
 			echo "Don't build gi on ${SYS_NAME}";; \

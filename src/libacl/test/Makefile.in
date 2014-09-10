@@ -15,7 +15,7 @@ LIBS= -lacl -lprot -lubik -lrx -llwp -lauth -lrxkad -lsys ${XLIBS}
 
 all: acltest
 
-install: 
+install:
 
 #
 # Build targets
@@ -23,7 +23,7 @@ install:
 acltest: acltest.o
 	$(AFS_LDRULE) $(LDIRS) $(LIBS) acltest.o
 
-acltest.o: acltest.c 
+acltest.o: acltest.c
 
 #
 # Misc. targets
@@ -31,5 +31,5 @@ acltest.o: acltest.c
 clean:
 	$(RM) -f *.o *.a acltest core
 
-dest: 
+dest:
 

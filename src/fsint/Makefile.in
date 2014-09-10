@@ -104,7 +104,7 @@ pagcb.h: pagcb.xg
 Kcallback.h: common.xg afscbint.xg
 	${RXGEN} -A -x -k -h -o Kcallback.h ${srcdir}/afscbint.xg
 
-afscbint.cs.c: common.xg afscbint.xg afsint.h afscbint.h 
+afscbint.cs.c: common.xg afscbint.xg afsint.h afscbint.h
 	${RXGEN} -A -x -C -o afscbint.cs.c ${srcdir}/afscbint.xg
 
 afscbint.ss.c: common.xg afscbint.xg afsint.h afscbint.h

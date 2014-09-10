@@ -179,7 +179,7 @@ rmtsysd: rmtsysd.o libsys.a
 # Test programs.
 #
 
-iinc:	iinc.c 
+iinc:	iinc.c
 	$(CC) -o iinc $(AFS_CFLAGS) ${srcdir}/iinc.c ${LIBS}
 
 idec:	idec.c  AFS_component_version_number.c

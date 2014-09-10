@@ -29,20 +29,20 @@ OBJECTS=listVicepx.o utilities.o  updateDirInode.o
 
 all: listVicepx updateDirInode testpart
 
-install:   
+install:
 
 ${OBJECTS}: ${PUBLICHEADERS} ${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/lock.h ${TOP_INCDIR}/afs/afsint.h ../filesignal.h ../vutils.h ../vldb.h ../salvage.h ../volinodes.h ../qiin.h
 
 testpart: testpart.c ../vlib.a
 	$(AFS_LDRULE) testpart.c ${TOP_LIBDIR}/vlib.a ${TOP_LIBDIR}/liblwp.a \
 		${TOP_LIBDIR}/util.a ${XLIBS}
-		
 
-listVicepx: listVicepx.o utilities.o 
-	$(AFS_LDRULE) listVicepx.o utilities.o ${LIBS} 
 
-updateDirInode:	updateDirInode.o 
-	$(AFS_LDRULE) updateDirInode.o ${LIBS} 
+listVicepx: listVicepx.o utilities.o
+	$(AFS_LDRULE) listVicepx.o utilities.o ${LIBS}
+
+updateDirInode:	updateDirInode.o
+	$(AFS_LDRULE) updateDirInode.o ${LIBS}
 
 
 NAMEI_PROGS = nicreate nincdec nino nilist
@@ -61,7 +61,7 @@ nino: nino.o
 	$(AFS_LDRULE) nino.o ${TOP_LIBDIR}/util.a
 
 clean:
-	$(RM) -f *.o *.a 
+	$(RM) -f *.o *.a
 	$(RM) -f ${SCMPROGS} ${STAGEPROGS} core listVicepx updateDirInode
-dest:   
+dest:
 

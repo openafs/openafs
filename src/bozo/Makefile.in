@@ -167,10 +167,10 @@ dest: bosserver bos bos_util libbos.a bosint.h bnode.h
 clean:
 	$(RM) -f  *.a *.o bos bosserver smail-notifier bos_util \
 		bosint.cs.c bosint.ss.c bosint.xdr.c bosint.h \
-		core boserr.c bnode.h AFS_component_version_number.c 
+		core boserr.c bnode.h AFS_component_version_number.c
 
-test: 
-	cd test; $(MAKE) 
+test:
+	cd test; $(MAKE)
 
 include ../config/Makefile.version
 

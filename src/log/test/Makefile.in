@@ -15,22 +15,22 @@ LIBS= -lauth -lrxkad -ldes -lsys -lrx -llwp -lcmd -lafsutil ${XLIBS}
 
 all: testlog gettoktest
 
-install:  
+install:
 
 #
 # Build targets
 #
-testlog: testlog.o 
+testlog: testlog.o
 	$(AFS_LDRULE) testlog.o ${LDIRS} ${LIBS}
 
-gettoktest: gettoktest.o 
+gettoktest: gettoktest.o
 	$(AFS_LDRULE) gettoktest.o ${LDIRS} ${LIBS}
 
 #
 # Misc. targets
-# 
-clean:	
+#
+clean:
 	$(RM) -f *.o testlog gettoktest core
 
-dest:  
+dest:
 
