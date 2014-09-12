@@ -11,9 +11,23 @@ include @TOP_OBJDIR@/src/config/Makefile.pthread
 include @TOP_OBJDIR@/src/config/Makefile.libtool
 
 LT_objs = afs_account.lo afs_session.lo afs_password.lo \
-	  afs_pam_msg.lo afs_message.lo AFS_component_version_number.lo
-LT_deps = $(top_builddir)/src/kauth/liboafs_kauth.la \
-	  $(top_builddir)/src/auth/liboafs_auth.la
+	  afs_pam_msg.lo afs_message.lo \
+	  $(top_builddir)/src/opr/libopr_pic.la \
+	  $(top_builddir)/src/comerr/libcomerr_pic.la \
+	  $(top_builddir)/src/rx/librx_pic.la \
+	  $(top_builddir)/src/rxkad/librxkad_pic.la \
+	  $(top_builddir)/src/audit/libaudit_pic.la \
+	  $(top_builddir)/src/util/libafsutil_pic.la \
+	  $(top_builddir)/src/sys/libsys_pic.la \
+	  $(top_builddir)/src/ubik/libauthent_ubik.la \
+	  $(top_builddir)/src/ptserver/libprot_pic.la \
+	  $(top_builddir)/src/kauth/libkauth_pic.la \
+	  $(top_builddir)/src/auth/libpam_auth.la \
+	  $(top_builddir)/src/crypto/rfc3961/librfc3961_pic.la
+LT_deps =
+LT_libs = \
+	$(PAM_LIBS) $(LDFLAGS_hcrypto) $(LDFLAGS_roken) \
+	$(LIB_hcrypto) $(LIB_roken) $(LIB_crypt) $(LIB_AFSDB)
 
 MODULE_CFLAGS=${PAM_CFLAGS}
 
@@ -23,6 +37,7 @@ CFLAGS_afs_setcred_krb.lo = -DAFS_KERBEROS_ENV
 CFLAGS_afs_auth_krb.lo   = -DAFS_KERBEROS_ENV
 CFLAGS_afs_util_krb.lo   = -DAFS_KERBEROS_ENV
 CFLAGS_ktc_krb.lo        = -DAFS_KERBEROS_ENV -I../auth
+CFLAGS_ktc.lo            = -I../auth
 
 afs_setcred.lo: afs_setcred.c afs_pam_msg.h afs_message.h afs_util.h
 afs_setcred_krb.lo: afs_setcred.c afs_pam_msg.h afs_message.h afs_util.h
@@ -36,19 +51,22 @@ afs_util.lo: afs_util.c afs_pam_msg.h afs_message.h afs_util.h
 afs_util_krb.lo: afs_util.c afs_pam_msg.h afs_message.h afs_util.h
 	$(LT_CCRULE) ${srcdir}/afs_util.c
 
+ktc.lo: ${srcdir}/../auth/ktc.c ${TOP_INCDIR}/afs/cellconfig.h \
+		${TOP_INCDIR}/afs/auth.h ${srcdir}/../auth/keys.h \
+		${TOP_INCDIR}/afs/vice.h
+	$(LT_CCRULE) $(srcdir)/../auth/ktc.c
 ktc_krb.lo: ${srcdir}/../auth/ktc.c ${TOP_INCDIR}/afs/cellconfig.h \
 		${TOP_INCDIR}/afs/auth.h ${srcdir}/../auth/keys.h \
 		${TOP_INCDIR}/afs/vice.h
 	$(LT_CCRULE) $(srcdir)/../auth/ktc.c
 
 pam_afs.la: $(LT_objs) $(LT_deps) \
-		afs_setcred.lo afs_auth.lo afs_util.lo \
+		afs_setcred.lo afs_auth.lo afs_util.lo ktc.lo \
 		pam_afs.map
 	$(LIBTOOL) --quiet --mode=link --tag=CC $(MT_CC) $(XLDFLAGS) -rpath $(libdir) \
 		-module -no-undefined -o pam_afs.la \
-		afs_setcred.lo afs_auth.lo afs_util.lo $(LT_objs) $(LT_deps) \
-		$(PAM_LIBS) $(LDFLAGS_hcrypto) $(LDFLAGS_roken) \
-		$(LIB_hcrypto) $(LIB_roken)
+		afs_setcred.lo afs_auth.lo afs_util.lo ktc.lo \
+		$(LT_objs) $(LT_deps) $(LT_libs)
 
 pam_afs.krb.la: $(LT_objs) $(LT_deps) \
 		afs_setcred_krb.lo afs_auth_krb.lo afs_util_krb.lo \
@@ -56,8 +74,7 @@ pam_afs.krb.la: $(LT_objs) $(LT_deps) \
 	$(LIBTOOL) --quiet --mode=link --tag=CC $(MT_CC) $(XLDFLAGS) -rpath $(libdir) \
 		-module -no-undefined -o pam_afs.krb.la \
 		afs_setcred_krb.lo afs_auth_krb.lo afs_util_krb.lo ktc_krb.lo \
-		$(LT_objs) $(LT_deps) $(PAM_LIBS) $(LDFLAGS_hcrypto) $(LDFLAGS_roken) \
-		$(LIB_hcrypto) $(LIB_roken)
+		$(LT_objs) $(LT_deps) $(LT_libs)
 
 test_pam: test_pam.o
 	$(Q)set -x; \

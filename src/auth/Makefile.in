@@ -37,7 +37,7 @@ LIBS=libauth.a \
 
 INCLS=cellconfig.h auth.h keys.h internal.h token.h
 
-all: liboafs_auth.la libauth_pic.la \
+all: liboafs_auth.la libauth_pic.la libpam_auth.la \
      ${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/libauth.krb.a \
      depinstall
 
@@ -103,6 +103,9 @@ liboafs_auth.la: liboafs_auth.la.sym $(LT_objs) $(LT_deps)
 
 libauth_pic.la: $(LT_objs)
 	$(LT_LDLIB_pic) $(LT_objs)
+
+libpam_auth.la: $(BASE_objs)
+	$(LT_LDLIB_pic) $(BASE_objs)
 
 copyauth: copyauth.o ${LIBS}
 	$(AFS_LDRULE) copyauth.o ${LIBS} ${XLIBS}
