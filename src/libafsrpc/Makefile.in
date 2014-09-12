@@ -18,10 +18,10 @@ LT_objs = \
 	$(top_builddir)/src/util/libafsrpc_util.la \
 	$(top_builddir)/src/rxstat/librxstat_pic.la \
 	$(top_builddir)/src/sys/libafsrpc_sys.la \
-	$(top_builddir)/src/lwp/liblwpcompat_pic.la
-
-LT_deps = \
+	$(top_builddir)/src/lwp/liblwpcompat_pic.la \
 	$(top_builddir)/src/opr/libopr_pic.la
+
+LT_deps =
 
 LT_libs = $(LIB_hcrypto) $(LIB_roken) $(MT_LIBS)
 

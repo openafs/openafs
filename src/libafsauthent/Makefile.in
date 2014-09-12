@@ -19,11 +19,11 @@ LT_objs = \
 	$(top_builddir)/src/sys/libsys_pic.la \
 	$(top_builddir)/src/ptserver/libprot_pic.la \
 	$(top_builddir)/src/volser/libvolser_pic.la \
-	$(top_builddir)/src/vlserver/libvlserver_pic.la
+	$(top_builddir)/src/vlserver/libvlserver_pic.la \
+	$(top_builddir)/src/opr/libopr_pic.la \
+	$(top_builddir)/src/util/libafsutil_pic.la
 
 LT_deps = \
-	$(top_builddir)/src/opr/libopr_pic.la \
-	$(top_builddir)/src/util/libafsutil_pic.la \
 	$(top_builddir)/src/libafsrpc/libafsrpc.la
 
 LT_libs = $(LIB_hcrypto) $(LIB_roken) $(LIB_crypt) $(LIB_AFSDB) $(MT_LIBS)
