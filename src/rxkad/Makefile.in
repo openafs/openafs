@@ -37,7 +37,7 @@ fc_test_LIBS=\
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libafsutil.a
 
-all: ${TOP_LIBDIR}/librxkad.a liboafs_rxkad.la libafsrpc_rxkad.la depinstall
+all: ${TOP_LIBDIR}/librxkad.a liboafs_rxkad.la librxkad_pic.la depinstall
 
 test: fc_test
 
@@ -78,7 +78,7 @@ librxkad.a: $(LT_objs)
 liboafs_rxkad.la: liboafs_rxkad.la.sym $(LT_objs) $(LT_deps)
 	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
 
-libafsrpc_rxkad.la: $(LT_objs)
+librxkad_pic.la: $(LT_objs)
 	$(LT_LDLIB_pic) $(LT_objs)
 
 CFLAGS_ticket5.lo = @CFLAGS_NOERROR@

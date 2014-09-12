@@ -69,7 +69,7 @@ KLIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libafsrfc3961.a \
 	${TOP_LIBDIR}/libafshcrypto_lwp.a
 
-all: liboafs_kauth.la libauthent_kauth.la \
+all: liboafs_kauth.la libkauth_pic.la \
      kaserver kas kpwvalid klog klog.krb knfs kpasswd rebuild kdb ka-forwarder \
 	${TOP_LIBDIR}/libkauth.a \
 	${TOP_LIBDIR}/libkauth.krb.a \
@@ -105,7 +105,7 @@ ${TOP_INCDIR}/afs/kaport.h: kaport.h
 liboafs_kauth.la: liboafs_kauth.la.sym $(LT_objs) $(LT_deps)
 	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
 
-libauthent_kauth.la: $(LT_objs)
+libkauth_pic.la: $(LT_objs)
 	$(LT_LDLIB_pic) $(LT_objs)
 
 test tests: all

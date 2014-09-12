@@ -15,7 +15,7 @@ LT_libs = $(LIB_roken) $(MT_LIBS)
 
 all: compile_et ${TOP_INCDIR}/afs/com_err.h ${TOP_INCDIR}/afs/error_table.h \
      ${TOP_INCDIR}/afs/mit-sipb-cr.h ${TOP_LIBDIR}/libafscom_err.a \
-     liboafs_comerr.la libafsrpc_comerr.la
+     liboafs_comerr.la libcomerr_pic.la
 
 buildtools: compile_et
 
@@ -49,7 +49,7 @@ libafscom_err.a: $(LT_objs)
 liboafs_comerr.la: $(LT_objs) $(LT_deps)
 	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
 
-libafsrpc_comerr.la: $(LT_objs)
+libcomerr_pic.la: $(LT_objs)
 	$(LT_LDLIB_pic) $(LT_objs)
 
 # When we build this file, we're using a .c file that's in the object directory,

@@ -47,7 +47,7 @@ LT_deps = $(top_builddir)/src/opr/liboafs_opr.la \
 all: \
 	vlserver vlclient cnvldb vlserver cnvldb vldb_check \
 	Kvldbint.cs.c Kvldbint.xdr.c vldbint.h \
-	liboafs_vldb.la libauthent_vlserver.la \
+	liboafs_vldb.la libvlserver_pic.la \
 	${TOP_LIBDIR}/libvldb.a depinstall
 
 generated: \
@@ -133,7 +133,7 @@ libvldb.a: $(LT_objs)
 liboafs_vldb.la: liboafs_vldb.la.sym $(LT_objs) $(LT_deps)
 	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
 
-libauthent_vlserver.la: $(LT_objs)
+libvlserver_pic.la: $(LT_objs)
 	$(LT_LDLIB_pic) $(LT_objs)
 
 vlclient: vlclient.o libvldb.a $(LIBS)

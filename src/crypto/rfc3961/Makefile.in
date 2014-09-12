@@ -18,7 +18,7 @@ MODULE_INCLUDE=-I${srcdir} -I${TOP_INCDIR}/hcrypto -I$(UPSTREAM)/krb5 -I$(UPSTRE
 
 HEADERS=rfc3961.h krb5_locl.h $(UPSTREAM)/krb5/crypto.h
 
-all:  ${TOP_INCDIR}/afs/rfc3961.h liboafs_rfc3961.la libafsrpc_rfc3961.la \
+all:  ${TOP_INCDIR}/afs/rfc3961.h liboafs_rfc3961.la librfc3961_pic.la \
         ${TOP_LIBDIR}/libafsrfc3961.a
 
 ${TOP_INCDIR}/afs/rfc3961.h: rfc3961.h
@@ -83,7 +83,7 @@ store-int.lo: ${UPSTREAM}/krb5/store-int.c ${HEADERS}
 liboafs_rfc3961.la: liboafs_rfc3961.la.sym $(LT_objs) $(LT_deps)
 	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs) $(MT_LIBS)
 
-libafsrpc_rfc3961.la: $(LT_objs)
+librfc3961_pic.la: $(LT_objs)
 	$(LT_LDLIB_pic) $(LT_objs) $(MT_LIBS)
 
 libafsrfc3961.a: $(LT_objs)

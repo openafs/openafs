@@ -10,18 +10,18 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.libtool
 
 LT_objs = \
-	$(top_builddir)/src/fsint/libafsrpc_fsint.la \
-	$(top_builddir)/src/rx/libafsrpc_rx.la \
-	$(top_builddir)/src/rxkad/libafsrpc_rxkad.la \
-	$(top_builddir)/src/crypto/rfc3961/libafsrpc_rfc3961.la \
-	$(top_builddir)/src/comerr/libafsrpc_comerr.la \
+	$(top_builddir)/src/fsint/libfsint_pic.la \
+	$(top_builddir)/src/rx/librx_pic.la \
+	$(top_builddir)/src/rxkad/librxkad_pic.la \
+	$(top_builddir)/src/crypto/rfc3961/librfc3961_pic.la \
+	$(top_builddir)/src/comerr/libcomerr_pic.la \
 	$(top_builddir)/src/util/libafsrpc_util.la \
-	$(top_builddir)/src/rxstat/libafsrpc_rxstat.la \
+	$(top_builddir)/src/rxstat/librxstat_pic.la \
 	$(top_builddir)/src/sys/libafsrpc_sys.la \
-	$(top_builddir)/src/lwp/libafsrpc_lwpcompat.la
+	$(top_builddir)/src/lwp/liblwpcompat_pic.la
 
 LT_deps = \
-	$(top_builddir)/src/opr/liboafs_opr.la
+	$(top_builddir)/src/opr/libopr_pic.la
 
 LT_libs = $(LIB_hcrypto) $(LIB_roken) $(MT_LIBS)
 

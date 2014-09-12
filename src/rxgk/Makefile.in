@@ -16,7 +16,7 @@ LT_deps =   $(top_builddir)/src/opr/liboafs_opr.la \
 LT_libs =   # gssapi will go here
 
 all: depinstall rxgk_int.cs.c rxgk_int.ss.c rxgk_int.xdr.c rxgk_int.h \
-	${LT_objs} liboafs_rxgk.la libafsrpc_rxgk.la
+	${LT_objs} liboafs_rxgk.la librxgk_pic.la
 
 generated: \
 	rxgk_errs.h rxgk_errs.c rxgk_int.h rxgk_int.cs.c rxgk_int.xdr.c \
@@ -56,7 +56,7 @@ rxgk_int.xdr.o: rxgk_int.xdr.c rxgk_int.h
 liboafs_rxgk.la: liboafs_rxgk.la.sym ${LT_objs} ${LT_deps}
 	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
 
-libafsrpc_rxgk.la: $(LT_objs)
+librxgk_pic.la: $(LT_objs)
 	$(LT_LDLIB_pic) $(LT_objs)
 
 $(LT_objs): $(INCLS)
