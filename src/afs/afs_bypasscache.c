@@ -621,6 +621,7 @@ afs_PrefetchNoCache(struct vcache *avc,
 	    } else {
 		afs_warn("BYPASS: StartRXAFS_FetchData failed: %d\n", code);
 		unlock_and_release_pages(auio);
+		afs_PutConn(tc, rxconn, SHARED_LOCK);
 		goto done;
 	    }
 	    if (code == 0) {

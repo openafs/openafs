@@ -2398,6 +2398,13 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 			afs_PutDCache(tdc);
 			tdc = 0;
 			ReleaseReadLock(&avc->lock);
+
+			if (tc) {
+			    /* If we have a connection, we must put it back,
+			     * since afs_Analyze will not be called here. */
+			    afs_PutConn(tc, rxconn, SHARED_LOCK);
+			}
+
 			slowPass = 1;
 			goto RetryGetDCache;
 		    }
