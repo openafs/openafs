@@ -29,6 +29,8 @@ LT_libs = \
 	$(PAM_LIBS) $(LDFLAGS_hcrypto) $(LDFLAGS_roken) \
 	$(LIB_hcrypto) $(LIB_roken) $(LIB_crypt) $(LIB_AFSDB)
 
+INSTALL_KAUTH = @INSTALL_KAUTH@
+
 MODULE_CFLAGS=${PAM_CFLAGS}
 
 all: test_pam pam_afs.la pam_afs.krb.la
@@ -92,14 +94,18 @@ test_pam: test_pam.o
 	esac
 
 install: pam_afs.la pam_afs.krb.la
-	${INSTALL} -d ${DESTDIR}${libdir}
-	$(INSTALL_DATA) .libs/pam_afs.so ${DESTDIR}${libdir}
-	$(INSTALL_DATA) .libs/pam_afs.krb.so ${DESTDIR}${libdir}
+	if [ "x${INSTALL_KAUTH}" = "xyes" ]; then \
+		${INSTALL} -d ${DESTDIR}${libdir}; \
+		$(INSTALL_DATA) .libs/pam_afs.so ${DESTDIR}${libdir}; \
+		$(INSTALL_DATA) .libs/pam_afs.krb.so ${DESTDIR}${libdir}; \
+	fi
 
 dest: pam_afs.la pam_afs.krb.la
-	${INSTALL} -d ${DEST}/lib
-	$(INSTALL_DATA) .libs/pam_afs.so ${DEST}/lib
-	$(INSTALL_DATA) .libs/pam_afs.krb.so ${DEST}/lib
+	if [ "x${INSTALL_KAUTH}" = "xyes" ]; then \
+		${INSTALL} -d ${DEST}/lib; \
+		$(INSTALL_DATA) .libs/pam_afs.so ${DEST}/lib; \
+		$(INSTALL_DATA) .libs/pam_afs.krb.so ${DEST}/lib; \
+	fi
 
 afs_pam_msg.o: afs_pam_msg.c afs_pam_msg.h afs_message.h
 afs_message.o: afs_message.c afs_message.h
