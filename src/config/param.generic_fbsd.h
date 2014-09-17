@@ -108,6 +108,20 @@ enum vcexcl { NONEXCL, EXCL };
 # endif /* ! ASSEMBLER & ! __LANGUAGE_ASSEMBLY__ */
 #endif /* _KERNEL */
 
+/*
+ * Consolidate version checks into configure-test-like definitions
+ */
+
+/* r270870 moved if_data into ifnet to avoid namespace-stealing macros. */
+#if __FreeBSD_version >= 1100030
+#define FBSD_IF_METRIC_IN_STRUCT_IFNET
+#endif
+
+/* r271438 changed the ifa_ifwithnet KPI signature. */
+#if __FreeBSD_version >= 1100032
+#define FBSD_IFA_IFWITHNET_THREE_ARGS
+#endif
+
 #else /* !defined(UKERNEL) */
 
 /* This section for user space compiles only */

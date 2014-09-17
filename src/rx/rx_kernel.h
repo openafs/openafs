@@ -78,12 +78,18 @@ extern void osi_Panic(char *fmt, ...)
 #endif
 #define rx_ifnet_mtu(x) (x)->if_mtu
 #define rx_ifnet_flags(x) (x?(x)->if_flags:0)
-#if defined(AFS_OBSD46_ENV) || defined(AFS_FBSD81_ENV)
+#if defined(FBSD_IFA_IFWITHNET_THREE_ARGS)
+#define rx_ifaddr_withnet(x) ifa_ifwithnet(x, 0, RT_ALL_FIBS)
+#elif defined(AFS_OBSD46_ENV) || defined(AFS_FBSD81_ENV)
 #define rx_ifaddr_withnet(x) ifa_ifwithnet(x, 0)
 #else
 #define rx_ifaddr_withnet(x) ifa_ifwithnet(x)
 #endif
+#if defined(FBSD_IF_METRIC_IN_STRUCT_IFNET)
+#define rx_ifnet_metric(x) (x?(x)->if_metric:0)
+#else
 #define rx_ifnet_metric(x) (x?(x)->if_data.ifi_metric:0)
+#endif
 #define rx_ifaddr_ifnet(x) (x?(x)->ifa_ifp:0)
 #define rx_ifaddr_address_family(x) (x)->ifa_addr->sa_family
 #define rx_ifaddr_address(x, y, z) memcpy(y, (x)->ifa_addr, z)
