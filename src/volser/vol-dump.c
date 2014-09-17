@@ -415,7 +415,7 @@ DumpDumpHeader(int dumpfd, Volume * vp, afs_int32 fromtime)
 	dumpTimes[1] = V_updateDate(vp);	/* until last update */
 	break;
     case readonlyVolume:
-	dumpTimes[1] = V_copyDate(vp);		/* until clone was made */
+	dumpTimes[1] = V_creationDate(vp);	/* until clone was updated */
 	break;
     case backupVolume:
 	dumpTimes[1] = V_backupDate(vp);	/* until backup was made */
