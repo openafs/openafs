@@ -4,14 +4,23 @@
 # This software has been released under the terms of the BSD License
 # For details, see the LICENSE file in the top level source directory
 
-# API version. Must be incremented whenever something changes.
-LIBMAJOR=1
-LIBMINOR=1
-
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-include @TOP_OBJDIR@/src/config/Makefile.shared
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+include @TOP_OBJDIR@/src/config/Makefile.lwptool
+top_builddir=@top_builddir@
 
+LT_current = 2
+LT_revision = 0
+LT_age = 0
+
+LT_objs = aes.lo camellia.lo camellia-ntt.lo des.lo engine.lo evp.lo \
+	  evp-hcrypto.lo evp-cc.lo hmac.lo md2.lo md4.lo md5.lo pkcs5.lo \
+	  rand-egd.lo rand-timer.lo rand-unix.lo rand.lo rc2.lo rc4.lo \
+	  rijndael-alg-fst.lo rnd_keys.lo sha.lo sha256.lo sha512.lo ui.lo \
+	  validate.lo rand-fortuna.lo
+
+LT_libs = $(LDFLAGS_roken) $(LIB_roken)
 
 HEADERS= ${TOP_INCDIR}/hcrypto/aes.h \
 	 ${TOP_INCDIR}/hcrypto/des.h \
@@ -33,11 +42,9 @@ UPSTREAM= ${TOP_SRCDIR}/external/heimdal
 
 MODULE_INCLUDE=-I${srcdir} -I${TOP_INCDIR}/hcrypto -I$(UPSTREAM)/hcrypto
 
-SHLIBOBJ= libafshcrypto.${SHLIB_SUFFIX}.${LIBMAJOR}.${LIBMINOR}
-
 all: @hcrypto_all_target@
 
-all-internal: ${HEADERS} ${TOP_LIBDIR}/${SHLIBOBJ} \
+all-internal: ${HEADERS} ${TOP_LIBDIR}/libafshcrypto.$(SHLIB_SUFFIX) \
 	${TOP_LIBDIR}/libafshcrypto.a \
 	${TOP_LIBDIR}/libafshcrypto_lwp.a
 
@@ -47,52 +54,33 @@ buildtools: ${HEADERS} ${TOP_LIBDIR}/libafshcrypto.a
 
 install: @hcrypto_install_target@
 
-install-internal: libafshcrypto.a ${SHLIBOBJ}
-	${TOP_OBJDIR}/src/config/shlib-install -d ${DESTDIR}${libdir} \
-	        -l libafshcrypto -M ${LIBMAJOR} -m ${LIBMINOR}
+install-internal: libafshcrypto.la libafshcrypto.a
+	${LT_INSTALL_DATA} libafshcrypto.la ${DESTDIR}${libdir}/libafshcrypto.la
+	${RM} ${DESTDIR}${libdir}/libafshcrypto.la
 	${INSTALL_DATA} libafshcrypto.a ${DESTDIR}${libdir}/libafshcrypto.a
 
-dest: libafshcrypto.a ${SHLIBOBJ}
-	${TOP_OBJDIR}/src/config/shlib-install -d ${DEST}/lib \
-	        -l libafshcrypto -M ${LIBMAJOR} -m ${LIBMINOR}
+dest: libafshcrypto.la libafshcrypto.a
+	${LT_INSTALL_DATA} libafshcrypto.la ${DEST}/lib/libafshcrypto.la
+	${RM} ${DEST}/lib/libafshcrypto.la
 	${INSTALL_DATA} libafshcrypto.a ${DEST}/lib/libafshcrypto.a
 
 clean:
-	$(RM) -f ${OBJECTS} ${SHLIBOBJ} rand-fortuna_lwp.o \
+	$(LT_CLEAN)
+	$(RM) -f ${OBJECTS} rand-fortuna_lwp.o \
 		libafshcrypto.a libafshcrypto_lwp.a libafshcrypto.exp \
 		test_cipher test_cipher.o
 
-COMMON_OBJS= aes.o camellia.o camellia-ntt.o des.o engine.o evp.o \
-	     evp-hcrypto.o evp-cc.o hmac.o md2.o md4.o md5.o pkcs5.o \
-	     rand-egd.o rand-timer.o rand-unix.o rand.o rc2.o rc4.o \
-	     rijndael-alg-fst.o rnd_keys.o sha.o sha256.o sha512.o ui.o \
-	     validate.o
+libafshcrypto.la: libafshcrypto.la.sym $(LT_objs)
+	$(LT_LDLIB_shlib) $(LT_objs) $(LT_libs)
 
-OBJECTS = $(COMMON_OBJS) rand-fortuna.o
+libafshcrypto.a: $(LT_objs)
+	$(LT_LDLIB_static) $(LT_objs)
 
-LWP_OBJS = $(COMMON_OBJS) rand-fortuna_lwp.o
+libafshcrypto_lwp.a: $(LT_objs)
+	$(LT_LDLIB_lwp) $(LT_objs)
 
-${TOP_LIBDIR}/${SHLIBOBJ}: ${SHLIBOBJ}
-	${TOP_OBJDIR}/src/config/shlib-install -d ${TOP_LIBDIR} \
-	        -l libafshcrypto -M ${LIBMAJOR} -m ${LIBMINOR}
-
-${SHLIBOBJ}: ${OBJECTS} libafshcrypto.map
-	${TOP_OBJDIR}/src/config/shlib-build -d $(srcdir) -l libafshcrypto \
-		-M ${LIBMAJOR} -m ${LIBMINOR} -- \
-		${OBJECTS} $(LDFLAGS_roken) $(LIB_roken) ${MT_LIBS}
-
-libafshcrypto.a: ${OBJECTS}
-	$(RM) -f $@
-	$(AR) crv $@ ${OBJECTS}
-	$(RANLIB) $@
-
-libafshcrypto_lwp.a: $(LWP_OBJS)
-	$(RM) -f $@
-	$(AR) crv $@ $(LWP_OBJS)
-	$(RANLIB) $@
-
-test_cipher: test_cipher.o libafshcrypto.a
-	$(AFS_LDRULE) test_cipher.o libafshcrypto.a $(LIB_roken)
+test_cipher: test_cipher.lo libafshcrypto.la
+	$(LT_LDRULE_static) test_cipher.lo libafshcrypto.la
 
 ${TOP_INCDIR}/hcrypto/aes.h: ${UPSTREAM}/hcrypto/aes.h
 	${INSTALL_DATA} $? $@
@@ -154,6 +142,11 @@ ${TOP_INCDIR}/hcrypto/sha.h: ${UPSTREAM}/hcrypto/sha.h
 ${TOP_INCDIR}/hcrypto/ui.h: ${UPSTREAM}/hcrypto/ui.h
 	${INSTALL_DATA} $? $@
 
+${TOP_LIBDIR}/libafshcrypto.$(SHLIB_SUFFIX): libafshcrypto.la
+	$(LT_INSTALL_DATA) libafshcrypto.la $(TOP_LIBDIR)/libafshcrypto.la
+	# libtool gets confused if we leave these around
+	$(RM) $(TOP_LIBDIR)/libafshcrypto.la
+
 ${TOP_LIBDIR}/libafshcrypto.a: libafshcrypto.a
 	${INSTALL_DATA} $? $@
 
@@ -162,97 +155,94 @@ ${TOP_LIBDIR}/libafshcrypto_lwp.a: libafshcrypto_lwp.a
 
 # Pthread Targets
 
-CFLAGS_test_cipher.o= -I${UPSTREAM}/roken/
-CFLAGS_rand-unix.o=@CFLAGS_NOERROR@
-CFLAGS_validate.o=@CFLAGS_NOERROR@
-CFLAGS_evp.o=-DHAVE_CONFIG_H
+CFLAGS_test_cipher.lo= -I${UPSTREAM}/roken/
+CFLAGS_rand-unix.lo=@CFLAGS_NOERROR@
+CFLAGS_validate.lo=@CFLAGS_NOERROR@
+CFLAGS_evp.lo=-DHAVE_CONFIG_H
 
-aes.o: ${UPSTREAM}/hcrypto/aes.c ${HEADERS}
-	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/aes.c
+# Here we have explicit rules for all the libtool objects we might need to
+# build.  The implicit rules don't work since the sources are in a different
+# castle.
+aes.lo: ${UPSTREAM}/hcrypto/aes.c ${HEADERS}
+	$(LTLWP_CCRULE) $(UPSTREAM)/hcrypto/aes.c
 
-bn.o: ${UPSTREAM}/hcrypto/bn.c ${HEADERS}
-	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/bn.c
+bn.lo: ${UPSTREAM}/hcrypto/bn.c ${HEADERS}
+	$(LTLWP_CCRULE) $(UPSTREAM)/hcrypto/bn.c
 
-camellia.o: ${UPSTREAM}/hcrypto/camellia.c ${HEADERS}
-	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/camellia.c
+camellia.lo: ${UPSTREAM}/hcrypto/camellia.c ${HEADERS}
+	$(LTLWP_CCRULE) $(UPSTREAM)/hcrypto/camellia.c
 
-camellia-ntt.o: ${UPSTREAM}/hcrypto/camellia-ntt.c ${HEADERS}
-	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/camellia-ntt.c
+camellia-ntt.lo: ${UPSTREAM}/hcrypto/camellia-ntt.c ${HEADERS}
+	$(LTLWP_CCRULE) $(UPSTREAM)/hcrypto/camellia-ntt.c
 
-des.o: ${UPSTREAM}/hcrypto/des.c ${HEADERS}
-	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/des.c
+des.lo: ${UPSTREAM}/hcrypto/des.c ${HEADERS}
+	$(LTLWP_CCRULE) $(UPSTREAM)/hcrypto/des.c
 
-evp.o: ${UPSTREAM}/hcrypto/evp.c ${HEADERS}
-	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/evp.c
+evp.lo: ${UPSTREAM}/hcrypto/evp.c ${HEADERS}
+	$(LTLWP_CCRULE) $(UPSTREAM)/hcrypto/evp.c
 
-evp-hcrypto.o: ${UPSTREAM}/hcrypto/evp-hcrypto.c ${HEADERS}
-	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/evp-hcrypto.c
+evp-hcrypto.lo: ${UPSTREAM}/hcrypto/evp-hcrypto.c ${HEADERS}
+	$(LTLWP_CCRULE) $(UPSTREAM)/hcrypto/evp-hcrypto.c
 
-evp-cc.o: ${UPSTREAM}/hcrypto/evp-cc.c ${HEADERS}
-	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/evp-cc.c
+evp-cc.lo: ${UPSTREAM}/hcrypto/evp-cc.c ${HEADERS}
+	$(LTLWP_CCRULE) $(UPSTREAM)/hcrypto/evp-cc.c
 
-hmac.o: ${UPSTREAM}/hcrypto/hmac.c ${HEADERS}
-	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/hmac.c
+hmac.lo: ${UPSTREAM}/hcrypto/hmac.c ${HEADERS}
+	$(LTLWP_CCRULE) $(UPSTREAM)/hcrypto/hmac.c
 
-md2.o: ${UPSTREAM}/hcrypto/md2.c ${HEADERS}
-	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/md2.c
+md2.lo: ${UPSTREAM}/hcrypto/md2.c ${HEADERS}
+	$(LTLWP_CCRULE) $(UPSTREAM)/hcrypto/md2.c
 
-md4.o: ${UPSTREAM}/hcrypto/md4.c ${HEADERS}
-	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/md4.c
+md4.lo: ${UPSTREAM}/hcrypto/md4.c ${HEADERS}
+	$(LTLWP_CCRULE) $(UPSTREAM)/hcrypto/md4.c
 
-md5.o: ${UPSTREAM}/hcrypto/md5.c ${HEADERS}
-	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/md5.c
+md5.lo: ${UPSTREAM}/hcrypto/md5.c ${HEADERS}
+	$(LTLWP_CCRULE) $(UPSTREAM)/hcrypto/md5.c
 
-pkcs5.o: ${UPSTREAM}/hcrypto/pkcs5.c ${HEADERS}
-	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/pkcs5.c
+pkcs5.lo: ${UPSTREAM}/hcrypto/pkcs5.c ${HEADERS}
+	$(LTLWP_CCRULE) $(UPSTREAM)/hcrypto/pkcs5.c
 
-rand-egd.o: ${UPSTREAM}/hcrypto/rand-egd.c ${HEADERS}
-	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/rand-egd.c
+rand-egd.lo: ${UPSTREAM}/hcrypto/rand-egd.c ${HEADERS}
+	$(LTLWP_CCRULE) $(UPSTREAM)/hcrypto/rand-egd.c
 
-rand-fortuna.o: ${UPSTREAM}/hcrypto/rand-fortuna.c ${HEADERS}
-	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/rand-fortuna.c
+rand-fortuna.lo: ${UPSTREAM}/hcrypto/rand-fortuna.c ${HEADERS}
+	$(LTLWP_CCRULE) $(UPSTREAM)/hcrypto/rand-fortuna.c
 
-rand-timer.o: ${UPSTREAM}/hcrypto/rand-timer.c ${HEADERS}
-	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/rand-timer.c
+rand-timer.lo: ${UPSTREAM}/hcrypto/rand-timer.c ${HEADERS}
+	$(LTLWP_CCRULE) $(UPSTREAM)/hcrypto/rand-timer.c
 
-rand-unix.o: ${UPSTREAM}/hcrypto/rand-unix.c ${HEADERS}
-	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/rand-unix.c
+rand-unix.lo: ${UPSTREAM}/hcrypto/rand-unix.c ${HEADERS}
+	$(LTLWP_CCRULE) $(UPSTREAM)/hcrypto/rand-unix.c
 
-rand.o: ${UPSTREAM}/hcrypto/rand.c ${HEADERS}
-	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/rand.c
+rand.lo: ${UPSTREAM}/hcrypto/rand.c ${HEADERS}
+	$(LTLWP_CCRULE) $(UPSTREAM)/hcrypto/rand.c
 
-rc2.o: ${UPSTREAM}/hcrypto/rc2.c ${HEADERS}
-	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/rc2.c
+rc2.lo: ${UPSTREAM}/hcrypto/rc2.c ${HEADERS}
+	$(LTLWP_CCRULE) $(UPSTREAM)/hcrypto/rc2.c
 
-rc4.o: ${UPSTREAM}/hcrypto/rc4.c ${HEADERS}
-	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/rc4.c
+rc4.lo: ${UPSTREAM}/hcrypto/rc4.c ${HEADERS}
+	$(LTLWP_CCRULE) $(UPSTREAM)/hcrypto/rc4.c
 
-rijndael-alg-fst.o: ${UPSTREAM}/hcrypto/rijndael-alg-fst.c ${HEADERS}
-	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/rijndael-alg-fst.c
+rijndael-alg-fst.lo: ${UPSTREAM}/hcrypto/rijndael-alg-fst.c ${HEADERS}
+	$(LTLWP_CCRULE) $(UPSTREAM)/hcrypto/rijndael-alg-fst.c
 
-rnd_keys.o: ${UPSTREAM}/hcrypto/rnd_keys.c ${HEADERS}
-	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/rnd_keys.c
+rnd_keys.lo: ${UPSTREAM}/hcrypto/rnd_keys.c ${HEADERS}
+	$(LTLWP_CCRULE) $(UPSTREAM)/hcrypto/rnd_keys.c
 
-sha.o: ${UPSTREAM}/hcrypto/sha.c ${HEADERS}
-	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/sha.c
+sha.lo: ${UPSTREAM}/hcrypto/sha.c ${HEADERS}
+	$(LTLWP_CCRULE) $(UPSTREAM)/hcrypto/sha.c
 
-sha256.o: ${UPSTREAM}/hcrypto/sha256.c ${HEADERS}
-	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/sha256.c
+sha256.lo: ${UPSTREAM}/hcrypto/sha256.c ${HEADERS}
+	$(LTLWP_CCRULE) $(UPSTREAM)/hcrypto/sha256.c
 
-sha512.o: ${UPSTREAM}/hcrypto/sha512.c ${HEADERS}
-	${AFS_CCRULE} $(UPSTREAM)/hcrypto/sha512.c
+sha512.lo: ${UPSTREAM}/hcrypto/sha512.c ${HEADERS}
+	${LTLWP_CCRULE} $(UPSTREAM)/hcrypto/sha512.c
 
-ui.o: ${UPSTREAM}/hcrypto/ui.c ${HEADERS}
-	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/ui.c
+ui.lo: ${UPSTREAM}/hcrypto/ui.c ${HEADERS}
+	$(LTLWP_CCRULE) $(UPSTREAM)/hcrypto/ui.c
 
-validate.o: ${UPSTREAM}/hcrypto/validate.c ${HEADERS}
-	${AFS_CCRULE} ${UPSTREAM}/hcrypto/validate.c
+validate.lo: ${UPSTREAM}/hcrypto/validate.c ${HEADERS}
+	${LTLWP_CCRULE} ${UPSTREAM}/hcrypto/validate.c
 
-test_cipher.o: ${UPSTREAM}/hcrypto/test_cipher.c ${HEADERS}
-	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/test_cipher.c
-
-# LWP Targets
-
-rand-fortuna_lwp.o: ${UPSTREAM}/hcrypto/rand-fortuna.c ${HEADERS}
-	$(LWP_CCRULE) $(UPSTREAM)/hcrypto/rand-fortuna.c
-
+test_cipher.lo: ${UPSTREAM}/hcrypto/test_cipher.c ${HEADERS}
+	$(LTLWP_CCRULE) $(UPSTREAM)/hcrypto/test_cipher.c
