@@ -247,14 +247,17 @@ LT_revision=0
 LT_age=0
 
 # Basic rule to link a shared library.
-LT_LDLIB_shlib_missing=$(LIBTOOL) --quiet --mode=link --tag=CC \
-		       $(MT_CC) -rpath $(libdir) \
-		       $(PTH_LDFLAGS) $(PTH_CFLAGS) $(LDFLAGS_$(@)) \
-		       -o $@ \
-		       -export-symbols ${srcdir}/$@.sym \
-		       -version-info $(LT_current):$(LT_revision):$(LT_age)
+LT_LDLIB_shlib_common=$(LIBTOOL) --quiet --mode=link --tag=CC \
+		      $(MT_CC) -rpath $(libdir) \
+		      $(PTH_LDFLAGS) $(PTH_CFLAGS) $(LDFLAGS_$(@)) \
+		      -o $@ \
+		      -version-info $(LT_current):$(LT_revision):$(LT_age)
 
-LT_LDLIB_shlib=$(LT_LDLIB_shlib_missing) -no-undefined
+LT_LDLIB_shlib=$(LT_LDLIB_shlib_common) -export-symbols $(srcdir)/$@.sym
+
+LT_LDLIB_shlib_missing=$(LT_LDLIB_shlib_common) -export-symbols-regex \
+	"($$(sed -e 's/^/^/' -e 's/$$/$$/' $(srcdir)/$@.sym | tr '\n' '|' | \
+	sed -e 's/|$$//'))"
 
 # Link a static convenience library (contains no PIC code)
 LT_LDLIB_static=$(LIBTOOL) --quiet --mode=link --tag=CC \
