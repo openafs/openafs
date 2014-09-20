@@ -8,10 +8,134 @@
 # Common elements for Makefiles for all system types.
 #
 
-SHELL=/bin/sh
+# Each MakefileProto includes Makefile.config, so we should only need
+# minor tweaks here.
+MODULE_CFLAGS=-DKERNEL
+
+LT_objs = \
+	afs_atomlist.lo \
+	afs_lhash.lo \
+	afs_analyze.lo \
+	afs_error.lo \
+	afs_axscache.lo  \
+	afs_buffer.lo	\
+	afs_bypasscache.lo \
+	afs_callback.lo	\
+	afs_cbqueue.lo    \
+	afs_cell.lo \
+	afs_chunk.lo		\
+	afs_conn.lo \
+	afs_daemons.lo	\
+	afs_dcache.lo \
+	afs_dir.lo		\
+	afs_disconnected.lo	\
+	afs_dynroot.lo \
+	afs_icl.lo \
+	afs_init.lo \
+	afs_lock.lo	\
+	afs_mariner.lo \
+	afs_memcache.lo	\
+	afs_fetchstore.lo	\
+	afs_osidnlc.lo	\
+	afs_osi_pag.lo \
+	afs_segments.lo \
+	afs_server.lo \
+	afs_stat.lo \
+	afs_syscall.lo \
+	afs_tokens.lo \
+	afs_user.lo \
+	afs_util.lo \
+	afs_vcache.lo \
+	afs_warn.lo \
+	afs_osi_uio.lo \
+	afs_vnop_access.lo \
+	afs_vnop_attrs.lo \
+	afs_vnop_create.lo \
+	afs_vnop_dirops.lo \
+	afs_vnop_fid.lo \
+	afs_vnop_flock.lo \
+	afs_vnop_link.lo \
+	afs_vnop_lookup.lo \
+	afs_vnop_open.lo \
+	afs_vnop_read.lo \
+	afs_vnop_readdir.lo \
+	afs_vnop_remove.lo \
+	afs_vnop_rename.lo \
+	afs_vnop_strategy.lo \
+	afs_vnop_symlink.lo \
+	afs_vnop_write.lo \
+	afs_volume.lo \
+	afs_call.lo \
+	afs_pioctl.lo \
+	osi_vfsops.lo \
+	afs_usrops.lo \
+	afsd.lo \
+	afsd_uafs.lo \
+	xdr.lo \
+	xdr_afsuuid.lo \
+	xdr_update.lo \
+	xdr_refernce.lo \
+	afs_uuid.lo \
+	assert.lo \
+	osi_vnodeops.lo \
+	osi_vm.lo \
+	osi_groups.lo \
+	osi_gcpags.lo \
+	osi_vcache.lo \
+	afsaux.lo \
+	Kvice.xdr.lo \
+	xdr_array.lo \
+	xdr_arrayn.lo \
+	Kvice.cs.lo \
+	fcrypt.lo \
+	rx.lo \
+	rx_rdwr.lo \
+	rx_clock.lo \
+	rx_event.lo \
+	rx_globals.lo \
+	rx_identity.lo \
+	rx_kmutex.lo \
+	rx_knet.lo \
+	rx_kcommon.lo \
+	rx_misc.lo \
+	rx_multi.lo \
+	rx_null.lo \
+	rx_opaque.lo \
+	rx_getaddr.lo \
+	rx_stats.lo \
+	rx_packet.lo \
+	rx_conncache.lo \
+	rx_call.lo \
+	rx_conn.lo \
+	rx_peer.lo \
+	xdr_rx.lo \
+	Kvldbint.cs.lo \
+	Kvldbint.xdr.lo \
+	Kcallback.ss.lo \
+	crypt_conn.lo \
+	AFS_component_version_number.lo \
+	afs_exporter.lo \
+	rxkad_client.lo \
+	rxkad_common.lo \
+	casestrcpy.lo \
+	dirpath.lo \
+	fileutil.lo \
+	netrestrict.lo \
+	cellconfig.lo \
+	keys.lo \
+	realms.lo \
+	ktc.lo \
+	Krxstat.ss.lo \
+	Krxstat.xdr.lo \
+	rxstat.lo \
+	xdr_int32.lo \
+	xdr_int64.lo \
+	token.xdr.lo \
+	token.lo \
+	xdr_mem.lo \
+	xdr_len.lo
+
 INCLUDE=  -I. -I${ISYSROOT}/usr/include -I${TOP_OBJDIR}/src/config
-UOBJ	=../UAFS
-PICOBJ  =../UAFS.pic
 PERLUAFS = PERLUAFS
 AFS	=../afs
 RX	=../rx
@@ -35,7 +159,7 @@ TOP_SRC_RX = ${TOP_SRCDIR}/rx
 TOP_SRC_VNOPS = ${TOP_SRCDIR}/afs/VNOPS
 TOP_SRC_RXKAD = ${TOP_SRCDIR}/rxkad
 
-COMMON_INCLUDE = -I. -I.. -I../nfs \
+MODULE_INCLUDE = -I. -I.. -I../nfs \
         -I${TOP_SRCDIR} \
         -I${TOP_SRCDIR}/afs \
         -I${TOP_SRCDIR}/afs/UKERNEL \
@@ -54,22 +178,31 @@ COMMON_INCLUDE = -I. -I.. -I../nfs \
 	-I${TOP_OBJDIR}/src/libuafs \
 	-I${TOP_OBJDIR}/src/auth \
 	-I${TOP_INCDIR}/afs \
-        -I${TOP_INCDIR} \
+	-I${TOP_INCDIR} \
         @INCLUDE_libintl@
 
 # Build rules - CC and CFLAGS are defined in system specific MakefileProtos.
 
-all: ${TOP_LIBDIR}/libjuafs.a ${TOP_LIBDIR}/$(LIBUAFS) \
+all: ${TOP_LIBDIR}/libjuafs.a ${TOP_LIBDIR}/libuafs.a libuafs.la \
 	${TOP_LIBDIR}/libuafs_pic.a linktest @LIBUAFS_BUILD_PERL@
 
-${TOP_LIBDIR}/$(LIBUAFS): UAFS/$(LIBUAFS)
-	${INSTALL_DATA} $? $@
+${TOP_LIBDIR}/libuafs.a: libuafs.a
+	${INSTALL_DATA} libuafs.a $@
 
-${TOP_LIBDIR}/libuafs_pic.a: UAFS.pic/libuafs_pic.a
-	${INSTALL_DATA} $? $@
+${TOP_LIBDIR}/libuafs_pic.a: libuafs_pic.la
+	${INSTALL_DATA} .libs/libuafs_pic.a $@
 
-${TOP_LIBDIR}/libjuafs.a: UAFS/$(LIBUAFS)
-	${INSTALL_DATA} $? $@
+${TOP_LIBDIR}/libjuafs.a: libuafs.a
+	${INSTALL_DATA} libuafs.a $@
+
+libuafs.la: h $(LT_objs)
+	$(LT_LDLIB_shlib) $(LT_objs)
+
+libuafs.a: h $(LT_objs)
+	$(LT_LDLIB_static) $(LT_objs)
+
+libuafs_pic.la: libuafs.a $(LT_objs)
+	$(LT_LDLIB_pic) $(LT_objs)
 
 setup_perllib:
 	${INSTALL} -d ${TOP_LIBDIR}/perl
@@ -83,766 +216,265 @@ ${TOP_LIBDIR}/perl/AFS/ukernel.pm: setup_perllib PERLUAFS/ukernel.pm
 
 LIBUAFS_BUILD_PERL: ${TOP_LIBDIR}/perl/ukernel.so ${TOP_LIBDIR}/perl/AFS/ukernel.pm
 
-linktest: UAFS/$(LIBUAFS)
+linktest: libuafs.a
 	$(CC) $(TEST_CFLAGS) $(TEST_LDFLAGS) \
 		$(LDFLAGS_roken) $(LDFLAGS_hcrypto) -o linktest \
-		${srcdir}/linktest.c $(COMMON_INCLUDE) -DUKERNEL \
-		UAFS/$(LIBUAFS) ${TOP_LIBDIR}/libcmd.a \
+		${srcdir}/linktest.c $(MODULE_INCLUDE) -DUKERNEL \
+		libuafs.a ${TOP_LIBDIR}/libcmd.a \
 		${TOP_LIBDIR}/libafsutil.a $(TOP_LIBDIR)/libopr.a \
 		$(LIB_hcrypto) $(LIB_roken) $(LIB_crypt) $(TEST_LIBS) $(XLIBS)
-
-CRULE1=	$(RUN_CC) $(CC) $(COMMON_INCLUDE) $(CPPFLAGS_roken) $(OPTF) -DKERNEL $(CFLAGS) -c $?
-CRULEPIC=$(RUN_CC) $(CC) $(COMMON_INCLUDE) $(CPPFLAGS_roken) $(OPTF) -DKERNEL $(CFLAGS) $(SHLIB_CFLAGS) -c $?
-
-UAFSOBJ = \
-	$(UOBJ)/afs_atomlist.o \
-	$(UOBJ)/afs_lhash.o \
-	$(UOBJ)/afs_analyze.o \
-	$(UOBJ)/afs_error.o \
-	$(UOBJ)/afs_axscache.o  \
-	$(UOBJ)/afs_buffer.o	\
-	$(UOBJ)/afs_bypasscache.o \
-	$(UOBJ)/afs_callback.o	\
-	$(UOBJ)/afs_cbqueue.o    \
-	$(UOBJ)/afs_cell.o \
-	$(UOBJ)/afs_chunk.o		\
-	$(UOBJ)/afs_conn.o \
-	$(UOBJ)/afs_daemons.o	\
-	$(UOBJ)/afs_dcache.o \
-	$(UOBJ)/afs_dir.o		\
-	$(UOBJ)/afs_disconnected.o	\
-	$(UOBJ)/afs_dynroot.o \
-	$(UOBJ)/afs_icl.o \
-	$(UOBJ)/afs_init.o \
-	$(UOBJ)/afs_lock.o	\
-	$(UOBJ)/afs_mariner.o \
-	$(UOBJ)/afs_memcache.o	\
-	$(UOBJ)/afs_fetchstore.o	\
-	$(UOBJ)/afs_osidnlc.o	\
-	$(UOBJ)/afs_osi_pag.o \
-	$(UOBJ)/afs_segments.o \
-	$(UOBJ)/afs_server.o \
-	$(UOBJ)/afs_stat.o \
-	$(UOBJ)/afs_syscall.o \
-	$(UOBJ)/afs_tokens.o \
-	$(UOBJ)/afs_user.o \
-	$(UOBJ)/afs_util.o \
-	$(UOBJ)/afs_vcache.o \
-	$(UOBJ)/afs_warn.o \
-	$(UOBJ)/afs_osi_uio.o \
-	$(UOBJ)/afs_vnop_access.o \
-	$(UOBJ)/afs_vnop_attrs.o \
-	$(UOBJ)/afs_vnop_create.o \
-	$(UOBJ)/afs_vnop_dirops.o \
-	$(UOBJ)/afs_vnop_fid.o \
-	$(UOBJ)/afs_vnop_flock.o \
-	$(UOBJ)/afs_vnop_link.o \
-	$(UOBJ)/afs_vnop_lookup.o \
-	$(UOBJ)/afs_vnop_open.o \
-	$(UOBJ)/afs_vnop_read.o \
-	$(UOBJ)/afs_vnop_readdir.o \
-	$(UOBJ)/afs_vnop_remove.o \
-	$(UOBJ)/afs_vnop_rename.o \
-	$(UOBJ)/afs_vnop_strategy.o \
-	$(UOBJ)/afs_vnop_symlink.o \
-	$(UOBJ)/afs_vnop_write.o \
-	$(UOBJ)/afs_volume.o \
-	$(UOBJ)/afs_call.o \
-	$(UOBJ)/afs_pioctl.o \
-	$(UOBJ)/osi_vfsops.o \
-	$(UOBJ)/afs_usrops.o \
-	$(UOBJ)/afsd.o \
-	$(UOBJ)/afsd_uafs.o \
-	$(UOBJ)/xdr.o \
-	$(UOBJ)/xdr_afsuuid.o \
-	$(UOBJ)/xdr_update.o \
-	$(UOBJ)/xdr_refernce.o \
-	$(UOBJ)/afs_uuid.o \
-	$(UOBJ)/assert.o \
-	$(UOBJ)/osi_vnodeops.o \
-	$(UOBJ)/osi_vm.o \
-	$(UOBJ)/osi_groups.o \
-	$(UOBJ)/osi_gcpags.o \
-	$(UOBJ)/osi_vcache.o \
-	$(UOBJ)/afsaux.o \
-	$(UOBJ)/Kvice.xdr.o \
-	$(UOBJ)/xdr_array.o \
-	$(UOBJ)/xdr_arrayn.o \
-	$(UOBJ)/Kvice.cs.o \
-	$(UOBJ)/fcrypt.o \
-	$(UOBJ)/rx.o \
-	$(UOBJ)/rx_rdwr.o \
-	$(UOBJ)/rx_clock.o \
-	$(UOBJ)/rx_event.o \
-	$(UOBJ)/rx_globals.o \
-	$(UOBJ)/rx_identity.o \
-	$(UOBJ)/rx_kmutex.o \
-	$(UOBJ)/rx_knet.o \
-	$(UOBJ)/rx_kcommon.o \
-	$(UOBJ)/rx_misc.o \
-	$(UOBJ)/rx_multi.o \
-	$(UOBJ)/rx_null.o \
-	$(UOBJ)/rx_opaque.o \
-	$(UOBJ)/rx_getaddr.o \
-	$(UOBJ)/rx_stats.o \
-	$(UOBJ)/rx_packet.o \
-	$(UOBJ)/rx_conncache.o \
-	$(UOBJ)/rx_call.o \
-	$(UOBJ)/rx_conn.o \
-	$(UOBJ)/rx_peer.o \
-	$(UOBJ)/xdr_rx.o \
-	$(UOBJ)/Kvldbint.cs.o \
-	$(UOBJ)/Kvldbint.xdr.o \
-	$(UOBJ)/Kcallback.ss.o \
-	$(UOBJ)/crypt_conn.o \
-	$(UOBJ)/AFS_component_version_number.o \
-	$(UOBJ)/afs_exporter.o \
-	$(UOBJ)/rxkad_client.o \
-	$(UOBJ)/rxkad_common.o \
-	$(UOBJ)/casestrcpy.o \
-	$(UOBJ)/dirpath.o \
-	$(UOBJ)/fileutil.o \
-	$(UOBJ)/netrestrict.o \
-	$(UOBJ)/cellconfig.o \
-	$(UOBJ)/keys.o \
-	$(UOBJ)/realms.o \
-	$(UOBJ)/ktc.o \
-	$(UOBJ)/Krxstat.ss.o \
-	$(UOBJ)/Krxstat.xdr.o \
-	$(UOBJ)/rxstat.o \
-	$(UOBJ)/xdr_int32.o \
-	$(UOBJ)/xdr_int64.o \
-	$(UOBJ)/token.xdr.o \
-	$(UOBJ)/token.o \
-	$(UOBJ)/xdr_mem.o \
-	$(UOBJ)/xdr_len.o
-
-PICUAFSOBJ = \
-	$(PICOBJ)/afs_atomlist.o \
-	$(PICOBJ)/afs_lhash.o \
-	$(PICOBJ)/afs_analyze.o \
-	$(PICOBJ)/afs_error.o \
-	$(PICOBJ)/afs_axscache.o  \
-	$(PICOBJ)/afs_buffer.o	\
-	$(PICOBJ)/afs_bypasscache.o \
-	$(PICOBJ)/afs_callback.o	\
-	$(PICOBJ)/afs_cbqueue.o    \
-	$(PICOBJ)/afs_cell.o \
-	$(PICOBJ)/afs_chunk.o		\
-	$(PICOBJ)/afs_conn.o \
-	$(PICOBJ)/afs_daemons.o	\
-	$(PICOBJ)/afs_dcache.o \
-	$(PICOBJ)/afs_dir.o		\
-	$(PICOBJ)/afs_disconnected.o	\
-	$(PICOBJ)/afs_dynroot.o \
-	$(PICOBJ)/afs_icl.o \
-	$(PICOBJ)/afs_init.o \
-	$(PICOBJ)/afs_lock.o	\
-	$(PICOBJ)/afs_mariner.o \
-	$(PICOBJ)/afs_memcache.o	\
-	$(PICOBJ)/afs_fetchstore.o	\
-	$(PICOBJ)/afs_osidnlc.o	\
-	$(PICOBJ)/afs_osi_pag.o \
-	$(PICOBJ)/afs_segments.o \
-	$(PICOBJ)/afs_server.o \
-	$(PICOBJ)/afs_stat.o \
-	$(PICOBJ)/afs_syscall.o \
-	$(PICOBJ)/afs_tokens.o \
-	$(PICOBJ)/afs_user.o \
-	$(PICOBJ)/afs_util.o \
-	$(PICOBJ)/afs_vcache.o \
-	$(PICOBJ)/afs_warn.o \
-	$(PICOBJ)/afs_osi_uio.o \
-	$(PICOBJ)/afs_vnop_access.o \
-	$(PICOBJ)/afs_vnop_attrs.o \
-	$(PICOBJ)/afs_vnop_create.o \
-	$(PICOBJ)/afs_vnop_dirops.o \
-	$(PICOBJ)/afs_vnop_fid.o \
-	$(PICOBJ)/afs_vnop_flock.o \
-	$(PICOBJ)/afs_vnop_link.o \
-	$(PICOBJ)/afs_vnop_lookup.o \
-	$(PICOBJ)/afs_vnop_open.o \
-	$(PICOBJ)/afs_vnop_read.o \
-	$(PICOBJ)/afs_vnop_readdir.o \
-	$(PICOBJ)/afs_vnop_remove.o \
-	$(PICOBJ)/afs_vnop_rename.o \
-	$(PICOBJ)/afs_vnop_strategy.o \
-	$(PICOBJ)/afs_vnop_symlink.o \
-	$(PICOBJ)/afs_vnop_write.o \
-	$(PICOBJ)/afs_volume.o \
-	$(PICOBJ)/afs_call.o \
-	$(PICOBJ)/afs_pioctl.o \
-	$(PICOBJ)/osi_vfsops.o \
-	$(PICOBJ)/afs_usrops.o \
-	$(PICOBJ)/afsd.o \
-	$(PICOBJ)/afsd_uafs.o \
-	$(PICOBJ)/xdr.o \
-	$(PICOBJ)/xdr_afsuuid.o \
-	$(PICOBJ)/xdr_update.o \
-	$(PICOBJ)/xdr_refernce.o \
-	$(PICOBJ)/afs_uuid.o \
-	$(PICOBJ)/assert.o \
-	$(PICOBJ)/osi_vnodeops.o \
-	$(PICOBJ)/osi_vm.o \
-	$(PICOBJ)/osi_groups.o \
-	$(PICOBJ)/osi_gcpags.o \
-	$(PICOBJ)/osi_vcache.o \
-	$(PICOBJ)/afsaux.o \
-	$(PICOBJ)/Kvice.xdr.o \
-	$(PICOBJ)/xdr_array.o \
-	$(PICOBJ)/xdr_arrayn.o \
-	$(PICOBJ)/Kvice.cs.o \
-	$(PICOBJ)/fcrypt.o \
-	$(PICOBJ)/rx.o \
-	$(PICOBJ)/rx_rdwr.o \
-	$(PICOBJ)/rx_clock.o \
-	$(PICOBJ)/rx_event.o \
-	$(PICOBJ)/rx_globals.o \
-	$(PICOBJ)/rx_identity.o \
-	$(PICOBJ)/rx_kmutex.o \
-	$(PICOBJ)/rx_knet.o \
-	$(PICOBJ)/rx_kcommon.o \
-	$(PICOBJ)/rx_misc.o \
-	$(PICOBJ)/rx_multi.o \
-	$(PICOBJ)/rx_null.o \
-	$(PICOBJ)/rx_opaque.o \
-	$(PICOBJ)/rx_getaddr.o \
-	$(PICOBJ)/rx_stats.o \
-	$(PICOBJ)/rx_packet.o \
-	$(PICOBJ)/rx_conncache.o \
-	$(PICOBJ)/rx_call.o \
-	$(PICOBJ)/rx_conn.o \
-	$(PICOBJ)/rx_peer.o \
-	$(PICOBJ)/xdr_rx.o \
-	$(PICOBJ)/Kvldbint.cs.o \
-	$(PICOBJ)/Kvldbint.xdr.o \
-	$(PICOBJ)/Kcallback.ss.o \
-	$(PICOBJ)/crypt_conn.o \
-	$(PICOBJ)/AFS_component_version_number.o \
-	$(PICOBJ)/afs_exporter.o \
-	$(PICOBJ)/rxkad_client.o \
-	$(PICOBJ)/rxkad_common.o \
-	$(PICOBJ)/casestrcpy.o \
-	$(PICOBJ)/dirpath.o \
-	$(PICOBJ)/fileutil.o \
-	$(PICOBJ)/netrestrict.o \
-	$(PICOBJ)/cellconfig.o \
-	$(PICOBJ)/keys.o \
-	$(PICOBJ)/realms.o \
-	$(PICOBJ)/ktc.o \
-	$(PICOBJ)/Krxstat.ss.o \
-	$(PICOBJ)/Krxstat.xdr.o \
-	$(PICOBJ)/rxstat.o \
-	$(PICOBJ)/xdr_int32.o \
-	$(PICOBJ)/xdr_int64.o \
-	$(PICOBJ)/token.xdr.o \
-	$(PICOBJ)/token.o \
-	$(PICOBJ)/xdr_mem.o \
-	$(PICOBJ)/xdr_len.o
 
 # Compilation rules
 
 # These files are for the user space library
-
-$(UOBJ)/afs_atomlist.o: $(TOP_SRCDIR)/util/afs_atomlist.c
-	$(CRULE1)
-$(UOBJ)/afs_lhash.o: $(TOP_SRCDIR)/util/afs_lhash.c
-	$(CRULE1)
-$(UOBJ)/afs_analyze.o: $(TOP_SRC_AFS)/afs_analyze.c
-	$(CRULE1)
-$(UOBJ)/afs_axscache.o: $(TOP_SRC_AFS)/afs_axscache.c
-	$(CRULE1)
-$(UOBJ)/afs_buffer.o: $(TOP_SRC_AFS)/afs_buffer.c
-	$(CRULE1)
-$(UOBJ)/afs_bypasscache.o: $(TOP_SRC_AFS)/afs_bypasscache.c
-	$(CRULE1)
-$(UOBJ)/afs_cell.o: $(TOP_SRC_AFS)/afs_cell.c
-	$(CRULE1)
-$(UOBJ)/afs_conn.o: $(TOP_SRC_AFS)/afs_conn.c
-	$(CRULE1)
-$(UOBJ)/afs_dcache.o: $(TOP_SRC_AFS)/afs_dcache.c
-	$(CRULE1)
-$(UOBJ)/afs_dynroot.o: $(TOP_SRC_AFS)/afs_dynroot.c
-	$(CRULE1)
-$(UOBJ)/afs_disconnected.o: $(TOP_SRC_AFS)/afs_disconnected.c
-	$(CRULE1)
-$(UOBJ)/afs_error.o: $(TOP_SRC_AFS)/afs_error.c
-	$(CRULE1)
-$(UOBJ)/afs_init.o: $(TOP_SRC_AFS)/afs_init.c
-	$(CRULE1)
-$(UOBJ)/afs_mariner.o: $(TOP_SRC_AFS)/afs_mariner.c
-	$(CRULE1)
-$(UOBJ)/afs_osidnlc.o: $(TOP_SRC_AFS)/afs_osidnlc.c
-	$(CRULE1)
-$(UOBJ)/afs_osi.o: $(TOP_SRC_AFS)/afs_osi.c
-	$(CRULE1)
-$(UOBJ)/afs_osi_pag.o: $(TOP_SRC_AFS)/afs_osi_pag.c
-	$(CRULE1)
-$(UOBJ)/afs_segments.o: $(TOP_SRC_AFS)/afs_segments.c
-	$(CRULE1)
-$(UOBJ)/afs_server.o: $(TOP_SRC_AFS)/afs_server.c
-	$(CRULE1)
-$(UOBJ)/afs_tokens.o: $(TOP_SRC_AFS)/afs_tokens.c
-	$(CRULE1)
-$(UOBJ)/afs_user.o: $(TOP_SRC_AFS)/afs_user.c
-	$(CRULE1)
-$(UOBJ)/afs_util.o: $(TOP_SRC_AFS)/afs_util.c
-	$(CRULE1)
-$(UOBJ)/afs_vcache.o: $(TOP_SRC_AFS)/afs_vcache.c
-	$(CRULE1)
-$(UOBJ)/afs_warn.o: $(TOP_SRC_AFS)/afs_warn.c
-	$(CRULE1)
-$(UOBJ)/afs_osi_uio.o: $(TOP_SRC_AFS)/afs_osi_uio.c
-	$(CRULE1)
-$(UOBJ)/afs_vnop_access.o: $(TOP_SRC_VNOPS)/afs_vnop_access.c
-	$(CRULE1)
-$(UOBJ)/afs_vnop_attrs.o: $(TOP_SRC_VNOPS)/afs_vnop_attrs.c
-	$(CRULE1)
-$(UOBJ)/afs_vnop_create.o: $(TOP_SRC_VNOPS)/afs_vnop_create.c
-	$(CRULE1)
-$(UOBJ)/afs_vnop_dirops.o: $(TOP_SRC_VNOPS)/afs_vnop_dirops.c
-	$(CRULE1)
-$(UOBJ)/afs_vnop_fid.o: $(TOP_SRC_VNOPS)/afs_vnop_fid.c
-	$(CRULE1)
-$(UOBJ)/afs_vnop_flock.o: $(TOP_SRC_VNOPS)/afs_vnop_flock.c
-	$(CRULE1)
-$(UOBJ)/afs_vnop_link.o: $(TOP_SRC_VNOPS)/afs_vnop_link.c
-	$(CRULE1)
-$(UOBJ)/afs_vnop_lookup.o: $(TOP_SRC_VNOPS)/afs_vnop_lookup.c
-	$(CRULE1)
-$(UOBJ)/afs_vnop_open.o: $(TOP_SRC_VNOPS)/afs_vnop_open.c
-	$(CRULE1)
-$(UOBJ)/afs_vnop_read.o: $(TOP_SRC_VNOPS)/afs_vnop_read.c
-	$(CRULE1)
-$(UOBJ)/afs_vnop_readdir.o: $(TOP_SRC_VNOPS)/afs_vnop_readdir.c
-	$(CRULE1)
-$(UOBJ)/afs_vnop_remove.o: $(TOP_SRC_VNOPS)/afs_vnop_remove.c
-	$(CRULE1)
-$(UOBJ)/afs_vnop_rename.o: $(TOP_SRC_VNOPS)/afs_vnop_rename.c
-	$(CRULE1)
-$(UOBJ)/afs_vnop_strategy.o: $(TOP_SRC_VNOPS)/afs_vnop_strategy.c
-	$(CRULE1)
-$(UOBJ)/afs_vnop_symlink.o: $(TOP_SRC_VNOPS)/afs_vnop_symlink.c
-	$(CRULE1)
-$(UOBJ)/afs_vnop_write.o: $(TOP_SRC_VNOPS)/afs_vnop_write.c
-	$(CRULE1)
-$(UOBJ)/afs_volume.o: $(TOP_SRC_AFS)/afs_volume.c
-	$(CRULE1)
-$(UOBJ)/rx_rdwr.o: $(TOP_SRC_RX)/rx_rdwr.c
-	$(CRULE1)
-$(UOBJ)/afs_cbqueue.o: $(TOP_SRC_AFS)/afs_cbqueue.c
-	$(CRULE1)
-$(UOBJ)/afs_callback.o: $(TOP_SRC_AFS)/afs_callback.c
-	$(CRULE1)
-$(UOBJ)/afs_chunk.o: $(TOP_SRC_AFS)/afs_chunk.c
-	$(CRULE1)
-$(UOBJ)/afs_daemons.o: $(TOP_SRC_AFS)/afs_daemons.c
-	$(CRULE1)
-$(UOBJ)/afs_dir.o: 	$(TOP_SRCDIR)/dir/dir.c
-	$(CRULE1) -o afs_dir.o
-$(UOBJ)/AFS_component_version_number.o: AFS_component_version_number.c
-	$(CRULE1)
-$(UOBJ)/afs_lock.o: $(TOP_SRC_AFS)/afs_lock.c
-	$(CRULE1)
-$(UOBJ)/afs_memcache.o: $(TOP_SRC_AFS)/afs_memcache.c
-	$(CRULE1)
-$(UOBJ)/afs_fetchstore.o: $(TOP_SRC_AFS)/afs_fetchstore.c
-	$(CRULE1)
-$(UOBJ)/afs_stat.o: $(TOP_SRC_AFS)/afs_stat.c
-	$(CRULE1)
-$(UOBJ)/fcrypt.o: 	$(TOP_SRC_RXKAD)/fcrypt.c
-	$(CRULE1)
-$(UOBJ)/crypt_conn.o: $(TOP_SRC_RXKAD)/crypt_conn.c
-	$(CRULE1)
-$(UOBJ)/rxkad_client.o: $(TOP_SRC_RXKAD)/rxkad_client.c
-	$(CRULE1)
-$(UOBJ)/rxkad_common.o: $(TOP_SRC_RXKAD)/rxkad_common.c
-	$(CRULE1)
-$(UOBJ)/afs_exporter.o: $(TOP_SRCDIR)/afs/afs_exporter.c
-	$(CRULE1)
-$(UOBJ)/afs_nfsclnt.o: $(TOP_SRC_AFS)/afs_nfsclnt.c
-	$(CRULE1)
-$(UOBJ)/afs_nfsdisp.o: $(TOP_SRC_AFS)/afs_nfsdisp.c
-	$(CRULE1)
-$(UOBJ)/rx.o: $(TOP_SRC_RX)/rx.c
-	$(CRULE1)
-$(UOBJ)/rx_clock.o: $(TOP_SRC_RX)/rx_clock.c
-	$(CRULE1)
-$(UOBJ)/rx_event.o: $(TOP_SRC_RX)/rx_event.c
-	$(CRULE1)
-$(UOBJ)/rx_globals.o: $(TOP_SRC_RX)/rx_globals.c
-	$(CRULE1)
-$(UOBJ)/rx_identity.o: $(TOP_SRC_RX)/rx_identity.c
-	$(CRULE1)
-$(UOBJ)/rx_misc.o: $(TOP_SRC_RX)/rx_misc.c
-	$(CRULE1)
-$(UOBJ)/rx_multi.o: $(TOP_SRC_RX)/rx_multi.c
-	$(CRULE1)
-$(UOBJ)/rx_null.o: $(TOP_SRC_RX)/rx_null.c
-	$(CRULE1)
-$(UOBJ)/rx_opaque.o: $(TOP_SRC_RX)/rx_opaque.c
-	$(CRULE1)
-$(UOBJ)/rx_getaddr.o: $(TOP_SRC_RX)/rx_getaddr.c
-	$(CRULE1)
-$(UOBJ)/rx_stats.o: $(TOP_SRC_RX)/rx_stats.c
-	$(CRULE1)
-$(UOBJ)/rx_packet.o: $(TOP_SRC_RX)/rx_packet.c
-	$(CRULE1)
-$(UOBJ)/rx_conncache.o: $(TOP_SRCDIR)/rx/rx_conncache.c
-	$(CRULE1)
-$(UOBJ)/rx_call.o: $(TOP_SRCDIR)/rx/rx_call.c
-	$(CRULE1)
-$(UOBJ)/rx_conn.o: $(TOP_SRCDIR)/rx/rx_conn.c
-	$(CRULE1)
-$(UOBJ)/rx_peer.o: $(TOP_SRCDIR)/rx/rx_peer.c
-	$(CRULE1)
-$(UOBJ)/xdr_rx.o: $(TOP_SRC_RX)/xdr_rx.c
-	$(CRULE1)
-$(UOBJ)/xdr_int32.o: $(TOP_SRC_RX)/xdr_int32.c
-	$(CRULE1)
-$(UOBJ)/xdr_int64.o: $(TOP_SRC_RX)/xdr_int64.c
-	$(CRULE1)
-$(UOBJ)/afs_usrops.o: $(TOP_SRC_AFS)/UKERNEL/afs_usrops.c
-	$(CRULE1)
-$(UOBJ)/afsd.o: $(TOP_SRCDIR)/afsd/afsd.c
-	$(CRULE1) @CFLAGS_NOERROR@
-$(UOBJ)/afsd_uafs.o: $(TOP_SRC_AFS)/UKERNEL/afsd_uafs.c
-	$(CRULE1)
-$(UOBJ)/afs_uuid.o: $(TOP_SRCDIR)/util/uuid.c
-	$(CRULE1) -o afs_uuid.o
-$(UOBJ)/assert.o: $(TOP_SRCDIR)/opr/assert.c
-	$(CRULE1)
-$(UOBJ)/xdr_afsuuid.o: $(TOP_SRCDIR)/rx/xdr_afsuuid.c
-	$(CRULE1)
-$(UOBJ)/xdr_update.o: $(TOP_SRCDIR)/rx/xdr_update.c
-	$(CRULE1)
-$(UOBJ)/xdr_refernce.o: $(TOP_SRCDIR)/rx/xdr_refernce.c
-	$(CRULE1)
-$(UOBJ)/xdr.o: $(TOP_SRCDIR)/rx/xdr.c
-	$(CRULE1)
-$(UOBJ)/osi_vnodeops.o: $(TOP_SRC_AFS)/UKERNEL/osi_vnodeops.c
-	$(CRULE1)
-$(UOBJ)/osi_vm.o: $(TOP_SRC_AFS)/UKERNEL/osi_vm.c
-	$(CRULE1)
-$(UOBJ)/osi_groups.o: $(TOP_SRC_AFS)/UKERNEL/osi_groups.c
-	$(CRULE1)
-$(UOBJ)/osi_gcpags.o: $(TOP_SRC_AFS)/UKERNEL/osi_gcpags.c
-	$(CRULE1)
-$(UOBJ)/osi_vcache.o: $(TOP_SRC_AFS)/UKERNEL/osi_vcache.c
-	$(CRULE1)
-$(UOBJ)/Kcallback.ss.o: $(TOP_OBJ_FSINT)/Kcallback.ss.c
-	$(CRULE1)
-$(UOBJ)/Kvice.xdr.o: $(TOP_OBJ_FSINT)/Kvice.xdr.c
-	$(CRULE1)
-$(UOBJ)/Kvice.cs.o: $(TOP_OBJ_FSINT)/Kvice.cs.c
-	$(CRULE1)
-$(UOBJ)/afsaux.o: $(TOP_SRC_FSINT)/afsaux.c
-	$(CRULE1)
-$(UOBJ)/xdr_arrayn.o: $(TOP_SRC_RX)/xdr_arrayn.c
-	$(CRULE1)
-$(UOBJ)/xdr_array.o: $(TOP_SRC_RX)/xdr_array.c
-	$(CRULE1)
-$(UOBJ)/Kvldbint.cs.o: $(TOP_OBJ_VLSERVER)/Kvldbint.cs.c
-	$(CRULE1)
-$(UOBJ)/Kvldbint.xdr.o: $(TOP_OBJ_VLSERVER)/Kvldbint.xdr.c
-	$(CRULE1)
-$(UOBJ)/rx_kmutex.o: $(TOP_SRC_RX)/UKERNEL/rx_kmutex.c
-	$(CRULE1)
-$(UOBJ)/rx_knet.o: $(TOP_SRC_RX)/UKERNEL/rx_knet.c
-	$(CRULE1)
-$(UOBJ)/rx_kcommon.o: $(TOP_SRCDIR)/rx/rx_kcommon.c
-	$(CRULE1)
-$(UOBJ)/afs_call.o: $(TOP_SRC_AFS)/afs_call.c
-	$(CRULE1) -DAFS_NONFSTRANS
-$(UOBJ)/afs_icl.o: $(TOP_SRC_AFS)/afs_icl.c
-	$(CRULE1) -DAFS_NONFSTRANS
-$(UOBJ)/afs_pioctl.o: $(TOP_SRC_AFS)/afs_pioctl.c
-	$(CRULE1) -DAFS_NONFSTRANS
-$(UOBJ)/afs_syscall.o: $(TOP_SRC_AFS)/afs_syscall.c
-	$(CRULE1) @CFLAGS_NOERROR@ -DAFS_NONFSTRANS
-$(UOBJ)/osi_vfsops.o: $(TOP_SRC_AFS)/UKERNEL/osi_vfsops.c
-	$(CRULE1) -DAFS_NONFSTRANS
-$(UOBJ)/ktc.o: 	$(TOP_SRCDIR)/auth/ktc.c
-	$(CRULE1) @CFLAGS_NOERROR@
-$(UOBJ)/cellconfig.o: $(TOP_SRCDIR)/auth/cellconfig.c
-	$(CRULE1)
-$(UOBJ)/keys.o: $(TOP_SRCDIR)/auth/keys.c
-	$(CRULE1)
-$(UOBJ)/casestrcpy.o: $(TOP_SRCDIR)/opr/casestrcpy.c
-	$(CRULE1)
-$(UOBJ)/realms.o: $(TOP_SRCDIR)/auth/realms.c
-	$(CRULE1)
-$(UOBJ)/dirpath.o: $(TOP_SRCDIR)/util/dirpath.c
-	$(CRULE1)
-$(UOBJ)/fileutil.o: $(TOP_SRCDIR)/util/fileutil.c
-	$(CRULE1)
-$(UOBJ)/netrestrict.o: $(TOP_SRCDIR)/auth/netrestrict.c
-	$(CRULE1)
-$(UOBJ)/rxstat.o: $(TOP_SRC_RXSTAT)/rxstat.c
-	$(CRULE1)
-$(UOBJ)/Krxstat.ss.o: $(TOP_OBJ_RXSTAT)/Krxstat.ss.c
-	$(CRULE1)
-$(UOBJ)/Krxstat.xdr.o: $(TOP_OBJ_RXSTAT)/Krxstat.xdr.c
-	$(CRULE1)
-$(UOBJ)/token.xdr.o: $(TOP_OBJ_AUTH)/token.xdr.c
-	$(CRULE1)
-$(UOBJ)/token.o: $(TOP_SRCDIR)/auth/token.c
-	$(CRULE1)
-$(UOBJ)/xdr_mem.o: $(TOP_SRC_RX)/xdr_mem.c
-	$(CRULE1)
-$(UOBJ)/xdr_len.o: $(TOP_SRC_RX)/xdr_len.c
-	$(CRULE1)
-
-# These files are for the PIC version of libuafs
-
-$(PICOBJ)/afs_atomlist.o: $(TOP_SRCDIR)/util/afs_atomlist.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_lhash.o: $(TOP_SRCDIR)/util/afs_lhash.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_analyze.o: $(TOP_SRC_AFS)/afs_analyze.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_axscache.o: $(TOP_SRC_AFS)/afs_axscache.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_buffer.o: $(TOP_SRC_AFS)/afs_buffer.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_bypasscache.o: $(TOP_SRC_AFS)/afs_bypasscache.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_cell.o: $(TOP_SRC_AFS)/afs_cell.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_conn.o: $(TOP_SRC_AFS)/afs_conn.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_dcache.o: $(TOP_SRC_AFS)/afs_dcache.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_dynroot.o: $(TOP_SRC_AFS)/afs_dynroot.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_disconnected.o: $(TOP_SRC_AFS)/afs_disconnected.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_error.o: $(TOP_SRC_AFS)/afs_error.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_init.o: $(TOP_SRC_AFS)/afs_init.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_mariner.o: $(TOP_SRC_AFS)/afs_mariner.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_osidnlc.o: $(TOP_SRC_AFS)/afs_osidnlc.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_osi.o: $(TOP_SRC_AFS)/afs_osi.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_osi_pag.o: $(TOP_SRC_AFS)/afs_osi_pag.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_segments.o: $(TOP_SRC_AFS)/afs_segments.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_server.o: $(TOP_SRC_AFS)/afs_server.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_tokens.o: $(TOP_SRC_AFS)/afs_tokens.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_user.o: $(TOP_SRC_AFS)/afs_user.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_util.o: $(TOP_SRC_AFS)/afs_util.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_vcache.o: $(TOP_SRC_AFS)/afs_vcache.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_warn.o: $(TOP_SRC_AFS)/afs_warn.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_osi_uio.o: $(TOP_SRC_AFS)/afs_osi_uio.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_vnop_access.o: $(TOP_SRC_VNOPS)/afs_vnop_access.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_vnop_attrs.o: $(TOP_SRC_VNOPS)/afs_vnop_attrs.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_vnop_create.o: $(TOP_SRC_VNOPS)/afs_vnop_create.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_vnop_dirops.o: $(TOP_SRC_VNOPS)/afs_vnop_dirops.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_vnop_fid.o: $(TOP_SRC_VNOPS)/afs_vnop_fid.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_vnop_flock.o: $(TOP_SRC_VNOPS)/afs_vnop_flock.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_vnop_link.o: $(TOP_SRC_VNOPS)/afs_vnop_link.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_vnop_lookup.o: $(TOP_SRC_VNOPS)/afs_vnop_lookup.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_vnop_open.o: $(TOP_SRC_VNOPS)/afs_vnop_open.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_vnop_read.o: $(TOP_SRC_VNOPS)/afs_vnop_read.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_vnop_readdir.o: $(TOP_SRC_VNOPS)/afs_vnop_readdir.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_vnop_remove.o: $(TOP_SRC_VNOPS)/afs_vnop_remove.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_vnop_rename.o: $(TOP_SRC_VNOPS)/afs_vnop_rename.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_vnop_strategy.o: $(TOP_SRC_VNOPS)/afs_vnop_strategy.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_vnop_symlink.o: $(TOP_SRC_VNOPS)/afs_vnop_symlink.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_vnop_write.o: $(TOP_SRC_VNOPS)/afs_vnop_write.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_volume.o: $(TOP_SRC_AFS)/afs_volume.c
-	$(CRULEPIC)
-$(PICOBJ)/rx_rdwr.o: $(TOP_SRC_RX)/rx_rdwr.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_cbqueue.o: $(TOP_SRC_AFS)/afs_cbqueue.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_callback.o: $(TOP_SRC_AFS)/afs_callback.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_chunk.o: $(TOP_SRC_AFS)/afs_chunk.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_daemons.o: $(TOP_SRC_AFS)/afs_daemons.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_dir.o: 	$(TOP_SRCDIR)/dir/dir.c
-	$(CRULEPIC) -o afs_dir.o
-$(PICOBJ)/AFS_component_version_number.o: AFS_component_version_number.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_lock.o: $(TOP_SRC_AFS)/afs_lock.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_memcache.o: $(TOP_SRC_AFS)/afs_memcache.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_fetchstore.o: $(TOP_SRC_AFS)/afs_fetchstore.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_stat.o: $(TOP_SRC_AFS)/afs_stat.c
-	$(CRULEPIC)
-$(PICOBJ)/fcrypt.o: 	$(TOP_SRC_RXKAD)/fcrypt.c
-	$(CRULEPIC)
-$(PICOBJ)/crypt_conn.o: $(TOP_SRC_RXKAD)/crypt_conn.c
-	$(CRULEPIC)
-$(PICOBJ)/rxkad_client.o: $(TOP_SRC_RXKAD)/rxkad_client.c
-	$(CRULEPIC)
-$(PICOBJ)/rxkad_common.o: $(TOP_SRC_RXKAD)/rxkad_common.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_exporter.o: $(TOP_SRCDIR)/afs/afs_exporter.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_nfsclnt.o: $(TOP_SRC_AFS)/afs_nfsclnt.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_nfsdisp.o: $(TOP_SRC_AFS)/afs_nfsdisp.c
-	$(CRULEPIC)
-$(PICOBJ)/rx.o: $(TOP_SRC_RX)/rx.c
-	$(CRULEPIC)
-$(PICOBJ)/rx_clock.o: $(TOP_SRC_RX)/rx_clock.c
-	$(CRULEPIC)
-$(PICOBJ)/rx_event.o: $(TOP_SRC_RX)/rx_event.c
-	$(CRULEPIC)
-$(PICOBJ)/rx_globals.o: $(TOP_SRC_RX)/rx_globals.c
-	$(CRULEPIC)
-$(PICOBJ)/rx_identity.o: $(TOP_SRC_RX)/rx_identity.c
-	$(CRULEPIC)
-$(PICOBJ)/rx_misc.o: $(TOP_SRC_RX)/rx_misc.c
-	$(CRULEPIC)
-$(PICOBJ)/rx_multi.o: $(TOP_SRC_RX)/rx_multi.c
-	$(CRULEPIC)
-$(PICOBJ)/rx_null.o: $(TOP_SRC_RX)/rx_null.c
-	$(CRULEPIC)
-$(PICOBJ)/rx_opaque.o: $(TOP_SRC_RX)/rx_opaque.c
-	$(CRULEPIC)
-$(PICOBJ)/rx_getaddr.o: $(TOP_SRC_RX)/rx_getaddr.c
-	$(CRULEPIC)
-$(PICOBJ)/rx_stats.o: $(TOP_SRC_RX)/rx_stats.c
-	$(CRULEPIC)
-$(PICOBJ)/rx_packet.o: $(TOP_SRC_RX)/rx_packet.c
-	$(CRULEPIC)
-$(PICOBJ)/rx_conncache.o: $(TOP_SRCDIR)/rx/rx_conncache.c
-	$(CRULEPIC)
-$(PICOBJ)/rx_call.o: $(TOP_SRCDIR)/rx/rx_call.c
-	$(CRULEPIC)
-$(PICOBJ)/rx_conn.o: $(TOP_SRCDIR)/rx/rx_conn.c
-	$(CRULEPIC)
-$(PICOBJ)/rx_peer.o: $(TOP_SRCDIR)/rx/rx_peer.c
-	$(CRULEPIC)
-$(PICOBJ)/xdr_rx.o: $(TOP_SRC_RX)/xdr_rx.c
-	$(CRULEPIC)
-$(PICOBJ)/xdr_int32.o: $(TOP_SRC_RX)/xdr_int32.c
-	$(CRULEPIC)
-$(PICOBJ)/xdr_int64.o: $(TOP_SRC_RX)/xdr_int64.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_usrops.o: $(TOP_SRC_AFS)/UKERNEL/afs_usrops.c
-	$(CRULEPIC)
-$(PICOBJ)/afsd.o: $(TOP_SRCDIR)/afsd/afsd.c
-	$(CRULEPIC) @CFLAGS_NOERROR@
-$(PICOBJ)/afsd_uafs.o: $(TOP_SRC_AFS)/UKERNEL/afsd_uafs.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_uuid.o: $(TOP_SRCDIR)/util/uuid.c
-	$(CRULEPIC) -o afs_uuid.o
-$(PICOBJ)/assert.o: $(TOP_SRCDIR)/opr/assert.c
-	$(CRULEPIC)
-$(PICOBJ)/xdr_afsuuid.o: $(TOP_SRCDIR)/rx/xdr_afsuuid.c
-	$(CRULEPIC)
-$(PICOBJ)/xdr_update.o: $(TOP_SRCDIR)/rx/xdr_update.c
-	$(CRULEPIC)
-$(PICOBJ)/xdr_refernce.o: $(TOP_SRCDIR)/rx/xdr_refernce.c
-	$(CRULEPIC)
-$(PICOBJ)/xdr.o: $(TOP_SRCDIR)/rx/xdr.c
-	$(CRULEPIC)
-$(PICOBJ)/osi_vnodeops.o: $(TOP_SRC_AFS)/UKERNEL/osi_vnodeops.c
-	$(CRULEPIC)
-$(PICOBJ)/osi_vm.o: $(TOP_SRC_AFS)/UKERNEL/osi_vm.c
-	$(CRULEPIC)
-$(PICOBJ)/osi_groups.o: $(TOP_SRC_AFS)/UKERNEL/osi_groups.c
-	$(CRULEPIC)
-$(PICOBJ)/osi_gcpags.o: $(TOP_SRC_AFS)/UKERNEL/osi_gcpags.c
-	$(CRULEPIC)
-$(PICOBJ)/osi_vcache.o: $(TOP_SRC_AFS)/UKERNEL/osi_vcache.c
-	$(CRULEPIC)
-$(PICOBJ)/Kcallback.ss.o: $(TOP_OBJ_FSINT)/Kcallback.ss.c
-	$(CRULEPIC)
-$(PICOBJ)/Kvice.xdr.o: $(TOP_OBJ_FSINT)/Kvice.xdr.c
-	$(CRULEPIC)
-$(PICOBJ)/Kvice.cs.o: $(TOP_OBJ_FSINT)/Kvice.cs.c
-	$(CRULEPIC)
-$(PICOBJ)/afsaux.o: $(TOP_SRC_FSINT)/afsaux.c
-	$(CRULEPIC)
-$(PICOBJ)/xdr_array.o: $(TOP_SRC_RX)/xdr_array.c
-	$(CRULEPIC)
-$(PICOBJ)/xdr_arrayn.o: $(TOP_SRC_RX)/xdr_arrayn.c
-	$(CRULEPIC)
-$(PICOBJ)/Kvldbint.cs.o: $(TOP_OBJ_VLSERVER)/Kvldbint.cs.c
-	$(CRULEPIC)
-$(PICOBJ)/Kvldbint.xdr.o: $(TOP_OBJ_VLSERVER)/Kvldbint.xdr.c
-	$(CRULEPIC)
-$(PICOBJ)/rx_kmutex.o: $(TOP_SRC_RX)/UKERNEL/rx_kmutex.c
-	$(CRULEPIC)
-$(PICOBJ)/rx_knet.o: $(TOP_SRC_RX)/UKERNEL/rx_knet.c
-	$(CRULEPIC)
-$(PICOBJ)/rx_kcommon.o: $(TOP_SRCDIR)/rx/rx_kcommon.c
-	$(CRULEPIC)
-$(PICOBJ)/afs_call.o: $(TOP_SRC_AFS)/afs_call.c
-	$(CRULEPIC) -DAFS_NONFSTRANS
-$(PICOBJ)/afs_icl.o: $(TOP_SRC_AFS)/afs_icl.c
-	$(CRULEPIC) -DAFS_NONFSTRANS
-$(PICOBJ)/afs_pioctl.o: $(TOP_SRC_AFS)/afs_pioctl.c
-	$(CRULEPIC) -DAFS_NONFSTRANS
-$(PICOBJ)/afs_syscall.o: $(TOP_SRC_AFS)/afs_syscall.c
-	$(CRULEPIC) @CFLAGS_NOERROR@ -DAFS_NONFSTRANS
-$(PICOBJ)/osi_vfsops.o: $(TOP_SRC_AFS)/UKERNEL/osi_vfsops.c
-	$(CRULEPIC) -DAFS_NONFSTRANS
-$(PICOBJ)/ktc.o: 	$(TOP_SRCDIR)/auth/ktc.c
-	$(CRULEPIC) @CFLAGS_NOERROR@
-$(PICOBJ)/cellconfig.o: $(TOP_SRCDIR)/auth/cellconfig.c
-	$(CRULEPIC)
-$(PICOBJ)/keys.o: $(TOP_SRCDIR)/auth/keys.c
-	$(CRULEPIC)
-$(PICOBJ)/casestrcpy.o: $(TOP_SRCDIR)/opr/casestrcpy.c
-	$(CRULEPIC)
-$(PICOBJ)/realms.o: $(TOP_SRCDIR)/auth/realms.c
-	$(CRULEPIC)
-$(PICOBJ)/dirpath.o: $(TOP_SRCDIR)/util/dirpath.c
-	$(CRULEPIC)
-$(PICOBJ)/fileutil.o: $(TOP_SRCDIR)/util/fileutil.c
-	$(CRULEPIC)
-$(PICOBJ)/netrestrict.o: $(TOP_SRCDIR)/auth/netrestrict.c
-	$(CRULEPIC)
-$(PICOBJ)/rxstat.o: $(TOP_SRC_RXSTAT)/rxstat.c
-	$(CRULEPIC)
-$(PICOBJ)/Krxstat.ss.o: $(TOP_OBJ_RXSTAT)/Krxstat.ss.c
-	$(CRULEPIC)
-$(PICOBJ)/Krxstat.xdr.o: $(TOP_OBJ_RXSTAT)/Krxstat.xdr.c
-	$(CRULEPIC)
-$(PICOBJ)/token.xdr.o: $(TOP_OBJ_AUTH)/token.xdr.c
-	$(CRULEPIC)
-$(PICOBJ)/token.o: $(TOP_SRCDIR)/auth/token.c
-	$(CRULEPIC)
-$(PICOBJ)/xdr_mem.o: $(TOP_SRC_RX)/xdr_mem.c
-	$(CRULEPIC)
-$(PICOBJ)/xdr_len.o: $(TOP_SRC_RX)/xdr_len.c
-	$(CRULEPIC)
+afs_atomlist.lo: $(TOP_SRCDIR)/util/afs_atomlist.c
+	$(LT_CCRULE) $(TOP_SRCDIR)/util/afs_atomlist.c
+afs_lhash.lo: $(TOP_SRCDIR)/util/afs_lhash.c
+	$(LT_CCRULE) $(TOP_SRCDIR)/util/afs_lhash.c
+afs_analyze.lo: $(TOP_SRC_AFS)/afs_analyze.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_analyze.c
+afs_axscache.lo: $(TOP_SRC_AFS)/afs_axscache.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_axscache.c
+afs_buffer.lo: $(TOP_SRC_AFS)/afs_buffer.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_buffer.c
+afs_bypasscache.lo: $(TOP_SRC_AFS)/afs_bypasscache.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_bypasscache.c
+afs_cell.lo: $(TOP_SRC_AFS)/afs_cell.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_cell.c
+afs_conn.lo: $(TOP_SRC_AFS)/afs_conn.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_conn.c
+afs_dcache.lo: $(TOP_SRC_AFS)/afs_dcache.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_dcache.c
+afs_dynroot.lo: $(TOP_SRC_AFS)/afs_dynroot.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_dynroot.c
+afs_disconnected.lo: $(TOP_SRC_AFS)/afs_disconnected.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_disconnected.c
+afs_error.lo: $(TOP_SRC_AFS)/afs_error.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_error.c
+afs_init.lo: $(TOP_SRC_AFS)/afs_init.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_init.c
+afs_mariner.lo: $(TOP_SRC_AFS)/afs_mariner.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_mariner.c
+afs_osidnlc.lo: $(TOP_SRC_AFS)/afs_osidnlc.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_osidnlc.c
+afs_osi.lo: $(TOP_SRC_AFS)/afs_osi.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_osi.c
+afs_osi_pag.lo: $(TOP_SRC_AFS)/afs_osi_pag.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_osi_pag.c
+afs_segments.lo: $(TOP_SRC_AFS)/afs_segments.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_segments.c
+afs_server.lo: $(TOP_SRC_AFS)/afs_server.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_server.c
+afs_tokens.lo: $(TOP_SRC_AFS)/afs_tokens.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_tokens.c
+afs_user.lo: $(TOP_SRC_AFS)/afs_user.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_user.c
+afs_util.lo: $(TOP_SRC_AFS)/afs_util.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_util.c
+afs_vcache.lo: $(TOP_SRC_AFS)/afs_vcache.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_vcache.c
+afs_warn.lo: $(TOP_SRC_AFS)/afs_warn.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_warn.c
+afs_osi_uio.lo: $(TOP_SRC_AFS)/afs_osi_uio.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_osi_uio.c
+afs_vnop_access.lo: $(TOP_SRC_VNOPS)/afs_vnop_access.c
+	$(LT_CCRULE) $(TOP_SRC_VNOPS)/afs_vnop_access.c
+afs_vnop_attrs.lo: $(TOP_SRC_VNOPS)/afs_vnop_attrs.c
+	$(LT_CCRULE) $(TOP_SRC_VNOPS)/afs_vnop_attrs.c
+afs_vnop_create.lo: $(TOP_SRC_VNOPS)/afs_vnop_create.c
+	$(LT_CCRULE) $(TOP_SRC_VNOPS)/afs_vnop_create.c
+afs_vnop_dirops.lo: $(TOP_SRC_VNOPS)/afs_vnop_dirops.c
+	$(LT_CCRULE) $(TOP_SRC_VNOPS)/afs_vnop_dirops.c
+afs_vnop_fid.lo: $(TOP_SRC_VNOPS)/afs_vnop_fid.c
+	$(LT_CCRULE) $(TOP_SRC_VNOPS)/afs_vnop_fid.c
+afs_vnop_flock.lo: $(TOP_SRC_VNOPS)/afs_vnop_flock.c
+	$(LT_CCRULE) $(TOP_SRC_VNOPS)/afs_vnop_flock.c
+afs_vnop_link.lo: $(TOP_SRC_VNOPS)/afs_vnop_link.c
+	$(LT_CCRULE) $(TOP_SRC_VNOPS)/afs_vnop_link.c
+afs_vnop_lookup.lo: $(TOP_SRC_VNOPS)/afs_vnop_lookup.c
+	$(LT_CCRULE) $(TOP_SRC_VNOPS)/afs_vnop_lookup.c
+afs_vnop_open.lo: $(TOP_SRC_VNOPS)/afs_vnop_open.c
+	$(LT_CCRULE) $(TOP_SRC_VNOPS)/afs_vnop_open.c
+afs_vnop_read.lo: $(TOP_SRC_VNOPS)/afs_vnop_read.c
+	$(LT_CCRULE) $(TOP_SRC_VNOPS)/afs_vnop_read.c
+afs_vnop_readdir.lo: $(TOP_SRC_VNOPS)/afs_vnop_readdir.c
+	$(LT_CCRULE) $(TOP_SRC_VNOPS)/afs_vnop_readdir.c
+afs_vnop_remove.lo: $(TOP_SRC_VNOPS)/afs_vnop_remove.c
+	$(LT_CCRULE) $(TOP_SRC_VNOPS)/afs_vnop_remove.c
+afs_vnop_rename.lo: $(TOP_SRC_VNOPS)/afs_vnop_rename.c
+	$(LT_CCRULE) $(TOP_SRC_VNOPS)/afs_vnop_rename.c
+afs_vnop_strategy.lo: $(TOP_SRC_VNOPS)/afs_vnop_strategy.c
+	$(LT_CCRULE) $(TOP_SRC_VNOPS)/afs_vnop_strategy.c
+afs_vnop_symlink.lo: $(TOP_SRC_VNOPS)/afs_vnop_symlink.c
+	$(LT_CCRULE) $(TOP_SRC_VNOPS)/afs_vnop_symlink.c
+afs_vnop_write.lo: $(TOP_SRC_VNOPS)/afs_vnop_write.c
+	$(LT_CCRULE) $(TOP_SRC_VNOPS)/afs_vnop_write.c
+afs_volume.lo: $(TOP_SRC_AFS)/afs_volume.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_volume.c
+rx_rdwr.lo: $(TOP_SRC_RX)/rx_rdwr.c
+	$(LT_CCRULE) $(TOP_SRC_RX)/rx_rdwr.c
+afs_cbqueue.lo: $(TOP_SRC_AFS)/afs_cbqueue.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_cbqueue.c
+afs_callback.lo: $(TOP_SRC_AFS)/afs_callback.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_callback.c
+afs_chunk.lo: $(TOP_SRC_AFS)/afs_chunk.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_chunk.c
+afs_daemons.lo: $(TOP_SRC_AFS)/afs_daemons.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_daemons.c
+afs_dir.lo: 	$(TOP_SRCDIR)/dir/dir.c
+	$(LT_CCRULE) $(TOP_SRCDIR)/dir/dir.c
+AFS_component_version_number.lo: AFS_component_version_number.c
+	$(LT_CCRULE) AFS_component_version_number.c
+afs_lock.lo: $(TOP_SRC_AFS)/afs_lock.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_lock.c
+afs_memcache.lo: $(TOP_SRC_AFS)/afs_memcache.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_memcache.c
+afs_fetchstore.lo: $(TOP_SRC_AFS)/afs_fetchstore.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_fetchstore.c
+afs_stat.lo: $(TOP_SRC_AFS)/afs_stat.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_stat.c
+fcrypt.lo: 	$(TOP_SRC_RXKAD)/fcrypt.c
+	$(LT_CCRULE) $(TOP_SRC_RXKAD)/fcrypt.c
+crypt_conn.lo: $(TOP_SRC_RXKAD)/crypt_conn.c
+	$(LT_CCRULE) $(TOP_SRC_RXKAD)/crypt_conn.c
+rxkad_client.lo: $(TOP_SRC_RXKAD)/rxkad_client.c
+	$(LT_CCRULE) $(TOP_SRC_RXKAD)/rxkad_client.c
+rxkad_common.lo: $(TOP_SRC_RXKAD)/rxkad_common.c
+	$(LT_CCRULE) $(TOP_SRC_RXKAD)/rxkad_common.c
+afs_exporter.lo: $(TOP_SRCDIR)/afs/afs_exporter.c
+	$(LT_CCRULE) $(TOP_SRCDIR)/afs/afs_exporter.c
+afs_nfsclnt.lo: $(TOP_SRC_AFS)/afs_nfsclnt.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_nfsclnt.c
+afs_nfsdisp.lo: $(TOP_SRC_AFS)/afs_nfsdisp.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_nfsdisp.c
+rx.lo: $(TOP_SRC_RX)/rx.c
+	$(LT_CCRULE) $(TOP_SRC_RX)/rx.c
+rx_clock.lo: $(TOP_SRC_RX)/rx_clock.c
+	$(LT_CCRULE) $(TOP_SRC_RX)/rx_clock.c
+rx_event.lo: $(TOP_SRC_RX)/rx_event.c
+	$(LT_CCRULE) $(TOP_SRC_RX)/rx_event.c
+rx_globals.lo: $(TOP_SRC_RX)/rx_globals.c
+	$(LT_CCRULE) $(TOP_SRC_RX)/rx_globals.c
+rx_identity.lo: $(TOP_SRC_RX)/rx_identity.c
+	$(LT_CCRULE) $(TOP_SRC_RX)/rx_identity.c
+rx_misc.lo: $(TOP_SRC_RX)/rx_misc.c
+	$(LT_CCRULE) $(TOP_SRC_RX)/rx_misc.c
+rx_multi.lo: $(TOP_SRC_RX)/rx_multi.c
+	$(LT_CCRULE) $(TOP_SRC_RX)/rx_multi.c
+rx_null.lo: $(TOP_SRC_RX)/rx_null.c
+	$(LT_CCRULE) $(TOP_SRC_RX)/rx_null.c
+rx_opaque.lo: $(TOP_SRC_RX)/rx_opaque.c
+	$(LT_CCRULE) $(TOP_SRC_RX)/rx_opaque.c
+rx_getaddr.lo: $(TOP_SRC_RX)/rx_getaddr.c
+	$(LT_CCRULE) $(TOP_SRC_RX)/rx_getaddr.c
+rx_stats.lo: $(TOP_SRC_RX)/rx_stats.c
+	$(LT_CCRULE) $(TOP_SRC_RX)/rx_stats.c
+rx_packet.lo: $(TOP_SRC_RX)/rx_packet.c
+	$(LT_CCRULE) $(TOP_SRC_RX)/rx_packet.c
+rx_conncache.lo: $(TOP_SRCDIR)/rx/rx_conncache.c
+	$(LT_CCRULE) $(TOP_SRCDIR)/rx/rx_conncache.c
+rx_call.lo: $(TOP_SRCDIR)/rx/rx_call.c
+	$(LT_CCRULE) $(TOP_SRCDIR)/rx/rx_call.c
+rx_conn.lo: $(TOP_SRCDIR)/rx/rx_conn.c
+	$(LT_CCRULE) $(TOP_SRCDIR)/rx/rx_conn.c
+rx_peer.lo: $(TOP_SRCDIR)/rx/rx_peer.c
+	$(LT_CCRULE) $(TOP_SRCDIR)/rx/rx_peer.c
+xdr_rx.lo: $(TOP_SRC_RX)/xdr_rx.c
+	$(LT_CCRULE) $(TOP_SRC_RX)/xdr_rx.c
+xdr_int32.lo: $(TOP_SRC_RX)/xdr_int32.c
+	$(LT_CCRULE) $(TOP_SRC_RX)/xdr_int32.c
+xdr_int64.lo: $(TOP_SRC_RX)/xdr_int64.c
+	$(LT_CCRULE) $(TOP_SRC_RX)/xdr_int64.c
+afs_usrops.lo: $(TOP_SRC_AFS)/UKERNEL/afs_usrops.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/UKERNEL/afs_usrops.c
+afsd.lo: $(TOP_SRCDIR)/afsd/afsd.c
+	$(LT_CCRULE) $(TOP_SRCDIR)/afsd/afsd.c @CFLAGS_NOERROR@
+afsd_uafs.lo: $(TOP_SRC_AFS)/UKERNEL/afsd_uafs.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/UKERNEL/afsd_uafs.c
+afs_uuid.lo: $(TOP_SRCDIR)/util/uuid.c
+	$(LT_CCRULE) $(TOP_SRCDIR)/util/uuid.c
+assert.lo: $(TOP_SRCDIR)/opr/assert.c
+	$(LT_CCRULE) $(TOP_SRCDIR)/opr/assert.c
+xdr_afsuuid.lo: $(TOP_SRCDIR)/rx/xdr_afsuuid.c
+	$(LT_CCRULE) $(TOP_SRCDIR)/rx/xdr_afsuuid.c
+xdr_update.lo: $(TOP_SRCDIR)/rx/xdr_update.c
+	$(LT_CCRULE) $(TOP_SRCDIR)/rx/xdr_update.c
+xdr_refernce.lo: $(TOP_SRCDIR)/rx/xdr_refernce.c
+	$(LT_CCRULE) $(TOP_SRCDIR)/rx/xdr_refernce.c
+xdr.lo: $(TOP_SRCDIR)/rx/xdr.c
+	$(LT_CCRULE) $(TOP_SRCDIR)/rx/xdr.c
+osi_vnodeops.lo: $(TOP_SRC_AFS)/UKERNEL/osi_vnodeops.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/UKERNEL/osi_vnodeops.c
+osi_vm.lo: $(TOP_SRC_AFS)/UKERNEL/osi_vm.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/UKERNEL/osi_vm.c
+osi_groups.lo: $(TOP_SRC_AFS)/UKERNEL/osi_groups.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/UKERNEL/osi_groups.c
+osi_gcpags.lo: $(TOP_SRC_AFS)/UKERNEL/osi_gcpags.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/UKERNEL/osi_gcpags.c
+osi_vcache.lo: $(TOP_SRC_AFS)/UKERNEL/osi_vcache.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/UKERNEL/osi_vcache.c
+Kcallback.ss.lo: $(TOP_OBJ_FSINT)/Kcallback.ss.c
+	$(LT_CCRULE) $(TOP_OBJ_FSINT)/Kcallback.ss.c
+Kvice.xdr.lo: $(TOP_OBJ_FSINT)/Kvice.xdr.c
+	$(LT_CCRULE) $(TOP_OBJ_FSINT)/Kvice.xdr.c
+Kvice.cs.lo: $(TOP_OBJ_FSINT)/Kvice.cs.c
+	$(LT_CCRULE) $(TOP_OBJ_FSINT)/Kvice.cs.c
+afsaux.lo: $(TOP_SRC_FSINT)/afsaux.c
+	$(LT_CCRULE) $(TOP_SRC_FSINT)/afsaux.c
+xdr_arrayn.lo: $(TOP_SRC_RX)/xdr_arrayn.c
+	$(LT_CCRULE) $(TOP_SRC_RX)/xdr_arrayn.c
+xdr_array.lo: $(TOP_SRC_RX)/xdr_array.c
+	$(LT_CCRULE) $(TOP_SRC_RX)/xdr_array.c
+Kvldbint.cs.lo: $(TOP_OBJ_VLSERVER)/Kvldbint.cs.c
+	$(LT_CCRULE) $(TOP_OBJ_VLSERVER)/Kvldbint.cs.c
+Kvldbint.xdr.lo: $(TOP_OBJ_VLSERVER)/Kvldbint.xdr.c
+	$(LT_CCRULE) $(TOP_OBJ_VLSERVER)/Kvldbint.xdr.c
+rx_kmutex.lo: $(TOP_SRC_RX)/UKERNEL/rx_kmutex.c
+	$(LT_CCRULE) $(TOP_SRC_RX)/UKERNEL/rx_kmutex.c
+rx_knet.lo: $(TOP_SRC_RX)/UKERNEL/rx_knet.c
+	$(LT_CCRULE) $(TOP_SRC_RX)/UKERNEL/rx_knet.c
+rx_kcommon.lo: $(TOP_SRCDIR)/rx/rx_kcommon.c
+	$(LT_CCRULE) $(TOP_SRCDIR)/rx/rx_kcommon.c
+afs_call.lo: $(TOP_SRC_AFS)/afs_call.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_call.c -DAFS_NONFSTRANS
+afs_icl.lo: $(TOP_SRC_AFS)/afs_icl.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_icl.c -DAFS_NONFSTRANS
+afs_pioctl.lo: $(TOP_SRC_AFS)/afs_pioctl.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_pioctl.c -DAFS_NONFSTRANS
+afs_syscall.lo: $(TOP_SRC_AFS)/afs_syscall.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_syscall.c @CFLAGS_NOERROR@ -DAFS_NONFSTRANS
+osi_vfsops.lo: $(TOP_SRC_AFS)/UKERNEL/osi_vfsops.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/UKERNEL/osi_vfsops.c -DAFS_NONFSTRANS
+ktc.lo: 	$(TOP_SRCDIR)/auth/ktc.c
+	$(LT_CCRULE) $(TOP_SRCDIR)/auth/ktc.c @CFLAGS_NOERROR@
+cellconfig.lo: $(TOP_SRCDIR)/auth/cellconfig.c
+	$(LT_CCRULE) $(TOP_SRCDIR)/auth/cellconfig.c
+keys.lo: $(TOP_SRCDIR)/auth/keys.c
+	$(LT_CCRULE) $(TOP_SRCDIR)/auth/keys.c
+casestrcpy.lo: $(TOP_SRCDIR)/opr/casestrcpy.c
+	$(LT_CCRULE) $(TOP_SRCDIR)/opr/casestrcpy.c
+realms.lo: $(TOP_SRCDIR)/auth/realms.c
+	$(LT_CCRULE) $(TOP_SRCDIR)/auth/realms.c
+dirpath.lo: $(TOP_SRCDIR)/util/dirpath.c
+	$(LT_CCRULE) $(TOP_SRCDIR)/util/dirpath.c
+fileutil.lo: $(TOP_SRCDIR)/util/fileutil.c
+	$(LT_CCRULE) $(TOP_SRCDIR)/util/fileutil.c
+netrestrict.lo: $(TOP_SRCDIR)/auth/netrestrict.c
+	$(LT_CCRULE) $(TOP_SRCDIR)/auth/netrestrict.c
+rxstat.lo: $(TOP_SRC_RXSTAT)/rxstat.c
+	$(LT_CCRULE) $(TOP_SRC_RXSTAT)/rxstat.c
+Krxstat.ss.lo: $(TOP_OBJ_RXSTAT)/Krxstat.ss.c
+	$(LT_CCRULE) $(TOP_OBJ_RXSTAT)/Krxstat.ss.c
+Krxstat.xdr.lo: $(TOP_OBJ_RXSTAT)/Krxstat.xdr.c
+	$(LT_CCRULE) $(TOP_OBJ_RXSTAT)/Krxstat.xdr.c
+token.xdr.lo: $(TOP_OBJ_AUTH)/token.xdr.c
+	$(LT_CCRULE) $(TOP_OBJ_AUTH)/token.xdr.c
+token.lo: $(TOP_SRCDIR)/auth/token.c
+	$(LT_CCRULE) $(TOP_SRCDIR)/auth/token.c
+xdr_mem.lo: $(TOP_SRC_RX)/xdr_mem.c
+	$(LT_CCRULE) $(TOP_SRC_RX)/xdr_mem.c
+xdr_len.lo: $(TOP_SRC_RX)/xdr_len.c
+	$(LT_CCRULE) $(TOP_SRC_RX)/xdr_len.c
 
 $(PERLUAFS)/ukernel.pm: $(PERLUAFS)/ukernel_swig_perl.c
 $(PERLUAFS)/ukernel_swig_perl.c: ${srcdir}/ukernel_swig.i
@@ -851,14 +483,14 @@ $(PERLUAFS)/ukernel_swig_perl.c: ${srcdir}/ukernel_swig.i
 
 $(PERLUAFS)/ukernel_swig_perl.o: $(PERLUAFS)/ukernel_swig_perl.c
 	${CC} -c ${CPPFLAGS} ${UAFS_CFLAGS} $(SWIG_PERL_CFLAGS) \
-		$(COMMON_INCLUDE) -DUKERNEL $(SHLIB_CFLAGS) -o $@ \
+		$(MODULE_INCLUDE) -DUKERNEL $(SHLIB_CFLAGS) -o $@ \
 		$(PERLUAFS)/ukernel_swig_perl.c
 
-$(PERLUAFS)/ukernel.so: $(PERLUAFS)/ukernel_swig_perl.o UAFS.pic/libuafs_pic.a
+$(PERLUAFS)/ukernel.so: $(PERLUAFS)/ukernel_swig_perl.o libuafs_pic.la
 	${TOP_OBJDIR}/src/config/shlib-build -d $(srcdir) -p -f $@ -- \
 		$(SWIG_PERL_LDFLAGS) $(LDFLAGS) \
 		$(PERLUAFS)/ukernel_swig_perl.o \
-		UAFS.pic/libuafs_pic.a ${TOP_LIBDIR}/libcmd_pic.a \
+		.libs/libuafs_pic.a ${TOP_LIBDIR}/libcmd_pic.a \
 		${TOP_LIBDIR}/libafsutil_pic.a \
 		$(TOP_LIBDIR)/libopr_pic.a \
 		$(LDFLAGS_roken) $(LDFLAGS_hcrypto) $(LIB_hcrypto) \
@@ -866,15 +498,16 @@ $(PERLUAFS)/ukernel.so: $(PERLUAFS)/ukernel_swig_perl.o UAFS.pic/libuafs_pic.a
 		$(XLIBS)
 
 clean:
-	-$(RM) -rf UAFS* PERLUAFS afsd afs afsint config rx
+	$(LT_CLEAN)
+	-$(RM) -rf PERLUAFS afs afsint config rx
 	-$(RM) -rf h
 	-$(RM) -f linktest $(AFS_OS_CLEAN)
 
-install: UAFS/$(LIBUAFS) UAFS.pic/libuafs_pic.a @LIBUAFS_BUILD_PERL@
+install: libuafs.a libuafs_pic.la @LIBUAFS_BUILD_PERL@
 	${INSTALL} -d ${DESTDIR}${libdir}
-	${INSTALL_DATA} UAFS/$(LIBUAFS) ${DESTDIR}${libdir}/$(LIBUAFS)
-	${INSTALL_DATA} UAFS/$(LIBUAFS) ${DESTDIR}${libdir}/libjuafs.a
-	${INSTALL_DATA} UAFS.pic/libuafs_pic.a ${DESTDIR}${libdir}/libuafs_pic.a
+	${INSTALL_DATA} libuafs.a ${DESTDIR}${libdir}/libuafs.a
+	${INSTALL_DATA} libuafs.a ${DESTDIR}${libdir}/libjuafs.a
+	${INSTALL_DATA} .libs/libuafs_pic.a ${DESTDIR}${libdir}/libuafs_pic.a
 	if [ "x$(LIBUAFS_BUILD_PERL)" != "x" ] ; then \
 		${INSTALL} -d ${DESTDIR}${libdir}/perl; \
 		${INSTALL} -d ${DESTDIR}${libdir}/perl/AFS; \
@@ -887,7 +520,7 @@ dest: $(TOP_INCDIR)/afs/param.h $(TOP_INCDIR)/afs/stds.h \
 		$(TOP_INCDIR)/afs/afs_stats.h \
 		$(TOP_SRCDIR)/afs/sysincludes.h \
 		$(TOP_SRCDIR)/afs/UKERNEL/afs_usrops.h \
-		UAFS/$(LIBUAFS) UAFS.pic/libuafs_pic.a \
+		libuafs.a libuafs_pic.la \
 		@LIBUAFS_BUILD_PERL@
 	${INSTALL} -d ${DEST}/root.perf/include/afs
 	${INSTALL} -d ${DEST}/root.perf/lib
@@ -903,9 +536,9 @@ dest: $(TOP_INCDIR)/afs/param.h $(TOP_INCDIR)/afs/stds.h \
 		${DEST}/root.perf/include/afs/sysincludes.h
 	${INSTALL_DATA} $(TOP_SRCDIR)/afs/UKERNEL/afs_usrops.h \
 		${DEST}/root.perf/include/afs/afs_usrops.h
-	${INSTALL_DATA} UAFS/$(LIBUAFS) ${DEST}/root.perf/lib/$(LIBUAFS)
-	${INSTALL_DATA} UAFS/$(LIBUAFS) ${DEST}/root.perf/lib/libjuafs.a
-	${INSTALL_DATA} UAFS.pic/libuafs_pic.a ${DEST}/root.perf/lib/libuafs_pic.a
+	${INSTALL_DATA} libuafs.a ${DEST}/root.perf/lib/libuafs.a
+	${INSTALL_DATA} libuafs.a ${DEST}/root.perf/lib/libjuafs.a
+	${INSTALL_DATA} .libs/libuafs_pic.a ${DEST}/root.perf/lib/libuafs_pic.a
 	if [ "x$(LIBUAFS_BUILD_PERL)" != "x" ] ; then \
 		${INSTALL} -d ${DEST}/root.perf/lib/perl; \
 		${INSTALL} -d ${DEST}/root.perf/lib/perl/AFS; \
@@ -916,39 +549,10 @@ dest: $(TOP_INCDIR)/afs/param.h $(TOP_INCDIR)/afs/stds.h \
 #
 # Common directory and other build targets
 #
-UAFS:
-	mkdir -p $@
-
-UAFS.pic:
-	mkdir -p $@
 
 h: $(TOP_SRC_AFS)/*.c $(TOP_SRC_VNOPS)/*.c $(TOP_SRC_RX)/*.c
 	-$(RM) -rf h
 	@TOP_SRCDIR@/libuafs/make_h_tree $(TOP_SRC_AFS) $(TOP_SRC_VNOPS) \
 		$(TOP_SRC_RX)
-
-setup_common: h
-	-$(RM) -f afsd
-	-ln -s $(TOP_SRCDIR)/afsd afsd
-
-setup_uafs: UAFS setup_common
-	-$(RM) -f UAFS/Makefile UAFS/Makefile.common
-	ln -s ../Makefile UAFS/Makefile
-	ln -s ../Makefile.common UAFS/Makefile.common
-
-setup_picuafs: UAFS.pic setup_common
-	-$(RM) -f UAFS.pic/Makefile UAFS.pic/Makefile.common
-	ln -s ../Makefile UAFS.pic/Makefile
-	ln -s ../Makefile.common UAFS.pic/Makefile.common
-
-UAFS/$(LIBUAFS): setup_uafs
-	cd UAFS && \
-	$(MAKE) $(LIBUAFS) DESTDIR=${DESTDIR} && \
-	$(RANLIB) $(LIBUAFS)
-
-UAFS.pic/libuafs_pic.a: setup_picuafs
-	cd UAFS.pic && \
-	$(MAKE) libuafs_pic.a DESTDIR=${DESTDIR} && \
-	$(RANLIB) libuafs_pic.a
 
 include ${TOP_OBJDIR}/src/config/Makefile.version

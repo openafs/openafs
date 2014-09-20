@@ -27,24 +27,11 @@ TEST_CFLAGS=-DAFS_PTHREAD_ENV -Daix -DAFS_AIX_ENV $(XCFLAGS)
 TEST_LDFLAGS=
 TEST_LIBS=-lm -lpthreads
 
-LIBUAFS = libuafs.a
-
 AFS_OS_CLEAN = \
 	*.exp \
 	export.h
 
-# To get __file__ (afs_osi_pag.c) you need to specify language level 
-# C99 to xlc_r like this:
-OPTF=${OPTMZ} -qlanglvl=stdc99
+# To get __file__ you need to specify the language level C99 to xlc_r
+CFLAGS_afs_osi_pag.lo=-qlanglvl=stdc99
 
 include Makefile.common
-
-$(LIBUAFS): $(UAFSOBJ)
-	-$(RM) -f $(LIBUAFS)
-	$(AR) $(ARFLAGS) $(LIBUAFS) $(UAFSOBJ) $(AFS)/afsl.exp
-	$(RANLIB) libuafs.a
-
-libuafs_pic.a: $(PICUAFSOBJ)
-	-$(RM) -f libuafs_pic.a
-	$(AR) $(ARFLAGS) libuafs_pic.a $(PICUAFSOBJ) $(AFS)/afsl.exp
-	$(RANLIB) libuafs_pic.a

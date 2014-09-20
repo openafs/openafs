@@ -17,21 +17,10 @@ CC = @CC@
 DEFINES= -D_REENTRANT -DKERNEL -DUKERNEL
 KOPTS=
 CFLAGS=-I. -I..  -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KOPTS) ${DBG} $(XCFLAGS)
-OPTF=${OPTMZ}
 
 TEST_CFLAGS=-D_REENTRANT -DAFS_PTHREAD_ENV -DAFS_DFFBSD_ENV $(XCFLAGS)
 TEST_LDFLAGS=
 TEST_LIBS=-lpthread
 <all>
 
-LIBUAFS = libuafs.a
-
 include Makefile.common
-
-$(LIBUAFS): $(UAFSOBJ)
-	-$(RM) -f $(LIBUAFS)
-	$(AR) $(ARFLAGS) $(LIBUAFS) $(UAFSOBJ)
-
-libuafs_pic.a: $(PICUAFSOBJ)
-	-$(RM) -f libuafs_pic.a
-	$(AR) $(ARFLAGS) libuafs_pic.a $(PICUAFSOBJ)
