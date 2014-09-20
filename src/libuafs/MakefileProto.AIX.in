@@ -28,7 +28,6 @@ TEST_LDFLAGS=
 TEST_LIBS=-lm -lpthreads
 
 LIBUAFS = libuafs.a
-LIBJUAFS = libjuafs.a
 
 AFS_OS_CLEAN = \
 	*.exp \
@@ -49,8 +48,3 @@ libuafs_pic.a: $(PICUAFSOBJ)
 	-$(RM) -f libuafs_pic.a
 	$(AR) $(ARFLAGS) libuafs_pic.a $(PICUAFSOBJ) $(AFS)/afsl.exp
 	$(RANLIB) libuafs_pic.a
-
-$(LIBJUAFS): $(JUAFSOBJ)
-	-$(RM) -f $(LIBJUAFS)
-	$(AR) $(ARFLAGS) $(LIBJUAFS) $(JUAFSOBJ) $(AFS)/afsl.exp
-	$(RANLIB) libjuafs.a

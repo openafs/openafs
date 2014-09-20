@@ -23,7 +23,6 @@ TEST_LDFLAGS=-pthread
 TEST_LIBS=-lm
 
 LIBUAFS = libuafs.a
-LIBJUAFS = libjuafs.a
 
 include Makefile.common
 
@@ -36,8 +35,3 @@ libuafs_pic.a: $(PICUAFSOBJ)
 	-$(RM) -f libuafs_pic.a
 	$(AR) $(ARFLAGS) libuafs_pic.a $(PICUAFSOBJ)
 	ranlib libuafs_pic.a
-
-$(LIBJUAFS): $(JUAFSOBJ)
-	-$(RM) -f $(LIBJUAFS)
-	$(AR) $(ARFLAGS) $(LIBJUAFS) $(JUAFSOBJ)
-	ranlib $(LIBJUAFS)

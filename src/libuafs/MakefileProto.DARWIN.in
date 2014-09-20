@@ -24,7 +24,6 @@ TEST_LDFLAGS=$(XLDFLAGS) $(ARCHFLAGS)
 TEST_LIBS=
 
 LIBUAFS = libuafs.a
-LIBJUAFS = libjuafs.a
 
 include Makefile.common
 
@@ -35,7 +34,3 @@ $(LIBUAFS): $(UAFSOBJ)
 libuafs_pic.a: $(PICUAFSOBJ)
 	-$(RM) -f libuafs_pic.a
 	$(AR) $(ARFLAGS) libuafs_pic.a $(PICUAFSOBJ)
-
-$(LIBJUAFS): $(JUAFSOBJ)
-	-$(RM) -f $(LIBJUAFS)
-	$(AR) $(ARFLAGS) $(LIBJUAFS) $(JUAFSOBJ)

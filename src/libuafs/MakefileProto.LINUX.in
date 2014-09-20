@@ -13,10 +13,6 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 # MakefileProto for LINUX systems
-# This Makefile generates two libraries: the standard libuafs and libjuafs,
-# a libuafs variant that is designed to link with Java enabled libraries.
-# The libjuafs library implements the AFS_WEB_ENHANCEMENTS definition, see
-# the libuafs README for details.
 
 # System specific build commands and flags
 DEFINES= -D_REENTRANT -DKERNEL -DUKERNEL
@@ -35,7 +31,6 @@ TEST_LDFLAGS=
 TEST_LIBS=-lpthread @LIB_crypt@
 
 LIBUAFS = libuafs.a
-LIBJUAFS = libjuafs.a
 
 include Makefile.common
 
@@ -46,7 +41,3 @@ $(LIBUAFS): $(UAFSOBJ)
 libuafs_pic.a: $(PICUAFSOBJ)
 	-$(RM) -f libuafs_pic.a
 	$(AR) $(ARFLAGS) libuafs_pic.a $(PICUAFSOBJ)
-
-$(LIBJUAFS): $(JUAFSOBJ)
-	-$(RM) -f $(LIBJUAFS)
-	$(AR) $(ARFLAGS) $(LIBJUAFS) $(JUAFSOBJ)

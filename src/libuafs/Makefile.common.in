@@ -12,7 +12,6 @@ SHELL=/bin/sh
 INCLUDE=  -I. -I${ISYSROOT}/usr/include -I${TOP_OBJDIR}/src/config
 UOBJ	=../UAFS
 PICOBJ  =../UAFS.pic
-JUAFS	=../JUAFS
 PERLUAFS = PERLUAFS
 AFS	=../afs
 RX	=../rx
@@ -60,7 +59,7 @@ COMMON_INCLUDE = -I. -I.. -I../nfs \
 
 # Build rules - CC and CFLAGS are defined in system specific MakefileProtos.
 
-all: ${TOP_LIBDIR}/$(LIBJUAFS) ${TOP_LIBDIR}/$(LIBUAFS) \
+all: ${TOP_LIBDIR}/libjuafs.a ${TOP_LIBDIR}/$(LIBUAFS) \
 	${TOP_LIBDIR}/libuafs_pic.a linktest @LIBUAFS_BUILD_PERL@
 
 ${TOP_LIBDIR}/$(LIBUAFS): UAFS/$(LIBUAFS)
@@ -69,7 +68,7 @@ ${TOP_LIBDIR}/$(LIBUAFS): UAFS/$(LIBUAFS)
 ${TOP_LIBDIR}/libuafs_pic.a: UAFS.pic/libuafs_pic.a
 	${INSTALL_DATA} $? $@
 
-${TOP_LIBDIR}/$(LIBJUAFS): JUAFS/$(LIBJUAFS)
+${TOP_LIBDIR}/libjuafs.a: UAFS/$(LIBUAFS)
 	${INSTALL_DATA} $? $@
 
 setup_perllib:
@@ -92,8 +91,8 @@ linktest: UAFS/$(LIBUAFS)
 		${TOP_LIBDIR}/libafsutil.a $(TOP_LIBDIR)/libopr.a \
 		$(LIB_hcrypto) $(LIB_roken) $(LIB_crypt) $(TEST_LIBS) $(XLIBS)
 
-CRULE1=	$(RUN_CC) $(CC) $(COMMON_INCLUDE) $(CPPFLAGS_roken) $(OPTF) -DKERNEL $(LIBJUAFS_FLAGS) $(CFLAGS) -c $?
-CRULEPIC=$(RUN_CC) $(CC) $(COMMON_INCLUDE) $(CPPFLAGS_roken) $(OPTF) -DKERNEL $(LIBJUAFS_FLAGS) $(CFLAGS) $(SHLIB_CFLAGS) -c $?
+CRULE1=	$(RUN_CC) $(CC) $(COMMON_INCLUDE) $(CPPFLAGS_roken) $(OPTF) -DKERNEL $(CFLAGS) -c $?
+CRULEPIC=$(RUN_CC) $(CC) $(COMMON_INCLUDE) $(CPPFLAGS_roken) $(OPTF) -DKERNEL $(CFLAGS) $(SHLIB_CFLAGS) -c $?
 
 UAFSOBJ = \
 	$(UOBJ)/afs_atomlist.o \
@@ -340,127 +339,6 @@ PICUAFSOBJ = \
 	$(PICOBJ)/token.o \
 	$(PICOBJ)/xdr_mem.o \
 	$(PICOBJ)/xdr_len.o
-
-JUAFSOBJ = \
-	$(JUAFS)/afs_atomlist.o \
-	$(JUAFS)/afs_lhash.o \
-	$(JUAFS)/afs_analyze.o \
-	$(JUAFS)/afs_error.o \
-	$(JUAFS)/afs_axscache.o  \
-	$(JUAFS)/afs_buffer.o	\
-	$(JUAFS)/afs_bypasscache.o \
-	$(JUAFS)/afs_callback.o	\
-	$(JUAFS)/afs_cbqueue.o    \
-	$(JUAFS)/afs_cell.o \
-	$(JUAFS)/afs_chunk.o \
-	$(JUAFS)/afs_conn.o \
-	$(JUAFS)/afs_daemons.o	\
-	$(JUAFS)/afs_dcache.o \
-	$(JUAFS)/afs_dir.o \
-	$(JUAFS)/afs_dynroot.o \
-	$(JUAFS)/afs_disconnected.o \
-	$(JUAFS)/afs_icl.o \
-	$(JUAFS)/afs_init.o \
-	$(JUAFS)/afs_lock.o	\
-	$(JUAFS)/afs_mariner.o \
-	$(JUAFS)/afs_memcache.o	\
-	$(JUAFS)/afs_fetchstore.o	\
-	$(JUAFS)/afs_osidnlc.o	\
-	$(JUAFS)/afs_osi_pag.o \
-	$(JUAFS)/afs_segments.o \
-	$(JUAFS)/afs_server.o \
-	$(JUAFS)/afs_stat.o \
-	$(JUAFS)/afs_syscall.o \
-	$(JUAFS)/afs_tokens.o \
-	$(JUAFS)/afs_user.o \
-	$(JUAFS)/afs_util.o \
-	$(JUAFS)/afs_vcache.o \
-	$(JUAFS)/afs_warn.o \
-	$(JUAFS)/afs_osi_uio.o \
-	$(JUAFS)/afs_vnop_access.o \
-	$(JUAFS)/afs_vnop_attrs.o \
-	$(JUAFS)/afs_vnop_create.o \
-	$(JUAFS)/afs_vnop_dirops.o \
-	$(JUAFS)/afs_vnop_fid.o \
-	$(JUAFS)/afs_vnop_flock.o \
-	$(JUAFS)/afs_vnop_link.o \
-	$(JUAFS)/afs_vnop_lookup.o \
-	$(JUAFS)/afs_vnop_open.o \
-	$(JUAFS)/afs_vnop_read.o \
-	$(JUAFS)/afs_vnop_readdir.o \
-	$(JUAFS)/afs_vnop_remove.o \
-	$(JUAFS)/afs_vnop_rename.o \
-	$(JUAFS)/afs_vnop_strategy.o \
-	$(JUAFS)/afs_vnop_symlink.o \
-	$(JUAFS)/afs_vnop_write.o \
-	$(JUAFS)/afs_volume.o \
-	$(JUAFS)/afs_call.o \
-	$(JUAFS)/afs_pioctl.o \
-	$(JUAFS)/osi_vfsops.o \
-	$(JUAFS)/afs_usrops.o \
-	$(JUAFS)/afsd.o \
-	$(JUAFS)/afsd_uafs.o \
-	$(JUAFS)/xdr.o \
-	$(JUAFS)/xdr_afsuuid.o \
-	$(JUAFS)/xdr_update.o \
-	$(JUAFS)/xdr_refernce.o \
-	$(JUAFS)/afs_uuid.o \
-	$(JUAFS)/assert.o \
-	$(JUAFS)/osi_vnodeops.o \
-	$(JUAFS)/osi_vm.o \
-	$(JUAFS)/osi_groups.o \
-	$(JUAFS)/osi_gcpags.o \
-	$(JUAFS)/osi_vcache.o \
-	$(JUAFS)/afsaux.o \
-	$(JUAFS)/Kvice.xdr.o \
-	$(JUAFS)/xdr_array.o \
-	$(JUAFS)/xdr_arrayn.o \
-	$(JUAFS)/Kvice.cs.o \
-	$(JUAFS)/fcrypt.o \
-	$(JUAFS)/rx.o \
-	$(JUAFS)/rx_rdwr.o \
-	$(JUAFS)/rx_clock.o \
-	$(JUAFS)/rx_event.o \
-	$(JUAFS)/rx_globals.o \
-	$(JUAFS)/rx_identity.o \
-	$(JUAFS)/rx_knet.o \
-	$(JUAFS)/rx_kcommon.o \
-	$(JUAFS)/rx_misc.o \
-	$(JUAFS)/rx_multi.o \
-	$(JUAFS)/rx_null.o \
-	$(JUAFS)/rx_opaque.o \
-	$(JUAFS)/rx_getaddr.o \
-	$(JUAFS)/rx_stats.o \
-	$(JUAFS)/rx_packet.o \
-	$(JUAFS)/rx_conncache.o \
-	$(JUAFS)/rx_call.o \
-	$(JUAFS)/rx_conn.o \
-	$(JUAFS)/rx_peer.o \
-	$(JUAFS)/xdr_rx.o \
-	$(JUAFS)/Kvldbint.cs.o \
-	$(JUAFS)/Kvldbint.xdr.o \
-	$(JUAFS)/Kcallback.ss.o \
-	$(JUAFS)/crypt_conn.o \
-	$(JUAFS)/AFS_component_version_number.o \
-	$(JUAFS)/afs_exporter.o \
-	$(JUAFS)/rxkad_client.o \
-	$(JUAFS)/rxkad_common.o \
-	$(JUAFS)/casestrcpy.o \
-	$(JUAFS)/dirpath.o \
-	$(JUAFS)/fileutil.o \
-	$(JUAFS)/netrestrict.o \
-	$(JUAFS)/cellconfig.o \
-	$(JUAFS)/keys.o \
-	$(JUAFS)/realms.o \
-	$(JUAFS)/ktc.o \
-	$(JUAFS)/Krxstat.ss.o \
-	$(JUAFS)/Krxstat.xdr.o \
-	$(JUAFS)/rxstat.o \
-	$(JUAFS)/xdr_int64.o \
-	$(JUAFS)/token.xdr.o \
-	$(JUAFS)/token.o \
-	$(JUAFS)/xdr_mem.o \
-	$(JUAFS)/xdr_len.o
 
 # Compilation rules
 
@@ -966,256 +844,6 @@ $(PICOBJ)/xdr_mem.o: $(TOP_SRC_RX)/xdr_mem.c
 $(PICOBJ)/xdr_len.o: $(TOP_SRC_RX)/xdr_len.c
 	$(CRULEPIC)
 
-# These are for libjuafs.a 
-# Used for linking with libafsauthent and libafsrpc
-
-$(JUAFS)/afs_atomlist.o: $(TOP_SRCDIR)/util/afs_atomlist.c
-	$(CRULE1)
-$(JUAFS)/afs_lhash.o: $(TOP_SRCDIR)/util/afs_lhash.c
-	$(CRULE1)
-$(JUAFS)/afs_analyze.o: $(TOP_SRC_AFS)/afs_analyze.c
-	$(CRULE1)
-$(JUAFS)/afs_axscache.o: $(TOP_SRC_AFS)/afs_axscache.c
-	$(CRULE1)
-$(JUAFS)/afs_buffer.o: $(TOP_SRC_AFS)/afs_buffer.c
-	$(CRULE1)
-$(JUAFS)/afs_bypasscache.o: $(TOP_SRC_AFS)/afs_bypasscache.c
-	$(CRULE1)
-$(JUAFS)/afs_cell.o: $(TOP_SRC_AFS)/afs_cell.c
-	$(CRULE1)
-$(JUAFS)/afs_conn.o: $(TOP_SRC_AFS)/afs_conn.c
-	$(CRULE1)
-$(JUAFS)/afs_dcache.o: $(TOP_SRC_AFS)/afs_dcache.c
-	$(CRULE1)
-$(JUAFS)/afs_disconnected.o: $(TOP_SRC_AFS)/afs_disconnected.c
-	$(CRULE1)
-$(JUAFS)/afs_dynroot.o: $(TOP_SRC_AFS)/afs_dynroot.c
-	$(CRULE1)
-$(JUAFS)/afs_error.o: $(TOP_SRC_AFS)/afs_error.c
-	$(CRULE1)
-$(JUAFS)/afs_init.o: $(TOP_SRC_AFS)/afs_init.c
-	$(CRULE1)
-$(JUAFS)/afs_mariner.o: $(TOP_SRC_AFS)/afs_mariner.c
-	$(CRULE1)
-$(JUAFS)/afs_osidnlc.o: $(TOP_SRC_AFS)/afs_osidnlc.c
-	$(CRULE1)
-$(JUAFS)/afs_osi.o: $(TOP_SRC_AFS)/afs_osi.c
-	$(CRULE1)
-$(JUAFS)/afs_osi_pag.o: $(TOP_SRC_AFS)/afs_osi_pag.c
-	$(CRULE1)
-$(JUAFS)/afs_segments.o: $(TOP_SRC_AFS)/afs_segments.c
-	$(CRULE1)
-$(JUAFS)/afs_server.o: $(TOP_SRC_AFS)/afs_server.c
-	$(CRULE1)
-$(JUAFS)/afs_tokens.o: $(TOP_SRC_AFS)/afs_tokens.c
-	$(CRULE1)
-$(JUAFS)/afs_user.o: $(TOP_SRC_AFS)/afs_user.c
-	$(CRULE1)
-$(JUAFS)/afs_util.o: $(TOP_SRC_AFS)/afs_util.c
-	$(CRULE1)
-$(JUAFS)/afs_vcache.o: $(TOP_SRC_AFS)/afs_vcache.c
-	$(CRULE1)
-$(JUAFS)/afs_warn.o: $(TOP_SRC_AFS)/afs_warn.c
-	$(CRULE1)
-$(JUAFS)/afs_osi_uio.o: $(TOP_SRC_AFS)/afs_osi_uio.c
-	$(CRULE1)
-$(JUAFS)/afs_vnop_access.o: $(TOP_SRC_VNOPS)/afs_vnop_access.c
-	$(CRULE1)
-$(JUAFS)/afs_vnop_attrs.o: $(TOP_SRC_VNOPS)/afs_vnop_attrs.c
-	$(CRULE1)
-$(JUAFS)/afs_vnop_create.o: $(TOP_SRC_VNOPS)/afs_vnop_create.c
-	$(CRULE1)
-$(JUAFS)/afs_vnop_dirops.o: $(TOP_SRC_VNOPS)/afs_vnop_dirops.c
-	$(CRULE1)
-$(JUAFS)/afs_vnop_fid.o: $(TOP_SRC_VNOPS)/afs_vnop_fid.c
-	$(CRULE1)
-$(JUAFS)/afs_vnop_flock.o: $(TOP_SRC_VNOPS)/afs_vnop_flock.c
-	$(CRULE1)
-$(JUAFS)/afs_vnop_link.o: $(TOP_SRC_VNOPS)/afs_vnop_link.c
-	$(CRULE1)
-$(JUAFS)/afs_vnop_lookup.o: $(TOP_SRC_VNOPS)/afs_vnop_lookup.c
-	$(CRULE1)
-$(JUAFS)/afs_vnop_open.o: $(TOP_SRC_VNOPS)/afs_vnop_open.c
-	$(CRULE1)
-$(JUAFS)/afs_vnop_read.o: $(TOP_SRC_VNOPS)/afs_vnop_read.c
-	$(CRULE1)
-$(JUAFS)/afs_vnop_readdir.o: $(TOP_SRC_VNOPS)/afs_vnop_readdir.c
-	$(CRULE1)
-$(JUAFS)/afs_vnop_remove.o: $(TOP_SRC_VNOPS)/afs_vnop_remove.c
-	$(CRULE1)
-$(JUAFS)/afs_vnop_rename.o: $(TOP_SRC_VNOPS)/afs_vnop_rename.c
-	$(CRULE1)
-$(JUAFS)/afs_vnop_strategy.o: $(TOP_SRC_VNOPS)/afs_vnop_strategy.c
-	$(CRULE1)
-$(JUAFS)/afs_vnop_symlink.o: $(TOP_SRC_VNOPS)/afs_vnop_symlink.c
-	$(CRULE1)
-$(JUAFS)/afs_vnop_write.o: $(TOP_SRC_VNOPS)/afs_vnop_write.c
-	$(CRULE1)
-$(JUAFS)/afs_volume.o: $(TOP_SRC_AFS)/afs_volume.c
-	$(CRULE1)
-$(JUAFS)/rx_rdwr.o: $(TOP_SRC_RX)/rx_rdwr.c
-	$(CRULE1)
-$(JUAFS)/afs_cbqueue.o: $(TOP_SRC_AFS)/afs_cbqueue.c
-	$(CRULE1)
-$(JUAFS)/afs_callback.o: $(TOP_SRC_AFS)/afs_callback.c
-	$(CRULE1)
-$(JUAFS)/afs_chunk.o: $(TOP_SRC_AFS)/afs_chunk.c
-	$(CRULE1)
-$(JUAFS)/afs_daemons.o: $(TOP_SRC_AFS)/afs_daemons.c
-	$(CRULE1)
-$(JUAFS)/afs_dir.o: 	$(TOP_SRCDIR)/dir/dir.c
-	$(CRULE1) -o afs_dir.o
-$(JUAFS)/AFS_component_version_number.o: AFS_component_version_number.c
-	$(CRULE1)
-$(JUAFS)/afs_lock.o: $(TOP_SRC_AFS)/afs_lock.c
-	$(CRULE1)
-$(JUAFS)/afs_memcache.o: $(TOP_SRC_AFS)/afs_memcache.c
-	$(CRULE1)
-$(JUAFS)/afs_md5.o: $(TOP_SRC_AFS)/afs_md5.c
-	$(CRULE1)
-$(JUAFS)/afs_fetchstore.o: $(TOP_SRC_AFS)/afs_fetchstore.c
-	$(CRULE1)
-$(JUAFS)/afs_stat.o: $(TOP_SRC_AFS)/afs_stat.c
-	$(CRULE1)
-$(JUAFS)/fcrypt.o: 	$(TOP_SRC_RXKAD)/fcrypt.c
-	$(CRULE1)
-$(JUAFS)/crypt_conn.o: $(TOP_SRC_RXKAD)/crypt_conn.c
-	$(CRULE1)
-$(JUAFS)/rxkad_client.o: $(TOP_SRC_RXKAD)/rxkad_client.c
-	$(CRULE1)
-$(JUAFS)/rxkad_common.o: $(TOP_SRC_RXKAD)/rxkad_common.c
-	$(CRULE1)
-$(JUAFS)/afs_exporter.o: $(TOP_SRCDIR)/afs/afs_exporter.c
-	$(CRULE1)
-$(JUAFS)/afs_nfsclnt.o: $(TOP_SRC_AFS)/afs_nfsclnt.c
-	$(CRULE1)
-$(JUAFS)/afs_nfsdisp.o: $(TOP_SRC_AFS)/afs_nfsdisp.c
-	$(CRULE1)
-$(JUAFS)/rx.o: $(TOP_SRC_RX)/rx.c
-	$(CRULE1)
-$(JUAFS)/rx_clock.o: $(TOP_SRC_RX)/rx_clock.c
-	$(CRULE1)
-$(JUAFS)/rx_event.o: $(TOP_SRC_RX)/rx_event.c
-	$(CRULE1)
-$(JUAFS)/rx_globals.o: $(TOP_SRC_RX)/rx_globals.c
-	$(CRULE1)
-$(JUAFS)/rx_identity.o: $(TOP_SRC_RX)/rx_identity.c
-	$(CRULE1)
-$(JUAFS)/rx_misc.o: $(TOP_SRC_RX)/rx_misc.c
-	$(CRULE1)
-$(JUAFS)/rx_multi.o: $(TOP_SRC_RX)/rx_multi.c
-	$(CRULE1)
-$(JUAFS)/rx_null.o: $(TOP_SRC_RX)/rx_null.c
-	$(CRULE1)
-$(JUAFS)/rx_opaque.o: $(TOP_SRC_RX)/rx_opaque.c
-	$(CRULE1)
-$(JUAFS)/rx_getaddr.o: $(TOP_SRC_RX)/rx_getaddr.c
-	$(CRULE1)
-$(JUAFS)/rx_stats.o: $(TOP_SRC_RX)/rx_stats.c
-	$(CRULE1)
-$(JUAFS)/rx_packet.o: $(TOP_SRC_RX)/rx_packet.c
-	$(CRULE1)
-$(JUAFS)/rx_conncache.o: $(TOP_SRCDIR)/rx/rx_conncache.c
-	$(CRULE1)
-$(JUAFS)/rx_call.o: $(TOP_SRC_RX)/rx_call.c
-	$(CRULE1)
-$(JUAFS)/rx_conn.o: $(TOP_SRC_RX)/rx_conn.c
-	$(CRULE1)
-$(JUAFS)/rx_peer.o: $(TOP_SRC_RX)/rx_peer.c
-	$(CRULE1)
-$(JUAFS)/xdr_rx.o: $(TOP_SRC_RX)/xdr_rx.c
-	$(CRULE1)
-$(JUAFS)/xdr_int64.o: $(TOP_SRC_RX)/xdr_int64.c
-	$(CRULE1)
-$(JUAFS)/afs_usrops.o: $(TOP_SRC_AFS)/UKERNEL/afs_usrops.c
-	$(CRULE1)
-$(JUAFS)/afsd.o: $(TOP_SRCDIR)/afsd/afsd.c
-	$(CRULE1) @CFLAGS_NOERROR@
-$(JUAFS)/afsd_uafs.o: $(TOP_SRC_AFS)/UKERNEL/afsd_uafs.c
-	$(CRULE1)
-$(JUAFS)/afs_uuid.o: $(TOP_SRCDIR)/util/uuid.c
-	$(CRULE1) -o afs_uuid.o
-$(JUAFS)/assert.o: $(TOP_SRCDIR)/opr/assert.c
-	$(CRULE1)
-$(JUAFS)/xdr_afsuuid.o: $(TOP_SRCDIR)/rx/xdr_afsuuid.c
-	$(CRULE1)
-$(JUAFS)/xdr_update.o: $(TOP_SRCDIR)/rx/xdr_update.c
-	$(CRULE1)
-$(JUAFS)/xdr_refernce.o: $(TOP_SRCDIR)/rx/xdr_refernce.c
-	$(CRULE1)
-$(JUAFS)/xdr.o: $(TOP_SRCDIR)/rx/xdr.c
-	$(CRULE1)
-$(JUAFS)/osi_vnodeops.o: $(TOP_SRC_AFS)/UKERNEL/osi_vnodeops.c
-	$(CRULE1)
-$(JUAFS)/osi_vm.o: $(TOP_SRC_AFS)/UKERNEL/osi_vm.c
-	$(CRULE1)
-$(JUAFS)/osi_groups.o: $(TOP_SRC_AFS)/UKERNEL/osi_groups.c
-	$(CRULE1)
-$(JUAFS)/osi_gcpags.o: $(TOP_SRC_AFS)/UKERNEL/osi_gcpags.c
-	$(CRULE1)
-$(JUAFS)/osi_vcache.o: $(TOP_SRC_AFS)/UKERNEL/osi_vcache.c
-	$(CRULE1)
-$(JUAFS)/Kcallback.ss.o: $(TOP_OBJ_FSINT)/Kcallback.ss.c
-	$(CRULE1)
-$(JUAFS)/Kvice.xdr.o: $(TOP_OBJ_FSINT)/Kvice.xdr.c
-	$(CRULE1)
-$(JUAFS)/Kvice.cs.o: $(TOP_OBJ_FSINT)/Kvice.cs.c
-	$(CRULE1)
-$(JUAFS)/afsaux.o: $(TOP_SRC_FSINT)/afsaux.c
-	$(CRULE1)
-$(JUAFS)/xdr_array.o: $(TOP_SRC_RX)/xdr_array.c
-	$(CRULE1)
-$(JUAFS)/xdr_arrayn.o: $(TOP_SRC_RX)/xdr_arrayn.c
-	$(CRULE1)
-$(JUAFS)/Kvldbint.cs.o: $(TOP_OBJ_VLSERVER)/Kvldbint.cs.c
-	$(CRULE1)
-$(JUAFS)/Kvldbint.xdr.o: $(TOP_OBJ_VLSERVER)/Kvldbint.xdr.c
-	$(CRULE1)
-$(JUAFS)/rx_knet.o: $(TOP_SRC_RX)/UKERNEL/rx_knet.c
-	$(CRULE1)
-$(JUAFS)/rx_kcommon.o: $(TOP_SRCDIR)/rx/rx_kcommon.c
-	$(CRULE1)
-$(JUAFS)/afs_call.o: $(TOP_SRC_AFS)/afs_call.c
-	$(CRULE1) -DAFS_NONFSTRANS
-$(JUAFS)/afs_icl.o: $(TOP_SRC_AFS)/afs_icl.c
-	$(CRULE1) -DAFS_NONFSTRANS
-$(JUAFS)/afs_pioctl.o: $(TOP_SRC_AFS)/afs_pioctl.c
-	$(CRULE1) -DAFS_NONFSTRANS
-$(JUAFS)/afs_syscall.o: $(TOP_SRC_AFS)/afs_syscall.c
-	$(CRULE1) @CFLAGS_NOERROR@ -DAFS_NONFSTRANS
-$(JUAFS)/osi_vfsops.o: $(TOP_SRC_AFS)/UKERNEL/osi_vfsops.c
-	$(CRULE1) -DAFS_NONFSTRANS
-$(JUAFS)/ktc.o: 	$(TOP_SRCDIR)/auth/ktc.c
-	$(CRULE1) @CFLAGS_NOERROR@
-$(JUAFS)/cellconfig.o: $(TOP_SRCDIR)/auth/cellconfig.c
-	$(CRULE1)
-$(JUAFS)/keys.o: $(TOP_SRCDIR)/auth/keys.c
-	$(CRULE1)
-$(JUAFS)/casestrcpy.o: $(TOP_SRCDIR)/opr/casestrcpy.c
-	$(CRULE1)
-$(JUAFS)/realms.o: $(TOP_SRCDIR)/auth/realms.c
-	$(CRULE1)
-$(JUAFS)/dirpath.o: $(TOP_SRCDIR)/util/dirpath.c
-	$(CRULE1)
-$(JUAFS)/fileutil.o: $(TOP_SRCDIR)/util/fileutil.c
-	$(CRULE1)
-$(JUAFS)/netrestrict.o: $(TOP_SRCDIR)/auth/netrestrict.c
-	$(CRULE1)
-$(JUAFS)/rxstat.o: $(TOP_SRC_RXSTAT)/rxstat.c
-	$(CRULE1)
-$(JUAFS)/Krxstat.ss.o: $(TOP_OBJ_RXSTAT)/Krxstat.ss.c
-	$(CRULE1)
-$(JUAFS)/Krxstat.xdr.o: $(TOP_OBJ_RXSTAT)/Krxstat.xdr.c
-	$(CRULE1)
-$(JUAFS)/token.xdr.o: $(TOP_OBJ_AUTH)/token.xdr.c
-	$(CRULE1)
-$(JUAFS)/token.o: $(TOP_SRCDIR)/auth/token.c
-	$(CRULE1)
-$(JUAFS)/xdr_mem.o: $(TOP_SRC_RX)/xdr_mem.c
-	$(CRULE1)
-$(JUAFS)/xdr_len.o: $(TOP_SRC_RX)/xdr_len.c
-	$(CRULE1)
-
 $(PERLUAFS)/ukernel.pm: $(PERLUAFS)/ukernel_swig_perl.c
 $(PERLUAFS)/ukernel_swig_perl.c: ${srcdir}/ukernel_swig.i
 	mkdir -p $(PERLUAFS)
@@ -1238,15 +866,14 @@ $(PERLUAFS)/ukernel.so: $(PERLUAFS)/ukernel_swig_perl.o UAFS.pic/libuafs_pic.a
 		$(XLIBS)
 
 clean:
-	-$(RM) -rf UAFS* JUAFS* PERLUAFS afsd afs afsint config rx
+	-$(RM) -rf UAFS* PERLUAFS afsd afs afsint config rx
 	-$(RM) -rf h
 	-$(RM) -f linktest $(AFS_OS_CLEAN)
 
-install: UAFS/$(LIBUAFS) JUAFS/$(LIBJUAFS) UAFS.pic/libuafs_pic.a \
-		@LIBUAFS_BUILD_PERL@
+install: UAFS/$(LIBUAFS) UAFS.pic/libuafs_pic.a @LIBUAFS_BUILD_PERL@
 	${INSTALL} -d ${DESTDIR}${libdir}
 	${INSTALL_DATA} UAFS/$(LIBUAFS) ${DESTDIR}${libdir}/$(LIBUAFS)
-	${INSTALL_DATA} JUAFS/$(LIBJUAFS) ${DESTDIR}${libdir}/$(LIBJUAFS)
+	${INSTALL_DATA} UAFS/$(LIBUAFS) ${DESTDIR}${libdir}/libjuafs.a
 	${INSTALL_DATA} UAFS.pic/libuafs_pic.a ${DESTDIR}${libdir}/libuafs_pic.a
 	if [ "x$(LIBUAFS_BUILD_PERL)" != "x" ] ; then \
 		${INSTALL} -d ${DESTDIR}${libdir}/perl; \
@@ -1260,7 +887,7 @@ dest: $(TOP_INCDIR)/afs/param.h $(TOP_INCDIR)/afs/stds.h \
 		$(TOP_INCDIR)/afs/afs_stats.h \
 		$(TOP_SRCDIR)/afs/sysincludes.h \
 		$(TOP_SRCDIR)/afs/UKERNEL/afs_usrops.h \
-		UAFS/$(LIBUAFS) JUAFS/$(LIBJUAFS) UAFS.pic/libuafs_pic.a \
+		UAFS/$(LIBUAFS) UAFS.pic/libuafs_pic.a \
 		@LIBUAFS_BUILD_PERL@
 	${INSTALL} -d ${DEST}/root.perf/include/afs
 	${INSTALL} -d ${DEST}/root.perf/lib
@@ -1277,7 +904,7 @@ dest: $(TOP_INCDIR)/afs/param.h $(TOP_INCDIR)/afs/stds.h \
 	${INSTALL_DATA} $(TOP_SRCDIR)/afs/UKERNEL/afs_usrops.h \
 		${DEST}/root.perf/include/afs/afs_usrops.h
 	${INSTALL_DATA} UAFS/$(LIBUAFS) ${DEST}/root.perf/lib/$(LIBUAFS)
-	${INSTALL_DATA} JUAFS/$(LIBJUAFS) ${DEST}/root.perf/lib/$(LIBJUAFS)
+	${INSTALL_DATA} UAFS/$(LIBUAFS) ${DEST}/root.perf/lib/libjuafs.a
 	${INSTALL_DATA} UAFS.pic/libuafs_pic.a ${DEST}/root.perf/lib/libuafs_pic.a
 	if [ "x$(LIBUAFS_BUILD_PERL)" != "x" ] ; then \
 		${INSTALL} -d ${DEST}/root.perf/lib/perl; \
@@ -1293,9 +920,6 @@ UAFS:
 	mkdir -p $@
 
 UAFS.pic:
-	mkdir -p $@
-
-JUAFS:
 	mkdir -p $@
 
 h: $(TOP_SRC_AFS)/*.c $(TOP_SRC_VNOPS)/*.c $(TOP_SRC_RX)/*.c
@@ -1317,24 +941,14 @@ setup_picuafs: UAFS.pic setup_common
 	ln -s ../Makefile UAFS.pic/Makefile
 	ln -s ../Makefile.common UAFS.pic/Makefile.common
 
-setup_juafs: JUAFS setup_common
-	-$(RM) -f JUAFS/Makefile JUAFS/Makefile.common
-	ln -s ../Makefile JUAFS/Makefile
-	ln -s ../Makefile.common JUAFS/Makefile.common
-
 UAFS/$(LIBUAFS): setup_uafs
 	cd UAFS && \
-	$(MAKE) $(LIBUAFS) DESTDIR=${DESTDIR} LIBJUAFS_FLAGS=&& \
+	$(MAKE) $(LIBUAFS) DESTDIR=${DESTDIR} && \
 	$(RANLIB) $(LIBUAFS)
 
 UAFS.pic/libuafs_pic.a: setup_picuafs
 	cd UAFS.pic && \
-	$(MAKE) libuafs_pic.a DESTDIR=${DESTDIR} LIBJUAFS_FLAGS=&& \
+	$(MAKE) libuafs_pic.a DESTDIR=${DESTDIR} && \
 	$(RANLIB) libuafs_pic.a
-
-JUAFS/$(LIBJUAFS): setup_juafs
-	cd JUAFS && \
-	$(MAKE) $(LIBJUAFS) DESTDIR=${DESTDIR} LIBJUAFS_FLAGS=&& \
-	$(RANLIB) $(LIBJUAFS)
 
 include ${TOP_OBJDIR}/src/config/Makefile.version
