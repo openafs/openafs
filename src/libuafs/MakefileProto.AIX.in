@@ -22,8 +22,6 @@ ARFLAGS = -r
 RANLIB = /bin/ranlib
 CC = xlc_r
 DEF_LIBPATH=/usr/lib/threads:/usr/lib:/lib
-EXPFILE=../nsafslib.exp 
-LD_FLAGS=-bM:SRE -bE:$(EXPFILE) -berok -bnoentry -blibpath:$(DEF_LIBPATH)
 
 TEST_CFLAGS=-DAFS_PTHREAD_ENV -Daix -DAFS_AIX_ENV $(XCFLAGS)
 TEST_LDFLAGS=
@@ -31,9 +29,6 @@ TEST_LIBS=-lm -lpthreads
 
 LIBUAFS = libuafs.a
 LIBJUAFS = libjuafs.a
-LIBAFSWEB = nsafs.a
-LIBAFSWEBKRB = nsafs.krb.a
-
 
 AFS_OS_CLEAN = \
 	*.exp \
@@ -42,7 +37,6 @@ AFS_OS_CLEAN = \
 # To get __file__ (afs_osi_pag.c) you need to specify language level 
 # C99 to xlc_r like this:
 OPTF=${OPTMZ} -qlanglvl=stdc99
-WEBOPTS = -I../nsapi -qarch=com -DNETSCAPE_NSAPI -DAIX -DNET_SSL -DXP_UNIX -DMCC_HTTPD
 
 include Makefile.common
 
@@ -60,14 +54,3 @@ $(LIBJUAFS): $(JUAFSOBJ)
 	-$(RM) -f $(LIBJUAFS)
 	$(AR) $(ARFLAGS) $(LIBJUAFS) $(JUAFSOBJ) $(AFS)/afsl.exp
 	$(RANLIB) libjuafs.a
-
-$(LIBAFSWEB): $(AFSWEBOBJ) ${DES}/libdes.a ${DESTDIR}/lib/afs/libsys.a
-	-$(RM) -f $(LIBAFSWEB)
-	ld -o $(LIBAFSWEB) $(LD_FLAGS) $(AFSWEBOBJ) ${DES}/libdes.a ${DESTDIR}/lib/afs/libsys.a -lm -lc
-
-##
-## Use Kerberos authentication instead of kaservers
-##
-$(LIBAFSWEBKRB): $(AFSWEBOBJKRB) ${DES}/libdes.a ${DESTDIR}/lib/afs/libsys.a 
-	-$(RM) -f $(LIBAFSWEBKRB)
-	ld -o $(LIBAFSWEBKRB) $(LD_FLAGS) $(AFSWEBOBJKRB) ${DES}/libdes.a ${DESTDIR}/lib/afs/libsys.a -lm -lc

@@ -26,8 +26,6 @@ TEST_LIBS=
 
 LIBUAFS = libuafs.a
 LIBJUAFS = libjuafs.a
-LIBAFSWEB = nsafs.so
-LIBAFSWEBKRB = nsafs.krb.so
 
 include Makefile.common
 
@@ -42,11 +40,3 @@ libuafs_pic.a: $(PICUAFSOBJ)
 $(LIBJUAFS): $(JUAFSOBJ)
 	-$(RM) -f $(LIBJUAFS)
 	$(AR) $(ARFLAGS) $(LIBJUAFS) $(JUAFSOBJ)
-
-$(LIBAFSWEB): $(AFSWEBOBJ) ${DES}/libdes.a
-	-$(RM) -f $(LIBAFSWEB)
-	ld -b $(LIBAFSWEB) $(AFSWEBOBJ) ${DES}/libdes.a $(WEBLIBS)
-
-$(LIBAFSWEBKRB): $(AFSWEBOBJKRB) ${DES}/libdes.a
-	-$(RM) -f $(LIBAFSWEBKRB)
-	ld -b $(LIBAFSWEBKRB) $(AFSWEBOBJKRB) ${DES}/libdes.a $(WEBLIBS)

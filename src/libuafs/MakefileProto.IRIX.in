@@ -17,7 +17,6 @@ CC = cc
 DEFINES=-D_SGI_MP_SOURCE -DKERNEL -DUKERNEL
 CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KOPTS) ${DBG} $(XCFLAGS)
 OPTF=${OPTMZ}
-WEBOPTS = -I../nsapi -DNETSCAPE_NSAPI -DNET_SSL -DXP_UNIX -DMCC_HTTPD
 
 TEST_CFLAGS=-D_SGI_MP_SOURCE -DAFS_PTHREAD_ENV -Dirix -DAFS_SGI_ENV $(XCFLAGS)
 TEST_LDFLAGS=-ignore_minor
@@ -25,8 +24,6 @@ TEST_LIBS=-lpthread -lm
 
 LIBUAFS = libuafs.a
 LIBJUAFS = libjuafs.a
-LIBAFSWEB = nsafs.so
-LIBAFSWEBKRB = nsafs.krb.so
 
 include Makefile.common
 
@@ -41,11 +38,3 @@ libuafs_pic.a: $(PICUAFSOBJ)
 $(LIBJUAFS): $(JUAFSOBJ)
 	-$(RM) -f $(LIBJUAFS)
 	$(AR) $(ARFLAGS) $(LIBJUAFS) $(JUAFSOBJ)
-
-$(LIBAFSWEB): $(AFSWEBOBJ) ${DES}/libdes.a
-	-$(RM) -f $(LIBAFSWEB)
-	ld -shared $(LIBAFSWEB) $(AFSWEBOBJ) ${DES}/libdes.a $(WEBLIBS)
-
-$(LIBAFSWEBKRB): $(AFSWEBOBJKRB) ${DES}/libdes.a
-	-$(RM) -f $(LIBAFSWEBKRB)
-	ld -shared $(LIBAFSWEBKRB) $(AFSWEBOBJKRB) ${DES}/libdes.a $(WEBLIBS)

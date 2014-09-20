@@ -173,15 +173,7 @@ typedef unsigned int fsblkcnt_t;
 
 #include  <sys/stat.h>		/* afs_usrops.h uses struct stat in prototypes */
 
-#ifdef NETSCAPE_NSAPI
-
-#include  <nsapi.h>
-
-#else /* NETSCAPE_NSAPI */
-
 #include  <pthread.h>
-
-#endif /* NETSCAPE_NSAPI */
 
 #ifdef AFS_USR_UNDEF_KERNEL_ENV
 #undef AFS_USR_UNDEF_KERNEL_ENV
@@ -848,91 +840,6 @@ static_inline void panic(const char *format, ...)
 #define abort()			assert(0)
 #define usr_assert(A)		assert(A)
 
-#ifdef NETSCAPE_NSAPI
-
-/*
- * All CONDVARs created with the same CRITICAL end up being the
- * same CONDVAR, not a new one. If we want to use more than
- * one usr_cond_t with the same usr_mutex_t, then we need a CRITICAL
- * for each CONDVAR, otherwise we cannot know which thread we are
- * waking when we do the signal.
- */
-typedef struct {
-    int waiters;
-    CRITICAL lock;
-    CONDVAR cond;
-} usr_cond_t;
-
-#define usr_mutex_t		CRITICAL
-#define usr_thread_t		SYS_THREAD
-#define usr_key_t		int
-
-#define usr_mutex_init(A)	(*(A)=crit_init(), 0)
-#define usr_mutex_destroy(A)	(crit_terminate(*(A)), 0)
-#define usr_mutex_lock(A)	crit_enter(*(A))
-#define usr_mutex_trylock(A)	(crit_enter(*(A)),1)
-#define usr_mutex_unlock(A)	crit_exit(*(A))
-
-#define usr_cond_init(A)	\
-     ((A)->waiters = 0,		\
-      (A)->lock = crit_init(),	\
-      (A)->cond = condvar_init((A)->lock), 0)
-
-#define usr_cond_destroy(A)	\
-    (condvar_terminate((A)->cond), \
-     crit_terminate((A)->lock), 0)
-
-#define usr_cond_signal(A)	\
-{				\
-    crit_enter((A)->lock);	\
-    if ((A)->waiters != 0) {	\
-      condvar_notify((A)->cond);\
-      (A)->waiters -= 1;	\
-    }				\
-    crit_exit((A)->lock);	\
-}
-
-#define usr_cond_broadcast(A)	\
-{				\
-   crit_enter((A)->lock);	\
-   while ((A)->waiters != 0) {	\
-     condvar_notify((A)->cond);	\
-     (A)->waiters -= 1;		\
-   }				\
-   crit_exit((A)->lock);	\
-}
-
-#define usr_cond_wait(A,B)	\
-    (crit_enter((A)->lock),	\
-     crit_exit(*(B)),		\
-     (A)->waiters += 1,		\
-     condvar_wait((A)->cond),	\
-     crit_exit((A)->lock),	\
-     crit_enter(*(B)), 0)
-
-#define usr_thread_create(A,B,C) \
-    ((*(A)=systhread_start(SYSTHREAD_DEFAULT_PRIORITY, \
-			   0,B,C))==SYS_THREAD_ERROR)
-#define usr_thread_detach(A)	0
-#define usr_keycreate(A,B)	(*(A)=systhread_newkey(),0)
-#define usr_setspecific(A,B)	(systhread_setdata(A,B),0)
-#define usr_getspecific(A,B)	(*(B)=systhread_getdata(A),0)
-#define usr_thread_self()	systhread_current()
-#ifdef AFS_USR_SUN5_ENV
-#define usr_thread_sleep(A) \
-    poll(0, 0, (A)->tv_sec*1000+(A)->tv_nsec/1000000)
-#else /* AFS_USR_SUN5_ENV */
-#define usr_thread_sleep(A) \
-    systhread_sleep((A)->tv_sec*1000+(A)->tv_nsec/1000000)
-#endif /* AFS_USR_SUN5_ENV */
-
-#define uprintf			printf
-
-#define usr_getpid()		(int)(usr_thread_self())
-
-#define ISAFS_GLOCK() (usr_thread_self() ==  afs_global_owner)
-
-#else /* NETSCAPE_NSAPI */
 
 /*
  * Mutex and condition variable used to implement sleep
@@ -995,8 +902,6 @@ extern pthread_cond_t usr_sleep_cond;
 #undef ISAFS_GLOCK
 #endif
 #define ISAFS_GLOCK() (usr_thread_self() == afs_global_owner)
-
-#endif /* NETSCAPE_NSAPI */
 
 #define copyin(A,B,C)		(memcpy((void *)B,(void *)A,C), 0)
 #define copyout(A,B,C)		(memcpy((void *)B,(void *)A,C), 0)
