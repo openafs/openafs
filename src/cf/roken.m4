@@ -6,30 +6,47 @@ AC_DEFUN([_OPENAFS_ROKEN_INTERNAL], [
   LIB_roken=-lrokenafs
 ])
 
-dnl _OPENAFS_ROKEN_CHECK($path,
-dnl 			 $action-if-found,
+dnl _OPENAFS_ROKEN_PATHS()
+dnl Set CPPFLAGS_roken, LDFLAGS_roken, and LIB_roken based on the values
+dnl of roken_root, roken_libdir, and roken_includedir.
+AC_DEFUN([_OPENAFS_ROKEN_PATHS], [
+  AS_IF([test x"$roken_libdir" != x],
+    [LDFLAGS_roken="-L$roken_libdir"],
+    [AS_IF([test x"$roken_root" != x],
+      [LDFLAGS_roken="-L$roken_root/lib"])])
+  AS_IF([test x"$roken_includedir" != x],
+    [CPPFLAGS_roken="-I$roken_includedir"],
+    [AS_IF([test x"$roken_root" != x],
+      [CPPFLAGS_roken="-I$roken_root/include"])])
+  LIB_roken="-lroken"])
+
+dnl _OPENAFS_ROKEN_CHECK($action-if-found,
 dnl 			 $action-if-not-found)
-dnl Find a roken library at $path.
+dnl Find a roken library using $roken_root, $roken_libdir, and $roken_includedir
 dnl
-dnl If $path is not specified,
+dnl If none of the three paths are specified,
 dnl try to find one in the standard locations on the system.
 dnl
-dnl If we fail, and $path was given, then error out. Otherwise,
-dnl fall back to the internal roken implementation
+dnl If we fail, and at least one path was given, then error out. Otherwise,
+dnl fall back to the internal roken implementation.
 AC_DEFUN([_OPENAFS_ROKEN_CHECK], [
-  roken_path=$1
 
+  _OPENAFS_ROKEN_PATHS
   save_CPPFLAGS=$CPPFLAGS
   save_LDFLAGS=$LDFLAGS
   save_LIBS=$LIBS
-  AS_IF([test x"$roken_path" != x],
-	[CPPFLAGS="-I$roken_path/include $CPPFLAGS"
-	 LDFLAGS="-L$roken_path/lib $LDFLAGS"
-	 checkstr=" in $roken_path"])
+  AS_IF([test x"$CPPFLAGS_roken" != x],
+	[CPPFLAGS="$CPPFLAGS_roken $CPPFLAGS"])
+  AS_IF([test x"$LDFLAGS_roken" != x],
+	[LDFLAGS="$LDFLAGS_roken $LDFLAGS"])
+  AS_IF([test x"$roken_libdir" != x || test x"$roken_includedir" != x],
+	[checkstr=" with specified include and lib paths"],
+	[AS_IF([test x"$roken_root" != x],
+		[checkstr=" in $roken_root"])])
 
   AC_MSG_CHECKING([for usable system libroken$checkstr])
 
-  LIBS="$LIBS -lroken"
+  LIBS="$LIBS $LIB_roken"
   dnl Need to be careful what we check for here, as libroken contains
   dnl different symbols on different platforms. We cannot simply check
   dnl if e.g. rk_rename is a symbol or not, since on most platforms it
@@ -54,12 +71,7 @@ AC_DEFUN([_OPENAFS_ROKEN_CHECK], [
   LIBS=$save_LIBS
 
   AS_IF([test x"$roken_found" = xtrue],
-	 [AS_IF([test x"$roken_path" != x],
-	       [CPPFLAGS_roken="-I$roken_path/include"
-		LDFLAGS_roken="-L$roken_path/lib"])
-	 LIB_roken="-lroken"
-	 $2],
-	[$3])
+	 [$1], [$2])
 ])
 
 AC_DEFUN([OPENAFS_ROKEN], [
@@ -78,13 +90,23 @@ AC_DEFUN([OPENAFS_ROKEN], [
 	          [roken_root="$withval"])
 	   ])
     ])
+  AC_ARG_WITH([roken-include],
+    [AS_HELP_STRING([--with-roken-include=DIR],
+	[Location of roken headers])],
+    [AS_IF([test x"$withval" != xyes && test x"$withval" != xno],
+	[roken_includedir="$withval"])])
+  AC_ARG_WITH([roken-lib],
+    [AS_HELP_STRING([--with-roken-lib=DIR],
+	[Location of roken libraries])],
+    [AS_IF([test x"$withval" != xyes && test x"$withval" != xno],
+	[roken_libdir="$withval"])])
 
-  AS_IF([test x"$roken_root" = xinteral],
+  AS_IF([test x"$roken_root" = xinternal],
 	[_OPENAFS_ROKEN_INTERNAL()],
-	[AS_IF([test x"$roken_root" = x],
-	    [_OPENAFS_ROKEN_CHECK([], [], [_OPENAFS_ROKEN_INTERNAL()])],
-	    [_OPENAFS_ROKEN_CHECK($roken_root,
-		[],
+	[AS_IF([test x"$roken_root" = x && test x"$roken_libdir" = x &&
+		test x"$roken_includedir" = x],
+	    [_OPENAFS_ROKEN_CHECK([], [_OPENAFS_ROKEN_INTERNAL()])],
+	    [_OPENAFS_ROKEN_CHECK([],
 		[AC_MSG_ERROR([Cannot find roken at that location])])
 	    ])
 	])
