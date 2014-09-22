@@ -1,0 +1,56 @@
+From: Marc Dionne <marc.dionne@your-file-system.com>
+Date: Wed, 18 Jun 2014 08:53:48 -0400
+Subject: Linux 3.16: Switch to iter_file_splice_write
+
+Users of generic_file_splice_write need to switch to
+using iter_file_splice_write.
+
+Reviewed-on: http://gerrit.openafs.org/11302
+Reviewed-by: Chas Williams - CONTRACTOR <chas@cmf.nrl.navy.mil>
+Tested-by: Chas Williams - CONTRACTOR <chas@cmf.nrl.navy.mil>
+Reviewed-by: Jeffrey Altman <jaltman@your-file-system.com>
+Tested-by: Jeffrey Altman <jaltman@your-file-system.com>
+(cherry picked from commit e284db57f94c8f97ed1c95dcd0bd9518d86c050c)
+
+Change-Id: I6f88ec0388fe43accc150c7243c1a474c9e643af
+Reviewed-on: http://gerrit.openafs.org/11308
+Reviewed-by: Chas Williams - CONTRACTOR <chas@cmf.nrl.navy.mil>
+Reviewed-by: Benjamin Kaduk <kaduk@mit.edu>
+Reviewed-by: Stephan Wiesand <stephan.wiesand@desy.de>
+Tested-by: BuildBot <buildbot@rampaginggeek.com>
+(cherry picked from commit ae86b07f827d6f3e2032a412f5f6cb3951a27d2d)
+---
+ acinclude.m4                 | 3 +++
+ src/afs/LINUX/osi_vnodeops.c | 4 ++++
+ 2 files changed, 7 insertions(+)
+
+diff --git a/acinclude.m4 b/acinclude.m4
+index 012d5a4..83a1a8c 100644
+--- a/acinclude.m4
++++ b/acinclude.m4
+@@ -917,6 +917,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
+ 		 AC_CHECK_LINUX_FUNC([inode_setattr],
+ 				     [#include <linux/fs.h>],
+ 				     [inode_setattr(NULL, NULL);])
++		 AC_CHECK_LINUX_FUNC([iter_file_splice_write],
++				     [#include <linux/fs.h>],
++				     [iter_file_splice_write(NULL,NULL,NULL,0,0);])
+ 		 AC_CHECK_LINUX_FUNC([kernel_setsockopt],
+ 				     [#include <linux/net.h>],
+ 				     [kernel_setsockopt(NULL, 0, 0, NULL, 0);])
+diff --git a/src/afs/LINUX/osi_vnodeops.c b/src/afs/LINUX/osi_vnodeops.c
+index 03caf1c..6d1c88d 100644
+--- a/src/afs/LINUX/osi_vnodeops.c
++++ b/src/afs/LINUX/osi_vnodeops.c
+@@ -812,7 +812,11 @@ struct file_operations afs_file_fops = {
+   .sendfile =   generic_file_sendfile,
+ #endif
+ #if defined(STRUCT_FILE_OPERATIONS_HAS_SPLICE)
++# if defined(HAVE_LINUX_ITER_FILE_SPLICE_WRITE)
++  .splice_write = iter_file_splice_write,
++# else
+   .splice_write = generic_file_splice_write,
++# endif
+   .splice_read = generic_file_splice_read,
+ #endif
+   .release =	afs_linux_release,
