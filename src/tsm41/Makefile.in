@@ -89,7 +89,7 @@ afs_dynamic_kerbauth: ${AUTH_KRB_OBJS} ${KAFSLIBS} ${AUTHFILES}
 
 aix_auth_common.o: ${srcdir}/aix_auth_common.c
 
-CFLAGS_aix_aklog.o = @KRB5_CPPFLAGS@
+CPPFLAGS_aix_aklog.o = @KRB5_CPPFLAGS@
 aix_aklog.o: ${srcdir}/aix_aklog.c
 
 CFLAGS_aix_ktc_krb.o = -DAFS_KERBEROS_ENV

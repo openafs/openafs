@@ -4,7 +4,7 @@ include @TOP_OBJDIR@/src/config/Makefile.pthread
 
 #for debugging:
 #CFLAGS += -DAFSCP_DEBUG
-KRB5CFLAGS = @KRB5_CPPFLAGS@
+KRB5CPPFLAGS = @KRB5_CPPFLAGS@
 
 LIBOBJS = \
 	afscp_callback.o \
@@ -39,8 +39,8 @@ depinstall: \
 ${TOP_INCDIR}/afs/afscp.h: afscp.h
 	${INSTALL_DATA} $? $@
 
-CFLAGS_afscp_util.o = $(KRB5CFLAGS)
-CFLAGS_afscp_server.o = $(KRB5CFLAGS)
+CPPFLAGS_afscp_util.o = $(KRB5CPPFLAGS)
+CPPFLAGS_afscp_server.o = $(KRB5CPPFLAGS)
 
 #
 # Install targets
