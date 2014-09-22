@@ -10,6 +10,7 @@ openafs (1.6.9-2) UNRELEASED; urgency=medium
     (Closes: #762248):
     - [ea0c9d8c] Linux 3.16: Switch to iter_file_splice_write
     - [02a07404] Linux 3.16: Convert to new write_iter/read_iter ops
+  * Update README.source for the gbp pq patch-management procedure.
 
  -- Russ Allbery <rra@debian.org>  Fri, 13 Jun 2014 16:02:57 -0700
 

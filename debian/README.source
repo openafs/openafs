@@ -7,9 +7,8 @@ General Maintenance
     Since we often pull up many upstream fixes from the upstream stable
     branch due to slow upstream release frequencies, we use Git to handle
     merging and patch pullups and do not attempt to export the Git
-    repository state as a patch set.  This package uses 3.0 (quilt) but
-    configures it to use a single debian patch that includes all the
-    merged changes.
+    repository state as a patch set.  This package uses 3.0 (quilt) via
+    the gbp pq subcommands.
 
     Ideally, any changes that are not strictly Debian packaging changes
     should be submitted upstream first.  Upstream uses Gerrit for patch
@@ -35,8 +34,8 @@ Importing a New Upstream Release
     Follow the following procedure to import a new upstream release:
 
     1. Update the package version in debian/changelog to match the new
-       upstream version.  If the new upstream version is a release
-       candidate, don't forget to add "~" before "rc" so that the versions
+       upstream version.  If the new upstream version is a prerelease
+       version, don't forget to add "~" before "pre" so that the versions
        will sort property.
 
     2. Double-check the TAG setting in debian/rules to be sure it's going
@@ -88,6 +87,9 @@ Pulling Upstream Changes
 
     The procedure is therefore:
 
+    0. Regenerate and switch to the patch-queue branch with
+       git branch -d patch-queue/master && gbp pq import
+
     1. Identify the hash of the commit that you want to pull up using git
        log or other information.
 
@@ -103,8 +105,11 @@ Pulling Upstream Changes
        branch will generally already have a line like this from upstream's
        cherry-pick.  This will be a second line.
 
-    3. Add a changelog entry and commit it separately.  Use the following
-       convention for changelog entries for cherry-picks:
+    3. Switch to the master branch and (re)generate patch files:
+       git checkout master && gbp pq export
+
+    4. Add a changelog entry and commit it along with the added patch files.
+       Use the following convention for changelog entries for cherry-picks:
 
            * Apply upstream deltas:
              - [<hash>] <title>
@@ -116,3 +121,4 @@ Pulling Upstream Changes
        down.
 
  -- Russ Allbery <rra@debian.org>, Sun, 20 Oct 2013 08:59:17 -0700
+ -- Benjamin Kaduk <kaduk@mit.edu>, Mon 22 Sep 2014 13:05:40 -0400
