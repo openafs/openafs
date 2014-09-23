@@ -35,13 +35,19 @@ MODULE_INCLUDE=-I${srcdir} -I${TOP_INCDIR}/hcrypto -I$(UPSTREAM)/hcrypto
 
 SHLIBOBJ= libafshcrypto.${SHLIB_SUFFIX}.${LIBMAJOR}.${LIBMINOR}
 
-all: ${HEADERS} ${TOP_LIBDIR}/${SHLIBOBJ} \
+all: @hcrypto_all_target@
+
+all-internal: ${HEADERS} ${TOP_LIBDIR}/${SHLIBOBJ} \
 	${TOP_LIBDIR}/libafshcrypto.a \
 	${TOP_LIBDIR}/libafshcrypto_lwp.a
 
+all-lwp: ${HEADERS} ${TOP_LIBDIR}/libafshcrypto_lwp.a
+
 buildtools: ${HEADERS} ${TOP_LIBDIR}/libafshcrypto.a
 
-install: libafshcrypto.a ${SHLIBOBJ}
+install: @hcrypto_install_target@
+
+install-internal: libafshcrypto.a ${SHLIBOBJ}
 	${TOP_OBJDIR}/src/config/shlib-install -d ${DESTDIR}${libdir} \
 	        -l libafshcrypto -M ${LIBMAJOR} -m ${LIBMINOR}
 	${INSTALL_DATA} libafshcrypto.a ${DESTDIR}${libdir}/libafshcrypto.a

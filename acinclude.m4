@@ -1561,6 +1561,7 @@ AC_CHECK_FUNCS([ \
 ])
 
 OPENAFS_ROKEN()
+OPENAFS_HCRYPTO()
 OPENAFS_C_ATTRIBUTE()
 
 dnl Functions that Heimdal's libroken provides, but that we
@@ -1981,12 +1982,6 @@ OPENAFS_HAVE_STRUCT_FIELD(struct rusage, ru_idrss,
 [#ifdef HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
 #endif])
-
-dnl Eventually, this will look for the system one, or for OpenSSL
-LIB_hcrypto="-lafshcrypto"
-LDFLAGS_hcrypto="-L\$(TOP_LIBDIR)"
-AC_SUBST(LIB_hcrypto)
-AC_SUBST(LDFLAGS_hcrypto)
 
 dnl Check for UUID library
 AC_CHECK_HEADERS([uuid/uuid.h])
