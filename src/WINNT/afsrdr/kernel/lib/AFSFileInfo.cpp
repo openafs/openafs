@@ -245,16 +245,17 @@ AFSQueryFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
                     try_return( ntStatus);
                 }
 
-                ntStatus = AFSQueryAccess( Irp,
-                                           pFcb,
-                                           &pAllInfo->AccessInformation,
-                                           &lLength);
+		//
+		// We skip setting AccessInformation since this is set by the IO Mgr prior
+		// to sending this request to the file system
+		//
 
-                if( !NT_SUCCESS( ntStatus))
+		if( lLength < sizeof( FILE_ACCESS_INFORMATION))
                 {
-
-                    try_return( ntStatus);
+		    try_return( ntStatus = STATUS_BUFFER_TOO_SMALL);
                 }
+
+		lLength -= sizeof( FILE_ACCESS_INFORMATION);
 
                 ntStatus = AFSQueryPositionInfo( Irp,
                                                  pFcb,
@@ -267,27 +268,28 @@ AFSQueryFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
                     try_return( ntStatus);
                 }
 
-                ntStatus = AFSQueryMode( Irp,
-                                         pFcb,
-                                         &pAllInfo->ModeInformation,
-                                         &lLength);
+		//
+		// We skip setting ModeInformation and AlignmentInformation since this is set by the IO Mgr prior
+		// to sending this request to the file system
+		//
 
-                if( !NT_SUCCESS( ntStatus))
+		if( lLength < sizeof( FILE_MODE_INFORMATION))
                 {
-
-                    try_return( ntStatus);
+		    try_return( ntStatus = STATUS_BUFFER_TOO_SMALL);
                 }
 
-                ntStatus = AFSQueryAlignment( Irp,
-                                              pFcb,
-                                              &pAllInfo->AlignmentInformation,
-                                              &lLength);
+		lLength -= sizeof( FILE_MODE_INFORMATION);
 
-                if( !NT_SUCCESS( ntStatus))
+		if( lLength < sizeof( FILE_ALIGNMENT_INFORMATION))
                 {
-
-                    try_return( ntStatus);
+		    try_return( ntStatus = STATUS_BUFFER_TOO_SMALL);
                 }
+
+		lLength -= sizeof( FILE_ALIGNMENT_INFORMATION);
+
+		//
+		// Populate the name information
+		//
 
                 ntStatus = AFSQueryNameInfo( Irp,
                                              pCcb->DirectoryCB,
@@ -1115,96 +1117,6 @@ AFSQueryPositionInfo( IN PIRP Irp,
         Buffer->CurrentByteOffset.QuadPart = pIrpSp->FileObject->CurrentByteOffset.QuadPart;
 
         *Length -= sizeof( FILE_POSITION_INFORMATION);
-    }
-    else
-    {
-
-        ntStatus = STATUS_BUFFER_TOO_SMALL;
-    }
-
-    return ntStatus;
-}
-
-NTSTATUS
-AFSQueryAccess( IN PIRP Irp,
-                IN AFSFcb *Fcb,
-                IN OUT PFILE_ACCESS_INFORMATION Buffer,
-                IN OUT PLONG Length)
-{
-
-    UNREFERENCED_PARAMETER(Irp);
-    UNREFERENCED_PARAMETER(Fcb);
-    NTSTATUS ntStatus = STATUS_SUCCESS;
-
-    if( *Length >= sizeof( FILE_ACCESS_INFORMATION))
-    {
-
-        RtlZeroMemory( Buffer,
-                       *Length);
-
-        Buffer->AccessFlags = 0;
-
-        *Length -= sizeof( FILE_ACCESS_INFORMATION);
-    }
-    else
-    {
-
-        ntStatus = STATUS_BUFFER_TOO_SMALL;
-    }
-
-    return ntStatus;
-}
-
-NTSTATUS
-AFSQueryMode( IN PIRP Irp,
-              IN AFSFcb *Fcb,
-              IN OUT PFILE_MODE_INFORMATION Buffer,
-              IN OUT PLONG Length)
-{
-
-    UNREFERENCED_PARAMETER(Irp);
-    UNREFERENCED_PARAMETER(Fcb);
-    NTSTATUS ntStatus = STATUS_SUCCESS;
-
-    if( *Length >= sizeof( FILE_MODE_INFORMATION))
-    {
-
-        RtlZeroMemory( Buffer,
-                       *Length);
-
-        Buffer->Mode = 0;
-
-        *Length -= sizeof( FILE_MODE_INFORMATION);
-    }
-    else
-    {
-
-        ntStatus = STATUS_BUFFER_TOO_SMALL;
-    }
-
-    return ntStatus;
-}
-
-NTSTATUS
-AFSQueryAlignment( IN PIRP Irp,
-                   IN AFSFcb *Fcb,
-                   IN OUT PFILE_ALIGNMENT_INFORMATION Buffer,
-                   IN OUT PLONG Length)
-{
-
-    UNREFERENCED_PARAMETER(Irp);
-    UNREFERENCED_PARAMETER(Fcb);
-    NTSTATUS ntStatus = STATUS_SUCCESS;
-
-    if( *Length >= sizeof( FILE_ALIGNMENT_INFORMATION))
-    {
-
-        RtlZeroMemory( Buffer,
-                       *Length);
-
-        Buffer->AlignmentRequirement = 1;
-
-        *Length -= sizeof( FILE_ALIGNMENT_INFORMATION);
     }
     else
     {

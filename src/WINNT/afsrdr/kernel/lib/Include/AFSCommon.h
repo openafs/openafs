@@ -798,24 +798,6 @@ AFSQueryStreamInfo( IN PIRP Irp,
                     IN OUT PLONG Length);
 
 NTSTATUS
-AFSQueryAccess( IN PIRP Irp,
-                IN AFSFcb *Fcb,
-                IN OUT PFILE_ACCESS_INFORMATION Buffer,
-                IN OUT PLONG Length);
-
-NTSTATUS
-AFSQueryMode( IN PIRP Irp,
-              IN AFSFcb *Fcb,
-              IN OUT PFILE_MODE_INFORMATION Buffer,
-              IN OUT PLONG Length);
-
-NTSTATUS
-AFSQueryAlignment( IN PIRP Irp,
-                   IN AFSFcb *Fcb,
-                   IN OUT PFILE_ALIGNMENT_INFORMATION Buffer,
-                   IN OUT PLONG Length);
-
-NTSTATUS
 AFSQueryAttribTagInfo( IN PIRP Irp,
                        IN AFSDirectoryCB *DirectoryCB,
                        IN OUT FILE_ATTRIBUTE_TAG_INFORMATION *Buffer,
