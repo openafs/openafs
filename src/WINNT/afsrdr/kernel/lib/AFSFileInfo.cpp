@@ -251,9 +251,9 @@ AFSQueryFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
 		//
 
 		if( lLength < sizeof( FILE_ACCESS_INFORMATION))
-                {
-		    try_return( ntStatus = STATUS_BUFFER_TOO_SMALL);
-                }
+		{
+		    try_return( ntStatus = STATUS_INFO_LENGTH_MISMATCH);
+		}
 
 		lLength -= sizeof( FILE_ACCESS_INFORMATION);
 
@@ -274,16 +274,16 @@ AFSQueryFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
 		//
 
 		if( lLength < sizeof( FILE_MODE_INFORMATION))
-                {
-		    try_return( ntStatus = STATUS_BUFFER_TOO_SMALL);
-                }
+		{
+		    try_return( ntStatus = STATUS_INFO_LENGTH_MISMATCH);
+		}
 
 		lLength -= sizeof( FILE_MODE_INFORMATION);
 
 		if( lLength < sizeof( FILE_ALIGNMENT_INFORMATION))
-                {
-		    try_return( ntStatus = STATUS_BUFFER_TOO_SMALL);
-                }
+		{
+		    try_return( ntStatus = STATUS_INFO_LENGTH_MISMATCH);
+		}
 
 		lLength -= sizeof( FILE_ALIGNMENT_INFORMATION);
 
@@ -819,7 +819,7 @@ AFSQueryBasicInfo( IN PIRP Irp,
                    IN OUT PFILE_BASIC_INFORMATION Buffer,
                    IN OUT PLONG Length)
 {
-    NTSTATUS ntStatus = STATUS_SUCCESS;
+    NTSTATUS ntStatus = STATUS_INFO_LENGTH_MISMATCH;
     AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     ULONG ulFileAttribs = 0;
     AFSFcb *pFcb = NULL;
@@ -922,11 +922,8 @@ AFSQueryBasicInfo( IN PIRP Irp,
         }
 
         *Length -= sizeof( FILE_BASIC_INFORMATION);
-    }
-    else
-    {
 
-        ntStatus = STATUS_BUFFER_TOO_SMALL;
+	ntStatus = STATUS_SUCCESS;
     }
 
     return ntStatus;
@@ -939,7 +936,7 @@ AFSQueryStandardInfo( IN PIRP Irp,
                       IN OUT PLONG Length)
 {
 
-    NTSTATUS ntStatus = STATUS_SUCCESS;
+    NTSTATUS ntStatus = STATUS_INFO_LENGTH_MISMATCH;
     AFSFcb *pFcb = NULL;
     AFSCcb *pCcb = NULL;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
@@ -1029,11 +1026,8 @@ AFSQueryStandardInfo( IN PIRP Irp,
         Buffer->Directory = BooleanFlagOn( ulFileAttribs, FILE_ATTRIBUTE_DIRECTORY);
 
         *Length -= sizeof( FILE_STANDARD_INFORMATION);
-    }
-    else
-    {
 
-        ntStatus = STATUS_BUFFER_TOO_SMALL;
+	ntStatus = STATUS_SUCCESS;
     }
 
     return ntStatus;
@@ -1047,7 +1041,7 @@ AFSQueryInternalInfo( IN PIRP Irp,
 {
 
     UNREFERENCED_PARAMETER(Irp);
-    NTSTATUS ntStatus = STATUS_SUCCESS;
+    NTSTATUS ntStatus = STATUS_INFO_LENGTH_MISMATCH;
 
     if( *Length >= sizeof( FILE_INTERNAL_INFORMATION))
     {
@@ -1057,11 +1051,8 @@ AFSQueryInternalInfo( IN PIRP Irp,
         Buffer->IndexNumber.LowPart = Fcb->ObjectInformation->FileId.Unique;
 
         *Length -= sizeof( FILE_INTERNAL_INFORMATION);
-    }
-    else
-    {
 
-        ntStatus = STATUS_BUFFER_TOO_SMALL;
+	ntStatus = STATUS_SUCCESS;
     }
 
     return ntStatus;
@@ -1076,7 +1067,7 @@ AFSQueryEaInfo( IN PIRP Irp,
 
     UNREFERENCED_PARAMETER(Irp);
     UNREFERENCED_PARAMETER(DirectoryCB);
-    NTSTATUS ntStatus = STATUS_SUCCESS;
+    NTSTATUS ntStatus = STATUS_INFO_LENGTH_MISMATCH;
 
     RtlZeroMemory( Buffer,
                    *Length);
@@ -1087,11 +1078,8 @@ AFSQueryEaInfo( IN PIRP Irp,
         Buffer->EaSize = 0;
 
         *Length -= sizeof( FILE_EA_INFORMATION);
-    }
-    else
-    {
 
-        ntStatus = STATUS_BUFFER_TOO_SMALL;
+	ntStatus = STATUS_SUCCESS;
     }
 
     return ntStatus;
@@ -1105,7 +1093,7 @@ AFSQueryPositionInfo( IN PIRP Irp,
 {
 
     UNREFERENCED_PARAMETER(Fcb);
-    NTSTATUS ntStatus = STATUS_SUCCESS;
+    NTSTATUS ntStatus = STATUS_INFO_LENGTH_MISMATCH;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
 
     if( *Length >= sizeof( FILE_POSITION_INFORMATION))
@@ -1117,11 +1105,8 @@ AFSQueryPositionInfo( IN PIRP Irp,
         Buffer->CurrentByteOffset.QuadPart = pIrpSp->FileObject->CurrentByteOffset.QuadPart;
 
         *Length -= sizeof( FILE_POSITION_INFORMATION);
-    }
-    else
-    {
 
-        ntStatus = STATUS_BUFFER_TOO_SMALL;
+	ntStatus = STATUS_SUCCESS;
     }
 
     return ntStatus;
@@ -1135,7 +1120,7 @@ AFSQueryNameInfo( IN PIRP Irp,
 {
 
     UNREFERENCED_PARAMETER(DirectoryCB);
-    NTSTATUS ntStatus = STATUS_SUCCESS;
+    NTSTATUS ntStatus = STATUS_INFO_LENGTH_MISMATCH;
     ULONG ulCopyLength = 0;
     ULONG cchCopied = 0;
     AFSFcb *pFcb = NULL;
@@ -1186,6 +1171,8 @@ AFSQueryNameInfo( IN PIRP Irp,
         {
 
             ulCopyLength = (LONG)usFullNameLength;
+
+	    ntStatus = STATUS_SUCCESS;
         }
         else
         {
@@ -1261,11 +1248,6 @@ AFSQueryNameInfo( IN PIRP Irp,
             }
         }
     }
-    else
-    {
-
-        ntStatus = STATUS_BUFFER_TOO_SMALL;
-    }
 
     return ntStatus;
 }
@@ -1278,7 +1260,7 @@ AFSQueryShortNameInfo( IN PIRP Irp,
 {
 
     UNREFERENCED_PARAMETER(Irp);
-    NTSTATUS ntStatus = STATUS_BUFFER_TOO_SMALL;
+    NTSTATUS ntStatus = STATUS_INFO_LENGTH_MISMATCH;
     ULONG ulCopyLength = 0;
 
     RtlZeroMemory( Buffer,
@@ -1371,7 +1353,7 @@ AFSQueryNetworkInfo( IN PIRP Irp,
                      IN OUT PLONG Length)
 {
 
-    NTSTATUS ntStatus = STATUS_SUCCESS;
+    NTSTATUS ntStatus = STATUS_INFO_LENGTH_MISMATCH;
     AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     AFSFcb *pFcb = NULL;
     AFSCcb *pCcb = NULL;
@@ -1479,11 +1461,8 @@ AFSQueryNetworkInfo( IN PIRP Irp,
         }
 
         *Length -= sizeof( FILE_NETWORK_OPEN_INFORMATION);
-    }
-    else
-    {
 
-        ntStatus = STATUS_BUFFER_TOO_SMALL;
+	ntStatus = STATUS_SUCCESS;
     }
 
     return ntStatus;
@@ -1497,7 +1476,7 @@ AFSQueryStreamInfo( IN PIRP Irp,
 {
 
     UNREFERENCED_PARAMETER(Irp);
-    NTSTATUS ntStatus = STATUS_BUFFER_TOO_SMALL;
+    NTSTATUS ntStatus = STATUS_INFO_LENGTH_MISMATCH;
     ULONG ulCopyLength = 0;
 
     if( *Length >= FIELD_OFFSET( FILE_STREAM_INFORMATION, StreamName))
@@ -1566,7 +1545,7 @@ AFSQueryAttribTagInfo( IN PIRP Irp,
                        IN OUT PLONG Length)
 {
 
-    NTSTATUS ntStatus = STATUS_BUFFER_TOO_SMALL;
+    NTSTATUS ntStatus = STATUS_INFO_LENGTH_MISMATCH;
     AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     AFSFcb *pFcb = NULL;
     AFSCcb *pCcb = NULL;
@@ -1693,7 +1672,7 @@ AFSQueryRemoteProtocolInfo( IN PIRP Irp,
 
     UNREFERENCED_PARAMETER(Irp);
     UNREFERENCED_PARAMETER(DirectoryCB);
-    NTSTATUS ntStatus = STATUS_BUFFER_TOO_SMALL;
+    NTSTATUS ntStatus = STATUS_INFO_LENGTH_MISMATCH;
 
     if( *Length >= sizeof( FILE_REMOTE_PROTOCOL_INFORMATION))
     {
@@ -1729,7 +1708,7 @@ AFSQueryPhysicalNameInfo( IN PIRP Irp,
 {
 
     UNREFERENCED_PARAMETER(DirectoryCB);
-    NTSTATUS ntStatus = STATUS_SUCCESS;
+    NTSTATUS ntStatus = STATUS_INFO_LENGTH_MISMATCH;
     ULONG ulCopyLength = 0;
     ULONG cchCopied = 0;
     AFSFcb *pFcb = NULL;
@@ -1764,6 +1743,8 @@ AFSQueryPhysicalNameInfo( IN PIRP Irp,
         if( *Length >= (LONG)(FIELD_OFFSET( FILE_NETWORK_PHYSICAL_NAME_INFORMATION, FileName) + (LONG)usFullNameLength))
         {
             ulCopyLength = (LONG)usFullNameLength;
+
+	    ntStatus = STATUS_SUCCESS;
         }
         else
         {
@@ -1811,11 +1792,6 @@ AFSQueryPhysicalNameInfo( IN PIRP Irp,
                 *Length -= ulCopyLength;
             }
         }
-    }
-    else
-    {
-
-        ntStatus = STATUS_BUFFER_TOO_SMALL;
     }
 
     return ntStatus;
