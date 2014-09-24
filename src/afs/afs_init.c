@@ -335,6 +335,17 @@ afs_InitVolumeInfo(char *afile)
     return 0;
 }
 
+void
+afs_InitFHeader(struct afs_fheader *aheader)
+{
+    memset(aheader, 0, sizeof(*aheader));
+    aheader->magic = AFS_FHMAGIC;
+    aheader->version = AFS_CI_VERSION;
+    aheader->dataSize = sizeof(struct fcache);
+    aheader->firstCSize = AFS_FIRSTCSIZE;
+    aheader->otherCSize = AFS_OTHERCSIZE;
+}
+
 /*
  * afs_InitCacheInfo
  *
@@ -490,11 +501,7 @@ afs_InitCacheInfo(char *afile)
     }
     if (!goodFile) {
 	/* write out a good file label */
-	theader.magic = AFS_FHMAGIC;
-	theader.firstCSize = AFS_FIRSTCSIZE;
-	theader.otherCSize = AFS_OTHERCSIZE;
-	theader.dataSize = sizeof(struct fcache);
-	theader.version = AFS_CI_VERSION;
+	afs_InitFHeader(&theader);
 	afs_osi_Write(tfile, 0, &theader, sizeof(theader));
 	/*
 	 * Truncate the rest of the file, since it may be arbitrarily
