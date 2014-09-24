@@ -8,7 +8,6 @@
 /Makefile.libtool
 /Makefile.lwp
 /Makefile.lwptool
-/Makefile.shared
 /Makefile.pthread
 /Makefile.version
 /Makefile.version-NOCML

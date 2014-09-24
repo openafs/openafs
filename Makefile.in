@@ -829,7 +829,6 @@ distclean: clean
 	src/config/Makefile.lwp \
 	src/config/Makefile.lwptool \
 	src/config/Makefile.pthread \
-	src/config/Makefile.shared \
 	src/config/Makefile.version \
 	src/config/Makefile.version-CML \
 	src/config/Makefile.version-NOCML \

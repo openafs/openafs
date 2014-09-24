@@ -187,7 +187,6 @@ AC_OUTPUT([
     src/config/Makefile.lwp
     src/config/Makefile.lwptool
     src/config/Makefile.pthread
-    src/config/Makefile.shared
     src/config/Makefile.version-CML
     src/config/Makefile.version-NOCML
     src/config/shlib-build
