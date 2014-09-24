@@ -1121,14 +1121,9 @@ AFSQueryNameInfo( IN PIRP Irp,
 
     UNREFERENCED_PARAMETER(DirectoryCB);
     NTSTATUS ntStatus = STATUS_INFO_LENGTH_MISMATCH;
-    ULONG ulCopyLength = 0;
-    ULONG cchCopied = 0;
     AFSFcb *pFcb = NULL;
     AFSCcb *pCcb = NULL;
     IO_STACK_LOCATION *pIrpSp = IoGetCurrentIrpStackLocation( Irp);
-    BOOLEAN bAddLeadingSlash = FALSE;
-    BOOLEAN bAddTrailingSlash = FALSE;
-    USHORT usFullNameLength = 0;
 
     pFcb = (AFSFcb *)pIrpSp->FileObject->FsContext;
 
@@ -1137,116 +1132,16 @@ AFSQueryNameInfo( IN PIRP Irp,
     if( *Length >= FIELD_OFFSET( FILE_NAME_INFORMATION, FileName))
     {
 
-        RtlZeroMemory( Buffer,
-                       *Length);
+	RtlZeroMemory( Buffer,
+		       *Length);
 
-        if( pCcb->FullFileName.Length == 0 ||
-            pCcb->FullFileName.Buffer[ 0] != L'\\')
-        {
-            bAddLeadingSlash = TRUE;
-        }
+	*Length -= FIELD_OFFSET( FILE_NAME_INFORMATION, FileName);
 
-        if( pFcb->ObjectInformation->FileType == AFS_FILE_TYPE_DIRECTORY &&
-            pCcb->FullFileName.Length > 0 &&
-            pCcb->FullFileName.Buffer[ (pCcb->FullFileName.Length/sizeof( WCHAR)) - 1] != L'\\')
-        {
-            bAddTrailingSlash = TRUE;
-        }
-
-        usFullNameLength = sizeof( WCHAR) +
-                                    AFSServerName.Length +
-                                    pCcb->FullFileName.Length;
-
-        if( bAddLeadingSlash)
-        {
-            usFullNameLength += sizeof( WCHAR);
-        }
-
-        if( bAddTrailingSlash)
-        {
-            usFullNameLength += sizeof( WCHAR);
-        }
-
-        if( *Length >= (LONG)(FIELD_OFFSET( FILE_NAME_INFORMATION, FileName) + (LONG)usFullNameLength))
-        {
-
-            ulCopyLength = (LONG)usFullNameLength;
-
-	    ntStatus = STATUS_SUCCESS;
-        }
-        else
-        {
-
-            ulCopyLength = *Length - FIELD_OFFSET( FILE_NAME_INFORMATION, FileName);
-
-            ntStatus = STATUS_BUFFER_OVERFLOW;
-        }
-
-        Buffer->FileNameLength = (ULONG)usFullNameLength;
-
-        *Length -= FIELD_OFFSET( FILE_NAME_INFORMATION, FileName);
-
-        if( ulCopyLength > 0)
-        {
-
-            Buffer->FileName[ 0] = L'\\';
-            ulCopyLength -= sizeof( WCHAR);
-
-            *Length -= sizeof( WCHAR);
-            cchCopied += 1;
-
-            if( ulCopyLength >= AFSServerName.Length)
-            {
-
-                RtlCopyMemory( &Buffer->FileName[ 1],
-                               AFSServerName.Buffer,
-                               AFSServerName.Length);
-
-                ulCopyLength -= AFSServerName.Length;
-                *Length -= AFSServerName.Length;
-                cchCopied += AFSServerName.Length/sizeof( WCHAR);
-
-                if ( ulCopyLength > 0 &&
-                     bAddLeadingSlash)
-                {
-
-                    Buffer->FileName[ cchCopied] = L'\\';
-
-                    ulCopyLength -= sizeof( WCHAR);
-                    *Length -= sizeof( WCHAR);
-                    cchCopied++;
-                }
-
-                if( ulCopyLength >= pCcb->FullFileName.Length)
-                {
-
-                    RtlCopyMemory( &Buffer->FileName[ cchCopied],
-                                   pCcb->FullFileName.Buffer,
-                                   pCcb->FullFileName.Length);
-
-                    ulCopyLength -= pCcb->FullFileName.Length;
-                    *Length -= pCcb->FullFileName.Length;
-                    cchCopied += pCcb->FullFileName.Length/sizeof( WCHAR);
-
-                    if( ulCopyLength > 0 &&
-                        bAddTrailingSlash)
-                    {
-                        Buffer->FileName[ cchCopied] = L'\\';
-
-                        *Length -= sizeof( WCHAR);
-                    }
-                }
-                else
-                {
-
-                    RtlCopyMemory( &Buffer->FileName[ cchCopied],
-                                   pCcb->FullFileName.Buffer,
-                                   ulCopyLength);
-
-                    *Length -= ulCopyLength;
-                }
-            }
-        }
+	ntStatus = AFSGetFullFileName( pFcb,
+				       pCcb,
+				       &Buffer->FileNameLength,
+				       Buffer->FileName,
+				       Length);
     }
 
     return ntStatus;
@@ -1709,13 +1604,9 @@ AFSQueryPhysicalNameInfo( IN PIRP Irp,
 
     UNREFERENCED_PARAMETER(DirectoryCB);
     NTSTATUS ntStatus = STATUS_INFO_LENGTH_MISMATCH;
-    ULONG ulCopyLength = 0;
-    ULONG cchCopied = 0;
     AFSFcb *pFcb = NULL;
     AFSCcb *pCcb = NULL;
     IO_STACK_LOCATION *pIrpSp = IoGetCurrentIrpStackLocation( Irp);
-    BOOLEAN bAddLeadingSlash = FALSE;
-    USHORT usFullNameLength = 0;
 
     pFcb = (AFSFcb *)pIrpSp->FileObject->FsContext;
 
@@ -1724,74 +1615,16 @@ AFSQueryPhysicalNameInfo( IN PIRP Irp,
     if( *Length >= FIELD_OFFSET( FILE_NETWORK_PHYSICAL_NAME_INFORMATION, FileName))
     {
 
-        RtlZeroMemory( Buffer,
-                       *Length);
+	RtlZeroMemory( Buffer,
+		       *Length);
 
-        if( pCcb->FullFileName.Length == 0 ||
-            pCcb->FullFileName.Buffer[ 0] != L'\\')
-        {
-            bAddLeadingSlash = TRUE;
-        }
+	*Length -= FIELD_OFFSET( FILE_NETWORK_PHYSICAL_NAME_INFORMATION, FileName);
 
-        usFullNameLength = pCcb->FullFileName.Length;
-
-        if( bAddLeadingSlash)
-        {
-            usFullNameLength += sizeof( WCHAR);
-        }
-
-        if( *Length >= (LONG)(FIELD_OFFSET( FILE_NETWORK_PHYSICAL_NAME_INFORMATION, FileName) + (LONG)usFullNameLength))
-        {
-            ulCopyLength = (LONG)usFullNameLength;
-
-	    ntStatus = STATUS_SUCCESS;
-        }
-        else
-        {
-
-            ulCopyLength = *Length - FIELD_OFFSET( FILE_NETWORK_PHYSICAL_NAME_INFORMATION, FileName);
-
-            ntStatus = STATUS_BUFFER_OVERFLOW;
-        }
-
-        Buffer->FileNameLength = (ULONG)usFullNameLength;
-
-        *Length -= FIELD_OFFSET( FILE_NETWORK_PHYSICAL_NAME_INFORMATION, FileName);
-
-        if( ulCopyLength > 0)
-        {
-
-            if( bAddLeadingSlash)
-            {
-
-                Buffer->FileName[ cchCopied] = L'\\';
-
-                ulCopyLength -= sizeof( WCHAR);
-                *Length -= sizeof( WCHAR);
-                cchCopied++;
-            }
-
-            if( ulCopyLength >= pCcb->FullFileName.Length)
-            {
-
-                RtlCopyMemory( &Buffer->FileName[ cchCopied],
-                               pCcb->FullFileName.Buffer,
-                               pCcb->FullFileName.Length);
-
-                ulCopyLength -= pCcb->FullFileName.Length;
-                *Length -= pCcb->FullFileName.Length;
-                cchCopied += pCcb->FullFileName.Length/sizeof( WCHAR);
-            }
-            else
-            {
-
-                RtlCopyMemory( &Buffer->FileName[ cchCopied],
-                               pCcb->FullFileName.Buffer,
-                               ulCopyLength);
-
-                *Length -= ulCopyLength;
-            }
-        }
+	ntStatus = AFSGetFullFileName( pFcb,
+				       pCcb,
+				       &Buffer->FileNameLength,
+				       Buffer->FileName,
+				       Length);
     }
 
     return ntStatus;

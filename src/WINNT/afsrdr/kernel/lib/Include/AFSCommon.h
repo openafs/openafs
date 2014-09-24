@@ -637,6 +637,13 @@ AFSProcessDFSLink( IN AFSDirectoryCB *DirEntry,
                    IN GUID *AuthGroup,
 		   OUT PUNICODE_STRING TargetName);
 
+NTSTATUS
+AFSGetFullFileName( IN AFSFcb *Fcb,
+		    IN AFSCcb *Ccb,
+		    OUT ULONG *FileNameLength,
+		    OUT WCHAR *FileName,
+		    IN OUT LONG *RemainingLength);
+
 //
 // AFSNetworkProviderSupport.cpp
 //
