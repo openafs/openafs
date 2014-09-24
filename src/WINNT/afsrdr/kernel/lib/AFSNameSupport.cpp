@@ -5263,7 +5263,6 @@ AFSGetFullFileName( IN AFSFcb *Fcb,
     ULONG       ulCopyLength = 0;
     ULONG       cchCopied = 0;
     BOOLEAN     bAddTrailingSlash = FALSE;
-    BOOLEAN     bAddLeadingSlash = FALSE;
     USHORT      usFullNameLength = 0;
 
     __Enter
@@ -5273,15 +5272,11 @@ AFSGetFullFileName( IN AFSFcb *Fcb,
 	// Add a trailing slash for anything which is of the form \server\share
 	//
 
-	if( Ccb->FullFileName.Length == 0 ||
-	    Ccb->FullFileName.Buffer[ 0] != L'\\')
-	{
-	    bAddLeadingSlash = TRUE;
-	}
-
-	if( Fcb->ObjectInformation->FileType == AFS_FILE_TYPE_DIRECTORY &&
-	    Ccb->FullFileName.Length > 0 &&
-	    Ccb->FullFileName.Buffer[ (Ccb->FullFileName.Length/sizeof( WCHAR)) - 1] != L'\\')
+	if( ( Fcb->ObjectInformation->FileType == AFS_FILE_TYPE_DIRECTORY ||
+	      Fcb->ObjectInformation->FileType == AFS_FILE_TYPE_MOUNTPOINT) &&
+	    Ccb->FullFileName.Length > sizeof( WCHAR) &&
+	    Ccb->FullFileName.Buffer[ (Ccb->FullFileName.Length/sizeof( WCHAR)) - 1] != L'\\' &&
+	    AFSIsShareName( &Ccb->FullFileName))
 	{
 	    bAddTrailingSlash = TRUE;
 	}
@@ -5289,11 +5284,6 @@ AFSGetFullFileName( IN AFSFcb *Fcb,
 	usFullNameLength = sizeof( WCHAR) +
 				    AFSServerName.Length +
 				    Ccb->FullFileName.Length;
-
-	if( bAddLeadingSlash)
-	{
-	    usFullNameLength += sizeof( WCHAR);
-	}
 
 	if( bAddTrailingSlash)
 	{
@@ -5333,17 +5323,6 @@ AFSGetFullFileName( IN AFSFcb *Fcb,
 		ulCopyLength -= AFSServerName.Length;
 		*RemainingLength -= AFSServerName.Length;
 		cchCopied += AFSServerName.Length/sizeof( WCHAR);
-
-		if ( ulCopyLength > 0 &&
-		     bAddLeadingSlash)
-		{
-
-		    FileName[ cchCopied] = L'\\';
-
-		    ulCopyLength -= sizeof( WCHAR);
-		    *RemainingLength -= sizeof( WCHAR);
-		    cchCopied++;
-		}
 
 		if( ulCopyLength >= Ccb->FullFileName.Length)
 		{

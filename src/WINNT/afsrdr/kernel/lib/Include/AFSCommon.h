@@ -1451,6 +1451,9 @@ NTSTATUS
 AFSRetrieveTargetFileInfo( IN PUNICODE_STRING TargetName,
 			   OUT AFSFileInfoCB *FileInfo);
 
+BOOLEAN
+AFSIsShareName( IN UNICODE_STRING *FileName);
+
 //
 // AFSNameArray.cpp Prototypes
 //
