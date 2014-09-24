@@ -532,7 +532,8 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
     pCurrentEntry->ChangeTime = pCurrentEntry->CreationTime;
 
     pCurrentEntry->EndOfFile = scp->length;
-    pCurrentEntry->AllocationSize = scp->length;
+    pCurrentEntry->AllocationSize.QuadPart =
+	((scp->length.QuadPart/1024)+1)*1024;
 
     if (bMustFake) {
         switch (scp->fileType) {
