@@ -5250,3 +5250,132 @@ try_exit:
 
     return ntStatus;
 }
+
+NTSTATUS
+AFSGetFullFileName( IN AFSFcb *Fcb,
+		    IN AFSCcb *Ccb,
+		    OUT ULONG *FileNameLength,
+		    OUT WCHAR *FileName,
+		    IN OUT LONG *RemainingLength)
+{
+
+    NTSTATUS    ntStatus = STATUS_SUCCESS;
+    ULONG       ulCopyLength = 0;
+    ULONG       cchCopied = 0;
+    BOOLEAN     bAddTrailingSlash = FALSE;
+    BOOLEAN     bAddLeadingSlash = FALSE;
+    USHORT      usFullNameLength = 0;
+
+    __Enter
+    {
+
+	//
+	// Add a trailing slash for anything which is of the form \server\share
+	//
+
+	if( Ccb->FullFileName.Length == 0 ||
+	    Ccb->FullFileName.Buffer[ 0] != L'\\')
+	{
+	    bAddLeadingSlash = TRUE;
+	}
+
+	if( Fcb->ObjectInformation->FileType == AFS_FILE_TYPE_DIRECTORY &&
+	    Ccb->FullFileName.Length > 0 &&
+	    Ccb->FullFileName.Buffer[ (Ccb->FullFileName.Length/sizeof( WCHAR)) - 1] != L'\\')
+	{
+	    bAddTrailingSlash = TRUE;
+	}
+
+	usFullNameLength = sizeof( WCHAR) +
+				    AFSServerName.Length +
+				    Ccb->FullFileName.Length;
+
+	if( bAddLeadingSlash)
+	{
+	    usFullNameLength += sizeof( WCHAR);
+	}
+
+	if( bAddTrailingSlash)
+	{
+	    usFullNameLength += sizeof( WCHAR);
+	}
+
+	if( *RemainingLength >= (LONG)usFullNameLength)
+	{
+	    ulCopyLength = (LONG)usFullNameLength;
+	}
+	else
+	{
+
+	    ulCopyLength = *RemainingLength;
+
+	    ntStatus = STATUS_BUFFER_OVERFLOW;
+	}
+
+	*FileNameLength = (ULONG)usFullNameLength;
+
+	if( ulCopyLength > 0)
+	{
+
+	    FileName[ 0] = L'\\';
+	    ulCopyLength -= sizeof( WCHAR);
+
+	    *RemainingLength -= sizeof( WCHAR);
+	    cchCopied += 1;
+
+	    if( ulCopyLength >= AFSServerName.Length)
+	    {
+
+		RtlCopyMemory( &FileName[ 1],
+			       AFSServerName.Buffer,
+			       AFSServerName.Length);
+
+		ulCopyLength -= AFSServerName.Length;
+		*RemainingLength -= AFSServerName.Length;
+		cchCopied += AFSServerName.Length/sizeof( WCHAR);
+
+		if ( ulCopyLength > 0 &&
+		     bAddLeadingSlash)
+		{
+
+		    FileName[ cchCopied] = L'\\';
+
+		    ulCopyLength -= sizeof( WCHAR);
+		    *RemainingLength -= sizeof( WCHAR);
+		    cchCopied++;
+		}
+
+		if( ulCopyLength >= Ccb->FullFileName.Length)
+		{
+
+		    RtlCopyMemory( &FileName[ cchCopied],
+				   Ccb->FullFileName.Buffer,
+				   Ccb->FullFileName.Length);
+
+		    ulCopyLength -= Ccb->FullFileName.Length;
+		    *RemainingLength -= Ccb->FullFileName.Length;
+		    cchCopied += Ccb->FullFileName.Length/sizeof( WCHAR);
+
+		    if( ulCopyLength > 0 &&
+			bAddTrailingSlash)
+		    {
+			FileName[ cchCopied] = L'\\';
+
+			*RemainingLength -= sizeof( WCHAR);
+		    }
+		}
+		else
+		{
+
+		    RtlCopyMemory( &FileName[ cchCopied],
+				   Ccb->FullFileName.Buffer,
+				   ulCopyLength);
+
+		    *RemainingLength -= ulCopyLength;
+		}
+	    }
+	}
+    }
+
+    return ntStatus;
+}
