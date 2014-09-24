@@ -76,9 +76,9 @@ AC_ARG_WITH([afs-sysname],
 
 dnl General feature options.
 AC_ARG_ENABLE([pam],
-    [AS_HELP_STRING([--disable-pam], [disable PAM support])],
+    [AS_HELP_STRING([--enable-pam], [enable PAM (kaserver) support])],
     ,
-    [enable_pam="yes"])
+    [enable_pam="no"])
 AC_ARG_ENABLE([gtx],
     AS_HELP_STRING([--disable-gtx], [disable gtx curses-based terminal tools]))
 AC_ARG_ENABLE([uss],
@@ -111,11 +111,11 @@ AC_ARG_ENABLE([tivoli-tsm],
     , 
     [enable_tivoli_tsm="no"])
 AC_ARG_ENABLE([pthreaded-ubik],
-    [AS_HELP_STRING([--enable-pthreaded-ubik],
-        [enable installation of pthreaded ubik applications (defaults to
-         disabled)])],
+    [AS_HELP_STRING([--disable-pthreaded-ubik],
+        [disable installation of pthreaded ubik applications (defaults to
+         enabled)])],
     ,
-    [enable_pthreaded_ubik="no"])
+    [enable_pthreaded_ubik="yes"])
 
 dnl Kernel module build options.
 AC_ARG_WITH([linux-kernel-headers],
