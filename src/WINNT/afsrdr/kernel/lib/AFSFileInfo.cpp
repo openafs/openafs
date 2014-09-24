@@ -957,7 +957,7 @@ AFSQueryStandardInfo( IN PIRP Irp,
         Buffer->NumberOfLinks = 1;
         Buffer->DeletePending = BooleanFlagOn( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE);
 
-        Buffer->AllocationSize.QuadPart = (ULONGLONG)((DirectoryCB->ObjectInformation->AllocationSize.QuadPart/PAGE_SIZE) + 1) * PAGE_SIZE;
+	Buffer->AllocationSize.QuadPart = DirectoryCB->ObjectInformation->AllocationSize.QuadPart;
 
         Buffer->EndOfFile = DirectoryCB->ObjectInformation->EndOfFile;
 
