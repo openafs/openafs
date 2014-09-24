@@ -10002,3 +10002,29 @@ try_exit:
 
     return ntStatus;
 }
+
+BOOLEAN
+AFSIsShareName( IN UNICODE_STRING *FileName)
+{
+
+    BOOLEAN     bIsShareName = TRUE;
+    USHORT      usIndex = 1; // Skip the first \
+
+    //
+    // A share name will be of the form \Share so only a single \ at the beginning
+    //
+
+    while( usIndex < FileName->Length/sizeof( WCHAR))
+    {
+
+	if( FileName->Buffer[ usIndex] == L'\\')
+	{
+	    bIsShareName = FALSE;
+	    break;
+	}
+
+	usIndex++;
+    }
+
+    return bIsShareName;
+}
