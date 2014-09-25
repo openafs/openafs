@@ -35,11 +35,6 @@
 #endif
 #include <hcrypto/rand.h>
 
-/* No hckernel-specific header for this prototype. */
-#ifndef UKERNEL
-extern void init_hckernel_mutex(void);
-#endif
-
 #if defined(AFS_SUN5_ENV) || defined(AFS_AIX_ENV) || defined(AFS_SGI_ENV) || defined(AFS_HPUX_ENV)
 #define	AFS_MINBUFFERS	100
 #else
@@ -106,11 +101,6 @@ afs_InitSetup(int preallocs)
 
     if (afs_InitSetup_done)
 	return EAGAIN;
-
-    /* Initialize a lock for the kernel hcrypto bits. */
-#ifndef UKERNEL
-    init_hckernel_mutex();
-#endif
 
 #ifdef AFS_SUN510_ENV
     /* Initialize a RW lock for the ifinfo global array */

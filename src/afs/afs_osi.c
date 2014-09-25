@@ -24,6 +24,11 @@
  *     -- On HP called from afsc_link.
  *     -- On SGI called from afs_init. */
 
+/* No hckernel-specific header for this prototype. */
+#ifndef UKERNEL
+extern void init_hckernel_mutex(void);
+#endif
+
 afs_lock_t afs_ftf;		/* flush text lock */
 
 #ifdef AFS_SGI53_ENV
@@ -77,6 +82,12 @@ osi_Init(void)
 	return;
 
     osi_InitGlock();
+
+    /* Initialize a lock for the kernel hcrypto bits. */
+#ifndef UKERNEL
+    init_hckernel_mutex();
+#endif
+
 
     if (!afs_osicred_initialized) {
 #if defined(AFS_DARWIN80_ENV)
