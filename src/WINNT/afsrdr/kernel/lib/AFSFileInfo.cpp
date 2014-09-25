@@ -2876,6 +2876,50 @@ AFSSetRenameInfo( IN PIRP Irp)
 
             ASSERT( lCount >= 0);
 
+	    //
+	    // Need to acquire the ObjectInfoLock while checking for the Fcb OpenRefCount so we don't race with
+	    // a tear down worker thread on the Fcb
+	    //
+
+	    AFSAcquireShared( &pTargetDirEntry->ObjectInformation->NonPagedInfo->ObjectInfoLock,
+			      TRUE);
+
+	    //
+	    // Check there are no current opens on the target
+	    //
+
+	    if( BooleanFlagOn( pTargetDirEntry->ObjectInformation->FileAttributes, FILE_ATTRIBUTE_READONLY) ||
+		( pTargetDirEntry->ObjectInformation->Fcb != NULL &&
+		  pTargetDirEntry->ObjectInformation->Fcb->OpenReferenceCount != 0))
+	    {
+
+		//
+		// Return the correct error code
+		//
+
+		if( BooleanFlagOn( pTargetDirEntry->Flags, AFS_DIR_ENTRY_PENDING_DELETE))
+		{
+		    ntStatus = STATUS_DELETE_PENDING;
+		}
+		else
+		{
+		    ntStatus = STATUS_ACCESS_DENIED;
+		}
+
+		AFSReleaseResource( &pTargetDirEntry->ObjectInformation->NonPagedInfo->ObjectInfoLock);
+
+		AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+			      AFS_TRACE_LEVEL_ERROR,
+			      "AFSSetRenameInfo Attempt to rename %s Target %wZ Status %08lX\n",
+			      BooleanFlagOn( pTargetDirEntry->ObjectInformation->FileAttributes, FILE_ATTRIBUTE_READONLY)?"ReadOnly":"Open",
+			      &pTargetDirEntry->NameInformation.FileName,
+			      ntStatus));
+
+		try_return( ntStatus);
+	    }
+
+	    AFSReleaseResource( &pTargetDirEntry->ObjectInformation->NonPagedInfo->ObjectInfoLock);
+
             if( !bReplaceIfExists)
             {
 
