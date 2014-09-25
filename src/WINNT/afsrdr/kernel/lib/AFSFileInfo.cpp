@@ -954,7 +954,7 @@ AFSQueryStandardInfo( IN PIRP Irp,
         RtlZeroMemory( Buffer,
                        *Length);
 
-        Buffer->NumberOfLinks = 1;
+	Buffer->NumberOfLinks = DirectoryCB->ObjectInformation->Links;
         Buffer->DeletePending = BooleanFlagOn( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE);
 
 	Buffer->AllocationSize.QuadPart = DirectoryCB->ObjectInformation->AllocationSize.QuadPart;
