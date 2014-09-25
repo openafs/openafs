@@ -1914,13 +1914,6 @@ AFSSetDispositionInfo( IN PIRP Irp,
             {
 
                 //
-                // Reduce the Link count in the object information block
-                // to correspond with the deletion of the directory entry.
-                //
-
-                pFcb->ObjectInformation->Links--;
-
-                //
                 // Check if this is a directory that there are not currently other opens
                 //
 
