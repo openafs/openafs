@@ -1529,9 +1529,18 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
     /* It's ok for the file to not be found. That's noted by the caller by
      * seeing that the dp->d_inode field is NULL.
      */
-    if (!code || code == ENOENT)
-	return newdp;
-    else 
+    if (!code || code == ENOENT) {
+	/*
+	 * d_splice_alias can return an error (EIO) if there is an existing
+	 * connected directory alias for this dentry.
+	 */
+	if (!IS_ERR(newdp))
+	    return newdp;
+	else {
+	    d_add(dp, ip);
+	    return NULL;
+	}
+    } else
 	return ERR_PTR(afs_convert_code(code));
 }
 
