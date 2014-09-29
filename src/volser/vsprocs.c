@@ -4818,6 +4818,8 @@ UV_RestoreVolume2(afs_uint32 toserver, afs_int32 topart, afs_uint32 tovolid,
     int reuseID;
     afs_int32 volflag, voltype, volsertype;
     afs_int32 oldCreateDate, oldUpdateDate, newCreateDate, newUpdateDate;
+    VolumeId oldCloneId = 0;
+    VolumeId oldBackupId = 0;
     int index, same, errcode;
     char apartName[10];
     char hoststr[16];
@@ -4927,6 +4929,8 @@ UV_RestoreVolume2(afs_uint32 toserver, afs_int32 topart, afs_uint32 tovolid,
 	}
 	oldCreateDate = tstatus.creationDate;
 	oldUpdateDate = tstatus.updateDate;
+	oldCloneId = tstatus.cloneID;
+	oldBackupId = tstatus.backupID;
     } else {
 	oldCreateDate = 0;
 	oldUpdateDate = 0;
@@ -4965,9 +4969,10 @@ UV_RestoreVolume2(afs_uint32 toserver, afs_int32 topart, afs_uint32 tovolid,
 	error = code;
 	goto refail;
     }
-    code = AFSVolSetIdsTypes(toconn, totid, tovolreal, voltype, pparentid, 0, 0);
+    code = AFSVolSetIdsTypes(toconn, totid, tovolreal, voltype, pparentid,
+		                oldCloneId, oldBackupId);
     if (code) {
-	fprintf(STDERR, "Could not set the right type and ID on %lu\n",
+	fprintf(STDERR, "Could not set the right type and IDs on %lu\n",
 		(unsigned long)pvolid);
 	error = code;
 	goto refail;
