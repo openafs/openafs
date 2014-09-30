@@ -1176,7 +1176,7 @@ next_path(char *origpath)
     static char path[MAXPATHLEN + 1];
     static char pathtocheck[MAXPATHLEN + 1];
 
-    int link = FALSE;		/* Is this a symbolic link? */
+    ssize_t link;		/* Return value from readlink */
     char linkbuf[MAXPATHLEN + 1];
     char tmpbuf[MAXPATHLEN + 1];
 
@@ -1254,7 +1254,7 @@ next_path(char *origpath)
 	else
 	    last_comp = elast_comp;
     }
-    while(link);
+    while(link > 0);
 
     return(pathtocheck);
 }
