@@ -1,3 +1,162 @@
+Release 1.7.3200; Changes since 1.7.3100
+
+de205b8 Windows: SetDispositionInfo vs Link Count
+ad4b6fc Windows: FileStandardInfo Link count
+e1e8557 Windows: Check for RO and Open Target in rename
+2053fe2 Windows: Use the allocation size from the service
+00691e2 Windows: report AllocationSize in 1KB increments
+d601786 Windows: Remove trailing slash on non-root directories
+cb3a699 Windows: FilePhysicalNameInfo query AFS prefix
+5013ff8 Windows: FileInfo too small INFO_LENGTH_MISMATCH
+56d9078 Windows: !overwrite IOMgr populated FileInfo data
+747f3ea Windows: preserve prior vlserver list on dns failure
+750e19a Windows: power management suspend/resume changes
+2ff98e0 Windows: No network, no probe
+171eb3a Windows: introduce cm_MarkServerDown
+b257be0 Windows: replace lana_OnlyLoopback() calls
+28f5493 Windows: cm_UpdateIFInfo consolidate syscfg_GetIFInfo calls
+0123b02 Windows: Prevent MDL leak on Cc*Mdl* failure
+d661840 Windows: Avoid deadlock during pending delete cleanup
+db92362 Windows: AFSEvaluateTargetByName NULL ptr assignment
+95b6dd2 sys: pioctl_nt translate WinErr to Unix
+683d0e8 Windows: registry enum do not request write perm
+432d964 Windows: Do not sync callbacks when only need locks
+bebbaa6 Windows: do not forget cm_SyncOpDone
+0fe5479 Windows: set hard dead timeout not conn timeout for probes
+1d82dbb Windows: Freelance whole volume rdr invalidate
+e328f08 Windows: Obtain File Attribs for DFS Link target
+eb7cc73 Windows: LocateName skip DFS Link only last component
+76dafdd Windows: Reparse Policy vs DFSLinks
+40e719d Windows: AFSParseRelatedName always use related name
+84b62c7 Windows: AFSParseName always set FileName output
+845b850 Windows: Refactor AFSParseName related name parsing
+ccc3536 vos: cross-device link error message
+7a440fc Windows: Restrict redir trace buffer to 10240KB
+
+ * When a SetDispositionInfo query marks a file as pending
+   delete the link count was decremented prematurely.  The
+   link count should only be decremented when the file is
+   actually deleted.
+
+ * In the FILE_STANDARD_INFO structure is the link count for
+   the file.  Return the actual hard link count as reported by
+   the AFS file server.
+
+ * The AFS redirector will now check for open or in use targets
+   during rename operations.  The return value will either be
+   STATUS_ACCESS_DENIED or STATUS_PENDING_DELETE depending on
+   whether or not the file has the pending delete flag set.
+
+ * The AFS redirector will now report file allocation size
+   in 1KB increments to match the output of the "fs" commands.
+
+ * The AFS redirector included trailing slashes on the
+   response from FileNameInfo and FilePhysicalNameInfo queries.
+   Only \\server\share\ should include the trailing slash not
+   arbitrary directories.
+
+ * Vista and above added the FilePhysicalNameInfo query.
+   The AFS Redirector failed to include the \\AFS prefix in
+   the response to this query.
+
+ * Return STATUS_INFO_LENGTH_MISMATCH instead of
+   STATUS_BUFFER_TOO_SMALL when the application provided
+   buffer is too small to populate the requested FILE_xxx_INFORMATION
+   structure.
+
+ * The AFS Redirector overwrote the FILE_ACCESS_INFORMATION,
+   FILE_MODE_INFORMATION, and FILE_ALIGNMENT_INFORMATION fields
+   of a FILE_ALL_INFORMATION structure when processing a
+   FileAllInformation query.  Use the values populated by
+   the I/O Manager instead.
+
+ * When VL server lists	are obtained via DNS SRV or AFSDB
+   records there is an associated lifetime for the response
+   values.  After expiration a new query will be issued.
+   If that query fails, continue using the expired values.
+
+ * Recompute the list of network interfaces in response
+   to power management events.
+
+ * Disable server probes when there is no valid network
+   interface.  Instead mark servers down immediately.
+
+ * Vista and above does not support Netbios over TCP.
+   As a result the lana_OnlyLoopback() tests are unreliable.
+   Replace them with a test based upon the syscfg_GetIFInfo()
+   response.
+
+ * Prevent potential kernel leaks of memory descriptor
+   list (MDL) structures upon write error.
+
+ * Avoid potential redirector deadlock when processing
+   pending delete requests due to out of order lock
+   acquisition.
+
+ * Prevent a NULL pointer dereference within the afs
+   redirector function AFSEvaluateTargetByName() when
+   executed from the network provider interface.
+
+ * Handle ERROR_NOT_SUPPORTED errors within the pioctl
+   interface.  This is only required if mixing command
+   line tools with an afsd_service.exe that does not
+   implement the requested pioctl operation.
+
+ * The afsd_service.exe does not require write permission
+   for the registry in order to monitor the Freelance
+   keys for possible change.  No functional change under
+   normal circumstances.  This change would permit an
+   organization to lock down the Freelance keys.
+
+ * Do not require a valid callback when processing a
+   file lock request.  File lock state changes can trigger
+   the breaking of callbacks by the file server but the
+   RPC does not return a callback or up to date FetchStatus
+   information.  Delaying file lock request processing
+   while waiting for a callback to be acquired introduces
+   unnecessary overhead and can delay the renewal of a
+   lock renewal to the point where the lock lease expires.
+
+ * A race condition exists when the cache manager is
+   notifying the file server of a change in local change
+   in the length of a file.   When the race is lost the
+   cache manager could trigger an internal synchronization
+   deadlock on a truncated file which would prevent all
+   further file operatons and status queries on that file
+   from completing.
+
+ * File and VL server probes to servers that accept Rx
+   connections but never complete the requested RPC can
+   prevent the probe from terminating.   The probe is
+   supposed to block for at most 10 seconds.  Set a hard
+   dead timeout of 10 seconds to ensure that the RPC is
+   canceled and the server is marked down if no response
+   is received.
+
+ * When the Freelance configuration changes use whole volume
+   change notiifcations to the redirector instead of per
+   object change notifications.   This forces the redirector
+   to discard all Freelance volume data and reacquire it from
+   the service.
+
+ * The redirector trace buffer must not exceed 10MB.  Add
+   explicit restrictions within the redirector and do not
+   trust the tool setting the buffer size.
+
+ * Ensure consistency of redirector trace buffer output
+   if AFSParseName() terminates with an error state.
+
+ * Improve processing of DFS Links.
+
+   . Add support for a symlink that includes a DFS link
+     as one of the path components.
+
+   . Fix behavior of IRP_MJ_CREATE operations on DFS link
+     objects with the open reparse point flag set.
+
+   . Fix the behavior of DFS Links when the Symlink to
+     File Reparse Point Policy is enabled.
+
 Release 1.7.3100; Changes since 1.7.3000
 
  * Setting File Position Information on a handle can be
