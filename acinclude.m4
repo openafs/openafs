@@ -94,7 +94,9 @@ AC_ARG_ENABLE([bitmap-later],
     [AS_HELP_STRING([--enable-bitmap-later],
         [enable fast startup of file server by not reading bitmap till
          needed])],
-    , 
+    [AS_IF([test x"$withval" = xyes],
+        [AC_MSG_WARN([bitmap-later is only used by non-demand-attach
+            fileservers.  Please migrate to demand-attach instead.])])],
     [enable_bitmap_later="no"])
 AC_ARG_ENABLE([unix-sockets],
     [AS_HELP_STRING([--disable-unix-sockets],
