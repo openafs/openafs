@@ -1532,7 +1532,7 @@ void cm_AppendServerList(cm_serverRef_t *dest, cm_serverRef_t **src)
 {
     cm_serverRef_t *ref;
 
-    if (dest == NULL | src == NULL || *src == NULL)
+    if (dest == NULL || src == NULL || *src == NULL)
 	return;
 
     for (ref = dest; ref->next != NULL; ref = ref->next);
