@@ -42,7 +42,8 @@ testfmtr2(opr_fmt_ctx *ctx, char c, va_list va) {
     return 0;
 }
 
-int main()
+int
+main(void)
 {
   static opr_fmtr fmtrs[256] = { ['s'] = testfmtr, ['t'] = testfmtr2 };
   static char buf[100];
