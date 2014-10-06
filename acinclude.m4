@@ -75,10 +75,6 @@ AC_ARG_WITH([afs-sysname],
     [AS_HELP_STRING([--with-afs-sysname=sys], [use sys for the afs sysname])])
 
 dnl General feature options.
-AC_ARG_ENABLE([pam],
-    [AS_HELP_STRING([--enable-pam], [enable PAM (kaserver) support])],
-    ,
-    [enable_pam="no"])
 AC_ARG_ENABLE([gtx],
     AS_HELP_STRING([--disable-gtx], [disable gtx curses-based terminal tools]))
 AC_ARG_ENABLE([uss],
@@ -165,10 +161,11 @@ AC_ARG_ENABLE([transarc-paths],
 dnl Deprecated crypto
 AC_ARG_ENABLE([kauth],
     [AS_HELP_STRING([--enable-kauth],
-        [install the deprecated kauth server and utilities (defaults to
-         disabled)])],
-    ,
-    [enable_kauth="no"])
+        [install the deprecated kauth server, pam modules, and utilities
+         (defaults to disabled)])],
+    [enable_pam="yes"],
+    [enable_kauth="no"
+     enable_pam="no"])
 
 dnl Optimization and debugging flags.
 AC_ARG_ENABLE([strip-binaries],
@@ -676,6 +673,7 @@ else
 			;;
 		mips-sgi-irix6.5)
 			AFS_SYSNAME="sgi_65"
+			enable_pam="no"
 			;;
 		ia64-*-linux*)
 			AFS_SYSNAME="ia64_linuxXX"
@@ -1490,16 +1488,8 @@ if test "$enable_debug_locks" = yes; then
 	AC_DEFINE(OPR_DEBUG_LOCKS, 1, [turn on lock debugging in opr])
 fi
 
-dnl Don't build PAM on IRIX; the interface doesn't work for us.
 if test "$ac_cv_header_security_pam_modules_h" = yes -a "$enable_pam" = yes; then
-        case $AFS_SYSNAME in
-        sgi_*)
-                HAVE_PAM="no"
-                ;;
-        *)
-	        HAVE_PAM="yes"
-                ;;
-        esac
+	HAVE_PAM="YES"
 else
 	HAVE_PAM="no"
 fi
