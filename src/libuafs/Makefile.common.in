@@ -183,7 +183,7 @@ MODULE_INCLUDE = -I. -I.. -I../nfs \
 
 # Build rules - CC and CFLAGS are defined in system specific MakefileProtos.
 
-all: ${TOP_LIBDIR}/libjuafs.a ${TOP_LIBDIR}/libuafs.a libuafs.la \
+all: ${TOP_LIBDIR}/libuafs.a \
 	${TOP_LIBDIR}/libuafs_pic.a linktest @LIBUAFS_BUILD_PERL@
 
 ${TOP_LIBDIR}/libuafs.a: libuafs.a
@@ -191,9 +191,6 @@ ${TOP_LIBDIR}/libuafs.a: libuafs.a
 
 ${TOP_LIBDIR}/libuafs_pic.a: libuafs_pic.la
 	${INSTALL_DATA} .libs/libuafs_pic.a $@
-
-${TOP_LIBDIR}/libjuafs.a: libuafs.a
-	${INSTALL_DATA} libuafs.a $@
 
 libuafs.la: h $(LT_objs)
 	$(LT_LDLIB_shlib) $(LT_objs)
@@ -506,7 +503,6 @@ clean:
 install: libuafs.a libuafs_pic.la @LIBUAFS_BUILD_PERL@
 	${INSTALL} -d ${DESTDIR}${libdir}
 	${INSTALL_DATA} libuafs.a ${DESTDIR}${libdir}/libuafs.a
-	${INSTALL_DATA} libuafs.a ${DESTDIR}${libdir}/libjuafs.a
 	${INSTALL_DATA} .libs/libuafs_pic.a ${DESTDIR}${libdir}/libuafs_pic.a
 	if [ "x$(LIBUAFS_BUILD_PERL)" != "x" ] ; then \
 		${INSTALL} -d ${DESTDIR}${libdir}/perl; \
@@ -537,7 +533,6 @@ dest: $(TOP_INCDIR)/afs/param.h $(TOP_INCDIR)/afs/stds.h \
 	${INSTALL_DATA} $(TOP_SRCDIR)/afs/UKERNEL/afs_usrops.h \
 		${DEST}/root.perf/include/afs/afs_usrops.h
 	${INSTALL_DATA} libuafs.a ${DEST}/root.perf/lib/libuafs.a
-	${INSTALL_DATA} libuafs.a ${DEST}/root.perf/lib/libjuafs.a
 	${INSTALL_DATA} .libs/libuafs_pic.a ${DEST}/root.perf/lib/libuafs_pic.a
 	if [ "x$(LIBUAFS_BUILD_PERL)" != "x" ] ; then \
 		${INSTALL} -d ${DEST}/root.perf/lib/perl; \

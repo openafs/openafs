@@ -150,7 +150,7 @@ UTILADMINLIB = ${TOP_LIBDIR}/libafsadminutil.a
 CLIENTADMINLIB = ${TOP_LIBDIR}/libclientadmin.a
 
 LIBJAFS_LIBS =\
-	${TOP_LIBDIR}/libjuafs.a \
+	${TOP_LIBDIR}/libuafs.a \
 	${TOP_LIBDIR}/libafsutil.a \
 	-lresolv \
 	-lpthread

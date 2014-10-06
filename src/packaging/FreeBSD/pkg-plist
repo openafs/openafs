@@ -206,7 +206,6 @@ lib/libuafs.a
 lib/libubik.a
 lib/libafsrpc.a
 lib/pam_afs.krb.so.1
-lib/libjuafs.a
 lib/pam_afs.so.1
 lib/libafsrpc_pic.a
 lib/libafsrpc.so.1.5
