@@ -28,7 +28,7 @@ and C<125>. The default value of C<0> produces only a few messages.
 
 =item B<-p> <I<number of processes>>
 
-Sets the number of threads (or LWPs) to run. Provide a positive integer. 
+Sets the number of threads to run. Provide a positive integer.
 The File Server creates and uses five threads for special purposes, 
 in addition to the number specified (but if this argument specifies 
 the maximum possible number, the File Server automatically uses five 
@@ -337,8 +337,6 @@ Setting this option to C<0> means to interrupt clients immediately if a
 volume is waiting to go offline. Setting this option to C<-1> means to
 wait forever for client requests to finish. The default value is C<-1>.
 
-For the LWP fileserver, the only valid value for this option is C<-1>.
-
 =item B<-offline-shutdown-timeout> <I<timeout in seconds>>
 
 This option behaves similarly to B<-offline-timeout> but applies to
@@ -355,8 +353,6 @@ shutdown process.
 If B<-offline-timeout> is specified, the default value of
 B<-offline-shutdown-timeout> is the value specified for
 B<-offline-timeout>. Otherwise, the default value is C<-1>.
-
-For the LWP fileserver, the only valid value for this option is C<-1>.
 
 =item B<-sync> <always | onclose | none>
 

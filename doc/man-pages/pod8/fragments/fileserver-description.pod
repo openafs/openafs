@@ -18,7 +18,7 @@ machine sizes.
 
 =item *
 
-The maximum number of lightweight processes (LWPs) or pthreads 
+The maximum number of threads
 the File Server uses to handle requests for data; corresponds to the 
 B<-p> argument. The File Server always uses a minimum of 32 KB of 
 memory for these processes.
@@ -64,7 +64,7 @@ The default values are:
 
   Parameter (Argument)               Small (-S)     Medium   Large (-L)
   ---------------------------------------------------------------------
-  Number of LWPs (-p)                        6           9          128
+  Number of threads (-p)                     6           9          128
   Number of cached dir blocks (-b)          70          90          120
   Number of cached large vnodes (-l)       200         400          600
   Number of cached small vnodes (-s)       200         400          600
