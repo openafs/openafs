@@ -134,7 +134,6 @@ afs_int32 implicitAdminRights = PRSFS_LOOKUP;	/* The ADMINISTER right is
 						 * already implied */
 afs_int32 readonlyServer = 0;
 
-int stack = 24;
 int stackSize = 24000;
 int fiveminutes = 300;		/* 5 minutes.  Change this for debugging only */
 int CurrentConnections = 0;
@@ -955,7 +954,6 @@ enum optionsList {
     OPT_vlruinterval,
     OPT_vlrumax,
     OPT_unsafe_nosalvage,
-    OPT_stack,
     OPT_cbwait,
     OPT_novbc,
     OPT_auditlog,
@@ -1102,8 +1100,6 @@ ParseArgs(int argc, char *argv[])
 #endif
 
     /* unrecommend options - should perhaps be CMD_HIDE */
-    cmd_AddParmAtOffset(opts, OPT_stack, "-k", CMD_SINGLE, CMD_OPTIONAL,
-			"stack size");
     cmd_AddParmAtOffset(opts, OPT_cbwait, "-w", CMD_SINGLE, CMD_OPTIONAL,
 			"callback wait interval");
     cmd_AddParmAtOffset(opts, OPT_novbc, "-novbc", CMD_SINGLE, CMD_FLAG,
@@ -1340,7 +1336,6 @@ ParseArgs(int argc, char *argv[])
     cmd_OptionAsFlag(opts, OPT_unsafe_nosalvage, &unsafe_attach);
 #endif /* AFS_DEMAND_ATTACH_FS */
 
-    cmd_OptionAsInt(opts, OPT_stack, &stack);
     cmd_OptionAsInt(opts, OPT_cbwait, &fiveminutes);
     cmd_OptionAsFlag(opts, OPT_novbc, &novbc);
 

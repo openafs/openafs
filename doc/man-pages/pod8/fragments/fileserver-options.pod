@@ -206,11 +206,6 @@ server machine. Combine this flag with any option except the B<-L> flag;
 omit both flags to set values suitable for a medium-sized file server
 machine.
 
-=item B<-k> <I<stack size>>
-
-Sets the LWP stack size in units of 1 kilobyte. Do not use this argument,
-and in particular do not specify a value less than the default of C<24>.
-
 =item B<-realm> <I<Kerberos realm name>>
 
 Defines the Kerberos realm name for the File Server to use. If this
