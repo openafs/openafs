@@ -66,9 +66,8 @@ dest: libafshcrypto.la libafshcrypto.a
 
 clean:
 	$(LT_CLEAN)
-	$(RM) -f ${OBJECTS} rand-fortuna_lwp.o \
-		libafshcrypto.a libafshcrypto_lwp.a libafshcrypto.exp \
-		test_cipher test_cipher.o
+	$(RM) -f *.o libafshcrypto.a libafshcrypto_lwp.a libafshcrypto.exp \
+		test_cipher
 
 $(LT_objs): $(HEADERS)
 

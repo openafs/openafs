@@ -7,7 +7,6 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-include @TOP_OBJDIR@/src/config/Makefile.libtool
 include @TOP_OBJDIR@/src/config/Makefile.pthread
 top_builddir=@top_builddir@
 
@@ -30,16 +29,16 @@ all test:  fulltest owntest idtest getinitparams
 install:
 dest:
 
-fulltest: fulltest.lo
-	$(LT_LDRULE_static) $@.lo $(LT_deps) $(LT_libs)
-owntest: owntest.lo
-	$(LT_LDRULE_static) $@.lo $(LT_deps) $(LT_libs)
-idtest: idtest.lo
-	$(LT_LDRULE_static) $@.lo $(LT_deps) $(LT_libs)
-getinitparams: getinitparams.lo
-	$(LT_LDRULE_static) $@.lo $(LT_deps) $(LT_libs)
+fulltest: fulltest.o
+	$(LT_LDRULE_static) $@.o $(LT_deps) $(LT_libs)
+owntest: owntest.o
+	$(LT_LDRULE_static) $@.o $(LT_deps) $(LT_libs)
+idtest: idtest.o
+	$(LT_LDRULE_static) $@.o $(LT_deps) $(LT_libs)
+getinitparams: getinitparams.o
+	$(LT_LDRULE_static) $@.o $(LT_deps) $(LT_libs)
 
 clean:
 	$(LT_CLEAN)
-	$(RM) -f fulltest owntest idtest getinitparams
+	$(RM) -f *.o fulltest owntest idtest getinitparams
 

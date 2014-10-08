@@ -33,4 +33,5 @@ uuid-t: uuid-t.o
 	$(LT_LDRULE_static) uuid-t.o ../tap/libtap.a $(LIBS) $(XLIBS)
 
 clean distclean:
+	$(LT_CLEAN)
 	$(RM) -f $(tests) *.o core

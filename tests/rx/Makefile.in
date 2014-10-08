@@ -19,5 +19,5 @@ event-t: event-t.o $(LIBS)
 install:
 
 clean distclean:
-	$(LT_clean)
+	$(LT_CLEAN)
 	$(RM) -f $(tests) *.o core
