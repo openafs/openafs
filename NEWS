@@ -16,7 +16,7 @@ OpenAFS 1.6.10
 
     * Avoid potentially erratic behaviour under certain error conditions by
       either avoiding or at least not ignoring them, in various places (11008
-      11010..11065 11112 11148 11196)
+      11010..11065 11112 11148 11196 11530)
 
   FreeBSD
 
@@ -60,7 +60,7 @@ OpenAFS 1.6.10
 
   Linux clients
 
-    * Support kernels up to at least 3.16 (11308 11309)
+    * Support kernels up to 3.16 (11308 11309)
 
     * Fixed a regression introduced in OpenAFS release 1.6.6 that made
       checking for existing write locks incorrectly fail on readonly volumes
