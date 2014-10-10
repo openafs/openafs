@@ -96,7 +96,7 @@ extern int uss_perr;
 
 static char Template[300] = "uss.template";	/*Default name */
 
-extern FILE *yyin, *yyout;	/*YACC input & output files */
+extern FILE *uss_yyin, *uss_yyout;	/*YACC input & output files */
 extern int doUnlog;
 int uss_BulkExpires = 0;
 int local_Cell = 1;
@@ -1652,15 +1652,15 @@ DoAdd(void)
      * Open up the template file before doing any real processing,
      * so we can quit early should it not be found.
      */
-    if (yyin == NULL) {
-	if ((yyin = uss_procs_FindAndOpen(Template)) == NULL) {
+    if (uss_yyin == NULL) {
+	if ((uss_yyin = uss_procs_FindAndOpen(Template)) == NULL) {
 	    fprintf(stderr, "%s: ** Can't open template file '%s'\n",
 		    uss_whoami, Template);
 	    return (-1);
 	}
-	yyout = fopen("/dev/null", "w");
+	uss_yyout = fopen("/dev/null", "w");
     } else
-	rewind(yyin);
+	rewind(uss_yyin);
 
     /*
      * Add the new user to the Protection DB.
@@ -1803,7 +1803,7 @@ main(int argc, char *argv[])
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
     strcpy(uss_whoami, argv[0]);
-    yyin = NULL;
+    uss_yyin = NULL;
 
     uss_fs_InBuff = malloc(USS_FS_MAX_SIZE);	/*Cache Manager input buff */
     uss_fs_OutBuff = malloc(USS_FS_MAX_SIZE);	/*Cache Manager output buff */

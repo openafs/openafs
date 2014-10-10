@@ -53,6 +53,7 @@ lex.yy.o : lex.yy.c y.tab.c
 
 lex.yy.c : lex.l
 	${LEX} ${srcdir}/lex.l
+	sed -f ${srcdir}/yy-lsed -i.orig lex.yy.c
 
 y.tab.o : y.tab.c
 
@@ -74,6 +75,7 @@ uss_fs.c: uss_fs.h
 
 y.tab.c : grammar.y
 	${YACC} -d ${srcdir}/grammar.y
+	sed -f ${srcdir}/yy-lsed -i.orig y.tab.h y.tab.c
 
 #
 # Installation targets
@@ -90,6 +92,6 @@ dest:
 # Misc. targets
 #
 clean:
-	$(RM) -f *.o uss y.tab.c y.tab.h lex.yy.c core AFS_component_version_number.c
+	$(RM) -f *.o uss y.tab.c y.tab.h lex.yy.c core AFS_component_version_number.c *.orig
 
 include ../config/Makefile.version
