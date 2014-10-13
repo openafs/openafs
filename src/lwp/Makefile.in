@@ -57,28 +57,34 @@ liblwpcompat_pic.la: $(LT_objs)
 	$(LT_LDLIB_pic) $(LT_objs)
 
 # This is required so sgi_64+ does not try to build this file.
-process.s:
-	@echo Nothing to be done for process.s
+process.default.s:
+	@echo Nothing to be done for process.default.s
 
 # Making process.o for $(SYS_NAME)
-process.o	: process.s process.i386.s process.amd64.s process.c lwp.o
+# The files "process.s" and "process.S" may be used internally,
+# but will be removed after building the .o
+process.o	: process.default.s process.i386.s process.amd64.s process.c lwp.o
 	@set -x; case "$(SYS_NAME)" in \
 	sun4c_51 | sun4c_52 | sun4m_51 | sun4m_52 | sun4c_53 | sun4m_53  | sun4_53 | sun4_52 | sun4_54 | sun4c_54 | sun4m_54 | sun4x_5* | arm_linux* ) \
-		$(PATH_CPP) -P -I${TOP_INCDIR} ${srcdir}/process.s > process.ss; \
-		${AS} process.ss -o process.o; \
-			$(RM) process.ss ;; \
+		$(PATH_CPP) -P -I${TOP_INCDIR} ${srcdir}/process.default.s > process.s; \
+		${AS} process.s -o process.o; \
+			$(RM) process.s ;; \
 	sgi_5* ) \
-		$(CCOBJ) ${LWP_DBG} ${LWP_OPTMZ} -c -I${TOP_INCDIR} -KPIC -G0  ${srcdir}/process.s;; \
+		cp ${srcdir}/process.default.s process.s ; \
+		$(CCOBJ) ${LWP_DBG} ${LWP_OPTMZ} -c -I${TOP_INCDIR} -KPIC -G0  process.s; \
+		$(RM) -f process.s ;;\
 	sgi_61 | sgi_62 | sgi_63 ) \
-		$(CCOBJ) ${LWP_DBG} ${LWP_OPTMZ} -c ${XCFLAGS} ${ARCHFLAGS} -I${TOP_INCDIR} -KPIC -G0  ${srcdir}/process.s;; \
+		cp ${srcdir}/process.default.s process.s ; \
+		$(CCOBJ) ${LWP_DBG} ${LWP_OPTMZ} -c ${XCFLAGS} ${ARCHFLAGS} -I${TOP_INCDIR} -KPIC -G0  process.s; \
+		$(RM) -f process.s ;;\
 	s390_*) \
-		$(PATH_CPP) -P -I${TOP_INCDIR} ${srcdir}/process.s390.s >process.ss; \
-		${AS} -ahlns process.ss -o process.o >process.lst; \
-		$(RM) process.ss ;; \
+		$(PATH_CPP) -P -I${TOP_INCDIR} ${srcdir}/process.s390.s >process.s; \
+		${AS} -ahlns process.s -o process.o >process.lst; \
+		$(RM) process.s ;; \
 	s390x_*) \
-		$(PATH_CPP) -P -I${TOP_INCDIR} ${srcdir}/process.s390x.s >process.ss; \
-		${AS} -ahlns process.ss -o process.o >process.lst; \
-		$(RM) process.ss ;; \
+		$(PATH_CPP) -P -I${TOP_INCDIR} ${srcdir}/process.s390x.s >process.s; \
+		${AS} -ahlns process.s -o process.o >process.lst; \
+		$(RM) process.s ;; \
 	*_darwin* ) \
 		$(RM) -f process.o ; \
 		CURRENTBUILDARCH="${ARCHFLAGS}"; \
@@ -98,19 +104,19 @@ process.o	: process.s process.i386.s process.amd64.s process.c lwp.o
 			fi ; \
 		fi ; \
 		if [ -n "$${armv6}" ] ; then \
-			$(CC) -x assembler-with-cpp -c -arch armv6 -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.s -o "$${armv6}" ; \
+			$(CC) -x assembler-with-cpp -c -arch armv6 -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.default.s -o "$${armv6}" ; \
 			if [ -z "$${i386}" -a -z "$${amd64}" -a -z "$${ppc}" -a -z "$${armv7}" ] ; then \
 				${MV} "$${armv6}" process.o ; \
 			fi ; \
 		fi ; \
 		if [ -n "$${armv7}" ] ; then \
-			$(CC) -x assembler-with-cpp -c -arch armv7 -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.s -o "$${armv7}" ; \
+			$(CC) -x assembler-with-cpp -c -arch armv7 -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.default.s -o "$${armv7}" ; \
 			if [ -z "$${i386}" -a -z "$${amd64}" -a -z "$${ppc}" -a -z "$${armv6}" ] ; then \
 				${MV} "$${armv7}" process.o ; \
 			fi ; \
 		fi ; \
 		if [ -n "$${ppc}" ] ; then \
-			$(CC) ${LWP_DBG} ${LWP_OPTMZ} -c -arch ppc -I${TOP_INCDIR} ${srcdir}/process.s -o "$${ppc}" ; \
+			$(CC) ${LWP_DBG} ${LWP_OPTMZ} -c -arch ppc -I${TOP_INCDIR} ${srcdir}/process.default.s -o "$${ppc}" ; \
 			if [ -z "$${i386}" -a -z "$${amd64}" -a -z "$${armv6}" -a -z "$${armv7}" ] ; then \
 				${MV} "$${ppc}" process.o ; \
 			fi ; \
@@ -132,18 +138,18 @@ process.o	: process.s process.i386.s process.amd64.s process.c lwp.o
 		fi ;; \
 	i386_*bsd*) \
 		cp ${srcdir}/process.i386.s process.S ; \
-		${CCOBJ} -DIGNORE_STDS_H -E -I${srcdir} -I${TOP_INCDIR} process.S > process.ss ; \
-		${AS} process.ss -o process.o ;  \
-		$(RM) -f process.S ;;\
+		${CCOBJ} -DIGNORE_STDS_H -E -I${srcdir} -I${TOP_INCDIR} process.S > process.s ; \
+		${AS} process.s -o process.o ;  \
+		$(RM) -f process.s process.S ;;\
 	amd64_*bsd*) \
 		cp ${srcdir}/process.amd64.s process.S ; \
-		${CCOBJ} -DIGNORE_STDS_H -E -I${srcdir} -I${TOP_INCDIR} process.S > process.ss ; \
-		${AS} process.ss -o process.o ;  \
-		$(RM) -f process.S ;;\
+		${CCOBJ} -DIGNORE_STDS_H -E -I${srcdir} -I${TOP_INCDIR} process.S > process.s ; \
+		${AS} process.s -o process.o ;  \
+		$(RM) -f process.s process.S ;;\
 	ncrx86_* | sunx86_58 | sunx86_59 ) \
-		$(PATH_CPP) -P -D__sun -D__i386 -DIGNORE_STDS_H -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.i386.s > process.ss; \
-		${AS} -o process.o process.ss; \
-		$(RM) process.ss ;; \
+		$(PATH_CPP) -P -D__sun -D__i386 -DIGNORE_STDS_H -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.i386.s > process.s; \
+		${AS} -o process.o process.s; \
+		$(RM) process.s ;; \
 	sunx86_510 | sunx86_511) \
 		if [ "${ASFLAGS}" = "-m64" ] ; then \
 			CURRENTBUILDARCH=amd64 ; \
@@ -151,28 +157,28 @@ process.o	: process.s process.i386.s process.amd64.s process.c lwp.o
 			XCPPFLAGS="-D__i386" ; \
 			CURRENTBUILDARCH=i386 ; \
 		fi ; \
-		$(PATH_CPP) $${XCPPFLAGS} -P -D__sun -DIGNORE_STDS_H -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.$${CURRENTBUILDARCH}.s > process.ss ; \
-		${AS} ${ASFLAGS} -o process.o process.ss ; \
-		$(RM) process.ss ;; \
+		$(PATH_CPP) $${XCPPFLAGS} -P -D__sun -DIGNORE_STDS_H -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.$${CURRENTBUILDARCH}.s > process.s ; \
+		${AS} ${ASFLAGS} -o process.o process.s ; \
+		$(RM) process.s ;; \
 	alpha_nbsd* ) \
-		$(PATH_CPP) -DASSEMBLER -P -I${TOP_INCDIR} ${srcdir}/process.s > process.ss; \
-		${AS} -o process.o process.ss; \
-		$(RM) process.ss ;; \
+		$(PATH_CPP) -DASSEMBLER -P -I${TOP_INCDIR} ${srcdir}/process.default.s > process.s; \
+		${AS} -o process.o process.s; \
+		$(RM) process.s ;; \
 	hp* | *_linux* | *_umlinux* | sgi_64 | sgi_65 ) \
 		$(AFS_CCRULE_NOQ) -c ${srcdir}/process.c;; \
 	alpha_osf1 | alpha_osf20 |  alpha_osf30 | alpha_osf32 | alpha_osf32c | alpha_dux?? ) \
-		${AS} -v  -P -DOSF -I${TOP_INCDIR} -DASSEMBLER ${srcdir}/process.s; \
+		${AS} -v  -P -DOSF -I${TOP_INCDIR} -DASSEMBLER ${srcdir}/process.default.s; \
 		${AS} -v process.i -o process.o;; \
 	ia64_hpux11* | hp_ux11* ) \
 		$(AFS_CCRULE_NOQ) -c ${srcdir}/process.c;; \
 	i386_*) \
-		$(PATH_CPP) -P -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.i386.s > process.ss; \
-		${AS} process.ss -o process.o; \
-		$(RM) process.ss ;; \
+		$(PATH_CPP) -P -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.i386.s > process.s; \
+		${AS} process.s -o process.o; \
+		$(RM) process.s ;; \
 	*) \
-		$(PATH_CPP) -P -I${TOP_INCDIR} ${srcdir}/process.s > process.ss; \
-		${AS} process.ss -o process.o; \
-		$(RM) process.ss ;; \
+		$(PATH_CPP) -P -I${TOP_INCDIR} ${srcdir}/process.default.s > process.s; \
+		${AS} process.s -o process.o; \
+		$(RM) process.s ;; \
 	esac
 
 iomgr.o		: iomgr.c lwp.h timer.h
