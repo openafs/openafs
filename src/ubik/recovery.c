@@ -874,7 +874,7 @@ DoProbe(struct ubik_server *server)
 {
     struct rx_connection *conns[UBIK_MAX_INTERFACE_ADDR];
     struct rx_connection *connSuccess = 0;
-    int i, j, success_i = -1;
+    int i, nconns, success_i = -1;
     afs_uint32 addr;
     char buffer[32];
     char hoststr[16];
@@ -893,9 +893,10 @@ DoProbe(struct ubik_server *server)
 	}
     }
     UBIK_ADDR_UNLOCK;
-    opr_Assert(i);			/* at least one interface address for this server */
+    nconns = i;
+    opr_Assert(nconns);			/* at least one interface address for this server */
 
-    multi_Rx(conns, i) {
+    multi_Rx(conns, nconns) {
 	multi_DISK_Probe();
 	if (!multi_error) {	/* first success */
 	    success_i = multi_i;
@@ -928,9 +929,9 @@ DoProbe(struct ubik_server *server)
     }
 
     /* Destroy all connections except the one on which we succeeded */
-    for (j = 0; j < i; j++)
-	if (conns[j] != connSuccess)
-	    rx_DestroyConnection(conns[j]);
+    for (i = 0; i < nconns; i++)
+	if (conns[i] != connSuccess)
+	    rx_DestroyConnection(conns[i]);
 
     if (!connSuccess)
 	ubik_dprint("ubik:server %s still down\n",
