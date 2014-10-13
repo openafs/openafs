@@ -624,7 +624,8 @@ out:
  * 	structure which should be freed by the caller.
  * @param[out[ userPtr
  * 	A string containing the principal of the user to whom the token was
- * 	issued. This is a malloc'd block which should be freed by the caller.
+ * 	issued. This is a malloc'd block which should be freed by the caller,
+ *      if set.
  *
  * @returns
  * 	0 on success, an error value upon failure
@@ -632,7 +633,7 @@ out:
 static int
 rxkad_build_native_token(krb5_context context, krb5_creds *v5cred,
 			 struct ktc_token **tokenPtr, char **userPtr) {
-    char username[BUFSIZ];
+    char username[BUFSIZ]="";
     struct ktc_token *token;
 #ifdef HAVE_NO_KRB5_524
     char *p;
@@ -657,14 +658,15 @@ rxkad_build_native_token(krb5_context context, krb5_creds *v5cred,
 				      (char *) &k4inst,
 				      (char *) &k4realm);
     if (status) {
-	afs_com_err(progname, status, "while converting principal "
-		    "to Kerberos V4 format");
-	return AKLOG_KERBEROS;
-    }
-    strcpy (username, k4name);
-    if (k4inst[0]) {
-	strcat (username, ".");
-	strcat (username, k4inst);
+	if (!noprdb)
+	    afs_com_err(progname, status,
+			"while converting principal to Kerberos V4 format");
+    } else {
+	strcpy (username, k4name);
+	if (k4inst[0]) {
+	    strcat (username, ".");
+	    strcat (username, k4inst);
+	}
     }
 #else
     len = min(get_princ_len(context, v5cred->client, 0),
@@ -701,8 +703,8 @@ rxkad_build_native_token(krb5_context context, krb5_creds *v5cred,
     memcpy(token->ticket, v5cred->ticket.data, token->ticketLen);
 
     *tokenPtr = token;
-    *userPtr = strdup(username);
-
+    if (username[0] != '\0')
+	*userPtr = strdup(username);
     return 0;
 }
 
@@ -805,7 +807,8 @@ rxkad_get_converted_token(krb5_context context, krb5_creds *v5cred,
  * 	be freed by the caller.
  * @parma[out] authuser
  * 	A string containing the principal of the user to whom the token was
- * 	issued. This is a malloc'd block which should be freed by the caller.
+ * 	issued. This is a malloc'd block which should be freed by the caller,
+ *	if set.
  * @param[out] foreign
  * 	Whether the user is considered as 'foreign' to the realm of the cell.
  *
@@ -839,7 +842,7 @@ rxkad_get_token(krb5_context context, struct afsconf_cell *cell, char *realm,
 
     /* We now have the username, plus the realm name, so stitch them together
      * to give us the name that the ptserver will know the user by */
-    if (realmUsed == NULL) {
+    if (realmUsed == NULL || username == NULL) {
 	*authuser = username;
 	username = NULL;
 	*foreign = 0;
@@ -893,7 +896,9 @@ set_kernel_token(struct afsconf_cell *cell, char *username,
 {
     struct ktc_principal client, server;
 
-    strncpy(client.name, username, MAXKTCNAMELEN - 1);
+    strncpy(client.name,
+	    username ? username : "",
+	    MAXKTCNAMELEN - 1);
     strcpy(client.instance, "");
     strncpy(client.cell, cell->name, MAXKTCREALMLEN - 1);
 
@@ -1003,7 +1008,10 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 	noprdb = 1;
 #endif
 
-	if (noprdb) {
+	if (username == NULL) {
+	    afs_dprintf("Not resolving name to id\n");
+	}
+	else if (noprdb) {
 	    afs_dprintf("Not resolving name %s to id (-noprdb set)\n", username);
 	}
 	else {
@@ -1082,9 +1090,14 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
 	    }
 	}
 
-	afs_dprintf("Set username to %s\n", username);
+	if (username) {
+	    afs_dprintf("Set username to %s\n", username);
 
-	afs_dprintf("Setting tokens. %s @ %s \n", username, cellconf.name);
+	    afs_dprintf("Setting tokens. %s @ %s\n",
+			username, cellconf.name);
+	} else {
+	    afs_dprintf("Setting tokens for cell %s\n", cellconf.name);
+	}
 
 #ifndef AFS_AIX51_ENV
 	/* on AIX 4.1.4 with AFS 3.4a+ if a write is not done before
