@@ -1012,11 +1012,6 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 			RXAFS_BulkStatus(rxconn, &fidParm, &statParm,
 					 &cbParm, &volSync);
 		    RX_AFS_GLOCK();
-		} else if (!code) {
-		    /* The InlineBulkStatus call itself succeeded, but we
-		     * may have failed to stat the first entry. Use the error
-		     * from the first entry for processing. */
-		    code = (&statsp[0])->errorCode;
 		}
 	    } else {
 		RX_AFS_GUNLOCK();
@@ -1032,8 +1027,13 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	    }
 	} else
 	    code = -1;
+	/* make sure we give afs_Analyze a chance to retry,
+	 * but if the RPC succeeded we may have entries to merge.
+	 * if we wipe code with one entry's status we get bogus failures.
+	 */
     } while (afs_Analyze
-	     (tcp, rxconn, code, &adp->f.fid, areqp, AFS_STATS_FS_RPCIDX_BULKSTATUS,
+	     (tcp, rxconn, code ? code : (&statsp[0])->errorCode,
+	      &adp->f.fid, areqp, AFS_STATS_FS_RPCIDX_BULKSTATUS,
 	      SHARED_LOCK, NULL));
 
     /* now, if we didnt get the info, bail out. */
