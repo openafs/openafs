@@ -1117,32 +1117,6 @@ rxi_AllocPacketNoLock(int class)
 
     RX_TS_INFO_GET(rx_ts_info);
 
-#ifdef KERNEL
-    if (rxi_OverQuota(class)) {
-	rxi_NeedMorePackets = TRUE;
-        if (rx_stats_active) {
-            switch (class) {
-            case RX_PACKET_CLASS_RECEIVE:
-                rx_atomic_inc(rx_stats.receivePktAllocFailures);
-                break;
-            case RX_PACKET_CLASS_SEND:
-                rx_atomic_inc(&rx_stats.sendPktAllocFailures);
-                break;
-            case RX_PACKET_CLASS_SPECIAL:
-                rx_atomic_inc(&rx_stats.specialPktAllocFailures);
-                break;
-            case RX_PACKET_CLASS_RECV_CBUF:
-                rx_atomic_inc(&rx_stats.receiveCbufPktAllocFailures);
-                break;
-            case RX_PACKET_CLASS_SEND_CBUF:
-                rx_atomic_inc(&rx_stats.sendCbufPktAllocFailures);
-                break;
-            }
-	}
-        return (struct rx_packet *)0;
-    }
-#endif /* KERNEL */
-
     if (rx_stats_active)
         rx_atomic_inc(&rx_stats.packetRequests);
     if (opr_queue_IsEmpty(&rx_ts_info->_FPQ.queue)) {
