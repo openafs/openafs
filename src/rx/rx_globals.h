@@ -235,7 +235,7 @@ EXT struct opr_queue rx_freePacketQueue;
 EXT afs_kmutex_t rx_freePktQ_lock;
 #endif /* RX_ENABLE_LOCKS */
 
-#if defined(AFS_PTHREAD_ENV)
+#if defined(AFS_PTHREAD_ENV) && !defined(KERNEL)
 #define RX_ENABLE_TSFPQ
 EXT int rx_TSFPQGlobSize GLOBALSINIT(3); /* number of packets to transfer between global and local queues in one op */
 EXT int rx_TSFPQLocalMax GLOBALSINIT(15); /* max number of packets on local FPQ before returning a glob to the global pool */
@@ -417,7 +417,7 @@ EXT int rx_TSFPQMaxProcs GLOBALSINIT(0); /* max number of threads expected */
         (rx_ts_info_p)->_FPQ.checkin_ops++; \
         (rx_ts_info_p)->_FPQ.checkin_xfer += (num_transfer); \
     } while(0)
-#endif /* AFS_PTHREAD_ENV */
+#endif /* AFS_PTHREAD_ENV && !KERNEL */
 
 /* Number of free packets */
 EXT int rx_nFreePackets GLOBALSINIT(0);

@@ -10,7 +10,7 @@
 #ifndef _AFS_PTHREAD_GLOCK_H_
 #define _AFS_PTHREAD_GLOCK_H_
 
-#ifdef AFS_PTHREAD_ENV
+#if defined(AFS_PTHREAD_ENV) && !defined(KERNEL)
 #include <pthread.h>
 #include <afs/opr.h>
 
@@ -40,11 +40,11 @@ extern int pthread_recursive_mutex_unlock(pthread_recursive_mutex_p);
 #define UNLOCK_GLOBAL_MUTEX \
     opr_Verify(pthread_recursive_mutex_unlock(&grmutex)==0)
 
-#else
+#else /* AFS_PTHREAD_ENV && !KERNEL */
 
 #define LOCK_GLOBAL_MUTEX
 #define UNLOCK_GLOBAL_MUTEX
 
-#endif /* AFS_PTHREAD_ENV */
+#endif /* AFS_PTHREAD_ENV && !KERNEL */
 
 #endif /* _AFS_PTHREAD_GLOCK_H_ */

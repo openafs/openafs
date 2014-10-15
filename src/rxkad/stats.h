@@ -20,7 +20,7 @@
    live with the nearly accurate aggregation (e.g. you might miss a few increments,
    but the resulting aggregation should be almost correct). */
 
-#ifdef AFS_PTHREAD_ENV
+#if defined(AFS_PTHREAD_ENV) && !defined(KERNEL)
 typedef struct rxkad_stats_t {
 #else
 struct rxkad_stats {
@@ -47,19 +47,19 @@ struct rxkad_stats {
     afs_uint32 clientObjects;
     afs_uint32 serverObjects;
     long spares[8];
-#ifdef AFS_PTHREAD_ENV
+#if defined(AFS_PTHREAD_ENV) && !defined(KERNEL)
     struct rxkad_stats_t * next;
     struct rxkad_stats_t * prev;
 } rxkad_stats_t;			/* put these here for convenience */
-#else /* AFS_PTHREAD_ENV */
+#else /* AFS_PTHREAD_ENV && !KERNEL */
 };
 #ifdef AFS_NT40_ENV
 struct rxkad_stats rxkad_stats;         /* put this here for convenience */
 #endif
-#endif /* AFS_PTHREAD_ENV */
+#endif /* AFS_PTHREAD_ENV && !KERNEL*/
 
 
-#ifdef AFS_PTHREAD_ENV
+#if defined(AFS_PTHREAD_ENV) && !defined(KERNEL)
 struct rxkad_global_stats {
     rxkad_stats_t * first;
     rxkad_stats_t * last;
@@ -128,13 +128,13 @@ extern int rxkad_stats_agg(rxkad_stats_t *);
 #define ADD_RXKAD_STATS(stats_elem, inc_value)
 #define SUB_RXKAD_STATS(stats_elem, dec_value)
 #endif /* AFS_OBSD38_ENV */
-#else /* AFS_PTHREAD_ENV */
+#else /* AFS_PTHREAD_ENV && !KERNEL*/
 #define INC_RXKAD_STATS(stats_elem) rxkad_stats.stats_elem++
 #define DEC_RXKAD_STATS(stats_elem) rxkad_stats.stats_elem--
 #define ADD_RXKAD_STATS(stats_elem, inc_value) rxkad_stats.stats_elem += (inc_value)
 #define SUB_RXKAD_STATS(stats_elem, dec_value) rxkad_stats.stats_elem -= (dec_value)
 #define GET_RXKAD_STATS(stats) memcpy((stats), &rxkad_stats, sizeof(rxkad_stats))
-#endif /* AFS_PTHREAD_ENV */
+#endif /* AFS_PTHREAD_ENV && !KERNEL */
 
 
 #if defined(AFS_NT40_ENV) && defined(AFS_PTHREAD_ENV)
@@ -145,9 +145,9 @@ extern int rxkad_stats_agg(rxkad_stats_t *);
 #define RXKAD_STATS_DECLSPEC extern
 #endif
 
-#ifdef AFS_PTHREAD_ENV
+#if defined(AFS_PTHREAD_ENV) && !defined(KERNEL)
 RXKAD_STATS_DECLSPEC struct rxkad_global_stats rxkad_global_stats;
-#else /* AFS_PTHREAD_ENV */
+#else /* AFS_PTHREAD_ENV && !KERNEL */
 RXKAD_STATS_DECLSPEC struct rxkad_stats rxkad_stats;
 #endif
 

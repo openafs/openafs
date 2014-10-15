@@ -256,6 +256,7 @@ extern afs_kmutex_t rx_packets_mutex;
 extern afs_kmutex_t rx_refcnt_mutex;
 extern afs_kmutex_t des_init_mutex;
 extern afs_kmutex_t des_random_mutex;
+#ifndef KERNEL
 extern afs_kmutex_t rx_clock_mutex;
 extern afs_kmutex_t rxi_connCacheMutex;
 extern afs_kmutex_t event_handler_mutex;
@@ -265,6 +266,7 @@ extern afs_kmutex_t rx_if_mutex;
 
 extern afs_kcondvar_t rx_event_handler_cond;
 extern afs_kcondvar_t rx_listener_cond;
+#endif /* !KERNEL */
 
 static afs_kmutex_t epoch_mutex;
 static afs_kmutex_t rx_init_mutex;
@@ -274,24 +276,28 @@ static afs_kmutex_t rx_rpc_stats;
 static void
 rxi_InitPthread(void)
 {
-    MUTEX_INIT(&rx_clock_mutex, "clock", MUTEX_DEFAULT, 0);
-    MUTEX_INIT(&rx_stats_mutex, "stats", MUTEX_DEFAULT, 0);
-    MUTEX_INIT(&rx_atomic_mutex, "atomic", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_quota_mutex, "quota", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_pthread_mutex, "pthread", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_packets_mutex, "packets", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_refcnt_mutex, "refcnts", MUTEX_DEFAULT, 0);
-    MUTEX_INIT(&epoch_mutex, "epoch", MUTEX_DEFAULT, 0);
-    MUTEX_INIT(&rx_init_mutex, "init", MUTEX_DEFAULT, 0);
-    MUTEX_INIT(&event_handler_mutex, "event handler", MUTEX_DEFAULT, 0);
+#ifndef KERNEL
+    MUTEX_INIT(&rx_clock_mutex, "clock", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rxi_connCacheMutex, "conn cache", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&event_handler_mutex, "event handler", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&listener_mutex, "listener", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_if_init_mutex, "if init", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_if_mutex, "if", MUTEX_DEFAULT, 0);
+#endif
+    MUTEX_INIT(&rx_stats_mutex, "stats", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&rx_atomic_mutex, "atomic", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&epoch_mutex, "epoch", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&rx_init_mutex, "init", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_debug_mutex, "debug", MUTEX_DEFAULT, 0);
 
+#ifndef KERNEL
     CV_INIT(&rx_event_handler_cond, "evhand", CV_DEFAULT, 0);
     CV_INIT(&rx_listener_cond, "rxlisten", CV_DEFAULT, 0);
+#endif
 
     osi_Assert(pthread_key_create(&rx_thread_id_key, NULL) == 0);
     osi_Assert(pthread_key_create(&rx_ts_info_key, NULL) == 0);
@@ -312,7 +318,9 @@ rxi_InitPthread(void)
     MUTEX_INIT(&rx_connHashTable_lock, "rx_connHashTable_lock", MUTEX_DEFAULT,
 	       0);
     MUTEX_INIT(&rx_serverPool_lock, "rx_serverPool_lock", MUTEX_DEFAULT, 0);
+#ifndef KERNEL
     MUTEX_INIT(&rxi_keyCreate_lock, "rxi_keyCreate_lock", MUTEX_DEFAULT, 0);
+#endif
 #endif /* RX_ENABLE_LOCKS */
 }
 
