@@ -131,6 +131,8 @@ AFSAOBJS = \
 	afs_volume.o \
 	afs_warn.o \
 	afsaux.o		\
+	xdr_update.o	\
+	xdr_refernce.o	\
 	Kvice.xdr.o	\
 	xdr_arrayn.o	\
 	xdr_array.o	\
@@ -241,6 +243,8 @@ AFSPAGOBJS = \
 	afs_tokens.o \
 	afs_warn.o \
 	afsaux.o		\
+	xdr_update.o	\
+	xdr_refernce.o	\
 	xdr_arrayn.o	\
 	xdr_array.o	\
 	xdr_int32.o	\
@@ -498,6 +502,10 @@ Krmtsys.cs.o: $(TOP_OBJ_SYS)/Krmtsys.cs.c
 	$(CRULE_NOOPT) $(TOP_OBJ_SYS)/Krmtsys.cs.c
 afsaux.o: $(TOP_SRC_FSINT)/afsaux.c
 	$(CRULE_NOOPT) $(TOP_SRC_FSINT)/afsaux.c
+xdr_update.o: $(TOP_SRC_RX)/xdr_update.c
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/xdr_update.c
+xdr_refernce.o: $(TOP_SRC_RX)/xdr_refernce.c
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/xdr_refernce.c
 xdr_arrayn.o: $(TOP_SRC_RX)/xdr_arrayn.c
 	$(CRULE_NOOPT) $(TOP_SRC_RX)/xdr_arrayn.c
 xdr_array.o: $(TOP_SRC_RX)/xdr_array.c

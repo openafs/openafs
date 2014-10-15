@@ -58,9 +58,6 @@ static afs_int32 bslosers = 0;
     only for the kernel system.  Later, when R is expunged, we'll remove the ifdef */
 #ifdef KERNEL
 #ifndef AFS_USR_DARWIN_ENV
-#ifdef	AFS_AIXNFS11
-#define	AUTH_DES 1
-#endif
 /*
  * Wrapper for xdr_string that can be called directly from
  * routines like clnt_call; from user-mode xdr package.
@@ -78,32 +75,6 @@ xdr_wrapstring(XDR * xdrs, char **cpp)
 #endif /* AFS_HPUX110_ENV */
 #endif /* AFS_SUN5_ENV */
 
-/*
- * xdr_vector():
- *
- * XDR a fixed length array. Unlike variable-length arrays,
- * the storage of fixed length arrays is static and unfreeable.
- * > basep: base of the array
- * > size: size of the array
- * > elemsize: size of each element
- * > xdr_elem: routine to XDR each element
- */
-bool_t
-xdr_vector(XDR * xdrs, char *basep, u_int nelem,
-	   u_int elemsize, xdrproc_t xdr_elem)
-{
-    u_int i;
-    char *elptr;
-
-    elptr = basep;
-    for (i = 0; i < nelem; i++) {
-	if (!(*xdr_elem) (xdrs, elptr, (u_int) (~0))) {
-	    return (FALSE);
-	}
-	elptr += elemsize;
-    }
-    return (TRUE);
-}
 #endif
 #endif /* KERNEL */
 
