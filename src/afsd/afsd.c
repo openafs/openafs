@@ -2463,7 +2463,9 @@ afsd_run(void)
     return 0;
 }
 
+#ifndef UKERNEL
 #include "AFS_component_version_number.c"
+#endif
 
 void
 afsd_init(void)
