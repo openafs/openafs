@@ -52,14 +52,11 @@
     _ELEM->_PREV = NULL; \
 }
 
-extern char *uafs_mountDir;
-
 extern struct afsconf_dir *afs_cdir;
 extern char afs_LclCellName[64];
 
 extern int afs_osicred_Initialized;
 
-extern void uafs_InitClient(void);
 extern void uafs_InitThread(void);
 extern int uafs_Setup(const char *mount);
 extern int uafs_ParseArgs(int argc, char **argv);
@@ -75,7 +72,6 @@ extern int uafs_LookupParent(char *path, struct usr_vnode **vpp);
 extern int uafs_GetAttr(struct usr_vnode *vp, struct stat *stats);
 
 extern int uafs_SetTokens(char *buf, int len);
-extern int uafs_SetTokens_r(char *buf, int len);
 extern int uafs_mkdir(char *path, int mode);
 extern int uafs_mkdir_r(char *path, int mode);
 extern int uafs_chdir(char *path);
@@ -134,10 +130,6 @@ extern int uafs_getdents(int fd, struct min_direct *buf, int len);
 extern int uafs_getdents_r(int fd, struct min_direct *buf, int len);
 extern int uafs_closedir(usr_DIR * dirp);
 extern int uafs_closedir_r(usr_DIR * dirp);
-extern void uafs_ThisCell(char *namep);
-extern void uafs_ThisCell_r(char *namep);
-extern int uafs_klog(char *user, char *cell, char *passwd, char **reason);
-extern int uafs_klog_r(char *user, char *cell, char *passwd, char **reason);
 extern int uafs_unlog(void);
 extern int uafs_unlog_r(void);
 extern void uafs_SetRxPort(int);
@@ -152,7 +144,6 @@ extern int uafs_statvfs(struct statvfs *buf);
 extern void uafs_Shutdown(void);
 extern void uafs_mount(void);
 extern void uafs_setMountDir(const char *dir);
-extern int uafs_fork(int wait, void* (*cbf) (void *), void *rock);
 extern int uafs_access(char *path, int amode);
 
 #endif /* __AFS_USROPS_H__ */
