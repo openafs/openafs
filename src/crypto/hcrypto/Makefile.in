@@ -70,6 +70,8 @@ clean:
 		libafshcrypto.a libafshcrypto_lwp.a libafshcrypto.exp \
 		test_cipher test_cipher.o
 
+$(LT_objs): $(HEADERS)
+
 libafshcrypto.la: libafshcrypto.la.sym $(LT_objs)
 	$(LT_LDLIB_shlib) $(LT_objs) $(LT_libs)
 
