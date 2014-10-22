@@ -224,13 +224,13 @@ ticket5.o: ${RXKAD}/ticket5.c
 	${CCRULE} -I../rxkad -I${RXKAD}
 
 crc.o: ${RXKAD}/crc.c
-	${CCRULE}
+	${CCRULE} -I../rxkad
 
 md4.o: ${RXKAD}/md4.c
-	${CCRULE}
+	${CCRULE} -I../rxkad
 
 md5.o: ${RXKAD}/md5.c
-	${CCRULE}
+	${CCRULE} -I../rxkad
 
 fcrypt.o: ${RXKAD}/fcrypt.c
 	${CCRULE} -I../rxkad -I${RXKAD}

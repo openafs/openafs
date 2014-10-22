@@ -32,9 +32,9 @@ osi_lookupname(char *aname, enum uio_seg seg, int followlink,
 	AFS_GUNLOCK();
 
 #if __FreeBSD_version >= 1000021 /* MPSAFE is gone for good! */
-    flags = LOCKLEAF;
+    flags = 0;
 #else
-    flags = LOCKLEAF | MPSAFE; /* namei must take Giant if needed */
+    flags = MPSAFE; /* namei must take Giant if needed */
 #endif
     if (followlink)
 	flags |= FOLLOW;
