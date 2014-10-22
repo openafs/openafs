@@ -1486,17 +1486,6 @@
               Directories</link>.</para>
             </listitem> </varlistentry>
 
-          <varlistentry>
-            <term><emphasis role="bold">wsadmin</emphasis></term>
-
-            <listitem>
-              <para>This directory contains prototype, configuration and
-              library files for use with the <emphasis
-              role="bold">package</emphasis> program. See <link
-              linkend="HDRWQ419">Configuring Client Machines with the
-              package Program</link>.</para>
-            </listitem>
-          </varlistentry>
         </variablelist>
       </para>
 
@@ -2598,12 +2587,6 @@
       functioning normally, users access the copy in the <emphasis
       role="bold">/usr/afsws</emphasis> directory, which is more likely to
       be current than a local copy.</para>
-
-      <para>You can automate the configuration of client machine local
-      disks by using the <emphasis role="bold">package</emphasis> program,
-      which updates the contents of the local disk to match a
-      configuration file. See <link linkend="HDRWQ419">Configuring Client
-      Machines with the package Program</link>.</para>
     </sect2>
 
     <sect2 id="Header_66">
@@ -2622,13 +2605,7 @@
       role="bold">/usr/vice/etc/CellServDB</emphasis> file. The Cache
       Manager reads the list into kernel memory at reboot for faster
       retrieval. You can change the list in kernel memory between reboots
-      by using the <emphasis role="bold">fs newcell</emphasis> command. It
-      is often practical to store a central version of the <emphasis
-      role="bold">CellServDB</emphasis> file in AFS and use the <emphasis
-      role="bold">package</emphasis> program periodically to update each
-      client's version with the source copy.  See <link
-      linkend="HDRWQ406">Maintaining Knowledge of Database Server
-      Machines</link>.</para>
+      by using the <emphasis role="bold">fs newcell</emphasis> command.</para>
 
       <para>Because each client machine maintains its own copy of the
       <emphasis role="bold">CellServDB</emphasis> file, you can in theory
@@ -3249,8 +3226,7 @@
             role="bold">butc</emphasis>, <emphasis
             role="bold">kas</emphasis>, <emphasis
             role="bold">uss</emphasis>, <emphasis
-            role="bold">vos</emphasis> commands), the <emphasis
-            role="bold">package</emphasis> program, and others</para>
+            role="bold">vos</emphasis> commands), and others.</para>
           </listitem>
       </itemizedlist>
       </para>

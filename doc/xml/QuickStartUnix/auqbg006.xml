@@ -3197,8 +3197,8 @@
 
           <para>There are several ways to update the <emphasis role="bold">CellServDB</emphasis> file on client machines, as
           detailed in the chapter of the <emphasis>OpenAFS Administration Guide</emphasis> about administering client machines. One
-          option is to copy over the central update source (which you updated in Step <link linkend="LIWQ116">5</link>), with or
-          without using the <emphasis role="bold">package</emphasis> program. To update the machine's kernel memory list, you can
+          option is to copy over the central update source (which you updated in Step <link linkend="LIWQ116">5</link>).
+          To update the machine's kernel memory list, you can
           either reboot after changing the <emphasis role="bold">CellServDB</emphasis> file or issue the <emphasis role="bold">fs
           newcell</emphasis> command. 
             <indexterm>
@@ -3507,8 +3507,8 @@
 
           <para>There are several ways to update the <emphasis role="bold">CellServDB</emphasis> file on client machines, as
           detailed in the chapter of the <emphasis>OpenAFS Administration Guide</emphasis> about administering client machines. One
-          option is to copy over the central update source (which you updated in Step <link linkend="LIWQ116">5</link>), with or
-          without using the <emphasis role="bold">package</emphasis> program. To update the machine's kernel memory list, you can
+          option is to copy over the central update source (which you updated in Step <link linkend="LIWQ116">5</link>).
+          To update the machine's kernel memory list, you can
           either reboot after changing the <emphasis role="bold">CellServDB</emphasis> file or issue the <emphasis role="bold">fs
           newcell</emphasis> command. <indexterm>
               <primary>bos commands</primary>

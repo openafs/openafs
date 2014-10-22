@@ -68,7 +68,7 @@ name>.
 The I<command_suite> specifies the group of related commands to which the
 command belongs, and indicates which command interpreter and server
 process perform the command.  AFS has several command suites, including
-B<bos>, B<fs>, B<kas>, B<package>, B<pts>, B<uss> (deprecated) and B<vos>.
+B<bos>, B<fs>, B<kas>, B<pts>, B<uss> (deprecated) and B<vos>.
 Some of these suites have an interactive mode in which the issuer omits the
 I<operation_code> portion of the command name.
 
@@ -530,7 +530,6 @@ L<klog(1)>,
 L<knfs(1)>,
 L<kpasswd(1)>,
 L<kpwvalid(8)>,
-L<package(1)>,
 L<pagsh(1)>,
 L<prdb_check(8)>,
 L<pts(1)>,

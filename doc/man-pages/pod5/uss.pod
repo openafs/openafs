@@ -187,8 +187,7 @@ instruction in the file.
 
 Although it is possible to use the C<D> instruction to create a directory
 on the local disk of the machine where the B<uss> command is issued, it is
-not recommended. The preferred method for automated creation of
-directories on a local disk is the B<package> program. Two complications
+not recommended.  Two complications
 arise if the <pathname> field refers to a local disk directory:
 
 =over 4
@@ -301,8 +300,7 @@ character string.
 
 Although it is possible to use the C<E> instruction to create a file on
 the local disk of the machine where the B<uss> command is issued, it is
-not recommended. The preferred method for automated creation of files on a
-local disk is the B<package> program.  The main complication is that
+not recommended.  The main complication is that
 designating any user other than the issuer as the new file's owner
 requires logging onto the machine as the local superuser C<root>. For
 local disk files, only the local superuser C<root> is allowed to issue the
@@ -384,8 +382,7 @@ by an C<F> instruction can be any length.
 
 Although it is possible to use the C<F> instruction to create a file on
 the local disk of the machine where the B<uss> command is issued, it is
-not recommended. The preferred method for automated creation of files on a
-local disk is the B<package> program.  The main complication is that
+not recommended.  The main complication is that
 designating any user other than the issuer as the new file's owner
 requires logging onto the machine as the local superuser C<root>. For
 local disk files, only the local superuser C<root> is allowed to issue the

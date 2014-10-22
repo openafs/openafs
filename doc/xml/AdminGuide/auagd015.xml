@@ -309,10 +309,6 @@
     the local superuser <emphasis role="bold">root</emphasis> to issue some commands, whereas others require no privilege. All files
     mentioned in this chapter must actually reside on the local disk of each AFS client machine (they cannot, for example, be
     symbolic links to files in AFS).</para>
-
-    <para>AFS's <emphasis role="bold">package</emphasis> program can simplify other aspects of client machine configuration,
-    including those normally set in the machine's AFS initialization file. See <link linkend="HDRWQ419">Configuring Client Machines
-    with the package Program</link>.</para>
   </sect1>
 
   <sect1 id="HDRWQ391">
@@ -1843,19 +1839,7 @@
       <para>Because a correct entry in the <emphasis role="bold">CellServDB</emphasis> file is vital for consistent client
       performance, you must also update the file on each client machine whenever a cell's list of database server machines changes
       (for instance, when you follow the instructions in the <emphasis>OpenAFS Quick Beginnings</emphasis> to add or remove a
-      database server machine). To facilitate the client updates, you can use the <emphasis role="bold">package</emphasis> program,
-      which copies files from a central source in AFS to the local disk of client machines. It is conventional to invoke the
-      <emphasis role="bold">package</emphasis> program in a client machine's AFS initialization file so that it runs as the machine
-      reboots, but you can also issue the <emphasis role="bold">package</emphasis> command at any time. For instructions, see <link
-      linkend="HDRWQ448">Running the package program</link>.</para>
-
-      <para>If you use the <emphasis role="bold">package</emphasis> program, the conventional location for your cell's central
-      source <emphasis role="bold">CellServDB</emphasis> file is <emphasis role="bold">/afs/</emphasis>cell_name<emphasis
-      role="bold">/common/etc/CellServDB</emphasis>, where cell_name is your cell name. <indexterm>
-          <primary>CellServDB file (client)</primary>
-
-          <secondary>central update source for clients</secondary>
-        </indexterm></para>
+      database server machine).</para>
 
       <para>Creating a symbolic or hard link from <emphasis role="bold">/usr/vice/etc/CellServDB</emphasis> to a central source file
       in AFS is not a viable option. The <emphasis role="bold">afsd</emphasis> program reads the file into kernel memory before the
@@ -2044,21 +2028,15 @@
       </indexterm>
 
       <indexterm>
-        <primary>package</primary>
-
-        <secondary>to update client</secondary>
-      </indexterm>
-
-      <indexterm>
         <primary>CellServDB file (client)</primary>
 
-        <secondary>updating with or without package</secondary>
+        <secondary>updating</secondary>
       </indexterm>
 
       <indexterm>
         <primary>updating</primary>
 
-        <secondary>CellServDB file (client) with or without package</secondary>
+        <secondary>CellServDB file (client)</secondary>
       </indexterm>
     </sect2>
 
@@ -2154,18 +2132,8 @@
           of the following three methods. In each case, be sure to obey the formatting requirements described in <link
           linkend="HDRWQ407">The Format of the CellServDB file</link>. <itemizedlist>
               <listitem>
-                <para>If you maintain a central source version of the <emphasis role="bold">CellServDB</emphasis> file and use the
-                <emphasis role="bold">package</emphasis> program, first use a text editor to alter the central copy of the file.
-                Then issue the <emphasis role="bold">package</emphasis> command to transfer the contents of the file to the local
-                machine. For complete instructions, see <link linkend="HDRWQ448">Running the package program</link>.
-                <programlisting>
-   # <emphasis role="bold">/etc/package -v -c</emphasis> &lt;<replaceable>name of package file</replaceable>&gt;
-</programlisting></para>
-              </listitem>
-
-              <listitem>
-                <para>If you maintain a central source <emphasis role="bold">CellServDB</emphasis> file but do not use the <emphasis
-                role="bold">package</emphasis> program, first use a text editor to alter the central copy of the file. Then use a
+                <para>If you maintain a central source <emphasis role="bold">CellServDB</emphasis> file,
+                first use a text editor to alter the central copy of the file. Then use a
                 copying command such as the <emphasis role="bold">cp</emphasis> command to copy it to the local <emphasis
                 role="bold">/usr/vice/etc/CellServDB</emphasis> file.</para>
               </listitem>
@@ -3631,8 +3599,8 @@
     <para>The Cache Manager uses the system name as a substitute for the @sys variable in AFS pathnames. The variable is useful when
     creating a symbolic link from the local disk to an AFS directory that houses binaries for the client machine's system type.
     Because the @sys variable automatically steers the Cache Manager to the appropriate directory, you can create the same symbolic
-    link on client machines of different system types. (You can even automate the creation operation by using the package utility
-    described in <link linkend="HDRWQ419">Configuring Client Machines with the package Program</link>.) The link also remains valid
+    link on client machines of different system types.
+    The link also remains valid
     when you upgrade the machine to a new system type.</para>
 
     <para>Configuration is simplest if you use the system type names that AFS assigns. For a list, see the <emphasis>OpenAFS Release

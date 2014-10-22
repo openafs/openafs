@@ -1088,11 +1088,6 @@
           role="bold">/etc/passwd</emphasis> or equivalent) of each machine the user can log onto. Remember to make the UNIX UID the
           same as the AFS UID you learned in Step <link linkend="LIWQ512">11</link>, and to fill the password field appropriately
           (for instructions, see <link linkend="HDRWQ497">Specifying Passwords in the Local Password File</link>).</para>
-
-          <para>If you use the <emphasis role="bold">package</emphasis> utility to distribute a common version of the password file
-          to all client machines, then you need to make the change only in the common version. See <link
-          linkend="HDRWQ419">Configuring Client Machines with the package Program</link>.</para>
-        </listitem>
       </orderedlist>
 
       <indexterm>

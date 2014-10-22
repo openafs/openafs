@@ -539,12 +539,6 @@
             <para>Incorporate the one-line file into the common source version of the local password file. It makes sense to store
             this file in AFS. See the following two example scripts for automating this step.</para>
           </listitem>
-
-          <listitem>
-            <para>Distribute the common password file to each client machine, perhaps by using the AFS <emphasis
-            role="bold">package</emphasis> utility as described in <link linkend="HDRWQ419">Configuring Client Machines with the
-            package Program</link>.</para>
-          </listitem>
         </orderedlist></para>
 
       <para>As an example, the template file used by the Example Corporation includes the following <emphasis role="bold">E</emphasis>
@@ -1237,17 +1231,6 @@
             still must appear in the <emphasis role="bold">D</emphasis> instruction's ACL field.</para>
           </listitem>
         </itemizedlist></para>
-
-      <para>The recommended method for configuring a machine's local disk is to use the AFS <emphasis role="bold">package</emphasis>
-      utility instead; see <link linkend="HDRWQ419">Configuring Client Machines with the package Program</link>. <indexterm>
-          <primary>examples</primary>
-
-          <secondary>uss template file</secondary>
-        </indexterm> <indexterm>
-          <primary>uss template file</primary>
-
-          <secondary>examples</secondary>
-        </indexterm></para>
     </sect2>
 
     <sect2 id="HDRWQ471">
@@ -3504,8 +3487,8 @@
 
         <listitem>
           <para>Delete the user's entry from the local password file (<emphasis role="bold">/etc/passwd</emphasis> or equivalent) of
-          each client machine. If you use the AFS <emphasis role="bold">package</emphasis> utility, it is sufficient to remove the
-          entry from the common source version of the file. If you intend to reactivate the user's account in the future, it is
+          each client machine.
+          If you intend to reactivate the user's account in the future, it is
           simpler to comment out the entry or place an asterisk (*) in the password field.</para>
         </listitem>
       </orderedlist>
@@ -4056,8 +4039,7 @@
 
         <listitem>
           <para>If you are deleting accounts, delete the user's entry from the local password file (<emphasis
-          role="bold">/etc/passwd</emphasis> or equivalent) of each client machine. If you use the AFS <emphasis
-          role="bold">package</emphasis> utility, it is sufficient to remove the entry from the common source version of the file.
+          role="bold">/etc/passwd</emphasis> or equivalent) of each client machine.
           If you intend to reactivate the user's account in the future, it is simpler to comment out the entry or place an asterisk
           (*) in the password field.</para>
         </listitem>

@@ -30,8 +30,8 @@
 
       <para>The <emphasis role="bold">command_suite</emphasis> specifies the group of related commands to which the command belongs,
       and indicates which command interpreter and server process perform the command. AFS has several command suites, including
-      <emphasis role="bold">bos</emphasis>, <emphasis role="bold">fs</emphasis>, <emphasis role="bold">kas</emphasis>, <emphasis
-      role="bold">package</emphasis>, <emphasis role="bold">pts</emphasis>, <emphasis role="bold">scout</emphasis>, <emphasis
+      <emphasis role="bold">bos</emphasis>, <emphasis role="bold">fs</emphasis>, <emphasis role="bold">kas</emphasis>,
+      <emphasis role="bold">pts</emphasis>, <emphasis role="bold">scout</emphasis>, <emphasis
       role="bold">uss</emphasis> and <emphasis role="bold">vos</emphasis>. Some of these suites have an interactive mode in which
       the issuer omits the <emphasis role="bold">command_suite</emphasis> portion of the command name.</para>
 

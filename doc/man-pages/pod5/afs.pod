@@ -75,8 +75,6 @@ Configuration files:
 
 =item L<krb.conf(5)>
 
-=item L<package(5)>
-
 =item L<sysid(5)>
 
 =item L<tapeconfig(5)>

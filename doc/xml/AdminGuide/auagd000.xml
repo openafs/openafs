@@ -13,7 +13,6 @@
 <!ENTITY chapter8 SYSTEM "auagd013.xml">
 <!ENTITY chapter9 SYSTEM "auagd014.xml">
 <!ENTITY chapter10 SYSTEM "auagd015.xml">
-<!ENTITY chapter11 SYSTEM "auagd016.xml">
 <!ENTITY chapter12 SYSTEM "auagd017.xml">
 <!ENTITY chapter13 SYSTEM "auagd018.xml">
 <!ENTITY chapter14 SYSTEM "auagd019.xml">
@@ -88,7 +87,6 @@
     <title>Managing Client Machines</title>
 
     &chapter10;
-    &chapter11;
   </part>
 
   <part>

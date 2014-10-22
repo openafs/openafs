@@ -23,7 +23,7 @@ include @TOP_OBJDIR@/src/config/Makefile.version
 
 SRCS     = $(BOOK).xml auagd005.xml auagd006.xml auagd007.xml auagd008.xml \
 	   auagd009.xml auagd010.xml auagd011.xml auagd012.xml auagd013.xml \
-	   auagd014.xml auagd015.xml auagd016.xml auagd017.xml auagd018.xml \
+	   auagd014.xml auagd015.xml auagd017.xml auagd018.xml \
 	   auagd019.xml auagd020.xml auagd021.xml auagd022.xml auagd023.xml \
 	   auagd024.xml auagd025.xml $(VERSION).xml
 HTML_XSL = @HTML_XSL@
