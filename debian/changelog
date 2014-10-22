@@ -1,6 +1,9 @@
 openafs (1.6.10-1) UNRELEASED; urgency=medium
 
   * New upstream release.
+    - fix segfault with aklog -path.
+  * The 1.6.10~pre1-1 changelog entry contains a full summary of changes
+    in the upstream release.
 
  -- Benjamin Kaduk <kaduk@mit.edu>  Wed, 22 Oct 2014 13:10:59 -0400
 
