@@ -8,7 +8,7 @@ Build-Depends: debhelper (>= 9), autoconf, automake, bison, comerr-dev,
  libpam0g-dev, libxml2-utils, perl, pkg-config
 Build-Depends-Indep: dblatex, dkms (>= 2.1.1.1), docbook-xsl, doxygen,
  xsltproc
-Standards-Version: 3.9.5
+Standards-Version: 3.9.6
 Homepage: http://www.openafs.org/
 Vcs-Git: git://anonscm.debian.org/pkg-k5-afs/openafs.git
 Vcs-Browser: http://anonscm.debian.org/gitweb/?p=pkg-k5-afs/openafs.git
