@@ -139,7 +139,7 @@ cellconfig.o: ${AUTH}/cellconfig.c
 	${CCRULE} -I../auth
 
 ktc.o: ${AUTH}/ktc.c
-	${CCRULE}
+	${CCRULE} -I../auth
 
 userok.o: ${AUTH}/userok.c
 	${CCRULE} -I../auth
@@ -238,7 +238,7 @@ rxkad_errs.o: ${RXKAD}/rxkad_errs.c
 	${CCRULE}
 
 ticket5_keytab.o: ${RXKAD}/ticket5_keytab.c
-	${CCRULE} @KRB5_CPPFLAGS@
+	${CCRULE} -I../rxkad @KRB5_CPPFLAGS@
 
 ptclient.o: ${PTSERVER}/ptclient.c
 	${CCRULE} -I../ptserver

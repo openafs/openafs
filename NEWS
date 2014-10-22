@@ -1,6 +1,6 @@
                        User-Visible OpenAFS Changes
 
-OpenAFS 1.6.10 (in progress)
+OpenAFS 1.6.10
 
   All platforms
 
@@ -12,15 +12,18 @@ OpenAFS 1.6.10 (in progress)
       11182 11183)
 
     * Build system improvements (11158 11221 11224 11225 11227..11241 11282
-      11342 11350 11353 11242 11367)
+      11342 11350 11353 11242 11367 11392)
 
     * Avoid potentially erratic behaviour under certain error conditions by
       either avoiding or at least not ignoring them, in various places (11008
-      11010..11065 11112 11148 11196)
+      11010..11065 11112 11148 11196 11530)
 
   FreeBSD
 
-    * Support releases 9.3 and 10.1 (11368 11369)
+    * Support releases 9.3 and 10.1 (11368 11369 11402 11403 11404)
+
+    * Makes a disk cache more likely to work on FreeBSD, though such
+      configurations remain not very tested (11448)
 
   All server platforms
 
@@ -57,7 +60,7 @@ OpenAFS 1.6.10 (in progress)
 
   Linux clients
 
-    * Support kernels up to at least 3.16 (11308 11309)
+    * Support kernels up to 3.16 (11308 11309)
 
     * Fixed a regression introduced in OpenAFS release 1.6.6 that made
       checking for existing write locks incorrectly fail on readonly volumes
