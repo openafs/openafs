@@ -1,3 +1,9 @@
+openafs (1.6.10-1) UNRELEASED; urgency=medium
+
+  * New upstream release.
+
+ -- Benjamin Kaduk <kaduk@mit.edu>  Wed, 22 Oct 2014 13:10:59 -0400
+
 openafs (1.6.10~pre1-1) experimental; urgency=low
 
   [ Benjamin Kaduk ]
