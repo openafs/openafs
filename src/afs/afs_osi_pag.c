@@ -487,6 +487,61 @@ afs_InitReq(struct vrequest *av, afs_ucred_t *acred)
     return 0;
 }
 
+/*!
+ * Allocate and setup a vrequest.
+ *
+ * \note The caller must free the allocated vrequest with
+ *       afs_DestroyReq() if this function returns successfully (zero).
+ *
+ * \note The GLOCK must be held on platforms which require the GLOCK
+ *       for osi_AllocSmallSpace() and osi_FreeSmallSpace().
+ *
+ * \param[out] avpp   address of the vrequest pointer
+ * \param[in]  acred  user credentials to setup the vrequest
+ *                    afs_osi_credp should be used for anonymous connections
+ * \return     0 on success
+ */
+int
+afs_CreateReq(struct vrequest **avpp, afs_ucred_t *acred)
+{
+    int code;
+    struct vrequest *treq = NULL;
+
+    if (afs_shuttingdown) {
+	return EIO;
+    }
+    if (!avpp || !acred) {
+	return EINVAL;
+    }
+    treq = osi_AllocSmallSpace(sizeof(struct vrequest));
+    if (!treq) {
+	return ENOMEM;
+    }
+    code = afs_InitReq(treq, acred);
+    if (code != 0) {
+	osi_FreeSmallSpace(treq);
+	return code;
+    }
+    *avpp = treq;
+    return 0;
+}
+
+/*!
+ * Deallocate a vrequest.
+ *
+ * \note The GLOCK must be held on platforms which require the GLOCK
+ *       for osi_FreeSmallSpace().
+ *
+ * \param[in]  av  pointer to the vrequest to free; may be NULL
+ */
+void
+afs_DestroyReq(struct vrequest *av)
+{
+    if (av) {
+	osi_FreeSmallSpace(av);
+    }
+}
+
 #ifndef AFS_LINUX26_ONEGROUP_ENV
 afs_uint32
 afs_get_pag_from_groups(gid_t g0a, gid_t g1a)

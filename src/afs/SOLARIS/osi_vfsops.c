@@ -250,10 +250,9 @@ afs_statvfs(struct vfs *afsp, struct statvfs *abp)
     AFS_STATCNT(afs_statfs);
 
     abp->f_frsize = 1024;
-    abp->f_favail = 9000000;
     abp->f_bsize = afsp->vfs_bsize;
     abp->f_blocks = abp->f_bfree = abp->f_bavail = abp->f_files =
-	abp->f_ffree = 9000000;
+	abp->f_favail = abp->f_ffree = AFS_VFS_FAKEFREE;
     abp->f_fsid = (AFS_VFSMAGIC << 16) || AFS_VFSFSID;
 
     AFS_GUNLOCK();

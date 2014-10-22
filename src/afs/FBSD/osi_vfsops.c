@@ -338,12 +338,8 @@ afs_statfs(struct mount *mp, struct statfs *abp, struct thread *p)
     abp->f_bsize = mp->vfs_bsize;
     abp->f_iosize = mp->vfs_bsize;
 
-    /* Fake a high number below to satisfy programs that use the statfs call
-     * to make sure that there's enough space in the device partition before
-     * storing something there.
-     */
     abp->f_blocks = abp->f_bfree = abp->f_bavail = abp->f_files =
-	abp->f_ffree = 2000000;
+	abp->f_ffree = AFS_VFS_FAKEFREE;
 
     abp->f_fsid.val[0] = mp->mnt_stat.f_fsid.val[0];
     abp->f_fsid.val[1] = mp->mnt_stat.f_fsid.val[1];

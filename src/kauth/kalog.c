@@ -137,53 +137,55 @@ ka_log(char *principal, char *instance, char *sprincipal, char *sinstance,
 {
     char logbuf[512];		/* not random! 63 . 63 , 63 . 63 max key */
 
+    logbuf[0] = '\0';		/* Empty string */
+
     if (*principal)
-	strcpy(logbuf, principal);
+	strlcpy(logbuf, principal, sizeof(logbuf));
     if (realm) {
-	strcat(logbuf, "@");
-	strcat(logbuf, realm);
+	strlcat(logbuf, "@", sizeof(logbuf));
+	strlcat(logbuf, realm, sizeof(logbuf));
     }
     if (*instance) {
-	strcat(logbuf, ".");
-	strcat(logbuf, instance);
+	strlcat(logbuf, ".", sizeof(logbuf));
+	strlcat(logbuf, instance, sizeof(logbuf));
     }
 
     /* unlike the name/instance, the services can come down as NULL */
     if (sprincipal && *sprincipal) {
-	strcat(logbuf, ",");
-	strcat(logbuf, sprincipal);
+	strlcat(logbuf, ",", sizeof(logbuf));
+	strlcat(logbuf, sprincipal, sizeof(logbuf));
 	if (sinstance && *sinstance) {
-	    strcat(logbuf, ".");
-	    strcat(logbuf, sinstance);
+	    strlcat(logbuf, ".", sizeof(logbuf));
+	    strlcat(logbuf, sinstance, sizeof(logbuf));
 	}
     }
     switch (type) {
     case LOG_CRUSER:
-	strcat(logbuf, ":cruser");
+	strlcat(logbuf, ":cruser", sizeof(logbuf));
 	break;
     case LOG_CHPASSWD:
-	strcat(logbuf, ":chp");
+	strlcat(logbuf, ":chp", sizeof(logbuf));
 	break;
     case LOG_AUTHENTICATE:
-	strcat(logbuf, ":auth");
+	strlcat(logbuf, ":auth", sizeof(logbuf));
 	break;
     case LOG_AUTHFAILED:
-	strcat(logbuf, ":authnot");
+	strlcat(logbuf, ":authnot", sizeof(logbuf));
 	break;
     case LOG_SETFIELDS:
-	strcat(logbuf, ":setf");
+	strlcat(logbuf, ":setf", sizeof(logbuf));
 	break;
     case LOG_DELUSER:
-	strcat(logbuf, ":delu");
+	strlcat(logbuf, ":delu", sizeof(logbuf));
 	break;
     case LOG_UNLOCK:
-	strcat(logbuf, ":unlok");
+	strlcat(logbuf, ":unlok", sizeof(logbuf));
 	break;
     case LOG_GETTICKET:
-	strcat(logbuf, ":gtck");
+	strlcat(logbuf, ":gtck", sizeof(logbuf));
 	break;
     case LOG_TGTREQUEST:
-        strcat(logbuf, ":tgtreq");
+        strlcat(logbuf, ":tgtreq", sizeof(logbuf));
         break;
     default:
 	break;

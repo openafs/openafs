@@ -1,5 +1,79 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.6.10 (in progress)
+
+  All platforms
+
+    * Don't hide the "version" subcommand in help output (11214)
+
+    * Documentation improvements (11126 11216 11222 11223 11225 11226)
+
+    * Improved diagnostics and error messages (11154 11246 11247 11249 11181
+      11182 11183)
+
+    * Build system improvements (11158 11221 11224 11225 11227..11241 11282
+      11342 11350 11353 11242 11367)
+
+    * Avoid potentially erratic behaviour under certain error conditions by
+      either avoiding or at least not ignoring them, in various places (11008
+      11010..11065 11112 11148 11196)
+
+  FreeBSD
+
+    * Support releases 9.3 and 10.1 (11368 11369)
+
+  All server platforms
+
+    * Added volscan(8) (11252..11280 11387 11388)
+
+    * Fixed a bug causing subgroups not to function correctly if their
+      ptdb entry had more than one continuation entry (11352)
+
+    * Logging improvements (10946 11153)
+
+    * Allow log rotation via copy and truncate (11193)
+
+    * Avoid a server crash during startup only observed on a single platform
+      and when using a 3rd party library under certain circumstances, which is
+      a collateral effect of the security improvements introduced in OpenAFS
+      release 1.6.5 (11075) (RT #131852)
+
+  All client platforms
+
+    * Raised the free space reported for /afs to the maximum possible value of
+      just under 2 TiB - the old value was 9 GiB on most platforms (10984)
+
+    * Reduced the amount of stack space used (11162 11163 11203 11164..11167
+      11338 11339 11364..11366 11381)
+
+    * Sped up a periodic client task which could be problematically slow
+      on systems with a large number of PAGs and files in use (11307)
+
+    * Fixed failure of the up command with large ACLs (11111)
+
+    * Avoid a potential crash of aklog (11218)
+
+    * Avoid potential crashes of scout and xstat_fs_test (11155)
+
+  Linux clients
+
+    * Support kernels up to at least 3.16 (11308 11309)
+
+    * Fixed a regression introduced in OpenAFS release 1.6.6 that made
+      checking for existing write locks incorrectly fail on readonly volumes
+      (11361)
+
+    * Fixed a regression introduced in OpenAFS release 1.6.8 that could
+      cause VFS cache inconsistencies when a previously-accessed directory
+      entry was removed and recreated with the same name but pointing to a
+      different file on another client (11358)
+
+    * Use the right path to depmod in Red Hat packaging to avoid dependency
+      calculation incorrectly failing unless a link /sbin -> /usr/sbin is
+      present on the system performing it (11171) (RT #131860)
+
+    * Do not ignore kernel module build errors (11205)
+
 OpenAFS 1.6.9
 
   All server platforms

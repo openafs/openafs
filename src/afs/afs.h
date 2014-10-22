@@ -48,6 +48,12 @@ extern int afs_shuttingdown;
 #define	AFS_VFSFSID		AFS_MOUNT_AFS
 #endif
 #endif
+/* use this value for reporting total space, free space, etc.
+ * fake a high number to satisfy programs that use the statfs call to make sure
+ * that there's enough space in the device partition before storing something
+ * there. keep it just under 2^31, to try and be safe about not breaking
+ * stuff that looks at the amount of free space. */
+#define AFS_VFS_FAKEFREE (2147483647)
 
 /* Moved from VNOPS/afs_vnop_flocks so can be used in prototypes */
 #if     defined(AFS_HPUX102_ENV)
@@ -89,8 +95,6 @@ extern int afs_shuttingdown;
 
 
 #define AFS_MAXCBRSCALL	32	/* max to return in a given call (must be <= AFSCBMAX) */
-#define	AFS_SALLOC_LOW_WATER	250	/* Min free blocks before allocating more */
-#define	AFS_LRALLOCSIZ 	4096	/* "Large" allocated size */
 #define	VCACHE_FREE	5
 #define	AFS_NRXPACKETS	80
 #define	AFS_RXDEADTIME	50

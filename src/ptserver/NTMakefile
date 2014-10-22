@@ -102,7 +102,7 @@ PTCLIENT_EXEOBJS =\
 PT_UTIL_EXEOBJS = \
         $(OUT)\pt_util.obj \
         $(OUT)\ptutils.obj \
-        $(OUT)\ubik.obj \
+        $(OUT)\ptubik.obj \
         $(OUT)\utils.obj \
         $(OUT)\map.obj \
         $(OUT)\pt_util.res

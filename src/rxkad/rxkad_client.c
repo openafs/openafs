@@ -55,7 +55,7 @@
 #include <rx/rx.h>
 #include <rx/xdr.h>
 #ifdef AFS_PTHREAD_ENV
-#include "rx/rxkad.h"
+#include "rxkad.h"
 #endif /* AFS_PTHREAD_ENV */
 #endif /* KERNEL */
 

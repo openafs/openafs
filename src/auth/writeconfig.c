@@ -71,7 +71,12 @@ VerifyEntries(struct afsconf_cell *aci)
 	    if (!th) {
 		strcpy(aci->hostName[i], "UNKNOWNHOST");
 	    } else {
-		strcpy(aci->hostName[i], th->h_name);
+		if (strlcpy(aci->hostName[i],
+			    th->h_name,
+			    sizeof(aci->hostName[i]))
+			>= sizeof(aci->hostName[i])) {
+		   strcpy(aci->hostName[i], "UNKNOWNHOST");
+		}
 	    }
 	}
     }

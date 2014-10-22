@@ -310,7 +310,9 @@ CompFindUser(struct afsconf_dir *adir, char *name, char *sep, char *inst,
     if (!name || !name[0]) {
 	return NULL;
     }
-    strcpy(fullname, name);
+
+    if (strlcpy(fullname, name, sizeof(fullname)) >= sizeof(fullname))
+	return NULL;
 
     /* might have instance */
     if (inst && inst[0]) {
@@ -318,14 +320,20 @@ CompFindUser(struct afsconf_dir *adir, char *name, char *sep, char *inst,
 	    return NULL;
 	}
 
-	strcat(fullname, sep);
-	strcat(fullname, inst);
+	if (strlcat(fullname, sep, sizeof(fullname)) >= sizeof(fullname))
+	    return NULL;
+
+	if (strlcat(fullname, inst, sizeof(fullname)) >= sizeof(fullname))
+	    return NULL;
     }
 
     /* might have realm */
     if (realm && realm[0]) {
-	strcat(fullname, "@");
-	strcat(fullname, realm);
+	if (strlcat(fullname, "@", sizeof(fullname)) >= sizeof(fullname))
+	    return NULL;
+
+	if (strlcat(fullname, realm, sizeof(fullname)) >= sizeof(fullname))
+	    return NULL;
     }
 
     if (FindUser(adir, fullname)) {

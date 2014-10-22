@@ -54,7 +54,7 @@
 
 #include "sboxes.h"
 #include "fcrypt.h"
-#include <rxkad.h>
+#include "rxkad.h"
 #include <des/stats.h>
 
 #ifdef TCRYPT

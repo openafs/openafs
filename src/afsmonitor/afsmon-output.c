@@ -66,7 +66,9 @@ static char *fsOpNames[] = {
     "NGetVolumeInfo",
     "BulkStatus",
     "XStatsVersion",
-    "GetXStats"
+    "GetXStats",
+    "Lookup",
+    "Residency"
 };
 
 static char *cmOpNames[] = {

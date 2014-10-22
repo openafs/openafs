@@ -54,6 +54,8 @@ main(afs_int32 argc, char **argv)
     afs_int32 verbose = 0;
     char *cellname;
 
+    buf[0] = '\0';
+
     if (argc < 2) {
 	fprintf(stderr, "Usage: readpwd [-v] [-c cellname] passwdfile.\n");
 	exit(1);
@@ -70,6 +72,12 @@ main(afs_int32 argc, char **argv)
 		strncpy(buf, argv[i], 150);
 	}
     }
+
+    if (buf[0] == '\0') {
+	fprintf(stderr, "Usage: readpwd [-v] [-c cellname] passwdfile.\n");
+	exit(1);
+    }
+
     code = pr_Initialize(2, AFSDIR_CLIENT_ETC_DIRPATH, cellname);
     free(cellname);
     if (code) {

@@ -30,11 +30,13 @@ ${TOP_LIBDIR}/libcmd64.a: libcmd64.a
 ${TOP_INCDIR}/afs/cmd.h: cmd.h
 	${INSTALL_DATA} $? $@
 
-cmd.h: cmd_errors.et cmd.p.h
-	$(RM) -f cmd.h cmd_errors.c
-	${COMPILE_ET} -p ${srcdir} cmd_errors -h cmd
+cmd_errors.c: cmd_errors.et
+	${COMPILE_ET_C} -p ${srcdir} cmd_errors
 
-cmd_errors.c: cmd.h 
+cmd.h: cmd_errors.et cmd.p.h
+	${COMPILE_ET_H} -p ${srcdir} cmd_errors -h cmd
+
+cmd.o: cmd.h
 
 cmd_errors.o: cmd_errors.c
 

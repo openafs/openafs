@@ -121,14 +121,14 @@ afs_MemWrite(struct vcache *avc, struct uio *auio, int aio,
     struct iovec *tvec;		/* again, should have define */
 #endif
     afs_int32 code;
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
 
     AFS_STATCNT(afs_MemWrite);
     if (avc->vc_error)
 	return avc->vc_error;
 
     startDate = osi_Time();
-    if ((code = afs_InitReq(&treq, acred)))
+    if ((code = afs_CreateReq(&treq, acred)))
 	return code;
     /* otherwise we read */
     totalLength = AFS_UIO_RESID(auio);
@@ -182,6 +182,7 @@ afs_MemWrite(struct vcache *avc, struct uio *auio, int aio,
 #endif
 	if (!noLock)
 	    ReleaseWriteLock(&avc->lock);
+	afs_DestroyReq(treq);
 	return (EFBIG);
     }
 #endif
@@ -202,7 +203,7 @@ afs_MemWrite(struct vcache *avc, struct uio *auio, int aio,
     tvec = (struct iovec *)osi_AllocSmallSpace(sizeof(struct iovec));
 #endif
     while (totalLength > 0) {
-	tdc = afs_ObtainDCacheForWriting(avc, filePos, totalLength, &treq, 
+	tdc = afs_ObtainDCacheForWriting(avc, filePos, totalLength, treq,
 					 noLock);
 	if (!tdc) {
 	    error = EIO;
@@ -265,7 +266,7 @@ afs_MemWrite(struct vcache *avc, struct uio *auio, int aio,
 #else
 	if (filePos > avc->f.m.Length) {
 	    if (AFS_IS_DISCON_RW)
-   		afs_PopulateDCache(avc, filePos, &treq);
+		afs_PopulateDCache(avc, filePos, treq);
 	    afs_Trace4(afs_iclSetp, CM_TRACE_SETLENGTH, ICL_TYPE_STRING,
 		       __FILE__, ICL_TYPE_LONG, __LINE__, ICL_TYPE_OFFSET,
 		       ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_OFFSET,
@@ -284,7 +285,7 @@ afs_MemWrite(struct vcache *avc, struct uio *auio, int aio,
 	 * the high-level write op.
 	 */
 	if (!noLock) {
-	    code = afs_DoPartialWrite(avc, &treq);
+	    code = afs_DoPartialWrite(avc, treq);
 	    if (code) {
 		error = code;
 		break;
@@ -304,7 +305,8 @@ afs_MemWrite(struct vcache *avc, struct uio *auio, int aio,
 #else
     osi_FreeSmallSpace(tvec);
 #endif
-    error = afs_CheckCode(error, &treq, 6);
+    error = afs_CheckCode(error, treq, 6);
+    afs_DestroyReq(treq);
     return error;
 }
 
@@ -339,7 +341,7 @@ afs_UFSWrite(struct vcache *avc, struct uio *auio, int aio,
 #endif
     struct osi_file *tfile;
     afs_int32 code;
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
 
     AFS_STATCNT(afs_UFSWrite);
     if (avc->vc_error)
@@ -349,7 +351,7 @@ afs_UFSWrite(struct vcache *avc, struct uio *auio, int aio,
 	return ENETDOWN;
     
     startDate = osi_Time();
-    if ((code = afs_InitReq(&treq, acred)))
+    if ((code = afs_CreateReq(&treq, acred)))
 	return code;
     /* otherwise we read */
     totalLength = AFS_UIO_RESID(auio);
@@ -403,6 +405,7 @@ afs_UFSWrite(struct vcache *avc, struct uio *auio, int aio,
 #endif
 	if (!noLock)
 	    ReleaseWriteLock(&avc->lock);
+	afs_DestroyReq(treq);
 	return (EFBIG);
     }
 #endif
@@ -423,7 +426,7 @@ afs_UFSWrite(struct vcache *avc, struct uio *auio, int aio,
     tvec = (struct iovec *)osi_AllocSmallSpace(sizeof(struct iovec));
 #endif
     while (totalLength > 0) {
-	tdc = afs_ObtainDCacheForWriting(avc, filePos, totalLength, &treq, 
+	tdc = afs_ObtainDCacheForWriting(avc, filePos, totalLength, treq,
 					 noLock);
 	if (!tdc) {
 	    error = EIO;
@@ -573,7 +576,7 @@ afs_UFSWrite(struct vcache *avc, struct uio *auio, int aio,
 #else
 	if (filePos > avc->f.m.Length) {
 	    if (AFS_IS_DISCON_RW)
-		afs_PopulateDCache(avc, filePos, &treq);
+		afs_PopulateDCache(avc, filePos, treq);
 	    afs_Trace4(afs_iclSetp, CM_TRACE_SETLENGTH, ICL_TYPE_STRING,
 		       __FILE__, ICL_TYPE_LONG, __LINE__, ICL_TYPE_OFFSET,
 		       ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_OFFSET,
@@ -593,7 +596,7 @@ afs_UFSWrite(struct vcache *avc, struct uio *auio, int aio,
 	 * the high-level write op.
 	 */
 	if (!noLock) {
-	    code = afs_DoPartialWrite(avc, &treq);
+	    code = afs_DoPartialWrite(avc, treq);
 	    if (code) {
 		error = code;
 		break;
@@ -604,7 +607,7 @@ afs_UFSWrite(struct vcache *avc, struct uio *auio, int aio,
 #if !defined(AFS_VM_RDWR_ENV) || defined(AFS_FAKEOPEN_ENV)
     afs_FakeClose(avc, acred);
 #endif
-    error = afs_CheckCode(error, &treq, 7);
+    error = afs_CheckCode(error, treq, 7);
     /* This set is here so we get the CheckCode. */
     if (error && !avc->vc_error)
 	avc->vc_error = error;
@@ -637,6 +640,7 @@ afs_UFSWrite(struct vcache *avc, struct uio *auio, int aio,
 	    afs_fsync(avc, acred);
     }
 #endif
+    afs_DestroyReq(treq);
     return error;
 }
 
@@ -683,7 +687,7 @@ afs_close(OSI_VC_DECL(avc), afs_int32 aflags, afs_ucred_t *acred)
     afs_int32 code;
     afs_int32 code_checkcode = 0;
     struct brequest *tb;
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
 #ifdef AFS_SGI65_ENV
     struct flid flid;
 #endif
@@ -693,25 +697,27 @@ afs_close(OSI_VC_DECL(avc), afs_int32 aflags, afs_ucred_t *acred)
     AFS_STATCNT(afs_close);
     afs_Trace2(afs_iclSetp, CM_TRACE_CLOSE, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_INT32, aflags);
-    code = afs_InitReq(&treq, acred);
+    code = afs_CreateReq(&treq, acred);
     if (code)
 	return code;
     afs_InitFakeStat(&fakestat);
-    code = afs_EvalFakeStat(&avc, &fakestat, &treq);
+    code = afs_EvalFakeStat(&avc, &fakestat, treq);
     if (code) {
 	afs_PutFakeStat(&fakestat);
+	afs_DestroyReq(treq);
 	return code;
     }
     AFS_DISCON_LOCK();
 #ifdef	AFS_SUN5_ENV
     if (avc->flockCount) {
-	HandleFlock(avc, LOCK_UN, &treq, 0, 1 /*onlymine */ );
+	HandleFlock(avc, LOCK_UN, treq, 0, 1 /*onlymine */ );
     }
 #endif
 #if defined(AFS_SGI_ENV)
     if (!lastclose) {
 	afs_PutFakeStat(&fakestat);
         AFS_DISCON_UNLOCK();
+	afs_DestroyReq(treq);
 	return 0;
     }
     /* unlock any locks for pid - could be wrong for child .. */
@@ -719,14 +725,14 @@ afs_close(OSI_VC_DECL(avc), afs_int32 aflags, afs_ucred_t *acred)
 # ifdef AFS_SGI65_ENV
     get_current_flid(&flid);
     cleanlocks((vnode_t *) avc, flid.fl_pid, flid.fl_sysid);
-    HandleFlock(avc, LOCK_UN, &treq, flid.fl_pid, 1 /*onlymine */ );
+    HandleFlock(avc, LOCK_UN, treq, flid.fl_pid, 1 /*onlymine */ );
 # else
 #  ifdef AFS_SGI64_ENV
     cleanlocks((vnode_t *) avc, flp);
 #  else /* AFS_SGI64_ENV */
     cleanlocks((vnode_t *) avc, u.u_procp->p_epid, u.u_procp->p_sysid);
 #  endif /* AFS_SGI64_ENV */
-    HandleFlock(avc, LOCK_UN, &treq, OSI_GET_CURRENT_PID(), 1 /*onlymine */ );
+    HandleFlock(avc, LOCK_UN, treq, OSI_GET_CURRENT_PID(), 1 /*onlymine */ );
 # endif /* AFS_SGI65_ENV */
     /* afs_chkpgoob will drop and re-acquire the global lock. */
     afs_chkpgoob(&avc->v, btoc(avc->f.m.Length));
@@ -737,18 +743,19 @@ afs_close(OSI_VC_DECL(avc), afs_int32 aflags, afs_ucred_t *acred)
 	 * with the close. */
 	afs_PutFakeStat(&fakestat);
 	AFS_DISCON_UNLOCK();
+	afs_DestroyReq(treq);
 	return 0;
     }
 #else
     if (avc->flockCount) {	/* Release Lock */
-	HandleFlock(avc, LOCK_UN, &treq, 0, 1 /*onlymine */ );
+	HandleFlock(avc, LOCK_UN, treq, 0, 1 /*onlymine */ );
     }
 #endif
     if (aflags & (FWRITE | FTRUNC)) {
 	if (afs_BBusy() || (AFS_NFSXLATORREQ(acred)) || AFS_IS_DISCONNECTED) {
 	    /* do it yourself if daemons are all busy */
 	    ObtainWriteLock(&avc->lock, 124);
-	    code = afs_StoreOnLastReference(avc, &treq);
+	    code = afs_StoreOnLastReference(avc, treq);
 	    ReleaseWriteLock(&avc->lock);
 #if defined(AFS_SGI_ENV)
 	    AFS_RWUNLOCK((vnode_t *) avc, VRWLOCK_WRITE);
@@ -860,8 +867,9 @@ afs_close(OSI_VC_DECL(avc), afs_int32 aflags, afs_ucred_t *acred)
     if (code_checkcode) {
 	code = code_checkcode;
     } else {
-	code = afs_CheckCode(code, &treq, 5);
+	code = afs_CheckCode(code, treq, 5);
     }
+    afs_DestroyReq(treq);
     return code;
 }
 
@@ -878,7 +886,7 @@ afs_fsync(OSI_VC_DECL(avc), afs_ucred_t *acred)
 #endif 
 {
     afs_int32 code;
-    struct vrequest treq;
+    struct vrequest *treq = NULL;
     OSI_VC_CONVERT(avc);
 
     if (avc->vc_error)
@@ -892,7 +900,7 @@ afs_fsync(OSI_VC_DECL(avc), afs_ucred_t *acred)
 
     AFS_STATCNT(afs_fsync);
     afs_Trace1(afs_iclSetp, CM_TRACE_FSYNC, ICL_TYPE_POINTER, avc);
-    if ((code = afs_InitReq(&treq, acred)))
+    if ((code = afs_CreateReq(&treq, acred)))
 	return code;
     AFS_DISCON_LOCK();
 #if defined(AFS_SGI_ENV)
@@ -909,7 +917,7 @@ afs_fsync(OSI_VC_DECL(avc), afs_ucred_t *acred)
 	    
 	    /* put the file back */
 	    UpgradeSToWLock(&avc->lock, 41);
-	    code = afs_StoreAllSegments(avc, &treq, AFS_SYNC);
+	    code = afs_StoreAllSegments(avc, treq, AFS_SYNC);
 	    ConvertWToSLock(&avc->lock);
 	} else {
 	    UpgradeSToWLock(&avc->lock, 711);
@@ -928,7 +936,8 @@ afs_fsync(OSI_VC_DECL(avc), afs_ucred_t *acred)
     }
 #endif
     AFS_DISCON_UNLOCK();
-    code = afs_CheckCode(code, &treq, 33);
+    code = afs_CheckCode(code, treq, 33);
+    afs_DestroyReq(treq);
     ReleaseSharedLock(&avc->lock);
     return code;
 }

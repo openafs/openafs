@@ -1047,10 +1047,6 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	code = 0;
 	AFS_COPYINSTR(AFSKPTR(parm2), tbuffer, AFS_SMALLOCSIZ, &bufferSize,
 		      code);
-	if (code) {
-	    osi_FreeSmallSpace(tbuffer);
-	    goto out;
-	}
 	if (!code) {
 	    tbuffer[AFS_SMALLOCSIZ - 1] = '\0';	/* null-terminate the name */
 	    /* We have the cache dir copied in.  Call the cache init routine */

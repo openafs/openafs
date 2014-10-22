@@ -45,6 +45,7 @@ DARWIN_INFOFILE=@DARWIN_INFOFILE@
 DBG = @DBG@
 DEST = @DEST@
 FSINCLUDES = @FSINCLUDES@
+GENCAT = @GENCAT@
 INCLUDE_LIBINTL = @INCLUDE_libintl@
 KERN_DBG = @KERN_DBG@
 KERN_OPTMZ = @KERN_OPTMZ@
@@ -123,6 +124,13 @@ KERNELDIR = ../libafs
 COMPILE_ET = ${TOP_OBJDIR}/src/comerr/compile_et
 RXGEN = ${TOP_OBJDIR}/src/rxgen/rxgen
 SHELL = /bin/sh
+
+#
+# Generate error table header and the source files independently for
+# parallel make.
+#
+COMPILE_ET_H=${COMPILE_ET} -emit h
+COMPILE_ET_C=${COMPILE_ET} -emit c
 
 #
 # Common/standard cflags/paths/etc
