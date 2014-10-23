@@ -16,6 +16,7 @@ ExecStop=/bin/umount -af -t afs
 ExecStopPost=/sbin/rmmod $KMOD
 EnvironmentFile=/var/cache/openafs-client/openafs-client.env
 KillMode=none
+GuessMainPID=no
 
 [Install]
 WantedBy=multi-user.target remote-fs.target
