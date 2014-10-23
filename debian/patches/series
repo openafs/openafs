@@ -1,0 +1,2 @@
+0001-userok.c-Fix-fixed-size-on-stack-path-buffers.patch
+0002-Tweak-AFSDIR_PATH_MAX-definition.patch

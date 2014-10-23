@@ -1,0 +1,43 @@
+From: Benjamin Kaduk <kaduk@mit.edu>
+Date: Mon, 8 Sep 2014 13:47:33 -0400
+Subject: Tweak AFSDIR_PATH_MAX definition
+
+On recent Debian, we run into runtime errors in the test suite
+because _POSIX_PATH_MAX is only 256, and that buffer is too small
+for a call to realpath().  Use PATH_MAX if it's available and larger
+than _POSIX_PATH_MAX, in a way that should be safe even when PATH_MAX
+is not defined.
+
+Change-Id: I39127e88d92b358245ece21131219380ca4be98a
+Reviewed-on: http://gerrit.openafs.org/11453
+Tested-by: BuildBot <buildbot@rampaginggeek.com>
+Reviewed-by: Jeffrey Altman <jaltman@your-file-system.com>
+Reviewed-by: Chas Williams - CONTRACTOR <chas@cmf.nrl.navy.mil>
+Reviewed-by: Perry Ruiter <pruiter@sinenomine.net>
+Reviewed-by: D Brashear <shadow@your-file-system.com>
+Tested-by: D Brashear <shadow@your-file-system.com>
+(cherry picked from commit ec2382e060753dfdcaf84b9ac03e1534c65fcdbc)
+---
+ src/util/dirpath.hin | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/src/util/dirpath.hin b/src/util/dirpath.hin
+index 2890426..ae6d2cf 100644
+--- a/src/util/dirpath.hin
++++ b/src/util/dirpath.hin
+@@ -75,7 +75,14 @@
+ #ifdef AFS_NT40_ENV
+ #define AFSDIR_PATH_MAX MAX_PATH
+ #else /* unices */
+-#define AFSDIR_PATH_MAX    _POSIX_PATH_MAX
++# ifndef PATH_MAX
++#  define PATH_MAX          1024
++# endif
++# if PATH_MAX > _POSIX_PATH_MAX
++#  define AFSDIR_PATH_MAX   PATH_MAX
++# else
++#  define AFSDIR_PATH_MAX   _POSIX_PATH_MAX
++# endif
+ #endif
+  
+ 

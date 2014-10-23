@@ -19,6 +19,8 @@ openafs (1.6.10-1) UNRELEASED; urgency=medium
     - Support for cold shutdowns is removed.  They generally resulted
       only in strange failures later on.
   * Add a systemd unit file for openafs-fileserver.
+  * Use heap-allocated buffers of sufficient length for realpath() in
+    userok.c. (Closes: #757378)
 
  -- Benjamin Kaduk <kaduk@mit.edu>  Wed, 22 Oct 2014 13:10:59 -0400
 
