@@ -101,6 +101,9 @@ echo AFS_DYNROOT="$RET" >> /etc/openafs/afs.conf.client
 db_get openafs-client/fakestat
 echo AFS_FAKESTAT="$RET" >> /etc/openafs/afs.conf.client
 
+# Prepopulate the systemd EnvironmentFile
+/usr/share/openafs/openafs-client-precheck
+
 #DEBHELPER#
 
 exit 0
