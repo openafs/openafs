@@ -13,7 +13,7 @@ ExecStartPost=/usr/bin/fs sysname $AFS_SYSNAME
 ExecStop=/bin/grep -qv ^1$ /proc/sys/kernel/modules_disabled
 ExecStop=/bin/umount -a -t afs
 ExecStop=/bin/umount -af -t afs
-ExecStopPost=/sbin/rmmod openafs
+ExecStopPost=/sbin/rmmod $KMOD
 EnvironmentFile=/var/cache/openafs-client/openafs-client.env
 KillMode=none
 

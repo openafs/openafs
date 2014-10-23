@@ -7,6 +7,7 @@ if [ -f /etc/openafs/afs.conf ]; then
 fi
 
 CACHEINFO=${CACHEINFO:-/etc/openafs/cacheinfo}
+MODULEROOT=${MODULEROOT:-/lib/modules/`uname -r`}
 
 # Exit if the package is not installed.
 [ -x /sbin/afsd ] || exit 1
@@ -32,7 +33,19 @@ if [ -z $(/sbin/lsmod | fgrep openafs) ]; then
 
     if [ $status -ne 0 ] ; then
 	echo "Failed to load openafs.ko.  Does it need to be built?" >&2
-        exit $status
+	# We cannot fail hard on a missing module, though, as that will
+	# cause our unit to be put in a disabled state.
+	if $(grep -q openafs "$MODULEROOT/modules.dep"); then
+	    exit $status
+	else
+	    cat > /var/cache/openafs-client/openafs-client.env <<EOF
+AFSD_ARGS=-exit
+AFS_SETCRYPT=-help
+AFS_SYSNAME=-help
+KMOD=--version
+EOF
+	    exit 0
+	fi
     fi
 fi
 
@@ -75,4 +88,5 @@ cat > /var/cache/openafs-client/openafs-client.env <<EOF
 AFSD_ARGS=${AFSD_OPTIONS}
 AFS_SETCRYPT=${AFS_SETCRYPT}
 AFS_SYSNAME=${AFS_SYSNAME}
+KMOD=openafs
 EOF
