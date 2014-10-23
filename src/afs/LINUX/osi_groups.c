@@ -498,10 +498,12 @@ error:
     return code;
 }
 
+#if defined(STRUCT_KEY_TYPE_HAS_MATCH)
 static int afs_pag_match(const struct key *key, const void *description)
 {
 	return strcmp(key->description, description) == 0;
 }
+#endif
 
 static void afs_pag_destroy(struct key *key)
 {
@@ -527,7 +529,9 @@ struct key_type key_type_afs_pag =
 #else
     .instantiate = afs_pag_instantiate,
 #endif
+#if defined(STRUCT_KEY_TYPE_HAS_MATCH)
     .match       = afs_pag_match,
+#endif
     .destroy     = afs_pag_destroy,
 };
 
