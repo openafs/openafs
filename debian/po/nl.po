@@ -1,27 +1,29 @@
-# SOME DESCRIPTIVE TITLE.
+# Dutch translation of openafs debconf templates.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# This file is distributed under the same license as the openafs package.
+# Frans Spiesschaert <Frans.Spiesschaert@yucom.be>, 2014.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: openafs\n"
 "Report-Msgid-Bugs-To: openafs@packages.debian.org\n"
 "POT-Creation-Date: 2013-04-08 11:17-0700\n"
-"PO-Revision-Date: 2009-02-13 09:24-0800\n"
-"Last-Translator: Bart Cornelis <cobaco@skolelinux.no>\n"
-"Language-Team: debian-l10n-dutch <debian-l10n-dutch@lists.debian.org>\n"
-"Language: \n"
+"PO-Revision-Date: 2014-09-30 13:17+0200\n"
+"Last-Translator: Frans Spiesschaert <Frans.Spiesschaert@yucom.be>\n"
+"Language-Team: Debian Dutch l10n Team <debian-l10n-dutch@lists.debian.org>\n"
+"Language: nl\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Poedit-Language: nl\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Lokalize 1.4\n"
 
 #. Type: string
 #. Description
 #: ../openafs-client.templates:1001
 msgid "DB server host names for your home cell:"
-msgstr "Computernamen van de DB-servers voor uw thuiscel:"
+msgstr "Computernamen van de DB-servers voor de cel waartoe u behoort:"
 
 #. Type: string
 #. Description
@@ -41,14 +43,14 @@ msgstr ""
 "die gecontacteerd moeten worden bij het zoeken naar delen van een cel. De "
 "cel waartoe dit werkstation volgens wat u aangaf behoort, is niet terug te "
 "vinden in dit bestand. Gelieve dus de computernamen van de databaseservers "
-"op te geven, gescheiden met spaties. OPGELET: als bezig bent een nieuwe cel "
-"op te zetten en deze machine als databaseserver voor deze cel zal fungeren "
-"dient u hier enkel de naam van deze machine in te geven; u kunt verdere "
-"servers dan later toevoegen eens alles functioneert. Zorg er ook voor dat u "
-"het opstarten van de AFS-client tijdens het opstarten van de machine niet "
-"activeert voordat de cel geconfigureerd is, zodra u daarmee klaar bent kunt "
-"u /etc/openafs/afs.conf.client aanpassen om het automatisch opstarten van de "
-"client tijdens de machinestart te activeren."
+"op te geven, gescheiden met spaties. OPGELET: als u bezig bent een nieuwe "
+"cel op te zetten en deze machine als databaseserver voor deze cel zal "
+"fungeren dient u hier enkel de naam van deze machine in te geven; u kunt "
+"verdere servers dan later toevoegen eens alles functioneert. Zorg er ook "
+"voor dat u het opstarten van de AFS-client tijdens het opstarten van de "
+"machine niet activeert voordat de cel geconfigureerd is. Zodra u daarmee "
+"klaar bent kunt u /etc/openafs/afs.conf.client aanpassen om het automatisch "
+"opstarten van de client tijdens de machinestart te activeren."
 
 #. Type: string
 #. Description
@@ -152,27 +154,27 @@ msgid ""
 msgstr ""
 "AFS biedt een zwakke encryptievorm aan die optioneel kan gebruikt worden bij "
 "de communicatie tussen de client en bestandsservers. Hoewel deze encryptie "
-"zwakker is dan DES, en dus niet voldoende is voor hoogvertrouwelijke data, "
-"biedt het enige betrouwbaarheid daar het de taak van een niet-gerichte "
-"aanval significant moeilijker maakt. "
+"zwakker is dan DES, en dus niet voldoende is voor zeer vertrouwelijke data, "
+"biedt het enige vertrouwelijkheid en plaatst een nonchalante aanvaller voor "
+"significante moeilijkheden. "
 
 #. Type: select
 #. Choices
 #: ../openafs-client.templates:7001
 msgid "Yes"
-msgstr ""
+msgstr "Ja"
 
 #. Type: select
 #. Choices
 #: ../openafs-client.templates:7001
 msgid "Sparse"
-msgstr ""
+msgstr "Gespreid"
 
 #. Type: select
 #. Choices
 #: ../openafs-client.templates:7001
 msgid "No"
-msgstr ""
+msgstr "Nee"
 
 #. Type: select
 #. Description
@@ -190,10 +192,10 @@ msgid ""
 "dynamically based on the contents of /etc/openafs/CellServDB and DNS."
 msgstr ""
 "/afs bevat een ingang voor elke cel waarmee een client kan communiceren. "
-"Traditioneel worden deze ingangen aangemaakt door de servers van de thuiscel "
-"van de client. OpenAFS-clients zijn echter in staat om de inhoud van /afs "
-"dynamisch te genereren, uitgaande van de data in /etc/openafs/CellServDB en "
-"DNS."
+"Traditioneel worden deze ingangen aangemaakt door de servers van de cel "
+"waartoe de client behoort. OpenAFS-clients zijn echter in staat om de inhoud "
+"van /afs dynamisch te genereren, uitgaande van de data in /etc/openafs/"
+"CellServDB en DNS."
 
 #. Type: select
 #. Description
@@ -206,9 +208,9 @@ msgid ""
 msgstr ""
 "Als u ervoor kiest om /afs dynamisch te genereren kan het noodzakelijk zijn "
 "om /etc/openafs/CellAlias aan te maken met daarin de aliases voor "
-"veelgebruikte cellen. (de syntax van dit bestand is 1 regel per alias, "
-"waarbij elke regel bestaat uit een celnaam gevolgd door een spatie en de "
-"alias voor die cel)"
+"veelgebruikte cellen. (De syntax van dit bestand is 1 regel per alias, "
+"waarbij elke regel bestaat uit de naam van een cel gevolgd door een spatie "
+"en de alias voor die cel.)"
 
 #. Type: select
 #. Description
@@ -220,14 +222,21 @@ msgid ""
 "CellAlias file are shown as normal, although they may appear to be dangling "
 "links until traversed."
 msgstr ""
+"De optie 'Gespreid' is hetzelfde als 'Ja', met dit verschil dat /afs niet "
+"onmiddellijk ingevuld wordt met gegevens uit /etc/openafs/CellServDB, maar "
+"dat cellen, op uitzondering van de lokale cel, slechts toegevoegd worden op "
+"het ogenblik dat er contact mee gemaakt wordt. De aliassen van cellen, zoals "
+"die vermeld staan in het bestand CellAlias blijven zichtbaar zoals "
+"gewoonlijk, maar kunnen er als een loze symbolische koppeling uitzien tot u "
+"de cel gebruikt heeft."
 
 #. Type: boolean
 #. Description
 #: ../openafs-client.templates:8001
 msgid "Use fakestat to avoid hangs when listing /afs?"
 msgstr ""
-"Wilt u fakestat gebruiken om vasthangen tijdens het weergeven van de inhoud "
-"van /afs tegen te gaan?"
+"Wilt u fakestat gebruiken om te voorkomen dat het programma bij het "
+"weergeven van de inhoud van /afs zou vastlopen?"
 
 #. Type: boolean
 #. Description
@@ -240,18 +249,19 @@ msgid ""
 "operations locally to avoid these hangs.  You want this option under most "
 "circumstances."
 msgstr ""
-"Omdat AFS een globale bestandsruimte is kunnen operaties op de '/afs'-map "
+"Omdat AFS een globale bestandsruimte is, kunnen bewerkingen op de '/afs'-map "
 "flink wat netwerkverkeer veroorzaken. Wanneer sommige AFS-cellen "
-"onbeschikbaar zijn kan het weergeven van /afs in een grafische browser uw "
-"machine enkele minuten vasthangen. AFS heeft een optie die antwoorden voor "
-"deze operaties lokaal simuleert en zo dit vasthangen vermijdt. Onder de "
-"meeste omstandigheden kunt u dit best activeren."
+"onbeschikbaar zijn, kan het weergeven van de inhoud van /afs met het "
+"commando 'ls' of via een grafische bestandsbrowser er toe leiden dat uw "
+"machine gedurende minuten vastloopt. AFS heeft een optie die de antwoorden "
+"voor deze operaties lokaal kan simuleren en zo het vastlopen vermijdt. In de "
+"meeste omstandigheden doet u er het beste aan deze optie te activeren."
 
 #. Type: string
 #. Description
 #: ../openafs-fileserver.templates:1001
 msgid "Cell this server serves files for:"
-msgstr "Voor welke cellen biedt deze server bestanden aan?"
+msgstr "Cellen waarvoor deze server bestanden aanbiedt:"
 
 #. Type: string
 #. Description
@@ -262,8 +272,8 @@ msgid ""
 "the same cell as the workstation's client belongs to."
 msgstr ""
 "AFS-bestandsservers maken deel uit van een cel. Ze beschikken over de "
-"sleutel voor de Kerberos-dienst van die cel, en ondersteunen volumes binnen "
-"die cel. Normaal is dit dezelfde cel als waartoe de client op het "
+"sleutel voor de Kerberos-dienst van die cel, en bedienen die cel met "
+"schijven. Die cel is normaliter dezelfde als die waartoe de client op het "
 "werkstation behoort."
 
 #. Type: note
@@ -282,7 +292,7 @@ msgid ""
 "does load, data corruption may result.  You have been warned."
 msgstr ""
 "U draait het OpenAFS bestandsserver pakket op een alpha. Dit werkt "
-"waarschijnlijk niet; de DES-code, en de 'threaded' bestandsserver zijn "
-"onbetrouwbaar op alpha. In alle waarschijnlijkheid zal de bestandsserver "
-"weigeren op te starten, maar als deze toch start is data corruptie "
-"waarschijnlijk. U bent gewaarschuwd. "
+"waarschijnlijk niet; de DES-code is onbetrouwbaar op alpha, evenals de "
+"'threaded' bestandsserver. Naar alle waarschijnlijkheid zal de "
+"bestandsserver niet eens opstarten, maar als hij toch start kan "
+"gegevensbeschadiging het gevolg zijn. U bent gewaarschuwd. "
