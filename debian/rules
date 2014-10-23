@@ -231,6 +231,7 @@ override_dh_install-indep:
 
 # We don't want to stop the init scripts on upgrade.
 override_dh_installinit:
+	dh_systemd_enable
 	dh_installinit -popenafs-client -r
 	dh_installinit -popenafs-fileserver -r
 
