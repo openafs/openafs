@@ -7,4 +7,4 @@ After=network.target network-online.target local-fs.target
 Type=forking
 EnvironmentFile=-/etc/default/openafs-fileserver
 ExecStart=/usr/sbin/bosserver $DAEMON_ARGS
-ExecStopPre=bos shutdown localhost -wait -localauth
+ExecStopPre=/usr/bin/bos shutdown localhost -wait -localauth
