@@ -1,4 +1,4 @@
-openafs (1.6.10-1) unstable; urgency=medium
+openafs (1.6.10-1) UNRELEASED; urgency=medium
 
   * New upstream release.
     - fix segfault with aklog -path.
@@ -23,7 +23,7 @@ openafs (1.6.10-1) unstable; urgency=medium
     userok.c. (Closes: #757378)
   * Update Dutch translation. (Closes: #765083)
 
- -- Benjamin Kaduk <kaduk@mit.edu>  Thu, 23 Oct 2014 00:16:27 -0400
+ -- Benjamin Kaduk <kaduk@mit.edu>  Wed, 22 Oct 2014 13:10:59 -0400
 
 openafs (1.6.10~pre1-1) experimental; urgency=low
 
