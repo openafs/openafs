@@ -1,0 +1,10 @@
+[Unit]
+Description=OpenAFS file and database server manager
+Wants=network-online.target
+After=network.target network-online.target local-fs.target
+
+[Service]
+Type=forking
+EnvironmentFile=-/etc/default/openafs-fileserver
+ExecStart=/usr/sbin/bosserver $DAEMON_ARGS
+ExecStopPre=bos shutdown localhost -wait -localauth

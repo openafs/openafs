@@ -18,6 +18,7 @@ openafs (1.6.10-1) UNRELEASED; urgency=medium
       was removed from the Linux kernel in 2008.
     - Support for cold shutdowns is removed.  They generally resulted
       only in strange failures later on.
+  * Add a systemd unit file for openafs-fileserver.
 
  -- Benjamin Kaduk <kaduk@mit.edu>  Wed, 22 Oct 2014 13:10:59 -0400
 
