@@ -90,7 +90,7 @@ get-orig-source:
 
 # Use dh for most actions, with overrides below.
 %:
-	dh $@
+	dh $@ --with-systemd
 
 # Handle the renaming of the up man page to afs-up here since the man pages
 # are generated from POD source by regen.sh.

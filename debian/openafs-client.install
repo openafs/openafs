@@ -32,6 +32,7 @@ debian/tmp/usr/sbin/rmtsysd             usr/sbin
 
 debian/tmp/usr/sbin/afsd                sbin
 
+debian/openafs-client-precheck                        usr/share/openafs
 debian/CellServDB                                     usr/share/openafs
 debian/tmp/usr/share/openafs/C/afszcm.cat             usr/share/openafs/C
 

@@ -1,0 +1,78 @@
+#! /bin/sh
+PATH=/bin:/usr/bin:/sbin:/usr/sbin
+
+# Gather up options and post startup script name, if present
+if [ -f /etc/openafs/afs.conf ]; then
+    . /etc/openafs/afs.conf
+fi
+
+CACHEINFO=${CACHEINFO:-/etc/openafs/cacheinfo}
+
+# Exit if the package is not installed.
+[ -x /sbin/afsd ] || exit 1
+
+# Do some other checks for prerequisites
+if ! [ -f "${CACHEINFO}" ]; then
+    echo "required cacheinfo file does not exist" >&2
+    exit 1
+fi
+if ! [ -d $(awk -F : '{print $1}' < "${CACHEINFO}") ]; then
+    echo "AFS mountpoint is not a directory or does not exist" >&2
+    exit 1
+fi
+if pidof /sbin/afsd || pidof /usr/sbin/afsd; then
+    echo "afsd is already running?" >&2
+    exit 1
+fi
+
+# Ensure that the kernel module is loaded.
+if [ -z $(/sbin/lsmod | fgrep openafs) ]; then
+    modprobe openafs
+    status=$?
+
+    if [ $status -ne 0 ] ; then
+	echo "Failed to load openafs.ko.  Does it need to be built?" >&2
+        exit $status
+    fi
+fi
+
+# Determine which afsd options to use.  /etc/openafs/afs.conf contains the
+# settings that are checked here.
+if [ -z "$OPTIONS" ] || [ "$OPTIONS" = "AUTOMATIC" ] ; then
+    AFSD_OPTIONS="$VERBOSE"
+else
+    AFSD_OPTIONS="$OPTIONS $VERBOSE"
+fi
+
+# These variables are from /etc/openafs/afs.conf.client and are managed
+# automatically by debconf.
+case "$AFS_AFSDB" in
+[Yy][Ee][Ss]|[Tt][Rr][Uu][Ee])
+    AFSD_OPTIONS="$AFSD_OPTIONS -afsdb"
+esac
+case "$AFS_DYNROOT" in
+[Yy][Ee][Ss]|[Tt][Rr][Uu][Ee])
+    AFSD_OPTIONS="$AFSD_OPTIONS -dynroot"
+    ;;
+[Ss][Pp][Aa][Rr][Ss][Ee])
+    AFSD_OPTIONS="$AFSD_OPTIONS -dynroot-sparse"
+esac
+case "$AFS_FAKESTAT" in
+[Yy][Ee][Ss]|[Tt][Rr][Uu][Ee])
+    AFSD_OPTIONS="$AFSD_OPTIONS -fakestat"
+esac
+
+case "$AFS_CRYPT" in
+[Yy][Ee][Ss]|[Tt][Rr][Uu][Ee])
+    AFS_SETCRYPT=on
+    ;;
+*)
+    AFS_SETCRYPT=off
+esac
+
+# Generate an EnvironmentFile for use by systemd.
+cat > /var/cache/openafs/openafs-client.env <<EOF
+AFSD_ARGS=${AFSD_OPTIONS}
+AFS_SETCRYPT=${AFS_SETCRYPT}
+AFS_SYSNAME=${AFS_SYSNAME}
+EOF

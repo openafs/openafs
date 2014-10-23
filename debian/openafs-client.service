@@ -1,0 +1,21 @@
+[Unit]
+Description=OpenAFS client
+Wants=network-online.target
+After=network.target network-online.target local-fs.target
+Before=remote-fs.target
+
+[Service]
+Type=forking
+ExecStartPre=/usr/share/openafs/openafs-client-precheck
+ExecStart=/sbin/afsd $AFSD_ARGS
+ExecStartPost=fs setcrypt $AFS_SETCRYPT
+ExecStartPost=fs sysname $AFS_SYSNAME
+ExecStopPre=grep -qv ^1$ /proc/sys/kernel/modules_disabled
+ExecStop=umount -a -t afs
+ExecStop=umount -af -t afs
+ExecStopPost=rmmod openafs
+EnvironmentFile=/var/cache/openafs/openafs-client.env
+KillMode=none
+
+[Install]
+WantedBy=multi-user.target remote-fs.target

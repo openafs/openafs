@@ -4,6 +4,20 @@ openafs (1.6.10-1) UNRELEASED; urgency=medium
     - fix segfault with aklog -path.
   * The 1.6.10~pre1-1 changelog entry contains a full summary of changes
     in the upstream release.
+  * Add a systemd unit file for openafs-client.
+    - The variables AFS_PRE_SHUTDOWN and AFS_POST_INIT from
+      /etc/openafs.afs.conf are no longer honored.  They should be
+      converted to the systemd format and placed in
+      /etc/systemd/system/openafs-client.service.d/ ; automatic conversion
+      is not possible.  In particular, the kill_all_afs functionality is
+      not available.
+    - The LIBAFS, MODULEROOT, MODULEDIR, and DKMSDIR settings from
+      /etc/openafs/afs.conf are not used by the unit file.
+    - The extra shutdown handling for when the NFS translator is used
+      was not converted to the systemd format; the necessary feature
+      was removed from the Linux kernel in 2008.
+    - Support for cold shutdowns is removed.  They generally resulted
+      only in strange failures later on.
 
  -- Benjamin Kaduk <kaduk@mit.edu>  Wed, 22 Oct 2014 13:10:59 -0400
 
