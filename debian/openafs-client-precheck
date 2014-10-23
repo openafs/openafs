@@ -71,7 +71,7 @@ case "$AFS_CRYPT" in
 esac
 
 # Generate an EnvironmentFile for use by systemd.
-cat > /var/cache/openafs/openafs-client.env <<EOF
+cat > /var/cache/openafs-client/openafs-client.env <<EOF
 AFSD_ARGS=${AFSD_OPTIONS}
 AFS_SETCRYPT=${AFS_SETCRYPT}
 AFS_SYSNAME=${AFS_SYSNAME}

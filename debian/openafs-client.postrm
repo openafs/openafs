@@ -9,6 +9,7 @@ if [ "$1" = 'purge' ] ; then
     for file in cacheinfo CellServDB ThisCell afs.conf.client ; do
         rm -f "/etc/openafs/$file"
     done
+    rm -f /var/cache/openafs-client/openafs-client.env
 fi
 
 #DEBHELPER#
