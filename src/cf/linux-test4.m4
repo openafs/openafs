@@ -776,3 +776,16 @@ AC_DEFUN([LINUX_IOP_LOOKUP_TAKES_UNSIGNED], [
 		       [define if your iops.lookup takes an unsigned int argument],
 		       [-Werror])
 ])
+
+
+AC_DEFUN([LINUX_D_INVALIDATE_IS_VOID], [
+  AC_CHECK_LINUX_BUILD([whether d_invalidate returns void],
+			[ac_cv_linux_func_d_invalidate_returns_void],
+			[#include <linux/fs.h>],
+			[
+			void d_invalidate(struct dentry *);
+			],
+		       [D_INVALIDATE_IS_VOID],
+		       [define if your d_invalidate returns void],
+		       [])
+])
