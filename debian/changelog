@@ -1,4 +1,4 @@
-openafs (1.6.10-1) UNRELEASED; urgency=medium
+openafs (1.6.10-1) unstable; urgency=medium
 
   * New upstream release.
     - fix segfault with aklog -path.
