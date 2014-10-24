@@ -11,7 +11,7 @@ openafs (1.6.10-1) UNRELEASED; urgency=medium
       /etc/systemd/system/openafs-client.service.d/ ; automatic conversion
       is not possible.  In particular, the kill_all_afs functionality is
       not available.
-    - The LIBAFS, MODULEROOT, MODULEDIR, and DKMSDIR settings from
+    - The LIBAFS, MODULEDIR, and DKMSDIR settings from
       /etc/openafs/afs.conf are not used by the unit file.
     - The extra shutdown handling for when the NFS translator is used
       was not converted to the systemd format; the necessary feature
