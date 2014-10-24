@@ -4,7 +4,7 @@ openafs (1.6.10-1) UNRELEASED; urgency=medium
     - fix segfault with aklog -path.
   * The 1.6.10~pre1-1 changelog entry contains a full summary of changes
     in the upstream release.
-  * Add a systemd unit file for openafs-client.
+  * Add a systemd unit file for openafs-client. (Closes: #760063)
     - The variables AFS_PRE_SHUTDOWN and AFS_POST_INIT from
       /etc/openafs.afs.conf are no longer honored.  They should be
       converted to the systemd format and placed in
