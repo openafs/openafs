@@ -1766,7 +1766,6 @@ Update_TargetVnodeStatus(Vnode * targetptr, afs_uint32 Caller,
     }
     if (InStatus->Mask & AFS_SETMODE) {
 	int modebits = InStatus->UnixModeBits;
-#define	CREATE_SGUID_ADMIN_ONLY 1
 #ifdef CREATE_SGUID_ADMIN_ONLY
 	if (!remote && VanillaUser(client))
 	    modebits = modebits & 0777;
