@@ -5406,6 +5406,7 @@ rxi_ResetCall(struct rx_call *call, int newcall)
     call->rprev = 0;
     call->lastAcked = 0;
     call->localStatus = call->remoteStatus = 0;
+    call->lastSendData = 0;
 
     if (flags & RX_CALL_READER_WAIT) {
 #ifdef	RX_ENABLE_LOCKS
