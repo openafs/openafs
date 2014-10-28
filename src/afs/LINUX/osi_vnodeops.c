@@ -1231,10 +1231,37 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 	if (hgetlo(pvcp->f.m.DataVersion) > dp->d_time || !(vcp->f.states & CStatd)) {
 	    struct vattr *vattr = NULL;
 	    int code;
+	    int lookup_good;
 
 	    credp = crref();
 	    code = afs_lookup(pvcp, (char *)dp->d_name.name, &tvc, credp);
-	    if (code || tvc != vcp) {
+
+	    if (code) {
+		/* We couldn't perform the lookup, so we're not okay. */
+		lookup_good = 0;
+
+	    } else if (tvc == vcp) {
+		/* We got back the same vcache, so we're good. */
+		lookup_good = 1;
+
+	    } else if (tvc == VTOAFS(dp->d_inode)) {
+		/* We got back the same vcache, so we're good. This is
+		 * different from the above case, because sometimes 'vcp' is
+		 * not the same as the vcache for dp->d_inode, if 'vcp' was a
+		 * mtpt and we evaluated it to a root dir. In rare cases,
+		 * afs_lookup might not evalute the mtpt when we do, or vice
+		 * versa, so the previous case will not succeed. But this is
+		 * still 'correct', so make sure not to mark the dentry as
+		 * invalid; it still points to the same thing! */
+		lookup_good = 1;
+
+	    } else {
+		/* We got back a different file, so we're definitely not
+		 * okay. */
+		lookup_good = 0;
+	    }
+
+	    if (!lookup_good) {
 		dput(parent);
 		/* Force unhash; the name doesn't point to this file
 		 * anymore. */
