@@ -1,3 +1,10 @@
+openafs (1.6.10-2) UNRELEASED; urgency=medium
+
+  * Some shell quoting and similar cleanups in openafs-client-precheck
+    from Anders Kaseorg.
+
+ -- Benjamin Kaduk <kaduk@mit.edu>  Tue, 28 Oct 2014 18:52:47 -0400
+
 openafs (1.6.10-1) unstable; urgency=medium
 
   * New upstream release.
