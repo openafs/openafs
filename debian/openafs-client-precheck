@@ -9,6 +9,15 @@ fi
 CACHEINFO=${CACHEINFO:-/etc/openafs/cacheinfo}
 MODULEROOT=${MODULEROOT:-/lib/modules/`uname -r`}
 
+do_nothing_env() {
+    cat > /var/cache/openafs-client/openafs-client.env <<EOF
+AFSD_ARGS=-exit
+AFS_SETCRYPT=-help
+AFS_SYSNAME=-help
+KMOD=--version
+EOF
+}
+
 # Exit if the package is not installed.
 [ -x /sbin/afsd ] || exit 1
 
@@ -22,8 +31,9 @@ if ! [ -d "$(awk -F : '{print $1}' < "${CACHEINFO}")" ]; then
     exit 1
 fi
 if pidof /sbin/afsd || pidof /usr/sbin/afsd; then
-    echo "afsd is already running?" >&2
-    exit 1
+    echo "afsd is already running, continuing" >&2
+    do_nothing_env
+    exit 0
 fi
 
 # Ensure that the kernel module is loaded.
@@ -38,12 +48,7 @@ if ! /sbin/lsmod | grep -Fq openafs; then
 	if grep -q openafs "$MODULEROOT/modules.dep"; then
 	    exit $status
 	else
-	    cat > /var/cache/openafs-client/openafs-client.env <<EOF
-AFSD_ARGS=-exit
-AFS_SETCRYPT=-help
-AFS_SYSNAME=-help
-KMOD=--version
-EOF
+	    do_nothing_env
 	    exit 0
 	fi
     fi
