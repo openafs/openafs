@@ -1,0 +1,565 @@
+
+This document describes version 4 of the OpenAFS Volume Location Database
+(VLDB) file format.
+
+
+VLDB file layout
+
+The vldb.DB0 file consists of 64 octet ubik header, followed by a 132,120 octet
+vldb header, followed a variable number of vldb records.  Records are either a
+148 octet volume location (vl) entry or a 8192 octet multi-homed (mh) extension
+block.  A bit flag at a fixed offset of each record specifies the record type.
+A field in the vldb header indicates the location of the last record. Any data
+in the file following the last record is ignored.
+
+
+Ubik header
+
+The vldb.DB0 file begins with a 64 octet ubik header.  All fields are in
+network byte order.  Only the first 16 octets of the ubik header are used.  The
+unused fields should always be zero.  The first 16 octets of the ubik header
+contain the representation of a struct ubik_hdr, with all the fields in network
+byte order:
+
+       0                   1                   2                   3
+       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                           ubik_magic                          |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |            padding            |          header_size          |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                             epoch                             |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                            counter                            |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                            [unused]                           |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                            [unused]                           |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                            [unused]                           |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                            [unused]                           |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                            [unused]                           |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                            [unused]                           |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                            [unused]                           |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                            [unused]                           |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                            [unused]                           |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                            [unused]                           |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                            [unused]                           |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                            [unused]                           |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+       0                   1                   2                   3
+
+magic is the ubik file identification. It should always be 0x00354545.
+
+pad1 is unused, should always be 0
+
+header_size is the size of the ubik header (including unused space), should always
+be 0x40
+
+epoch is the ubik quorum epoch value.
+
+counter is the ubik counter for transactions and updates.
+
+unused space should always be zero.
+
+
+The ubik header is not exposed through the VL_ RPC package, and as such is not
+considered to be part of the logical VLDB database.
+
+Subsequent discussion will refer to VLDB addresses, or simply addresses.  A
+VLDB address is a logical offset to a data within the VLDB.  The physical file
+offset of data referenced by a VLDB address is the VLDB address plus the size
+of the ubik header (64 octets).
+
+
+VLDB header
+
+The VLDB header follows the ubik_header. It is the logical beginning of the
+VLDB.  The VLDB header is 132120 octets in size. The majority of this space
+contains four hash tables enabling quick lookups of volumes by name and id.
+All integer fields are stored in network byte order.
+
+The layout of the VLDB header is:
+
+        0                   1                   2                   3
+        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+octets +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     0 |                            version                            |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     4 |                          headersize                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     8 |                            freePtr                            |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    12 |                            eofPtr                             |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    16 |                            allocs                             |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    20 |                             frees                             |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    24 |                          MaxVolumeId                          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    28 |                         TotalEntries[0] (rw)                  |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    32 |                         TotalEntries[1] (ro)                  |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    36 |                         TotalEntries[2] (bk)                  |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    40 |                          IpMappedAddr                         |
+       ~                              ...                              ~
+  1056 |                                                               |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  1060 |                          VolnameHash                          |
+       ~                              ...                              ~
+ 33820 |                                                               |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ 33824 |                          VolidHash[0] (rw)                    |
+       ~                              ...                              ~
+       |                                                               |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                          VolidHash[1] (ro)                    |
+       ~                              ...                              ~
+       |                                                               |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                          VolidHash[2] (bk)                    |
+       ~                              ...                              ~
+132112 |                                                               |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+132116 |                              SIT                              |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+        0                   1                   2                   3
+
+vldbversion is the vldb disk format version number. This document describes
+version 4.
+
+   Note: The OpenAFS vlserver creates empty vldb files as version 3, and
+         converts the vldb to version 4 in place the first time a fileserver
+         UUID is registered.
+
+headersize is the size in octets of the vldb header, currently 0x020418 (132120)
+
+freePtr is the logical address in octets of the first in a linked list of
+unused vldb entries in the vldb database file (that is the first logical hole
+in the database file). This value is zero if the database is densely packed.
+The physical file offset to the first free entry is the freePtr value plus the
+size of the ubik header (64 octets).
+
+eofPtr is the logical address in octets of the end of the database file. When a
+new entry is created that extends the database file, it will be created at this
+logical index.The physical file offset to the end of the database file eofPtr
+value plus the size of the ubik header (64 octets).
+
+allocs is the number of calls to AllocBlock(), for statistical purposes.
+
+frees is the number of calls to FreeBlock(), for statistical purposes.
+
+MaxVolumeId is the largest volume id allocated. It is incremented every time
+a volume is created.
+
+TotalEntries[0] is the number of read-write volume entries.
+
+TotalEntries[1] is the number of read/only volume entries.
+
+TotalEntries[2] is the number of backup volume entries.
+
+IpMappedAddr maps vl entry serverNumbers to file server information.  The vl
+entry serverNumber field is used as an offset into the IpMappedAddr table.  The
+IpMappedaddr is a table of 255 records, one for each possible serverNumber,
+from 0 to 254.  Each record is a 32 bit integer in network byte order.  Empty
+records should be zero filled.
+
+IpMappedAddr records hold either a reference to a mh entry or a single IPv4
+address.  Records which contain 0xFF in the first octet are references to mh
+entries. Non-zero records which do not contain 0xFF in the first octet hold a
+single IPv4 address in network byte order.
+
+The format of a reference to a mh entry is:
+
+        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |      0xFF     |     base      |            index              |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+0xFF in the first octet indicates the record contains a multi-homed entry
+reference, instead of an IPv4 address.
+
+base is the mh extension block number; supported range is 0 to 3.
+
+index is the index to the mh entry within the mh extension block; supported range
+is 1 to 63. (Index of 0 is reserved for the mh extension block header.)
+
+Following the index are four hash tables, each containing 8191 (a prime number)
+32-bit entries in network byte order. Each entry represents a hash bucket and
+holds the address of the vl entry at the head of the hash chain, or zero to
+indicate an empty hash bucket.
+
+VolnameHash is the hash table for searches by volume name.  The nextNameHash
+field at the head of the chain holds the address of the next vl entry in the
+hash chain.
+
+The NameHash hash function is targetted for ASCII text and is similar to the
+PRDB name hash function.  Each octet of the volume name is treated as an
+unsigned integer from which 63 (decimal) is subtracted, and the resulting
+stream of integers is used as the coefficients of a power series with base 63
+(decimal), with the least significant coefficient appearing first.
+
+For example, for a volume name string string of "abc", which is the stream
+of octets (in decimal):
+
+   97 98 99
+
+then the power series used in the hash function calculation would be
+(all numbers in decimal):
+
+  34 + (35 * 63) + (36 * 63**2)
+
+The value of this power series is stored in an unsigned 32-bit integer, and as
+such is implicitly computed modulo 2**32.  The remainder modulo 8191 (the size
+of the hash table) of this 32-bit value is used as the index into the hash
+table for this name entry.  (This hash function can be easily implemented
+iteratively.)
+
+
+VolidHash[0] is the hash table for searches by read-write volume ID. The
+nextIdHash[0] field at the head of the chain holds the address of the next vl
+entry in the hash chain.
+
+VolidHash[1] is the read-only volume ID to vldb entry hash table. The
+nextIdHash[1] field at the head of the chain holds the address of the next vl
+entry in the hash chain.
+
+VolidHash[2] is the backup volume ID to vldb entry hash table. The
+nextIdHash[2] field at the head of the chain holds the address of the next vl
+entry in the hash chain.
+
+The VolidHash hash function the remainder modulo 8191 (the size of the hash
+table) of the absolute value of the volume id.
+
+
+SIT holds the logical address of the first multi-homed extension block in the
+vldb. Each multi-homed extension block holds 4 logical addresses to additional
+multi-homed extension blocks.
+
+
+VLDB Records
+
+VLDB Records follow immediately after the VLDB header. Each record is either a
+148 octet sized volume location (vl) entry or a 8192 octet sized multi-homed
+(mh) extension block.  A bit flag at a fixed offset specifies the record type.
+
+    Note: The mh extension block size is *not* a multiple of the
+          vl entry size.
+
+The only invariant field is the single bit field which indicates the
+record type:
+
+        0                   1                   2                   3
+        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+octets +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     0 |                       [record-specific]                       |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                       [record-specific]                       |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                       [record-specific]                       |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    12 |              [record-specific-flags]                  |C| ... |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                       [record-specific]                       |
+       ~                            ...                                ~
+       |                                                               |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+C is the continuation block flag (VLCONTBLOCK). A value of 0 indicates the
+record is a 148 octet vl entry. A value of 1 indicates the record is a 8192
+octet mh extension block.
+
+
+VL Entry
+
+The 148 octet vl entry maps a volume group to a set of file server locations
+for each volume in the volume group.  A volume group consists of a single
+read-write volume, zero or one backup volumes, zero or more read-only volumes,
+and zero or one temporary clone volumes.
+
+The vl entry also holds information for volume administration.
+
+All integer fields are in network byte order.
+
+The layout of the vl entry is:
+
+        0                   1                   2                   3
+        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+octets +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     0 |                         volumeId[0] (rw)                      |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                         volumeId[1] (ro)                      |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                         volumeId[2] (bk)                      |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    12 |                             flags                             |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                           LockAfsId                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                        LockAfsTimestamp                       |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                            cloneId                            |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                        nextIdHash[0] (rw)                     |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                        nextIdHash[1] (ro)                     |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                        nextIdHash[2] (bk)                     |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    40 |                         nextNameHash                          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    44 |                             name                              |
+       +                                                               +
+       |                                                               |
+       ~                              ...                              ~
+       |                                                               |
+       +               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   108 |               |      serverNumber table                       |
+       +-+-+-+-+-+-+-+-+                                               +
+   112 |                                                               |
+       +                                                               +
+       |                                                               |
+       +                               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   120 |                               |                               |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               +
+   124 |                      serverPartition table                    |
+       +                                                               +
+       |                                                               |
+       +                                               +-+-+-+-+-+-+-+-+
+   132 |                                               |               |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+               +
+   136 |                      serverFlags table                        |
+       +                                                               +
+       |                                                               |
+       +                                                               +
+   144 |                                                               |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+
+
+volumeId[0] is the volume id allocated for the read-write volume in this volume
+group.  (The VLF_RWEXITS flag is set when the read-write volume is created.)
+
+volumeId[1] is the volume id allocated for read-only volumes in this volume
+group.  This number is allocated when the entry is created. (The VLF_ROEXISTS
+flag is set when a read-only volume is created.)
+
+volumeId[2] is the volume id allocated for the backup volume in this volume
+group, if one.  This number is allocated when the entry is created. (The
+VLF_BACKEXISTS flag is set when a backup volume is created.)
+
+flags is a bitmap which indicates the vl entry state:
+
+0x0001  VLFREE          indicates this entry is on the free list
+0x0002  VLDELETE        indicates this entry is deleted
+0x0004  VLLOCKED        not used; always zero
+0x0008  VLCONTBLOCK     always zero in vl entries
+0x0010  VLOP_MOVE       locked for a move operation
+0x0020  VLOP_RELEASE    locked for a release operation
+0x0040  VLOP_BACKUP     locked for a backup clone operation
+0x0080  VLOP_DELETE     locked for a delete or addsite operation
+0x0100  VLOP_DUMP       locked for a dump or restore operation
+0x1000  VLF_RWEXISTS    this group has a read-write volume
+0x2000  VLF_ROEXISTS    this group has at least one read-only volume
+0x4000  VLF_BACKEXISTS  this group has a backup clone
+0x8000  VLF_DFSFILESET  not used; always cleared
+
+High order bits of the flags field are reserved and should always be zero.
+
+LockAfsId is not used. This field is reserved to hold the id of the operator
+who locked the entry for a volume operation.
+
+LockTimestamp is the time stamp on the entry lock.
+
+cloneId is the volume id of the temporary clone volume, which may be
+created during volume operations.
+
+nextIdHash[0] is the logical address of the next vl entry on the
+read-write volume id hash chain.
+
+nextIdHash[1] is the logical address of the next vl entry on the
+read-only volume id hash chain.
+
+nextIdHash[2] is the logical address of the next vl entry on the backup
+volume id hash chain.
+
+nextNameHash the logical address of the next vl entry on the volume name
+hash chain.
+
+name is a 65 octet field which holds the volume name, as a null
+terminated string.
+
+serverNumber, serverPartition, and serverFlags fields form a 13 row by 3
+column table. Each row describes a volume site. Empty rows are filled with
+0xFF instead of zero.
+
+serverNumber is a number from 0 to 254. The IpMappedAddr record at the
+serverNumber offset has a reference to a multi-homed (mh) entry. The mh entry
+holds the fileserver uuid and one or more IPv4 addresses of the fileserver.
+
+serverPartition is a number from 0 to 255 which represents a file server
+partition, from /vicepa to /vicepih.
+
+serverFlags indicates the state of the volume site:
+
+0x01  VLSF_NEWREPSITE    read-only volume added to vldb, but not released yet
+0x02  VLSF_ROVOL         a read-only volume is present at this location (see Notes)
+0x04  VLSF_RWVOL         a read-write volume is present at this location (see Notes)
+0x08  VLSF_BACKVOL       a backup volume is present at this location (see Notes)
+0x10  VLSF_UUID          not used in the vldb; always zero
+0x20  VLSF_DONTUSE       out of date read-only volume
+0x40  VLSF_RWREPLICA     reserved for volume is a read-write replica
+
+Notes:
+
+1. In practice, one, and only one, of the VLSF_ROVOL, VLSF_RWVOL, VLSF_BACKVOL
+   flags are set per table row.
+
+2. In practice, the VLSF_BACKVOL flag is not used. Instead the VLF_BACKEXISTS
+   is set in the vl entry to indicate a backup clone is present on the same
+   fileserver and partition as the read-write volume. This saves an entry
+   in the table to allow for more read-only sites.
+
+
+Multi-homed Extension Block
+
+Multi-homed extension blocks are 8192 octets in size. The first 128 octets hold
+a header, which is mostly unused.  The header is immediately followed by 63 mh
+entry slots, each 128 octets in size.
+
+Up to 4 blocks may be present in the vldb. The address of the first block is
+held in the SIT field of the vldb header.  Addresses of the first and
+additional blocks are held in the contaddr field of the first block.
+
+Note: In the current format, the vldb is limited to 4 blocks, and 63 mh entries
+per block, which means the vldb is limited to 252 different mh servers, which
+is three less than the maximum number of server numbers (255).
+
+
+Multi-homed Extension Block Header
+
+The layout of the mh extension block is:
+
+        0                   1                   2                   3
+        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+octets +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     0 |                             count                             |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     4 |                           reserved[0]                         |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     8 |                           reserved[1]                         |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    12 |                             flags                             |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    16 |                           contaddr[0]                         |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    20 |                           contaddr[1]                         |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    24 |                           contaddr[2]                         |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    28 |                           contaddr[3]                         |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    32 |                            reserved                           |
+       +                                                               +
+       |                                                               |
+       ~                              ...                              ~
+   124 |                                                               |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+count is not used.
+
+reserved[0], reserved[1] should always be zero.
+
+flags must have the VLCONTBLOCK bit set to indicate this is a 8192 octet
+mh extension block. All other bits in this field should be zero.
+
+contaddrs is a table of the addresses of the mh extension blocks, including
+the first block.
+
+reserved should always be zero.
+
+
+Multi-homed Entry
+
+The mh entry contains information for a single file server. Each mh entry
+is 128 octets in size.
+
+        0                   1                   2                   3
+        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+octets +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     0 |                         uuid.time_low                         |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     4 |         uuid.time_mid         |   uuid.time_hi_and_version    |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     8 | uuid.clock_hi | uuid.clock_lo |          uuid.node            |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               |
+    12 |                                                               |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    16 |                           uniquifier                          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    20 |                            addrs[0]                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    24 |                            addrs[1]                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    28 |                            addrs[2]                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    32 |                            addrs[3]                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    36 |                            addrs[4]                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    40 |                            addrs[5]                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    44 |                            addrs[6]                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    48 |                            addrs[7]                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    52 |                            addrs[8]                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    56 |                            addrs[9]                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    60 |                            addrs[10]                          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    64 |                            addrs[11]                          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    68 |                            addrs[12]                          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    72 |                            addrs[13]                          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    76 |                            addrs[14]                          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    80 |                             flags                             |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    84 |                            reserved                           |
+       ~                               ...                             ~
+   124 |                                                               |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+
+uuid is the universal unique id the fileserver used when registering
+with the vldb.
+
+uniquifier is a serial number of the mh entry. The first mh entry is assigned a
+uniquifier of 1.  The uniquifier is incremented each time its containing entry
+is modified.
+
+addrs[0..14] holds a list of IPv4 addresses for this fileserver, each in
+network byte order.  Zero indicates an empty slot.
+
+flags is reserved and should always be zero.
+
+reserved should always be zero.
+
