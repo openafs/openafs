@@ -49,7 +49,11 @@ afs_init(struct vfsconf *vfc)
     int code;
     int offset = AFS_SYSCALL;
 #if defined(AFS_FBSD90_ENV) || defined(AFS_FBSD82_ENV)
+# if defined(FBSD_SYSCALL_REGISTER_FOUR_ARGS)
+    code = syscall_register(&offset, &afs_sysent, &old_sysent, 0);
+# else
     code = syscall_register(&offset, &afs_sysent, &old_sysent);
+# endif
     if (code) {
 	printf("AFS_SYSCALL in use, error %i. aborting\n", code);
 	return code;
