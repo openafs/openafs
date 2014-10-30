@@ -59,7 +59,7 @@
 
         <listitem>
           <para>You have a Kerberos v5 realm running for your site. If you are
-          working with an existing cell which uses 
+          working with an existing cell which uses legacy
           <emphasis role="bold">kaserver</emphasis> or Kerberos v4 for
           authentication, please see 
           <link linkend="KAS001">kaserver and Legacy Kerberos v4 Authentication</link>
@@ -172,7 +172,8 @@
         </listitem>
 
         <listitem>
-          <para>On some system types, install and configure an AFS-modified version of the <emphasis role="bold">fsck</emphasis>
+          <para>On some system types (very rare), install and configure
+          an AFS-modified version of the <emphasis role="bold">fsck</emphasis>
           program</para>
         </listitem>
 
@@ -212,12 +213,12 @@
   <sect1 id="HDRWQ19">
     <title>Choosing the First AFS Machine</title>
 
-    <para>The first AFS machine you install must have sufficient disk space to store AFS volumes. To take best advantage of AFS's
-    capabilities, store client-side binaries as well as user files in volumes. When you later install additional file server
+    <para>The first AFS machine you install must have sufficient disk space to store AFS volumes.
+    When you later install additional file server
     machines in your cell, you can distribute these volumes among the different machines as you see fit.</para>
 
-    <para>These instructions configure the first AFS machine as a <emphasis>database server machine</emphasis>, the <emphasis>binary
-    distribution machine</emphasis> for its system type, and the cell's <emphasis>system control machine</emphasis>. For a
+    <para>These instructions configure the first AFS machine as a <emphasis>database server machine</emphasis>, and optionally as the <emphasis>binary
+    distribution machine</emphasis> for its system type and the cell's <emphasis>system control machine</emphasis>. For a
     description of these roles, see the <emphasis>OpenAFS Administration Guide</emphasis>.</para>
 
     <para>Installation of additional machines is simplest if the first machine has the lowest IP address of any database server
@@ -281,7 +282,10 @@
     packages for client and server functionality, and a seperate package 
     containing a suitable kernel module for your running kernel. Consult 
     the package lists on the OpenAFS website to determine the packages 
-    appropriate for your system.</para>
+    appropriate for your system.  The preparer of such packages may
+    have included some helper scripts to partially automate the
+    creation of a new cell; such scripts can supersede much of the
+    procedures described in the rest of this document.</para>
 
     <para>If you are installing from a tarfile, or from a locally compiled 
     source tree you should create the <emphasis role="bold">/usr/afs</emphasis>
@@ -327,7 +331,10 @@
           the AFS fileservers, must incorporate AFS extensions. On machines 
           that use a dynamic kernel module loader, it is conventional to 
           alter the machine's initialization script to load the AFS extensions
-          at each reboot. <indexterm>
+          at each reboot.  The preparer of OS-format binary packages
+          may have included an init script which automates the loading
+          of the needed kernel module, eliminating a need to manually
+          configure this step. <indexterm>
               <primary>AFS server partition</primary>
 
               <secondary>mounted on /vicep directory</secondary>
@@ -361,7 +368,7 @@
         <listitem>
           <para>Configure server partitions or logical volumes to house AFS volumes.</para>
 
-          <para>Every AFS file server machine must have at least one partition or logical volume dedicated to storing AFS volumes
+          <para>Every AFS file server machine should have at least one partition or logical volume dedicated to storing AFS volumes
           (for convenience, the documentation hereafter refers to partitions only). Each server partition is mounted at a directory
           named <emphasis role="bold">/vicep</emphasis><replaceable>xx</replaceable>, where <replaceable>xx</replaceable> is one or
           two lowercase letters. By convention, the first 26 partitions are mounted on the directories called <emphasis
@@ -377,7 +384,8 @@
           The <emphasis role="bold">fileserver</emphasis> will refuse to
           mount
           any <emphasis role="bold">/vicep</emphasis><replaceable>xx</replaceable>
-          folders that are not separate partitions. </para>
+          folders that are not separate partitions without additional
+          configuration. </para>
 
           <warning>
             <para>The separate partition requirement may be overridden by
@@ -406,7 +414,7 @@
         </listitem>
 
         <listitem>
-          <para>On system types using the <emphasis role="bold">inode</emphasis> storage format, install and configure a modified <emphasis role="bold">fsck</emphasis> program which
+          <para>On (rare) system types using the <emphasis role="bold">inode</emphasis> storage format, install and configure a modified <emphasis role="bold">fsck</emphasis> program which
           recognizes the structures that the File Server uses to organize volume data on AFS server partitions. The <emphasis
           role="bold">fsck</emphasis> program provided with the operating system does not understand the AFS data structures, and so
           removes them to the <emphasis role="bold">lost+found</emphasis> directory.</para>
@@ -522,13 +530,15 @@
       <para>The procedure for starting up OpenAFS depends upon your distribution</para>
       <sect3>
         <title>Fedora and RedHat Enterprise Linux</title>
-        <para>OpenAFS provides RPMS for all current Fedora and RedHat Enterprise Linux (RHEL) releases on the OpenAFS web site and the OpenAFS yum repository.
+        <para>OpenAFS provides RPMS for all current Fedora and
+          RedHat Enterprise Linux (RHEL) releases prior to EL7 on the
+          OpenAFS web site and the OpenAFS yum repository.
         <orderedlist>
           <listitem>
             <para>Browse to
             http://dl.openafs.org/dl/openafs/<replaceable>VERSION</replaceable>,
             where VERSION is the latest stable release of
-            OpenAFS. Download the
+            OpenAFS for Unix. Download the
             openafs-repository-<replaceable>VERSION</replaceable>.noarch.rpm
             file for Fedora systems or the
             openafs-repository-rhel-<replaceable>VERSION</replaceable>.noarch.rpm
@@ -538,14 +548,14 @@
           <listitem>
             <para>Install the downloaded RPM file using the following command:
               <programlisting>
-                # rpm -U openafs-repository*.rpm
+# rpm -U openafs-repository*.rpm
               </programlisting>
             </para>
           </listitem>
           <listitem>
             <para>Install the RPM set for your operating system using the yum command as follows:
               <programlisting>
-                # yum -y install openafs-client openafs-server openafs-krb5 kmod-openafs
+# yum -y install openafs-client openafs-server openafs-krb5 kmod-openafs
               </programlisting>
 
             </para>
@@ -557,7 +567,7 @@
             </para>
             <para>To use dynamically-compiled kernel modules instead of statically compiled modules, use the following command instead of the kmod-openafs as shown above:
               <programlisting>
-                # yum install openafs-client openafs-server openafs-krb5 dkms-openafs
+# yum install openafs-client openafs-server openafs-krb5 dkms-openafs
               </programlisting>
             </para>
           </listitem>
@@ -847,7 +857,8 @@ auth  required                pam_unix.so try_first_pass</literallayout>
       details on the available options for the PAM configuration, see the
       Linux PAM documentation.</para>
 
-      <para>Sites which still require <command>kaserver</command> or
+      <para>Sites which still require the deprecated
+      <command>kaserver</command> or
       external Kerberos v4 authentication should consult <link
       linkend="KAS015">Enabling kaserver based AFS Login on Linux
       Systems</link> for details of how to enable AFS login on Linux.</para>
@@ -1752,22 +1763,26 @@ auth  required                pam_unix.so try_first_pass</literallayout>
     <title>Starting the BOS Server</title>
 
     <para>You are now ready to start the AFS server processes on this machine. 
-    If you are not working from a packaged distribution, begin by copying the 
-    AFS server binaries from the distribution to the conventional local disk
+    If you are not working from a packaged distribution, begin by installing the
+    AFS server binaries to the conventional local disk
     location, the <emphasis role="bold">/usr/afs/bin</emphasis> directory. The 
     following instructions also create files in other subdirectories of the 
     <emphasis role="bold">/usr/afs</emphasis> directory.</para>
 
-    <para>Then issue the <emphasis role="bold">bosserver</emphasis> command to initialize the Basic OverSeer (BOS) Server, which
-    monitors and controls other AFS server processes on its server machine. Include the <emphasis role="bold">-noauth</emphasis>
-    flag to disable authorization checking. Because you have not yet configured your cell's AFS authentication and authorization
-    mechanisms, the BOS Server cannot perform authorization checking as it does during normal operation. In no-authorization mode,
-    it does not verify the identity or privilege of the issuer of a <emphasis role="bold">bos</emphasis> command, and so performs
-    any operation for anyone.</para>
-
-    <para>Disabling authorization checking gravely compromises cell security. You must complete all subsequent steps in one
-    uninterrupted pass and must not leave the machine unattended until you restart the BOS Server with authorization checking
-    enabled, in <link linkend="HDRWQ72">Verifying the AFS Initialization Script</link>.</para>
+    <para>Then obtain a krb5 keytab for use by the servers in the cell.
+    Once the keytab is in place, issue the
+    <emphasis role="bold">bosserver</emphasis> command to initialize
+    the Basic OverSeer (BOS) Server, which
+    monitors and controls other AFS server processes on its server machine.
+    Because you have not yet configured your cell's AFS authentication and authorization
+    mechanisms, you must always use the
+    <emphasis role="bold">-localauth</emphasis> flag to commands, to use a
+    printed token that does not correspond to a normal krb5 identity.</para>
+    <para>Older versions of these instructions used the
+    <emphasis role="bold">-noauth</emphasis> flag, which completely disables
+    all authentication and authorization checking, allowing anyone at all
+    to control the system.  Do not use this flag!  It is highly insecure,
+    and is no longer needed.</para>
 
     <para>As it initializes for the first time, the BOS Server creates the following directories and files, setting the owner to the
     local superuser <emphasis role="bold">root</emphasis> and the mode bits to limit the ability to write (and in some cases, read)
@@ -1849,13 +1864,153 @@ auth  required                pam_unix.so try_first_pass</literallayout>
     role="bold">ThisCell</emphasis> files in the <emphasis role="bold">/usr/vice/etc</emphasis> directory because they generally run
     on client machines. On machines that are AFS servers only (as this machine currently is), the files reside only in the <emphasis
     role="bold">/usr/afs/etc</emphasis> directory; the links enable the command interpreters to retrieve the information they need.
-    Later instructions for installing the client functionality replace the links with actual files. <orderedlist>
+    Later instructions for installing the client functionality replace the links with actual files.</para>
+    <sect2>
+      <title>Generating the Cell's Kerberos V5 Keys</title>
+
+      <para>This guide uses krb5 for authentication; do not use the
+        legacy <emphasis role="bold">kaserver</emphasis> for new
+        installations.</para>
+      <para>This section creates only the cell-wide shared secret key;
+        administrative users will be created later in the procedure.
+        This cell-wide key has the principal name
+        <emphasis role="bold">afs/<replaceable>cell</replaceable></emphasis>. 
+        No user logs in under this identity, but it is used to encrypt the
+        server tickets that the KDC grants to AFS clients for presentation
+        to server processes during mutual authentication.  (The
+        chapter in the <emphasis>OpenAFS Administration Guide</emphasis>
+        about cell configuration and administration describes the
+        role of server encryption keys in mutual authentication.)</para>
+      <para>The OpenAFS 1.8.x series stores the cell-wide shared keys in
+        the file <emphasis role="bold">/usr/afs/etc/KeyFileExt</emphasis>,
+        whereas the 1.6.x series uses a krb5 keytab format file in
+        <emphasis role="bold">/usr/afs/etc/rxkad.keytab</emphasis>.
+        These instructions create both files, but populating the
+        <emphasis role="bold">KeyFileExt</emphasis> file will only succeed
+        using the version of <emphasis role="bold">asetkey</emphasis>
+        from OpenAFS 1.8.x.</para>
+      <para>The examples below assume you are using MIT Kerberos. Please refer 
+      to the documentation for your KDC's administrative interface if you are 
+      using a different vendor</para>
+
+      <orderedlist>
+          <listitem>
+            <para>Enter <emphasis role="bold">kadmin</emphasis> interactive mode.
+  <programlisting>
+     # <emphasis role="bold">kadmin</emphasis>
+  Authenticating as principal <replaceable>you</replaceable>/admin@<replaceable>YOUR REALM</replaceable> with password
+  Password for <replaceable>you/admin@REALM</replaceable>: <replaceable>your_password</replaceable>
+  </programlisting> <indexterm>
+                <primary>server encryption key</primary>
+
+                <secondary>in Kerberos Database</secondary>
+              </indexterm> <indexterm>
+                <primary>creating</primary>
+
+                <secondary>server encryption key</secondary>
+
+                <tertiary>Kerberos Database</tertiary>
+              </indexterm></para>
+          </listitem>
+
+          <listitem id="LIWQ54">
+            <para>Issue the 
+            <emphasis role="bold">add_principal</emphasis> command to create 
+            a Kerberos Database entry for
+            <emphasis role="bold">afs/&lt;<replaceable>cell name</replaceable>&gt;</emphasis>.</para>
+
+            <para>Note that when creating the 
+            <emphasis role="bold">afs/&lt;<replaceable>cell name</replaceable>&gt;</emphasis> 
+            entry, the encryption type list does not include any single-DES
+            encryption types.  If such encryption types are included,
+            additional <emphasis role="bold">asetkey</emphasis> commands
+            will be needed to place those keys in the legacy
+            <emphasis role="bold">KeyFile</emphasis> and ensure proper
+            operation of the cell.
+            For more details regarding encryption types, see the documentation 
+            for your Kerberos installation.
+
+  <programlisting>
+     kadmin: <emphasis role="bold">add_principal -randkey -e aes256-cts-hmac-sha1-96:normal,aes128-cts-hmac-sha1-96:normal afs/</emphasis>&lt;<replaceable>cell name</replaceable>&gt;
+     Principal "afs/<replaceable>cell name</replaceable>@<replaceable>REALM</replaceable>" created.
+  </programlisting>
+            </para>
+          </listitem>
+
+          <listitem>
+            <para>Extract the newly created key for
+            <emphasis role="bold">afs/<replaceable>cell</replaceable></emphasis>
+            to a keytab on the local machine.</para>
+
+            <para>The keytab contains the key material that ensures the security of your AFS cell. You should ensure that it is kept in a secure location at all times.</para>
+
+  <programlisting>
+    kadmin: <emphasis role="bold">ktadd -k /usr/afs/etc/rxkad.keytab -e aes256-cts-hmac-sha1-96:normal,aes128-cts-hmac-sha1-96:normal afs/&lt;<replaceable>cell name</replaceable>&gt;</emphasis>
+  Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 2, encryption type aes256-cts-hmac-sha1-96 added to keytab WRFILE:/usr/afs/etc/rxkad.keytab
+  Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 2, encryption type aes128-cts-hmac-sha1-96 added to keytab WRFILE:/usr/afs/etc/rxkad.keytab
+  </programlisting>
+            <para>Make a note of the key version number (kvno) given in the
+            response, as you will need it to load the key into
+            the <emphasis role="bold">KeyFileExt</emphasis> in a later
+            step</para>
+
+            <note><para>Note that each time you run 
+            <emphasis role="bold">ktadd</emphasis> a new key is generated
+            for the item being extracted. This means that you cannot run ktadd
+            multiple times and end up with the same key material each time.
+            </para></note>
+
+          </listitem>
+          <listitem>
+            <para>Issue the <emphasis role="bold">quit</emphasis> command to leave <emphasis role="bold">kadmin</emphasis>
+            interactive mode. <programlisting>
+     kadmin: <emphasis role="bold">quit</emphasis>
+  </programlisting></para>
+          </listitem>
+
+          <listitem id="LIWQ58">
+            <para>Issue the 
+            <emphasis role="bold">asetkey</emphasis> command to set the AFS 
+            server encryption key in the 
+            <emphasis role="bold">/usr/afs/etc/KeyFileExt</emphasis> file.
+            This key 
+            is created from the <emphasis role="bold">rxkad.keytab</emphasis> 
+            file created earlier.</para>
+
+            <para>asetkey requires the key version number (or kvno) of the 
+            <emphasis role="bold">afs/</emphasis><replaceable>cell</replaceable>
+            key, as well as the encryption type number of the key.
+            You should have made note of the kvno when creating the key
+            earlier.  The key version number can also be found by running the 
+            <emphasis role="bold">kvno</emphasis> command</para>
+  <programlisting>
+     # <emphasis role="bold">kvno -kt /usr/afs/etc/rxkad.keytab</emphasis>
+  </programlisting>
+            <para>The encryption type numbers can be found in the local krb5
+            headers or the IANA registry.  The most common numbers are
+            18 for <emphasis role="bold">aes256-cts-hmac-sha1-96</emphasis> and
+            17 for <emphasis role="bold">aes128-cts-hmac-sha1-96</emphasis>.
+            </para>
+
+            <para>Once the kvno and enctypes are known, the keys
+            can then be extracted using asetkey</para>
+  <programlisting>
+     # <emphasis role="bold">asetkey add rxkad_krb5</emphasis> &lt;<replaceable>kvno</replaceable>&gt;  <emphasis role="bold">18 /usr/afs/etc/rxkad.keytab afs/</emphasis>&lt;<replaceable>cell name</replaceable>&gt;
+     # <emphasis role="bold">asetkey add rxkad_krb5</emphasis> &lt;<replaceable>kvno</replaceable>&gt;  <emphasis role="bold">17 /usr/afs/etc/rxkad.keytab afs/</emphasis>&lt;<replaceable>cell name</replaceable>&gt;
+  </programlisting>
+          </listitem>
+        </orderedlist>
+    </sect2>
+    <sect2>
+      <title>Starting the Server Processes</title>
+
+      <para>Now that the keys are in place, proceed to start the server
+      processes:
+      <orderedlist>
         <listitem>
-	  <para>If you are not working from a packaged distribution, you may need to copy files from the distribution media to the local <emphasis role="bold">/usr/afs</emphasis> directory. 
-<programlisting>
-   # <emphasis role="bold">cd /tmp/afsdist/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/root.server/usr/afs</emphasis>
-   # <emphasis role="bold">cp -rp  *  /usr/afs</emphasis>
-</programlisting> <indexterm>
+	  <para>If you are building from source, you need to install the
+          compiled files to the local
+          <emphasis role="bold">/usr/afs</emphasis> directory. <indexterm>
               <primary>commands</primary>
 
               <secondary>bosserver</secondary>
@@ -1865,9 +2020,9 @@ auth  required                pam_unix.so try_first_pass</literallayout>
         </listitem>
 
         <listitem>
-          <para>Issue the <emphasis role="bold">bosserver</emphasis> command. Include the <emphasis role="bold">-noauth</emphasis>
-          flag to disable authorization checking. <programlisting>
-   # <emphasis role="bold">/usr/afs/bin/bosserver -noauth &amp;</emphasis>
+          <para>Issue the <emphasis role="bold">bosserver</emphasis> command.
+          <programlisting>
+   # <emphasis role="bold">/usr/afs/bin/bosserver</emphasis>
 </programlisting></para>
         </listitem>
 
@@ -2004,6 +2159,7 @@ auth  required                pam_unix.so try_first_pass</literallayout>
 
       <secondary>first AFS machine as database server</secondary>
     </indexterm>
+    </sect2>
   </sect1>
 
   <sect1 id="HDRWQ51">
@@ -2055,12 +2211,8 @@ auth  required                pam_unix.so try_first_pass</literallayout>
       <listitem>
         <para>Issue the <emphasis role="bold">bos setcellname</emphasis> command to set the cell name. <programlisting>
    # <emphasis role="bold">bos setcellname</emphasis> &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>cell name</replaceable>&gt; <emphasis
-              role="bold">-noauth</emphasis>
-</programlisting></para>
-
-        <para>Because you are not authenticated and authorization checking is disabled, the <emphasis role="bold">bos</emphasis>
-        command interpreter possibly produces error messages about being unable to obtain tickets and running unauthenticated. You
-        can safely ignore the messages. <indexterm>
+              role="bold">-localauth</emphasis>
+</programlisting></para> <indexterm>
             <primary>commands</primary>
 
             <secondary>bos listhosts</secondary>
@@ -2076,13 +2228,13 @@ auth  required                pam_unix.so try_first_pass</literallayout>
             <primary>displaying</primary>
 
             <secondary>CellServDB file (server) entries</secondary>
-          </indexterm></para>
+          </indexterm>
       </listitem>
 
       <listitem>
         <para>Issue the <emphasis role="bold">bos listhosts</emphasis> command to verify that the machine you are installing is now
         registered as the cell's first database server machine. <programlisting>
-   # <emphasis role="bold">bos listhosts</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">-noauth</emphasis>
+   # <emphasis role="bold">bos listhosts</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">-localauth</emphasis>
    Cell name is <replaceable>cell_name</replaceable>
        Host 1 is <replaceable>machine_name</replaceable>
 </programlisting></para>
@@ -2246,10 +2398,6 @@ auth  required                pam_unix.so try_first_pass</literallayout>
     server machines only: <itemizedlist>
 
         <listitem>
-          <para>The Backup Server (the <emphasis role="bold">buserver</emphasis> process) maintains the Backup Database</para>
-        </listitem>
-
-        <listitem>
           <para>The Protection Server (the <emphasis role="bold">ptserver</emphasis> process) maintains the Protection
           Database</para>
         </listitem>
@@ -2257,6 +2405,10 @@ auth  required                pam_unix.so try_first_pass</literallayout>
         <listitem>
           <para>The Volume Location (VL) Server (the <emphasis role="bold">vlserver</emphasis> process) maintains the Volume
           Location Database (VLDB)</para>
+        </listitem>
+
+        <listitem>
+          <para>The optional Backup Server (the <emphasis role="bold">buserver</emphasis> process) maintains the Backup Database</para>
         </listitem>
       </itemizedlist></para>
 
@@ -2289,20 +2441,20 @@ auth  required                pam_unix.so try_first_pass</literallayout>
         <secondary>create</secondary>
       </indexterm> <orderedlist>
         <listitem>
-          <para>Issue the <emphasis role="bold">bos create</emphasis> command to start the Backup Server. <programlisting>
-   # <emphasis role="bold">./bos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">buserver simple /usr/afs/bin/buserver</emphasis>  <emphasis role="bold">-noauth</emphasis>
-</programlisting></para>
-        </listitem>
-
-        <listitem>
           <para>Issue the <emphasis role="bold">bos create</emphasis> command to start the Protection Server. <programlisting>
-   # <emphasis role="bold">./bos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">ptserver simple /usr/afs/bin/ptserver</emphasis> <emphasis role="bold">-noauth</emphasis>
+   # <emphasis role="bold">./bos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">ptserver simple /usr/afs/bin/ptserver</emphasis> <emphasis role="bold">-localauth</emphasis>
 </programlisting></para>
         </listitem>
 
         <listitem>
           <para>Issue the <emphasis role="bold">bos create</emphasis> command to start the VL Server. <programlisting>
-   # <emphasis role="bold">./bos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">vlserver simple /usr/afs/bin/vlserver</emphasis> <emphasis role="bold">-noauth</emphasis>
+   # <emphasis role="bold">./bos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">vlserver simple /usr/afs/bin/vlserver</emphasis> <emphasis role="bold">-localauth</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Optionally, issue the <emphasis role="bold">bos create</emphasis> command to start the Backup Server. <programlisting>
+   # <emphasis role="bold">./bos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">buserver simple /usr/afs/bin/buserver</emphasis>  <emphasis role="bold">-localauth</emphasis>
 </programlisting></para>
         </listitem>
       </orderedlist></para>
@@ -2391,7 +2543,7 @@ auth  required                pam_unix.so try_first_pass</literallayout>
     <link linkend="HDRWQ53">Initializing Cell Security with kaserver</link>
     for installation instructions which replace this section.</para>
     
-    <para>Now initialize the cell's security mechanisms. Begin by creating the following two entires in your site's Kerberos database: <itemizedlist>
+    <para>Now finish initializing the cell's security mechanisms. Begin by creating the following entry in your site's Kerberos database: <itemizedlist>
         <listitem>
           <para>A generic administrative account, called <emphasis role="bold">admin</emphasis> by convention. If you choose to
           assign a different name, substitute it throughout the remainder of this document.</para>
@@ -2400,24 +2552,6 @@ auth  required                pam_unix.so try_first_pass</literallayout>
           <emphasis role="bold">admin</emphasis> account, or you can create a separate administrative account for each of them. The
           latter scheme implies somewhat more overhead, but provides a more informative audit trail for administrative
           operations.</para>
-        </listitem>
-
-        <listitem>
-          <para>The entry for AFS server processes, called either 
-          <emphasis role="bold">afs</emphasis> or 
-          <emphasis role="bold">afs/<replaceable>cell</replaceable></emphasis>. 
-          The latter form is preferred since it works regardless of whether
-          your cell name matches your Kerberos realm name and allows multiple
-	  AFS cells to be served from a single Kerberos realm.  
-          No user logs in under this identity, but it is used to encrypt the
-          server tickets that granted to AFS clients for presentation to 
-          server processes during mutual authentication. (The
-          chapter in the <emphasis>OpenAFS Administration Guide</emphasis> about cell configuration and administration describes the
-          role of server encryption keys in mutual authentication.)</para>
-
-          <para>In Step <link linkend="LIWQ58">7</link>, you also place the initial AFS server encryption key into the <emphasis
-          role="bold">/usr/afs/etc/KeyFile</emphasis> file. The AFS server processes refer to this file to learn the server
-          encryption key when they need to decrypt server tickets.</para>
         </listitem>
       </itemizedlist></para>
 
@@ -2438,55 +2572,24 @@ auth  required                pam_unix.so try_first_pass</literallayout>
    # <emphasis role="bold">kadmin</emphasis>
 Authenticating as principal <replaceable>you</replaceable>/admin@<replaceable>YOUR REALM</replaceable> with password
 Password for <replaceable>you/admin@REALM</replaceable>: <replaceable>your_password</replaceable>
-</programlisting> <indexterm>
-              <primary>server encryption key</primary>
-
-              <secondary>in Kerberos Database</secondary>
-            </indexterm> <indexterm>
-              <primary>creating</primary>
-
-              <secondary>server encryption key</secondary>
-
-              <tertiary>Kerberos Database</tertiary>
-            </indexterm></para>
+</programlisting> </para>
         </listitem>
 
         <listitem id="LIWQ54">
           <para>Issue the 
           <emphasis role="bold">add_principal</emphasis> command to create 
-          Kerberos Database entries called 
-          <emphasis role="bold">admin</emphasis> and 
-          <emphasis role="bold">afs/&lt;<replaceable>cell name</replaceable>&gt;</emphasis>.</para>
+          the Kerberos Database entry for
+          <emphasis role="bold">admin</emphasis>.</para>
 
           <para>You should make the <replaceable>admin_passwd</replaceable> as
           long and complex as possible, but keep in mind that administrators 
-          need to enter it often. It must be at least six characters long.</para>
-          <para>Note that when creating the 
-          <emphasis role="bold">afs/&lt;<replaceable>cell name</replaceable>&gt;</emphasis> 
-          entry, the encryption types should be restricted to des-cbc-crc:v4. 
-          For more details regarding encryption types, see the documentation 
-          for your Kerberos installation.
-
+          need to enter it often. It must be at least six characters long.
 <programlisting>
-   kadmin: <emphasis role="bold">add_principal -randkey -e des-cbc-crc:v4 afs/</emphasis>&lt;<replaceable>cell name</replaceable>&gt;
-   Principal "afs/<replaceable>cell name</replaceable>@<replaceable>REALM</replaceable>" created.
    kadmin:  <emphasis role="bold">add_principal admin</emphasis>
    Enter password for principal "admin@<replaceable>REALM</replaceable>": <emphasis role="bold"><replaceable>admin_password</replaceable></emphasis>
    Principal "admin@<replaceable>REALM</replaceable>" created.
 </programlisting>
           </para>
-
-          <indexterm>
-            <primary>commands</primary>
-
-            <secondary>kas examine</secondary>
-          </indexterm>
-
-          <indexterm>
-            <primary>kas commands</primary>
-
-            <secondary>examine</secondary>
-          </indexterm>
 
           <indexterm>
             <primary>displaying</primary>
@@ -2497,39 +2600,6 @@ Password for <replaceable>you/admin@REALM</replaceable>: <replaceable>your_passw
           </indexterm>
         </listitem>
 
-        <listitem id="LIWQ55">
-          <para>Issue the <emphasis role="bold">kadmin 
-	  get_principal</emphasis> command to display the <emphasis
-          role="bold">afs/</emphasis>&lt;<replaceable>cell name</replaceable>&gt; entry. 
-<programlisting>
-  kadmin: <emphasis role="bold">get_principal afs/&lt;<replaceable>cell name</replaceable>&gt;</emphasis>
-  Principal: afs/<replaceable>cell</replaceable>
-  [ ... ]
-  Key: vno 2, DES cbc mode with CRC-32, no salt
-  [ ... ]
-</programlisting>
-</para>
-        </listitem>
-        <listitem>
-          <para>Extract the newly created key for <emphasis role="bold">afs/<replaceable>cell</replaceable></emphasis> to a keytab on the local machine. We will use <emphasis role="bold">/etc/afs.keytab</emphasis> as the location for this keytab.</para>
-
-          <para>The keytab contains the key material that ensures the security of your AFS cell. You should ensure that it is kept in a secure location at all times.</para>
-
-<programlisting>
-  kadmin: <emphasis role="bold">ktadd -k /etc/afs.keytab -e des-cbc-crc:v4 afs/&lt;<replaceable>cell name</replaceable>&gt;</emphasis>
-Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3, encryption type DES cbc mode with CRC-32 added to keytab WRFILE:/etc/afs.keytab
-</programlisting>
-          <para>Make a note of the key version number (kvno) given in the
-          response, as you will need it to load the key into bos in a later
-          step</para>
-
-          <note><para>Note that each time you run 
-          <emphasis role="bold">ktadd</emphasis> a new key is generated
-          for the item being extracted. This means that you cannot run ktadd
-          multiple times and end up with the same key material each time.
-          </para></note>
-
-        </listitem>
         <listitem>
           <para>Issue the <emphasis role="bold">quit</emphasis> command to leave <emphasis role="bold">kadmin</emphasis>
           interactive mode. <programlisting>
@@ -2572,7 +2642,7 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
           role="bold">admin</emphasis> user to the <emphasis role="bold">/usr/afs/etc/UserList</emphasis> file. This enables the
           <emphasis role="bold">admin</emphasis> user to issue privileged <emphasis role="bold">bos</emphasis> and <emphasis
           role="bold">vos</emphasis> commands. <programlisting>
-   # <emphasis role="bold">./bos adduser</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">admin -noauth</emphasis>
+   # <emphasis role="bold">./bos adduser</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">admin -localauth</emphasis>
 </programlisting> 
             <indexterm>
               <primary>commands</primary>
@@ -2588,63 +2658,6 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
               <secondary>in KeyFile file</secondary>
             </indexterm></para>
         </listitem>
-
-        <listitem id="LIWQ58">
-          <para>Issue the 
-          <emphasis role="bold">asetkey</emphasis> command to set the AFS 
-          server encryption key in the 
-          <emphasis role="bold">/usr/afs/etc/KeyFile</emphasis> file. This key 
-          is created from the <emphasis role="bold">/etc/afs.keytab</emphasis> 
-          file created earlier.</para>
-
-          <para>asetkey requires the key version number (or kvno) of the 
-          <emphasis role="bold">afs/</emphasis><replaceable>cell</replaceable>
-          key. You should have made note of the kvno when creating the key
-          earlier.  The key version number can also be found by running the 
-          <emphasis role="bold">kvno</emphasis> command</para>
-<programlisting>
-   # <emphasis role="bold">kvno -k /etc/afs.keytab afs/</emphasis>&lt;<replaceable>cell name</replaceable>&gt;
-</programlisting>
-
-          <para>Once the kvno is known, the key can then be extracted using 
-          asetkey</para>
-<programlisting>
-   # <emphasis role="bold">asetkey add</emphasis> &lt;<replaceable>kvno</replaceable>&gt;  <emphasis role="bold">/etc/afs.keytab afs/</emphasis>&lt;<replaceable>cell name</replaceable>&gt;
-</programlisting>
-
-          <indexterm>
-            <primary>commands</primary>
-            <secondary>bos listkeys</secondary>
-          </indexterm>
-
-          <indexterm>
-            <primary>bos commands</primary>
-            <secondary>listkeys</secondary>
-          </indexterm>
-
-          <indexterm>
-            <primary>displaying</primary>
-            <secondary>server encryption key</secondary>
-            <tertiary>KeyFile file</tertiary>
-          </indexterm>
-        </listitem>
-
-        <listitem id="LIWQ59">
-          <para>Issue the 
-          <emphasis role="bold">bos listkeys</emphasis> command to verify that 
-          the key version number for the new key in the 
-          <emphasis role="bold">KeyFile</emphasis> file is the same as the key 
-          version number in the Authentication Database's 
-          <emphasis role="bold">afs/<replaceable>cell name</replaceable></emphasis> 
-          entry, which you displayed in Step <link linkend="LIWQ55">3</link>. 
-<programlisting>
-   # <emphasis role="bold">./bos listkeys</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">-noauth</emphasis>
-   key 0 has cksum <replaceable>checksum</replaceable>    
-</programlisting></para>
-
-          <para>You can safely ignore any error messages indicating that <emphasis role="bold">bos</emphasis> failed to get tickets
-          or that authentication failed.</para>
-        </listitem>
       </orderedlist>
     </sect1>
     <sect1 id="HDRWQ53a">
@@ -2653,10 +2666,16 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
       <para>Now continue to configure your cell's security systems by
       populating the Protection Database with the newly created
       <emphasis role="bold">admin</emphasis> user, and permitting it
-      to issue priviledged commands on the AFS filesystem.</para>
+      to issue priviledged commands on the AFS filesystem.
+      There is nothing special about the name "admin"; it is just a
+      convenient name for these instructions.  An other name could
+      be used throughout this document, or multiple privileged
+      accounts created.</para>
           
         <orderedlist>
           <listitem>
+          <para>Issue the <emphasis role="bold">pts createuser</emphasis> command to create a Protection Database entry for the
+          <emphasis role="bold">admin</emphasis> user.
           <indexterm>
             <primary>commands</primary>
             <secondary>pts createuser</secondary>
@@ -2669,9 +2688,7 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
 
           <indexterm>
             <primary>Protection Database</primary>
-          </indexterm>
-          <para>Issue the <emphasis role="bold">pts createuser</emphasis> command to create a Protection Database entry for the
-          <emphasis role="bold">admin</emphasis> user.</para>
+          </indexterm></para>
 
           <para>By default, the Protection Server assigns AFS UID 1 (one) to the <emphasis role="bold">admin</emphasis> user,
           because it is the first user entry you are creating. If the local password file (<emphasis
@@ -2682,7 +2699,7 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
 
           <programlisting>
    # <emphasis role="bold">pts createuser -name admin</emphasis> [<emphasis
-              role="bold">-id</emphasis> &lt;<replaceable>AFS UID</replaceable>&gt;]  <emphasis role="bold">-noauth</emphasis>
+              role="bold">-id</emphasis> &lt;<replaceable>AFS UID</replaceable>&gt;]  <emphasis role="bold">-localauth</emphasis>
    User admin has id <replaceable>AFS UID</replaceable>
 </programlisting>
 
@@ -2713,8 +2730,8 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
           membership</emphasis> command to verify the new membership. Membership in the group enables the <emphasis
           role="bold">admin</emphasis> user to issue privileged <emphasis role="bold">pts</emphasis> commands and some privileged
           <emphasis role="bold">fs</emphasis> commands. <programlisting>
-   # <emphasis role="bold">./pts adduser admin system:administrators</emphasis> <emphasis role="bold">-noauth</emphasis>
-   # <emphasis role="bold">./pts membership admin</emphasis> <emphasis role="bold">-noauth</emphasis>
+   # <emphasis role="bold">./pts adduser admin system:administrators</emphasis> <emphasis role="bold">-localauth</emphasis>
+   # <emphasis role="bold">./pts membership admin</emphasis> <emphasis role="bold">-localauth</emphasis>
    Groups admin (id: 1) is a member of:
      system:administrators
 </programlisting> <indexterm>
@@ -2733,14 +2750,6 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
               <secondary>restarting</secondary>
               <tertiary>on first AFS machine</tertiary>
             </indexterm></para>
-        </listitem>
-
-        <listitem>
-          <para>Issue the <emphasis role="bold">bos restart</emphasis> command with the <emphasis role="bold">-all</emphasis> flag
-          to restart the database server processes, so that they start using the new server encryption key. <programlisting>
-   # <emphasis role="bold">./bos restart</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">-all</emphasis>
-   <emphasis role="bold">-noauth</emphasis>
-</programlisting></para>
         </listitem>
       </orderedlist>
 
@@ -2847,7 +2856,7 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
 	          <programlisting>
    # <emphasis role="bold">./bos create</emphasis>  &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">dafs dafs /usr/afs/bin/dafileserver</emphasis>   \
                    <emphasis role="bold">/usr/afs/bin/davolserver /usr/afs/bin/salvageserver</emphasis> \
-                   <emphasis role="bold">/usr/afs/bin/dasalvager</emphasis> <emphasis role="bold">-noauth</emphasis>   
+                   <emphasis role="bold">/usr/afs/bin/dasalvager</emphasis> <emphasis role="bold">-localauth</emphasis>   
 </programlisting></para>
              </listitem>
 	    </itemizedlist>
@@ -2876,9 +2885,9 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
 	  successfully by issuing the <emphasis role="bold">bos status</emphasis> command. Its output mentions two <computeroutput>proc
           starts</computeroutput>.</para>
 
-	      <para>If you are running the Demand-Attach File Server:
+	      <para>
           <programlisting>
-   # <emphasis role="bold">./bos status</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">dafs -long -noauth</emphasis>
+   # <emphasis role="bold">./bos status</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">dafs -long -localauth</emphasis>
 </programlisting></para>
         </listitem>
 
@@ -2930,11 +2939,10 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
                 <programlisting>
    # <emphasis role="bold">./vos create</emphasis>  &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>partition name</replaceable>&gt; <emphasis
                     role="bold">root.afs</emphasis>   \
-                   <emphasis role="bold">-noauth</emphasis>   
+                   <emphasis role="bold">-localauth</emphasis>   
 </programlisting>
 
-                <para>The Volume Server produces a message confirming that it created the volume on the specified partition. You can
-                ignore error messages indicating that tokens are missing, or that authentication failed. <indexterm>
+                <para>The Volume Server produces a message confirming that it created the volume on the specified partition.  <indexterm>
                     <primary>commands</primary>
 
                     <secondary>vos syncvldb</secondary>
@@ -2951,20 +2959,6 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
 
                     <secondary>syncserv</secondary>
                   </indexterm></para>
-              </listitem>
-
-              <listitem>
-                <para>If there are existing AFS file server machines and volumes in the cell, issue the <emphasis role="bold">vos
-                syncvldb</emphasis> and <emphasis role="bold">vos syncserv</emphasis> commands to synchronize the VLDB with the
-                actual state of volumes on the local machine. To follow the progress of the synchronization operation, which can
-                take several minutes, use the <emphasis role="bold">-verbose</emphasis> flag. <programlisting>
-   # <emphasis role="bold">./vos syncvldb</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis
-                      role="bold">-verbose  -noauth</emphasis>
-   # <emphasis role="bold">./vos syncserv</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis
-                      role="bold">-verbose  -noauth</emphasis>   
-</programlisting></para>
-
-                <para>You can ignore error messages indicating that tokens are missing, or that authentication failed.</para>
               </listitem>
             </itemizedlist></para>
         </listitem>
@@ -3061,9 +3055,9 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
   <sect1 id="HDRWQ63">
     <title>Overview: Installing Client Functionality</title>
 
-    <para>The machine you are installing is now an AFS file server machine, 
-    database server machine, system control machine, and binary distribution 
-    machine. Now make it a client machine by completing the following tasks: 
+    <para>The machine you are installing is now an AFS file server machine
+    and database server machine.
+    Now make it a client machine by completing the following tasks: 
     <orderedlist>
         <listitem>
           <para>Define the machine's cell membership for client processes</para>
