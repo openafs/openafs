@@ -10,6 +10,7 @@ if [ "$1" = 'purge' ] ; then
         rm -f "/etc/openafs/$file"
     done
     rm -f /var/cache/openafs-client/openafs-client.env
+    rm -f /var/cache/openafs-client/openafs-client.shutdown.env
 fi
 
 #DEBHELPER#

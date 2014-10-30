@@ -11,10 +11,12 @@ ExecStart=/sbin/afsd $AFSD_ARGS
 ExecStartPost=/usr/bin/fs setcrypt $AFS_SETCRYPT
 ExecStartPost=/usr/bin/fs sysname $AFS_SYSNAME
 ExecStop=/bin/grep -qv ^1$ /proc/sys/kernel/modules_disabled
+ExecStop=/usr/share/openafs/openafs-client-postcheck
 ExecStop=/bin/umount -a -t afs
 ExecStop=/bin/umount -af -t afs
 ExecStopPost=/sbin/rmmod $KMOD
 EnvironmentFile=/var/cache/openafs-client/openafs-client.env
+EnvironmentFile=-/var/cache/openafs-client/openafs-client.shutdown.env
 KillMode=none
 GuessMainPID=no
 

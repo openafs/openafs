@@ -1,0 +1,12 @@
+#! /bin/sh
+PATH=/bin:/usr/bin:/sbin:/usr/sbin
+
+# Always unload a module if it's loaded.
+if /sbin/lsmod | grep -Fq openafs; then
+    KMOD=openafs
+else
+    KMOD=--version
+fi
+cat > /var/cache/openafs-client/openafs-client.shutdown.env <<EOF
+KMOD=${KMOD}
+EOF
