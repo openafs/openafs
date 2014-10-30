@@ -1,4 +1,4 @@
-openafs (1.6.10-2) UNRELEASED; urgency=medium
+openafs (1.6.10-2) unstable; urgency=medium
 
   * Some shell quoting and similar cleanups in openafs-client-precheck
     from Anders Kaseorg.
