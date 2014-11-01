@@ -632,22 +632,22 @@ else
 			AFS_SYSNAME="x86_darwin_120"
 			OSXSDK="macosx10.8"
 			;;
-                x86_64-apple-darwin13.*)
-                        AFS_SYSNAME="x86_darwin_130"
-                        OSXSDK="macosx10.9"
-                        ;;
-                i?86-apple-darwin13.*)
-                        AFS_SYSNAME="x86_darwin_130"
-                        OSXSDK="macosx10.9"
-                        ;;
-                x86_64-apple-darwin14.*)
-                        AFS_SYSNAME="x86_darwin_140"
-                        OSXSDK="macosx10.10"
-                        ;;
-                i?86-apple-darwin14.*)
-                        AFS_SYSNAME="x86_darwin_140"
-                        OSXSDK="macosx10.10"
-                        ;;
+		x86_64-apple-darwin13.*)
+			AFS_SYSNAME="x86_darwin_130"
+			OSXSDK="macosx10.9"
+			;;
+		i?86-apple-darwin13.*)
+			AFS_SYSNAME="x86_darwin_130"
+			OSXSDK="macosx10.9"
+			;;
+		x86_64-apple-darwin14.*)
+			AFS_SYSNAME="x86_darwin_140"
+			OSXSDK="macosx10.10"
+			;;
+		i?86-apple-darwin14.*)
+			AFS_SYSNAME="x86_darwin_140"
+			OSXSDK="macosx10.10"
+			;;
 		sparc-sun-solaris2.8)
 			AFS_SYSNAME="sun4x_58"
 			;;
