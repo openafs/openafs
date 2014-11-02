@@ -170,6 +170,7 @@
 #define SYS_NAME_ID_sparc_linux2	1700
 #define SYS_NAME_ID_sparc_linux22	1701
 #define SYS_NAME_ID_sparc_linux24	1702
+#define SYS_NAME_ID_sparc_linux26	1703
 
 #define SYS_NAME_ID_sparc64_linux2	1800
 #define SYS_NAME_ID_sparc64_linux22	1801
