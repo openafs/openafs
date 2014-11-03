@@ -577,6 +577,28 @@
       </para>
       </sect3>
       <sect3>
+        <title>Debian and Ubuntu Linux</title>
+        <para>OpenAFS is available as binary packages from the Debian
+          linux distribution and its derivatives such as Ubuntu.
+        <orderedlist>
+          <listitem>
+            <para>Install the client and server packages using the following command:
+              <programlisting>
+# apt-get install openafs-client openafs-modules-dkms openafs-krb5 \
+  openafs-fileserver openafs-dbserver
+              </programlisting>
+              You will be prompted by debconf to select your cell name and
+              the size of your local cache.
+            </para>
+          </listitem>
+        </orderedlist>
+      </para>
+      <para>The Debian package also includes helper scripts
+        <literal>afs-newcell</literal> and <literal>afs-rootvol</literal>,
+        which can automate much of the remainder of this document.
+      </para>
+      </sect3>
+      <sect3>
          <title>Systems packaged as tar files</title>
          <para>If you are running a system where the OpenAFS Binary Distribution
          is provided as a tar file, or where you have built the system from
