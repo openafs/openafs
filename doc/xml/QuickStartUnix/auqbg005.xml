@@ -599,22 +599,22 @@
       </para>
       </sect3>
       <sect3>
-         <title>Systems packaged as tar files</title>
-         <para>If you are running a system where the OpenAFS Binary Distribution
-         is provided as a tar file, or where you have built the system from
-         source yourself, you need to install the relevant components by hand
+         <title>Systems built from source</title>
+         <para>If you are running a system where
+         you have built the system from
+         source yourself, you need to install the relevant components by hand:
          </para>
          <orderedlist>
            
           <listitem>
             <para>Unpack the distribution tarball. The examples below assume
-            that you have unpacked the files into the
+            that you have extracted and built OpenAFS in the
             <emphasis role="bold">/tmp/afsdist</emphasis> directory. If you
             pick a different location, substitute this in all of the following
-            examples. Once you have unpacked the distribution,
-            change directory as indicated.
+            examples. Once you have compiled the distribution,
+            change to the source directory as indicated.
 <programlisting>
-  # <emphasis role="bold">cd /tmp/afsdist/linux/dest/root.client/usr/vice/etc</emphasis>
+  # <emphasis role="bold">cd /tmp/afsdist</emphasis>
 </programlisting></para>
           </listitem>
           
@@ -625,7 +625,8 @@
             <replaceable>version</replaceable> indicates the kernel build level. The string <emphasis role="bold">.mp</emphasis> in
             the <replaceable>version</replaceable> indicates that the file is appropriate for machines running a multiprocessor
             kernel. <programlisting>
-   # <emphasis role="bold">cp -rp  modload  /usr/vice/etc</emphasis>
+   # <emphasis role="bold">mkdir -p /usr/vice/etc/modload</emphasis>
+   # <emphasis role="bold">cp -rp src/libafs/*.ko  /usr/vice/etc/modload</emphasis>
 </programlisting></para>
           </listitem>
 
@@ -633,20 +634,10 @@
             <para>Copy the AFS initialization script to the local directory for initialization files (by convention, <emphasis
             role="bold">/etc/rc.d/init.d</emphasis> on Linux machines). Note the removal of the <emphasis role="bold">.rc</emphasis>
             extension as you copy the script. <programlisting>
-   # <emphasis role="bold">cp -p   afs.rc  /etc/rc.d/init.d/afs</emphasis> 
+   # <emphasis role="bold">cp -p src/afsd/afs.rc.linux /etc/rc.d/init.d/afs</emphasis>
 </programlisting></para>
           </listitem>
 
-<!-- I don't think we need to do this for Linux, and it complicates things if
-     dynroot is enabled ...
-          <listitem>
-            <para>Run the AFS initialization script to load AFS extensions into the kernel. You can ignore any error messages about
-            the inability to start the BOS Server or the Cache Manager or AFS client.</para>
-<programlisting>
-   # <emphasis role="bold">/etc/rc.d/init.d/afs start</emphasis>
-</programlisting>
-          </listitem>
--->
         </orderedlist>
 
       <indexterm>
