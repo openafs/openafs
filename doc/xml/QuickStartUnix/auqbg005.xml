@@ -2813,31 +2813,23 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
   <sect1 id="HDRWQ60">
     <title>Starting the File Server processes</title>
 
-    <para>Start either the <emphasis role="bold">fs</emphasis> process or, if you want to run the Demand-Attach File Server, the
-    <emphasis role="bold">dafs</emphasis> process. The <emphasis role="bold">fs</emphasis> process consists of the File Server,
-    Volume Server, and Salvager (<emphasis role="bold">fileserver</emphasis>, <emphasis role="bold">volserver</emphasis> and
-    <emphasis role="bold">salvager</emphasis> processes). The <emphasis role="bold">dafs</emphasis> process consists of the
+    <para>Start the
+    <emphasis role="bold">dafs</emphasis> process.
+    The <emphasis role="bold">dafs</emphasis> process consists of the
     Demand-Attach File Server, Volume Server, Salvage Server, and Salvager (<emphasis role="bold">dafileserver</emphasis>,
     <emphasis role="bold"> davolserver</emphasis>, <emphasis role="bold">salvageserver</emphasis>, and <emphasis
-    role="bold">dasalvager</emphasis> processes). For information about the Demand-Attach File Server and to see whether or not
-    you should run it, see <link linkend="DAFS">Appendix C, The Demand-Attach File Server</link>.
+    role="bold">dasalvager</emphasis> processes). Most sites should run the
+    Demand-Attach File Server, but the traditional/legacy File Server remains
+    an option.  If you are uncertain whether to run the legacy File Server,
+    see <link linkend="DAFS">Appendix C, The Demand-Attach File Server</link>.
      <orderedlist>
         <listitem>
-          <para>Issue the <emphasis role="bold">bos create</emphasis> command to start the <emphasis role="bold">fs</emphasis>
-          process or the <emphasis role="bold">dafs</emphasis> process. The commands appear here on multiple lines only for legibility.
+          <para>Issue the <emphasis role="bold">bos create</emphasis> command to start the 
+          <emphasis role="bold">dafs</emphasis> process. The commands appear here on multiple lines only for legibility.
 
 	    <itemizedlist>
-	      <listitem>
-	        <para>If you are not planning on running the Demand-Attach File Server, create the <emphasis role="bold">fs</emphasis>
-		process:
-	          <programlisting>
-   # <emphasis role="bold">./bos create</emphasis>  &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">fs fs /usr/afs/bin/fileserver</emphasis>   \
-                   <emphasis role="bold">/usr/afs/bin/volserver /usr/afs/bin/salvager</emphasis>  \
-                   <emphasis role="bold">-noauth</emphasis>   
-</programlisting></para>
-             </listitem>
 	     <listitem>
-	       <para>If you are planning on running the Demand-Attach File Server, create the <emphasis
+	       <para>Create the <emphasis
 	       role="bold">dafs</emphasis> process:
 	          <programlisting>
    # <emphasis role="bold">./bos create</emphasis>  &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">dafs dafs /usr/afs/bin/dafileserver</emphasis>   \
@@ -2867,25 +2859,14 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
               <secondary>status</secondary>
             </indexterm></para>
 
-          <para>You can verify that the <emphasis role="bold">fs</emphasis> or <emphasis role="bold">dafs</emphasis> process has started
+          <para>You can verify that the <emphasis role="bold">dafs</emphasis> process has started
 	  successfully by issuing the <emphasis role="bold">bos status</emphasis> command. Its output mentions two <computeroutput>proc
           starts</computeroutput>.</para>
 
-	  <itemizedlist>
-	    <listitem>
-	      <para>If you are not running the Demand-Attach File Server:
-
-          <programlisting>
-   # <emphasis role="bold">./bos status</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">fs -long -noauth</emphasis>
-</programlisting></para></listitem>
-
-            <listitem>
 	      <para>If you are running the Demand-Attach File Server:
           <programlisting>
    # <emphasis role="bold">./bos status</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">dafs -long -noauth</emphasis>
-</programlisting></para></listitem>
-          </itemizedlist>
-
+</programlisting></para>
         </listitem>
 
         <listitem>
