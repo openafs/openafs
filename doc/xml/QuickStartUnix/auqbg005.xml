@@ -3010,57 +3010,6 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
     </indexterm>
   </sect1>
 
-  <sect1 id="HDRWQ61">
-    <title>Starting the Server Portion of the Update Server</title>
-
-    <para>Start the server portion of the Update Server (the <emphasis role="bold">upserver</emphasis> process), to distribute the
-    contents of directories on this machine to other server machines in the cell. It becomes active when you configure the client
-    portion of the Update Server on additional server machines.</para>
-
-    <para>Distributing the contents of its <emphasis role="bold">/usr/afs/etc</emphasis> directory makes this machine the cell's
-    <emphasis>system control machine</emphasis>. The other server machines in the cell run the <emphasis
-    role="bold">upclientetc</emphasis> process (an instance of the client portion of the Update Server) to retrieve the
-    configuration files. Use the <emphasis role="bold">-crypt</emphasis> argument to the <emphasis role="bold">upserver</emphasis>
-    initialization command to specify that the Update Server distributes the contents of the <emphasis
-    role="bold">/usr/afs/etc</emphasis> directory only in encrypted form, as shown in the following instruction. Several of the
-    files in the directory, particularly the <emphasis role="bold">KeyFile</emphasis> file, are crucial to cell security and so must
-    never cross the network unencrypted.</para>
-
-    <para>(You can choose not to configure a system control machine, in which case you must update the configuration files in each
-    server machine's <emphasis role="bold">/usr/afs/etc</emphasis> directory individually. The <emphasis role="bold">bos</emphasis>
-    commands used for this purpose also encrypt data before sending it across the network.)</para>
-
-    <para>Distributing the contents of its <emphasis role="bold">/usr/afs/bin</emphasis> directory to other server machines of its
-    system type makes this machine a <emphasis>binary distribution machine</emphasis>. The other server machines of its system type
-    run the <emphasis role="bold">upclientbin</emphasis> process (an instance of the client portion of the Update Server) to
-    retrieve the binaries. If your platform has a package management system, 
-    such as 'rpm' or 'apt', running the Update Server to distribute binaries 
-    may interfere with this system.</para>
-
-    <para>The binaries in the <emphasis role="bold">/usr/afs/bin</emphasis> directory are not sensitive, so it is not necessary to
-    encrypt them before transfer across the network. Include the <emphasis role="bold">-clear</emphasis> argument to the <emphasis
-    role="bold">upserver</emphasis> initialization command to specify that the Update Server distributes the contents of the
-    <emphasis role="bold">/usr/afs/bin</emphasis> directory in unencrypted form unless an <emphasis
-    role="bold">upclientbin</emphasis> process requests encrypted transfer.</para>
-
-    <para>Note that the server and client portions of the Update Server always mutually authenticate with one another, regardless of
-    whether you use the <emphasis role="bold">-clear</emphasis> or <emphasis role="bold">-crypt</emphasis> arguments. This protects
-    their communications from eavesdropping to some degree.</para>
-
-    <para>For more information on the <emphasis role="bold">upclient</emphasis> and <emphasis role="bold">upserver</emphasis>
-    processes, see their reference pages in the <emphasis>OpenAFS Administration Reference</emphasis>. The commands appear on
-    multiple lines here only for legibility. <orderedlist>
-        <listitem>
-          <para>Issue the <emphasis role="bold">bos create</emphasis> command to start the <emphasis role="bold">upserver</emphasis>
-          process. <programlisting>
-   # <emphasis role="bold">./bos create</emphasis>  &lt;<replaceable>machine name&gt;</replaceable> <emphasis role="bold">upserver simple</emphasis>  \ 
-             <emphasis role="bold">"/usr/afs/bin/upserver  -crypt /usr/afs/etc</emphasis>    \
-             <emphasis role="bold">-clear /usr/afs/bin"</emphasis> <emphasis role="bold">-noauth</emphasis> 
-</programlisting></para>
-        </listitem>
-      </orderedlist></para>
-  </sect1>
-
   <sect1 id="HDRWQ62">
     <title>Clock Sync Considerations</title>
 
