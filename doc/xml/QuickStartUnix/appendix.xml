@@ -634,11 +634,6 @@ ll name</replaceable>&gt; <emphasis
             </listitem>
             <listitem>
               <para>
-                <link linkend="KAS014">Enabling AFS Login on IRIX Systems</link>
-              </para>
-            </listitem>
-            <listitem>
-              <para>
                 <link linkend="KAS015">Enabling AFS Login on Linux Systems</link>
               </para>
             </listitem>
@@ -991,48 +986,6 @@ ll name</replaceable>&gt; <emphasis
           </listitem>
         </orderedlist>
         </para>
-      </sect2>
-      <sect2 id="KAS014">
-        <title>Enabling kaserver based AFS Login on IRIX Systems</title>
-        
-        <para>The standard IRIX command-line 
-        <emphasis role="bold">login</emphasis> program and the graphical 
-        <emphasis role="bold">xdm</emphasis> login program both automatically 
-        grant an AFS token when AFS is incorporated into the machine's
-        kernel. However, some IRIX distributions use another login utility by 
-        default, and it does not necessarily incorporate the required AFS 
-        modifications. If that is the case, you must disable the default 
-        utility if you want AFS users to obtain AFS tokens at login. For 
-        further discussion, see the 
-        <emphasis>OpenAFS Release Notes</emphasis>.</para>
-
-        <para>If you configure the machine to use an AFS-modified login 
-        utility, then the <emphasis role="bold">afsauthlib.so</emphasis> and 
-        <emphasis role="bold">afskauthlib.so</emphasis> files (included in the 
-        AFS distribution) must reside in the 
-        <emphasis role="bold">/usr/vice/etc</emphasis> directory. Issue the 
-        <emphasis role="bold">ls</emphasis> command to verify.</para>
-
-<programlisting>
-   # <emphasis role="bold">ls /usr/vice/etc</emphasis>   
-</programlisting>
-
-        <para>If the files do not exist, unpack the OpenAFS Binary Distribution
-        for IRIX (if it is not already), change directory as indicated, and copy
-        them.</para>
-
-<programlisting>
-   # <emphasis role="bold">cd /tmp/afsdist/sgi_65/dest/root.client/usr/vice/etc</emphasis>
-   # <emphasis role="bold">cp  -p  *authlib*  /usr/vice/etc</emphasis>   
-</programlisting>
-
-        <para>After taking any necessary action, proceed to 
-        <link linkend="HDRWQ50">Starting the BOS Server</link> if you
-        are installing your first file server;
-        <link linkend="HDRWQ108">Starting Server Programs</link> if you
-        are installing an additional file server machine; or
-        <link linkend="HDRWQ145">Loading and Creating Client Files</link> 
-        if you are installing a client.</para>
       </sect2>
       <sect2 id="KAS015">
         <title>Enabling kaserver based AFS Login on Linux Systems</title>
