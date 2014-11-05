@@ -3712,10 +3712,6 @@ Password for <replaceable>you/admin@REALM</replaceable>: <replaceable>your_passw
                 <para>On AIX systems, <emphasis role="bold">/etc/rc.afs</emphasis></para>
               </listitem>
 
-              <listitem>
-                <para>On HP-UX systems, <emphasis role="bold">/sbin/init.d/afs</emphasis></para>
-              </listitem>
-
 	          <listitem>
                 <para>On Fedora and RHEL systems, <emphasis role="bold">/etc/sysconfg/openafs</emphasis></para>
               </listitem>
@@ -3921,30 +3917,6 @@ Password for <replaceable>you/admin@REALM</replaceable>: <replaceable>your_passw
               </listitem>
             </orderedlist></para>
 
-          <indexterm>
-            <primary>HP-UX</primary>
-
-            <secondary>AFS initialization script</secondary>
-
-            <tertiary>on first AFS machine</tertiary>
-          </indexterm>
-
-          <para><emphasis role="bold">On HP-UX systems:</emphasis> <orderedlist>
-              <listitem>
-                <para>Run the AFS initialization script. <programlisting>
-   # <emphasis role="bold">/sbin/init.d/afs  start</emphasis>
-</programlisting></para>
-              </listitem>
-            </orderedlist></para>
-
-          <indexterm>
-            <primary>Linux</primary>
-
-            <secondary>AFS initialization script</secondary>
-
-            <tertiary>on first AFS machine</tertiary>
-          </indexterm>
-
           <para><emphasis role="bold">On Linux systems:</emphasis> <orderedlist>
               <listitem>
                 <para>Reboot the machine and log in again as the local superuser <emphasis role="bold">root</emphasis>.
@@ -4122,10 +4094,6 @@ Password for <replaceable>you/admin@REALM</replaceable>: <replaceable>your_passw
         </listitem>
 
         <listitem>
-          <para><link linkend="HDRWQ76">Activating the Script on HP-UX Systems</link></para>
-        </listitem>
-
-        <listitem>
           <para><link linkend="HDRWQ78">Activating the Script on Linux Systems</link></para>
         </listitem>
 
@@ -4161,45 +4129,6 @@ Password for <replaceable>you/admin@REALM</replaceable>: <replaceable>your_passw
    # <emphasis role="bold">cd  /usr/vice/etc</emphasis>
    # <emphasis role="bold">rm  rc.afs</emphasis>
    # <emphasis role="bold">ln -s  /etc/rc.afs</emphasis>
-</programlisting></para>
-        </listitem>
-
-        <listitem>
-          <para>Proceed to <link linkend="HDRWQ80">Configuring the Top Levels of the AFS Filespace</link>.</para>
-        </listitem>
-      </orderedlist>
-
-      <indexterm>
-        <primary>HP-UX</primary>
-
-        <secondary>AFS initialization script</secondary>
-
-        <tertiary>on first AFS machine</tertiary>
-      </indexterm>
-    </sect2>
-
-    <sect2 id="HDRWQ76">
-      <title>Activating the Script on HP-UX Systems</title>
-
-      <orderedlist>
-        <listitem>
-          <para>Change to the <emphasis role="bold">/sbin/init.d</emphasis> directory and issue the <emphasis role="bold">ln
-          -s</emphasis> command to create symbolic links that incorporate the AFS initialization script into the HP-UX startup and
-          shutdown sequence. <programlisting>
-   # <emphasis role="bold">cd /sbin/init.d</emphasis>
-   # <emphasis role="bold">ln -s ../init.d/afs /sbin/rc2.d/S460afs</emphasis>
-   # <emphasis role="bold">ln -s ../init.d/afs /sbin/rc2.d/K800afs</emphasis>
-</programlisting></para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">(Optional)</emphasis> There are now copies of the AFS initialization file in both the
-          <emphasis role="bold">/usr/vice/etc</emphasis> and <emphasis role="bold">/sbin/init.d</emphasis> directories. If you want
-          to avoid potential confusion by guaranteeing that they are always the same, create a link between them. You can always
-          retrieve the original script from the AFS CD-ROM if necessary. <programlisting>
-   # <emphasis role="bold">cd /usr/vice/etc</emphasis>
-   # <emphasis role="bold">rm afs.rc</emphasis>
-   # <emphasis role="bold">ln -s  /sbin/init.d/afs  afs.rc</emphasis>
 </programlisting></para>
         </listitem>
 
