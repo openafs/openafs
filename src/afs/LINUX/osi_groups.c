@@ -498,7 +498,13 @@ error:
     return code;
 }
 
-#if defined(STRUCT_KEY_TYPE_HAS_MATCH)
+#if !defined(STRUCT_KEY_TYPE_HAS_MATCH_PREPARSE)
+/* Note that we only define a ->match function if struct
+ * key_type.match_preparse does _not_ exist. If key_type.match_preparse does
+ * exist, we would use that to specify an alternative comparison function; but
+ * since we just rely on default behavior, we don't need to actually specify
+ * one. But for kernels with no such match_preparse function, we need to
+ * specify a 'match' function, since there is no default. */
 static int afs_pag_match(const struct key *key, const void *description)
 {
 	return strcmp(key->description, description) == 0;
@@ -529,7 +535,7 @@ struct key_type key_type_afs_pag =
 #else
     .instantiate = afs_pag_instantiate,
 #endif
-#if defined(STRUCT_KEY_TYPE_HAS_MATCH)
+#if !defined(STRUCT_KEY_TYPE_HAS_MATCH_PREPARSE)
     .match       = afs_pag_match,
 #endif
     .destroy     = afs_pag_destroy,
