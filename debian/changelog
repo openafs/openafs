@@ -1,3 +1,10 @@
+openafs (1.6.10-3) UNRELEASED; urgency=medium
+
+  * Make openafs-client Before=umount.target for improved shutdown
+    behavior. (Affects: #760063)
+
+ -- Benjamin Kaduk <kaduk@mit.edu>  Thu, 06 Nov 2014 15:16:17 -0500
+
 openafs (1.6.10-2) unstable; urgency=medium
 
   * Some shell quoting and similar cleanups in openafs-client-precheck

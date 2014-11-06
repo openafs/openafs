@@ -2,7 +2,7 @@
 Description=OpenAFS client
 Wants=network-online.target
 After=network.target network-online.target local-fs.target
-Before=remote-fs.target
+Before=remote-fs.target umount.target
 
 [Service]
 Type=forking
