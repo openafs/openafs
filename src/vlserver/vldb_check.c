@@ -1433,8 +1433,9 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 
     if (fix) {
 	/*
-	 * If we are fixing we will rebuild all the hash lists from the ground up
+	 * If we are fixing we will rebuild the free and hash lists from the ground up.
 	 */
+	header.vital_header.freePtr = 0;
 	memcpy(oldnamehash, header.VolnameHash, sizeof(oldnamehash));
 	memset(header.VolnameHash, 0, sizeof(header.VolnameHash));
 
@@ -1588,6 +1589,18 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		    }
 		}
 		writeMH(record[i].addr, block, MHblock);
+	    }
+	} else if (record[i].type & FR) {
+	    if (fix) {
+		readentry(record[i].addr, &vlentry, &type);
+		vlentry.nextIdHash[0] = header.vital_header.freePtr;
+		header.vital_header.freePtr = record[i].addr;
+		if ((record[i].type & FRC) == 0) {
+		    quiet_println
+			("FIX: Putting free entry on the free chain: addr=%lu (offset 0x%0x)\n",
+			 record[i].addr, OFFSET(record[i].addr));
+		}
+		writeentry(record[i].addr, &vlentry);
 	    }
 	}
     }
