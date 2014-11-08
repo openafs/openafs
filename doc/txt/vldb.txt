@@ -152,7 +152,9 @@ freePtr is the logical address in octets of the first in a linked list of
 unused vldb entries in the vldb database file (that is the first logical hole
 in the database file). This value is zero if the database is densely packed.
 The physical file offset to the first free entry is the freePtr value plus the
-size of the ubik header (64 octets).
+size of the ubik header (64 octets). Every free vl entry in the vldb should be
+on the free list.  The nextIdHash[0] vl entry field holds the address of the
+next vl entry on the free list.
 
 eofPtr is the logical address in octets of the end of the database file. When a
 new entry is created that extends the database file, it will be created at this
@@ -201,7 +203,8 @@ is 1 to 63. (Index of 0 is reserved for the mh extension block header.)
 Following the index are four hash tables, each containing 8191 (a prime number)
 32-bit entries in network byte order. Each entry represents a hash bucket and
 holds the address of the vl entry at the head of the hash chain, or zero to
-indicate an empty hash bucket.
+indicate an empty hash bucket.  Every vl entry which is not free should be in
+all four hashes.
 
 VolnameHash is the hash table for searches by volume name.  The nextNameHash
 field at the head of the chain holds the address of the next vl entry in the
@@ -314,7 +317,7 @@ octets +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
        +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
        |                            cloneId                            |
        +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       |                        nextIdHash[0] (rw)                     |
+       |                        nextIdHash[0] (rw)/(free)              |
        +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
        |                        nextIdHash[1] (ro)                     |
        +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -388,8 +391,10 @@ LockTimestamp is the time stamp on the entry lock.
 cloneId is the volume id of the temporary clone volume, which may be
 created during volume operations.
 
-nextIdHash[0] is the logical address of the next vl entry on the
-read-write volume id hash chain.
+nextIdHash[0] has a dual role. The nextIdHash[0] is the logical address of the
+next vl entry on the read-write volume id hash chain when the VLFREE flag is
+unset. The nextIdHash[0] field is the logical address of the next vl entry on
+the free list when the VLFREE flag is set.
 
 nextIdHash[1] is the logical address of the next vl entry on the
 read-only volume id hash chain.
@@ -452,7 +457,7 @@ is three less than the maximum number of server numbers (255).
 
 Multi-homed Extension Block Header
 
-The layout of the mh extension block is:
+The layout of the mh extension block header is:
 
         0                   1                   2                   3
         0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -506,7 +511,7 @@ octets +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
      4 |         uuid.time_mid         |   uuid.time_hi_and_version    |
        +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
      8 | uuid.clock_hi | uuid.clock_lo |          uuid.node            |
-       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               +
     12 |                                                               |
        +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     16 |                           uniquifier                          |
