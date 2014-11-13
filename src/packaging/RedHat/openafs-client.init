@@ -13,11 +13,14 @@
 
 
 start() {
-        echo -n $"Updating CellServDB: "
-        cat /usr/vice/etc/CellServDB.local /usr/vice/etc/CellServDB.dist > \
-               /usr/vice/etc/CellServDB
-        chmod 644 /usr/vice/etc/CellServDB
-        echo
+	if [ -h /usr/vice/etc/CellServDB ]; then
+		rm -f /usr/vice/etc/CellServDB
+	fi
+	echo -n $"Updating CellServDB: "
+	cat /usr/vice/etc/CellServDB.local /usr/vice/etc/CellServDB.dist > \
+	/usr/vice/etc/CellServDB
+	chmod 644 /usr/vice/etc/CellServDB
+	echo
 	echo -n $"Starting openafs-client: "
 	if [ -e /var/lock/subsys/openafs-client ] ; then
 		echo -n $"cannot start openafs-client: already running"

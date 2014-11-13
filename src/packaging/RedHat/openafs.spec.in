@@ -1371,6 +1371,9 @@ fi
 [ -f /usr/vice/etc/CellServDB.local ] || touch /usr/vice/etc/CellServDB.local
 
 ( cd /usr/vice/etc ; \
+  if [ -h CellServDB ]; then \
+    rm -f CellServDB; \
+  fi; \
   cat CellServDB.local CellServDB.dist > CellServDB ; \
   chmod 644 CellServDB )
 
