@@ -18,6 +18,7 @@
 #include <roken.h>
 
 #include <afs/vldbint.h>
+#include <opr/uuid.h>
 
 #define SYSIDMAGIC      0x88aabbcc
 #define SYSIDVERSION    1
@@ -33,9 +34,11 @@ main(int argc, char **argv)
     int fd, size, i;
 
     struct versionStamp vs;
-    afsUUID uuid;
+    int code;
+    opr_uuid_t uuid;
     int nentries;
     int addr;
+    char *buffer = NULL;
 
     if ((argc != 2) || (strcmp(argv[1], "-h") == 0)) {
 	printf("Usage: check_sysid <sysid_file>\n");
@@ -48,7 +51,8 @@ main(int argc, char **argv)
 	exit(2);
     }
 
-    /* Read the Version Stamp */
+    /* Read the Version Stamp. The magic and version fields are stored
+     * in host byte order. */
     size = read(fd, (char *)&vs, sizeof(vs));
     if (size != sizeof(vs)) {
 	printf("Unable to read versionStamp. Size = %d. Errno = %d\n", size,
@@ -59,31 +63,25 @@ main(int argc, char **argv)
     printf("versionStamp.version = 0x%x %s\n", vs.version,
 	   (vs.version == SYSIDVERSION) ? "" : "(should be 0x1)");
 
-    /* Read the uuid.
-     * Look at util/uuid.c afs_uuid_create() to see how it is created.
-     */
+    /* Read the uuid. Portions of the uuid are stored in network
+     * byte order. */
     size = read(fd, (char *)&uuid, sizeof(uuid));
     if (size != sizeof(uuid)) {
 	printf("Unable to read afsUUID. Size = %d. Errno = %d\n", size,
 	       errno);
 	exit(3);
     }
-    printf("UUID.time(hi.mid.low)= 0x%03x.%04x.%08x\n",
-	   uuid.time_hi_and_version & 0x0fff, uuid.time_mid & 0xffff,
-	   uuid.time_low);
-    printf("UUID.version         = %d (0x%01x)\n",
-	   (uuid.time_hi_and_version >> 12) & 0xf,
-	   (uuid.time_hi_and_version >> 12) & 0xf);
-    printf("UUID.clock(hi.low)   = 0x%02x.%02x\n",
-	   uuid.clock_seq_hi_and_reserved & 0x3f, uuid.clock_seq_low & 0xff);
-    printf("UUID.reserved        = %d (0x%02x)\n",
-	   (uuid.clock_seq_hi_and_reserved >> 6) & 0x3,
-	   (uuid.clock_seq_hi_and_reserved >> 6) & 0x3);
-    printf("UUID.node            = %02x.%02x.%02x.%02x.%02x.%02x\n",
-	   uuid.node[0] & 0xff, uuid.node[1] & 0xff, uuid.node[2] & 0xff,
-	   uuid.node[3] & 0xff, uuid.node[4] & 0xff, uuid.node[5] & 0xff);
 
-    /* Read the number of addresses recorded in the sysid */
+    code = opr_uuid_toString(&uuid, &buffer);
+    if (code != 0) {
+        printf("Unable to format uuid string. code=%d\n", code);
+        exit(6);
+    }
+    printf("UUID                 = %s\n", buffer);
+    opr_uuid_freeString(buffer);
+
+    /* Read the number of addresses recorded in the sysid.
+     * nentries is stored in host byte order. */
     size = read(fd, (char *)&nentries, sizeof(int));
     if (size != sizeof(int)) {
 	printf("Unable to read nentries. Size = %d. Errno = %d\n", size,
@@ -92,7 +90,8 @@ main(int argc, char **argv)
     }
     printf("Number of addreses   = %d (0x%x)\n", nentries, nentries);
 
-    /* Now read in each of the addresses */
+    /* Now read in each of the addresses.
+     * Each address is stored in network byte order. */
     for (i = 0; i < nentries; i++) {
 	size = read(fd, (char *)&addr, sizeof(int));
 	if (size != sizeof(int)) {
@@ -100,6 +99,7 @@ main(int argc, char **argv)
 		   i + 1, size, errno);
 	    exit(5);
 	}
+	addr = ntohl(addr);
 	printf("Address              = %d.%d.%d.%d (0x%x)\n",
 	       (addr >> 24) & 0xff, (addr >> 16) & 0xff, (addr >> 8) & 0xff,
 	       (addr) & 0xff, addr);

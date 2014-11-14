@@ -46,9 +46,9 @@ all: cbd fsprobe check_sysid fileserver ${TOP_INCDIR}/afs/fs_stats.h
 ${TOP_INCDIR}/afs/fs_stats.h: fs_stats.h
 	${INSTALL_DATA} $? $@
 
-check_sysid: check_sysid.c
-	${CC} ${AFS_CFLAGS} ${AFS_LDFLAGS} -o check_sysid \
-		${srcdir}/check_sysid.c
+check_sysid: check_sysid.o
+	$(LT_LDRULE_static) check_sysid.o \
+		${LIBS} $(LIB_hcrypto) $(LIB_roken) $(MT_LIBS) ${XLIBS}
 
 fsprobe.o: fsprobe.c AFS_component_version_number.c
 
