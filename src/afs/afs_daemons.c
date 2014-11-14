@@ -136,7 +136,6 @@ afs_Daemon(void)
     afs_int32 last3MinCheck, last10MinCheck, last60MinCheck, lastNMinCheck;
     afs_int32 last1MinCheck, last5MinCheck;
     afs_uint32 lastCBSlotBump;
-    char cs_warned = 0;
 
     AFS_STATCNT(afs_Daemon);
 
@@ -220,11 +219,6 @@ afs_Daemon(void)
         }
 
 	if (!afs_CheckServerDaemonStarted) {
-	    /* Do the check here if the correct afsd is not installed. */
-	    if (!cs_warned) {
-		cs_warned = 1;
-		afs_warn("Please install afsd with check server daemon.\n");
-	    }
 	    if (lastNMinCheck + afs_probe_interval < now) {
 		/* only check down servers */
 		afs_CheckServers(1, NULL);
