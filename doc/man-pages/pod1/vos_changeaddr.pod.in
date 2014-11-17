@@ -30,9 +30,9 @@ The B<vos changeaddr> command removes a server entry from the Volume
 Location Database (VLDB) when the B<-remove> flag is combined with the
 B<-oldaddr> argument. There must be no VLDB entries that list the machine
 as a site for any version of a volume (if necessary, use the B<vos move>
-or B<vos remove> command to more or remove volumes). It is appropriate to
+or B<vos remove> command to move or remove volumes). It is appropriate to
 remove a VLDB server entry when removing the corresponding file server
-machine from service; this is the only recommended use of the command.
+machine from service.
 
 To display all VLDB server entries, use the B<vos listaddrs> command.
 

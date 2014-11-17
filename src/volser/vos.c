@@ -5319,7 +5319,7 @@ print_addrs(const bulkaddrs * addrs, afsUUID * m_uuid, int nentries,
 	    int print)
 {
     int i;
-    afs_uint32 *addrp;
+    afs_uint32 addr;
     char buf[1024];
 
     if (print) {
@@ -5328,14 +5328,13 @@ print_addrs(const bulkaddrs * addrs, afsUUID * m_uuid, int nentries,
     }
 
     /* print out the list of all the server */
-    addrp = (afs_uint32 *) addrs->bulkaddrs_val;
-    for (i = 0; i < nentries; i++, addrp++) {
-	*addrp = htonl(*addrp);
+    for (i = 0; i < addrs->bulkaddrs_len; i++) {
+	addr = htonl(addrs->bulkaddrs_val[i]);
 	if (noresolve) {
 	    char hoststr[16];
-	    printf("%s\n", afs_inet_ntoa_r(*addrp, hoststr));
+	    printf("%s\n", afs_inet_ntoa_r(addr, hoststr));
 	} else {
-	    printf("%s\n", hostutil_GetNameByINet(*addrp));
+	    printf("%s\n", hostutil_GetNameByINet(addr));
 	}
     }
 
@@ -5516,6 +5515,68 @@ SetAddrs(struct cmd_syndesc *as, void *arock)
     }
     return 0;
 }
+
+static int
+RemoveAddrs(struct cmd_syndesc *as, void *arock)
+{
+    afs_int32 code;
+    ListAddrByAttributes attrs;
+    afsUUID uuid;
+    afs_int32 uniq = 0;
+    afs_int32 nentries = 0;
+    bulkaddrs addrs;
+    afs_uint32 ip1;
+    afs_uint32 ip2;
+
+    memset(&attrs, 0, sizeof(ListAddrByAttributes));
+    memset(&addrs, 0, sizeof(bulkaddrs));
+    memset(&uuid, 0, sizeof(afsUUID));
+    attrs.Mask = VLADDR_UUID;
+
+    if (as->parms[0].items) {	/* -uuid */
+	if (afsUUID_from_string(as->parms[0].items->data, &attrs.uuid) < 0) {
+	    fprintf(STDERR, "vos: invalid UUID '%s'\n",
+		    as->parms[0].items->data);
+	    return EINVAL;
+	}
+    }
+
+    code =
+	ubik_VL_GetAddrsU(cstruct, UBIK_CALL_NEW, &attrs, &uuid, &uniq,
+			  &nentries, &addrs);
+    if (code == VL_NOENT) {
+	fprintf(STDERR, "vos: UUID not found\n");
+	goto out;
+    }
+    if (code != 0) {
+	fprintf(STDERR, "vos: could not list the server addresses\n");
+	PrintError("", code);
+	goto out;
+    }
+    if (addrs.bulkaddrs_len == 0) {
+	fprintf(STDERR, "vos: no addresses found for UUID\n");
+	goto out;
+    }
+
+    ip2 = addrs.bulkaddrs_val[0]; /* network byte order */
+    ip1 = 0xffffffff;             /* indicates removal mode */
+
+    if (verbose) {
+	printf("vos: Removing UUID with hosts:\n");
+	print_addrs(&addrs, &uuid, nentries, 1);
+    }
+
+    code = ubik_VL_ChangeAddr(cstruct, UBIK_CALL_NEW, ip1, ip2);
+    if (code) {
+	fprintf(STDERR, "Could not remove server entry from the VLDB.\n");
+	PrintError("", code);
+    }
+
+  out:
+    xdr_free((xdrproc_t) xdr_bulkaddrs, &addrs);
+    return code;
+}
+
 
 static int
 LockEntry(struct cmd_syndesc *as, void *arock)
@@ -6267,9 +6328,13 @@ main(int argc, char **argv)
     COMMONPARMS;
 
     ts = cmd_CreateSyntax("setaddrs", SetAddrs, NULL, 0,
-			  "set the list of IP address for a given UUID in the VLDB");
+			  "set the list of IP addresses for a given UUID in the VLDB");
     cmd_AddParm(ts, "-uuid", CMD_SINGLE, 0, "uuid of server");
     cmd_AddParm(ts, "-host", CMD_LIST, 0, "address of host");
+
+    ts = cmd_CreateSyntax("remaddrs", RemoveAddrs, NULL, 0,
+			  "remove the list of IP addresses for a given UUID in the VLDB");
+    cmd_AddParm(ts, "-uuid", CMD_SINGLE, 0, "uuid of server");
 
     COMMONPARMS;
     code = cmd_Dispatch(argc, argv);

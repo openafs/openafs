@@ -1,0 +1,76 @@
+=head1 NAME
+
+vos_remaddrs - removes a file server machine's entry from the VLDB
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<vos remaddrs> S<<< B<-uuid> <I<UUID of server>> >>>
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>]
+    [B<-verbose>] [B<-encrypt>] [B<-noresolve>]
+    S<<< [B<-config> <I<config directory>>] >>>
+    [B<-help>]
+
+B<vos rema> S<<< B<-u> <I<UUID of server>> >>>
+    S<<< [B<-c> <I<cell name>>] >>>
+    [B<-noa>] [B<-l>] [B<-v>] [B<-e>] [B<-nor>]
+    S<<< [B<-co> <I<config directory>>] >>>
+    [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<vos remaddrs> command removes a server entry from the Volume Location
+Database (VLDB). There must be no VLDB entries that list the machine as a site
+for any version of a volume. If necessary, use the B<vos move> or B<vos remove>
+command to move or remove volumes. It is appropriate to remove a VLDB server
+entry when removing the corresponding file server machine from service.
+
+To display all VLDB server entries, use the B<vos listaddrs> command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-uuid> <I<UUID of server>>
+
+The unique ID as provided by the C<vos listaddrs -printuuid> command.
+
+=back
+
+=head1 EXAMPLES
+
+The following command removes the VLDB server entry for the file server
+with the addresses C<192.12.107.214> and C<10.47.11.17>.
+
+   $ vos remaddrs -uuid 008f157e-bad0-157c-0ffee-357c4d1faa77 -verbose
+   vos: Removing UUID with addresses:
+   UUID: 008f157e-bad0-157c-0ffee-357c4d1faa77
+   192.12.107.214
+   10.47.11.17
+
+=head1 PRIVILEGE REQUIRED
+
+Issuer must be listed in the F</usr/afs/etc/UserList> file on each database
+server machine.
+
+=head1 SEE ALSO
+
+L<CellServDB(5)>,
+L<UserList(5)>,
+L<fileserver(8)>,
+L<vos(1)>,
+L<vos_listaddrs(1)>,
+L<vos_setaddrs(1)>
+
+=head1 COPYRIGHT
+
+Copyright 2014 Sine Nomine Associates.  All Rights Reserved.
+
+This documentation is covered by the BSD License as written in the
+doc/LICENSE file. This man page was written by Michael Meffie for
+OpenAFS.
