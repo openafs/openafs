@@ -234,6 +234,7 @@ GetServer(char *aname)
     afs_uint32 addr; /* in network byte order */
     afs_int32 code;
     char hostname[MAXHOSTCHARS];
+    afs_uint32 **addr_list;
     int i;
 
     addr = GetServerNoresolve(aname);
@@ -245,10 +246,11 @@ GetServer(char *aname)
     }
 
     th = gethostbyname(aname);
-    if (th != NULL) {
-	for (i=0; i < th->h_length; i++) {
-	    if (!rx_IsLoopbackAddr(ntohl(*(afs_uint32 *)th->h_addr_list[i]))) {
-		memcpy(&addr, th->h_addr_list[i], sizeof(addr));
+    if (th != NULL && th->h_addrtype == AF_INET) {
+	addr_list = (afs_uint32 **)th->h_addr_list;
+	for(i = 0; addr_list[i] != NULL; i++) {
+	    if (!rx_IsLoopbackAddr(ntohl(*addr_list[i]))) {
+		memcpy(&addr, addr_list[i], sizeof(addr));
 		return addr;
 	    }
 	}
@@ -263,10 +265,11 @@ GetServer(char *aname)
 	code = gethostname(hostname, MAXHOSTCHARS);
 	if (code == 0) {
 	    th = gethostbyname(hostname);
-	    if (th != NULL) {
-		for (i=0; i < th->h_length; i++) {
-		    if (!rx_IsLoopbackAddr(ntohl(*(afs_uint32 *)th->h_addr_list[i]))) {
-			memcpy(&addr, th->h_addr_list[i], sizeof(addr));
+	    if (th != NULL && th->h_addrtype == AF_INET) {
+		addr_list = (afs_uint32 **)th->h_addr_list;
+		for (i=0; addr_list[i] != NULL; i++) {
+		    if (!rx_IsLoopbackAddr(ntohl(*addr_list[i]))) {
+			memcpy(&addr, addr_list[i], sizeof(addr));
 			return addr;
 		    }
 		}
