@@ -1,5 +1,24 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.6.11 (in progress)
+
+  All platforms
+
+    * Allow aklog to succeed creating native K5 tokens even when mapping
+      the K5 principal to a K4 one fails (11538)
+
+  Linux clients
+
+    * Support kernels at least up to 3.17 (11549 11550 11569 11570 11595)
+
+    * Fixed a regression introduced in OpenAFS release 1.6.10 which could
+      make the spurious "getcwd: cannot access parent directories" problem
+      return (11558 11568) (RT #131780)
+
+  OS X clients
+
+    * Support OS X 10.10 "Yosemite" (11571 11572 11611) (RT #131946)
+
 OpenAFS 1.6.10
 
   All platforms
