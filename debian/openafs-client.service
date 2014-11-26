@@ -6,6 +6,7 @@ Before=remote-fs.target umount.target
 
 [Service]
 Type=forking
+RemainAfterExit=true
 ExecStartPre=/usr/share/openafs/openafs-client-precheck
 ExecStart=/sbin/afsd $AFSD_ARGS
 ExecStartPost=/usr/bin/fs setcrypt $AFS_SETCRYPT
