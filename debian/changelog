@@ -1,10 +1,10 @@
-openafs (1.6.10-3) UNRELEASED; urgency=medium
+openafs (1.6.10-3) unstable; urgency=medium
 
   * Make openafs-client Before=umount.target for improved shutdown
     behavior. (Affects: #760063)
   * Mark openafs-client.service as RemainAfterExit=true. (Closes: #770815)
 
- -- Benjamin Kaduk <kaduk@mit.edu>  Thu, 06 Nov 2014 15:16:17 -0500
+ -- Benjamin Kaduk <kaduk@mit.edu>  Wed, 26 Nov 2014 13:00:27 -0500
 
 openafs (1.6.10-2) unstable; urgency=medium
 
