@@ -849,6 +849,10 @@ VolClone(struct rx_call *acid, afs_int32 atrans, VolumeId purgeId,
 #ifdef AFS_DEMAND_ATTACH_FS
     salv_vp = NULL;
 #endif
+
+    /* Clients could have callbacks to the clone ID */
+    FSYNC_VolOp(newId, NULL, FSYNC_VOL_BREAKCBKS, 0l, NULL);
+
     if (TRELE(tt)) {
 	tt = (struct volser_trans *)0;
 	error = VOLSERTRELE_ERROR;
