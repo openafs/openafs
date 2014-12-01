@@ -949,7 +949,7 @@ check_bad_parent(struct dentry *dp)
     parent = dget_parent(dp);
     pvc = VTOAFS(parent->d_inode);
 
-    if (vcp->mvid->Fid.Volume != pvc->f.fid.Fid.Volume) {	/* bad parent */
+    if (!vcp->mvid || vcp->mvid->Fid.Volume != pvc->f.fid.Fid.Volume) {	/* bad parent */
 	credp = crref();
 
 	/* force a lookup, so vcp->mvid is fixed up */
