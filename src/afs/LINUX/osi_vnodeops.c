@@ -932,44 +932,6 @@ canonical_dentry(struct inode *ip)
  * AFS Linux dentry operations
  **********************************************************************/
 
-/* fix_bad_parent() : called if this dentry's vcache is a root vcache
- * that has its mvid (parent dir's fid) pointer set to the wrong directory
- * due to being mounted in multiple points at once. fix_bad_parent()
- * calls afs_lookup() to correct the vcache's mvid, as well as the volume's
- * dotdotfid and mtpoint fid members.
- * Parameters:
- *   dp - dentry to be checked.
- *   credp - credentials
- *   vcp, pvc - item's and parent's vcache pointer
- * Return Values:
- *   None.
- * Sideeffects:
- *   This dentry's vcache's mvid will be set to the correct parent directory's
- *   fid.
- *   This root vnode's volume will have its dotdotfid and mtpoint fids set
- *   to the correct parent and mountpoint fids.
- */
-
-static inline void
-fix_bad_parent(struct dentry *dp, cred_t *credp, struct vcache *vcp, struct vcache *pvc) 
-{
-    struct vcache *avc = NULL;
-    int code;
-
-    /* force a lookup, so vcp->mvid is fixed up */
-    code = afs_lookup(pvc, (char *)dp->d_name.name, &avc, credp);
-    if (code || vcp != avc) {	/* bad, very bad.. */
-	afs_Trace4(afs_iclSetp, CM_TRACE_TMP_1S3L, ICL_TYPE_STRING,
-		   "check_bad_parent: bad pointer returned from afs_lookup origvc newvc dentry",
-		   ICL_TYPE_POINTER, vcp, ICL_TYPE_POINTER, avc,
-		   ICL_TYPE_POINTER, dp);
-    }
-    if (avc)
-	AFS_RELE(AFSTOV(avc));
-
-    return;
-}
-
 /* afs_linux_revalidate
  * Ensure vcache is stat'd before use. Return 0 if entry is valid.
  */
@@ -990,25 +952,6 @@ afs_linux_revalidate(struct dentry *dp)
     if (code) {
 	goto out;
     }
-
-#ifdef notyet
-    /* Make this a fast path (no crref), since it's called so often. */
-    if (vcp->states & CStatd) {
-	struct vcache *pvc = VTOAFS(dp->d_parent->d_inode);
-
-	if (*dp->d_name.name != '/' && vcp->mvstat == 2) {	/* root vnode */
-	    if (vcp->mvid->Fid.Volume != pvc->fid.Fid.Volume) {	/* bad parent */
-		credp = crref();
-		AFS_GLOCK();
-		fix_bad_parent(dp);	/* check and correct mvid */
-		AFS_GUNLOCK();
-		crfree(credp);
-	    }
-	}
-	afs_DestroyAttr(vattr);
-	return 0;
-    }
-#endif
 
     /* This avoids the crref when we don't have to do it. Watch for
      * changes in afs_getattr that don't get replicated here!
@@ -1253,12 +1196,7 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 		    goto bad_dentry;
 		}
 	    }
-	} else
-	    if (locked && *dp->d_name.name != '/' && vcp->mvstat == 2) {	/* root vnode */
-		if (vcp->mvid->Fid.Volume != pvcp->f.fid.Fid.Volume) {	/* bad parent */
-		    fix_bad_parent(dp, credp, vcp, pvcp);	/* check and correct mvid */
-		}
-	    }
+	}
 
 #ifdef notdef
 	/* If the last looker changes, we should make sure the current
