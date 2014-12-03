@@ -2172,7 +2172,7 @@ DeleteVolume(struct cmd_syndesc *as, void *arock)
 	} else if ((volid == entry.volumeId[ROVOL])
 		   && (entry.flags & RO_EXISTS)) {
 	    for (idx = -1, j = 0; j < entry.nServers; j++) {
-		if (entry.serverFlags[j] != ITSROVOL)
+		if (!(entry.serverFlags[j] & ITSROVOL))
 		    continue;
 
 		if (((server == 0) || (server == entry.serverNumber[j]))
