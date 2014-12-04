@@ -1,8 +1,0 @@
-* Get bos restrict working.
-
-* The configuration transcript and the README.servers file would be best
-  read together, but preferrably with some nicer formatting (such as HTML
-  with a style sheet to set off the transcript in a different background
-  color).
-
-* Use pts addu -local instead of pt_util for initial cell setup.

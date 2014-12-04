@@ -1,8 +1,0 @@
-Source: openafs-modules
-Section: kernel
-Priority: optional
-Maintainer: Russ Allbery <rra@debian.org>
-Uploaders: Sam Hartman <hartmans@debian.org>
-Build-Depends: debhelper (>= 8)
-Standards-Version: 3.9.1
-Homepage: http://www.openafs.org/

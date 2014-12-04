@@ -231,7 +231,6 @@ AC_OUTPUT([
     src/lwp/Makefile
     src/lwp/test/Makefile
     src/opr/Makefile
-    src/packaging/Debian/changelog
     src/packaging/MacOS/OpenAFS-debug.Description.plist
     src/packaging/MacOS/OpenAFS-debug.Info.plist
     src/packaging/MacOS/OpenAFS.Description.plist
