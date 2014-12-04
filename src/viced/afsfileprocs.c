@@ -5392,6 +5392,8 @@ SRXAFS_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
 		 afs_int32 * a_timeP, AFS_CollData * a_dataP)
 {				/*SRXAFS_GetXStats */
 
+    struct client *t_client = NULL;	/* tmp ptr to client data */
+    struct rx_connection *tcon = rx_ConnectionOf(a_call);
     int code;		/*Return value */
     afs_int32 *dataBuffP;	/*Ptr to data to be returned */
     afs_int32 dataBytes;	/*Bytes in data buffer */
@@ -5399,6 +5401,7 @@ SRXAFS_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
 
     fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_GETXSTATS);
 
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
     /*
      * Record the time of day and the server version number.
      */
@@ -5410,9 +5413,10 @@ SRXAFS_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
      */
     code = 0;
 
-    ViceLog(1,
-	    ("Received GetXStats call for collection %d\n",
-	     a_collectionNumber));
+    osi_auditU(a_call, GetXStatsEvent,
+	       AUD_ID, t_client ? t_client->z.ViceId : 0,
+	       AUD_INT, a_clientVersionNum,
+	       AUD_INT, a_collectionNumber, AUD_END);
 
 #if 0
     /*

@@ -190,6 +190,7 @@
 #define SetExtendedVolumeAttributesEvent "AFS_SRX_SetVA"
 #define GetStatisticsEvent      "AFS_SRX_GetStats"
 #define XStatsVersionEvent      "AFS_SRX_XStatsVer"
+#define GetXStatsEvent          "AFS_SRX_GetXStats"
 
 #define NoAuthEvent             "AFS_RunNoAuth"
 #define NoAuthDisableEvent      "AFS_NoAuthDsbl"
