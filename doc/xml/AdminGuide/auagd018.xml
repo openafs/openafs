@@ -1088,6 +1088,7 @@
           role="bold">/etc/passwd</emphasis> or equivalent) of each machine the user can log onto. Remember to make the UNIX UID the
           same as the AFS UID you learned in Step <link linkend="LIWQ512">11</link>, and to fill the password field appropriately
           (for instructions, see <link linkend="HDRWQ497">Specifying Passwords in the Local Password File</link>).</para>
+        </listitem>
       </orderedlist>
 
       <indexterm>
