@@ -1913,7 +1913,7 @@ auth  required                pam_unix.so try_first_pass</literallayout>
               </indexterm></para>
           </listitem>
 
-          <listitem id="LIWQ54">
+          <listitem>
             <para>Issue the 
             <emphasis role="bold">add_principal</emphasis> command to create 
             a Kerberos Database entry for
@@ -2575,7 +2575,7 @@ Password for <replaceable>you/admin@REALM</replaceable>: <replaceable>your_passw
 </programlisting> </para>
         </listitem>
 
-        <listitem id="LIWQ54">
+        <listitem>
           <para>Issue the 
           <emphasis role="bold">add_principal</emphasis> command to create 
           the Kerberos Database entry for
