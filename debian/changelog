@@ -1,3 +1,9 @@
+openafs (1.6.11~pre1-1) UNRELEASED; urgency=low
+
+  * New upstream pre-release.
+
+ -- Andrew Deason <adeason@sinenomine.net>  Sun, 07 Dec 2014 22:11:10 -0600
+
 openafs (1.6.10-3) unstable; urgency=medium
 
   * Make openafs-client Before=umount.target for improved shutdown
