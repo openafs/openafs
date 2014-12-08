@@ -1,4 +1,4 @@
-openafs (1.6.11~pre1-1) UNRELEASED; urgency=low
+openafs (1.6.11~pre1-1) experimental; urgency=low
 
   * New upstream pre-release.
     - Linux kernels up to 3.17 are now supported.
@@ -8,7 +8,7 @@ openafs (1.6.11~pre1-1) UNRELEASED; urgency=low
     - Allow aklog to succeed in creating native K5 tokens even when K5-to-K4
       principal conversion fails.
 
- -- Andrew Deason <adeason@sinenomine.net>  Sun, 07 Dec 2014 22:11:10 -0600
+ -- Andrew Deason <adeason@sinenomine.net>  Sun, 07 Dec 2014 23:43:21 -0600
 
 openafs (1.6.10-3) unstable; urgency=medium
 
