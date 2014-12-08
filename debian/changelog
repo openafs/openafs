@@ -1,6 +1,12 @@
 openafs (1.6.11~pre1-1) UNRELEASED; urgency=low
 
   * New upstream pre-release.
+    - Linux kernels up to 3.17 are now supported.
+    - Fix more incorrect behavior in our revalidation of dcache entries. Bugs
+      in this area can cause stale path lookups in certain situations, as well
+      as cause getcwd() to fail spuriously.
+    - Allow aklog to succeed in creating native K5 tokens even when K5-to-K4
+      principal conversion fails.
 
  -- Andrew Deason <adeason@sinenomine.net>  Sun, 07 Dec 2014 22:11:10 -0600
 
