@@ -13,14 +13,7 @@ MACOS_VERSION=1.5.76
 #LINUX_PKGREL=0.pre3
 LINUX_PKGREL=1.1
 
-dnl Debian wants the release candidate version in the main upstream version,
-dnl and wants ~ before it.
-DEB_PKGVER=m4_esyscmd([build-tools/git-version .])
-AS_IF([echo "$LINUX_PKGREL" | grep pre >/dev/null 2>/dev/null],
-    [DEB_PKGVER="$DEB_PKGVER"`echo "$LINUX_PKGREL" | sed 's/0.pre/~rc/'`])
-
 AC_SUBST([MACOS_VERSION])
-AC_SUBST([DEB_PKGVER])
 
 dnl If the user hasn't specified CFLAGS don't let configure pick -g -O2
 AS_IF([test -z "$CFLAGS"], [CFLAGS=" "])

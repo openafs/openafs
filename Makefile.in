@@ -91,10 +91,6 @@ dest_only_libafs: only_libafs dest_dirs
 	$(MAKE) build TARGET=libafs COMPILE_PART2B=dest
 	-${INSTALL_DATA} ${srcdir}/src/LICENSE ${DEST}/LICENSE
 
-dpkg:
-	ln -fs ${srcdir}/src/packaging/Debian debian
-	dpkg-buildpackage -rfakeroot -b -us -uc
-
 packages: dest
 	@case ${SYS_NAME} in \
 	*_darwin_* ) \
@@ -882,7 +878,6 @@ distclean: clean
 	src/lwp/Makefile \
 	src/lwp/test/Makefile \
 	src/opr/Makefile \
-	src/packaging/Debian/changelog \
 	src/packaging/MacOS/OpenAFS-debug.Description.plist \
 	src/packaging/MacOS/OpenAFS-debug.Info.plist \
 	src/packaging/MacOS/OpenAFS.Description.plist \
