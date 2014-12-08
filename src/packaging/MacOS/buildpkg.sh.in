@@ -46,6 +46,10 @@ fi
 if [ $majorvers -eq 13 ]; then
   RELNAME="Mavericks"
 fi
+if [ $majorvers -eq 14 ]; then
+  RELNAME="Yosemite"
+fi
+
 
 PKGROOT=$CURDIR/pkgroot
 PKGRES=$CURDIR/pkgres

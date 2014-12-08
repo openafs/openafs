@@ -943,6 +943,7 @@ check_bad_parent(struct dentry *dp)
     cred_t *credp;
     struct dentry *parent;
     struct vcache *vcp, *pvc, *avc = NULL;
+    int code;
 
     vcp = VTOAFS(dp->d_inode);
     parent = dget_parent(dp);
@@ -952,8 +953,8 @@ check_bad_parent(struct dentry *dp)
 	credp = crref();
 
 	/* force a lookup, so vcp->mvid is fixed up */
-	afs_lookup(pvc, (char *)dp->d_name.name, &avc, credp);
-	if (!avc || vcp != avc) {	/* bad, very bad.. */
+	code = afs_lookup(pvc, (char *)dp->d_name.name, &avc, credp);
+	if (code || vcp != avc) {	/* bad, very bad.. */
 	    afs_Trace4(afs_iclSetp, CM_TRACE_TMP_1S3L, ICL_TYPE_STRING,
 		       "check_bad_parent: bad pointer returned from afs_lookup origvc newvc dentry",
 		       ICL_TYPE_POINTER, vcp, ICL_TYPE_POINTER, avc,
@@ -1230,10 +1231,37 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 	if (hgetlo(pvcp->f.m.DataVersion) > dp->d_time || !(vcp->f.states & CStatd)) {
 	    struct vattr *vattr = NULL;
 	    int code;
+	    int lookup_good;
 
 	    credp = crref();
 	    code = afs_lookup(pvcp, (char *)dp->d_name.name, &tvc, credp);
-	    if (!tvc || tvc != vcp) {
+
+	    if (code) {
+		/* We couldn't perform the lookup, so we're not okay. */
+		lookup_good = 0;
+
+	    } else if (tvc == vcp) {
+		/* We got back the same vcache, so we're good. */
+		lookup_good = 1;
+
+	    } else if (tvc == VTOAFS(dp->d_inode)) {
+		/* We got back the same vcache, so we're good. This is
+		 * different from the above case, because sometimes 'vcp' is
+		 * not the same as the vcache for dp->d_inode, if 'vcp' was a
+		 * mtpt and we evaluated it to a root dir. In rare cases,
+		 * afs_lookup might not evalute the mtpt when we do, or vice
+		 * versa, so the previous case will not succeed. But this is
+		 * still 'correct', so make sure not to mark the dentry as
+		 * invalid; it still points to the same thing! */
+		lookup_good = 1;
+
+	    } else {
+		/* We got back a different file, so we're definitely not
+		 * okay. */
+		lookup_good = 0;
+	    }
+
+	    if (!lookup_good) {
 		dput(parent);
 		/* Force unhash; the name doesn't point to this file
 		 * anymore. */
@@ -1478,7 +1506,7 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
     AFS_GLOCK();
     code = afs_lookup(VTOAFS(dip), (char *)comp, &vcp, credp);
     
-    if (vcp) {
+    if (!code) {
 	struct vattr *vattr = NULL;
 	struct vcache *parent_vc = VTOAFS(dip);
 
@@ -1529,9 +1557,18 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
     /* It's ok for the file to not be found. That's noted by the caller by
      * seeing that the dp->d_inode field is NULL.
      */
-    if (!code || code == ENOENT)
-	return newdp;
-    else 
+    if (!code || code == ENOENT) {
+	/*
+	 * d_splice_alias can return an error (EIO) if there is an existing
+	 * connected directory alias for this dentry.
+	 */
+	if (!IS_ERR(newdp))
+	    return newdp;
+	else {
+	    d_add(dp, ip);
+	    return NULL;
+	}
+    } else
 	return ERR_PTR(afs_convert_code(code));
 }
 

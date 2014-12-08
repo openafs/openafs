@@ -395,7 +395,7 @@ AC_DEFUN([LINUX_REGISTER_SYSCTL_TABLE_NOFLAG], [
   AC_CHECK_LINUX_BUILD([whether register_sysctl_table has an insert_at_head argument],
 		       [ac_cv_linux_register_sysctl_table_noflag],
 		       [#include <linux/sysctl.h>],
-		       [ctl_table *t; register_sysctl_table (t);],
+		       [struct ctl_table *t; register_sysctl_table (t);],
 		       [REGISTER_SYSCTL_TABLE_NOFLAG],
 		       [define if register_sysctl_table has no insert_at head flag],
 		       [])
@@ -785,4 +785,17 @@ AC_DEFUN([LINUX_IOP_LOOKUP_TAKES_UNSIGNED], [
 		       [IOP_LOOKUP_TAKES_UNSIGNED],
 		       [define if your iops.lookup takes an unsigned int argument],
 		       [-Werror])
+])
+
+
+AC_DEFUN([LINUX_D_INVALIDATE_IS_VOID], [
+  AC_CHECK_LINUX_BUILD([whether d_invalidate returns void],
+			[ac_cv_linux_func_d_invalidate_returns_void],
+			[#include <linux/fs.h>],
+			[
+			void d_invalidate(struct dentry *);
+			],
+		       [D_INVALIDATE_IS_VOID],
+		       [define if your d_invalidate returns void],
+		       [])
 ])

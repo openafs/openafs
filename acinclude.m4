@@ -579,14 +579,22 @@ else
 			AFS_SYSNAME="x86_darwin_120"
 			OSXSDK="macosx10.8"
 			;;
-                x86_64-apple-darwin13.*)
-                        AFS_SYSNAME="x86_darwin_130"
-                        OSXSDK="macosx10.9"
-                        ;;
-                i?86-apple-darwin13.*)
-                        AFS_SYSNAME="x86_darwin_130"
-                        OSXSDK="macosx10.9"
-                        ;;
+		x86_64-apple-darwin13.*)
+			AFS_SYSNAME="x86_darwin_130"
+			OSXSDK="macosx10.9"
+			;;
+		i?86-apple-darwin13.*)
+			AFS_SYSNAME="x86_darwin_130"
+			OSXSDK="macosx10.9"
+			;;
+		x86_64-apple-darwin14.*)
+			AFS_SYSNAME="x86_darwin_140"
+			OSXSDK="macosx10.10"
+			;;
+		i?86-apple-darwin14.*)
+			AFS_SYSNAME="x86_darwin_140"
+			OSXSDK="macosx10.10"
+			;;
 		sparc-sun-solaris2.5*)
 			AFS_SYSNAME="sun4x_55"
 			enable_login="yes"
@@ -840,8 +848,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_STRUCT([file_operations], [sendfile], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([file_system_type], [mount], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([inode_operations], [truncate], [fs.h])
-		 AC_CHECK_LINUX_STRUCT([key_type], [preparse], [key-type.h])
 		 AC_CHECK_LINUX_STRUCT([key_type], [instantiate_prep], [key-type.h])
+		 AC_CHECK_LINUX_STRUCT([key_type], [match_preparse], [key-type.h])
+		 AC_CHECK_LINUX_STRUCT([key_type], [preparse], [key-type.h])
 		 AC_CHECK_LINUX_STRUCT([nameidata], [path], [namei.h])
 		 AC_CHECK_LINUX_STRUCT([proc_dir_entry], [owner], [proc_fs.h])
 		 AC_CHECK_LINUX_STRUCT([super_block], [s_bdi], [fs.h])
@@ -1024,6 +1033,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_IOP_I_CREATE_TAKES_BOOL
 		 LINUX_DOP_D_REVALIDATE_TAKES_UNSIGNED
 		 LINUX_IOP_LOOKUP_TAKES_UNSIGNED
+		 LINUX_D_INVALIDATE_IS_VOID
 
 		 dnl If we are guaranteed that keyrings will work - that is
 		 dnl  a) The kernel has keyrings enabled

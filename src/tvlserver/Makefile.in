@@ -180,10 +180,10 @@ vl_errors.o: vl_errors.c
 	${CCRULE} vl_errors.c
 
 vl_errors.c: ${VLSERVER}/vl_errors.et
-	${COMPILE_ET_C} -p ${VLSERVER} vl_errors
+	${COMPILE_ET_C} -p ${srcdir}/${VLSERVER} vl_errors
 
 vlserver.h: ${VLSERVER}/vl_errors.et ${VLSERVER}/vlserver.p.h
-	${COMPILE_ET_H} -p ${VLSERVER} vl_errors -h vlserver
+	${COMPILE_ET_H} -p ${srcdir}/${VLSERVER} vl_errors -h vlserver
 
 cnvldb.o: vlserver.h
 vlclient.o: vlserver.h

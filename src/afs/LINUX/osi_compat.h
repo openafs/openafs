@@ -557,4 +557,15 @@ afs_maybe_shrink_dcache(struct dentry *dp)
 #endif
 }
 
+static inline int
+afs_d_invalidate(struct dentry *dp)
+{
+#if defined(D_INVALIDATE_IS_VOID)
+    d_invalidate(dp);
+    return 0;
+#else
+    return d_invalidate(dp);
+#endif
+}
+
 #endif /* AFS_LINUX_OSI_COMPAT_H */

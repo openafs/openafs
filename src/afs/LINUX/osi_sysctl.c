@@ -34,7 +34,7 @@ extern afs_int32 afs_pct2;
 #ifdef CONFIG_SYSCTL
 static struct ctl_table_header *afs_sysctl = NULL;
 
-static ctl_table afs_sysctl_table[] = {
+static struct ctl_table afs_sysctl_table[] = {
     {
 #if defined(STRUCT_CTL_TABLE_HAS_CTL_NAME)
 #if defined(CTL_UNNUMBERED)
@@ -234,7 +234,7 @@ static ctl_table afs_sysctl_table[] = {
     {0}
 };
 
-static ctl_table fs_sysctl_table[] = {
+static struct ctl_table fs_sysctl_table[] = {
     {
 #if defined(STRUCT_CTL_TABLE_HAS_CTL_NAME)
 #if defined(CTL_UNNUMBERED)
