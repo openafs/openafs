@@ -1,6 +1,8 @@
 [Unit]
 Description=OpenAFS Client Service
-After=syslog.target network.target
+Wants=network-online.target
+After=syslog.target network-online.target
+Before=remote-fs.target
 
 [Service]
 Type=forking

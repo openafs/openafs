@@ -13,6 +13,8 @@
 #include "afs/sysincludes.h"    /*Standard vendor system headers */
 #include "afsincludes.h"        /*AFS-based standard headers */
 
+#include "osi_compat.h"
+
 int
 osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep) {
     int code;
@@ -71,7 +73,7 @@ restart:
 	    dget(dentry);
 
 	    spin_unlock(&inode->i_lock);
-	    if (d_invalidate(dentry) == -EBUSY) {
+	    if (afs_d_invalidate(dentry) == -EBUSY) {
 		dput(dentry);
 		/* perhaps lock and try to continue? (use cur as head?) */
 		goto inuse;

@@ -36,12 +36,14 @@ specified with B<-k>.  B<-k> cannot be used in B<-path> mode (see below).
 When a Kerberos 5 cross-realm trust is used, B<aklog> looks up the AFS ID
 corresponding to the name (Kerberos principal) of the person invoking the
 command, and if the user doesn't exist and the
-system:authuser@FOREIGN.REALM PTS group exists, then it attempts automatic
+C<system:authuser@FOREIGN.REALM> PTS group exists, then it attempts automatic
 registration of the user with the foreign cell.  The user is then added to
-the system:authuser@FOREIGN.REALM PTS group if registration is successful.
+the C<system:authuser@FOREIGN.REALM> PTS group if registration is successful.
 Automatic registration in the foreign cell will fail if the group quota
-for the system:authuser@FOREIGN.REALM group is less than one.  Each
+for the C<system:authuser@FOREIGN.REALM> group is less than one.  Each
 automatic registration decrements the group quota by one.
+
+=head1 CAUTIONS
 
 When using B<aklog>, be aware that AFS uses the Kerberos v4 principal
 naming format, not the Kerberos v5 format, when referring to principals in
@@ -53,6 +55,15 @@ principal part of C<host> to C<rcmd>.  In other words, to create a PTS
 entry for the Kerberos v5 principal C<user/admin>, refer to it as
 C<user.admin>, and for the principal C<host/shell.example.com>, refer to
 it as C<rcmd.shell>.
+
+The B<aklog> mapping of Kerberos v5 principal to Kerberos v4 principal and
+the determination that a Kerberos realm is foreign is performed in the
+absence of the actual AFS server configuration.  If the B<aklog> mapping
+of Kerberos v5 principal to Kerberos v4 principal or the foreign realm
+determination is wrong, the PTS name-to-id lookup will produce the wrong
+AFS ID for the user.  The AFS ID is only used for display purposes and
+should not be trusted.  Use the B<-noprdb> switch to disable the PTS
+name-to-id lookup.
 
 =head1 OPTIONS
 
