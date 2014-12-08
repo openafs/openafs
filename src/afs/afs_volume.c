@@ -259,7 +259,7 @@ afs_UFSGetVolSlot(afs_int32 volid, struct cell *tcell)
 				 &staticFVolume, sizeof(struct fvolume));
 		osi_UFSClose(tfile);
 		if (code != sizeof(struct fvolume)) {
-		    afs_warn("afs_SetupVolume: error %d reading volumeinfo\n",
+		    afs_warn("afs_UFSGetVolSlot: error %d reading volumeinfo\n",
 			     (int)code);
 		}
 	    }
