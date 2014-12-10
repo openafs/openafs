@@ -1476,7 +1476,7 @@ afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName, char *aservice,
  *
  * @return status
  *    @retval 0 success
- *    @retval AFSCONF_UNKNOWN failed to get cellname
+ *    @retval AFSCONF_NOCELLNAME cannot determine local cell name
  *
  * @internal
  */
@@ -1509,7 +1509,7 @@ _afsconf_GetLocalCell(struct afsconf_dir *adir, char **pname, int check)
 	if (adir->cellName) {
 	    *pname = adir->cellName;
 	} else
-	    code = AFSCONF_UNKNOWN;
+	    code = AFSCONF_NOCELLNAME;
     }
     return code;
 }
