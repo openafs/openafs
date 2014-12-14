@@ -2347,19 +2347,17 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
     conn->serial += len;
     for (i = 0; i < len; i++) {
 	p = list[i];
+	/* a ping *or* a sequenced packet can count */
 	if (p->length > conn->peer->maxPacketSize) {
-	    /* a ping *or* a sequenced packet can count */
-	    if ((p->length > conn->peer->maxPacketSize)) {
-		if (((p->header.type == RX_PACKET_TYPE_ACK) &&
-		     (p->header.flags & RX_REQUEST_ACK)) &&
-		    ((i == 0) || (p->length >= conn->lastPingSize))) {
-		    conn->lastPingSize = p->length;
-		    conn->lastPingSizeSer = serial + i;
-		} else if ((p->header.seq != 0) &&
-			   ((i == 0) || (p->length >= conn->lastPacketSize))) {
-		    conn->lastPacketSize = p->length;
-		    conn->lastPacketSizeSeq = p->header.seq;
-		}
+	    if (((p->header.type == RX_PACKET_TYPE_ACK) &&
+		 (p->header.flags & RX_REQUEST_ACK)) &&
+		((i == 0) || (p->length >= conn->lastPingSize))) {
+		conn->lastPingSize = p->length;
+		conn->lastPingSizeSer = serial + i;
+	    } else if ((p->header.seq != 0) &&
+		       ((i == 0) || (p->length >= conn->lastPacketSize))) {
+		conn->lastPacketSize = p->length;
+		conn->lastPacketSizeSeq = p->header.seq;
 	    }
 	}
     }
