@@ -6308,7 +6308,7 @@ mtuout:
 	rxi_SetPeerMtu(conn->peer, 0, 0, newmtu);
 
 	/* clean up */
-	conn->lastPacketSize = 0;
+	conn->lastPacketSize = conn->lastPacketSizeSeq = 0;
 
 	/* needed so ResetCall doesn't clobber us. */
 	call->MTU = conn->peer->ifMTU;
