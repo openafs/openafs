@@ -6373,33 +6373,6 @@ rxi_CheckCall(struct rx_call *call, int haveCTLock)
      * number of seconds. */
     if (now > (call->lastReceiveTime + deadTime)) {
 	if (call->state == RX_STATE_ACTIVE) {
-#ifdef AFS_ADAPT_PMTU
-# if defined(KERNEL) && defined(AFS_SUN5_ENV)
-	    ire_t *ire;
-#  if defined(AFS_SUN510_ENV) && defined(GLOBAL_NETSTACKID)
-	    netstack_t *ns = netstack_find_by_stackid(GLOBAL_NETSTACKID);
-	    ip_stack_t *ipst = ns->netstack_ip;
-#  endif
-	    ire = ire_cache_lookup(conn->peer->host
-#  if defined(AFS_SUN510_ENV) && defined(ALL_ZONES)
-				   , ALL_ZONES
-#    if defined(ICL_3_ARG) || defined(GLOBAL_NETSTACKID)
-				   , NULL
-#     if defined(GLOBAL_NETSTACKID)
-				   , ipst
-#     endif
-#    endif
-#  endif
-		);
-
-	    if (ire && ire->ire_max_frag > 0)
-		rxi_SetPeerMtu(NULL, conn->peer->host, 0,
-			       ire->ire_max_frag);
-#  if defined(GLOBAL_NETSTACKID)
-	    netstack_rele(ns);
-#  endif
-# endif
-#endif /* AFS_ADAPT_PMTU */
 	    cerror = RX_CALL_DEAD;
 	    goto mtuout;
 	} else {
