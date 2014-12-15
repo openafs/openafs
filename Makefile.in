@@ -258,17 +258,7 @@ libacl: cmd comerr ptserver libacl_depinstall
 dir: cmd comerr libacl dir_depinstall
 	+${COMPILE_PART1} dir ${COMPILE_PART2}
 
-# Removed from sgi_* case below:
-# ${COMPILE_PART1} sgiefs ${COMPILE_PART2};;
-sgiefs:
-	+case ${SYS_NAME} in \
-	sgi_*) \
-                echo "SGI efs not supported" ;; \
-	*) \
-		echo No efs stuff for ${SYS_NAME};; \
-	esac
-
-vol: cmd comerr dir afs sgiefs $(DIR_roken)
+vol: cmd comerr dir afs $(DIR_roken)
 	+${COMPILE_PART1} vol ${COMPILE_PART2}
 
 tsalvaged: vol libafsrpc libafsauthent cmd util
