@@ -3326,7 +3326,7 @@ ChangeIPAddr(struct vl_ctx *ctx, afs_uint32 ipaddr1, afs_uint32 ipaddr2)
     int i, j;
     afs_int32 code;
     struct extentaddr *exp = NULL;
-    int base = 0;
+    int base = -1;
     int index, mhidx;
     afsUUID tuuid;
     afs_int32 blockindex, count;
@@ -3336,7 +3336,7 @@ ChangeIPAddr(struct vl_ctx *ctx, afs_uint32 ipaddr1, afs_uint32 ipaddr2)
     char addrbuf1[256];
     char addrbuf2[256];
 
-    /* Don't let addr change to 256.*.*.* : Causes internal error below */
+    /* Don't let addr change to 255.*.*.* : Causes internal error below */
     if ((ipaddr2 & 0xff000000) == 0xff000000)
 	return (VL_BADSERVER);
 
@@ -3352,30 +3352,35 @@ ChangeIPAddr(struct vl_ctx *ctx, afs_uint32 ipaddr1, afs_uint32 ipaddr2)
     }
 
     for (i = 0; i <= MAXSERVERID; i++) {
+	struct extentaddr *texp = NULL;
+	int tbase;
+
 	if ((ctx->hostaddress[i] & 0xff000000) == 0xff000000) {
-	    base = (ctx->hostaddress[i] >> 16) & 0xff;
+	    tbase = (ctx->hostaddress[i] >> 16) & 0xff;
 	    index = ctx->hostaddress[i] & 0x0000ffff;
-	    if ((base >= VL_MAX_ADDREXTBLKS) || (index >= VL_MHSRV_PERBLK)) {
+	    if ((tbase >= VL_MAX_ADDREXTBLKS) || (index >= VL_MHSRV_PERBLK)) {
 		VLog(0,
 		     ("Internal error: Multihome extent addr is too large. Base %d index %d\n",
-		      base, index));
+		      tbase, index));
 		return -1;	/* EINVAL */
 	    }
-
-	    exp = &ctx->ex_addr[base][index];
+	    texp = &ctx->ex_addr[tbase][index];
 	    for (mhidx = 0; mhidx < VL_MAXIPADDRS_PERMH; mhidx++) {
-		if (!exp->ex_addrs[mhidx])
+		if (!texp->ex_addrs[mhidx])
 		    continue;
-		if (ntohl(exp->ex_addrs[mhidx]) == ipaddr1) {
+		if (ntohl(texp->ex_addrs[mhidx]) == ipaddr1) {
 		    ipaddr1_id = i;
+		    exp = texp;
+		    base = tbase;
 		}
-		if (ipaddr2 != 0 && ntohl(exp->ex_addrs[mhidx]) == ipaddr2) {
+		if (ipaddr2 != 0 && ntohl(texp->ex_addrs[mhidx]) == ipaddr2) {
 		    ipaddr2_id = i;
 		}
 	    }
 	} else {
 	    if (ctx->hostaddress[i] == ipaddr1) {
 		exp = NULL;
+		base = -1;
 		ipaddr1_id = i;
 	    }
 	    if (ipaddr2 != 0 && ctx->hostaddress[i] == ipaddr2) {
@@ -3425,6 +3430,15 @@ ChangeIPAddr(struct vl_ctx *ctx, afs_uint32 ipaddr1, afs_uint32 ipaddr2)
 		}
 	    }
 	}
+    } else if (exp) {
+	/* Do not allow changing addresses in multi-homed entries.
+	   Older versions of this RPC would silently "downgrade" mh entries
+	   to single-homed entries and orphan the mh enties. */
+	addrbuf1[0] = '\0';
+	append_addr(addrbuf1, ipaddr1, sizeof(addrbuf1));
+	VLog(0, ("Refusing to change address %s in multi-homed entry; "
+		 "use RegisterAddrs instead.\n", addrbuf1));
+	return VL_NOENT;	/* single-homed entry not found */
     }
 
     /* Log a message saying we are changing/removing an IP address */
@@ -3446,10 +3460,10 @@ ChangeIPAddr(struct vl_ctx *ctx, afs_uint32 ipaddr1, afs_uint32 ipaddr2)
     if (ipaddr2) {
 	append_addr(addrbuf2, ipaddr2, sizeof(addrbuf2));
     }
-    VLog(0, ("      entry %d: [%s] -> [%s]\n", i, addrbuf1, addrbuf2));
+    VLog(0, ("      entry %d: [%s] -> [%s]\n", ipaddr1_id, addrbuf1, addrbuf2));
 
     /* Change the registered uuuid addresses */
-    if (exp) {
+    if (exp && base != -1) {
 	memset(&tuuid, 0, sizeof(afsUUID));
 	afs_htonuuid(&tuuid);
 	exp->ex_hostuuid = tuuid;
