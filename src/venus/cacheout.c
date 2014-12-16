@@ -239,7 +239,6 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
     struct afsconf_cell info;
     struct rx_connection *serverconns[MAXSERVERS];
     afs_int32 code, i;
-    struct rx_securityClass *scnull;
     rxkad_level sclevel = rxkad_auth;
 
     sprintf(confdir, "%s", AFSDIR_CLIENT_ETC_DIRPATH);
@@ -258,7 +257,7 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 	return 1;
     }
 
-    scnull = sc = rxnull_NewClientSecurityObject();
+    sc = rxnull_NewClientSecurityObject();
     scindex = 0;
 
     tdir = afsconf_Open(confdir);
@@ -310,8 +309,8 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
     for (i = 0; i < info.numServers; ++i)
 	serverconns[i] =
 	    rx_NewConnection(info.hostAddr[i].sin_addr.s_addr,
-			     info.hostAddr[i].sin_port, USER_SERVICE_ID, scnull,
-			     0);
+			     info.hostAddr[i].sin_port, USER_SERVICE_ID, sc,
+			     scindex);
     for (; i < MAXSERVERS; ++i) {
 	serverconns[i] = (struct rx_connection *)0;
     }
