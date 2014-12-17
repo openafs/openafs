@@ -5249,6 +5249,7 @@ ChangeAddr(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 ip1, ip2, vcode;
     int remove = 0;
+    int force = 0;
 
     if (noresolve)
 	ip1 = GetServerNoresolve(as->parms[0].items->data);
@@ -5264,6 +5265,10 @@ ChangeAddr(struct cmd_syndesc *as, void *arock)
 	fprintf(STDERR,
 		"vos: Must specify either '-newaddr <addr>' or '-remove' flag\n");
 	return (EINVAL);
+    }
+
+    if (as->parms[3].items) {
+	force = 1;
     }
 
     if (as->parms[1].items) {
@@ -5283,6 +5288,42 @@ ChangeAddr(struct cmd_syndesc *as, void *arock)
 	remove = 1;
 	ip2 = ip1;
 	ip1 = 0xffffffff;
+    }
+
+    if (!remove && !force) {
+	afs_int32 m_nentries;
+	bulkaddrs m_addrs;
+	afs_int32 m_uniq = 0;
+	afsUUID m_uuid;
+	ListAddrByAttributes m_attrs;
+	char buffer[128];
+
+	memset(&m_attrs, 0, sizeof(m_attrs));
+	memset(&m_uuid, 0, sizeof(m_uuid));
+	memset(&m_addrs, 0, sizeof(m_addrs));
+	memset(buffer, 0, sizeof(buffer));
+
+	m_attrs.Mask = VLADDR_IPADDR;
+	m_attrs.ipaddr = ntohl(ip1);	/* -oldaddr */
+
+	vcode =
+	    ubik_VL_GetAddrsU(cstruct, UBIK_CALL_NEW, &m_attrs, &m_uuid,
+			      &m_uniq, &m_nentries, &m_addrs);
+	xdr_free((xdrproc_t) xdr_bulkaddrs, &m_addrs);
+	switch (vcode) {
+	case 0:		/* mh entry detected */
+	    afsUUID_to_string(&m_uuid, buffer, sizeof(buffer) - 1);
+	    fprintf(STDERR, "vos: Refusing to change address in multi-homed server entry.\n");
+	    fprintf(STDERR, "     -oldaddr address is registered to file server UUID %s\n", buffer);
+	    fprintf(STDERR, "     Please restart the file server or use vos setaddrs.\n");
+	    return EINVAL;
+	case VL_NOENT:
+	    break;
+	default:
+	    fprintf(STDERR, "vos: could not list the server addresses\n");
+	    PrintError("", vcode);
+	    return vcode;
+	}
     }
 
     vcode = ubik_VL_ChangeAddr(cstruct, UBIK_CALL_NEW, ntohl(ip1), ntohl(ip2));
@@ -6295,6 +6336,8 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-newaddr", CMD_SINGLE, CMD_OPTIONAL, "new IP address");
     cmd_AddParm(ts, "-remove", CMD_FLAG, CMD_OPTIONAL,
 		"remove the IP address from the VLDB");
+    cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL,
+		"allow multi-homed server entry change (not recommended)");
     COMMONPARMS;
 
     ts = cmd_CreateSyntax("listaddrs", ListAddrs, NULL, 0,
