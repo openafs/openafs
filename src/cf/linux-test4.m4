@@ -723,7 +723,11 @@ AC_DEFUN([LINUX_D_ALIAS_IS_HLIST], [
 			[#include <linux/fs.h>],
 			[struct dentry *d = NULL;
 			struct hlist_node *hn = NULL;
-			d->d_alias = *hn;],
+			#if defined(STRUCT_DENTRY_HAS_D_U_D_ALIAS)
+			d->d_u.d_alias = *hn;
+			#else
+			d->d_alias = *hn;
+			#endif],
 			[D_ALIAS_IS_HLIST],
 			[define if dentry->d_alias is an hlist],
 			[])
@@ -737,6 +741,9 @@ AC_DEFUN([LINUX_HLIST_ITERATOR_NO_NODE], [
 			#include <linux/fs.h>],
 			[struct dentry *d = NULL, *cur;
 			struct inode *ip;
+			#if defined(STRUCT_DENTRY_HAS_D_U_D_ALIAS)
+			# define d_alias d_u.d_alias
+			#endif
 			hlist_for_each_entry(cur, &ip->i_dentry, d_alias) { }
 			],
 			[HLIST_ITERATOR_NO_NODE],
