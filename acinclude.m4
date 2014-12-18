@@ -232,6 +232,26 @@ AC_ARG_ENABLE([linux-syscall-probing],
     ,
     [enable_linux_syscall_probing="maybe"])
     
+AC_ARG_ENABLE([linux-d_splice_alias-extra-iput],
+    [AS_HELP_STRING([--enable-linux-d_splice_alias-extra-iput],
+	[Linux has introduced an incompatible behavior change in the
+	 d_splice_alias function with no reliable way to determine which
+	 behavior will be produced.  If Linux commit
+	 51486b900ee92856b977eacfc5bfbe6565028070 (or equivalent) has been
+	 applied to your kernel, disable this option.  If that commit is
+	 not present in your kernel, enable this option.  We apologize
+	 that you are required to know this about your running kernel.])],
+    [],
+    [case $system in
+    *-linux*)
+	AS_IF([test "x$LOGNAME" != "xbuildslave" &&
+	    test "x$LOGNAME" != "xbuildbot"],
+	    [AC_ERROR([Linux users must specify either
+		--enable-linux-d_splice_alias-extra-iput or
+		--disable-linux-d_splice_alias-extra-iput])],
+	    [enable_linux_d_splice_alias_extra_iput="no"])
+     esac
+    ])
 AC_ARG_WITH([xslt-processor],
 	AS_HELP_STRING([--with-xslt-processor=ARG],
 	[which XSLT processor to use (possible choices are: libxslt, saxon, xalan-j, xsltproc)]),
@@ -925,6 +945,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_FUNC([hlist_unhashed],
 				     [#include <linux/list.h>],
 				     [hlist_unhashed(0);])
+		 AC_CHECK_LINUX_FUNC([ihold],
+				     [#include <linux/fs.h>],
+				     [ihold(NULL);])
 		 AC_CHECK_LINUX_FUNC([i_size_read],
 				     [#include <linux/fs.h>],
 				     [i_size_read(NULL);])
@@ -1115,6 +1138,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		  AC_MSG_WARN([your kernel does not have a usable symlink cache API])
 		 fi
                 :
+		fi
+		if test "x$enable_linux_d_splice_alias_extra_iput" = xyes; then
+		    AC_DEFINE(D_SPLICE_ALIAS_LEAK_ON_ERROR, 1, [for internal use])
 		fi
 dnl Linux-only, but just enable always.
 		AC_DEFINE(AFS_CACHE_BYPASS, 1, [define to activate cache bypassing Unix client])

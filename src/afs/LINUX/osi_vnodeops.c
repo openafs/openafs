@@ -1548,6 +1548,17 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 	ip->i_flags |= S_AUTOMOUNT;
 #endif
     }
+    /*
+     * Take an extra reference so the inode doesn't go away if
+     * d_splice_alias drops our reference on error.
+     */
+    if (ip)
+#ifdef HAVE_LINUX_IHOLD
+	ihold(ip);
+#else
+	igrab(ip);
+#endif
+
     newdp = d_splice_alias(ip, dp);
 
  done:
@@ -1561,14 +1572,26 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 	 * d_splice_alias can return an error (EIO) if there is an existing
 	 * connected directory alias for this dentry.
 	 */
-	if (!IS_ERR(newdp))
+	if (!IS_ERR(newdp)) {
+	    iput(ip);
 	    return newdp;
-	else {
+	} else {
 	    d_add(dp, ip);
+	    /*
+	     * Depending on the kernel version, d_splice_alias may or may
+	     * not drop the inode reference on error.  If it didn't, do it
+	     * here.
+	     */
+#if defined(D_SPLICE_ALIAS_LEAK_ON_ERROR)
+	    iput(ip);
+#endif
 	    return NULL;
 	}
-    } else
+    } else {
+	if (ip)
+	    iput(ip);
 	return ERR_PTR(afs_convert_code(code));
+    }
 }
 
 static int
