@@ -37,6 +37,10 @@ typedef struct vfs_path afs_linux_path_t;
 typedef struct path afs_linux_path_t;
 #endif
 
+#if defined(STRUCT_DENTRY_HAS_D_U_D_ALIAS)
+# define d_alias d_u.d_alias
+#endif
+
 #ifndef HAVE_LINUX_DO_SYNC_READ
 static inline int
 do_sync_read(struct file *fp, char *buf, size_t count, loff_t *offp) {
