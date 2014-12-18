@@ -69,6 +69,9 @@ extern void osi_syscall_clean(void);
 extern int osi_sysctl_init(void);
 extern void osi_sysctl_clean(void);
 
+/* osi_vcache.c */
+extern void osi_ResetRootVCache(afs_uint32 volid);
+
 /* osi_vm.c */
 extern int osi_VM_FlushVCache(struct vcache *avc);
 extern void osi_VM_TryToSmush(struct vcache *avc, afs_ucred_t *acred,

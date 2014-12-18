@@ -351,71 +351,14 @@ afs_CheckRootVolume(void)
 		 * count to zero and fs checkv is executed when the current
 		 * directory is /afs.
 		 */
-#ifdef AFS_LINUX20_ENV
-		{
-		    struct vrequest *treq = NULL;
-		    struct vattr vattr;
-		    cred_t *credp;
-		    struct dentry *dp;
-		    struct vcache *vcp;
-
-		    afs_rootFid.Fid.Volume = volid;
-		    afs_rootFid.Fid.Vnode = 1;
-		    afs_rootFid.Fid.Unique = 1;
-
-		    credp = crref();
-		    if (afs_CreateReq(&treq, credp))
-			goto out;
-		    vcp = afs_GetVCache(&afs_rootFid, treq, NULL, NULL);
-		    if (!vcp)
-			goto out;
-		    afs_getattr(vcp, &vattr, credp);
-		    afs_fill_inode(AFSTOV(vcp), &vattr);
-
-		    dp = d_find_alias(AFSTOV(afs_globalVp));
-
-#if defined(AFS_LINUX24_ENV)
-#if defined(HAVE_DCACHE_LOCK)
-		    spin_lock(&dcache_lock);
+#ifdef AFS_LINUX22_ENV
+		osi_ResetRootVCache(volid);
 #else
-		    spin_lock(&AFSTOV(vcp)->i_lock);
-#endif
-#if defined(AFS_LINUX26_ENV)
-		    spin_lock(&dp->d_lock);
-#endif
-#endif
-#if defined(D_ALIAS_IS_HLIST)
-		    hlist_del_init(&dp->d_alias);
-		    hlist_add_head(&dp->d_alias, &(AFSTOV(vcp)->i_dentry));
-#else
-		    list_del_init(&dp->d_alias);
-		    list_add(&dp->d_alias, &(AFSTOV(vcp)->i_dentry));
-#endif
-		    dp->d_inode = AFSTOV(vcp);
-#if defined(AFS_LINUX24_ENV)
-#if defined(AFS_LINUX26_ENV)
-		    spin_unlock(&dp->d_lock);
-#endif
-#if defined(HAVE_DCACHE_LOCK)
-		    spin_unlock(&dcache_lock);
-#else
-		    spin_unlock(&AFSTOV(vcp)->i_lock);
-#endif
-#endif
-		    dput(dp);
-
-		    AFS_FAST_RELE(afs_globalVp);
-		    afs_globalVp = vcp;
-		out:
-		    crfree(credp);
-		    afs_DestroyReq(treq);
-		}
-#else
-#ifdef AFS_DARWIN80_ENV
+# ifdef AFS_DARWIN80_ENV
 		afs_PutVCache(afs_globalVp);
-#else
+# else
 		AFS_FAST_RELE(afs_globalVp);
-#endif
+# endif
 		afs_globalVp = 0;
 #endif
 	    }
