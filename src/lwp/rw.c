@@ -34,7 +34,7 @@ typedef struct QUEUE {
 } queue;
 
 queue *
-init()
+init(void)
 {
     queue *q;
 
@@ -236,4 +236,6 @@ main(int argc, char **argv)
     for (i = nreaders - 1; i >= 0; i--)
 	LWP_DestroyProcess(readers[i]);
     printf("\n*Exiting*\n");
+
+    exit(0);
 }
