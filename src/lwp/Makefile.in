@@ -15,7 +15,7 @@ include @TOP_OBJDIR@/src/config/Makefile.lwptool
 DBG=${LWP_DBG}
 OPTMZ=${LWP_OPTMZ}
 
-LIBOBJS=lwp.o process.o iomgr.o timer.o preempt.o \
+LIBOBJS=lwp.o process.o iomgr.o timer.o \
 	threadname.o AFS_component_version_number.o
 
 LT_objs = waitkey.lo fasttime.lo lock.lo
@@ -25,7 +25,7 @@ LT_libs = $(MT_LIBS)
 all: liboafs_lwpcompat.la liblwpcompat_pic.la \
 	${TOP_LIBDIR}/liblwp.a depinstall
 
-depinstall: ${TOP_INCDIR}/lock.h ${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/preempt.h ${TOP_INCDIR}/timer.h
+depinstall: ${TOP_INCDIR}/lock.h ${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/timer.h
 
 ${TOP_LIBDIR}/liblwp.a: liblwp.a
 	${INSTALL_DATA} $? $@
@@ -34,9 +34,6 @@ ${TOP_INCDIR}/lock.h: lock.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/lwp.h: lwp.h
-	${INSTALL_DATA} $? $@
-
-${TOP_INCDIR}/preempt.h: preempt.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/timer.h: timer.h
@@ -182,7 +179,6 @@ process.o	: process.default.s process.i386.s process.amd64.s process.c lwp.o
 	esac
 
 iomgr.o		: iomgr.c lwp.h timer.h
-preempt.o	: preempt.c lwp.h preempt.h
 lwp.o		: lwp.c lwp.h
 	case "$(SYS_NAME)" in \
 		rs_aix*) \
@@ -206,22 +202,20 @@ rw: rw.o liblwp.a $(TOP_LIBDIR)/util.a $(TOP_LIBDIR)/libopr.a
 #
 # Install targets
 #
-install: liblwp.a lock.h lwp.h preempt.h timer.h
+install: liblwp.a lock.h lwp.h timer.h
 	${INSTALL} -d ${DESTDIR}${libdir}
 	${INSTALL} -d ${DESTDIR}${includedir}
 	${INSTALL_DATA} liblwp.a ${DESTDIR}${libdir}/liblwp.a
 	${INSTALL_DATA} ${srcdir}/lock.h ${DESTDIR}${includedir}/lock.h
 	${INSTALL_DATA} ${srcdir}/lwp.h ${DESTDIR}${includedir}/lwp.h
-	${INSTALL_DATA} ${srcdir}/preempt.h ${DESTDIR}${includedir}/preempt.h
 	${INSTALL_DATA} ${srcdir}/timer.h ${DESTDIR}${includedir}/timer.h
 
-dest: liblwp.a lock.h lwp.h preempt.h timer.h
+dest: liblwp.a lock.h lwp.h timer.h
 	${INSTALL} -d ${DEST}/lib
 	${INSTALL} -d ${DEST}/include
 	${INSTALL_DATA} liblwp.a ${DEST}/lib/liblwp.a
 	${INSTALL_DATA} ${srcdir}/lock.h ${DEST}/include/lock.h
 	${INSTALL_DATA} ${srcdir}/lwp.h ${DEST}/include/lwp.h
-	${INSTALL_DATA} ${srcdir}/preempt.h ${DEST}/include/preempt.h
 	${INSTALL_DATA} ${srcdir}/timer.h ${DEST}/include/timer.h
 
 buildtools: ${TOP_LIBDIR}/liblwp.a depinstall

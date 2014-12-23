@@ -21,7 +21,6 @@ Created: 11/1/83, J. Rosenberg
 
 #include "lwp.h"
 #include "lock.h"
-#include "preempt.h"
 
 #define DEFAULT_READERS	5
 
@@ -94,7 +93,6 @@ read_process(void *arg)
     printf("\t[Reader %d]\n", *id);
     LWP_DispatchProcess();	/* Just relinquish control for now */
 
-    PRE_PreemptMe();
     for (;;) {
 	int i;
 
@@ -108,9 +106,7 @@ read_process(void *arg)
 	}
 	asleep--;
 	for (i = 0; i < 10000; i++);
-	PRE_BeginCritical();
 	printf("[%d: %s]\n", *id, Remove(q));
-	PRE_EndCritical();
 	ReleaseReadLock(&q->lock);
 	LWP_DispatchProcess();
     }
@@ -166,7 +162,6 @@ write_process(void *dummy)
     char **mesg;
 
     printf("\t[Writer]\n");
-    PRE_PreemptMe();
 
     /* Now loop & write data */
     for (mesg = messages; *mesg != 0; mesg++) {
@@ -195,11 +190,9 @@ main(int argc, char **argv)
 {
     int nreaders, i;
     PROCESS pid;
-    afs_int32 interval;		/* To satisfy Brad */
     PROCESS *readers;
     int *readerid;
     PROCESS writer;
-    struct timeval tv;
 
     printf("\n*Readers & Writers*\n\n");
     setbuf(stdout, 0);
@@ -211,15 +204,10 @@ main(int argc, char **argv)
 	sscanf(*++argv, "%d", &nreaders);
     printf("[There will be %d readers]\n", nreaders);
 
-    interval = (argc >= 3 ? atoi(*++argv) * 1000 : 50000);
-
     if (argc == 4)
 	lwp_debug = 1;
     LWP_InitializeProcessSupport(0, &pid);
     printf("[Support initialized]\n");
-    tv.tv_sec = 0;
-    tv.tv_usec = interval;
-    PRE_InitPreempt(&tv);
 
     /* Initialize queue */
     q = init();

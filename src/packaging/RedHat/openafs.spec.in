@@ -1283,7 +1283,6 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_includedir}/afs
 %{_includedir}/lock.h
 %{_includedir}/lwp.h
-%{_includedir}/preempt.h
 %{_includedir}/rx
 %{_includedir}/timer.h
 %{_includedir}/ubik.h

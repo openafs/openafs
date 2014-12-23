@@ -1482,7 +1482,6 @@
                             <File Id="fileosithrdnt_H" Name="osithrdn.h" LongName="osithrdnt.h" DiskId="1" src="$(var.IncDir)osithrdnt.h" />
                             <File Id="fileosiutils_H" Name="osiutils.h" LongName="osiutils.h" DiskId="1" src="$(var.IncDir)osiutils.h" /> 
                             <File Id="fileperf_H" Name="perf.h" LongName="perf.h" DiskId="1" src="$(var.IncDir)perf.h" /> 
-                            <File Id="filepreempt_H" Name="preempt.h" LongName="preempt.h" DiskId="1" src="$(var.IncDir)preempt.h" /> 
                             <File Id="filepthread_H" Name="pthread.h" LongName="pthread.h" DiskId="1" src="$(var.IncDir)pthread.h" /> 
                             <File Id="fileroken_common_H" Name="rokencmn.h" LongName="roken-common.h" DiskId="1" src="$(var.IncDir)roken-common.h" />
                             <File Id="fileroken_H" Name="roken.h" LongName="roken.h" DiskId="1" src="$(var.IncDir)roken.h" />

@@ -28,7 +28,6 @@ LIBFILE = $(DESTDIR)\lib\afslwp.lib
 INCFILES = \
 	$(DESTDIR)\include\lock.h \
 	$(DESTDIR)\include\lwp.h \
-	$(DESTDIR)\include\preempt.h \
 	$(DESTDIR)\include\timer.h
 
 install_headers: $(INCFILES)

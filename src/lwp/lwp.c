@@ -35,9 +35,9 @@ int setlim(int limcon, uchar_t hard, int limit);
 
 #ifndef AFS_ARM_LINUX20_ENV
 #if defined(AFS_OSF_ENV) || defined(AFS_S390_LINUX20_ENV)
-extern int PRE_Block;		/* from preempt.c */
+int PRE_Block;	/* Remnants of preemption support. */
 #else
-extern char PRE_Block;		/* from preempt.c */
+char PRE_Block;	/* Remnants of preemption support. */
 #endif
 #endif
 
