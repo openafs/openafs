@@ -220,9 +220,11 @@ main(int argc, char **argv)
     printf("[Creating Readers...\n");
     readers = (PROCESS *) calloc(nreaders, sizeof(PROCESS));
     readerid = calloc(nreaders, sizeof(i));
-    for (i = 0; i < nreaders; i++)
+    for (i = 0; i < nreaders; i++) {
+	readerid[i] = i;
 	LWP_CreateProcess(read_process, STACK_SIZE, 0, (void *)&readerid[i],
 			  "Reader", &readers[i]);
+    }
     printf("done]\n");
 
     printf("\t[Creating Writer...\n");
