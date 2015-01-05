@@ -493,23 +493,23 @@ afs_get_dentry_ref(struct nameidata *nd, struct vfsmount **mnt, struct dentry **
 #else
 afs_get_dentry_ref(afs_linux_path_t *path, struct vfsmount **mnt, struct dentry **dpp) {
 #endif
-#if defined(STRUCT_NAMEIDATA_HAS_PATH)
-# if defined(HAVE_LINUX_PATH_LOOKUP)
+#if defined(HAVE_LINUX_PATH_LOOKUP)
+# if defined(STRUCT_NAMEIDATA_HAS_PATH)
     *dpp = dget(nd->path.dentry);
     if (mnt)
 	*mnt = mntget(nd->path.mnt);
     path_put(&nd->path);
 # else
-    *dpp = dget(path->dentry);
-    if (mnt)
-	*mnt = mntget(path->mnt);
-    path_put(path);
-# endif
-#else
     *dpp = dget(nd->dentry);
     if (mnt)
 	*mnt = mntget(nd->mnt);
     path_release(nd);
+# endif
+#else
+    *dpp = dget(path->dentry);
+    if (mnt)
+	*mnt = mntget(path->mnt);
+    path_put(path);
 #endif
 }
 
