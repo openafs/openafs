@@ -79,8 +79,6 @@ dnl General feature options.
 AC_ARG_ENABLE([gtx],
     [AS_HELP_STRING([--disable-gtx], [disable gtx curses-based terminal tools])])
 
-AC_ARG_ENABLE([uss],
-    [AS_HELP_STRING([--disable-uss], [disable uss bulk creation tool])])
 AC_ARG_ENABLE([namei-fileserver],
     [AS_HELP_STRING([--enable-namei-fileserver],
 	[force compilation of namei fileserver in preference to inode
@@ -1538,13 +1536,6 @@ else
 	BUILD_LOGIN="no"
 fi
 AC_SUBST(BUILD_LOGIN)
-
-if test "$enable_uss" = yes; then
-	BUILD_USS="yes"
-else
-	BUILD_USS="no"
-fi
-AC_SUBST(BUILD_USS)
 
 if test "$enable_kauth" = yes; then
 	INSTALL_KAUTH="yes"

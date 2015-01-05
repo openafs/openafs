@@ -355,11 +355,7 @@ scout: cmd comerr gtx fsprobe
 	fi
 
 uss: hcrypto kauth cmd comerr rx vlserver vol volser
-	+if test "@BUILD_USS@" = "yes"; then \
-		${COMPILE_PART1} uss ${COMPILE_PART2} ; \
-	else \
-		echo Not building uss. ; \
-	fi
+	+${COMPILE_PART1} uss ${COMPILE_PART2}
 
 bozo: cmd comerr audit auth kauth volser
 	+${COMPILE_PART1} bozo ${COMPILE_PART2}
