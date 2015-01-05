@@ -41,6 +41,12 @@ typedef struct path afs_linux_path_t;
 # define d_alias d_u.d_alias
 #endif
 
+#if defined(STRUCT_FILE_HAS_F_PATH)
+# if !defined(f_dentry)
+#  define f_dentry f_path.dentry
+# endif
+#endif
+
 #ifndef HAVE_LINUX_DO_SYNC_READ
 static inline int
 do_sync_read(struct file *fp, char *buf, size_t count, loff_t *offp) {
