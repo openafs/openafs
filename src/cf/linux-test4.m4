@@ -278,9 +278,9 @@ AC_DEFUN([LINUX_IOP_I_PUT_LINK_TAKES_COOKIE], [
 #include <linux/namei.h>],
 [struct inode _inode;
 struct dentry _dentry;
-struct nameidata _nameidata;
+struct nameidata *_nameidata;
 void *cookie;
-(void)_inode.i_op->put_link(&_dentry, &_nameidata, cookie);],
+(void)_inode.i_op->put_link(&_dentry, _nameidata, cookie);],
 		       [IOP_PUT_LINK_TAKES_COOKIE],
 		       [define if your iops.put_link takes a cookie],
 		       [])
