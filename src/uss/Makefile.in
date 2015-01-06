@@ -53,7 +53,8 @@ lex.yy.o : lex.yy.c y.tab.c
 
 lex.yy.c : lex.l
 	${LEX} ${srcdir}/lex.l
-	sed -f ${srcdir}/yy-lsed -i.orig lex.yy.c
+	${MV} lex.yy.c lex.yy.c.orig
+	${SED} -f ${srcdir}/yy-lsed lex.yy.c.orig > lex.yy.c
 
 y.tab.o : y.tab.c
 
@@ -75,7 +76,10 @@ uss_fs.c: uss_fs.h
 
 y.tab.c : grammar.y
 	${YACC} -d ${srcdir}/grammar.y
-	sed -f ${srcdir}/yy-lsed -i.orig y.tab.h y.tab.c
+	${MV} y.tab.h y.tab.h.orig
+	${MV} y.tab.c y.tab.c.orig
+	${SED} -f ${srcdir}/yy-lsed y.tab.h.orig > y.tab.h
+	${SED} -f ${srcdir}/yy-lsed y.tab.c.orig > y.tab.c
 
 #
 # Installation targets
