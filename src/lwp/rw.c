@@ -237,6 +237,10 @@ main(int argc, char **argv)
     /* Destroy the readers */
     for (i = nreaders - 1; i >= 0; i--)
 	LWP_DestroyProcess(readers[i]);
+    LWP_DestroyProcess(writer);
+
+    LWP_TerminateProcessSupport();
+
     printf("\n*Exiting*\n");
 
     exit(0);
