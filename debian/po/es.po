@@ -8,6 +8,7 @@
 #
 #   - Updates
 #       Francisco Javier Cuadrado <fcocuadrado@gmail.com>, 2009
+#       Javier Fernández-Sanguino Peña <jfs@debian.org>, 2014
 #
 # Traductores, si no conocen el formato PO, merece la pena leer la
 # documentación de gettext, especialmente las secciones dedicadas a este
@@ -32,13 +33,16 @@ msgstr ""
 "Project-Id-Version: openafs 1.4.7.dfsg1-6\n"
 "Report-Msgid-Bugs-To: openafs@packages.debian.org\n"
 "POT-Creation-Date: 2013-04-08 11:17-0700\n"
-"PO-Revision-Date: 2009-02-13 09:23-0800\n"
-"Last-Translator: Francisco Javier Cuadrado <fcocuadrado@gmail.com>\n"
+"PO-Revision-Date: 2014-12-05 19:05+0100\n"
+"Last-Translator: Javier Fernández-Sanguino Peña <jfs@debian.org>\n"
 "Language-Team: Debian l10n Spanish <debian-l10n-spanish@lists.debian.org>\n"
-"Language: \n"
+"Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-POFile-SpellExtra: kB openafs force DNS CellAlias Kerberos fakestat\n"
+"X-POFile-SpellExtra: alpha Openafs start init client ls conf AFSDB var\n"
+"X-POFile-SpellExtra: home AFS CellServDB OpenAFS afs\n"
 
 #. Type: string
 #. Description
@@ -95,7 +99,7 @@ msgstr ""
 #. Description
 #: ../openafs-client.templates:3001
 msgid "Size of AFS cache in kB:"
-msgstr "Tamaño de la cache de AFS en kB:"
+msgstr "Tamaño de la caché de AFS en kB:"
 
 #. Type: string
 #. Description
@@ -105,18 +109,13 @@ msgid ""
 "cache will be mounted on /var/cache/openafs.  It is important that the cache "
 "not overfill the partition it is located on.  Often, people find it useful "
 "to dedicate a partition to their AFS cache."
-msgstr ""
-"Para mejorar la velocidad de acceso,  AFS utiliza un espacio del disco para "
-"la cache de archivos remotos. Esta cache se montará en «/var/cache/openafs». "
-"Es importante que la cache no ocupe más que la partición en la que se ubica. "
-"Frecuentemente, la gente encuentra útil dedicar una partición a la cache de "
-"AFS."
+msgstr "Para mejorar la velocidad de acceso,  AFS utiliza un espacio del disco para la caché de archivos remotos. Esta caché se montará en «/var/cache/openafs». Es importante que la caché no ocupe más que la partición en la que se ubica. Frecuentemente, la gente encuentra útil dedicar una partición a la caché de AFS."
 
 #. Type: boolean
 #. Description
 #: ../openafs-client.templates:4001
 msgid "Run Openafs client now and at boot?"
-msgstr "¿Desea ejecutar ahora el cliente Openafs y en el arranque?"
+msgstr "¿Desea ejecutar ahora el cliente OpenAFS y en el arranque?"
 
 #. Type: boolean
 #. Description
@@ -152,7 +151,7 @@ msgid ""
 msgstr ""
 "Para conectar a una celda de AFS, necesita la dirección IP de la celda de "
 "los servidores de la base de datos. Normalmente, esta información se "
-"encuentra en el archivo «/etc/openafs/CellServDB». Sin embargo, si Openafs "
+"encuentra en el archivo «/etc/openafs/CellServDB». Sin embargo, si OpenAFS "
 "no encuentra una celda en ese archivo, puede usar el DNS para buscar las "
 "copias de los registros de AFSDB que contengan la información."
 
@@ -183,19 +182,19 @@ msgstr ""
 #. Choices
 #: ../openafs-client.templates:7001
 msgid "Yes"
-msgstr ""
+msgstr "Sí"
 
 #. Type: select
 #. Choices
 #: ../openafs-client.templates:7001
 msgid "Sparse"
-msgstr ""
+msgstr "Dispersos"
 
 #. Type: select
 #. Choices
 #: ../openafs-client.templates:7001
 msgid "No"
-msgstr ""
+msgstr "No"
 
 #. Type: select
 #. Description
@@ -241,7 +240,7 @@ msgid ""
 "cell will not appear until they are accessed.  Cell aliases as set in the "
 "CellAlias file are shown as normal, although they may appear to be dangling "
 "links until traversed."
-msgstr ""
+msgstr "La opción «Dispersos» es la misma que «Sí» salvo que, en lugar de poblar «/afs» inmediatamente con los datos de «/etc/openafs/CellServDB», las celdas que no sean la local no se aparecerán hasta que se accedan. Los apodos de las celdas definidos en el fichero «CellAlias» se muestran de forma normal, pero pueden aparecer como enlaces incompletos hasta que se recorran. "
 
 #. Type: boolean
 #. Description
@@ -292,7 +291,7 @@ msgstr ""
 #. Description
 #: ../openafs-fileserver.templates:2001
 msgid "OpenAFS file server probably does not work!"
-msgstr "¡Seguramente el servidor de archivos OpenAFS no funciona!"
+msgstr "¡Es probable que el servidor de archivos OpenAFS no funcione!"
 
 #. Type: note
 #. Description
@@ -302,9 +301,4 @@ msgid ""
 "doesn't work; the DES code is flaky on the alpha, along with the threaded "
 "file server.  Likely, the fileserver will simply fail to start, but if it "
 "does load, data corruption may result.  You have been warned."
-msgstr ""
-"Está ejecutando el paquete OpenAFS como servidor de archivos sobre la "
-"arquitectura alpha. Es probable que no funcione, el código DES se ha hecho "
-"añicos sobre alpha, junto a los hilos del servidor de archivos. De este "
-"modo, el servidor de archivos simplemente fallará al iniciarlo, pero si "
-"carga, puede producir datos corruptos. Ha sido advertido."
+msgstr "Está ejecutando el paquete OpenAFS como servidor de archivos sobre la arquitectura alpha. Es probable que no funcione, el código DES es muy inestable cuando se ejecuta sobre alpha, así como los hilos del servidor de archivos. Lo más probable es que el servidor de archivos simplemente falle al iniciarlo, pero si carga, puede corromper los datos. Ha sido advertido."

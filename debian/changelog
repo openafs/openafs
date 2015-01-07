@@ -1,3 +1,10 @@
+openafs (1.6.10-4) UNRELEASED; urgency=medium
+
+  * Update Spanish translation, thanks Javier Fernandez-Sanguino Pena.
+    (Closes: #773565)
+
+ -- Benjamin Kaduk <kaduk@mit.edu>  Wed, 07 Jan 2015 13:50:56 -0500
+
 openafs (1.6.10-3) unstable; urgency=medium
 
   * Make openafs-client Before=umount.target for improved shutdown
