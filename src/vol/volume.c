@@ -37,6 +37,7 @@
 # include <opr/lockstub.h>
 #endif
 #include <opr/ffs.h>
+#include <opr/jhash.h>
 
 #include <afs/afsint.h>
 
@@ -196,9 +197,11 @@ pthread_t vol_glock_holder = 0;
  * an AVL or splay tree might work a lot better, but we'll just increase
  * the default hash table size for now
  */
-#define DEFAULT_VOLUME_HASH_SIZE 256   /* Must be a power of 2!! */
-#define DEFAULT_VOLUME_HASH_MASK (DEFAULT_VOLUME_HASH_SIZE-1)
-#define VOLUME_HASH(volumeId) (volumeId&(VolumeHashTable.Mask))
+#define DEFAULT_VOLUME_HASH_BITS 10
+#define DEFAULT_VOLUME_HASH_SIZE opr_jhash_size(DEFAULT_VOLUME_HASH_BITS)
+#define DEFAULT_VOLUME_HASH_MASK opr_jhash_mask(DEFAULT_VOLUME_HASH_BITS)
+#define VOLUME_HASH(volumeId) \
+    (opr_jhash_int(volumeId, 0) & VolumeHashTable.Mask)
 
 /*
  * turn volume hash chains into partially ordered lists.
@@ -8418,8 +8421,8 @@ VSetVolHashSize(int logsize)
     }
 
     if (!VInit) {
-        VolumeHashTable.Size = 1 << logsize;
-        VolumeHashTable.Mask = VolumeHashTable.Size - 1;
+        VolumeHashTable.Size = opr_jhash_size(logsize);
+        VolumeHashTable.Mask = opr_jhash_mask(logsize);
     } else {
 	/* we can't yet support runtime modification of this
 	 * parameter. we'll need a configuration rwlock to
