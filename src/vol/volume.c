@@ -3490,7 +3490,7 @@ attach2(Error * ec, VolumeId volumeId, char *path, struct DiskPartition64 *partp
 	V_checkoutMode(vp) = mode;
     }
 
-    AddVolumeToHashTable(vp, V_id(vp));
+    AddVolumeToHashTable(vp, vp->hashid);
 #ifdef AFS_DEMAND_ATTACH_FS
     if (VCanUnlockAttached() && (V_attachFlags(vp) & VOL_LOCKED)) {
 	VUnlockVolume(vp);
