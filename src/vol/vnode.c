@@ -55,33 +55,6 @@ void VNLog(afs_int32 aop, afs_int32 anparms, ... );
 
 extern int LogLevel;
 
-
-
-
-#define BAD_IGET	-1000
-
-/* There are two separate vnode queue types defined here:
- * Each hash conflict chain -- is singly linked, with a single head
- * pointer. New entries are added at the beginning. Old
- * entries are removed by linear search, which generally
- * only occurs after a disk read).
- * LRU chain -- is doubly linked, single head pointer.
- * Entries are added at the head, reclaimed from the tail,
- * or removed from anywhere in the queue.
- */
-
-
-/* Vnode hash table.  Find hash chain by taking lower bits of
- * (volume_hash_offset + vnode).
- * This distributes the root inodes of the volumes over the
- * hash table entries and also distributes the vnodes of
- * volumes reasonably fairly.  The volume_hash_offset field
- * for each volume is established as the volume comes on line
- * by using the VOLUME_HASH_OFFSET macro.  This distributes the
- * volumes fairly among the cache entries, both when servicing
- * a small number of volumes and when servicing a large number.
- */
-
 /* logging stuff for finding bugs */
 #define	THELOGSIZE	5120
 static afs_int32 theLog[THELOGSIZE];
@@ -108,6 +81,20 @@ VNLog(afs_int32 aop, afs_int32 anparms, ... )
     }
     va_end(ap);
 }
+
+
+
+
+/* Vnode hash table.  Find hash chain by taking lower bits of
+ * (volume_hash_offset + vnode).
+ * This distributes the root inodes of the volumes over the
+ * hash table entries and also distributes the vnodes of
+ * volumes reasonably fairly.  The volume_hash_offset field
+ * for each volume is established as the volume comes on line
+ * by using the VOLUME_HASH_OFFSET macro.  This distributes the
+ * volumes fairly among the cache entries, both when servicing
+ * a small number of volumes and when servicing a large number.
+ */
 
 /* VolumeHashOffset -- returns a new value to be stored in the
  * volumeHashOffset of a Volume structure.  Called when a
@@ -140,6 +127,19 @@ private Vnode *VnodeHashTable[VNODE_HASH_TABLE_SIZE];
 #define VNODE_HASH(volumeptr,vnodenumber)\
     ((volumeptr->vnodeHashOffset + vnodenumber)&(VNODE_HASH_TABLE_SIZE-1))
 
+
+
+#define BAD_IGET	-1000
+
+/* There are two separate vnode queue types defined here:
+ * Each hash conflict chain -- is singly linked, with a single head
+ * pointer. New entries are added at the beginning. Old
+ * entries are removed by linear search, which generally
+ * only occurs after a disk read).
+ * LRU chain -- is doubly linked, single head pointer.
+ * Entries are added at the head, reclaimed from the tail,
+ * or removed from anywhere in the queue.
+ */
 
 /**
  * add a vnode to the volume's vnode list.
