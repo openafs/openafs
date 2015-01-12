@@ -8490,7 +8490,6 @@ AddVolumeToHashTable(Volume * vp, VolumeId hashid)
     head->len++;
     vp->hashid = hashid;
     queue_Append(head, vp);
-    vp->vnodeHashOffset = VolumeHashOffset_r();
 }
 
 /**

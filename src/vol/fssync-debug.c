@@ -706,7 +706,6 @@ VolQuery(struct cmd_syndesc * as, void * rock)
 	printf("\tlinkHandle      = %p\n", v.linkHandle);
 	printf("\tnextVnodeUnique = %u\n", v.nextVnodeUnique);
 	printf("\tdiskDataHandle  = %p\n", v.diskDataHandle);
-	printf("\tvnodeHashOffset = %u\n", v.vnodeHashOffset);
 	printf("\tshuttingDown    = %d\n", v.shuttingDown);
 	printf("\tgoingOffline    = %d\n", v.goingOffline);
 	printf("\tcacheCheck      = %u\n", v.cacheCheck);

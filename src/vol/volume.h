@@ -665,9 +665,6 @@ typedef struct Volume {
 				 * uniquifier should be rewritten with the
 				 * value nextVnodeVersion */
     IHandle_t *diskDataHandle;	/* Unix inode holding general volume info */
-    bit16 vnodeHashOffset;	/* Computed by HashOffset function in vnode.h.
-				 * Assigned to the volume when initialized.
-				 * Added to vnode number for hash table index */
     byte shuttingDown;		/* This volume is going to be detached */
     byte goingOffline;		/* This volume is going offline */
     bit32 cacheCheck;		/* Online sequence number to be used to invalidate vnode cache entries
