@@ -83,7 +83,6 @@ extern int afs_shuttingdown;
 #define	NVOLS		64	/* hash table size for volume table */
 #define	NFENTRIES	256	/* hash table size for disk volume table */
 #define	VCSIZE	       1024	/* stat cache hash table size */
-#define	DCSIZE		512	/* disk cache hash table size */
 #define CBRSIZE		512	/* call back returns hash table size */
 #define	PIGGYSIZE	1350	/* max piggyback size */
 #define	MAXVOLS		128	/* max vols we can store */
