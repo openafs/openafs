@@ -20,6 +20,9 @@
 #include "afs/afs_consts.h"
 #endif
 
+/* jhash.h is a standalone header and is fine to pull into kernel code. */
+#include <opr/jhash.h>
+
 /*
  * afs_fsfragsize cannot be less than 1023, or some cache-tracking
  * calculations will be incorrect (since we track cache usage in kb).
@@ -82,7 +85,8 @@ extern int afs_shuttingdown;
 #define	NSERVERS	16	/* hash table size for server table */
 #define	NVOLS		64	/* hash table size for volume table */
 #define	NFENTRIES	256	/* hash table size for disk volume table */
-#define	VCSIZE	       1024	/* stat cache hash table size */
+#define VCSIZEBITS	10	/* log of stat cache hash table size */
+#define	VCSIZE		(opr_jhash_size(VCSIZEBITS))
 #define CBRSIZE		512	/* call back returns hash table size */
 #define	PIGGYSIZE	1350	/* max piggyback size */
 #define	MAXVOLS		128	/* max vols we can store */
@@ -1335,21 +1339,6 @@ struct afs_FetchOutput {
 #define	afs_DirtyPages(avc)	((avc)->f.states & CDirty)
 
 #define afs_InReadDir(avc) (((avc)->f.states & CReadDir) && (avc)->readdir_pid == MyPidxx2Pid(MyPidxx))
-
-/* The PFlush algorithm makes use of the fact that Fid.Unique is not used in
-  below hash algorithms.  Change it if need be so that flushing algorithm
-  doesn't move things from one hash chain to another
-*/
-/* extern int afs_dhashsize; */
-#define	DCHash(v, c)	((((v)->Fid.Vnode + (v)->Fid.Volume + (c))) & (afs_dhashsize-1))
-	/*Vnode, Chunk -> Hash table index */
-#define	DVHash(v)	((((v)->Fid.Vnode + (v)->Fid.Volume )) & (afs_dhashsize-1))
-	/*Vnode -> Other hash table index */
-/* don't hash on the cell, our callback-breaking code sometimes fails to compute
-    the cell correctly, and only scans one hash bucket */
-#define	VCHash(fid)	(((fid)->Fid.Volume + (fid)->Fid.Vnode) & (VCSIZE-1))
-/* Hash only on volume to speed up volume callbacks. */
-#define VCHashV(fid) ((fid)->Fid.Volume & (VCSIZE-1))
 
 extern struct dcache **afs_indexTable;	/*Pointers to in-memory dcache entries */
 extern afs_int32 *afs_indexUnique;	/*dcache entry Fid.Unique */

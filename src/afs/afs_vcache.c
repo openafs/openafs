@@ -85,6 +85,25 @@ static struct afs_slotlist *afs_freeSlotList = NULL;
 /* Forward declarations */
 static afs_int32 afs_QueueVCB(struct vcache *avc, int *slept);
 
+
+/*
+ * The PFlush algorithm makes use of the fact that Fid.Unique is not used in
+ * below hash algorithms.  Change it if need be so that flushing algorithm
+ * doesn't move things from one hash chain to another.
+ */
+/* Don't hash on the cell; our callback-breaking code sometimes fails to compute
+ * the cell correctly, and only scans one hash bucket. */
+int VCHash(struct VenusFid *fid)
+{
+    return opr_jhash_int2(fid->Fid.Volume, fid->Fid.Vnode, 0) &
+	opr_jhash_mask(VCSIZEBITS);
+}
+/* Hash only on volume to speed up volume callbacks. */
+int VCHashV(struct VenusFid *fid)
+{
+    return opr_jhash_int(fid->Fid.Vnode, 0) & opr_jhash_mask(VCSIZEBITS);
+}
+
 /*!
  * Generate an index into the hash table for a given Fid.
  * \param fid

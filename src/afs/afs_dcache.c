@@ -154,6 +154,29 @@ struct afs_cacheOps afs_MemCacheOps = {
 int cacheDiskType;		/*Type of backing disk for cache */
 struct afs_cacheOps *afs_cacheType;
 
+
+/*
+ * The PFlush algorithm makes use of the fact that Fid.Unique is not used in
+ * below hash algorithms.  Change it if need be so that flushing algorithm
+ * doesn't move things from one hash chain to another.
+ */
+/*Vnode, Chunk -> Hash table index */
+int DCHash(struct VenusFid *fid, afs_int32 chunk)
+{
+    afs_uint32 buf[3];
+
+    buf[0] = fid->Fid.Volume;
+    buf[1] = fid->Fid.Vnode;
+    buf[2] = chunk;
+    return opr_jhash(buf, 3, 0) & (afs_dhashsize - 1);
+}
+/*Vnode -> Other hash table index */
+int DVHash(struct VenusFid *fid)
+{
+    return opr_jhash_int2(fid->Fid.Volume, fid->Fid.Vnode, 0) &
+	(afs_dhashsize - 1);
+}
+
 /*!
  * Where is this vcache's entry associated dcache located/
  * \param avc The vcache entry.

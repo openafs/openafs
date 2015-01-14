@@ -245,6 +245,8 @@ extern unsigned char *afs_indexFlags;
 extern struct afs_cacheOps *afs_cacheType;
 extern afs_dcache_id_t cacheInode;
 extern struct osi_file *afs_cacheInodep;
+extern int DCHash(struct VenusFid *fid, afs_int32 chunk);
+extern int DVHash(struct VenusFid *fid);
 extern void afs_dcacheInit(int afiles, int ablocks, int aDentries, int achunk,
 			   int aflags);
 extern int afs_PutDCache(struct dcache *adc);
@@ -1053,6 +1055,8 @@ extern void afs_warnall(char *fmt, ...)
 #endif
 
 /* afs_vcache.c */
+extern int VCHash(struct VenusFid *fid);
+extern int VCHashV(struct VenusFid *fid);
 extern int afs_ShakeLooseVCaches(afs_int32 anumber);
 extern afs_int32 afs_maxvcount;
 extern afs_int32 afs_vcount;
