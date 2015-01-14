@@ -1197,6 +1197,8 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 			goto bad_dentry;
 		    }
 		}
+	    } else if (vcp->mvstat == 2 && *dp->d_name.name != '/') {
+		osi_Assert(vcp->mvid != NULL);
 	    }
 	}
 
