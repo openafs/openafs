@@ -4426,8 +4426,8 @@ UV_DumpClonedVolume(afs_uint32 afromvol, afs_uint32 afromserver,
     afs_int32 fromtid = 0, rcode = 0;
     afs_int32 code = 0, error = 0;
     afs_uint32 tmpVol;
-    char vname[64];
     time_t tmv = fromdate;
+    char *volName = NULL;
 
     if (setjmp(env))
 	ERROR_EXIT(EPIPE);
@@ -4453,6 +4453,12 @@ UV_DumpClonedVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 	   afromvol);
     VEDONE;
 
+    VEPRINT1("Getting the name for volume %u ...", afromvol);
+    code = AFSVolGetName(fromconn, fromtid, &volName);
+    EGOTO1(error_exit, code,
+	   "Failed to get the name of the volume %u\n",afromvol);
+    VEDONE;
+
     /* Get a clone id */
     VEPRINT1("Allocating new volume id for clone of volume %u ...", afromvol);
     tmpVol = clonevol;
@@ -4466,10 +4472,9 @@ UV_DumpClonedVolume(afs_uint32 afromvol, afs_uint32 afromserver,
     /* Do the clone. Default flags on clone are set to delete on salvage and out of service */
     VEPRINT2("Cloning source volume %u to clone volume %u...", afromvol,
 	    clonevol);
-    strcpy(vname, "dump-clone-temp");
     tmpVol = clonevol;
     code =
-	AFSVolClone(fromconn, fromtid, 0, readonlyVolume, vname, &tmpVol);
+	AFSVolClone(fromconn, fromtid, 0, readonlyVolume, volName, &tmpVol);
     clonevol = tmpVol;
     EGOTO1(error_exit, code, "Failed to clone the source volume %u\n",
 	   afromvol);
@@ -4520,6 +4525,9 @@ UV_DumpClonedVolume(afs_uint32 afromvol, afs_uint32 afromserver,
     VEDONE;
 
   error_exit:
+    if (volName)
+	free(volName);
+
     /* now delete the clone */
     VEPRINT1("Deleting the cloned volume %u ...", clonevol);
     code = AFSVolDeleteVolume(fromconn, clonetid);
