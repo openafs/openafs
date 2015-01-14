@@ -444,6 +444,10 @@ pr_AddToGroup(prname user, prname group)
     if (code)
 	goto done;
     /* if here, still could be missing an entry */
+    if (lids.idlist_len != 2) {
+	code = PRINTERNAL;
+	goto done;
+    }
     if (lids.idlist_val[0] == ANONYMOUSID
 	|| lids.idlist_val[1] == ANONYMOUSID) {
 	code = PRNOENT;
@@ -483,6 +487,10 @@ pr_RemoveUserFromGroup(prname user, prname group)
     if (code)
 	goto done;
 
+    if (lids.idlist_len != 2) {
+	code = PRINTERNAL;
+	goto done;
+    }
     if (lids.idlist_val[0] == ANONYMOUSID
 	|| lids.idlist_val[1] == ANONYMOUSID) {
 	code = PRNOENT;
@@ -987,6 +995,11 @@ pr_IsAMemberOf(prname uname, prname gname, afs_int32 *flag)
 	    free(lnames.namelist_val);
 	xdr_free((xdrproc_t) xdr_idlist, &lids);
 	return code;
+    }
+    if (lids.idlist_len != 2) {
+	free(lnames.namelist_val);
+	xdr_free((xdrproc_t) xdr_idlist, &lids);
+	return PRINTERNAL;
     }
     code =
 	ubik_PR_IsAMemberOf(pruclient, 0, lids.idlist_val[0],
