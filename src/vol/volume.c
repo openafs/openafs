@@ -36,6 +36,7 @@
 #else
 # include <opr/lockstub.h>
 #endif
+#include <opr/ffs.h>
 
 #include <afs/afsint.h>
 
@@ -236,24 +237,6 @@ VolumeHashTable_t VolumeHashTable = {
 
 static void VInitVolumeHash(void);
 
-
-#ifndef AFS_HAVE_FFS
-/* This macro is used where an ffs() call does not exist. Was in util/ffs.c */
-ffs(x)
-{
-    afs_int32 ffs_i;
-    afs_int32 ffs_tmp = x;
-    if (ffs_tmp == 0)
-	return (-1);
-    else
-	for (ffs_i = 1;; ffs_i++) {
-	    if (ffs_tmp & 1)
-		return (ffs_i);
-	    else
-		ffs_tmp >>= 1;
-	}
-}
-#endif /* !AFS_HAVE_FFS */
 
 #ifdef AFS_PTHREAD_ENV
 /**
@@ -6435,7 +6418,7 @@ VAllocBitmapEntry_r(Error * ec, Volume * vp,
 	    index->bitmapOffset = (afs_uint32) (bp - index->bitmap);
 	    while (*bp == 0xff)
 		bp++;
-	    o = ffs(~*bp) - 1;	/* ffs is documented in BSTRING(3) */
+	    o = opr_ffs(~*bp) - 1;
 	    *bp |= (1 << o);
 	    ret = ((bp - index->bitmap) * 8 + o);
 #ifdef AFS_DEMAND_ATTACH_FS
