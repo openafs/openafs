@@ -14,6 +14,7 @@ INCFILES = \
 	$(INCFILEDIR)\opr.h \
 	$(INCFILEDIR)\opr_assert.h \
 	$(DESTDIR)\include\opr\dict.h \
+	$(DESTDIR)\include\opr\ffs.h \
 	$(DESTDIR)\include\opr\fmt.h \
 	$(DESTDIR)\include\opr\jhash.h \
 	$(DESTDIR)\include\opr\proc.h \
