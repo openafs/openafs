@@ -20,6 +20,8 @@
 #include "afs/afs_cbqueue.h"
 #include "afs/afs_osidnlc.h"
 
+#include <opr/ffs.h>
+
 /* Forward declarations. */
 static void afs_GetDownD(int anumber, int *aneedSpace, afs_int32 buckethint);
 static int afs_FreeDiscardedDCache(void);
@@ -3249,6 +3251,7 @@ afs_dcacheInit(int afiles, int ablocks, int aDentries, int achunk, int aflags)
     struct dcache *tdp;
     int i;
     int code;
+    int afs_dhashbits;
 
     afs_freeDCList = NULLIDX;
     afs_discardDCList = NULLIDX;
@@ -3270,8 +3273,18 @@ afs_dcacheInit(int afiles, int ablocks, int aDentries, int achunk, int aflags)
     if (!aDentries)
 	aDentries = DDSIZE;
 
+    /* afs_dhashsize defaults to 1024 */
     if (aDentries > 512)
 	afs_dhashsize = 2048;
+    /* Try to keep the average chain length around two unless the table
+     * would be ridiculously big. */
+    if (aDentries > 4096) {
+	afs_dhashbits = opr_fls(aDentries) - 3;
+	/* Cap the hash tables to 32k entries. */
+	if (afs_dhashbits > 15)
+	    afs_dhashbits = 15;
+	afs_dhashsize = opr_jhash_size(afs_dhashbits);
+    }
     /* initialize hash tables */
     afs_dvhashTbl = afs_osi_Alloc(afs_dhashsize * sizeof(afs_int32));
     osi_Assert(afs_dvhashTbl != NULL);

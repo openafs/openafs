@@ -85,7 +85,7 @@ extern int afs_shuttingdown;
 #define	NSERVERS	16	/* hash table size for server table */
 #define	NVOLS		64	/* hash table size for volume table */
 #define	NFENTRIES	256	/* hash table size for disk volume table */
-#define VCSIZEBITS	10	/* log of stat cache hash table size */
+#define VCSIZEBITS	16	/* log of stat cache hash table size */
 #define	VCSIZE		(opr_jhash_size(VCSIZEBITS))
 #define CBRSIZE		512	/* call back returns hash table size */
 #define	PIGGYSIZE	1350	/* max piggyback size */
