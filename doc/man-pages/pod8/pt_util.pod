@@ -102,11 +102,8 @@ Prints the online help for this command. All other valid options are ignored.
 
 =head1 CAUTIONS
 
-The file dump format does not include supergroup information, so should
-not be used if you have and are using groups within groups.
-
-In all cases, entry timestamps and other information is also not
-preserved.
+Entry timestamps and other information is not preserved when dumping the
+protection database.
 
 =head1 EXAMPLES
 
