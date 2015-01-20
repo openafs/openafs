@@ -21,7 +21,7 @@ B<backup dele> S<<< [B<-d> <I<dump id>>+] >>>
     [-t <I<date time>>+]
     S<<< [B<-p> <I<TC port offset>>] >>>
     S<<< [B<-g> <I<group ID>>] >>>
-    [B<-db>] [B<-fo>] [B<-n>] [B<-l>]
+    [B<-db>] [B<-fo>] [B<-l>]
     [B<-dryrun> | B<-n>]
     S<<< [B<-c> <I<cell name>>] >>>
     [B<-h>]
