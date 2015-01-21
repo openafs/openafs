@@ -857,9 +857,9 @@ main(int argc, char **argv, char **envp)
     afs_int32 numClasses;
     int DoPeerRPCStats = 0;
     int DoProcessRPCStats = 0;
+    struct stat sb;
 #ifndef AFS_NT40_ENV
     int nofork = 0;
-    struct stat sb;
 #endif
 #ifdef	AFS_AIX32_ENV
     struct sigaction nsa;
@@ -1045,18 +1045,17 @@ main(int argc, char **argv, char **envp)
 	exit(1);
     }
 
-    if ((!DoSyslog)
-#ifndef AFS_NT40_ENV
-	&& ((lstat(AFSDIR_SERVER_BOZLOG_FILEPATH, &sb) == 0) &&
-	!(S_ISFIFO(sb.st_mode)))
-#endif
-	) {
-	if (asprintf(&oldlog, "%s.old", AFSDIR_SERVER_BOZLOG_FILEPATH) < 0) {
-	    printf("bosserver: out of memory\n");
-	    exit(1);
+    if (!DoSyslog) {
+	/* Support logging to named pipes by not renaming. */
+	if ((lstat(AFSDIR_SERVER_BOZLOG_FILEPATH, &sb) == 0)
+	    && !(S_ISFIFO(sb.st_mode))) {
+	    if (asprintf(&oldlog, "%s.old", AFSDIR_SERVER_BOZLOG_FILEPATH) < 0) {
+		printf("bosserver: out of memory\n");
+		exit(1);
+	    }
+	    rk_rename(AFSDIR_SERVER_BOZLOG_FILEPATH, oldlog);
+	    free(oldlog);
 	}
-	rk_rename(AFSDIR_SERVER_BOZLOG_FILEPATH, oldlog);	/* try rename first */
-	free(oldlog);
 	bozo_logFile = fopen(AFSDIR_SERVER_BOZLOG_FILEPATH, "a");
 	if (!bozo_logFile) {
 	    printf("bosserver: can't initialize log file (%s).\n",
