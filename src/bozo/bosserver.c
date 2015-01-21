@@ -199,11 +199,17 @@ CreateDirs(const char *coredir)
 	return errno;
 
     if (symlink(AFSDIR_SERVER_THISCELL_FILEPATH,
-	    AFSDIR_CLIENT_THISCELL_FILEPATH))
-	return errno;
+	    AFSDIR_CLIENT_THISCELL_FILEPATH)) {
+	if (errno != EEXIST) {
+	    return errno;
+	}
+    }
     if (symlink(AFSDIR_SERVER_CELLSERVDB_FILEPATH,
-	    AFSDIR_CLIENT_CELLSERVDB_FILEPATH))
-	return errno;
+	    AFSDIR_CLIENT_CELLSERVDB_FILEPATH)) {
+	if (errno != EEXIST) {
+	    return errno;
+	}
+    }
 #endif /* AFS_NT40_ENV */
     if (coredir) {
 	if (MakeDir(coredir))
