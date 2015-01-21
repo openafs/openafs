@@ -976,19 +976,26 @@ main(int argc, char **argv, char **envp)
     }
 #endif
 
+    /* create useful dirs */
+    i = CreateDirs(DoCore);
+    if (i) {
+	printf("bosserver: could not set up directories, code %d\n", i);
+	exit(1);
+    }
+
     if ((!DoSyslog)
 #ifndef AFS_NT40_ENV
-	&& ((lstat(AFSDIR_BOZLOG_FILE, &sb) == 0) &&
+	&& ((lstat(AFSDIR_SERVER_BOZLOG_FILEPATH, &sb) == 0) &&
 	!(S_ISFIFO(sb.st_mode)))
 #endif
 	) {
-	if (asprintf(&oldlog, "%s.old", AFSDIR_BOZLOG_FILE) < 0) {
+	if (asprintf(&oldlog, "%s.old", AFSDIR_SERVER_BOZLOG_FILEPATH) < 0) {
 	    printf("bosserver: out of memory\n");
 	    exit(1);
 	}
-	rk_rename(AFSDIR_BOZLOG_FILE, oldlog);	/* try rename first */
+	rk_rename(AFSDIR_SERVER_BOZLOG_FILEPATH, oldlog);	/* try rename first */
 	free(oldlog);
-	bozo_logFile = fopen(AFSDIR_BOZLOG_FILE, "a");
+	bozo_logFile = fopen(AFSDIR_SERVER_BOZLOG_FILEPATH, "a");
 	if (!bozo_logFile) {
 	    printf("bosserver: can't initialize log file (%s).\n",
 		   AFSDIR_SERVER_BOZLOG_FILEPATH);
@@ -1013,13 +1020,6 @@ main(int argc, char **argv, char **envp)
 	    printf("bosserver: warning - daemon() returned code %d\n", errno);
     }
 #endif /* ! AFS_NT40_ENV */
-
-    /* create useful dirs */
-    i = CreateDirs(DoCore);
-    if (i) {
-	printf("bosserver: could not set up directories, code %d\n", i);
-	exit(1);
-    }
 
     /* Write current state of directory permissions to log file */
     DirAccessOK();
