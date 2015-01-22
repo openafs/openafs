@@ -55,6 +55,10 @@ SDISK_Begin(struct rx_call *rxcall, struct ubik_tid *atid)
 	return code;
     }
     DBHOLD(ubik_dbase);
+    if (urecovery_AllBetter(ubik_dbase, 0) == 0) {
+	code = UNOQUORUM;
+	goto out;
+    }
     urecovery_CheckTid(atid, 1);
     code = udisk_begin(ubik_dbase, UBIK_WRITETRANS, &ubik_currentTrans);
     if (!code && ubik_currentTrans) {
@@ -62,6 +66,7 @@ SDISK_Begin(struct rx_call *rxcall, struct ubik_tid *atid)
 	ubik_currentTrans->tid.epoch = atid->epoch;
 	ubik_currentTrans->tid.counter = atid->counter;
     }
+  out:
     DBRELE(ubik_dbase);
     return code;
 }
