@@ -82,9 +82,6 @@ int bozo_newKTs;
 int rxBind = 0;
 int rxkadDisableDotCheck = 0;
 
-#define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
-afs_uint32 SHostAddrs[ADDRSPERSITE];
-
 int bozo_isrestricted = 0;
 int bozo_restdisable = 0;
 
@@ -775,6 +772,71 @@ bozo_CreateRxBindFile(afs_uint32 host)
     }
 }
 
+/**
+ * Get an interface address in network byte order, modulo the
+ * NetInfo/NetRestrict configuration files. Return the INADDR_ANY if no
+ * interface address is found.
+ */
+static afs_uint32
+GetRxBindAddress(void)
+{
+    afs_uint32 addr;
+    afs_int32 ccode; /* number of addresses found */
+
+    if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || AFSDIR_SERVER_NETINFO_FILEPATH) {
+	char reason[1024];
+	ccode = afsconf_ParseNetFiles(&addr, NULL, NULL, 1, reason,
+				      AFSDIR_SERVER_NETINFO_FILEPATH,
+				      AFSDIR_SERVER_NETRESTRICT_FILEPATH);
+    } else {
+	/* Get the first non-loopback address from the kernel. */
+	ccode = rx_getAllAddr(&addr, 1);
+    }
+
+    if (ccode != 1) {
+	addr = htonl(INADDR_ANY);
+    }
+    return addr;
+}
+
+/**
+ * Try to create local cell config file.
+ */
+static struct afsconf_dir *
+CreateLocalCellConfig(void)
+{
+    int code;
+    struct afsconf_dir *tdir = NULL;
+    struct afsconf_cell tcell;
+
+    memset(&tcell, 0, sizeof(tcell));
+    strcpy(tcell.name, "localcell");  /* assume name is big enough for the default value */
+    tcell.numServers = 1;
+    code = gethostname(tcell.hostName[0], MAXHOSTCHARS);
+    if (code) {
+	bozo_Log("failed to get hostname, code %d\n", errno);
+	exit(1);
+    }
+    if (tcell.hostName[0][0] == 0) {
+	bozo_Log("host name not set, can't start\n");
+	bozo_Log("try the 'hostname' command\n");
+	exit(1);
+    }
+    code = afsconf_SetCellInfo(NULL, AFSDIR_SERVER_ETC_DIRPATH, &tcell);
+    if (code) {
+	bozo_Log
+	    ("could not create cell database in '%s' (code %d), quitting\n",
+	     AFSDIR_SERVER_ETC_DIRPATH, code);
+	exit(1);
+    }
+    tdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
+    if (!tdir) {
+	bozo_Log("failed to open newly-created cell database, quitting\n");
+	exit(1);
+    }
+    return tdir;
+}
+
 /* start a process and monitor it */
 
 #include "AFS_component_version_number.c"
@@ -1038,36 +1100,7 @@ main(int argc, char **argv, char **envp)
     /* try to read the key from the config file */
     tdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
     if (!tdir) {
-	/* try to create local cell config file */
-	struct afsconf_cell tcell;
-	strcpy(tcell.name, "localcell");
-	tcell.numServers = 1;
-	code = gethostname(tcell.hostName[0], MAXHOSTCHARS);
-	if (code) {
-	    bozo_Log("failed to get hostname, code %d\n", errno);
-	    exit(1);
-	}
-	if (tcell.hostName[0][0] == 0) {
-	    bozo_Log("host name not set, can't start\n");
-	    bozo_Log("try the 'hostname' command\n");
-	    exit(1);
-	}
-	memset(tcell.hostAddr, 0, sizeof(tcell.hostAddr));	/* not computed */
-	code =
-	    afsconf_SetCellInfo(NULL, AFSDIR_SERVER_ETC_DIRPATH,
-				&tcell);
-	if (code) {
-	    bozo_Log
-		("could not create cell database in '%s' (code %d), quitting\n",
-		 AFSDIR_SERVER_ETC_DIRPATH, code);
-	    exit(1);
-	}
-	tdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
-	if (!tdir) {
-	    bozo_Log
-		("failed to open newly-created cell database, quitting\n");
-	    exit(1);
-	}
+	tdir = CreateLocalCellConfig();
     }
     /* opened the cell databse */
     bozo_confdir = tdir;
@@ -1106,19 +1139,7 @@ main(int argc, char **argv, char **envp)
     }
 
     if (rxBind) {
-	afs_int32 ccode;
-	if (AFSDIR_SERVER_NETRESTRICT_FILEPATH ||
-	    AFSDIR_SERVER_NETINFO_FILEPATH) {
-	    char reason[1024];
-	    ccode = afsconf_ParseNetFiles(SHostAddrs, NULL, NULL,
-			                  ADDRSPERSITE, reason,
-	                                  AFSDIR_SERVER_NETINFO_FILEPATH,
-	                                  AFSDIR_SERVER_NETRESTRICT_FILEPATH);
-        } else {
-            ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
-        }
-        if (ccode == 1)
-            host = SHostAddrs[0];
+	host = GetRxBindAddress();
     }
     for (i = 0; i < 10; i++) {
 	if (rxBind) {
