@@ -625,6 +625,8 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
 		    } else {
 			osi_Log2(afsd_logp, "RDR_PopulateCurrentEntry cm_FollowMountPoint failed scp=0x%p code=0x%x",
 				  scp, code2);
+			if (code2 == CM_ERROR_TOO_MANY_SYMLINKS)
+			    code = CM_ERROR_TOO_MANY_SYMLINKS;
 		    }
                 }
             } else {
