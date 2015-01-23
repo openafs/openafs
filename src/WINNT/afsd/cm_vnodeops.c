@@ -980,7 +980,7 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
     if (targetType == BACKVOL
          && (scp->flags & (CM_SCACHEFLAG_RO | CM_SCACHEFLAG_PURERO))
          == CM_SCACHEFLAG_RO) {
-        code = CM_ERROR_NOSUCHVOLUME;
+	code = CM_ERROR_TOO_MANY_SYMLINKS;
         goto done;
     }
 
