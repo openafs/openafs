@@ -1171,29 +1171,31 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 	    locked = 1;
 	}
 
-	if (locked && vcp->mvstat == 1) {         /* mount point */
-	    if (vcp->mvid && (vcp->f.states & CMValid)) {
-		int tryEvalOnly = 0;
-		int code = 0;
-		struct vrequest *treq = NULL;
+	if (locked) {
+	    if (vcp->mvstat == 1) {         /* mount point */
+		if (vcp->mvid && (vcp->f.states & CMValid)) {
+		    int tryEvalOnly = 0;
+		    int code = 0;
+		    struct vrequest *treq = NULL;
 
-		code = afs_CreateReq(&treq, credp);
-		if (code) {
-		    dput(parent);
-		    goto bad_dentry;
-		}
-		if ((strcmp(dp->d_name.name, ".directory") == 0)) {
-		    tryEvalOnly = 1;
-		}
-		if (tryEvalOnly)
-		    code = afs_TryEvalFakeStat(&vcp, &fakestate, treq);
-		else
-		    code = afs_EvalFakeStat(&vcp, &fakestate, treq);
-		afs_DestroyReq(treq);
-		if ((tryEvalOnly && vcp->mvstat == 1) || code) {
-		    /* a mount point, not yet replaced by its directory */
-		    dput(parent);
-		    goto bad_dentry;
+		    code = afs_CreateReq(&treq, credp);
+		    if (code) {
+			dput(parent);
+			goto bad_dentry;
+		    }
+		    if ((strcmp(dp->d_name.name, ".directory") == 0)) {
+			tryEvalOnly = 1;
+		    }
+		    if (tryEvalOnly)
+			code = afs_TryEvalFakeStat(&vcp, &fakestate, treq);
+		    else
+			code = afs_EvalFakeStat(&vcp, &fakestate, treq);
+		    afs_DestroyReq(treq);
+		    if ((tryEvalOnly && vcp->mvstat == 1) || code) {
+			/* a mount point, not yet replaced by its directory */
+			dput(parent);
+			goto bad_dentry;
+		    }
 		}
 	    }
 	}
