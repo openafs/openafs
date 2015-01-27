@@ -21,7 +21,7 @@ static const char char_set[] =
 static char buf[6];
 
 const char *
-afs_error_table_name(afs_int32 num)
+afs_error_table_name(int num)
 {
     int ch;
     int i;
