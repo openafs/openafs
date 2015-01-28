@@ -978,7 +978,9 @@ afs_obsd_lock(void *v)
 
     if (!vc)
 	panic("afs_obsd_lock: null vcache");
-    return afs_osi_lockmgr(&vc->rwlock, ap->a_flags | LK_CANRECURSE, VP_INTERLOCK, ap->a_p);
+    return afs_osi_lockmgr(&vc->rwlock,
+	(ap->a_flags & LK_RECURSEFAIL) ? ap->a_flags : ap->a_flags | LK_CANRECURSE,
+	VP_INTERLOCK, ap->a_p);
 }
 
 int
