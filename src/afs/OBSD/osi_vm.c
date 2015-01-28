@@ -80,7 +80,7 @@ void
 osi_VM_TryToSmush(struct vcache *avc, afs_ucred_t *acred, int sync)
 {
     ReleaseWriteLock(&avc->lock);
-    osi_VM_FlushVCache(avc, NULL);
+    osi_VM_FlushVCache(avc);
     ObtainWriteLock(&avc->lock, 59);
 }
 
