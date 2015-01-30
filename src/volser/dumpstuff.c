@@ -1095,7 +1095,11 @@ DumpVnode(struct iod *iodp, struct VnodeDiskObject *v, int volid,
     if (!code)
 	code = DumpInt32(iodp, 's', v->serverModifyTime);
     if (v->type == vDirectory) {
-	acl_HtonACL(VVnodeDiskACL(v));
+	code = acl_HtonACL(VVnodeDiskACL(v));
+	if (code) {
+	    Log("DumpVnode: Skipping invalid acl vnode %u (volume %i)\n",
+		 vnodeNumber, volid);
+	}
 	if (!code)
 	    code =
 		DumpByteString(iodp, 'A', (byte *) VVnodeDiskACL(v),
@@ -1420,7 +1424,11 @@ ReadVnodes(struct iod *iodp, Volume * vp, int incremental,
 	    case 'A':
 		ReadByteString(iodp, (byte *) VVnodeDiskACL(vnode),
 			       VAclDiskSize(vnode));
-		acl_NtohACL(VVnodeDiskACL(vnode));
+		if (acl_NtohACL(VVnodeDiskACL(vnode)) != 0) {
+		    Log("ReadVnodes: invalid acl for vnode %lu in dump.\n",
+			 (unsigned long)vnodeNumber);
+		    return VOLSERREAD_DUMPERROR;
+		}
 		break;
 	    case 'h':
 	    case 'f':{
