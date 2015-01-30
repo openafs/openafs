@@ -713,7 +713,11 @@ DumpVnode(int dumpfd, struct VnodeDiskObject *v, VolumeId volid, int vnodeNumber
     if (!code)
 	code = DumpInt32(dumpfd, 's', v->serverModifyTime);
     if (v->type == vDirectory) {
-	acl_HtonACL(VVnodeDiskACL(v));
+	code = acl_HtonACL(VVnodeDiskACL(v));
+	if (code) {
+	    fprintf(stderr, "Skipping invalid acl in vnode %u (volume %"AFS_VOLID_FMT")\n",
+			vnodeNumber, afs_printable_VolumeId_lu(volid));
+	}
 	if (!code)
 	    code =
 		DumpByteString(dumpfd, 'A', (byte *) VVnodeDiskACL(v),

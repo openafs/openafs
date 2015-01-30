@@ -24,14 +24,53 @@
 
 #include "acl.h"
 
+/*!
+ * Sanity check the access list.
+ *
+ * \param acl   pointer to the acl structure to be checked
+ *
+ * \returns  0 if acl list is valid
+ *   \retval 0       success
+ *   \retval EINVAL  invalid values in the acl header
+ */
+static int
+CheckAccessList(struct acl_accessList *acl)
+{
+    if (acl->total < 0 || acl->total > ACL_MAXENTRIES) {
+	return EINVAL;
+    }
+    if (acl->positive < 0 || acl->negative < 0
+	|| (acl->positive + acl->negative) != acl->total) {
+	return EINVAL;
+    }
+    /* Note: size may exceed sizeof(struct acl_accessList). */
+    if (acl->size < sizeof(struct acl_accessList)
+	+ (acl->total - 1) * sizeof(struct acl_accessEntry)) {
+	return EINVAL;
+    }
+    return 0;
+}
+
+/*!
+ * Convert the access list to network byte order.
+ *
+ * \param acl   pointer to the acl structure to be converted
+ *
+ * \returns  zero on success
+ *   \retval 0       success
+ *   \retval EINVAL  invalid values in the acl header
+ */
 int
 acl_HtonACL(struct acl_accessList *acl)
 {
-    /* Converts the access list defined by acl to network order.  Returns 0 always. */
-
     int i;
-    if (htonl(1) == 1)
-	return (0);		/* no swapping needed */
+    int code;
+
+    code = CheckAccessList(acl);
+    if (code) {
+	return code;
+    }
+
     for (i = 0; i < acl->positive; i++) {
 	acl->entries[i].id = htonl(acl->entries[i].id);
 	acl->entries[i].rights = htonl(acl->entries[i].rights);
@@ -48,19 +87,32 @@ acl_HtonACL(struct acl_accessList *acl)
     return (0);
 }
 
+/*!
+ * Convert the access list to host byte order.
+ *
+ * \param acl   pointer to the acl structure to be converted
+ *
+ * \returns  zero on success
+ *   \retval 0       success
+ *   \retval EINVAL  invalid values in the acl header
+ */
 int
 acl_NtohACL(struct acl_accessList *acl)
 {
-    /* Converts the access list defined by acl to network order. Returns 0 always. */
-
     int i;
-    if (ntohl(1) == 1)
-	return (0);		/* no swapping needed */
+    int code;
+
     acl->size = ntohl(acl->size);
     acl->version = ntohl(acl->version);
     acl->total = ntohl(acl->total);
     acl->positive = ntohl(acl->positive);
     acl->negative = ntohl(acl->negative);
+
+    code = CheckAccessList(acl);
+    if (code) {
+	return code;
+    }
+
     for (i = 0; i < acl->positive; i++) {
 	acl->entries[i].id = ntohl(acl->entries[i].id);
 	acl->entries[i].rights = ntohl(acl->entries[i].rights);
