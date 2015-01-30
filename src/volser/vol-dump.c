@@ -675,7 +675,7 @@ DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v
 
 
 static int
-DumpVnode(int dumpfd, struct VnodeDiskObject *v, int volid, int vnodeNumber,
+DumpVnode(int dumpfd, struct VnodeDiskObject *v, VolumeId volid, int vnodeNumber,
 	  int dumpEverything, struct Volume *vp)
 {
     int code = 0;
@@ -725,9 +725,10 @@ DumpVnode(int dumpfd, struct VnodeDiskObject *v, int volid, int vnodeNumber,
 	fdP = IH_OPEN(ihP);
 	if (fdP == NULL) {
 	    fprintf(stderr,
-		    "Unable to open inode %s for vnode %u (volume %i); not dumped, error %d\n",
-		    PrintInode(stmp, VNDISK_GET_INO(v)), vnodeNumber, volid,
-		    errno);
+		    "Unable to open inode %s for vnode %u "
+		    "(volume %"AFS_VOLID_FMT"); not dumped, error %d\n",
+		    PrintInode(stmp, VNDISK_GET_INO(v)), vnodeNumber,
+		    afs_printable_VolumeId_lu(volid), errno);
 	}
 	else
 	{
