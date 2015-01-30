@@ -120,13 +120,9 @@ afs_UFSWriteUIO(struct vcache *avc, afs_dcache_id_t *inode, struct uio *tuiop)
 #elif defined(AFS_SUN5_ENV)
     AFS_GUNLOCK();
 # ifdef AFS_SUN510_ENV
-    {
-	caller_context_t ct;
-
-	VOP_RWLOCK(tfile->vnode, 1, &ct);
-	code = VOP_WRITE(tfile->vnode, tuiop, 0, afs_osi_credp, &ct);
-	VOP_RWUNLOCK(tfile->vnode, 1, &ct);
-    }
+    VOP_RWLOCK(tfile->vnode, 1, NULL);
+    code = VOP_WRITE(tfile->vnode, tuiop, 0, afs_osi_credp, NULL);
+    VOP_RWUNLOCK(tfile->vnode, 1, NULL);
 # else
     VOP_RWLOCK(tfile->vnode, 1);
     code = VOP_WRITE(tfile->vnode, tuiop, 0, afs_osi_credp);
