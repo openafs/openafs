@@ -862,13 +862,9 @@ afs_UFSRead(struct vcache *avc, struct uio *auio,
 #elif defined(AFS_SUN5_ENV)
 	    AFS_GUNLOCK();
 #ifdef AFS_SUN510_ENV
-	    {
-		caller_context_t ct;
-
-		VOP_RWLOCK(tfile->vnode, 0, &ct);
-		code = VOP_READ(tfile->vnode, &tuio, 0, afs_osi_credp, &ct);
-		VOP_RWUNLOCK(tfile->vnode, 0, &ct);
-	    }
+	    VOP_RWLOCK(tfile->vnode, 0, NULL);
+	    code = VOP_READ(tfile->vnode, &tuio, 0, afs_osi_credp, NULL);
+	    VOP_RWUNLOCK(tfile->vnode, 0, NULL);
 #else
 	    VOP_RWLOCK(tfile->vnode, 0);
 	    code = VOP_READ(tfile->vnode, &tuio, 0, afs_osi_credp);
