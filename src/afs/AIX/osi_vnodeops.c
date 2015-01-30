@@ -643,6 +643,9 @@ afs_gn_fclear(struct vnode *vp,
     static int fclear_init = 0;
     struct vcache *avc = VTOAFS(vp);
 
+    memset(&uio, 0, sizeof(uio));
+    memset(&iov, 0, sizeof(iov));
+
     AFS_STATCNT(afs_gn_fclear);
     if (!fclear_init) {
 	memset(zero_buffer, 0, PAGESIZE);
@@ -919,6 +922,9 @@ afs_vm_rdwr(struct vnode *vp,
 	    struct iovec tvec[16];	/* Should have access to #define */
 	    afs_int32 tsize;
 
+	    memset(&tuio, 0, sizeof(tuio));
+	    memset(&tvec, 0, sizeof(tvec));
+
 	    mixed = 1;
 	    finalOffset = xfrOffset + xfrSize;
 	    tsize = (afs_size_t) (xfrOffset + xfrSize - afs_vmMappingEnd);
@@ -1085,6 +1091,9 @@ afs_vm_rdwr(struct vnode *vp,
 	    /* Write just one chunk's worth of data. */
 	    struct uio tuio;
 	    struct iovec tvec[16];	/* Should have access to #define */
+
+	    memset(&tuio, 0, sizeof(tuio));
+	    memset(&tvec, 0, sizeof(tvec));
 
 	    /* Purge dirty chunks of file if there are too many dirty chunks.
 	     * Inside the write loop, we only do this at a chunk boundary.

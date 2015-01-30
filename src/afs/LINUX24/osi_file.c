@@ -190,6 +190,9 @@ afs_osi_Read(struct osi_file *afile, int offset, void *aptr,
     struct iovec iov;
     afs_int32 code;
 
+    memset(&auio, 0, sizeof(auio));
+    memset(&iov, 0, sizeof(iov));
+
     AFS_STATCNT(osi_Read);
 
     /*
@@ -230,6 +233,9 @@ afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
     struct uio auio;
     struct iovec iov;
     afs_int32 code;
+
+    memset(&auio, 0, sizeof(auio));
+    memset(&iov, 0, sizeof(iov));
 
     AFS_STATCNT(osi_Write);
 

@@ -88,10 +88,12 @@ afsio_partialcopy(struct uio *auio, size_t len) {
     char *space;
     struct uio *newuio;
     struct iovec *newvec;
+    size_t space_len = sizeof(struct uio) +
+                       sizeof(struct iovec) * AFS_MAXIOVCNT;
 
     /* Allocate a block that can contain both the UIO and the iovec */
-    space = osi_AllocSmallSpace(sizeof(struct uio) +
-				sizeof(struct iovec) * AFS_MAXIOVCNT);
+    space = osi_AllocSmallSpace(space_len);
+    memset(space, 0, space_len);
 
     newuio = (struct uio *) space;
     newvec = (struct iovec *) (space + sizeof(struct uio));
