@@ -265,12 +265,17 @@ ReadString(struct iod *iodp, char *to, int maxa)
     }
 }
 
-static void
-ReadByteString(struct iod *iodp, byte * to,
-	       int size)
+static int
+ReadByteString(struct iod *iodp, byte * to, int size)
 {
-    while (size--)
-	*to++ = iod_getc(iodp);
+    int nbytes = 0;
+    int c;
+
+    while (size-- > 0 && (c = iod_getc(iodp)) != EOF) {
+	*to++ = c;
+	nbytes++;
+    }
+    return nbytes;
 }
 
 /*
@@ -1363,6 +1368,7 @@ ReadVnodes(struct iod *iodp, Volume * vp, int incremental,
     FdHandle_t *fdP;
     Inode nearInode AFS_UNUSED;
     afs_int32 critical = 0;
+    int nbytes;
 
     tag = iod_getc(iodp);
     V_pref(vp, nearInode);
@@ -1428,8 +1434,13 @@ ReadVnodes(struct iod *iodp, Volume * vp, int incremental,
 		    return VOLSERREAD_DUMPERROR;
 		break;
 	    case 'A':
-		ReadByteString(iodp, (byte *) VVnodeDiskACL(vnode),
+		nbytes = ReadByteString(iodp, (byte *) VVnodeDiskACL(vnode),
 			       VAclDiskSize(vnode));
+		if (nbytes != VAclDiskSize(vnode)) {
+		    Log("ReadVnodes: could not read acl for vnode %lu in dump.\n",
+			 (unsigned long)vnodeNumber);
+		    return VOLSERREAD_DUMPERROR;
+		}
 		if (acl_NtohACL(VVnodeDiskACL(vnode)) != 0) {
 		    Log("ReadVnodes: invalid acl for vnode %lu in dump.\n",
 			 (unsigned long)vnodeNumber);
