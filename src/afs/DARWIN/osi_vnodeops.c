@@ -837,17 +837,20 @@ afs_vop_pagein(ap)
     int flags = ap->a_flags;
     struct ucred *cred;
     vm_offset_t ioaddr;
+    int code;
+    struct vcache *tvc = VTOAFS(vp);
+    int nocommit = flags & UPL_NOCOMMIT;
 #ifdef AFS_DARWIN80_ENV
     struct uio *uio;
 #else
     struct uio auio;
     struct iovec aiov;
     struct uio *uio = &auio;
-#endif
-    int nocommit = flags & UPL_NOCOMMIT;
 
-    int code;
-    struct vcache *tvc = VTOAFS(vp);
+    memset(&auio, 0, sizeof(auio));
+    memset(&aiov, 0, sizeof(aiov));
+#endif
+
 #ifndef AFS_DARWIN80_ENV
     if (UBCINVALID(vp)) {
 #if DIAGNOSTIC
@@ -982,18 +985,21 @@ afs_vop_pageout(ap)
     int flags = ap->a_flags;
     struct ucred *cred;
     vm_offset_t ioaddr;
+    int nocommit = flags & UPL_NOCOMMIT;
+    int iosize;
+    int code;
+    struct vcache *tvc = VTOAFS(vp);
 #ifdef AFS_DARWIN80_ENV
     struct uio *uio;
 #else
     struct uio auio;
     struct iovec aiov;
     struct uio *uio = &auio;
-#endif
-    int nocommit = flags & UPL_NOCOMMIT;
-    int iosize;
 
-    int code;
-    struct vcache *tvc = VTOAFS(vp);
+    memset(&auio, 0, sizeof(auio));
+    memset(&aiov, 0, sizeof(aiov));
+#endif
+
 #ifndef AFS_DARWIN80_ENV
     if (UBCINVALID(vp)) {
 #if DIAGNOSTIC

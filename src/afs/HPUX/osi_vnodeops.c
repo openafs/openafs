@@ -222,6 +222,9 @@ afs_bread(vp, lbn, bpp)
     struct iovec iov;
     struct uio uio;
 
+    memset(&uio, 0, sizeof(uio));
+    memset(&iov, 0, sizeof(iov));
+
     AFS_STATCNT(afs_bread);
     fsbsize = vp->v_vfsp->vfs_bsize;
     offset = lbn * fsbsize;
@@ -2085,6 +2088,9 @@ afs_readdir(vp, uiop, cred)
     dir_off_t offset;
     uint64_t tmp_offset;
 
+    memset(&auio, 0, sizeof(auio));
+    memset(&aiov, 0, sizeof(aiov));
+
     count = uiop->uio_resid;
     /* Allocate temporary space for format conversion */
     ibuf = kmem_alloc(2 * count);	/* overkill - fix later */
@@ -2150,6 +2156,9 @@ afs_readdir3(vp, uiop, cred)
     struct __dirent64 *odp;
     int count, outcount;
     dir_off_t offset;
+
+    memset(&auio, 0, sizeof(auio));
+    memset(&aiov, 0, sizeof(aiov));
 
     count = uiop->uio_resid;
     /* Allocate temporary space for format conversion */
@@ -2520,6 +2529,9 @@ afs_hp_strategy(bp)
     struct iovec tiovec[1];
     extern caddr_t hdl_kmap_bp();
     struct kthread *t = u.u_kthreadp;
+
+    memset(&tuio, 0, sizeof(tuio));
+    memset(&tiovec, 0, sizeof(tiovec));
 
     AFS_STATCNT(afs_hp_strategy);
     /*

@@ -1033,6 +1033,9 @@ afs_obsd_strategy(void *v)
     long len = abp->b_bcount;
     int code;
 
+    memset(&tuio, 0, sizeof(tuio));
+    memset(&tiovec, 0, sizeof(tiovec));
+
     AFS_STATCNT(afs_strategy);
 
     tuio.afsio_iov = tiovec;
