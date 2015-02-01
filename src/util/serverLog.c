@@ -439,11 +439,7 @@ ReOpenLog(const char *fileName)
 	    ; /* don't care */
 	if (freopen(fileName, "a", stderr) != NULL) {
 #ifdef HAVE_SETVBUF
-#ifdef SETVBUF_REVERSED
-	    setvbuf(stderr, _IONBF, NULL, 0);
-#else
 	    setvbuf(stderr, NULL, _IONBF, 0);
-#endif
 #else
 	    setbuf(stderr, NULL);
 #endif
