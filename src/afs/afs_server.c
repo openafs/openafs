@@ -581,7 +581,7 @@ CkSrv_SetTime(int nconns, struct rx_connection **rxconns,
     osi_Assert(deltas != NULL);
 
     /* make sure we're starting from zero */
-    memset(&deltas, 0, sizeof(deltas));
+    memset(deltas, 0, nconns * sizeof (afs_int32));
 
     start = osi_Time();         /* time the gettimeofday call */
     AFS_GUNLOCK();
