@@ -12,6 +12,7 @@ openafs (1.6.10-4) UNRELEASED; urgency=medium
       files larger than the AFS cache, which manifested as file corruption.
     This leaves us roughly equivalent to the forthcoming 1.6.11pre2
     release candidate.
+  * Update CellServDB to the 2015-01-19 release.
 
  -- Benjamin Kaduk <kaduk@mit.edu>  Wed, 07 Jan 2015 13:50:56 -0500
 
