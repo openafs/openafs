@@ -34,6 +34,7 @@
 
 #if defined(AFS_PTHREAD_ENV)
 #include <pthread.h>
+static pthread_once_t serverLogOnce = PTHREAD_ONCE_INIT;
 static pthread_mutex_t serverLogMutex;
 #define LOCK_SERVERLOG() opr_Verify(pthread_mutex_lock(&serverLogMutex) == 0)
 #define UNLOCK_SERVERLOG() opr_Verify(pthread_mutex_unlock(&serverLogMutex) == 0)
@@ -312,6 +313,14 @@ SetupLogSignals(void)
 #endif
 }
 
+#if defined(AFS_PTHREAD_ENV)
+static void
+InitServerLogMutex(void)
+{
+    opr_Verify(pthread_mutex_init(&serverLogMutex, NULL) == 0);
+}
+#endif /* AFS_PTHREAD_ENV */
+
 int
 OpenLog(const char *fileName)
 {
@@ -327,7 +336,13 @@ OpenLog(const char *fileName)
 
 #ifndef AFS_NT40_ENV
     struct stat statbuf;
+#endif
 
+#if defined(AFS_PTHREAD_ENV)
+    opr_Verify(pthread_once(&serverLogOnce, InitServerLogMutex) == 0);
+#endif /* AFS_PTHREAD_ENV */
+
+#ifndef AFS_NT40_ENV
     if (serverLogSyslog) {
 	openlog(serverLogSyslogTag, LOG_PID, serverLogSyslogFacility);
 	return (0);
@@ -387,10 +402,6 @@ OpenLog(const char *fileName)
 	setbuf(stderr, NULL);
 #endif
     }
-
-#if defined(AFS_PTHREAD_ENV)
-    opr_Verify(pthread_mutex_init(&serverLogMutex, NULL) == 0);
-#endif /* AFS_PTHREAD_ENV */
 
     serverLogFD = tempfd;
 
