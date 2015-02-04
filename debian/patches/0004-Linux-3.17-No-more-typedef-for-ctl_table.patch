@@ -1,0 +1,65 @@
+From: Marc Dionne <marc.dionne@your-file-system.com>
+Date: Tue, 9 Sep 2014 10:39:55 -0300
+Subject: Linux 3.17: No more typedef for ctl_table
+
+The typedef has been removed so we need to use the structure
+directly.
+
+Note that the API for register_sysctl_table has also changed
+with 3.17, but it reverted back to a form that existed
+before and the configure tests handle it correctly.
+
+Reviewed-on: http://gerrit.openafs.org/11455
+Reviewed-by: Benjamin Kaduk <kaduk@mit.edu>
+Tested-by: BuildBot <buildbot@rampaginggeek.com>
+Reviewed-by: Perry Ruiter <pruiter@sinenomine.net>
+Reviewed-by: Andrew Deason <adeason@sinenomine.net>
+Reviewed-by: D Brashear <shadow@your-file-system.com>
+(cherry picked from commit 6a23ca5b6e8bcaf881be7a4c50bfba72d001e6cd)
+
+Change-Id: Ifb8fc0b9b01d2578c65407608f0e1b3f3b254459
+Reviewed-on: http://gerrit.openafs.org/11549
+Tested-by: BuildBot <buildbot@rampaginggeek.com>
+Reviewed-by: Benjamin Kaduk <kaduk@mit.edu>
+Reviewed-by: Stephan Wiesand <stephan.wiesand@desy.de>
+(cherry picked from commit 75f36df74bb3c13aadb047163b93d6c24436f784)
+---
+ src/afs/LINUX/osi_sysctl.c | 4 ++--
+ src/cf/linux-test4.m4      | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/afs/LINUX/osi_sysctl.c b/src/afs/LINUX/osi_sysctl.c
+index a8f7fac..834e8ad 100644
+--- a/src/afs/LINUX/osi_sysctl.c
++++ b/src/afs/LINUX/osi_sysctl.c
+@@ -34,7 +34,7 @@ extern afs_int32 afs_pct2;
+ #ifdef CONFIG_SYSCTL
+ static struct ctl_table_header *afs_sysctl = NULL;
+ 
+-static ctl_table afs_sysctl_table[] = {
++static struct ctl_table afs_sysctl_table[] = {
+     {
+ #if defined(STRUCT_CTL_TABLE_HAS_CTL_NAME)
+ #if defined(CTL_UNNUMBERED)
+@@ -234,7 +234,7 @@ static ctl_table afs_sysctl_table[] = {
+     {0}
+ };
+ 
+-static ctl_table fs_sysctl_table[] = {
++static struct ctl_table fs_sysctl_table[] = {
+     {
+ #if defined(STRUCT_CTL_TABLE_HAS_CTL_NAME)
+ #if defined(CTL_UNNUMBERED)
+diff --git a/src/cf/linux-test4.m4 b/src/cf/linux-test4.m4
+index b068af5..1759d9e 100644
+--- a/src/cf/linux-test4.m4
++++ b/src/cf/linux-test4.m4
+@@ -395,7 +395,7 @@ AC_DEFUN([LINUX_REGISTER_SYSCTL_TABLE_NOFLAG], [
+   AC_CHECK_LINUX_BUILD([whether register_sysctl_table has an insert_at_head argument],
+ 		       [ac_cv_linux_register_sysctl_table_noflag],
+ 		       [#include <linux/sysctl.h>],
+-		       [ctl_table *t; register_sysctl_table (t);],
++		       [struct ctl_table *t; register_sysctl_table (t);],
+ 		       [REGISTER_SYSCTL_TABLE_NOFLAG],
+ 		       [define if register_sysctl_table has no insert_at head flag],
+ 		       [])

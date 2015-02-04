@@ -1,0 +1,101 @@
+From: Andrew Deason <adeason@sinenomine.net>
+Date: Tue, 28 Oct 2014 00:10:56 -0500
+Subject: LINUX: Avoid d_revalidate failure on mtpt mismatch
+
+Currently, if afs_linux_dentry_revalidate is given an inode that
+corresponds to a mtpt vcache ('vcp'), it resolves the mtpt to its root
+dir if it's easy to do so (mvid and CMValid are set). Later on, we run
+afs_lookup to see if looking up our dentry's name returns the same
+vcache that we got; afs_lookup presumably will also resolve the mtpt
+if it's easy to do so.
+
+However, it is possible that afs_linux_dentry_revalidate and
+afs_lookup will make different decisions as to whether or not they
+resolve a mtpt to a dir. Specifically, if CMValid is cleared after
+afs_linux_dentry_revalidate checks for it, but before afs_lookup does,
+then afs_lookup will return a different vcache than
+afs_linux_dentry_revalidate is expecting, even though the relevant
+directory entry has not changed. That is, tvc is not equal to vcp, but
+tvc could be a mtpt that resolves to vcp, or vice versa. CMValid can
+be cleared by another thread at virtually any time, since this is
+cleared in some situations when we're not sure if the mtpt resolution
+is still valid (callbacks are broken, vldb cache entries expire, etc).
+
+afs_linux_dentry_revalidate interprets this situation to mean that the
+directory entry has changed, and so it eventually d_drop's the
+associated dentry. The way that this manifests to users is that a
+"fakestatted" mtpt can appear to be deleted effectively randomly, even
+when nothing has changed. This can be a problem because this causes
+the getcwd() syscall to return ENOENT when the working directory
+involves such an affected directory.
+
+To fix this situation, we just detect if afs_lookup returned either
+'vcp' (our possibly-resolved vcache), or the original inode associated
+with the dentry we are revalidating. If the returned vcache matches
+either of these, then the entry is okay and we don't need to
+invalidate or drop anything.
+
+FIXES 131780
+
+Reviewed-on: http://gerrit.openafs.org/11559
+Tested-by: BuildBot <buildbot@rampaginggeek.com>
+Reviewed-by: Benjamin Kaduk <kaduk@mit.edu>
+Tested-by: Anders Kaseorg <andersk@mit.edu>
+Reviewed-by: Anders Kaseorg <andersk@mit.edu>
+Reviewed-by: D Brashear <shadow@your-file-system.com>
+(cherry picked from commit ba1cc838ab4a80b7a7787c441a79aca31d84808c)
+
+Change-Id: I3273cc15ebe7fd94f3127840fdc5316bd7458e7c
+Reviewed-on: http://gerrit.openafs.org/11568
+Reviewed-by: Anders Kaseorg <andersk@mit.edu>
+Tested-by: BuildBot <buildbot@rampaginggeek.com>
+Reviewed-by: Benjamin Kaduk <kaduk@mit.edu>
+Reviewed-by: Stephan Wiesand <stephan.wiesand@desy.de>
+(cherry picked from commit 2fd2c69257edff968ef24a1d903bd602817bbf01)
+---
+ src/afs/LINUX/osi_vnodeops.c | 29 ++++++++++++++++++++++++++++-
+ 1 file changed, 28 insertions(+), 1 deletion(-)
+
+diff --git a/src/afs/LINUX/osi_vnodeops.c b/src/afs/LINUX/osi_vnodeops.c
+index 4d29efb..9a164ea 100644
+--- a/src/afs/LINUX/osi_vnodeops.c
++++ b/src/afs/LINUX/osi_vnodeops.c
+@@ -1231,10 +1231,37 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
+ 	if (hgetlo(pvcp->f.m.DataVersion) > dp->d_time || !(vcp->f.states & CStatd)) {
+ 	    struct vattr *vattr = NULL;
+ 	    int code;
++	    int lookup_good;
+ 
+ 	    credp = crref();
+ 	    code = afs_lookup(pvcp, (char *)dp->d_name.name, &tvc, credp);
+-	    if (code || tvc != vcp) {
++
++	    if (code) {
++		/* We couldn't perform the lookup, so we're not okay. */
++		lookup_good = 0;
++
++	    } else if (tvc == vcp) {
++		/* We got back the same vcache, so we're good. */
++		lookup_good = 1;
++
++	    } else if (tvc == VTOAFS(dp->d_inode)) {
++		/* We got back the same vcache, so we're good. This is
++		 * different from the above case, because sometimes 'vcp' is
++		 * not the same as the vcache for dp->d_inode, if 'vcp' was a
++		 * mtpt and we evaluated it to a root dir. In rare cases,
++		 * afs_lookup might not evalute the mtpt when we do, or vice
++		 * versa, so the previous case will not succeed. But this is
++		 * still 'correct', so make sure not to mark the dentry as
++		 * invalid; it still points to the same thing! */
++		lookup_good = 1;
++
++	    } else {
++		/* We got back a different file, so we're definitely not
++		 * okay. */
++		lookup_good = 0;
++	    }
++
++	    if (!lookup_good) {
+ 		dput(parent);
+ 		/* Force unhash; the name doesn't point to this file
+ 		 * anymore. */

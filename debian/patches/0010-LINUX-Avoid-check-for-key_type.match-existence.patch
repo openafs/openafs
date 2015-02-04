@@ -1,0 +1,97 @@
+From: Andrew Deason <adeason@sinenomine.net>
+Date: Wed, 5 Nov 2014 10:22:00 -0600
+Subject: LINUX: Avoid check for key_type.match existence
+
+Commit b5de4a9f removed our key_type 'match' function for kernels that
+do not have such a 'match' function pointer. However, this added a
+configure test where we are supposed to fail for the "new" behavior,
+which is discouraged.
+
+This causes an actual problem, because this test will fail on at least
+RHEL5, due to arguably unrelated reasons (the header file for the
+relevant struct is in key.h instead of key-type.h). And so, in that
+situation we avoid defining a 'match' function callback, meaning our
+'match' function callback is NULL, which causes a panic when we try to
+actually look up keys for a PAG.
+
+To fix this, transform the 'match' config test into one where we
+succeed for the "new" behavior. We do this by testing for the
+existence of the new functionality that replaced the old 'match'
+function, which is the match_preparse function (specifically, the
+'cmp' field in the structure accepted by match_preparse). This should
+cause unrelated compilation errors to cause us to revert to the "old"
+behavior instead of the "new" behavior. At worst, this should cause
+build issues if we get the config test wrong (since we will try to use
+the 'match' function definition that does not exist), instead of
+panicing at runtime.
+
+Note that while we test for key_type.match_preparse, we don't actually
+use that function, since our 'match' functionality is the same as the
+default behavior (according to b5de4a9f). So, we can avoid defining
+any such function for newer kernels.
+
+Thanks to Stephan Wiesand for bisecting this issue.
+
+Reviewed-on: http://gerrit.openafs.org/11589
+Reviewed-by: Marc Dionne <marc.c.dionne@gmail.com>
+Reviewed-by: Stephan Wiesand <stephan.wiesand@desy.de>
+Tested-by: BuildBot <buildbot@rampaginggeek.com>
+Reviewed-by: Jeffrey Altman <jaltman@your-file-system.com>
+(cherry picked from commit a9a3cb2efff7e6c020be4687b004d157bc070ac6)
+
+Change-Id: I59f40258c5ea35a59681f436095922d111e344f6
+Reviewed-on: http://gerrit.openafs.org/11595
+Tested-by: Anders Kaseorg <andersk@mit.edu>
+Reviewed-by: Anders Kaseorg <andersk@mit.edu>
+Tested-by: BuildBot <buildbot@rampaginggeek.com>
+Reviewed-by: Marc Dionne <marc.c.dionne@gmail.com>
+Reviewed-by: Benjamin Kaduk <kaduk@mit.edu>
+Reviewed-by: Andrew Deason <adeason@sinenomine.net>
+Reviewed-by: Stephan Wiesand <stephan.wiesand@desy.de>
+(cherry picked from commit 9ff1cd92d023f9a949b499891f552b41cb0c52e4)
+---
+ acinclude.m4               |  2 +-
+ src/afs/LINUX/osi_groups.c | 10 ++++++++--
+ 2 files changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/acinclude.m4 b/acinclude.m4
+index 72dd6c1..d324dc1 100644
+--- a/acinclude.m4
++++ b/acinclude.m4
+@@ -841,7 +841,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
+ 		 AC_CHECK_LINUX_STRUCT([file_system_type], [mount], [fs.h])
+ 		 AC_CHECK_LINUX_STRUCT([inode_operations], [truncate], [fs.h])
+ 		 AC_CHECK_LINUX_STRUCT([key_type], [instantiate_prep], [key-type.h])
+-		 AC_CHECK_LINUX_STRUCT([key_type], [match], [key-type.h])
++		 AC_CHECK_LINUX_STRUCT([key_type], [match_preparse], [key-type.h])
+ 		 AC_CHECK_LINUX_STRUCT([key_type], [preparse], [key-type.h])
+ 		 AC_CHECK_LINUX_STRUCT([nameidata], [path], [namei.h])
+ 		 AC_CHECK_LINUX_STRUCT([proc_dir_entry], [owner], [proc_fs.h])
+diff --git a/src/afs/LINUX/osi_groups.c b/src/afs/LINUX/osi_groups.c
+index f1d97a6..3b068e5 100644
+--- a/src/afs/LINUX/osi_groups.c
++++ b/src/afs/LINUX/osi_groups.c
+@@ -498,7 +498,13 @@ error:
+     return code;
+ }
+ 
+-#if defined(STRUCT_KEY_TYPE_HAS_MATCH)
++#if !defined(STRUCT_KEY_TYPE_HAS_MATCH_PREPARSE)
++/* Note that we only define a ->match function if struct
++ * key_type.match_preparse does _not_ exist. If key_type.match_preparse does
++ * exist, we would use that to specify an alternative comparison function; but
++ * since we just rely on default behavior, we don't need to actually specify
++ * one. But for kernels with no such match_preparse function, we need to
++ * specify a 'match' function, since there is no default. */
+ static int afs_pag_match(const struct key *key, const void *description)
+ {
+ 	return strcmp(key->description, description) == 0;
+@@ -529,7 +535,7 @@ struct key_type key_type_afs_pag =
+ #else
+     .instantiate = afs_pag_instantiate,
+ #endif
+-#if defined(STRUCT_KEY_TYPE_HAS_MATCH)
++#if !defined(STRUCT_KEY_TYPE_HAS_MATCH_PREPARSE)
+     .match       = afs_pag_match,
+ #endif
+     .destroy     = afs_pag_destroy,
