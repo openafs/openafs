@@ -58,6 +58,9 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
     BHV_PDATA(&bhv) = (void *)so;
 #endif
 
+    memset(&tuio, 0, sizeof(tuio));
+    memset(&tmpvec, 0, sizeof(tmpvec));
+
     tuio.uio_iov = tmpvec;
     tuio.uio_iovcnt = nvecs;
     tuio.uio_offset = 0;
@@ -429,6 +432,9 @@ osi_NetSend(asocket, addr, dvec, nvec, asize, istack)
     struct mbuf *to;
     int i;
     bhv_desc_t bhv;
+
+    memset(&tuio, 0, sizeof(tuio));
+    memset(&tvecs, 0, sizeof(tvecs));
 
     if (nvec > RX_MAXWVECS + 1) {
 	osi_Panic("osi_NetSend: %d: Too many iovecs.\n", nvec);

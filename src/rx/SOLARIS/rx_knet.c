@@ -484,6 +484,9 @@ osi_NetSend(osi_socket asocket, struct sockaddr_in *addr, struct iovec *dvec,
     int error;
     int i;
 
+    memset(&uio, 0, sizeof(uio));
+    memset(&iov, 0, sizeof(iov));
+
     if (nvecs > RX_MAXIOVECS) {
 	osi_Panic("osi_NetSend: %d: Too many iovecs.\n", nvecs);
     }
@@ -523,6 +526,9 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
     struct iovec iov[RX_MAXIOVECS];
     int error;
     int i;
+
+    memset(&uio, 0, sizeof(uio));
+    memset(&iov, 0, sizeof(iov));
 
     if (nvecs > RX_MAXIOVECS) {
 	osi_Panic("osi_NetSend: %d: Too many iovecs.\n", nvecs);

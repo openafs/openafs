@@ -166,6 +166,14 @@ int
 osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
 	       int nvecs, int *alength)
 {
+    int i;
+    struct iovec iov[RX_MAXIOVECS];
+    struct sockaddr *sa = NULL;
+    int code;
+    size_t resid;
+
+    int haveGlock = ISAFS_GLOCK();
+
 #ifdef AFS_DARWIN80_ENV
     socket_t asocket = (socket_t)so;
     struct msghdr msg;
@@ -175,14 +183,9 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
 #else
     struct socket *asocket = (struct socket *)so;
     struct uio u;
+    memset(&u, 0, sizeof(u));
 #endif
-    int i;
-    struct iovec iov[RX_MAXIOVECS];
-    struct sockaddr *sa = NULL;
-    int code;
-    size_t resid;
-
-    int haveGlock = ISAFS_GLOCK();
+    memset(&iov, 0, sizeof(iov));
     /*AFS_STATCNT(osi_NetReceive); */
 
     if (nvecs > RX_MAXIOVECS)
@@ -282,6 +285,10 @@ int
 osi_NetSend(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
 	    int nvecs, afs_int32 alength, int istack)
 {
+    afs_int32 code;
+    int i;
+    struct iovec iov[RX_MAXIOVECS];
+    int haveGlock = ISAFS_GLOCK();
 #ifdef AFS_DARWIN80_ENV
     socket_t asocket = (socket_t)so;
     struct msghdr msg;
@@ -289,11 +296,9 @@ osi_NetSend(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
 #else
     struct socket *asocket = (struct socket *)so;
     struct uio u;
+    memset(&u, 0, sizeof(u));
 #endif
-    afs_int32 code;
-    int i;
-    struct iovec iov[RX_MAXIOVECS];
-    int haveGlock = ISAFS_GLOCK();
+    memset(&iov, 0, sizeof(iov));
 
     AFS_STATCNT(osi_NetSend);
     if (nvecs > RX_MAXIOVECS)
