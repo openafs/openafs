@@ -250,24 +250,21 @@ AC_ARG_ENABLE([linux-syscall-probing],
     [enable_linux_syscall_probing="maybe"])
 AC_ARG_ENABLE([linux-d_splice_alias-extra-iput],
     [AS_HELP_STRING([--enable-linux-d_splice_alias-extra-iput],
-	[Linux has introduced an incompatible behavior change in the
-	 d_splice_alias function with no reliable way to determine which
-	 behavior will be produced.  If Linux commit
-	 51486b900ee92856b977eacfc5bfbe6565028070 (or equivalent) has been
-	 applied to your kernel, disable this option.  If that commit is
-	 not present in your kernel, enable this option.  We apologize
-	 that you are required to know this about your running kernel.])],
+	[Linux kernels in the 3.17 series prior to 3.17.3 had a bug
+	 wherein error returns from the d_splice_alias() function were
+	 leaking a reference on the inode.  The bug was fixed for the
+	 3.17.3 kernel, and the possibility of an error return was only
+	 introduced in kernel 3.17, so only the narrow range of kernels
+	 is affected.  Enable this option for builds on systems with
+	 kernels affected by this bug, to manually release the reference
+	 on error returns and correct the reference counting.
+	 Linux commit 51486b900ee92856b977eacfc5bfbe6565028070 (or
+	 equivalent) is the fix for the upstream bug, so if such a commit
+	 is present, leave this option disabled.  We apologize
+	 that you are required to know this about your running kernel,
+	 but luckily only a narrow range of versions is affected.])],
     [],
-    [case $system in
-    *-linux*)
-	AS_IF([test "x$LOGNAME" != "xbuildslave" &&
-	    test "x$LOGNAME" != "xbuildbot"],
-	    [AC_ERROR([Linux users must specify either
-		--enable-linux-d_splice_alias-extra-iput or
-		--disable-linux-d_splice_alias-extra-iput])],
-	    [enable_linux_d_splice_alias_extra_iput="no"])
-     esac
-    ])
+    [enable_linux_d_splice_alias_extra_iput="no"])
 AC_ARG_WITH([crosstools-dir],
     [AS_HELP_STRING([--with-crosstools-dir=path],
 	[use path for native versions of rxgen, compile_et and config])
