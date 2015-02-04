@@ -465,9 +465,6 @@ ReOpenLog(const char *fileName)
 {
     int flags = O_WRONLY | O_APPEND | O_CREAT;
 
-    if (access(fileName, F_OK) == 0)
-	return 0;		/* exists, no need to reopen. */
-
 #if !defined(AFS_NT40_ENV)
     if (serverLogSyslog) {
 	return 0;
