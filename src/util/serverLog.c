@@ -73,7 +73,6 @@ char *serverLogSyslogTag = 0;
 int LogLevel;
 int mrafsStyleLogs = 0;
 static int threadIdLogs = 0;
-int printLocks = 0;
 static int resetSignals = 0;
 static char *ourName = NULL;
 
@@ -235,7 +234,6 @@ SetDebug_Signal(int signo)
             threadIdLogs = 0;
 #endif
     }
-    printLocks = 2;
 #if defined(AFS_PTHREAD_ENV)
     DebugOn((void *)(intptr_t)LogLevel);
 #else /* AFS_PTHREAD_ENV */
@@ -254,8 +252,6 @@ ResetDebug_Signal(int signo)
 {
     LogLevel = 0;
 
-    if (printLocks > 0)
-	--printLocks;
 #if defined(AFS_PTHREAD_ENV)
     DebugOn((void *)(intptr_t)LogLevel);
 #else /* AFS_PTHREAD_ENV */
