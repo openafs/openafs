@@ -78,6 +78,23 @@ static char *ourName = NULL;
 
 static void RotateLogFile(void);
 
+/*!
+ * Determine if the file is a named pipe.
+ *
+ * This check is performed to support named pipes as logs by not rotating them
+ * and opening them with a non-blocking flags.
+ *
+ * \param[in] fileName  log file name
+ *
+ * \returns non-zero if log file is a named pipe.
+ */
+static int
+IsFIFO(const char *fileName)
+{
+    struct stat statbuf;
+    return (lstat(fileName, &statbuf) == 0) && (S_ISFIFO(statbuf.st_mode));
+}
+
 void
 SetLogThreadNumProgram(int (*func) (void) )
 {
@@ -202,6 +219,61 @@ LogDesWarning(void)
     ViceLog(0, ("\n"));
 }
 
+/*!
+ * Move the current log file out of the way so a new one can be started.
+ *
+ * The format of the new name depends on the logging style.  The traditional
+ * Transarc style appends ".old" to the log file name.  When MR-AFS style
+ * logging is in effect, a time stamp is appended to the log file name instead
+ * of ".old".
+ *
+ * \bug  Unfortunately, no check is made to avoid overwriting
+ *       old logs in the traditional Transarc mode.
+ *
+ * \param fileName  fully qualified log file path
+ */
+static void
+RenameLogFile(const char *fileName)
+{
+    int code;
+    char *nextName = NULL;
+
+    if (mrafsStyleLogs) {
+	int tries;
+	time_t t;
+	struct stat buf;
+	struct tm *timeFields;
+
+	time(&t);
+	for (tries = 0; nextName == NULL && tries < 100; t++, tries++) {
+	    timeFields = localtime(&t);
+	    code = asprintf(&nextName, "%s.%d%02d%02d%02d%02d%02d",
+			    fileName, timeFields->tm_year + 1900,
+			    timeFields->tm_mon + 1, timeFields->tm_mday,
+			    timeFields->tm_hour, timeFields->tm_min,
+			    timeFields->tm_sec);
+	    if (code < 0) {
+		nextName = NULL;
+		break;
+	    }
+	    if (lstat(nextName, &buf) == 0) {
+		/* Avoid clobbering a log. */
+		free(nextName);
+		nextName = NULL;
+	    }
+	}
+    } else {
+	code = asprintf(&nextName, "%s.old", fileName);
+	if (code < 0) {
+	    nextName = NULL;
+	}
+    }
+    if (nextName != NULL) {
+	rk_rename(fileName, nextName);	/* Don't check the error code. */
+	free(nextName);
+    }
+}
+
 static void*
 DebugOn(void *param)
 {
@@ -320,6 +392,27 @@ InitServerLogMutex(void)
 }
 #endif /* AFS_PTHREAD_ENV */
 
+/*!
+ * Redirect stdout and stderr to the log file.
+ *
+ * \note Call directly after opening the log file.
+ *
+ * \param[in] fileName  log file name
+ */
+static void
+RedirectStdStreams(const char *fileName)
+{
+    if (freopen(fileName, "a", stdout) == NULL)
+	; /* don't care */
+    if (freopen(fileName, "a", stderr) != NULL) {
+#ifdef HAVE_SETVBUF
+	setvbuf(stderr, NULL, _IONBF, 0);
+#else
+	setbuf(stderr, NULL);
+#endif
+    }
+}
+
 int
 OpenLog(const char *fileName)
 {
@@ -327,13 +420,8 @@ OpenLog(const char *fileName)
      * This function should allow various libraries that inconsistently
      * use stdout/stderr to all go to the same place
      */
-    int tempfd, isfifo = 0;
-    int code;
-    char *nextName = NULL;
-
-#ifndef AFS_NT40_ENV
-    struct stat statbuf;
-#endif
+    int tempfd;
+    int flags = O_WRONLY | O_TRUNC | O_CREAT | O_APPEND;
 
 #if defined(AFS_PTHREAD_ENV)
     opr_Verify(pthread_once(&serverLogOnce, InitServerLogMutex) == 0);
@@ -348,64 +436,19 @@ OpenLog(const char *fileName)
 
     opr_Assert(fileName != NULL);
 
-#ifndef AFS_NT40_ENV
-    /* Support named pipes as logs by not rotating them */
-    if ((lstat(fileName, &statbuf) == 0)  && (S_ISFIFO(statbuf.st_mode))) {
-	isfifo = 1;
-    }
-#endif
-
-    if (mrafsStyleLogs) {
-        time_t t;
-	struct stat buf;
-	int tries;
-	struct tm *timeFields;
-
-	time(&t);
-	for (tries = 0; nextName == NULL && tries < 100; t++, tries++) {
-	    timeFields = localtime(&t);
-	    code = asprintf(&nextName, "%s.%d%02d%02d%02d%02d%02d",
-		     fileName, timeFields->tm_year + 1900,
-		     timeFields->tm_mon + 1, timeFields->tm_mday,
-		     timeFields->tm_hour, timeFields->tm_min,
-		     timeFields->tm_sec);
-	    if (code < 0) {
-		nextName = NULL;
-		break;
-	    }
-	    if (lstat(nextName, &buf) == 0) {
-		/* Avoid clobbering a log. */
-		free(nextName);
-		nextName = NULL;
-	    }
-        }
+    if (IsFIFO(fileName)) {
+	/* Support named pipes as logs by not rotating them. */
+	flags |= O_NONBLOCK;
     } else {
-	code = asprintf(&nextName, "%s.old", fileName);
-	if (code < 0) {
-	    nextName = NULL;
-	}
-    }
-    if (nextName != NULL) {
-	if (!isfifo)
-	    rk_rename(fileName, nextName);	/* Don't check the error code. */
-	free(nextName);
+	RenameLogFile(fileName);
     }
 
-    tempfd = open(fileName, O_WRONLY | O_TRUNC | O_CREAT | O_APPEND | (isfifo?O_NONBLOCK:0), 0666);
+    tempfd = open(fileName, flags, 0666);
     if (tempfd < 0) {
 	printf("Unable to open log file %s\n", fileName);
 	return -1;
     }
-    /* redirect stdout and stderr so random printf's don't write to data */
-    if (freopen(fileName, "a", stdout) == NULL)
-	; /* don't care */
-    if (freopen(fileName, "a", stderr) != NULL) {
-#ifdef HAVE_SETVBUF
-	setvbuf(stderr, NULL, _IONBF, 0);
-#else
-	setbuf(stderr, NULL);
-#endif
-    }
+    RedirectStdStreams(fileName);
 
     /* Save our name for reopening. */
     free(ourName);
@@ -420,10 +463,7 @@ OpenLog(const char *fileName)
 int
 ReOpenLog(const char *fileName)
 {
-    int isfifo = 0;
-#if !defined(AFS_NT40_ENV)
-    struct stat statbuf;
-#endif
+    int flags = O_WRONLY | O_APPEND | O_CREAT;
 
     if (access(fileName, F_OK) == 0)
 	return 0;		/* exists, no need to reopen. */
@@ -432,28 +472,18 @@ ReOpenLog(const char *fileName)
     if (serverLogSyslog) {
 	return 0;
     }
-
-    /* Support named pipes as logs by not rotating them */
-    if ((lstat(fileName, &statbuf) == 0)  && (S_ISFIFO(statbuf.st_mode))) {
-	isfifo = 1;
-    }
 #endif
+
+    if (IsFIFO(fileName)) {
+	flags |= O_NONBLOCK;
+    }
 
     LOCK_SERVERLOG();
     if (serverLogFD >= 0)
 	close(serverLogFD);
-    serverLogFD = open(fileName, O_WRONLY | O_APPEND | O_CREAT | (isfifo?O_NONBLOCK:0), 0666);
+    serverLogFD = open(fileName, flags, 0666);
     if (serverLogFD >= 0) {
-	if (freopen(fileName, "a", stdout) == NULL)
-	    ; /* don't care */
-	if (freopen(fileName, "a", stderr) != NULL) {
-#ifdef HAVE_SETVBUF
-	    setvbuf(stderr, NULL, _IONBF, 0);
-#else
-	    setbuf(stderr, NULL);
-#endif
-	}
-
+        RedirectStdStreams(fileName);
     }
     UNLOCK_SERVERLOG();
     return serverLogFD < 0 ? -1 : 0;
