@@ -281,7 +281,7 @@ CreateGroup(struct cmd_syndesc *as, void *arock)
 		return code;
 	    }
 	    if (id == 0) {
-		printf("0 isn't a valid group id; aborting\n");
+		fprintf(stderr, "0 isn't a valid group id; aborting\n");
 		return EINVAL;
 	    }
 	    if (id > 0) {
@@ -334,7 +334,7 @@ CreateUser(struct cmd_syndesc *as, void *arock)
 		return code;
 	    }
 	    if (id == 0) {
-		printf("0 isn't a valid user id; aborting\n");
+		fprintf(stderr, "0 isn't a valid user id; aborting\n");
 		return EINVAL;
 	    }
 	    if (id < 0) {
@@ -929,7 +929,7 @@ SetMaxCommand(struct cmd_syndesc *as, void *arock)
     }
     if (!as->parms[0].items && !as->parms[1].items) {
 	code = PRBADARG;
-	printf("Must specify at least one of group or user.\n");
+	fprintf(stderr, "Must specify at least one of group or user.\n");
     }
     return code;
 }
@@ -959,7 +959,7 @@ SetFields(struct cmd_syndesc *as, void *arock)
 	} else {		/* interpret flag bit names */
 	    if (strlen(access) != 5) {
 	      form_error:
-		printf("Access bits must be of the form 'somar', not %s\n",
+		fprintf(stderr, "Access bits must be of the form 'somar', not %s\n",
 		       access);
 		return PRBADARG;
 	    }
@@ -974,8 +974,8 @@ SetFields(struct cmd_syndesc *as, void *arock)
 		else if (access[i] == '-')
 		    new = 0;
 		else {
-		    printf
-			("Access bits out of order or illegal:\n  must be a combination of letters from '%s' or '%s' or hyphen, not %s\n",
+		    fprintf(stderr,
+			"Access bits out of order or illegal:\n  must be a combination of letters from '%s' or '%s' or hyphen, not %s\n",
 			 flags_upcase, flags_dncase, access);
 		    return PRBADARG;
 		}
