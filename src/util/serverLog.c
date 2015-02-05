@@ -76,6 +76,8 @@ static int threadIdLogs = 0;
 static int resetSignals = 0;
 static char *ourName = NULL;
 
+static void RotateLogFile(void);
+
 void
 SetLogThreadNumProgram(int (*func) (void) )
 {
@@ -268,11 +270,7 @@ ResetDebug_Signal(int signo)
         threadIdLogs = 0;
 #endif
     if (mrafsStyleLogs) {
-	LOCK_SERVERLOG();
-	if (ourName != NULL) {
-	    OpenLog(ourName);
-	}
-	UNLOCK_SERVERLOG();
+	RotateLogFile();
     }
 }				/*ResetDebug_Signal */
 
@@ -459,6 +457,23 @@ ReOpenLog(const char *fileName)
     }
     UNLOCK_SERVERLOG();
     return serverLogFD < 0 ? -1 : 0;
+}
+
+/*!
+ * Rotate the log file by renaming then truncating.
+ */
+static void
+RotateLogFile(void)
+{
+    LOCK_SERVERLOG();
+    if (ourName != NULL) {
+	if (serverLogFD >= 0) {
+	    close(serverLogFD);
+	    serverLogFD = -1;
+	}
+	OpenLog(ourName);
+    }
+    UNLOCK_SERVERLOG();
 }
 
 /*!
