@@ -150,7 +150,7 @@ BKGLoop(void *unused)
 	loop++;
 	if (loop == 10) {	/* reopen log every 5 minutes */
 	    loop = 0;
-	    ReOpenLog(AFSDIR_SERVER_VOLSERLOG_FILEPATH);
+	    ReOpenLog();
 	}
     }
 

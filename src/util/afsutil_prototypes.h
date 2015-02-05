@@ -130,7 +130,7 @@ extern void SetDebug_Signal(int signo);
 extern void ResetDebug_Signal(int signo);
 extern void SetupLogSignals(void);
 extern int OpenLog(const char *fileName);
-extern int ReOpenLog(const char *fileName);
+extern int ReOpenLog(void);
 extern int LogThreadNum(void);
 extern void LogCommandLine(int argc, char **argv, const char *progname,
 			   const char *version, const char *logstring,

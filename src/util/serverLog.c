@@ -460,8 +460,16 @@ OpenLog(const char *fileName)
     return 0;
 }				/*OpenLog */
 
+/*!
+ * Reopen the log file descriptor.
+ *
+ * Reopen the log file descriptor in order to support rotation
+ * of the log files.  Has no effect when logging to the syslog.
+ *
+ * \returns  0 on success
+ */
 int
-ReOpenLog(const char *fileName)
+ReOpenLog(void)
 {
     int flags = O_WRONLY | O_APPEND | O_CREAT;
 
@@ -471,16 +479,19 @@ ReOpenLog(const char *fileName)
     }
 #endif
 
-    if (IsFIFO(fileName)) {
+    LOCK_SERVERLOG();
+    if (ourName == NULL) {
+	UNLOCK_SERVERLOG();
+	return -1;
+    }
+    if (IsFIFO(ourName)) {
 	flags |= O_NONBLOCK;
     }
-
-    LOCK_SERVERLOG();
     if (serverLogFD >= 0)
 	close(serverLogFD);
-    serverLogFD = open(fileName, flags, 0666);
+    serverLogFD = open(ourName, flags, 0666);
     if (serverLogFD >= 0) {
-        RedirectStdStreams(fileName);
+        RedirectStdStreams(ourName);
     }
     UNLOCK_SERVERLOG();
     return serverLogFD < 0 ? -1 : 0;

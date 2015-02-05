@@ -54,7 +54,7 @@ extern void FSLog(const char *format, ...)
     do { ViceLog(level, str); osi_Panic str; } while(0);
 
 extern int OpenLog(const char *filename);
-extern int ReOpenLog(const char *fileName);
+extern int ReOpenLog(void);
 extern void SetupLogSignals(void);
 extern void CloseLog(void);
 extern void SetupLogSoftSignals(void);

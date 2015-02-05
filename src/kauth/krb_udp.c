@@ -111,7 +111,7 @@ FiveMinuteCheckLWP(void *unused)
     while (1) {
 	IOMGR_Sleep(fiveminutes);
 	/* close the log so it can be removed */
-	ReOpenLog(AFSDIR_SERVER_KALOG_FILEPATH);	/* no trunc, just append */
+	ReOpenLog();	/* no trunc, just append */
     }
     return NULL;
 }

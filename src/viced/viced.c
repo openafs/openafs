@@ -402,7 +402,7 @@ FiveMinuteCheckLWP(void *unused)
 #endif
 
 	/* close the log so it can be removed */
-	ReOpenLog(AFSDIR_SERVER_FILELOG_FILEPATH);	/* don't trunc, just append */
+	ReOpenLog();	/* don't trunc, just append */
 	ViceLog(2, ("Cleaning up timed out callbacks\n"));
 	if (CleanupTimedOutCallBacks())
 	    ViceLog(5, ("Timed out callbacks deleted\n"));
