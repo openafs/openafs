@@ -506,7 +506,7 @@ Copy(char *a_from, char *a_to, int a_mode)
 
     int fd1, fd2;
     char buf[BUFSIZ];
-    int cnt, rc;
+    int rcnt, wcnt = -1, rc;
 
     umask(0);
     fd1 = open(a_to, O_EXCL | O_CREAT | O_WRONLY, a_mode);
@@ -537,10 +537,18 @@ Copy(char *a_from, char *a_to, int a_mode)
 	close(fd1);
 	return (1);
     }
-    while ((cnt = read(fd2, buf, BUFSIZ)) == BUFSIZ)
-	write(fd1, buf, cnt);
-
-    write(fd1, buf, cnt);
+    do {
+	rcnt = read(fd2, buf, BUFSIZ);
+	if (rcnt == -1)
+	    break;
+	wcnt = write(fd1, buf, rcnt);
+    } while (rcnt == BUFSIZ && rcnt == wcnt);
+    if (rcnt == -1 || wcnt != rcnt) {
+	uss_procs_PrintErr(line, "read/write error to %s\n", a_to);
+	close(fd1);
+	close(fd2);
+	return (1);
+    }
     rc = close(fd1);
     if (rc) {
 	uss_procs_PrintErr(line, "Failed to close '%s' %s\n", a_to,
@@ -608,8 +616,12 @@ Echo(char *a_s, char *a_f, int a_mode)
 	    return (1);
 	}
     }
-    write(fd, a_s, strlen(a_s));
-    write(fd, "\n", 1);
+    if (write(fd, a_s, strlen(a_s)) != strlen(a_s) ||
+	write(fd, "\n", 1) != 1) {
+	uss_procs_PrintErr(line, "Short write to '%s'\n", a_f);
+	close(fd);
+	return (1);
+    }
     if (close(fd)) {
 	uss_procs_PrintErr(line, "Failed to close '%s': %s\n", a_f,
 			   strerror(errno));
