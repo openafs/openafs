@@ -74,6 +74,7 @@ const char *DoPidFiles = NULL;
 #ifndef AFS_NT40_ENV
 int DoSyslogFacility = LOG_DAEMON;
 #endif
+int DoTransarcLogs = 0;
 static afs_int32 nextRestart;
 static afs_int32 nextDay;
 
@@ -995,6 +996,8 @@ main(int argc, char **argv, char **envp)
 	    DoPidFiles = (argv[code]+10);
 	} else if (strncmp(argv[code], "-pidfiles", 9) == 0) {
 	    DoPidFiles = AFSDIR_LOCAL_DIR;
+	} else if (strcmp(argv[code], "-transarc-logs") == 0) {
+	    DoTransarcLogs = 1;
 	}
 	else {
 
@@ -1010,6 +1013,7 @@ main(int argc, char **argv, char **envp)
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-cores=<none|path>] \n"
 		   "[-pidfiles[=path]] "
+		   "[-transarc-logs] "
 		   "[-nofork] " "[-help]\n");
 #else
 	    printf("Usage: bosserver [-noauth] [-log] "
@@ -1047,7 +1051,8 @@ main(int argc, char **argv, char **envp)
 
     if (!DoSyslog) {
 	/* Support logging to named pipes by not renaming. */
-	if ((lstat(AFSDIR_SERVER_BOZLOG_FILEPATH, &sb) == 0)
+	if (DoTransarcLogs
+	    && (lstat(AFSDIR_SERVER_BOZLOG_FILEPATH, &sb) == 0)
 	    && !(S_ISFIFO(sb.st_mode))) {
 	    if (asprintf(&oldlog, "%s.old", AFSDIR_SERVER_BOZLOG_FILEPATH) < 0) {
 		printf("bosserver: out of memory\n");

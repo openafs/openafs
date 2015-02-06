@@ -45,6 +45,7 @@ int parseServerList(struct cmd_item *);
 char lcell[MAXKTCREALMLEN];
 afs_uint32 myHost = 0;
 int helpOption;
+static struct logOptions logopts;
 
 /* server's global configuration information. This is exported to other
  * files/routines
@@ -173,6 +174,9 @@ initializeArgHandler(void)
 
     cmd_AddParm(cptr, "-audit-interface", CMD_SINGLE, CMD_OPTIONAL,
 		"audit interface (file or sysvmq)");
+
+    cmd_AddParm(cptr, "-transarc-logs", CMD_FLAG, CMD_OPTIONAL,
+		"enable Transarc style logging");
 }
 
 int
@@ -249,6 +253,11 @@ argHandler(struct cmd_syndesc *as, void *arock)
 	    printf("Invalid audit interface '%s'\n", interface);
 	    BUDB_EXIT(-1);
 	}
+    }
+    /* -transarc-logs */
+    if (as->parms[11].items != 0) {
+	logopts.lopt_rotateOnOpen = 1;
+	logopts.lopt_rotateStyle = logRotate_old;
     }
 
     /* -auditlog */
@@ -371,7 +380,6 @@ main(int argc, char **argv)
     afs_int32 numClasses;
 
     extern int rx_stackSize;
-    struct logOptions logopts;
 
 #ifdef AFS_NT40_ENV
     /* initialize winsock */
@@ -404,8 +412,6 @@ main(int argc, char **argv)
     memset(&logopts, 0, sizeof(logopts));
     logopts.lopt_dest = logDest_file;
     logopts.lopt_filename = AFSDIR_SERVER_BUDBLOG_FILEPATH;
-    logopts.lopt_rotateOnOpen = 1;
-    logopts.lopt_rotateStyle = logRotate_old;
 
     osi_audit_init();
     osi_audit(BUDB_StartEvent, 0, AUD_END);

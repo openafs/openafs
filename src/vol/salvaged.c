@@ -183,7 +183,8 @@ enum optionsList {
     OPT_syslog,
     OPT_syslogfacility,
     OPT_logfile,
-    OPT_client
+    OPT_client,
+    OPT_transarc_logs
 };
 
 static int
@@ -263,7 +264,10 @@ handleit(struct cmd_syndesc *opts, void *arock)
 	    fprintf(stderr, "Invalid options: -syslog and -logfile are exclusive.\n");
 	    return -1;
 	}
-
+	if (cmd_OptionPresent(opts, OPT_transarc_logs)) {
+	    fprintf(stderr, "Invalid options: -syslog and -transarc-logs are exclusive.\n");
+	    return -1;
+	}
 	logopts.lopt_dest = logDest_syslog;
 	logopts.lopt_facility = LOG_DAEMON;
 	logopts.lopt_tag = "salvageserver";
@@ -272,9 +276,10 @@ handleit(struct cmd_syndesc *opts, void *arock)
 #endif
     {
 	logopts.lopt_dest = logDest_file;
-	logopts.lopt_rotateOnOpen = 1;
-	logopts.lopt_rotateStyle = logRotate_old;
-
+	if (cmd_OptionPresent(opts, OPT_transarc_logs)) {
+	    logopts.lopt_rotateOnOpen = 1;
+	    logopts.lopt_rotateStyle = logRotate_old;
+	}
 	if (cmd_OptionPresent(opts, OPT_logfile))
 	    cmd_OptionAsString(opts, OPT_logfile, (char**)&logopts.lopt_filename);
 	else
@@ -426,6 +431,9 @@ main(int argc, char **argv)
 
     cmd_AddParmAtOffset(ts, OPT_logfile, "-logfile", CMD_SINGLE, CMD_OPTIONAL,
 	    "Location of log file ");
+
+    cmd_AddParmAtOffset(ts, OPT_transarc_logs, "-transarc-logs", CMD_FLAG,
+			CMD_OPTIONAL, "enable Transarc style logging");
 
     err = cmd_Dispatch(argc, argv);
     Exit(err);

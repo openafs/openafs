@@ -233,7 +233,8 @@ enum optionsList {
     OPT_process,
     OPT_rxbind,
     OPT_rxmaxmtu,
-    OPT_dotted
+    OPT_dotted,
+    OPT_transarc_logs
 };
 
 int
@@ -344,6 +345,8 @@ main(int argc, char **argv)
     cmd_AddParmAtOffset(opts, OPT_syslog, "-syslog", CMD_SINGLE_OR_FLAG, 
 		        CMD_OPTIONAL, "log to syslog");
 #endif
+    cmd_AddParmAtOffset(opts, OPT_transarc_logs, "-transarc-logs", CMD_FLAG,
+			CMD_OPTIONAL, "enable Transarc style logging");
 
     /* rx options */
     cmd_AddParmAtOffset(opts, OPT_peer, "-enable_peer_stats", CMD_FLAG,
@@ -419,6 +422,10 @@ main(int argc, char **argv)
 	    fprintf(stderr, "Invalid options: -syslog and -logfile are exclusive.");
 	    PT_EXIT(1);
 	}
+	if (cmd_OptionPresent(opts, OPT_transarc_logs)) {
+	    fprintf(stderr, "Invalid options: -syslog and -transarc-logs are exclusive.");
+	    PT_EXIT(1);
+	}
 	logopts.lopt_dest = logDest_syslog;
 	logopts.lopt_facility = LOG_DAEMON;
 	logopts.lopt_tag = "ptserver";
@@ -427,9 +434,10 @@ main(int argc, char **argv)
 #endif
     {
 	logopts.lopt_dest = logDest_file;
-	logopts.lopt_rotateOnOpen = 1;
-	logopts.lopt_rotateStyle = logRotate_old;
-
+	if (cmd_OptionPresent(opts, OPT_transarc_logs)) {
+	    logopts.lopt_rotateOnOpen = 1;
+	    logopts.lopt_rotateStyle = logRotate_old;
+	}
 	if (cmd_OptionPresent(opts, OPT_logfile))
 	    cmd_OptionAsString(opts, OPT_logfile, (char**)&logopts.lopt_filename);
 	else

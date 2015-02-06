@@ -265,6 +265,12 @@ default LOG_USER.
 
 Use MR-AFS (Multi-Resident) style logging.  This option is deprecated.
 
+=item B<-transarc-logs>
+
+Use Transarc style logging features. Rename the existing log file
+F</usr/afs/logs/FileLog> to F</usr/afs/logs/FileLog.old> when the fileserver is
+restarted.  This option is provided for compatibility with older versions.
+
 =item B<-saneacls>
 
 Offer the SANEACLS capability for the fileserver.  This option is

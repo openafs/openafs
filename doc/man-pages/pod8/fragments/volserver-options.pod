@@ -14,6 +14,12 @@ successfully initiate a B<vos> command. The Volume Server also records any
 file removals that result from issuing the B<vos release> command with the
 B<-f> flag.
 
+=item B<-transarc-logs>
+
+Use Transarc style logging features. Rename the log file
+F</usr/afs/logs/VolserLog> to F</usr/afs/logs/VolserLog.old> when the volume server is
+restarted.  This option is provided for compatibility with older versions.
+
 =item B<-p> <I<number of processes>>
 
 Sets the number of server lightweight processes (LWPs) to run.  Provide an

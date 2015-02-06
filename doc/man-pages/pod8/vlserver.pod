@@ -16,6 +16,7 @@ vlserver [B<-noauth>] [B<-smallmem>]
     [B<-allow-dotted-principals>]
     S<<< [B<-database> | B<-db> <I<database path>>] >>>
     S<<< [B<-logfile> <I<log file>>] >>>
+    [B<-transarc-logs>]
     S<<< [B<-config> <I<configuration path>>] >>>
     S<<< [B<-syslog>[=<I<facility>>]>] >>>
     [B<-enable_peer_stats>] [B<-enable_process_stats>]
@@ -176,6 +177,12 @@ no other logging options are supplied, this will be F</usr/afs/logs/VLLog>.
 Note that this option is intended for debugging and testing purposes.
 Changing the location of the log file from the command line may result
 in undesirable interactions with tools such as B<bos>.
+
+=item B<-transarc-logs>
+
+Use Transarc style logging features. Rename the log file
+F</usr/afs/logs/VLLog> to F</usr/afs/logs/VLLog.old> when the VL Server is
+restarted.  This option is provided for compatibility with older versions.
 
 =item B<-database> | B<-db> <I<database path>>
 

@@ -18,6 +18,7 @@ ptserver S<<< [B<-database> | B<-db> <I<db path>>] >>>
     S<<< [B<-audit-interface> (file | sysvmq)] >>>
     S<<< [B<-syslog>[=<I<FACILITY>>]] >>>
     S<<< [B<-logfile> <I<log file>>] >>>
+    [B<-transarc-logs>]
     S<<< [B<-config> <I<configuration path>>] >>>
     S<<< [B<-rxmaxmtu> <I<bytes>>] >>>
     [B<-help>]
@@ -162,6 +163,12 @@ no other logging options are supplied, this will be F</usr/afs/logs/PTLog>.
 Note that this option is intended for debugging and testing purposes.
 Changing the location of the log file from the command line may result
 in undesirable interactions with tools such as B<bos>.
+
+=item B<-transarc-logs>
+
+Use Transarc style logging features. Rename the log file
+F</usr/afs/logs/PtLog> to F</usr/afs/logs/PtLog.old> when the PT Server is
+restarted.  This option is provided for compatibility with older versions.
 
 =item B<-config> <I<configuration directory>>
 

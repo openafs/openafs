@@ -927,7 +927,8 @@ enum optionsList {
     OPT_udpsize,
     OPT_dotted,
     OPT_realm,
-    OPT_sync
+    OPT_sync,
+    OPT_transarc_logs
 };
 
 static int
@@ -1065,6 +1066,8 @@ ParseArgs(int argc, char *argv[])
 			"debug level");
     cmd_AddParmAtOffset(opts, OPT_mrafslogs, "-mrafslogs", CMD_FLAG,
 			CMD_OPTIONAL, "enable MRAFS style logging");
+    cmd_AddParmAtOffset(opts, OPT_transarc_logs, "-transarc-logs", CMD_FLAG,
+			CMD_OPTIONAL, "enable Transarc style logging");
     cmd_AddParmAtOffset(opts, OPT_threads, "-p", CMD_SINGLE, CMD_OPTIONAL,
 		        "number of threads");
 #ifdef HAVE_SYSLOG
@@ -1317,6 +1320,10 @@ ParseArgs(int argc, char *argv[])
 	    fprintf(stderr, "Invalid options: -syslog and -logfile are exclusive.\n");
 	    return -1;
 	}
+	if (cmd_OptionPresent(opts, OPT_transarc_logs)) {
+	    fprintf(stderr, "Invalid options: -syslog and -transarc-logs are exclusive.\n");
+	    return -1;
+	}
 	if (cmd_OptionPresent(opts, OPT_mrafslogs)) {
 	    fprintf(stderr, "Invalid options: -syslog and -mrafslogs are exclusive.\n");
 	    return -1;
@@ -1330,18 +1337,26 @@ ParseArgs(int argc, char *argv[])
 #endif
     {
 	logopts.lopt_dest = logDest_file;
-	logopts.lopt_rotateOnOpen = 1;
-	logopts.lopt_rotateStyle = logRotate_old;
+
+	if (cmd_OptionPresent(opts, OPT_transarc_logs)) {
+	    if (cmd_OptionPresent(opts, OPT_mrafslogs)) {
+		fprintf(stderr,
+			"Invalid options: -transarc-logs and -mrafslogs are exclusive.\n");
+		return -1;
+	    }
+	    logopts.lopt_rotateOnOpen = 1;
+	    logopts.lopt_rotateStyle = logRotate_old;
+	} else if (cmd_OptionPresent(opts, OPT_mrafslogs)) {
+	    logopts.lopt_rotateOnOpen = 1;
+	    logopts.lopt_rotateOnReset = 1;
+	    logopts.lopt_rotateStyle = logRotate_timestamp;
+	}
 
 	if (cmd_OptionPresent(opts, OPT_logfile))
 	    cmd_OptionAsString(opts, OPT_logfile, (char**)&logopts.lopt_filename);
 	else
 	    logopts.lopt_filename = AFSDIR_SERVER_FILELOG_FILEPATH;
 
-	if (cmd_OptionPresent(opts, OPT_mrafslogs)) {
-	    logopts.lopt_rotateOnReset = 1;
-	    logopts.lopt_rotateStyle = logRotate_timestamp;
-	}
     }
     cmd_OptionAsInt(opts, OPT_debug, &logopts.lopt_logLevel);
 

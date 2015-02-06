@@ -37,6 +37,7 @@ B<fileserver>
     S<<< [B<-enable_process_stats>] >>>
     S<<< [B<-syslog> [<I< loglevel >>]] >>>
     S<<< [B<-mrafslogs>] >>>
+    S<<< [B<-transarc-logs>] >>>
     S<<< [B<-saneacls>] >>>
     S<<< [B<-help>] >>>
     S<<< [B<-vhandle-setaside> <I<fds reserved for non-cache io>>] >>>
