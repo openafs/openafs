@@ -443,6 +443,29 @@ ResetDebug_Signal(int signo)
     }
 }				/*ResetDebug_Signal */
 
+/*!
+ * Handle requests to reopen the log.
+ *
+ * This signal handler will reopen the log file. A new, empty log file
+ * will be created if the log file does not already exist.
+ *
+ * External log rotation programs may rotate a server log file by
+ * renaming the existing server log file and then immediately sending a
+ * signal to the corresponding server process.  Server log messages will
+ * continue to be appended to the renamed server log file until the
+ * server log is reopened.  After this signal handler completes, server
+ * log messages will be written to the new log file.  This allows
+ * external log rotation programs to rotate log files without
+ * messages being dropped.
+ */
+void
+ReOpenLog_Signal(int signo)
+{
+    ReOpenLog();
+    if (resetSignals) {
+	(void)signal(signo, ReOpenLog_Signal);
+    }
+}
 
 #ifdef AFS_PTHREAD_ENV
 /*!
@@ -455,6 +478,7 @@ SetupLogSoftSignals(void)
 {
     opr_softsig_Register(SIGHUP, ResetDebug_Signal);
     opr_softsig_Register(SIGTSTP, SetDebug_Signal);
+    opr_softsig_Register(SIGUSR1, ReOpenLog_Signal);
 #ifndef AFS_NT40_ENV
     (void)signal(SIGPIPE, SIG_IGN);
 #endif
@@ -474,8 +498,8 @@ SetupLogSignals(void)
 {
     resetSignals = 1;
     (void)signal(SIGHUP, ResetDebug_Signal);
-    /* Note that we cannot use SIGUSR1 -- Linux stole it for pthreads! */
     (void)signal(SIGTSTP, SetDebug_Signal);
+    (void)signal(SIGUSR1, ReOpenLog_Signal);
 #ifndef AFS_NT40_ENV
     (void)signal(SIGPIPE, SIG_IGN);
 #endif
