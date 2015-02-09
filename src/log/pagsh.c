@@ -32,7 +32,7 @@ int
 main(int argc, char *argv[])
 {
     struct passwd *pwe;
-    int uid, gid;
+    int uid;
     char *shell = "/bin/sh";
 
 #ifdef	AFS_AIX32_ENV
@@ -49,7 +49,6 @@ main(int argc, char *argv[])
     nsa.sa_flags = SA_FULLDUMP;
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
-    gid = getgid();
     uid = getuid();
     pwe = getpwuid(uid);
     if (pwe == 0) {
@@ -63,8 +62,6 @@ main(int argc, char *argv[])
 #ifdef AFS_KERBEROS_ENV
     ktc_newpag();
 #endif
-    (void)setuid(uid);
-    (void)setgid(gid);
     argv[0] = shell;
     execvp(shell, argv);
     perror(shell);
