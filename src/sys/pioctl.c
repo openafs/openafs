@@ -68,15 +68,23 @@ lpioctl(char *path, int cmd, void *cmarg, int follow)
      * exists (yet). */
     void (*old)(int) = signal(SIGSYS, SIG_IGN);
 
-#if defined(AFS_DARWIN80_ENV)
-    errcode = ioctl_afs_syscall(AFSCALL_PIOCTL, (long)path, cmd, (long)cmarg,
+# if defined(AFS_DARWIN80_ENV) || defined(AFS_SUN511_ENV)
+    {
+	int rval;	/* rval and errcode are distinct for pioctl platforms */
+#  if defined(AFS_DARWIN80_ENV)
+	rval = ioctl_afs_syscall(AFSCALL_PIOCTL, (long)path, cmd, (long)cmarg,
 				follow, 0, 0, &errcode);
-#elif defined(AFS_SUN511_ENV)
-    errcode = ioctl_sun_afs_syscall(AFSCALL_PIOCTL, (uintptr_t)path, cmd,
+#  elif defined(AFS_SUN511_ENV)
+	rval = ioctl_sun_afs_syscall(AFSCALL_PIOCTL, (uintptr_t)path, cmd,
 				    (uintptr_t)cmarg, follow, 0, 0, &errcode);
-#else
+#  endif  /* !AFS_DARWIN80_ENV */
+	/* non-zero rval takes precedence over errcode */
+	if (rval)
+	    errcode = rval;
+    }
+# else   /* ! AFS_DARWIN80_ENV || AFS_SUN511_ENV */
     errcode = syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, cmd, cmarg, follow);
-#endif
+# endif
 
     signal(SIGSYS, old);
 
