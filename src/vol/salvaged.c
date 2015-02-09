@@ -421,6 +421,9 @@ SalvageClient(VolumeId vid, char * pname)
     SALVSYNC_response_hdr sres;
     VolumePackageOptions opts;
 
+    /* Send Log() messages to stderr in client mode. */
+    logFile = stderr;
+
     VOptDefaults(volumeUtility, &opts);
     if (VInitVolumePackage2(volumeUtility, &opts)) {
 	/* VInitVolumePackage2 can fail on e.g. partition attachment errors,
