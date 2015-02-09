@@ -34,6 +34,8 @@
 #include <afs/afsutil.h>
 #include <ubik.h>
 
+#include <ctype.h>
+
 #include "uss_vol.h"		/*Interface to this module */
 #include "uss_common.h"		/*Common definitions */
 #include "uss_procs.h"		/*Defs from procs module */
@@ -584,7 +586,7 @@ uss_vol_CreateVol(char *a_volname, char *a_server, char *a_partition,
     char *Oldmpoint = NULL;	/*Old mountpoint name, if any */
     char tmp_str[uss_MAX_SIZE];	/*Useful string buffer */
     int o;			/*Owner's user id */
-    char userinput[64];		/*User's input */
+    int checkch, ch;		/*Read user's confirmation input */
     struct uss_subdir *new_dir;	/*Used to remember original ACL */
 
     /*
@@ -698,8 +700,12 @@ uss_vol_CreateVol(char *a_volname, char *a_server, char *a_partition,
 		    printf
 			("Overwrite files in pre-existing '%s' volume? [y, n]: ",
 			 a_volname);
-		    scanf("%s", userinput);
-		    if ((userinput[0] == 'y') || (userinput[0] == 'Y')) {
+		    checkch = ch = ' ';
+		    while (isspace(ch))
+			checkch = ch = getchar();
+		    while (ch != '\n' && ch != EOF)
+			ch = getchar();
+		    if (checkch == 'y' || checkch == 'Y') {
 			printf("\t[Overwriting allowed]\n");
 			uss_OverwriteThisOne = 1;
 		    } else
