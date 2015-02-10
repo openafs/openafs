@@ -482,7 +482,8 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
                 if (code) {
                     osi_Log2(afsd_logp, "RDR_PopulateCurrentEntry RDR_BulkStatLookup failed for scp=0x%p code=0x%x",
                              scp, code);
-                    return code;
+		    if (code != CM_ERROR_NOACCESS)
+			return code;
                 }
                 lock_ObtainWrite(&scp->rw);
                 /*
