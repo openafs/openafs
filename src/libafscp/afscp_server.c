@@ -474,7 +474,7 @@ afscp_ServerByIndex(int i)
 struct rx_connection *
 afscp_ServerConnection(const struct afscp_server *srv, int i)
 {
-    if (srv == NULL || srv->conns == NULL)
+    if (srv == NULL)
 	return NULL;
     if (i >= srv->naddrs || i < 0)
 	return NULL;
