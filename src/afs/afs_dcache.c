@@ -2921,14 +2921,12 @@ afs_UFSGetDSlot(afs_int32 aslot, dslot_state type)
 	tdc->f.states &= ~(DRO|DBackup|DRW);
 	afs_DCMoveBucket(tdc, 0, 0);
     } else {
-	if (&tdc->f != 0) {
-	    if (tdc->f.states & DRO) {
-		afs_DCMoveBucket(tdc, 0, 2);
-	    } else if (tdc->f.states & DBackup) {
-		afs_DCMoveBucket(tdc, 0, 1);
-	    } else {
-		afs_DCMoveBucket(tdc, 0, 1);
-	    }
+	if (tdc->f.states & DRO) {
+	    afs_DCMoveBucket(tdc, 0, 2);
+	} else if (tdc->f.states & DBackup) {
+	    afs_DCMoveBucket(tdc, 0, 1);
+	} else {
+	    afs_DCMoveBucket(tdc, 0, 1);
 	}
     }
     tdc->refCount = 1;
