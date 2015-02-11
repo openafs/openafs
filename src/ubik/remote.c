@@ -679,6 +679,18 @@ SDISK_UpdateInterfaceAddr(struct rx_call *rxcall,
 	ubik_print("... %s\n", afs_inet_ntoa_r(ts->addr[i], hoststr));
 
     UBIK_ADDR_UNLOCK;
+
+    /*
+     * The most likely cause of a DISK_UpdateInterfaceAddr RPC
+     * is because the server was restarted.  Reset its state
+     * so that no DISK_Begin RPCs will be issued until the
+     * known database version is current.
+     */
+    UBIK_BEACON_LOCK;
+    ts->beaconSinceDown = 0;
+    ts->currentDB = 0;
+    urecovery_LostServer(ts);
+    UBIK_BEACON_UNLOCK;
     return 0;
 }
 
