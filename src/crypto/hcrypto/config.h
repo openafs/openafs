@@ -22,6 +22,8 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef OAFS_HCRYPTO_CONFIG_H
+#define OAFS_HCRYPTO_CONFIG_H
 #include <afsconfig.h>
 #include <afs/param.h>
 
@@ -41,3 +43,11 @@
 # define inline __inline __attribute__((always_inline))
 #endif
 
+#define Camellia_DecryptBlock _oafs_h_Camellia_DecryptBlock
+#define Camellia_Ekeygen _oafs_h_Camellia_Ekeygen
+#define Camellia_EncryptBlock _oafs_h_Camellia_EncryptBlock
+#define ENGINE_get_RAND _oafs_h_ENGINE_get_RAND
+#define ENGINE_up_ref _oafs_h_ENGINE_up_ref
+#define ENGINE_finish _oafs_h_ENGINE_finish
+
+#endif /* OAFS_HCRYPTO_CONFIG_H */
