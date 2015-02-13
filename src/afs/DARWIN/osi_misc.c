@@ -67,7 +67,7 @@ loop:
 	    if (afs_IsDynrootFid(&tvc->f.fid))
 		continue;
 	    /* no fake fsevents on mount point sources. leaks refs */
-	    if (tvc->mvstat == 1)
+	    if (tvc->mvstat == AFS_MVSTAT_MTPT)
 		continue;
 	    /* if it's being reclaimed, just pass */
 	    if (vnode_get(vp))

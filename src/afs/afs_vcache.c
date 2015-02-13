@@ -708,9 +708,9 @@ afs_PostPopulateVCache(struct vcache *avc, struct VenusFid *afid, int seq)
     /*
      * The proper value for mvstat (for root fids) is setup by the caller.
      */
-    avc->mvstat = 0;
+    avc->mvstat = AFS_MVSTAT_FILE;
     if (afid->Fid.Vnode == 1 && afid->Fid.Unique == 1)
-	avc->mvstat = 2;
+	avc->mvstat = AFS_MVSTAT_ROOT;
 
     if (afs_globalVFS == 0)
 	osi_Panic("afs globalvfs");
@@ -1294,7 +1294,7 @@ afs_SimpleVStat(struct vcache *avc,
     } else if (vType(avc) == VLNK) {
 	avc->f.m.Mode |= S_IFLNK;
 	if ((avc->f.m.Mode & 0111) == 0)
-	    avc->mvstat = 1;
+	    avc->mvstat = AFS_MVSTAT_MTPT;
     }
     if (avc->f.states & CForeign) {
 	struct axscache *ac;
@@ -1446,7 +1446,7 @@ afs_WriteVCacheDiscon(struct vcache *avc,
 		} else if (vType(avc) == VLNK) {
 			avc->f.m.Mode |= S_IFLNK;
 			if ((avc->f.m.Mode & 0111) == 0)
-				avc->mvstat = 1;
+				avc->mvstat = AFS_MVSTAT_MTPT;
 		}
 #endif
 		flags |= VDisconSetMode;
@@ -1536,7 +1536,7 @@ afs_ProcessFS(struct vcache *avc,
 	    avc->f.m.Mode |= S_IFLNK;
 	}
 	if ((avc->f.m.Mode & 0111) == 0) {
-	    avc->mvstat = 1;
+	    avc->mvstat = AFS_MVSTAT_MTPT;
 	}
     }
     avc->f.anyAccess = astat->AnonymousAccess;
@@ -1813,7 +1813,7 @@ afs_GetVCache(struct VenusFid *afid, struct vrequest *areq,
 		tvc->f.states |= CForeign;
 	    if (newvcache && (tvp->rootVnode == afid->Fid.Vnode)
 		&& (tvp->rootUnique == afid->Fid.Unique)) {
-		tvc->mvstat = 2;
+		tvc->mvstat = AFS_MVSTAT_ROOT;
 	    }
 	}
 	if (tvp->states & VRO)
@@ -1821,7 +1821,7 @@ afs_GetVCache(struct VenusFid *afid, struct vrequest *areq,
 	if (tvp->states & VBackup)
 	    tvc->f.states |= CBackup;
 	/* now copy ".." entry back out of volume structure, if necessary */
-	if (tvc->mvstat == 2 && tvp->dotdot.Fid.Volume != 0) {
+	if (tvc->mvstat == AFS_MVSTAT_ROOT && tvp->dotdot.Fid.Volume != 0) {
 	    if (!tvc->mvid)
 		tvc->mvid = (struct VenusFid *)
 		    osi_AllocSmallSpace(sizeof(struct VenusFid));
@@ -2001,14 +2001,14 @@ afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
 		tvc->f.states |= CForeign;
 	    if (newvcache && (tvp->rootVnode == afid->Fid.Vnode)
 		&& (tvp->rootUnique == afid->Fid.Unique))
-		tvc->mvstat = 2;
+		tvc->mvstat = AFS_MVSTAT_ROOT;
 	}
 	if (tvp->states & VRO)
 	    tvc->f.states |= CRO;
 	if (tvp->states & VBackup)
 	    tvc->f.states |= CBackup;
 	/* now copy ".." entry back out of volume structure, if necessary */
-	if (tvc->mvstat == 2 && tvp->dotdot.Fid.Volume != 0) {
+	if (tvc->mvstat == AFS_MVSTAT_ROOT && tvp->dotdot.Fid.Volume != 0) {
 	    if (!tvc->mvid)
 		tvc->mvid = (struct VenusFid *)
 		    osi_AllocSmallSpace(sizeof(struct VenusFid));
@@ -2231,9 +2231,9 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
     /* now copy ".." entry back out of volume structure, if necessary */
     if (newvcache && (tvolp->rootVnode == afid->Fid.Vnode)
 	&& (tvolp->rootUnique == afid->Fid.Unique)) {
-	tvc->mvstat = 2;
+	tvc->mvstat = AFS_MVSTAT_ROOT;
     }
-    if (tvc->mvstat == 2 && tvolp->dotdot.Fid.Volume != 0) {
+    if (tvc->mvstat == AFS_MVSTAT_ROOT && tvolp->dotdot.Fid.Volume != 0) {
 	if (!tvc->mvid)
 	    tvc->mvid = (struct VenusFid *)
 		osi_AllocSmallSpace(sizeof(struct VenusFid));
@@ -2543,7 +2543,7 @@ afs_StuffVcache(struct VenusFid *afid,
 	 * Now, copy ".." entry back out of volume structure, if
 	 * necessary
 	 */
-	if (tvc->mvstat == 2 && tvp->dotdot.Fid.Volume != 0) {
+	if (tvc->mvstat == AFS_MVSTAT_ROOT && tvp->dotdot.Fid.Volume != 0) {
 	    if (!tvc->mvid)
 		tvc->mvid = (struct VenusFid *)
 		    osi_AllocSmallSpace(sizeof(struct VenusFid));

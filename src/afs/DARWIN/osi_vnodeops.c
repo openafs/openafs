@@ -294,7 +294,7 @@ afs_vop_lookup(ap)
      */
     if (ap->a_context == afs_osi_ctxtp)
 	return ENOENT;
-    if (vcp->mvstat != 1) {
+    if (vcp->mvstat != AFS_MVSTAT_MTPT) {
 	error = cache_lookup(ap->a_dvp, ap->a_vpp, ap->a_cnp);
 	if (error == -1) 
 	    return 0;
@@ -579,7 +579,7 @@ afs_vop_access(ap)
         code = afs_CheckCode(code, &treq, 56);
         goto out;
     }
-    if (afs_fakestat_enable && tvc->mvstat && !(tvc->f.states & CStatd)) {
+    if (afs_fakestat_enable && tvc->mvstat != AFS_MVSTAT_FILE && !(tvc->f.states & CStatd)) {
         code = 0;
         goto out;
     }
@@ -700,7 +700,7 @@ afs_vop_getattr(ap)
 	if (!isglock)
 	  AFS_GLOCK();
 	/* do minimal work to return fake result for fsevents */
-	if (afs_fakestat_enable && VTOAFS(ap->a_vp)->mvstat == 1) {
+	if (afs_fakestat_enable && VTOAFS(ap->a_vp)->mvstat == AFS_MVSTAT_MTPT) {
 	    struct afs_fakestat_state fakestat;
 	    struct vrequest treq;
 
@@ -1490,7 +1490,7 @@ afs_vop_rename(ap)
 	tvc = VTOAFS(tdvp);
 
         /* unrewritten mount point? */
-        if (tvc->mvstat == 1) {
+        if (tvc->mvstat == AFS_MVSTAT_MTPT) {
             if (tvc->mvid && (tvc->f.states & CMValid)) {
                 struct vrequest treq;
 

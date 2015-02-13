@@ -53,7 +53,7 @@ afs_CopyOutAttrs(struct vcache *avc, struct vattr *attrs)
     int fakedir = 0;
 
     AFS_STATCNT(afs_CopyOutAttrs);
-    if (afs_fakestat_enable && avc->mvstat == 1)
+    if (afs_fakestat_enable && avc->mvstat == AFS_MVSTAT_MTPT)
 	fakedir = 1;
     attrs->va_type = fakedir ? VDIR : vType(avc);
 #if defined(AFS_SGI_ENV) || defined(AFS_AIX32_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DARWIN_ENV)
@@ -101,7 +101,7 @@ afs_CopyOutAttrs(struct vcache *avc, struct vattr *attrs)
 #else /* ! AFS_DARWIN_ENV */
     attrs->va_fsid = 1;
 #endif 
-    if (avc->mvstat == 2) {
+    if (avc->mvstat == AFS_MVSTAT_ROOT) {
 	tvp = afs_GetVolume(&avc->f.fid, 0, READ_LOCK);
 	/* The mount point's vnode. */
 	if (tvp) {
@@ -205,7 +205,7 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, afs_ucred_t *acred)
     afs_Trace2(afs_iclSetp, CM_TRACE_GETATTR, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->f.m.Length));
 
-    if (afs_fakestat_enable && avc->mvstat == 1) {
+    if (afs_fakestat_enable && avc->mvstat == AFS_MVSTAT_MTPT) {
 	struct afs_fakestat_state fakestat;
 	struct vrequest *ureq = NULL;
 

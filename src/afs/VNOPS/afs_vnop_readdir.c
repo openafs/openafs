@@ -249,7 +249,7 @@ afs_readdir_type(struct vcache *avc, struct DirEntry *ade)
     ObtainReadLock(&afs_xvcache);
     if ((tvc = afs_FindVCache(&tfid, 0, 0))) {
         ReleaseReadLock(&afs_xvcache);
-	if (tvc->mvstat) {
+	if (tvc->mvstat != AFS_MVSTAT_FILE) {
 	    afs_PutVCache(tvc);
 	    return DT_DIR;
 	} else if (((tvc->f.states) & (CStatd | CTruth))) {
@@ -262,7 +262,7 @@ afs_readdir_type(struct vcache *avc, struct DirEntry *ade)
 	    else if (vtype == VREG)
 		return DT_REG;
 	    /* Don't do this until we're sure it can't be a mtpt */
-	    /* if we're CStatd and CTruth and mvstat==0, it's a link */
+	    /* if we're CStatd and CTruth and mvstat==AFS_MVSTAT_FILE, it's a link */
 	    else if (vtype == VLNK)
 		return DT_LNK;
 	    /* what other types does AFS support? */
@@ -319,7 +319,7 @@ afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio,
 	if (!FidCmp(&afs_rootFid, &vc->f.fid)) {
 	    Volume = 0;
 	    Vnode  = 2;
-	} else if (vc->mvstat == 2) {
+	} else if (vc->mvstat == AFS_MVSTAT_ROOT) {
 	    tvp = afs_GetVolume(&vc->f.fid, 0, READ_LOCK);
 	    if (tvp) {
 		Volume = tvp->mtpoint.Fid.Volume;
@@ -337,7 +337,7 @@ afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio,
 	    /* We are the root of the AFS root, and thus our own parent */
 	    Volume = 0;
 	    Vnode  = 2;
-	} else if (vc->mvstat == 2) {
+	} else if (vc->mvstat == AFS_MVSTAT_ROOT) {
 	    /* We are a volume root, which means our parent is in another
 	     * volume.  Luckily, we should have his fid cached... */
 	    if (vc->mvid) {

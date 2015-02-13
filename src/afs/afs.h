@@ -803,6 +803,11 @@ struct fvcache {
     struct afs_vnuniq oldParent;
 };
 
+/* Values for 'mvstat' in struct vcache */
+#define AFS_MVSTAT_FILE (0x0) /* regular file or directory */
+#define AFS_MVSTAT_MTPT (0x1) /* mountpoint */
+#define AFS_MVSTAT_ROOT (0x2) /* volume root dir */
+
 #ifdef AFS_SUN5_ENV
 /*
  * This is for the multiPage field in struct vcache. Each one of these
@@ -894,7 +899,7 @@ struct vcache {
     short execsOrWriters;	/* The number of execs (if < 0) or writers (if > 0) of
 				 * this file. */
     short flockCount;		/* count of flock readers, or -1 if writer */
-    char mvstat;		/* 0->normal, 1->mt pt, 2->root. */
+    char mvstat;		/* see the AFS_MVSTAT_* constants */
 
     char cachingStates;			/* Caching policies for this file */
     afs_uint32 cachingTransitions;		/* # of times file has flopped between caching and not */

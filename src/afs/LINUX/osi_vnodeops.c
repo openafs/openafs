@@ -425,7 +425,7 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 	    if ((avc->f.states & CForeign) == 0 && (ntohl(de->fid.vnode) & 1)) {
 		type = DT_DIR;
 	    } else if ((tvc = afs_FindVCache(&afid, 0, 0))) {
-		if (tvc->mvstat) {
+		if (tvc->mvstat != AFS_MVSTAT_FILE) {
 		    type = DT_DIR;
 		} else if (((tvc->f.states) & (CStatd | CTruth))) {
 		    /* CTruth will be set if the object has
@@ -959,7 +959,7 @@ afs_linux_revalidate(struct dentry *dp)
      * changes in afs_getattr that don't get replicated here!
      */
     if (vcp->f.states & CStatd &&
-        (!afs_fakestat_enable || vcp->mvstat != 1) &&
+        (!afs_fakestat_enable || vcp->mvstat != AFS_MVSTAT_MTPT) &&
 	!afs_nfsexporter &&
 	(vType(vcp) == VDIR || vType(vcp) == VLNK)) {
 	code = afs_CopyOutAttrs(vcp, vattr);
@@ -1100,7 +1100,7 @@ parent_vcache_dv(struct inode *inode, cred_t *credp)
      * us.  The fake entry is the one with the useful DataVersion.
      */
     pvcp = VTOAFS(inode);
-    if (pvcp->mvstat == 1 && afs_fakestat_enable) {
+    if (pvcp->mvstat == AFS_MVSTAT_MTPT && afs_fakestat_enable) {
 	struct vrequest treq;
 	struct afs_fakestat_state fakestate;
 
@@ -1166,15 +1166,15 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 	parent = dget_parent(dp);
 	pvcp = VTOAFS(parent->d_inode);
 
-	if ((vcp->mvstat == 1) || (vcp->mvstat == 2) ||
-		(pvcp->mvstat == 1 && afs_fakestat_enable)) {	/* need to lock */
+	if ((vcp->mvstat != AFS_MVSTAT_FILE) ||
+		(pvcp->mvstat == AFS_MVSTAT_MTPT && afs_fakestat_enable)) {	/* need to lock */
 	    credp = crref();
 	    AFS_GLOCK();
 	    locked = 1;
 	}
 
 	if (locked) {
-	    if (vcp->mvstat == 1) {         /* mount point */
+	    if (vcp->mvstat == AFS_MVSTAT_MTPT) {
 		if (vcp->mvid && (vcp->f.states & CMValid)) {
 		    int tryEvalOnly = 0;
 		    int code = 0;
@@ -1193,13 +1193,13 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 		    else
 			code = afs_EvalFakeStat(&vcp, &fakestate, treq);
 		    afs_DestroyReq(treq);
-		    if ((tryEvalOnly && vcp->mvstat == 1) || code) {
+		    if ((tryEvalOnly && vcp->mvstat == AFS_MVSTAT_MTPT) || code) {
 			/* a mount point, not yet replaced by its directory */
 			dput(parent);
 			goto bad_dentry;
 		    }
 		}
-	    } else if (vcp->mvstat == 2 && *dp->d_name.name != '/') {
+	    } else if (vcp->mvstat == AFS_MVSTAT_ROOT && *dp->d_name.name != '/') {
 		osi_Assert(vcp->mvid != NULL);
 	    }
 	}

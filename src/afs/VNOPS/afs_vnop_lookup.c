@@ -373,7 +373,7 @@ afs_EvalFakeStat_int(struct vcache **avcp, struct afs_fakestat_state *state,
     state->did_eval = 1;
 
     tvc = *avcp;
-    if (tvc->mvstat != 1)
+    if (tvc->mvstat != AFS_MVSTAT_MTPT)
 	return 0;
 
     if (canblock) {
@@ -1168,7 +1168,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	}
 
 	/* now copy ".." entry back out of volume structure, if necessary */
-	if (tvcp->mvstat == 2 && (dotdot.Fid.Volume != 0)) {
+	if (tvcp->mvstat == AFS_MVSTAT_ROOT && (dotdot.Fid.Volume != 0)) {
 	    if (!tvcp->mvid)
 		tvcp->mvid = osi_AllocSmallSpace(sizeof(struct VenusFid));
 	    *tvcp->mvid = dotdot;
@@ -1397,7 +1397,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
     if ((code = afs_CreateReq(&treq, acred)))
 	goto done;
 
-    if (afs_fakestat_enable && adp->mvstat == 1) {
+    if (afs_fakestat_enable && adp->mvstat == AFS_MVSTAT_MTPT) {
        if (strcmp(aname, ".directory") == 0)
            tryEvalOnly = 1;
     }
@@ -1406,13 +1406,13 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
     /* Workaround for MacOSX Finder, which tries to look for
      * .DS_Store and Contents under every directory.
      */
-    if (afs_fakestat_enable && adp->mvstat == 1) {
+    if (afs_fakestat_enable && adp->mvstat == AFS_MVSTAT_MTPT) {
 	if (strcmp(aname, ".DS_Store") == 0)
 	    tryEvalOnly = 1;
 	if (strcmp(aname, "Contents") == 0)
 	    tryEvalOnly = 1;
     }
-    if (afs_fakestat_enable && adp->mvstat == 2) {
+    if (afs_fakestat_enable && adp->mvstat == AFS_MVSTAT_ROOT) {
 	if (strncmp(aname, "._", 2) == 0)
 	    tryEvalOnly = 1;
     }
@@ -1425,7 +1425,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 
     /*printf("Code is %d\n", code);*/
     
-    if (tryEvalOnly && adp->mvstat == 1)
+    if (tryEvalOnly && adp->mvstat == AFS_MVSTAT_MTPT)
 	code = ENOENT;
     if (code)
 	goto done;
@@ -1444,7 +1444,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	code = 0;
 
     /* watch for ".." in a volume root */
-    if (adp->mvstat == 2 && aname[0] == '.' && aname[1] == '.' && !aname[2]) {
+    if (adp->mvstat == AFS_MVSTAT_ROOT && aname[0] == '.' && aname[1] == '.' && !aname[2]) {
 	/* looking up ".." in root via special hacks */
 	if (adp->mvid == (struct VenusFid *)0 || adp->mvid->Fid.Volume == 0) {
 	    code = ENODEV;
@@ -1592,7 +1592,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	    goto done;
 	}
 #ifdef AFS_LINUX22_ENV
-	if (tvc->mvstat == 2) {	/* we don't trust the dnlc for root vcaches */
+	if (tvc->mvstat == AFS_MVSTAT_ROOT) {	/* we don't trust the dnlc for root vcaches */
 	    AFS_RELE(AFSTOV(tvc));
 	    *avcp = 0;
 	} else {
@@ -1789,7 +1789,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	tvc->f.parent.unique = adp->f.fid.Fid.Unique;
 	tvc->f.states &= ~CBulkStat;
 
-	if (afs_fakestat_enable == 2 && tvc->mvstat == 1) {
+	if (afs_fakestat_enable == 2 && tvc->mvstat == AFS_MVSTAT_MTPT) {
 	    ObtainSharedLock(&tvc->lock, 680);
 	    if (!tvc->linkData) {
 		UpgradeSToWLock(&tvc->lock, 681);
@@ -1803,14 +1803,14 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 		force_eval = 1;
 	    ReleaseReadLock(&tvc->lock);
 	}
-	if (tvc->mvstat == 1 && (tvc->f.states & CMValid) && tvc->mvid != NULL)
+	if (tvc->mvstat == AFS_MVSTAT_MTPT && (tvc->f.states & CMValid) && tvc->mvid != NULL)
 	  force_eval = 1; /* This is now almost for free, get it correct */
 
 #if defined(UKERNEL)
 	if (!(flags & AFS_LOOKUP_NOEVAL))
 	    /* don't eval mount points */
 #endif /* UKERNEL */
-	    if (tvc->mvstat == 1 && force_eval) {
+	    if (tvc->mvstat == AFS_MVSTAT_MTPT && force_eval) {
 		/* a mt point, possibly unevaluated */
 		struct volume *tvolp;
 
@@ -1924,7 +1924,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	     * volume) rather than the vc of the mount point itself.  We can
 	     * still find the mount point's vc in the vcache by its fid. */
 #endif /* UKERNEL */
-	    if (!hit && (force_eval || tvc->mvstat != 1)) {
+	    if (!hit && (force_eval || tvc->mvstat != AFS_MVSTAT_MTPT)) {
 		osi_dnlc_enter(adp, aname, tvc, &versionNo);
 	    } else {
 #ifdef AFS_LINUX20_ENV

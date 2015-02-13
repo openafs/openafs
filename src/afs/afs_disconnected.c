@@ -1535,7 +1535,7 @@ afs_GenDisconStatus(struct vcache *adp, struct vcache *avc,
 	vSetType(avc, VLNK);
 	avc->f.m.Mode |= S_IFLNK;
 	if ((avc->f.m.Mode & 0111) == 0)
-	    avc->mvstat = 1;
+	    avc->mvstat = AFS_MVSTAT_MTPT;
 	avc->f.parent.vnode = adp->f.fid.Fid.Vnode;
 	avc->f.parent.unique = adp->f.fid.Fid.Unique;
 	break;

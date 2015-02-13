@@ -2235,7 +2235,7 @@ DECL_PIOCTL(PNewStatMount)
 	code = ENOENT;
 	goto out;
     }
-    if (tvc->mvstat != 1) {
+    if (tvc->mvstat != AFS_MVSTAT_MTPT) {
 	afs_PutVCache(tvc);
 	code = EINVAL;
 	goto out;
@@ -3299,7 +3299,7 @@ DECL_PIOCTL(PRemoveMount)
 	afs_PutDCache(tdc);
 	goto out;
     }
-    if (tvc->mvstat != 1) {
+    if (tvc->mvstat != AFS_MVSTAT_MTPT) {
 	afs_PutDCache(tdc);
 	afs_PutVCache(tvc);
 	code = EINVAL;
@@ -4849,7 +4849,7 @@ DECL_PIOCTL(PFlushMount)
 	code = ENOENT;
 	goto out;
     }
-    if (tvc->mvstat != 1) {
+    if (tvc->mvstat != AFS_MVSTAT_MTPT) {
 	afs_PutVCache(tvc);
 	code = EINVAL;
 	goto out;

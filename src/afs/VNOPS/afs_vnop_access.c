@@ -214,9 +214,9 @@ afs_access(OSI_VC_DECL(avc), afs_int32 amode,
 
     AFS_DISCON_LOCK();
 
-    if (afs_fakestat_enable && avc->mvstat == 1) {
+    if (afs_fakestat_enable && avc->mvstat == AFS_MVSTAT_MTPT) {
 	code = afs_TryEvalFakeStat(&avc, &fakestate, treq);
-        if (code == 0 && avc->mvstat == 1) {
+        if (code == 0 && avc->mvstat == AFS_MVSTAT_MTPT) {
 	    afs_PutFakeStat(&fakestate);
 	    AFS_DISCON_UNLOCK();
 	    afs_DestroyReq(treq);
