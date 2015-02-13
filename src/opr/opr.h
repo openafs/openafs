@@ -54,6 +54,13 @@ extern void opr_AssertFailU(const char *, const char *, int) AFS_NORETURN;
 # define opr_Verify(ex) __opr_Verify(ex)
 #endif
 
+/* opr_StaticAssert is a static build-time assertion, to assert certain
+ * static values (such as sizeof results). If the assertion fails, the
+ * build will fail. */
+
+#define opr_StaticAssert(ex) \
+    ((void)(sizeof(char[1 - 2 * !(ex)])))
+
 /* casestrcpy.c */
 #define lcstring opr_lcstring
 #define ucstring opr_ucstring
