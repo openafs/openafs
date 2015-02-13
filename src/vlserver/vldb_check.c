@@ -213,7 +213,7 @@ NameHash(char *volname)
 afs_int32
 IdHash(afs_uint32 volid)
 {
-    return ((abs(volid)) % HASHSIZE);
+    return (volid % HASHSIZE);
 }
 
 #define LEGALCHARS ".ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
