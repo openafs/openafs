@@ -823,7 +823,7 @@ afs_nfsrdwr(struct vcache *avc, struct uio *auio, enum uio_rw arw,
 	    afs_size_t toff, tlen;
 	    dcp = afs_GetDCache(avc, fileBase, &treq, &toff, &tlen, 2);
 	    if (!dcp) {
-		code = ENOENT;
+		code = EIO;
 		break;
 	    }
 	}

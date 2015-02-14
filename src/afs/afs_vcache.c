@@ -1228,7 +1228,7 @@ afs_VerifyVCache2(struct vcache *avc, struct vrequest *areq)
     /* fetch the status info */
     tvc = afs_GetVCache(&avc->f.fid, areq, NULL, avc);
     if (!tvc)
-	return ENOENT;
+	return EIO;
     /* Put it back; caller has already incremented vrefCount */
     afs_PutVCache(tvc);
     return 0;

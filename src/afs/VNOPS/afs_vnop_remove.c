@@ -199,7 +199,7 @@ afs_remove(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 	goto done;
     }
     if (afs_IsDynrootMount(adp)) {
-	code = ENOENT;
+	code = EROFS;
 	goto done;
     }
 

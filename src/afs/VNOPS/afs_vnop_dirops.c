@@ -197,7 +197,7 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	if (tvc) {
 	    *avcp = tvc;
 	} else {
-	    code = ENOENT;
+	    code = EIO;
 	    goto done;
 	}
 
@@ -210,7 +210,7 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	new_dc = afs_GetDCache(tvc, (afs_size_t) 0, treq, &offset, &len, 1);
 	if (!new_dc) {
 	    /* printf("afs_mkdir: can't get new dcache for dir.\n"); */
-	    code = ENOENT;
+	    code = EIO;
 	    goto done;
 	}
 
@@ -235,8 +235,12 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     	if (tvc) {
 	    code = 0;
 	    *avcp = tvc;
-    	} else
-	    code = ENOENT;
+
+	} else {
+	    /* For some reason, we cannot fetch the vcache for our
+	     * newly-created dir. */
+	    code = EIO;
+	}
     }				/* if (AFS_DISCON_RW) */
 
   done:

@@ -667,7 +667,7 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
     /* get a reference to the entire directory */
     tdc = afs_GetDCache(avc, (afs_size_t) 0, treq, &origOffset, &tlen, 1);
     if (!tdc) {
-	code = ENOENT;
+	code = EIO;
 	goto done;
     }
     ObtainReadLock(&avc->lock);

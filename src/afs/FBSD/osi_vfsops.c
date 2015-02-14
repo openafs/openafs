@@ -292,7 +292,7 @@ tryagain:
 		    }
 		}
 	    } else
-		error = ENOENT;
+		error = EIO;
 	}
     }
     if (tvp) {

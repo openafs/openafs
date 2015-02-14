@@ -2212,7 +2212,7 @@ DECL_PIOCTL(PNewStatMount)
     }
     tdc = afs_GetDCache(avc, (afs_size_t) 0, areq, &offset, &len, 1);
     if (!tdc)
-	return ENOENT;
+	return EIO;
     Check_AtSys(avc, name, &sysState, areq);
     ObtainReadLock(&tdc->lock);
     do {
@@ -2232,7 +2232,7 @@ DECL_PIOCTL(PNewStatMount)
 	tvc = afs_GetVCache(&tfid, areq, NULL, NULL);
     }
     if (!tvc) {
-	code = ENOENT;
+	code = EIO;
 	goto out;
     }
     if (tvc->mvstat != AFS_MVSTAT_MTPT) {
@@ -3275,7 +3275,7 @@ DECL_PIOCTL(PRemoveMount)
 
     tdc = afs_GetDCache(avc, (afs_size_t) 0, areq, &offset, &len, 1);	/* test for error below */
     if (!tdc)
-	return ENOENT;
+	return EIO;
     Check_AtSys(avc, name, &sysState, areq);
     ObtainReadLock(&tdc->lock);
     do {
@@ -3295,7 +3295,7 @@ DECL_PIOCTL(PRemoveMount)
 	tvc = afs_GetVCache(&tfid, areq, NULL, NULL);
     }
     if (!tvc) {
-	code = ENOENT;
+	code = EIO;
 	afs_PutDCache(tdc);
 	goto out;
     }
@@ -4826,7 +4826,7 @@ DECL_PIOCTL(PFlushMount)
     }
     tdc = afs_GetDCache(avc, (afs_size_t) 0, areq, &offset, &len, 1);
     if (!tdc)
-	return ENOENT;
+	return EIO;
     Check_AtSys(avc, mount, &sysState, areq);
     ObtainReadLock(&tdc->lock);
     do {
@@ -4846,7 +4846,7 @@ DECL_PIOCTL(PFlushMount)
 	tvc = afs_GetVCache(&tfid, areq, NULL, NULL);
     }
     if (!tvc) {
-	code = ENOENT;
+	code = EIO;
 	goto out;
     }
     if (tvc->mvstat != AFS_MVSTAT_MTPT) {

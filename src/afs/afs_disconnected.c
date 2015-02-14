@@ -264,7 +264,7 @@ afs_GetVnodeName(struct vcache *avc, struct VenusFid *afid, char *aname,
 	parent_vc = afs_FindVCache(&parent_fid, 0, 1);
 	ReleaseSharedLock(&afs_xvcache);
 	if (!parent_vc) {
-	    return ENOENT;
+	    return ENETDOWN;
 	}
 
 	shadow_fid.Cell = parent_vc->f.fid.Cell;
@@ -293,7 +293,7 @@ afs_GetVnodeName(struct vcache *avc, struct VenusFid *afid, char *aname,
 	    code = ENOENT;
     } else {
 	/* printf("Directory dcache not found!\n"); */
-        code = ENOENT;
+        code = ENETDOWN;
     }
 
     return code;
@@ -507,7 +507,7 @@ afs_GetParentVCache(struct vcache *avc, int deleted, struct VenusFid *afid,
 
     if (afs_GetParentDirFid(avc, afid)) {
 	/* printf("afs_GetParentVCache: Couldn't find parent dir's FID.\n"); */
-	return ENOENT;
+	return ENETDOWN;
     }
 
     code = afs_GetVnodeName(avc, afid, aname, deleted);
@@ -521,7 +521,7 @@ afs_GetParentVCache(struct vcache *avc, int deleted, struct VenusFid *afid,
     ReleaseSharedLock(&afs_xvcache);
     if (!*adp) {
 	/* printf("afs_GetParentVCache: Couldn't find parent dir's vcache\n"); */
-	code = ENOENT;
+	code = ENETDOWN;
 	goto end;
     }
 
@@ -593,7 +593,7 @@ afs_ProcessOpRename(struct vcache *avc, struct vrequest *areq)
 	/* Get parent dir's FID.*/
     	if (afs_GetParentDirFid(avc, &new_pdir_fid)) {
 	    /* printf("afs_ProcessOpRename: Couldn't find new parent dir FID.\n"); */
-	    code = ENOENT;
+	    code = ENETDOWN;
 	    goto done;
         }
     }
@@ -687,7 +687,7 @@ afs_ProcessOpCreate(struct vcache *avc, struct vrequest *areq,
 
 	tdc = afs_GetDCache(avc, 0, areq, &offset, &tlen, 0);
 	if (!tdc) {
-	    code = ENOENT;
+	    code = ENETDOWN;
 	    goto end;
 	}
 

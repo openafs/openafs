@@ -189,7 +189,7 @@ again:
 		}
 		afs_globalVp = tvp;
 	    } else
-		code = ENOENT;
+		code = EIO;
 	}
     }
     if (tvp) {

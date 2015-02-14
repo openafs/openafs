@@ -257,8 +257,12 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 		    }
 		}
 		*avcp = tvc;
-	    } else
-		code = ENOENT;	/* shouldn't get here */
+
+	    } else {
+		/* Directory entry already exists, but we cannot fetch the
+		 * fid it points to. */
+		code = EIO;
+	    }
 	    /* make sure vrefCount bumped only if code == 0 */
 	    goto done;
 	}
@@ -465,8 +469,11 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	    ReleaseWriteLock(&tvc->lock);
 	    *avcp = tvc;
 	    code = 0;
-	} else
-	    code = ENOENT;
+
+	} else {
+	    /* Cannot create a new vcache. */
+	    code = EIO;
+	}
     } else {
 	/* otherwise cache entry already exists, someone else must
 	 * have created it.  Comments used to say:  "don't need write

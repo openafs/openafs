@@ -567,8 +567,8 @@ afs_close(OSI_VC_DECL(avc), afs_int32 aflags, afs_ucred_t *acred)
 
 	/* VNOVNODE is "acceptable" error code from close, since
 	 * may happen when deleting a file on another machine while
-	 * it is open here. We do the same for ENOENT since in afs_CheckCode we map VNOVNODE -> ENOENT */
-	if (code == VNOVNODE || code == ENOENT)
+	 * it is open here. */
+	if (code == VNOVNODE)
 	    code = 0;
 
 	/* Ensure last closer gets the error. If another thread caused

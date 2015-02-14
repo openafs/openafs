@@ -209,7 +209,7 @@ afs_root(struct super_block *afsp)
 		    afs_DestroyAttr(vattr);
 		}
 	    } else
-		code = ENOENT;
+		code = EIO;
 	}
 	crfree(credp);
 	afs_DestroyReq(treq);

@@ -65,7 +65,6 @@ osi_lookupname_internal(char *aname, int followlink, struct vfsmount **mnt,
     afs_linux_path_t path_data;
 #endif
     int flags = LOOKUP_POSITIVE;
-    code = ENOENT;
 
     if (followlink)
        flags |= LOOKUP_FOLLOW;
@@ -113,7 +112,6 @@ osi_lookupname(char *aname, uio_seg_t seg, int followlink,
     int code;
     char *name;
 
-    code = ENOENT;
     if (seg == AFS_UIOUSER) {
 	name = afs_getname(aname);
 	if (IS_ERR(name))
@@ -136,7 +134,6 @@ int osi_abspath(char *aname, char *buf, int buflen,
     char *name, *path;
     int code;
 
-    code = ENOENT;
     name = afs_getname(aname);
     if (IS_ERR(name))
 	return -PTR_ERR(name);

@@ -279,7 +279,7 @@ afs_root(OSI_VFS_ARG(afsp), avpp)
 	    if (tvp) {
 		afs_globalVp = tvp;
 	    } else
-		code = ENOENT;
+		code = EIO;
 	}
     }
     if (tvp) {
@@ -529,7 +529,7 @@ afs_vget(OSI_VFS_DECL(afsp), vnode_t ** avcp, struct fid * fidp)
 	/* It's a checkpoint restart fid. */
 	tcell = afs_GetCellByIndex(afid2->af_cell, READ_LOCK);
 	if (!tcell) {
-	    code = ENOENT;
+	    code = EIO;
 	    goto out;
 	}
 	vfid.Cell = tcell->cellNum;
@@ -543,7 +543,7 @@ afs_vget(OSI_VFS_DECL(afsp), vnode_t ** avcp, struct fid * fidp)
 	*avcp =
 	    (vnode_t *) afs_GetVCache(&vfid, &treq, NULL, (struct vcache *)0);
 	if (!*avcp) {
-	    code = ENOENT;
+	    code = EIO;
 	}
 	goto out;
     }

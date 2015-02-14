@@ -47,7 +47,7 @@ afs_DisconCreateSymlink(struct vcache *avc, char *aname,
     tdc = afs_GetDCache(avc, 0, areq, &offset, &len, 0);
     if (!tdc) {
 	/* printf("afs_DisconCreateSymlink: can't get new dcache for symlink.\n"); */
-	return ENOENT;
+	return ENETDOWN;
     }
 
     len = strlen(aname);
@@ -398,7 +398,7 @@ afs_UFSHandleLink(struct vcache *avc, struct vrequest *areq)
 	    ReleaseReadLock(&tdc->lock);
 	    afs_PutDCache(tdc);
 	    osi_FreeLargeSpace(rbuf);
-	    return ENOENT;
+	    return EIO;
 	}
 	code = afs_osi_Read(tfile, -1, rbuf, tlen);
 	osi_UFSClose(tfile);

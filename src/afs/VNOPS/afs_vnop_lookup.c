@@ -411,7 +411,7 @@ afs_EvalFakeStat_int(struct vcache **avcp, struct afs_fakestat_state *state,
 	    root_vp = afs_GetVCache(tvc->mvid.target_root, areq, NULL, NULL);
 	}
 	if (!root_vp) {
-	    code = canblock ? ENOENT : 0;
+	    code = canblock ? EIO : 0;
 	    goto done;
 	}
 #ifdef AFS_DARWIN80_ENV
@@ -437,7 +437,7 @@ afs_EvalFakeStat_int(struct vcache **avcp, struct afs_fakestat_state *state,
 	*avcp = root_vp;
 	code = 0;
     } else {
-	code = canblock ? ENOENT : 0;
+	code = canblock ? EIO : 0;
     }
 
   done:
@@ -755,7 +755,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 
     dcp = afs_GetDCache(adp, (afs_size_t) 0, areqp, &temp, &temp, 1);
     if (!dcp) {
-	code = ENOENT;
+	code = EIO;
 	goto done2;
     }
 
@@ -1426,7 +1426,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
     /*printf("Code is %d\n", code);*/
     
     if (tryEvalOnly && adp->mvstat == AFS_MVSTAT_MTPT)
-	code = ENOENT;
+	code = ENODEV;
     if (code)
 	goto done;
 
@@ -1456,7 +1456,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	afs_Trace3(afs_iclSetp, CM_TRACE_GETVCDOTDOT, ICL_TYPE_FID, adp->mvid.parent,
 		   ICL_TYPE_POINTER, tvc, ICL_TYPE_INT32, code);
 	*avcp = tvc;
-	code = (tvc ? 0 : ENOENT);
+	code = (tvc ? 0 : EIO);
 	hit = 1;
 	if (tvc && !VREFCOUNT_GT(tvc, 0)) {
 	    osi_Panic("TT1");
@@ -1549,7 +1549,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	    tfid.Fid.Unique = volid;
 	}
 	*avcp = tvc = afs_GetVCache(&tfid, treq, NULL, NULL);
-	code = (tvc ? 0 : ENOENT);
+	code = (tvc ? 0 : EIO);
 	hit = 1;
 	goto done;
     }
@@ -1844,7 +1844,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 		    afs_PutVCache(uvc);	/* we're done with it */
 
 		    if (!tvc) {
-			code = ENOENT;
+			code = EIO;
 			if (tvolp) {
 			    afs_PutVolume(tvolp, WRITE_LOCK);
 			}
@@ -1867,7 +1867,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 		    }
 		} else {
 		    afs_PutVCache(tvc);
-		    code = ENOENT;
+		    code = ENODEV;
 		    if (tvolp)
 			afs_PutVolume(tvolp, WRITE_LOCK);
 		    goto done;
@@ -1902,7 +1902,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 		    afs_PutVolume(tv, READ_LOCK);
 	        }
 	    }
-	    code = ENOENT;
+	    code = EIO;
 	} else {
 	    code = ENETDOWN;
 	}

@@ -1152,7 +1152,7 @@ OSI_VC_DECL(avc);
 	    avc->mapcnt -= mapcnt;
 	    code = afs_StoreOnLastReference(avc, &treq);
 	    /* The following behavior mimics the behavior in afs_close. */
-	    if (code == VNOVNODE || code == ENOENT)
+	    if (code == VNOVNODE)
 		code = 0;
 	    if (code) {
 		if (mapcnt) {

@@ -281,7 +281,7 @@ again:
                     needref=1;
                 }
 	    } else
-		error = ENOENT;
+		error = EIO;
 	}
     }
     if (tvp) {

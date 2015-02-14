@@ -339,7 +339,7 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
     tdc = afs_GetDCache(avc, (afs_size_t) 0, treq, &origOffset, &tlen, 1);
     len = tlen;
     if (!tdc) {
-	code = -ENOENT;
+	code = -EIO;
 	goto out;
     }
     ObtainWriteLock(&avc->lock, 811);
@@ -403,7 +403,7 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 		UpgradeSToWLock(&avc->lock, 814);
 		avc->f.states |= CCorrupt;
 	    }
-	    code = -ENOENT;
+	    code = -EIO;
 	    goto unlock_out;
         }
 
