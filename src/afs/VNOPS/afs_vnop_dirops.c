@@ -150,7 +150,7 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     	/* Disconnected. */
 
 	/* We have the dir entry now, we can use it while disconnected. */
-	if (adp->mvid == NULL) {
+	if (adp->mvid.target_root == NULL) {
 	    /* If not mount point, generate a new fid. */
 	    newFid.Cell = adp->f.fid.Cell;
     	    newFid.Fid.Volume = adp->f.fid.Fid.Volume;

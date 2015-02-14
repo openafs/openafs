@@ -346,10 +346,10 @@ afs_remove(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 	code = afsrename(adp, aname, adp, unlname, acred, treq);
 	Tnam1 = unlname;
 	if (!code) {
-	    struct VenusFid *oldmvid = NULL;
-	    if (tvc->mvid) 
-		oldmvid = tvc->mvid;
-	    tvc->mvid = (struct VenusFid *)unlname;
+	    void *oldmvid = NULL;
+	    if (tvc->mvid.silly_name)
+		oldmvid = tvc->mvid.silly_name;
+	    tvc->mvid.silly_name = unlname;
 	    if (oldmvid)
 		osi_FreeSmallSpace(oldmvid);
 	    crhold(acred);
@@ -410,7 +410,7 @@ afs_remunlink(struct vcache *avc, int doit)
     }
 #endif
 
-    if (avc->mvid && (doit || (avc->f.states & CUnlinkedDel))) {
+    if (avc->mvid.silly_name && (doit || (avc->f.states & CUnlinkedDel))) {
 	struct vrequest *treq = NULL;
 
 	if ((code = afs_CreateReq(&treq, avc->uncred))) {
@@ -419,8 +419,8 @@ afs_remunlink(struct vcache *avc, int doit)
 	    /* Must bump the refCount because GetVCache may block.
 	     * Also clear mvid so no other thread comes here if we block.
 	     */
-	    unlname = (char *)avc->mvid;
-	    avc->mvid = NULL;
+	    unlname = avc->mvid.silly_name;
+	    avc->mvid.silly_name = NULL;
 	    cred = avc->uncred;
 	    avc->uncred = NULL;
 

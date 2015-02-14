@@ -872,8 +872,8 @@ static struct dentry *afs_export_get_parent(struct dentry *child)
     } else if (vcp->mvstat == AFS_MVSTAT_ROOT) {
 	/* volume root */
 	ObtainReadLock(&vcp->lock);
-	if (vcp->mvid && vcp->mvid->Fid.Volume) {
-	    tfid = *vcp->mvid;
+	if (vcp->mvid.parent && vcp->mvid.parent->Fid.Volume) {
+	    tfid = *vcp->mvid.parent;
 	    ReleaseReadLock(&vcp->lock);
 	} else {
 	    ReleaseReadLock(&vcp->lock);

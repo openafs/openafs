@@ -495,10 +495,10 @@ loop1:
 			uq = QPrev(tq);
 			AFS_FAST_RELE(tvc);
 		    } else if ((tvc->f.states & CMValid)
-			       && (tvc->mvid->Fid.Volume == a_fid->Volume)) {
+			       && (tvc->mvid.target_root->Fid.Volume == a_fid->Volume)) {
 			tvc->f.states &= ~CMValid;
 			if (!localFid.Cell)
-			    localFid.Cell = tvc->mvid->Cell;
+			    localFid.Cell = tvc->mvid.target_root->Cell;
 		    }
 		}
 		ReleaseReadLock(&afs_xvcache);

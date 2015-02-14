@@ -1175,7 +1175,7 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 
 	if (locked) {
 	    if (vcp->mvstat == AFS_MVSTAT_MTPT) {
-		if (vcp->mvid && (vcp->f.states & CMValid)) {
+		if (vcp->mvid.target_root && (vcp->f.states & CMValid)) {
 		    int tryEvalOnly = 0;
 		    int code = 0;
 		    struct vrequest *treq = NULL;
@@ -1200,7 +1200,7 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 		    }
 		}
 	    } else if (vcp->mvstat == AFS_MVSTAT_ROOT && *dp->d_name.name != '/') {
-		osi_Assert(vcp->mvid != NULL);
+		osi_Assert(vcp->mvid.parent != NULL);
 	    }
 	}
 
@@ -1671,7 +1671,7 @@ afs_linux_sillyrename(struct inode *dir, struct dentry *dentry,
 		      VTOAFS(dir), (char *)__dp->d_name.name,
 		      credp);
     if (!code) {
-	tvc->mvid = (void *) __name;
+	tvc->mvid.silly_name = __name;
 	crhold(credp);
 	if (tvc->uncred) {
 	    crfree(tvc->uncred);

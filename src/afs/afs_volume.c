@@ -476,14 +476,14 @@ loop:
 	for (i = 0; i < VCSIZE; i++) {
 	    for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
 
-		/* if the volume of "mvid" of the vcache entry is among the
-		 * ones we found earlier, then we re-evaluate it.  Also, if the
-		 * force bit is set or we explicitly asked to reevaluate the
-		 * mt-pts, we clean the cmvalid bit */
+		/* if the volume of "mvid.target_root" of the vcache entry is
+		 * among the ones we found earlier, then we re-evaluate it.
+		 * Also, if the force bit is set or we explicitly asked to
+		 * reevaluate the mt-pts, we clean the cmvalid bit */
 
 		if ((flags & (AFS_VOLCHECK_FORCE | AFS_VOLCHECK_MTPTS))
-		    || (tvc->mvid
-			&& inVolList(tvc->mvid, nvols, volumeID, cellID)))
+		    || (tvc->mvid.target_root
+			&& inVolList(tvc->mvid.target_root, nvols, volumeID, cellID)))
 		    tvc->f.states &= ~CMValid;
 
 		/* If the volume that this file belongs to was reset earlier,

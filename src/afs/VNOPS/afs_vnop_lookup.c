@@ -39,7 +39,7 @@ int afs_fakestat_enable = 0;	/* 1: fakestat-all, 2: fakestat-crosscell */
  * what "@sys" is in binary... */
 #define AFS_EQ_ATSYS(name) (((name)[0]=='@')&&((name)[1]=='s')&&((name)[2]=='y')&&((name)[3]=='s')&&(!(name)[4]))
 
-/* call under write lock, evaluate mvid field from a mt pt.
+/* call under write lock, evaluate mvid.target_root field from a mt pt.
  * avc is the vnode of the mount point object; must be write-locked.
  * advc is the vnode of the containing directory (optional; if NULL and
  *   EvalMountPoint succeeds, caller must initialize *avolpp->dotdot)
@@ -279,7 +279,7 @@ EvalMountPoint(struct vcache *avc, struct vcache *advc,
 
     AFS_STATCNT(EvalMountPoint);
 #ifdef notdef
-    if (avc->mvid && (avc->f.states & CMValid))
+    if (avc->mvid.target_root && (avc->f.states & CMValid))
 	return 0;		/* done while racing */
 #endif
     *avolpp = NULL;
@@ -299,12 +299,12 @@ EvalMountPoint(struct vcache *avc, struct vcache *advc,
     if (!auniq)
 	auniq = 1;
 
-    if (avc->mvid == 0)
-	avc->mvid = osi_AllocSmallSpace(sizeof(struct VenusFid));
-    avc->mvid->Cell = (*avolpp)->cell;
-    avc->mvid->Fid.Volume = (*avolpp)->volume;
-    avc->mvid->Fid.Vnode = avnoid;
-    avc->mvid->Fid.Unique = auniq;
+    if (avc->mvid.target_root == NULL)
+	avc->mvid.target_root = osi_AllocSmallSpace(sizeof(struct VenusFid));
+    avc->mvid.target_root->Cell = (*avolpp)->cell;
+    avc->mvid.target_root->Fid.Volume = (*avolpp)->volume;
+    avc->mvid.target_root->Fid.Vnode = avnoid;
+    avc->mvid.target_root->Fid.Unique = auniq;
     avc->f.states |= CMValid;
 
     /* Used to: if the mount point is stored within a backup volume,
@@ -393,14 +393,14 @@ afs_EvalFakeStat_int(struct vcache **avcp, struct afs_fakestat_state *state,
 	    tvolp->dotdot.Fid.Unique = tvc->f.parent.unique;
 	}
     }
-    if (tvc->mvid && (tvc->f.states & CMValid)) {
+    if (tvc->mvid.target_root && (tvc->f.states & CMValid)) {
 	if (!canblock) {
 	    afs_int32 retry;
 
 	    do {
 		retry = 0;
 		ObtainWriteLock(&afs_xvcache, 597);
-		root_vp = afs_FindVCache(tvc->mvid, &retry, IS_WLOCK);
+		root_vp = afs_FindVCache(tvc->mvid.target_root, &retry, IS_WLOCK);
 		if (root_vp && retry) {
 		    ReleaseWriteLock(&afs_xvcache);
 		    afs_PutVCache(root_vp);
@@ -408,7 +408,7 @@ afs_EvalFakeStat_int(struct vcache **avcp, struct afs_fakestat_state *state,
 	    } while (root_vp && retry);
 	    ReleaseWriteLock(&afs_xvcache);
 	} else {
-	    root_vp = afs_GetVCache(tvc->mvid, areq, NULL, NULL);
+	    root_vp = afs_GetVCache(tvc->mvid.target_root, areq, NULL, NULL);
 	}
 	if (!root_vp) {
 	    code = canblock ? ENOENT : 0;
@@ -427,9 +427,9 @@ afs_EvalFakeStat_int(struct vcache **avcp, struct afs_fakestat_state *state,
 	     * NBObtainWriteLock to avoid potential deadlock.
 	     */
 	    ObtainWriteLock(&root_vp->lock, 598);
-	    if (!root_vp->mvid)
-		root_vp->mvid = osi_AllocSmallSpace(sizeof(struct VenusFid));
-	    *root_vp->mvid = tvolp->dotdot;
+	    if (!root_vp->mvid.parent)
+		root_vp->mvid.parent = osi_AllocSmallSpace(sizeof(struct VenusFid));
+	    *root_vp->mvid.parent = tvolp->dotdot;
 	    ReleaseWriteLock(&root_vp->lock);
 	}
 	state->need_release = 1;
@@ -1169,9 +1169,9 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 
 	/* now copy ".." entry back out of volume structure, if necessary */
 	if (tvcp->mvstat == AFS_MVSTAT_ROOT && (dotdot.Fid.Volume != 0)) {
-	    if (!tvcp->mvid)
-		tvcp->mvid = osi_AllocSmallSpace(sizeof(struct VenusFid));
-	    *tvcp->mvid = dotdot;
+	    if (!tvcp->mvid.parent)
+		tvcp->mvid.parent = osi_AllocSmallSpace(sizeof(struct VenusFid));
+	    *tvcp->mvid.parent = dotdot;
 	}
 
 #ifdef AFS_DARWIN80_ENV
@@ -1446,14 +1446,14 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
     /* watch for ".." in a volume root */
     if (adp->mvstat == AFS_MVSTAT_ROOT && aname[0] == '.' && aname[1] == '.' && !aname[2]) {
 	/* looking up ".." in root via special hacks */
-	if (adp->mvid == (struct VenusFid *)0 || adp->mvid->Fid.Volume == 0) {
+	if (adp->mvid.parent == (struct VenusFid *)0 || adp->mvid.parent->Fid.Volume == 0) {
 	    code = ENODEV;
 	    goto done;
 	}
 	/* otherwise we have the fid here, so we use it */
 	/*printf("Getting vcache\n");*/
-	tvc = afs_GetVCache(adp->mvid, treq, NULL, NULL);
-	afs_Trace3(afs_iclSetp, CM_TRACE_GETVCDOTDOT, ICL_TYPE_FID, adp->mvid,
+	tvc = afs_GetVCache(adp->mvid.parent, treq, NULL, NULL);
+	afs_Trace3(afs_iclSetp, CM_TRACE_GETVCDOTDOT, ICL_TYPE_FID, adp->mvid.parent,
 		   ICL_TYPE_POINTER, tvc, ICL_TYPE_INT32, code);
 	*avcp = tvc;
 	code = (tvc ? 0 : ENOENT);
@@ -1803,7 +1803,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 		force_eval = 1;
 	    ReleaseReadLock(&tvc->lock);
 	}
-	if (tvc->mvstat == AFS_MVSTAT_MTPT && (tvc->f.states & CMValid) && tvc->mvid != NULL)
+	if (tvc->mvstat == AFS_MVSTAT_MTPT && (tvc->f.states & CMValid) && tvc->mvid.target_root != NULL)
 	  force_eval = 1; /* This is now almost for free, get it correct */
 
 #if defined(UKERNEL)
@@ -1826,7 +1826,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 		}
 
 		/* next, we want to continue using the target of the mt point */
-		if (tvc->mvid && (tvc->f.states & CMValid)) {
+		if (tvc->mvid.target_root && (tvc->f.states & CMValid)) {
 		    struct vcache *uvc;
 		    /* now lookup target, to set .. pointer */
 		    afs_Trace2(afs_iclSetp, CM_TRACE_LOOKUP1,
@@ -1837,9 +1837,9 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 		    if (tvolp && (tvolp->states & VForeign)) {
 			/* XXXX tvolp has ref cnt on but not locked! XXX */
 			tvc =
-			    afs_GetRootVCache(tvc->mvid, treq, NULL, tvolp);
+			    afs_GetRootVCache(tvc->mvid.target_root, treq, NULL, tvolp);
 		    } else {
-			tvc = afs_GetVCache(tvc->mvid, treq, NULL, NULL);
+			tvc = afs_GetVCache(tvc->mvid.target_root, treq, NULL, NULL);
 		    }
 		    afs_PutVCache(uvc);	/* we're done with it */
 
@@ -1856,12 +1856,12 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 		     * ptr to point back to the appropriate place */
 		    if (tvolp) {
 			ObtainWriteLock(&tvc->lock, 134);
-			if (tvc->mvid == NULL) {
-			    tvc->mvid =
+			if (tvc->mvid.parent == NULL) {
+			    tvc->mvid.parent =
 				osi_AllocSmallSpace(sizeof(struct VenusFid));
 			}
 			/* setup backpointer */
-			*tvc->mvid = tvolp->dotdot;
+			*tvc->mvid.parent = tvolp->dotdot;
 			ReleaseWriteLock(&tvc->lock);
 			afs_PutVolume(tvolp, WRITE_LOCK);
 		    }

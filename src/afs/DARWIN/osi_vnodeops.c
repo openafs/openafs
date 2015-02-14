@@ -1491,7 +1491,7 @@ afs_vop_rename(ap)
 
         /* unrewritten mount point? */
         if (tvc->mvstat == AFS_MVSTAT_MTPT) {
-            if (tvc->mvid && (tvc->f.states & CMValid)) {
+            if (tvc->mvid.target_root && (tvc->f.states & CMValid)) {
                 struct vrequest treq;
 
                 afs_InitFakeStat(&fakestate);

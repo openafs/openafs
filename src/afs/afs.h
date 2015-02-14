@@ -882,7 +882,15 @@ struct vcache {
 #endif
 #endif
 
-    struct VenusFid *mvid;	/* Either parent dir (if root) or root (if mt pt) */
+    union {
+	char *silly_name;        /* For sillyrenamed regular files, the silly
+	                          * name the file was renamed to. */
+	struct VenusFid *target_root; /* For mountpoints, the fid of the root dir
+	                               * in the target volume. */
+	struct VenusFid *parent; /* For root dir vcaches, the fid of the
+	                          * parent dir. */
+    } mvid;
+
     char *linkData;		/* Link data if a symlink. */
     afs_hyper_t flushDV;	/* data version last flushed from text */
     afs_hyper_t mapDV;		/* data version last flushed from map */

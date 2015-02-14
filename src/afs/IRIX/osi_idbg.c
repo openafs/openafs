@@ -69,14 +69,14 @@ idbg_prafsnode(OSI_VC_DECL(avc))
 #ifdef AFS_SGI64_ENV
     qprintf("   mapcnt %llu, mvstat %d anyAcc 0x%x Access 0x%x\n",
 	    avc->mapcnt, avc->mvstat, avc->f.anyAccess, avc->Access);
-    qprintf("   mvid 0x%x &lock 0x%x cred 0x%x\n", avc->mvid, &avc->lock,
+    qprintf("   mvid 0x%x &lock 0x%x cred 0x%x\n", avc->mvid.target_root, &avc->lock,
 	    avc->cred);
     qprintf("   rwlock 0x%x (%d) id %llu trips %d\n", &avc->vc_rwlock,
 	    valusema(&avc->vc_rwlock), avc->vc_rwlockid, avc->vc_locktrips);
 #else
     qprintf("   mapcnt %d mvstat %d anyAcc 0x%x Access 0x%x\n", avc->mapcnt,
 	    avc->mvstat, avc->f.anyAccess, avc->Access);
-    qprintf("   mvid 0x%x &lock 0x%x cred 0x%x\n", avc->mvid, &avc->lock,
+    qprintf("   mvid 0x%x &lock 0x%x cred 0x%x\n", avc->mvid.target_root, &avc->lock,
 	    avc->cred);
     qprintf("   rwlock 0x%x (%d) id %d trips %d\n", &avc->vc_rwlock,
 	    valusema(&avc->vc_rwlock), avc->vc_rwlockid, avc->vc_locktrips);

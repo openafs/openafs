@@ -340,16 +340,16 @@ afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio,
 	} else if (vc->mvstat == AFS_MVSTAT_ROOT) {
 	    /* We are a volume root, which means our parent is in another
 	     * volume.  Luckily, we should have his fid cached... */
-	    if (vc->mvid) {
-		if (!FidCmp(&afs_rootFid, vc->mvid)) {
+	    if (vc->mvid.parent) {
+		if (!FidCmp(&afs_rootFid, vc->mvid.parent)) {
 		    /* Parent directory is the root of the AFS root */
 		    Volume = 0;
 		    Vnode  = 2;
-		} else if (vc->mvid->Fid.Vnode == 1
-			   && vc->mvid->Fid.Unique == 1) {
+		} else if (vc->mvid.parent->Fid.Vnode == 1
+			   && vc->mvid.parent->Fid.Unique == 1) {
 		    /* XXX The above test is evil and probably breaks DFS */
 		    /* Parent directory is the target of a mount point */
-		    tvp = afs_GetVolume(vc->mvid, 0, READ_LOCK);
+		    tvp = afs_GetVolume(vc->mvid.parent, 0, READ_LOCK);
 		    if (tvp) {
 			Volume = tvp->mtpoint.Fid.Volume;
 			Vnode  = tvp->mtpoint.Fid.Vnode;
@@ -357,8 +357,8 @@ afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio,
 		    }
 		} else {
 		    /* Parent directory is not a volume root */
-		    Volume = vc->mvid->Fid.Volume;
-		    Vnode  = vc->mvid->Fid.Vnode;
+		    Volume = vc->mvid.parent->Fid.Volume;
+		    Vnode  = vc->mvid.parent->Fid.Vnode;
 		}
 	    }
 	} else if (de->fid.vnode == 1 && de->fid.vunique == 1) {

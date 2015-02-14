@@ -204,9 +204,9 @@ afs_FlushVCache(struct vcache *avc, int *slept)
     }
 #endif
 
-    if (avc->mvid)
-	osi_FreeSmallSpace(avc->mvid);
-    avc->mvid = (struct VenusFid *)0;
+    if (avc->mvid.target_root)
+	osi_FreeSmallSpace(avc->mvid.target_root);
+    avc->mvid.target_root = NULL;
     if (avc->linkData) {
 	afs_osi_Free(avc->linkData, strlen(avc->linkData) + 1);
 	avc->linkData = NULL;
@@ -838,7 +838,7 @@ afs_PrePopulateVCache(struct vcache *avc, struct VenusFid *afid,
 
     AFS_RWLOCK_INIT(&avc->lock, "vcache lock");
 
-    avc->mvid = NULL;
+    memset(&avc->mvid, 0, sizeof(avc->mvid));
     avc->linkData = NULL;
     avc->cbExpires = 0;
     avc->opens = 0;
@@ -1822,10 +1822,10 @@ afs_GetVCache(struct VenusFid *afid, struct vrequest *areq,
 	    tvc->f.states |= CBackup;
 	/* now copy ".." entry back out of volume structure, if necessary */
 	if (tvc->mvstat == AFS_MVSTAT_ROOT && tvp->dotdot.Fid.Volume != 0) {
-	    if (!tvc->mvid)
-		tvc->mvid = (struct VenusFid *)
+	    if (!tvc->mvid.parent)
+		tvc->mvid.parent = (struct VenusFid *)
 		    osi_AllocSmallSpace(sizeof(struct VenusFid));
-	    *tvc->mvid = tvp->dotdot;
+	    *tvc->mvid.parent = tvp->dotdot;
 	}
 	afs_PutVolume(tvp, READ_LOCK);
     }
@@ -2009,10 +2009,10 @@ afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
 	    tvc->f.states |= CBackup;
 	/* now copy ".." entry back out of volume structure, if necessary */
 	if (tvc->mvstat == AFS_MVSTAT_ROOT && tvp->dotdot.Fid.Volume != 0) {
-	    if (!tvc->mvid)
-		tvc->mvid = (struct VenusFid *)
+	    if (!tvc->mvid.parent)
+		tvc->mvid.parent = (struct VenusFid *)
 		    osi_AllocSmallSpace(sizeof(struct VenusFid));
-	    *tvc->mvid = tvp->dotdot;
+	    *tvc->mvid.parent = tvp->dotdot;
 	}
     }
 
@@ -2234,10 +2234,10 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
 	tvc->mvstat = AFS_MVSTAT_ROOT;
     }
     if (tvc->mvstat == AFS_MVSTAT_ROOT && tvolp->dotdot.Fid.Volume != 0) {
-	if (!tvc->mvid)
-	    tvc->mvid = (struct VenusFid *)
+	if (!tvc->mvid.parent)
+	    tvc->mvid.parent = (struct VenusFid *)
 		osi_AllocSmallSpace(sizeof(struct VenusFid));
-	*tvc->mvid = tvolp->dotdot;
+	*tvc->mvid.parent = tvolp->dotdot;
     }
 
     /* stat the file */
@@ -2544,10 +2544,10 @@ afs_StuffVcache(struct VenusFid *afid,
 	 * necessary
 	 */
 	if (tvc->mvstat == AFS_MVSTAT_ROOT && tvp->dotdot.Fid.Volume != 0) {
-	    if (!tvc->mvid)
-		tvc->mvid = (struct VenusFid *)
+	    if (!tvc->mvid.parent)
+		tvc->mvid.parent = (struct VenusFid *)
 		    osi_AllocSmallSpace(sizeof(struct VenusFid));
-	    *tvc->mvid = tvp->dotdot;
+	    *tvc->mvid.parent = tvp->dotdot;
 	}
     }
     /* store the stat on the file */
@@ -3083,9 +3083,9 @@ shutdown_vcache(void)
 	for (tq = VLRU.prev; tq != &VLRU; tq = uq) {
 	    tvc = QTOV(tq);
 	    uq = QPrev(tq);
-	    if (tvc->mvid) {
-		osi_FreeSmallSpace(tvc->mvid);
-		tvc->mvid = (struct VenusFid *)0;
+	    if (tvc->mvid.target_root) {
+		osi_FreeSmallSpace(tvc->mvid.target_root);
+		tvc->mvid.target_root = NULL;
 	    }
 #ifdef	AFS_AIX_ENV
 	    aix_gnode_rele(AFSTOV(tvc));
@@ -3100,9 +3100,9 @@ shutdown_vcache(void)
 	 */
 	for (i = 0; i < VCSIZE; i++) {
 	    for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
-		if (tvc->mvid) {
-		    osi_FreeSmallSpace(tvc->mvid);
-		    tvc->mvid = (struct VenusFid *)0;
+		if (tvc->mvid.target_root) {
+		    osi_FreeSmallSpace(tvc->mvid.target_root);
+		    tvc->mvid.target_root = NULL;
 		}
 #ifdef	AFS_AIX_ENV
 		if (tvc->v.v_gnode)
