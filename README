@@ -298,6 +298,20 @@ I  Other configure options
        by the option with debugging information.  If --enable-debug is
        given, also do not strip binaries when installing them.
 
+   --enable-linux-d_splice_alias-extra-iput
+       Work around a kernel memory leak present in a few Linux kernels.
+       The only affected mainline kernels are 3.17 to 3.17.2, but this
+       switch will also be required should a distribution backport commit
+       908790fa3b779d37365e6b28e3aa0f6e833020c3 or commit
+       95ad5c291313b66a98a44dc92b57e0b37c1dd589 but not the fix in commit
+       51486b900ee92856b977eacfc5bfbe6565028070 from the linux-stable repo
+       (git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git) or
+       the corresponding changes on other branches. This is impossible to
+       detect automatically. Without this switch, the openafs module will
+       build and work even with affected kernels. But it will leak kernel
+       memory, leading to performance degradation and eventually system
+       failure due to memory exhaustion.
+
    --enable-linux-syscall-probing
        OpenAFS now uses keyrings to manage PAGs by default on Linux, which
        does not require hooking into the system call table.  On older
