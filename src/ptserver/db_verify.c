@@ -260,6 +260,13 @@ PrintEntryError(struct misc_data *misc, afs_int32 ea, struct prentry *e, int ind
     return 0;
 }
 
+int
+PrintContError(struct misc_data *misc, afs_int32 ea, struct contentry *c, int indent)
+{
+    pr_PrintContEntry(stderr, /*net order */ 0, ea, c, indent);
+    return 0;
+}
+
 afs_int32
 WalkHashTable(afs_int32 hashtable[],	/* hash table to walk */
 	      int hashType,		/* hash function to use */
@@ -385,7 +392,7 @@ WalkNextChain(char map[],		/* one byte per db entry */
     afs_int32 head;
     int bit;
     afs_int32 code;
-    struct prentry c;		/* continuation entry */
+    struct contentry c;		/* continuation entry */
     afs_int32 na;		/* next thread */
     int ni;
     afs_int32 eid = 0;
@@ -493,7 +500,7 @@ WalkNextChain(char map[],		/* one byte per db entry */
 		return PRDBBAD;
 	    if (na != sghead) {
 		fprintf(stderr, "last block: \n");
-		if (PrintEntryError(misc, na, &c, 4))
+		if (PrintContError(misc, na, &c, 4))
 		    return PRDBBAD;
 	    }
 	    return 0;
@@ -507,7 +514,7 @@ WalkNextChain(char map[],		/* one byte per db entry */
 	    fprintf(stderr, "Continuation entry reused\n");
 	    if (PrintEntryError(misc, ea, e, 2))
 		return PRDBBAD;
-	    if (PrintEntryError(misc, na, &c, 4))
+	    if (PrintContError(misc, na, &c, 4))
 		return PRDBBAD;
 	    noErrors = 0;
 	    break;
@@ -517,7 +524,7 @@ WalkNextChain(char map[],		/* one byte per db entry */
 	    fprintf(stderr, "Continuation id mismatch\n");
 	    if (PrintEntryError(misc, ea, e, 2))
 		return PRDBBAD;
-	    if (PrintEntryError(misc, na, &c, 4))
+	    if (PrintContError(misc, na, &c, 4))
 		return PRDBBAD;
 	    noErrors = 0;
 	    continue;
@@ -541,7 +548,7 @@ WalkNextChain(char map[],		/* one byte per db entry */
 			    "User can't be member of supergroup list\n");
 		    if (PrintEntryError(misc, ea, e, 2))
 			return PRDBBAD;
-		    if (PrintEntryError(misc, na, &c, 4))
+		    if (PrintContError(misc, na, &c, 4))
 			return PRDBBAD;
 		    noErrors = 0;
 		}
@@ -568,7 +575,7 @@ WalkNextChain(char map[],		/* one byte per db entry */
 		return PRDBBAD;
 	    if (na != head) {
 		fprintf(stderr, "last block: \n");
-		if (PrintEntryError(misc, na, &c, 4))
+		if (PrintContError(misc, na, &c, 4))
 		    return PRDBBAD;
 	    }
 	    return 0;
@@ -584,7 +591,7 @@ WalkNextChain(char map[],		/* one byte per db entry */
 		fprintf(stderr, "walking free list");
 	    else if (PrintEntryError(misc, ea, e, 2))
 		return PRDBBAD;
-	    if (PrintEntryError(misc, na, &c, 4))
+	    if (PrintContError(misc, na, &c, 4))
 		return PRDBBAD;
 	    noErrors = 0;
 	    break;
@@ -596,7 +603,7 @@ WalkNextChain(char map[],		/* one byte per db entry */
 		fprintf(stderr, "walking free list");
 	    else if (PrintEntryError(misc, ea, e, 2))
 		return PRDBBAD;
-	    if (PrintEntryError(misc, na, &c, 4))
+	    if (PrintContError(misc, na, &c, 4))
 		return PRDBBAD;
 	    noErrors = 0;
 	    continue;
@@ -626,7 +633,7 @@ WalkNextChain(char map[],		/* one byte per db entry */
 				"User can't be member of user in membership list\n");
 			if (PrintEntryError(misc, ea, e, 2))
 			    return PRDBBAD;
-			if (PrintEntryError(misc, na, &c, 4))
+			if (PrintContError(misc, na, &c, 4))
 			    return PRDBBAD;
 			noErrors = 0;
 		    }
@@ -636,7 +643,7 @@ WalkNextChain(char map[],		/* one byte per db entry */
 				"Bad user/group dicotomy in membership list\n");
 			if (PrintEntryError(misc, ea, e, 2))
 			    return PRDBBAD;
-			if (PrintEntryError(misc, na, &c, 4))
+			if (PrintContError(misc, na, &c, 4))
 			    return PRDBBAD;
 			noErrors = 0;
 		    }
@@ -1197,7 +1204,7 @@ DumpRecreate(char map[], struct misc_data *misc)
 		}
 		na = ntohl(e.next);
 		while (na) {
-		    struct prentry c;
+		    struct contentry c;
 		    code = pr_Read(na, (char *)&c, sizeof(c));
 		    if (code)
 			return code;
