@@ -698,7 +698,7 @@ WalkOwnedChain(char map[],		/* one byte per db entry */
 {
     afs_int32 head;
     afs_int32 code;
-    struct prentry c;		/* continuation entry */
+    struct prentry te;		/* next entry in owner chain */
     afs_int32 na;		/* next thread */
     int ni;
     afs_int32 eid = 0;
@@ -711,7 +711,7 @@ WalkOwnedChain(char map[],		/* one byte per db entry */
 	head = ntohl(cheader.orphan);
 
     length = 0;
-    for (na = head; na; na = ntohl(c.nextOwned)) {
+    for (na = head; na; na = ntohl(te.nextOwned)) {
 	code = ConvertDiskAddress(na, &ni);
 	if (code) {
 	    fprintf(stderr, "Bad owned list ptr %d", na);
@@ -721,23 +721,33 @@ WalkOwnedChain(char map[],		/* one byte per db entry */
 		return PRDBBAD;
 	    if (na != head) {
 		fprintf(stderr, "last block: \n");
-		if (PrintEntryError(misc, na, &c, 4))
+		if (PrintEntryError(misc, na, &te, 4))
 		    return PRDBBAD;
 	    }
 	    return 0;
 	}
-	code = pr_Read(na, (char *)&c, sizeof(c));
+	code = pr_Read(na, (char *)&te, sizeof(te));
 	if (code)
 	    return code;
 	length++;
 
+	if ((ntohl(te.flags) & PRTYPE) == PRCONT) {
+	    fprintf(stderr, "Continuation entry found on owner chain\n");
+	    if (e == 0)
+		fprintf(stderr, "walking orphan list");
+	    else if (PrintEntryError(misc, ea, e, 2))
+		return PRDBBAD;
+	    if (PrintEntryError(misc, na, &te, 4))
+		return PRDBBAD;
+	    break;
+	}
 	if (map[ni] & MAP_OWNED) {
 	    fprintf(stderr, "Entry on multiple owner chains\n");
 	    if (e == 0)
 		fprintf(stderr, "walking orphan list");
 	    else if (PrintEntryError(misc, ea, e, 2))
 		return PRDBBAD;
-	    if (PrintEntryError(misc, na, &c, 4))
+	    if (PrintEntryError(misc, na, &te, 4))
 		return PRDBBAD;
 	    break;
 	}
@@ -749,16 +759,16 @@ WalkOwnedChain(char map[],		/* one byte per db entry */
 		fprintf(stderr, "walking orphan list");
 	    else if (PrintEntryError(misc, ea, e, 2))
 		return PRDBBAD;
-	    if (PrintEntryError(misc, na, &c, 4))
+	    if (PrintEntryError(misc, na, &te, 4))
 		return PRDBBAD;
 	    continue;
 	}
 	if (e) {
-	    if (ntohl(c.owner) != eid) {
+	    if (ntohl(te.owner) != eid) {
 		fprintf(stderr, "Owner id mismatch\n");
 		goto abort;
 	    }
-	} else /* orphan */ if (c.owner) {
+	} else /* orphan */ if (te.owner) {
 	    fprintf(stderr, "Orphan group owner not zero\n");
 	    goto abort;
 	}
