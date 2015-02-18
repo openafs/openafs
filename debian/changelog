@@ -10,6 +10,24 @@ openafs (1.6.11~pre1-1) experimental; urgency=low
 
  -- Andrew Deason <adeason@sinenomine.net>  Sun, 07 Dec 2014 23:43:21 -0600
 
+openafs (1.6.10-4) unstable; urgency=medium
+
+  * Update Spanish translation, thanks Javier Fernandez-Sanguino Pena.
+    (Closes: #773565)
+  * Import many patches from upstream:
+    - Support newer linux versions, up through 3.19. (Closes: #771298)
+    - Avoid some spurious getcwd() failures.
+    - Improve configure test for key_type.match (which caused buggy
+      behavior in certain versions of RHEL).
+    - Fix a refcount leak that would manifest as an unrelated OOPS.
+    - Avoid using a stale data version in certain cases when writing
+      files larger than the AFS cache, which manifested as file corruption.
+    This leaves us roughly equivalent to the forthcoming 1.6.11pre2
+    release candidate.
+  * Update CellServDB to the 2015-01-19 release.
+
+ -- Benjamin Kaduk <kaduk@mit.edu>  Wed, 04 Feb 2015 13:35:48 -0500
+
 openafs (1.6.10-3) unstable; urgency=medium
 
   * Make openafs-client Before=umount.target for improved shutdown

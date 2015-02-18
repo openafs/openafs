@@ -1,0 +1,89 @@
+From: Marc Dionne <marc.dionne@your-file-system.com>
+Date: Thu, 18 Dec 2014 07:13:46 -0500
+Subject: Linux: d_alias becomes d_u.d_alias
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+
+The fields in struct dentry are re-arranged so that d_alias
+shares space wth d_rcu inside the d_u union.  Some references
+need to change from d_alias to d_u.d_alias.
+
+The kernel change was introduced for 3.19 but was also backported
+to the 3.18 stable series in 3.18.1, so this commit is required
+for 3.19 and current 3.18 kernels.
+
+Reviewed-on: http://gerrit.openafs.org/11642
+Reviewed-by: Anders Kaseorg <andersk@mit.edu>
+Reviewed-by: Michael Laß <lass@mail.uni-paderborn.de>
+Reviewed-by: Daria Brashear <shadow@your-file-system.com>
+Tested-by: BuildBot <buildbot@rampaginggeek.com>
+(cherry picked from commit d6f29679098aff171e69511823b340ccf28e5c31)
+
+Change-Id: Ifb6199aa7fa922e64540d9fad1d2d79facbb9761
+Reviewed-on: http://gerrit.openafs.org/11659
+Reviewed-by: Chas Williams - CONTRACTOR <chas@cmf.nrl.navy.mil>
+Tested-by: BuildBot <buildbot@rampaginggeek.com>
+Reviewed-by: Daria Brashear <shadow@your-file-system.com>
+Reviewed-by: Stephan Wiesand <stephan.wiesand@desy.de>
+(cherry picked from commit 860764da5ee2e48a2c3f7552fad1766e19eae47f)
+---
+ acinclude.m4               | 1 +
+ src/afs/LINUX/osi_compat.h | 4 ++++
+ src/cf/linux-test4.m4      | 9 ++++++++-
+ 3 files changed, 13 insertions(+), 1 deletion(-)
+
+diff --git a/acinclude.m4 b/acinclude.m4
+index d324dc1..fa429c7 100644
+--- a/acinclude.m4
++++ b/acinclude.m4
+@@ -828,6 +828,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
+ 				       [backing-dev.h])
+ 		 AC_CHECK_LINUX_STRUCT([cred], [session_keyring], [cred.h])
+ 		 AC_CHECK_LINUX_STRUCT([ctl_table], [ctl_name], [sysctl.h])
++		 AC_CHECK_LINUX_STRUCT([dentry], [d_u.d_alias], [dcache.h])
+ 		 AC_CHECK_LINUX_STRUCT([dentry_operations], [d_automount], [dcache.h])
+ 		 AC_CHECK_LINUX_STRUCT([inode], [i_alloc_sem], [fs.h])
+ 		 AC_CHECK_LINUX_STRUCT([inode], [i_blkbits], [fs.h])
+diff --git a/src/afs/LINUX/osi_compat.h b/src/afs/LINUX/osi_compat.h
+index 26673a7..b98e980 100644
+--- a/src/afs/LINUX/osi_compat.h
++++ b/src/afs/LINUX/osi_compat.h
+@@ -37,6 +37,10 @@ typedef struct vfs_path afs_linux_path_t;
+ typedef struct path afs_linux_path_t;
+ #endif
+ 
++#if defined(STRUCT_DENTRY_HAS_D_U_D_ALIAS)
++# define d_alias d_u.d_alias
++#endif
++
+ #ifndef HAVE_LINUX_DO_SYNC_READ
+ static inline int
+ do_sync_read(struct file *fp, char *buf, size_t count, loff_t *offp) {
+diff --git a/src/cf/linux-test4.m4 b/src/cf/linux-test4.m4
+index 34c5d4d..5f5ec5c 100644
+--- a/src/cf/linux-test4.m4
++++ b/src/cf/linux-test4.m4
+@@ -723,7 +723,11 @@ AC_DEFUN([LINUX_D_ALIAS_IS_HLIST], [
+ 			[#include <linux/fs.h>],
+ 			[struct dentry *d = NULL;
+ 			struct hlist_node *hn = NULL;
+-			d->d_alias = *hn;],
++			#if defined(STRUCT_DENTRY_HAS_D_U_D_ALIAS)
++			d->d_u.d_alias = *hn;
++			#else
++			d->d_alias = *hn;
++			#endif],
+ 			[D_ALIAS_IS_HLIST],
+ 			[define if dentry->d_alias is an hlist],
+ 			[])
+@@ -737,6 +741,9 @@ AC_DEFUN([LINUX_HLIST_ITERATOR_NO_NODE], [
+ 			#include <linux/fs.h>],
+ 			[struct dentry *d = NULL, *cur;
+ 			struct inode *ip;
++			#if defined(STRUCT_DENTRY_HAS_D_U_D_ALIAS)
++			# define d_alias d_u.d_alias
++			#endif
+ 			hlist_for_each_entry(cur, &ip->i_dentry, d_alias) { }
+ 			],
+ 			[HLIST_ITERATOR_NO_NODE],

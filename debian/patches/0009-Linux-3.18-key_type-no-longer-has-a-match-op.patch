@@ -1,0 +1,72 @@
+From: Marc Dionne <marc.dionne@your-file-system.com>
+Date: Thu, 23 Oct 2014 11:27:55 -0400
+Subject: Linux 3.18: key_type no longer has a match op
+
+Structure key_type no longer has a match op, and
+overriding the default matching has to be done
+differently.
+
+Our current match op doesn't do anything special so there's
+no need to try to override the defaults; just remove the
+assignment of .match and the associated function.
+
+Reviewed-on: http://gerrit.openafs.org/11563
+Tested-by: BuildBot <buildbot@rampaginggeek.com>
+Reviewed-by: D Brashear <shadow@your-file-system.com>
+(cherry picked from commit b5de4a9f42bb83ae03f2f647b11a1200a502d013)
+
+Change-Id: I7baca4a7f02eac45671e1e9ebf48534cdd5830be
+Reviewed-on: http://gerrit.openafs.org/11570
+Reviewed-by: Anders Kaseorg <andersk@mit.edu>
+Tested-by: BuildBot <buildbot@rampaginggeek.com>
+Reviewed-by: Benjamin Kaduk <kaduk@mit.edu>
+Reviewed-by: Andrew Deason <adeason@sinenomine.net>
+Reviewed-by: Stephan Wiesand <stephan.wiesand@desy.de>
+(cherry picked from commit 9d653bd966b47223eaaf6f8a5d983b6634bdf0d5)
+---
+ acinclude.m4               | 3 ++-
+ src/afs/LINUX/osi_groups.c | 4 ++++
+ 2 files changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/acinclude.m4 b/acinclude.m4
+index b10cfb6..72dd6c1 100644
+--- a/acinclude.m4
++++ b/acinclude.m4
+@@ -840,8 +840,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
+ 		 AC_CHECK_LINUX_STRUCT([file_operations], [sendfile], [fs.h])
+ 		 AC_CHECK_LINUX_STRUCT([file_system_type], [mount], [fs.h])
+ 		 AC_CHECK_LINUX_STRUCT([inode_operations], [truncate], [fs.h])
+-		 AC_CHECK_LINUX_STRUCT([key_type], [preparse], [key-type.h])
+ 		 AC_CHECK_LINUX_STRUCT([key_type], [instantiate_prep], [key-type.h])
++		 AC_CHECK_LINUX_STRUCT([key_type], [match], [key-type.h])
++		 AC_CHECK_LINUX_STRUCT([key_type], [preparse], [key-type.h])
+ 		 AC_CHECK_LINUX_STRUCT([nameidata], [path], [namei.h])
+ 		 AC_CHECK_LINUX_STRUCT([proc_dir_entry], [owner], [proc_fs.h])
+ 		 AC_CHECK_LINUX_STRUCT([super_block], [s_bdi], [fs.h])
+diff --git a/src/afs/LINUX/osi_groups.c b/src/afs/LINUX/osi_groups.c
+index f3f87c2..f1d97a6 100644
+--- a/src/afs/LINUX/osi_groups.c
++++ b/src/afs/LINUX/osi_groups.c
+@@ -498,10 +498,12 @@ error:
+     return code;
+ }
+ 
++#if defined(STRUCT_KEY_TYPE_HAS_MATCH)
+ static int afs_pag_match(const struct key *key, const void *description)
+ {
+ 	return strcmp(key->description, description) == 0;
+ }
++#endif
+ 
+ static void afs_pag_destroy(struct key *key)
+ {
+@@ -527,7 +529,9 @@ struct key_type key_type_afs_pag =
+ #else
+     .instantiate = afs_pag_instantiate,
+ #endif
++#if defined(STRUCT_KEY_TYPE_HAS_MATCH)
+     .match       = afs_pag_match,
++#endif
+     .destroy     = afs_pag_destroy,
+ };
+ 

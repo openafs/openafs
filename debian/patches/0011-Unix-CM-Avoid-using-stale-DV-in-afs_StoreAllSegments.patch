@@ -1,0 +1,74 @@
+From: Marc Dionne <marc.dionne@your-file-system.com>
+Date: Fri, 19 Dec 2014 10:11:53 -0500
+Subject: Unix CM: Avoid using stale DV in afs_StoreAllSegments
+
+It was reported in RT 131976 that on Linux some file
+corruption was observed when doing mmap writes to
+a file substantially larger than the cache size.
+
+osi_VM_StoreAllSegments drops locks and asks the OS to flush
+any dirty pages in the file 's mapping.  This will trigger
+calls into our writepage op, and if the number of dirty
+cache chunks is too high (as will happen for a file larger
+than the cache size), afs_DoPartialWrite will recursively
+call afs_StoreAllSegments and some chunks will be written
+back to the server.  After potentially doing this several
+times, control will return to the original afs_StoreAllSegments.
+
+At that point the data version that was stored before
+osi_VM_StoreAllSegments is no longer correct, leading to
+possible data corruption.
+
+Triggering this bug requires writing a file larger than the
+cache so that partial stores are done, and writing enough
+data to exceed the system's maximum dirty ratio and cause
+it to initiate writeback.
+
+To fix, just wait until after osi_VM_StoreAllSegments to
+look at and store the data version
+
+FIXES 131976
+
+Reviewed-on: http://gerrit.openafs.org/11644
+Tested-by: BuildBot <buildbot@rampaginggeek.com>
+Reviewed-by: Jeffrey Altman <jaltman@your-file-system.com>
+(cherry picked from commit b22c586bcdf785c489009ab96cbb572181cb9b09)
+
+Change-Id: I32a2f6f32d432fe4a2e21ebd4bb278a9d7e5499f
+Reviewed-on: http://gerrit.openafs.org/11656
+Tested-by: BuildBot <buildbot@rampaginggeek.com>
+Reviewed-by: Benjamin Kaduk <kaduk@mit.edu>
+Reviewed-by: Stephan Wiesand <stephan.wiesand@desy.de>
+(cherry picked from commit 013e8db33fbec8b5db4ac5a1ec94a7f5b2afbc45)
+---
+ src/afs/afs_segments.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/src/afs/afs_segments.c b/src/afs/afs_segments.c
+index f407b49..1ea3311 100644
+--- a/src/afs/afs_segments.c
++++ b/src/afs/afs_segments.c
+@@ -174,8 +174,6 @@ afs_StoreAllSegments(struct vcache *avc, struct vrequest *areq,
+ 
+     AFS_STATCNT(afs_StoreAllSegments);
+ 
+-    hset(oldDV, avc->f.m.DataVersion);
+-    hset(newDV, avc->f.m.DataVersion);
+     hash = DVHash(&avc->f.fid);
+     foreign = (avc->f.states & CForeign);
+     dcList = (struct dcache **)osi_AllocLargeSpace(AFS_LRALLOCSIZ);
+@@ -213,6 +211,14 @@ afs_StoreAllSegments(struct vcache *avc, struct vrequest *areq,
+ 	/*printf("Net down in afs_StoreSegments\n");*/
+ 	return ENETDOWN;
+     }
++
++    /*
++     * Can't do this earlier because osi_VM_StoreAllSegments drops locks
++     * and can indirectly do some stores that increase the DV.
++     */
++    hset(oldDV, avc->f.m.DataVersion);
++    hset(newDV, avc->f.m.DataVersion);
++
+     ConvertWToSLock(&avc->lock);
+ 
+     /*
