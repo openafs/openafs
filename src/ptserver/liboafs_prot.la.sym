@@ -20,6 +20,7 @@ pr_ListMembers
 pr_ListOwned
 pr_ListSuperGroups
 pr_NameToId
+pr_PrintContEntry
 pr_PrintEntry
 pr_RemoveUserFromGroup
 pr_SIdToName
