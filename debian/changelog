@@ -1,3 +1,9 @@
+openafs (1.6.11~pre2-1) UNRELEASED; urgency=low
+
+  * New upstream pre-release.
+
+ -- Benjamin Kaduk <kaduk@mit.edu>  Fri, 20 Feb 2015 14:24:00 -0500
+
 openafs (1.6.11~pre1-1) experimental; urgency=low
 
   * New upstream pre-release.
