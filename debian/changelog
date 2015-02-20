@@ -1,4 +1,4 @@
-openafs (1.6.11~pre2-1) UNRELEASED; urgency=low
+openafs (1.6.11~pre2-1) experimental; urgency=low
 
   * New upstream pre-release.
     - Avoid using a stale data version in certain cases when writing
@@ -7,7 +7,7 @@ openafs (1.6.11~pre2-1) UNRELEASED; urgency=low
     - Support newer linux versions, up through 3.19.
     - Fix some leaks and crashes in error cases.
 
- -- Benjamin Kaduk <kaduk@mit.edu>  Fri, 20 Feb 2015 14:24:00 -0500
+ -- Benjamin Kaduk <kaduk@mit.edu>  Fri, 20 Feb 2015 15:50:49 -0500
 
 openafs (1.6.11~pre1-1) experimental; urgency=low
 
