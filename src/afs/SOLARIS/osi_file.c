@@ -327,11 +327,7 @@ osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
      */
     AFS_GUNLOCK();
 #ifdef AFS_SUN510_ENV
-    {
-	caller_context_t ct;
-
-	code = VOP_SETATTR(afile->vnode, &tvattr, 0, afs_osi_credp, &ct);
-    }
+    code = VOP_SETATTR(afile->vnode, &tvattr, 0, afs_osi_credp, NULL);
 #else
     code = VOP_SETATTR(afile->vnode, &tvattr, 0, afs_osi_credp);
 #endif

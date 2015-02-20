@@ -54,15 +54,16 @@ afs_MemRead(struct vcache *avc, struct uio *auio,
     afs_int32 trimlen;
     struct dcache *tdc = 0;
     afs_int32 error, trybusy = 1;
+    afs_int32 code;
+    struct vrequest *treq = NULL;
 #ifdef AFS_DARWIN80_ENV
     uio_t tuiop = NULL;
 #else
     struct uio tuio;
     struct uio *tuiop = &tuio;
     struct iovec *tvec;
+    memset(&tuio, 0, sizeof(tuio));
 #endif
-    afs_int32 code;
-    struct vrequest *treq = NULL;
 
     AFS_STATCNT(afs_MemRead);
     if (avc->vc_error)
@@ -93,6 +94,7 @@ afs_MemRead(struct vcache *avc, struct uio *auio,
 
 #ifndef AFS_DARWIN80_ENV
     tvec = (struct iovec *)osi_AllocSmallSpace(sizeof(struct iovec));
+    memset(tvec, 0, sizeof(struct iovec));
 #endif
     totalLength = AFS_UIO_RESID(auio);
     filePos = AFS_UIO_OFFSET(auio);
@@ -513,17 +515,18 @@ afs_UFSRead(struct vcache *avc, struct uio *auio,
     afs_int32 trimlen;
     struct dcache *tdc = 0;
     afs_int32 error;
+    struct osi_file *tfile;
+    afs_int32 code;
+    int trybusy = 1;
+    struct vrequest *treq = NULL;
 #ifdef AFS_DARWIN80_ENV
     uio_t tuiop=NULL;
 #else
     struct uio tuio;
     struct uio *tuiop = &tuio;
     struct iovec *tvec;
+    memset(&tuio, 0, sizeof(tuio));
 #endif
-    struct osi_file *tfile;
-    afs_int32 code;
-    int trybusy = 1;
-    struct vrequest *treq = NULL;
 
     AFS_STATCNT(afs_UFSRead);
     if (avc && avc->vc_error)
@@ -562,6 +565,7 @@ afs_UFSRead(struct vcache *avc, struct uio *auio,
 
 #ifndef AFS_DARWIN80_ENV
     tvec = (struct iovec *)osi_AllocSmallSpace(sizeof(struct iovec));
+    memset(tvec, 0, sizeof(struct iovec));
 #endif
     totalLength = AFS_UIO_RESID(auio);
     filePos = AFS_UIO_OFFSET(auio);
@@ -862,13 +866,9 @@ afs_UFSRead(struct vcache *avc, struct uio *auio,
 #elif defined(AFS_SUN5_ENV)
 	    AFS_GUNLOCK();
 #ifdef AFS_SUN510_ENV
-	    {
-		caller_context_t ct;
-
-		VOP_RWLOCK(tfile->vnode, 0, &ct);
-		code = VOP_READ(tfile->vnode, &tuio, 0, afs_osi_credp, &ct);
-		VOP_RWUNLOCK(tfile->vnode, 0, &ct);
-	    }
+	    VOP_RWLOCK(tfile->vnode, 0, NULL);
+	    code = VOP_READ(tfile->vnode, &tuio, 0, afs_osi_credp, NULL);
+	    VOP_RWUNLOCK(tfile->vnode, 0, NULL);
 #else
 	    VOP_RWLOCK(tfile->vnode, 0);
 	    code = VOP_READ(tfile->vnode, &tuio, 0, afs_osi_credp);
