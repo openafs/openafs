@@ -1,6 +1,11 @@
 openafs (1.6.11~pre2-1) UNRELEASED; urgency=low
 
   * New upstream pre-release.
+    - Avoid using a stale data version in certain cases when writing
+      files larger than the AFS cache, which manifested as file corruption.
+    - Fix a refcount leak that could lead to panics.
+    - Support newer linux versions, up through 3.19.
+    - Fix some leaks and crashes in error cases.
 
  -- Benjamin Kaduk <kaduk@mit.edu>  Fri, 20 Feb 2015 14:24:00 -0500
 
