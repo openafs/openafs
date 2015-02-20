@@ -1,11 +1,3 @@
 0001-userok.c-Fix-fixed-size-on-stack-path-buffers.patch
 0002-Tweak-AFSDIR_PATH_MAX-definition.patch
 0003-Add-dummy-exit-command-for-afsd-to-do-nothing.patch
-0011-Unix-CM-Avoid-using-stale-DV-in-afs_StoreAllSegments.patch
-0012-afs-Fix-some-afs_conn-overcounts.patch
-0013-Linux-Move-code-to-reset-the-root-to-afs-LINUX.patch
-0014-Linux-d_alias-becomes-d_u.d_alias.patch
-0015-Linux-3.19-No-more-f_dentry.patch
-0016-Linux-3.19-Use-mgs_iter-in-struct-msghdr.patch
-0017-Linux-3.19-struct-nameidata-becomes-opaque.patch
-0018-Linux-d_splice_alias-may-drop-inode-reference-on-err.patch
