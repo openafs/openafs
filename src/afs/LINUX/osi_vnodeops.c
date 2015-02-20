@@ -392,10 +392,8 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 	if (code) {
 	    afs_warn("Corrupt directory (inode %lx, dirpos %d)",
 		     (unsigned long)&tdc->f.inode, dirpos);
-	    ReleaseSharedLock(&avc->lock);
-	    afs_PutDCache(tdc);
 	    code = -ENOENT;
-	    goto out;
+	    goto unlock_out;
         }
 
 	ino = afs_calc_inum(avc->f.fid.Cell, avc->f.fid.Fid.Volume,
@@ -461,7 +459,9 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 #else
     fp->f_pos = (loff_t) offset;
 #endif
+    code = 0;
 
+unlock_out:
     ReleaseReadLock(&tdc->lock);
     afs_PutDCache(tdc);
     UpgradeSToWLock(&avc->lock, 813);
@@ -469,7 +469,6 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
     avc->dcreaddir = 0;
     avc->readdir_pid = 0;
     ReleaseSharedLock(&avc->lock);
-    code = 0;
 
 out:
     afs_PutFakeStat(&fakestat);
@@ -949,7 +948,7 @@ check_bad_parent(struct dentry *dp)
     parent = dget_parent(dp);
     pvc = VTOAFS(parent->d_inode);
 
-    if (vcp->mvid->Fid.Volume != pvc->f.fid.Fid.Volume) {	/* bad parent */
+    if (!vcp->mvid || vcp->mvid->Fid.Volume != pvc->f.fid.Fid.Volume) {	/* bad parent */
 	credp = crref();
 
 	/* force a lookup, so vcp->mvid is fixed up */
@@ -1549,6 +1548,17 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 	ip->i_flags |= S_AUTOMOUNT;
 #endif
     }
+    /*
+     * Take an extra reference so the inode doesn't go away if
+     * d_splice_alias drops our reference on error.
+     */
+    if (ip)
+#ifdef HAVE_LINUX_IHOLD
+	ihold(ip);
+#else
+	igrab(ip);
+#endif
+
     newdp = d_splice_alias(ip, dp);
 
  done:
@@ -1562,14 +1572,26 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 	 * d_splice_alias can return an error (EIO) if there is an existing
 	 * connected directory alias for this dentry.
 	 */
-	if (!IS_ERR(newdp))
+	if (!IS_ERR(newdp)) {
+	    iput(ip);
 	    return newdp;
-	else {
+	} else {
 	    d_add(dp, ip);
+	    /*
+	     * Depending on the kernel version, d_splice_alias may or may
+	     * not drop the inode reference on error.  If it didn't, do it
+	     * here.
+	     */
+#if defined(D_SPLICE_ALIAS_LEAK_ON_ERROR)
+	    iput(ip);
+#endif
 	    return NULL;
 	}
-    } else
+    } else {
+	if (ip)
+	    iput(ip);
 	return ERR_PTR(afs_convert_code(code));
+    }
 }
 
 static int
@@ -1830,6 +1852,9 @@ afs_linux_ireadlink(struct inode *ip, char *target, int maxlen, uio_seg_t seg)
     cred_t *credp = crref();
     struct uio tuio;
     struct iovec iov;
+
+    memset(&tuio, 0, sizeof(tuio));
+    memset(&iov, 0, sizeof(iov));
 
     setup_uio(&tuio, &iov, target, (afs_offs_t) 0, maxlen, UIO_READ, seg);
     code = afs_readlink(VTOAFS(ip), &tuio, credp);
@@ -2582,6 +2607,9 @@ afs_linux_page_writeback(struct inode *ip, struct page *pp,
     struct uio tuio;
     struct iovec iovec;
     int f_flags = 0;
+
+    memset(&tuio, 0, sizeof(tuio));
+    memset(&iovec, 0, sizeof(iovec));
 
     buffer = kmap(pp) + offset;
     base = page_offset(pp) + offset;

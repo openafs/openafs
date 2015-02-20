@@ -37,6 +37,16 @@ typedef struct vfs_path afs_linux_path_t;
 typedef struct path afs_linux_path_t;
 #endif
 
+#if defined(STRUCT_DENTRY_HAS_D_U_D_ALIAS)
+# define d_alias d_u.d_alias
+#endif
+
+#if defined(STRUCT_FILE_HAS_F_PATH)
+# if !defined(f_dentry)
+#  define f_dentry f_path.dentry
+# endif
+#endif
+
 #ifndef HAVE_LINUX_DO_SYNC_READ
 static inline int
 do_sync_read(struct file *fp, char *buf, size_t count, loff_t *offp) {
@@ -465,23 +475,23 @@ afs_get_dentry_ref(struct nameidata *nd, struct vfsmount **mnt, struct dentry **
 #else
 afs_get_dentry_ref(afs_linux_path_t *path, struct vfsmount **mnt, struct dentry **dpp) {
 #endif
-#if defined(STRUCT_NAMEIDATA_HAS_PATH)
-# if defined(HAVE_LINUX_PATH_LOOKUP)
+#if defined(HAVE_LINUX_PATH_LOOKUP)
+# if defined(STRUCT_NAMEIDATA_HAS_PATH)
     *dpp = dget(nd->path.dentry);
     if (mnt)
 	*mnt = mntget(nd->path.mnt);
     path_put(&nd->path);
 # else
-    *dpp = dget(path->dentry);
-    if (mnt)
-	*mnt = mntget(path->mnt);
-    path_put(path);
-# endif
-#else
     *dpp = dget(nd->dentry);
     if (mnt)
 	*mnt = mntget(nd->mnt);
     path_release(nd);
+# endif
+#else
+    *dpp = dget(path->dentry);
+    if (mnt)
+	*mnt = mntget(path->mnt);
+    path_put(path);
 #endif
 }
 

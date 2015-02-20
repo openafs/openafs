@@ -119,3 +119,39 @@ osi_PostPopulateVCache(struct vcache *avc) {
     vSetType(avc, VREG);
 }
 
+void
+osi_ResetRootVCache(afs_uint32 volid)
+{
+    struct vrequest *treq = NULL;
+    struct vattr vattr;
+    cred_t *credp;
+    struct dentry *dp;
+    struct vcache *vcp;
+
+    afs_rootFid.Fid.Volume = volid;
+    afs_rootFid.Fid.Vnode = 1;
+    afs_rootFid.Fid.Unique = 1;
+
+    credp = crref();
+    if (afs_CreateReq(&treq, credp))
+	goto out;
+    vcp = afs_GetVCache(&afs_rootFid, treq, NULL, NULL);
+    if (!vcp)
+	goto out;
+    afs_getattr(vcp, &vattr, credp);
+    afs_fill_inode(AFSTOV(vcp), &vattr);
+
+    dp = d_find_alias(AFSTOV(afs_globalVp));
+    spin_lock(&dcache_lock);
+    list_del_init(&dp->d_alias);
+    list_add(&dp->d_alias, &(AFSTOV(vcp)->i_dentry));
+    dp->d_inode = AFSTOV(vcp);
+    spin_unlock(&dcache_lock);
+    dput(dp);
+
+    AFS_FAST_RELE(afs_globalVp);
+    afs_globalVp = vcp;
+out:
+    crfree(credp);
+    afs_DestroyReq(treq);
+}
