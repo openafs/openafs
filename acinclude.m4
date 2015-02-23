@@ -915,6 +915,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_TYPE([kuid_t], [uidgid.h])
 
 		 dnl Check for structure elements
+		 AC_CHECK_LINUX_STRUCT([address_space], [backing_dev_info], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([address_space_operations],
 				       [write_begin], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([backing_dev_info], [name],
