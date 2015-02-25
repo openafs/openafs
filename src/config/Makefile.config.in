@@ -63,6 +63,7 @@ LIB_crypt = @LIB_crypt@
 LIB_curses = @LIB_curses@
 LIB_hcrypto = @LIB_hcrypto@
 LIB_roken = @LIB_roken@
+buildtool_roken = @buildtool_roken@
 LIB_krb5 = @KRB5_LIBS@
 LIB_gssapi = @GSSAPI_LIBS@
 LIBTOOL= @LIBTOOL@

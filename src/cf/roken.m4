@@ -4,6 +4,7 @@ AC_DEFUN([_OPENAFS_ROKEN_INTERNAL], [
   CPPFLAGS_roken=
   LDFLAGS_roken="-L\$(TOP_LIBDIR)"
   LIB_roken=-lrokenafs
+  buildtool_roken="\$(TOP_OBJDIR)/src/roken/librokenafs.a"
 ])
 
 dnl _OPENAFS_ROKEN_PATHS()
@@ -18,7 +19,8 @@ AC_DEFUN([_OPENAFS_ROKEN_PATHS], [
     [CPPFLAGS_roken="-I$roken_includedir"],
     [AS_IF([test x"$roken_root" != x],
       [CPPFLAGS_roken="-I$roken_root/include"])])
-  LIB_roken="-lroken"])
+  LIB_roken="-lroken"
+  buildtool_roken="$(LDFLAGS_roken) $(LIB_roken)"])
 
 dnl _OPENAFS_ROKEN_CHECK($action-if-found,
 dnl 			 $action-if-not-found)
@@ -80,6 +82,7 @@ AC_DEFUN([OPENAFS_ROKEN], [
   AC_SUBST(CPPFLAGS_roken)
   AC_SUBST(LDFLAGS_roken)
   AC_SUBST(DIR_roken)
+  AC_SUBST(buildtool_roken)
 
   AC_ARG_WITH([roken],
     [AS_HELP_STRING([--with-roken=DIR],
