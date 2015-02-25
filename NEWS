@@ -1,6 +1,6 @@
                        User-Visible OpenAFS Changes
 
-OpenAFS 1.6.11 (in progress)
+OpenAFS 1.6.11
 
   All platforms
 
@@ -20,7 +20,7 @@ OpenAFS 1.6.11 (in progress)
   Linux clients
 
     * Support kernels at least up to 3.19 (11549 11550 11569 11570 11595
-      11658..11662 11694)
+      11658..11662 11694 11752)
 
       Note: By default this excludes kernels 3.17 to 3.17.2, which will leak
             an inode reference when an error occurs in d_splice_alias(). The
