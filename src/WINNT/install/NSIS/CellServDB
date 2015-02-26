@@ -1,4 +1,4 @@
->grand.central.org      #GCO Public CellServDB 17 Nov 2014
+>grand.central.org      #GCO Public CellServDB 19 Jan 2015
 18.9.48.14                      #grand.mit.edu
 128.2.13.219                    #grand-old-opry.central.org
 >wu-wien.ac.at          #University of Economics, Vienna, Austria
@@ -435,10 +435,10 @@
 152.66.241.6                    #afs.iit.bme.hu
 >kfki.hu                #Wigner Research Centre for Physics - Budapest, Hungary
 148.6.2.109                     #afs0.kfki.hu
->dev.ru.is              #Reykjavik University
-130.208.209.37                  #afsdb1.dev.ru.is
-130.208.209.39                  #afsdb2.dev.ru.is
-130.208.209.40                  #afsdb3.dev.ru.is
+>rnd.ru.is              #Reykjavik University Research and Development Network
+130.208.242.66                  #lithium.rnd.ru.is.
+130.208.242.67                  #beryllium.rnd.ru.is.
+130.208.242.68                  #boron.rnd.ru.is.
 >caspur.it              #CASPUR Inter-University Computing Consortium, Rome
 193.204.5.45                    #pomodoro.caspur.it
 193.204.5.46                    #banana.caspur.it
