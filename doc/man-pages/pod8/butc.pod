@@ -175,14 +175,16 @@ socket will listen on all interfaces.
 =item B<-localauth>
 
 Constructs a server ticket using the server encryption key with the
-highest key version number in the local F</usr/afs/etc/KeyFile>. The
+highest key version number in the local F</usr/afs/etc/KeyFile> or
+F</usr/afs/etc/KeyFileExt>. The
 B<butc> command interpreter presents the ticket, which never expires, to
 the Volume Server and Volume Location Server to use in mutual
 authentication.
 
 Do not combine this argument with the B<-cell> flag, and use it only when
 logged on to a server machine as the local superuser C<root>; client
-machines do not have F</usr/afs/etc/KeyFile> file.
+machines do not have F</usr/afs/etc/KeyFile> or F</usr/afs/etc/KeyFileExt>
+files.
 
 =item B<-help>
 
@@ -212,6 +214,7 @@ configuration files in the local F</usr/afs/backup> directory.
 =head1 SEE ALSO
 
 L<KeyFile(5)>,
+L<KeyFileExt(5)>,
 L<ThisCell(5)>,
 L<UserList(5)>,
 L<butc(5)>,

@@ -35,6 +35,11 @@ Displaying actual keys on the standard output stream (by including the
 B<-showkey> flag) is a security exposure. Displaying a checksum is
 sufficient for most purposes.
 
+This command will only list keys in the F<KeyFile>; it cannot display
+keys from a F<KeyFileExt>.  A server running a modern, secure installation
+using only keys for the rxkad-k5 extension will yield no keys in
+the output of this command.
+
 =head1 OPTIONS
 
 =over 4
@@ -70,7 +75,8 @@ L<bos(8)>.
 =item B<-localauth>
 
 Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> file. The B<bos> command interpreter presents the
+F</usr/afs/etc/KeyFile> or F</usr/afs/etc/KeyFileExt> file.
+The B<bos> command interpreter presents the
 ticket to the BOS Server during mutual authentication. Do not combine this
 flag with the B<-cell> or B<-noauth> options. For more details, see
 L<bos(8)>.
@@ -136,6 +142,7 @@ included.
 =head1 SEE ALSO
 
 L<KeyFile(5)>,
+L<KeyFileExt(5)>,
 L<UserList(5)>,
 L<asetkey(8)>,
 L<bos_addkey(8)>,

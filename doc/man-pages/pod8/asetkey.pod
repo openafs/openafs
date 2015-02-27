@@ -1,6 +1,6 @@
 =head1 NAME
 
-asetkey - Add a key from a keytab to an AFS KeyFile
+asetkey - Add a key from a keytab to an AFS KeyFile or KeyFileExt
 
 =head1 SYNOPSIS
 
@@ -26,8 +26,8 @@ B<asetkey> list
 
 The B<asetkey> command is used to add a key to an AFS KeyFile or KeyFileExt
 from a Kerberos keytab.  It is similar to B<bos addkey> except that it must be
-run locally on the system where the KeyFile is located and it takes the
-new key from the command line or a Kerberos 5 keytab rather than prompting
+run locally on the system where the KeyFile or KeyFileExt is located
+and it takes the new key from a Kerberos 5 keytab rather than prompting
 for the password.
 
 B<asetkey delete> can be used to delete a key (similar to B<bos

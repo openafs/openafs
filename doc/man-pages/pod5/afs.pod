@@ -91,6 +91,8 @@ Administrative files:
 
 =item L<KeyFile(5)>
 
+=item L<KeyFileExt(5)>
+
 =item L<UserList(5)>
 
 =back
