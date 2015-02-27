@@ -31,27 +31,24 @@ new key from the command line or a Kerberos 5 keytab rather than prompting
 for the password.
 
 B<asetkey delete> can be used to delete a key (similar to B<bos
-removekeys>), and B<asetkey list> will list the keys in a KeyFile (similar
-to B<bos listkeys>).
+removekeys>), and B<asetkey list> will list the keys in a KeyFile
+and the keys in a KeyFileExt (similar to B<bos listkeys>, but more
+fully featured, since B<bos listkeys> cannot list the contents of
+a KeyFileExt).
 
 B<asetkey> is used when authentication for an AFS cell is provided by a
-Kerberos 5 KDC rather than B<kaserver>.  The key for the C<afs> or
+Kerberos 5 KDC rather than the deprecated B<kaserver>.
+The key for the C<afs> or
 C<afs/I<cell name>> principal in the Kerberos 5 KDC must match the key
-stored in the AFS KeyFile on all AFS database servers and file servers.
+stored in the AFS KeyFileExt on all AFS database servers and file servers.
 This is done by creating a keytab containing that key using the standard
 Kerberos commands (generally the C<ktadd> function of the B<kadmin>
 command) and then, on each AFS database server and file server, adding
-that key to the KeyFile with B<asetkey add>.  The I<kvno> chosen should
+that key to the KeyFileExt with B<asetkey add>.  The I<kvno> chosen should
 match the kvno in the Kerberos KDC (checked with B<kvno> or the
 C<getprinc> function of B<kadmin>).  I<principal> should be the name of
 the AFS principal in the keytab, which must be either C<afs> or
-C<afs/I<cell name>>. B<asetkey> can also be used to install a key
-from a hex string.
-
-In cells that use the Update Server to distribute the contents of the
-F</usr/afs/etc> directory, it is conventional to run B<asetkey add> only
-on the control machine and then let the Update Server propagate the new
-KeyFile to all other systems.
+C<afs/I<cell name>>.
 
 =head1 CAUTIONS
 
@@ -62,15 +59,15 @@ the encryption type.  Otherwise, AFS authentication may not work.
 
 As soon as a new keytab is created with C<ktadd>, new AFS service tickets
 will use the new key.  However, tokens formed from those service tickets
-will only work if the new key is present in the KeyFile on the AFS file
+will only work if the new key is present in the KeyFileExt on the AFS file
 server.  There is therefore an outage window between when the new keytab
-is created and when the key had been added to the KeyFile of all AFS
+is created and when the key had been added to the KeyFileExt of all AFS
 servers with B<asetkey>, during which newly obtained AFS tokens will not
 work properly.
 
-All of the KeyFile entries must match the key in the Kerberos KDC, but
-each time C<ktadd> is run, it creates a new key.  Either the Update Server
-or some other mechanism must be used to distribute the KeyFile to all servers,
+All of the KeyFileExt entries must match the key in the Kerberos KDC, but
+each time C<ktadd> is run, it creates a new key.  Some secure mechanism
+must be used to distribute the KeyFileExt to all servers,
 or the same keytab must be used with B<asetkey> on each server.
 
 =head1 EXAMPLES
@@ -97,9 +94,38 @@ system's krb5 headers.
     % asetkey add rxkad_krb5 4 17 /tmp/afs.keytab afs/disarray.mit.edu
     % asetkey add rxkad_krb5 4 16 /tmp/afs.keytab afs/disarray.mit.edu
 
-In a cell which is <B<not>> using the rxkad-k5 extension, the following
-commands create a new keytab for the principal C<afs> and then import the
-key into the KeyFile.  Note the kvno in the output from C<ktadd>.
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be able to read (for B<asetkey list>) and write (for
+B<asetkey add> and B<asetkey delete>) the KeyFileExt, normally
+F</usr/afs/etc/KeyFileExt>.  In practice, this means that the issuer must be
+the local superuser C<root> on the AFS file server or database server.
+For B<asetkey add>, the issuer must also be able to read the specified
+keytab file.
+
+=head1 HISTORICAL COMPATIBILITY
+
+A modern AFS cell should be using the rxkad-k5 extension, or risks
+terribly insecure operation (complete cell compromise for $100 in
+1 day).  The keys used for rxkad-k5 operation are stored in the
+KeyFileExt.  Cells not using the rxkad-k5 extension (i.e., stock
+rxkad) use keys of the des-cbc-crc encryption type, which are stored
+in the KeyFile.
+
+B<asetkey> retains the functionality needed to support stock rxkad
+operation, but its use is disrecommended.  A bare 8-byte hex key
+can be added with
+
+    % asetkey add I<kvno> I<key>
+
+I<key> should be an 8 byte hex representation.  An example using
+a kvno of 3:
+
+    % asetkey add 3 80b6a7cd7a9dadb6
+
+The following commands create a new keytab for the principal C<afs>
+and then import the key into the KeyFile.  Note the kvno in the
+output from C<ktadd>.
 
     % kadmin
     Authenticating as principal rra/admin@stanford.edu with password.
@@ -113,25 +139,10 @@ key into the KeyFile.  Note the kvno in the output from C<ktadd>.
 You may want to use C<afs/I<cell name>> instead of C<afs>, particularly if
 you may have multiple AFS cells for a single Kerberos realm.
 
-In the event you have been distributed a key by a Kerberos administrator
-in the form of a hex string, you may use asetkey to install that.
-
-    % asetkey add 3 80b6a7cd7a9dadb6
-
-I<key> should be an 8 byte hex representation.
-
-=head1 PRIVILEGE REQUIRED
-
-The issuer must be able to read (for B<asetkey list>) and write (for
-B<asetkey add> and B<asetkey delete>) the KeyFile, normally
-F</usr/afs/etc/KeyFile>.  In practice, this means that the issuer must be
-the local superuser C<root> on the AFS file server or database server.
-For B<asetkey add>, the issuer must also be able to read the specified
-keytab file.
-
 =head1 SEE ALSO
 
 L<KeyFile(5)>,
+L<KeyFileExt(5)>,
 L<bos_addkey(8)>,
 L<bos_listkeys(8)>,
 L<bos_removekey(8)>,
@@ -141,6 +152,8 @@ kvno(1)
 =head1 COPYRIGHT
 
 Copyright 2006 Russ Allbery <rra@stanford.edu>
+Copyright 2013,2015 Massachusetts Institute of Technology
 
 This documentation is covered by the IBM Public License Version 1.0.  This
-man page was written by Russ Allbery for OpenAFS.
+man page was written by Russ Allbery for OpenAFS and updated for the
+rxkad-k5 extension by Benjamin Kaduk.
