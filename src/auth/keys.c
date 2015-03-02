@@ -1057,6 +1057,8 @@ afsconf_typedKey_new(afsconf_keyType type, int kvno, int subType,
 void
 afsconf_typedKey_free(struct afsconf_typedKey **key)
 {
+    if (*key == NULL)
+	return;
     rx_opaque_freeContents(&(*key)->key);
     free(*key);
     *key = NULL;
@@ -1082,10 +1084,14 @@ void
 afsconf_typedKey_values(struct afsconf_typedKey *key, afsconf_keyType *type,
 			int *kvno, int *subType, struct rx_opaque **material)
 {
-    *type = key->type;
-    *kvno = key->kvno;
-    *subType = key->subType;
-    *material = &key->key;
+    if (type != NULL)
+	*type = key->type;
+    if (kvno != NULL)
+	*kvno = key->kvno;
+    if (subType != NULL)
+	*subType = key->subType;
+    if (material != NULL)
+	*material = &key->key;
 }
 
 int
