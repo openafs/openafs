@@ -172,8 +172,6 @@ static int SimulateForwardMultiple(struct rx_connection *fromconn,
 				   afs_int32 fromtid, afs_int32 fromdate,
 				   manyDests * tr, afs_int32 flags,
 				   void *cookie, manyResults * results);
-static int DoVolOnline(struct nvldbentry *vldbEntryPtr, afs_uint32 avolid,
-		       int index, char *vname, struct rx_connection *connPtr);
 static int DoVolClone(struct rx_connection *aconn, afs_uint32 avolid,
 		      afs_int32 apart, int type, afs_uint32 cloneid,
 		      char *typestring, char *pname, char *vname, char *suffix,
@@ -3422,41 +3420,6 @@ PutTrans(afs_int32 *vldbindex, struct replica *replicas,
     }
 }
 
-static int
-DoVolOnline(struct nvldbentry *vldbEntryPtr, afs_uint32 avolid, int index,
-	    char *vname, struct rx_connection *connPtr)
-{
-    afs_int32 code = 0, rcode = 0, onlinetid = 0;
-
-    code =
-	AFSVolTransCreate_retry(connPtr, avolid,
-				vldbEntryPtr->serverPartition[index],
-				ITOffline,
-				&onlinetid);
-    if (code)
-      EPRINT(code, "Could not create transaction on readonly...\n");
-
-    else {
-	code = AFSVolSetFlags(connPtr, onlinetid, 0);
-	if (code)
-	    EPRINT(code, "Could not set flags on readonly...\n");
-    }
-
-    if (!code) {
-	code =
-	    AFSVolSetIdsTypes(connPtr, onlinetid, vname,
-			      ROVOL, vldbEntryPtr->volumeId[RWVOL],
-			      0, 0);
-	if (code)
-	    EPRINT(code, "Could not set ids on readonly...\n");
-    }
-    if (!code)
-	code = AFSVolEndTrans(connPtr, onlinetid, &rcode);
-    if (!code)
-	code = rcode;
-    return code;
-}
-
 /**
  * Release a volume to read-only sites
  *
@@ -3477,7 +3440,6 @@ DoVolOnline(struct nvldbentry *vldbEntryPtr, afs_uint32 avolid, int index,
  * @param[in] flags         bitmap of options
  *                            REL_COMPLETE  - force a complete release
  *                            REL_FULLDUMPS - force full dumps
- *                            REL_STAYUP    - dump to clones to avoid offline time
  */
 int
 UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
@@ -3523,7 +3485,6 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
     int justnewsites = 0; /* are we just trying to release to new RO sites? */
     int sites = 0; /* number of ro sites */
     int new_sites = 0; /* number of ro sites markes as new */
-    int stayUp = (flags & REL_STAYUP);
 
     typedef enum {
         CR_RECOVER    = 0x0000, /**< not complete: a recovery from a previous failed release */
@@ -3639,29 +3600,6 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
     code = VolumeExists(afromserver, afrompart, cloneVolId);
     roexists = ((code == ENODEV) ? 0 : 1);
 
-    /* For stayUp case, if roclone is the only site, bypass special handling */
-    if (stayUp && roclone) {
-	int e;
-	error = 0;
-
-	for (e = 0; (e < entry.nServers) && !error; e++) {
-	    if ((entry.serverFlags[e] & VLSF_ROVOL)) {
-		if (!(VLDB_IsSameAddrs(entry.serverNumber[e], afromserver,
-				       &error)))
-		    break;
-	    }
-	}
-	if (e >= entry.nServers)
-	    stayUp = 0;
-    }
-
-    /* If we had a previous release to complete, do so, else: */
-    if (stayUp && (cloneVolId == entry.volumeId[ROVOL])) {
-	code = ubik_VL_GetNewVolumeId(cstruct, 0, 1, &cloneVolId);
-	ONERROR(code, afromvol,
-		"Cannot get temporary clone id for volume %u\n");
-    }
-
     fromconn = UV_Bind(afromserver, AFSCONF_VOLUMEPORT);
     if (!fromconn)
 	ONERROR(-1, afromserver,
@@ -3765,21 +3703,12 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 	 * (it was recently added), then also delete it. We do not
 	 * want to "reclone" a temporary RO clone.
 	 */
-	if (stayUp) {
-	    code = VolumeExists(afromserver, afrompart, cloneVolId);
-	    if (!code) {
-		code = DoVolDelete(fromconn, cloneVolId, afrompart, "previous clone", 0,
-				   NULL, NULL);
-		if (code && (code != VNOVOL))
-		    ERROREXIT(code);
-		VDONE;
-	    }
-	}
+
 	/* clean up any previous tmp clone before starting if staying up */
 	if (roexists
 	    && (!roclone || (entry.serverFlags[roindex] & VLSF_DONTUSE))) {
 	    code = DoVolDelete(fromconn,
-			       stayUp ? entry.volumeId[ROVOL] : cloneVolId,
+			       cloneVolId,
 			       afrompart, "the", 0, NULL, NULL);
 	    if (code && (code != VNOVOL))
 		ERROREXIT(code);
@@ -3891,16 +3820,13 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 
 	if (roclone) {
 	    strcpy(vname, entry.name);
-	    if (stayUp)
-		strcat(vname, ".roclone");
-	    else
-		strcat(vname, ".readonly");
+	    strcat(vname, ".readonly");
 	} else {
 	    strcpy(vname, "readonly-clone-temp");
 	}
 
 	code = DoVolClone(fromconn, afromvol, afrompart, readonlyVolume,
-			  cloneVolId, (roclone && !stayUp)?"permanent RO":
+			  cloneVolId, roclone?"permanent RO":
 			  "temporary RO", NULL, vname, NULL, &volstatus, NULL);
 	if (code) {
 	    error = code;
@@ -3923,7 +3849,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 	/* Remember clone volume ID in case we fail or are interrupted */
 	entry.cloneId = cloneVolId;
 
-	if (roclone && !stayUp) {
+	if (roclone) {
 	    /* Bring the RO clone online - though not if it's a temporary clone */
 	    VPRINT1("Starting transaction on RO clone volume %u...",
 		    cloneVolId);
@@ -3993,10 +3919,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
      */
 
     strcpy(vname, entry.name);
-    if (stayUp)
-	strcat(vname, ".roclone");
-    else
-	strcat(vname, ".readonly");
+    strcat(vname, ".readonly");
     memset(&cookie, 0, sizeof(cookie));
     strncpy(cookie.name, vname, VOLSER_OLDMAXVOLNAME);
     cookie.type = ROVOL;
@@ -4004,7 +3927,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
     cookie.clone = 0;
 
     /* how many to do at once, excluding clone */
-    if (stayUp || justnewsites)
+    if (justnewsites)
 	nservers = entry.nServers; /* can do all, none offline */
     else
 	nservers = entry.nServers / 2;
@@ -4030,22 +3953,13 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
     ONERROR0(code, "Failed to create transaction on the release clone\n");
     VDONE;
 
-    /* if we have a clone, treat this as done, for now */
-    if (stayUp && !complete_release) {
-	entry.serverFlags[roindex] |= VLSF_NEWREPSITE;
-	entry.serverFlags[roindex] &= ~VLSF_DONTUSE;
-	entry.flags |= VLF_ROEXISTS;
-
-	releasecount++;
-    }
-
     /* For each index in the VLDB */
     for (vldbindex = 0; vldbindex < entry.nServers;) {
 	/* Get a transaction on the replicas. Pick replicas which have an old release. */
 	for (volcount = 0;
 	     ((volcount < nservers) && (vldbindex < entry.nServers));
 	     vldbindex++) {
-	    if (!stayUp && !justnewsites) {
+	    if (!justnewsites) {
 		/* The first two RO volumes will be released individually.
 		 * The rest are then released in parallel. This is a hack
 		 * for clients not recognizing right away when a RO volume
@@ -4080,7 +3994,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 			 &(replicas[volcount].trans),
 			 &(times[volcount].crtime),
 			 &(times[volcount].uptime),
-			 origflags, stayUp?cloneVolId:0);
+			 origflags, 0);
 	    if (code)
 		continue;
 
@@ -4151,8 +4065,8 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 
 	if (verbose) {
 	    fprintf(STDOUT, "Starting ForwardMulti from %lu to %u on %s",
-		    (unsigned long)cloneVolId, stayUp?
-		    cloneVolId:entry.volumeId[ROVOL],
+		    (unsigned long)cloneVolId,
+		    entry.volumeId[ROVOL],
                     noresolve ? afs_inet_ntoa_r(entry.serverNumber[times[0].
                                                 vldbEntryIndex], hoststr) :
                     hostutil_GetNameByINet(entry.
@@ -4239,166 +4153,12 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 	    }
 	}
 
-	if (!stayUp) {
-	    PutTrans(&vldbindex, replicas, toconns, times, volcount);
-	    MapNetworkToHost(&entry, &storeEntry);
-	    vcode = VLDB_ReplaceEntry(afromvol, RWVOL, &storeEntry, 0);
-	    ONERROR(vcode, afromvol,
-		    " Could not update VLDB entry for volume %u\n");
-	}
-    }				/* for each index in the vldb */
-
-    /* for the stayup case, put back at the end */
-    if (stayUp) {
-	afs_uint32 tmpVol = entry.volumeId[ROVOL];
-	strcpy(vname, entry.name);
-	strcat(vname, ".readonly");
-
-	if (roclone) {
-	    /* have to clear flags to ensure new vol goes online
-	     */
-	    code = AFSVolSetFlags(fromconn, fromtid, 0);
-	    if (code && (code != ENOENT)) {
-		PrintError("Failed to set flags on ro volume: ",
-			   code);
-	    }
-
-	    VPRINT3("%sloning to permanent RO %u on %s...", roexists?"Re-c":"C", tmpVol,
-		    noresolve ?
-		    afs_inet_ntoa_r(entry.serverNumber[roindex],
-				    hoststr) :
-		    hostutil_GetNameByINet(entry.serverNumber[roindex]));
-
-	    code = AFSVolClone(fromconn, fromtid, roexists?tmpVol:0,
-			       readonlyVolume, vname, &tmpVol);
-
-	    if (!code) {
-		VDONE;
-		VPRINT("Bringing readonly online...");
-		code = DoVolOnline(&entry, tmpVol, roindex, vname,
-				   fromconn);
-	    }
-	    if (code) {
-		EPRINT(code, "Failed: ");
-		entry.serverFlags[roindex] &= ~VLSF_NEWREPSITE;
-		entry.serverFlags[roindex] |= VLSF_DONTUSE;
-	    } else {
-		entry.serverFlags[roindex] |= VLSF_NEWREPSITE;
-		entry.serverFlags[roindex] &= ~VLSF_DONTUSE;
-		entry.flags |= VLF_ROEXISTS;
-		VDONE;
-	    }
-
-	}
-	for (s = 0; s < volcount; s++) {
-	    if (replicas[s].trans) {
-		vldbindex = times[s].vldbEntryIndex;
-
-		/* ok, so now we have to end the previous transaction */
-		code = AFSVolEndTrans(toconns[s], replicas[s].trans, &rcode);
-		if (!code)
-		    code = rcode;
-
-		if (!code) {
-		    code = AFSVolTransCreate_retry(toconns[s],
-						   cloneVolId,
-						   entry.serverPartition[vldbindex],
-						   ITBusy,
-						   &(replicas[s].trans));
-		    if (code) {
-			PrintError("Unable to begin transaction on temporary clone: ", code);
-		    }
-		} else {
-		    PrintError("Unable to end transaction on temporary clone: ", code);
-		}
-
-		VPRINT3("%sloning to permanent RO %u on %s...", times[s].crtime?"Re-c":"C",
-			tmpVol, noresolve ?
-			afs_inet_ntoa_r(htonl(replicas[s].server.destHost),
-					hoststr) :
-			hostutil_GetNameByINet(htonl(replicas[s].server.destHost)));
-		if (times[s].crtime)
-		    code = AFSVolClone(toconns[s], replicas[s].trans, tmpVol,
-				       readonlyVolume, vname, &tmpVol);
-		else
-		    code = AFSVolClone(toconns[s], replicas[s].trans, 0,
-				       readonlyVolume, vname, &tmpVol);
-
-		if (code) {
-		    if (!times[s].crtime) {
-			entry.serverFlags[vldbindex] |= VLSF_DONTUSE;
-		    }
-		    entry.serverFlags[vldbindex] &= ~VLSF_NEWREPSITE;
-		    PrintError("Failed: ",
-			       code);
-		} else
-		    VDONE;
-
-		if (entry.serverFlags[vldbindex] != VLSF_DONTUSE) {
-		    /* bring it online (mark it InService) */
-		    VPRINT1("Bringing readonly online on %s...",
-			    noresolve ?
-			    afs_inet_ntoa_r(
-				htonl(replicas[s].server.destHost),
-				hoststr) :
-			    hostutil_GetNameByINet(
-				htonl(replicas[s].server.destHost)));
-
-		    code = DoVolOnline(&entry, tmpVol, vldbindex, vname,
-				       toconns[s]);
-		    /* needed to come online for cloning */
-		    if (code) {
-			/* technically it's still new, just not online */
-			entry.serverFlags[s] &= ~VLSF_NEWREPSITE;
-			entry.serverFlags[s] |= VLSF_DONTUSE;
-			if (code != ENOENT) {
-			    PrintError("Failed to set correct names and ids: ",
-				       code);
-			}
-		    } else
-			VDONE;
-		}
-
-		VPRINT("Marking temporary clone for deletion...\n");
-		code = AFSVolSetFlags(toconns[s],
-				      replicas[s].trans,
-				      VTDeleteOnSalvage |
-				      VTOutOfService);
-		if (code)
-		  EPRINT(code, "Failed: ");
-		else
-		  VDONE;
-
-		VPRINT("Ending transaction on temporary clone...\n");
-		code = AFSVolEndTrans(toconns[s], replicas[s].trans, &rcode);
-		if (!code)
-		    rcode = code;
-		if (code)
-		    PrintError("Failed: ", code);
-		else {
-		    VDONE;
-		    /* ended successfully */
-		    replicas[s].trans = 0;
-
-		    VPRINT2("Deleting temporary clone %u on %s...", cloneVolId,
-			    noresolve ?
-			    afs_inet_ntoa_r(htonl(replicas[s].server.destHost),
-					    hoststr) :
-			    hostutil_GetNameByINet(htonl(replicas[s].server.destHost)));
-		    code = DoVolDelete(toconns[s], cloneVolId,
-				       entry.serverPartition[vldbindex],
-				       NULL, 0, NULL, NULL);
-		    if (code) {
-			EPRINT(code, "Failed: ");
-		    } else
-			VDONE;
-		}
-	    }
-	}
-
-	/* done. put the vldb entry in the success tail case*/
 	PutTrans(&vldbindex, replicas, toconns, times, volcount);
-    }
+	MapNetworkToHost(&entry, &storeEntry);
+	vcode = VLDB_ReplaceEntry(afromvol, RWVOL, &storeEntry, 0);
+	ONERROR(vcode, afromvol,
+		" Could not update VLDB entry for volume %u\n");
+    }				/* for each index in the vldb */
 
     /* End the transaction on the cloned volume */
     code = AFSVolEndTrans(fromconn, fromtid, &rcode);
@@ -4438,7 +4198,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 
     entry.cloneId = 0;
     /* All the ROs were release successfully. Remove the temporary clone */
-    if (!roclone || stayUp) {
+    if (!roclone) {
 	if (verbose) {
 	    fprintf(STDOUT, "Deleting the releaseClone %lu ...",
 		    (unsigned long)cloneVolId);

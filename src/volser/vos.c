@@ -2894,8 +2894,10 @@ ReleaseVolume(struct cmd_syndesc *as, void *arock)
 
     if (as->parms[1].items) /* -force */
 	flags |= (REL_COMPLETE | REL_FULLDUMPS);
-    if (as->parms[2].items) /* -stayonline */
-	flags |= REL_STAYUP;
+    if (as->parms[2].items) { /* -stayonline */
+	fprintf(STDERR, "vos: -stayonline not supported\n");
+	return EINVAL;
+    }
     if (as->parms[3].items) /* -force-reclone */
         flags |= REL_COMPLETE;
 
@@ -6074,7 +6076,8 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL,
 		"force a complete release and full dumps");
     cmd_AddParmAlias(ts, 1, "-f"); /* original force option */
-    cmd_AddParm(ts, "-stayonline", CMD_FLAG, CMD_OPTIONAL,
+    /* keep this reserved */
+    cmd_AddParm(ts, "-stayonline", CMD_FLAG, CMD_OPTIONAL|CMD_HIDDEN,
 		"release to cloned temp vol, then clone back to repsite RO");
     cmd_AddParm(ts, "-force-reclone", CMD_FLAG, CMD_OPTIONAL,
 		"force a reclone and complete release with incremental dumps");
