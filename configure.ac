@@ -60,6 +60,8 @@ AS_IF([test x"$KRB5_LIBS" != x],
 	krb5_c_encrypt \
 	krb5_decode_ticket \
 	krb5_enctype_enable \
+	krb5_free_keytab_entry_contents \
+	krb5_free_unparsed_name \
 	krb5_get_init_creds_opt_alloc \
 	krb5_get_prompt_types \
 	krb5_princ_size \
@@ -87,6 +89,8 @@ AS_IF([test x"$KRB5_LIBS" != x],
        [AC_MSG_ERROR([Cannot find a usable com_err.h])])
      AC_CHECK_MEMBERS([krb5_creds.keyblock, krb5_creds.keyblock.enctype, krb5_creds.session,
 		       krb5_prompt.type], [], [], [#include <krb5.h>])
+     AC_CHECK_MEMBERS([krb5_keytab_entry.key, krb5_keytab_entry.keyblock],
+		      [], [], [#include <krb5.h>])
 dnl If we have krb5_creds.session, we are using heimdal
 dnl If we're using heimdal, aklog needs libasn1 for encode_EncTicketPart and a
 dnl few other functions. But just aklog; not any of the other stuff that uses
