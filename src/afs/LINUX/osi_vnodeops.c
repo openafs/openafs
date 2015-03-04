@@ -1147,7 +1147,6 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
     struct dentry *parent;
     int valid;
     struct afs_fakestat_state fakestate;
-    int locked = 0;
     int force_drop = 0;
     afs_uint32 parent_dv;
 
@@ -1161,6 +1160,7 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
        return -ECHILD;
 #endif
 
+    AFS_GLOCK();
     afs_InitFakeStat(&fakestate);
 
     if (dp->d_inode) {
@@ -1169,45 +1169,33 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 	if (vcp == afs_globalVp)
 	    goto good_dentry;
 
-	parent = dget_parent(dp);
-	pvcp = VTOAFS(parent->d_inode);
+	if (vcp->mvstat == AFS_MVSTAT_MTPT) {
+	    if (vcp->mvid.target_root && (vcp->f.states & CMValid)) {
+		int tryEvalOnly = 0;
+		int code = 0;
+		struct vrequest *treq = NULL;
 
-	if ((vcp->mvstat != AFS_MVSTAT_FILE) ||
-		(pvcp->mvstat == AFS_MVSTAT_MTPT && afs_fakestat_enable)) {	/* need to lock */
-	    credp = crref();
-	    AFS_GLOCK();
-	    locked = 1;
-	}
+		credp = crref();
 
-	if (locked) {
-	    if (vcp->mvstat == AFS_MVSTAT_MTPT) {
-		if (vcp->mvid.target_root && (vcp->f.states & CMValid)) {
-		    int tryEvalOnly = 0;
-		    int code = 0;
-		    struct vrequest *treq = NULL;
-
-		    code = afs_CreateReq(&treq, credp);
-		    if (code) {
-			dput(parent);
-			goto bad_dentry;
-		    }
-		    if ((strcmp(dp->d_name.name, ".directory") == 0)) {
-			tryEvalOnly = 1;
-		    }
-		    if (tryEvalOnly)
-			code = afs_TryEvalFakeStat(&vcp, &fakestate, treq);
-		    else
-			code = afs_EvalFakeStat(&vcp, &fakestate, treq);
-		    afs_DestroyReq(treq);
-		    if ((tryEvalOnly && vcp->mvstat == AFS_MVSTAT_MTPT) || code) {
-			/* a mount point, not yet replaced by its directory */
-			dput(parent);
-			goto bad_dentry;
-		    }
+		code = afs_CreateReq(&treq, credp);
+		if (code) {
+		    goto bad_dentry;
 		}
-	    } else if (vcp->mvstat == AFS_MVSTAT_ROOT && *dp->d_name.name != '/') {
-		osi_Assert(vcp->mvid.parent != NULL);
+		if ((strcmp(dp->d_name.name, ".directory") == 0)) {
+		    tryEvalOnly = 1;
+		}
+		if (tryEvalOnly)
+		    code = afs_TryEvalFakeStat(&vcp, &fakestate, treq);
+		else
+		    code = afs_EvalFakeStat(&vcp, &fakestate, treq);
+		afs_DestroyReq(treq);
+		if ((tryEvalOnly && vcp->mvstat == AFS_MVSTAT_MTPT) || code) {
+		    /* a mount point, not yet replaced by its directory */
+		    goto bad_dentry;
+		}
 	    }
+	} else if (vcp->mvstat == AFS_MVSTAT_ROOT && *dp->d_name.name != '/') {
+	    osi_Assert(vcp->mvid.parent != NULL);
 	}
 
 #ifdef notdef
@@ -1217,7 +1205,6 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 	 */
 	if (vcp->last_looker != treq.uid) {
 	    if (!afs_AccessOK(vcp, (vType(vcp) == VREG) ? PRSFS_READ : PRSFS_LOOKUP, &treq, CHECK_MODE_BITS)) {
-		dput(parent);
 		goto bad_dentry;
 	    }
 
@@ -1225,24 +1212,23 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 	}
 #endif
 
-	parent_dv = parent_vcache_dv(parent->d_inode, credp, locked);
+	parent = dget_parent(dp);
+	pvcp = VTOAFS(parent->d_inode);
+	parent_dv = parent_vcache_dv(parent->d_inode, credp, 1);
 
 	/* If the parent's DataVersion has changed or the vnode
 	 * is longer valid, we need to do a full lookup.  VerifyVCache
 	 * isn't enough since the vnode may have been renamed.
 	 */
 
-	if ((!locked) && (parent_dv > dp->d_time || !(vcp->f.states & CStatd)) ) {
-	    credp = crref();
-	    AFS_GLOCK();
-	    locked = 1;
-	}
-
-	if (locked && (parent_dv > dp->d_time || !(vcp->f.states & CStatd))) {
+	if (parent_dv > dp->d_time || !(vcp->f.states & CStatd)) {
 	    struct vattr *vattr = NULL;
 	    int code;
 	    int lookup_good;
 
+	    if (credp == NULL) {
+		credp = crref();
+	    }
 	    code = afs_lookup(pvcp, (char *)dp->d_name.name, &tvc, credp);
 
 	    if (code) {
@@ -1312,7 +1298,7 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 
 	parent = dget_parent(dp);
 	pvcp = VTOAFS(parent->d_inode);
-	parent_dv = parent_vcache_dv(parent->d_inode, credp, locked);
+	parent_dv = parent_vcache_dv(parent->d_inode, credp, 1);
 
 	if (parent_dv > dp->d_time || !(pvcp->f.states & CStatd)
 	    || afs_IsDynroot(pvcp)) {
@@ -1330,11 +1316,8 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
     /* Clean up */
     if (tvc)
 	afs_PutVCache(tvc);
-    afs_PutFakeStat(&fakestate);	/* from here on vcp may be no longer valid */
-    if (locked) {
-	/* we hold the global lock if we evaluated a mount point */
-	AFS_GUNLOCK();
-    }
+    afs_PutFakeStat(&fakestate);
+    AFS_GUNLOCK();
     if (credp)
 	crfree(credp);
 
