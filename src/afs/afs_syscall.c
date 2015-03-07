@@ -141,6 +141,8 @@ copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst)
     if (test_thread_flag(TIF_31BIT))
 #elif defined(AFS_S390X_LINUX20_ENV)
     if (current->thread.flags & S390_FLAG_31BIT)
+#elif defined(AFS_ARM64_LINUX26_ENV)
+    if (is_compat_task())
 
 #else
 #error pioctl32 not done for this linux
@@ -416,6 +418,8 @@ copyin_iparam(caddr_t cmarg, struct iparam *dst)
     if (test_thread_flag(TIF_31BIT))
 #elif defined(AFS_S390X_LINUX20_ENV)
     if (current->thread.flags & S390_FLAG_31BIT)
+#elif defined(AFS_ARM64_LINUX26_ENV)
+    if (is_compat_task())
 
 #else
 #error iparam32 not done for this linux platform

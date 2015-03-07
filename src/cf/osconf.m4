@@ -69,7 +69,7 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${CC} -shared"
 		;;
 
-	arm_linux_24 | arm_linux26)
+	arm_linux_24 | arm_linux26 | arm64_linux26)
 		CCOBJ="\$(CC) -fPIC"
 		MT_CFLAGS='-pthread -D_REENTRANT'
 		PAM_OPTMZ=-O2
