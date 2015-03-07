@@ -122,6 +122,7 @@
 # include <linux/kdev_t.h>
 # include <linux/ioctl.h>
 # if defined(AFS_LINUX26_ENV)
+#  include <linux/compat.h>
 #  include <linux/backing-dev.h>
 #  include <linux/pagemap.h>
 #  include <linux/namei.h>
