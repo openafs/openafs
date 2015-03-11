@@ -448,8 +448,10 @@ rxi_syscall(afs_uint32 a3, afs_uint32 a4, void *a5)
 
 #if defined(AFS_SGI_ENV)
     rcode = afs_syscall(AFS_SYSCALL, 28, a3, a4, a5);
-#else
+#elif defined(AFS_SYSCALL)
     rcode = syscall(AFS_SYSCALL, 28 /* AFSCALL_CALL */ , a3, a4, a5);
+#else
+    rcode = -1;
 #endif /* AFS_SGI_ENV */
 
     signal(SIGSYS, old);
