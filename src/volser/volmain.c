@@ -173,6 +173,13 @@ volser_syscall(afs_uint32 a3, afs_uint32 a4, void *a5)
     }
     return err;
 }
+#elif !defined(AFS_SYSCALL)
+int
+volser_syscall(afs_uint32 a3, afs_uint32 a4, void *a5)
+{
+    errno = ENOSYS;
+    return -1;
+}
 #else
 int
 volser_syscall(afs_uint32 a3, afs_uint32 a4, void *a5)

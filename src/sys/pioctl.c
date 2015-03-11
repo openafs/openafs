@@ -51,9 +51,14 @@ lpioctl(char *path, int cmd, void *cmarg, int follow)
     rval = proc_afs_syscall(AFSCALL_PIOCTL, (long)path, cmd, (long)cmarg,
 			    follow, &errcode);
 
-    if(rval)
+    if(rval) {
+# ifdef AFS_SYSCALL
 	errcode = syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, cmd, cmarg,
 			  follow);
+# else
+	errcode = -1;
+# endif
+    }
 
     return (errcode);
 }

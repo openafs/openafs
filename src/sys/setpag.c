@@ -55,8 +55,14 @@ lsetpag(void)
 
     rval = proc_afs_syscall(AFSCALL_SETPAG,0,0,0,0,&errcode);
 
-    if(rval)
+    if(rval) {
+# ifdef AFS_SYSCALL
       errcode = syscall(AFS_SYSCALL, AFSCALL_SETPAG);
+# else
+      errcode = -1;
+# endif
+    }
+
 #elif defined(AFS_DARWIN80_ENV)
     int rval;
 

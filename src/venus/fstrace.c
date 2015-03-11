@@ -1120,12 +1120,22 @@ afs_syscall(long call, long parm0, long parm1, long parm2, long parm3,
     /* Linux can only handle 5 arguments in the actual syscall. */
     if (call == AFSCALL_ICL) {
 	rval = proc_afs_syscall(call, parm0, parm1, parm2, (long)eparm, &code);
-	if (rval)
+	if (rval) {
+#ifdef AFS_SYSCALL
 	    code = syscall(AFS_SYSCALL, call, parm0, parm1, parm2, eparm);
+#else
+	    code = -1;
+#endif
+	}
     } else {
 	rval = proc_afs_syscall(call, parm0, parm1, parm2, parm3, &code);
-	if (rval)
+	if (rval) {
+#ifdef AFS_SYSCALL
 	    code = syscall(AFS_SYSCALL, call, parm0, parm1, parm2, parm3);
+#else
+	    code = -1;
+#endif
+	}
     }
 #if defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_SPARC_LINUX20_ENV)
     /* on sparc this function returns none value, so do it myself */
@@ -1137,7 +1147,11 @@ afs_syscall(long call, long parm0, long parm1, long parm2, long parm3,
     if (!code) code = rval;
 #else
 #if !defined(AFS_SGI_ENV) && !defined(AFS_AIX32_ENV)
+# if defined(AFS_SYSCALL)
     code = syscall(AFS_SYSCALL, call, parm0, parm1, parm2, parm3, parm4);
+# else
+    code = -1;
+# endif
 #else
 #if defined(AFS_SGI_ENV)
     code = syscall(AFS_ICL, call, parm0, parm1, parm2, parm3, parm4);	/* XXX */

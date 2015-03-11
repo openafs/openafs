@@ -57,9 +57,13 @@ main(int argc, char **argv)
 	    numberFlag = 1;
 	}
     }
+#ifdef AFS_SYSCALL
     code =
 	syscall(AFS_SYSCALL, parms[0], parms[1], parms[2], parms[3], parms[4],
 		parms[5]);
+#else
+    code = -1;
+#endif
     printf("code %d\n", code);
     return 0;
 }

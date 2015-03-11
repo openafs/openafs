@@ -274,12 +274,18 @@ afsd_call_syscall(struct afsd_syscall_args *args)
     error = os_syscall(args);
 
     if (afsd_debug) {
+        const char *syscall_str;
+#if defined(AFS_SYSCALL)
+        syscall_str = AFS_STRINGIZE(AFS_SYSCALL);
+#else
+        syscall_str = "[AFS_SYSCALL]";
+#endif
 	if (error == -1) {
 	    char *s = strerror(errno);
-	    printf("SScall(%d, %d, %d)=%d (%d, %s)\n", AFS_SYSCALL, AFSCALL_CALL,
+	    printf("SScall(%s, %d, %d)=%d (%d, %s)\n", syscall_str, AFSCALL_CALL,
 		   (int)args->params[0], error, errno, s);
 	} else {
-	    printf("SScall(%d, %d, %d)=%d\n", AFS_SYSCALL, AFSCALL_CALL,
+	    printf("SScall(%s, %d, %d)=%d\n", syscall_str, AFSCALL_CALL,
 		   (int)args->params[0], error);
 	}
     }
