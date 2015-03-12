@@ -86,7 +86,7 @@ void
 WriteLogBuffer(char *buf, afs_uint32 len)
 {
     LOCK_SERVERLOG();
-    if (serverLogFD > 0) {
+    if (serverLogFD >= 0) {
 	if (write(serverLogFD, buf, len) < 0)
 	    ; /* don't care */
     }
@@ -132,7 +132,7 @@ vFSLog(const char *format, va_list args)
 	syslog(LOG_INFO, "%s", info);
     } else
 #endif
-    if (serverLogFD > 0) {
+    if (serverLogFD >= 0) {
 	if (write(serverLogFD, tbuffer, len) < 0)
 	    ; /* don't care */
     }
@@ -420,10 +420,10 @@ ReOpenLog(const char *fileName)
 #endif
 
     LOCK_SERVERLOG();
-    if (serverLogFD > 0)
+    if (serverLogFD >= 0)
 	close(serverLogFD);
     serverLogFD = open(fileName, O_WRONLY | O_APPEND | O_CREAT | (isfifo?O_NONBLOCK:0), 0666);
-    if (serverLogFD > 0) {
+    if (serverLogFD >= 0) {
 	if (freopen(fileName, "a", stdout) == NULL)
 	    ; /* don't care */
 	if (freopen(fileName, "a", stderr) != NULL) {
