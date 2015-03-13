@@ -125,11 +125,6 @@
 #define AFSCALL_RXSTATS_DISABLE	0x2	/* Disable RX stats */
 #define AFSCALL_RXSTATS_CLEAR	0x4	/* Clear RX stats */
 
-/* Main afs syscall entry; this number may vary per system (i.e. defined in afs/param.h) */
-#ifndef	AFS_SYSCALL
-#define AFS_SYSCALL		31
-#endif
-
 /* arguments passed by afsd */
 #define IDTYPE_UID 0
 
