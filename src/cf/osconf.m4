@@ -201,7 +201,7 @@ case $AFS_SYSNAME in
 		XCFLAGS="-pipe"
 		;;
 
-	ia64_linux24|ia64_linux26)
+	ia64_linux26)
 		KERN_OPTMZ=-O2
 		MT_CFLAGS='-pthread -D_REENTRANT'
 		PAM_OPTMZ=-O2
@@ -223,7 +223,7 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${CC} -shared"
 		;;
 
-	ppc64_linux24 | ppc64_linux26)
+	ppc64_linux26)
 		MT_CFLAGS='-pthread -D_REENTRANT'
 		PAM_OPTMZ=-O2
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
@@ -249,7 +249,7 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${CC} -shared"
 		;;
 
-	i386_umlinux22 | i386_umlinux24 | i386_umlinux26)
+	i386_umlinux26)
 		MT_CFLAGS='-pthread -D_REENTRANT'
 		DBG=-g
 		LWP_DBG=-g
@@ -273,16 +273,6 @@ case $AFS_SYSNAME in
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_LINKER="${CC} -shared"
 		XCFLAGS=
-		;;
-
-	parisc_linux24)
-		KERN_OPTMZ=-O2
-		MT_CFLAGS='-pthread -D_REENTRANT'
-		PAM_OPTMZ=-O2
-		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
-		SHLIB_CFLAGS="-fPIC"
-		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		SHLIB_LINKER="${CC} -shared"
 		;;
 
 	ppc_darwin_70)
@@ -422,7 +412,7 @@ case $AFS_SYSNAME in
 		AIX64="yes"
 		;;
 
-	s390_linux22|s390_linux24|s390_linux26)
+	s390_linux26)
 		LD="ld"
 		KERN_OPTMZ=-O2
 		MT_CFLAGS='-pthread -D_REENTRANT'
@@ -433,7 +423,7 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${CC} -shared"
 		;;
 
-	s390x_linux24|s390x_linux26)
+	s390x_linux26)
 		CCOBJ="\$(CC) -fPIC"
 		LD="ld"
 		KERN_OPTMZ=-O2
