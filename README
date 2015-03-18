@@ -31,41 +31,39 @@ A  Configuring
       into with this name when you build.
 
       alpha_dux40, alpha_dux50, alpha_dux51 (client does not work)
-      alpha_linux22, alpha_linux24, alpha_linux26
+      alpha_linux26
       alpha_nbsd15, alpha_nbsd16
       amd64_fbsd_80, amd64_fbsd_81, amd64_fbsd_82, amd64_fbsd_83,
          amd64_fbsd_84, amd64_fbsd_90, amd64_fbsd_91, amd64_fbsd_92,
          amd64_fbsd_93, amd64_fbsd_100, amd64_fbsd_101
-      amd64_linux24, amd64_linux26
+      amd64_linux26
       amd64_nbsd20, amd64_nbsd30, amd64_nbsd40
-      arm_linux24, arm_linux26
+      arm_linux26
       hp_ux11i, hp_ux110, hp_ux1123 (See notes below for information on
          getting missing header)
       hp_ux102 (Client port possible, but db servers and utilities work)
       i386_fbsd_80, i386_fbsd_81, i386_fbsd_82, i386_fbsd_83,
          i386_fbsd_84, i386_fbsd_90, i386_fbsd_91, i386_fbsd_92,
          i386_fbsd_93, i386_fbsd_100, i386_fbsd_101
-      i386_linux22, i386_linux24, i386_linux26
+      i386_linux26
       i386_nbsd15, i386_nbsd16, i386_nbsd20, i386_nbsd21, i386_nbsd30,
          i386_nbsd40
       i386_obsd31, i386_obsd32, i386_obsd33, i386_obsd34, i386_obsd35,
          i386_obsd36, i386_obsd37, i386_obsd38, i386_obsd39, i386_obsd40,
          i386_obsd41
-      i386_umlinux22, i386_umlinux24, i386_umlinux26
+      i386_umlinux26
       ia64_hpux1122, ia64_hpux1123
-      ia64_linux24, ia64_linux26
-      parisc_linux24
-      ppc64_linux24, ppc64_linux26
+      ia64_linux26
+      ppc64_linux26
       ppc_darwin_12, ppc_darwin_13, ppc_darwin_14, ppc_darwin_60,
          ppc_darwin_70, ppc_darwin_80, ppc_darwin_90
-      ppc_linux22, ppc_linux24, ppc_linux26
+      ppc_linux26
       ppc_nbsd16, ppc_nbsd20
       rs_aix42, rs_aix51, rs_aix52, rs_aix53, rs_aix61
-      s390_linux22, s390_linux24, s390_linux26
-      s390x_linux24, s390x_linux26
+      s390_linux26
+      s390x_linux26
       sgi_62, sgi_63, sgi_64, sgi_65 (file server not tested)
-      sparc64_linux22, sparc64_linux24, sparc64_linux26
-      sparc_linux22, sparc_linux24
+      sparc64_linux26
       sun4x_58, sun4x_59, sun4x_510, sun4x_511
          (logging UFS not supported for mixed-use partitions containing
          client cache)
@@ -153,7 +151,7 @@ B  Building
       directory tree, or if you configured with --enable-transarc-paths
       make dest to create a complete binary tree in the dest directory
       under the directory named for the sys_name you built for,
-      e.g. sun4x_57/dest or i386_linux22/dest
+      e.g. sun4x_57/dest or i386_linux26/dest
 
    3. As appropriate you can clean up or, if you're using Linux, build for
       another kernel version.
@@ -185,7 +183,7 @@ D  Linux Notes
    "include". So if your version file were
    /usr/src/linux/include/linux/version.h you would run:
 
-   % ./configure --with-afs-sysname=i386_linux24 \
+   % ./configure --with-afs-sysname=i386_linux26 \
        --with-linux-kernel-headers=/usr/src/linux
 
    Currently you can build for only one Linux kernel at a time, and the
@@ -196,7 +194,7 @@ D  Linux Notes
    then run:
 
       % ./configure --with-afs-sysname=<sysname> \
-          --with-linux-kernel-headers=/usr/src/linux-2.2.19-i686
+          --with-linux-kernel-headers=/usr/src/linux-3.19-i686
       % make
 
    Your build tree will now include an additional kernel module for your
@@ -204,6 +202,10 @@ D  Linux Notes
    which UTS_RELEASE is defined to in include/linux/version.h matches the
    last kernel you built for, the previous kernel module will be
    overwritten.
+
+   The Linux 2.4 series (and older) are no longer supported. The OpenAFS 1.6
+   series of releases are the last ones supporting those old kernels and in
+   particular their LinuxThreads.
 
 E  HP-UX 11.0 Notes
 

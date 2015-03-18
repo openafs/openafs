@@ -800,6 +800,10 @@ else
 			if test "x${AFS_SYSKVERS}" = "x"; then
 			 AC_MSG_ERROR(Couldn't guess your Linux version. Please use the --with-afs-sysname option to configure an AFS sysname.)
 			fi
+			if test "x${AFS_SYSKVERS}" = "x24" ||
+				test "x${AFS_SYSKVERS}" = "x22"; then
+			    AC_MSG_ERROR([Linux 2.4.x and older are no longer supported by OpenAFS.  Please use an OpenAFS 1.6.x release on those systems.])
+			fi
 			_AFS_SYSNAME=`echo $AFS_SYSNAME|sed s/XX\$/$AFS_SYSKVERS/`
 			AFS_SYSNAME="$_AFS_SYSNAME"
 			AC_TRY_KBUILD(
@@ -862,12 +866,8 @@ case $AFS_SYSNAME in
     *_obsd52)   AFS_PARAM_COMMON=param.obsd52.h  ;;
     *_obsd53)   AFS_PARAM_COMMON=param.obsd53.h  ;;
     *_obsd54)   AFS_PARAM_COMMON=param.obsd54.h  ;;
-    *_linux22)  AFS_PARAM_COMMON=param.linux22.h ;;
-    *_linux24)  AFS_PARAM_COMMON=param.linux24.h ;;
     *_linux26)  AFS_PARAM_COMMON=param.linux26.h ;;
 # Linux alpha adds an extra underscore for no good reason.
-    *_linux_22) AFS_PARAM_COMMON=param.linux22.h ;;
-    *_linux_24) AFS_PARAM_COMMON=param.linux24.h ;;
     *_linux_26) AFS_PARAM_COMMON=param.linux26.h ;;
     *_fbsd_*)   AFS_PARAM_COMMON=param.generic_fbsd.h ;;
 esac
