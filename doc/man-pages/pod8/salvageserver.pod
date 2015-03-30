@@ -13,7 +13,6 @@ B<salvageserver> [I<initcmd>] S<<< [B<-partition> <I<name of partition to salvag
     [B<-salvagedirs>] [B<-blockreads>]
     S<<< [B<-parallel> <I<# of max parallel partition salvaging>>] >>>
     S<<< [B<-tmpdir> <I<name of dir to place tmp files>>] >>>
-    [B<-showlog>]
     S<<< [B<-orphans> (ignore | remove | attach)] >>>
     [B<-syslog>]
     S<<< [B<-syslogfacility> <I<Syslog facility number to use>>] >>>
@@ -226,11 +225,6 @@ files it creates during a salvage operation, instead of writing them to
 the partition being salvaged (the default). If the Salvageserver cannot write
 to the specified directory, it attempts to write to the partition being
 salvaged.
-
-=item B<-showlog>
-
-Displays on the standard output stream all log data that is being written
-to the F</usr/afs/logs/SalsrvLog> file.
 
 =item B<-orphans> (ignore | remove | attach)
 

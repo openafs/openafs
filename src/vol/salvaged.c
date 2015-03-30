@@ -179,7 +179,6 @@ enum optionsList {
     OPT_blockreads,
     OPT_parallel,
     OPT_tmpdir,
-    OPT_showlog,
     OPT_orphans,
     OPT_syslog,
     OPT_syslogfacility,
@@ -242,7 +241,6 @@ handleit(struct cmd_syndesc *opts, void *arock)
 	free(optstring);
 	optstring = NULL;
     }
-    cmd_OptionAsFlag(opts, OPT_showlog, &ShowLog);
     if (cmd_OptionAsString(opts, OPT_orphans, &optstring) == 0) {
 	if (Testing)
 	    orphans = ORPH_IGNORE;
@@ -258,7 +256,6 @@ handleit(struct cmd_syndesc *opts, void *arock)
 #ifndef AFS_NT40_ENV		/* ignore options on NT */
     if (cmd_OptionPresent(opts, OPT_syslog)) {
 	useSyslog = 1;
-	ShowLog = 0;
     }
     cmd_OptionAsInt(opts, OPT_syslogfacility, &useSyslogFacility);
 #endif
@@ -280,11 +277,6 @@ handleit(struct cmd_syndesc *opts, void *arock)
 		exit(-1);
 	    }
 	    vid = (VolumeId)vid_l;
-	}
-
-	if (ShowLog) {
-	    printf("-showlog does not work with -client\n");
-	    exit(-1);
 	}
 
 	if (!seenpart || !seenvol) {
@@ -399,8 +391,6 @@ main(int argc, char **argv)
 	    "# of max parallel partition salvaging");
     cmd_AddParmAtOffset(ts, OPT_tmpdir, "-tmpdir", CMD_SINGLE, CMD_OPTIONAL,
 	    "Name of dir to place tmp files ");
-    cmd_AddParmAtOffset(ts, OPT_showlog, "-showlog", CMD_FLAG, CMD_OPTIONAL,
-	    "Show log file upon completion");
     cmd_AddParmAtOffset(ts, OPT_orphans, "-orphans", CMD_SINGLE, CMD_OPTIONAL,
 	    "ignore | remove | attach");
 
@@ -609,7 +599,6 @@ DoSalvageVolume(struct SalvageQueueNode * node, int slot)
     if (asprintf(&childLog, "%s.%d",
 		 AFSDIR_SERVER_SLVGLOG_FILEPATH, getpid()) < 0) {
 	logFile = stdout;
-	ShowLog = 0;
     } else {
 	logFile = afs_fopen(childLog, "a");
 	if (!logFile) {		/* still nothing, use stdout */
