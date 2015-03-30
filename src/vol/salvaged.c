@@ -183,7 +183,6 @@ enum optionsList {
     OPT_orphans,
     OPT_syslog,
     OPT_syslogfacility,
-    OPT_datelogs,
     OPT_logfile,
     OPT_client
 };
@@ -262,10 +261,6 @@ handleit(struct cmd_syndesc *opts, void *arock)
 	ShowLog = 0;
     }
     cmd_OptionAsInt(opts, OPT_syslogfacility, &useSyslogFacility);
-
-    if (cmd_OptionPresent(opts, OPT_datelogs)) {
-	TimeStampLogFile((char *)AFSDIR_SERVER_SALSRVLOG_FILEPATH);
-    }
 #endif
 
     if (cmd_OptionPresent(opts, OPT_client)) {
@@ -414,8 +409,6 @@ main(int argc, char **argv)
 	    "Write salvage log to syslogs");
     cmd_AddParmAtOffset(ts, OPT_syslogfacility, "-syslogfacility", CMD_SINGLE,
 	    CMD_OPTIONAL, "Syslog facility number to use");
-    cmd_AddParmAtOffset(ts, OPT_datelogs, "-datelogs", CMD_FLAG, CMD_OPTIONAL,
-		"Include timestamp in logfile filename");
 #endif
 
     cmd_AddParmAtOffset(ts, OPT_client, "-client", CMD_FLAG, CMD_OPTIONAL,
