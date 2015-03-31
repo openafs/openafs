@@ -13,7 +13,7 @@ B<salvageserver> [I<initcmd>] S<<< [B<-partition> <I<name of partition to salvag
     [B<-salvagedirs>] [B<-blockreads>]
     S<<< [B<-parallel> <I<# of max parallel partition salvaging>>] >>>
     S<<< [B<-tmpdir> <I<name of dir to place tmp files>>] >>>
-    [B<-showlog>] [B<-showsuid>] [B<-showmounts>]
+    [B<-showlog>]
     S<<< [B<-orphans> (ignore | remove | attach)] >>>
     [B<-syslog>]
     S<<< [B<-syslogfacility> <I<Syslog facility number to use>>] >>>
@@ -111,9 +111,6 @@ I<orphaned> element is completely inaccessible because it is not
 referenced by the vnode of any directory that can act as its parent (is
 higher in the filespace). Orphaned objects occupy space on the server
 partition, but do not count against the volume's quota.
-
-To generate a list of all mount points that reside in one or more volumes,
-rather than actually salvaging them, include the B<-showmounts> flag.
 
 This command does not use the syntax conventions of the AFS command
 suites. Provide the command name and all option names in full.
@@ -234,17 +231,6 @@ salvaged.
 
 Displays on the standard output stream all log data that is being written
 to the F</usr/afs/logs/SalsrvLog> file.
-
-=item B<-showsuid>
-
-Displays a list of the pathnames for all files that have the setuid or
-setgid mode bit set.
-
-=item B<-showmounts>
-
-Records in the F</usr/afs/logs/SalsrvLog> file all mount points found in
-each volume. The Salvageserver does not repair corruption in the volumes, if
-any exists.
 
 =item B<-orphans> (ignore | remove | attach)
 
