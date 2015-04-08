@@ -984,6 +984,34 @@ rxfs_fetchInit(struct afs_conn *tc, struct rx_connection *rxconn,
 	    }
 	}
 	FillInt64(length64, length_hi, length);
+
+        if (!code) {
+            /* Check if the fileserver said our length is bigger than can fit
+             * in a signed 32-bit integer. If it is, we can't handle that, so
+             * error out. */
+	    if (length64 > MAX_AFS_INT32) {
+		RX_AFS_GUNLOCK();
+                code = rx_EndCall(v->call, RX_PROTOCOL_ERROR);
+		v->call = NULL;
+		length = 0;
+		RX_AFS_GLOCK();
+                code = code != 0 ? code : EIO;
+            }
+        }
+
+        if (!code) {
+            /* Check if the fileserver said our length was negative. If it
+             * is, just treat it as a 0 length, since some older fileservers
+             * returned negative numbers when they meant to return 0. Note
+             * that we must do this in this 64-bit-specific block, since
+             * length64 being negative will screw up our conversion to the
+             * 32-bit 'alength' below. */
+            if (length64 < 0) {
+                length_hi = length = 0;
+                FillInt64(length64, 0, 0);
+            }
+        }
+
 	afs_Trace3(afs_iclSetp, CM_TRACE_FETCH64LENG,
 		   ICL_TYPE_POINTER, avc, ICL_TYPE_INT32, code,
 		   ICL_TYPE_OFFSET,
@@ -1002,6 +1030,12 @@ rxfs_fetchInit(struct afs_conn *tc, struct rx_connection *rxconn,
 	    RX_AFS_GLOCK();
 	    if (bytes == sizeof(afs_int32)) {
                 *alength = ntohl(length);
+                if (*alength < 0) {
+                    /* Older fileservers can return a negative length when they
+                     * meant to return 0; just assume negative lengths were
+                     * meant to be 0 lengths. */
+                    *alength = 0;
+                }
 	    } else {
 		code = rx_Error(v->call);
                 code1 = rx_EndCall(v->call, code);
