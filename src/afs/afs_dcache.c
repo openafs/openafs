@@ -2232,10 +2232,13 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 		maxGoodLength = avc->f.truncPos;
 
 	    size = AFS_CHUNKSIZE(abyte);	/* expected max size */
-	    if (Position + size > maxGoodLength)
+            if (Position > maxGoodLength) { /* If we're beyond EOF */
+                size = 0;
+	    } else if (Position + size > maxGoodLength) {
 		size = maxGoodLength - Position;
-	    if (size < 0)
-		size = 0;	/* Handle random races */
+            }
+            osi_Assert(size >= 0);
+
 	    if (size > tdc->f.chunkBytes) {
 		/* pre-reserve estimated space for file */
 		afs_AdjustSize(tdc, size);	/* changes chunkBytes */
@@ -2259,12 +2262,12 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 		 * avc->f.truncPos to reappear, instead of extending the file
 		 * with NUL bytes. */
 		size = AFS_CHUNKSIZE(abyte);
-		if (Position + size > avc->f.truncPos) {
+                if (Position > avc->f.truncPos) {
+                    size = 0;
+		} else if (Position + size > avc->f.truncPos) {
 		    size = avc->f.truncPos - Position;
 		}
-		if (size < 0) {
-		    size = 0;
-		}
+                osi_Assert(size >= 0);
 	    }
 	}
 	if (afs_mariner && !tdc->f.chunk)
