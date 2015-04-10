@@ -990,6 +990,14 @@ rxfs_fetchInit(struct afs_conn *tc, struct rx_connection *rxconn,
              * in a signed 32-bit integer. If it is, we can't handle that, so
              * error out. */
 	    if (length64 > MAX_AFS_INT32) {
+                static int warned;
+                if (!warned) {
+                    warned = 1;
+                    afs_warn("afs: Warning: FetchData64 returned too much data "
+                             "(length64 %u.%u); this should not happen! "
+                             "Aborting fetch request.\n",
+                             length_hi, length);
+                }
 		RX_AFS_GUNLOCK();
                 code = rx_EndCall(v->call, RX_PROTOCOL_ERROR);
 		v->call = NULL;
@@ -1054,6 +1062,14 @@ rxfs_fetchInit(struct afs_conn *tc, struct rx_connection *rxconn,
 	 * requested. It shouldn't do that, and accepting that much data
 	 * can make us take up more cache space than we're supposed to,
 	 * so error. */
+        static int warned;
+        if (!warned) {
+            warned = 1;
+            afs_warn("afs: Warning: FetchData64 returned more data than "
+                     "requested (requested %ld, got %ld); this should not "
+                     "happen! Aborting fetch request.\n",
+                     (long)size, (long)*alength);
+        }
 	code = rx_Error(v->call);
 	RX_AFS_GUNLOCK();
 	code1 = rx_EndCall(v->call, code);
