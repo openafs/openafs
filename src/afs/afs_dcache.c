@@ -543,6 +543,23 @@ afs_AdjustSize(struct dcache *adc, afs_int32 newSize)
 
     AFS_STATCNT(afs_AdjustSize);
 
+    if (newSize > afs_OtherCSize && !(adc->f.fid.Fid.Vnode & 1)) {
+        /* No non-dir cache files should be larger than the chunk size.
+         * (Directory blobs are fetched in a single chunk file, so directories
+         * can be larger.) If someone is requesting that a chunk is larger than
+         * the chunk size, something strange is happening. Log a message about
+         * it, to give a hint to subsequent strange behavior, if any occurs. */
+        static int warned;
+        if (!warned) {
+            warned = 1;
+            afs_warn("afs: Warning: dcache %d is very large (%d > %d). This "
+                     "should not happen, but trying to continue regardless. If "
+                     "AFS starts hanging or behaving strangely, this might be "
+                     "why.\n",
+                     adc->index, newSize, afs_OtherCSize);
+        }
+    }
+
     adc->dflags |= DFEntryMod;
     oldSize = ((adc->f.chunkBytes + afs_fsfragsize) ^ afs_fsfragsize) >> 10;	/* round up */
     adc->f.chunkBytes = newSize;
