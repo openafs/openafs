@@ -1,5 +1,23 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.6.12 (in progress)
+
+  All server platforms
+
+    * Avoid database corruption if a database server is shut down and then
+      brought up again quickly with an altered database (11773 11774)
+      (RT #131997)
+
+  All client platforms
+
+    * Fixed a potential buffer overflow in aklog (11808)
+
+    * Avoid a bogus warning regarding the checkserver daemon, which could be
+      logged during startup when the cache initialization was very fast (11680)
+
+    * Added documentation of the inaccuracy of the 'partition' field in
+      'fs listquota' output for partitions larger than 2 TiB (11626)
+
 OpenAFS 1.6.11.1
 
   Linux clients
