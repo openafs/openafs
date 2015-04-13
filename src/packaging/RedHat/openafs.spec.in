@@ -6,7 +6,6 @@
 # for real releases make pkgrel 1 (or more for extra releases)
 %define pkgrel @LINUX_PKGREL@
 
-%{!?fedorakmod: %define fedorakmod 1}
 %{!?build_dkmspkg: %define build_dkmspkg 1}
 
 # Determine presence of rpmbuild command line --define arguments used for
@@ -16,39 +15,12 @@
 %define build_modules_on_cmdline %{?build_modules:1}%{!?build_modules:0}
 %define build_authlibs_on_cmdline %{?build_authlibs:1}%{!?build_authlibs:0}
 
-%if 0%{?rhel} >= 5
-%define fedorakmod 1
-%endif
-%if 0%{?fedora}
-%define fedorakmod 1
-%endif
-
 %if 0%{?fedora} >= 17 || 0%{?rhel} >= 7
 %define depmod /usr/sbin/depmod
 %else
 %define depmod /sbin/depmod
 %endif
 
-%if !%{fedorakmod}
-# Determine the version of the kernel to build against
-# - automatically select running kernel if there are sources in /lib/modules
-# - note that this can be overridden on the command line
-#
-%if !%{kernvers_on_cmdline}
-%define kernvers %(%{_sourcedir}/openafs-kernel-version.sh)
-%endif
-
-# If we're building for a 2.4 series kernel, then fedora style kmods aren't
-# appropriate - disable them.
-
-%define kern24 %([ `echo "%{kernvers}" | sed -e 's/^\([0-9]*\.[0-9]*\)\..*/\1/'` = "2.4" ] && echo 1 || echo 0)
-
-%if %{kern24}
-%define fedorakmod 0
-%endif
-%endif
-
-%if %{fedorakmod}
 %define kmodtool bash %{_sourcedir}/openafs-kmodtool
 
 %define kmod_name openafs
@@ -64,38 +36,6 @@
     %define ksrcdir %{_usrsrc}/kernels/%{kverrel}.%{_target_cpu}}
   fi
 %endif
-
-%else # Legacy kernel build stuff 
-
-%define kversis %{_sourcedir}/openafs-kvers-is.sh
-%define kvers %(%{kversis} parsev %{kernvers})
-%define kvers_is_24 %(%{kversis} %{kvers} "2.4")
-%define kvers_is_26 %(%{kversis} %{kvers} "2.6")
-%define ktype %(%{kversis} parset %{kernvers})
-%define kversion %(%{kversis} kvers %{kernvers})
-
-# This is where to look for kernel build include files.  Default
-# is /lib/modules/<kvers>/build, but you can define kbase and
-# kend on the commandline to change that.
-#
-%if %{?kbase:0}%{!?kbase:1}
-%define kbase /lib/modules/
-%endif
-%if %{?kend:0}%{!?kend:1}
-%define kend /build
-%endif
-# Let the buildscript define the ksrcdir directly -- needed for RHEL4
-%if %{?ksrcdir:0}%{!?ksrcdir:1}
-%define ksrcdir %{kbase}%{kernvers}%{kend}
-%endif
-
-%if %{?kmoddir:0}%{!?kmoddir:1}
-%define kmoddir /lib/modules
-%endif
-%define kxmoddir %{kmoddir}/%{kernvers}
-
-# End legacy kernel build stuff
-%endif 
 
 %define dkms_version %{pkgvers}-%{pkgrel}%{?dist}
 
@@ -158,77 +98,6 @@
 %endif
 %endif
 
-%if %{build_modules}
-%if !%{fedorakmod}
-
-# Define the set of kernel module variations to be built:
-# For 2.4 kernels we just build everything at once for a particular
-# kernel.   So we build up, smp, and bigmem all at once.
-# For 2.6 kernels we have to build against the specific kernel headers
-# for a particular kernel variation.  AFS will handle the specific smp or
-# non-smp determination.  So just always build as if it's "up" -- the kernel
-# version will have the 'variation' type already in the version #.
-
-%define up_package 0
-%define smp_package 0
-%define bigmem_package 0
-%define hugemem_package 0
-%define largesmp_package 0
-
-#######################################################################
-# 2.4
-%if %{kvers_is_24}
-%define kdepend kernel-source
-%define up_package 1
-%define smp_package 1
-%define smp_ext smp
-
-%define bigmem_package %(%{kversis} find %{ksrcdir} %{_target_cpu} bigmem) 
-%if %{bigmem_package}
-%define bigmem_ext bigmem
-%endif
-
-%define hugemem_package %(%{kversis} find %{ksrcdir} %{_target_cpu} hugemem) 
-%if %{hugemem_package}
-%define hugemem_ext hugemem
-%endif
-
-%define kvariations up smp %{?bigmem_ext:%{bigmem_ext}} %{?hugemem_ext:%{hugemem_ext}}
-
-#######################################################################
-# 2.6
-%else
-%if %{kvers_is_26}
-%define kvariations up
-%ifarch s390x
-%define ktype "smp"
-%define up_package 1
-%else
-%define up_package %(%{kversis} "%{ktype}" "")
-%define smp_package %(%{kversis} "%{ktype}" "smp")
-%define hugemem_package %(%{kversis} "%{ktype}" "hugemem")
-%define largesmp_package %(%{kversis} "%{ktype}" "largesmp")
-%endif
-
-%if !%{up_package} && !%{smp_package} && !%{hugemem_package} && !%{largesmp_package}
-%error "unknown kernel type: %{ktype}"
-%endif
-
-%if !%{kernvers_on_cmdline}
-%define kdepend %{ksrcdir}/include/linux/version.h
-%endif
-
-#######################################################################
-# other kernels?
-%else
-%error "unknown kernel version: ${kvers} (parsed from %{kernvers})"
-%endif
-%endif
-
-# End of legacy kernel module build
-%endif 
-%endif
-
 # Make sure RPM doesn't complain about installed but non-packaged files.
 #define __check_files  %{nil}
 
@@ -286,7 +155,7 @@ OpenAFS packages but are not necessarily tied to a client or server.
 The OpenAFS SRPM can be rebuilt with the following options to control
 what gets built:
 
- --define "kernvers 2.4.20-1.1376_FC3" Specify the specific kernel version 
+ --define "kernvers 3.19.3-100.fc20.i686" Specify the specific kernel version 
                                   to build modules against. The default is
                                   to build against the currently-running
                                   kernel.
@@ -313,9 +182,6 @@ what gets built:
  --define "kmoddir /lib/modules"  This is the base location where modules
                                   will be installed.  You probably don't
                                   need to change this ever.
-
- --define "fedorakmod 0"	  Disable the building of 'Fedora' style kernel 
-				  modules, and use the old format.
 
  --define "kvariants <variants>"  When building Fedora style kernel modules,
                                   this defines the set of kernel variants
@@ -344,12 +210,8 @@ Requires(preun): systemd-units
 Requires(postun): systemd-units
 %endif
 
-%if %{fedorakmod}
 Requires: %{name}-kmod >= %{version}
 Provides: %{name}-kmod-common = %{version}
-%else
-Requires: openafs-kernel
-%endif
 
 Summary: OpenAFS Filesystem Client
 Group: Networking/Filesystem
@@ -388,9 +250,7 @@ Cell.
 Summary:        DKMS-ready kernel source for AFS distributed filesystem
 Group:          Development/Kernel
 Provides:       openafs-kernel = %{version}
-%if %{fedorakmod}
 Provides: %{name}-kmod = %{version}
-%endif
 Requires(pre):  dkms
 Requires(pre):  flex
 Requires(post): dkms
@@ -474,9 +334,7 @@ administrators.
 Summary: OpenAFS Kernel Module source tree
 Group: Networking/Filesystems
 Provides: openafs-kernel = %{version}
-%if %{fedorakmod}
 Provides: %{name}-kmod = %{version}
-%endif
 
 %description kernel-source
 The AFS distributed filesystem.  AFS is a distributed filesystem
@@ -545,123 +403,8 @@ krb4 lookalike services.
 ##############################################################################
 %if %{build_modules}
 
-%if %{fedorakmod}
 %{expand:%(%{kmodtool} rpmtemplate %{kmod_name} %{kverrel} %{depmod} %{kvariants} 2>/dev/null)}
 
-%else
-
-# Legacy kernel compilation code here ...
-%define modkversion %(echo %{kernvers} | cut -d- -f1)
-%define modkrelease %(echo %{kernvers} | cut -d- -f2)
-%define modpkgrel %{modkversion}_%{modkrelease}_%{pkgrel}
-
-%if %{up_package}
-%package kernel
-Summary: OpenAFS Kernel Module (compiled for UP)
-Release: %{modpkgrel}
-Group: Networking/Filesystems
-Provides: openafs-kernel = %{version}
-%if %{kprovidesarch}
-Requires: kernel-%{_target_cpu} = %{kversion}
-%else
-Requires: /boot/config-%{kernvers}
-%endif
-
-%description kernel
-The AFS distributed filesystem.  AFS is a distributed filesystem
-allowing cross-platform sharing of files among multiple computers.
-Facilities are provided for access control, authentication, backup and
-administrative management.
-
-This package provides a precompiled AFS kernel module for %{kernvers}.
-%endif
-
-%if %{smp_package}
-%package kernel-smp
-Summary: OpenAFS Kernel Module (compiled for SMP)
-Release: %{modpkgrel}
-Provides: openafs-kernel = %{version}
-%if %{kprovidesarch}
-Requires: kernel-smp-%{_target_cpu} = %{kversion}
-%else
-Requires: /boot/config-%{kernvers}%{?smp_ext:%{smp_ext}}
-%endif
-Group: Networking/Filesystems
-
-%description kernel-smp
-The AFS distributed filesystem.  AFS is a distributed filesystem
-allowing cross-platform sharing of files among multiple computers.
-Facilities are provided for access control, authentication, backup and
-administrative management.
-
-This package provides a precompiled AFS kernel module for %{kernvers}.
-%endif
-
-%if %{largesmp_package}
-%package kernel-largesmp
-Summary: OpenAFS Kernel Module (compiled for LARGESMP)
-Release: %{modpkgrel}
-Provides: openafs-kernel = %{version}
-%if %{kprovidesarch}
-Requires: kernel-largesmp-%{_target_cpu} = %{kversion}
-%else
-Requires: /boot/config-%{kernvers}%{?largesmp_ext:%{largesmp_ext}}
-%endif
-Group: Networking/Filesystems
-
-%description kernel-largesmp
-The AFS distributed filesystem.  AFS is a distributed filesystem
-allowing cross-platform sharing of files among multiple computers.
-Facilities are provided for access control, authentication, backup and
-administrative management.
-
-This package provides a precompiled AFS kernel module for %{kernvers}.
-%endif
- 
-%if %{bigmem_package}
-%package kernel-bigmem
-Summary: OpenAFS Kernel Module (compiled for SMP & big memory support)
-Release: %{modpkgrel}
-Provides: openafs-kernel = %{version}
-%if %{kprovidesarch}
-Requires: kernel-bigmem-%{_target_cpu} = %{kversion}
-%else
-Requires: /boot/config-%{kernvers}%{?bigmem_ext:%{bigmem_ext}}
-%endif
-Group: Networking/Filesystems
-
-%description kernel-bigmem
-The AFS distributed filesystem.  AFS is a distributed filesystem
-allowing cross-platform sharing of files among multiple computers.
-Facilities are provided for access control, authentication, backup and
-administrative management.
-
-This package provides a precompiled AFS kernel module for %{kernvers}.
-%endif
-
-%if %{hugemem_package}
-%package kernel-hugemem
-Summary: OpenAFS Kernel Module (compiled for SMP & huge memory support)
-Release: %{modpkgrel}
-Provides: openafs-kernel = %{version}
-%if %{kprovidesarch}
-Requires: kernel-hugemem-%{_target_cpu} = %{kversion}
-%else
-Requires: /boot/config-%{kernvers}%{?hugemem_ext:%{hugemem_ext}}
-%endif
-Group: Networking/Filesystems
-
-%description kernel-hugemem
-The AFS distributed filesystem.  AFS is a distributed filesystem
-allowing cross-platform sharing of files among multiple computers.
-Facilities are provided for access control, authentication, backup and
-administrative management.
-
-This package provides a precompiled AFS kernel module for %{kernvers}.
-%endif
-
-%endif
-# End legacy kernel compilation code ...
 %endif
 
 ##############################################################################
@@ -675,22 +418,7 @@ This package provides a precompiled AFS kernel module for %{kernvers}.
 : @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 : @@@
 : @@@ kernel version:     %{kernvers}
-%if %{fedorakmod}
 : @@@ kernel variations:  %{kvariants}
-%else
-: @@@ base kernel version:%{kversion}
-: @@@ kernel modules dir: %{kxmoddir}
-: @@@ kernel source dir:  %{ksrcdir}
-%if %{kvers_is_24}
-: @@@ kernel variations:  %{kvariations}
-%else
-%if %{up_package}
-: @@@ kernel type:        up
-%else
-: @@@ kernel type:        %{ktype}
-%endif
-%endif
-%endif
 : @@@ PAM modules dir:    %{pamdir}
 : @@@ build userspace:    %{build_userspace}
 : @@@ build modules:      %{build_modules}
@@ -709,28 +437,11 @@ This package provides a precompiled AFS kernel module for %{kernvers}.
 #
 ##############################################################################
 %build
-%if !%{fedorakmod}
-case %{kernvers} in
-   2.4.*)
-       kv='24'
-       ;;
-   2.6.* | 3.*)
-       kv='26'
-       ;;
-   *)
-       echo "I don't know how to build linux-`expr %{kernvers} : '\(^[0-9]*[.][0-9]*\)'`"
-       exit 1
-       ;;
-esac
-%else
-kv='26'
-%endif
-
 case %{_arch} in
-       x86_64)                         sysname=amd64_linux${kv}        ;;
-       alpha*)                         sysname=alpha_linux_${kv}       ;;
-       i386|i486|i586|i686|athlon)     sysname=i386_linux${kv}         ;;
-       *)                              sysname=%{_arch}_linux${kv}     ;;
+       x86_64)                         sysname=amd64_linux26        ;;
+       alpha*)                         sysname=alpha_linux_26       ;;
+       i386|i486|i586|i686|athlon)     sysname=i386_linux26         ;;
+       *)                              sysname=%{_arch}_linux26     ;;
 esac
 
 %ifarch %{ix86}
@@ -849,19 +560,17 @@ config_opts="--enable-redhat-buildsys \
 # then use the standard kernel. If variants are specified, use the standard kernel
 # if it's listed, otherwise pick the first listed kernel.
 ksrc=""
-%if %{fedorakmod} 
-  for kvariant in %{kvariants} ; do
-    if [ -z "${kvariant}" -o -z "$ksrc" ] ; then
-      if [ -d %{_usrsrc}/kernels/%{kverrel}${kvariant:+-$kvariant}-%{_target_cpu} ] ; then
-        ksrc=%{_usrsrc}/kernels/%{kverrel}${kvariant:+-$kvariant}-%{_target_cpu}
-      elif [ -d %{_usrsrc}/kernels/%{kverrel}.%{_target_cpu}${kvariant:++$kvariant} ] ; then
-        ksrc=%{_usrsrc}/kernels/%{kverrel}.%{_target_cpu}${kvariant:++$kvariant}
-      else
-        ksrc=%{_usrsrc}/kernels/%{kverrel}.%{_target_cpu}${kvariant:+.$kvariant}
-      fi
+for kvariant in %{kvariants} ; do
+  if [ -z "${kvariant}" -o -z "$ksrc" ] ; then
+    if [ -d %{_usrsrc}/kernels/%{kverrel}${kvariant:+-$kvariant}-%{_target_cpu} ] ; then
+      ksrc=%{_usrsrc}/kernels/%{kverrel}${kvariant:+-$kvariant}-%{_target_cpu}
+    elif [ -d %{_usrsrc}/kernels/%{kverrel}.%{_target_cpu}${kvariant:++$kvariant} ] ; then
+      ksrc=%{_usrsrc}/kernels/%{kverrel}.%{_target_cpu}${kvariant:++$kvariant}
+    else
+      ksrc=%{_usrsrc}/kernels/%{kverrel}.%{_target_cpu}${kvariant:+.$kvariant}
     fi
-  done
-%endif
+  fi
+done
 if [ -z "$ksrc" ] ; then
 ksrc=%{ksrcdir}
 fi
@@ -904,7 +613,7 @@ export KRB5_CONFIG
 
 # Configure each of our kernel modules
 
-%if %{fedorakmod} && %{build_modules}
+%if %{build_modules}
 for kvariant in %{kvariants} ; do
   if [ -n "${kvariant}" ] ; then
 
@@ -946,7 +655,6 @@ make dest_nolibafs || exit 1
 %endif
 
 %if %{build_modules}
-%if %{fedorakmod}
 for kvariant in %{kvariants}
 do
   if [ -n "${kvariant}" ] ; then
@@ -957,41 +665,6 @@ do
     make dest_only_libafs
   fi
 done
-
-%else
-# Begin legacy kernel module building code
-
-%if %{kvers_is_24}
-# Build all the kernel modules for linux 2.4.x
-for variation in %{kvariations}
-do
-    if [ ${variation} = up ]
-    then
-       local_smp_def=-DREDHAT_FIX
-       suffix=
-    else
-       local_smp_def="-DAFS_SMP -DREDHAT_FIX"
-       suffix=${variation}
-    fi
-
-    PrintRedhatKernelFix %{_target_cpu} $variation src/config/redhat-fix.h
-    make dest_only_libafs LOCAL_SMP_DEF="${local_smp_def}" \
-	LINUX_MODULE_NAME="${suffix}" MPS=SP
-
-done
-rm -f src/config/redhat-fix.h
-
-%elseif %{kvers_is_26}
-# Build the kernel module for this version of linux 2.6.x
-# Notice how much easier this is than 2.4.  On the other hand,
-# we require much more external support to build multiple modules.
-
-  # the MPS=SP just means that we don't add a '.mp' to the name.
-  make dest_only_libafs MPS=SP
-
-%endif
-# End legacy kernel module building code
-%endif
 %endif
 
 
@@ -1005,30 +678,12 @@ rm -f src/config/redhat-fix.h
 export DONT_GPRINTIFY=1
 
 [ $RPM_BUILD_ROOT != / ] && rm -rf $RPM_BUILD_ROOT
-%if !%{fedorakmod}
-case %{kernvers} in
-   2.4.*)
-       kv='24'
-       kmodend=.o
-       ;;
-   2.6.* | 3.*)
-       kv='26'
-       kmodend=.ko
-       ;;
-   *)
-       echo "I don't know how to build linux-`expr %{kernvers} : '\(^[0-9]*[.][0-9]*\)'`"
-       exit 1
-       ;;
-esac
-%else
-kv='26'
-%endif
 
 case %{_arch} in
-       x86_64)                         sysname=amd64_linux${kv}        ;;
-       alpha*)                         sysname=alpha_linux_${kv}       ;;
-       i386|i486|i586|i686|athlon)     sysname=i386_linux${kv}         ;;
-       *)                              sysname=%{_arch}_linux${kv}     ;;
+       x86_64)                         sysname=amd64_linux26        ;;
+       alpha*)                         sysname=alpha_linux_26       ;;
+       i386|i486|i586|i686|athlon)     sysname=i386_linux26         ;;
+       *)                              sysname=%{_arch}_linux26     ;;
 esac
 
 # Build install tree
