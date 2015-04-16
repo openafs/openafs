@@ -159,6 +159,10 @@ Setting sysctl_darwin[] = {
     {@"Darwin80", AFS_SC_DARWIN_80, Node, NULL},
     {@"Darwin90", AFS_SC_DARWIN_90, Node, NULL},
     {@"Darwin100", AFS_SC_DARWIN_100, Node, NULL},
+    {@"Darwin110", AFS_SC_DARWIN_110, Node, NULL},
+    {@"Darwin120", AFS_SC_DARWIN_120, Node, NULL},
+    {@"Darwin130", AFS_SC_DARWIN_130, Node, NULL},
+    {@"Darwin140", AFS_SC_DARWIN_140, Node, NULL},
     {NULL, 0, 0, NULL}
 };
 Setting sysctl_first[] = {
@@ -174,7 +178,6 @@ main(int argc, char **argv)
     struct vfsconf vfcp;
     NSData *plistData;
     id plist;
-    NSString *error;
     NSAutoreleasePool * nspool = [[NSAutoreleasePool alloc] init];
     NSString *plistpath = @"/var/db/openafs/etc/config/settings.plist";
     int oid[CTL_MAXNAME] = {CTL_VFS};
@@ -183,13 +186,13 @@ main(int argc, char **argv)
 	exit(-1);
     plistData = [NSData dataWithContentsOfFile: plistpath];
     if(plistData) {
-	plist = [NSPropertyListSerialization propertyListFromData: plistData
-					     mutabilityOption: NSPropertyListImmutable
+	plist = [NSPropertyListSerialization propertyListWithData: plistData
+					     options: NSPropertyListImmutable
 					     format: NULL
-					     errorDescription: &error
+					     error: NULL
 	    ];
 	if (!plist) {
-	    NSLog(@"Error reading plist from file '%s', error = '%s'", [plistpath UTF8String], [error UTF8String]);
+	    NSLog(@"Error reading plist from file '%s'", [plistpath UTF8String]);
 	    [nspool release];
 	    return -1;
 	}
