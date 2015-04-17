@@ -268,21 +268,21 @@ hpr_Initialize(struct ubik_client **uclient)
     tdir = afsconf_Open(FS_configPath);
     if (!tdir) {
 	ViceLog(0,
-		("hpr_Initialize: Could not open configuration directory: %s",
+		("hpr_Initialize: Could not open configuration directory: %s\n",
 		 FS_configPath));
 	return -1;
     }
 
     code = afsconf_GetLocalCell(tdir, cellstr, sizeof(cellstr));
     if (code) {
-	ViceLog(0, ("hpr_Initialize: Could not get local cell. [%d]", code));
+	ViceLog(0, ("hpr_Initialize: Could not get local cell. [%d]\n", code));
 	afsconf_Close(tdir);
 	return code;
     }
 
     code = afsconf_GetCellInfo(tdir, cellstr, "afsprot", &info);
     if (code) {
-	ViceLog(0, ("hpr_Initialize: Could not locate cell %s in %s/%s",
+	ViceLog(0, ("hpr_Initialize: Could not locate cell %s in %s/%s\n",
 		    cellstr, tdir->name, AFSDIR_CELLSERVDB_FILE));
 	afsconf_Close(tdir);
 	return code;
@@ -290,7 +290,7 @@ hpr_Initialize(struct ubik_client **uclient)
 
     code = rx_Init(0);
     if (code) {
-	ViceLog(0, ("hpr_Initialize: Could not initialize rx."));
+	ViceLog(0, ("hpr_Initialize: Could not initialize rx.\n"));
 	afsconf_Close(tdir);
         return code;
     }
@@ -301,14 +301,14 @@ hpr_Initialize(struct ubik_client **uclient)
     code = afsconf_ClientAuthSecure(tdir, &sc, &scIndex);
     if (code) {
 	ViceLog(0, ("hpr_Initialize: clientauthsecure returns %d %s "
-		    "(so trying noauth)", code, afs_error_message(code)));
+		    "(so trying noauth)\n", code, afs_error_message(code)));
 	scIndex = RX_SECIDX_NULL;
 	sc = rxnull_NewClientSecurityObject();
     }
 
     if (scIndex == RX_SECIDX_NULL)
 	ViceLog(0, ("hpr_Initialize: Could not get afs tokens, "
-		    "running unauthenticated. [%d]", code));
+		    "running unauthenticated. [%d]\n", code));
 
     memset(serverconns, 0, sizeof(serverconns));        /* terminate list!!! */
     for (i = 0; i < info.numServers; i++) {
@@ -320,7 +320,7 @@ hpr_Initialize(struct ubik_client **uclient)
 
     code = ubik_ClientInit(serverconns, uclient);
     if (code) {
-	ViceLog(0, ("hpr_Initialize: ubik client init failed. [%d]", code));
+	ViceLog(0, ("hpr_Initialize: ubik client init failed. [%d]\n", code));
     }
     afsconf_Close(tdir);
     code = rxs_Release(sc);
@@ -1354,7 +1354,7 @@ reconcileHosts_r(afs_uint32 addr, afs_uint16 port, struct host *newHost,
 
     ViceLog(125,
 	    ("reconcileHosts_r: addr %s:%d newHost %" AFS_PTR_FMT " oldHost %"
-	     AFS_PTR_FMT, afs_inet_ntoa_r(addr, hoststr), ntohs(port),
+	     AFS_PTR_FMT "\n", afs_inet_ntoa_r(addr, hoststr), ntohs(port),
 	     newHost, oldHost));
 
     opr_Assert(oldHost != newHost);
