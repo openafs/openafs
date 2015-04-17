@@ -4407,7 +4407,7 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
 			     NewName, errno));
 		    if ((errno != ENOENT) && (errno != EIO)
 			&& (errno != ENXIO))
-			ViceLog(0, ("Do we need to fsck?"));
+			ViceLog(0, ("Do we need to fsck?\n"));
 		}
 	    }
 	    VN_SET_INO(newfileptr, (Inode) 0);
