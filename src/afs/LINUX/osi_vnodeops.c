@@ -807,8 +807,10 @@ struct file_operations afs_file_fops = {
 #ifdef STRUCT_FILE_OPERATIONS_HAS_READ_ITER
   .read_iter =	afs_linux_read_iter,
   .write_iter =	afs_linux_write_iter,
+# if !defined(HAVE_LINUX___VFS_READ)
   .read =	new_sync_read,
   .write =	new_sync_write,
+# endif
 #elif defined(HAVE_LINUX_GENERIC_FILE_AIO_READ)
   .aio_read =	afs_linux_aio_read,
   .aio_write =	afs_linux_aio_write,
