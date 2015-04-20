@@ -631,4 +631,24 @@ afs_d_invalidate(struct dentry *dp)
 #endif
 }
 
+static inline int
+afs_file_read(struct file *filp, char __user *buf, size_t len, loff_t *pos)
+{
+#if defined(HAVE_LINUX___VFS_READ)
+    return __vfs_read(filp, buf, len, pos);
+#else
+    return filp->f_op->read(filp, buf, len, pos);
+#endif
+}
+
+static inline int
+afs_file_write(struct file *filp, char __user *buf, size_t len, loff_t *pos)
+{
+#if defined(HAVE_LINUX___VFS_READ)
+    return __vfs_write(filp, buf, len, pos);
+#else
+    return filp->f_op->write(filp, buf, len, pos);
+#endif
+}
+
 #endif /* AFS_LINUX_OSI_COMPAT_H */

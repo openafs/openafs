@@ -966,6 +966,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 
 		 dnl Function existence checks
 
+		 AC_CHECK_LINUX_FUNC([__vfs_read],
+				     [#include <linux/fs.h>],
+				     [__vfs_read(NULL, NULL, 0, NULL);])
                  AC_CHECK_LINUX_FUNC([bdi_init],
 				     [#include <linux/backing-dev.h>],
 				     [bdi_init(NULL);])

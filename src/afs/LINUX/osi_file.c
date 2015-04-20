@@ -375,9 +375,9 @@ osi_rdwr(struct osi_file *osifile, struct uio *uiop, int rw)
 
 	pos = uiop->uio_offset;
 	if (rw == UIO_READ)
-	    code = filp->f_op->read(filp, iov->iov_base, count, &pos);
+	    code = afs_file_read(filp, iov->iov_base, count, &pos);
 	else
-	    code = filp->f_op->write(filp, iov->iov_base, count, &pos);
+	    code = afs_file_write(filp, iov->iov_base, count, &pos);
 
 	if (code < 0) {
 	    code = -code;
