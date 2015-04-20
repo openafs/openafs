@@ -47,7 +47,7 @@ typedef struct path afs_linux_path_t;
 # endif
 #endif
 
-#ifndef HAVE_LINUX_DO_SYNC_READ
+#if !defined(HAVE_LINUX_DO_SYNC_READ) && !defined(STRUCT_FILE_OPERATIONS_HAS_READ_ITER)
 static inline int
 do_sync_read(struct file *fp, char *buf, size_t count, loff_t *offp) {
     return generic_file_read(fp, buf, count, offp);
