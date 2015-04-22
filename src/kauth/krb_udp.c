@@ -297,7 +297,7 @@ UDP_Authenticate(int ksoc, struct sockaddr_in *client, char *name,
 	    code = KERB_ERR_NAME_EXP;	/* XXX Could use another error code XXX */
 	    goto abort;
 	}
-	if (startTime - now > KTC_TIME_UNCERTAINTY) {
+	if (check_ka_skew(startTime, now, KTC_TIME_UNCERTAINTY)) {
 	    code = KERB_ERR_SERVICE_EXP;	/* was KABADREQUEST */
 	    goto abort;
 	}

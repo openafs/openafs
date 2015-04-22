@@ -711,7 +711,7 @@ ChangePassWord(struct rx_call *call, char *aname, char *ainstance,
     /* validate the request */
     request_time = ntohl(request.time);	/* reorder date */
     kvno = ntohl(request.kvno);
-    if (labs(request_time - time(NULL)) > KTC_TIME_UNCERTAINTY ||
+    if (check_ka_skew(request_time, time(NULL), KTC_TIME_UNCERTAINTY) ||
 	strncmp(request.label, KA_CPW_REQ_LABEL, sizeof(request.label)) ||
 	request.spare || kvno > MAXKAKVNO) {	/* these are reserved */
 	code = KABADREQUEST;
@@ -1142,7 +1142,7 @@ Authenticate(int version, struct rx_call *call, char *aname, char *ainstance,
     }
 #endif /* EXPIREPW */
 
-    if (request.time - now > KTC_TIME_UNCERTAINTY) {
+    if (check_ka_skew(request.time, now, KTC_TIME_UNCERTAINTY)) {
 #if 0
 	if (oanswer->MaxSeqLen < sizeof(afs_int32))
 	    code = KAANSWERTOOLONG;
