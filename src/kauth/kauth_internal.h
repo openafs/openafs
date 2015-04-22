@@ -71,4 +71,30 @@ ktc_to_EncryptionKey(struct ktc_encryptionKey *key) {
     return (EncryptionKey *)key;
 }
 
+/*
+ * Some of the RPCs need to verify that two times are within a given
+ * skew window (usually KTC_TIME_UNCERTAINTY, 15 minutes).  However,
+ * there are multiple sources of timestamps.  The "AFS-native" type,
+ * Date, is afs_uint32; timestamps fetched from the system will
+ * generally be the output of time(NULL), i.e., time_t.  However, the
+ * base type of time_t is platform-dependent -- on some systems, it
+ * is int32_t, and on others it is int64_t.  Arithmetic operations
+ * and comparisons between integers of different type are subject to
+ * the usual arithmetic promotions in C -- comparing a uint32_t and
+ * an int32_t results in the int32_t being "promoted" to uint32_t, which
+ * has disasterous consequences when the value being promoted is
+ * negative.  If, on the other hand, time_t is int64_t, then the promotions
+ * work the other way, with everything evaluated at int64_t precision,
+ * since int64_t has a higher conversion rank than int32_t (which has
+ * the same conversion rank as uint32_t).  In order to properly and
+ * portably check the time skew, it is simplest to cast everything to
+ * afs_int64 before evaluating any expressions.
+ *
+ * The expression evaluates to true if the absolute value of the difference
+ * between the two time inputs is larger than the skew.
+ */
+#define check_ka_skew(__t1, __t2, __skew) \
+	((afs_int64)(__t1) - (afs_int64)(__skew) > (afs_int64)(__t2) || \
+	(afs_int64)(__t2) - (afs_int64)(__skew) > (afs_int64)(__t1))
+
 #endif
