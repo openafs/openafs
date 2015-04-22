@@ -21,18 +21,18 @@
   *	-blocks	    The number of blocks available in the workstation cache.
   *	-files	    The target number of files in the workstation cache (Default:
   *		    1000).
-  *	-rootvol	    The name of the root volume to use.
+  *	-rootvol    The name of the root volume to use.
   *	-stat	    The number of stat cache entries.
-  *	-hosts	    List of servers to check for volume location info FOR THE
+  *	-hosts	    [OBSOLETE] List of servers to check for volume location info FOR THE
   *		    HOME CELL.
   *     -memcache   Use an in-memory cache rather than disk.
-  *	-cachedir    The base directory for the workstation cache.
+  *	-cachedir   The base directory for the workstation cache.
   *	-mountdir   The directory on which the AFS is to be mounted.
-  *	-confdir    The configuration directory .
+  *	-confdir    The configuration directory.
   *	-nosettime  Don't keep checking the time to avoid drift (default).
-  *     -settime    Keep checking the time to avoid drift.
+  *     -settime    [IGNORED] Keep checking the time to avoid drift.
   *	-rxmaxmtu   Set the max mtu to help with VPN issues.
-  *	-verbose     Be chatty.
+  *	-verbose    Be chatty.
   *	-disable-dynamic-vcaches     Disable the use of -stat value as the starting size of
   *                          the size of the vcache/stat cache pool,
   *                          but increase that pool dynamically as needed.
@@ -44,13 +44,28 @@
   *                support daemon
   *     -chunksize [n]   2^n is the chunksize to be used.  0 is default.
   *     -dcache    The number of data cache entries.
+  *     -volumes    The number of volume entries.
   *     -biods     Number of bkg I/O daemons (AIX3.1 only)
   *	-prealloc  Number of preallocated "small" memory blocks
-  *	-logfile   [OBSOLETE] Place where to put the logfile (default in
+  *	-logfile    [IGNORED] Place where to put the logfile (default in
   *                <cache>/etc/AFSLog.
   *	-waitclose make close calls always synchronous (slows em down, tho)
   *	-files_per_subdir [n]	number of files per cache subdir. (def=2048)
   *	-shutdown  Shutdown afs daemons
+  *	-enable_peer_stats	Collect RPC statistics by peer.
+  *	-enable_process_stats	Collect RPC statistics for this process.
+  *	-mem_alloc_sleep [IGNORED] Sleep when allocating memory.
+  *	-afsdb	    Enable AFSDB support.
+  *	-dynroot	Enable dynroot support.
+  *	-dynroot-sparse	Enable dynroot support with minimal cell list.
+  *	-fakestat	Enable fake stat() for cross-cell mounts.
+  *	-fakestat-all	Enable fake stat() for all mounts.
+  *	-nomount    Do not mount /afs.
+  *	-backuptree Prefer backup volumes for mountpoints in backup volumes.
+  *	-rxbind	    Bind the rx socket.
+  *	-rxpck	    Value for rx_extraPackets.
+  *	-splitcache RW/RO ratio for cache.
+  *	-rxmaxfrags Max number of UDP fragments per rx packet.
   *---------------------------------------------------------------------------*/
 
 #include <afsconfig.h>
@@ -2542,7 +2557,7 @@ afsd_init(void)
 		        CMD_OPTIONAL, "Do not mount AFS");
     cmd_AddParmAtOffset(ts, OPT_backuptree, "-backuptree", CMD_FLAG,
 		        CMD_OPTIONAL,
-			"Prefer backup volumes for mointpoints in backup "
+			"Prefer backup volumes for mountpoints in backup "
 			"volumes");
     cmd_AddParmAtOffset(ts, OPT_rxbind, "-rxbind", CMD_FLAG,
 			CMD_OPTIONAL,
