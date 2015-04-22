@@ -125,6 +125,9 @@ osi_NewVnode(void)
     tvc->v = ip;
 #endif
 
+    INIT_LIST_HEAD(&tvc->pagewriters);
+    spin_lock_init(&tvc->pagewriter_lock);
+
     return tvc;
 }
 

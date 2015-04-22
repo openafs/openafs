@@ -2571,10 +2571,27 @@ out:
  * locked */
 static inline int
 afs_linux_prepare_writeback(struct vcache *avc) {
-    if (avc->f.states & CPageWrite) {
-	return AOP_WRITEPAGE_ACTIVATE;
+    pid_t pid;
+    struct pagewriter *pw;
+
+    pid = MyPidxx2Pid(MyPidxx);
+    /* Prevent recursion into the writeback code */
+    spin_lock(&avc->pagewriter_lock);
+    list_for_each_entry(pw, &avc->pagewriters, link) {
+	if (pw->writer == pid) {
+	    spin_unlock(&avc->pagewriter_lock);
+	    return AOP_WRITEPAGE_ACTIVATE;
+	}
     }
-    avc->f.states |= CPageWrite;
+    spin_unlock(&avc->pagewriter_lock);
+
+    /* Add ourselves to writer list */
+    pw = osi_Alloc(sizeof(struct pagewriter));
+    pw->writer = pid;
+    spin_lock(&avc->pagewriter_lock);
+    list_add_tail(&pw->link, &avc->pagewriters);
+    spin_unlock(&avc->pagewriter_lock);
+
     return 0;
 }
 
@@ -2593,7 +2610,26 @@ afs_linux_dopartialwrite(struct vcache *avc, cred_t *credp) {
 
 static inline void
 afs_linux_complete_writeback(struct vcache *avc) {
-    avc->f.states &= ~CPageWrite;
+    struct pagewriter *pw, *store;
+    pid_t pid;
+    struct list_head tofree;
+
+    INIT_LIST_HEAD(&tofree);
+    pid = MyPidxx2Pid(MyPidxx);
+    /* Remove ourselves from writer list */
+    spin_lock(&avc->pagewriter_lock);
+    list_for_each_entry_safe(pw, store, &avc->pagewriters, link) {
+	if (pw->writer == pid) {
+	    list_del(&pw->link);
+	    /* osi_Free may sleep so we need to defer it */
+	    list_add_tail(&pw->link, &tofree);
+	}
+    }
+    spin_unlock(&avc->pagewriter_lock);
+    list_for_each_entry_safe(pw, store, &tofree, link) {
+	list_del(&pw->link);
+	osi_Free(pw, sizeof(struct pagewriter));
+    }
 }
 
 /* Writeback a given page syncronously. Called with no AFS locks held */
