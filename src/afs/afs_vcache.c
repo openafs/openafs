@@ -184,6 +184,26 @@ afs_FlushVCache(struct vcache *avc, int *slept)
     /* remove entry from the volume hash table */
     QRemove(&avc->vhashq);
 
+#if defined(AFS_LINUX26_ENV)
+    {
+	struct pagewriter *pw, *store;
+	struct list_head tofree;
+
+	INIT_LIST_HEAD(&tofree);
+	spin_lock(&avc->pagewriter_lock);
+	list_for_each_entry_safe(pw, store, &avc->pagewriters, link) {
+	    list_del(&pw->link);
+	    /* afs_osi_Free may sleep so we need to defer it */
+	    list_add_tail(&pw->link, &tofree);
+	}
+	spin_unlock(&avc->pagewriter_lock);
+	list_for_each_entry_safe(pw, store, &tofree, link) {
+	    list_del(&pw->link);
+	    afs_osi_Free(pw, sizeof(struct pagewriter));
+	}
+    }
+#endif
+
     if (avc->mvid)
 	osi_FreeSmallSpace(avc->mvid);
     avc->mvid = (struct VenusFid *)0;

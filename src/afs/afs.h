@@ -652,9 +652,7 @@ struct SimpleLocks {
 #define CBulkStat	0x00020000	/* loaded by a bulk stat, and not ref'd since */
 #define CUnlinkedDel	0x00040000
 #define CVFlushed	0x00080000
-#ifdef AFS_LINUX22_ENV
-#define CPageWrite      0x00200000      /* to detect vm deadlock - linux */
-#elif defined(AFS_SGI_ENV)
+#if defined(AFS_SGI_ENV)
 #define CWritingUFS	0x00200000	/* to detect vm deadlock - used by sgi */
 #elif defined(AFS_DARWIN80_ENV)
 #define CEvent          0x00200000      /* to preclude deadlock when sending events */
@@ -950,7 +948,18 @@ struct vcache {
     void *vpacRock;		/* used to read or write in visible partitions */
 #endif
     afs_uint32 lastBRLWarnTime; /* last time we warned about byte-range locks */
+#ifdef AFS_LINUX26_ENV
+    spinlock_t pagewriter_lock;
+    struct list_head pagewriters;	/* threads that are writing vm pages */
+#endif
 };
+
+#ifdef AFS_LINUX26_ENV
+struct pagewriter {
+    struct list_head link;
+    pid_t writer;
+};
+#endif
 
 #define	DONT_CHECK_MODE_BITS	0
 #define	CHECK_MODE_BITS		1

@@ -86,7 +86,7 @@ osi_VM_StoreAllSegments(struct vcache *avc)
 {
     struct inode *ip = AFSTOV(avc);
 
-    if (avc->f.states & CPageWrite)
+    if (!list_empty(&avc->pagewriters))
 	return; /* someone already writing */
 
     /* filemap_fdatasync() only exported in 2.4.5 and above */
