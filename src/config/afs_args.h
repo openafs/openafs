@@ -12,6 +12,9 @@
 
 /*
  * AFS system call opcodes
+ *
+ * When adding new opcodes, please also update afsd_init_syscall_opcodes()
+ * for syscall tracing.
  */
 
 #define AFSOP_START_RXCALLBACK	  0	/* no aux parms */

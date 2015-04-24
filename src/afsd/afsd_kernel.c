@@ -124,6 +124,72 @@ kern_return_t DiskArbDiskAppearedWithMountpointPing_auto(char *, unsigned int,
 # endif
 #endif
 
+static char *afsd_syscalls[AFSOP_MAX_OPCODE + 1]; /* For syscall tracing. */
+
+static void
+afsd_init_syscall_opcodes(void)
+{
+#define add_opcode(x) afsd_syscalls[x] = #x
+    add_opcode(AFSOP_START_RXCALLBACK);
+    add_opcode(AFSOP_START_AFS);
+    add_opcode(AFSOP_START_BKG);
+    add_opcode(AFSOP_START_TRUNCDAEMON);
+    add_opcode(AFSOP_START_CS);
+    add_opcode(AFSOP_ADDCELL);
+    add_opcode(AFSOP_CACHEINIT);
+    add_opcode(AFSOP_CACHEINFO);
+    add_opcode(AFSOP_VOLUMEINFO);
+    add_opcode(AFSOP_CACHEFILE);
+    add_opcode(AFSOP_CACHEINODE);
+    add_opcode(AFSOP_AFSLOG);
+    add_opcode(AFSOP_ROOTVOLUME);
+    add_opcode(AFSOP_STARTLOG);
+    add_opcode(AFSOP_ENDLOG);
+    add_opcode(AFSOP_AFS_VFSMOUNT);
+    add_opcode(AFSOP_ADVISEADDR);
+    add_opcode(AFSOP_CLOSEWAIT);
+    add_opcode(AFSOP_RXEVENT_DAEMON);
+    add_opcode(AFSOP_GETMTU);
+    add_opcode(AFSOP_GETIFADDRS);
+    add_opcode(AFSOP_ADDCELL2);
+    add_opcode(AFSOP_AFSDB_HANDLER);
+    add_opcode(AFSOP_SET_DYNROOT);
+    add_opcode(AFSOP_ADDCELLALIAS);
+    add_opcode(AFSOP_SET_FAKESTAT);
+    add_opcode(AFSOP_CELLINFO);
+    add_opcode(AFSOP_SET_THISCELL);
+    add_opcode(AFSOP_BASIC_INIT);
+    add_opcode(AFSOP_SET_BACKUPTREE);
+    add_opcode(AFSOP_SET_RXPCK);
+    add_opcode(AFSOP_BUCKETPCT);
+    add_opcode(AFSOP_SET_RXMAXMTU);
+    add_opcode(AFSOP_BKG_HANDLER);
+    add_opcode(AFSOP_GETMASK);
+    add_opcode(AFSOP_SET_RXMAXFRAGS);
+    add_opcode(AFSOP_SET_RMTSYS_FLAG);
+    add_opcode(AFSOP_SEED_ENTROPY);
+    add_opcode(AFSOP_SET_INUMCALC);
+    add_opcode(AFSOP_RXLISTENER_DAEMON);
+    add_opcode(AFSOP_CACHEBASEDIR);
+    add_opcode(AFSOP_CACHEDIRS);
+    add_opcode(AFSOP_CACHEFILES);
+    add_opcode(AFSOP_SETINT);
+    add_opcode(AFSOP_GO);
+    add_opcode(AFSOP_CHECKLOCKS);
+    add_opcode(AFSOP_SHUTDOWN);
+    add_opcode(AFSOP_STOP_RXCALLBACK);
+    add_opcode(AFSOP_STOP_AFS);
+    add_opcode(AFSOP_STOP_BKG);
+    add_opcode(AFSOP_STOP_TRUNCDAEMON);
+    /* AFSOP_STOP_RXEVENT -- not a syscall opcode */
+    /* AFSOP_STOP_COMPLETE -- not a syscall opcode */
+    add_opcode(AFSOP_STOP_CS);
+    /* AFSOP_STOP_RXK_LISTENER -- not a syscall opcode */
+    add_opcode(AFSOP_STOP_AFSDB);
+    add_opcode(AFSOP_STOP_NETIF);
+#undef add_opcode
+}
+
 void
 afsd_set_rx_rtpri(void)
 {
@@ -274,19 +340,36 @@ afsd_call_syscall(struct afsd_syscall_args *args)
     error = os_syscall(args);
 
     if (afsd_debug) {
+	char *opcode;
+	char buffer[32];
         const char *syscall_str;
+
 #if defined(AFS_SYSCALL)
         syscall_str = AFS_STRINGIZE(AFS_SYSCALL);
 #else
         syscall_str = "[AFS_SYSCALL]";
 #endif
+
+	if ((args->syscall < 0) ||
+	    (args->syscall >= (sizeof(afsd_syscalls) / sizeof(*afsd_syscalls))))
+	    opcode = NULL;
+	else
+	    opcode = afsd_syscalls[args->syscall];
+
+	if (opcode == NULL) {
+	    snprintf(buffer, sizeof(buffer), "unknown (%d)", args->syscall);
+	    opcode = buffer;
+	}
+
 	if (error == -1) {
 	    char *s = strerror(errno);
-	    printf("SScall(%s, %d, %d)=%d (%d, %s)\n", syscall_str, AFSCALL_CALL,
-		   (int)args->params[0], error, errno, s);
+	    printf("os_syscall(%s, %d, %s, 0x%lx)=%d (%d, %s)\n",
+		    syscall_str, AFSCALL_CALL, opcode,
+		   (long)args->params[0], error, errno, s);
 	} else {
-	    printf("SScall(%s, %d, %d)=%d\n", syscall_str, AFSCALL_CALL,
-		   (int)args->params[0], error);
+	    printf("os_syscall(%s %d %s, 0x%lx)=%d\n",
+		    syscall_str, AFSCALL_CALL, opcode,
+		   (long)args->params[0], error);
 	}
     }
 
@@ -573,6 +656,7 @@ main(int argc, char **argv)
 {
     int code;
 
+    afsd_init_syscall_opcodes();
     afsd_init();
 
     code = afsd_parse(argc, argv);
