@@ -1621,6 +1621,7 @@ OPENAFS_ROKEN()
 OPENAFS_HCRYPTO()
 OPENAFS_CURSES()
 OPENAFS_C_ATTRIBUTE()
+OPENAFS_C_PRAGMA()
 
 dnl Functions that Heimdal's libroken provides, but that we
 dnl haven't found a need for yet, and so haven't imported
