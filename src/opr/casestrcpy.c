@@ -23,8 +23,7 @@ lcstring(char *d, const char *s, int n)
     char *original_d = d;
     char c;
 
-    if ((s == 0) || (d == 0))
-	return 0;		/* just to be safe */
+    opr_Assert(s != NULL && d != NULL);
     while (n) {
 	c = *s++;
 	if (isupper(c))
@@ -44,8 +43,7 @@ ucstring(char *d, const char *s, int n)
     char *original_d = d;
     char c;
 
-    if ((s == 0) || (d == 0))
-	return 0;
+    opr_Assert(s != NULL && d != NULL);
     while (n) {
 	c = *s++;
 	if (islower(c))
@@ -97,7 +95,8 @@ strcompose(char *buf, size_t len, ...)
     char *str;
     size_t slen;
 
-    if (buf == NULL || len <= 0)
+    opr_Assert(buf != NULL);
+    if (len <= 0)
 	return NULL;
 
     *buf = '\0';
