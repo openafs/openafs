@@ -87,6 +87,9 @@ afs_int32 afs_rx_idledead_rep = AFS_IDLEDEADTIME_REP;
 
 static int afscall_set_rxpck_received = 0;
 
+/* From afs_util.c */
+extern afs_int32 afs_md5inum;
+
 /* This is code which needs to be called once when the first daemon enters
  * the client. A non-zero return means an error and AFS should not start.
  */
@@ -1301,6 +1304,19 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	    afs_osi_Free(seedbuf, parm3);
 	}
 #endif
+    } else if (parm == AFSOP_SET_INUMCALC) {
+	switch (parm2) {
+	case AFS_INUMCALC_COMPAT:
+	    afs_md5inum = 0;
+	    code = 0;
+	    break;
+	case AFS_INUMCALC_MD5:
+	    afs_md5inum = 1;
+	    code = 0;
+	    break;
+	default:
+	    code = EINVAL;
+	}
     } else {
 	code = EINVAL;
     }

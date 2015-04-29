@@ -53,6 +53,7 @@
 #define AFSOP_SET_RXMAXFRAGS     43     /* set rxi_nSendFrags, rxi_nRecvFrags */
 #define AFSOP_SET_RMTSYS_FLAG    44     /* set flag if rmtsys is enabled */
 #define AFSOP_SEED_ENTROPY       45     /* Give the kernel hcrypto entropy */
+#define AFSOP_SET_INUMCALC       46     /* set inode number calculation method */
 
 /* The range 20-30 is reserved for AFS system offsets in the afs_syscall */
 #define	AFSCALL_PIOCTL		20
@@ -168,6 +169,13 @@ struct afs_cacheParams {
     afs_int32 users;
     afs_int32 dynamic_vcaches;
 };
+
+/* Supported values for AFSOP_SET_INUMCALC. */
+enum {
+    AFS_INUMCALC_COMPAT = 0,
+    AFS_INUMCALC_MD5 = 1
+};
+
 
 /*
  * Note that the AFS_*ALLOCSIZ values should be multiples of sizeof(void*) to

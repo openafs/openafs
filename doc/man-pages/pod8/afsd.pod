@@ -20,6 +20,7 @@ B<afsd> [B<-afsdb>] [B<-backuptree>]
      S<<< [B<-files> <I<files in cache>>] >>>
      S<<< [B<-files_per_subdir> <I<log(2) of files per dir>> ] >>>
      [B<-help>] S<<< [B<-logfile> <I<Place to keep the CM log>>] >>>
+     S<<< [B<-inumcalc>] <I<method>> >>>
      [B<-mem_alloc_sleep>] [B<-memcache>]
      S<<< [B<-mountdir> <I<mount location>>] >>> [B<-nomount>]
      [B<-nosettime>]
@@ -603,6 +604,24 @@ ignored.
 =item B<-logfile> <I<log file location>>
 
 This option is obsolete and no longer has any effect.
+
+=item B<-inumcalc> <I<method>>
+
+Specifies the method used by the Cache Manager to generate inode numbers for
+files, directories, and symlinks in the AFS filesystem.  Valid methods are
+C<compat> and C<md5>.  The default method is C<compat>.
+
+When the C<compat> method is in effect, the Cache Manager generates inode
+numbers for a given inode by multiplying the AFS volume number by 65536, adding
+the result to the AFS vnode number, and finally truncating the result to a
+signed 32 bit integer.
+
+When the C<md5> method is in effect, the Cache Manager generates inode numbers
+for a given inode by calculating the MD5 digest of a combination of the cell
+number, volume number, and vnode number. The result is truncated to a signed 32
+bit integer. The C<md5> method is computationally more expensive but greatly
+reduces the chance for inode number collisions, especially when volumes from
+multiple cells are mounted within the AFS filesystem.
 
 =item B<-mem_alloc_sleep>
 

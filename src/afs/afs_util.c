@@ -41,7 +41,7 @@
 #include <sys/fp_io.h>
 #endif
 
-afs_int32 afs_new_inum = 0;
+afs_int32 afs_md5inum = 0;
 
 #ifndef afs_cv2string
 char *
@@ -381,7 +381,7 @@ afs_calc_inum_md5(afs_int32 cell, afs_int32 volume, afs_int32 vnode)
     char digest[16];
     struct md5 ct;
 
-    if (afs_new_inum) {
+    if (afs_md5inum) {
 	int offset;
 	MD5_Init(&ct);
 	MD5_Update(&ct, &cell, 4);
