@@ -35,10 +35,7 @@
 
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
-
-#ifdef AFS_LINUX20_ENV
 #include "hcrypto/md5.h"
-#endif
 
 #if	defined(AFS_AIX_ENV)
 #include <sys/fp_io.h>
@@ -377,7 +374,6 @@ afs_data_pointer_to_int32(const void *p)
     return ip.i32[i32_sub];
 }
 
-#ifdef AFS_LINUX20_ENV
 static_inline afs_int32
 afs_calc_inum_md5(afs_int32 cell, afs_int32 volume, afs_int32 vnode)
 {
@@ -409,9 +405,6 @@ afs_calc_inum_md5(afs_int32 cell, afs_int32 volume, afs_int32 vnode)
     }
     return ino;
 }
-#else
-# define afs_calc_inum_md5(cell, volume, vnode) 0
-#endif
 
 afs_int32
 afs_calc_inum(afs_int32 cell, afs_int32 volume, afs_int32 vnode)
