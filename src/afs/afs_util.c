@@ -40,13 +40,6 @@
 #include "hcrypto/md5.h"
 #endif
 
-#if	defined(AFS_SUN5_ENV)
-#include <inet/led.h>
-#include <inet/common.h>
-#include <netinet/ip6.h>
-#include <inet/ip.h>
-#endif
-
 #if	defined(AFS_AIX_ENV)
 #include <sys/fp_io.h>
 #endif
