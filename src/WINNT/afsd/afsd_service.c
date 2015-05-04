@@ -1176,6 +1176,134 @@ BOOL AFSModulesVerify(void)
 }
 
 /*
+ * Add or remove the specified service from the Network Provider "Order" value
+ * in the registry:
+ *
+ *    str : target string
+ *    str2: string to add/remove
+ *    bInst: == 1 if string should be added to target if not already there, otherwise remove string from target if present.
+ *    if before != NULL, add string before
+ */
+
+enum INP_ERR {
+    inp_err_error=0,
+    inp_err_present=1,
+    inp_err_added=2,
+    inp_err_absent=3,
+    inp_err_removed=4
+};
+
+static enum INP_ERR
+npi_CheckAndAddRemove(char *str, const char *str2, int bInst,
+		      const char *before)
+{
+    char *target = NULL;
+    char *charset = NULL;
+    char *match, *bmatch;
+    int code;
+    enum INP_ERR rv = inp_err_error;
+
+    code = asprintf(&target, ",%s,", str);
+    if (code < 0)
+	goto out;
+
+    code = asprintf(&charset, ",%s,", str2);
+    if (code < 0)
+	goto out;
+
+    match = strstr(target, charset);
+    if (match && bInst) {
+	if (before != NULL) {
+	    bmatch = strstr(target, before);
+	    if (bmatch == NULL || bmatch > match) {
+		rv = inp_err_present;
+		goto out;
+	    }
+
+	    strcpy(str+(match-target), match + strlen(str2) + 2);
+	    str[strlen(str)-1] = '\0';
+	    match = NULL;
+	} else {
+	    rv = inp_err_present;
+	    goto out;
+	}
+    }
+
+    if (match == NULL && !bInst) {
+	rv = inp_err_absent;
+    }
+    else if (bInst)
+    {
+	if (before == NULL || (bmatch = strstr(str, before)) == NULL) {
+	    /* append to list */
+	    strcat(str, ",");
+	    strcat(str, str2);
+	} else {
+	    /* insert before str2 */
+	    size_t s2len = strlen(str2);
+	    memmove(bmatch + s2len + 1, bmatch, strlen(bmatch) + 1);
+	    memcpy(bmatch, str2, s2len);
+	    bmatch[s2len] = ',';
+	}
+	rv = inp_err_added;
+    }
+    else
+    {
+	/* remove from list */
+	strcpy(str + (match-target), match + strlen(str2) + 2);
+	str[strlen(str)-1] = '\0';
+	rv = inp_err_removed;
+    }
+
+  out:
+    free(target);
+    free(charset);
+    return rv;
+}
+
+
+static DWORD
+InstNetProvider(const char *svcname, int bInst, const char *before)
+{
+    const char *strOrder = NULL;
+    HKEY hkOrder;
+    LONG rv;
+    DWORD dwSize;
+    HANDLE hProcHeap;
+
+    rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_NP_ORDER, 0,
+		      KEY_READ | KEY_WRITE, &hkOrder);
+    if (rv != ERROR_SUCCESS)
+	goto out;
+
+    dwSize = 0;
+    rv = RegQueryValueEx(hkOrder, AFSREG_NP_ORDER_VALUE,
+			 NULL, NULL, NULL, &dwSize);
+    if (rv != ERROR_SUCCESS)
+	goto out;
+
+    strOrder = malloc(dwSize + 2 + strlen(svcname));
+
+    rv = RegQueryValueEx(hkOrder, AFSREG_NP_ORDER_VALUE,
+			 NULL, NULL, (LPBYTE) strOrder, &dwSize);
+    if (rv != ERROR_SUCCESS)
+	goto out;
+
+    switch(npi_CheckAndAddRemove(strOrder, svcname , bInst, before)) {
+    case inp_err_added:
+    case inp_err_removed:
+	dwSize = strlen(strOrder) + 1;
+	rv = RegSetValueEx(hkOrder, AFSREG_NP_ORDER_VALUE, 0, REG_SZ,
+			   strOrder, dwSize);
+	break;
+    }
+
+  out:
+    free(strOrder);
+    return rv;
+}
+
+/*
 control serviceex exists only on 2000/xp. These functions will be loaded dynamically.
 */
 
@@ -1427,7 +1555,13 @@ afsd_Main(DWORD argc, LPTSTR *argv)
             else if (cm_sysNameCount)
                 RDR_SysName( AFS_SYSNAME_ARCH_64BIT, cm_sysNameCount, cm_sysNameList );
 #endif
-        }
+
+	    InstNetProvider("AFSRedirector", TRUE, "LanmanWorkstation");
+	} else {
+	    InstNetProvider("AFSRedirector", FALSE, NULL);
+	}
+
+	InstNetProvider("TransarcAFSDaemon", TRUE, NULL);
 
         /*
          * Set the default for the SMB interface based upon the state of the

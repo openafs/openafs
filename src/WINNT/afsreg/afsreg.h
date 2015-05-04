@@ -191,6 +191,12 @@ TEXT("HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Services")
 #define AFSREG_USER_OPENAFS_SUBKEY TEXT("Software\\OpenAFS\\Client")
 #define AFSREG_USER_OPENAFS_KEY TEXT("HKEY_CURRENT_USER") AFSREG_USER_OPENAFS_SUBKEY
 
+/* Network Provider Order */
+
+#define AFSREG_NP_ORDER \
+    TEXT("SYSTEM\\CurrentControlSet\\Control\\NetworkProvider\\Order")
+
+#define AFSREG_NP_ORDER_VALUE TEXT("ProviderOrder")
 
 /* Extended (alternative) versions of registry access functions */
 
