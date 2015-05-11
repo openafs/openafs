@@ -936,7 +936,6 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libafsrpc.so.*
 %endif
 
 %if %{build_modules}
-%if %{fedorakmod}
 for kvariant in %{kvariants}
 do
   if [ -n "$kvariant" ] ; then
@@ -963,27 +962,6 @@ do
   mkdir -p ${dstdir}
   install -m 755 ${srcdir}/openafs.ko ${dstdir}/openafs.ko
 done
-%else
-# Install the kernel modules
-for variation in %{kvariations}
-do
-    if [ ${variation} = up ]
-    then
-       kvar=%{kxmoddir}
-       modname=openafs${kmodend}
-    else
-       kvar=%{kxmoddir}${variation}
-       modname=openafs${kmodend}
-    fi
-
-    srcdir=${sysname}/dest/root.client/lib/modules/%{kverrel}${kvariant}/extra/openafs
-    dstdir=$RPM_BUILD_ROOT${kvar}/fs/openafs
-
-    mkdir -p ${dstdir}
-
-    install -m 755 ${srcdir}/${modname} ${dstdir}/openafs${kmodend}
-done
-%endif
 %endif
 
 ##############################################################################
@@ -1106,51 +1084,6 @@ dkms install -m %{name} -v %{dkms_version} --rpm_safe_upgrade
 
 %preun -n dkms-%{name}
 dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
-%endif
-%endif
-
-%if %{build_modules}
-%if !%{fedorakmod}
-%if %{up_package}
-%post kernel
-%{depmod} -ae %{kernvers}
-
-%postun kernel
-%{depmod} -ae %{kernvers}
-
-%endif
-
-%if %{smp_package}
-%post kernel-smp
-%{depmod} -ae %{kernvers}%{?smp_ext:%{smp_ext}}
-
-%postun kernel-smp
-%{depmod} -ae %{kernvers}%{?smp_ext:%{smp_ext}}
-%endif
-
-%if %{largesmp_package}
-%post kernel-largesmp
-%{depmod} -ae %{kernvers}%{?largesmp_ext:%{largesmp_ext}}
-
-%postun kernel-largesmp
-%{depmod} -ae %{kernvers}%{?largesmp_ext:%{largesmp_ext}}
-%endif
- 
-%if %{bigmem_package}
-%post kernel-bigmem
-%{depmod} -ae %{kernvers}%{?bigmem_ext:%{bigmem_ext}}
-
-%postun kernel-bigmem
-%{depmod} -ae %{kernvers}%{?bigmem_ext:%{bigmem_ext}}
-%endif
-
-%if %{hugemem_package}
-%post kernel-hugemem
-%{depmod} -ae %{kernvers}%{?hugemem_ext:%{hugemem_ext}}
-
-%postun kernel-hugemem
-%{depmod} -ae %{kernvers}%{?hugemem_ext:%{hugemem_ext}}
-%endif
 %endif
 %endif
 
@@ -1405,43 +1338,6 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %endif
 
 %endif
-
-%if %{build_modules}
-
-%if !%{fedorakmod}
-%if %{up_package}
-%files kernel
-%defattr(-,root,root)
-%{kxmoddir}/fs/openafs/openafs.*
-%endif
-
-%if %{smp_package}
-%files kernel-smp
-%defattr(-,root,root)
-%{kxmoddir}%{?smp_ext:%{smp_ext}}/fs/openafs/openafs.*
-%endif
-
-%if %{largesmp_package}
-%files kernel-largesmp
-%defattr(-,root,root)
-%{kxmoddir}%{?largesmp_ext:%{largesmp_ext}}/fs/openafs/openafs.*
-%endif
- 
-%if %{bigmem_package}
-%files kernel-bigmem
-%defattr(-,root,root)
-%{kxmoddir}%{?bigmem_ext:%{bigmem_ext}}/fs/openafs/openafs.*
-%endif
-
-%if %{hugemem_package}
-%files kernel-hugemem
-%defattr(-,root,root)
-%{kxmoddir}%{?hugemem_ext:%{hugemem_ext}}/fs/openafs/openafs.*
-%endif
-%endif
-
-%endif
-
 ##############################################################################
 ###
 ### openafs.spec change log
