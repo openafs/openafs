@@ -1483,7 +1483,6 @@ AFSGetConnectionInfo( IN AFSNetworkProviderConnectionCB *ConnectCB,
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSProviderConnectionCB *pConnection = NULL, *pBestMatch = NULL;
     UNICODE_STRING uniRemoteName, uniServerName, uniShareName, uniRemainingPath, uniFullName, uniRemainingPathLocal;
-    USHORT usNameLen = 0, usMaxNameLen = 0;
     BOOLEAN bEnumerationEntry = FALSE;
     AFSDeviceExt *pRDRDevExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
 
@@ -1665,9 +1664,22 @@ AFSGetConnectionInfo( IN AFSNetworkProviderConnectionCB *ConnectCB,
         else
         {
 
-            //
-            // See if we can locate it on our connection list
-            //
+	    USHORT usNameLen = 0, usMaxNameLen = 0;
+
+	    //
+	    // AFSGetConnectionInfo() is called to generate responses for
+	    // NPGetResourceInformation and NPGetConnectionPerformance.
+	    // The former can be called with a Connection->RemoteName that
+	    // consists of \\server\share\dir1\dir2\...\dirN where one or
+	    // all of the directories do not have to be processed by the
+	    // network provider.  For example, one of the directories might
+	    // be a reparse point that redirects to another network provider.
+	    // It might also be the case that a directory might be in the
+	    // \\afs file namespace but not be accessible with the current
+	    // credentials.  That doesn't make the connection invalid.
+	    // As such the network provider is not required to validate the
+	    // entire RemoteName.  This can result in false positives.
+	    //
 
             pConnection = pRDRDevExt->Specific.RDR.ProviderConnectionList;
 
@@ -1676,19 +1688,27 @@ AFSGetConnectionInfo( IN AFSNetworkProviderConnectionCB *ConnectCB,
                           "AFSGetConnectionInfo Searching for full name %wZ\n",
                           &uniFullName));
 
-            while( pConnection != NULL)
+	    while (pConnection != NULL)
             {
 
-                if( usMaxNameLen < pConnection->RemoteName.Length &&
-                    pConnection->RemoteName.Length <= uniFullName.Length)
+		//
+		// A partial match can be valid but it must occur on a
+		// component boundary.
+		//
+
+		if (pConnection->AuthenticationId.QuadPart == ConnectCB->AuthenticationId.QuadPart &&
+		     usMaxNameLen < pConnection->RemoteName.Length &&
+		     (pConnection->RemoteName.Length == uniFullName.Length ||
+		       pConnection->RemoteName.Length < uniFullName.Length &&
+		       (uniFullName.Buffer[pConnection->RemoteName.Length/sizeof(WCHAR)] == L'\\' ||
+			 uniFullName.Buffer[pConnection->RemoteName.Length/sizeof(WCHAR)] == L'/')))
                 {
 
                     usNameLen = uniFullName.Length;
 
                     uniFullName.Length = pConnection->RemoteName.Length;
 
-                    if( pConnection->AuthenticationId.QuadPart == ConnectCB->AuthenticationId.QuadPart &&
-                        RtlCompareUnicodeString( &uniFullName,
+		    if (RtlCompareUnicodeString( &uniFullName,
                                                  &pConnection->RemoteName,
                                                  TRUE) == 0)
                     {
@@ -1721,8 +1741,7 @@ AFSGetConnectionInfo( IN AFSNetworkProviderConnectionCB *ConnectCB,
                               "AFSGetConnectionInfo Using best match for %wZ\n",
                               &pConnection->RemoteName));
             }
-
-            if( pConnection == NULL)
+	    else
             {
 
                 //
@@ -1730,7 +1749,16 @@ AFSGetConnectionInfo( IN AFSNetworkProviderConnectionCB *ConnectCB,
                 //
 
                 pConnection = AFSLocateEnumRootEntry( &uniShareName);
-            }
+
+		if (pConnection != NULL)
+		{
+
+		    AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
+				  AFS_TRACE_LEVEL_VERBOSE,
+				  "AFSGetConnectionInfo Using share connection %wZ\n",
+				  &pConnection->RemoteName));
+		}
+	    }
         }
 
         if( pConnection == NULL)
