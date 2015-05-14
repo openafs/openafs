@@ -168,6 +168,7 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
     afs_uint32 hash;
     cm_cell_rock_t rock;
     size_t len;
+    size_t namelen;
     afs_int32 cellID;
 
     if (namep == NULL || !namep[0] || !strcmp(namep,CM_IOCTL_FILENAME_NOSLASH))
@@ -186,6 +187,7 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
     if (len == 0)
         return NULL;
     namep = name;
+    namelen = strlen(namep);
 
     hash = CM_CELL_NAME_HASH(namep);
 
@@ -199,13 +201,32 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
     }
 
     if (!cp) {
-        for (cp = cm_data.allCellsp; cp; cp=cp->allNextp) {
-            if (strnicmp(namep, cp->name, strlen(namep)) == 0) {
-                strncpy(fullname, cp->name, CELL_MAXNAMELEN);
-                fullname[CELL_MAXNAMELEN-1] = '\0';
-                break;
-            }
-        }
+	/* the name wasn't found but it might be a matching prefix */
+	for (cp = cm_data.allCellsp, cp2 = NULL; cp; cp=cp->allNextp) {
+	    if (strnicmp(namep, cp->name, namelen) == 0
+		 && (namelen == strlen(cp->name) || cp->name[namelen] == '.')) {
+		if (cp2 != NULL) {
+		    osi_Log5(afsd_logp,
+			      "cm_GetCell_gen ambiguous prefix match: prefix %s matches (%u) %s and (%u) %s",
+			      osi_LogSaveString(afsd_logp,namep),
+			      cp->cellID,
+			      osi_LogSaveString(afsd_logp,cp->name),
+			      cp2->cellID,
+			      osi_LogSaveString(afsd_logp,cp2->name));
+		    cp = NULL;
+		    lock_ReleaseRead(&cm_cellLock);
+		    goto done;
+		}
+		cp2 = cp;
+	    }
+	}
+
+	if (cp2 != NULL) {
+	    /* an unambiguous prefix match was found */
+	    cp = cp2;
+	    strncpy(fullname, cp->name, CELL_MAXNAMELEN);
+	    fullname[CELL_MAXNAMELEN-1] = '\0';
+	}
     }
 
     if (cp) {
@@ -222,30 +243,36 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
             if (cm_stricmp_utf8(namep, cp->name) == 0) {
                 strncpy(fullname, cp->name, CELL_MAXNAMELEN);
                 fullname[CELL_MAXNAMELEN-1] = '\0';
-                break;
+		goto done;
             }
         }
 
-        if (cp)
-            goto done;
+	/* the name wasn't found but it might be a matching prefix */
+	for (cp = cm_data.allCellsp, cp2 = NULL; cp; cp=cp->allNextp) {
+	    if (strnicmp(namep, cp->name, namelen) == 0
+		 && (namelen == strlen(cp->name) || cp->name[namelen] == '.')) {
+		if (cp2 != NULL) {
+		    osi_Log5(afsd_logp,
+			      "cm_GetCell_gen ambiguous prefix match: prefix %s matches (%u) %s and (%u) %s",
+			      osi_LogSaveString(afsd_logp,namep),
+			      cp->cellID,
+			      osi_LogSaveString(afsd_logp,cp->name),
+			      cp2->cellID,
+			      osi_LogSaveString(afsd_logp,cp2->name));
+		    cp = NULL;
+		    goto done;
+		}
+		cp2 = cp;
+	    }
+	}
 
-        for (cp = cm_data.allCellsp; cp; cp=cp->allNextp) {
-            if (strnicmp(namep, cp->name, strlen(namep)) == 0) {
-                strncpy(fullname, cp->name, CELL_MAXNAMELEN);
-                fullname[CELL_MAXNAMELEN-1] = '\0';
-                break;
-            }
-        }
-
-        if (cp) {
-            lock_ReleaseWrite(&cm_cellLock);
-            lock_ObtainMutex(&cp->mx);
-            lock_ObtainWrite(&cm_cellLock);
-            cm_AddCellToNameHashTable(cp);
-            cm_AddCellToIDHashTable(cp);
-            lock_ReleaseMutex(&cp->mx);
-            goto done;
-        }
+	if (cp2 != NULL) {
+	    /* an unambiguous prefix match was found */
+	    cp = cp2;
+	    strncpy(fullname, cp->name, CELL_MAXNAMELEN);
+	    fullname[CELL_MAXNAMELEN-1] = '\0';
+	    goto done;
+	}
 
         if ( cm_data.freeCellsp != NULL ) {
             cp = cm_data.freeCellsp;
