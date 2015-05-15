@@ -1,9 +1,9 @@
-openafs (1.6.11.1-1) UNRELEASED; urgency=medium
+openafs (1.6.11.1-1) unstable; urgency=medium
 
   * New upstream release.
     - Support for Linux kernels up to 4.0.
 
- -- Benjamin Kaduk <kaduk@mit.edu>  Fri, 15 May 2015 10:33:51 -0400
+ -- Benjamin Kaduk <kaduk@mit.edu>  Fri, 15 May 2015 11:02:14 -0400
 
 openafs (1.6.11~pre2-1) experimental; urgency=low
 
