@@ -43,7 +43,7 @@ KOPTS = -fPIC -mno-red-zone
 KDEFS=-Wall -nostdinc -I/usr/include -D_KERNEL -DKLD_MODULE \
 	-elf \
 	-mno-mmx -mno-3dnow -mno-sse -mno-sse2 \
-	-mno-align-long-strings -fno-common -ffreestanding \
+	-fno-common -ffreestanding \
 	-I${KBLD} -include opt_global.h -fno-strict-aliasing
 
 DBUG = -O2

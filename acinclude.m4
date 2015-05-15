@@ -378,7 +378,7 @@ case $system in
                  case "$LINUX_VERSION" in
                   2.2.*) AFS_SYSKVERS=22 ;;
                   2.4.*) AFS_SYSKVERS=24 ;;
-                  2.6.* | 3.*) AFS_SYSKVERS=26 ;;
+                  [2.6.* | [3-9]* | [1-2][0-9]*]) AFS_SYSKVERS=26 ;;
                   *) AC_MSG_ERROR(Couldn't guess your Linux version [2]) ;;
                  esac
                 fi
@@ -851,6 +851,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_TYPE([kuid_t], [uidgid.h])
 
 		 dnl Check for structure elements
+		 AC_CHECK_LINUX_STRUCT([address_space], [backing_dev_info], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([address_space_operations],
 				       [write_begin], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([backing_dev_info], [name],
