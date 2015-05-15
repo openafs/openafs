@@ -13,6 +13,8 @@
 #include "afs/sysincludes.h"    /*Standard vendor system headers */
 #include "afsincludes.h"        /*AFS-based standard headers */
 
+#include "osi_compat.h"
+
 int
 osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep) {
     int code;
@@ -71,7 +73,7 @@ restart:
 	    dget(dentry);
 
 	    spin_unlock(&inode->i_lock);
-	    if (d_invalidate(dentry) == -EBUSY) {
+	    if (afs_d_invalidate(dentry) == -EBUSY) {
 		dput(dentry);
 		/* perhaps lock and try to continue? (use cur as head?) */
 		goto inuse;
@@ -141,3 +143,64 @@ osi_PostPopulateVCache(struct vcache *avc) {
     vSetType(avc, VREG);
 }
 
+/**
+ * osi_ResetRootVCache - Reset the root vcache
+ * Reset the dentry associated with the afs root.
+ * Called from afs_CheckRootVolume when we notice that
+ * the root volume ID has changed.
+ *
+ * @volid: volume ID for the afs root
+ */
+void
+osi_ResetRootVCache(afs_uint32 volid)
+{
+    struct vrequest *treq = NULL;
+    struct vattr vattr;
+    cred_t *credp;
+    struct dentry *dp;
+    struct vcache *vcp;
+    struct inode *root = AFSTOV(afs_globalVp);
+
+    afs_rootFid.Fid.Volume = volid;
+    afs_rootFid.Fid.Vnode = 1;
+    afs_rootFid.Fid.Unique = 1;
+
+    credp = crref();
+    if (afs_CreateReq(&treq, credp))
+	goto out;
+    vcp = afs_GetVCache(&afs_rootFid, treq, NULL, NULL);
+    if (!vcp)
+	goto out;
+    afs_getattr(vcp, &vattr, credp);
+    afs_fill_inode(AFSTOV(vcp), &vattr);
+
+    dp = d_find_alias(root);
+
+#if defined(HAVE_DCACHE_LOCK)
+    spin_lock(&dcache_lock);
+#else
+    spin_lock(&AFSTOV(vcp)->i_lock);
+#endif
+    spin_lock(&dp->d_lock);
+#if defined(D_ALIAS_IS_HLIST)
+    hlist_del_init(&dp->d_alias);
+    hlist_add_head(&dp->d_alias, &(AFSTOV(vcp)->i_dentry));
+#else
+    list_del_init(&dp->d_alias);
+    list_add(&dp->d_alias, &(AFSTOV(vcp)->i_dentry));
+#endif
+    dp->d_inode = AFSTOV(vcp);
+    spin_unlock(&dp->d_lock);
+#if defined(HAVE_DCACHE_LOCK)
+    spin_unlock(&dcache_lock);
+#else
+    spin_unlock(&AFSTOV(vcp)->i_lock);
+#endif
+    dput(dp);
+
+    AFS_RELE(root);
+    afs_globalVp = vcp;
+out:
+    crfree(credp);
+    afs_DestroyReq(treq);
+}

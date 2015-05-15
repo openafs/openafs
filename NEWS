@@ -1,5 +1,66 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.6.11 (in progress)
+
+  All platforms
+
+    * Allow aklog to succeed creating native K5 tokens even when mapping
+      the K5 principal to a K4 one fails (11538)
+
+    * Build fixes (11435 11636)
+
+  All client platforms
+
+    * Avoid a potential kernel panic due to connection reference overcounts
+      (11645) (RT #131885)
+
+    * Avoid potential corruption of files written using memory mapped I/O
+      when the file is larger than the cache (11656) (RT #131976)
+
+  Linux clients
+
+    * Support kernels at least up to 3.19 (11549 11550 11569 11570 11595
+      11658..11662 11694)
+
+      Note: By default this excludes kernels 3.17 to 3.17.2, which will leak
+            an inode reference when an error occurs in d_splice_alias(). The
+            module will build and work, but leak kernel memory, leading to
+	    performance degradation and eventually system failure due to
+	    memory exhaustion. Since it's impossible to detect this condition
+	    automatically, the switch --enable-linux-d_splice_alias-extra-iput
+	    must be passed to configure when building the module for those
+	    kernels. The same would be necessary for any kernel with backports
+	    of commit 908790fa3b779d37365e6b28e3aa0f6e833020c3 or commit
+	    95ad5c291313b66a98a44dc92b57e0b37c1dd589 but not the fix in commit
+	    51486b900ee92856b977eacfc5bfbe6565028070 in the linux-stable repo
+	    (git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git) or
+	    the corresponding changes on other branches.
+
+    * Fixed a regression introduced in OpenAFS release 1.6.10 which could
+      make the spurious "getcwd: cannot access parent directories" problem
+      return (11558 11568) (RT #131780)
+
+    * Avoid leaking memory when scanning a corrupt directory (11707)
+
+  OS X clients
+
+    * Support OS X 10.10 "Yosemite" (11571 11572 11611) (RT #131946)
+
+  Solaris clients
+
+    * Avoid reading random data rather than correct cache content when using
+      ZFS as the cache file system on Solaris >= 11, and fix potential similar
+      problems on other platforms (11713 11714)
+
+  FreeBSD
+
+    * Build fix for releases >= 11.0 (11610)
+
+  OpenBSD
+
+    * Support release 5.4 (11700)
+
+
 OpenAFS 1.6.10
 
   All platforms

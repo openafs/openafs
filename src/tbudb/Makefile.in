@@ -18,7 +18,7 @@ CCRULE=${MT_CC} ${CFLAGS} ${MT_CFLAGS} -c
 
 RX=../rx
 UTIL=../util
-BUDB=../budb
+BUDB=${srcdir}/../budb
 
 RXOBJS= rx_pthread.o rxkad_errs.o
 
@@ -166,16 +166,16 @@ budb_server: $(SERVER_OBJS) ${LIBS}
 	${CC} ${LDFLAGS} -o budb_server $(SERVER_OBJS) ${LIBS} ${MT_LIBS} ${XLIBS} ${KRB5_LIBS}
 
 budb.cs.c: ${BUDB}/budb.rg
-	${RXGEN} -u -C -o $@ ${srcdir}/${BUDB}/budb.rg
+	${RXGEN} -u -C -o $@ ${BUDB}/budb.rg
 
 budb.ss.c: ${BUDB}/budb.rg
-	${RXGEN} -S -o $@ ${srcdir}/${BUDB}/budb.rg
+	${RXGEN} -S -o $@ ${BUDB}/budb.rg
 
 budb.xdr.c: ${BUDB}/budb.rg
-	${RXGEN} -c -o $@ ${srcdir}/${BUDB}/budb.rg
+	${RXGEN} -c -o $@ ${BUDB}/budb.rg
 
 budb.h: ${BUDB}/budb.rg
-	${RXGEN} -u -h -o $@ ${srcdir}/${BUDB}/budb.rg
+	${RXGEN} -u -h -o $@ ${BUDB}/budb.rg
 
 budb.cs.c: budb.h
 budb.xdr.c: budb.h

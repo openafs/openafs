@@ -1544,6 +1544,9 @@ afs_linux_ireadlink(struct inode *ip, char *target, int maxlen, uio_seg_t seg)
     struct uio tuio;
     struct iovec iov;
 
+    memset(&tuio, 0, sizeof(tuio));
+    memset(&iov, 0, sizeof(iov));
+
     setup_uio(&tuio, &iov, target, (afs_offs_t) 0, maxlen, UIO_READ, seg);
     code = afs_readlink(VTOAFS(ip), &tuio, credp);
     crfree(credp);
@@ -1812,6 +1815,9 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
     struct iovec iovec;
     int f_flags = 0;
 
+    memset(&tuio, 0, sizeof(tuio));
+    memset(&iovec, 0, sizeof(iovec));
+
     buffer = kmap(pp) + offset;
     base = (((loff_t) pp->index) << PAGE_CACHE_SHIFT)  + offset;
 
@@ -1920,6 +1926,9 @@ afs_linux_updatepage(struct file *fp, struct page *pp, unsigned long offset,
     cred_t *credp;
     struct uio tuio;
     struct iovec iovec;
+
+    memset(&tuio, 0, sizeof(tuio));
+    memset(&iovec, 0, sizeof(iovec));
 
     set_bit(PG_locked, &pp->flags);
 

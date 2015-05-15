@@ -148,7 +148,6 @@
 	afs_xdr_short;
 	afs_xdr_string;
 	afs_xdr_vector;
-	afs_xdr_pointer;
 	rx_InterruptCall;
 	rx_SetBusyChannelError;
 	rx_KeepAliveOn;

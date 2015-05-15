@@ -232,6 +232,26 @@ AC_ARG_ENABLE([linux-syscall-probing],
     ,
     [enable_linux_syscall_probing="maybe"])
     
+AC_ARG_ENABLE([linux-d_splice_alias-extra-iput],
+    [AS_HELP_STRING([--enable-linux-d_splice_alias-extra-iput],
+	[Linux has introduced an incompatible behavior change in the
+	 d_splice_alias function with no reliable way to determine which
+	 behavior will be produced.  If Linux commit
+	 51486b900ee92856b977eacfc5bfbe6565028070 (or equivalent) has been
+	 applied to your kernel, disable this option.  If that commit is
+	 not present in your kernel, enable this option.  We apologize
+	 that you are required to know this about your running kernel.])],
+    [],
+    [case $system in
+    *-linux*)
+	AS_IF([test "x$LOGNAME" != "xbuildslave" &&
+	    test "x$LOGNAME" != "xbuildbot"],
+	    [AC_ERROR([Linux users must specify either
+		--enable-linux-d_splice_alias-extra-iput or
+		--disable-linux-d_splice_alias-extra-iput])],
+	    [enable_linux_d_splice_alias_extra_iput="no"])
+     esac
+    ])
 AC_ARG_WITH([xslt-processor],
 	AS_HELP_STRING([--with-xslt-processor=ARG],
 	[which XSLT processor to use (possible choices are: libxslt, saxon, xalan-j, xsltproc)]),
@@ -579,14 +599,22 @@ else
 			AFS_SYSNAME="x86_darwin_120"
 			OSXSDK="macosx10.8"
 			;;
-                x86_64-apple-darwin13.*)
-                        AFS_SYSNAME="x86_darwin_130"
-                        OSXSDK="macosx10.9"
-                        ;;
-                i?86-apple-darwin13.*)
-                        AFS_SYSNAME="x86_darwin_130"
-                        OSXSDK="macosx10.9"
-                        ;;
+		x86_64-apple-darwin13.*)
+			AFS_SYSNAME="x86_darwin_130"
+			OSXSDK="macosx10.9"
+			;;
+		i?86-apple-darwin13.*)
+			AFS_SYSNAME="x86_darwin_130"
+			OSXSDK="macosx10.9"
+			;;
+		x86_64-apple-darwin14.*)
+			AFS_SYSNAME="x86_darwin_140"
+			OSXSDK="macosx10.10"
+			;;
+		i?86-apple-darwin14.*)
+			AFS_SYSNAME="x86_darwin_140"
+			OSXSDK="macosx10.10"
+			;;
 		sparc-sun-solaris2.5*)
 			AFS_SYSNAME="sun4x_55"
 			enable_login="yes"
@@ -772,6 +800,7 @@ case $AFS_SYSNAME in
     *_obsd51)   AFS_PARAM_COMMON=param.obsd51.h  ;;
     *_obsd52)   AFS_PARAM_COMMON=param.obsd52.h  ;;
     *_obsd53)   AFS_PARAM_COMMON=param.obsd53.h  ;;
+    *_obsd54)   AFS_PARAM_COMMON=param.obsd54.h  ;;
     *_linux22)  AFS_PARAM_COMMON=param.linux22.h ;;
     *_linux24)  AFS_PARAM_COMMON=param.linux24.h ;;
     *_linux26)  AFS_PARAM_COMMON=param.linux26.h ;;
@@ -828,20 +857,24 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 				       [backing-dev.h])
 		 AC_CHECK_LINUX_STRUCT([cred], [session_keyring], [cred.h])
 		 AC_CHECK_LINUX_STRUCT([ctl_table], [ctl_name], [sysctl.h])
+		 AC_CHECK_LINUX_STRUCT([dentry], [d_u.d_alias], [dcache.h])
 		 AC_CHECK_LINUX_STRUCT([dentry_operations], [d_automount], [dcache.h])
 		 AC_CHECK_LINUX_STRUCT([inode], [i_alloc_sem], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([inode], [i_blkbits], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([inode], [i_blksize], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([inode], [i_mutex], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([inode], [i_security], [fs.h])
+		 AC_CHECK_LINUX_STRUCT([file], [f_path], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([file_operations], [flock], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([file_operations], [iterate], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([file_operations], [read_iter], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([file_operations], [sendfile], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([file_system_type], [mount], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([inode_operations], [truncate], [fs.h])
-		 AC_CHECK_LINUX_STRUCT([key_type], [preparse], [key-type.h])
 		 AC_CHECK_LINUX_STRUCT([key_type], [instantiate_prep], [key-type.h])
+		 AC_CHECK_LINUX_STRUCT([key_type], [match_preparse], [key-type.h])
+		 AC_CHECK_LINUX_STRUCT([key_type], [preparse], [key-type.h])
+		 AC_CHECK_LINUX_STRUCT([msghdr], [msg_iter], [socket.h])
 		 AC_CHECK_LINUX_STRUCT([nameidata], [path], [namei.h])
 		 AC_CHECK_LINUX_STRUCT([proc_dir_entry], [owner], [proc_fs.h])
 		 AC_CHECK_LINUX_STRUCT([super_block], [s_bdi], [fs.h])
@@ -912,6 +945,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_FUNC([hlist_unhashed],
 				     [#include <linux/list.h>],
 				     [hlist_unhashed(0);])
+		 AC_CHECK_LINUX_FUNC([ihold],
+				     [#include <linux/fs.h>],
+				     [ihold(NULL);])
 		 AC_CHECK_LINUX_FUNC([i_size_read],
 				     [#include <linux/fs.h>],
 				     [i_size_read(NULL);])
@@ -1024,6 +1060,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_IOP_I_CREATE_TAKES_BOOL
 		 LINUX_DOP_D_REVALIDATE_TAKES_UNSIGNED
 		 LINUX_IOP_LOOKUP_TAKES_UNSIGNED
+		 LINUX_D_INVALIDATE_IS_VOID
 
 		 dnl If we are guaranteed that keyrings will work - that is
 		 dnl  a) The kernel has keyrings enabled
@@ -1101,6 +1138,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		  AC_MSG_WARN([your kernel does not have a usable symlink cache API])
 		 fi
                 :
+		fi
+		if test "x$enable_linux_d_splice_alias_extra_iput" = xyes; then
+		    AC_DEFINE(D_SPLICE_ALIAS_LEAK_ON_ERROR, 1, [for internal use])
 		fi
 dnl Linux-only, but just enable always.
 		AC_DEFINE(AFS_CACHE_BYPASS, 1, [define to activate cache bypassing Unix client])

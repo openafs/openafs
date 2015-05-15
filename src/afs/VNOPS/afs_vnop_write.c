@@ -113,15 +113,16 @@ afs_MemWrite(struct vcache *avc, struct uio *auio, int aio,
 #if defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV)
     struct vnode *vp = AFSTOV(avc);
 #endif
+    afs_int32 code;
+    struct vrequest *treq = NULL;
 #ifdef AFS_DARWIN80_ENV
     uio_t tuiop = NULL;
 #else
     struct uio tuio;
     struct uio *tuiop = &tuio;
     struct iovec *tvec;		/* again, should have define */
+    memset(&tuio, 0, sizeof(tuio));
 #endif
-    afs_int32 code;
-    struct vrequest *treq = NULL;
 
     AFS_STATCNT(afs_MemWrite);
     if (avc->vc_error)
@@ -201,6 +202,7 @@ afs_MemWrite(struct vcache *avc, struct uio *auio, int aio,
     avc->f.states |= CDirty;
 #ifndef AFS_DARWIN80_ENV
     tvec = (struct iovec *)osi_AllocSmallSpace(sizeof(struct iovec));
+    memset(tvec, 0, sizeof(struct iovec));
 #endif
     while (totalLength > 0) {
 	tdc = afs_ObtainDCacheForWriting(avc, filePos, totalLength, treq,
@@ -332,16 +334,17 @@ afs_UFSWrite(struct vcache *avc, struct uio *auio, int aio,
 #if defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV)
     struct vnode *vp = AFSTOV(avc);
 #endif
+    struct osi_file *tfile;
+    afs_int32 code;
+    struct vrequest *treq = NULL;
 #ifdef AFS_DARWIN80_ENV
     uio_t tuiop = NULL;
 #else
     struct uio tuio;
     struct uio *tuiop = &tuio;
     struct iovec *tvec;		/* again, should have define */
+    memset(&tuio, 0, sizeof(tuio));
 #endif
-    struct osi_file *tfile;
-    afs_int32 code;
-    struct vrequest *treq = NULL;
 
     AFS_STATCNT(afs_UFSWrite);
     if (avc->vc_error)
@@ -424,6 +427,7 @@ afs_UFSWrite(struct vcache *avc, struct uio *auio, int aio,
     avc->f.states |= CDirty;
 #ifndef AFS_DARWIN80_ENV
     tvec = (struct iovec *)osi_AllocSmallSpace(sizeof(struct iovec));
+    memset(tvec, 0, sizeof(struct iovec));
 #endif
     while (totalLength > 0) {
 	tdc = afs_ObtainDCacheForWriting(avc, filePos, totalLength, treq,
@@ -470,13 +474,9 @@ afs_UFSWrite(struct vcache *avc, struct uio *auio, int aio,
 #elif defined(AFS_SUN5_ENV)
 	AFS_GUNLOCK();
 #ifdef AFS_SUN510_ENV
-	{
-	    caller_context_t ct;
-
-	    VOP_RWLOCK(tfile->vnode, 1, &ct);
-	    code = VOP_WRITE(tfile->vnode, &tuio, 0, afs_osi_credp, &ct);
-	    VOP_RWUNLOCK(tfile->vnode, 1, &ct);
-	}
+	VOP_RWLOCK(tfile->vnode, 1, NULL);
+	code = VOP_WRITE(tfile->vnode, &tuio, 0, afs_osi_credp, NULL);
+	VOP_RWUNLOCK(tfile->vnode, 1, NULL);
 #else
 	VOP_RWLOCK(tfile->vnode, 1);
 	code = VOP_WRITE(tfile->vnode, &tuio, 0, afs_osi_credp);

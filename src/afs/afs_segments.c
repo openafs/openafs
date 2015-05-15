@@ -174,8 +174,6 @@ afs_StoreAllSegments(struct vcache *avc, struct vrequest *areq,
 
     AFS_STATCNT(afs_StoreAllSegments);
 
-    hset(oldDV, avc->f.m.DataVersion);
-    hset(newDV, avc->f.m.DataVersion);
     hash = DVHash(&avc->f.fid);
     foreign = (avc->f.states & CForeign);
     dcList = (struct dcache **)osi_AllocLargeSpace(AFS_LRALLOCSIZ);
@@ -213,6 +211,14 @@ afs_StoreAllSegments(struct vcache *avc, struct vrequest *areq,
 	/*printf("Net down in afs_StoreSegments\n");*/
 	return ENETDOWN;
     }
+
+    /*
+     * Can't do this earlier because osi_VM_StoreAllSegments drops locks
+     * and can indirectly do some stores that increase the DV.
+     */
+    hset(oldDV, avc->f.m.DataVersion);
+    hset(newDV, avc->f.m.DataVersion);
+
     ConvertWToSLock(&avc->lock);
 
     /*

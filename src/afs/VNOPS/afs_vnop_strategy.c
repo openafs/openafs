@@ -46,6 +46,9 @@ int afs_ustrategy(struct buf *abp)
     afs_ucred_t *credp = u.u_cred;
 #endif
 
+    memset(&tuio, 0, sizeof(tuio));
+    memset(&tiovec, 0, sizeof(tiovec));
+
     AFS_STATCNT(afs_ustrategy);
 #ifdef	AFS_AIX41_ENV
     /*

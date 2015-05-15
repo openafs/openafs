@@ -1,3 +1,26 @@
+openafs (1.6.11~pre2-1) experimental; urgency=low
+
+  * New upstream pre-release.
+    - Avoid using a stale data version in certain cases when writing
+      files larger than the AFS cache, which manifested as file corruption.
+    - Fix a refcount leak that could lead to panics.
+    - Support newer linux versions, up through 3.19.
+    - Fix some leaks and crashes in error cases.
+
+ -- Benjamin Kaduk <kaduk@mit.edu>  Fri, 20 Feb 2015 15:50:49 -0500
+
+openafs (1.6.11~pre1-1) experimental; urgency=low
+
+  * New upstream pre-release.
+    - Linux kernels up to 3.17 are now supported.
+    - Fix more incorrect behavior in our revalidation of dcache entries. Bugs
+      in this area can cause stale path lookups in certain situations, as well
+      as cause getcwd() to fail spuriously.
+    - Allow aklog to succeed in creating native K5 tokens even when K5-to-K4
+      principal conversion fails.
+
+ -- Andrew Deason <adeason@sinenomine.net>  Sun, 07 Dec 2014 23:43:21 -0600
+
 openafs (1.6.10-4) unstable; urgency=medium
 
   * Update Spanish translation, thanks Javier Fernandez-Sanguino Pena.

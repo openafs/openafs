@@ -225,6 +225,9 @@ osi_NetSend(struct socket *asocket, struct sockaddr_in *addr,
     int code;
     int size = sizeof(struct sockaddr_in);
 
+    memset(&uio, 0, sizeof(uio));
+    memset(&temp, 0, sizeof(temp));
+
     /* Guess based on rxk_NewSocket */
     bp = allocb((size + SO_MSGOFFSET + 1), BPRI_MED);
     if (!bp)
@@ -257,6 +260,9 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
     struct iovec tmpvec[RX_MAXWVECS + 2];
     int flags = 0;
     MBLKP bp, sp;
+
+    memset(&tuio, 0, sizeof(tuio));
+    memset(&tmpvec, 0, sizeof(tempvec));
 
     if (nvecs > RX_MAXWVECS + 2) {
 	osi_Panic("Too many (%d) iovecs passed to osi_NetReceive\n", nvecs);

@@ -24,6 +24,9 @@ osi_NetReceive(osi_socket asocket, struct sockaddr_in *addr,
 
     int haveGlock = ISAFS_GLOCK();
 
+    memset(&u, 0, sizeof(u));
+    memset(&iov, 0, sizeof(iov));
+
     if (nvecs > RX_MAXIOVECS)
 	osi_Panic("osi_NetReceive: %d: too many iovecs\n", nvecs);
 
@@ -91,6 +94,9 @@ osi_NetSend(osi_socket asocket, struct sockaddr_in *addr, struct iovec *dvec,
     struct uio u;
     struct mbuf *nam;
     int haveGlock = ISAFS_GLOCK();
+
+    memset(&u, 0, sizeof(u));
+    memset(&iov, 0, sizeof(iov));
 
     AFS_STATCNT(osi_NetSend);
     if (nvecs > RX_MAXIOVECS)

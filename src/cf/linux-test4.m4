@@ -278,9 +278,9 @@ AC_DEFUN([LINUX_IOP_I_PUT_LINK_TAKES_COOKIE], [
 #include <linux/namei.h>],
 [struct inode _inode;
 struct dentry _dentry;
-struct nameidata _nameidata;
+struct nameidata *_nameidata;
 void *cookie;
-(void)_inode.i_op->put_link(&_dentry, &_nameidata, cookie);],
+(void)_inode.i_op->put_link(&_dentry, _nameidata, cookie);],
 		       [IOP_PUT_LINK_TAKES_COOKIE],
 		       [define if your iops.put_link takes a cookie],
 		       [])
@@ -395,7 +395,7 @@ AC_DEFUN([LINUX_REGISTER_SYSCTL_TABLE_NOFLAG], [
   AC_CHECK_LINUX_BUILD([whether register_sysctl_table has an insert_at_head argument],
 		       [ac_cv_linux_register_sysctl_table_noflag],
 		       [#include <linux/sysctl.h>],
-		       [ctl_table *t; register_sysctl_table (t);],
+		       [struct ctl_table *t; register_sysctl_table (t);],
 		       [REGISTER_SYSCTL_TABLE_NOFLAG],
 		       [define if register_sysctl_table has no insert_at head flag],
 		       [])
@@ -723,7 +723,11 @@ AC_DEFUN([LINUX_D_ALIAS_IS_HLIST], [
 			[#include <linux/fs.h>],
 			[struct dentry *d = NULL;
 			struct hlist_node *hn = NULL;
-			d->d_alias = *hn;],
+			#if defined(STRUCT_DENTRY_HAS_D_U_D_ALIAS)
+			d->d_u.d_alias = *hn;
+			#else
+			d->d_alias = *hn;
+			#endif],
 			[D_ALIAS_IS_HLIST],
 			[define if dentry->d_alias is an hlist],
 			[])
@@ -737,6 +741,9 @@ AC_DEFUN([LINUX_HLIST_ITERATOR_NO_NODE], [
 			#include <linux/fs.h>],
 			[struct dentry *d = NULL, *cur;
 			struct inode *ip;
+			#if defined(STRUCT_DENTRY_HAS_D_U_D_ALIAS)
+			# define d_alias d_u.d_alias
+			#endif
 			hlist_for_each_entry(cur, &ip->i_dentry, d_alias) { }
 			],
 			[HLIST_ITERATOR_NO_NODE],
@@ -785,4 +792,17 @@ AC_DEFUN([LINUX_IOP_LOOKUP_TAKES_UNSIGNED], [
 		       [IOP_LOOKUP_TAKES_UNSIGNED],
 		       [define if your iops.lookup takes an unsigned int argument],
 		       [-Werror])
+])
+
+
+AC_DEFUN([LINUX_D_INVALIDATE_IS_VOID], [
+  AC_CHECK_LINUX_BUILD([whether d_invalidate returns void],
+			[ac_cv_linux_func_d_invalidate_returns_void],
+			[#include <linux/fs.h>],
+			[
+			void d_invalidate(struct dentry *);
+			],
+		       [D_INVALIDATE_IS_VOID],
+		       [define if your d_invalidate returns void],
+		       [])
 ])

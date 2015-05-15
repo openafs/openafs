@@ -97,6 +97,9 @@ gop_rdwr(rw, vp, base, len, offset, segflg, unit, aresid)
     struct iovec uiovector;
     int code;
 
+    memset(&uio_struct, 0, sizeof(uio_struct));
+    memset(&uiovector, 0, sizeof(uiovector));
+
     AFS_STATCNT(gop_rdwr);
     /* Set up the uio structure */
     uiovector.iov_base = (caddr_t) base;

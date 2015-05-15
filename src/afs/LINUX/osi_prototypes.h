@@ -79,6 +79,9 @@ extern void osi_VM_FlushPages(struct vcache *avc, afs_ucred_t *credp);
 extern void osi_VM_Truncate(struct vcache *avc, int alen,
 			    afs_ucred_t *acred);
 
+/* osi_vcache.c */
+extern void osi_ResetRootVCache(afs_uint32 volid);
+
 /* osi_vfsops.c */
 extern void vattr2inode(struct inode *ip, struct vattr *vp);
 extern int afs_init_inodecache(void);

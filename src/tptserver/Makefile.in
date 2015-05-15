@@ -175,10 +175,10 @@ ptuser.o: ${PTSERVER}/ptuser.c ${INCLS}
 	${CCRULE} ${srcdir}/${PTSERVER}/ptuser.c
 
 pterror.c: ${PTSERVER}/pterror.et
-	${COMPILE_ET_C} -p ${PTSERVER} pterror
+	${COMPILE_ET_C} -p ${srcdir}/${PTSERVER} pterror
 
 pterror.h: ${PTSERVER}/pterror.et
-	${COMPILE_ET_H} -p ${PTSERVER} pterror
+	${COMPILE_ET_H} -p ${srcdir}/${PTSERVER} pterror
 
 db_verify.o: pterror.h
 ptclient.o: pterror.h
