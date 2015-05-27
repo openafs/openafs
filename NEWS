@@ -18,6 +18,18 @@ OpenAFS 1.6.12 (in progress)
     * Added documentation of the inaccuracy of the 'partition' field in
       'fs listquota' output for partitions larger than 2 TiB (11626)
 
+  Linux clients
+
+    * Support kernels up to 4.1 (11872 11873)
+
+    * Avoid spurious EIO errors when writing large chunks of data to
+      mmapped files (11877)
+
+  OS X
+
+    * Build fixes required at least on OS X 10.10 Yosemite with the latest
+      XCode (11859 11876 11842..11845 11863 11878 11879)
+
 OpenAFS 1.6.11.1
 
   Linux clients
