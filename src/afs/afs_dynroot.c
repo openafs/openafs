@@ -107,6 +107,17 @@ afs_dynrootCellInit(void)
     return 0;
 }
 
+/*!
+ * Returns non-zero if the volume is the dynroot volume.
+ */
+int
+afs_IsDynrootVolume(struct volume *v)
+{
+    return (afs_dynrootEnable
+	    && v->cell == afs_dynrootCell
+	    && v->volume == AFS_DYNROOT_VOLUME);
+}
+
 /*
  * Returns non-zero iff fid corresponds to the top of the dynroot volume.
  */
