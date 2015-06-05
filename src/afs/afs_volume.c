@@ -288,6 +288,24 @@ afs_ResetVolumes(struct server *srvp, struct volume *tv)
     }
 }
 
+/*!
+ * Returns non-zero if the volume information is expired.
+ *
+ * Dynroot volumes are not setup from vldb queries, so never expire.
+ * Read-only volume expiry is tied to the volume callback.
+ *
+ * \param tv volume to check
+ * \param now current time
+ *
+ * \return non-zero if the volume should be reset
+ */
+static int
+IsExpired(struct volume *tv, afs_int32 now)
+{
+    return (tv->expireTime < (now + 10)) && (tv->states & VRO)
+	    && !afs_IsDynrootVolume(tv);
+}
+
 /**
  *   Reset volume name to volume id mapping cache.
  * @param flags
@@ -297,7 +315,7 @@ afs_CheckVolumeNames(int flags)
 {
     afs_int32 i, j;
     struct volume *tv;
-    unsigned int now;
+    afs_int32 now;
     struct vcache *tvc;
     afs_int32 *volumeID, *cellID, vsize, nvols;
 #ifdef AFS_DARWIN80_ENV
@@ -326,8 +344,7 @@ afs_CheckVolumeNames(int flags)
     for (i = 0; i < NVOLS; i++) {
 	for (tv = afs_volumes[i]; tv; tv = tv->next) {
 	    if (flags & AFS_VOLCHECK_EXPIRED) {
-		if (((tv->expireTime < (now + 10)) && (tv->states & VRO))
-		    || (flags & AFS_VOLCHECK_FORCE)) {
+		if (IsExpired(tv, now) || (flags & AFS_VOLCHECK_FORCE)) {
 		    afs_ResetVolumeInfo(tv);	/* also resets status */
 		    if (volumeID) {
 			volumeID[nvols] = tv->volume;
