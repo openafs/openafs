@@ -5778,22 +5778,26 @@ AFSRetrieveFileAttributes( IN AFSDirectoryCB *ParentDirectoryCB,
             RtlZeroMemory( uniFullPathName.Buffer,
                            uniFullPathName.MaximumLength);
 
-            RtlCopyMemory( uniFullPathName.Buffer,
-                           ParentPathName->Buffer,
-                           ParentPathName->Length);
+	    if ( ParentPathName->Length > 0)
+	    {
 
-            uniFullPathName.Length = ParentPathName->Length;
+		RtlCopyMemory( uniFullPathName.Buffer,
+			       ParentPathName->Buffer,
+			       ParentPathName->Length);
 
-            if( uniFullPathName.Buffer[ (uniFullPathName.Length/sizeof( WCHAR)) - 1] != L'\\' &&
-                DirectoryCB->NameInformation.TargetName.Buffer[ 0] != L'\\')
-            {
+		uniFullPathName.Length = ParentPathName->Length;
 
-                uniFullPathName.Buffer[ uniFullPathName.Length/sizeof( WCHAR)] = L'\\';
+		if( uniFullPathName.Buffer[ (uniFullPathName.Length/sizeof( WCHAR)) - 1] != L'\\' &&
+		    DirectoryCB->NameInformation.TargetName.Buffer[ 0] != L'\\')
+		{
 
-                uniFullPathName.Length += sizeof( WCHAR);
-            }
+		    uniFullPathName.Buffer[ uniFullPathName.Length/sizeof( WCHAR)] = L'\\';
 
-            RtlCopyMemory( &uniFullPathName.Buffer[ uniFullPathName.Length/sizeof( WCHAR)],
+		    uniFullPathName.Length += sizeof( WCHAR);
+		}
+	    }
+
+	    RtlCopyMemory( &uniFullPathName.Buffer[ uniFullPathName.Length/sizeof( WCHAR)],
                            DirectoryCB->NameInformation.TargetName.Buffer,
                            DirectoryCB->NameInformation.TargetName.Length);
 
