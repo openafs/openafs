@@ -9117,12 +9117,14 @@ AFSRetrieveParentPath( IN UNICODE_STRING *FullFileName,
     // If the final character is a \, jump over it
     //
 
-    if( ParentPath->Buffer[ (ParentPath->Length/sizeof( WCHAR)) - 1] == L'\\')
+    if( ParentPath->Length >= sizeof( WCHAR)
+	&& ParentPath->Buffer[ (ParentPath->Length/sizeof( WCHAR)) - 1] == L'\\')
     {
         ParentPath->Length -= sizeof( WCHAR);
     }
 
-    while( ParentPath->Buffer[ (ParentPath->Length/sizeof( WCHAR)) - 1] != L'\\')
+    while( ParentPath->Length >= sizeof( WCHAR)
+	   && ParentPath->Buffer[ (ParentPath->Length/sizeof( WCHAR)) - 1] != L'\\')
     {
         ParentPath->Length -= sizeof( WCHAR);
     }
@@ -9131,7 +9133,10 @@ AFSRetrieveParentPath( IN UNICODE_STRING *FullFileName,
     // And the separator
     //
 
-    ParentPath->Length -= sizeof( WCHAR);
+    if ( ParentPath->Length >= sizeof( WCHAR))
+    {
+	ParentPath->Length -= sizeof( WCHAR);
+    }
 
     return;
 }
