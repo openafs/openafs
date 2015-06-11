@@ -558,7 +558,7 @@ struct volume {
     afs_int32 roVol;
     afs_int32 backVol;
     afs_int32 rwVol;		/* For r/o vols, original read/write volume. */
-    afs_int32 accessTime;	/* last time we used it */
+    afs_int32 setupTime;	/* time volume was setup from vldb info */
     afs_int32 vtix;		/* volume table index */
     afs_int32 copyDate;		/* copyDate field, for tracking vol releases */
     afs_int32 expireTime;	/* for per-volume callbacks... */

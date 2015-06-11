@@ -2698,13 +2698,13 @@ print_volume(int kmem, struct volume *vep, struct volume *ptr, int pnt)
 	   vep->backVol);
 #ifdef	AFS33
     printf
-	("\trwVol=%d, AcTime=%d, copyDate=%d, expTime=%d, vtix=%d, refC=%d, states=%x\n",
-	 vep->rwVol, vep->accessTime, vep->copyDate, vep->expireTime,
+	("\trwVol=%d, setupTime=%d, copyDate=%d, expTime=%d, vtix=%d, refC=%d, states=%x\n",
+	 vep->rwVol, vep->setupTime, vep->copyDate, vep->expireTime,
 	 vep->vtix, vep->refCount, vep->states);
 #else
     printf
-	("\trwVol=%d, AcTime=%d, copyDate=%d, vtix=%d, refC=%d, states=%x\n",
-	 vep->rwVol, vep->accessTime, vep->copyDate, vep->vtix, vep->refCount,
+	("\trwVol=%d, setupTime=%d, copyDate=%d, vtix=%d, refC=%d, states=%x\n",
+	 vep->rwVol, vep->setupTime, vep->copyDate, vep->vtix, vep->refCount,
 	 vep->states);
 #endif
     printf("\tVolume's statuses: ");
