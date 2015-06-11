@@ -55,6 +55,7 @@
 #define AFSOP_SET_RMTSYS_FLAG	 44	/* set flag if rmtsys is enabled */
 #define AFSOP_SEED_ENTROPY	 45	/* Give the kernel hcrypto entropy */
 #define AFSOP_SET_INUMCALC	 46	/* set inode number calculation method */
+#define AFSOP_SET_VOLUME_TTL     47     /* set the vldb cache timeout */
 
 #define AFSOP_RXLISTENER_DAEMON  48	/* starts kernel RX listener */
 
