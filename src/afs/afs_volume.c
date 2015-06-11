@@ -166,8 +166,8 @@ afs_UFSGetVolSlot(afs_int32 volid, struct cell *tcell)
 	    lv = &afs_volumes[i];
 	    for (tv = *lv; tv; lv = &tv->next, tv = *lv) {
 		if (tv->refCount == 0) {	/* is this one available? */
-		    if (tv->accessTime < bestTime) {	/* best one available? */
-			bestTime = tv->accessTime;
+		    if (tv->setupTime < bestTime) {	/* best one available? */
+			bestTime = tv->setupTime;
 			bestLp = lv;
 			bestVp = tv;
 		    }
@@ -373,7 +373,7 @@ afs_SetupVolSlot(afs_int32 volid, struct cell *tcell)
     }
     tv->refCount++;
     tv->states &= ~VRecheck;	/* just checked it */
-    tv->accessTime = osi_Time();
+    tv->setupTime = osi_Time();
     ReleaseWriteLock(&afs_xvolume);
     return tv;
 }
