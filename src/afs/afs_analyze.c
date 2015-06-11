@@ -195,6 +195,9 @@ VLDB_Same(struct VenusFid *afid, struct vrequest *areq)
 	    }
 	}
 
+	tvp->states &= ~VRecheck;     /* Just checked it. */
+	tvp->setupTime = osi_Time();  /* Time the vldb was checked. */
+
 	ReleaseWriteLock(&tvp->lock);
 	afs_PutVolume(tvp, WRITE_LOCK);
     } else {			/* can't find volume */
