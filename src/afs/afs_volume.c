@@ -56,6 +56,7 @@
 #endif /* vlserver error base define */
 
 /* Exported variables */
+afs_int32 afs_volume_ttl = 0;
 afs_dcache_id_t volumeInode;	/* Inode for VolumeItems file */
 afs_rwlock_t afs_xvolume;	/** allocation lock for volumes */
 struct volume *afs_freeVolList;
@@ -294,6 +295,12 @@ afs_ResetVolumes(struct server *srvp, struct volume *tv)
  * Dynroot volumes are not setup from vldb queries, so never expire.
  * Read-only volume expiry is tied to the volume callback.
  *
+ * Optionally, invalidate volume information after a fixed timeout.
+ * The vlservers will be periodically probed for volume information.
+ * This avoids a situation where the vldb information is cached
+ * indefinitely as long as files in the volume are accessed (and are
+ * not in the vcache) before the callback expires.
+ *
  * \param tv volume to check
  * \param now current time
  *
@@ -302,8 +309,16 @@ afs_ResetVolumes(struct server *srvp, struct volume *tv)
 static int
 IsExpired(struct volume *tv, afs_int32 now)
 {
-    return (tv->expireTime < (now + 10)) && (tv->states & VRO)
-	    && !afs_IsDynrootVolume(tv);
+    if (afs_IsDynrootVolume(tv)) {
+	return 0;
+    }
+    if ((tv->states & VRO) && (tv->expireTime < (now + 10))) {
+	return 1;
+    }
+    if ((afs_volume_ttl != 0) && ((tv->setupTime + afs_volume_ttl) < now)) {
+	return 1;
+    }
+    return 0;
 }
 
 /**

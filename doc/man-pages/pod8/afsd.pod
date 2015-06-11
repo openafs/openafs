@@ -34,6 +34,7 @@ B<afsd> [B<-afsdb>] [B<-backuptree>]
      [B<-disable-dynamic-vcaches>] 
      S<<< [B<-volumes> <I<number of volume entries>>] >>>
      [B<-waitclose>] [B<-rxmaxfrags> <I<max # of fragments>>]
+     S<<< [B<-volume-ttl> <I<vldb cache timeout>>] >>>
 
 =for html
 </div>
@@ -760,6 +761,21 @@ Has no effect on the operation of the Cache Manager. The behavior it
 affected in previous versions of the Cache Manager, to perform synchronous
 writes to the File Server, is now the default behavior. To perform
 asynchronous writes in certain cases, use the B<fs storebehind> command.
+
+=item B<-volume-ttl>
+
+Specifies the maximum amount of time the Cache Manager will cache volume
+information retrieved from VL Servers.
+
+By default, the Cache Manager will cache read-only volume information as long
+as a volume callback is held for a read-only volume. The callback may be held
+as long as files in the read-only volume are being accessed.  The Cache Manager
+will cache read/write volume information as long as volume level errors are not
+returned from fileservers while accessing files within the volume.
+
+Use the B<-volume-ttl> to specify the maximum amount of time in seconds
+volume information will be cached, regardless of connectivity to the
+fileserers. The minimum valid value is 600 seconds (10 minutes).
 
 =back
 

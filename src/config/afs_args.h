@@ -54,6 +54,7 @@
 #define AFSOP_SET_RMTSYS_FLAG    44     /* set flag if rmtsys is enabled */
 
 #define AFSOP_SET_INUMCALC       46     /* set inode number calculation method */
+#define AFSOP_SET_VOLUME_TTL     47     /* set the vldb cache timeout */
 
 /* The range 20-30 is reserved for AFS system offsets in the afs_syscall */
 #define	AFSCALL_PIOCTL		20

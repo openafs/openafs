@@ -52,6 +52,7 @@
   *	-files_per_subdir [n]	number of files per cache subdir. (def=2048)
   *	-shutdown  Shutdown afs daemons
   *	-inumcalc  inode number calculation method; 0=compat, 1=MD5 digest
+  *	-volume-ttl vldb cache timeout in seconds
   *---------------------------------------------------------------------------*/
 
 #include <afsconfig.h>
@@ -305,6 +306,7 @@ int afsd_debug = 0;		/*Are we printing debugging info? */
 static int afsd_CloseSynch = 0;	/*Are closes synchronous or not? */
 static int rxmaxmtu = 0;       /* Are we forcing a limit on the mtu? */
 static int rxmaxfrags = 0;      /* Are we forcing a limit on frags? */
+static int volume_ttl = 0;      /* enable vldb cache timeout support */
 
 #ifdef AFS_SGI62_ENV
 #define AFSD_INO_T ino64_t
@@ -1919,6 +1921,11 @@ mainproc(struct cmd_syndesc *as, void *arock)
 	inumcalc = strdup(as->parms[39].items->data);
     }
 
+    if (as->parms[40].items) {
+	/* -volume-ttl */
+	volume_ttl = atoi(as->parms[40].items->data);
+    }
+
     /* parse cacheinfo file if this is a diskcache */
     if (ParseCacheInfoFile()) {
 	exit(1);
@@ -2443,6 +2450,14 @@ afsd_run(void)
 	afsd_call_syscall(AFSOP_ROOTVOLUME, rootVolume);
     }
 
+    if (volume_ttl != 0) {
+	if (afsd_verbose)
+	    printf("%s: Calling AFSOP_SET_VOLUME_TTL with '%d'\n", rn, volume_ttl);
+	code = afsd_call_syscall(AFSOP_SET_VOLUME_TTL, volume_ttl);
+	if (code != 0)
+	    printf("%s: Error setting volume ttl to %d seconds; code=%d.\n", rn, volume_ttl, code);
+    }
+
     /*
      * Pass the kernel the name of the workstation cache file holding the
      * volume information.
@@ -2629,6 +2644,8 @@ afsd_init(void)
                 " per Rx packet");
     cmd_AddParm(ts, "-inumcalc", CMD_SINGLE, CMD_OPTIONAL,
 		"Set inode number calculation method");
+    cmd_AddParm(ts, "-volume-ttl", CMD_SINGLE, CMD_OPTIONAL,
+		"Set the vldb cache timeout volume in seconds.");
 }
 
 int

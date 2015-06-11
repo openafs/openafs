@@ -87,6 +87,8 @@ afs_int32 afs_rx_idledead_rep = AFS_IDLEDEADTIME_REP;
 
 static int afscall_set_rxpck_received = 0;
 
+extern afs_int32 afs_volume_ttl;
+
 /* From afs_util.c */
 extern afs_int32 afs_md5inum;
 
@@ -1319,6 +1321,13 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	    break;
 	default:
 	    code = EINVAL;
+	}
+    } else if (parm == AFSOP_SET_VOLUME_TTL) {
+	if ((parm2 < AFS_MIN_VOLUME_TTL) || (parm2 > AFS_MAX_VOLUME_TTL)) {
+	    code = EINVAL;
+	} else {
+	    afs_volume_ttl = parm2;
+	    code = 0;
 	}
     } else {
 	code = EINVAL;
