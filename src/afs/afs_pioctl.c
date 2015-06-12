@@ -3550,14 +3550,16 @@ FlushVolumeData(struct VenusFid *afid, afs_ucred_t * acred)
     ReleaseWriteLock(&afs_xdcache);
 
     ObtainReadLock(&afs_xvolume);
-    for (i = 0; i < NVOLS; i++) {
+    for (i = all ? 0 : VHash(volume); i < NVOLS; i++) {
 	for (tv = afs_volumes[i]; tv; tv = tv->next) {
 	    if (all || tv->volume == volume) {
 		afs_ResetVolumeInfo(tv);
-		break;
+		if (!all)
+		    goto last;
 	    }
 	}
     }
+ last:
     ReleaseReadLock(&afs_xvolume);
 
     /* probably, a user is doing this, probably, because things are screwed up.
