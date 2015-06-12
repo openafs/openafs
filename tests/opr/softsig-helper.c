@@ -104,14 +104,14 @@ main(int argvc, char **argv)
 
     opr_softsig_Init();
 
-    opr_Verity(opr_softsig_Register(SIGINT, handler) == 0);
-    opr_Verity(opr_softsig_Register(SIGHUP, handler) == 0);
-    opr_Verity(opr_softsig_Register(SIGQUIT, handler) == 0);
-    opr_Verity(opr_softsig_Register(SIGALRM, handler) == 0);
-    opr_Verity(opr_softsig_Register(SIGTERM, handler) == 0);
-    opr_Verity(opr_softsig_Register(SIGTSTP, handler) == 0);
-    opr_Verity(opr_softsig_Register(SIGUSR1, handler) == 0);
-    opr_Verity(opr_softsig_Register(SIGUSR2, handler) == 0);
+    opr_Verify(opr_softsig_Register(SIGINT, handler) == 0);
+    opr_Verify(opr_softsig_Register(SIGHUP, handler) == 0);
+    opr_Verify(opr_softsig_Register(SIGQUIT, handler) == 0);
+    opr_Verify(opr_softsig_Register(SIGALRM, handler) == 0);
+    opr_Verify(opr_softsig_Register(SIGTERM, handler) == 0);
+    opr_Verify(opr_softsig_Register(SIGTSTP, handler) == 0);
+    opr_Verify(opr_softsig_Register(SIGUSR1, handler) == 0);
+    opr_Verify(opr_softsig_Register(SIGUSR2, handler) == 0);
 
     for (i=0; i<threads; i++) {
 	pthread_t id;
