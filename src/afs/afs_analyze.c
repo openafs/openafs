@@ -385,6 +385,7 @@ afs_PrintServerErrors(struct vrequest *areq, struct VenusFid *afid)
  *	actions are necessary.
  *
  * \param[in]     aconn  Ptr to the relevant connection on which the call was made.
+ * \param[in]     rxconn Ptr to the rx_connection.
  * \param[in]     acode  The return code experienced by the RPC.
  * \param[in]     fid    The FID of the file involved in the action.  This argument
  *                       may be null if none was involved.
