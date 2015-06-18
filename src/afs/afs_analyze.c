@@ -395,6 +395,7 @@ afs_PrintServerErrors(struct vrequest *areq, struct VenusFid *afid)
  *
  * Arguments:
  *	aconn : Ptr to the relevant connection on which the call was made.
+ *	rxconn: Ptr to the rx_connection
  *	acode : The return code experienced by the RPC.
  *	afid  : The FID of the file involved in the action.  This argument
  *		may be null if none was involved.
