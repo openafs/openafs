@@ -276,8 +276,8 @@ afs_BlackListOnce(struct vrequest *areq, struct VenusFid *afid,
 
 /*!
  * \brief
- *	Analyze the outcome of an RPC operation, taking whatever support
- *	actions are necessary.
+ *	Clear any cached status for the target FID of a failed fileserver
+ *	write RPC.
  *
  * \param[in]     afid   The FID of the file involved in the action.  This argument
  *                       may be null if none was involved.
