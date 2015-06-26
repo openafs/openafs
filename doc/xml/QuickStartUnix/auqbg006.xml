@@ -967,7 +967,7 @@
             processes from performing authorization checking. This is a grave compromise of security; finish the remaining
             instructions in this section in an uninterrupted pass. <programlisting>
    # <emphasis role="bold">cd /usr/afs/bin</emphasis>
-   # <emphasis role="bold">./bosserver -noauth &amp;</emphasis>
+   # <emphasis role="bold">./bosserver -noauth</emphasis>
 </programlisting> <indexterm>
                 <primary>BosConfig file</primary>
 

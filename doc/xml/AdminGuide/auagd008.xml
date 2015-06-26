@@ -4684,7 +4684,7 @@
     command's optional arguments, see its reference page in the <emphasis>OpenAFS Administration Reference</emphasis>.</para>
 
     <programlisting>
-   /usr/afs/bin/bosserver &amp;
+   /usr/afs/bin/bosserver
 </programlisting>
 
     <indexterm>
@@ -5465,7 +5465,7 @@
     command.</para>
 
     <programlisting>
-   /usr/afs/bin/bosserver &amp;
+   /usr/afs/bin/bosserver
 </programlisting>
 
     <sect2 id="HDRWQ140">
