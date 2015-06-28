@@ -2973,13 +2973,14 @@ NPGetResourceInformation( LPNETRESOURCE   lpNetResource,
 
         if( !dwError)
         {
-#ifdef AFS_DEBUG_TRACE
-            DWORD gle = GetLastError();
+	    dwStatus = GetLastError();
 
+#ifdef AFS_DEBUG_TRACE
             AFSDbgPrint( L"NPGetResourceInformation Failed to get connection info from file system for local %s gle 0x%x\n",
-                         lpNetResource->lpRemoteName, gle);
+			 lpNetResource->lpRemoteName, dwStatus);
 #endif
-            try_return( dwStatus = WN_BAD_NETNAME);
+
+	    try_return( dwStatus);
         }
 
         // Determine the space needed for this entry...
