@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2008, 2009, 2010, 2011 Kernel Drivers, LLC.
- * Copyright (c) 2009, 2010, 2011 Your File System, Inc.
+ * Copyright (c) 2009, 2010, 2011, 2015 Your File System, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -61,16 +61,17 @@ AFSAddConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
         if( ConnectCB->AuthenticationId.QuadPart == 0)
         {
 
-            ConnectCB->AuthenticationId = AFSGetAuthenticationId();
+	    ntStatus = AFSGetAuthenticationId(&ConnectCB->AuthenticationId);
 
-	    if ( ConnectCB->AuthenticationId.QuadPart == 0)
+	    if ( !NT_SUCCESS( ntStatus))
 	    {
 
 		AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
 			      AFS_TRACE_LEVEL_ERROR,
-			      "AFSAddConnection Unable to retrieve authentication id\n"));
+			      "AFSAddConnection Unable to retrieve authentication id %08lX\n",
+			      ntStatus));
 
-		return STATUS_ACCESS_DENIED;
+		return ntStatus;
 	    }
 
             AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
@@ -436,16 +437,17 @@ AFSCancelConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
         if( ConnectCB->AuthenticationId.QuadPart == 0)
         {
 
-            ConnectCB->AuthenticationId = AFSGetAuthenticationId();
+	    ntStatus = AFSGetAuthenticationId(&ConnectCB->AuthenticationId);
 
-	    if ( ConnectCB->AuthenticationId.QuadPart == 0)
+	    if ( !NT_SUCCESS( ntStatus))
 	    {
 
 		AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
 			      AFS_TRACE_LEVEL_ERROR,
-			      "AFSCancelConnection Unable to retrieve authentication id\n"));
+			      "AFSCancelConnection Unable to retrieve authentication id %08lX\n",
+			      ntStatus));
 
-		return STATUS_ACCESS_DENIED;
+		return ntStatus;
 	    }
 
             AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
@@ -571,16 +573,17 @@ AFSGetConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
 	if( ConnectCB->AuthenticationId.QuadPart == 0)
 	{
 
-	    ConnectCB->AuthenticationId = AFSGetAuthenticationId();
+	    ntStatus = AFSGetAuthenticationId(&ConnectCB->AuthenticationId);
 
-	    if ( ConnectCB->AuthenticationId.QuadPart == 0)
+	    if ( !NT_SUCCESS( ntStatus))
 	    {
 
 		AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
 			      AFS_TRACE_LEVEL_ERROR,
-			      "AFSGetConnection Unable to retrieve authentication id\n"));
+			      "AFSGetConnection Unable to retrieve authentication id %08lX\n",
+			      ntStatus));
 
-		return STATUS_ACCESS_DENIED;
+		return ntStatus;
 	    }
 
 	    AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
@@ -721,16 +724,17 @@ AFSListConnections( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
         if( ConnectCB->AuthenticationId.QuadPart == 0)
         {
 
-            ConnectCB->AuthenticationId = AFSGetAuthenticationId();
+	    ntStatus = AFSGetAuthenticationId(&ConnectCB->AuthenticationId);
 
-	    if ( ConnectCB->AuthenticationId.QuadPart == 0)
+	    if ( !NT_SUCCESS( ntStatus))
 	    {
 
 		AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
 			      AFS_TRACE_LEVEL_ERROR,
-			      "AFSListConnections Unable to retrieve authentication id\n"));
+			      "AFSListConnection Unable to retrieve authentication id %08lX\n",
+			      ntStatus));
 
-		return STATUS_ACCESS_DENIED;
+		return ntStatus;
 	    }
 
             AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
@@ -1508,16 +1512,17 @@ AFSGetConnectionInfo( IN AFSNetworkProviderConnectionCB *ConnectCB,
 	if( ConnectCB->AuthenticationId.QuadPart == 0)
 	{
 
-	    ConnectCB->AuthenticationId = AFSGetAuthenticationId();
+	    ntStatus = AFSGetAuthenticationId(&ConnectCB->AuthenticationId);
 
-	    if ( ConnectCB->AuthenticationId.QuadPart == 0)
+	    if ( !NT_SUCCESS( ntStatus))
 	    {
 
 		AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
 			      AFS_TRACE_LEVEL_ERROR,
-			      "AFSGetConnectionInfo Unable to retrieve authentication id\n"));
+			      "AFSGetConnectionInfo Unable to retrieve authentication id %08lX\n",
+			      ntStatus));
 
-		return STATUS_ACCESS_DENIED;
+		return ntStatus;
 	    }
 
 	    AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,

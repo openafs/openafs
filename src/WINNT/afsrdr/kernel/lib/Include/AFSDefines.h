@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2008, 2009, 2010, 2011 Kernel Drivers, LLC.
- * Copyright (c) 2009, 2010, 2011, 2014 Your File System, Inc.
+ * Copyright (c) 2009, 2010, 2011, 2014, 2015 Your File System, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -110,7 +110,7 @@ NTSTATUS
 // Worker Thread codes
 //
 
-#define AFS_WORK_UNUSED_1                       0x0001
+#define AFS_WORK_GET_AUTH_ID                    0x0001
 #define AFS_WORK_FLUSH_FCB                      0x0002
 #define AFS_WORK_UNUSED_3                       0x0003
 #define AFS_WORK_UNUSED_4                       0x0004
