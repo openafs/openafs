@@ -46,7 +46,7 @@ AFSAddConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSProviderConnectionCB *pConnection = NULL, *pLastConnection = NULL;
-    UNICODE_STRING uniRemoteName;
+    UNICODE_STRING uniRemoteName, uniServerName, uniShareName, uniRemainingPath;
     AFSDeviceExt *pRDRDevExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
 
     __Enter
@@ -76,6 +76,14 @@ AFSAddConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
 		      "AFSAddConnection Retrieved authentication id %I64X\n",
 		      ConnectCB->AuthenticationId.QuadPart));
 
+	uniServerName.Length = 0;
+	uniServerName.MaximumLength = 0;
+	uniServerName.Buffer = NULL;
+
+	uniShareName.Length = 0;
+	uniShareName.MaximumLength = 0;
+	uniShareName.Buffer = NULL;
+
         AFSAcquireExcl( &pRDRDevExt->Specific.RDR.ProviderListLock,
                         TRUE);
 
@@ -89,12 +97,12 @@ AFSAddConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
         uniRemoteName.Buffer = ConnectCB->RemoteName;
 
         //
-        // Strip off any trailing slashes
-        //
+	// Strip off any trailing slashes
+	//
 
 	if( uniRemoteName.Length >= sizeof( WCHAR)
 	    && uniRemoteName.Buffer[ (uniRemoteName.Length/sizeof( WCHAR)) - 1] == L'\\')
-        {
+	{
 
             uniRemoteName.Length -= sizeof( WCHAR);
         }
@@ -103,6 +111,28 @@ AFSAddConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
 
         while( pConnection != NULL)
         {
+
+	    if( pConnection->LocalName != L'\0')
+	    {
+
+		AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
+			      AFS_TRACE_LEVEL_VERBOSE,
+			      "AFSAddConnection Comparing passed in %C to %C authentication id %I64X - %I64X\n",
+			      ConnectCB->LocalName,
+			      pConnection->LocalName,
+			      ConnectCB->AuthenticationId.QuadPart,
+			      pConnection->AuthenticationId.QuadPart));
+	    }
+	    else
+	    {
+
+		AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
+			      AFS_TRACE_LEVEL_VERBOSE,
+			      "AFSAddConnection Comparing passed in %C to (NULL) authentication id %I64X - %I64X\n",
+			      ConnectCB->LocalName,
+			      ConnectCB->AuthenticationId.QuadPart,
+			      pConnection->AuthenticationId.QuadPart));
+	    }
 
             if( pConnection->LocalName == ConnectCB->LocalName &&
                 pConnection->AuthenticationId.QuadPart == ConnectCB->AuthenticationId.QuadPart &&
@@ -163,106 +193,82 @@ AFSAddConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
             uniRemoteName.Length -= (2 * sizeof( WCHAR));
         }
 
-        if( uniRemoteName.Length >= AFSServerName.Length)
-        {
+	FsRtlDissectName( uniRemoteName,
+			  &uniServerName,
+			  &uniRemainingPath);
 
-            USHORT usLength = uniRemoteName.Length;
+	if( RtlCompareUnicodeString( &uniServerName,
+				     &AFSServerName,
+				     TRUE) != 0)
+	{
 
-            if (uniRemoteName.Buffer[AFSServerName.Length/sizeof( WCHAR)] != L'\\')
-            {
+	    if( ConnectCB->LocalName != L'\0')
+	    {
 
-                if( ConnectCB->LocalName != L'\0')
-                {
+		AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
+			      AFS_TRACE_LEVEL_VERBOSE,
+			      "AFSAddConnection Bad Server Name remote name %wZ Local %C authentication id %I64X\n",
+			      &uniRemoteName,
+			      ConnectCB->LocalName,
+			      ConnectCB->AuthenticationId.QuadPart));
+	    }
+	    else
+	    {
 
-                    AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSAddConnection BAD_NETNAME 1 remote name %wZ Local %C authentication id %I64X\n",
-                                  &uniRemoteName,
-                                  ConnectCB->LocalName,
-                                  ConnectCB->AuthenticationId.QuadPart));
-                }
-                else
-                {
+		AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
+			      AFS_TRACE_LEVEL_VERBOSE,
+			      "AFSAddConnection Bad Server Name remote name %wZ Local (NULL) authentication id %I64X\n",
+			      &uniRemoteName,
+			      ConnectCB->AuthenticationId.QuadPart));
+	    }
 
-                    AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSAddConnection BAD_NETNAME 1 remote name %wZ Local (NULL) authentication id %I64X\n",
-                                  &uniRemoteName,
-                                  ConnectCB->AuthenticationId.QuadPart));
-                }
+	    *ResultStatus = WN_BAD_NETNAME;
 
-                *ResultStatus = WN_BAD_NETNAME;
+	    *ReturnOutputBufferLength = sizeof( ULONG);
 
-                *ReturnOutputBufferLength = sizeof( ULONG);
+	    try_return( ntStatus = STATUS_SUCCESS);
+	}
 
-                try_return( ntStatus = STATUS_SUCCESS);
-            }
+	if (uniRemainingPath.Length > 0)
+	{
 
-            uniRemoteName.Length = AFSServerName.Length;
+	    AFSProviderConnectionCB *pConnection;
 
-            if( RtlCompareUnicodeString( &AFSServerName,
-                                         &uniRemoteName,
-                                         TRUE) != 0)
-            {
+	    FsRtlDissectName( uniRemainingPath,
+			      &uniShareName,
+			      &uniRemainingPath);
 
-                if( ConnectCB->LocalName != L'\0')
-                {
+	    pConnection = AFSLocateEnumRootEntry( &uniShareName);
 
-                    AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSAddConnection BAD_NETNAME 2 remote name %wZ Local %C authentication id %I64X\n",
-                                  &uniRemoteName,
-                                  ConnectCB->LocalName,
-                                  ConnectCB->AuthenticationId.QuadPart));
-                }
-                else
-                {
+	    if ( pConnection == NULL) {
 
-                    AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSAddConnection BAD_NETNAME 2 remote name %wZ Local (NULL) authentication id %I64X\n",
-                                  &uniRemoteName,
-                                  ConnectCB->AuthenticationId.QuadPart));
-                }
+		if( ConnectCB->LocalName != L'\0')
+		{
 
-                *ResultStatus = WN_BAD_NETNAME;
+		    AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
+				  AFS_TRACE_LEVEL_VERBOSE,
+				  "AFSAddConnection Bad Share Name remote name %wZ Local %C authentication id %I64X\n",
+				  &uniRemoteName,
+				  ConnectCB->LocalName,
+				  ConnectCB->AuthenticationId.QuadPart));
+		}
+		else
+		{
 
-                *ReturnOutputBufferLength = sizeof( ULONG);
+		    AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
+				  AFS_TRACE_LEVEL_VERBOSE,
+				  "AFSAddConnection Bad Share Name remote name %wZ Local (NULL) authentication id %I64X\n",
+				  &uniRemoteName,
+				  ConnectCB->AuthenticationId.QuadPart));
+		}
 
-                try_return( ntStatus = STATUS_SUCCESS);
-            }
+		*ResultStatus = WN_BAD_NETNAME;
 
-            uniRemoteName.Length = usLength;
-        }
-        else
-        {
+		*ReturnOutputBufferLength = sizeof( ULONG);
 
-            if( ConnectCB->LocalName != L'\0')
-            {
-
-                AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSAddConnection BAD_NETNAME 3 remote name %wZ Local %C authentication id %I64X\n",
-                              &uniRemoteName,
-                              ConnectCB->LocalName,
-                              ConnectCB->AuthenticationId.QuadPart));
-            }
-            else
-            {
-
-                AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSAddConnection BAD_NETNAME 3 remote name %wZ Local (NULL) authentication id %I64X\n",
-                              &uniRemoteName,
-                              ConnectCB->AuthenticationId.QuadPart));
-            }
-
-            *ResultStatus = WN_BAD_NETNAME;
-
-            *ReturnOutputBufferLength = sizeof( ULONG);
-
-            try_return( ntStatus = STATUS_SUCCESS);
-        }
+		try_return( ntStatus = STATUS_SUCCESS);
+	    }
+	}
 
         uniRemoteName.Length = (USHORT)ConnectCB->RemoteNameLength;
         uniRemoteName.MaximumLength = uniRemoteName.Length;
@@ -270,12 +276,12 @@ AFSAddConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
         uniRemoteName.Buffer = ConnectCB->RemoteName;
 
         //
-        // Strip off any trailing slashes
-        //
+	// Strip off any trailing slashes
+	//
 
 	if( uniRemoteName.Length >= sizeof( WCHAR)
 	    && uniRemoteName.Buffer[ (uniRemoteName.Length/sizeof( WCHAR)) - 1] == L'\\')
-        {
+	{
 
             uniRemoteName.Length -= sizeof( WCHAR);
         }
@@ -1591,7 +1597,7 @@ AFSGetConnectionInfo( IN AFSNetworkProviderConnectionCB *ConnectCB,
                                      TRUE) != 0)
         {
 
-            try_return( ntStatus = STATUS_INVALID_PARAMETER);
+	    try_return( ntStatus = STATUS_BAD_NETWORK_NAME);
         }
 
         if ( uniRemainingPath.Length > 0 )
@@ -1787,7 +1793,7 @@ AFSGetConnectionInfo( IN AFSNetworkProviderConnectionCB *ConnectCB,
                               "AFSGetConnectionInfo Evaluation Failed share name %wZ\n",
                               uniShareName));
 
-                try_return( ntStatus = STATUS_INVALID_PARAMETER);
+		try_return( ntStatus = STATUS_BAD_NETWORK_NAME);
 
             }
 
