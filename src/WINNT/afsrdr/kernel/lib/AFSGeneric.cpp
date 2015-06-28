@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2008, 2009, 2010, 2011 Kernel Drivers, LLC.
- * Copyright (c) 2009, 2010, 2011, 2012, 2013 Your File System, Inc.
+ * Copyright (c) 2009, 2010, 2011, 2012, 2013, 2015 Your File System, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -7700,8 +7700,100 @@ try_exit:
     return;
 }
 
-LARGE_INTEGER
-AFSGetAuthenticationId()
+NTSTATUS
+AFSGetAuthenticationId( OUT LARGE_INTEGER *pliAuthId)
+{
+    AFSWorkItem *pWorkItem = NULL;
+    NTSTATUS ntStatus;
+
+    __try
+    {
+
+	RtlZeroMemory( pliAuthId, sizeof(LARGE_INTEGER));
+
+	pWorkItem = (AFSWorkItem *) AFSExAllocatePoolWithTag( NonPagedPool,
+							      sizeof(AFSWorkItem),
+							      AFS_WORK_ITEM_TAG);
+	if (NULL == pWorkItem)
+	{
+
+	    AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
+			  AFS_TRACE_LEVEL_ERROR,
+			  "AFSGetAuthenticationId Failed to allocate work item\n"));
+
+	    try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES );
+	}
+
+	RtlZeroMemory( pWorkItem,
+		       sizeof(AFSWorkItem));
+
+	pWorkItem->Size = sizeof( AFSWorkItem);
+
+	pWorkItem->RequestType = AFS_WORK_GET_AUTH_ID;
+
+	pWorkItem->RequestFlags = AFS_SYNCHRONOUS_REQUEST;
+
+	KeInitializeEvent(&pWorkItem->Event,
+			  NotificationEvent,
+			  FALSE);
+
+	pWorkItem->Specific.GetAuthId.peProcess = PsGetCurrentProcess();
+
+	pWorkItem->Specific.GetAuthId.peThread = PsGetCurrentThread();
+
+	AFSDbgTrace(( AFS_SUBSYSTEM_WORKER_PROCESSING,
+		      AFS_TRACE_LEVEL_VERBOSE,
+		      "AFSGetAuthenticationId Workitem %p\n",
+		      pWorkItem));
+
+	ntStatus = AFSQueueWorkerRequest( pWorkItem);
+
+try_exit:
+
+	if( NT_SUCCESS( ntStatus))
+	{
+
+	    *pliAuthId = pWorkItem->Specific.GetAuthId.AuthId;
+
+	    ntStatus = pWorkItem->Status;
+
+	    AFSDbgTrace(( AFS_SUBSYSTEM_WORKER_PROCESSING,
+			  AFS_TRACE_LEVEL_VERBOSE,
+			  "AFSGetAuthenticationId Request complete Status %08lX\n",
+			  ntStatus));
+	}
+	else {
+
+	    AFSDbgTrace(( AFS_SUBSYSTEM_FILE_PROCESSING,
+			  AFS_TRACE_LEVEL_ERROR,
+			  "AFSGetAuthenticationId Failed to queue request Status %08lX\n",
+			  ntStatus));
+	}
+
+	if( pWorkItem != NULL)
+	{
+
+	    AFSExFreePoolWithTag( pWorkItem,
+				  AFS_WORK_ITEM_TAG);
+	}
+    }
+    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
+    {
+
+	AFSDbgTrace(( 0,
+		      0,
+		      "EXCEPTION - AFSGetAuthenticationId\n"));
+
+	AFSDumpTraceFilesFnc();
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSPerformGetAuthId( IN PEPROCESS peProcess,
+		     IN PETHREAD peThread,
+		     OUT LARGE_INTEGER *outAuthId)
 {
 
     LARGE_INTEGER liAuthId = {0,0};
@@ -7716,7 +7808,7 @@ AFSGetAuthenticationId()
     __Enter
     {
 
-        hToken = PsReferenceImpersonationToken( PsGetCurrentThread(),
+	hToken = PsReferenceImpersonationToken( peThread,
                                                 &bCopyOnOpen,
                                                 &bEffectiveOnly,
                                                 &stImpersonationLevel);
@@ -7724,14 +7816,14 @@ AFSGetAuthenticationId()
         if( hToken == NULL)
         {
 
-            hToken = PsReferencePrimaryToken( PsGetCurrentProcess());
+	    hToken = PsReferencePrimaryToken( peProcess);
 
             if( hToken == NULL)
             {
 
                 AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSGetAuthenticationId Failed to retrieve impersonation or primary token\n"));
+			      "AFSPerformGetAuthId Failed to retrieve impersonation or primary token\n"));
 
                 try_return( ntStatus);
             }
@@ -7748,7 +7840,7 @@ AFSGetAuthenticationId()
 
             AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSGetAuthenticationId Failed to retrieve information Status %08lX\n",
+			  "AFSPerformGetAuthId Failed to retrieve information Status %08lX\n",
                           ntStatus));
 
             try_return( ntStatus);
@@ -7759,7 +7851,7 @@ AFSGetAuthenticationId()
 
         AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSGetAuthenticationId Successfully retrieved authentication ID %I64X\n",
+		      "AFSPerformGetAuthId Successfully retrieved authentication ID %I64X\n",
                       liAuthId.QuadPart));
 
 try_exit:
@@ -7784,9 +7876,11 @@ try_exit:
 
             ExFreePool( pTokenInfo);    // Allocated by SeQueryInformationToken
         }
+
+	*outAuthId = liAuthId;
     }
 
-    return liAuthId;
+    return ntStatus;
 }
 
 void

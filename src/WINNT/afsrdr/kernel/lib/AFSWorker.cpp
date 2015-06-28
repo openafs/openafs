@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2008, 2009, 2010, 2011 Kernel Drivers, LLC.
- * Copyright (c) 2009, 2010, 2011, 2012, 2013 Your File System, Inc.
+ * Copyright (c) 2009, 2010, 2011, 2012, 2013, 2015 Your File System, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -708,7 +708,7 @@ AFSWorkerThread( IN PVOID Context)
             else
             {
 
-                freeWorkItem = TRUE;
+		freeWorkItem = !(pWorkItem->RequestFlags & AFS_SYNCHRONOUS_REQUEST);
 
                 //
                 // Switch on the type of work item to process
@@ -755,18 +755,25 @@ AFSWorkerThread( IN PVOID Context)
                         AFSPerformObjectInvalidate( pWorkItem->Specific.Invalidate.ObjectInfo,
                                                     pWorkItem->Specific.Invalidate.InvalidateReason);
 
-                        freeWorkItem = TRUE;
-
                         break;
                     }
 
                     case AFS_WORK_START_IOS:
                     {
 
-                        freeWorkItem = TRUE;
-
                         break;
                     }
+
+		    case AFS_WORK_GET_AUTH_ID:
+		    {
+
+			pWorkItem->Status =
+			    AFSPerformGetAuthId( pWorkItem->Specific.GetAuthId.peProcess,
+						 pWorkItem->Specific.GetAuthId.peThread,
+						 &pWorkItem->Specific.GetAuthId.AuthId);
+
+			break;
+		    }
 
                     default:
 
@@ -784,6 +791,13 @@ AFSWorkerThread( IN PVOID Context)
 		    AFSExFreePoolWithTag( pWorkItem,
 					  AFS_WORK_ITEM_TAG);
                 }
+		else
+		{
+
+		    KeSetEvent( &pWorkItem->Event,
+				0,
+				FALSE);
+		}
 
                 ntStatus = STATUS_SUCCESS;
             }

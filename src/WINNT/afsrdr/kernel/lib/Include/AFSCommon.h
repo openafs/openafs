@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2008, 2009, 2010, 2011 Kernel Drivers, LLC.
- * Copyright (c) 2009, 2010, 2011 Your File System, Inc.
+ * Copyright (c) 2009, 2010, 2011, 2015 Your File System, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1370,8 +1370,13 @@ void
 AFSRemoveNameEntry( IN AFSObjectInfoCB *ParentObjectInfo,
                     IN AFSDirectoryCB *DirEntry);
 
-LARGE_INTEGER
-AFSGetAuthenticationId( void);
+NTSTATUS
+AFSGetAuthenticationId( OUT LARGE_INTEGER *pliAuthId);
+
+NTSTATUS
+AFSPerformGetAuthId( IN PEPROCESS peProcess,
+		     IN PETHREAD peThread,
+		     OUT LARGE_INTEGER *outAuthId);
 
 void
 AFSUnwindFileInfo( IN AFSFcb *Fcb,
