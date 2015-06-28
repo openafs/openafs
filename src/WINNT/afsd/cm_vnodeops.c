@@ -375,8 +375,10 @@ long cm_CheckNTDelete(cm_scache_t *dscp, cm_scache_t *scp, cm_user_t *userp,
         if (code)
             goto done;
 
-        if (cm_HaveBuffer(scp, bufferp, 1))
+	if (cm_HaveBuffer(scp, bufferp, 1)) {
+	    cm_SyncOpDone(scp, bufferp, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ | CM_SCACHESYNC_BUFLOCKED);
             break;
+	}
 
         /* otherwise, load the buffer and try again */
         lock_ReleaseMutex(&bufferp->mx);
