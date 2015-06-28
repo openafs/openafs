@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2008, 2009, 2010, 2011 Kernel Drivers, LLC.
- * Copyright (c) 2009, 2010, 2011 Your File System, Inc.
+ * Copyright (c) 2009, 2010, 2011, 2015 Your File System, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -132,9 +132,6 @@ static wchar_t wszServerNameUNC[MAX_SERVER_NAME_LENGTH+3];
 static wchar_t wszServerComment[] = OPENAFS_SERVER_COMMENT;
 
 static BOOL bServerNameRead = FALSE;
-
-LARGE_INTEGER
-AFSRetrieveAuthId( void);
 
 void
 ReadProviderNameString( void)
@@ -817,14 +814,6 @@ NPAddConnection3( HWND            hwndOwner,
 
         pConnectCB->Type = lpNetResource->dwType;
 
-        pConnectCB->AuthenticationId = AFSRetrieveAuthId();
-
-#ifdef AFS_DEBUG_TRACE
-        AFSDbgPrint( L"NPAddConnection3 Retrieved authentication id %08lX-%08lX\n",
-                     pConnectCB->AuthenticationId.HighPart,
-                     pConnectCB->AuthenticationId.LowPart);
-#endif
-
         hControlDevice = OpenRedirector();
 
         if( hControlDevice == NULL)
@@ -1132,14 +1121,6 @@ NPCancelConnection( LPWSTR  lpName,
                        wchRemoteName);
 
         pConnectCB->Version = AFS_NETWORKPROVIDER_INTERFACE_VERSION_1;
-
-        pConnectCB->AuthenticationId = AFSRetrieveAuthId();
-
-#ifdef AFS_DEBUG_TRACE
-        AFSDbgPrint( L"NPCancelConnection Retrieved authentication id %08lX-%08lX\n",
-                     pConnectCB->AuthenticationId.HighPart,
-                     pConnectCB->AuthenticationId.LowPart);
-#endif
 
         hControlDevice = OpenRedirector();
 
@@ -1576,14 +1557,6 @@ NPGetConnectionCommon( LPWSTR  lpLocalName,
 
         pConnectCB->Version = AFS_NETWORKPROVIDER_INTERFACE_VERSION_1;
 
-        pConnectCB->AuthenticationId = AFSRetrieveAuthId();
-
-#ifdef AFS_DEBUG_TRACE
-        AFSDbgPrint( L"NPGetConnection Retrieved authentication id %08lX-%08lX\n",
-                     pConnectCB->AuthenticationId.HighPart,
-                     pConnectCB->AuthenticationId.LowPart);
-#endif
-
         hControlDevice = OpenRedirector();
 
         if( hControlDevice == NULL)
@@ -1842,14 +1815,6 @@ NPGetConnection3Common( IN     LPCWSTR lpLocalName,
 
         pConnectCB->Version = AFS_NETWORKPROVIDER_INTERFACE_VERSION_1;
 
-        pConnectCB->AuthenticationId = AFSRetrieveAuthId();
-
-#ifdef AFS_DEBUG_TRACE
-        AFSDbgPrint( L"NPGetConnection3 Retrieved authentication id %08lX-%08lX\n",
-                     pConnectCB->AuthenticationId.HighPart,
-                     pConnectCB->AuthenticationId.LowPart);
-#endif
-
         hControlDevice = OpenRedirector();
 
         if( hControlDevice == NULL)
@@ -1961,8 +1926,6 @@ NPGetConnectionPerformance( LPCWSTR lpRemoteName,
                       lpRemoteName);
 
         pConnectCB->Version = AFS_NETWORKPROVIDER_INTERFACE_VERSION_1;
-
-        pConnectCB->AuthenticationId = AFSRetrieveAuthId();
 
         hControlDevice = OpenRedirector();
 
@@ -2724,14 +2687,6 @@ NPEnumResource( HANDLE  hEnum,
                           pEnumCB->RemoteName);
         }
 
-        pConnectionCB->AuthenticationId = AFSRetrieveAuthId();
-
-#ifdef AFS_DEBUG_TRACE
-        AFSDbgPrint( L"NPEnumResource Retrieved authentication id %08lX-%08lX\n",
-                     pConnectionCB->AuthenticationId.HighPart,
-                     pConnectionCB->AuthenticationId.LowPart);
-#endif
-
         dwError = DeviceIoControl( hControlDevice,
                                    IOCTL_AFS_LIST_CONNECTIONS,
                                    pConnectionCB,
@@ -3205,14 +3160,6 @@ NPGetResourceInformation( LPNETRESOURCE   lpNetResource,
                       lpNetResource->lpRemoteName);
 
         pConnectCB->Version = AFS_NETWORKPROVIDER_INTERFACE_VERSION_1;
-
-        pConnectCB->AuthenticationId = AFSRetrieveAuthId();
-
-#ifdef AFS_DEBUG_TRACE
-        AFSDbgPrint( L"NPGetResourceInformation Retrieved authentication id %08lX-%08lX\n",
-                     pConnectCB->AuthenticationId.HighPart,
-                     pConnectCB->AuthenticationId.LowPart);
-#endif
 
         hControlDevice = OpenRedirector();
 
@@ -3727,14 +3674,6 @@ NPGetUniversalNameCommon( LPCWSTR lpLocalPath,
 
         pConnectCB->Version = AFS_NETWORKPROVIDER_INTERFACE_VERSION_1;
 
-        pConnectCB->AuthenticationId = AFSRetrieveAuthId();
-
-#ifdef AFS_DEBUG_TRACE
-        AFSDbgPrint( L"NPGetUniversalName Retrieved authentication id %08lX-%08lX\n",
-                     pConnectCB->AuthenticationId.HighPart,
-                     pConnectCB->AuthenticationId.LowPart);
-#endif
-
         hControlDevice = OpenRedirector();
 
         if( hControlDevice == NULL)
@@ -4230,74 +4169,6 @@ OpenRedirector()
 #endif
 
     return hControlDevice;
-}
-
-LARGE_INTEGER
-AFSRetrieveAuthId()
-{
-
-    LARGE_INTEGER liAuthId = {0,0};
-    HANDLE hToken = NULL;
-    TOKEN_STATISTICS stTokenInfo;
-    DWORD dwCopyBytes = 0;
-
-    if ( !OpenThreadToken( GetCurrentThread(),
-                           TOKEN_QUERY,
-                           FALSE,       // Impersonation
-                           &hToken))
-    {
-        if( !OpenProcessToken( GetCurrentProcess(),
-                               TOKEN_QUERY,
-                               &hToken))
-        {
-
-#ifdef AFS_DEBUG_TRACE
-            AFSDbgPrint( L"AFSRetrieveAuthId Failed to retrieve Thread and Process tokens 0x%X\n",
-                         GetLastError());
-#endif
-        }
-        else
-        {
-
-#ifdef AFS_DEBUG_TRACE
-            AFSDbgPrint( L"AFSRetrieveAuthId Retrieved Process Token\n");
-#endif
-        }
-    }
-    else
-    {
-
-#ifdef AFS_DEBUG_TRACE
-        AFSDbgPrint( L"AFSRetrieveAuthId Retrieved Thread Token\n");
-#endif
-    }
-
-    if ( hToken != NULL)
-    {
-
-        if( !GetTokenInformation( hToken,
-                                  TokenStatistics,
-                                  &stTokenInfo,
-                                  sizeof( TOKEN_STATISTICS),
-                                  &dwCopyBytes))
-        {
-
-#ifdef AFS_DEBUG_TRACE
-            AFSDbgPrint( L"AFSRetrieveAuthId Failed to retrieve token information 0x%X\n",
-                         GetLastError());
-#endif
-        }
-        else
-        {
-
-            liAuthId.HighPart = stTokenInfo.AuthenticationId.HighPart;
-            liAuthId.LowPart = stTokenInfo.AuthenticationId.LowPart;
-        }
-
-        CloseHandle( hToken);
-    }
-
-    return liAuthId;
 }
 
 static DWORD
