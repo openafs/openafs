@@ -352,8 +352,14 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
         /* Do not hold the volume lock across the RPC calls */
         lock_ReleaseWrite(&volp->rw);
 
-        if (cellp->flags & CM_CELLFLAG_VLSERVER_INVALID)
-             cm_UpdateCell(cellp, 0);
+	if (cellp->flags & CM_CELLFLAG_VLSERVER_INVALID) {
+	    cellp = cm_UpdateCell(cellp, 0);
+	    if (cellp == NULL) {
+		lock_ObtainWrite(&volp->rw);
+		_InterlockedAnd(&volp->flags, ~CM_VOLUMEFLAG_UPDATING_VL);
+		return(CM_ERROR_NOSUCHCELL);
+	    }
+	}
 
         /* now we have volume structure locked and held; make RPC to fill it */
         code = cm_GetEntryByName(cellp, volp->namep, &vldbEntry, &nvldbEntry,
@@ -707,7 +713,9 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
         volp->vol[BACKVOL].state = bkNewstate;
     }
 
-    volp->lastUpdateTime = time(NULL);
+    if (code == 0 || (volp->flags & CM_VOLUMEFLAG_NOEXIST))
+	volp->lastUpdateTime = time(NULL);
+
     if (isMixed)
         _InterlockedOr(&volp->flags, CM_VOLUMEFLAG_RO_MIXED);
     else
