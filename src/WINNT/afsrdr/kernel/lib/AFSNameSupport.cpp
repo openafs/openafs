@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2008, 2009, 2010, 2011 Kernel Drivers, LLC.
- * Copyright (c) 2009, 2010, 2011 Your File System, Inc.
+ * Copyright (c) 2009, 2010, 2011, 2015 Your File System, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -3657,6 +3657,8 @@ AFSParseName( IN PIRP Irp,
         {
 
             uniFullName.Length -= sizeof( WCHAR);
+
+	    uniFullName.MaximumLength -= sizeof( WCHAR);
         }
 
         //
