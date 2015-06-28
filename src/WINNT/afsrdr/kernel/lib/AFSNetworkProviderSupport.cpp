@@ -58,27 +58,23 @@ AFSAddConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
                       &pRDRDevExt->Specific.RDR.ProviderListLock,
                       PsGetCurrentThread()));
 
-        if( ConnectCB->AuthenticationId.QuadPart == 0)
-        {
+	ntStatus = AFSGetAuthenticationId(&ConnectCB->AuthenticationId);
 
-	    ntStatus = AFSGetAuthenticationId(&ConnectCB->AuthenticationId);
+	if ( !NT_SUCCESS( ntStatus))
+	{
 
-	    if ( !NT_SUCCESS( ntStatus))
-	    {
+	    AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
+			  AFS_TRACE_LEVEL_ERROR,
+			  "AFSAddConnection Unable to retrieve authentication id %08lX\n",
+			  ntStatus));
 
-		AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
-			      AFS_TRACE_LEVEL_ERROR,
-			      "AFSAddConnection Unable to retrieve authentication id %08lX\n",
-			      ntStatus));
+	    return ntStatus;
+	}
 
-		return ntStatus;
-	    }
-
-            AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSAddConnection Retrieved authentication id %I64X\n",
-                          ConnectCB->AuthenticationId.QuadPart));
-        }
+	AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
+		      AFS_TRACE_LEVEL_VERBOSE,
+		      "AFSAddConnection Retrieved authentication id %I64X\n",
+		      ConnectCB->AuthenticationId.QuadPart));
 
         AFSAcquireExcl( &pRDRDevExt->Specific.RDR.ProviderListLock,
                         TRUE);
@@ -434,27 +430,23 @@ AFSCancelConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
                       &pRDRDevExt->Specific.RDR.ProviderListLock,
                       PsGetCurrentThread()));
 
-        if( ConnectCB->AuthenticationId.QuadPart == 0)
-        {
+	ntStatus = AFSGetAuthenticationId(&ConnectCB->AuthenticationId);
 
-	    ntStatus = AFSGetAuthenticationId(&ConnectCB->AuthenticationId);
+	if ( !NT_SUCCESS( ntStatus))
+	{
 
-	    if ( !NT_SUCCESS( ntStatus))
-	    {
+	    AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
+			  AFS_TRACE_LEVEL_ERROR,
+			  "AFSCancelConnection Unable to retrieve authentication id %08lX\n",
+			  ntStatus));
 
-		AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
-			      AFS_TRACE_LEVEL_ERROR,
-			      "AFSCancelConnection Unable to retrieve authentication id %08lX\n",
-			      ntStatus));
+	    return ntStatus;
+	}
 
-		return ntStatus;
-	    }
-
-            AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSCancelConnection Retrieved authentication id %I64X\n",
-                          ConnectCB->AuthenticationId.QuadPart));
-        }
+	AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
+		      AFS_TRACE_LEVEL_VERBOSE,
+		      "AFSCancelConnection Retrieved authentication id %I64X\n",
+		      ConnectCB->AuthenticationId.QuadPart));
 
         AFSAcquireExcl( &pRDRDevExt->Specific.RDR.ProviderListLock,
                         TRUE);
@@ -570,27 +562,23 @@ AFSGetConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
     __Enter
     {
 
-	if( ConnectCB->AuthenticationId.QuadPart == 0)
+	ntStatus = AFSGetAuthenticationId(&ConnectCB->AuthenticationId);
+
+	if ( !NT_SUCCESS( ntStatus))
 	{
 
-	    ntStatus = AFSGetAuthenticationId(&ConnectCB->AuthenticationId);
-
-	    if ( !NT_SUCCESS( ntStatus))
-	    {
-
-		AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
-			      AFS_TRACE_LEVEL_ERROR,
-			      "AFSGetConnection Unable to retrieve authentication id %08lX\n",
-			      ntStatus));
-
-		return ntStatus;
-	    }
-
 	    AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
-			  AFS_TRACE_LEVEL_VERBOSE,
-			  "AFSGetConnection Retrieved authentication id %I64X\n",
-			  ConnectCB->AuthenticationId.QuadPart));
+			  AFS_TRACE_LEVEL_ERROR,
+			  "AFSGetConnection Unable to retrieve authentication id %08lX\n",
+			  ntStatus));
+
+	    return ntStatus;
 	}
+
+	AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
+		      AFS_TRACE_LEVEL_VERBOSE,
+		      "AFSGetConnection Retrieved authentication id %I64X\n",
+		      ConnectCB->AuthenticationId.QuadPart));
 
         if( ConnectCB->LocalName != L'\0')
         {
@@ -721,27 +709,23 @@ AFSListConnections( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
 
         ulType = ConnectCB->Type;
 
-        if( ConnectCB->AuthenticationId.QuadPart == 0)
-        {
+	ntStatus = AFSGetAuthenticationId(&ConnectCB->AuthenticationId);
 
-	    ntStatus = AFSGetAuthenticationId(&ConnectCB->AuthenticationId);
+	if ( !NT_SUCCESS( ntStatus))
+	{
 
-	    if ( !NT_SUCCESS( ntStatus))
-	    {
+	    AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
+			  AFS_TRACE_LEVEL_ERROR,
+			  "AFSListConnection Unable to retrieve authentication id %08lX\n",
+			  ntStatus));
 
-		AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
-			      AFS_TRACE_LEVEL_ERROR,
-			      "AFSListConnection Unable to retrieve authentication id %08lX\n",
-			      ntStatus));
+	    return ntStatus;
+	}
 
-		return ntStatus;
-	    }
-
-            AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSListConnections Retrieved authentication id %I64X\n",
-                          ConnectCB->AuthenticationId.QuadPart));
-        }
+	AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
+		      AFS_TRACE_LEVEL_VERBOSE,
+		      "AFSListConnections Retrieved authentication id %I64X\n",
+		      ConnectCB->AuthenticationId.QuadPart));
 
         liAuthenticationID.QuadPart = ConnectCB->AuthenticationId.QuadPart;
 
@@ -1509,27 +1493,23 @@ AFSGetConnectionInfo( IN AFSNetworkProviderConnectionCB *ConnectCB,
         uniRemoteName.MaximumLength = uniRemoteName.Length + sizeof( WCHAR);
         uniRemoteName.Buffer = (WCHAR *)ConnectCB->RemoteName;
 
-	if( ConnectCB->AuthenticationId.QuadPart == 0)
+	ntStatus = AFSGetAuthenticationId(&ConnectCB->AuthenticationId);
+
+	if ( !NT_SUCCESS( ntStatus))
 	{
 
-	    ntStatus = AFSGetAuthenticationId(&ConnectCB->AuthenticationId);
-
-	    if ( !NT_SUCCESS( ntStatus))
-	    {
-
-		AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
-			      AFS_TRACE_LEVEL_ERROR,
-			      "AFSGetConnectionInfo Unable to retrieve authentication id %08lX\n",
-			      ntStatus));
-
-		return ntStatus;
-	    }
-
 	    AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
-			  AFS_TRACE_LEVEL_VERBOSE,
-			  "AFSGetConnectionInfo Retrieved authentication id %I64X\n",
-			  ConnectCB->AuthenticationId.QuadPart));
+			  AFS_TRACE_LEVEL_ERROR,
+			  "AFSGetConnectionInfo Unable to retrieve authentication id %08lX\n",
+			  ntStatus));
+
+	    return ntStatus;
 	}
+
+	AFSDbgTrace(( AFS_SUBSYSTEM_NETWORK_PROVIDER,
+		      AFS_TRACE_LEVEL_VERBOSE,
+		      "AFSGetConnectionInfo Retrieved authentication id %I64X\n",
+		      ConnectCB->AuthenticationId.QuadPart));
 
         if( ConnectCB->LocalName != L'\0')
         {
