@@ -279,6 +279,14 @@ cm_ResetServerBusyStatus(cm_serverRef_t **serverspp)
     lock_ReleaseRead(&cm_serverLock);
 }
 
+static int
+isNetworkError(int code)
+{
+    if (code >= -64 && code < 0)
+	return 1;
+    return 0;
+}
+
 /*
  * Analyze the error return from an RPC.  Determine whether or not to retry,
  * and if we're going to retry, determine whether failover is appropriate,
@@ -1051,9 +1059,23 @@ cm_Analyze(cm_conn_t *connp,
         if ( timeLeft > 2 )
             retry = 1;
     }
-    else if (errorCode >= -64 && errorCode < 0) {
-        /* mark server as down */
-        if (serverp)
+    else if (isNetworkError(errorCode)) {
+	/*
+	 * any other rx error - mark server as down.
+	 *
+	 * The most likely error to receive is RX_INVALID_OPERATION which
+	 * can be received as a result of an unrecognized rx service id or
+	 * an unrecognized security class.  Failing to mark the server down
+	 * when a service id or security class that is expected to be
+	 * recognized is not will result in an infinite retry loop.  Instead
+	 * mark the server down.  If we are ever able to successfully
+	 * communicate with it again it will be marked up via a probe.
+	 *
+	 * The most common scenario for this behavior would be an AuriStor
+	 * file server being replaced by an AFS3 file server or a reflected
+	 * packet.
+	 */
+	if (serverp)
             sprintf(addr, "%d.%d.%d.%d",
                     ((serverp->addr.sin_addr.s_addr & 0xff)),
                     ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
@@ -1068,9 +1090,13 @@ cm_Analyze(cm_conn_t *connp,
         if (serverp) {
 	    if ((connp->flags & CM_CONN_FLAG_NEW) ||
 		(reqp->flags & CM_REQ_NEW_CONN_FORCED)) {
-                reqp->errorServp = serverp;
-                reqp->tokenError = errorCode;
-            } else {
+		lock_ObtainMutex(&serverp->mx);
+		if (!(serverp->flags & CM_SERVERFLAG_DOWN)) {
+		    _InterlockedOr(&serverp->flags, CM_SERVERFLAG_DOWN);
+		    serverp->downTime = time(NULL);
+		}
+		lock_ReleaseMutex(&serverp->mx);
+	    } else {
                 reqp->flags |= CM_REQ_NEW_CONN_FORCED;
                 forcing_new = 1;
                 cm_ForceNewConnections(serverp);
@@ -1277,10 +1303,10 @@ cm_Analyze(cm_conn_t *connp,
     }
 
     /* If not allowed to retry, don't */
-    if (dead_session ||
-        !forcing_new && (retry < 2) && (reqp->flags & CM_REQ_NORETRY) &&
-        !(errorCode > -64 && errorCode <= RX_INVALID_OPERATION))
-        retry = 0;
+    if (dead_session)
+	retry = 0;
+    else if (!forcing_new && (retry < 2) && (reqp->flags & CM_REQ_NORETRY))
+	retry = 0;
 
     /* drop this on the way out */
     if (connp)
