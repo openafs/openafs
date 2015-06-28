@@ -627,10 +627,10 @@ long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
                     lock_ReleaseWrite(&scp->rw);
                     break;
                 }
-		cm_SyncOpDone(scp, bufferp, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ | CM_SCACHESYNC_BUFLOCKED);
 
                 if (cm_HaveBuffer(scp, bufferp, 1)) {
-                    lock_ReleaseWrite(&scp->rw);
+		    cm_SyncOpDone(scp, bufferp, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ | CM_SCACHESYNC_BUFLOCKED);
+		    lock_ReleaseWrite(&scp->rw);
                     break;
                 }
 
@@ -638,7 +638,8 @@ long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
                 lock_ReleaseMutex(&bufferp->mx);
                 code = cm_GetBuffer(scp, bufferp, NULL, userp,
                                     reqp);
-                lock_ReleaseWrite(&scp->rw);
+		cm_SyncOpDone(scp, bufferp, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ);
+		lock_ReleaseWrite(&scp->rw);
                 lock_ObtainMutex(&bufferp->mx);
                 if (code)
                     break;
