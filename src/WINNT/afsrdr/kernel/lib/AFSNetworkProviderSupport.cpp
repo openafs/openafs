@@ -92,7 +92,8 @@ AFSAddConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
         // Strip off any trailing slashes
         //
 
-        if( uniRemoteName.Buffer[ (uniRemoteName.Length/sizeof( WCHAR)) - 1] == L'\\')
+	if( uniRemoteName.Length >= sizeof( WCHAR)
+	    && uniRemoteName.Buffer[ (uniRemoteName.Length/sizeof( WCHAR)) - 1] == L'\\')
         {
 
             uniRemoteName.Length -= sizeof( WCHAR);
@@ -272,7 +273,8 @@ AFSAddConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
         // Strip off any trailing slashes
         //
 
-        if( uniRemoteName.Buffer[ (uniRemoteName.Length/sizeof( WCHAR)) - 1] == L'\\')
+	if( uniRemoteName.Length >= sizeof( WCHAR)
+	    && uniRemoteName.Buffer[ (uniRemoteName.Length/sizeof( WCHAR)) - 1] == L'\\')
         {
 
             uniRemoteName.Length -= sizeof( WCHAR);
@@ -761,8 +763,9 @@ AFSListConnections( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
                            ConnectCB->RemoteName,
                            uniRemoteName.Length);
 
-            if( uniRemoteName.Buffer[ 0] == L'\\' &&
-                uniRemoteName.Buffer[ 1] == L'\\')
+	    if( uniRemoteName.Length >= 2 * sizeof( WCHAR)
+		&& uniRemoteName.Buffer[ 0] == L'\\'
+		&& uniRemoteName.Buffer[ 1] == L'\\')
             {
 
                 uniRemoteName.Buffer = &uniRemoteName.Buffer[ 1];
@@ -770,7 +773,8 @@ AFSListConnections( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
                 uniRemoteName.Length -= sizeof( WCHAR);
             }
 
-            if( uniRemoteName.Buffer[ (uniRemoteName.Length/sizeof( WCHAR)) - 1] == L'\\')
+	    if( uniRemoteName.Length >= sizeof( WCHAR)
+		&& uniRemoteName.Buffer[ (uniRemoteName.Length/sizeof( WCHAR)) - 1] == L'\\')
             {
 
                 uniRemoteName.Length -= sizeof( WCHAR);
@@ -1032,11 +1036,12 @@ AFSInitializeConnectionInfo( IN AFSProviderConnectionCB *Connection,
         uniName = Connection->RemoteName;
 
         //
-        // Strip of the double leading slash if there is one
+	// Strip off the double leading slash if there is one
         //
 
-        if( uniName.Buffer[ 0] == L'\\' &&
-            uniName.Buffer[ 1] == L'\\')
+	if( uniName.Length >= 2 * sizeof( WCHAR)
+	    && uniName.Buffer[ 0] == L'\\'
+	    && uniName.Buffer[ 1] == L'\\')
         {
 
             uniName.Buffer = &uniName.Buffer[ 1];
@@ -1543,8 +1548,9 @@ AFSGetConnectionInfo( IN AFSNetworkProviderConnectionCB *ConnectCB,
 
         uniFullName = uniRemoteName;
 
-        if( uniRemoteName.Buffer[ 0] == L'\\' &&
-            uniRemoteName.Buffer[ 1] == L'\\')
+	if( uniRemoteName.Length >= 2 * sizeof( WCHAR)
+	    && uniRemoteName.Buffer[ 0] == L'\\'
+	    && uniRemoteName.Buffer[ 1] == L'\\')
         {
 
             uniRemoteName.Buffer = &uniRemoteName.Buffer[ 1];
@@ -1552,7 +1558,8 @@ AFSGetConnectionInfo( IN AFSNetworkProviderConnectionCB *ConnectCB,
             uniRemoteName.Length -= sizeof( WCHAR);
         }
 
-        if( uniRemoteName.Buffer[ (uniRemoteName.Length/sizeof( WCHAR)) - 1] == L'\\')
+	if( uniRemoteName.Length >= sizeof( WCHAR)
+	    && uniRemoteName.Buffer[ (uniRemoteName.Length/sizeof( WCHAR)) - 1] == L'\\')
         {
 
             uniRemoteName.Length -= sizeof( WCHAR);
