@@ -203,7 +203,6 @@ extern int MultiBreakCallBackAlternateAddress_r(struct host *host,
 				     struct AFSCBFids *afidp);
 extern int DumpCallBackState(void);
 extern int PrintCallBackStats(void);
-extern void *ShutDown(void *);
 extern void ShutDownAndCore(int dopanic);
 
 extern int h_Lookup_r(afs_uint32 hostaddr, afs_uint16 hport,

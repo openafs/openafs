@@ -83,12 +83,10 @@
 
 extern int etext;
 
-void *ShutDown(void *);
 static void ClearXStatValues(void);
 static void PrintCounters(void);
 static void ResetCheckDescriptors(void);
 static void ResetCheckSignal(void);
-static void *CheckSignal(void *);
 
 static afs_int32 Do_VLRegisterRPC(void);
 
@@ -241,8 +239,8 @@ static int fs_stateInit(void)
  */
 
 /* DEBUG HACK */
-static void *
-CheckDescriptors(void *unused)
+void
+CheckDescriptors_Signal(int signo)
 {
 #ifndef AFS_NT40_ENV
     struct afs_stat status;
@@ -260,26 +258,29 @@ CheckDescriptors(void *unused)
     fflush(stdout);
     ResetCheckDescriptors();
 #endif
-    return 0;
-}				/*CheckDescriptors */
-
+}
 
 void
 CheckSignal_Signal(int x)
 {
-    CheckSignal(NULL);
+    if (FS_registered > 0) {
+	/*
+	 * We have proper ip addresses; tell the vlserver what we got; the following
+	 * routine will do the proper reporting for us
+	 */
+	Do_VLRegisterRPC();
+    }
+    h_DumpHosts();
+    h_PrintClients();
+    DumpCallBackState();
+    PrintCounters();
+    ResetCheckSignal();
 }
 
 void
 ShutDown_Signal(int x)
 {
-    ShutDown(NULL);
-}
-
-void
-CheckDescriptors_Signal(int x)
-{
-    CheckDescriptors(NULL);
+    ShutDownAndCore(DONTPANIC);
 }
 
 /* check whether caller is authorized to perform admin operations */
@@ -686,26 +687,6 @@ PrintCounters(void)
 
 }				/*PrintCounters */
 
-
-
-static void *
-CheckSignal(void *unused)
-{
-    if (FS_registered > 0) {
-	/*
-	 * We have proper ip addresses; tell the vlserver what we got; the following
-	 * routine will do the proper reporting for us
-	 */
-	Do_VLRegisterRPC();
-    }
-    h_DumpHosts();
-    h_PrintClients();
-    DumpCallBackState();
-    PrintCounters();
-    ResetCheckSignal();
-    return 0;
-}				/*CheckSignal */
-
 static void *
 ShutdownWatchdogLWP(void *unused)
 {
@@ -815,13 +796,6 @@ ShutDownAndCore(int dopanic)
 	osi_Panic("Panic requested\n");
 
     exit(0);
-}
-
-void *
-ShutDown(void *unused)
-{				/* backward compatibility */
-    ShutDownAndCore(DONTPANIC);
-    return 0;
 }
 
 static afs_int32
