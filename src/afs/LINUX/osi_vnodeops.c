@@ -1385,9 +1385,17 @@ afs_dentry_automount(afs_linux_path_t *path)
 {
     struct dentry *target;
 
-    /* avoid symlink resolution limits when resolving; we cannot contribute to
-     * an infinite symlink loop */
+    /* 
+     * Avoid symlink resolution limits when resolving; we cannot contribute to
+     * an infinite symlink loop.
+     *
+     * On newer kernels the field has moved to the private nameidata structure
+     * so we can't adjust it here.  This may cause ELOOP when using a path with
+     * 40 or more directories that are not already in the dentry cache.
+     */
+#if defined(STRUCT_TASK_STRUCT_HAS_TOTAL_LINK_COUNT)
     current->total_link_count--;
+#endif
 
     target = canonical_dentry(path->dentry->d_inode);
 
