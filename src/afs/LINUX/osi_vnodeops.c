@@ -1896,14 +1896,22 @@ afs_linux_readlink(struct dentry *dp, char *target, int maxlen)
 /* afs_linux_follow_link
  * a file system dependent link following routine.
  */
+#if defined(HAVE_LINUX_INODE_OPERATIONS_FOLLOW_LINK_NO_NAMEIDATA)
+static const char *afs_linux_follow_link(struct dentry *dentry, void **link_data)
+#else
 static int afs_linux_follow_link(struct dentry *dentry, struct nameidata *nd)
+#endif
 {
     int code;
     char *name;
 
     name = kmalloc(PATH_MAX, GFP_NOFS);
     if (!name) {
+#if defined(HAVE_LINUX_INODE_OPERATIONS_FOLLOW_LINK_NO_NAMEIDATA)
+	return ERR_PTR(-EIO);
+#else
 	return -EIO;
+#endif
     }
 
     AFS_GLOCK();
@@ -1911,14 +1919,32 @@ static int afs_linux_follow_link(struct dentry *dentry, struct nameidata *nd)
     AFS_GUNLOCK();
 
     if (code < 0) {
+#if defined(HAVE_LINUX_INODE_OPERATIONS_FOLLOW_LINK_NO_NAMEIDATA)
+	return ERR_PTR(code);
+#else
 	return code;
+#endif
     }
 
     name[code] = '\0';
+#if defined(HAVE_LINUX_INODE_OPERATIONS_FOLLOW_LINK_NO_NAMEIDATA)
+    return *link_data = name;
+#else
     nd_set_link(nd, name);
     return 0;
+#endif
 }
 
+#if defined(HAVE_LINUX_INODE_OPERATIONS_PUT_LINK_NO_NAMEIDATA)
+static void
+afs_linux_put_link(struct inode *inode, void *link_data)
+{
+    char *name = link_data;
+
+    if (name && !IS_ERR(name))
+	kfree(name);
+}
+#else
 static void
 afs_linux_put_link(struct dentry *dentry, struct nameidata *nd)
 {
@@ -1927,6 +1953,7 @@ afs_linux_put_link(struct dentry *dentry, struct nameidata *nd)
     if (name && !IS_ERR(name))
 	kfree(name);
 }
+#endif /* HAVE_LINUX_INODE_OPERATIONS_PUT_LINK_NO_NAMEIDATA */
 
 #endif /* USABLE_KERNEL_PAGE_SYMLINK_CACHE */
 
