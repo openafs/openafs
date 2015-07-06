@@ -901,6 +901,16 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_KBUILD_USES_EXTRA_CFLAGS
 		 LINUX_KERNEL_COMPILE_WORKS
 
+		 dnl Operation signature checks
+		 AC_CHECK_LINUX_OPERATION([inode_operations], [follow_link], [no_nameidata],
+					  [#include <linux/fs.h>],
+					  [const char *],
+					  [struct dentry *dentry, void **link_data])
+		 AC_CHECK_LINUX_OPERATION([inode_operations], [put_link], [no_nameidata],
+					  [#include <linux/fs.h>],
+					  [void],
+					  [struct inode *inode, void *link_data])
+
 		 dnl Check for header files
 		 AC_CHECK_LINUX_HEADER([config.h])
 		 AC_CHECK_LINUX_HEADER([completion.h])
