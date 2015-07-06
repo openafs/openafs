@@ -150,3 +150,18 @@ AC_DEFUN([AC_CHECK_LINUX_TYPED_STRUCT],
 		       [Define if kernel typedef'd $1 has the $2 element])
  ])
 
+dnl AC_CHECK_LINUX_OPERATION([structure], [operation], [label], [includes], [return_type], [args])
+AC_DEFUN([AC_CHECK_LINUX_OPERATION],
+ [AS_VAR_PUSHDEF([ac_linux_operation], [ac_cv_linux_operation_$1_$2_$3])
+  AC_CACHE_CHECK([operation $2 in $1], [ac_linux_operation],
+    [save_CPPFLAGS="$CPPFLAGS"
+     CPPFLAGS="$CPPFLAGS -Werror"
+     AC_TRY_KBUILD([$4], [struct $1 ops; $5 op($6) { return ($5)0; }; ops.$2 = op;],
+		   AS_VAR_SET([ac_linux_operation], [yes]),
+		   AS_VAR_SET([ac_linux_operation], [no]))
+     CPPFLAGS="$save_CPPFLAGS"
+    ])
+  AS_IF([test AS_VAR_GET([ac_linux_operation]) = yes],
+	[AC_DEFINE(AS_TR_CPP(HAVE_LINUX_$1_$2_$3), 1,
+		   [Define if $1 has $2 operation of form $6])])
+ ])
