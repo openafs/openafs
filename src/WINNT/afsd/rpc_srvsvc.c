@@ -795,7 +795,10 @@ NET_API_STATUS NetrShareGetInfo(
         if (allSubmount) {
             scp = dscp;
             cm_HoldSCache(scp);
-        }
+	    code = 0;
+	} else {
+	    code = CM_ERROR_NOSUCHPATH;
+	}
     } else {
         /*
          * Could be a Submount, a directory entry, or a cell name we
@@ -830,7 +833,9 @@ NET_API_STATUS NetrShareGetInfo(
                     code == CM_ERROR_BPLUS_NOMATCH)
                     code = cm_NameI(dscp, pathstr, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                                     userp, NULL, &req, &scp);
-            }
+	    } else {
+		code = CM_ERROR_NOSUCHPATH;
+	    }
         }
     }
 
