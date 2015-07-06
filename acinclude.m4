@@ -958,6 +958,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_STRUCT([task_struct], [sigmask_lock], [sched.h])
 		 AC_CHECK_LINUX_STRUCT([task_struct], [tgid], [sched.h])
 		 AC_CHECK_LINUX_STRUCT([task_struct], [thread_info], [sched.h])
+		 AC_CHECK_LINUX_STRUCT([task_struct], [total_link_count], [sched.h])
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM
 
 		 dnl Check for typed structure elements
