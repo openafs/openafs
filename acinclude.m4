@@ -989,6 +989,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_FUNC([sock_create_kern],
 				     [#include <linux/net.h>],
 				     [sock_create_kern(0, 0, 0, NULL);])
+		 AC_CHECK_LINUX_FUNC([sock_create_kern_ns],
+				     [#include <linux/net.h>],
+				     [sock_create_kern(NULL, 0, 0, 0, NULL);])
 		 AC_CHECK_LINUX_FUNC([splice_direct_to_actor],
 				     [#include <linux/splice.h>],
 				     [splice_direct_to_actor(NULL,NULL,NULL);])
