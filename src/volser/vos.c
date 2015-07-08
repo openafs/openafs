@@ -5522,6 +5522,8 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
     struct rx_connection *aconn;
     int c, dc;
 
+    memset(&storeEntry, 0, sizeof(struct nvldbentry));
+
     server = GetServer(as->parms[0].items->data);
     if (!server) {
 	fprintf(STDERR, "vos: host '%s' not found in host table\n",
