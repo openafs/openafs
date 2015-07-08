@@ -721,6 +721,8 @@ UV_CreateVolume3(afs_uint32 aserver, afs_int32 apart, char *aname,
     tid = 0;
     error = 0;
 
+    memset(&storeEntry, 0, sizeof(struct nvldbentry));
+
     init_volintInfo(&tstatus);
     tstatus.maxquota = aquota;
 
@@ -851,6 +853,8 @@ UV_AddVLDBEntry(afs_uint32 aserver, afs_int32 apart, char *aname,
     afs_int32 vcode;
     struct nvldbentry entry, storeEntry;	/*the new vldb entry */
 
+    memset(&storeEntry, 0, sizeof(struct nvldbentry));
+
     aconn = (struct rx_connection *)0;
     error = 0;
 
@@ -908,6 +912,8 @@ UV_DeleteVolume(afs_uint32 aserver, afs_int32 apart, afs_uint32 avolid)
     int islocked = 0;
     afs_int32 avoltype = -1, vtype;
     int notondisk = 0, notinvldb = 0;
+
+    memset(&storeEntry, 0, sizeof(struct nvldbentry));
 
     /* Find and read bhe VLDB entry for this volume */
     code = ubik_VL_SetLock(cstruct, 0, avolid, avoltype, VLOP_DELETE);
@@ -1353,6 +1359,8 @@ UV_ConvertRO(afs_uint32 server, afs_uint32 partition, afs_uint32 volid,
     afs_int32 roindex = 0;
     afs_uint32 roserver = 0;
     struct rx_connection *aconn;
+
+    memset(&storeEntry, 0, sizeof(struct nvldbentry));
 
     vcode =
 	ubik_VL_SetLock(cstruct, 0, entry->volumeId[RWVOL], RWVOL,
@@ -7453,6 +7461,8 @@ void
 MapNetworkToHost(struct nvldbentry *old, struct nvldbentry *new)
 {
     int i, count;
+
+    memset(new, 0, sizeof(struct nvldbentry));
 
     /*copy all the fields */
     strcpy(new->name, old->name);
