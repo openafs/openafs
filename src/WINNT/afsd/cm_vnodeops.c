@@ -1131,7 +1131,10 @@ retry_lookup:
                 goto haveFid;
             }
 
-            code = CM_ERROR_BPLUS_NOMATCH;
+	    if (code == CM_ERROR_AMBIGUOUS_FILENAME)
+		goto done;
+
+	    code = CM_ERROR_BPLUS_NOMATCH;
             goto notfound;
         }
 #endif
