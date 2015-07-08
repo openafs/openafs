@@ -8795,6 +8795,23 @@ AFSCheckSymlinkAccess( IN AFSDirectoryCB *ParentDirectoryCB,
                                                 &pDirEntry);
                 }
             }
+	    else
+	    {
+
+		//
+		// Here we have a match on the case insensitive lookup for the name. If there
+		// Is more than one link entry for this node then fail the lookup request
+		//
+
+		if( !BooleanFlagOn( pDirEntry->Flags, AFS_DIR_ENTRY_CASE_INSENSTIVE_LIST_HEAD) ||
+		    pDirEntry->CaseInsensitiveList.fLink != NULL)
+		{
+
+		    AFSReleaseResource( ParentDirectoryCB->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
+
+		    try_return(ntStatus = STATUS_OBJECT_NAME_COLLISION);
+		}
+	    }
         }
 
         if( pDirEntry != NULL)

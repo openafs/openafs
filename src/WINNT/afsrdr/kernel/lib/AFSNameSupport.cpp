@@ -1821,35 +1821,23 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                         //
                         // Here we have a match on the case insensitive lookup for the name. If there
-                        // Is more than one link entry for this node then fail the lookup request
-                        //
+			// Is more than one link entry for this node then fail the lookup request
+			//
 
-                        pCurrentObject = pDirEntry->ObjectInformation;
+			if( !BooleanFlagOn( pDirEntry->Flags, AFS_DIR_ENTRY_CASE_INSENSTIVE_LIST_HEAD) ||
+			    pDirEntry->CaseInsensitiveList.fLink != NULL)
+			{
 
-                        if( !BooleanFlagOn( pDirEntry->Flags, AFS_DIR_ENTRY_CASE_INSENSTIVE_LIST_HEAD) ||
-                            pDirEntry->CaseInsensitiveList.fLink != NULL)
-                        {
+			    AFSReleaseResource( pParentDirEntry->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
-                            //
-                            // Increment our dir entry ref count since we will decrement it on exit
-                            //
+			    pDirEntry = NULL;
 
-                            lCount = InterlockedIncrement( &pDirEntry->DirOpenReferenceCount);
+			    try_return(ntStatus = STATUS_OBJECT_NAME_COLLISION);
+			}
 
-                            AFSDbgTrace(( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                                          AFS_TRACE_LEVEL_VERBOSE,
-                                          "AFSLocateNameEntry Increment5 count on %wZ DE %p Ccb %p Cnt %d\n",
-                                          &pDirEntry->NameInformation.FileName,
-                                          pDirEntry,
-                                          NULL,
-                                          lCount));
-
-                            AFSReleaseResource( pParentDirEntry->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
-
-                            try_return(ntStatus = STATUS_OBJECT_NAME_COLLISION);
-                        }
-                    }
-                }
+			pCurrentObject = pDirEntry->ObjectInformation;
+		    }
+		}
 
                 if( pDirEntry != NULL)
                 {
@@ -4027,13 +4015,36 @@ AFSParseName( IN PIRP Irp,
                     }
                 }
             }
+	    else
+	    {
+
+		//
+		// Here we have a match on the case insensitive lookup for the name. If there
+		// Is more than one link entry for this node then fail the lookup request
+		//
+
+		if( !BooleanFlagOn( pDirEntry->Flags, AFS_DIR_ENTRY_CASE_INSENSTIVE_LIST_HEAD) ||
+		    pDirEntry->CaseInsensitiveList.fLink != NULL)
+		{
+
+		    AFSReleaseResource( AFSGlobalRoot->ObjectInformation.Specific.Directory.DirectoryNodeHdr.TreeLock);
+
+		    bReleaseTreeLock = FALSE;
+
+		    pDirEntry = NULL;
+
+		    try_return(ntStatus = STATUS_OBJECT_NAME_COLLISION);
+		}
+	    }
         }
 
         if( bReleaseTreeLock)
         {
-            AFSReleaseResource( AFSGlobalRoot->ObjectInformation.Specific.Directory.DirectoryNodeHdr.TreeLock);
-        }
 
+	    AFSReleaseResource( AFSGlobalRoot->ObjectInformation.Specific.Directory.DirectoryNodeHdr.TreeLock);
+
+	    bReleaseTreeLock = FALSE;
+	}
 
         //
         // Be sure we are starting from the correct volume

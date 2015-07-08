@@ -1333,6 +1333,22 @@ AFSEnumerateConnection( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
 
                 try_return( ntStatus);
             }
+
+	    //
+	    // Here we have a match on the case insensitive lookup for the name. If there
+	    // Is more than one link entry for this node then fail the lookup request
+	    //
+
+	    if( !BooleanFlagOn( pShareDirEntry->Flags, AFS_DIR_ENTRY_CASE_INSENSTIVE_LIST_HEAD) ||
+		pShareDirEntry->CaseInsensitiveList.fLink != NULL)
+	    {
+
+		AFSReleaseResource( AFSGlobalRoot->ObjectInformation.Specific.Directory.DirectoryNodeHdr.TreeLock);
+
+		pShareDirEntry = NULL;
+
+		try_return(ntStatus = STATUS_OBJECT_NAME_COLLISION);
+	    }
         }
 
         lCount = InterlockedIncrement( &pShareDirEntry->DirOpenReferenceCount);

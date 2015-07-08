@@ -2362,19 +2362,39 @@ AFSSetFileLinkInfo( IN PIRP Irp)
             AFSLocateCaseInsensitiveDirEntry( pTargetParentObject->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead,
                                               ulTargetCRC,
                                               &pTargetDirEntry);
-        }
 
-        if ( !BooleanFlagOn( pDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_DISABLE_SHORTNAMES) &&
-             pTargetDirEntry == NULL && RtlIsNameLegalDOS8Dot3( &uniTargetName,
-                                                                NULL,
-                                                                NULL))
-        {
-            //
-            // Try the short name
-            //
-            AFSLocateShortNameDirEntry( pTargetParentObject->Specific.Directory.ShortNameTree,
-                                        ulTargetCRC,
-                                        &pTargetDirEntry);
+	    if ( pTargetDirEntry == NULL)
+	    {
+
+		if ( !BooleanFlagOn( pDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_DISABLE_SHORTNAMES) &&
+		     RtlIsNameLegalDOS8Dot3( &uniTargetName,
+					     NULL,
+					     NULL))
+		{
+		    //
+		    // Try the short name
+		    //
+		    AFSLocateShortNameDirEntry( pTargetParentObject->Specific.Directory.ShortNameTree,
+						ulTargetCRC,
+						&pTargetDirEntry);
+		}
+	    }
+	    else
+	    {
+		//
+		// Here we have a match on the case insensitive lookup for the name. If there
+		// Is more than one link entry for this node then fail the lookup request
+		//
+
+		if( !BooleanFlagOn( pTargetDirEntry->Flags, AFS_DIR_ENTRY_CASE_INSENSTIVE_LIST_HEAD) ||
+		    pTargetDirEntry->CaseInsensitiveList.fLink != NULL)
+		{
+
+		    pTargetDirEntry = NULL;
+
+		    try_return(ntStatus = STATUS_OBJECT_NAME_COLLISION);
+		}
+	    }
         }
 
         //
@@ -2832,19 +2852,39 @@ AFSSetRenameInfo( IN PIRP Irp)
             AFSLocateCaseInsensitiveDirEntry( pTargetParentObject->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead,
                                               ulTargetCRC,
                                               &pTargetDirEntry);
-        }
 
-        if ( !BooleanFlagOn( pDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_DISABLE_SHORTNAMES) &&
-             pTargetDirEntry == NULL && RtlIsNameLegalDOS8Dot3( &uniTargetName,
-                                                               NULL,
-                                                               NULL))
-        {
-            //
-            // Try the short name
-            //
-            AFSLocateShortNameDirEntry( pTargetParentObject->Specific.Directory.ShortNameTree,
-                                        ulTargetCRC,
-                                        &pTargetDirEntry);
+	    if ( pTargetDirEntry == NULL)
+	    {
+
+		if ( !BooleanFlagOn( pDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_DISABLE_SHORTNAMES) &&
+		     RtlIsNameLegalDOS8Dot3( &uniTargetName,
+					     NULL,
+					     NULL))
+		{
+		    //
+		    // Try the short name
+		    //
+		    AFSLocateShortNameDirEntry( pTargetParentObject->Specific.Directory.ShortNameTree,
+						ulTargetCRC,
+						&pTargetDirEntry);
+		}
+	    }
+	    else
+	    {
+		//
+		// Here we have a match on the case insensitive lookup for the name. If there
+		// Is more than one link entry for this node then fail the lookup request
+		//
+
+		if( !BooleanFlagOn( pTargetDirEntry->Flags, AFS_DIR_ENTRY_CASE_INSENSTIVE_LIST_HEAD) ||
+		    pTargetDirEntry->CaseInsensitiveList.fLink != NULL)
+		{
+
+		    pTargetDirEntry = NULL;
+
+		    try_return(ntStatus = STATUS_OBJECT_NAME_COLLISION);
+		}
+	    }
         }
 
         //
