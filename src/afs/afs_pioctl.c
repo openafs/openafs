@@ -5065,8 +5065,7 @@ DECL_PIOCTL(PFsCmd)
 	    if (tc) {
 		RX_AFS_GUNLOCK();
 		code =
-		    RXAFS_FsCmd(rxconn, Fid, Inputs,
-					(struct FsCmdOutputs *)aout);
+		    RXAFS_FsCmd(rxconn, Fid, Inputs, Outputs);
 		RX_AFS_GLOCK();
 	    } else
 		code = -1;
