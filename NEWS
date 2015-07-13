@@ -1,5 +1,30 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.6.13
+
+  All server platforms
+
+    * Fix for CVE-2015-3282: vos leaks stack data onto the wire in the
+      clear when creating vldb entries
+
+    * Workaround for CVE-2015-3283: bos commands can be spoofed, including
+      some which alter server state
+
+    * Disabled searching the VLDB by volume name regular expression to avoid
+      possible buffer overruns in the volume location server
+
+  All client platforms
+
+    * Fix for CVE-2015-3284: pioctls leak kernel memory
+
+    * Fix for CVE-2015-3285: kernel pioctl support for OSD command passing
+      can trigger a panic
+
+  Solaris clients
+
+    * Fix for CVE-2015-3286: Solaris grouplist modifications for PAGs can
+      panic  or overwrite memory
+
 OpenAFS 1.6.12
 
   All server platforms
