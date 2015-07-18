@@ -111,11 +111,7 @@ static int RestoreSalFlag(struct fsbnode *abnode);
 static void SetNeedsClock(struct fsbnode *);
 static int NudgeProcs(struct fsbnode *);
 
-#ifdef AFS_NT40_ENV
-static char *AppendExecutableExtension(char *cmd);
-#else
-#define AppendExecutableExtension(x) strdup(x)
-#endif
+static char *PathToExecutable(char *cmd);
 
 struct bnode_ops fsbnode_ops = {
     fs_create,
@@ -346,21 +342,67 @@ fs_delete(struct bnode *bn)
     return 0;
 }
 
-
+/*! PathToExecutable() - for both Unix and Windows, accept a full bnode
+ * command, including any arguments, and return only the path to the
+ * binary executable, with arguments stripped.
+ *
+ * \notes The caller will stat() the returned path.
+ *
+ * \param cmd - full bnode command string with arguments
+ *
+ * \return - string path to the binary executable, to be freed by the caller
+ */
 #ifdef AFS_NT40_ENV
+/* The Windows implementation must also ensure that an extension is
+ * specified in the path.
+ */
+
 static char *
-AppendExecutableExtension(char *cmd)
+PathToExecutable(char *cmd)
 {
     char cmdext[_MAX_EXT];
-    char *cmdexe;
+    char *cmdexe, *cmdcopy, *cmdname;
+    size_t cmdend;
 
-    _splitpath(cmd, NULL, NULL, NULL, cmdext);
+    cmdcopy = strdup(cmd);
+    if (cmdcopy == NULL) {
+	return NULL;
+    }
+    /* strip off any arguments */
+    cmdname = strsep(&cmdcopy, " \t");    /* roken, I'm hopin' */
+    if (*cmdname == '\0') {
+	free(cmdname);
+	return NULL;
+    }
+    /* Is there an extension specified? */
+    _splitpath(cmdname, NULL, NULL, NULL, cmdext);
     if (*cmdext == '\0') {
-	if (asprintf(&cmdexe, "%s.exe", cmd) < 0)
+	/* No, supply one. */
+	if (asprintf(&cmdexe, "%s.exe", cmdname) < 0) {
+	    free(cmdname);
 	    return NULL;
+	}
+	free(cmdname);
 	return cmdexe;
     }
-    return strdup(cmd);
+    return cmdname;
+}
+#else /* AFS_NT40_ENV */
+/* Unix implementation is extension-agnostic. */
+static char *
+PathToExecutable(char *cmd)
+{
+    char *cmdcopy, *cmdname;
+    cmdcopy = strdup(cmd);
+    if (cmdcopy == NULL) {
+	return NULL;
+    }
+    cmdname = strsep(&cmdcopy, " ");
+    if (*cmdname == '\0') {
+	free(cmdname);
+	return NULL;
+    }
+    return cmdname;
 }
 #endif /* AFS_NT40_ENV */
 
@@ -404,7 +446,7 @@ fs_create(char *ainstance, char *afilecmd, char *avolcmd, char *asalcmd,
     }
 
     if (!bailout) {
-	cmdname = AppendExecutableExtension(fileCmdpath);
+	cmdname = PathToExecutable(fileCmdpath);
 	if (cmdname == NULL) {
 	    bozo_Log("Out of memory constructing binary filename\n");
 	    bailout = 1;
@@ -417,7 +459,7 @@ fs_create(char *ainstance, char *afilecmd, char *avolcmd, char *asalcmd,
 	}
 	free(cmdname);
 
-	cmdname = AppendExecutableExtension(volCmdpath);
+	cmdname = PathToExecutable(volCmdpath);
 	if (cmdname == NULL) {
 	    bozo_Log("Out of memory constructing binary filename\n");
 	    bailout = 1;
@@ -430,7 +472,7 @@ fs_create(char *ainstance, char *afilecmd, char *avolcmd, char *asalcmd,
 	}
 	free(cmdname);
 
-	cmdname = AppendExecutableExtension(salCmdpath);
+	cmdname = PathToExecutable(salCmdpath);
 	if (cmdname == NULL) {
 	    bozo_Log("Out of memory constructing binary filename\n");
 	    bailout = 1;
@@ -444,7 +486,7 @@ fs_create(char *ainstance, char *afilecmd, char *avolcmd, char *asalcmd,
 
 	if (ascancmd && strlen(ascancmd)) {
 	    free(cmdname);
-	    cmdname = AppendExecutableExtension(scanCmdpath);
+	    cmdname = PathToExecutable(scanCmdpath);
 	    if (cmdname == NULL) {
 		bozo_Log("Out of memory constructing binary filename\n");
 		bailout = 1;
@@ -544,7 +586,7 @@ dafs_create(char *ainstance, char *afilecmd, char *avolcmd,
     }
 
     if (!bailout) {
-	cmdname = AppendExecutableExtension(fileCmdpath);
+	cmdname = PathToExecutable(fileCmdpath);
 	if (cmdname == NULL) {
 	    bozo_Log("Out of memory constructing binary filename\n");
 	    bailout = 1;
@@ -557,7 +599,7 @@ dafs_create(char *ainstance, char *afilecmd, char *avolcmd,
 	}
 	free(cmdname);
 
-	cmdname = AppendExecutableExtension(volCmdpath);
+	cmdname = PathToExecutable(volCmdpath);
 	if (cmdname == NULL) {
 	    bozo_Log("Out of memory constructing binary filename\n");
 	    bailout = 1;
@@ -570,7 +612,7 @@ dafs_create(char *ainstance, char *afilecmd, char *avolcmd,
 	}
 	free(cmdname);
 
-	cmdname = AppendExecutableExtension(salsrvCmdpath);
+	cmdname = PathToExecutable(salsrvCmdpath);
 	if (cmdname == NULL) {
 	    bozo_Log("Out of memory constructing binary filename\n");
 	    bailout = 1;
@@ -583,7 +625,7 @@ dafs_create(char *ainstance, char *afilecmd, char *avolcmd,
 	}
 	free(cmdname);
 
-	cmdname = AppendExecutableExtension(salCmdpath);
+	cmdname = PathToExecutable(salCmdpath);
 	if (cmdname == NULL) {
 	    bozo_Log("Out of memory constructing binary filename\n");
 	    bailout = 1;
@@ -597,7 +639,7 @@ dafs_create(char *ainstance, char *afilecmd, char *avolcmd,
 
 	if (ascancmd && strlen(ascancmd)) {
 	    free(cmdname);
-	    cmdname = AppendExecutableExtension(scanCmdpath);
+	    cmdname = PathToExecutable(scanCmdpath);
 	    if (cmdname == NULL) {
 		bozo_Log("Out of memory constructing binary filename\n");
 		bailout = 1;
