@@ -1561,7 +1561,9 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 	d_prune_aliases(ip);
 
 #ifdef STRUCT_DENTRY_OPERATIONS_HAS_D_AUTOMOUNT
-	ip->i_flags |= S_AUTOMOUNT;
+	/* Only needed if this is a volume root */
+	if (vcp->mvstat == 2)
+	    ip->i_flags |= S_AUTOMOUNT;
 #endif
     }
     /*
