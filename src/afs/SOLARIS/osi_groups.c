@@ -88,19 +88,28 @@ setpag(cred, pagvalue, newpag, change_parent)
     gid_t *gidset;
     int ngroups, code;
     int j;
+    size_t gidset_sz;
 
     AFS_STATCNT(setpag);
 
-    gidset = (gid_t *) osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+    /* Derive gidset size from running kernel's ngroups_max;
+     * default 16, but configurable up to 32 (Sol10) or
+     * 1024 (Sol11).
+     */
+    gidset_sz = sizeof(gidset[0]) * ngroups_max;
+
+    /* must use osi_Alloc, osi_AllocSmallSpace may not be enough. */
+    gidset = osi_Alloc(gidset_sz);
 
     mutex_enter(&curproc->p_crlock);
     ngroups = afs_getgroups(*cred, gidset);
 
     if (afs_get_pag_from_groups(gidset[0], gidset[1]) == NOPAG) {
 	/* We will have to shift grouplist to make room for pag */
-	if ((sizeof gidset[0]) * (ngroups + 2) > AFS_SMALLOCSIZ) {
-	    osi_FreeSmallSpace((char *)gidset);
-	    return (E2BIG);
+	if ((sizeof gidset[0]) * (ngroups + 2) > gidset_sz) {
+	    mutex_exit(&curproc->p_crlock);
+	    code = E2BIG;
+	    goto done;
 	}
 	for (j = ngroups - 1; j >= 0; j--) {
 	    gidset[j + 2] = gidset[j];
@@ -110,11 +119,11 @@ setpag(cred, pagvalue, newpag, change_parent)
     *newpag = (pagvalue == -1 ? genpag() : pagvalue);
     afs_get_groups_from_pag(*newpag, &gidset[0], &gidset[1]);
     /* afs_setgroups will release curproc->p_crlock */
-    if (code = afs_setgroups(cred, ngroups, gidset, change_parent)) {
-	osi_FreeSmallSpace((char *)gidset);
-	return (code);
-    }
-    osi_FreeSmallSpace((char *)gidset);
+    /* exit action is same regardless of code */
+    code = afs_setgroups(cred, ngroups, gidset, change_parent);
+
+ done:
+    osi_Free((char *)gidset, gidset_sz);
     return code;
 }
 

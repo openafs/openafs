@@ -1,5 +1,60 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.6.13
+
+  All server platforms
+
+    * Fix for CVE-2015-3282: vos leaks stack data onto the wire in the
+      clear when creating vldb entries
+
+    * Workaround for CVE-2015-3283: bos commands can be spoofed, including
+      some which alter server state
+
+    * Disabled searching the VLDB by volume name regular expression to avoid
+      possible buffer overruns in the volume location server
+
+  All client platforms
+
+    * Fix for CVE-2015-3284: pioctls leak kernel memory
+
+    * Fix for CVE-2015-3285: kernel pioctl support for OSD command passing
+      can trigger a panic
+
+  Solaris clients
+
+    * Fix for CVE-2015-3286: Solaris grouplist modifications for PAGs can
+      panic  or overwrite memory
+
+OpenAFS 1.6.12
+
+  All server platforms
+
+    * Avoid database corruption if a database server is shut down and then
+      brought up again quickly with an altered database (11773 11774)
+      (RT #131997)
+
+  All client platforms
+
+    * Fixed a potential buffer overflow in aklog (11808)
+
+    * Avoid a bogus warning regarding the checkserver daemon, which could be
+      logged during startup when the cache initialization was very fast (11680)
+
+    * Added documentation of the inaccuracy of the 'partition' field in
+      'fs listquota' output for partitions larger than 2 TiB (11626)
+
+  Linux clients
+
+    * Support kernels up to 4.1 (11872 11873)
+
+    * Avoid spurious EIO errors when writing large chunks of data to
+      mmapped files (11877)
+
+  OS X
+
+    * Build fixes required at least on OS X 10.10 Yosemite with the latest
+      XCode (11859 11876 11842..11845 11863 11878 11879)
+
 OpenAFS 1.6.11.1
 
   Linux clients

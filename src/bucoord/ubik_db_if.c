@@ -907,7 +907,7 @@ udbClientInit(int noAuthFlag, int localauth, char *cellName)
 	afs_com_err(whoami, code, "(configuring connection security)");
 	ERROR(BC_NOCELLCONFIG);
     }
-    if (&udbHandle.uh_scIndex == RX_SECIDX_NULL && !noAuthFlag)
+    if (udbHandle.uh_scIndex == RX_SECIDX_NULL && !noAuthFlag)
 	afs_com_err(whoami, 0, "Can't get tokens - running unauthenticated");
 
     /* We have to have space for the trailing NULL that terminates the server

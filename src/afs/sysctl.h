@@ -23,6 +23,10 @@
 #define AFS_SC_DARWIN_80                        6
 #define AFS_SC_DARWIN_90                        7
 #define AFS_SC_DARWIN_100                       8
+#define AFS_SC_DARWIN_110                       9
+#define AFS_SC_DARWIN_120                      10
+#define AFS_SC_DARWIN_130                      11
+#define AFS_SC_DARWIN_140                      12
 
 /* AFS_SC_DARWIN_ALL sysctls */
 #define AFS_SC_DARWIN_ALL_REALMODES             1

@@ -1604,7 +1604,7 @@ main(int argc, char *argv[])
 	    }
 	    else {
 		cmode++;
-		strlcpy(cell, argv[i], sizeof(path));
+		strlcpy(cell, argv[i], sizeof(cell));
 	    }
 	}
 	else
