@@ -11,7 +11,6 @@
 
 # General rules
 
-.*
 *.orig
 *.rej
 *.o
@@ -38,6 +37,27 @@ vc*.pdb
 rs_state.ini
 config.log
 
+# binaries
+src/tviced/fileserver
+src/sys/pagsh
+src/sys/pagsh.krb
+src/des/make_fp
+src/des/make_ip
+src/des/make_keyperm
+src/des/make_odd
+src/des/make_p
+src/des/make_p_table
+src/des/make_s_table
+
+# auto-generated files
+src/des/fp.c
+src/des/ip.c
+src/des/key_perm.h
+src/des/odd.h
+src/des/p.c
+src/des/p_table.h
+src/des/s_table.h
+
 !.gitignore
 !.cvsignore
 !.splintrc
@@ -58,6 +78,9 @@ config.log
 /NTLang.bat
 /golast.bat
 /.version
+/confdefs.h
+/conftest.dir/
+/conftest.err
 
 # Destination build directories
 /alpha_nbsd*
