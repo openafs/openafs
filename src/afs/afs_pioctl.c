@@ -62,6 +62,11 @@ afs_pd_alloc(struct afs_pdata *apd, size_t size)
     if (apd->ptr == NULL)
 	return ENOMEM;
 
+    if (size > AFS_LRALLOCSIZ)
+	memset(apd->ptr, 0, size + 1);
+    else
+	memset(apd->ptr, 0, AFS_LRALLOCSIZ);
+
     apd->remaining = size;
 
     return 0;
@@ -5025,8 +5030,7 @@ DECL_PIOCTL(PFsCmd)
 	    if (tc) {
 		RX_AFS_GUNLOCK();
 		code =
-		    RXAFS_FsCmd(rxconn, Fid, Inputs,
-					(struct FsCmdOutputs *)aout);
+		    RXAFS_FsCmd(rxconn, Fid, Inputs, Outputs);
 		RX_AFS_GLOCK();
 	    } else
 		code = -1;
