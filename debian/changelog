@@ -1,3 +1,9 @@
+openafs (1.6.13-1) UNRELEASED; urgency=high
+
+  * New upstream security release.
+
+ -- Benjamin Kaduk <kaduk@mit.edu>  Thu, 30 Jul 2015 01:01:39 -0400
+
 openafs (1.6.11.1-1) unstable; urgency=medium
 
   * New upstream release.
