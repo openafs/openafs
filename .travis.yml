@@ -1,0 +1,17 @@
+language: c
+sudo: required
+dist: trusty
+compiler:
+ - gcc
+ - clang
+before_install:
+ - uname -a && lsb_release -a
+ - sudo apt-get -qq update
+ - sudo apt-get -qq build-dep openafs
+script:
+- ./regen.sh
+- ./configure
+- make -j16
+- make -j16 check
+# there's no `make` target `distcheck`
+- sudo make install
