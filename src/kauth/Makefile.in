@@ -185,7 +185,6 @@ libkauth.krb.a: $(KRB_objs)
 
 kas.o: kas.c ${INCLS} AFS_component_version_number.o
 
-CFLAGS_admin_tools.o= @CFLAGS_NOERROR@
 admin_tools.o: admin_tools.c ${INCLS} kaport.h
 
 kkids.o: kkids.c ${INCLS}

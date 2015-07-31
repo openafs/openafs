@@ -16,6 +16,10 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
+#ifdef IGNORE_SOME_GCC_WARNINGS
+# pragma GCC diagnostic warning "-Wstrict-prototypes"
+#endif
+
 #include <roken.h>
 #include <afs/opr.h>
 #include <afs/opr_assert.h>
@@ -581,7 +585,7 @@ SetFields(struct cmd_syndesc *as, void *arock)
     char instance[MAXKTCNAMELEN];
     char *end;
     afs_int32 flags = 0;
-    Date expiration = 0;
+    afs_int32 expiration = 0;
     afs_int32 lifetime = 0;
     afs_int32 maxAssociates = -1;
     afs_int32 pwexpiry = 0;
