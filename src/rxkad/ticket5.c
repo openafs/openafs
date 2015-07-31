@@ -198,7 +198,7 @@ tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
     Ticket t5;			/* Must free */
     EncTicketPart decr_part;	/* Must free */
     int code;
-    size_t siz, plainsiz;
+    size_t siz, plainsiz = 0;
     int v5_serv_kvno;
     char *v5_comp0, *v5_comp1, *c;
     const struct krb_convert *p;
@@ -536,7 +536,7 @@ tkt_MakeTicket5(char *ticket, int *ticketLen, int enctype, int *kvno,
 {
     EncTicketPart data;
     EncryptedData encdata;
-    char *buf, *encodebuf;
+    unsigned char *buf, *encodebuf;
     size_t encodelen, allocsiz;
     heim_general_string carray[2];
     int code;
@@ -599,7 +599,7 @@ tkt_MakeTicket5(char *ticket, int *ticketLen, int enctype, int *kvno,
 	goto cleanup;
     }
     tl=*ticketLen;
-    code = encode_EncryptedData(ticket + *ticketLen - 1, *ticketLen, &encdata, &tl);
+    code = encode_EncryptedData((unsigned char *)ticket + *ticketLen - 1, *ticketLen, &encdata, &tl);
     if (code == 0) {
 	*kvno=RXKAD_TKT_TYPE_KERBEROS_V5_ENCPART_ONLY;
 	/*

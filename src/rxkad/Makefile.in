@@ -81,8 +81,6 @@ liboafs_rxkad.la: liboafs_rxkad.la.sym $(LT_objs) $(LT_deps)
 librxkad_pic.la: $(LT_objs)
 	$(LT_LDLIB_pic) $(LT_objs)
 
-CFLAGS_ticket5.lo = @CFLAGS_NOERROR@
-
 crc.lo: crc.c ${INCLS}
 crypt_conn.lo: crypt_conn.c fcrypt.h private_data.h ${INCLS}
 fcrypt.lo: fcrypt.c fcrypt.h sboxes.h rxkad.h rxkad_prototypes.h

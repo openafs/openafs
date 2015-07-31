@@ -262,7 +262,6 @@ libadmin/kas/afs_kasAdmin.c: strict-proto : ubik_Call nonsense
 libadmin/samples/rxstat_query_peer.c : all : util_RPCStatsStateGet types
 libadmin/samples/rxstat_query_process.c : all : util_RPCStatsStateGet types
 libadmin/test/client.c : all         : util_RPCStatsStateGet types
-rxkad/ticket5.c	     : all	     : v5gen.c has set-but-unused variables
 ubik/ubikclient.c    : strict-protos : ubik_Call
 volser/vol-dump.c    : format        : afs_sfsize_t
 
