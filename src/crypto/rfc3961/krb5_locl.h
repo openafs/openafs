@@ -300,6 +300,14 @@ krb5_error_code _krb5_SP_HMAC_SHA1_checksum (krb5_context,
 
 void _krb5_xor(DES_cblock *key, const unsigned char *b);
 
+krb5_error_code _krb5_internal_hmac(krb5_context context,
+                                    struct _krb5_checksum_type *cm,
+                                    const void *data,
+                                    size_t len,
+                                    unsigned usage,
+                                    struct _krb5_key_data *keyblock,
+                                    Checksum *result);
+
 #ifdef KERNEL
 /*
  * Ew, gross!
