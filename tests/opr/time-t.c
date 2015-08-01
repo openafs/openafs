@@ -43,7 +43,7 @@ main(int argc, char **argv)
     is_int(0, opr_time_Now(&oprTime), "opr_time_Now succeeds");
     osNow = time(NULL);
     osTime = opr_time_ToSecs(&oprTime);
-    ok(abs(osTime - osNow) < 2, "opr_time_Now returns a reasonable value");
+    ok(labs(osTime - osNow) < 2, "opr_time_Now returns a reasonable value");
 
     return 0;
 }
