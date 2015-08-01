@@ -6,7 +6,7 @@ RXDEBUG="-DRXDEBUG"
 SHLIB_SUFFIX="so"
 CCOBJ="\$(CC)"
 MT_CC="\$(CC)"
-XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} ${LIB_libintl}"
+XLIBS="${LIB_AFSDB} ${LIB_libintl}"
 MT_LIBS='-lpthread ${XLIBS}'
 XCFLAGS=
 
@@ -287,7 +287,7 @@ case $AFS_SYSNAME in
 		EXTRA_VLIBOBJS="fstab.o"
 		SHLIB_LINKER="${CC} \${ARCHFLAGS} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
-		XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} -framework CoreFoundation"
+		XLIBS="${LIB_AFSDB} -framework CoreFoundation"
 		;;
 
 	*_darwin_80)
@@ -304,7 +304,7 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${CC} \${ARCHFLAGS} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
 		RANLIB="ranlib -c"
-		XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} -framework CoreFoundation"
+		XLIBS="${LIB_AFSDB} -framework CoreFoundation"
 		;;
 
 	*_darwin_90)
@@ -321,7 +321,7 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${CC} \${ARCHFLAGS} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
 		RANLIB="ranlib -c"
-		XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} -framework CoreFoundation"
+		XLIBS="${LIB_AFSDB} -framework CoreFoundation"
 		;;
 
 	arm_darwin_100)
@@ -341,7 +341,7 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${CC} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
 		RANLIB="ranlib"
-		XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} -framework CoreFoundation"
+		XLIBS="${LIB_AFSDB} -framework CoreFoundation"
 		;;
 
 	*_darwin_100 | *_darwin_110 | *_darwin_120 | *_darwin_130 | *_darwin_140 )
@@ -360,7 +360,7 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${CC} \${ARCHFLAGS} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
 		RANLIB="ranlib"
-		XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} -framework CoreFoundation"
+		XLIBS="${LIB_AFSDB} -framework CoreFoundation"
 		;;
 
 	ppc_linux*)

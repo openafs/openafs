@@ -1445,6 +1445,7 @@ else
 fi
 AC_SUBST(XBSA_CFLAGS)
 AC_SUBST(XBSA_XLIBS) 
+XLIBS="$XBSA_XLIBS $XLIBS"
 
 dnl checks for header files.
 AC_HEADER_STDC
