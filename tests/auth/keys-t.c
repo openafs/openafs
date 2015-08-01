@@ -45,8 +45,9 @@ static int
 copy(char *inFile, char *outFile)
 {
     int in, out;
-    char *block;
-    size_t len;
+    char *block, *block_out;
+    ssize_t len;
+    size_t len_out;
 
     in = open(inFile, O_RDONLY);
     if (in<0)
@@ -59,8 +60,17 @@ copy(char *inFile, char *outFile)
     block = malloc(1024);
     do {
 	len = read(in, block, 1024);
-	if (len > 0)
-	    write(out, block, len);
+	if (len <= 0)
+	    break;
+	len_out = len;
+	block_out = block;
+	do {
+	    len = write(out, block_out, len_out);
+	    if (len <= 0)
+		break;
+	    block_out += len;
+	    len_out -= len;
+	} while (len_out > 0);
     } while (len > 0);
     free(block);
 
