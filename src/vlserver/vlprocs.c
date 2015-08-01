@@ -1450,7 +1450,8 @@ SVL_ListAttributesN2(struct rx_call *rxcall,
     int pollcount = 0;
     int namematchRWBK, namematchRO, thismatch;
     int matchtype = 0;
-    char volumename[VL_MAXNAMELEN+2]; /* regex anchors */
+    int size;
+    char volumename[VL_MAXNAMELEN+3]; /* regex anchors */
     char rxstr[AFS_RXINFO_LEN];
 #ifdef HAVE_POSIX_REGEX
     regex_t re;
@@ -1519,7 +1520,11 @@ SVL_ListAttributesN2(struct rx_call *rxcall,
 		errorcode = VL_PERM;
 		goto done;
 	    }
-	    sprintf(volumename, "^%s$", name);
+	    size = snprintf(volumename, sizeof(volumename), "^%s$", name);
+	    if (size < 0 || size >= sizeof(volumename)) {
+		errorcode = VL_BADNAME;
+		goto done;
+	    }
 #ifdef HAVE_POSIX_REGEX
 	    if (regcomp(&re, volumename, REG_NOSUB) != 0) {
 		errorcode = VL_BADNAME;
@@ -1564,7 +1569,12 @@ SVL_ListAttributesN2(struct rx_call *rxcall,
 		    /* Does the name match the RW name */
 		    if (tentry.flags & VLF_RWEXISTS) {
 			if (findname) {
-			    sprintf(volumename, "%s", tentry.name);
+			    size = snprintf(volumename, sizeof(volumename),
+					    "%s", tentry.name);
+			    if (size < 0 || size >= sizeof(volumename)) {
+				errorcode = VL_BADNAME;
+				goto done;
+			    }
 #ifdef HAVE_POSIX_REGEX
 			    if (regexec(&re, volumename, 0, NULL, 0) == 0) {
 				thismatch = VLSF_RWVOL;
@@ -1582,7 +1592,13 @@ SVL_ListAttributesN2(struct rx_call *rxcall,
 		    /* Does the name match the BK name */
 		    if (!thismatch && (tentry.flags & VLF_BACKEXISTS)) {
 			if (findname) {
-			    sprintf(volumename, "%s.backup", tentry.name);
+			    /* If this fails, the tentry.name is invalid */
+			    size = snprintf(volumename, sizeof(volumename),
+					    "%s.backup", tentry.name);
+			    if (size < 0 || size >= sizeof(volumename)) {
+				errorcode = VL_BADNAME;
+				goto done;
+			    }
 #ifdef HAVE_POSIX_REGEX
 			    if (regexec(&re, volumename, 0, NULL, 0) == 0) {
 				thismatch = VLSF_BACKVOL;
@@ -1611,8 +1627,13 @@ SVL_ListAttributesN2(struct rx_call *rxcall,
 				thismatch =
 				    ((namematchRO == 1) ? VLSF_ROVOL : 0);
 			    } else {
-				sprintf(volumename, "%s.readonly",
-					tentry.name);
+				/* If this fails, the tentry.name is invalid */
+				size = snprintf(volumename, sizeof(volumename),
+						"%s.readonly", tentry.name);
+				if (size < 0 || size >= sizeof(volumename)) {
+				    errorcode = VL_BADNAME;
+				    goto done;
+				}
 #ifdef HAVE_POSIX_REGEX
 			    if (regexec(&re, volumename, 0, NULL, 0) == 0) {
 				thismatch = VLSF_ROVOL;
