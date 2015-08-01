@@ -7,6 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#define UBIK_LEGACY_CALLITER 1
+
 #include <afsconfig.h>
 #include <afs/param.h>
 #include <afs/stds.h>

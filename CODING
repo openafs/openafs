@@ -257,7 +257,7 @@ butc/tcudbprocs.c    : all	     : ubik_Call
 external/heimdal/hcrypto/validate.c: all: statement with empty body
 kauth/admin_tools.c  : all           : signed vs unsigned for dates
 kauth/authclient.c   : strict-proto  : ubik_Call nonsense
-libadmin/kas/afs_kasAdmin.c: all     : Ubik_Call nonsense
+libadmin/kas/afs_kasAdmin.c: strict-proto : ubik_Call nonsense
 libadmin/samples/rxstat_query_peer.c : all : util_RPCStatsStateGet types
 libadmin/samples/rxstat_query_process.c : all : util_RPCStatsStateGet types
 libadmin/test/client.c : all         : util_RPCStatsStateGet types
