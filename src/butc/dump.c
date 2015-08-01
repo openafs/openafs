@@ -620,7 +620,7 @@ xbsaDumpVolume(struct tc_dumpDesc * curDump, struct dumpRock * dparamsPtr)
     hostVolumeHeader.contd = 0;
     volumeHeader_hton(&hostVolumeHeader, (struct volumeHeader *)buffer);
 
-    rc = xbsa_WriteObjectData(&butxInfo, (struct volumeHeader *)buffer,
+    rc = xbsa_WriteObjectData(&butxInfo, buffer,
 			      sizeof(struct volumeHeader), &bytesWritten);
     if (rc != XBSA_SUCCESS) {
 	ErrorLog(1, taskId, rc, 0,
@@ -633,7 +633,7 @@ xbsaDumpVolume(struct tc_dumpDesc * curDump, struct dumpRock * dparamsPtr)
     bytesWritten = sizeof(struct volumeHeader);
     if (bytesWritten != sizeof(struct volumeHeader)) {
 	ErrorLog(1, taskId, rc, 0,
-		 "The size of VolumeHeader written (%d) does not equal its actual size (%d)\n",
+		 "The size of VolumeHeader written (%d) does not equal its actual size (%" AFS_SIZET_FMT ")\n",
 		 bytesWritten, sizeof(struct volumeHeader));
 	ERROR_EXIT(TC_INTERNALERROR);
     }
@@ -680,7 +680,7 @@ xbsaDumpVolume(struct tc_dumpDesc * curDump, struct dumpRock * dparamsPtr)
 	    hostVolumeHeader.contd = 0;
 	    hostVolumeHeader.magic = TC_VOLENDMAGIC;
 	    hostVolumeHeader.endTime = time(0);
-	    volumeHeader_hton(&hostVolumeHeader, &buffer[bytesread]);
+	    volumeHeader_hton(&hostVolumeHeader, (struct volumeHeader *)&buffer[bytesread]);
 	    bytesread += sizeof(hostVolumeHeader);
 
 	    /* End the dump and transaction with the volserver. We end it now, before
@@ -2029,13 +2029,13 @@ DeleteDump(void *param)
     extern struct udbHandleS udbHandle;
     extern struct deviceSyncNode *deviceLatch;
 
+    dumpid = ptr->dumpID;
+    taskId = ptr->taskId;	/* Get task Id */
+
     afs_pthread_setname_self("deletedump");
     setStatus(taskId, DRIVE_WAIT);
     EnterDeviceQueue(deviceLatch);
     clearStatus(taskId, DRIVE_WAIT);
-
-    dumpid = ptr->dumpID;
-    taskId = ptr->taskId;	/* Get task Id */
 
     printf("\n\n");
     TapeLog(2, taskId, 0, 0, "Delete Dump %u\n", dumpid);
@@ -2194,6 +2194,6 @@ DeleteDump(void *param)
 	code = BUTX_DELETENOVOL;
 	setStatus(taskId, TASK_ERROR);
     }
-    return (void *)(code);
+    return (void *)(uintptr_t)(code);
 }
 #endif

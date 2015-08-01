@@ -178,7 +178,7 @@ typedef struct afs_hyper_t {	/* unsigned 64 bit integers */
         } else if ((n) >= 2*s) { /*Shift off all bits*/                    \
            (a).high = (a).low = 0;                                         \
         } else if ((n) < s) { /*Part of low shifted into high*/            \
-           (a).high = ((a).high<<(n)) | (((a).low>>(s-(n))) & (1<<(n))-1); \
+           (a).high = ((a).high<<(n)) | (((a).low>>(s-(n))) & ((1<<(n))-1)); \
            (a).low  = (a).low << (n);                                      \
         } else if ((n) >= s) { /*All of low shifted into high plus some*/  \
            (a).high = (a).low << ((n)-s);                                  \

@@ -19,10 +19,12 @@
 #include <dlfcn.h>
 #endif
 
+#include <afs/tcdata.h>
 #include "butc_xbsa.h"
 #include <afs/butx.h>
 #include <afs/bubasics.h>
 
+#include "butc_internal.h"
 #include "error_macros.h"
 
 extern int debugLevel;
@@ -64,6 +66,7 @@ BSA_Int16(*XBSAQueryApiVersion) (ApiVersion *);
 BSA_Int16(*XBSAGetEnvironment) (BSA_UInt32, ObjectOwner *, char **);
 #endif
 
+void
 xbsa_error(int rc, struct butx_transactionInfo *info)
 {
     switch (rc) {
@@ -126,8 +129,9 @@ xbsa_error(int rc, struct butx_transactionInfo *info)
 afs_int32
 xbsa_MountLibrary(struct butx_transactionInfo *info, afs_int32 serverType)
 {
+#ifndef NEW_XBSA
     void *dynlib;
-    int rc;
+#endif
 
     if (debugLevel > 98) {
 	printf("\nxbsa_MountLibraray\n");
@@ -378,7 +382,7 @@ xbsa_Initialize(struct butx_transactionInfo * info, char *bsaObjectOwner,
 	}
 	strcpy(info->objOwner.bsaObjectOwner, bsaObjectOwner);
     } else {
-	info->objOwner.bsaObjectOwner[0] = NULL;
+	info->objOwner.bsaObjectOwner[0] = '\0';
     }
 
     if (appObjectOwner) {
@@ -390,7 +394,7 @@ xbsa_Initialize(struct butx_transactionInfo * info, char *bsaObjectOwner,
 	}
 	strcpy(info->objOwner.appObjectOwner, appObjectOwner);
     } else {
-	info->objOwner.appObjectOwner[0] = NULL;
+	info->objOwner.appObjectOwner[0] = '\0';
     }
 
     if (secToken) {
@@ -402,7 +406,7 @@ xbsa_Initialize(struct butx_transactionInfo * info, char *bsaObjectOwner,
 	}
 	strcpy(info->secToken, secToken);
     } else {
-	info->secToken[0] = NULL;
+	info->secToken[0] = '\0';
     }
 
     rc = (int)XBSAInit(&(info->bsaHandle), &(info->secToken),
@@ -432,7 +436,7 @@ xbsa_Initialize(struct butx_transactionInfo * info, char *bsaObjectOwner,
     switch (XBSA_GET_SERVER_TYPE(info->serverType)) {
     case XBSA_SERVER_TYPE_ADSM:
 	for (i = 0; i < XBSA_NUM_ENV_STRS; i++) {
-	    if (strncmp(envP[i], ADSMMaxObject, sizeof(ADSMMaxObject)) == 0) {
+	    if (strncmp(envP[i], ADSMMaxObject, strlen(ADSMMaxObject)) == 0) {
 		tempStrPtr = envP[i];
 		tempStrPtr = tempStrPtr + strlen(ADSMMaxObject);
 		info->maxObjects = strtol(tempStrPtr, NULL, 10);
@@ -601,7 +605,7 @@ xbsa_QueryObject(struct butx_transactionInfo * info, char *objectSpaceName,
 	}
 	strcpy(queryDescriptor.objName.objectSpaceName, objectSpaceName);
     } else {
-	queryDescriptor.objName.objectSpaceName[0] = NULL;
+	queryDescriptor.objName.objectSpaceName[0] = '\0';
     }
 
     if (pathName) {
@@ -613,7 +617,7 @@ xbsa_QueryObject(struct butx_transactionInfo * info, char *objectSpaceName,
 	}
 	strcpy(queryDescriptor.objName.pathName, pathName);
     } else {
-	queryDescriptor.objName.pathName[0] = NULL;
+	queryDescriptor.objName.pathName[0] = '\0';
     }
 
     queryDescriptor.owner = info->objOwner;
@@ -743,7 +747,6 @@ xbsa_WriteObjectBegin(struct butx_transactionInfo * info,
 		      char *objectInfo)
 {
     int rc;
-    int length;
     DataBlock dataBlock;
 
     if (debugLevel > 98) {
@@ -776,7 +779,7 @@ xbsa_WriteObjectBegin(struct butx_transactionInfo * info,
 	}
 	strcpy(info->curObject.objName.objectSpaceName, objectSpaceName);
     } else {
-	info->curObject.objName.objectSpaceName[0] = NULL;
+	info->curObject.objName.objectSpaceName[0] = '\0';
     }
 
     if (pathName) {
@@ -788,7 +791,7 @@ xbsa_WriteObjectBegin(struct butx_transactionInfo * info,
 	}
 	strcpy(info->curObject.objName.pathName, pathName);
     } else {
-	info->curObject.objName.pathName[0] = NULL;
+	info->curObject.objName.pathName[0] = '\0';
     }
 
     if (lGName) {
@@ -800,7 +803,7 @@ xbsa_WriteObjectBegin(struct butx_transactionInfo * info,
 	}
 	strcpy(info->curObject.lGName, lGName);
     } else {
-	info->curObject.lGName[0] = NULL;
+	info->curObject.lGName[0] = '\0';
     }
 
     if (objectDescription) {
@@ -816,7 +819,7 @@ xbsa_WriteObjectBegin(struct butx_transactionInfo * info,
 	}
 	strcpy(info->curObject.desc, objectDescription);
     } else {
-	info->curObject.desc[0] = NULL;
+	info->curObject.desc[0] = '\0';
     }
 
     if (objectInfo) {
@@ -832,7 +835,7 @@ xbsa_WriteObjectBegin(struct butx_transactionInfo * info,
 	}
 	strcpy(info->curObject.objectInfo, objectInfo);
     } else {
-	info->curObject.objectInfo[0] = NULL;
+	info->curObject.objectInfo[0] = '\0';
     }
 
     if (info->numObjects == info->maxObjects) {
@@ -910,7 +913,7 @@ xbsa_DeleteObject(struct butx_transactionInfo * info, char *objectSpaceName,
 	}
 	strcpy(objectName.objectSpaceName, objectSpaceName);
     } else {
-	objectName.objectSpaceName[0] = NULL;
+	objectName.objectSpaceName[0] = '\0';
     }
 
     if (pathName) {
@@ -921,7 +924,7 @@ xbsa_DeleteObject(struct butx_transactionInfo * info, char *objectSpaceName,
 	}
 	strcpy(objectName.pathName, pathName);
     } else {
-	objectName.pathName[0] = NULL;
+	objectName.pathName[0] = '\0';
     }
 
     rc = (int)XBSAMarkObjectInactive(info->bsaHandle, &objectName);

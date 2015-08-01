@@ -56,6 +56,7 @@
 #define XBSA_TCMAIN
 #include "butc_xbsa.h"
 #include "butc_prototypes.h"
+#include "butc_internal.h"
 
 #define N_SECURITY_OBJECTS 3
 #define ERRCODE_RANGE 8		/* from error_table.h */
