@@ -924,7 +924,11 @@ distclean: clean
 	tests/opr/Makefile \
 	tests/util/Makefile \
 	tests/volser/Makefile \
-	src/helper-splint.sh
+	src/helper-splint.sh \
+	doc/xml/AdminGuide/Makefile \
+	doc/xml/QuickStartUnix/Makefile \
+	doc/xml/UserGuide/Makefile \
+	doc/xml/AdminRef/Makefile
 	if test -d doc/man-pages ; then \
 	    /bin/rm -f doc/man-pages/Makefile doc/man-pages/install-man ; \
 	fi
