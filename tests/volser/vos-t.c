@@ -57,7 +57,10 @@ TestListAddrs(struct ubik_client *client, char *dirname)
     is_int(0, code, "Second address registration succeeds");
 
     /* Now we need to run vos ListAddrs and see what happens ... */
-    pipe(outpipe);
+    if (pipe(outpipe) < 0) {
+	perror("pipe");
+	exit(1);
+    }
     pid = fork();
     if (pid == 0) {
 	char *build, *binPath;
