@@ -1656,10 +1656,11 @@ ListAttributesN2(struct rx_call *rxcall,
     afs_int32 blockindex = 0, count = 0, k, match;
     afs_int32 matchindex = 0;
     int serverindex = -1;	/* no server found */
-    int findserver = 0, findpartition = 0, findflag = 0;
+    int findserver = 0, findpartition = 0, findflag = 0, findname = 0;
     int pollcount = 0;
     int namematchRWBK, namematchRO, thismatch;
     int matchtype = 0;
+    char volumename[VL_MAXNAMELEN+2]; /* regex anchors */
     char rxstr[AFS_RXINFO_LEN];
 #ifdef HAVE_POSIX_REGEX
     regex_t re;
@@ -1713,7 +1714,8 @@ ListAttributesN2(struct rx_call *rxcall,
     }
 
     /* Search each entry in the database and return all entries
-     * that match the request. It checks entry flags, server, and partition.
+     * that match the request. It checks volumename (with
+     * wildcarding), entry flags, server, and partition.
      */
     else {
 	/* Get the server index for matching server address */
@@ -1727,9 +1729,21 @@ ListAttributesN2(struct rx_call *rxcall,
 	findpartition = ((attributes->Mask & VLLIST_PARTITION) ? 1 : 0);
 	findflag = ((attributes->Mask & VLLIST_FLAG) ? 1 : 0);
 	if (name && (strcmp(name, ".*") != 0) && (strcmp(name, "") != 0)) {
-	    /* regex-matching code has been disabled for security reasons. */
-	    code = VL_BADNAME;
-	    goto done;
+	    sprintf(volumename, "^%s$", name);
+#ifdef HAVE_POSIX_REGEX
+	    if (regcomp(&re, volumename, REG_NOSUB) != 0) {
+		code = VL_BADNAME;
+		goto done;
+	    }
+	    need_regfree = 1;
+#else
+	    t = (char *)re_comp(volumename);
+	    if (t) {
+		code = VL_BADNAME;
+		goto done;
+	    }
+#endif
+	    findname = 1;
 	}
 
 	/* Read each entry and see if it is the one we want */
@@ -1759,12 +1773,38 @@ ListAttributesN2(struct rx_call *rxcall,
 		if (tentry.serverFlags[k] & VLSF_RWVOL) {
 		    /* Does the name match the RW name */
 		    if (tentry.flags & VLF_RWEXISTS) {
-			thismatch = VLSF_RWVOL;
+			if (findname) {
+			    sprintf(volumename, "%s", tentry.name);
+#ifdef HAVE_POSIX_REGEX
+			    if (regexec(&re, volumename, 0, NULL, 0) == 0) {
+				thismatch = VLSF_RWVOL;
+			    }
+#else
+			    if (re_exec(volumename)) {
+				thismatch = VLSF_RWVOL;
+			    }
+#endif
+			} else {
+			    thismatch = VLSF_RWVOL;
+			}
 		    }
 
 		    /* Does the name match the BK name */
 		    if (!thismatch && (tentry.flags & VLF_BACKEXISTS)) {
-			thismatch = VLSF_BACKVOL;
+			if (findname) {
+			    sprintf(volumename, "%s.backup", tentry.name);
+#ifdef HAVE_POSIX_REGEX
+			    if (regexec(&re, volumename, 0, NULL, 0) == 0) {
+				thismatch = VLSF_BACKVOL;
+			    }
+#else
+			    if (re_exec(volumename)) {
+				thismatch = VLSF_BACKVOL;
+			    }
+#endif
+			} else {
+			    thismatch = VLSF_BACKVOL;
+			}
 		    }
 
 		    namematchRWBK = (thismatch ? 1 : 2);
@@ -1776,7 +1816,25 @@ ListAttributesN2(struct rx_call *rxcall,
 		 */
 		else {
 		    if (tentry.flags & VLF_ROEXISTS) {
-			thismatch = VLSF_ROVOL;
+			if (findname) {
+			    if (namematchRO) {
+				thismatch =
+				    ((namematchRO == 1) ? VLSF_ROVOL : 0);
+			    } else {
+				sprintf(volumename, "%s.readonly",
+					tentry.name);
+#ifdef HAVE_POSIX_REGEX
+			    if (regexec(&re, volumename, 0, NULL, 0) == 0) {
+				thismatch = VLSF_ROVOL;
+			    }
+#else
+				if (re_exec(volumename))
+				    thismatch = VLSF_ROVOL;
+#endif
+			    }
+			} else {
+			    thismatch = VLSF_ROVOL;
+			}
 		    }
 		    namematchRO = (thismatch ? 1 : 2);
 		}
