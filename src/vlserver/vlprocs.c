@@ -2019,7 +2019,7 @@ SVL_GetStats(struct rx_call *rxcall,
 #ifdef	notdef
     /* Allow users to get statistics freely */
     if (!afsconf_SuperUser(vldb_confdir, rxcall, NULL)) {	/* Must be in 'UserList' to use */
-	code = VL_PERM;
+	errorcode = VL_PERM;
 	goto end;
     }
 #endif
