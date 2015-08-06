@@ -28,11 +28,12 @@ use Test::More tests => 11;
 use IO::File;
 use POSIX qw(:signal_h);
 use File::Temp;
+use FindBin qw($Bin);
 
 # Start up our test process, and send it various signals. Check that these
 # signals make it to it correctly, and are reported on the command line.
-
-my $pid=open(HELPER, "./softsig-helper |")
+my $softsig_helper = $Bin . "/softsig-helper";
+my $pid=open(HELPER, "$softsig_helper |")
     or die "Couldn't start test helper.";
 
 # Wait for softsig to start up.
@@ -70,7 +71,7 @@ is($?, SIGKILL, "Helper exited on KILL signal.");
 
 # Check that an internal segmentation fault kills the process.
 
-$pid = open(HELPER, "./softsig-helper -crash |")
+$pid = open(HELPER, "$softsig_helper -crash |")
     or die "Couldn't start test helper.";
 close(HELPER);
 is($? & 0x7f, SIGSEGV, "Helper exited on SEGV signal.");
@@ -78,7 +79,7 @@ is($? & 0x7f, SIGSEGV, "Helper exited on SEGV signal.");
 # Check that an internal bus error kills the process.
 
 my ($fh, $path) = mkstemp("/tmp/softsig-t_XXXXXX");
-$pid = open(HELPER, "./softsig-helper -buserror $path |")
+$pid = open(HELPER, "$softsig_helper -buserror $path |")
     or die "Couldn't start test helper.";
 close(HELPER);
 is($? & 0x7f, SIGBUS, "Helper exited on BUS signal.");
