@@ -36,6 +36,7 @@
 #define AFS_GLOBAL_SUNLOCK	1	/* For global locking */
 #define RXK_LISTENER_ENV	1
 #define AFS_GCPAGS		1	/* if nonzero, garbage collect PAGs */
+#define AFS_PAG_ONEGROUP_ENV	1	/* Use a single gid to indicate a PAG */
 
 /* File system entry (used if mount.h doesn't define MOUNT_AFS */
 #define AFS_MOUNT_AFS	 "afs"

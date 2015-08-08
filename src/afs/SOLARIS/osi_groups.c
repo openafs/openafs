@@ -67,6 +67,91 @@ afs_xsetgroups(uap, rvp)
     return code;
 }
 
+#ifdef AFS_PAG_ONEGROUP_ENV
+/**
+ * Take a PAG, and put it into the given array of gids.
+ *
+ * @param[in] pagvalue     The numeric id for the PAG to assign (must not be -1)
+ * @param[in] gidset       An array of gids
+ * @param[inout] a_ngroups How many entries in 'gidset' have valid gids
+ * @param[in] gidset_sz    The number of bytes allocated for 'gidset'
+ *
+ * @return error code
+ */
+static int
+pag_to_gidset(afs_uint32 pagvalue, gid_t *gidset, int *a_ngroups,
+              size_t gidset_sz)
+{
+    int i;
+    gid_t *gidslot = NULL;
+    int ngroups = *a_ngroups;
+
+    osi_Assert(pagvalue != -1);
+
+    /* See if we already have a PAG gid */
+    for (i = 0; i < ngroups; i++) {
+        if (((gidset[i] >> 24) & 0xff) == 'A') {
+            gidslot = &gidset[i];
+            break;
+        }
+    }
+
+    if (gidslot != NULL) {
+        /* If we don't already have a PAG, grow the groups list by one, and put
+         * our PAG in the new empty slot. */
+        if ((sizeof(gidset[0])) * (ngroups + 1) > gidset_sz) {
+            return E2BIG;
+        }
+        ngroups += 1;
+        gidslot = &gidset[ngroups-1];
+    }
+
+    /*
+     * For newer Solaris releases (Solaris 11), we cannot control the order of
+     * the supplemental groups list of a process, so we can't store PAG gids as
+     * the first two gids anymore. To make finding a PAG gid easier to find,
+     * just use a single gid to represent a PAG, and just store the PAG id
+     * itself in there, like is currently done on Linux. Note that our PAG ids
+     * all start with the byte 0x41 ('A'), so we should not collide with
+     * anything. GIDs with the highest bit set are special (used for Windows
+     * SID mapping), but anything under that range should be fine.
+     */
+    *gidslot = pagvalue;
+
+    *a_ngroups = ngroups;
+
+    return 0;
+}
+#else
+/* For earlier Solaris releases, convert a PAG number into two gids, and store
+ * those gids as the first groups in the supplemental group list. */
+static int
+pag_to_gidset(afs_uint32 pagvalue, gid_t *gidset, int *a_ngroups,
+              size_t gidset_sz)
+{
+    int j;
+    int ngroups = *a_ngroups;
+
+    osi_Assert(pagvalue != -1);
+
+    if (afs_get_pag_from_groups(gidset[0], gidset[1]) == NOPAG) {
+	/* We will have to shift grouplist to make room for pag */
+	if ((sizeof(gidset[0])) * (ngroups + 2) > gidset_sz) {
+	    return E2BIG;
+	}
+	for (j = ngroups - 1; j >= 0; j--) {
+	    gidset[j + 2] = gidset[j];
+	}
+	ngroups += 2;
+    }
+    afs_get_groups_from_pag(pagvalue, &gidset[0], &gidset[1]);
+
+    *a_ngroups = ngroups;
+
+    return 0;
+}
+#endif
+
 int
 setpag(cred, pagvalue, newpag, change_parent)
      struct cred **cred;
@@ -76,7 +161,6 @@ setpag(cred, pagvalue, newpag, change_parent)
 {
     gid_t *gidset;
     int ngroups, code;
-    int j;
     size_t gidset_sz;
 
     AFS_STATCNT(setpag);
@@ -90,23 +174,19 @@ setpag(cred, pagvalue, newpag, change_parent)
     /* must use osi_Alloc, osi_AllocSmallSpace may not be enough. */
     gidset = osi_Alloc(gidset_sz);
 
+    pagvalue = (pagvalue == -1 ? genpag() : pagvalue);
+
     mutex_enter(&curproc->p_crlock);
     ngroups = afs_getgroups(*cred, gidset);
 
-    if (afs_get_pag_from_groups(gidset[0], gidset[1]) == NOPAG) {
-	/* We will have to shift grouplist to make room for pag */
-	if ((sizeof gidset[0]) * (ngroups + 2) > gidset_sz) {
-	    mutex_exit(&curproc->p_crlock);
-	    code = E2BIG;
-	    goto done;
-	}
-	for (j = ngroups - 1; j >= 0; j--) {
-	    gidset[j + 2] = gidset[j];
-	}
-	ngroups += 2;
+    code = pag_to_gidset(pagvalue, gidset, &ngroups, gidset_sz);
+    if (code != 0) {
+        mutex_exit(&curproc->p_crlock);
+        goto done;
     }
-    *newpag = (pagvalue == -1 ? genpag() : pagvalue);
-    afs_get_groups_from_pag(*newpag, &gidset[0], &gidset[1]);
+
+    *newpag = pagvalue;
+
     /* afs_setgroups will release curproc->p_crlock */
     /* exit action is same regardless of code */
     code = afs_setgroups(cred, ngroups, gidset, change_parent);
@@ -144,7 +224,9 @@ static int
 afs_setgroups(struct cred **cred, int ngroups, gid_t * gidset,
 	      int change_parent)
 {
+#ifndef AFS_PAG_ONEGROUP_ENV
     gid_t *gp;
+#endif
 
     AFS_STATCNT(afs_setgroups);
 
@@ -154,17 +236,42 @@ afs_setgroups(struct cred **cred, int ngroups, gid_t * gidset,
     }
     if (!change_parent)
 	*cred = (struct cred *)crcopy(*cred);
-#if defined(AFS_SUN510_ENV)
+
+#ifdef AFS_PAG_ONEGROUP_ENV
+    crsetgroups(*cred, ngroups, gidset);
+#else
+# if defined(AFS_SUN510_ENV)
     crsetgroups(*cred, ngroups, gidset);
     gp = crgetgroups(*cred);
-#else
+# else
     (*cred)->cr_ngroups = ngroups;
     gp = (*cred)->cr_groups;
-#endif
+# endif
     while (ngroups--)
 	*gp++ = *gidset++;
+#endif /* !AFS_PAG_ONEGROUP_ENV */
+
     mutex_exit(&curproc->p_crlock);
     if (!change_parent)
 	crset(curproc, *cred);	/* broadcast to all threads */
     return (0);
 }
+
+#ifdef AFS_PAG_ONEGROUP_ENV
+afs_int32
+osi_get_group_pag(struct cred *cred) {
+    gid_t *gidset;
+    int ngroups;
+    int i;
+
+    gidset = crgetgroups(cred);
+    ngroups = crgetngroups(cred);
+
+    for (i = 0; i < ngroups; i++) {
+        if (((gidset[i] >> 24) & 0xff) == 'A') {
+            return gidset[i];
+        }
+    }
+    return NOPAG;
+}
+#endif
