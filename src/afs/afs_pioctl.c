@@ -4573,9 +4573,14 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
     GROUP_AT(afs_cr_group_info(newcred), 1) = g1;
 # endif
 #elif defined(AFS_SUN510_ENV)
+# ifdef AFS_PAG_ONEGROUP_ENV
+    gids[0] = afs_get_pag_from_groups(g0, g1);
+    crsetgroups(newcred, 1, gids);
+# else
     gids[0] = g0;
     gids[1] = g1;
     crsetgroups(newcred, 2, gids);
+# endif /* !AFS_PAG_ONEGROUP_ENV */
 #else
     newcred->cr_groups[0] = g0;
     newcred->cr_groups[1] = g1;
