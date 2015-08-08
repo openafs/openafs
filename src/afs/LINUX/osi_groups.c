@@ -26,7 +26,7 @@
 #include "afs/nfsclient.h"
 #include "osi_compat.h"
 
-#ifdef AFS_LINUX26_ONEGROUP_ENV
+#ifdef AFS_PAG_ONEGROUP_ENV
 
 static afs_uint32
 afs_linux_pag_from_groups(struct group_info *group_info) {

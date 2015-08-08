@@ -448,7 +448,7 @@ extern afs_ucred_t afs_osi_cred, *afs_osi_credp;
 #define osi_curcred() (u.u_cred)
 #endif
 
-#ifdef AFS_LINUX26_ONEGROUP_ENV
+#ifdef AFS_PAG_ONEGROUP_ENV
 #define AFS_NUMPAGGROUPS 1
 #else
 #define AFS_NUMPAGGROUPS 2

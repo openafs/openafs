@@ -127,7 +127,7 @@ os_haspag(void)
     gid_t *groups;
     afs_uint32 g0, g1;
     afs_uint32 h, l, pag;
-# ifdef AFS_LINUX26_ENV
+# ifdef AFS_PAG_ONEGROUP_ENV
     int i;
 # endif
 
@@ -137,8 +137,8 @@ os_haspag(void)
         return 0;
     ngroups = getgroups(ngroups, groups);
 
-    /* Check for AFS_LINUX26_ONEGROUP_ENV PAGs. */
-# ifdef AFS_LINUX26_ENV
+    /* Check for one-group PAGs. */
+# ifdef AFS_PAG_ONEGROUP_ENV
     for (i = 0; i < ngroups; i++)
         if (((groups[i] >> 24) & 0xff) == 'A') {
             free(groups);
