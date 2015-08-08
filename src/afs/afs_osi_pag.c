@@ -382,7 +382,7 @@ afs_setpag_val(int pagval)
     return (code);
 }
 
-#ifndef AFS_LINUX26_ONEGROUP_ENV
+#ifndef AFS_PAG_ONEGROUP_ENV
 int
 afs_getpag_val(void)
 {
@@ -535,7 +535,7 @@ afs_DestroyReq(struct vrequest *av)
     }
 }
 
-#ifndef AFS_LINUX26_ONEGROUP_ENV
+#ifndef AFS_PAG_ONEGROUP_ENV
 afs_uint32
 afs_get_pag_from_groups(gid_t g0a, gid_t g1a)
 {
@@ -582,7 +582,8 @@ afs_get_groups_from_pag(afs_uint32 pag, gid_t * g0p, gid_t * g1p)
     *g1p = g1 + 0x3f00;
 }
 #else
-void afs_get_groups_from_pag(afs_uint32 pag, gid_t *g0p, gid_t *g1p)
+void
+afs_get_groups_from_pag(afs_uint32 pag, gid_t *g0p, gid_t *g1p)
 {
     AFS_STATCNT(afs_get_groups_from_pag);
     *g0p = pag;
