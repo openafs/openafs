@@ -431,3 +431,34 @@ to the following license:
    THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+doc/protocol/rfc5864.txt is dual-licensed under the following two licenses:
+   Copyright 2009, 2010 Russ Allbery <rra@stanford.edu>
+   Copyright 2010 IETF Trust
+
+   Permission to use, copy, modify, and distribute this document for any
+   purpose and without fee is hereby granted, provided that the above
+   copyright notice appear in all copies and that both that copyright
+   notice and this permission notice appear in supporting documentation,
+   and that the name of its authors not be used in advertising or
+   publicity pertaining to distribution of this document without specific,
+   written prior permission.  Its authors make no representations about
+   the suitability of this document for any purpose.  It is provided "as
+   is" without express or implied warranty.
+
+   THIS DOCUMENT IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED
+   WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
+   MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+and
+   Copyright (c) 2010 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents
+   (http://trustee.ietf.org/license-info) in effect on the date of
+   publication of this document.  Please review these documents
+   carefully, as they describe your rights and restrictions with respect
+   to this document.  Code Components extracted from this document must
+   include Simplified BSD License text as described in Section 4.e of
+   the Trust Legal Provisions and are provided without warranty as
+   described in the Simplified BSD License.
