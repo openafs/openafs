@@ -18,9 +18,9 @@ openafs (1.6.13-1) unstable; urgency=high
     - OPENAFS-SA-2015-003 CVE-2015-3284: pioctls leak kernel memory contents
     - OPENAFS-SA-2015-004 CVE-2015-3285: kernel pioctl support for OSD
       command passing can trigger a panic
-    - OPENAFS-SA02015-005 CVE 2015-3286 is Solaris-specific and did not
+    - OPENAFS-SA02015-005 CVE-2015-3286 is Solaris-specific and did not
       affect Debian
-    - OPENAFS-SA-2015-006: buffer overflow in vlserver
+    - OPENAFS-SA-2015-006 CV-2015-3287: buffer overflow in vlserver
   * Also includes changes from the upstream 1.6.12 release:
     - Avoid database corruption if a database server is shut down and
       brought up again quickly with an altered database
