@@ -1,0 +1,59 @@
+From: Marc Dionne <marc.dionne@your-file-system.com>
+Date: Mon, 6 Jul 2015 11:00:13 -0300
+Subject: Linux 4.2: total_link_count is no longer accessible
+
+The value is now stored in the nameidata structure which
+is private to fs/namei.c, so we can't modify it here.
+
+The effect is that using a path that contains 40+ directories
+may fail with ELOOP, depending on which directories in the
+path were previously used.  After a directory is accessed once
+its D_AUTOMOUNT flag is reset and it will no longer count
+against the symlink limit in later path lookups.
+
+Change-Id: I90e4cb0e9004b075bff2330d165c67b7a923193f
+Reviewed-on: http://gerrit.openafs.org/11926
+Tested-by: BuildBot <buildbot@rampaginggeek.com>
+Reviewed-by: Jeffrey Altman <jaltman@your-file-system.com>
+(cherry picked from commit 89aeb71a3e23c944f58cfa9572e9eae4d2130d37)
+---
+ acinclude.m4                 |  1 +
+ src/afs/LINUX/osi_vnodeops.c | 12 ++++++++++--
+ 2 files changed, 11 insertions(+), 2 deletions(-)
+
+diff --git a/acinclude.m4 b/acinclude.m4
+index 0d1bb61..935fd00 100644
+--- a/acinclude.m4
++++ b/acinclude.m4
+@@ -894,6 +894,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
+ 		 AC_CHECK_LINUX_STRUCT([task_struct], [sigmask_lock], [sched.h])
+ 		 AC_CHECK_LINUX_STRUCT([task_struct], [tgid], [sched.h])
+ 		 AC_CHECK_LINUX_STRUCT([task_struct], [thread_info], [sched.h])
++		 AC_CHECK_LINUX_STRUCT([task_struct], [total_link_count], [sched.h])
+ 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM
+ 
+ 		 dnl Check for typed structure elements
+diff --git a/src/afs/LINUX/osi_vnodeops.c b/src/afs/LINUX/osi_vnodeops.c
+index a8f0074..a878eb4 100644
+--- a/src/afs/LINUX/osi_vnodeops.c
++++ b/src/afs/LINUX/osi_vnodeops.c
+@@ -1385,9 +1385,17 @@ afs_dentry_automount(afs_linux_path_t *path)
+ {
+     struct dentry *target;
+ 
+-    /* avoid symlink resolution limits when resolving; we cannot contribute to
+-     * an infinite symlink loop */
++    /* 
++     * Avoid symlink resolution limits when resolving; we cannot contribute to
++     * an infinite symlink loop.
++     *
++     * On newer kernels the field has moved to the private nameidata structure
++     * so we can't adjust it here.  This may cause ELOOP when using a path with
++     * 40 or more directories that are not already in the dentry cache.
++     */
++#if defined(STRUCT_TASK_STRUCT_HAS_TOTAL_LINK_COUNT)
+     current->total_link_count--;
++#endif
+ 
+     target = canonical_dentry(path->dentry->d_inode);
+ 
