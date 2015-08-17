@@ -1,5 +1,60 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.6.14
+
+  All server platforms
+
+    * Prior to the OpenAFS security release 1.6.13, the Volume Location
+      Server (vlserver) RPC VL_ListAttributesN2() supported wildcard volume
+      name lookups via regular expression (regex) pattern matching. This
+      support was completely disabled in 1.6.13 because it was judged to be
+      a security risk due to buffer overruns in the implementation, as well
+      as the possibility of denial of service attacks where certain regular
+      expressions could cause excessive CPU usage in some regex
+      implementations.
+
+      Unfortunately, after 1.6.13 was released, it was discovered that
+      the native OpenAFS 'backup' system uses the VL_ListAttributesN2()
+      regex support to evaluate configured volume sets. If you use the
+      OpenAFS 'backup' system (or another backup system which relies on it,
+      such as Tivoli Storage Manager (TSM, aka Tivoli ADSM)), and are using
+      volume sets which require regular expressions for the volume name,
+      then those volume sets cannot be resolved by OpenAFS 1.6.13. The next
+      paragraph provides details on how to identify any affected volume sets.
+
+      OpenAFS backup volume sets may be described by fileserver, partition
+      name, and volume name. The fileserver and partition specifications
+      never require regular expression support. The volume name specification
+      always requires regular expression support except for when specifying
+      _all_ volumes via two special cases: the universal wildcard ".*", or "".
+      For example, volume name "proj" or "*.backup" or "homevol.*" all
+      require regex support - even if the specification contains no wildcard
+      characters and/or exactly matches an existing volume name.
+
+      As a result of this issue, OpenAFS 1.6.14 replaces the 1.6.13 changes
+      to VL_ListAttributesN2. 1.6.14 prevents the buffer overruns and
+      reenables the regex support, but restricts it to OpenAFS super-users
+      and -localauth only. This is sufficient to restore the OpenAFS 'backup'
+      system's ability to work correctly with any previously supported volume
+      set. The OpenAFS 'backup' commands are already documented to require
+      super-user authorization, so this restriction is moot for the backup
+      system.
+
+      There are no other direct consumers of the VL_ListAttributesN2() regex
+      support in the OpenAFS tree. However, the VL_ListAttributesN2 RPC is
+      publicly accessible and might be used by third party tools directly or
+      indirectly via OpenAFS's libadmin. Any such tools that issue
+      VL_ListAttributesN2 RPCs must now be executed using super-user or
+      -localauth tokens.
+
+      None of the other security fixes in OpenAFS 1.6.13 are known to have
+      any issues, and are still included unchanged in OpenAFS 1.6.14.
+
+      If there are any questions concerning the possible impact of OpenAFS
+      1.6.13 or 1.6.14 at your site, please contact your OpenAFS support
+      provider or the openafs-info@openafs.org mailing list for further
+      assistance.
+
 OpenAFS 1.6.13
 
   All server platforms
