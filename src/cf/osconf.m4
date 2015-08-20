@@ -633,7 +633,7 @@ else
 fi
 
 CFLAGS_NOERROR=
-CFLAGS_NOSTRICT=
+CFLAGS_NOSTRICT=-fno-strict-aliasing
 CFLAGS_NOUNUSED=
 CFLAGS_NOOLDSTYLE=
 XCFLAGS_NOCHECKING="$XCFLAGS"
@@ -646,10 +646,11 @@ if test "x$GCC" = "xyes"; then
     XCFLAGS="${XCFLAGS} -Wall -Wstrict-prototypes -Wold-style-definition -Werror -fdiagnostics-show-option -Wpointer-arith"
     if test "x$enable_checking" != "xall"; then
       CFLAGS_NOERROR="-Wno-error"
-      CFLAGS_NOSTRICT="-fno-strict-aliasing"
       CFLAGS_NOUNUSED="-Wno-unused"
       CFLAGS_NOOLDSTYLE="-Wno-old-style-definition"
       AC_DEFINE(IGNORE_SOME_GCC_WARNINGS, 1, [define to disable some gcc warnings in warnings-as-errors mode])
+    else
+      CFLAGS_NOSTRICT=
     fi
   fi
 else
