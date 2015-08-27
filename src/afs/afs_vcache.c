@@ -752,6 +752,7 @@ int
 afs_ShakeLooseVCaches(afs_int32 anumber)
 {
     afs_int32 i, loop;
+    int evicted;
     struct vcache *tvc;
     struct afs_q *tq, *uq;
     int fv_slept, defersleep = 0;
@@ -779,12 +780,23 @@ afs_ShakeLooseVCaches(afs_int32 anumber)
 	}
 
 	fv_slept = 0;
-	if (osi_TryEvictVCache(tvc, &fv_slept, defersleep))
+	evicted = osi_TryEvictVCache(tvc, &fv_slept, defersleep);
+	if (evicted) {
 	    anumber--;
+	}
 
 	if (fv_slept) {
 	    if (loop++ > 100)
 		break;
+	    if (!evicted) {
+		/*
+		 * This vcache was busy and we slept while trying to evict it.
+		 * Move this busy vcache to the head of the VLRU so vcaches
+		 * following this busy vcache can be evicted during the retry.
+		 */
+		QRemove(&tvc->vlruq);
+		QAdd(&VLRU, &tvc->vlruq);
+	    }
 	    goto retry;	/* start over - may have raced. */
 	}
 	if (uq == &VLRU) {
