@@ -200,10 +200,11 @@ to reduce the number of warnings in the OpenAFS tree. In an attempt to
 prevent warnings from creeping back in, we now have the ability to break the
 build when new warnings appear.
 
-This is only available for systems with gcc 4.2 or later, and is disabled
-unless the --enable-checking option is supplied to configure. Because we
-can't remove all of the warnings, we permit file by file (and warning by
-warning) disabling of specific warnings. The --enable-checking=all prevents
+This is only available for systems with gcc 4.2 or later or clang 3.2 or
+later, and is disabled unless the --enable-checking option is supplied to
+configure. Because we can't remove all of the warnings, we permit file by
+file (and warning by warning) disabling of specific warnings. The
+--enable-checking=all option prevents
 this, and errors for any file containing a warning.
 
 Disabling warnings
