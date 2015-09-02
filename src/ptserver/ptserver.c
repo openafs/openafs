@@ -114,6 +114,10 @@
 
 #include <roken.h>
 #include <afs/opr.h>
+#ifdef AFS_PTHREAD_ENV
+# include <opr/softsig.h>
+# include <afs/procmgmt_softsig.h> /* must come after softsig.h */
+#endif
 
 #ifdef AFS_NT40_ENV
 #include <WINNT/afsevent.h>
@@ -441,7 +445,12 @@ main(int argc, char **argv)
     serverLogSyslogTag = "ptserver";
 #endif
     OpenLog(logFile);	/* set up logging */
+#ifdef AFS_PTHREAD_ENV
+    opr_softsig_Init();
+    SetupLogSoftSignals();
+#else
     SetupLogSignals();
+#endif
 
     prdir = afsconf_Open(configDir);
     if (!prdir) {
