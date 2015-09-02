@@ -43,8 +43,6 @@ pthread_recursive_mutex_unlock
 serverLogSyslog
 serverLogSyslogFacility
 serverLogSyslogTag
-softsig_init
-softsig_signal
 util_GetHumanInt32
 util_GetInt32
 util_GetInt64

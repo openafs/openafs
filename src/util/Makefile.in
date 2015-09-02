@@ -19,7 +19,7 @@ LT_objs =$(LT_rpc_objs) \
 	 hputil.lo kreltime.lo uuid.lo serverLog.lo \
 	 dirpath.lo fileutil.lo flipbase64.lo fstab.lo \
 	 afs_atomlist.lo afs_lhash.lo pthread_glock.lo tabular_output.lo \
-	 pthread_threadname.lo softsig.lo ${REGEX_OBJ}
+	 pthread_threadname.lo ${REGEX_OBJ}
 
 LT_deps = $(top_builddir)/src/opr/liboafs_opr.la
 LT_libs = $(LIB_roken) $(MT_LIBS)
@@ -36,7 +36,6 @@ includes = \
 	${TOP_INCDIR}/afs/pthread_glock.h \
 	${TOP_INCDIR}/afs/afs_atomlist.h \
 	${TOP_INCDIR}/afs/afs_lhash.h \
-	${TOP_INCDIR}/afs/softsig.h \
 	${TOP_INCDIR}/afs/work_queue.h \
 	${TOP_INCDIR}/afs/work_queue_types.h \
 	${TOP_INCDIR}/afs/thread_pool.h \
@@ -99,9 +98,6 @@ ${TOP_INCDIR}/afs/afs_atomlist.h: ${srcdir}/afs_atomlist.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/afs_lhash.h: ${srcdir}/afs_lhash.h
-	${INSTALL_DATA} $? $@
-
-${TOP_INCDIR}/afs/softsig.h: ${srcdir}/softsig.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/work_queue.h: ${srcdir}/work_queue.h
@@ -174,7 +170,6 @@ install: dirpath.h util.a sys
 	${INSTALL_DATA} ${srcdir}/pthread_glock.h ${DESTDIR}${includedir}/afs/pthread_glock.h
 	${INSTALL_DATA} ${srcdir}/afs_atomlist.h ${DESTDIR}${includedir}/afs/afs_atomlist.h
 	${INSTALL_DATA} ${srcdir}/afs_lhash.h ${DESTDIR}${includedir}/afs/afs_lhash.h
-	${INSTALL_DATA} ${srcdir}/softsig.h ${DESTDIR}${includedir}/afs/softsig.h
 	${INSTALL_DATA} ${srcdir}/work_queue.h ${DESTDIR}${includedir}/afs/work_queue.h
 	${INSTALL_DATA} ${srcdir}/work_queue_types.h ${DESTDIR}${includedir}/afs/work_queue_types.h
 	${INSTALL_DATA} ${srcdir}/thread_pool.h ${DESTDIR}${includedir}/afs/thread_pool.h
@@ -199,7 +194,6 @@ dest: dirpath.h util.a sys
 	${INSTALL_DATA} ${srcdir}/pthread_glock.h ${DEST}/include/afs/pthread_glock.h
 	${INSTALL_DATA} ${srcdir}/afs_atomlist.h ${DEST}/include/afs/afs_atomlist.h
 	${INSTALL_DATA} ${srcdir}/afs_lhash.h ${DEST}/include/afs/afs_lhash.h
-	${INSTALL_DATA} ${srcdir}/softsig.h ${DEST}/include/afs/softsig.h
 	${INSTALL_DATA} ${srcdir}/work_queue.h ${DEST}/include/afs/work_queue.h
 	${INSTALL_DATA} ${srcdir}/work_queue_types.h ${DEST}/include/afs/work_queue_types.h
 	${INSTALL_DATA} ${srcdir}/thread_pool.h ${DEST}/include/afs/thread_pool.h
