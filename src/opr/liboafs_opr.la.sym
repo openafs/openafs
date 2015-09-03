@@ -15,3 +15,5 @@ opr_stolower
 opr_stoupper
 opr_strcompose
 opr_ucstring
+opr_softsig_Init
+opr_softsig_Register
