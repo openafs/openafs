@@ -281,6 +281,8 @@ char *tmpdir = NULL;
 
 
 /* Forward declarations */
+static void QuietExit(int) AFS_NORETURN;
+static void SalvageShowLog(void);
 static int IsVnodeOrphaned(struct SalvInfo *salvinfo, VnodeId vnode);
 static int AskVolumeSummary(struct SalvInfo *salvinfo,
                             VolumeId singleVolumeNumber);
@@ -608,7 +610,7 @@ SalvageFileSysParallel(struct DiskPartition64 *partP)
 	    } else {
 		int fd;
 
-		ShowLog = 0;
+		ShowLog = 0; /* Child processes do not display. */
 		for (fd = 0; fd < 16; fd++)
 		    close(fd);
 		open(OS_DIRSEP, 0);
@@ -663,8 +665,7 @@ SalvageFileSys(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
     if (!canfork || debug || Fork() == 0) {
 	SalvageFileSys1(partP, singleVolumeNumber);
 	if (canfork && !debug) {
-	    ShowLog = 0;
-	    Exit(0);
+	    QuietExit(0);
 	}
     } else
 	Wait("SalvageFileSys");
@@ -1304,8 +1305,7 @@ GetInodeSummary(struct SalvInfo *salvinfo, FD_t inodeFile, VolumeId singleVolume
 	    goto error;
 	}
 	if (canfork && !debug) {
-	    ShowLog = 0;
-	    Exit(0);
+	    QuietExit(0);
 	}
     } else {
 	if (Wait("Inode summary") == -1) {
@@ -2192,8 +2192,7 @@ DoSalvageVolumeGroup(struct SalvInfo *salvinfo, struct InodeSummary *isp, int nV
     IH_RELEASE(salvinfo->VGLinkH);
 
     if (canfork && !debug) {
-	ShowLog = 0;
-	Exit(0);
+	QuietExit(0);
     }
 }
 
@@ -4763,12 +4762,9 @@ Fork(void)
     return f;
 }
 
-void
-Exit(int code)
+static void
+QuietExit(int code)
 {
-    if (ShowLog)
-	showlog();
-
 #ifdef AFS_DEMAND_ATTACH_FS
     if (programType == salvageServer) {
 	/* release all volume locks before closing down our SYNC channels.
@@ -4801,6 +4797,14 @@ Exit(int code)
     exit(code);
 #endif
 }
+
+void
+Exit(int code)
+{
+    SalvageShowLog();
+    QuietExit(code);
+}
+
 
 int
 Wait(char *prog)
@@ -4836,7 +4840,6 @@ CheckLogFile(char * log_path)
 
 #ifndef AFS_NT40_ENV
     if (useSyslog) {
-	ShowLog = 0;
 	return;
     }
 #endif
@@ -4850,7 +4853,6 @@ CheckLogFile(char * log_path)
 
 	if (!logFile) {		/* still nothing, use stdout */
 	    logFile = stdout;
-	    ShowLog = 0;
 	}
 #ifndef AFS_NAMEI_ENV
 	AFS_DEBUG_IOPS_LOG(logFile);
@@ -4881,10 +4883,14 @@ TimeStampLogFile(char * log_path)
 }
 #endif
 
-void
-showlog(void)
+static void
+SalvageShowLog(void)
 {
     char line[256];
+
+    if (ShowLog == 0 || logFile == stdout || logFile == stderr) {
+	return;
+    }
 
 #ifndef AFS_NT40_ENV
     if (useSyslog) {
@@ -4950,13 +4956,12 @@ Abort(const char *format, ...)
 	if (logFile) {
 	    fprintf(logFile, "%s", tmp);
 	    fflush(logFile);
-	    if (ShowLog)
-		showlog();
+	    SalvageShowLog();
 	}
 
     if (debug)
 	abort();
-    Exit(1);
+    QuietExit(1);
 }
 
 char *

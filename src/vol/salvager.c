@@ -252,7 +252,6 @@ handleit(struct cmd_syndesc *as, void *arock)
 #ifndef AFS_NT40_ENV		/* ignore options on NT */
     if ((ti = as->parms[16].items)) {	/* -syslog */
 	useSyslog = 1;
-	ShowLog = 0;
     }
     if ((ti = as->parms[17].items)) {	/* -syslogfacility */
 	useSyslogFacility = atoi(ti->data);

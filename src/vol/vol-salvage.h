@@ -252,7 +252,6 @@ extern int SalvageVolumeHeaderFile(struct SalvInfo *salvinfo,
                                    struct InodeSummary *isp,
                                    struct ViceInodeInfo *inodes, int RW,
                                    int check, int *deleteMe);
-extern void showlog(void);
 extern int UseTheForceLuke(char *path);
 
 

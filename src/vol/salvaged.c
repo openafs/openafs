@@ -606,7 +606,6 @@ DoSalvageVolume(struct SalvageQueueNode * node, int slot)
 	logFile = afs_fopen(childLog, "a");
 	if (!logFile) {		/* still nothing, use stdout */
 	    logFile = stdout;
-	    ShowLog = 0;
 	}
 	free(childLog);
     }
