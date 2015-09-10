@@ -408,3 +408,24 @@ ReOpenLog(const char *fileName)
     UNLOCK_SERVERLOG();
     return serverLogFD < 0 ? -1 : 0;
 }
+
+/*!
+ * Close the server log file.
+ *
+ * \note Must be preceeded by OpenLog().
+ */
+void
+CloseLog(void)
+{
+    LOCK_SERVERLOG();
+#ifndef AFS_NT40_ENV
+    if (serverLogSyslog) {
+	closelog();
+    } else
+#endif
+    if (serverLogFD >= 0) {
+	close(serverLogFD);
+	serverLogFD = -1;
+    }
+    UNLOCK_SERVERLOG();
+}

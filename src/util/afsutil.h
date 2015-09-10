@@ -56,6 +56,7 @@ extern void FSLog(const char *format, ...)
 extern int OpenLog(const char *filename);
 extern int ReOpenLog(const char *fileName);
 extern void SetupLogSignals(void);
+extern void CloseLog(void);
 
 #ifdef AFS_NT40_ENV
 #ifndef _MFC_VER
