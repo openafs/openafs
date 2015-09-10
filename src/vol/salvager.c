@@ -111,16 +111,48 @@
 pthread_t main_thread;
 #endif
 
+extern char *ShowLogFilename;
+extern char cml_version_number[];
 static int get_salvage_lock = 0;
+
+struct CmdLine {
+   int argc;
+   char **argv;
+};
+
+#ifndef AFS_NT40_ENV
+static int
+TimeStampLogFile(char **logfile)
+{
+    char *stampSlvgLog;
+    struct tm *lt;
+    time_t now;
+
+    now = time(0);
+    lt = localtime(&now);
+    if (asprintf(&stampSlvgLog,
+		 "%s.%04d-%02d-%02d.%02d:%02d:%02d",
+		 AFSDIR_SERVER_SLVGLOG_FILEPATH,
+		 lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour,
+		 lt->tm_min, lt->tm_sec) < 0) {
+	return ENOMEM;
+    }
+    free(*logfile); /* free the default name */
+    *logfile = stampSlvgLog;
+    return 0;
+}
+#endif
 
 static int
 handleit(struct cmd_syndesc *as, void *arock)
 {
+    struct CmdLine *cmdline = (struct CmdLine*)arock;
     struct cmd_item *ti;
     char pname[100], *temp;
     afs_int32 seenpart = 0, seenvol = 0;
     VolumeId vid = 0;
     ProgramType pt;
+    char *logfile = strdup(AFSDIR_SERVER_SLVGLOG_FILEPATH);
 
 #ifdef FAST_RESTART
     afs_int32  seenany = 0;
@@ -148,16 +180,9 @@ handleit(struct cmd_syndesc *as, void *arock)
 	}
     }
     if (!seenany) {
-	char *msg =
-	    "Exiting immediately without salvage. Look into the FileLog to find volumes which really need to be salvaged!";
-
-#ifndef AFS_NT40_ENV
-	if (useSyslog)
-	    Log("%s", msg);
-	else
-#endif
-	    printf("%s\n", msg);
-
+	printf
+	    ("Exiting immediately without salvage. "
+	     "Look into the FileLog to find volumes which really need to be salvaged!\n");
 	Exit(0);
     }
 #endif /* FAST_RESTART */
@@ -251,28 +276,38 @@ handleit(struct cmd_syndesc *as, void *arock)
     }
 #ifndef AFS_NT40_ENV		/* ignore options on NT */
     if ((ti = as->parms[16].items)) {	/* -syslog */
-	useSyslog = 1;
+	if (ShowLog) {
+	    fprintf(stderr, "Invalid options: -syslog and -showlog are exclusive.\n");
+	    Exit(1);
+	}
+	serverLogSyslog = 1;
     }
     if ((ti = as->parms[17].items)) {	/* -syslogfacility */
-	useSyslogFacility = atoi(ti->data);
+	serverLogSyslogFacility = atoi(ti->data);
     }
 
     if ((ti = as->parms[18].items)) {	/* -datelogs */
-      TimeStampLogFile((char *)AFSDIR_SERVER_SLVGLOG_FILEPATH);
+	int code = TimeStampLogFile(&logfile);
+	if (code != 0) {
+	    fprintf(stderr, "Failed to format log file name for -datelogs; code=%d\n", code);
+	    Exit(code);
+	}
+	ShowLogFilename = logfile;
     }
 #endif
+
+    OpenLog(logfile);
+    SetupLogSignals();
+
+    Log("%s\n", cml_version_number);
+    LogCommandLine(cmdline->argc, cmdline->argv, "SALVAGER", SalvageVersion, "STARTING AFS", Log);
 
 #ifdef FAST_RESTART
     if (ti = as->parms[19].items) {	/* -DontSalvage */
 	char *msg =
 	    "Exiting immediately without salvage. Look into the FileLog to find volumes which really need to be salvaged!";
-
-#ifndef AFS_NT40_ENV
-	if (useSyslog)
-	    Log("%s", msg);
-	else
-#endif
-	    printf("%s\n", msg);
+	Log("%s\n", msg);
+	printf("%s\n", msg);
 	Exit(0);
     }
 #endif
@@ -335,12 +370,8 @@ handleit(struct cmd_syndesc *as, void *arock)
 #endif
 
 	if (msg) {
-#ifndef AFS_NT40_ENV
-	    if (useSyslog)
-		Log("%s", msg);
-	    else
-#endif
-		printf("%s\n", msg);
+	    Log("%s\n", msg);
+	    printf("%s\n", msg);
 	    Exit(1);
 	}
     }
@@ -383,10 +414,9 @@ handleit(struct cmd_syndesc *as, void *arock)
 int
 main(int argc, char **argv)
 {
+    struct CmdLine cmdline;
     struct cmd_syndesc *ts;
     int err = 0;
-
-    extern char cml_version_number[];
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -426,19 +456,6 @@ main(int argc, char **argv)
 	    exit(3);
     } else {
 #endif
-	/* All entries to the log will be appended.  Useful if there are
-	 * multiple salvagers appending to the log.
-	 */
-
-	CheckLogFile((char *)AFSDIR_SERVER_SLVGLOG_FILEPATH);
-#ifndef AFS_NT40_ENV
-#ifdef AFS_LINUX20_ENV
-	fcntl(fileno(logFile), F_SETFL, O_APPEND);	/* Isn't this redundant? */
-#else
-	fcntl(fileno(logFile), F_SETFL, FAPPEND);	/* Isn't this redundant? */
-#endif
-#endif
-	setlinebuf(logFile);
 
 #ifndef AFS_NT40_ENV
 	if (geteuid() != 0) {
@@ -447,12 +464,6 @@ main(int argc, char **argv)
 	    Exit(0);
 	}
 #endif
-
-	/* bad for normal help flag processing, but can do nada */
-
-	fprintf(logFile, "%s\n", cml_version_number);
-	LogCommandLine(argc, argv, "SALVAGER", SalvageVersion, "STARTING AFS",
-		       Log);
 
 	/* Get and hold a lock for the duration of the salvage to make sure
 	 * that no other salvage runs at the same time.  The routine
@@ -464,7 +475,9 @@ main(int argc, char **argv)
     }
 #endif
 
-    ts = cmd_CreateSyntax("initcmd", handleit, NULL, 0, "initialize the program");
+    cmdline.argc = argc;
+    cmdline.argv = argv;
+    ts = cmd_CreateSyntax("initcmd", handleit, &cmdline, 0, "initialize the program");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_OPTIONAL,
 		"Name of partition to salvage");
     cmd_AddParm(ts, "-volumeid", CMD_SINGLE, CMD_OPTIONAL,

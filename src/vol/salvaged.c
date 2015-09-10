@@ -110,7 +110,7 @@
 #include <pthread.h>
 #endif
 
-char *logFileName = NULL;
+extern int ClientMode;
 
 #if !defined(AFS_DEMAND_ATTACH_FS)
 #error "online salvager only supported for demand attach fileserver"
@@ -144,7 +144,7 @@ static void SalvageClient(VolumeId vid, char * pname);
 static int Reap_Child(char * prog, int * pid, int * status);
 
 static void * SalvageLogCleanupThread(void *);
-static int SalvageLogCleanup(int pid);
+static void SalvageLogCleanup(int pid);
 
 static void * SalvageLogScanningThread(void *);
 static void ScanLogs(struct rx_queue *log_watch_queue);
@@ -255,9 +255,9 @@ handleit(struct cmd_syndesc *opts, void *arock)
     }
 #ifndef AFS_NT40_ENV		/* ignore options on NT */
     if (cmd_OptionPresent(opts, OPT_syslog)) {
-	useSyslog = 1;
+	serverLogSyslog = 1;
     }
-    cmd_OptionAsInt(opts, OPT_syslogfacility, &useSyslogFacility);
+    cmd_OptionAsInt(opts, OPT_syslogfacility, &serverLogSyslogFacility);
 #endif
 
     if (cmd_OptionPresent(opts, OPT_client)) {
@@ -366,7 +366,6 @@ main(int argc, char **argv)
     arock.argc = argc;
     arock.argv = argv;
 
-    logFileName = strdup(AFSDIR_SERVER_SALSRVLOG_FILEPATH);
 
     ts = cmd_CreateSyntax("initcmd", handleit, &arock, 0, "initialize the program");
     cmd_AddParmAtOffset(ts, OPT_partition, "-partition", CMD_SINGLE,
@@ -422,7 +421,7 @@ SalvageClient(VolumeId vid, char * pname)
     VolumePackageOptions opts;
 
     /* Send Log() messages to stderr in client mode. */
-    logFile = stderr;
+    ClientMode = 1;
 
     VOptDefaults(volumeUtility, &opts);
     if (VInitVolumePackage2(volumeUtility, &opts)) {
@@ -487,18 +486,10 @@ SalvageServer(int argc, char **argv)
     /* All entries to the log will be appended.  Useful if there are
      * multiple salvagers appending to the log.
      */
+    OpenLog(AFSDIR_SERVER_SALSRVLOG_FILEPATH);
+    SetupLogSignals();
 
-    CheckLogFile(logFileName);
-#ifndef AFS_NT40_ENV
-#ifdef AFS_LINUX20_ENV
-    fcntl(fileno(logFile), F_SETFL, O_APPEND);	/* Isn't this redundant? */
-#else
-    fcntl(fileno(logFile), F_SETFL, FAPPEND);	/* Isn't this redundant? */
-#endif
-#endif
-    setlinebuf(logFile);
-
-    fprintf(logFile, "%s\n", cml_version_number);
+    Log("%s\n", cml_version_number);
     LogCommandLine(argc, argv, "Online Salvage Server",
 		   SalvageVersion, "Starting OpenAFS", Log);
     /* Get and hold a lock for the duration of the salvage to make sure
@@ -595,20 +586,18 @@ DoSalvageVolume(struct SalvageQueueNode * node, int slot)
     /* do not allow further forking inside salvager */
     canfork = 0;
 
-    /* do not attempt to close parent's logFile handle as
-     * another thread may have held the lock on the FILE
-     * structure when fork was called! */
-
+    /*
+     * Do not attempt to close parent's log file handle as
+     * another thread may have held the lock when fork was
+     * called!
+     */
     if (asprintf(&childLog, "%s.%d",
 		 AFSDIR_SERVER_SLVGLOG_FILEPATH, getpid()) < 0) {
-	logFile = stdout;
-    } else {
-	logFile = afs_fopen(childLog, "a");
-	if (!logFile) {		/* still nothing, use stdout */
-	    logFile = stdout;
-	}
-	free(childLog);
+	fprintf(stderr, "out of memory\n");
+	return ENOMEM;
     }
+    OpenLog(childLog);
+    free(childLog);
 
     if (node->command.sop.parent <= 0) {
 	Log("salvageServer: invalid volume id specified; salvage aborted\n");
@@ -630,7 +619,7 @@ DoSalvageVolume(struct SalvageQueueNode * node, int slot)
     /* Salvage individual volume; don't notify fs */
     SalvageFileSys1(partP, node->command.sop.parent);
 
-    fclose(logFile);
+    CloseLog();
     return 0;
 }
 
@@ -738,31 +727,40 @@ SalvageLogCleanupThread(void * arg)
 }
 
 #define LOG_XFER_BUF_SIZE 65536
-static int
+static void
 SalvageLogCleanup(int pid)
 {
     int pidlog, len;
-    char *fn;
-    static char buf[LOG_XFER_BUF_SIZE];
+    char *fn = NULL;
+    char *buf = NULL;
 
-    if (asprintf(&fn, "%s.%d", AFSDIR_SERVER_SLVGLOG_FILEPATH, pid) < 0)
-	return 1;
+    if (asprintf(&fn, "%s.%d", AFSDIR_SERVER_SLVGLOG_FILEPATH, pid) < 0) {
+	Log("Unable to write child log: out of memory\n");
+	goto done;
+    }
+
+    buf = calloc(1, LOG_XFER_BUF_SIZE);
+    if (buf != NULL) {
+	Log("Unable to write child log: out of memory\n");
+	goto done;
+    }
 
     pidlog = open(fn, O_RDONLY);
     unlink(fn);
-    free(fn);
     if (pidlog < 0)
-	return 1;
+	goto done;
 
     len = read(pidlog, buf, LOG_XFER_BUF_SIZE);
     while (len) {
-	fwrite(buf, len, 1, logFile);
+	WriteLogBuffer(buf, len);
 	len = read(pidlog, buf, LOG_XFER_BUF_SIZE);
     }
 
     close(pidlog);
 
-    return 0;
+ done:
+    free(fn);
+    free(buf);
 }
 
 /* wake up every five minutes to see if a non-child salvage has finished */
