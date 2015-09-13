@@ -178,17 +178,17 @@ osi_UfsOpen(afs_dcache_id_t *ainode)
     afile = osi_AllocSmallSpace(sizeof(struct osi_file));
     AFS_GUNLOCK();
 
-/*
- * AFS_CACHE_VNODE_PATH can be used with any file system, including ZFS or tmpfs.
- * The ainode is not an inode number but a path.
- */
+    /*
+     * AFS_CACHE_VNODE_PATH can be used with any file system, including ZFS or tmpfs.
+     * The ainode is not an inode number but a path.
+     */
 #ifdef AFS_CACHE_VNODE_PATH
-	/* Can not use vn_open or lookupname, they use user's CRED() 
-	 * We need to run as root So must use low level lookuppnvp
-	 * assume fname starts with /
-	 */
+    /* Can not use vn_open or lookupname, they use user's CRED()
+     * We need to run as root So must use low level lookuppnvp
+     * assume fname starts with /
+     */
 
-	code = pn_get_buf(ainode->ufs, AFS_UIOSYS, &lookpn, namebuf, sizeof(namebuf));
+    code = pn_get_buf(ainode->ufs, AFS_UIOSYS, &lookpn, namebuf, sizeof(namebuf));
     if (code != 0) 
         osi_Panic("UfsOpen: pn_get_buf failed %ld %s", code, ainode->ufs);
  
