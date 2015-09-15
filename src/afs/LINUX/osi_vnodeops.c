@@ -1089,7 +1089,7 @@ afs_linux_getattr(struct vfsmount *mnt, struct dentry *dentry, struct kstat *sta
 }
 
 static afs_uint32
-parent_vcache_dv(struct inode *inode, cred_t *credp)
+parent_vcache_dv(struct inode *inode, cred_t *credp, int locked)
 {
     int free_cred = 0;
     struct vcache *pvcp;
@@ -1104,6 +1104,9 @@ parent_vcache_dv(struct inode *inode, cred_t *credp)
 	struct vrequest treq;
 	struct afs_fakestat_state fakestate;
 
+	if (!locked) {
+	    AFS_GLOCK();
+	}
 	if (!credp) {
 	    credp = crref();
 	    free_cred = 1;
@@ -1114,6 +1117,9 @@ parent_vcache_dv(struct inode *inode, cred_t *credp)
 	if (free_cred)
 	    crfree(credp);
 	afs_PutFakeStat(&fakestate);
+	if (!locked) {
+	    AFS_GUNLOCK();
+	}
     }
     return hgetlo(pvcp->f.m.DataVersion);
 }
@@ -1219,7 +1225,7 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 	}
 #endif
 
-	parent_dv = parent_vcache_dv(parent->d_inode, credp);
+	parent_dv = parent_vcache_dv(parent->d_inode, credp, locked);
 
 	/* If the parent's DataVersion has changed or the vnode
 	 * is longer valid, we need to do a full lookup.  VerifyVCache
@@ -1306,7 +1312,7 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 
 	parent = dget_parent(dp);
 	pvcp = VTOAFS(parent->d_inode);
-	parent_dv = parent_vcache_dv(parent->d_inode, credp);
+	parent_dv = parent_vcache_dv(parent->d_inode, credp, locked);
 
 	if (parent_dv > dp->d_time || !(pvcp->f.states & CStatd)) {
 	    dput(parent);
@@ -1483,7 +1489,7 @@ afs_linux_create(struct inode *dip, struct dentry *dp, int mode)
 #if !defined(STRUCT_SUPER_BLOCK_HAS_S_D_OP)
 	dp->d_op = &afs_dentry_operations;
 #endif
-	dp->d_time = parent_vcache_dv(dip, credp);
+	dp->d_time = parent_vcache_dv(dip, credp, 1);
 	d_instantiate(dp, ip);
     }
 
@@ -1551,7 +1557,7 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 #if !defined(STRUCT_SUPER_BLOCK_HAS_S_D_OP)
     dp->d_op = &afs_dentry_operations;
 #endif
-    dp->d_time = parent_vcache_dv(dip, credp);
+    dp->d_time = parent_vcache_dv(dip, credp, 1);
 
     AFS_GUNLOCK();
 
