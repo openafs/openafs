@@ -1630,7 +1630,7 @@ int cm_DumpServers(FILE *outputFile, char *cookie, int lock)
         sprintf(output,
                  "%s - tsp=0x%p cell=%s addr=%-15s port=%u uuid=%s type=%s caps=0x%x "
 		 "flags=0x%x waitCount=%u pingCount=%d rank=%u downTime=\"%s\" "
-		 "refCount=%u pingCount=%\r\n",
+		 "refCount=%u\r\n",
                  cookie, tsp, tsp->cellp ? tsp->cellp->name : "", hoststr,
                  ntohs(tsp->addr.sin_port), uuidstr, type,
 		 tsp->capabilities, tsp->flags, tsp->waitCount, tsp->pingCount,
