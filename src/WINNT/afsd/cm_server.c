@@ -528,17 +528,17 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
 	    InterlockedIncrement(&tsp->pingCount);
             lock_ReleaseMutex(&tsp->mx);
 
-            serversp[nconns] = tsp;
 	    if (cm_noIPAddr > 0)
 		code = cm_ConnByServer(tsp, cm_rootUserp, FALSE, &conns[nconns]);
 	    else
 		code = RX_CALL_DEAD;
             if (code) {
-		if (code == RX_CALL_DEAD) {
-		    lock_ObtainMutex(&tsp->mx);
+		lock_ObtainMutex(&tsp->mx);
+		if (code == RX_CALL_DEAD)
 		    cm_MarkServerDown(tsp, code, isDown);
-		    lock_ReleaseMutex(&tsp->mx);
-		}
+		InterlockedDecrement(&tsp->pingCount);
+		lock_ReleaseMutex(&tsp->mx);
+
 		lock_ObtainRead(&cm_serverLock);
 		cm_PutServerNoLock(tsp);
                 continue;
@@ -547,7 +547,7 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
             rxconns[nconns] = cm_GetRxConn(conns[nconns]);
             if (conntimer[nconns] = (isDown ? 1 : 0))
                 rx_SetConnHardDeadTime(rxconns[nconns], 10);
-
+	    serversp[nconns] = tsp;
             nconns++;
         }
         lock_ReleaseRead(&cm_serverLock);
@@ -672,17 +672,17 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
 	    InterlockedIncrement(&tsp->pingCount);
             lock_ReleaseMutex(&tsp->mx);
 
-            serversp[nconns] = tsp;
 	    if (cm_noIPAddr > 0)
 		code = cm_ConnByServer(tsp, cm_rootUserp, FALSE, &conns[nconns]);
 	    else
 		code = RX_CALL_DEAD;
             if (code) {
-		if (code == RX_CALL_DEAD) {
-		    lock_ObtainMutex(&tsp->mx);
+		lock_ObtainMutex(&tsp->mx);
+		if (code == RX_CALL_DEAD)
 		    cm_MarkServerDown(tsp, code, isDown);
-		    lock_ReleaseMutex(&tsp->mx);
-		}
+		InterlockedDecrement(&tsp->pingCount);
+		lock_ReleaseMutex(&tsp->mx);
+
 		lock_ObtainRead(&cm_serverLock);
                 cm_PutServerNoLock(tsp);
                 continue;
@@ -692,7 +692,7 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
             conntimer[nconns] = (isDown ? 1 : 0);
             if (isDown)
                 rx_SetConnHardDeadTime(rxconns[nconns], 10);
-
+	    serversp[nconns] = tsp;
             nconns++;
         }
         lock_ReleaseRead(&cm_serverLock);
