@@ -1266,7 +1266,7 @@ static DWORD
 InstNetProvider(const char *svcname, int bInst, const char *before)
 {
     const char *strOrder = NULL;
-    HKEY hkOrder;
+    HKEY hkOrder = NULL;
     LONG rv;
     DWORD dwSize;
     HANDLE hProcHeap;
@@ -1299,6 +1299,8 @@ InstNetProvider(const char *svcname, int bInst, const char *before)
     }
 
   out:
+    if (hkOrder)
+	RegCloseKey(hkOrder);
     free(strOrder);
     return rv;
 }
