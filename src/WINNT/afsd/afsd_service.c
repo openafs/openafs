@@ -1305,6 +1305,21 @@ InstNetProvider(const char *svcname, int bInst, const char *before)
     return rv;
 }
 
+static int
+clientServiceProviderKeyExists(void)
+{
+    HKEY hk;
+    LONG rv;
+
+    rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+		      AFSREG_CLT_SVC_PROVIDER_KEY, 0,
+		      KEY_READ, &hk);
+    if (rv == ERROR_SUCCESS)
+	RegCloseKey(hk);
+
+    return (rv == ERROR_SUCCESS);
+}
+
 /*
 control serviceex exists only on 2000/xp. These functions will be loaded dynamically.
 */
@@ -1563,7 +1578,8 @@ afsd_Main(DWORD argc, LPTSTR *argv)
 	    InstNetProvider("AFSRedirector", FALSE, NULL);
 	}
 
-	InstNetProvider("TransarcAFSDaemon", TRUE, NULL);
+	InstNetProvider("TransarcAFSDaemon", clientServiceProviderKeyExists(),
+			NULL);
 
         /*
          * Set the default for the SMB interface based upon the state of the
