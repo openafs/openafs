@@ -5376,6 +5376,9 @@ rxi_ResetCall(struct rx_call *call, int newcall)
     int	reason;			 Reason an acknowledge was prompted
 */
 
+#define RX_ZEROS 1024
+static char rx_zeros[RX_ZEROS];
+
 struct rx_packet *
 rxi_SendAck(struct rx_call *call,
 	    struct rx_packet *optionalPacket, int serial, int reason,
@@ -5535,6 +5538,11 @@ rxi_SendAck(struct rx_call *call,
     ap->nAcks = offset;
     p->length = rx_AckDataSize(offset) + 4 * sizeof(afs_int32);
 
+    /* Must zero the 3 octets that rx_AckDataSize skips at the end of the
+     * ACK list.
+     */
+    rx_packetwrite(p, rx_AckDataSize(offset) - 3, 3, rx_zeros);
+
     /* these are new for AFS 3.3 */
     templ = rxi_AdjustMaxMTU(call->conn->peer->ifMTU, rx_maxReceiveSize);
     templ = htonl(templ);
@@ -5553,6 +5561,8 @@ rxi_SendAck(struct rx_call *call,
     rx_packetwrite(p, rx_AckDataSize(offset) + 3 * sizeof(afs_int32),
 		   sizeof(afs_int32), &templ);
 
+    p->length = rx_AckDataSize(offset) + 4 * sizeof(afs_int32);
+
     p->header.serviceId = call->conn->serviceId;
     p->header.cid = (call->conn->cid | call->channel);
     p->header.callNumber = *call->callNumber;
@@ -5561,21 +5571,21 @@ rxi_SendAck(struct rx_call *call,
     p->header.epoch = call->conn->epoch;
     p->header.type = RX_PACKET_TYPE_ACK;
     p->header.flags = RX_SLOW_START_OK;
-    if (reason == RX_ACK_PING) {
+    if (reason == RX_ACK_PING)
 	p->header.flags |= RX_REQUEST_ACK;
-	if (padbytes) {
-	    p->length = padbytes +
-		rx_AckDataSize(call->rwind) + 4 * sizeof(afs_int32);
 
-	    while (padbytes--)
-		/* not fast but we can potentially use this if truncated
-		 * fragments are delivered to figure out the mtu.
-		 */
-		rx_packetwrite(p, rx_AckDataSize(offset) + 4 *
-			       sizeof(afs_int32), sizeof(afs_int32),
-			       &padbytes);
+    while (padbytes > 0) {
+	if (padbytes > RX_ZEROS) {
+	    rx_packetwrite(p, p->length, RX_ZEROS, rx_zeros);
+	    p->length += RX_ZEROS;
+	    padbytes -= RX_ZEROS;
+	} else {
+	    rx_packetwrite(p, p->length, padbytes, rx_zeros);
+	    p->length += padbytes;
+	    padbytes = 0;
 	}
     }
+
     if (call->conn->type == RX_CLIENT_CONNECTION)
 	p->header.flags |= RX_CLIENT_INITIATED;
 
