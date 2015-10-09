@@ -765,6 +765,17 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
     DWORD dummyLen;
     DWORD multi = 1;
 
+    lock_ObtainRead(&cm_syscfgLock);
+    if (cm_LanAdapterChangeDetected) {
+	lock_ConvertRToW(&cm_syscfgLock);
+	if (cm_LanAdapterChangeDetected) {
+	    code = cm_UpdateIFInfo();
+	}
+	lock_ReleaseWrite(&cm_syscfgLock);
+    } else {
+	lock_ReleaseRead(&cm_syscfgLock);
+    }
+
     code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
                          0, KEY_QUERY_VALUE, &parmKey);
     if (code == ERROR_SUCCESS) {
@@ -861,7 +872,9 @@ afs_int32 cm_UpdateIFInfo(void)
     code = syscfg_GetIFInfo(&cm_noIPAddr,
 			     cm_IPAddr, cm_SubnetMask,
 			     cm_NetMtu, cm_NetFlags);
-    cm_LanAdapterChangeDetected = 0;
+
+    cm_LanAdapterChangeDetected = (code != 0);
+
     return code;
 }
 
