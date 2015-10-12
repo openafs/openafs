@@ -2309,7 +2309,7 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
     }
 
     code = cm_Lookup(dscp, FileName, 0, userp, &req, &scp);
-    if (code) {
+    if (code && code != CM_ERROR_INEXACT_MATCH) {
         smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
         (*ResultCB)->ResultStatus = status;
         (*ResultCB)->ResultBufferLength = 0;
@@ -2597,7 +2597,7 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
             cm_EndDirOp(&dirop);
         }
 
-        if (code != 0) {
+	if (code != 0 && code != CM_ERROR_INEXACT_MATCH) {
             osi_Log1(afsd_logp, "RDR_RenameFileEntry cm_BPlusDirLookup failed code 0x%x",
                      code);
             (*ResultCB)->ResultStatus = STATUS_OBJECT_PATH_INVALID;
@@ -2923,7 +2923,7 @@ RDR_HardLinkFileEntry( IN cm_user_t *userp,
             cm_EndDirOp(&dirop);
         }
 
-        if (code != 0) {
+	if (code != 0 && code != CM_ERROR_INEXACT_MATCH) {
             osi_Log1(afsd_logp, "RDR_HardLinkFileEntry cm_BPlusDirLookup failed code 0x%x",
                      code);
             (*ResultCB)->ResultStatus = STATUS_OBJECT_PATH_INVALID;
