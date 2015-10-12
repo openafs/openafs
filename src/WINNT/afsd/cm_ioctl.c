@@ -1089,7 +1089,7 @@ cm_IoctlStatMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache
     cp = cm_ParseIoctlStringAlloc(ioctlp, NULL);
 
     code = cm_Lookup(dscp, cp[0] ? cp : L".", CM_FLAG_NOMOUNTCHASE, userp, reqp, &scp);
-    if (code)
+    if (code && code != CM_ERROR_INEXACT_MATCH)
         goto done_2;
 
     lock_ObtainWrite(&scp->rw);
@@ -1146,7 +1146,7 @@ cm_IoctlDeleteMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scac
     code = cm_Lookup(dscp, cp[0] ? cp : L".", CM_FLAG_NOMOUNTCHASE, userp, reqp, &scp);
 
     /* if something went wrong, bail out now */
-    if (code)
+    if (code && code != CM_ERROR_INEXACT_MATCH)
         goto done3;
 
     lock_ObtainWrite(&scp->rw);
@@ -2245,7 +2245,7 @@ cm_IoctlListlink(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *ds
     clientp = cm_Utf8ToClientStringAlloc(cp, -1, NULL);
     code = cm_Lookup(dscp, clientp[0] ? clientp : L".", CM_FLAG_NOMOUNTCHASE, userp, reqp, &scp);
     free(clientp);
-    if (code)
+    if (code && code != CM_ERROR_INEXACT_MATCH)
         return code;
 
     /* Check that it's a real symlink */
@@ -2314,7 +2314,7 @@ cm_IoctlIslink(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *dscp
     clientp = cm_Utf8ToClientStringAlloc(cp, -1, NULL);
     code = cm_Lookup(dscp, clientp[0] ? clientp : L".", CM_FLAG_NOMOUNTCHASE, userp, reqp, &scp);
     free(clientp);
-    if (code)
+    if (code && code != CM_ERROR_INEXACT_MATCH)
         return code;
 
     /* Check that it's a real symlink */
@@ -2352,7 +2352,7 @@ cm_IoctlDeletelink(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *
     code = cm_Lookup(dscp, clientp[0] ? clientp : L".", CM_FLAG_NOMOUNTCHASE, userp, reqp, &scp);
 
     /* if something went wrong, bail out now */
-    if (code)
+    if (code && code != CM_ERROR_INEXACT_MATCH)
         goto done3;
 
     lock_ObtainWrite(&scp->rw);
