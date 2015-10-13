@@ -53,7 +53,9 @@
  *
  * Note that BlobScan switches pages if necessary.  BlobScan may
  * return either 0 for success or an error code.  Upon successful
- * return, the new blob value is assigned to *ablobOut.
+ * return, the new blob value is assigned to *ablobOut.  The new
+ * blob value (*ablobOut) is set to 0 when the end of the file has
+ * been reached.
  *
  * BlobScan is used by the Linux port in a separate file, so it should not
  * become static.
@@ -73,6 +75,10 @@ BlobScan(struct dcache * afile, afs_int32 ablob, int *ablobOut)
     while (1) {
 	pageBlob = ablob & ~(EPP - 1);	/* base blob in same page */
 	code = afs_dir_GetBlob(afile, pageBlob, &headerbuf);
+	if (code == ENOENT) {
+	    *ablobOut = 0; /* past the end of file */
+	    return 0;      /* not an error */
+	}
 	if (code)
 	    return code;
 	tpe = (struct PageHeader *)headerbuf.data;

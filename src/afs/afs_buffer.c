@@ -236,7 +236,7 @@ DRead(struct dcache *adc, int page, struct DirBuffer *entry)
 	afs_reset_inode(&tb->inode);
 	tb->lockers--;
 	ReleaseWriteLock(&tb->lock);
-	return EIO;
+	return ENOENT; /* past the end */
     }
     tfile = afs_CFileOpen(&adc->f.inode);
     code =
