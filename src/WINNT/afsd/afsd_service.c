@@ -1312,7 +1312,7 @@ clientServiceProviderKeyExists(void)
     LONG rv;
 
     rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-		      AFSREG_CLT_SVC_PROVIDER_KEY, 0,
+		      AFSREG_CLT_SVC_PROVIDER_SUBKEY, 0,
 		      KEY_READ, &hk);
     if (rv == ERROR_SUCCESS)
 	RegCloseKey(hk);
