@@ -5362,7 +5362,7 @@ RDR_PioctlOpen( IN cm_user_t *userp,
     cm_fid_t    RootFid;
     cm_req_t    req;
 
-    RDR_InitReq(&req, bWow64);
+    cm_InitReq(&req);
 
     *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult));
     if (!(*ResultCB))
@@ -5430,7 +5430,7 @@ RDR_PioctlWrite( IN cm_user_t *userp,
     cm_req_t    req;
     DWORD       status;
 
-    RDR_InitReq(&req, bWow64);
+    cm_InitReq(&req);
 
     *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult) + sizeof(AFSPIOCtlIOResultCB));
     if (!(*ResultCB))
@@ -5469,7 +5469,7 @@ RDR_PioctlRead( IN cm_user_t *userp,
     DWORD       status;
     afs_uint32  pflags = (bIsLocalSystem ? AFSCALL_FLAG_LOCAL_SYSTEM : 0);
 
-    RDR_InitReq(&req, bWow64);
+    cm_InitReq(&req);
 
     *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult) + sizeof(AFSPIOCtlIOResultCB));
     if (!(*ResultCB))
