@@ -7,7 +7,7 @@ signature   =   "$Windows NT$"
 Class	    =	"AFSRedirector"
 ClassGuid   = 	{63EA509E-71F9-42ec-9C5E-1ECC95E3A1A0}
 Provider    =   %AFS%
-DriverVer   =   04/20/2006,1.0.0.0
+DriverVer   =   10/26/2015,1.7.3300.0
 
 [DestinationDirs]
 DefaultDestDir		= 12
