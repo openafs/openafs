@@ -1,3 +1,92 @@
+Release 1.7.3300; Changes since 1.7.3200
+
+ * CVE-2015-7762 and CVE-2015-7763
+   Information exposure vulnerabilities when sending Rx ACK
+   packets.
+
+ * One of the features of the SMB interface is that
+   ambiguous case-insensitive path component matches
+   are treated as failures.  This functionality was
+   not implemented for the Redirector interface.
+   It is now.
+
+ * Pioctl operations performed through the redirector
+   are opaque to the redirector.  Therefore, the redirector
+   is unaware of the actions and invalidation notifications
+   must be delivered.  This impacts the symlink and mount
+   point operations.
+
+ * During an upgrade from a prior OS version to Windows 8.0,
+   8.1 or 10 will result in the removal of the OpenAFS
+   Network Provider registrations.  As of this release the
+   afsd_service will register or deregister the Network
+   Providers as appropriate for the mode the service is
+   running in.
+
+ * After a system resume it was possible for the service to
+   end up in a state in which there were no known IP addresses.
+   When there are no IP addresses then there will be no server
+   probes and all servers known prior to the system suspend
+   will forever be marked down.  Additional, checks are added
+   to force a test for IP addresses prior to the periodic
+   down server probes.
+
+ * A reference count leak during multi-server ping operations
+   could result in server entries that could not be destroyed.
+   The reference count leak has been fixed.
+
+ * CellServDB updated to 20150119 release
+
+ * Freelance cell prefix matches will now fail if there is
+   an ambiguous match.
+
+ * Freelance cell prefix matches must now match whole components.
+   For cs.cmu.edu, "cs" and "cs.cmu" are ok; "cs.c" is not.
+
+ * During cm_Analyze mark servers down for miscellaneous rx errors
+   instead of attempting the token retry logic.  V* and CM_ERROR_*
+   errors will once again perform proper failover to occur.
+
+ * When adding a NP connection verify that the server name and the
+   share name are valid. If not, return ERROR_BAD_NETWORK_NAME.
+
+ * When fetching NP connection info, if a pre-existing connection
+   does not exist and the either the server name or share name do not
+   verify return ERROR_BAD_NETWORK_NAME and not ERROR_INVALID_PARAMETER.
+
+ * When NPGetResourceInformation() fails return the actual error to
+   the caller instead of WN_BAD_NETNAME.
+
+ * Move the Network Provider AuthID query from userland to a kernel
+   SYSTEM thread.  This ensures that SeQueryInformationToken() will
+   always have sufficient privileges to execute the query.
+
+ * NPGetResourceInformation and NPGetConnectionPerformance WNet API
+   requests permit partial prefix matching.  Ensure that only full
+   component prefix matches are accepted.
+
+ * Modify the behavior of the Workstation Pipe Service emulation 
+   function NetrShareGetInfo() to work around a bug in the Explorer
+   Shell that can result in a Shell API deadlock.
+
+ * When enumerating a directory if status info for an entry cannot be
+   obtained, fake it.  Do not return STATUS_ACCESS_DENIED to the redirector
+   as that will be interpreted as the directory not being listable.
+
+ * In the case where an explicit mount point to a .backup volume is
+   resolved from a .backup volume the cache manager refuses to evaluate
+   the mount point target.  This is meant to address unwanted recursion
+   in the directory tree searches.
+
+   Change the error code to ERROR_TOO_MANY_SYMLINKS and propagate that
+   error to the AFS redirector.  That will result in the application
+   receiving STATUS_ACCESS_DENIED instead of
+   STATUS_REPARSE_POINT_NOT_RESOLVED.
+
+   The STATUS_REPARSE_POINT_NOT_RESOLVED error causes cmd.exe and
+   powershell.exe to terminate recursive directory searches.
+
+
 Release 1.7.3200; Changes since 1.7.3100
 
 de205b8 Windows: SetDispositionInfo vs Link Count
