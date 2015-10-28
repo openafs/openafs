@@ -615,6 +615,14 @@ else
 			AFS_SYSNAME="x86_darwin_140"
 			OSXSDK="macosx10.10"
 			;;
+		x86_64-apple-darwin15.*)
+			AFS_SYSNAME="x86_darwin_150"
+			OSXSDK="macosx10.11"
+			;;
+		i?86-apple-darwin15.*)
+			AFS_SYSNAME="x86_darwin_150"
+			OSXSDK="macosx10.11"
+			;;
 		sparc-sun-solaris2.5*)
 			AFS_SYSNAME="sun4x_55"
 			enable_login="yes"
