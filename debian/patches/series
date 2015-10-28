@@ -1,8 +1,3 @@
 0001-userok.c-Fix-fixed-size-on-stack-path-buffers.patch
 0002-Tweak-AFSDIR_PATH_MAX-definition.patch
 0003-Add-dummy-exit-command-for-afsd-to-do-nothing.patch
-0004-Linux-CM-Use-kernel-allocator-directly.patch
-0005-Linux-4.2-Pass-namespace-to-sock_create_kern.patch
-0006-Linux-4.2-total_link_count-is-no-longer-accessible.patch
-0007-Linux-Add-AC_CHECK_LINUX_OPERATION-configure-macro.patch
-0008-Linux-4.2-Changes-in-link-operation-APIs.patch
