@@ -1,0 +1,19 @@
+#!/bin/sh
+majorvers=`uname -r | sed 's/\..*//'`
+if [ $majorvers -ne 15 ]; then
+	exit 112
+fi
+
+# check for temporary versions of ThisCell and CellAlias
+# and move them aside
+tmpthiscell=/private/tmp/org.OpenAFS.Install.ThisCell.$USER
+tmpcellalias=/private/tmp/org.OpenAFS.Install.CellAlias.$USER
+date=`date +%Y%m%d%H%M`
+if [ -e $tmpthiscell ]; then
+    mv -f $tmpthiscell $tmpthiscell.$date
+fi
+if [ -e $tmpcellalias ]; then
+    mv -f $tmpcellalias $tmpcellalias.$date
+fi
+
+exit 0
