@@ -447,7 +447,7 @@ struct rx_serverQueueEntry *rx_waitForPacket = 0;
  * by the kernel.  Whether this will ever overlap anything in
  * /etc/services is anybody's guess...  Returns 0 on success, -1 on
  * error. */
-#ifndef AFS_NT40_ENV
+#if !(defined(AFS_NT40_ENV) || defined(RXK_UPCALL_ENV))
 static
 #endif
 rx_atomic_t rxinit_status = RX_ATOMIC_INIT(1);
