@@ -1,5 +1,33 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.6.15 (Security Release)
+
+  All client and server platforms
+
+    * Fix for OPENAFS-SA-2015-007 "Tattletale"
+
+      When constructing an Rx acknowledgment (ACK) packet, Andrew-derived
+      Rx implementations do not initialize three octets of data that are
+      padding in the C language structure and were inadvertently included
+      in the wire protocol (CVE-2015-7762).  Additionally, OpenAFS Rx in
+      versions 1.5.75 through 1.5.78, 1.6.0 through 1.6.14, and 1.7.0
+      through 1.7.32 include a variable-length padding at the end of the
+      ACK packet, in an attempt to detect the path MTU, but only four octets
+      of the additional padding are initialized (CVE-2015-7763).
+
+OpenAFS 1.6.14.1
+
+  Linux clients
+
+    * Support kernels up to 4.2
+
+      Due to changes to internal data structures with this kernel release,
+      the OpenAFS client can no longer reset the link count during path
+      lookups. Since volume root directories must behave like symlinks
+      instead of normal directories in order to satisfy Linux kernel
+      invariants, looking up paths containing more than 40 mount points
+      will fail with ELOOP on such kernels.
+
 OpenAFS 1.6.14
 
   All server platforms

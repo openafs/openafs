@@ -1385,9 +1385,17 @@ afs_dentry_automount(afs_linux_path_t *path)
 {
     struct dentry *target;
 
-    /* avoid symlink resolution limits when resolving; we cannot contribute to
-     * an infinite symlink loop */
+    /* 
+     * Avoid symlink resolution limits when resolving; we cannot contribute to
+     * an infinite symlink loop.
+     *
+     * On newer kernels the field has moved to the private nameidata structure
+     * so we can't adjust it here.  This may cause ELOOP when using a path with
+     * 40 or more directories that are not already in the dentry cache.
+     */
+#if defined(STRUCT_TASK_STRUCT_HAS_TOTAL_LINK_COUNT)
     current->total_link_count--;
+#endif
 
     target = canonical_dentry(path->dentry->d_inode);
 
@@ -1547,7 +1555,9 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 	d_prune_aliases(ip);
 
 #ifdef STRUCT_DENTRY_OPERATIONS_HAS_D_AUTOMOUNT
-	ip->i_flags |= S_AUTOMOUNT;
+	/* Only needed if this is a volume root */
+	if (vcp->mvstat == 2)
+	    ip->i_flags |= S_AUTOMOUNT;
 #endif
     }
     /*
@@ -1888,14 +1898,22 @@ afs_linux_readlink(struct dentry *dp, char *target, int maxlen)
 /* afs_linux_follow_link
  * a file system dependent link following routine.
  */
+#if defined(HAVE_LINUX_INODE_OPERATIONS_FOLLOW_LINK_NO_NAMEIDATA)
+static const char *afs_linux_follow_link(struct dentry *dentry, void **link_data)
+#else
 static int afs_linux_follow_link(struct dentry *dentry, struct nameidata *nd)
+#endif
 {
     int code;
     char *name;
 
-    name = osi_Alloc(PATH_MAX);
+    name = kmalloc(PATH_MAX, GFP_NOFS);
     if (!name) {
+#if defined(HAVE_LINUX_INODE_OPERATIONS_FOLLOW_LINK_NO_NAMEIDATA)
+	return ERR_PTR(-EIO);
+#else
 	return -EIO;
+#endif
     }
 
     AFS_GLOCK();
@@ -1903,22 +1921,41 @@ static int afs_linux_follow_link(struct dentry *dentry, struct nameidata *nd)
     AFS_GUNLOCK();
 
     if (code < 0) {
+#if defined(HAVE_LINUX_INODE_OPERATIONS_FOLLOW_LINK_NO_NAMEIDATA)
+	return ERR_PTR(code);
+#else
 	return code;
+#endif
     }
 
     name[code] = '\0';
+#if defined(HAVE_LINUX_INODE_OPERATIONS_FOLLOW_LINK_NO_NAMEIDATA)
+    return *link_data = name;
+#else
     nd_set_link(nd, name);
     return 0;
+#endif
 }
 
+#if defined(HAVE_LINUX_INODE_OPERATIONS_PUT_LINK_NO_NAMEIDATA)
+static void
+afs_linux_put_link(struct inode *inode, void *link_data)
+{
+    char *name = link_data;
+
+    if (name && !IS_ERR(name))
+	kfree(name);
+}
+#else
 static void
 afs_linux_put_link(struct dentry *dentry, struct nameidata *nd)
 {
     char *name = nd_get_link(nd);
-    if (name && !IS_ERR(name)) {
-	osi_Free(name, PATH_MAX);
-    }
+
+    if (name && !IS_ERR(name))
+	kfree(name);
 }
+#endif /* HAVE_LINUX_INODE_OPERATIONS_PUT_LINK_NO_NAMEIDATA */
 
 #endif /* USABLE_KERNEL_PAGE_SYMLINK_CACHE */
 
@@ -2174,8 +2211,8 @@ afs_linux_fillpage(struct file *fp, struct page *pp)
     address = kmap(pp);
     ClearPageError(pp);
 
-    auio = osi_Alloc(sizeof(struct uio));
-    iovecp = osi_Alloc(sizeof(struct iovec));
+    auio = kmalloc(sizeof(struct uio), GFP_NOFS);
+    iovecp = kmalloc(sizeof(struct iovec), GFP_NOFS);
 
     setup_uio(auio, iovecp, (char *)address, offset, PAGE_SIZE, UIO_READ,
               AFS_UIOSYS);
@@ -2206,8 +2243,8 @@ afs_linux_fillpage(struct file *fp, struct page *pp)
 
     kunmap(pp);
 
-    osi_Free(auio, sizeof(struct uio));
-    osi_Free(iovecp, sizeof(struct iovec));
+    kfree(auio);
+    kfree(iovecp);
 
     crfree(credp);
     return afs_convert_code(code);

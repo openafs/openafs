@@ -112,7 +112,7 @@ afs_fill_super(struct super_block *sb, void *data, int silent)
 #endif
 
     /* used for inodes backing_dev_info field, also */
-    afs_backing_dev_info = osi_Alloc(sizeof(struct backing_dev_info));
+    afs_backing_dev_info = kmalloc(sizeof(struct backing_dev_info), GFP_NOFS);
     memset(afs_backing_dev_info, 0, sizeof(struct backing_dev_info));
 #if defined(HAVE_LINUX_BDI_INIT)
     bdi_init(afs_backing_dev_info);
@@ -338,7 +338,7 @@ afs_put_super(struct super_block *sbp)
 #if defined(HAVE_LINUX_BDI_INIT)
     bdi_destroy(afs_backing_dev_info);
 #endif
-    osi_Free(afs_backing_dev_info, sizeof(struct backing_dev_info));
+    kfree(afs_backing_dev_info);
     AFS_GUNLOCK();
 
     sbp->s_dev = 0;
