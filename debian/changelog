@@ -1,6 +1,8 @@
 openafs (1.6.15-1) UNRELEASED; urgency=high
 
   * New upstream security release.
+    - Fix data leakage in rx ACK packets, OPENAFS-SA-2015-007,
+      CVE-2015-7762, CVE-2015-7763.
 
  -- Benjamin Kaduk <kaduk@mit.edu>  Wed, 28 Oct 2015 15:38:00 -0400
 
