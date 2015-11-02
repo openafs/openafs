@@ -192,10 +192,12 @@ ${TOP_LIBDIR}/libuafs.a: libuafs.a
 ${TOP_LIBDIR}/libuafs_pic.a: libuafs_pic.la
 	${INSTALL_DATA} .libs/libuafs_pic.a $@
 
-libuafs.la: h $(LT_objs)
+$(LT_objs): h
+
+libuafs.la: $(LT_objs)
 	$(LT_LDLIB_shlib) $(LT_objs)
 
-libuafs.a: h $(LT_objs)
+libuafs.a: $(LT_objs)
 	$(LT_LDLIB_static) $(LT_objs)
 
 libuafs_pic.la: libuafs.a $(LT_objs)
