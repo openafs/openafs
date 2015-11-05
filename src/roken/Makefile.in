@@ -13,7 +13,7 @@ LT_age = 0
 # need to replace/provide.  The values contained therein include a prefix
 # ${LIBOBJDIR}, which is not set, so they will be sought in this directory.
 LT_objs = $(ROKEN_LTLIBOBJS) base64.lo cloexec.lo ct.lo hex.lo issuid.lo \
-	  mkdir.lo net_read.lo net_write.lo rename.lo socket.lo snprintf.lo \
+	  mkdir.lo net_read.lo net_write.lo socket.lo snprintf.lo \
 	  warnerr.lo
 
 HEADERS = ${TOP_INCDIR}/base64.h \
@@ -130,9 +130,6 @@ net_read.lo: ${UPSTREAM}/net_read.c ${HEADERS}
 
 net_write.lo: ${UPSTREAM}/net_write.c ${HEADERS}
 	$(LT_CCRULE) $(UPSTREAM)/net_write.c
-
-rename.lo: ${UPSTREAM}/rename.c ${HEADERS}
-	$(LT_CCRULE) $(UPSTREAM)/rename.c
 
 setenv.lo: ${UPSTREAM}/setenv.c ${HEADERS}
 	$(LT_CCRULE) $(UPSTREAM)/setenv.c
