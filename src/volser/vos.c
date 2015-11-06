@@ -6431,12 +6431,13 @@ main(int argc, char **argv)
 			  "set the list of IP addresses for a given UUID in the VLDB");
     cmd_AddParm(ts, "-uuid", CMD_SINGLE, 0, "uuid of server");
     cmd_AddParm(ts, "-host", CMD_LIST, 0, "address of host");
+    COMMONPARMS;
 
     ts = cmd_CreateSyntax("remaddrs", RemoveAddrs, NULL,
 			  "remove the list of IP addresses for a given UUID in the VLDB");
     cmd_AddParm(ts, "-uuid", CMD_SINGLE, 0, "uuid of server");
-
     COMMONPARMS;
+
     code = cmd_Dispatch(argc, argv);
     if (rxInitDone) {
 	/* Shut down the ubik_client and rx connections */
