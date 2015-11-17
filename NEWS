@@ -1,5 +1,56 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.6.16 (in progress)
+
+  All platforms
+
+    * Documentation improvements (11932 12096 12100)
+
+    * Improved diagnostics and error messages (11586 11587)
+
+    * Distribute the contributor code of conduct with the stable release (12056)
+
+  All server platforms
+
+    * Create PID files in the right location when bosserver is started with
+      the "-pidfiles" argument and transarc paths are not being used (12086)
+
+    * Several fixes regarding volume dump creation and restore (11433 11553
+      11825 11826 12082)
+
+    * Obey the "-toname" parameter in "vos clone" operations (11434)
+
+    * Avoid writing a loopback address into the server CellServDB - search
+      for a non-loopback one, and fail if none is found (12083 12105)
+
+    * Rebuild the vldb free list with "vldb_check -fix" (12084)
+
+    * Fixed and improved the "check_sysid" utility (12090)
+
+    * Fixed and improved the "prdb_check" utility (12101..04)
+
+  All client platforms
+
+    * Refuse to change multi-homed server entries with "vos changeaddr",
+      unless "-force" is given, to avoid corruption of those entries (12087)
+
+    * Provide a new vos subcommand "remaddrs" for removing server entries, to
+      replace the slightly confusing "vos changeaddr -remove" (12092 12094)
+
+    * Make "fs flushall" actually invalidate all cached data (11894)
+
+    * Prevent spurious call aborts due to erroneous idle timeouts (11594)
+
+    * Provide a "--disable-gtx" configure switch to avoid building and
+      installing libgtx and its header files as well as the depending
+      "scout" and "afsmonitor" applications (12095)
+
+  Linux clients
+
+    * In Red Hat packaging, avoid following a symbolic link when writing
+      the client CellServDB, which could overwrite the server CellServDB,
+      by removing an existing symlink before writing the file (12081)
+
 OpenAFS 1.6.15 (Security Release)
 
   All client and server platforms
