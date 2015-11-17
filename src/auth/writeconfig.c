@@ -45,6 +45,8 @@ VerifyEntries(struct afsconf_cell *aci)
 
 		code = getaddrinfo(aci->hostName[i], NULL, &hints, &result);
 		if (code) {
+		    printf("Host %s not found in host database...\n",
+			   aci->hostName[i]);
 		    return AFSCONF_FAILURE;
 		}
 		for (rp = result; rp != NULL; rp = rp->ai_next) {
@@ -56,6 +58,8 @@ VerifyEntries(struct afsconf_cell *aci)
 		}
 		freeaddrinfo(result);
 		if (aci->hostAddr[i].sin_addr.s_addr == 0) {
+		    printf("No non-loopback addresses found for host %s\n",
+			   aci->hostName[i]);
 		    return AFSCONF_FAILURE;
 		}
 	    }
