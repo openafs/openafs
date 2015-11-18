@@ -541,6 +541,9 @@ GetEntryByName(struct rx_call *rxcall,
     if (NameIsId(volname)) {
 	return GetEntryByID(rxcall, strtoul(volname, NULL, 10), -1, aentry, new, this_op);
     }
+
+    countRequest(this_op);
+
     if (InvalidVolname(volname))
 	return VL_BADNAME;
     if ((errorcode = Init_VLdbase(&ctx, LOCKREAD, this_op)))
