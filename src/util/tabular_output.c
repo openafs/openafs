@@ -90,6 +90,8 @@ util_setTableBodyRow(struct util_Table *Table, int RowIndex, char **Contents) {
 }
 
 int util_setTableFooter(struct util_Table * Table, char ** Contents) {
+    if (Table->Footer != NULL)
+        Table->Footer = newTableRow(Table);
     return do_setTableRow(Table,Table->Footer,Contents);
 }
 
