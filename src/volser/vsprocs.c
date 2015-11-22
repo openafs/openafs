@@ -4067,7 +4067,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 
 	code = CheckTrans(fromconn, &fromtid, afrompart, &orig_status);
 	if (code) {
-	    code = ENOENT;
+	    error = ENOENT;
 	    goto rfail;
 	}
 
