@@ -870,7 +870,8 @@ static int
 ParseHostLine(char *aline, struct sockaddr_in *addr, char *aname,
 	      char *aclone)
 {
-    int c1, c2, c3, c4;
+    int i;
+    int c[4];
     afs_int32 code;
     char *tp;
 
@@ -878,25 +879,34 @@ ParseHostLine(char *aline, struct sockaddr_in *addr, char *aname,
 	if (aclone)
 	    *aclone = 1;
 	/* FIXME: length of aname unknown here */
-	code = sscanf(aline, "[%d.%d.%d.%d] #%s", &c1, &c2, &c3, &c4, aname);
+	code = sscanf(aline, "[%d.%d.%d.%d] #%s", &c[0], &c[1], &c[2], &c[3],
+		      aname);
     } else {
 	if (aclone)
 	    *aclone = 0;
 	/* FIXME: length of aname unknown here */
-	code = sscanf(aline, "%d.%d.%d.%d #%s", &c1, &c2, &c3, &c4, aname);
+	code = sscanf(aline, "%d.%d.%d.%d #%s", &c[0], &c[1], &c[2], &c[3],
+		      aname);
     }
     if (code != 5)
 	return AFSCONF_SYNTAX;
+    for(i = 0; i < 4; ++i) {
+	if (c[i] < 0 || c[i] > 255) {
+	    fprintf(stderr, "Illegal IP address %d.%d.%d.%d\n", c[0], c[1],
+		    c[2], c[3]);
+	    return AFSCONF_SYNTAX;
+	}
+    }
     addr->sin_family = AF_INET;
     addr->sin_port = 0;
 #ifdef STRUCT_SOCKADDR_HAS_SA_LEN
     addr->sin_len = sizeof(struct sockaddr_in);
 #endif
     tp = (char *)&addr->sin_addr;
-    *tp++ = c1;
-    *tp++ = c2;
-    *tp++ = c3;
-    *tp++ = c4;
+    *tp++ = c[0];
+    *tp++ = c[1];
+    *tp++ = c[2];
+    *tp++ = c[3];
     return 0;
 }
 
