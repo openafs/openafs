@@ -309,7 +309,7 @@ main(int argc, char **argv)
 		        CMD_OPTIONAL, "database file");
     cmd_AddParmAlias(opts, OPT_database, "-db");
 
-    cmd_AddParmAtOffset(opts, OPT_access, "-default_access", CMD_SINGLE,
+    cmd_AddParmAtOffset(opts, OPT_access, "-default_access", CMD_LIST,
 		        CMD_OPTIONAL, "default access flags for new entries");
 #if defined(SUPERGROUPS)
     cmd_AddParmAtOffset(opts, OPT_groupdepth, "-groupdepth", CMD_SINGLE,
