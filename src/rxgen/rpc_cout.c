@@ -221,15 +221,15 @@ print_ifarg_len(char *objname, char *name)
 {
     if (*objname == '&') {
 	if (brief_flag) {
-	    f_print(fout, "(u_int *)%s.len", objname);
+	    f_print(fout, "%s.len", objname);
 	} else {
-	    f_print(fout, "(u_int *)%s.%s_len", objname, name);
+	    f_print(fout, "%s.%s_len", objname, name);
 	}
     } else {
 	if (brief_flag) {
-	    f_print(fout, "(u_int *)&%s->len", objname);
+	    f_print(fout, "&%s->len", objname);
 	} else {
-	    f_print(fout, "(u_int *)&%s->%s_len", objname, name);
+	    f_print(fout, "&%s->%s_len", objname, name);
 	}
     }
 }
