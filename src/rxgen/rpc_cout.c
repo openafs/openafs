@@ -199,6 +199,42 @@ space(void)
 }
 
 static void
+print_ifarg_val(char *objname, char *name)
+{
+    if (*objname == '&') {
+	if (brief_flag) {
+	    f_print(fout, "%s.val", objname);
+	} else {
+	    f_print(fout, "%s.%s_val", objname, name);
+	}
+    } else {
+	if (brief_flag) {
+	    f_print(fout, "&%s->val", objname);
+	} else {
+	    f_print(fout, "&%s->%s_val", objname, name);
+	}
+    }
+}
+
+static void
+print_ifarg_len(char *objname, char *name)
+{
+    if (*objname == '&') {
+	if (brief_flag) {
+	    f_print(fout, "(u_int *)%s.len", objname);
+	} else {
+	    f_print(fout, "(u_int *)%s.%s_len", objname, name);
+	}
+    } else {
+	if (brief_flag) {
+	    f_print(fout, "(u_int *)&%s->len", objname);
+	} else {
+	    f_print(fout, "(u_int *)&%s->%s_len", objname, name);
+	}
+    }
+}
+
+static void
 print_ifstat(int indent, char *prefix, char *type, relation rel, char *amax,
 	     char *objname, char *name)
 {
@@ -251,22 +287,9 @@ print_ifstat(int indent, char *prefix, char *type, relation rel, char *amax,
 		print_ifopen(indent, "array");
                 print_ifarg("(caddr_t *)");
 	    }
-	    if (*objname == '&') {
-		if (brief_flag) {
-		    f_print(fout, "%s.val, (u_int *)%s.len", objname, objname);
-		} else {
-		    f_print(fout, "%s.%s_val, (u_int *)%s.%s_len",
-			    objname, name, objname, name);
-		}
-	    } else {
-		if (brief_flag) {
-		    f_print(fout, "&%s->val, (u_int *)&%s->len",
-			    objname, objname);
-		} else {
-		    f_print(fout, "&%s->%s_val, (u_int *)&%s->%s_len",
-			    objname, name, objname, name);
-		}
-	    }
+	    print_ifarg_val(objname, name);
+	    f_print(fout, ", ");
+	    print_ifarg_len(objname, name);
 	}
 	print_ifarg(amax);
 	if (!alt) {
