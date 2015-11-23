@@ -275,6 +275,14 @@ print_ifstat(int indent, char *prefix, char *type, relation rel, char *amax,
 	    alt = "string";
 	} else if (streq(type, "opaque")) {
 	    alt = "bytes";
+	    tabify(fout, indent);
+	    f_print(fout, "{\n");
+	    ++indent;
+	    tabify(fout, indent);
+	    f_print(fout, "u_int __len = (u_int) ");
+	    f_print(fout, "*(");
+	    print_ifarg_len(objname, name);
+	    f_print(fout, ");\n");
 	}
 	if (streq(type, "string")) {
 	    print_ifopen(indent, alt);
@@ -289,7 +297,11 @@ print_ifstat(int indent, char *prefix, char *type, relation rel, char *amax,
 	    }
 	    print_ifarg_val(objname, name);
 	    f_print(fout, ", ");
-	    print_ifarg_len(objname, name);
+	    if (streq(type, "opaque")) {
+		f_print(fout, "&__len");
+	    } else {
+		print_ifarg_len(objname, name);
+	    }
 	}
 	print_ifarg(amax);
 	if (!alt) {
@@ -302,6 +314,17 @@ print_ifstat(int indent, char *prefix, char *type, relation rel, char *amax,
 	break;
     }
     print_ifclose(indent);
+    if (rel == REL_ARRAY && streq(type, "opaque")) {
+	tabify(fout, indent);
+	f_print(fout, "*(");
+	print_ifarg_len(objname, name);
+	f_print(fout, ")");
+	f_print(fout, " = __len;\n");
+	--indent;
+	tabify(fout, indent);
+	f_print(fout, "}\n");
+    }
+
 }
 
 
