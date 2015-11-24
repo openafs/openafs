@@ -964,7 +964,7 @@ afsconf_GetExtendedCellInfo(struct afsconf_dir *adir, char *acellName,
 int
 afsconf_LookupServer(const char *service, const char *protocol,
 		     const char *cellName, unsigned short afsdbPort,
-		     int *cellHostAddrs, char cellHostNames[][MAXHOSTCHARS],
+		     afs_uint32 *cellHostAddrs, char cellHostNames[][MAXHOSTCHARS],
 		     unsigned short ports[], unsigned short ipRanks[],
 		     int *numServers, int *ttl, char **arealCellName)
 {
@@ -1104,7 +1104,7 @@ afsconf_LookupServer(const char *service, const char *protocol,
 		/* Do we want to get TTL data for the A record as well? */
 		(he = gethostbyname(host))) {
 		if (he->h_addrtype == AF_INET) {
-		    afs_int32 ipaddr;
+		    afs_uint32 ipaddr;
 		    memcpy(&ipaddr, he->h_addr, sizeof(ipaddr));
 		    cellHostAddrs[server_num] = ipaddr;
 		    ports[server_num] = afsdbPort;
@@ -1138,7 +1138,7 @@ afsconf_LookupServer(const char *service, const char *protocol,
 		/* Do we want to get TTL data for the A record as well? */
 		(he = gethostbyname(host))) {
 		if (he->h_addrtype == AF_INET) {
-		    afs_int32 ipaddr;
+		    afs_uint32 ipaddr;
 
 		    memcpy(&ipaddr, he->h_addr, sizeof(ipaddr));
 		    cellHostAddrs[server_num] = ipaddr;
@@ -1188,7 +1188,7 @@ int
 afsconf_GetAfsdbInfo(char *acellName, char *aservice,
 		     struct afsconf_cell *acellInfo)
 {
-    afs_int32 cellHostAddrs[AFSMAXCELLHOSTS];
+    afs_uint32 cellHostAddrs[AFSMAXCELLHOSTS];
     char cellHostNames[AFSMAXCELLHOSTS][MAXHOSTCHARS];
     unsigned short ipRanks[AFSMAXCELLHOSTS];
     unsigned short ports[AFSMAXCELLHOSTS];
@@ -1256,7 +1256,7 @@ afsconf_GetAfsdbInfo(char *acellName, char *aservice,
     int tservice = afsconf_FindService(aservice);   /* network byte order */
     const char *ianaName = afsconf_FindIANAName(aservice);
     struct afsconf_entry DNSce;
-    afs_int32 cellHostAddrs[AFSMAXCELLHOSTS];
+    afs_uint32 cellHostAddrs[AFSMAXCELLHOSTS];
     char cellHostNames[AFSMAXCELLHOSTS][MAXHOSTCHARS];
     unsigned short ipRanks[AFSMAXCELLHOSTS];
     unsigned short ports[AFSMAXCELLHOSTS];          /* network byte order */
