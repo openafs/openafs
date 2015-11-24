@@ -24,6 +24,14 @@
 # include <curses.h>
 #endif
 
+#ifndef HAVE_GETMAXYX
+#  if defined(HAVE_GETMAXY) && defined(HAVE_GETMAXX)
+#    define getmaxyx(w,y,x) do {(y) = getmaxy(w); (x) = getmaxx(w);} while (0)
+#  else
+#    define getmaxyx(w,y,x) do {(y) = (w)->_maxy; (x) = (w)->_maxx;} while (0)
+#  endif
+#endif
+
 /*Value for gwin w_type field*/
 #define	GATOR_WIN_CURSES    2
 
