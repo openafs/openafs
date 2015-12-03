@@ -62,6 +62,8 @@ dummyThreadNum(void)
 }
 static int (*threadNumProgram) (void) = dummyThreadNum;
 
+/* After single-threaded startup, accesses to serverlogFD and
+ * serverLogSyslog* are protected by LOCK_SERVERLOG(). */
 static int serverLogFD = -1;
 
 #ifndef AFS_NT40_ENV
