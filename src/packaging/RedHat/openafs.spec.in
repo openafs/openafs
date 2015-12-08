@@ -1062,8 +1062,11 @@ chmod +x $RPM_BUILD_ROOT%{_libdir}/*.so*
 # any user in /usr/bin
 mv $RPM_BUILD_ROOT%{_prefix}/afs/bin/restorevol $RPM_BUILD_ROOT%{_bindir}/restorevol
 
-# Link kpasswd to kapasswd
-ln -f $RPM_BUILD_ROOT%{_bindir}/kpasswd $RPM_BUILD_ROOT%{_bindir}/kapasswd
+# Copy kpasswd to kapasswd
+cp -a $RPM_BUILD_ROOT%{_bindir}/kpasswd $RPM_BUILD_ROOT%{_bindir}/kapasswd
+
+# make kpasswd non-executable to exclude it from debuginfo processing
+chmod 0644 $RPM_BUILD_ROOT%{_bindir}/kpasswd
 
 # Copy root.client config files
 install -m 755 src/packaging/RedHat/openafs.sysconfig $RPM_BUILD_ROOT/etc/sysconfig/openafs
@@ -1729,7 +1732,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 
 %files kpasswd
 %defattr(-,root,root)
-%{_bindir}/kpasswd
+%attr(0755,root,root) %{_bindir}/kpasswd
 %{_bindir}/kpwvalid
 
 %if %{krb5support}
