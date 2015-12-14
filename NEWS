@@ -1,10 +1,10 @@
                        User-Visible OpenAFS Changes
 
-OpenAFS 1.6.16 (in progress)
+OpenAFS 1.6.16
 
   All platforms
 
-    * Documentation improvements (11932 12096 12100)
+    * Documentation improvements (11932 12096 12100 12112 12120)
 
     * Improved diagnostics and error messages (11586 11587)
 
@@ -18,6 +18,10 @@ OpenAFS 1.6.16 (in progress)
     * Several fixes regarding volume dump creation and restore (11433 11553
       11825 11826 12082)
 
+    * Avoid a reported bosserver crash, and potentially others, by replacing
+      fixed size buffers with dynamically allocated ones in some user handling
+      functions (11436) (RT #130719)
+
     * Obey the "-toname" parameter in "vos clone" operations (11434)
 
     * Avoid writing a loopback address into the server CellServDB - search
@@ -30,6 +34,10 @@ OpenAFS 1.6.16 (in progress)
     * Fixed and improved the "prdb_check" utility (12101..04)
 
   All client platforms
+
+    * Avoid a potential denial of service issue, by fixing a bug in pioctl
+      logic that allowed a local user to overrun a kernel buffer with a single
+      NUL byte (commit 2ef86372) (RT #132256) (CVE-2015-8312)
 
     * Refuse to change multi-homed server entries with "vos changeaddr",
       unless "-force" is given, to avoid corruption of those entries (12087)
@@ -45,11 +53,21 @@ OpenAFS 1.6.16 (in progress)
       installing libgtx and its header files as well as the depending
       "scout" and "afsmonitor" applications (12095)
 
+    * Fixed building the gtx applications against newer ncurses (12125)
+
+    * Allow pioctls to work in environments where the syscall emulation
+      pseudo file is created in a read-only pseudo filesystem, like in
+      containers under recent versions of docker (12124)
+
   Linux clients
 
     * In Red Hat packaging, avoid following a symbolic link when writing
       the client CellServDB, which could overwrite the server CellServDB,
       by removing an existing symlink before writing the file (12081)
+
+    * In Red Hat packaging, avoid a conflict of openafs-debuginfo with
+      krb5-debuginfo by excluding our kpasswd executable from debuginfo
+      processing (12128) (RT #131771)
 
 OpenAFS 1.6.15 (Security Release)
 
