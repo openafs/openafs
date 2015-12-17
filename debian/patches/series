@@ -1,3 +1,1 @@
-0001-userok.c-Fix-fixed-size-on-stack-path-buffers.patch
-0002-Tweak-AFSDIR_PATH_MAX-definition.patch
 0003-Add-dummy-exit-command-for-afsd-to-do-nothing.patch
