@@ -150,6 +150,7 @@ debian/tmp/usr/share/man/man1/vos_online.1            usr/share/man/man1
 debian/tmp/usr/share/man/man1/vos_move.1              usr/share/man/man1
 debian/tmp/usr/share/man/man1/vos_partinfo.1          usr/share/man/man1
 debian/tmp/usr/share/man/man1/vos_release.1           usr/share/man/man1
+debian/tmp/usr/share/man/man1/vos_remaddrs.1          usr/share/man/man1
 debian/tmp/usr/share/man/man1/vos_remove.1            usr/share/man/man1
 debian/tmp/usr/share/man/man1/vos_remsite.1           usr/share/man/man1
 debian/tmp/usr/share/man/man1/vos_rename.1            usr/share/man/man1
