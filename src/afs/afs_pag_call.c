@@ -546,7 +546,7 @@ int
 afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
      long parm, parm2, parm3, parm4, parm5, parm6;
 {
-    /* superusers may shut us down, as with afsd --shutdown */
+    /* Superusers may shut us down, such as with afsd -shutdown. */
 #ifdef AFS_SUN5_ENV
     if (parm == AFSOP_SHUTDOWN && afs_suser(CRED()))
 #else
