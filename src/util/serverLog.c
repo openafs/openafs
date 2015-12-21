@@ -116,7 +116,7 @@ vFSLog(const char *format, va_list args)
 		   localtime_r(&currenttime, &tm));
     info = &tbuffer[len];
 
-    if (mrafsStyleLogs || threadIdLogs) {
+    if (threadIdLogs) {
 	num = (*threadNumProgram) ();
         if (num > -1) {
 	    snprintf(info, (sizeof tbuffer) - strlen(tbuffer), "[%d] ",
