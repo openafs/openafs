@@ -256,7 +256,7 @@ FreeHT(struct host *entry)
 afs_int32
 hpr_Initialize(struct ubik_client **uclient)
 {
-    afs_int32 code;
+    afs_int32 code, code2;
     struct rx_connection *serverconns[MAXSERVERS];
     struct rx_securityClass *sc;
     struct afsconf_dir *tdir;
@@ -323,7 +323,11 @@ hpr_Initialize(struct ubik_client **uclient)
 	ViceLog(0, ("hpr_Initialize: ubik client init failed. [%d]\n", code));
     }
     afsconf_Close(tdir);
-    code = rxs_Release(sc);
+    code2 = rxs_Release(sc);
+
+    if (code == 0) {
+	code = code2;
+    }
     return code;
 }
 
