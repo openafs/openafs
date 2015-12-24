@@ -1314,7 +1314,8 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 	pvcp = VTOAFS(parent->d_inode);
 	parent_dv = parent_vcache_dv(parent->d_inode, credp, locked);
 
-	if (parent_dv > dp->d_time || !(pvcp->f.states & CStatd)) {
+	if (parent_dv > dp->d_time || !(pvcp->f.states & CStatd)
+	    || afs_IsDynroot(pvcp)) {
 	    dput(parent);
 	    goto bad_dentry;
 	}
