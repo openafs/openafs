@@ -11,25 +11,14 @@ any action for any user who logs into the machine's local file system or
 issues a remote command that affects the machine's AFS server functioning,
 such as commands from the AFS command suites. Because failure to check
 authorization exposes the machine's AFS server functionality to attack,
-there are normally only two circumstances in which the file is present:
+this file should never be created.  It was once necessary to use
+NoAuth when initializing a new cell, but B<-localauth> and other
+tooling means that new cells can be running securely from the start.
+As such, this file is just a historical vestige.
 
-=over 4
-
-=item *
-
-During installation of the machine, as instructed in the I<OpenAFS Quick
-Start Guide>.
-
-=item *
-
-During correction of a server encryption key emergency, as discussed in
-the I<OpenAFS Administration Guide>.
-
-=back
-
-In all other circumstances, the absence of the file means that the AFS
-server processes perform authorization checking, verifying that the issuer
-of a command has the required privilege.
+The absence of the file means that the AFS server processes perform
+authorization checking, verifying that the issuer of a command has the
+required privilege.
 
 Create the file in one of the following ways:
 
