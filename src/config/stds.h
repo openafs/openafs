@@ -68,12 +68,12 @@ typedef unsigned __int64 afs_uint64;
 typedef long long afs_int64;
 typedef unsigned long long afs_uint64;
 #endif
-#define ZeroInt64(a)       (a = 0)
+#define ZeroInt64(a)       ((a) = 0)
 #define AssignInt64(a, b) *(b) = (a)
-#define IncInt64(a) (*(a))++
-#define IncUInt64(a) (*(a))++
-#define DecInt64(a) (*(a))--
-#define DecUInt64(a) (*(a))--
+#define IncInt64(a) ((*(a))++)
+#define IncUInt64(a) ((*(a))++)
+#define DecInt64(a) ((*(a))--)
+#define DecUInt64(a) ((*(a))--)
 #define GTInt64(a,b) ((a) > (b))
 #define GEInt64(a,b) ((a) >= (b))
 #define LEInt64(a,b) ((a) <= (b))
@@ -82,16 +82,16 @@ typedef unsigned long long afs_uint64;
 #define AddUInt64(a,b,c) *(c) = (afs_uint64)(a) + (afs_uint64)(b)
 #define SubtractInt64(a,b,c) *(c) = (afs_int64)(a) - (afs_int64)(b)
 #define SubtractUInt64(a,b,c) *(c) = (afs_uint64)(a) - (afs_uint64)(b)
-#define CompareInt64(a,b) (afs_int64)(a) - (afs_int64)(b)
-#define CompareUInt64(a,b) (afs_uint64)(a) - (afs_uint64)(b)
+#define CompareInt64(a,b) ((afs_int64)(a) - (afs_int64)(b))
+#define CompareUInt64(a,b) ((afs_uint64)(a) - (afs_uint64)(b))
 #define NonZeroInt64(a)                (a)
 #ifndef HAVE_INT64TOINT32
-#define Int64ToInt32(a)    (a) & MAX_AFS_UINT32
+#define Int64ToInt32(a)    ((a) & MAX_AFS_UINT32)
 #endif
 #define FillInt64(t,h,l) (t) = ((afs_int64)(h) << 32) | (l)
-#define SplitInt64(t,h,l) (h) = ((afs_int64)t) >> 32; (l) = (t) & MAX_AFS_UINT32
-#define RoundInt64ToInt32(a)    (a > MAX_AFS_UINT32) ? MAX_AFS_UINT32 : a
-#define RoundInt64ToInt31(a)    (a > MAX_AFS_INT32) ? MAX_AFS_INT32 : a
+#define SplitInt64(t,h,l) (h) = ((afs_int64)(t)) >> 32; (l) = (t) & MAX_AFS_UINT32
+#define RoundInt64ToInt32(a)    (((a) > MAX_AFS_UINT32) ? MAX_AFS_UINT32 : (a))
+#define RoundInt64ToInt31(a)    (((a) > MAX_AFS_INT32) ? MAX_AFS_INT32 : (a))
 
 #ifdef AFS_64BIT_CLIENT
 typedef afs_int64 afs_size_t;
