@@ -1686,15 +1686,14 @@ afs_linux_sillyrename(struct inode *dir, struct dentry *dentry,
 	tvc->uncred = credp;
 	tvc->f.states |= CUnlinked;
 	afs_linux_set_nfsfs_renamed(dentry);
+
+	__dp->d_time = 0;		/* force to revalidate */
+	d_move(dentry, __dp);
     } else {
 	osi_FreeSmallSpace(__name);
     }
     AFS_GUNLOCK();
 
-    if (!code) {
-	__dp->d_time = hgetlo(VTOAFS(dir)->f.m.DataVersion);
-	d_move(dentry, __dp);
-    }
     dput(__dp);
 
     return code;
@@ -1788,7 +1787,7 @@ afs_linux_mkdir(struct inode *dip, struct dentry *dp, int mode)
 #if !defined(STRUCT_SUPER_BLOCK_HAS_S_D_OP)
 	dp->d_op = &afs_dentry_operations;
 #endif
-	dp->d_time = hgetlo(VTOAFS(dip)->f.m.DataVersion);
+	dp->d_time = parent_vcache_dv(dip, credp, 1);
 	d_instantiate(dp, ip);
     }
     afs_DestroyAttr(vattr);
