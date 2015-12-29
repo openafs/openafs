@@ -234,7 +234,7 @@ afs_FlushVCache(struct vcache *avc, int *slept)
     else
 	osi_dnlc_purgevp(avc);
 
-    if (!afs_shuttingdown)
+    if (afs_shuttingdown == AFS_RUNNING)
 	afs_QueueVCB(avc, slept);
 
     /*

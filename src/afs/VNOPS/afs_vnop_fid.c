@@ -84,7 +84,7 @@ afs_fid(OSI_VC_DECL(avc), struct fid **fidpp)
 
     AFS_STATCNT(afs_fid);
 
-    if (afs_shuttingdown)
+    if (afs_shuttingdown != AFS_RUNNING)
 	return EIO;
 
     if (afs_NFSRootOnly && (avc == afs_globalVp))
