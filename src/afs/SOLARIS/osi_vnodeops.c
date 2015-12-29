@@ -1659,7 +1659,7 @@ int
 afs_inactive(struct vcache *avc, afs_ucred_t *acred)
 {
     struct vnode *vp = AFSTOV(avc);
-    if (afs_shuttingdown)
+    if (afs_shuttingdown != AFS_RUNNING)
 	return 0;
 
     /*

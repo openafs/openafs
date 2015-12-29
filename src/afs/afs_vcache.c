@@ -261,7 +261,7 @@ afs_FlushVCache(struct vcache *avc, int *slept)
      * via which someone could try to use the vcache. It is okay to drop
      * afs_xvcache at this point (if *slept is set). */
 
-    if (!afs_shuttingdown)
+    if (afs_shuttingdown == AFS_RUNNING)
 	afs_QueueVCB(avc, slept);
 
     /*
