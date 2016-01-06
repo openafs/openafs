@@ -60,8 +60,6 @@
 
 #ifdef FSSYNC_BUILD_CLIENT
 
-extern int LogLevel;
-
 static SYNC_client_state fssync_state =
     { -1,                    /* file descriptor */
       FSSYNC_ENDPOINT_DECL,  /* server endpoint */

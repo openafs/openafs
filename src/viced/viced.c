@@ -71,6 +71,7 @@
 #include <afs/audit.h>
 #include <afs/partition.h>
 #include <afs/dir.h>
+#include <afs/afsutil.h>
 #include "viced_prototypes.h"
 #include "viced.h"
 #include "host.h"
@@ -89,7 +90,7 @@ static afs_int32 Do_VLRegisterRPC(void);
 
 int eventlog = 0, rxlog = 0;
 FILE *debugFile;
-char *logFile = NULL;
+static struct logOptions logopts;
 
 pthread_mutex_t fsync_glock_mutex;
 pthread_cond_t fsync_cond;
@@ -115,7 +116,6 @@ int restartMode = RESTART_ORDINARY;
  */
 struct afs_PerfStats afs_perfstats;
 
-extern int LogLevel;
 extern int Statistics;
 
 int busyonrst = 1;
@@ -629,9 +629,9 @@ PrintCounters(void)
     ViceLog(0, ("Vice was last started at %s\n", tbuffer));
 
 #ifdef AFS_DEMAND_ATTACH_FS
-    if (LogLevel >= 125) {
+    if (GetLogLevel() >= 125) {
 	stats_flags = VOL_STATS_PER_CHAIN2;
-    } else if (LogLevel >= 25) {
+    } else if (GetLogLevel() >= 25) {
 	stats_flags = VOL_STATS_PER_CHAIN;
     }
     VPrintExtendedCacheStats(stats_flags);
@@ -912,7 +912,9 @@ enum optionsList {
     OPT_logfile,
     OPT_mrafslogs,
     OPT_threads,
+#ifdef HAVE_SYSLOG
     OPT_syslog,
+#endif
     OPT_peer,
     OPT_process,
     OPT_nojumbo,
@@ -1065,7 +1067,7 @@ ParseArgs(int argc, char *argv[])
 			CMD_OPTIONAL, "enable MRAFS style logging");
     cmd_AddParmAtOffset(opts, OPT_threads, "-p", CMD_SINGLE, CMD_OPTIONAL,
 		        "number of threads");
-#if !defined(AFS_NT40_ENV)
+#ifdef HAVE_SYSLOG
     cmd_AddParmAtOffset(opts, OPT_syslog, "-syslog", CMD_SINGLE_OR_FLAG,
 			CMD_OPTIONAL, "log to syslog");
 #endif
@@ -1300,9 +1302,6 @@ ParseArgs(int argc, char *argv[])
 	optstring = NULL;
     }
 
-    cmd_OptionAsInt(opts, OPT_debug, &LogLevel);
-    cmd_OptionAsFlag(opts, OPT_mrafslogs, &mrafsStyleLogs);
-
     if (cmd_OptionAsInt(opts, OPT_threads, &lwps) == 0) {
 	lwps_max = max_fileserver_thread() - FILESERVER_HELPER_THREADS;
 	if (lwps > lwps_max)
@@ -1311,12 +1310,40 @@ ParseArgs(int argc, char *argv[])
 	    lwps = 6;
     }
 
-#ifndef AFS_NT40_ENV
+    /* Logging options. */
+#ifdef HAVE_SYSLOG
     if (cmd_OptionPresent(opts, OPT_syslog)) {
-	serverLogSyslog = 1;
-	cmd_OptionAsInt(opts, OPT_syslog, &serverLogSyslogFacility);
-    }
+	if (cmd_OptionPresent(opts, OPT_logfile)) {
+	    fprintf(stderr, "Invalid options: -syslog and -logfile are exclusive.\n");
+	    return -1;
+	}
+	if (cmd_OptionPresent(opts, OPT_mrafslogs)) {
+	    fprintf(stderr, "Invalid options: -syslog and -mrafslogs are exclusive.\n");
+	    return -1;
+	}
+
+	logopts.lopt_dest = logDest_syslog;
+	logopts.lopt_facility = LOG_DAEMON;
+	logopts.lopt_tag = "fileserver";
+	cmd_OptionAsInt(opts, OPT_syslog, &logopts.lopt_facility);
+    } else
 #endif
+    {
+	logopts.lopt_dest = logDest_file;
+	logopts.lopt_rotateOnOpen = 1;
+	logopts.lopt_rotateStyle = logRotate_old;
+
+	if (cmd_OptionPresent(opts, OPT_logfile))
+	    cmd_OptionAsString(opts, OPT_logfile, (char**)&logopts.lopt_filename);
+	else
+	    logopts.lopt_filename = AFSDIR_SERVER_FILELOG_FILEPATH;
+
+	if (cmd_OptionPresent(opts, OPT_mrafslogs)) {
+	    logopts.lopt_rotateOnReset = 1;
+	    logopts.lopt_rotateStyle = logRotate_timestamp;
+	}
+    }
+    cmd_OptionAsInt(opts, OPT_debug, &logopts.lopt_logLevel);
 
     if (cmd_OptionPresent(opts, OPT_peer))
 	rx_enablePeerRPCStats();
@@ -1368,7 +1395,6 @@ ParseArgs(int argc, char *argv[])
 	busy_threshold = 3 * rxpackets / 2;
     }
 
-    cmd_OptionAsString(opts, OPT_logfile, &logFile);
     cmd_OptionAsString(opts, OPT_config, &FS_configPath);
 
 
@@ -1809,7 +1835,7 @@ main(int argc, char *argv[])
     CheckParms();
 
     FS_configPath = strdup(AFSDIR_SERVER_ETC_DIRPATH);
-    logFile = strdup(AFSDIR_SERVER_FILELOG_FILEPATH);
+    memset(&logopts, 0, sizeof(logopts));
 
     if (ParseArgs(argc, argv)) {
 	exit(-1);
@@ -1834,11 +1860,7 @@ main(int argc, char *argv[])
     /* initialize audit user check */
     osi_audit_set_user_check(confDir, fs_IsLocalRealmMatch);
 
-    /* Open FileLog on stdout, stderr, fd 1 and fd2 (for perror), sigh. */
-#ifndef AFS_NT40_ENV
-    serverLogSyslogTag = "fileserver";
-#endif
-    OpenLog(logFile);
+    OpenLog(&logopts);
 
     LogCommandLine(argc, argv, "starting", "", "File server", FSLog);
     if (afsconf_GetLatestKey(confDir, NULL, NULL) == 0) {

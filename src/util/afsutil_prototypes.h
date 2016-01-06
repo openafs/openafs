@@ -125,17 +125,21 @@ extern void afs_pthread_setname_self(const char *threadname);
 
 
 /* serverLog.c */
+struct logOptions;
 extern void WriteLogBuffer(char *buf, afs_uint32 len);
 extern void SetDebug_Signal(int signo);
 extern void ResetDebug_Signal(int signo);
 extern void SetupLogSignals(void);
-extern int OpenLog(const char *fileName);
+extern int OpenLog(struct logOptions *opts);
 extern int ReOpenLog(void);
 extern int LogThreadNum(void);
 extern void LogCommandLine(int argc, char **argv, const char *progname,
 			   const char *version, const char *logstring,
 			   void (*log) (const char *format, ...));
 extern void LogDesWarning(void);
+extern int GetLogLevel(void);
+extern enum logDest GetLogDest(void);
+extern const char *GetLogFilename(void);
 
 /* snprintf.c */
 

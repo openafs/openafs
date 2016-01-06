@@ -171,6 +171,7 @@ main(int argc, char *argv[])
     char clones[MAXHOSTSPERCELL];
     afs_uint32 host = ntohl(INADDR_ANY);
     char *auditFileName = NULL;
+    struct logOptions logopts;
 
     struct rx_service *tservice;
     struct rx_securityClass *sca[1];
@@ -194,6 +195,8 @@ main(int argc, char *argv[])
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
     osi_audit_init();
+
+    memset(&logopts, 0, sizeof(logopts));
 
     if (argc == 0) {
       usage:
@@ -321,7 +324,12 @@ main(int argc, char *argv[])
      * text logging. So open the AuthLog file for logging and redirect
      * stdin and stdout to it
      */
-    OpenLog(AFSDIR_SERVER_KALOG_FILEPATH);
+    logopts.lopt_dest = logDest_file;
+    logopts.lopt_filename = AFSDIR_SERVER_KALOG_FILEPATH;
+    logopts.lopt_rotateOnOpen = 1;
+    logopts.lopt_rotateStyle = logRotate_old;
+
+    OpenLog(&logopts);
     SetupLogSignals();
 #endif
 

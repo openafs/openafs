@@ -143,7 +143,6 @@ static void GetHandler(struct pollfd *fds, int maxfds, int events, int *nfds);
 static void CallHandler(fd_set * fdsetp);
 static void GetHandler(fd_set * fdsetp, int *maxfdp);
 #endif
-extern int LogLevel;
 
 static afs_int32 FSYNC_com_VolOp(osi_socket fd, SYNC_command * com, SYNC_response * res);
 
@@ -1063,7 +1062,7 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     if (vp) {
 	if (VVolOpLeaveOnline_r(vp, &info)) {
 	    VUpdateVolume_r(&error, vp, VOL_UPDATE_WAIT);	/* At least get volume stats right */
-	    if (LogLevel) {
+	    if (GetLogLevel() > 0) {
 		Log("FSYNC: Volume %" AFS_VOLID_FMT " (%s) was left on line for an external %s request\n",
 		    afs_printable_VolumeId_lu(V_id(vp)), V_name(vp),
 		    vcom->hdr->reason == V_CLONE ? "clone" :

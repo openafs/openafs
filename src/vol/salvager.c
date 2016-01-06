@@ -111,7 +111,6 @@
 pthread_t main_thread;
 #endif
 
-extern char *ShowLogFilename;
 extern char cml_version_number[];
 static int get_salvage_lock = 0;
 
@@ -120,7 +119,6 @@ struct CmdLine {
    char **argv;
 };
 
-#ifndef AFS_NT40_ENV
 static int
 TimeStampLogFile(char **logfile)
 {
@@ -137,11 +135,9 @@ TimeStampLogFile(char **logfile)
 		 lt->tm_min, lt->tm_sec) < 0) {
 	return ENOMEM;
     }
-    free(*logfile); /* free the default name */
     *logfile = stampSlvgLog;
     return 0;
 }
-#endif
 
 static int
 handleit(struct cmd_syndesc *as, void *arock)
@@ -152,14 +148,17 @@ handleit(struct cmd_syndesc *as, void *arock)
     afs_int32 seenpart = 0, seenvol = 0;
     VolumeId vid = 0;
     ProgramType pt;
-    char *logfile = strdup(AFSDIR_SERVER_SLVGLOG_FILEPATH);
 
 #ifdef FAST_RESTART
     afs_int32  seenany = 0;
 #endif
 
+    char *filename = NULL;
+    struct logOptions logopts;
     VolumePackageOptions opts;
     struct DiskPartition64 *partP;
+
+    memset(&logopts, 0, sizeof(logopts));
 
 #ifdef AFS_SGI_VNODE_GLUE
     if (afs_init_kernel_config(-1) < 0) {
@@ -274,30 +273,47 @@ handleit(struct cmd_syndesc *as, void *arock)
 		 || strcmp(ti->data, "a") == 0)
 	    orphans = ORPH_ATTACH;
     }
-#ifndef AFS_NT40_ENV		/* ignore options on NT */
+
     if ((ti = as->parms[16].items)) {	/* -syslog */
 	if (ShowLog) {
 	    fprintf(stderr, "Invalid options: -syslog and -showlog are exclusive.\n");
 	    Exit(1);
 	}
-	serverLogSyslog = 1;
-    }
-    if ((ti = as->parms[17].items)) {	/* -syslogfacility */
-	serverLogSyslogFacility = atoi(ti->data);
-    }
-
-    if ((ti = as->parms[18].items)) {	/* -datelogs */
-	int code = TimeStampLogFile(&logfile);
-	if (code != 0) {
-	    fprintf(stderr, "Failed to format log file name for -datelogs; code=%d\n", code);
-	    Exit(code);
+	if ((ti = as->parms[18].items)) {	/* -datelogs */
+	    fprintf(stderr, "Invalid option: -syslog and -datelogs are exclusive.\n");
+	    Exit(1);
 	}
-	ShowLogFilename = logfile;
-    }
-#endif
+#ifndef HAVE_SYSLOG
+	/* Do not silently ignore. */
+	fprintf(stderr, "Invalid option: -syslog is not available on this platform.\n");
+	Exit(1);
+#else
+	logopts.lopt_dest = logDest_syslog;
+	logopts.lopt_tag = "salvager";
 
-    OpenLog(logfile);
+	if ((ti = as->parms[17].items))  /* -syslogfacility */
+	    logopts.lopt_facility = atoi(ti->data);
+	else
+	    logopts.lopt_facility = LOG_DAEMON; /* default value */
+#endif
+    } else {
+	logopts.lopt_dest = logDest_file;
+
+	if ((ti = as->parms[18].items)) {	/* -datelogs */
+	    int code = TimeStampLogFile(&filename);
+	    if (code != 0) {
+	        fprintf(stderr, "Failed to format log file name for -datelogs; code=%d\n", code);
+	        Exit(code);
+	    }
+	    logopts.lopt_filename = filename;
+	} else {
+	    logopts.lopt_filename = AFSDIR_SERVER_SLVGLOG_FILEPATH;
+	}
+    }
+
+    OpenLog(&logopts);
     SetupLogSignals();
+    free(filename); /* Free string created by -datelogs, if one. */
 
     Log("%s\n", cml_version_number);
     LogCommandLine(cmdline->argc, cmdline->argv, "SALVAGER", SalvageVersion, "STARTING AFS", Log);

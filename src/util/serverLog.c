@@ -65,19 +65,14 @@ static int (*threadNumProgram) (void) = dummyThreadNum;
 /* After single-threaded startup, accesses to serverlogFD and
  * serverLogSyslog* are protected by LOCK_SERVERLOG(). */
 static int serverLogFD = -1;
-
-#ifndef AFS_NT40_ENV
-int serverLogSyslog = 0;
-int serverLogSyslogFacility = LOG_DAEMON;
-char *serverLogSyslogTag = 0;
-#endif
+static struct logOptions serverLogOpts;
 
 int LogLevel;
-int mrafsStyleLogs = 0;
 static int threadIdLogs = 0;
 static int resetSignals = 0;
 static char *ourName = NULL;
 
+static int OpenLogFile(const char *fileName);
 static void RotateLogFile(void);
 
 /*!
@@ -95,6 +90,37 @@ IsFIFO(const char *fileName)
 {
     struct stat statbuf;
     return (lstat(fileName, &statbuf) == 0) && (S_ISFIFO(statbuf.st_mode));
+}
+
+/*!
+ * Return the current logging level.
+ */
+int
+GetLogLevel(void)
+{
+    return LogLevel;
+}
+
+/*!
+ * Return the log destination.
+ */
+enum logDest
+GetLogDest(void)
+{
+    return serverLogOpts.lopt_dest;
+}
+
+/*!
+ * Get the log filename for file based logging.
+ *
+ * An empty string is returned if the log destination is not
+ * file based.  The caller must make a copy of the string
+ * if it is accessed after the CloseLog.
+ */
+const char *
+GetLogFilename(void)
+{
+    return serverLogOpts.lopt_dest == logDest_file ? (const char*)ourName : "";
 }
 
 void
@@ -148,8 +174,8 @@ vFSLog(const char *format, va_list args)
 
     len = strlen(tbuffer);
     LOCK_SERVERLOG();
-#ifndef AFS_NT40_ENV
-    if (serverLogSyslog) {
+#ifdef HAVE_SYSLOG
+    if (serverLogOpts.dest == logDest_syslog) {
 	syslog(LOG_INFO, "%s", info);
     } else
 #endif
@@ -160,7 +186,7 @@ vFSLog(const char *format, va_list args)
     UNLOCK_SERVERLOG();
 
 #if !defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
-    if (!serverLogSyslog) {
+    if (serverLogOpts.dest == logDest_file) {
 	fflush(stdout);
 	fflush(stderr);		/* in case they're sharing the same FD */
     }
@@ -239,13 +265,21 @@ RenameLogFile(const char *fileName)
 {
     int code;
     char *nextName = NULL;
+    int tries;
+    time_t t;
+    struct stat buf;
+    struct tm *timeFields;
 
-    if (mrafsStyleLogs) {
-	int tries;
-	time_t t;
-	struct stat buf;
-	struct tm *timeFields;
-
+    switch (serverLogOpts.lopt_rotateStyle) {
+    case logRotate_none:
+	break;
+    case logRotate_old:
+	code = asprintf(&nextName, "%s.old", fileName);
+	if (code < 0) {
+	    nextName = NULL;
+	}
+	break;
+    case logRotate_timestamp:
 	time(&t);
 	for (tries = 0; nextName == NULL && tries < 100; t++, tries++) {
 	    timeFields = localtime(&t);
@@ -264,11 +298,9 @@ RenameLogFile(const char *fileName)
 		nextName = NULL;
 	    }
 	}
-    } else {
-	code = asprintf(&nextName, "%s.old", fileName);
-	if (code < 0) {
-	    nextName = NULL;
-	}
+	break;
+    default:
+	opr_Assert(0);
     }
     if (nextName != NULL) {
 	rk_rename(fileName, nextName);	/* Don't check the error code. */
@@ -343,7 +375,7 @@ ResetDebug_Signal(int signo)
     if (threadIdLogs == 1)
         threadIdLogs = 0;
 #endif
-    if (mrafsStyleLogs) {
+    if (serverLogOpts.lopt_rotateOnReset) {
 	RotateLogFile();
     }
 }				/*ResetDebug_Signal */
@@ -415,33 +447,33 @@ RedirectStdStreams(const char *fileName)
     }
 }
 
-int
-OpenLog(const char *fileName)
+/*!
+ * Open the log file.
+ *
+ * Open the log file using the options given in OpenLog().
+ *
+ * \returns 0 on success
+ */
+static int
+OpenLogFile(const char *fileName)
 {
     /*
      * This function should allow various libraries that inconsistently
      * use stdout/stderr to all go to the same place
      */
     int tempfd;
-    int flags = O_WRONLY | O_TRUNC | O_CREAT | O_APPEND;
+    int flags = O_WRONLY | O_CREAT | O_APPEND;
 
-#if defined(AFS_PTHREAD_ENV)
-    opr_Verify(pthread_once(&serverLogOnce, InitServerLogMutex) == 0);
-#endif /* AFS_PTHREAD_ENV */
-
-#ifndef AFS_NT40_ENV
-    if (serverLogSyslog) {
-	openlog(serverLogSyslogTag, LOG_PID, serverLogSyslogFacility);
-	return (0);
-    }
-#endif
+    opr_Assert(serverLogOpts.dest == logDest_file);
 
     opr_Assert(fileName != NULL);
 
     if (IsFIFO(fileName)) {
 	/* Support named pipes as logs by not rotating them. */
 	flags |= O_NONBLOCK;
-    } else {
+    } else if (serverLogOpts.lopt_rotateOnOpen) {
+	/* Old style logging always started a new log file. */
+	flags |= O_TRUNC;
 	RenameLogFile(fileName);
     }
 
@@ -460,6 +492,103 @@ OpenLog(const char *fileName)
     serverLogFD = tempfd;
 
     return 0;
+}
+
+/*!
+ * Open the log file descriptor or a connection to the system log.
+ *
+ * This function should be called once during program initialization and
+ * must be called before calling FSLog() or WriteLogBuffer().  The
+ * fields of the given argument specify the logging destination and
+ * various optional features.
+ *
+ * The lopt_logLevel value specifies the initial logging level.
+ *
+ * The lopt_dest enum specifies the logging destination; either
+ * file based (logDest_file) or the system log (logDest_syslog).
+ *
+ * File Based Logging
+ * ------------------
+ *
+ * A file will be opened for log messages when the lopt_dest enum is set
+ * to logDest_file.  The file specified by lopt_filename will be opened
+ * for appending log messages.  A new file will be created if the log
+ * file does not exist.
+ *
+ * The lopt_rotateOnOpen flag specifies whether an existing log file is
+ * to be renamed and a new log file created during the call to OpenLog.
+ * The lopt_rotateOnOpen flag has no effect if the file given by
+ * lopt_filename is a named pipe (fifo).
+ *
+ * The lopt_rotateOnReset flag specifies whether the log file is renamed
+ * and then reopened when the reset signal (SIGHUP) is caught.
+ *
+ * The lopt_rotateStyle enum specifies how the new log file is renamed when
+ * lopt_rotateOnOpen or lopt_rotateOnReset are set. The lopt_rotateStyle
+ * may be the traditional Transarc style (logRotate_old) or the MR-AFS
+ * style (logRotate_timestamp).
+ *
+ * When lopt_rotateStyle is set to logRotate_old, the suffix ".old" is
+ * appended to the log file name. The existing ".old" log file is
+ * removed.
+ *
+ * When lopt_rotateStyle is set to logRotate_timestamp, a timestamp
+ * string is appended to the log file name and existing files are not
+ * removed.
+ *
+ * \note  Messages written to stdout and stderr are redirected to the log
+ *        file when file-based logging is in effect.
+ *
+ * System Logging
+ * --------------
+ *
+ * A connection to the system log (syslog) will be established for log
+ * messages when the lopt_dest enum is set to logDest_syslog.
+ *
+ * The lopt_facility specifies the system log facility to be used when
+ * writing messages to the system log.
+ *
+ * The lopt_tag string specifies the indentification string to be used
+ * when writing messages to the system log.
+ *
+ * \param opts  logging options. A copy of the logging
+ *              options will be made before returning to
+ *              the caller.
+ *
+ * \returns 0 on success
+ */
+int
+OpenLog(struct logOptions *opts)
+{
+    int code;
+
+#if defined(AFS_PTHREAD_ENV)
+    opr_Verify(pthread_once(&serverLogOnce, InitServerLogMutex) == 0);
+#endif /* AFS_PTHREAD_ENV */
+
+    LogLevel = serverLogOpts.logLevel = opts->logLevel;
+    serverLogOpts.dest = opts->dest;
+    switch (serverLogOpts.dest) {
+    case logDest_file:
+	serverLogOpts.lopt_rotateOnOpen = opts->lopt_rotateOnOpen;
+	serverLogOpts.lopt_rotateOnReset = opts->lopt_rotateOnReset;
+	serverLogOpts.lopt_rotateStyle = opts->lopt_rotateStyle;
+	/* OpenLogFile() sets ourName; don't cache filename here. */
+	code = OpenLogFile(opts->lopt_filename);
+	break;
+#ifdef HAVE_SYSLOG
+    case logDest_syslog:
+	serverLogOpts.lopt_rotateOnOpen = 0;
+	serverLogOpts.lopt_rotateOnReset = 0;
+	serverLogOpts.lopt_rotateStyle = logRotate_none;
+	openlog(opts->lopt_tag, LOG_PID, opts->lopt_facility);
+	code = 0;
+	break;
+#endif
+    default:
+	opr_Assert(0);
+    }
+    return code;
 }				/*OpenLog */
 
 /*!
@@ -475,8 +604,8 @@ ReOpenLog(void)
 {
     int flags = O_WRONLY | O_APPEND | O_CREAT;
 
-#if !defined(AFS_NT40_ENV)
-    if (serverLogSyslog) {
+#ifdef HAVE_SYSLOG
+    if (serverLogOpts.dest == logDest_syslog) {
 	return 0;
     }
 #endif
@@ -511,7 +640,7 @@ RotateLogFile(void)
 	    close(serverLogFD);
 	    serverLogFD = -1;
 	}
-	OpenLog(ourName);
+	OpenLogFile(ourName);
     }
     UNLOCK_SERVERLOG();
 }
@@ -525,8 +654,9 @@ void
 CloseLog(void)
 {
     LOCK_SERVERLOG();
-#ifndef AFS_NT40_ENV
-    if (serverLogSyslog) {
+
+#ifdef HAVE_SYSLOG
+    if (serverLogOpts.dest == logDest_syslog) {
 	closelog();
     } else
 #endif

@@ -52,7 +52,6 @@ afs_uint32 rd_HostAddress[MAXSERVERID + 1];
 afs_uint32 wr_HostAddress[MAXSERVERID + 1];
 
 static void *CheckSignal(void*);
-int LogLevel = 0;
 int smallMem = 0;
 int restrictedQueryLevel = RESTRICTED_QUERY_ANYUSER;
 int rxJumbograms = 0;		/* default is to not send and receive jumbo grams */
@@ -147,7 +146,9 @@ enum optionsList {
     OPT_database,
     OPT_logfile,
     OPT_threads,
+#ifdef HAVE_SYSLOG
     OPT_syslog,
+#endif
     OPT_peer,
     OPT_process,
     OPT_nojumbo,
@@ -176,10 +177,10 @@ main(int argc, char **argv)
     char clones[MAXHOSTSPERCELL];
     afs_uint32 host = ntohl(INADDR_ANY);
     struct cmd_syndesc *opts;
+    struct logOptions logopts;
 
     char *vl_dbaseName;
     char *configDir;
-    char *logFile;
 
     char *auditFileName = NULL;
     char *interface = NULL;
@@ -205,6 +206,8 @@ main(int argc, char **argv)
 #endif
     osi_audit_init();
 
+    memset(&logopts, 0, sizeof(logopts));
+
     /* Initialize dirpaths */
     if (!(initAFSDirPath() & AFSDIR_SERVER_PATHS_OK)) {
 #ifdef AFS_NT40_ENV
@@ -217,7 +220,6 @@ main(int argc, char **argv)
 
     vl_dbaseName = strdup(AFSDIR_SERVER_VLDB_FILEPATH);
     configDir = strdup(AFSDIR_SERVER_ETC_DIRPATH);
-    logFile = strdup(AFSDIR_SERVER_VLOG_FILEPATH);
 
     cmd_DisableAbbreviations();
     cmd_DisablePositionalCommands();
@@ -245,7 +247,7 @@ main(int argc, char **argv)
 		        CMD_OPTIONAL, "location of logfile");
     cmd_AddParmAtOffset(opts, OPT_threads, "-p", CMD_SINGLE, CMD_OPTIONAL,
 		        "number of threads");
-#if !defined(AFS_NT40_ENV)
+#ifdef HAVE_SYSLOG
     cmd_AddParmAtOffset(opts, OPT_syslog, "-syslog", CMD_SINGLE_OR_FLAG,
 		        CMD_OPTIONAL, "log to syslog");
 #endif
@@ -308,9 +310,7 @@ main(int argc, char **argv)
 	free(interface);
     }
 
-    cmd_OptionAsInt(opts, OPT_debug, &LogLevel);
     cmd_OptionAsString(opts, OPT_database, &vl_dbaseName);
-    cmd_OptionAsString(opts, OPT_logfile, &logFile);
 
     if (cmd_OptionAsInt(opts, OPT_threads, &lwps) == 0) {
 	if (lwps > MAXLWP) {
@@ -319,12 +319,32 @@ main(int argc, char **argv)
 	     lwps = MAXLWP;
 	}
     }
-#ifndef AFS_NT40_ENV
+
+    cmd_OptionAsInt(opts, OPT_debug, &logopts.lopt_logLevel);
+#ifdef HAVE_SYSLOG
     if (cmd_OptionPresent(opts, OPT_syslog)) {
-        serverLogSyslog = 1;
-        cmd_OptionAsInt(opts, OPT_syslog, &serverLogSyslogFacility);
-    }
+	if (cmd_OptionPresent(opts, OPT_logfile)) {
+	    fprintf(stderr, "Invalid options: -syslog and -logfile are exclusive.\n");
+	    return -1;
+	}
+
+	logopts.lopt_dest = logDest_syslog;
+	logopts.lopt_facility = LOG_DAEMON; /* default value */
+	logopts.lopt_tag = "vlserver";
+	cmd_OptionAsInt(opts, OPT_syslog, &logopts.lopt_facility);
+    } else
 #endif
+    {
+	logopts.lopt_dest = logDest_file;
+	logopts.lopt_rotateOnOpen = 1;
+	logopts.lopt_rotateStyle = logRotate_old;
+
+	if (cmd_OptionPresent(opts, OPT_logfile))
+	    cmd_OptionAsString(opts, OPT_logfile, (char**)&logopts.lopt_filename);
+	else
+	    logopts.lopt_filename = AFSDIR_SERVER_VLOG_FILEPATH;
+    }
+
 
     /* rx options */
     if (cmd_OptionPresent(opts, OPT_peer))
@@ -362,10 +382,7 @@ main(int argc, char **argv)
 	osi_audit_file(auditFileName);
     }
 
-#ifndef AFS_NT40_ENV
-    serverLogSyslogTag = "vlserver";
-#endif
-    OpenLog(logFile);	/* set up logging */
+    OpenLog(&logopts);
 #ifdef AFS_PTHREAD_ENV
     opr_softsig_Init();
     SetupLogSoftSignals();

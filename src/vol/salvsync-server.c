@@ -115,7 +115,6 @@ static afs_int32 SALVSYNC_com_CancelAll(SALVSYNC_command * com, SALVSYNC_respons
 static afs_int32 SALVSYNC_com_Link(SALVSYNC_command * com, SALVSYNC_response * res);
 
 
-extern int LogLevel;
 extern int VInit;
 extern pthread_mutex_t vol_salvsync_mutex;
 

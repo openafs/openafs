@@ -34,7 +34,14 @@ DBM *kalog_db;
 void
 kalog_Init(void)
 {
-    OpenLog(AFSDIR_SERVER_KALOGDB_FILEPATH);	/* set up logging */
+    struct logOptions logopts;
+
+    memset(&logopts, 0, sizeof(logopts));
+    logopts.lopt_dest = logDest_file;
+    logopts.lopt_filename = AFSDIR_SERVER_KALOGDB_FILEPATH;
+    logopts.lopt_rotateOnOpen = 1;
+    logopts.lopt_rotateStyle = logRotate_old;
+    OpenLog(&logopts);
     SetupLogSignals();
     kalog_db =
 	dbm_open(AFSDIR_SERVER_KALOG_FILEPATH, O_WRONLY | O_CREAT,

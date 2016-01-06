@@ -1602,6 +1602,7 @@ AC_SUBST(INSTALL_KAUTH)
 
 AC_CHECK_FUNCS([ \
 	arc4random \
+	closelog \
 	fcntl \
 	fseeko64 \
 	ftello64 \
@@ -1613,6 +1614,7 @@ AC_CHECK_FUNCS([ \
 	getrlimit \
 	issetugid \
 	mkstemp \
+	openlog \
 	poll \
 	pread \
 	preadv \
@@ -1630,6 +1632,7 @@ AC_CHECK_FUNCS([ \
 	strerror \
 	sysconf \
 	sysctl \
+	syslog \
 	tdestroy \
 	timegm \
 ])

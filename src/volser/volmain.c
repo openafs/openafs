@@ -80,7 +80,7 @@ int DoPreserveVolumeStats = 0;
 int rxJumbograms = 0;	/* default is to not send and receive jumbograms. */
 int rxMaxMTU = -1;
 char *auditFileName = NULL;
-char *logFile = NULL;
+static struct logOptions logopts;
 char *configDir = NULL;
 
 #define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
@@ -236,7 +236,9 @@ enum optionsList {
     OPT_process,
     OPT_preserve_vol_stats,
     OPT_sync,
+#ifdef HAVE_SYSLOG
     OPT_syslog,
+#endif
     OPT_logfile,
     OPT_config,
     OPT_restricted_query
@@ -283,7 +285,7 @@ ParseArgs(int argc, char **argv) {
 	    CMD_OPTIONAL, "enable RX RPC statistics");
     cmd_AddParmAtOffset(opts, OPT_preserve_vol_stats, "-preserve-vol-stats", CMD_FLAG,
 	    CMD_OPTIONAL, "preserve volume statistics");
-#if !defined(AFS_NT40_ENV)
+#ifdef HAVE_SYSLOG
     cmd_AddParmAtOffset(opts, OPT_syslog, "-syslog", CMD_SINGLE_OR_FLAG,
 	    CMD_OPTIONAL, "log to syslog");
 #endif
@@ -307,7 +309,6 @@ ParseArgs(int argc, char **argv) {
     cmd_OptionAsFlag(opts, OPT_rxbind, &rxBind);
     cmd_OptionAsFlag(opts, OPT_dotted, &rxkadDisableDotCheck);
     cmd_OptionAsFlag(opts, OPT_preserve_vol_stats, &DoPreserveVolumeStats);
-    cmd_OptionAsInt(opts, OPT_debug, &LogLevel);
     if (cmd_OptionPresent(opts, OPT_peer))
 	rx_enablePeerRPCStats();
     if (cmd_OptionPresent(opts, OPT_process))
@@ -316,12 +317,31 @@ ParseArgs(int argc, char **argv) {
 	rxJumbograms = 0;
     if (cmd_OptionPresent(opts, OPT_jumbo))
 	rxJumbograms = 1;
-#ifndef AFS_NT40_ENV
+
+#ifdef HAVE_SYSLOG
     if (cmd_OptionPresent(opts, OPT_syslog)) {
-	serverLogSyslog = 1;
-	cmd_OptionAsInt(opts, OPT_syslog, &serverLogSyslogFacility);
-    }
+	if (cmd_OptionPresent(opts, OPT_logfile)) {
+	    fprintf(stderr, "Invalid options: -syslog and -logfile are exclusive.\n");
+	    return -1;
+	}
+	logopts.lopt_dest = logDest_syslog;
+	logopts.lopt_facility = LOG_DAEMON;
+	logopts.lopt_tag = "volserver";
+	cmd_OptionAsInt(opts, OPT_syslog, &logopts.lopt_facility);
+    } else
 #endif
+    {
+	logopts.lopt_dest = logDest_file;
+	logopts.lopt_rotateOnOpen = 1;
+	logopts.lopt_rotateStyle = logRotate_old;
+
+	if (cmd_OptionPresent(opts, OPT_logfile))
+	    cmd_OptionAsString(opts, OPT_logfile, (char**)&logopts.lopt_filename);
+	else
+	    logopts.lopt_filename = AFSDIR_SERVER_VOLSERLOG_FILEPATH;
+    }
+    cmd_OptionAsInt(opts, OPT_debug, &logopts.lopt_logLevel);
+
     cmd_OptionAsInt(opts, OPT_rxmaxmtu, &rxMaxMTU);
     if (cmd_OptionAsInt(opts, OPT_udpsize, &optval) == 0) {
 	if (optval < rx_GetMinUdpBufSize()) {
@@ -355,7 +375,6 @@ ParseArgs(int argc, char **argv) {
 	    return -1;
 	}
     }
-    cmd_OptionAsString(opts, OPT_logfile, &logFile);
     cmd_OptionAsString(opts, OPT_config, &configDir);
     if (cmd_OptionAsString(opts, OPT_restricted_query,
 			   &restricted_query_parameter) == 0) {
@@ -415,7 +434,6 @@ main(int argc, char **argv)
     }
 
     configDir = strdup(AFSDIR_SERVER_ETC_DIRPATH);
-    logFile = strdup(AFSDIR_SERVER_VOLSERLOG_FILEPATH);
 
     if (ParseArgs(argc, argv)) {
 	exit(1);
@@ -445,9 +463,8 @@ main(int argc, char **argv)
 	exit(1);
     }
 #endif
-    /* Open VolserLog and map stdout, stderr into it; VInitVolumePackage2 can
-       log, so we need to do this here */
-    OpenLog(logFile);
+
+    OpenLog(&logopts);
 
     VOptDefaults(volumeServer, &opts);
     if (VInitVolumePackage2(volumeServer, &opts)) {

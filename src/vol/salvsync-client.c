@@ -40,7 +40,6 @@
  * SALVSYNC is a feature specific to the demand attach fileserver
  */
 
-extern int LogLevel;
 extern int VInit;
 extern pthread_mutex_t vol_salvsync_mutex;
 

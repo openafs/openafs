@@ -53,7 +53,6 @@ extern int CurrentConnections;
 extern int SystemId;
 extern int AnonymousID;
 extern prlist AnonCPS;
-extern int LogLevel;
 extern struct afsconf_dir *confDir;	/* config dir object */
 extern int lwps;		/* the max number of server threads */
 extern afsUUID FS_HostUUID;
@@ -1128,7 +1127,7 @@ h_AddHostToUuidHashTable_r(struct afsUUID *uuid, struct host *host)
 
 	if (chain->hostPtr->z.interface &&
 	    afs_uuid_equal(&chain->hostPtr->z.interface->uuid, uuid)) {
-	    if (LogLevel >= 125) {
+	    if (GetLogLevel() >= 125) {
 		afsUUID_to_string(&chain->hostPtr->z.interface->uuid, uuid1,
 				  127);
 		afsUUID_to_string(uuid, uuid2, 127);
@@ -1149,7 +1148,7 @@ h_AddHostToUuidHashTable_r(struct afsUUID *uuid, struct host *host)
     chain->hostPtr = host;
     chain->next = hostUuidHashTable[index];
     hostUuidHashTable[index] = chain;
-         if (LogLevel < 125)
+         if (GetLogLevel() < 125)
 	       return;
      afsUUID_to_string(uuid, uuid2, 127);
      ViceLog(125,
@@ -1173,7 +1172,7 @@ h_DeleteHostFromUuidHashTable_r(struct host *host)
      /* hash into proper bucket */
      index = h_UuidHashIndex(&host->z.interface->uuid);
 
-     if (LogLevel >= 125)
+     if (GetLogLevel() >= 125)
 	 afsUUID_to_string(&host->z.interface->uuid, uuid1, 127);
      for (uhp = &hostUuidHashTable[index]; (uth = *uhp); uhp = &uth->next) {
          opr_Assert(uth->hostPtr);
@@ -4259,7 +4258,7 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
 
     h_AddHostToUuidHashTable_r(&interface->uuid, host);
 
-    if (LogLevel >= 125) {
+    if (GetLogLevel() >= 125) {
 	afsUUID_to_string(&interface->uuid, uuidstr, 127);
 
 	ViceLog(125, ("--- uuid %s\n", uuidstr));

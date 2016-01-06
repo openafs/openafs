@@ -176,8 +176,6 @@ static int VCheckDetach(Volume * vp);
 static Volume * GetVolume(Error * ec, Error * client_ec, VolumeId volumeId,
                           Volume * hint, const struct timespec *ts);
 
-int LogLevel;			/* Vice loglevel--not defined as extern so that it will be
-				 * defined when not linked with vice, XXXX */
 ProgramType programType;	/* The type of program using the package */
 static VolumePackageOptions vol_opts;
 
@@ -1125,7 +1123,7 @@ VAttachVolumesByPartition(struct DiskPartition64 *diskP, int * nAttached, int * 
       (*(vp ? nAttached : nUnattached))++;
       if (error == VOFFLINE)
 	Log("Volume %d stays offline (/vice/offline/%s exists)\n", VolumeNumber(dp->d_name), dp->d_name);
-      else if (LogLevel >= 5) {
+      else if (GetLogLevel() >= 5) {
 	Log("Partition %s: attached volume %d (%s)\n",
 	    diskP->name, VolumeNumber(dp->d_name),
 	    dp->d_name);
@@ -1356,7 +1354,7 @@ VShutdown_r(void)
 	for (queue_Scan(&VolumeHashTable.Table[i],vp,np,Volume)) {
 	    code = VHold_r(vp);
 	    if (code == 0) {
-		if (LogLevel >= 5)
+		if (GetLogLevel() >= 5)
 		    Log("VShutdown:  Attempting to take volume %" AFS_VOLID_FMT " offline.\n",
 			afs_printable_VolumeId_lu(vp->hashid));
 
@@ -1844,7 +1842,7 @@ VShutdownVolume_r(Volume * vp)
 
     VCreateReservation_r(vp);
 
-    if (LogLevel >= 5) {
+    if (GetLogLevel() >= 5) {
 	Log("VShutdownVolume_r:  vid=%" AFS_VOLID_FMT ", device=%d, state=%u\n",
 	    afs_printable_VolumeId_lu(vp->hashid), vp->partition->device,
 	    (unsigned int) V_attachState(vp));
@@ -1872,7 +1870,7 @@ VShutdownVolume_r(Volume * vp)
     case VOL_STATE_ATTACHED:
 	code = VHold_r(vp);
 	if (!code) {
-	    if (LogLevel >= 5)
+	    if (GetLogLevel() >= 5)
 		Log("VShutdown:  Attempting to take volume %" AFS_VOLID_FMT " offline.\n",
 		    afs_printable_VolumeId_lu(vp->hashid));
 
@@ -2299,7 +2297,7 @@ VPreAttachVolumeByVp_r(Error * ec,
     VLRU_Init_Node_r(vp);
     VChangeState_r(vp, VOL_STATE_PREATTACHED);
 
-    if (LogLevel >= 5)
+    if (GetLogLevel() >= 5)
 	Log("VPreAttachVolumeByVp_r:  volume %" AFS_VOLID_FMT " pre-attached\n", afs_printable_VolumeId_lu(vp->hashid));
 
   done:
@@ -2578,7 +2576,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
 		goto done;
 	    }
 	}
-	if (LogLevel)
+	if (GetLogLevel() != 0)
 	  Log("VOnline:  volume %" AFS_VOLID_FMT " (%s) attached and online\n", afs_printable_VolumeId_lu(V_id(vp)),
 		V_name(vp));
     }
@@ -2728,7 +2726,7 @@ VAttachVolumeByVp_r(Error * ec, Volume * vp, int mode)
 	    goto done;
 	}
     }
-    if (LogLevel)
+    if (GetLogLevel() != 0)
 	Log("VOnline:  volume %" AFS_VOLID_FMT " (%s) attached and online\n",
 	    afs_printable_VolumeId_lu(V_id(vp)), V_name(vp));
   done:
@@ -4233,7 +4231,7 @@ GetVolume(Error * ec, Error * client_ec, VolumeId volumeId, Volume * hint,
 	    VGET_CTR_INC(V6);
 	    /* Only log the error if it was a totally unexpected error.  Simply
 	     * a missing inode is likely to be caused by the volume being deleted */
-	    if (errno != ENXIO || LogLevel)
+	    if (errno != ENXIO || GetLogLevel() != 0)
 		Log("Volume %" AFS_VOLID_FMT ": couldn't reread volume header\n",
 		    afs_printable_VolumeId_lu(vp->hashid));
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -4481,7 +4479,7 @@ VScanCalls_r(struct Volume *vp)
 #endif /* AFS_DEMAND_ATTACH_FS */
 
     for(queue_Scan(&vp->rx_call_list, cbv, ncbv, VCallByVol)) {
-	if (LogLevel > 0) {
+	if (GetLogLevel() != 0) {
 	    struct rx_peer *peer;
 	    char hoststr[16];
 	    peer = rx_PeerOf(rx_ConnectionOf(cbv->call));
@@ -5172,7 +5170,7 @@ VCheckOffline(Volume * vp)
 	VUpdateVolume_r(&error, vp, 0);
 	VCloseVolumeHandles_r(vp);
 
-	if (LogLevel) {
+	if (GetLogLevel() != 0) {
 	    if (V_offlineMessage(vp)[0]) {
 		Log("VOffline: Volume %lu (%s) is now offline (%s)\n",
 		    afs_printable_uint32_lu(V_id(vp)), V_name(vp),
@@ -5211,7 +5209,7 @@ VCheckOffline(Volume * vp)
 	V_inUse(vp) = 0;
 	VUpdateVolume_r(&error, vp, 0);
 	VCloseVolumeHandles_r(vp);
-	if (LogLevel) {
+	if (GetLogLevel() != 0) {
 	    if (V_offlineMessage(vp)[0]) {
 		Log("VOffline: Volume %lu (%s) is now offline (%s)\n",
 		    afs_printable_uint32_lu(V_id(vp)), V_name(vp),
@@ -7218,7 +7216,7 @@ VInitVLRU(void)
     /* setup the timing constants */
     VLRU_ComputeConstants();
 
-    /* XXX put inside LogLevel check? */
+    /* XXX put inside log level check? */
     Log("VLRU: starting scanner with the following configuration parameters:\n");
     Log("VLRU:  offlining volumes after minimum of %d seconds of inactivity\n", VLRU_offline_thresh);
     Log("VLRU:  running VLRU soft detach pass every %d seconds\n", VLRU_offline_interval);

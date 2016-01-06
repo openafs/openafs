@@ -138,7 +138,7 @@ static pthread_cond_t worker_cv;
 static void * SalvageChildReaperThread(void *);
 static int DoSalvageVolume(struct SalvageQueueNode * node, int slot);
 
-static void SalvageServer(int argc, char **argv);
+static void SalvageServer(int argc, char **argv, struct logOptions *logopts);
 static void SalvageClient(VolumeId vid, char * pname);
 
 static int Reap_Child(char * prog, int * pid, int * status);
@@ -194,6 +194,9 @@ handleit(struct cmd_syndesc *opts, void *arock)
     VolumeId vid = 0;
     struct cmdline_rock *rock = (struct cmdline_rock *)arock;
     char *optstring = NULL;
+    struct logOptions logopts;
+
+    memset(&logopts, 0, sizeof(logopts));
 
 #ifdef AFS_SGI_VNODE_GLUE
     if (afs_init_kernel_config(-1) < 0) {
@@ -253,12 +256,30 @@ handleit(struct cmd_syndesc *opts, void *arock)
 	free(optstring);
 	optstring = NULL;
     }
-#ifndef AFS_NT40_ENV		/* ignore options on NT */
+
+#ifdef HAVE_SYSLOG
     if (cmd_OptionPresent(opts, OPT_syslog)) {
-	serverLogSyslog = 1;
-    }
-    cmd_OptionAsInt(opts, OPT_syslogfacility, &serverLogSyslogFacility);
+	if (cmd_OptionPresent(opts, OPT_logfile)) {
+	    fprintf(stderr, "Invalid options: -syslog and -logfile are exclusive.\n");
+	    return -1;
+	}
+
+	logopts.lopt_dest = logDest_syslog;
+	logopts.lopt_facility = LOG_DAEMON;
+	logopts.lopt_tag = "salvageserver";
+	cmd_OptionAsInt(opts, OPT_syslogfacility, &logopts.lopt_facility);
+    } else
 #endif
+    {
+	logopts.lopt_dest = logDest_file;
+	logopts.lopt_rotateOnOpen = 1;
+	logopts.lopt_rotateStyle = logRotate_old;
+
+	if (cmd_OptionPresent(opts, OPT_logfile))
+	    cmd_OptionAsString(opts, OPT_logfile, (char**)&logopts.lopt_filename);
+	else
+	    logopts.lopt_filename = AFSDIR_SERVER_SALSRVLOG_FILEPATH;
+    }
 
     if (cmd_OptionPresent(opts, OPT_client)) {
 	if (cmd_OptionAsString(opts, OPT_partition, &optstring) == 0) {
@@ -287,7 +308,7 @@ handleit(struct cmd_syndesc *opts, void *arock)
 	SalvageClient(vid, pname);
 
     } else {  /* salvageserver mode */
-	SalvageServer(rock->argc, rock->argv);
+	SalvageServer(rock->argc, rock->argv, &logopts);
     }
     return (0);
 }
@@ -393,7 +414,7 @@ main(int argc, char **argv)
     cmd_AddParmAtOffset(ts, OPT_orphans, "-orphans", CMD_SINGLE, CMD_OPTIONAL,
 	    "ignore | remove | attach");
 
-#if !defined(AFS_NT40_ENV)
+#ifdef HAVE_SYSLOG
     cmd_AddParmAtOffset(ts, OPT_syslog, "-syslog", CMD_FLAG, CMD_OPTIONAL,
 	    "Write salvage log to syslogs");
     cmd_AddParmAtOffset(ts, OPT_syslogfacility, "-syslogfacility", CMD_SINGLE,
@@ -474,7 +495,7 @@ SalvageClient(VolumeId vid, char * pname)
 static int * child_slot;
 
 static void
-SalvageServer(int argc, char **argv)
+SalvageServer(int argc, char **argv, struct logOptions *logopts)
 {
     int pid, ret;
     struct SalvageQueueNode * node;
@@ -486,7 +507,7 @@ SalvageServer(int argc, char **argv)
     /* All entries to the log will be appended.  Useful if there are
      * multiple salvagers appending to the log.
      */
-    OpenLog(AFSDIR_SERVER_SALSRVLOG_FILEPATH);
+    OpenLog(logopts);
     SetupLogSignals();
 
     Log("%s\n", cml_version_number);
@@ -580,7 +601,8 @@ SalvageServer(int argc, char **argv)
 static int
 DoSalvageVolume(struct SalvageQueueNode * node, int slot)
 {
-    char *childLog;
+    char *filename = NULL;
+    struct logOptions logopts;
     struct DiskPartition64 * partP;
 
     /* do not allow further forking inside salvager */
@@ -591,13 +613,17 @@ DoSalvageVolume(struct SalvageQueueNode * node, int slot)
      * another thread may have held the lock when fork was
      * called!
      */
-    if (asprintf(&childLog, "%s.%d",
+    memset(&memset, 0, sizeof(logopts));
+    logopts.lopt_dest = logDest_file;
+    logopts.lopt_rotateStyle = logRotate_none;
+    if (asprintf(&filename, "%s.%d",
 		 AFSDIR_SERVER_SLVGLOG_FILEPATH, getpid()) < 0) {
 	fprintf(stderr, "out of memory\n");
 	return ENOMEM;
     }
-    OpenLog(childLog);
-    free(childLog);
+    logopts.lopt_filename = filename;
+    OpenLog(&logopts);
+    free(filename);
 
     if (node->command.sop.parent <= 0) {
 	Log("salvageServer: invalid volume id specified; salvage aborted\n");

@@ -33,13 +33,46 @@
 #include <stdarg.h>
 #include <string.h>
 
-extern int LogLevel;
-extern int mrafsStyleLogs;
-#ifndef AFS_NT40_ENV
-extern int serverLogSyslog;
-extern int serverLogSyslogFacility;
-extern char *serverLogSyslogTag;
+enum logDest {
+    logDest_file,
+#ifdef HAVE_SYSLOG
+    logDest_syslog,
 #endif
+};
+
+enum logRotateStyle {
+    logRotate_none = 0,
+    logRotate_old,        /**< Rename log file by adding .old to the file name. */
+    logRotate_timestamp,  /**< Rename log file to a timestamped file name. */
+};
+
+struct logOptions {
+    int logLevel;                  /**< The initial log level. */
+    enum logDest dest;             /**< Log destination */
+    union {
+	struct fileOptions {
+	    const char *filename;  /**< Log filename (may be a named pipe). */
+	    int rotateOnOpen;      /**< Rotate the log file during OpenLog. */
+	    int rotateOnReset;     /**< Rotate the log file when the SIGHUP is caught. */
+	    enum logRotateStyle rotateStyle; /**< Specifies how logs are renamed. */
+	} fileOpts;
+#ifdef HAVE_SYSLOG
+	struct syslogOptions {
+	    int facility;          /**< The syslog facility. */
+	    char *tag;             /**< The syslog identification. */
+	} syslogOpts;
+#endif
+    } opts;
+};
+#define lopt_logLevel logLevel
+#define lopt_dest dest
+#define lopt_filename  opts.fileOpts.filename
+#define lopt_rotateOnOpen opts.fileOpts.rotateOnOpen
+#define lopt_rotateOnReset opts.fileOpts.rotateOnReset
+#define lopt_rotateStyle opts.fileOpts.rotateStyle
+#define lopt_facility opts.syslogOpts.facility
+#define lopt_tag opts.syslogOpts.tag
+
 extern void vFSLog(const char *format, va_list args)
 	AFS_ATTRIBUTE_FORMAT(__printf__, 1, 0);
 
@@ -48,16 +81,22 @@ extern void SetLogThreadNumProgram(int (*func) (void) );
 extern void FSLog(const char *format, ...)
 	AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
 
+
+extern int LogLevel; /* For logging macros only. */
+
 #define ViceLog(level, str)  do { if ((level) <= LogLevel) (FSLog str); } while (0)
 #define vViceLog(level, str) do { if ((level) <= LogLevel) (vFSLog str); } while (0)
 #define ViceLogThenPanic(level, str) \
     do { ViceLog(level, str); osi_Panic str; } while(0);
 
-extern int OpenLog(const char *filename);
+extern int OpenLog(struct logOptions *opts);
 extern int ReOpenLog(void);
 extern void SetupLogSignals(void);
 extern void CloseLog(void);
 extern void SetupLogSoftSignals(void);
+extern int GetLogLevel(void);
+extern enum logDest GetLogDest(void);
+extern const char *GetLogFilename(void);
 
 #ifdef AFS_NT40_ENV
 #ifndef _MFC_VER

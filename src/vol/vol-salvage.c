@@ -603,7 +603,11 @@ SalvageFileSysParallel(struct DiskPartition64 *partP)
 		numjobs++;
 	    } else {
 		int fd;
-		char *logFileName;
+		char *filename;
+		struct logOptions logopts;
+
+		memset(&logopts, 0, sizeof(logopts));
+		logopts.lopt_dest = logDest_file;
 
 		for (fd = 0; fd < 16; fd++)
 		    close(fd);
@@ -612,11 +616,12 @@ SalvageFileSysParallel(struct DiskPartition64 *partP)
 		dup2(0, 2);
 
 		ShowLog = 0; /* Child processes do not display. */
-		if (asprintf(&logFileName, "%s.%d",
+		if (asprintf(&filename, "%s.%d",
 			     AFSDIR_SERVER_SLVGLOG_FILEPATH,
 			     jobs[startjob]->jobnumb) >= 0) {
-		    OpenLog(logFileName);
-		    free(logFileName);
+		    logopts.lopt_filename = filename;
+		    OpenLog(&logopts);
+		    free(filename);
 		}
 
 		SalvageFileSys1(jobs[startjob]->partP, 0);
@@ -626,10 +631,11 @@ SalvageFileSysParallel(struct DiskPartition64 *partP)
 	}
     }				/* while ( thisjob || (!partP && numjobs > 0) ) */
 
-    /* If waited for all jobs to complete, now collect log files and return */
-#ifndef AFS_NT40_ENV
-    if (!serverLogSyslog)		/* if syslogging - no need to collect */
-#endif
+    /*
+     * If waited for all jobs to complete, now collect log files and return.
+     * No files can be collected when logging to the system log (syslog).
+     */
+    if (GetLogDest() == logDest_file) {
 	if (!partP) {
 	    char *buf = calloc(1, SALV_BUFFER_SIZE);
 	    char *logFileName;
@@ -655,7 +661,7 @@ SalvageFileSysParallel(struct DiskPartition64 *partP)
 		free(buf);
 	    }
 	}
-
+    }
     return;
 }
 
@@ -4842,17 +4848,17 @@ static void
 SalvageShowLog(void)
 {
     char line[256];
+    char *filename;
     FILE *logFile;
 
     if (ShowLog == 0 || ClientMode) {
-	return;
+	return; /* nothing to do */
     }
-
-    if (ShowLogFilename == NULL) {
-	ShowLogFilename = strdup(AFSDIR_SERVER_SLVGLOG_FILEPATH);
-    }
+    filename = strdup(GetLogFilename());
+    opr_Assert(filename != NULL);
     CloseLog();
-    logFile = afs_fopen(ShowLogFilename, "r");
+
+    logFile = afs_fopen(filename, "r");
     if (!logFile)
 	printf("Can't read %s, exiting\n", ShowLogFilename);
     else {
@@ -4860,6 +4866,7 @@ SalvageShowLog(void)
 	    printf("%s", line);
 	fflush(stdout);
     }
+    free(filename);
 }
 
 static void

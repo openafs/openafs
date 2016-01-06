@@ -54,8 +54,6 @@ struct VnodeClassInfo VnodeClassInfo[nVNODECLASSES];
 
 void VNLog(afs_int32 aop, afs_int32 anparms, ... );
 
-extern int LogLevel;
-
 /* logging stuff for finding bugs */
 #define	THELOGSIZE	5120
 static afs_int32 theLog[THELOGSIZE];
@@ -951,7 +949,7 @@ VnLoad(Error * ec, Volume * vp, Vnode * vnp,
 	    Log("VnLoad: Couldn't read vnode %u, volume %" AFS_VOLID_FMT " (%s); volume needs salvage\n", Vn_id(vnp), afs_printable_VolumeId_lu(V_id(vp)), V_name(vp));
 	} else {
 	    /* vnode is not allocated */
-	    if (LogLevel >= 5)
+	    if (GetLogLevel() >= 5)
 		Log("VnLoad: Couldn't read vnode %u, volume %" AFS_VOLID_FMT " (%s); read %d bytes, errno %d\n",
 		    Vn_id(vnp), afs_printable_VolumeId_lu(V_id(vp)), V_name(vp), (int)nBytes, errno);
 	    *ec = VNOVNODE;

@@ -35,14 +35,10 @@ hostutil_GetNameByINet
 initAFSDirPath
 int64_to_flipbase64
 ktime_DateToInt32
-mrafsStyleLogs
 pthread_recursive_mutex_lock
 pthread_recursive_mutex_lock
 pthread_recursive_mutex_unlock
 pthread_recursive_mutex_unlock
-serverLogSyslog
-serverLogSyslogFacility
-serverLogSyslogTag
 util_GetHumanInt32
 util_GetInt32
 util_GetInt64

@@ -371,6 +371,7 @@ main(int argc, char **argv)
     afs_int32 numClasses;
 
     extern int rx_stackSize;
+    struct logOptions logopts;
 
 #ifdef AFS_NT40_ENV
     /* initialize winsock */
@@ -399,6 +400,12 @@ main(int argc, char **argv)
 
     memset(&cellinfo_s, 0, sizeof(cellinfo_s));
     memset(clones, 0, sizeof(clones));
+
+    memset(&logopts, 0, sizeof(logopts));
+    logopts.lopt_dest = logDest_file;
+    logopts.lopt_filename = AFSDIR_SERVER_BUDBLOG_FILEPATH;
+    logopts.lopt_rotateOnOpen = 1;
+    logopts.lopt_rotateStyle = logRotate_old;
 
     osi_audit_init();
     osi_audit(BUDB_StartEvent, 0, AUD_END);
@@ -442,7 +449,7 @@ main(int argc, char **argv)
 	BUDB_EXIT(0);
 
     /* open the log file */
-    OpenLog(AFSDIR_SERVER_BUDBLOG_FILEPATH);
+    OpenLog(&logopts);
 
     /* open the cell's configuration directory */
     LogDebug(4, "opening %s\n", globalConfPtr->cellConfigdir);
