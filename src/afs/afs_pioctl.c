@@ -2913,7 +2913,7 @@ DECL_PIOCTL(PGetCacheSize)
 	    if (tdc){
 	        results[9]++;
 	        size = tdc->validPos;
-	        if ( 0 < size && size < (1<<12) ) results[10]++;
+	        if ( 0 <= size && size < (1<<12) ) results[10]++;
     	        else if (size < (1<<14) ) results[11]++;
 	        else if (size < (1<<16) ) results[12]++;
 	        else if (size < (1<<18) ) results[13]++;
