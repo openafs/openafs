@@ -2919,7 +2919,7 @@ DECL_PIOCTL(PGetCacheSize)
     afs_int32 results[MAXGCSTATS];
     afs_int32 flags;
     struct dcache * tdc;
-    int i, size;
+    int i;
 
     AFS_STATCNT(PGetCacheSize);
 
@@ -2951,8 +2951,9 @@ DECL_PIOCTL(PGetCacheSize)
 
 	    tdc = afs_indexTable[i];
 	    if (tdc){
+		afs_size_t size = tdc->validPos;
+
 	        results[9]++;
-	        size = tdc->validPos;
 	        if ( 0 <= size && size < (1<<12) ) results[10]++;
     	        else if (size < (1<<14) ) results[11]++;
 	        else if (size < (1<<16) ) results[12]++;
