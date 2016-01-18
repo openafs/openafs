@@ -976,6 +976,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_FUNC([kernel_setsockopt],
 				     [#include <linux/net.h>],
 				     [kernel_setsockopt(NULL, 0, 0, NULL, 0);])
+		 AC_CHECK_LINUX_FUNC([locks_lock_file_wait],
+				     [#include <linux/fs.h>],
+				     [locks_lock_file_wait(NULL, NULL);])
 		 AC_CHECK_LINUX_FUNC([page_follow_link],
 				     [#include <linux/fs.h>],
 				     [page_follow_link(0,0);])
