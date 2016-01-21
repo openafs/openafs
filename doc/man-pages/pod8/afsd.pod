@@ -242,15 +242,6 @@ Sets the number of I<stat> entries available in machine memory for caching
 status information about cached AFS files. The default is based on the
 size of the cache. Use the B<-stat> argument to override the default.
 
-=item *
-
-If the B<-settime> option is specified, then it randomly selects a file
-server machine in the local cell as the source for the correct time. Every
-five minutes thereafter, the local clock is adjusted (if necessary) to
-match the file server machine's clock. This is not enabled by default.  It
-is recommended, instead, that the Network Time Protocol Daemon be used to
-synchronize the time.
-
 =back
 
 In addition to setting cache configuration parameters, the B<afsd> program
@@ -300,10 +291,7 @@ Server.
 =item *
 
 One I<server connection> daemon, which sends a probe to the File
-Server every few minutes to check that it is still accessible. If the
-B<-settime> option is set, it also synchronizes the machine's clock
-with the clock on a randomly-chosen file server machine. There is
-always one server connection daemon.
+Server every few minutes to check that it is still accessible.
 
 =item *
 
@@ -641,12 +629,8 @@ mounted in /Network/afs like other network file systems.
 
 =item B<-nosettime>
 
-This is enabled by default. It prevents the Cache Manager from
-synchronizing its clock with the clock on a server machine selected at
-random by checking the time on the server machine every five minutes.
-This is the recommended behavior; instead of the AFS Cache Manager, the
-Network Time Protocol Daemon should be used to synchronize the system
-time.
+This option is obsolete and no longer has any effect.  The operating system
+provided time keeping daemons should be used to maintain the system time.
 
 =item B<-prealloc> <I<number of preallocated blocks>>
 
@@ -703,8 +687,8 @@ improve OpenAFS client performance in some circumstances.
 
 =item B<-settime>
 
-Enable native AFS time synchronization. This option is the opposite of
-B<-nosettime> and cannot be used with the B<-nosettime> option.
+This option is obsolete and no longer has any effect.  The operating system
+provided time keeping daemons should be used to maintain the system time.
 
 =item B<-shutdown>
 
