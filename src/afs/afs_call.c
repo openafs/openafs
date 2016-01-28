@@ -1453,14 +1453,16 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	}
     }
     else if (parm == AFSOP_SHUTDOWN) {
-	afs_cold_shutdown = 0;
-	if (parm2 == 1)
-	    afs_cold_shutdown = 1;
 	if (afs_globalVFS != 0) {
 	    afs_warn("AFS isn't unmounted yet! Call aborted\n");
 	    code = EACCES;
-	} else
+	} else {
+	    afs_cold_shutdown = 0;
+	    if (parm2 == 1) {
+		afs_cold_shutdown = 1;
+	    }
 	    afs_shutdown();
+	}
     } else if (parm == AFSOP_AFS_VFSMOUNT) {
 #ifdef	AFS_HPUX_ENV
 	vfsmount(parm2, parm3, parm4, parm5);
