@@ -1456,12 +1456,10 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	if (afs_globalVFS != 0) {
 	    afs_warn("AFS isn't unmounted yet! Call aborted\n");
 	    code = EACCES;
+	} else if (parm2 == AFS_COLD) {
+	    afs_shutdown(AFS_COLD);
 	} else {
-	    afs_cold_shutdown = 0;
-	    if (parm2 == 1) {
-		afs_cold_shutdown = 1;
-	    }
-	    afs_shutdown();
+	    afs_shutdown(AFS_WARM);
 	}
     } else if (parm == AFSOP_AFS_VFSMOUNT) {
 #ifdef	AFS_HPUX_ENV
@@ -1645,7 +1643,7 @@ afs_CheckInit(void)
 
 enum afs_shutdown_state afs_shuttingdown = AFS_RUNNING;
 void
-afs_shutdown(void)
+afs_shutdown(enum afs_shutdown_type cold_flag)
 {
     extern short afs_brsDaemons;
     extern afs_int32 afs_CheckServerDaemonStarted;
@@ -1660,6 +1658,8 @@ afs_shutdown(void)
 
     if (afs_shuttingdown != AFS_RUNNING)
 	return;
+
+    afs_cold_shutdown = ((cold_flag == AFS_COLD) ? 1 : 0);
 
     afs_shuttingdown = AFS_FLUSHING_CB;
 

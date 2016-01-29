@@ -353,7 +353,7 @@ afs_put_super(struct super_block *sbp)
     afs_globalVFS = 0;
     afs_globalVp = 0;
 
-    afs_shutdown();
+    afs_shutdown(AFS_WARM);
     mntput(afs_cacheMnt);
 
     osi_linux_verify_alloced_memory();

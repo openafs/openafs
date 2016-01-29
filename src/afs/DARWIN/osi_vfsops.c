@@ -196,7 +196,7 @@ afs_unmount(struct mount *mp, int flags, CTX_TYPE ctx)
 	        vflush(mp, NULLVP, FORCECLOSE/*0*/);
 		AFS_GLOCK();
 		afs_globalVFS = 0;
-		afs_shutdown();
+		afs_shutdown(AFS_WARM);
 	    } else {
 		AFS_GUNLOCK();
 		return EBUSY;

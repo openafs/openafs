@@ -2255,7 +2255,7 @@ CheckOptions(struct cmd_syndesc *as)
 	 * Cold shutdown is the default
 	 */
 	printf("afsd: Shutting down all afs processes and afs state\n");
-	code = afsd_syscall(AFSOP_SHUTDOWN, 1);
+	code = afsd_syscall(AFSOP_SHUTDOWN, 1);		/* always AFS_COLD */
 	if (code) {
 	    printf("afsd: AFS still mounted; Not shutting down\n");
 	    exit(1);

@@ -75,7 +75,7 @@ afs_freevfs(void)
 
     afs_globalVFS = 0;
 
-    afs_shutdown();
+    afs_shutdown(AFS_WARM);
 }
 
 int
