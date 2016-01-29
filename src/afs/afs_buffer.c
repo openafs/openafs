@@ -594,7 +594,7 @@ shutdown_bufferpackage(void)
     for (i = 0; i < nbuffers; i += NPB, tp += NPB) {
 	afs_osi_Free(tp->data, NPB * AFS_BUFFER_PAGESIZE);
     }
-    afs_osi_Free(Buffers, nbuffers * sizeof(struct buffer));
+    afs_osi_Free(Buffers, afs_max_buffers * sizeof(struct buffer));
     Buffers = NULL;
     nbuffers = 0;
     timecounter = 1;
