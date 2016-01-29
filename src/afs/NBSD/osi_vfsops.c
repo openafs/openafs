@@ -302,8 +302,7 @@ afs_unmount(struct mount *mp, int mntflags)
     vflush(mp, NULLVP, 0);	/* don't support forced */
     AFS_GLOCK();
     afs_globalVFS = NULL;
-    afs_cold_shutdown = 1;
-    afs_shutdown();		/* XXX */
+    afs_shutdown(AFS_COLD);
     AFS_GUNLOCK();
 
     mp->mnt_data = NULL;

@@ -245,7 +245,7 @@ afs_unmount(OSI_VFS_ARG(afsp), flags, cr)
     }
     ReleaseWriteLock(&afs_xvcache);
     afs_globalVFS = 0;
-    afs_shutdown();
+    afs_shutdown(AFS_WARM);
 #ifdef AFS_SGI65_ENV
     VFS_REMOVEBHV(afsp, &afs_vfs_bhv);
 #endif

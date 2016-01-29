@@ -100,8 +100,7 @@ afs_unmount(struct vfs *afsp, int flag)
     AFS_STATCNT(afs_unmount);
 
     afs_globalVFS = 0;
-    afs_cold_shutdown = 1;
-    afs_shutdown();
+    afs_shutdown(AFS_COLD);
 
     AFS_VFSUNLOCK();
     return 0;

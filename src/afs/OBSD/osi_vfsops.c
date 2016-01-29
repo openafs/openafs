@@ -290,8 +290,7 @@ afs_unmount(afsp, flags, p)
     afsp->mnt_data = NULL;
     AFS_GLOCK();
     afs_globalVFS = 0;
-    afs_cold_shutdown = 1;
-    afs_shutdown();		/* XXX */
+    afs_shutdown(AFS_COLD);
     AFS_GUNLOCK();
 
     /* give up syscall entries for ioctl & setgroups, which we've stolen */

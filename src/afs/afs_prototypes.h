@@ -33,7 +33,14 @@ extern int afs_cold_shutdown;
 extern char afs_rootVolumeName[MAXROOTVOLNAMELEN];
 extern void afs_FlushCBs(void);
 extern int afs_CheckInit(void);
-extern void afs_shutdown(void);
+/* for afs_shutdown */
+enum afs_shutdown_type {
+	AFS_WARM = 0,
+	AFS_COLD = 1,
+};
+extern void afs_shutdown(enum afs_shutdown_type);
+
+
 extern void shutdown_afstest(void);
 extern int afs_syscall_call(long parm, long parm2, long parm3,
 			    long parm4, long parm5, long parm6);
