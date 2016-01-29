@@ -31,7 +31,6 @@ extern void shutdown_bufferpackage(void);
 /* afs_call.c */
 extern int afs_cold_shutdown;
 extern char afs_rootVolumeName[MAXROOTVOLNAMELEN];
-extern void afs_shutdown(void);
 extern void afs_FlushCBs(void);
 extern int afs_CheckInit(void);
 extern void afs_shutdown(void);
