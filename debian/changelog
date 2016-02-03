@@ -11,6 +11,10 @@ openafs (1.6.17-1) UNRELEASED; urgency=high
       they were administrators (CVE-2016-2860).
     - Fix an information leak of uninitialized memory over the network.
     - Fix a crash when the AFS root volume is not found.
+  * debian/patches/Linux-4.4-key_payload-has-no-member-value.patch,
+    debian/patches/Linux-4.4-Use-locks_lock_file_wait.patch,
+    debian/patches/Linux-4.4-Do-not-use-splice.patch:
+    Add upstream patches for current Linux kernel support.  (Closes: #815521)
 
  -- Anders Kaseorg <andersk@mit.edu>  Wed, 16 Mar 2016 13:39:06 -0400
 

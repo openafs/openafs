@@ -1,1 +1,4 @@
 0003-Add-dummy-exit-command-for-afsd-to-do-nothing.patch
+Linux-4.4-key_payload-has-no-member-value.patch
+Linux-4.4-Use-locks_lock_file_wait.patch
+Linux-4.4-Do-not-use-splice.patch
