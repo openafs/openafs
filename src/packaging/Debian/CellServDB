@@ -1,4 +1,4 @@
->grand.central.org      #GCO Public CellServDB 01 Jan 2016
+>grand.central.org      #GCO Public CellServDB 14 Mar 2017
 18.9.48.14                      #grand.mit.edu
 128.2.13.219                    #grand-old-opry.central.org
 >wu-wien.ac.at          #University of Economics, Vienna, Austria
@@ -57,8 +57,8 @@
 195.113.0.36                    #asterix.ruk.cuni.cz
 195.113.0.37                    #obelix.ruk.cuni.cz
 195.113.0.40                    #sal.ruk.cuni.cz
->ics.muni.cz            #Masaryk university, Czech Republic
-147.251.3.11                    #grond.ics.muni.cz
+>ics.muni.cz            #Masaryk university
+147.228.240.30                  #afs-plzen.meta.zcu.cz
 147.251.9.9                     #smaug2.ics.muni.cz
 195.113.214.4                   #tarkil-xen.cesnet.cz
 >zcu.cz                 #University of West Bohemia, Czech Republic
@@ -257,7 +257,7 @@
 >northstar.dartmouth.edu #Dartmouth College Research Computing
 129.170.16.22                   #halley.dartmouth.edu
 129.170.16.26                   #andromeda.dartmouth.edu
-129.170.16.43                   #cygnusx1.dartmouth.edu
+129.170.199.250                 #kuiper.dartmouth.edu
 >cs.hm.edu              #Department Computer Science Munich University Of Applied Science
 129.187.208.31                  #afs1.cs.hm.edu
 >eecs.harvard.edu       #Harvard - EECS
@@ -267,10 +267,13 @@
 129.186.1.243                   #afsdb-1.iastate.edu
 129.186.6.243                   #afsdb-2.iastate.edu
 129.186.142.243                 #afsdb-3.iastate.edu
->athena.mit.edu         #MIT/Athena cell
-18.3.48.11                      #aether.mit.edu
+>acm.jhu.edu            #Johns Hopkins ACM chapter
+128.220.35.191                  #chicago.acm.jhu.edu
+128.220.70.76                   #typhon.acm.jhu.edu
+>athena.mit.edu         #Cell Name
 18.9.48.11                      #castor.mit.edu
 18.9.48.12                      #pollux.mit.edu
+18.27.2.14                      #prill.mit.edu
 >csail.mit.edu          #MIT Computer Science & Artificial Intelligence Lab
 128.30.2.13                     #titanic.csail.mit.edu
 128.30.2.31                     #vasa.csail.mit.edu
@@ -291,6 +294,8 @@
 18.181.0.23                     #ronald-ann.mit.edu
 >msu.edu                #Michigan State University Main Cell
 35.9.7.10                       #afsdb0.cl.msu.edu
+35.9.7.11                       #afsdb1.cl.msu.edu
+35.9.7.12                       #afsdb2.cl.msu.edu
 >nd.edu                 #University of Notre Dame
 129.74.223.17                   #john.helios.nd.edu
 129.74.223.33                   #lizardo.helios.nd.edu
@@ -384,6 +389,8 @@
 >cs.uwm.edu             #University of Wisconsin--Milwaukee
 129.89.38.124                   #solomons.cs.uwm.edu
 129.89.143.71                   #filip.cs.uwm.edu
+>cs.vassar.edu          #Computer Science research network / Vassar College
+143.229.6.73                    #afsserv.cs.vassar.edu
 >cs.wisc.edu            #Univ. of Wisconsin-Madison, Computer Sciences Dept.
 128.105.132.14                  #timon.cs.wisc.edu
 128.105.132.15                  #pumbaa.cs.wisc.edu
@@ -401,9 +408,8 @@
 128.104.160.14                  #fray.physics.wisc.edu
 128.104.160.15                  #buffy.physics.wisc.edu
 >ciemat.es              #Ciemat, Madrid, Spain
-130.206.11.42                   #afsdb1.ciemat.es
-130.206.11.217                  #afsdb2.ciemat.es
-130.206.11.247                  #afsdb3.ciemat.es
+192.101.165.10                  #afsdb1.ciemat.es
+192.101.165.11                  #afsdb2.ciemat.es
 >ifca.unican.es         #Instituto de Fisica de Cantabria (IFCA), Santander, Spain
 193.144.209.20                  #gridwall.ifca.unican.es
 >ific.uv.es             #Instituto de Fisica Corpuscular, Valencia, Spain
@@ -430,10 +436,6 @@
 130.199.48.32                   #aafs01.usatlas.bnl.gov
 130.199.48.33                   #aafs02.usatlas.bnl.gov
 130.199.48.34                   #aafs03.usatlas.bnl.gov
->fnal.gov               #Fermi National Acclerator Laboratory
-131.225.68.1                    #fsus01.fnal.gov
-131.225.68.4                    #fsus03.fnal.gov
-131.225.68.14                   #fsus04.fnal.gov
 >jpl.nasa.gov           #Jet Propulsion Laboratory
 137.78.160.21                   #afsdb08.jpl.nasa.gov
 137.78.160.22                   #afsdb09.jpl.nasa.gov
@@ -532,6 +534,8 @@
 132.229.170.27                  #fwncisafs1.gorlaeus.net
 >laroia.net             #Laroia Networks
 66.66.102.254                   #supercore.laroia.net
+>pallissard.net         #pallissard.net
+198.98.51.77                    #a001.pallissard.net
 >sinenomine.net         #Sine Nomine Associates
 199.167.73.142                  #afsdb1.sinenomine.net
 199.167.73.152                  #afsdb4.sinenomine.net
@@ -595,26 +599,22 @@
 130.237.216.11                  #afsdb1.ict.kth.se
 130.237.216.12                  #afsdb2.ict.kth.se
 130.237.216.13                  #afsdb3.ict.kth.se
->isk.kth.se             #Royal Institute of Technology, ISK
-130.237.216.17                  #afsdb1.isk.kth.se
-130.237.216.82                  #afsdb2.isk.kth.se
-130.237.216.83                  #afsdb3.isk.kth.se
 >it.kth.se              #Royal Institute of Technology, Teleinformatics, Kista
 130.237.216.14                  #afsdb1.it.kth.se
 130.237.216.15                  #afsdb2.it.kth.se
 130.237.216.16                  #afsdb3.it.kth.se
 >md.kth.se              #Royal Institute of Technology, MMK
-130.237.57.7                    #mdafs-1.md.kth.se
+130.237.32.63                   #mdafs-1.sys.kth.se
 >mech.kth.se            #Royal Institute of Technology, MECH
 130.237.233.142                 #matterhorn.mech.kth.se
 130.237.233.143                 #castor.mech.kth.se
 130.237.233.144                 #pollux.mech.kth.se
 >nada.kth.se            #Royal Institute of Technology, NADA
-130.237.222.20                  #kosmos.nada.kth.se
-130.237.223.12                  #sputnik.nada.kth.se
-130.237.224.78                  #mir.nada.kth.se
-130.237.227.23                  #gagarin.nada.kth.se
-130.237.228.28                  #laika.nada.kth.se
+130.237.222.20                  #afsdb-1.csc.kth.se
+130.237.223.12                  #afsdb-2.csc.kth.se
+130.237.224.78                  #afsdb-3.csc.kth.se
+130.237.227.23                  #afsdb-4.csc.kth.se
+130.237.228.28                  #afsdb-5.csc.kth.se
 >pdc.kth.se             #Royal Institute of Technology, PDC
 130.237.232.29                  #crab.pdc.kth.se
 130.237.232.112                 #anna.pdc.kth.se
@@ -625,15 +625,16 @@
 130.237.234.101                 #fishburger.stacken.kth.se
 >syd.kth.se             #Royal Institute of Technology, KTH-Syd
 130.237.83.23                   #afs.haninge.kth.se
->physto.se              #Physics department Stockholm University
-130.237.205.36                  #sysafs1.physto.se
-130.237.205.72                  #sysafs2.physto.se
 >sanchin.se             #Sanchin Consulting AB, Sweden
 192.195.148.10                  #sesan.sanchin.se
 >su.se                  #Stockholm University
 130.237.162.81                  #afsdb1.su.se
 130.237.162.82                  #afsdb2.su.se
 130.237.162.230                 #afsdb3.su.se
+>fysik.su.se            #Stockholm University, Physics Department
+130.237.244.134                 #srv01.fysik.su.se
+130.237.244.135                 #srv02.fysik.su.se
+130.237.244.139                 #srv05.fysik.su.se
 >f9.ijs.si              #F9, Jozef Stefan Institue
 194.249.156.1                   #brenta.ijs.si
 >p-ng.si                #University of Nova Gorica
@@ -642,6 +643,8 @@
 >ihep.su                #Institute for High-Energy Physics
 194.190.165.201                 #fs0001.ihep.su
 194.190.165.202                 #fs0002.ihep.su
+>motherfsck.tech        #motherfsck.tech
+198.98.52.149                   #a001.motherfsck.tech
 >hep-ex.physics.metu.edu.tr #METU Department of Physics, Experimental HEP group, Ankara/Turke
 144.122.31.131                  #neutrino.physics.metu.edu.tr
 >phy.bris.ac.uk         #Bristol University - physics
