@@ -77,11 +77,17 @@ close(HELPER);
 is($? & 0x7f, SIGSEGV, "Helper exited on SEGV signal.");
 
 # Check that an internal bus error kills the process.
+# Skip this test when running on ancient versions of Perl
+# which do not have SIGBUS defined.
+SKIP: {
+    my $sigbus = eval "SIGBUS";
+    skip("Skipping buserror test; SIGBUS constant is not defined.", 1) unless $sigbus;
 
-my ($fh, $path) = mkstemp("/tmp/softsig-t_XXXXXX");
-$pid = open(HELPER, "$softsig_helper -buserror $path |")
-    or die "Couldn't start test helper.";
-close(HELPER);
-is($? & 0x7f, SIGBUS, "Helper exited on BUS signal.");
-$fh->close;
-unlink $path;
+    my ($fh, $path) = mkstemp("/tmp/softsig-t_XXXXXX");
+    $pid = open(HELPER, "$softsig_helper -buserror $path |")
+        or die "Couldn't start test helper.";
+    close(HELPER);
+    is($? & 0x7f, $sigbus, "Helper exited on BUS signal.");
+    $fh->close;
+    unlink $path;
+}
