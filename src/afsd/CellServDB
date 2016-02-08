@@ -1,4 +1,4 @@
->grand.central.org      #GCO Public CellServDB 19 Jan 2015
+>grand.central.org      #GCO Public CellServDB 01 Jan 2016
 18.9.48.14                      #grand.mit.edu
 128.2.13.219                    #grand-old-opry.central.org
 >wu-wien.ac.at          #University of Economics, Vienna, Austria
@@ -6,9 +6,9 @@
 137.208.7.57                    #caravaggio.wu-wien.ac.at
 137.208.8.14                    #vermeer.wu-wien.ac.at
 >hephy.at               #hephy-vienna
-193.170.243.10                  #mowgli.oeaw.ac.at
-193.170.243.12                  #baloo.oeaw.ac.at
-193.170.243.14                  #akela.oeaw.ac.at
+193.170.243.10                  #afs01.hephy.oeaw.ac.at
+193.170.243.12                  #afs02.hephy.oeaw.ac.at
+193.170.243.14                  #afs03.hephy.oeaw.ac.at
 >cgv.tugraz.at          #CGV cell
 129.27.218.30                   #phobos.cgv.tugraz.at
 129.27.218.31                   #deimos.cgv.tugraz.at
@@ -57,10 +57,10 @@
 195.113.0.36                    #asterix.ruk.cuni.cz
 195.113.0.37                    #obelix.ruk.cuni.cz
 195.113.0.40                    #sal.ruk.cuni.cz
->ics.muni.cz            #Masaryk university
+>ics.muni.cz            #Masaryk university, Czech Republic
 147.251.3.11                    #grond.ics.muni.cz
-147.251.3.15                    #nimloth.ics.muni.cz
-147.251.3.19                    #sirion.ics.muni.cz
+147.251.9.9                     #smaug2.ics.muni.cz
+195.113.214.4                   #tarkil-xen.cesnet.cz
 >zcu.cz                 #University of West Bohemia, Czech Republic
 147.228.10.18                   #sauron.zcu.cz
 147.228.52.10                   #oknos.zcu.cz
@@ -141,6 +141,9 @@
 134.100.106.44                  #afs-core.physnet.uni-hamburg.de
 134.100.106.45                  #afs-core2.physnet.uni-hamburg.de
 134.100.106.47                  #afs-core3.physnet.uni-hamburg.de
+>iqo.uni-hannover.de    #Institut fuer Quantenoptik Hannover
+130.75.103.221                  #afs1.iqo.uni-hannover.de
+130.75.103.223                  #afs2.iqo.uni-hannover.de
 >mathi.uni-heidelberg.de #Uni Heidelberg (Mathematisches Institut)
 129.206.26.241                  #hactar.mathi.uni-heidelberg.de
 >urz.uni-heidelberg.de  #Uni Heidelberg (Rechenzentrum)
@@ -177,10 +180,15 @@
 134.155.97.204                  #afsdb1.uni-mannheim.de
 134.155.97.205                  #afsdb2.uni-mannheim.de
 134.155.97.206                  #afsdb3.uni-mannheim.de
->uni-paderborn.de       #University of Paderborn, Germany
-131.234.137.10                  #afsdb1.uni-paderborn.de
-131.234.137.11                  #afsdb2.uni-paderborn.de
-131.234.137.12                  #afsdb3.uni-paderborn.de
+>mathematik.uni-stuttgart.de #University of Stuttgart, Math Dept.
+129.69.61.1                     #fbm01.mathematik.uni-stuttgart.de
+129.69.61.2                     #fbm02.mathematik.uni-stuttgart.de
+129.69.61.3                     #fbm03.mathematik.uni-stuttgart.de
+>stud.mathematik.uni-stuttgart.de #CIP-Pool of Math. Dept, University of Stuttgart
+129.69.61.28                    #omni.mathematik.uni-stuttgart.de
+129.69.116.201                  #stud01.mathematik.uni-stuttgart.de
+129.69.116.202                  #stud02.mathematik.uni-stuttgart.de
+129.69.116.203                  #stud03.mathematik.uni-stuttgart.de
 >physik.uni-wuppertal.de #Physics department of Bergische Universität Wuppertal
 132.195.104.3                   #afs1.physik.uni-wuppertal.de
 132.195.104.230                 #afs2.physik.uni-wuppertal.de
@@ -375,6 +383,7 @@
 155.98.111.10                   #carl.eng.utah.edu
 >cs.uwm.edu             #University of Wisconsin--Milwaukee
 129.89.38.124                   #solomons.cs.uwm.edu
+129.89.143.71                   #filip.cs.uwm.edu
 >cs.wisc.edu            #Univ. of Wisconsin-Madison, Computer Sciences Dept.
 128.105.132.14                  #timon.cs.wisc.edu
 128.105.132.15                  #pumbaa.cs.wisc.edu
@@ -524,9 +533,9 @@
 >laroia.net             #Laroia Networks
 66.66.102.254                   #supercore.laroia.net
 >sinenomine.net         #Sine Nomine Associates
-72.73.25.18                     #afsdb2.sinenomine.net
-72.73.30.74                     #afsdb3.sinenomine.net
 199.167.73.142                  #afsdb1.sinenomine.net
+199.167.73.152                  #afsdb4.sinenomine.net
+199.167.73.153                  #afsdb5.sinenomine.net
 >slackers.net           #The Slackers' Network
 199.4.150.159                   #alexandria.slackers.net
 >tproa.net              #The People's Republic of Ames
@@ -595,9 +604,7 @@
 130.237.216.15                  #afsdb2.it.kth.se
 130.237.216.16                  #afsdb3.it.kth.se
 >md.kth.se              #Royal Institute of Technology, MMK
-130.237.57.21                   #euler.md.kth.se
-130.237.57.68                   #trinity.md.kth.se
-130.237.57.72                   #morpheus.md.kth.se
+130.237.57.7                    #mdafs-1.md.kth.se
 >mech.kth.se            #Royal Institute of Technology, MECH
 130.237.233.142                 #matterhorn.mech.kth.se
 130.237.233.143                 #castor.mech.kth.se
