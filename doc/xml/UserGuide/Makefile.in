@@ -33,6 +33,7 @@ KINDLEGEN = @KINDLEGEN@
 
 index.html: $(SRCS)
 	$(XSLTPROC) --param navig.graphics 1 \
+	    --param use.id.as.filename 1 \
 	    --stringparam navig.graphics.path ../ $(DOCBOOK_STYLESHEETS)/$(HTML_XSL) $(BOOK).xml
 
 $(BOOK).pdf: $(SRCS)

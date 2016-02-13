@@ -11,7 +11,7 @@ include @TOP_OBJDIR@/src/config/Makefile.version
 SRCS     = $(BOOK).xml preface.xml $(VERSION).xml \
 	   entities.dtd sect1.xml sect5.xml sect8.xml
 DOCBOOK_STYLESHEETS = @DOCBOOK_STYLESHEETS@
-XSLTPROC = @XSLTPROC@ --stringparam variablelist.as.blocks 1
+XSLTPROC = @XSLTPROC@ --stringparam variablelist.as.blocks 1 --param use.id.as.filename 1
 DOCBOOK2PDF = @DOCBOOK2PDF@
 DBTOEPUB = $(DOCBOOK_STYLESHEETS)/epub/bin/dbtoepub
 KINDLEGEN = @KINDLEGEN@
