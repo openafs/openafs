@@ -264,9 +264,8 @@ printbuf(int rec, char *audEvent, char *afsName, afs_int32 hostId,
                 vaFid = vaFids->AFSCBFids_val;
 
                 if (vaFid) {
-                    audit_ops->append_msg("FIDS %u FID %u:%u:%u ", vaFids->AFSCBFids_len, vaFid->Volume,
-                             vaFid->Vnode, vaFid->Unique);
-                    for ( i = 1; i < vaFids->AFSCBFids_len; i++, vaFid++ )
+                    audit_ops->append_msg("FIDS %u ", vaFids->AFSCBFids_len);
+                    for ( i = 1; i <= vaFids->AFSCBFids_len; i++, vaFid++ )
                         audit_ops->append_msg("FID %u:%u:%u ", vaFid->Volume,
                                 vaFid->Vnode, vaFid->Unique);
                 } else
