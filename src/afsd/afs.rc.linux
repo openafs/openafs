@@ -82,7 +82,15 @@ is_on() {
 }
 
 on_network() {
-    ADDRS=`LANG=C ifconfig -a | grep 'inet ' | grep -v 127.0.0.1 | wc -l`
+    if hash ip 2>/dev/null >/dev/null; then
+        IP="ip -4 addr"
+    elif hash ifconfg 2>/dev/null >/dev/null; then
+        IP="ifconfig -a"
+    else
+        echo afs: Unable to check interfaces. 1>&2
+        return 1
+    fi
+    ADDRS=`LANG=C ${IP} | grep 'inet ' | grep -v 127.0.0.1 | wc -l`
     if [ "$ADDRS" = "" ]; then
        echo afs: No interfaces with IP address 1>&2
        return 1
