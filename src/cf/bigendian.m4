@@ -17,22 +17,22 @@ AC_ARG_ENABLE([littleendian],
 
 AC_CACHE_CHECK(whether byte order is known at compile time,
 openafs_cv_c_bigendian_compile,
-[AC_TRY_COMPILE([
+[AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/types.h>
-#include <sys/param.h>],[
+#include <sys/param.h>]], [[
 #if !BYTE_ORDER || !BIG_ENDIAN || !LITTLE_ENDIAN
  bogus endian macros
-#endif], openafs_cv_c_bigendian_compile=yes, openafs_cv_c_bigendian_compile=no)])
+#endif]])],[openafs_cv_c_bigendian_compile=yes],[openafs_cv_c_bigendian_compile=no])])
 AC_CACHE_CHECK(whether byte ordering is bigendian, openafs_cv_c_bigendian,[
   if test "$openafs_cv_c_bigendian_compile" = "yes"; then
-    AC_TRY_COMPILE([
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/types.h>
-#include <sys/param.h>],[
+#include <sys/param.h>]], [[
 #if BYTE_ORDER != BIG_ENDIAN
   not big endian
-#endif], openafs_cv_c_bigendian=yes, openafs_cv_c_bigendian=no)
+#endif]])],[openafs_cv_c_bigendian=yes],[openafs_cv_c_bigendian=no])
   else
-    AC_TRY_RUN([main () {
+    AC_RUN_IFELSE([AC_LANG_SOURCE([[main () {
       /* Are we little or big endian?  From Harbison&Steele.  */
       union
       {
@@ -41,8 +41,7 @@ AC_CACHE_CHECK(whether byte ordering is bigendian, openafs_cv_c_bigendian,[
     } u;
     u.l = 1;
     exit (u.c[sizeof (long) - 1] == 1);
-  }], openafs_cv_c_bigendian=no, openafs_cv_c_bigendian=yes,
-  AC_MSG_ERROR([specify either --enable-bigendian or --enable-littleendian]))
+  }]])],[openafs_cv_c_bigendian=no],[openafs_cv_c_bigendian=yes],[AC_MSG_ERROR(specify either --enable-bigendian or --enable-littleendian)])
   fi
 ])
 if test "$openafs_cv_c_bigendian" = "yes"; then

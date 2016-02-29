@@ -12,10 +12,7 @@ AC_DEFUN([SOLARIS_CC_TAKES_XVECTOR_NONE], [
     [ac_cv_solaris_cc_takes_xvector_none],
     [save_CFLAGS="$CFLAGS"
      CFLAGS="$CFLAGS -xvector=%none"
-     AC_TRY_COMPILE([],
-		    [int x;],
-		    [ac_cv_solaris_cc_takes_xvector_none=yes],
-		    [ac_cv_solaris_cc_takes_xvector_none=no])
+     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[int x;]])],[ac_cv_solaris_cc_takes_xvector_none=yes],[ac_cv_solaris_cc_takes_xvector_none=no])
      CFLAGS="$save_CFLAGS"
     ])
 

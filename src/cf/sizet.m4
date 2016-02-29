@@ -2,7 +2,7 @@ AC_DEFUN([OPENAFS_PRINTF_TAKES_Z_LEN],
 [
 AC_CACHE_CHECK([whether printf understands the %z length modifier],
 [openafs_cv_printf_takes_z], [
-        AC_TRY_RUN([
+        AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <stdio.h>
 #include <string.h>
 
@@ -15,10 +15,7 @@ int main(void) {
         } else {
                 return 1;
         }
-}],
-                [openafs_cv_printf_takes_z="yes"],
-                [openafs_cv_printf_takes_z="no"],
-                [openafs_cv_printf_takes_z="no"])
+}]])],[openafs_cv_printf_takes_z="yes"],[openafs_cv_printf_takes_z="no"],[openafs_cv_printf_takes_z="no"])
 ])
 
 if test "x$openafs_cv_printf_takes_z" = "xyes"; then

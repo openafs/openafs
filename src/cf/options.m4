@@ -241,7 +241,7 @@ AC_ARG_WITH([docbook-stylesheets],
                  /opt/local/share/xsl/docbook-xsl],
                 [$HTML_XSL])
            AS_IF([test "x$DOCBOOK_STYLESHEETS" = "x"],
-                [AC_WARN([Docbook stylesheets not found; some documentation can't be built])
+                [AC_MSG_WARN(Docbook stylesheets not found; some documentation can't be built)
            ])
         ])
 
