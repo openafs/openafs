@@ -50,4 +50,7 @@
 #define ENGINE_up_ref _oafs_h_ENGINE_up_ref
 #define ENGINE_finish _oafs_h_ENGINE_finish
 
+#define RETSIGTYPE void
+#define SIGRETURN(x) return
+
 #endif /* OAFS_HCRYPTO_CONFIG_H */
