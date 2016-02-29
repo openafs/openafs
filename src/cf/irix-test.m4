@@ -4,13 +4,9 @@ AC_DEFUN([IRIX_SYS_SYSTM_H_HAS_MEM_FUNCS], [
  [
     save_CPPFLAGS="$CPPFLAGS"
     CPPFLAGS="$CPPFLAGS -D_KERNEL -D__STRING_H__"
-    AC_TRY_COMPILE(
-[#include <sys/types.h>
-#include <sys/systm.h>],
-[extern void     *memcpy(char *, const void *, size_t);
-],
-[ac_cv_irix_sys_systm_h_has_mem_funcs=no],
-[ac_cv_irix_sys_systm_h_has_mem_funcs=yes])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
+#include <sys/systm.h>]], [[extern void     *memcpy(char *, const void *, size_t);
+]])],[ac_cv_irix_sys_systm_h_has_mem_funcs=no],[ac_cv_irix_sys_systm_h_has_mem_funcs=yes])
     CPPFLAGS="$save_CPPFLAGS"
   ])
   AS_IF([test "$ac_cv_irix_sys_systm_h_has_mem_funcs" = "yes"],

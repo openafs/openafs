@@ -14,7 +14,7 @@ OPENAFS_OPTIONS
 OPENAFS_DOC
 
 dnl Checks for UNIX variants.
-AC_ISC_POSIX
+AC_SEARCH_LIBS([strerror],[cposix])
 
 dnl Various compiler setup.
 AC_TYPE_PID_T

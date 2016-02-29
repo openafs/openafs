@@ -14,15 +14,15 @@ AS_CASE([$CTF_TOOLS],
 
         [yes],   [AC_PATH_PROG([CTFCONVERT], [ctfconvert], [], [$CTF_DEFAULT_PATH])
                   AC_PATH_PROG([CTFMERGE], [ctfmerge], [], [$CTF_DEFAULT_PATH])
-                  AS_IF([test "x$CTFCONVERT" = "x"], [AC_ERROR("ctfconvert not found")])
-                  AS_IF([test "x$CTFMERGE" = "x"], [AC_ERROR("ctfmerge not found")])],
+                  AS_IF([test "x$CTFCONVERT" = "x"], [AC_MSG_ERROR("ctfconvert not found")])
+                  AS_IF([test "x$CTFMERGE" = "x"], [AC_MSG_ERROR("ctfmerge not found")])],
 
         [no],    [],
 
         [AC_PATH_PROG([CTFCONVERT], [ctfconvert], [], [$CTF_TOOLS])
          AC_PATH_PROG([CTFMERGE], [ctfmerge], [], [$CTF_TOOLS])
-         AS_IF([test "x$CTFCONVERT" = "x"], [AC_ERROR("ctfconvert not found")])
-         AS_IF([test "x$CTFMERGE" = "x"], [AC_ERROR("ctfmerge not found")])]
+         AS_IF([test "x$CTFCONVERT" = "x"], [AC_MSG_ERROR("ctfconvert not found")])
+         AS_IF([test "x$CTFMERGE" = "x"], [AC_MSG_ERROR("ctfmerge not found")])]
 )
 
 AC_ARG_VAR([CTFCONVERT], [Path to ctfconvert])
