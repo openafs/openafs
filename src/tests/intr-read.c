@@ -50,7 +50,6 @@
 
 #include <err.h>
 
-#define RETSIGTYPE void
 #ifndef MAXPATHLEN
 #ifdef PATH_MAX
 #define MAXPATHLEN PATH_MAX
@@ -61,7 +60,7 @@
 
 static sig_atomic_t set_alarm = 1;
 
-static RETSIGTYPE
+static void
 sigalrm(int foo)
 {
     signal(SIGALRM, sigalrm);
