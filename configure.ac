@@ -1,12 +1,8 @@
 AC_PREREQ([2.60])
-AC_INIT([OpenAFS],
-    m4_esyscmd([build-tools/git-version .]),
-    [openafs-bugs@openafs.org], [],
-    [http://www.openafs.org/])
+AC_INIT([OpenAFS],[m4_esyscmd(build-tools/git-version .)],[openafs-bugs@openafs.org],[],[http://www.openafs.org/])
 AC_CONFIG_AUX_DIR([build-tools])
 AC_CONFIG_MACRO_DIR([src/cf])
 AC_CONFIG_SRCDIR([src/config/stds.h])
-AM_INIT_AUTOMAKE([foreign])
 
 AC_CONFIG_HEADER([src/config/afsconfig.h])
 MACOS_VERSION=1.8.0fc1
@@ -22,7 +18,6 @@ AC_USE_SYSTEM_EXTENSIONS
 AFS_LT_INIT
 
 AC_PROG_CC
-AC_PROG_LIBTOOL
 
 AC_PATH_PROGS([PATH_CPP], [cpp], [${CC-cc} -E], [$PATH:/lib:/usr/ccs/lib])
 AC_SUBST([PATH_CPP])
@@ -147,7 +142,7 @@ AS_IF([test -f 'doc/doxygen/Doxyfile.in'],
     [DOXYFILE="doc/doxygen/Doxyfile"],
     [DOXYFILE=])
 
-AC_OUTPUT([
+AC_CONFIG_FILES([
     Makefile
     ${MAN_MAKEFILE}
     ${ADMINGUIDE_MAKEFILE}
@@ -296,9 +291,10 @@ AC_OUTPUT([
     tests/rx/Makefile
     tests/tap/Makefile
     tests/util/Makefile
-    tests/volser/Makefile],
-[chmod a+x src/config/shlib-build
- chmod a+x src/config/shlib-install])
+    tests/volser/Makefile])
+AC_CONFIG_COMMANDS([default],[chmod a+x src/config/shlib-build
+ chmod a+x src/config/shlib-install],[])
+AC_OUTPUT
 
 # print a final summary
 OPENAFS_SUMMARY

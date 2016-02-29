@@ -1,11 +1,7 @@
 AC_PRERQ([2.60])
-AC_INIT([OpenAFS],
-	m4_esyscmd([build-tools/git-version .]),
-	[openafs-bugs@openafs.org], [],
-	[http://www.openafs.org/])
+AC_INIT([OpenAFS],[m4_esyscmd(build-tools/git-version .)],[openafs-bugs@openafs.org],[],[http://www.openafs.org/])
 AC_CONFIG_AUX_DIR([build-tools])
 AC_CONFIG_SRCDIR([src/libafs/Makefile.common.in])
-AM_INIT_AUTOMAKE([foreign])
 
 AC_CONFIG_HEADER([src/config/afsconfig.h])
 MACOS_VERSION=1.8.0fc1
@@ -18,7 +14,7 @@ AC_PROG_CC
 
 OPENAFS_CONFIGURE_COMMON
 
-AC_OUTPUT([
+AC_CONFIG_FILES([
 	Makefile
 	src/config/Makefile
 	src/config/Makefile.config
@@ -28,3 +24,4 @@ AC_OUTPUT([
 	src/libafs/Makefile.common
 	src/libafs/MakefileProto
 ])
+AC_OUTPUT
