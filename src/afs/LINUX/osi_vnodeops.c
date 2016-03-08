@@ -834,7 +834,7 @@ struct file_operations afs_file_fops = {
 #if defined(STRUCT_FILE_OPERATIONS_HAS_SENDFILE)
   .sendfile =   generic_file_sendfile,
 #endif
-#if defined(STRUCT_FILE_OPERATIONS_HAS_SPLICE)
+#if defined(STRUCT_FILE_OPERATIONS_HAS_SPLICE) && !defined(HAVE_LINUX_DEFAULT_FILE_SPLICE_READ)
 # if defined(HAVE_LINUX_ITER_FILE_SPLICE_WRITE)
   .splice_write = iter_file_splice_write,
 # else

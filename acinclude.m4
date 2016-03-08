@@ -1010,6 +1010,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_FUNC([splice_direct_to_actor],
 				     [#include <linux/splice.h>],
 				     [splice_direct_to_actor(NULL,NULL,NULL);])
+		 AC_CHECK_LINUX_FUNC([default_file_splice_read],
+				     [#include <linux/fs.h>],
+				     [default_file_splice_read(NULL,NULL,NULL, 0, 0);])
 		 AC_CHECK_LINUX_FUNC([svc_addr_in],
 				     [#include <linux/sunrpc/svc.h>],
 				     [svc_addr_in(NULL);])
