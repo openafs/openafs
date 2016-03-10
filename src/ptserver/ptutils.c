@@ -338,8 +338,11 @@ CreateEntry(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid, af
 
     admin = pr_noAuth || IsAMemberOf(at, creator, SYSADMINID);
 
-    if (oid == 0 || oid == ANONYMOUSID)
+    if (oid == 0 || oid == ANONYMOUSID) {
+	if (!admin && creator == 0)
+	    return PRBADARG;
 	oid = creator;
+    }
 
     if (flag & PRGRP) {
 	code = CorrectGroupName(at, aname, creator, oid, admin, tentry.name);
@@ -456,7 +459,10 @@ CreateEntry(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid, af
 	    return PRDBFAIL;
 
 	/* Now add the new user entry to the database */
-	tentry.creator = creator;
+	if (creator == 0)
+	    tentry.creator = tentry.id;
+	else
+	    tentry.creator = creator;
 	*aid = tentry.id;
 	code = pr_WriteEntry(at, 0, newEntry, &tentry);
 	if (code)
@@ -558,7 +564,10 @@ CreateEntry(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid, af
 	tentry.ngroups = tentry.nusers = 20;
     }
 
-    tentry.creator = creator;
+    if (creator == 0)
+	tentry.creator = tentry.id;
+    else
+	tentry.creator = creator;
     *aid = tentry.id;
     code = pr_WriteEntry(at, 0, newEntry, &tentry);
     if (code)

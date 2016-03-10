@@ -314,6 +314,7 @@ newEntry(struct rx_call *call, char aname[], afs_int32 flag, afs_int32 oid,
     afs_int32 code;
     struct ubik_trans *tt;
     int admin;
+    int foreign = 0;
     char cname[PR_MAXNAMELEN];
     stolower(aname);
 
@@ -326,18 +327,31 @@ newEntry(struct rx_call *call, char aname[], afs_int32 flag, afs_int32 oid,
      * automatic id assignment.
      */
     code = WhoIsThisWithName(call, tt, cid, cname);
-    if (code != 2) {		/* 2 specifies that this is a foreign cell request */
-	if (code)
-	    ABORT_WITH(tt, PRPERM);
-	admin = IsAMemberOf(tt, *cid, SYSADMINID);
-    } else {
-	admin = ((!restricted && !strcmp(aname, cname))) || IsAMemberOf(tt, *cid, SYSADMINID);
-	oid = *cid = SYSADMINID;
+    if (code && code != 2)
+	ABORT_WITH(tt, PRPERM);
+    admin = IsAMemberOf(tt, *cid, SYSADMINID);
+    if (code == 2 /* foreign cell request */) {
+	foreign = 1;
+
+	if (!restricted && (strcmp(aname, cname) == 0)) {
+	    /* can't autoregister while providing an owner id */
+	    if (oid != 0)
+		ABORT_WITH(tt, PRPERM);
+
+	    admin = 1;
+	    oid = SYSADMINID;
+	}
     }
     if (!CreateOK(tt, *cid, oid, flag, admin))
 	ABORT_WITH(tt, PRPERM);
 
     code = CreateEntry(tt, aname, aid, 0, flag, oid, *cid);
+    /*
+     * If this was an autoregistration then be sure to audit log
+     * the proper id as the creator.
+     */
+    if (foreign && code == 0 && *aid > 0)
+	*cid = *aid;
     if (code != PRSUCCESS)
 	ABORT_WITH(tt, code);
 
