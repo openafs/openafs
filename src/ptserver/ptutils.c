@@ -193,11 +193,11 @@ CorrectUserName(char *name)
 static afs_int32
 CorrectGroupName(struct ubik_trans *ut, char aname[PR_MAXNAMELEN],	/* name for group */
 		 afs_int32 cid,		/* caller id */
-		 afs_int32 *oid,		/* owner of group */
+		 afs_int32 oid,		/* owner of group */
+		 afs_int32 admin,	/* non-zero if admin */
 		 char cname[PR_MAXNAMELEN])	/* correct name for group */
 {
     afs_int32 code;
-    int admin;
     char *prefix;		/* ptr to group owner part */
     char *suffix;		/* ptr to group name part */
     char name[PR_MAXNAMELEN];	/* correct name for group */
@@ -205,16 +205,12 @@ CorrectGroupName(struct ubik_trans *ut, char aname[PR_MAXNAMELEN],	/* name for g
 
     if (strlen(aname) >= PR_MAXNAMELEN)
 	return PRBADNAM;
-    admin = pr_noAuth || IsAMemberOf(ut, cid, SYSADMINID);
-
-    if (((*oid == 0) || (*oid == ANONYMOUSID)) && !admin)
-	*oid = cid;
 
     /* Determine the correct prefix for the name. */
-    if (*oid == SYSADMINID)
+    if (oid == SYSADMINID)
 	prefix = "system";
     else {
-	afs_int32 loc = FindByID(ut, *oid);
+	afs_int32 loc = FindByID(ut, oid);
 	if (loc == 0) {
 	    /* let admin create groups owned by non-existent ids (probably
 	     * setting a group to own itself).  Check that they look like
@@ -334,13 +330,19 @@ CreateEntry(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid, af
     /* get and init a new entry */
     afs_int32 code;
     afs_int32 newEntry;
+    afs_int32 admin;
     struct prentry tentry, tent;
     char *atsign;
 
     memset(&tentry, 0, sizeof(tentry));
 
+    admin = pr_noAuth || IsAMemberOf(at, creator, SYSADMINID);
+
+    if (oid == 0 || oid == ANONYMOUSID)
+	oid = creator;
+
     if (flag & PRGRP) {
-	code = CorrectGroupName(at, aname, creator, &oid, tentry.name);
+	code = CorrectGroupName(at, aname, creator, oid, admin, tentry.name);
 	if (code)
 	    return code;
 	if (strcmp(aname, tentry.name) != 0)
@@ -1873,6 +1875,7 @@ ChangeEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 cid, char *name, afs
     struct prentry tentry, tent;
     afs_int32 loc;
     afs_int32 oldowner;
+    afs_int32 admin;
     char holder[PR_MAXNAMELEN];
     char temp[PR_MAXNAMELEN];
     char oldname[PR_MAXNAMELEN];
@@ -1892,10 +1895,11 @@ ChangeEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 cid, char *name, afs
 	&& !IsAMemberOf(at, cid, tentry.owner) && !pr_noAuth)
 	return PRPERM;
     tentry.changeTime = time(0);
+    admin = pr_noAuth || IsAMemberOf(at, cid, SYSADMINID);
 
     /* we're actually trying to change the id */
     if (newid && (newid != aid)) {
-	if (!IsAMemberOf(at, cid, SYSADMINID) && !pr_noAuth)
+	if (!admin)
 	    return PRPERM;
 
 	pos = FindByID(at, newid);
@@ -2086,7 +2090,11 @@ ChangeEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 cid, char *name, afs
 	    /* don't let foreign cell groups change name */
 	    if (atsign != NULL)
 		return PRPERM;
-	    code = CorrectGroupName(at, name, cid, &tentry.owner, tentry.name);
+
+	    if (tentry.owner == 0 || tentry.owner == ANONYMOUSID)
+		tentry.owner = cid;
+
+	    code = CorrectGroupName(at, name, cid, tentry.owner, admin, tentry.name);
 	    if (code)
 		return code;
 
