@@ -12,7 +12,7 @@
 /*  Information Technology Center                                         */
 /*  Date: 05/21/97                                                        */
 /*                                                                        */
-/*  Function    - These routiens implement logging from the servers       */
+/*  Function    - These routines implement logging from the servers.      */
 /*                                                                        */
 /* ********************************************************************** */
 
@@ -55,6 +55,9 @@ static pthread_mutex_t serverLogMutex;
 #define O_NONBLOCK 0
 #endif
 
+/*!
+ * Placeholder function to return dummy thread number.
+ */
 static int
 dummyThreadNum(void)
 {
@@ -64,13 +67,13 @@ static int (*threadNumProgram) (void) = dummyThreadNum;
 
 /* After single-threaded startup, accesses to serverlogFD and
  * serverLogSyslog* are protected by LOCK_SERVERLOG(). */
-static int serverLogFD = -1;
-static struct logOptions serverLogOpts;
+static int serverLogFD = -1;	/*!< The log file descriptor. */
+static struct logOptions serverLogOpts;	/*!< logging options */
 
-int LogLevel;
-static int threadIdLogs = 0;
-static int resetSignals = 0;
-static char *ourName = NULL;
+int LogLevel;			/*!< The current logging level. */
+static int threadIdLogs = 0;	/*!< Include the thread id in log messages when true. */
+static int resetSignals = 0;	/*!< Reset signal handlers for the next signal when true. */
+static char *ourName = NULL;	/*!< The fully qualified log file path, saved for reopens. */
 
 static int OpenLogFile(const char *fileName);
 static void RotateLogFile(void);
@@ -123,12 +126,24 @@ GetLogFilename(void)
     return serverLogOpts.lopt_dest == logDest_file ? (const char*)ourName : "";
 }
 
+/*!
+ * Set the function to log thread numbers.
+ */
 void
 SetLogThreadNumProgram(int (*func) (void) )
 {
     threadNumProgram = func;
 }
 
+/*!
+ * Write a block of bytes to the log.
+ *
+ * Write a block of bytes directly to the log without formatting
+ * or prepending a timestamp.
+ *
+ * \param[in] buf  pointer to bytes to write
+ * \param[in] len  number of bytes to write
+ */
 void
 WriteLogBuffer(char *buf, afs_uint32 len)
 {
@@ -140,12 +155,21 @@ WriteLogBuffer(char *buf, afs_uint32 len)
     UNLOCK_SERVERLOG();
 }
 
+/*!
+ * Get the current thread number.
+ */
 int
 LogThreadNum(void)
 {
   return (*threadNumProgram) ();
 }
 
+/*!
+ * Write a message to the log.
+ *
+ * \param[in] format  printf-style format string
+ * \param[in] args    variable list of arguments
+ */
 void
 vFSLog(const char *format, va_list args)
 {
@@ -193,8 +217,12 @@ vFSLog(const char *format, va_list args)
 #endif
 }				/*vFSLog */
 
-/* VARARGS1 */
-/*@printflike@*/
+/*!
+ * Write a message to the log.
+ *
+ * \param[in] format  printf-style format specification
+ * \param[in] ...     arguments for format specification
+ */
 void
 FSLog(const char *format, ...)
 {
@@ -205,6 +233,16 @@ FSLog(const char *format, ...)
     va_end(args);
 }				/*FSLog */
 
+/*!
+ * Write the command-line invocation to the log.
+ *
+ * \param[in] argc      argument count from main()
+ * \param[in] argv      argument vector from main()
+ * \param[in] progname  program name
+ * \param[in] version   program version
+ * \param[in] logstring log message string
+ * \param[in] log       printf-style log function
+ */
 void
 LogCommandLine(int argc, char **argv, const char *progname,
 	       const char *version, const char *logstring,
@@ -234,6 +272,9 @@ LogCommandLine(int argc, char **argv, const char *progname,
     }
 }
 
+/*!
+ * Write the single-DES deprecation warning to the log.
+ */
 void
 LogDesWarning(void)
 {
@@ -308,6 +349,13 @@ RenameLogFile(const char *fileName)
     }
 }
 
+/*!
+ * Write message to the log to indicate the log level.
+ *
+ * This helper function is called by the signal handlers when the log level is
+ * changed, to write a message to the log to indicate the log level has been
+ * changed.
+ */
 static void*
 DebugOn(void *param)
 {
@@ -320,8 +368,15 @@ DebugOn(void *param)
     return 0;
 }				/*DebugOn */
 
-
-
+/*!
+ * Signal handler to increase the logging level.
+ *
+ * Increase the current logging level to 1 if it in currently 0,
+ * otherwise, increase the current logging level by a factor of 5 if it
+ * is currently non-zero.
+ *
+ * Enables thread id logging when the log level is greater than 1.
+ */
 void
 SetDebug_Signal(int signo)
 {
@@ -355,6 +410,14 @@ SetDebug_Signal(int signo)
     }
 }				/*SetDebug_Signal */
 
+/*!
+ * Signal handler to reset the logging level.
+ *
+ * Reset the logging level and disable thread id logging.
+ *
+ * \note This handler has the side-effect of rotating and reopening
+ *       MR-AFS style logs.
+ */
 void
 ResetDebug_Signal(int signo)
 {
