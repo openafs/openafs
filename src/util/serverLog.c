@@ -377,7 +377,6 @@ OpenLog(const char *fileName)
 	}
 	if (!isfifo)
 	    rk_rename(fileName, FileName);	/* don't check error code */
-	tempfd = open(fileName, O_WRONLY | O_TRUNC | O_CREAT | (isfifo?O_NONBLOCK:0), 0666);
     } else {
 	strcpy(oldName, fileName);
 	strcat(oldName, ".old");
@@ -385,9 +384,9 @@ OpenLog(const char *fileName)
 	/* don't check error */
 	if (!isfifo)
 	    rk_rename(fileName, oldName);
-	tempfd = open(fileName, O_WRONLY | O_TRUNC | O_CREAT | O_APPEND | (isfifo?O_NONBLOCK:0), 0666);
     }
 
+    tempfd = open(fileName, O_WRONLY | O_TRUNC | O_CREAT | O_APPEND | (isfifo?O_NONBLOCK:0), 0666);
     if (tempfd < 0) {
 	printf("Unable to open log file %s\n", fileName);
 	return -1;
