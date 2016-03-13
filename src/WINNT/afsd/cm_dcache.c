@@ -416,6 +416,7 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     int call_was_64bit = 0;
 
     memset(&volSync, 0, sizeof(volSync));
+    memset(&inStatus, 0, sizeof(inStatus);
 
     osi_Log2(afsd_logp, "cm_StoreMini scp 0x%p userp 0x%p", scp, userp);
 
