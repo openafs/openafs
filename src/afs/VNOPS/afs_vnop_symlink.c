@@ -94,6 +94,7 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 
     OutFidStatus = osi_AllocSmallSpace(sizeof(struct AFSFetchStatus));
     OutDirStatus = osi_AllocSmallSpace(sizeof(struct AFSFetchStatus));
+    memset(&InStatus, 0, sizeof(InStatus));
 
     if ((code = afs_CreateReq(&treq, acred)))
 	goto done2;

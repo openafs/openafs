@@ -358,6 +358,7 @@ afs_VAttrToAS(struct vcache *avc, struct vattr *av,
 {
     int mask;
     mask = 0;
+
     AFS_STATCNT(afs_VAttrToAS);
 #if     defined(AFS_DARWIN80_ENV)
     if (VATTR_IS_ACTIVE(av, va_mode)) {
@@ -482,6 +483,8 @@ afs_setattr(OSI_VC_DECL(avc), struct vattr *attrs,
 #endif
     if ((code = afs_CreateReq(&treq, acred)))
 	return code;
+
+    memset(&astat, 0, sizeof(astat));
 
     AFS_DISCON_LOCK();
 
