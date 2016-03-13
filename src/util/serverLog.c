@@ -332,8 +332,6 @@ OpenLog(const char *fileName)
     int tempfd, isfifo = 0;
     int code;
     char *nextName = NULL;
-    struct timeval Start;
-    struct tm *TimeFields;
 
 #ifndef AFS_NT40_ENV
     struct stat statbuf;
@@ -362,24 +360,27 @@ OpenLog(const char *fileName)
     if (mrafsStyleLogs) {
         time_t t;
 	struct stat buf;
-	gettimeofday(&Start, NULL);
-        t = Start.tv_sec;
-	TimeFields = localtime(&t);
-    makefilename:
-	code = asprintf(&nextName, "%s.%d%02d%02d%02d%02d%02d",
-		 fileName, TimeFields->tm_year + 1900,
-		 TimeFields->tm_mon + 1, TimeFields->tm_mday,
-		 TimeFields->tm_hour, TimeFields->tm_min,
-		 TimeFields->tm_sec);
-	if (code < 0) {
-	    nextName = NULL;
-	} else if (lstat(nextName, &buf) == 0) {
-	    /* avoid clobbering a log */
-	    TimeFields->tm_sec++;
-	    free(nextName);
-	    nextName = NULL;
-	    goto makefilename;
-	}
+	int tries;
+	struct tm *timeFields;
+
+	time(&t);
+	for (tries = 0; nextName == NULL && tries < 100; t++, tries++) {
+	    timeFields = localtime(&t);
+	    code = asprintf(&nextName, "%s.%d%02d%02d%02d%02d%02d",
+		     fileName, timeFields->tm_year + 1900,
+		     timeFields->tm_mon + 1, timeFields->tm_mday,
+		     timeFields->tm_hour, timeFields->tm_min,
+		     timeFields->tm_sec);
+	    if (code < 0) {
+		nextName = NULL;
+		break;
+	    }
+	    if (lstat(nextName, &buf) == 0) {
+		/* Avoid clobbering a log. */
+		free(nextName);
+		nextName = NULL;
+	    }
+        }
     } else {
 	code = asprintf(&nextName, "%s.old", fileName);
 	if (code < 0) {
