@@ -75,7 +75,7 @@ int mrafsStyleLogs = 0;
 static int threadIdLogs = 0;
 int printLocks = 0;
 static int resetSignals = 0;
-static char ourName[MAXPATHLEN];
+static char *ourName = NULL;
 
 void
 SetLogThreadNumProgram(int (*func) (void) )
@@ -271,8 +271,13 @@ ResetDebug_Signal(int signo)
     if (threadIdLogs == 1)
         threadIdLogs = 0;
 #endif
-    if (mrafsStyleLogs)
-	OpenLog((char *)&ourName);
+    if (mrafsStyleLogs) {
+	LOCK_SERVERLOG();
+	if (ourName != NULL) {
+	    OpenLog(ourName);
+	}
+	UNLOCK_SERVERLOG();
+    }
 }				/*ResetDebug_Signal */
 
 
@@ -329,10 +334,10 @@ OpenLog(const char *fileName)
      * use stdout/stderr to all go to the same place
      */
     int tempfd, isfifo = 0;
-    char oldName[MAXPATHLEN];
+    int code;
+    char *nextName = NULL;
     struct timeval Start;
     struct tm *TimeFields;
-    char FileName[MAXPATHLEN];
 
 #ifndef AFS_NT40_ENV
     struct stat statbuf;
@@ -347,7 +352,11 @@ OpenLog(const char *fileName)
 	openlog(serverLogSyslogTag, LOG_PID, serverLogSyslogFacility);
 	return (0);
     }
+#endif
 
+    opr_Assert(fileName != NULL);
+
+#ifndef AFS_NT40_ENV
     /* Support named pipes as logs by not rotating them */
     if ((lstat(fileName, &statbuf) == 0)  && (S_ISFIFO(statbuf.st_mode))) {
 	isfifo = 1;
@@ -360,30 +369,31 @@ OpenLog(const char *fileName)
 	gettimeofday(&Start, NULL);
         t = Start.tv_sec;
 	TimeFields = localtime(&t);
-	if (fileName) {
-	    if (strncmp(fileName, (char *)&ourName, strlen(fileName)))
-		strcpy((char *)&ourName, (char *)fileName);
-	}
     makefilename:
-	snprintf(FileName, MAXPATHLEN, "%s.%d%02d%02d%02d%02d%02d",
-		 ourName, TimeFields->tm_year + 1900,
+	code = asprintf(&nextName, "%s.%d%02d%02d%02d%02d%02d",
+		 fileName, TimeFields->tm_year + 1900,
 		 TimeFields->tm_mon + 1, TimeFields->tm_mday,
 		 TimeFields->tm_hour, TimeFields->tm_min,
 		 TimeFields->tm_sec);
-	if(lstat(FileName, &buf) == 0) {
+	if (code < 0) {
+	    nextName = NULL;
+	} else if (lstat(nextName, &buf) == 0) {
 	    /* avoid clobbering a log */
 	    TimeFields->tm_sec++;
+	    free(nextName);
+	    nextName = NULL;
 	    goto makefilename;
 	}
-	if (!isfifo)
-	    rk_rename(fileName, FileName);	/* don't check error code */
     } else {
-	strcpy(oldName, fileName);
-	strcat(oldName, ".old");
-
-	/* don't check error */
+	code = asprintf(&nextName, "%s.old", fileName);
+	if (code < 0) {
+	    nextName = NULL;
+	}
+    }
+    if (nextName != NULL) {
 	if (!isfifo)
-	    rk_rename(fileName, oldName);
+	    rk_rename(fileName, nextName);	/* Don't check the error code. */
+	free(nextName);
     }
 
     tempfd = open(fileName, O_WRONLY | O_TRUNC | O_CREAT | O_APPEND | (isfifo?O_NONBLOCK:0), 0666);
@@ -401,6 +411,11 @@ OpenLog(const char *fileName)
 	setbuf(stderr, NULL);
 #endif
     }
+
+    /* Save our name for reopening. */
+    free(ourName);
+    ourName = strdup(fileName);
+    opr_Assert(ourName != NULL);
 
     serverLogFD = tempfd;
 
@@ -463,9 +478,13 @@ CloseLog(void)
 	closelog();
     } else
 #endif
-    if (serverLogFD >= 0) {
-	close(serverLogFD);
-	serverLogFD = -1;
+    {
+	if (serverLogFD >= 0) {
+	    close(serverLogFD);
+	    serverLogFD = -1;
+	}
+	free(ourName);
+	ourName = NULL;
     }
     UNLOCK_SERVERLOG();
 }
