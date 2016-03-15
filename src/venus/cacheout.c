@@ -60,6 +60,7 @@ ListServers(void)
     char hoststr[16];
     ListAddrByAttributes m_attrs;
 
+    memset(&m_attrs, 0, sizeof(m_attrs));
     memset(&addrs, 0, sizeof(addrs));
     memset(&spare3, 0, sizeof(spare3));
     code =
