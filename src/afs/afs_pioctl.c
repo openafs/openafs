@@ -2051,6 +2051,7 @@ DECL_PIOCTL(PSetVolumeStatus)
     AFS_STATCNT(PSetVolumeStatus);
     if (!avc)
 	return EINVAL;
+    memset(&storeStat, 0, sizeof(storeStat));
 
     tvp = afs_GetVolume(&avc->f.fid, areq, READ_LOCK);
     if (tvp) {
