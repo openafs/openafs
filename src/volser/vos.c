@@ -4506,7 +4506,7 @@ ListVLDB(struct cmd_syndesc *as, void *arock)
     aserver = 0;
     apart = 0;
 
-    attributes.Mask = 0;
+    memset(&attributes, 0, sizeof(attributes));
     lock = (as->parms[3].items ? 1 : 0);	/* -lock   flag */
     quiet = (as->parms[4].items ? 1 : 0);	/* -quit   flag */
     sort = (as->parms[5].items ? 0 : 1);	/* -nosort flag */
@@ -5009,7 +5009,7 @@ UnlockVLDB(struct cmd_syndesc *as, void *arock)
 
     apart = -1;
     totalE = 0;
-    attributes.Mask = 0;
+    memset(&attributes, 0, sizeof(attributes));
 
     if (as->parms[0].items) {	/* server specified */
 	aserver = GetServer(as->parms[0].items->data);
