@@ -652,6 +652,7 @@ cm_IoctlSetVolumeStatus(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scach
     clientchar_t *strp;
     struct rx_connection * rxconnp;
 
+    memset(&storeStat, 0, sizeof(storeStat));
 #ifdef AFS_FREELANCE_CLIENT
     if ( scp->fid.cell == AFS_FAKE_ROOT_CELL_ID && scp->fid.volume == AFS_FAKE_ROOT_VOL_ID ) {
 	code = CM_ERROR_NOACCESS;
