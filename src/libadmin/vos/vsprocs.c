@@ -3604,6 +3604,7 @@ UV_SyncServer(afs_cell_handle_p cellHandle, struct rx_connection *server,
 
     noError = 1;
     arrayEntries.nbulkentries_val = 0;
+    memset(&attributes, 0, sizeof(attributes));
 
     /* Set up attributes to search VLDB  */
     attributes.server = ntohl(rx_HostOf(rx_PeerOf(server)));

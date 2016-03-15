@@ -6955,6 +6955,7 @@ UV_SyncServer(afs_uint32 aserver, afs_int32 apart, int flags, int force)
     aconn = UV_Bind(aserver, AFSCONF_VOLUMEPORT);
 
     /* Set up attributes to search VLDB  */
+    memset(&attributes, 0, sizeof(attributes));
     attributes.server = ntohl(aserver);
     attributes.Mask = VLLIST_SERVER;
     if ((flags & 1)) {
