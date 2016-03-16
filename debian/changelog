@@ -1,6 +1,16 @@
-openafs (1.6.17-1) UNRELEASED; urgency=medium
+openafs (1.6.17-1) UNRELEASED; urgency=high
 
-  * New upstream release.
+  * New upstream release 1.6.16.
+    - Fix bosserver crashes related to fixed-sized buffers.
+    - Fix potential denial of service issue in pioctl logic
+      (CVE-2015-8312).
+    - Provide a new vos remaddrs subcommand for removing server entries.
+    - Allow pioctls to work with read-only /proc (e.g. Docker containers).
+  * New upstream security release 1.6.17.
+    - Prevent users in foreign Kerberos realms from creating groups as if
+      they were administrators (CVE-2016-2860).
+    - Fix an information leak of uninitialized memory over the network.
+    - Fix a crash when the AFS root volume is not found.
 
  -- Anders Kaseorg <andersk@mit.edu>  Wed, 16 Mar 2016 13:39:06 -0400
 
