@@ -1,3 +1,9 @@
+openafs (1.6.17-1) UNRELEASED; urgency=medium
+
+  * New upstream release.
+
+ -- Anders Kaseorg <andersk@mit.edu>  Wed, 16 Mar 2016 13:39:06 -0400
+
 openafs (1.6.15-1) unstable; urgency=high
 
   * New upstream security release.
