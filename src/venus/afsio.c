@@ -898,6 +898,7 @@ writeFile(struct cmd_syndesc *as, void *unused)
     /* stdin on Windows defaults to _O_TEXT mode */
     _setmode(0, _O_BINARY);
 #endif
+    memset(&InStatus, 0, sizeof(InStatus));
 
     CmdProlog(as, &cell, &realm, &fname, &sSynthLen);
     afscp_AnonymousAuth(1);

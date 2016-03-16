@@ -1199,6 +1199,7 @@ GetServerRPC(void *rpc_specific, int slot, int *last_item,
     bulkaddrs addr_multi;
     int i;
 
+    memset(&m_attrs, 0, sizeof(m_attrs));
     /*
      * Check to see if this is a multihomed address server
      */

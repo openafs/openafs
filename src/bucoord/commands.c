@@ -219,6 +219,7 @@ EvalVolumeSet2(struct bc_config *aconfig,
     *avols = (struct bc_volumeDump *)0;
     bulkentries.nbulkentries_len = 0;
     bulkentries.nbulkentries_val = 0;
+    memset(&attributes, 0, sizeof(attributes));
 
     /* For each of the volume set entries - collect the volumes that match it */
     for (tve = avs->ventries; tve; tve = tve->next) {

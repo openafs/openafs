@@ -55,6 +55,7 @@ afs_StoreMini(struct vcache *avc, struct vrequest *areq)
 	tlen = avc->f.truncPos;
     avc->f.truncPos = AFS_NOTRUNC;
     avc->f.states &= ~CExtendedFile;
+    memset(&InStatus, 0, sizeof(InStatus));
 
     do {
 	tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK, &rxconn);

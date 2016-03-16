@@ -824,6 +824,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 
 			printf("[0x%x %u] (special multi-homed entry)\n",
 			       *addrp, *addrp);
+			memset(&attrs, 0, sizeof(attrs));
 			attrs.Mask = VLADDR_INDEX;
 			mhaddrs.bulkaddrs_val = 0;
 			mhaddrs.bulkaddrs_len = 0;
@@ -899,6 +900,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 
 			addrs2.bulkaddrs_val = 0;
 			addrs2.bulkaddrs_len = 0;
+			memset(&attrs, 0, sizeof(attrs));
 			attrs.Mask = VLADDR_INDEX;
 			attrs.index = (base * VL_MHSRV_PERBLK) + index;
 			code =

@@ -10,12 +10,12 @@ xstat_fs_test - Displays data collections from the File Server process
 B<xstat_fs_test> [I<initcmd>] S<<< B<-fsname> <I<file server name(s) to monitor>>+ >>>
     S<<< B<-collID> <I<collection(s) to fetch>>+ >>> [B<-onceonly>]
     S<<< [B<-frequency> <I<poll frequency, in seconds>>] >>>
-    S<<< [B<-period> <I<data collection time, in minutes>>] >>> [B<-debug>] [B<-help>]
+    S<<< [B<-period> <I<data collection time, in minutes>>] >>> [B<-debug>] [B<-version>] [B<-help>]
 
 B<xstat_fs_test> [B<initcmd>] S<<< B<-fs> <I<File Server name(s) to monitor>>+ >>>
     S<<< B<-c> <I<Collection(s) to fetch>>+ >>> [B<-o>]
     S<<< [B<-fr> <I<poll frequency, in seconds>>] >>>
-    S<<< [B<-p> <I<data collection time, in minutes>>] >>> [B<-d>] [B<-h>]
+    S<<< [B<-p> <I<data collection time, in minutes>>] >>> [B<-d>] [B<-version>] [B<-h>]
 
 =for html
 </div>
@@ -104,6 +104,11 @@ Displays a trace on the standard output stream as the command runs.
 
 Prints the online help for this command. All other valid options are
 ignored.
+
+=item B<-version>
+
+Prints the program version and then exits. All other valid options
+are ignored.
 
 =back
 

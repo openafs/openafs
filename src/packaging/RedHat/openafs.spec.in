@@ -266,7 +266,7 @@ Source1: http://www.openafs.org/dl/openafs/%{afsvers}/openafs-%{afsvers}-doc.tar
 Source10: http://www.openafs.org/dl/openafs/%{afsvers}/RELNOTES-%{afsvers}
 Source11: http://www.openafs.org/dl/openafs/%{afsvers}/ChangeLog
 
-Source20: http://dl.central.org/dl/cellservdb/CellServDB.2015-01-19
+Source20: http://dl.central.org/dl/cellservdb/CellServDB.2016-01-01
 
 Source30: openafs-kernel-version.sh
 Source996: openafs-kvers-is.sh
@@ -1062,8 +1062,11 @@ chmod +x $RPM_BUILD_ROOT%{_libdir}/*.so*
 # any user in /usr/bin
 mv $RPM_BUILD_ROOT%{_prefix}/afs/bin/restorevol $RPM_BUILD_ROOT%{_bindir}/restorevol
 
-# Link kpasswd to kapasswd
-ln -f $RPM_BUILD_ROOT%{_bindir}/kpasswd $RPM_BUILD_ROOT%{_bindir}/kapasswd
+# Copy kpasswd to kapasswd
+cp -a $RPM_BUILD_ROOT%{_bindir}/kpasswd $RPM_BUILD_ROOT%{_bindir}/kapasswd
+
+# make kpasswd non-executable to exclude it from debuginfo processing
+chmod 0644 $RPM_BUILD_ROOT%{_bindir}/kpasswd
 
 # Copy root.client config files
 install -m 755 src/packaging/RedHat/openafs.sysconfig $RPM_BUILD_ROOT/etc/sysconfig/openafs
@@ -1071,9 +1074,9 @@ install -m 755 src/packaging/RedHat/openafs.sysconfig $RPM_BUILD_ROOT/etc/syscon
 install -m 755 src/packaging/RedHat/openafs-client.init $RPM_BUILD_ROOT%{initdir}/openafs-client
 install -m 755 src/packaging/RedHat/openafs-server.init $RPM_BUILD_ROOT%{initdir}/openafs-server
 %else
-install -m 755 src/packaging/RedHat/openafs-client.service $RPM_BUILD_ROOT%{_unitdir}/openafs-client.service
+install -m 644 src/packaging/RedHat/openafs-client.service $RPM_BUILD_ROOT%{_unitdir}/openafs-client.service
 install -m 755 src/packaging/RedHat/openafs-client.modules $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig/modules/openafs-client.modules
-install -m 755 src/packaging/RedHat/openafs-server.service $RPM_BUILD_ROOT%{_unitdir}/openafs-server.service
+install -m 644 src/packaging/RedHat/openafs-server.service $RPM_BUILD_ROOT%{_unitdir}/openafs-server.service
 %endif
 
 # Copy PAM modules
@@ -1371,6 +1374,9 @@ fi
 [ -f /usr/vice/etc/CellServDB.local ] || touch /usr/vice/etc/CellServDB.local
 
 ( cd /usr/vice/etc ; \
+  if [ -h CellServDB ]; then \
+    rm -f CellServDB; \
+  fi; \
   cat CellServDB.local CellServDB.dist > CellServDB ; \
   chmod 644 CellServDB )
 
@@ -1726,7 +1732,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 
 %files kpasswd
 %defattr(-,root,root)
-%{_bindir}/kpasswd
+%attr(0755,root,root) %{_bindir}/kpasswd
 %{_bindir}/kpwvalid
 
 %if %{krb5support}

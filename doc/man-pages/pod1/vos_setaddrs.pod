@@ -131,7 +131,8 @@ L<UserList(5)>,
 L<sysid(5)>,
 L<fileserver(8)>,
 L<vos(1)>,
-L<vos_listaddrs(1)>
+L<vos_listaddrs(1)>,
+L<vos_remaddrs(1)>
 
 =head1 COPYRIGHT
 

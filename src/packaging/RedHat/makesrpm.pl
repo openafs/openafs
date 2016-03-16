@@ -169,7 +169,8 @@ if ($changelog) {
 }
 
 # Build an RPM
-system("rpmbuild -bs --define \"dist %undefined\" ".
+system("rpmbuild -bs --nodeps --define \"dist %undefined\" ".
+       "--define \"build_modules 0\" ".
        "--define \"_topdir $tmpdir/rpmdir\" ".
        "$tmpdir/rpmdir/SPECS/openafs.spec > /dev/null") == 0
   or die "rpmbuild failed : $!\n";

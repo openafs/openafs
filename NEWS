@@ -1,5 +1,101 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.6.17 (Security Release)
+
+  All server platforms
+
+    * Fix for OPENAFS-SA-2016-001: foreign users can create groups as
+      if they were an administrator (RT #132822) (CVE-2016-2860)
+
+  All client platforms
+
+    * Fix for OPENAFS-SA-2016-002: information leakage from sending
+      uninitialized memory over the network.  Multiple call sites
+      were vulnerable, with potential for leaking both kernel and
+      userland stack data (RT #132847)
+
+    * Update to the GCO CellServDB update from 01 January 2016 (12188)
+
+  Linux clients
+
+    * Fix a crash when the root volume is not found and dynroot is not
+      in use, a regression introduced in 1.6.14.1 (12166)
+
+    * Avoid introducing a dependency on the kernel-devel package corresponding
+      to the currently running system while building the srpm (12195)
+
+    * Create systemd unit files with mode 0644 instead of 0755
+      (12196) (RT #132662)
+
+OpenAFS 1.6.16
+
+  All platforms
+
+    * Documentation improvements (11932 12096 12100 12112 12120)
+
+    * Improved diagnostics and error messages (11586 11587)
+
+    * Distribute the contributor code of conduct with the stable release (12056)
+
+  All server platforms
+
+    * Create PID files in the right location when bosserver is started with
+      the "-pidfiles" argument and transarc paths are not being used (12086)
+
+    * Several fixes regarding volume dump creation and restore (11433 11553
+      11825 11826 12082)
+
+    * Avoid a reported bosserver crash, and potentially others, by replacing
+      fixed size buffers with dynamically allocated ones in some user handling
+      functions (11436) (RT #130719)
+
+    * Obey the "-toname" parameter in "vos clone" operations (11434)
+
+    * Avoid writing a loopback address into the server CellServDB - search
+      for a non-loopback one, and fail if none is found (12083 12105)
+
+    * Rebuild the vldb free list with "vldb_check -fix" (12084)
+
+    * Fixed and improved the "check_sysid" utility (12090)
+
+    * Fixed and improved the "prdb_check" utility (12101..04)
+
+  All client platforms
+
+    * Avoid a potential denial of service issue, by fixing a bug in pioctl
+      logic that allowed a local user to overrun a kernel buffer with a single
+      NUL byte (commit 2ef86372) (RT #132256) (CVE-2015-8312)
+
+    * Refuse to change multi-homed server entries with "vos changeaddr",
+      unless "-force" is given, to avoid corruption of those entries (12087)
+
+    * Provide a new vos subcommand "remaddrs" for removing server entries, to
+      replace the slightly confusing "vos changeaddr -remove" (12092 12094)
+
+    * Make "fs flushall" actually invalidate all cached data (11894)
+
+    * Prevent spurious call aborts due to erroneous idle timeouts (11594)
+
+    * Provide a "--disable-gtx" configure switch to avoid building and
+      installing libgtx and its header files as well as the depending
+      "scout" and "afsmonitor" applications (12095)
+
+    * Fixed building the gtx applications against newer ncurses (12125)
+
+    * Allow pioctls to work in environments where the syscall emulation
+      pseudo file is created in a read-only pseudo filesystem, like in
+      containers under recent versions of docker (12124)
+
+  Linux clients
+
+    * In Red Hat packaging, avoid following a symbolic link when writing
+      the client CellServDB, which could overwrite the server CellServDB,
+      by removing an existing symlink before writing the file (12081)
+
+    * In Red Hat packaging, avoid a conflict of openafs-debuginfo with
+      krb5-debuginfo by excluding our kpasswd executable from debuginfo
+      processing (12128) (RT #131771)
+
 OpenAFS 1.6.15 (Security Release)
 
   All client and server platforms

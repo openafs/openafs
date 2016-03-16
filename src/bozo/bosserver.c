@@ -836,7 +836,7 @@ main(int argc, char **argv, char **envp)
 	} else if (strncmp(argv[code], "-pidfiles=", 10) == 0) {
 	    DoPidFiles = (argv[code]+10);
 	} else if (strncmp(argv[code], "-pidfiles", 9) == 0) {
-	    DoPidFiles = AFSDIR_BOSCONFIG_DIR;
+	    DoPidFiles = AFSDIR_LOCAL_DIR;
 	}
 	else {
 
@@ -1076,7 +1076,7 @@ main(int argc, char **argv, char **envp)
 }
 
 void
-bozo_Log(char *format, ...)
+bozo_Log(const char *format, ...)
 {
     char tdate[27];
     time_t myTime;

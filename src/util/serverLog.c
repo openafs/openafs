@@ -101,8 +101,10 @@ void
 WriteLogBuffer(char *buf, afs_uint32 len)
 {
     LOCK_SERVERLOG();
-    if (serverLogFD > 0)
-	(void)write(serverLogFD, buf, len);
+    if (serverLogFD > 0) {
+	if (write(serverLogFD, buf, len) < 0)
+	    ; /* don't care */
+    }
     UNLOCK_SERVERLOG();
 }
 
@@ -146,8 +148,10 @@ vFSLog(const char *format, va_list args)
 	syslog(LOG_INFO, "%s", info);
     } else
 #endif
-    if (serverLogFD > 0)
-	(void)write(serverLogFD, tbuffer, len);
+    if (serverLogFD > 0) {
+	if (write(serverLogFD, tbuffer, len) < 0)
+	    ; /* don't care */
+    }
     UNLOCK_SERVERLOG();
 
 #if !defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
@@ -359,13 +363,15 @@ OpenLog(const char *fileName)
 	return -1;
     }
     /* redirect stdout and stderr so random printf's don't write to data */
-    (void)freopen(fileName, "a", stdout);
-    (void)freopen(fileName, "a", stderr);
+    if (freopen(fileName, "a", stdout) == NULL)
+	; /* don't care */
+    if (freopen(fileName, "a", stderr) != NULL) {
 #ifdef HAVE_SETVBUF
-    setvbuf(stderr, NULL, _IONBF, 0);
+	setvbuf(stderr, NULL, _IONBF, 0);
 #else
-    setbuf(stderr, NULL);
+	setbuf(stderr, NULL);
 #endif
+    }
 
 #if defined(AFS_PTHREAD_ENV)
     MUTEX_INIT(&serverLogMutex, "serverlog", MUTEX_DEFAULT, 0);
@@ -403,17 +409,19 @@ ReOpenLog(const char *fileName)
 	close(serverLogFD);
     serverLogFD = open(fileName, O_WRONLY | O_APPEND | O_CREAT | (isfifo?O_NONBLOCK:0), 0666);
     if (serverLogFD > 0) {
-	(void)freopen(fileName, "a", stdout);
-	(void)freopen(fileName, "a", stderr);
+	if (freopen(fileName, "a", stdout) == NULL)
+	    ; /* don't care */
+	if (freopen(fileName, "a", stderr) != NULL) {
 #ifdef HAVE_SETVBUF
 #ifdef SETVBUF_REVERSED
-	setvbuf(stderr, _IONBF, NULL, 0);
+	    setvbuf(stderr, _IONBF, NULL, 0);
 #else
-	setvbuf(stderr, NULL, _IONBF, 0);
+	    setvbuf(stderr, NULL, _IONBF, 0);
 #endif
 #else
-	setbuf(stderr, NULL);
+	    setbuf(stderr, NULL);
 #endif
+	}
 
     }
     UNLOCK_SERVERLOG();

@@ -12,12 +12,12 @@ B<xstat_cm_test> [I<initcmd>]
     S<<< B<-collID> <I<collection(s) to fetch>>+ >>> [B<-onceonly>]
     S<<< [B<-frequency> <I<poll frequency, in seconds>>] >>>
     S<<< [B<-period> <I<data collection time, in minutes>>] >>> [B<-debug>]
-    [B<-help>]
+    [B<-version>] [B<-help>]
 
 B<xstat_cm_test> [I<i>] S<<< B<-cm> <I<cache manager name(s) to monitor>>+ >>>
     S<<< B<-co> <I<collection(s) to fetch>>+ >>> [B<-o>]
     S<<< [B<-f> <I<poll frequency, in seconds>>] >>>
-    S<<< [B<-p> <I<data collection time, in minutes>>] >>> [B<-d>] [B<-h>]
+    S<<< [B<-p> <I<data collection time, in minutes>>] >>> [B<-d>] [B<-version>] [B<-h>]
 
 =for html
 </div>
@@ -101,6 +101,11 @@ Displays a trace on the standard output stream as the command runs.
 
 Prints the online help for this command. All other valid options are
 ignored.
+
+=item B<-version>
+
+Prints the program version and then exits. All other valid options
+are ignored.
 
 =back
 

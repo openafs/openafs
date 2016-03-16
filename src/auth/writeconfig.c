@@ -51,14 +51,34 @@ VerifyEntries(struct afsconf_cell *aci)
 	if (aci->hostAddr[i].sin_addr.s_addr == 0) {
 	    /* no address spec'd */
 	    if (*(aci->hostName[i]) != 0) {
-		th = gethostbyname(aci->hostName[i]);
-		if (!th) {
+		int code;
+		struct addrinfo hints;
+		struct addrinfo *result;
+		struct addrinfo *rp;
+
+		memset(&hints, 0, sizeof(struct addrinfo));
+		hints.ai_family = AF_INET;
+		hints.ai_socktype = SOCK_DGRAM;
+
+		code = getaddrinfo(aci->hostName[i], NULL, &hints, &result);
+		if (code) {
 		    printf("Host %s not found in host database...\n",
 			   aci->hostName[i]);
 		    return AFSCONF_FAILURE;
 		}
-		memcpy(&aci->hostAddr[i].sin_addr, th->h_addr,
-		       sizeof(afs_int32));
+		for (rp = result; rp != NULL; rp = rp->ai_next) {
+		    struct sockaddr_in *sa = (struct sockaddr_in *)rp->ai_addr;
+		    if (!rx_IsLoopbackAddr(ntohl(sa->sin_addr.s_addr))) {
+			aci->hostAddr[i].sin_addr.s_addr = sa->sin_addr.s_addr;
+			break;
+		    }
+		}
+		freeaddrinfo(result);
+		if (aci->hostAddr[i].sin_addr.s_addr == 0) {
+		    printf("No non-loopback addresses found for host %s\n",
+			   aci->hostName[i]);
+		    return AFSCONF_FAILURE;
+		}
 	    }
 	    /* otherwise we're deleting this entry */
 	} else {
