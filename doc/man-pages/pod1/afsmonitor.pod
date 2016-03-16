@@ -13,7 +13,7 @@ B<afsmonitor> [B<initcmd>] [-config <I<configuration file>>]
     S<<< [B<-debug> <I<debug output file>>] >>>
     S<<< [B<-fshosts> <I<list of file servers to monitor>>+] >>>
     S<<< [B<-cmhosts> <I<list of cache managers to monitor>>+] >>>
-    S<<< [B<-buffers> <I<number of buffer slots>>] >>> [B<-help>]
+    S<<< [B<-buffers> <I<number of buffer slots>>] >>> [B<-version>] [B<-help>]
 
 B<afsmonitor> [B<i>]  [-co <I<configuration file>>]
     S<<< [B<-fr> <I<poll frequency, in seconds>>] >>>
@@ -21,7 +21,7 @@ B<afsmonitor> [B<i>]  [-co <I<configuration file>>]
     S<<< [B<-deb> <I<debug output file>>] >>>
     S<<< [B<-fs> <I<list of file servers to monitor>>+] >>>
     S<<< [B<-cm> <I<list of cache managers to monitor>>+] >>>
-    S<<< [B<-b> <I<number of buffer slots>>] >>> [B<-h>]
+    S<<< [B<-b> <I<number of buffer slots>>] >>> [B<-version>] [B<-h>]
 
 =for html
 </div>
@@ -167,6 +167,11 @@ enhancements to the program.
 
 Prints the online help for this command. All other valid options are
 ignored.
+
+=item B<-version>
+
+Prints the program version and then exits. All other valid options
+are ignored.
 
 =back
 

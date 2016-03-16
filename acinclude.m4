@@ -1438,17 +1438,6 @@ AC_CHECK_TYPES([fsblkcnt_t],,,[
 dnl see what struct stat has for timestamps
 AC_CHECK_MEMBERS([struct stat.st_ctimespec, struct stat.st_ctimensec])
 
-dnl check for curses-lib
-save_LIBS=$LIBS
-AC_CHECK_LIB( [ncurses], [setupterm],
-[LIB_curses=-lncurses],
-    [AC_CHECK_LIB([Hcurses], [setupterm], [LIB_curses=-lHcurses],
-        [AC_CHECK_LIB([curses], [setupterm], [LIB_curses=-lcurses])
-    ])
-])
-LIBS=$save_LIBS
-AC_SUBST(LIB_curses)
-
 OPENAFS_TEST_PACKAGE(libintl,[#include <libintl.h>],[-lintl],,,INTL)
 
 dnl Don't build PAM on IRIX; the interface doesn't work for us.
@@ -1508,6 +1497,8 @@ AC_CHECK_FUNCS([ \
 	vsnprintf \
 	vsyslog \
 ])
+
+OPENAFS_CURSES()
 
 case $AFS_SYSNAME in
 *hp_ux* | *hpux*)

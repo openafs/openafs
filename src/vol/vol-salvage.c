@@ -4904,7 +4904,8 @@ TimeStampLogFile(char * log_path)
 
     /* try to link the logfile to a timestamped filename */
     /* if it fails, oh well, nothing we can do */
-    link(log_path, stampSlvgLog);
+    if (link(log_path, stampSlvgLog))
+	; /* oh well */
 }
 #endif
 

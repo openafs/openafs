@@ -49,7 +49,7 @@ afs_init(struct vfsconf *vfc)
     int code;
     int offset = AFS_SYSCALL;
 #if defined(AFS_FBSD90_ENV) || defined(AFS_FBSD82_ENV)
-# if defined(AFS_FBSD_110_ENV)
+# if defined(AFS_FBSD110_ENV)
     code = syscall_register(&offset, &afs_sysent, &old_sysent, 0);
 # else
     code = syscall_register(&offset, &afs_sysent, &old_sysent);

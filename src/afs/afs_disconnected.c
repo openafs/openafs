@@ -671,6 +671,7 @@ afs_ProcessOpCreate(struct vcache *avc, struct vrequest *areq,
     tname = afs_osi_Alloc(AFSNAMEMAX);
     if (!tname)
 	return ENOMEM;
+    memset(&InStatus, 0, sizeof(InStatus));
 
     code = afs_GetParentVCache(avc, 0, &pdir_fid, tname, &tdp);
     if (code)

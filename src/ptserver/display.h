@@ -12,5 +12,7 @@
 
 extern int pr_PrintEntry(FILE *f, int hostOrder, afs_int32 ea,
 			 struct prentry *e, int indent);
+extern int pr_PrintContEntry(FILE *f, int hostOrder, afs_int32 ea,
+			 struct contentry *e, int indent);
 
 #endif

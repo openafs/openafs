@@ -106,12 +106,10 @@ pr_WriteEntry(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos, struct prentr
 	nentry.sibling = htonl(tentry->sibling);
 	nentry.child = htonl(tentry->child);
 	strncpy(nentry.name, tentry->name, PR_MAXNAMELEN);
-#ifdef PR_REMEMBER_TIMES
 	nentry.createTime = htonl(tentry->createTime);
 	nentry.addTime = htonl(tentry->addTime);
 	nentry.removeTime = htonl(tentry->removeTime);
 	nentry.changeTime = htonl(tentry->changeTime);
-#endif
 	for (i = 0; i < PRSIZE; i++)
 	    nentry.entries[i] = htonl(tentry->entries[i]);
 	tentry = &nentry;
@@ -155,12 +153,10 @@ pr_ReadEntry(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos, struct prentry
     tentry->sibling = ntohl(nentry.sibling);
     tentry->child = ntohl(nentry.child);
     strncpy(tentry->name, nentry.name, PR_MAXNAMELEN);
-#ifdef PR_REMEMBER_TIMES
     tentry->createTime = ntohl(nentry.createTime);
     tentry->addTime = ntohl(nentry.addTime);
     tentry->removeTime = ntohl(nentry.removeTime);
     tentry->changeTime = ntohl(nentry.changeTime);
-#endif
     for (i = 0; i < PRSIZE; i++)
 	tentry->entries[i] = ntohl(nentry.entries[i]);
     return (code);

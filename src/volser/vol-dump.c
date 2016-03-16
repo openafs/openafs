@@ -410,7 +410,21 @@ DumpDumpHeader(int dumpfd, Volume * vp, afs_int32 fromtime)
 	code = DumpString(dumpfd, 'n', V_name(vp));
 
     dumpTimes[0] = fromtime;
-    dumpTimes[1] = V_backupDate(vp);	/* Until the time the clone was made */
+    switch (V_type(vp)) {
+    case readwriteVolume:
+	dumpTimes[1] = V_updateDate(vp);	/* until last update */
+	break;
+    case readonlyVolume:
+	dumpTimes[1] = V_creationDate(vp);	/* until clone was updated */
+	break;
+    case backupVolume:
+	/* until backup was made */
+	dumpTimes[1] = V_backupDate(vp) != 0 ? V_backupDate(vp) :
+					       V_creationDate(vp);
+	break;
+    default:
+	code = EINVAL;
+    }
     if (!code)
 	code = DumpArrayInt32(dumpfd, 't', (afs_uint32 *) dumpTimes, 2);
 

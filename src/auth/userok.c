@@ -108,8 +108,8 @@ afsconf_SetNoAuthFlag(struct afsconf_dir *adir, int aflag)
 int
 afsconf_DeleteUser(struct afsconf_dir *adir, char *auser)
 {
-    char tbuffer[1024];
-    char nbuffer[1024];
+    char *filename, *nfilename;
+    char *buffer;
     FILE *tf;
     FILE *nf;
     int flag;
@@ -119,8 +119,17 @@ afsconf_DeleteUser(struct afsconf_dir *adir, char *auser)
     struct stat tstat;
     afs_int32 code;
 
+    buffer = malloc(AFSDIR_PATH_MAX);
+    if (buffer == NULL)
+	return ENOMEM;
+    filename = malloc(AFSDIR_PATH_MAX);
+    if (filename == NULL) {
+	free(buffer);
+	return ENOMEM;
+    }
+
     LOCK_GLOBAL_MUTEX;
-    strcompose(tbuffer, sizeof tbuffer, adir->name, "/",
+    strcompose(filename, AFSDIR_PATH_MAX, adir->name, "/",
 	       AFSDIR_ULIST_FILE, NULL);
 #ifndef AFS_NT40_ENV
     {
@@ -129,64 +138,86 @@ afsconf_DeleteUser(struct afsconf_dir *adir, char *auser)
 	 * of the temporary file will work even if UserList is a symlink
 	 * into a different filesystem.
 	 */
-	char resolved_path[1024];
-
-	if (realpath(tbuffer, resolved_path)) {
-	    strcpy(tbuffer, resolved_path);
+	nfilename = malloc(AFSDIR_PATH_MAX);
+	if (nfilename == NULL) {
+	    UNLOCK_GLOBAL_MUTEX;
+	    free(filename);
+	    free(buffer);
+	    return ENOMEM;
+	}
+	if (realpath(filename, nfilename)) {
+	    free(filename);
+	    filename = nfilename;
+	} else {
+	    free(nfilename);
 	}
     }
 #endif /* AFS_NT40_ENV */
-    tf = fopen(tbuffer, "r");
-    if (!tf) {
+    if (afs_asprintf(&nfilename, "%s.NXX", filename) < 0) {
 	UNLOCK_GLOBAL_MUTEX;
+	free(filename);
+	free(buffer);
 	return -1;
     }
-    code = stat(tbuffer, &tstat);
+    tf = fopen(filename, "r");
+    if (!tf) {
+	UNLOCK_GLOBAL_MUTEX;
+	free(filename);
+	free(nfilename);
+	free(buffer);
+	return -1;
+    }
+    code = stat(filename, &tstat);
     if (code < 0) {
 	UNLOCK_GLOBAL_MUTEX;
+	free(filename);
+	free(nfilename);
+	free(buffer);
 	return code;
     }
-    strcpy(nbuffer, tbuffer);
-    strcat(nbuffer, ".NXX");
-    nf = fopen(nbuffer, "w+");
+    nf = fopen(nfilename, "w+");
     if (!nf) {
 	fclose(tf);
 	UNLOCK_GLOBAL_MUTEX;
+	free(filename);
+	free(nfilename);
+	free(buffer);
 	return EIO;
     }
     flag = 0;
     found = 0;
     while (1) {
 	/* check for our user id */
-	tp = fgets(nbuffer, sizeof(nbuffer), tf);
+	tp = fgets(buffer, AFSDIR_PATH_MAX, tf);
 	if (tp == NULL)
 	    break;
-	code = sscanf(nbuffer, "%64s", tname);
+	code = sscanf(buffer, "%64s", tname);
 	if (code == 1 && strcmp(tname, auser) == 0) {
 	    /* found the guy, don't copy to output file */
 	    found = 1;
 	} else {
 	    /* otherwise copy original line  to output */
-	    fprintf(nf, "%s", nbuffer);
+	    fprintf(nf, "%s", buffer);
 	}
     }
     fclose(tf);
+    free(buffer);
     if (ferror(nf))
 	flag = 1;
     if (fclose(nf) == EOF)
 	flag = 1;
-    strcpy(nbuffer, tbuffer);
-    strcat(nbuffer, ".NXX");	/* generate new file name again */
     if (flag == 0) {
 	/* try the rename */
-	flag = renamefile(nbuffer, tbuffer);
+	flag = renamefile(nfilename, filename);
 	if (flag == 0)
-	    flag = chmod(tbuffer, tstat.st_mode);
+	    flag = chmod(filename, tstat.st_mode);
     } else
-	unlink(nbuffer);
+	unlink(nfilename);
 
     /* finally, decide what to return to the caller */
     UNLOCK_GLOBAL_MUTEX;
+    free(filename);
+    free(nfilename);
     if (flag)
 	return EIO;		/* something mysterious went wrong */
     if (!found)
@@ -199,25 +230,30 @@ int
 afsconf_GetNthUser(struct afsconf_dir *adir, afs_int32 an, char *abuffer,
 		   afs_int32 abufferLen)
 {
-    char tbuffer[256];
+    char *tbuffer;
     FILE *tf;
     char tname[64 + 1];
     char *tp;
     int flag;
     afs_int32 code;
 
+    tbuffer = malloc(AFSDIR_PATH_MAX);
+    if (tbuffer == NULL)
+	return ENOMEM;
+
     LOCK_GLOBAL_MUTEX;
-    strcompose(tbuffer, sizeof tbuffer, adir->name, "/",
+    strcompose(tbuffer, AFSDIR_PATH_MAX, adir->name, "/",
 	       AFSDIR_ULIST_FILE, NULL);
     tf = fopen(tbuffer, "r");
     if (!tf) {
 	UNLOCK_GLOBAL_MUTEX;
+	free(tbuffer);
 	return 1;
     }
     flag = 1;
     while (1) {
 	/* check for our user id */
-	tp = fgets(tbuffer, sizeof(tbuffer), tf);
+	tp = fgets(tbuffer, AFSDIR_PATH_MAX, tf);
 	if (tp == NULL)
 	    break;
 	code = sscanf(tbuffer, "%64s", tname);
@@ -230,6 +266,7 @@ afsconf_GetNthUser(struct afsconf_dir *adir, afs_int32 an, char *abuffer,
 	strcpy(abuffer, tname);
     fclose(tf);
     UNLOCK_GLOBAL_MUTEX;
+    free(tbuffer);
     return flag;
 }
 
@@ -237,22 +274,28 @@ afsconf_GetNthUser(struct afsconf_dir *adir, afs_int32 an, char *abuffer,
 static int
 FindUser(struct afsconf_dir *adir, char *auser)
 {
-    char tbuffer[256];
+    char *tbuffer;
     bufio_p bp;
     char tname[64 + 1];
     int flag;
     afs_int32 code;
     int rc;
 
-    strcompose(tbuffer, sizeof tbuffer, adir->name, "/", AFSDIR_ULIST_FILE,
+    tbuffer = malloc(AFSDIR_PATH_MAX);
+    if (tbuffer == NULL)
+	return 0;
+
+    strcompose(tbuffer, AFSDIR_PATH_MAX, adir->name, "/", AFSDIR_ULIST_FILE,
 	       NULL);
     bp = BufioOpen(tbuffer, O_RDONLY, 0);
-    if (!bp)
+    if (!bp) {
+	free(tbuffer);
 	return 0;
+    }
     flag = 0;
     while (1) {
 	/* check for our user id */
-	rc = BufioGets(bp, tbuffer, sizeof(tbuffer));
+	rc = BufioGets(bp, tbuffer, AFSDIR_PATH_MAX);
 	if (rc < 0)
 	    break;
 	code = sscanf(tbuffer, "%64s", tname);
@@ -262,6 +305,7 @@ FindUser(struct afsconf_dir *adir, char *auser)
 	}
     }
     BufioClose(bp);
+    free(tbuffer);
     return flag;
 }
 
@@ -271,7 +315,7 @@ afsconf_AddUser(struct afsconf_dir *adir, char *aname)
 {
     FILE *tf;
     afs_int32 code;
-    char tbuffer[256];
+    char *tbuffer;
 
     LOCK_GLOBAL_MUTEX;
     if (FindUser(adir, aname)) {
@@ -279,9 +323,11 @@ afsconf_AddUser(struct afsconf_dir *adir, char *aname)
 	return EEXIST;		/* already in the list */
     }
 
-    strcompose(tbuffer, sizeof tbuffer, adir->name, "/", AFSDIR_ULIST_FILE,
+    tbuffer = malloc(AFSDIR_PATH_MAX);
+    strcompose(tbuffer, AFSDIR_PATH_MAX, adir->name, "/", AFSDIR_ULIST_FILE,
 	       NULL);
     tf = fopen(tbuffer, "a+");
+    free(tbuffer);
     if (!tf) {
 	UNLOCK_GLOBAL_MUTEX;
 	return EIO;

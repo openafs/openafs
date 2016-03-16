@@ -29,9 +29,9 @@
 int proc_afs_syscall(long syscall, long param1, long param2, long param3,
 		     long param4, int *rval) {
   struct afsprocdata syscall_data;
-  int fd = open(PROC_SYSCALL_FNAME, O_RDWR);
+  int fd = open(PROC_SYSCALL_FNAME, O_RDONLY);
   if(fd < 0)
-      fd = open(PROC_SYSCALL_ARLA_FNAME, O_RDWR);
+      fd = open(PROC_SYSCALL_ARLA_FNAME, O_RDONLY);
   if(fd < 0)
     return -1;
 
@@ -55,7 +55,7 @@ int ioctl_afs_syscall(long syscall, long param1, long param2, long param3,
     struct afssysargs syscall_data;
     void *ioctldata;
     int code;
-    int fd = open(SYSCALL_DEV_FNAME, O_RDWR);
+    int fd = open(SYSCALL_DEV_FNAME, O_RDONLY);
     int syscallnum;
 #ifdef AFS_DARWIN100_ENV
     struct afssysargs64 syscall64_data;
@@ -137,7 +137,7 @@ ioctl_sun_afs_syscall(long syscall, uintptr_t param1, uintptr_t param2,
     callnum = VIOC_SYSCALL;
 # endif /* !_ILP32 */
 
-    fd = open(SYSCALL_DEV_FNAME, O_RDWR);
+    fd = open(SYSCALL_DEV_FNAME, O_RDONLY);
     if (fd < 0) {
 	return -1;
     }

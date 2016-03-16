@@ -124,6 +124,7 @@ afscp_PWrite(const struct afscp_venusfid * fid, const void *buffer,
     off_t filesize;
     time_t now;
 
+    memset(&sst, 0, sizeof(sst));
     vol = afscp_VolumeById(fid->cell, fid->fid.Volume);
     if (vol == NULL) {
 	afscp_errno = ENOENT;

@@ -138,9 +138,10 @@ None
 L<fs_uuid(1)>,
 L<sysid(5)>,
 L<vos(1)>,
-L<vos_changeaddr(1)>,
 L<vos_examine(1)>,
-L<vos_listvldb(1)>
+L<vos_listvldb(1)>,
+L<vos_setaddrs(1)>,
+L<vos_remaddrs(1)>
 
 =head1 COPYRIGHT
 

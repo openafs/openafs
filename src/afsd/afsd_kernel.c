@@ -510,8 +510,8 @@ afsd_mount_afs(const char *rn, const char *cacheMountDir)
 	printf("%s: Mounting the AFS root on '%s', flags: %d.\n", rn,
 	    cacheMountDir, mountFlags);
 #if defined(AFS_FBSD60_ENV)
-    /* data must be non-NULL but is otherwise ignored */
-    if ((mount(MOUNT_AFS, cacheMountDir, mountFlags, rn)) < 0) {
+    /* data must be non-const non-NULL but is otherwise ignored */
+    if ((mount(MOUNT_AFS, cacheMountDir, mountFlags, &mountFlags)) < 0) {
 #elif defined(AFS_FBSD_ENV)
     if ((mount("AFS", cacheMountDir, mountFlags, (caddr_t) 0)) < 0) {
 #elif defined(AFS_AIX_ENV)

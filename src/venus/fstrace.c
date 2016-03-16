@@ -1117,7 +1117,10 @@ int
 afs_syscall(long call, long parm0, long parm1, long parm2, long parm3,
 	    long parm4, long parm5, long parm6)
 {
-    int code, rval;
+    int code;
+#if defined(AFS_DARWIN80_ENV) || defined(AFS_LINUX20_ENV)
+    int rval;
+#endif
 #ifdef AFS_LINUX20_ENV
 #if defined AFS_LINUX_64BIT_KERNEL
     long long eparm[4];

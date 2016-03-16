@@ -99,6 +99,10 @@ Commands to obtain help:
 L<B<fs apropos>|fs_apropos(1)>
 and L<B<fs help>|fs_help(1)>.
 
+=item *
+
+A command to display the OpenAFS command suite version: B<fs version>.
+
 =back
 
 The Cache Manager and the fs commands use and maintain the following

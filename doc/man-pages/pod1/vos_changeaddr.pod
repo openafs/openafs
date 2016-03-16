@@ -8,12 +8,12 @@ vos_changeaddr - Changes or removes a file server machine's entry in the VLDB
 <div class="synopsis">
 
 B<vos changeaddr> S<<< B<-oldaddr> <I<original IP address>> >>>
-    S<<< [B<-newaddr> <I<new IP address>>] >>> [B<-remove>]
+    S<<< [B<-newaddr> <I<new IP address>>] >>> [B<-remove>] [B<-force>]
     S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>]
     [B<-verbose>] [B<-encrypt>] [B<-noresolve>] [B<-help>]
 
 B<vos changea> S<<< B<-o> <I<original IP address>> >>>
-    S<<< [B<-ne> <I<new IP address>>] >>> [B<-r>]
+    S<<< [B<-ne> <I<new IP address>>] >>> [B<-r>] [B<-f>]
     S<<< [B<-c> <I<cell name>>] >>>
     [B<-noa>] [B<-l>] [B<-v>] [B<-e>] [B<-nor>] [B<-h>]
 
@@ -26,9 +26,9 @@ The B<vos changeaddr> command removes a server entry from the Volume
 Location Database (VLDB) when the B<-remove> flag is combined with the
 B<-oldaddr> argument. There must be no VLDB entries that list the machine
 as a site for any version of a volume (if necessary, use the B<vos move>
-or B<vos remove> command to more or remove volumes). It is appropriate to
+or B<vos remove> command to move or remove volumes). It is appropriate to
 remove a VLDB server entry when removing the corresponding file server
-machine from service; this is the only recommended use of the command.
+machine from service.
 
 To display all VLDB server entries, use the B<vos listaddrs> command.
 
@@ -74,10 +74,20 @@ multihomed machine, use any of them to identify the server entry.
 Specifies the new IP address that replaces all currently registered
 addresses.
 
+Unless the B<-force> option is given, B<vos changeaddr> will refuse to change
+addresses when the address given in B<-oldaddr> is registered with a multihomed
+server entry in the VLDB. See L</CAUTIONS>.
+
 =item B<-remove>
 
 Removes from the VLDB the server entry that includes the address specified
 by the B<-oldaddr> argument.
+
+=item B<-force>
+
+Overrides the multihomed server entry check when the B<-oldaddr> and
+B<-newaddr> options are combined. The B<-force> flag is provided for historical
+compatibility and is not recommended.
 
 =item B<-cell> <I<cell name>>
 

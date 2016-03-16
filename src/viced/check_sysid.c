@@ -24,8 +24,8 @@
 #define SYSIDVERSION    1
 
 struct versionStamp {		/* Stolen from <afs/volume.h> */
-    int magic;
-    int version;
+    int magic;   /* stored in host byte order */
+    int version; /* stored in host byte order */
 };
 
 int
@@ -69,6 +69,19 @@ main(int argc, char **argv)
 	       errno);
 	exit(3);
     }
+
+    /* These uuid fields are in network byte order */
+    uuid.time_low = ntohl(uuid.time_low);
+    uuid.time_mid = ntohs(uuid.time_mid);
+    uuid.time_hi_and_version = ntohs(uuid.time_hi_and_version);
+
+    printf("UUID                 = %08x-%04x-%04x-%02x-%02x-%02x%02x%02x%02x%02x%02x\n",
+	     uuid.time_low, uuid.time_mid, uuid.time_hi_and_version,
+	     (unsigned char)uuid.clock_seq_hi_and_reserved,
+	     (unsigned char)uuid.clock_seq_low, (unsigned char)uuid.node[0],
+	     (unsigned char)uuid.node[1], (unsigned char)uuid.node[2],
+	     (unsigned char)uuid.node[3], (unsigned char)uuid.node[4],
+	     (unsigned char)uuid.node[5]);
     printf("UUID.time(hi.mid.low)= 0x%03x.%04x.%08x\n",
 	   uuid.time_hi_and_version & 0x0fff, uuid.time_mid & 0xffff,
 	   uuid.time_low);
@@ -101,6 +114,7 @@ main(int argc, char **argv)
 		   i + 1, size, errno);
 	    exit(5);
 	}
+	addr = ntohl(addr);
 	printf("Address              = %d.%d.%d.%d (0x%x)\n",
 	       (addr >> 24) & 0xff, (addr >> 16) & 0xff, (addr >> 8) & 0xff,
 	       (addr) & 0xff, addr);

@@ -13,8 +13,10 @@ B<salvageserver> [I<initcmd>] S<<< [B<-partition> <I<name of partition to salvag
     [B<-salvagedirs>] [B<-blockreads>]
     S<<< [B<-parallel> <I<# of max parallel partition salvaging>>] >>>
     S<<< [B<-tmpdir> <I<name of dir to place tmp files>>] >>>
-    [B<-showlog>] [B<-showsuid>] [B<-showmounts>]
+    [B<-showlog>]
     S<<< [B<-orphans> (ignore | remove | attach)] >>>
+    [B<-syslog>]
+    S<<< [B<-syslogfacility> <I<Syslog facility number to use>>] >>>
     [B<-client>] [B<-help>]
 
 =for html
@@ -110,9 +112,6 @@ referenced by the vnode of any directory that can act as its parent (is
 higher in the filespace). Orphaned objects occupy space on the server
 partition, but do not count against the volume's quota.
 
-To generate a list of all mount points that reside in one or more volumes,
-rather than actually salvaging them, include the B<-showmounts> flag.
-
 This command does not use the syntax conventions of the AFS command
 suites. Provide the command name and all option names in full.
 
@@ -140,7 +139,7 @@ the volume's actual site.
 
 This flag should be considered deprecated.  Its primary purpose was to disable
 forking and parallelization of the Salvager so that log messages were not
-interleaved.  Due to the manner in which F</usr/afs/logs/SalSrvLog> is 
+interleaved.  Due to the manner in which F</usr/afs/logs/SalsrvLog> is
 written, log messages from subprocesses are never interleaved; the entire log
 for a volume group salvage is appended to the master log as one atomic 
 transaction.
@@ -152,7 +151,7 @@ damaged volumes.
 
 =item B<-inodes>
 
-Records in the F</usr/afs/logs/SalSrvLog> file a list of all AFS inodes
+Records in the F</usr/afs/logs/SalsrvLog> file a list of all AFS inodes
 that the Salvageserver modified.
 
 =item B<-force>
@@ -171,7 +170,7 @@ needed.
 
 =item B<-rootinodes>
 
-Records in the F</usr/afs/logs/SalSrvLog> file a list of all AFS inodes
+Records in the F</usr/afs/logs/SalsrvLog> file a list of all AFS inodes
 owned by the local superuser C<root>.
 
 =item B<-salvagedirs>
@@ -231,18 +230,7 @@ salvaged.
 =item B<-showlog>
 
 Displays on the standard output stream all log data that is being written
-to the F</usr/afs/logs/SalSrvLog> file.
-
-=item B<-showsuid>
-
-Displays a list of the pathnames for all files that have the setuid or
-setgid mode bit set.
-
-=item B<-showmounts>
-
-Records in the F</usr/afs/logs/SalSrvLog> file all mount points found in
-each volume. The Salvageserver does not repair corruption in the volumes, if
-any exists.
+to the F</usr/afs/logs/SalsrvLog> file.
 
 =item B<-orphans> (ignore | remove | attach)
 
@@ -254,14 +242,14 @@ one of the following three values:
 =item ignore
 
 Leaves the orphaned objects on the disk, but prints a message to the
-F</usr/afs/logs/SalSrvLog> file reporting how many orphans were found and
+F</usr/afs/logs/SalsrvLog> file reporting how many orphans were found and
 the approximate number of kilobytes they are consuming. This is the
 default if the B<-orphans> argument is omitted.
 
 =item remove
 
 Removes the orphaned objects, and prints a message to the
-F</usr/afs/logs/SalSrvLog> file reporting how many orphans were removed
+F</usr/afs/logs/SalsrvLog> file reporting how many orphans were removed
 and the approximate number of kilobytes they were consuming.
 
 =item attach
@@ -284,6 +272,15 @@ the output of the B<ls> command issued against the volume's root
 directory.
 
 =back
+
+=item B<-syslog>
+
+Specifies that logging output should go to syslog instead of the log file.
+
+=item B<-syslogfacility> <I<Syslog facility number to use>>
+
+Specify to which facility log messages should be sent when B<-syslog> is
+given.
 
 =item B<-client>
 

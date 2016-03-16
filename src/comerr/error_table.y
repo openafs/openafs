@@ -20,7 +20,6 @@
 #else
 #include <sys/time.h>
 #endif
-#include <sys/timeb.h>
 #include "error_table.h"
 #include "mit-sipb-cr.h"
 
