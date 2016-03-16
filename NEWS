@@ -1,5 +1,32 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.6.17 (Security Release)
+
+  All server platforms
+
+    * Fix for OPENAFS-SA-2016-001: foreign users can create groups as
+      if they were an administrator (RT #132822) (CVE-2016-2860)
+
+  All client platforms
+
+    * Fix for OPENAFS-SA-2016-002: information leakage from sending
+      uninitialized memory over the network.  Multiple call sites
+      were vulnerable, with potential for leaking both kernel and
+      userland stack data (RT #132847)
+
+    * Update to the GCO CellServDB update from 01 January 2016 (12188)
+
+  Linux clients
+
+    * Fix a crash when the root volume is not found and dynroot is not
+      in use, a regression introduced in 1.6.14.1 (12166)
+
+    * Avoid introducing a dependency on the kernel-devel package corresponding
+      to the currently running system while building the srpm (12195)
+
+    * Create systemd unit files with mode 0644 instead of 0755
+      (12196) (RT #132662)
+
 OpenAFS 1.6.16
 
   All platforms
