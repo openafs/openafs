@@ -1,4 +1,4 @@
-openafs (1.6.17-1) UNRELEASED; urgency=high
+openafs (1.6.17-1) unstable; urgency=high
 
   * New upstream release 1.6.16.
     - Fix bosserver crashes related to fixed-sized buffers.
@@ -16,7 +16,7 @@ openafs (1.6.17-1) UNRELEASED; urgency=high
     debian/patches/Linux-4.4-Do-not-use-splice.patch:
     Add upstream patches for current Linux kernel support.  (Closes: #815521)
 
- -- Anders Kaseorg <andersk@mit.edu>  Wed, 16 Mar 2016 13:39:06 -0400
+ -- Anders Kaseorg <andersk@mit.edu>  Thu, 17 Mar 2016 00:55:42 -0400
 
 openafs (1.6.15-1) unstable; urgency=high
 
