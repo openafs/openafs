@@ -245,7 +245,7 @@ override_dh_installchangelogs:
 	dh_installchangelogs NEWS
 
 # Override some of our permissions.
-override_dh_fixperms:
+override_dh_fixperms-arch:
 	dh_fixperms
 	chmod 700 debian/openafs-client/var/cache/openafs
 	chmod 700 debian/openafs-dbserver/var/lib/openafs/db
