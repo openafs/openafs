@@ -1,9 +1,9 @@
-openafs (1.6.17-2) UNRELEASED; urgency=high
+openafs (1.6.17-2) unstable; urgency=high
 
   * debian/rules: Fix FTBFS when built with dpkg-buildpackage -A.
     (Closes: #806088)
 
- -- Anders Kaseorg <andersk@mit.edu>  Thu, 17 Mar 2016 04:33:27 -0400
+ -- Anders Kaseorg <andersk@mit.edu>  Thu, 17 Mar 2016 04:48:16 -0400
 
 openafs (1.6.17-1) unstable; urgency=high
 
