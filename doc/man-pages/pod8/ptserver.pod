@@ -17,8 +17,8 @@ ptserver S<<< [B<-database> | B<-db> <I<db path>>] >>>
     [B<-rxbind>] S<<< [B<-auditlog> <I<file path>>] >>>
     S<<< [B<-audit-interface> (file | sysvmq)] >>>
     S<<< [B<-syslog>[=<I<FACILITY>>]] >>>
-    S<<< [B<-logfile <I<log file>>] >>>
-    S<<< [B<-config <I<configuration path>>] >>>
+    S<<< [B<-logfile> <I<log file>>] >>>
+    S<<< [B<-config> <I<configuration path>>] >>>
     S<<< [B<-rxmaxmtu> <I<bytes>>] >>>
     [B<-help>]
 
