@@ -23,6 +23,7 @@ INCFILES = \
 	$(DESTDIR)\include\opr\time.h \
 	$(DESTDIR)\include\opr\lock.h \
 	$(DESTDIR)\include\opr\lockstub.h \
+	$(DESTDIR)\include\opr\softsig.h \
 	$(DESTDIR)\include\opr\uuid.h
 
 $(DESTDIR)\include\opr\time.h: opr_time.h
