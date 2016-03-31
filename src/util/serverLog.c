@@ -23,6 +23,10 @@
 #include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
 
 #include <roken.h>		/* Must come after procmgmt.h */
+#ifdef AFS_PTHREAD_ENV
+ #include <opr/softsig.h>
+ #include <afs/procmgmt_softsig.h>	/* Must come after softsig.h */
+#endif
 #include <afs/opr.h>
 #include "afsutil.h"
 #include "fileutil.h"
@@ -69,6 +73,7 @@ int LogLevel;
 int mrafsStyleLogs = 0;
 static int threadIdLogs = 0;
 int printLocks = 0;
+static int resetSignals = 0;
 static char ourName[MAXPATHLEN];
 
 void
@@ -236,9 +241,11 @@ SetDebug_Signal(int signo)
     IOMGR_SoftSig(DebugOn, (void *)(intptr_t)LogLevel);
 #endif /* AFS_PTHREAD_ENV */
 
-    (void)signal(signo, SetDebug_Signal);	/* on some platforms, this
-						 * signal handler needs to
-						 * be set again */
+    if (resetSignals) {
+	/* When pthreaded softsig handlers are not in use, some platforms
+	 * require this signal handler to be set again. */
+	(void)signal(signo, SetDebug_Signal);
+    }
 }				/*SetDebug_Signal */
 
 void
@@ -254,10 +261,11 @@ ResetDebug_Signal(int signo)
     IOMGR_SoftSig(DebugOn, (void *)(intptr_t)LogLevel);
 #endif /* AFS_PTHREAD_ENV */
 
-    (void)signal(signo, ResetDebug_Signal);	/* on some platforms,
-						 * this signal handler
-						 * needs to be set
-						 * again */
+    if (resetSignals) {
+	/* When pthreaded softsig handlers are not in use, some platforms
+	 * require this signal handler to be set again. */
+	(void)signal(signo, ResetDebug_Signal);
+    }
 #if defined(AFS_PTHREAD_ENV)
     if (threadIdLogs == 1)
         threadIdLogs = 0;
@@ -267,9 +275,35 @@ ResetDebug_Signal(int signo)
 }				/*ResetDebug_Signal */
 
 
+#ifdef AFS_PTHREAD_ENV
+/*!
+ * Register pthread-safe signal handlers for server log management.
+ *
+ * \note opr_softsig_Init() must be called before this function.
+ */
+void
+SetupLogSoftSignals(void)
+{
+    opr_softsig_Register(SIGHUP, ResetDebug_Signal);
+    opr_softsig_Register(SIGTSTP, SetDebug_Signal);
+#ifndef AFS_NT40_ENV
+    (void)signal(SIGPIPE, SIG_IGN);
+#endif
+}
+#endif /* AFS_PTHREAD_ENV */
+
+/*!
+ * Register signal handlers for server log management.
+ *
+ * \note This function is deprecated and should not be used
+ *       in new code. This function should be removed when
+ *       all the servers have been converted to pthreads
+ *       and lwp has been removed.
+ */
 void
 SetupLogSignals(void)
 {
+    resetSignals = 1;
     (void)signal(SIGHUP, ResetDebug_Signal);
     /* Note that we cannot use SIGUSR1 -- Linux stole it for pthreads! */
     (void)signal(SIGTSTP, SetDebug_Signal);
