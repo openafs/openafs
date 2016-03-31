@@ -46,6 +46,8 @@
 #include <lwp.h>
 #include <opr/lock.h>
 #include <opr/proc.h>
+#include <opr/softsig.h>
+#include <afs/procmgmt_softsig.h> /* must come after softsig.h */
 #include <afs/cmd.h>
 #include <afs/ptclient.h>
 #include <afs/afsint.h>
@@ -69,9 +71,6 @@
 #include <afs/audit.h>
 #include <afs/partition.h>
 #include <afs/dir.h>
-#ifndef AFS_NT40_ENV
-# include <afs/softsig.h>
-#endif
 #include "viced_prototypes.h"
 #include "viced.h"
 #include "host.h"
@@ -85,8 +84,6 @@ extern int etext;
 
 static void ClearXStatValues(void);
 static void PrintCounters(void);
-static void ResetCheckDescriptors(void);
-static void ResetCheckSignal(void);
 
 static afs_int32 Do_VLRegisterRPC(void);
 
@@ -239,10 +236,10 @@ static int fs_stateInit(void)
  */
 
 /* DEBUG HACK */
+#ifndef AFS_NT40_ENV
 void
 CheckDescriptors_Signal(int signo)
 {
-#ifndef AFS_NT40_ENV
     struct afs_stat status;
     int tsize = getdtablesize();
     int i;
@@ -256,10 +253,17 @@ CheckDescriptors_Signal(int signo)
 	}
     }
     fflush(stdout);
-    ResetCheckDescriptors();
-#endif
 }
+#endif
 
+/* Signal number for dumping debug info is platform dependent. */
+#if defined(AFS_HPUX_ENV)
+# define AFS_SIG_CHECK    SIGPOLL
+#elif defined(AFS_NT40_ENV)
+# define AFS_SIG_CHECK    SIGUSR2
+#else
+# define AFS_SIG_CHECK    SIGXCPU
+#endif
 void
 CheckSignal_Signal(int x)
 {
@@ -274,7 +278,6 @@ CheckSignal_Signal(int x)
     h_PrintClients();
     DumpCallBackState();
     PrintCounters();
-    ResetCheckSignal();
 }
 
 void
@@ -307,34 +310,6 @@ fs_IsLocalRealmMatch(void *rock, char *name, char *inst, char *cell)
 		 code, name, inst, cell));
     }
     return islocal;
-}
-
-static void
-ResetCheckSignal(void)
-{
-    int signo;
-
-#if defined(AFS_HPUX_ENV)
-    signo = SIGPOLL;
-#elif defined(AFS_NT40_ENV)
-    signo = SIGUSR2;
-#else
-    signo = SIGXCPU;
-#endif
-
-#if !defined(AFS_NT40_ENV)
-    softsig_signal(signo, CheckSignal_Signal);
-#else
-    signal(signo, CheckSignal_Signal);
-#endif
-}
-
-static void
-ResetCheckDescriptors(void)
-{
-#ifndef AFS_NT40_ENV
-    softsig_signal(SIGTERM, CheckDescriptors_Signal);
-#endif
 }
 
 #ifndef AFS_NT40_ENV
@@ -1864,21 +1839,19 @@ main(int argc, char *argv[])
     serverLogSyslogTag = "fileserver";
 #endif
     OpenLog(logFile);
-    SetupLogSignals();
 
     LogCommandLine(argc, argv, "starting", "", "File server", FSLog);
     if (afsconf_GetLatestKey(confDir, NULL, NULL) == 0) {
 	LogDesWarning();
     }
 
-#if !defined(AFS_NT40_ENV)
     /* initialize the pthread soft signal handler thread */
-    softsig_init();
+    opr_softsig_Init();
+    SetupLogSoftSignals();
+    opr_softsig_Register(AFS_SIG_CHECK, CheckSignal_Signal);
+#ifndef AFS_NT40_ENV
+    opr_softsig_Register(SIGTERM, CheckDescriptors_Signal);
 #endif
-
-    /* install signal handlers for controlling the fileserver process */
-    ResetCheckSignal();		/* set CheckSignal_Signal() sig handler */
-    ResetCheckDescriptors();	/* set CheckDescriptors_Signal() sig handler */
 
 #if defined(AFS_SGI_ENV)
     /* give this guy a non-degrading priority so help busy servers */
@@ -2121,11 +2094,7 @@ main(int argc, char *argv[])
     /* Install handler to catch the shutdown signal;
      * bosserver assumes SIGQUIT shutdown
      */
-#if !defined(AFS_NT40_ENV)
-    softsig_signal(SIGQUIT, ShutDown_Signal);
-#else
-    (void)signal(SIGQUIT, ShutDown_Signal);
-#endif
+    opr_softsig_Register(SIGQUIT, ShutDown_Signal);
 
     if (VInitAttachVolumes(fileServer)) {
 	ViceLog(0,
