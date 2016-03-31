@@ -13,7 +13,8 @@ RELDIR=procmgmt
 
 ############################################################################
 
-INCFILES =	$(DESTDIR)\include\afs\procmgmt.h
+INCFILES =	$(DESTDIR)\include\afs\procmgmt.h \
+	 $(DESTDIR)\include\afs\procmgmt_softsig.h
 
 $(INCFILES):$$(@F)
 	$(COPY) $** $(DESTDIR)\include\afs\.

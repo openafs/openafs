@@ -359,6 +359,44 @@ void (__cdecl * pmgt_SignalSet(int signo, void (__cdecl * dispP) (int))) (int) {
     }
 }
 
+/*!
+ * Initialize signal handling.
+ *
+ * \note The signature of this routine matches the opr softsig
+ *       registration function opr_softsig_Init() used on
+ *       unix. Since this process management library is
+ *       initialized by DllMain when the library is loaded,
+ *       this routine is currently a no op.
+ */
+int pmgt_SignalInit(void)
+{
+    /* no op */
+    return 0;
+}
+
+/*!
+ * Register a signal a handler.
+ *
+ * This routine is a variant of the original pmgt_SignalSet
+ * which returns a status code instead of the previously registered
+ * handler.
+ *
+ * \note The signature of this routine matches the opr softsig
+ *       registration function opr_softsig_Register() used on
+ *       unix.
+ */
+int pmgt_SignalRegister(int signo, void (__cdecl *handler)(int))
+{
+    struct sigaction sa;
+
+    sa.sa_handler = pmgt_SignalSet(signo, handler);
+    if (sa.sa_handler == SIG_ERR) {
+	return EINVAL;
+    } else {
+	return 0;
+    }
+}
+
 
 /*
  * pmgt_SignalRaiseLocal() -- Raise a signal in this process (C raise()

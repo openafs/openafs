@@ -10,7 +10,8 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.lwp
 
 
-all: ${TOP_LIBDIR}/libprocmgmt.a ${TOP_INCDIR}/afs/procmgmt.h
+all: ${TOP_LIBDIR}/libprocmgmt.a ${TOP_INCDIR}/afs/procmgmt.h \
+	${TOP_INCDIR}/afs/procmgmt_softsig.h
 
 buildtools: ${TOP_INCDIR}/afs/procmgmt.h
 
@@ -18,6 +19,9 @@ ${TOP_LIBDIR}/libprocmgmt.a: libprocmgmt.a
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/procmgmt.h: ${srcdir}/procmgmt.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/procmgmt_softsig.h: ${srcdir}/procmgmt_softsig.h
 	${INSTALL_DATA} $? $@
 
 #
@@ -39,6 +43,8 @@ install: libprocmgmt.a
 	${INSTALL_DATA} libprocmgmt.a ${DESTDIR}${libdir}/afs/libprocmgmt.a
 	${INSTALL_DATA} ${srcdir}/procmgmt.h \
 		${DESTDIR}${includedir}/afs/procmgmt.h
+	${INSTALL_DATA} ${srcdir}/procmgmt_softsig.h \
+		${DESTDIR}${includedir}/afs/procmgmt_softsig.h
 
 dest: libprocmgmt.a
 	${INSTALL} -d ${DEST}/lib/afs
@@ -46,6 +52,8 @@ dest: libprocmgmt.a
 	${INSTALL_DATA} libprocmgmt.a ${DEST}/lib/afs/libprocmgmt.a
 	${INSTALL_DATA} ${srcdir}/procmgmt.h \
 		${DEST}/include/afs/procmgmt.h
+	${INSTALL_DATA} ${srcdir}/procmgmt_softsig.h \
+		${DEST}/include/afs/procmgmt_softsig.h
 
 #
 # Misc targets
