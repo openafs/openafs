@@ -69,6 +69,7 @@ options:
   ptserver supergroups   : ${enable_supergroups}
   pthreaded ubik         : ${enable_pthreaded_ubik}
   install kauth          : ${INSTALL_KAUTH}
+  ubik read while write  : ${enable_ubik_read_while_write}
 build:
   scout/afsmonitor       : ${summary_build_scout}
   pam                    : ${HAVE_PAM}
