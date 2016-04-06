@@ -1,5 +1,67 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.6.18 (in progress)
+
+  All platforms
+
+    * Documentation improvements (12224 11675 11613 12197)
+
+    * Improved diagnostics and error messages (12129 12207 12185 12211 12113
+      12215 12216)
+
+    * Check that CellServDB entries are valid IPv4 addresses, to avoid
+      occasional hangs or potentially other erratic behaviour due to invalid
+      entries (12210) (RT #131794)
+
+  All client platforms
+
+    * Gracefully handle cases where a client shutdown sequence is initiated
+      while the client is already shutting down, rather than cause a panic
+      (12179)
+
+    * Fixed several bugs that could cause erratic behaviour when the write
+      offset into a file was more than 2 GiB beyond the file's current end
+      on the server (12213 12214)
+
+  All server platforms
+
+    * Avoid a possible volserver crash during volume dump or restore due
+      to invalid ACL entries (12127)
+
+    * Allow recovering from a DAFS fileserver operation which allocates a
+      new vnode but fails to update the vnode index, rather than crashing the
+      server (12209)
+
+    * Fixed a longstanding bug which could damage the volume location database
+      when "vos changeaddr" was run with "-oldaddr" and "-newaddr" and the
+      old address was present in a multi-homed entry (12089)
+
+  FreeBSD
+
+    * Added support for releases 10.2 and 10.3 (12232)
+
+  Linux clients
+
+    * Support for mainline kernel 4.4 and distribution kernels with
+      backports from it, alas at a performance penalty (12226 12227 12228)
+      (RT #132677 #132819)
+
+    * Avoid using excessive amounts of kernel memory for dynamically
+      allocated vcaches, by improving the algorithm to free unused ones
+      (12256 12257)
+
+    * In Red Hat packaging, make the init script use "ip" if available, with
+      "ifconfig" as a fallback (12193)
+
+  OS X
+
+    * Basic support for release 10.11 "El Capitan" (12212)
+
+  IRIX clients
+
+    * Fixed kernel module builds with optimization (12198) (RT #131261)
+
+
 OpenAFS 1.6.17 (Security Release)
 
   All server platforms
