@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -14,7 +14,7 @@
  * So far the only truly scary part is that Linux relies on the inode cache
  * to be up to date. Don't you dare break a callback and expect an fstat
  * to give you meaningful information. This appears to be fixed in the 2.1
- * development kernels. As it is we can fix this now by intercepting the 
+ * development kernels. As it is we can fix this now by intercepting the
  * stat calls.
  */
 
@@ -443,7 +443,7 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 		/* clean up from afs_FindVCache */
 		afs_PutVCache(tvc);
 	    }
-	    /* 
+	    /*
 	     * If this is NFS readdirplus, then the filler is going to
 	     * call getattr on this inode, which will deadlock if we're
 	     * holding the GLOCK.
@@ -604,7 +604,7 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
     struct vcache *vcp = VTOAFS(FILE_INODE(fp));
     cred_t *credp = crref();
     struct AFS_FLOCK flock;
-    
+
     /* Convert to a lock format afs_lockctl understands. */
     memset(&flock, 0, sizeof(flock));
     flock.l_type = flp->fl_type;
@@ -630,7 +630,7 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
     code = afs_convert_code(afs_lockctl(vcp, &flock, cmd, credp));
     AFS_GUNLOCK();
 
-    if ((code == 0 || flp->fl_type == F_UNLCK) && 
+    if ((code == 0 || flp->fl_type == F_UNLCK) &&
         (cmd == F_SETLK || cmd == F_SETLKW)) {
 	code = afs_posix_lock_file(fp, flp);
 	if (code && flp->fl_type != F_UNLCK) {
@@ -653,7 +653,7 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
             return 0;
         }
     }
-    
+
     /* Convert flock back to Linux's file_lock */
     flp->fl_type = flock.l_type;
     flp->fl_pid = flock.l_pid;
@@ -696,7 +696,7 @@ afs_linux_flock(struct file *fp, int cmd, struct file_lock *flp) {
     code = afs_convert_code(afs_lockctl(vcp, &flock, cmd, credp));
     AFS_GUNLOCK();
 
-    if ((code == 0 || flp->fl_type == F_UNLCK) && 
+    if ((code == 0 || flp->fl_type == F_UNLCK) &&
         (cmd == F_SETLK || cmd == F_SETLKW)) {
 	flp->fl_flags &=~ FL_SLEEP;
 	code = flock_lock_file_wait(fp, flp);
@@ -1127,7 +1127,7 @@ parent_vcache_dv(struct inode *inode, cred_t *credp, int locked)
 /* Validate a dentry. Return 1 if unchanged, 0 if VFS layer should re-evaluate.
  * In kernels 2.2.10 and above, we are passed an additional flags var which
  * may have either the LOOKUP_FOLLOW OR LOOKUP_DIRECTORY set in which case
- * we are advised to follow the entry if it is a link or to make sure that 
+ * we are advised to follow the entry if it is a link or to make sure that
  * it is a directory. But since the kernel itself checks these possibilities
  * later on, we shouldn't have to do it until later. Perhaps in the future..
  *
@@ -1356,7 +1356,7 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
   bad_dentry:
     if (have_submounts(dp))
 	valid = 1;
-    else 
+    else
 	valid = 0;
     goto done;
 }
@@ -1395,7 +1395,7 @@ afs_dentry_automount(afs_linux_path_t *path)
 {
     struct dentry *target;
 
-    /* 
+    /*
      * Avoid symlink resolution limits when resolving; we cannot contribute to
      * an infinite symlink loop.
      *
@@ -1524,7 +1524,7 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 
     AFS_GLOCK();
     code = afs_lookup(VTOAFS(dip), (char *)comp, &vcp, credp);
-    
+
     if (!code) {
 	struct vattr *vattr = NULL;
 	struct vcache *parent_vc = VTOAFS(dip);
@@ -1864,7 +1864,7 @@ afs_linux_rename(struct inode *oldip, struct dentry *olddp,
 }
 
 
-/* afs_linux_ireadlink 
+/* afs_linux_ireadlink
  * Internal readlink which can return link contents to user or kernel space.
  * Note that the buffer is NOT supposed to be null-terminated.
  */
@@ -1890,7 +1890,7 @@ afs_linux_ireadlink(struct inode *ip, char *target, int maxlen, uio_seg_t seg)
 }
 
 #if !defined(USABLE_KERNEL_PAGE_SYMLINK_CACHE)
-/* afs_linux_readlink 
+/* afs_linux_readlink
  * Fill target (which is in user space) with contents of symlink.
  */
 static int
@@ -2235,7 +2235,7 @@ afs_linux_fillpage(struct file *fp, struct page *pp)
 	       99999);	/* not a possible code value */
 
     code = afs_rdwr(avc, auio, UIO_READ, 0, credp);
-	
+
     afs_Trace4(afs_iclSetp, CM_TRACE_READPAGE, ICL_TYPE_POINTER, ip,
 	       ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, cnt, ICL_TYPE_INT32,
 	       code);
@@ -2281,7 +2281,7 @@ afs_linux_prefetch(struct file *fp, struct page *pp)
 	    if (tdc) {
 		if (!(tdc->mflags & DFNextStarted))
 		    afs_PrefetchChunk(avc, tdc, credp, treq);
-		    afs_PutDCache(tdc);
+		afs_PutDCache(tdc);
 	    }
 	    ReleaseWriteLock(&avc->lock);
 	}
@@ -3132,7 +3132,6 @@ static struct inode_operations afs_symlink_iops = {
 void
 afs_fill_inode(struct inode *ip, struct vattr *vattr)
 {
-	
     if (vattr)
 	vattr2inode(ip, vattr);
 
