@@ -1379,6 +1379,8 @@ if test "$enable_tivoli_tsm" = "yes"; then
 	XBSADIR2=/opt/tivoli/tsm/client/api/bin/xopen
 	XBSADIR3=/usr/tivoli/tsm/client/api/bin/sample
 	XBSADIR4=/opt/tivoli/tsm/client/api/bin/sample
+	XBSADIR5=/usr/tivoli/tsm/client/api/bin64/sample
+	XBSADIR6=/opt/tivoli/tsm/client/api/bin64/sample
 
 	if test -r "$XBSADIR3/dsmapifp.h"; then
 		XBSA_CFLAGS="-Dxbsa -DNEW_XBSA -I$XBSADIR3"
@@ -1386,6 +1388,14 @@ if test "$enable_tivoli_tsm" = "yes"; then
 		AC_MSG_RESULT([yes, $XBSA_CFLAGS])
 	elif test -r "$XBSADIR4/dsmapifp.h"; then
 		XBSA_CFLAGS="-Dxbsa -DNEW_XBSA -I$XBSADIR4"
+		XBSA_XLIBS="-ldl"
+		AC_MSG_RESULT([yes, $XBSA_CFLAGS])
+	elif test -r "$XBSADIR5/dsmapifp.h"; then
+		XBSA_CFLAGS="-Dxbsa -DNEW_XBSA -I$XBSADIR5"
+		XBSA_XLIBS="-ldl"
+		AC_MSG_RESULT([yes, $XBSA_CFLAGS])
+	elif test -r "$XBSADIR6/dsmapifp.h"; then
+		XBSA_CFLAGS="-Dxbsa -DNEW_XBSA -I$XBSADIR6"
 		XBSA_XLIBS="-ldl"
 		AC_MSG_RESULT([yes, $XBSA_CFLAGS])
 	elif test -r "$XBSADIR1/xbsa.h"; then
