@@ -72,7 +72,6 @@ uphys_open(struct ubik_dbase *adbase, afs_int32 afid)
     /* scan file descr cache */
     for (tfd = fdcache, i = 0; i < MAXFDCACHE; i++, tfd++) {
 	if (afid == tfd->fileID && tfd->refCount == 0) {	/* don't use open fd */
-	    lseek(tfd->fd, 0, 0);	/* reset ptr just like open would have */
 	    tfd->refCount++;
 	    return tfd->fd;
 	}
@@ -266,6 +265,10 @@ uphys_getlabel(struct ubik_dbase *adbase, afs_int32 afile,
     fd = uphys_open(adbase, afile);
     if (fd < 0)
 	return UNOENT;
+    if (lseek(fd, 0, 0) < 0) {
+	uphys_close(fd);
+	return EIO;
+    }
     code = read(fd, &thdr, sizeof(thdr));
     if (code != sizeof(thdr)) {
 	uphys_close(fd);
@@ -297,6 +300,10 @@ uphys_setlabel(struct ubik_dbase *adbase, afs_int32 afile,
     thdr.version.counter = htonl(aversion->counter);
     thdr.magic = htonl(UBIK_MAGIC);
     thdr.size = htons(HDRSIZE);
+    if (lseek(fd, 0, 0) < 0) {
+	uphys_close(fd);
+	return EIO;
+    }
     code = write(fd, &thdr, sizeof(thdr));
     fsync(fd);			/* preserve over crash */
     uphys_close(fd);
