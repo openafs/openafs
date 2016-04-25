@@ -412,7 +412,7 @@ SDISK_GetFile(struct rx_call *rxcall, afs_int32 file,
     code = rx_Write(rxcall, (char *)&tlen, sizeof(afs_int32));
     if (code != sizeof(afs_int32)) {
 	DBRELE(dbase);
-	ubik_dprint("Rx-write length error=%d\n", code);
+	ViceLog(5, ("Rx-write length error=%d\n", code));
 	return BULK_ERROR;
     }
     offset = 0;
@@ -421,13 +421,13 @@ SDISK_GetFile(struct rx_call *rxcall, afs_int32 file,
 	code = (*dbase->read) (dbase, file, tbuffer, offset, tlen);
 	if (code != tlen) {
 	    DBRELE(dbase);
-	    ubik_dprint("read failed error=%d\n", code);
+	    ViceLog(5, ("read failed error=%d\n", code));
 	    return UIOERROR;
 	}
 	code = rx_Write(rxcall, tbuffer, tlen);
 	if (code != tlen) {
 	    DBRELE(dbase);
-	    ubik_dprint("Rx-write length error=%d\n", code);
+	    ViceLog(5, ("Rx-write length error=%d\n", code));
 	    return BULK_ERROR;
 	}
 	length -= tlen;
@@ -483,10 +483,10 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
     if (offset && offset != otherHost) {
 	/* we *know* this is the wrong guy */
         char sync_hoststr[16];
-	ubik_print
+	ViceLog(0,
 	    ("Ubik: Refusing synchronization with server %s since it is not the sync-site (%s).\n",
 	     afs_inet_ntoa_r(otherHost, hoststr),
-	     afs_inet_ntoa_r(offset, sync_hoststr));
+	     afs_inet_ntoa_r(offset, sync_hoststr)));
 	return USYNC;
     }
 
@@ -495,8 +495,8 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
     /* abort any active trans that may scribble over the database */
     urecovery_AbortAll(dbase);
 
-    ubik_print("Ubik: Synchronize database with server %s\n",
-	       afs_inet_ntoa_r(otherHost, hoststr));
+    ViceLog(0, ("Ubik: Synchronize database with server %s\n",
+	       afs_inet_ntoa_r(otherHost, hoststr)));
 
     offset = 0;
     UBIK_VERSION_LOCK;
@@ -526,7 +526,7 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
 #endif
 	code = rx_Read(rxcall, tbuffer, tlen);
 	if (code != tlen) {
-	    ubik_dprint("Rx-read length error=%d\n", code);
+	    ViceLog(5, ("Rx-read length error=%d\n", code));
 	    code = BULK_ERROR;
 	    close(fd);
 	    goto failed;
@@ -534,7 +534,7 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
 	code = write(fd, tbuffer, tlen);
 	pass++;
 	if (code != tlen) {
-	    ubik_dprint("write failed error=%d\n", code);
+	    ViceLog(5, ("write failed error=%d\n", code));
 	    code = UIOERROR;
 	    close(fd);
 	    goto failed;
@@ -594,12 +594,11 @@ failed:
 	    (*dbase->setlabel) (dbase, file, &tversion);
 	    UBIK_VERSION_UNLOCK;
 	}
-	ubik_print
-	    ("Ubik: Synchronize database with server %s failed (error = %d)\n",
-	     afs_inet_ntoa_r(otherHost, hoststr), code);
+	ViceLog(0, ("Ubik: Synchronize database with server %s failed (error = %d)\n",
+	     afs_inet_ntoa_r(otherHost, hoststr), code));
     } else {
 	uvote_set_dbVersion(*avers);
-	ubik_print("Ubik: Synchronize database completed\n");
+	ViceLog(0, ("Ubik: Synchronize database completed\n"));
     }
     DBRELE(dbase);
     return code;
@@ -663,9 +662,9 @@ SDISK_UpdateInterfaceAddr(struct rx_call *rxcall,
     /* if (probableMatch) */
     /* inconsistent addresses in CellServDB */
     if (!probableMatch || found) {
-	ubik_print("Inconsistent Cell Info from server:\n");
+	ViceLog(0, ("Inconsistent Cell Info from server:\n"));
 	for (i = 0; i < UBIK_MAX_INTERFACE_ADDR && inAddr->hostAddr[i]; i++)
-	    ubik_print("... %s\n", afs_inet_ntoa_r(htonl(inAddr->hostAddr[i]), hoststr));
+	    ViceLog(0, ("... %s\n", afs_inet_ntoa_r(htonl(inAddr->hostAddr[i]), hoststr)));
 	fflush(stdout);
 	fflush(stderr);
 	printServerInfo();
@@ -677,9 +676,9 @@ SDISK_UpdateInterfaceAddr(struct rx_call *rxcall,
     for (i = 1; i < UBIK_MAX_INTERFACE_ADDR; i++)
 	ts->addr[i] = htonl(inAddr->hostAddr[i]);
 
-    ubik_print("ubik: A Remote Server has addresses:\n");
+    ViceLog(0, ("ubik: A Remote Server has addresses:\n"));
     for (i = 0; i < UBIK_MAX_INTERFACE_ADDR && ts->addr[i]; i++)
-	ubik_print("... %s\n", afs_inet_ntoa_r(ts->addr[i], hoststr));
+	ViceLog(0, ("... %s\n", afs_inet_ntoa_r(ts->addr[i], hoststr)));
 
     UBIK_ADDR_UNLOCK;
 
@@ -704,11 +703,11 @@ printServerInfo(void)
     int i, j = 1;
     char hoststr[16];
 
-    ubik_print("Local CellServDB:\n");
+    ViceLog(0, ("Local CellServDB:\n"));
     for (ts = ubik_servers; ts; ts = ts->next, j++) {
-	ubik_print("  Server %d:\n", j);
+	ViceLog(0, ("  Server %d:\n", j));
 	for (i = 0; (i < UBIK_MAX_INTERFACE_ADDR) && ts->addr[i]; i++)
-	    ubik_print("  ... %s\n", afs_inet_ntoa_r(ts->addr[i], hoststr));
+	    ViceLog(0, ("  ... %s\n", afs_inet_ntoa_r(ts->addr[i], hoststr)));
     }
 }
 
