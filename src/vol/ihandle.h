@@ -391,24 +391,24 @@ extern FdHandle_t *ih_attachfd(IHandle_t * ihP, FD_t fd);
 #define IH_CONDSYNC(H) ih_condsync(H)
 
 #ifdef HAVE_PIO
-# ifdef AFS_NT40_ENV
-#  define OS_PREAD(FD, B, S, O) nt_pread(FD, B, S, O)
-#  define OS_PWRITE(FD, B, S, O) nt_pwrite(FD, B, S, O)
-# else
-#  ifdef O_LARGEFILE
-#   define OS_PREAD(FD, B, S, O) pread64(FD, B, S, O)
-#   define OS_PWRITE(FD, B, S, O) pwrite64(FD, B, S, O)
-#  else /* !O_LARGEFILE */
-#   define OS_PREAD(FD, B, S, O) pread(FD, B, S, O)
-#   define OS_PWRITE(FD, B, S, O) pwrite(FD, B, S, O)
-#  endif /* !O_LARGEFILE */
-# endif /* AFS_NT40_ENV */
-#else /* !HAVE_PIO */
+# define AFS_IHANDLE_PIO_ENV 1
+# ifdef O_LARGEFILE
+#  define OS_PREAD(FD, B, S, O) pread64(FD, B, S, O)
+#  define OS_PWRITE(FD, B, S, O) pwrite64(FD, B, S, O)
+# else /* !O_LARGEFILE */
+#  define OS_PREAD(FD, B, S, O) pread(FD, B, S, O)
+#  define OS_PWRITE(FD, B, S, O) pwrite(FD, B, S, O)
+# endif /* !O_LARGEFILE */
+#elif defined(AFS_NT40_ENV)
+# define AFS_IHANDLE_PIO_ENV 1
+# define OS_PREAD(FD, B, S, O) nt_pread(FD, B, S, O)
+# define OS_PWRITE(FD, B, S, O) nt_pwrite(FD, B, S, O)
+#else
 extern ssize_t ih_pread(FD_t fd, void * buf, size_t count, afs_foff_t offset);
 extern ssize_t ih_pwrite(FD_t fd, const void * buf, size_t count, afs_foff_t offset);
 # define OS_PREAD(FD, B, S, O) ih_pread(FD, B, S, O)
 # define OS_PWRITE(FD, B, S, O) ih_pwrite(FD, B, S, O)
-#endif /* !HAVE_PIO */
+#endif
 
 #ifdef AFS_NT40_ENV
 # define OS_LOCKFILE(FD, O) (!LockFile(FD, (DWORD)((O) & 0xFFFFFFFF), (DWORD)((O) >> 32), 2, 0))
