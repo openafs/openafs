@@ -18,6 +18,7 @@
 #else
 # include <opr/lockstub.h>
 #endif
+#include <afs/afsutil.h>
 
 #define UBIK_INTERNALS
 #include "ubik.h"
@@ -380,7 +381,7 @@ DRead(struct ubik_trans *atrans, afs_int32 fid, int page)
 	tb->file = BADFID;
 	Dlru(tb);
 	tb->lockers--;
-	ubik_print("Ubik: Error reading database file: errno=%d\n", errno);
+	ViceLog(0, ("Ubik: Error reading database file: errno=%d\n", errno));
 	return 0;
     }
     ios++;
@@ -545,8 +546,7 @@ newslot(struct ubik_dbase *adbase, afs_int32 afid, afs_int32 apage)
 
     if (pp == 0) {
 	/* There are no unlocked buffers that don't need to be written to the disk. */
-	ubik_print
-	    ("Ubik: Internal Error: Unable to find free buffer in ubik cache\n");
+	ViceLog(0, ("Ubik: Internal Error: Unable to find free buffer in ubik cache\n"));
 	return NULL;
     }
 
@@ -878,9 +878,9 @@ udisk_commit(struct ubik_trans *atrans)
 	    UBIK_VERSION_LOCK;
 	    if (version_globals.ubik_epochTime < UBIK_MILESTONE
 		|| version_globals.ubik_epochTime > now) {
-		ubik_print
+		ViceLog(0,
 		    ("Ubik: New database label %d is out of the valid range (%d - %d)\n",
-		     version_globals.ubik_epochTime, UBIK_MILESTONE, now);
+		     version_globals.ubik_epochTime, UBIK_MILESTONE, now));
 		panic("Writing Ubik DB label\n");
 	    }
 	    oldversion = dbase->version;

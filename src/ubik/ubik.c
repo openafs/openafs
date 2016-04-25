@@ -23,6 +23,7 @@
 #include <lock.h>
 #include <rx/rx.h>
 #include <afs/cellconfig.h>
+#include <afs/afsutil.h>
 
 
 #define UBIK_INTERNALS
@@ -499,7 +500,7 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
 	rx_NewService(0, VOTE_SERVICE_ID, "VOTE", ubik_sc, numClasses,
 		      VOTE_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
-	ubik_dprint("Could not create VOTE rx service!\n");
+	ViceLog(5, ("Could not create VOTE rx service!\n"));
 	return -1;
     }
     rx_SetMinProcs(tservice, 2);
@@ -509,7 +510,7 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
 	rx_NewService(0, DISK_SERVICE_ID, "DISK", ubik_sc, numClasses,
 		      DISK_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
-	ubik_dprint("Could not create DISK rx service!\n");
+	ViceLog(5, ("Could not create DISK rx service!\n"));
 	return -1;
     }
     rx_SetMinProcs(tservice, 2);
@@ -612,9 +613,9 @@ BeginTrans(struct ubik_dbase *dbase, afs_int32 transMode,
 	/* it's not safe to use ubik_BeginTransReadAnyWrite without a
 	 * cache-syncing function; fall back to ubik_BeginTransReadAny,
 	 * which is safe but slower */
-	ubik_print("ubik_BeginTransReadAnyWrite called, but "
+	ViceLog(0, ("ubik_BeginTransReadAnyWrite called, but "
 	           "ubik_SyncWriterCacheProc not set; pretending "
-	           "ubik_BeginTransReadAny was called instead\n");
+	           "ubik_BeginTransReadAny was called instead\n"));
 	readAny = 1;
     }
 
@@ -905,7 +906,7 @@ ubik_EndTrans(struct ubik_trans *transPtr)
 	 * to us, or timeout.  Put safety check in anyway */
 	if (now - realStart > 10 * BIGTIME) {
 	    ubik_stats.escapes++;
-	    ubik_print("ubik escaping from commit wait\n");
+	    ViceLog(0, ("ubik escaping from commit wait\n"));
 	    break;
 	}
 	for (ts = ubik_servers; ts; ts = ts->next) {
@@ -1392,12 +1393,12 @@ panic(char *format, ...)
     va_list ap;
 
     va_start(ap, format);
-    ubik_print("Ubik PANIC:\n");
-    ubik_vprint(format, ap);
+    ViceLog(0, ("Ubik PANIC:\n"));
+    vViceLog(0, (format, ap));
     va_end(ap);
 
     abort();
-    ubik_print("BACK FROM ABORT\n");	/* shouldn't come back */
+    ViceLog(0, ("BACK FROM ABORT\n"));	/* shouldn't come back */
     exit(1);			/* never know, though  */
 }
 

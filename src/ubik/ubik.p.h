@@ -547,17 +547,6 @@ extern void ulock_Debug(struct ubik_debug *aparm);
 extern int uvote_ShouldIRun(void);
 extern afs_int32 uvote_GetSyncSite(void);
 extern int uvote_Init(void);
-extern void ubik_vprint(const char *format, va_list ap)
-    AFS_ATTRIBUTE_FORMAT(__printf__, 1, 0);
-
-extern void ubik_print(const char *format, ...)
-    AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
-
-extern void ubik_dprint(const char *format, ...)
-    AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
-
-extern void ubik_dprint_25(const char *format, ...)
-    AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
 extern struct vote_data vote_globals;
 extern void uvote_set_dbVersion(struct ubik_version);
 extern int uvote_eq_dbVersion(struct ubik_version);
