@@ -908,12 +908,6 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	osi_Assert(tbuffer1 != NULL);
 	code = afs_InitDynroot();
 	if (!code) {
-#if 0
-	    /* wait for basic init - XXX can't find any reason we need this? */
-	    while (afs_initState < AFSOP_START_BKG)
-		afs_osi_Sleep(&afs_initState);
-#endif
-
 	    AFS_COPYIN(AFSKPTR(parm2), (caddr_t)tcell->hosts, sizeof(tcell->hosts),
 		       code);
 	}
