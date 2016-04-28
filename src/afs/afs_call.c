@@ -86,10 +86,6 @@ afs_int32 afs_rx_idledead_rep = AFS_IDLEDEADTIME_REP;
 
 static int afscall_set_rxpck_received = 0;
 
-#if defined(AFS_HPUX_ENV)
-extern int afs_vfs_mount();
-#endif /* defined(AFS_HPUX_ENV) */
-
 /* This is code which needs to be called once when the first daemon enters
  * the client. A non-zero return means an error and AFS should not start.
  */
