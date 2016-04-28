@@ -1225,22 +1225,6 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	if (!code)
 	    AFS_COPYOUT((caddr_t) & mtu, AFSKPTR(parm3),
 			sizeof(afs_int32), code);
-#ifdef AFS_AIX32_ENV
-/* this is disabled for now because I can't figure out how to get access
- * to these kernel variables.  It's only for supporting user-mode rx
- * programs -- it makes a huge difference on the 220's in my testbed,
- * though I don't know why. The bosserver does this with /etc/no, so it's
- * being handled a different way for the servers right now.  */
-/*      {
-	static adjusted = 0;
-	extern u_long sb_max_dflt;
-	if (!adjusted) {
-	  adjusted = 1;
-	  if (sb_max_dflt < 131072) sb_max_dflt = 131072;
-	  if (sb_max < 131072) sb_max = 131072;
-	}
-      } */
-#endif /* AFS_AIX32_ENV */
     } else if (parm == AFSOP_GETMASK) {	/* parm2 == addr in net order */
 	afs_uint32 mask = 0;
 #if	!defined(AFS_SUN5_ENV)
