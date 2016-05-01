@@ -3149,6 +3149,9 @@ afs_fill_inode(struct inode *ip, struct vattr *vattr)
 
     } else if (S_ISLNK(ip->i_mode)) {
 	ip->i_op = &afs_symlink_iops;
+#if defined(HAVE_LINUX_INODE_NOHIGHMEM)
+	inode_nohighmem(ip);
+#endif
 #if defined(USABLE_KERNEL_PAGE_SYMLINK_CACHE)
 	ip->i_data.a_ops = &afs_symlink_aops;
 	ip->i_mapping = &ip->i_data;
