@@ -583,13 +583,13 @@ afs_linux_fsync(struct file *fp, int datasync)
     cred_t *credp = crref();
 
 #if defined(FOP_FSYNC_TAKES_RANGE)
-    mutex_lock(&ip->i_mutex);
+    afs_linux_lock_inode(ip);
 #endif
     AFS_GLOCK();
     code = afs_fsync(VTOAFS(ip), credp);
     AFS_GUNLOCK();
 #if defined(FOP_FSYNC_TAKES_RANGE)
-    mutex_unlock(&ip->i_mutex);
+    afs_linux_unlock_inode(ip);
 #endif
     crfree(credp);
     return afs_convert_code(code);
