@@ -1034,6 +1034,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 				     [#include <linux/kernel.h>
 				      #include <linux/kthread.h>],
 				     [kthread_run(NULL, NULL, "test");])
+		 AC_CHECK_LINUX_FUNC([inode_nohighmem],
+				     [#include <linux/fs.h>],
+				     [inode_nohighmem(NULL);])
 
 		 dnl Consequences - things which get set as a result of the
 		 dnl                above tests
