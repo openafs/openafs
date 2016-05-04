@@ -915,7 +915,6 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 
 		 dnl Check for header files
 		 AC_CHECK_LINUX_HEADER([config.h])
-		 AC_CHECK_LINUX_HEADER([completion.h])
 		 AC_CHECK_LINUX_HEADER([exportfs.h])
 		 AC_CHECK_LINUX_HEADER([freezer.h])
 		 AC_CHECK_LINUX_HEADER([key-type.h])

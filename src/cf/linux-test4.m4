@@ -25,20 +25,6 @@ read_lock(&tasklist_lock);
 		       [])
 ])
 
-AC_DEFUN([LINUX_COMPLETION_H_EXISTS], [
-  AC_CHECK_LINUX_BUILD([for linux/completion.h],
-		       [ac_cv_linux_completion_h_exists],
-[#include <linux/version.h>
-#include <linux/completion.h>],
-[struct completion _c;
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,4,8)
-lose
-#endif],
-		       [HAVE_LINUX_COMPLETION_H]
-		       [Define if your kernel has a usable linux/completion.h],
-		       [])
-])
-
 
 AC_DEFUN([LINUX_EXPORTS_INIT_MM], [
   AC_CHECK_LINUX_BUILD([for exported init_mm],

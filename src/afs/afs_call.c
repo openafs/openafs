@@ -41,7 +41,7 @@
 #define	AFS_MINBUFFERS	50
 #endif
 
-#if (defined(AFS_SUN5_ENV) || (defined(AFS_LINUX24_ENV) && defined(HAVE_LINUX_COMPLETION_H)) || defined(AFS_DARWIN80_ENV)) && !defined(UKERNEL)
+#if (defined(AFS_SUN5_ENV) || defined(AFS_LINUX26_ENV) || defined(AFS_DARWIN80_ENV)) && !defined(UKERNEL)
 /* If AFS_DAEMONOP_ENV is defined, it indicates we run "daemon" AFS syscalls by
  * spawning a kernel thread to do the work, instead of running them in the
  * calling process. */
@@ -276,9 +276,9 @@ afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
 #endif
 
 
-#if defined(AFS_LINUX24_ENV) && defined(HAVE_LINUX_COMPLETION_H)
+#if defined(AFS_LINUX26_ENV)
 struct afsd_thread_info {
-# if defined(AFS_LINUX26_ENV) && !defined(INIT_WORK_HAS_DATA)
+# if !defined(INIT_WORK_HAS_DATA)
     struct work_struct tq;
 # endif
     unsigned long parm;
