@@ -595,7 +595,6 @@ uvote_Init(void)
     vote_globals.ubik_lastYesTime = FT_ApproxTime();
 
     /* Initialize globals */
-    vote_globals.ubik_lastYesTime = 0;
     vote_globals.lastYesHost = 0xffffffff;
     vote_globals.lastYesClaim = 0;
     vote_globals.lastYesState = 0;
