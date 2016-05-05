@@ -890,6 +890,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_STRUCT([file_operations], [sendfile], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([file_system_type], [mount], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([inode_operations], [truncate], [fs.h])
+		 AC_CHECK_LINUX_STRUCT([inode_operations], [get_link], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([key], [payload.value], [key.h])
 		 AC_CHECK_LINUX_STRUCT([key_type], [instantiate_prep], [key-type.h])
 		 AC_CHECK_LINUX_STRUCT([key_type], [match_preparse], [key-type.h])
@@ -990,6 +991,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_FUNC([page_follow_link],
 				     [#include <linux/fs.h>],
 				     [page_follow_link(0,0);])
+		 AC_CHECK_LINUX_FUNC([page_get_link],
+				     [#include <linux/fs.h>],
+				     [page_get_link(0,0,0);])
 		 AC_CHECK_LINUX_FUNC([page_offset],
 				     [#include <linux/pagemap.h>],
 				     [page_offset(NULL);])
@@ -1168,10 +1172,14 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 if test -f "$LINUX_KERNEL_PATH/include/linux/mm_inline.h"; then
 		  AC_DEFINE(HAVE_MM_INLINE_H, 1, [define if you have mm_inline.h header file])
 	         fi
-		 if test "x$ac_cv_linux_kernel_page_follow_link" = "xyes" -o "x$ac_cv_linux_func_i_put_link_takes_cookie" = "xyes"; then
+		 if test "x$ac_cv_linux_func_page_get_link" = "xyes" -o "x$ac_cv_linux_func_i_put_link_takes_cookie" = "xyes"; then
 		  AC_DEFINE(USABLE_KERNEL_PAGE_SYMLINK_CACHE, 1, [define if your kernel has a usable symlink cache API])
 		 else
 		  AC_MSG_WARN([your kernel does not have a usable symlink cache API])
+		 fi
+		 if test "x$ac_cv_linux_func_page_get_link" != "xyes" -a "x$ac_cv_linux_struct_inode_operations_has_get_link" = "xyes"; then
+			AC_MSG_ERROR([Your kernel does not use follow_link - not supported without symlink cache API])
+			exit 1
 		 fi
                 :
 		fi

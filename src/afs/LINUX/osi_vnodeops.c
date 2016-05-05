@@ -3108,7 +3108,9 @@ static struct address_space_operations afs_symlink_aops = {
 static struct inode_operations afs_symlink_iops = {
 #if defined(USABLE_KERNEL_PAGE_SYMLINK_CACHE)
   .readlink = 		page_readlink,
-# if defined(HAVE_LINUX_PAGE_FOLLOW_LINK)
+# if defined(HAVE_LINUX_PAGE_GET_LINK)
+  .get_link =		page_get_link,
+# elif defined(HAVE_LINUX_PAGE_FOLLOW_LINK)
   .follow_link =	page_follow_link,
 # else
   .follow_link =	page_follow_link_light,
