@@ -621,7 +621,7 @@ DoSalvageVolume(struct SalvageQueueNode * node, int slot)
      * another thread may have held the lock when fork was
      * called!
      */
-    memset(&memset, 0, sizeof(logopts));
+    memset(&logopts, 0, sizeof(logopts));
     logopts.lopt_dest = logDest_file;
     logopts.lopt_rotateStyle = logRotate_none;
     if (asprintf(&filename, "%s.%d",
