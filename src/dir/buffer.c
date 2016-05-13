@@ -313,6 +313,7 @@ newslot(dir_file_t dir, afs_int32 apage, struct buffer *lp)
     /* Now fill in the header. */
     FidZap(bufferDir(lp));
     FidCpy(bufferDir(lp), dir);	/* set this */
+    memset(lp->data, 0, BUFFER_PAGE_SIZE);  /* Don't leak stale data. */
     lp->page = apage;
     lp->accesstime = ++timecounter;
 
