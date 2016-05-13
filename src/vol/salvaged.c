@@ -774,7 +774,7 @@ SalvageLogCleanup(int pid)
     }
 
     buf = calloc(1, LOG_XFER_BUF_SIZE);
-    if (buf != NULL) {
+    if (buf == NULL) {
 	Log("Unable to write child log: out of memory\n");
 	goto done;
     }
