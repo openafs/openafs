@@ -477,6 +477,13 @@ main(int argc, char **argv)
 	}
     }
 
+    code = rx_Init(htons(AFSCONF_VLDBPORT));
+    if (code < 0) {
+        VLog(0, ("vlserver: Rx init failed: %d\n", code));
+        exit(1);
+    }
+    rx_SetRxDeadTime(50);
+
     ubik_nBuffers = 512;
     ubik_SetClientSecurityProcs(afsconf_ClientAuth, afsconf_UpToDate, tdir);
     ubik_SetServerSecurityProcs(afsconf_BuildServerSecurityObjects,
@@ -490,7 +497,6 @@ main(int argc, char **argv)
 	VLog(0, ("vlserver: Ubik init failed: %s\n", afs_error_message(code)));
 	exit(2);
     }
-    rx_SetRxDeadTime(50);
 
     memset(rd_HostAddress, 0, sizeof(rd_HostAddress));
     memset(wr_HostAddress, 0, sizeof(wr_HostAddress));
