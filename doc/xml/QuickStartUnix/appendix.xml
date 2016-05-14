@@ -98,7 +98,7 @@
 </programlisting>
           becomes
 <programlisting>
-   # <emphasis role="bold">kinit admin</emphasis>
+   # <emphasis role="bold">klog admin</emphasis>
    Password:  <replaceable>admin_passwd</replaceable>
 </programlisting></para>
         </listitem>
