@@ -859,6 +859,8 @@ extern int VLockFileLock(struct VLockFile *lf, afs_uint32 offset,
                          int locktype, int nonblock);
 extern void VLockFileUnlock(struct VLockFile *lf, afs_uint32 offset);
 
+extern int VSetVolHashSize(int logsize);
+
 #ifdef AFS_DEMAND_ATTACH_FS
 extern Volume *VPreAttachVolumeByName(Error * ec, char *partition, char *name);
 extern Volume *VPreAttachVolumeByName_r(Error * ec, char *partition, char *name);
@@ -878,7 +880,6 @@ extern int VDisconnectSALV_r(void);
 extern void VPrintExtendedCacheStats(int flags);
 extern void VPrintExtendedCacheStats_r(int flags);
 extern void VLRU_SetOptions(int option, afs_uint32 val);
-extern int VSetVolHashSize(int logsize);
 extern int VRequestSalvage_r(Error * ec, Volume * vp, int reason, int flags);
 extern int VUpdateSalvagePriority_r(Volume * vp);
 extern int VRegisterVolOp_r(Volume * vp, FSSYNC_VolOp_info * vopinfo);

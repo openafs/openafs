@@ -455,6 +455,14 @@ Note that this option is intended for debugging and testing purposes.
 Changing the location of the log file from the command line may result
 in undesirable interactions with tools such as B<bos>.
 
+=item B<-vhashsize <I<size>>
+
+The log(2) of the number of volume hash buckets.  Default is 8 (i.e., by
+default, there are 2^8 = 256 volume hash buckets). The minimum that can
+be specified is 6 (64 hash buckets). In OpenAFS 1.5.77 and earlier, the
+maximum that can be specified is 14 (16384 buckets). After 1.5.77, the
+maximum that can be specified is 28 (268435456 buckets).
+
 =item B<-config> <I<configuration directory>>
 
 Set the location of the configuration directory used to configure this

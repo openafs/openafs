@@ -55,14 +55,6 @@ prior to save and following a restore.
 
 The default is C<both>.
 
-=item B<-vhashsize <I<size>>
-
-The log(2) number of of volume hash buckets.  Default is 8 (i.e., by
-default, there are 2^8 = 256 volume hash buckets). The minimum that can
-be specified is 6 (64 hash buckets). In OpenAFS 1.5.77 and earlier, the
-maximum that can be specified is 14 (16384 buckets). After 1.5.77, the
-maximum that can be specified is 28 (268435456 buckets).
-
 =item B<-vlrudisable>
 
 This option completely disables the VLRU mechanism, which means volumes will

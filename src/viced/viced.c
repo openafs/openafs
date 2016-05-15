@@ -1023,6 +1023,9 @@ ParseArgs(int argc, char *argv[])
     cmd_AddParmAtOffset(opts, OPT_vhandle_initial_cachesize,
 			"-vhandle-initial-cachesize", CMD_SINGLE,
 			CMD_OPTIONAL, "# fds reserved for cache IO");
+    cmd_AddParmAtOffset(opts, OPT_vhashsize, "-vhashsize",
+			CMD_SINGLE, CMD_OPTIONAL,
+			"log(2) of # of volume hash buckets");
 
 #ifdef AFS_DEMAND_ATTACH_FS
     /* dafs options */
@@ -1034,9 +1037,6 @@ ParseArgs(int argc, char *argv[])
 			"disable state restore during startup");
     cmd_AddParmAtOffset(opts, OPT_fs_state_verify, "-fs-state-verify",
 			CMD_SINGLE, CMD_OPTIONAL, "none|save|restore|both");
-    cmd_AddParmAtOffset(opts, OPT_vhashsize, "-vhashsize",
-			CMD_SINGLE, CMD_OPTIONAL,
-			"log(2) of # of volume hash buckets");
     cmd_AddParmAtOffset(opts, OPT_vlrudisable, "-vlrudisable",
 			CMD_FLAG, CMD_OPTIONAL, "disable VLRU functionality");
     cmd_AddParmAtOffset(opts, OPT_vlruthresh, "-vlruthresh",
@@ -1251,6 +1251,13 @@ ParseArgs(int argc, char *argv[])
 	    return -1;
 	}
     }
+    if (cmd_OptionAsInt(opts, OPT_vhashsize, &optval) == 0) {
+	if (VSetVolHashSize(optval)) {
+	    fprintf(stderr, "specified -vhashsize (%d) is invalid or out "
+		            "of range\n", optval);
+	    return -1;
+	}
+    }
 
 #ifdef AFS_DEMAND_ATTACH_FS
     if (cmd_OptionPresent(opts, OPT_fs_state_dont_save))
@@ -1269,13 +1276,6 @@ ParseArgs(int argc, char *argv[])
 	    /* default */
 	} else {
 	    fprintf(stderr, "invalid argument for -fs-state-verify\n");
-	    return -1;
-	}
-    }
-    if (cmd_OptionAsInt(opts, OPT_vhashsize, &optval) == 0) {
-	if (VSetVolHashSize(optval)) {
-	    fprintf(stderr, "specified -vhashsize (%d) is invalid or out "
-		            "of range\n", optval);
 	    return -1;
 	}
     }
