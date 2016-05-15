@@ -1,6 +1,17 @@
 openafs (1.6.18-1) UNRELEASED; urgency=high
 
   * New upstream release 1.6.18:
+    - Support for Linux 4.4 kernels.
+    - Improve dynamic vcache cleanup behavior, reducing memory usage and
+      avoiding a long hang when many vcaches are in use
+    - Deprecate afsd -settime.
+    - Failure to release a volume now reports an error back to the client.
+    - Check for invalid IP addresses in the CellServDB.
+    - Fix dafileserver crash experience with large volumes.
+    - Close race between "umount /afs" and "afsd -shutdown".
+    - Prefer -dryrun arguments to -noexecute.
+    - Limit ChangeAddr RPCs to removal, to avoid database corruption.
+    - Improve behavior relating to large (~2GB fetches from the fileserver).
 
  -- Benjamin Kaduk <kaduk@mit.edu>  Sun, 15 May 2016 16:03:14 -0400
 
