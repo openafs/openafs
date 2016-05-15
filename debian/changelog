@@ -1,3 +1,9 @@
+openafs (1.6.18-1) UNRELEASED; urgency=high
+
+  * New upstream release 1.6.18:
+
+ -- Benjamin Kaduk <kaduk@mit.edu>  Sun, 15 May 2016 16:03:14 -0400
+
 openafs (1.6.17-2) unstable; urgency=high
 
   * debian/rules: Fix FTBFS when built with dpkg-buildpackage -A.
