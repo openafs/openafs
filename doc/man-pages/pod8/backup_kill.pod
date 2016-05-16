@@ -85,7 +85,7 @@ multiple tapes. If the termination signal comes before the Backup System
 has accessed all of the necessary tapes, each volume is only partially
 written and is never brought online. It is best to restart the restore
 operation from scratch to avoid possible inconsistencies. See also
-L<CAUTIONS>.
+L</CAUTIONS>.
 
 =back
 

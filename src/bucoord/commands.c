@@ -244,7 +244,7 @@ EvalVolumeSet2(struct bc_config *aconfig,
 	    bulkentries.nbulkentries_val = 0;
 	    nsi = -1;
 	    tcode =
-		ubik_Call(VL_ListAttributesN2, uclient, 0, &attributes,
+		ubik_VL_ListAttributesN2(uclient, 0, &attributes,
 			  tve->name, si, &nentries, &bulkentries, &nsi);
 	    if (tcode)
 		ERROR(tcode);
@@ -461,8 +461,7 @@ EvalVolumeSet1(struct bc_config *aconfig,
      */
     for (index = 0; 1; index = next_index) {	/*w */
 	memset(&entry, 0, sizeof(entry));
-	code = ubik_Call(VL_ListEntry,	/*Routine to invoke */
-			 uclient,	/*Ubik client structure */
+	code = ubik_VL_ListEntry(uclient,	/*Ubik client structure */
 			 0,	/*Ubik flags */
 			 index,	/*Current index */
 			 &count,	/*Ptr to working variable */
@@ -2289,7 +2288,7 @@ bc_dbVerifyCmd(struct cmd_syndesc *as, void *arock)
     detail = (as->parms[0].items ? 1 : 0);	/* print more details */
 
     code =
-	ubik_Call(BUDB_DbVerify, udbHandle.uh_client, 0, &status, &orphans,
+	ubik_BUDB_DbVerify(udbHandle.uh_client, 0, &status, &orphans,
 		  &host);
 
     if (code) {
@@ -2486,7 +2485,12 @@ bc_deleteDumpCmd(struct cmd_syndesc *as, void *arock)
     if (havegroupid)
 	groupId = atoi(as->parms[4].items->data);
 
-    noexecute = (as->parms[7].items ? 1 : 0);
+    if (as->parms[7].items || as->parms[8].items) {
+        /* -noexecute (hidden) or -dryrun used */
+	noexecute = 1;
+    } else {
+	noexecute = 0;
+    }
 
     /* Get the time to delete to */
     if (as->parms[2].items) {	/* -to */
@@ -3104,7 +3108,7 @@ printRecentDumps(int ndumps)
 	dl.budb_dumpList_val = 0;
 
 	/* outline algorithm */
-	code = ubik_Call(BUDB_GetDumps, udbHandle.uh_client, 0, BUDB_MAJORVERSION, BUDB_OP_NPREVIOUS, "",	/* no name */
+	code = ubik_BUDB_GetDumps(udbHandle.uh_client, 0, BUDB_MAJORVERSION, BUDB_OP_NPREVIOUS, "",	/* no name */
 			 0,	/* start */
 			 ndumps,	/* end */
 			 index,	/* index */

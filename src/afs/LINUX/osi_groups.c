@@ -489,7 +489,11 @@ static int afs_pag_instantiate(struct key *key, const void *data, size_t datalen
     if (*userpag != pag)
 	goto error;
 
+#if defined(STRUCT_KEY_HAS_PAYLOAD_VALUE)
     key->payload.value = (unsigned long) *userpag;
+#else
+    memcpy(&key->payload, userpag, sizeof(afs_uint32));
+#endif
     key->datalen = sizeof(afs_uint32);
     code = 0;
 
@@ -513,8 +517,14 @@ static int afs_pag_match(const struct key *key, const void *description)
 
 static void afs_pag_destroy(struct key *key)
 {
-    afs_uint32 pag = key->payload.value;
+    afs_uint32 pag;
     int locked = ISAFS_GLOCK();
+
+#if defined(STRUCT_KEY_HAS_PAYLOAD_VALUE)
+    pag = key->payload.value;
+#else
+    memcpy(&pag, &key->payload, sizeof(afs_uint32));
+#endif
 
     if (!locked)
 	AFS_GLOCK();
@@ -609,7 +619,11 @@ osi_get_keyring_pag(afs_ucred_t *cred)
 
 	if (!IS_ERR(key)) {
 	    if (key_validate(key) == 0 && uid_eq(key->uid, GLOBAL_ROOT_UID)) {      /* also verify in the session keyring? */
+#if defined(STRUCT_KEY_HAS_PAYLOAD_VALUE)
 		keyring_pag = key->payload.value;
+#else
+		memcpy(&keyring_pag, &key->payload, sizeof(afs_int32));
+#endif
 		/* Only set PAG in groups if needed,
 		 * and the creds are from the current process */
 		if (afs_linux_cred_is_current(cred) &&

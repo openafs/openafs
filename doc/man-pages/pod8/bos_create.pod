@@ -38,7 +38,7 @@ a demand-attach File Server, and a server process entry of type B<dafs>
 for a demand-attach File Server will not work with a traditional File
 Server. When switching from one File Server implementation to another,
 remove the existing server process entry and create a new one. See
-L<EXAMPLES> below for an example of switching from a traditional File
+L</EXAMPLES> below for an example of switching from a traditional File
 Server to a demand-attach File Server.
 
 =head1 OPTIONS
@@ -230,7 +230,7 @@ format as when specifying the time alone.
 Specifies the complete pathname on the local disk of a program that the
 BOS Server invokes when the process terminates. The AFS distribution does
 not include any notifier programs, but this argument is available for
-administrator use. See L<NOTES>.
+administrator use. See L</NOTES>.
 
 =item B<-cell> <I<cell name>>
 

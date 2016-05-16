@@ -47,6 +47,10 @@ typedef struct path afs_linux_path_t;
 # endif
 #endif
 
+#if defined(HAVE_LINUX_LOCKS_LOCK_FILE_WAIT)
+# define flock_lock_file_wait locks_lock_file_wait
+#endif
+
 #if !defined(HAVE_LINUX_DO_SYNC_READ) && !defined(STRUCT_FILE_OPERATIONS_HAS_READ_ITER)
 static inline int
 do_sync_read(struct file *fp, char *buf, size_t count, loff_t *offp) {

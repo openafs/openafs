@@ -28,7 +28,7 @@ B<scout> [B<i>] S<<< B<-s> <I<servers to monitor>>+ >>>
 
 The scout command displays statistics gathered from the File Server
 process running on each machine specified with the B<-server>
-argument. L<OUTPUT> explains the meaning of the statistics and describes
+argument. L</OUTPUT> explains the meaning of the statistics and describes
 how they appear in the command shell, which is preferably a window managed
 by a window manager program.
 

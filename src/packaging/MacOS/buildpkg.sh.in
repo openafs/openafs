@@ -49,6 +49,9 @@ fi
 if [ $majorvers -eq 14 ]; then
   RELNAME="Yosemite"
 fi
+if [ $majorvers -eq 15 ]; then
+  RELNAME="El Capitan"
+fi
 
 
 PKGROOT=$CURDIR/pkgroot

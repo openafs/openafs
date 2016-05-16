@@ -615,6 +615,14 @@ else
 			AFS_SYSNAME="x86_darwin_140"
 			OSXSDK="macosx10.10"
 			;;
+		x86_64-apple-darwin15.*)
+			AFS_SYSNAME="x86_darwin_150"
+			OSXSDK="macosx10.11"
+			;;
+		i?86-apple-darwin15.*)
+			AFS_SYSNAME="x86_darwin_150"
+			OSXSDK="macosx10.11"
+			;;
 		sparc-sun-solaris2.5*)
 			AFS_SYSNAME="sun4x_55"
 			enable_login="yes"
@@ -882,6 +890,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_STRUCT([file_operations], [sendfile], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([file_system_type], [mount], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([inode_operations], [truncate], [fs.h])
+		 AC_CHECK_LINUX_STRUCT([key], [payload.value], [key.h])
 		 AC_CHECK_LINUX_STRUCT([key_type], [instantiate_prep], [key-type.h])
 		 AC_CHECK_LINUX_STRUCT([key_type], [match_preparse], [key-type.h])
 		 AC_CHECK_LINUX_STRUCT([key_type], [preparse], [key-type.h])
@@ -975,6 +984,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_FUNC([kernel_setsockopt],
 				     [#include <linux/net.h>],
 				     [kernel_setsockopt(NULL, 0, 0, NULL, 0);])
+		 AC_CHECK_LINUX_FUNC([locks_lock_file_wait],
+				     [#include <linux/fs.h>],
+				     [locks_lock_file_wait(NULL, NULL);])
 		 AC_CHECK_LINUX_FUNC([page_follow_link],
 				     [#include <linux/fs.h>],
 				     [page_follow_link(0,0);])
@@ -1006,6 +1018,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_FUNC([splice_direct_to_actor],
 				     [#include <linux/splice.h>],
 				     [splice_direct_to_actor(NULL,NULL,NULL);])
+		 AC_CHECK_LINUX_FUNC([default_file_splice_read],
+				     [#include <linux/fs.h>],
+				     [default_file_splice_read(NULL,NULL,NULL, 0, 0);])
 		 AC_CHECK_LINUX_FUNC([svc_addr_in],
 				     [#include <linux/sunrpc/svc.h>],
 				     [svc_addr_in(NULL);])

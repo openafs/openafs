@@ -30,7 +30,7 @@ Server. This command specifies the number of kilobytes of a file that can
 still remain to be written to the File Server when the Cache Manager
 returns control to the application. It is useful if users working on the
 machine commonly work with very large files, but also introduces the
-complications discussed in the L<CAUTIONS>.
+complications discussed in the L</CAUTIONS>.
 
 Set either or both of the following in a single command:
 
@@ -81,7 +81,7 @@ asynchrony once another value has been set for the file.
 
 To display the settings that currently apply to individual files or to all
 files, provide the command's arguments in certain combinations as
-specified in L<OUTPUT>.
+specified in L</OUTPUT>.
 
 =head1 CAUTIONS
 

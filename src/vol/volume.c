@@ -6504,7 +6504,9 @@ VFreeBitMapEntry_r(Error * ec, Volume *vp, struct vnodeIndex *index,
 
  done:
 #ifdef AFS_DEMAND_ATTACH_FS
-    VCancelReservation_r(vp);
+    if (flags & VOL_FREE_BITMAP_WAIT) {
+	VCancelReservation_r(vp);
+    }
 #endif
     return; /* make the compiler happy for non-DAFS */
 }

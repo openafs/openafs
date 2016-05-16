@@ -715,8 +715,9 @@ main(int argc, char **argv)
 		"delete the dump from the backup database only");
     cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL,
 		"always delete from backup database");
-    cmd_AddParm(ts, "-noexecute", CMD_FLAG, CMD_OPTIONAL,
-		"Just list the dumps");
+    cmd_AddParm(ts, "-noexecute", CMD_FLAG, CMD_OPTIONAL|CMD_HIDDEN, "");
+    cmd_AddParm(ts, "-dryrun", CMD_FLAG, CMD_OPTIONAL,
+		"list the dumps, don't delete anything");
 
     if (!interact)
 	add_std_args(ts);

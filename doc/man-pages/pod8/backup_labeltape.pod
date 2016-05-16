@@ -62,7 +62,7 @@ output from B<backup> commands. The permanent name appears in the C<tape
 name> field of the output from the B<backup readlabel> command.
 
 To write an AFS tape name on the label, provide a value for the B<-name>
-argument in the required format described in L<OPTIONS>.  Include the
+argument in the required format described in L</OPTIONS>.  Include the
 B<-name> argument or the B<-pname> argument, but not both. If this
 argument is omitted, the AFS tape name is set to C<< <NULL> >>, but the
 Backup System automatically assigns the appropriate name when the tape is

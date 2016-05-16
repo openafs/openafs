@@ -161,7 +161,7 @@ results from attempting to create a new mount point in a read-only
 volume. By convention, the read/write path is indicated by placing a
 period before the cell name at the pathname's second level (for example,
 F</afs/.abc.com>). For further discussion of the concept of read/write and
-read-only paths through the filespace, see L<DESCRIPTION>.
+read-only paths through the filespace, see L</DESCRIPTION>.
 
 =item B<-vol> <I<volume name>>
 

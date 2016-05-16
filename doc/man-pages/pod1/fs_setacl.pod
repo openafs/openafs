@@ -171,7 +171,7 @@ within an individual pairing of user or group and permissions.
 Granting the C<l> (lookup) and C<i> (insert) permissions without
 granting the C<w> (write) and/or C<r> (read) permissions is a special
 case, and grants rights approrpriate for "dropbox" directories. See the
-L<DROPBOXES> section for details.
+L</DROPBOXES> section for details.
 
 If setting ACLs on a pathname in DFS filespace, see the DFS documentation
 for the proper format and acceptable values for DFS ACL entries.

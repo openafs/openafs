@@ -304,7 +304,7 @@ shell script or program that directs an automated tape device, such as a
 jukebox or stacker, to mount a tape (insert it into the tape reader).  The
 operator must write the routine to invoke the mount command specified by
 the device's manufacturer; AFS does not include any scripts, although an
-example appears in L<EXAMPLES>.  The script or program inherits the Tape
+example appears in L</EXAMPLES>.  The script or program inherits the Tape
 Coordinator's AFS authentication status.
 
 When the Tape Coordinator needs to mount a tape, it checks the
@@ -463,7 +463,7 @@ shell script or program that directs an automated tape device, such as a
 jukebox or stacker, to unmount a tape (remove it from the tape reader).
 The operator must write the routine to invoke the unmount command
 specified by the device's manufacturer; AFS does not include any scripts,
-although an example appears in L<EXAMPLES>.  The script or program
+although an example appears in L</EXAMPLES>.  The script or program
 inherits the Tape Coordinator's AFS authentication status.
 
 After closing a tape device, the Tape Coordinator checks the configuration
@@ -512,7 +512,7 @@ has port offset 0.
 
 The administrator includes the following five lines in the
 F</usr/afs/backup/CFG_stacker0.1> file. To review the meaning of each
-instruction, see L<DESCRIPTION>.
+instruction, see L</DESCRIPTION>.
 
    MOUNT /usr/afs/backup/stacker0.1
    UNMOUNT /usr/afs/backup/stacker0.1
@@ -590,7 +590,7 @@ file. It has port offset 20.
 
 The administrator includes the following lines in the
 F</usr/afs/backup/CFG_HSM_device> file. To review the meaning of each
-instruction, see L<DESCRIPTION>.
+instruction, see L</DESCRIPTION>.
 
    MOUNT /usr/afs/backup/file
    FILE YES

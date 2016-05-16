@@ -200,7 +200,7 @@ afs_osi_Read(struct osi_file *afile, int offset, void *aptr,
      * down. No point in crashing when we are already shutting down
      */
     if (!afile) {
-	if (!afs_shuttingdown)
+	if (afs_shuttingdown == AFS_RUNNING)
 	    osi_Panic("osi_Read called with null param");
 	else
 	    return -EIO;
@@ -240,7 +240,7 @@ afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
     AFS_STATCNT(osi_Write);
 
     if (!afile) {
-	if (!afs_shuttingdown)
+	if (afs_shuttingdown == AFS_RUNNING)
 	    osi_Panic("afs_osi_Write called with null param");
 	else
 	    return -EIO;
