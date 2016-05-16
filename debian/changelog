@@ -1,4 +1,4 @@
-openafs (1.6.18-1) UNRELEASED; urgency=high
+openafs (1.6.18-1) unstable; urgency=high
 
   * New upstream release 1.6.18:
     - Support for Linux 4.4 kernels.
@@ -18,7 +18,7 @@ openafs (1.6.18-1) UNRELEASED; urgency=high
     to eliminate dependency cycles with other services that depend on
     remote-fs.target.  (Closes: #794451)
 
- -- Benjamin Kaduk <kaduk@mit.edu>  Sun, 15 May 2016 16:03:14 -0400
+ -- Benjamin Kaduk <kaduk@mit.edu>  Sun, 15 May 2016 22:19:38 -0400
 
 openafs (1.6.17-2) unstable; urgency=high
 
