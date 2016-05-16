@@ -12,6 +12,8 @@ openafs (1.6.18-1) UNRELEASED; urgency=high
     - Prefer -dryrun arguments to -noexecute.
     - Limit ChangeAddr RPCs to removal, to avoid database corruption.
     - Improve behavior relating to large (~2GB fetches from the fileserver).
+  * Import patches from upstream gerrit to improve support for
+    Linux 4.5 kernels.  (Closes: #821782)
 
  -- Benjamin Kaduk <kaduk@mit.edu>  Sun, 15 May 2016 16:03:14 -0400
 

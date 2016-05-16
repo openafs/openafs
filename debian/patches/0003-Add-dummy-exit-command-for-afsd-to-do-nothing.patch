@@ -7,10 +7,10 @@ Subject: Add dummy -exit command for afsd to do nothing
  1 file changed, 5 insertions(+)
 
 diff --git a/src/afsd/afsd.c b/src/afsd/afsd.c
-index 141dc69..ab8e560 100644
+index 0d5f413..d5d014f 100644
 --- a/src/afsd/afsd.c
 +++ b/src/afsd/afsd.c
-@@ -1909,6 +1909,10 @@ mainproc(struct cmd_syndesc *as, void *arock)
+@@ -1911,6 +1911,10 @@ mainproc(struct cmd_syndesc *as, void *arock)
  	/* -rxmaxfrags */
  	rxmaxfrags = atoi(as->parms[38].items->data);
      }
@@ -21,7 +21,7 @@ index 141dc69..ab8e560 100644
  
      /* parse cacheinfo file if this is a diskcache */
      if (ParseCacheInfoFile()) {
-@@ -2588,6 +2592,7 @@ afsd_init(void)
+@@ -2590,6 +2594,7 @@ afsd_init(void)
      cmd_AddParm(ts, "-rxmaxfrags", CMD_SINGLE, CMD_OPTIONAL,
                  "Set the maximum number of UDP fragments Rx should send/receive"
                  " per Rx packet");
