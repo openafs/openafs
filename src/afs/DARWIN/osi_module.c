@@ -115,7 +115,7 @@ afs_modunload(struct kmod_info * kmod_info, void *data)
 {
     if (afs_globalVFS)
 	return KERN_FAILURE;
-    if ((afs_initState != 0) || (afs_shuttingdown))
+    if ((afs_initState != 0) || (afs_shuttingdown != AFS_RUNNING))
 	return KERN_FAILURE;
 #ifdef AFS_DARWIN80_ENV
     if (vfs_fsremove(afs_vfstable))

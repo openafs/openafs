@@ -245,7 +245,7 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, afs_ucred_t *acred)
     afs_BozonLock(&avc->pvnLock, avc);
 #endif
 
-    if (afs_shuttingdown)
+    if (afs_shuttingdown != AFS_RUNNING)
 	return EIO;
 
     if (!(avc->f.states & CStatd)) {

@@ -114,7 +114,7 @@ specified extension also already exists, the command overwrites it.
 
 The B<-n> flag produces a list of the volumes to be restored if the B<-n>
 flag were not included, without actually restoring any volumes. See
-L<OUTPUT> for a detailed description of the output, and suggestions on how
+L</OUTPUT> for a detailed description of the output, and suggestions on how
 to combine it most effectively with the B<-file> and B<-name> arguments.
 
 The execution time for a B<backup volsetrestore> command depends on the
@@ -227,7 +227,7 @@ explicitly in the appropriate order.
 =item B<-n>
 
 Displays a list of the volumes to be restored if the flag were not
-included, without actually restoring them. L<OUTPUT> details the format of
+included, without actually restoring them. L</OUTPUT> details the format of
 the output. When combined with the B<-name> argument, its output is easily
 edited for use as input to the B<-file> argument on a subsequent B<backup
 volsetrestore> command.

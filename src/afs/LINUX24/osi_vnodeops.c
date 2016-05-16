@@ -890,7 +890,7 @@ afs_linux_revalidate(struct dentry *dp)
     cred_t *credp;
     int code;
 
-    if (afs_shuttingdown)
+    if (afs_shuttingdown != AFS_RUNNING)
 	return EIO;
 
 #ifdef AFS_LINUX24_ENV

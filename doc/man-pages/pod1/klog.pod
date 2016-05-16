@@ -281,7 +281,7 @@ encountered.
 Requests a specific lifetime for the token. Provide a number of hours and
 optionally minutes and seconds in the format I<hh>[B<:>I<mm>[B<:>I<ss>]].
 The value is used in calculating the token lifetime as described in
-L<DESCRIPTION>.
+L</DESCRIPTION>.
 
 =item B<-setpag>
 
@@ -321,7 +321,7 @@ Kerberos-style ticket file was created:
 
 Most often, this command is issued without arguments. The appropriate
 password is for the person currently logged into the local system. The
-ticket's lifetime is calculated as described in L<DESCRIPTION> (if no
+ticket's lifetime is calculated as described in L</DESCRIPTION> (if no
 defaults have been changed, it is 25 hours for a user whose Authentication
 Database entry was created in AFS 3.1 or later).
 
@@ -337,7 +337,7 @@ Corporation's test cell:
 In the following, the issuer requests a ticket lifetime of 104 hours 30
 minutes (4 days 8 hours 30 minutes). Presuming that this lifetime is
 allowed by the maximum ticket lifetimes and other factors described in
-L<DESCRIPTION>, the token's lifetime is 110:44:28, which is the next
+L</DESCRIPTION>, the token's lifetime is 110:44:28, which is the next
 largest possible value.
 
    % klog -lifetime 104:30

@@ -95,8 +95,6 @@ typedef struct vlheader vlheader;
 typedef struct vlentry vlentry;
 typedef struct nvlentry nvlentry;
 
-#define COUNT_REQ(op) static int this_op = op-VL_LOWEST_OPCODE; dynamic_statistics.requests[this_op]++
-#define COUNT_ABO dynamic_statistics.aborts[this_op]++
 #define	DOFFSET(abase,astr,aitem) ((abase)+(((char *)(aitem)) - ((char *)(astr))))
 
 #define	VL_MHSRV_PERBLK		64

@@ -37,7 +37,7 @@ recommended. The concept is meaningless for machines and groups, because
 it is impossible to authenticate as a group or machine.
 
 Similarly, some privacy flag settings do not have a sensible
-interpretation. L<OPTIONS> specifies the appropriate settings.
+interpretation. L</OPTIONS> specifies the appropriate settings.
 
 =head1 OPTIONS
 

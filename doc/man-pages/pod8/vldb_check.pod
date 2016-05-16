@@ -82,7 +82,7 @@ ignored.
 If there are errors in the database, the output always reports them on the
 standard error stream. If any options other than B<-database> or B<-help>
 are provided, the output written to the standard output stream includes
-additional information as described for each option in L<OPTIONS>.  The
+additional information as described for each option in L</OPTIONS>.  The
 output is intended for debugging purposes and is meaningful to someone
 familiar with the internal structure of the VLDB.
 
