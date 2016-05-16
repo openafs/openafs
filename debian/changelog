@@ -14,6 +14,9 @@ openafs (1.6.18-1) UNRELEASED; urgency=high
     - Improve behavior relating to large (~2GB fetches from the fileserver).
   * Import patches from upstream gerrit to improve support for
     Linux 4.5 kernels.  (Closes: #821782)
+  * Depend on sysint.target instead of basic.target in openafs-client.service,
+    to eliminate dependency cycles with other services that depend on
+    remote-fs.target.  (Closes: #794451)
 
  -- Benjamin Kaduk <kaduk@mit.edu>  Sun, 15 May 2016 16:03:14 -0400
 
