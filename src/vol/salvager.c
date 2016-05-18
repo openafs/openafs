@@ -200,7 +200,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 	seenvol = 1;
 	vid_l = strtoul(ti->data, &end, 10);
 	if (vid_l >= MAX_AFS_UINT32 || vid_l == ULONG_MAX || *end != '\0') {
-	    Log("salvage: invalid volume id specified; salvage aborted\n");
+	    fprintf(stderr, "salvage: invalid volume id specified; salvage aborted\n");
 	    Exit(1);
 	}
 	vid = (VolumeId)vid_l;
