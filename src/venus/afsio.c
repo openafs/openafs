@@ -87,6 +87,7 @@ static int readlock = 0;	/* Set if -readlock option given */
 static int waittime = 0;	/* Set if -waittime option given */
 static int useFid = 0;		/* Set if fidwrite/fidread/fidappend invoked */
 static int append = 0;		/* Set if append/fidappend invoked */
+static int readDir = 0;		/* Set if readdir/fidreaddir invoked. */
 static struct timeval starttime, opentime, readtime, writetime;
 static afs_uint64 xfered = 0;
 static struct timeval now;
@@ -234,6 +235,9 @@ CmdProlog(struct cmd_syndesc *as, char **cellp, char **realmp,
     if ( (strcmp(as->name, "append") == 0) ||
          (strcmp(as->name, "fidappend") == 0) )
 	append = 1;		/* global */
+    if (strcmp(as->name, "readdir") == 0 ||
+        strcmp(as->name, "fidreaddir") == 0)
+        readDir = 1;
 
     /* attempts to ensure loop is bounded: */
     for (pdp = as->parms, i = 0; pdp && (i < as->nParms); i++, pdp++) {
@@ -249,7 +253,8 @@ CmdProlog(struct cmd_syndesc *as, char **cellp, char **realmp,
             else if (strcmp(pdp->name, "-cell") == 0) {
 		cellGiven = 1;	/* global */
 		*cellp = pdp->items->data;
-            } else if ( strcmp(pdp->name, "-file") == 0) {
+            } else if ( strcmp(pdp->name, "-file") == 0 ||
+			strcmp(pdp->name, "-dir") == 0) {
 		*fnp = pdp->items->data;
 #ifdef AFS_NT40_ENV
                 ConvertAFSPath(fnp);
@@ -363,6 +368,27 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-md5", CMD_FLAG, CMD_OPTIONAL, "calculate md5 checksum");
+    cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
+
+    ts = cmd_CreateSyntax("readdir", readFile, CMD_REQUIRED, 0,
+			  "read a directory from AFS");
+    cmd_AddParm(ts, "-dir", CMD_SINGLE, CMD_REQUIRED, "AFS-dirname");
+    cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
+    cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-md5", CMD_FLAG, CMD_OPTIONAL, "calculate md5 checksum");
+    cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
+
+    ts = cmd_CreateSyntax("fidreaddir", readFile, CMD_REQUIRED, 0,
+			  "read on a non AFS-client a directory from AFS");
+    cmd_AddParm(ts, "-fid", CMD_SINGLE, CMD_REQUIRED,
+		"volume.vnode.uniquifier");
+    cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
+    cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-md5", CMD_FLAG, CMD_OPTIONAL, "calculate md5 checksum");
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
 
@@ -788,7 +814,14 @@ readFile(struct cmd_syndesc *as, void *unused)
 	return code;
     }
 
-    if (avfp->fid.Vnode & 1) {
+    if (readDir) {
+	if ((avfp->fid.Vnode & 1) == 0) {
+	    code = ENOENT;
+	    afs_com_err(pnp, code, "(%s is a file, not a directory)", fname);
+	    afscp_FreeFid(avfp);
+	    return code;
+	}
+    } else if (avfp->fid.Vnode & 1) {
 	code = ENOENT;
 	afs_com_err(pnp, code, "(%s is a directory, not a file)", fname);
 	afscp_FreeFid(avfp);
