@@ -201,7 +201,7 @@ ContactQuorum_rcode(int okcalls, afs_int32 rcode)
     if (okcalls + 1 >= ubik_quorum)
 	return 0;
     else
-	return rcode;
+	return (rcode != 0) ? rcode : UNOQUORUM;
 }
 
 /*!
