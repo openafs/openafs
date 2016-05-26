@@ -1040,7 +1040,7 @@ afs_nfsrdwr(struct vcache *avc, struct uio *auio, enum uio_rw arw,
 }
 
 int
-afs_map(struct vnode *vp, offset_t off, struct as *as, caddr_t *addr, u_int len, u_char prot, u_char maxprot, u_int flags, afs_ucred_t *cred)
+afs_map(struct vnode *vp, offset_t off, struct as *as, caddr_t *addr, size_t len, u_char prot, u_char maxprot, u_int flags, afs_ucred_t *cred)
 {
     struct segvn_crargs crargs;
     afs_int32 code;
