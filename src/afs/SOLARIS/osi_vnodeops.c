@@ -1104,7 +1104,7 @@ afs_map(struct vnode *vp, offset_t off, struct as *as, caddr_t *addr, size_t len
 	(void)as_unmap(as, *addr, len);	/* unmap old address space use */
     /* setup the create parameter block for the call */
     crargs.vp = AFSTOV(avc);
-    crargs.offset = (u_int) off;
+    crargs.offset = (u_offset_t)off;
     crargs.cred = cred;
     crargs.type = flags & MAP_TYPE;
     crargs.prot = prot;
