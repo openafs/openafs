@@ -23,6 +23,7 @@ AFS_OS_OBJS = \
 	osi_ioctl.o \
 <all>
 	osi_file.o \
+	osi_kstat.o \
 	osi_sleep.o \
 	osi_vcache.o \
 	osi_vm.o \

@@ -1107,6 +1107,10 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	if (afs_uuid_create(&afs_cb_interface.uuid) != 0)
 	    memset(&afs_cb_interface.uuid, 0, sizeof(afsUUID));
 
+#if defined(AFS_SUN5_ENV)
+	afs_kstat_init();
+#endif
+
 	printf("found %d non-empty cache files (%d%%).\n",
 	       afs_stats_cmperf.cacheFilesReused,
 	       (100 * afs_stats_cmperf.cacheFilesReused) /
@@ -1406,6 +1410,10 @@ afs_shutdown(void)
     afs_FlushVCBs(2);
 
     afs_shuttingdown = AFS_SHUTDOWN;
+
+#if defined(AFS_SUN5_ENV)
+    afs_kstat_shutdown();
+#endif
 
     if (afs_cold_shutdown)
 	afs_warn("afs: COLD ");

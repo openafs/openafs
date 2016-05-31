@@ -912,6 +912,10 @@ extern struct afs_stats_CMFullPerf afs_stats_cmfullperf;
 extern afs_int32 afs_stats_XferSumBytes[AFS_STATS_NUM_FS_XFER_OPS];
 extern void afs_InitStats(void);
 
+/* ARCH/osi_kstat.c */
+extern void afs_kstat_init(void);
+extern void afs_kstat_shutdown(void);
+
 /* afs_syscall.c */
 #ifdef AFS_DARWIN100_ENV
 extern int copyin_afs_ioctl(user_addr_t cmarg, struct afs_ioctl *dst);

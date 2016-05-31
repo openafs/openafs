@@ -711,6 +711,8 @@ osi_vcache.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vcache.c
 	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vcache.c
 osi_crypto.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_crypto.c
 	$(CRULE_OPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_crypto.c
+osi_kstat.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_kstat.c
+	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_kstat.c
 
 clean:
 	-$(RM) -rf STATIC* MODLOAD* $(AFS_OS_CLEAN)
