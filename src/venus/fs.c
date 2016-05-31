@@ -3326,6 +3326,9 @@ GetPrefCmd(struct cmd_syndesc *as, void *arock)
 	    if (code) {
 		if ((errno != E2BIG) || (2 * blob.out_size > 0x7FFF)) {
 		    perror("getserverprefs pioctl");
+		    if (blob.out != space) {
+			free(blob.out);
+		    }
 		    return 1;
 		}
 		blob.out_size *= 2;
