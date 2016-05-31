@@ -915,6 +915,10 @@ extern void afs_GetCMStat(char **ptr, unsigned *size);
 extern void afs_AddToMean(struct afs_MeanStats *oldMean, afs_int32 newValue);
 #endif
 
+/* ARCH/osi_kstat.c */
+extern void afs_kstat_init(void);
+extern void afs_kstat_shutdown(void);
+
 /* afs_syscall.c */
 #ifdef AFS_DARWIN100_ENV
 extern int copyin_afs_ioctl(user_addr_t cmarg, struct afs_ioctl *dst);

@@ -1361,6 +1361,8 @@ extern afs_int32 *afs_dcnextTbl;	/*Dcache hash table links */
 extern afs_int32 afs_cacheFiles;	/*Size of afs_indexTable */
 extern afs_int32 afs_cacheBlocks;	/*1K blocks in cache */
 extern afs_int32 afs_cacheStats;	/*Stat entries in cache */
+extern afs_int32 afs_freeDCCount;	/*Count of elts in freeDCList */
+extern afs_uint32 afs_CacheTooFullCount;
 extern afs_uint32 afs_WaitForCacheDrainCount;
 extern struct vcache *afs_vhashT[VCSIZE];	/*Stat cache hash table */
 extern struct afs_q afs_vhashTV[VCSIZE]; /* cache hash table on volume */
