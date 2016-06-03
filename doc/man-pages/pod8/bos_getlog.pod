@@ -67,6 +67,10 @@ The BOS Server (B<bosserver>) log file.
 
 The File Server (B<fileserver>) log file.
 
+=item F<PtLog>
+
+The Protection Server (B<ptserver>) log file.
+
 =item F<SalvageLog>
 
 The Salvager (B<salvager>) log file.
