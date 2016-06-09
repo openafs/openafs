@@ -274,7 +274,7 @@ afs_linux_cred_is_current(afs_ucred_t *cred)
 static inline loff_t
 page_offset(struct page *pp)
 {
-    return (((loff_t) pp->index) << PAGE_CACHE_SHIFT);
+    return (((loff_t) pp->index) << PAGE_SHIFT);
 }
 #endif
 
