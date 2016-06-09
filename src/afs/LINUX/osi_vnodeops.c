@@ -1984,7 +1984,7 @@ afs_linux_read_cache(struct file *cachefp, struct page *page,
     /* If we're trying to read a page that's past the end of the disk
      * cache file, then just return a zeroed page */
     if (AFS_CHUNKOFFSET(offset) >= i_size_read(cacheinode)) {
-	zero_user_segment(page, 0, PAGE_CACHE_SIZE);
+	zero_user_segment(page, 0, PAGE_SIZE);
 	SetPageUptodate(page);
 	if (task)
 	    unlock_page(page);
@@ -1993,7 +1993,7 @@ afs_linux_read_cache(struct file *cachefp, struct page *page,
 
     /* From our offset, we now need to work out which page in the disk
      * file it corresponds to. This will be fun ... */
-    pageindex = (offset - AFS_CHUNKTOBASE(chunk)) >> PAGE_CACHE_SHIFT;
+    pageindex = (offset - AFS_CHUNKTOBASE(chunk)) >> PAGE_SHIFT;
 
     while (cachepage == NULL) {
         cachepage = find_get_page(cachemapping, pageindex);
@@ -2011,12 +2011,12 @@ afs_linux_read_cache(struct file *cachefp, struct page *page,
 	        cachepage = newpage;
 	        newpage = NULL;
 
-	        page_cache_get(cachepage);
+	        get_page(cachepage);
                 if (!pagevec_add(lrupv, cachepage))
                     __pagevec_lru_add_file(lrupv);
 
 	    } else {
-		page_cache_release(newpage);
+		put_page(newpage);
 		newpage = NULL;
 		if (code != -EEXIST)
 		    goto out;
@@ -2057,7 +2057,7 @@ afs_linux_read_cache(struct file *cachefp, struct page *page,
 
 out:
     if (cachepage)
-	page_cache_release(cachepage);
+	put_page(cachepage);
 
     return code;
 }
@@ -2328,7 +2328,7 @@ afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
 	/* If we allocate a page and don't remove it from page_list,
 	 * the page cache gets upset. */
 	list_del(&pp->lru);
-	isize = (i_size_read(fp->f_mapping->host) - 1) >> PAGE_CACHE_SHIFT;
+	isize = (i_size_read(fp->f_mapping->host) - 1) >> PAGE_SHIFT;
 	if(pp->index > isize) {
 	    if(PageLocked(pp))
 		unlock_page(pp);
@@ -2345,7 +2345,7 @@ afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
         if(base_index != pp->index) {
             if(PageLocked(pp))
 		 unlock_page(pp);
-            page_cache_release(pp);
+            put_page(pp);
 	    iovecp[page_ix].iov_base = (void *) 0;
 	    base_index++;
 	    ancr->length -= PAGE_SIZE;
@@ -2355,7 +2355,7 @@ afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
         if(code) {
 	    if(PageLocked(pp))
 		unlock_page(pp);
-	    page_cache_release(pp);
+	    put_page(pp);
 	    iovecp[page_ix].iov_base = (void *) 0;
 	} else {
 	    page_count++;
@@ -2415,7 +2415,7 @@ afs_linux_bypass_readpage(struct file *fp, struct page *pp)
      * it as up to date.
      */
     if (page_offset(pp) >=  i_size_read(fp->f_mapping->host)) {
-	zero_user_segment(pp, 0, PAGE_CACHE_SIZE);
+	zero_user_segment(pp, 0, PAGE_SIZE);
 	SetPageUptodate(pp);
 	unlock_page(pp);
 	return 0;
@@ -2576,13 +2576,13 @@ afs_linux_readpages(struct file *fp, struct address_space *mapping,
 
 	if (tdc && !add_to_page_cache(page, mapping, page->index,
 				      GFP_KERNEL)) {
-	    page_cache_get(page);
+	    get_page(page);
 	    if (!pagevec_add(&lrupv, page))
 		__pagevec_lru_add_file(&lrupv);
 
 	    afs_linux_read_cache(cacheFp, page, tdc->f.chunk, &lrupv, task);
 	}
-	page_cache_release(page);
+	put_page(page);
     }
     if (pagevec_count(&lrupv))
        __pagevec_lru_add_file(&lrupv);
@@ -2763,7 +2763,7 @@ afs_linux_writepage(struct page *pp)
     struct inode *inode;
     struct vcache *vcp;
     cred_t *credp;
-    unsigned int to = PAGE_CACHE_SIZE;
+    unsigned int to = PAGE_SIZE;
     loff_t isize;
     int code = 0;
     int code1 = 0;
@@ -2773,7 +2773,7 @@ afs_linux_writepage(struct page *pp)
 	/* XXX - Do we need to redirty the page here? */
     }
 
-    page_cache_get(pp);
+    get_page(pp);
 
     inode = mapping->host;
     vcp = VTOAFS(inode);
@@ -2842,7 +2842,7 @@ afs_linux_writepage(struct page *pp)
 
 done:
     end_page_writeback(pp);
-    page_cache_release(pp);
+    put_page(pp);
 
     if (code1)
 	return code1;
@@ -2931,10 +2931,10 @@ afs_linux_prepare_write(struct file *file, struct page *page, unsigned from,
 	/* Is the location we are writing to beyond the end of the file? */
 	if (pagebase >= isize ||
 	    ((from == 0) && (pagebase + to) >= isize)) {
-	    zero_user_segments(page, 0, from, to, PAGE_CACHE_SIZE);
+	    zero_user_segments(page, 0, from, to, PAGE_SIZE);
 	    SetPageChecked(page);
 	/* Are we we writing a full page */
-	} else if (from == 0 && to == PAGE_CACHE_SIZE) {
+	} else if (from == 0 && to == PAGE_SIZE) {
 	    SetPageChecked(page);
 	/* Is the page readable, if it's wronly, we don't care, because we're
 	 * not actually going to read from it ... */
@@ -2955,12 +2955,12 @@ afs_linux_write_end(struct file *file, struct address_space *mapping,
                                 struct page *page, void *fsdata)
 {
     int code;
-    unsigned int from = pos & (PAGE_CACHE_SIZE - 1);
+    unsigned int from = pos & (PAGE_SIZE - 1);
 
     code = afs_linux_commit_write(file, page, from, from + len);
 
     unlock_page(page);
-    page_cache_release(page);
+    put_page(page);
     return code;
 }
 
@@ -2970,8 +2970,8 @@ afs_linux_write_begin(struct file *file, struct address_space *mapping,
                                 struct page **pagep, void **fsdata)
 {
     struct page *page;
-    pgoff_t index = pos >> PAGE_CACHE_SHIFT;
-    unsigned int from = pos & (PAGE_CACHE_SIZE - 1);
+    pgoff_t index = pos >> PAGE_SHIFT;
+    unsigned int from = pos & (PAGE_SIZE - 1);
     int code;
 
     page = grab_cache_page_write_begin(mapping, index, flags);
@@ -2980,7 +2980,7 @@ afs_linux_write_begin(struct file *file, struct address_space *mapping,
     code = afs_linux_prepare_write(file, page, from, from + len);
     if (code) {
 	unlock_page(page);
-	page_cache_release(page);
+	put_page(page);
     }
 
     return code;
