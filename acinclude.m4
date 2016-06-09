@@ -1602,7 +1602,7 @@ if test "$enable_debug_locks" = yes; then
 fi
 
 if test "$ac_cv_header_security_pam_modules_h" = yes -a "$enable_pam" = yes; then
-	HAVE_PAM="YES"
+	HAVE_PAM="yes"
 else
 	HAVE_PAM="no"
 fi
