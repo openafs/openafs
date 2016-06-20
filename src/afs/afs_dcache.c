@@ -95,6 +95,8 @@ afs_size_t afs_vmMappingEnd;	/* !< For large files (>= 2GB) the VM
 int afs_WaitForCacheDrain = 0;
 int afs_TruncateDaemonRunning = 0;
 int afs_CacheTooFull = 0;
+afs_uint32 afs_CacheTooFullCount = 0;
+afs_uint32 afs_WaitForCacheDrainCount = 0;
 
 afs_int32 afs_dcentries;	/*!< In-memory dcache entries */
 
@@ -395,6 +397,7 @@ void
 afs_MaybeWakeupTruncateDaemon(void)
 {
     if (!afs_CacheTooFull && afs_CacheIsTooFull()) {
+	afs_CacheTooFullCount++;
 	afs_CacheTooFull = 1;
 	if (!afs_TruncateDaemonRunning)
 	    afs_osi_Wakeup((int *)afs_CacheTruncateDaemon);
@@ -2435,6 +2438,8 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 	    ReleaseReadLock(&avc->lock);
 	    while ((afs_blocksUsed - afs_blocksDiscarded) >
 		   PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks)) {
+		if (afs_WaitForCacheDrain == 0)
+		    afs_WaitForCacheDrainCount++;
 		afs_WaitForCacheDrain = 1;
 		afs_osi_Sleep(&afs_WaitForCacheDrain);
 	    }
@@ -3781,6 +3786,8 @@ afs_ObtainDCacheForWriting(struct vcache *avc, afs_size_t filePos,
 		ReleaseWriteLock(&avc->lock);
 		if (afs_blocksUsed - afs_blocksDiscarded >
 		    PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks)) {
+		    if (afs_WaitForCacheDrain == 0)
+		        afs_WaitForCacheDrainCount++;
 		    afs_WaitForCacheDrain = 1;
 		    afs_osi_Sleep(&afs_WaitForCacheDrain);
 		}

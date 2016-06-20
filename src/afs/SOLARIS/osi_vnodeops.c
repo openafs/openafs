@@ -697,6 +697,8 @@ afs_nfsrdwr(struct vcache *avc, struct uio *auio, enum uio_rw arw,
 	   && (afs_blocksUsed > PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks))) {
 	if (afs_blocksUsed - afs_blocksDiscarded >
 	    PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks)) {
+	    if (afs_WaitForCacheDrain == 0)
+		afs_WaitForCacheDrainCount++;
 	    afs_WaitForCacheDrain = 1;
 	    afs_osi_Sleep(&afs_WaitForCacheDrain);
 	}
