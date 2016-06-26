@@ -571,13 +571,13 @@ afs_linux_fsync(struct file *fp, int datasync)
     cred_t *credp = crref();
 
 #if defined(FOP_FSYNC_TAKES_RANGE)
-    mutex_lock(&ip->i_mutex);
+    afs_linux_lock_inode(ip);
 #endif
     AFS_GLOCK();
     code = afs_fsync(VTOAFS(ip), credp);
     AFS_GUNLOCK();
 #if defined(FOP_FSYNC_TAKES_RANGE)
-    mutex_unlock(&ip->i_mutex);
+    afs_linux_unlock_inode(ip);
 #endif
     crfree(credp);
     return afs_convert_code(code);
@@ -3108,7 +3108,9 @@ static struct address_space_operations afs_symlink_aops = {
 static struct inode_operations afs_symlink_iops = {
 #if defined(USABLE_KERNEL_PAGE_SYMLINK_CACHE)
   .readlink = 		page_readlink,
-# if defined(HAVE_LINUX_PAGE_FOLLOW_LINK)
+# if defined(HAVE_LINUX_PAGE_GET_LINK)
+  .get_link =		page_get_link,
+# elif defined(HAVE_LINUX_PAGE_FOLLOW_LINK)
   .follow_link =	page_follow_link,
 # else
   .follow_link =	page_follow_link_light,
@@ -3143,6 +3145,9 @@ afs_fill_inode(struct inode *ip, struct vattr *vattr)
 
     } else if (S_ISLNK(ip->i_mode)) {
 	ip->i_op = &afs_symlink_iops;
+#if defined(HAVE_LINUX_INODE_NOHIGHMEM)
+	inode_nohighmem(ip);
+#endif
 #if defined(USABLE_KERNEL_PAGE_SYMLINK_CACHE)
 	ip->i_data.a_ops = &afs_symlink_aops;
 	ip->i_mapping = &ip->i_data;

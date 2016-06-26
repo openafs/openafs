@@ -1,5 +1,13 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.6.18.1
+
+  Linux clients
+
+    * Support for mainline kernel 4.5 and distribution kernels with
+      backports from it (12300..12302)
+
+
 OpenAFS 1.6.18
 
   All platforms

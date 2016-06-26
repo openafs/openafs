@@ -87,6 +87,9 @@ int
 afs_fill_super(struct super_block *sb, void *data, int silent)
 {
     int code = 0;
+#if defined(HAVE_LINUX_BDI_INIT)
+    int bdi_init_done = 0;
+#endif
 
     AFS_GLOCK();
     if (afs_was_mounted) {
@@ -115,7 +118,10 @@ afs_fill_super(struct super_block *sb, void *data, int silent)
     afs_backing_dev_info = kmalloc(sizeof(struct backing_dev_info), GFP_NOFS);
     memset(afs_backing_dev_info, 0, sizeof(struct backing_dev_info));
 #if defined(HAVE_LINUX_BDI_INIT)
-    bdi_init(afs_backing_dev_info);
+    code = bdi_init(afs_backing_dev_info);
+    if (code)
+	goto out;
+    bdi_init_done = 1;
 #endif
 #if defined(STRUCT_BACKING_DEV_INFO_HAS_NAME)
     afs_backing_dev_info->name = "openafs";
@@ -144,11 +150,13 @@ afs_fill_super(struct super_block *sb, void *data, int silent)
 #endif
 #endif
     code = afs_root(sb);
+out:
     if (code) {
 	afs_globalVFS = NULL;
 	afs_FlushAllVCaches();
 #if defined(HAVE_LINUX_BDI_INIT)
-	bdi_destroy(afs_backing_dev_info);
+	if (bdi_init_done)
+	    bdi_destroy(afs_backing_dev_info);
 #endif
 	kfree(afs_backing_dev_info);
         module_put(THIS_MODULE);
