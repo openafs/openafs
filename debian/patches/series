@@ -1,4 +1,1 @@
 0003-Add-dummy-exit-command-for-afsd-to-do-nothing.patch
-0002-Linux-4.5-no-highmem-in-symlink-ops.patch
-0003-Linux-4.5-get_link-instead-of-follow_link-put_link.patch
-0004-Linux-4.5-don-t-access-i_mutex-directly.patch
