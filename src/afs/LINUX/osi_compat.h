@@ -427,7 +427,9 @@ afs_init_sb_export_ops(struct super_block *sb) {
 
 static inline void
 afs_linux_lock_inode(struct inode *ip) {
-#ifdef STRUCT_INODE_HAS_I_MUTEX
+#if defined(HAVE_LINUX_INODE_LOCK)
+    inode_lock(ip);
+#elif defined(STRUCT_INODE_HAS_I_MUTEX)
     mutex_lock(&ip->i_mutex);
 #else
     down(&ip->i_sem);
@@ -436,7 +438,9 @@ afs_linux_lock_inode(struct inode *ip) {
 
 static inline void
 afs_linux_unlock_inode(struct inode *ip) {
-#ifdef STRUCT_INODE_HAS_I_MUTEX
+#if defined(HAVE_LINUX_INODE_LOCK)
+    inode_unlock(ip);
+#elif defined(STRUCT_INODE_HAS_I_MUTEX)
     mutex_unlock(&ip->i_mutex);
 #else
     up(&ip->i_sem);
