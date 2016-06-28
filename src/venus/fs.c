@@ -3351,10 +3351,10 @@ GetPrefCmd(struct cmd_syndesc *as, void *arock)
 	}
 
 	in->offset = out->next_offset;
-    } while (out->next_offset > 0);
-
-    if (blob.out != space)
-	free(blob.out);
+	if (blob.out != space) {
+	    free(blob.out);
+	}
+    } while (in->offset > 0);
 
     return 0;
 }
