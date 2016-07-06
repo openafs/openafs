@@ -83,7 +83,8 @@ do_klog(const char *user, const char *password, const char *lifetime,
     char *argv[32];
     int argc = 0;
     char *klog_prog;
-    int ret = 1;
+    int ret = 1;	/* ret different than zero means failure */
+    int fd, nbytes;
 
 #if defined(AFS_KERBEROS_ENV)
     klog_prog = KLOGKRB;
@@ -124,11 +125,22 @@ do_klog(const char *user, const char *password, const char *lifetime,
 	goto out;
     case (0):			/* child */
 	close(0);
-	dup(pipedes[0]);
+	fd = dup(pipedes[0]);
 	close(pipedes[0]);
+	if (fd == -1) {
+	    syslog(LOG_ERR, "do_klog: dup failed for pipedes[0]: %s",
+		   strerror(errno));
+	    exit(1);
+	}
 	close(1);
-	dup(pipedes[1]);
+	fd = dup(pipedes[1]);
 	close(pipedes[1]);
+	if (fd == -1) {
+	    close(0);
+	    syslog(LOG_ERR, "do_klog: dup failed for pipedes[1]: %s",
+		   strerror(errno));
+	    exit(1);
+	}
 	execv(klog_prog, argv);
 	/* notreached */
 	syslog(LOG_ERR, "execv failed: %s", strerror(errno));
@@ -136,8 +148,18 @@ do_klog(const char *user, const char *password, const char *lifetime,
 	close(1);
 	goto out;
     default:
-	write(pipedes[1], password, strlen(password));
-	write(pipedes[1], "\n", 1);
+	nbytes = write(pipedes[1], password, strlen(password));
+	if (nbytes == -1) {
+	    syslog(LOG_ERR,
+		   "do_klog: could not write the password into the input of the pipe: %s",
+		   strerror(errno));
+	}
+	nbytes = write(pipedes[1], "\n", 1);
+	if (nbytes == -1) {
+	    syslog(LOG_ERR,
+		   "do_klog: could not write the end-of-line code into the input of the pipe: %s",
+		   strerror(errno));
+	}
 	close(pipedes[0]);
 	close(pipedes[1]);
 	if (pid != wait(&status))

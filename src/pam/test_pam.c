@@ -95,7 +95,12 @@ main(int argc, char *argv[])
 
     putenv((char *)new_envstring);
     putenv((char *)new_homestring);
-    chdir("/tmp");
+
+    if ((retcode = chdir("/tmp")) != 0) {
+	fprintf(stderr, "chdir returned %d.\n", retcode);
+	exit(1);
+    }
+
     printf("Type exit to back out.\n");
     return execl("/bin/csh", "/bin/csh", NULL);
 }
@@ -135,7 +140,10 @@ my_conv(int num_msg, PAM_CONST struct pam_message **msg, struct pam_response **r
 	    fputs(m->msg, stdout);
 	    if (r) {
 		r->resp = malloc(PAM_MAX_RESP_SIZE);
-		fgets(r->resp, PAM_MAX_RESP_SIZE, stdin);
+		if (fgets(r->resp, PAM_MAX_RESP_SIZE, stdin) == NULL) {
+		    fprintf(stderr, "fgets did not work as expected\n");
+		    exit(1);
+		}
 		r->resp[PAM_MAX_RESP_SIZE - 1] = '\0';
 		p = &r->resp[strlen(r->resp) - 1];
 		while (*p == '\n' && p >= r->resp)
