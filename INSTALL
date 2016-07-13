@@ -506,7 +506,9 @@ I  Other configure options
    CC
        The C compiler to use.  Be aware that this is overridden on some
        architectures that require a specific compiler be used to build the
-       kernel module.
+       kernel module.  If gcc is used, version 3 or later is required.
+       If clang is used, version 3 or later is required.  (Additional
+       restrictions apply when --enable-checking is used.)
 
    CFLAGS
        Additional flags to pass to the C compiler.
