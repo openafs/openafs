@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<installer-gui-script minSpecVersion="2">
+    <options rootVolumeOnly="true" />
+    <volume-check>
+	<allowed-os-versions>
+	    <os-version min="10.%%OSX_MAJOR_CUR%%.0" before="10.%%OSX_MAJOR_NEXT%%.0"/>
+	</allowed-os-versions>
+    </volume-check>
+    <installation-check>
+	<ram min-gb="2.00"/>
+    </installation-check>
+    <!--+==========================+
+        |       Presentation       |
+        +==========================+-->
+    <title>OpenAFS</title>
+    <background file="background.jpg" scaling="proportional" alignment="bottomleft"/>
+    <readme file="ReadMe.rtf"/>
+    <license file="License.rtf"/>
+    %%PRES_EXTRA%%
+    <!--+==========================+
+        |         Installer        |
+        +==========================+-->
+    <choices-outline>
+	<line choice="installer_normal"/>
+	<line choice="installer_debug"/>
+    </choices-outline>
+    <choice id="installer_normal" title="OpenAFS client" enabled="false" selected="true"
+	    description="This provides the OpenAFS client, kernel module, and utilities.
+	    Everything you need to run a client normally.">
+	<pkg-ref id="org.openafs.OpenAFS.pkg"/>
+    </choice>
+    <choice id="installer_debug" title="OpenAFS kernel debug info" start_selected="true"
+	    description="Installing this provides some extra files that are useful for
+	    debugging issues with the OpenAFS client. You can safely leave this out to
+	    save disk space, but it does no harm to install it.">
+	<pkg-ref id="org.openafs.OpenAFS-debug.pkg"/>
+    </choice>
+    <!--+==========================+
+        |    Package References    |
+        +==========================+-->
+    <pkg-ref id="org.openafs.OpenAFS.pkg">
+	#OpenAFS-dist.pkg
+    </pkg-ref>
+    <pkg-ref id="org.openafs.OpenAFS-debug.pkg">
+	#OpenAFS-debug-extension.pkg
+    </pkg-ref>
+    <product version="%%OPENAFS_VERSION%%"/>
+</installer-gui-script>

@@ -234,6 +234,7 @@ AC_OUTPUT([
     src/packaging/MacOS/OpenAFS.Info.plist
     src/packaging/MacOS/OpenAFS.info
     src/packaging/MacOS/buildpkg.sh
+    src/packaging/MacOS/pkgbuild.sh
     src/pam/Makefile
     src/platform/Makefile
     src/platform/${MKAFS_OSTYPE}/Makefile

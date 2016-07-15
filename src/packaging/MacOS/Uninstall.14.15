@@ -1,0 +1,357 @@
+#!/usr/bin/perl -w
+# real Perl code begins here
+#
+# Adapted from Apple's uninstall-devtools.pl (Version 7 for Xcode Tools 1.2)
+#
+# BSD License: c.f. <http://www.opensource.org/licenses/bsd-license>
+#
+
+use strict;
+use warnings;
+use File::Basename;
+
+use vars qw ($do_nothing $print_donothing_removals $receipts_dir $verbose $noisy_warnings);
+use vars qw ($suppress_spin $spin_counter $spin_state $spin_slower_downer);
+use vars qw (%exception_list $gen_dirs @gen_files @rmfiles @rmdirs @rmpkg);
+
+#----------------------------------------------------------------------------------------
+
+$do_nothing = 0;
+$print_donothing_removals = 1;
+$verbose = 1;
+$noisy_warnings = 0;
+
+# One of rm -rf in this script uses $receipts_dir -- change with care.
+$receipts_dir = "/Library/Receipts";
+
+%exception_list = (
+);
+
+$gen_dirs = { };
+
+@gen_files = (
+    "/var/db/openafs/etc/cacheinfo",
+    "/var/db/openafs/etc/ThisCell",
+    "/var/db/openafs/etc/config/afsd.options",
+    "/var/db/openafs/etc/config/afs.conf",
+    "/var/db/openafs/etc/CellServDB.save",
+    "/var/db/openafs/etc/CellServDB.master.last",
+    "/var/db/openafs/etc/CellServDB",
+    "/var/db/openafs/etc/config/settings.plist",
+);
+
+#----------------------------------------------------------------------------------------
+
+$| = 1;
+
+sub main {
+    # commandline args:
+    #     0: dir of packages to remove
+    #     1: flag indicating whether to keep package receipts
+    #     2: flag indicating whether to supress spin indicator
+
+    if (!@ARGV) {
+	use FindBin qw($Bin);
+	@ARGV = ("$Bin/..", 0, 0);
+    }
+    $suppress_spin = defined ($ARGV[2]) && $ARGV[2];
+
+    $spin_counter = 0;
+    $spin_state = 0;
+    spin_rate_slow ();
+
+    pre_print ();
+    print "Uninstalling OpenAFS package:\n\n";
+
+    remove_generated_files ();
+    remove_main_packages ();
+    remove_generated_directories ();
+
+    if ($do_nothing == 0) {
+	# When osascript runs some shell commands, newlines are printed as just
+	# \r instead of \n for some reason, so anything output kinda overwrites
+	# earlier output. The final 'tr' in the pipeline here turns them back
+	# into \n newlines. pkgutil --forget at least will print output like
+	# "Forgot package 'foo'".
+	my $rmcmd = "osascript -e 'do shell script \"/bin/rm -f @rmfiles; " .
+		    "/bin/rmdir @rmdirs; echo @rmpkg | xargs -n 1 " .
+		    "/usr/sbin/pkgutil --forget\" with administrator " .
+		    "privileges' | tr '\\r' '\\n'";
+	system $rmcmd;
+	my $retcode = $? >> 8;
+	if ($retcode != 0) {
+	    print_warning ("Warning:  There may have been a problem uninstalling\n");
+	}
+    }
+
+    pre_print ();
+    print "\nFinished uninstalling.\n";
+}
+
+sub remove_main_packages {
+     my @pkglist = ("org.openafs.OpenAFS-debug.pkg",
+		    "org.openafs.OpenAFS.pkg",
+		    );
+
+    foreach (@pkglist) {
+	s/\.pkg$//;
+	my $pkgname = $_;
+	my $pkg = $pkgname.".pkg";
+	my $bomroot;
+
+	if (not open(INFO, '-|', "/usr/sbin/pkgutil --pkg-info $pkg | " .
+				 "grep ^volume: | cut -d' ' -f2-")) {
+	    print_warning("Warning: Could not get pkg info for $pkg " .
+			  "(maybe it's not installed?)\n");
+	    next;
+	}
+
+	$bomroot = <INFO>;
+	if ((not close(INFO)) or (!defined($bomroot))) {
+	    print_warning("Warning: Could not get pkg info for $pkg " .
+			  "(maybe it's not installed?)\n");
+	    next;
+	}
+
+	chomp $bomroot;
+
+	pre_print();
+	print "\nFound pkg install root $bomroot for $pkg\n";
+
+	spin_rate_slow ();
+
+	if (not open (LSBOM, '-|', "/usr/sbin/pkgutil --only-files --files $pkg")) {
+	    print_warning("Warning: Error running pkgutil --only-files --files $pkg\n");
+	    next;
+	}
+
+	while (<LSBOM>) {
+	    chomp;
+	    m#^(.*/.*)$#;
+	    next if (!defined ($1) || $1 eq "");
+	    my $filename = $bomroot . $1;
+
+	    remove_a_file ($filename);
+	}
+	close (LSBOM);
+
+	my $rooth = { };
+
+	if (not open (LSBOM, '-|', "/usr/sbin/pkgutil --only-dirs --files $pkg")) {
+	    print_warning("Warning: Error running pkgutil --only-dirs --files $pkg\n");
+	    next;
+	}
+
+	while (<LSBOM>) {
+	    chomp;
+	    m#^(.*/.*)$#;
+	    next if (!defined ($1) || $1 eq "");
+	    my $directory = $bomroot . $1;
+	    if (-d $directory) {
+		$rooth = add_directory_to_tree ($directory, $rooth);
+	    } else {
+		if ($noisy_warnings) {
+		    print_warning ("Warning: \"$directory\" listed in BOM " .
+				   "but not present on system.\n");
+		}
+	    }
+	}
+	close (LSBOM);
+
+	spin_rate_fast ();
+	remove_empty_directories ($rooth, $bomroot);
+
+	remove_package_receipts($pkg) if (!defined ($ARGV[1]) || !$ARGV[1]);
+    }
+}
+
+sub remove_generated_files {
+    foreach (@gen_files) {
+	remove_a_file ($_);
+    }
+}
+
+sub remove_generated_directories {
+    remove_empty_directories ($gen_dirs, "/");
+}
+
+sub add_directory_to_tree {
+    my $dir = shift;
+    my $rooth = shift;
+    my $p = $rooth;
+
+    my @pathcomp = split /\//, $dir;
+
+    progress_point ();
+    foreach (@pathcomp) {
+	my $cur_name = $_;
+	if ($cur_name eq "" || !defined ($cur_name)) {
+	    $cur_name = "/";
+	}
+	if (!defined ($p->{"$cur_name"})) {
+	    $p->{$cur_name} = { };
+	}
+	$p = $p->{$cur_name};
+    }
+    return $rooth;
+}
+
+sub remove_empty_directories {
+    my $rooth = shift;
+    my $path = shift;
+    my $children = (scalar (keys %{$rooth}));
+    my $dirs_remain = 0;
+
+    if ($children > 0) {
+	foreach my $dirname (sort keys %{$rooth}) {
+	    my $printpath;
+	    $printpath = "$path/$dirname";
+	    $printpath =~ s#^/*#/#;
+	    remove_empty_directories ($rooth->{$dirname}, "$printpath");
+	    $dirs_remain = 1 if (-d "$printpath");
+	}
+    }
+
+    if ($dirs_remain == 0) {
+	maybe_remove_ds_store ("$path");
+    }
+
+    remove_a_dir ("$path");
+}
+
+sub remove_a_file {
+    my $fn = shift;
+    my $dirname = dirname ($fn);
+    my $basename = basename ($fn);
+    my $ufs_rsrc_file = "$dirname/._$basename";
+
+    progress_point ();
+    return if (!defined ($fn) || $fn eq "");
+
+    # Leave any files that are shared between packages alone.
+    if (defined($exception_list{$fn})) {
+	if ($noisy_warnings) {
+	    print_warning ("Warning: file \"$fn\" intentionally not removed, " .
+			   "even though it's in the BOM.\n");
+	}
+	return;
+    }
+
+    if (! -f $fn && ! -l $fn) {
+	if ($noisy_warnings) {
+	    print_warning ("Warning: file \"$fn\" present in BOM but not found on disc.\n");
+	}
+	return;
+    }
+
+    if ($do_nothing == 1) {
+	print_donothing ("rm $fn\n");
+	print_donothing ("rm $ufs_rsrc_file\n") if ( -f $ufs_rsrc_file);
+    } else {
+	unshift(@rmfiles, "$fn");
+	unshift(@rmfiles, "$ufs_rsrc_file") if ( -f $ufs_rsrc_file);
+    }
+}
+
+sub remove_a_dir {
+    my $dir = shift;
+
+    progress_point ();
+    return if (!defined ($dir) || $dir eq "" || $dir eq "/" || $dir eq "/usr");
+    if (! -d $dir) {
+	if ($noisy_warnings) {
+	    print_warning ("Warning: directory \"$dir\" present in BOM " .
+			   "but not found on disc.\n");
+	}
+	return;
+    }
+
+    if ($do_nothing == 1) {
+	print_donothing ("rmdir $dir\n");
+    } else {
+	push(@rmdirs, "$dir");
+    }
+}
+
+sub remove_package_receipts {
+    my $pkgname = shift;
+    $pkgname =~ s#/##g;  # There shouldn't be any path seps in the pkg name...
+    return if (!defined ($pkgname) || $pkgname eq ""
+	       || $pkgname eq "." || $pkgname eq "..");
+
+    if ($do_nothing == 1) {
+	print_donothing("pkgutil --forget $pkgname\n");
+    } else {
+	push(@rmpkg, $pkgname);
+    }
+}
+
+sub maybe_remove_ds_store {
+    my $path = shift;
+    my $filecount = 0;
+    return if (!defined ($path) || $path eq "" || $path eq "/" || $path eq "/usr");
+    return if (! -f "$path/.DS_Store");
+
+    open (LS, "/bin/ls -a '$path' |");
+    while (<LS>) {
+	chomp;
+	next if (m#^\.$# || m#^\.\.$#);
+	$filecount++;
+    }
+    close (LS);
+
+    if ($filecount == 1) {
+	remove_a_file ("$path/.DS_Store");
+    }
+}
+
+sub print_donothing {
+    my $msg = shift;
+    return if ($print_donothing_removals != 1);
+    pre_print ();
+    print $msg;
+}
+
+sub print_verbose {
+    my $msg = shift;
+    return if ($verbose != 1);
+    pre_print ();
+    print $msg;
+}
+
+sub print_warning {
+    my $msg = shift;
+    pre_print ();
+    print STDERR $msg;
+}
+
+sub print_error {
+    my $msg = shift;
+    pre_print ();
+    print STDERR $msg;
+}
+
+sub pre_print {
+    print " " unless ($suppress_spin);
+}
+
+sub spin_rate_slow {
+    $spin_slower_downer = 150;
+}
+
+sub spin_rate_fast {
+    $spin_slower_downer = 75;
+}
+
+sub progress_point {
+    return if ($suppress_spin);
+    $spin_counter++;
+    if (($spin_counter % $spin_slower_downer) == 0) {
+	my $spin_chars = "|/-\\";
+	my $c = substr ($spin_chars, $spin_state % 4, 1);
+	$spin_state++;
+	print "[7m$c[m";
+    }
+}
+
+main ();
