@@ -1,0 +1,495 @@
+#!/bin/bash
+# Portions Copyright (c) 2003, 2006 Apple Computer, Inc.  All rights reserved.
+echo '**BUILDPKG**' "$@"
+
+usage() {
+    exec >&2
+
+    echo 'Usage: pkgbuild.sh [-x] [--app-key <appkey>] [--inst-key <instkey>]'
+    echo '                   [--pass N] [--csdb <CellServDB>] <binary-dir>'
+    echo
+    echo '--app-key and --inst-key are for signing. -x prints all comamnds as '
+    echo 'they are run.'
+    echo
+    echo 'By default, all passes are run. Available passes:'
+    echo '    --pass 1: prepare pkgroot'
+    echo '    --pass 2: create packages/installer from pkgroot'
+    echo 'If you want to alter the pkgroot, run pass 1, then alter what you'
+    echo 'want, and then run pass 2 to create the resulting packages.'
+    echo 'The --pass argument may be given multiple times.'
+    exit 1
+}
+
+if [ x"$#" = x0 ]; then
+    usage
+fi
+
+anypass=0
+PASS1=
+PASS2=
+
+APP_KEY=
+INST_KEY=
+DEST_DIR=
+CSDB=
+
+while [ x"$#" != x0 ] ; do
+    key="$1"
+    shift
+
+    case "$key" in
+    --app-key)
+	APP_KEY="$1"
+	shift
+	;;
+    --inst-key)
+	INST_KEY="$1"
+	shift
+	;;
+    --csdb)
+	CSDB="$1"
+	shift
+	;;
+    --pass)
+	anypass=1
+	pass_arg="$1"
+	shift
+	case "$pass_arg" in
+	1)
+	    PASS1=1
+	    ;;
+	2)
+	    PASS2=1
+	    ;;
+	*)
+	    echo "Unknown pass $pass_arg" >&2
+	    exit 1
+	    ;;
+	esac
+	;;
+    -x)
+	DO_X=1
+	;;
+    *)
+	if [ x"$DEST_DIR" = x ] ; then
+	    DEST_DIR="$key"
+	else
+	    echo "Error: Unknown arg $key" >&2
+	    usage
+	fi
+	;;
+    esac
+done
+
+if [ x"$anypass" = x0 ] ; then
+    PASS1=1
+    PASS2=1
+fi
+
+if [ x"$DEST_DIR" = x ] ; then
+    echo "Error: binary 'dest' dir not given"
+    usage
+fi
+
+set -e
+
+if [ x"$DO_X" = x1 ] ; then
+    set -x
+fi
+
+BINDEST=`cd "$DEST_DIR" && pwd`
+CURDIR=`pwd`
+RESSRC=`dirname "$0"`
+RESSRC=`cd "$RESSRC" && pwd`
+majorvers=`uname -r | cut -d. -f1`
+
+if [ x"$majorvers" = x10 ]; then
+    RELNAME="Snowleopard"
+    THISREL=6
+
+elif [ x"$majorvers" = x11 ]; then
+    RELNAME="Lion"
+    THISREL=7
+
+elif [ x"$majorvers" = x12 ]; then
+    RELNAME="MountainLion"
+    THISREL=8
+
+elif [ x"$majorvers" = x13 ]; then
+    RELNAME="Mavericks"
+    THISREL=9
+
+elif [ x"$majorvers" = x14 ]; then
+    RELNAME="Yosemite"
+    THISREL=10
+
+elif [ x"$majorvers" = x15 ]; then
+    RELNAME="ElCapitan"
+    THISREL=11
+
+elif [ x"$majorvers" = x ] ; then
+    echo "Error running uname" >&2
+    exit 1
+
+else
+    echo "Unknown major version $majorvers" >&2
+    exit 1
+fi
+
+SEP=:
+
+PKGROOT="$CURDIR"/pkgroot
+PKGRES="$CURDIR"/pkgres
+DPKGROOT="$CURDIR"/dpkgroot
+PLUGINS="$CURDIR"/plugins
+if test -e /usr/bin/pkgbuild; then
+    :
+else
+    echo pkgbuild not found >&2
+    exit 1
+fi
+if test -e /usr/bin/productbuild; then
+    :
+else
+    echo productbuild not found >&2
+    exit 1
+fi
+
+if [ x"$PASS1" = x1 ]; then
+    if [ -x /usr/bin/curl ] && [ x"$CSDB" = x ]; then
+	echo "No CellServDB provided; downloading one from central.org"
+	/usr/bin/curl -f -O https://www.central.org/dl/cellservdb/CellServDB
+	if [ -f "$CURDIR"/CellServDB ] ; then
+	    CSDB="$CURDIR"/CellServDB
+	fi
+    fi
+
+    if [ x"$CSDB" = x ]; then
+	echo "A CellServDB file must be provided with --csdb" >&2
+	die=1
+    else
+	# Turn CSDB into an absolute path
+	case "$CSDB" in
+	/*)
+	    ;;
+	*)
+	    CSDB="$CURDIR/$CSDB"
+	    ;;
+	esac
+
+	if grep -q 'GCO Public CellServDB' "$CSDB" ; then
+	    touch "$CSDB"
+	else
+	    echo "A proper CellServDB file must be provided" >&2
+	    die=1
+	fi
+    fi
+
+    for f in ReadMe.rtf."$majorvers" \
+	     License.rtf \
+	     CellServDB.list \
+	     OpenAFS.info \
+	     OpenAFS.post_install \
+	     OpenAFS.pre_upgrade \
+	     csrvdbmerge.pl \
+	     2.0.txt
+    do
+	if [ ! -f "$RESSRC/$f" ]; then
+	    echo "file missing: $RESSRC/$f" >&2
+	    die=1
+	fi
+    done
+    if [ x"$die" = x1 ]; then
+	echo "Correct above errors; then retry" >&2
+	exit 1
+    fi
+
+    for f in "$BINDEST"/bin/translate_et \
+	     "$BINDEST/root.client/usr/vice/etc/afs.kext/Contents/MacOS/afs"
+    do
+	if [ ! -f "$f" ] ; then
+	    echo "dest file missing: $f" >&2
+	    die=1
+	fi
+    done
+    if [ x"$die" = x1 ]; then
+	echo $BINDEST " is not a valid binary dir. it should be the result of" >&2
+	echo "make dest" >&2
+	exit 1
+    fi
+
+    rm -rf "$PKGROOT" "$PLUGINS"
+    mkdir "$PKGROOT"
+    mkdir "$PLUGINS"
+
+    mkdir -p "$PKGROOT"/Library
+    mkdir -p "$PKGROOT"/Library/PreferencePanes
+    mkdir -p "$PKGROOT"/Library/Security/SecurityAgentPlugins
+
+    chown -R root${SEP}admin "$PKGROOT"
+    chmod -R 755 "$PKGROOT"
+
+    (cd "$BINDEST"/tools && pax -rw OpenAFS.prefPane "$PKGROOT"/Library/PreferencePanes/)
+    (cd "$BINDEST"/tools && pax -rw aklog.bundle \
+    "$PKGROOT"/Library/Security/SecurityAgentPlugins/)
+
+    mkdir -p "$PKGROOT"/Library/OpenAFS/Tools
+    (cd "$BINDEST" && pax -rw * "$PKGROOT"/Library/OpenAFS/Tools)
+
+    cd "$RESSRC"
+    mv "$PKGROOT"/Library/OpenAFS/Tools/installer/* "$PLUGINS"/
+
+    mkdir -p "$PKGROOT"/Library/LaunchDaemons
+    chmod -R o-w "$PKGROOT"/Library
+    chmod -R g-w "$PKGROOT"/Library
+
+    cp openafs.launchd.plist "$PKGROOT"/Library/LaunchDaemons/org.openafs.filesystems.afs.plist
+    chmod 644 "$PKGROOT"/Library/LaunchDaemons/org.openafs.filesystems.afs.plist
+
+    chown root${SEP}admin "$PKGROOT"/Library
+    chown -R root${SEP}wheel "$PKGROOT"/Library/LaunchDaemons
+    chown -R root${SEP}wheel "$PKGROOT"/Library/OpenAFS/Tools
+    chmod -R og-w "$PKGROOT"/Library/OpenAFS/Tools
+
+    mkdir -p "$PKGROOT"/private/var/db/openafs/cache
+    mkdir -p "$PKGROOT"/private/var/db/openafs/etc/config
+
+    cp openafs.launchdaemon "$PKGROOT"/private/var/db/openafs/etc/launchafs.sh
+    chmod 755 "$PKGROOT"/private/var/db/openafs/etc/launchafs.sh
+
+    cp "$CSDB" "$PKGROOT"/private/var/db/openafs/etc/CellServDB.master
+    echo grand.central.org > "$PKGROOT"/private/var/db/openafs/etc/ThisCell.sample
+    echo /afs:/var/db/openafs/cache:100000 > \
+	 "$PKGROOT"/private/var/db/openafs/etc/cacheinfo.sample
+
+    cp -RP "$PKGROOT"/Library/OpenAFS/Tools/etc/afssettings \
+	   "$PKGROOT"/private/var/db/openafs/etc/config
+    cp settings.plist "$PKGROOT"/private/var/db/openafs/etc/config/settings.plist.orig
+    cp afs.conf "$PKGROOT"/private/var/db/openafs/etc/config/afs.conf.sample
+    cp krb5-weak.conf "$PKGROOT"/private/var/db/openafs/etc/krb5-weak.conf
+
+    cp decode-panic "$PKGROOT"/Library/OpenAFS/Tools/tools
+    chmod a+x "$PKGROOT"/Library/OpenAFS/Tools/tools/decode-panic
+
+    rm -rf "$DPKGROOT"
+    mkdir "$DPKGROOT"
+    mkdir -p "$DPKGROOT"/Library/OpenAFS/Debug
+
+    mv "$PKGROOT"/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.kext.dSYM \
+       "$DPKGROOT"/Library/OpenAFS/Debug/
+    cp -RP "$PKGROOT"/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.kext \
+	   "$DPKGROOT"/Library/OpenAFS/Debug/
+    chown -R root${SEP}wheel "$DPKGROOT"/Library/OpenAFS/Debug
+    chmod -R og-w "$DPKGROOT"/Library/OpenAFS/Debug
+
+    strip -X -S \
+	"$PKGROOT"/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.kext/Contents/MacOS/afs
+
+    mkdir -p "$PKGROOT"/private/var/db/openafs
+
+    cp -RP "$PKGROOT"/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.kext \
+	   "$PKGROOT"/Library/OpenAFS/Tools/root.client/usr/vice/etc/C \
+	   "$PKGROOT"/private/var/db/openafs/etc
+
+    chown -R root${SEP}wheel "$PKGROOT"/private
+    chmod -R og-w "$PKGROOT"/private
+
+    chown -R root${SEP}wheel "$PKGROOT"/private
+    chmod -R og-w "$PKGROOT"/private
+    chmod  og-rx "$PKGROOT"/private/var/db/openafs/cache
+
+    if [ x"$APP_KEY" != x ] ; then
+	# Sign each 'thing' that we have (commands, kexts, etc)
+	for obj in "$DPKGROOT"/Library/OpenAFS/Debug/afs.kext \
+		   "$PKGROOT"/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.kext \
+		   "$PKGROOT"/private/var/db/openafs/etc/afs.kext \
+		   "$PKGROOT"/Library/PreferencePanes/OpenAFS.prefPane/Contents/Resources/AFSBackgrounder.app \
+		   "$PKGROOT"/Library/PreferencePanes/OpenAFS.prefPane \
+		   "$PKGROOT"/Library/Security/SecurityAgentPlugins/aklog.bundle \
+		   "$PKGROOT"/Library/OpenAFS/Tools/tools/growlagent-openafs.app \
+		   "$PKGROOT"/Library/OpenAFS/Tools/tools/aklog.bundle \
+		   "$PLUGINS"/afscell.bundle
+	do
+	    codesign --verbose --force --timestamp --sign "$APP_KEY" "$obj"
+	done
+
+	# Check if our signatures for our kexts are valid. 'kextutil' will exit
+	# with an error and print out a message if something is wrong with the
+	# signature. Note that a code signing cert must have the
+	# 1.2.840.113635.100.6.1.18 extension present to be used for kexts
+	# (most code signing certs cannot be used for kexts).
+	for kext in "$DPKGROOT"/Library/OpenAFS/Debug/afs.kext \
+		    "$PKGROOT"/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.kext \
+		    "$PKGROOT"/private/var/db/openafs/etc/afs.kext
+	do
+	    kextutil -no-load -print-diagnostics "$kext"
+	done
+    fi
+
+    if [ $majorvers -ge 15 ]; then
+	# El Capitan and further prevent us from touching /usr/bin directly
+	PREFIX=/opt
+	USRBIN=/opt/openafs/bin
+	USRBIN2TOOLS=../../../Library/OpenAFS/Tools
+
+	USRSBIN=/opt/openafs/sbin
+	USRSBIN2TOOLS=../../../Library/OpenAFS/Tools
+
+	MANDIR=/opt/openafs/share/man
+	MANDIR2TOOLS=../../../../Library/OpenAFS/Tools
+
+	# Add our bin, sbin, and man directories to the default search path
+	mkdir -p "$PKGROOT"/etc/paths.d "$PKGROOT"/etc/manpaths.d
+	echo "$USRBIN" > "$PKGROOT"/etc/paths.d/40-openafs
+	echo "$USRSBIN" >> "$PKGROOT"/etc/paths.d/40-openafs
+	echo "$MANDIR" > "$PKGROOT"/etc/manpaths.d/40-openafs
+    else
+	PREFIX=/usr
+	USRBIN=/usr/bin
+	USRBIN2TOOLS=../../Library/OpenAFS/Tools
+
+	USRSBIN=/usr/sbin
+	USRSBIN2TOOLS="$USRBIN2TOOLS"
+
+	MANDIR=/usr/share/man
+	MANDIR2TOOLS=../../../Library/OpenAFS/Tools
+    fi
+
+    mkdir -p "$PKGROOT$USRBIN" \
+	     "$PKGROOT$USRSBIN" \
+	     "$PKGROOT$MANDIR"/man1 \
+	     "$PKGROOT$MANDIR"/man5 \
+	     "$PKGROOT$MANDIR"/man8
+
+    BINLIST="fs klog klog.krb pagsh pagsh.krb pts sys tokens tokens.krb unlog unlog.krb aklog"
+    ETCLIST="vos"
+
+    if [ x"$DO_X" = x1 ] ; then
+	# Don't print out every single 'ln -s'... that's kinda useless
+	: 'Symlinking commands and manpages into place...'
+	set +x
+    fi
+
+    for f in $BINLIST; do
+	ln -s "$USRBIN2TOOLS"/bin/"$f" "$PKGROOT$USRBIN/$f"
+    done
+    for f in $ETCLIST; do
+	ln -s "$USRSBIN2TOOLS"/etc/"$f" "$PKGROOT$USRSBIN/$f"
+    done
+
+    for section in man1 man5 man8 ; do
+	for f in $(ls $PKGROOT/Library/OpenAFS/Tools/man/$section); do
+
+	    if [ -L "$PKGROOT/Library/OpenAFS/Tools/man/$section/$f" ] ; then
+		# If this manpage is a symlink, just change where it's pointing,
+		# and rename the link; don't actually 'gzip' it.
+		link=$(readlink "$PKGROOT/Library/OpenAFS/Tools/man/$section/$f")
+		rm -f "$PKGROOT/Library/OpenAFS/Tools/man/$section/$f"
+		ln -s "$link".gz "$PKGROOT/Library/OpenAFS/Tools/man/$section/$f".gz
+
+	    else
+		gzip -9 "$PKGROOT/Library/OpenAFS/Tools/man/$section/$f"
+	    fi
+	    ln -s ../"$MANDIR2TOOLS"/man/"$section/$f".gz \
+		  "$PKGROOT$MANDIR/$section/$f".gz
+	done
+    done
+
+    if [ x"$DO_X" = x1 ] ; then
+	set -x
+    fi
+
+    ln -s "$USRBIN2TOOLS"/bin/kpasswd "$PKGROOT$USRBIN"/kpasswd.afs
+
+    ln -s "$USRSBIN2TOOLS"/root.client/usr/vice/etc/afsd "$PKGROOT$USRSBIN"/afsd
+
+    chown -R root${SEP}wheel "$PKGROOT$PREFIX"
+    chmod -R og-w "$PKGROOT$PREFIX"
+fi
+
+if [ x"$PASS2" = x1 ]; then
+    rm -rf "$PKGRES"
+    mkdir "$PKGRES"
+    cd "$RESSRC"
+
+    rm -rf "$CURDIR"/OpenAFS-debug-extension.pkg
+    /usr/bin/pkgbuild --root "$DPKGROOT" --id org.openafs.OpenAFS-debug.pkg \
+		      --version '@VERSION@' \
+	     "$CURDIR"/OpenAFS-debug-extension.pkg
+
+    cd "$RESSRC"
+    cp OpenAFS.post_install "$PKGRES"/postinstall
+    cp OpenAFS.pre_upgrade "$PKGRES"/preupgrade
+    cp OpenAFS.post_install "$PKGRES"/postupgrade
+    cp csrvdbmerge.pl "$PKGRES"
+
+    chmod a+x "$PKGRES"/csrvdbmerge.pl \
+	      "$PKGRES"/postinstall \
+	      "$PKGRES"/postupgrade \
+	      "$PKGRES"/preupgrade
+
+    cp CellServDB.list "$PKGRES"
+    chown -R root${SEP}wheel "$PKGRES"
+
+    rm -rf "$CURDIR"/OpenAFS-dist.pkg
+    /usr/bin/pkgbuild --root "$PKGROOT" --id org.openafs.OpenAFS.pkg \
+		      --version '@VERSION@' \
+		      --scripts "$PKGRES" "$CURDIR"/OpenAFS-dist.pkg
+
+    rm -rf "$PKGRES"
+    mkdir "$PKGRES"
+    cp background.jpg "$PKGRES"/background.jpg
+    cp License.rtf "$PKGRES"
+    cp ReadMe.rtf."$majorvers" "$PKGRES"/ReadMe.rtf
+    chown -R root${SEP}wheel "$PKGRES"
+
+    if [ $majorvers -ge 15 ] ; then
+	# For El Capitan and further, we have some extra information to tell
+	# the user at the end of the installation process.
+	cp conclusion.txt "$PKGRES"/conclusion.txt
+	PRES_EXTRA="<conclusion file=\"conclusion.txt\"/>"
+    fi
+
+    # generate Distribution.xml from Distribution.xml.in -- nonstandard substs
+    sed -e "s/%%OSX_MAJOR_CUR%%/$THISREL/g" \
+	-e "s/%%OSX_MAJOR_NEXT%%/$(( $THISREL + 1 ))/g" \
+	-e "s,%%PRES_EXTRA%%,$PRES_EXTRA,g" \
+	-e "s/%%OPENAFS_VERSION%%/@VERSION@/g" \
+	< Distribution.xml.in > Distribution.xml
+
+    rm -rf "$CURDIR/prod"
+    mkdir "$CURDIR/prod"
+    mv "$CURDIR"/OpenAFS-dist.pkg "$CURDIR"/OpenAFS-debug-extension.pkg "$CURDIR"/prod
+    /usr/bin/productbuild --distribution Distribution.xml --resources "$PKGRES" \
+			  --plugins "$PLUGINS" --package-path "$CURDIR"/prod "$CURDIR"/OpenAFS.pkg
+
+    if [ x"$INST_KEY" != x ] ; then
+	mv "$CURDIR"/OpenAFS.pkg "$CURDIR"/OpenAFS-unsigned.pkg
+	productsign --timestamp --sign "$INST_KEY" "$CURDIR"/OpenAFS-unsigned.pkg \
+		    "$CURDIR"/OpenAFS.pkg
+	rm -f "$CURDIR"/OpenAFS-unsigned.pkg
+    fi
+
+    rm -rf "$CURDIR/dmg"
+    rm -f "$CURDIR/TMP.dmg"
+    rm -rf "$CURDIR/OpenAFS-@VERSION@-$RELNAME.dmg"
+
+    mkdir "$CURDIR"/dmg
+    mv "$CURDIR"/OpenAFS.pkg "$CURDIR"/dmg
+    cp "$RESSRC"/Uninstall.14.15 "$CURDIR"/dmg/Uninstall.command
+    cp "$RESSRC"/DS_Store "$CURDIR"/dmg/.DS_Store
+    mkdir "$CURDIR"/dmg/.background
+    cp "$RESSRC"/afslogo.jpg "$CURDIR"/dmg/.background
+
+    if [ x"$APP_KEY" != x ] ; then
+	codesign --verbose --force --timestamp --sign "$APP_KEY" "$CURDIR"/dmg/Uninstall.command
+    fi
+
+    hdiutil create -srcfolder "$CURDIR"/dmg -volname OpenAFS \
+	    -o "$CURDIR"/TMP.dmg
+    hdiutil convert -format UDZO "$CURDIR"/TMP.dmg \
+	    -o "$CURDIR/OpenAFS-@VERSION@-$RELNAME".dmg
+
+    echo
+    echo "Created $CURDIR/OpenAFS-@VERSION@-$RELNAME".dmg
+fi

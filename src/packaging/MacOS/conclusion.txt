@@ -1,0 +1,3 @@
+OpenAFS commands have been installed into /opt/openafs/, instead of the old locations in /usr/bin/ and /usr/sbin/. You must start a new shell for your PATH to be automatically updated to find these commands.
+
+Alternatively, you can just add /opt/openafs/bin and /opt/openafs/sbin into your PATH manually.

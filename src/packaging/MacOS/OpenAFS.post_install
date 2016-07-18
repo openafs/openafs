@@ -127,8 +127,10 @@ fi
 # properly, we should acquire a certificate from a real CA and ship 
 # signed binaries. for now, make Application Firewall (Security prefs pane)
 # happy like this. See TN2206
-if [ -f /usr/bin/codesign ]; then
-  codesign -s - /usr/sbin/afsd
+if [ $majorvers -lt 14 ]; then
+    if [ -f /usr/bin/codesign ]; then
+	codesign -s - /usr/sbin/afsd
+    fi
 fi
 
 #here we should run tools which configure the client, and then if it's enabled:

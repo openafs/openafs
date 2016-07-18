@@ -96,8 +96,10 @@ dpkg:
 
 packages: dest
 	@case ${SYS_NAME} in \
-	*_darwin_* ) \
+	*_darwin_1[2-4] | *_darwin_[6-9]0 | *_darwin_1[0-3]0 ) \
 		${COMPILE_PART1} packaging/MacOS && bash ./buildpkg.sh ${DEST} ;; \
+	*_darwin_* ) \
+		${COMPILE_PART1} packaging/MacOS && bash ./pkgbuild.sh ${DEST} ;; \
 	hp_ux110 ) \
 		${COMPILE_PART1} packaging/HP-UX && swpackage -s  psf-1.2.10-transarc-paths-11.00 ;; \
 	hp_ux11i ) \
