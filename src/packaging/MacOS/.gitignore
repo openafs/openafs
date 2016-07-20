@@ -8,6 +8,7 @@
 /OpenAFS.info
 /OpenAFS.Description.plist
 /buildpkg.sh
+/pkgbuild.sh
 /CellServDB
 .DS_Store
 *.mode1v3
