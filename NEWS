@@ -1,5 +1,28 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.6.18.2
+
+  Linux clients
+
+    * Support for mainline kernel 4.6 and distribution kernels with
+      backports from it (12332)
+
+    * Switch back to the pre-1.6.18 algorithm for freeing unused vcaches.
+      While the new algorithm is still believed to be correct, it turned
+      out that at least on some kernels, including 4.5 and 4.6, the dentry
+      for the current working directory may be erroneously invalidated.
+      This could lead to errors like "Unable to read current working directory"
+      when a directory wasn't accessed for a few minutes. (12323)
+
+    * Use a secure URL to retrieve the CellServDB in the script to create
+      the Red Hat source package (12330)
+
+  FreeBSD
+
+    * Added sysname IDs for 10.2 and 10.3 to fix the build on those platforms
+      (12322)
+
+
 OpenAFS 1.6.18.1
 
   Linux clients

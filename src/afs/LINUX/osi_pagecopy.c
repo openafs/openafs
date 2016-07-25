@@ -116,9 +116,9 @@ void afs_pagecopy_queue_page(struct afs_pagecopy_task *task,
     page = kzalloc(sizeof(struct afs_pagecopy_page), GFP_NOFS);
     INIT_LIST_HEAD(&page->tasklink);
 
-    page_cache_get(cachepage);
+    get_page(cachepage);
     page->cachepage = cachepage;
-    page_cache_get(afspage);
+    get_page(afspage);
     page->afspage = afspage;
 
     spin_lock(&task->lock);
@@ -159,7 +159,7 @@ static struct page * afs_pagecopy_checkworkload(void) {
 		if (!schedule_work(&task->work))
 		   atomic_dec(&task->refcnt);
 	   } else if (!sleeppage) {
-		page_cache_get(page->cachepage);
+		get_page(page->cachepage);
 		sleeppage = page->cachepage;
 	   }
 	}
@@ -205,8 +205,8 @@ static void afs_pagecopy_worker(struct work_struct *work)
 	    SetPageUptodate(page->afspage);
 	}
 	unlock_page(page->afspage);
-	page_cache_release(page->cachepage);
-	page_cache_release(page->afspage);
+	put_page(page->cachepage);
+	put_page(page->afspage);
 	kfree(page);
 
 	spin_lock(&task->lock);
@@ -224,7 +224,7 @@ static int afs_pagecopy_thread(void *unused) {
 	    sleeppage = afs_pagecopy_checkworkload();
 	    if (sleeppage) {
 		wait_on_page_locked(sleeppage);
-		page_cache_release(sleeppage);
+		put_page(sleeppage);
 	    } else {
 		break;
 	    }

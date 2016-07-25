@@ -53,7 +53,10 @@ osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep) {
 	 * this out, since the iocount we have to hold makes it
 	 * always "fail" */
 	if (AFSTOV(avc) == tvp) {
-	    /* Caller will move this vcache to the head of the VLRU. */
+	    if (*slept) {
+		QRemove(&avc->vlruq);
+		QAdd(&VLRU, &avc->vlruq);
+            }
 	    return 0;
 	} else
 	    return 1;
