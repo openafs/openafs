@@ -1,8 +1,12 @@
 openafs (1.6.18.2-1) UNRELEASED; urgency=medium
 
-  * New upstream release 1.6.18.2.
+  * New upstream release 1.6.18.2:
+    - Support Linux kernel 4.6.
+    - Revert the vcache cleanup improvement of 1.6.18, which exposed
+      another previously latent issue that wrongly invalidated the current
+      working directry on some kernels.
 
- -- Anders Kaseorg <andersk@mit.edu>  Sun, 24 Jul 2016 19:58:09 -0400
+ -- Anders Kaseorg <andersk@mit.edu>  Sun, 24 Jul 2016 20:06:58 -0400
 
 openafs (1.6.18.1-1) unstable; urgency=medium
 
