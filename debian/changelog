@@ -1,4 +1,4 @@
-openafs (1.6.18.2-1) UNRELEASED; urgency=medium
+openafs (1.6.18.2-1) unstable; urgency=medium
 
   * New upstream release 1.6.18.2:
     - Support Linux kernel 4.6.
@@ -7,7 +7,7 @@ openafs (1.6.18.2-1) UNRELEASED; urgency=medium
       working directry on some kernels.
   * Update CellServDB to the 2016-01-01 release.
 
- -- Anders Kaseorg <andersk@mit.edu>  Sun, 24 Jul 2016 20:06:58 -0400
+ -- Anders Kaseorg <andersk@mit.edu>  Mon, 25 Jul 2016 19:12:12 -0400
 
 openafs (1.6.18.1-1) unstable; urgency=medium
 
