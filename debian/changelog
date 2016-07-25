@@ -5,6 +5,7 @@ openafs (1.6.18.2-1) UNRELEASED; urgency=medium
     - Revert the vcache cleanup improvement of 1.6.18, which exposed
       another previously latent issue that wrongly invalidated the current
       working directry on some kernels.
+  * Update CellServDB to the 2016-01-01 release.
 
  -- Anders Kaseorg <andersk@mit.edu>  Sun, 24 Jul 2016 20:06:58 -0400
 
