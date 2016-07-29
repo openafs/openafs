@@ -2379,6 +2379,13 @@ afs_linux_read_cache(struct file *cachefp, struct page *page,
     struct address_space *cachemapping;
     int pageindex;
     int code = 0;
+    int do_unlock_page; /* should we unlock 'page' before returning? */
+
+    if (task != NULL) {
+	do_unlock_page = 1;
+    } else {
+	do_unlock_page = 0;
+    }
 
     cachemapping = cacheinode->i_mapping;
     newpage = NULL;
@@ -2389,9 +2396,8 @@ afs_linux_read_cache(struct file *cachefp, struct page *page,
     if (AFS_CHUNKOFFSET(offset) >= i_size_read(cacheinode)) {
 	zero_user_segment(page, 0, PAGE_SIZE);
 	SetPageUptodate(page);
-	if (task)
-	    unlock_page(page);
-	return 0;
+	code = 0;
+	goto out;
     }
 
     /* From our offset, we now need to work out which page in the disk
@@ -2443,17 +2449,34 @@ afs_linux_read_cache(struct file *cachefp, struct page *page,
 	    flush_dcache_page(page);
 	    SetPageUptodate(page);
 
-	    if (task)
-		unlock_page(page);
-        } else if (task) {
+	} else if (task) {
+	    /*
+	     * All prep work has been done, but our source cachepage
+	     * is still not up to date.  Fortunately, our caller has
+	     * requested an async 'task' to copy the page in an
+	     * afs_pagecopy_thread, as a last resort.
+	     *
+	     * The afs_pagecopy subsystem will now wait for the target
+	     * source cachepage to become up to date, then copy it to
+	     * the target page.
+	     *
+	     * The afs_pagecopy subsystem now assumes responsibility for
+	     * eventually unlocking the page, so don't unlock it here.
+	     */
 	    afs_pagecopy_queue_page(task, cachepage, page);
+	    do_unlock_page = 0;
+
 	} else {
+	    /*
+	     * The caller did not specify a 'task' to handle waiting for the
+	     * page, so return an error.
+	     */
 	    code = -EIO;
 	}
     }
 
  out:
-    if (code && task) {
+    if (do_unlock_page) {
         unlock_page(page);
     }
 
