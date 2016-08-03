@@ -11,7 +11,7 @@ openafs (1.6.18.2-1) unstable; urgency=medium
     - Support Linux kernel 4.6.
     - Revert the vcache cleanup improvement of 1.6.18, which exposed
       another previously latent issue that wrongly invalidated the current
-      working directry on some kernels.
+      working directroy on some kernels.
   * Update CellServDB to the 2016-01-01 release.
 
  -- Anders Kaseorg <andersk@mit.edu>  Mon, 25 Jul 2016 19:12:12 -0400
