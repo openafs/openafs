@@ -25,6 +25,9 @@ AFSD=$VICEETC/afsd
 if [ -r /var/db/openafs ]; then
     VICEETC=/var/db/openafs/etc
     AFSD=/usr/sbin/afsd
+    if [ -x /opt/openafs/sbin/afsd ] ; then
+	AFSD=/opt/openafs/sbin/afsd
+    fi
 fi
 
 CONFIG=$VICEETC/config
