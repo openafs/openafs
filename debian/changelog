@@ -1,6 +1,7 @@
 openafs (1.6.18.3-1) UNRELEASED; urgency=medium
 
-  * New upstream release 1.6.18.3.
+  * New upstream release 1.6.18.3:
+    - Support Linux kernel 4.7.
 
  -- Anders Kaseorg <andersk@mit.edu>  Wed, 03 Aug 2016 16:51:40 -0400
 
