@@ -1040,7 +1040,7 @@ afs_nfsrdwr(struct vcache *avc, struct uio *auio, enum uio_rw arw,
 }
 
 int
-afs_map(struct vnode *vp, offset_t off, struct as *as, caddr_t *addr, u_int len, u_char prot, u_char maxprot, u_int flags, afs_ucred_t *cred)
+afs_map(struct vnode *vp, offset_t off, struct as *as, caddr_t *addr, size_t len, u_char prot, u_char maxprot, u_int flags, afs_ucred_t *cred)
 {
     struct segvn_crargs crargs;
     afs_int32 code;
@@ -1104,7 +1104,7 @@ afs_map(struct vnode *vp, offset_t off, struct as *as, caddr_t *addr, u_int len,
 	(void)as_unmap(as, *addr, len);	/* unmap old address space use */
     /* setup the create parameter block for the call */
     crargs.vp = AFSTOV(avc);
-    crargs.offset = (u_int) off;
+    crargs.offset = (u_offset_t)off;
     crargs.cred = cred;
     crargs.type = flags & MAP_TYPE;
     crargs.prot = prot;

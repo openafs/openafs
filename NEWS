@@ -1,5 +1,26 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.6.18.3
+
+  Linux clients
+
+    * Support for mainline kernel 4.7 and distribution kernels with
+      backports from it (12348)
+
+  Solaris clients
+
+    * Fixed memory mapped I/O on files >= 4 GiB (12349 12350)
+
+      Note that there is a suspicion that this might break the client
+      on very old Solaris releases (2.6). If it does, the breakage should
+      occur at build time.
+
+  OS X
+
+    * Added tooling to build a package for OS X 10.10 "Yosemite" and
+      10.11 "El Capitan" (12335 12351)
+
+
 OpenAFS 1.6.18.2
 
   Linux clients
