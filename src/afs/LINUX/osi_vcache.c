@@ -15,77 +15,88 @@
 
 #include "osi_compat.h"
 
-int
-osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep) {
-    int code;
-
+void
+osi_TryEvictDentries(struct vcache *avc)
+{
     struct dentry *dentry;
     struct inode *inode = AFSTOV(avc);
 #if defined(D_ALIAS_IS_HLIST) && !defined(HLIST_ITERATOR_NO_NODE)
     struct hlist_node *p;
 #endif
 
-    /* First, see if we can evict the inode from the dcache */
-    if (defersleep && avc != afs_globalVp && VREFCOUNT(avc) > 1 && avc->opens == 0) {
-	*slept = 1;
-	AFS_FAST_HOLD(avc);
-	ReleaseWriteLock(&afs_xvcache);
-        AFS_GUNLOCK();
-
 #if defined(HAVE_DCACHE_LOCK)
-        spin_lock(&dcache_lock);
+    spin_lock(&dcache_lock);
 
 restart:
-	list_for_each_entry(dentry, &inode->i_dentry, d_alias) {
-	    if (d_unhashed(dentry))
-		continue;
-	    dget_locked(dentry);
+    list_for_each_entry(dentry, &inode->i_dentry, d_alias) {
+	if (d_unhashed(dentry))
+	    continue;
+	dget_locked(dentry);
 
-	    spin_unlock(&dcache_lock);
-	    if (d_invalidate(dentry) == -EBUSY) {
-		dput(dentry);
-		/* perhaps lock and try to continue? (use cur as head?) */
-		goto inuse;
-	    }
-	    dput(dentry);
-	    spin_lock(&dcache_lock);
-	    goto restart;
-	}
 	spin_unlock(&dcache_lock);
+	if (d_invalidate(dentry) == -EBUSY) {
+	    dput(dentry);
+	    /* perhaps lock and try to continue? (use cur as head?) */
+	    goto inuse;
+	}
+	dput(dentry);
+	spin_lock(&dcache_lock);
+	goto restart;
+    }
+    spin_unlock(&dcache_lock);
 #else /* HAVE_DCACHE_LOCK */
-	spin_lock(&inode->i_lock);
+    spin_lock(&inode->i_lock);
 
 restart:
 #if defined(D_ALIAS_IS_HLIST)
 # if defined(HLIST_ITERATOR_NO_NODE)
-	hlist_for_each_entry(dentry, &inode->i_dentry, d_alias) {
+    hlist_for_each_entry(dentry, &inode->i_dentry, d_alias) {
 # else
-	hlist_for_each_entry(dentry, p, &inode->i_dentry, d_alias) {
+    hlist_for_each_entry(dentry, p, &inode->i_dentry, d_alias) {
 # endif
 #else
-	list_for_each_entry(dentry, &inode->i_dentry, d_alias) {
+    list_for_each_entry(dentry, &inode->i_dentry, d_alias) {
 #endif
-	    spin_lock(&dentry->d_lock);
-	    if (d_unhashed(dentry)) {
-		spin_unlock(&dentry->d_lock);
-		continue;
-	    }
+	spin_lock(&dentry->d_lock);
+	if (d_unhashed(dentry)) {
 	    spin_unlock(&dentry->d_lock);
-	    dget(dentry);
-
-	    spin_unlock(&inode->i_lock);
-	    if (afs_d_invalidate(dentry) == -EBUSY) {
-		dput(dentry);
-		/* perhaps lock and try to continue? (use cur as head?) */
-		goto inuse;
-	    }
-	    dput(dentry);
-	    spin_lock(&inode->i_lock);
-	    goto restart;
+	    continue;
 	}
+	spin_unlock(&dentry->d_lock);
+	dget(dentry);
+
 	spin_unlock(&inode->i_lock);
+	if (afs_d_invalidate(dentry) == -EBUSY) {
+	    dput(dentry);
+	    /* perhaps lock and try to continue? (use cur as head?) */
+	    goto inuse;
+	}
+	dput(dentry);
+	spin_lock(&inode->i_lock);
+	goto restart;
+    }
+    spin_unlock(&inode->i_lock);
 #endif /* HAVE_DCACHE_LOCK */
 inuse:
+    return;
+}
+
+
+int
+osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep)
+{
+    int code;
+
+    /* First, see if we can evict the inode from the dcache */
+    if (defersleep && avc != afs_globalVp && VREFCOUNT(avc) > 1
+	&& avc->opens == 0) {
+	*slept = 1;
+	AFS_FAST_HOLD(avc);
+	ReleaseWriteLock(&afs_xvcache);
+	AFS_GUNLOCK();
+
+	osi_TryEvictDentries(avc);
+
 	AFS_GLOCK();
 	ObtainWriteLock(&afs_xvcache, 733);
 	AFS_FAST_RELE(avc);
