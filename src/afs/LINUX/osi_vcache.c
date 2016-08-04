@@ -24,6 +24,13 @@ TryEvictDentries(struct vcache *avc)
     struct hlist_node *p;
 #endif
 
+#if defined(D_INVALIDATE_IS_VOID)
+    /* At this kernel level, d_invalidate always succeeds;
+     * that is, it will now invalidate even an active directory,
+     * Therefore we must use a different method to evict dentries.
+     */
+    d_prune_aliases(inode);
+#else
 #if defined(HAVE_DCACHE_LOCK)
     spin_lock(&dcache_lock);
 
@@ -78,6 +85,7 @@ restart:
     spin_unlock(&inode->i_lock);
 #endif /* HAVE_DCACHE_LOCK */
 inuse:
+#endif /* D_INVALIDATE_IS_VOID */
     return;
 }
 
