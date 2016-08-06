@@ -83,6 +83,16 @@ Suggested compiler flags:
 		(You might not want the -fd, it isn't really useful, just complains about the
 		K&R style functions, but -v gives useful info.)
 
+Multiple line comment blocks should begin with only /* on one line and end with
+only */ on one line.
+
+Example:
+
+	/*
+	 * Multiple line comment blocks should be formatted
+	 * like this example.
+	 */
+
 
 Dependencies required to build OpenAFS from source
 --------------------------------------------------
