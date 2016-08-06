@@ -608,7 +608,18 @@ main(int argc, char **argv)
 
 	split_args(&args);
 
-	uafs_ParseArgs(afsd_args.argc, afsd_args.argv);
+	code = uafs_ParseArgs(afsd_args.argc, afsd_args.argv);
+	if (code != 0) {
+	    /*
+	     * split_args() failed to populate afds_args correctly.
+	     * We do not not bother to check for CMD_HELP here, since
+	     * split_args() exits when -help is given.
+	     */
+	    fprintf(stderr,
+		    "afsd.fuse: Could not parse command line options; code %d\n",
+		    code);
+	    return 1;
+	}
 
 	/* pass "-- /mount/dir" to fuse to specify dir to mount; "--" is
 	 * just to make sure fuse doesn't interpret the mount dir as a flag

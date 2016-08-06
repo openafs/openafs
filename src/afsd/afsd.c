@@ -1684,8 +1684,16 @@ rmtsysd_thread(void *rock)
 }
 #endif /* !UKERNEL */
 
-int
-mainproc(struct cmd_syndesc *as, void *arock)
+/**
+ * Check the command line and cacheinfo options.
+ *
+ * @param[in] as  parsed command line arguments
+ *
+ * @note Invokes the shutdown syscall and exits with 0 when
+ *       -shutdown is given.
+ */
+static int
+CheckOptions(struct cmd_syndesc *as)
 {
     afs_int32 code;		/*Result of fork() */
 #ifdef	AFS_SUN5_ENV
@@ -2520,7 +2528,7 @@ afsd_init(void)
 {
     struct cmd_syndesc *ts;
 
-    ts = cmd_CreateSyntax(NULL, mainproc, NULL, 0, "start AFS");
+    ts = cmd_CreateSyntax(NULL, NULL, NULL, 0, "start AFS");
 
     /* 0 - 10 */
     cmd_AddParmAtOffset(ts, OPT_blocks, "-blocks", CMD_SINGLE,
@@ -2618,10 +2626,24 @@ afsd_init(void)
 			"Set inode number calculation method");
 }
 
+/**
+ * Parse and check the command line options.
+ *
+ * @note The -shutdown command is handled in CheckOptions().
+ */
 int
 afsd_parse(int argc, char **argv)
 {
-    return cmd_Dispatch(argc, argv);
+    struct cmd_syndesc *ts = NULL;
+    int code;
+
+    code = cmd_Parse(argc, argv, &ts);
+    if (code) {
+	return code;
+    }
+    code = CheckOptions(ts);
+    cmd_FreeOptions(&ts);
+    return code;
 }
 
 /**

@@ -570,7 +570,10 @@ main(int argc, char **argv)
     afsd_init();
 
     code = afsd_parse(argc, argv);
-    if (code) {
+    if (code == CMD_HELP) {
+	return 0; /* Displaying help is not an error. */
+    }
+    if (code != 0) {
 	return -1;
     }
 
