@@ -93,7 +93,29 @@ Example:
 	 * like this example.
 	 */
 
-
+Do not use braces on one-line if and loop statements.
+
+Use:
+
+	if (some_condition)
+	    do_some_action();
+	else
+	    do_something_else();
+
+	while (some_condition)
+	    do_something();
+
+Instead of:
+
+	if (some_condition) {
+	    do_some_action();
+	}
+
+	while (some_condition) {
+	    do_something();
+	}
+
+
 Dependencies required to build OpenAFS from source
 --------------------------------------------------
 The following packages are required to build all of the OpenAFS code
