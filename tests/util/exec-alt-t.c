@@ -24,6 +24,7 @@
 
 #define FAILSTR "exec test failure\n"
 #define ARGSTRING "teststring"
+#define PSTR(s) ((s) != NULL ? (s) : "(null)")
 
 static struct exec_test {
     const char *prefix; /* program prefix to run */
@@ -196,7 +197,7 @@ main(int argc, char **argv)
 	    nBytes = read(fds[0], buf, sizeof(buf)-1);
 	    is_int(result_len, nBytes,
 	           "child output size for prefix=%s, suffix=%s",
-	           t->prefix, t->suffix);
+	           PSTR(t->prefix), PSTR(t->suffix));
 
 	    if (nBytes < 0) {
 		skip("read() failed; cannot test read buffer");
@@ -206,7 +207,7 @@ main(int argc, char **argv)
 
 		is_string(result, buf,
 		          "child output for prefix=%s, suffix=%s",
-		          t->prefix, t->suffix);
+		          PSTR(t->prefix), PSTR(t->suffix));
 	    }
 
 	    if (close(fds[0])) {
@@ -225,12 +226,12 @@ main(int argc, char **argv)
 	    }
 
 	    ok(WIFEXITED(status), "child exited for prefix=%s, suffix=%s",
-	                          t->prefix, t->suffix);
+	                          PSTR(t->prefix), PSTR(t->suffix));
 
 	    if (WIFEXITED(status)) {
 		is_int(0, WEXITSTATUS(status),
 		       "child exit code for prefix=%s, suffix=%s",
-		       t->prefix, t->suffix);
+		       PSTR(t->prefix), PSTR(t->suffix));
 	    } else {
 		skip("!WIFEXITED(status) (status=%d), cannot check exit code",
 		     status);
