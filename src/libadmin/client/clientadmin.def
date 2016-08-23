@@ -22,4 +22,5 @@ EXPORTS
 	afsclient_RPCStatOpenPort				@21
 	afsclient_CMStatOpenPort				@20
 	afsclient_CMStatClose					@22
+	afsclient_TokenPrint					@23
 

@@ -231,6 +231,123 @@ afsclient_TokenGetExisting(const char *cellName, void **tokenHandle,
 }
 
 /*
+ * afsclient_TokenPrint - create tokens with the keys in the
+ *                        server configuration directory
+ *
+ * Create a set of tokens using the keys the server configuration
+ * directory. Creates two rxkad tokens; one for rxkad_clear and
+ * one for rxkad_crypt.
+ *
+ * PARAMETERS
+ *
+ * IN confdir - path to the server configuration directory
+ *
+ * OUT tokenHandle - a handle to the tokens if they were obtained
+ * successfully.
+ *
+ * LOCKS
+ *
+ * No locks are obtained or released by this function
+ *
+ * CAUTIONS
+ *
+ * The user of this process must have read permissions of the
+ * keys in the server configuration directory.
+ *
+ * RETURN CODES
+ *
+ * Returns != 0 upon successful completion.
+ */
+int ADMINAPI
+afsclient_TokenPrint(const char *confdir, void **tokenHandle, afs_status_p st)
+{
+    int rc = 0;
+    int code;
+    afs_status_t tst = 0;
+    struct afsconf_dir *tdir = NULL;
+    struct rx_securityClass *sc_clear;
+    afs_int32 index_clear;
+    struct rx_securityClass *sc_crypt;
+    afs_int32 index_crypt;
+    afs_token_handle_p t_handle = calloc(1, sizeof(*t_handle));
+    size_t n_afs_sc;
+    size_t n_afs_encrypt_sc;
+
+    if (client_init == 0) {
+	tst = ADMCLIENTNOINIT;
+	goto fail_afsclient_TokenPrint;
+    }
+
+    if (tokenHandle == NULL) {
+	tst = ADMCLIENTTOKENHANDLENULL;
+	goto fail_afsclient_TokenPrint;
+    }
+
+    if (t_handle == NULL) {
+	tst = ADMNOMEM;
+	goto fail_afsclient_TokenPrint;
+    }
+
+    tdir = afsconf_Open(confdir);
+    if (tdir == NULL) {
+	tst = ADMCLIENTBADCLIENTCONFIG;
+	goto fail_afsclient_TokenPrint;
+    }
+
+    code = afsconf_ClientAuth(tdir, &sc_clear, &index_clear);
+    if (code != 0 || index_clear == RX_SECIDX_NULL) {
+	tst = ADMCLIENTTOKENHANDLENOSECURITY;
+	goto fail_afsclient_TokenPrint;
+    }
+    n_afs_sc = sizeof(t_handle->afs_sc) / sizeof(*t_handle->afs_sc);
+    if (index_clear < 0 || index_clear >= n_afs_sc) {
+	/* Out of range. */
+	tst = ADMCLIENTTOKENHANDLENOSECURITY;
+	goto fail_afsclient_TokenPrint;
+    }
+
+    code = afsconf_ClientAuthSecure(tdir, &sc_crypt, &index_crypt);
+    if (code != 0 || index_crypt == RX_SECIDX_NULL) {
+	tst = ADMCLIENTTOKENHANDLENOSECURITY;
+	goto fail_afsclient_TokenPrint;
+    }
+    n_afs_encrypt_sc =
+	sizeof(t_handle->afs_encrypt_sc) / sizeof(*t_handle->afs_encrypt_sc);
+    if (index_crypt < 0 || index_crypt >= n_afs_encrypt_sc) {
+	/* Out of range. */
+	tst = ADMCLIENTTOKENHANDLENOSECURITY;
+	goto fail_afsclient_TokenPrint;
+    }
+
+    strncpy(t_handle->cell, tdir->cellName, MAXCELLCHARS);
+    t_handle->cell[MAXCELLCHARS - 1] = '\0';
+    t_handle->afs_token_set = 1;
+    t_handle->from_kernel = 0;
+    t_handle->kas_token_set = 0;
+    t_handle->sc_index = index_clear;
+    t_handle->afs_sc[index_clear] = sc_clear;
+    t_handle->afs_encrypt_sc[index_crypt] = sc_crypt;
+    t_handle->begin_magic = BEGIN_MAGIC;
+    t_handle->is_valid = 1;
+    t_handle->end_magic = END_MAGIC;
+    *tokenHandle = (void *)t_handle;
+    rc = 1;  /* ok */
+
+  fail_afsclient_TokenPrint:
+
+    if (tdir != NULL) {
+	afsconf_Close(tdir);
+    }
+    if (rc == 0) {
+	free(t_handle);
+    }
+    if (st != NULL) {
+	*st = tst;
+    }
+    return rc;
+}
+
+/*
  * afsclient_TokenSet - set the tokens represented by tokenHandle to be
  * active in the kernel (aka ka_SetToken).
  *

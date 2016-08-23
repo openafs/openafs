@@ -33,6 +33,7 @@
 	afsclient_RXDebugOpen;
 	afsclient_RXDebugOpenPort;
 	afsclient_RXDebugClose;
+	afsclient_TokenPrint;
 
     local:
 	*;

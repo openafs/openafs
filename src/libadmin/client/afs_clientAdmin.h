@@ -65,6 +65,10 @@ extern int ADMINAPI afsclient_TokenGetExisting(const char *cellName,
 					       void **tokenHandle,
 					       afs_status_p st);
 
+extern int ADMINAPI afsclient_TokenPrint(const char *confdir,
+					 void **tokenHandle,
+					 afs_status_p st);
+
 extern int ADMINAPI afsclient_TokenSet(const void *tokenHandle,
 				       afs_status_p st);
 
