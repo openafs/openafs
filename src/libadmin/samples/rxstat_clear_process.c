@@ -24,6 +24,7 @@
 
 #include <rx/rx.h>
 #include <rx/rxstat.h>
+#include <afs/dirpath.h>
 #include <afs/cmd.h>
 
 #include <afs/afs_Admin.h>
@@ -34,6 +35,7 @@ enum optionsList {
     OPT_cell,
     OPT_server,
     OPT_port,
+    OPT_localauth,
 };
 
 static int
@@ -45,12 +47,15 @@ rxstat_clear_process(struct cmd_syndesc *as, void *arock)
     char *srvrName = NULL;
     int srvrPort = 0;
     char *cellName = NULL;
+    int localauth = 0;
+    const char *confdir = AFSDIR_SERVER_ETC_DIR;
     void *tokenHandle;
     void *cellHandle;
 
     cmd_OptionAsString(as, OPT_cell, &cellName);
     cmd_OptionAsString(as, OPT_server, &srvrName);
     cmd_OptionAsInt(as, OPT_port, &srvrPort);
+    cmd_OptionAsFlag(as, OPT_localauth, &localauth);
 
     if (srvrPort <= 0 || srvrPort > USHRT_MAX) {
 	fprintf(stderr, "Out of range -port value.\n");
@@ -63,10 +68,18 @@ rxstat_clear_process(struct cmd_syndesc *as, void *arock)
 	return 1;
     }
 
-    rc = afsclient_TokenGetExisting(cellName, &tokenHandle, &st);
-    if (!rc) {
-	fprintf(stderr, "afsclient_TokenGetExisting, status %d\n", st);
-	return 1;
+    if (localauth) {
+	rc = afsclient_TokenPrint(confdir, &tokenHandle, &st);
+	if (!rc) {
+	    fprintf(stderr, "afsclient_TokenPrint, status %d\n", st);
+	    return 1;
+	}
+    } else {
+	rc = afsclient_TokenGetExisting(cellName, &tokenHandle, &st);
+	if (!rc) {
+	    fprintf(stderr, "afsclient_TokenGetExisting, status %d\n", st);
+	    return 1;
+	}
     }
 
     rc = afsclient_CellOpen(cellName, tokenHandle, &cellHandle, &st);
@@ -119,6 +132,7 @@ main(int argc, char *argv[])
     cmd_AddParmAtOffset(ts, OPT_cell, "-cell", CMD_SINGLE, CMD_REQUIRED, "cell name");
     cmd_AddParmAtOffset(ts, OPT_server, "-server", CMD_SINGLE, CMD_REQUIRED, "server");
     cmd_AddParmAtOffset(ts, OPT_port, "-port", CMD_SINGLE, CMD_REQUIRED, "port");
+    cmd_AddParmAtOffset(ts, OPT_localauth, "-localauth", CMD_FLAG, CMD_OPTIONAL, "use server tickets");
 
     return cmd_Dispatch(argc, argv);
 }
