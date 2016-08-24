@@ -42,6 +42,7 @@ SAMPLELIBS =\
 	${TOP_LIBDIR}/libafsrpc.a \
 	$(top_builddir)/src/auth/liboafs_auth.la \
 	$(top_builddir)/src/kauth/liboafs_kauth.la \
+	$(top_builddir)/src/cmd/liboafs_cmd.la \
 	$(top_builddir)/src/util/liboafs_util.la \
 	$(top_builddir)/src/ubik/liboafs_ubik.la \
 	$(top_builddir)/src/opr/liboafs_opr.la \

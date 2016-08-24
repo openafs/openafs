@@ -24,6 +24,7 @@
 
 #include <rx/rx.h>
 #include <rx/rxstat.h>
+#include <afs/cmd.h>
 #include <afs/afs_Admin.h>
 #include <afs/afs_AdminErrors.h>
 #include <afs/afs_clientAdmin.h>
@@ -44,29 +45,10 @@
 #include <ubik.h>
 #include <ubik_int.h>
 
-void
-Usage(void)
-{
-    fprintf(stderr, "Usage: rxstat_get_peer <cell> <host> <port>\n");
-    exit(1);
-}
-
-void
-ParseArgs(int argc, char *argv[], char **srvrName, long *srvrPort)
-{
-    char **argp = argv;
-
-    if (!*(++argp))
-	Usage();
-    *srvrName = *(argp++);
-    if (!*(argp))
-	Usage();
-    *srvrPort = strtol(*(argp++), NULL, 0);
-    if (*srvrPort <= 0 || *srvrPort >= 65536)
-	Usage();
-    if (*(argp))
-	Usage();
-}
+enum optionsList {
+    OPT_server,
+    OPT_port,
+};
 
 void
 GetPrintStrings(afs_RPCStats_p statp, char *ifName, char *ifRole,
@@ -152,14 +134,14 @@ GetPrintStrings(afs_RPCStats_p statp, char *ifName, char *ifRole,
     }
 }
 
-int
-main(int argc, char *argv[])
+static int
+rxstat_get_peer(struct cmd_syndesc *as, void *arock)
 {
     int rc;
     afs_status_t st = 0;
     struct rx_connection *conn;
-    char *srvrName;
-    long srvrPort;
+    char *srvrName = NULL;
+    int srvrPort = 0;
     void *cellHandle;
     void *iterator;
     afs_RPCStats_t stats;
@@ -170,32 +152,38 @@ main(int argc, char *argv[])
     int funcListLen;
     int index;
 
-    ParseArgs(argc, argv, &srvrName, &srvrPort);
+    cmd_OptionAsString(as, OPT_server, &srvrName);
+    cmd_OptionAsInt(as, OPT_port, &srvrPort);
+
+    if (srvrPort <= 0 || srvrPort > USHRT_MAX) {
+	fprintf(stderr, "Out of range -port value.\n");
+	return 1;
+    }
 
     rc = afsclient_Init(&st);
     if (!rc) {
 	fprintf(stderr, "afsclient_Init, status %d\n", st);
-	exit(1);
+	return 1;
     }
 
     rc = afsclient_NullCellOpen(&cellHandle, &st);
     if (!rc) {
 	fprintf(stderr, "afsclient_NullCellOpen, status %d\n", st);
-	exit(1);
+	return 1;
     }
 
     rc = afsclient_RPCStatOpenPort(cellHandle, srvrName, srvrPort, &conn,
 				   &st);
     if (!rc) {
 	fprintf(stderr, "afsclient_RPCStatOpenPort, status %d\n", st);
-	exit(1);
+	return 1;
     }
 
     rc = util_RPCStatsGetBegin(conn, RXSTATS_RetrievePeerRPCStats, &iterator,
 			       &st);
     if (!rc) {
 	fprintf(stderr, "util_RPCStatsGetBegin, status %d\n", st);
-	exit(1);
+	return 1;
     }
 
     while (util_RPCStatsGetNext(iterator, &stats, &st)) {
@@ -248,27 +236,39 @@ main(int argc, char *argv[])
     }
     if (st != ADMITERATORDONE) {
 	fprintf(stderr, "util_RPCStatsGetNext, status %d\n", st);
-	exit(1);
+	return 1;
     }
     printf("\n");
 
     rc = util_RPCStatsGetDone(iterator, &st);
     if (!rc) {
 	fprintf(stderr, "util_RPCStatsGetDone, status %d\n", st);
-	exit(1);
+	return 1;
     }
 
     rc = afsclient_RPCStatClose(conn, &st);
     if (!rc) {
 	fprintf(stderr, "afsclient_RPCStatClose, status %d\n", st);
-	exit(1);
+	return 1;
     }
 
     rc = afsclient_CellClose(cellHandle, &st);
     if (!rc) {
 	fprintf(stderr, "afsclient_CellClose, status %d\n", st);
-	exit(1);
+	return 1;
     }
 
-    exit(0);
+    return 0;
+}
+
+int
+main(int argc, char *argv[])
+{
+    struct cmd_syndesc *ts;
+
+    ts = cmd_CreateSyntax(NULL, rxstat_get_peer, NULL, 0, "rxstat get peer");
+    cmd_AddParmAtOffset(ts, OPT_server, "-server", CMD_SINGLE, CMD_REQUIRED, "server");
+    cmd_AddParmAtOffset(ts, OPT_port, "-port", CMD_SINGLE, CMD_REQUIRED, "port");
+
+    return cmd_Dispatch(argc, argv);
 }
