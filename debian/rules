@@ -197,6 +197,7 @@ override_dh_install-indep:
 		&& rm Doxyfile *.h && mv html/* . && rm -r latex html	\
 		&& cd $(CURDIR) ;					\
 	done
+	dh_doxygen -popenafs-doc
 
 	install -d debian/$(srcpkg)/usr/src/modules/$(package)
 	cd libafs_tree && find . -print \

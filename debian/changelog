@@ -2,6 +2,7 @@ openafs (1.6.18.3-2) UNRELEASED; urgency=medium
 
   * Drop hardening-wrapper in favor of passing flags via CC.
     (Closes: #836642)
+  * Clean doxyen-generated documentation with dh_doxygen.
 
  -- Anders Kaseorg <andersk@mit.edu>  Mon, 05 Sep 2016 22:35:28 -0400
 
