@@ -1,10 +1,5 @@
 #!/usr/bin/make -f
 
-# Enable hardening flags in hardening-wrapper.  This is a temporary
-# workaround until upstream supports using user-provided CFLAGS, CPPFLAGS,
-# and LDFLAGS.
-export DEB_BUILD_HARDENING = 1
-
 # Tell Autoconf the correct system types.
 DEB_HOST_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 DEB_BUILD_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
@@ -94,6 +89,9 @@ get-orig-source:
 
 # Handle the renaming of the up man page to afs-up here since the man pages
 # are generated from POD source by regen.sh.
+#
+# As a temporary workaround until upstream supports using
+# user-provided CFLAGS, CPPFLAGS, and LDFLAGS, we pass these via CC.
 override_dh_auto_configure:
 	@if test x"$(SYS_NAME)" = x"UNKNOWN" ; then exit 1 ; fi
 	echo '$(DEBIAN)'-debian > .version
@@ -102,7 +100,7 @@ override_dh_auto_configure:
 	sh regen.sh
 	afslogsdir=/var/log/openafs afslocaldir=/var/lib/openafs/local	   \
 	    sh configure						   \
-	    CFLAGS='$(CFLAGS)' CPPFLAGS='$(CPPFLAGS)' LDFLAGS='$(LDFLAGS)' \
+	    CC='$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS)'			   \
 	    --with-afs-sysname=$(SYS_NAME) --disable-kernel-module	   \
 	    --prefix=/usr --mandir=\$${prefix}/share/man		   \
 	    --sysconfdir=/etc --libexecdir=/usr/lib --with-krb5		   \
