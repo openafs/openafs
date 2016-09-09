@@ -42,13 +42,6 @@ afs_uint32 pagCounter = 1;
 afs_uint32 pagCounter = 0;
 #endif /* UKERNEL */
 
-#ifdef AFS_LINUX26_ONEGROUP_ENV
-#define NUMPAGGROUPS 1
-#else
-#define NUMPAGGROUPS 2
-#endif
-/* Local variables */
-
 /*
  * Pags are implemented as follows: the set of groups whose long
  * representation is '41XXXXXX' hex are used to represent the pags.
@@ -631,7 +624,7 @@ osi_get_group_pag(afs_ucred_t *cred)
     if (cred->cr_ngrps < 2)
 	return NOPAG;
 # elif defined(AFS_LINUX26_ENV)
-    if (afs_cr_group_info(cred)->ngroups < NUMPAGGROUPS)
+    if (afs_cr_group_info(cred)->ngroups < AFS_NUMPAGGROUPS)
 	return NOPAG;
 # elif defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_XBSD_ENV)
 #  if defined(AFS_SUN510_ENV)
