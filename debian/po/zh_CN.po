@@ -1,7 +1,7 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# Simplified Chinese translation of openafs debconf messages.
+# Copyright (C) 2007 Chun Tian
+# This file is distributed under the same license as the openafs package.
+# Chun Tian <binghe.lisp@gmail.com>, 2007.
 #
 #, fuzzy
 msgid ""
@@ -11,8 +11,8 @@ msgstr ""
 "POT-Creation-Date: 2013-04-08 11:17-0700\n"
 "PO-Revision-Date: 2009-02-13 09:25-0800\n"
 "Last-Translator: Chun Tian (binghe) <binghe.lisp@gmail.com>\n"
-"Language-Team: Internationalization <debian-i18n@lists.debian.org>\n"
-"Language: \n"
+"Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
+"Language: zh_CN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
