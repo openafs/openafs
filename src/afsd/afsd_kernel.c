@@ -279,7 +279,7 @@ afsd_call_syscall(struct afsd_syscall_args *args)
         printf("SScall(%d, %d, %d)=%d (%d, %s)\n", AFS_SYSCALL, AFSCALL_CALL,
                 (int)args->params[0], error, errno, s);
 #else
-	printf("SScall(%d, %d, %d)=%d ", AFS_SYSCALL, AFSCALL_CALL,
+	printf("SScall(%d, %d, %d)=%d\n", AFS_SYSCALL, AFSCALL_CALL,
 	       (int)args->params[0], error);
 #endif
     }
