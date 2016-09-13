@@ -461,8 +461,8 @@ int osi_syscall_init(void)
 
         flush_cache((void *)afs_sys_call_table, 2*NR_syscalls*sizeof(void*));
 
-	sys_setgroupsp = sys_setgroups_stub;
-	sys32_setgroupsp = sys32_setgroups_stub;
+	sys_setgroupsp = POINTER2SYSCALL sys_setgroups_stub;
+	sys32_setgroupsp = POINTER2SYSCALL sys32_setgroups_stub;
     }
 /***** COMMON (except IA64 or PPC64) *****/
 #else /* !AFS_IA64_LINUX20_ENV */
