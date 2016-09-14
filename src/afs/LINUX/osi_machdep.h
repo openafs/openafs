@@ -141,6 +141,11 @@ static inline long copyinstr(char *from, char *to, int count, int *length) {
 #define NGROUPS NGROUPS_SMALL
 #endif
 
+#ifdef STRUCT_GROUP_INFO_HAS_GID
+/* compat macro for Linux 4.9 */
+#define GROUP_AT(gi,x)  ((gi)->gid[x])
+#endif
+
 typedef struct task_struct afs_proc_t;
 
 #ifdef HAVE_LINUX_KUID_T
