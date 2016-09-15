@@ -216,17 +216,3 @@ Description: AFS distributed filesystem kaserver PAM module
  kaserver for authentication.  New sites should use a Kerberos v5
  implementation, a Kerberos v5 PAM module such as libpam-krb5, and
  libpam-afs-session.
-
-Package: openafs-dbg
-Section: debug
-Priority: extra
-Architecture: alpha amd64 arm armel armhf i386 ia64 powerpc powerpcspe ppc64 s390 s390x sparc
-Depends: ${misc:Depends}, openafs-fileserver (= ${binary:Version})
- | openafs-dbserver (= ${binary:Version})
-Description: AFS distributed filesystem debugging information
- AFS is a distributed filesystem allowing cross-platform sharing of
- files among multiple computers.  Facilities are provided for access
- control, authentication, backup and administrative management.
- .
- This package contains the debugging information for the OpenAFS
- server binaries (the openafs-fileserver and openafs-dbserver packages).

@@ -250,16 +250,8 @@ override_dh_fixperms-arch:
 	chmod 700 debian/openafs-dbserver/var/lib/openafs/db
 	chmod 700 debian/openafs-fileserver/var/lib/openafs/local
 
-# Only include debugging information for the servers installed into
-# /usr/lib/openafs rather than for all binaries.  The servers are where
-# debugging backtraces really matter, and a 10MB debugging package is
-# overkill.
 override_dh_strip:
-	dh_strip --dbg-package=openafs-dbg
-	rm -rf debian/openafs-dbg/usr/lib/debug/lib
-	rm -rf debian/openafs-dbg/usr/lib/debug/sbin
-	rm -rf debian/openafs-dbg/usr/lib/debug/usr/bin
-	rm -rf debian/openafs-dbg/usr/lib/debug/usr/sbin
+	dh_strip --dbgsym-migration='openafs-dbg (<< 1.6.18.3-3~)'
 
 override_dh_builddeb:
 	dh_builddeb -- -Zxz
