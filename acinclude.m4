@@ -917,6 +917,12 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 					  [#include <linux/fs.h>],
 					  [void],
 					  [struct inode *inode, void *link_data])
+		 AC_CHECK_LINUX_OPERATION([inode_operations], [rename], [takes_flags],
+					  [#include <linux/fs.h>],
+					  [int],
+					  [struct inode *oinode, struct dentry *odentry,
+						struct inode *ninode, struct dentry *ndentry,
+						unsigned int flags])
 
 		 dnl Check for header files
 		 AC_CHECK_LINUX_HEADER([config.h])
