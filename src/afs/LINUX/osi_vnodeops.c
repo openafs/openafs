@@ -1821,13 +1821,22 @@ afs_linux_rmdir(struct inode *dip, struct dentry *dp)
 
 static int
 afs_linux_rename(struct inode *oldip, struct dentry *olddp,
-		 struct inode *newip, struct dentry *newdp)
+		 struct inode *newip, struct dentry *newdp
+#ifdef HAVE_LINUX_INODE_OPERATIONS_RENAME_TAKES_FLAGS
+		 , unsigned int flags
+#endif
+		)
 {
     int code;
     cred_t *credp = crref();
     const char *oldname = olddp->d_name.name;
     const char *newname = newdp->d_name.name;
     struct dentry *rehash = NULL;
+
+#ifdef HAVE_LINUX_INODE_OPERATIONS_RENAME_TAKES_FLAGS
+    if (flags)
+	return -EINVAL;		/* no support for new flags yet */
+#endif
 
     /* Prevent any new references during rename operation. */
 
