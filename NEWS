@@ -1,4 +1,880 @@
                        User-Visible OpenAFS Changes
+OpenAFS 1.6.20 (Security Release)
+
+  All platforms
+
+    * Fix for OPENAFS-SA-2016-003: file and directory names leak due to
+      reuse of directory objects without zeroing the contents
+      (12461 12462 12463 12464 12465)
+
+OpenAFS 1.6.19
+
+  All platforms
+
+    * Documentation improvements (12304)
+    * Fixes for test failures (12396 12415)
+
+  All DB server platforms
+
+    * Avoid potentially writing to an out of date volume location or protection
+      database, or losing a database write, which could happen in rare cases
+      under special conditions during database leader election
+      (12339 12389)
+
+  Solaris clients
+
+    * Allow the fsinfo::: DTrace provider to work with AFS files (12371)
+
+  Linux clients
+
+    * Don't commit more data to a file than was actually copied during writes,
+      which could happen on architectures with a page size > 4 KiB (12413)
+    * Fixed build on PPC64 with GCC 6.1 (12388) (RT #133407)
+    * Fixed build on x86_64 with recent GCC (12365 12366)
+
+
+OpenAFS 1.6.18.3
+
+  Linux clients
+
+    * Support for mainline kernel 4.7 and distribution kernels with
+      backports from it (12348)
+
+  Solaris clients
+
+    * Fixed memory mapped I/O on files >= 4 GiB (12349 12350)
+
+      Note that there is a suspicion that this might break the client
+      on very old Solaris releases (2.6). If it does, the breakage should
+      occur at build time.
+
+  OS X
+
+    * Added tooling to build a package for OS X 10.10 "Yosemite" and
+      10.11 "El Capitan" (12335 12351)
+
+
+OpenAFS 1.6.18.2
+
+  Linux clients
+
+    * Support for mainline kernel 4.6 and distribution kernels with
+      backports from it (12332)
+
+    * Switch back to the pre-1.6.18 algorithm for freeing unused vcaches.
+      While the new algorithm is still believed to be correct, it turned
+      out that at least on some kernels, including 4.5 and 4.6, the dentry
+      for the current working directory may be erroneously invalidated.
+      This could lead to errors like "Unable to read current working directory"
+      when a directory wasn't accessed for a few minutes. (12323)
+
+    * Use a secure URL to retrieve the CellServDB in the script to create
+      the Red Hat source package (12330)
+
+  FreeBSD
+
+    * Added sysname IDs for 10.2 and 10.3 to fix the build on those platforms
+      (12322)
+
+
+OpenAFS 1.6.18.1
+
+  Linux clients
+
+    * Support for mainline kernel 4.5 and distribution kernels with
+      backports from it (12300..12302)
+
+
+OpenAFS 1.6.18
+
+  All platforms
+
+    * Documentation improvements (12224 11675 11613 12197)
+
+    * Improved diagnostics and error messages (12129 12207 12185 12211 12113
+      12215 12216)
+
+    * Check that CellServDB entries are valid IPv4 addresses, to avoid
+      occasional hangs or potentially other erratic behaviour due to invalid
+      entries (12210) (RT #131794)
+
+  All client platforms
+
+    * Gracefully handle cases where a client shutdown sequence is initiated
+      while the client is already shutting down, rather than cause a panic
+      (12179)
+
+    * Fixed several bugs that could cause erratic behaviour when the write
+      offset into a file was more than 2 GiB beyond the file's current end
+      on the server (12213 12214)
+
+  All server platforms
+
+    * Avoid a possible volserver crash during volume dump or restore due
+      to invalid ACL entries (12127)
+
+    * Allow recovering from a DAFS fileserver operation which allocates a
+      new vnode but fails to update the vnode index, rather than crashing the
+      server (12209)
+
+    * Fixed a longstanding bug which could damage the volume location database
+      when "vos changeaddr" was run with "-oldaddr" and "-newaddr" and the
+      old address was present in a multi-homed entry (12089)
+
+  FreeBSD
+
+    * Added support for releases 10.2 and 10.3 (12232)
+
+  Linux clients
+
+    * Support for mainline kernel 4.4 and distribution kernels with
+      backports from it, alas at a performance penalty (12226 12227 12228)
+      (RT #132677 #132819)
+
+    * Avoid using excessive amounts of kernel memory for dynamically
+      allocated vcaches, by improving the algorithm to free unused ones
+      (12256 12257)
+
+    * In Red Hat packaging, make the init script use "ip" if available, with
+      "ifconfig" as a fallback (12193)
+
+  OS X
+
+    * Basic support for release 10.11 "El Capitan" (12212)
+
+  IRIX clients
+
+    * Fixed kernel module builds with optimization (12198) (RT #131261)
+
+
+OpenAFS 1.6.17 (Security Release)
+
+  All server platforms
+
+    * Fix for OPENAFS-SA-2016-001: foreign users can create groups as
+      if they were an administrator (RT #132822) (CVE-2016-2860)
+
+  All client platforms
+
+    * Fix for OPENAFS-SA-2016-002: information leakage from sending
+      uninitialized memory over the network.  Multiple call sites
+      were vulnerable, with potential for leaking both kernel and
+      userland stack data (RT #132847)
+
+    * Update to the GCO CellServDB update from 01 January 2016 (12188)
+
+  Linux clients
+
+    * Fix a crash when the root volume is not found and dynroot is not
+      in use, a regression introduced in 1.6.14.1 (12166)
+
+    * Avoid introducing a dependency on the kernel-devel package corresponding
+      to the currently running system while building the srpm (12195)
+
+    * Create systemd unit files with mode 0644 instead of 0755
+      (12196) (RT #132662)
+
+OpenAFS 1.6.16
+
+  All platforms
+
+    * Documentation improvements (11932 12096 12100 12112 12120)
+
+    * Improved diagnostics and error messages (11586 11587)
+
+    * Distribute the contributor code of conduct with the stable release (12056)
+
+  All server platforms
+
+    * Create PID files in the right location when bosserver is started with
+      the "-pidfiles" argument and transarc paths are not being used (12086)
+
+    * Several fixes regarding volume dump creation and restore (11433 11553
+      11825 11826 12082)
+
+    * Avoid a reported bosserver crash, and potentially others, by replacing
+      fixed size buffers with dynamically allocated ones in some user handling
+      functions (11436) (RT #130719)
+
+    * Obey the "-toname" parameter in "vos clone" operations (11434)
+
+    * Avoid writing a loopback address into the server CellServDB - search
+      for a non-loopback one, and fail if none is found (12083 12105)
+
+    * Rebuild the vldb free list with "vldb_check -fix" (12084)
+
+    * Fixed and improved the "check_sysid" utility (12090)
+
+    * Fixed and improved the "prdb_check" utility (12101..04)
+
+  All client platforms
+
+    * Avoid a potential denial of service issue, by fixing a bug in pioctl
+      logic that allowed a local user to overrun a kernel buffer with a single
+      NUL byte (commit 2ef86372) (RT #132256) (CVE-2015-8312)
+
+    * Refuse to change multi-homed server entries with "vos changeaddr",
+      unless "-force" is given, to avoid corruption of those entries (12087)
+
+    * Provide a new vos subcommand "remaddrs" for removing server entries, to
+      replace the slightly confusing "vos changeaddr -remove" (12092 12094)
+
+    * Make "fs flushall" actually invalidate all cached data (11894)
+
+    * Prevent spurious call aborts due to erroneous idle timeouts (11594)
+
+    * Provide a "--disable-gtx" configure switch to avoid building and
+      installing libgtx and its header files as well as the depending
+      "scout" and "afsmonitor" applications (12095)
+
+    * Fixed building the gtx applications against newer ncurses (12125)
+
+    * Allow pioctls to work in environments where the syscall emulation
+      pseudo file is created in a read-only pseudo filesystem, like in
+      containers under recent versions of docker (12124)
+
+  Linux clients
+
+    * In Red Hat packaging, avoid following a symbolic link when writing
+      the client CellServDB, which could overwrite the server CellServDB,
+      by removing an existing symlink before writing the file (12081)
+
+    * In Red Hat packaging, avoid a conflict of openafs-debuginfo with
+      krb5-debuginfo by excluding our kpasswd executable from debuginfo
+      processing (12128) (RT #131771)
+
+OpenAFS 1.6.15 (Security Release)
+
+  All client and server platforms
+
+    * Fix for OPENAFS-SA-2015-007 "Tattletale"
+
+      When constructing an Rx acknowledgment (ACK) packet, Andrew-derived
+      Rx implementations do not initialize three octets of data that are
+      padding in the C language structure and were inadvertently included
+      in the wire protocol (CVE-2015-7762).  Additionally, OpenAFS Rx in
+      versions 1.5.75 through 1.5.78, 1.6.0 through 1.6.14, and 1.7.0
+      through 1.7.32 include a variable-length padding at the end of the
+      ACK packet, in an attempt to detect the path MTU, but only four octets
+      of the additional padding are initialized (CVE-2015-7763).
+
+OpenAFS 1.6.14.1
+
+  Linux clients
+
+    * Support kernels up to 4.2
+
+      Due to changes to internal data structures with this kernel release,
+      the OpenAFS client can no longer reset the link count during path
+      lookups. Since volume root directories must behave like symlinks
+      instead of normal directories in order to satisfy Linux kernel
+      invariants, looking up paths containing more than 40 mount points
+      will fail with ELOOP on such kernels.
+
+OpenAFS 1.6.14
+
+  All server platforms
+
+    * Prior to the OpenAFS security release 1.6.13, the Volume Location
+      Server (vlserver) RPC VL_ListAttributesN2() supported wildcard volume
+      name lookups via regular expression (regex) pattern matching. This
+      support was completely disabled in 1.6.13 because it was judged to be
+      a security risk due to buffer overruns in the implementation, as well
+      as the possibility of denial of service attacks where certain regular
+      expressions could cause excessive CPU usage in some regex
+      implementations.
+
+      Unfortunately, after 1.6.13 was released, it was discovered that
+      the native OpenAFS 'backup' system uses the VL_ListAttributesN2()
+      regex support to evaluate configured volume sets. If you use the
+      OpenAFS 'backup' system (or another backup system which relies on it,
+      such as Tivoli Storage Manager (TSM, aka Tivoli ADSM)), and are using
+      volume sets which require regular expressions for the volume name,
+      then those volume sets cannot be resolved by OpenAFS 1.6.13. The next
+      paragraph provides details on how to identify any affected volume sets.
+
+      OpenAFS backup volume sets may be described by fileserver, partition
+      name, and volume name. The fileserver and partition specifications
+      never require regular expression support. The volume name specification
+      always requires regular expression support except for when specifying
+      _all_ volumes via two special cases: the universal wildcard ".*", or "".
+      For example, volume name "proj" or "*.backup" or "homevol.*" all
+      require regex support - even if the specification contains no wildcard
+      characters and/or exactly matches an existing volume name.
+
+      As a result of this issue, OpenAFS 1.6.14 replaces the 1.6.13 changes
+      to VL_ListAttributesN2. 1.6.14 prevents the buffer overruns and
+      reenables the regex support, but restricts it to OpenAFS super-users
+      and -localauth only. This is sufficient to restore the OpenAFS 'backup'
+      system's ability to work correctly with any previously supported volume
+      set. The OpenAFS 'backup' commands are already documented to require
+      super-user authorization, so this restriction is moot for the backup
+      system.
+
+      There are no other direct consumers of the VL_ListAttributesN2() regex
+      support in the OpenAFS tree. However, the VL_ListAttributesN2 RPC is
+      publicly accessible and might be used by third party tools directly or
+      indirectly via OpenAFS's libadmin. Any such tools that issue
+      VL_ListAttributesN2 RPCs must now be executed using super-user or
+      -localauth tokens.
+
+      None of the other security fixes in OpenAFS 1.6.13 are known to have
+      any issues, and are still included unchanged in OpenAFS 1.6.14.
+
+      If there are any questions concerning the possible impact of OpenAFS
+      1.6.13 or 1.6.14 at your site, please contact your OpenAFS support
+      provider or the openafs-info@openafs.org mailing list for further
+      assistance.
+
+OpenAFS 1.6.13
+
+  All server platforms
+
+    * Fix for CVE-2015-3282: vos leaks stack data onto the wire in the
+      clear when creating vldb entries
+
+    * Workaround for CVE-2015-3283: bos commands can be spoofed, including
+      some which alter server state
+
+    * Disabled searching the VLDB by volume name regular expression to avoid
+      possible buffer overruns in the volume location server
+
+  All client platforms
+
+    * Fix for CVE-2015-3284: pioctls leak kernel memory
+
+    * Fix for CVE-2015-3285: kernel pioctl support for OSD command passing
+      can trigger a panic
+
+  Solaris clients
+
+    * Fix for CVE-2015-3286: Solaris grouplist modifications for PAGs can
+      panic  or overwrite memory
+
+OpenAFS 1.6.12
+
+  All server platforms
+
+    * Avoid database corruption if a database server is shut down and then
+      brought up again quickly with an altered database (11773 11774)
+      (RT #131997)
+
+  All client platforms
+
+    * Fixed a potential buffer overflow in aklog (11808)
+
+    * Avoid a bogus warning regarding the checkserver daemon, which could be
+      logged during startup when the cache initialization was very fast (11680)
+
+    * Added documentation of the inaccuracy of the 'partition' field in
+      'fs listquota' output for partitions larger than 2 TiB (11626)
+
+  Linux clients
+
+    * Support kernels up to 4.1 (11872 11873)
+
+    * Avoid spurious EIO errors when writing large chunks of data to
+      mmapped files (11877)
+
+  OS X
+
+    * Build fixes required at least on OS X 10.10 Yosemite with the latest
+      XCode (11859 11876 11842..11845 11863 11878 11879)
+
+OpenAFS 1.6.11.1
+
+  Linux clients
+
+    * Support kernels up to 4.0 (11760 11761)
+
+  FreeBSD clients
+
+    * Fixed kernel module build on systems with an updated clang which no
+      longer accepts the -mno-align-long-strings as a no-op (11809)
+
+OpenAFS 1.6.11
+
+  All platforms
+
+    * Allow aklog to succeed creating native K5 tokens even when mapping
+      the K5 principal to a K4 one fails (11538)
+
+    * Build fixes (11435 11636)
+
+  All client platforms
+
+    * Avoid a potential kernel panic due to connection reference overcounts
+      (11645) (RT #131885)
+
+    * Avoid potential corruption of files written using memory mapped I/O
+      when the file is larger than the cache (11656) (RT #131976)
+
+  Linux clients
+
+    * Support kernels at least up to 3.19 (11549 11550 11569 11570 11595
+      11658..11662 11694 11752)
+
+      Note: By default this excludes kernels 3.17 to 3.17.2, which will leak
+            an inode reference when an error occurs in d_splice_alias(). The
+            module will build and work, but leak kernel memory, leading to
+	    performance degradation and eventually system failure due to
+	    memory exhaustion. Since it's impossible to detect this condition
+	    automatically, the switch --enable-linux-d_splice_alias-extra-iput
+	    must be passed to configure when building the module for those
+	    kernels. The same would be necessary for any kernel with backports
+	    of commit 908790fa3b779d37365e6b28e3aa0f6e833020c3 or commit
+	    95ad5c291313b66a98a44dc92b57e0b37c1dd589 but not the fix in commit
+	    51486b900ee92856b977eacfc5bfbe6565028070 in the linux-stable repo
+	    (git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git) or
+	    the corresponding changes on other branches.
+
+    * Fixed a regression introduced in OpenAFS release 1.6.10 which could
+      make the spurious "getcwd: cannot access parent directories" problem
+      return (11558 11568) (RT #131780)
+
+    * Avoid leaking memory when scanning a corrupt directory (11707)
+
+  OS X clients
+
+    * Support OS X 10.10 "Yosemite" (11571 11572 11611) (RT #131946)
+
+  Solaris clients
+
+    * Avoid reading random data rather than correct cache content when using
+      ZFS as the cache file system on Solaris >= 11, and fix potential similar
+      problems on other platforms (11713 11714)
+
+  FreeBSD
+
+    * Build fix for releases >= 11.0 (11610)
+
+  OpenBSD
+
+    * Support release 5.4 (11700)
+
+
+OpenAFS 1.6.10
+
+  All platforms
+
+    * Don't hide the "version" subcommand in help output (11214)
+
+    * Documentation improvements (11126 11216 11222 11223 11225 11226)
+
+    * Improved diagnostics and error messages (11154 11246 11247 11249 11181
+      11182 11183)
+
+    * Build system improvements (11158 11221 11224 11225 11227..11241 11282
+      11342 11350 11353 11242 11367 11392)
+
+    * Avoid potentially erratic behaviour under certain error conditions by
+      either avoiding or at least not ignoring them, in various places (11008
+      11010..11065 11112 11148 11196 11530)
+
+  FreeBSD
+
+    * Support releases 9.3 and 10.1 (11368 11369 11402 11403 11404)
+
+    * Makes a disk cache more likely to work on FreeBSD, though such
+      configurations remain not very tested (11448)
+
+  All server platforms
+
+    * Added volscan(8) (11252..11280 11387 11388)
+
+    * Fixed a bug causing subgroups not to function correctly if their
+      ptdb entry had more than one continuation entry (11352)
+
+    * Logging improvements (10946 11153)
+
+    * Allow log rotation via copy and truncate (11193)
+
+    * Avoid a server crash during startup only observed on a single platform
+      and when using a 3rd party library under certain circumstances, which is
+      a collateral effect of the security improvements introduced in OpenAFS
+      release 1.6.5 (11075) (RT #131852)
+
+  All client platforms
+
+    * Raised the free space reported for /afs to the maximum possible value of
+      just under 2 TiB - the old value was 9 GiB on most platforms (10984)
+
+    * Reduced the amount of stack space used (11162 11163 11203 11164..11167
+      11338 11339 11364..11366 11381)
+
+    * Sped up a periodic client task which could be problematically slow
+      on systems with a large number of PAGs and files in use (11307)
+
+    * Fixed failure of the up command with large ACLs (11111)
+
+    * Avoid a potential crash of aklog (11218)
+
+    * Avoid potential crashes of scout and xstat_fs_test (11155)
+
+  Linux clients
+
+    * Support kernels up to 3.16 (11308 11309)
+
+    * Fixed a regression introduced in OpenAFS release 1.6.6 that made
+      checking for existing write locks incorrectly fail on readonly volumes
+      (11361)
+
+    * Fixed a regression introduced in OpenAFS release 1.6.8 that could
+      cause VFS cache inconsistencies when a previously-accessed directory
+      entry was removed and recreated with the same name but pointing to a
+      different file on another client (11358)
+
+    * Use the right path to depmod in Red Hat packaging to avoid dependency
+      calculation incorrectly failing unless a link /sbin -> /usr/sbin is
+      present on the system performing it (11171) (RT #131860)
+
+    * Do not ignore kernel module build errors (11205)
+
+OpenAFS 1.6.9
+
+  All server platforms
+
+    * Fix for OPENAFS-SA-2014-002
+
+OpenAFS 1.6.8
+
+  All platforms
+
+    * Documentation improvements (10751 10875 10931 10897 10883 10954 10955)
+
+    * Improved diagnostics and error messages (10756 10814 10949)
+
+    * Fixed a bug in RX that could make errors during packet reception go
+      unnoticed. (10733)
+
+    * Fixed a bug that made "vos size -dump" display the wrong size for
+      large volumes. (10933)  (RT #131819)
+
+  All server platforms
+
+    * Change the default fileserver sync behavior from "delayed" to "onclose".
+      This means that explicit syncing only happens when a volume is detached.
+      (10809)
+
+    * Added the -offline-timeout and -offline-shutdown-timeout options to the
+      fileserver, to implement interrupting clients accessing volumes we are
+      trying to take offline. (6266 10799)
+
+  All client platforms
+
+    * When a client is shut down, it will give up its callbacks. The Windows
+      client has been doing this since 2007. Note that older fileservers
+      (1.3.50 to 1.4.5 and 1.5.0 to 1.5.27) had a bug in the implementation of
+      the relevant RPC that could cause crashes or other undefined behavior
+      when this happens. (6272 8840 10855)
+
+    * Restored the pre-1.6 behavior of "vos e" being an alias for "vos examine".
+      (10886)
+
+    * Avoid flooding logs with warnings about byte-range locks, by throttling
+      them per file. Also, make the messages more useful by including the
+      FID. (10836..10839)
+
+    * Avoid a possible panic during shutdown while tracing. (10932)
+
+  Linux clients
+
+    * Fixed a bug that could cause the "getcwd: cannot access parent
+      directories" problem (10804 10984)
+
+    * Avoid a delay when accessing uncached data in AFS in a confined
+      context under SELinux. (10598)
+
+    * Red Hat packaging improvements (10600 10767 10807)
+
+OpenAFS 1.6.7
+
+  All server platforms
+
+    * Fix for OPENAFS-SA-2014-001
+
+    * Fix for a potential DOS attack against RX servers
+
+OpenAFS 1.6.6
+
+  All platforms
+
+    * As of this release, OpenAFS no longer ships uncompressed source tarballs.
+      Tarballs are still shipped with both compression formats, gzip and bzip2.
+      (10131)
+
+    * Documentation improvements (10136 10314 10601)
+
+    * Improved diagnostics and error messages (9412 10085 10274)
+
+    * Avoid redefining "assert" in our public header files, which could
+      cause failures when building some applications using them. (10096)
+
+    * Fixes for parallel builds (10005 10309 10337)
+
+    * Added a -s switch to afscp (not installed by default) to help simulate
+      a slow client. (9416 9417)
+
+    * Added a -probe switch to vlclient test program (not installed by default)
+      to ping all vlservers in a cell in parallel. (9570)
+
+  All server platforms
+    * The fileserver now ignores any vice partitions with a NeverAttach flag
+      file present in the root directory. (RT #130561) (9470 9471)
+
+    * Restrict forcing CPS ("Current Protection Subdomain") recalculation in
+      the fileserver to administrators. Also fixed a bug that could cause this
+      operation to be incomplete. (9485 9487)
+
+    * Allow non-DAFS fileservers to attach unusable volumes, restoring pre-1.6
+      behaviour. (RT #131505) (9499)
+
+    * Restored the pre-1.6 behaviour when running vos examine for a volume
+      currently in a transaction, showing the volume as busy again rather than
+      offline. (9685 9915 9916)
+
+    * Reduced the minimum time a bos salvage takes from 5 seconds to 1. (9476)
+
+    * Fixed buserver to not segfault when started with the -servers option.
+      (RT #131706) (10166)
+
+    * Salvager fixes, addressing a wide variety of possible problems from
+      unnecessary salvaging to aborts (9282 9283 9457 9458 9459 9461 9462 9480
+      9481 10165 10167)
+
+    * Fixed a bug that could cause saved state information to be discarded
+      when restarting a large or busy fileserver, which negatively impacted
+      performance. (9683)
+
+    * Fixed a bug that could have caused undefined behaviour in the vlserver
+      in rare cases when a fileserver registered its addresses in the VLDB.
+      (9429)
+
+    * Added the -preserve-vol-stats switch to volserver, allowing it to keep
+      the access statistics across volume restore and reclone operations
+      instead of resetting them. (9477)
+
+    * Inserted an exponential delay between retries when bosserver attempts to
+      restart a server process. (9571 10199)
+
+    * Improved vldb_check (not installed by default) to cope with broken
+      vlentry names and volids, and provide more output to aid debugging.
+      (10268)
+
+    * Releasing a volume after adding a new RO site no longer touches any of
+      the existing RO sites, if the RW data hasn't changed since the last
+      release. (10174)
+
+    * Make the copyDate field for RO clones have the same meaning as for
+      remote RO volumes. Previously, the copyDate field for clones was updated
+      every time we released. (9451)
+
+    * Fixed potentially undefined behaviour in ptserver when too many pts
+      ids are allocated. (10124)
+
+    * Note that the server side NAT pings feature present in the prereleases
+      was removed before the final release, since no positive feedback
+      was provided during prerelease testing. (9420 10135)
+
+  Linux servers
+
+    * Start bosserver with -nofork in the systemd unit file, to allow systemd
+      to track its state (10093)
+
+  All client platforms
+
+    * No longer track file locks on read-only volumes. Write locks can't
+      succeed, read locks always will. Avoids log messages about this kind
+      of lock. (8910)
+
+    * Added the "fs flushall" subcommand, which makes the client discard all
+      cached data. This was previously available on Windows only. (9065 9388
+      9389 9390)
+
+    * Fixed a bug that could make the client incorrectly believe its cache
+      is up to date. This change could negatively impact AFS <-> DFS
+      translators, should those still be running anywhere. (8898)
+
+    * Several changes to avoid panicing in certain error conditions.
+      (9131 9287 10354 10355 10356 10357) (partially addressing RT #131747)
+
+    * Added the -rxmaxfrags switch to afsd, allowing to limit the number
+      of UDP fragments sent or received per RX packet. (9430)
+
+    * Build fixes for aklog on several platforms (RT #131716) (9917 10107 10275)
+
+    * Require that the AFS mountpoint specified in the cacheinfo file is
+      an absolute path. Relative paths result in a client that basically
+      works but is not fully functional. (10253)
+
+    * Fixed a bug that could cause one of the afsd threads to enter an infinite
+      loop (10431 .. 10436)
+
+  Linux clients
+
+    * Support Linux kernels up to 3.13 (10241)
+
+    * Fixed a bug that made readv/writev calls in AFS space fail with Linux
+      kernels where generic_file_aio_read exists but those operations have
+      not been switched to using aio_read/aio_write. This was a regression
+      introduced with release 1.6.3 and affected at least RHEL 5.9 kernels.
+      (10248)
+
+    * Fixed a similar bug making core dumps fail in AFS space, affecting
+      a much wider range of kernels including the most recent ones.
+      (RT #131729) (10254)
+
+    * Enhanced the keyring code to make PAGs work correctly on kernels with a
+      distribution specific change to the Linux keyring code. This affected at
+      least SLES 11 SP3 kernels. (10252)
+
+    * Fixed a bug that could make failures during PAG instantiation go
+      unnoticed. (10255)
+
+    * Fixed a bug that made compilation fail for Linux kernels without
+      keyring support. This affected at least the SLE 10 SDK and an
+      OEM version of SLES 11 SP1. (10325)
+
+    * Fixed build for kernels with user namespace support enabled. Likely
+      to be required for Ubuntu 14.04 and eventually other distributions.
+      (10456 10457 10458 10518 10472)
+
+    * Support RHEL 6.5 kernels, and possibly others with changes backported
+      from recent mainline kernels that touch getname/putname, by no longer
+      using those functions. Previously, the client could cause a kernel
+      panic when syscall auditing was enabled. (10578)
+
+    * Make tmpfs usable as the cache filesystem again. This had been broken
+      since kernel 3.1 (9950 10193)
+
+    * When starting the client fails, clean up the backing device information
+      created in sysfs, to avoid error messages during a subsequent start
+      and possible system instability later on (10454)
+
+    * Update Red Hat packaging to support Fedora >= 20, RHEL >= 7 and
+      ELrepo kernels (10597 10619 10622 10703 10704)
+
+  OS X Clients
+
+    * Support OS X 10.9 "Mavericks" (10519 10541 10542 10543 10548 10549)
+
+  AIX clients
+
+    * Fixed a bug that caused the 1.6 AIX client to never receive any RX
+      packets in the kernel. (RT #131725)
+
+  FUSE client
+
+    * Support Solaris 11 (9454 9455)
+
+    * Allow other users to access filesystems mounted by root. (9452)
+
+  FreeBSD
+
+    * Build tvolser and dvolser on this platform (10122)
+    * Several fixes to catch up with newer releases (10374 .. 10381)
+
+  NetBSD
+
+    * Build tsalvaged, tvolser and dvolser on this platform (10121)
+    * Fixed build on NetBSD 5 and newer. (10138)
+
+OpenAFS 1.6.5
+
+All platforms
+
+    * Fixes for OpenAFS-SA-2013-0003 and OpenAFS-SA-2013-0004
+
+OpenAFS 1.6.4
+
+All platforms
+
+    * Obey the jumbo/nojumbo settings for ubik servers (the DB servers)
+      too. In previous releases, those servers may have used jumbograms
+      even if they were not configured to do so. This change corrects
+      the actual behaviour, and will improve performance and reliability
+      for sites where jumbograms are problematic. It could cause a decrease
+      in performance for sites where jumbograms work, but those can turn
+      them back on manually.
+
+    * Dozens of fixes for common coding problems like use after free,
+      use of possibly uninitialised memory, reading or writing past the
+      end of arrays and potential NULL pointer derefences. Spotted by
+      code analysis tools or human inspection.
+
+    * Documentation improvements.
+
+    * Fixes and improvements to the diagnostic or log messages printed by
+      vos, the fileserver and others.
+
+    * Build fixes, making parallel builds more reliable with certain
+      configuration options and helping various platforms including
+      recent releases of IRIX, Solaris and several flavours of Linux.
+
+    * Avoid sending a small amount of data over the wire unencrypted
+      under certain conditions, and emit the correct error message in
+      this case.
+
+All server platforms
+
+    * Avoid generating duplicate IDs for readonly and backup volumes,
+      which could happen under certain conditions.
+
+    * Allow the fileserver to return volume data like quota or free space,
+      which is available publicly elsewhere, without the additional access
+      check for read permissions on a volume's root directory the fileserver
+      performed before.
+
+    * The fileserver now emits a log message when it ran out of memory for
+      callbacks.
+
+    * Avoid several potential fileserver problems, including memory
+      corruption and segmentation faults, due to client bookkeeping.
+
+    * Avoid known cases of silent data corruption due to background syncs
+      on the fileserver, especially during Copy on Write.
+
+    * Make the fileserver sync behaviour runtime configurable. Up to 1.4.5,
+      we had synchronous syncs which were safe but really slow. Since 1.4.5,
+      we've had asynchronous syncs which are much faster but believed to
+      be the cause of rare data corruption issues, and while all known cases
+      of these happening are believed to be fixed in the 1.6.3 release, doubts
+      remain. This change allows choosing between those, and in addition allows
+      to turn syncs by the fileserver off altogether, thus relying on the vice
+      partition's backend filesystem and the operating system, or to just
+      execute them when a volume is detached. The default behaviour is
+      unchanged from releases since 1.4.5, but it's highly recommended to
+      consider the additional options this change provides. Future OpenAFS
+      releases will default to "-sync=none".
+
+    * For dbservers, avoid a situation where misinterpreting transient
+      network errors causes long-term issues with achieving ubik quorum.
+
+All UNIX client platforms
+
+    * Improvements to the detection of an aklog-specific krb5 configuration
+      file, for the purposes of turning on "weak crypto" for aklog.
+
+    * Fixed a regression introduced in release 1.6.2 which caused the
+      supposedly persistent disk cache to be discarded upon client start.
+      (RT #131655)
+
+Linux clients
+
+    * Support Linux kernels up to 3.10
+
+    * Fixed two bugs making it impossible to unmount a disk cache filesystem
+      after it has been used by the client. (RT #131613)
+
+    * Fixed a bug that could cause an oops with kernels 3.6 and later
+
+OpenBSD
+
+    * Improved support for OpenBSD 4.9 to 5.3
+
+OpenAFS 1.6.3
+
+  This release number had to be skipped for technical reasons.
 
 OpenAFS 1.6.2.1
 
