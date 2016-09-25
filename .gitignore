@@ -38,6 +38,7 @@ vc*.pdb
 rs_state.ini
 config.log
 
+!.mailmap
 !.gitignore
 !.cvsignore
 !.splintrc
