@@ -1,5 +1,31 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.6.19 (in progress)
+
+  All platforms
+
+    * Documentation improvements (12304)
+    * Fixes for test failures (12396 12415)
+
+  All DB server platforms
+
+    * Avoid potentially writing to an out of date volume location or protection
+      database, or losing a database write, which could happen in rare cases
+      under special conditions during database leader election
+      (12339 12389)
+
+  Solaris clients
+
+    * Allow the fsinfo::: DTrace provider to work with AFS files (12371)
+
+  Linux clients
+
+    * Don't commit more data to a file than was actually copied during writes,
+      which could happen on architectures with a page size > 4 KiB (12413)
+    * Fixed build on PPC64 with GCC 6.1 (12388) (RT #133407)
+    * Fixed build on x86_64 with recent GCC (12365 12366)
+
+
 OpenAFS 1.6.18.3
 
   Linux clients
