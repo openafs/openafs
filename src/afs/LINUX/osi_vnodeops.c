@@ -2940,7 +2940,7 @@ afs_linux_write_end(struct file *file, struct address_space *mapping,
     int code;
     unsigned int from = pos & (PAGE_SIZE - 1);
 
-    code = afs_linux_commit_write(file, page, from, from + len);
+    code = afs_linux_commit_write(file, page, from, from + copied);
 
     unlock_page(page);
     put_page(page);
