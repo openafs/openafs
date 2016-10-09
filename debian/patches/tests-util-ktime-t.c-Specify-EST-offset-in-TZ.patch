@@ -1,0 +1,33 @@
+From 5751945cf57432538df65ce89ba96f7b9086fca4 Mon Sep 17 00:00:00 2001
+From: Anders Kaseorg <andersk@mit.edu>
+Date: Sun, 9 Oct 2016 06:39:12 -0400
+Subject: tests/util/ktime-t.c: Specify EST offset in TZ
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+This fixes test failures observed on new Debian build servers that no
+longer install tzdata by default.  As the tests expect, EST is defined
+as UTC−05:00 with no daylight saving time.
+
+Change-Id: Ida8cb33687b5d87761cb0422e446afd99246d47a
+---
+ tests/util/ktime-t.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tests/util/ktime-t.c b/tests/util/ktime-t.c
+index fefbcb3..1992598 100644
+--- a/tests/util/ktime-t.c
++++ b/tests/util/ktime-t.c
+@@ -74,7 +74,7 @@ main(void)
+ 
+     /* should do timezone and daylight savings time correction so this program
+      * work in other than EST */
+-    putenv("TZ=EST");
++    putenv("TZ=EST+5");
+ 
+     errors = 0;
+     for (tt = testTimes; tt->time; tt++) {
+-- 
+2.10.1
+
