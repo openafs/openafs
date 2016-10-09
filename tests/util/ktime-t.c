@@ -73,7 +73,7 @@ main(void)
 
     /* should do timezone and daylight savings time correction so this program
      * work in other than EST */
-    putenv("TZ=EST");
+    putenv("TZ=EST+5");
 
     for (tt = testTimes; tt->time; tt++) {
 	temp = 0;
