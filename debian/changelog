@@ -4,6 +4,8 @@ openafs (1.6.18.3-3) UNRELEASED; urgency=medium
   * Mark openafs-doc Multi-Arch: foreign.
   * debian/patches/tests-util-ktime-t.c-Specify-EST-offset-in-TZ.patch:
     Fix FTBFS with tzdata uninstalled.  (Closes: #839481)
+  * Depend lsb-base (>= 3.0-6) in openafs-client and openafs-fileserver
+    for /lib/lsb/init-functions.
 
  -- Anders Kaseorg <andersk@mit.edu>  Thu, 15 Sep 2016 03:23:49 -0400
 

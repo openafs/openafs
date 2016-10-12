@@ -16,7 +16,7 @@ Vcs-Browser: http://anonscm.debian.org/gitweb/?p=pkg-k5-afs/openafs.git
 
 Package: openafs-client
 Architecture: alpha amd64 arm armel armhf i386 ia64 powerpc powerpcspe ppc64 s390 s390x sparc
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, lsb-base (>= 3.0-6)
 Recommends: lsof, openafs-modules-dkms (>= ${source:Version})
  | openafs-modules-source (>= ${source:Version})
  | openafs-modules3
@@ -66,7 +66,7 @@ Description: AFS distributed filesystem old password changing
 
 Package: openafs-fileserver
 Architecture: alpha amd64 arm armel armhf i386 ia64 powerpc powerpcspe ppc64 s390 s390x sparc
-Depends: ${shlibs:Depends}, ${misc:Depends}, lsb-base, openafs-client
+Depends: ${shlibs:Depends}, ${misc:Depends}, lsb-base (>= 3.0-6), openafs-client
 Recommends: ntp | time-daemon
 Suggests: openafs-doc
 Description: AFS distributed filesystem file server
