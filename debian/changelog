@@ -1,4 +1,4 @@
-openafs (1.6.18.3-3) UNRELEASED; urgency=medium
+openafs (1.6.18.3-3) unstable; urgency=medium
 
   * Drop openafs-dbg in favor of automatically generated dbgsym packages.
   * Mark openafs-doc Multi-Arch: foreign.
@@ -7,7 +7,7 @@ openafs (1.6.18.3-3) UNRELEASED; urgency=medium
   * Depend lsb-base (>= 3.0-6) in openafs-client and openafs-fileserver
     for /lib/lsb/init-functions.
 
- -- Anders Kaseorg <andersk@mit.edu>  Thu, 15 Sep 2016 03:23:49 -0400
+ -- Anders Kaseorg <andersk@mit.edu>  Wed, 12 Oct 2016 18:04:12 -0400
 
 openafs (1.6.18.3-2) unstable; urgency=medium
 
