@@ -1028,6 +1028,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_FUNC([set_nlink],
 				     [#include <linux/fs.h>],
 				     [set_nlink(NULL, 1);])
+		 AC_CHECK_LINUX_FUNC([setattr_prepare],
+				     [#include <linux/fs.h>],
+				     [setattr_prepare(NULL, NULL);])
 		 AC_CHECK_LINUX_FUNC([sock_create_kern],
 				     [#include <linux/net.h>],
 				     [sock_create_kern(0, 0, 0, NULL);])
