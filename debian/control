@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Benjamin Kaduk <kaduk@mit.edu>
 Uploaders: Russ Allbery <rra@debian.org>, Sam Hartman <hartmans@debian.org>,
  Anders Kaseorg <andersk@mit.edu>
-Build-Depends: debhelper (>= 9), autoconf, automake, bison, comerr-dev,
+Build-Depends: debhelper (>= 9.20160114~), autoconf, automake, bison, comerr-dev,
  cpio, flex, libfuse-dev, libkrb5-dev, libncurses5-dev,
  libpam0g-dev, libxml2-utils, perl, pkg-config, dh-systemd
 Build-Depends-Indep: dblatex, dkms (>= 2.1.1.1), docbook-xsl, doxygen (>= 1.8.4-1~),
