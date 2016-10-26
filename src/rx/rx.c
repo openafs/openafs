@@ -2371,9 +2371,7 @@ rx_EndCall(struct rx_call *call, afs_int32 rc)
 	    MUTEX_ENTER(&call->lock);
 	}
 	if (call->app.mode == RX_MODE_SENDING) {
-            MUTEX_EXIT(&call->lock);
-	    rxi_FlushWrite(call);
-            MUTEX_ENTER(&call->lock);
+	    rxi_FlushWriteLocked(call);
 	}
 	rxi_calltrace(RX_CALL_END, call);
 	/* Call goes to hold state until reply packets are acknowledged */

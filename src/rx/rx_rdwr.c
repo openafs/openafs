@@ -189,9 +189,7 @@ rxi_ReadProc(struct rx_call *call, char *buf,
 			return 0;
 		    }
 		    if (call->app.mode == RX_MODE_SENDING) {
-                        MUTEX_EXIT(&call->lock);
-			rxi_FlushWrite(call);
-                        MUTEX_ENTER(&call->lock);
+			rxi_FlushWriteLocked(call);
 			continue;
 		    }
 		}
@@ -1223,12 +1221,13 @@ rx_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 }
 
 /* Flush any buffered data to the stream, switch to read mode
- * (clients) or to EOF mode (servers)
+ * (clients) or to EOF mode (servers). If 'locked' is nonzero, call->lock must
+ * be already held.
  *
  * LOCKS HELD: called at netpri.
  */
-void
-rxi_FlushWrite(struct rx_call *call)
+static void
+FlushWrite(struct rx_call *call, int locked)
 {
     struct rx_packet *cp = NULL;
 
@@ -1259,7 +1258,10 @@ rxi_FlushWrite(struct rx_call *call)
 	}
 #endif
 
-        MUTEX_ENTER(&call->lock);
+        if (!locked) {
+            MUTEX_ENTER(&call->lock);
+        }
+
         if (call->error)
             call->app.mode = RX_MODE_ERROR;
 
@@ -1307,8 +1309,22 @@ rxi_FlushWrite(struct rx_call *call)
 	if (!(call->flags & RX_CALL_FAST_RECOVER)) {
 	    rxi_Start(call, 0);
 	}
-        MUTEX_EXIT(&call->lock);
+        if (!locked) {
+            MUTEX_EXIT(&call->lock);
+        }
     }
+}
+
+void
+rxi_FlushWrite(struct rx_call *call)
+{
+    FlushWrite(call, 0);
+}
+
+void
+rxi_FlushWriteLocked(struct rx_call *call)
+{
+    FlushWrite(call, 1);
 }
 
 /* Flush any buffered data to the stream, switch to read mode
@@ -1318,6 +1334,6 @@ rx_FlushWrite(struct rx_call *call)
 {
     SPLVAR;
     NETPRI;
-    rxi_FlushWrite(call);
+    FlushWrite(call, 0);
     USERPRI;
 }
