@@ -10,13 +10,13 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-#include "afs/sysincludes.h"    /*Standard vendor system headers */
-#include "afsincludes.h"        /*AFS-based standard headers */
+#include "afs/sysincludes.h"	/*Standard vendor system headers */
+#include "afsincludes.h"	/*AFS-based standard headers */
 
 #include "osi_compat.h"
 
-void
-osi_TryEvictDentries(struct vcache *avc)
+static void
+TryEvictDentries(struct vcache *avc)
 {
     struct dentry *dentry;
     struct inode *inode = AFSTOV(avc);
@@ -95,7 +95,7 @@ osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep)
 	ReleaseWriteLock(&afs_xvcache);
 	AFS_GUNLOCK();
 
-	osi_TryEvictDentries(avc);
+	TryEvictDentries(avc);
 
 	AFS_GLOCK();
 	ObtainWriteLock(&afs_xvcache, 733);
@@ -103,7 +103,7 @@ osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep)
     }
 
     /* See if we can evict it from the VLRUQ */
-    if (VREFCOUNT_GT(avc,0) && !VREFCOUNT_GT(avc,1) && avc->opens == 0
+    if (VREFCOUNT_GT(avc, 0) && !VREFCOUNT_GT(avc, 1) && avc->opens == 0
 	&& (avc->f.states & CUnlinkedDel) == 0) {
 	int didsleep = *slept;
 
@@ -145,17 +145,22 @@ osi_NewVnode(void)
 }
 
 void
-osi_PrePopulateVCache(struct vcache *avc) {
+osi_PrePopulateVCache(struct vcache *avc)
+{
     avc->uncred = 0;
     memset(&(avc->f), 0, sizeof(struct fvcache));
     avc->cred = NULL;
 }
 
 void
-osi_AttachVnode(struct vcache *avc, int seq) { /* Nada */ }
+osi_AttachVnode(struct vcache *avc, int seq)
+{
+    /* Nada */
+}
 
 void
-osi_PostPopulateVCache(struct vcache *avc) {
+osi_PostPopulateVCache(struct vcache *avc)
+{
     vSetType(avc, VREG);
 }
 
