@@ -1800,8 +1800,6 @@ afs_GetServer(afs_uint32 *aserverp, afs_int32 nservers, afs_int32 acell,
 	if (afs_stats_cmperf.srvRecords > afs_stats_cmperf.srvRecordsHWM)
 	    afs_stats_cmperf.srvRecordsHWM = afs_stats_cmperf.srvRecords;
     }
-    /* We can't need this below, and won't reacquire */
-    ReleaseWriteLock(&afs_xvcb);
 
     ReleaseWriteLock(&afs_xsrvAddr);
 
