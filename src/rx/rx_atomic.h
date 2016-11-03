@@ -184,14 +184,21 @@ rx_atomic_test_and_clear_bit(rx_atomic_t *atomic, int bit) {
 
 #elif defined(AFS_DARWIN80_ENV) || defined(AFS_USR_DARWIN80_ENV)
 
-#include <libkern/OSAtomic.h>
-#if defined(KERNEL) && !defined(UKERNEL)
-#define OSAtomicIncrement32 OSIncrementAtomic
-#define OSAtomicAdd32 OSAddAtomic
-#define OSAtomicDecrement32 OSDecrementAtomic
-#define OSAtomicOr32 OSBitOrAtomic
-#define OSAtomicAnd32 OSBitAndAtomic
-#endif
+# if defined (AFS_DARWIN160_ENV) || defined(AFS_USR_DARWIN160_ENV)
+#  define OSATOMIC_USE_INLINED 1
+# else
+
+#  if defined(KERNEL) && !defined(UKERNEL)
+#   define OSAtomicIncrement32 OSIncrementAtomic
+#   define OSAtomicAdd32 OSAddAtomic
+#   define OSAtomicDecrement32 OSDecrementAtomic
+#   define OSAtomicOr32 OSBitOrAtomic
+#   define OSAtomicAnd32 OSBitAndAtomic
+#  endif
+
+# endif /* end defined DARWIN160 */
+
+# include <libkern/OSAtomic.h>
 
 typedef struct {
     volatile int var;
