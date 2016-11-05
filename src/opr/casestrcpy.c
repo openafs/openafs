@@ -23,7 +23,6 @@ lcstring(char *d, const char *s, int n)
     char *original_d = d;
     char c;
 
-    opr_Assert(s != NULL && d != NULL);
     while (n) {
 	c = *s++;
 	if (isupper(c))
@@ -43,7 +42,6 @@ ucstring(char *d, const char *s, int n)
     char *original_d = d;
     char c;
 
-    opr_Assert(s != NULL && d != NULL);
     while (n) {
 	c = *s++;
 	if (islower(c))
@@ -95,7 +93,6 @@ strcompose(char *buf, size_t len, ...)
     char *str;
     size_t slen;
 
-    opr_Assert(buf != NULL);
     if (len <= 0)
 	return NULL;
 

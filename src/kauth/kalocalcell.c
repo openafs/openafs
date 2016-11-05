@@ -114,8 +114,6 @@ ka_CellToRealm(char *cell, char *realm, int *local)
 {
     int code = 0;
 
-    opr_Assert(realm != NULL);
-
     LOCK_GLOBAL_MUTEX;
     code = ka_ExpandCell(cell, realm, local);
     ucstring(realm, realm, MAXKTCREALMLEN);
