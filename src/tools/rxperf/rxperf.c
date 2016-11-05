@@ -926,9 +926,9 @@ rxperf_server(int argc, char **argv)
 	    hotthreads = 1;
 	    break;
 	case 'm':
-	  maxmtu = strtol(optarg, &ptr, 0);
-	  if (ptr && *ptr != '\0')
-	    errx(1, "can't resolve rx maxmtu to use");
+	    maxmtu = strtol(optarg, &ptr, 0);
+	    if (ptr && *ptr != '\0')
+		errx(1, "can't resolve rx maxmtu to use");
 	    break;
 	case 'u':
 	    udpbufsz = strtol(optarg, &ptr, 0) * 1024;
@@ -1098,9 +1098,9 @@ rxperf_client(int argc, char **argv)
 	  nojumbo=1;
 	  break;
 	case 'm':
-	  maxmtu = strtol(optarg, &ptr, 0);
-	  if (ptr && *ptr != '\0')
-	    errx(1, "can't resolve rx maxmtu to use");
+	    maxmtu = strtol(optarg, &ptr, 0);
+	    if (ptr && *ptr != '\0')
+		errx(1, "can't resolve rx maxmtu to use");
 	    break;
 	case 'u':
 	    udpbufsz = strtol(optarg, &ptr, 0) * 1024;
