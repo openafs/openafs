@@ -2061,16 +2061,16 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 		return ap;
 
 	    /* Since its all int32s convert to network order with a loop. */
-        if (rx_stats_active)
-	    MUTEX_ENTER(&rx_stats_mutex);
+	    if (rx_stats_active)
+		MUTEX_ENTER(&rx_stats_mutex);
 	    s = (afs_int32 *) & rx_stats;
 	    for (i = 0; i < sizeof(rx_stats) / sizeof(afs_int32); i++, s++)
 		rx_PutInt32(ap, i * sizeof(afs_int32), htonl(*s));
 
 	    tl = ap->length;
 	    ap->length = sizeof(rx_stats);
-        if (rx_stats_active)
-	    MUTEX_EXIT(&rx_stats_mutex);
+	    if (rx_stats_active)
+		MUTEX_EXIT(&rx_stats_mutex);
 	    rxi_SendDebugPacket(ap, asocket, ahost, aport, istack);
 	    ap->length = tl;
 	    break;
