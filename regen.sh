@@ -18,9 +18,9 @@ echo "Updating configuration..."
 
 echo "Running libtoolize"
 if which libtoolize > /dev/null 2>&1; then
-    libtoolize -c -f
+    libtoolize -c -f -i
 elif which glibtoolize > /dev/null 2>&1; then
-    glibtoolize -c -f
+    glibtoolize -c -f -i
 else
   echo "No libtoolize found on your system (looked for libtoolize & glibtoolize)"
   exit 1

@@ -1,1 +1,5 @@
+/config.guess
+/config.sub
+/install-sh
 /ltmain.sh
+/missing
