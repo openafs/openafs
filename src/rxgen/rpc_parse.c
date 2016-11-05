@@ -903,8 +903,8 @@ analyze_ProcParams(definition * defp, token * tokp)
 	Proc_listp = &Proc_list->next;
 	decls = ALLOC(decl_list);
 	memset(decls, 0, sizeof(decl_list));
-    if (tokp->kind != TOK_RPAREN)
-        decls->decl = dec;
+	if (tokp->kind != TOK_RPAREN)
+	    decls->decl = dec;
 	*tailp = decls;
 	tailp = &decls->next;
     } while (tokp->kind != TOK_RPAREN);
