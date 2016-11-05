@@ -2175,7 +2175,7 @@ afsd_run(void)
 	if (code > 0) {
 	    if (enable_rxbind)
 		code = code | 0x80000000;
-		afsd_syscall(AFSOP_ADVISEADDR, code, addrbuf, maskbuf, mtubuf);
+	    afsd_syscall(AFSOP_ADVISEADDR, code, addrbuf, maskbuf, mtubuf);
 	} else
 	    printf("ADVISEADDR: Error in specifying interface addresses:%s\n",
 		   reason);
@@ -2487,7 +2487,7 @@ afsd_run(void)
     if (afsd_debug)
 	printf("%s: Calling AFSOP_GO with cacheSetTime = %d\n", rn,
 	       0);
-	afsd_syscall(AFSOP_GO, 0);
+    afsd_syscall(AFSOP_GO, 0);
 
     /*
      * At this point, we have finished passing the kernel all the info
