@@ -93,9 +93,10 @@ internal_client_init(struct afsconf_dir *dir, struct afsconf_cell *info,
     if (uclientp) {
 	*uclientp = 0;
 	code = ubik_ClientInit(serverconns, uclientp);
-	if (code)
+	if (code) {
 	    fprintf(stderr, "%s: ubik client init failed.\n", progname);
 	    return code;
+	}
     }
 
     return 0;
