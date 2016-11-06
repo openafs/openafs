@@ -212,6 +212,7 @@ handleit(struct cmd_syndesc *opts, void *arock)
     cmd_OptionAsFlag(opts, OPT_inodes, &ListInodeOption);
     cmd_OptionAsFlag(opts, OPT_oktozap, &OKToZap);
     cmd_OptionAsFlag(opts, OPT_rootinodes, &ShowRootFiles);
+    cmd_OptionAsFlag(opts, OPT_salvagedirs, &RebuildDirs);
     cmd_OptionAsFlag(opts, OPT_blockreads, &forceR);
     if (cmd_OptionAsString(opts, OPT_parallel, &optstring) == 0) {
 	if (strncmp(optstring, "all", 3) == 0) {
