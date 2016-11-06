@@ -41,7 +41,7 @@ static int DoStat(char *aname, struct rx_connection *aconn,
 #include "bosprototypes.h"
 
 /* command offsets for bos salvage command */
-#define ADDPARMOFFSET 10
+#define ADDPARMOFFSET 11
 
 /* dummy routine for the audit work.  It should do nothing since audits */
 /* occur at the server level and bos is not a server. */
@@ -1039,7 +1039,7 @@ StopServer(struct cmd_syndesc *as, void *arock)
 static afs_int32
 DoSalvage(struct rx_connection * aconn, char * aparm1, char * aparm2,
 	  char * aoutName, afs_int32 showlog, char * parallel,
-	  char * atmpDir, char * orphans, int dafs)
+	  char * atmpDir, char * orphans, int dafs, int dodirs)
 {
     afs_int32 code;
     char *parms[6];
@@ -1169,6 +1169,14 @@ DoSalvage(struct rx_connection * aconn, char * aparm1, char * aparm2,
 	    }
 	    strcat(tbuffer, " -orphans ");
 	    strcat(tbuffer, orphans);
+	}
+	/* add the salvagedirs option if given */
+	if (dodirs) {
+	    if (strlen(tbuffer) + 14 > BOZO_BSSIZE) {
+		fprintf(stderr, "bos: command line too big\n");
+		return (E2BIG);
+	    }
+	    strcat(tbuffer, " -salvagedirs");
 	}
     }
 
@@ -1307,6 +1315,7 @@ SalvageCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 newID;
     extern struct ubik_client *cstruct;
     afs_int32 curGoal, showlog = 0, dafs = 0;
+    int dodirs = 0;
     char *parallel;
     char *tmpDir;
     char *orphans;
@@ -1371,6 +1380,15 @@ SalvageCmd(struct cmd_syndesc *as, void *arock)
 	}
     }
 
+    if (as->parms[10].items) { /* -salvagedirs */
+	if (as->parms[4].items) { /* -all */
+	    dodirs = 1;
+	} else {
+	    fprintf(stderr, " -salvagedirs only possible with -all.\n");
+	    return EINVAL;
+	}
+    }
+
     if (as->parms[4].items) {
 	/* salvage whole enchilada */
 	curGoal = GetServerGoal(tconn, serviceName);
@@ -1389,7 +1407,7 @@ SalvageCmd(struct cmd_syndesc *as, void *arock)
 	/* now do the salvage operation */
 	printf("Starting salvage.\n");
 	rc = DoSalvage(tconn, NULL, NULL, outName, showlog, parallel, tmpDir,
-		       orphans, dafs);
+		       orphans, dafs, dodirs);
 	if (curGoal == BSTAT_NORMAL) {
 	    printf("bos: restarting %s.\n", serviceName);
 	    code = BOZO_SetTStatus(tconn, serviceName, BSTAT_NORMAL);
@@ -1431,7 +1449,7 @@ SalvageCmd(struct cmd_syndesc *as, void *arock)
 	/* now do the salvage operation */
 	printf("Starting salvage.\n");
 	rc = DoSalvage(tconn, as->parms[1].items->data, NULL, outName,
-		       showlog, parallel, tmpDir, orphans, dafs);
+		       showlog, parallel, tmpDir, orphans, dafs, 0);
 	if (curGoal == BSTAT_NORMAL) {
 	    printf("bos: restarting '%s'.\n", serviceName);
 	    code = BOZO_SetTStatus(tconn, serviceName, BSTAT_NORMAL);
@@ -1490,7 +1508,7 @@ SalvageCmd(struct cmd_syndesc *as, void *arock)
 	}
 	printf("Starting salvage.\n");
 	rc = DoSalvage(tconn, as->parms[1].items->data, tname, outName,
-		       showlog, parallel, tmpDir, orphans, dafs);
+		       showlog, parallel, tmpDir, orphans, dafs, 0);
 	if (rc)
 	    return rc;
     }
@@ -1918,6 +1936,8 @@ main(int argc, char **argv)
 		"ignore | remove | attach");
     cmd_AddParm(ts, "-forceDAFS", CMD_FLAG, CMD_OPTIONAL,
 		"(DAFS) force salvage of demand attach fileserver");
+    cmd_AddParm(ts, "-salvagedirs", CMD_FLAG, CMD_OPTIONAL,
+		"Force rebuild/salvage of all directories");
     add_std_args(ts);
 
     ts = cmd_CreateSyntax("getrestricted", GetRestrict, NULL, 0,
