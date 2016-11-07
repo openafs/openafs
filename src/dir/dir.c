@@ -191,7 +191,9 @@ afs_dir_Delete(dir_file_t dir, char *entry)
     DRelease(&prevbuf, 1);
     index = DVOffset(&entrybuf) / 32;
     nitems = afs_dir_NameBlobs(firstitem->name);
-    DRelease(&entrybuf, 0);
+    /* Clear entire DirEntry and any DirXEntry extensions */
+    memset(firstitem, 0, nitems * sizeof(*firstitem));
+    DRelease(&entrybuf, 1);
     FreeBlobs(dir, index, nitems);
     return 0;
 }
