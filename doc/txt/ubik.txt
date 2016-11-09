@@ -90,14 +90,6 @@ MAJOR DATA STRUCTURES
       thread to examine them without holding the database lock; see the
       section on the BEACON package for details.
 
-      The condition variable 'version_cond' is used to signal to that the
-      database version may have changed; it is broadcast in udisk_commit(),
-      in SDISK_SendFile(), and from the recovery thread; it is monitored by
-      ubik_WaitVersion(), which can be called by an application to wait for
-      a database version change (this is not currently used in OpenAFS).
-      This CV is associated with the database lock.  When LWP is used, this
-      condition is signalled on &ubik_dbase->version.
-
       The condition variable 'flags_cond' is used by udisk_end() to signal
       that DBWRITING flag has been cleared.  This wakes threads waiting in
       ubik.c:BeginTrans() to begin a new transaction.  This CV is
@@ -1164,12 +1156,6 @@ MAJOR SUBSYSTEMS
          because ubik_Flush() calls ContactQuorum_* functions).
 
       Utilities
-
-         The functions ubik_GetVersion() and ubik_WaitVersion() provide the
-         application with a way to discover the current database version
-         and to wait for it to change.  These interfaces are not currently
-         used in OpenAFS.  ubik_GetVersion() needs to acquire the database
-         lock while copying the database version.
 
          The internal function ubikGetPrimaryInterfaceAddr() is used by
          Ubik RPCs to determine a peer server's primary address, given the

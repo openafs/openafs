@@ -572,10 +572,6 @@ extern int ubik_Truncate(struct ubik_trans *transPtr,
 			 afs_int32 length);
 extern int ubik_SetLock(struct ubik_trans *atrans, afs_int32 apos,
 			afs_int32 alen, int atype);
-extern int ubik_WaitVersion(struct ubik_dbase *adatabase,
-			    struct ubik_version *aversion);
-extern int ubik_GetVersion(struct ubik_trans *atrans,
-			   struct ubik_version *avers);
 extern int ubik_CheckCache(struct ubik_trans *atrans,
                            ubik_updatecache_func check,
                            void *rock);

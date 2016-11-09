@@ -1255,43 +1255,6 @@ ubik_SetLock(struct ubik_trans *atrans, afs_int32 apos, afs_int32 alen,
 }
 
 /*!
- * \brief utility to wait for a version # to change
- */
-int
-ubik_WaitVersion(struct ubik_dbase *adatabase,
-		 struct ubik_version *aversion)
-{
-    DBHOLD(adatabase);
-    while (1) {
-	/* wait until version # changes, and then return */
-	if (vcmp(*aversion, adatabase->version) != 0) {
-	    DBRELE(adatabase);
-	    return 0;
-	}
-#ifdef AFS_PTHREAD_ENV
-	opr_cv_wait(&adatabase->version_cond, &adatabase->versionLock);
-#else
-	DBRELE(adatabase);
-	LWP_WaitProcess(&adatabase->version);	/* same vers, just wait */
-	DBHOLD(adatabase);
-#endif
-    }
-}
-
-/*!
- * \brief utility to get the version of the dbase a transaction is dealing with
- */
-int
-ubik_GetVersion(struct ubik_trans *atrans,
-		struct ubik_version *avers)
-{
-    DBHOLD(atrans->dbase);
-    *avers = atrans->dbase->version;
-    DBRELE(atrans->dbase);
-    return 0;
-}
-
-/*!
  * \brief Facility to simplify database caching.
  * \return zero if last trans was done on the local server and was successful.
  * \return -1 means bad (NULL) argument.

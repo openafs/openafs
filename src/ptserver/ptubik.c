@@ -93,13 +93,6 @@ ubik_SetLock(struct ubik_trans *atrans, afs_int32 apos, afs_int32 alen,
 }
 
 int
-ubik_WaitVersion(struct ubik_dbase *adatabase,
-                 struct ubik_version *aversion)
-{
-    return (0);
-}
-
-int
 ubik_CheckCache(struct ubik_trans *atrans, ubik_updatecache_func cbf, void *rock)
 {
     return (*cbf)(atrans, rock);
@@ -118,14 +111,6 @@ panic(char *format, ...)
     AFS_UNREACHED(printf("BACK FROM ABORT\n"));	/* shouldn't come back from floating pt exception */
     AFS_UNREACHED(exit(1));			/* never know, though */
 }
-
-int
-ubik_GetVersion(struct ubik_trans *dummy, struct ubik_version *ver)
-{
-    memset(ver, 0, sizeof(struct ubik_version));
-    return (0);
-}
-
 
 int
 ubik_Seek(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos)
