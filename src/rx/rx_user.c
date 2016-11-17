@@ -437,7 +437,7 @@ fudge_netmask(afs_uint32 addr)
 
 
 
-#if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV)
+#if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN160_ENV)
 int
 rxi_syscall(afs_uint32 a3, afs_uint32 a4, void *a5)
 {
@@ -564,7 +564,7 @@ rx_GetIFInfo(void)
 	}
 #endif /* SIOCGIFFLAGS */
 
-#if !defined(AFS_AIX_ENV)  && !defined(AFS_LINUX20_ENV)
+#if !defined(AFS_AIX_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN160_ENV)
 	/* this won't run on an AIX system w/o a cache manager */
 	rxi_syscallp = rxi_syscall;
 #endif

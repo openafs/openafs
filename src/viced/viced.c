@@ -312,7 +312,7 @@ fs_IsLocalRealmMatch(void *rock, char *name, char *inst, char *cell)
     return islocal;
 }
 
-#ifndef AFS_NT40_ENV
+#if !defined(AFS_NT40_ENV) && !defined(AFS_DARWIN160_ENV)
 int
 viced_syscall(afs_uint32 a3, afs_uint32 a4, void *a5)
 {
@@ -1963,7 +1963,7 @@ main(int argc, char *argv[])
     acl_Initialize(ACL_VERSION);
 
     /* initialize RX support */
-#ifndef AFS_NT40_ENV
+#if !defined(AFS_NT40_ENV) && !defined(AFS_DARWIN160_ENV)
     rxi_syscallp = viced_syscall;
 #endif
     rx_extraPackets = rxpackets;

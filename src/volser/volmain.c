@@ -159,7 +159,7 @@ BKGLoop(void *unused)
     return NULL;
 }
 
-#ifdef AFS_NT40_ENV
+#if defined(AFS_NT40_ENV) || defined(AFS_DARWIN160_ENV)
 /* no volser_syscall */
 #elif defined(AFS_SUN511_ENV)
 int
@@ -504,7 +504,7 @@ main(int argc, char **argv)
 #ifndef AFS_PTHREAD_ENV
     vol_PollProc = IOMGR_Poll;	/* tell vol pkg to poll io system periodically */
 #endif
-#ifndef AFS_NT40_ENV
+#if !defined( AFS_NT40_ENV ) && !defined(AFS_DARWIN160_ENV)
     rxi_syscallp = volser_syscall;
 #endif
     rx_nPackets = rxpackets;	/* set the max number of packets */
