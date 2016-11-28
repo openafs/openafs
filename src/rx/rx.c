@@ -294,6 +294,9 @@ rxi_InitPthread(void)
 
     MUTEX_INIT(&rx_rpc_stats, "rx_rpc_stats", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_freePktQ_lock, "rx_freePktQ_lock", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&rx_mallocedPktQ_lock, "rx_mallocedPktQ_lock", MUTEX_DEFAULT,
+	       0);
+
 #ifdef	RX_ENABLE_LOCKS
 #ifdef RX_LOCKS_DB
     rxdb_init();
@@ -513,6 +516,9 @@ rx_InitHost(u_int host, u_int port)
     MUTEX_INIT(&rx_connHashTable_lock, "rx_connHashTable_lock", MUTEX_DEFAULT,
 	       0);
     MUTEX_INIT(&rx_serverPool_lock, "rx_serverPool_lock", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&rx_mallocedPktQ_lock, "rx_mallocedPktQ_lock", MUTEX_DEFAULT,
+	       0);
+
 #if defined(AFS_HPUX110_ENV)
     if (!uniprocessor)
 	rx_sleepLock = alloc_spinlock(LAST_HELD_ORDER - 10, "rx_sleepLock");
@@ -535,6 +541,7 @@ rx_InitHost(u_int host, u_int port)
     opr_queue_Init(&rx_freePacketQueue);
     rxi_NeedMorePackets = FALSE;
     rx_nPackets = 0;	/* rx_nPackets is managed by rxi_MorePackets* */
+    opr_queue_Init(&rx_mallocedPacketQueue);
 
     /* enforce a minimum number of allocated packets */
     if (rx_extraPackets < rxi_nSendFrags * rx_maxSendWindow)
@@ -7885,8 +7892,6 @@ shutdown_rx(void)
     UNPIN(rx_connHashTable,
 	  rx_hashTableSize * sizeof(struct rx_connection *));
     UNPIN(rx_peerHashTable, rx_hashTableSize * sizeof(struct rx_peer *));
-
-    rxi_FreeAllPackets();
 
     MUTEX_ENTER(&rx_quota_mutex);
     rxi_dataQuota = RX_MAX_QUOTA;

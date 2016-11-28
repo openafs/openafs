@@ -1459,6 +1459,7 @@ afs_shutdown(void)
     afs_warn("NetIfPoller... ");
     osi_StopNetIfPoller();
 #endif
+    rxi_FreeAllPackets();
 
     afs_termState = AFSOP_STOP_COMPLETE;
 
