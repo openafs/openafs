@@ -1,4 +1,4 @@
-openafs (1.6.20-1) UNRELEASED; urgency=high
+openafs (1.6.20-1) unstable; urgency=high
 
   * New upstream release (1.6.19):
     - Fix issue that could result in using out-of-date database versions
@@ -9,7 +9,7 @@ openafs (1.6.20-1) UNRELEASED; urgency=high
     - Fix information leakage (file/directory names) from reused directory
       buffers
 
- -- Benjamin Kaduk <kaduk@mit.edu>  Wed, 30 Nov 2016 15:36:12 -0500
+ -- Benjamin Kaduk <kaduk@mit.edu>  Wed, 30 Nov 2016 16:52:29 -0500
 
 openafs (1.6.18.3-3) unstable; urgency=medium
 
