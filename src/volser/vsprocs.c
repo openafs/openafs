@@ -3427,11 +3427,11 @@ PutTrans(afs_int32 *vldbindex, struct replica *replicas,
 /**
  * Release a volume to read-only sites
  *
- * Release volume <afromvol> on <afromserver> <afrompart> to all
- * its RO sites (full release). Unless the previous release was
- * incomplete: in which case we bring the remaining incomplete
- * volumes up to date with the volumes that were released
- * successfully.
+ * Release volume <afromvol> on <afromserver> <afrompart> to all its RO
+ * sites (complete release), unless the previous release was incomplete
+ * or new sites were added without changes to the read-write volume, in
+ * which case we bring the remaining volumes up to date with the volumes
+ * that were previously released successfully.
  *
  * Will create a clone from the RW, then dump the clone out to
  * the remaining replicas. If there is more than 1 RO sites,
@@ -3491,7 +3491,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
     int new_sites = 0; /* number of ro sites markes as new */
 
     typedef enum {
-        CR_RECOVER    = 0x0000, /**< not complete: a recovery from a previous failed release */
+        CR_PARTIAL    = 0x0000, /**< just new sites added or recover from a previous failed release */
         CR_FORCED     = 0x0001, /**< complete: forced by caller */
         CR_LAST_OK    = 0x0002, /**< complete: no sites have been marked as new release */
         CR_ALL_NEW    = 0x0004, /**< complete: all sites have been marked as new release */
@@ -3499,7 +3499,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
         CR_RO_MISSING = 0x0010, /**< complete: ro clone is missing */
     } complete_release_t;
 
-    complete_release_t complete_release = CR_RECOVER;
+    complete_release_t complete_release = CR_PARTIAL;
 
     memset(remembertime, 0, sizeof(remembertime));
     memset(&results, 0, sizeof(results));
@@ -3667,8 +3667,13 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 		    "This is a recovery of previously failed release\n");
 	} else {
 	    fprintf(STDOUT, "This is a complete release of volume %u", afromvol);
-	    /* Give the reasons for a complete release, except if only CR_LAST_OK. */
-	    if (complete_release != CR_LAST_OK) {
+	    if (complete_release == CR_LAST_OK) {
+		if (justnewsites) {
+		    tried_justnewsites = 1;
+		    fprintf(STDOUT, "\nThere are new RO sites; we will try to "
+			    "only release to new sites");
+		}
+	    } else {
 		char *sep = " (";
 		if (complete_release & CR_FORCED) {
 		    fprintf(STDOUT, "%sforced", sep);
@@ -3692,11 +3697,6 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 		fprintf(STDOUT, ")");
 	    }
 	    fprintf(STDOUT, "\n");
-	    if (justnewsites) {
-		tried_justnewsites = 1;
-		fprintf(STDOUT, "There are new RO sites; we will try to "
-			"only release to new sites\n");
-	    }
 	}
     }
 
@@ -3909,7 +3909,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
     if (justnewsites) {
 	VPRINT("RW vol has not changed; only releasing to new RO sites\n");
 	/* act like this is a completion of a previous release */
-	complete_release = CR_RECOVER;
+	complete_release = CR_PARTIAL;
     } else if (tried_justnewsites) {
 	VPRINT("RW vol has changed; releasing to all sites\n");
     }
@@ -4007,11 +4007,16 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 		/* Do a full dump when forced by the caller. */
 		VPRINT("This will be a full dump: forced\n");
 		thisdate = 0;
-	    } else if (!complete_release) {
-		/* If this release is a recovery of a failed release, we can't be
-		 * sure the creation date is good, so do a full dump.
-		 */
-		VPRINT("This will be a full dump: previous release failed\n");
+	    } else if (complete_release == CR_PARTIAL) {
+		if (justnewsites) {
+		    VPRINT("This will be a full dump: read-only volume needs be created for new site\n");
+		} else {
+		    /*
+		     * We cannot be sure the creation date is good since the previous
+		     * release failed, so do a full dump.
+		     */
+		    VPRINT("This will be a full dump: previous release failed\n");
+		}
 		thisdate = 0;
 	    } else if (times[volcount].crtime == 0) {
 		/* A full dump is needed for a new read-only volume. */
