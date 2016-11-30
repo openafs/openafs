@@ -66,7 +66,6 @@ main(void)
 {
     long code;
     afs_int32 temp;
-    int errors;
     time_t t;
     struct testTime *tt;
 
@@ -74,9 +73,8 @@ main(void)
 
     /* should do timezone and daylight savings time correction so this program
      * work in other than EST */
-    putenv("TZ=EST");
+    putenv("TZ=EST+5");
 
-    errors = 0;
     for (tt = testTimes; tt->time; tt++) {
 	temp = 0;
 	code = ktime_DateToLong(tt->time, &temp);

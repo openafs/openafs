@@ -282,8 +282,8 @@ afs_BlackListOnce(struct vrequest *areq, struct VenusFid *afid,
  * afs_ClearStatus
  *
  * Description:
- *	Analyze the outcome of an RPC operation, taking whatever support
- *	actions are necessary.
+ *	Clear any cached status for the target FID of a failed fileserver
+ *	write RPC.
  *
  * Arguments:
  *	afid  : The FID of the file involved in the action.  This argument
@@ -395,6 +395,7 @@ afs_PrintServerErrors(struct vrequest *areq, struct VenusFid *afid)
  *
  * Arguments:
  *	aconn : Ptr to the relevant connection on which the call was made.
+ *	rxconn: Ptr to the rx_connection
  *	acode : The return code experienced by the RPC.
  *	afid  : The FID of the file involved in the action.  This argument
  *		may be null if none was involved.

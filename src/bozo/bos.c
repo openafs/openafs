@@ -1562,9 +1562,18 @@ SalvageCmd(struct cmd_syndesc *as, void *arock)
 
 	for (i = MRAFS_OFFSET; i < ADDPARMOFFSET; i++) {
 	    if (as->parms[i].items) {
-		printf(" %s only possible for MR-AFS fileserver.\n",
-		       as->parms[i].name);
-		stop = 1;
+		if (i == MRAFS_OFFSET + 5) { /* -salvagedirs */
+		    if (as->parms[4].items) { /* -all */
+			mrafsParm.Optsalvagedirs = 1; /* Let this one slide. */
+		    } else {
+			printf(" -salvagedirs only possible with -all.\n");
+			stop = 1;
+		    }
+		} else {
+		    printf(" %s only possible for MR-AFS fileserver.\n",
+			   as->parms[i].name);
+		    stop = 1;
+		}
 	    }
 	}
 	if (stop)

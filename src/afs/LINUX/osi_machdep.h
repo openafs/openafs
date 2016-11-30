@@ -111,7 +111,12 @@ static inline time_t osi_Time(void) {
 #define VN_RELE(V) iput((V))
 
 #define afs_suser(x) capable(CAP_SYS_ADMIN)
-#define wakeup afs_osi_Wakeup
+extern int afs_osi_Wakeup(void *event);
+static inline void
+wakeup(void *event)
+{
+    afs_osi_Wakeup(event);
+}
 
 #define vType(V) ((AFSTOV((V)))->i_mode & S_IFMT)
 #define vSetType(V, type) AFSTOV((V))->i_mode = ((type) | (AFSTOV((V))->i_mode & ~S_IFMT))	/* preserve mode */
@@ -133,8 +138,8 @@ static inline long copyinstr(char *from, char *to, int count, int *length) {
 #define copyout(F, T, C) (copy_to_user ((char*)(T), (char*)(F), (C)) > 0 ? EFAULT : 0)
 
 /* kernel print statements */
-#define printf printk
-#define uprintf printk
+#define printf(args...) printk(args)
+#define uprintf(args...) printk(args)
 
 
 #ifndef NGROUPS

@@ -38,7 +38,11 @@ typedef struct socket *osi_socket;
 extern int osi_utoa(char *buf, size_t len, unsigned long val);
 #define osi_Assert(exp) (void)((exp) || (osi_AssertFailK( #exp , __FILE__, __LINE__), 0))
 
-#define	osi_Msg printf)(
+#ifdef AFS_LINUX20_ENV
+# define	osi_Msg printk)(
+#else
+# define	osi_Msg printf)(
+#endif
 #define osi_VMsg vprintf)(
 
 #define	osi_YieldIfPossible()

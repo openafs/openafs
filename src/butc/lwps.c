@@ -1121,15 +1121,12 @@ xbsaRestoreVolumeData(struct rx_call *call, void *rock)
     afs_int32 headBytes, tailBytes, w;
     afs_int32 taskId;
     struct volumeHeader volTrailer;
-    afs_int32 vtsize = 0;
     int found;
     struct dumpNode *nodePtr;
-    struct tc_restoreDesc *Restore;
     afs_int32 bytesRead, tbuffersize, endData = 0;
     char *buffer = (char *)bufferBlock, tbuffer[256];
 
     nodePtr = rparamsPtr->nodePtr;
-    Restore = nodePtr->restores;
     taskId = nodePtr->taskID;
 
     /* Read the volume fragment one block at a time until

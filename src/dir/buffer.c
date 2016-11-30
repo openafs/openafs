@@ -11,6 +11,7 @@
 #include <afs/param.h>
 
 
+#include <string.h>
 #include <stdlib.h>
 #include <lock.h>
 
@@ -449,7 +450,9 @@ DNew(afs_int32 *fid, int page)
     }
     ObtainWriteLock(&tb->lock);
     tb->lockers++;
+    memset(tb->data, 0, BUFFER_PAGE_SIZE);  /* don't leak other people's dirs */
     ReleaseWriteLock(&afs_bufferLock);
     ReleaseWriteLock(&tb->lock);
+
     return tb->data;
 }

@@ -72,7 +72,11 @@
  */
 struct butx_transactionInfo {
     ApiVersion apiVersion;
+#ifdef NEW_XBSA
+    long bsaHandle;
+#else
     u_long bsaHandle;
+#endif
     afs_int32 serverType;	/* Type and flags           */
     afs_int32 maxObjects;	/* max objects/transaction  */
     afs_int32 numObjects;	/* objects in current trans */

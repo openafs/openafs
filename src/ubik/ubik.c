@@ -146,7 +146,7 @@ ContactQuorum_NoArguments(afs_int32 (*proc)(struct rx_connection *, ubik_tid *),
     if (okcalls + 1 >= ubik_quorum)
 	return 0;
     else
-	return rcode;
+	return (rcode != 0) ? rcode : UNOQUORUM;
 }
 
 afs_int32
@@ -185,7 +185,7 @@ ContactQuorum_DISK_Lock(struct ubik_trans *atrans, int aflags,afs_int32 file,
     if (okcalls + 1 >= ubik_quorum)
 	return 0;
     else
-	return rcode;
+	return (rcode != 0) ? rcode : UNOQUORUM;
 }
 
 afs_int32
@@ -223,7 +223,7 @@ ContactQuorum_DISK_Write(struct ubik_trans *atrans, int aflags,
     if (okcalls + 1 >= ubik_quorum)
 	return 0;
     else
-	return rcode;
+	return (rcode != 0) ? rcode : UNOQUORUM;
 }
 
 afs_int32
@@ -261,7 +261,7 @@ ContactQuorum_DISK_Truncate(struct ubik_trans *atrans, int aflags,
     if (okcalls + 1 >= ubik_quorum)
 	return 0;
     else
-	return rcode;
+	return (rcode != 0) ? rcode : UNOQUORUM;
 }
 
 afs_int32
@@ -330,7 +330,7 @@ ContactQuorum_DISK_WriteV(struct ubik_trans *atrans, int aflags,
     if (okcalls + 1 >= ubik_quorum)
 	return 0;
     else
-	return rcode;
+	return (rcode != 0) ? rcode : UNOQUORUM;
 }
 
 afs_int32
@@ -370,7 +370,7 @@ ContactQuorum_DISK_SetVersion(struct ubik_trans *atrans, int aflags,
     if (okcalls + 1 >= ubik_quorum)
 	return 0;
     else
-	return rcode;
+	return (rcode != 0) ? rcode : UNOQUORUM;
 }
 
 /*!
