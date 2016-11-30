@@ -1,0 +1,54 @@
+From 10fd7e53aa9086b6fba94dd3340517cbc7294655 Mon Sep 17 00:00:00 2001
+From: Mark Vitale <mvitale@sinenomine.net>
+Date: Wed, 14 Sep 2016 18:01:22 -0400
+Subject: Linux 4.9: deal with demise of GROUP_AT
+
+Linux commit 81243eacfa40 "cred: simpler, 1D supplementary groups"
+refactors the group_info struct, removing some members (which OpenAFS
+references only through the GROUP_AT macro) and adding a gid member.
+The GROUP_AT macro is also removed from the tree.
+
+Add an autoconfigure test for the new group_info member gid and define a
+replacement GROUP_AT macro to do the right thing under the new regime.
+
+Change-Id: I85a52c0ae0d91fc141a523f443a4ffc05eb72a2b
+Reviewed-on: https://gerrit.openafs.org/12390
+Tested-by: BuildBot <buildbot@rampaginggeek.com>
+Reviewed-by: Benjamin Kaduk <kaduk@mit.edu>
+(cherry picked from commit 8e81b182e36cde28ec5708e5fcbe56e4900b1ea3)
+---
+ acinclude.m4                | 1 +
+ src/afs/LINUX/osi_machdep.h | 5 +++++
+ 2 files changed, 6 insertions(+)
+
+diff --git a/acinclude.m4 b/acinclude.m4
+index c645c3d03..38eefceb6 100644
+--- a/acinclude.m4
++++ b/acinclude.m4
+@@ -878,6 +878,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
+ 		 AC_CHECK_LINUX_STRUCT([ctl_table], [ctl_name], [sysctl.h])
+ 		 AC_CHECK_LINUX_STRUCT([dentry], [d_u.d_alias], [dcache.h])
+ 		 AC_CHECK_LINUX_STRUCT([dentry_operations], [d_automount], [dcache.h])
++		 AC_CHECK_LINUX_STRUCT([group_info], [gid], [cred.h])
+ 		 AC_CHECK_LINUX_STRUCT([inode], [i_alloc_sem], [fs.h])
+ 		 AC_CHECK_LINUX_STRUCT([inode], [i_blkbits], [fs.h])
+ 		 AC_CHECK_LINUX_STRUCT([inode], [i_blksize], [fs.h])
+diff --git a/src/afs/LINUX/osi_machdep.h b/src/afs/LINUX/osi_machdep.h
+index 54efc99b6..4448fdcfd 100644
+--- a/src/afs/LINUX/osi_machdep.h
++++ b/src/afs/LINUX/osi_machdep.h
+@@ -146,6 +146,11 @@ static inline long copyinstr(char *from, char *to, int count, int *length) {
+ #define NGROUPS NGROUPS_SMALL
+ #endif
+ 
++#ifdef STRUCT_GROUP_INFO_HAS_GID
++/* compat macro for Linux 4.9 */
++#define GROUP_AT(gi,x)  ((gi)->gid[x])
++#endif
++
+ typedef struct task_struct afs_proc_t;
+ 
+ #ifdef HAVE_LINUX_KUID_T
+-- 
+2.11.0
+

@@ -8,6 +8,10 @@ openafs (1.6.20-2) UNRELEASED; urgency=medium
       LINUX-do-not-use-d_invalidate-to-evict-dentries.patch,
       afs-shake-harder-in-shake-loose-vcaches.patch: Avoid system hangs on
       busy machines due to vcache deallocation failures.
+    - Linux-4.9-deal-with-demise-of-GROUP_AT.patch,
+      Linux-4.9-inode_operation-rename-now-takes-flags.patch,
+      Linux-4.9-inode_change_ok-becomes-setattr_prepare.patch: Support
+      Linux kernel 4.9.  (Closes: #847011)
 
  -- Anders Kaseorg <andersk@mit.edu>  Thu, 01 Dec 2016 00:13:01 -0500
 
