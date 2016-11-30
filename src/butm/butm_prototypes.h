@@ -11,6 +11,7 @@
 
 /* file_tm.c */
 
+extern void incSize(struct butm_tapeInfo *info, afs_uint32 dataSize);
 extern afs_int32 SeekFile(struct butm_tapeInfo *, int);
 extern afs_int32 butm_file_Instantiate(struct butm_tapeInfo *,
 		                       struct tapeConfig *);

@@ -519,6 +519,7 @@ urecovery_Interact(void *dummy)
 	 * most current database, then go find the most current db.
 	 */
 	if (!(urecovery_state & UBIK_RECFOUNDDB)) {
+            int okcalls = 0;
 	    bestServer = (struct ubik_server *)0;
 	    bestDBVersion.epoch = 0;
 	    bestDBVersion.counter = 0;
@@ -529,6 +530,7 @@ urecovery_Interact(void *dummy)
 		    continue;
 		code = DISK_GetVersion(ts->disk_rxcid, &ts->version);
 		if (code == 0) {
+                    okcalls++;
 		    /* perhaps this is the best version */
 		    if (vcmp(ts->version, bestDBVersion) > 0) {
 			/* new best version */
@@ -537,22 +539,33 @@ urecovery_Interact(void *dummy)
 		    }
 		}
 	    }
-	    /* take into consideration our version. Remember if we,
-	     * the sync site, have the best version. Also note that
-	     * we may need to send the best version out.
-	     */
-	    if (vcmp(ubik_dbase->version, bestDBVersion) >= 0) {
-		bestDBVersion = ubik_dbase->version;
-		bestServer = (struct ubik_server *)0;
-		urecovery_state |= UBIK_RECHAVEDB;
-	    } else {
-		/* Clear the flag only when we know we have to retrieve
-		 * the db. Because urecovery_AllBetter() looks at it.
-		 */
-		urecovery_state &= ~UBIK_RECHAVEDB;
-	    }
-	    urecovery_state |= UBIK_RECFOUNDDB;
-	    urecovery_state &= ~UBIK_RECSENTDB;
+
+            if (okcalls + 1 >= ubik_quorum) {
+                /* If we've asked a majority of sites about their db version,
+                 * then we can say with confidence that we've found the best db
+                 * version. If we haven't contacted most sites (because
+                 * GetVersion failed or because we already know the server is
+                 * down), then we don't really know if we know about the best
+                 * db version. So we can only proceed in here if 'okcalls'
+                 * indicates we managed to contact a majority of sites. */
+
+                /* take into consideration our version. Remember if we,
+                 * the sync site, have the best version. Also note that
+                 * we may need to send the best version out.
+                 */
+                if (vcmp(ubik_dbase->version, bestDBVersion) >= 0) {
+                    bestDBVersion = ubik_dbase->version;
+                    bestServer = (struct ubik_server *)0;
+                    urecovery_state |= UBIK_RECHAVEDB;
+                } else {
+                    /* Clear the flag only when we know we have to retrieve
+                     * the db. Because urecovery_AllBetter() looks at it.
+                     */
+                    urecovery_state &= ~UBIK_RECHAVEDB;
+                }
+                urecovery_state |= UBIK_RECFOUNDDB;
+                urecovery_state &= ~UBIK_RECSENTDB;
+            }
 	}
 #if defined(UBIK_PAUSE)
 	/* it's not possible for UBIK_RECFOUNDDB not to be set here.

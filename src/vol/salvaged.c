@@ -206,6 +206,8 @@ handleit(struct cmd_syndesc *as, void *arock)
 	OKToZap = 1;
     if (as->parms[6].items)	/* -rootinodes */
 	ShowRootFiles = 1;
+    if (as->parms[7].items)	/* -salvagedirs */
+	RebuildDirs = 1;
     if (as->parms[8].items)	/* -ForceReads */
 	forceR = 1;
     if ((ti = as->parms[9].items)) {	/* -Parallel # */

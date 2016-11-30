@@ -21,10 +21,18 @@ extern void waitDbWatcher(void);
 extern afs_int32 finishDump(struct budb_dumpEntry *);
 extern afs_int32 threadEntryDir(void *, afs_int32, afs_int32);
 
+/* dump.c */
+#ifdef xbsa
+struct butx_transactionInfo;
+extern afs_int32 InitToServer(afs_int32 taskId, struct butx_transactionInfo * butxInfoP,
+                              char *server);
+#endif
+
 /* list.c */
 extern afs_int32 allocTaskId(void);
 
-/* lwps.h */
+/* lwps.c */
+extern void ELog(afs_int32 task, char *fmt, ...);
 extern int ReadLabel(struct tc_tapeLabel *);
 extern void unmountTape(afs_int32, struct butm_tapeInfo *);
 extern int tapeExpired(struct butm_tapeLabel *);

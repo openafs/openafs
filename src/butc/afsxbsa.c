@@ -17,13 +17,17 @@
 #include <stdio.h>
 
 
+#include <ctype.h>
+
 #if defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX26_ENV)
 #include <dlfcn.h>
 #endif
 
 #include <errno.h>
+#include <afs/tcdata.h>
 #include "butc_xbsa.h"
 #include <afs/butx.h>
+#include "butc_internal.h"
 
 /* Global Definations */
 #define APPLTYPE "afs-butc"
@@ -32,7 +36,7 @@
 #define NOHANDLE 0
 #define XAPI_FSINFO "FS for XOpen API"
 #define DIR_DELIMITER '/'
-#define STR_DIR_DELIMITER '/'
+#define STR_DIR_DELIMITER "/"
 
 xGlobal xopenGbl;
 char traceStr[DSM_MAX_RC_MSG_LENGTH+1];
@@ -199,7 +203,6 @@ void ourLogEvent_Ex(dsUint32_t dsmHandle, dsmLogType type, char *message,
 {
    dsmLogExIn_t dsmLogIn;
    dsmLogExOut_t dsmLogOut;
-   dsInt16_t    rc = 0;
    memset(&dsmLogOut, '\0', sizeof(dsmLogExOut_t));
 
    if (dsmHandle)
@@ -210,7 +213,7 @@ void ourLogEvent_Ex(dsUint32_t dsmHandle, dsmLogType type, char *message,
 
       strcpy(dsmLogIn.appMsgID, appMsg);
       dsmLogIn.message = message;
-      rc = AFSdsmLogEventEx(dsmHandle, &dsmLogIn, &dsmLogOut);
+      AFSdsmLogEventEx(dsmHandle, &dsmLogIn, &dsmLogOut);
    }
 }
 
@@ -641,7 +644,7 @@ qryRespBackupData *respBackupP
 }
 
 
-afs_int32 dsm_MountLibrary()
+afs_int32 dsm_MountLibrary(void)
 {
 void * dynlib = NULL ;
 
@@ -989,7 +992,7 @@ BSA_Int16 BSAInit( long     *BSAHandleP,
 
       strcat(msg, ".\n");
 
-      sprintf(traceStr, msg);
+      strcpy(traceStr, msg);
    }
 
    *BSAHandleP = (long)dsmHandle;
@@ -1082,7 +1085,7 @@ BSA_Int16 BSATerminate(
    }
 
    dsmHandle = BSAHandle;
-   sprintf(traceStr2, "BSATerminate ENTRY: BSAHandle is %d.",
+   sprintf(traceStr2, "BSATerminate ENTRY: BSAHandle is %ld.",
                       BSAHandle);
    ourTrace(dsmHandle, TrFL, traceStr2);
 
@@ -1121,8 +1124,8 @@ BSA_Int16 BSAChangeToken(
 
    dsmHandle = BSAHandle;
 
-   sprintf(traceStr2, "BSAChangeToken ENTRY: BSAHandle:%d old:>%s< new:>%s<",
-           BSAHandle,oldTokenP,newTokenP);
+   sprintf(traceStr2, "BSAChangeToken ENTRY: BSAHandle:%ld old:>%s< new:>%s<",
+           BSAHandle,*oldTokenP,*newTokenP);
    ourTrace(dsmHandle, TrFL, traceStr2);
 
    rc = AFSdsmChangePW(dsmHandle, (char *)oldTokenP, (char *)newTokenP);
@@ -1172,7 +1175,7 @@ BSA_Int16 BSASetEnvironment(
 #endif
    }
 
-   sprintf(traceStr2, "BSASetEnvironment ENTRY: BSAHandle:%d envP:>%p< ",
+   sprintf(traceStr2, "BSASetEnvironment ENTRY: BSAHandle:%ld envP:>%p< ",
            BSAHandle,envP);
    ourTrace(BSAHandle, TrFL, traceStr2);
    XOPENRETURN(BSAHandle,"BSASetEnvironment",
@@ -1191,7 +1194,7 @@ BSA_Int16 BSAGetEnvironment(
    char        envString[ADSM_ENV_STRS][BSA_MAX_DESC];
    char        maxObjStr[6];  /* conversion field. value range is 16-256 */
    dsUint32_t  maxObjNum;
-   dsInt16_t   i, j;
+   dsInt16_t   i;
 
    if(!dsm_init)
    {
@@ -1212,7 +1215,7 @@ BSA_Int16 BSAGetEnvironment(
    {
       memset(envString[i], 0x00, BSA_MAX_DESC);
    }
-   sprintf(traceStr2, "BSAGetEnvironment ENTRY: BSAHandle:%d ObjOwner:'%s' appOwner:'%s' envP:>%p<.",
+   sprintf(traceStr2, "BSAGetEnvironment ENTRY: BSAHandle:%ld ObjOwner:'%s' appOwner:'%s' envP:>%p<.",
            BSAHandle,
            objOwnerP->bsaObjectOwner,
            objOwnerP->appObjectOwner,
@@ -1261,7 +1264,7 @@ BSA_Int16 BSAGetEnvironment(
 
    strcpy(envString[1],"TSMMAXOBJ=");
    maxObjNum = xopenGbl.dsmSessInfo.maxObjPerTxn;  /* convert to 32 bit */
-   sprintf(maxObjStr,"%lu", maxObjNum );
+   sprintf(maxObjStr,"%u", maxObjNum );
    strcat(envString[1], maxObjStr);
 
    strcpy(envString[2], "TSMSRVRSTANZA=");
@@ -1306,7 +1309,7 @@ BSA_Int16 BSABeginTxn(
 #endif
    }
 
-   sprintf(traceStr2, "BSABeginTxn ENTRY: BSAHandle:%d", BSAHandle);
+   sprintf(traceStr2, "BSABeginTxn ENTRY: BSAHandle:%ld", BSAHandle);
    ourTrace(BSAHandle, TrFL, traceStr2);
   /*========================================================
    don't actually issue BeginTxn yet, because we will do our
@@ -1351,7 +1354,7 @@ BSA_Int16 BSAEndTxn(
    memset(rsMsg,        '\0', DSM_MAX_RC_MSG_LENGTH + 1);
    memset(ourMessage,    '\0', DSM_MAX_RC_MSG_LENGTH + 1);
 
-   sprintf(traceStr2, "BSAEndTxn ENTRY: BSAHandle:%d Vote:>%d<", BSAHandle, vote);
+   sprintf(traceStr2, "BSAEndTxn ENTRY: BSAHandle:%ld Vote:>%d<", BSAHandle, vote);
    ourTrace(BSAHandle, TrFL, traceStr2);
 
    dsmHandle = BSAHandle;
@@ -1496,7 +1499,7 @@ ObjectDescriptor *BSAobjDescP
 
    memset(&backupData, 0x00, sizeof(qryBackupData));
 
-   sprintf(traceStr2, "BSAQueryObject ENTRY: BSAHandle:%d ObjOwner(qryDesc):'%s' appOwner(qryDesc):'%s' \n ObjName(qryDesc):'%.*s%.*s' \n copyType:%d ObjectType:%d status:%d ",
+   sprintf(traceStr2, "BSAQueryObject ENTRY: BSAHandle:%ld ObjOwner(qryDesc):'%s' appOwner(qryDesc):'%s' \n ObjName(qryDesc):'%.*s%.*s' \n copyType:%d ObjectType:%d status:%d ",
           BSAHandle,
           BSAqryDescP->owner.bsaObjectOwner,
           BSAqryDescP->owner.appObjectOwner,
@@ -1546,7 +1549,7 @@ ObjectDescriptor *BSAobjDescP
      ====================================================*/
    if (strlen(BSAqryDescP->objName.objectSpaceName) > BSA_MAX_OSNAME)
    {
-      sprintf(traceStr2, "BSAQueryObject: objectSpaceName too long (%d).",
+      sprintf(traceStr2, "BSAQueryObject: objectSpaceName too long (%" AFS_SIZET_FMT ").",
               strlen(BSAqryDescP->objName.objectSpaceName));
       ourTrace(BSAHandle,TrFL, traceStr2);
       bsaRC = BSA_RC_OBJNAME_TOO_LONG;
@@ -1560,7 +1563,7 @@ ObjectDescriptor *BSAobjDescP
    if (strlen(BSAqryDescP->objName.pathName) >
        min(DSM_MAX_HL_LENGTH, BSA_MAX_PATHNAME))
    {
-      sprintf(traceStr2, "BSAQueryObject: pathName too long (%d)",
+      sprintf(traceStr2, "BSAQueryObject: pathName too long (%" AFS_SIZET_FMT ")",
               strlen(BSAqryDescP->objName.pathName));
       ourTrace(BSAHandle, TrFL, traceStr2);
       bsaRC = BSA_RC_OBJNAME_TOO_LONG;
@@ -1619,7 +1622,7 @@ ObjectDescriptor *BSAobjDescP
          if (strlen(BSAqryDescP->desc) > ADSM_MAX_DESC)
          {
 
-            sprintf(traceStr2, "BSAQueryObject: description longer than ADSM max (%d). ", strlen(BSAqryDescP->desc));
+            sprintf(traceStr2, "BSAQueryObject: description longer than ADSM max (%" AFS_SIZET_FMT "). ", strlen(BSAqryDescP->desc));
             ourTrace(BSAHandle,TrFL, traceStr2);
             bsaRC = BSA_RC_DESC_TOO_LONG;
             XOPENRETURN(BSAHandle, "BSAQueryObject",
@@ -1815,7 +1818,7 @@ ObjectDescriptor *BSAobjDescP
 
    if (rc == DSM_RC_OK)
    {
-      sprintf(traceStr2, "BSAQueryObject(AFSdsmGetNextQObj) rc = %d, ObjOwner(objDesc):'%s' appOwner(objDesc):'%s' \n ObjName(objDesc):'%.*s%.*s' \n copyType:%d copyId:'%d %d' cGName:'%s'",
+      sprintf(traceStr2, "BSAQueryObject(AFSdsmGetNextQObj) rc = %d, ObjOwner(objDesc):'%s' appOwner(objDesc):'%s' \n ObjName(objDesc):'%.*s%.*s' \n copyType:%d copyId:'%lu %lu' cGName:'%s'",
        rc,
        BSAobjDescP->Owner.bsaObjectOwner,
        BSAobjDescP->Owner.appObjectOwner,
@@ -1824,7 +1827,7 @@ ObjectDescriptor *BSAobjDescP
        BSAobjDescP->copyType,
        BSAobjDescP->copyId.left,
        BSAobjDescP->copyId.right,
-       BSAobjDescP->cGName == NULL ? "" : BSAobjDescP->cGName);
+       BSAobjDescP->cGName);
        ourTrace(BSAHandle,TrFL, traceStr2);
    }
 
@@ -1840,7 +1843,6 @@ BSA_Int16 BSAGetObject(
 )
 {
    dsInt16_t      rc = 0;
-   dsInt16_t      rc1 = 0;
    BSA_Int16      bsaRC = 0;
    dsUint32_t     dsmHandle;
    DataBlk        getBlk;
@@ -1871,7 +1873,7 @@ BSA_Int16 BSAGetObject(
    memset(errPrefix,     '\0', DSM_MAX_RC_MSG_LENGTH + 1);
    memset(ourMessage,    '\0', DSM_MAX_RC_MSG_LENGTH + 1);
 
-   sprintf(traceStr2, "BSAGetObject ENTRY: BSAHandle:%d version:%d copyType:%d copyId:'%d %d' \n bufferLen:%d numBytes:%d ",
+   sprintf(traceStr2, "BSAGetObject ENTRY: BSAHandle:%ld version:%lu copyType:%d copyId:'%lu %lu' \n bufferLen:%d numBytes:%d ",
            BSAHandle,
            BSAobjDescP->version,
            BSAobjDescP->copyType,
@@ -1885,7 +1887,7 @@ BSA_Int16 BSAGetObject(
 
    if (BSAobjDescP->version != ObjectDescriptorVersion)
    {
-      sprintf(traceStr2,"Warning: BSAGetObject: objectDesc.version unexpected %d.", BSAobjDescP->version);
+      sprintf(traceStr2,"Warning: BSAGetObject: objectDesc.version unexpected %lu.", BSAobjDescP->version);
       ourTrace(BSAHandle,TrFL, traceStr2);
       /*==================================================================
        don't treat this as an error now since it isn't defined in the spec
@@ -1966,8 +1968,8 @@ BSA_Int16 BSAGetObject(
    else
    {
       /*=== appl may call BSAEndData to clean up trxn but don't count on it... ===*/
-      rc1 = AFSdsmEndGetObj(dsmHandle);
-      rc1 = AFSdsmEndGetData(dsmHandle);
+      AFSdsmEndGetObj(dsmHandle);
+      AFSdsmEndGetData(dsmHandle);
       xopenGbl.sessFlags =
                (xopenGbl.sessFlags | FL_END_DATA_DONE);  /* turn flag on */
     }
@@ -1983,7 +1985,6 @@ BSA_Int16 BSAGetData(
 )
 {
    dsInt16_t      rc = 0;
-   dsInt16_t      rc1 = 0;
    BSA_Int16      bsaRC = 0;
    dsUint32_t     dsmHandle;
    DataBlk        getBlk;
@@ -2006,7 +2007,7 @@ BSA_Int16 BSAGetData(
    dsmHandle = BSAHandle;
 
 
-   sprintf(traceStr2, "BSAGetData ENTRY: BSAHandle:%d, bufferLen:%d, numBytes:%d",
+   sprintf(traceStr2, "BSAGetData ENTRY: BSAHandle:%ld, bufferLen:%d, numBytes:%d",
            BSAHandle,
            BSAdataBlockP->bufferLen,
            BSAdataBlockP->numBytes);
@@ -2037,8 +2038,8 @@ BSA_Int16 BSAGetData(
       ourTrace(BSAHandle, TrFL,traceStr2);
 
       /*=== appl may call BSAEndData to clean up trxn but don't count on it... ===*/
-      rc1 = AFSdsmEndGetObj(dsmHandle);
-      rc1 = AFSdsmEndGetData(dsmHandle);
+      AFSdsmEndGetObj(dsmHandle);
+      AFSdsmEndGetData(dsmHandle);
       xopenGbl.sessFlags =
                (xopenGbl.sessFlags | FL_END_DATA_DONE);  /* turn flag on */
    }
@@ -2075,7 +2076,7 @@ BSA_Int16 BSASendData(
    dsmHandle = BSAHandle;
 
 
-   sprintf(traceStr2, "BSASendData ENTRY: BSAHandle:%d bufferLen: %d numBytes: %d ",
+   sprintf(traceStr2, "BSASendData ENTRY: BSAHandle:%ld bufferLen: %d numBytes: %d ",
            BSAHandle,
            BSAdataBlockP->bufferLen,
            BSAdataBlockP->numBytes);
@@ -2101,7 +2102,7 @@ BSA_Int16 BSASendData(
             xopenGbl.sessFlags = (xopenGbl.sessFlags | FL_RC_WILL_ABORT);
       }
       BSAdataBlockP->numBytes = (BSA_UInt16)dataBlkArea.numBytes;
-      sprintf(traceStr2, "BSASendData(AFSdsmSendData): BSAHandle:%d bufferLen: %d numBytes sent: %d ",
+      sprintf(traceStr2, "BSASendData(AFSdsmSendData): BSAHandle:%ld bufferLen: %d numBytes sent: %d ",
            BSAHandle,
            BSAdataBlockP->bufferLen,
            BSAdataBlockP->numBytes);
@@ -2117,7 +2118,6 @@ BSA_Int16 BSAEndData(
 )
 {
    dsInt16_t      rc = 0;
-   dsInt16_t      rc1 = 0;
    BSA_Int16      bsaRC = 0;
    dsUint32_t     dsmHandle;
 
@@ -2139,7 +2139,7 @@ BSA_Int16 BSAEndData(
    dsmHandle = BSAHandle;
 
 
-   sprintf(traceStr2, "BSAEndData ENTRY: BSAHandle:%d", BSAHandle);
+   sprintf(traceStr2, "BSAEndData ENTRY: BSAHandle:%ld", BSAHandle);
    ourTrace(BSAHandle,TrFL, traceStr2);
 
    /*=======================================================
@@ -2246,7 +2246,7 @@ BSA_Int16 BSACreateObject(
 
    if (BSAobjDescP != NULL && BSAdataBlockP != NULL)
    {
-   sprintf(traceStr2, "BSACreateObject ENTRY: BSAHandle:%d ObjOwner:'%s' appOwner:'%s' \n ObjName:'%.*s%.*s' \n objType:%d  size:'%d %d' resourceType:'%s'  \n bufferLen:%d numBytes:%d ",
+   sprintf(traceStr2, "BSACreateObject ENTRY: BSAHandle:%ld ObjOwner:'%s' appOwner:'%s' \n ObjName:'%.*s%.*s' \n objType:%d  size:'%lu %lu' resourceType:'%s'  \n bufferLen:%d numBytes:%d ",
 
            BSAHandle,
            BSAobjDescP->Owner.bsaObjectOwner[0] != '\0' ? BSAobjDescP->Owner.bsaObjectOwner : "",
@@ -2269,7 +2269,7 @@ BSA_Int16 BSACreateObject(
          XOPENRETURN(BSAHandle, "BSACreateObject",
                   bsaRC,__FILE__,__LINE__);
       }
-    sprintf(traceStr2, "BSACreateObject ENTRY: BSAHandle:%d", BSAHandle);
+    sprintf(traceStr2, "BSACreateObject ENTRY: BSAHandle:%ld", BSAHandle);
   }
 
   ourTrace(BSAHandle, TrFL, traceStr2);
@@ -2304,7 +2304,7 @@ BSA_Int16 BSACreateObject(
    /*=== check string lengths - if this too long, it won't fit in our objInfo ===*/
    if (strlen(BSAobjDescP->desc) > ADSM_MAX_DESC)
    {
-      sprintf(traceStr2,"BSACreateObject: description longer than TSM max (%d). ",
+      sprintf(traceStr2,"BSACreateObject: description longer than TSM max (%" AFS_SIZET_FMT "). ",
               strlen(BSAobjDescP->desc));
       ourTrace(BSAHandle, TrFL, traceStr2);
       bsaRC = BSA_RC_DESC_TOO_LONG;
@@ -2313,7 +2313,7 @@ BSA_Int16 BSACreateObject(
    }
    if (strlen(BSAobjDescP->objectInfo) > ADSM_MAX_OBJINFO)
    {
-      sprintf(traceStr2,"BSACreateObject: objInfo longer than TSM max (%d).",
+      sprintf(traceStr2,"BSACreateObject: objInfo longer than TSM max (%" AFS_SIZET_FMT ").",
       strlen(BSAobjDescP->objectInfo));
       ourTrace(BSAHandle,TrFL, traceStr2);
       bsaRC = BSA_RC_OBJINFO_TOO_LONG;
@@ -2332,7 +2332,7 @@ BSA_Int16 BSACreateObject(
 
    if (strlen(BSAobjDescP->objName.objectSpaceName) > BSA_MAX_OSNAME)
    {
-      sprintf(traceStr2, "BSACreateObject: objectSpaceName too long (%d)",
+      sprintf(traceStr2, "BSACreateObject: objectSpaceName too long (%" AFS_SIZET_FMT ")",
                        strlen(BSAobjDescP->objName.objectSpaceName));
       ourTrace(BSAHandle, TrFL, traceStr2);
       bsaRC = BSA_RC_OBJNAME_TOO_LONG;
@@ -2448,7 +2448,7 @@ BSA_Int16 BSACreateObject(
    if (strlen(BSAobjDescP->objName.pathName) >
             min(DSM_MAX_HL_LENGTH, BSA_MAX_PATHNAME))
    {
-      sprintf(traceStr2, "BSACreateObject: pathName too long (%d)",
+      sprintf(traceStr2, "BSACreateObject: pathName too long (%" AFS_SIZET_FMT ")",
               strlen(BSAobjDescP->objName.pathName));
       ourTrace(BSAHandle,TrFL, traceStr2);
       bsaRC = BSA_RC_OBJNAME_TOO_LONG;
@@ -2602,7 +2602,7 @@ BSA_Int16 BSADeleteObject(
 
    dsmHandle = BSAHandle;
 
-   sprintf(traceStr2, "BSADeleteObject ENTRY: BSAHandle:%d CopyType:%d \n ObjName:'%.*s%.*s' copyidP:'%d %d'.",
+   sprintf(traceStr2, "BSADeleteObject ENTRY: BSAHandle:%ld CopyType:%d \n ObjName:'%.*s%.*s' copyidP:'%lu %lu'.",
            BSAHandle,
            copyType,
            100,BSAobjNameP->objectSpaceName,
@@ -2749,7 +2749,7 @@ BSA_Int16 BSAMarkObjectInactive(
    memset(&delInfo, 0x00, sizeof(dsmDelInfo));
    memset(&queryBuffer, 0x00, sizeof(qryBackupData));
 
-   sprintf(traceStr2, "BSAMarkObjectInactive ENTRY: BSAHandle:%d \n ObjName:'%.*s%.*s'.",
+   sprintf(traceStr2, "BSAMarkObjectInactive ENTRY: BSAHandle:%ld \n ObjName:'%.*s%.*s'.",
            BSAHandle,
            100, BSAobjNameP->objectSpaceName,
            100, BSAobjNameP->pathName);
@@ -2766,7 +2766,7 @@ BSA_Int16 BSAMarkObjectInactive(
 
    if (strlen(BSAobjNameP->objectSpaceName) > DSM_MAX_FSNAME_LENGTH)
    {
-      sprintf(traceStr2, "BSAMarkObjectInactive: objectSpaceName too long (%d)", strlen(BSAobjNameP->objectSpaceName));
+      sprintf(traceStr2, "BSAMarkObjectInactive: objectSpaceName too long (%" AFS_SIZET_FMT ")", strlen(BSAobjNameP->objectSpaceName));
       ourTrace(BSAHandle,TrFL, traceStr2);
 
       bsaRC = BSA_RC_OBJNAME_TOO_LONG;
@@ -2780,7 +2780,7 @@ BSA_Int16 BSAMarkObjectInactive(
    if (strlen(BSAobjNameP->pathName) >
        min(DSM_MAX_HL_LENGTH, BSA_MAX_PATHNAME))
    {
-      sprintf(traceStr2, "BSAMarkObjectInactive: pathName too long (%d)",
+      sprintf(traceStr2, "BSAMarkObjectInactive: pathName too long (%" AFS_SIZET_FMT ")",
                          strlen(BSAobjNameP->pathName));
       ourTrace(BSAHandle,TrFL, traceStr2);
       bsaRC = BSA_RC_OBJNAME_TOO_LONG;

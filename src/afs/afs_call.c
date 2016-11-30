@@ -86,10 +86,6 @@ afs_int32 afs_rx_idledead_rep = AFS_IDLEDEADTIME_REP;
 
 static int afscall_set_rxpck_received = 0;
 
-#if defined(AFS_HPUX_ENV)
-extern int afs_vfs_mount();
-#endif /* defined(AFS_HPUX_ENV) */
-
 /* This is code which needs to be called once when the first daemon enters
  * the client. A non-zero return means an error and AFS should not start.
  */
@@ -912,12 +908,6 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	osi_Assert(tbuffer1 != NULL);
 	code = afs_InitDynroot();
 	if (!code) {
-#if 0
-	    /* wait for basic init - XXX can't find any reason we need this? */
-	    while (afs_initState < AFSOP_START_BKG)
-		afs_osi_Sleep(&afs_initState);
-#endif
-
 	    AFS_COPYIN(AFSKPTR(parm2), (caddr_t)tcell->hosts, sizeof(tcell->hosts),
 		       code);
 	}
@@ -1245,22 +1235,6 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	if (!code)
 	    AFS_COPYOUT((caddr_t) & mtu, AFSKPTR(parm3),
 			sizeof(afs_int32), code);
-#ifdef AFS_AIX32_ENV
-/* this is disabled for now because I can't figure out how to get access
- * to these kernel variables.  It's only for supporting user-mode rx
- * programs -- it makes a huge difference on the 220's in my testbed,
- * though I don't know why. The bosserver does this with /etc/no, so it's
- * being handled a different way for the servers right now.  */
-/*      {
-	static adjusted = 0;
-	extern u_long sb_max_dflt;
-	if (!adjusted) {
-	  adjusted = 1;
-	  if (sb_max_dflt < 131072) sb_max_dflt = 131072;
-	  if (sb_max < 131072) sb_max = 131072;
-	}
-      } */
-#endif /* AFS_AIX32_ENV */
     } else if (parm == AFSOP_GETMASK) {	/* parm2 == addr in net order */
 	afs_uint32 mask = 0;
 #if	!defined(AFS_SUN5_ENV)

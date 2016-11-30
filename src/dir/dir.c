@@ -206,7 +206,9 @@ Delete(void *dir, char *entry)
     DRelease(previtem, 1);
     index = DVOffset(firstitem) / 32;
     nitems = NameBlobs(firstitem->name);
-    DRelease(firstitem, 0);
+    /* Clear entire DirEntry and any DirXEntry extensions */
+    memset(firstitem, 0, nitems * sizeof(*firstitem));
+    DRelease(firstitem, 1);
     FreeBlobs(dir, index, nitems);
     return 0;
 }

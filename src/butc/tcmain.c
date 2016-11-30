@@ -56,6 +56,7 @@
 #define XBSA_TCMAIN
 #include "butc_xbsa.h"
 #include "butc_prototypes.h"
+#include "butc_internal.h"
 #include <afs/kautils.h>
 #include <afs/bc.h>
 
