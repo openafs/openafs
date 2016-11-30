@@ -1,0 +1,63 @@
+From 83a174de588c56cedbf13e6abab786fb56e8082f Mon Sep 17 00:00:00 2001
+From: Mark Vitale <mvitale@sinenomine.net>
+Date: Thu, 4 Aug 2016 18:42:27 -0400
+Subject: LINUX: do not use d_invalidate to evict dentries
+
+When working within the AFS filespace, commands which access large
+numbers of OpenAFS files (e.g., git operations and builds) may result in
+active files (e.g., the current working directory) being evicted from the
+dentry cache.  One symptom of this is the following message upon return
+to the shell prompt:
+
+"fatal: unable to get current working directory: No such file or
+directory"
+
+Starting with Linux 3.18, d_invalidate returns void because it always
+succeeds.  Commit a42f01d5ebb13da575b3123800ee6990743155ab adapted
+OpenAFS to cope with the new return type, but not with the changed
+semantics of d_invalidate.  Because d_invalidate can no longer fail with
+-EBUSY when invoked on an in-use dentry. OpenAFS must no longer trust it
+to preserve in-use dentries.
+
+Modify the dentry eviction code to use a method (d_prune_aliases) that
+does not evict in-use dentries.
+
+Reviewed-on: https://gerrit.openafs.org/12363
+Reviewed-by: Benjamin Kaduk <kaduk@mit.edu>
+Tested-by: Benjamin Kaduk <kaduk@mit.edu>
+(cherry picked from commit c3bbf0b4444db88192eea4580ac9e9ca3de0d286)
+
+Change-Id: Ic72a280f136cc414b54d4b8ec280f225290df122
+---
+ src/afs/LINUX/osi_vcache.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/src/afs/LINUX/osi_vcache.c b/src/afs/LINUX/osi_vcache.c
+index bc74b6744..23040b12c 100644
+--- a/src/afs/LINUX/osi_vcache.c
++++ b/src/afs/LINUX/osi_vcache.c
+@@ -24,6 +24,13 @@ TryEvictDentries(struct vcache *avc)
+     struct hlist_node *p;
+ #endif
+ 
++#if defined(D_INVALIDATE_IS_VOID)
++    /* At this kernel level, d_invalidate always succeeds;
++     * that is, it will now invalidate even an active directory,
++     * Therefore we must use a different method to evict dentries.
++     */
++    d_prune_aliases(inode);
++#else
+ #if defined(HAVE_DCACHE_LOCK)
+     spin_lock(&dcache_lock);
+ 
+@@ -78,6 +85,7 @@ restart:
+     spin_unlock(&inode->i_lock);
+ #endif /* HAVE_DCACHE_LOCK */
+ inuse:
++#endif /* D_INVALIDATE_IS_VOID */
+     return;
+ }
+ 
+-- 
+2.11.0
+

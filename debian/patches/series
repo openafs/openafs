@@ -1,1 +1,5 @@
 0003-Add-dummy-exit-command-for-afsd-to-do-nothing.patch
+LINUX-split-dentry-eviction-from-osi_TryEvictVCache.patch
+Reformat-src-afs-LINUX-osi_vcache.c.patch
+LINUX-do-not-use-d_invalidate-to-evict-dentries.patch
+afs-shake-harder-in-shake-loose-vcaches.patch

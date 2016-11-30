@@ -1,0 +1,89 @@
+From f31b673509664714b146f23be069b69be7e1ac89 Mon Sep 17 00:00:00 2001
+From: Benjamin Kaduk <kaduk@mit.edu>
+Date: Thu, 27 Oct 2016 17:27:26 -0500
+Subject: Reformat src/afs/LINUX/osi_vcache.c
+
+Apply the GNU indent options from CODING, with manual adjustments
+to leave jump labels in column zero.
+
+Also rename and mark static a function-local helper function.
+
+Reviewed-on: https://gerrit.openafs.org/12422
+Reviewed-by: Benjamin Kaduk <kaduk@mit.edu>
+Tested-by: BuildBot <buildbot@rampaginggeek.com>
+(cherry picked from commit 22933e02e2510f25b79230964f135571c7bfe710)
+
+Change-Id: I9fb2886ae2213218ae80ea9d5b80540b9c79077b
+---
+ src/afs/LINUX/osi_vcache.c | 23 ++++++++++++++---------
+ 1 file changed, 14 insertions(+), 9 deletions(-)
+
+diff --git a/src/afs/LINUX/osi_vcache.c b/src/afs/LINUX/osi_vcache.c
+index 3682bdc29..bc74b6744 100644
+--- a/src/afs/LINUX/osi_vcache.c
++++ b/src/afs/LINUX/osi_vcache.c
+@@ -10,13 +10,13 @@
+ #include <afsconfig.h>
+ #include "afs/param.h"
+ 
+-#include "afs/sysincludes.h"    /*Standard vendor system headers */
+-#include "afsincludes.h"        /*AFS-based standard headers */
++#include "afs/sysincludes.h"	/*Standard vendor system headers */
++#include "afsincludes.h"	/*AFS-based standard headers */
+ 
+ #include "osi_compat.h"
+ 
+-void
+-osi_TryEvictDentries(struct vcache *avc)
++static void
++TryEvictDentries(struct vcache *avc)
+ {
+     struct dentry *dentry;
+     struct inode *inode = AFSTOV(avc);
+@@ -95,7 +95,7 @@ osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep)
+ 	ReleaseWriteLock(&afs_xvcache);
+ 	AFS_GUNLOCK();
+ 
+-	osi_TryEvictDentries(avc);
++	TryEvictDentries(avc);
+ 
+ 	AFS_GLOCK();
+ 	ObtainWriteLock(&afs_xvcache, 733);
+@@ -103,7 +103,7 @@ osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep)
+     }
+ 
+     /* See if we can evict it from the VLRUQ */
+-    if (VREFCOUNT_GT(avc,0) && !VREFCOUNT_GT(avc,1) && avc->opens == 0
++    if (VREFCOUNT_GT(avc, 0) && !VREFCOUNT_GT(avc, 1) && avc->opens == 0
+ 	&& (avc->f.states & CUnlinkedDel) == 0) {
+ 	int didsleep = *slept;
+ 
+@@ -145,17 +145,22 @@ osi_NewVnode(void)
+ }
+ 
+ void
+-osi_PrePopulateVCache(struct vcache *avc) {
++osi_PrePopulateVCache(struct vcache *avc)
++{
+     avc->uncred = 0;
+     memset(&(avc->f), 0, sizeof(struct fvcache));
+     avc->cred = NULL;
+ }
+ 
+ void
+-osi_AttachVnode(struct vcache *avc, int seq) { /* Nada */ }
++osi_AttachVnode(struct vcache *avc, int seq)
++{
++    /* Nada */
++}
+ 
+ void
+-osi_PostPopulateVCache(struct vcache *avc) {
++osi_PostPopulateVCache(struct vcache *avc)
++{
+     vSetType(avc, VREG);
+ }
+ 
+-- 
+2.11.0
+
