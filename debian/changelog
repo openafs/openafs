@@ -1,3 +1,9 @@
+openafs (1.6.20-1) UNRELEASED; urgency=high
+
+  * New upstream security release (1.6.20):
+
+ -- Benjamin Kaduk <kaduk@mit.edu>  Wed, 30 Nov 2016 15:36:12 -0500
+
 openafs (1.6.18.3-3) unstable; urgency=medium
 
   * Drop openafs-dbg in favor of automatically generated dbgsym packages.
