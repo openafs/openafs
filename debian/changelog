@@ -1,6 +1,13 @@
 openafs (1.6.20-1) UNRELEASED; urgency=high
 
+  * New upstream release (1.6.19):
+    - Fix issue that could result in using out-of-date database versions
+      in rare cases
+    - Don't commit more data to a file than was actually copied during writes,
+      which could happen on architectures with a page size greater than 4K
   * New upstream security release (1.6.20):
+    - Fix information leakage (file/directory names) from reused directory
+      buffers
 
  -- Benjamin Kaduk <kaduk@mit.edu>  Wed, 30 Nov 2016 15:36:12 -0500
 
