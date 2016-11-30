@@ -1,4 +1,11 @@
                        User-Visible OpenAFS Changes
+OpenAFS 1.6.20 (Security Release)
+
+  All platforms
+
+    * Fix for OPENAFS-SA-2016-003: file and directory names leak due to
+      reuse of directory objects without zeroing the contents
+      (12461 12462 12463 12464 12465)
 
 OpenAFS 1.6.19
 
