@@ -214,7 +214,7 @@ override_dh_install-indep:
 	find debian/$(srcpkg) -type f -perm -100 | xargs chmod 755
 	find debian/$(srcpkg) -type f -not -perm -100 | xargs chmod 644
 	chmod 775 debian/$(srcpkg)/usr/src/modules
-	cd debian/$(srcpkg)/usr/src && tar cf $(package).tar modules
+	cd debian/$(srcpkg)/usr/src && find modules -print0 | LC_ALL=C sort -z | tar --no-recursion --null -T - $(if $(SOURCE_DATE_EPOCH),--mtime=@$(SOURCE_DATE_EPOCH)) -cf $(package).tar
 	bzip2 debian/$(srcpkg)/usr/src/$(package).tar
 	chmod 644 debian/$(srcpkg)/usr/src/$(package).tar.bz2
 	install -d debian/$(dkmspkg)/usr/src

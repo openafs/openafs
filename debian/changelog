@@ -15,6 +15,8 @@ openafs (1.6.20-2) UNRELEASED; urgency=medium
     - AFS_component_version_number.c-Respect-SOURCE_DATE_E.patch:
       Respect SOURCE_DATE_EPOCH in cml_version_number to improve build
       reproducibility.
+  * openafs-modules-source: Generate /usr/src/openafs.tar.bz2
+    reproducibly.
 
  -- Anders Kaseorg <andersk@mit.edu>  Thu, 01 Dec 2016 00:13:01 -0500
 
