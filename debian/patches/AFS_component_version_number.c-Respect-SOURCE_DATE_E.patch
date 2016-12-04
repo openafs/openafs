@@ -1,0 +1,31 @@
+From 246ac68baddf44731ea402442d99a932e50b5b84 Mon Sep 17 00:00:00 2001
+From: Anders Kaseorg <andersk@mit.edu>
+Date: Sun, 4 Dec 2016 17:26:46 -0500
+Subject: [PATCH] AFS_component_version_number.c: Respect SOURCE_DATE_EPOCH if
+ set
+
+This enables better build reproducibility.
+
+https://wiki.debian.org/ReproducibleBuilds/TimestampsProposal
+
+Change-Id: Id379543a4782a7c1267eaa3d9258751d857cc07b
+---
+ src/config/Makefile.version-NOCML.in | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/config/Makefile.version-NOCML.in b/src/config/Makefile.version-NOCML.in
+index c8ab053c4..83313d26b 100644
+--- a/src/config/Makefile.version-NOCML.in
++++ b/src/config/Makefile.version-NOCML.in
+@@ -11,7 +11,7 @@ AFS_component_version_number.o: AFS_component_version_number.c
+ 
+ AFS_component_version_number.c: @TOP_OBJDIR@/src/config/Makefile.version
+ 	( VERSION=`@abs_top_srcdir@/build-tools/git-version @abs_top_srcdir@ "@VERSION@"` && \
+-	echo 'char cml_version_number[]="@(#) OpenAFS '$$VERSION' built ' `date +"%Y-%m-%d"` '";' >AFS_component_version_number.c.NEW && \
++	echo 'char cml_version_number[]="@(#) OpenAFS '$$VERSION' built ' `date +"%Y-%m-%d" $${SOURCE_DATE_EPOCH:+-d "@$$SOURCE_DATE_EPOCH"}` '";' >AFS_component_version_number.c.NEW && \
+ 	echo 'char* AFSVersion = "${PACKAGE} '$$VERSION'";' >>AFS_component_version_number.c.NEW && \
+ 	if cmp AFS_component_version_number.c.NEW AFS_component_version_number.c > /dev/null 2>&1 ; then : ; else \
+ 	mv AFS_component_version_number.c.NEW AFS_component_version_number.c ; fi )
+-- 
+2.11.0
+

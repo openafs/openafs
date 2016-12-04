@@ -6,3 +6,4 @@ afs-shake-harder-in-shake-loose-vcaches.patch
 Linux-4.9-deal-with-demise-of-GROUP_AT.patch
 Linux-4.9-inode_operation-rename-now-takes-flags.patch
 Linux-4.9-inode_change_ok-becomes-setattr_prepare.patch
+AFS_component_version_number.c-Respect-SOURCE_DATE_E.patch
