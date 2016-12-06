@@ -20,7 +20,7 @@ AC_DEFUN([_OPENAFS_ROKEN_PATHS], [
     [AS_IF([test x"$roken_root" != x],
       [CPPFLAGS_roken="-I$roken_root/include"])])
   LIB_roken="-lroken"
-  buildtool_roken="$(LDFLAGS_roken) $(LIB_roken)"])
+  buildtool_roken="\$(LDFLAGS_roken) \$(LIB_roken)"])
 
 dnl _OPENAFS_ROKEN_CHECK($action-if-found,
 dnl 			 $action-if-not-found)
