@@ -12,6 +12,10 @@ heimdal/hcrypto/crypto-data.c
 heimdal/hcrypto/crypto-evp.c
 heimdal/hcrypto/crypto-keyblock.c
 heimdal/hcrypto/crypto-store-int.c
+heimdal/hcrypto/rand.h
+heimdal/hcrypto/randi.h
+heimdal/hcrypto/rand-fortuna.c
+heimdal/hcrypto/sha256.c
 heimdal/krb5/n-fold.c
 heimdal/krb5/crypto.[ch]
 heimdal/krb5/crypto-aes.c
