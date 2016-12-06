@@ -177,7 +177,7 @@ openafs (1.6.14-1) unstable; urgency=medium
   * Update Swedish translation, thanks Martin Bagge and Anders Jonsson.
     (Closes: #781678)
   * Note that the protocol document rfc5864.txt is dual licensed.
-    (Closes: #768385)
+    (Closes: #754735)
   * Supply copyright notice for systemd helper scripts. (Closes: #779170)
   * Import upstream patches to support the 4.2 Linux kernel.
 
