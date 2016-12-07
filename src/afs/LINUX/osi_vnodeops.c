@@ -1318,6 +1318,24 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 
   good_dentry:
     valid = 1;
+    goto done;
+
+  bad_dentry:
+    valid = 0;
+#ifndef D_INVALIDATE_IS_VOID
+    /* When (v3.18) d_invalidate was converted to void, it also started
+     * being called automatically from revalidate, and automatically
+     * handled:
+     *  - shrink_dcache_parent
+     *  - automatic detach of submounts
+     *  - d_drop
+     * Therefore, after that point, OpenAFS revalidate logic no longer needs
+     * to do any of those things itself for invalid dentry structs.  We only need
+     * to tell VFS it's invalid (by returning 0), and VFS will handle the rest.
+     */
+    if (have_submounts(dp))
+	valid = 1;
+#endif
 
   done:
     /* Clean up */
@@ -1328,6 +1346,7 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
     if (credp)
 	crfree(credp);
 
+#ifndef D_INVALIDATE_IS_VOID
     if (!valid) {
 	/*
 	 * If we had a negative lookup for the name we want to forcibly
@@ -1340,15 +1359,9 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 	} else
 	    d_invalidate(dp);
     }
-
+#endif
     return valid;
 
-  bad_dentry:
-    if (have_submounts(dp))
-	valid = 1;
-    else
-	valid = 0;
-    goto done;
 }
 
 static void
