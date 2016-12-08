@@ -29,6 +29,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 #include <ctype.h>
 #include <afs/cmd.h>
 #include <afs/afsint.h>
@@ -220,28 +221,28 @@ main(int argc, char **argv)
     afs_int32 code;
     struct cmd_syndesc *ts;
 
-    ts = cmd_CreateSyntax(NULL, VolScan, NULL,
+    ts = cmd_CreateSyntax(NULL, VolScan, NULL, 0,
 			  "Print volume vnode information");
 
-    cmd_AddParm(ts, "-checkout", CMD_FLAG, CMD_OPTIONAL,
+    cmd_AddParmAtOffset(ts, P_CHECKOUT, "-checkout", CMD_FLAG, CMD_OPTIONAL,
 			"Checkout volumes from running fileserver");
-    cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_OPTIONAL,
+    cmd_AddParmAtOffset(ts, P_PART, "-partition", CMD_SINGLE, CMD_OPTIONAL,
 			"AFS partition name or id (default current partition)");
-    cmd_AddParm(ts, "-volumeid", CMD_SINGLE, CMD_OPTIONAL,
+    cmd_AddParmAtOffset(ts, P_VOLUMEID, "-volumeid", CMD_SINGLE, CMD_OPTIONAL,
 			"Volume id (-partition required)");
-    cmd_AddParm(ts, "-type", CMD_LIST, CMD_OPTIONAL,
+    cmd_AddParmAtOffset(ts, P_TYPE, "-type", CMD_LIST, CMD_OPTIONAL,
 			"Volume types: rw, ro, bk");
-    cmd_AddParm(ts, "-find", CMD_LIST, CMD_OPTIONAL,
+    cmd_AddParmAtOffset(ts, P_FIND, "-find", CMD_LIST, CMD_OPTIONAL,
 			"Objects to find: file, dir, mount, symlink, acl");
-    cmd_AddParm(ts, "-mask", CMD_LIST, (CMD_OPTIONAL | CMD_HIDE),
+    cmd_AddParmAtOffset(ts, P_MASK, "-mask", CMD_LIST, CMD_OPTIONAL,
                         "Unix mode mask (example: 06000)");
-    cmd_AddParm(ts, "-output", CMD_LIST, CMD_OPTIONAL,
+    cmd_AddParmAtOffset(ts, P_OUTPUT, "-output", CMD_LIST, CMD_OPTIONAL,
 			ColumnNames);
-    cmd_AddParm(ts, "-delim", CMD_SINGLE, CMD_OPTIONAL,
+    cmd_AddParmAtOffset(ts, P_DELIM, "-delim", CMD_SINGLE, CMD_OPTIONAL,
 			"Output field delimiter");
-    cmd_AddParm(ts, "-noheading", CMD_FLAG, CMD_OPTIONAL,
+    cmd_AddParmAtOffset(ts, P_NOHEADING, "-noheading", CMD_FLAG, CMD_OPTIONAL,
 			"Do not print the heading line");
-    cmd_AddParm(ts, "-ignore-magic", CMD_FLAG, CMD_OPTIONAL,
+    cmd_AddParmAtOffset(ts, P_NOMAGIC, "-ignore-magic", CMD_FLAG, CMD_OPTIONAL,
 			"Skip directory vnode magic checks when looking up paths.");
 
     code = cmd_Dispatch(argc, argv);

@@ -5,7 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV
+AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV -DHAVE_WARNX -DHAVE_ERRX -DHAVE_WARN -DHAVE_ERR
 !IF ("$(AFSDEV_BUILDTYPE)" == "CHECKED")
 AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DRXDEBUG
 !ENDIF
@@ -18,18 +18,14 @@ LIBS = \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\mtafsutil.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
-	$(DESTDIR)\lib\afspthread.lib
+	$(DESTDIR)\lib\afspthread.lib \
+        $(DESTDIR)\lib\afsroken.lib \
+	$(DESTDIR)\lib\opr.lib
 
 
 RXTESTOBJS = $(OUT)\testclient.obj $(OUT)\testserver.obj
 
-tests: $(OUT)\rxperf.exe $(OUT)\testclient.exe $(OUT)\testserver.exe $(OUT)\tableGen.exe $(OUT)\generator.exe
-
-$(OUT)\rxperf.exe: $(OUT)\rxperf.obj $(LIBS)
-	$(EXECONLINK)
-        $(_VC_MANIFEST_EMBED_EXE)
-        $(CODESIGN_USERLAND)
-        $(SYMSTORE_IMPORT)
+tests: $(OUT)\testclient.exe $(OUT)\testserver.exe $(OUT)\tableGen.exe $(OUT)\generator.exe
 
 $(OUT)\testclient.exe: $(OUT)\testclient.obj $(LIBS)
 	$(EXECONLINK)
@@ -58,10 +54,8 @@ $(OUT)\generator.exe: $(OUT)\generator.obj $(LIBS)
 $(RXTESTOBJS): ..\rx_clock.h ..\rx_queue.h ..\rx_event.h ..\rx.h
 
 mkdir:
-	
-install: tests
 
-install9x: tests
+install: tests
 
 clean::
     $(DEL) $(TESTS)

@@ -10,6 +10,7 @@ use warnings;
 use Getopt::Long;
 use File::Path;
 use IO::Dir;
+use File::Temp qw/ tempfile tempdir /;
 
 my $suser="nsu";
 my $rootbase="/var/lib/mock/";
@@ -22,16 +23,42 @@ my $ignorerelease = 1;
 my @newrpms;
 
 sub findKernels {
-  my ($root, $uname, @modules) = @_;
+  my ($root, $platform, $uname, $osv, @modules) = @_;
+  $osv =~s/[^\d]//g;
 
+  my ($fh, $tmpconf) = tempfile( "yum.confXXXX", DIR => "/tmp");
+  open(OLDCONF, "$root/etc/yum.conf");
+  while(<OLDCONF>) {
+      $_ =~ s#/var/cache/yum#/var/cache/mock/${platform}/yum_cache#;
+      print $fh $_;
+  }
+  close(OLDCONF);
+  my $archv = "";
+  open(PLATCONF, "/etc/mock/${platform}.cfg");
+  while (<PLATCONF>) {
+      if ($_ =~ "legal_host_arches") {
+	  $_ =~ s/ //g;
+	  $_ =~ /\(([\S]*)\)/;
+	  $_ = $1;
+	  if ($platform =~ "i386") {
+	      $_ =~ s/\'x86_64\'//;
+	      $_ =~ s/\,\,/\,/;
+	      $_ =~ s/\,\$//;
+	  }
+	  if ($_ ne "") {
+	      $archv="--archlist=$_";
+	  }
+      }
+  }
+  close(PLATCONF);
   my $modlist = join(" ", @modules);
-
   my @kernels;
   if ($uname) {
-    @kernels = `repoquery --whatprovides kernel-devel-uname-r --qf "%{name}.%{arch} %{version}-%{release}" -c $root/etc/yum.conf`;
+    @kernels = `repoquery $archv --releasever=$osv --whatprovides kernel-devel-uname-r --qf "%{name}.%{arch} %{version}-%{release}" -c $tmpconf`;
   } else {
-    @kernels = `repoquery --whatprovides $modlist --qf "%{name}.%{arch} %{version}-%{release}" -c $root/etc/yum.conf`;
+    @kernels = `strace -o /tmp/out repoquery $archv --releasever=$osv --show-duplicates --whatprovides $modlist --qf "%{name}.%{arch} %{version}-%{release}" -c $tmpconf`;
   }
+  unlink $tmpconf;
 
   return @kernels;
 }
@@ -59,9 +86,9 @@ my %platconf = ( "centos-4-i386" => { osver => "el4",
 					results => "rhel5/x86_64" },
 		 "centos-6-i386" => { osver => "el6", 
 				      kmod => '1', 
-				      basearch => 'i386',
+				      basearch => 'i686',
 				      updaterepo => 'update',
-				      results => "rhel6/i386" },
+				      results => "rhel6/i686" },
 		 "centos-6-x86_64" => { osver => "el6",
 					kmod => '1',
 				   	basearch => 'x86_64',
@@ -89,9 +116,9 @@ my %platconf = ( "centos-4-i386" => { osver => "el4",
 					results => "rhel5/x86_64" },
 		 "epel-6-i386" => { osver => "el6", 
 				      kmod => '1', 
-				      basearch => 'i386',
+				      basearch => 'i686',
 				      updaterepo => 'update',
-				      results => "rhel6/i386" },
+				      results => "rhel6/i686" },
 		 "epel-6-x86_64" => { osver => "el6",
 					kmod => '1',
 				   	basearch => 'x86_64',
@@ -99,20 +126,36 @@ my %platconf = ( "centos-4-i386" => { osver => "el4",
 					results => "rhel6/x86_64" },
                  "fedora-14-i386" => { osver => "fc14",
                                         kmod => "1",
-                                        basearch => "i386",
-                                        results => "fedora-14/i386" },
+                                        basearch => "i686",
+                                        results => "fedora-14/i686" },
                  "fedora-14-x86_64" => { osver => "fc14",
                                         kmod => "1",
                                         basearch => "x86_64",
                                         results => "fedora-14/x86_64" },
                  "fedora-15-i386" => { osver => "fc15",
                                         kmod => "1",
-                                        basearch => "i386",
-                                        results => "fedora-15/i386" },
+                                        basearch => "i686",
+                                        results => "fedora-15/i686" },
                  "fedora-15-x86_64" => { osver => "fc15",
                                         kmod => "1",
                                         basearch => "x86_64",
                                         results => "fedora-15/x86_64" },
+                 "fedora-16-i386" => { osver => "fc16",
+                                        kmod => "1",
+                                        basearch => "i686",
+                                        results => "fedora-16/i686" },
+                 "fedora-16-x86_64" => { osver => "fc16",
+                                        kmod => "1",
+                                        basearch => "x86_64",
+                                        results => "fedora-16/x86_64" },
+                 "fedora-17-i386" => { osver => "fc17",
+                                        kmod => "1",
+                                        basearch => "i686",
+                                        results => "fedora-16/i686" },
+                 "fedora-17-x86_64" => { osver => "fc17",
+                                        kmod => "1",
+                                        basearch => "x86_64",
+                                        results => "fedora-16/x86_64" },
 		 "fedora-development-i386" => { osver => "fcd",
 					  kmod => '1',
 					  basearch => 'i386',
@@ -204,12 +247,12 @@ foreach my $platform (@platforms) {
 
   my @kernels;
   if ($platform=~/fedora-development/) {
-    @kernels = findKernels($root, 0, "kernel-devel");
+    @kernels = findKernels($root, $platform, 0, $osver, "kernel-devel");
   } elsif ($platform=~/centos-4/) {
-    @kernels = findKernels($root, 0, "kernel-devel", "kernel-smp-devel", 
+    @kernels = findKernels($root, $platform, 0, $osver, "kernel-devel", "kernel-smp-devel", 
 				 "kernel-hugemem-devel", "kernel-xenU-devel");
   } else {
-    @kernels = findKernels($root, 0, 'kernel-devel');
+    @kernels = findKernels($root, $platform, 0, $osver, 'kernel-devel');
   }
 
   foreach my $kernel (@kernels) {
@@ -223,6 +266,7 @@ foreach my $platform (@platforms) {
       next 
 	  if (exists($badkernels{$version}) && ($badkernels{$version}{$variant}));
       next if ($variant =~/debug$/); # Fedora debug kernels are bad
+      next if ($kernel !~ /$osver/ ); # fc15 kernel in fc14 repo?
 
       print "$arch : $variant : $version\n";
       $modulelist{$arch} ={} if !$modulelist{$arch};

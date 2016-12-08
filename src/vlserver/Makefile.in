@@ -7,10 +7,9 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+include @TOP_OBJDIR@/src/config/Makefile.lwptool
+
 ENABLE_PTHREADED_UBIK = @ENABLE_PTHREADED_UBIK@
 
 INCLS=${TOP_INCDIR}/ubik.h \
@@ -23,24 +22,32 @@ INCLS=${TOP_INCDIR}/ubik.h \
 	vlserver.h vldbint.h
 
 LIBS=\
+        $(TOP_LIBDIR)/libopr.a \
 	${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/librxkad.a \
 	${TOP_LIBDIR}/librxstat.a \
 	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/liblwp.a \
-	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/libafscom_err.a \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libsys.a \
-	${TOP_LIBDIR}/libafsutil.a
+	${TOP_LIBDIR}/libaudit.a \
+	${TOP_LIBDIR}/libafsutil.a \
+	$(TOP_LIBDIR)/libopr.a \
+	${TOP_LIBDIR}/libafsrfc3961.a \
+	${TOP_LIBDIR}/libafshcrypto_lwp.a
 
-OBJS=vldbint.xdr.o vldbint.cs.o vl_errors.o
+LT_objs = vldbint.xdr.lo vldbint.cs.lo vl_errors.lo
 
+LT_deps = $(top_builddir)/src/opr/liboafs_opr.la \
+	  $(top_builddir)/src/rx/liboafs_rx.la \
+	  $(top_builddir)/src/ubik/liboafs_ubik.la
 
 all: \
 	vlserver vlclient cnvldb vlserver cnvldb vldb_check \
 	Kvldbint.cs.c Kvldbint.xdr.c vldbint.h \
+	liboafs_vldb.la libvlserver_pic.la \
 	${TOP_LIBDIR}/libvldb.a depinstall
 
 generated: \
@@ -53,7 +60,7 @@ depinstall: \
 	${TOP_INCDIR}/afs/vl_opcodes.h \
 	${TOP_INCDIR}/afs/vlserver.h \
 	${TOP_INCDIR}/afs/vldbint.h \
-	${TOP_INCDIR}/afs/cnvldb.h 
+	${TOP_INCDIR}/afs/cnvldb.h
 
 ${TOP_LIBDIR}/libvldb.a: libvldb.a
 	${INSTALL_DATA} $? $@
@@ -71,30 +78,32 @@ ${TOP_INCDIR}/afs/cnvldb.h: cnvldb.h
 	${INSTALL_DATA} $? $@
 
 vldb_check: vldb_check.o ${LIBS}
-	$(CC) ${CFLAGS} -o vldb_check vldb_check.o ${LIBS} ${XLIBS} ${KRB5_LIBS}
+	$(AFS_LDRULE) vldb_check.o ${LIBS} $(LIB_roken) ${XLIBS}
 
 vldb_check.o: vldb_check.c AFS_component_version_number.o
 
 cnvldb: cnvldb.o ${LIBS}
-	$(CC) ${CFLAGS} -o cnvldb cnvldb.o ${LIBS} ${XLIBS} ${KRB5_LIBS}
+	$(AFS_LDRULE) cnvldb.o ${LIBS} $(LIB_roken) ${XLIBS}
 
 cnvldb.o: cnvldb.c cnvldb.h AFS_component_version_number.o
 
 sascnvldb: sascnvldb.o ${LIBS}
-	$(CC) ${CFLAGS} -o sascnvldb sascnvldb.o ${LIBS} ${XLIBS} ${KRB5_LIBS}
+	$(AFS_LDRULE) sascnvldb.o ${LIBS} $(LIB_roken) ${XLIBS}
 
 sascnvldb.o: sascnvldb.c cnvldb.h AFS_component_version_number.o
 
-vlserver: vlserver.o vlutils.o vlprocs.o vldbint.ss.o vldbint.xdr.o $(LIBS)
-	$(CC) ${CFLAGS} -o vlserver vlserver.o vlutils.o vlprocs.o vldbint.ss.o \
-		vldbint.xdr.o $(LIBS) ${XLIBS} ${TOP_LIBDIR}/libaudit.a ${KRB5_LIBS}
+vlserver: vlserver.o vlutils.o vlprocs.o vldbint.ss.o vldbint.xdr.lo $(LIBS)
+	$(AFS_LDRULE) vlserver.o vlutils.o vlprocs.o vldbint.ss.o \
+		.lwp/vldbint.xdr.o \
+		$(LIBS) $(LIB_roken) ${XLIBS}
 
 vlserver.o: vlserver.c ${INCLS} AFS_component_version_number.o
 vlutils.o: vlutils.c ${INCLS}
 vlprocs.o: vlprocs.c ${INCLS}
 vldbint.ss.o: vldbint.ss.c vldbint.xdr.c
-vldbint.cs.o: vldbint.cs.c vldbint.xdr.c
-vldbint.xdr.o: vldbint.xdr.c vldbint.h
+
+vldbint.cs.lo: vldbint.cs.c vldbint.xdr.c
+vldbint.xdr.lo: vldbint.xdr.c vldbint.h
 
 vldbint.cs.c: vldbint.xg
 	${RXGEN} -A -u -x -C -o $@ ${srcdir}/vldbint.xg
@@ -118,13 +127,18 @@ Kvldbint.cs.c: vldbint.xg
 Kvldbint.xdr.c: vldbint.xg
 	${RXGEN} -A -x -k -c -o $@ ${srcdir}/vldbint.xg
 
-libvldb.a: $(OBJS) AFS_component_version_number.o
-	$(RM) -f $@
-	$(AR) crv $@ $(OBJS) AFS_component_version_number.o
-	$(RANLIB) $@
+libvldb.a: $(LT_objs)
+	$(LT_LDLIB_lwp) $(LT_objs)
+
+liboafs_vldb.la: liboafs_vldb.la.sym $(LT_objs) $(LT_deps)
+	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
+
+libvlserver_pic.la: $(LT_objs)
+	$(LT_LDLIB_pic) $(LT_objs)
 
 vlclient: vlclient.o libvldb.a $(LIBS)
-	$(CC) ${CFLAGS} -o vlclient vlclient.o libvldb.a $(LIBS) ${XLIBS} ${TOP_LIBDIR}/libcmd.a ${KRB5_LIBS}
+	$(AFS_LDRULE) vlclient.o libvldb.a \
+		$(LIBS) ${TOP_LIBDIR}/libcmd.a $(LIB_roken) ${XLIBS}
 
 vlclient.o: vlclient.c ${INCLS} AFS_component_version_number.o
 
@@ -136,12 +150,12 @@ vl_errors.c: vl_errors.et
 vlserver.h : vl_errors.et vlserver.p.h
 	${COMPILE_ET_H} -p ${srcdir} vl_errors -h vlserver
 
-cnvldb.o: vlserver.h
-vlclient.o: vlserver.h
-vldb_check.o: vlserver.h
-vlprocs.o: vlserver.h
-vlserver.o: vlserver.h
-vlutils.o: vlserver.h
+cnvldb.o cnvldb.lo: vlserver.h
+vlclient.o vlclient.lo: vlserver.h
+vldb_check.o vldb_check.lo: vlserver.h
+vlprocs.o vlprocs.lo: vlserver.h
+vlserver.o vlserver.lo: vlserver.h
+vlutils.o vlutils.lo: vlserver.h
 
 vlserver.o: vlserver.c
 
@@ -187,6 +201,7 @@ dest: vlserver cnvldb vldb_check libvldb.a vl_opcodes.h vlserver.h \
 include ../config/Makefile.version
 
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o *.a *.otl *.xdr.c *.cs.c *.ss.c core \
 		vlserver vlclient cnvldb vldbint.h vlserver.h vldb_check \
 		vl_errors.c AFS_component_version_number.c

@@ -14,7 +14,7 @@ AH_BOTTOM([
 #   include <sys/types.h>
 #   include <sys/param.h>
 #   if BYTE_ORDER == BIG_ENDIAN
-#   define WORDS_BIGENDIAN 1
+#    define WORDS_BIGENDIAN 1
 #   endif
 #  else
 #   if defined(AUTOCONF_FOUND_BIGENDIAN)
@@ -44,8 +44,8 @@ AH_BOTTOM([
  * need to define this when building for such interfaces, but set it always to
  * try and reduce potential confusion. 
  */
-#define _FILE_OFFSET_BITS 64
-#define AFS_CACHE_VNODE_PATH
+# define _FILE_OFFSET_BITS 64
+# define AFS_CACHE_VNODE_PATH
 #endif
 
 #undef AFS_NAMEI_ENV
@@ -59,11 +59,10 @@ AH_BOTTOM([
 #undef RECALC_SIGPENDING_TAKES_VOID
 #undef STRUCT_FS_HAS_FS_ROLLED
 #undef ssize_t
-#undef HAVE_ARPA_NAMESER_COMPAT_H
 /* glue for RedHat kernel bug */
 #undef ENABLE_REDHAT_BUILDSYS
 #if defined(ENABLE_REDHAT_BUILDSYS) && defined(KERNEL) && defined(REDHAT_FIX)
-#include "redhat-fix.h"
+# include "redhat-fix.h"
 #endif])
 
 AC_CANONICAL_HOST
@@ -73,116 +72,134 @@ SRCDIR_PARENT=`pwd`
 
 dnl System identity.
 AC_ARG_WITH([afs-sysname],
-    [AS_HELP_STRING([--with-afs-sysname=sys], [use sys for the afs sysname])])
+    [AS_HELP_STRING([--with-afs-sysname=sys], [use sys for the afs sysname])
+])
 
 dnl General feature options.
-AC_ARG_ENABLE([pam],
-    [AS_HELP_STRING([--disable-pam], [disable PAM support])],
-    ,
-    [enable_pam="yes"])
 AC_ARG_ENABLE([namei-fileserver],
     [AS_HELP_STRING([--enable-namei-fileserver],
-        [force compilation of namei fileserver in preference to inode
-         fileserver])],
-    , 
+	[force compilation of namei fileserver in preference to inode
+	 fileserver])],
+    [],
     [enable_namei_fileserver="default"])
 AC_ARG_ENABLE([supergroups],
     [AS_HELP_STRING([--enable-supergroups],
-        [enable support for nested pts groups])],
-    , 
+	[enable support for nested pts groups])],
+    [],
     [enable_supergroups="no"])
 AC_ARG_ENABLE([bitmap-later],
     [AS_HELP_STRING([--enable-bitmap-later],
         [enable fast startup of file server by not reading bitmap till
          needed])],
-    , 
+    [AS_IF([test x"$withval" = xyes],
+        [AC_MSG_WARN([bitmap-later is only used by non-demand-attach
+            fileservers.  Please migrate to demand-attach instead.])])],
     [enable_bitmap_later="no"])
 AC_ARG_ENABLE([unix-sockets],
     [AS_HELP_STRING([--disable-unix-sockets],
-        [disable use of unix domain sockets for fssync (defaults to enabled)])],
-    ,
+	[disable use of unix domain sockets for fssync (defaults to enabled)])],
+    [],
     [enable_unix_sockets="yes"])
 AC_ARG_ENABLE([tivoli-tsm],
     [AS_HELP_STRING([--enable-tivoli-tsm],
-        [enable use of the Tivoli TSM API libraries for butc support])],
-    , 
+	[enable use of the Tivoli TSM API libraries for butc support])],
+    [],
     [enable_tivoli_tsm="no"])
 AC_ARG_ENABLE([pthreaded-ubik],
-    [AS_HELP_STRING([--enable-pthreaded-ubik],
-        [enable installation of pthreaded ubik applications (defaults to
-         disabled)])],
-    ,
-    [enable_pthreaded_ubik="no"])
+    [AS_HELP_STRING([--disable-pthreaded-ubik],
+        [disable installation of pthreaded ubik applications (defaults to
+         enabled)])],
+    [],
+    [enable_pthreaded_ubik="yes"])
+AC_ARG_ENABLE([ubik-read-while-write],
+    [AS_HELP_STRING([--enable-ubik-read-while-write],
+	[enable vlserver read from db cache during write locks (EXPERIMENTAL)])],
+    [],
+    [enable_ubik_read_while_write="no"])
 
 dnl Kernel module build options.
 AC_ARG_WITH([linux-kernel-headers],
     [AS_HELP_STRING([--with-linux-kernel-headers=path],
-        [use the kernel headers found at path (optional, defaults to
-         /lib/modules/`uname -r`/build, then /lib/modules/`uname -r`/source,
-         then /usr/src/linux-2.4, and lastly /usr/src/linux)])])
+	[use the kernel headers found at path (optional, defaults to
+	 /lib/modules/`uname -r`/build, then /lib/modules/`uname -r`/source,
+	 then /usr/src/linux-2.4, and lastly /usr/src/linux)])
+])
 AC_ARG_WITH([linux-kernel-build],
     [AS_HELP_STRING([--with-linux-kernel-build=path],
-	[use the kernel build found at path(optional, defaults to 
-	kernel headers path)])])
+	[use the kernel build found at path(optional, defaults to
+	kernel headers path)]
+)])
 AC_ARG_WITH([bsd-kernel-headers],
     [AS_HELP_STRING([--with-bsd-kernel-headers=path],
-        [use the kernel headers found at path (optional, defaults to
-         /usr/src/sys)])])
+	[use the kernel headers found at path (optional, defaults to
+	 /usr/src/sys)])
+])
 AC_ARG_WITH([bsd-kernel-build],
-    [AS_HELP_STRING([--with-bsd-kernel-build=path], 
-        [use the kernel build found at path (optional, defaults to
-         KSRC/i386/compile/GENERIC)])])
+    [AS_HELP_STRING([--with-bsd-kernel-build=path],
+	[use the kernel build found at path (optional, defaults to
+	 KSRC/i386/compile/GENERIC)])
+])
 AC_ARG_WITH([linux-kernel-packaging],
     [AS_HELP_STRING([--with-linux-kernel-packaging],
-        [use standard naming conventions to aid Linux kernel build packaging
-         (disables MPS, sets the kernel module name to openafs.ko, and
-         installs kernel modules into the standard Linux location)])],
-    [AC_SUBST(LINUX_KERNEL_PACKAGING, "yes")
-     AC_SUBST(LINUX_LIBAFS_NAME, "openafs")],
-    [AC_SUBST(LINUX_LIBAFS_NAME, "libafs")])
+	[use standard naming conventions to aid Linux kernel build packaging
+	 (disables MPS, sets the kernel module name to openafs.ko, and
+	 installs kernel modules into the standard Linux location)])],
+    [AC_SUBST([LINUX_KERNEL_PACKAGING], [yes])
+     AC_SUBST([LINUX_LIBAFS_NAME], [openafs])],
+    [AC_SUBST([LINUX_LIBAFS_NAME], [libafs])
+])
 AC_ARG_ENABLE([kernel-module],
     [AS_HELP_STRING([--disable-kernel-module],
-        [disable compilation of the kernel module (defaults to enabled)])],
-    , 
+	[disable compilation of the kernel module (defaults to enabled)])],
+    [],
     [enable_kernel_module="yes"])
 AC_ARG_ENABLE([redhat-buildsys],
     [AS_HELP_STRING([--enable-redhat-buildsys],
-        [enable compilation of the redhat build system kernel (defaults to
-         disabled)])],
-    ,
+	[enable compilation of the redhat build system kernel (defaults to
+	 disabled)])],
+    [],
     [enable_redhat_buildsys="no"])
 
 dnl Installation locations.
 AC_ARG_ENABLE([transarc-paths],
     [AS_HELP_STRING([--enable-transarc-paths],
-        [use Transarc style paths like /usr/afs and /usr/vice])],
-    , 
+	[use Transarc style paths like /usr/afs and /usr/vice])],
+    [],
     [enable_transarc_paths="no"])
+
+dnl Deprecated crypto
+AC_ARG_ENABLE([kauth],
+    [AS_HELP_STRING([--enable-kauth],
+        [install the deprecated kauth server, pam modules, and utilities
+         (defaults to disabled)])],
+    [enable_pam="yes"],
+    [enable_kauth="no"
+     enable_pam="no"])
 
 dnl Optimization and debugging flags.
 AC_ARG_ENABLE([strip-binaries],
     [AS_HELP_STRING([--disable-strip-binaries],
-        [disable stripping of symbol information from binaries (defaults to
-         enabled)])],
-    ,
+	[disable stripping of symbol information from binaries (defaults to
+	 enabled)])],
+    [],
     [enable_strip_binaries="maybe"])
 AC_ARG_ENABLE([debug],
     [AS_HELP_STRING([--enable-debug],
-        [enable compilation of the user space code with debugging information
-         (defaults to disabled)])],
-    , 
+	[enable compilation of the user space code with debugging information
+	 (defaults to disabled)])],
+    [],
     [enable_debug="no"])
 AC_ARG_ENABLE([optimize],
     [AS_HELP_STRING([--disable-optimize],
-        [disable optimization for compilation of the user space code (defaults
-         to enabled)])],
-    , 
+	[disable optimization for compilation of the user space code (defaults
+	 to enabled)])],
+    [],
     [enable_optimize="yes"])
 AC_ARG_ENABLE([warnings],
     [AS_HELP_STRING([--enable-warnings],
-        [enable compilation warnings when building with gcc (defaults to
-         disabled)])],
-    ,
+	[enable compilation warnings when building with gcc (defaults to
+	 disabled)])],
+    [],
     [enable_warnings="no"])
 AC_ARG_ENABLE([checking],
     [AS_HELP_STRING([--enable-checking],
@@ -190,92 +207,146 @@ AC_ARG_ENABLE([checking],
 	 to disabled)])],
     [enable_checking="$enableval"],
     [enable_checking="no"])
+AC_ARG_ENABLE([debug-locks],
+    [AS_HELP_STRING([--enable-debug-locks],
+	[turn on lock debugging assertions (defaults to disabled)])],
+    [enable_debug_locks="$enableval"],
+    [enable_debug_locks="no"])
 AC_ARG_ENABLE([debug-kernel],
     [AS_HELP_STRING([--enable-debug-kernel],
-        [enable compilation of the kernel module with debugging information
-         (defaults to disabled)])],
-    ,
+	[enable compilation of the kernel module with debugging information
+	 (defaults to disabled)])],
+    [],
     [enable_debug_kernel="no"])
 AC_ARG_ENABLE([optimize-kernel],
     [AS_HELP_STRING([--disable-optimize-kernel],
-        [disable compilation of the kernel module with optimization (defaults
-         based on platform)])],
-    , 
+	[disable compilation of the kernel module with optimization (defaults
+	 based on platform)])],
+    [],
     [enable_optimize_kernel=""])
 AC_ARG_ENABLE([debug-lwp],
     [AS_HELP_STRING([--enable-debug-lwp],
-        [enable compilation of the LWP code with debugging information
-         (defaults to disabled)])],
-    ,
+	[enable compilation of the LWP code with debugging information
+	 (defaults to disabled)])],
+    [],
     [enable_debug_lwp="no"])
 AC_ARG_ENABLE([optimize-lwp],
     [AS_HELP_STRING([--disable-optimize-lwp],
-        [disable optimization for compilation of the LWP code (defaults to
-         enabled)])],
-    ,
+	[disable optimization for compilation of the LWP code (defaults to
+	 enabled)])],
+    [],
     [enable_optimize_lwp="yes"])
 AC_ARG_ENABLE([debug-pam],
     [AS_HELP_STRING([--enable-debug-pam],
-        [enable compilation of the PAM code with debugging information
-         (defaults to disabled)])],
-    ,
+	[enable compilation of the PAM code with debugging information
+	 (defaults to disabled)])],
+    [],
     [enable_debug_pam="no"])
 AC_ARG_ENABLE([optimize-pam],
     [AS_HELP_STRING([--disable-optimize-pam],
-        [disable optimization for compilation of the PAM code (defaults to
-         enabled)])],
-    ,
+	[disable optimization for compilation of the PAM code (defaults to
+	 enabled)])],
+    [],
     [enable_optimize_pam="yes"])
 AC_ARG_ENABLE([linux-syscall-probing],
     [AS_HELP_STRING([--enable-linux-syscall-probing],
 	[enable Linux syscall probing (defaults to autodetect)])],
-    ,
+    [],
     [enable_linux_syscall_probing="maybe"])
-    
 AC_ARG_ENABLE([linux-d_splice_alias-extra-iput],
     [AS_HELP_STRING([--enable-linux-d_splice_alias-extra-iput],
-	[Linux has introduced an incompatible behavior change in the
-	 d_splice_alias function with no reliable way to determine which
-	 behavior will be produced.  If Linux commit
-	 51486b900ee92856b977eacfc5bfbe6565028070 (or equivalent) has been
-	 applied to your kernel, disable this option.  If that commit is
-	 not present in your kernel, enable this option.  We apologize
-	 that you are required to know this about your running kernel.])],
+	[Linux kernels in the 3.17 series prior to 3.17.3 had a bug
+	 wherein error returns from the d_splice_alias() function were
+	 leaking a reference on the inode.  The bug was fixed for the
+	 3.17.3 kernel, and the possibility of an error return was only
+	 introduced in kernel 3.17, so only the narrow range of kernels
+	 is affected.  Enable this option for builds on systems with
+	 kernels affected by this bug, to manually release the reference
+	 on error returns and correct the reference counting.
+	 Linux commit 51486b900ee92856b977eacfc5bfbe6565028070 (or
+	 equivalent) is the fix for the upstream bug, so if such a commit
+	 is present, leave this option disabled.  We apologize
+	 that you are required to know this about your running kernel,
+	 but luckily only a narrow range of versions is affected.])],
     [],
-    [case $system in
-    *-linux*)
-	AS_IF([test "x$LOGNAME" != "xbuildslave" &&
-	    test "x$LOGNAME" != "xbuildbot"],
-	    [AC_ERROR([Linux users must specify either
-		--enable-linux-d_splice_alias-extra-iput or
-		--disable-linux-d_splice_alias-extra-iput])],
-	    [enable_linux_d_splice_alias_extra_iput="no"])
-     esac
-    ])
+    [enable_linux_d_splice_alias_extra_iput="no"])
+AC_ARG_WITH([crosstools-dir],
+    [AS_HELP_STRING([--with-crosstools-dir=path],
+	[use path for native versions of rxgen, compile_et and config])
+])
+
 AC_ARG_WITH([xslt-processor],
 	AS_HELP_STRING([--with-xslt-processor=ARG],
 	[which XSLT processor to use (possible choices are: libxslt, saxon, xalan-j, xsltproc)]),
-       	XSLTPROC="$withval",
-	AC_CHECK_PROGS([XSLTPROC], [libxslt saxon xalan-j xsltproc], [echo]))
+	[XSLTPROC="$withval"],
+	[AC_CHECK_PROGS([XSLTPROC], [libxslt saxon xalan-j xsltproc], [echo])])
 
-AC_ARG_WITH([html-xsl], 
-        AS_HELP_STRING([--with-html-xsl],
-	[build HTML documentation using Norman Walsh's DocBook XSL stylesheets (default is no; specify a path to chunk.xsl or docbook.xsl)]),
-	HTML_XSL="$withval",
-	HTML_XSL=no)
+AC_ARG_WITH([html-xsl],
+	AS_HELP_STRING([--with-html-xsl],
+	[build HTML documentation using this stylesheet (default is html/chunk.dsl; specify either html/chunk.xsl or html/docbook.xsl)]),
+	[HTML_XSL="$withval"],
+	[HTML_XSL="html/chunk.xsl"])
 
 AC_ARG_WITH([docbook2pdf],
 	AS_HELP_STRING([--with-docbook2pdf=ARG],
-	[which Docbook to PDF utility to use (possible choices are: docbook2pdf, dblatex)]),
-       	DOCBOOK2PDF="$withval",
-	AC_CHECK_PROGS([DOCBOOK2PDF], [docbook2pdf dblatex], [echo]))
+	[which Docbook to PDF utility to use (possible choices are: fop, dblatex, docbook2pdf)]),
+	[DOCBOOK2PDF="$withval"],
+	[AC_CHECK_PROGS([DOCBOOK2PDF], [fop dblatex docbook2pdf], [echo])])
+
+AC_ARG_WITH([docbook-stylesheets],
+	AS_HELP_STRING([--with-docbook-stylesheets=ARG],
+	[location of DocBook stylesheets (default is to search a set of likely paths)]),
+	[DOCBOOK_STYLESHEETS="$withval"],
+	[OPENAFS_SEARCH_DIRLIST([DOCBOOK_STYLESHEETS],
+		[/usr/share/xml/docbook/stylesheet/nwalsh/current \
+		 /usr/share/xml/docbook/stylesheet/nwalsh \
+		 /usr/share/xml/docbook/xsl-stylesheets \
+		 /usr/share/sgml/docbook/docbook-xsl-stylesheets \
+		 /usr/share/sgml/docbook/xsl-stylesheets \
+		 /usr/share/docbook-xsl \
+		 /usr/share/sgml/docbkxsl \
+		 /usr/local/share/xsl/docbook \
+		 /sw/share/xml/xsl/docbook-xsl \
+		 /opt/local/share/xsl/docbook-xsl],
+		[$HTML_XSL])
+	   AS_IF([test "x$DOCBOOK_STYLESHEETS" = "x"],
+		[AC_WARN([Docbook stylesheets not found; some documentation can't be built])
+	   ])
+	])
+
+AC_ARG_WITH([dot],
+	AS_HELP_STRING([--with-dot@<:@=PATH@:>@],
+        [use graphviz dot to generate dependency graphs with doxygen (defaults to autodetect)]),
+        [], [with_dot="maybe"])
 
 enable_login="no"
 
-dnl weird ass systems
-dnl AC_AIX
+dnl Check whether kindlegen exists.  If not, we'll suppress that part of the
+dnl documentation build.
+AC_CHECK_PROGS([KINDLEGEN], [kindlegen])
+AC_CHECK_PROGS([DOXYGEN], [doxygen])
+
+dnl Optionally generate graphs with doxygen.
+case "$with_dot" in
+maybe)
+    AC_CHECK_PROGS([DOT], [dot])
+    AS_IF([test "x$DOT" = "x"], [HAVE_DOT="no"], [HAVE_DOT="yes"])
+    ;;
+yes)
+    HAVE_DOT="yes"
+    ;;
+no)
+    HAVE_DOT="no"
+    ;;
+*)
+    HAVE_DOT="yes"
+    DOT_PATH=$with_dot
+esac
+AC_SUBST(HAVE_DOT)
+AC_SUBST(DOT_PATH)
+
+dnl Checks for UNIX variants.
 AC_ISC_POSIX
-dnl AC_MINIX
 
 dnl Various compiler setup.
 AC_TYPE_PID_T
@@ -374,14 +445,18 @@ case $system in
                  SUBARCH=default
 		fi
 		AC_MSG_RESULT(linux)
+                GUESS_LINUX_VERSION=
                 if test "x$enable_kernel_module" = "xyes"; then
-                 case "$LINUX_VERSION" in
+                 GUESS_LINUX_VERSION=${LINUX_VERSION}
+                else
+                 GUESS_LINUX_VERSION=`uname -r`
+                fi
+                case "$GUESS_LINUX_VERSION" in
                   2.2.*) AFS_SYSKVERS=22 ;;
                   2.4.*) AFS_SYSKVERS=24 ;;
                   [2.6.* | [3-9]* | [1-2][0-9]*]) AFS_SYSKVERS=26 ;;
                   *) AC_MSG_ERROR(Couldn't guess your Linux version [2]) ;;
-                 esac
-                fi
+                esac
                 ;;
         *-solaris*)
 		MKAFS_OSTYPE=SOLARIS
@@ -623,15 +698,13 @@ else
 			AFS_SYSNAME="x86_darwin_150"
 			OSXSDK="macosx10.11"
 			;;
-		sparc-sun-solaris2.5*)
-			AFS_SYSNAME="sun4x_55"
-			enable_login="yes"
+		x86_64-apple-darwin16.*)
+			AFS_SYSNAME="x86_darwin_160"
+			OSXSDK="macosx10.12"
 			;;
-		sparc-sun-solaris2.6)
-			AFS_SYSNAME="sun4x_56"
-			;;
-		sparc-sun-solaris2.7)
-			AFS_SYSNAME="sun4x_57"
+		i?86-apple-darwin16.*)
+			AFS_SYSNAME="x86_darwin_160"
+			OSXSDK="macosx10.12"
 			;;
 		sparc-sun-solaris2.8)
 			AFS_SYSNAME="sun4x_58"
@@ -644,13 +717,6 @@ else
 			;;
 		sparc-sun-solaris2.11)
 			AFS_SYSNAME="sun4x_511"
-			;;
-		sparc-sun-sunos4*)
-			AFS_SYSNAME="sun4_413"
-			enable_login="yes"
-			;;
-		i386-pc-solaris2.7)
-			AFS_SYSNAME="sunx86_57"
 			;;
 		i386-pc-solaris2.8)
 			AFS_SYSNAME="sunx86_58"
@@ -675,6 +741,7 @@ else
 			;;
 		mips-sgi-irix6.5)
 			AFS_SYSNAME="sgi_65"
+			enable_pam="no"
 			;;
 		ia64-*-linux*)
 			AFS_SYSNAME="ia64_linuxXX"
@@ -748,6 +815,10 @@ else
 			if test "x${AFS_SYSKVERS}" = "x"; then
 			 AC_MSG_ERROR(Couldn't guess your Linux version. Please use the --with-afs-sysname option to configure an AFS sysname.)
 			fi
+			if test "x${AFS_SYSKVERS}" = "x24" ||
+				test "x${AFS_SYSKVERS}" = "x22"; then
+			    AC_MSG_ERROR([Linux 2.4.x and older are no longer supported by OpenAFS.  Please use an OpenAFS 1.6.x release on those systems.])
+			fi
 			_AFS_SYSNAME=`echo $AFS_SYSNAME|sed s/XX\$/$AFS_SYSKVERS/`
 			AFS_SYSNAME="$_AFS_SYSNAME"
 			AC_TRY_KBUILD(
@@ -785,6 +856,7 @@ case $AFS_SYSNAME in
     *_nbsd40)   AFS_PARAM_COMMON=param.nbsd40.h  ;;
     *_nbsd50)   AFS_PARAM_COMMON=param.nbsd50.h  ;;
     *_nbsd60)   AFS_PARAM_COMMON=param.nbsd60.h  ;;
+    *_nbsd70)   AFS_PARAM_COMMON=param.nbsd70.h  ;;
     *_obsd31)   AFS_PARAM_COMMON=param.obsd31.h  ;;
     *_obsd32)   AFS_PARAM_COMMON=param.obsd32.h  ;;
     *_obsd33)   AFS_PARAM_COMMON=param.obsd33.h  ;;
@@ -809,14 +881,13 @@ case $AFS_SYSNAME in
     *_obsd52)   AFS_PARAM_COMMON=param.obsd52.h  ;;
     *_obsd53)   AFS_PARAM_COMMON=param.obsd53.h  ;;
     *_obsd54)   AFS_PARAM_COMMON=param.obsd54.h  ;;
-    *_linux22)  AFS_PARAM_COMMON=param.linux22.h ;;
-    *_linux24)  AFS_PARAM_COMMON=param.linux24.h ;;
     *_linux26)  AFS_PARAM_COMMON=param.linux26.h ;;
 # Linux alpha adds an extra underscore for no good reason.
-    *_linux_22) AFS_PARAM_COMMON=param.linux22.h ;;
-    *_linux_24) AFS_PARAM_COMMON=param.linux24.h ;;
     *_linux_26) AFS_PARAM_COMMON=param.linux26.h ;;
+    *_fbsd_*)   AFS_PARAM_COMMON=param.generic_fbsd.h ;;
 esac
+
+OPENAFS_OSCONF
 
 case $AFS_SYSNAME in *_linux* | *_umlinux*)
 
@@ -854,10 +925,15 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 					  [#include <linux/fs.h>],
 					  [void],
 					  [struct inode *inode, void *link_data])
+		 AC_CHECK_LINUX_OPERATION([inode_operations], [rename], [takes_flags],
+					  [#include <linux/fs.h>],
+					  [int],
+					  [struct inode *oinode, struct dentry *odentry,
+						struct inode *ninode, struct dentry *ndentry,
+						unsigned int flags])
 
 		 dnl Check for header files
 		 AC_CHECK_LINUX_HEADER([config.h])
-		 AC_CHECK_LINUX_HEADER([completion.h])
 		 AC_CHECK_LINUX_HEADER([exportfs.h])
 		 AC_CHECK_LINUX_HEADER([freezer.h])
 		 AC_CHECK_LINUX_HEADER([key-type.h])
@@ -878,6 +954,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_STRUCT([ctl_table], [ctl_name], [sysctl.h])
 		 AC_CHECK_LINUX_STRUCT([dentry], [d_u.d_alias], [dcache.h])
 		 AC_CHECK_LINUX_STRUCT([dentry_operations], [d_automount], [dcache.h])
+		 AC_CHECK_LINUX_STRUCT([group_info], [gid], [cred.h])
 		 AC_CHECK_LINUX_STRUCT([inode], [i_alloc_sem], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([inode], [i_blkbits], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([inode], [i_blksize], [fs.h])
@@ -1013,6 +1090,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_FUNC([set_nlink],
 				     [#include <linux/fs.h>],
 				     [set_nlink(NULL, 1);])
+		 AC_CHECK_LINUX_FUNC([setattr_prepare],
+				     [#include <linux/fs.h>],
+				     [setattr_prepare(NULL, NULL);])
 		 AC_CHECK_LINUX_FUNC([sock_create_kern],
 				     [#include <linux/net.h>],
 				     [sock_create_kern(0, 0, 0, NULL);])
@@ -1078,7 +1158,6 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_POSIX_TEST_LOCK_CONFLICT_ARG
 		 LINUX_KERNEL_SOCK_CREATE
 		 LINUX_EXPORTS_KEY_TYPE_KEYRING
-		 LINUX_KEYS_HAVE_SESSION_TO_PARENT
 		 LINUX_NEED_RHCONFIG
 		 LINUX_RECALC_SIGPENDING_ARG_TYPE
 		 LINUX_EXPORTS_TASKLIST_LOCK
@@ -1193,6 +1272,16 @@ dnl Linux-only, but just enable always.
 		AC_DEFINE(AFS_CACHE_BYPASS, 1, [define to activate cache bypassing Unix client])
 esac
 
+AC_CACHE_CHECK([if compiler has __sync_add_and_fetch],
+    [ac_cv_sync_fetch_and_add],
+    [AC_TRY_LINK(, [int var; return __sync_add_and_fetch(&var, 1);],
+		    [ac_cv_sync_fetch_and_add=yes],
+		    [ac_cv_sync_fetch_and_add=no])
+])
+AS_IF([test "$ac_cv_sync_fetch_and_add" = "yes"],
+      [AC_DEFINE(HAVE_SYNC_FETCH_AND_ADD, 1,
+		[define if your C compiler has __sync_add_and_fetch])])
+
 AC_CACHE_CHECK([if struct sockaddr has sa_len field],
     [ac_cv_sockaddr_len],
     [AC_TRY_COMPILE( [#include <sys/types.h>
@@ -1255,6 +1344,7 @@ else
   fi
   
 fi
+XLIBS="$LIB_AFSDB $XLIBS"
 
 AC_CHECK_RESOLV_RETRANS
 
@@ -1270,8 +1360,8 @@ setsockopt(0, SOL_IP, IP_RECVERR, &on, sizeof(on));],
 	[ac_cv_setsockopt_iprecverr=no])])
 
 AS_IF([test "$ac_cv_setsockopt_iprecverr" = "yes"],
-      [AC_DEFINE(ADAPT_PMTU_RECVERR, 1,
-		 [define if asynchronous socket errors can be received])])
+      [AC_DEFINE([HAVE_SETSOCKOPT_IP_RECVERR], [1],
+		 [define if we can receive socket errors via IP_RECVERR])])
 
 PTHREAD_LIBS=error
 if test "x$MKAFS_OSTYPE" = OBSD; then
@@ -1342,9 +1432,9 @@ else
 fi
 AC_SUBST(USE_UNIX_SOCKETS)
 
-dnl if test "$ac_cv_setsockopt_iprecverr" = "yes"; then
-dnl 	AC_DEFINE(ADAPT_PMTU, 1, [define if you want to decode icmp unreachable packets to discover path mtu])
-dnl fi
+if test "$enable_ubik_read_while_write" = "yes"; then
+	AC_DEFINE(UBIK_READ_WHILE_WRITE, 1, [define if you want to enable ubik read while write])
+fi
 
 if test "$enable_namei_fileserver" = "yes"; then
 	AC_DEFINE(AFS_NAMEI_ENV, 1, [define if you want to want namei fileserver])
@@ -1414,50 +1504,96 @@ else
 fi
 AC_SUBST(XBSA_CFLAGS)
 AC_SUBST(XBSA_XLIBS) 
+XLIBS="$XBSA_XLIBS $XLIBS"
 
 dnl checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_HEADER_DIRENT
 AC_CHECK_HEADERS([ \
-	curses.h \
-	direct.h \
-	fcntl.h \
-	grp.h \
-	mntent.h \
-	ncurses.h \
-	ncurses/ncurses.h \
-	netinet/in.h \
-	netdb.h \
-	regex.h \
-	search.h \
-	security/pam_modules.h \
-	signal.h \
-	stdio_ext.h \
-	stdlib.h \
-	string.h \
-	strings.h \
-	sys/bitypes.h \
-	sys/fcntl.h \
-	sys/file.h \
-	sys/fs_types.h \
-	sys/fstyp.h \
-	sys/ipc.h \
-	sys/mntent.h \
-	sys/mnttab.h \
-	sys/mount.h \
-	sys/pag.h \
-	sys/param.h \
-	sys/resource.h \
-	sys/statfs.h \
-	sys/statvfs.h \
-	sys/time.h \
-	sys/vfs.h \
-	termios.h \
-	ucontext.h \
-	unistd.h \
-	windows.h \
-])
+		   arpa/inet.h \
+		   arpa/nameser.h \
+		   curses.h\
+		   direct.h \
+		   errno.h \
+		   fcntl.h \
+		   grp.h \
+		   math.h \
+		   mntent.h \
+		   ncurses.h \
+		   ncurses/ncurses.h \
+		   netdb.h \
+		   netinet/in.h \
+		   pthread_np.h \
+		   pwd.h \
+		   regex.h \
+		   security/pam_appl.h \
+		   signal.h \
+		   stdint.h \
+		   stdio_ext.h \
+		   stdlib.h \
+		   string.h \
+		   strings.h \
+		   sys/bitypes.h \
+		   sys/bswap.h \
+		   sys/dk.h \
+		   sys/fcntl.h \
+		   sys/file.h \
+		   sys/fs_types.h \
+		   sys/fstyp.h \
+		   sys/ioctl.h \
+		   sys/ipc.h \
+		   sys/lockf.h \
+		   sys/map.h \
+		   sys/mount.h \
+		   sys/mntent.h \
+		   sys/mnttab.h \
+		   sys/pag.h \
+		   sys/param.h \
+		   sys/resource.h \
+		   sys/select.h \
+		   sys/statfs.h \
+		   sys/statvfs.h \
+		   sys/socket.h \
+		   sys/sysctl.h \
+		   sys/time.h \
+		   sys/types.h \
+		   sys/uio.h \
+		   sys/un.h \
+		   sys/vfs.h \
+		   syslog.h \
+		   termios.h \
+		   time.h \
+		   ucontext.h \
+		   unistd.h \
+		   windows.h \
+		])
+
+AC_CHECK_HEADERS([resolv.h], [], [], [AC_INCLUDES_DEFAULT
+#ifdef HAVE_NETINET_IN_H
+# include <netinet/in.h>
+#endif])
+
+AC_CHECK_HEADERS([net/if.h],[],[],[AC_INCLUDES_DEFAULT
+#ifdef HAVE_SYS_SOCKET_H
+# include <sys/socket.h>
+#endif])
+
+AC_CHECK_HEADERS([netinet/if_ether.h],[],[],[AC_INCLUDES_DEFAULT
+#ifdef HAVE_SYS_SOCKET_H
+# include <sys/socket.h>
+#endif
+#ifdef HAVE_NETINET_IN_H
+# include <netinet/in.h>
+#endif
+#ifdef HAVE_NET_IF_H
+# include <net/if.h>
+#endif])
+
+AC_CHECK_HEADERS([security/pam_modules.h],[],[],[AC_INCLUDES_DEFAULT
+#ifdef HAVE_SECURITY_PAM_APPL_H
+# include <security/pam_appl.h>
+#endif])
 
 AC_CHECK_HEADERS(linux/errqueue.h,,,[#include <linux/types.h>])
 
@@ -1479,16 +1615,12 @@ AC_CHECK_MEMBERS([struct stat.st_ctimespec, struct stat.st_ctimensec])
 
 OPENAFS_TEST_PACKAGE(libintl,[#include <libintl.h>],[-lintl],,,INTL)
 
-dnl Don't build PAM on IRIX; the interface doesn't work for us.
+if test "$enable_debug_locks" = yes; then
+	AC_DEFINE(OPR_DEBUG_LOCKS, 1, [turn on lock debugging in opr])
+fi
+
 if test "$ac_cv_header_security_pam_modules_h" = yes -a "$enable_pam" = yes; then
-        case $AFS_SYSNAME in
-        sgi_*)
-                HAVE_PAM="no"
-                ;;
-        *)
-	        HAVE_PAM="yes"
-                ;;
-        esac
+	HAVE_PAM="yes"
 else
 	HAVE_PAM="no"
 fi
@@ -1501,15 +1633,28 @@ else
 fi
 AC_SUBST(BUILD_LOGIN)
 
+if test "$enable_kauth" = yes; then
+	INSTALL_KAUTH="yes"
+else
+	INSTALL_KAUTH="no"
+fi
+AC_SUBST(INSTALL_KAUTH)
+
 AC_CHECK_FUNCS([ \
-	daemon \
-	flock \
+	arc4random \
+	closelog \
+	fcntl \
 	fseeko64 \
 	ftello64 \
 	getcwd \
-	getprogname \
+	getegid \
+	geteuid \
+	getgid \
+	getuid \
 	getrlimit \
+	issetugid \
 	mkstemp \
+	openlog \
 	poll \
 	pread \
 	preadv \
@@ -1520,24 +1665,144 @@ AC_CHECK_FUNCS([ \
 	regcomp \
 	regerror \
 	regexec \
-	setenv \
-	setprogname \
+	setitimer \
 	setvbuf \
 	sigaction \
-	snprintf \
 	strcasestr \
 	strerror \
-	strlcat \
-	strlcpy \
-	strnlen \
+	sysconf \
+	sysctl \
+	syslog \
+	tdestroy \
 	timegm \
-	tsearch \
-	unsetenv \
-	vsnprintf \
-	vsyslog \
 ])
 
+OPENAFS_ROKEN()
+OPENAFS_HCRYPTO()
 OPENAFS_CURSES()
+OPENAFS_C_ATTRIBUTE()
+OPENAFS_C_PRAGMA()
+
+dnl Functions that Heimdal's libroken provides, but that we
+dnl haven't found a need for yet, and so haven't imported
+AC_CHECK_FUNCS([ \
+	chown \
+	fchown \
+	gethostname \
+	lstat \
+	inet_aton \
+	putenv \
+	readv \
+	setenv \
+	strdup \
+	strftime \
+	strndup \
+	strsep \
+	unsetenv \
+])
+
+dnl Functions that are in objects that we always build from libroken
+AC_CHECK_FUNCS([ \
+	asprintf \
+	asnprintf \
+	vasprintf \
+	vasnprintf \
+	vsnprintf \
+	snprintf \
+])
+
+dnl Functions that we're going to try and get from libroken
+AC_REPLACE_FUNCS([ \
+	daemon \
+	ecalloc \
+	emalloc \
+	erealloc \
+	err \
+	errx \
+	flock \
+	freeaddrinfo \
+	gai_strerror \
+	getaddrinfo \
+	getdtablesize \
+	getnameinfo \
+	getopt \
+	getprogname \
+	gettimeofday \
+	inet_ntop \
+	inet_pton \
+	localtime_r \
+	mkstemp \
+	setenv \
+	setprogname \
+	strcasecmp \
+	strlcat \
+	strnlen \
+	strlcpy \
+	strsep \
+	tdelete \
+	tfind \
+	tsearch \
+	twalk \
+	unsetenv \
+	verr \
+	verrx \
+	vsyslog \
+	vwarn \
+	vwarnx \
+	warn \
+	warnx \
+])
+
+dnl Headers that we're going to try and get from libroken
+AC_CHECK_HEADERS([ \
+	err.h \
+	search.h \
+])
+
+AC_CHECK_DECLS([h_errno], [], [], [
+#include <sys/types.h>
+#ifdef HAVE_NETDB_H
+#include <netdb.h>
+#endif
+])
+
+AC_HEADER_TIME
+
+ROKEN_HEADERS=
+AS_IF([test "$ac_cv_header_err_h" != "yes" ],
+      [ROKEN_HEADERS="$ROKEN_HEADERS \$(TOP_INCDIR)/err.h"],
+      [])
+AC_SUBST(ROKEN_HEADERS)
+
+dnl Stuff that's harder ...
+AC_MSG_CHECKING([for bswap16])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#ifdef HAVE_SYS_BSWAP_H
+#include <sys/bswap.h>
+#endif
+],
+[short a, b; b = bswap16(a); ])],
+[AC_MSG_RESULT(yes)
+ AC_DEFINE(HAVE_BSWAP16, 1, [Define to 1 if you have the bswap16 function])
+],
+[AC_MSG_RESULT(no)])
+
+AC_MSG_CHECKING([for bswap32])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#ifdef HAVE_SYS_BSWAP_H
+#include <sys/bswap.h>
+#endif
+],
+[int a, b; b = bswap32(a); ])],
+[AC_MSG_RESULT(yes)
+ AC_DEFINE(HAVE_BSWAP32, 1, [Define to 1 if you have the bswap32 function])
+],
+[AC_MSG_RESULT(no)])
 
 case $AFS_SYSNAME in
 *hp_ux* | *hpux*)
@@ -1574,7 +1839,53 @@ else
     AC_MSG_RESULT(no)
 fi
 
+dnl Look for "non-portable" pthreads functions.
+save_LIBS="$LIBS"
+LIBS="$LIBS $PTHREAD_LIBS"
+AC_CHECK_FUNCS([ \
+	pthread_set_name_np \
+	pthread_setname_np \
+])
+
+dnl Sadly, there are three different versions of pthread_setname_np.
+dnl Try to cater for all of them.
+if test "$ac_cv_func_pthread_setname_np" = "yes" ; then
+    AC_MSG_CHECKING([for signature of pthread_setname_np])
+    AC_TRY_COMPILE([
+#include <pthread.h>
+#ifdef HAVE_PTHREAD_NP_H
+#include <pthread_np.h>
+#endif
+], [pthread_setname_np(pthread_self(), "test", (void *)0)], [
+	AC_MSG_RESULT([three arguments])
+	pthread_setname_np_args=3], [
+	AC_TRY_COMPILE([
+#include <pthread.h>
+#ifdef HAVE_PTHREAD_NP_H
+#include <pthread_np.h>
+#endif
+], [pthread_setname_np(pthread_self(), "test")], [
+	    AC_MSG_RESULT([two arguments])
+	    pthread_setname_np_args=2], [
+	    AC_TRY_COMPILE([
+#include <pthread.h>
+#ifdef HAVE_PTHREAD_NP_H
+#include <pthread_np.h>
+#endif
+], [pthread_setname_np("test")], [
+		AC_MSG_RESULT([one argument])
+		pthread_setname_np_args=1], [pthread_setname_np_args=0])
+])
+])
+AC_DEFINE_UNQUOTED([PTHREAD_SETNAME_NP_ARGS], $pthread_setname_np_args, [Number of arguments required by pthread_setname_np() function])
+fi
+LIBS="$save_LIBS"
+
+openafs_cv_saved_CFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS $XCFLAGS_NOCHECKING"
+
 AC_TYPE_SIGNAL
+OPENAFS_RETSIGTYPE
 AC_CHECK_SIZEOF(void *)
 AC_CHECK_SIZEOF(unsigned long long)
 AC_CHECK_SIZEOF(unsigned long)
@@ -1593,9 +1904,37 @@ AC_CHECK_TYPE([socklen_t],[],
 [#include <sys/types.h>
 #include <sys/socket.h>])
 AC_CHECK_TYPES(off64_t)
+AC_CHECK_TYPES([ssize_t], [], [], [#include <unistd.h>])
+AC_CHECK_TYPES([struct winsize], [], [], [
+#ifdef HAVE_TERMIOS_H
+# include <termios.h>
+#else
+# include <sys/termios.h>
+#endif
+#include <sys/ioctl.h>])
+AC_CHECK_TYPES([sa_family_t, socklen_t, struct sockaddr,
+		struct sockaddr_storage],
+	       [], [], [
+#include <sys/types.h>
+#include <sys/socket.h>
+])
+AC_CHECK_TYPES([sa_family_t], [], [], [
+#include <sys/types.h>
+#include <sys/socket.h>
+])
+AC_CHECK_TYPES([struct addrinfo], [], [], [
+#include <sys/types.h>
+#ifdef HAVE_NETDB_H
+#include <netdb.h>
+#endif
+])
+AC_CHECK_TYPES([long long], [], [], [])
+
 AC_SIZEOF_TYPE(long)
 
-AC_HEADER_PAM_CONST
+CFLAGS="$openafs_cv_saved_CFLAGS"
+
+RRA_HEADER_PAM_CONST
 
 
 dnl Directory PATH handling
@@ -1670,9 +2009,10 @@ AC_SUBST(IRIX_BUILD_IP35)
 AC_SUBST(HTML_XSL)
 AC_SUBST(XSLTPROC)
 AC_SUBST(DOCBOOK2PDF)
+AC_SUBST(DOCBOOK_STYLESHEETS)
 
-OPENAFS_OSCONF
 OPENAFS_FUSE
+OPENAFS_SWIG
 
 TOP_SRCDIR="${srcdir}/src"
 dnl
@@ -1693,13 +2033,30 @@ if test "${DEST}x" = "x"; then
         DEST="${SRCDIR_PARENT}/${AFS_SYSNAME}/dest"
 fi
 
+if test "x$with_crosstools_dir" != "x"; then
+   	if test -f "$with_crosstools_dir/rxgen" -a -f "$with_crosstools_dir/compile_et" -a -f "$with_crosstools_dir/config"; then
+		COMPILE_ET_PATH=$with_crosstools_dir/compile_et
+		CONFIGTOOL_PATH=$with_crosstools_dir/config
+		RXGEN_PATH=$with_crosstools_dir/rxgen
+	else
+		AC_MSG_ERROR(Tools not found in $with_crosstools_dir)
+		exit 1
+	fi
+else
+	COMPILE_ET_PATH="${SRCDIR_PARENT}/src/comerr/compile_et"
+	CONFIGTOOL_PATH="${SRCDIR_PARENT}/src/config/config"
+	RXGEN_PATH="${SRCDIR_PARENT}/src/rxgen/rxgen"
+fi
+AC_SUBST(COMPILE_ET_PATH)
+AC_SUBST(CONFIGTOOL_PATH)
+AC_SUBST(RXGEN_PATH)
+
 HELPER_SPLINT="${TOP_SRCDIR}/helper-splint.sh"
 HELPER_SPLINTCFG="${TOP_SRCDIR}/splint.cfg"
 AC_SUBST(HELPER_SPLINT)
 AC_SUBST(HELPER_SPLINTCFG)
 
 mkdir -p ${TOP_OBJDIR}/src/JAVA/libjafs
-
 
 dnl Check to see if crypt lives in a different library
 AC_CHECK_LIB(crypt, crypt, LIB_crypt="-lcrypt")
@@ -1722,18 +2079,33 @@ struct labeltest struct_labeltest = {
 [AC_MSG_RESULT(no)
 ])
 
+AC_MSG_CHECKING([checking for dirfd])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
+#ifdef HAVE_DIRENT_H
+#include <dirent.h>
+#endif
+]],
+        [[DIR *d = 0; dirfd(d);]])],
+        [ac_rk_have_dirfd=yes], [ac_rk_have_dirfd=no])
+if test "$ac_rk_have_dirfd" = "yes" ; then
+        AC_DEFINE_UNQUOTED(HAVE_DIRFD, 1, [have a dirfd function/macro])
+fi
+AC_MSG_RESULT($ac_rk_have_dirfd)
+
+OPENAFS_HAVE_STRUCT_FIELD(DIR, dd_fd, [#include <sys/types.h>
+#ifdef HAVE_DIRENT_H
+#include <dirent.h>
+#endif])
+
+OPENAFS_HAVE_STRUCT_FIELD(struct rusage, ru_idrss,
+[#ifdef HAVE_SYS_RESOURCE_H
+#include <sys/resource.h>
+#endif])
+
+dnl Check for UUID library
+AC_CHECK_HEADERS([uuid/uuid.h])
+AC_CHECK_LIB(uuid, uuid_generate, LIBS_uuid="-luuid")
+AC_CHECK_FUNCS([uuid_generate])
 ])
 
-AC_DEFUN([SUMMARY], [
-    # Print a configuration summary
-echo 
-echo "**************************************"
-echo configure summary
-echo
-AS_IF([test $LIB_curses],[
-echo "LIB_curses :                $LIB_curses" ],[
-echo "XXX LIB_curses  not found! not building scout and afsmonitor!"
-])
-echo 
-echo "**************************************"
-])
+

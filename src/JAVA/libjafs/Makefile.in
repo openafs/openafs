@@ -94,8 +94,7 @@ LIBJAFS_OBJS +=\
 	${LIBJAFSADMDIR}Internal.o \
 	${LIBJAFSADMDIR}UserToken.o \
 	${LIBJAFSADMDIR}VersionInfo.o \
-	${TOP_SRCDIR}/libuafs/UAFS/xdr_int32.o \
-	${TOP_SRCDIR}/util/rxkstats.o
+	${TOP_SRCDIR}/libuafs/UAFS/xdr_int32.o
 
 ifeq (${SYS_NAME}, ppc64_linux26)
 LIBJAFSADM_OBJS =\
@@ -151,9 +150,8 @@ UTILADMINLIB = ${TOP_LIBDIR}/libafsadminutil.a
 CLIENTADMINLIB = ${TOP_LIBDIR}/libclientadmin.a
 
 LIBJAFS_LIBS =\
-	${TOP_LIBDIR}/libjuafs.a \
+	${TOP_LIBDIR}/libuafs.a \
 	${TOP_LIBDIR}/libafsutil.a \
-	${TOP_LIBDIR}/libdes.a \
 	-lresolv \
 	-lpthread
 

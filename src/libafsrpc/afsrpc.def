@@ -1,11 +1,4 @@
 EXPORTS
-	des_check_key_parity			@2
-	des_fixup_key_parity			@5
-	des_init_random_number_generator	@6
-	des_is_weak_key				@7
-	des_key_sched				@8
-	des_random_key				@9
-	des_string_to_key			@10
 	ktohl					@11
 	life_to_time				@12
 	rx_DestroyConnection			@13
@@ -135,64 +128,64 @@ EXPORTS
 	rxi_callAbortThreshhold			@140 DATA
 	rxi_callAbortDelay			@141 DATA
 	RXSTATS_function_names			@142 DATA
-	RXAFSCB_function_names			@143 DATA
-	RXAFSCB_CallBack			@144
-	StartRXAFSCB_CallBack			@145
-	EndRXAFSCB_CallBack			@146
-	RXAFSCB_InitCallBackState		@147
-	RXAFSCB_Probe				@148
-	StartRXAFSCB_Probe			@149
-	EndRXAFSCB_Probe			@150
-	RXAFSCB_GetLock				@151
-	RXAFSCB_GetCE				@152
-	RXAFSCB_XStatsVersion			@153
-	RXAFSCB_GetXStats			@154
-	RXAFSCB_InitCallBackState2		@155
-	RXAFSCB_WhoAreYou			@156
-	RXAFSCB_InitCallBackState3		@157
-	RXAFSCB_ProbeUuid			@158
-	StartRXAFSCB_ProbeUuid			@159
-	EndRXAFSCB_ProbeUuid			@160
-	RXAFSCB_GetServerPrefs			@161
-	RXAFSCB_GetCellServDB			@162
-	RXAFSCB_GetLocalCell			@163
-	RXAFSCB_GetCacheConfig			@164
-	StartRXAFS_FetchData			@165
-	EndRXAFS_FetchData			@166
-	RXAFS_FetchACL				@167
-	RXAFS_FetchStatus			@168
-	StartRXAFS_StoreData			@169
-	EndRXAFS_StoreData			@170
-	RXAFS_StoreACL				@171
-	RXAFS_StoreStatus			@172
-	RXAFS_RemoveFile			@173
-	RXAFS_CreateFile			@174
-	RXAFS_Rename				@175
-	RXAFS_Symlink				@176
-	RXAFS_Link				@177
-	RXAFS_MakeDir				@178
-	RXAFS_RemoveDir				@179
-	RXAFS_OldSetLock			@180
-	RXAFS_OldExtendLock			@181
-	RXAFS_OldReleaseLock			@182
-	RXAFS_GetStatistics			@183
-	RXAFS_GiveUpCallBacks			@184
-	RXAFS_GetVolumeInfo			@185
-	RXAFS_GetVolumeStatus			@186
-	RXAFS_SetVolumeStatus			@187
-	RXAFS_GetRootVolume			@188
-	RXAFS_CheckToken			@189
-	RXAFS_GetTime				@190
-	RXAFS_NGetVolumeInfo			@191
-	RXAFS_BulkStatus			@192
-	RXAFS_SetLock				@193
-	RXAFS_ExtendLock			@194
-	RXAFS_ReleaseLock			@195
-	RXAFS_XStatsVersion			@196
-	RXAFS_GetXStats				@197
-	RXAFS_Lookup				@198
-	RXAFS_FlushCPS				@199
-	RXAFS_DFSSymlink			@200
+;	RXAFSCB_function_names			@143 DATA
+;	RXAFSCB_CallBack			@144
+;	StartRXAFSCB_CallBack			@145
+;	EndRXAFSCB_CallBack			@146
+;	RXAFSCB_InitCallBackState		@147
+;	RXAFSCB_Probe				@148
+;	StartRXAFSCB_Probe			@149
+;	EndRXAFSCB_Probe			@150
+;	RXAFSCB_GetLock				@151
+;	RXAFSCB_GetCE				@152
+;	RXAFSCB_XStatsVersion			@153
+;	RXAFSCB_GetXStats			@154
+;	RXAFSCB_InitCallBackState2		@155
+;	RXAFSCB_WhoAreYou			@156
+;	RXAFSCB_InitCallBackState3		@157
+;	RXAFSCB_ProbeUuid			@158
+;	StartRXAFSCB_ProbeUuid			@159
+;	EndRXAFSCB_ProbeUuid			@160
+;	RXAFSCB_GetServerPrefs			@161
+;	RXAFSCB_GetCellServDB			@162
+;	RXAFSCB_GetLocalCell			@163
+;	RXAFSCB_GetCacheConfig			@164
+;	StartRXAFS_FetchData			@165
+;	EndRXAFS_FetchData			@166
+;	RXAFS_FetchACL				@167
+;	RXAFS_FetchStatus			@168
+;	StartRXAFS_StoreData			@169
+;	EndRXAFS_StoreData			@170
+;	RXAFS_StoreACL				@171
+;	RXAFS_StoreStatus			@172
+;	RXAFS_RemoveFile			@173
+;	RXAFS_CreateFile			@174
+;	RXAFS_Rename				@175
+;	RXAFS_Symlink				@176
+;	RXAFS_Link				@177
+;	RXAFS_MakeDir				@178
+;	RXAFS_RemoveDir				@179
+;	RXAFS_OldSetLock			@180
+; 	RXAFS_OldExtendLock			@181
+;	RXAFS_OldReleaseLock			@182
+;	RXAFS_GetStatistics			@183
+;	RXAFS_GiveUpCallBacks			@184
+;	RXAFS_GetVolumeInfo			@185
+;	RXAFS_GetVolumeStatus			@186
+;	RXAFS_SetVolumeStatus			@187
+;	RXAFS_GetRootVolume			@188
+;	RXAFS_CheckToken			@189
+;	RXAFS_GetTime				@190
+;	RXAFS_NGetVolumeInfo			@191
+;	RXAFS_BulkStatus			@192
+;	RXAFS_SetLock				@193
+;	RXAFS_ExtendLock			@194
+;	RXAFS_ReleaseLock			@195
+;	RXAFS_XStatsVersion			@196
+;	RXAFS_GetXStats				@197
+;	RXAFS_Lookup				@198
+;	RXAFS_FlushCPS				@199
+;	RXAFS_DFSSymlink			@200
 	rx_SetRxStatUserOk			@201
 	rx_RxStatUserOk				@202
 	rx_enable_hot_thread			@203 DATA
@@ -200,18 +193,18 @@ EXPORTS
 	xdr_uint64				@205
 	rx_SetMaxMTU				@206
 	rx_GetConnection			@207
-        RXAFSCB_GetCE64                         @208
-        RXAFSCB_GetCellByNum                    @209
-        RXAFSCB_TellMeAboutYourself             @210
-        EndRXAFS_FetchData64                    @211
-        EndRXAFS_StoreData64                    @212
-        RXAFS_CallBackRxConnAddr                @213
-        RXAFS_GetCapabilities                   @214
-        RXAFS_GiveUpAllCallBacks                @215
-        RXAFS_InlineBulkStatus                  @216
-        RXAFS_ResidencyCmd                      @217
-        StartRXAFS_FetchData64                  @218
-        StartRXAFS_StoreData64                  @219
+;       RXAFSCB_GetCE64                         @208
+;       RXAFSCB_GetCellByNum                    @209
+;       RXAFSCB_TellMeAboutYourself             @210
+;       EndRXAFS_FetchData64                    @211
+;       EndRXAFS_StoreData64                    @212
+;       RXAFS_CallBackRxConnAddr                @213
+;       RXAFS_GetCapabilities                   @214
+;       RXAFS_GiveUpAllCallBacks                @215
+;       RXAFS_InlineBulkStatus                  @216
+;       RXAFS_ResidencyCmd                      @217
+;       StartRXAFS_FetchData64                  @218
+;       StartRXAFS_StoreData64                  @219
         rx_StartClientThread                    @220
 	rxkad_global_stats_lock			@221 DATA
 	rxkad_stats_key				@222 DATA
@@ -221,11 +214,11 @@ EXPORTS
         osi_AssertFailU				@226
 	DllMain					@227
         rx_SetSecurityConfiguration             @228
-;        RXAFSCB_ExecuteRequest                  @229
-        EndRXAFS_GetTime                        @230
-        StartRXAFS_GetTime                      @231
-        EndRXAFS_GetCapabilities                @232
-        StartRXAFS_GetCapabilities              @233
+;       RXAFSCB_ExecuteRequest                  @229
+;       EndRXAFS_GetTime                        @230
+;       StartRXAFS_GetTime                      @231
+;       EndRXAFS_GetCapabilities                @232
+;       StartRXAFS_GetCapabilities              @233
         xdr_afs_uint32                          @234
         xdr_afs_int32                           @235
         xdr_afs_uint64                          @236
@@ -245,7 +238,7 @@ EXPORTS
         rx_ReadProc32                           @250
         rx_WriteProc32                          @251
         xdr_free                                @252
-        RXAFS_FsCmd                             @253
+;       RXAFS_FsCmd                             @253
         rxi_CallError                           @254
         rx_GetLocalPeers			@255
         xdr_alloc                               @256
@@ -255,15 +248,15 @@ EXPORTS
 	rx_SetMaxSendWindow			@260
 	rx_GetMinPeerTimeout			@261
 	rx_SetMinPeerTimeout			@262
-        xdr_serverList                          @263
-        xdr_Capabilities                        @264
+;       xdr_serverList                          @263
+;       xdr_Capabilities                        @264
         xdrlen_create                           @265
         rx_SetConnSecondsUntilNatPing           @266
         rx_GetServiceSpecific                   @267
         rx_SetServiceSpecific                   @268
-;	rx_NewThreadId				@269
-;       rx_GetStatistics                        @270
-;       rx_FreeStatistics                       @271
+	rx_NewThreadId				@269
+        rx_GetStatistics                        @270
+        rx_FreeStatistics                       @271
 	rx_SetConnHardDeadTime			@272
 	rx_SetConnIdleDeadTime			@273
 	rx_InterruptCall                        @274
@@ -284,10 +277,72 @@ EXPORTS
         registerthread                          @287
         swapthreadname                          @288
 
-	rx_SetBusyChannelError                  @304
+	rx_opaque_new                           @289
+	rx_opaque_alloc                         @290
+	rx_opaque_populate                      @291
+	rx_opaque_copy                          @292
+	rx_opaque_freeContents                  @293
+	rx_opaque_zeroFreeContents              @294
+	rx_opaque_free                          @295
+	rx_opaque_zeroFree                      @296
+	rx_identity_match                       @297
+	rx_identity_populate                    @298
+	rx_identity_copy                        @299
+	rx_identity_copyContents                @300
+	rx_identity_new                         @301
+	rx_identity_freeContents                @302
+	rx_identity_free                        @303
 
-	rx_KeepAliveOn				@335
-	rx_KeepAliveOff				@336
+;	rx_SetBusyChannelError                  @304
+	rx_GetThreadNum				@305
+	rx_SetThreadNum				@306
+
+;	rx_SetConnectionEpoch			@307
+        rx_GetConnectionEpoch                   @308
+;	rx_SetConnectionId			@309
+        rx_GetConnectionId                      @310
+        rx_GetSecurityData                      @311
+        rx_SetSecurityData                      @312
+        rx_IsUsingPktCksum                      @313
+        rx_SetSecurityHeaderSize                @314
+        rx_GetSecurityHeaderSize                @315
+        rx_SetSecurityMaxTrailerSize            @316
+        rx_GetSecurityMaxTrailerSize            @317
+        ; @318 is available
+        rx_SetMsgsizeRetryErr                   @319
+        rx_IsServerConn                         @320
+        rx_IsClientConn                         @321
+        rx_SecurityObjectOf                     @322
+        rx_PeerOf                               @323
+        rx_ServiceIdOf                          @324
+        rx_SecurityClassOf                      @325
+        rx_ServiceOf                            @326
+        rx_ConnError                            @327
+
+        rx_ConnectionOf                         @328
+        rx_Error                                @329
+        rx_GetRemoteStatus                      @330
+        rx_SetLocalStatus                       @331
+        rx_GetCallAbortCode                     @332
+        rx_SetCallAbortCode                     @333
+        rx_RecordCallStatistics                 @334
+;	rx_KeepAliveOn				@335
+;	rx_KeepAliveOff				@336
+	rx_HostOf				@337
+        rx_PortOf                               @338
+
+        rx_ClearProcessRPCStats                 @339
+        rx_ClearPeerRPCStats                    @340
+        rx_CopyProcessRPCStats                  @341
+        rx_CopyPeerRPCStats                     @342
+	rx_ReleaseRPCStats                      @343
+;       RXAFS_OpCodeIndex                       @344
+	initialize_RXK_error_table		@345
+	rx_GetNetworkError                      @346
+        afs_set_com_err_hook                    @347
+	rxkad_NewKrb5ServerSecurityObject       @348
+	tkt_MakeTicket5                         @349
+	tkt_DeriveDesKey                        @350
 
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA

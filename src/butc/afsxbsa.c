@@ -11,11 +11,9 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-#include <sys/types.h>
 #include <afs/stds.h>
-#include <stdio.h>
 
+#include <roken.h>
 
 #include <ctype.h>
 
@@ -23,7 +21,6 @@
 #include <dlfcn.h>
 #endif
 
-#include <errno.h>
 #include <afs/tcdata.h>
 #include "butc_xbsa.h"
 #include <afs/butx.h>
@@ -1277,7 +1274,7 @@ BSA_Int16 BSAGetEnvironment(
    for (i=0; i< ADSM_ENV_STRS; i++) {
      if ( *envP == NULL ) {  /* watch for NULL pointers */
        /* Allocating memory for *envP.*/
-       *envP = (char *) malloc(sizeof(char) * BSA_MAX_DESC +1);
+       *envP = malloc(sizeof(char) * BSA_MAX_DESC +1);
 
        /* copy the content of envString[i] to *envP. */
         strcpy(*envP,envString[i]);

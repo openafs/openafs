@@ -22,8 +22,9 @@ EXELIBS =\
 	$(DESTDIR)\lib\afs\afscmd.lib \
 	$(DESTDIR)\lib\afs\afsusd.lib \
 	$(DESTDIR)\lib\afs\afsutil.lib \
-	$(DESTDIR)\lib\afs\afsprocmgmt.lib
-	
+	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
+	$(DESTDIR)\lib\afsroken.lib
+
 
 $(EXEFILE): $(EXEOBJS) $(EXELIBS)
 	$(EXECONLINK)
@@ -49,4 +50,4 @@ install: $(LIBFILE) $(DLLFILE) $(EXEFILE) $(INCFILES)
 clean::
 
 mkdir:
-	
+

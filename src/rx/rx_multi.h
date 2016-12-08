@@ -27,20 +27,26 @@ struct multi_handle {
     do {\
 	struct multi_handle *multi_h;\
 	int multi_i;\
+	int multi_i0;\
+	afs_int32 multi_error;\
 	struct rx_call *multi_call;\
 	multi_h = multi_Init(conns, nConns);\
-	for (multi_i = 0; multi_i < nConns; multi_i++)
+	for (multi_i0 = multi_i = 0; ; multi_i = multi_i0 )
 
 #define multi_Body(startProc, endProc)\
-	multi_call = multi_h->calls[multi_i];\
-	startProc;\
-	rx_FlushWrite(multi_call);\
-	}\
-	while ((multi_i = multi_Select(multi_h)) >= 0) {\
-	    afs_int32 multi_error;\
+	if (multi_h->nextReady == multi_h->firstNotReady && multi_i < multi_h->nConns) {\
 	    multi_call = multi_h->calls[multi_i];\
-	    multi_error = rx_EndCall(multi_call, endProc);\
-	    multi_h->calls[multi_i] = (struct rx_call *) 0
+            if (multi_call) {\
+                startProc;\
+	        rx_FlushWrite(multi_call);\
+            }\
+	    multi_i0++;  /* THIS is the loop variable!! */\
+	    continue;\
+	}\
+	if ((multi_i = multi_Select(multi_h)) < 0) break;\
+	multi_call = multi_h->calls[multi_i];\
+	multi_error = rx_EndCall(multi_call, endProc);\
+	multi_h->calls[multi_i] = (struct rx_call *) 0
 
 #define	multi_Abort break
 

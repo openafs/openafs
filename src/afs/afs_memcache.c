@@ -171,6 +171,29 @@ afs_MemReadUIO(afs_dcache_id_t *ainode, struct uio *uioP)
     return code;
 }
 
+static int
+_afs_MemExtendEntry(struct memCacheEntry *mceP, afs_uint32 size)
+{
+    if (size > mceP->dataSize) {
+	char *oldData = mceP->data;
+
+	mceP->data = afs_osi_Alloc(size);
+	if (mceP->data == NULL) {       /* no available memory */
+	    mceP->data = oldData;       /* revert back change that was made */
+	    afs_warn("afs: afs_MemWriteBlk mem alloc failure (%d bytes)\n", size);
+	    return -ENOMEM;
+	}
+
+	/* may overlap, but this is OK */
+	AFS_GUNLOCK();
+	memcpy(mceP->data, oldData, mceP->size);
+	AFS_GLOCK();
+	afs_osi_Free(oldData, mceP->dataSize);
+	mceP->dataSize = size;
+    }
+    return 0;
+}
+
 int
 afs_MemWriteBlk(struct osi_file *fP, int offset, void *src,
 		int size)
@@ -193,25 +216,9 @@ afs_MemWritevBlk(struct memCacheEntry *mceP, int offset,
     int bytesToWrite;
     AFS_STATCNT(afs_MemWriteBlk);
     ObtainWriteLock(&mceP->afs_memLock, 561);
-    if (offset + size > mceP->dataSize) {
-	char *oldData = mceP->data;
-
-	mceP->data = afs_osi_Alloc(size + offset);
-	if (mceP->data == NULL) {	/* no available memory */
-	    mceP->data = oldData;	/* revert back change that was made */
-	    ReleaseWriteLock(&mceP->afs_memLock);
-	    afs_warn("afs: afs_MemWriteBlk mem alloc failure (%d bytes)\n",
-		     size + offset);
-	    return -ENOMEM;
-	}
-
-	/* may overlap, but this is OK */
-	AFS_GUNLOCK();
-	memcpy(mceP->data, oldData, mceP->size);
-	AFS_GLOCK();
-	afs_osi_Free(oldData, mceP->dataSize);
-	mceP->dataSize = size + offset;
-    }
+    bytesWritten = _afs_MemExtendEntry(mceP, (offset + size));
+    if (bytesWritten != 0)
+      goto out;
     AFS_GUNLOCK();
     if (mceP->size < offset)
 	memset(mceP->data + mceP->size, 0, offset - mceP->size);
@@ -224,13 +231,13 @@ afs_MemWritevBlk(struct memCacheEntry *mceP, int offset,
     }
     mceP->size = (offset < mceP->size) ? mceP->size : offset;
     AFS_GLOCK();
-
+out:
     ReleaseWriteLock(&mceP->afs_memLock);
     return bytesWritten;
 }
 
 int
-afs_MemWriteUIO(afs_dcache_id_t *ainode, struct uio *uioP)
+afs_MemWriteUIO(struct vcache *avc, afs_dcache_id_t *ainode, struct uio *uioP)
 {
     struct memCacheEntry *mceP =
 	(struct memCacheEntry *)afs_MemCacheOpen(ainode);
@@ -298,6 +305,15 @@ afs_MemCacheTruncate(struct osi_file *fP, int size)
     return 0;
 }
 
+int
+afs_MemExtendEntry(struct memCacheEntry *mceP, afs_uint32 size)
+{
+    int code = 0;
+    ObtainWriteLock(&mceP->afs_memLock, 560);
+    code = _afs_MemExtendEntry(mceP, size);
+    ReleaseWriteLock(&mceP->afs_memLock);
+    return code;
+}
 
 void
 shutdown_memcache(void)

@@ -7,24 +7,29 @@
 #
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
+# tell bsd.kmod.mk to build us vnode_if*
+SRCS=	vnode_if.h
 
-# OS specific object files:
-AFS_OS_OBJS = \
-	osi_gcpags.o \
-	osi_groups.o \
-	osi_file.o \
-	osi_inode.o \
-	osi_misc.o \
-	osi_sleep.o \
-	osi_vcache.o \
-	osi_vm.o \
-	osi_vnodeops.o \
-	osi_module.o 
+# We must set SRCS to include at least one .c file if we are also using
+# vnode_if.h, due to a bug in the system makefiles where the empty string
+# gets expanded to a ".o" entry in OBJS, which there is (correctly) no
+# rule to make.  For simplicity, just set this as all of what would
+# otherwise be AFS_OS_OBJS so that people have a familiar list to look for.
+#
+# OS specific "object" files:
+SRCS+= \
+	osi_crypto.c \
+	osi_gcpags.c \
+	osi_groups.c \
+	osi_file.c \
+	osi_inode.c \
+	osi_misc.c \
+	osi_sleep.c \
+	osi_vcache.c \
+	osi_vm.c \
+	osi_vnodeops.c \
+	osi_module.c
 
 #AFS_OS_NFSOBJS = \
 #	osi_vfsops_nfs.o
@@ -32,25 +37,26 @@ AFS_OS_OBJS = \
 AFS_OS_NONFSOBJS = \
 	osi_vfsops.o
 
-
 # System specific build commands and flags
 KSRC = @BSD_KERNEL_PATH@
 KBLD = @BSD_KERNEL_BUILD@
-<amd64>
-KOPTS = -fPIC -mno-red-zone
-<all>
 
-KDEFS=-Wall -nostdinc -I/usr/include -D_KERNEL -DKLD_MODULE \
-	-elf \
-	-mno-mmx -mno-3dnow -mno-sse -mno-sse2 \
-	-fno-common -ffreestanding \
-	-I${KBLD} -include opt_global.h -fno-strict-aliasing
+# keep symbols if --enable-debug-kernel
+AC_DEBUG_FLAGS = @DEBUG_FLAGS@
+.if !empty(AC_DEBUG_FLAGS)
+DEBUG_FLAGS=	${AC_DEBUG_FLAGS}
+.endif
 
-DBUG = -O2
-#DBUG = -O -g
-DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
-CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
+# We are not doing very well (WARNS=2 brings in printf format type checking)
+WARNS= 1
+# We have some sketchy code that redeclares prototypes
+CWARNFLAGS+= -Wno-redundant-decls
 
+# setup for bsd.kmod.mk infrastructure
+.PATH:	${TOP_SRCDIR}/afs/FBSD
+KMODDIR=/boot/modules
+KMOD=	libafs
+SYSDIR= ${KSRC}
 
 # Name of directory to hold object files and libraries.
 KOBJ = MODLOAD
@@ -60,33 +66,30 @@ COMPDIRS = single_compdir
 INSTDIRS = single_instdir
 DESTDIRS = single_destdir
 
-include Makefile.common
-
+# The common sysincludes code needs the 'h' symlink.
+# We cannot include bsd.kmod.mk in this file directly, because it will start
+# generating headers and objects in this directory, which we want in $(KOBJ).
+# We also need the install target from bsd.kmod.mk in $(KOBJ), but the one
+# from Makefile.common in this directory.  A prime candidate for cleanup.
 setup:
 	-mkdir $(KOBJ)
 	-$(RM) $(KOBJ)/Makefile $(KOBJ)/Makefile.common
-	ln -fs ../Makefile $(KOBJ)/Makefile
-	ln -fs ../Makefile.common $(KOBJ)/Makefile.common
-	-$(RM) -f  h net netinet rpc ufs nfs  machine sys vm
-	-ln -fs ${KSRC}/net net
-<amd64 i386>
-	-ln -fs ${KSRC}/x86/include x86
-<all>
-	-ln -fs ${KSRC}/netinet netinet
-	-ln -fs ${KSRC}/nfs nfs
-	-ln -fs ${KSRC}/rpc rpc
-	-ln -fs ${KSRC}/sys sys
-	-ln -fs ${KSRC}/ufs/ufs ufs
+	$(CP) Makefile $(KOBJ)/Makefile
+	echo ".include <bsd.kmod.mk>" >> $(KOBJ)/Makefile
+	sed -e 's/^install:/afsinstall:/' Makefile.common > $(KOBJ)/Makefile.common
+	-$(RM) -f h
 	-ln -fs ${KSRC}/sys h
-	-ln -fs ${KSRC}/vm vm
-	-touch $(KOBJ)/sec_net.h
 
+# Makefile.common sets AFSAOBJS, COMMON_INCLUDE, TOP_{SRC,OBJ}*, and the like.
+# We must live with its other pollution of targets and build rules.
+include Makefile.common
 
-depsrcs:	vnode_if.h
+# we only do the no-NFS case
+OBJS=	${AFSAOBJS} ${AFSNONFSOBJS}
 
-# Below this line are targets when in the COMMON directory:
-LIBAFS = libafsnfs.ko
-LIBAFSNONFS = libafs.ko
+LIBAFSNONFS=	libafs.ko
+DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
+CFLAGS+= $(DEFINES) ${COMMON_INCLUDE}
 
 INST_LIBAFS = ${DESTDIR}${afskerneldir}/${LIBAFS}
 INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/${LIBAFSNONFS}
@@ -94,43 +97,12 @@ INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/${LIBAFSNONFS}
 DEST_LIBAFS = ${DEST}/root.client/bin/${LIBAFS}
 DEST_LIBAFSNONFS = ${DEST}/root.client/bin/${LIBAFSNONFS}
 
-
-# Without this line, gmake tries to build libafs
-.PHONY: libafs
-
-# libafs:	$(LIBAFS) $(LIBAFSNONFS)
-libafs:	$(LIBAFSNONFS)
-
-install_libafs:	$(LIBAFSNONFS)
-	${INSTALL} -d ${DESTDIR}${afskerneldir}
-	${INSTALL} -m 644 $(LIBAFSNONFS) $(INST_LIBAFSNONFS)
+install_libafs:	$(LIBAFSNONFS) install
 
 dest_libafs: $(LIBAFSNONFS)
 	${INSTALL} -d ${DEST}/root.client/bin
 	${INSTALL} -m 644 $(LIBAFSNONFS) $(DEST_LIBAFSNONFS)
 
-${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
-	$(LD) -r -o ${LIBAFS}.kld ${AFSAOBJS} ${AFSNFSOBJS}
-	gensetdefs ${LIBAFS}.kld
-	$(MAKE) setdef0.o setdef1.o
-	$(LD) -Bshareable -o ${LIBAFS} setdef0.o ${LIBAFS}.kld setdef1.o
+# This is ugly, but the common infrastructure needs a libafs target.
+libafs: depend $(LIBAFSNONFS)
 
-${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
-	$(LD) -r -d -warn-common -o libafs.kld ${AFSAOBJS} ${AFSNONFSOBJS}
-	touch export_syms
-	awk -f ${KSRC}/conf/kmod_syms.awk libafs.kld export_syms | xargs -J% objcopy % libafs.kld
-	$(LD) -Bshareable -d -warn-common -o ${LIBAFSNONFS} libafs.kld
-
-
-# Object build rules:
-setdef0.o: setdef0.c
-	$(CRULE_NOOPT)
-setdef1.o: setdef1.c
-	$(CRULE_NOOPT)
-
-# vnode_if.h build rules:
-vnode_if.h:	${KSRC}/kern/vnode_if.src
-	awk -f ${KSRC}/tools/vnode_if.awk ${KSRC}/kern/vnode_if.src -h
-	awk -f ${KSRC}/tools/vnode_if.awk ${KSRC}/kern/vnode_if.src -q
-	awk -f ${KSRC}/tools/vnode_if.awk ${KSRC}/kern/vnode_if.src -p
-<all>

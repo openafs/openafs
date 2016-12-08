@@ -18,7 +18,7 @@
 #ifndef _OSI_MACHDEP_H_
 #define _OSI_MACHDEP_H_
 
-#ifdef AFS_SUN57_64BIT_ENV
+#ifdef AFS_SUN5_64BIT_ENV
 #include <sys/model.h>		/* for get_udatamodel() */
 #endif
 
@@ -54,11 +54,7 @@ local_osi_Time()
 #define osi_Time() (hrestime.tv_sec)
 #endif
 
-#undef afs_osi_Alloc_NoSleep
-extern void *afs_osi_Alloc_NoSleep(size_t size);
-
-#ifdef AFS_SUN58_ENV
-# define osi_vnhold(avc, r)  do {    \
+#define osi_vnhold(avc, r)  do {    \
     struct vnode *vp = AFSTOV(avc); \
     uint_t prevcount;               \
                                     \
@@ -70,9 +66,6 @@ extern void *afs_osi_Alloc_NoSleep(size_t size);
 	VFS_HOLD(afs_globalVFS);    \
     }                               \
 } while(0)
-#else /* !AFS_SUN58_ENV */
-# define osi_vnhold(avc, r)  do { VN_HOLD(AFSTOV(avc)); } while(0)
-#endif /* !AFS_SUN58_ENV */
 
 #define gop_rdwr(rw,gp,base,len,offset,segflg,ioflag,ulimit,cr,aresid) \
   vn_rdwr((rw),(gp),(base),(len),(offset),(segflg),(ioflag),(ulimit),(cr),(aresid))
@@ -94,8 +87,8 @@ extern void *afs_osi_Alloc_NoSleep(size_t size);
 #include <sys/mutex.h>
 extern kmutex_t afs_global_lock;
 
-#define AFS_GLOCK()	mutex_enter(&afs_global_lock);
-#define AFS_GUNLOCK()	mutex_exit(&afs_global_lock);
+#define AFS_GLOCK()	mutex_enter(&afs_global_lock)
+#define AFS_GUNLOCK()	mutex_exit(&afs_global_lock)
 #define ISAFS_GLOCK()	mutex_owned(&afs_global_lock)
 #define osi_InitGlock() \
 	mutex_init(&afs_global_lock, "afs_global_lock", MUTEX_DEFAULT, NULL);
@@ -115,7 +108,6 @@ extern kmutex_t afs_global_lock;
 #define	IO_SYNC		FSYNC
 #endif
 
-#if	defined(AFS_SUN56_ENV)
 /*
 ** Macro returns 1 if file is larger than 2GB; else returns 0
 */
@@ -123,7 +115,6 @@ extern kmutex_t afs_global_lock;
 #define AfsLargeFileUio(uio)       ( (uio)->_uio_offset._p._u ? 1 : 0 )
 #undef AfsLargeFileSize
 #define AfsLargeFileSize(pos, off) ( ((offset_t)(pos)+(offset_t)(off) > (offset_t)0x7fffffff)?1:0)
-#endif
 
 #if defined(AFS_SUN510_ENV)
 #include "h/sunddi.h"

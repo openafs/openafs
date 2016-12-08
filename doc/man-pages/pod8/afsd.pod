@@ -20,6 +20,7 @@ B<afsd> [B<-afsdb>] [B<-backuptree>]
      S<<< [B<-files> <I<files in cache>>] >>>
      S<<< [B<-files_per_subdir> <I<log(2) of files per dir>> ] >>>
      [B<-help>] S<<< [B<-logfile> <I<Place to keep the CM log>>] >>>
+     S<<< [B<-inumcalc>] <I<method>> >>>
      [B<-mem_alloc_sleep>] [B<-memcache>]
      S<<< [B<-mountdir> <I<mount location>>] >>> [B<-nomount>]
      [B<-nosettime>]
@@ -291,10 +292,7 @@ Server.
 =item *
 
 One I<server connection> daemon, which sends a probe to the File
-Server every few minutes to check that it is still accessible. If the
-B<-settime> option is set, it also synchronizes the machine's clock
-with the clock on a randomly-chosen file server machine. There is
-always one server connection daemon.
+Server every few minutes to check that it is still accessible.
 
 =item *
 
@@ -532,10 +530,12 @@ When the dynamic root (B<-dynroot>, B<-dynroot-sparse>) and the fake stat
 provides a special directory named F</afs/.:mount> which allows access to
 volumes by volume name or ID.  The F</afs/.:mount> directory appears to be
 empty, but any name in the form of I<cell>:I<volume> will be resolved as a
-read-write mount point to the specified volume.  This dynamic mount feature is
-recommended only for temporary access to a volume.  Linux-based cache managers
-provide this dynamic mount feature even when dynamic root (B<-dynroot>,
-B<-dynroot-sparse>) is not in effect.
+read-write mount point to the specified volume.  For example, the
+I<user.jdoe> volume in the I<example.com> cell would be accessible at the
+following path: F</afs/.:mount/example.com:user.jdoe>.  This dynamic mount
+feature is recommended only for temporary access to a volume.  Linux-based
+cache managers provide this dynamic mount feature even when dynamic root
+(B<-dynroot>, B<-dynroot-sparse>) is not in effect.
 
 =item B<-dynroot-sparse>
 
@@ -605,6 +605,24 @@ ignored.
 
 This option is obsolete and no longer has any effect.
 
+=item B<-inumcalc> <I<method>>
+
+Specifies the method used by the Cache Manager to generate inode numbers for
+files, directories, and symlinks in the AFS filesystem.  Valid methods are
+C<compat> and C<md5>.  The default method is C<compat>.
+
+When the C<compat> method is in effect, the Cache Manager generates inode
+numbers for a given inode by multiplying the AFS volume number by 65536, adding
+the result to the AFS vnode number, and finally truncating the result to a
+signed 32 bit integer.
+
+When the C<md5> method is in effect, the Cache Manager generates inode numbers
+for a given inode by calculating the MD5 digest of a combination of the cell
+number, volume number, and vnode number. The result is truncated to a signed 32
+bit integer. The C<md5> method is computationally more expensive but greatly
+reduces the chance for inode number collisions, especially when volumes from
+multiple cells are mounted within the AFS filesystem.
+
 =item B<-mem_alloc_sleep>
 
 This option is obsolete and no longer has any effect.
@@ -631,7 +649,7 @@ mounted in /Network/afs like other network file systems.
 =item B<-nosettime>
 
 This option is obsolete and no longer has any effect.  The operating system
-provided time keeping services should be used to maintain the system time.
+provided time keeping daemons should be used to maintain the system time.
 
 =item B<-prealloc> <I<number of preallocated blocks>>
 
@@ -688,15 +706,8 @@ improve OpenAFS client performance in some circumstances.
 
 =item B<-settime>
 
-The B<-settime> option is deprecated and should no longer be specified.  The
-operating system provided time keeping services should be used to maintain the
-system time.
-
-The B<-settime> option enables the native AFS time synchronization.  If the
-B<-settime> option is specified, then a randomly selected a file server machine
-in the local cell is used as the source for the correct time. Every five minutes
-thereafter, the local clock is adjusted (if necessary) to match the file server
-machine's clock.
+This option is obsolete and no longer has any effect.  The operating system
+provided time keeping daemons should be used to maintain the system time.
 
 =item B<-shutdown>
 

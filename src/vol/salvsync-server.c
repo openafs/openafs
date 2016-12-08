@@ -26,31 +26,19 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <afs/procmgmt.h>
+#include <roken.h>
 
-#include <sys/types.h>
-#include <stdio.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <time.h>
-#else
-#include <sys/param.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/time.h>
-#endif
-#include <errno.h>
-#include <afs/afs_assert.h>
-#include <signal.h>
-#include <string.h>
+#include <stddef.h>
 
-
-#include <rx/xdr.h>
+#include <afs/opr.h>
+#include <opr/lock.h>
 #include <afs/afsint.h>
+#include <rx/rx_queue.h>
+
 #include "nfs.h"
 #include <afs/errors.h>
 #include "salvsync.h"
-#include "lwp.h"
 #include "lock.h"
 #include <afs/afssyscalls.h>
 #include "ihandle.h"
@@ -59,11 +47,6 @@
 #include "partition.h"
 #include "common.h"
 #include <rx/rx_queue.h>
-#include <afs/procmgmt.h>
-
-#if !defined(offsetof)
-#include <stddef.h>
-#endif
 
 #ifdef USE_UNIX_SOCKETS
 #include <afs/afsutil.h>
@@ -132,7 +115,6 @@ static afs_int32 SALVSYNC_com_CancelAll(SALVSYNC_command * com, SALVSYNC_respons
 static afs_int32 SALVSYNC_com_Link(SALVSYNC_command * com, SALVSYNC_response * res);
 
 
-extern int LogLevel;
 extern int VInit;
 extern pthread_mutex_t vol_salvsync_mutex;
 
@@ -199,11 +181,11 @@ static void (*HandlerProc[MAXHANDLERS]) (int);
 static struct QueueHead  SalvageHashTable[VSHASH_SIZE];
 
 static struct SalvageQueueNode *
-LookupNode(afs_uint32 vid, char * partName,
+LookupNode(VolumeId vid, char * partName,
 	   struct SalvageQueueNode ** parent)
 {
     struct rx_queue *qp, *nqp;
-    struct SalvageQueueNode *vsp;
+    struct SalvageQueueNode *vsp = NULL;
     int idx = VSHASH(vid);
 
     for (queue_Scan(&SalvageHashTable[idx], qp, nqp, rx_queue)) {
@@ -292,9 +274,10 @@ SALVSYNC_salvInit(void)
     }
 
     /* start the salvsync thread */
-    osi_Assert(pthread_attr_init(&tattr) == 0);
-    osi_Assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
-    osi_Assert(pthread_create(&tid, &tattr, SALVSYNC_syncThread, NULL) == 0);
+    opr_Verify(pthread_attr_init(&tattr) == 0);
+    opr_Verify(pthread_attr_setdetachstate(&tattr,
+					   PTHREAD_CREATE_DETACHED) == 0);
+    opr_Verify(pthread_create(&tid, &tattr, SALVSYNC_syncThread, NULL) == 0);
 }
 
 static void
@@ -324,7 +307,7 @@ SALVSYNC_syncThread(void * args)
     /* when we fork, the child needs to close the salvsync server sockets,
      * otherwise, it may get salvsync requests, instead of the parent
      * salvageserver */
-    osi_Assert(pthread_atfork(NULL, NULL, CleanFDs) == 0);
+    opr_Verify(pthread_atfork(NULL, NULL, CleanFDs) == 0);
 
     SYNC_getAddr(&state->endpoint, &state->addr);
     SYNC_cleanupSock(state);
@@ -335,7 +318,7 @@ SALVSYNC_syncThread(void * args)
 
     state->fd = SYNC_getSock(&state->endpoint);
     code = SYNC_bindSock(state);
-    osi_Assert(!code);
+    opr_Assert(!code);
 
     InitHandler();
     AcceptOn();
@@ -373,7 +356,7 @@ SALVSYNC_newconnection(int afd)
 	osi_Panic("SALVSYNC_newconnection:  accept failed, errno==%d\n", errno);
     } else if (!AddHandler(fd, SALVSYNC_com)) {
 	AcceptOff();
-	osi_Assert(AddHandler(fd, SALVSYNC_com));
+	opr_Verify(AddHandler(fd, SALVSYNC_com));
     }
 }
 
@@ -765,11 +748,7 @@ static void
 SALVSYNC_Drop(osi_socket fd)
 {
     RemoveHandler(fd);
-#ifdef AFS_NT40_ENV
-    closesocket(fd);
-#else
-    close(fd);
-#endif
+    rk_closesocket(fd);
     AcceptOn();
 }
 
@@ -779,7 +758,8 @@ static void
 AcceptOn(void)
 {
     if (AcceptHandler == -1) {
-	osi_Assert(AddHandler(salvsync_server_state.fd, SALVSYNC_newconnection));
+	opr_Verify(AddHandler(salvsync_server_state.fd,
+			      SALVSYNC_newconnection));
 	AcceptHandler = FindHandler(salvsync_server_state.fd);
     }
 }
@@ -788,7 +768,7 @@ static void
 AcceptOff(void)
 {
     if (AcceptHandler != -1) {
-	osi_Assert(RemoveHandler(salvsync_server_state.fd));
+	opr_Verify(RemoveHandler(salvsync_server_state.fd));
 	AcceptHandler = -1;
     }
 }
@@ -913,14 +893,12 @@ AllocNode(struct SalvageQueueNode ** node_out)
     int code = 0;
     struct SalvageQueueNode * node;
 
-    *node_out = node = (struct SalvageQueueNode *)
-	malloc(sizeof(struct SalvageQueueNode));
+    *node_out = node = calloc(1, sizeof(struct SalvageQueueNode));
     if (node == NULL) {
 	code = 1;
 	goto done;
     }
 
-    memset(node, 0, sizeof(struct SalvageQueueNode));
     node->type = SALVSYNC_VOLGROUP_PARENT;
     node->state = SALVSYNC_STATE_UNKNOWN;
 
@@ -1150,7 +1128,7 @@ UpdateCommandPrio(struct SalvageQueueNode * node)
     afs_int32 id;
     afs_uint32 prio;
 
-    osi_Assert(queue_IsOnQueue(node));
+    opr_Assert(queue_IsOnQueue(node));
 
     prio = node->command.sop.prio;
     id = node->partition_id;
@@ -1242,7 +1220,7 @@ SALVSYNC_getWork(void)
     osi_Panic("Node not found\n");
 
  have_node:
-    osi_Assert(node != NULL);
+    opr_Assert(node != NULL);
     node->pid = 0;
     partition_salvaging[node->partition_id]++;
     DeleteFromSalvageQueue(node);
@@ -1336,7 +1314,7 @@ SALVSYNC_doneWorkByPid(int pid, int status)
 {
     struct SalvageQueueNode * node;
     char partName[16];
-    afs_uint32 volids[VOLMAXTYPES+1];
+    VolumeId volids[VOLMAXTYPES+1];
     unsigned int idx;
 
     memset(volids, 0, sizeof(volids));

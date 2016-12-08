@@ -15,11 +15,10 @@
 #include <sys/systm.h>
 #endif
 #else
-#include <stdio.h>
+#include <roken.h>
 #endif
 #include "xdr.h"
 
-#ifdef AFS_64BIT_ENV
 /*
  * XDR afs_int64 integers
  */
@@ -94,58 +93,3 @@ xdr_afs_uint64(XDR * xdrs, afs_uint64 * ulp)
     return (FALSE);
 }
 
-#else /* AFS_64BIT_ENV */
-/*
- * XDR afs_int64 integers
- */
-bool_t
-xdr_int64(XDR * xdrs, afs_int64 * ulp)
-{
-    return xdr_afs_int64(xdrs, ulp);
-}
-
-bool_t
-xdr_afs_int64(XDR * xdrs, afs_int64 * ulp)
-{
-    if (xdrs->x_op == XDR_DECODE) {
-	if (!XDR_GETINT32(xdrs, (afs_int32 *) & ulp->high))
-	    return (FALSE);
-	return (XDR_GETINT32(xdrs, (afs_int32 *) & ulp->low));
-    }
-    if (xdrs->x_op == XDR_ENCODE) {
-	if (!XDR_PUTINT32(xdrs, (afs_int32 *) & ulp->high))
-	    return (FALSE);
-	return (XDR_PUTINT32(xdrs, (afs_int32 *) & ulp->low));
-    }
-    if (xdrs->x_op == XDR_FREE)
-	return (TRUE);
-    return (FALSE);
-}
-
-/*
- * XDR afs_uint64 integers
- */
-bool_t
-xdr_uint64(XDR * xdrs, afs_uint64 * ulp)
-{
-    return xdr_afs_uint64(xdrs, ulp);
-}
-
-bool_t
-xdr_afs_uint64(XDR * xdrs, afs_uint64 * ulp)
-{
-    if (xdrs->x_op == XDR_DECODE) {
-	if (!XDR_GETINT32(xdrs, (afs_uint32 *) & ulp->high))
-	    return (FALSE);
-	return (XDR_GETINT32(xdrs, (afs_uint32 *) & ulp->low));
-    }
-    if (xdrs->x_op == XDR_ENCODE) {
-	if (!XDR_PUTINT32(xdrs, (afs_uint32 *) & ulp->high))
-	    return (FALSE);
-	return (XDR_PUTINT32(xdrs, (afs_uint32 *) & ulp->low));
-    }
-    if (xdrs->x_op == XDR_FREE)
-	return (TRUE);
-    return (FALSE);
-}
-#endif /* AFS_64BIT_ENV */

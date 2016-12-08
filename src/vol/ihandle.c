@@ -14,42 +14,25 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <stdio.h>
-#include <sys/types.h>
-#include <errno.h>
-#include <string.h>
-#ifdef AFS_NT40_ENV
-#include <fcntl.h>
-#else
-#include <sys/file.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#if defined(AFS_SUN5_ENV) || defined(AFS_NBSD_ENV)
-#include <sys/fcntl.h>
+#include <limits.h>
+
+#ifdef HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
 #endif
-#endif
 
-#include <rx/xdr.h>
+#include <afs/opr.h>
+#ifdef AFS_PTHREAD_ENV
+# include <opr/lock.h>
+#endif
 #include <afs/afsint.h>
-#include <errno.h>
 #include <afs/afssyscalls.h>
+#include <afs/afsutil.h>
+
 #include "nfs.h"
 #include "ihandle.h"
 #include "viceinode.h"
-#include "afs/afs_assert.h"
-#include <limits.h>
-
-#ifndef AFS_NT40_ENV
-#ifdef O_LARGEFILE
-#define afs_stat	stat64
-#define afs_fstat	fstat64
-#else /* !O_LARGEFILE */
-#define	afs_stat	stat
-#define	afs_fstat	fstat
-#endif /* !O_LARGEFILE */
-#endif /* AFS_NT40_ENV */
 
 #ifdef AFS_PTHREAD_ENV
 pthread_once_t ih_glock_once = PTHREAD_ONCE_INIT;
@@ -92,7 +75,7 @@ int fdInUseCount = 0;
 /* Hash table for inode handles */
 IHashBucket_t ihashTable[I_HANDLE_HASH_SIZE];
 
-void *ih_sync_thread(void *);
+static int _ih_release_r(IHandle_t * ihP);
 
 /* start-time configurable I/O limits */
 ih_init_params vol_io_params;
@@ -126,9 +109,6 @@ ih_SetSyncBehavior(const char *behavior)
     if (strcmp(behavior, "always") == 0) {
 	val = IH_SYNC_ALWAYS;
 
-    } else if (strcmp(behavior, "delayed") == 0) {
-	val = IH_SYNC_DELAYED;
-
     } else if (strcmp(behavior, "onclose") == 0) {
 	val = IH_SYNC_ONCLOSE;
 
@@ -149,7 +129,7 @@ ih_SetSyncBehavior(const char *behavior)
 void
 ih_glock_init(void)
 {
-    MUTEX_INIT(&ih_glock_mutex, "ih glock", MUTEX_DEFAULT, 0);
+    opr_mutex_init(&ih_glock_mutex);
 }
 #endif /* AFS_PTHREAD_ENV */
 
@@ -158,7 +138,7 @@ void
 ih_Initialize(void)
 {
     int i;
-    osi_Assert(!ih_Inited);
+    opr_Assert(!ih_Inited);
     ih_Inited = 1;
     DLL_INIT_LIST(ihAvailHead, ihAvailTail);
     DLL_INIT_LIST(fdAvailHead, fdAvailTail);
@@ -171,9 +151,9 @@ ih_Initialize(void)
 #elif defined(AFS_SUN5_ENV) || defined(AFS_NBSD_ENV)
     {
 	struct rlimit rlim;
-	osi_Assert(getrlimit(RLIMIT_NOFILE, &rlim) == 0);
+	opr_Verify(getrlimit(RLIMIT_NOFILE, &rlim) == 0);
 	rlim.rlim_cur = rlim.rlim_max;
-	osi_Assert(setrlimit(RLIMIT_NOFILE, &rlim) == 0);
+	opr_Verify(setrlimit(RLIMIT_NOFILE, &rlim) == 0);
 	fdMaxCacheSize = rlim.rlim_cur - vol_io_params.fd_handle_setaside;
 #ifdef AFS_NBSD_ENV
 	/* XXX this is to avoid using up all system fd netbsd is
@@ -186,37 +166,20 @@ ih_Initialize(void)
 	 */
 	fdMaxCacheSize /= 4;
 #endif
-	fdMaxCacheSize = MIN(fdMaxCacheSize, vol_io_params.fd_max_cachesize);
-	osi_Assert(fdMaxCacheSize > 0);
+	fdMaxCacheSize = min(fdMaxCacheSize, vol_io_params.fd_max_cachesize);
+	opr_Assert(fdMaxCacheSize > 0);
     }
 #elif defined(AFS_HPUX_ENV)
     /* Avoid problems with "UFSOpen: igetinode failed" panics on HPUX 11.0 */
     fdMaxCacheSize = 0;
 #else
     {
-	long fdMax = MAX(sysconf(_SC_OPEN_MAX) - vol_io_params.fd_handle_setaside,
+	long fdMax = max(sysconf(_SC_OPEN_MAX) - vol_io_params.fd_handle_setaside,
 					 0);
-	fdMaxCacheSize = (int)MIN(fdMax, vol_io_params.fd_max_cachesize);
+	fdMaxCacheSize = (int)min(fdMax, vol_io_params.fd_max_cachesize);
     }
 #endif
-    fdCacheSize = MIN(fdMaxCacheSize, vol_io_params.fd_initial_cachesize);
-
-    if (vol_io_params.sync_behavior == IH_SYNC_DELAYED) {
-#ifdef AFS_PTHREAD_ENV
-	pthread_t syncer;
-	pthread_attr_t tattr;
-
-	pthread_attr_init(&tattr);
-	pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED);
-
-	pthread_create(&syncer, &tattr, ih_sync_thread, NULL);
-#else /* AFS_PTHREAD_ENV */
-	PROCESS syncer;
-	LWP_CreateProcess(ih_sync_thread, 16*1024, LWP_MAX_PRIORITY - 2,
-	    NULL, "ih_syncer", &syncer);
-#endif /* AFS_PTHREAD_ENV */
-    }
-
+    fdCacheSize = min(fdMaxCacheSize, vol_io_params.fd_initial_cachesize);
 }
 
 /* Make the file descriptor cache as big as possible. Don't this call
@@ -249,9 +212,9 @@ iHandleAllocateChunk(void)
     int i;
     IHandle_t *ihP;
 
-    osi_Assert(ihAvailHead == NULL);
-    ihP = (IHandle_t *) malloc(I_HANDLE_MALLOCSIZE * sizeof(IHandle_t));
-    osi_Assert(ihP != NULL);
+    opr_Assert(ihAvailHead == NULL);
+    ihP = malloc(I_HANDLE_MALLOCSIZE * sizeof(IHandle_t));
+    opr_Assert(ihP != NULL);
     for (i = 0; i < I_HANDLE_MALLOCSIZE; i++) {
 	ihP[i].ih_refcnt = 0;
 	DLL_INSERT_TAIL(&ihP[i], ihAvailHead, ihAvailTail, ih_next, ih_prev);
@@ -288,7 +251,7 @@ ih_init(int dev, int vid, Inode ino)
 	iHandleAllocateChunk();
     }
     ihP = ihAvailHead;
-    osi_Assert(ihP->ih_refcnt == 0);
+    opr_Assert(ihP->ih_refcnt == 0);
     DLL_DELETE(ihP, ihAvailHead, ihAvailTail, ih_next, ih_prev);
     ihP->ih_dev = dev;
     ihP->ih_vid = vid;
@@ -308,8 +271,8 @@ IHandle_t *
 ih_copy(IHandle_t * ihP)
 {
     IH_LOCK;
-    osi_Assert(ih_Inited);
-    osi_Assert(ihP->ih_refcnt > 0);
+    opr_Assert(ih_Inited);
+    opr_Assert(ihP->ih_refcnt > 0);
     ihP->ih_refcnt++;
     IH_UNLOCK;
     return ihP;
@@ -322,9 +285,9 @@ fdHandleAllocateChunk(void)
     int i;
     FdHandle_t *fdP;
 
-    osi_Assert(fdAvailHead == NULL);
-    fdP = (FdHandle_t *) malloc(FD_HANDLE_MALLOCSIZE * sizeof(FdHandle_t));
-    osi_Assert(fdP != NULL);
+    opr_Assert(fdAvailHead == NULL);
+    fdP = malloc(FD_HANDLE_MALLOCSIZE * sizeof(FdHandle_t));
+    opr_Assert(fdP != NULL);
     for (i = 0; i < FD_HANDLE_MALLOCSIZE; i++) {
 	fdP[i].fd_status = FD_HANDLE_AVAIL;
 	fdP[i].fd_refcnt = 0;
@@ -343,10 +306,10 @@ streamHandleAllocateChunk(void)
     int i;
     StreamHandle_t *streamP;
 
-    osi_Assert(streamAvailHead == NULL);
+    opr_Assert(streamAvailHead == NULL);
     streamP = (StreamHandle_t *)
 	malloc(STREAM_HANDLE_MALLOCSIZE * sizeof(StreamHandle_t));
-    osi_Assert(streamP != NULL);
+    opr_Assert(streamP != NULL);
     for (i = 0; i < STREAM_HANDLE_MALLOCSIZE; i++) {
 	streamP[i].str_fd = INVALID_FD;
 	DLL_INSERT_TAIL(&streamP[i], streamAvailHead, streamAvailTail,
@@ -357,10 +320,11 @@ streamHandleAllocateChunk(void)
 /*
  * Get a file descriptor handle given an Inode handle
  * Takes the given file descriptor, and creates a new FdHandle_t for it,
- * attached to the given IHandle_t. fd can be INVALID_FD, indicating that the
- * caller failed to open the relevant file because we had too many FDs open;
- * ih_attachfd_r will then just evict/close an existing fd in the cache, and
- * return NULL.
+ * attached to the given IHandle_t. If fdLruHead is not NULL, fd can be
+ * INVALID_FD, indicating that the caller failed to open the relevant file
+ * because we had too many FDs open; ih_attachfd_r will then just evict/close
+ * an existing fd in the cache, and return NULL. You must not call this
+ * function with an invalid fd while fdLruHead is NULL; instead, error out.
  */
 static FdHandle_t *
 ih_attachfd_r(IHandle_t *ihP, FD_t fd)
@@ -368,13 +332,18 @@ ih_attachfd_r(IHandle_t *ihP, FD_t fd)
     FD_t closeFd;
     FdHandle_t *fdP;
 
+    /* If the given fd is invalid, we must have an available fd to close.
+     * Otherwise, the caller must have realized this before calling
+     * ih_attachfd_r and yielded an error before getting here. */
+    opr_Assert(fd != INVALID_FD || fdLruHead != NULL);
+
     /* fdCacheSize limits the size of the descriptor cache, but
      * we permit the number of open files to exceed fdCacheSize.
      * We only recycle open file descriptors when the number
      * of open files reaches the size of the cache */
     if ((fdInUseCount > fdCacheSize || fd == INVALID_FD)  && fdLruHead != NULL) {
 	fdP = fdLruHead;
-	osi_Assert(fdP->fd_status == FD_HANDLE_OPEN);
+	opr_Assert(fdP->fd_status == FD_HANDLE_OPEN);
 	DLL_DELETE(fdP, fdLruHead, fdLruTail, fd_next, fd_prev);
 	DLL_DELETE(fdP, fdP->fd_ih->ih_fdhead, fdP->fd_ih->ih_fdtail,
 		   fd_ihnext, fd_ihprev);
@@ -396,7 +365,7 @@ ih_attachfd_r(IHandle_t *ihP, FD_t fd)
 	    fdHandleAllocateChunk();
 	}
 	fdP = fdAvailHead;
-	osi_Assert(fdP->fd_status == FD_HANDLE_AVAIL);
+	opr_Assert(fdP->fd_status == FD_HANDLE_AVAIL);
 	DLL_DELETE(fdP, fdAvailHead, fdAvailTail, fd_next, fd_prev);
 	closeFd = INVALID_FD;
     }
@@ -427,14 +396,16 @@ ih_attachfd(IHandle_t *ihP, FD_t fd)
 {
     FdHandle_t *fdP;
 
+    if (fd == INVALID_FD) {
+	return NULL;
+    }
+
     IH_LOCK;
 
     fdInUseCount += 1;
 
     fdP = ih_attachfd_r(ihP, fd);
-    if (!fdP) {
-	fdInUseCount -= 1;
-    }
+    opr_Assert(fdP);
 
     IH_UNLOCK;
 
@@ -470,9 +441,9 @@ ih_open(IHandle_t * ihP)
 	if (fdP->fd_status == FD_HANDLE_INUSE) {
 	    continue;
 	}
-	osi_Assert(fdP->fd_status == FD_HANDLE_OPEN);
+	opr_Assert(fdP->fd_status == FD_HANDLE_OPEN);
 #else /* HAVE_PIO */
-	osi_Assert(fdP->fd_status != FD_HANDLE_AVAIL);
+	opr_Assert(fdP->fd_status != FD_HANDLE_AVAIL);
 #endif /* HAVE_PIO */
 
 	fdP->fd_refcnt++;
@@ -501,7 +472,7 @@ ih_open_retry:
 
     fdP = ih_attachfd_r(ihP, fd);
     if (!fdP) {
-	osi_Assert(fd == INVALID_FD);
+	opr_Assert(fd == INVALID_FD);
 	IH_UNLOCK;
 	goto ih_open_retry;
     }
@@ -523,9 +494,9 @@ fd_close(FdHandle_t * fdP)
 	return 0;
 
     IH_LOCK;
-    osi_Assert(ih_Inited);
-    osi_Assert(fdInUseCount > 0);
-    osi_Assert(fdP->fd_status == FD_HANDLE_INUSE ||
+    opr_Assert(ih_Inited);
+    opr_Assert(fdInUseCount > 0);
+    opr_Assert(fdP->fd_status == FD_HANDLE_INUSE ||
                fdP->fd_status == FD_HANDLE_CLOSING);
 
     ihP = fdP->fd_ih;
@@ -551,13 +522,12 @@ fd_close(FdHandle_t * fdP)
     /* If this is not the only reference to the Inode then we can decrement
      * the reference count, otherwise we need to call ih_release.
      */
-    if (ihP->ih_refcnt > 1) {
+    if (ihP->ih_refcnt > 1)
 	ihP->ih_refcnt--;
-	IH_UNLOCK;
-    } else {
-	IH_UNLOCK;
-	ih_release(ihP);
-    }
+    else
+	_ih_release_r(ihP);
+
+    IH_UNLOCK;
 
     return 0;
 }
@@ -576,9 +546,9 @@ fd_reallyclose(FdHandle_t * fdP)
 	return 0;
 
     IH_LOCK;
-    osi_Assert(ih_Inited);
-    osi_Assert(fdInUseCount > 0);
-    osi_Assert(fdP->fd_status == FD_HANDLE_INUSE ||
+    opr_Assert(ih_Inited);
+    opr_Assert(fdInUseCount > 0);
+    opr_Assert(fdP->fd_status == FD_HANDLE_INUSE ||
                fdP->fd_status == FD_HANDLE_CLOSING);
 
     ihP = fdP->fd_ih;
@@ -626,13 +596,12 @@ fd_reallyclose(FdHandle_t * fdP)
 
     /* If this is not the only reference to the Inode then we can decrement
      * the reference count, otherwise we need to call ih_release. */
-    if (ihP->ih_refcnt > 1) {
+    if (ihP->ih_refcnt > 1)
 	ihP->ih_refcnt--;
-	IH_UNLOCK;
-    } else {
-	IH_UNLOCK;
-	ih_release(ihP);
-    }
+    else
+	_ih_release_r(ihP);
+
+    IH_UNLOCK;
 
     return 0;
 }
@@ -679,7 +648,7 @@ stream_open(const char *filename, const char *mode)
     } else if (strcmp(mode, "a+") == 0) {
 	fd = OS_OPEN(filename, O_RDWR | O_APPEND | O_CREAT, 0);
     } else {
-	osi_Assert(FALSE);		/* not implemented */
+	opr_abort();		/* not implemented */
     }
 
     if (fd == INVALID_FD) {
@@ -702,7 +671,7 @@ stream_read(void *ptr, afs_fsize_t size, afs_fsize_t nitems,
 	streamP->str_bufoff = 0;
 	streamP->str_buflen = 0;
     } else {
-	osi_Assert(streamP->str_direction == STREAM_DIRECTION_READ);
+	opr_Assert(streamP->str_direction == STREAM_DIRECTION_READ);
     }
 
     bytesRead = 0;
@@ -756,7 +725,7 @@ stream_write(void *ptr, afs_fsize_t size, afs_fsize_t nitems,
 	streamP->str_bufoff = 0;
 	streamP->str_buflen = STREAM_HANDLE_BUFSIZE;
     } else {
-	osi_Assert(streamP->str_direction == STREAM_DIRECTION_WRITE);
+	opr_Assert(streamP->str_direction == STREAM_DIRECTION_WRITE);
     }
 
     nbytes = size * nitems;
@@ -846,7 +815,7 @@ stream_close(StreamHandle_t * streamP, int reallyClose)
     ssize_t rc;
     int retval = 0;
 
-    osi_Assert(streamP != NULL);
+    opr_Assert(streamP != NULL);
     if (streamP->str_direction == STREAM_DIRECTION_WRITE
 	&& streamP->str_bufoff > 0) {
 	rc = OS_PWRITE(streamP->str_fd, streamP->str_buffer,
@@ -883,7 +852,7 @@ ih_fdclose(IHandle_t * ihP)
     int closeCount, closedAll;
     FdHandle_t *fdP, *head, *tail, *next;
 
-    osi_Assert(ihP->ih_refcnt > 0);
+    opr_Assert(ihP->ih_refcnt > 0);
 
     closedAll = 1;
     DLL_INIT_LIST(head, tail);
@@ -896,8 +865,8 @@ ih_fdclose(IHandle_t * ihP)
      */
     for (fdP = ihP->ih_fdhead; fdP != NULL; fdP = next) {
 	next = fdP->fd_ihnext;
-	osi_Assert(fdP->fd_ih == ihP);
-	osi_Assert(fdP->fd_status == FD_HANDLE_OPEN
+	opr_Assert(fdP->fd_ih == ihP);
+	opr_Assert(fdP->fd_status == FD_HANDLE_OPEN
 	       || fdP->fd_status == FD_HANDLE_INUSE
 	       || fdP->fd_status == FD_HANDLE_CLOSING);
 	if (fdP->fd_status == FD_HANDLE_OPEN) {
@@ -920,9 +889,9 @@ ih_fdclose(IHandle_t * ihP)
      * closed all file descriptors.
      */
     if (ihP->ih_refcnt == 1 || closedAll) {
-	osi_Assert(closedAll);
-	osi_Assert(!ihP->ih_fdhead);
-	osi_Assert(!ihP->ih_fdtail);
+	opr_Assert(closedAll);
+	opr_Assert(!ihP->ih_fdhead);
+	opr_Assert(!ihP->ih_fdtail);
     }
 
     if (head == NULL) {
@@ -944,7 +913,7 @@ ih_fdclose(IHandle_t * ihP)
     }
 
     IH_LOCK;
-    osi_Assert(fdInUseCount >= closeCount);
+    opr_Assert(fdInUseCount >= closeCount);
     fdInUseCount -= closeCount;
 
     /*
@@ -973,8 +942,8 @@ ih_reallyclose(IHandle_t * ihP)
     ihP->ih_refcnt++;   /* must not disappear over unlock */
     if (ihP->ih_synced) {
 	FdHandle_t *fdP;
-	osi_Assert(vol_io_params.sync_behavior != IH_SYNC_ALWAYS);
-	osi_Assert(vol_io_params.sync_behavior != IH_SYNC_NEVER);
+	opr_Assert(vol_io_params.sync_behavior != IH_SYNC_ALWAYS);
+	opr_Assert(vol_io_params.sync_behavior != IH_SYNC_NEVER);
         ihP->ih_synced = 0;
 	IH_UNLOCK;
 
@@ -987,37 +956,34 @@ ih_reallyclose(IHandle_t * ihP)
 	IH_LOCK;
     }
 
-    osi_Assert(ihP->ih_refcnt > 0);
+    opr_Assert(ihP->ih_refcnt > 0);
 
     ih_fdclose(ihP);
 
-    if (ihP->ih_refcnt > 1) {
+    if (ihP->ih_refcnt > 1)
 	ihP->ih_refcnt--;
-	IH_UNLOCK;
-    } else {
-	IH_UNLOCK;
-	ih_release(ihP);
-    }
+    else
+	_ih_release_r(ihP);
+
+    IH_UNLOCK;
     return 0;
 }
 
 /* Release an Inode handle. All cached file descriptors for this
  * inode are closed when the last reference to this handle is released
  */
-int
-ih_release(IHandle_t * ihP)
+static int
+_ih_release_r(IHandle_t * ihP)
 {
     int ihash;
 
     if (!ihP)
 	return 0;
 
-    IH_LOCK;
-    osi_Assert(ihP->ih_refcnt > 0);
+    opr_Assert(ihP->ih_refcnt > 0);
 
     if (ihP->ih_refcnt > 1) {
 	ihP->ih_refcnt--;
-	IH_UNLOCK;
 	return 0;
     }
 
@@ -1031,8 +997,24 @@ ih_release(IHandle_t * ihP)
 
     DLL_INSERT_TAIL(ihP, ihAvailHead, ihAvailTail, ih_next, ih_prev);
 
-    IH_UNLOCK;
     return 0;
+}
+
+/* Release an Inode handle. All cached file descriptors for this
+ * inode are closed when the last reference to this handle is released
+ */
+int
+ih_release(IHandle_t * ihP)
+{
+    int ret;
+
+    if (!ihP)
+	return 0;
+
+    IH_LOCK;
+    ret = _ih_release_r(ihP);
+    IH_UNLOCK;
+    return ret;
 }
 
 /* Sync an inode to disk if its handle isn't NULL */
@@ -1054,70 +1036,6 @@ ih_condsync(IHandle_t * ihP)
 
     return code;
 }
-
-void
-ih_sync_all(void) {
-
-    int ihash;
-
-    IH_LOCK;
-    for (ihash = 0; ihash < I_HANDLE_HASH_SIZE; ihash++) {
-	IHandle_t *ihP, *ihPnext;
-
-	ihP = ihashTable[ihash].ihash_head;
-	if (ihP)
-	    ihP->ih_refcnt++;	/* must not disappear over unlock */
-	for (; ihP; ihP = ihPnext) {
-
-	    if (ihP->ih_synced) {
-		FD_t fd;
-
-		ihP->ih_synced = 0;
-		IH_UNLOCK;
-
-		fd = OS_IOPEN(ihP);
-		if (fd != INVALID_FD) {
-		    OS_SYNC(fd);
-		    OS_CLOSE(fd);
-		}
-
-	  	IH_LOCK;
-	    }
-
-	    /* when decrementing the refcount, the ihandle might disappear
-	       and we might not even be able to proceed to the next one.
-	       Hence the gymnastics putting a hold on the next one already */
-	    ihPnext = ihP->ih_next;
-	    if (ihPnext) ihPnext->ih_refcnt++;
-
-	    if (ihP->ih_refcnt > 1) {
-		ihP->ih_refcnt--;
-	    } else {
-		IH_UNLOCK;
-		ih_release(ihP);
-		IH_LOCK;
-	    }
-
-	}
-    }
-    IH_UNLOCK;
-}
-
-void *
-ih_sync_thread(void *dummy) {
-    while(1) {
-
-#ifdef AFS_PTHREAD_ENV
-	sleep(10);
-#else /* AFS_PTHREAD_ENV */
-	IOMGR_Sleep(60);
-#endif /* AFS_PTHREAD_ENV */
-
-        ih_sync_all();
-    }
-    return NULL;
-}
-
 
 /*************************************************************************
  * OS specific support routines.
@@ -1167,7 +1085,7 @@ ih_size(FD_t fd)
 	return -1;
     return size.QuadPart;
 #else
-    struct afs_stat status;
+    struct afs_stat_st status;
     if (afs_fstat(fd, &status) < 0)
 	return -1;
     return status.st_size;
@@ -1200,7 +1118,7 @@ ih_pwrite(int fd, const void * buf, size_t count, afs_foff_t offset)
 int
 ih_isunlinked(int fd)
 {
-    struct afs_stat status;
+    struct afs_stat_st status;
     if (afs_fstat(fd, &status) < 0) {
 	return -1;
     }
@@ -1217,7 +1135,6 @@ ih_fdsync(FdHandle_t *fdP)
     switch (vol_io_params.sync_behavior) {
     case IH_SYNC_ALWAYS:
 	return OS_SYNC(fdP->fd_fd);
-    case IH_SYNC_DELAYED:
     case IH_SYNC_ONCLOSE:
 	if (fdP->fd_ih) {
 	    fdP->fd_ih->ih_synced = 1;
@@ -1227,6 +1144,6 @@ ih_fdsync(FdHandle_t *fdP)
     case IH_SYNC_NEVER:
 	return 0;
     default:
-	osi_Assert(0);
+	opr_Assert(0);
     }
 }

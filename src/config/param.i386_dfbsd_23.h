@@ -23,7 +23,6 @@
 #define AFS_X86_XBSD_ENV 1
 
 #define AFS_NAMEI_ENV     1	/* User space interface to file system */
-#define AFS_64BIT_ENV 1
 #define AFS_64BIT_CLIENT 1
 #define AFS_64BIT_IOPS_ENV 1	/* Needed for NAMEI */
 #define AFS_DFBSD_ENV 1
@@ -73,7 +72,6 @@
 #ifdef _KERNEL
 #define AFS_GLOBAL_SUNLOCK        1
 #define	AFS_VFS34	1	/* What is VFS34??? */
-#define	AFS_SHORTGID	0	/* are group id's short? */
 #define	afsio_iov	uio_iov
 #define	afsio_iovcnt	uio_iovcnt
 #define	afsio_offset	uio_offset
@@ -137,7 +135,6 @@ enum vcexcl { NONEXCL, EXCL };
 #define AFS_MOUNT_AFS "afs"	/* The name of the filesystem type. */
 #define AFS_SYSCALL 339
 #define AFS_NAMEI_ENV         1	/* User space interface to file system */
-#define AFS_64BIT_ENV 1
 #define AFS_64BIT_IOPS_ENV    1	/* Needed for NAMEI */
 #define AFS_USERSPACE_IP_ADDR 1
 #define RXK_LISTENER_ENV      1
@@ -172,11 +169,5 @@ enum vcexcl { NONEXCL, EXCL };
 #include <limits.h>
 
 #endif /* !defined(UKERNEL) */
-
-/* general user-space compiles */
-
-#if defined(UKERNEL) || !defined(KERNEL)
-#define STDLIB_HAS_MALLOC_PROTOS 1
-#endif
 
 #endif /* AFS_PARAM_H */

@@ -10,14 +10,14 @@ backup_volsetrestore - Restores all volumes in a volume set
 B<backup volsetrestore> S<<< [B<-name> <I<volume set name>>] >>>
     S<<< [B<-file> <I<file name>>] >>>
     S<<< [B<-portoffset> <I<TC port offset>>+] >>>
-    S<<< [B<-extension> <I<new volume name extension>>] >>> [B<-n>]
+    S<<< [B<-extension> <I<new volume name extension>>] >>> [B<-dryrun> | B<-n>]
     [B<-localauth>] S<<< [B<-cell> <I<cell name>>] >>> [B<-help>]
 
 B<backup vols> S<<< [B<-na> <I<volume set name>>] >>>
     S<<< [B<-f> <I<file name>>] >>>
     S<<< [B<-p> <I<TC port offset>>+] >>>
     S<<< [B<-e> <I<new volume name extension>>] >>>
-    [B<-n>] [B<-l>] S<<< [B<-c> <I<cell name>>] >>> [B<-h>]
+    [B<-dryrun> | B<-n>] [B<-l>] S<<< [B<-c> <I<cell name>>] >>> [B<-h>]
 
 =for html
 </div>
@@ -112,10 +112,11 @@ the read/write base name, and creates a new VLDB entry. The command does
 not affect the existing volume in any way. However, if a volume with the
 specified extension also already exists, the command overwrites it.
 
-The B<-n> flag produces a list of the volumes to be restored if the B<-n>
-flag were not included, without actually restoring any volumes. See
-L</OUTPUT> for a detailed description of the output, and suggestions on how
-to combine it most effectively with the B<-file> and B<-name> arguments.
+The B<-dryrun> flag produces a list of the volumes to be restored if the
+B<-dryrun> flag were not included, without actually restoring any volumes.
+See L</OUTPUT> for a detailed description of the output, and suggestions
+on how to combine it most effectively with the B<-file> and B<-name>
+arguments.
 
 The execution time for a B<backup volsetrestore> command depends on the
 number of volumes to be restored and the amount of data in them, but it
@@ -224,7 +225,7 @@ Provide this argument unless the default value of 0 (zero) is appropriate
 for all dumps. If C<0> is just one of the values in the list, provide it
 explicitly in the appropriate order.
 
-=item B<-n>
+=item B<-dryrun> | B<-n>
 
 Displays a list of the volumes to be restored if the flag were not
 included, without actually restoring them. L</OUTPUT> details the format of
@@ -254,8 +255,8 @@ ignored.
 
 =head1 OUTPUT
 
-If the B<-n> flag is not provided, the command displays a unique task ID
-number for the operation, in two places:
+If the B<-dryrun> flag is not provided, the command displays a unique
+task ID number for the operation, in two places:
 
 =over 4
 
@@ -275,13 +276,13 @@ B<backup jobs> command when the B<backup volsetrestore> command is issued
 in interactive mode. The Backup System does not assign either type of ID
 number until the restoration process actually begins.
 
-When the B<-n> flag is included, no task ID or job ID numbers are reported
-because none are assigned. Instead, the output begins with a count of the
-number of volumes to be restored, followed by a line for each dump of a
-volume. For each volume, the line representing the most recent full dump
-appears first, and lines for any subsequent incremental dumps follow,
-ordered by dump level. The lines for a given volume do not necessarily
-appear all together, however.
+When the B<-dryrun> flag is included, no task ID or job ID numbers are
+reported because none are assigned. Instead, the output begins with a
+count of the number of volumes to be restored, followed by a line for
+each dump of a volume. For each volume, the line representing the most
+recent full dump appears first, and lines for any subsequent incremental
+dumps follow, ordered by dump level. The lines for a given volume do not
+necessarily appear all together, however.
 
 The format of each line is as follows (the output is shown here on two
 lines only for legibility reasons):
@@ -340,7 +341,7 @@ The date and time when the volume was dumped.
 =back
 
 One way to generate a file for use as input to the B<-file> argument is to
-combine the B<-name> and B<-n> options, directing the output to a
+combine the B<-name> and B<-dryrun> options, directing the output to a
 file. The I<OpenAFS Administration Guide> section on using the Backup
 System to restore data explains how to edit the file as necessary before
 using it as input to the B<-file> argument.
@@ -375,10 +376,10 @@ named F</tmp/restore>:
 
 The F</tmp/restore> file has the following contents:
 
-   fs1.abc.com b user.pat
-   fs1.abc.com b user.terry
-   fs1.abc.com b user.smith
-   fs2.abc.com c user.jones
+   fs1.example.com b user.pat
+   fs1.example.com b user.terry
+   fs1.example.com b user.smith
+   fs2.example.com c user.jones
           .         .     .
           .         .     .
 

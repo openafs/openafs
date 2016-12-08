@@ -7,7 +7,6 @@
 
 # General AFS utilities.
 
-AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I..\WINNT\kfw\inc\krb5
 RELDIR=util
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 
@@ -16,11 +15,8 @@ INCFILEDIR = $(DESTDIR)\include\afs  # header file install directory
 INCFILES =\
 	$(DESTDIR)\include\dirent.h \
 	$(INCFILEDIR)\afsutil.h \
-	$(INCFILEDIR)\afs_assert.h \
 	$(INCFILEDIR)\errors.h \
-	$(INCFILEDIR)\itc.h \
 	$(INCFILEDIR)\vice.h \
-        $(INCFILEDIR)\netutils.h \
 	$(INCFILEDIR)\pthread_glock.h \
 	$(INCFILEDIR)\pthread_nosigs.h \
 	$(INCFILEDIR)\errmap_nt.h \
@@ -30,7 +26,7 @@ INCFILES =\
 	$(INCFILEDIR)\fileutil.h \
 	$(INCFILEDIR)\afsutil_prototypes.h \
 	$(INCFILEDIR)\secutil_nt.h \
-        $(INCFILEDIR)\softsig.h
+	$(INCFILEDIR)\tabular_output.h
 
 $(DESTDIR)\include\dirent.h: dirent_nt.h
 	$(COPY) $** $@
@@ -43,56 +39,40 @@ LIBFILE = $(DESTDIR)\lib\afs\afsutil.lib
 MT_LIBFILE = $(DESTDIR)\lib\afs\mtafsutil.lib
 
 LIBOBJS = \
-	$(OUT)\assert.obj \
 	$(OUT)\base32.obj \
-	$(OUT)\casestrcpy.obj \
-	$(OUT)\get_krbrlm.obj \
 	$(OUT)\hostparse.obj \
-	$(OUT)\isathing.obj \
         $(OUT)\krb5_nt.obj \
 	$(OUT)\kreltime.obj \
 	$(OUT)\ktime.obj \
-        $(OUT)\netutils.obj \
 	$(OUT)\regex.obj \
 	$(OUT)\readdir_nt.obj \
 	$(OUT)\serverLog.obj \
-    	$(OUT)\snprintf.obj \
-    	$(OUT)\strlcat.obj \
 	$(OUT)\uuid.obj \
 	$(OUT)\volparse.obj \
 	$(OUT)\winsock_nt.obj \
 	$(OUT)\errmap_nt.obj \
 	$(OUT)\dirpath.obj \
-	$(OUT)\strnlen.obj \
-	$(OUT)\strlcpy.obj \
 	$(OUT)\fileutil.obj \
-	$(OUT)\secutil_nt.obj
+	$(OUT)\secutil_nt.obj \
+	$(OUT)\tabular_output.obj
 
 MT_LIBOBJS = \
-	$(OUT)\assert.obj \
 	$(OUT)\base32.obj \
-	$(OUT)\casestrcpy.obj \
-	$(OUT)\get_krbrlm.obj \
 	$(OUT)\hostparse.obj \
-	$(OUT)\isathing.obj \
         $(OUT)\krb5_nt.obj \
 	$(OUT)\kreltime.obj \
 	$(OUT)\ktime.obj \
-        $(OUT)\netutils.obj \
 	$(OUT)\regex.obj \
 	$(OUT)\readdir_nt.obj \
 	$(OUT)\serverLog_mt.obj \
-    	$(OUT)\snprintf.obj \
-    	$(OUT)\strlcat.obj \
 	$(OUT)\uuid.obj \
 	$(OUT)\volparse.obj \
 	$(OUT)\winsock_nt.obj \
 	$(OUT)\errmap_nt.obj \
 	$(OUT)\dirpath_mt.obj \
-	$(OUT)\strnlen.obj \
-	$(OUT)\strlcpy.obj \
 	$(OUT)\fileutil.obj \
-	$(OUT)\secutil_nt.obj
+	$(OUT)\secutil_nt.obj \
+	$(OUT)\tabular_output.obj
 
 $(LIBOBJS): $$(@B).c
     $(C2OBJ) $**
@@ -109,14 +89,12 @@ $(LIBFILE): $(LIBOBJS)
 $(MT_LIBFILE): $(MT_LIBOBJS)
 	$(LIBARCH) Rpcrt4.lib
 
-install_headers: $(INCFILES) 
+install_headers: $(INCFILES)
 
 install: install_headers $(LIBOBJS) $(LIBFILE) $(MT_LIBFILE)
-
-install9x: install
 
 clean::
 	$(DEL) $(LIBFILE)
 
 mkdir:
-	
+

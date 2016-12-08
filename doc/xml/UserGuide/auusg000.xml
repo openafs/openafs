@@ -18,6 +18,12 @@
   <bookinfo>
     <title>OpenAFS User Guide</title>
 
+    <mediaobject role="cover">
+      <imageobject>
+        <imagedata fileref="auusg000.png" />
+      </imageobject>
+    </mediaobject>
+
     <copyright>
       <year>2000</year>
 

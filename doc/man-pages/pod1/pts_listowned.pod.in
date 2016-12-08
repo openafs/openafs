@@ -9,9 +9,11 @@ pts_listowned - Show the Protection Database groups owned by a user or group
 
 B<pts listowned> S<<< B<-nameorid> <I<user or group name or id>>+ >>>
     [-cell <I<cell name>>] [B<-noauth>] [B<-localauth>] [B<-force>] [B<-help>]
+    [B<-auth>] [B<-encrypt>] S<<< [B<-config> <I<config directory>>] >>>
 
 B<pts listo> S<<< B<-na> <I<user or group name or id>>+ >>>
     [-c <I<cell name>>] [B<-no>] [B<-l>] [B<-f>] [B<-h>]
+    [B<-a>] [B<-e>] S<<< [B<-co> <I<config directory>>] >>>
 
 =for html
 </div>

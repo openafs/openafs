@@ -8,23 +8,19 @@
  */
 
 #include <afsconfig.h>
-#ifdef	KERNEL
-#include "afs/param.h"
-#else
 #include <afs/param.h>
-#endif
-
 
 #ifdef KERNEL
-#ifndef	UKERNEL
-#include "h/types.h"
-#else /* !UKERNEL */
-#include "afs/sysincludes.h"
-#endif /* !UKERNEL */
-#include "rx/rx.h"
+# ifndef UKERNEL
+#  include "h/types.h"
+# else /* !UKERNEL */
+#  include "afs/sysincludes.h"
+# endif /* !UKERNEL */
 #else /* KERNEL */
-#include "rx.h"
+# include <roken.h>
 #endif /* KERNEL */
+
+#include "rx.h"
 
 /* The null security object.  No authentication, no nothing. */
 

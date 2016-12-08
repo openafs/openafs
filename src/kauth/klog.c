@@ -9,23 +9,17 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
-#include <sys/types.h>
+
+#include <roken.h>
+
 #include <rx/xdr.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
-#include <string.h>
 #include <lock.h>
 #include <ubik.h>
-
-#include <stdio.h>
-#include <pwd.h>
 #include <afs/com_err.h>
 #include <afs/cellconfig.h>
 #include <afs/cmd.h>
+
 #include "kauth.h"
 #include "kautils.h"
 #include "kauth_internal.h"
@@ -96,7 +90,7 @@ main(int argc, char *argv[])
     zero_argc = argc;
     zero_argv = argv;
 
-    ts = cmd_CreateSyntax(NULL, CommandProc, NULL,
+    ts = cmd_CreateSyntax(NULL, CommandProc, NULL, 0,
 			  "obtain Kerberos authentication");
 
 #define aXFLAG 0
@@ -164,7 +158,6 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 
     struct passwd pwent;
     struct passwd *pw = &pwent;
-    struct passwd *lclpw = &pwent;
     char passwd[BUFSIZ];
 
     static char rn[] = "klog";	/*Routine name */
@@ -275,7 +268,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	    foundExplicitCell = 1;
 	    strncpy(realm, cell, sizeof(realm));
 	}
-	lclpw->pw_name = name;
+	pw->pw_name = name;
     } else {
 	/* No explicit name provided: use Unix uid. */
 	pw = getpwuid(getuid());
@@ -288,7 +281,6 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	    }
 	    KLOGEXIT(KABADARGUMENT);
 	}
-	lclpw = pw;
     }
 
     if (as->parms[aPASSWORD].items) {

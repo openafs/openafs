@@ -18,6 +18,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 /* On DUX "IN" is a variable in curses.h, so this can be a bit of a problem */
 #ifdef IN

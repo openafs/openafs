@@ -29,23 +29,21 @@ LIBOBJS =\
 	$(OUT)\usd_nt.obj \
 	$(OUT)\AFS_component_version_number.obj
 
-$(LIBFILE): $(LIBOBJS) 
-	$(LIBARCH) 
+$(LIBFILE): $(LIBOBJS)
+	$(LIBARCH)
 
 ############################################################################
-# make and install 
+# make and install
 
 install: $(INCFILES) $(LIBFILE)
-
-install9x: install
 
 clean::
 	$(DEL) $(LIBFILE)
 
-test: 
+test:
 	$(CD) test
 	$(MAKECMD) /fNTMakefile test
 	$(CD) ..
 
 mkdir:
-	
+

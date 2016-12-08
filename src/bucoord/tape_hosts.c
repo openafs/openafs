@@ -9,24 +9,17 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#endif
+
+#include <roken.h>
+
 #include <afs/budb_client.h>
 #include <afs/cmd.h>
 #include <afs/com_err.h>
 #include <afs/bubasics.h>
+
 #include "bc.h"
 #include "error_macros.h"
-#include <errno.h>
 #include "bucoord_internal.h"
 #include "bucoord_prototypes.h"
 
@@ -262,10 +255,9 @@ bc_ParseHosts(void)
 		    "can't get host info for %s from nameserver or /etc/hosts.",
 		    hostName);
 	}
-	the = (struct bc_hostEntry *)malloc(sizeof(struct bc_hostEntry));
+	the = calloc(1, sizeof(struct bc_hostEntry));
 	if (the == (struct bc_hostEntry *)0)
 	    return (BC_NOMEM);
-	memset(the, 0, sizeof(struct bc_hostEntry));
 	if (tlast) {
 	    tlast->next = the;
 	    tlast = the;
@@ -273,8 +265,7 @@ bc_ParseHosts(void)
 	    tfirst = tlast = the;
 	}
 	the->next = (struct bc_hostEntry *)0;
-	the->name = (char *)malloc(strlen(hostName) + 1);
-	strcpy(the->name, hostName);
+	the->name = strdup(hostName);
 	the->portOffset = port;
 	if (th) {
 	    memcpy(&the->addr.sin_addr.s_addr, th->h_addr, 4);

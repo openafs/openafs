@@ -18,8 +18,15 @@
 
 #include <linux/version.h>
 #include "rx/rx_kcommon.h"
+#include "rx.h"
+#include "rx_atomic.h"
+#include "rx_globals.h"
+#include "rx_stats.h"
+#include "rx_peer.h"
+#include "rx_packet.h"
+#include "rx_internal.h"
 #include <asm/uaccess.h>
-#ifdef ADAPT_PMTU
+#ifdef AFS_RXERRQ_ENV
 #include <linux/errqueue.h>
 #include <linux/icmp.h>
 #endif
@@ -35,9 +42,8 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     struct socket *sockp;
     struct sockaddr_in myaddr;
     int code;
-#ifdef ADAPT_PMTU
+#ifdef AFS_ADAPT_PMTU
     int pmtu = IP_PMTUDISC_WANT;
-    int do_recverr = 1;
 #else
     int pmtu = IP_PMTUDISC_DONT;
 #endif
@@ -68,9 +74,12 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
 
     kernel_setsockopt(sockp, SOL_IP, IP_MTU_DISCOVER, (char *)&pmtu,
 		      sizeof(pmtu));
-#ifdef ADAPT_PMTU
-    kernel_setsockopt(sockp, SOL_IP, IP_RECVERR, (char *)&do_recverr,
-                      sizeof(do_recverr));
+#ifdef AFS_RXERRQ_ENV
+    {
+	int recverr = 1;
+	kernel_setsockopt(sockp, SOL_IP, IP_RECVERR, (char *)&recverr,
+	                  sizeof(recverr));
+    }
 #endif
     return (osi_socket *)sockp;
 }
@@ -89,61 +98,68 @@ rxk_FreeSocket(struct socket *asocket)
     return 0;
 }
 
-#ifdef ADAPT_PMTU
-void
-handle_socket_error(osi_socket so)
+#ifdef AFS_RXERRQ_ENV
+static int
+osi_HandleSocketError(osi_socket so, char *cmsgbuf, size_t cmsgbuf_len)
 {
     struct msghdr msg;
     struct cmsghdr *cmsg;
     struct sock_extended_err *err;
     struct sockaddr_in addr;
-    struct sockaddr *offender;
-    char *controlmsgbuf;
     int code;
     struct socket *sop = (struct socket *)so;
 
-    if (!(controlmsgbuf=rxi_Alloc(256)))
-	return;
     msg.msg_name = &addr;
     msg.msg_namelen = sizeof(addr);
-    msg.msg_control = controlmsgbuf;
-    msg.msg_controllen = 256;
+    msg.msg_control = cmsgbuf;
+    msg.msg_controllen = cmsgbuf_len;
     msg.msg_flags = 0;
 
     code = kernel_recvmsg(sop, &msg, NULL, 0, 0,
 			  MSG_ERRQUEUE|MSG_DONTWAIT|MSG_TRUNC);
 
     if (code < 0 || !(msg.msg_flags & MSG_ERRQUEUE))
-	goto out;
+	return 0;
 
-    for (cmsg = CMSG_FIRSTHDR(&msg); cmsg; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
-	if (CMSG_OK(&msg, cmsg) && cmsg->cmsg_level == SOL_IP &&
-	    cmsg->cmsg_type == IP_RECVERR)
-	    break;
+    /* kernel_recvmsg changes msg_control to point at the _end_ of the buffer,
+     * and msg_controllen is set to the number of bytes remaining */
+    msg.msg_controllen = ((char*)msg.msg_control - (char*)cmsgbuf);
+    msg.msg_control = cmsgbuf;
+
+    for (cmsg = CMSG_FIRSTHDR(&msg); cmsg && CMSG_OK(&msg, cmsg);
+         cmsg = CMSG_NXTHDR(&msg, cmsg)) {
+
+	if (cmsg->cmsg_level != SOL_IP || cmsg->cmsg_type != IP_RECVERR) {
+	    continue;
+	}
+
+	err = CMSG_DATA(cmsg);
+	rxi_ProcessNetError(err, addr.sin_addr.s_addr, addr.sin_port);
     }
-    if (!cmsg)
-	goto out;
-    err = CMSG_DATA(cmsg);
-    offender = SO_EE_OFFENDER(err);
-    
-    if (offender->sa_family != AF_INET)
-       goto out;
 
-    memcpy(&addr, offender, sizeof(addr));
-
-    if (err->ee_origin == SO_EE_ORIGIN_ICMP &&
-	err->ee_type == ICMP_DEST_UNREACH &&
-	err->ee_code == ICMP_FRAG_NEEDED) {
-	rxi_SetPeerMtu(NULL, ntohl(addr.sin_addr.s_addr), ntohs(addr.sin_port),
-		       err->ee_info);
-    }
-    /* other DEST_UNREACH's and TIME_EXCEEDED should be dealt with too */
-
-out:
-    rxi_Free(controlmsgbuf, 256);
-    return;
+    return 1;
 }
 #endif
+
+static void
+do_handlesocketerror(osi_socket so)
+{
+#ifdef AFS_RXERRQ_ENV
+    char *cmsgbuf;
+    size_t cmsgbuf_len;
+
+    cmsgbuf_len = 256;
+    cmsgbuf = rxi_Alloc(cmsgbuf_len);
+    if (!cmsgbuf) {
+	return;
+    }
+
+    while (osi_HandleSocketError(so, cmsgbuf, cmsgbuf_len))
+	;
+
+    rxi_Free(cmsgbuf, cmsgbuf_len);
+#endif
+}
 
 /* osi_NetSend
  *
@@ -157,19 +173,7 @@ osi_NetSend(osi_socket sop, struct sockaddr_in *to, struct iovec *iovec,
 {
     struct msghdr msg;
     int code;
-#ifdef ADAPT_PMTU
-    int sockerr;
-    int esize;
 
-    while (1) {
-	sockerr=0;
-	esize = sizeof(sockerr);
-	kernel_getsockopt(sop, SOL_SOCKET, SO_ERROR, (char *)&sockerr, &esize);
-	if (sockerr == 0)
-	   break;
-	handle_socket_error(sop);
-    }
-#endif
 
     msg.msg_name = to;
     msg.msg_namelen = sizeof(*to);
@@ -178,6 +182,11 @@ osi_NetSend(osi_socket sop, struct sockaddr_in *to, struct iovec *iovec,
     msg.msg_flags = 0;
 
     code = kernel_sendmsg(sop, &msg, (struct kvec *) iovec, iovcnt, size);
+
+    if (code < 0) {
+	do_handlesocketerror(sop);
+    }
+
     return (code < 0) ? code : 0;
 }
 
@@ -209,26 +218,13 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *from, struct iovec *iov,
 {
     struct msghdr msg;
     int code;
-#ifdef ADAPT_PMTU
-    int sockerr;
-    int esize;
-#endif
     struct iovec tmpvec[RX_MAXWVECS + 2];
     struct socket *sop = (struct socket *)so;
 
     if (iovcnt > RX_MAXWVECS + 2) {
 	osi_Panic("Too many (%d) iovecs passed to osi_NetReceive\n", iovcnt);
     }
-#ifdef ADAPT_PMTU
-    while (1) {
-	sockerr=0;
-	esize = sizeof(sockerr);
-	kernel_getsockopt(sop, SOL_SOCKET, SO_ERROR, (char *)&sockerr, &esize);
-	if (sockerr == 0)
-	   break;
-	handle_socket_error(so);
-    }
-#endif
+
     memcpy(tmpvec, iov, iovcnt * sizeof(struct iovec));
     msg.msg_name = from;
 #if defined(STRUCT_MSGHDR_HAS_MSG_ITER)
@@ -254,6 +250,8 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *from, struct iovec *iov,
 	flush_signals(current);	/* We don't want no stinkin' signals. */
 	rxk_lastSocketError = code;
 	rxk_nSocketErrors++;
+
+	do_handlesocketerror(so);
     } else {
 	*lengthp = code;
 	code = 0;

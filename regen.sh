@@ -15,11 +15,22 @@ do
 done
 
 echo "Updating configuration..."
+
+echo "Running libtoolize"
+if which libtoolize > /dev/null 2>&1; then
+    libtoolize -c -f -i
+elif which glibtoolize > /dev/null 2>&1; then
+    glibtoolize -c -f -i
+else
+  echo "No libtoolize found on your system (looked for libtoolize & glibtoolize)"
+  exit 1
+fi
+
 echo "Running aclocal"
 if which aclocal > /dev/null 2>&1; then
-  aclocal -I src/cf
+  aclocal -I src/cf -I src/external/rra-c-util/m4
 elif which aclocal-1.10 > /dev/null 2>&1; then
-  aclocal-1.10 -I src/cf
+  aclocal-1.10 -I src/cf -I src/external/rra-c-util/m4
 else
   echo "No aclocal found on your system (looked for aclocal & aclocal-1.10)"
   exit 1
@@ -45,8 +56,7 @@ else
     # pod2man available.
     if test -d doc/man-pages ; then
         echo "Building man pages"
-        perl doc/man-pages/merge-pod doc/man-pages/pod1/*.in
-        perl doc/man-pages/merge-pod doc/man-pages/pod8/*.in
+        perl doc/man-pages/merge-pod doc/man-pages/pod*/*.in
         (cd doc/man-pages && ./generate-man)
     fi
 fi

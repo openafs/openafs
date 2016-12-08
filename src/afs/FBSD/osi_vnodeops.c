@@ -79,7 +79,6 @@ static vop_mkdir_t	afs_vop_mkdir;
 static vop_mknod_t	afs_vop_mknod;
 static vop_open_t	afs_vop_open;
 static vop_pathconf_t	afs_vop_pathconf;
-static vop_poll_t	afs_vop_poll;
 static vop_print_t	afs_vop_print;
 static vop_putpages_t	afs_vop_putpages;
 static vop_read_t	afs_vop_read;
@@ -120,7 +119,6 @@ struct vop_vector afs_vnodeops = {
 	.vop_mknod =		afs_vop_mknod,
 	.vop_open =		afs_vop_open,
 	.vop_pathconf =		afs_vop_pathconf,
-	.vop_poll =		afs_vop_poll,
 	.vop_print =		afs_vop_print,
 	.vop_putpages =		afs_vop_putpages,
 	.vop_read =		afs_vop_read,
@@ -157,7 +155,6 @@ int afs_vop_getpages(struct vop_getpages_args *);
 int afs_vop_putpages(struct vop_putpages_args *);
 int afs_vop_ioctl(struct vop_ioctl_args *);
 static int afs_vop_pathconf(struct vop_pathconf_args *);
-int afs_vop_poll(struct vop_poll_args *);
 int afs_vop_fsync(struct vop_fsync_args *);
 int afs_vop_remove(struct vop_remove_args *);
 int afs_vop_link(struct vop_link_args *);
@@ -200,7 +197,7 @@ struct vnodeopv_entry_desc afs_vnodeop_entries[] = {
     {&vop_mknod_desc, (vop_t *) afs_vop_mknod},	/* mknod */
     {&vop_open_desc, (vop_t *) afs_vop_open},	/* open */
     {&vop_pathconf_desc, (vop_t *) afs_vop_pathconf},	/* pathconf */
-    {&vop_poll_desc, (vop_t *) afs_vop_poll},	/* select */
+    {&vop_poll_desc, (vop_t *) vop_nopoll},	/* select */
     {&vop_print_desc, (vop_t *) afs_vop_print},	/* print */
     {&vop_read_desc, (vop_t *) afs_vop_read},	/* read */
     {&vop_readdir_desc, (vop_t *) afs_vop_readdir},	/* readdir */
@@ -704,7 +701,7 @@ afs_vop_close(ap)
 	code = afs_close(avc, ap->a_fflag, ap->a_cred);
     else
 	code = afs_close(avc, ap->a_fflag, afs_osi_credp);
-    osi_FlushPages(avc, ap->a_cred);	/* hold bozon lock, but not basic vnode lock */
+    osi_FlushPages(avc, ap->a_cred);	/* hold GLOCK, but not basic vnode lock */
     AFS_GUNLOCK();
     return code;
 }
@@ -774,8 +771,8 @@ afs_vop_read(ap)
     int code;
     struct vcache *avc = VTOAFS(ap->a_vp);
     AFS_GLOCK();
-    osi_FlushPages(avc, ap->a_cred);	/* hold bozon lock, but not basic vnode lock */
-    code = afs_read(avc, ap->a_uio, ap->a_cred, 0, 0, 0);
+    osi_FlushPages(avc, ap->a_cred);	/* hold GLOCK, but not basic vnode lock */
+    code = afs_read(avc, ap->a_uio, ap->a_cred, 0);
     AFS_GUNLOCK();
     return code;
 }
@@ -857,8 +854,8 @@ afs_vop_getpages(struct vop_getpages_args *ap)
     uio.uio_td = curthread;
 
     AFS_GLOCK();
-    osi_FlushPages(avc, osi_curcred());	/* hold bozon lock, but not basic vnode lock */
-    code = afs_read(avc, &uio, osi_curcred(), 0, 0, 0);
+    osi_FlushPages(avc, osi_curcred());	/* hold GLOCK, but not basic vnode lock */
+    code = afs_read(avc, &uio, osi_curcred(), 0);
     AFS_GUNLOCK();
     pmap_qremove(kva, npages);
 
@@ -963,7 +960,7 @@ afs_vop_write(ap)
     int code;
     struct vcache *avc = VTOAFS(ap->a_vp);
     AFS_GLOCK();
-    osi_FlushPages(avc, ap->a_cred);	/* hold bozon lock, but not basic vnode lock */
+    osi_FlushPages(avc, ap->a_cred);	/* hold GLOCK, but not basic vnode lock */
     code =
 	afs_write(VTOAFS(ap->a_vp), ap->a_uio, ap->a_ioflag, ap->a_cred, 0);
     AFS_GUNLOCK();
@@ -1079,22 +1076,6 @@ afs_vop_ioctl(ap)
 	/* No-op call; just return. */
 	return (ENOTTY);
     }
-}
-
-/* ARGSUSED */
-int
-afs_vop_poll(ap)
-     struct vop_poll_args	/* {
-				 * struct vnode *a_vp;
-				 * int  a_events;
-				 * struct ucred *a_cred;
-				 * struct thread *td;
-				 * } */ *ap;
-{
-    /*
-     * We should really check to see if I/O is possible.
-     */
-    return (1);
 }
 
 int
@@ -1594,7 +1575,10 @@ afs_vop_advlock(ap)
 
     AFS_GLOCK();
     error =
-	afs_lockctl(VTOAFS(ap->a_vp), ap->a_fl, ap->a_op, &cr, (int)ap->a_id);
+	afs_lockctl(VTOAFS(ap->a_vp),
+		ap->a_fl,
+		ap->a_op, &cr,
+		(int)(intptr_t)ap->a_id);	/* XXX: no longer unique! */
     AFS_GUNLOCK();
     return error;
 }

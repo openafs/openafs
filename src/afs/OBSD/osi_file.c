@@ -34,7 +34,7 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
     AFS_STATCNT(osi_UFSOpen);
     if (cacheDiskType != AFS_FCACHE_TYPE_UFS)
 	osi_Panic("UFSOpen called for non-UFS cache\n");
-    afile = (struct osi_file *)osi_AllocSmallSpace(sizeof(struct osi_file));
+    afile = osi_AllocSmallSpace(sizeof(struct osi_file));
     AFS_GUNLOCK();
     code = VFS_VGET(cacheDev.mp, ainode->ufs, &vp);
     AFS_GLOCK();
@@ -164,7 +164,7 @@ afs_osi_Read(struct osi_file *afile, int offset, void *aptr, afs_int32 asize)
 	afs_Trace2(afs_iclSetp, CM_TRACE_READFAILED, ICL_TYPE_INT32,
 		   (unsigned int) resid, ICL_TYPE_INT32, code);
 	if (code > 0) {
-	    code *= -1;
+	    code = -code;
 	}
     }
     return code;
@@ -199,7 +199,7 @@ afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
 	    afile->size = afile->offset;
     } else {
 	if (code > 0) {
-	    code *= -1;
+	    code = -code;
 	}
     }
 

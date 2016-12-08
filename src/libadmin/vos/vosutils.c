@@ -10,12 +10,13 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+
+#include <afs/afs_AdminErrors.h>
 
 #include "vosutils.h"
 #include "vsprocs.h"
 #include "lockprocs.h"
-#include <afs/afs_AdminErrors.h>
-#include <string.h>
 
 /*
  * VLDB entry conversion routines.
@@ -276,21 +277,24 @@ VLDB_ListAttributes(afs_cell_handle_p cellHandle,
 		if (*entriesp > arrayEntries.bulkentries_len)
 		    *entriesp = arrayEntries.bulkentries_len;
 
-		blkentriesp->nbulkentries_val =
-		    (nvldbentry *) malloc(*entriesp * sizeof(*blkentriesp));
-		if (blkentriesp->nbulkentries_val != NULL) {
-		    for (i = 0; i < *entriesp; i++) {
-			OldVLDB_to_NewVLDB((struct vldbentry *)&arrayEntries.
-					   bulkentries_val[i],
-					   (struct nvldbentry *)&blkentriesp->
-					   nbulkentries_val[i], &tst);
+		if (*entriesp > 0) {
+		    blkentriesp->nbulkentries_val =
+			calloc(*entriesp, sizeof(struct nvldbentry));
+		    if (blkentriesp->nbulkentries_val != NULL) {
+		        for (i = 0; i < *entriesp; i++) {
+			    OldVLDB_to_NewVLDB((struct vldbentry *)&arrayEntries.
+					       bulkentries_val[i],
+					       (struct nvldbentry *)&blkentriesp->
+					       nbulkentries_val[i], &tst);
+			}
+		    } else {
+			tst = ADMNOMEM;
 		    }
 		} else {
-		    tst = ADMNOMEM;
+		    blkentriesp->nbulkentries_val = NULL;
 		}
-		if (arrayEntries.bulkentries_val) {
-		    free(arrayEntries.bulkentries_val);
-		}
+
+		xdr_free((xdrproc_t)xdr_bulkentries, &arrayEntries);
 
 		rc = 1;
 	    }
@@ -424,8 +428,8 @@ GetVolumeInfo(afs_cell_handle_p cellHandle, afs_uint32 volid,
     if (volid == rentry->volumeId[ROVOL]) {
 	*voltype = ROVOL;
 	for (i = 0; i < rentry->nServers; i++) {
-	    if ((index == -1) && (rentry->serverFlags[i] & ITSROVOL)
-		&& !(rentry->serverFlags[i] & RO_DONTUSE))
+	    if ((index == -1) && (rentry->serverFlags[i] & VLSF_ROVOL)
+		&& !(rentry->serverFlags[i] & VLSF_DONTUSE))
 		index = i;
 	}
 	if (index == -1) {

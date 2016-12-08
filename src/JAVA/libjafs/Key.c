@@ -58,8 +58,7 @@ void fillKeyInfo( JNIEnv *env, jobject key, bos_KeyInfo_t keyEntry )
   // set all the fields
   (*env)->SetIntField( env, key, key_versionField, keyEntry.keyVersionNumber );
   
-  convertedKey = (char *) malloc( sizeof(char *)*
-				  (sizeof(keyEntry.key.key)*4+1) );
+  convertedKey = malloc( sizeof(char *) * (sizeof(keyEntry.key.key)*4+1) );
   if( !convertedKey ) {
     throwAFSException( env, JAFSADMNOMEM );
     return;    

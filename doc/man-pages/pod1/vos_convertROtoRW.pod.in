@@ -1,0 +1,103 @@
+=head1 NAME
+
+vos_convertROtoRW - Converts a Read-Only volume into a Read/Write volume
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<vos convertROtoRW> S<<< [B<-server>] <I<machine name>> >>>
+   S<<< [B<-partition>] <I<partition name>> >>>
+   S<<< [B<-id>] <I<volume name or ID>> >>> [B<-force>]
+   S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>]
+   [B<-verbose>] [B<-encrypt>] [B<-noresolve>]
+   S<<< [B<-config> <I<config directory>>] >>>
+   [B<-help>]
+
+B<vos con> S<<< [B<-s>] <I<machine name>> >>>
+   S<<< [B<-p>] <I<partition name>> >>>
+   S<<< [B<-i>] <I<volume name or ID>> >>> [B<-f>]
+   S<<< [B<-c> <I<cell name>>] >>> [B<-noa>] [B<-l>]
+   [B<-v>] [B<-e>] [B<-nor>]
+   S<<< [B<-co> <I<config directory>>] >>>
+   [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+B<vos convertROtoRW> converts a Read-Only volume into a Read/Write volume
+when the original Read/Write volume is no longer available.  It's normal use
+is to recover the Read/Write volume from a replica after a failed disk,
+failed server, or accidental deletion.
+
+=head1 CAUTIONS
+
+The command name is case-sensitive.  It must be issued with the capital "RO"
+and "RW".
+
+After running vos convertROtoRW, the old file server will still contain
+the old Read/Write copy of the volume, even if the VLDB no longer
+references it. You can view the old volume with B<vos listvol>, and you
+should remove the old copy (for example, with B<vos zap>) so that the
+original file server will match the VLDB.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-server> <I<server name>>
+
+Identifies the file server machine that houses the Read-Only volume which
+will be converted.  Provide the machine's IP address or its host name
+(either fully qualified or using an unambiguous abbreviation).  For details,
+see L<vos(1)>.
+
+=item B<-partition> <I<partition name>>
+
+Identifies the partition on the file server machine that houses the
+Read-Only volume which will be converted.  Provide the full partition name
+(for, example, B</vicepa>) or one of the abbreviated forms described in
+L<vos(1)>.
+
+=item B<-id> <I<volume ID>>
+
+Specifies either the complete name or volume ID number of a Read/Write
+volume.
+
+=item B<-force>
+
+Don't ask for confirmation.
+
+=include fragments/vos-common.pod
+
+=back
+
+=head1 EXAMPLES
+
+The following example converts the read-only volume test3.readonly in
+partition vicepb on server1 to a read-write volume:
+
+   % vos convertROtoRW server1 b test3.readonly
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the F</usr/afs/etc/UserList> file on the
+machine specified with the B<-server> argument and
+on each database server machine.  If the B<-localauth> flag is included,
+the issuer must instead be logged on to a server machine as the local
+superuser C<root>.
+
+=head1 SEE ALSO
+
+L<vos(1)>
+
+=head1 COPYRIGHT
+
+Copyright 2007 Jason Edgecombe <jason@rampaginggeek.com>
+
+This documentation is covered by the BSD License as written in the
+doc/LICENSE file. This man page was written by Jason Edgecombe for
+OpenAFS.

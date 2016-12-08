@@ -30,6 +30,9 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+
+#include <roken.h>
+
 #include <afs/stds.h>
 
 #include "rpc_test_procs.h"
@@ -54,8 +57,6 @@
 #endif
 #ifdef AFS_DARWIN_ENV
 #include <sys/malloc.h>
-#else
-#include <malloc.h>
 #endif
 #include <afs/errors.h>
 #include <afs/sys_prototypes.h>
@@ -234,7 +235,6 @@ afs_int32
 SRXAFSCB_TellMeAboutYourself(struct rx_call *a_call, struct interfaceAddr *
 			     addr, Capabilities *capabilities)
 {
-    afs_int32 code;
     rpc_test_request_ctx *ctx = CTX_FOR_RXCALL(a_call);
 
     printf("%s: SRXAFSCB_TellMeAboutYourself: enter (%s)\n", prog,

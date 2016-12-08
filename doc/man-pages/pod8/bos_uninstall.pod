@@ -74,7 +74,8 @@ L<bos(8)>.
 =item B<-localauth>
 
 Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> file. The B<bos> command interpreter presents the
+F</usr/afs/etc/KeyFile> or F</usr/afs/etc/KeyFileExt> file.
+The B<bos> command interpreter presents the
 ticket to the BOS Server during mutual authentication. Do not combine this
 flag with the B<-cell> or B<-noauth> options. For more details, see
 L<bos(8)>.
@@ -89,10 +90,10 @@ ignored.
 =head1 EXAMPLES
 
 The following example command overwrites the F</usr/afs/bin/kaserver> file
-on the machine C<fs4.abc.com> with its C<.BAK> version, and the current
+on the machine C<fs4.example.com> with its C<.BAK> version, and the current
 C<.BAK> version by the C<.OLD> version.
 
-   % bos uninstall -server fs4.abc.com -file kaserver
+   % bos uninstall -server fs4.example.com -file kaserver
 
 =head1 PRIVILEGE REQUIRED
 
@@ -108,6 +109,7 @@ restricted mode.
 
 L<BosConfig(5)>,
 L<KeyFile(5)>,
+L<KeyFileExt(5)>,
 L<UserList(5)>,
 L<bos(8)>,
 L<bos_getrestart(8)>,

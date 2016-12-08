@@ -233,7 +233,7 @@ main(int argc, char **argv)
 	perror("open ronly");
 	return -1;
     }
-    fchown(fd1, 1, -1);		/* don't check error code, may fail on Ultrix */
+    code = fchown(fd1, 1, -1); /* don't check error code, may fail on Ultrix */
     code = write(fd1, "test", 4);
     if (code != 4) {
 	printf("rotest short read (%d)\n", code);
@@ -296,7 +296,10 @@ main(int argc, char **argv)
     }
 
     /* now finish up */
-    chdir("..");
+    if (chdir("..") < 0) {
+	perror("chdir ..");
+	return -1;
+    }
     rmdir(dirName);
     printf("Test completed successfully.\n");
     return 0;

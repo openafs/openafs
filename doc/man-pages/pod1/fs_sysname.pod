@@ -71,11 +71,11 @@ When the B<-newsys> argument is included, the output is the following:
 
 =head1 EXAMPLES
 
-The following example shows the output produced on a Sun SPARCStation
-running Solaris 5.7:
+The following example shows the output produced on a Sun Netra T1
+running Solaris 10:
 
    % fs sysname
-   Current sysname is 'sun4x_57'
+   Current sysname is 'sun4x_510'
 
 The following command defines a machine to be a IBM RS/6000 running AIX
 4.2:

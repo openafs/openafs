@@ -781,12 +781,12 @@
       are any negative permissions, the <computeroutput>Negative rights</computeroutput> header appears next, followed by pairs of
       negative permissions.</para>
 
-      <para>The following example displays the ACL on user <emphasis role="bold">terry</emphasis>'s home directory in the ABC
+      <para>The following example displays the ACL on user <emphasis role="bold">terry</emphasis>'s home directory in the Example
       Corporation cell:</para>
 
       <programlisting>
-   % <emphasis role="bold">fs la /afs/abc.com/usr/terry</emphasis>
-   Access list for /afs/abc.com/usr/terry is
+   % <emphasis role="bold">fs la /afs/example.com/usr/terry</emphasis>
+   Access list for /afs/example.com/usr/terry is
    Normal permissions:
       system:authuser rl
       pat rlw
@@ -947,7 +947,7 @@
 
                 <para>Specify the read/write path to each directory, to avoid the failure that results when you attempt to change a
                 read-only volume. By convention, you indicate the read/write path by placing a period before the cell name at the
-                pathname's second level (for example, <emphasis role="bold">/afs/.abc.com</emphasis>). For further discussion of the
+                pathname's second level (for example, <emphasis role="bold">/afs/.example.com</emphasis>). For further discussion of the
                 concept of read/write and read-only paths through the filespace, see <link linkend="HDRWQ209">The Rules of Mount
                 Point Traversal</link>.</para>
 
@@ -1387,7 +1387,7 @@
         </listitem>
 
         <listitem>
-          <para><anchor id="LIWQ578" />Issue the <emphasis role="bold">fs copyacl</emphasis> command to copy a source ACL to the ACL
+          <para>Issue the <emphasis role="bold">fs copyacl</emphasis> command to copy a source ACL to the ACL
           on one or more destination directories. (The command appears here on two lines only for legibility.) <programlisting>
    % <emphasis role="bold">fs copyacl -fromdir</emphasis> &lt;<replaceable>source directory</replaceable>&gt; <emphasis role="bold">-todir</emphasis> &lt;<replaceable>destination directory</replaceable>&gt;+  \
                 [<emphasis role="bold">-clear</emphasis>]
@@ -1422,7 +1422,7 @@
 
                 <para>Specify the read/write path to each directory, to avoid the failure that results when you attempt to change a
                 read-only volume. By convention, you indicate the read/write path by placing a period before the cell name at the
-                pathname's second level (for example, <emphasis role="bold">/afs/.abc.com</emphasis>). For further discussion of the
+                pathname's second level (for example, <emphasis role="bold">/afs/.example.com</emphasis>). For further discussion of the
                 concept of read/write and read-only paths through the filespace, see <link linkend="HDRWQ209">The Rules of Mount
                 Point Traversal</link>.</para>
               </listitem>
@@ -1509,18 +1509,18 @@
     <para>When you remove a user or group entry from the Protection Database, the <emphasis role="bold">fs listacl</emphasis>
     command displays the user's AFS UID (or group's AFS GID) in ACL entries, rather than the name. In the following example, user
     <emphasis role="bold">terry</emphasis> has an ACL entry for the group <emphasis role="bold">terry:friends</emphasis> (AFS GID
-    -567) on her home directory in the ABC Corporation cell, and then removes the group from the Protection Database.</para>
+    -567) on her home directory in the Example Corporation cell, and then removes the group from the Protection Database.</para>
 
     <programlisting>
-   % <emphasis role="bold">fs listacl /afs/abc.com/usr/terry</emphasis>
-   Access list for /afs/abc.com/usr/terry is
+   % <emphasis role="bold">fs listacl /afs/example.com/usr/terry</emphasis>
+   Access list for /afs/example.com/usr/terry is
    Normal permissions:
      terry:friends rlik
      system:anyuser l
      terry rlidwka
    % <emphasis role="bold">pts delete terry:friends</emphasis>
-   % <emphasis role="bold">fs listacl /afs/abc.com/usr/terry</emphasis>
-   Access list for /afs/abc.com/usr/terry is
+   % <emphasis role="bold">fs listacl /afs/example.com/usr/terry</emphasis>
+   Access list for /afs/example.com/usr/terry is
    Normal permissions:
      -567 rlik
      system:anyuser l
@@ -1579,7 +1579,7 @@
 
                 <para>Specify the read/write path to each directory, to avoid the failure that results when you attempt to change a
                 read-only volume. By convention, you indicate the read/write path by placing a period before the cell name at the
-                pathname's second level (for example, <emphasis role="bold">/afs/.abc.com</emphasis>). For further discussion of the
+                pathname's second level (for example, <emphasis role="bold">/afs/.example.com</emphasis>). For further discussion of the
                 concept of read/write and read-only paths through the filespace, see <link linkend="HDRWQ209">The Rules of Mount
                 Point Traversal</link>.</para>
 

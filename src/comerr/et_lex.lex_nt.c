@@ -677,7 +677,7 @@ YY_RULE_SETUP
 case 7:
 YY_RULE_SETUP
 #line 13 "et_lex.lex.l"
-{ char *p; yylval.dynstr = ds((char *)yytext+1);
+{ char *p; yylval.dynstr = strdup((char *)yytext+1);
 		  if (p=strrchr(yylval.dynstr, '"')) *p='\0';
 		  return QUOTED_STRING;
 		}
@@ -685,7 +685,7 @@ YY_RULE_SETUP
 case 8:
 YY_RULE_SETUP
 #line 18 "et_lex.lex.l"
-{ yylval.dynstr = ds((char *)yytext); return STRING; }
+{ yylval.dynstr = strdup((char *)yytext); return STRING; }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
@@ -1520,7 +1520,7 @@ static void *yy_flex_alloc( size )
 yy_size_t size;
 #endif
 	{
-	return (void *) malloc( size );
+	return malloc( size );
 	}
 
 #ifdef YY_USE_PROTOS
@@ -1531,14 +1531,7 @@ void *ptr;
 yy_size_t size;
 #endif
 	{
-	/* The cast to (char *) in the following accommodates both
-	 * implementations that use char* generic pointers, and those
-	 * that use void* generic pointers.  It works with the latter
-	 * because both ANSI C and C++ allow castless assignment from
-	 * any pointer type to void*, and deal with argument conversions
-	 * as though doing an assignment.
-	 */
-	return (void *) realloc( (char *) ptr, size );
+	return realloc( (char *) ptr, size );
 	}
 
 #ifdef YY_USE_PROTOS

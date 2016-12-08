@@ -1,0 +1,39 @@
+/*
+ * afstoken - pioctl interface for new common token data structures.
+ *
+ * revised following suggestions from lha@kth.se 20070511, 20070513
+ */
+
+/* this file is in the public domain.  Do what thou wilt. */
+
+const AFSTOKEN_RK_TIX_MAX = 12000; 	/* Matches entry in rxkad.h */
+
+struct token_rxkad {
+    afs_int32 rk_viceid;
+    afs_int32 rk_kvno;
+    opaque rk_key[8];
+    afs_int32 rk_begintime;
+    afs_int32 rk_endtime;
+    afs_int32 rk_primary_flag;
+    opaque rk_ticket<AFSTOKEN_RK_TIX_MAX>;
+};
+
+const AFSTOKEN_UNION_NOAUTH = 0;
+const AFSTOKEN_UNION_KAD = 2;
+union ktc_tokenUnion switch (afs_int32 at_type) {
+    case AFSTOKEN_UNION_KAD:
+	token_rxkad at_kad;
+};
+
+const AFSTOKEN_LENGTH_MAX = 16384;
+typedef opaque token_opaque<AFSTOKEN_LENGTH_MAX>;
+
+const AFSTOKEN_EX_SETPAG = 0x00000001; /* set tokens in new pag */
+const AFSTOKEN_MAX = 8;
+const AFSTOKEN_CELL_MAX = 64;
+
+struct ktc_setTokenData {
+    afs_int32 flags;
+    string cell<AFSTOKEN_CELL_MAX>;
+    token_opaque tokens<AFSTOKEN_MAX>;
+};

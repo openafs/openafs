@@ -19,14 +19,11 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <errno.h>
 #include <afs/errmap_nt.h>
 #include <windows.h>
 #include <winbase.h>
-#include <dirent.h>
-#include <stdlib.h>
-#include <sys/stat.h>
 
 /* opendir() - The case insensitive version of opendir */
 DIR *
@@ -78,11 +75,10 @@ opendir(const char *path)
 	}
     }
 
-    tDir = (DIR *) malloc(sizeof(DIR));
+    tDir = calloc(1, sizeof(DIR));
     if (!tDir) {
 	errno = ENOMEM;
     } else {
-	memset((void *)tDir, 0, sizeof(*tDir));
 	tDir->h = tH;
 	tDir->data = tData;
     }
@@ -99,7 +95,7 @@ closedir(DIR * dir)
 
     if (dir->h != INVALID_HANDLE_VALUE)
 	FindClose(dir->h);
-    free((void *)dir);
+    free(dir);
     return 0;
 }
 

@@ -15,20 +15,14 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
-#include <stdio.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <ptclient.h>
+
 #include "acl.h"
 #include "prs_fs.h"
-
 
 struct acl_accessList *aclstore[20];
 char *externalstore[20];
@@ -178,7 +172,7 @@ main()
 	    if (externalstore[which] != NULL) {
 		/* we're adding to access list */
 		size = strlen(externalstore[which]);
-		ptr = (char *)malloc(size);
+		ptr = malloc(size);
 		sscanf(externalstore[which], "%d\n%d\n", &p, &n);
 		strncpy(ptr, externalstore[which], size);
 		p++;
@@ -241,7 +235,7 @@ main()
 		continue;
 	    }
 	    names.namelist_len = 1;
-	    names.namelist_val = (prname *) malloc(strlen(name) + 1);
+	    names.namelist_val = malloc(strlen(name) + 1);
 	    strncpy(names.namelist_val, name, PR_MAXNAMELEN);
 	    code = pr_NameToId(&names, &ids);
 	    if (code) {

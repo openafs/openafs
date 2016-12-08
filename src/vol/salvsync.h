@@ -91,7 +91,7 @@ typedef enum {
 typedef struct SALVSYNC_command_hdr {
     afs_uint32 hdr_version;     /**< salvsync protocol header version */
     afs_uint32 prio;            /**< salvage priority */
-    afs_uint32 volume;          /**< volume on which to operate */
+    VolumeId volume;          /**< volume on which to operate */
     afs_uint32 parent;          /**< parent volume (for vol group linking command) */
     char partName[16];		/**< partition name, e.g. /vicepa */
     afs_uint32 reserved[6];

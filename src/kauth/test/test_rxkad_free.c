@@ -369,7 +369,7 @@ main(argc, argv)
     initialize_ACFG_error_table();
     initialize_KA_error_table();
 
-    ts = cmd_CreateSyntax(NULL, Main, NULL, "Main program");
+    ts = cmd_CreateSyntax(NULL, Main, NULL, 0, "Main program");
     /* 0 */ cmd_AddParm(ts, "-number", CMD_SINGLE, CMD_OPTIONAL,
 			"number of iterations");
     /* 1 */ cmd_AddParm(ts, "-long", CMD_FLAG, CMD_OPTIONAL,

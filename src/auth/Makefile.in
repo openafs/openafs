@@ -7,33 +7,51 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+include @TOP_OBJDIR@/src/config/Makefile.lwptool
 
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+BASE_objs= cellconfig.lo keys.lo userok.lo writeconfig.lo authcon.lo \
+	 acfg_errors.lo ktc_errors.lo netrestrict.lo token.xdr.lo token.lo \
+	 realms.lo
 
-OBJS= cellconfig.o ktc.o userok.o writeconfig.o authcon.o \
-    acfg_errors.o ktc_errors.o @MAKE_KRB5@ akimpersonate.o akimpersonate_v5gen.o
-KOBJS= cellconfig.o ktc.krb.o userok.o writeconfig.o authcon.o \
-    acfg_errors.o ktc_errors.o @MAKE_KRB5@ akimpersonate.o akimpersonate_v5gen.o
+LT_objs= ktc.lo $(BASE_objs)
+KRB_objs = ktc.krb.lo $(BASE_objs)
+
+LT_deps= $(top_builddir)/src/opr/liboafs_opr.la \
+	 $(top_builddir)/src/comerr/liboafs_comerr.la \
+	 $(top_builddir)/src/rx/liboafs_rx.la \
+	 $(top_builddir)/src/rxkad/liboafs_rxkad.la \
+	 $(top_builddir)/src/audit/liboafs_audit.la \
+	 $(top_builddir)/src/util/liboafs_util.la \
+	 $(top_builddir)/src/sys/liboafs_sys.la
+
+LT_libs= $(LDFLAGS_roken) $(LIB_roken)
 
 LIBS=libauth.a \
-      ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libdes.a \
-      ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/libsys.a \
-      ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a
-INCLS=cellconfig.h auth.h keys.h akimpersonate.h akimpersonate_v5gen.h
-KSRCS=auth.h
-UKSRCS=${KSRCS} cellconfig.h acfg_errors.c keys.h cellconfig.c \
-       ktc.c authcon.c ktc_errors.c
+      ${TOP_LIBDIR}/librxkad.a \
+      ${TOP_LIBDIR}/libafsrfc3961.a \
+      ${TOP_LIBDIR}/librx.a \
+      ${TOP_LIBDIR}/libsys.a \
+      ${TOP_LIBDIR}/liblwp.a \
+      ${TOP_LIBDIR}/util.a
 
-all: ${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/libauth.krb.a depinstall
+INCLS=cellconfig.h auth.h keys.h internal.h token.h
+
+all: liboafs_auth.la libauth_pic.la libpam_auth.la \
+     ${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/libauth.krb.a \
+     depinstall
 
 depinstall: ${TOP_INCDIR}/afs/keys.h \
 	${TOP_INCDIR}/afs/cellconfig.h \
-	${TOP_INCDIR}/afs/akimpersonate.h \
 	${TOP_INCDIR}/afs/auth.h \
-	${TOP_INCDIR}/afs/ktc.h
+	${TOP_INCDIR}/afs/ktc.h \
+	${TOP_INCDIR}/afs/token.h \
+	token.h \
+	Ktoken.xdr.c \
+	token.xdr.c
+
+${TOP_INCDIR}/afs/token.h: token.h
+	${INSTALL_DATA} $? $@
 
 generated: acfg_errors.c cellconfig.h ktc_errors.c auth.h
 
@@ -42,9 +60,6 @@ ${TOP_INCDIR}/afs/keys.h: keys.h
 
 ${TOP_INCDIR}/afs/cellconfig.h: cellconfig.h
 	${INSTALL_DATA} cellconfig.h $@
-
-${TOP_INCDIR}/afs/akimpersonate.h: akimpersonate.h
-	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/auth.h: auth.h
 	${INSTALL_DATA} $? $@
@@ -58,44 +73,45 @@ ${TOP_LIBDIR}/libauth.a: libauth.a
 ${TOP_LIBDIR}/libauth.krb.a: libauth.krb.a
 	${INSTALL_DATA} libauth.krb.a $@
 
-cellconfig.o: cellconfig.c ${INCLS}
-ktc.o: ktc.c ${INCLS} ${TOP_INCDIR}/afs/vice.h
-writeconfig.o: writeconfig.c ${INCLS}
+cellconfig.lo: cellconfig.c ${INCLS}
+keys.lo: keys.c ${INCLS}
+ktc.lo: ktc.c ${INCLS} ${TOP_INCDIR}/afs/vice.h
+writeconfig.lo: writeconfig.c ${INCLS}
+authcon.lo: authcon.c ${INCLS}
+userok.lo: userok.c ${INCLS}
+cellconfig.lo: cellconfig.c ${INCLS}
+realms.lo: realms.c ${INCLS}
+netrestrict.lo: ${INCLS}
 
-authcon.o: authcon.c ${INCLS}
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/authcon.c @KRB5_CPPFLAGS@
-
-akimpersonate.o: akimpersonate.c ${INCLS}
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/akimpersonate.c @KRB5_CPPFLAGS@
-
-akimpersonate_v5gen.o: akimpersonate_v5gen.c ${INCLS}
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/akimpersonate_v5gen.c @KRB5_CPPFLAGS@ -I${srcdir}/../rxkad -I../rxkad
-
-userok.o: userok.c ${INCLS}
-cellconfig.o: cellconfig.c ${INCLS}
 copyauth.o: copyauth.c ${INCLS} AFS_component_version_number.o
 setkey.o: setkey.c ${INCLS} AFS_component_version_number.o
 
-ktc.krb.o: ktc.c ${INCLS} ${TOP_INCDIR}/afs/vice.h
-	${CCOBJ} ${CFLAGS} -DAFS_KERBEROS_ENV -c ${srcdir}/ktc.c -o ktc.krb.o
+$(LT_objs): $(INCLS)
 
-libauth.a: $(OBJS) AFS_component_version_number.o
-	-$(RM) -f libauth.a
-	$(AR) crv $@ $(OBJS) AFS_component_version_number.o
-	$(RANLIB) libauth.a
+CFLAGS_ktc.krb.lo = -DAFS_KERBEROS_ENV
+ktc.krb.lo: ktc.c ${INCLS} ${TOP_INCDIR}/afs/vice.h
+	$(LTLWP_CCRULE) $(srcdir)/ktc.c
 
-libauth.krb.a: $(KOBJS) AFS_component_version_number.o
-	-$(RM) -f $@
-	$(AR) crv $@ $(KOBJS) AFS_component_version_number.o
-	$(RANLIB) $@
+libauth.a: $(LT_objs)
+	$(LT_LDLIB_lwp) $(LT_objs)
+
+libauth.krb.a: $(KRB_objs)
+	$(LT_LDLIB_lwp) $(KRB_objs)
+
+liboafs_auth.la: liboafs_auth.la.sym $(LT_objs) $(LT_deps)
+	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
+
+libauth_pic.la: $(LT_objs)
+	$(LT_LDLIB_pic) $(LT_objs)
+
+libpam_auth.la: $(BASE_objs)
+	$(LT_LDLIB_pic) $(BASE_objs)
 
 copyauth: copyauth.o ${LIBS}
-	$(CC) $(CFLAGS) -o copyauth copyauth.o ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) copyauth.o ${LIBS} ${XLIBS}
 
 setkey: setkey.o ${LIBS}
-	${CC} $(CFLAGS) -o setkey setkey.o ${LIBS} ${XLIBS}
-
-acfg_errors.o: acfg_errors.c
+	$(AFS_LDRULE) setkey.o ${LIBS} ${XLIBS}
 
 acfg_errors.c: acfg_errors.et
 	${COMPILE_ET_C} -p ${srcdir} acfg_errors
@@ -103,15 +119,16 @@ acfg_errors.c: acfg_errors.et
 cellconfig.h: acfg_errors.et cellconfig.p.h
 	${COMPILE_ET_H} -p ${srcdir} acfg_errors -h cellconfig
 
-authcon.o: cellconfig.h
-cellconfig.o: cellconfig.h
+authcon.lo: cellconfig.h
+cellconfig.lo: cellconfig.h
 copyauth.o: cellconfig.h
-ktc.o: cellconfig.h
+keys.lo: cellconfig.h
+ktc.lo: cellconfig.h
+netrestrict.lo: cellconfig.h
+realms.lo: cellconfig.h
 setkey.o: cellconfig.h
-userok.o: cellconfig.h
-writeconfig.o: cellconfig.h
-
-ktc_errors.o: ktc_errors.c
+userok.lo: cellconfig.h
+writeconfig.lo: cellconfig.h
 
 ktc_errors.c: ktc_errors.et
 	${COMPILE_ET_C} -p ${srcdir} ktc_errors
@@ -119,10 +136,20 @@ ktc_errors.c: ktc_errors.et
 auth.h: ktc_errors.et auth.p.h
 	${COMPILE_ET_H} -p ${srcdir} ktc_errors -h auth
 
-authcon.o: auth.h
+authcon.lo: auth.h
 copyauth.o: auth.h
-ktc.o: auth.h
-userok.o: auth.h
+ktc.lo: auth.h
+token.lo: auth.h
+userok.lo: auth.h
+
+Ktoken.xdr.c: token.xg
+	$(RXGEN) -A -x -k -c -o $@ $(srcdir)/token.xg
+
+token.xdr.c: token.xg
+	$(RXGEN) -A -x -c -o $@ ${srcdir}/token.xg
+
+token.h : token.xg
+	$(RXGEN) -A -x -h -o $@ ${srcdir}/token.xg
 
 #
 # Install targets
@@ -150,11 +177,13 @@ dest: libauth.a libauth.krb.a auth.h cellconfig.h
 #
 # Misc. targets
 #
-test: 
+test:
 	cd test; $(MAKE)
 
 clean:
-	$(RM) -f *.o *.a copyauth setkey auth.h cellconfig.h acfg_errors.c ktc_errors.c core \
-	AFS_component_version_number.c
+	$(LT_CLEAN)
+	$(RM) -f *.o *.a copyauth setkey auth.h cellconfig.h acfg_errors.c \
+		ktc_errors.c token.h token.xdr.c core Ktoken.xdr.c \
+		AFS_component_version_number.c
 
 include ../config/Makefile.version

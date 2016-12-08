@@ -1,12 +1,14 @@
 #!/usr/bin/perl
+use warnings;
+use strict;
 
 use Getopt::Long;
 use Pod::Usage;
 use File::Path;
 use File::Temp;
 
-my $tag;
-my $last;
+my $help;
+my $man;
 my $tagPoint;
 my $last;
 my $outDir = ".";
@@ -64,6 +66,9 @@ system("git describe --abbrev=4 $tagName > $tempDir/$name/.version");
 system ("cd $tempDir/$name && ./regen.sh") == 0
     or die $!;
 
+# A list of files to compress
+my @toCompress;
+
 # Create the documentation tarball
 system("tar -cf $outDir/$name-doc.tar -C $tempDir $name/doc") == 0
     or die "Unable to create documentation tarball : $!";
@@ -74,7 +79,7 @@ File::Path::rmtree("$tempDir/$name/doc");
 
 # Create the source tarball (both .gz and .bz2)
 system("tar -cf $outDir/$name-src.tar -C $tempDir $name") == 0
-    or die "Unable to create documentation tarball : $!";
+    or die "Unable to create source code tarball : $!";
 push @toCompress, "$outDir/$name-src.tar";
 
 # Construct the diffs, and zip them

@@ -19,31 +19,37 @@
 #endif
 
 #include <afsconfig.h>
-#ifdef KERNEL
-#include "afs/param.h"
-#else
 #include <afs/param.h>
-#endif
-
 
 /* Enable data initialization when the header file is included */
 #define GLOBALSINIT(stuff) = stuff
 #if defined(AFS_NT40_ENV) && defined(AFS_PTHREAD_ENV)
 #define EXT __declspec(dllexport)
 #define EXT2 __declspec(dllexport)
+#define POSTAMBLE
 #else
 #define EXT
 #define EXT2
+#ifdef AFS_PTHREAD_ENV
+#define POSTAMBLE =PTHREAD_MUTEX_INITIALIZER
+#else
+#define POSTAMBLE
+#endif
 #endif
 
 #ifdef KERNEL
-#ifndef UKERNEL
-#include "h/types.h"
-#else /* !UKERNEL */
-#include	"afs/sysincludes.h"
-#endif /* UKERNEL */
+# ifndef UKERNEL
+#  include "h/types.h"
+# else /* !UKERNEL */
+#  include	"afs/sysincludes.h"
+# endif /* UKERNEL */
+#else /* KERNEL */
+# include <roken.h>
 #endif /* KERNEL */
 
+#include "rx.h"
+#include "rx_clock.h"
+#include "rx_packet.h"
 #include "rx_globals.h"
 
 void rx_SetMaxReceiveWindow(int packets)

@@ -15,7 +15,6 @@ EXPORTS
 	afsconf_GetLocalCell				@14
 	afsconf_GetNoAuthFlag				@15
 	afsconf_GetNthUser				@16
-	afsconf_IntGetKeys				@17
 	afsconf_Open					@18
 	afsconf_ServerAuth				@19
 	afsconf_SetCellInfo				@20
@@ -50,9 +49,9 @@ EXPORTS
 	ubik_ParseClientList				@49
 	getDirPath					@50
 	ka_AuthSpecificServersConn			@51
-	pthread_recursive_mutex_lock			@52
-	pthread_recursive_mutex_unlock			@53
-	grmutex						@54 DATA
+;	pthread_recursive_mutex_lock			@52
+;	pthread_recursive_mutex_unlock			@53
+;	grmutex						@54 DATA
 	initAFSDirPath					@55
 ;     	renamefile					@56
 	opendir						@57
@@ -142,13 +141,29 @@ EXPORTS
         ugen_ClientInit                                 @140
         afsconf_BuildServerSecurityObjects              @141
         afsconf_ClientAuthToken                         @142
-;	ktc_GetTokenEx					@143
-;	ktc_SetTokenEx					@144
-;	token_extractRxkad				@145
-;	token_FreeSet					@146
-;        xdr_ktc_tokenUnion                              @147
-;        xdr_ktc_setTokenData                            @148
-;	ktc_ListTokensEx				@149
+	ktc_GetTokenEx					@143
+	ktc_SetTokenEx					@144
+	token_extractRxkad				@145
+	token_FreeSet					@146
+        xdr_ktc_tokenUnion                              @147
+        xdr_ktc_setTokenData                            @148
+	ktc_ListTokensEx				@149
         pr_SIdToName                                    @150
         afsconf_GetExtendedCellInfo                     @151
-;        afsconf_UpToDate                                @152
+        afsconf_UpToDate                                @152
+	afsconf_SetSecurityFlags			@153
+	afsconf_SetLocalRealm				@154
+	afsconf_IsLocalRealmMatch			@155
+	afsconf_ParseNetFiles				@156
+	afsconf_SetExtendedCellInfo			@157
+	afsconf_PickClientSecObj			@158
+	afsconf_SawCell					@159    DATA
+	ka_PrintBytes					@160
+	ka_KeyIsZero					@161
+        afsconf_typedKey_new                            @162
+        afsconf_typedKey_put                            @163
+        afsconf_AddTypedKey                             @164
+        afsconf_typedKey_values                         @165
+        afsconf_GetAllKeys                              @166
+	afsconf_CheckRestrictedQuery			@167
+        string_PR_IDToName				@168

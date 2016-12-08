@@ -10,9 +10,7 @@ error conditions it encounters.
 
 If the F<VLLog> file does not already exist in the
 F</usr/afs/logs> directory when the VL Server starts, the server
-process creates it and writes initial start-up messages to it. If there
-is an existing file, the VL Server renames it to F<VLLog.old>,
-overwriting the existing F<VLLog.old> file if it exists.
+process creates it and writes initial start-up messages to it.
 
 The file is in ASCII format. Administrators listed in the
 F</usr/afs/etc/UserList> file can use the B<bos getlog> command to display
@@ -25,10 +23,14 @@ The VL Server records operations only as it completes them, and cannot
 recover from failures by reviewing the file. The log contents are useful
 for administrative evaluation of process failures and other problems.
 
-The VL Server can record messages at three levels of detail. By default,
-it records only very rudimentary messages. To increase logging to the
-first level of detail, issue the following command while logged onto the
-database server machine as the local superuser C<root>.
+The VL Server can record messages at several levels of detail. By default, it
+records only very rudimentary messages.  The initial level of detail
+logged by the VL Server can be set by using the B<-d> command
+line option (possibly multiple times) when it is started.
+
+To increase the level of detail logged by a running VL Server, issue
+the following command while logged onto the database server machine
+as the local superuser C<root>.
 
    # kill -TSTP <vlserver_pid>
 

@@ -14,24 +14,15 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <stdio.h>
-#include <sys/types.h>
-#include <stdlib.h>
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
 #include <direct.h>
 #else
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netdb.h>
 #include <ctype.h>
 #endif
-#include <string.h>
-#include <errno.h>
-#include "afsutil.h"
 
+#include "afsutil.h"
 
 /* also parse a.b.c.d addresses */
 struct hostent *
@@ -62,7 +53,6 @@ hostutil_GetHostByName(char *ahost)
 	}
     }
     if (numeric) {
-	tc = *ahost;		/* look at the first char */
 	/* decimal address, return fake hostent with only hostaddr field good */
 	tval = 0;
 	dots = 0;
@@ -256,7 +246,7 @@ gettmpdir(void)
 
     if (saveTmpDir == NULL) {
 	/* initialize global temporary directory string */
-	char *dirp = (char *)malloc(MAX_PATH+1);
+	char *dirp = malloc(MAX_PATH+1);
 	int freeDirp = 1;
 
 	if (dirp != NULL) {

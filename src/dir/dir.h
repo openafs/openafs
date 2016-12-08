@@ -39,6 +39,11 @@ struct PageHeader {
     char padding[32 - (5 + EPP / 8)];
 };
 
+struct DirBuffer {
+    void *buffer;
+    void *data;
+};
+
 struct DirHeader {
     /* A directory header object. */
     struct PageHeader header;
@@ -72,81 +77,65 @@ struct DirPage1 {
     struct DirEntry entry[1];
 };
 
-/*
- * Note that this declaration is seen in both the kernel code and the
- * user space code.  One implementation is in afs/afs_buffer.c; the
- * other is in dir/buffer.c.
- */
-extern int DVOffset(void *ap);
-
-
-/* This is private to buffer.c */
-struct buffer;
-
 /* Prototypes */
-extern int NameBlobs(char *name);
-extern int Create(void *dir, char *entry, void *vfid);
-extern int Length(void *dir);
-extern int Delete(void *dir, char *entry);
-extern int FindBlobs(void *dir, int nblobs);
-extern void AddPage(void *dir, int pageno);
-extern void FreeBlobs(void *dir, int firstblob, int nblobs);
-extern int MakeDir(void *dir, afs_int32 * me, afs_int32 * parent);
-extern int Lookup(void *dir, char *entry, void *fid);
-extern int LookupOffset(void *dir, char *entry, void *fid, long *offsetp);
-extern int EnumerateDir(void *dir,
-			int (*hookproc) (void *dir, char *name,
-					 afs_int32 vnode, afs_int32 unique),
-			void *hook);
-extern int IsEmpty(void *dir);
-extern struct DirEntry *GetBlob(void *dir, afs_int32 blobno);
-extern int GetVerifiedBlob(void *dir, afs_int32 blobno, struct DirEntry **);
-extern int DirHash(char *string);
+#ifdef KERNEL
+struct dcache;
+typedef struct dcache * dir_file_t;
+#else
+struct DirHandle;
+typedef struct DirHandle * dir_file_t;
+extern void Die(const char *msg) AFS_NORETURN;
+#endif
 
-extern int DStat(int *abuffers, int *acalls, int *aios);
-extern void DRelease(void *loc, int flag);
-extern int DVOffset(void *ap);
-extern int DFlushVolume(afs_int32 vid);
-extern int DFlushEntry(afs_int32 *fid);
-extern int InverseLookup (void *dir, afs_uint32 vnode, afs_uint32 unique,
-			  char *name, afs_uint32 length);
+extern int afs_dir_NameBlobs(char *name);
+extern int afs_dir_Create(dir_file_t dir, char *entry, void *vfid);
+extern int afs_dir_Length(dir_file_t dir);
+extern int afs_dir_Delete(dir_file_t dir, char *entry);
+extern int afs_dir_MakeDir(dir_file_t dir, afs_int32 * me,
+			   afs_int32 * parent);
+extern int afs_dir_Lookup(dir_file_t dir, char *entry, void *fid);
+extern int afs_dir_LookupOffset(dir_file_t dir, char *entry, void *fid,
+				long *offsetp);
+extern int afs_dir_EnumerateDir(dir_file_t dir,
+				int (*hookproc) (void *, char *name,
+						 afs_int32 vnode, 
+						 afs_int32 unique),
+				void *hook);
+extern int afs_dir_IsEmpty(dir_file_t dir);
+extern int afs_dir_GetBlob(dir_file_t dir, afs_int32 blobno,
+			   struct DirBuffer *);
+extern int afs_dir_GetVerifiedBlob(dir_file_t dir, afs_int32 blobno,
+				   struct DirBuffer *);
+extern int afs_dir_DirHash(char *string);
 
-/* The kernel uses different versions of these, and prototypes them
-   in afs_prototypes.h */
-#ifndef KERNEL
-extern int DInit(int abuffers);
-extern void *DRead(afs_int32 *fid, int page);
+extern int afs_dir_InverseLookup (void *dir, afs_uint32 vnode,
+				  afs_uint32 unique, char *name,
+				  afs_uint32 length);
+
+extern int afs_dir_ChangeFid(dir_file_t dir, char *entry,
+		             afs_uint32 *old_fid, afs_uint32 *new_fid);
+
+/* buffer operations */
+
+extern void DInit(int abuffers);
+extern int DRead(dir_file_t fid, int page, struct DirBuffer *);
 extern int DFlush(void);
-extern void *DNew(afs_int32 *fid, int page);
-extern void DZap(afs_int32 *fid);
+extern int DFlushVolume(afs_int32);
+extern int DNew(dir_file_t fid, int page, struct DirBuffer *);
+extern void DZap(dir_file_t fid);
+extern void DRelease(struct DirBuffer *loc, int flag);
+extern int DStat(int *abuffers, int *acalls, int *aios);
+extern int DFlushVolume(afs_int32 vid);
+extern int DFlushEntry(dir_file_t fid);
+extern int DVOffset(struct DirBuffer *);
 
 /* salvage.c */
 
+#ifndef KERNEL
 extern int DirOK(void *);
 extern int DirSalvage(void *, void *, afs_int32, afs_int32,
                       afs_int32, afs_int32);
 
-#endif
-
-#ifdef KERNEL
-extern int afs_dir_NameBlobs(char *name);
-extern int afs_dir_Create(void *dir, char *entry, void *vfid);
-extern int afs_dir_Length(void *dir);
-extern int afs_dir_Delete(void *dir, char *entry);
-extern int afs_dir_MakeDir(void *dir, afs_int32 * me, afs_int32 * parent);
-extern int afs_dir_Lookup(void *dir, char *entry, void *fid);
-extern int afs_dir_LookupOffset(void *dir, char *entry, void *fid,
-				long *offsetp);
-extern int afs_dir_EnumerateDir(void *dir,
-				int (*hookproc) (void *dir, char *name,
-						 afs_int32 vnode,
-						 afs_int32 unique),
-				void *hook);
-extern int afs_dir_IsEmpty(void *dir);
-extern int afs_dir_ChangeFid(void *dir, char *entry, afs_uint32 *old_fid,
-               		     afs_uint32 *new_fid);
-extern struct DirEntry *afs_dir_GetBlob(void *dir, afs_int32 blobno);
-extern int afs_dir_GetVerifiedBlob(void *, afs_int32, struct DirEntry **);
 #endif
 
 #endif /*       !defined(__AFS_DIR_H) */

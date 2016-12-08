@@ -18,10 +18,11 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+
+#include <ctype.h>
 
 #define VICE
-#include <sys/param.h>
-#include <sys/time.h>
 #ifdef	AFS_OSF_ENV
 #include <sys/vnode.h>
 #include <sys/mount.h>
@@ -32,13 +33,10 @@
 #include <ufs/dir.h>
 #undef	_KERNEL
 #undef	_BSD
-#include <stdio.h>
 #else /* AFS_OSF_ENV */
 #ifdef AFS_VFSINCL_ENV
 #include <sys/vnode.h>
 #ifdef	  AFS_SUN5_ENV
-#include <stdio.h>
-#include <unistd.h>
 #include <sys/fs/ufs_inode.h>
 #include <sys/fs/ufs_fs.h>
 #define _KERNEL
@@ -54,7 +52,6 @@
 #ifdef	AFS_HPUX_ENV
 extern int ge_danger;
 #define	DUX
-#include <ctype.h>
 #define	LONGFILENAMES	1
 #include <sys/sysmacros.h>
 #include <sys/ino.h>
@@ -151,7 +148,7 @@ pass1()
 		continue;
 	    }
 #endif /* ACLS */
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
 	    if (dp->di_size < 0 || dp->di_size > (UOFF_T) UFS_MAXOFFSET_T) {
 		if (debug)
 		    printf("bad size %llu:", dp->di_size);
@@ -239,7 +236,7 @@ pass1()
 
 	    if (ndb < 0) {
 		if (debug)
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
 		    printf("bad size %" AFS_INT64_FMT " ndb %d:",
 #else
 		    printf("bad size %d ndb %d:",
@@ -295,7 +292,7 @@ pass1()
 	    n_files++;
 	    lncntp[inumber] = dp->di_nlink;
 	    if (dp->di_nlink <= 0) {
-		zlnp = (struct zlncnt *)malloc(sizeof *zlnp);
+		zlnp = malloc(sizeof *zlnp);
 		if (zlnp == NULL) {
 		    pfatal("LINK COUNT TABLE OVERFLOW");
 		    if (reply("CONTINUE") == 0)
@@ -306,7 +303,7 @@ pass1()
 		    zlnhead = zlnp;
 		}
 	    }
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
 	    if (OLDVICEINODE) {
 		if (yflag) {
 		    if (!oldreported) {
@@ -436,7 +433,7 @@ pass1check(idesc)
 #endif
 		return (STOP);
 	    }
-	    new = (struct dups *)malloc(sizeof(struct dups));
+	    new = malloc(sizeof(struct dups));
 	    if (new == NULL) {
 		pfatal("DUP TABLE OVERFLOW.");
 		if (reply("CONTINUE") == 0)

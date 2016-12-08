@@ -10,35 +10,20 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <afs/procmgmt.h>
+#include <roken.h>
 
 #include <stddef.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <dirent.h>
-#include <errno.h>
-#include <sys/types.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
-#ifdef AFS_NT40_ENV
-#include <io.h>
-#else
-#include <sys/file.h>
-#include <sys/time.h>
-#endif
-#ifdef BOZO_SAVE_CORES
-#include <time.h>
-#endif
-#include <sys/stat.h>
-#include <string.h>
 
-#include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
 #include <lwp.h>
 #include <rx/rx.h>
 #include <afs/audit.h>
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
+#include <opr/queue.h>
+
 #include "bnode.h"
+#include "bnode_internal.h"
 #include "bosprototypes.h"
 
 #ifndef WCOREDUMP
@@ -50,9 +35,9 @@
 #define BNODE_ERROR_DELAY_MAX   60   /* maximum retry delay (seconds) */
 
 static PROCESS bproc_pid;	/* pid of waker-upper */
-static struct bnode *allBnodes = 0;	/* list of all bnodes */
-static struct bnode_proc *allProcs = 0;	/* list of all processes for which we're waiting */
-static struct bnode_type *allTypes = 0;	/* list of registered type handlers */
+static struct opr_queue allBnodes;	/**< List of all bnodes */
+static struct opr_queue allProcs;	/**< List of all processes for which we're waiting */
+static struct opr_queue allTypes;	/**< List of all registered type handlers */
 
 static struct bnode_stats {
     int weirdPids;
@@ -77,10 +62,8 @@ RememberProcName(struct bnode_proc *ap)
 	free(tbnodep->lastErrorName);
 	tbnodep->lastErrorName = NULL;
     }
-    if (ap->coreName) {
-	tbnodep->lastErrorName = (char *)malloc(strlen(ap->coreName) + 1);
-	strcpy(tbnodep->lastErrorName, ap->coreName);
-    }
+    if (ap->coreName)
+	tbnodep->lastErrorName = strdup(ap->coreName);
 }
 
 /* utility for use by BOP_HASCORE functions to determine where a core file might
@@ -129,7 +112,6 @@ SaveCore(struct bnode *abnode, struct bnode_proc
     if (code) {
         DIR *logdir;
         struct dirent *file;
-        size_t length;
         unsigned long pid;
 	const char *coredir = AFSDIR_LOGS_DIR;
 
@@ -144,13 +126,13 @@ SaveCore(struct bnode *abnode, struct bnode_proc
                 continue;
             pid = atol(file->d_name + 5);
             if (pid == aproc->pid) {
-                length = strlen(coredir) + strlen(file->d_name) + 2;
-                corefile = malloc(length);
-                if (corefile == NULL) {
+                int r;
+
+                r = asprintf(&corefile, "%s/%s", coredir, file->d_name);
+                if (r < 0 || corefile == NULL) {
                     closedir(logdir);
                     return;
                 }
-                snprintf(corefile, length, "%s/%s", coredir, file->d_name);
                 code = 0;
                 break;
             }
@@ -171,7 +153,7 @@ SaveCore(struct bnode *abnode, struct bnode_proc
 	    TimeFields->tm_hour, TimeFields->tm_min, TimeFields->tm_sec);
     strcpy(tbuffer, FileName);
 #endif
-    code = renamefile(corefile, tbuffer);
+    rk_rename(corefile, tbuffer);
     free(corefile);
 }
 
@@ -222,12 +204,14 @@ bnode_HasCore(struct bnode *abnode)
 int
 bnode_WaitAll(void)
 {
-    struct bnode *tb;
+    struct opr_queue *cursor;
     afs_int32 code;
     afs_int32 stat;
 
   retry:
-    for (tb = allBnodes; tb; tb = tb->next) {
+    for (opr_queue_Scan(&allBnodes, cursor)) {
+	struct bnode *tb = opr_queue_Entry(cursor, struct bnode, q);
+
 	bnode_Hold(tb);
 	code = BOP_GETSTAT(tb, &stat);
 	if (code) {
@@ -314,11 +298,11 @@ bnode_SetFileGoal(struct bnode *abnode, int agoal)
 int
 bnode_ApplyInstance(int (*aproc) (struct bnode *tb, void *), void *arock)
 {
-    struct bnode *tb, *nb;
+    struct opr_queue *cursor, *store;
     afs_int32 code;
 
-    for (tb = allBnodes; tb; tb = nb) {
-	nb = tb->next;
+    for (opr_queue_ScanSafe(&allBnodes, cursor, store)) {
+	struct bnode *tb = opr_queue_Entry(cursor, struct bnode, q);
 	code = (*aproc) (tb, arock);
 	if (code)
 	    return code;
@@ -329,9 +313,11 @@ bnode_ApplyInstance(int (*aproc) (struct bnode *tb, void *), void *arock)
 struct bnode *
 bnode_FindInstance(char *aname)
 {
-    struct bnode *tb;
+    struct opr_queue *cursor;
 
-    for (tb = allBnodes; tb; tb = tb->next) {
+    for (opr_queue_Scan(&allBnodes, cursor)) {
+	struct bnode *tb = opr_queue_Entry(cursor, struct bnode, q);
+
 	if (!strcmp(tb->name, aname))
 	    return tb;
     }
@@ -341,29 +327,32 @@ bnode_FindInstance(char *aname)
 static struct bnode_type *
 FindType(char *aname)
 {
-    struct bnode_type *tt;
+    struct opr_queue *cursor;
 
-    for (tt = allTypes; tt; tt = tt->next) {
+    for (opr_queue_Scan(&allTypes, cursor)) {
+	struct bnode_type *tt = opr_queue_Entry(cursor, struct bnode_type, q);
+
 	if (!strcmp(tt->name, aname))
 	    return tt;
     }
-    return (struct bnode_type *)0;
+    return NULL;
 }
 
 int
 bnode_Register(char *atype, struct bnode_ops *aprocs, int anparms)
 {
-    struct bnode_type *tt;
+    struct opr_queue *cursor;
+    struct bnode_type *tt = NULL;
 
-    for (tt = allTypes; tt; tt = tt->next) {
+    for (opr_queue_Scan(&allTypes, cursor), tt = NULL) {
+	tt = opr_queue_Entry(cursor, struct bnode_type, q);
 	if (!strcmp(tt->name, atype))
 	    break;
     }
     if (!tt) {
-	tt = (struct bnode_type *)malloc(sizeof(struct bnode_type));
-	memset(tt, 0, sizeof(struct bnode_type));
-	tt->next = allTypes;
-	allTypes = tt;
+	tt = calloc(1, sizeof(struct bnode_type));
+        opr_queue_Init(&tt->q);
+	opr_queue_Prepend(&allTypes, &tt->q);
 	tt->name = atype;
     }
     tt->ops = aprocs;
@@ -457,7 +446,6 @@ int
 bnode_Delete(struct bnode *abnode)
 {
     afs_int32 code;
-    struct bnode **lb, *ub;
     afs_int32 temp;
 
     if (abnode->refCount != 0) {
@@ -475,13 +463,7 @@ bnode_Delete(struct bnode *abnode)
 	return BZBUSY;
 
     /* all clear to zap */
-    for (lb = &allBnodes, ub = *lb; ub; lb = &ub->next, ub = *lb) {
-	if (ub == abnode) {
-	    /* unthread it from the list */
-	    *lb = ub->next;
-	    break;
-	}
-    }
+    opr_queue_Remove(&abnode->q);
     free(abnode->name);		/* do this first, since bnode fields may be bad after BOP_DELETE */
     code = BOP_DELETE(abnode);	/* don't play games like holding over this one */
     WriteBozoFile(0);
@@ -515,41 +497,21 @@ int
 bnode_InitBnode(struct bnode *abnode, struct bnode_ops *abnodeops,
 		char *aname)
 {
-    struct bnode **lb, *nb;
-
     /* format the bnode properly */
     memset(abnode, 0, sizeof(struct bnode));
+    opr_queue_Init(&abnode->q);
     abnode->ops = abnodeops;
-    abnode->name = (char *)malloc(strlen(aname) + 1);
+    abnode->name = strdup(aname);
     if (!abnode->name)
 	return ENOMEM;
-    strcpy(abnode->name, aname);
     abnode->flags = BNODE_ACTIVE;
     abnode->fileGoal = BSTAT_NORMAL;
     abnode->goal = BSTAT_SHUTDOWN;
 
     /* put the bnode at the end of the list so we write bnode file in same order */
-    for (lb = &allBnodes, nb = *lb; nb; lb = &nb->next, nb = *lb);
-    *lb = abnode;
+    opr_queue_Append(&allBnodes, &abnode->q);
 
     return 0;
-}
-
-static int
-DeleteProc(struct bnode_proc *abproc)
-{
-    struct bnode_proc **pb, *tb;
-    struct bnode_proc *nb;
-
-    for (pb = &allProcs, tb = *pb; tb; pb = &tb->next, tb = nb) {
-	nb = tb->next;
-	if (tb == abproc) {
-	    *pb = nb;
-	    free(tb);
-	    return 0;
-	}
-    }
-    return BZNOENT;
 }
 
 /* bnode lwp executes this code repeatedly */
@@ -559,8 +521,8 @@ bproc(void *unused)
     afs_int32 code;
     struct bnode *tb;
     afs_int32 temp;
+    struct opr_queue *cursor, *store;
     struct bnode_proc *tp;
-    struct bnode *nb;
     int options;		/* must not be register */
     struct timeval tv;
     int setAny;
@@ -570,7 +532,8 @@ bproc(void *unused)
 	/* first figure out how long to sleep for */
 	temp = 0x7fffffff;	/* afs_int32 time; maxint doesn't work in select */
 	setAny = 0;
-	for (tb = allBnodes; tb; tb = tb->next) {
+	for (opr_queue_Scan(&allBnodes, cursor)) {
+	    tb = opr_queue_Entry(cursor, struct bnode, q);
 	    if (tb->flags & BNODE_NEEDTIMEOUT) {
 		if (tb->nextTimeout < temp) {
 		    setAny = 1;
@@ -597,7 +560,8 @@ bproc(void *unused)
 	temp = tv.tv_sec;
 
 	/* check all bnodes to see which ones need timeout events */
-	for (tb = allBnodes; tb; tb = nb) {
+	for (opr_queue_ScanSafe(&allBnodes, cursor, store)) {
+	    tb = opr_queue_Entry(cursor, struct bnode, q);
 	    if ((tb->flags & BNODE_NEEDTIMEOUT) && temp > tb->nextTimeout) {
 		bnode_Hold(tb);
 		BOP_TIMEOUT(tb);
@@ -605,10 +569,8 @@ bproc(void *unused)
 		if (tb->flags & BNODE_NEEDTIMEOUT) {	/* check again, BOP_TIMEOUT could change */
 		    tb->nextTimeout = FT_ApproxTime() + tb->period;
 		}
-		nb = tb->next;
 		bnode_Release(tb);	/* delete may occur here */
-	    } else
-		nb = tb->next;
+	    }
 	}
 
 	if (code < 0) {
@@ -619,9 +581,12 @@ bproc(void *unused)
 		if (code == 0 || code == -1)
 		    break;	/* all done */
 		/* otherwise code has a process id, which we now search for */
-		for (tp = allProcs; tp; tp = tp->next)
+		for (tp = NULL, opr_queue_Scan(&allProcs, cursor), tp = NULL) {
+		    tp = opr_queue_Entry(cursor, struct bnode_proc, q);
+
 		    if (tp->pid == code)
 			break;
+		}
 		if (tp) {
 		    /* found the pid */
 		    tb = tp->bnode;
@@ -709,7 +674,8 @@ bproc(void *unused)
 		    BOP_PROCEXIT(tb, tp);
 		    bnode_Check(tb);
 		    bnode_Release(tb);	/* bnode delete can happen here */
-		    DeleteProc(tp);
+		    opr_queue_Remove(&tp->q);
+		    free(tp);
 		} else
 		    bnode_stats.weirdPids++;
 	    }
@@ -873,6 +839,9 @@ bnode_Init(void)
     if (initDone)
 	return 0;
     initDone = 1;
+    opr_queue_Init(&allTypes);
+    opr_queue_Init(&allProcs);
+    opr_queue_Init(&allBnodes);
     memset(&bnode_stats, 0, sizeof(bnode_stats));
     LWP_InitializeProcessSupport(1, &junk);	/* just in case */
     IOMGR_Initialize();
@@ -936,11 +905,9 @@ bnode_ParseLine(char *aline, struct bnode_token **alist)
 	    if (inToken) {
 		inToken = 0;	/* end of this token */
 		*tptr++ = 0;
-		ttok =
-		    (struct bnode_token *)malloc(sizeof(struct bnode_token));
+		ttok = malloc(sizeof(struct bnode_token));
 		ttok->next = (struct bnode_token *)0;
-		ttok->key = (char *)malloc(strlen(tbuffer) + 1);
-		strcpy(ttok->key, tbuffer);
+		ttok->key = strdup(tbuffer);
 		if (last) {
 		    last->next = ttok;
 		    last = ttok;
@@ -984,9 +951,8 @@ bnode_NewProc(struct bnode *abnode, char *aexecString, char *coreName,
     code = bnode_ParseLine(aexecString, &tlist);	/* try parsing first */
     if (code)
 	return code;
-    tp = (struct bnode_proc *)malloc(sizeof(struct bnode_proc));
-    memset(tp, 0, sizeof(struct bnode_proc));
-    tp->next = allProcs;
+    tp = calloc(1, sizeof(struct bnode_proc));
+    opr_queue_Init(&tp->q);
     tp->bnode = abnode;
     tp->comLine = aexecString;
     tp->coreName = coreName;	/* may be null */
@@ -1011,7 +977,7 @@ bnode_NewProc(struct bnode *abnode, char *aexecString, char *coreName,
     bozo_Log("%s started pid %ld: %s\n", abnode->name, cpid, aexecString);
 
     bnode_FreeTokens(tlist);
-    allProcs = tp;
+    opr_queue_Prepend(&allProcs, &tp->q);
     *aproc = tp;
     tp->pid = cpid;
     tp->flags = BPROC_STARTED;

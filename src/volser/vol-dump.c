@@ -21,23 +21,13 @@
 # pragma GCC diagnostic warning "-Wformat"
 #endif
 
-#include <ctype.h>
-#include <errno.h>
-#include <sys/stat.h>
-#include <stdio.h>
-#include <string.h>
-#ifdef AFS_NT40_ENV
-#include <fcntl.h>
-#include <time.h>
-#include <io.h>
-#else
-#include <sys/param.h>
-#include <sys/file.h>
-#include <sys/time.h>
-#endif
-#include <afs/cmd.h>
+#include <roken.h>
 
+#include <ctype.h>
+
+#include <afs/cmd.h>
 #include <rx/xdr.h>
+#include <rx/rx_queue.h>
 #include <afs/afsint.h>
 #include <afs/nfs.h>
 #include <afs/errors.h>
@@ -54,48 +44,21 @@
 #include <afs/dir.h>
 #include <afs/com_err.h>
 
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-
-#ifdef HAVE_FCNTL_H
-#include <fcntl.h>
-#endif
-
-#ifdef _AIX
-#include <time.h>
-#endif
-
-#include <dirent.h>
-
 #include "volser.h"
 #include "volint.h"
 #include "dump.h"
 
-#define putint32(p, v)  *p++ = v>>24, *p++ = v>>16, *p++ = v>>8, *p++ = v
-#define putshort(p, v) *p++ = v>>8, *p++ = v
-
-#ifdef O_LARGEFILE
-#define afs_stat	stat64
-#define afs_fstat	fstat64
-#define afs_open	open64
-#else /* !O_LARGEFILE */
-#define afs_stat	stat
-#define afs_fstat	fstat
-#define afs_open	open
-#endif /* !O_LARGEFILE */
+#define afs_putint32(p, v)  *p++ = v>>24, *p++ = v>>16, *p++ = v>>8, *p++ = v
+#define afs_putshort(p, v) *p++ = v>>8, *p++ = v
 
 int VolumeChanged;		/* needed by physio - leave alone */
 int verbose = 0;
 
 /* Forward Declarations */
-void HandleVolume(struct DiskPartition64 *partP, char *name, char *filename, int fromtime);
-Volume *AttachVolume(struct DiskPartition64 *dp, char *volname,
-		     struct VolumeHeader *header);
+static void HandleVolume(struct DiskPartition64 *partP, char *name,
+			 char *filename, int fromtime);
+static Volume *AttachVolume(struct DiskPartition64 *dp, char *volname,
+			    struct VolumeHeader *header);
 static void DoMyVolDump(Volume * vp, struct DiskPartition64 *dp,
 			char *dumpfile, int fromtime);
 
@@ -106,7 +69,7 @@ static void DoMyVolDump(Volume * vp, struct DiskPartition64 *dp,
 char name[VMAXPATHLEN];
 
 
-int
+static int
 ReadHdr1(IHandle_t * ih, char *to, int size, u_int magic, u_int version)
 {
     int code;
@@ -119,7 +82,7 @@ ReadHdr1(IHandle_t * ih, char *to, int size, u_int magic, u_int version)
 }
 
 
-Volume *
+static Volume *
 AttachVolume(struct DiskPartition64 * dp, char *volname,
 	     struct VolumeHeader * header)
 {
@@ -141,7 +104,7 @@ AttachVolume(struct DiskPartition64 * dp, char *volname,
     vp->shuttingDown = 0;
     vp->goingOffline = 0;
     vp->nUsers = 1;
-    vp->header = (struct volHeader *)calloc(1, sizeof(*vp->header));
+    vp->header = calloc(1, sizeof(*vp->header));
     ec = ReadHdr1(V_diskDataHandle(vp), (char *)&V_disk(vp),
 		  sizeof(V_disk(vp)), VOLUMEINFOMAGIC, VOLUMEINFOVERSION);
     if (!ec) {
@@ -243,12 +206,12 @@ handleit(struct cmd_syndesc *as, void *arock)
 	exit(1);
     }
 
-    (void)afs_snprintf(name1, sizeof name1, VFORMAT, (unsigned long)volumeId);
+    snprintf(name1, sizeof name1, VFORMAT, (unsigned long)volumeId);
     HandleVolume(partP, name1, fileName, fromtime);
     return 0;
 }
 
-void
+static void
 HandleVolume(struct DiskPartition64 *dp, char *name, char *filename, int fromtime)
 {
     struct VolumeHeader header;
@@ -260,8 +223,8 @@ HandleVolume(struct DiskPartition64 *dp, char *name, char *filename, int fromtim
 
     afs_int32 n;
 
-    (void)afs_snprintf(headerName, sizeof headerName, "%s" OS_DIRSEP "%s",
-		       VPartitionPath(dp), name);
+    snprintf(headerName, sizeof headerName, "%s" OS_DIRSEP "%s",
+	     VPartitionPath(dp), name);
     if ((fd = afs_open(headerName, O_RDONLY)) == -1
 	|| afs_fstat(fd, &status) == -1) {
 	fprintf(stderr, "Cannot read volume header %s\n", name);
@@ -291,6 +254,8 @@ HandleVolume(struct DiskPartition64 *dp, char *name, char *filename, int fromtim
     }
 
     DoMyVolDump(vp, dp, filename, fromtime);
+
+    free(vp);
 }
 
 
@@ -307,7 +272,7 @@ main(int argc, char **argv)
 	                "trying to continue anyway\n");
     }
 
-    ts = cmd_CreateSyntax(NULL, handleit, NULL,
+    ts = cmd_CreateSyntax(NULL, handleit, NULL, 0,
 			  "Dump a volume to a 'vos dump' format file without using volserver");
     cmd_AddParm(ts, "-part", CMD_LIST, CMD_OPTIONAL, "AFS partition name");
     cmd_AddParm(ts, "-volumeid", CMD_LIST, CMD_OPTIONAL, "Volume id");
@@ -330,8 +295,8 @@ DumpDouble(int dumpfd, char tag, afs_uint32 value1,
     char tbuffer[9];
     byte *p = (unsigned char *)tbuffer;
     *p++ = tag;
-    putint32(p, value1);
-    putint32(p, value2);
+    afs_putint32(p, value1);
+    afs_putint32(p, value2);
 
     res = write(dumpfd, tbuffer, 9);
     return ((res == 9) ? 0 : VOLSERDUMPERROR);
@@ -343,7 +308,7 @@ DumpInt32(int dumpfd, char tag, afs_uint32 value)
     char tbuffer[5];
     byte *p = (unsigned char *)tbuffer;
     *p++ = tag;
-    putint32(p, value);
+    afs_putint32(p, value);
     return ((write(dumpfd, tbuffer, 5) == 5) ? 0 : VOLSERDUMPERROR);
 }
 
@@ -372,7 +337,7 @@ DumpArrayInt32(int dumpfd, char tag, afs_uint32 * array,
     int code = 0;
     byte *p = (unsigned char *)tbuffer;
     *p++ = tag;
-    putshort(p, nelem);
+    afs_putshort(p, nelem);
     code = write(dumpfd, tbuffer, 3);
     if (code != 3)
 	return VOLSERDUMPERROR;
@@ -380,7 +345,7 @@ DumpArrayInt32(int dumpfd, char tag, afs_uint32 * array,
 	p = (unsigned char *)tbuffer;
 	v = *array++;		/*this was register */
 
-	putint32(p, v);
+	afs_putint32(p, v);
 	code = write(dumpfd, tbuffer, 4);
 	if (code != 4)
 	    return VOLSERDUMPERROR;
@@ -583,6 +548,8 @@ DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v
     afs_ino_str_t stmp;
 #ifndef AFS_NT40_ENV
     struct afs_stat status;
+#else
+    LARGE_INTEGER fileSize;
 #endif
     afs_sfsize_t size;
 #ifdef	AFS_AIX_ENV
@@ -594,7 +561,11 @@ DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v
 	fprintf(stderr, "dumping file for vnode %d\n", vnode);
 
 #ifdef AFS_NT40_ENV
-    howBig = _filelength(handleP->fd_fd);
+    if (!GetFileSizeEx(handleP->fd_fd, &fileSize)) {
+        Log("DumpFile: GetFileSizeEx returned error code %d on descriptor %d\n", GetLastError(), handleP->fd_fd);
+	    return VOLSERDUMPERROR;
+    }
+    howBig = fileSize.QuadPart;
     howMany = 4096;
 
 #else
@@ -631,7 +602,7 @@ DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v
 	return VOLSERDUMPERROR;
     }
 
-    p = (unsigned char *)malloc(howMany);
+    p = malloc(howMany);
     if (!p) {
 	fprintf(stderr, "out of memory!\n");
 	return VOLSERDUMPERROR;
@@ -704,7 +675,7 @@ DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v
 
 
 static int
-DumpVnode(int dumpfd, struct VnodeDiskObject *v, int volid, int vnodeNumber,
+DumpVnode(int dumpfd, struct VnodeDiskObject *v, VolumeId volid, int vnodeNumber,
 	  int dumpEverything, struct Volume *vp)
 {
     int code = 0;
@@ -744,8 +715,8 @@ DumpVnode(int dumpfd, struct VnodeDiskObject *v, int volid, int vnodeNumber,
     if (v->type == vDirectory) {
 	code = acl_HtonACL(VVnodeDiskACL(v));
 	if (code) {
-	    fprintf(stderr, "Skipping invalid acl in vnode %u (volume %i)\n",
-		    vnodeNumber, volid);
+	    fprintf(stderr, "Skipping invalid acl in vnode %u (volume %"AFS_VOLID_FMT")\n",
+			vnodeNumber, afs_printable_VolumeId_lu(volid));
 	}
 	if (!code)
 	    code =
@@ -758,9 +729,10 @@ DumpVnode(int dumpfd, struct VnodeDiskObject *v, int volid, int vnodeNumber,
 	fdP = IH_OPEN(ihP);
 	if (fdP == NULL) {
 	    fprintf(stderr,
-		    "Unable to open inode %s for vnode %u (volume %i); not dumped, error %d\n",
-		    PrintInode(stmp, VNDISK_GET_INO(v)), vnodeNumber, volid,
-		    errno);
+		    "Unable to open inode %s for vnode %u "
+		    "(volume %"AFS_VOLID_FMT"); not dumped, error %d\n",
+		    PrintInode(stmp, VNDISK_GET_INO(v)), vnodeNumber,
+		    afs_printable_VolumeId_lu(volid), errno);
 	}
 	else
 	{

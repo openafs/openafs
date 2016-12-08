@@ -26,7 +26,6 @@
 #endif
 
 #define RX_ENABLE_LOCKS         1
-#define AFS_GLOBAL_RXLOCK_KERNEL
 
 typedef int afs_kcondvar_t;
 
@@ -57,8 +56,7 @@ typedef struct {
 	(a)->owner = 0; \
     } while(0);
 
-#undef MUTEX_ISMINE
-#define MUTEX_ISMINE(a) (((afs_kmutex_t *)(a))->owner == curproc)
+#define MUTEX_ASSERT(a) osi_Assert(((afs_kmutex_t *)(a))->owner == curproc)
 
 #elif defined(AFS_FBSD70_ENV) /* dunno about 6.x */
 
@@ -95,9 +93,8 @@ typedef struct mtx afs_kmutex_t;
 	mtx_unlock((a)); \
     } while(0);
 
-#undef MUTEX_ISMINE
-#define MUTEX_ISMINE(a)				\
-    ( mtx_owned((a)) )
+#define MUTEX_ASSERT(a)				\
+    osi_Assert(mtx_owned((a)))
 
 #else
 
@@ -133,14 +130,8 @@ typedef struct {
 	lockmgr(&(a)->lock, LK_RELEASE, 0, curthread); \
     } while(0);
 
-#undef MUTEX_ISMINE
-#define MUTEX_ISMINE(a) (((afs_kmutex_t *)(a))->owner == curthread)
+#define MUTEX_ASSERT(a) osi_Assert(((afs_kmutex_t *)(a))->owner == curthread)
 #endif
-
-
-#undef osirx_AssertMine
-extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
-
 
 /*
  * Condition variables

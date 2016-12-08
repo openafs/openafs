@@ -4,7 +4,7 @@
 
   <para>This Appendix provides a complete listing of the AFS events that can be audited on AIX file server machines. See Chapter
   <link linkend="HDRWQ323">Monitoring and Auditing AFS Performance</link> for instructions on auditing AFS events on AIX file server
-  machines. <anchor id="IDX8189" /></para>
+  machines.</para>
 
   <sect1 id="HDRWQ621">
     <title>Introduction</title>

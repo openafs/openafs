@@ -596,7 +596,7 @@ xfs_iincdec64(struct vfs *vfsp, ino_t inode, int inode_p1, int amount)
 		    /* Try to remove the directory if this is a volume
 		     * special file. It's ok to fail.
 		     */
-		    AFS_VOP_LOOKUP(dvp, "..", &ddvp, (struct pathname *)NULL,
+		    AFS_VOP_LOOKUP(dvp, "..", &ddvp, NULL,
 				   0, OSI_GET_CURRENT_RDIR(),
 				   OSI_GET_CURRENT_CRED(), code2);
 		    if (!code2) {

@@ -10,41 +10,29 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+#include <afs/opr.h>
 
 #include <ctype.h>
-#include <errno.h>
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <WINNT/afsevent.h>
-#else
-#include <sys/socket.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#endif
-#include <string.h>
 #include <math.h>
-#ifdef HAVE_FCNTL_H
-#include <fcntl.h>
+
+#ifdef AFS_NT40_ENV
+#include <WINNT/afsevent.h>
 #endif
-#ifdef HAVE_SYS_STAT_H
-#include <sys/stat.h>
-#endif
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
+
 #include <rx/rx.h>
 #include <rx/xdr.h>
 #include <afs/rxgen_consts.h>
 #include <afs/cmd.h>
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
+#include <afs/afsutil.h>
+#include <afs/com_err.h>
+
 #include "ptclient.h"
 #include "pterror.h"
 #include "ptuser.h"
 #include "ptprototypes.h"
-#include <afs/afsutil.h>
-#include <afs/com_err.h>
 
 static char *whoami = "testpr";
 static struct afsconf_dir *conf;	/* cell info, set by MyBeforeProc */
@@ -99,8 +87,6 @@ ListUsedIds(struct cmd_syndesc *as, void *arock)
 	}
     }
     range = abs(startId - maxId);
-    if (range < 0)
-	range = -range;
     range++;			/* number that can be printed */
     if (range < number) {
 	fprintf(stderr, "Only %d ids to be checked.\n", range);
@@ -110,7 +96,7 @@ ListUsedIds(struct cmd_syndesc *as, void *arock)
     printf("Checking for %d %sused ids starting at %d.\n", number,
 	   (unused ? "un" : ""), startId);
 #define NUM 100
-    lids.idlist_val = (afs_int32 *) malloc(sizeof(afs_int32) * NUM);
+    lids.idlist_val = malloc(sizeof(afs_int32) * NUM);
     lnames.namelist_len = 0;
     lnames.namelist_val = 0;
     while (number) {
@@ -501,22 +487,17 @@ TestManyMembers(struct cmd_syndesc *as, void *arock)
 
     srandom(seed);
 
-    users = (afs_int32 *) malloc(number * sizeof(afs_int32));
-    groups = (afs_int32 *) malloc(number * sizeof(afs_int32));
-    filled = (char *)malloc(number * sizeof(char));
-    cleaned = (char *)malloc(number * sizeof(char));
-    population = (char *)malloc(sqr(number) * sizeof(char));
+    users = calloc(number, sizeof(afs_int32));
+    groups = calloc(number, sizeof(afs_int32));
+    filled = calloc(number, sizeof(char));
+    cleaned = calloc(number, sizeof(char));
+    population = calloc(sqr(number), sizeof(char));
 
     nFilled = 0;
-    memset(filled, 0, number);
     nCleaned = 0;
-    memset(cleaned, 0, number);
-    memset(population, 0, sqr(number));
-    memset(users, 0, number * sizeof(afs_int32));
-    memset(groups, 0, number * sizeof(afs_int32));
 
     ownerUser = lastGroup = 0;
-    groupOwners = (afs_int32 *) malloc(number * sizeof(afs_int32));
+    groupOwners = malloc(number * sizeof(afs_int32));
     nUsers = nGroups = nAdds = nRems = nUDels = nGDels = 0;
 
     while ((nFilled < number) || (nCleaned < number)) {
@@ -575,7 +556,7 @@ TestManyMembers(struct cmd_syndesc *as, void *arock)
 
     /* check the membership list of all users for correctness */
     printf("Starting check of memberships\n");
-    glist = (afs_int32 *) malloc(number * sizeof(afs_int32));
+    glist = malloc(number * sizeof(afs_int32));
     for (u = 0; u < number; u++) {
 	afs_int32 ui = users[u];
 	if (ui) {
@@ -1005,7 +986,7 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 	}
 
 	strcompose(tmp_conf_file, 128, tmp_conf_dir, "/",
-		   AFSDIR_CELLSERVDB_FILE, NULL);
+		   AFSDIR_CELLSERVDB_FILE, (char *)NULL);
 	f = fopen(tmp_conf_file, "w");
 	if (f == 0) {
 	  cantcreate:
@@ -1028,7 +1009,7 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 	}
 
 	strcompose(tmp_cell_file, 128, tmp_conf_dir, "/",
-		   AFSDIR_THISCELL_FILE, NULL);
+		   AFSDIR_THISCELL_FILE, (char *)NULL);
 	f = fopen(tmp_cell_file, "w");
 	if (f == 0)
 	    goto cantcreate;
@@ -1037,7 +1018,7 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 	    goto cantclose;
 
 	strcompose(tmp_noauth_file, 128, tmp_conf_dir, "/",
-		   AFSDIR_NOAUTH_FILE, NULL);
+		   AFSDIR_NOAUTH_FILE, (char *)NULL);
 	if (noAuth) {
 	    code = creat(tmp_noauth_file, 0777);
 	    if (code && (errno != EEXIST))
@@ -1104,7 +1085,7 @@ main(int argc, char *argv[])
     cmd_SetBeforeProc(MyBeforeProc, NULL);
     cmd_SetAfterProc(MyAfterProc, NULL);
 
-    ts = cmd_CreateSyntax("usedIds", ListUsedIds, NULL,
+    ts = cmd_CreateSyntax("usedIds", ListUsedIds, NULL, 0,
 			  "Find used (or unused) user (or group) ids");
     cmd_AddParm(ts, "-startId", CMD_SINGLE, CMD_OPTIONAL,
 		"id to start checking");
@@ -1113,10 +1094,10 @@ main(int argc, char *argv[])
     cmd_AddParm(ts, "-unused", CMD_FLAG, CMD_OPTIONAL, "print unused ids");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("initcmd", TestPrServ, NULL, "test the prserver");
+    ts = cmd_CreateSyntax("initcmd", TestPrServ, NULL, 0, "test the prserver");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("testmanymembers", TestManyMembers, NULL,
+    ts = cmd_CreateSyntax("testmanymembers", TestManyMembers, NULL, 0,
 			  "test creating users and groups w/ many members");
     cmd_AddParm(ts, "-number", CMD_SINGLE, 0,
 		"number of users/groups to create");

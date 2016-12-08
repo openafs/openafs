@@ -11,17 +11,15 @@
 #define __AFS_SYSINCLUDESH__ 1
 
 #include  <stdio.h>
+#include  <afs/opr.h>
+
 #if !defined(AFS_USR_DARWIN_ENV) && !defined(AFS_USR_FBSD_ENV) && !defined(AFS_USR_DFBSD_ENV) /* must be included after KERNEL undef'd */
 #include  <errno.h>
 #endif
 #include  <stdlib.h>
 #include  <string.h>
 #include  <limits.h>
-#ifdef AFS_PTHREAD_ENV
 #include  <assert.h>
-#else
-#include <afs/afs_assert.h>
-#endif
 #include  <stdarg.h>
 
 #if !defined(AFS_USR_DARWIN_ENV) && !defined(AFS_USR_FBSD_ENV) && !defined(AFS_USR_DFBSD_ENV) /* must be included after KERNEL undef'd */
@@ -175,15 +173,7 @@ typedef unsigned int fsblkcnt_t;
 
 #include  <sys/stat.h>		/* afs_usrops.h uses struct stat in prototypes */
 
-#ifdef NETSCAPE_NSAPI
-
-#include  <nsapi.h>
-
-#else /* NETSCAPE_NSAPI */
-
 #include  <pthread.h>
-
-#endif /* NETSCAPE_NSAPI */
 
 #ifdef AFS_USR_UNDEF_KERNEL_ENV
 #undef AFS_USR_UNDEF_KERNEL_ENV
@@ -206,9 +196,8 @@ typedef unsigned int fsblkcnt_t;
 
 #ifdef UKERNEL
 
-#ifdef AFS_USR_SGI_ENV
 #undef socket
-#endif /* AFS_USR_SGI_ENV */
+#undef flock
 
 #if defined(AFS_USR_DARWIN_ENV) || defined(AFS_USR_FBSD_ENV)
 #undef if_mtu
@@ -236,6 +225,7 @@ typedef unsigned int fsblkcnt_t;
 #define ifaddr                  usr_ifaddr
 #define ifnet                   usr_ifnet
 #define in_ifaddr		usr_in_ifaddr
+#undef socket
 #define socket			usr_socket
 #define crget			usr_crget
 #define crcopy			usr_crcopy
@@ -838,95 +828,18 @@ enum usr_uio_rw { USR_UIO_READ, USR_UIO_WRITE };
 #endif
 #define NBPG			4096
 
-#define panic(S)		do{fprintf(stderr, "%s", S);assert(0);}while(0)
+static_inline void panic(const char *format, ...) AFS_NORETURN;
+static_inline void panic(const char *format, ...)
+{
+    va_list ap;
+    va_start(ap, format);
+    vfprintf(stderr, format, ap);
+    va_end(ap);
+    assert(0);
+};
 #define abort()			assert(0)
 #define usr_assert(A)		assert(A)
 
-#ifdef NETSCAPE_NSAPI
-
-/*
- * All CONDVARs created with the same CRITICAL end up being the
- * same CONDVAR, not a new one. If we want to use more than
- * one usr_cond_t with the same usr_mutex_t, then we need a CRITICAL
- * for each CONDVAR, otherwise we cannot know which thread we are
- * waking when we do the signal.
- */
-typedef struct {
-    int waiters;
-    CRITICAL lock;
-    CONDVAR cond;
-} usr_cond_t;
-
-#define usr_mutex_t		CRITICAL
-#define usr_thread_t		SYS_THREAD
-#define usr_key_t		int
-
-#define usr_mutex_init(A)	(*(A)=crit_init(), 0)
-#define usr_mutex_destroy(A)	(crit_terminate(*(A)), 0)
-#define usr_mutex_lock(A)	crit_enter(*(A))
-#define usr_mutex_trylock(A)	(crit_enter(*(A)),1)
-#define usr_mutex_unlock(A)	crit_exit(*(A))
-
-#define usr_cond_init(A)	\
-     ((A)->waiters = 0,		\
-      (A)->lock = crit_init(),	\
-      (A)->cond = condvar_init((A)->lock), 0)
-
-#define usr_cond_destroy(A)	\
-    (condvar_terminate((A)->cond), \
-     crit_terminate((A)->lock), 0)
-
-#define usr_cond_signal(A)	\
-{				\
-    crit_enter((A)->lock);	\
-    if ((A)->waiters != 0) {	\
-      condvar_notify((A)->cond);\
-      (A)->waiters -= 1;	\
-    }				\
-    crit_exit((A)->lock);	\
-}
-
-#define usr_cond_broadcast(A)	\
-{				\
-   crit_enter((A)->lock);	\
-   while ((A)->waiters != 0) {	\
-     condvar_notify((A)->cond);	\
-     (A)->waiters -= 1;		\
-   }				\
-   crit_exit((A)->lock);	\
-}
-
-#define usr_cond_wait(A,B)	\
-    (crit_enter((A)->lock),	\
-     crit_exit(*(B)),		\
-     (A)->waiters += 1,		\
-     condvar_wait((A)->cond),	\
-     crit_exit((A)->lock),	\
-     crit_enter(*(B)), 0)
-
-#define usr_thread_create(A,B,C) \
-    ((*(A)=systhread_start(SYSTHREAD_DEFAULT_PRIORITY, \
-			   0,B,C))==SYS_THREAD_ERROR)
-#define usr_thread_detach(A)	0
-#define usr_keycreate(A,B)	(*(A)=systhread_newkey(),0)
-#define usr_setspecific(A,B)	(systhread_setdata(A,B),0)
-#define usr_getspecific(A,B)	(*(B)=systhread_getdata(A),0)
-#define usr_thread_self()	systhread_current()
-#ifdef AFS_USR_SUN5_ENV
-#define usr_thread_sleep(A) \
-    poll(0, 0, (A)->tv_sec*1000+(A)->tv_nsec/1000000)
-#else /* AFS_USR_SUN5_ENV */
-#define usr_thread_sleep(A) \
-    systhread_sleep((A)->tv_sec*1000+(A)->tv_nsec/1000000)
-#endif /* AFS_USR_SUN5_ENV */
-
-#define uprintf			printf
-
-#define usr_getpid()		(int)(usr_thread_self())
-
-#define ISAFS_GLOCK() (usr_thread_self() ==  afs_global_owner)
-
-#else /* NETSCAPE_NSAPI */
 
 /*
  * Mutex and condition variable used to implement sleep
@@ -939,29 +852,29 @@ extern pthread_cond_t usr_sleep_cond;
 #define usr_thread_t		pthread_t
 #define usr_key_t		pthread_key_t
 
-#define usr_mutex_init(A)	assert(pthread_mutex_init(A,NULL) == 0)
-#define usr_mutex_destroy(A)	assert(pthread_mutex_destroy(A) == 0)
-#define usr_mutex_lock(A)	assert(pthread_mutex_lock(A) == 0)
+#define usr_mutex_init(A)	opr_Verify(pthread_mutex_init(A,NULL) == 0)
+#define usr_mutex_destroy(A)	opr_Verify(pthread_mutex_destroy(A) == 0)
+#define usr_mutex_lock(A)	opr_Verify(pthread_mutex_lock(A) == 0)
 #define usr_mutex_trylock(A)	((pthread_mutex_trylock(A)==0)?1:0)
-#define usr_mutex_unlock(A)	assert(pthread_mutex_unlock(A) == 0)
-#define usr_cond_init(A)	assert(pthread_cond_init(A,NULL) == 0)
-#define usr_cond_destroy(A)	assert(pthread_cond_destroy(A) == 0)
-#define usr_cond_signal(A)	assert(pthread_cond_signal(A) == 0)
-#define usr_cond_broadcast(A)	assert(pthread_cond_broadcast(A) == 0)
+#define usr_mutex_unlock(A)	opr_Verify(pthread_mutex_unlock(A) == 0)
+#define usr_cond_init(A)	opr_Verify(pthread_cond_init(A,NULL) == 0)
+#define usr_cond_destroy(A)	opr_Verify(pthread_cond_destroy(A) == 0)
+#define usr_cond_signal(A)	opr_Verify(pthread_cond_signal(A) == 0)
+#define usr_cond_broadcast(A)	opr_Verify(pthread_cond_broadcast(A) == 0)
 #define usr_cond_wait(A,B)	pthread_cond_wait(A,B)
 #define usr_cond_timedwait(A,B,C)  pthread_cond_timedwait(A,B,C)
 
 #define usr_thread_create(A,B,C) \
     do { \
 	pthread_attr_t attr; \
-	assert(pthread_attr_init(&attr) == 0); \
-	assert(pthread_attr_setstacksize(&attr, 122880) == 0);	   \
-	assert(pthread_create((A), &attr, (B), (void *)(C)) == 0); \
-	assert(pthread_attr_destroy(&attr) == 0); \
+	opr_Verify(pthread_attr_init(&attr) == 0); \
+	opr_Verify(pthread_attr_setstacksize(&attr, 122880) == 0); \
+	opr_Verify(pthread_create((A), &attr, (B), (void *)(C)) == 0); \
+	opr_Verify(pthread_attr_destroy(&attr) == 0); \
     } while(0)
 #define usr_thread_join(A,B)	pthread_join(A, B)
 #define usr_thread_detach(A)	pthread_detach(A)
-#define usr_keycreate(A,B)	assert(pthread_key_create(A,B) == 0)
+#define usr_keycreate(A,B)	opr_Verify(pthread_key_create(A,B) == 0)
 #define usr_setspecific(A,B)	pthread_setspecific(A,B)
 #define usr_getspecific(A,B)	(*(B)=pthread_getspecific(A),0)
 #define usr_thread_self()	pthread_self()
@@ -977,9 +890,9 @@ extern pthread_cond_t usr_sleep_cond;
 	_sleep_ts.tv_sec += 1;						   \
 	_sleep_ts.tv_nsec -= 1000000000;				   \
     }									   \
-    assert(pthread_mutex_lock(&usr_sleep_mutex) == 0);			   \
+    opr_Verify(pthread_mutex_lock(&usr_sleep_mutex) == 0);			   \
     pthread_cond_timedwait(&usr_sleep_cond, &usr_sleep_mutex, &_sleep_ts); \
-    assert(pthread_mutex_unlock(&usr_sleep_mutex) == 0);		   \
+    opr_Verify(pthread_mutex_unlock(&usr_sleep_mutex) == 0);		   \
 }
 
 #define uprintf			printf
@@ -989,8 +902,6 @@ extern pthread_cond_t usr_sleep_cond;
 #undef ISAFS_GLOCK
 #endif
 #define ISAFS_GLOCK() (usr_thread_self() == afs_global_owner)
-
-#endif /* NETSCAPE_NSAPI */
 
 #define copyin(A,B,C)		(memcpy((void *)B,(void *)A,C), 0)
 #define copyout(A,B,C)		(memcpy((void *)B,(void *)A,C), 0)
@@ -1246,7 +1157,7 @@ struct usr_vnodeops {
     int (*vn_rmdir) (struct vcache *adp, char *, afs_ucred_t *);
     int (*vn_readdir) (struct vcache *avc, struct uio *, afs_ucred_t *);
     int (*vn_symlink) (struct vcache *adp, char *, struct vattr *, char *,
-		       struct vcache **vpp, afs_ucred_t *);
+		       struct vcache **pvc, afs_ucred_t *);
     int (*vn_readlink) (struct vcache *avc, struct uio *, afs_ucred_t *);
     int (*vn_fsync) (struct vcache *avc, afs_ucred_t *);
     int (*vn_inactive) (struct vcache *avc, afs_ucred_t *acred);

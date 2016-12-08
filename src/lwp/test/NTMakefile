@@ -10,7 +10,7 @@ RELDIR=lwp\test
 !INCLUDE ..\..\config\NTMakefile.version
 
 LIBS =  $(DESTDIR)\lib\afslwp.lib \
-	$(DESTDIR)lib\afs\afsutil.lib
+	$(DESTDIR)\lib\afs\afsutil.lib
 
 
 # build testkey.exe
@@ -31,4 +31,4 @@ clean::
 
 
 mkdir:
-	
+

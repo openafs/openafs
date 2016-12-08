@@ -10,40 +10,14 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-/* missing type from C language */
-
-#include <errno.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#undef	_NONSTD_TYPES
-#endif
-#include <stdio.h>
-#include <unistd.h>
 #include <afs/afs_args.h>
-#include <sys/param.h>
-#ifdef	AFS_SUN5_ENV
-#include <fcntl.h>
-#endif
-#include <sys/file.h>
-#include <sys/stat.h>
-#include <dirent.h>
-#include <sys/time.h>
 #define VIRTUE
 #define VICE
-#include <sys/ioctl.h>
 #include <afs/vice.h>
 #undef VIRTUE
 #undef VICE
-#include <sys/ioctl.h>
-#include <netdb.h>
-#ifdef HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#endif
-
-#include <string.h>
-#include <stdlib.h>
-
 #include <afs/venus.h>
 #include <afs/sys_prototypes.h>
 #include <afs/afsutil.h>
@@ -210,8 +184,10 @@ MakeParent(char *file, afs_int32 owner)
 	    fflush(stdout);
 	}
 
-	mkdir(parent, 0777);
-	chown(parent, owner, -1);
+	if (mkdir(parent, 0777))
+	    return (0);
+	if (chown(parent, owner, -1))
+	    return (0);
     }
     return (1);
 }				/*MakeParent */
@@ -322,6 +298,10 @@ Copy(char *file1, char *file2, short recursive, int level)
 
 	    /* Close the files */
 	    code = close(f1);
+	    if (code < 0) {
+		perror("close ");
+		rcode = 1;
+	    }
 	    code = close(f2);
 	    if (code < 0) {
 		perror("close ");

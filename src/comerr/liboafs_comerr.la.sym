@@ -1,0 +1,10 @@
+afs_add_to_error_table
+afs_com_err
+afs_com_err_va
+afs_com_right
+afs_com_right_r
+afs_error_message
+afs_error_message_localize
+afs_error_table_name
+afs_reset_com_err_hook
+afs_set_com_err_hook

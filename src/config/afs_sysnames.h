@@ -82,6 +82,9 @@
 #define SYS_NAME_ID_x86_darwin_150       529
 #define SYS_NAME_ID_amd64_darwin_150     530
 #define SYS_NAME_ID_arm_darwin_150       531
+#define SYS_NAME_ID_x86_darwin_160       532
+#define SYS_NAME_ID_amd64_darwin_160     533
+#define SYS_NAME_ID_arm_darwin_160       534
 
 #define SYS_NAME_ID_next_mach20		 601
 #define SYS_NAME_ID_next_mach30		 602
@@ -173,6 +176,7 @@
 #define SYS_NAME_ID_sparc_linux2	1700
 #define SYS_NAME_ID_sparc_linux22	1701
 #define SYS_NAME_ID_sparc_linux24	1702
+#define SYS_NAME_ID_sparc_linux26	1703
 
 #define SYS_NAME_ID_sparc64_linux2	1800
 #define SYS_NAME_ID_sparc64_linux22	1801
@@ -272,6 +276,8 @@
 #define SYS_NAME_ID_macppc_nbsd50       2541
 #define SYS_NAME_ID_amd64_nbsd60        2542
 #define SYS_NAME_ID_i386_nbsd60         2543
+#define SYS_NAME_ID_amd64_nbsd70        2544
+#define SYS_NAME_ID_i386_nbsd70         2545
 
 #define SYS_NAME_ID_i386_obsd31		2600
 #define SYS_NAME_ID_i386_obsd32		2601
@@ -370,29 +376,10 @@
 #define SYS_NAME_ID_amd64_obsd53        4022
 #define SYS_NAME_ID_amd64_obsd54        4023
 
-/*
- * Placeholder to keep system-wide standard flags since this file is included by all
- * files (i.e in afs/param.h)
- */
-#ifdef	notdef
-/* Should be enabled by src sites that are compiling afs in a kerberos environment
- * (i.e. use their headers and libs) and want to use the realm-related kerberos code
- */
-#define	AFS_ATHENA_STDENV		1
-#endif
-#ifdef	AFS_ATHENA_STDENV
-/* So that they don't get our own version of the kerb-related function  in libutil.a */
-#define	afs_krb_get_lrealm(r,n)	krb_get_lrealm(r,n)
-#define	AFS_REALM_SZ		REALM_SZ
-#endif
 
-/* Should be enabled by src sites that are compiling afs without the kerb headers/libs
- * but want to use the kerberos realm-related code
- */
-#define	AFS_KERBREALM_ENV	1
-#ifdef	AFS_KERBREALM_ENV
-#define	AFS_REALM_SZ		64
-#endif
+#define	AFS_REALM_SZ	64
+
 /* Specifies the number of equivalent local realm names */
 #define AFS_NUM_LREALMS 4
+
 #endif /* __AFS_SYSNAMES_INCL_ENV_ */

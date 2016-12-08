@@ -1,0 +1,80 @@
+=head1 NAME
+
+fs_nukenfscreds - Discard NFS translator tokens
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<fs nukenfscreds> S<<< B<-addr> <I<host>> >>>
+    [B<-help>]
+
+B<fs nu> S<<< B<-a> <I<host>> >>>
+    [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+When using the NFS translator, it is possible for clients to supply AFS tokens
+that the NFS translator will use for NFS-originating accesses from a specific
+host and uid. The B<fs nukenfscreds> command, when run on the translator host,
+will destroy all tokens for all uids for a specific NFS client host. After this
+command is run successfully, all accesses for all users from that host will be
+unauthenticated until they provide AFS tokens again.
+
+This command can be useful in the following scenario. Say you have an NFS
+client machine accessing a translator, and the machine is decommissioned, and a
+new machine is brought up with the same IP. If there are credentials associated
+with certain uids from that host, it is possible that accesses from the new
+host will use the same credentials from the old host, even if they haven't
+authenticated. With the B<fs_nukenfscreds> command, you can destroy all
+credentials associated with the machine when it is decommissioned, ensuring
+that that situation cannot occur.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-addr> <I<host>>
+
+Specifies which host to invalidate tokens for. Specify either a resolvable host
+name or an IP address.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+If the specified tokens were destroyed successfully, no output is generated.
+
+=head1 EXAMPLES
+
+The following example destroys credentials from all PAGs for the NFS translator
+client host 198.51.100.20:
+
+   % fs nukenfscreds -addr 198.51.100.20
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be logged in as the local superuser C<root>.
+
+=head1 SEE ALSO
+
+L<fs_exportafs(1)>,
+L<klog(1)>,
+L<knfs(1)>
+
+=head1 COPYRIGHT
+
+Copyright 2013 Sine Nomine Associates
+
+This documentation is covered by the BSD License as written in the
+doc/LICENSE file. This man page was written by Andrew Deason for
+OpenAFS.

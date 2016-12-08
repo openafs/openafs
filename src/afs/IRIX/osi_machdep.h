@@ -38,10 +38,6 @@ typedef struct proc afs_proc_t;
 
 #define osi_vnhold(avc, r)  do { VN_HOLD(AFSTOV(avc)); } while(0)
 
-#undef afs_osi_Alloc_NoSleep
-extern void *afs_osi_Alloc_NoSleep(size_t size);
-
-
 #ifdef AFS_SGI64_ENV
 #include <sys/flock.h>
 extern flid_t osi_flid;

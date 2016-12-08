@@ -10,15 +10,14 @@
 #ifndef	_AFSUTIL_PROTOTYPES_H
 #define _AFSUTIL_PROTOTYPES_H
 
+#if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
+# include <pthread.h>
+#endif
+
 /* afs_atomlist.c */
 
 
 /* afs_lhash.c */
-
-
-/* assert.c */
-extern void AssertionFailed(char *file, int line);
-
 
 /* base32.c */
 extern char *int_to_base32(b32_string_t s, int a);
@@ -27,27 +26,6 @@ extern int base32_to_int(char *s);
 /* base64.c */
 extern char *int_to_base64(b64_string_t s, int a);
 extern int base64_to_int(char *s);
-
-/* casestrcpy.c */
-extern char *lcstring(char *d, char *s, int n);
-extern char *ucstring(char *d, char *s, int n);
-extern char *strcompose(char *buf, size_t len, ...);
-extern void stolower(char *s);
-extern void stoupper(char *s);
-
-/* config_file.c && krb5_locl.h */
-typedef struct afs_config_section_struct afs_config_section;
-extern int afs_config_parse_file_multi(const char *, afs_config_section **);
-extern int afs_config_parse_file(const char *, afs_config_section **);
-extern int afs_config_file_free(afs_config_section *s);
-extern const char* afs_config_get_string(const afs_config_section *, ...);
-extern int afs_config_get_bool(const afs_config_section *, ...);
-extern int afs_config_get_int(const afs_config_section *c, ...);
-
-/* daemon.c */
-#ifndef HAVE_DAEMON
-int daemon(int nochdir, int noclose);
-#endif
 
 /* dirpath.c */
 extern unsigned int initAFSDirPath(void);
@@ -65,32 +43,21 @@ extern char* afs_exec_alt(int argc, char **argv, const char *prefix,
                           const char *suffix);
 
 /* fileutil.c */
-extern int renamefile(const char *oldname, const char *newname);
 extern void FilepathNormalizeEx(char *path, int slashType);
 extern void FilepathNormalize(char *path);
 
 /* flipbase64.c */
 extern char *int_to_base32(b32_string_t s, int a);
 extern int base32_to_int(char *s);
-#if defined(AFS_NAMEI_ENV) && !defined(AFS_NT40_ENV)
+#if !defined(AFS_NT40_ENV)
 /* base 64 converters for namei interface. Flip bits to differences are
  * early in name.
  */
-#ifdef AFS_64BIT_ENV
 #define int32_to_flipbase64(S, A) int64_to_flipbase64(S, (afs_uint64)(A))
 extern char *int64_to_flipbase64(lb64_string_t s, afs_uint64 a);
 extern afs_int64 flipbase64_to_int64(char *s);
-#else
-#define int32_to_flipbase64(S, A) int64_to_flipbase64(S, (u_int64_t)(A))
-extern char *int64_to_flipbase64(lb64_string_t s, u_int64_t a);
-extern int64_t flipbase64_to_int64(char *s);
-#endif
 #endif
 
-/* get_krbrlm.c */
-extern int afs_krb_get_lrealm(char *r, int n);
-extern int afs_krb_exclusion(char *name);
-extern int afs_is_foreign_ticket_name(char *tname, char *tinst, char * tcell, char *localrealm);
 /* hostparse.c */
 extern struct hostent *hostutil_GetHostByName(char *ahost);
 extern char *hostutil_GetNameByINet(afs_uint32 addr);
@@ -111,9 +78,6 @@ extern int getdtablesize(void);
 extern void setlinebuf(FILE * file);
 extern void psignal(unsigned int sig, char *s);
 #endif
-
-/* isathing.c */
-extern int util_isint(char *str);
 
 /* kreltime.c */
 struct ktime;
@@ -138,25 +102,18 @@ extern afs_int32 ktime_DateToInt32(char *adate, afs_int32 * aint32);
 extern char *ktime_GetDateUsage(void);
 extern afs_int32 ktime_InterpretDate(struct ktime_date *akdate);
 
-/* netutils.c */
-extern afs_uint32 extract_Addr(char *line, int maxSize);
-extern int parseNetRestrictFile(afs_uint32 outAddrs[], afs_uint32 * mask,
-				afs_uint32 * mtu, afs_uint32 maxAddrs,
-				afs_uint32 * nAddrs, char reason[],
-				const char *fileName);
-extern int ParseNetInfoFile(afs_uint32 * final, afs_uint32 * mask,
-			    afs_uint32 * mtu, int max, char reason[],
-			    const char *fileName);
-extern int filterAddrs(afs_uint32 addr1[], afs_uint32 addr2[],
-		       afs_uint32 mask1[], afs_uint32 mask2[],
-		       afs_uint32 mtu1[], afs_uint32 mtu2[], int n1, int n2);
-extern int parseNetFiles(afs_uint32 addrbuf[], afs_uint32 maskbuf[],
-			 afs_uint32 mtubuf[], afs_uint32 max, char reason[],
-			 const char *niFileName, const char *nrFileName);
-
-
 /* pthread_glock.c */
 
+
+/* pthread_threadname.c */
+#if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
+extern void afs_pthread_setname_self(const char *threadname);
+#else
+/* Allow unconditional references to afs_pthread_setname_self to
+ * reduce #ifdef spaghetti.
+ */
+#define afs_pthread_setname_self(threadname) (void)0
+#endif
 
 /* readdir_nt.c */
 
@@ -168,35 +125,43 @@ extern int parseNetFiles(afs_uint32 addrbuf[], afs_uint32 maskbuf[],
 
 
 /* serverLog.c */
+struct logOptions;
 extern void WriteLogBuffer(char *buf, afs_uint32 len);
 extern void SetDebug_Signal(int signo);
 extern void ResetDebug_Signal(int signo);
 extern void SetupLogSignals(void);
-extern int OpenLog(const char *fileName);
-extern int ReOpenLog(const char *fileName);
+extern int OpenLog(struct logOptions *opts);
+extern int ReOpenLog(void);
 extern int LogThreadNum(void);
 extern void LogCommandLine(int argc, char **argv, const char *progname,
 			   const char *version, const char *logstring,
 			   void (*log) (const char *format, ...));
 extern void LogDesWarning(void);
+extern int GetLogLevel(void);
+extern enum logDest GetLogDest(void);
+extern const char *GetLogFilename(void);
 
 /* snprintf.c */
 
 
-/* strl */
-#ifndef HAVE_STRLCPY
-extern size_t strlcpy(char *dst, const char *src, size_t siz);
-#endif
-#ifndef HAVE_STRLCAT
-extern size_t strlcat(char *dst, const char *src, size_t siz);
-#endif
-
-/* strn */
-extern size_t afs_strnlen(char * buf, size_t len);
-
-
 /* sys.c */
 
+/* tabular_output.c */
+struct util_Table;
+extern struct util_Table* util_newTable(int Type, int numColumns,
+		char **ColumnHeaders, int *ColumnContentTypes,
+		int *ColumnWidths, int sortByColumn);
+extern char ** util_newCellContents(struct util_Table*);
+extern int util_printTableHeader(struct util_Table *Table);
+extern int util_printTableBody(struct util_Table *Table);
+extern int util_printTableFooter(struct util_Table *Table);
+extern int util_printTable(struct util_Table *Table);
+extern int util_addTableBodyRow(struct util_Table *Table, char **Contents);
+extern int util_setTableBodyRow(struct util_Table *Table, int RowIndex,
+				char **Contents);
+extern int util_setTableHeader(struct util_Table *Table, char **Contents);
+extern int util_setTableFooter(struct util_Table *Table, char **Contents);
+extern int util_freeTable(struct util_Table* Table);
 
 /* uuid.c */
 extern afs_int32 afs_uuid_equal(afsUUID * u1, afsUUID * u2);

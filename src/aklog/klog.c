@@ -9,30 +9,21 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
 #include <afs/stds.h>
-#include <sys/types.h>
-#include <rx/xdr.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
-#include <string.h>
-#include <errno.h>
 
+#include <roken.h>
+
+#include <rx/xdr.h>
 #include <lock.h>
 #include <ubik.h>
-
-#include <stdio.h>
-#include <pwd.h>
 #include <afs/com_err.h>
 #include <afs/auth.h>
 #include <afs/afsutil.h>
 #include <afs/cellconfig.h>
-#ifdef AFS_RXK5
-#include "rxk5_utilafs.h"
-#endif
 #include <afs/ptclient.h>
 #include <afs/cmd.h>
+#include <afs/ptuser.h>
+
 #define KERBEROS_APPLE_DEPRECATED(x)
 #include <krb5.h>
 
@@ -43,7 +34,6 @@
 #define USING_HEIMDAL 1
 #endif
 
-#include "assert.h"
 #include "skipwrap.h"
 
 /* This code borrowed heavily from the previous version of log.  Here is the
@@ -109,7 +99,7 @@ main(int argc, char *argv[])
     zero_argc = argc;
     zero_argv = argv;
 
-    ts = cmd_CreateSyntax(NULL, CommandProc, NULL,
+    ts = cmd_CreateSyntax(NULL, CommandProc, NULL, 0,
 			  "obtain Kerberos authentication");
 
 #define aXFLAG 0
@@ -127,7 +117,7 @@ main(int argc, char *argv[])
 #define aK5 12
 #define aK4 13
 
-    cmd_AddParm(ts, "-x", CMD_FLAG, CMD_OPTIONAL|CMD_HIDDEN, 0);
+    cmd_AddParm(ts, "-x", CMD_FLAG, CMD_OPTIONAL, "obsolete, noop");
     cmd_Seek(ts, aPRINCIPAL);
     cmd_AddParm(ts, "-principal", CMD_SINGLE, CMD_OPTIONAL, "user name");
     cmd_AddParm(ts, "-password", CMD_SINGLE, CMD_OPTIONAL, "user's password");
@@ -223,43 +213,20 @@ whoami(struct ktc_token *atoken,
     struct ktc_principal *aclient,
     int *vicep)
 {
-    rx_securityIndex scIndex;
     int code;
-    int i;
-    struct ubik_client *ptconn = 0;
-    struct rx_securityClass *sc;
-    struct rx_connection *conns[MAXSERVERS+1];
-    idlist lids[1];
-    namelist lnames[1];
     char tempname[PR_MAXNAMELEN + 1];
 
-    memset(lnames, 0, sizeof *lnames);
-    memset(lids, 0, sizeof *lids);
-    scIndex = RX_SECIDX_KAD;
-    sc = rxkad_NewClientSecurityObject(rxkad_auth,
-	&atoken->sessionKey, atoken->kvno,
-	atoken->ticketLen, atoken->ticket);
-    for (i = 0; i < cellconfig->numServers; ++i)
-	conns[i] = rx_NewConnection(cellconfig->hostAddr[i].sin_addr.s_addr,
-		cellconfig->hostAddr[i].sin_port, PRSRV, sc, scIndex);
-    conns[i] = 0;
-    ptconn = 0;
-    if ((code = ubik_ClientInit(conns, &ptconn)))
+    code = pr_Initialize(0, AFSDIR_CLIENT_ETC_DIRPATH, cellconfig->name);
+    if (code)
 	goto Failed;
+
     if (*aclient->instance)
 	snprintf (tempname, sizeof tempname, "%s.%s",
 	    aclient->name, aclient->instance);
     else
 	snprintf (tempname, sizeof tempname, "%s", aclient->name);
-    lnames->namelist_len = 1;
-    lnames->namelist_val = (prname *) tempname;
-    code = ubik_PR_NameToID(ptconn, 0, lnames, lids);
-    if (lids->idlist_val) {
-	*vicep = *lids->idlist_val;
-    }
+    code = pr_SNameToId(tempname, vicep);
 Failed:
-    if (lids->idlist_val) free(lids->idlist_val);
-    if (ptconn) ubik_ClientDestroy(ptconn);
     return code;
 }
 

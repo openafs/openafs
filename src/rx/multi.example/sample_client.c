@@ -88,7 +88,7 @@ main(argc, argv)
 	conns[i] =
 	    rx_NewConnection(host[i].ipaddr, SAMPLE_SERVER_PORT,
 			     SAMPLE_SERVICE_ID, null_securityObject,
-			     SAMPLE_NULL);
+			     RX_SECIDX_NULL);
     }
 
     clock_NewTime();

@@ -13,28 +13,21 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
-#include <sys/types.h>
+
+#include <roken.h>
+
 #if (defined(AFS_AIX_ENV) && defined(KERNEL) && !defined(UKERNEL)) || defined(AFS_AUX_ENV) || defined(AFS_SUN5_ENV)
 #include <sys/systm.h>
 #endif
-#include <time.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
-#include <string.h>
+
+#include <afs/opr.h>
 #include <rx/rx.h>
 #include <rx/xdr.h>
-#include <des.h>
+#include <rx/rx_packet.h>
 #include <afs/afsutil.h>
-#include <des/stats.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
+
+#include "stats.h"
 #include "private_data.h"
 #define XPRT_RXKAD_SERVER
 
@@ -85,8 +78,8 @@ pthread_mutex_t rxkad_random_mutex
 = PTHREAD_MUTEX_INITIALIZER
 #endif
 ;
-#define LOCK_RM osi_Assert(pthread_mutex_lock(&rxkad_random_mutex)==0)
-#define UNLOCK_RM osi_Assert(pthread_mutex_unlock(&rxkad_random_mutex)==0)
+#define LOCK_RM opr_Verify(pthread_mutex_lock(&rxkad_random_mutex)==0)
+#define UNLOCK_RM opr_Verify(pthread_mutex_unlock(&rxkad_random_mutex)==0)
 #else
 #define LOCK_RM
 #define UNLOCK_RM
@@ -146,16 +139,18 @@ rxkad_NewServerSecurityObject(rxkad_level level, void *get_key_rock,
     struct rxkad_sprivate *tsp;
     int size;
 
+    rxkad_Init();
+
     if (!get_key)
 	return 0;
 
     size = sizeof(struct rx_securityClass);
-    tsc = (struct rx_securityClass *)osi_Alloc(size);
+    tsc = rxi_Alloc(size);
     memset(tsc, 0, size);
     tsc->refCount = 1;		/* caller has one reference */
     tsc->ops = &rxkad_server_ops;
     size = sizeof(struct rxkad_sprivate);
-    tsp = (struct rxkad_sprivate *)osi_Alloc(size);
+    tsp = rxi_Alloc(size);
     memset(tsp, 0, size);
     tsc->privateData = (char *)tsp;
 
@@ -170,19 +165,35 @@ rxkad_NewServerSecurityObject(rxkad_level level, void *get_key_rock,
     return tsc;
 }
 
+struct rx_securityClass *
+rxkad_NewKrb5ServerSecurityObject(rxkad_level level, void *get_key_rock,
+				  int (*get_key) (void *get_key_rock, int kvno,
+						  struct ktc_encryptionKey *
+						  serverKey),
+				  rxkad_get_key_enctype_func get_key_enctype,
+				  int (*user_ok) (char *name, char *instance,
+						  char *cell, afs_int32 kvno)
+) {
+    struct rx_securityClass *tsc;
+    struct rxkad_sprivate *tsp;
+    tsc = rxkad_NewServerSecurityObject(level, get_key_rock, get_key, user_ok);
+    tsp = (struct rxkad_sprivate *)tsc->privateData;
+    tsp->get_key_enctype = get_key_enctype;
+    return tsc;
+}
+
 /* server: called to tell if a connection authenticated properly */
 
 int
 rxkad_CheckAuthentication(struct rx_securityClass *aobj,
 			  struct rx_connection *aconn)
 {
-    struct rxkad_sconn *sconn;
+    struct rxkad_sconn *sconn = rx_GetSecurityData(aconn);
 
     /* first make sure the object exists */
-    if (!aconn->securityData)
+    if (!sconn)
 	return RXKADINCONSISTENCY;
 
-    sconn = (struct rxkad_sconn *)aconn->securityData;
     return !sconn->authenticated;
 }
 
@@ -193,10 +204,9 @@ int
 rxkad_CreateChallenge(struct rx_securityClass *aobj,
 		      struct rx_connection *aconn)
 {
-    struct rxkad_sconn *sconn;
+    struct rxkad_sconn *sconn = rx_GetSecurityData(aconn);
     struct rxkad_sprivate *tsp;
 
-    sconn = (struct rxkad_sconn *)aconn->securityData;
     sconn->challengeID = get_random_int32();
     sconn->authenticated = 0;	/* conn unauth. 'til we hear back */
     /* initialize level from object's minimum acceptable level */
@@ -211,13 +221,12 @@ int
 rxkad_GetChallenge(struct rx_securityClass *aobj, struct rx_connection *aconn,
 		   struct rx_packet *apacket)
 {
-    struct rxkad_sconn *sconn;
+    struct rxkad_sconn *sconn = rx_GetSecurityData(aconn);
     char *challenge;
     int challengeSize;
     struct rxkad_v2Challenge c_v2;	/* version 2 */
     struct rxkad_oldChallenge c_old;	/* old style */
 
-    sconn = (struct rxkad_sconn *)aconn->securityData;
     if (rx_IsUsingPktCksum(aconn))
 	sconn->cksumSeen = 1;
 
@@ -274,7 +283,7 @@ rxkad_CheckResponse(struct rx_securityClass *aobj,
     unsigned int pos;
     struct rxkad_serverinfo *rock;
 
-    sconn = (struct rxkad_sconn *)aconn->securityData;
+    sconn = rx_GetSecurityData(aconn);
     tsp = (struct rxkad_sprivate *)aobj->privateData;
 
     if (sconn->cksumSeen) {
@@ -333,11 +342,11 @@ rxkad_CheckResponse(struct rx_securityClass *aobj,
     if (code == -1 && ((kvno == RXKAD_TKT_TYPE_KERBEROS_V5)
 	|| (kvno == RXKAD_TKT_TYPE_KERBEROS_V5_ENCPART_ONLY))) {
 	code =
-	    tkt_DecodeTicket5(tix, tlen, tsp->get_key, tsp->get_key_rock,
-			      kvno, client.name, client.instance, client.cell,
+	    tkt_DecodeTicket5(tix, tlen, tsp->get_key, tsp->get_key_enctype,
+			      tsp->get_key_rock, kvno, client.name,
+			      client.instance, client.cell,
 			      &sessionkey, &host, &start, &end,
-			      tsp->flags & RXS_CONFIG_FLAGS_DISABLE_DOTCHECK,
-			      tsp->alt_decrypt);
+			      tsp->flags & RXS_CONFIG_FLAGS_DISABLE_DOTCHECK);
 	if (code)
 	    return code;
     }
@@ -425,7 +434,7 @@ rxkad_CheckResponse(struct rx_securityClass *aobj,
 	    return RXKADNOAUTH;
     } else {			/* save the info for later retreival */
 	int size = sizeof(struct rxkad_serverinfo);
-	rock = (struct rxkad_serverinfo *)osi_Alloc(size);
+	rock = rxi_Alloc(size);
 	memset(rock, 0, size);
 	rock->kvno = kvno;
 	memcpy(&rock->client, &client, sizeof(rock->client));
@@ -443,7 +452,7 @@ rxkad_GetServerInfo(struct rx_connection * aconn, rxkad_level * level,
 {
     struct rxkad_sconn *sconn;
 
-    sconn = (struct rxkad_sconn *)aconn->securityData;
+    sconn = rx_GetSecurityData(aconn);
     if (sconn && sconn->authenticated && sconn->rock
 	&& (time(0) < sconn->expirationTime)) {
 	if (level)
@@ -483,15 +492,5 @@ afs_int32 rxkad_SetConfiguration(struct rx_securityClass *aobj,
     default:
         break;
     }
-    return 0;
-}
-
-int rxkad_SetAltDecryptProc(struct rx_securityClass *aobj,
-			    rxkad_alt_decrypt_func alt_decrypt)
-{
-    struct rxkad_sprivate *private =
-    (struct rxkad_sprivate *)aobj->privateData;
-
-    private->alt_decrypt = alt_decrypt;
     return 0;
 }

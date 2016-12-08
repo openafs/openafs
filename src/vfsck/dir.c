@@ -18,13 +18,27 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#ifdef AFS_HPUX_ENV
+/* We need the old directory type headers (included below), so don't include
+ * the normal dirent.h, or it will conflict. */
+# undef HAVE_DIRENT_H
+# include <sys/inode.h>
+# define	LONGFILENAMES	1
+# include <sys/sysmacros.h>
+# include <sys/ino.h>
+# define	DIRSIZ_MACRO
+# ifdef HAVE_USR_OLD_USR_INCLUDE_NDIR_H
+#  include </usr/old/usr/include/ndir.h>
+# else
+#  include <ndir.h>
+# endif
+#endif
+
+#include <roken.h>
+
+#include <ctype.h>
 
 #define VICE			/* allow us to put our changes in at will */
-#include <stdio.h>
-
-#include <sys/param.h>
-#include <sys/time.h>
-#include <sys/types.h>
 
 #ifdef	AFS_OSF_ENV
 #include <sys/vnode.h>
@@ -56,18 +70,7 @@
 
 #else /* AFS_VFSINCL_ENV */
 #include <sys/inode.h>
-#ifdef	AFS_HPUX_ENV
-#include <ctype.h>
-#define	LONGFILENAMES	1
-#include <sys/sysmacros.h>
-#include <sys/ino.h>
-#define	DIRSIZ_MACRO
-#ifdef HAVE_USR_OLD_USR_INCLUDE_NDIR_H
-#include </usr/old/usr/include/ndir.h>
-#else
-#include <ndir.h>
-#endif
-#else
+#ifndef	AFS_HPUX_ENV
 #define KERNEL
 #include <sys/dir.h>
 #undef KERNEL

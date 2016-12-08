@@ -53,10 +53,7 @@ osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep) {
 	 * this out, since the iocount we have to hold makes it
 	 * always "fail" */
 	if (AFSTOV(avc) == tvp) {
-	    if (*slept) {
-		QRemove(&avc->vlruq);
-		QAdd(&VLRU, &avc->vlruq);
-            }
+	    /* Caller will move this vcache to the head of the VLRU. */
 	    return 0;
 	} else
 	    return 1;
@@ -88,12 +85,6 @@ osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep) {
 void
 osi_PrePopulateVCache(struct vcache *avc) {
     memset(avc, 0, sizeof(struct vcache));
-
-    /* PPC Darwin 80 seems to be a BOZONLOCK environment, so we need this
-     * here ... */
-#if defined(AFS_BOZONLOCK_ENV)
-    afs_BozonInit(&avc->pvnLock, avc);
-#endif
 }
 
 void

@@ -10,27 +10,20 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
+#include <roken.h>
+
+#ifdef HAVE_SYS_WAIT_H
 #include <sys/wait.h>
 #endif
-#include <fcntl.h>
-#include <errno.h>
+
 #include <limits.h>
-#include <sys/stat.h>
-#include <stdio.h>
-#include <string.h>
 #include <ctype.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
+
 #include <lwp.h>
 #include <afs/com_err.h>
 #include <afs/butm.h>
 #include <afs/usd.h>
+
 #include "error_macros.h"
 #include "butm_prototypes.h"
 
@@ -601,10 +594,9 @@ static int
 Rewind(usd_handle_t fid)
 {
     if (isafile) {
-	afs_hyper_t startOff, stopOff;
-	hzero(startOff);
+	afs_int64 stopOff;
 
-	return (USD_SEEK(fid, startOff, SEEK_SET, &stopOff));
+	return (USD_SEEK(fid, 0, SEEK_SET, &stopOff));
     } else {
 	return (ForkIoctl(fid, USDTAPE_REW, 0));
     }
@@ -682,8 +674,9 @@ incPosition(struct butm_tapeInfo *info, usd_handle_t fid, afs_uint32 dataSize)
 	info->posCount = 0;
 #if (defined(AFS_SUN_ENV) || defined(AFS_LINUX24_ENV))
 	if (!isafile) {
-        afs_hyper_t off;
-	    hset64(off, 0, 0);
+	    afs_int64 off;
+
+	    off = 0;
 	    USD_IOCTL(fid, USD_IOCTL_SETSIZE, &off);
 	}
 #endif
@@ -1081,7 +1074,7 @@ file_Mount(struct butm_tapeInfo *info, char *tape)
 
     (void)PrepareAccess(fid);	/* for NT */
 
-    p = (struct progress *)malloc(sizeof(*p));
+    p = malloc(sizeof(*p));
     info->tmRock = (char *)p;
     p->fid = fid;
     p->mountId = config.mountId = time(0);
@@ -1155,7 +1148,7 @@ file_WriteLabel(struct butm_tapeInfo *info, struct butm_tapeLabel *label,
     afs_int32 fcode;
     struct tapeLabel *tlabel;
     struct progress *p;
-    afs_hyper_t off;		/* offset */
+    afs_int64 off;		/* offset */
 
     if (info->debug)
 	printf("butm: Write tape label\n");
@@ -1178,7 +1171,7 @@ file_WriteLabel(struct butm_tapeInfo *info, struct butm_tapeLabel *label,
 
 	if (isafile) {
 	    p = (struct progress *)info->tmRock;
-	    hset64(off, 0, 0);
+	    off = 0;
 	    code = USD_IOCTL(p->fid, USD_IOCTL_SETSIZE, &off);
 	    if (code)
 		ERROR_EXIT(BUTM_POSITION);
@@ -1584,9 +1577,8 @@ file_Seek(struct butm_tapeInfo *info, afs_int32 position)
     afs_int32 code = 0;
     afs_int32 w;
     osi_lloff_t posit;
-    afs_uint32 c, d;
     struct progress *p;
-    afs_hyper_t startOff, stopOff;	/* for normal file(non-tape)  seeks  */
+    afs_int64 stopOff;	/* for normal file(non-tape)  seeks  */
 
     if (info->debug)
 	printf("butm: Seek to the tape position %d\n", position);
@@ -1601,20 +1593,10 @@ file_Seek(struct butm_tapeInfo *info, afs_int32 position)
 	p = (struct progress *)info->tmRock;
 	posit = (osi_lloff_t) position *(osi_lloff_t) BUTM_BLOCKSIZE;
 
-	/* Not really necessary to do it this way, should be fixed */
-#ifdef O_LARGEFILE
-	c = (posit >> 32);
-	d = (posit & 0xffffffff);
-#else
-	c = 0;
-	d = posit;
-#endif
-	hset64(startOff, c, d);
-
-	w = USD_SEEK(p->fid, startOff, SEEK_SET, &stopOff);
+	w = USD_SEEK(p->fid, posit, SEEK_SET, &stopOff);
 	if (w)
 	    info->error = w;
-	if (hcmp(startOff, stopOff) != 0)
+	if (posit != stopOff)
 	    ERROR_EXIT(BUTM_POSITION);
 
 	p->reading = p->writing = 0;
@@ -1645,7 +1627,7 @@ file_SeekEODump(struct butm_tapeInfo *info, afs_int32 position)
     afs_int32 blockType;
     afs_int32 w;
     struct progress *p;
-    afs_hyper_t startOff, stopOff;	/* file seek offsets */
+    afs_int64 stopOff;	/* file seek offsets */
 
     if (info->debug)
 	printf("butm: Seek to end-of-dump\n");
@@ -1659,16 +1641,15 @@ file_SeekEODump(struct butm_tapeInfo *info, afs_int32 position)
 
     if (isafile) {
 	p = (struct progress *)info->tmRock;
-	hset64(startOff, 0, 0);
-	w = USD_SEEK(p->fid, startOff, SEEK_END, &stopOff);
+	w = USD_SEEK(p->fid, 0, SEEK_END, &stopOff);
 	if (w) {
 	    info->error = w;
 	    ERROR_EXIT(BUTM_POSITION);
 	}
 
-	if (hgetlo(stopOff) % BUTM_BLOCKSIZE)
+	if (stopOff % BUTM_BLOCKSIZE)
 	    ERROR_EXIT(BUTM_POSITION);
-	info->position = (hgetlo(stopOff) / BUTM_BLOCKSIZE);
+	info->position = (stopOff / BUTM_BLOCKSIZE);
     } else {
 	/* Seek to the desired position */
 	code = SeekFile(info, (position - info->position) + 1);

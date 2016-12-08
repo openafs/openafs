@@ -130,16 +130,12 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	    } else
 	    	code = -1;
     	} while (afs_Analyze
-		 (tc, rxconn, code, &adp->f.fid, treq, AFS_STATS_FS_RPCIDX_MAKEDIR,
+		    (tc, rxconn, code, &adp->f.fid, treq, AFS_STATS_FS_RPCIDX_MAKEDIR,
 		     SHARED_LOCK, NULL));
 
     	if (code) {
 	    if (code < 0) {
-	    	ObtainWriteLock(&afs_xcbhash, 490);
-	    	afs_DequeueCallback(adp);
-	    	adp->f.states &= ~CStatd;
-	    	ReleaseWriteLock(&afs_xcbhash);
-	    	osi_dnlc_purgedp(adp);
+		afs_StaleVCache(adp);
 	    }
 	    ReleaseWriteLock(&adp->lock);
 	    if (tdc)
@@ -151,7 +147,7 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     	/* Disconnected. */
 
 	/* We have the dir entry now, we can use it while disconnected. */
-	if (adp->mvid == NULL) {
+	if (adp->mvid.target_root == NULL) {
 	    /* If not mount point, generate a new fid. */
 	    newFid.Cell = adp->f.fid.Cell;
     	    newFid.Fid.Volume = adp->f.fid.Fid.Volume;
@@ -198,7 +194,7 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	if (tvc) {
 	    *avcp = tvc;
 	} else {
-	    code = ENOENT;
+	    code = EIO;
 	    goto done;
 	}
 
@@ -211,7 +207,7 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	new_dc = afs_GetDCache(tvc, (afs_size_t) 0, treq, &offset, &len, 1);
 	if (!new_dc) {
 	    /* printf("afs_mkdir: can't get new dcache for dir.\n"); */
-	    code = ENOENT;
+	    code = EIO;
 	    goto done;
 	}
 
@@ -236,8 +232,12 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     	if (tvc) {
 	    code = 0;
 	    *avcp = tvc;
-    	} else
-	    code = ENOENT;
+
+	} else {
+	    /* For some reason, we cannot fetch the vcache for our
+	     * newly-created dir. */
+	    code = EIO;
+	}
     }				/* if (AFS_DISCON_RW) */
 
   done:
@@ -366,11 +366,7 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 	    }
 
 	    if (code < 0) {
-	    	ObtainWriteLock(&afs_xcbhash, 491);
-	    	afs_DequeueCallback(adp);
-	    	adp->f.states &= ~CStatd;
-	    	ReleaseWriteLock(&afs_xcbhash);
-	    	osi_dnlc_purgedp(adp);
+		afs_StaleVCache(adp);
 	    }
 	    ReleaseWriteLock(&adp->lock);
 	    goto done;

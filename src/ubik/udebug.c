@@ -10,26 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#include <sys/types.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
-#include <signal.h>
-#include <time.h>
-
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/file.h>
-#include <sys/param.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#endif
-
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
+#include <roken.h>
 
 #include <lock.h>
 #include <rx/xdr.h>
@@ -357,7 +338,7 @@ main(int argc, char **argv)
     nsa.sa_flags = SA_FULLDUMP;
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
-    ts = cmd_CreateSyntax(NULL, CommandProc, NULL, "probe ubik server");
+    ts = cmd_CreateSyntax(NULL, CommandProc, NULL, 0, "probe ubik server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server machine");
     cmd_AddParm(ts, "-port", CMD_SINGLE, CMD_OPTIONAL, "IP port");
     cmd_AddParm(ts, "-long", CMD_FLAG, CMD_OPTIONAL, "print all info");

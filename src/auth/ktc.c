@@ -12,26 +12,21 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+
+#include <afs/stds.h>
+#include <afs/opr.h>
+#include <afs/pthread_glock.h>
+#include <ctype.h>
+
+#ifdef HAVE_SYS_FILE_H
+#include <sys/file.h>
+#endif
+
 #if defined(UKERNEL)
 #include "afsincludes.h"
 #endif
 
-#ifdef	AFS_SUN5_ENV
-#include <unistd.h>
-#endif
-#include <stdio.h>
-#include <stdlib.h>
-#include <afs/stds.h>
-#include <afs/pthread_glock.h>
-#include <sys/types.h>
-#include <ctype.h>
-#include <sys/stat.h>
-#include <signal.h>
-#include <errno.h>
-#include <sys/ioctl.h>
-#include <netinet/in.h>
-#include <string.h>
-#include <afs/vice.h>
 #ifdef	AFS_AIX_ENV
 #include <sys/lockf.h>
 #ifdef AFS_AIX51_ENV
@@ -41,12 +36,12 @@
 #endif
 #endif
 #endif
+
 #ifdef HAVE_CRT_EXTERNS_H
 #include <crt_externs.h>
 #endif
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
+
+#include <afs/vice.h>
 #include "auth.h"
 #include <afs/venus.h>
 #include <afs/afsutil.h>
@@ -55,23 +50,18 @@
 #include <afs/sys_prototypes.h>
 #endif
 
-#if defined(LINUX_KEYRING_SUPPORT) && defined(HAVE_SESSION_TO_PARENT)
+#if defined(AFS_LINUX26_ENV)
 #include <sys/syscall.h>
+#if defined(SYS_keyctl)
+/* Open code this value to avoid a dependency on keyutils */
 #define KEYCTL_SESSION_TO_PARENT        18
 #endif
-
-/* For malloc() */
-#include <stdlib.h>
-#include "ktc.h"
-
-#ifdef	notdef
-/* AFS_KERBEROS_ENV is now conditionally defined in the Makefile */
-#define AFS_KERBEROS_ENV
 #endif
 
+#include "token.h"
+#include "ktc.h"
+
 #ifdef AFS_KERBEROS_ENV
-#include <fcntl.h>
-#include <sys/file.h>
 #include "cellconfig.h"
 static char lcell[MAXCELLCHARS];
 
@@ -98,9 +88,6 @@ static char lcell[MAXCELLCHARS];
 #define BUFSIZ 4096
 #endif
 
-#ifdef	AFS_HPUX_ENV
-#include <unistd.h>
-#endif
 #if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV)
 static struct flock fileWlock = { F_WRLCK, 0, 0, 0, 0, 0 };
 static struct flock fileRlock = { F_RDLCK, 0, 0, 0, 0, 0 };
@@ -158,11 +145,11 @@ static struct {
     struct ktc_principal server;
     struct ktc_principal client;
     struct ktc_token token;
-} local_tokens[MAXLOCALTOKENS] = { {
-0}, {
-0}, {
-0}, {
-0}};
+} local_tokens[MAXLOCALTOKENS];
+
+static int
+GetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
+          int atokenLen, struct ktc_principal *alicnet, afs_int32 *aviceid);
 
 
 #define MAXPIOCTLTOKENLEN \
@@ -308,17 +295,85 @@ SetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
     }
 #else /* NO_AFS_CLIENT */
     code = PIOCTL(0, VIOCSETTOK, &iob, 0);
-#if defined(LINUX_KEYRING_SUPPORT) && defined(HAVE_SESSION_TO_PARENT)
-    /*
-     * If we're using keyring based PAGs and the SESSION_TO_PARENT keyctl
-     * is available, use it to copy the session keyring to the parent process
-     */
-    if (flags & AFS_SETTOK_SETPAG)
-	syscall(SYS_keyctl, KEYCTL_SESSION_TO_PARENT);
-#endif
 #endif /* NO_AFS_CLIENT */
     if (code)
 	return KTC_PIOCTLFAIL;
+    return 0;
+}
+
+int
+ktc_SetTokenEx(struct ktc_setTokenData *token) {
+    struct ViceIoctl iob;
+    afs_int32 code;
+    XDR xdrs;
+
+    xdrlen_create(&xdrs);
+    if (!xdr_ktc_setTokenData(&xdrs, token))
+	return EINVAL;
+    iob.in_size = xdr_getpos(&xdrs);
+    xdr_destroy(&xdrs);
+
+    iob.in = malloc(iob.in_size);
+    if (iob.in == NULL)
+	return ENOMEM;
+
+    xdrmem_create(&xdrs, iob.in, iob.in_size, XDR_ENCODE);
+    if (!xdr_ktc_setTokenData(&xdrs, token))
+	return KTC_INVAL;
+    xdr_destroy(&xdrs);
+
+    iob.out = NULL;
+    iob.out_size = 0;
+
+    code = PIOCTL(0, VIOC_SETTOK2, &iob, 0);
+
+    free(iob.in);
+
+    /* If we can't use the new pioctl, then fallback to using the old
+     * one, with just the rxkad portion of the token we're being asked to
+     * set
+     */
+    if (code == -1 && errno == EINVAL) {
+	struct ktc_principal server, client;
+	struct ktc_token *rxkadToken;
+	afs_int32 flags;
+
+	/* With the growth of ticket sizes, a ktc_token is now 12k. Don't
+	 * allocate it on the stack! */
+	rxkadToken = malloc(sizeof(*rxkadToken));
+	if (rxkadToken == NULL)
+	    return ENOMEM;
+
+	code = token_extractRxkad(token, rxkadToken, &flags, &client);
+	if (code) {
+	    free(rxkadToken);
+	    return KTC_INVAL;
+	}
+
+	memset(&server, 0, sizeof(server));
+	strcpy(server.name, "afs");
+	if (strlcpy(server.cell, token->cell, sizeof(server.cell))
+		>= sizeof(server.cell)) {
+	    free(rxkadToken);
+	    return KTC_INVAL;
+	}
+	code = ktc_SetToken(&server, rxkadToken, &client, flags);
+	free(rxkadToken);
+	return code;
+    }
+
+    if (code)
+	return KTC_PIOCTLFAIL;
+#if defined(AFS_LINUX26_ENV) && defined(SYS_keyctl)
+    else
+	/*
+	 * If we're using keyring based PAGs and the SESSION_TO_PARENT keyctl
+	 * is available, use it to copy the session keyring to the parent process
+	 */
+	if (token->flags & AFS_SETTOK_SETPAG)
+	    syscall(SYS_keyctl, KEYCTL_SESSION_TO_PARENT);
+#endif
+
     return 0;
 }
 
@@ -386,12 +441,112 @@ ktc_SetToken(struct ktc_principal *aserver,
     return 0;
 }
 
+/*!
+ * Get a token, given the cell that we need to get information for
+ *
+ * @param cellName
+ * 	The name of the cell we're getting the token for - if NULL, we'll
+ * 	get information for the primary cell
+ */
+int
+ktc_GetTokenEx(char *cellName, struct ktc_setTokenData **tokenSet) {
+    struct ViceIoctl iob;
+    char tbuffer[MAXPIOCTLTOKENLEN];
+    char *tp;
+    afs_int32 code;
+    XDR xdrs;
+
+    tp = tbuffer;
+
+    /* If we have a cellName, write it out here */
+    if (cellName) {
+	memcpy(tp, cellName, strlen(cellName) +1);
+	tp += strlen(cellName)+1;
+    }
+
+    iob.in = tbuffer;
+    iob.in_size = tp - tbuffer;
+    iob.out = tbuffer;
+    iob.out_size = sizeof(tbuffer);
+
+    code = PIOCTL(0, VIOC_GETTOK2, &iob, 0);
+
+    /* If we can't use the new pioctl, the fall back to the old one. We then
+     * need to convert the rxkad token we get back into the new format
+     */
+    if (code == -1 && errno == EINVAL) {
+	struct ktc_principal server;
+	struct ktc_tokenUnion token;
+	struct ktc_token *ktcToken; /* too huge for the stack */
+	afs_int32 viceid;
+
+	memset(&server, 0, sizeof(server));
+	ktcToken = malloc(sizeof(struct ktc_token));
+	if (ktcToken == NULL)
+	    return ENOMEM;
+	memset(ktcToken, 0, sizeof(struct ktc_token));
+
+	strcpy(server.name, "afs");
+
+	if (cellName != NULL)
+	    strcpy(server.cell, cellName);
+
+	code = GetToken(&server, ktcToken, sizeof(struct ktc_token),
+			 NULL /*client*/, &viceid);
+	if (code == 0) {
+	    *tokenSet = token_buildTokenJar(cellName);
+	    token.at_type = AFSTOKEN_UNION_KAD;
+	    token.ktc_tokenUnion_u.at_kad.rk_kvno = ktcToken->kvno;
+	    memcpy(token.ktc_tokenUnion_u.at_kad.rk_key,
+		   ktcToken->sessionKey.data, 8);
+
+	    token.ktc_tokenUnion_u.at_kad.rk_begintime = ktcToken->startTime;
+	    token.ktc_tokenUnion_u.at_kad.rk_endtime   = ktcToken->endTime;
+	    token.ktc_tokenUnion_u.at_kad.rk_ticket.rk_ticket_len
+		= ktcToken->ticketLen;
+	    token.ktc_tokenUnion_u.at_kad.rk_ticket.rk_ticket_val
+		= ktcToken->ticket;
+	    token.ktc_tokenUnion_u.at_kad.rk_viceid = viceid;
+
+	    token_addToken(*tokenSet, &token);
+
+	    memset(ktcToken, 0, sizeof(struct ktc_token));
+	}
+	free(ktcToken);
+        return code;
+    }
+    if (code)
+	return KTC_PIOCTLFAIL;
+
+    *tokenSet = malloc(sizeof(struct ktc_setTokenData));
+    if (*tokenSet == NULL)
+	return ENOMEM;
+    memset(*tokenSet, 0, sizeof(struct ktc_setTokenData));
+
+    xdrmem_create(&xdrs, iob.out, iob.out_size, XDR_DECODE);
+    if (!xdr_ktc_setTokenData(&xdrs, *tokenSet)) {
+	free(*tokenSet);
+	*tokenSet = NULL;
+	xdr_destroy(&xdrs);
+	return EINVAL;
+    }
+    xdr_destroy(&xdrs);
+    return 0;
+}
+
 /* get token, given server we need and token buffer.  aclient will eventually
  * be set to our identity to the server.
  */
 int
 ktc_GetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
 	     int atokenLen, struct ktc_principal *aclient)
+{
+    return GetToken(aserver, atoken, atokenLen, aclient, NULL);
+}
+
+static int
+GetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
+          int atokenLen, struct ktc_principal *aclient, afs_int32 *aviceid)
 {
     struct ViceIoctl iob;
     char tbuffer[MAXPIOCTLTOKENLEN];
@@ -406,6 +561,9 @@ ktc_GetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
 #ifdef AFS_KERBEROS_ENV
     char found = 0;
 #endif
+    if (aviceid) {
+	*aviceid = 0;
+    }
 
     LOCK_GLOBAL_MUTEX;
 
@@ -541,15 +699,22 @@ ktc_GetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
 		       sizeof(struct ktc_encryptionKey));
 		atoken->ticketLen = tktLen;
 
-		if (aclient) {
-		    strlcpy(aclient->cell, cellp, sizeof(aclient->cell));
-		    aclient->instance[0] = 0;
+		if (aclient || aviceid) {
+		    if (aclient) {
+			strlcpy(aclient->cell, cellp, sizeof(aclient->cell));
+			aclient->instance[0] = 0;
+		    }
 
 		    if ((atoken->kvno == 999) ||	/* old style bcrypt ticket */
 			(ct.BeginTimestamp &&	/* new w/ prserver lookup */
 			 (((ct.EndTimestamp - ct.BeginTimestamp) & 1) == 1))) {
-			sprintf(aclient->name, "AFS ID %d", ct.ViceId);
-		    } else {
+			if (aclient) {
+			    sprintf(aclient->name, "AFS ID %d", ct.ViceId);
+			}
+			if (aviceid) {
+			    *aviceid = ct.ViceId;
+			}
+		    } else if (aclient) {
 			sprintf(aclient->name, "Unix UID %d", ct.ViceId);
 		    }
 		}
@@ -582,6 +747,84 @@ ktc_ForgetToken(struct ktc_principal *aserver)
     return rc;
 }
 #endif /* NO_AFS_CLIENT */
+
+/*!
+ * An iterator which can list all cells with tokens in the cache
+ *
+ * This function may be used to list the names of all cells for which
+ * tokens exist in the current cache. The first time that it is called,
+ * prevIndex should be set to 0. On all subsequent calls, prevIndex
+ * should be set to the value returned in newIndex by the last call
+ * to the function. Note that there is no guarantee that the index value
+ * is monotonically increasing.
+ *
+ * @param prevIndex
+ * 	The index returned by the last call, or 0 if this is the first
+ * 	call in an iteration
+ * @param newIndex
+ * 	A pointer to an int which, upon return, will hold the next value
+ * 	to be used.
+ * @param cellName
+ * 	A pointer to a char * which, upon return, will hold a cellname.
+ * 	This must be freed by the caller using free()
+ */
+
+int
+ktc_ListTokensEx(int prevIndex, int *newIndex, char **cellName) {
+    struct ViceIoctl iob;
+    char tbuffer[MAXPIOCTLTOKENLEN];
+    afs_int32 code;
+    afs_int32 index;
+    struct ktc_setTokenData tokenSet;
+    XDR xdrs;
+
+    memset(&tokenSet, 0, sizeof(tokenSet));
+
+    *cellName = NULL;
+    *newIndex = prevIndex;
+
+    index = prevIndex;
+
+    while (index<100) { /* Safety, incase of pioctl failure */
+	memset(tbuffer, 0, sizeof(tbuffer));
+	iob.in = tbuffer;
+	memcpy(tbuffer, &index, sizeof(afs_int32));
+	iob.in_size = sizeof(afs_int32);
+	iob.out = tbuffer;
+	iob.out_size = sizeof(tbuffer);
+
+	code = PIOCTL(0, VIOC_GETTOK2, &iob, 0);
+
+	/* Can't use new pioctl, so must use old one */
+	if (code == -1 && errno == EINVAL) {
+	    struct ktc_principal server;
+
+	    code = ktc_ListTokens(index, newIndex, &server);
+	    if (code == 0)
+		*cellName = strdup(server.cell);
+	    return code;
+	}
+
+	if (code == 0) {
+	    /* Got a token from the pioctl. Now we throw it away,
+	     * so we can return just a cellname. This is rather wasteful,
+	     * but it's what the old API does. Ho hum.  */
+
+	    xdrmem_create(&xdrs, iob.out, iob.out_size, XDR_DECODE);
+	    if (!xdr_ktc_setTokenData(&xdrs, &tokenSet)) {
+		xdr_destroy(&xdrs);
+		return EINVAL;
+	    }
+	    xdr_destroy(&xdrs);
+	    *cellName = strdup(tokenSet.cell);
+	    xdr_free((xdrproc_t)xdr_ktc_setTokenData, &tokenSet);
+	    *newIndex = index + 1;
+	    return 0;
+	}
+	index++;
+    }
+    return KTC_PIOCTLFAIL;
+}
 
 /* ktc_ListTokens - list all tokens.  start aprevIndex at 0, it returns the
  * next rock in (*aindex).  (*aserver) is set to the relevant ticket on
@@ -817,14 +1060,14 @@ ktc_curpag(void)
 	afs_uint32 g0, g1;
 	afs_uint32 h, l, ret;
 	int ngroups;
-#ifdef AFS_LINUX26_ENV
+#ifdef AFS_PAG_ONEGROUP_ENV
 	int i;
 #endif
 
 	ngroups = getgroups(sizeof groups / sizeof groups[0], groups);
 
-#ifdef AFS_LINUX26_ENV
-	/* check for AFS_LINUX26_ONEGROUP_ENV PAGs */
+#ifdef AFS_PAG_ONEGROUP_ENV
+	/* Check for one-group PAGs. */
 	for (i = 0; i < ngroups; i++) {
 	    if (((groups[i] >> 24) & 0xff) == 'A') {
 		return groups[i];
@@ -866,10 +1109,6 @@ ktc_curpag(void)
   */
 
 #if 0
-#include <stdio.h>
-#include <errno.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/file.h>
 #include <krb.h>
 #endif
@@ -1584,7 +1823,7 @@ extern char **environ;
 
     for (senv = environ, numenv = 0; *senv; senv++)
 	numenv++;
-    newenv = (char **)malloc((numenv + 2) * sizeof(char *));
+    newenv = malloc((numenv + 2) * sizeof(char *));
 
     for (senv = environ, denv = newenv; *senv; senv++) {
 	if (strncmp(*senv, "KRBTKFILE=", 10) != 0 &&

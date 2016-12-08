@@ -65,8 +65,14 @@ for (n=0, queue_Scan(&myqueue, qe, nqe, myelement), n++) {}
 #define _RXQA(q,i,a,b) (((i->a=q->a)->b=i)->b=q, q->a=i)
 
 /* These ones splice two queues together.  If (a,b) is (next,prev) then (*q2) is prepended to (*q1), otherwise (*q2) is appended to (*q1). */
-#define _RXQS(q1,q2,a,b) if (queue_IsEmpty(q2)); else \
-    ((((q2->a->b=q1)->a->b=q2->b)->a=q1->a, q1->a=q2->a), queue_Init(q2))
+#define _RXQS(q1,q2,a,b) \
+	do { \
+	    if (!queue_IsEmpty(q2)) { \
+		((q2->a->b=q1)->a->b=q2->b)->a=q1->a; \
+		q1->a=q2->a; \
+		queue_Init(q2); \
+	    } \
+	} while (0)
 
 /* This one removes part of queue (*q1) and attaches it to queue (*q2).
  * If (a,b) is (next,prev) then the subchain is prepended to (*q2),
@@ -75,26 +81,44 @@ for (n=0, queue_Scan(&myqueue, qe, nqe, myelement), n++) {}
  * otherwise the subchain is the elements in (*q1) after (i).
  * If (x,y) is (q1,i) then operation is either BeforePrepend of AfterAppend.
  * If (x,y) is (i,q1) then operation is either BeforeAppend or AfterPrepend. */
-#define _RXQSP(q1,q2,i,a,b,c,d,x,y) if (!queue_IsEnd(q1,i->c)) \
-    (((y->b->a=q2->a)->b=y->b), ((x->a->b=q2)->a=x->a), ((i->c=q1)->d=i))
+#define _RXQSP(q1,q2,i,a,b,c,d,x,y) \
+	do { \
+	    if (!queue_IsEnd(q1, i->c)) { \
+		(y->b->a=q2->a)->b=y->b; \
+		(x->a->b=q2)->a=x->a; \
+		(i->c=q1)->d=i; \
+	    } \
+	} while (0)
 
 /* This one moves a chain of elements from (s) to (e) from its
  * current position to either before or after element (i)
  * if (a,b,x,y) is (prev,next,s,e) then chain is moved before (i)
  * if (a,b,x,y) is (next,prev,e,s) then chain is moved after (i) */
-#define _RXQMV(i, s, e, a, b, x, y) if (i->a != y) \
-    (((e->next->prev=s->prev)->next=e->next), ((i->a->b=x)->a=i->a), ((y->b=i)->a=y))
+#define _RXQMV(i, s, e, a, b, x, y) \
+	do { \
+	    if (i->a != y) { \
+		(e->next->prev=s->prev)->next=e->next; \
+		(i->a->b=x)->a=i->a; \
+		(y->b=i)->a=y; \
+	    } \
+	} while (0)
 
 /* Basic remove operation.  Doesn't update the queue item to indicate it's been removed */
-#define _RXQR(i) ((_RXQ(i)->prev->next=_RXQ(i)->next)->prev=_RXQ(i)->prev)
+#define _RXQR(i) \
+	do { \
+	    struct rx_queue *_qp = _RXQ(i); \
+	    (_qp->prev->next = _qp->next)->prev = _qp->prev; \
+	} while (0)
 
 /* EXPORTED macros */
 
 /* Initialize a queue head (*q).  A queue head is just a queue element */
-#define queue_Init(q) (_RXQ(q))->prev = (_RXQ(q))->next = (_RXQ(q))
+#define queue_Init(q) \
+	do { _RXQ(q)->prev = _RXQ(q)->next = _RXQ(q); } while (0)
 
 /* initialize a node in the queue */
-#define queue_NodeInit(q) ((_RXQ(q))->prev = (_RXQ(q))->next = NULL)
+#define queue_NodeInit(q) \
+	do { _RXQ(q)->prev = _RXQ(q)->next = NULL; } while (0)
 
 /* Prepend a queue element (*i) to the head of the queue, after the queue head (*q).  The new queue element should not currently be on any list. */
 #define queue_Prepend(q,i) _RXQA(_RXQ(q),_RXQ(i),next,prev)
@@ -127,8 +151,16 @@ for (n=0, queue_Scan(&myqueue, qe, nqe, myelement), n++) {}
 #define queue_SplitBeforePrepend(q1,q2,i) _RXQSP(_RXQ(q1),_RXQ(q2),_RXQ(i),next,prev,prev,next,_RXQ(q1),_RXQ(i))
 
 /* Replace the queue (*q1) with the contents of the queue (*q2), re-initialize (*q2) */
-#define queue_Replace(q1,q2) if (queue_IsEmpty(q2)) queue_Init(q1); else \
-    (*_RXQ(q1) = *_RXQ(q2), _RXQ(q1)->next->prev = _RXQ(q1)->prev->next = _RXQ(q1), queue_Init(q2))
+#define queue_Replace(q1,q2) \
+	do { \
+	    if (queue_IsEmpty(q2)) \
+		queue_Init(q1); \
+	    else { \
+		*_RXQ(q1) = *_RXQ(q2); \
+		_RXQ(q1)->next->prev = _RXQ(q1)->prev->next = _RXQ(q1); \
+		queue_Init(q2); \
+	    } \
+	} while (0)
 
 /* move a chain of elements beginning at (s) and ending at (e) before node (i) */
 #define queue_MoveChainBefore(i, s, e) _RXQMV(_RXQ(i),_RXQ(s),_RXQ(e),prev,next,_RXQ(s),_RXQ(e))
@@ -136,14 +168,26 @@ for (n=0, queue_Scan(&myqueue, qe, nqe, myelement), n++) {}
 /* move a chain of elements beginning at (s) and ending at (e) after node (i) */
 #define queue_MoveChainAfter(i, s, e) _RXQMV(_RXQ(i),_RXQ(s),_RXQ(e),next,prev,_RXQ(e),_RXQ(s))
 
-/* Remove a queue element (*i) from it's queue.  The next field is 0'd, so that any further use of this q entry will hopefully cause a core dump.  Multiple removes of the same queue item are not supported */
-#define queue_Remove(i) (_RXQR(i), _RXQ(i)->next = 0)
+/* Remove a queue element (*i) from its queue.  The next field is 0'd, so that any further use of this q entry will hopefully cause a core dump.  Multiple removes of the same queue item are not supported */
+#define queue_Remove(i) \
+	do { \
+	    _RXQR(i); \
+	    _RXQ(i)->next = NULL; \
+	} while (0)
 
-/* Move the queue element (*i) from it's queue to the end of the queue (*q) */
-#define queue_MoveAppend(q,i) (_RXQR(i), queue_Append(q,i))
+/* Move the queue element (*i) from its queue to the end of the queue (*q) */
+#define	queue_MoveAppend(q,i) \
+	do { \
+	    _RXQR(i); \
+	    queue_Append(q, i); \
+	} while (0)
 
-/* Move the queue element (*i) from it's queue to the head of the queue (*q) */
-#define queue_MovePrepend(q,i) (_RXQR(i), queue_Prepend(q,i))
+/* Move the queue element (*i) from its queue to the head of the queue (*q) */
+#define	queue_MovePrepend(q,i) \
+	do { \
+	    _RXQR(i); \
+	    queue_Prepend(q, i); \
+	} while (0)
 
 /* Return the first element of a queue, coerced too the specified structure s */
 /* Warning:  this returns the queue head, if the queue is empty */

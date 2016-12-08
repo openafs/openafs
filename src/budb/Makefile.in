@@ -8,16 +8,13 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 
 INCLS=\
 	${TOP_INCDIR}/lock.h \
 	${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/lwp.h \
-	${TOP_INCDIR}/des.h \
 	${TOP_INCDIR}/rx/rx.h \
 	${TOP_INCDIR}/rx/xdr.h \
 	${TOP_INCDIR}/rx/rxkad.h \
@@ -38,13 +35,15 @@ LIBS=${TOP_LIBDIR}/libbubasics.a \
 	${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/librxkad.a \
 	${TOP_LIBDIR}/libsys.a \
-	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libafscom_err.a \
-	${TOP_LIBDIR}/util.a
+	${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/libopr.a \
+	${TOP_LIBDIR}/libafsrfc3961.a \
+	${TOP_LIBDIR}/libafshcrypto_lwp.a
 
 COMMON_OBJS = database.o db_alloc.o db_dump.o db_hash.o struct_ops.o ol_verify.o
 
@@ -92,8 +91,8 @@ struct_ops.o: budb_errs.h
 
 database.o: database.c budb_errs.h globals.h ${INCLS}
 db_alloc.o: db_alloc.c budb_errs.h ${INCLS}
-db_dump.o: db_dump.c budb_errs.h ${INCLS}
 dbs_dump.o: dbs_dump.c budb_errs.h ${INCLS}
+db_dump.o: db_dump.c budb_errs.h ${INCLS}
 db_lock.o:  db_lock.c budb_errs.h ${INCLS}
 db_text.o:  db_text.c budb_errs.h ${INCLS}
 db_hash.o: db_hash.c budb_errs.h ${INCLS}
@@ -103,7 +102,7 @@ struct_ops.o: budb_errs.h ${INCLS}
 server.o: server.c budb_errs.h ${INCLS} AFS_component_version_number.c
 
 budb_server: $(SERVER_OBJS) ${LIBS} ${TOP_INCDIR}/afs/budb_client.h
-	${CC} ${LDFLAGS} -o budb_server $(SERVER_OBJS) ${LIBS} ${XLIBS} ${KRB5_LIBS}
+	$(AFS_LDRULE) $(SERVER_OBJS) ${LIBS} $(LIB_roken) ${XLIBS}
 
 budb.cs.c: budb.rg
 	${RXGEN} -A -u -C -o $@ ${srcdir}/budb.rg

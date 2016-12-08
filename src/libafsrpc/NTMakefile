@@ -6,14 +6,13 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 
 RELDIR=libafsrpc
-AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DNOGDI -DWIN32_LEAN_AND_MEAN -DAFS_PTHREAD_ENV
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DNOGDI -DWIN32_LEAN_AND_MEAN -DAFS_PTHREAD_ENV -DMAKEDEBUGCALL
 !include ..\config\NTMakefile.$(SYS_NAME)
 !include ..\config\NTMakefile.version
 
 RX = ..\rx
 RXSTAT = ..\rxstat
 RXKAD = ..\rxkad
-DES = ..\des
 UTIL = ..\util
 FSINT = ..\fsint
 COMERR = ..\comerr
@@ -33,50 +32,46 @@ XDROBJS = $(OUT)\xdr.obj $(OUT)\xdr_array.obj $(OUT)\xdr_arrayn.obj $(OUT)\xdr_f
 	$(OUT)\xdr_rec.obj  $(OUT)\xdr_refernce.obj $(OUT)\xdr_rx.obj $(OUT)\xdr_update.obj \
 	$(OUT)\xdr_afsuuid.obj $(OUT)\xdr_int64.obj $(OUT)\xdr_int32.obj $(OUT)\xdr_len.obj
 
-RXOBJS = $(OUT)\rx_event.obj $(OUT)\rx_user.obj $(OUT)\rx_pthread.obj $(OUT)\rx.obj $(OUT)\rx_clock_nt.obj \
-	$(OUT)\rx_null.obj $(OUT)\rx_globals.obj $(OUT)\rx_getaddr.obj $(OUT)\rx_misc.obj $(OUT)\rx_packet.obj \
-	$(OUT)\rx_rdwr.obj $(OUT)\rx_trace.obj $(OUT)\rx_xmit_nt.obj $(OUT)\rx_conncache.obj
+RXOBJS = $(OUT)\rx_event.obj $(OUT)\rx_user.obj $(OUT)\rx_pthread.obj \
+	 $(OUT)\rx.obj $(OUT)\rx_clock_nt.obj $(OUT)\rx_null.obj \
+	 $(OUT)\rx_globals.obj $(OUT)\rx_getaddr.obj $(OUT)\rx_misc.obj \
+	 $(OUT)\rx_packet.obj $(OUT)\rx_rdwr.obj $(OUT)\rx_trace.obj \
+	 $(OUT)\rx_xmit_nt.obj $(OUT)\rx_conncache.obj $(OUT)\rx_opaque.obj \
+	 $(OUT)\rx_identity.obj $(OUT)\rx_stats.obj \
+         $(OUT)\rx_call.obj $(OUT)\rx_conn.obj $(OUT)\rx_peer.obj
 
 RXSTATBJS = $(OUT)\rxstat.obj $(OUT)\rxstat.ss.obj $(OUT)\rxstat.xdr.obj $(OUT)\rxstat.cs.obj
 
-LIBRXKAD_OBJS = $(OUT)\rxkad_client.obj $(OUT)\rxkad_server.obj $(OUT)\rxkad_common.obj $(OUT)\ticket.obj \
-	$(OUT)\ticket5.obj $(OUT)\crc.obj $(OUT)\md4.obj $(OUT)\md5.obj $(OUT)\AFS_component_version_number.obj
+LIBRXKAD_OBJS = $(OUT)\rxkad_client.obj $(OUT)\rxkad_server.obj $(OUT)\rxkad_common.obj $(OUT)\rxkad_errs.obj \
+	$(OUT)\ticket.obj $(OUT)\ticket5.obj $(OUT)\crc.obj $(OUT)\AFS_component_version_number.obj
 
 LIBRXKAD_REGOBJS = $(OUT)\bg-fcrypt.obj
 
-DESOBJS_INT = $(OUT)\des.obj $(OUT)\cbc_encrypt.obj $(OUT)\pcbc_encrypt.obj $(OUT)\cksum.obj $(OUT)\new_rnd_key.obj \
-	$(OUT)\key_sched.obj $(OUT)\debug_decl.obj $(OUT)\quad_cksum.obj $(OUT)\key_parity.obj \
-	$(OUT)\weak_key.obj $(OUT)\strng_to_key.obj $(OUT)\util.obj
-
-DESOBJS = $(DESOBJS_INT) $(OUT)\misc.obj 
-
-UTILOBJS = $(OUT)\casestrcpy.obj $(OUT)\winsock_nt.obj
+UTILOBJS = $(OUT)\winsock_nt.obj \
+           $(OUT)\pthread_glock.obj
 
 COMERRBJS = $(OUT)\error_msg.obj $(OUT)\et_name.obj $(OUT)\com_err.obj
 
 LWPOBJS = $(OUT)\lock.obj $(OUT)\fasttime.obj $(OUT)\threadname.obj
 
-FSINTBJS = $(OUT)\afsint.cs.obj $(OUT)\afsint.xdr.obj $(OUT)\afscbint.cs.obj $(OUT)\afscbint.xdr.obj \
-	$(OUT)\afsaux.obj
+FSINTBJS = $(OUT)\afsint.cs.obj \
+           $(OUT)\afsint.xdr.obj \
+           $(OUT)\afscbint.cs.obj \
+           $(OUT)\afscbint.xdr.obj \
+	   $(OUT)\afsaux.obj
 
 DLLOBJS = $(MULTIOBJS) $(RXOBJS) $(XDROBJS) $(RXSTATBJS) $(LIBRXKAD_OBJS) \
-	$(DESOBJS) $(LIBRXKAD_REGOBJS) $(UTILBJS) $(COMERRBJS) \
-	$(FSINTBJS) $(LWPOBJS) $(OUT)\afsrpc.res
+	$(LIBRXKAD_REGOBJS) $(UTILOBJS) $(COMERRBJS) \
+        $(LWPOBJS) $(OUT)\afsrpc.res
 
 $(MULTIOBJS) $(RXOBJS) $(XDROBJS):$(RX)\$$(@B).c
-	$(C2OBJ) $** -I$(RX) 
+	$(C2OBJ) $** -I$(RX)
 
 $(RXSTATBJS):$(RXSTAT)\$$(@B).c
 	$(C2OBJ) $** -I$(RXSTAT)
 
 $(LIBRXKAD_REGOBJS) $(LIBRXKAD_OBJS):$(RXKAD)\$$(@B).c
 	$(C2OBJ) $** -I$(RXKAD)
-
-$(DESOBJS_INT):$(DES)\$$(@B).c
-	$(C2OBJ) $** -I$(DES)
-
-$(OUT)\misc.obj:$(DES)\misc.c
-	$(C2OBJ) $** -DDONT_INCL_MAIN -I$(DES)
 
 $(COMERRBJS):$(COMERR)\$$(@B).c
 	$(C2OBJ) $** -I$(COMERR)
@@ -94,13 +89,13 @@ NTMAKE = nmake /nologo /f ntmakefile
 
 
 DLLLIBS =\
-!IF (("$(SYS_NAME)"=="i386_win95" ) || ("$(SYS_NAME)"=="I386_WIN95" ))
-	$(DESTDIR)\lib\win95\afspthread.lib \
-!ELSE
 	$(DESTDIR)\lib\afspthread.lib \
-!ENDIF
-	$(DESTDIR)\lib\afs\afsutil.lib \
-	$(DESTDIR)\lib\afs\afsreg.lib
+	$(DESTDIR)\lib\afs\mtafsutil.lib \
+	$(DESTDIR)\lib\afs\afsreg.lib \
+	$(DESTDIR)\lib\opr.lib \
+	$(DESTDIR)\lib\afshcrypto.lib \
+	$(DESTDIR)\lib\afsrfc3961.lib \
+	$(DESTDIR)\lib\afsroken.lib
 
 $(LIBFILE): $(DLLOBJS) $(DLLLIBS)
 	$(DLLCONLINK) /DEF:afsrpc.def iphlpapi.lib
@@ -113,31 +108,7 @@ $(LIBFILE): $(DLLOBJS) $(DLLLIBS)
 # Definitions for generating versioninfo resources
 $(OUT)\afsrpc.res: AFS_component_version_number.h
 
-install:
-!       IF (EXIST(..\..\src\des\NTMakefile))
-		$(NTMAKE) $(LIBFILE)
-!	else
-		$(NTMAKE) libstub
-!	endif
-
-install9x: install
-
-!IF (EXIST(..\..\src\des\NTMakefile))
-!ELSE IF (EXIST(..\..\DESLIB))
-DESPAR = ..\..\DESLIB\dest
-!ELSE IF (EXIST(..\..\..\DESLIB))
-DESPAR = ..\..\..\DESLIB\dest
-!ELSE
-!ERROR Must create DESLIB link in the same directory as PARENT link.
-!ENDIF
-
-libstub:
-	$(COPY) $(DESPAR)\lib\afsrpc.dll \
-		$(DESTDIR)\lib\afsrpc.dll
-	$(COPY) $(DESPAR)\lib\afsrpc.lib \
-		$(DESTDIR)\lib\afsrpc.lib
-	$(COPY) $(DESPAR)\lib\afsrpc.exp \
-		$(DESTDIR)\lib\afsrpc.exp
+install: $(LIBFILE)
 
 clean::
 	$(DEL) $(DESTDIR)\lib\afsrpc.dll $(DESTDIR)\lib\afsrpc.lib $(DESTDIR)\lib\afsrpc.exp

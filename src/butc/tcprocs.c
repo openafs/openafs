@@ -12,27 +12,13 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <afs/procmgmt.h>
+#include <roken.h>
 
-#include <sys/types.h>
-#include <errno.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/file.h>
-#include <netinet/in.h>
-#endif
-#include <rx/xdr.h>
+#include <afs/opr.h>
 #include <rx/rx.h>
 #include <afs/afsint.h>
-#include <stdio.h>
-#include <string.h>
-#include <afs/procmgmt.h>
-#include <afs/afs_assert.h>
 #include <afs/prs_fs.h>
-#include <sys/stat.h>
 #include <afs/nfs.h>
 #include <lwp.h>
 #include <lock.h>
@@ -42,6 +28,7 @@
 #include <afs/tcdata.h>
 #include <afs/budb_client.h>
 #include <afs/bucoord_prototypes.h>
+
 #include "error_macros.h"
 #include "butc_xbsa.h"
 #include "butc_prototypes.h"
@@ -54,9 +41,12 @@ static int CopyTapeSetDesc(struct tc_tapeSet *, struct tc_tapeSet *);
 int
 callPermitted(struct rx_call *call)
 {
-    /* before this code can be used, the rx connection, on the bucoord side, must */
-    /* be changed so that it will set up for token passing instead of using  a    */
-    /* simple rx connection that, below, returns a value of 0 from rx_SecurityClassOf */
+    /*
+     * Before this code can be used, the rx connection, on the bucoord side,
+     * must be changed so that it will set up for token passing instead of
+     * using a simple rx connection that, below, returns a value of
+     * RX_SECIDX_NULL from rx_SecurityClassOf.
+     */
     return 1;
 }
 
@@ -159,7 +149,7 @@ STC_LabelTape(struct rx_call *acid, struct tc_tapeLabel *label, afs_uint32 *task
     if (callPermitted(acid) == 0)
 	return (TC_NOTPERMITTED);
 
-    ptr = (struct labelTapeIf *)malloc(sizeof(*ptr));
+    ptr = malloc(sizeof(*ptr));
     if (!ptr)
 	ERROR_EXIT(TC_NOMEMORY);
     memcpy(&ptr->label, label, sizeof(ptr->label));
@@ -239,18 +229,13 @@ STC_PerformDump(struct rx_call *rxCallId, struct tc_dumpInterface *tcdiPtr, tc_d
     /*set up the parameters in the node, to be used by LWP */
     strcpy(newNode->dumpSetName, tcdiPtr->dumpName);
 
-    newNode->dumpName = (char *)malloc(strlen(tcdiPtr->dumpPath) + 1);
-    strcpy(newNode->dumpName, tcdiPtr->dumpPath);
-
-    newNode->volumeSetName =
-	(char *)malloc(strlen(tcdiPtr->volumeSetName) + 1);
-    strcpy(newNode->volumeSetName, tcdiPtr->volumeSetName);
+    newNode->dumpName = strdup(tcdiPtr->dumpPath);
+    newNode->volumeSetName = strdup(tcdiPtr->volumeSetName);
 
     CopyTapeSetDesc(&(newNode->tapeSetDesc), &tcdiPtr->tapeSet);
 
-    newNode->dumps = (struct tc_dumpDesc *)
-	malloc(sizeof(struct tc_dumpDesc) *
-	       tc_dumpArrayPtr->tc_dumpArray_len);
+    newNode->dumps = malloc(sizeof(struct tc_dumpDesc) *
+			    tc_dumpArrayPtr->tc_dumpArray_len);
     newNode->arraySize = tc_dumpArrayPtr->tc_dumpArray_len;
     CopyDumpDesc(newNode->dumps, tc_dumpArrayPtr);
 
@@ -331,9 +316,8 @@ STC_PerformRestore(struct rx_call *acid, char *dumpSetName, tc_restoreArray *are
     /* this creates a node in list, alots an id for it and prepares it for locking */
     CreateNode(&newNode);
 
-    newNode->restores = (struct tc_restoreDesc *)
-	malloc(sizeof(struct tc_restoreDesc) *
-	       arestores->tc_restoreArray_len);
+    newNode->restores = malloc(sizeof(struct tc_restoreDesc) *
+		               arestores->tc_restoreArray_len);
     newNode->arraySize = arestores->tc_restoreArray_len;
     CopyRestoreDesc(newNode->restores, arestores);
     *taskID = newNode->taskID;
@@ -494,7 +478,7 @@ STC_SaveDb(struct rx_call *rxCall, Date archiveTime, afs_uint32 *taskId)
 
     *taskId = allocTaskId();
 
-    ptr = (struct saveDbIf *)malloc(sizeof(struct saveDbIf));
+    ptr = malloc(sizeof(struct saveDbIf));
     if (!ptr)
 	ERROR_EXIT(TC_NOMEMORY);
     ptr->archiveTime = archiveTime;
@@ -573,7 +557,7 @@ STC_ScanDumps(struct rx_call *acid, afs_int32 addDbFlag, afs_uint32 *taskId)
 
     *taskId = allocTaskId();
 
-    ptr = (struct scanTapeIf *)malloc(sizeof(*ptr));
+    ptr = malloc(sizeof(*ptr));
     if (!ptr)
 	ERROR_EXIT(TC_NOMEMORY);
     ptr->addDbFlag = addDbFlag;
@@ -661,7 +645,7 @@ STC_DeleteDump(struct rx_call *acid, afs_uint32 dumpID, afs_uint32 *taskId)
     if (callPermitted(acid) == 0)
 	return (TC_NOTPERMITTED);
 
-    ptr = (struct deleteDumpIf *)malloc(sizeof(*ptr));
+    ptr = malloc(sizeof(*ptr));
     if (!ptr)
 	ERROR_EXIT(TC_NOMEMORY);
 

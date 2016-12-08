@@ -34,12 +34,10 @@
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
 
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
 #include <inet/led.h>
 #include <inet/common.h>
-#if   defined(AFS_SUN58_ENV)
 #include <netinet/ip6.h>
-#endif
 #include <inet/ip.h>
 #endif
 
@@ -52,62 +50,15 @@ struct unixuser *afs_users[NUSERS];
 
 #ifndef AFS_PAG_MANAGER
 /* Forward declarations */
-void afs_ResetAccessCache(afs_int32 uid, int alock);
-
-/*
- * Called with afs_xuser, afs_xserver and afs_xconn locks held, to delete
- * appropriate conn structures for au
- */
-static void
-RemoveUserConns(struct unixuser *au)
-{
-    int i;
-    struct server *ts;
-    struct srvAddr *sa;
-    struct afs_conn *tc, **lc;
-
-    AFS_STATCNT(RemoveUserConns);
-    for (i = 0; i < NSERVERS; i++) {
-	for (ts = afs_servers[i]; ts; ts = ts->next) {
-	    for (sa = ts->addr; sa; sa = sa->next_sa) {
-		lc = &sa->conns;
-		for (tc = *lc; tc; lc = &tc->next, tc = *lc) {
-		    if (tc->user == au && tc->refCount == 0) {
-			*lc = tc->next;
-			AFS_GUNLOCK();
-			rx_SetConnSecondsUntilNatPing(tc->id, 0);
-			rx_DestroyConnection(tc->id);
-			AFS_GLOCK();
-			if (tc->srvr->natping == tc) {
-			    struct afs_conn *nc = sa->conns;
-			    if (nc == tc)
-				nc = *lc;
-			    if (nc && nc->id) {
-				rx_SetConnSecondsUntilNatPing((nc->id), 20);
-				tc->srvr->natping = nc;
-			    }
-			}
-			afs_osi_Free(tc, sizeof(struct afs_conn));
-			break;	/* at most one instance per server */
-		    }		/*Found unreferenced connection for user */
-		}		/*For each connection on the server */
-	    }
-	}			/*For each server on chain */
-    }				/*For each chain */
-
-}				/*RemoveUserConns */
+void afs_ResetAccessCache(afs_int32 uid, afs_int32 cell, int alock);
 #endif /* !AFS_PAG_MANAGER */
 
 
 /* Called from afs_Daemon to garbage collect unixusers no longer using system,
- * and their conns.  The aforce parameter tells the function to flush all
- * *unauthenticated* conns, no matter what their expiration time; it exists
- * because after we choose our final rx epoch, we want to stop using calls with
- * other epochs as soon as possible (old file servers act bizarrely when they
- * see epoch changes).
+ * and their conns.
  */
 void
-afs_GCUserData(int aforce)
+afs_GCUserData(void)
 {
     struct unixuser *tu, **lu, *nu;
     int i;
@@ -126,15 +77,14 @@ afs_GCUserData(int aforce)
 	    delFlag = 0;	/* should we delete this dude? */
 	    /* Don't garbage collect users in use now (refCount) */
 	    if (tu->refCount == 0) {
-		if (tu->states & UHasTokens) {
-		    /*
-		     * Give ourselves a little extra slack, in case we
-		     * reauthenticate
-		     */
-		    if (tu->ct.EndTimestamp < now - NOTOKTIMEOUT)
+		if (tu->tokens) {
+		    /* Need to walk the token stack, and dispose of
+		     * all expired tokens */
+		    afs_DiscardExpiredTokens(&tu->tokens, now);
+		    if (!afs_HasUsableTokens(tu->tokens, now))
 			delFlag = 1;
 		} else {
-		    if (aforce || (tu->tokenTime < now - NOTOKTIMEOUT))
+		    if (tu->tokenTime < now - NOTOKTIMEOUT)
 			delFlag = 1;
 		}
 	    }
@@ -142,10 +92,10 @@ afs_GCUserData(int aforce)
 	    if (delFlag) {
 		*lu = tu->next;
 #ifndef AFS_PAG_MANAGER
-		RemoveUserConns(tu);
+                afs_ReleaseConnsUser(tu);
 #endif
-		if (tu->stp)
-		    afs_osi_Free(tu->stp, tu->stLen);
+		afs_FreeTokens(&tu->tokens);
+
 		if (tu->exporter)
 		    EXP_RELE(tu->exporter);
 		afs_osi_Free(tu, sizeof(struct unixuser));
@@ -208,18 +158,12 @@ afs_CheckTokenCache(void)
 	     * If tokens are still good and user has Kerberos tickets,
 	     * check expiration
 	     */
-	    if (!(tu->states & UTokensBad) && tu->vid != UNDEFVID) {
-		if (tu->ct.EndTimestamp < now) {
+	    if ((tu->states & UHasTokens) && !(tu->states & UTokensBad)) {
+		if (!afs_HasUsableTokens(tu->tokens, now)) {
 		    /*
 		     * This token has expired, warn users and reset access
 		     * cache.
 		     */
-#ifdef notdef
-		    /* I really hate this message - MLK */
-		    afs_warn
-			("afs: Tokens for user of AFS id %d for cell %s expired now\n",
-			 tu->vid, afs_GetCell(tu->cell)->cellName);
-#endif
 		    tu->states |= (UTokensBad | UNeedsReset);
 		}
 	    }
@@ -267,12 +211,16 @@ afs_CheckTokenCache(void)
 done:
     ReleaseReadLock(&afs_xuser);
     ReleaseReadLock(&afs_xvcache);
-
 }				/*afs_CheckTokenCache */
 
 
+/* Remove any access caches associated with this uid+cell
+ * by scanning the entire vcache table.  Specify cell=-1
+ * to remove all access caches associated with this uid
+ * regardless of cell.
+ */
 void
-afs_ResetAccessCache(afs_int32 uid, int alock)
+afs_ResetAccessCache(afs_int32 uid, afs_int32 cell, int alock)
 {
     int i;
     struct vcache *tvc;
@@ -285,8 +233,11 @@ afs_ResetAccessCache(afs_int32 uid, int alock)
 	for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
 	    /* really should do this under cache write lock, but that.
 	     * is hard to under locking hierarchy */
-	    if (tvc->Access && (ac = afs_FindAxs(tvc->Access, uid))) {
-		afs_RemoveAxs(&tvc->Access, ac);
+	    if (tvc->Access && (cell == -1 || tvc->f.fid.Cell == cell)) {
+		ac = afs_FindAxs(tvc->Access, uid);
+		if (ac) {
+		    afs_RemoveAxs(&tvc->Access, ac);
+		}
 	    }
 	}
     }
@@ -303,9 +254,9 @@ afs_ResetAccessCache(afs_int32 uid, int alock)
 void
 afs_ResetUserConns(struct unixuser *auser)
 {
-    int i;
+    int i, j;
     struct srvAddr *sa;
-    struct afs_conn *tc;
+    struct sa_conn_vector *tcv;
 
     AFS_STATCNT(afs_ResetUserConns);
     ObtainReadLock(&afs_xsrvAddr);
@@ -313,9 +264,11 @@ afs_ResetUserConns(struct unixuser *auser)
 
     for (i = 0; i < NSERVERS; i++) {
 	for (sa = afs_srvAddrs[i]; sa; sa = sa->next_bkt) {
-	    for (tc = sa->conns; tc; tc = tc->next) {
-		if (tc->user == auser) {
-		    tc->forceConnectFS = 1;
+	    for (tcv = sa->conns; tcv; tcv = tcv->next) {
+		if (tcv->user == auser) {
+		    for(j = 0; j < CVEC_LEN; ++j) {
+		    	(tcv->cvec[j]).forceConnectFS = 1;
+		    }
 		}
 	    }
 	}
@@ -323,7 +276,7 @@ afs_ResetUserConns(struct unixuser *auser)
 
     ReleaseWriteLock(&afs_xconn);
     ReleaseReadLock(&afs_xsrvAddr);
-    afs_ResetAccessCache(auser->uid, 1);
+    afs_ResetAccessCache(auser->uid, auser->cell, 1);
     auser->states &= ~UNeedsReset;
 }				/*afs_ResetUserConns */
 #endif /* !AFS_PAG_MANAGER */
@@ -337,6 +290,8 @@ afs_FindUser(afs_int32 auid, afs_int32 acell, afs_int32 locktype)
     ObtainWriteLock(&afs_xuser, 99);
     tu = afs_FindUserNoLock(auid, acell);
     ReleaseWriteLock(&afs_xuser);
+    if (tu)
+	afs_LockUser(tu, locktype, 365);
     return tu;
 }				/*afs_FindUser */
 
@@ -407,7 +362,7 @@ afs_ComputePAGStats(void)
 	     * We've found a previously-uncounted PAG.  If it's been deleted
 	     * but just not garbage-collected yet, we step over it.
 	     */
-	    if (currPAGP->vid == UNDEFVID)
+	    if (!(currPAGP->states & UHasTokens))
 		continue;
 
 	    /*
@@ -497,18 +452,32 @@ afs_ComputePAGStats(void)
 
 }				/*afs_ComputePAGStats */
 
+/*!
+ * Obtain a unixuser for the specified uid and cell;
+ * if no existing match found, allocate a new one.
+ *
+ * \param[in] auid	uid/PAG value
+ * \param[in] acell	cell number; if -1, match on auid only
+ * \param[in] locktype  locktype desired on returned unixuser
+ *
+ * \post unixuser is chained in afs_users[], returned with <locktype> held
+ *
+ * \note   Maintain unixusers in sorted order within hash bucket to enable
+ *         small lookup optimizations.
+ */
 
 struct unixuser *
 afs_GetUser(afs_int32 auid, afs_int32 acell, afs_int32 locktype)
 {
-    struct unixuser *tu, *pu = 0;
+    struct unixuser *tu, *xu = 0, *pu = 0;
     afs_int32 i;
     afs_int32 RmtUser = 0;
 
     AFS_STATCNT(afs_GetUser);
     i = UHash(auid);
     ObtainWriteLock(&afs_xuser, 104);
-    for (tu = afs_users[i]; tu; tu = tu->next) {
+    /* unixusers are sorted by uid in each hash bucket */
+    for (tu = afs_users[i]; tu && (tu->uid <= auid) ; xu = tu, tu = tu->next) {
 	if (tu->uid == auid) {
 	    RmtUser = 0;
 	    pu = NULL;
@@ -520,23 +489,32 @@ afs_GetUser(afs_int32 auid, afs_int32 acell, afs_int32 locktype)
 		/* Here we setup the real cell for the client */
 		tu->cell = acell;
 		tu->refCount++;
-		ReleaseWriteLock(&afs_xuser);
-		return tu;
+		goto done;
 	    } else if (tu->cell == acell || acell == -1) {
 		tu->refCount++;
-		ReleaseWriteLock(&afs_xuser);
-		return tu;
+		goto done;
 	    }
 	}
     }
+    /* no matching unixuser found; repurpose the tu pointer to
+     * allocate a new unixuser.
+     * xu will be insertion point for our new unixuser.
+     */
     tu = afs_osi_Alloc(sizeof(struct unixuser));
     osi_Assert(tu != NULL);
 #ifndef AFS_NOSTATS
     afs_stats_cmfullperf.authent.PAGCreations++;
 #endif /* AFS_NOSTATS */
     memset(tu, 0, sizeof(struct unixuser));
-    tu->next = afs_users[i];
-    afs_users[i] = tu;
+    AFS_RWLOCK_INIT(&tu->lock, "unixuser lock");
+    /* insert new nu in sorted order after xu */
+    if (xu == NULL) {
+	tu->next = afs_users[i];
+	afs_users[i] = tu;
+    } else {
+	tu->next = xu->next;
+	xu->next = tu;
+    }
     if (RmtUser) {
 	/*
 	 * This is for the case where an additional unixuser struct is
@@ -551,19 +529,58 @@ afs_GetUser(afs_int32 auid, afs_int32 acell, afs_int32 locktype)
     }
     tu->uid = auid;
     tu->cell = acell;
-    tu->vid = UNDEFVID;
+    tu->viceId = UNDEFVID;
     tu->refCount = 1;
     tu->tokenTime = osi_Time();
+    /* fall through to return the new one */
+
+ done:
     ReleaseWriteLock(&afs_xuser);
+    afs_LockUser(tu, locktype, 364);
     return tu;
 
 }				/*afs_GetUser */
 
+void
+afs_LockUser(struct unixuser *au, afs_int32 locktype,
+             unsigned int src_indicator)
+{
+    switch (locktype) {
+    case READ_LOCK:
+	ObtainReadLock(&au->lock);
+	break;
+    case WRITE_LOCK:
+	ObtainWriteLock(&au->lock, src_indicator);
+	break;
+    case SHARED_LOCK:
+	ObtainSharedLock(&au->lock, src_indicator);
+	break;
+    default:
+	/* noop */
+	break;
+    }
+}
 
 void
 afs_PutUser(struct unixuser *au, afs_int32 locktype)
 {
     AFS_STATCNT(afs_PutUser);
+
+    switch (locktype) {
+    case READ_LOCK:
+	ReleaseReadLock(&au->lock);
+	break;
+    case WRITE_LOCK:
+	ReleaseWriteLock(&au->lock);
+	break;
+    case SHARED_LOCK:
+	ReleaseSharedLock(&au->lock);
+	break;
+    default:
+	/* noop */
+	break;
+    }
+
     --au->refCount;
 }				/*afs_PutUser */
 
@@ -642,7 +659,7 @@ afs_MarkUserExpired(afs_int32 pag)
     ObtainWriteLock(&afs_xuser, 9);
     for (tu = afs_users[i]; tu; tu = tu->next) {
 	if (tu->uid == pag) {
-	    tu->ct.EndTimestamp = 0;
+	    tu->states &= ~UHasTokens;
 	    tu->tokenTime = 0;
 	}
     }
@@ -805,10 +822,8 @@ afs_GCPAGs(afs_int32 * ReleasedCount)
 		 * i.e. nfs translator, etc.
 		 */
 		if (!pu->exporter && afs_gcpags == AFS_GCPAGS_OK) {
-		    /* set the expire times to 0, causes
-		     * afs_GCUserData to remove this entry
-		     */
-		    pu->ct.EndTimestamp = 0;
+		    /* make afs_GCUserData remove this entry  */
+		    pu->states &= ~UHasTokens;
 		    pu->tokenTime = 0;
 
 		    (*ReleasedCount)++;	/* remember how many we marked (info only) */

@@ -7,10 +7,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 
 INCLS=${TOP_INCDIR}/afs/gtxobjects.h \
 	${TOP_INCDIR}/afs/gtxwindows.h \
@@ -34,8 +32,10 @@ LIBS=${TOP_LIBDIR}/libxstat_fs.a \
 	${TOP_LIBDIR}/libafsint.a \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/libafshcrypto_lwp.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libsys.a \
+	$(TOP_LIBDIR)/libopr.a \
 	${TOP_LIBDIR}/util.a
 
 EXTRA_LIBS=${LIB_curses} ${XLIBS}
@@ -47,12 +47,12 @@ afsmon-win.o: afsmon-win.c ${INCLS}
 afsmonitor.o: afsmonitor.c ${INCLS} AFS_component_version_number.c
 
 afsmonitor: afsmonitor.o afsmon-win.o afsmon-output.o ${LIBS}
-	${CC} ${LDFLAGS} -o afsmonitor afsmonitor.o afsmon-win.o \
-		afsmon-output.o ${LIBS} ${EXTRA_LIBS}
+	$(AFS_LDRULE) afsmonitor.o afsmon-win.o afsmon-output.o \
+		${LIBS} $(LIB_roken) ${EXTRA_LIBS}
 
 afsmon-parselog:  afsmon-parselog.o ${LIBS}
-	${CC} ${CFLAGS} -o afsmon-parselog afsmon-parselog.c \
-		${LIBS} ${EXTRA_LIBS}
+	$(AFS_LDRULE) afsmon-parselog.c \
+		${LIBS} $(LIB_roken) ${EXTRA_LIBS}
 
 install: afsmonitor
 	${INSTALL} -d ${DESTDIR}${bindir}

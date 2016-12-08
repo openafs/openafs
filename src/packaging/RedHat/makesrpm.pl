@@ -43,24 +43,14 @@ die "Unable to find unpacked source code\n" if !$vdir;
 
 my $srcdir = $tmpdir."/".$vdir;
 
-# Work out which version we're dealing with from the configure.ac file
+# Work out which version we're dealing with from git-version script
+# (which may use a .version file)
 my $afsversion;
 my $linuxver;
 my $linuxrel;
-my $fh = new IO::File $srcdir."/configure.ac"
-  or die "Unable to find unpacked configure.ac file";
-while(<$fh>) {
-  next if (/^\s*\#/);
-
-  if (/AM_INIT_AUTOMAKE\(openafs,(.*)\)/) {
-    $afsversion = $1;
-    next;
-  }
-}
-undef $fh;
 
 if (not defined($afsversion)) {
-  $afsversion = `"$srcdir/build-tools/git-version" "$srcdir"`;
+  $afsversion = `"/bin/sh" "$srcdir/build-tools/git-version" "$srcdir"`;
 }
 
 # Build the Linux version and release information from the package version

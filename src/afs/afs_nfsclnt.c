@@ -285,7 +285,9 @@ afs_nfsclient_reqhandler(struct afs_exporter *exporter,
     }
     if (au)
 	afs_PutUser(au, READ_LOCK);
-    au = afs_GetUser(pag, -1, WRITE_LOCK);
+    /* do not get a lock on au; afs_nfsclient_getcreds may write-lock the
+     * same unixuser */
+    au = afs_GetUser(pag, -1, 0);
     if (!(au->exporter)) {	/* Created new unixuser struct */
 	np->refCount++;		/* so it won't disappear */
 	au->exporter = (struct afs_exporter *)np;
@@ -296,7 +298,7 @@ afs_nfsclient_reqhandler(struct afs_exporter *exporter,
     }
     *pagparam = pag;
     *outexporter = (struct afs_exporter *)np;
-    afs_PutUser(au, WRITE_LOCK);
+    afs_PutUser(au, 0);
 /*    ReleaseWriteLock(&afs_xnfsreq);	*/
     return 0;
 }
@@ -307,6 +309,8 @@ afs_nfsclient_getcreds(struct unixuser *au)
     struct nfsclientpag *np = (struct nfsclientpag *)(au->exporter);
     struct rx_securityClass *csec;
     struct rx_connection *tconn;
+    union tokenUnion *tokenPtr;
+    struct rxkadToken *token;
     SysNameList tsysnames;
     CredInfos tcreds;
     CredInfo *tcred;
@@ -379,24 +383,26 @@ afs_nfsclient_getcreds(struct unixuser *au)
 	    tu->exporter = (struct afs_exporter *)np;
 	}
 
-	/* free any old secret token, and keep the new one */
-	if (tu->stp != NULL) {
-	    afs_osi_Free(tu->stp, tu->stLen);
-	}
-	tu->stp = tcred->st.st_val;
-	tu->stLen = tcred->st.st_len;
+	afs_FreeTokens(&tu->tokens);
+
+	/* Add a new rxkad token. Using the afs_AddRxkadToken interface
+	 * would require another copy, so we do this the hard way */
+	tokenPtr = afs_AddToken(&tu->tokens, 2);
+	token = &tokenPtr->rxkad;
+	token->ticket = tcred->st.st_val;
+	token->ticketLen = tcred->st.st_len;
 
 	/* copy the clear token */
-	memset(&tu->ct, 0, sizeof(tu->ct));
-	memcpy(tu->ct.HandShakeKey, tcred->ct.HandShakeKey, 8);
+	memset(&token->clearToken, 0, sizeof(token->clearToken));
+	memcpy(token->clearToken.HandShakeKey, tcred->ct.HandShakeKey, 8);
 	memset(tcred->ct.HandShakeKey, 0, 8);
-	tu->ct.AuthHandle     = tcred->ct.AuthHandle;
-	tu->ct.ViceId         = tcred->ct.ViceId;
-	tu->ct.BeginTimestamp = tcred->ct.BeginTimestamp;
-	tu->ct.EndTimestamp   = tcred->ct.EndTimestamp;
+	token->clearToken.AuthHandle     = tcred->ct.AuthHandle;
+	token->clearToken.ViceId         = tcred->ct.ViceId;
+	token->clearToken.BeginTimestamp = tcred->ct.BeginTimestamp;
+	token->clearToken.EndTimestamp   = tcred->ct.EndTimestamp;
 
 	/* Set everything else, reset connections, and move on. */
-	tu->vid = tcred->vid;
+	tu->viceId = tcred->vid;
 	tu->states |= UHasTokens;
 	tu->states &= ~UTokensBad;
 	afs_SetPrimary(tu, !!(tcred->states & UPrimary));

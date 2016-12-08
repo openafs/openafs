@@ -14,53 +14,63 @@
 #include "afsincludes.h"	/*AFS-based standard headers */
 
 int
-osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep) {
-    *slept = 0;
+osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep)
+{
+    int code;
 
-    if (!VREFCOUNT_GT(avc,0)
-        && avc->opens == 0 && (avc->f.states & CUnlinkedDel) == 0) {
-	/*
-         * vgone() reclaims the vnode, which calls afs_FlushVCache(),
-         * then it puts the vnode on the free list.
-         * If we don't do this we end up with a cleaned vnode that's
-         * not on the free list.
-         */
-        AFS_GUNLOCK();
-        vgone(AFSTOV(avc));
-        AFS_GLOCK();
-	return 1;
+    /* Perhaps this function should use vgone() or vrecycle() instead. */
+
+    if ((afs_debug & AFSDEB_GENERAL) != 0) {
+	printf("%s enter\n", __func__);
     }
-    return 0;
+
+    if (osi_VM_FlushVCache(avc) != 0) {
+	code = 0;
+    } else {
+	code = 1;
+    }
+
+    if ((afs_debug & AFSDEB_GENERAL) != 0) {
+        printf("%s exit %d\n", __func__, code);
+    }
+
+    return code;
 }
 
 struct vcache *
-osi_NewVnode(void) {
+osi_NewVnode(void)
+{
     struct vcache *tvc;
 
-    tvc = (struct vcache *)afs_osi_Alloc(sizeof(struct vcache));
+    tvc = afs_osi_Alloc(sizeof(struct vcache));
     tvc->v = NULL; /* important to clean this, or use memset 0 */
 
     return tvc;
 }
 
 void
-osi_PrePopulateVCache(struct vcache *avc) {
+osi_PrePopulateVCache(struct vcache *avc)
+{
     memset(avc, 0, sizeof(struct vcache));
 }
 
 void
-osi_AttachVnode(struct vcache *avc, int seq) {
+osi_AttachVnode(struct vcache *avc, int seq)
+{
     ReleaseWriteLock(&afs_xvcache);
     AFS_GUNLOCK();
-    afs_obsd_getnewvnode(avc);	/* includes one refcount */
+    afs_nbsd_getnewvnode(avc);	/* includes one refcount */
     AFS_GLOCK();
     ObtainWriteLock(&afs_xvcache,337);
+#ifndef AFS_NBSD50_ENV
     lockinit(&avc->rwlock, PINOD, "vcache", 0, 0);
+#endif
 }
 
 void
-osi_PostPopulateVCache(struct vcache *avc) {
+osi_PostPopulateVCache(struct vcache *avc)
+{
     AFSTOV(avc)->v_mount = afs_globalVFS;
-    vSetType(vc, VREG);
+    vSetType(avc, VREG);
 }
 

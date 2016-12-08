@@ -533,8 +533,8 @@
       <title>To create one user account with individual commands</title>
 
       <orderedlist>
-        <listitem>
-          <para><anchor id="LIWQ504" />Decide on the value to assign to each of the following account components. If you are
+        <listitem id="LIWQ504">
+          <para>Decide on the value to assign to each of the following account components. If you are
           creating an authentication-only account, you need to pick only a username, AFS UID, and initial password. <itemizedlist>
               <listitem>
                 <para>The username. By convention, the names of many components of the user account incorporate this name. For a
@@ -590,8 +590,8 @@
             </itemizedlist></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ505" />Authenticate as an AFS identity with all of the following privileges. In the conventional
+        <listitem id="LIWQ505">
+          <para>Authenticate as an AFS identity with all of the following privileges. In the conventional
           configuration, the <emphasis role="bold">admin</emphasis> user account has them, or you possibly have a personal
           administrative account. (To increase cell security, it is best to create special privileged accounts for use only while
           performing administrative procedures; for further discussion, see <link linkend="HDRWQ584">An Overview of Administrative
@@ -661,8 +661,8 @@
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ506" />Issue the <emphasis role="bold">pts createuser</emphasis> command to create an entry in the
+        <listitem id="LIWQ506">
+          <para>Issue the <emphasis role="bold">pts createuser</emphasis> command to create an entry in the
           Protection Database. For a discussion of setting AFS UIDs, see <link linkend="HDRWQ496">Assigning AFS and UNIX UIDs that
           Match</link>. If you are converting an existing UNIX account into an AFS account, also see <link
           linkend="HDRWQ498">Converting Existing UNIX Accounts</link>. <programlisting>
@@ -719,8 +719,8 @@
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ507" />Issue the <emphasis role="bold">kas create</emphasis> command to create an entry in the
+        <listitem id="LIWQ507">
+          <para>Issue the <emphasis role="bold">kas create</emphasis> command to create an entry in the
           Authentication Database. To avoid having the user's temporary initial password echo visibly on the screen, omit the
           <emphasis role="bold">-initial_password</emphasis> argument; instead enter the password at the prompts that appear when
           you omit the argument, as shown in the following syntax specification.</para>
@@ -798,8 +798,8 @@
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ508" />Issue the <emphasis role="bold">vos create</emphasis> command to create the user's volume.
+        <listitem id="LIWQ508">
+          <para>Issue the <emphasis role="bold">vos create</emphasis> command to create the user's volume.
           <programlisting>
    % <emphasis role="bold">vos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>partition name</replaceable>&gt; &lt;<replaceable>volume name</replaceable>&gt;  \
                 [<emphasis role="bold">-maxquota</emphasis> &lt;<replaceable>initial quota (KB)</replaceable>&gt;]
@@ -869,8 +869,8 @@
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ509" />Issue the <emphasis role="bold">fs mkmount</emphasis> command to mount the volume in the
+        <listitem id="LIWQ509">
+          <para>Issue the <emphasis role="bold">fs mkmount</emphasis> command to mount the volume in the
           filespace and create the user's home directory. <programlisting>
    % <emphasis role="bold">fs mkmount</emphasis> &lt;<replaceable>directory</replaceable>&gt; &lt;<replaceable>volume name</replaceable>&gt;
 </programlisting></para>
@@ -898,7 +898,7 @@
 
                 <para>Specify the read/write path to the mount point, to avoid the failure that results when you attempt to create
                 the new mount point in a read-only volume. By convention, you indicate the read/write path by placing a period
-                before the cell name at the pathname's second level (for example, <emphasis role="bold">/afs/.abc.com</emphasis>).
+                before the cell name at the pathname's second level (for example, <emphasis role="bold">/afs/.example.com</emphasis>).
                 For further discussion of the concept of read/write and read-only paths through the filespace, see <link
                 linkend="HDRWQ209">The Rules of Mount Point Traversal</link>.</para>
               </listitem>
@@ -943,7 +943,7 @@
 
                 <para>Specify the read/write path to the mount point, to avoid the failure that results when you attempt to change a
                 read-only volume. By convention, you indicate the read/write path by placing a period before the cell name at the
-                pathname's second level (for example, <emphasis role="bold">/afs/.abc.com</emphasis>). For further discussion of the
+                pathname's second level (for example, <emphasis role="bold">/afs/.example.com</emphasis>). For further discussion of the
                 concept of read/write and read-only paths through the filespace, see <link linkend="HDRWQ209">The Rules of Mount
                 Point Traversal</link>.</para>
               </listitem>
@@ -959,8 +959,8 @@
           </variablelist>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ510" />Issue the <emphasis role="bold">fs setacl</emphasis> command to set the ACL on the new home
+        <listitem id="LIWQ510">
+          <para>Issue the <emphasis role="bold">fs setacl</emphasis> command to set the ACL on the new home
           directory. At the least, create an entry that grants all permissions to the user, as shown.</para>
 
           <para>You can also use the command to edit or remove the entry that the <emphasis role="bold">vos create</emphasis>
@@ -980,8 +980,8 @@
 </programlisting>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ511" /><emphasis role="bold">(Optional)</emphasis> Create configuration files and subdirectories in
+        <listitem id="LIWQ511">
+          <para><emphasis role="bold">(Optional)</emphasis> Create configuration files and subdirectories in
           the new home directory. Possibilities include <emphasis role="bold">.login</emphasis> and <emphasis
           role="bold">.logout</emphasis> files, a shell-initialization file such as <emphasis role="bold">.cshrc</emphasis>, files
           to help with printing and mail delivery, and so on.</para>
@@ -998,8 +998,8 @@
           directories).</para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ512" />In Step <link linkend="LIWQ513">12</link> and Step <link linkend="LIWQ514">14</link>, you
+        <listitem id="LIWQ512">
+          <para>In Step <link linkend="LIWQ513">12</link> and Step <link linkend="LIWQ514">14</link>, you
           must know the user's AFS UID. If you had the Protection Server assign it in Step <link linkend="LIWQ506">3</link>, you
           probably do not know it. If necessary, issue the <emphasis role="bold">pts examine</emphasis> command to display it.
           <programlisting>
@@ -1030,8 +1030,8 @@
           see <link linkend="HDRWQ536">Displaying Information from the Protection Database</link>.</para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ513" />Designate the user as the owner of the home directory and any files and subdirectories
+        <listitem id="LIWQ513">
+          <para>Designate the user as the owner of the home directory and any files and subdirectories
           created or moved in Step <link linkend="LIWQ511">9</link>. Specify the owner by the AFS UID you learned in Step <link
           linkend="LIWQ512">11</link> rather than by username. This is necessary for new accounts because the user does not yet have
           an entry in your local machine's password file (<emphasis role="bold">/etc/passwd</emphasis> or equivalent). If you are
@@ -1075,23 +1075,19 @@
 
           <note>
             <para>This step can be necessary even if the home directory's parent directory is not itself a mount point for a
-            replicated volume (and is easier to overlook in that case). Suppose, for example, that the ABC Corporation puts the
-            mount points for user volumes in the <emphasis role="bold">/afs/abc.com/usr</emphasis> directory. Because that is a
+            replicated volume (and is easier to overlook in that case). Suppose, for example, that the Example Corporation puts the
+            mount points for user volumes in the <emphasis role="bold">/afs/example.com/usr</emphasis> directory. Because that is a
             regular directory rather than a mount point, it resides in the <emphasis role="bold">root.cell</emphasis> volume mounted
-            at the <emphasis role="bold">/afs/abc.com</emphasis> directory. That volume is replicated, so after changing it by
+            at the <emphasis role="bold">/afs/example.com</emphasis> directory. That volume is replicated, so after changing it by
             creating a new mount point the administrator must issue the <emphasis role="bold">vos release</emphasis> command.</para>
           </note>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ514" />Create or modify an entry for the new user in the local password file (<emphasis
+        <listitem id="LIWQ514">
+          <para>Create or modify an entry for the new user in the local password file (<emphasis
           role="bold">/etc/passwd</emphasis> or equivalent) of each machine the user can log onto. Remember to make the UNIX UID the
           same as the AFS UID you learned in Step <link linkend="LIWQ512">11</link>, and to fill the password field appropriately
           (for instructions, see <link linkend="HDRWQ497">Specifying Passwords in the Local Password File</link>).</para>
-
-          <para>If you use the <emphasis role="bold">package</emphasis> utility to distribute a common version of the password file
-          to all client machines, then you need to make the change only in the common version. See <link
-          linkend="HDRWQ419">Configuring Client Machines with the package Program</link>.</para>
         </listitem>
       </orderedlist>
 
@@ -1832,8 +1828,8 @@
           </itemizedlist>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ519" />Issue the <emphasis role="bold">pts listowned</emphasis> command to display the names of the
+        <listitem id="LIWQ519">
+          <para>Issue the <emphasis role="bold">pts listowned</emphasis> command to display the names of the
           groups the user owns. After you change the username in the Protection Database in Step <link linkend="LIWQ520">3</link>,
           you must issue the <emphasis role="bold">pts rename</emphasis> command to change each group's owner prefix to match the
           new name, because the Protection Server does not automatically make this change. For a complete description of the
@@ -1843,8 +1839,8 @@
 </programlisting></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ520" />Issue the <emphasis role="bold">pts rename</emphasis> command to change the user's name in
+        <listitem id="LIWQ520">
+          <para>Issue the <emphasis role="bold">pts rename</emphasis> command to change the user's name in
           the Protection Database. <programlisting>
    % <emphasis role="bold">pts rename</emphasis> &lt;<replaceable>old name</replaceable>&gt; &lt;<replaceable>new name</replaceable>&gt;
 </programlisting></para>
@@ -2018,7 +2014,7 @@
         </listitem>
 
         <listitem>
-          <para><anchor id="LIWQ521" />Issue the <emphasis role="bold">vos rename</emphasis> command to change the name of the
+          <para>Issue the <emphasis role="bold">vos rename</emphasis> command to change the name of the
           user's volume. For complete syntax, see <link linkend="HDRWQ246">To rename a volume</link>. <programlisting>
    % <emphasis role="bold">vos rename</emphasis>  &lt;<replaceable>old volume name</replaceable>&gt;  &lt;<replaceable>new volume name</replaceable>&gt;
 </programlisting><indexterm>
@@ -2048,8 +2044,8 @@
             </indexterm></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ522" />Issue the <emphasis role="bold">fs rmmount</emphasis> command to remove the existing mount
+        <listitem id="LIWQ522">
+          <para>Issue the <emphasis role="bold">fs rmmount</emphasis> command to remove the existing mount
           point. For the directory argument, specify the read/write path to the mount point, to avoid the failure that results when
           you attempt to delete a mount point from a read-only volume. <programlisting>
    % <emphasis role="bold">fs rmmount</emphasis> &lt;<replaceable>directory</replaceable>&gt;
@@ -2072,8 +2068,8 @@
             </indexterm></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ523" />Issue the <emphasis role="bold">fs mkmount</emphasis> command to create a mount point for the
+        <listitem id="LIWQ523">
+          <para>Issue the <emphasis role="bold">fs mkmount</emphasis> command to create a mount point for the
           volume's new name. Specify the read/write path to the mount point for the directory argument, as in the previous step. For
           complete syntax, see Step <link linkend="LIWQ509">6</link> in <link linkend="HDRWQ503">To create one user account with
           individual commands</link>. <programlisting>
@@ -2091,10 +2087,10 @@
 
           <note>
             <para>This step can be necessary even if the home directory's parent directory is not itself a mount point for a
-            replicated volume (and is easier to overlook in that case). For example, the ABC Corporation template puts the mount
-            points for user volumes in the <emphasis role="bold">/afs/abc.com/usr</emphasis> directory. Because that is a regular
+            replicated volume (and is easier to overlook in that case). For example, the Example Corporation template puts the mount
+            points for user volumes in the <emphasis role="bold">/afs/example.com/usr</emphasis> directory. Because that is a regular
             directory rather than a mount point, it resides in the <emphasis role="bold">root.cell</emphasis> volume mounted at the
-            <emphasis role="bold">/afs/abc.com</emphasis> directory. That volume is replicated, so after changing it the
+            <emphasis role="bold">/afs/example.com</emphasis> directory. That volume is replicated, so after changing it the
             administrator must issue the <emphasis role="bold">vos release</emphasis> command.</para>
           </note>
         </listitem>
@@ -2189,8 +2185,8 @@
           Volumes</link> or the AFS Backup System as described in <link linkend="HDRWQ296">Backing Up Data</link>.</para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ525" /><emphasis role="bold">(Optional)</emphasis> If you intend to remove groups that the user owns
+        <listitem id="LIWQ525">
+          <para><emphasis role="bold">(Optional)</emphasis> If you intend to remove groups that the user owns
           from the Protection Database after removing the user's entry, issue the <emphasis role="bold">pts listowned</emphasis>
           command to display them. For complete instructions, see <link linkend="HDRWQ536">Displaying Information from the
           Protection Database</link>. <programlisting>
@@ -2198,8 +2194,8 @@
 </programlisting></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ526" />(<emphasis role="bold">Optional)</emphasis> Issue the <emphasis role="bold">pts
+        <listitem id="LIWQ526">
+          <para>(<emphasis role="bold">Optional)</emphasis> Issue the <emphasis role="bold">pts
           delete</emphasis> command to remove the groups the user owns. However, if it is likely that other users have placed the
           groups on the ACLs of directories they own, it is best not to remove them. <programlisting>
    % <emphasis role="bold">pts delete</emphasis> &lt;<replaceable>user or group name or id</replaceable>&gt;+
@@ -2295,8 +2291,8 @@
             </variablelist></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ527" />Issue the <emphasis role="bold">vos listvldb</emphasis> command to display the site of the
+        <listitem id="LIWQ527">
+          <para>Issue the <emphasis role="bold">vos listvldb</emphasis> command to display the site of the
           user's home volume in preparation for removing it. By convention, user volumes are named <emphasis
           role="bold">user</emphasis>.username. <programlisting>
    % <emphasis role="bold">vos listvldb</emphasis> &lt;<replaceable>volume name or ID</replaceable>&gt;
@@ -2352,7 +2348,7 @@
         </listitem>
 
         <listitem>
-          <para><anchor id="LIWQ528" />Issue the <emphasis role="bold">vos remove</emphasis> command to remove the user's volume. It
+          <para>Issue the <emphasis role="bold">vos remove</emphasis> command to remove the user's volume. It
           automatically removes the backup version of the volume, if it exists. It is not conventional to replicate user volumes, so
           the command usually also completely removes the volume's entry from the Volume Location Database (VLDB). If there are
           ReadOnly replicas of the volume, you must repeat the <emphasis role="bold">vos remove</emphasis> command to remove each
@@ -2426,7 +2422,7 @@
         </listitem>
 
         <listitem>
-          <para><anchor id="LIWQ529" />Issue the <emphasis role="bold">fs rmmount</emphasis> command to remove the volume's mount
+          <para>Issue the <emphasis role="bold">fs rmmount</emphasis> command to remove the volume's mount
           point.</para>
 
           <para>If you mounted the user's backup volume as a subdirectory of the home directory, then this command is sufficient to
@@ -2455,7 +2451,7 @@
 
                   <para>Specify the read/write path to the mount point, to avoid the failure that results when you attempt to delete
                   a mount point from a read-only volume. By convention, you indicate the read/write path by placing a period before
-                  the cell name at the pathname's second level (for example, <emphasis role="bold">/afs/.abc.com</emphasis>). For
+                  the cell name at the pathname's second level (for example, <emphasis role="bold">/afs/.example.com</emphasis>). For
                   further discussion of the concept of read/write and read-only paths through the filespace, see <link
                   linkend="HDRWQ208">Mounting Volumes</link>.</para>
                 </listitem>
@@ -2492,7 +2488,7 @@
         </listitem>
 
         <listitem>
-          <para><anchor id="LIWQ530" />Issue the <emphasis role="bold">pts delete</emphasis> command to remove the user's Protection
+          <para>Issue the <emphasis role="bold">pts delete</emphasis> command to remove the user's Protection
           Database entry. A complete description of this command appears in Step <link linkend="LIWQ526">5</link>. <programlisting>
    % <emphasis role="bold">pts delete</emphasis> &lt;<replaceable>user or group name or id</replaceable>&gt;
 </programlisting></para>
@@ -2507,10 +2503,10 @@
 
           <note>
             <para>This step can be necessary even if the home directory's parent directory is not itself a mount point for a
-            replicated volume (and is easier to overlook in that case). For example, the ABC Corporation template puts the mount
-            points for user volumes in the <emphasis role="bold">/afs/abc.com/usr</emphasis> directory. Because that is a regular
+            replicated volume (and is easier to overlook in that case). For example, the Example Corporation template puts the mount
+            points for user volumes in the <emphasis role="bold">/afs/example.com/usr</emphasis> directory. Because that is a regular
             directory rather than a mount point, it resides in the <emphasis role="bold">root.cell</emphasis> volume mounted at the
-            <emphasis role="bold">/afs/abc.com</emphasis> directory. That volume is replicated, so after changing it by deleting a
+            <emphasis role="bold">/afs/example.com</emphasis> directory. That volume is replicated, so after changing it by deleting a
             mount point the administrator must issue the <emphasis role="bold">vos release</emphasis> command.</para>
           </note>
         </listitem>

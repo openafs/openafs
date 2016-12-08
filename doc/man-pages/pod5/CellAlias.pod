@@ -18,7 +18,7 @@ look at the C<root.afs> volume. F<CellAlias> is a replacement that allows
 such short names to be created under the client control.
 
 If you configure a short name mapping such as C<ir> for
-C<ir.stanford.edu>, the mapping of C<.ir> to C<.ir.stanford.edu> for the
+C<ir.example.org>, the mapping of C<.ir> to C<.ir.example.org> for the
 read/write version of the C<root.cell> volume for that cell will be
 created automatically. There is no need to list that alias
 separately. B<afsd> will report an error on startup if the dotted entry is
@@ -32,15 +32,15 @@ of the cell, and the second column is the alias that should be created.
 
 The following F<CellAlias> file:
 
-   openafs.org openafs
-   uncc.edu uncc
+   prod.example.com prod
+   test.example.org testcell
 
 results in the following symbolic links:
 
-   /afs/.openafs  ->  /afs/.openafs.org
-   /afs/openafs   ->  /afs/openafs.org
-   /afs/.uncc     ->  /afs/.uncc.edu
-   /afs/uncc      ->  /afs/uncc.edu
+   /afs/.prod      ->  /afs/.prod.example.com
+   /afs/prod       ->  /afs/prod.example.com
+   /afs/.testcell  ->  /afs/.testcell.example.org
+   /afs/testcell   ->  /afs/testcell.example.org
 
 =head1 SEE ALSO
 

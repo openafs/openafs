@@ -10,25 +10,13 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <sys/types.h>
 #include <ctype.h>
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#ifdef AFS_NT40_ENV
-#include <fcntl.h>
-#else
-#include <sys/param.h>
-#include <sys/file.h>
-#include <sys/uio.h>
-#include <netinet/in.h>
-#include <unistd.h>
-#endif
-#include <sys/stat.h>
-#include <afs/afs_assert.h>
-#include <rx/xdr.h>
+
+#include <afs/opr.h>
 #include <rx/rx.h>
+#include <rx/rx_queue.h>
 #include <afs/afsint.h>
 #include <afs/nfs.h>
 #include <afs/errors.h>
@@ -38,12 +26,13 @@
 #include <afs/vnode.h>
 #include <afs/volume.h>
 #include <afs/partition.h>
-#include "dump.h"
 #include <afs/daemon_com.h>
 #include <afs/fssync.h>
 #include <afs/acl.h>
 #include <afs/com_err.h>
 #include <afs/vol_prototypes.h>
+
+#include "dump.h"
 #include "volser.h"
 #include "volint.h"
 #include "dumpstuff.h"
@@ -73,7 +62,7 @@ static int DumpVnodeIndex(struct iod *iodp, Volume * vp,
 			  VnodeClass class, afs_int32 fromtime,
 			  int forcedump);
 static int DumpVnode(struct iod *iodp, struct VnodeDiskObject *v,
-		     int volid, int vnodeNumber, int dumpEverything);
+		     VolumeId volid, int vnodeNumber, int dumpEverything);
 static int ReadDumpHeader(struct iod *iodp, struct DumpHeader *hp);
 static int ReadVnodes(struct iod *iodp, Volume * vp, int incremental,
 		      afs_foff_t * Lbuf, afs_int32 s1, afs_foff_t * Sbuf,
@@ -93,11 +82,13 @@ static int SizeDumpVnodeIndex(struct iod *iodp, Volume * vp,
 			      int forcedump,
 			      struct volintSize *size);
 static int SizeDumpVnode(struct iod *iodp, struct VnodeDiskObject *v,
-			 int volid, int vnodeNumber, int dumpEverything,
+			 VolumeId volid, int vnodeNumber, int dumpEverything,
 			 struct volintSize *size);
 
 #define MAX_SECTIONS    3
-#define MIN_TLV_TAG     5
+
+/* The TLV range must start above D_MAX */
+#define MIN_TLV_TAG     21
 #define MAX_TLV_TAG     0x60
 #define MAX_STANDARD_TAG 0x7a
 static afs_uint32 oldtags[MAX_SECTIONS][16];
@@ -174,7 +165,7 @@ iod_Write(struct iod *iodp, char *buf, int nbytes)
     int code, i;
     int one_success = 0;
 
-    osi_Assert((iodp->call && iodp->ncalls == 1 && !iodp->calls)
+    opr_Assert((iodp->call && iodp->ncalls == 1 && !iodp->calls)
 	   || (!iodp->call && iodp->ncalls >= 1 && iodp->calls));
 
     if (iodp->call) {
@@ -550,8 +541,8 @@ DumpByte(struct iod *iodp, char tag, byte value)
     return ((iod_Write(iodp, tbuffer, 2) == 2) ? 0 : VOLSERDUMPERROR);
 }
 
-#define putint32(p, v)  *p++ = v>>24, *p++ = v>>16, *p++ = v>>8, *p++ = v
-#define putshort(p, v) *p++ = v>>8, *p++ = v
+#define afs_putint32(p, v)  *p++ = v>>24, *p++ = v>>16, *p++ = v>>8, *p++ = v
+#define afs_putshort(p, v) *p++ = v>>8, *p++ = v
 
 static int
 DumpDouble(struct iod *iodp, char tag, afs_uint32 value1,
@@ -560,8 +551,8 @@ DumpDouble(struct iod *iodp, char tag, afs_uint32 value1,
     char tbuffer[9];
     byte *p = (unsigned char *)tbuffer;
     *p++ = tag;
-    putint32(p, value1);
-    putint32(p, value2);
+    afs_putint32(p, value1);
+    afs_putint32(p, value2);
     return ((iod_Write(iodp, tbuffer, 9) == 9) ? 0 : VOLSERDUMPERROR);
 }
 
@@ -571,7 +562,7 @@ DumpInt32(struct iod *iodp, char tag, afs_uint32 value)
     char tbuffer[5];
     byte *p = (unsigned char *)tbuffer;
     *p++ = tag;
-    putint32(p, value);
+    afs_putint32(p, value);
     return ((iod_Write(iodp, tbuffer, 5) == 5) ? 0 : VOLSERDUMPERROR);
 }
 
@@ -584,7 +575,7 @@ DumpArrayInt32(struct iod *iodp, char tag,
     int code = 0;
     byte *p = (unsigned char *)tbuffer;
     *p++ = tag;
-    putshort(p, nelem);
+    afs_putshort(p, nelem);
     code = iod_Write(iodp, tbuffer, 3);
     if (code != 3)
 	return VOLSERDUMPERROR;
@@ -592,7 +583,7 @@ DumpArrayInt32(struct iod *iodp, char tag,
 	p = (unsigned char *)tbuffer;
 	v = *array++;		/*this was register */
 
-	putint32(p, v);
+	afs_putint32(p, v);
 	code = iod_Write(iodp, tbuffer, 4);
 	if (code != 4)
 	    return VOLSERDUMPERROR;
@@ -724,6 +715,8 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
     afs_ino_str_t stmp;
 #ifndef AFS_NT40_ENV
     struct afs_stat status;
+#else
+    LARGE_INTEGER fileSize;
 #endif
 #ifdef	AFS_AIX_ENV
 #include <sys/statfs.h>
@@ -736,7 +729,11 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
 #endif
 
 #ifdef AFS_NT40_ENV
-    howBig = _filelength(handleP->fd_fd);
+    if (!GetFileSizeEx(handleP->fd_fd, &fileSize)) {
+        Log("DumpFile: GetFileSizeEx returned error code %d on descriptor %d\n", GetLastError(), handleP->fd_fd);
+	    return VOLSERDUMPERROR;
+    }
+    howBig = fileSize.QuadPart;
     howMany = 4096;
 
 #else
@@ -994,15 +991,15 @@ DumpVnodeIndex(struct iod *iodp, Volume * vp, VnodeClass class,
     int vnodeIndex;
 
     fdP = IH_OPEN(vp->vnodeIndex[class].handle);
-    osi_Assert(fdP != NULL);
+    opr_Assert(fdP != NULL);
     file = FDH_FDOPEN(fdP, "r+");
-    osi_Assert(file != NULL);
+    opr_Assert(file != NULL);
     size = OS_SIZE(fdP->fd_fd);
-    osi_Assert(size != -1);
+    opr_Assert(size != -1);
     nVnodes = (size / vcp->diskSize) - 1;
     if (nVnodes > 0) {
-	osi_Assert((nVnodes + 1) * vcp->diskSize == size);
-	osi_Assert(STREAM_ASEEK(file, vcp->diskSize) == 0);
+	opr_Assert((nVnodes + 1) * vcp->diskSize == size);
+	opr_Assert(STREAM_ASEEK(file, vcp->diskSize) == 0);
     } else
 	nVnodes = 0;
     for (vnodeIndex = 0;
@@ -1066,12 +1063,13 @@ DumpDumpHeader(struct iod *iodp, Volume * vp,
 }
 
 static int
-DumpVnode(struct iod *iodp, struct VnodeDiskObject *v, int volid,
+DumpVnode(struct iod *iodp, struct VnodeDiskObject *v, VolumeId volid,
 	  int vnodeNumber, int dumpEverything)
 {
     int code = 0;
     IHandle_t *ihP;
     FdHandle_t *fdP;
+    afs_ino_str_t stmp;
 
     if (!v || v->type == vNull)
 	return code;
@@ -1102,8 +1100,8 @@ DumpVnode(struct iod *iodp, struct VnodeDiskObject *v, int volid,
     if (v->type == vDirectory) {
 	code = acl_HtonACL(VVnodeDiskACL(v));
 	if (code) {
-	    Log("DumpVnode: Skipping invalid acl vnode %u (volume %i)\n",
-		 vnodeNumber, volid);
+	    Log("DumpVnode: Skipping invalid acl vnode %u (volume %"AFS_VOLID_FMT")\n",
+		 vnodeNumber, afs_printable_VolumeId_lu(volid));
 	}
 	if (!code)
 	    code =
@@ -1115,7 +1113,11 @@ DumpVnode(struct iod *iodp, struct VnodeDiskObject *v, int volid,
 	IH_INIT(ihP, iodp->device, iodp->parentId, VNDISK_GET_INO(v));
 	fdP = IH_OPEN(ihP);
 	if (fdP == NULL) {
-	    Log("1 Volser: DumpVnode: dump: Unable to open inode %llu for vnode %u (volume %i); not dumped, error %d\n", (afs_uintmax_t) VNDISK_GET_INO(v), vnodeNumber, volid, errno);
+	    Log("1 Volser: DumpVnode: dump: Unable to open inode %s "
+		"for vnode %u (volume %" AFS_VOLID_FMT "); "
+		"not dumped, error %d\n",
+		PrintInode(stmp, VNDISK_GET_INO(v)), vnodeNumber,
+		afs_printable_VolumeId_lu(volid), errno);
 	    IH_RELEASE(ihP);
 	    return VOLSERREAD_DUMPERROR;
 	}
@@ -1124,10 +1126,11 @@ DumpVnode(struct iod *iodp, struct VnodeDiskObject *v, int volid,
 	if (indexlen != disklen) {
 	    FDH_REALLYCLOSE(fdP);
 	    IH_RELEASE(ihP);
-	    Log("DumpVnode: volume %lu vnode %lu has inconsistent length "
-	        "(index %lu disk %lu); aborting dump\n",
-	        (unsigned long)volid, (unsigned long)vnodeNumber,
-	        (unsigned long)indexlen, (unsigned long)disklen);
+	    Log("DumpVnode: volume %"AFS_VOLID_FMT" "
+		"vnode %lu has inconsistent length "
+		"(index %lu disk %lu); aborting dump\n",
+		afs_printable_VolumeId_lu(volid), (unsigned long)vnodeNumber,
+		(unsigned long)indexlen, (unsigned long)disklen);
 	    return VOLSERREAD_DUMPERROR;
 	}
 	code = DumpFile(iodp, vnodeNumber, fdP);
@@ -1152,6 +1155,7 @@ ProcessIndex(Volume * vp, VnodeClass class, afs_foff_t ** Bufp, int *sizep,
     struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
     char buf[SIZEOF_LARGEDISKVNODE], zero[SIZEOF_LARGEDISKVNODE];
     struct VnodeDiskObject *vnode = (struct VnodeDiskObject *)buf;
+    afs_ino_str_t stmp;
 
     memset(zero, 0, sizeof(zero));	/* zero out our proto-vnode */
     fdP = IH_OPEN(vp->vnodeIndex[class].handle);
@@ -1170,9 +1174,12 @@ ProcessIndex(Volume * vp, VnodeClass class, afs_foff_t ** Bufp, int *sizep,
 		    if (vnode->type != vNull && VNDISK_GET_INO(vnode)) {
 			cnt1++;
 			if (DoLogging) {
-			    Log("RestoreVolume %u Cleanup: Removing old vnode=%u inode=%llu size=unknown\n",
-                     V_id(vp), bitNumberToVnodeNumber(i, class),
-                     (afs_uintmax_t) VNDISK_GET_INO(vnode));
+			    Log("RestoreVolume %"AFS_VOLID_FMT" "
+				"Cleanup: Removing old vnode=%u inode=%s "
+				"size=unknown\n",
+				afs_printable_VolumeId_lu(V_id(vp)),
+				bitNumberToVnodeNumber(i, class),
+				PrintInode(stmp, VNDISK_GET_INO(vnode)));
 			}
 			IH_DEC(V_linkHandle(vp), VNDISK_GET_INO(vnode),
 			       V_parentId(vp));
@@ -1192,18 +1199,17 @@ ProcessIndex(Volume * vp, VnodeClass class, afs_foff_t ** Bufp, int *sizep,
 	OS_SYNC(afile->str_fd);
     } else {
 	size = OS_SIZE(fdP->fd_fd);
-	osi_Assert(size != -1);
+	opr_Assert(size != -1);
 	nVnodes =
 	    (size <=
 	     vcp->diskSize ? 0 : size - vcp->diskSize) >> vcp->logSize;
 	if (nVnodes > 0) {
-	    Buf = malloc(nVnodes * sizeof(afs_foff_t));
+	    Buf = calloc(nVnodes,  sizeof(afs_foff_t));
 	    if (Buf == NULL) {
 		STREAM_CLOSE(afile);
 		FDH_CLOSE(fdP);
 		return -1;
 	    }
-	    memset(Buf, 0, nVnodes * sizeof(afs_foff_t));
 	    STREAM_ASEEK(afile, offset = vcp->diskSize);
 	    while (1) {
 		code = STREAM_READ(vnode, vcp->diskSize, 1, afile);
@@ -1339,9 +1345,9 @@ RestoreVolume(struct rx_call *call, Volume * avp, int incremental,
   out:
     /* Free the malloced space above */
     if (b1)
-	free((char *)b1);
+	free(b1);
     if (b2)
-	free((char *)b2);
+	free(b2);
     return error;
 }
 
@@ -1569,7 +1575,6 @@ volser_WriteFile(int vn, struct iod *iodp, FdHandle_t * handleP, int tag,
 
 
     *status = 0;
-#ifdef AFS_64BIT_ENV
     {
 	afs_uint32 filesize_high = 0L, filesize_low = 0L;
 	if (tag == 'h') {
@@ -1584,13 +1589,7 @@ volser_WriteFile(int vn, struct iod *iodp, FdHandle_t * handleP, int tag,
 	}
 	FillInt64(filesize, filesize_high, filesize_low);
     }
-#else /* !AFS_64BIT_ENV */
-    if (!ReadInt32(iodp, &filesize)) {
-	*status = 1;
-	return (0);
-    }
-#endif /* !AFS_64BIT_ENV */
-    p = (unsigned char *)malloc(size);
+    p = malloc(size);
     if (p == NULL) {
 	*status = 2;
 	return (0);
@@ -1826,7 +1825,7 @@ SizeDumpDumpHeader(struct iod *iodp, Volume * vp,
 }
 
 static int
-SizeDumpVnode(struct iod *iodp, struct VnodeDiskObject *v, int volid,
+SizeDumpVnode(struct iod *iodp, struct VnodeDiskObject *v, VolumeId volid,
 	      int vnodeNumber, int dumpEverything,
 	      struct volintSize *v_size)
 {
@@ -1924,15 +1923,15 @@ SizeDumpVnodeIndex(struct iod *iodp, Volume * vp, VnodeClass class,
     int vnodeIndex;
 
     fdP = IH_OPEN(vp->vnodeIndex[class].handle);
-    osi_Assert(fdP != NULL);
+    opr_Assert(fdP != NULL);
     file = FDH_FDOPEN(fdP, "r+");
-    osi_Assert(file != NULL);
+    opr_Assert(file != NULL);
     size = OS_SIZE(fdP->fd_fd);
-    osi_Assert(size != -1);
+    opr_Assert(size != -1);
     nVnodes = (size / vcp->diskSize) - 1;
     if (nVnodes > 0) {
-	osi_Assert((nVnodes + 1) * vcp->diskSize == size);
-	osi_Assert(STREAM_ASEEK(file, vcp->diskSize) == 0);
+	opr_Assert((nVnodes + 1) * vcp->diskSize == size);
+	opr_Assert(STREAM_ASEEK(file, vcp->diskSize) == 0);
     } else
 	nVnodes = 0;
     for (vnodeIndex = 0;

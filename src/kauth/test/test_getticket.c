@@ -133,9 +133,9 @@ SetFields(conn, name, flags, expiration, lifetime)
     }
 }
 
-#define SetLife(c,n,l) SetFields (c,n,0,0,l);
-#define SetExp(c,n,e) SetFields (c,n,0,e,0);
-#define SetFlags(c,n,f) SetFields (c,n,f,0,0);
+#define SetLife(c,n,l) SetFields (c,n,0,0,l)
+#define SetExp(c,n,e) SetFields (c,n,0,e,0)
+#define SetFlags(c,n,f) SetFields (c,n,f,0,0)
 
 #define EXACT 0x5b
 #define KERBEROS 0x2a
@@ -506,7 +506,7 @@ main(argc, argv)
     initialize_ACFG_error_table();
     initialize_KA_error_table();
 
-    ts = cmd_CreateSyntax(NULL, Main, NULL, "Main program");
+    ts = cmd_CreateSyntax(NULL, Main, NULL, 0, "Main program");
     /* 0 */ cmd_AddParm(ts, "-patient", CMD_FLAG, CMD_OPTIONAL,
 			"wait for TGS ticket to age");
     cmd_Seek(ts, 12);

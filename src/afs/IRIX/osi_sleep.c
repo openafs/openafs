@@ -71,22 +71,11 @@ afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
 
 
 
-typedef struct afs_event {
-    struct afs_event *next;	/* next in hash chain */
-    char *event;		/* lwp event: an address */
-    int refcount;		/* Is it in use? */
-    int seq;			/* Sequence number: this is incremented
-				 * by wakeup calls; wait will not return until
-				 * it changes */
-    kcondvar_t cond;		/* Currently associated condition variable */
-} afs_event_t;
-
-#define HASHSIZE 128
-afs_event_t *afs_evhasht[HASHSIZE];	/* Hash table for events */
+afs_event_t *afs_evhasht[AFS_EVHASHSIZE];	/* Hash table for events */
 #if (_MIPS_SZPTR == 64)
-#define afs_evhash(event)	(afs_uint32) ((((long)event)>>3) & (HASHSIZE-1));
+#define afs_evhash(event)	(afs_uint32) ((((long)event)>>3) & (AFS_EVHASHSIZE-1))
 #else
-#define afs_evhash(event)	(afs_uint32) ((((long)event)>>2) & (HASHSIZE-1));
+#define afs_evhash(event)	(afs_uint32) ((((long)event)>>2) & (AFS_EVHASHSIZE-1))
 #endif
 int afs_evhashcnt = 0;
 
@@ -111,7 +100,7 @@ afs_getevent(char *event)
 	evp = evp->next;
     }
     if (!newp) {
-	newp = (afs_event_t *) osi_AllocSmallSpace(sizeof(afs_event_t));
+	newp = osi_AllocSmallSpace(sizeof(afs_event_t));
 	afs_evhashcnt++;
 	newp->next = afs_evhasht[hashcode];
 	afs_evhasht[hashcode] = newp;

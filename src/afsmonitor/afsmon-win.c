@@ -772,9 +772,9 @@ ovw_refresh(int a_pageNum,	/* page to refresh overview display */
 		/* highlighten if overflowed or probe failed */
 
 		if (fsDataP->ovfCount || !fsDataP->probeOK)
-		    code = gator_light_set(*tmp_fsNames_o, 1);
+		    gator_light_set(*tmp_fsNames_o, 1);
 		else
-		    code = gator_light_set(*tmp_fsNames_o, 0);
+		    gator_light_set(*tmp_fsNames_o, 0);
 
 
 	    } else {		/* no more hosts, blank the rest of the entries */
@@ -846,9 +846,9 @@ ovw_refresh(int a_pageNum,	/* page to refresh overview display */
 
 		/* highlighten if overflow or if probe failed */
 		if (cmDataP->ovfCount || !cmDataP->probeOK)
-		    code = gator_light_set(*tmp_cmNames_o, 1);
+		    gator_light_set(*tmp_cmNames_o, 1);
 		else
-		    code = gator_light_set(*tmp_cmNames_o, 0);
+		    gator_light_set(*tmp_cmNames_o, 0);
 
 
 	    } else {		/* no more hosts, blank the rest of the entries */
@@ -1153,9 +1153,7 @@ create_ovwFrame_objects(void)
     ovw_numHosts_perPage = maxY - OVW_NUM_FIXED_LINES;
 
     /* allocate memory for a list of onode pointers for file server names */
-    ovw_fsNames_o =
-	(struct onode **)malloc(sizeof(struct onode *) *
-				ovw_numHosts_perPage);
+    ovw_fsNames_o = malloc(sizeof(struct onode *) * ovw_numHosts_perPage);
     if (ovw_fsNames_o == NULL) {
 	sprintf(errMsg, "[ %s ] Failed to allocate memory for FS onodes\n",
 		rn);
@@ -1186,9 +1184,7 @@ create_ovwFrame_objects(void)
 
 
     /* allocate memory for a list of onode pointers for cache manager names */
-    ovw_cmNames_o =
-	(struct onode **)malloc(sizeof(struct onode *) *
-				ovw_numHosts_perPage);
+    ovw_cmNames_o = malloc(sizeof(struct onode *) * ovw_numHosts_perPage);
     if (ovw_cmNames_o == NULL) {
 	sprintf(errMsg, "[ %s ] Failed to allocate memory for CM onodes\n",
 		rn);
@@ -1714,15 +1710,13 @@ fs_refresh(int a_pageNum,	/* page to display */
 
 	if (labelIdx < fs_numCols) {
 	    dataIndex = fs_Display_map[labelIdx];
-	    code =
-		display_Server_label(fs_labels[dataIndex], *fsLabels_o_Ptr1,
-				     *fsLabels_o_Ptr2, *fsLabels_o_Ptr3);
+	    display_Server_label(fs_labels[dataIndex], *fsLabels_o_Ptr1,
+				 *fsLabels_o_Ptr2, *fsLabels_o_Ptr3);
 
 	    labelIdx++;		/* next label */
 	} else {
-	    code =
-		display_Server_label("//", *fsLabels_o_Ptr1, *fsLabels_o_Ptr2,
-				     *fsLabels_o_Ptr3);
+	    display_Server_label("//", *fsLabels_o_Ptr1, *fsLabels_o_Ptr2,
+				 *fsLabels_o_Ptr3);
 	}
 
 	fsLabels_o_Ptr1++;	/* next onode in label row 1 */
@@ -1803,17 +1797,16 @@ fs_refresh(int a_pageNum,	/* page to display */
 
 		    dataIndex = fs_Display_map[fs_curr_RCol];
 
-		    code =
-			display_Server_datum(fsDataP->data[dataIndex],
-					     *firstSlot_o_Ptr,
-					     *secondSlot_o_Ptr,
-					     fsDataP->probeOK, RIGHT_JUSTIFY,
-					     fsDataP->threshOvf[dataIndex]);
+		    display_Server_datum(fsDataP->data[dataIndex],
+					 *firstSlot_o_Ptr,
+					 *secondSlot_o_Ptr,
+					 fsDataP->probeOK, RIGHT_JUSTIFY,
+					 fsDataP->threshOvf[dataIndex]);
 
 		    fs_curr_RCol++;
 		} else {	/* no more data, blank out columns */
-		    code = display_Server_datum("", *firstSlot_o_Ptr, *secondSlot_o_Ptr, 1,	/* probe ok */
-						RIGHT_JUSTIFY, 0);	/* no overflow */
+		    display_Server_datum("", *firstSlot_o_Ptr, *secondSlot_o_Ptr, 1,	/* probe ok */
+					 RIGHT_JUSTIFY, 0);	/* no overflow */
 		}
 
 
@@ -1852,8 +1845,8 @@ fs_refresh(int a_pageNum,	/* page to display */
 	    secondSlot_o_Ptr = tmp_fs_lines_P->data_o[1];
 
 	    for (k = 0; k < fs_cols_perPage; k++) {
-		code = display_Server_datum("", *firstSlot_o_Ptr, *secondSlot_o_Ptr, 1,	/* probe OK */
-					    RIGHT_JUSTIFY, 0);	/* dont highlight */
+		display_Server_datum("", *firstSlot_o_Ptr, *secondSlot_o_Ptr, 1,	/* probe OK */
+				     RIGHT_JUSTIFY, 0);	/* dont highlight */
 
 		firstSlot_o_Ptr++;
 		secondSlot_o_Ptr++;
@@ -2189,7 +2182,7 @@ create_FSframe_objects(void)
      * the file server statistics */
 
     numBytes = fs_numHosts_perPage * sizeof(struct ServerInfo_line);
-    fs_lines = (struct ServerInfo_line *)malloc(numBytes);
+    fs_lines = malloc(numBytes);
     if (fs_lines == (struct ServerInfo_line *)0) {
 	sprintf(errMsg,
 		"[ %s ] Failed to allocate %d bytes for FS data lines\n", rn,
@@ -2204,7 +2197,7 @@ create_FSframe_objects(void)
     for (i = 0; i < fs_numHosts_perPage; i++) {
 	for (arrIdx = 0; arrIdx < 2; arrIdx++) {
 	    numBytes = fs_cols_perPage * sizeof(struct onode *);
-	    fs_lines_Ptr->data_o[arrIdx] = (struct onode **)malloc(numBytes);
+	    fs_lines_Ptr->data_o[arrIdx] = malloc(numBytes);
 	    if (fs_lines_Ptr->data_o[arrIdx] == NULL) {
 		sprintf(errMsg,
 			"[ %s ] Failed to allocate %d bytes for FS data onodes\n",
@@ -2276,8 +2269,7 @@ create_FSframe_objects(void)
      * labels */
     for (arrIdx = 0; arrIdx < 3; arrIdx++) {
 
-	fsLabels_o[arrIdx] =
-	    (struct onode **)malloc(sizeof(struct onode *) * fs_cols_perPage);
+	fsLabels_o[arrIdx] = malloc(sizeof(struct onode *) * fs_cols_perPage);
 	if (fsLabels_o[arrIdx] == NULL) {
 	    sprintf(errMsg,
 		    "[ %s ] Failed to allocate memory for FS label onodes\n",
@@ -2496,15 +2488,13 @@ cm_refresh(int a_pageNum,		/* page to display */
 
 	if (labelIdx < cm_numCols) {
 	    dataIndex = cm_Display_map[labelIdx];
-	    code =
-		display_Server_label(cm_labels[dataIndex], *cmLabels_o_Ptr1,
-				     *cmLabels_o_Ptr2, *cmLabels_o_Ptr3);
+	    display_Server_label(cm_labels[dataIndex], *cmLabels_o_Ptr1,
+				 *cmLabels_o_Ptr2, *cmLabels_o_Ptr3);
 
 	    labelIdx++;		/* next label */
 	} else {
-	    code =
-		display_Server_label("//", *cmLabels_o_Ptr1, *cmLabels_o_Ptr2,
-				     *cmLabels_o_Ptr3);
+	    display_Server_label("//", *cmLabels_o_Ptr1, *cmLabels_o_Ptr2,
+				 *cmLabels_o_Ptr3);
 	}
 
 	cmLabels_o_Ptr1++;	/* next onode in label row 1 */
@@ -2585,17 +2575,16 @@ cm_refresh(int a_pageNum,		/* page to display */
 
 		    dataIndex = cm_Display_map[cm_curr_RCol];
 
-		    code =
-			display_Server_datum(cmDataP->data[dataIndex],
-					     *firstSlot_o_Ptr,
-					     *secondSlot_o_Ptr,
-					     cmDataP->probeOK, RIGHT_JUSTIFY,
-					     cmDataP->threshOvf[dataIndex]);
+		    display_Server_datum(cmDataP->data[dataIndex],
+					 *firstSlot_o_Ptr,
+					 *secondSlot_o_Ptr,
+					 cmDataP->probeOK, RIGHT_JUSTIFY,
+					 cmDataP->threshOvf[dataIndex]);
 
 		    cm_curr_RCol++;
 		} else {	/* no more data, blank out columns */
-		    code = display_Server_datum("", *firstSlot_o_Ptr, *secondSlot_o_Ptr, 1,	/* probe ok */
-						RIGHT_JUSTIFY, 0);	/* no overflow */
+		    display_Server_datum("", *firstSlot_o_Ptr, *secondSlot_o_Ptr, 1,	/* probe ok */
+					 RIGHT_JUSTIFY, 0);	/* no overflow */
 		}
 
 
@@ -2634,7 +2623,7 @@ cm_refresh(int a_pageNum,		/* page to display */
 	    secondSlot_o_Ptr = tmp_cm_lines_P->data_o[1];
 
 	    for (k = 0; k < cm_cols_perPage; k++) {
-		code = display_Server_datum("", *firstSlot_o_Ptr, *secondSlot_o_Ptr, 1,	/* probe OK */
+		display_Server_datum("", *firstSlot_o_Ptr, *secondSlot_o_Ptr, 1,	/* probe OK */
 					    RIGHT_JUSTIFY, 0);	/* dont highlight */
 
 		firstSlot_o_Ptr++;
@@ -2971,7 +2960,7 @@ create_CMframe_objects(void)
      * the file server statistics */
 
     numBytes = cm_numHosts_perPage * sizeof(struct ServerInfo_line);
-    cm_lines = (struct ServerInfo_line *)malloc(numBytes);
+    cm_lines = malloc(numBytes);
     if (cm_lines == (struct ServerInfo_line *)0) {
 	sprintf(errMsg,
 		"[ %s ] Failed to allocate %d bytes for CM data lines\n", rn,
@@ -2986,7 +2975,7 @@ create_CMframe_objects(void)
     for (i = 0; i < cm_numHosts_perPage; i++) {
 	for (arrIdx = 0; arrIdx < 2; arrIdx++) {
 	    numBytes = cm_cols_perPage * sizeof(struct onode *);
-	    cm_lines_Ptr->data_o[arrIdx] = (struct onode **)malloc(numBytes);
+	    cm_lines_Ptr->data_o[arrIdx] = malloc(numBytes);
 	    if (cm_lines_Ptr->data_o[arrIdx] == NULL) {
 		sprintf(errMsg,
 			"[ %s ] Failed to allocate %d bytes for CM data onodes\n",
@@ -3058,8 +3047,7 @@ create_CMframe_objects(void)
      * labels */
     for (arrIdx = 0; arrIdx < 3; arrIdx++) {
 
-	cmLabels_o[arrIdx] =
-	    (struct onode **)malloc(sizeof(struct onode *) * cm_cols_perPage);
+	cmLabels_o[arrIdx] = malloc(sizeof(struct onode *) * cm_cols_perPage);
 	if (cmLabels_o[arrIdx] == NULL) {
 	    sprintf(errMsg,
 		    "[ %s ] Failed to allocate memory for CM label onodes\n",

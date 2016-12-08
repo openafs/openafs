@@ -163,6 +163,11 @@ not with the B<-config> argument.
 Is nonoperational and provided to accommodate potential future
 enhancements to the program.
 
+=item B<-debug> <I<debut output file>>
+
+Turns on debugging output, and writes debugging information to the specified
+file.
+
 =item B<-help>
 
 Prints the online help for this command. All other valid options are

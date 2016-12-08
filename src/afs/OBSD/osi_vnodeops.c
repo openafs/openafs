@@ -237,7 +237,7 @@ struct vnodeopv_entry_desc afs_vnodeop_entries[] = {
     {&vop_advlock_desc, afs_obsd_advlock},	/* advlock */
     {&vop_reallocblks_desc, afs_obsd_reallocblks},	/* reallocblks */
     {&vop_bwrite_desc, vop_generic_bwrite},
-    {(struct vnodeop_desc *)NULL, (int (*)__P((void *)))NULL}
+    {NULL, (int (*)__P((void *)))NULL}
 };
 struct vnodeopv_desc afs_vnodeop_opv_desc =
     { &afs_vnodeop_p, afs_vnodeop_entries };
@@ -504,9 +504,7 @@ afs_obsd_read(void *v)
     int code;
 
     AFS_GLOCK();
-    code =
-	afs_read(VTOAFS(ap->a_vp), ap->a_uio, ap->a_cred, (daddr_t) 0, NULL,
-		 0);
+    code = afs_read(VTOAFS(ap->a_vp), ap->a_uio, ap->a_cred, 0);
     AFS_GUNLOCK();
     return code;
 }
@@ -980,7 +978,9 @@ afs_obsd_lock(void *v)
 
     if (!vc)
 	panic("afs_obsd_lock: null vcache");
-    return afs_osi_lockmgr(&vc->rwlock, ap->a_flags | LK_CANRECURSE, VP_INTERLOCK, ap->a_p);
+    return afs_osi_lockmgr(&vc->rwlock,
+	(ap->a_flags & LK_RECURSEFAIL) ? ap->a_flags : ap->a_flags | LK_CANRECURSE,
+	VP_INTERLOCK, ap->a_p);
 }
 
 int

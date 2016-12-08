@@ -10,18 +10,11 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include <afs/cmd.h>
 #include <lock.h>
 #include <afs/tcdata.h>
-
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
-
 #include <afs/usd.h>
 
 usd_handle_t fd;
@@ -201,7 +194,7 @@ openOutFile(struct volumeHeader *headerPtr)
     int rc;
     int oflag;
     int skip, first;
-    afs_hyper_t size;
+    afs_int64 size;
 
     /* If we were asked to skip this volume, then skip it */
     if (nskip) {
@@ -267,7 +260,7 @@ openOutFile(struct volumeHeader *headerPtr)
 	return 0;
     }
     if (headerPtr->contd != TC_VOLCONTD) {
-	hzero(size);
+	size = 0;
 	rc = USD_IOCTL(ofd, USD_IOCTL_SETSIZE, &size);
 	if (rc != 0) {
 	    fprintf(stderr, "Unable to open file %s. Skipping. Code = %d\n",
@@ -428,7 +421,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     /*
      * Initialize the tape block buffers
      */
-    tapeblock1 = (char *)malloc(3 * 16384);
+    tapeblock1 = malloc(3 * 16384);
     if (tapeblock1 == NULL) {
 	printf("Failed to allocate I/O buffers.\n");
 	exit(1);
@@ -550,7 +543,7 @@ main(int argc, char **argv)
 
     setlinebuf(stdout);
 
-    ts = cmd_CreateSyntax(NULL, WorkerBee, NULL,
+    ts = cmd_CreateSyntax(NULL, WorkerBee, NULL, 0,
 			  "Restore volumes from backup tape");
     cmd_AddParm(ts, "-tape", CMD_SINGLE, CMD_REQUIRED, "tape device");
     cmd_AddParm(ts, "-restore", CMD_SINGLE, CMD_OPTIONAL,

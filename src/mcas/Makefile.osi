@@ -3,16 +3,8 @@
 # INTEL, X86_64, PPC, IA64, MIPS, SPARC, ALPHA
 #
 
-ifeq ($(SYS_NAME),i386_linux24)
-ARCH          := INTEL
-endif
-
 ifeq ($(SYS_NAME),i386_linux26)
 ARCH          := INTEL
-endif
-
-ifeq ($(SYS_NAME),amd64_linux24)
-ARCH          := X86_64
 endif
 
 ifeq ($(SYS_NAME),amd64_linux26)

@@ -15,6 +15,4 @@ sub miscserver {
 &Print("  root.server/usr/afs/bin/buserver");
 &Print("  root.server/usr/afs/bin/upserver");
 &Print("  root.server/usr/afs/bin/upclient");
-&Print("  root.server/usr/afs/bin/runntp");
-&Print("  root.server/usr/afs/bin/ntpd");
 }

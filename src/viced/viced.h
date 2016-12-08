@@ -193,21 +193,13 @@ extern int saneacls;
 #define MAX_FILESERVER_THREAD 16384 /* max number of threads in fileserver */
 #define FILESERVER_HELPER_THREADS 8 /* Listner, IOMGR, FiveMinute, FsyncCk
 					 * HostCheck, Signal, min 2 for RXSTATS */
-#ifdef AFS_PTHREAD_ENV
 #include <pthread.h>
-#include <afs/afs_assert.h>
 extern pthread_mutex_t fileproc_glock_mutex;
-#define FS_LOCK MUTEX_ENTER(&fileproc_glock_mutex);
-#define FS_UNLOCK MUTEX_EXIT(&fileproc_glock_mutex);
+#define FS_LOCK opr_mutex_enter(&fileproc_glock_mutex)
+#define FS_UNLOCK opr_mutex_exit(&fileproc_glock_mutex)
 extern pthread_mutex_t fsync_glock_mutex;
-#define FSYNC_LOCK MUTEX_ENTER(&fsync_glock_mutex);
-#define FSYNC_UNLOCK MUTEX_EXIT(&fsync_glock_mutex);
-#else /* AFS_PTHREAD_ENV */
-#define FS_LOCK
-#define FS_UNLOCK
-#define FSYNC_LOCK
-#define FSYNC_UNLOCK
-#endif /* AFS_PTHREAD_ENV */
+#define FSYNC_LOCK opr_mutex_enter(&fsync_glock_mutex)
+#define FSYNC_UNLOCK opr_mutex_exit(&fsync_glock_mutex)
 
 
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -244,11 +236,11 @@ extern struct fs_state fs_state;
 #ifdef AFS_NT40_ENV
 #define FS_STATE_INIT    fs_stateInit()
 #else
-#define FS_STATE_INIT    osi_Assert(pthread_rwlock_init(&fs_state.state_lock, NULL) == 0)
+#define FS_STATE_INIT    opr_Verify(pthread_rwlock_init(&fs_state.state_lock, NULL) == 0)
 #endif
-#define FS_STATE_RDLOCK  osi_Assert(pthread_rwlock_rdlock(&fs_state.state_lock) == 0)
-#define FS_STATE_WRLOCK  osi_Assert(pthread_rwlock_wrlock(&fs_state.state_lock) == 0)
-#define FS_STATE_UNLOCK  osi_Assert(pthread_rwlock_unlock(&fs_state.state_lock) == 0)
+#define FS_STATE_RDLOCK  opr_Verify(pthread_rwlock_rdlock(&fs_state.state_lock) == 0)
+#define FS_STATE_WRLOCK  opr_Verify(pthread_rwlock_wrlock(&fs_state.state_lock) == 0)
+#define FS_STATE_UNLOCK  opr_Verify(pthread_rwlock_unlock(&fs_state.state_lock) == 0)
 
 #define FS_MODE_NORMAL    0
 #define FS_MODE_SHUTDOWN  1

@@ -97,7 +97,6 @@
 #include "volume.h"
 #include "vldb.h"
 #include "partition.h"
-#include "afs/afs_assert.h"
 #include "filesignal.h"
 #include "vutils.h"
 #include "daemon_com.h"
@@ -301,7 +300,7 @@ scanLargeVnode(dev, node, partitionName, option)
 		 vnode->inodeNumber, vnode->parent);
 #endif
 
-	    assert(dirEntry = (DirEnt *) malloc(sizeof(DirEnt)));
+	    assert(dirEntry = malloc(sizeof(DirEnt)));
 	    dirEntry->inode = vnode->inodeNumber;
 	    dirEntry->numEntries = 0;
 	    dirEntry->vnodeName = NULL;
@@ -340,14 +339,12 @@ createDirEnt(dirEntry, fileName, vnode, unique)
 
     (dirEntry->numEntries)++;
     assert(dirEntry->vnodeName =
-	   (VnodeName *) realloc(dirEntry->vnodeName,
-				 dirEntry->numEntries * sizeof(VnodeName)));
+	   realloc(dirEntry->vnodeName,
+		   dirEntry->numEntries * sizeof(VnodeName)));
     dirEntry->vnodeName[dirEntry->numEntries - 1].vnode = vnode;
     dirEntry->vnodeName[dirEntry->numEntries - 1].vunique = unique;
-    dirEntry->vnodeName[dirEntry->numEntries - 1].name =
-	(char *)malloc(strlen(fileName) + 1);
+    dirEntry->vnodeName[dirEntry->numEntries - 1].name = strdup(fileName);
     assert(dirEntry->vnodeName[dirEntry->numEntries - 1].name);
-    strcpy(dirEntry->vnodeName[dirEntry->numEntries - 1].name, fileName);
 }
 
 
@@ -441,7 +438,7 @@ scanSmallVnode(dev, node, partitionName, option)
 			   errno);
 		    exit(12);
 		}
-		assert(symLink = (char *)malloc(statLink.st_size + 1));
+		assert(symLink = malloc(statLink.st_size + 1));
 		if (read(fdLink, symLink, statLink.st_size) < 0) {
 		    printf("Error in reading symbolic link : %d\n", errno);
 		    exit(11);

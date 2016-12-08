@@ -156,11 +156,7 @@ afs_getpage(struct vnode *vp, offset_t off, u_int len, u_int *protp,
 
     if (len <= PAGESIZE)
 	code =
-	    afs_GetOnePage(vp, 
-#if !defined(AFS_SUN56_ENV)
-			   (u_int)
-#endif
-			   off, len, protp, pl, plsz, seg, addr, rw, acred);
+	    afs_GetOnePage(vp, off, len, protp, pl, plsz, seg, addr, rw, acred);
     else {
 	struct multiPage_range range;
 	struct vcache *vcp = VTOAFS(vp);
@@ -191,14 +187,8 @@ afs_getpage(struct vnode *vp, offset_t off, u_int len, u_int *protp,
 	ObtainWriteLock(&vcp->vlock, 548);
 	QAdd(&vcp->multiPage, &range.q);
 	ReleaseWriteLock(&vcp->vlock);
-	afs_BozonLock(&vcp->pvnLock, vcp);
 	code =
-	    pvn_getpages(afs_GetOnePage, vp, 
-#if !defined(AFS_SUN56_ENV)
-			 (u_int)
-#endif
-			 off, len, protp, pl, plsz, seg, addr, rw, acred);
-	afs_BozonUnlock(&vcp->pvnLock, vcp);
+	    pvn_getpages(afs_GetOnePage, vp, off, len, protp, pl, plsz, seg, addr, rw, acred);
 	ObtainWriteLock(&vcp->vlock, 549);
 	QRemove(&range.q);
 	ReleaseWriteLock(&vcp->vlock);
@@ -209,15 +199,9 @@ afs_getpage(struct vnode *vp, offset_t off, u_int len, u_int *protp,
 
 /* Return all the pages from [off..off+len) in file */
 int
-#if	defined(AFS_SUN56_ENV)
 afs_GetOnePage(struct vnode *vp, u_offset_t off, u_int alen, u_int *protp, 
 	       struct page *pl[], u_int plsz, struct seg *seg, caddr_t addr, 
 	       enum seg_rw rw, afs_ucred_t *acred)
-#else
-afs_GetOnePage(struct vnode *vp, u_int off, u_int alen, u_int *protp, 
-	       struct page *pl[], u_int plsz, struct seg *seg, caddr_t addr, 
-	       enum seg_rw rw, afs_ucred_t *acred)
-#endif
 {
     struct page *page;
     afs_int32 code = 0;
@@ -330,7 +314,6 @@ afs_GetOnePage(struct vnode *vp, u_int off, u_int alen, u_int *protp,
 	return afs_CheckCode(code, &treq, 44);	/* failed to get it */
     }
 
-    afs_BozonLock(&avc->pvnLock, avc);
     ObtainReadLock(&avc->lock);
 
     afs_Trace4(afs_iclSetp, CM_TRACE_PAGEIN, ICL_TYPE_POINTER, (afs_int32) vp,
@@ -346,7 +329,6 @@ afs_GetOnePage(struct vnode *vp, u_int off, u_int alen, u_int *protp,
     if (avc->activeV) {
 	ReleaseReadLock(&avc->lock);
 	ReleaseWriteLock(&avc->vlock);
-	afs_BozonUnlock(&avc->pvnLock, avc);
 	afs_PutDCache(tdc);
 	/* Check activeV again, it may have been turned off
 	 * while we were waiting for a lock in afs_PutDCache */
@@ -370,7 +352,6 @@ afs_GetOnePage(struct vnode *vp, u_int off, u_int alen, u_int *protp,
 	|| !hsame(avc->f.m.DataVersion, tdc->f.versionNo)) {
 	ReleaseReadLock(&tdc->lock);
 	ReleaseReadLock(&avc->lock);
-	afs_BozonUnlock(&avc->pvnLock, avc);
 	afs_PutDCache(tdc);
 	goto retry;
     }
@@ -387,24 +368,14 @@ afs_GetOnePage(struct vnode *vp, u_int off, u_int alen, u_int *protp,
 	/* if we make it here, we can't find the page in memory.  Do a real disk read
 	 * from the cache to get the data */
 	Code |= 0x200;		/* XXX */
-#if	defined(AFS_SUN54_ENV)
 	/* use PG_EXCL because we know the page does not exist already.  If it 
 	 * actually does exist, we have somehow raced between lookup and create.
 	 * As of 4/98, that shouldn't be possible, but we'll be defensive here
 	 * in case someone tries to relax all the serialization of read and write
 	 * operations with harmless things like stat. */
-#if    defined(AFS_SUN58_ENV)
 	page =
 	    page_create_va(vp, toffset, PAGESIZE, PG_WAIT | PG_EXCL, seg,
 			   addr);
-#else
-	page =
-	    page_create_va(vp, toffset, PAGESIZE, PG_WAIT | PG_EXCL,
-			   seg->s_as, addr);
-#endif
-#else
-	page = page_create(vp, toffset, PAGESIZE, PG_WAIT);
-#endif
 	if (!page) {
 	    continue;
 	}
@@ -420,11 +391,7 @@ afs_GetOnePage(struct vnode *vp, u_int off, u_int alen, u_int *protp,
 	    buf = pageio_setup(page, PAGESIZE, vp, B_READ);	/* allocate a buf structure */
 	    buf->b_edev = 0;
 	    buf->b_dev = 0;
-#if defined(AFS_SUN56_ENV)
 	    buf->b_lblkno = lbtodb(toffset);
-#else
-	    buf->b_blkno = btodb(toffset);
-#endif
 	    bp_mapin(buf);	/* map it in to our address space */
 
 	    AFS_GLOCK();
@@ -447,12 +414,7 @@ afs_GetOnePage(struct vnode *vp, u_int off, u_int alen, u_int *protp,
       nextpage:
 	/* put page in array and continue */
 	/* The p_selock must be downgraded to a shared lock after the page is read */
-#if	defined(AFS_SUN56_ENV)
-	if ((rw != S_CREATE) && !(PAGE_SHARED(page)))
-#else
-	if ((rw != S_CREATE) && !(se_shared_assert(&page->p_selock)))
-#endif
-	{
+	if ((rw != S_CREATE) && !(PAGE_SHARED(page))) {
 	    page_downgrade(page);
 	}
 	pl[slot++] = page;
@@ -483,7 +445,6 @@ afs_GetOnePage(struct vnode *vp, u_int off, u_int alen, u_int *protp,
     }
     afs_indexFlags[tdc->index] |= IFAnyPages;
     ReleaseWriteLock(&afs_xdcache);
-    afs_BozonUnlock(&avc->pvnLock, avc);
     afs_PutDCache(tdc);
     afs_Trace3(afs_iclSetp, CM_TRACE_PAGEINDONE, ICL_TYPE_LONG, code,
 	       ICL_TYPE_LONG, (int)page, ICL_TYPE_LONG, Code);
@@ -497,7 +458,6 @@ afs_GetOnePage(struct vnode *vp, u_int off, u_int alen, u_int *protp,
     if (page)
 	pvn_read_done(page, B_ERROR);
     ReleaseReadLock(&avc->lock);
-    afs_BozonUnlock(&avc->pvnLock, avc);
     ReleaseReadLock(&tdc->lock);
     afs_PutDCache(tdc);
     return code;
@@ -510,18 +470,10 @@ afs_putpage(struct vnode *vp, offset_t off, u_int len, int flags,
     struct vcache *avc;
     struct page *pages;
     afs_int32 code = 0;
-#if    defined(AFS_SUN58_ENV)
     size_t tlen;
-#else
-    afs_int32 tlen;
-#endif
     afs_offs_t endPos;
     afs_int32 NPages = 0;
-#if	defined(AFS_SUN56_ENV)
     u_offset_t toff = off;
-#else
-    int toff = (int)off;
-#endif
     int didWriteLock;
 
     AFS_STATCNT(afs_putpage);
@@ -536,7 +488,6 @@ afs_putpage(struct vnode *vp, offset_t off, u_int len, int flags,
 	       (afs_int32) vp, ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(off),
 	       ICL_TYPE_INT32, (afs_int32) len, ICL_TYPE_LONG, (int)flags);
     avc = VTOAFS(vp);
-    afs_BozonLock(&avc->pvnLock, avc);
     ObtainSharedLock(&avc->lock, 247);
     didWriteLock = 0;
 
@@ -579,11 +530,7 @@ afs_putpage(struct vnode *vp, offset_t off, u_int len, int flags,
 	}
 
 	AFS_GUNLOCK();
-#if	defined(AFS_SUN56_ENV)
 	code = pvn_vplist_dirty(vp, toff, afs_putapage, flags, cred);
-#else
-	code = pvn_vplist_dirty(vp, (u_int) off, afs_putapage, flags, cred);
-#endif
 	AFS_GLOCK();
     }
 
@@ -599,7 +546,6 @@ afs_putpage(struct vnode *vp, offset_t off, u_int len, int flags,
 	ReleaseWriteLock(&avc->lock);
     else
 	ReleaseSharedLock(&avc->lock);
-    afs_BozonUnlock(&avc->pvnLock, avc);
     afs_Trace2(afs_iclSetp, CM_TRACE_PAGEOUTDONE, ICL_TYPE_LONG, code,
 	       ICL_TYPE_LONG, NPages);
     AFS_GUNLOCK();
@@ -608,16 +554,8 @@ afs_putpage(struct vnode *vp, offset_t off, u_int len, int flags,
 
 
 int
-#if defined(AFS_SUN58_ENV)
 afs_putapage(struct vnode *vp, struct page *pages, u_offset_t * offp,
 	     size_t * lenp, int flags, afs_ucred_t *credp)
-#elif defined(AFS_SUN56_ENV)
-afs_putapage(struct vnode *vp, struct page *pages, u_offset_t * offp,
-	     u_int * lenp, int flags, afs_ucred_t *credp)
-#else
-afs_putapage(struct vnode *vp, struct page *pages, u_int * offp,
-	     u_int * lenp, int flags, afs_ucred_t *credp)
-#endif
 {
     struct buf *tbuf;
     struct vcache *avc = VTOAFS(vp);
@@ -646,11 +584,7 @@ afs_putapage(struct vnode *vp, struct page *pages, u_int * offp,
 	    return (ENOMEM);
 
 	tbuf->b_dev = 0;
-#if defined(AFS_SUN56_ENV)
 	tbuf->b_lblkno = lbtodb(pages->p_offset);
-#else
-	tbuf->b_blkno = btodb(pages->p_offset);
-#endif
 	bp_mapin(tbuf);
 	AFS_GLOCK();
 	afs_Trace4(afs_iclSetp, CM_TRACE_PAGEOUTONE, ICL_TYPE_LONG, avc,
@@ -737,29 +671,22 @@ afs_nfsrdwr(struct vcache *avc, struct uio *auio, enum uio_rw arw,
     if (code)
 	return afs_CheckCode(code, &treq, 45);
 
-    afs_BozonLock(&avc->pvnLock, avc);
-    osi_FlushPages(avc, acred);	/* hold bozon lock, but not basic vnode lock */
+    osi_FlushPages(avc, acred);
 
     ObtainWriteLock(&avc->lock, 250);
 
     /* adjust parameters when appending files */
     if ((ioflag & IO_APPEND) && arw == UIO_WRITE) {
-#if defined(AFS_SUN56_ENV)
 	auio->uio_loffset = avc->f.m.Length;	/* write at EOF position */
-#else
-	auio->uio_offset = avc->f.m.Length;	/* write at EOF position */
-#endif
     }
     if (auio->afsio_offset < 0 || (auio->afsio_offset + auio->uio_resid) < 0) {
 	ReleaseWriteLock(&avc->lock);
-	afs_BozonUnlock(&avc->pvnLock, avc);
 	return EINVAL;
     }
 #ifndef AFS_64BIT_CLIENT
     /* file is larger than 2GB */
     if (AfsLargeFileSize(auio->uio_offset, auio->uio_resid)) {
 	ReleaseWriteLock(&avc->lock);
-	afs_BozonUnlock(&avc->pvnLock, avc);
 	return EFBIG;
     }
 #endif
@@ -767,11 +694,9 @@ afs_nfsrdwr(struct vcache *avc, struct uio *auio, enum uio_rw arw,
     didFakeOpen = 0;		/* keep track of open so we can do close */
     if (arw == UIO_WRITE) {
 	/* do ulimit processing; shrink resid or fail */
-#if	defined(AFS_SUN56_ENV)
 	if (auio->uio_loffset + auio->afsio_resid > auio->uio_llimit) {
 	    if (auio->uio_loffset >= auio->uio_llimit) {
 		ReleaseWriteLock(&avc->lock);
-		afs_BozonUnlock(&avc->pvnLock, avc);
 		return EFBIG;
 	    } else {
 		/* track # of bytes we should write, but won't because of
@@ -783,25 +708,6 @@ afs_nfsrdwr(struct vcache *avc, struct uio *auio, enum uio_rw arw,
 		extraResid -= auio->uio_resid;
 	    }
 	}
-#else
-#ifdef	AFS_SUN52_ENV
-	if (auio->afsio_offset + auio->afsio_resid > auio->uio_limit) {
-	    if (auio->afsio_offset >= auio->uio_limit) {
-		ReleaseWriteLock(&avc->lock);
-		afs_BozonUnlock(&avc->pvnLock, avc);
-		return EFBIG;
-	    } else {
-		/* track # of bytes we should write, but won't because of
-		 * ulimit; we must add this into the final resid value
-		 * so caller knows we punted some data.
-		 */
-		extraResid = auio->uio_resid;
-		auio->uio_resid = auio->uio_limit - auio->afsio_offset;
-		extraResid -= auio->uio_resid;
-	    }
-	}
-#endif
-#endif /* SUN56 */
 	mode = S_WRITE;		/* segment map-in mode */
 	afs_FakeOpen(avc);	/* do this for writes, so data gets put back
 				 * when we want it to be put back */
@@ -831,7 +737,6 @@ afs_nfsrdwr(struct vcache *avc, struct uio *auio, enum uio_rw arw,
 		(avc, PRSFS_READ, &treq,
 		 CHECK_MODE_BITS | CMB_ALLOW_EXEC_AS_READ)) {
 		ReleaseWriteLock(&avc->lock);
-		afs_BozonUnlock(&avc->pvnLock, avc);
 		return EACCES;
 	    }
 	}
@@ -918,19 +823,14 @@ afs_nfsrdwr(struct vcache *avc, struct uio *auio, enum uio_rw arw,
 	    afs_size_t toff, tlen;
 	    dcp = afs_GetDCache(avc, fileBase, &treq, &toff, &tlen, 2);
 	    if (!dcp) {
-		code = ENOENT;
+		code = EIO;
 		break;
 	    }
 	}
 	ReleaseWriteLock(&avc->lock);	/* uiomove may page fault */
 	AFS_GUNLOCK();
-#if	defined(AFS_SUN56_ENV)
 	data = segmap_getmap(segkmap, AFSTOV(avc), (u_offset_t) pageBase);
 	raddr = (caddr_t) (((uintptr_t) data + pageOffset) & PAGEMASK);
-#else
-	data = segmap_getmap(segkmap, AFSTOV(avc), pageBase);
-	raddr = (caddr_t) (((u_int) data + pageOffset) & PAGEMASK);
-#endif
 	rsize =
 	    (((u_int) data + pageOffset + tsize + PAGEOFFSET) & PAGEMASK) -
 	    (u_int) raddr;
@@ -1012,26 +912,17 @@ afs_nfsrdwr(struct vcache *avc, struct uio *auio, enum uio_rw arw,
 	code = code_checkcode = avc->vc_error;
     }
     ReleaseWriteLock(&avc->lock);
-    afs_BozonUnlock(&avc->pvnLock, avc);
     if (!code) {
-#ifdef	AFS_SUN53_ENV
 	if ((ioflag & FSYNC) && (arw == UIO_WRITE)
 	    && !AFS_NFSXLATORREQ(acred))
 	    code = afs_fsync(avc, 0, acred);
-#else
-	if ((ioflag & IO_SYNC) && (arw == UIO_WRITE)
-	    && !AFS_NFSXLATORREQ(acred))
-	    code = afs_fsync(avc, acred);
-#endif
     }
-#ifdef	AFS_SUN52_ENV
     /* 
      * If things worked, add in as remaining in request any bytes
      * we didn't write due to file size ulimit.
      */
     if (code == 0 && extraResid > 0)
 	auio->uio_resid += extraResid;
-#endif
     if (code_checkcode) {
 	return code_checkcode;
     } else {
@@ -1080,21 +971,13 @@ afs_map(struct vnode *vp, offset_t off, struct as *as, caddr_t *addr, size_t len
     if (code) {
 	goto out;
     }
-    afs_BozonLock(&avc->pvnLock, avc);
     osi_FlushPages(avc, cred);	/* ensure old pages are gone */
     avc->f.states |= CMAPPED;	/* flag cleared at afs_inactive */
-    afs_BozonUnlock(&avc->pvnLock, avc);
 
     AFS_GUNLOCK();
     as_rangelock(as);
     if ((flags & MAP_FIXED) == 0) {
-#if	defined(AFS_SUN57_ENV)
 	map_addr(addr, len, off, 1, flags);
-#elif	defined(AFS_SUN56_ENV)
-	map_addr(addr, len, off, 1);
-#else
-	map_addr(addr, len, (off_t) off, 1);
-#endif
 	if (*addr == NULL) {
 	    as_rangeunlock(as);
 	    code = ENOMEM;
@@ -1215,11 +1098,8 @@ int
 #ifdef AFS_SUN59_ENV
 afs_frlock(struct vnode *vnp, int cmd, struct flock64 *ap, int flag, 
 	   offset_t off, struct flk_callback *flkcb, afs_ucred_t *credp)
-#elif defined(AFS_SUN56_ENV)
-afs_frlock(struct vnode *vnp, int cmd, struct flock64 *ap, int flag, 
-	   offset_t off, afs_ucred_t *credp)
 #else
-afs_frlock(struct vnode *vnp, int cmd, struct flock *ap, int flag, 
+afs_frlock(struct vnode *vnp, int cmd, struct flock64 *ap, int flag,
 	   offset_t off, afs_ucred_t *credp)
 #endif
 {
@@ -1234,20 +1114,11 @@ afs_frlock(struct vnode *vnp, int cmd, struct flock *ap, int flag,
 #endif
     if ((cmd == F_GETLK) || (cmd == F_O_GETLK) || (cmd == F_SETLK)
 	|| (cmd == F_SETLKW)) {
-#ifdef	AFS_SUN53_ENV
 	ap->l_pid = ttoproc(curthread)->p_pid;
 	ap->l_sysid = 0;
-#else
-	ap->l_pid = ttoproc(curthread)->p_epid;
-	ap->l_sysid = ttoproc(curthread)->p_sysid;
-#endif
 
 	AFS_GUNLOCK();
-#ifdef	AFS_SUN56_ENV
 	code = convoff(vnp, ap, 0, off);
-#else
-	code = convoff(vnp, ap, 0, (off_t) off);
-#endif
 	if (code)
 	    return code;
 	AFS_GLOCK();
@@ -1260,23 +1131,14 @@ afs_frlock(struct vnode *vnp, int cmd, struct flock *ap, int flag,
 
 
 int
-#if	defined(AFS_SUN56_ENV)
 afs_space(struct vnode *vnp, int cmd, struct flock64 *ap, int flag, 
 	  offset_t off, afs_ucred_t *credp)
-#else
-afs_space(struct vnode *vnp, int cmd, struct flock *ap, int flag, 
-	  offset_t off, afs_ucred_t *credp)
-#endif
 {
     afs_int32 code = EINVAL;
     struct vattr vattr;
 
     if ((cmd == F_FREESP)
-#ifdef	AFS_SUN56_ENV
 	&& ((code = convoff(vnp, ap, 0, off)) == 0)) {
-#else
-	&& ((code = convoff(vnp, ap, 0, (off_t) off)) == 0)) {
-#endif
 	AFS_GLOCK();
 	if (!ap->l_len) {
 	    vattr.va_mask = AT_SIZE;
@@ -1333,7 +1195,6 @@ afs_dumpctl(struct vnode *vp, int i)
     return EINVAL;
 }
 
-#ifdef	AFS_SUN54_ENV
 #ifdef	AFS_SUN511_ENV
 extern void
 afs_dispose(struct vnode *vp, struct page *p, int fl, int dn, struct cred *cr, struct caller_context_t *ct)
@@ -1372,7 +1233,6 @@ afs_getsecattr(struct vnode *vp, vsecattr_t *vsecattr, int flag, struct cred *cr
     return fs_fab_acl(vp, vsecattr, flag, creds);
 }
 #endif
-#endif
 
 #ifdef	AFS_GLOBAL_SUNLOCK
 extern int gafs_open(struct vcache **avcp, afs_int32 aflags, 
@@ -1407,12 +1267,7 @@ extern int gafs_rmdir(struct vcache *adp, char *aname,
 extern int gafs_mkdir(struct vcache *adp, char *aname, 
 		      struct vattr *attrs, struct vcache **avcp, 
 		      afs_ucred_t *acred);
-extern int
-#ifdef  AFS_SUN53_ENV
-gafs_fsync(struct vcache *avc, int flag, afs_ucred_t *acred);
-#else
-gafs_fsync(struct vcache *avc, afs_ucred_t *acred);
-#endif
+extern int gafs_fsync(struct vcache *avc, int flag, afs_ucred_t *acred);
 extern int gafs_readlink(struct vcache *avc, struct uio *auio, 
 			 afs_ucred_t *acred);
 extern int gafs_readdir(struct vcache *avc, struct uio *auio,
@@ -1570,14 +1425,10 @@ struct vnodeops Afs_vnodeops = {
     afs_pathconf,
     afs_pageio,
     afs_dumpctl,
-#ifdef	AFS_SUN54_ENV
     afs_dispose,
     afs_setsecattr,
     afs_getsecattr,
-#endif
-#if	defined(AFS_SUN56_ENV)
     fs_shrlock,
-#endif
 };
 struct vnodeops *afs_ops = &Afs_vnodeops;
 #endif
@@ -1794,20 +1645,12 @@ gafs_readlink(struct vcache *avc, struct uio *auio, afs_ucred_t *acred)
 }
 
 int
-#ifdef	AFS_SUN53_ENV
 gafs_fsync(struct vcache *avc, int flag, afs_ucred_t *acred)
-#else
-gafs_fsync(struct vcache *avc, afs_ucred_t *acred)
-#endif
 {
     int code;
 
     AFS_GLOCK();
-#ifdef	AFS_SUN53_ENV
     code = afs_fsync(avc, flag, acred);
-#else
-    code = afs_fsync(avc, acred);
-#endif
     AFS_GUNLOCK();
     return (code);
 }
@@ -1842,23 +1685,21 @@ afs_inactive(struct vcache *avc, afs_ucred_t *acred)
      * Solaris calls VOP_OPEN on exec, but doesn't call VOP_CLOSE when
      * the executable exits.  So we clean up the open count here.
      *
-     * Only do this for mvstat 0 vnodes: when using fakestat, we can't
-     * lose the open count for volume roots (mvstat 2), even though they
+     * Only do this for AFS_MVSTAT_FILE vnodes: when using fakestat, we can't
+     * lose the open count for volume roots (AFS_MVSTAT_ROOT), even though they
      * will get VOP_INACTIVE'd when released by afs_PutFakeStat().
      */
-    if (avc->opens > 0 && avc->mvstat == 0 && !(avc->f.states & CCore))
+    if (avc->opens > 0 && avc->mvstat == AFS_MVSTAT_FILE && !(avc->f.states & CCore))
 	avc->opens = avc->execsOrWriters = 0;
 #endif
 
     afs_InactiveVCache(avc, acred);
 
-#ifdef AFS_SUN58_ENV
     AFS_GUNLOCK();
     /* VFS_RELE must be called outside of GLOCK, since it can potentially
      * call afs_freevfs, which acquires GLOCK */
     VFS_RELE(afs_globalVFS);
     AFS_GLOCK();
-#endif
 
     return 0;
 }

@@ -1,0 +1,48 @@
+#!/bin/sh
+# libwrap - run a command with the specified library paths
+# Parameters: path_to_library command_to_run command_parameters
+#
+# This was written to help run the OpenAFS test suite.
+#
+# License: MIT
+
+NEWLIB_PATH="$1"
+export NEWLIB_PATH
+
+shift
+TEST_COMMAND="$1"
+
+# Linux, HP-UX (64bit), Solaris, BSD
+if [ -z "$LD_LIBRARY_PATH" ] ; then
+    LD_LIBRARY_PATH="$NEWLIB_PATH"
+else
+    LD_LIBRARY_PATH="$NEWLIB_PATH:$LD_LIBRARY_PATH"
+fi
+export LD_LIBRARY_PATH
+
+# Mac OS X
+if [ -z "$DYLD_LIBRARY_PATH" ] ; then
+    DYLD_LIBRARY_PATH="$NEWLIB_PATH"
+else
+    DYLD_LIBRARY_PATH="$NEWLIB_PATH:$DYLD_LIBRARY_PATH"
+fi
+export DYLD_LIBRARY_PATH
+
+# HP-UX (32bit)
+if [ -z "$SHLIB_PATH" ] ; then
+    SHLIB_PATH="$NEWLIB_PATH"
+else
+    SHLIB_PATH="$NEWLIB_PATH:$SHLIB_PATH"
+fi
+export SHLIB_PATH
+
+# AIX
+if [ -z "$LIBPATH" ] ; then
+    LIBPATH="$NEWLIB_PATH"
+else
+    LIBPATH="$NEWLIB_PATH:$LIBPATH"
+fi
+export LIBPATH
+
+shift
+"$TEST_COMMAND" "$@"

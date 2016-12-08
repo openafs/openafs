@@ -1,8 +1,5 @@
 #ifndef	_LOCKPROCS_PROTOTYPES_H
 #define _LOCKPROCS_PROTOTYPES_H
-extern int FindIndex(struct nvldbentry *entry, afs_uint32 server, afs_int32 part, afs_int32 type);
-extern void SetAValue(struct nvldbentry *entry, afs_uint32 oserver, afs_int32 opart,
-          afs_uint32 nserver, afs_int32 npart, afs_int32 type);
 extern void Lp_SetRWValue(struct nvldbentry *entry, afs_uint32 oserver, afs_int32 opart,
               afs_uint32 nserver, afs_int32 npart);
 extern void Lp_SetROValue(struct nvldbentry *entry, afs_uint32 oserver,

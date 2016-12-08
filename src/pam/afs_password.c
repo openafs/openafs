@@ -10,24 +10,19 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#include <syslog.h>
-#include <stdlib.h>
-#include <string.h>
-#include <pwd.h>
-#include <unistd.h>
+#include <roken.h>
+
+#ifdef HAVE_SYS_WAIT_H
+#include <sys/wait.h>
+#endif
 
 #include <security/pam_appl.h>
 #include <security/pam_modules.h>
 
-
-#include <sys/param.h>
 #include <afs/kautils.h>
 #include "afs_message.h"
 #include "afs_util.h"
 #include "afs_pam_msg.h"
-#include <signal.h>
-#include <sys/wait.h>
-#include <errno.h>
 
 #define RET(x) { retcode = (x); goto out; }
 
@@ -43,7 +38,6 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
     int use_first_pass = 0;
     int try_first_pass = 0;
     int ignore_root = 0;
-    int got_authtok = 0;	/* got PAM_AUTHTOK upon entry */
     char *torch_password = NULL;
     int i;
     char my_password_buf[256];
@@ -53,15 +47,18 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
     char *localcell;
     PAM_CONST char *user = NULL, *password = NULL;
     char *new_password = NULL, *verify_password = NULL;
-    char upwd_buf[2048];	/* size is a guess. */
     char *reason = NULL;
     struct ktc_encryptionKey oldkey, newkey;
     struct ktc_token token;
     struct ubik_client *conn = 0;
     PAM_CONST struct pam_conv *pam_convp = NULL;
-    struct passwd unix_pwd, *upwd = NULL;
+    struct passwd *upwd = NULL;
+#if !(defined(AFS_LINUX20_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV) || defined(AFS_NBSD_ENV))
+    char upwd_buf[2048];	/* size is a guess. */
+    struct passwd unix_pwd;
+#endif
 
-#ifndef AFS_SUN56_ENV
+#ifndef AFS_SUN5_ENV
     openlog(pam_afs_ident, LOG_CONS, LOG_AUTH);
 #endif
     origmask = setlogmask(logmask);
@@ -91,7 +88,7 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
     if (use_first_pass)
 	try_first_pass = 0;
 
-    if (logmask && LOG_MASK(LOG_DEBUG)) {
+    if (logmask & LOG_MASK(LOG_DEBUG)) {
 	pam_afs_syslog(LOG_DEBUG, PAMAFS_OPTIONS, nowarn, use_first_pass,
 		       try_first_pass);
 	pam_afs_syslog(LOG_DEBUG, PAMAFS_PAMERROR, flags);
@@ -112,7 +109,7 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	RET(PAM_USER_UNKNOWN);
     }
 
-    if (logmask && LOG_MASK(LOG_DEBUG))
+    if (logmask & LOG_MASK(LOG_DEBUG))
 	pam_afs_syslog(LOG_DEBUG, PAMAFS_USERNAMEDEBUG, user);
 
     /*
@@ -120,8 +117,8 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
      * and its uid==0, and "ignore_root" was given in pam.conf,
      * ignore the user.
      */
-#if	defined(AFS_HPUX_ENV) || defined(AFS_DARWIN100_ENV) || defined(AFS_SUN58_ENV)
-#if     defined(AFS_HPUX110_ENV) || defined(AFS_DARWIN100_ENV) || defined(AFS_SUN58_ENV)
+#if	defined(AFS_HPUX_ENV) || defined(AFS_DARWIN100_ENV) || defined(AFS_SUN5_ENV)
+#if     defined(AFS_HPUX110_ENV) || defined(AFS_DARWIN100_ENV) || defined(AFS_SUN5_ENV)
     i = getpwnam_r(user, &unix_pwd, upwd_buf, sizeof(upwd_buf), &upwd);
 #else /* AFS_HPUX110_ENV */
     i = getpwnam_r(user, &unix_pwd, upwd_buf, sizeof(upwd_buf));
@@ -151,16 +148,15 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	    RET(PAM_AUTH_ERR);
 	}
 	password = NULL;	/* In case it isn't already NULL */
-	if (logmask && LOG_MASK(LOG_DEBUG))
+	if (logmask & LOG_MASK(LOG_DEBUG))
 	    pam_afs_syslog(LOG_DEBUG, PAMAFS_NOFIRSTPASS, user);
     } else if (password[0] == '\0') {
 	/* Actually we *did* get one but it was empty. */
 	pam_afs_syslog(LOG_INFO, PAMAFS_NILPASSWORD, user);
 	RET(PAM_NEW_AUTHTOK_REQD);
     } else {
-	if (logmask && LOG_MASK(LOG_DEBUG))
+	if (logmask & LOG_MASK(LOG_DEBUG))
 	    pam_afs_syslog(LOG_DEBUG, PAMAFS_GOTPASS, user);
-	got_authtok = 1;
     }
     if (!(use_first_pass || try_first_pass)) {
 	password = NULL;
@@ -196,7 +192,7 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	 */
 	strncpy(my_password_buf, prompt_password, sizeof(my_password_buf));
 	my_password_buf[sizeof(my_password_buf) - 1] = '\0';
-	memset(prompt_password, 0, strlen(password));
+	memset(prompt_password, 0, strlen(prompt_password));
 	free(prompt_password);
 	password = torch_password = my_password_buf;
     }
@@ -306,7 +302,7 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	memset(torch_password, 0, strlen(torch_password));
     }
     (void)setlogmask(origmask);
-#ifndef AFS_SUN56_ENV
+#ifndef AFS_SUN5_ENV
     closelog();
 #endif
     return retcode;

@@ -18,12 +18,10 @@
 #
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.lwp
 
-CFLAGS=${COMMON_CFLAGS} ${XCFLAGS} ${ARCHFLAGS} ${VFSCK_CFLAGS}
+
+MODULE_CFLAGS=${VFSCK_CFLAGS}
 
 SRCS= dir.c inode.c main.c pass1.c pass1b.c pass2.c pass3.c \
 	pass4.c pass5.c setup.c utilities.c ufs_subr.c \
@@ -35,8 +33,8 @@ OBJS= dir.o inode.o main.o pass1.o pass1b.o pass2.o pass3.o pass4.o \
 
 all: vfsck
 
-vfsck: ${OBJS} 
-	${CC} -o vfsck ${CFLAGS} ${OBJS} ${NON_SHARED} ${XLIBS}
+vfsck: ${OBJS}
+	$(AFS_LDRULE) ${OBJS} ${NON_SHARED} ${XLIBS}
 
 main.o: main.c AFS_component_version_number.c
 

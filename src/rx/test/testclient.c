@@ -11,44 +11,34 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <roken.h>
 
-
-#include <sys/types.h>
-#include <stdio.h>
-#ifdef AFS_NT40_ENV
-#include <io.h>
-#include <winsock2.h>
-#include <fcntl.h>
-#include <stdlib.h>
-#else
-#include <netinet/in.h>
-#include <netdb.h>
+#ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
 #endif
-#include <sys/stat.h>
-#include <signal.h>
-#include "rx_clock.h"
-#include "rx.h"
-#include "rx_globals.h"
-#include "rx_null.h"
-#include <errno.h>
+
+#include <afs/opr.h>
+#include <rx/rx_clock.h>
+#include <rx/rx.h>
+#include <rx/rx_globals.h>
+#include <rx/rx_null.h>
 #include <afs/afsutil.h>
 
 #ifndef osi_Alloc
-#define osi_Alloc(n) (char *) malloc(n)
+#define osi_Alloc(n) malloc(n)
 #endif
 
 int timeReadvs = 0;
 int print = 1, eventlog = 0, rxlog = 0;
 int fillPackets;
-int burst;
-struct clock burstTime;
-struct clock retryTime;
 FILE *debugFile;
 int timeout;
 struct clock waitTime, computeTime;
 
-void OpenFD();
+void OpenFD(int n);
+void Abort(const char *msg, ...);
+void Quit(char *msg);
+int SendFile(char *file, struct rx_connection *conn);
 
 void
 intSignal(int ignore)
@@ -69,9 +59,7 @@ quitSignal(int ignore)
 
 #if !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV)
 int
-test_syscall(a3, a4, a5)
-     afs_uint32 a3, a4;
-     void *a5;
+test_syscall(afs_uint32 a3, afs_uint32 a4, void *a5)
 {
     afs_uint32 rcode;
     void (*old) (int);
@@ -85,8 +73,8 @@ test_syscall(a3, a4, a5)
 }
 #endif
 
-main(argc, argv)
-     char **argv;
+int
+main(int argc, char **argv)
 {
     char *hostname;
     struct hostent *hostent;
@@ -94,6 +82,7 @@ main(argc, argv)
     int logstdout = 0;
     struct rx_connection *conn;
     struct rx_call *call;
+    struct rx_peer *peer;
     int err = 0;
     int nCalls = 1, nBytes = 1;
     int bufferSize = 4000000;
@@ -141,14 +130,6 @@ main(argc, argv)
 #else
             fprintf(stderr, "ERROR: Compiled without RXDEBUG\n");
 #endif
-        }
-	else if (strcmp(*argv, "-burst") == 0) {
-	    burst = atoi(*++argv), argc--;
-	    burstTime.sec = atoi(*++argv), argc--;
-	    burstTime.usec = atoi(*++argv), argc--;
-	} else if (strcmp(*argv, "-retry") == 0) {
-	    retryTime.sec = atoi(*++argv), argc--;
-	    retryTime.usec = atoi(*++argv), argc--;
 	} else if (strcmp(*argv, "-timeout") == 0)
 	    timeout = atoi(*++argv), argc--;
 	else if (strcmp(*argv, "-fill") == 0)
@@ -234,17 +215,10 @@ main(argc, argv)
     if (!conn)
 	Abort("unable to make a new connection");
 
-    /* Set initial parameters.  This is (currently) not the approved interface */
-    if (burst)
-	conn->peer->burstSize = conn->peer->burst = burst;
-    if (!clock_IsZero(&burstTime))
-	conn->peer->burstWait = burstTime;
-    if (!clock_IsZero(&retryTime))
-	conn->peer->rtt = _8THMSEC(&retryTime);
     if (sendFile)
 	SendFile(sendFile, conn);
     else {
-	buffer = (char *)osi_Alloc(bufferSize);
+	buffer = osi_Alloc(bufferSize);
 	while (nCalls--) {
 	    struct clock startTime;
 	    struct timeval t;
@@ -267,7 +241,7 @@ main(argc, argv)
 		    break;
 
 	    }
-	    for (bytesRead = 0; nbytes = rx_Read(call, buffer, bufferSize);
+	    for (bytesRead = 0; (nbytes = rx_Read(call, buffer, bufferSize));
 		 bytesRead += nbytes) {
 	    };
 	    if (print)
@@ -307,11 +281,11 @@ main(argc, argv)
 	}
     }
     Quit("testclient: done!\n");
+    return 0;
 }
 
-int SendFile(file, conn)
-     char *file;
-     struct rx_connection *conn;
+int
+SendFile(char *file, struct rx_connection *conn)
 {
     struct rx_call *call;
     int fd;
@@ -349,7 +323,7 @@ int SendFile(file, conn)
     blockSize = status.st_blksize;
 #endif
 #endif
-    buf = (char *)osi_Alloc(blockSize);
+    buf = osi_Alloc(blockSize);
     bytesLeft = status.st_size;
     clock_GetTime(&startTime);
     call = rx_NewCall(conn);
@@ -376,7 +350,7 @@ int SendFile(file, conn)
 	char *p = buf;
 	while (nbytes--) {
 	    putchar(*p);
-	    *p++;
+	    p++;
 	}
     }
     if ((err = rx_EndCall(call, 0)) != 0) {
@@ -389,7 +363,7 @@ int SendFile(file, conn)
 	elapsedTime = totalTime.sec + totalTime.usec / 1e6;
 	fprintf(stderr,
 		"Sent %d bytes in %0.3f seconds:  %0.0f bytes per second\n",
-		status.st_size, elapsedTime, status.st_size / elapsedTime);
+		(int) status.st_size, elapsedTime, status.st_size / elapsedTime);
 	if (timeReadvs) {
 	    float delay = clock_Float(&totalReadvDelay) / nReadvs;
 	    fprintf(stderr, "%d readvs, average delay of %0.4f seconds\n",
@@ -401,22 +375,28 @@ int SendFile(file, conn)
     return(0);
 }
 
-Abort(msg, a, b, c, d, e)
+void
+Abort(const char *msg, ...)
 {
-    printf((char *)msg, a, b, c, d, e);
+    va_list args;
+
+    va_start(args, msg);
+    printf(msg, args);
+    va_end(args);
+
     printf("\n");
     if (debugFile) {
 	rx_PrintStats(debugFile);
 	fflush(debugFile);
     }
-    afs_abort();
+    opr_abort();
     exit(1);
 }
 
-Quit(char *msg, int a, int b, int c, int d, int e)
+void
+Quit(char *msg)
 {
-    printf((char *)msg, a, b, c, d, e);
-    printf("\n");
+    printf("%s\n", msg);
     if (debugFile) {
 	rx_PrintStats(debugFile);
 	fflush(debugFile);
@@ -429,10 +409,8 @@ Quit(char *msg, int a, int b, int c, int d, int e)
  *
  * Open file descriptors until file descriptor n or higher is returned.
  */
-#include <sys/stat.h>
 void
-OpenFD(n)
-     int n;
+OpenFD(int n)
 {
     int i;
     struct stat sbuf;

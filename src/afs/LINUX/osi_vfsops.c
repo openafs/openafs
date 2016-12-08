@@ -115,8 +115,7 @@ afs_fill_super(struct super_block *sb, void *data, int silent)
 #endif
 
     /* used for inodes backing_dev_info field, also */
-    afs_backing_dev_info = kmalloc(sizeof(struct backing_dev_info), GFP_NOFS);
-    memset(afs_backing_dev_info, 0, sizeof(struct backing_dev_info));
+    afs_backing_dev_info = kzalloc(sizeof(struct backing_dev_info), GFP_NOFS);
 #if defined(HAVE_LINUX_BDI_INIT)
     code = bdi_init(afs_backing_dev_info);
     if (code)
@@ -210,7 +209,7 @@ afs_root(struct super_block *afsp)
 		    afs_DestroyAttr(vattr);
 		}
 	    } else
-		code = ENOENT;
+		code = EIO;
 	}
 	crfree(credp);
 	afs_DestroyReq(treq);

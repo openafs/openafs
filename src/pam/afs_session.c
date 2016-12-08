@@ -10,16 +10,12 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#include <syslog.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <errno.h>
+#include <roken.h>
 
 #include <security/pam_appl.h>
 #include <security/pam_modules.h>
 
+#include <afs/auth.h>
 #include "afs_message.h"
 #include "afs_util.h"
 
@@ -39,13 +35,12 @@ pam_sm_close_session(pam_handle_t * pamh, int flags, int argc,
 {
     int i;
     int logmask = LOG_UPTO(LOG_INFO);
-    int origmask;
     int remain = 0;
     int remainlifetime = REMAINLIFETIME;
     int no_unlog = 0;
 
     openlog(pam_afs_ident, LOG_CONS | LOG_PID, LOG_AUTH);
-    origmask = setlogmask(logmask);
+    setlogmask(logmask);
 
     /*
      * Parse the user options.  Log an error for any unknown options.
@@ -59,8 +54,8 @@ pam_sm_close_session(pam_handle_t * pamh, int flags, int argc,
 	} else if (strcasecmp(argv[i], "remainlifetime") == 0) {
 	    i++;
 	    remain = 1;
-	    remainlifetime = (int)strtol(argv[i], (char **)NULL, 10);
-	    if (remainlifetime == 0)
+	    remainlifetime = (int)strtol(argv[i], NULL, 10);
+	    if (remainlifetime == 0) {
 		if ((errno == EINVAL) || (errno == ERANGE)) {
 		    remainlifetime = REMAINLIFETIME;
 		    pam_afs_syslog(LOG_ERR, PAMAFS_REMAINLIFETIME, argv[i],
@@ -69,6 +64,7 @@ pam_sm_close_session(pam_handle_t * pamh, int flags, int argc,
 		    no_unlog = 0;
 		    remain = 0;
 		}
+	    }
 	} else if (strcmp(argv[i], "no_unlog") == 0) {
 	    no_unlog = 1;
 	} else {
@@ -76,7 +72,7 @@ pam_sm_close_session(pam_handle_t * pamh, int flags, int argc,
 	}
     }
 
-    if (logmask && LOG_MASK(LOG_DEBUG))
+    if (logmask & LOG_MASK(LOG_DEBUG))
 	syslog(LOG_DEBUG,
 	       "pam_afs_session_close: remain: %d, remainlifetime: %d, no_unlog: %d",
 	       remain, remainlifetime, no_unlog);
@@ -102,7 +98,7 @@ pam_sm_close_session(pam_handle_t * pamh, int flags, int argc,
     }
     if (!no_unlog && ktc_ForgetAllTokens())
 	return PAM_SESSION_ERR;
-    if (logmask && LOG_MASK(LOG_DEBUG))
+    if (logmask & LOG_MASK(LOG_DEBUG))
 	syslog(LOG_DEBUG, "pam_afs_session_close: Session closed");
     return PAM_SUCCESS;
 }

@@ -46,7 +46,7 @@ directory, which is also the default value if this argument is omitted.
 Specify the read/write path to the file or directory, to avoid the failure
 that results from attempting to change a read-only volume. By convention,
 the read/write path is indicated by placing a period before the cell name
-at the pathname's second level (for example, F</afs/.abc.com>). For
+at the pathname's second level (for example, F</afs/.example.com>). For
 further discussion of the concept of read/write and read-only paths
 through the filespace, see the B<fs mkmount> reference page.
 
@@ -74,9 +74,9 @@ ignored.
 =head1 EXAMPLES
 
 The following command imposes a maximum quota of 3000 kilobytes on the
-volume that houses the F</afs/abc.com/usr/smith> directory:
+volume that houses the F</afs/example.com/usr/smith> directory:
 
-   % fs setquota -path /afs/abc.com/usr/smith -max 3000
+   % fs setquota -path /afs/example.com/usr/smith -max 3000
 
 =head1 PRIVILEGE REQUIRED
 

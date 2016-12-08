@@ -90,14 +90,14 @@ ignored.
 
 The following command creates an entry in the Backup Database that assigns
 port offset number 4 to a Tape Coordinator running on the machine
-C<backup1.abc.com>:
+C<backup1.example.com>:
 
-   % backup addhost -tapehost backup1.abc.com -portoffset 4
+   % backup addhost -tapehost backup1.example.com -portoffset 4
 
 The following command creates a Backup Database entry that assigns port
-offset number 0 to a Tape Coordinator on the machine C<backup3.abc.com>:
+offset number 0 to a Tape Coordinator on the machine C<backup3.example.com>:
 
-   % backup addhost backup3.abc.com
+   % backup addhost backup3.example.com
 
 =head1 PRIVILEGE REQUIRED
 

@@ -65,6 +65,8 @@ static struct ltable {
     { "afs_discon_lock", (char *)&afs_discon_lock},
     { "afs_disconDirtyLock", (char *)&afs_disconDirtyLock},
     { "afs_discon_vc_dirty", (char *)&afs_xvcdirty},
+    { "afs_dynrootDirLock", (char *)&afs_dynrootDirLock},
+    { "afs_dynSymlinkLock", (char *)&afs_dynSymlinkLock},
 };
 unsigned long lastCallBack_vnode;
 unsigned int lastCallBack_dv;
@@ -234,12 +236,7 @@ SRXAFSCB_GetCE64(struct rx_call *a_call, afs_int32 a_index,
     a_result->lock.pid_writer = 0;
     a_result->lock.src_indicator = 0;
 #endif /* INSTRUMENT_LOCKS */
-#if !defined(AFS_64BIT_ENV)
-    a_result->Length.high = 0;
-    a_result->Length.low = tvc->f.m.Length;
-#else
     a_result->Length = tvc->f.m.Length;
-#endif
     a_result->DataVersion = hgetlo(tvc->f.m.DataVersion);
     a_result->callback = afs_data_pointer_to_int32(tvc->callback);	/* XXXX Now a pointer; change it XXXX */
     a_result->cbExpires = tvc->cbExpires;
@@ -476,17 +473,12 @@ loop1:
 #endif
 #endif
 			ReleaseReadLock(&afs_xvcache);
-			ObtainWriteLock(&afs_xcbhash, 449);
-			afs_DequeueCallback(tvc);
-			tvc->f.states &= ~(CStatd | CUnique | CBulkFetching);
+			afs_StaleVCacheFlags(tvc, 0, CUnique | CBulkFetching);
 			afs_allCBs++;
 			if (tvc->f.fid.Fid.Vnode & 1)
 			    afs_oddCBs++;
 			else
 			    afs_evenCBs++;
-			ReleaseWriteLock(&afs_xcbhash);
-			if ((tvc->f.fid.Fid.Vnode & 1 || (vType(tvc) == VDIR)))
-			    osi_dnlc_purgedp(tvc);
 			afs_Trace3(afs_iclSetp, CM_TRACE_CALLBACK,
 				   ICL_TYPE_POINTER, tvc, ICL_TYPE_INT32,
 				   tvc->f.states, ICL_TYPE_INT32,
@@ -498,10 +490,10 @@ loop1:
 			uq = QPrev(tq);
 			AFS_FAST_RELE(tvc);
 		    } else if ((tvc->f.states & CMValid)
-			       && (tvc->mvid->Fid.Volume == a_fid->Volume)) {
+			       && (tvc->mvid.target_root->Fid.Volume == a_fid->Volume)) {
 			tvc->f.states &= ~CMValid;
 			if (!localFid.Cell)
-			    localFid.Cell = tvc->mvid->Cell;
+			    localFid.Cell = tvc->mvid.target_root->Cell;
 		    }
 		}
 		ReleaseReadLock(&afs_xvcache);
@@ -564,12 +556,7 @@ loop2:
 #endif
 #endif
 		    ReleaseReadLock(&afs_xvcache);
-		    ObtainWriteLock(&afs_xcbhash, 450);
-		    afs_DequeueCallback(tvc);
-		    tvc->f.states &= ~(CStatd | CUnique | CBulkFetching);
-		    ReleaseWriteLock(&afs_xcbhash);
-		    if ((tvc->f.fid.Fid.Vnode & 1 || (vType(tvc) == VDIR)))
-			osi_dnlc_purgedp(tvc);
+		    afs_StaleVCacheFlags(tvc, 0, CUnique | CBulkFetching);
 		    afs_Trace3(afs_iclSetp, CM_TRACE_CALLBACK,
 			       ICL_TYPE_POINTER, tvc, ICL_TYPE_INT32,
 			       tvc->f.states, ICL_TYPE_LONG, 0);
@@ -748,11 +735,9 @@ SRXAFSCB_InitCallBackState(struct rx_call *a_call)
 	    for (i = 0; i < VCSIZE; i++)
 		for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
 		    if (tvc->callback == ts) {
-			ObtainWriteLock(&afs_xcbhash, 451);
-			afs_DequeueCallback(tvc);
-			tvc->callback = NULL;
-			tvc->f.states &= ~(CStatd | CUnique | CBulkFetching);
-			ReleaseWriteLock(&afs_xcbhash);
+			afs_StaleVCacheFlags(tvc, AFS_STALEVC_NODNLC |
+						  AFS_STALEVC_CLEARCB,
+					     CUnique | CBulkFetching);
 		    }
 		}
 
@@ -1309,7 +1294,8 @@ SRXAFSCB_GetCellServDB(struct rx_call *a_call, afs_int32 a_index,
 
     t_name = afs_osi_Alloc(i + 1);
     if (t_name == NULL) {
-	afs_osi_Free(a_hosts->serverList_val, (j * sizeof(afs_int32)));
+	if (tcell != NULL)
+	    afs_osi_Free(a_hosts->serverList_val, (j * sizeof(afs_int32)));
 	RX_AFS_GUNLOCK();
 	return ENOMEM;
     }

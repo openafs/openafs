@@ -37,11 +37,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <ctype.h>
-#include <string.h>
 
 #include "rpc_scan.h"
 #include "rpc_parse.h"
@@ -405,8 +403,6 @@ static token symbols[] = {
     {TOK_FLOAT, "float"},
     {TOK_DOUBLE, "double"},
     {TOK_STRING, "string"},
-    {TOK_PROGRAM, "program"},
-    {TOK_VERSION, "version"},
     {TOK_PACKAGE, "package"},
     {TOK_PREFIX, "prefix"},
     {TOK_STATINDEX, "statindex"},
@@ -519,6 +515,7 @@ docppline(char *line, int *lineno, char **fname)
     *p = 0;
     if (*file == 0) {
 	*fname = NULL;
+	free(file);
     } else {
 	*fname = file;
     }

@@ -18,23 +18,14 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+
+#include <afs/kautils.h> /*MAXKTCREALMLEN*/
 
 #include "uss_procs.h"		/*Module interface */
 #include "uss_common.h"		/*Common defs & operations */
 #include "uss_acl.h"		/*ACL-related operations */
-#include <errno.h>		/*Unix error codes */
-#include <pwd.h>		/*Password info */
-#include <sys/stat.h>		/*Stat defs */
-#include <dirent.h>		/*Directory package */
-#include <sys/file.h>		/*O_EXCL, O_CREAT, etc */
-#ifdef	AFS_SUN5_ENV
-#include <fcntl.h>
-#endif
 
-#include <string.h>
-#include <stdarg.h>
-
-#include <afs/kautils.h> /*MAXKTCREALMLEN*/
 #undef USS_PROCS_DB
 #undef USS_PROCS_DB_INSTANCE
 #undef USS_PROCS_DB_BUILDDIR
@@ -153,12 +144,10 @@ uss_procs_BuildDir(char *a_path, char *a_mode, char *a_owner, char *a_access)
      * Use our linked list to remember this directory's true ACL setting so
      * we may set it correctly at the tail end of the account creation.
      */
-    new_dir = (struct uss_subdir *)malloc(sizeof(struct uss_subdir));
+    new_dir = malloc(sizeof(struct uss_subdir));
     new_dir->previous = uss_currentDir;
-    new_dir->path = (char *)malloc(strlen(a_path) + 1);
-    strcpy(new_dir->path, a_path);
-    new_dir->finalACL = (char *)malloc(strlen(a_access) + 1);
-    strcpy(new_dir->finalACL, a_access);
+    new_dir->path = strdup(a_path);
+    new_dir->finalACL = strdup(a_access);
     uss_currentDir = new_dir;
 
     /*
@@ -517,7 +506,7 @@ Copy(char *a_from, char *a_to, int a_mode)
 
     int fd1, fd2;
     char buf[BUFSIZ];
-    int cnt, rc;
+    int rcnt, wcnt = -1, rc;
 
     umask(0);
     fd1 = open(a_to, O_EXCL | O_CREAT | O_WRONLY, a_mode);
@@ -548,10 +537,18 @@ Copy(char *a_from, char *a_to, int a_mode)
 	close(fd1);
 	return (1);
     }
-    while ((cnt = read(fd2, buf, BUFSIZ)) == BUFSIZ)
-	write(fd1, buf, cnt);
-
-    write(fd1, buf, cnt);
+    do {
+	rcnt = read(fd2, buf, BUFSIZ);
+	if (rcnt == -1)
+	    break;
+	wcnt = write(fd1, buf, rcnt);
+    } while (rcnt == BUFSIZ && rcnt == wcnt);
+    if (rcnt == -1 || wcnt != rcnt) {
+	uss_procs_PrintErr(line, "read/write error to %s\n", a_to);
+	close(fd1);
+	close(fd2);
+	return (1);
+    }
     rc = close(fd1);
     if (rc) {
 	uss_procs_PrintErr(line, "Failed to close '%s' %s\n", a_to,
@@ -619,8 +616,12 @@ Echo(char *a_s, char *a_f, int a_mode)
 	    return (1);
 	}
     }
-    write(fd, a_s, strlen(a_s));
-    write(fd, "\n", 1);
+    if (write(fd, a_s, strlen(a_s)) != strlen(a_s) ||
+	write(fd, "\n", 1) != 1) {
+	uss_procs_PrintErr(line, "Short write to '%s'\n", a_f);
+	close(fd);
+	return (1);
+    }
     if (close(fd)) {
 	uss_procs_PrintErr(line, "Failed to close '%s': %s\n", a_f,
 			   strerror(errno));

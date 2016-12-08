@@ -18,23 +18,12 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <stdio.h>
 #include <math.h>
-#include <string.h>
-#include <errno.h>
-#include <afs/cmd.h>
-#include <afs/afsutil.h>
-#include <signal.h>
-#undef IN
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <netdb.h>
 #include <ctype.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
+
+#include <afs/cmd.h>
 
 #include <afs/gtxwindows.h>		/*Generic window package */
 #include <afs/gtxobjects.h>		/*Object definitions */
@@ -300,7 +289,7 @@ strcasestr(s1, s2)
     len2 = strlen(s2);
 
     if (len1 < len2)
-	return ((char *)NULL);
+	return (NULL);
 
     ptr = s1;
 
@@ -310,7 +299,7 @@ strcasestr(s1, s2)
 	ptr++;
 	len1--;
     }
-    return ((char *)NULL);
+    return (NULL);
 }
 #endif
 
@@ -570,8 +559,7 @@ insert_FS(char *a_hostName)		/* name of cache manager to be inserted in list */
 
     if (*a_hostName == '\0')
 	return (-1);
-    curr_item = (struct afsmon_hostEntry *)
-	malloc(sizeof(struct afsmon_hostEntry));
+    curr_item = malloc(sizeof(struct afsmon_hostEntry));
     if (curr_item == (struct afsmon_hostEntry *)0) {
 	fprintf(stderr, "Failed to allocate space for FS nameList\n");
 	return (-1);
@@ -657,8 +645,7 @@ insert_CM(char *a_hostName)		/* name of cache manager to be inserted in list */
 
     if (*a_hostName == '\0')
 	return (-1);
-    curr_item = (struct afsmon_hostEntry *)
-	malloc(sizeof(struct afsmon_hostEntry));
+    curr_item = malloc(sizeof(struct afsmon_hostEntry));
     if (curr_item == (struct afsmon_hostEntry *)0) {
 	fprintf(stderr, "Failed to allocate space for CM nameList\n");
 	return (-1);
@@ -1163,8 +1150,8 @@ parse_showEntry(char *a_line)
 	/* if it is a section/group name, find it in the fs_categories[] array */
 
 	found = 0;
-	if (strcasestr(arg2, "_section") != (char *)NULL
-	    || strcasestr(arg2, "_group") != (char *)NULL) {
+	if (strcasestr(arg2, "_section") != NULL
+	    || strcasestr(arg2, "_group") != NULL) {
 	    idx = 0;
 	    while (idx < FS_NUM_DATA_CATEGORIES) {
 		sscanf(fs_categories[idx], "%s %d %d", catName, &fromIdx,
@@ -1187,7 +1174,7 @@ parse_showEntry(char *a_line)
 	/* if it is a group name, read its start/end indices and fill in the
 	 * fs_Display_map[]. */
 
-	if (strcasestr(arg2, "_group") != (char *)NULL) {
+	if (strcasestr(arg2, "_group") != NULL) {
 
 	    if (fromIdx < 0 || toIdx < 0 || fromIdx >= NUM_FS_STAT_ENTRIES
 		|| toIdx >= NUM_FS_STAT_ENTRIES)
@@ -1207,7 +1194,7 @@ parse_showEntry(char *a_line)
 	    /* if it is a section name, get the count of number of groups in it and
 	     * for each group fill in the start/end indices in the fs_Display_map[] */
 
-	if (strcasestr(arg2, "_section") != (char *)NULL) {
+	if (strcasestr(arg2, "_section") != NULL) {
 	    /* fromIdx is actually the number of groups in thi section */
 	    numGroups = fromIdx;
 	    /* for each group in section */
@@ -1278,8 +1265,8 @@ parse_showEntry(char *a_line)
 	/* if it is a section/group name, find it in the cm_categories[] array */
 
 	found = 0;
-	if (strcasestr(arg2, "_section") != (char *)NULL
-	    || strcasestr(arg2, "_group") != (char *)NULL) {
+	if (strcasestr(arg2, "_section") != NULL
+	    || strcasestr(arg2, "_group") != NULL) {
 	    idx = 0;
 	    while (idx < CM_NUM_DATA_CATEGORIES) {
 		sscanf(cm_categories[idx], "%s %d %d", catName, &fromIdx,
@@ -1302,7 +1289,7 @@ parse_showEntry(char *a_line)
 	/* if it is a group name, read its start/end indices and fill in the
 	 * cm_Display_map[]. */
 
-	if (strcasestr(arg2, "_group") != (char *)NULL) {
+	if (strcasestr(arg2, "_group") != NULL) {
 
 	    if (fromIdx < 0 || toIdx < 0 || fromIdx >= NUM_CM_STAT_ENTRIES
 		|| toIdx >= NUM_CM_STAT_ENTRIES)
@@ -1322,7 +1309,7 @@ parse_showEntry(char *a_line)
 	    /* if it is a section name, get the count of number of groups in it and
 	     * for each group fill in the start/end indices in the cm_Display_map[] */
 
-	if (strcasestr(arg2, "_section") != (char *)NULL) {
+	if (strcasestr(arg2, "_section") != NULL) {
 	    /* fromIdx is actually the number of groups in thi section */
 	    numGroups = fromIdx;
 	    /* for each group in section */
@@ -1542,7 +1529,7 @@ process_config_file(char *a_config_filename)
 	}
 	if (curr_host->numThresh) {
 	    numBytes = curr_host->numThresh * sizeof(struct Threshold);
-	    curr_host->thresh = (struct Threshold *)malloc(numBytes);
+	    curr_host->thresh = malloc(numBytes);
 	    if (curr_host->thresh == NULL) {
 		fprintf(stderr, "[ %s ] Memory Allocation error 1", rn);
 		afsmon_Exit(25);
@@ -1560,7 +1547,7 @@ process_config_file(char *a_config_filename)
 	}
 	if (curr_host->numThresh) {
 	    numBytes = curr_host->numThresh * sizeof(struct Threshold);
-	    curr_host->thresh = (struct Threshold *)malloc(numBytes);
+	    curr_host->thresh = malloc(numBytes);
 	    if (curr_host->thresh == NULL) {
 		fprintf(stderr, "[ %s ] Memory Allocation error 2", rn);
 		afsmon_Exit(35);
@@ -1883,6 +1870,7 @@ fs_FullPerfs_ltoa(struct fs_Display_Data *a_fsData,
     int i, j;
     afs_int32 *tmpbuf;
     int code;
+    int large_time;
 
     /* there are two parts to the xstat FS statistics
      * - fullPerfP->overall which give the overall performance statistics, and
@@ -1919,6 +1907,15 @@ fs_FullPerfs_ltoa(struct fs_Display_Data *a_fsData,
 
     srcbuf = (afs_int32 *) (fullPerfP->det.rpcOpTimes);
 
+    /*
+     * For every time value below, we'll have to skip an additional
+     * 64 bits of input if struct timeval uses 64-bit values
+     */
+    if (sizeof(struct timeval) == 16)
+	large_time = 1;
+    else
+	large_time = 0;
+
     for (i = 0; i < FS_STATS_NUM_RPC_OPS; i++) {
 	sprintf(a_fsData->data[idx], "%d", *srcbuf);	/* numOps */
 	idx++;
@@ -1930,18 +1927,26 @@ fs_FullPerfs_ltoa(struct fs_Display_Data *a_fsData,
 	sprintf(a_fsData->data[idx], "%d.%06d", *tmpbuf, *srcbuf);
 	idx++;
 	srcbuf++;
+	if (large_time)
+	    srcbuf += 2;
 	tmpbuf = srcbuf++;	/* sqr time */
 	sprintf(a_fsData->data[idx], "%d.%06d", *tmpbuf, *srcbuf);
 	idx++;
 	srcbuf++;
+	if (large_time)
+	    srcbuf += 2;
 	tmpbuf = srcbuf++;	/* min time */
 	sprintf(a_fsData->data[idx], "%d.%06d", *tmpbuf, *srcbuf);
 	idx++;
 	srcbuf++;
+	if (large_time)
+	    srcbuf += 2;
 	tmpbuf = srcbuf++;	/* max time */
 	sprintf(a_fsData->data[idx], "%d.%06d", *tmpbuf, *srcbuf);
 	idx++;
 	srcbuf++;
+	if (large_time)
+	    srcbuf += 2;
     }
 
     /* copy fs transfer timings */
@@ -1958,18 +1963,26 @@ fs_FullPerfs_ltoa(struct fs_Display_Data *a_fsData,
 	sprintf(a_fsData->data[idx], "%d.%06d", *tmpbuf, *srcbuf);
 	idx++;
 	srcbuf++;
+	if (large_time)
+	    srcbuf += 2;
 	tmpbuf = srcbuf++;	/* sqr time */
 	sprintf(a_fsData->data[idx], "%d.%06d", *tmpbuf, *srcbuf);
 	idx++;
 	srcbuf++;
+	if (large_time)
+	    srcbuf += 2;
 	tmpbuf = srcbuf++;	/* min time */
 	sprintf(a_fsData->data[idx], "%d.%06d", *tmpbuf, *srcbuf);
 	idx++;
 	srcbuf++;
+	if (large_time)
+	    srcbuf += 2;
 	tmpbuf = srcbuf++;	/* max time */
 	sprintf(a_fsData->data[idx], "%d.%06d", *tmpbuf, *srcbuf);
 	idx++;
 	srcbuf++;
+	if (large_time)
+	    srcbuf += 2;
 	sprintf(a_fsData->data[idx], "%d", *srcbuf);	/* sum bytes */
 	idx++;
 	srcbuf++;
@@ -3498,8 +3511,8 @@ init_cm_buffers(void)
 		    /* >>>  need to allocate rx connection info structure here <<< */
 
 		    new_cmPR->data.AFSCB_CollData_val =
-			(afs_int32 *) malloc(XSTAT_CM_FULLPERF_RESULTS_LEN
-					     * sizeof(afs_int32));
+			malloc(XSTAT_CM_FULLPERF_RESULTS_LEN
+			       *sizeof(afs_int32));
 		    if (new_cmPR->data.AFSCB_CollData_val == NULL) {
 			free(new_cmlist_item);
 			free(new_cmPR->connP);
@@ -3590,7 +3603,7 @@ init_print_buffers(void)
 
     if (numFS) {
 	numBytes = numFS * sizeof(struct fs_Display_Data);
-	curr_fsData = (struct fs_Display_Data *)malloc(numBytes);
+	curr_fsData = malloc(numBytes);
 	if (curr_fsData == (struct fs_Display_Data *)0) {
 	    fprintf(stderr, "[ %s ] Memory allocation failure\n", rn);
 	    return (-1);
@@ -3598,7 +3611,7 @@ init_print_buffers(void)
 	memset(curr_fsData, 0, numBytes);
 
 	numBytes = numFS * sizeof(struct fs_Display_Data);
-	prev_fsData = (struct fs_Display_Data *)malloc(numBytes);
+	prev_fsData = malloc(numBytes);
 	if (prev_fsData == (struct fs_Display_Data *)0) {
 	    fprintf(stderr, "[ %s ] Memory allocation failure\n", rn);
 	    return (-5);
@@ -3627,7 +3640,7 @@ init_print_buffers(void)
     if (numCM) {
 	numBytes = numCM * sizeof(struct cm_Display_Data);
 
-	curr_cmData = (struct cm_Display_Data *)malloc(numBytes);
+	curr_cmData = malloc(numBytes);
 	if (curr_cmData == (struct cm_Display_Data *)0) {
 	    fprintf(stderr, "[ %s ] Memory allocation failure\n", rn);
 	    return (-10);
@@ -3635,7 +3648,7 @@ init_print_buffers(void)
 	memset(curr_cmData, 0, numBytes);
 
 	numBytes = numCM * sizeof(struct cm_Display_Data);
-	prev_cmData = (struct cm_Display_Data *)malloc(numBytes);
+	prev_cmData = malloc(numBytes);
 	if (prev_cmData == (struct cm_Display_Data *)0) {
 	    fprintf(stderr, "[ %s ] Memory allocation failure\n", rn);
 	    return (-15);
@@ -3728,7 +3741,7 @@ afsmon_execute(void)
 	/* Allocate an array of sockets for each fileserver we monitor */
 
 	FSsktbytes = numFS * sizeof(struct sockaddr_in);
-	FSSktArray = (struct sockaddr_in *)malloc(FSsktbytes);
+	FSSktArray = malloc(FSsktbytes);
 	if (FSSktArray == (struct sockaddr_in *)0) {
 	    fprintf(stderr,
 		    "[ %s ] cannot malloc %d sockaddr_ins for fileservers\n",
@@ -3813,7 +3826,7 @@ afsmon_execute(void)
 	/* Allocate an array of sockets for each cache manager we monitor */
 
 	CMsktbytes = numCM * sizeof(struct sockaddr_in);
-	CMSktArray = (struct sockaddr_in *)malloc(CMsktbytes);
+	CMSktArray = malloc(CMsktbytes);
 	if (CMSktArray == (struct sockaddr_in *)0) {
 	    fprintf(stderr,
 		    "[ %s ] cannot malloc %d sockaddr_ins for CM entries\n",
@@ -4242,7 +4255,7 @@ main(int argc, char **argv)
     /*
      * Set up the commands we understand.
      */
-    ts = cmd_CreateSyntax("initcmd", afsmonInit, NULL, "initialize the program");
+    ts = cmd_CreateSyntax("initcmd", afsmonInit, NULL, 0, "initialize the program");
     cmd_AddParm(ts, "-config", CMD_SINGLE, CMD_OPTIONAL,
 		"configuration file");
     cmd_AddParm(ts, "-frequency", CMD_SINGLE, CMD_OPTIONAL,

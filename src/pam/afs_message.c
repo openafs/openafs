@@ -10,20 +10,13 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#include <syslog.h>
-#include <stdlib.h>
-#include <string.h>
-#include <pwd.h>
-#include <unistd.h>
-
+#include <roken.h>
 
 #include <security/pam_appl.h>
 #include <security/pam_modules.h>
 
-
-#include <sys/param.h>
 #include <afs/kautils.h>
-#include <stdarg.h>
+
 #include "afs_message.h"
 #include "afs_util.h"
 

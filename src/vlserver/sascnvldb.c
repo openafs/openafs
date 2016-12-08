@@ -9,31 +9,14 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
-#include <sys/types.h>
-#include <errno.h>
-#include <stdio.h>
+
 #include <sys/file.h>
-#include "cnvldb.h"		/* CHANGEME! */
-#include <netinet/in.h>
 #include <afs/venus.h>
 #include <afs/cmd.h>
 #include <afs/afs_consts.h>
 
-#ifdef notdef
-#include <afs/vice.h>
-#undef VIRTUE
-#undef VICE
-#include "afs/prs_fs.h"
-#include <afs/afsint.h>
-#include <afs/cellconfig.h>
-#include <ubik.h>
-#endif
-#include <strings.h>
-
-
+#include "cnvldb.h"		/* CHANGEME! */
 
 static char pn[] = "cnvldb";
 static char tempname[] = "XXnewvldb";

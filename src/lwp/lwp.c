@@ -17,17 +17,12 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#include <stdlib.h>
-#include <stdio.h>
-#ifdef HAVE_STDINT_H
-#include <stdint.h>
-#endif
-#include <time.h>
+#include <roken.h>
 
 /* allocate externs here */
 #define  LWP_KERNEL
 #include "lwp.h"
+
 #ifdef	AFS_AIX32_ENV
 #include <ulimit.h>
 #include <sys/errno.h>
@@ -37,23 +32,12 @@
 #pragma alloca
 int setlim(int limcon, uchar_t hard, int limit);
 #endif
-#ifdef AFS_SGI64_ENV
-extern char *getenv();
-#include <time.h>
-#endif
-#include <string.h>
 
-#if	!defined(USE_PTHREADS) && !defined(USE_SOLARIS_THREADS)
-
-#ifdef	AFS_OSF_ENV
-extern void *malloc(int size);
-extern void *realloc(void *ptr, int size);
-#endif
 #ifndef AFS_ARM_LINUX20_ENV
 #if defined(AFS_OSF_ENV) || defined(AFS_S390_LINUX20_ENV)
-extern int PRE_Block;		/* from preempt.c */
+int PRE_Block;	/* Remnants of preemption support. */
 #else
-extern char PRE_Block;		/* from preempt.c */
+char PRE_Block;	/* Remnants of preemption support. */
 #endif
 #endif
 
@@ -297,7 +281,7 @@ LWP_CreateProcess(void *(*ep) (void *), int stacksize, int priority, void *parm,
     /* Throw away all dead process control blocks */
     purge_dead_pcbs();
     if (lwp_init) {
-	temp = (PROCESS) malloc(sizeof(struct lwp_pcb));
+	temp = malloc(sizeof(struct lwp_pcb));
 	if (temp == NULL) {
 	    Set_LWP_RC();
 	    return LWP_ENOMEM;
@@ -353,9 +337,9 @@ LWP_CreateProcess(void *(*ep) (void *), int stacksize, int priority, void *parm,
 	stackmemory = stackptr;
 #else
 #ifdef AFS_DARWIN_ENV
-	if ((stackmemory = (char *)malloc(stacksize + STACK_ALIGN - 1)) == NULL)
+	if ((stackmemory = malloc(stacksize + STACK_ALIGN - 1)) == NULL)
 #else /* !AFS_DARWIN_ENV */
-	if ((stackmemory = (char *)malloc(stacksize + 7)) == NULL)
+	if ((stackmemory = malloc(stacksize + 7)) == NULL)
 #endif /* !AFS_DARWIN_ENV */
 	{
 	    Set_LWP_RC();
@@ -450,7 +434,7 @@ LWP_CreateProcess2(void *(*ep) (void *), int stacksize, int priority, void *parm
     /* Throw away all dead process control blocks */
     purge_dead_pcbs();
     if (lwp_init) {
-	temp = (PROCESS) malloc(sizeof(struct lwp_pcb));
+	temp = malloc(sizeof(struct lwp_pcb));
 	if (temp == NULL) {
 	    Set_LWP_RC();
 	    return LWP_ENOMEM;
@@ -460,7 +444,7 @@ LWP_CreateProcess2(void *(*ep) (void *), int stacksize, int priority, void *parm
 	else
 	    stacksize =
 		STACK_ALIGN * ((stacksize + STACK_ALIGN - 1) / STACK_ALIGN);
-	if ((stackptr = (char *)malloc(stacksize)) == NULL) {
+	if ((stackptr = malloc(stacksize)) == NULL) {
 	    Set_LWP_RC();
 	    return LWP_ENOMEM;
 	}
@@ -630,8 +614,8 @@ LWP_InitializeProcessSupport(int priority, PROCESS * pid)
     blocked.count = 0;
     qwaiting.head = NULL;
     qwaiting.count = 0;
-    lwp_init = (struct lwp_ctl *)malloc(sizeof(struct lwp_ctl));
-    temp = (PROCESS) malloc(sizeof(struct lwp_pcb));
+    lwp_init = malloc(sizeof(struct lwp_ctl));
+    temp = malloc(sizeof(struct lwp_pcb));
     if (lwp_init == NULL || temp == NULL)
 	Abort_LWP("Insufficient Storage to Initialize LWP Support");
     LWPANCHOR.processcnt = 1;
@@ -739,9 +723,8 @@ LWP_MwaitProcess(int wcount, void *evlist[])
 	}
 	if (ecount > lwp_cpptr->eventlistsize) {
 
-	    lwp_cpptr->eventlist =
-		(void **)realloc(lwp_cpptr->eventlist,
-				 ecount * sizeof(void *));
+	    lwp_cpptr->eventlist = realloc(lwp_cpptr->eventlist,
+				           ecount * sizeof(void *));
 	    lwp_cpptr->eventlistsize = ecount;
 	}
 	for (i = 0; i < ecount; i++)
@@ -996,11 +979,15 @@ Overflow_Complain(void)
     currenttime = time(0);
     timeStamp = ctime(&currenttime);
     timeStamp[24] = 0;
-    write(2, timeStamp, strlen(timeStamp));
+    if (write(2, timeStamp, strlen(timeStamp)) < 0)
+	return;
 
-    write(2, msg1, strlen(msg1));
-    write(2, lwp_cpptr->name, strlen(lwp_cpptr->name));
-    write(2, msg2, strlen(msg2));
+    if (write(2, msg1, strlen(msg1)) < 0)
+	return;
+    if (write(2, lwp_cpptr->name, strlen(lwp_cpptr->name)) < 0)
+	return;
+    if (write(2, msg2, strlen(msg2)) < 0)
+	return;
 }
 
 static void
@@ -1049,7 +1036,7 @@ Initialize_PCB(PROCESS temp, int priority, char *stack, int stacksize,
 	    i++;
     temp->name[31] = '\0';
     temp->status = READY;
-    temp->eventlist = (void **)malloc(EVINITSIZE * sizeof(void *));
+    temp->eventlist = malloc(EVINITSIZE * sizeof(void *));
     temp->eventlistsize = EVINITSIZE;
     temp->eventcnt = 0;
     temp->wakevent = 0;
@@ -1242,27 +1229,6 @@ setlim(int limcon, uchar_t hard, int limit)
     }
     return (0);
 }
-
-
-#ifdef	notdef
-/*
- * Print the specific limit out
- */
-int
-plim(char *name, afs_int32 lc, uchar_t hard)
-{
-    struct rlimit rlim;
-    int lim;
-
-    printf("%s \t", name);
-    (void)getrlimit(lc, &rlim);
-    lim = hard ? rlim.rlim_max : rlim.rlim_cur;
-    if (lim == RLIM_INFINITY)
-	printf("unlimited");
-    printf("%d %s", lim / 1024, "kbytes");
-    printf("\n");
-}
-#endif
 #endif
 
 #ifdef	AFS_SUN5_ENV
@@ -1279,381 +1245,3 @@ LWP_SignalProcess(void *event)
 }
 
 #endif
-#else
-#ifdef	USE_SOLARIS_THREADS
-#include <thread.h>
-#else
-#include "pthread.h"
-#endif
-#include <stdio.h>
-#include <assert.h>
-
-pthread_mutex_t lwp_mutex;	/* Mutex to ensure mutual exclusion of all LWP threads */
-
-PROCESS lwp_process_list;	/* List of LWP initiated threads */
-
-pthread_key_t lwp_process_key;	/* Key associating lwp pid with thread */
-
-#define CHECK check(__LINE__);
-
-typedef struct event {
-    struct event *next;		/* next in hash chain */
-    void *event;		/* lwp event: an address */
-    int refcount;		/* Is it in use? */
-    pthread_cond_t cond;	/* Currently associated condition variable */
-    int seq;			/* Sequence number: this is incremented
-				 * by wakeup calls; wait will not return until
-				 * it changes */
-} event_t;
-
-#define HASHSIZE 127
-event_t *hashtable[HASHSIZE];	/* Hash table for events */
-#define hash(event)	((unsigned long) (event) % HASHSIZE);
-
-#if CMA_DEBUG || DEBUGF
-char *
-lwp_process_string(void)
-{
-    static char id[200];
-    PROCESS p;
-    LWP_CurrentProcess(&p);
-    sprintf(id, "PID %x <%s>", p, p->name);
-    return id;
-}
-#endif
-
-void
-lwp_unimplemented(char *interface)
-{
-    fprintf(stderr,
-	    "cmalwp: %s is not currently implemented: program aborted\n",
-	    interface);
-    exit(1);
-}
-
-static void
-lwpabort(char *interface)
-{
-    fprintf(stderr, "cmalwp: %s failed unexpectedly\n", interface);
-    abort();
-}
-
-int
-LWP_QWait(void)
-{
-    lwp_unimplemented("LWP_QWait");
-}
-
-int
-LWP_QSignal(int pid)
-{
-    lwp_unimplemented("LWP_QSignal");
-}
-
-/* Allocate and initialize an LWP process handle. The associated pthread handle
- * must be added by the caller, and the structure threaded onto the LWP active
- * process list by lwp_thread_process */
-static PROCESS
-lwp_alloc_process(char *name, pthread_startroutine_t ep, pthread_addr_t arg)
-{
-    PROCESS lp;
-    lp = (PROCESS) malloc(sizeof(*lp));
-    assert(lp);
-    memset(lp, 0, sizeof(*lp));
-    if (!name) {
-	char temp[100];
-	static procnum;
-	sprintf(temp, "unnamed_process_%04d", ++procnum);
-	name = (char *)malloc(strlen(temp) + 1);
-	assert(name);
-	strcpy(name, temp);
-    }
-    lp->name = name;
-    lp->ep = ep;
-    lp->arg = arg;
-    return lp;
-}
-
-/* Thread the LWP process descriptor *lp onto the lwp active process list
- * and associate a back pointer to the process descriptor from the associated
- * thread */
-static
-lwp_thread_process(PROCESS lp)
-{
-    lp->next = lwp_process_list;
-    lwp_process_list = lp;
-    if (pthread_setspecific(lwp_process_key, (pthread_addr_t) lp) != 0)
-	assert(0);
-}
-
-/* The top-level routine used as entry point to explicitly created LWP
- * processes. This completes a few details of process creation left
- * out by LWP_CreateProcess and calls the user-specified entry point */
-static int
-lwp_top_level(pthread_addr_t argp)
-{
-    PROCESS lp = (PROCESS) argp;
-
-    MUTEX_ENTER(&lwp_mutex);
-    lwp_thread_process(lp);
-    (lp->ep) (lp->arg);
-    MUTEX_EXIT(&lwp_mutex);
-    /* Should cleanup state */
-}
-
-int
-LWP_CreateProcess(pthread_startroutine_t ep, int stacksize, int priority,
-		  void *parm, char *name, PROCESS * pid)
-{
-    int status;
-    pthread_attr_t attr;
-    pthread_t handle;
-    PROCESS lp;
-
-#ifndef LWP_NO_PRIORITIES
-    if (!cmalwp_pri_inrange(priority))
-	return LWP_EBADPRI;
-#endif
-    if (pthread_attr_create(&attr))
-	assert(0);
-    if (pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED))
-	assert(0);
-    if (stacksize)
-	if (pthread_attr_setstacksize(&attr, stacksize))
-	    assert(0);
-#ifndef BDE_THREADS
-    (void)pthread_attr_setinheritsched(&attr, PTHREAD_DEFAULT_SCHED);
-    (void)pthread_attr_setsched(&attr, SCHED_FIFO);
-#ifndef LWP_NO_PRIORITIES
-    (void)pthread_attr_setprio(&attr, cmalwp_lwppri_to_cmapri(priority));
-#endif
-#endif
-    lp = lwp_alloc_process(name, (pthread_startroutine_t) ep,
-			   (pthread_addr_t) parm);
-
-    /* allow new thread to run if higher priority */
-    MUTEX_EXIT(&lwp_mutex);
-    /* process is only added to active list after first time it runs (it adds itself) */
-    status =
-	pthread_create(&lp->handle, attr,
-		       (pthread_startroutine_t) lwp_top_level,
-		       (pthread_addr_t) lp);
-    if (pthread_attr_delete(&attr))
-	assert(0);
-    if (pthread_mutex_lock(&lwp_mutex))
-	assert(0);
-    if (status != 0) {
-	free(lp);
-	return LWP_ENOMEM;
-    }
-    if (pid)
-	*pid = lp;
-    return LWP_SUCCESS;
-}
-
-PROCESS
-LWP_ActiveProcess(void)
-{				/* returns pid of current process */
-    PROCESS pid;
-    if (pthread_getspecific(lwp_process_key, (pthread_addr_t *) & pid))
-	assert(0);
-    return pid;
-}
-
-int
-LWP_CurrentProcess(PROCESS * pid)
-{				/* get pid of current process */
-    if (pthread_getspecific(lwp_process_key, (pthread_addr_t *) pid))
-	assert(0);
-    return LWP_SUCCESS;
-}
-
-int
-LWP_DestroyProcess(PROCESS pid)
-{				/* destroy a lightweight process */
-    lwp_unimplemented("LWP_DestroyProcess");
-}
-
-int
-LWP_DispatchProcess(void)
-{				/* explicit voluntary preemption */
-    MUTEX_EXIT(&lwp_mutex);
-    pthread_yield();
-    MUTEX_ENTER(&lwp_mutex);
-    return LWP_SUCCESS;
-}
-
-static int
-lwp_process_key_destructor(void)
-{
-}
-
-int
-LWP_InitializeProcessSupport(int priority, PROCESS * pid)
-{
-    static int initialized = 0;
-    int status;
-    static PROCESS lp;
-    extern main;
-    int state;
-
-    if (initialized) {
-	if (pid)
-	    *pid = lp;
-	return LWP_SUCCESS;
-    }
-#ifndef LWP_NO_PRIORITIES
-    if (priority < 0 || priority > LWP_MAX_PRIORITY)
-	return LWP_EBADPRI;
-#endif
-
-    /* Create pthread key to associate LWP process descriptor with each
-     * LWP-created thread */
-    if (pthread_keycreate(&lwp_process_key, (pthread_destructor_t)
-			  lwp_process_key_destructor))
-	assert(0);
-
-    lp = lwp_alloc_process("main process", main, 0);
-    lp->handle = pthread_self();
-    lwp_thread_process(lp);
-#ifndef LWP_NO_PRIORITIES
-    (void)pthread_setscheduler(pthread_self(), SCHED_FIFO,
-			       cmalwp_lwppri_to_cmapri(priority));
-
-#endif
-    MUTEX_INIT(&lwp_mutex, "lwp", MUTEX_DEFAULT, 0);
-    MUTEX_ENTER(&lwp_mutex);
-    initialized = 1;
-    if (pid)
-	*pid = lp;
-    return LWP_SUCCESS;
-}
-
-int
-LWP_TerminateProcessSupport(void)
-{				/* terminate all LWP support */
-    lwp_unimplemented("LWP_TerminateProcessSupport");
-}
-
-/* Get and initialize event structure corresponding to lwp event (i.e. address) */
-static event_t *
-getevent(void *event)
-{
-    event_t *evp, *newp;
-    int hashcode;
-
-    hashcode = hash(event);
-    evp = hashtable[hashcode];
-    newp = 0;
-    while (evp) {
-	if (evp->event == event) {
-	    evp->refcount++;
-	    return evp;
-	}
-	if (evp->refcount == 0)
-	    newp = evp;
-	evp = evp->next;
-    }
-    if (!newp) {
-	newp = (event_t *) malloc(sizeof(event_t));
-	assert(newp);
-	newp->next = hashtable[hashcode];
-	hashtable[hashcode] = newp;
-	if (pthread_cond_init(&newp->cond, ((pthread_condattr_t) 0)))
-	    assert(0);
-	newp->seq = 0;
-    }
-    newp->event = event;
-    newp->refcount = 1;
-    return newp;
-}
-
-/* Release the specified event */
-#define relevent(evp) ((evp)->refcount--)
-
-int
-LWP_WaitProcess(void *event)
-{				/* wait on a single event */
-    struct event *ev;
-    int seq;
-    debugf(("%s: wait process (%x)\n", lwp_process_string(), event));
-    if (event == NULL)
-	return LWP_EBADEVENT;
-    ev = getevent(event);
-    seq = ev->seq;
-    while (seq == ev->seq) {
-	if (pthread_cond_wait(&ev->cond, &lwp_mutex))
-	    assert(0);
-    }
-    debugf(("%s: Woken up (%x)\n", lwp_process_string(), event));
-    relevent(ev);
-    return LWP_SUCCESS;
-}
-
-int
-LWP_MwaitProcess(int wcount, char *evlist[])
-{				/* wait on m of n events */
-    lwp_unimplemented("LWP_MWaitProcess");
-}
-
-int
-LWP_NoYieldSignal(void *event)
-{
-    struct event *ev;
-    debugf(("%s: no yield signal (%x)\n", lwp_process_string(), event));
-    if (event == NULL)
-	return LWP_EBADEVENT;
-    ev = getevent(event);
-    if (ev->refcount > 1) {
-	ev->seq++;
-	if (pthread_cond_broadcast(&ev->cond))
-	    assert(0);
-    }
-    relevent(ev);
-    return LWP_SUCCESS;
-}
-
-int
-LWP_SignalProcess(void *event)
-{
-    struct event *ev;
-    debugf(("%s: signal process (%x)\n", lwp_process_string(), event));
-    if (event == NULL)
-	return LWP_EBADEVENT;
-    ev = getevent(event);
-    if (ev->refcount > 1) {
-	ev->seq++;
-	MUTEX_EXIT(&lwp_mutex);
-	CV_BROADCAST(&ev->cond);
-	pthread_yield();
-	MUTEX_ENTER(&lwp_mutex);
-    }
-    relevent(ev);
-    return LWP_SUCCESS;
-}
-
-int
-LWP_StackUsed(PROCESS pid, int *maxa, int *used)
-{
-    lwp_unimplemented("LWP_StackUsed");
-}
-
-int
-LWP_NewRock(int Tag, char *Value)
-{
-    lwp_unimplemented("LWP_NewRock");
-}
-
-int
-LWP_GetRock(int Tag, char **Value)
-{
-    lwp_unimplemented("LWP_GetRock");
-}
-
-int
-LWP_GetProcessPriority(PROCESS pid, int *priority)
-{				/* returns process priority */
-    lwp_unimplemented("LWP_GetProcessPriority");
-}
-
-#endif /* USE_PTHREADS */

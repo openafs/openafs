@@ -7,7 +7,7 @@ fs_rxstatproc - Manage per-process Rx statistics collection
 =for html
 <div class="synopsis">
 
-B<fs rxstatproc> [B<-enable>] [B<-disable>] [B<-clear>]
+B<fs rxstatproc> [B<-enable>] [B<-disable>] [B<-clear>] [B<-help>]
 
 =for html
 </div>
@@ -35,6 +35,11 @@ Enable the collection of process RPC statistics
 =item B<-clear>
 
 Resets all trace counters to zero.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 

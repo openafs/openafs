@@ -55,6 +55,13 @@
 #endif /* !TRUE */
 #define __dontcare__	-1
 
+#if defined(AFS_NBSD50_ENV)
+# if !defined(DEF_CADDR_T)
+typedef char * caddr_t;
+#define DEF_CADDR_T
+# endif
+#endif
+
 #ifndef mem_alloc
 #define mem_alloc(bsize)	malloc(bsize)
 #endif
@@ -101,9 +108,6 @@
 /* keep here for now, 64 bit issues */
 #ifndef AFS_OBSD44_ENV
 extern void *afs_osi_Alloc(size_t x);
-#ifndef afs_osi_Alloc_NoSleep
-extern void *afs_osi_Alloc_NoSleep(size_t x);
-#endif
 extern void afs_osi_Free(void *x, size_t asize);
 #endif
 
@@ -194,36 +198,17 @@ typedef bool_t(*xdrproc_t) (void *, ...);
  * and two private fields for the use of the particular impelementation.
  */
 
-#if defined(KERNEL) && ((defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV))
-/* NOTE: SGI 6.1 adds two routines to the xdr_ops if the size of a long is
- * 64 bits. I've only done this for the kernel, since other changes may
- * be necessary if we make a 64 bit user version of AFS.
- */
-#define AFS_XDR_64BITOPS 1
-#endif
-
 typedef struct __afs_xdr {
     enum xdr_op x_op;		/* operation; fast additional param */
     struct xdr_ops {
-#ifdef AFS_XDR_64BITOPS
-	bool_t(*x_getint64) (struct __afs_xdr *xdrs, afs_int64 * lp);	/* get 32 bits into a long */
-	bool_t(*x_putint64) (struct __afs_xdr *xdrs, afs_int64 * lp);	/* send 32 bits of a long */
-#endif
-#if !(defined(KERNEL) && defined(AFS_SUN57_ENV))
 	bool_t(*x_getint32) (struct __afs_xdr *xdrs, afs_int32 * lp);	/* get an afs_int32 from underlying stream */
 	bool_t(*x_putint32) (struct __afs_xdr *xdrs, afs_int32 * lp);	/* put an afs_int32 to " */
-#endif
 	bool_t(*x_getbytes) (struct __afs_xdr *xdrs, caddr_t addr, u_int len);	/* get some bytes from " */
 	bool_t(*x_putbytes) (struct __afs_xdr *xdrs, caddr_t addr, u_int len);	/* put some bytes to " */
 	u_int(*x_getpostn) (struct __afs_xdr *xdrs);	/* returns bytes off from beginning */
 	bool_t(*x_setpostn) (struct __afs_xdr *xdrs, u_int pos);	/* lets you reposition the stream */
 	afs_int32 *(*x_inline) (struct __afs_xdr *xdrs, u_int len);	/* buf quick ptr to buffered data */
 	void (*x_destroy) (struct __afs_xdr *xdrs);	/* free privates of this xdr_stream */
-#if defined(KERNEL) && defined(AFS_SUN57_ENV)
-	  bool_t(*x_control) (struct __afs_xdr *xdrs);
-	  bool_t(*x_getint32) (struct __afs_xdr *xdrs, afs_int32 * lp);
-	  bool_t(*x_putint32) (struct __afs_xdr *xdrs, afs_int32 * lp);
-#endif
     } *x_ops;
     caddr_t x_public;		/* users' data */
     caddr_t x_private;		/* pointer to private data */
@@ -240,18 +225,6 @@ typedef struct __afs_xdr {
  * u_int	 len;
  * u_int	 pos;
  */
-#ifdef AFS_XDR_64BITOPS
-#define XDR_GETINT64(xdrs, int64p)			\
-	(*(xdrs)->x_ops->x_getint64)(xdrs, int64p)
-#define xdr_getint64(xdrs, int64p)			\
-	(*(xdrs)->x_ops->x_getint64)(xdrs, int64p)
-
-#define XDR_PUTINT64(xdrs, int64p)			\
-	(*(xdrs)->x_ops->x_putint64)(xdrs, int64p)
-#define xdr_putint64(xdrs, int64p)			\
-	(*(xdrs)->x_ops->x_putint64)(xdrs, int64p)
-#endif /* AFS_XDR_64BITOPS */
-
 #define XDR_GETINT32(xdrs, int32p)			\
 	(*(xdrs)->x_ops->x_getint32)(xdrs, int32p)
 #define xdr_getint32(xdrs, int32p)			\

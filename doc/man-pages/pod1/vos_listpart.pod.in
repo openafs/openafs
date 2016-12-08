@@ -1,0 +1,79 @@
+=head1 NAME
+
+vos_listpart - Displays all AFS partitions on a file server machine
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<vos listpart> S<<< B<-server> <I<machine name>> >>>
+    S<<< [B<-cell> <I<cell name>>] >>>
+    [B<-noauth>] [B<-localauth>]
+    [B<-verbose>] [B<-encrypt>] [B<-noresolve>]
+    S<<< [B<-config> <I<config directory>>] >>>
+    [B<-help>]
+
+B<vos listp> S<<< B<-s> <I<machine name>> >>> S<<< [B<-c> <I<cell name>>] >>>
+    [B<-noa>] [B<-l>] [B<-v>] [B<-e>] [B<-nor>]
+    S<<< [B<-co> <I<config directory>>] >>>
+    [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<vos listpart> command displays all of the valid AFS partitions on
+the indicated file server machine, without consulting the Volume Location
+Database (VLDB). The B<vos partinfo> command reports the size of a
+partition and the available space on that partition.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-server> <I<server name>>
+
+Identifies the file server machine for which to list the partitions.
+Provide the machine's IP address or its host name (either fully qualified
+or using an unambiguous abbreviation). For details, see L<vos(1)>.
+
+=include fragments/vos-common.pod
+
+=back
+
+=head1 OUTPUT
+
+The output consists of a list of partition names of the form
+F</vicepI<xx>>, following the header:
+
+   The partitions on the server are:
+
+The last line of the output reports the total number of partitions.
+
+=head1 EXAMPLES
+
+The following command displays the partitions on C<fs1.example.com>:
+
+   % vos listpart fs1.example.com
+   The partitions on the server are:
+       /vicepa     /vicepb     /vicepc     /vicepd
+   Total:  4
+
+=head1 PRIVILEGE REQUIRED
+
+None
+
+=head1 SEE ALSO
+
+L<vos(1)>,
+L<vos_partinfo(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

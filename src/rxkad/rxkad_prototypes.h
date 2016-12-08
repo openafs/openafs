@@ -14,11 +14,6 @@
 #include "fcrypt.h"
 #include "rx/rx.h"
 
-/* Don't include des.h where it can cause conflict with krb4 headers */
-#if !defined(NO_DES_H_INCLUDE)
-#include <des.h>
-#endif
-
 /* crypt_conn.c */
 extern afs_int32 rxkad_DecryptPacket(const struct rx_connection *conn,
 				     const fc_KeySchedule * schedule,
@@ -55,6 +50,8 @@ extern int rxkad_GetResponse(struct rx_securityClass *aobj,
 extern void rxkad_ResetState(void);
 
 /* rxkad_common.c */
+extern void rxkad_Init(void);
+
 struct rxkad_endpoint;
 extern int rxkad_SetupEndpoint(struct rx_connection *aconnp,
 			       struct rxkad_endpoint *aendpointp);
@@ -83,8 +80,6 @@ extern int rxkad_GetStats(struct rx_securityClass *aobj,
 extern rxkad_level rxkad_StringToLevel(char *string);
 extern char *rxkad_LevelToString(rxkad_level level);
 
-extern void rxkad_global_stats_init(void);
-
 /* rxkad_errs.c */
 
 /* rxkad_server.c */
@@ -111,6 +106,12 @@ extern struct rx_securityClass *rxkad_NewServerSecurityObject(rxkad_level
 							       char *cell,
 							       afs_int32
 							       kvno));
+extern struct rx_securityClass *rxkad_NewKrb5ServerSecurityObject
+(rxkad_level level, void *get_key_rock,
+ int (*get_key) (void *get_key_rock, int kvno,
+		 struct ktc_encryptionKey *serverKey),
+ rxkad_get_key_enctype_func get_key_enctype,
+ int (*user_ok) (char *name, char *instance, char *cell, afs_int32 kvno));
 extern int rxkad_CheckAuthentication(struct rx_securityClass *aobj,
 				     struct rx_connection *aconn);
 extern int rxkad_CreateChallenge(struct rx_securityClass *aobj,
@@ -130,8 +131,6 @@ extern afs_int32 rxkad_SetConfiguration(struct rx_securityClass *aobj,
                                         struct rx_connection *aconn,
                                         rx_securityConfigVariables atype,
                                         void * avalue, void **aresult);
-extern int rxkad_SetAltDecryptProc(struct rx_securityClass *aobj,
-				   rxkad_alt_decrypt_func alt_decrypt);
 
 /* ticket.c */
 extern int tkt_DecodeTicket(char *asecret, afs_int32 ticketLen,
@@ -158,37 +157,21 @@ extern afs_uint32 _rxkad_crc_update(const char *p, size_t len, afs_uint32 res);
 extern int tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 			     int (*get_key) (void *, int,
 					     struct ktc_encryptionKey *),
+			     rxkad_get_key_enctype_func get_key2,
 			     char *get_key_rock, int serv_kvno, char *name,
 			     char *inst, char *cell, struct ktc_encryptionKey *session_key,
 			     afs_int32 * host, afs_uint32 * start,
-			     afs_uint32 * end, afs_int32 disableDotCheck,
-			     rxkad_alt_decrypt_func alt_decrypt);
+			     afs_uint32 * end, afs_int32 disableDotCheck);
+extern int tkt_MakeTicket5(char *ticket, int *ticketLen, int enctype, int *kvno,
+			   void *key, size_t keylen,
+			   char *name, char *inst, char *cell, afs_uint32 start,
+			   afs_uint32 end, struct ktc_encryptionKey *sessionKey,
+			   char *sname, char *sinst);
 /*
  * Compute a des key from a key of a semi-arbitrary kerberos 5 enctype.
  * Modifies keydata if enctype is 3des.
  */
 extern int tkt_DeriveDesKey(int enctype, void *keydata, size_t keylen, struct ktc_encryptionKey
 			    *output);
-/* ticket5_keytab.c */
-extern int rxkad_InitKeytabDecrypt(const char *, const char *);
-extern int rxkad_BindKeytabDecrypt(struct rx_securityClass *);
-
-#if !defined(NO_DES_H_INCLUDE)
-static_inline unsigned char *
-ktc_to_cblock(struct ktc_encryptionKey *key) {
-    return (unsigned char *)key;
-}
-
-static_inline char *
-ktc_to_charptr(struct ktc_encryptionKey *key) {
-    return (char *)key;
-}
-
-static_inline des_cblock *
-ktc_to_cblockptr(struct ktc_encryptionKey *key) {
-    return (des_cblock *)key;
-}
-#endif
-
 
 #endif

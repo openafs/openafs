@@ -58,9 +58,9 @@ struct onodeops {
 /*
  * Macros facilitating the use of onode functions.
  */
-#define	OOP_DESTROY(ONP)	(ONP)->o_op->on_destroy(ONP);
-#define	OOP_DISPLAY(ONP)	(ONP)->o_op->on_display(ONP);
-#define	OOP_RELEASE(ONP)	(ONP)->o_op->on_release(ONP);
+#define	OOP_DESTROY(ONP)	(ONP)->o_op->on_destroy(ONP)
+#define	OOP_DISPLAY(ONP)	(ONP)->o_op->on_display(ONP)
+#define	OOP_RELEASE(ONP)	(ONP)->o_op->on_release(ONP)
 
 /*
  * Initialization parameters for an onode.

@@ -10,14 +10,12 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #define VICE			/* control whether AFS changes are present */
 
 #ifdef   AFS_OSF_ENV
 
-#include <stdio.h>
-#include <sys/time.h>
-#include <sys/param.h>
 #include <sys/mount.h>
 #include <sys/vnode.h>
 #include <ufs/inode.h>
@@ -31,7 +29,6 @@
 #undef	_BSD
 
 #include <afs/osi_inode.h>
-#include <pwd.h>
 #include "fsck.h"
 
 struct prop_entry_desc {
@@ -169,8 +166,7 @@ proplist_blkscan(dp, idesc, entry_list)
 		valueresid = 0;
 	    }
 	    if (valueresid == 0) {
-		entry = (struct prop_entry_desc *)
-		    malloc(sizeof(struct prop_entry_desc));
+		entry = malloc(sizeof(struct prop_entry_desc));
 		if (entry == NULL)
 		    return (SKIP);
 		entry->next = NULL;

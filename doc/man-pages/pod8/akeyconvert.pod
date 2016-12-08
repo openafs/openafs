@@ -1,0 +1,88 @@
+=head1 NAME
+
+akeyconvert - Import keys from rxkad.keytab to an AFS KeyFileExt
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<akeyconvert> I<-all>
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<akeyconvert> command is used when upgrading an AFS cell from
+the 1.6.x release series to the 1.8.x release series.
+When using the rxkad-k5 security extension, the 1.6.x release series
+stored the AFS long-term Kerberos keys in a krb5 keytab file named
+F<rxkad.keytab>.  The 1.8.x series releases avoid widespread linking
+against libkrb5, and instead store the AFS long-term Kerberos keys
+in an OpenAFS-specific file format, the L<KeyFileExt(5)>.
+
+B<akeyconvert> provides an easy way to convert the AFS long-term
+Kerberos keys from the krb5 keytab format to the KeyFileExt format.
+The same functionality is possible via repeated use of L<asetkey(8)>,
+but B<akeyconvert> is provided to simplify the process.
+
+By default, B<akeyconvert> will only migrate the newest key (highest kvno)
+for each Kerberos principal with a key in the rxkad.keytab.  The ability
+to convert all keys, regardless of kvno, is provided as B<akeyconvert -all>.
+
+=head1 CAUTIONS
+
+The F<KeyFileExt> format is slightly less flexible than the krb5
+keytab format -- the F<KeyFileExt> identifies keys only by the
+type (rxkad-k5), kvno, and enctype ("subtype"), whereas the krb5 keytab
+also stores the principal name associated with each key.  This means
+that a krb5 keytab which contained keys of identical kvno and enctype,
+but for different principals, would not be representable as a
+F<KeyFileExt>.  B<akeyconvert> detects such a situation and does
+not perform any key conversions until the conflict is removed.
+
+Many of the concerns given in L<asetkey(8)> regarding extracting
+new Kerberos keys with C<ktadd> are also applicable to changes
+involving the F<rxkad.keytab>.
+
+=head1 EXAMPLES
+
+In a cell which is using the rxkad-k5 extension, the following command
+will read the newest keys from the F<rxkad.keytab> and write them to the
+F<KeyFileExt> in the appropriate format.
+
+    % akeyconvert
+
+In a cell which has a key of kvno 2 and enctype aes128-cts-hmac-sha1-96
+for both afs/example.com@EXAMPLE.COM and a different key with
+the same kvno and enctype but for the principal afs@EXAMPLE.COM,
+B<akeyconvert> will detect the kvno/enctype collision and refuse to
+continue.  The appropriate Kerberos keytab-manipulation tools should
+be used to generate a new key (of higher kvno) for one of the colliding
+principals and remove the old (colliding) key for that principal before
+B<akeyconvert> is used.
+
+    % akeyconvert -all
+    Duplicate kvno/enctype 2/17
+    FATAL: duplicate key identifiers found.
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be able to read the F<rxkad.keytab> and write the
+F<KeyFile> and F<KeyFileExt>, normally F</usr/afs/etc/KeyFile> and
+F</usr/afs/etc/KeyFileExt>.  In practice, this means that the issuer must be
+the local superuser C<root> on the AFS file server or database server.
+
+=head1 SEE ALSO
+
+L<KeyFile(5)>,
+L<KeyFileExt(5)>,
+L<asetkey(8)>,
+
+=head1 COPYRIGHT
+
+Copyright 2015 Massachusetts Institute of Technology.
+
+This documentation is covered by the IBM Public License Version 1.0.  This
+man page was written by Benjamin Kaduk for OpenAFS.

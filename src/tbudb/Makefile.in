@@ -8,29 +8,17 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+
 HELPER_SPLINT=@HELPER_SPLINT@
 
-CCRULE=${MT_CC} ${CFLAGS} ${MT_CFLAGS} -c
-
-RX=../rx
-UTIL=../util
-BUDB=${srcdir}/../budb
-
-RXOBJS= rx_pthread.o rxkad_errs.o
-
-UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o \
-     volparse.o flipbase64.o softsig.o hostparse.o snprintf.o pthread_glock.o
-
+RX=$(srcdir)/../rx
+BUDB=$(srcdir)/../budb
 
 INCLS=\
 	${TOP_INCDIR}/lock.h \
 	${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/lwp.h \
-	${TOP_INCDIR}/des.h \
 	${TOP_INCDIR}/rx/rx.h \
 	${TOP_INCDIR}/rx/xdr.h \
 	${TOP_INCDIR}/rx/rxkad.h \
@@ -43,13 +31,15 @@ INCLS=\
 	budb.h $(BUDB)/budb_client.h
 
 # library ordering defined by top level makefile
-LIBS=${RXOBJS} ${UTILOBJS} \
+LIBS= \
 	${TOP_LIBDIR}/libbubasics.a \
-	${TOP_LIBDIR}/libubik_pthread.a \
-	${TOP_LIBDIR}/libafsauthent.a \
-	${TOP_LIBDIR}/libafsrpc.a \
-	${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/libafsutil.a
+	$(top_builddir)/src/ubik/liboafs_ubik.la \
+	$(top_builddir)/src/sys/liboafs_sys.la \
+	$(top_builddir)/src/rxkad/liboafs_rxkad.la \
+	$(top_builddir)/src/lwp/liboafs_lwpcompat.la \
+	$(top_builddir)/src/cmd/liboafs_cmd.la \
+	$(top_builddir)/src/opr/liboafs_opr.la \
+	$(top_builddir)/src/util/liboafs_util.la
 
 COMMON_OBJS = database.o db_alloc.o db_dump.o db_hash.o struct_ops.o ol_verify.o
 
@@ -80,90 +70,42 @@ struct_ops.o: budb_errs.h
 # Build targets
 #
 
-rx_pthread.o: ${RX}/rx_pthread.c
-	${CCRULE} ${srcdir}/${RX}/rx_pthread.c
-
-rxkad_errs.o: ../rxkad/rxkad_errs.c
-	${CCRULE} ../rxkad/rxkad_errs.c
-
-# get the pthreaded util stuff compiled here.  we do this instead of
-# using the non-pthreaded libutil.a.  There probably should be a
-# pthreaded version of this library, as we are doing with ubik itself, but...
-#
-
-assert.o: ${UTIL}/assert.c
-	${CCRULE} ${srcdir}/${UTIL}/assert.c
-
-uuid.o: ${UTIL}/uuid.c
-	${CCRULE} ${srcdir}/${UTIL}/uuid.c
-
-serverLog.o: ${UTIL}/serverLog.c
-	${CCRULE} ${srcdir}/${UTIL}/serverLog.c
-
-fileutil.o: ${UTIL}/fileutil.c
-	${CCRULE} ${srcdir}/${UTIL}/fileutil.c
-
-volparse.o: ${UTIL}/volparse.c
-	${CCRULE} ${srcdir}/${UTIL}/volparse.c
-
-flipbase64.o: ${UTIL}/flipbase64.c
-	${CCRULE} ${srcdir}/${UTIL}/flipbase64.c
-
-netutils.o: ${UTIL}/netutils.c
-	${CCRULE} ${srcdir}/${UTIL}/netutils.c
-
-dirpath.o: ${UTIL}/dirpath.c
-	${CCRULE} ${srcdir}/${UTIL}/dirpath.c
-
-softsig.o: ${UTIL}/softsig.c
-	${CCRULE} ${srcdir}/${UTIL}/softsig.c
-
-hostparse.o: ${UTIL}/hostparse.c
-	${CCRULE} ${srcdir}/${UTIL}/hostparse.c
-
-snprintf.o: ${UTIL}/snprintf.c
-	${CCRULE} ${srcdir}/${UTIL}/snprintf.c
-
-pthread_glock.o: ${UTIL}/pthread_glock.c
-	${CCRULE} ${srcdir}/${UTIL}/pthread_glock.c
-
-
 database.o: ${BUDB}/database.c budb_errs.h ${INCLS}
-	${CCRULE} ${srcdir}/${BUDB}/database.c
+	$(AFS_CCRULE) $(BUDB)/database.c
 
 db_alloc.o: ${BUDB}/db_alloc.c budb_errs.h ${INCLS}
-	${CCRULE} ${srcdir}/${BUDB}/db_alloc.c
+	$(AFS_CCRULE) $(BUDB)/db_alloc.c
 
 db_dump.o: ${BUDB}/db_dump.c budb_errs.h ${INCLS}
-	${CCRULE} ${srcdir}/${BUDB}/db_dump.c
+	$(AFS_CCRULE) $(BUDB)/db_dump.c
 
 dbs_dump.o: ${BUDB}/dbs_dump.c budb_errs.h ${INCLS}
-	${CCRULE} ${srcdir}/${BUDB}/dbs_dump.c
+	$(AFS_CCRULE) $(BUDB)/dbs_dump.c
 
 db_lock.o:  ${BUDB}/db_lock.c budb_errs.h ${INCLS}
-	${CCRULE} ${srcdir}/${BUDB}/db_lock.c
+	$(AFS_CCRULE) $(BUDB)/db_lock.c
 
 db_text.o:  ${BUDB}/db_text.c budb_errs.h ${INCLS}
-	${CCRULE} ${srcdir}/${BUDB}/db_text.c
+	$(AFS_CCRULE) $(BUDB)/db_text.c
 
 db_hash.o: ${BUDB}/db_hash.c budb_errs.h ${INCLS}
-	${CCRULE} ${srcdir}/${BUDB}/db_hash.c
+	$(AFS_CCRULE) $(BUDB)/db_hash.c
 
 ol_verify.o: ${BUDB}/ol_verify.c budb_errs.h ${INCLS}
-	${CCRULE} ${srcdir}/${BUDB}/ol_verify.c
+	$(AFS_CCRULE) $(BUDB)/ol_verify.c
 
 procs.o: ${BUDB}/procs.c budb_errs.h ${INCLS}
-	${CCRULE} ${srcdir}/${BUDB}/procs.c
+	$(AFS_CCRULE) $(BUDB)/procs.c
 
 struct_ops.o: ${BUDB}/struct_ops.c budb_errs.h ${INCLS}
-	${CCRULE} ${srcdir}/${BUDB}/struct_ops.c
+	$(AFS_CCRULE) $(BUDB)/struct_ops.c
 
 server.o: ${BUDB}/server.c budb_errs.h ${INCLS}
-	${CCRULE} ${srcdir}/${BUDB}/server.c
-
+	$(AFS_CCRULE) $(BUDB)/server.c
 
 budb_server: $(SERVER_OBJS) ${LIBS}
-	${CC} ${LDFLAGS} -o budb_server $(SERVER_OBJS) ${LIBS} ${MT_LIBS} ${XLIBS} ${KRB5_LIBS}
+	$(LT_LDRULE_static) $(SERVER_OBJS) ${LIBS} \
+		$(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
 
 budb.cs.c: ${BUDB}/budb.rg
 	${RXGEN} -u -C -o $@ ${BUDB}/budb.rg
@@ -189,23 +131,25 @@ libbudb.a: budb_errs.o budb.cs.o budb.xdr.o struct_ops.o AFS_component_version_n
 #
 # Install targets
 #
-install: \
-	${DESTDIR}${afssrvlibexecdir}/buserver
+install: budb_server
+	if [ "x$(ENABLE_PTHREADED_UBIK)" = "xyes" ] ; then      \
+	    ${LT_INSTALl_PROGRAM} budb_server                      \
+		${DESTDIR}${afssrvlibexecdir}/buserver;         \
+	fi
 
-${DEST}/root.server/usr/afs/bin/buserver: budb_server
-	${INSTALL_PROGRAM} $? $@
+dest: budb_server
+	if [ "x$(ENABLE_PTHREADED_UBIK)" = "xyes" ] ; then      \
+	    ${INSTALL_PROGRAM} budb_server			\
+		${DEST}/root.server/usr/afs/bin/buserver;	\
+	fi
 
 #
 # Misc targets
 #
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o *~ budb_errs.[ch] budb.h *.a *.xdr.c \
 		*.ss.c *.cs.c core budb_server AFS_component_version_number.c
 
 include ../config/Makefile.version
-${DESTDIR}${afssrvlibexecdir}/buserver: budb_server
-	${INSTALL_PROGRAM} $? $@
-
-dest: \
-	${DEST}/root.server/usr/afs/bin/buserver
 

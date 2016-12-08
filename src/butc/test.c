@@ -6,17 +6,16 @@
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  */
+#include <afsconfig.h>
+#include <afs/param.h>
 
-#include <sys/types.h>
-#include <sys/file.h>
-#include <sys/stat.h>
+#include <roken.h>
+
 #ifdef AFS_AIX_ENV
 #include <sys/statfs.h>
 #endif
-#include <netdb.h>
-#include <sys/errno.h>
+
 #include <lock.h>
-#include <netinet/in.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
@@ -29,9 +28,6 @@
 #include <afs/cmd.h>
 #include <rx/rxkad.h>
 #include <afs/tcdata.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
 
 #define SERVERNAME "server1"
 
@@ -107,8 +103,7 @@ PerformDump(struct cmd_syndesc *as, void *arock)
     strcpy(ttapeSet.format, "tapeName%u");
     strcpy(ttapeSet.tapeServer, "diskTapes");
     tdumps.tc_dumpArray_val =
-	(struct tc_dumpDesc
-	 *)(malloc(tdumps.tc_dumpArray_len * sizeof(struct tc_dumpDesc)));
+	malloc(tdumps.tc_dumpArray_len * sizeof(struct tc_dumpDesc));
     ptr = tdumps.tc_dumpArray_val;
     for (i = 0; i < tdumps.tc_dumpArray_len; i++) {
 	fscanf(fp, "%s\n", ptr->name);
@@ -150,9 +145,9 @@ PerformRestore(struct cmd_syndesc *as, void *arock)
     strcpy(tdumpSetName, "Test");
     fp = fopen("restoreScr", "r");
     fscanf(fp, "%u\n", &trestores.tc_restoreArray_len);
-    trestores.tc_restoreArray_val =
-	(struct tc_restoreDesc *)malloc(trestores.tc_restoreArray_len *
-					sizeof(struct tc_restoreDesc));
+    trestores.tc_restoreArray_val
+	= malloc(trestores.tc_restoreArray_len *
+		 sizeof(struct tc_restoreDesc));
     ptr = trestores.tc_restoreArray_val;
     for (i = 0; i < trestores.tc_restoreArray_len; i++) {
 	fscanf(fp, "%s\n", ptr->oldName);
@@ -295,20 +290,20 @@ main(argc, argv)
 #endif
     cmd_SetBeforeProc(MyBeforeProc, NULL);
 
-    ts = cmd_CreateSyntax("dump", PerformDump, NULL, "perform a dump");
+    ts = cmd_CreateSyntax("dump", PerformDump, NULL, 0, "perform a dump");
 
-    ts = cmd_CreateSyntax("restore", PerformRestore, NULL, "perform a restore");
+    ts = cmd_CreateSyntax("restore", PerformRestore, NULL, 0, "perform a restore");
 
-    ts = cmd_CreateSyntax("check", CheckDump, NULL, "check a dump");
+    ts = cmd_CreateSyntax("check", CheckDump, NULL, 0, "check a dump");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "dump id");
 
-    ts = cmd_CreateSyntax("abort", AbortDump, NULL, "abort a dump");
+    ts = cmd_CreateSyntax("abort", AbortDump, NULL, 0, "abort a dump");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "dump id");
 
-    ts = cmd_CreateSyntax("wait", WaitForDump, NULL, "wait for a dump");
+    ts = cmd_CreateSyntax("wait", WaitForDump, NULL, 0, "wait for a dump");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "dump id");
 
-    ts = cmd_CreateSyntax("end", EndDump, NULL, "end a dump");
+    ts = cmd_CreateSyntax("end", EndDump, NULL, 0, "end a dump");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "dump id");
 
     code = cmd_Dispatch(argc, argv);

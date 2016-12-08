@@ -35,17 +35,16 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <stdlib.h>
-#include <stdio.h>
 #include <ctype.h>
-#include <string.h>
+
 #include "rpc_scan.h"
 #include "rpc_parse.h"
 #include "rpc_util.h"
 
 list *proc_defined[MAX_PACKAGES], *special_defined, *typedef_defined,
-    *uniondef_defined;
+    *uniondef_defined, *complex_defined;
 char *SplitStart = NULL;
 char *SplitEnd = NULL;
 char *MasterPrefix = NULL;
@@ -69,6 +68,7 @@ int combinepackages = 0;
 int PackageIndex = -1;
 int PerProcCounter = 0;
 int Multi_Init = 0;
+int StatIndex = -1;
 
 /*
  * Character arrays to keep list of function names as we process the file
@@ -82,7 +82,6 @@ int function_list_index;
 /* static prototypes */
 static void isdefined(definition * defp);
 static void def_struct(definition * defp);
-static void def_program(definition * defp);
 static void def_enum(definition * defp);
 static void def_const(definition * defp);
 static void def_union(definition * defp);
@@ -132,20 +131,23 @@ static void ucs_ProcParams_setup(definition * defp, int split_flag);
 static void ucs_ProcTail_setup(definition * defp, int split_flag);
 static void ss_Proc_CodeGeneration(definition * defp);
 static void ss_ProcName_setup(definition * defp);
-static void ss_ProcParams_setup(definition * defp, int *somefrees);
-static void ss_ProcSpecial_setup(definition * defp, int *somefrees);
+static void ss_ProcParams_setup(definition * defp);
+static void ss_ProcSpecial_setup(definition * defp);
 static void ss_ProcUnmarshallInParams_setup(definition * defp);
 static void ss_ProcCallRealProc_setup(definition * defp);
 static void ss_ProcMarshallOutParams_setup(definition * defp);
-static void ss_ProcTail_setup(definition * defp, int somefrees);
+static void ss_ProcTail_setup(definition * defp);
 static int opcode_holes_exist(void);
 static void er_ProcDeclExterns_setup(void);
 static void er_ProcProcsArray_setup(void);
 static void er_ProcMainBody_setup(void);
 static void er_HeadofOldStyleProc_setup(void);
+static void er_HeadofOldStyleProc_setup2(void);
 static void er_BodyofOldStyleProc_setup(void);
+static void er_BodyofOldStyleProc_setup2(void);
 static void proc_er_case(definition * defp);
 static void er_TailofOldStyleProc_setup(void);
+static void er_TailofOldStyleProc_setup2(void);
 
 
 
@@ -174,14 +176,12 @@ get_definition(void)
     case TOK_ENUM:
 	def_enum(defp);
 	break;
-    case TOK_PROGRAM:
-	def_program(defp);
-	break;
     case TOK_CONST:
 	def_const(defp);
 	break;
     case TOK_EOF:
-	return (NULL);
+	free(defp);
+	return NULL;
     case TOK_PACKAGE:
 	def_package(defp);
 	break;
@@ -248,6 +248,7 @@ def_struct(definition * defp)
     declaration dec;
     decl_list *decls;
     decl_list **tailp;
+    int special = 0;
 
     defp->def_kind = DEF_STRUCT;
 
@@ -257,6 +258,11 @@ def_struct(definition * defp)
     tailp = &defp->def.st.decls;
     do {
 	get_declaration(&dec, DEF_STRUCT);
+	/* If a structure contains an array, then we're going
+	 * to need to be clever about freeing it */
+	if (dec.rel == REL_ARRAY) {
+	   special = 1;
+	}
 	decls = ALLOC(decl_list);
 	decls->decl = dec;
 	*tailp = decls;
@@ -266,64 +272,9 @@ def_struct(definition * defp)
     } while (tok.kind != TOK_RBRACE);
     get_token(&tok);
     *tailp = NULL;
-}
 
-static void
-def_program(definition * defp)
-{
-    token tok;
-    version_list *vlist;
-    version_list **vtailp;
-    proc_list *plist;
-    proc_list **ptailp;
-
-    defp->def_kind = DEF_PROGRAM;
-    scan(TOK_IDENT, &tok);
-    defp->def_name = tok.str;
-    scan(TOK_LBRACE, &tok);
-    vtailp = &defp->def.pr.versions;
-    scan(TOK_VERSION, &tok);
-    do {
-	scan(TOK_IDENT, &tok);
-	vlist = ALLOC(version_list);
-	vlist->vers_name = tok.str;
-	scan(TOK_LBRACE, &tok);
-	ptailp = &vlist->procs;
-	do {
-	    plist = ALLOC(proc_list);
-	    get_type(&plist->res_prefix, &plist->res_type, DEF_PROGRAM);
-	    if (streq(plist->res_type, "opaque")) {
-		error("illegal result type");
-	    }
-	    scan(TOK_IDENT, &tok);
-	    plist->proc_name = tok.str;
-	    scan(TOK_LPAREN, &tok);
-	    get_type(&plist->arg_prefix, &plist->arg_type, DEF_PROGRAM);
-	    if (streq(plist->arg_type, "opaque")) {
-		error("illegal argument type");
-	    }
-	    scan(TOK_RPAREN, &tok);
-	    scan(TOK_EQUAL, &tok);
-	    scan_num(&tok);
-	    scan(TOK_SEMICOLON, &tok);
-	    plist->proc_num = tok.str;
-	    *ptailp = plist;
-	    ptailp = &plist->next;
-	    peek(&tok);
-	} while (tok.kind != TOK_RBRACE);
-	*vtailp = vlist;
-	vtailp = &vlist->next;
-	scan(TOK_RBRACE, &tok);
-	scan(TOK_EQUAL, &tok);
-	scan_num(&tok);
-	vlist->vers_num = tok.str;
-	scan(TOK_SEMICOLON, &tok);
-	scan2(TOK_VERSION, TOK_RBRACE, &tok);
-    } while (tok.kind == TOK_VERSION);
-    scan(TOK_EQUAL, &tok);
-    scan_num(&tok);
-    defp->def.pr.prog_num = tok.str;
-    *vtailp = NULL;
+    if (special)
+	STOREVAL(&complex_defined, defp);
 }
 
 static void
@@ -418,6 +369,8 @@ def_typedef(definition * defp)
 {
     declaration dec;
 
+    memset(&dec, 0, sizeof(dec));
+
     defp->def_kind = DEF_TYPEDEF;
     get_declaration(&dec, DEF_TYPEDEF);
     defp->def_name = dec.name;
@@ -458,7 +411,7 @@ get_declaration(declaration * dec, defkind dkind)
 	}
 	dec->rel = REL_ARRAY;
 	if (peekscan(TOK_RANGLE, &tok)) {
-	    dec->array_max = "~0";	/* unspecified size, use max */
+	    dec->array_max = "~0u";	/* unspecified size, use max */
 	} else {
 	    scan_num(&tok);
 	    dec->array_max = tok.str;
@@ -507,8 +460,8 @@ get_type(char **prefixp, char **typep, defkind dkind)
 	(void)peekscan(TOK_INT, &tok);
 	break;
     case TOK_VOID:
-	if (dkind != DEF_UNION && dkind != DEF_PROGRAM) {
-	    error("voids allowed only inside union and program definitions");
+	if (dkind != DEF_UNION) {
+	    error("voids allowed only inside union definitions");
 	}
 	*typep = tok.str;
 	break;
@@ -617,6 +570,7 @@ def_statindex(definition * defp)
     defp->def_name = name;
     defp->def.co = tok.str;
     PackageStatIndex[PackageIndex] = name;
+    StatIndex = atoi(tok.str);
 }
 
 static void
@@ -835,6 +789,7 @@ check_proc(definition * defp, token * tokp, int noname)
 	    prefix, PackagePrefix[PackageIndex], defp->pc.proc_name);
 
     function_list_index++;
+    defp->statindex = no_of_stat_funcs;
     no_of_stat_funcs_header[PackageIndex]++;
     no_of_stat_funcs++;
     *Proc_listp = NULL;
@@ -903,8 +858,8 @@ analyze_ProcParams(definition * defp, token * tokp)
 	Proc_listp = &Proc_list->next;
 	decls = ALLOC(decl_list);
 	memset(decls, 0, sizeof(decl_list));
-    if (tokp->kind != TOK_RPAREN)
-        decls->decl = dec;
+	if (tokp->kind != TOK_RPAREN)
+	    decls->decl = dec;
 	*tailp = decls;
 	tailp = &decls->next;
     } while (tokp->kind != TOK_RPAREN);
@@ -924,7 +879,7 @@ generate_code(definition * defp, int proc_split_flag, int multi_flag)
 	if (Sflag || cflag)
 	    ss_Proc_CodeGeneration(defp);
     }
-    if (Sflag || (cflag && xflag && !proc_split_flag))
+    if (Sflag || (cflag && xflag && !proc_split_flag) || hflag)
 	STOREVAL(&proc_defined[PackageIndex], defp);
 }
 
@@ -1142,16 +1097,21 @@ cs_ProcName_setup(definition * defp, char *procheader, int split_flag)
     if (!cflag) {
 	for (plist = defp->pc.plists; plist; plist = plist->next) {
 	    if (plist->component_kind == DEF_PARAM) {
+		f_print(fout, ",");
 		if (ansic_flag) {
+		    if (plist->pl.param_kind == DEF_INPARAM &&
+			strcmp(plist->pl.param_type, "char *") == 0) {
+			f_print(fout, "const ");
+		    }
 		    if (plist->pl.param_flag & OUT_STRING) {
-			f_print(fout, ",%s *%s", plist->pl.param_type,
+			f_print(fout, "%s *%s", plist->pl.param_type,
 				plist->pl.param_name);
 		    } else {
-			f_print(fout, ",%s %s", plist->pl.param_type,
+			f_print(fout, "%s %s", plist->pl.param_type,
 				plist->pl.param_name);
 		    }
 		} else {
-		    f_print(fout, ", %s", plist->pl.param_name);
+		    f_print(fout, " %s", plist->pl.param_name);
 		    plist->pl.param_flag &= ~PROCESSED_PARAM;
 		}
 	    }
@@ -1231,12 +1191,6 @@ cs_ProcMarshallInParams_setup(definition * defp, int split_flag)
     f_print(fout, "\tint z_result;\n");
     if (!(split_flag > 1) || (noofallparams != 0)) {
 	f_print(fout, "\tXDR z_xdrs;\n");
-    }
-    /*
-     * Print out client side stat gathering call
-     */
-    if (xflag && split_flag != 1) {
-	f_print(fout, "\tstruct clock __QUEUE, __EXEC;\n");
     }
 
     if ((!split_flag) || (split_flag == 1)) {
@@ -1323,39 +1277,18 @@ cs_ProcTail_setup(definition * defp, int split_flag)
     }
     if (xflag && split_flag != 1) {
 	f_print(fout, "\tif (rx_enable_stats) {\n");
-	f_print(fout, "\t    clock_GetTime(&__EXEC);\n");
-	f_print(fout, "\t    clock_Sub(&__EXEC, &z_call->startTime);\n");
-	f_print(fout, "\t    __QUEUE = z_call->startTime;\n");
-	f_print(fout, "\t    clock_Sub(&__QUEUE, &z_call->queueTime);\n");
 	if (PackageStatIndex[PackageIndex]) {
-	    if (!split_flag) {
-		f_print(fout,
-			"\t    rx_IncrementTimeAndCount(z_conn->peer, %s,\n",
-			PackageStatIndex[PackageIndex]);
-	    } else {
-		f_print(fout,
-			"\t    rx_IncrementTimeAndCount(z_call->conn->peer, %s,\n",
-			PackageStatIndex[PackageIndex]);
-	    }
-	} else {
-	    if (!split_flag) {
-		f_print(fout,
-			"\t    rx_IncrementTimeAndCount(z_conn->peer,\n"
-			"\t\t(((afs_uint32)(ntohs(z_conn->serviceId) << 16)) \n"
-			"\t\t| ((afs_uint32)ntohs(z_conn->peer->port))),\n");
-	    } else {
-		f_print(fout,
-			"\t    rx_IncrementTimeAndCount(z_call->conn->peer,\n"
-			"\t\t(((afs_uint32)(ntohs(z_call->conn->serviceId) << 16)) |\n"
-			"\t\t((afs_uint32)ntohs(z_call->conn->peer->port))),\n");
-	    }
-	}
-	if (xflag) {
-	    f_print(fout, "\t\t%d, %sNO_OF_STAT_FUNCS, &__QUEUE, &__EXEC,\n",
-		    no_of_stat_funcs, PackagePrefix[PackageIndex]);
 	    f_print(fout,
-		    "\t\t&z_call->bytesSent, &z_call->bytesRcvd, 1);\n");
+		    "\t    rx_RecordCallStatistics(z_call, %s,\n",
+		    PackageStatIndex[PackageIndex]);
+	} else {
+	    f_print(fout,
+		    "\t    rx_RecordCallStatistics(z_call, \n"
+		    "\t\t(((afs_uint32)(ntohs(rx_ServiceIdOf(rx_ConnectionOf(z_call))) << 16)) |\n"
+		    "\t\t((afs_uint32)ntohs(rx_PortOf(rx_PeerOf(rx_ConnectionOf(z_call)))))),\n");
 	}
+	f_print(fout, "\t\t%d, %sNO_OF_STAT_FUNCS, 1);\n",
+		no_of_stat_funcs, PackagePrefix[PackageIndex]);
 	f_print(fout, "\t}\n\n");
     }
     f_print(fout, "\treturn z_result;\n}\n\n");
@@ -1365,17 +1298,15 @@ cs_ProcTail_setup(definition * defp, int split_flag)
 static void
 ss_Proc_CodeGeneration(definition * defp)
 {
-    int somefrees = 0;
-
     defp->can_fail = 0;
     ss_ProcName_setup(defp);
     if (!cflag) {
-	ss_ProcParams_setup(defp, &somefrees);
-	ss_ProcSpecial_setup(defp, &somefrees);
+	ss_ProcParams_setup(defp);
+	ss_ProcSpecial_setup(defp);
 	ss_ProcUnmarshallInParams_setup(defp);
 	ss_ProcCallRealProc_setup(defp);
 	ss_ProcMarshallOutParams_setup(defp);
-	ss_ProcTail_setup(defp, somefrees);
+	ss_ProcTail_setup(defp);
     }
 }
 
@@ -1395,9 +1326,6 @@ ss_ProcName_setup(definition * defp)
 		PackagePrefix[PackageIndex], defp->pc.proc_name);
 	f_print(fout, "struct rx_call *z_call, XDR *z_xdrs)\n{\n");
 	f_print(fout, "\t" "afs_int32 z_result;\n");
-	if (xflag) {
-	    f_print(fout, "\tstruct clock __QUEUE, __EXEC;\n");
-	}
 
 	for (plist = defp->pc.plists; plist; plist = plist->next)
 	    if (plist->component_kind == DEF_PARAM) {
@@ -1409,7 +1337,7 @@ ss_ProcName_setup(definition * defp)
 
 
 static void
-ss_ProcParams_setup(definition * defp, int *somefrees)
+ss_ProcParams_setup(definition * defp)
 {
     proc1_list *plist, *plist1;
     list *listp;
@@ -1434,7 +1362,6 @@ ss_ProcParams_setup(definition * defp, int *somefrees)
 			plist->pl.param_name);
 	    } else {
 		plist->pl.param_flag |= FREETHIS_PARAM;
-		*somefrees = 1;
 		f_print(fout, "\t%s %s=(%s)0", plist->pl.param_type,
 			plist->pl.param_name, plist->pl.param_type);
 	    }
@@ -1449,7 +1376,6 @@ ss_ProcParams_setup(definition * defp, int *somefrees)
 			f_print(fout, ", %s", plist1->pl.param_name);
 		    } else {
 			plist1->pl.param_flag |= FREETHIS_PARAM;
-			*somefrees = 1;
 			f_print(fout, ", *%s=(%s)0", plist1->pl.param_name,
 				plist1->pl.param_type);
 		    }
@@ -1482,7 +1408,7 @@ ss_ProcParams_setup(definition * defp, int *somefrees)
 
 
 static void
-ss_ProcSpecial_setup(definition * defp, int *somefrees)
+ss_ProcSpecial_setup(definition * defp)
 {
     proc1_list *plist;
     definition *defp1;
@@ -1490,6 +1416,7 @@ ss_ProcSpecial_setup(definition * defp, int *somefrees)
 
     for (listp = special_defined; listp != NULL; listp = listp->next) {
 	defp1 = (definition *) listp->val;
+
 	for (plist = defp->pc.plists; plist; plist = plist->next) {
 	    if (plist->component_kind == DEF_PARAM
 		&& (plist->pl.param_kind == DEF_INPARAM
@@ -1500,22 +1427,18 @@ ss_ProcSpecial_setup(definition * defp, int *somefrees)
 		if (streq(string, structname(plist->pl.param_type))) {
 		    plist->pl.string_name = spec->sdef.string_name;
 		    plist->pl.param_flag |= FREETHIS_PARAM;
-		    *somefrees = 1;
 		    fprintf(fout, "\n\t%s.%s = 0;", plist->pl.param_name,
 			    spec->sdef.string_name);
 		}
 	    }
 	}
     }
-    if (!*somefrees)
-	fprintf(fout, "\n");
     for (listp = typedef_defined; listp != NULL; listp = listp->next) {
 	defp1 = (definition *) listp->val;
 	for (plist = defp->pc.plists; plist; plist = plist->next) {
 	    if (plist->component_kind == DEF_PARAM) {
 		if (streq(defp1->def_name, structname(plist->pl.param_type))) {
 		    plist->pl.param_flag |= FREETHIS_PARAM;
-		    *somefrees = 1;
 		    switch (defp1->pc.rel) {
 		    case REL_ARRAY:
 			plist->pl.string_name = alloc(40);
@@ -1545,6 +1468,19 @@ ss_ProcSpecial_setup(definition * defp, int *somefrees)
 	    }
 	}
     }
+    for (listp = complex_defined; listp != NULL; listp = listp->next) {
+	defp1 = (definition *) listp->val;
+	for (plist = defp->pc.plists; plist; plist = plist->next) {
+	    if (plist->component_kind == DEF_PARAM) {
+		if (streq(defp1->def_name, structname(plist->pl.param_type))) {
+		    plist->pl.param_flag |= FREETHIS_PARAM;
+		    fprintf(fout, "\n\tmemset(&%s, 0, sizeof(%s));",
+				 plist->pl.param_name, defp1->def_name);
+		}
+	    }
+	}
+    }
+
     f_print(fout, "\n");
 }
 
@@ -1640,31 +1576,36 @@ ss_ProcMarshallOutParams_setup(definition * defp)
     }
 }
 
+static void
+ss_ProcTail_frees(char *xdrfunc, int *somefrees) {
+    if (!*somefrees) {
+	f_print(fout, "\tz_xdrs->x_op = XDR_FREE;\n");
+        f_print(fout, "\tif ((!%s)", xdrfunc);
+	*somefrees = 1;
+    } else {
+	f_print(fout, "\n\t    || (!%s)", xdrfunc);
+    }
+}
+
 
 static void
-ss_ProcTail_setup(definition * defp, int somefrees)
+ss_ProcTail_setup(definition * defp)
 {
     proc1_list *plist;
     definition *defp1;
     list *listp;
-    int firsttime = 0;
+    int somefrees = 0;
 
     if (defp->can_fail) {
 	f_print(fout, "fail:\n");
     }
+
     for (plist = defp->pc.plists; plist; plist = plist->next) {
 	if (plist->component_kind == DEF_PARAM
-	    && (plist->pl.param_flag & FREETHIS_PARAM))
-	    somefrees = 1;
+		&& (plist->pl.param_flag & FREETHIS_PARAM))
+	    ss_ProcTail_frees(plist->scode, &somefrees);
     }
-    if (somefrees)
-	f_print(fout, "\tz_xdrs->x_op = XDR_FREE;\n");
-    for (plist = defp->pc.plists; plist; plist = plist->next) {
-	if (plist->component_kind == DEF_PARAM
-	    && (plist->pl.param_flag & FREETHIS_PARAM)) {
-	    f_print(fout, "\tif (!%s) goto fail1;\n", plist->scode);
-	}
-    }
+
     for (listp = typedef_defined; listp != NULL; listp = listp->next) {
 	defp1 = (definition *) listp->val;
 	for (plist = defp->pc.plists; plist; plist = plist->next) {
@@ -1676,13 +1617,7 @@ ss_ProcTail_setup(definition * defp, int somefrees)
 		    switch (defp1->pc.rel) {
 		    case REL_ARRAY:
 		    case REL_POINTER:
-			if (!somefrees && !firsttime) {
-			    firsttime = 1;
-			    f_print(fout, "\tz_xdrs->x_op = XDR_FREE;\n");
-			}
-			somefrees = 1;
-			f_print(fout, "\tif (!%s) goto fail1;\n",
-				plist->scode);
+			ss_ProcTail_frees(plist->scode, &somefrees);
 			break;
 		    default:
 			break;
@@ -1691,6 +1626,7 @@ ss_ProcTail_setup(definition * defp, int somefrees)
 	    }
 	}
     }
+
     for (listp = uniondef_defined; listp != NULL; listp = listp->next) {
 	defp1 = (definition *) listp->val;
 	for (plist = defp->pc.plists; plist; plist = plist->next) {
@@ -1700,69 +1636,35 @@ ss_ProcTail_setup(definition * defp, int somefrees)
 		&& !(plist->pl.param_flag & FREETHIS_PARAM)) {
 		if (streq(defp1->def_name, structname(plist->pl.param_type))) {
 		    if (plist->pl.param_flag & INDIRECT_PARAM) {
-			if (!somefrees && !firsttime) {
-			    firsttime = 1;
-			    f_print(fout, "\tz_xdrs->x_op = XDR_FREE;\n");
-			}
-			somefrees = 1;
-			f_print(fout, "\tif (!%s) goto fail1;\n",
-				plist->scode);
+			ss_ProcTail_frees(plist->scode, &somefrees);
 		    }
 		}
 	    }
 	}
     }
 
+    if (somefrees) {
+	f_print(fout, ")\n");
+	f_print(fout, "\t\tz_result = RXGEN_SS_XDRFREE;\n\n");
+    }
+
     if (xflag) {
 	f_print(fout, "\tif (rx_enable_stats) {\n");
-	f_print(fout, "\t    clock_GetTime(&__EXEC);\n");
-	f_print(fout, "\t    clock_Sub(&__EXEC, &z_call->startTime);\n");
-	f_print(fout, "\t    __QUEUE = z_call->startTime;\n");
-	f_print(fout, "\t    clock_Sub(&__QUEUE, &z_call->queueTime);\n");
-	f_print(fout, "\t    rx_IncrementTimeAndCount(z_call->conn->peer,");
+	f_print(fout, "\t    rx_RecordCallStatistics(z_call,");
 	if (PackageStatIndex[PackageIndex]) {
 	    f_print(fout, " %s,\n", PackageStatIndex[PackageIndex]);
 	} else {
 	    f_print(fout,
-		    "\n\t\t(((afs_uint32)(ntohs(z_call->conn->serviceId) << 16)) |\n"
-		    "\t\t((afs_uint32)ntohs(z_call->conn->service->servicePort))),\n");
+		    "\n\t\t(((afs_uint32)(ntohs(rx_ServiceIdOf(rx_ConnectionOf(z_call))) << 16)) |\n"
+		    "\t\t((afs_uint32)ntohs(rx_ServiceOf(rx_ConnectionOf(z_call))->servicePort))),\n");
 	}
-	f_print(fout, "\t\t%d, %sNO_OF_STAT_FUNCS, &__QUEUE, &__EXEC,\n",
+	f_print(fout, "\t\t%d, %sNO_OF_STAT_FUNCS, 0);\n",
 		no_of_stat_funcs, PackagePrefix[PackageIndex]);
-	f_print(fout, "\t\t&z_call->bytesSent, &z_call->bytesRcvd, 0);\n");
 	f_print(fout, "\t}\n\n");
     }
 
     f_print(fout, "\treturn z_result;\n");
-    if (somefrees) {
-	f_print(fout, "fail1:\n");
-
-	if (xflag) {
-	    f_print(fout, "\tif (rx_enable_stats) {\n");
-	    f_print(fout, "\t    clock_GetTime(&__EXEC);\n");
-	    f_print(fout, "\t    clock_Sub(&__EXEC, &z_call->startTime);\n");
-	    f_print(fout, "\t    __QUEUE = z_call->startTime;\n");
-	    f_print(fout, "\t    clock_Sub(&__QUEUE, &z_call->queueTime);\n");
-	    f_print(fout,
-		    "\t    rx_IncrementTimeAndCount(z_call->conn->peer,");
-	    if (PackageStatIndex[PackageIndex]) {
-		f_print(fout, " %s,\n", PackageStatIndex[PackageIndex]);
-	    } else {
-		f_print(fout,
-			"\n\t\t(((afs_uint32)(ntohs(z_call->conn->serviceId) << 16)) |\n"
-			"\t\t((afs_uint32)ntohs(z_call->conn->service->servicePort))),\n");
-	    }
-	    f_print(fout, "\t\t%d, %sNO_OF_STAT_FUNCS, &__QUEUE, &__EXEC,\n",
-		    no_of_stat_funcs, PackagePrefix[PackageIndex]);
-	    f_print(fout,
-		    "\t\t&z_call->bytesSent, &z_call->bytesRcvd, 0);\n");
-	    f_print(fout, "\t}\n\n");
-	}
-
-	f_print(fout, "\treturn RXGEN_SS_XDRFREE;\n}\n\n");
-    } else {
-	f_print(fout, "}\n\n");
-    }
+    f_print(fout, "}\n\n");
 }
 
 
@@ -1789,17 +1691,22 @@ ucs_ProcName_setup(definition * defp, char *procheader, int split_flag)
     if (!cflag) {
 	for (plist = defp->pc.plists; plist; plist = plist->next) {
 	    if (plist->component_kind == DEF_PARAM) {
+		f_print(fout, ",");
 		if (ansic_flag) {
+		    if (plist->pl.param_kind == DEF_INPARAM &&
+			strcmp(plist->pl.param_type, "char *") == 0) {
+			f_print(fout, "const ");
+		    }
 		    if (plist->pl.param_flag & OUT_STRING) {
-			f_print(fout, ",%s *%s", plist->pl.param_type,
+			f_print(fout, "%s *%s", plist->pl.param_type,
 				plist->pl.param_name);
 		    } else {
-			f_print(fout, ",%s %s", plist->pl.param_type,
+			f_print(fout, "%s %s", plist->pl.param_type,
 				plist->pl.param_name);
 		    }
 		} else {
 		    plist->pl.param_flag &= ~PROCESSED_PARAM;
-		    f_print(fout, ", %s", plist->pl.param_name);
+		    f_print(fout, " %s", plist->pl.param_name);
 		}
 	    }
 	}
@@ -2014,6 +1921,9 @@ er_Proc_CodeGeneration(void)
 	    er_HeadofOldStyleProc_setup();
 	    er_BodyofOldStyleProc_setup();
 	    er_TailofOldStyleProc_setup();
+	    er_HeadofOldStyleProc_setup2();
+	    er_BodyofOldStyleProc_setup2();
+	    er_TailofOldStyleProc_setup2();
 	} else {
 	    er_ProcDeclExterns_setup();
 	    er_ProcProcsArray_setup();
@@ -2065,7 +1975,6 @@ er_ProcProcsArray_setup(void)
 			"\nstatic afs_int32 (*StubProcsArray%d[])(struct rx_call *z_call, XDR *z_xdrs) = {_%s%s%s",
 			PackageIndex, prefix, defp->pc.proc_prefix,
 			((definition *) listp->val)->pc.proc_name);
-		defp = (definition *) listp->val;
 	    }
 	}
 	listp = listp->next;
@@ -2098,6 +2007,13 @@ er_ProcMainBody_setup(void)
 		PackagePrefix[PackageIndex], PackagePrefix[PackageIndex]);
 	f_print(fout, "\treturn opnames%d[op - %sLOWEST_OPCODE];\n}\n",
 		PackageIndex, PackagePrefix[PackageIndex]);
+	f_print(fout, "struct %sstats *%sOpCodeStats(int op)\n{\n",
+		PackagePrefix[PackageIndex], PackagePrefix[PackageIndex]);
+	f_print(fout, "\tif (op < %sLOWEST_OPCODE || op > %sHIGHEST_OPCODE)\n\t\treturn NULL;\n",
+		PackagePrefix[PackageIndex], PackagePrefix[PackageIndex]);
+	f_print(fout, "\treturn NULL;/*%d %s*/\n}\n",
+		PackageIndex, PackagePrefix[PackageIndex]);
+
 	return;
     }
     f_print(fout, "int %s%sExecuteRequest(struct rx_call *z_call)\n",
@@ -2117,6 +2033,14 @@ er_ProcMainBody_setup(void)
     f_print(fout, "\treturn hton_syserr_conv(z_result);\n}\n");
 }
 
+static void
+er_HeadofOldStyleProc_setup2(void)
+{
+    if ( cflag ) {
+	f_print(fout, "int %sOpCodeIndex(int op)\n{\n", (combinepackages ? MasterPrefix : PackagePrefix[PackageIndex]));
+        f_print(fout, "\tswitch (op) {\n");
+    }
+}
 
 static void
 er_HeadofOldStyleProc_setup(void)
@@ -2186,6 +2110,44 @@ proc_er_case(definition * defp)
     f_print(fout, "\t\t\tbreak;\n");
 }
 
+static void
+proc_op_case(definition * defp)
+{
+    f_print(fout, "\t\tcase %d:", defp->pc.proc_opcodenum);
+    f_print(fout, "\treturn %d;\n",
+	    defp->statindex);
+}
+
+static void
+er_BodyofOldStyleProc_setup2(void)
+{
+    list *listp;
+
+    if (!cflag)
+	return;
+    if (combinepackages) {
+	int temp = PackageIndex;
+	for (PackageIndex = 0; PackageIndex <= temp; PackageIndex++) {
+	    for (listp = proc_defined[PackageIndex]; listp != NULL;
+		 listp = listp->next)
+		proc_op_case((definition *) listp->val);
+	}
+	PackageIndex = temp;
+    } else {
+	for (listp = proc_defined[PackageIndex]; listp != NULL;
+	     listp = listp->next)
+	    proc_op_case((definition *) listp->val);
+    }
+}
+
+static void
+er_TailofOldStyleProc_setup2(void)
+{
+    if ( cflag ) {
+	f_print(fout, "\t\tdefault:\n");
+	f_print(fout, "\t\t\treturn -1;\n\t}\n}\n");
+    }
+}
 
 static void
 er_TailofOldStyleProc_setup(void)
@@ -2211,9 +2173,12 @@ h_ProcMainBody_setup(void)
 static void
 h_HeadofOldStyleProc_setup(void)
 {
+    char *pprefix = (combinepackages ? MasterPrefix :
+		     PackagePrefix[PackageIndex]);
+    f_print(fout,"\nstruct %sstats{\n\tint statsver;\n};", pprefix);
     f_print(fout,"\nextern int %s%sExecuteRequest(struct rx_call *);\n",
-	    prefix,
-	    (combinepackages ? MasterPrefix : PackagePrefix[PackageIndex]));
+	    prefix, pprefix);
+    f_print(fout,"\nextern int %sOpCodeIndex(int op);\n", PackagePrefix[PackageIndex]);
 }
 
 void
@@ -2234,45 +2199,52 @@ h_Proc_CodeGeneration(void)
     PackageIndex = temp;
 }
 
+static void
+proc_h_case(definition * defp)
+{
+    f_print(fout, "#define opcode_%s%s \t((afs_uint64)((%uLL << 32) + %sOpCodeIndex(%u)))\n",
+	    defp->pc.proc_prefix, defp->pc.proc_name, StatIndex,
+	    defp->pc.proc_prefix, defp->pc.proc_opcodenum);
+}
+
+void
+h_opcode_stats_pkg(char *pprefix, int lowest, int highest, int nops,
+		  int statfuncs, char *ptype, list *proclist)
+{
+    list *listp;
+
+    if (!pprefix)
+	return;
+
+    f_print(fout,
+            "\n/* Opcode-related useful stats for %spackage: %s */\n",
+            ptype, pprefix);
+    f_print(fout, "#define %sLOWEST_OPCODE   %d\n", pprefix, lowest);
+    f_print(fout, "#define %sHIGHEST_OPCODE     %d\n", pprefix, highest);
+    f_print(fout, "#define %sNUMBER_OPCODES     %d\n\n", pprefix, nops);
+
+    for (listp = proclist; listp != NULL;
+         listp = listp->next)
+        proc_h_case((definition *) listp->val);
+
+    if (xflag) {
+        f_print(fout, "#define %sNO_OF_STAT_FUNCS\t%d\n\n",
+                pprefix, statfuncs);
+        f_print(fout, "AFS_RXGEN_EXPORT\n");
+        f_print(fout, "extern const char *%sfunction_names[];\n\n",
+                pprefix);
+    }
+}
+
 void
 h_opcode_stats(void)
 {
     if (combinepackages) {
-	f_print(fout,
-		"\n/* Opcode-related useful stats for Master package: %s */\n",
-		MasterPrefix);
-	f_print(fout, "#define %sLOWEST_OPCODE   %d\n", MasterPrefix,
-		master_lowest_opcode);
-	f_print(fout, "#define %sHIGHEST_OPCODE	%d\n", MasterPrefix,
-		master_highest_opcode);
-	f_print(fout, "#define %sNUMBER_OPCODES	%d\n\n", MasterPrefix,
-		master_no_of_opcodes);
-	if (xflag) {
-	    f_print(fout, "#define %sNO_OF_STAT_FUNCS\t%d\n\n", MasterPrefix,
-		    no_of_stat_funcs_header[0]);
-	    f_print(fout, "AFS_RXGEN_EXPORT\n");
-	    f_print(fout, "extern const char *%sfunction_names[];\n\n",
-		    MasterPrefix);
-	}
+	h_opcode_stats_pkg(MasterPrefix, master_lowest_opcode, master_highest_opcode, master_no_of_opcodes, no_of_stat_funcs_header[0], "Master ", proc_defined[0]);
     } else {
 	int i;
 	for (i = 0; i <= PackageIndex; i++) {
-	    f_print(fout,
-		    "\n/* Opcode-related useful stats for package: %s */\n",
-		    PackagePrefix[i]);
-	    f_print(fout, "#define %sLOWEST_OPCODE   %d\n", PackagePrefix[i],
-		    lowest_opcode[i]);
-	    f_print(fout, "#define %sHIGHEST_OPCODE	%d\n",
-		    PackagePrefix[i], highest_opcode[i]);
-	    f_print(fout, "#define %sNUMBER_OPCODES	%d\n\n",
-		    PackagePrefix[i], no_of_opcodes[i]);
-	    if (xflag) {
-		f_print(fout, "#define %sNO_OF_STAT_FUNCS\t%d\n\n",
-			PackagePrefix[i], no_of_stat_funcs_header[i]);
-		f_print(fout, "AFS_RXGEN_EXPORT\n");
-		f_print(fout, "extern const char *%sfunction_names[];\n\n",
-			PackagePrefix[i]);
-	    }
+	    h_opcode_stats_pkg(PackagePrefix[i], lowest_opcode[i], highest_opcode[i], no_of_opcodes[i], no_of_stat_funcs_header[i], "", proc_defined[i]);
 	}
     }
 }

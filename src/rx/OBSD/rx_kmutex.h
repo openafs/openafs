@@ -20,7 +20,6 @@
 
 /* You can't have AFS_GLOBAL_SUNLOCK and not RX_ENABLE_LOCKS */
 #define RX_ENABLE_LOCKS 1
-#define AFS_GLOBAL_RXLOCK_KERNEL
 
 /* This is incomplete and probably wouldn't work with NCPUS > 1 */
 
@@ -65,6 +64,6 @@ typedef struct {
 	osi_Assert((a)->owner == curproc); \
 	(a)->owner = 0; \
     } while(0);
-#define MUTEX_ISMINE(a) (((afs_kmutex_t *)(a))->owner == curproc)
+#define MUTEX_ASSERT(a) osi_Assert(((afs_kmutex_t *)(a))->owner == curproc)
 
 #endif /* _RX_KMUTEX_H_ */

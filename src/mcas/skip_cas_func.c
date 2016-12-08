@@ -78,7 +78,7 @@ static int gc_id[NUM_LEVELS];
  * PRIVATE FUNCTIONS
  */
 
-#define compare_keys(s, k1, k2) (s->cmpf(k1, k2));
+#define compare_keys(s, k1, k2) (s->cmpf(k1, k2))
 
 /*
  * Random level generator. Drop-off rate is 0.5 per level.

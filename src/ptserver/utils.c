@@ -10,17 +10,12 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#include <sys/types.h>
+#include <roken.h>
+
+#include <afs/opr.h>
 #include <lock.h>
 #include <ubik.h>
-#include <stdio.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#include <netdb.h>
-#endif
-#include <string.h>
+
 #include "ptserver.h"
 #include "pterror.h"
 
@@ -287,7 +282,7 @@ FindByID(struct ubik_trans *at, afs_int32 aid)
 	return 0;
     if (aid == tentry.id)
 	return entry;
-    osi_Assert(entry != tentry.nextID);
+    opr_Assert(entry != tentry.nextID);
     entry = tentry.nextID;
     while (entry != 0) {
 	memset(&tentry, 0, sizeof(tentry));
@@ -296,7 +291,7 @@ FindByID(struct ubik_trans *at, afs_int32 aid)
 	    return 0;
 	if (aid == tentry.id)
 	    return entry;
-	osi_Assert(entry != tentry.nextID);
+	opr_Assert(entry != tentry.nextID);
 	entry = tentry.nextID;
     }
     return 0;
@@ -320,7 +315,7 @@ FindByName(struct ubik_trans *at, char aname[PR_MAXNAMELEN], struct prentry *ten
 	return 0;
     if ((strncmp(aname, tentryp->name, PR_MAXNAMELEN)) == 0)
 	return entry;
-    osi_Assert(entry != tentryp->nextName);
+    opr_Assert(entry != tentryp->nextName);
     entry = tentryp->nextName;
     while (entry != 0) {
 	memset(tentryp, 0, sizeof(struct prentry));
@@ -329,7 +324,7 @@ FindByName(struct ubik_trans *at, char aname[PR_MAXNAMELEN], struct prentry *ten
 	    return 0;
 	if ((strncmp(aname, tentryp->name, PR_MAXNAMELEN)) == 0)
 	    return entry;
-	osi_Assert(entry != tentryp->nextName);
+	opr_Assert(entry != tentryp->nextName);
 	entry = tentryp->nextName;
     }
     return 0;
@@ -460,7 +455,7 @@ RemoveFromIDHash(struct ubik_trans *tt, afs_int32 aid, afs_int32 *loc)		/* ??? i
     if (code)
 	return PRDBFAIL;
     while (aid != tentry.id) {
-	osi_Assert(trail != current);
+	opr_Assert(trail != current);
 	trail = current;
 	current = tentry.nextID;
 	if (current == 0)
@@ -540,7 +535,7 @@ RemoveFromNameHash(struct ubik_trans *tt, char *aname, afs_int32 *loc)
     if (code)
 	return PRDBFAIL;
     while (strcmp(aname, tentry.name)) {
-	osi_Assert(trail != current);
+	opr_Assert(trail != current);
 	trail = current;
 	current = tentry.nextName;
 	if (current == 0)

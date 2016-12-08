@@ -5,7 +5,6 @@
 #define AFS_PARAM_H
 
 #define AFS_ENV                 1
-#define AFS_64BIT_ENV           1	/* Defines afs_int32 as int, not long. */
 #define AFS_64BIT_IOPS_ENV 1
 #define AFS_PPC_ENV 1
 #define AFS_VFSINCL_ENV 1
@@ -80,7 +79,6 @@
 
 #define AFS_VFSINCL_ENV 1	/* NOBODY uses this.... */
 #define AFS_ENV                 1
-#define AFS_64BIT_ENV           1	/* Defines afs_int32 as int, not long. */
 #define AFS_PPC_ENV 1
 
 #include <afs/afs_sysnames.h>

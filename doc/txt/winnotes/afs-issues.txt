@@ -1,4 +1,4 @@
-This file is a rough list of known issues with the 1.5.55 release of OpenAFS 
+This file is a rough list of known issues with the 1.7.01 release of OpenAFS 
 on Windows.  This list is not complete.  There are probably other issues which 
 can be found in the RT database or on the mailing list.
 
@@ -10,49 +10,32 @@ For all of these issues please review
 
 (1) File/Directory access is not integrated with windows security 
 
-(3c) Loopback adapter hack:
-  (i)   prevents use of AFS Gateway 
-  (ii)  requires installation of loopback adapter
-
 (12) AFS Integrated Logon:
 (12c) If network is not available must store the username and password 
       somewhere until such time as the network starts.
 
-(16) Better EventLog handling
+(17) Named Pipes Support
+     [requires modifications to AFS servers to support distributed
+      named pipes but local machine named pipes could be implemented
+      now that AFS has its own redirector file system driver.]
 
-(17) Named Pipes Support [requires modifications to AFS servers to support]
+(21) There is no Management Console to use for client configuration.
 
-(20) NSIS Installer issues
-     (a) integration with KFW install script
-     (b) Optional removal of AFS Server volumes
+(24) Compatibility with User Account Control (UAC)
 
-(21) The User Interface needs to be re-designed to separate the per-user
-     and per-machine settings.  All of the new registry items need to 
-     be added to the UI
+(25) No support for the Volume Query Quota Interface
 
-(22) CIFS Remote Administration Protocol implementation is incomplete.
-     Notifications are not made to requestors when the view of a file
-     or folder changes due to token acquisition; token expiration; or
-     token destruction
+(26) No support for the Volume Shadow Copy Service
 
-(23) Remove submount creation as a side effect of AFS drive mapping.
-     
-     The AFS Submount is effectively a server side alias for a path 
-     located in the AFS space.  This alias is exported by the AFS 
-     SMB/CIFS Server to the Windows SMB/CIFS client as a Share name.  
-     This makes the AFS Submount a system global setting which should 
-     only be modified by a member of the "AFS Client Admin" group.
+(27) No support for storing DOS attributes
 
-     afs_creds.exe and afs_config.exe should be modified to no longer 
-     use submount names when creating drive maps.  Drive maps should 
-     simply use the full AFS path name.  Submounts should not be 
-     created as a side effect of a drive mapping.
+(28) No support for Alternate Data Streams
 
-     The creation of submounts should only be possible via afsshare.exe 
-     or by the new AFS Client Service Administration tool when executed 
-     by an authorized user.
+(29) No support for Extended Attributes
 
-(24) Compatibility with Vista User Account Control (UAC)
+(30) No support for Access Based Enumeration
+
+(31) No support for Distributed Link Tracking and Object IDs
 
 -------------------------------------------------------------------------
 List of unfunded projects:
@@ -82,28 +65,9 @@ List of unfunded projects:
         13. need to add support for all of the new registry values since 1.2.8
   10. Add support for configurable Icon file representing AFS folders within the Explorer Shell
   11. Documentation Documentation Documentation
-  13. Integrate KFW installation into the NSIS and MSI installers
   14. Add support for server side byte range locking.
-  16. Complete implementation of CIFS Remote Administration Protocol
-  17. Add support for SMB/CIFS Digital Signatures
-  18. Missing SMB/CIFS functions: 
-        Find
-        FindUnique
-        FindClose
-        ReadBulk
-        WriteBulk       
-        WriteBulkData
-        Tran2::SessionSetup
-	Tran2::Directory Search InfoLevel 0x105 / 0x106
-  19. StoreBehind mode is not implemented.  Or more correctly, all data is
-      written directly to the server and is not cached.  Writes invalidate
-      the local cache entries which are then read back from the server.
-  20. Develop an optional Installable File System replacement for the SMB/CIFS 
-      Server.
   21. Add support for storing Extended Attributes on files
   22. Add support for storing Windows ACLs on files
-  23. Remove submount creation as a side effect of drive creation
-  24. Finish conversion from string.h to strsafe.h for VS 2005/2008
   25. Implement RX Statistics gathering interfaces and reporting tools
       (necessary to obtain profiling data)
   26. Implement RX Connection Pools in the Cache Manager allowing more than

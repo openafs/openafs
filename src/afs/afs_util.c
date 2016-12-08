@@ -35,25 +35,13 @@
 
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
-
-#ifdef AFS_LINUX20_ENV
-#include "afs/afs_md5.h"	/* For MD5 inodes - Linux only */
-#endif
-
-#if	defined(AFS_SUN56_ENV)
-#include <inet/led.h>
-#include <inet/common.h>
-#if     defined(AFS_SUN58_ENV)
-#include <netinet/ip6.h>
-#endif
-#include <inet/ip.h>
-#endif
+#include "hcrypto/md5.h"
 
 #if	defined(AFS_AIX_ENV)
 #include <sys/fp_io.h>
 #endif
 
-afs_int32 afs_new_inum = 0;
+afs_int32 afs_md5inum = 0;
 
 #ifndef afs_cv2string
 char *
@@ -109,7 +97,7 @@ afs_strtoi_r(const char *str, char **endptr, afs_uint32 *ret)
 
 #ifndef afs_strcasecmp
 int
-afs_strcasecmp(char *s1, char *s2)
+afs_strcasecmp(const char *s1, const char *s2)
 {
     while (*s1 && *s2) {
 	char c1, c2;
@@ -196,7 +184,7 @@ afs_strdup(char *s)
 
 void
 print_internet_address(char *preamble, struct srvAddr *sa, char *postamble,
-		       int flag, int code)
+		       int flag, int code, struct rx_connection *rxconn)
 {
     struct server *aserver = sa->server;
     char *ptr = "\n";
@@ -220,6 +208,26 @@ print_internet_address(char *preamble, struct srvAddr *sa, char *postamble,
 	     (address >> 16) & 0xff, (address >> 8) & 0xff, (address) & 0xff,
 	     aserver->cell->cellName, postamble, code, ptr);
 
+    if (flag == 1 && rxconn) {
+	/* server was marked down, check Rx to see if this was possibly due to
+	 * an ICMP error received from the network */
+	int errorigin, errtype, errcode;
+	const char *errmsg;
+	if (rx_GetNetworkError(rxconn, &errorigin, &errtype, &errcode, &errmsg) == 0) {
+	    const char *str1 = " (";
+	    const char *str2 = ")";
+	    if (!errmsg) {
+		errmsg = str1 = str2 = "";
+	    }
+	    afs_warnall("afs: network error for %d.%d.%d.%d:%d: origin %d type %d code %d%s%s%s\n",
+	             (address >> 24),
+	             (address >> 16) & 0xff,
+	             (address >> 8) & 0xff,
+	             (address) & 0xff,
+	             (int)ntohs(sa->sa_portal),
+	             errorigin, errtype, errcode, str1, errmsg, str2);
+	}
+    }
 }				/*print_internet_address */
 
 
@@ -267,15 +275,15 @@ afs_CheckLocks(void)
     {
 	struct srvAddr *sa;
 	struct server *ts;
-	struct afs_conn *tc;
+        struct sa_conn_vector *tcv;
 	for (i = 0; i < NSERVERS; i++) {
 	    for (ts = afs_servers[i]; ts; ts = ts->next) {
 		if (ts->flags & SRVR_ISDOWN)
 		    afs_warn("Server entry %p is marked down\n", ts);
 		for (sa = ts->addr; sa; sa = sa->next_sa) {
-		    for (tc = sa->conns; tc; tc = tc->next) {
-			if (tc->refCount)
-			    afs_warn("conn at %p (server %x) is held\n", tc,
+                    for (tcv = sa->conns; tcv; tcv = tcv->next) {
+                        if (tcv->refCount)
+                            afs_warn("conn at %p (server %x) is held\n", tcv,
 				     sa->sa_ip);
 		    }
 		}
@@ -298,6 +306,8 @@ afs_CheckLocks(void)
 
 	for (i = 0; i < NUSERS; i++) {
 	    for (tu = afs_users[i]; tu; tu = tu->next) {
+		if (CheckLock(&tu->lock))
+		    afs_warn("user at %p is locked\n", tu);
 		if (tu->refCount)
 		    afs_warn("user at %lx is held\n", (unsigned long)tu);
 	    }
@@ -364,22 +374,20 @@ afs_data_pointer_to_int32(const void *p)
     return ip.i32[i32_sub];
 }
 
-#ifdef AFS_LINUX20_ENV
-
-afs_int32
-afs_calc_inum(afs_int32 cell, afs_int32 volume, afs_int32 vnode)
+static_inline afs_int32
+afs_calc_inum_md5(afs_int32 cell, afs_int32 volume, afs_int32 vnode)
 {
     afs_int32 ino = 0, vno = vnode;
     char digest[16];
-    struct afs_md5 ct;
+    struct md5 ct;
 
-    if (afs_new_inum) {
+    if (afs_md5inum) {
 	int offset;
-	AFS_MD5_Init(&ct);
-	AFS_MD5_Update(&ct, &cell, 4);
-	AFS_MD5_Update(&ct, &volume, 4);
-	AFS_MD5_Update(&ct, &vnode, 4);
-	AFS_MD5_Final(digest, &ct);
+	MD5_Init(&ct);
+	MD5_Update(&ct, &cell, 4);
+	MD5_Update(&ct, &volume, 4);
+	MD5_Update(&ct, &vnode, 4);
+	MD5_Final(digest, &ct);
 
 	/* Userspace may react oddly to an inode number of 0 or 1, so keep
 	 * reading more of the md5 digest if we get back one of those.
@@ -395,19 +403,19 @@ afs_calc_inum(afs_int32 cell, afs_int32 volume, afs_int32 vnode)
 	    ino &= 0x7fffffff;      /* Assumes 32 bit ino_t ..... */
 	}
     }
+    return ino;
+}
+
+afs_int32
+afs_calc_inum(afs_int32 cell, afs_int32 volume, afs_int32 vnode)
+{
+    afs_int32 ino;
+
+    ino = afs_calc_inum_md5(cell, volume, vnode);
+
     if (ino == 0 || ino == 1) {
 	ino = (volume << 16) + vnode;
     }
     ino &= 0x7fffffff;      /* Assumes 32 bit ino_t ..... */
     return ino;
 }
-
-#else
-
-afs_int32
-afs_calc_inum(afs_int32 cell, afs_int32 volume, afs_int32 vnode)
-{
-    return (volume << 16) + vnode;
-}
-
-#endif

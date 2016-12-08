@@ -1,6 +1,7 @@
 %{
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <roken.h>
 
 /*
  *
@@ -45,10 +46,9 @@
 
 int char_to_num(char c);
 char *gensym(const char *x);
-char *current_token = (char *)NULL;
+char *current_token = NULL;
 extern char *table_name;
 
-char *ds(const char *string);
 char *quote(const char *string);
 void set_table_1num(char *string);
 int char_to_1num(char c);
@@ -74,7 +74,7 @@ extern int yylex (void);
 %%
 
 error_table	:	ERROR_TABLE header error_codes END
-			{ table_name = ds($2);
+			{ table_name = strdup($2);
 			  current_token = table_name;
 			  put_ecs(); }
 		;
@@ -84,7 +84,7 @@ header          :       table_fun table_id
                           $$ = $2; }
                 |       table_id
                         { current_token = $1;
-                          set_table_fun(ds("1"));
+                          set_table_fun(strdup("1"));
                           $$ = $1;
                         }
                 ;
@@ -119,12 +119,12 @@ ec_entry	:	ERROR_CODE_ENTRY ec_name ',' description
 		;
 
 ec_name		:	STRING
-			{ $$ = ds($1);
+			{ $$ = strdup($1);
 			  current_token = $$; }
 		;
 
 description	:	QUOTED_STRING
-			{ $$ = ds($1);
+			{ $$ = strdup($1);
 			  current_token = $$; }
 		;
 
@@ -152,26 +152,17 @@ char *gensym(const char *x)
 		gettimeofday(&tv, (void *)0);
 		gensym_n = (tv.tv_sec%10000)*100 + tv.tv_usec/10000;
 	}
-	symbol = (char *)malloc(32 * sizeof(char));
+	symbol = malloc(32 * sizeof(char));
 	gensym_n++;
 	sprintf(symbol, "et%ld", (long int) gensym_n);
 	return(symbol);
 }
 
 char *
-ds(const char *string)
-{
-	char *rv;
-	rv = (char *)malloc(strlen(string)+1);
-	strcpy(rv, string);
-	return(rv);
-}
-
-char *
 quote(const char *string)
 {
 	char *rv;
-	rv = (char *)malloc(strlen(string)+3);
+	rv = malloc(strlen(string)+3);
 	strcpy(rv, "\"");
 	strcat(rv, string);
 	strcat(rv, "\"");
@@ -180,7 +171,7 @@ quote(const char *string)
 
 afs_int32 table_number = 0;
 int current = 0;
-char **error_codes = (char **)NULL;
+char **error_codes = NULL;
 
 void add_ec(const char *name, const char *description)
 {
@@ -194,14 +185,14 @@ void add_ec(const char *name, const char *description)
         } else if (cfile){
 	    fprintf(cfile, "\t\"%s\",\n", description);
 	}
-	if (error_codes == (char **)NULL) {
-		error_codes = (char **)malloc(sizeof(char *));
-		*error_codes = (char *)NULL;
+	if (error_codes == NULL) {
+		error_codes = malloc(sizeof(char *));
+		*error_codes = NULL;
 	}
 	error_codes = (char **)realloc((char *)error_codes,
 				       (current + 2)*sizeof(char *));
-	error_codes[current++] = ds(name);
-	error_codes[current] = (char *)NULL;
+	error_codes[current++] = strdup(name);
+	error_codes[current] = NULL;
 }
 
 void add_ec_val(const char *name, const char *val, const char *description)
@@ -228,14 +219,14 @@ void add_ec_val(const char *name, const char *val, const char *description)
         } else if (cfile) {
 	    fprintf(cfile, "\t\"%s\",\n", description);
 	}
-	if (error_codes == (char **)NULL) {
-		error_codes = (char **)malloc(sizeof(char *));
-		*error_codes = (char *)NULL;
+	if (error_codes == NULL) {
+		error_codes = malloc(sizeof(char *));
+		*error_codes = NULL;
 	}
 	error_codes = (char **)realloc((char *)error_codes,
 				       (current + 2)*sizeof(char *));
-	error_codes[current++] = ds(name);
-	error_codes[current] = (char *)NULL;
+	error_codes[current++] = strdup(name);
+	error_codes[current] = NULL;
 } 
 
 void put_ecs(void)
@@ -244,7 +235,7 @@ void put_ecs(void)
 	if (!hfile)
 	    return;
 	for (i = 0; i < current; i++) {
-	     if (error_codes[i] != (char *)NULL)
+	     if (error_codes[i] != NULL)
 		  fprintf(hfile, "#define %-40s (%ldL)\n",
 			  error_codes[i], (long int) table_number + i);
 	}

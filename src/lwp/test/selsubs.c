@@ -11,6 +11,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+
 #include <unistd.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -37,15 +38,14 @@
 fd_set *
 IOMGR_AllocFDSet(void)
 {
-    fd_set *tmp = (fd_set *) malloc(sizeof(fd_set));
-    memset(tmp, 0, sizeof(fd_set));
+    fd_set *tmp = calloc(1, sizeof(fd_set));
     return tmp;
 }
 
 void
 IOMGR_FreeFDSet(fd_set * fds)
 {
-    free((char *)fds);
+    free(fds);
 }
 #endif
 
@@ -145,14 +145,13 @@ Log(char *fmt, ...)
 {
     va_list args;
     struct timeval now;
-    struct timezone tz;
     struct tm *ltime;
     time_t tt;
     int code;
     PROCESS pid;
     extern char *program;
 
-    code = gettimeofday(&now, &tz);
+    code = gettimeofday(&now, NULL);
     assert(code == 0);
 
     tt = now.tv_sec;

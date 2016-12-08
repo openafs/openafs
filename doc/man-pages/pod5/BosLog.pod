@@ -10,9 +10,7 @@ error conditions it encounters.
 
 If the F<BosLog> file does not already exist in the F</usr/afs/logs>
 directory when the BOS Server starts, the server process creates it and
-writes initial start-up messages to it. If there is an existing file, the
-BOS server renames it to F<BosLog.old>, overwriting the existing
-F<BosLog.old> file if it exists.
+writes initial start-up messages to it.
 
 The file is in ASCII format. Administrators listed in the
 F</usr/afs/etc/UserList> file can use the B<bos getlog> command to display

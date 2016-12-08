@@ -1,0 +1,55 @@
+
+srcdir=@srcdir@
+abs_top_builddir=@abs_top_builddir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+
+TESTS = authcon-t superuser-t keys-t realms-t
+
+MODULE_CFLAGS=-I$(srcdir)/../.. -I$(srcdir)/../common/
+
+all check test tests: $(TESTS)
+
+MODULE_LIBS = 	../tap/libtap.a \
+		$(abs_top_builddir)/src/auth/liboafs_auth.la \
+		$(LIB_rfc3961) $(LIB_roken) \
+		$(XLIBS)
+
+authcon-t: authcon-t.o ../common/config.o ../common/network.o
+	$(LT_LDRULE_static) authcon-t.o ../common/config.o ../common/network.o \
+		$(MODULE_LIBS)
+
+superuser-t: superuser-t.o ../common/config.o ../common/rxkad.o \
+	     test.cs.o test.ss.o test.xdr.o ../common/network.o
+	$(LT_LDRULE_static) superuser-t.o ../common/config.o \
+		../common/rxkad.o ../common/servers.o \
+		test.cs.o test.ss.o test.xdr.o ../common/network.o \
+		$(MODULE_LIBS)
+
+keys-t: keys-t.o ../common/config.o ../common/network.o
+	$(LT_LDRULE_static) keys-t.o ../common/config.o ../common/network.o $(MODULE_LIBS)
+
+realms-t: realms-t.o ../common/config.o ../common/network.o
+	$(LT_LDRULE_static) realms-t.o ../common/config.o ../common/network.o $(MODULE_LIBS)
+
+writekeyfile: writekeyfile.o
+	$(LT_LDRULE_static) writekeyfile.o $(MODULE_LIBS)
+
+test.cs.c: test.xg
+	$(RXGEN) -A -x -C -o $@ $(srcdir)/test.xg
+
+test.ss.c: test.xg
+	$(RXGEN) -A -x -S -o $@ $(srcdir)/test.xg
+
+test.xdr.c: test.xg
+	$(RXGEN) -A -x -c -o $@ $(srcdir)/test.xg
+
+test.h: test.xg
+	$(RXGEN) -A -x -h -o $@ $(srcdir)/test.xg
+
+superuser-t.o: test.h
+
+clean:
+	$(LT_CLEAN)
+	rm -f *.o *.cs.c *.ss.c *.xdr.c test.h \
+		writekeyfile $(TESTS)

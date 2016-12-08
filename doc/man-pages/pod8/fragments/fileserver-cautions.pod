@@ -13,12 +13,9 @@ Server to demand-attach or vice versa, you will need to stop and remove
 the C<fs> or C<dafs> node in F<BosConfig> and create a new node of the
 appropriate type. See L<bos_create(8)> for more information.
 
-Do not use the B<-k> and B<-w> arguments, which are intended for use
-by the OpenAFS developers only. Changing them from their default
-values can result in unpredictable File Server behavior.  In any case,
-on many operating systems the File Server uses native threads rather
-than the LWP threads, so using the B<-k> argument to set the number of
-LWP threads has no effect.
+Do not use the B<-w> argument, which is intended for use
+by the OpenAFS developers only. Changing it from its default
+values can result in unpredictable File Server behavior.
 
 Do not specify both the B<-spare> and B<-pctspare> arguments. Doing so
 causes the File Server to exit, leaving an error message in the

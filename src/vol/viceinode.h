@@ -20,7 +20,7 @@
 /* The four inode parameters for most inodes (files, directories,
    symbolic links) */
 struct InodeParams {
-    VolId volumeId;
+    VolumeId volumeId;
     VnodeId vnodeNumber;
     Unique vnodeUniquifier;
     FileVersion inodeDataVersion;
@@ -29,14 +29,14 @@ struct InodeParams {
 /* The four inode parameters for special inodes, i.e. the descriptive
    inodes for a volume */
 struct SpecialInodeParams {
-    VolId volumeId;
+    VolumeId volumeId;
     VnodeId vnodeNumber;	/* this must be INODESPECIAL */
 #ifdef	AFS_3DISPARES
-    VolId parentId;
+    VolumeId parentId;
     int type;
 #else
     int type;
-    VolId parentId;
+    VolumeId parentId;
 #endif
 };
 

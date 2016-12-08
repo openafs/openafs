@@ -9,34 +9,16 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
-#include <sys/types.h>
-#ifdef HAVE_TIME_H
-#include <time.h>
-#endif
-#ifdef HAVE_FCNTL_H
-#include <fcntl.h>
-#endif
+
+#include <roken.h>
+
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
 #include <WINNT/afsevent.h>
-#endif
-#ifdef HAVE_SYS_TIME_H
-#include <sys/time.h>
 #endif
 #ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
 #endif
-#ifdef HAVE_NETDB_H
-#include <netdb.h>
-#endif
-#ifdef HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#endif
-#include <stdio.h>
-#include <string.h>
 #include <ctype.h>
 
 #include <afs/afsutil.h>
@@ -49,6 +31,7 @@
 #include <afs/cmd.h>
 #include <lock.h>
 #include <ubik.h>
+
 #include "vlserver.h"
 
 void fill_listattributes_entry(struct VldbListByAttributes *, char **, int);
@@ -151,12 +134,11 @@ GetVolume(int vol, struct vldbentry *entry)
 
 /* Almost identical's to pr_Initialize in vlserver/pruser.c */
 afs_int32
-vl_Initialize(int auth, char *confDir, int server, char *cellp)
+vl_Initialize(char *confDir, int secFlags, int server, char *cellp)
 {
-    return ugen_ClientInit(auth?0:1, confDir, cellp, 0,
-			  &cstruct, NULL, "vl_Initialize", rxkad_clear,
-			  MAXSERVERS, AFSCONF_VLDBSERVICE, 50, server,
-			  htons(AFSCONF_VLDBPORT), USER_SERVICE_ID);
+    return ugen_ClientInitServer(confDir, cellp, secFlags, &cstruct,
+				 MAXSERVERS, AFSCONF_VLDBSERVICE, 90,
+				 server, htons(AFSCONF_VLDBPORT));
 }
 
 /* return host address in network byte order */
@@ -191,14 +173,14 @@ handleit(struct cmd_syndesc *as, void *arock)
     char *cellp = 0;
     struct VldbUpdateEntry updateentry;
     struct VldbListByAttributes listbyattributes;
-    int noAuth = 1;		/* Default is authenticated connections */
+    int secFlags = AFSCONF_SECOPTS_FALLBACK_NULL;
 
     if ((ti = as->parms[0].items))	/* -cellpath <dir> */
 	strcpy(confdir, ti->data);
     if (as->parms[1].items)	/* -server */
 	strcpy(confdir, AFSDIR_SERVER_ETC_DIRPATH);
     if (as->parms[2].items)	/* -noauth */
-	noAuth = 0;
+	secFlags |= AFSCONF_SECOPTS_NOAUTH;
     if ((ti = as->parms[3].items)) {	/* -host */
 	server = GetServer(ti->data);
 	if (server == 0) {
@@ -207,7 +189,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 	}
 	sawserver = 1;
     }
-    if (!sawserver && noAuth && (!(ti = as->parms[4].items))) {
+    if (sawserver && !as->parms[2].items && (!(ti = as->parms[4].items))) {
 	printf
 	    ("Must also specify the -cell' option along with -host for authenticated conns\n");
 	exit(1);
@@ -215,7 +197,7 @@ handleit(struct cmd_syndesc *as, void *arock)
     if ((ti = as->parms[4].items)) {	/* -cell */
 	cellp = ti->data;
     }
-    if ((code = vl_Initialize(noAuth, confdir, server, cellp))) {
+    if ((code = vl_Initialize(confdir, secFlags, server, cellp))) {
 	printf("Couldn't initialize vldb library (code=%d).\n", code);
 	exit(1);
     }
@@ -339,8 +321,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		afs_int32 index, count, num = 0, num1 = 0, next_index;
 		struct Vlent *vl1;
 
-		VL = SVL =
-		    (struct Vlent *)malloc(ALLOCNT * sizeof(struct Vlent));
+		VL = SVL = malloc(ALLOCNT * sizeof(struct Vlent));
 		if (VL == NULL) {
 		    printf("Can't allocate memory...\n");
 		    exit(1);
@@ -388,8 +369,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		    0, num31 = 0, num4 = 0, num41 = 0, next_index;
 		struct vldbentry tentry;
 
-		VL = SVL =
-		    (struct Vlent *)malloc(ALLOCNT * sizeof(struct Vlent));
+		VL = SVL = malloc(ALLOCNT * sizeof(struct Vlent));
 		if (VL == NULL) {
 		    printf("Can't allocate memory...\n");
 		    exit(1);
@@ -461,8 +441,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		    0;
 		struct vldbentry tentry;
 
-		VL = SVL =
-		    (struct Vlent *)malloc(ALLOCNT * sizeof(struct Vlent));
+		VL = SVL = malloc(ALLOCNT * sizeof(struct Vlent));
 		if (VL == NULL) {
 		    printf("Can't allocate memory...\n");
 		    exit(1);
@@ -588,7 +567,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		for (i = 0; i < nentries; i++, entry++)
 		    display_entry(entry, 0);
 		if (entries.bulkentries_val)
-		    free((char *)entries.bulkentries_val);
+		    free(entries.bulkentries_val);
 	    } else if (!strcmp(oper, "lan2")) {
 		int nentries, i, si, nsi, t = 0;
 		nbulkentries entries;
@@ -625,7 +604,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		    for (i = 0; i < nentries; i++, entry++)
 			display_entryN(entry, 0);
 		    if (entries.nbulkentries_val)
-			free((char *)entries.nbulkentries_val);
+			free(entries.nbulkentries_val);
 		}
 		printf("--- %d volumes ---\n", t);
 	    } else if (!strcmp(oper, "ln")) {
@@ -670,7 +649,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		for (vllist = linkedvldbs.node; vllist; vllist = vllist1) {
 		    vllist1 = vllist->next_vldb;
 		    display_entry((struct vldbentry *)&vllist->VldbEntry, 0);
-		    free((char *)vllist);
+		    free(vllist);
 		}
 	    } else if (!strcmp(oper, "di")) {
 		sscanf(&(*argp)[0], "%d", &id);
@@ -796,7 +775,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 			printf("[0x%x %u] %s\n", *addrp, *addrp,
 			       hostutil_GetNameByINet(ntohl(*addrp)));
 		}
-		free((char *)addrs.bulkaddrs_val);
+		free(addrs.bulkaddrs_val);
 	    } else if (!strcmp(oper, "gau")) {
 		int nentries, i, j;
 		afs_uint32 *addrp;
@@ -853,13 +832,13 @@ handleit(struct cmd_syndesc *as, void *arock)
 				   hostutil_GetNameByINet(mhaddrp[j]));
 			}
 			if (mhaddrs.bulkaddrs_val)
-			    free((char *)mhaddrs.bulkaddrs_val);
+			    free(mhaddrs.bulkaddrs_val);
 		    } else {
 			printf("[0x%x %u] %s\n", *addrp, *addrp,
 			       hostutil_GetNameByINet(ntohl(*addrp)));
 		    }
 		}
-		free((char *)addrs.bulkaddrs_val);
+		free(addrs.bulkaddrs_val);
 	    } else if (!strcmp(oper, "mhc")) {
 		afs_uint32 serveraddrs[MAXSERVERID + 1][VL_MAXIPADDRS_PERMH];
 		afs_int32 serveraddrtype[MAXSERVERID + 1];
@@ -915,7 +894,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 			for (j = 0; j < nentries2; j++) {
 			    serveraddrs[i][j] = ntohl(addrp2[j]);
 			}
-			free((char *)addrs2.bulkaddrs_val);
+			free(addrs2.bulkaddrs_val);
 		    }
 
 		    if (nargs) {
@@ -930,7 +909,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 			}
 		    }
 		}
-		free((char *)addrs1.bulkaddrs_val);
+		free(addrs1.bulkaddrs_val);
 
 		/* Look for any duplicates */
 		for (i = 0; i < MAXSERVERID + 1; i++) {
@@ -979,7 +958,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		    printf("Illegal # entries = %d\n", nargs);
 		    continue;
 		}
-		addrp = (afs_uint32 *) malloc(20 * 4);
+		addrp = malloc(20 * 4);
 		addrs.bulkaddrs_val = addrp;
 		addrs.bulkaddrs_len = nargs;
 		while (nargs > 0) {
@@ -1060,7 +1039,7 @@ main(int argc, char **argv)
     afs_int32 code;
 
     strcpy(confdir, AFSDIR_CLIENT_ETC_DIRPATH);
-    ts = cmd_CreateSyntax("initcmd", handleit, NULL, "initialize the program");
+    ts = cmd_CreateSyntax("initcmd", handleit, NULL, 0, "initialize the program");
     cmd_AddParm(ts, "-cellpath", CMD_LIST, CMD_OPTIONAL,
 		"Cell configuration directory");
     cmd_AddParm(ts, "-server", CMD_LIST, CMD_OPTIONAL,
@@ -1330,9 +1309,10 @@ dump_stats(vldstats *stats, vital_vlheader *vital_header)
     int i;
     char strg[30];
     time_t start_time = stats->start_time;
+    struct tm tm;
 
-    afs_ctime(&start_time, strg, sizeof(strg));
-    strg[strlen(strg) - 1] = 0;
+    strftime(strg, sizeof(strg), "%a %b %d %H:%M:%S %Y",
+	     localtime_r(&start_time, &tm));
     printf("Dynamic statistics stats (starting time: %s):\n", strg);
     printf("OpcodeName\t# Requests\t# Aborts\n");
     for (i = 0; i < VL_NUMBER_OPCODESX; i++)
