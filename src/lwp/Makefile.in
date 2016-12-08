@@ -61,14 +61,6 @@ process.o	: process.s process.i386.s process.amd64.s process.c lwp.o
 		$(CCOBJ) ${LWP_DBG} ${LWP_OPTMZ} -c -I${TOP_INCDIR} -KPIC -G0  ${srcdir}/process.s;; \
 	sgi_61 | sgi_62 | sgi_63 ) \
 		$(CCOBJ) ${LWP_DBG} ${LWP_OPTMZ} -c ${XCFLAGS} ${ARCHFLAGS} -I${TOP_INCDIR} -KPIC -G0  ${srcdir}/process.s;; \
-	s390_*) \
-		$(PATH_CPP) -P -I${TOP_INCDIR} ${srcdir}/process.s390.s >process.ss; \
-		${AS} -ahlns process.ss -o process.o >process.lst; \
-		$(RM) process.ss ;; \
-	s390x_*) \
-		$(PATH_CPP) -P -I${TOP_INCDIR} ${srcdir}/process.s390x.s >process.ss; \
-		${AS} -ahlns process.ss -o process.o >process.lst; \
-		$(RM) process.ss ;; \
 	*_darwin* ) \
 		$(RM) -f process.o ; \
 		CURRENTBUILDARCH="${ARCHFLAGS}"; \
