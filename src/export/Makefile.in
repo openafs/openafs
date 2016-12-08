@@ -7,35 +7,41 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 
   EXPORTS = -bexport:export.exp
   IMPORTS = /lib/kernex.exp /lib/syscalls.exp ${srcdir}/extras.exp
      KOBJ = export.o symtab.o
 
-EXPORTS32 = @AIX32@export.exp export.ext.nonfs export.ext cfgexport cfgafs
-EXPORTS64 = @AIX64@export64.exp export64.ext.nonfs export64.ext cfgexport64 cfgafs64
-TOPEXP32  = @AIX32@${TOP_LIBDIR}/export.exp
-TOPEXP64  = @AIX64@${TOP_LIBDIR}/export64.exp
+EXPORTS32 = export.exp export.ext.nonfs export.ext cfgexport cfgafs
+TOPEXP32  = ${TOP_LIBDIR}/export.exp
+EXPORTS64 = export64.exp export64.ext.nonfs export64.ext cfgexport64 cfgafs64
+TOPEXP64  = ${TOP_LIBDIR}/export64.exp
 
 all: $(TOPEXP32) $(TOPEXP64) ${TOP_LIBDIR}/extras.exp
 	${INSTALL} -d ${KERNELDIR}
 	${INSTALL} -d ${UKERNELDIR}
 	${INSTALL_DATA} ${srcdir}/export.h ${KERNELDIR}/export.h
-	@AIX32@${INSTALL_DATA} export.exp ${KERNELDIR}/export.exp
-	@AIX64@${INSTALL_DATA} export64.exp ${KERNELDIR}/export64.exp
 	${INSTALL_DATA} ${srcdir}/export.h ${UKERNELDIR}/export.h
-	@AIX32@${INSTALL_DATA} export.exp ${UKERNELDIR}/export.exp
-	@AIX64@${INSTALL_DATA} export64.exp ${UKERNELDIR}/export64.exp
+	if [ "x$(AIX32)" = "xyes" ]; then  \
+	  ${INSTALL_DATA} export.exp ${UKERNELDIR}/export.exp; \
+	  ${INSTALL_DATA} export.exp ${KERNELDIR}/export.exp; \
+	fi
+	if [ "x$(AIX64)" = "xyes" ]; then  \
+	  ${INSTALL_DATA} export64.exp ${KERNELDIR}/export64.exp; \
+	  ${INSTALL_DATA} export64.exp ${UKERNELDIR}/export64.exp; \
+	fi
 
 ${TOP_LIBDIR}/export.exp: export.exp
-	${INSTALL_DATA} $? $@
+	if [ "x$(AIX32)" = "xyes" ]; then  \
+	  ${INSTALL_DATA} $? $@ ; \
+	fi
 
 ${TOP_LIBDIR}/export64.exp: export64.exp
-	${INSTALL_DATA} $? $@
+	if [ "x$(AIX64)" = "xyes" ]; then  \
+	  ${INSTALL_DATA} $? $@ ; \
+	fi
 
 ${TOP_LIBDIR}/extras.exp: ${srcdir}/extras.exp
 	${INSTALL_DATA} $? $@
@@ -61,80 +67,115 @@ export64.exp: ${srcdir}/export4-64.exp ${srcdir}/export5-64.exp
 	esac
 
 export.ext: ${KOBJ}
-	${LD} -o export.ext -eexport ${IMPORTS} ${KOBJ} ${EXPORTS} -lcsys
+	if [ "x$(AIX32)" = "xyes" ]; then  \
+	  ${LD} -o export.ext -eexport ${IMPORTS} ${KOBJ} ${EXPORTS} -lcsys ; \
+	fi
 
 export64.ext: export64.o symtab64.o
-	${LD} -b64 -o export64.ext -eexport ${IMPORTS} export64.o symtab64.o \
-		-bexport:export64.exp -lcsys
+	if [ "x$(AIX64)" = "xyes" ]; then  \
+	  ${LD} -b64 -o export64.ext -eexport ${IMPORTS} export64.o symtab64.o \
+		-bexport:export64.exp -lcsys ; \
+	fi
 
 export.ext.nonfs: export.nonfs.o symtab.o
-	${LD} -o export.ext.nonfs -eexport ${IMPORTS} export.nonfs.o \
-		symtab.o ${EXPORTS} -lcsys
+	if [ "x$(AIX32)" = "xyes" ]; then  \
+	  ${LD} -o export.ext.nonfs -eexport ${IMPORTS} export.nonfs.o \
+		symtab.o ${EXPORTS} -lcsys ; \
+	fi
 
 export64.ext.nonfs: export64.nonfs.o symtab64.o
-	${LD} -b64 -o export64.ext.nonfs -eexport ${IMPORTS} export64.nonfs.o \
-		symtab64.o -bexport:export64.exp -lcsys
+	if [ "x$(AIX64)" = "xyes" ]; then  \
+	  ${LD} -b64 -o export64.ext.nonfs -eexport ${IMPORTS} export64.nonfs.o \
+		symtab64.o -bexport:export64.exp -lcsys ; \
+	fi
 
 symtab.o symtab64.o: ${srcdir}/symtab.c
 	case ${SYS_NAME} in \
 	rs_aix4* ) \
-		${CC} ${CFLAGS} -c ${srcdir}/symtab.c ;; \
+		$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) -c ${srcdir}/symtab.c ;; \
 	rs_aix5* ) \
-		${CC} ${CFLAGS} -q64 -D__XCOFF64__ -DAFS_64BIT_KERNEL -DAFS_AIX51_ENV -c ${srcdir}/symtab.c ; \
+		$(CC) $(AFS_CPPFLAGS) ${AFS_CFLAGS} -q64 -D__XCOFF64__ \
+			-DAFS_64BIT_KERNEL -DAFS_AIX51_ENV \
+			-c ${srcdir}/symtab.c ; \
 		mv symtab.o symtab64.o ; \
-		${CC} ${CFLAGS} -DAFS_AIX51_ENV -c ${srcdir}/symtab.c ;; \
+		$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) -DAFS_AIX51_ENV \
+			-c ${srcdir}/symtab.c ;; \
 	rs_aix6* ) \
-		${CC} ${CFLAGS} -q64 -D__XCOFF64__ -DAFS_64BIT_KERNEL -DAFS_AIX51_ENV -c ${srcdir}/symtab.c ; \
+		$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) -q64 -D__XCOFF64__ \
+			-DAFS_64BIT_KERNEL -DAFS_AIX51_ENV \
+			-c ${srcdir}/symtab.c ; \
 		mv symtab.o symtab64.o ;; \
 	esac
 
 export.o export64.o: ${srcdir}/export.c
 	case ${SYS_NAME} in \
 	rs_aix4* ) \
-		${CC} ${CFLAGS} -c ${srcdir}/export.c ;; \
+		$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) -c ${srcdir}/export.c ;; \
 	rs_aix5* ) \
-		${CC} ${CFLAGS} -q64 -D__XCOFF64__ -DAFS_64BIT_KERNEL -DAFS_AIX51_ENV -c ${srcdir}/export.c ; \
+		$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) -q64 -D__XCOFF64__ \
+			-DAFS_64BIT_KERNEL -DAFS_AIX51_ENV \
+			-c ${srcdir}/export.c ; \
 		mv export.o export64.o ; \
-		${CC} ${CFLAGS} -DAFS_AIX51_ENV -c ${srcdir}/export.c ;; \
+		$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) -DAFS_AIX51_ENV \
+			-c ${srcdir}/export.c ;; \
 	rs_aix6* ) \
-		${CC} ${CFLAGS} -q64 -D__XCOFF64__ -DAFS_64BIT_KERNEL -DAFS_AIX51_ENV -c ${srcdir}/export.c ; \
+		$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) -q64 \
+			-D__XCOFF64__ -DAFS_64BIT_KERNEL -DAFS_AIX51_ENV \
+			-c ${srcdir}/export.c ; \
 		mv export.o export64.o ;; \
 	esac
 
 export.nonfs.o export64.nonfs.o: ${srcdir}/export.c
 	case ${SYS_NAME} in \
 	rs_aix4* ) \
-		${CC} ${INCS} -DAFS_NONFSTRANS -c ${srcdir}/export.c ; \
+		$(CC) $(CPPFLAGS) $(CFLAGS) ${INCS} -DAFS_NONFSTRANS \
+			-c ${srcdir}/export.c ; \
 		mv export.o export.nonfs.o ;; \
 	rs_aix5* ) \
-		${CC} -q64 ${INCS} -D__XCOFF64__ -DAFS_64BIT_KERNEL -DAFS_NONFSTRANS -DAFS_AIX51_ENV -c ${srcdir}/export.c ; \
+		$(CC) $(CPPFLAGS) $(CFLAGS) -q64 ${INCS} -D__XCOFF64__ \
+			-DAFS_64BIT_KERNEL -DAFS_NONFSTRANS -DAFS_AIX51_ENV \
+			-c ${srcdir}/export.c ; \
 		mv export.o export64.nonfs.o ; \
-		${CC} ${INCS} -DAFS_NONFSTRANS -DAFS_AIX51_ENV -c ${srcdir}/export.c ; \
+		$(CC) $(CPPFLAGS) $(CFLAGS) ${INCS} -DAFS_NONFSTRANS \
+			-DAFS_AIX51_ENV -c ${srcdir}/export.c ; \
 		mv export.o export.nonfs.o ;; \
 	rs_aix6* ) \
-		${CC} -q64 ${INCS} -D__XCOFF64__ -DAFS_64BIT_KERNEL -DAFS_NONFSTRANS -DAFS_AIX51_ENV -c ${srcdir}/export.c ; \
+		$(CC) $(CPPFLAGS) $(CFLAGS) -q64 ${INCS} -D__XCOFF64__ \
+			-DAFS_64BIT_KERNEL -DAFS_NONFSTRANS -DAFS_AIX51_ENV \
+			-c ${srcdir}/export.c ; \
 		mv export.o export64.nonfs.o ;; \
 	esac
 
 cfgexport: cfgexport.o
-	${CC} -g ${INCS} -o cfgexport cfgexport.o
+	$(CC) $(LDFLAGS) -g ${INCS} -o cfgexport cfgexport.o
 
 cfgexport64: cfgexport64.o
-	${CC} -g ${INCS} -q64 -o cfgexport64 cfgexport64.o
+	if [ "x$(AIX64)" = "xyes" ]; then  \
+	  $(CC) $(LDFLAGS) -g ${INCS} -q64 -o cfgexport64 cfgexport64.o ; \
+	fi
 
 cfgafs: cfgafs.o
-	${CC} ${INCS} -o cfgafs cfgafs.o
+	$(CC) $(LDFLAGS) ${INCS} -o cfgafs cfgafs.o
 
 cfgafs64: cfgafs64.o
-	${CC} -g ${INCS} -q64 -o cfgafs64 cfgafs64.o
+	if [ "x$(AIX64)" = "xyes" ]; then  \
+	  $(CC) $(LDFLAGS) -g ${INCS} -q64 -o cfgafs64 cfgafs64.o ; \
+	fi
 
+CFLAGS_cfgexport64.o = -g -q64 -D__XCOFF64__
 cfgexport64.o: ${srcdir}/cfgexport.c AFS_component_version_number.c
-	${CC} -g -q64 ${CFLAGS} -D__XCOFF64__ -c ${srcdir}/cfgexport.c -o cfgexport64.o
+	$(Q)if [ "x$(AIX64)" = "xyes" ]; then  \
+	  $(AFS_CCRULE_NOQ) $(srcdir)/cfgexport.c ; \
+	fi
 
 cfgexport.o: ${srcdir}/cfgexport.c AFS_component_version_number.c
 cfgafs.o: ${srcdir}/cfgafs.c AFS_component_version_number.c
+
+CFLAGS_cfgafs64.o = -q64
 cfgafs64.o: ${srcdir}/cfgafs.c AFS_component_version_number.c
-	${CC} -q64 ${CFLAGS} -c ${srcdir}/cfgafs.c -o cfgafs64.o
+	$(Q)if [ "x$(AIX64)" = "xyes" ]; then  \
+	  $(AFS_CCRULE_NOQ) $(srcdir)/cfgafs.c ; \
+	fi
 
 clean:
 	$(RM) -f *.o *.Zlst *.map *.out AFS_component_version_number.c
@@ -147,30 +188,38 @@ install: $(EXPORTS32) $(EXPORTS64)
 	${INSTALL} -d ${DESTDIR}${afskerneldir}
 	${INSTALL} -d ${DESTDIR}${libdir}/afs
 	${INSTALL_DATA} ${srcdir}/extras.exp ${DESTDIR}${libdir}/afs/extras.exp
-	@AIX32@${INSTALL_DATA} export.exp ${DESTDIR}${libdir}/afs/export.exp
-	@AIX32@${INSTALL_DATA} export.ext ${DESTDIR}${afskerneldir}/export.ext
-	@AIX32@${INSTALL_DATA} export.ext.nonfs ${DESTDIR}${afskerneldir}/export.ext.nonfs
-	@AIX32@${INSTALL_DATA} cfgexport ${DESTDIR}${afskerneldir}/cfgexport
-	@AIX32@${INSTALL_DATA} cfgafs ${DESTDIR}${afskerneldir}/cfgafs
-	@AIX64@${INSTALL_DATA} export64.exp ${DESTDIR}${libdir}/afs/export64.exp
-	@AIX64@${INSTALL_DATA} export64.ext ${DESTDIR}${afskerneldir}/export64.ext
-	@AIX64@${INSTALL_DATA} export64.ext.nonfs ${DESTDIR}${afskerneldir}/export64.ext.nonfs
-	@AIX64@${INSTALL_DATA} cfgexport64 ${DESTDIR}${afskerneldir}/cfgexport64
-	@AIX64@${INSTALL_DATA} cfgafs64 ${DESTDIR}${afskerneldir}/cfgafs64
+	if [ "xyes" = "x$(AIX32)" ]; then \
+	  ${INSTALL_DATA} export.exp ${DESTDIR}${libdir}/afs/export.exp ; \
+	  ${INSTALL_DATA} export.ext ${DESTDIR}${afskerneldir}/export.ext ; \
+	  ${INSTALL_DATA} export.ext.nonfs ${DESTDIR}${afskerneldir}/export.ext.nonfs ; \
+	  ${INSTALL_DATA} cfgexport ${DESTDIR}${afskerneldir}/cfgexport ; \
+	  ${INSTALL_DATA} cfgafs ${DESTDIR}${afskerneldir}/cfgafs ; \
+	fi
+	if [ "xyes" = "x$(AIX64)" ]; then \
+	  ${INSTALL_DATA} export64.exp ${DESTDIR}${libdir}/afs/export64.exp ; \
+	  ${INSTALL_DATA} export64.ext ${DESTDIR}${afskerneldir}/export64.ext ; \
+	  ${INSTALL_DATA} export64.ext.nonfs ${DESTDIR}${afskerneldir}/export64.ext.nonfs ; \
+	  ${INSTALL_DATA} cfgexport64 ${DESTDIR}${afskerneldir}/cfgexport64 ; \
+	  ${INSTALL_DATA} cfgafs64 ${DESTDIR}${afskerneldir}/cfgafs64 ; \
+	fi
 
 dest: $(EXPORTS32) $(EXPORTS64)
 	${INSTALL} -d ${DEST}/root.client/usr/vice/etc/dkload
 	${INSTALL} -d ${DEST}/lib/afs
 	${INSTALL_DATA} ${srcdir}/extras.exp ${DEST}/lib/afs/extras.exp
-	@AIX32@${INSTALL_DATA} export.exp ${DEST}/lib/afs/export.exp
-	@AIX32@${INSTALL} export.ext ${DEST}/root.client/usr/vice/etc/dkload/export.ext
-	@AIX32@${INSTALL} export.ext.nonfs ${DEST}/root.client/usr/vice/etc/dkload/export.ext.nonfs
-	@AIX32@${INSTALL} cfgexport ${DEST}/root.client/usr/vice/etc/dkload/cfgexport
-	@AIX32@${INSTALL} cfgafs ${DEST}/root.client/usr/vice/etc/dkload/cfgafs
-	@AIX64@${INSTALL_DATA} export64.exp ${DEST}/lib/afs/export64.exp
-	@AIX64@${INSTALL} export64.ext ${DEST}/root.client/usr/vice/etc/dkload/export64.ext
-	@AIX64@${INSTALL} export64.ext.nonfs ${DEST}/root.client/usr/vice/etc/dkload/export64.ext.nonfs
-	@AIX64@${INSTALL} cfgexport64 ${DEST}/root.client/usr/vice/etc/dkload/cfgexport64
-	@AIX64@${INSTALL} cfgafs64 ${DEST}/root.client/usr/vice/etc/dkload/cfgafs64
+	if [ "xyes" = "x$(AIX32)" ];then \
+	  ${INSTALL_DATA} export.exp ${DEST}/lib/afs/export.exp ; \
+	  ${INSTALL} export.ext ${DEST}/root.client/usr/vice/etc/dkload/export.ext ; \
+	  ${INSTALL} export.ext.nonfs ${DEST}/root.client/usr/vice/etc/dkload/export.ext.nonfs ; \
+	  ${INSTALL} cfgexport ${DEST}/root.client/usr/vice/etc/dkload/cfgexport ; \
+	  ${INSTALL} cfgafs ${DEST}/root.client/usr/vice/etc/dkload/cfgafs ; \
+	fi
+	if [ "xyes" = "x$(AIX64)" ];then \
+	  ${INSTALL_DATA} export64.exp ${DEST}/lib/afs/export64.exp ; \
+	  ${INSTALL} export64.ext ${DEST}/root.client/usr/vice/etc/dkload/export64.ext ; \
+	  ${INSTALL} export64.ext.nonfs ${DEST}/root.client/usr/vice/etc/dkload/export64.ext.nonfs ; \
+	  ${INSTALL} cfgexport64 ${DEST}/root.client/usr/vice/etc/dkload/cfgexport64 ; \
+	  ${INSTALL} cfgafs64 ${DEST}/root.client/usr/vice/etc/dkload/cfgafs64 ; \
+	fi
 
 include ../config/Makefile.version

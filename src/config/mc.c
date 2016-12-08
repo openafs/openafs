@@ -63,16 +63,14 @@ ParseLine(char *aline, struct token **alist)
 		    return -1;	/* should never get here */
 		else
 		    *tptr++ = 0;
-		ttok = (struct token *)malloc(sizeof(struct token));
+		ttok = malloc(sizeof(struct token));
 		ttok->next = NULL;
 		if (dontUse) {
-		    ttok->key = (char *)malloc(strlen(tbuffer));
-		    strcpy(ttok->key, tbuffer + 1);
+		    ttok->key = strdup(tbuffer + 1); /* Skip first char */
 		    ttok->flags = TOK_DONTUSE;
 		    dontUse = 0;
 		} else {
-		    ttok->key = (char *)malloc(strlen(tbuffer) + 1);
-		    strcpy(ttok->key, tbuffer);
+		    ttok->key = strdup(tbuffer);
 		    ttok->flags = 0;
 		}
 		if (last) {

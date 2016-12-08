@@ -10,13 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#include <sys/types.h>
+#include <roken.h>
 
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/socket.h>
-#endif
 #include <rx/rx.h>
 
 /* services available on incoming message port */
@@ -29,6 +24,6 @@ SBC_Print(struct rx_call *acall, afs_int32 acode, afs_int32 aflags,
 
     tconn = rx_ConnectionOf(acall);
     tpeer = rx_PeerOf(tconn);
-    printf("From %08x: %s <%d>\n", tpeer->host, amessage, acode);
+    printf("From %08x: %s <%d>\n", rx_HostOf(tpeer), amessage, acode);
     return 0;
 }

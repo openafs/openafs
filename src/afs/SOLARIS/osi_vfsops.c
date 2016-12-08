@@ -24,14 +24,12 @@
 #endif
 #include <sys/kobj.h>
 
-#ifdef AFS_SUN58_ENV
-# include <sys/mount.h>
-#endif
+#include <sys/mount.h>
 
 struct vfs *afs_globalVFS = 0;
 struct vcache *afs_globalVp = 0;
 
-#if defined(AFS_SUN57_64BIT_ENV)
+#if defined(AFS_SUN5_64BIT_ENV)
 extern struct sysent sysent32[];
 #endif
 
@@ -74,22 +72,14 @@ afs_mount(struct vfs *afsp, struct vnode *amvp, struct mounta *uap,
 static void
 afs_freevfs(void)
 {
-    int i;
-    struct vcache *vc, *nvc;
-    extern struct vcache *afs_vhashT[VCSIZE];
 
     afs_globalVFS = 0;
 
     afs_shutdown();
 }
 
-#if defined(AFS_SUN58_ENV)
 int
 afs_unmount(struct vfs *afsp, int flag, afs_ucred_t *credp)
-#else
-int
-afs_unmount(struct vfs *afsp, afs_ucred_t *credp)
-#endif
 {
     struct vcache *rootvp = NULL;
 
@@ -105,7 +95,6 @@ afs_unmount(struct vfs *afsp, afs_ucred_t *credp)
         return (EPERM);
     }
 
-#ifdef AFS_SUN58_ENV
     if (flag & MS_FORCE) {
 	AFS_GUNLOCK();
 	return ENOTSUP;
@@ -126,7 +115,6 @@ afs_unmount(struct vfs *afsp, afs_ucred_t *credp)
     }
 
     afsp->vfs_flag |= VFS_UNMOUNTED;
-#endif /* AFS_SUN58_ENV */
 
     if (afs_globalVp) {
 	/* release the root vnode, which should be the last reference to us
@@ -136,16 +124,10 @@ afs_unmount(struct vfs *afsp, afs_ucred_t *credp)
 	AFS_RELE(rootvp);
     }
 
-#ifndef AFS_SUN58_ENV
-    /* shutdown now, since gafs_freevfs() will not be called */
-    afs_freevfs();
-#endif /* !AFS_SUN58_ENV */
-
     AFS_GUNLOCK();
     return 0;
 }
 
-#ifdef AFS_SUN58_ENV
 void
 gafs_freevfs(struct vfs *afsp)
 {
@@ -155,7 +137,6 @@ gafs_freevfs(struct vfs *afsp)
 
     AFS_GUNLOCK();
 }
-#endif /* AFS_SUN58_ENV */
 
 int
 afs_root(struct vfs *afsp, struct vnode **avpp)
@@ -208,7 +189,7 @@ again:
 		}
 		afs_globalVp = tvp;
 	    } else
-		code = ENOENT;
+		code = EIO;
 	}
     }
     if (tvp) {
@@ -237,13 +218,8 @@ again:
     return code;
 }
 
-#ifdef AFS_SUN56_ENV
 int
 afs_statvfs(struct vfs *afsp, struct statvfs64 *abp)
-#else
-int
-afs_statvfs(struct vfs *afsp, struct statvfs *abp)
-#endif
 {
     AFS_GLOCK();
 
@@ -354,9 +330,7 @@ struct vfsops Afs_vfsops = {
     afs_vget,
     afs_mountroot,
     afs_swapvp,
-#if defined(AFS_SUN58_ENV)
     gafs_freevfs,
-#endif
 };
 #endif
 
@@ -421,12 +395,12 @@ afsinit(struct vfssw *vfsswp, int fstype)
     sysent[SYS_setgroups].sy_callc = afs_xsetgroups;
     sysent[SYS_ioctl].sy_call = afs_xioctl;
 
-#if defined(AFS_SUN57_64BIT_ENV)
+#if defined(AFS_SUN5_64BIT_ENV)
     afs_orig_setgroups32 = sysent32[SYS_setgroups].sy_callc;
     afs_orig_ioctl32 = sysent32[SYS_ioctl].sy_call;
     sysent32[SYS_setgroups].sy_callc = afs_xsetgroups;
     sysent32[SYS_ioctl].sy_call = afs_xioctl;
-#endif /* AFS_SUN57_64BIT_ENV */
+#endif /* AFS_SUN5_64BIT_ENV */
 
 #ifdef AFS_SUN510_ENV
     vfs_setfsops(fstype, afs_vfsops_template, &afs_vfsopsp);
@@ -509,14 +483,6 @@ static struct sysent afssysent = {
 };
 #endif /* AFS_SUN511_ENV */
 
-/* inter-module dependencies */
-char _depends_on[] = 
-#if AFS_SUN510_ENV
-	"drv/ip drv/udp strmod/rpcmod fs/ufs";
-#else
-	"drv/ip drv/udp strmod/rpcmod";
-#endif
-
 /*
  * Info/Structs to link the afs module into the kernel
  */
@@ -554,7 +520,7 @@ static struct modlsys afsmodlsys = {
   * land here from sysent or sysent32
   */
 
-# if defined(AFS_SUN57_64BIT_ENV)
+# if defined(AFS_SUN5_64BIT_ENV)
 extern struct mod_ops mod_syscallops32;
 
 static struct modlsys afsmodlsys32 = {
@@ -573,7 +539,7 @@ static struct modlinkage afs_modlinkage = {
     (void *)&afs_modldrv,
 #else
     (void *)&afsmodlsys,
-# ifdef AFS_SUN57_64BIT_ENV
+# ifdef AFS_SUN5_64BIT_ENV
     (void *)&afsmodlsys32,
 # endif
 #endif /* !AFS_SUN511_ENV */
@@ -586,7 +552,7 @@ reset_sysent(void)
     if (afs_sinited) {
 	sysent[SYS_setgroups].sy_callc = afs_orig_setgroups;
 	sysent[SYS_ioctl].sy_call = afs_orig_ioctl;
-#if defined(AFS_SUN57_64BIT_ENV)
+#if defined(AFS_SUN5_64BIT_ENV)
 	sysent32[SYS_setgroups].sy_callc = afs_orig_setgroups32;
 	sysent32[SYS_ioctl].sy_call = afs_orig_ioctl32;
 #endif
@@ -620,7 +586,6 @@ _init()
 	return (ENOSYS);
     }
 #ifndef	AFS_NONFSTRANS
-#if     defined(AFS_SUN55_ENV)
     if ((!(mp = mod_find_by_filename("misc", "nfssrv"))
 	 && !(mp = mod_find_by_filename(NULL, NFSSRV))
 	 && !(mp = mod_find_by_filename(NULL, NFSSRV_V9))
@@ -632,59 +597,8 @@ _init()
 	    ("misc/nfssrv module must be loaded before loading afs with nfs-xlator\n");
 	return (ENOSYS);
     }
-#else /* !AFS_SUN55_ENV */
-#if	defined(AFS_SUN52_ENV)
-    if ((!(mp = mod_find_by_filename("fs", "nfs"))
-	 && !(mp = mod_find_by_filename(NULL, "/kernel/fs/nfs"))
-	 && !(mp = mod_find_by_filename(NULL, "sys/nfs"))) || (mp
-							       && !mp->
-							       mod_installed))
-    {
-	printf
-	    ("fs/nfs module must be loaded before loading afs with nfs-xlator\n");
-	return (ENOSYS);
-    }
-#endif /* AFS_SUN52_ENV */
-#endif /* AFS_SUN55_ENV */
 #endif /* !AFS_NONFSTRANS */
 
-#ifndef AFS_SUN511_ENV
-    /* syscall initialization stff */
-
-# if !defined(AFS_SUN58_ENV)
-    /* 
-     * Re-read the /etc/name_to_sysnum file to make sure afs isn't added after
-     * reboot.  Ideally we would like to call modctl_read_sysbinding_file() but
-     * unfortunately in Solaris 2.2 it became a local function so we have to do
-     * the read_binding_file() direct call with the appropriate text file and
-     * system call hashtable.  make_syscallname actually copies "afs" to the
-     * proper slot entry and we also actually have to properly initialize the
-     * global sysent[AFS_SYSCALL] entry!
-     */
-#  ifdef	AFS_SUN53_ENV
-#   ifndef	SYSBINDFILE
-#    define	SYSBINDFILE	"/etc/name_to_sysnum"
-#   endif /* SYSBINDFILE */
-    read_binding_file(SYSBINDFILE, sb_hashtab);
-#  else /* !AFS_SUN53_ENV */
-    read_binding_file(sysbind, sb_hashtab);
-#  endif /* AFS_SUN53_ENV */
-    make_syscallname("afs", AFS_SYSCALL);
-
-    if (sysent[AFS_SYSCALL].sy_call == nosys) {
-	if ((sysn = mod_getsysname(AFS_SYSCALL)) != NULL) {
-	    sysent[AFS_SYSCALL].sy_lock =
-		(krwlock_t *) kobj_zalloc(sizeof(krwlock_t), KM_SLEEP);
-	    rw_init(sysent[AFS_SYSCALL].sy_lock, "afs_syscall",
-#  ifdef AFS_SUN57_ENV
-		    RW_DEFAULT, NULL);
-#  else /* !AFS_SUN57_ENV */
-		    RW_DEFAULT, DEFAULT_WT);
-#  endif /* AFS_SUN57_ENV */
-	}
-    }
-# endif /* !AFS_SUN58_ENV */
-#endif /* !AFS_SUN511_ENV */
 
     osi_Init();			/* initialize global lock, etc */
 

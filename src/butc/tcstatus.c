@@ -10,19 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/socket.h>
-#include <sys/time.h>
-#include <strings.h>
-#endif
-#include <stdio.h>
-#include <string.h>
 #include <afs/com_err.h>
 #include <lock.h>
 #include <afs/bubasics.h>
@@ -30,10 +19,11 @@
 #include <afs/butc.h>
 #include <afs/budb_client.h>
 #include <afs/bucoord_prototypes.h>
-#include "butc_internal.h"
 
+#include "butc_internal.h"
 #include "error_macros.h"
 #include "butc_xbsa.h"
+
 /* tape coordinator - task status management */
 extern afs_int32 xbsaType;
 

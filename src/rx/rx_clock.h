@@ -86,6 +86,11 @@ extern int clock_nUpdates;
 
 /* Current clock time, truncated to seconds */
 #define	clock_Sec() ((!clock_haveCurrentTime)? clock_UpdateTime(), clock_now.sec:clock_now.sec)
+
+extern void clock_Init(void);
+extern int clock_UnInit(void);
+extern void clock_UpdateTime(void);
+
 #endif /* AFS_USE_GETTIMEOFDAY || AFS_PTHREAD_ENV */
 #else /* KERNEL */
 #define clock_Init()

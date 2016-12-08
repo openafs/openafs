@@ -9,36 +9,25 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
+
+#include <roken.h>
+#include <afs/opr.h>
+#ifdef AFS_PTHREAD_ENV
+# include <opr/lock.h>
+#endif
 
 #ifdef IGNORE_SOME_GCC_WARNINGS
 # pragma GCC diagnostic warning "-Wstrict-prototypes"
 #endif
 
-#ifdef UKERNEL
-#include "afsincludes.h"
-#endif
-
-#include <afs/stds.h>
 #include <afs/pthread_glock.h>
-#include <stdio.h>
-#include <string.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <lock.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <unistd.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#endif
 #include <afs/rxgen_consts.h>
 #define UBIK_LEGACY_CALLITER
 #include "ubik.h"
-
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
 
 short ubik_initializationState;	/*!< initial state is zero */
 
@@ -94,7 +83,6 @@ ubik_ParseClientList(int argc, char **argv, afs_uint32 * aothers)
     return 0;
 }
 
-#include <afs/afs_assert.h>
 #ifdef AFS_PTHREAD_ENV
 #include <pthread.h>
 
@@ -105,13 +93,12 @@ static pthread_key_t random_number_key;
 static void
 afs_random_once(void)
 {
-    osi_Assert(pthread_key_create(&random_number_key, NULL) == 0);
+    opr_Verify(pthread_key_create(&random_number_key, NULL) == 0);
     called_afs_random_once = 1;
 }
 
 #endif
 
-#if !defined(UKERNEL)
 /*!
  * \brief use time and pid to try to get some initial randomness.
  */
@@ -187,7 +174,6 @@ afs_randomMod15(void)
 
     return temp;
 }
-#endif /* !defined(UKERNEL) */
 
 #ifdef abs
 #undef abs
@@ -229,13 +215,14 @@ ubik_ClientInit(struct rx_connection **serverconns,
 	    return UMUTEXDESTROY;
 #endif
     } else {
-	tc = (struct ubik_client *)malloc(sizeof(struct ubik_client));
+	tc = malloc(sizeof(struct ubik_client));
     }
     if (tc == NULL)
 	return UNOMEM;
     memset((void *)tc, 0, sizeof(*tc));
 #ifdef AFS_PTHREAD_ENV
     if (pthread_mutex_init(&(tc->cm), (const pthread_mutexattr_t *)0)) {
+	free(tc);
 	return UMUTEXINIT;
     }
 #endif
@@ -334,7 +321,7 @@ ubik_RefreshConn(struct rx_connection *tc)
 pthread_once_t ubik_client_once = PTHREAD_ONCE_INIT;
 pthread_mutex_t ubik_client_mutex;
 #define LOCK_UCLNT_CACHE do { \
-    osi_Assert(pthread_once(&ubik_client_once, ubik_client_init_mutex) == 0); \
+    opr_Verify(pthread_once(&ubik_client_once, ubik_client_init_mutex) == 0); \
     MUTEX_ENTER(&ubik_client_mutex); \
   } while (0)
 #define UNLOCK_UCLNT_CACHE MUTEX_EXIT(&ubik_client_mutex)
@@ -443,12 +430,8 @@ CallIter(int (*aproc) (), struct ubik_client *aclient,
     while (*apos < MAXSERVERS) {
 	/* tc is the next conn to try */
 	tc = aclient->conns[*apos];
-	if (!tc) {
-	    if (needlock) {
-		UNLOCK_UBIK_CLIENT(aclient);
-	    }
-	    return UNOSERVERS;
-	}
+	if (!tc)
+	    goto errout;
 
 	if (rx_ConnError(tc)) {
 	    tc = ubik_RefreshConn(tc);
@@ -461,22 +444,15 @@ CallIter(int (*aproc) (), struct ubik_client *aclient,
 	    break;		/* this is the desired path */
 	}
     }
-    if (*apos >= MAXSERVERS) {
-	if (needlock) {
-	    UNLOCK_UBIK_CLIENT(aclient);
-	}
-	return UNOSERVERS;
-    }
+    if (*apos >= MAXSERVERS)
+	goto errout;
 
     code =
 	(*aproc) (tc, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13,
 		  p14, p15, p16);
-    if (aclient->initializationState != origLevel) {
-	if (needlock) {
-	    UNLOCK_UBIK_CLIENT(aclient);
-	}
-	return code;		/* somebody did a ubik_ClientInit */
-    }
+    if (aclient->initializationState != origLevel)
+	/* somebody did a ubik_ClientInit */
+	goto errout;
 
     /* what should I do in case of UNOQUORUM ? */
     if (code < 0) {
@@ -487,6 +463,7 @@ CallIter(int (*aproc) (), struct ubik_client *aclient,
     }
 
     (*apos)++;
+errout:
     if (needlock) {
 	UNLOCK_UBIK_CLIENT(aclient);
     }

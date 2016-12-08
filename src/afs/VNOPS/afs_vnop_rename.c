@@ -93,7 +93,7 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	ObtainWriteLock(&andp->lock, 147);
 	tdc1 = afs_GetDCache(aodp, (afs_size_t) 0, areq, &offset, &len, 0);
 	if (!tdc1) {
-	    code = ENOENT;
+	    code = EIO;
 	} else {
 	    ObtainWriteLock(&tdc1->lock, 643);
 	}
@@ -112,7 +112,7 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	if (tdc1)
 	    ObtainWriteLock(&tdc1->lock, 645);
 	else
-	    code = ENOENT;
+	    code = EIO;
     } else {
 	ObtainWriteLock(&aodp->lock, 150);	/* lock smaller one first */
 	ObtainWriteLock(&andp->lock, 557);
@@ -120,7 +120,7 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	if (tdc1)
 	    ObtainWriteLock(&tdc1->lock, 646);
 	else
-	    code = ENOENT;
+	    code = EIO;
 	tdc2 = afs_FindDCache(andp, (afs_size_t) 0);
 	if (tdc2)
 	    ObtainWriteLock(&tdc2->lock, 647);
@@ -172,7 +172,7 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
     if (!AFS_IS_DISCON_RW) {
     	/* Connected. */
 	do {
-	  tc = afs_Conn(&aodp->f.fid, areq, SHARED_LOCK, &rxconn);
+	    tc = afs_Conn(&aodp->f.fid, areq, SHARED_LOCK, &rxconn);
 	    if (tc) {
 	    	XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_RENAME);
 	    	RX_AFS_GUNLOCK();
@@ -191,7 +191,7 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	    	code = -1;
 
 	} while (afs_Analyze
-		 (tc, rxconn, code, &andp->f.fid, areq, AFS_STATS_FS_RPCIDX_RENAME,
+	     (tc, rxconn, code, &andp->f.fid, areq, AFS_STATS_FS_RPCIDX_RENAME,
 	      SHARED_LOCK, NULL));
 
     } else {
@@ -234,7 +234,7 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	    ReleaseWriteLock(&tvc->lock);
 	    afs_PutVCache(tvc);
 	} else {
-	    code = ENOENT;
+	    code = ENETDOWN;
 	}			/* if (tvc) */
     }				/* if !(AFS_IS_DISCON_RW)*/
     returnCode = code;		/* remember for later */
@@ -320,13 +320,9 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	    /* if failed, server might have done something anyway, and 
 	     * assume that we know about it */
 	    ObtainWriteLock(&afs_xcbhash, 498);
-	    afs_DequeueCallback(aodp);
-	    afs_DequeueCallback(andp);
-	    andp->f.states &= ~CStatd;
-	    aodp->f.states &= ~CStatd;
+	    afs_StaleVCacheFlags(aodp, AFS_STALEVC_CBLOCKED, 0);
+	    afs_StaleVCacheFlags(andp, AFS_STALEVC_CBLOCKED, 0);
 	    ReleaseWriteLock(&afs_xcbhash);
-	    osi_dnlc_purgedp(andp);
-	    osi_dnlc_purgedp(aodp);
 	}
     }
 
@@ -371,9 +367,6 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	    tvc = afs_GetVCache(&unlinkFid, areq, NULL, NULL);
 
 	if (tvc) {
-#ifdef AFS_BOZONLOCK_ENV
-	    afs_BozonLock(&tvc->pvnLock, tvc);	/* Since afs_TryToSmush will do a pvn_vptrunc */
-#endif
 	    ObtainWriteLock(&tvc->lock, 151);
 	    tvc->f.m.LinkCount--;
 	    tvc->f.states &= ~CUnique;	/* For the dfs xlator */
@@ -390,9 +383,6 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 		    afs_TryToSmush(tvc, acred, 0);
 	    }
 	    ReleaseWriteLock(&tvc->lock);
-#ifdef AFS_BOZONLOCK_ENV
-	    afs_BozonUnlock(&tvc->pvnLock, tvc);
-#endif
 	    afs_PutVCache(tvc);
 	}
     }

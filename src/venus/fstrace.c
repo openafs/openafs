@@ -12,23 +12,10 @@
  */
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
-#include <stdio.h>
-#include <sys/types.h>
-#include <unistd.h>
-#if !defined(AFS_SUN3_ENV) && !defined(sys_vax_ul43)
-#include <time.h>
-/*#ifdef	AFS_AIX_ENV*/
-#include <sys/time.h>
-/*#endif*/
-#include <errno.h>
-#undef abs
-#include <stdlib.h>
-
-#include <string.h>
-
 #include <afs/stds.h>
+
+#include <roken.h>
+
 #include <afs/cmd.h>
 #include <afs/afs_args.h>
 #include <afs/icl.h>
@@ -48,7 +35,6 @@ int afs_icl_sizeofLong = 1;
 int afs_64bit_kernel = 1;	/* Default for 6.2+, and always for 6.1 */
 extern int afs_icl_sizeofLong;	/* Used in ICL_SIZEHACK() */
 #ifdef AFS_SGI62_ENV
-#include <unistd.h>
 
 /* If _SC_KERN_POINTERS not in sysconf, then we can assume a 32 bit abi. */
 void
@@ -622,8 +608,8 @@ dce1_error_inq_text(afs_uint32 status_to_convert,
      * install this special message catalog in with internationalization
      * catalogs.
      */
-    afs_snprintf(nls_filename, sizeof(nls_filename), "%s/C/%s.cat",
-		 AFSDIR_CLIENT_DATA_DIRPATH, filename_prefix);
+    snprintf(nls_filename, sizeof(nls_filename), "%s/C/%s.cat",
+	     AFSDIR_CLIENT_DATA_DIRPATH, filename_prefix);
 
     catd = catopen(nls_filename, 0);
     if (catd == (nl_catd) -1) {
@@ -675,7 +661,6 @@ icl_DumpKernel(FILE *outFilep, char *setname)
 			    i, (long)tname, sizeof(tname), 0, 0);
 	    if (code) {
 		if (errno == EBADF) {
-		    code = 0;
 		    continue;	/* missing slot, nothing to worry about */
 		}
 		break;
@@ -688,12 +673,10 @@ icl_DumpKernel(FILE *outFilep, char *setname)
 	    found++;
 	    if (dummy > bufferSize)	/* find biggest log */
 		bufferSize = dummy;
-	    lip = (struct logInfo *)malloc(sizeof(struct logInfo));
-	    memset(lip, 0, sizeof(*lip));
+	    lip = calloc(1, sizeof(struct logInfo));
 	    lip->nextp = allInfo;
 	    allInfo = lip;
-	    lip->name = (char *)malloc(strlen(tname) + 1);
-	    strcpy(lip->name, tname);
+	    lip->name = strdup(tname);
 	}
 	i = found;
     } else {
@@ -706,18 +689,16 @@ icl_DumpKernel(FILE *outFilep, char *setname)
 		break;
 	    if (dummy > bufferSize)	/* find biggest log */
 		bufferSize = dummy;
-	    lip = (struct logInfo *)malloc(sizeof(struct logInfo));
-	    memset(lip, 0, sizeof(*lip));
+	    lip = calloc(1, sizeof(struct logInfo));
 	    lip->nextp = allInfo;
 	    allInfo = lip;
-	    lip->name = (char *)malloc(strlen(tname) + 1);
-	    strcpy(lip->name, tname);
+	    lip->name = strdup(tname);
 	}
     }
 
     if (bufferSize == 0)
 	return -1;
-    bufferp = (afs_int32 *) malloc(sizeof(afs_int32) * bufferSize);
+    bufferp = malloc(sizeof(afs_int32) * bufferSize);
     if (!bufferp)
 	return -1;
 
@@ -1003,7 +984,7 @@ icl_TailKernel(FILE *outFilep, char *logname, afs_int32 waitTime)
 
     if (bufferSize == 0)
 	return -1;
-    bufferp = (afs_int32 *) malloc(sizeof(afs_int32) * bufferSize);
+    bufferp = malloc(sizeof(afs_int32) * bufferSize);
     if (!bufferp) {
 	(void)fprintf(stderr, "cannot allocate %d words for buffer\n",
 		      bufferSize);
@@ -1097,7 +1078,7 @@ icl_TailKernel(FILE *outFilep, char *logname, afs_int32 waitTime)
 	    /* have to reallocate a buffer */
 	    bufferSize = newBufferSize;
 	    free(bufferp);
-	    bufferp = (afs_int32 *) malloc(sizeof(afs_int32) * bufferSize);
+	    bufferp = malloc(sizeof(afs_int32) * bufferSize);
 	    if (!bufferp) {
 		(void)fprintf(stderr, "cannot allocate %d words for buffer\n",
 			      bufferSize);
@@ -1231,17 +1212,17 @@ icl_CreateSetWithFlags(char *name, struct afs_icl_log *baseLogp,
     if (flags & ICL_CRSET_FLAG_PERSISTENT)
 	states |= ICL_SETF_PERSISTENT;
 
-    setp = (struct afs_icl_set *)osi_Alloc(sizeof(struct afs_icl_set));
+    setp = osi_Alloc(sizeof(struct afs_icl_set));
     memset((caddr_t) setp, 0, sizeof(*setp));
     setp->refCount = 1;
     if (states & ICL_SETF_FREED)
 	states &= ~ICL_SETF_ACTIVE;	/* if freed, can't be active */
     setp->states = states;
 
-    setp->name = (char *)osi_Alloc(strlen(name) + 1);
+    setp->name = osi_Alloc(strlen(name) + 1);
     strcpy(setp->name, name);
     setp->nevents = ICL_DEFAULTEVENTS;
-    setp->eventFlags = (char *)osi_Alloc(ICL_DEFAULTEVENTS);
+    setp->eventFlags = osi_Alloc(ICL_DEFAULTEVENTS);
     for (i = 0; i < ICL_DEFAULTEVENTS; i++)
 	setp->eventFlags[i] = 0xff;	/* default to enabled */
 
@@ -1528,8 +1509,7 @@ icl_LogUse(struct afs_icl_log *logp)
 	    /* we weren't passed in a hint and it wasn't set */
 	    logp->logSize = ICL_DEFAULT_LOGSIZE;
 	}
-	logp->datap =
-	    (afs_int32 *) osi_Alloc(sizeof(afs_int32) * logp->logSize);
+	logp->datap = osi_Alloc(sizeof(afs_int32) * logp->logSize);
     }
     logp->setCount++;
     return 0;
@@ -1563,7 +1543,7 @@ icl_LogSetSize(struct afs_icl_log *logp, afs_int32 logSize)
 
 	/* free and allocate a new one */
 	osi_Free(logp->datap, sizeof(afs_int32) * logp->logSize);
-	logp->datap = (afs_int32 *) osi_Alloc(sizeof(afs_int32) * logSize);
+	logp->datap = osi_Alloc(sizeof(afs_int32) * logSize);
 	logp->logSize = logSize;
     }
 
@@ -1633,12 +1613,13 @@ icl_EnumerateLogs(int (*aproc)
 		    (char *name, void *arock, struct afs_icl_log * tp),
 		  void *arock)
 {
-    struct afs_icl_log *tp;
+    struct afs_icl_log *tp, *np;
     afs_int32 code;
 
     code = 0;
-    for (tp = afs_icl_allLogs; tp; tp = tp->nextp) {
+    for (tp = afs_icl_allLogs; tp; tp = np) {
 	tp->refCount++;		/* hold this guy */
+	np = tp->nextp;
 	code = (*aproc) (tp->name, arock, tp);
 	if (--tp->refCount == 0)
 	    icl_ZapLog(tp);
@@ -1658,14 +1639,13 @@ GetBulkSetInfo(void)
 	sizeof(afs_icl_bulkSetinfo_t) + (ICL_RPC_MAX_SETS -
 					 1) * sizeof(afs_icl_setinfo_t);
     if (!setInfo) {
-	setInfo = (afs_icl_bulkSetinfo_t *) malloc(infoSize);
+	setInfo = calloc(1, infoSize);
 	if (!setInfo) {
 	    (void)fprintf(stderr,
 			  "Could not allocate the memory for bulk set info structure\n");
 	    exit(1);
 	}
     }
-    memset(setInfo, 0, infoSize);
 
     return setInfo;
 }
@@ -1679,7 +1659,7 @@ GetBulkLogInfo(void)
 	sizeof(afs_icl_bulkLoginfo_t) + (ICL_RPC_MAX_LOGS -
 					 1) * sizeof(afs_icl_loginfo_t);
     if (!logInfo) {
-	logInfo = (afs_icl_bulkLoginfo_t *) malloc(infoSize);
+	logInfo = calloc(1, infoSize);
 	if (!logInfo) {
 	    (void)fprintf(stderr,
 			  "Could not allocate the memory for bulk log info structure\n");
@@ -1687,7 +1667,6 @@ GetBulkLogInfo(void)
 	}
     }
 
-    memset(logInfo, 0, infoSize);
     return logInfo;
 }
 
@@ -1767,15 +1746,17 @@ SetUpDump(void)
     struct cmd_syndesc *dumpSyntax;
 
     dumpSyntax =
-	cmd_CreateSyntax("dump", DoDump, NULL, "dump AFS trace logs");
-    (void)cmd_AddParm(dumpSyntax, "-set", CMD_LIST, CMD_OPTIONAL, "set_name");
+	cmd_CreateSyntax("dump", DoDump, NULL, 0, "dump AFS trace logs");
+    (void)cmd_AddParm(dumpSyntax, "-set", CMD_LIST, CMD_OPTIONAL,
+		      "event set name");
     (void)cmd_AddParm(dumpSyntax, "-follow", CMD_SINGLE, CMD_OPTIONAL,
-		      "log_name");
+		      "trace log name");
     (void)cmd_AddParm(dumpSyntax, "-file", CMD_SINGLE, CMD_OPTIONAL,
-		      "output_filename");
+		      "path to trace log file for writing");
     (void)cmd_AddParm(dumpSyntax, "-sleep", CMD_SINGLE, CMD_OPTIONAL,
-		      "seconds_between_reads");
+		      "interval (secs) for writes when using -follow");
 }
+
 
 static int
 DoShowLog(struct cmd_syndesc *as, void *arock)
@@ -1841,11 +1822,14 @@ SetUpShowLog(void)
     struct cmd_syndesc *showSyntax;
 
     showSyntax =
-	cmd_CreateSyntax("lslog", DoShowLog, NULL,
+	cmd_CreateSyntax("lslog", DoShowLog, NULL, 0,
 			 "list available logs");
-    (void)cmd_AddParm(showSyntax, "-set", CMD_LIST, CMD_OPTIONAL, "set_name");
-    (void)cmd_AddParm(showSyntax, "-log", CMD_LIST, CMD_OPTIONAL, "log_name");
-    (void)cmd_AddParm(showSyntax, "-long", CMD_FLAG, CMD_OPTIONAL, "");
+    (void)cmd_AddParm(showSyntax, "-set", CMD_LIST, CMD_OPTIONAL,
+		      "event set name");
+    (void)cmd_AddParm(showSyntax, "-log", CMD_LIST, CMD_OPTIONAL,
+		      "trace log name");
+    (void)cmd_AddParm(showSyntax, "-long", CMD_FLAG, CMD_OPTIONAL,
+		      "show defined log size in kbytes & if it is allocated in kernel mem");
 }
 
 static int
@@ -1897,9 +1881,10 @@ SetUpShowSet(void)
     struct cmd_syndesc *showSyntax;
 
     showSyntax =
-	cmd_CreateSyntax("lsset", DoShowSet, NULL,
+	cmd_CreateSyntax("lsset", DoShowSet, NULL, 0,
 			 "list available event sets");
-    (void)cmd_AddParm(showSyntax, "-set", CMD_LIST, CMD_OPTIONAL, "set_name");
+    (void)cmd_AddParm(showSyntax, "-set", CMD_LIST, CMD_OPTIONAL,
+		      "event set name");
 }
 
 static int
@@ -1954,12 +1939,12 @@ SetUpClear(void)
     struct cmd_syndesc *clearSyntax;
 
     clearSyntax =
-	cmd_CreateSyntax("clear", DoClear, NULL,
+	cmd_CreateSyntax("clear", DoClear, NULL, 0,
 			 "clear logs by logname or by event set");
     (void)cmd_AddParm(clearSyntax, "-set", CMD_LIST, CMD_OPTIONAL,
-		      "set_name");
+		      "event set name");
     (void)cmd_AddParm(clearSyntax, "-log", CMD_LIST, CMD_OPTIONAL,
-		      "log_name");
+		      "trace log name");
 }
 
 static int
@@ -2041,12 +2026,16 @@ SetUpSet(void)
     struct cmd_syndesc *setSyntax;
 
     setSyntax =
-	cmd_CreateSyntax("setset", DoSet, NULL,
+	cmd_CreateSyntax("setset", DoSet, NULL, 0,
 			 "set state of event sets");
-    (void)cmd_AddParm(setSyntax, "-set", CMD_LIST, CMD_OPTIONAL, "set_name");
-    (void)cmd_AddParm(setSyntax, "-active", CMD_FLAG, CMD_OPTIONAL, "");
-    (void)cmd_AddParm(setSyntax, "-inactive", CMD_FLAG, CMD_OPTIONAL, "");
-    (void)cmd_AddParm(setSyntax, "-dormant", CMD_FLAG, CMD_OPTIONAL, "");
+    (void)cmd_AddParm(setSyntax, "-set", CMD_LIST, CMD_OPTIONAL,
+		      "event set name");
+    (void)cmd_AddParm(setSyntax, "-active", CMD_FLAG, CMD_OPTIONAL,
+		      "enable tracing for event set & allocate kernel memory");
+    (void)cmd_AddParm(setSyntax, "-inactive", CMD_FLAG, CMD_OPTIONAL,
+		      "disables tracing for event set, keep kernel memory");
+    (void)cmd_AddParm(setSyntax, "-dormant", CMD_FLAG, CMD_OPTIONAL,
+		      "disable tracing for event set & free kernel memory");
 }
 
 static int
@@ -2098,12 +2087,12 @@ SetUpResize(void)
     struct cmd_syndesc *setsizeSyntax;
 
     setsizeSyntax =
-	cmd_CreateSyntax("setlog", DoResize, NULL,
+	cmd_CreateSyntax("setlog", DoResize, NULL, 0,
 			 "set the size of a log");
     (void)cmd_AddParm(setsizeSyntax, "-log", CMD_LIST, CMD_OPTIONAL,
-		      "log_name");
+		      "trace log name");
     (void)cmd_AddParm(setsizeSyntax, "-buffersize", CMD_SINGLE, CMD_REQUIRED,
-		      "1-kilobyte_units");
+		      "# of 1-kbyte blocks to allocate for log");
 }
 
 #include "AFS_component_version_number.c"
@@ -2126,12 +2115,3 @@ main(int argc, char *argv[])
 
     return (cmd_Dispatch(argc, argv));
 }
-#else
-#include "AFS_component_version_number.c"
-
-int
-main(int argc, char *argv[])
-{
-    printf("fstrace is NOT supported for this OS\n");
-}
-#endif

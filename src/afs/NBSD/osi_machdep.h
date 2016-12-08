@@ -9,7 +9,7 @@
 
 /*
  *
- * OpenBSD OSI header file. Extends afs_osi.h.
+ * NetBSD OSI header file. Extends afs_osi.h.
  *
  * afs_osi.h includes this file, which is the only way this file should
  * be included in a source file. This file can redefine macros declared in
@@ -23,16 +23,21 @@
 #define AFS_DIRENT 1
 
 #include <sys/lock.h>
-#include <sys/malloc.h>
+#if defined(AFS_NBSD50_ENV)
+#include <sys/kmem.h>
+#include <sys/specificdata.h>
+#include <sys/mutex.h>
+#include <sys/rwlock.h>
+#endif
 #include <sys/syscall.h>
 #include <sys/syscallargs.h>
 
-#include "opt_ddb.h" /* Debugger() */
-
-#define M_AFSFID	(M_TEMP-1)
-#define M_AFSBUFHDR	(M_TEMP-2)
-#define M_AFSBUFFER	(M_TEMP-3)
-#define M_AFSGENERIC	(M_TEMP-4)
+#if defined(AFS_NBSD50_ENV)
+# if !defined(DEF_CADDR_T)
+typedef char * caddr_t;
+#define DEF_CADDR_T
+# endif
+#endif
 
 /* vfs */
 #define osi_vfs		mount
@@ -45,19 +50,13 @@
 #endif
 #define vfs_vnodecovered mnt_vnodecovered
 #define v_vfsp		v_mount
-#define VFS_STATFS      afs_statvfs
-
-int
-sys_ioctl(struct lwp *l, void *v, register_t *retval);
 
 /* vnode */
-#define VN_HOLD(vp)	(vref(vp))
+#define VN_HOLD(vp)	(vget(vp, 0))
 #define VN_RELE(vp)	(vrele(vp))
 #define osi_vnhold(avc, r) (VN_HOLD(AFSTOV(avc)))
 
-
 #define va_nodeid	va_fileid
-#define vnode_t		struct vnode
 
 /* syscall */
 struct afs_sysargs {
@@ -79,77 +78,30 @@ struct afs_sysargs {
 #define AFS_UIOSYS	UIO_SYSSPACE
 #define AFS_UIOUSER	UIO_USERSPACE
 
-/* malloc */
-inline void * afs_osi_Alloc(size_t asize);
-inline void * afs_osi_Alloc_NoSleep(size_t asize);
-inline void afs_osi_Free(void *buf, size_t asize);
-inline void afs_osi_FreeStr(char *x);
-extern void *osi_nbsd_Alloc(size_t asize, int cansleep);
-extern void osi_nbsd_Free(void *p, size_t asize);
-
-#ifdef AFS_KALLOC
-#undef AFS_KALLOC
-#define AFS_KALLOC(s) (osi_nbsd_Alloc((s), 1 /* cansleep */))
-#endif
-
-#ifdef AFS_KFREE
-#undef AFS_KFREE
-#define AFS_KFREE(p, s) (osi_nbsd_Free((p), (s)))
-#endif
-
 /* proc */
 typedef struct lwp afs_proc_t;
 #define osi_curproc()	curlwp
 #define getpid()	(osi_curproc())->l_proc->p_pid
+#define osi_procname(procname, size) strncpy(procname, curproc->p_comm, size)
 
-/*
- * XXX  I'm exporting the internal definition of kauth_cred_t
- * until I work out protocol for switching group buffers.
- * Matt.
- */
-
-#define KAUTH_EXPORT 1
-#if defined(KAUTH_EXPORT)
-/* internal type from kern_auth.c */
-#ifdef AFS_NBSD40_ENV
-struct kauth_cred {
-	struct simplelock cr_lock;	/* lock on cr_refcnt */
-	u_int cr_refcnt;		/* reference count */
-	uid_t cr_uid;			/* user id */
-	uid_t cr_euid;			/* effective user id */
-	uid_t cr_svuid;			/* saved effective user id */
-	gid_t cr_gid;			/* group id */
-	gid_t cr_egid;			/* effective group id */
-	gid_t cr_svgid;			/* saved effective group id */
-	u_int cr_ngroups;		/* number of groups */
-	gid_t cr_groups[NGROUPS];	/* group memberships */
-};
-#else
-#error TODO:  verify kauth_cred structure, if this is still here
-#endif /* AFS_NBSD40_ENV */
-#endif /* KAUTH_EXPORT */
-
-typedef kauth_cred_t afs_ucred_t;
+typedef struct kauth_cred afs_ucred_t;
 #define osi_curcred()	(kauth_cred_get())
 #define afs_suser(x)	afs_osi_suser(osi_curcred())
 #define osi_crgetruid(acred) (kauth_cred_getuid(acred))
 #define osi_crgetrgid(acred) (kauth_cred_getgid(acred))
 #define osi_crngroups(acred) (kauth_cred_ngroups(acred))
-#define osi_proccred(aproc) (aproc->p_cred)
-#define osi_crdup(acred) (kauth_cred_dup(acred))
-#define crref osi_crdup
-#define crdup osi_crdup
-#define crhold crref
+#define osi_proccred(aproc) ((aproc)->l_proc->p_cred)
+#define osi_crgroupbyid kauth_cred_group
+#define crdup kauth_cred_dup
+#define crhold kauth_cred_hold
 #define crfree kauth_cred_free
 
 #define afs_cr_gid osi_crgetrgid
 #define afs_cr_uid osi_crgetruid
 
-inline gid_t osi_crgroupbyid(afs_ucred_t *acred, int gindex);
-
 /* time */
 #define	afs_hz		hz
-#define osi_GetTime(x)	microtime(x)
+#define osi_GetTime(x)	getmicrotime(x)
 #define osi_Time()      time_second
 
 /* str */
@@ -168,10 +120,9 @@ inline gid_t osi_crgroupbyid(afs_ucred_t *acred, int gindex);
 /* This is not always in scope yet */
 struct vcache;
 
-extern int afs_nbsd_lookupname(char *fnamep, enum uio_seg segflg,
+extern int afs_nbsd_lookupname(const char *fnamep, enum uio_seg segflg,
 			       int followlink, struct vnode **compvpp);
 extern void afs_nbsd_getnewvnode(struct vcache *tvc);
-extern int afs_vget();
 
 #undef gop_lookupname
 #undef gop_lookupname_user
@@ -182,8 +133,24 @@ extern int afs_vget();
 
 #ifdef KERNEL
 #ifdef AFS_GLOBAL_SUNLOCK
-extern struct lock afs_global_lock;
 
+#if defined(AFS_NBSD50_ENV)
+extern kmutex_t afs_global_mtx;
+#define AFS_GLOCK() \
+    do { \
+	mutex_enter(&afs_global_mtx); \
+    } while (0)
+#define AFS_GUNLOCK() \
+    do { \
+	mutex_exit(&afs_global_mtx); \
+    } while (0)
+#define ISAFS_GLOCK() (mutex_owned(&afs_global_mtx))
+#define osi_InitGlock() \
+    do { \
+	mutex_init(&afs_global_mtx, MUTEX_DEFAULT, IPL_NONE); \
+    } while (0)
+#else /* !50 */
+extern struct lock afs_global_lock;
 #if defined(LOCKDEBUG)
 #define AFS_GLOCK() \
   do { \
@@ -203,14 +170,15 @@ extern struct lock afs_global_lock;
     lockmgr(&afs_global_lock, LK_RELEASE, NULL); \
   } while(0);
 #endif /* LOCKDEBUG */
-#define ISAFS_GLOCK() (lockstatus(&afs_global_lock) == LK_EXCLUSIVE)
+#endif /* !50 */
 #else
+#define ISAFS_GLOCK() (lockstatus(&afs_global_lock) == LK_EXCLUSIVE)
 extern struct lock afs_global_lock;
 #define AFS_GLOCKP(p)
 #define AFS_GUNLOCKP(p)
 #define AFS_ASSERT_GLOCK()
 #define ISAFS_GLOCK() 1
-#endif
+#endif /* !AFS_GLOBAL_SUNLOCK */
 
 #undef SPLVAR
 #define SPLVAR int splvar
@@ -233,11 +201,15 @@ enum vcexcl { NONEXCL, EXCL };
 #endif /* ASSEMBLER */
 
 /* vnodes */
-extern int (**afs_vnodeop_p) ();
+extern int (**afs_vnodeop_p) __P((void *));
 #define vType(vc)               AFSTOV(vc)->v_type
 #define vSetVfsp(vc, vfsp)      AFSTOV(vc)->v_mount = (vfsp)
 #define vSetType(vc, type)      AFSTOV(vc)->v_type = (type)
 #define IsAfsVnode(v)      ((v)->v_op == afs_vnodeop_p)
 #define SetAfsVnode(v)     /* nothing; done in getnewvnode() */
+
+extern int afs_debug;
+
+#define AFS_USE_NBSD_NAMECACHE 0
 
 #endif /* _OSI_MACHDEP_H_ */

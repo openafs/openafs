@@ -36,15 +36,12 @@
 #include "afs/afs_util.h"
 #include "afs/unified_afs.h"
 
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
 #include <inet/led.h>
 #include <inet/common.h>
-#if     defined(AFS_SUN58_ENV)
 #include <netinet/ip6.h>
-#endif
 #include <inet/ip.h>
 #endif
-
 
 /* shouldn't do it this way, but for now will do */
 #ifndef ERROR_TABLE_BASE_U
@@ -63,30 +60,35 @@
 #endif /* vlserver error base define */
 
 
-int afs_BusyWaitPeriod = 15;	/* poll every 15 seconds */
+int afs_BusyWaitPeriod = 15;	/**< poll period, in seconds */
 
-afs_int32 hm_retry_RO = 0;	/* don't wait */
-afs_int32 hm_retry_RW = 0;	/* don't wait */
-afs_int32 hm_retry_int = 0;	/* don't wait */
+afs_int32 hm_retry_RO = 0;	/**< enable read-only hard-mount retry */
+afs_int32 hm_retry_RW = 0;	/**< enable read-write hard-mount retry */
+afs_int32 hm_retry_int = 0;	/**< hard-mount retry interval, in seconds */
 
 #define	VSleep(at)	afs_osi_Wait((at)*1000, 0, 0)
 
 
 int lastcode;
-/* returns:
- * 0   if the vldb record for a specific volume is different from what
- *     we have cached -- perhaps the volume has moved.
- * 1   if the vldb record is the same
- * 2   if we can't tell if it's the same or not.
- *
- * If 0, the caller will probably start over at the beginning of our
- * list of servers for this volume and try to find one that is up.  If
- * not 0, we will probably just keep plugging with what we have
- * cached.   If we fail to contact the VL server, we  should just keep
- * trying with the information we have, rather than failing. */
 #define DIFFERENT 0
 #define SAME 1
 #define DUNNO 2
+/*!
+ * \brief
+ *	Request vldb record to determined if it has changed.
+ *
+ * \retval 0 if the vldb record for a specific volume is different from what
+ *           we have cached -- perhaps the volume has moved.
+ * \retval 1 if the vldb record is the same
+ * \retval 2 if we can't tell if it's the same or not.
+ *
+ * \note
+ *	If 0 returned, the caller will probably start over at the beginning of our
+ *	list of servers for this volume and try to find one that is up.  If
+ *	not 0, we will probably just keep plugging with what we have
+ *	cached.   If we fail to contact the VL server, we  should just keep
+ *	trying with the information we have, rather than failing.
+ */
 static int
 VLDB_Same(struct VenusFid *afid, struct vrequest *areq)
 {
@@ -120,12 +122,12 @@ VLDB_Same(struct VenusFid *afid, struct vrequest *areq)
 	    afs_ConnByMHosts(tcell->cellHosts, tcell->vlport, tcell->cellNum,
 			     treq, SHARED_LOCK, 0, &rxconn);
 	if (tconn) {
-	    if (tconn->srvr->server->flags & SNO_LHOSTS) {
+	    if ( tconn->parent->srvr->server->flags & SNO_LHOSTS) {
 		type = 0;
 		RX_AFS_GUNLOCK();
 		i = VL_GetEntryByNameO(rxconn, bp, &v->tve);
 		RX_AFS_GLOCK();
-	    } else if (tconn->srvr->server->flags & SYES_LHOSTS) {
+	    } else if (tconn->parent->srvr->server->flags & SYES_LHOSTS) {
 		type = 1;
 		RX_AFS_GUNLOCK();
 		i = VL_GetEntryByNameN(rxconn, bp, &v->ntve);
@@ -135,7 +137,7 @@ VLDB_Same(struct VenusFid *afid, struct vrequest *areq)
 		RX_AFS_GUNLOCK();
 		i = VL_GetEntryByNameU(rxconn, bp, &v->utve);
 		RX_AFS_GLOCK();
-		if (!(tconn->srvr->server->flags & SVLSRV_UUID)) {
+		if (!(tconn->parent->srvr->server->flags & SVLSRV_UUID)) {
 		    if (i == RXGEN_OPCODE) {
 			type = 1;
 			RX_AFS_GUNLOCK();
@@ -143,14 +145,14 @@ VLDB_Same(struct VenusFid *afid, struct vrequest *areq)
 			RX_AFS_GLOCK();
 			if (i == RXGEN_OPCODE) {
 			    type = 0;
-			    tconn->srvr->server->flags |= SNO_LHOSTS;
+			    tconn->parent->srvr->server->flags |= SNO_LHOSTS;
 			    RX_AFS_GUNLOCK();
 			    i = VL_GetEntryByNameO(rxconn, bp, &v->tve);
 			    RX_AFS_GLOCK();
 			} else if (!i)
-			    tconn->srvr->server->flags |= SYES_LHOSTS;
+			    tconn->parent->srvr->server->flags |= SYES_LHOSTS;
 		    } else if (!i)
-			tconn->srvr->server->flags |= SVLSRV_UUID;
+			tconn->parent->srvr->server->flags |= SVLSRV_UUID;
 		}
 		lastcode = i;
 	    }
@@ -195,6 +197,9 @@ VLDB_Same(struct VenusFid *afid, struct vrequest *areq)
 	    }
 	}
 
+	tvp->states &= ~VRecheck;     /* Just checked it. */
+	tvp->setupTime = osi_Time();  /* Time the vldb was checked. */
+
 	ReleaseWriteLock(&tvp->lock);
 	afs_PutVolume(tvp, WRITE_LOCK);
     } else {			/* can't find volume */
@@ -216,34 +221,28 @@ VLDB_Same(struct VenusFid *afid, struct vrequest *areq)
     return (changed ? DIFFERENT : SAME);
 }				/*VLDB_Same */
 
-/*------------------------------------------------------------------------
- * afs_BlackListOnce
- *
- * Description:
+/*!
+ * \brief
  *	Mark a server as invalid for further attempts of this request only.
  *
- * Arguments:
- *	areq  : The request record associated with this operation.
- *	afid  : The FID of the file involved in the action.  This argument
- *		may be null if none was involved.
- *      tsp   : pointer to a server struct for the server we wish to
- *              blacklist.
+ * \param[in,out] areq  The request record associated with this operation.
+ * \param[in]     afid  The FID of the file involved in the action.  This argument
+ *                      may be null if none was involved.
+ * \param[in,out] tsp   pointer to a server struct for the server we wish to
+ *                      blacklist.
  *
- * Returns:
+ * \returns
  *	Non-zero value if further servers are available to try,
  *	zero otherwise.
  *
- * Environment:
+ * \note
  *	This routine is typically called in situations where we believe
- *      one server out of a pool may have an error condition.
+ *	one server out of a pool may have an error condition.
  *
- * Side Effects:
- *	As advertised.
- *
- * NOTE:
+ * \note
  *	The afs_Conn* routines use the list of invalidated servers to
  *      avoid reusing a server marked as invalid for this request.
- *------------------------------------------------------------------------*/
+ */
 static afs_int32
 afs_BlackListOnce(struct vrequest *areq, struct VenusFid *afid,
 		  struct server *tsp)
@@ -278,28 +277,25 @@ afs_BlackListOnce(struct vrequest *areq, struct VenusFid *afid,
     return serversleft;
 }
 
-/*------------------------------------------------------------------------
- * afs_ClearStatus
- *
- * Description:
+/*!
+ * \brief
  *	Clear any cached status for the target FID of a failed fileserver
  *	write RPC.
  *
- * Arguments:
- *	afid  : The FID of the file involved in the action.  This argument
- *		may be null if none was involved.
- *      op    : which RPC we are analyzing.
- *      avp   : A pointer to the struct volume, if we already have one.
+ * \param[in]     afid   The FID of the file involved in the action.  This argument
+ *                       may be null if none was involved.
+ * \param[in]     op     which RPC we are analyzing.
+ * \param[in,out] avp    A pointer to the struct volume, if we already have one.
  *
- * Returns:
+ * \returns
  *	Non-zero value if the related RPC operation can be retried,
  *	zero otherwise.
  *
- * Environment:
+ * \note
  *	This routine is called when we got a network error,
  *      and discards state if the operation was a data-mutating
  *      operation.
- *------------------------------------------------------------------------*/
+ */
 static int
 afs_ClearStatus(struct VenusFid *afid, int op, struct volume *avp)
 {
@@ -321,7 +317,8 @@ afs_ClearStatus(struct VenusFid *afid, int op, struct volume *avp)
 	ObtainReadLock(&afs_xvcache);
 	if ((tvc = afs_FindVCache(afid, 0, 0))) {
 	    ReleaseReadLock(&afs_xvcache);
-	    tvc->f.states &= ~(CStatd | CUnique);
+	    afs_StaleVCacheFlags(tvc, AFS_STALEVC_NOCB | AFS_STALEVC_NODNLC,
+				 CUnique);
 	    afs_PutVCache(tvc);
 	} else {
 	    ReleaseReadLock(&afs_xvcache);
@@ -386,44 +383,37 @@ afs_PrintServerErrors(struct vrequest *areq, struct VenusFid *afid)
     afs_warnuser("%s\n", term);
 }
 
-/*------------------------------------------------------------------------
- * EXPORTED afs_Analyze
- *
- * Description:
+/*!
+ * \brief
  *	Analyze the outcome of an RPC operation, taking whatever support
  *	actions are necessary.
  *
- * Arguments:
- *	aconn : Ptr to the relevant connection on which the call was made.
- *	rxconn: Ptr to the rx_connection
- *	acode : The return code experienced by the RPC.
- *	afid  : The FID of the file involved in the action.  This argument
- *		may be null if none was involved.
- *	areq  : The request record associated with this operation.
- *      op    : which RPC we are analyzing.
- *      cellp : pointer to a cell struct.  Must provide either fid or cell.
+ * \param[in]     aconn  Ptr to the relevant connection on which the call was made.
+ * \param[in]     rxconn Ptr to the rx_connection.
+ * \param[in]     acode  The return code experienced by the RPC.
+ * \param[in]     fid    The FID of the file involved in the action.  This argument
+ *                       may be null if none was involved.
+ * \param[in,out] areq   The request record associated with this operation.
+ * \param[in]     op     which RPC we are analyzing.
+ * \param[in]     cellp  pointer to a cell struct.  Must provide either fid or cell.
  *
- * Returns:
+ * \returns
  *	Non-zero value if the related RPC operation should be retried,
  *	zero otherwise.
  *
- * Environment:
+ * \note
  *	This routine is typically called in a do-while loop, causing the
  *	embedded RPC operation to be called repeatedly if appropriate
  *	until whatever error condition (if any) is intolerable.
  *
- * Side Effects:
- *	As advertised.
- *
- * NOTE:
+ * \note
  *	The retry return value is used by afs_StoreAllSegments to determine
  *	if this is a temporary or permanent error.
- *------------------------------------------------------------------------*/
+ */
 int
 afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
-	    afs_int32 acode,
-	    struct VenusFid *afid, struct vrequest *areq, int op,
-	    afs_int32 locktype, struct cell *cellp)
+            afs_int32 acode, struct VenusFid *afid, struct vrequest *areq,
+            int op, afs_int32 locktype, struct cell *cellp)
 {
     afs_int32 i;
     struct srvAddr *sa;
@@ -497,7 +487,7 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
 	return shouldRetry;	/* should retry */
     }
 
-    if (!aconn || !aconn->srvr) {
+    if (!aconn || !aconn->parent->srvr) {
 	if (!areq->volumeError) {
 	    if (aerrP)
 		(aerrP->err_Network)++;
@@ -594,7 +584,7 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
     }
 
     /* Find server associated with this connection. */
-    sa = aconn->srvr;
+    sa = aconn->parent->srvr;
     tsp = sa->server;
     address = ntohl(sa->sa_ip);
 
@@ -636,11 +626,11 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
     if (acode == -455)
 	acode = 455;
 #endif /* AFS_64BIT_CLIENT */
-    if (acode == RX_MSGSIZE || acode == RX_CALL_BUSY) {
+    if (acode == RX_MSGSIZE) {
 	shouldRetry = 1;
 	goto out;
     }
-    if (acode == RX_CALL_TIMEOUT || acode == RX_CALL_IDLE || acode == VNOSERVICE) {
+    if (acode == RX_CALL_TIMEOUT || acode == VNOSERVICE) {
 	serversleft = afs_BlackListOnce(areq, afid, tsp);
 	if (afid)
 	    tvp = afs_FindVolume(afid, READ_LOCK);
@@ -669,17 +659,10 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
     /* VRESTARTING is < 0 because of backward compatibility issues
      * with 3.4 file servers and older cache managers */
     if ((acode < 0) && (acode != VRESTARTING)) {
-	afs_ServerDown(sa, acode);
-	ForceNewConnections(sa); /**multi homed clients lock:afs_xsrvAddr? */
+	afs_ServerDown(sa, acode, rxconn);
+	ForceNewConnections(sa); /* multi homed clients lock:afs_xsrvAddr? */
 	if (aerrP)
 	    (aerrP->err_Server)++;
-#if 0
-	/* retry *once* when the server is timed out in case of NAT */
-	if (markeddown && acode == RX_CALL_DEAD) {
-	    aconn->forceConnectFS = 1;
-	    shouldRetry = 1;
-	}
-#endif
     }
 
     if (acode == VBUSY || acode == VRESTARTING) {
@@ -725,11 +708,11 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
 		aconn->forceConnectFS = 1;
 	    } else if (acode == RXKADEXPIRED) {
 		aconn->forceConnectFS = 0;	/* don't check until new tokens set */
-		aconn->user->states |= UTokensBad;
+		aconn->parent->user->states |= UTokensBad;
 		afs_NotifyUser(tu, UTokensDropped);
 		afs_warnuser
 		    ("afs: Tokens for user of AFS id %d for cell %s have expired (server %d.%d.%d.%d)\n",
-		     tu->vid, aconn->srvr->server->cell->cellName,
+		     tu->viceId, aconn->parent->srvr->server->cell->cellName,
 		     (address >> 24), (address >> 16) & 0xff,
 		     (address >> 8) & 0xff, (address) & 0xff);
 	    } else {
@@ -739,18 +722,18 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
 		if (serversleft) {
 		    afs_warnuser
 			("afs: Tokens for user of AFS id %d for cell %s: rxkad error=%d (server %d.%d.%d.%d)\n",
-			 tu->vid, aconn->srvr->server->cell->cellName, acode,
+			 tu->viceId, aconn->parent->srvr->server->cell->cellName, acode,
 			 (address >> 24), (address >> 16) & 0xff,
 			 (address >> 8) & 0xff, (address) & 0xff);
 		    shouldRetry = 1;
 		} else {
 		    areq->tokenError = 0;
 		    aconn->forceConnectFS = 0;	/* don't check until new tokens set */
-		    aconn->user->states |= UTokensBad;
+		    aconn->parent->user->states |= UTokensBad;
 		    afs_NotifyUser(tu, UTokensDropped);
 		    afs_warnuser
 			("afs: Tokens for user of AFS id %d for cell %s are discarded (rxkad error=%d, server %d.%d.%d.%d)\n",
-			 tu->vid, aconn->srvr->server->cell->cellName, acode,
+			 tu->viceId, aconn->parent->srvr->server->cell->cellName, acode,
 			 (address >> 24), (address >> 16) & 0xff,
 			 (address >> 8) & 0xff, (address) & 0xff);
 		}
@@ -762,20 +745,21 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
 		aconn->forceConnectFS = 1;
 	    } else if (acode == RXKADEXPIRED) {
 		aconn->forceConnectFS = 0;	/* don't check until new tokens set */
-		aconn->user->states |= UTokensBad;
+		aconn->parent->user->states |= UTokensBad;
 		afs_NotifyUser(tu, UTokensDropped);
 		afs_warnuser
 		    ("afs: Tokens for user %d for cell %s have expired (server %d.%d.%d.%d)\n",
-		     areq->uid, aconn->srvr->server->cell->cellName,
+		     areq->uid, aconn->parent->srvr->server->cell->cellName,
 		     (address >> 24), (address >> 16) & 0xff,
 		     (address >> 8) & 0xff, (address) & 0xff);
 	    } else {
 		aconn->forceConnectFS = 0;	/* don't check until new tokens set */
-		aconn->user->states |= UTokensBad;
+		aconn->parent->user->states |= UTokensBad;
 		afs_NotifyUser(tu, UTokensDropped);
 		afs_warnuser
 		    ("afs: Tokens for user %d for cell %s are discarded (rxkad error = %d, server %d.%d.%d.%d)\n",
-		     areq->uid, aconn->srvr->server->cell->cellName, acode,
+		     areq->uid, aconn->parent->srvr->server->cell->cellName,
+                     acode,
 		     (address >> 24), (address >> 16) & 0xff,
 		     (address >> 8) & 0xff, (address) & 0xff);
 
@@ -795,7 +779,7 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
     }
     /* check for ubik errors; treat them like crashed servers */
     else if (acode >= ERROR_TABLE_BASE_U && acode < ERROR_TABLE_BASE_U + 255) {
-	afs_ServerDown(sa, acode);
+	afs_ServerDown(sa, acode, rxconn);
 	if (aerrP)
 	    (aerrP->err_Server)++;
 	shouldRetry = 1;	/* retryable (maybe one is working) */
@@ -855,7 +839,7 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
 	 * retry in case there is another server.  However, if we find
 	 * no connection (aconn == 0) we set the networkError flag.
 	 */
-	afs_ServerDown(sa, acode);
+	afs_ServerDown(sa, acode, rxconn);
 	if (aerrP)
 	    (aerrP->err_Server)++;
 	VSleep(1);		/* Just a hack for desperate times. */

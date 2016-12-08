@@ -30,6 +30,9 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+
+#include <roken.h>
+
 #include <afs/stds.h>
 
 #include "rpc_test_procs.h"
@@ -53,8 +56,6 @@
 #endif
 #ifdef AFS_DARWIN_ENV
 #include <sys/malloc.h>
-#else
-#include <malloc.h>
 #endif
 #include <afs/errors.h>
 #include <afs/sys_prototypes.h>

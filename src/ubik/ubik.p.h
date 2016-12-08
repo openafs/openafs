@@ -12,30 +12,6 @@
 
 #include <stdarg.h>
 
-/* these are now appended by the error table compiler */
-#if 0
-/* ubik error codes */
-#define	UMINCODE	100000	/* lowest ubik error code */
-#define	UNOQUORUM	100000	/* no quorum elected */
-#define	UNOTSYNC	100001	/* not synchronization site (should work on sync site) */
-#define	UNHOSTS		100002	/* too many hosts */
-#define	UIOERROR	100003	/* I/O error writing dbase or log */
-#define	UINTERNAL	100004	/* mysterious internal error */
-#define	USYNC		100005	/* major synchronization error */
-#define	UNOENT		100006	/* file not found when processing dbase */
-#define	UBADLOCK	100007	/* bad lock range size (must be 1) */
-#define	UBADLOG		100008	/* read error reprocessing log */
-#define	UBADHOST	100009	/* problems with host name */
-#define	UBADTYPE	100010	/* bad operation for this transaction type */
-#define	UTWOENDS	100011	/* two commits or aborts done to transaction */
-#define	UDONE		100012	/* operation done after abort (or commmit) */
-#define	UNOSERVERS	100013	/* no servers appear to be up */
-#define	UEOF		100014	/* premature EOF */
-#define	ULOGIO		100015	/* error writing log file */
-#define	UMAXCODE	100100	/* largest ubik error code */
-
-#endif
-
 #include <ubik_int.h>
 
 /*! \name ubik_trans types */
@@ -46,9 +22,7 @@
 /*! \name ubik_lock types */
 #define	LOCKREAD	    1
 #define	LOCKWRITE	    2
-#if !defined(UBIK_PAUSE)
 #define	LOCKWAIT	    3
-#endif /* UBIK_PAUSE */
 /*\}*/
 
 /*! \name ubik client flags */
@@ -95,8 +69,8 @@ struct ubik_client {
 };
 
 #ifdef AFS_PTHREAD_ENV
-#define LOCK_UBIK_CLIENT(client) MUTEX_ENTER(&client->cm)
-#define UNLOCK_UBIK_CLIENT(client) MUTEX_EXIT(&client->cm)
+#define LOCK_UBIK_CLIENT(client) opr_mutex_enter(&client->cm)
+#define UNLOCK_UBIK_CLIENT(client) opr_mutex_exit(&client->cm)
 #else
 #define LOCK_UBIK_CLIENT(client)
 #define UNLOCK_UBIK_CLIENT(client)
@@ -147,11 +121,7 @@ struct ubik_stat {
     afs_int32 mtime;
 };
 
-#if defined(UKERNEL)
-#include "afs/lock.h"
-#else /* defined(UKERNEL) */
 #include <lock.h>		/* just to make sure we've got this */
-#endif /* defined(UKERNEL) */
 
 /*!
  * \brief representation of a ubik database.
@@ -165,11 +135,9 @@ struct ubik_dbase {
     struct ubik_version version;	/*!< version number */
 #ifdef AFS_PTHREAD_ENV
     pthread_mutex_t versionLock;	/*!< lock on version number */
-#elif defined(UKERNEL)
-    struct afs_lock versionLock;	/*!< lock on version number */
-#else				/* defined(UKERNEL) */
+#else
     struct Lock versionLock;	/*!< lock on version number */
-#endif				/* defined(UKERNEL) */
+#endif
     afs_int32 tidCounter;	/*!< last RW or RO trans tid counter */
     afs_int32 writeTidCounter;	/*!< last write trans tid counter */
     afs_int32 flags;		/*!< flags */
@@ -189,11 +157,7 @@ struct ubik_dbase {
     int (*getnfiles) (struct ubik_dbase * adbase);	/*!< find out number of files */
     short readers;		/*!< number of current read transactions */
     struct ubik_version cachedVersion;	/*!< version of caller's cached data */
-#ifdef UKERNEL
-    struct afs_lock cache_lock;
-#else
     struct Lock cache_lock; /*!< protects cached application data */
-#endif
 #ifdef AFS_PTHREAD_ENV
     pthread_cond_t version_cond;    /*!< condition variable to manage changes to version */
     pthread_cond_t flags_cond;      /*!< condition variable to manage changes to flags */
@@ -220,6 +184,19 @@ extern int (*ubik_SRXSecurityProc) (void *, struct rx_securityClass **,
 extern void *ubik_SRXSecurityRock;
 extern int (*ubik_CheckRXSecurityProc) (void *, struct rx_call *);
 extern void *ubik_CheckRXSecurityRock;
+
+extern void ubik_SetClientSecurityProcs(int (*scproc)(void *,
+						      struct rx_securityClass **,
+						      afs_int32 *),
+					int (*checkproc) (void *),
+					void *rock);
+extern void ubik_SetServerSecurityProcs
+		(void (*buildproc) (void *,
+                                    struct rx_securityClass ***,
+                                    afs_int32 *),
+                 int (*checkproc) (void *, struct rx_call *),
+                 void *rock);
+
 /*\}*/
 
 /*
@@ -250,19 +227,12 @@ extern int (*ubik_SyncWriterCacheProc) (void);
 
 /*! \name ubik_dbase flags */
 #define	DBWRITING	    1	/*!< are any write trans. in progress */
-#if defined(UBIK_PAUSE)
-#define DBVOTING            2	/*!< the beacon task is polling */
-#endif /* UBIK_PAUSE */
 /*\}*/
 
 /*!\name ubik trans flags */
 #define	TRDONE		    1	/*!< commit or abort done */
 #define	TRABORT		    2	/*!< if #TRDONE, tells if aborted */
 #define TRREADANY	    4	/*!< read any data available in trans */
-#if defined(UBIK_PAUSE)
-#define TRSETLOCK           8	/*!< SetLock is using trans */
-#define TRSTALE             16	/*!< udisk_end during getLock */
-#endif /* UBIK_PAUSE */
 #define TRCACHELOCKED       32  /*!< this trans has locked dbase->cache_lock
                                  *   (meaning, this trans has called
                                  *   ubik_CheckCache at some point */
@@ -324,8 +294,8 @@ struct ubik_server {
 
 /*! \name hold and release functions on a database */
 #ifdef AFS_PTHREAD_ENV
-# define	DBHOLD(a)	MUTEX_ENTER(&((a)->versionLock))
-# define	DBRELE(a)	MUTEX_EXIT(&((a)->versionLock))
+# define	DBHOLD(a)	opr_mutex_enter(&((a)->versionLock))
+# define	DBRELE(a)	opr_mutex_exit(&((a)->versionLock))
 #else /* !AFS_PTHREAD_ENV */
 # define	DBHOLD(a)	ObtainWriteLock(&((a)->versionLock))
 # define	DBRELE(a)	ReleaseWriteLock(&((a)->versionLock))
@@ -359,17 +329,102 @@ extern int ubik_amSyncSite;	/* sleep on this waiting to be sync site */
 extern struct ubik_stats {	/* random stats */
     afs_int32 escapes;
 } ubik_stats;
-extern afs_int32 ubik_epochTime;	/* time when this site started */
 extern afs_int32 urecovery_state;	/* sync site recovery process state */
 extern struct ubik_trans *ubik_currentTrans;	/* current trans */
-extern struct ubik_version ubik_dbVersion;	/* sync site's dbase version */
 extern afs_int32 ubik_debugFlag;	/* ubik debug flag */
 extern int ubikPrimaryAddrOnly;	/* use only primary address */
 
-/* this extern gives the sync site's db version, with epoch of 0 if none yet */
+/*
+ * Lock ordering
+ *
+ * Any of the locks may be acquired singly; when acquiring multiple locks, they
+ * should be acquired in the listed order:
+ * 	application cache lock	(dbase->cache_lock)
+ * 	database lock		DBHOLD/DBRELE
+ * 	beacon lock		UBIK_BEACON_LOCK/UNLOCK
+ * 	vote lock		UBIK_VOTE_LOCK/UNLOCK
+ * 	version lock		UBIK_VERSION_LOCK/UNLOCK
+ * 	server address lock	UBIK_ADDR_LOCK/UNLOCK
+ */
+
+/*!
+ * \brief Global beacon data.  All values are protected by beacon_lock
+ * This lock also protects some values in the ubik_server structures:
+ * 	lastVoteTime
+ * 	lastBeaconSent
+ * 	lastVote
+ * 	up
+ * 	beaconSinceDown
+ */
+struct beacon_data {
+#ifdef AFS_PTHREAD_ENV
+    pthread_mutex_t beacon_lock;
+#endif
+    int ubik_amSyncSite;		/*!< flag telling if I'm sync site */
+    afs_int32 syncSiteUntil;		/*!< valid only if amSyncSite */
+};
+
+#define UBIK_BEACON_LOCK opr_mutex_enter(&beacon_globals.beacon_lock)
+#define UBIK_BEACON_UNLOCK opr_mutex_exit(&beacon_globals.beacon_lock)
+
+/*!
+ * \brief Global vote data.  All values are protected by vote_lock
+ */
+struct vote_data {
+#ifdef AFS_PTHREAD_ENV
+    pthread_mutex_t vote_lock;
+#endif
+    struct ubik_version ubik_dbVersion;	/* sync site's dbase version */
+    struct ubik_tid ubik_dbTid;		/* sync site's tid, or 0 if none */
+    /* Used by all sites in nominating new sync sites */
+    afs_int32 ubik_lastYesTime;		/* time we sent the last yes vote */
+    afs_uint32 lastYesHost;		/* host to which we sent yes vote */
+    /* Next is time sync site began this vote: guarantees sync site until this + SMALLTIME */
+    afs_int32 lastYesClaim;
+    int lastYesState;			/* did last site we voted for claim to be sync site? */
+    /* Used to guarantee that nomination process doesn't loop */
+    afs_int32 lowestTime;
+    afs_uint32 lowestHost;
+    afs_int32 syncTime;
+    afs_int32 syncHost;
+};
+
+#define UBIK_VOTE_LOCK opr_mutex_enter(&vote_globals.vote_lock)
+#define UBIK_VOTE_UNLOCK opr_mutex_exit(&vote_globals.vote_lock)
+
+/*!
+ * \brief Server address data.  All values are protected by addr_lock
+ *
+ * This lock also protects:
+ *     ubik_server: addr[], vote_rxcid, disk_rxcid
+ *
+ */
+struct addr_data {
+#ifdef AFS_PTHREAD_ENV
+    pthread_mutex_t addr_lock;
+#endif
+    afs_int32 ubikSecIndex;
+    struct rx_securityClass *ubikSecClass;
+};
+
+#define UBIK_ADDR_LOCK opr_mutex_enter(&addr_globals.addr_lock)
+#define UBIK_ADDR_UNLOCK opr_mutex_exit(&addr_globals.addr_lock)
+
+/*!
+ * \brief The version lock protects the structure member, as well as
+ * the database version, flags, tidCounter, writeTidCounter
+ */
+struct version_data {
+#ifdef AFS_PTHREAD_ENV
+    pthread_mutex_t version_lock;
+#endif
+    afs_int32 ubik_epochTime;	/* time when this site started */
+};
+
+#define UBIK_VERSION_LOCK opr_mutex_enter(&version_globals.version_lock)
+#define UBIK_VERSION_UNLOCK opr_mutex_exit(&version_globals.version_lock)
 
 /* phys.c */
-extern int uphys_close(int afd);
 extern int uphys_stat(struct ubik_dbase *adbase, afs_int32 afid,
 		      struct ubik_stat *astat);
 extern int uphys_read(struct ubik_dbase *adbase, afs_int32 afile,
@@ -391,11 +446,11 @@ extern void uphys_invalidate(struct ubik_dbase *adbase,
 
 /*! \name recovery.c */
 extern int urecovery_ResetState(void);
-extern int urecovery_LostServer(void);
+extern int urecovery_LostServer(struct ubik_server *server);
 extern int urecovery_AllBetter(struct ubik_dbase *adbase,
 			       int areadAny);
 extern int urecovery_AbortAll(struct ubik_dbase *adbase);
-extern int urecovery_CheckTid(struct ubik_tid *atid);
+extern int urecovery_CheckTid(struct ubik_tid *atid, int abortalways);
 extern int urecovery_Initialize(struct ubik_dbase *adbase);
 extern void *urecovery_Interact(void *);
 extern int DoProbe(struct ubik_server *server);
@@ -436,10 +491,15 @@ extern void panic(char *format, ...)
     AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
 
 extern afs_uint32 ubikGetPrimaryInterfaceAddr(afs_uint32 addr);
+
+extern int ubik_CheckAuth(struct rx_call *);
+
 /*\}*/
 
 /*! \name beacon.c */
 struct afsconf_cell;
+extern void ubeacon_InitSecurityClass(void);
+extern void ubeacon_ReinitServer(struct ubik_server *ts);
 extern void ubeacon_Debug(struct ubik_debug *aparm);
 extern int ubeacon_AmSyncSite(void);
 extern int ubeacon_InitServerListByInfo(afs_uint32 ame,
@@ -447,9 +507,14 @@ extern int ubeacon_InitServerListByInfo(afs_uint32 ame,
 					char clones[]);
 extern int ubeacon_InitServerList(afs_uint32 ame, afs_uint32 aservers[]);
 extern void *ubeacon_Interact(void *);
+extern int ubeacon_updateUbikNetworkAddress(afs_uint32 ubik_host[]);
+extern struct beacon_data beacon_globals;
+extern struct addr_data addr_globals;
+
 /*\}*/
 
 /*! \name disk.c */
+extern int udisk_Init(int nBUffers);
 extern void udisk_Debug(struct ubik_debug *aparm);
 extern int udisk_Invalidate(struct ubik_dbase *adbase, afs_int32 afid);
 extern int udisk_read(struct ubik_trans *atrans, afs_int32 afile,
@@ -466,6 +531,7 @@ extern int udisk_end(struct ubik_trans *atrans);
 /*\}*/
 
 /*! \name lock.c */
+extern void ulock_Init(void);
 extern int  ulock_getLock(struct ubik_trans *atrans, int atype, int await);
 extern void ulock_relLock(struct ubik_trans *atrans);
 extern void ulock_Debug(struct ubik_debug *aparm);
@@ -486,6 +552,10 @@ extern void ubik_dprint(const char *format, ...)
 
 extern void ubik_dprint_25(const char *format, ...)
     AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
+extern struct vote_data vote_globals;
+extern void uvote_set_dbVersion(struct ubik_version);
+extern int uvote_eq_dbVersion(struct ubik_version);
+extern int uvote_HaveSyncAndVersion(struct ubik_version);
 /*\}*/
 
 #endif /* UBIK_INTERNALS */
@@ -536,6 +606,7 @@ extern int ubik_GetVersion(struct ubik_trans *atrans,
 extern int ubik_CheckCache(struct ubik_trans *atrans,
                            ubik_updatecache_func check,
                            void *rock);
+extern struct version_data version_globals;
 /*\}*/
 
 /*! \name ubikclient.c */
@@ -568,6 +639,24 @@ extern int ubik_ParseServerList(int argc, char **argv, afs_uint32 *ahost,
 /* \name uinit.c */
 
 struct rx_securityClass;
+struct afsconf_dir;
+extern int ugen_ClientInitCell(struct afsconf_dir *dir,
+			       struct afsconf_cell *info,
+			       int secFlags,
+			       struct ubik_client **uclientp,
+			       int maxservers, const char *serviceid,
+			       int deadtime);
+extern int ugen_ClientInitServer(const char *confDir, char *cellName,
+				 int secFlags, struct ubik_client **uclientp,
+				 int maxservers, char *serviceid,
+				 int deadtime, afs_uint32 server,
+			         afs_uint32 port);
+extern int ugen_ClientInitFlags(const char *confDir, char *cellName,
+				int secFlags, struct ubik_client **uclientp,
+				int (*secproc) (struct rx_securityClass *,
+						afs_int32),
+				int maxservers, char *serviceid,
+				int deadtime);
 extern afs_int32 ugen_ClientInit(int noAuthFlag, const char *confDir,
 				 char *cellName, afs_int32 sauth,
 				 struct ubik_client **uclientp,

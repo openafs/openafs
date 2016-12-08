@@ -8,10 +8,11 @@ kaserver - Initializes the Authentication Server
 <div class="synopsis">
 
 B<kaserver> [B<-noAuth>] [B<-database> <I<dbpath>>]
-    S<<< [B<-auditlog> <I<log path>>] >>> [B<-audit-interface> (file | sysvmq)]
+    S<<< [B<-auditlog> <I<log path>>] >>>
+    S<<< [B<-audit-interface> (file | sysvmq)] >>>
     S<<< [B<-localfiles> <I<lclpath>>] >>> S<<< [B<-minhours> <I<n>>] >>>
     S<<< [B<-servers> <I<serverlist>>] >>> [B<-enable_peer_stats>]
-    [B<-enable_process_stats>] [B<-help>]
+    [B<-enable_process_stats>] [B<-rxbind>] [B<-crossrealm>] [B<-help>]
 
 =for html
 </div>
@@ -160,6 +161,16 @@ GetStatus, and so on) sent or received, aggregated over all connections to
 other machines. To display or otherwise access the records, use the Rx
 Monitoring API.
 
+=item B<-rxbind>
+
+Bind the Rx socket to the primary interface only. (If not specified, the Rx
+socket will listen on all interfaces.)
+
+=item B<-crossrealm>
+
+Enable cross-realm authentication. The use of this option is considered
+insecure, and thus strongly discouraged. See OPENAFS-SA-2003-001.
+
 =item B<-help>
 
 Prints the online help for this command. All other valid options are
@@ -170,10 +181,10 @@ ignored.
 =head1 EXAMPLES
 
 The following B<bos create> command creates a C<kaserver> process on
-C<fs3.abc.com> (the command appears on two lines here only for
+C<fs3.example.com> (the command appears on two lines here only for
 legibility):
 
-   % bos create -server fs3.abc.com -instance kaserver \
+   % bos create -server fs3.example.com -instance kaserver \
                 -type simple -cmd /usr/afs/bin/kaserver
 
 =head1 PRIVILEGE REQUIRED

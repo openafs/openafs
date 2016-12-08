@@ -28,10 +28,14 @@
  */
 #include <afsconfig.h>
 #include <afs/param.h>
-#include "rx.h"
-
 
 #ifndef	NeXT
+
+#ifndef KERNEL
+# include <roken.h>
+#endif
+
+#include "rx.h"
 
 /*
  * xdr_array.c, Generic XDR routines impelmentation.
@@ -48,17 +52,11 @@
 #endif
 #ifdef AFS_LINUX20_ENV
 #include "h/string.h"
-#if 0
-#define bzero(A,C) memset((A), 0, (C))
-#endif
 #else
 #ifndef AFS_DARWIN90_ENV
 #include <sys/systm.h>
 #endif
 #endif /* AFS_LINUX20_ENV */
-#else
-#include <stdio.h>
-#include <string.h>
 #endif
 #include "xdr.h"
 
@@ -90,8 +88,7 @@ xdr_array(XDR * xdrs, caddr_t * addrp, u_int * sizep, u_int maxsize,
     bool_t stat = TRUE;
     u_int nodesize;
 
-    /* FIXME: this does not look correct: MSVC 6 computes -1 / elsize here */
-    i = ((~0) >> 1) / elsize;
+    i = ((~0u) >> 1) / elsize;
     if (maxsize > i)
 	maxsize = i;
 

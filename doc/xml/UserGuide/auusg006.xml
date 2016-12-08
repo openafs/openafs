@@ -88,10 +88,10 @@
       <title>Example: Displaying Percentage of Quota Used</title>
 
       <para><indexterm><primary>examples</primary><secondary>displaying volume quota percentage used</secondary></indexterm> The following example displays the percentage of quota used for the volumes that contain two user
-      home directories in the ABC Corporation cell.</para>
+      home directories in the Example Corporation cell.</para>
 
       <programlisting>
-   % <emphasis role="bold">cd /afs/abc.com/usr</emphasis>
+   % <emphasis role="bold">cd /afs/example.com/usr</emphasis>
    % <emphasis role="bold">fs quota terry pat</emphasis>
    34% of quota used.
    85% of quota used.
@@ -287,10 +287,10 @@
       role="bold">terry</emphasis> and <emphasis role="bold">pat</emphasis>.</para>
 
       <programlisting>
-   % <emphasis role="bold">cd /afs/abc.com/usr</emphasis>
+   % <emphasis role="bold">cd /afs/example.com/usr</emphasis>
    % <emphasis role="bold">fs whereis terry pat</emphasis>
-   File /afs/abc.com/usr/terry is on host fs2.abc.com
-   File /afs/abc.com/usr/pat is on host fs3.abc.com
+   File /afs/example.com/usr/terry is on host fs2.example.com
+   File /afs/example.com/usr/pat is on host fs3.example.com
 </programlisting>
     </sect2>
   </sect1>
@@ -402,7 +402,7 @@
       <programlisting>
    % <emphasis role="bold">fs checkservers -all &amp;</emphasis>
    These servers unavailable due to network or server problems:
-      fs1.abc.com server7.stateu.edu.
+      fs1.example.com server7.example.org.
 </programlisting>
     </sect2>
   </sect1>
@@ -432,18 +432,18 @@
 
       <programlisting>
    % <emphasis role="bold">fs listcells &amp;</emphasis>
-   Cell abc.com  on hosts
-        db1.abc.com
-        db2.abc.com
-        db3.abc.com
-   Cell test.abc.com on hosts
-        test4.abc.com.
-   Cell stateu.edu on hosts
-        sv5.stateu.edu.
-        sv2.stateu.edu.
-        sv11.stateu.edu.
-   Cell def.com on hosts
-        serverA.def.com
+   Cell example.com on hosts
+        db1.example.com
+        db2.example.com
+        db3.example.com
+   Cell test.example.com on hosts
+        test4.example.com.
+   Cell example.org on hosts
+        sv5.example.org.
+        sv2.example.org.
+        sv11.example.org.
+   Cell example.net on hosts
+        serverA.example.net
 </programlisting>
     </sect2>
   </sect1>
@@ -494,21 +494,21 @@
 </programlisting>
 
       <para>The following example displays the file server machine preference ranks for a client machine in the <emphasis
-      role="bold">abc.com</emphasis> cell. The ranks of the file server machines in that cell are lower than the ranks of the file
-      server machines from the foreign cell, <emphasis role="bold">def.com</emphasis>. Because the <emphasis
+      role="bold">example.com</emphasis> cell. The ranks of the file server machines in that cell are lower than the ranks of the file
+      server machines from the foreign cell, <emphasis role="bold">example.net</emphasis>. Because the <emphasis
       role="bold">-numeric</emphasis> flag is not used, the output displays hostnames. The appearance of an IP address for two
       machines indicates that translating them was not possible.</para>
 
       <programlisting>
    % <emphasis role="bold">fs getserverprefs</emphasis>
-   fs2.abc.com           20007
-   fs3.abc.com           30002
-   fs1.abc.com           20011
-   fs4.abc.com           30010
-   server1.def.com       40002
-   192.12.105.34         40000
-   server6.def.com       40012
-   192.12.105.37         40005
+   fs2.example.com           20007
+   fs3.example.com           30002
+   fs1.example.com           20011
+   fs4.example.com           30010
+   server1.example.net       40002
+   192.12.105.34             40000
+   server6.example.net       40012
+   192.12.105.37             40005
 </programlisting>
     </sect2>
   </sect1>

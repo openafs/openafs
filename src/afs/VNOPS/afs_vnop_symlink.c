@@ -47,7 +47,7 @@ afs_DisconCreateSymlink(struct vcache *avc, char *aname,
     tdc = afs_GetDCache(avc, 0, areq, &offset, &len, 0);
     if (!tdc) {
 	/* printf("afs_DisconCreateSymlink: can't get new dcache for symlink.\n"); */
-	return ENOENT;
+	return ENETDOWN;
     }
 
     len = strlen(aname);
@@ -163,7 +163,7 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	do {
 	    tc = afs_Conn(&adp->f.fid, treq, SHARED_LOCK, &rxconn);
 	    if (tc) {
-		hostp = tc->srvr->server;
+		hostp = tc->parent->srvr->server;
 		XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_SYMLINK);
 		if (adp->f.states & CForeign) {
 		    now = osi_Time();
@@ -189,7 +189,7 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	    } else
 		code = -1;
 	} while (afs_Analyze
-		 (tc, rxconn, code, &adp->f.fid, treq, AFS_STATS_FS_RPCIDX_SYMLINK,
+		    (tc, rxconn, code, &adp->f.fid, treq, AFS_STATS_FS_RPCIDX_SYMLINK,
 		     SHARED_LOCK, NULL));
     } else {
 	newFid.Cell = adp->f.fid.Cell;
@@ -200,11 +200,7 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     ObtainWriteLock(&afs_xvcache, 40);
     if (code) {
 	if (code < 0) {
-	    ObtainWriteLock(&afs_xcbhash, 499);
-	    afs_DequeueCallback(adp);
-	    adp->f.states &= ~CStatd;
-	    ReleaseWriteLock(&afs_xcbhash);
-	    osi_dnlc_purgedp(adp);
+	    afs_StaleVCache(adp);
 	}
 	ReleaseWriteLock(&adp->lock);
 	ReleaseWriteLock(&afs_xvcache);
@@ -289,7 +285,7 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     ReleaseWriteLock(&tvc->lock);
     ReleaseWriteLock(&afs_xvcache);
     if (tvcp)
-    	*tvcp = tvc;
+	*tvcp = tvc;
     else
 	afs_PutVCache(tvc);
     code = 0;
@@ -334,7 +330,7 @@ afs_MemHandleLink(struct vcache *avc, struct vrequest *areq)
 	    alen = len + 1;	/* regular link */
 	else
 	    alen = len;		/* mt point */
-	rbuf = (char *)osi_AllocLargeSpace(AFS_LRALLOCSIZ);
+	rbuf = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
 	ObtainReadLock(&tdc->lock);
 	addr = afs_MemCacheOpen(&tdc->f.inode);
 	tlen = len;
@@ -391,10 +387,16 @@ afs_UFSHandleLink(struct vcache *avc, struct vrequest *areq)
 	    alen = len + 1;	/* regular link */
 	else
 	    alen = len;		/* mt point */
-	rbuf = (char *)osi_AllocLargeSpace(AFS_LRALLOCSIZ);
+	rbuf = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
 	tlen = len;
 	ObtainReadLock(&tdc->lock);
 	tfile = osi_UFSOpen(&tdc->f.inode);
+	if (!tfile) {
+	    ReleaseReadLock(&tdc->lock);
+	    afs_PutDCache(tdc);
+	    osi_FreeLargeSpace(rbuf);
+	    return EIO;
+	}
 	code = afs_osi_Read(tfile, -1, rbuf, tlen);
 	osi_UFSClose(tfile);
 	ReleaseReadLock(&tdc->lock);

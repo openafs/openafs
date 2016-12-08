@@ -114,9 +114,9 @@ the C<ADMIN> flag.
 
 In the following example, an administrator using the admin account gathers
 statistics from the Authentication Server running on the machine
-C<fs1.abc.com>.
+C<fs1.example.com>.
 
-   % kas statistics -servers fs1.abc.com
+   % kas statistics -servers fs1.example.com
    56 allocs, 46 frees, 0 password changes
    Hash table utilization = 0.100000%
    From host bfff21a7 started at Tue Mar 23 12:42:02 1999:

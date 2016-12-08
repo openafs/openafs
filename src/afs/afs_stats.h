@@ -333,15 +333,15 @@ struct afs_MeanStats {
     AFS_CS(Lock_Obtain)		/* afs_lock.c */ \
     AFS_CS(Lock_ReleaseR)	/* afs_lock.c */ \
     AFS_CS(Lock_ReleaseW)	/* afs_lock.c */ \
-    AFS_CS(afs_BozonLock)	/* afs_lock.c */ \
-    AFS_CS(afs_BozonUnlock)	/* afs_lock.c */ \
+    AFS_CS(afs_BozonLock)	/* UNUSED */ \
+    AFS_CS(afs_BozonUnlock)	/* UNUSED */ \
     AFS_CS(osi_SleepR)		/* afs_lock.c */ \
     AFS_CS(osi_SleepS)		/* afs_lock.c */ \
     AFS_CS(osi_SleepW)		/* afs_lock.c */ \
     AFS_CS(osi_Sleep)		/* afs_lock */ \
-    AFS_CS(afs_BozonInit)	/* afs_lock.c */ \
-    AFS_CS(afs_CheckBozonLock)	/* afs_lock.c */ \
-    AFS_CS(afs_CheckBozonLockBlocking)	/* afs_lock.c */ \
+    AFS_CS(afs_BozonInit)	/* UNUSED */ \
+    AFS_CS(afs_CheckBozonLock)	/* UNUSED */ \
+    AFS_CS(afs_CheckBozonLockBlocking)	/* UNUSED */ \
     AFS_CS(xxxinit)		/* afs_main.c */ \
     AFS_CS(KernelEntry)		/* afs_main.c */ \
     AFS_CS(afs_InitMemCache)	/* afs_memcache.c */ \
@@ -381,10 +381,10 @@ struct afs_MeanStats {
     AFS_CS(osi_CancelProc)	/* afs_osi.c */ \
     AFS_CS(osi_Invisible)	/* afs_osi.c */ \
     AFS_CS(osi_Time)		/* afs_osi.c */ \
-    AFS_CS(osi_Alloc)		/* afs_osi.c */ \
+    AFS_CS(osi_Alloc)		/* afs_osi_alloc.c */ \
     AFS_CS(osi_SetTime)		/* afs_osi.c */ \
     AFS_CS(osi_Dump)		/* afs_osi.c */ \
-    AFS_CS(osi_Free)		/* afs_osi.c */ \
+    AFS_CS(osi_Free)		/* afs_osi_alloc.c */ \
     AFS_CS(shutdown_osi)	/* afs_osi.c */ \
     AFS_CS(osi_UFSOpen)		/* afs_osifile.c */ \
     AFS_CS(osi_Close)		/* afs_osifile.c */ \
@@ -394,13 +394,13 @@ struct afs_MeanStats {
     AFS_CS(osi_Write)		/* afs_osifile.c */ \
     AFS_CS(osi_MapStrategy)	/* afs_osifile.c */ \
     AFS_CS(shutdown_osifile)	/* afs_osifile.c */ \
-    AFS_CS(osi_FreeLargeSpace)	/* afs_osinet.c */ \
-    AFS_CS(osi_FreeSmallSpace)	/* afs_osinet.c */ \
+    AFS_CS(osi_FreeLargeSpace)	/* afs_osi_alloc.c */ \
+    AFS_CS(osi_FreeSmallSpace)	/* afs_osi_alloc.c */ \
     AFS_CS(pkt_iodone)		/* afs_osinet.c */ \
-    AFS_CS(shutdown_osinet)	/* afs_osinet.c */ \
+    AFS_CS(shutdown_osinet)	/* afs_osi_alloc.c */ \
     AFS_CS(afs_cs)		/* afs_osinet.c */ \
-    AFS_CS(osi_AllocLargeSpace)	/* afs_osinet.c */ \
-    AFS_CS(osi_AllocSmallSpace)	/* afs_osinet.c */ \
+    AFS_CS(osi_AllocLargeSpace)	/* afs_osi_alloc.c */ \
+    AFS_CS(osi_AllocSmallSpace)	/* afs_osi_alloc.c */ \
     AFS_CS(osi_CloseToTheEdge)	/* afs_osinet.c */ \
     AFS_CS(osi_xgreedy)		/* afs_osinet.c */ \
     AFS_CS(osi_FreeSocket)	/* afs_osinet.c */ \
@@ -634,8 +634,8 @@ struct afs_MeanStats {
     AFS_CS(afs_xflock)		/* afs_vnodeops.c */ \
     AFS_CS(PSetSPrefs)		/* afs_pioctl.c */ \
     AFS_CS(PGetSPrefs)		/* afs_pioctl.c */ \
-    AFS_CS(afs_warn)		/* afs_resource.c */ \
-    AFS_CS(afs_warnuser)	/* afs_resource.c */ \
+    AFS_CS(afs_warn)		/* afs_warn.c */ \
+    AFS_CS(afs_warnuser)	/* afs_warn.c */ \
     AFS_CS(afs_pagein)		/* afs_hp_subr.c */ \
     AFS_CS(afs_pageout)		/* afs_hp_subr.c */ \
     AFS_CS(afs_hp_strategy)	/* afs_hp_subr.c */ \
@@ -657,7 +657,9 @@ struct afs_MeanStats {
     AFS_CS(afs_ReadNoCache)	/* osi_vnodeops.c */ \
     AFS_CS(PSetTokens2)		/* afs_pioctl.c */ \
     AFS_CS(PPrefetchFromTape)   /* afs_pioctl.c */ \
-    AFS_CS(PFlushAllVolumeData)	/* afs_pioctl.c */
+    AFS_CS(PFlushAllVolumeData)	/* afs_pioctl.c */ \
+    AFS_CS(afs_InitVolSlot)     /* afs_volume.c */ \
+    AFS_CS(afs_SetupVolSlot)    /* afs_volume.c */
 
 struct afs_CMCallStats {
 #define AFS_CS(call) afs_int32 C_ ## call;

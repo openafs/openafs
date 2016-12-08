@@ -1,0 +1,46 @@
+# Makefile to build the AFS Reference Guide for Unix.
+
+BOOK = auarf000
+
+all: $(BOOK).pdf $(BOOK).epub $(BOOK).mobi
+
+include @TOP_OBJDIR@/src/config/Makefile.config
+VERSION=version
+include @TOP_OBJDIR@/src/config/Makefile.version
+
+SRCS     = $(BOOK).xml preface.xml $(VERSION).xml \
+	   entities.dtd sect1.xml sect5.xml sect8.xml
+DOCBOOK_STYLESHEETS = @DOCBOOK_STYLESHEETS@
+XSLTPROC = @XSLTPROC@ --stringparam variablelist.as.blocks 1 --param use.id.as.filename 1
+DOCBOOK2PDF = @DOCBOOK2PDF@
+DBTOEPUB = $(DOCBOOK_STYLESHEETS)/epub/bin/dbtoepub
+KINDLEGEN = @KINDLEGEN@
+
+entities.dtd sect1.xml sect5.xml sect8.xml:
+	./generate-xml.pl $(TOP_SRCDIR)
+
+$(BOOK).pdf: $(SRCS)
+	if test "x$(DOCBOOK2PDF)" = "xfop"; then \
+		$(XSLTPROC) $(DOCBOOK_STYLESHEETS)/fo/docbook.xsl $(BOOK).xml > $(BOOK).fo; \
+		$(DOCBOOK2PDF) $(BOOK).fo $(BOOK).pdf; \
+	else \
+		$(DOCBOOK2PDF) $(BOOK).xml; \
+	fi
+
+$(BOOK).epub: $(SRCS)
+	if test -x "$(DBTOEPUB)" ; then \
+		$(DBTOEPUB) -s $(TOP_SRCDIR)/../doc/xml/mobi-fixup.xsl $(BOOK).xml; \
+	fi
+
+$(BOOK).mobi: $(BOOK).epub
+	if test -n "$(KINDLEGEN)" && test -x "$(DBTOEPUB)" ; then \
+		$(KINDLEGEN) $(BOOK).epub -o $(BOOK).mobi; \
+	fi
+
+check:
+	xmllint --noout --valid $(BOOK).xml
+
+clean:
+	rm -f $(BOOK).pdf $(BOOK).mobi $(BOOK).epub $(BOOK).fo \
+		entities.dtd sect1.xml sect5.xml sect8.xml $(VERSION).xml
+	rm -rf sect1 sect5 sect8

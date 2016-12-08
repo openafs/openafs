@@ -18,10 +18,27 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#ifdef AFS_HPUX_ENV
+/* We need the old directory type headers (included below), so don't include
+ * the normal dirent.h, or it will conflict. */
+# undef HAVE_DIRENT_H
+# include <sys/inode.h>
+# define	LONGFILENAMES	1
+# include <sys/sysmacros.h>
+# include <sys/ino.h>
+# define	DIRSIZ_MACRO
+# ifdef HAVE_USR_OLD_USR_INCLUDE_NDIR_H
+#  include </usr/old/usr/include/ndir.h>
+# else
+#  include <ndir.h>
+# endif
+#endif
+
+#include <roken.h>
+
+#include <ctype.h>
 
 #define VICE
-#include <sys/time.h>
-#include <sys/param.h>
 #ifdef	AFS_OSF_ENV
 #include <sys/vnode.h>
 #include <sys/mount.h>
@@ -32,13 +49,10 @@
 #include <ufs/dir.h>
 #undef	_KERNEL
 #undef	_BSD
-#include <stdio.h>
 #else /* AFS_OSF_ENV */
 #ifdef AFS_VFSINCL_ENV
 #include <sys/vnode.h>
 #ifdef	  AFS_SUN5_ENV
-#include <stdio.h>
-#include <unistd.h>
 #include <sys/fs/ufs_inode.h>
 #include <sys/fs/ufs_fs.h>
 #define _KERNEL
@@ -52,18 +66,7 @@
 #endif
 #else /* AFS_VFSINCL_ENV */
 #include <sys/inode.h>
-#ifdef	AFS_HPUX_ENV
-#include <ctype.h>
-#define	LONGFILENAMES	1
-#include <sys/sysmacros.h>
-#include <sys/ino.h>
-#define	DIRSIZ_MACRO
-#ifdef HAVE_USR_OLD_USR_INCLUDE_NDIR_H
-#include </usr/old/usr/include/ndir.h>
-#else
-#include <ndir.h>
-#endif
-#else
+#ifndef	AFS_HPUX_ENV
 #include <sys/dir.h>
 #endif
 #include <sys/fs.h>
@@ -72,11 +75,6 @@
 #endif /* AFS_OSF_ENV */
 #include <afs/osi_inode.h>
 
-#ifdef	AFS_SUN5_ENV
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 #include "fsck.h"
 
 int pass2check();
@@ -377,11 +375,7 @@ pass2check(idesc)
 		break;
 	    if ((dp = ginode(dirp->d_ino)) == NULL)
 		break;
-#if	defined(AFS_SUN_ENV) && !defined(AFS_SUN56_ENV)
-	    dp->di_gen = dp->di_ic.ic_flags = dp->di_ic.ic_size.val[0] = 0;
-#else
 	    CLEAR_DVICEMAGIC(dp);
-#endif
 	    inodirty();
 	    statemap[dirp->d_ino] = FSTATE;
 	    ret |= ALTERED;

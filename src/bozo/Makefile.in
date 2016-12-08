@@ -7,10 +7,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 
 RPCINCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/rx/rx.h bosint.h
 
@@ -23,7 +21,7 @@ INCLS=bnode.h \
 	${TOP_INCDIR}/afs/ktime.h
 
 # EH 12/18/90 - have to search librx.a twice on Ultrix 4.0
-LIBS=${TOP_LIBDIR}/librx.a \
+LIBS=   ${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libkauth.a \
@@ -32,13 +30,17 @@ LIBS=${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/librxstat.a \
 	${TOP_LIBDIR}/librxkad.a \
-	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libafscom_err.a \
+	${TOP_LIBDIR}/libaudit.a \
 	${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/libopr.a \
 	${TOP_LIBDIR}/libsys.a \
-	${TOP_LIBDIR}/libprocmgmt.a
+	${TOP_LIBDIR}/libprocmgmt.a \
+	${TOP_LIBDIR}/libafsrfc3961.a \
+	${TOP_LIBDIR}/libafshcrypto_lwp.a
 
 OBJS=bosserver.o bnode.o ezbnodeops.o fsbnodeops.o bosint.ss.o bosint.xdr.o \
 bosoprocs.o cronbnodeops.o
@@ -102,16 +104,14 @@ bnode.o: bnode.c ${INCLS}
 bosoprocs.o: bosoprocs.c ${INCLS}
 
 bos.o: bos.c ${INCLS} AFS_component_version_number.o
-	$(CC) $(CFLAGS) -c ${srcdir}/bos.c
 
 bos: bos.o $(LIBS) libbos.a
-	${CC} ${CFLAGS} -o bos bos.o libbos.a $(LIBS)  ${XLIBS} ${KRB5_LIBS}
+	$(AFS_LDRULE) bos.o libbos.a $(LIBS) $(LIB_roken) $(LIB_crypt) ${XLIBS}
 
 bos_util.o: bos_util.c ${INCLS} AFS_component_version_number.o ${TOP_INCDIR}/afs/bnode.h
-	$(CC) $(CFLAGS) -c ${srcdir}/bos_util.c
 
-bos_util: bos_util.o $(LIBS) 
-	${CC} ${CFLAGS} -o bos_util bos_util.o $(LIBS)  ${XLIBS} ${KRB5_LIBS}
+bos_util: bos_util.o  $(LIBS)
+	$(AFS_LDRULE) bos_util.o $(LIBS) $(LIB_roken) $(LIB_crypt) ${XLIBS}
 
 ezbnodeops.o: ezbnodeops.c ${INCLS}
 
@@ -123,12 +123,13 @@ libbos.a: bosint.xdr.o bosint.cs.o boserr.o AFS_component_version_number.o
 	$(RANLIB) $@
 
 bosserver: $(OBJS) $(LIBS)
-	${CC} $(CFLAGS) -o bosserver $(OBJS) ${TOP_LIBDIR}/libaudit.a $(LIBS)  ${XLIBS} ${KRB5_LIBS}
+	$(AFS_LDRULE) $(OBJS) \
+		$(LIBS) $(LIB_roken) $(LIB_crypt) ${XLIBS}
 
 smail-notifier.o: smail-notifier.c ${INCLS}
 
 smail-notifier: smail-notifier.o $(LIBS)
-	${CC} $(CFLAGS) -o smail-notifier smail-notifier.o $(LIBS) ${XLIBS}
+	$(AFS_LDRULE) smail-notifier.o $(LIBS) $(LIB_roken) ${XLIBS}
 
 #
 # Install targets
@@ -166,10 +167,10 @@ dest: bosserver bos bos_util libbos.a bosint.h bnode.h
 clean:
 	$(RM) -f  *.a *.o bos bosserver smail-notifier bos_util \
 		bosint.cs.c bosint.ss.c bosint.xdr.c bosint.h \
-		core boserr.c bnode.h AFS_component_version_number.c 
+		core boserr.c bnode.h AFS_component_version_number.c
 
-test: 
-	cd test; $(MAKE) 
+test:
+	cd test; $(MAKE)
 
 include ../config/Makefile.version
 

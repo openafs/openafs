@@ -67,22 +67,8 @@ afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
     return code;
 }
 
-
-
-
-typedef struct afs_event {
-    struct afs_event *next;	/* next in hash chain */
-    char *event;		/* lwp event: an address */
-    int refcount;		/* Is it in use? */
-    int seq;			/* Sequence number: this is incremented
-				 * by wakeup calls; wait will not return until
-				 * it changes */
-    wait_queue_head_t cond;
-} afs_event_t;
-
-#define HASHSIZE 128
-afs_event_t *afs_evhasht[HASHSIZE];	/* Hash table for events */
-#define afs_evhash(event)	(afs_uint32) ((((long)event)>>2) & (HASHSIZE-1));
+afs_event_t *afs_evhasht[AFS_EVHASHSIZE];	/* Hash table for events */
+#define afs_evhash(event)	(afs_uint32) ((((long)event)>>2) & (AFS_EVHASHSIZE-1))
 int afs_evhashcnt = 0;
 
 /* Get and initialize event structure corresponding to lwp event (i.e. address)
@@ -119,10 +105,7 @@ afs_getevent(char *event)
  *     address.
  *
  * Locks:
- *     Called with GLOCK held. However the function might drop
- *     GLOCK when it calls osi_AllocSmallSpace for allocating
- *     a new event (In Linux, the allocator drops GLOCK to avoid
- *     a deadlock).
+ *     Called with GLOCK held.
  */
 
 static void
@@ -133,18 +116,16 @@ afs_addevent(char *event)
 
     AFS_ASSERT_GLOCK();
     hashcode = afs_evhash(event);
-    newp = osi_linux_alloc(sizeof(afs_event_t), 0);
+    newp = kzalloc(sizeof(afs_event_t), GFP_NOFS);
     afs_evhashcnt++;
     newp->next = afs_evhasht[hashcode];
     afs_evhasht[hashcode] = newp;
     init_waitqueue_head(&newp->cond);
-    newp->seq = 0;
     newp->event = &dummyV;	/* Dummy address for new events */
-    newp->refcount = 0;
 }
 
 #ifndef set_current_state
-#define set_current_state(x)            current->state = (x);
+#define set_current_state(x)            current->state = (x)
 #endif
 
 /* Release the specified event */
@@ -160,11 +141,7 @@ afs_osi_SleepSig(void *event)
 {
     struct afs_event *evp;
     int seq, retval;
-#ifdef DECLARE_WAITQUEUE
-    DECLARE_WAITQUEUE(wait, current);
-#else
-    struct wait_queue wait = { current, NULL };
-#endif
+    int code;
 
     evp = afs_getevent(event);
     if (!evp) {
@@ -175,25 +152,17 @@ afs_osi_SleepSig(void *event)
     seq = evp->seq;
     retval = 0;
 
-    add_wait_queue(&evp->cond, &wait);
-    while (seq == evp->seq) {
-	set_current_state(TASK_INTERRUPTIBLE);
-	AFS_ASSERT_GLOCK();
-	AFS_GUNLOCK();
-	schedule();
-	afs_try_to_freeze();
+    AFS_GUNLOCK();
+    code = wait_event_freezable(evp->cond, seq != evp->seq);
+    AFS_GLOCK();
 
-	AFS_GLOCK();
-	if (signal_pending(current)) {
-	    retval = EINTR;
-	    break;
-	}
-    }
-    remove_wait_queue(&evp->cond, &wait);
-    set_current_state(TASK_RUNNING);
+    if (code == -ERESTARTSYS)
+	code = EINTR;
+    else
+	code = -code;
 
     relevent(evp);
-    return retval;
+    return code;
 }
 
 /* afs_osi_Sleep -- waits for an event to be notified, ignoring signals.
@@ -238,11 +207,7 @@ afs_osi_TimedSleep(void *event, afs_int32 ams, int aintok)
     int code = 0;
     long ticks = (ams * HZ / 1000) + 1;
     struct afs_event *evp;
-#ifdef DECLARE_WAITQUEUE
-    DECLARE_WAITQUEUE(wait, current);
-#else
-    struct wait_queue wait = { current, NULL };
-#endif
+    int seq;
 
     evp = afs_getevent(event);
     if (!evp) {
@@ -250,22 +215,15 @@ afs_osi_TimedSleep(void *event, afs_int32 ams, int aintok)
 	evp = afs_getevent(event);
     }
 
-    add_wait_queue(&evp->cond, &wait);
-    set_current_state(TASK_INTERRUPTIBLE);
-    /* always sleep TASK_INTERRUPTIBLE to keep load average
-     * from artifically increasing. */
+    seq = evp->seq;
+
     AFS_GUNLOCK();
-
-    if (schedule_timeout(ticks)) {
-	if (aintok)
-	    code = EINTR;
-    }
-
-    afs_try_to_freeze();
-
+    code = wait_event_freezable_timeout(evp->cond, evp->seq != seq, ticks);
     AFS_GLOCK();
-    remove_wait_queue(&evp->cond, &wait);
-    set_current_state(TASK_RUNNING);
+    if (code == -ERESTARTSYS)
+	code = EINTR;
+    else
+	code = -code;
 
     relevent(evp);
 

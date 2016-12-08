@@ -10,16 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <stdio.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
 #include <afs/afscbint.h>
 #include <afs/cmd.h>
 #include <afs/com_err.h>
@@ -111,7 +103,7 @@ char **argv; {
 #endif
     rx_Init(0);
 
-    ts = cmd_CreateSyntax(NULL, CommandProc, NULL, "probe unik server");
+    ts = cmd_CreateSyntax(NULL, CommandProc, NULL, 0, "probe unik server");
     cmd_AddParm(ts, "-servers", CMD_SINGLE, CMD_REQUIRED, "server machine");
     cmd_AddParm(ts, "-port", CMD_SINGLE, CMD_OPTIONAL, "IP port");
     cmd_AddParm(ts, "-long", CMD_FLAG, CMD_OPTIONAL, "print all info");

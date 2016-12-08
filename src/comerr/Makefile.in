@@ -6,12 +6,16 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+include @TOP_OBJDIR@/src/config/Makefile.lwptool
 
-all: compile_et ${TOP_INCDIR}/afs/com_err.h ${TOP_INCDIR}/afs/error_table.h ${TOP_INCDIR}/afs/mit-sipb-cr.h ${TOP_LIBDIR}/libafscom_err.a
+LT_objs = error_msg.lo et_name.lo com_err.lo
+LT_deps = $(top_builddir)/src/opr/liboafs_opr.la
+LT_libs = $(LIB_roken) $(MT_LIBS)
+
+all: compile_et ${TOP_INCDIR}/afs/com_err.h ${TOP_INCDIR}/afs/error_table.h \
+     ${TOP_INCDIR}/afs/mit-sipb-cr.h ${TOP_LIBDIR}/libafscom_err.a \
+     liboafs_comerr.la libcomerr_pic.la
 
 buildtools: compile_et
 
@@ -32,29 +36,32 @@ et_lex.lex.c: et_lex.lex.l
 	$(LEX) -t $(srcdir)/et_lex.lex.l > et_lex.lex.c
 
 compile_et:	compile_et.o error_table.o
-	case $(SYS_NAME) in \
-	*_linux* | *_umlinux* ) \
-	${CC} ${CFLAGS} -o compile_et compile_et.o error_table.o -L${TOP_LIBDIR} -lafsutil;; \
+	$(Q)case $(SYS_NAME) in \
+	*_linux* | *_umlinux* | *_darwin* ) \
+	$(LT_LDRULE_static_NOQ) compile_et.o error_table.o -L${TOP_LIBDIR} -lopr $(buildtool_roken) $(MT_LIBS);; \
 	* ) \
-	${CC} ${CFLAGS} -o compile_et compile_et.o error_table.o -L${TOP_LIBDIR} -lafsutil -ll;; \
+	$(LT_LDRULE_static_NOQ) compile_et.o error_table.o -L${TOP_LIBDIR} -lopr -ll $(buildtool_roken) $(MT_LIBS);; \
 	esac
 
-libafscom_err.a: error_msg.o et_name.o com_err.o AFS_component_version_number.o
-	$(RM) -f $@
-	$(AR) crv $@ error_msg.o et_name.o com_err.o AFS_component_version_number.o
-	$(RANLIB) $@
+libafscom_err.a: $(LT_objs)
+	$(LT_LDLIB_lwp) $(LT_objs)
 
-#
+liboafs_comerr.la: $(LT_objs) $(LT_deps)
+	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
+
+libcomerr_pic.la: $(LT_objs)
+	$(LT_LDLIB_pic) $(LT_objs)
+
 # When we build this file, we're using a .c file that's in the object directory,
 # so we need to add the source directory to the includes to pick up local headers.
 #
-error_table.o: error_table.c
-	$(CC) $(CFLAGS) -I${srcdir} @CFLAGS_NOUNUSED@ @CFLAGS_NOOLDSTYLE@ -c error_table.c
+CFLAGS_error_table.o= -I${srcdir} @CFLAGS_NOUNUSED@ @CFLAGS_NOOLDSTYLE@
 
 #
 # Installation targets
 #
-install: compile_et com_err.h error_table.h mit-sipb-cr.h libafscom_err.a
+install: compile_et com_err.h error_table.h mit-sipb-cr.h libafscom_err.a \
+	liboafs_comerr.la
 	${INSTALL} -d ${DESTDIR}${bindir}
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
 	${INSTALL} -d ${DESTDIR}${libdir}/afs
@@ -75,6 +82,7 @@ dest: compile_et com_err.h error_table.h mit-sipb-cr.h libafscom_err.a
 	${INSTALL_DATA} libafscom_err.a ${DEST}/lib/afs/libafscom_err.a
 
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *~ \#* *.bak *.otl *.aux *.toc *.PS *.dvi *.x9700 *.ps \
 		*.cp *.fn *.ky *.log *.pg *.tp *.vr *.o libafscom_err.a \
 		com_err.o compile_et et.ar TAGS y.tab.c lex.yy.c error_table.c \
@@ -85,6 +93,8 @@ test:
 	cd test; $(MAKE)
 
 compile_et.o:  AFS_component_version_number.c
-error_table.o: et_lex.lex.c
+# specify yacc build product as a dependency so our .c.o rule will apply
+error_table.o: et_lex.lex.c error_table.c
+error_table.lo: et_lex.lex.c error_table.c
 
 include ../config/Makefile.version

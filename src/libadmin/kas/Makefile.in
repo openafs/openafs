@@ -7,14 +7,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.pthread
 
-CC = ${MT_CC}
-CFLAGS=${COMMON_CFLAGS} ${MT_CFLAGS}
-CCRULE = ${CC} ${CFLAGS} -c $?
 
 KAUTH= ${srcdir}/../../kauth
 
@@ -53,16 +47,15 @@ libkasadmin.a: ${LIBOBJS}
 	${RANLIB} $@
 
 afs_kasAdmin.o: afs_kasAdmin.c afs_kasAdmin.h
-	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c ${srcdir}/afs_kasAdmin.c
 
 kauth.cs.o: ../../kauth/kauth.cs.c
-	${CCRULE}
+	$(AFS_CCRULE) ../../kauth/kauth.cs.c
 
 kauth.xdr.o: ../../kauth/kauth.xdr.c
-	${CCRULE}
+	$(AFS_CCRULE) ../../kauth/kauth.xdr.c
 
 kaaux.o: ${KAUTH}/kaaux.c
-	${CCRULE}
+	$(AFS_CCRULE) $(KAUTH)/kaaux.c
 
 clean:
 	$(RM) -f *.o libkasadmin*

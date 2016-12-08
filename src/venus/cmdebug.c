@@ -10,24 +10,12 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-
-#include <sys/types.h>
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
 #include <rpc.h>
-#else
-#ifdef HAVE_NETINET_IN_H
-#include <netinet/in.h>
 #endif
-#include <sys/socket.h>
-#include <netdb.h>
-#endif
-#include <stdio.h>
-#include <string.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
+
 #include <afs/afscbint.h>
 #include <afs/cmd.h>
 #include <rx/rx.h>
@@ -398,16 +386,11 @@ PrintCacheEntries64(struct rx_connection *aconn, int aint32)
 	    PrintLock(&centry.lock);
 	    printf("\n");
 	}
-#ifdef AFS_64BIT_ENV
 #ifdef AFS_NT40_ENV
 	printf("    %12I64d bytes  DV %12d  refcnt %5d\n", centry.Length,
 	       centry.DataVersion, centry.refCount);
 #else
 	printf("    %12llu bytes  DV %12d  refcnt %5d\n", centry.Length,
-	       centry.DataVersion, centry.refCount);
-#endif
-#else
-	printf("    %12d bytes  DV %12d  refcnt %5d\n", centry.Length,
 	       centry.DataVersion, centry.refCount);
 #endif
         if (print_ctime) {
@@ -624,7 +607,7 @@ main(int argc, char **argv)
 
     rx_Init(0);
 
-    ts = cmd_CreateSyntax(NULL, CommandProc, NULL, "query afs cache manager");
+    ts = cmd_CreateSyntax(NULL, CommandProc, NULL, 0, "query afs cache manager");
     cmd_AddParm(ts, "-servers", CMD_SINGLE, CMD_REQUIRED, "server machine");
     cmd_AddParm(ts, "-port", CMD_SINGLE, CMD_OPTIONAL, "IP port");
     cmd_AddParm(ts, "-long", CMD_FLAG, CMD_OPTIONAL, "print all info");

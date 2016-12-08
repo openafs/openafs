@@ -10,11 +10,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <string.h>
-#include <dirent.h>
+#include <afs/afsint.h>
 #include <afs/ihandle.h>
 #include <afs/partition.h>
 

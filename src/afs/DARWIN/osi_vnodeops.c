@@ -159,7 +159,7 @@ struct vnodeopv_entry_desc afs_vnodeop_entries[] = {
     {VOPPREF(blktooff_desc), (VOPFUNC)afs_vop_blktooff},	/* blktooff */
     {VOPPREF(offtoblk_desc), (VOPFUNC)afs_vop_offtoblk},	/* offtoblk */
     {VOPPREF(bwrite_desc), (VOPFUNC)vn_bwrite},
-    {(struct vnodeop_desc *)NULL, (void (*)())NULL}
+    {NULL, (void (*)())NULL}
 };
 struct vnodeopv_desc afs_vnodeop_opv_desc =
     { &afs_vnodeop_p, afs_vnodeop_entries };
@@ -202,7 +202,7 @@ struct vnodeopv_entry_desc afs_dead_vnodeop_entries[] = {
     {VOPPREF(blktooff_desc), (VOPFUNC)err_blktooff},	/* blktooff */
     {VOPPREF(offtoblk_desc), (VOPFUNC)err_offtoblk},	/* offtoblk */
     {VOPPREF(bwrite_desc), (VOPFUNC)err_bwrite},
-    {(struct vnodeop_desc *)NULL, (void (*)())NULL}
+    {NULL, (void (*)())NULL}
 };
 struct vnodeopv_desc afs_dead_vnodeop_opv_desc =
     { &afs_dead_vnodeop_p, afs_dead_vnodeop_entries };
@@ -294,7 +294,7 @@ afs_vop_lookup(ap)
      */
     if (ap->a_context == afs_osi_ctxtp)
 	return ENOENT;
-    if (vcp->mvstat != 1) {
+    if (vcp->mvstat != AFS_MVSTAT_MTPT) {
 	error = cache_lookup(ap->a_dvp, ap->a_vpp, ap->a_cnp);
 	if (error == -1) 
 	    return 0;
@@ -530,7 +530,7 @@ afs_vop_close(ap)
 	code = afs_close(avc, ap->a_fflag, vop_cred);
     else
 	code = afs_close(avc, ap->a_fflag, &afs_osi_cred);
-    osi_FlushPages(avc, vop_cred);	/* hold bozon lock, but not basic vnode lock */
+    osi_FlushPages(avc, vop_cred);	/* hold GLOCK, but not basic vnode lock */
     /* This is legit; it just forces the fstrace event to happen */
     code = afs_CheckCode(code, NULL, 60);
     AFS_GUNLOCK();
@@ -579,7 +579,7 @@ afs_vop_access(ap)
         code = afs_CheckCode(code, &treq, 56);
         goto out;
     }
-    if (afs_fakestat_enable && tvc->mvstat && !(tvc->f.states & CStatd)) {
+    if (afs_fakestat_enable && tvc->mvstat != AFS_MVSTAT_FILE && !(tvc->f.states & CStatd)) {
         code = 0;
         goto out;
     }
@@ -700,7 +700,7 @@ afs_vop_getattr(ap)
 	if (!isglock)
 	  AFS_GLOCK();
 	/* do minimal work to return fake result for fsevents */
-	if (afs_fakestat_enable && VTOAFS(ap->a_vp)->mvstat == 1) {
+	if (afs_fakestat_enable && VTOAFS(ap->a_vp)->mvstat == AFS_MVSTAT_MTPT) {
 	    struct afs_fakestat_state fakestat;
 	    struct vrequest treq;
 
@@ -811,8 +811,8 @@ afs_vop_read(ap)
     }
 #endif
     AFS_GLOCK();
-    osi_FlushPages(avc, vop_cred);	/* hold bozon lock, but not basic vnode lock */
-    code = afs_read(avc, ap->a_uio, vop_cred, 0, 0, 0);
+    osi_FlushPages(avc, vop_cred);	/* hold GLOCK, but not basic vnode lock */
+    code = afs_read(avc, ap->a_uio, vop_cred, 0);
     AFS_GUNLOCK();
     return code;
 }
@@ -900,8 +900,8 @@ afs_vop_pagein(ap)
     aiov.iov_base = (caddr_t) ioaddr;
 #endif
     AFS_GLOCK();
-    osi_FlushPages(tvc, vop_cred);	/* hold bozon lock, but not basic vnode lock */
-    code = afs_read(tvc, uio, cred, 0, 0, 0);
+    osi_FlushPages(tvc, vop_cred);	/* hold GLOCK, but not basic vnode lock */
+    code = afs_read(tvc, uio, cred, 0);
     if (code == 0) {
 	ObtainWriteLock(&tvc->lock, 2);
 	tvc->f.states |= CMAPPED;
@@ -958,7 +958,7 @@ afs_vop_write(ap)
 			 AFS_UIO_RESID(ap->a_uio));
 #endif
     AFS_GLOCK();
-    osi_FlushPages(avc, vop_cred);	/* hold bozon lock, but not basic vnode lock */
+    osi_FlushPages(avc, vop_cred);	/* hold GLOCK, but not basic vnode lock */
     code =
 	afs_write(VTOAFS(ap->a_vp), ap->a_uio, ap->a_ioflag, vop_cred, 0);
     AFS_GUNLOCK();
@@ -1109,7 +1109,7 @@ afs_vop_pageout(ap)
     }
 
     AFS_GLOCK();
-    osi_FlushPages(tvc, vop_cred);	/* hold bozon lock, but not basic vnode lock */
+    osi_FlushPages(tvc, vop_cred);	/* hold GLOCK, but not basic vnode lock */
     ObtainWriteLock(&tvc->lock, 1);
     afs_FakeOpen(tvc);
     ReleaseWriteLock(&tvc->lock);
@@ -1490,8 +1490,8 @@ afs_vop_rename(ap)
 	tvc = VTOAFS(tdvp);
 
         /* unrewritten mount point? */
-        if (tvc->mvstat == 1) {
-            if (tvc->mvid && (tvc->f.states & CMValid)) {
+        if (tvc->mvstat == AFS_MVSTAT_MTPT) {
+            if (tvc->mvid.target_root && (tvc->f.states & CMValid)) {
                 struct vrequest treq;
 
                 afs_InitFakeStat(&fakestate);
@@ -1661,12 +1661,12 @@ afs_vop_symlink(ap)
 				 * } */ *ap;
 {
     struct vnode *dvp = ap->a_dvp;
-    struct vcache *vpp = NULL;
+    struct vcache *pvc = NULL;
     int error = 0;
 
     GETNAME();
     AFS_GLOCK();
-    error = afs_symlink(VTOAFS(dvp), name, ap->a_vap, ap->a_target, &vpp,
+    error = afs_symlink(VTOAFS(dvp), name, ap->a_vap, ap->a_target, &pvc,
 			vop_cn_cred);
     AFS_GUNLOCK();
 #ifndef AFS_DARWIN80_ENV
@@ -1675,9 +1675,9 @@ afs_vop_symlink(ap)
 #endif
     *ap->a_vpp = NULL;
     if (!error) {
-	error = afs_darwin_finalizevnode(vpp, dvp, ap->a_cnp, 0, 0);
-	if (! error)
-	    *ap->a_vpp = AFSTOV(vpp);
+	error = afs_darwin_finalizevnode(pvc, dvp, ap->a_cnp, 0, 0);
+	if (!error)
+	    *ap->a_vpp = AFSTOV(pvc);
     }
     DROPNAME();
     return error;
@@ -2246,6 +2246,10 @@ afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp,
 	vnode_put(ovp);
 	vnode_rele(ovp);
     }
+    /* If it's ref'd still, unmark stat'd to force new lookup */
+    if ((vnode_vtype(ovp) != avc->f.m.Type) && VREFCOUNT_GT(avc, 1))
+	avc->f.states &= ~CStatd;
+
     vnode_put(ovp);
     vnode_rele(ovp);
     AFS_GLOCK();

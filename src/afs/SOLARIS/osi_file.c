@@ -18,9 +18,6 @@
 
 
 int afs_osicred_initialized = 0;
-#ifndef AFS_SUN58_ENV
-afs_ucred_t afs_osi_cred;
-#endif
 afs_lock_t afs_xosi;		/* lock is for tvattr */
 extern struct osi_dev cacheDev;
 extern struct vfs *afs_cacheVfsp;
@@ -45,11 +42,7 @@ afs_InitDualFSCacheOps(struct vnode *vp)
     int code;
     static int inited = 0;
     struct vfs *vfsp;
-#ifdef AFS_SUN56_ENV
     struct statvfs64 vfst;
-#else /* AFS_SUN56_ENV */
-    struct statvfs vfst;
-#endif /* AFS_SUN56_ENV */
 
     if (inited)
 	return;
@@ -150,7 +143,7 @@ osi_VxfsOpen(afs_dcache_id_t *ainode)
     struct osi_file *afile = NULL;
     afs_int32 code = 0;
     int dummy;
-    afile = (struct osi_file *)osi_AllocSmallSpace(sizeof(struct osi_file));
+    afile = osi_AllocSmallSpace(sizeof(struct osi_file));
     AFS_GUNLOCK();
     code = (*vxfs_vx_vp_byino) (afs_cacheVfsp, &vp, (unsigned int)ainode->ufs);
     AFS_GLOCK();
@@ -182,20 +175,20 @@ osi_UfsOpen(afs_dcache_id_t *ainode)
     struct pathname lookpn;
 #endif
     struct osi_stat tstat;
-    afile = (struct osi_file *)osi_AllocSmallSpace(sizeof(struct osi_file));
+    afile = osi_AllocSmallSpace(sizeof(struct osi_file));
     AFS_GUNLOCK();
 
-/*
- * AFS_CACHE_VNODE_PATH can be used with any file system, including ZFS or tmpfs.
- * The ainode is not an inode number but a path.
- */
+    /*
+     * AFS_CACHE_VNODE_PATH can be used with any file system, including ZFS or tmpfs.
+     * The ainode is not an inode number but a path.
+     */
 #ifdef AFS_CACHE_VNODE_PATH
-	/* Can not use vn_open or lookupname, they use user's CRED() 
-	 * We need to run as root So must use low level lookuppnvp
-	 * assume fname starts with /
-	 */
+    /* Can not use vn_open or lookupname, they use user's CRED()
+     * We need to run as root So must use low level lookuppnvp
+     * assume fname starts with /
+     */
 
-	code = pn_get_buf(ainode->ufs, AFS_UIOSYS, &lookpn, namebuf, sizeof(namebuf));
+    code = pn_get_buf(ainode->ufs, AFS_UIOSYS, &lookpn, namebuf, sizeof(namebuf));
     if (code != 0) 
         osi_Panic("UfsOpen: pn_get_buf failed %ld %s", code, ainode->ufs);
  
@@ -249,14 +242,7 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
 	osi_Panic("UFSOpen called for non-UFS cache\n");
     }
     if (!afs_osicred_initialized) {
-#ifdef AFS_SUN58_ENV
 	afs_osi_credp = kcred;
-#else
-	/* valid for alpha_osf, SunOS, Ultrix */
-	memset(&afs_osi_cred, 0, sizeof(afs_ucred_t));
-	crhold(&afs_osi_cred);	/* don't let it evaporate, since it is static */
-	afs_osi_credp = &afs_osi_cred;
-#endif
 	afs_osicred_initialized = 1;
     }
 #ifdef AFS_HAVE_VXFS
@@ -358,11 +344,7 @@ afs_osi_Read(struct osi_file *afile, int offset, void *aptr,
 	     afs_int32 asize)
 {
     afs_ucred_t *oldCred;
-#if defined(AFS_SUN57_ENV)
     ssize_t resid;
-#else
-    int resid;
-#endif
     afs_int32 code;
     afs_int32 cnt1 = 0;
     AFS_STATCNT(osi_Read);
@@ -393,7 +375,7 @@ afs_osi_Read(struct osi_file *afile, int offset, void *aptr,
 	afs_Trace2(afs_iclSetp, CM_TRACE_READFAILED, ICL_TYPE_INT32, resid,
 		   ICL_TYPE_INT32, code);
 	if (code > 0) {
-	    code *= -1;
+	    code = -code;
 	}
     }
     return code;
@@ -405,11 +387,7 @@ afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
 	      afs_int32 asize)
 {
     afs_ucred_t *oldCred;
-#if defined(AFS_SUN57_ENV)
     ssize_t resid;
-#else
-    int resid;
-#endif
     afs_int32 code;
     AFS_STATCNT(osi_Write);
     if (!afile)
@@ -427,7 +405,7 @@ afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
 	afile->offset += code;
     } else {
 	if (code > 0) {
-	    code *= -1;
+	    code = -code;
 	}
     }
     if (afile->proc) {

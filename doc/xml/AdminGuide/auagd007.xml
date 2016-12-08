@@ -11,7 +11,7 @@
 
   <para>It is best to read this chapter before installing your cell's
   first file server machine or performing any other administrative
-  task.</para>
+  task.
 
   <indexterm>
     <primary>AFS</primary>
@@ -30,6 +30,7 @@
 
     <secondary>between AFS and UNIX, summarized</secondary>
   </indexterm>
+  </para>
 
   <sect1 id="HDRWQ30">
     <title>Differences between AFS and UNIX: A Summary</title>
@@ -633,11 +634,11 @@
     element in any AFS pathname; therefore, a unique cell name guarantees
     that every AFS pathname uniquely identifies a file, even if cells use
     the same directory names at lower levels in their local AFS
-    filespace. For example, both the ABC Corporation cell and the State
-    University cell can have a home directory for the user <emphasis
+    filespace. For example, both the Example Corporation cell and the Example
+    Organization cell can have a home directory for the user <emphasis
     role="bold">pat</emphasis>, because the pathnames are distinct:
-    <emphasis role="bold">/afs/abc.com/usr/pat</emphasis> and <emphasis
-    role="bold">/afs/stateu.edu/usr/pat</emphasis>.</para>
+    <emphasis role="bold">/afs/example.com/usr/pat</emphasis> and <emphasis
+    role="bold">/afs/example.org/usr/pat</emphasis>.</para>
 
     <para>By convention, cell names follow the Domain Name System (DNS)
     conventions for domain names. If you are already an Internet site,
@@ -1305,32 +1306,32 @@
       from the local cell. Minimally, there must be a directory for the
       local cell. Each such directory is a mount point to the indicated
       cell's <emphasis role="bold">root.cell</emphasis> volume. For
-      example, in the ABC Corporation cell, <emphasis
-      role="bold">/afs/abc.com</emphasis> is a mount point for the cell's
+      example, in the Example Corporation cell, <emphasis
+      role="bold">/afs/example.com</emphasis> is a mount point for the cell's
       own <emphasis role="bold">root.cell</emphasis> volume and <emphasis
-      role="bold">stateu.edu</emphasis> is a mount point for the State
-      University cell's <emphasis role="bold">root.cell</emphasis>
+      role="bold">example.org</emphasis> is a mount point for the Example
+      Organization cell's <emphasis role="bold">root.cell</emphasis>
       volume. The <emphasis role="bold">fs lsmount</emphasis> command
       displays the mount points.</para>
 
 <programlisting>
-   % <emphasis role="bold">fs lsmount /afs/abc.com</emphasis>
-   '/afs/abc.com' is a mount point for volume '#root.cell'
-   % <emphasis role="bold">fs lsmount /afs/stateu.edu</emphasis>
-   '/afs/stateu.edu' is a mount point for volume '#stateu.edu:root.cell'
+   % <emphasis role="bold">fs lsmount /afs/example.com</emphasis>
+   '/afs/example.com' is a mount point for volume '#root.cell'
+   % <emphasis role="bold">fs lsmount /afs/example.org</emphasis>
+   '/afs/example.org' is a mount point for volume '#example.org:root.cell'
 </programlisting>
 
       <para>To reduce the amount of typing necessary in pathnames, you can
       create a symbolic link with an abbreviated name to the mount point
       of each cell your users frequently access (particularly the home
-      cell). In the ABC Corporation cell, for instance, <emphasis
-      role="bold">/afs/abc</emphasis> is a symbolic link to the <emphasis
-      role="bold">/afs/abc.com</emphasis> mount point, as the <emphasis
+      cell). In the Example Corporation cell, for instance, <emphasis
+      role="bold">/afs/example</emphasis> is a symbolic link to the <emphasis
+      role="bold">/afs/example.com</emphasis> mount point, as the <emphasis
       role="bold">fs lsmount</emphasis> command reveals.</para>
 
 <programlisting>
-   % <emphasis role="bold">fs lsmount /afs/abc</emphasis>
-   '/afs/abc' is a symbolic link, leading to a mount point for volume
+   % <emphasis role="bold">fs lsmount /afs/example</emphasis>
+   '/afs/example' is a symbolic link, leading to a mount point for volume
 '#root.cell' </programlisting>
 
       <indexterm>
@@ -1485,17 +1486,6 @@
               Directories</link>.</para>
             </listitem> </varlistentry>
 
-          <varlistentry>
-            <term><emphasis role="bold">wsadmin</emphasis></term>
-
-            <listitem>
-              <para>This directory contains prototype, configuration and
-              library files for use with the <emphasis
-              role="bold">package</emphasis> program. See <link
-              linkend="HDRWQ419">Configuring Client Machines with the
-              package Program</link>.</para>
-            </listitem>
-          </varlistentry>
         </variablelist>
       </para>
 
@@ -1616,8 +1606,8 @@
             role="bold">root.cell</emphasis>, mounted respectively at the
             top (<emphasis role="bold">/afs</emphasis>) level in the
             filespace and just below that level, at the cell's name (for
-            example, at <emphasis role="bold">/afs/abc.com</emphasis> in
-            the ABC Corporation cell).</para>
+            example, at <emphasis role="bold">/afs/example.com</emphasis> in
+            the Example Corporation cell).</para>
 
             <para>Deviating from these names only creates confusion and
             extra work. Changing the name of the <emphasis
@@ -2191,12 +2181,8 @@
         <listitem>
           <para>The single <emphasis>system control machine</emphasis>
           distributes common server configuration files to all other
-          server machines in the cell, in a cell that runs the United
-          States edition of AFS (cells that use the international edition
-          of AFS must not use the system control machine for this
-          purpose). The machine conventionally also serves as the time
-          synchronization source for the cell, adjusting its clock
-          according to a time source outside the cell.</para>
+          server machines in the cell.
+          </para>
         </listitem>
     </itemizedlist>
     </para>
@@ -2601,12 +2587,6 @@
       functioning normally, users access the copy in the <emphasis
       role="bold">/usr/afsws</emphasis> directory, which is more likely to
       be current than a local copy.</para>
-
-      <para>You can automate the configuration of client machine local
-      disks by using the <emphasis role="bold">package</emphasis> program,
-      which updates the contents of the local disk to match a
-      configuration file. See <link linkend="HDRWQ419">Configuring Client
-      Machines with the package Program</link>.</para>
     </sect2>
 
     <sect2 id="Header_66">
@@ -2625,13 +2605,7 @@
       role="bold">/usr/vice/etc/CellServDB</emphasis> file. The Cache
       Manager reads the list into kernel memory at reboot for faster
       retrieval. You can change the list in kernel memory between reboots
-      by using the <emphasis role="bold">fs newcell</emphasis> command. It
-      is often practical to store a central version of the <emphasis
-      role="bold">CellServDB</emphasis> file in AFS and use the <emphasis
-      role="bold">package</emphasis> program periodically to update each
-      client's version with the source copy.  See <link
-      linkend="HDRWQ406">Maintaining Knowledge of Database Server
-      Machines</link>.</para>
+      by using the <emphasis role="bold">fs newcell</emphasis> command.</para>
 
       <para>Because each client machine maintains its own copy of the
       <emphasis role="bold">CellServDB</emphasis> file, you can in theory
@@ -2664,10 +2638,10 @@
       you can place the same links on machines of various system types and
       still have each machine access the binaries for its system type. For
       example, the Cache Manager on a machine running AIX 4.2 converts
-      <emphasis role="bold">/afs/abc.com/@sys</emphasis> to <emphasis
-      role="bold">/afs/abc.com/rs_aix42</emphasis>, whereas a machine
-      running Solaris 7 converts it to <emphasis
-      role="bold">/afs/abc.com/sun4x_57</emphasis>.</para>
+      <emphasis role="bold">/afs/example.com/@sys</emphasis> to <emphasis
+      role="bold">/afs/example.com/rs_aix42</emphasis>, whereas a machine
+      running Solaris 10 converts it to <emphasis
+      role="bold">/afs/example.com/sun4x_510</emphasis>.</para>
 
       <para>If you want to use the @sys variable, it is simplest to use
       the conventional AFS system type names as specified in the OpenAFS
@@ -3141,11 +3115,12 @@
             a solution is to create a symbolic link in the regular
             <emphasis role="bold">usr</emphasis> directory that references
             the actual mount point. For example, if user <emphasis
-            role="bold">smith</emphasis>'s volume is mounted at the
-            <emphasis role="bold">/afs/bigcell.com/usr17/smith</emphasis>
-            directory, then the <emphasis
-            role="bold">/afs/bigcell.com/usr/smith</emphasis> directory is
-            a symbolic link to the <emphasis
+	    role="bold">smith</emphasis>'s volume is mounted at the
+	    <emphasis
+	    role="bold">/afs/bigcell.example.com/usr17/smith</emphasis>
+	    directory, then the <emphasis
+	    role="bold">/afs/bigcell.example.com/usr/smith</emphasis>
+            directory is a symbolic link to the <emphasis
             role="bold">../usr17/smith</emphasis> directory. This way, if
             someone does not know which directory the user <emphasis
             role="bold">smith</emphasis> is in, he or she can access it
@@ -3251,8 +3226,7 @@
             role="bold">butc</emphasis>, <emphasis
             role="bold">kas</emphasis>, <emphasis
             role="bold">uss</emphasis>, <emphasis
-            role="bold">vos</emphasis> commands), the <emphasis
-            role="bold">package</emphasis> program, and others</para>
+            role="bold">vos</emphasis> commands), and others.</para>
           </listitem>
       </itemizedlist>
       </para>
@@ -3696,12 +3670,12 @@
             the attempt proceeds to the next step.</para>
           </listitem>
 
-          <listitem>
-            <para><anchor id="LIWQ66" />The utility obtains a PAG.</para>
+          <listitem id="LIWQ66">
+            <para>The utility obtains a PAG.</para>
           </listitem>
 
-          <listitem>
-            <para><anchor id="LIWQ67" />The utility converts the password
+          <listitem id="LIWQ67">
+            <para>The utility converts the password
             provided by the user into an encryption key and encrypts a
             packet of data with the key. It sends the packet to the AFS
             authentication service (the AFS Authentication Server in the
@@ -3740,8 +3714,8 @@
             </para>
           </listitem>
 
-          <listitem>
-            <para><anchor id="LIWQ68" />If no AFS token was granted in
+          <listitem id="LIWQ68">
+            <para>If no AFS token was granted in
             Step <link linkend="LIWQ67">4</link>, the login utility
             attempts to log the user into the local file system, by
             comparing the password provided to the local password file.
@@ -4010,26 +3984,26 @@
 </programlisting>
 
       <para>The following shows the output for a user with AFS UID 1000 in
-      the ABC Corporation cell:</para>
+      the Example Corporation cell:</para>
 
 <programlisting>
    % <emphasis role="bold">tokens</emphasis>
    Tokens held by the Cache Manager:
-   User's (AFS ID 1000) tokens for afs@abc.com  [Expires Jun  2 10:00]
+   User's (AFS ID 1000) tokens for afs@example.com  [Expires Jun  2 10:00]
        --End of list--
 </programlisting>
 
       <para>The following shows the output for a user who is authenticated
-      in ABC Corporation cell, the State University cell and the DEF
-      Company cell. The user has different AFS UIDs in the three
+      in Example Corporation cell, the Example Organization cell and the
+      Example Network cell. The user has different AFS UIDs in the three
       cells. Tokens for the last cell are expired:</para>
 
 <programlisting>
    % <emphasis role="bold">tokens</emphasis>
    Tokens held by the Cache Manager:
-   User's (AFS ID 1000) tokens for afs@abc.com  [Expires Jun  2 10:00]
-   User's (AFS ID 4286) tokens for afs@stateu.edu  [Expires Jun  3 1:34]
-   User's (AFS ID 22) tokens for afs@def.com  [&gt;&gt;Expired&lt;&lt;]
+   User's (AFS ID 1000) tokens for afs@example.com  [Expires Jun  2 10:00]
+   User's (AFS ID 4286) tokens for afs@example.org  [Expires Jun  3 1:34]
+   User's (AFS ID 22) tokens for afs@example.net  [&gt;&gt;Expired&lt;&lt;]
        --End of list--
 </programlisting>
 
@@ -4044,8 +4018,8 @@
 <programlisting>
    % <emphasis role="bold">tokens.krb</emphasis>
    Tokens held by the Cache Manager:
-   User's (AFS ID 1000) tokens for afs@abc.com [Expires Jun  2 10:00]
-   User smith's tokens for krbtgt.ABC.COM@abc.com [Expires Jun  2 10:00]
+   User's (AFS ID 1000) tokens for afs@example.com [Expires Jun  2 10:00]
+   User smith's tokens for krbtgt.EXAMPLE.COM@example.com [Expires Jun  2 10:00]
      --End of list--
 </programlisting>
     </sect2>
@@ -4503,7 +4477,7 @@
       </itemizedlist>
       </para>
 
-      <para>In addition, the United States edition of the Update Server
+      <para>In addition, the Update Server
       encrypts sensitive information (such as the contents of <emphasis
       role="bold">KeyFile</emphasis>) when distributing it. Other commands
       in the <emphasis role="bold">bos</emphasis> suite and the commands

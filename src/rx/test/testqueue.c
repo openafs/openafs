@@ -46,10 +46,10 @@ createQueue(int n)
     int i;
     struct rx_queue *q;
     struct myq *qe;
-    q = (struct rx_queue *)malloc(sizeof(struct rx_queue));
+    q = malloc(sizeof(struct rx_queue));
     queue_Init(q);
     for (i = 0; i < 3; i++) {
-	qe = (struct myq *)malloc(sizeof(struct myq));
+	qe = malloc(sizeof(struct myq));
 	qe->value = n * 1000 + i;
 	queue_Append(q, qe);
     }

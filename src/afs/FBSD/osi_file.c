@@ -36,7 +36,7 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
     AFS_STATCNT(osi_UFSOpen);
     if (cacheDiskType != AFS_FCACHE_TYPE_UFS)
 	osi_Panic("UFSOpen called for non-UFS cache\n");
-    afile = (struct osi_file *)osi_AllocSmallSpace(sizeof(struct osi_file));
+    afile = osi_AllocSmallSpace(sizeof(struct osi_file));
     AFS_GUNLOCK();
     code = VFS_VGET(afs_cacheVfsp, (ino_t) ainode->ufs, LK_EXCLUSIVE, &vp);
     AFS_GLOCK();
@@ -158,7 +158,11 @@ int
 afs_osi_Read(struct osi_file *afile, int offset, void *aptr,
 	     afs_int32 asize)
 {
+#if (__FreeBSD_version >= 900505 && __FreeBSD_Version < 1000000) ||__FreeBSD_version >= 1000009
+    ssize_t resid;
+#else
     int resid;
+#endif
     afs_int32 code;
     AFS_STATCNT(osi_Read);
 
@@ -185,10 +189,10 @@ afs_osi_Read(struct osi_file *afile, int offset, void *aptr,
 	afile->offset += code;
 	osi_DisableAtimes(afile->vnode);
     } else {
-	afs_Trace2(afs_iclSetp, CM_TRACE_READFAILED, ICL_TYPE_INT32, resid,
+	afs_Trace2(afs_iclSetp, CM_TRACE_READFAILED, ICL_TYPE_INT32, (int)resid,
 		   ICL_TYPE_INT32, code);
 	if (code > 0) {
-	    code *= -1;
+	    code = -code;
 	}
     }
     return code;
@@ -199,7 +203,11 @@ int
 afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
 	      afs_int32 asize)
 {
-    unsigned int resid;
+#if (__FreeBSD_version >= 900505 && __FreeBSD_Version < 1000000) ||__FreeBSD_version >= 1000009
+    ssize_t resid;
+#else
+    int resid;
+#endif
     afs_int32 code;
     AFS_STATCNT(osi_Write);
     if (!afile)
@@ -219,7 +227,7 @@ afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
 	afile->offset += code;
     } else {
 	if (code > 0) {
-	    code *= -1;
+	    code = -code;
 	}
     }
     if (afile->proc) {

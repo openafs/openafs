@@ -73,7 +73,7 @@ char* getACL(char *path)
     char *buffer;
     int rval1=0;
 
-    buffer = (char*) malloc(ACL_LEN);
+    buffer = malloc(ACL_LEN);
     params.in = NULL;
     params.out = NULL;
     params.in_size = params.out_size = 0;

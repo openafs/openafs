@@ -3,7 +3,6 @@
 #ifndef	AFS_PARAM_COMMON_H
 #define	AFS_PARAM_COMMON_H 1
 
-#define AFS_64BIT_ENV  1
 #define AFS_NAMEI_ENV  1	/* User space interface to file system */
 #define AFS_64BIT_IOPS_ENV 1	/* Needed for NAMEI */
 #define AFS_64BIT_CLIENT 1
@@ -68,7 +67,6 @@
 #ifdef _KERNEL
 #define AFS_GLOBAL_SUNLOCK        1
 #define	AFS_VFS34	1	/* What is VFS34??? */
-#define	AFS_SHORTGID	1	/* are group id's short? */
 #define	afsio_iov	uio_iov
 #define	afsio_iovcnt	uio_iovcnt
 #define	afsio_offset	uio_offset

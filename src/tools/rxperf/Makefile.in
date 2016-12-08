@@ -1,0 +1,20 @@
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+top_builddir=@TOP_OBJDIR@
+
+LIBS= $(top_builddir)/src/rx/liboafs_rx.la
+
+all: rxperf
+
+rxperf: rxperf.o $(LIBS)
+	$(LT_LDRULE_static) rxperf.o $(LIBS) $(LIB_hcrypto) $(LIB_roken) \
+		$(MT_LIBS)
+
+install:
+
+dest:
+
+clean:
+	$(LT_CLEAN)
+	$(RM) -f rxperf.o rxperf

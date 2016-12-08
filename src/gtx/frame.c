@@ -11,16 +11,10 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
-#ifdef AFS_HPUX_ENV
-#include <sys/types.h>
-#endif
+#include <roken.h>
+
 #include <lwp.h>
 
-#include <string.h>
-#include <stdlib.h>
-#ifdef HAVE_STDINT_H
-#include <stdint.h>
-#endif
 #include "gtxobjects.h"
 #include "gtxwindows.h"
 #include "gtxcurseswin.h"
@@ -193,10 +187,9 @@ gtxframe_AddMenu(struct gtx_frame *aframe, char *alabel, char *astring)
     if (!tmenu) {
 	/* Handle everything but the command string, which is handled by the
 	 * common-case code below */
-	tmenu = (struct gtxframe_menu *)malloc(sizeof(*tmenu));
+	tmenu = calloc(1, sizeof(*tmenu));
 	if (tmenu == (struct gtxframe_menu *)0)
 	    return (-1);
-	memset(tmenu, 0, sizeof(*tmenu));
 	tmenu->next = aframe->menus;
 	aframe->menus = tmenu;
 	tmenu->name = gtx_CopyString(alabel);
@@ -267,7 +260,7 @@ gtxframe_AskForString(struct gtx_frame *aframe, char *aprompt,
     if (aframe->defaultLine)
 	free(aframe->defaultLine);
     aframe->promptLine = gtx_CopyString(aprompt);
-    tp = aframe->defaultLine = (char *)malloc(1024);
+    tp = aframe->defaultLine = malloc(1024);
     if (tp == NULL)
 	return (-1);
     if (adefault)
@@ -345,7 +338,7 @@ ShowMessageLine(struct gtx_frame *aframe)
 	strparms.x = 0;
 	strparms.y = sizeparms.maxy - 1;
 	strparms.highlight = 1;
-	tp = strparms.s = (char *)malloc(1024);
+	tp = strparms.s = malloc(1024);
 	strcpy(tp, aframe->promptLine);
 	strcat(tp, aframe->defaultLine);
 	WOP_DRAWSTRING(aframe->window, &strparms);
@@ -388,7 +381,7 @@ gtxframe_Create(void)
     /*
      * Allocate all the pieces first: frame, keymap, and key state.
      */
-    tframe = (struct gtx_frame *)malloc(sizeof(struct gtx_frame));
+    tframe = calloc(1, sizeof(struct gtx_frame));
     if (tframe == (struct gtx_frame *)0) {
 	return ((struct gtx_frame *)0);
     }
@@ -402,8 +395,7 @@ gtxframe_Create(void)
 	return ((struct gtx_frame *)0);
     }
 
-    newkeystate = (struct keymap_state *)
-	malloc(sizeof(struct keymap_state));
+    newkeystate = malloc(sizeof(struct keymap_state));
     if (newkeystate == (struct keymap_state *)0) {
 	/*
 	 * Get rid of the frame AND the keymap before exiting.
@@ -417,7 +409,6 @@ gtxframe_Create(void)
      * Now that all the pieces exist, fill them in and stick them in
      * the right places.
      */
-    memset(tframe, 0, sizeof(struct gtx_frame));
     tframe->keymap = newkeymap;
     tframe->keystate = newkeystate;
     keymap_InitState(tframe->keystate, tframe->keymap);
@@ -494,7 +485,7 @@ gtxframe_AddToList(struct gtx_frame *aframe, struct onode *aobj)
      * OK, it's not alreadyt there.  Create a new list object, fill it
      * in, and splice it on.
      */
-    tlist = (struct gtxframe_dlist *)malloc(sizeof(struct gtxframe_dlist));
+    tlist = malloc(sizeof(struct gtxframe_dlist));
     if (tlist == (struct gtxframe_dlist *)0)
 	return (-1);
     tlist->data = (char *)aobj;

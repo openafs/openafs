@@ -1,0 +1,40 @@
+srcdir=@srcdir@
+abs_top_builddir=@abs_top_builddir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+
+MODULE_CFLAGS = -I$(srcdir)/../..
+
+LIBS=../tap/libtap.a $(abs_top_builddir)/src/opr/liboafs_opr.la
+
+tests = dict-t fmt-t jhash-t queues-t rbtree-t softsig-helper time-t uuid-t
+
+all check test tests: $(tests)
+
+dict-t: dict-t.o
+	$(LT_LDRULE_static) dict-t.o $(LIBS) $(XLIBS)
+
+fmt-t: fmt-t.o
+	$(LT_LDRULE_static) fmt-t.o $(LIBS) $(XLIBS)
+
+queues-t: queues-t.o
+	$(LT_LDRULE_static) queues-t.o ../tap/libtap.a $(XLIBS)
+
+rbtree-t: rbtree-t.o $(LIBS)
+	$(LT_LDRULE_static) rbtree-t.o ../tap/libtap.a $(LIBS) $(XLIBS)
+
+jhash-t: jhash-t.o
+	$(LT_LDRULE_static) jhash-t.o ../tap/libtap.a $(XLIBS)
+
+time-t: time-t.o
+	$(LT_LDRULE_static) time-t.o ../tap/libtap.a $(XLIBS)
+
+uuid-t: uuid-t.o
+	$(LT_LDRULE_static) uuid-t.o ../tap/libtap.a $(LIBS) $(XLIBS)
+
+softsig-helper: softsig-helper.o $(LIBS)
+	$(LT_LDRULE_static) softsig-helper.o $(LIBS) $(XLIBS)
+
+clean distclean:
+	$(LT_CLEAN)
+	$(RM) -f $(tests) *.o core

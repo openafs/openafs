@@ -27,12 +27,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+
 #include <afs/vlserver.h>
 #include <afs/vldbint.h>
 #include <afs/dir.h>
+#include <afs/unified_afs.h>
 #include "afscp.h"
 #include "afscp_internal.h"
-#include <afs/unified_afs.h>
 
 int
 afscp_CreateFile(const struct afscp_venusfid *dir, char *name,

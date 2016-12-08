@@ -16,40 +16,27 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#include <sys/file.h>
-#include <sys/param.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-#endif
-
-#include <string.h>
-#include <sys/types.h>
 #include <afs/stds.h>
 #include <afs/bubasics.h>
-#include <stdio.h>
 #include <lock.h>
 #include <ubik.h>
 #include <lwp.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rxkad.h>
-#include <des.h>
 #include <afs/cellconfig.h>
 #include <afs/auth.h>
-#include <errno.h>
+#include <afs/audit.h>
+#include <afs/afsutil.h>
+
 #include "budb.h"
 #include "budb_errs.h"
 #include "database.h"
 #include "budb_internal.h"
 #include "error_macros.h"
 #include "globals.h"
-#include "afs/audit.h"
-#include <afs/afsutil.h>
 
 #undef min
 #undef max
@@ -359,7 +346,7 @@ FreeReturnList(struct returnList *list)
 static afs_int32
 AddToReturnList(struct returnList *list, dbadr a, afs_int32 *to_skipP)
 {
-    char *tmp;
+    dbadr *tmp;
     afs_int32 size;
 
     if (a == 0)
@@ -378,14 +365,14 @@ AddToReturnList(struct returnList *list, dbadr a, afs_int32 *to_skipP)
     if (list->nElements >= list->allocSize) {
 	if (list->elements == 0) {
 	    size = 10;
-	    tmp = (char *)malloc(sizeof(dbadr) * size);
+	    tmp = malloc(sizeof(dbadr) * size);
 	} else {
 	    size = list->allocSize + 10;
-	    tmp = (char *)realloc(list->elements, sizeof(dbadr) * size);
+	    tmp = realloc(list->elements, sizeof(dbadr) * size);
 	}
 	if (!tmp)
 	    return BUDB_NOMEM;
-	list->elements = (dbadr *) tmp;
+	list->elements = tmp;
 	list->allocSize = size;
     }
 
@@ -547,12 +534,16 @@ SendReturnList(struct ubik_trans *ut,
 
     /* Allocate space for the return values if needed and zero it */
     if (eList->budb_dumpList_val == 0) {
-	eList->budb_dumpList_val =
-	    (struct budb_dumpEntry *)malloc(e_size * to_return);
-	if (!eList->budb_dumpList_val)
-	    return (BUDB_NOMEM);
+	if (to_return > 0) {
+	    eList->budb_dumpList_val = calloc(to_return, e_size);
+	    if (!eList->budb_dumpList_val)
+		return (BUDB_NOMEM);
+	} else
+	    eList->budb_dumpList_val = NULL;
+    } else {
+        memset(eList->budb_dumpList_val, 0, e_size * to_return);
     }
-    memset(eList->budb_dumpList_val, 0, e_size * to_return);
+
     eList->budb_dumpList_len = to_return;
 
     e = (char *)(eList->budb_dumpList_val);
@@ -951,13 +942,12 @@ deleteDump(struct rx_call *call, dumpId id, budb_dumpsList *dumps)
 	/* Record the dump just deleted */
 	if (dumps && (dumps->budb_dumpsList_len < BUDB_MAX_RETURN_LIST)) {
 	    if (dumps->budb_dumpsList_len == 0)
-		dumps->budb_dumpsList_val =
-		    (afs_int32 *) malloc(sizeof(afs_int32));
+		dumps->budb_dumpsList_val = malloc(sizeof(afs_int32));
 	    else
 		dumps->budb_dumpsList_val =
-		    (afs_int32 *) realloc(dumps->budb_dumpsList_val,
-					  (dumps->budb_dumpsList_len +
-					   1) * sizeof(afs_int32));
+		    realloc(dumps->budb_dumpsList_val,
+			    (dumps->budb_dumpsList_len + 1)
+			     * sizeof(afs_int32));
 
 	    if (!dumps->budb_dumpsList_val)
 		ABORT(BUDB_NOMEM);
@@ -1053,10 +1043,9 @@ rememberDump(dbadr dumpAddr, void *dumpParam, void *dumpListPtrParam)
     dumpPtr = (struct dump *)dumpParam;
     rockPtr = (struct wantDumpRock *)dumpListPtrParam;
 
-    ptr = (struct chosenDump *)malloc(sizeof(*ptr));
+    ptr = calloc(1, sizeof(*ptr));
     if (!ptr)
 	return (0);
-    memset(ptr, 0, sizeof(*ptr));
     ptr->addr = dumpAddr;
     ptr->date = (afs_uint32) ntohl(dumpPtr->created);
 
@@ -1643,22 +1632,16 @@ ListDumps(struct rx_call *call, afs_int32 sflags, afs_int32 groupid,
 			count += 10;
 			if (count == 10) {
 			    dumps->budb_dumpsList_val =
-				(afs_int32 *) malloc(count *
-						     sizeof(afs_int32));
+				malloc(count * sizeof(afs_int32));
 			    flags->budb_dumpsList_val =
-				(afs_int32 *) malloc(count *
-						     sizeof(afs_int32));
+				malloc(count * sizeof(afs_int32));
 			} else {
 			    dumps->budb_dumpsList_val =
-				(afs_int32 *) realloc(dumps->
-						      budb_dumpsList_val,
-						      count *
-						      sizeof(afs_int32));
+				realloc(dumps->budb_dumpsList_val,
+					count * sizeof(afs_int32));
 			    flags->budb_dumpsList_val =
-				(afs_int32 *) realloc(flags->
-						      budb_dumpsList_val,
-						      count *
-						      sizeof(afs_int32));
+				realloc(flags->budb_dumpsList_val,
+					count * sizeof(afs_int32));
 			}
 			if (!dumps->budb_dumpsList_val
 			    || !dumps->budb_dumpsList_val)
@@ -3547,11 +3530,9 @@ T_DumpDatabase(struct rx_call *call, char *filename)
     if (!callPermitted(call))
 	return BUDB_NOTPERMITTED;
 
-    path = (char *)malloc(strlen(gettmpdir()) + 1 + strlen(filename) + 1);
-    if (!path)
+    length = asprintf(&path, "%s/%s", gettmpdir(), filename);
+    if (length < 0 || !path)
 	return (BUDB_INTERNALERROR);
-
-    sprintf(path, "%s/%s", gettmpdir(), filename);
 
     dumpfid = fopen(path, "w");
     if (!dumpfid)

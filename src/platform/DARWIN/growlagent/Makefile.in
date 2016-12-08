@@ -1,16 +1,13 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.pthread
 
 OBJS=main.o
 
 all: growlagent-openafs
 
 growlagent-openafs: ${OBJS}
-	${CC} ${CFLAGS} -o $@ ${OBJS} -framework Security \
+	$(AFS_LDRULE) ${OBJS} -framework Security \
 		-framework AppKit -framework CoreFoundation
 
 main.o: GrowlDefines.h GrowlPathway.h

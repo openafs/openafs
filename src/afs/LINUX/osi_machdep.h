@@ -15,11 +15,6 @@
 #ifndef OSI_MACHDEP_H_
 #define OSI_MACHDEP_H_
 
-#include <linux/version.h>
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,4)
-# define AFS_LINUX26_ONEGROUP_ENV 1
-#endif
-
 /* Only needed for xdr.h in glibc 2.1.x */
 #ifndef quad_t
 # define quad_t __quad_t
@@ -144,6 +139,11 @@ static inline long copyinstr(char *from, char *to, int count, int *length) {
 
 #ifndef NGROUPS
 #define NGROUPS NGROUPS_SMALL
+#endif
+
+#ifdef STRUCT_GROUP_INFO_HAS_GID
+/* compat macro for Linux 4.9 */
+#define GROUP_AT(gi,x)  ((gi)->gid[x])
 #endif
 
 typedef struct task_struct afs_proc_t;

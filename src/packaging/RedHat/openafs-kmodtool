@@ -153,13 +153,13 @@ You called: ${invocation}
 
 Usage: ${myprog} <command> <option>+
  Commands:
-  verrel <uname>                               
+  verrel <uname>
     - Get "base" version-release.
-  variant <uname>                               
+  variant <uname>
     - Get variant from uname.
-  rpmtemplate <mainpgkname> <uname> </path/to/depmod> <variants> 
+  rpmtemplate <mainpgkname> <uname> </path/to/depmod> <variants>
     - Return a template for
-  version  
+  version
     - Output version number and exit.
 EOF
 }

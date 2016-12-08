@@ -7,15 +7,33 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+include @TOP_OBJDIR@/src/config/Makefile.lwptool
 
-OBJS=afsaux.o afscbint.cs.o afscbint.ss.o afscbint.xdr.o afsint.cs.o afsint.ss.o afsint.xdr.o
+LT_objs = \
+	afsaux.lo \
+	afscbint.cs.lo \
+	afsint.cs.lo \
+	afsint.xdr.lo
+
+LT_deps = \
+	$(top_builddir)/src/rx/liboafs_rx.la
 
 all: \
-	${TOP_LIBDIR}/libafsint.a depinstall
+	depinstall \
+	generated \
+	${TOP_LIBDIR}/libafsint.a \
+	liboafs_fsint.la \
+	libfsint_pic.la
+
+liboafs_fsint.la: liboafs_fsint.la.sym $(LT_objs) $(LT_deps)
+	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
+
+libfsint_pic.la: $(LT_objs)
+	$(LT_LDLIB_pic) $(LT_objs)
+
+libafsint.a: $(LT_objs) afsint.ss.lo afscbint.ss.lo
+	$(LT_LDLIB_lwp) $(LT_objs) afsint.ss.lo afscbint.ss.lo
 
 depinstall: \
 	${TOP_INCDIR}/afs/afsint.h \
@@ -34,7 +52,7 @@ generated: \
 	afsint.cs.c afsint.ss.c afsint.xdr.c afsint.h
 
 ${TOP_LIBDIR}/libafsint.a: libafsint.a
-	${INSTALL_DATA} $? $@
+	${INSTALL_DATA} libafsint.a $@
 
 ${TOP_INCDIR}/afs/afsint.h: afsint.h
 	${INSTALL_DATA} $? $@
@@ -45,12 +63,7 @@ ${TOP_INCDIR}/afs/afscbint.h: afscbint.h
 ${TOP_INCDIR}/afs/pagcb.h: pagcb.h
 	${INSTALL_DATA} $? $@
 
-libafsint.a: ${OBJS} AFS_component_version_number.o
-	-$(RM) -f $@
-	$(AR) crv $@ ${OBJS} AFS_component_version_number.o
-	$(RANLIB) $@
-
-afsaux.o: afsaux.c afsint.h
+afsaux.lo: afsaux.c afsint.h
 
 Kcallback.cs.c: common.xg afscbint.xg Kvice.h Kcallback.h
 	${RXGEN} -A -x -k -C -o Kcallback.cs.c ${srcdir}/afscbint.xg
@@ -91,7 +104,7 @@ pagcb.h: pagcb.xg
 Kcallback.h: common.xg afscbint.xg
 	${RXGEN} -A -x -k -h -o Kcallback.h ${srcdir}/afscbint.xg
 
-afscbint.cs.c: common.xg afscbint.xg afsint.h afscbint.h 
+afscbint.cs.c: common.xg afscbint.xg afsint.h afscbint.h
 	${RXGEN} -A -x -C -o afscbint.cs.c ${srcdir}/afscbint.xg
 
 afscbint.ss.c: common.xg afscbint.xg afsint.h afscbint.h
@@ -114,8 +127,6 @@ afsint.h: common.xg afsint.xg
 
 afscbint.h: common.xg afscbint.xg
 	${RXGEN} -A -x -h -o afscbint.h ${srcdir}/afscbint.xg
-
-afsint.xdr.o: afsint.xdr.c
 
 #
 # Installation targets
@@ -141,6 +152,7 @@ dest: libafsint.a afsint.h afscbint.h pagcb.h
 #
 
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o *.cs.c *.ss.c *.er.c *.a *.xdr.c core \
 		afsint.h afscbint.h pagcb.h AFS_component_version_number.c   \
 	Kvice.h Kcallback.h Kpagcb.h

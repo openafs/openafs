@@ -1,0 +1,12 @@
+AFS_CFLAGS = $(LWP_CFLAGS)
+AFS_LDFLAGS = $(LWP_LDFLAGS)
+AFS_CCRULE     =$(LWP_CCRULE)
+AFS_CCRULE_NOQ =$(LWP_CCRULE_NOQ)
+
+.c.o:
+	$(AFS_CCRULE) $<
+%.o: %.c
+	$(AFS_CCRULE) $<
+.m.o:
+	$(AFS_CCRULE) $<
+

@@ -10,9 +10,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include "cmd.h"
-#include <stdio.h>
+#include <afs/cmd.h>
 
 static int
 cproc1(struct cmd_syndesc *as, void *arock)
@@ -42,10 +42,10 @@ main(int argc, char **argv)
 {
     struct cmd_syndesc *ts;
 
-    ts = cmd_CreateSyntax("apple", cproc1, NULL, "describe apple");
+    ts = cmd_CreateSyntax("apple", cproc1, NULL, 0, "describe apple");
     cmd_CreateAlias(ts, "appl");
 
-    ts = cmd_CreateSyntax("pear", cproc2, NULL, "describe pear");
+    ts = cmd_CreateSyntax("pear", cproc2, NULL, 0, "describe pear");
     cmd_AddParm(ts, "-num", CMD_LIST, 0, "number of pears");
     cmd_AddParm(ts, "-noauth", CMD_FLAG, CMD_OPTIONAL, "don't authenticate");
     cmd_AddParm(ts, "-spotpos", CMD_LIST, CMD_OPTIONAL | CMD_EXPANDS, 0);

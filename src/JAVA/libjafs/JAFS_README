@@ -73,25 +73,7 @@ the Jafs API.
 *** BUILD ***
 
 The first step in compiling your own versions of the library and jar file
-is to download the OpenAFS source code.  If the code doesn't contain the
-libjuafs version of the libuafs library -- noted by the README file located
-in the src/libuafs directory (if a README file doesn't exist in this directory
-then the libjuafs patch (libuafs.diff) has not been applied) -- you must 
-first apply the libjuafs patch. You can apply the libjuafs patch with the 
-following command, executed from the root directory of the download code 
-(i.e. openafs-1.2.4/):
-
-  patch -p1 < libuafs.diff
-
-Next, if the code doesn't contain the src/JAVA/libjafs directory, you can 
-apply the jafs patch to it with the following command, executed from the 
-root directory of the download code (i.e. openafs-1.2.4/):
-
-  patch -p1 < jafs.diff
-
-Note that the source code you download needs to be newer than 4/22/02,
-in order for the full functionality of the API to be effective.  Otherwise,
-you may experience link errors.
+is to download the OpenAFS source code.
 
 From that same directory, run the configure script as you normally would 
 to compile OpenAFS, but run it with a java_home argument so the script can

@@ -20,11 +20,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#ifdef KERNEL
-#include "param.h"
-#else
-#include <sys/param.h>
+#ifndef KERNEL
+#include <roken.h>
 #ifdef 	AFS_HPUX_ENV
 #include <sys/fs.h>
 #endif

@@ -87,7 +87,7 @@ enum FSYNCReasonCode {
 /* FSYNC flag codes */
 
 struct offlineInfo {
-    afs_uint32 volumeID;
+    VolumeId volumeID;
     char partName[16];
 };
 
@@ -95,7 +95,7 @@ struct offlineInfo {
  * fssync protocol volume operation request message.
  */
 typedef struct FSSYNC_VolOp_hdr {
-    afs_uint32 volume;          /**< volume id associated with request */
+    VolumeId volume;          /**< volume id associated with request */
     char partName[16];		/**< partition name, e.g. /vicepa */
 } FSSYNC_VolOp_hdr;
 
@@ -157,7 +157,7 @@ typedef struct FSSYNC_StatsOp_command {
  * fssync protocol vnode query request message.
  */
 typedef struct FSSYNC_VnQry_hdr {
-    afs_uint32 volume;          /**< volume id */
+    VolumeId volume;          /**< volume id */
     afs_uint32 vnode;           /**< vnode id */
     afs_uint32 unique;          /**< uniqifier */
     afs_uint32 spare;           /**< reserved for future use */

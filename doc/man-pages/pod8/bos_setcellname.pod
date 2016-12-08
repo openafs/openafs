@@ -66,8 +66,8 @@ L<bos(8)>.
 =item B<-name> <I<cell name>>
 
 Defines the cell name, using standard Internet domain name format (the
-actual domain name is usually appropriate). Examples are C<abc.com> for
-the ABC Corporation and C<stateu.edu> for the State University. It must
+actual domain name is usually appropriate). Examples are C<example.com> for
+the Example Corporation and C<example.org> for the Example Organization. It must
 match the value of the B<-cell> argument, if that is provided.
 
 =item B<-cell> <I<cell name>>
@@ -84,7 +84,8 @@ L<bos(8)>.
 =item B<-localauth>
 
 Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> file. The B<bos> command interpreter presents the
+F</usr/afs/etc/KeyFile> or F</usr/afs/etc/KeyFileExt> file.
+The B<bos> command interpreter presents the
 ticket to the BOS Server during mutual authentication. Do not combine this
 flag with the B<-cell> or B<-noauth> options. For more details, see
 L<bos(8)>.
@@ -98,11 +99,11 @@ ignored.
 
 =head1 EXAMPLES
 
-The following command defines the cell name C<abc.com> in the F<ThisCell>
-and F<CellServDB> files on the machine C<fs1.abc.com> as it is installed
+The following command defines the cell name C<example.com> in the F<ThisCell>
+and F<CellServDB> files on the machine C<fs1.example.com> as it is installed
 as the cell's first server machine.
 
-   % bos setcellname -server fs1.abc.com -name abc.com
+   % bos setcellname -server fs1.example.com -name example.com
 
 =head1 PRIVILEGE REQUIRED
 
@@ -117,6 +118,7 @@ C<root> if the B<-localauth> flag is included.
 
 L<CellServDB(5)>,
 L<KeyFile(5)>,
+L<KeyFileExt(5)>,
 L<ThisCell(5)>,
 L<UserList(5)>,
 L<bos(8)>

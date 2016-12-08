@@ -10,26 +10,13 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <stdio.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/time.h>
-#include <sys/file.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <strings.h>
-#endif
-#include <sys/types.h>
-#include <string.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <lwp.h>
 #include <lock.h>
+#include <afs/afsutil.h>
 #include <afs/tcdata.h>
 #include <afs/bubasics.h>
 #include <afs/budb.h>
@@ -37,6 +24,7 @@
 #include <afs/budb_prototypes.h>
 #include <afs/butm_prototypes.h>
 #include <afs/bucoord_prototypes.h>
+
 #include "error_macros.h"
 #include "butc_internal.h"
 
@@ -180,7 +168,7 @@ scanVolData(afs_int32 taskId, struct butm_tapeInfo *curTapePtr,
 
     memset(volumeHeader, 0, sizeof(struct volumeHeader));
 
-    block = (char *)malloc(2 * BUTM_BLOCKSIZE);
+    block = malloc(2 * BUTM_BLOCKSIZE);
     if (!block)
 	return (TC_NOMEMORY);
     buffer[0] = &block[sizeof(struct blockMark)];
@@ -718,6 +706,7 @@ ScanDumps(void *param)
     afs_uint32 taskId;
     afs_int32 code = 0;
 
+    afs_pthread_setname_self("scandump");
     taskId = ptr->taskId;
     setStatus(taskId, DRIVE_WAIT);
     EnterDeviceQueue(deviceLatch);
@@ -917,6 +906,7 @@ RcreateDump(struct tapeScanInfo *tapeScanInfoPtr,
 	    struct volumeHeader *volHeaderPtr)
 {
     afs_int32 code;
+    const char *volsetName;
     struct butm_tapeLabel *dumpLabelPtr = &tapeScanInfoPtr->dumpLabel;
     struct budb_dumpEntry *dumpEntryPtr = &tapeScanInfoPtr->dumpEntry;
 
@@ -930,8 +920,10 @@ RcreateDump(struct tapeScanInfo *tapeScanInfoPtr,
     dumpEntryPtr->flags = 0;
     dumpEntryPtr->incTime = 0;
     dumpEntryPtr->nVolumes = 0;
-    strcpy(dumpEntryPtr->volumeSetName,
-	   volumesetNamePtr(volHeaderPtr->dumpSetName));
+    volsetName = volumesetNamePtr(volHeaderPtr->dumpSetName);
+    if (volsetName == NULL)
+	return BUDB_BADARGUMENT;
+    strcpy(dumpEntryPtr->volumeSetName, volsetName);
     strcpy(dumpEntryPtr->dumpPath, dumpLabelPtr->dumpPath);
     strcpy(dumpEntryPtr->name, volHeaderPtr->dumpSetName);
     default_tapeset(&dumpEntryPtr->tapes, volHeaderPtr->dumpSetName);

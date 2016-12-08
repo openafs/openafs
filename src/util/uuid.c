@@ -43,52 +43,26 @@
  */
 
 #include <afsconfig.h>
-#ifdef KERNEL
-#include "afs/param.h"
-#else
 #include <afs/param.h>
-#endif
 
+#ifndef KERNEL
+# include <roken.h>
 
-#ifdef KERNEL
-#include "afs/sysincludes.h"
-#include "afsincludes.h"
-#define uuid_memcmp(A,B,C)	memcmp(A, B, C)
-#define uuid_memcpy(A,B,C)	memcpy(A, B, C)
-#else /* KERNEL */
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#ifdef AFS_NT40_ENV
-#include <rpc.h>
-#include <winsock2.h>
-#include <process.h>
-#else
-#include <sys/file.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#ifndef ITIMER_REAL
-#include <sys/time.h>
-#endif /* ITIMER_REAL */
-#include <net/if.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#include <stdlib.h>
-#endif
-#include <sys/stat.h>
-#include <fcntl.h>
-#if !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_ARM_DARWIN_ENV)
-#include <netinet/if_ether.h>
-#endif
+# ifdef AFS_NT40_ENV
+#  include <rpc.h>
+# else
+#  include <net/if.h>
+#  if !defined(AFS_LINUX20_ENV) && !defined(AFS_ARM_DARWIN_ENV)
+#   include <netinet/if_ether.h>
+#  endif
+# endif
+
 #include "afsutil.h"
 
-#define uuid_memcmp(A,B,C)	memcmp(A,B,C)
-#define uuid_memcpy(A,B,C)	memcpy(A,B,C)
-#endif /* KERNEL */
-
+#else
+# include "afs/sysincludes.h"
+# include "afsincludes.h"
+#endif
 #ifdef UKERNEL
 # include "rx/rx_prototypes.h"
 #endif
@@ -124,7 +98,7 @@ void uuid__get_os_time(uuid_time_t * os_time);
  * +--------------------------...-----+
  */
 
-afsUUID afs_uuid_g_nil_uuid = { 0 };
+afsUUID afs_uuid_g_nil_uuid;
 static uuid_time_t time_now, time_last;
 static u_short uuid_time_adjust, clock_seq;
 static afs_uint32 rand_m, rand_ia, rand_ib, rand_irand, uuid_init_done = 0;
@@ -134,7 +108,7 @@ static afs_uint32 rand_m, rand_ia, rand_ib, rand_irand, uuid_init_done = 0;
 afs_int32
 afs_uuid_equal(afsUUID * u1, afsUUID * u2)
 {
-    return (uuid_memcmp((void *)u1, (void *)u2, sizeof(afsUUID)) == 0);
+    return (memcmp(u1, u2, sizeof(afsUUID)) == 0);
 }
 
 afs_int32
@@ -142,8 +116,7 @@ afs_uuid_is_nil(afsUUID * u1)
 {
     if (!u1)
 	return 1;
-    return (uuid_memcmp
-	    ((void *)u1, (void *)&afs_uuid_g_nil_uuid, sizeof(afsUUID)) == 0);
+    return afs_uuid_equal(u1, &afs_uuid_g_nil_uuid);
 }
 
 void
@@ -339,7 +312,7 @@ afs_uuid_create(afsUUID * uuid)
     uuid->clock_seq_low = clock_seq & 0xff;
     uuid->clock_seq_hi_and_reserved = (clock_seq & 0x3f00) >> 8;
     uuid->clock_seq_hi_and_reserved |= 0x80;
-    uuid_memcpy((void *)uuid->node, (void *)&eaddr, sizeof(uuid_address_t));
+    memcpy(uuid->node, &eaddr, sizeof(uuid_address_t));
 #endif /* AFS_NT40_ENV */
     return 0;
 }
@@ -411,7 +384,7 @@ extern struct interfaceAddr afs_cb_interface;
 static int
 uuid_get_address(uuid_address_p_t addr)
 {
-    uuid_memcpy((void *)addr->eaddr, (void *)&afs_cb_interface.addr_in[0], 4);
+    memcpy(addr->eaddr, &afs_cb_interface.addr_in[0], 4);
     addr->eaddr[4] = 0xaa;
     addr->eaddr[5] = 0x77;
     return 0;
@@ -442,7 +415,7 @@ uuid_get_address(uuid_address_p_t addr)
 	he = gethostbyname(hostName1);
 
     if (he)
-	uuid_memcpy(&addr1, he->h_addr_list[0], 4);
+	memcpy(&addr1, he->h_addr_list[0], 4);
 #ifdef UKERNEL
     else
 	addr1=rxi_getaddr();
@@ -454,13 +427,12 @@ uuid_get_address(uuid_address_p_t addr)
 #else
 	return errno;
 #endif
-    } else {
-	addr1 = ntohl(addr1);
-	uuid_memcpy(addr->eaddr, &addr1, 4);
-	addr->eaddr[4] = 0xaa;
-	addr->eaddr[5] = 0x77;
     }
 
+    addr1 = ntohl(addr1);
+    memcpy(addr->eaddr, &addr1, 4);
+    addr->eaddr[4] = 0xaa;
+    addr->eaddr[5] = 0x77;
 #ifdef  UUID_DEBUG
     printf("uuid_get_address: %02x-%02x-%02x-%02x-%02x-%02x\n",
 	   addr->eaddr[0], addr->eaddr[1], addr->eaddr[2], addr->eaddr[3],

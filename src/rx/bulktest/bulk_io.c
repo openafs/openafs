@@ -31,7 +31,7 @@ bulk_SendFile(fd, call, status)
     long error = 0;
     blockSize = status->st_blksize;
     length = status->st_size;
-    buffer = (char *)malloc(status->st_blksize);
+    buffer = malloc(status->st_blksize);
     if (!buffer) {
 	printf("malloc failed\n");
 	return BULK_ERROR;
@@ -74,7 +74,7 @@ bulk_ReceiveFile(fd, call, status)
     if (!xdr_long(&xdr, &length))
 	return BULK_ERROR;
     blockSize = status->st_blksize;
-    buffer = (char *)malloc(status->st_blksize);
+    buffer = malloc(status->st_blksize);
     if (!buffer) {
 	printf("malloc failed\n");
 	return BULK_ERROR;

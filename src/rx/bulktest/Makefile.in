@@ -7,10 +7,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 
 
 SRCDIR=/usr/andy/
@@ -18,15 +16,16 @@ LIBRX=${SRCDIR}/lib/librx.a
 DESTDIR=/usr/andy/
 INSTALL=${SRCDIR}/bin/install
 LIBS=${LIBRX} ${SRCDIR}/lib/liblwp.a
-CFLAGS=${DBG} -I.. -I. -I${SRCDIR}/include -DDEBUG ${XCFLAGS} ${ARCHFLAGS}
+
+MODULE_CFLAGS = -DDEBUG
 
 all: bulk_client bulk_server
 
 bulk_client: bulk_client.o bulk_io.o ${LIBS} bulk.cs.o
-	${CC} ${CFLAGS} -o bulk_client bulk_client.o bulk_io.o bulk.cs.o ${LIBS}
+	$(AFS_LDRULE) bulk_client.o bulk_io.o bulk.cs.o ${LIBS}
 
 bulk_server: bulk_server.o bulk_io.o bulk.ss.o ${LIBS}
-	${CC} ${CFLAGS} -o bulk_server bulk_server.o bulk_io.o bulk.ss.o ${LIBS}
+	$(AFS_LDRULE) bulk_server.o bulk_io.o bulk.ss.o ${LIBS}
 
 bulk_client.o bulk_server.o bulk_io.o:	bulk.h
 

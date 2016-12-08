@@ -10,13 +10,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <stdio.h>
 #include <security/pam_appl.h>
-#include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
-
 
 static int my_conv(int num_msg, PAM_CONST struct pam_message **msg,
 		   struct pam_response **response, void *appdata_ptr);
@@ -32,7 +28,7 @@ static const char *service = "afstest";
 static const char *new_envstring = "GOTHEREVIATESTPAM=1";
 static const char *new_homestring = "HOME=/tmp";
 
-#if defined(AFS_LINUX20_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV) || defined(AFS_NBSD_ENV)
+#if defined(AFS_LINUX20_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV) || defined(AFS_NBSD_ENV) || defined(AFS_DARWIN_ENV)
 #define getpassphrase getpass
 #endif
 
@@ -99,7 +95,12 @@ main(int argc, char *argv[])
 
     putenv((char *)new_envstring);
     putenv((char *)new_homestring);
-    chdir("/tmp");
+
+    if ((retcode = chdir("/tmp")) != 0) {
+	fprintf(stderr, "chdir returned %d.\n", retcode);
+	exit(1);
+    }
+
     printf("Type exit to back out.\n");
     return execl("/bin/csh", "/bin/csh", NULL);
 }
@@ -139,7 +140,10 @@ my_conv(int num_msg, PAM_CONST struct pam_message **msg, struct pam_response **r
 	    fputs(m->msg, stdout);
 	    if (r) {
 		r->resp = malloc(PAM_MAX_RESP_SIZE);
-		fgets(r->resp, PAM_MAX_RESP_SIZE, stdin);
+		if (fgets(r->resp, PAM_MAX_RESP_SIZE, stdin) == NULL) {
+		    fprintf(stderr, "fgets did not work as expected\n");
+		    exit(1);
+		}
 		r->resp[PAM_MAX_RESP_SIZE - 1] = '\0';
 		p = &r->resp[strlen(r->resp) - 1];
 		while (*p == '\n' && p >= r->resp)

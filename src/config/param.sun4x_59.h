@@ -12,17 +12,8 @@
 #define AFS_ENV			1
 #define AFS_SUN_ENV		1
 #define AFS_SUN5_ENV		1
-#define	AFS_SUN52_ENV		1
-#define	AFS_SUN53_ENV		1
-#define	AFS_SUN54_ENV		1
-#define	AFS_SUN55_ENV		1
-#define	AFS_SUN56_ENV		1
-#define AFS_SUN57_ENV		1
-#define AFS_SUN58_ENV		1
 #define AFS_SUN59_ENV		1
-#define AFS_BOZONLOCK_ENV       1
 
-#define AFS_64BIT_ENV		1	/* Defines afs_int32 as int, not long. */
 #define AFS_64BIT_CLIENT	1
 
 #define AFS_HAVE_FLOCK_SYSID    1
@@ -85,10 +76,9 @@
 /**
   * These defines are for the 64 bit Solaris 7 port
   * AFS_SYSCALL32 is used to protect the ILP32 syscall interface
-  * AFS_64BIT_ENV is for use of 64 bit inode numbers
   */
 #if defined(__sparcv9)
-#define	AFS_SUN57_64BIT_ENV	1
+#define	AFS_SUN5_64BIT_ENV	1
 #define AFS_64BIT_INO   	1
 #endif
 
@@ -129,8 +119,6 @@
 #define AFS_USR_SUN7_ENV	1
 #define AFS_USR_SUN8_ENV	1
 #define AFS_USR_SUN9_ENV	1
-
-#define AFS_64BIT_ENV          1
 
 #include <afs/afs_sysnames.h>
 

@@ -11,23 +11,17 @@
  * Glue code for the kopenafs API.  Mostly just wrappers around the functions
  * included in the libsys code.
  */
-
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#include <errno.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <signal.h>
-#include <stdlib.h>
+#include <roken.h>
+
 #ifdef AFS_AIX51_ENV
 # include <sys/cred.h>
 # ifdef HAVE_SYS_PAG_H
 #  include <sys/pag.h>
 # endif
 #endif
-#include <sys/param.h>
-#include <unistd.h>
 
 #include <afs/afssyscalls.h>
 #include <kopenafs.h>
@@ -133,7 +127,7 @@ os_haspag(void)
     gid_t *groups;
     afs_uint32 g0, g1;
     afs_uint32 h, l, pag;
-# ifdef AFS_LINUX26_ENV
+# ifdef AFS_PAG_ONEGROUP_ENV
     int i;
 # endif
 
@@ -143,8 +137,8 @@ os_haspag(void)
         return 0;
     ngroups = getgroups(ngroups, groups);
 
-    /* Check for AFS_LINUX26_ONEGROUP_ENV PAGs. */
-# ifdef AFS_LINUX26_ENV
+    /* Check for one-group PAGs. */
+# ifdef AFS_PAG_ONEGROUP_ENV
     for (i = 0; i < ngroups; i++)
         if (((groups[i] >> 24) & 0xff) == 'A') {
             free(groups);

@@ -1,0 +1,41 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV -DHAVE_WARNX -DHAVE_ERRX -DHAVE_WARN -DHAVE_ERR
+!IF ("$(AFSDEV_BUILDTYPE)" == "CHECKED")
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DRXDEBUG
+!ENDIF
+
+RELDIR=tools/rxperf
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+LIBS = \
+	$(DESTDIR)\lib\afs\afsreg.lib \
+	$(DESTDIR)\lib\afs\mtafsutil.lib \
+	$(DESTDIR)\lib\afsrpc.lib \
+	$(DESTDIR)\lib\afspthread.lib \
+        $(DESTDIR)\lib\afsroken.lib \
+	$(DESTDIR)\lib\opr.lib
+
+
+all: $(OUT)\rxperf.exe
+
+$(OUT)\rxperf.res: rxperf.rc AFS_component_version_number.h
+
+$(OUT)\rxperf.exe: $(OUT)\rxperf.obj $(OUT)\rxperf.res $(LIBS)
+	$(EXECONLINK)
+        $(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
+
+mkdir:
+
+install: all
+
+clean::
+    $(DEL) $(OUT)\rxperf.res

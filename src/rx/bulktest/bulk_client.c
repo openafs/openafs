@@ -67,15 +67,6 @@ struct async_work {
 
 int async_nProcs = 0;
 
-char *
-allocString(s)
-     char *s;
-{
-    char *new = (char *)malloc(strlen(s) + 1);
-    strcpy(new, s);
-    return new;
-}
-
 void
 async_BulkProc(data)
      char *data;
@@ -126,8 +117,7 @@ async_BulkTest(host, conn, store, count, verbose, file)
     char tempfile[256];
     char *name;
     PROCESS pid;
-    struct async_work *work =
-	(struct async_work *)malloc(sizeof(struct async_work));
+    struct async_work *work = malloc(sizeof(struct async_work));
     work->host = host;
     work->conn = conn;
     work->store = store;
@@ -140,8 +130,8 @@ async_BulkTest(host, conn, store, count, verbose, file)
 	name++;
 /*   sprintf(tempfile, "/usr/tmp/%s.%s", myHostName, name);*/
     sprintf(tempfile, "/usr/tmp/%s", name);
-    work->local = allocString(store ? file : tempfile);
-    work->remote = allocString(store ? tempfile : file);
+    work->local = strdup(store ? file : tempfile);
+    work->remote = strdup(store ? tempfile : file);
     async_nProcs += 1;
     LWP_CreateProcess(async_BulkProc, 3000, RX_PROCESS_PRIORITY, (void *)work,
 		      "bulk", &pid);
@@ -221,7 +211,7 @@ main(argc, argv)
 		host = GetIpAddress(hostname);
 		conn =
 		    rx_NewConnection(host, BULK_SERVER_PORT, BULK_SERVICE_ID,
-				     null_securityObject, BULK_NULL);
+				     null_securityObject, RX_SECIDX_NULL);
 	    } else if (strcmp(*argv, "-f") == 0)
 		store = 0;
 	    else if (strcmp(*argv, "-s") == 0)

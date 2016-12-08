@@ -14,23 +14,14 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#include <sys/types.h>
-#include <stdio.h>
-#include <string.h>
+#include <roken.h>
 
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#endif
-#include <errno.h>
 #include <afs/ktime.h>
 #include <afs/budb_client.h>
 #include <afs/cmd.h>
 #include <afs/com_err.h>
 #include <afs/bubasics.h>
+
 #include "bc.h"
 #include "error_macros.h"
 #include "bucoord_internal.h"
@@ -433,13 +424,10 @@ bc_ParseDumpSchedule(void)
 		    tbuffer);
 	    return (BC_INTERNALERROR);
 	}
-	tds =
-	    (struct bc_dumpSchedule *)malloc(sizeof(struct bc_dumpSchedule));
-	memset(tds, 0, sizeof(*tds));
+	tds = calloc(1, sizeof(struct bc_dumpSchedule));
 
 	tds->next = (struct bc_dumpSchedule *)0;
-	tds->name = (char *)malloc(strlen(dsname) + 1);
-	strcpy(tds->name, dsname);
+	tds->name = strdup(dsname);
 
 	tds->expDate = expDate;
 	tds->expType = expType;

@@ -13,14 +13,18 @@ B<vos addsite> S<<< B<-server> <I<machine name for new site>> >>>
     S<<< [B<-roid> <I<readonly volume name or ID>>] >>>
     [B<-valid>] S<<< [B<-cell> <I<cell name>>] >>>
     [B<-noauth>] [B<-localauth>]
-    [B<-verbose>] [B<-encrypt>] [B<-noresolve>] [B<-help>]
+    [B<-verbose>] [B<-encrypt>] [B<-noresolve>]
+    S<<< [B<-config> <I<config directory>>] >>>
+    [B<-help>]
 
 B<vos ad> S<<< B<-s> <I<machine name for new site>> >>>
     S<<< B<-p> <I<partition name for new site>> >>>
     S<<< B<-i> <I<volume name or ID>> >>>
     S<<< [B<-r> <I<readonly volume name or ID>>] >>>
     [B<-va>] [B<-c> <I<cell name>>] >>> [B<-noa>] [B<-l>]
-    [B<-ve>] [B<-e>] [B<-nor>] [B<-h>]
+    [B<-ve>] [B<-e>] [B<-nor>]
+    S<<< [B<-co> <I<config directory>>] >>>
+    [B<-h>]
 
 =for html
 </div>
@@ -106,10 +110,10 @@ versions later than 1.4.1 or 1.5.0.
 
 =head1 EXAMPLES
 
-The following example, appropriate in the State University cell, defines a
+The following example, appropriate in the Example Organization cell, defines a
 read-only site for the cell's C<root.afs> volume.
 
-   % vos addsite -server sv7.stateu.edu -partition /vicepb -id root.afs
+   % vos addsite -server sv7.example.org -partition /vicepb -id root.afs
 
 =head1 PRIVILEGE REQUIRED
 

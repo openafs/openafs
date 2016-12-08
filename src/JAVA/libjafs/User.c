@@ -559,8 +559,7 @@ void getUserInfoChar
 					  kasEntry.lastModPrincipal.principal);
       (*env)->SetObjectField(env, user, user_lastModNameField, jlastModName);
 
-      convertedKey = (char *) malloc( sizeof(char *)*
-				      (sizeof(kasEntry.key.key)*4+1) );
+      convertedKey = malloc( sizeof(char *) * (sizeof(kasEntry.key.key)*4+1) );
       if( !convertedKey ) {
 	throwAFSException( env, JAFSADMNOMEM );
 	return;    
@@ -1171,7 +1170,7 @@ Java_org_openafs_jafs_User_getUserGroupsNextString
   (JNIEnv *env, jclass cls, jlong iterationId)
 {
   afs_status_t ast;
-  char *groupName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN);
+  char *groupName = malloc( sizeof(char)*PTS_MAX_NAME_LEN);
   jstring jgroup;
 
   if( !groupName ) {
@@ -1215,7 +1214,7 @@ Java_org_openafs_jafs_User_getUserGroupsNext
   char *groupName;
   jstring jgroup;
 
-  groupName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN);
+  groupName = malloc( sizeof(char)*PTS_MAX_NAME_LEN);
 
   if( !groupName ) {
     throwAFSException( env, JAFSADMNOMEM );
@@ -1290,7 +1289,7 @@ Java_org_openafs_jafs_User_getGroupsOwnedCount
 								cellHandle, 
 								jname );
 
-  groupName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN);
+  groupName = malloc( sizeof(char)*PTS_MAX_NAME_LEN);
 
   if( !groupName ) {
     throwAFSException( env, JAFSADMNOMEM );
@@ -1370,7 +1369,7 @@ Java_org_openafs_jafs_User_getGroupsOwnedNextString
   (JNIEnv *env, jclass cls, jlong iterationId)
 {
   afs_status_t ast;
-  char *groupName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN);
+  char *groupName = malloc( sizeof(char)*PTS_MAX_NAME_LEN);
   jstring jgroup;
 
   if( !groupName ) {
@@ -1415,7 +1414,7 @@ Java_org_openafs_jafs_User_getGroupsOwnedNext
   char *groupName;
   jstring jgroup;
 
-  groupName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN);
+  groupName = malloc( sizeof(char)*PTS_MAX_NAME_LEN);
 
   if( !groupName ) {
     throwAFSException( env, JAFSADMNOMEM );

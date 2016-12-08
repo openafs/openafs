@@ -30,19 +30,15 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+
 #if defined(AFS_DARWIN_ENV)
 /*
  * Reworked from FreeBSD umount
  */
 
-#include <sys/param.h>
 #include <sys/mount.h>
-
-#include <err.h>
-#include <errno.h>
 #include <fstab.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 size_t
 mntinfo(struct statfs **mntbuffer)
@@ -62,7 +58,7 @@ mntinfo(struct statfs **mntbuffer)
     return (mntsize);
 }
 
-static struct statfs *mntbuf = (struct statfs *)NULL;
+static struct statfs *mntbuf = NULL;
 static struct statfs *mntent;
 static int mntcnt;
 static struct fstab fstabent;
@@ -71,7 +67,7 @@ struct fstab *
 getfsent(void)
 {
     if (((!mntbuf) && !setfsent()) || mntcnt == 0)
-	return ((struct fstab *)NULL);
+	return (NULL);
     fstabent.fs_file = mntent->f_mntonname;
     fstabent.fs_freq = fstabent.fs_passno = 0;
     fstabent.fs_mntops = mntent->f_fstypename;

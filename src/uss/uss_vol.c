@@ -18,18 +18,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#include "uss_vol.h"		/*Interface to this module */
-#include "uss_common.h"		/*Common definitions */
-#include "uss_procs.h"		/*Defs from procs module */
-#include "uss_fs.h"		/*CacheManager ops */
-#include "uss_acl.h"
-#include <sys/stat.h>
-#include <pwd.h>
-#include <netdb.h>
-#include <errno.h>
-
-#include <string.h>
+#include <roken.h>
 
 #include <afs/com_err.h>
 #include <afs/vlserver.h>
@@ -37,12 +26,21 @@
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <rx/rx_globals.h>
+#include <afs/afsint.h>
 #include <afs/volser.h>
 #include <afs/volser_prototypes.h>
 #include <afs/volint.h>
 #include <afs/keys.h>
 #include <afs/afsutil.h>
 #include <ubik.h>
+
+#include <ctype.h>
+
+#include "uss_vol.h"		/*Interface to this module */
+#include "uss_common.h"		/*Common definitions */
+#include "uss_procs.h"		/*Defs from procs module */
+#include "uss_fs.h"		/*CacheManager ops */
+#include "uss_acl.h"
 
 extern int line;
 
@@ -588,7 +586,7 @@ uss_vol_CreateVol(char *a_volname, char *a_server, char *a_partition,
     char *Oldmpoint = NULL;	/*Old mountpoint name, if any */
     char tmp_str[uss_MAX_SIZE];	/*Useful string buffer */
     int o;			/*Owner's user id */
-    char userinput[64];		/*User's input */
+    int checkch, ch;		/*Read user's confirmation input */
     struct uss_subdir *new_dir;	/*Used to remember original ACL */
 
     /*
@@ -702,8 +700,12 @@ uss_vol_CreateVol(char *a_volname, char *a_server, char *a_partition,
 		    printf
 			("Overwrite files in pre-existing '%s' volume? [y, n]: ",
 			 a_volname);
-		    scanf("%s", userinput);
-		    if ((userinput[0] == 'y') || (userinput[0] == 'Y')) {
+		    checkch = ch = ' ';
+		    while (isspace(ch))
+			checkch = ch = getchar();
+		    while (ch != '\n' && ch != EOF)
+			ch = getchar();
+		    if (checkch == 'y' || checkch == 'Y') {
 			printf("\t[Overwriting allowed]\n");
 			uss_OverwriteThisOne = 1;
 		    } else
@@ -731,7 +733,7 @@ uss_vol_CreateVol(char *a_volname, char *a_server, char *a_partition,
      * the code if we're doing a dry run.
      */
     if (VolExistFlag) {
-	if ((Oldmpoint = (char *)malloc(strlen(a_mpoint) + 50)) == NULL) {
+	if ((Oldmpoint = malloc(strlen(a_mpoint) + 50)) == NULL) {
 	    fprintf(stderr, "%s: No more memory!\n", uss_whoami);
 	    return (1);
 	}
@@ -827,12 +829,10 @@ uss_vol_CreateVol(char *a_volname, char *a_server, char *a_partition,
      * properly, as well as all ACLs of future subdirectories,as the very last
      * thing we do to the new account.
      */
-    new_dir = (struct uss_subdir *)malloc(sizeof(struct uss_subdir));
+    new_dir = malloc(sizeof(struct uss_subdir));
     new_dir->previous = uss_currentDir;
-    new_dir->path = (char *)malloc(strlen(a_mpoint) + 1);
-    strcpy(new_dir->path, a_mpoint);
-    new_dir->finalACL = (char *)malloc(strlen(a_acl) + 1);
-    strcpy(new_dir->finalACL, a_acl);
+    new_dir->path = strdup(a_mpoint);
+    new_dir->finalACL = strdup(a_acl);
     uss_currentDir = new_dir;
     sprintf(tmp_str, "%s %s all", a_mpoint, uss_AccountCreator);
 

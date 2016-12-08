@@ -10,24 +10,18 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <afs/procmgmt.h>
+#include <roken.h>
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <lwp.h>
-#include <time.h>
 #include <ctype.h>
-#include <stdio.h>
-#ifdef AFS_NT40_ENV
-#include <io.h>
-#endif
 
-#include <string.h>
-#include <stdlib.h>
-
+#include <lwp.h>
 #include <afs/ktime.h>
 #include <afs/afsutil.h>
-#include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
+#include <opr/queue.h>
+
 #include "bnode.h"
+#include "bnode_internal.h"
 #include "bosprototypes.h"
 
 struct bnode *cron_create(char *, char *, char *, char *, char *, char *);
@@ -169,8 +163,7 @@ cron_create(char *ainstance, char *acommand, char *awhen,
 	return NULL;
     }
 
-    te = (struct cronbnode *)malloc(sizeof(struct cronbnode));
-    memset(te, 0, sizeof(struct cronbnode));
+    te = calloc(1, sizeof(struct cronbnode));
     code = ktime_ParsePeriodic(awhen, &te->whenToRun);
     if ((code < 0) || (bnode_InitBnode((struct bnode *)te, &cronbnode_ops, ainstance) != 0)) {
 	free(te);
@@ -179,7 +172,7 @@ cron_create(char *ainstance, char *acommand, char *awhen,
     }
     te->when = ktime_next(&te->whenToRun, 0);
     te->command = cmdpath;
-    te->whenString = copystr(awhen);
+    te->whenString = strdup(awhen);
     return (struct bnode *)te;
 }
 

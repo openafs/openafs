@@ -1,0 +1,14 @@
+error_table RXGK
+   ec RXGK_INCONSISTENCY, "Security module structure inconsistent"
+   ec RXGK_PACKETSHORT, "Packet too short for security challenge"
+   ec RXGK_BADCHALLENGE, "Invalid security challenge"
+   ec RXGK_BADETYPE, "Invalid or impermissible encryption type"
+   ec RXGK_BADLEVEL, "Invalid or impermissible security level"
+   ec RXGK_BADKEYNO, "Key version number not found"
+   ec RXGK_EXPIRED, "Token has expired"
+   ec RXGK_NOTAUTH, "Caller not authorized"
+   ec RXGK_BAD_TOKEN, "Security object was passed a bad token"
+   ec RXGK_SEALED_INCON, "Sealed data inconsistent"
+   ec RXGK_DATA_LEN, "User data too long"
+   ec RXGK_BAD_QOP, "Inadequate quality of protection available"
+end

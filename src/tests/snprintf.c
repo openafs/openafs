@@ -31,6 +31,7 @@
  * SUCH DAMAGE.
  */
 
+#include <afsconfig.h>
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -39,7 +40,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <afsconfig.h>
 
 #ifndef HAVE_VASNPRINTF
 int vasnprintf(char **ret, size_t max_sz, const char *format, va_list args);

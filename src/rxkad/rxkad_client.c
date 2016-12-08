@@ -12,15 +12,10 @@
  * make any use of DES. */
 
 #include <afsconfig.h>
-#ifdef KERNEL
-#include "afs/param.h"
-#else
 #include <afs/param.h>
-#endif
-
+#include <afs/stds.h>
 
 #ifdef KERNEL
-#include "afs/stds.h"
 #ifndef UKERNEL
 #include "h/types.h"
 #include "h/time.h"
@@ -36,30 +31,18 @@
 #else /* !UKERNEL */
 #include "afs/sysincludes.h"
 #endif /* !UKERNEL */
-#ifndef AFS_LINUX22_ENV
-#include "rpc/types.h"
-#include "rx/xdr.h"
-#endif
-#include "rx/rx.h"
 #else /* ! KERNEL */
-#include <afs/stds.h>
-#include <sys/types.h>
-#include <time.h>
-#include <string.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#include <unistd.h>
-#endif
-#include <rx/rx.h>
-#include <rx/xdr.h>
-#ifdef AFS_PTHREAD_ENV
-#include "rxkad.h"
-#endif /* AFS_PTHREAD_ENV */
+#include <roken.h>
+#include <afs/opr.h>
 #endif /* KERNEL */
 
-#include <des/stats.h>
+
+#include <rx/rx.h>
+#include <rx/xdr.h>
+#include <rx/rx_packet.h>
+
+#include "rxkad.h"
+#include "stats.h"
 #include "private_data.h"
 #define XPRT_RXKAD_CLIENT
 
@@ -85,82 +68,6 @@ static struct rx_securityOps rxkad_client_ops = {
     0,
 };
 
-/* To minimize changes to epoch, we set this Cuid once, and everyone (including
- * rxnull) uses it after that.  This means that the Ksession of the first
- * authencticated connection should be a good one. */
-
-#ifdef AFS_PTHREAD_ENV
-/*
- * This mutex protects the following global variables:
- * Cuid
- * counter
- * rxkad_EpochWasSet
- */
-pthread_mutex_t rxkad_client_uid_mutex;
-#define LOCK_CUID osi_Assert(pthread_mutex_lock(&rxkad_client_uid_mutex)==0)
-#define UNLOCK_CUID osi_Assert(pthread_mutex_unlock(&rxkad_client_uid_mutex)==0)
-#else
-#define LOCK_CUID
-#define UNLOCK_CUID
-#endif /* AFS_PTHREAD_ENV */
-
-static afs_int32 Cuid[2];	/* set once and shared by all */
-int rxkad_EpochWasSet = 0;	/* TRUE => we called rx_SetEpoch */
-
-/* allocate a new connetion ID in place */
-int
-rxkad_AllocCID(struct rx_securityClass *aobj, struct rx_connection *aconn)
-{
-    struct rxkad_cprivate *tcp;
-    struct rxkad_cidgen tgen;
-    static afs_int32 counter = 0;	/* not used anymore */
-
-    LOCK_CUID;
-    if (Cuid[0] == 0) {
-	afs_uint32 xor[2];
-	tgen.ipAddr = rxi_getaddr();	/* comes back in net order */
-	clock_GetTime(&tgen.time);	/* changes time1 and time2 */
-	tgen.time.sec = htonl(tgen.time.sec);
-	tgen.time.usec = htonl(tgen.time.usec);
-	tgen.counter = htonl(counter);
-	counter++;
-#ifdef KERNEL
-	tgen.random1 = afs_random() & 0x7fffffff;	/* was "80000" */
-	tgen.random2 = afs_random() & 0x7fffffff;	/* was "htonl(100)" */
-#else
-	tgen.random1 = htonl(getpid());
-	tgen.random2 = htonl(100);
-#endif
-	if (aobj) {
-	    /* block is ready for encryption with session key, let's go for it. */
-	    tcp = (struct rxkad_cprivate *)aobj->privateData;
-	    memcpy((void *)xor, (void *)tcp->ivec, 2 * sizeof(afs_int32));
-	    fc_cbc_encrypt((char *)&tgen, (char *)&tgen, sizeof(tgen),
-			   tcp->keysched, xor, ENCRYPT);
-	} else {
-	    /* Create a session key so that we can encrypt it */
-
-	}
-	memcpy((void *)Cuid,
-	       ((char *)&tgen) + sizeof(tgen) - ENCRYPTIONBLOCKSIZE,
-	       ENCRYPTIONBLOCKSIZE);
-	Cuid[0] = (Cuid[0] & ~0x40000000) | 0x80000000;
-	Cuid[1] &= RX_CIDMASK;
-	rx_SetEpoch(Cuid[0]);	/* for future rxnull connections */
-	rxkad_EpochWasSet++;
-    }
-
-    if (!aconn) {
-	UNLOCK_CUID;
-	return 0;
-    }
-    aconn->epoch = Cuid[0];
-    aconn->cid = Cuid[1];
-    Cuid[1] += 1 << RX_CIDSHIFT;
-    UNLOCK_CUID;
-    return 0;
-}
-
 /* Allocate a new client security object.  Called with the encryption level,
  * the session key and the ticket for the other side obtained from the
  * AuthServer.  Refers to export control to determine level. */
@@ -175,14 +82,16 @@ rxkad_NewClientSecurityObject(rxkad_level level,
     int code;
     int size, psize;
 
+    rxkad_Init();
+
     size = sizeof(struct rx_securityClass);
-    tsc = (struct rx_securityClass *)rxi_Alloc(size);
+    tsc = rxi_Alloc(size);
     memset((void *)tsc, 0, size);
     tsc->refCount = 1;		/* caller gets one for free */
     tsc->ops = &rxkad_client_ops;
 
     psize = PDATA_SIZE(ticketLen);
-    tcp = (struct rxkad_cprivate *)rxi_Alloc(psize);
+    tcp = rxi_Alloc(psize);
     memset((void *)tcp, 0, psize);
     tsc->privateData = (char *)tcp;
     tcp->type |= rxkad_client;
@@ -301,13 +210,4 @@ rxkad_GetResponse(struct rx_securityClass *aobj, struct rx_connection *aconn,
 
     rx_SetDataSize(apacket, responseSize + tcp->ticketLen);
     return 0;
-}
-
-void
-rxkad_ResetState(void)
-{
-    LOCK_CUID;
-    Cuid[0] = 0;
-    rxkad_EpochWasSet = 0;
-    UNLOCK_CUID;
 }

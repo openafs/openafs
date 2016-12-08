@@ -58,14 +58,8 @@
 /* Define if you have the res_search function.  */
 #undef HAVE_RES_SEARCH
 
-/* Define if you have the snprintf function.  */
-#undef HAVE_SNPRINTF
-
 /* Define if you have the socket function.  */
 #define HAVE_SOCKET
-
-/* Define if you have the strnlen function.  */
-#define HAVE_STRNLEN 1
 
 /* Define if you have the <direct.h> header file.  */
 #undef HAVE_DIRECT_H
@@ -130,6 +124,9 @@
 /* Define if you have the <sys/param.h> header file.  */
 #undef HAVE_SYS_PARAM_H
 
+/* Define if you have the <sys/stat.h> header file. */
+#define HAVE_SYS_STAT_H 1
+
 /* Define if you have the <sys/time.h> header file.  */
 #undef HAVE_SYS_TIME_H
 
@@ -148,11 +145,7 @@
 /* Define if you have the <winsock2.h> header file.  */
 #define HAVE_WINSOCK2_H
 
-/* Define if you have vsnprintf */
-#define HAVE_VSNPRINTF 1
-
-/* Define if you have snprintf */
-#define HAVE_SNPRINTF 1
+#define HAVE_WINSOCK
 
 /* Name of package */
 #undef PACKAGE
@@ -206,6 +199,9 @@
 #include "redhat-fix.h"
 #endif
 
+/* Define if rename() does not unlink an existing file */
+#define RENAME_DOES_NOT_UNLINK 1
+
 /* Windows does not provide socklen_t prior to WDK 6.0 */
 #define HAVE_SOCKLEN_T 1
 typedef int socklen_t;
@@ -244,9 +240,41 @@ typedef int errno_t;
 #define S_ISVTX  0001000
 #endif
 
-#ifndef S_ISDIR
-#define S_ISDIR(m)      (((m)&(S_IFMT)) == (S_IFDIR))
-#endif
-
 #define HAVE_CONIO_H 1
+
+#define HAVE_FSYNC 1
+
+/* param.h overrides lstat, so stop roken getting involved */
+#define HAVE_LSTAT 1
+
+#define HAVE_STRCASECMP 1
+
+#define HAVE_STRUCT_SOCKADDR_STORAGE 1
+
+#define HAVE_DECL_H_ERRNO 1
+
+#define HAVE_STRUCT_ADDRINFO 1
+#define HAVE_GETADDRINFO 1
+#define HAVE_GETNAMEINFO 1
+#define HAVE_FREENAMEINFO 1
+#define HAVE_FREEADDRINFO 1
+#define HAVE_GAI_STRERROR 1
+#define HAVE_STRERROR 1
+#define HAVE_STRLWR 1
+#define HAVE_STRDUP 1
+#define HAVE_GETHOSTNAME 1
+#define HAVE_STRFTIME 1
+#define HAVE_GETCWD 1
+#define HAVE_STRUPR 1
+#define HAVE_UINTPTR_T 1
+#define HAVE_TIMEGM 1
+
+/* Build against Heimdal */
 #define HAVE_KRB5_CREDS_KEYBLOCK_ENCTYPE 1
+#define HAVE_KRB5_CREDS_SESSION 1
+
+/* Build afsroken.dll as a dynamic library */
+#define ROKEN_LIB_DYNAMIC 1
+
+#define MAX(a,b) (((a) > (b)) ? (a) : (b))
+#define MIN(a,b) (((a) < (b)) ? (a) : (b))

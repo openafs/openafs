@@ -13,10 +13,6 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 # MakefileProto for LINUX systems
-# This Makefile generates two libraries: the standard libuafs and libjuafs,
-# a libuafs variant that is designed to link with Java enabled libraries.
-# The libjuafs library implements the AFS_WEB_ENHANCEMENTS definition, see
-# the libuafs README for details.
 
 # System specific build commands and flags
 DEFINES= -D_REENTRANT -DKERNEL -DUKERNEL
@@ -28,38 +24,9 @@ else
 CFLAGS=
 endif
 CFLAGS+= -I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KOPTS) ${DBG} $(XCFLAGS)
-OPTF=-O
-# WEBOPTS = -I../nsapi -DNETSCAPE_NSAPI -DNET_SSL -DXP_UNIX -DMCC_HTTPD
 
 TEST_CFLAGS=-pthread -D_REENTRANT -DAFS_PTHREAD_ENV -DAFS_LINUX22_ENV $(XCFLAGS)
 TEST_LDFLAGS=
-TEST_LIBS=-lpthread
-
-LIBUAFS = libuafs.a
-LIBJUAFS = libjuafs.a
-LIBAFSWEB = nsafs.so
-LIBAFSWEBKRB = nsafs.krb.so
+TEST_LIBS=-lpthread @LIB_crypt@
 
 include Makefile.common
-
-$(LIBUAFS): $(UAFSOBJ)
-	-$(RM) -f $(LIBUAFS)
-	$(AR) $(ARFLAGS) $(LIBUAFS) $(UAFSOBJ)
-
-$(LIBJUAFS): $(JUAFSOBJ)
-	-$(RM) -f $(LIBJUAFS)
-	$(AR) $(ARFLAGS) $(LIBJUAFS) $(JUAFSOBJ)
-
-$(LIBAFSWEB): $(AFSWEBOBJ) ${DES}/libdes.a
-	-$(RM) -f $(LIBAFSWEB)
-	ld -b $(LIBAFSWEB) $(AFSWEBOBJ) ${DES}/libdes.a $(WEBLIBS)
-
-$(LIBAFSWEBKRB): $(AFSWEBOBJKRB) ${DES}/libdes.a
-	-$(RM) -f $(LIBAFSWEBKRB)
-	ld -b $(LIBAFSWEBKRB) $(AFSWEBOBJKRB) ${DES}/libdes.a $(WEBLIBS)
-
-
-
-
-
-

@@ -75,8 +75,6 @@ Configuration files:
 
 =item L<krb.conf(5)>
 
-=item L<package(5)>
-
 =item L<sysid(5)>
 
 =item L<tapeconfig(5)>
@@ -92,6 +90,8 @@ Administrative files:
 =over 4
 
 =item L<KeyFile(5)>
+
+=item L<KeyFileExt(5)>
 
 =item L<UserList(5)>
 

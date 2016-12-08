@@ -360,7 +360,7 @@ afs_root(struct mount *mp, struct vnode **vpp)
 	    afs_globalVFS = mp;
 	    *vpp = AFSTOV(tvp);
 	} else
-	    code = ENOENT;
+	    code = EIO;
     }
     AFS_GUNLOCK();
 

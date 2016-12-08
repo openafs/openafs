@@ -1,0 +1,7 @@
+LICENSE			LICENSE
+m4/gssapi.m4		m4/gssapi.m4
+m4/krb5.m4		m4/krb5.m4
+m4/krb5-config.m4	m4/krb5-config.m4
+m4/lib-depends.m4	m4/lib-depends.m4
+m4/lib-pathname.m4	m4/lib-pathname.m4
+m4/pam-const.m4		m4/pam-const.m4

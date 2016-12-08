@@ -12,10 +12,15 @@
  */
 
 #include <afsconfig.h>
-#include "afs/param.h"
+#include <afs/param.h>
 
 
 #include "rx/rx_kcommon.h"
+#include "rx_atomic.h"
+#include "rx_packet.h"
+#include "rx_internal.h"
+#include "rx_stats.h"
+#include "rx_peer.h"
 
 #ifdef AFS_HPUX110_ENV
 #include "h/tihdr.h"
@@ -296,9 +301,7 @@ MyPacketProc(struct rx_packet **ahandle, int asize)
 		rxi_FreePacket(tp);
 		tp = NULL;
                 if (rx_stats_active) {
-                    MUTEX_ENTER(&rx_stats_mutex);
-                    rx_stats.noPacketBuffersOnRead++;
-                    MUTEX_EXIT(&rx_stats_mutex);
+		    rx_atomic_inc(&rx_stats.noPacketBuffersOnRead);
                 }
 	    }
 	}
@@ -309,9 +312,7 @@ MyPacketProc(struct rx_packet **ahandle, int asize)
 	 * end know we're losing.
 	 */
         if (rx_stats_active) {
-            MUTEX_ENTER(&rx_stats_mutex);
-            rx_stats.bogusPacketOnRead++;
-            MUTEX_EXIT(&rx_stats_mutex);
+	    rx_atomic_inc(&rx_stats.bogusPacketOnRead);
         }
 	/* I DON"T LIKE THIS PRINTF -- PRINTFS MAKE THINGS VERY VERY SLOOWWW */
 	dpf(("rx: packet dropped: bad ulen=%d\n", asize));
@@ -364,9 +365,8 @@ rxi_InitPeerParams(struct rx_peer *pp)
 {
     u_short rxmtu;
 
-#ifdef	ADAPT_MTU
-# ifndef AFS_SUN5_ENV
-#  ifdef AFS_USERSPACE_IP_ADDR
+#ifndef AFS_SUN5_ENV
+# ifdef AFS_USERSPACE_IP_ADDR
     afs_int32 i;
     afs_int32 mtu;
 
@@ -386,25 +386,25 @@ rxi_InitPeerParams(struct rx_peer *pp)
 		pp->ifMTU = rxmtu;
 	}
     }
-#  else /* AFS_USERSPACE_IP_ADDR */
+# else /* AFS_USERSPACE_IP_ADDR */
     rx_ifnet_t ifn;
 
-#   if !defined(AFS_SGI62_ENV)
+#  if !defined(AFS_SGI62_ENV)
     if (numMyNetAddrs == 0)
 	(void)rxi_GetIFInfo();
-#   endif
+#  endif
 
     ifn = rxi_FindIfnet(pp->host, NULL);
     if (ifn) {
 	rx_rto_setPeerTimeoutSecs(pp, 2);
 	pp->ifMTU = MIN(RX_MAX_PACKET_SIZE, rx_MyMaxSendSize);
-#   ifdef IFF_POINTOPOINT
+#  ifdef IFF_POINTOPOINT
 	if (rx_ifnet_flags(ifn) & IFF_POINTOPOINT) {
 	    /* wish we knew the bit rate and the chunk size, sigh. */
 	    rx_rto_setPeerTimeoutSecs(pp, 4);
 	    pp->ifMTU = RX_PP_PACKET_SIZE;
 	}
-#   endif /* IFF_POINTOPOINT */
+#  endif /* IFF_POINTOPOINT */
 	/* Diminish the packet size to one based on the MTU given by
 	 * the interface. */
 	if (rx_ifnet_mtu(ifn) > (RX_IPUDP_SIZE + RX_HEADER_SIZE)) {
@@ -416,8 +416,8 @@ rxi_InitPeerParams(struct rx_peer *pp)
 	rx_rto_setPeerTimeoutSecs(pp, 3);
 	pp->ifMTU = MIN(RX_REMOTE_PACKET_SIZE, rx_MyMaxSendSize);
     }
-#  endif /* else AFS_USERSPACE_IP_ADDR */
-# else /* AFS_SUN5_ENV */
+# endif /* else AFS_USERSPACE_IP_ADDR */
+#else /* AFS_SUN5_ENV */
     afs_int32 mtu;
 
     mtu = rxi_FindIfMTU(pp->host);
@@ -437,12 +437,7 @@ rxi_InitPeerParams(struct rx_peer *pp)
 		pp->ifMTU = rxmtu;
 	}
     }
-# endif /* AFS_SUN5_ENV */
-#else /* ADAPT_MTU */
-    pp->rateFlag = 2;		/* start timing after two full packets */
-    rx_rto_setPeerTimeoutSecs(pp, 2);
-    pp->ifMTU = OLD_MAX_PACKET_SIZE;
-#endif /* else ADAPT_MTU */
+#endif /* AFS_SUN5_ENV */
     pp->ifMTU = rxi_AdjustIfMTU(pp->ifMTU);
     pp->maxMTU = OLD_MAX_PACKET_SIZE;	/* for compatibility with old guys */
     pp->natMTU = MIN(pp->ifMTU, OLD_MAX_PACKET_SIZE);
@@ -484,7 +479,7 @@ shutdown_rxkernel(void)
 	    rxk_shutdownPorts();
 	    return;
 	}
-    dpf(("shutdown_rxkernel: no udp proto"));
+    dpf(("shutdown_rxkernel: no udp proto\n"));
 }
 #endif /* !AIX && !SUN && !NCR  && !UKERNEL */
 
@@ -759,12 +754,7 @@ rxi_FindIfnet(afs_uint32 addr, afs_uint32 * maskp)
 
     addr = ntohl(addr);
 
-#if defined(AFS_DARWIN_ENV)
-    for (ifa = TAILQ_FIRST(&in_ifaddrhead); ifa;
-	 ifa = TAILQ_NEXT(ifa, ia_link)) {
-#else
     for (ifa = in_ifaddr; ifa; ifa = ifa->ia_next) {
-#endif
 	if ((addr & ifa->ia_netmask) == ifa->ia_net) {
 	    if ((addr & ifa->ia_subnetmask) == ifa->ia_subnet) {
 		if (IA_SIN(ifa)->sin_addr.s_addr == addr) {	/* ie, ME!!!  */
@@ -893,11 +883,7 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     memcpy((caddr_t) bindnam->b_rptr + SO_MSGOFFSET, (caddr_t) & myaddr,
 	   addrsize);
     bindnam->b_wptr = bindnam->b_rptr + (addrsize + SO_MSGOFFSET + 1);
-#if defined(AFS_NBSD40_ENV)
-    code = sobind(newSocket, bindnam, addrsize, osi_curproc());
-#else
     code = sobind(newSocket, bindnam, addrsize);
-#endif
     if (code) {
 	soclose(newSocket);
 #if !defined(AFS_HPUX1122_ENV)
@@ -925,12 +911,18 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
        }
     }
 #else
+#if defined(AFS_NBSD_ENV)
+    solock(newSocket);
+#endif
     code = soreserve(newSocket, 50000, 50000);
     if (code) {
 	code = soreserve(newSocket, 32766, 32766);
 	if (code)
 	    osi_Panic("osi_NewSocket: last attempt to reserve 32K failed!\n");
     }
+#if defined(AFS_NBSD_ENV)
+    sounlock(newSocket);
+#endif
 #endif
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 #if defined(AFS_FBSD_ENV)
@@ -1150,11 +1142,11 @@ rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host, int *port)
 	    if (nbytes <= 0) {
                 if (rx_stats_active) {
                     MUTEX_ENTER(&rx_stats_mutex);
-                    rx_stats.bogusPacketOnRead++;
+                    rx_atomic_inc(&rx_stats.bogusPacketOnRead);
                     rx_stats.bogusHost = from.sin_addr.s_addr;
                     MUTEX_EXIT(&rx_stats_mutex);
                 }
-		dpf(("B: bogus packet from [%x,%d] nb=%d",
+		dpf(("B: bogus packet from [%x,%d] nb=%d\n",
 		     from.sin_addr.s_addr, from.sin_port, nbytes));
 	    }
 	    return -1;
@@ -1166,9 +1158,7 @@ rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host, int *port)
 	    *port = from.sin_port;
 	    if (p->header.type > 0 && p->header.type < RX_N_PACKET_TYPES) {
                 if (rx_stats_active) {
-                    MUTEX_ENTER(&rx_stats_mutex);
-                    rx_stats.packetsRead[p->header.type - 1]++;
-                    MUTEX_EXIT(&rx_stats_mutex);
+                    rx_atomic_inc(&rx_stats.packetsRead[p->header.type - 1]);
                 }
 	    }
 
@@ -1305,7 +1295,7 @@ osi_Panic(char *msg, ...)
 	icmn_err(CE_PANIC, msg, ap);
 	va_end(ap);
     }
-#elif defined(AFS_DARWIN80_ENV) || (defined(AFS_LINUX22_ENV) && !defined(AFS_LINUX_26_ENV))
+#elif defined(AFS_DARWIN80_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_FBSD_ENV) || defined(UKERNEL)
     char buf[256];
     va_list ap;
     if (!msg)
@@ -1315,7 +1305,7 @@ osi_Panic(char *msg, ...)
     vsnprintf(buf, sizeof(buf), msg, ap);
     va_end(ap);
     printf("%s", buf);
-    panic(buf);
+    panic("%s", buf);
 #else
     va_list ap;
     if (!msg)
@@ -1327,7 +1317,7 @@ osi_Panic(char *msg, ...)
 # ifdef AFS_LINUX20_ENV
     * ((char *) 0) = 0;
 # else
-    panic(msg);
+    panic("%s", msg);
 # endif
 #endif
 }

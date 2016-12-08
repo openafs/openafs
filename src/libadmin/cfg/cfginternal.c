@@ -9,31 +9,18 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
 
-#include <stddef.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#include <fcntl.h>
+#include <roken.h>
 
 #ifdef AFS_NT40_ENV
 #include <windows.h>
-#include <winsock2.h>
-#include <io.h>
 #include <WINNT/afsreg.h>
-#else
-#include <unistd.h>
-#include <math.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <sys/param.h>
 #endif /* AFS_NT40_ENV */
-#include <dirent.h>
+
+#ifdef HAVE_MATH_H
+# include <math.h>
+#endif
 
 #include <pthread.h>
 
@@ -493,8 +480,7 @@ cfgutil_HostAddressFetchAll(const char *hostName, int *addrCount,
 	for (i = 0; hentryp->h_addr_list[i] != NULL; i++);
 	aCount = i;
 
-	if ((aList =
-	     (afs_int32 *) malloc(aCount * sizeof(afs_int32))) == NULL) {
+	if ((aList = malloc(aCount * sizeof(afs_int32))) == NULL) {
 	    tst = ADMNOMEM;
 	} else {
 	    for (i = 0; i < aCount; i++) {

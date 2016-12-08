@@ -27,7 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#include <afs/afsutil.h>
+#include <roken.h>
 
 #ifdef AFS_NT40_ENV
 #include <windows.h>
@@ -259,19 +259,15 @@ afscp_ReturnCallBacks(const struct afscp_server *server)
 	    continue;
 	}
 	if (!inited) {
-	    theFids.AFSCBFids_val = malloc(sizeof(struct AFSFid) * AFSCBMAX);
+	    theFids.AFSCBFids_val = calloc(AFSCBMAX, sizeof(struct AFSFid));
 	    if (!theFids.AFSCBFids_val) {
 		return -1;
 	    }
-	    memset(theFids.AFSCBFids_val, 0,
-		   sizeof(struct AFSFid) * AFSCBMAX);
-	    theCBs.AFSCBs_val = malloc(sizeof(struct AFSCallBack) * AFSCBMAX);
+	    theCBs.AFSCBs_val = calloc(AFSCBMAX, sizeof(struct AFSCallBack));
 	    if (!theCBs.AFSCBs_val) {
 		free(theFids.AFSCBFids_val);
 		return -1;
 	    }
-	    memset(theCBs.AFSCBs_val, 0,
-		   sizeof(struct AFSCallBack) * AFSCBMAX);
 	    inited = 1;
 	}
 
@@ -563,36 +559,11 @@ SRXAFSCB_TellMeAboutYourself(struct rx_call * a_call,
 			     struct interfaceAddr * addr,
 			     Capabilities * capabilities)
 {
-#ifdef AFS_NT40_ENV
-    int code;
-    int cm_noIPAddr;		/* number of client network interfaces */
-    int cm_IPAddr[CM_MAXINTERFACE_ADDR];	/* client's IP address in host order */
-    int cm_SubnetMask[CM_MAXINTERFACE_ADDR];	/* client's subnet mask in host order */
-    int cm_NetMtu[CM_MAXINTERFACE_ADDR];	/* client's MTU sizes */
-    int cm_NetFlags[CM_MAXINTERFACE_ADDR];	/* network flags */
-    int i;
-
-    cm_noIPAddr = CM_MAXINTERFACE_ADDR;
-    code = syscfg_GetIFInfo(&cm_noIPAddr,
-			    cm_IPAddr, cm_SubnetMask, cm_NetMtu, cm_NetFlags);
-    if (code > 0) {
-	/* return all network interface addresses */
-	addr->numberOfInterfaces = cm_noIPAddr;
-	for (i = 0; i < cm_noIPAddr; i++) {
-	    addr->addr_in[i] = cm_IPAddr[i];
-	    addr->subnetmask[i] = cm_SubnetMask[i];
-	    addr->mtu[i] = cm_NetMtu[i];
-	}
-    } else {
-	addr->numberOfInterfaces = 0;
-    }
-#else
     if (a_call && addr) {
 	if (!afs_cb_inited)
 	    init_afs_cb();
 	*addr = afs_cb_interface;
     }
-#endif
     if (capabilities != NULL) {
 	afs_uint32 *dataBuffP;
 	afs_int32 dataBytes;

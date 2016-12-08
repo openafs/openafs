@@ -245,7 +245,7 @@ the reader count.
 
  - viced state serialization
 
-See src/tviced/serialize_state.* and ShutDownAndCore in
+See src/viced/serialize_state.* and ShutDownAndCore in
 src/viced/viced.c
 
 Before DAFS, whenever a fileserver restarted, it lost all information
@@ -358,7 +358,7 @@ lock cannot cause any process to just hang, waiting for a lock.
 
  -- re-reading volume headers
 
-Since we cannot know whether a volume is writeable or not until the
+Since we cannot know whether a volume is writable or not until the
 volume header is read, and we cannot atomically upgrade file-level
 locks, part of attachment can now occur twice (see attach2 and
 attach_volume_header). What occurs is we read the vol header, assuming

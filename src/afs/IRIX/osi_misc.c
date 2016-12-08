@@ -114,7 +114,7 @@ afs_init_kernel_config(int flag)
 	     * only if it's an IP27 or IP35.
 	     */
 	    pinv =
-		find_inventory((inventory_t *) NULL, INV_PROCESSOR,
+		find_inventory(NULL, INV_PROCESSOR,
 			       INV_CPUBOARD, -1, -1, -1);
 	    if (!pinv)
 		code = ENODEV;

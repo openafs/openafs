@@ -10,11 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#include <string.h>
-#include <errno.h>
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
+#include <roken.h>
 
 #include "afsutil.h"
 

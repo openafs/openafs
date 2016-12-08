@@ -10,25 +10,16 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <sys/types.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <time.h>
-#ifdef AFS_NT40_ENV
-#include <io.h>
-#else
-#include <sys/time.h>
-#include <netinet/in.h>
-#endif
-#include <afs/afsutil.h>
 #include <limits.h>
-#include <sys/stat.h>
-#include <stdio.h>
 #include <ctype.h>
+
+#include <afs/afsutil.h>
 #include <lwp.h>
 #include <afs/com_err.h>
 #include <afs/butm.h>
+
 #include "error_macros.h"
 
 int isafile = 0, debugLevel = 1;
@@ -120,7 +111,7 @@ main(argc, argv)
     if (argc < 2)
 	goto usage;
 
-    files = (char **)malloc(argc * sizeof(char *));
+    files = malloc(argc * sizeof(char *));
     nFiles = 0;
     for (i = 1; i < argc; i++) {
 	if (argv[i][0] == '-') {
@@ -222,7 +213,7 @@ PerformDumpTest(TestInfo * tip)
     int i, past, code;
     struct timeval tp;
 
-    bufferBlock = (struct BufferBlock *)malloc(sizeof(struct BufferBlock));
+    bufferBlock = malloc(sizeof(struct BufferBlock));
 
     info.structVersion = BUTM_MAJORVERSION;
     if (code = butm_file_Instantiate(&info, tip->tc_Infop)) {
@@ -231,7 +222,7 @@ PerformDumpTest(TestInfo * tip)
     }
 
     memset(&label, 0, sizeof(label));
-    gettimeofday(&tp, 0);
+    gettimeofday(&tp, NULL);
     label.structVersion = CUR_TAPE_VERSION;
     label.creationTime = tp.tv_sec;
     label.size = info.tapeSize;

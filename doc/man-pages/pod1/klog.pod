@@ -328,10 +328,10 @@ Database entry was created in AFS 3.1 or later).
    % klog
    Password:
 
-The following example authenticates the user as admin in the ABC
+The following example authenticates the user as admin in the Example
 Corporation's test cell:
 
-   % klog -principal admin -cell test.abc.com
+   % klog -principal admin -cell test.example.com
    Password:
 
 In the following, the issuer requests a ticket lifetime of 104 hours 30

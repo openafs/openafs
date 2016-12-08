@@ -10,7 +10,7 @@ restorevol - Restore a volume from vos dump to the local file system
 B<restorevol> S<<< [B<-file> <I<dump file>>] >>> S<<< [B<-dir> <I<restore dir>> ] >>>
     S<<< [B<-extension> <I<name extension>>] >>>
     S<<< [B<-mountpoint> <I<mount point root>>] >>>
-    S<<< [B<-umask> <I<mode mask>>] >>> [B<-verbose>] [B<-help>]
+    S<<< [B<-umask> <I<mode mask>>] >>> [B<-help>]
 
 =for html
 </div>
@@ -118,6 +118,19 @@ restored volume would be resolved via AFS.
 The I<mount point root> must exist, and the process running the command
 have read access to that directory, or the command will fail.
 
+=item B<-umask> <I<mode mask>>
+
+Sets the umask while creating files. If not specified, the current process
+umask is used. All directories are created with mode C<0777> (ANDed with the
+umask), and files are created with the owner, group, and user mode bits set to
+the owner mode bits of the relevant AFS file (ANDed with the umask).
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+
 =back
 
 =head1 EXAMPLES
@@ -128,7 +141,7 @@ mountpoints inside the volume point to AFS (note that this requires
 knowledge of where F<sample> is mounted in AFS):
 
    % restorevol -file sample.dump -dir /tmp -extension .2009-05-17 \
-       -mountpoint /afs/example.org/sample
+       -mountpoint /afs/example.com/sample
    Restoring volume dump of 'sample' to directory '/tmp/sample.2009-05-17'
 
 =head1 PRIVILEGE REQUIRED

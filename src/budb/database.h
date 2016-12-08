@@ -148,7 +148,7 @@ struct volFragment {
 #define NvolFragmentS 45
 struct vfBlock {
     struct blockHeader h;
-    struct {
+    struct vfBlock_frag {
 	struct volFragment s;
 	char pad[4];
     } a[NvolFragmentS];
@@ -176,7 +176,7 @@ struct volInfo {
 #define NvolInfoS 20
 struct viBlock {
     struct blockHeader h;
-    struct {
+    struct viBlock_info {
 	struct volInfo s;
 	char pad[4];
     } a[NvolInfoS];
@@ -211,7 +211,7 @@ struct tape {
 #define NtapeS 20
 struct tBlock {
     struct blockHeader h;
-    struct {
+    struct tBlock_tape {
 	struct tape s;
 	char pad[8];
     } a[NtapeS];
@@ -249,7 +249,7 @@ typedef dbDumpT *dbDumpP;
 #define NdumpS 3
 struct dBlock {
     struct blockHeader h;
-    struct {
+    struct dBlock_dump {
 	struct dump s;
 	char pad[44];
     } a[NdumpS];

@@ -18,20 +18,12 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <sys/types.h>
 #include <afs/cmd.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/param.h>
-#endif
 #include <afs/com_err.h>
-
 #include <afs/bubasics.h>
+
 #include "bc.h"
 #include "bucoord_internal.h"
 
@@ -198,11 +190,9 @@ bc_CreateVolumeSet(struct bc_config *aconfig, char *avolName,
 	return -1;		/* already exists */
     /* move to end of the list */
 
-    nset = (struct bc_volumeSet *)malloc(sizeof(struct bc_volumeSet));
-    memset(nset, 0, sizeof(*nset));
+    nset = calloc(1, sizeof(struct bc_volumeSet));
     nset->flags = aflags;
-    nset->name = (char *)malloc(strlen(avolName) + 1);
-    strcpy(nset->name, avolName);
+    nset->name = strdup(avolName);
     if (aflags & VSFLAG_TEMPORARY) {
 	/* Add to beginning of list */
 	nset->next = aconfig->vset;
@@ -312,14 +302,10 @@ bc_AddVolumeItem(struct bc_config *aconfig, char *avolName, char *ahost,
 
     /* move to end of the list */
     for (tentry = *tlast; tentry; tlast = &tentry->next, tentry = *tlast);
-    tentry = (struct bc_volumeEntry *)malloc(sizeof(struct bc_volumeEntry));
-    memset(tentry, 0, sizeof(*tentry));
-    tentry->serverName = (char *)malloc(strlen(ahost) + 1);
-    strcpy(tentry->serverName, ahost);
-    tentry->partname = (char *)malloc(strlen(apart) + 1);
-    strcpy(tentry->partname, apart);
-    tentry->name = (char *)malloc(strlen(avol) + 1);
-    strcpy(tentry->name, avol);
+    tentry = calloc(1, sizeof(struct bc_volumeEntry));
+    tentry->serverName = strdup(ahost);
+    tentry->partname = strdup(apart);
+    tentry->name = strdup(avol);
 
     code = bc_ParseHost(tentry->serverName, &tentry->server);
     if (code)
@@ -378,16 +364,14 @@ bc_CreateDumpSchedule(struct bc_config *aconfig, char *adumpName,
     else if (code != -1)
 	return -2;		/* name specification error */
 
-    tdump = (struct bc_dumpSchedule *)malloc(sizeof(struct bc_dumpSchedule));
-    memset(tdump, 0, sizeof(*tdump));
+    tdump = calloc(1, sizeof(struct bc_dumpSchedule));
 
     /* prepend this node to the dump schedule list */
     tdump->next = aconfig->dsched;
     aconfig->dsched = tdump;
 
     /* save the name of this dump node */
-    tdump->name = (char *)malloc(strlen(adumpName) + 1);
-    strcpy(tdump->name, adumpName);
+    tdump->name = strdup(adumpName);
 
     /* expiration information */
     tdump->expDate = expDate;
@@ -558,7 +542,6 @@ FindDump(struct bc_config *aconfig, char *nodeString,
 	return (-3);
     }
 
-    matchLength = 0;
     curptr = &nodeString[1];	/* past first / */
     separator = strchr(curptr, '/');
     if (separator == 0)

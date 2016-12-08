@@ -7,13 +7,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.pthread
 
-CFLAGS=${COMMON_CFLAGS} ${MT_CFLAGS}
-CCRULE = ${CC} ${CFLAGS} -c $?
 
 UBIKOBJS=\
 	ubik_int.cs.o \
@@ -58,10 +53,10 @@ libcfgadmin.a: ${LIBOBJS}
 UBIKDIR=../../ubik
 
 ubik_int.cs.o: ${UBIKDIR}/ubik_int.cs.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UBIKDIR)/ubik_int.cs.c
 
 ubik_int.xdr.o: ${UBIKDIR}/ubik_int.xdr.c
-	${CCRULE}
+	$(AFS_CCRULE) $(UBIKDIR)/ubik_int.xdr.c
 
 ${CFGOBJS}: afs_cfgAdmin.h
 

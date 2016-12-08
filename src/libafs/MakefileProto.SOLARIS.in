@@ -15,6 +15,7 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 # OS specific object files:
 AFS_OS_OBJS = \
+	osi_crypto.o \
 	osi_gcpags.o \
 	osi_groups.o \
 	osi_inode.o \
@@ -41,37 +42,35 @@ DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
 #CC = /opt/SUNWspro/bin/cc
 KDEFS= -D_KERNEL -DSYSV -dn ${ARCH_DEFS}
 
-<sun4x_57 sun4x_58 sun4x_59 sun4x_510 sun4x_511>
+<sun4x_58 sun4x_59 sun4x_510 sun4x_511>
 KDEFS_32 = -xarch=v8
 KDEFS_64 = -xarch=v9 
 
-<sunx86_57 sunx86_58 sunx86_59 sunx86_510 sunx86_511>
+<sunx86_58 sunx86_59 sunx86_510 sunx86_511>
 KDEFS_32 = 
 KDEFS_64 = -xarch=amd64 -xmodel=kernel
 
 <all>
 CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
 
+<sun4x_58 sunx86_58 sun4x_59 sunx86_59>
+LDFLAGS=-r -dy -N drv/ip -N drv/udp -N strmod/rpcmod
+
+<sun4x_510 sunx86_510 sun4x_511 sunx86_511>
+LDFLAGS=-r -dy -N drv/ip -N drv/udp -N strmod/rpcmod -N fs/ufs
+
 # Name of directory to hold object files and libraries.
-<all -sun4x_57 -sun4x_58 -sun4x_59 -sun4x_510 -sun4x_511 -sunx86_57 -sunx86_58 -sunx86_59 -sunx86_510 -sunx86_511>
-KOBJ = MODLOAD
-<sun4x_57 sun4x_58 sun4x_59 sunx86_57 sunx86_58 sunx86_59 sunx86_510>
+<all -sun4x_510 sun4x_511 sunx86_511>
 KOBJ = MODLOAD32 MODLOAD64
 <sun4x_510 sun4x_511 sunx86_511>
 KOBJ = MODLOAD64
 
 # This tells Makefile.common to use it's single directory build target.
-<all -sun4x_57 -sun4x_58 -sun4x_59 -sun4x_510 -sun4x_511 -sunx86_57 -sunx86_58 -sunx86_59 -sunx86_510 -sunx86_511>
-COMPDIRS = single_compdir
-INSTDIRS = single_instdir
-DESTDIRS = single_destdir
-
-<sun4x_57 sun4x_58 sun4x_59 sun4x_510 sun4x_511 sunx86_57 sunx86_58 sunx86_59 sunx86_510 sunx86_511>
+<all>
 COMPDIRS = solaris_compdirs
 INSTDIRS = solaris_instdirs
 DESTDIRS = solaris_destdirs
 
-<all>
 include Makefile.common
 
 
@@ -98,7 +97,6 @@ setup:
 ## This is the target for a Solaris 7. Here we build both the 32 bit and
 ## the 64 bit libafs in MODLOAD32 and MODLOAD64 directories respectively
 
-<sun4x_57 sun4x_58 sun4x_59 sun4x_510 sun4x_511 sunx86_57 sunx86_58 sunx86_59 sunx86_510 sunx86_511>
 ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 	for t in ${KOBJ} ; do \
 		echo Building directory: $$t ; \
@@ -121,27 +119,15 @@ solaris_compdirs_libafs: depsrcs libafs
 solaris_instdirs_libafs: install_libafs
 solaris_destdirs_libafs: dest_libafs
 
-<all>
-
 # Below this line are targets when in the COMMON directory:
 LIBAFS = libafs.o
 LIBAFSNONFS = libafs.nonfs.o
 
-<all -sun4x_57 -sun4x_58 -sun4x_59>
-INST_LIBAFS = ${DESTDIR}${afskerneldir}/${LIBAFS}
-INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/${LIBAFSNONFS}
-
-DEST_LIBAFS = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS}
-DEST_LIBAFSNONFS = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFSNONFS}
-
-<sun4x_57 sun4x_58 sun4x_59 sun4x_510 sun4x_511 sunx86_57 sunx86_58 sunx86_59 sunx86_510 sunx86_511>
 INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/libafs${BITS}.nonfs.o
 INST_LIBAFS = ${DESTDIR}${afskerneldir}/libafs${BITS}.o
 
 DEST_LIBAFSNONFS = ${DEST}/root.client/usr/vice/etc/modload/libafs${BITS}.nonfs.o
 DEST_LIBAFS = ${DEST}/root.client/usr/vice/etc/modload/libafs${BITS}.o
-
-<all>
 
 # Without this line, gmake tries to build libafs.o
 .PHONY: libafs
@@ -160,9 +146,9 @@ dest_libafs: $(LIBAFS) $(LIBAFSNONFS)
 
 ${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
 	$(RM) -f $@
-	$(LD) -r -o $@ $(AFSAOBJS) ${AFSNFSOBJS}
+	$(LD) $(LDFLAGS) -o $@ $(AFSAOBJS) ${AFSNFSOBJS}
 
 ${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
 	$(RM) -f $@
-	$(LD) -r -o $@  $(AFSAOBJS) ${AFSNONFSOBJS}
+	$(LD) $(LDFLAGS) -o $@ $(AFSAOBJS) ${AFSNONFSOBJS}
 

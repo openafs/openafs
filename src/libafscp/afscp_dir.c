@@ -27,11 +27,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#ifdef HAVE_SEARCH_H
+#include <roken.h>
+
 #include <search.h>
-#else
-#include "afscp_search.h"
-#endif
 
 #include <afs/vlserver.h>
 #include <afs/vldbint.h>
@@ -209,12 +207,11 @@ afscp_OpenDir(const struct afscp_venusfid *fid)
 	afscp_errno = ENOTDIR;
 	return NULL;
     }
-    ret = malloc(sizeof(struct afscp_dirstream));
+    ret = calloc(1, sizeof(struct afscp_dirstream));
     if (ret == NULL) {
 	afscp_errno = ENOMEM;
 	return NULL;
     }
-    memset(ret, 0, sizeof(struct afscp_dirstream));
     memmove(&ret->fid, fid, sizeof(struct afscp_venusfid));
     code = _DirUpdate(ret);
     if (code < 0) {
@@ -713,6 +710,7 @@ afscp_ResolvePath(const char *path)
     }
     cell = afscp_DefaultCell();
     if (cell == NULL) {
+	free(p);
 	afscp_errno = EINVAL;
 	return NULL;
     }
@@ -742,10 +740,10 @@ struct afscp_venusfid *
 afscp_ResolvePathFromVol(const struct afscp_volume *v, const char *path)
 {
     struct afscp_venusfid *root, *ret;
-    char *p;
+    char *origp, *p;
 
     /* so we can modify the string */
-    p = strdup(path);
+    origp = p = strdup(path);
     if (p == NULL) {
 	afscp_errno = ENOMEM;
 	return NULL;
@@ -758,6 +756,6 @@ afscp_ResolvePathFromVol(const struct afscp_volume *v, const char *path)
 	free(root);
     } else
 	ret = root;
-    free(p);
+    free(origp);
     return ret;
 }

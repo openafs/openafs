@@ -1,6 +1,20 @@
+=item B<-auth>
+
+Use the calling user's tokens to communicate with the Protection Server. For
+more details, see L<pts(1)>.
+
 =item B<-cell> <I<cell name>>
 
 Names the cell in which to run the command. For more details, see
+L<pts(1)>.
+
+=item B<-config> <I<config directory>>
+
+Use an alternate config directory. For more details, see L<pts(1)>.
+
+=item B<-encrypt>
+
+Encrypts any communication with the Protection Server. For more details, see
 L<pts(1)>.
 
 =item B<-force>

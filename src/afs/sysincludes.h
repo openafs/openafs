@@ -52,6 +52,9 @@
 # include <sys/timeout.h>
 
 #elif defined(AFS_NBSD40_ENV)
+# if defined(AFS_NBSD50_ENV) && !defined(AFS_NBSD70_ENV)
+#  include <sys/simplelock.h>
+# endif
 # include <sys/errno.h>
 # include <sys/types.h>
 # include <sys/mount.h> /* may define MOUNT_AFS */
@@ -82,21 +85,14 @@
 # include <sys/socket.h>
 # include <sys/socketvar.h>
 # include <sys/dirent.h>
-# include <sys/user.h>
 # include <sys/kauth.h>
 # include <sys/uio.h>
 # include <sys/buf.h>
 # include <sys/stat.h>
 # include <sys/file.h>
 # include <sys/namei.h>
-# include <sys/socket.h>
-# include <sys/socketvar.h>
-# include <sys/dirent.h>
-# include <sys/user.h>
-# include <sys/kauth.h>
 # include <sys/uio.h>
 # include <sys/buf.h>
-# include <sys/stat.h>
 # include <sys/file.h>
 # include <sys/namei.h>
 # include <sys/vnode.h>
@@ -106,9 +102,7 @@
 # include <ufs/ufs/extattr.h>
 # include <ufs/ufs/ufsmount.h>
 # ifndef MLEN
-#  if 0
-#   include <sys/mbuf.h>
-#  endif /* 0 */
+#  include <sys/mbuf.h>
 #  include <net/if.h>
 # endif /* !MLEN */
 # include <sys/protosw.h>
@@ -171,9 +165,7 @@ struct xfs_inode_info {
 #  include <linux/mutex.h>
 # endif
 # include <linux/errno.h>
-# ifdef HAVE_LINUX_COMPLETION_H
-#  include <linux/completion.h>
-# endif
+# include <linux/completion.h>
 # if defined(HAVE_LINUX_EXPORTFS_H)
 #  include <linux/exportfs.h>
 # endif
@@ -276,12 +268,9 @@ typedef unsigned short etap_event_t;
 
 # ifdef	AFS_SUN5_ENV
 #  include <sys/cmn_err.h>	/* for kernel printf() prototype */
-# endif
-
-# if	defined(AFS_SUN56_ENV)
-#  include "h/vfs.h"		/* stops SUN56 socketvar.h warnings */
-#  include "h/stropts.h"		/* stops SUN56 socketvar.h warnings */
-#  include "h/stream.h"		/* stops SUN56 socketvar.h errors */
+#  include "h/vfs.h"		/* stops SUN5 socketvar.h warnings */
+#  include "h/stropts.h"		/* stops SUN5 socketvar.h warnings */
+#  include "h/stream.h"		/* stops SUN5 socketvar.h errors */
 # endif
 
 # ifdef AFS_SUN510_ENV

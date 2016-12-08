@@ -29,6 +29,7 @@ fi
 # Create the directories.  We generate each section into its own directory
 # to make installation rules easier.
 [ -d man1 ] || mkdir man1
+[ -d man3 ] || mkdir man3
 [ -d man5 ] || mkdir man5
 [ -d man8 ] || mkdir man8
 
@@ -41,6 +42,18 @@ if [ -n "$pod1" ] ; then
     for f in *.pod ; do
         pod2man -c 'AFS Command Reference' -r 'OpenAFS' -s 1 "$f" \
             > ../man1/`echo "$f" | sed 's/\.pod$//'`.1
+    done
+    cd ..
+fi
+pod3=`ls pod3`
+if [ -n "$pod3" ] ; then
+    cd pod3
+    for f in *.pod ; do
+        pod2man -c 'AFS Library Reference' -r 'OpenAFS' -s 3 "$f" \
+            > ../man3/`echo "$f" | sed -e 's/\.pod$//' -e 's/^AFS\./AFS::/'`.3
+	# Perl module manpages are named AFS.foo instead of AFS::foo, since
+	# we cannot have colons in filenames on Windows. So here, we assume
+	# anything with "AFS." should be "AFS::" instead.
     done
     cd ..
 fi

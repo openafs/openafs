@@ -1,0 +1,117 @@
+=head1 NAME
+
+fs_discon - Manage client "disconnected mode"
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<fs discon> S<<< B<-mode> <offline | online> >>>
+    S<<< [B<-policy> <client | server>] >>>
+    [B<-force>]
+    S<<< [B<-uid> <I<uid>>] >>>
+    [B<-help>]
+
+B<fs disc> S<<< B<-m> <offline | online> >>>
+    S<<< [B<-p> <client | server>] >>>
+    [B<-f>]
+    S<<< [B<-u> <I<uid>>] >>>
+    [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<fs discon> command configures "disconnected mode" in the OpenAFS Cache
+Manager. Disconnected mode allows you to keep reading and writing files in AFS
+without a network connection, and any changes to files are recorded locally.
+When the network connection is restored and disconnected mode is turned off,
+any locally recorded changes are sent to the relevant server.
+
+This command was introduced in OpenAFS 1.5.38.
+
+=head1 CAUTIONS
+
+The "disconnected mode" of the OpenAFS cache manager is still considered an
+experimental feature. It can be a bit rough around the edges, and you may lose
+or corrupt data you have written while in disconnected mode. Use with caution.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-mode> <offline | online>
+
+This turns "disconnected mode" on or off. If C<offline> is specified, the
+client will go into disconnected mode, and the client will no longer make any
+effort to reach any server over the network.
+
+If C<online> is specified, the client will come out of disconnected mode, and
+any pending changes will be sent to the relevant server. If there are errors
+when synchronizing changes to the server, the client will stay in disconnected
+mode, unless the B<-force> flag is also given. See B<-force>.
+
+=item B<-policy> <client | server>
+
+This specifies the conflict resolution policy when resynchronizing data afer
+coming back online. A conflict resolution policy is needed when changes have
+been made locally on the client while in disconnected mode, and different
+changes have occurred on the server while we were in disconnected mode. When
+this happens, there are two different possible results:
+
+If C<client> is specified, the local changes on the client will overwrite any
+conflicting changes on the server. This means that if we change a file locally
+while in disconnected mode, and another user changes the same file in the same
+place on the fileserver while we are disconnected, the other user's changes
+will be lost.
+
+If C<server> is specified, the conflicting changes on the server will overwrite
+our local changes. This means that if we change a file locally while in
+disconnected mode, and another user changes the same file in the same place on
+the fileserver while we are disconnected, our local changes will be lost.
+
+The default value is C<server>.
+
+=item B<-force>
+
+If B<-force> is specified when coming back online, any errors during
+resynchronization are ignored by throwing away our local changes. That is, if
+we write our local pending changes to a server while coming back online, and
+there is an error while writing those changes, those changes will be lost.
+
+Without B<-force>, such an error causes the client to stay offline.
+
+=item B<-uid> <I<uid>>
+
+When resynchronizing local pending changes to the relevant fileserver, by
+default we use the credentials of the user issuing B<fs discon> to send the
+changes to the fileserver. If B<-uid> is specified, we will instead use the
+credentials for the specified uid.
+
+Note that this will only use the PAG-less credentials of the specified uid. It
+is currently not possible to specify an arbitrary PAG here.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be logged in as the local superuser C<root>.
+
+=head1 SEE ALSO
+
+L<afsd(8)>
+
+=head1 COPYRIGHT
+
+Copyright 2013 Sine Nomine Associates
+
+This documentation is covered by the BSD License as written in the
+doc/LICENSE file. This man page was written by Andrew Deason for
+OpenAFS.

@@ -42,10 +42,10 @@ typedef unsigned short etap_event_t;
 #include "h/systm.h"
 #endif
 #include "h/time.h"
-#ifdef AFS_SUN56_ENV
-#include "h/vfs.h"		/* stops SUN56 socketvar.h warnings */
-#include "h/stropts.h"		/* stops SUN56 socketvar.h warnings */
-#include "h/stream.h"		/* stops SUN56 socketvar.h errors */
+#ifdef AFS_SUN5_ENV
+#include "h/vfs.h"		/* stops SUN5 socketvar.h warnings */
+#include "h/stropts.h"		/* stops SUN5 socketvar.h warnings */
+#include "h/stream.h"		/* stops SUN5 socketvar.h errors */
 #include "h/disp.h"
 #endif
 #include "h/socket.h"

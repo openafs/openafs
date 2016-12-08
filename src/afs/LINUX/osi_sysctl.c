@@ -19,7 +19,7 @@
 #endif
 
 /* From afs_util.c */
-extern afs_int32 afs_new_inum;
+extern afs_int32 afs_md5inum;
 
 /* From afs_analyze.c */
 extern afs_int32 hm_retry_RO;
@@ -226,7 +226,7 @@ static struct ctl_table afs_sysctl_table[] = {
 #endif
 #endif
 	.procname	= "md5inum",
-	.data		= &afs_new_inum, 
+	.data		= &afs_md5inum,
 	.maxlen		= sizeof(afs_int32),
 	.mode		= 0644,
      	.proc_handler	= &proc_dointvec

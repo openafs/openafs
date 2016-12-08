@@ -27,7 +27,7 @@ char* GetNativeString(JNIEnv *env, jstring jstr){
   exc = (*env)->ExceptionOccurred(env);
   if (!exc) {
     jint len = (*env)->GetArrayLength(env, bytes);
-    result = (char *)malloc(len + 1);
+    result = malloc(len + 1);
     if (result == 0) {
 
       /*JNU_ThrowByName(env, "java/lang/OutOfMemoryError",

@@ -7,14 +7,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.pthread
 
-CC = ${MT_CC}
-CFLAGS=${COMMON_CFLAGS} ${MT_CFLAGS} ${CFLAGS_NOERROR}
-CCRULE = ${CC} ${CFLAGS} -c $?
 
 BOZO = ../../bozo
 
@@ -50,13 +44,12 @@ libbosadmin.a: ${LIBOBJS}
 	${RANLIB} $@
 
 afs_bosAdmin.o: afs_bosAdmin.c afs_bosAdmin.h
-	$(CC) $(CFLAGS) -c ${srcdir}/afs_bosAdmin.c
 
 bosint.xdr.o: ${BOZO}/bosint.xdr.c
-	${CCRULE}
+	$(AFS_CCRULE) $(BOZO)/bosint.xdr.c
 
 bosint.cs.o: ${BOZO}/bosint.cs.c
-	${CCRULE}
+	$(AFS_CCRULE) $(BOZO)/bosint.cs.c
 
 clean:
 	$(RM) -f *.o libbosadmin*

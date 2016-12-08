@@ -14,9 +14,9 @@ to talk to other database servers.
 =head2 FORMAT
 
 The F<NetRestrict> file is in ASCII format. One IP address appears on each
-line, in dotted decimal format. The order of the addresses is not
-significant. There is currently no mechanism to specify a range of
-addresses or a wildcard; each IP address must be listed individually.
+line, in dotted decimal format.  To specify a network instead, use a
+slash (C</>) followed by a subnet length.  The order of the addresses is
+not significant.
 
 =head2 Client NetRestrict
 
@@ -32,10 +32,6 @@ list of interfaces configured with the operating system otherwise.  The
 Cache Manager then removes from the list any addresses that appear in the
 F<NetRestrict> file, if it exists. The Cache Manager records the resulting
 list in kernel memory.
-
-The F<NetRestrict> file is in ASCII format. One IP address appears on each
-line, in dotted decimal format. The order of the addresses is not
-significant.
 
 To display the addresses the Cache Manager is currently registering with
 File Servers, use the B<fs getclientaddrs> command.
@@ -73,6 +69,19 @@ the peer processes on other database machines in the cell.
 
 To display the File Server interface addresses registered in the VLDB, use
 the B<vos listaddrs> command.
+
+=head1 EXAMPLES
+
+If the File Server should not use the IP address 192.168.1.1 on one of
+its private interfaces, then the F<NetRestrict> file should contain
+the following:
+
+   196.168.1.1
+
+In order to prevent the usage of any 192.168/16 addresses on its local
+interfaces, the F<NetRestrict> file should contain:
+
+   196.168.0.0/16
 
 =head1 SEE ALSO
 

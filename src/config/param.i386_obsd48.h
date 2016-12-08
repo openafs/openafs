@@ -13,4 +13,13 @@
 #define AFS_X86_ENV	        1
 #define AFSLITTLE_ENDIAN	1
 
+#ifdef _KERNEL
+void bcopy(const void *, void *, size_t);
+
+static inline void *memmove(void *dst, const void *src, size_t len) {
+    bcopy(src, dst, len);
+    return(dst);
+}
+#endif
+
 #endif /* AFS_I386_PARAM_H */

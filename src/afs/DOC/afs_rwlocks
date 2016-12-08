@@ -31,6 +31,10 @@ entries can be locked while holding afs_xdcache.
 Bugs: afs_xvcache locked before afs_xdcache in afs_remove, afs_symlink,
 etc in the file afs_vnodeops.c
 
+5.1.  unixusers. unixuser structs are locked before afs_xvcache in PSetTokens
+via afs_NotifyUser and via afs_ResetUserConns. They are also locked before
+afs_xvcache in afs_Analyze via afs_BlackListOnce.
+
 6.  afs_xvcache.  Must be able to load new cache entries while holding
 locks on others.  Note this means you can't lock a cache entry while
 holding either of this lock, unless, as in afs_create, the cache entry

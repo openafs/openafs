@@ -1,4 +1,6 @@
-...(This document is current as of release 1.5.55)
+This document is current as of release 1.6.0b.  It has not been updated
+to reflect the changes due to the use of the AFSRedir.sys file system
+redirector driver in 1.7.0100 and later.
 
 How to determine if OpenAFS is installed?
 

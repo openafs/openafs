@@ -26,15 +26,14 @@
 #include "afs/nfsclient.h"
 #include "osi_compat.h"
 
-#ifdef AFS_LINUX26_ONEGROUP_ENV
-# define NUMPAGGROUPS 1
+#ifdef AFS_PAG_ONEGROUP_ENV
 
 static afs_uint32
 afs_linux_pag_from_groups(struct group_info *group_info) {
     afs_uint32 g0 = 0;
     afs_uint32 i;
 
-    if (group_info->ngroups < NUMPAGGROUPS)
+    if (group_info->ngroups < AFS_NUMPAGGROUPS)
 	return NOPAG;
 
     for (i = 0; i < group_info->ngroups; i++) {
@@ -54,7 +53,7 @@ afs_linux_pag_to_groups(afs_uint32 newpag,
     afs_kgid_t newkgid = afs_make_kgid(newpag);
 
     if (afs_linux_pag_from_groups(old) == NOPAG)
-	need_space = NUMPAGGROUPS;
+	need_space = AFS_NUMPAGGROUPS;
 
     *new = groups_alloc(old->ngroups + need_space);
 
@@ -75,12 +74,11 @@ afs_linux_pag_to_groups(afs_uint32 newpag,
 }
 
 #else
-# define NUMPAGGROUPS 2
 
 static inline afs_uint32
 afs_linux_pag_from_groups(struct group_info *group_info) {
 
-    if (group_info->ngroups < NUMPAGGROUPS)
+    if (group_info->ngroups < AFS_NUMPAGGROUPS)
 	return NOPAG;
 
     return afs_get_pag_from_groups(GROUP_AT(group_info, 0), GROUP_AT(group_info, 1));
@@ -95,7 +93,7 @@ afs_linux_pag_to_groups(afs_uint32 newpag,
     gid_t g1;
 
     if (afs_linux_pag_from_groups(old) == NOPAG)
-	need_space = NUMPAGGGROUPS;
+	need_space = AFS_NUMPAGGROUPS;
 
     *new = groups_alloc(old->ngroups + need_space);
 
@@ -281,7 +279,7 @@ setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
     return code;
 }
 
-
+#ifndef LINUX_KEYRING_SUPPORT
 /* Intercept the standard system call. */
 extern asmlinkage long (*sys_setgroupsp) (int gidsetsize, gid_t * grouplist);
 asmlinkage long
@@ -342,7 +340,7 @@ afs_xsetgroups32(int gidsetsize, gid_t * grouplist)
     return (-code);
 }
 
-#if defined(AFS_PPC64_LINUX20_ENV)
+# if defined(AFS_PPC64_LINUX20_ENV)
 /* Intercept the uid16 system call as used by 32bit programs. */
 extern asmlinkage long (*sys32_setgroupsp)(int gidsetsize, gid_t *grouplist);
 asmlinkage long afs32_xsetgroups(int gidsetsize, gid_t *grouplist)
@@ -370,17 +368,17 @@ asmlinkage long afs32_xsetgroups(int gidsetsize, gid_t *grouplist)
     /* Linux syscall ABI returns errno as negative */
     return (-code);
 }
-#endif
+# endif
 
-#if defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_AMD64_LINUX20_ENV)
+# if defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_AMD64_LINUX20_ENV)
 /* Intercept the uid16 system call as used by 32bit programs. */
-#ifdef AFS_AMD64_LINUX20_ENV
+#  ifdef AFS_AMD64_LINUX20_ENV
 extern asmlinkage long (*sys32_setgroupsp) (int gidsetsize, u16 * grouplist);
-#endif /* AFS_AMD64_LINUX20_ENV */
-#ifdef AFS_SPARC64_LINUX26_ENV
+#  endif /* AFS_AMD64_LINUX20_ENV */
+#  ifdef AFS_SPARC64_LINUX26_ENV
 extern asmlinkage int (*sys32_setgroupsp) (int gidsetsize,
 					   __kernel_gid32_t * grouplist);
-#endif /* AFS_SPARC64_LINUX26_ENV */
+#  endif /* AFS_SPARC64_LINUX26_ENV */
 asmlinkage long
 afs32_xsetgroups(int gidsetsize, u16 * grouplist)
 {
@@ -409,13 +407,13 @@ afs32_xsetgroups(int gidsetsize, u16 * grouplist)
 }
 
 /* Intercept the uid32 system call as used by 32bit programs. */
-#ifdef AFS_AMD64_LINUX20_ENV
+#  ifdef AFS_AMD64_LINUX20_ENV
 extern asmlinkage long (*sys32_setgroups32p) (int gidsetsize, gid_t * grouplist);
-#endif /* AFS_AMD64_LINUX20_ENV */
-#ifdef AFS_SPARC64_LINUX26_ENV
+#  endif /* AFS_AMD64_LINUX20_ENV */
+#  ifdef AFS_SPARC64_LINUX26_ENV
 extern asmlinkage int (*sys32_setgroups32p) (int gidsetsize,
 					     __kernel_gid32_t * grouplist);
-#endif /* AFS_SPARC64_LINUX26_ENV */
+#  endif /* AFS_SPARC64_LINUX26_ENV */
 asmlinkage long
 afs32_xsetgroups32(int gidsetsize, gid_t * grouplist)
 {
@@ -442,8 +440,8 @@ afs32_xsetgroups32(int gidsetsize, gid_t * grouplist)
     /* Linux syscall ABI returns errno as negative */
     return (-code);
 }
-#endif
-
+# endif
+#endif /* !LINUX_KEYRING_SUPPORT */
 
 #ifdef LINUX_KEYRING_SUPPORT
 static void afs_pag_describe(const struct key *key, struct seq_file *m)

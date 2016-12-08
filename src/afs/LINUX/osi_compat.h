@@ -335,21 +335,39 @@ kernel_getsockopt(struct socket *sockp, int level, int name, char *val,
 #endif
 
 #ifdef HAVE_TRY_TO_FREEZE
-static inline void
+static inline int
 afs_try_to_freeze(void) {
 # ifdef LINUX_REFRIGERATOR_TAKES_PF_FREEZE
-    try_to_freeze(PF_FREEZE);
+    return try_to_freeze(PF_FREEZE);
 # else
-    try_to_freeze();
+    return try_to_freeze();
 # endif
 }
 #else
-static inline void
+static inline int
 afs_try_to_freeze(void) {
 # ifdef CONFIG_PM
     if (current->flags & PF_FREEZE) {
 	refrigerator(PF_FREEZE);
+	return 1;
     }
+# endif
+    return 0;
+}
+#endif
+
+/* The commit which changed refrigerator so that it takes no arguments
+ * also added freezing(), so if LINUX_REFRIGERATOR_TAKES_PF_FREEZE is
+ * true, the kernel doesn't have a freezing() function.
+ */
+#ifdef LINUX_REFRIGERATOR_TAKES_PF_FREEZE
+static inline int
+freezing(struct task_struct *p)
+{
+# ifdef CONFIG_PM
+    return p->flags & PF_FREEZE;
+# else
+    return 0;
 # endif
 }
 #endif
@@ -504,6 +522,41 @@ afs_get_dentry_ref(afs_linux_path_t *path, struct vfsmount **mnt, struct dentry 
     path_put(path);
 #endif
 }
+
+/* wait_event_freezable appeared with 2.6.24 */
+
+/* These implement the original AFS wait behaviour, with respect to the
+ * refrigerator, rather than the behaviour of the current wait_event_freezable
+ * implementation.
+ */
+
+#ifndef wait_event_freezable
+# define wait_event_freezable(waitqueue, condition)				\
+({										\
+    int _ret;									\
+    do {									\
+	_ret = wait_event_interruptible(waitqueue, 				\
+					(condition) || freezing(current));	\
+	if (_ret && !freezing(current))					\
+	    break;								\
+	else if (!(condition))							\
+	    _ret = -EINTR;							\
+    } while (afs_try_to_freeze());						\
+    _ret;									\
+})
+
+# define wait_event_freezable_timeout(waitqueue, condition, timeout)		\
+({										\
+     int _ret;									\
+     do {									\
+	_ret = wait_event_interruptible_timeout(waitqueue,			\
+						(condition || 			\
+						 freezing(current)),		\
+						timeout);			\
+     } while (afs_try_to_freeze());						\
+     _ret;									\
+})
+#endif
 
 #if defined(STRUCT_TASK_STRUCT_HAS_CRED)
 static inline struct file *

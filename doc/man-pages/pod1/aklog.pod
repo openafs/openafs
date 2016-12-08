@@ -117,7 +117,7 @@ normally won't be necessary.
 
 =item B<-linked>
 
-If the AFS cell is linked to a DCE cell, get tokens for both.
+If the AFS cell is linked to another AFS cell, get tokens for both.
 
 =item B<-noauth>
 
@@ -242,24 +242,24 @@ To get tokens for the local cell:
 
     % aklog
 
-To get tokens for the C<athena.mit.edu> cell:
+To get tokens for the C<prod.example.org> cell:
 
-    % aklog athena.mit.edu
+    % aklog prod.example.org
 
 or
 
-    % aklog athena
+    % aklog prod
 
 The latter will work if you local cache manager already knows about the
-C<athena> cell.
+C<prod> cell.
 
-To get tokens adequate to read F</afs/athena.mit.edu/user/p/potato>:
+To get tokens adequate to read F</afs/prod.example.org/user/p/potato>:
 
-    % aklog /afs/athena.mit.edu/user/p/potato
+    % aklog /afs/prod.example.org/user/p/potato
 
-To get tokens for C<testcell.mit.edu> that is in a test Kerberos realm:
+To get tokens for C<testcell.example.org> that is in a test Kerberos realm:
 
-    % aklog testcell.mit.edu -k TESTREALM.MIT.EDU
+    % aklog testcell.example.org -k TESTREALM.EXAMPLE.ORG
 
 =head1 SEE ALSO
 

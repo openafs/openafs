@@ -1,0 +1,558 @@
+Copyright 2000, International Business Machines Corporation and others.
+All Rights Reserved.
+
+This software has been released under the terms of the IBM Public
+License.  For details, see the LICENSE file in the top-level
+directory or online at http://www.openafs.org/dl/license10.html
+
+Short instructions for sites upgrading from a previous version of AFS:
+% ./configure --enable-transarc-paths
+% make
+% make dest
+
+will create a Transarc-style dest tree in ${SYS_NAME}/dest where
+${SYS_NAME} is the AFS sysname of the system you built for.
+This assumes if you're building for Linux that your kernel source is
+in /usr/src/linux.
+
+Otherwise, please read on.
+
+Building OpenAFS on UNIX and Linux
+----------------------------------
+
+A  Configuring
+
+   Uncompress the source into a directory of your choice. A directory
+   in afs space is also valid. In the directory that you uncompressed the
+   source in, you will only have an src/ directory.
+
+   1. Pick a system to build for, and note its default AFS sys_name.
+      A directory will be automatically created for binaries to be written
+      into with this name when you build.
+
+      alpha_dux40, alpha_dux50, alpha_dux51 (client does not work)
+      alpha_linux26
+      alpha_nbsd15, alpha_nbsd16
+      amd64_fbsd_80, amd64_fbsd_81, amd64_fbsd_82, amd64_fbsd_83,
+         amd64_fbsd_84, amd64_fbsd_90, amd64_fbsd_91, amd64_fbsd_92,
+         amd64_fbsd_93, amd64_fbsd_100, amd64_fbsd_101
+      amd64_linux26
+      amd64_nbsd20, amd64_nbsd30, amd64_nbsd40
+      arm_linux26
+      hp_ux11i, hp_ux110, hp_ux1123 (See notes below for information on
+         getting missing header)
+      hp_ux102 (Client port possible, but db servers and utilities work)
+      i386_fbsd_80, i386_fbsd_81, i386_fbsd_82, i386_fbsd_83,
+         i386_fbsd_84, i386_fbsd_90, i386_fbsd_91, i386_fbsd_92,
+         i386_fbsd_93, i386_fbsd_100, i386_fbsd_101
+      i386_linux26
+      i386_nbsd15, i386_nbsd16, i386_nbsd20, i386_nbsd21, i386_nbsd30,
+         i386_nbsd40
+      i386_obsd31, i386_obsd32, i386_obsd33, i386_obsd34, i386_obsd35,
+         i386_obsd36, i386_obsd37, i386_obsd38, i386_obsd39, i386_obsd40,
+         i386_obsd41
+      i386_umlinux26
+      ia64_hpux1122, ia64_hpux1123
+      ia64_linux26
+      ppc64_linux26
+      ppc_darwin_12, ppc_darwin_13, ppc_darwin_14, ppc_darwin_60,
+         ppc_darwin_70, ppc_darwin_80, ppc_darwin_90
+      ppc_linux26
+      ppc_nbsd16, ppc_nbsd20
+      rs_aix42, rs_aix51, rs_aix52, rs_aix53, rs_aix61
+      s390_linux26
+      s390x_linux26
+      sgi_62, sgi_63, sgi_64, sgi_65 (file server not tested)
+      sparc64_linux26
+      sun4x_58, sun4x_59, sun4x_510, sun4x_511
+         (logging UFS not supported for mixed-use partitions containing
+         client cache)
+      sunx86_58, sunx86_59, sunx86_510, sunx86_511
+         (logging UFS not supported for mixed-use partitions containing
+         client cache)
+      x86_darwin_80, x86_darwin90
+
+   2. Using configure in the top level directory, configure for your
+      AFS system type, providing the necessary flags:
+
+      % ./configure --with-afs-sysname=sun4x_58 --enable-transarc-paths
+
+      If you do not have the "configure" script, or if you modify the
+      source files, you can re-create it by running regen.sh.  You will
+      need autoconf to do this.
+
+      For some systems you need also provide the path in which your kernel
+      headers for your configured kernel can be found.  See the
+      system-specific Notes sections below for details.  If you want to
+      build only the user-space programs and servers and not the kernel
+      module, specify the --disable-kernel-module option on the
+      ./configure command line.
+
+      All binaries, except for the 'fileserver' and 'volserver'
+      executables and their 'da' variants, are stripped of their symbol
+      table information by default.  To enable a debugging build, specify
+      the --enable-debug option on the ./configure command line.  This
+      builds with debugging compiler options and disables stripping of
+      binaries.
+
+      You can also use different combinations of --enable-debug and
+      --enable (or --disable)-strip-binaries for finer control.  One can,
+      for example, compile binaries for debug and strip them anyway.
+      Alternatively, one can compile without debug and force the binaries
+      to not be stripped.  Note that these combinations are not
+      necessarily useful.
+
+      The binaries noted above, 'fileserver' and 'volserver' and their
+      'da' variants, will never be stripped, regardless of any options
+      given to configure.
+
+   There are two modes for directory path handling: "Transarc mode" and
+   "default mode":
+
+   - In Transarc mode, we retain compatibility with Transarc/IBM AFS tools
+     by putting client configuration files in /usr/vice/etc, and server
+     files in /usr/afs under the traditional directory layout.
+   - In default mode, files are located in standardized locations, usually
+     under $(prefix), which defaults to /usr/local.
+   - Client programs, libraries, and related files always go in standard
+     directories under $(prefix).  This rule covers things that would go
+     into $(bindir), $(includedir), $(libdir), $(mandir), and $(sbindir).
+   - Other files get located in the following places:
+
+    Directory     Transarc Mode              Default Mode
+    ============  =========================  ==============================
+    viceetcdir    /usr/vice/etc              $(sysconfdir)/openafs
+    afssrvdir     /usr/afs/bin (servers)     $(libexecdir)/openafs
+    afsconfdir    /usr/afs/etc               $(sysconfdir)/openafs/server
+    afslocaldir   /usr/afs/local             $(localstatedir)/openafs
+    afsdbdir      /usr/afs/db                $(localstatedir)/openafs/db
+    afslogdir     /usr/afs/logs              $(localstatedir)/openafs/logs
+    afsbosconfig  $(afslocaldir)/BosConfig   $(afsconfdir)/BosConfig
+    afsbosserver  $(afsbindir)/bosserver     $(sbindir)/bosserver
+
+   In default mode, you can change all of the variables named above that
+   do not start with "afs" by passing the flags with the same name to
+   configure.  For example, if you want to install the server binaries in
+   /usr/local/lib/openafs instead of /usr/local/libexec/openafs, pass the
+   --libexecdir=/usr/local/lib flag to configure.
+
+   For additional options, see section I below.
+
+B  Building
+
+   1. Now, you can build OpenAFS.
+
+      % make
+
+   2. Install your build using either "make install" to install
+      into the current system (you will need to be root, and files
+      will be placed as appropriate for Transarc or standard paths),
+      "make install DESTDIR=/some/path" to install into an alternate
+      directory tree, or if you configured with --enable-transarc-paths
+      make dest to create a complete binary tree in the dest directory
+      under the directory named for the sys_name you built for,
+      e.g. sun4x_57/dest or i386_linux26/dest
+
+   3. As appropriate you can clean up or, if you're using Linux, build for
+      another kernel version.
+
+      To clean up:
+
+      % make clean
+
+C  Problems
+
+   If you have a problem building this source, you may want to visit
+   http://www.openafs.org/ to see if any problems have been reported
+   or to find out how to get more help.
+
+   Mailing lists have been set up to help; More details can be found
+   on the openafs.org site.
+
+D  Linux Notes
+
+   With current Linux versions, the /lib/modules/`uname -r`/source symlink
+   will be used to locate the kernel headers, but you will need to have
+   the headers and build system for your kernel installed in order to
+   build the kernel module.  These are usually found in a separate package
+   from the kernel, often called something like linux-headers-<version>.
+
+   For older Linux systems, you may also need to provide the path in which
+   your kernel headers for your configured kernel can be found. This
+   should be the path of the directory containing a child directory named
+   "include". So if your version file were
+   /usr/src/linux/include/linux/version.h you would run:
+
+   % ./configure --with-afs-sysname=i386_linux26 \
+       --with-linux-kernel-headers=/usr/src/linux
+
+   Currently you can build for only one Linux kernel at a time, and the
+   version is extracted from the kernel headers in the root you specify.
+
+   To build for another Linux kernel version, determine the sysname for
+   the system type as defined in step A1 for the other kernel version and
+   then run:
+
+      % ./configure --with-afs-sysname=<sysname> \
+          --with-linux-kernel-headers=/usr/src/linux-3.19-i686
+      % make
+
+   Your build tree will now include an additional kernel module for your
+   additional kernel headers. Be aware that if the kernel version string
+   which UTS_RELEASE is defined to in include/linux/version.h matches the
+   last kernel you built for, the previous kernel module will be
+   overwritten.
+
+   The Linux 2.4 series (and older) are no longer supported. The OpenAFS 1.6
+   series of releases are the last ones supporting those old kernels and in
+   particular their LinuxThreads.
+
+E  HP-UX 11.0 Notes
+
+   HP-UX 11.0 requires a header called vfs_vm.h which HP has provided on
+   their web site.  Go to http://www.hp.com/dspp, choose Software
+   downloads from the side menu, and select Software: HP operating systems
+   and then Operating systems: HP-UX from the select boxes.  The last
+   select box will have an option for downloading vfs_vm.h.
+
+F  OpenBSD Notes
+
+   If you need to run regen.sh to make the configure script, you should
+   first install autoconf-2.59, then setenv AUTOCONF_VERSION 2.59.
+
+   You need kernel source installed to build OpenAFS.  Use the
+   --with-bsd-kernel-headers= configure option if your kernel source is
+   not in /usr/src/sys.
+
+   src/packaging/OpenBSD/buildpkg.sh will make a tar file for installing
+   the client.  There is no server package, but I am told that "make
+   install" will put server binaries in /usr/afs.
+
+   Your kernel may panic when you try to shutdown after running the
+   OpenAFS client.  To prevent this, change the "dangling vnode" panic in
+   sys/kern/vfs_syscalls.c to a printf and build a new kernel.
+
+   You can't run arla and OpenAFS at the same time.
+
+G  FreeBSD Notes
+
+   The FreeBSD client supports FreeBSD 8.x and later, but does not receive
+   regular testing on versions older than FreeBSD 9.x at this time.  Only
+   the amd64 and i386 architectures are supported, but it should not be
+   hard to port to other processors if they are already supported under
+   another operating system.
+
+   You need kernel source installed to build OpenAFS.  Use the
+   --with-bsd-kernel-headers= configure option if your kernel source is
+   not in /usr/src/sys.
+
+   You also need access to your kernel build directory for the opt_global.h
+   include file.  Use the --with-bsd-kernel-build= configure option if your
+   kernel build is not GENERIC in the standard place. If
+   /usr/src/sys/${CPUARCH}/compile/GENERIC does not point to
+   /usr/obj/usr/src/sys/GENERIC you may need to resolve that and retry the
+   build.
+
+H  AIX notes
+
+   Make sure that your default build environment is 32bit, ie.
+   the OBJECT_MODE environment variable is either unset or set to "32".
+
+   Verify this before doing configure and make. For example, assuming
+   ksh/bash:
+
+   % export OBJECT_MODE=32
+
+   To build aklog (in order to be able to get tokens from your Kerberos v5
+   ticket), you will need Kerberos libraries.  On AIX 6.1, the IBM
+   Kerberos v5 libraries are in the packages krb5.client.rte and
+   krb5.toolkit.adt on the Expansion Pack.
+
+I  Other configure options
+
+   AFS has a ton of other optional features that must be enabled using
+   configure options.  Here is a summary:
+
+   --enable-bigendian
+   --enable-littleendian
+       These configure options are normally not required and should not be
+       given.  They're only needed if the OpenAFS build system cannot
+       determine the endianness of your system, in which case configure
+       will abort and say to use one of these options.
+
+   --enable-bitmap-later
+       Speeds the startup of the fileserver by deferring reading volume
+       bitmaps until necessary.  Demand attach is a better solution to the
+       same problem.
+
+   --enable-checking
+       Enable compiler warnings when building with GCC and turn compiler
+       warnings into errors so that new warnings will cause compilation
+       failures.  If you are developing patches to contribute to OpenAFS,
+       please build OpenAFS with this flag enabled.  Warning-free code is
+       a requirement for all new submissions to OpenAFS.
+
+   --enable-debug
+   --enable-debug-kernel
+   --enable-debug-lwp
+   --enable-debug-pam
+       Compile the userspace code (for --enable-debug) or the code named
+       by the option with debugging information.  If --enable-debug is
+       given, also do not strip binaries when installing them.
+
+   --enable-linux-d_splice_alias-extra-iput
+       Work around a kernel memory leak present in a few Linux kernels.
+       The only affected mainline kernels are 3.17 to 3.17.2, but this
+       switch will also be required should a distribution backport commit
+       908790fa3b779d37365e6b28e3aa0f6e833020c3 or commit
+       95ad5c291313b66a98a44dc92b57e0b37c1dd589 but not the fix in commit
+       51486b900ee92856b977eacfc5bfbe6565028070 from the linux-stable repo
+       (git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git) or
+       the corresponding changes on other branches. This is impossible to
+       detect automatically. Without this switch, the openafs module will
+       build and work even with affected kernels. But it will leak kernel
+       memory, leading to performance degradation and eventually system
+       failure due to memory exhaustion.
+
+   --enable-linux-syscall-probing
+       OpenAFS now uses keyrings to manage PAGs by default on Linux, which
+       does not require hooking into the system call table.  On older
+       versions of Linux without keyring support, OpenAFS uses groups to
+       manage PAGs and probes for the system call table to hook into it to
+       preserve that group information.  Normally, which method to use is
+       detected automatically, and if keyring support is present, support
+       for system call table probing is not compiled in.  Use this
+       configure option to force inclusion of the system call table
+       probing code even if the kernel appears to support keyrings.
+
+   --enable-namei-fileserver
+       Forces the namei fileserver on platforms (like Solaris 8 and 9)
+       where the inode fileserver is the default.
+
+   --enable-redhat-buildsys
+       Enable compilation of the kernel module for the Red Hat build
+       system kernel.  Use this configure flag when building kernel
+       modules for Red Hat Linux systems.
+
+   --enable-reduced-depends
+       Try to minimize the shared library dependencies encoded in the
+       binaries.  This omits from the link line all the libraries included
+       solely because the Kerberos libraries depend on them and instead
+       links the programs only against libraries whose APIs are called
+       directly.  This will only work with shared Kerberos libraries and
+       will only work on platforms where shared libraries properly encode
+       their own dependencies (such as Linux).  It is intended primarily
+       for building packages for Linux distributions to avoid encoding
+       unnecessary shared library dependencies that make shared library
+       migrations more difficult.  If none of the above made any sense to
+       you, don't bother with this flag.
+
+   --enable-supergroups
+       Enables support of nested groups in the ptserver.  WARNING: Once
+       you make use of this option by nesting one group inside another,
+       the resulting PTS database cannot be correctly and safely used by a
+       ptserver built without this option.  If some of your ptservers were
+       built with this option and some without this option, you will
+       probably corrupt your PTS database.
+
+   --enable-tivoli-tsm
+       Build with the Tivoli TSM API libraries for butc support of the
+       Tivoli backup system.
+
+   --enable-transarc-paths
+       As discussed in A2 above, build for the traditional paths used by
+       the Transarc and IBM AFS distributions instead of the more typical
+       open source /usr/local paths.  Passing this option to configure and
+       then running make dest will generate, in the dest directory, the
+       set of files and directory layout matching a Transarc or IBM AFS
+       tape distribution.
+
+   --enable-warnings
+       Enable compilation warnings when built with GCC.  This is similar
+       to --enable-checking, but new warnings will only be displayed, not
+       cause a build failure.
+
+   It's also possible to disable some standard features.  None of these
+   options are normally needed, but they may be useful in unusual
+   circumstances:
+
+   --disable-kernel-module
+       Even if kernel headers are found, do not attempt to build the
+       kernel module.  On Linux, if you provide this flag, you'll also
+       need to provide --with-afs-sysname, since OpenAFS cannot determine
+       the correct sysname automatically without the kernel headers.
+
+   --disable-optimize
+   --disable-optimize-kernel
+   --disable-optimize-lwp
+   --disable-optimize-pam
+       Disable optimization for the given portion of the OpenAFS code.
+       Usually used either for debugging to avoid code optimization making
+       it harder to use a debugger, or to work around bugs in the compiler
+       optimizers or in the OpenAFS code.
+
+   --disable-pam
+       Do not build the AFS PAM modules.  Normally building them is
+       harmless, but the PAM modules that come with OpenAFS are deprecated
+       and should not be used unless you're still using the OpenAFS
+       kaserver (which is itself deprecated and should not be used).
+
+   --disable-pthreaded-ubik
+       Disable the threaded version of Ubik and install the LWP
+       versions of Ubik servers.
+
+   --disable-strip-binaries
+       Disable stripping of binaries on installation.  You probably want
+       to use --enable-debug instead of this flag to also inclusion of
+       debugging information.
+
+   --disable-unix-sockets
+       Disable use of UNIX domain sockets for fssync.  A TCP connection to
+       localhost will be used instead.
+
+   You may need to pass one or more of the following options to specify
+   paths and locations of files needed by the OpenAFS build process or
+   additional information required by the build process:
+
+   --with-afs-sysname=SYSNAME
+       Specifies the AFS sysname of the target system is SYSNAME.
+       Normally this is determined automatically from the build
+       architecture plus additional information (such as, on Linux, from
+       the kernel headers).  The SYSNAME should be one of the options
+       listed in A2.
+
+   --with-gssapi=DIR
+   --with-gssapi-include=DIR
+   --with-gssapi-lib=DIR
+   --with-krb5[=DIR]
+   --with-krb5-include=DIR
+   --with-krb5-lib=DIR
+       Normally, OpenAFS will automatically build with Kerberos support if
+       Kerberos is found during the build.  If your Kerberos libraries are
+       in an unusual location, however, you may need to pass one or more
+       of these flags.  --with-krb5 forces building with Kerberos support
+       if given and will cause configure to fail if Kerberos is not found.
+       You may optionally specify the root path to your Kerberos
+       installation as an argument to --with-krb5.
+
+       If you have a krb5-config script, it's used to find the flags to
+       build with Kerberos.  If you have no krb5-config script, you can
+       specify the location to the include files with --with-krb5-include
+       and the libraries with --with-krb5-lib.  You may need to do this if
+       Autoconf can't figure out whether to use lib, lib32, or lib64 on
+       your platform.
+
+       --with-gssapi is similar, except for the GSS-API libraries instead
+       of the Kerberos libraries.  If you have to manually set the
+       location of the Kerberos libraries, you may need to do the same
+       thing for the GSS-API libraries.
+
+   --with-libintl=DIR
+   --with-libintl-include=DIR
+   --with-libintl-lib=DIR
+       Specifies the install location of the libintl library, used for
+       internationalization, or separately specifies the location of the
+       header files and libraries.  By default, the default system library
+       paths will be searched.  This library is not required on many
+       platforms.
+
+   --with-roken=PATH
+   --with-roken=internal
+       Specifies the install location of the libroken library.  Specify
+       "internal" to use the embedded libroken library that comes with
+       OpenAFS (the default).  This option is primarily useful for
+       building against a system libroken library if you have one.
+
+   --with-linux-kernel-build=PATH
+   --with-linux-kernel-headers=PATH
+   --with-bsd-kernel-build=PATH
+   --with-bsd-kernel-headers=PATH
+       Specifies the path to the kernel headers and build system.  See the
+       information above for Linux and *BSD systems.
+
+   --with-linux-kernel-packaging
+       Tells the OpenAFS kernel module build system to use conventions
+       appropriate for building modules to include in Linux kernel module
+       packages.  Primarily, this renames the kernel module to openafs.ko
+       rather than libafs-<VERSION>.ko, which is easier to handle in Linux
+       distribution init scripts.
+
+   --with-docbook2pdf=PROGRAM
+       Specifies the program used to convert the DocBook manuals to PDF.
+       Supported choices are fop, dblatex, and docbook2pdf.  By default,
+       the user's path is searched for those programs in that order, and
+       the first one found is used.
+
+   --with-docbook-stylesheets=PATH
+       The location of the DocBook style sheets, used to convert the
+       DocBook manuals to other formats.  By default, a set of likely
+       paths are searched.
+
+   --with-html-xsl=PATH
+       Specifies the XSLT style sheet to convert DocBook manuals into
+       HTML.  The default is html/chunk.xsl.  You may wish to use
+       html/docbook.xsml instead.
+
+   --with-xslt-processor=PROGRAM
+       Specifies the XSLT processor to use to convert the DocBook manuals
+       into HTML.  Supported choices are libxslt, saxon, xalan-j, and
+       xsltproc.  By default, the user's path is searched for those
+       programs in that order, and the first one found is used.
+
+   There are also some environment variables that you can set to control
+   aspects of the build.  They can be set either on the configure command
+   line (preferred) or in the environment.
+
+   CC
+       The C compiler to use.  Be aware that this is overridden on some
+       architectures that require a specific compiler be used to build the
+       kernel module.  If gcc is used, version 3 or later is required.
+       If clang is used, version 3 or later is required.  (Additional
+       restrictions apply when --enable-checking is used.)
+
+   CFLAGS
+       Additional flags to pass to the C compiler.
+
+   CPP
+       The C preprocessor to use.  Defaults to cpp if found, otherwise
+       $CC -E.
+
+   CPPFLAGS
+       Additional flags to pass to the C preprocessor or compiler.  This
+       is where to put -I options to add paths to the include file search.
+
+   FUSE_CFLAGS
+       Compiler flags required for building applications that use FUSE.
+
+   FUSE_LIBS
+       Libraries required for linking applications that use FUSE.
+
+   KRB5_CONFIG
+       To specify a particular krb5-config script to use, either set the
+       KRB5_CONFIG environment variable or pass it to configure like:
+
+           ./configure KRB5_CONFIG=/path/to/krb5-config
+
+       To not use krb5-config and force library probing even if there is a
+       krb5-config script on your path, set KRB5_CONFIG to a nonexistent
+       path:
+
+           ./configure KRB5_CONFIG=/nonexistent
+
+   LDFLAGS
+       Additional flags to pass to the linker.  This is where to put -L
+       options to add paths to the library search.
+
+   LIBS
+       Additional libraries to link all userspace programs with.
+
+   PKG_CONFIG
+       The path to the pkg-config utility.  Currently, this is only used
+       to locate the flags for building the FUSE version of afsd.
+
+   YACC
+       The yacc implementation to use.  Defaults to bison, byacc, or yacc,
+       whichever is found first.
+
+   YFLAGS
+       Additional flags to pass to yacc.

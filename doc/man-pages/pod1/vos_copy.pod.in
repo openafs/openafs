@@ -15,6 +15,7 @@ B<vos copy> S<<< [B<-id>] <I<volume name or ID of source>> >>>
    S<<< [B<-topartition>] <I<partition name for destination>> >>>
    [B<-offline>] [B<-readonly>] [B<-live>] S<<< [B<-cell> <I<cell name>>] >>>
    [B<-noauth>] [B<-localauth>] [B<-verbose>] [B<-encrypt>] [B<-noresolve>]
+   S<<< [B<-config> <I<config directory>>] >>>
    [B<-help>]
 
 B<vos cop> S<<< [B<-i>] <I<volume name or ID of source>> >>>
@@ -25,6 +26,7 @@ B<vos cop> S<<< [B<-i>] <I<volume name or ID of source>> >>>
    S<<< [B<-top>] <I<partition name for destination>> >>>
    [B<-o>] [B<-r>] [B<-li>] S<<< [B<-c> <I<cell name>>] >>>
    [B<-noa>] [B<-lo>] [B<-v>] [B<-e>] [B<-nor>]
+   S<<< [B<-co> <I<config directory>>] >>>
    [B<-h>]
 
 =for html
@@ -44,34 +46,34 @@ the volume be stored locally by the client.
 
 =over 4
 
-=item [B<-id>] <I<volume name or ID>>
+=item B<-id> <I<volume name or ID>>
 
 Specifies either the complete name or volume ID number of a read/write
 volume.
 
-=item [B<-fromserver>] <I<machine name for source>>
+=item B<-fromserver> <I<machine name for source>>
 
 Identifies the file server machine where the source volume resides. Provide
 the machine's IP address or its host name (either fully qualified or using
 an unambiguous abbreviation). For details, see L<vos(1)>.
 
-=item [B<-frompartition>] <I<partition name for source>>
+=item B<-frompartition> <I<partition name for source>>
 
 Names the partition where the source volume resides. Provide the full
 partition name (for, example, B</vicepa>) or one of the abbreviated forms
 described in L<vos(1)>.
 
-=item [B<-toname>] <I<volume name for new copy>>
+=item B<-toname> <I<volume name for new copy>>
 
 The complete name of the new volume to create.
 
-=item [B<-toserver>] <I<machine name for destination>>
+=item B<-toserver> <I<machine name for destination>>
 
 Identifies the file server machine to which to copy the volume.  Provide
 the machine's IP address or its host name (either fully qualified or using
 an unambiguous abbreviation). For details, see L<vos(1)>.
 
-=item [B<-topartition>] <I<partition name for destination>>
+=item B<-topartition> <I<partition name for destination>>
 
 Names the partition to which to copy the volume. Provide the full partition
 name (for, example, B</vicepa>) or one of the abbreviated forms described in

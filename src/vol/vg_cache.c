@@ -15,28 +15,19 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+
+#ifdef HAVE_SYS_FILE_H
+#include <sys/file.h>
+#endif
+
 #ifdef AFS_DEMAND_ATTACH_FS
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <dirent.h>
-#include <afs/afs_assert.h>
-#include <string.h>
-#ifdef AFS_NT40_ENV
-#include <io.h>
-#else
-#include <sys/file.h>
-#include <sys/param.h>
-#if defined(AFS_SUN5_ENV) || defined(AFS_HPUX_ENV)
-#include <unistd.h>
-#endif
-#endif /* AFS_NT40_ENV */
+#include <afs/opr.h>
+#include <rx/rx_queue.h>
+#include <opr/lock.h>
 #include <lock.h>
 #include <afs/afsutil.h>
-#include <lwp.h>
 #include "nfs.h"
 #include <afs/afsint.h>
 #include "ihandle.h"
@@ -161,19 +152,12 @@ VVGCache_PkgShutdown(void)
 static int
 _VVGC_entry_alloc(VVGCache_entry_t ** entry_out)
 {
-    int code = 0;
-    VVGCache_entry_t * ent;
+    *entry_out = calloc(1, sizeof(VVGCache_entry_t));
 
-    *entry_out = ent = malloc(sizeof(VVGCache_entry_t));
-    if (ent == NULL) {
-	code = ENOMEM;
-	goto error;
-    }
+    if (*entry_out == NULL)
+	return ENOMEM;
 
-    memset(ent, 0, sizeof(*ent));
-
- error:
-    return code;
+    return 0;
 }
 
 /**
@@ -191,7 +175,7 @@ _VVGC_entry_free(VVGCache_entry_t * entry)
 {
     int code = 0;
 
-    osi_Assert(entry->refcnt == 0);
+    opr_Assert(entry->refcnt == 0);
     free(entry);
 
     return code;
@@ -380,7 +364,7 @@ _VVGC_entry_put(struct DiskPartition64 * dp, VVGCache_entry_t * entry)
 {
     int code = 0;
 
-    osi_Assert(entry->refcnt > 0);
+    opr_Assert(entry->refcnt > 0);
 
     if (--entry->refcnt == 0) {
 	VVGCache_entry_t *nentry;
@@ -772,7 +756,7 @@ VVGCache_entry_add_r(struct DiskPartition64 * dp,
 	}
     }
 
-    osi_Assert(!child_ent);
+    opr_Assert(!child_ent);
     child_ent = parent_ent;
     code = _VVGC_hash_entry_add(dp,
 				child,

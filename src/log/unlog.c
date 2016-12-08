@@ -29,19 +29,10 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+#include <afs/opr.h>
 
-#include <stdio.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
-
-#include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <errno.h>
-#include <sys/ioctl.h>
 #include <afs/vice.h>
-#include <sys/file.h>
 
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
@@ -116,7 +107,7 @@ main(int argc, char *argv[])
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
 
-    ts = cmd_CreateSyntax(NULL, CommandProc, NULL,
+    ts = cmd_CreateSyntax(NULL, CommandProc, NULL, 0,
 			  "Release Kerberos authentication");
     cmd_AddParm(ts, "-cell", CMD_LIST, CMD_OPTIONAL, "cell name");
 
@@ -152,8 +143,7 @@ unlog_ForgetCertainTokens(char **list, int listSize)
 	code = ktc_ListTokens(count, &count, &serviceName);
     } while (!code);
 
-    tokenInfoP =
-	(struct tokenInfo *)malloc((sizeof(struct tokenInfo) * count));
+    tokenInfoP = malloc((sizeof(struct tokenInfo) * count));
     if (!tokenInfoP) {
 	perror("unlog_ForgetCertainTokens -- osi_Alloc failed");
 	exit(1);

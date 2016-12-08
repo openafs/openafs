@@ -10,35 +10,23 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#include <string.h>
-#include <stdlib.h>
+#include <roken.h>
 
 #include "gtxkeymap.h"
 
 struct keymap_map *
 keymap_Create(void)
 {
-    struct keymap_map *tmap;
-
-    tmap = (struct keymap_map *)malloc(sizeof(struct keymap_map));
-    if (tmap != (struct keymap_map *)0)
-	memset(tmap, 0, sizeof(*tmap));
-    return (tmap);
+    return calloc(1, sizeof(struct keymap_map));
 }
 
 /* make a copy of a string; generic utility */
 char *
 gtx_CopyString(char *aval)
 {
-    char *tp;
-
     if (!aval)
 	return NULL;		/* propagate null strings around */
-    tp = (char *)malloc(strlen(aval) + 1);
-    if (tp != NULL)
-	strcpy(tp, aval);
-    return (tp);
+    return strdup(aval);
 }
 
 static int

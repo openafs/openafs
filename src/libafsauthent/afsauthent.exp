@@ -2,6 +2,7 @@ afsconf_AddKey
 afsconf_AddUser
 afsconf_CellApply
 afsconf_CheckAuth
+afsconf_CheckRestrictedQuery
 afsconf_ClientAuth
 afsconf_ClientAuthSecure
 afsconf_Close

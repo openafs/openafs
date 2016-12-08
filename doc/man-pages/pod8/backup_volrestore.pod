@@ -12,7 +12,7 @@ B<backup volrestore> S<<< B<-server> <I<destination machine>> >>>
     S<<< B<-volume> <I<volume(s) to restore>>+ >>>
     S<<< [B<-extension> <I<new volume name extension>>] >>>
     S<<< [B<-date> <I<date from which to restore>>+] >>>
-    S<<< [B<-portoffset> <I<TC port offsets>>+] >>> [B<-n>]
+    S<<< [B<-portoffset> <I<TC port offsets>>+] >>> [B<-dryrun> | B<-n>]
     S<<< [B<-usedump> <I<specify the dumpID to restore from>>] >>>
     [B<-localauth>] S<<< [B<-cell> <I<cell name>>] >>> [B<-help>]
 
@@ -23,7 +23,7 @@ B<backup volr> S<<< B<-s> <I<destination machine>> >>>
     S<<< [B<-d> <I<date from which to restore>>+] >>>
     S<<< [B<-po> <I<TC port offsets>>+] >>>
     S<<< [B<-u> <I<specify the dumpID to restore from>>] >>>
-    [B<-n>] [B<-l>] S<<< [B<-c> <I<cell name>>] >>> [B<-h>]
+    [B<-dryrun> | B<-n>] [B<-l>] S<<< [B<-c> <I<cell name>>] >>> [B<-h>]
 
 =for html
 </div>
@@ -127,8 +127,8 @@ volume name explicitly includes the C<.backup> or C<.readonly> extension,
 the Backup System restores dumps of the corresponding volume version only.
 
 To generate a list of the tapes the Backup System needs to perform the
-restore operation, without actually performing it, combine the B<-n> flag
-with the options to be used on the actual command.
+restore operation, without actually performing it, combine the B<-dryrun>
+flag with the options to be used on the actual command.
 
 If all of the full and incremental dumps of all relevant volumes were not
 written to a type of tape that a single Tape Coordinator can read, use the
@@ -216,6 +216,12 @@ reduces any later date to the maximum value.
 If this argument is omitted, the Backup System restores all possible dumps
 including the most recently created.
 
+=item B<-usedump> <I<dumpID>>
+
+Specifies the dumpID of the specific dump to use to restore the volume. If this
+option is not specified, we will find the appropriate dump to restore,
+according to the logic in the B<-date> option.
+
 =item B<-portoffset> <I<TC port offest>>+
 
 Specifies one or more port offset numbers (up to a maximum of 128), each
@@ -230,7 +236,7 @@ Provide this argument unless the default value of 0 (zero) is appropriate
 for all dumps. If C<0> is just one of the values in the list, provide it
 explicitly in the appropriate order.
 
-=item B<-n>
+=item B<-dryrun> | B<-n>
 
 Displays the list of tapes that contain the dumps required by the restore
 operation, without actually performing the operation.
@@ -257,7 +263,7 @@ ignored.
 
 =head1 OUTPUT
 
-If the issuer includes the B<-n> flag with the command, the following
+If the issuer includes the B<-dryrun> flag with the command, the following
 string appears at the head of the list of the tapes necessary to complete
 the restore operation.
 
@@ -266,28 +272,28 @@ the restore operation.
 =head1 EXAMPLES
 
 The following command restores the volume user.pat to partition F</vicepa>
-on machine C<fs5.abc.com>:
+on machine C<fs5.example.com>:
 
-   % backup volrestore -server fs5.abc.com -partition a -volume user.pat
+   % backup volrestore -server fs5.example.com -partition a -volume user.pat
 
 The following command restores the volumes C<user.smith> and C<user.terry>
-to partition F</vicepb> on machine C<fs4.abc.com>, adding a C<.rst>
+to partition F</vicepb> on machine C<fs4.example.com>, adding a C<.rst>
 extension to each volume name and preserving the existing C<user.smith>
 and C<user.terry> volumes.  Only dumps created before 5:00 p.m. on 31
 January 1998 are restored. (The command is shown here on multiple lines
 only for legibility reasons.)
 
-   % backup volrestore -server fs4.abc.com -partition b  \
+   % backup volrestore -server fs4.example.com -partition b  \
                        -volume user.smith user.terry  \
                        -extension .rst -date 1/31/1998 17:00
 
 The following command restores the volume user.pat to partition F</vicepb>
-on machine C<fs4.abc.com>. The Tape Coordinator with port offset 1 handles
+on machine C<fs4.example.com>. The Tape Coordinator with port offset 1 handles
 the tape containing the full dump; the Tape Coordinator with port offset 0
 handles all tapes containing incremental dumps. (The command is shown here
 on two lines only for legibility reasons.)
 
-   % backup volrestore -server fs5.abc.com -partition a  \
+   % backup volrestore -server fs5.example.com -partition a  \
                        -volume user.pat -portoffset 1 0
 
 =head1 PRIVILEGE REQUIRED

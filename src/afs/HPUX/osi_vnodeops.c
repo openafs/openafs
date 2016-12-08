@@ -246,7 +246,7 @@ afs_bread(vp, lbn, bpp)
     uio.uio_fpflags = 0;
     *bpp = 0;
 
-    error = afs_read(VTOAFS(vp), &uio, p_cred(u.u_procp), lbn, bpp, 0);
+    error = afs_read(VTOAFS(vp), &uio, p_cred(u.u_procp), 0);
     if (error) {
 	afs_bread_freebp = bp;
 	return error;

@@ -17,30 +17,19 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+
+#include <afs/opr.h>
+#ifdef AFS_PTHREAD_ENV
+# include <opr/lock.h>
+#endif
 
 #ifdef AFS_NT40_ENV
 #include <afs/afsutil.h>
-#else
-#include <sys/time.h>
 #endif
 
-#include <stdio.h>
-#include <sys/types.h>
-#include <errno.h>
-#include <string.h>
-#ifdef AFS_NT40_ENV
-#include <fcntl.h>
-#include <winsock2.h>
-#else
-#include <sys/file.h>
-#include <netinet/in.h>
-#include <unistd.h>
-#endif
-#include <dirent.h>
-#include <sys/stat.h>
+#include <rx/rx_queue.h>
 #include <afs/afsint.h>
-#include <signal.h>
-#include <afs/afs_assert.h>
 #include <afs/prs_fs.h>
 #include <afs/nfs.h>
 #include <lwp.h>
@@ -65,14 +54,13 @@ static afs_int32 transCounter = 1;
 
 /* create a new transaction, returning ptr to same with high ref count */
 struct volser_trans *
-NewTrans(afs_uint32 avol, afs_int32 apart)
+NewTrans(VolumeId avol, afs_int32 apart)
 {
     /* set volid, next, partition */
     struct volser_trans *tt, *newtt;
     struct timeval tp;
-    struct timezone tzp;
 
-    newtt = (struct volser_trans *)malloc(sizeof(struct volser_trans));
+    newtt = calloc(1, sizeof(struct volser_trans));
     VTRANS_LOCK;
     /* don't allow the same volume to be attached twice */
     for (tt = allTrans; tt; tt = tt->next) {
@@ -83,13 +71,12 @@ NewTrans(afs_uint32 avol, afs_int32 apart)
 	}
     }
     tt = newtt;
-    memset(tt, 0, sizeof(struct volser_trans));
     tt->volid = avol;
     tt->partition = apart;
     tt->refCount = 1;
     tt->rxCallPtr = (struct rx_call *)0;
     strcpy(tt->lastProcName, "");
-    gettimeofday(&tp, &tzp);
+    gettimeofday(&tp, NULL);
     tt->creationTime = tp.tv_sec;
     tt->time = FT_ApproxTime();
     tt->tid = transCounter++;
@@ -195,15 +182,15 @@ GCTrans(void)
     for (tt = allTrans; tt; tt = nt) {
 	nt = tt->next;		/* remember in case we zap it */
 	if (tt->time + OLDTRANSWARN < now) {
-	    Log("trans %u on volume %u %s than %d seconds\n", tt->tid,
-		tt->volid,
+	    Log("trans %u on volume %" AFS_VOLID_FMT " %s than %d seconds\n", tt->tid,
+		afs_printable_VolumeId_lu(tt->volid),
 		((tt->refCount > 0) ? "is older" : "has been idle for more"),
 		(((now - tt->time) / GCWAKEUP) * GCWAKEUP));
 	}
 	if (tt->refCount > 0)
 	    continue;
 	if (tt->time + OLDTRANSTIME < now) {
-	    Log("trans %u on volume %u has timed out\n", tt->tid, tt->volid);
+	    Log("trans %u on volume %" AFS_VOLID_FMT " has timed out\n", tt->tid, afs_printable_VolumeId_lu(tt->volid));
 
 	    tt->refCount++;	/* we're using it now */
 

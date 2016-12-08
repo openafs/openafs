@@ -20,7 +20,6 @@
 
 #ifdef MP
 #define	RX_ENABLE_LOCKS	1
-#define	AFS_GLOBAL_RXLOCK_KERNEL 1
 
 
 #include "sys/sema.h"
@@ -43,14 +42,11 @@ typedef kcondvar_t afs_kcondvar_t;
 #define MUTEX_INIT(a,b,c,d)  mutex_init(a,b,c,d)
 #endif
 #define MUTEX_DESTROY(a) mutex_destroy(a)
-#undef MUTEX_ISMINE
-#define MUTEX_ISMINE(a)	1
+#define MUTEX_ASSERT(a)
 #define CV_INIT(cv, a,b,c)	cv_init(cv, a, b, c)
 #define CV_SIGNAL(_cv)		cv_signal(_cv)
 #define CV_BROADCAST(_cv)	cv_broadcast(_cv)
 #define CV_DESTROY(_cv)		cv_destroy(_cv)
-#undef osirx_AssertMine
-extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
 #ifdef AFS_SGI64_ENV
 /* Add PLTWAIT for afsd's to wait so we don't rack up the load average. */
 #ifdef AFS_SGI65_ENV
@@ -145,12 +141,10 @@ extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
 #else /* MP */
 #define MUTEX_INIT(m, nm, type , a)
 #define MUTEX_DESTROY(a)
-#define MUTEX_ISMINE(a)	1
+#define MUTEX_ASSERT(a)
 #define MUTEX_ENTER(a)
 #define MUTEX_TRYENTER(a) 1
 #define MUTEX_EXIT(a)
-
-#define osirx_AssertMine(addr, msg)
 
 #define CV_INIT(cv, a,b,c)
 #define CV_SIGNAL(_cv)

@@ -21,20 +21,15 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+
+#include <afs/afs_AdminErrors.h>
 
 #include "vsprocs.h"
 #include "vosutils.h"
 #include "lockprocs.h"
 #include "../adminutil/afs_AdminInternal.h"
-#include <afs/afs_AdminErrors.h>
 #include "afs_vosAdmin.h"
-#include <string.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#ifdef AFS_NT40_ENV
-#include <io.h>
-#endif
 
 static afs_int32 GroupEntries(struct rx_connection *server, volintInfo * pntr, afs_int32 count,
              struct qHead *myQueue, afs_int32 apart);
@@ -166,8 +161,8 @@ UV_CreateVolume(afs_cell_handle_p cellHandle, struct rx_connection *server,
     entry.nServers = 1;
     entry.serverNumber[0] = ntohl(rx_HostOf(rx_PeerOf(server)));
     entry.serverPartition[0] = partition;
-    entry.flags = RW_EXISTS;
-    entry.serverFlags[0] = ITSRWVOL;
+    entry.flags = VLF_RWEXISTS;
+    entry.serverFlags[0] = VLSF_RWVOL;
     entry.volumeId[RWVOL] = *volumeId;
     entry.volumeId[ROVOL] = *volumeId + 1;
     entry.volumeId[BACKVOL] = *volumeId + 2;
@@ -263,13 +258,13 @@ UV_DeleteVolume(afs_cell_handle_p cellHandle, struct rx_connection *server,
     }
 
     if (volumeId == entry.volumeId[BACKVOL]) {
-	if (!(entry.flags & BACK_EXISTS)
+	if (!(entry.flags & VLF_BACKEXISTS)
 	    || !Lp_Match(cellHandle, &entry, serverAddr, partition, &tst)) {
 	    notinvldb = 2;
 	    goto fail_UV_DeleteVolume;
 	}
 
-	entry.flags &= ~BACK_EXISTS;
+	entry.flags &= ~VLF_BACKEXISTS;
 	vtype = BACKVOL;
     }
 
@@ -282,13 +277,13 @@ UV_DeleteVolume(afs_cell_handle_p cellHandle, struct rx_connection *server,
 	Lp_SetROValue(cellHandle, &entry, serverAddr, partition, 0, 0);
 	entry.nServers--;
 	if (!Lp_ROMatch(cellHandle, &entry, 0, 0, &tst)) {
-	    entry.flags &= ~RO_EXISTS;
+	    entry.flags &= ~VLF_ROEXISTS;
 	}
 	vtype = ROVOL;
     }
 
     else if (volumeId == entry.volumeId[RWVOL]) {
-	if (!(entry.flags & RW_EXISTS)
+	if (!(entry.flags & VLF_RWEXISTS)
 	    || !Lp_Match(cellHandle, &entry, serverAddr, partition, &tst)) {
 	    notinvldb = 2;
 	    goto fail_UV_DeleteVolume;
@@ -313,7 +308,7 @@ UV_DeleteVolume(afs_cell_handle_p cellHandle, struct rx_connection *server,
 
 	Lp_SetRWValue(cellHandle, &entry, serverAddr, partition, 0L, 0L);
 	entry.nServers--;
-	entry.flags &= ~(BACK_EXISTS | RW_EXISTS);
+	entry.flags &= ~(VLF_BACKEXISTS | VLF_RWEXISTS);
 	vtype = RWVOL;
 
     }
@@ -323,7 +318,7 @@ UV_DeleteVolume(afs_cell_handle_p cellHandle, struct rx_connection *server,
 	goto fail_UV_DeleteVolume;
     }
 
-    if ((entry.nServers <= 0) || !(entry.flags & (RO_EXISTS | RW_EXISTS))) {
+    if ((entry.nServers <= 0) || !(entry.flags & (VLF_ROEXISTS | VLF_RWEXISTS))) {
 	tst = ubik_VL_DeleteEntry(cellHandle->vos, 0, volumeId, vtype);
 	if (tst) {
 	    goto fail_UV_DeleteVolume;
@@ -722,7 +717,7 @@ UV_MoveVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
     Lp_SetRWValue(cellHandle, &entry, afromserver, afrompart, atoserver,
 		  atopart);
     store_flags = entry.flags;
-    entry.flags &= ~BACK_EXISTS;
+    entry.flags &= ~VLF_BACKEXISTS;
 
     if (!VLDB_ReplaceEntry
 	(cellHandle, afromvol, -1, &entry,
@@ -998,7 +993,7 @@ UV_BackupVolume(afs_cell_handle_p cellHandle, afs_int32 aserver,
     /* These operations require the VLDB be locked since it means the VLDB
      * will change or the vldb is already locked.
      */
-    if (!(entry.flags & BACK_EXISTS) ||	/* backup volume doesnt exist */
+    if (!(entry.flags & VLF_BACKEXISTS) ||	/* backup volume doesnt exist */
 	(entry.flags & VLOP_ALLOPERS) ||	/* vldb lock already held */
 	(entry.volumeId[BACKVOL] == INVALID_BID)) {
 	/* no assigned backup volume id */
@@ -1089,8 +1084,8 @@ UV_BackupVolume(afs_cell_handle_p cellHandle, afs_int32 aserver,
     }
 
     /* Mork vldb as backup exists */
-    if (!(entry.flags & BACK_EXISTS)) {
-	entry.flags |= BACK_EXISTS;
+    if (!(entry.flags & VLF_BACKEXISTS)) {
+	entry.flags |= VLF_BACKEXISTS;
 	vldbmod = 1;
     }
 
@@ -1543,7 +1538,7 @@ UV_ReleaseVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
 
     /* Will we be completing a previously unfinished release. -force overrides */
     for (fullrelease = 1, i = 0; (fullrelease && (i < entry.nServers)); i++) {
-	if (entry.serverFlags[i] & NEW_REPSITE)
+	if (entry.serverFlags[i] & VLSF_NEWREPSITE)
 	    fullrelease = 0;
     }
     if (forceflag && !fullrelease)
@@ -1571,7 +1566,7 @@ UV_ReleaseVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
 	 * want to "reclone" a temporary RO clone.
 	 */
 	if (roexists
-	    && (!roclone || (entry.serverFlags[roindex] & RO_DONTUSE))) {
+	    && (!roclone || (entry.serverFlags[roindex] & VLSF_DONTUSE))) {
 	    tst = DelVol(fromconn, cloneVolId, afrompart, ITOffline);
 	    if (tst && (tst != VNOVOL)) {
 		goto fail_UV_ReleaseVolume;
@@ -1584,11 +1579,11 @@ UV_ReleaseVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
 	 * RO volume is released (temp RO clones don't count).
 	 */
 	for (i = 0; i < entry.nServers; i++) {
-	    entry.serverFlags[i] &= ~NEW_REPSITE;
-	    entry.serverFlags[i] |= RO_DONTUSE;
+	    entry.serverFlags[i] &= ~VLSF_NEWREPSITE;
+	    entry.serverFlags[i] |= VLSF_DONTUSE;
 	}
-	entry.serverFlags[rwindex] |= NEW_REPSITE;
-	entry.serverFlags[rwindex] &= ~RO_DONTUSE;
+	entry.serverFlags[rwindex] |= VLSF_NEWREPSITE;
+	entry.serverFlags[rwindex] &= ~VLSF_DONTUSE;
 
 	/* Begin transaction on RW and mark it busy while we clone it */
 	tst =
@@ -1668,9 +1663,9 @@ UV_ReleaseVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
 		sleep(5);
 
 	    /* Mark the RO clone in the VLDB as a good site (already released) */
-	    entry.serverFlags[roindex] |= NEW_REPSITE;
-	    entry.serverFlags[roindex] &= ~RO_DONTUSE;
-	    entry.flags |= RO_EXISTS;
+	    entry.serverFlags[roindex] |= VLSF_NEWREPSITE;
+	    entry.serverFlags[roindex] &= ~VLSF_DONTUSE;
+	    entry.flags |= VLF_ROEXISTS;
 
 	    releasecount++;
 
@@ -1703,23 +1698,14 @@ UV_ReleaseVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
     cookie.clone = 0;
 
     nservers = entry.nServers / 2;	/* how many to do at once, excluding clone */
-    replicas =
-	(struct replica *)malloc(sizeof(struct replica) * nservers + 1);
-    times = (struct release *)malloc(sizeof(struct release) * nservers + 1);
-    toconns =
-	(struct rx_connection **)malloc(sizeof(struct rx_connection *) *
-					nservers + 1);
-    results.manyResults_val =
-	(afs_int32 *) malloc(sizeof(afs_int32) * nservers + 1);
+    replicas = calloc(nservers + 1, sizeof(struct replica));
+    times = calloc(nservers + 1, sizeof(struct release));
+    toconns = calloc(nservers + 1, sizeof(struct rx_connection *));
+    results.manyResults_val = calloc(nservers + 1, sizeof(afs_int32));
     if (!replicas || !times || !!!results.manyResults_val || !toconns) {
 	tst = ADMNOMEM;
 	goto fail_UV_ReleaseVolume;
     }
-
-    memset(replicas, 0, (sizeof(struct replica) * nservers + 1));
-    memset(times, 0, (sizeof(struct release) * nservers + 1));
-    memset(toconns, 0, (sizeof(struct rx_connection *) * nservers + 1));
-    memset(results.manyResults_val, 0, (sizeof(afs_int32) * nservers + 1));
 
     /* Create a transaction on the cloned volume */
     tst =
@@ -1745,10 +1731,10 @@ UV_ReleaseVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
 
 	    if (vldbindex == roindex)
 		continue;	/* the clone    */
-	    if ((entry.serverFlags[vldbindex] & NEW_REPSITE)
-		&& !(entry.serverFlags[vldbindex] & RO_DONTUSE))
+	    if ((entry.serverFlags[vldbindex] & VLSF_NEWREPSITE)
+		&& !(entry.serverFlags[vldbindex] & VLSF_DONTUSE))
 		continue;
-	    if (!(entry.serverFlags[vldbindex] & ITSROVOL))
+	    if (!(entry.serverFlags[vldbindex] & VLSF_ROVOL))
 		continue;	/* not a RO vol */
 
 
@@ -1853,9 +1839,9 @@ UV_ReleaseVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
 		    continue;
 		}
 
-		entry.serverFlags[times[m].vldbEntryIndex] |= NEW_REPSITE;
-		entry.serverFlags[times[m].vldbEntryIndex] &= ~RO_DONTUSE;
-		entry.flags |= RO_EXISTS;
+		entry.serverFlags[times[m].vldbEntryIndex] |= VLSF_NEWREPSITE;
+		entry.serverFlags[times[m].vldbEntryIndex] &= ~VLSF_DONTUSE;
+		entry.flags |= VLF_ROEXISTS;
 		releasecount++;
 	    }
 	}
@@ -1891,7 +1877,7 @@ UV_ReleaseVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
 
     /* Figure out if any volume were not released and say so */
     for (failure = 0, i = 0; i < entry.nServers; i++) {
-	if (!(entry.serverFlags[i] & NEW_REPSITE))
+	if (!(entry.serverFlags[i] & VLSF_NEWREPSITE))
 	    failure++;
     }
     if (failure) {
@@ -1914,7 +1900,7 @@ UV_ReleaseVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
     entry.cloneId = 0;
 
     for (i = 0; i < entry.nServers; i++)
-	entry.serverFlags[i] &= ~NEW_REPSITE;
+	entry.serverFlags[i] &= ~VLSF_NEWREPSITE;
 
     /* Update the VLDB */
     if (!VLDB_ReplaceEntry
@@ -2008,7 +1994,7 @@ t structure!! */
     }
 #endif
     nbytes = blockSize;
-    buffer = (char *)malloc(blockSize);
+    buffer = malloc(blockSize);
     if (!buffer) {
 	return ADMNOMEM;
     }
@@ -2087,14 +2073,12 @@ UV_DumpVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
     struct rx_connection *fromconn;
     struct rx_call *fromcall;
     afs_int32 fromtid;
-    afs_int32 rxError;
     afs_int32 rcode;
 
     struct nvldbentry entry;
     int islocked;
 
     islocked = 0;
-    rxError = 0;
     fromconn = (struct rx_connection *)0;
     fromtid = 0;
     fromcall = (struct rx_call *)0;
@@ -2117,7 +2101,7 @@ UV_DumpVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
     if ((tst = DumpFunction(fromcall, filename))) {
 	goto fail_UV_DumpVolume;
     }
-    tst = rx_EndCall(fromcall, rxError);
+    tst = rx_EndCall(fromcall, 0);
     fromcall = (struct rx_call *)0;
     if (tst) {
 	goto fail_UV_DumpVolume;
@@ -2144,7 +2128,7 @@ UV_DumpVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
     }
 
     if (fromcall) {
-	etst = rx_EndCall(fromcall, rxError);
+	etst = rx_EndCall(fromcall, 0);
 	if (etst) {
 	    if (!tst)
 		tst = etst;
@@ -2199,7 +2183,7 @@ t structure!! */
 	blockSize = 4096;
     }
 #endif
-    buffer = (char *)malloc(blockSize);
+    buffer = malloc(blockSize);
     if (!buffer) {
 	return ADMNOMEM;
     }
@@ -2279,7 +2263,6 @@ UV_RestoreVolume(afs_cell_handle_p cellHandle, afs_int32 toserver,
     struct rx_connection *toconn, *tempconn;
     struct rx_call *tocall;
     afs_int32 totid, rcode;
-    afs_int32 rxError = 0;
     struct volser_status tstatus;
     char partName[10];
     afs_uint32 pvolid;
@@ -2386,7 +2369,7 @@ UV_RestoreVolume(afs_cell_handle_p cellHandle, afs_int32 toserver,
     if (tst) {
 	goto fail_UV_RestoreVolume;
     }
-    tst = rx_EndCall(tocall, rxError);
+    tst = rx_EndCall(tocall, 0);
     tocall = (struct rx_call *)0;
     if (tst) {
 	goto fail_UV_RestoreVolume;
@@ -2435,8 +2418,8 @@ UV_RestoreVolume(afs_cell_handle_p cellHandle, afs_int32 toserver,
 	    entry.nServers = 1;
 	    entry.serverNumber[0] = toserver;	/*should be indirect */
 	    entry.serverPartition[0] = topart;
-	    entry.serverFlags[0] = ITSRWVOL;
-	    entry.flags = RW_EXISTS;
+	    entry.serverFlags[0] = VLSF_RWVOL;
+	    entry.flags = VLF_RWEXISTS;
 	    if (tstatus.cloneID != 0) {
 		entry.volumeId[ROVOL] = tstatus.cloneID;	/*this should come from status info on the volume if non zero */
 	    } else
@@ -2468,7 +2451,7 @@ UV_RestoreVolume(afs_cell_handle_p cellHandle, afs_int32 toserver,
 		/* Add the rw site for the volume being restored */
 		entry.serverNumber[entry.nServers] = toserver;
 		entry.serverPartition[entry.nServers] = topart;
-		entry.serverFlags[entry.nServers] = ITSRWVOL;
+		entry.serverFlags[entry.nServers] = VLSF_RWVOL;
 		entry.nServers++;
 	    } else {
 		/* This volume should be deleted on the old site
@@ -2512,7 +2495,7 @@ UV_RestoreVolume(afs_cell_handle_p cellHandle, afs_int32 toserver,
 		entry.serverPartition[index] = topart;
 	    }
 
-	    entry.flags |= RW_EXISTS;
+	    entry.flags |= VLF_RWEXISTS;
 	    if (!VLDB_ReplaceEntry
 		(cellHandle, pvolid, RWVOL, &entry,
 		 LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP, &tst)) {
@@ -2526,7 +2509,7 @@ UV_RestoreVolume(afs_cell_handle_p cellHandle, afs_int32 toserver,
   fail_UV_RestoreVolume:
 
     if (tocall) {
-	etst = rx_EndCall(tocall, rxError);
+	etst = rx_EndCall(tocall, 0);
 	if (!tst)
 	    tst = etst;
     }
@@ -2604,7 +2587,7 @@ UV_AddSite(afs_cell_handle_p cellHandle, afs_int32 server, afs_int32 part,
 
     /* See if it's on the same server */
     for (j = 0; j < entry.nServers; j++) {
-	if (entry.serverFlags[j] & ITSROVOL) {
+	if (entry.serverFlags[j] & VLSF_ROVOL) {
 	    nro++;
 	    if (!VLDB_IsSameAddrs
 		(cellHandle, server, entry.serverNumber[j], &same, &tst)) {
@@ -2625,7 +2608,7 @@ UV_AddSite(afs_cell_handle_p cellHandle, afs_int32 server, afs_int32 part,
 
     entry.serverNumber[entry.nServers] = server;
     entry.serverPartition[entry.nServers] = part;
-    entry.serverFlags[entry.nServers] = (ITSROVOL | RO_DONTUSE);
+    entry.serverFlags[entry.nServers] = (VLSF_ROVOL | VLSF_DONTUSE);
     entry.nServers++;
 
     if (!VLDB_ReplaceEntry
@@ -2676,8 +2659,8 @@ UV_RemoveSite(afs_cell_handle_p cellHandle, afs_int32 server, afs_int32 part,
     } else {			/*remove the rep site */
 	Lp_SetROValue(cellHandle, &entry, server, part, 0, 0);
 	entry.nServers--;
-	if ((entry.nServers == 1) && (entry.flags & RW_EXISTS))
-	    entry.flags &= ~RO_EXISTS;
+	if ((entry.nServers == 1) && (entry.flags & VLF_RWEXISTS))
+	    entry.flags &= ~VLF_ROEXISTS;
 	if (entry.nServers < 1) {	/*this is the last ref */
 	    tst = ubik_VL_DeleteEntry(cellHandle->vos, 0, volid, ROVOL);
 	    if (tst) {
@@ -3050,8 +3033,8 @@ ProcessEntries(afs_cell_handle_p cellHandle, struct qHead *myQueue,
 	    memset(&entry, 0, sizeof(entry));
 	    strncpy(entry.name, elem.name, VOLSER_OLDMAXVOLNAME);
 	    if (elem.isValid[RWVOL]) {	/*rw exists */
-		entry.flags |= RW_EXISTS;
-		entry.serverFlags[entry.nServers] = ITSRWVOL;
+		entry.flags |= VLF_RWEXISTS;
+		entry.serverFlags[entry.nServers] = VLSF_RWVOL;
 		entry.serverNumber[entry.nServers] = aserver;
 		entry.serverPartition[entry.nServers] = apart;
 		entry.nServers += 1;
@@ -3060,8 +3043,8 @@ ProcessEntries(afs_cell_handle_p cellHandle, struct qHead *myQueue,
 		entry.volumeId[BACKVOL] = elem.ids[BACKVOL];
 	    }
 	    if (elem.isValid[ROVOL]) {	/*ro volume exists */
-		entry.flags |= RO_EXISTS;
-		entry.serverFlags[entry.nServers] = ITSROVOL;
+		entry.flags |= VLF_ROEXISTS;
+		entry.serverFlags[entry.nServers] = VLSF_ROVOL;
 		entry.serverNumber[entry.nServers] = aserver;
 		entry.serverPartition[entry.nServers] = apart;
 		entry.nServers += 1;
@@ -3070,9 +3053,9 @@ ProcessEntries(afs_cell_handle_p cellHandle, struct qHead *myQueue,
 
 	    }
 	    if (elem.isValid[BACKVOL]) {	/*backup volume exists */
-		entry.flags |= BACK_EXISTS;
-		if (!(entry.flags & RW_EXISTS)) {	/*this helps to check for a stray backup if parent moves */
-		    entry.serverFlags[entry.nServers] = ITSRWVOL;
+		entry.flags |= VLF_BACKEXISTS;
+		if (!(entry.flags & VLF_RWEXISTS)) {	/*this helps to check for a stray backup if parent moves */
+		    entry.serverFlags[entry.nServers] = VLSF_RWVOL;
 		    entry.serverNumber[entry.nServers] = aserver;
 		    entry.serverPartition[entry.nServers] = apart;
 		    entry.nServers += 1;
@@ -3096,10 +3079,10 @@ ProcessEntries(afs_cell_handle_p cellHandle, struct qHead *myQueue,
 		if (temp == -1) {
 		    /* A RW index is not found in the VLDB entry - will add it */
 
-		    entry.flags |= RW_EXISTS;
+		    entry.flags |= VLF_RWEXISTS;
 		    entry.serverNumber[entry.nServers] = aserver;
 		    entry.serverPartition[entry.nServers] = apart;
-		    entry.serverFlags[entry.nServers] = ITSRWVOL;
+		    entry.serverFlags[entry.nServers] = VLSF_RWVOL;
 		    entry.nServers++;
 		} else {
 		    /* A RW index is found in the VLDB entry.
@@ -3120,7 +3103,7 @@ ProcessEntries(afs_cell_handle_p cellHandle, struct qHead *myQueue,
 			entry.serverPartition[temp] = apart;
 
 		    }
-		    entry.flags |= RW_EXISTS;
+		    entry.flags |= VLF_RWEXISTS;
 		}
 		if ((elem.ids[BACKVOL] != 0) && elem.isValid[BACKVOL])
 		    entry.volumeId[BACKVOL] = elem.ids[BACKVOL];
@@ -3144,14 +3127,14 @@ ProcessEntries(afs_cell_handle_p cellHandle, struct qHead *myQueue,
 			count = entry.nServers;
 			rwsite = -1;
 			for (j = 0; j < count; j++) {
-			    if (entry.serverFlags[j] & ITSROVOL) {
+			    if (entry.serverFlags[j] & VLSF_ROVOL) {
 
 				/*delete the site */
 				entry.serverNumber[j] = 0;
 				entry.serverPartition[j] = 0;
 				entry.serverFlags[j] = 0;
 
-			    } else if (entry.serverFlags[j] & ITSRWVOL)
+			    } else if (entry.serverFlags[j] & VLSF_RWVOL)
 				rwsite = j;
 			}
 			entry.nServers = 0;
@@ -3166,19 +3149,19 @@ ProcessEntries(afs_cell_handle_p cellHandle, struct qHead *myQueue,
 			}
 			entry.serverNumber[entry.nServers] = aserver;
 			entry.serverPartition[entry.nServers] = apart;
-			entry.serverFlags[entry.nServers] = ITSROVOL;
+			entry.serverFlags[entry.nServers] = VLSF_ROVOL;
 			entry.nServers++;
 			entry.volumeId[ROVOL] = elem.ids[ROVOL];
-			entry.flags |= RO_EXISTS;
+			entry.flags |= VLF_ROEXISTS;
 
 		    } else if (elem.ids[ROVOL] < entry.volumeId[ROVOL]) {
-			if (!(entry.flags & RO_EXISTS)) {
+			if (!(entry.flags & VLF_ROEXISTS)) {
 			    entry.volumeId[ROVOL] = elem.ids[ROVOL];
 			    entry.serverNumber[entry.nServers] = aserver;
 			    entry.serverPartition[entry.nServers] = apart;
-			    entry.serverFlags[entry.nServers] = ITSROVOL;
+			    entry.serverFlags[entry.nServers] = VLSF_ROVOL;
 			    entry.nServers++;
-			    entry.flags |= RO_EXISTS;
+			    entry.flags |= VLF_ROEXISTS;
 			}
 
 		    }
@@ -3186,9 +3169,9 @@ ProcessEntries(afs_cell_handle_p cellHandle, struct qHead *myQueue,
 		    else if (elem.ids[ROVOL] == entry.volumeId[ROVOL]) {
 			entry.serverNumber[entry.nServers] = aserver;
 			entry.serverPartition[entry.nServers] = apart;
-			entry.serverFlags[entry.nServers] = ITSROVOL;
+			entry.serverFlags[entry.nServers] = VLSF_ROVOL;
 			entry.nServers++;
-			entry.flags |= RO_EXISTS;
+			entry.flags |= VLF_ROEXISTS;
 			entry.volumeId[ROVOL] = elem.ids[ROVOL];
 		    }
 		}
@@ -3209,7 +3192,7 @@ ProcessEntries(afs_cell_handle_p cellHandle, struct qHead *myQueue,
 		} else {
 		    /*tackle the backup volume */
 		    entry.volumeId[BACKVOL] = elem.ids[BACKVOL];
-		    entry.flags |= BACK_EXISTS;
+		    entry.flags |= VLF_BACKEXISTS;
 		}
 		if (entry.volumeId[BACKVOL] == INVALID_BID)
 		    entry.volumeId[BACKVOL] = elem.ids[BACKVOL];
@@ -3345,65 +3328,65 @@ CheckVldbRWBK(afs_cell_handle_p cellHandle, struct nvldbentry *entry,
 	*modified = 0;
     idx = Lp_GetRwIndex(cellHandle, entry, 0);
 
-    /* Check to see if the RW volume exists and set the RW_EXISTS
+    /* Check to see if the RW volume exists and set the VLF_RWEXISTS
      * flag accordingly.
      */
     if (idx == -1) {		/* Did not find a RW entry */
-	if (entry->flags & RW_EXISTS) {	/* ... yet entry says RW exists */
-	    entry->flags &= ~RW_EXISTS;	/* ... so say RW does not exist */
+	if (entry->flags & VLF_RWEXISTS) {	/* ... yet entry says RW exists */
+	    entry->flags &= ~VLF_RWEXISTS;	/* ... so say RW does not exist */
 	    modentry++;
 	}
     } else {
 	if (VolumeExists
 	    (cellHandle, entry->serverNumber[idx],
 	     entry->serverPartition[idx], entry->volumeId[RWVOL], &tst)) {
-	    if (!(entry->flags & RW_EXISTS)) {	/* ... yet entry says RW does no
+	    if (!(entry->flags & VLF_RWEXISTS)) {	/* ... yet entry says RW does no
 						 * t exist */
-		entry->flags |= RW_EXISTS;	/* ... so say RW does exist */
+		entry->flags |= VLF_RWEXISTS;	/* ... so say RW does exist */
 		modentry++;
 	    }
 	} else if (tst == ENODEV) {	/* RW volume does not exist */
-	    if (entry->flags & RW_EXISTS) {	/* ... yet entry says RW exists
+	    if (entry->flags & VLF_RWEXISTS) {	/* ... yet entry says RW exists
 						 */
-		entry->flags &= ~RW_EXISTS;	/* ... so say RW does not exist
+		entry->flags &= ~VLF_RWEXISTS;	/* ... so say RW does not exist
 						 */
 		modentry++;
 	    }
 	} else {
 	    /* If VLDB says it didn't exist, then ignore error */
-	    if (entry->flags & RW_EXISTS) {
+	    if (entry->flags & VLF_RWEXISTS) {
 		goto fail_CheckVldbRWBK;
 	    }
 	}
     }
 
-    /* Check to see if the BK volume exists and set the BACK_EXISTS
+    /* Check to see if the BK volume exists and set the VLF_BACKEXISTS
      * flag accordingly. idx already ponts to the RW entry.
      */
     if (idx == -1) {		/* Did not find a RW entry */
-	if (entry->flags & BACK_EXISTS) {	/* ... yet entry says BK exists */
-	    entry->flags &= ~BACK_EXISTS;	/* ... so say BK does not exist */
+	if (entry->flags & VLF_BACKEXISTS) {	/* ... yet entry says BK exists */
+	    entry->flags &= ~VLF_BACKEXISTS;	/* ... so say BK does not exist */
 	    modentry++;
 	}
     } else {			/* Found a RW entry */
 	if (VolumeExists
 	    (cellHandle, entry->serverNumber[idx],
 	     entry->serverPartition[idx], entry->volumeId[BACKVOL], &tst)) {
-	    if (!(entry->flags & BACK_EXISTS)) {	/* ... yet entry says BK does n
+	    if (!(entry->flags & VLF_BACKEXISTS)) {	/* ... yet entry says BK does n
 							 * ot exist */
-		entry->flags |= BACK_EXISTS;	/* ... so say BK does exist */
+		entry->flags |= VLF_BACKEXISTS;	/* ... so say BK does exist */
 		modentry++;
 	    }
 	} else if (tst == ENODEV) {	/* BK volume does not exist */
-	    if (entry->flags & BACK_EXISTS) {	/* ... yet entry says BK exists
+	    if (entry->flags & VLF_BACKEXISTS) {	/* ... yet entry says BK exists
 						 */
-		entry->flags &= ~BACK_EXISTS;	/* ... so say BK does not exist
+		entry->flags &= ~VLF_BACKEXISTS;	/* ... so say BK does not exist
 						 */
 		modentry++;
 	    }
 	} else {
 	    /* If VLDB says it didn't exist, then ignore error */
-	    if (entry->flags & BACK_EXISTS) {
+	    if (entry->flags & VLF_BACKEXISTS) {
 		goto fail_CheckVldbRWBK;
 	    }
 	}
@@ -3412,8 +3395,8 @@ CheckVldbRWBK(afs_cell_handle_p cellHandle, struct nvldbentry *entry,
     /* If there is an idx but the BK and RW volumes no
      * longer exist, then remove the RW entry.
      */
-    if ((idx != -1) && !(entry->flags & RW_EXISTS)
-	&& !(entry->flags & BACK_EXISTS)) {
+    if ((idx != -1) && !(entry->flags & VLF_RWEXISTS)
+	&& !(entry->flags & VLF_BACKEXISTS)) {
 	Lp_SetRWValue(cellHandle, entry, entry->serverNumber[idx],
 		      entry->serverPartition[idx], 0L, 0L);
 	entry->nServers--;
@@ -3445,11 +3428,11 @@ CheckVldbRO(afs_cell_handle_p cellHandle, struct nvldbentry *entry,
     if (modified)
 	*modified = 0;
 
-    /* Check to see if the RO volumes exist and set the RO_EXISTS
+    /* Check to see if the RO volumes exist and set the VLF_ROEXISTS
      * flag accordingly.
      */
     for (idx = 0; idx < entry->nServers; idx++) {
-	if (!(entry->serverFlags[idx] & ITSROVOL)) {
+	if (!(entry->serverFlags[idx] & VLSF_ROVOL)) {
 	    continue;		/* not a RO */
 	}
 
@@ -3469,14 +3452,14 @@ CheckVldbRO(afs_cell_handle_p cellHandle, struct nvldbentry *entry,
     }
 
     if (foundro) {		/* A RO volume exists */
-	if (!(entry->flags & RO_EXISTS)) {	/* ... yet entry says RW does not e
+	if (!(entry->flags & VLF_ROEXISTS)) {	/* ... yet entry says RW does not e
 						 * xist */
-	    entry->flags |= RO_EXISTS;	/* ... so say RW does exist */
+	    entry->flags |= VLF_ROEXISTS;	/* ... so say RW does exist */
 	    modentry++;
 	}
     } else {			/* A RO volume does not exist */
-	if (entry->flags & RO_EXISTS) {	/* ... yet entry says RO exists */
-	    entry->flags &= ~RO_EXISTS;	/* ... so say RO does not exist */
+	if (entry->flags & VLF_ROEXISTS) {	/* ... yet entry says RO exists */
+	    entry->flags &= ~VLF_ROEXISTS;	/* ... so say RO does not exist */
 	    modentry++;
 	}
     }
@@ -3558,8 +3541,8 @@ CheckVldb(afs_cell_handle_p cellHandle, struct nvldbentry *entry,
 	if (pass == 1)
 	    goto retry;
 
-	if (!(entry->flags & RW_EXISTS) && !(entry->flags & BACK_EXISTS)
-	    && !(entry->flags & RO_EXISTS)) {
+	if (!(entry->flags & VLF_RWEXISTS) && !(entry->flags & VLF_BACKEXISTS)
+	    && !(entry->flags & VLF_ROEXISTS)) {
 	    /* The RW, BK, nor RO volumes do not exist. Delete the VLDB entry */
 	    tst =
 		ubik_VL_DeleteEntry(cellHandle->vos, 0,
@@ -3708,7 +3691,7 @@ UV_RenameVolume(afs_cell_handle_p cellHandle, struct nvldbentry *entry,
     /*at this stage the intent to rename is recorded in the vldb, as far
      * as the vldb 
      * is concerned, oldname is lost */
-    if (entry->flags & RW_EXISTS) {
+    if (entry->flags & VLF_RWEXISTS) {
 	index = Lp_GetRwIndex(cellHandle, entry, 0);
 	if (index == -1) {	/* there is a serious discrepancy */
 	    tst = VOLSERVLDB_ERROR;
@@ -3744,7 +3727,7 @@ UV_RenameVolume(afs_cell_handle_p cellHandle, struct nvldbentry *entry,
 	aconn = (struct rx_connection *)0;
     }
     /*end rw volume processing */
-    if (entry->flags & BACK_EXISTS) {	/*process the backup volume */
+    if (entry->flags & VLF_BACKEXISTS) {	/*process the backup volume */
 	index = Lp_GetRwIndex(cellHandle, entry, 0);
 	if (index == -1) {	/* there is a serious discrepancy */
 	    tst = VOLSERVLDB_ERROR;
@@ -3782,9 +3765,9 @@ UV_RenameVolume(afs_cell_handle_p cellHandle, struct nvldbentry *entry,
     if (aconn)
 	rx_ReleaseCachedConnection(aconn);
     aconn = (struct rx_connection *)0;
-    if (entry->flags & RO_EXISTS) {	/*process the ro volumes */
+    if (entry->flags & VLF_ROEXISTS) {	/*process the ro volumes */
 	for (i = 0; i < entry->nServers; i++) {
-	    if (entry->serverFlags[i] & ITSROVOL) {
+	    if (entry->serverFlags[i] & VLSF_ROVOL) {
 		aconn =
 		    UV_Bind(cellHandle, entry->serverNumber[i],
 			    AFSCONF_VOLUMEPORT);
@@ -3961,7 +3944,7 @@ GroupEntries(struct rx_connection *server, volintInfo * pntr, afs_int32 count,
 			error = VOLSERBADOP;
 		}
 	    } else {		/*create a fresh entry */
-		qPtr = (struct aqueue *)malloc(sizeof(struct aqueue));
+		qPtr = malloc(sizeof(struct aqueue));
 		if (pntr->type == RWVOL) {
 		    qPtr->isValid[RWVOL] = 1;
 		    qPtr->isValid[BACKVOL] = 0;

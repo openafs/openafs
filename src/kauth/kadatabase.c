@@ -10,18 +10,13 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
-#include <string.h>
 #include <ubik.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <afs/afsutil.h>
+
 #include "kauth.h"
 #include "kautils.h"
 #include "kaserver.h"
@@ -109,8 +104,7 @@ init_kadatabase(int initFlags)
     Lock_Init(&keycache_lock);
 
     maxCachedKeys = 10;
-    keyCache =
-	(struct cachedKey *)malloc(maxCachedKeys * sizeof(struct cachedKey));
+    keyCache = malloc(maxCachedKeys * sizeof(struct cachedKey));
     keyCacheVersion = 0;
     if (initFlags & 4) {
 	maxKeyLifetime = 90;
@@ -425,7 +419,6 @@ ka_NewKey(struct ubik_trans *tt, afs_int32 tentryaddr,
     int foundcurrentkey = 0;
 #endif
 
-
     es_Report("Newkey for %s.%s\n", tentry->userID.name,
 	      tentry->userID.instance);
 
@@ -717,10 +710,8 @@ ka_Encache(char *name, char *inst, afs_int32 kvno,
 	    return;
 	}
     /* i == maxCachedKeys */
-    keyCache =
-	(struct cachedKey *)realloc(keyCache,
-				    (maxCachedKeys *=
-				     2) * sizeof(struct cachedKey));
+    keyCache = realloc(keyCache, (maxCachedKeys *=2)
+				  * sizeof(struct cachedKey));
     if (keyCache == 0) {
 	es_Report("Can't realloc keyCache! out of memory?");
 	exit(123);

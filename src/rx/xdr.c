@@ -28,11 +28,10 @@
  */
 
 #include <afsconfig.h>
-#ifdef KERNEL
-#include "afs/param.h"
-#else
 #include <afs/param.h>
-#include <string.h>
+
+#ifndef KERNEL
+# include <roken.h>
 #endif
 
 
@@ -55,8 +54,6 @@
 #ifndef AFS_LINUX20_ENV
 #include <sys/systm.h>
 #endif
-#else
-#include <stdio.h>
 #endif
 #include "xdr.h"
 #include "rx.h"
@@ -514,9 +511,8 @@ xdr_string(XDR * xdrs, char **cpp, u_int maxsize)
     u_int size;
     u_int nodesize;
 
-    /* FIXME: this does not look correct: MSVC 6 computes -2 here */
-    if (maxsize > ((~0) >> 1) - 1)
-	maxsize = ((~0) >> 1) - 1;
+    if (maxsize > ((~0u) >> 1) - 1)
+	maxsize = ((~0u) >> 1) - 1;
 
     /*
      * first deal with the length since xdr strings are counted-strings

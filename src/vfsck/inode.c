@@ -18,12 +18,27 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#ifdef AFS_HPUX_ENV
+/* We need the old directory type headers (included below), so don't include
+ * the normal dirent.h, or it will conflict. */
+# undef HAVE_DIRENT_H
+# include <sys/inode.h>
+# define	LONGFILENAMES	1
+# include <sys/sysmacros.h>
+# include <sys/ino.h>
+# define	DIRSIZ_MACRO
+# ifdef HAVE_USR_OLD_USR_INCLUDE_NDIR_H
+#  include </usr/old/usr/include/ndir.h>
+# else
+#  include <ndir.h>
+# endif
+#endif
+
+#include <roken.h>
+
+#include <ctype.h>
 
 #define VICE			/* control whether AFS changes are present */
-#include <stdio.h>
-
-#include <sys/time.h>
-#include <sys/param.h>
 
 #ifdef	AFS_OSF_ENV
 #include <sys/mount.h>
@@ -54,18 +69,7 @@
 #endif
 #else /* AFS_VFSINCL_ENV */
 #include <sys/inode.h>
-#ifdef	AFS_HPUX_ENV
-#include <ctype.h>
-#define	LONGFILENAMES	1
-#include <sys/sysmacros.h>
-#include <sys/ino.h>
-#define	DIRSIZ_MACRO
-#ifdef HAVE_USR_OLD_USR_INCLUDE_NDIR_H
-#include </usr/old/usr/include/ndir.h>
-#else
-#include <ndir.h>
-#endif
-#else
+#ifndef	AFS_HPUX_ENV
 #include <sys/dir.h>
 #endif
 #include <sys/fs.h>
@@ -73,7 +77,6 @@
 #endif /* AFS_OSF_ENV */
 
 #include <afs/osi_inode.h>
-#include <pwd.h>
 #include "fsck.h"
 
 #ifdef AFS_SUN_ENV
@@ -141,7 +144,7 @@ ckinode(dp, idesc)
 	    return (ret);
     }
     idesc->id_numfrags = sblock.fs_frag;
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
     /*
      * indir_data_blks determine the no. of data blocks
      * in the previous levels. ie., at level 3 it
@@ -208,7 +211,7 @@ iblock(idesc, ilevel, isize)
 	return (SKIP);
     bp = getdatablk(idesc->id_blkno, sblock.fs_bsize);
     ilevel--;
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
     for (sizepb = 1, i = 0; i < ilevel; i++) {
 	sizepb *= (u_offset_t) NINDIR(&sblock);
     }
@@ -266,7 +269,7 @@ iblock(idesc, ilevel, isize)
 	if (*ap) {
 	    idesc->id_blkno = *ap;
 	    if (ilevel > 0) {
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
 		n = iblock(idesc, ilevel, isize);
 		/*
 		 * each iteration decrease "remaining block
@@ -351,9 +354,9 @@ inocleanup()
     if (inphead == NULL)
 	return;
     for (inpp = &inpsort[inplast - 1]; inpp >= inpsort; inpp--)
-	free((char *)(*inpp));
-    free((char *)inphead);
-    free((char *)inpsort);
+	free(*inpp);
+    free(inphead);
+    free(inpsort);
     inphead = inpsort = NULL;
 }
 #endif
@@ -490,7 +493,7 @@ pinode(ino)
     printf("MODE=%o\n", dp->di_mode);
     if (preen)
 	printf("%s: ", devname);
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
     printf("SIZE=%" AFS_INT64_FMT " ", dp->di_size);
 #else
     printf("SIZE=%ld ", dp->di_size);

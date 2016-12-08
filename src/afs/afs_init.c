@@ -32,7 +32,7 @@
 /* Exported variables */
 struct osi_dev cacheDev;	/*Cache device */
 afs_int32 cacheInfoModTime;	/*Last time cache info modified */
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_NBSD_ENV)
 struct mount *afs_cacheVfsp = 0;
 #elif defined(AFS_LINUX20_ENV)
 struct super_block *afs_cacheSBp = 0;
@@ -186,7 +186,7 @@ afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
     cm_initParams.cmi_firstChunkSize = AFS_FIRSTCSIZE;
     cm_initParams.cmi_otherChunkSize = AFS_OTHERCSIZE;
     cm_initParams.cmi_cacheSize = afs_cacheBlocks;
-    cm_initParams.cmi_setTime = afs_setTime;
+    cm_initParams.cmi_setTime = 0;
     cm_initParams.cmi_memCache = (aflags & AFSCALL_INIT_MEMCACHE) ? 1 : 0;
 
     return 0;
@@ -335,6 +335,17 @@ afs_InitVolumeInfo(char *afile)
     return 0;
 }
 
+void
+afs_InitFHeader(struct afs_fheader *aheader)
+{
+    memset(aheader, 0, sizeof(*aheader));
+    aheader->magic = AFS_FHMAGIC;
+    aheader->version = AFS_CI_VERSION;
+    aheader->dataSize = sizeof(struct fcache);
+    aheader->firstCSize = AFS_FIRSTCSIZE;
+    aheader->otherCSize = AFS_OTHERCSIZE;
+}
+
 /*
  * afs_InitCacheInfo
  *
@@ -349,7 +360,7 @@ afs_InitVolumeInfo(char *afile)
  *
  * Environment:
  *	This function is called only during initialization.  The given
- *	file should NOT be truncated to 0 lenght; its contents descrebe
+ *	file should NOT be truncated to 0 length; its contents describe
  *	what data is really in the cache.
  *
  *	WARNING: data will be written to this file over time by AFS.
@@ -382,17 +393,17 @@ afs_InitCacheInfo(char *afile)
     if (code || !filevp)
 	return ENOENT;
     {
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
 	struct statvfs64 st;
 #elif	defined(AFS_HPUX102_ENV)
 	struct k_statvfs st;
-#elif	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_HPUX100_ENV) || defined(AFS_NBSD40_ENV)
+#elif	defined(AFS_SGI_ENV) || defined(AFS_HPUX100_ENV) || defined(AFS_NBSD40_ENV)
 	struct statvfs st;
 #elif defined(AFS_DARWIN80_ENV)
 	struct vfsstatfs st;
 #else
 	struct statfs st;
-#endif /* SUN56 */
+#endif /* SUN5 */
 
 #if	defined(AFS_SGI_ENV)
 #ifdef AFS_SGI65_ENV
@@ -418,6 +429,8 @@ afs_InitCacheInfo(char *afile)
 	if (afs_cacheVfsp && ((st = *(vfs_statfs(afs_cacheVfsp))),1))
 #elif defined(AFS_FBSD80_ENV)
 	if (!VFS_STATFS(filevp->v_mount, &st))
+#elif defined(AFS_NBSD50_ENV)
+	if (!VFS_STATVFS(filevp->v_vfsp, &st))
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	if (!VFS_STATFS(filevp->v_mount, &st, osi_curproc()))
 #else
@@ -470,6 +483,9 @@ afs_InitCacheInfo(char *afile)
 	afs_fsfragsize = AFS_MIN_FRAGSIZE;
     }
     tfile = osi_UFSOpen(&cacheInode);
+    if (!tfile)
+	return ENOENT;
+
     afs_osi_Stat(tfile, &tstat);
     cacheInfoModTime = tstat.mtime;
     code = afs_osi_Read(tfile, -1, &theader, sizeof(theader));
@@ -485,11 +501,7 @@ afs_InitCacheInfo(char *afile)
     }
     if (!goodFile) {
 	/* write out a good file label */
-	theader.magic = AFS_FHMAGIC;
-	theader.firstCSize = AFS_FIRSTCSIZE;
-	theader.otherCSize = AFS_OTHERCSIZE;
-	theader.dataSize = sizeof(struct fcache);
-	theader.version = AFS_CI_VERSION;
+	afs_InitFHeader(&theader);
 	afs_osi_Write(tfile, 0, &theader, sizeof(theader));
 	/*
 	 * Truncate the rest of the file, since it may be arbitrarily
@@ -521,7 +533,7 @@ afs_ResourceInit(int preallocs)
     AFS_RWLOCK_INIT(&afs_icl_lock, "afs_icl_lock");
     AFS_RWLOCK_INIT(&afs_xinterface, "afs_xinterface");
     LOCK_INIT(&afs_puttofileLock, "afs_puttofileLock");
-#ifndef AFS_FBSD_ENV
+#ifndef AFS_PRIVATE_OSI_ALLOCSPACES
     LOCK_INIT(&osi_fsplock, "osi_fsplock");
     LOCK_INIT(&osi_flplock, "osi_flplock");
 #endif
@@ -738,7 +750,6 @@ static void
 shutdown_server(void)
 {
     int i;
-    struct afs_conn *tc, *ntc;
     struct afs_cbr *tcbrp, *tbrp;
     struct srvAddr *sa;
 
@@ -750,22 +761,11 @@ shutdown_server(void)
 	    next = ts->next;
 	    for (sa = ts->addr; sa; sa = sa->next_sa) {
 		if (sa->conns) {
-		    /*
-		     * Free all server's connection structs
-		     */
-		    tc = sa->conns;
-		    while (tc) {
-			ntc = tc->next;
-#if 0
-			/* we should destroy all connections
-			   when shutting down Rx, not here */
-			AFS_GUNLOCK();
-			rx_DestroyConnection(tc->id);
-			AFS_GLOCK();
-#endif
-			afs_osi_Free(tc, sizeof(struct afs_conn));
-			tc = ntc;
-		    }
+                    /* afs_ReleaseConns has been updated to
+                     * defer rx_DestroyConnection to Rx
+                     * shutdown, as most recently was done
+                     * here */
+                    afs_ReleaseConns(sa->conns);
 		}
 	    }
 	    for (tcbrp = ts->cbrs; tcbrp; tcbrp = tbrp) {
@@ -841,8 +841,8 @@ shutdown_AFS(void)
 	    for (i = 0; i < NUSERS; i++) {
 		for (tu = afs_users[i]; tu; tu = ntu) {
 		    ntu = tu->next;
-		    if (tu->stp)
-			afs_osi_Free(tu->stp, tu->stLen);
+		    if (tu->tokens)
+			afs_FreeTokens(&tu->tokens);
 		    if (tu->exporter)
 			EXP_RELE(tu->exporter);
 		    afs_osi_Free(tu, sizeof(struct unixuser));
@@ -859,7 +859,6 @@ shutdown_AFS(void)
 	afs_sysname = 0;
 	afs_sysnamecount = 0;
 	afs_marinerHost = 0;
-	afs_setTimeHost = NULL;
 	afs_volCounter = 1;
 	afs_waitForever = afs_waitForeverCount = 0;
 	afs_FVIndex = -1;

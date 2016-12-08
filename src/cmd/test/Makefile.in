@@ -7,30 +7,22 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.lwp
 
 
-LDIRS= -L${DESTDIR}/lib -L${DESTDIR}/lib/afs -L..
-LIBS=-lcmd -lafscom_err -lafsutil
-
-INCDIRS=  -I${SRCDIR}/include -I${SRCDIR}/include/afs -I..
-
-CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LDIRS} ${LIBS} ${XCFLAGS} ${ARCHFLAGS}
+LIBS=-lcmd $(TOP_LIBDIR)/libafscom_err.a -lafsutil $(LIB_roken) $(XLIBS)
 
 all: test
 test tests: ctest dtest itest
 
-itest: itest.o 
-	cc ${CFLAGS} -o itest itest.o 
+itest: itest.o
+	$(AFS_LDRULE) itest.o $(LDIRS) $(LIBS)
 
 ctest: ctest.o
-	cc ${CFLAGS} -o ctest ctest.o 
+	$(AFS_LDRULE) ctest.o $(LDIRS) $(LIBS)
 
 dtest: dtest.o
-	cc ${CFLAGS} -o dtest dtest.o 
+	$(AFS_LDRULE) dtest.o $(LDIRS) $(LIBS)
 
 system: test
 

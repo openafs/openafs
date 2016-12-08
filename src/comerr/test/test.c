@@ -44,7 +44,7 @@ main()
     printf("Msg KRB_SKDC_CANT is '%s'\n", afs_error_message(KRB_SKDC_CANT));
     printf("Msg 1e6 (8B 64) is '%s'\n", afs_error_message(1000000));
     printf("\n\nCOM_ERR tests:\n");
-    afs_com_err("whoami", FOO_ERR, (char *)NULL);
+    afs_com_err("whoami", FOO_ERR, NULL);
     afs_com_err("whoami", FOO_ERR, " -- message goes %s", "here");
     afs_com_err("whoami", 0, NULL);
     afs_com_err("whoami", 0, "error number %d\n", 0);

@@ -23,7 +23,7 @@ INCFILES = \
 
 $(INCFILEDIR)\vl_opcodes.h: vl_opcodes.h
 	$(COPY) vl_opcodes.h $(INCFILEDIR)\vl_opcodes.h
-        
+
 ############################################################################
 # build afsvldb.lib
 
@@ -35,8 +35,8 @@ LIBOBJS =\
 	$(OUT)\vldbint.xdr.obj \
 	$(OUT)\AFS_component_version_number.obj
 
-$(LIBFILE): $(LIBOBJS)  
-	$(LIBARCH) 
+$(LIBFILE): $(LIBOBJS)
+	$(LIBARCH)
 
 ############################################################################
 # build mtafsvldb.lib
@@ -58,8 +58,8 @@ $(OUT)\vldbint.cs_mt.obj:vldbint.cs.c
 $(OUT)\vldbint.xdr_mt.obj:vldbint.xdr.c
 	$(C2OBJ) $** -DAFS_PTHREAD_ENV
 
-$(MT_LIBFILE): $(MT_LIBOBJS)  
-	$(LIBARCH) 
+$(MT_LIBFILE): $(MT_LIBOBJS)
+	$(LIBARCH)
 
 ############################################################################
 # build vlserver.exe
@@ -75,13 +75,13 @@ VLSERVER_EXEOBJS =\
 	$(OUT)\vlserver.res
 
 VLSERVER_EXECLIBS = \
+	$(DESTDIR)\lib\afs\afscmd.lib \
 	$(DESTDIR)\lib\afsubik.lib \
 	$(DESTDIR)\lib\afs\afsauth.lib \
 	$(DESTDIR)\lib\afsrxkad.lib \
 	$(DESTDIR)\lib\afsrxstat.lib \
 	$(DESTDIR)\lib\afsrx.lib \
 	$(DESTDIR)\lib\afslwp.lib \
-	$(DESTDIR)\lib\afsdes.lib \
 	$(DESTDIR)\lib\afs\afscom_err.lib \
 	$(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afs\afsaudit.lib \
@@ -89,12 +89,16 @@ VLSERVER_EXECLIBS = \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
-        $(DESTDIR)\lib\afs\afspioctl.lib
+        $(DESTDIR)\lib\afs\afspioctl.lib \
+	$(DESTDIR)\lib\opr.lib \
+	$(DESTDIR)\lib\afshcrypto.lib \
+	$(DESTDIR)\lib\afsroken.lib \
+	$(DESTDIR)\lib\afsrfc3961.lib
 
 $(VLSERVER): $(VLSERVER_EXEOBJS) $(LIBFILE) $(VLSERVER_EXECLIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
-	$(EXEPREP) 
+	$(EXEPREP)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 
@@ -139,7 +143,8 @@ VLDB_CHECK_LIBS =\
 	$(DESTDIR)\lib\afs\afsutil.lib 	\
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
-	$(DESTDIR)\lib\afs\afscmd.lib
+	$(DESTDIR)\lib\afs\afscmd.lib \
+	$(DESTDIR)\lib\afsroken.lib
 
 $(OUT)\vldb_check.exe: $(OUT)\vldb_check.obj $(VLDB_CHECK_LIBS)
 	$(EXECONLINK)
@@ -151,7 +156,8 @@ $(OUT)\vldb_check.exe: $(OUT)\vldb_check.obj $(VLDB_CHECK_LIBS)
 # build local vlclient
 VLCLIENT_LIBS = \
 	$(DESTDIR)\lib\afs\afscmd.lib \
-	$(DESTDIR)\lib\afs\afspioctl.lib
+	$(DESTDIR)\lib\afs\afspioctl.lib \
+	$(DESTDIR)\lib\afsroken.lib
 
 $(OUT)\vlclient.exe: $(OUT)\vlclient.obj  $(LIBFILE) $(VLSERVER_EXECLIBS) $(VLCLIENT_LIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
@@ -165,8 +171,6 @@ $(OUT)\vlclient.exe: $(OUT)\vlclient.obj  $(LIBFILE) $(VLSERVER_EXECLIBS) $(VLCL
 
 install: $(INCFILES) $(LIBFILE) $(VLSERVER) $(OUT)\vldb_check.exe $(OUT)\vlclient.exe \
 	 $(MT_LIBFILE)
-
-install9x: install
 
 install_libutils: $(INCFILES) $(LIBFILE)
 

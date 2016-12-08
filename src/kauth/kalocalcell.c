@@ -10,24 +10,16 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+#include <afs/opr.h>
+
 #include <afs/pthread_glock.h>
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
-#include <string.h>
 #include <afs/cellconfig.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
+
 #include "kauth.h"
 #include "kautils.h"
-#include <afs/afsutil.h>
-
-#ifdef UKERNEL
-#include "afs_usrops.h"
-#endif
 
 /* This is a utility routine that many parts of kauth use but it invokes the
    afsconf package so its best to have it in a separate .o file to make the
@@ -39,11 +31,6 @@ static char cell_name[MAXCELLCHARS];
 int
 ka_CellConfig(const char *dir)
 {
-#ifdef UKERNEL
-    conf = afs_cdir;
-    strcpy(cell_name, afs_LclCellName);
-    return 0;
-#else /* UKERNEL */
     int code;
 
     LOCK_GLOBAL_MUTEX;
@@ -57,25 +44,18 @@ ka_CellConfig(const char *dir)
     code = afsconf_GetLocalCell(conf, cell_name, sizeof(cell_name));
     UNLOCK_GLOBAL_MUTEX;
     return code;
-#endif /* UKERNEL */
 }
 
 char *
 ka_LocalCell(void)
 {
-#ifndef UKERNEL
     int code = 0;
-#endif
 
     LOCK_GLOBAL_MUTEX;
     if (conf) {
 	UNLOCK_GLOBAL_MUTEX;
 	return cell_name;
     }
-#ifdef UKERNEL
-    conf = afs_cdir;
-    strcpy(cell_name, afs_LclCellName);
-#else /* UKERNEL */
     if ((conf = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH))) {
 	code = afsconf_GetLocalCell(conf, cell_name, sizeof(cell_name));
 /* leave conf open so we can lookup other cells */
@@ -87,7 +67,6 @@ ka_LocalCell(void)
 	UNLOCK_GLOBAL_MUTEX;
 	return 0;
     }
-#endif /* UKERNEL */
     UNLOCK_GLOBAL_MUTEX;
     return cell_name;
 }

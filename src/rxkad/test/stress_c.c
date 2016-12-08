@@ -12,16 +12,10 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include <afs/stds.h>
-#include <sys/types.h>
-#include <stdio.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netdb.h>
-#include <netinet/in.h>
-#endif
+
 #include <afs/com_err.h>
 #include <afs/afsutil.h>
 #include <rx/rxkad.h>
@@ -288,7 +282,7 @@ CallSimultaneously(u_int threads, opaque rock, long (*proc)(int, opaque))
 	PROCESS pid;
 #endif
 	assert(i < MAX_CTHREADS);
-	w = (struct worker *)osi_Alloc(sizeof(struct worker));
+	w = osi_Alloc(sizeof(struct worker));
 	memset(w, 0, sizeof(*w));
 	w->next = workers;
 	workers = w;
@@ -378,7 +372,7 @@ static double
 ftime(void)
 {
     struct timeval tv;
-    gettimeofday(&tv, 0);
+    gettimeofday(&tv, NULL);
     return (double)tv.tv_sec + (double)tv.tv_usec / 1000000.0;
 }
 

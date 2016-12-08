@@ -729,12 +729,12 @@
         <secondary>displaying ACL for single directory</secondary>
       </indexterm>
 
-      <para>The following example displays the ACL on user <emphasis role="bold">terry</emphasis>'s home directory in the ABC
+      <para>The following example displays the ACL on user <emphasis role="bold">terry</emphasis>'s home directory in the Example
       Corporation cell:</para>
 
       <programlisting>
-   % <emphasis role="bold">fs la /afs/abc.com/usr/terry</emphasis>
-   Access list for /afs/abc.com/usr/terry is
+   % <emphasis role="bold">fs la /afs/example.com/usr/terry</emphasis>
+   Access list for /afs/example.com/usr/terry is
    Normal rights:
       system:authuser rl
       pat rlw
@@ -774,12 +774,12 @@
       <emphasis role="bold">plans</emphasis>.</para>
 
       <programlisting>
-   % <emphasis role="bold">fs listacl  .  /afs/abc.com/usr/pat  ../plans</emphasis>
+   % <emphasis role="bold">fs listacl  .  /afs/example.com/usr/pat  ../plans</emphasis>
    Access list for . is
    Normal rights:
       system:anyuser rl
       pat:dept rliw
-   Access list for /afs/abc.com/usr/pat is
+   Access list for /afs/example.com/usr/pat is
    Normal rights:
       system:anyuser rl
       pat rlidwka
@@ -1146,7 +1146,7 @@
       to the group <emphasis role="bold">terry:team</emphasis> on her <emphasis role="bold">plans</emphasis> subdirectory.</para>
 
       <programlisting>
-   % <emphasis role="bold">cd /afs/abc.com/usr/terry</emphasis>
+   % <emphasis role="bold">cd /afs/example.com/usr/terry</emphasis>
    % <emphasis role="bold">fs listacl plans</emphasis>
    Access control list for plans is
    Normal rights:

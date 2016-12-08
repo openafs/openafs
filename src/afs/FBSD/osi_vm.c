@@ -10,7 +10,7 @@
 
 /* osi_vm.c implements:
  *
- * osi_VM_FlushVCache(avc, slept)
+ * osi_VM_FlushVCache(avc)
  * osi_ubc_flush_dirty_and_wait(vp, flags)
  * osi_VM_StoreAllSegments(avc)
  * osi_VM_TryToSmush(avc, acred, sync)
@@ -50,12 +50,12 @@
 
 #if defined(AFS_FBSD80_ENV)
 #define	lock_vnode(v, f)	vn_lock((v), (f))
-#define ilock_vnode(v)	vn_lock((v), LK_INTERLOCK|LK_EXCLUSIVE|LK_RETRY);
+#define ilock_vnode(v)	vn_lock((v), LK_INTERLOCK|LK_EXCLUSIVE|LK_RETRY)
 #define unlock_vnode(v)	VOP_UNLOCK((v), 0)
 #define islocked_vnode(v)	VOP_ISLOCKED((v))
 #else
 #define	lock_vnode(v, f)	vn_lock((v), (f), curthread)
-#define ilock_vnode(v)	vn_lock((v), LK_INTERLOCK|LK_EXCLUSIVE|LK_RETRY, curthread);
+#define ilock_vnode(v)	vn_lock((v), LK_INTERLOCK|LK_EXCLUSIVE|LK_RETRY, curthread)
 #define unlock_vnode(v)	VOP_UNLOCK((v), 0, curthread)
 #define islocked_vnode(v)	VOP_ISLOCKED((v), curthread)
 #endif
@@ -75,59 +75,36 @@
  * We also do some non-VM-related chores, such as releasing the cred pointer
  * (for AIX and Solaris) and releasing the gnode (for AIX).
  *
- * Locking:  afs_xvcache lock is held.  If it is dropped and re-acquired,
- *   *slept should be set to warn the caller.
- *
- * Formerly, afs_xvcache was dropped and re-acquired for Solaris, but now it
- * is not dropped and re-acquired for any platform.  It may be that *slept is
- * therefore obsolescent.
+ * Locking:  afs_xvcache lock is held. It must not be dropped.
  *
  */
 int
-osi_VM_FlushVCache(struct vcache *avc, int *slept)
+osi_VM_FlushVCache(struct vcache *avc)
 {
-    struct vnode *vp = AFSTOV(avc);
+    struct vnode *vp;
+    int code;
 
-    if (!VI_TRYLOCK(vp)) /* need interlock to check usecount */
+    vp = AFSTOV(avc);
+
+    if (!VI_TRYLOCK(vp))
 	return EBUSY;
-
-    if (vp->v_usecount > 0) {
+    code = osi_fbsd_checkinuse(avc);
+    if (code) {
 	VI_UNLOCK(vp);
-	return EBUSY;
+	return code;
     }
 
-    /* XXX
-     * The value of avc->opens here came to be, at some point,
-     * typically -1.  This was caused by incorrectly performing afs_close
-     * processing on vnodes being recycled */
-    if (avc->opens) {
-	VI_UNLOCK(vp);
-	return EBUSY;
-    }
-
-    /* if a lock is held, give up */
-    if (CheckLock(&avc->lock)) {
-	VI_UNLOCK(vp);
-	return EBUSY;
-    }
-
-    if ((vp->v_iflag & VI_DOOMED) != 0) {
-	VI_UNLOCK(vp);
-	return (0);
-    }
-
-    /* must hold the vnode before calling vgone()
+    /* must hold the vnode before calling cache_purge()
      * This code largely copied from vfs_subr.c:vlrureclaim() */
     vholdl(vp);
+    VI_UNLOCK(vp);
+
     AFS_GUNLOCK();
-    *slept = 1;
-    /* use the interlock while locking, so no one else can DOOM this */
-    ilock_vnode(vp);
-    vgone(vp);
-    unlock_vnode(vp);
+    cache_purge(vp);
+    AFS_GLOCK();
+
     vdrop(vp);
 
-    AFS_GLOCK();
     return 0;
 }
 

@@ -32,6 +32,9 @@ lifetime has passed since the current key was defined using the B<kas
 setpassword> and B<bos addkey> commands. This ensures that no clients
 still possess tickets encrypted with the obsolete key.
 
+This command can only remove keys from the F</usr/afs/etc/KeyFile> file;
+the F</usr/afs/etc/KeyFileExt> cannot be modified by this command.
+
 =head1 OPTIONS
 
 =over 4
@@ -67,7 +70,8 @@ L<bos(8)>.
 =item B<-localauth>
 
 Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> file. The B<bos> command interpreter presents the
+F</usr/afs/etc/KeyFile> or F</usr/afs/etc/KeyFileExt> file.
+The B<bos> command interpreter presents the
 ticket to the BOS Server during mutual authentication. Do not combine this
 flag with the B<-cell> or B<-noauth> options. For more details, see
 L<bos(8)>.
@@ -82,9 +86,9 @@ ignored.
 =head1 EXAMPLES
 
 The following command removes the keys with key version numbers 5 and 6
-from the F<KeyFile> file on the system control machine C<fs1.abc.com>.
+from the F<KeyFile> file on the system control machine C<fs1.example.com>.
 
-   % bos removekey -server fs1.abc.com -kvno 5 6
+   % bos removekey -server fs1.example.com -kvno 5 6
 
 =head1 PRIVILEGE REQUIRED
 
@@ -96,6 +100,7 @@ included.
 =head1 SEE ALSO
 
 L<KeyFile(5)>,
+L<KeyFileExt(5)>,
 L<UserList(5)>,
 L<bos(8)>,
 L<bos_addkey(8)>,

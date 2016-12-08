@@ -22,21 +22,16 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <stdio.h>
 #ifdef HAVE_STDIO_EXT_H
 #include <stdio_ext.h>
 #endif
-#include <sys/types.h>
+
 #ifdef AFS_NT40_ENV
-#include <time.h>
 #include <conio.h>
-#include <assert.h>
-#else
-#include <sys/time.h>
-#include <unistd.h>
 #endif
-#include <string.h>
+
 #include "lwp.h"
 
 #define LWP_KEYSTROKE_DELAY   250	/* 250ms. Must be < 1000 */
@@ -58,12 +53,14 @@ LWP_WaitForKeystroke(int seconds)
 {
     time_t startTime, nowTime;
     double timeleft = 1;
+#ifndef AFS_PTHREAD_ENV
     struct timeval twait;
-
-    time(&startTime);
 
     twait.tv_sec = 0;
     twait.tv_usec = LWP_KEYSTROKE_DELAY;
+#endif
+
+    time(&startTime);
 
     if (seconds >= 0)
 	timeleft = seconds;
@@ -78,8 +75,11 @@ LWP_WaitForKeystroke(int seconds)
 
 	/* sleep for  LWP_KEYSTROKE_DELAY ms and let other
 	 * process run some*/
+#ifdef AFS_PTHREAD_ENV
+	Sleep(LWP_KEYSTROKE_DELAY);
+#else
 	IOMGR_Select(0, 0, 0, 0, &twait);
-
+#endif
 	if (seconds > 0) {	/* we only worry about elapsed time if
 				 * not looping forever (seconds < 0) */
 	    /* now check elapsed time */
@@ -161,12 +161,13 @@ LWP_WaitForKeystroke(int seconds)
     struct timeval twait;
     struct timeval *tp = NULL;
 
-#ifdef AFS_LINUX20_ENV
+#if defined(HAVE_STDIO_EXT_H)
+    if (__fbufsize(stdin) > 0)
+        return 1;
+#elif defined(AFS_LINUX20_ENV)
     if (stdin->_IO_read_ptr < stdin->_IO_read_end)
 	return 1;
-#else
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-#if defined(AFS_DFBSD_ENV)
+#elif (defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)) && defined(AFS_DFBSD_ENV)
     struct appx_sbuf {
       unsigned char *_base;
       int     _size;
@@ -179,19 +180,12 @@ LWP_WaitForKeystroke(int seconds)
     struct APPX_FILE *appx_stdin = (struct APPX_FILE *) stdin;
     if (appx_stdin->_bf._size > 0)
 	return 1;
-#else
+#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     if (stdin->_bf._size > 0)
 	return 1;
-#endif
 #else
-#if defined(HAVE_STDIO_EXT_H)
-    if (__fbufsize(stdin) > 0)
-	return 1;
-#else /* HAVE_STDIO_EXT_H */
     if (stdin->_cnt > 0)
 	return 1;
-#endif /* HAVE_STDIO_EXT_H */
-#endif
 #endif
 
     FD_ZERO(&rdfds);
@@ -203,7 +197,11 @@ LWP_WaitForKeystroke(int seconds)
 	tp = &twait;
     }
 
+#ifdef AFS_PTHREAD_ENV
+    code = select(1 + fileno(stdin), &rdfds, NULL, NULL, tp);
+#else
     code = IOMGR_Select(1 + fileno(stdin), &rdfds, NULL, NULL, tp);
+#endif
 
     return (code == 1) ? 1 : 0;
 }

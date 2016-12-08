@@ -17,22 +17,24 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+#include <afs/opr.h>
 
-#include <stdio.h>
-#include <sys/types.h>
-#include <errno.h>
-#ifdef AFS_NT40_ENV
-#include <time.h>
-#include <fcntl.h>
-#else
-#include <sys/time.h>
+#ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
-#include <unistd.h>
 #endif
-#include <dirent.h>
-#include <sys/stat.h>
-#include <afs/afs_assert.h>
 
+#ifdef HAVE_SYS_LOCKF_H
+#include <sys/lockf.h>
+#endif
+
+#ifdef AFS_PTHREAD_ENV
+# include <opr/lock.h>
+#else
+# include <opr/lockstub.h>
+#endif
+
+#include <rx/rx_queue.h>
 #include <rx/xdr.h>
 #include <afs/afsint.h>
 #include "nfs.h"
@@ -44,7 +46,6 @@
 #include <afs/afsutil.h>
 #ifdef AFS_NT40_ENV
 #include "ntops.h"
-#include <io.h>
 #endif
 #include "vnode.h"
 #include "volume.h"
@@ -55,22 +56,6 @@
 #include "volinodes.h"
 #include "vol_prototypes.h"
 #include "common.h"
-
-#ifdef	AFS_AIX_ENV
-#include <sys/lockf.h>
-#endif
-#if defined(AFS_SUN5_ENV) || defined(AFS_NT40_ENV) || defined(AFS_LINUX20_ENV)
-#include <string.h>
-#else
-#include <strings.h>
-#endif
-
-#ifdef O_LARGEFILE
-#define afs_open	open64
-#else /* !O_LARGEFILE */
-#define afs_open	open
-#endif /* !O_LARGEFILE */
-
 
 #ifndef AFS_NT40_ENV
 # ifdef O_LARGEFILE
@@ -114,7 +99,7 @@ RemoveInodes(struct afs_inode_info *stuff, Device dev, VolumeId parent,
 }
 
 Volume *
-VCreateVolume(Error * ec, char *partname, VolId volumeId, VolId parentId)
+VCreateVolume(Error * ec, char *partname, VolumeId volumeId, VolumeId parentId)
 {				/* Should be the same as volumeId if there is
 				 * no parent */
     Volume *retVal;
@@ -125,7 +110,7 @@ VCreateVolume(Error * ec, char *partname, VolId volumeId, VolId parentId)
 }
 
 Volume *
-VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
+VCreateVolume_r(Error * ec, char *partname, VolumeId volumeId, VolumeId parentId)
 {				/* Should be the same as volumeId if there is
 				 * no parent */
     VolumeDiskData vol;
@@ -139,9 +124,9 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
     Inode nearInode AFS_UNUSED = 0;
     char *part, *name;
     struct stat st;
-    afs_ino_str_t stmp;
     struct VolumeHeader tempHeader;
     struct afs_inode_info stuff[MAXINODETYPE];
+    afs_ino_str_t stmp;
 # ifdef AFS_DEMAND_ATTACH_FS
     int locktype = 0;
 # endif /* AFS_DEMAND_ATTACH_FS */
@@ -176,10 +161,10 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
 	/* return EXDEV if it's a clone or read-only to an alternate partition
 	 * otherwise assume it's a move */
 	if (vol.parentId != vol.id) {
-	    Log("VCreateVolume: volume %lu for parent %lu"
+	    Log("VCreateVolume: volume %" AFS_VOLID_FMT " for parent %" AFS_VOLID_FMT
 		" found on %s; unable to create volume on %s.\n",
-		afs_printable_uint32_lu(vol.id),
-		afs_printable_uint32_lu(vol.parentId), part, partition->name);
+		afs_printable_VolumeId_lu(vol.id),
+		afs_printable_VolumeId_lu(vol.parentId), part, partition->name);
 	    *ec = EXDEV;
 	    return NULL;
 	}
@@ -210,9 +195,10 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
     vol.stamp.magic = VOLUMEINFOMAGIC;
     vol.stamp.version = VOLUMEINFOVERSION;
     vol.destroyMe = DESTROY_ME;
-    (void)afs_snprintf(headerName, sizeof headerName, VFORMAT, afs_printable_uint32_lu(vol.id));
-    (void)afs_snprintf(volumePath, sizeof volumePath, "%s" OS_DIRSEP "%s",
-		       VPartitionPath(partition), headerName);
+    snprintf(headerName, sizeof headerName, VFORMAT,
+	     afs_printable_VolumeId_lu(vol.id));
+    snprintf(volumePath, sizeof volumePath, "%s" OS_DIRSEP "%s",
+	     VPartitionPath(partition), headerName);
     rc = stat(volumePath, &st);
     if (rc == 0 || errno != ENOENT) {
 	if (rc == 0) {
@@ -321,8 +307,8 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
     rc = VCreateVolumeDiskHeader(&diskHeader, partition);
     if (rc) {
 	Log("VCreateVolume: Error %d trying to write volume header for "
-	    "volume %u on partition %s; volume not created\n", rc,
-	    vol.id, VPartitionPath(partition));
+	    "volume %" AFS_VOLID_FMT " on partition %s; volume not created\n", rc,
+	    afs_printable_VolumeId_lu(vol.id), VPartitionPath(partition));
 	if (rc == EEXIST) {
 	    *ec = VVOLEXISTS;
 	}
@@ -466,18 +452,17 @@ VReadVolumeDiskHeader(VolumeId volid,
     int fd;
     char path[MAXPATHLEN];
 
-    (void)afs_snprintf(path, sizeof(path),
-		       "%s" OS_DIRSEP VFORMAT,
-		       VPartitionPath(dp), afs_printable_uint32_lu(volid));
+    snprintf(path, sizeof(path), "%s" OS_DIRSEP VFORMAT,
+	     VPartitionPath(dp), afs_printable_VolumeId_lu(volid));
     fd = open(path, O_RDONLY);
     if (fd < 0) {
-	Log("VReadVolumeDiskHeader: Couldn't open header for volume %lu (errno %d).\n",
-	    afs_printable_uint32_lu(volid), errno);
+	Log("VReadVolumeDiskHeader: Couldn't open header for volume %" AFS_VOLID_FMT " (errno %d).\n",
+	    afs_printable_VolumeId_lu(volid), errno);
 	code = -1;
 
     } else if (hdr && read(fd, hdr, sizeof(*hdr)) != sizeof(*hdr)) {
-	Log("VReadVolumeDiskHeader: Couldn't read header for volume %lu.\n",
-	    afs_printable_uint32_lu(volid));
+	Log("VReadVolumeDiskHeader: Couldn't read header for volume %" AFS_VOLID_FMT ".\n",
+	    afs_printable_VolumeId_lu(volid));
 	code = EIO;
     }
 
@@ -522,9 +507,8 @@ _VWriteVolumeDiskHeader(VolumeDiskHeader_t * hdr,
 
     flags |= O_RDWR;
 
-    (void)afs_snprintf(path, sizeof(path),
-		       "%s" OS_DIRSEP VFORMAT,
-		       VPartitionPath(dp), afs_printable_uint32_lu(hdr->id));
+    snprintf(path, sizeof(path), "%s" OS_DIRSEP VFORMAT,
+	     VPartitionPath(dp), afs_printable_VolumeId_lu(hdr->id));
     fd = open(path, flags, 0644);
     if (fd < 0) {
 	code = errno;
@@ -702,9 +686,8 @@ VDestroyVolumeDiskHeader(struct DiskPartition64 * dp,
     SYNC_response res;
 #endif /* AFS_DEMAND_ATTACH_FS */
 
-    (void)afs_snprintf(path, sizeof(path),
-                       "%s" OS_DIRSEP VFORMAT,
-                       VPartitionPath(dp), afs_printable_uint32_lu(volid));
+    snprintf(path, sizeof(path), "%s" OS_DIRSEP VFORMAT,
+             VPartitionPath(dp), afs_printable_VolumeId_lu(volid));
     code = unlink(path);
     if (code) {
 	Log("VDestroyVolumeDiskHeader: Couldn't unlink disk header, error = %d\n", errno);
@@ -730,10 +713,10 @@ VDestroyVolumeDiskHeader(struct DiskPartition64 * dp,
     }
     code = FSYNC_VGCDel(dp->name, parent, volid, FSYNC_WHATEVER, &res);
     if (code) {
-	Log("VDestroyVolumeDiskHeader: FSYNC_VGCDel(%s, %lu, %lu) failed "
+	Log("VDestroyVolumeDiskHeader: FSYNC_VGCDel(%s, %" AFS_VOLID_FMT ", %" AFS_VOLID_FMT ") failed "
 	    "with code %ld reason %ld\n", dp->name,
-	    afs_printable_uint32_lu(parent),
-	    afs_printable_uint32_lu(volid),
+	    afs_printable_VolumeId_lu(parent),
+	    afs_printable_VolumeId_lu(volid),
 	    afs_printable_int32_ld(code),
 	    afs_printable_int32_ld(res.hdr.reason));
     }
@@ -766,17 +749,17 @@ _VHandleVolumeHeader(struct DiskPartition64 *dp, VWalkVolFunc volfunc,
                      int locked, void *rock)
 {
     int error = 0;
-    int fd;
+    FD_t fd;
 
-    if ((fd = afs_open(name, O_RDONLY)) == -1
-        || read(fd, hdr, sizeof(*hdr))
+    if ((fd = OS_OPEN(name, O_RDONLY, 0)) == INVALID_FD
+        || OS_READ(fd, hdr, sizeof(*hdr))
         != sizeof(*hdr)
         || hdr->stamp.magic != VOLUMEHEADERMAGIC) {
         error = 1;
     }
 
-    if (fd >= 0) {
-	close(fd);
+    if (fd != INVALID_FD) {
+	OS_CLOSE(fd);
     }
 
 #ifdef AFSFS_DEMAND_ATTACH_FS
@@ -856,8 +839,8 @@ int
 VWalkVolumeHeaders(struct DiskPartition64 *dp, const char *partpath,
                    VWalkVolFunc volfunc, VWalkErrFunc errfunc, void *rock)
 {
-    DIR *dirp = NULL;
-    struct dirent *dentry = NULL;
+    DIR *dirp;
+    struct dirent *dentry;
     int code = 0;
     struct VolumeDiskHeader diskHeader;
 
@@ -868,8 +851,8 @@ VWalkVolumeHeaders(struct DiskPartition64 *dp, const char *partpath,
 	goto done;
     }
 
-    while ((dentry = readdir(dirp))) {
-	char *p = dentry->d_name;
+    while ((dentry = readdir(dirp)) != NULL) {
+	char *p;
 	p = strrchr(dentry->d_name, '.');
 	if (p != NULL && strcmp(p, VHDREXT) == 0) {
 	    char name[VMAXPATHLEN];
@@ -918,7 +901,7 @@ VLockFileInit(struct VLockFile *lf, const char *path)
     memset(lf, 0, sizeof(*lf));
     lf->path = strdup(path);
     lf->fd = INVALID_FD;
-    MUTEX_INIT(&lf->mutex, "vlockfile", MUTEX_DEFAULT, 0);
+    opr_mutex_init(&lf->mutex);
 }
 
 #ifdef AFS_NT40_ENV
@@ -968,20 +951,20 @@ _VLockFd(FD_t handle, afs_uint32 offset, int locktype, int nonblock)
 }
 
 static_inline void
-_VUnlockFd(struct VLockFile *lf, afs_uint32 offset)
+_VUnlockFd(FD_t handle, afs_uint32 offset)
 {
     OVERLAPPED lap;
 
     memset(&lap, 0, sizeof(lap));
     lap.Offset = offset;
 
-    UnlockFileEx(lf->fd, 0, 1, 0, &lap);
+    UnlockFileEx(handle, 0, 1, 0, &lap);
 }
 
 static_inline void
-_VCloseFd(struct VLockFile *lf)
+_VCloseFd(FD_t handle)
 {
-    CloseHandle(lf->fd);
+    CloseHandle(handle);
 }
 
 #else /* !AFS_NT40_ENV */
@@ -994,7 +977,7 @@ _VCloseFd(struct VLockFile *lf)
  * @return file descriptor
  *  @retval INVALID_FD failure opening file
  */
-static_inline int
+static_inline FD_t
 _VOpenPath(const char *path)
 {
     int fd;
@@ -1021,11 +1004,13 @@ _VOpenPath(const char *path)
  *  @retval EIO   error acquiring file lock
  */
 static_inline int
-_VLockFd(int fd, afs_uint32 offset, int locktype, int nonblock)
+_VLockFd(FD_t fd, afs_uint32 offset, int locktype, int nonblock)
 {
     int l_type = F_WRLCK;
     int cmd = AFS_SETLKW;
     struct afs_st_flock sf;
+
+    opr_Assert(fd >= 0);
 
     if (locktype == READ_LOCK) {
 	l_type = F_RDLCK;
@@ -1071,7 +1056,7 @@ _VLockFd(int fd, afs_uint32 offset, int locktype, int nonblock)
  * @param[in] fd file descriptor to close
  */
 static_inline void
-_VCloseFd(int fd)
+_VCloseFd(FD_t fd)
 {
     if (close(fd)) {
 	Log("_VCloseFd: error %d closing fd %d\n",
@@ -1086,7 +1071,7 @@ _VCloseFd(int fd)
  * @param[in] offset offset to unlock
  */
 static_inline void
-_VUnlockFd(int fd, afs_uint32 offset)
+_VUnlockFd(FD_t fd, afs_uint32 offset)
 {
     struct afs_st_flock sf;
 
@@ -1119,7 +1104,7 @@ _VUnlockFd(int fd, afs_uint32 offset)
 void
 VLockFileReinit(struct VLockFile *lf)
 {
-    MUTEX_ENTER(&lf->mutex);
+    opr_mutex_enter(&lf->mutex);
 
     if (lf->fd != INVALID_FD) {
 	_VCloseFd(lf->fd);
@@ -1128,7 +1113,7 @@ VLockFileReinit(struct VLockFile *lf)
 
     lf->refcount = 0;
 
-    MUTEX_EXIT(&lf->mutex);
+    opr_mutex_exit(&lf->mutex);
 }
 
 /**
@@ -1158,31 +1143,35 @@ VLockFileLock(struct VLockFile *lf, afs_uint32 offset, int locktype, int nonbloc
 {
     int code;
 
-    osi_Assert(locktype == READ_LOCK || locktype == WRITE_LOCK);
+    opr_Assert(locktype == READ_LOCK || locktype == WRITE_LOCK);
 
-    MUTEX_ENTER(&lf->mutex);
+    opr_mutex_enter(&lf->mutex);
 
     if (lf->fd == INVALID_FD) {
+	opr_Assert(lf->refcount == 0);
 	lf->fd = _VOpenPath(lf->path);
 	if (lf->fd == INVALID_FD) {
-	    MUTEX_EXIT(&lf->mutex);
+	    opr_mutex_exit(&lf->mutex);
 	    return EIO;
 	}
     }
 
     lf->refcount++;
 
-    MUTEX_EXIT(&lf->mutex);
+    opr_Assert(lf->refcount > 0);
+
+    opr_mutex_exit(&lf->mutex);
 
     code = _VLockFd(lf->fd, offset, locktype, nonblock);
 
     if (code) {
-	MUTEX_ENTER(&lf->mutex);
+	opr_mutex_enter(&lf->mutex);
+	opr_Assert(lf->refcount > 0);
 	if (--lf->refcount < 1) {
 	    _VCloseFd(lf->fd);
 	    lf->fd = INVALID_FD;
 	}
-	MUTEX_EXIT(&lf->mutex);
+	opr_mutex_exit(&lf->mutex);
     }
 
     return code;
@@ -1191,9 +1180,10 @@ VLockFileLock(struct VLockFile *lf, afs_uint32 offset, int locktype, int nonbloc
 void
 VLockFileUnlock(struct VLockFile *lf, afs_uint32 offset)
 {
-    MUTEX_ENTER(&lf->mutex);
+    opr_mutex_enter(&lf->mutex);
 
-    osi_Assert(lf->fd != INVALID_FD);
+    opr_Assert(lf->fd != INVALID_FD);
+    opr_Assert(lf->refcount > 0);
 
     if (--lf->refcount < 1) {
 	_VCloseFd(lf->fd);
@@ -1202,7 +1192,7 @@ VLockFileUnlock(struct VLockFile *lf, afs_uint32 offset)
 	_VUnlockFd(lf->fd, offset);
     }
 
-    MUTEX_EXIT(&lf->mutex);
+    opr_mutex_exit(&lf->mutex);
 }
 
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -1216,11 +1206,11 @@ VLockFileUnlock(struct VLockFile *lf, afs_uint32 offset)
 void
 VDiskLockInit(struct VDiskLock *dl, struct VLockFile *lf, afs_uint32 offset)
 {
-    osi_Assert(lf);
+    opr_Assert(lf);
     memset(dl, 0, sizeof(*dl));
     Lock_Init(&dl->rwlock);
-    MUTEX_INIT(&dl->mutex, "disklock", MUTEX_DEFAULT, 0);
-    CV_INIT(&dl->cv, "disklock cv", CV_DEFAULT, 0);
+    opr_mutex_init(&dl->mutex);
+    opr_cv_init(&dl->cv);
     dl->lockfile = lf;
     dl->offset = offset;
 }
@@ -1251,7 +1241,7 @@ int
 VGetDiskLock(struct VDiskLock *dl, int locktype, int nonblock)
 {
     int code = 0;
-    osi_Assert(locktype == READ_LOCK || locktype == WRITE_LOCK);
+    opr_Assert(locktype == READ_LOCK || locktype == WRITE_LOCK);
 
     if (nonblock) {
 	if (locktype == READ_LOCK) {
@@ -1270,7 +1260,7 @@ VGetDiskLock(struct VDiskLock *dl, int locktype, int nonblock)
 	ObtainWriteLock(&dl->rwlock);
     }
 
-    MUTEX_ENTER(&dl->mutex);
+    opr_mutex_enter(&dl->mutex);
 
     if ((dl->flags & VDISKLOCK_ACQUIRING)) {
 	/* Some other thread is waiting to acquire an fs lock. If nonblock=1,
@@ -1281,7 +1271,7 @@ VGetDiskLock(struct VDiskLock *dl, int locktype, int nonblock)
 	    code = EBUSY;
 	} else {
 	    while ((dl->flags & VDISKLOCK_ACQUIRING)) {
-		CV_WAIT(&dl->cv, &dl->mutex);
+		opr_cv_wait(&dl->cv, &dl->mutex);
 	    }
 	}
     }
@@ -1298,9 +1288,9 @@ VGetDiskLock(struct VDiskLock *dl, int locktype, int nonblock)
 	    /* mark that we are waiting on the fs lock */
 	    dl->flags |= VDISKLOCK_ACQUIRING;
 
-	    MUTEX_EXIT(&dl->mutex);
+	    opr_mutex_exit(&dl->mutex);
 	    code = VLockFileLock(dl->lockfile, dl->offset, locktype, nonblock);
-	    MUTEX_ENTER(&dl->mutex);
+	    opr_mutex_enter(&dl->mutex);
 
 	    dl->flags &= ~VDISKLOCK_ACQUIRING;
 
@@ -1308,7 +1298,7 @@ VGetDiskLock(struct VDiskLock *dl, int locktype, int nonblock)
 		dl->flags |= VDISKLOCK_ACQUIRED;
 	    }
 
-	    CV_BROADCAST(&dl->cv);
+	    opr_cv_broadcast(&dl->cv);
 	}
     }
 
@@ -1324,7 +1314,7 @@ VGetDiskLock(struct VDiskLock *dl, int locktype, int nonblock)
 	++dl->lockers;
     }
 
-    MUTEX_EXIT(&dl->mutex);
+    opr_mutex_exit(&dl->mutex);
 
     return code;
 }
@@ -1342,10 +1332,10 @@ VGetDiskLock(struct VDiskLock *dl, int locktype, int nonblock)
 void
 VReleaseDiskLock(struct VDiskLock *dl, int locktype)
 {
-    osi_Assert(locktype == READ_LOCK || locktype == WRITE_LOCK);
+    opr_Assert(locktype == READ_LOCK || locktype == WRITE_LOCK);
 
-    MUTEX_ENTER(&dl->mutex);
-    osi_Assert(dl->lockers > 0);
+    opr_mutex_enter(&dl->mutex);
+    opr_Assert(dl->lockers > 0);
 
     if (--dl->lockers < 1) {
 	/* no threads are holding this lock anymore, so we can release the
@@ -1354,7 +1344,7 @@ VReleaseDiskLock(struct VDiskLock *dl, int locktype)
 	dl->flags &= ~VDISKLOCK_ACQUIRED;
     }
 
-    MUTEX_EXIT(&dl->mutex);
+    opr_mutex_exit(&dl->mutex);
 
     if (locktype == READ_LOCK) {
 	ReleaseReadLock(&dl->rwlock);

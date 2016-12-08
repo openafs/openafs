@@ -22,7 +22,7 @@ osi_VM_Truncate(struct vcache *avc, int alen, afs_ucred_t *acred)
 }
 
 int
-osi_VM_FlushVCache(struct vcache *avc, int *slept)
+osi_VM_FlushVCache(struct vcache *avc)
 {
     return 0;
 }

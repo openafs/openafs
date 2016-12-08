@@ -12,13 +12,17 @@ B<fs exportafs> S<<< B<-type> <I<exporter name>> >>>
     S<<< [B<-convert> <I<convert from afs to unix mode (on | off)>>] >>>
     S<<< [B<-uidcheck> <I<run on strict 'uid check' mode (on | off)>>] >>>
     S<<< [B<-submounts> <I<allow nfs mounts to subdirs of /afs/.. (on | off)>>] >>>
+    S<<< [B<-clipags> <I<use client-assigned PAGs (on | off)>>] >>>
+    S<<< [B<-pagcb> <I<callback clients to get creds (on | off)>>] >>>
     [B<-help>]
 
 B<fs exp> S<<< B<-t> <I<exporter name>> >>>
     S<<< [B<-st> <I<start/stop translator (on | off)>>] >>>
-    S<<< [B<-c> <I<convert from afs to unix mode (on | off)>>] >>>
+    S<<< [B<-co> <I<convert from afs to unix mode (on | off)>>] >>>
     S<<< [B<-u> <I<run on strict 'uid check' mode (on | off)>>] >>>
     S<<< [B<-su> <I<allow nfs mounts to subdirs of /afs/.. (on | off)>>] >>>
+    S<<< [B<-cl> <I<use client-assigned PAGs (on | off)>>] >>>
+    S<<< [B<-p> <I<callback clients to get creds (on | off)>>] >>>
     [B<-h>]
 
 =for html
@@ -64,15 +68,13 @@ AFS directory other than F</afs>, use the B<-submounts> argument.
 Names the alternate file system to which to reexport the AFS
 filespace. The only acceptable value is C<nfs>, in lowercase letters only.
 
-=item B<-start> on
-=item B<-start> off
+=item B<-start> <on | off>
 
 Enables the local machine to reexport the AFS filespace if the value is
 C<on>, or disables it if the value is C<off>. Omit this argument to report
 the current setting for all of the configurable parameters.
 
-=item B<-convert> on
-=item B<-convert> off
+=item B<-convert> <on | off>
 
 Controls the setting of the UNIX group and other mode bits on AFS files
 and directories exported to the non-AFS file system. If the value is
@@ -80,8 +82,7 @@ C<on>, they are set to match the B<owner> mode bits. If the value is
 C<off>, the bits are not changed. If this argument is omitted, the default
 value is C<on>.
 
-=item B<-uidcheck> on
-=item B<-uidcheck> off
+=item B<-uidcheck> <on | off>
 
 Controls whether tokens can be placed in a credential structure identified
 by a UID that differs from the local UID of the entity that is placing the
@@ -124,14 +125,41 @@ can result in unpredictable access for the user on the NFS client machine.
 
 =back
 
-=item B<-submounts> on
-=item B<-submounts> off
+=item B<-submounts> <on | off>
 
 Controls whether a user of the non-AFS filesystem can mount any directory
 in the AFS filespace other than the top-level F</afs> directory. If the
 value is C<on>, such submounts are allowed. If the value is C<off>, only
 mounts of the F</afs> directory are allowed. If this argument is omitted,
 the default value is C<off>.
+
+=item B<-clipags> <on | off>
+
+Turning on this option enables support for "client-assigned PAGs". With
+client-assigned PAGs, an NFS client can manage its own AFS pags, and inform the
+NFS translator machine what PAG we are using, instead of the NFS translator
+machine keeping track of PAGs. An NFS client machine can do this if it has the
+"afspag" kernel module loaded, which tracks PAGs but otherwise does not
+implement AFS functionality, and forwards all requests to the NFS translator
+machine.
+
+You should only turn on this option if you are making use of client-assigned
+PAGs, and you trust the NFS client machines making use of the translator. This
+option is off by default.
+
+=item B<-pagcb> <on | off>
+
+Turning on this option means that the NFS translator machine will contact new
+NFS clients in order to obtain their credentials and sysnames. This option can
+be useful so that client credentials are not lost if the translator machine is
+rebooted, or if an NFS client is "moved" to using a different translator. This
+functionality will only work with NFS clients that are also running the
+"afspag" kernel module.
+
+Using this option with NFS clients not running with the "afspag" kernel module
+would cause long timeouts when the translator machine attempts to contact the
+client to obtain its credentials and sysname list. This option is off by
+default.
 
 =item B<-help>
 

@@ -54,7 +54,7 @@ omitted.
 Specify the read/write path to the file or directory, to avoid the failure
 that results from attempting to change a read-only volume. By convention,
 the read/write path is indicated by placing a period before the cell name
-at the pathname's second level (for example, F</afs/.abc.com>). For
+at the pathname's second level (for example, F</afs/.example.com>). For
 further discussion of the concept of read/write and read-only paths
 through the filespace, see the B<fs mkmount> reference page.
 
@@ -86,10 +86,10 @@ ignored.
 =head1 EXAMPLES
 
 The following command imposes a 6500 kilobyte quota on the volumes mounted
-at the home directories F</afs/abc.com/usr/smith> and
-F</afs/abc.com/usr/pat>:
+at the home directories F</afs/example.com/usr/smith> and
+F</afs/example.com/usr/pat>:
 
-   % cd /afs/abc.com/usr
+   % cd /afs/example.com/usr
    % fs setvol -path smith pat -max 6500B<>
 
 =head1 PRIVILEGE REQUIRED

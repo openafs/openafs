@@ -11,25 +11,22 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#ifdef AFS_NT40_ENV
-#include <fcntl.h>
-#include <windows.h>
-#else
-#include <sys/file.h>
-#endif
-#include <stdio.h>
-#include <errno.h>
+#include <afs/dir.h>
 
 long fidCounter = 0;
 
-typedef struct dirhandle {
+typedef struct DirHandle {
     int fd;
     int uniq;
 } dirhandle;
 int Uniq;
 
-void
+static void OpenDir(char *name, dirhandle *dir);
+static void CreateDir(char *name, dirhandle *dir);
+
+static void
 Usage(void)
 {
     printf("Usage: dtest <command [args]>, where command is one of:\n");
@@ -44,8 +41,226 @@ Usage(void)
     exit(1);
 }
 
-main(argc, argv)
-     char **argv;
+static void
+LookupDir(char *dname, char *ename)
+{
+    dirhandle dir;
+    long fid[3];
+    int code;
+
+    OpenDir(dname, &dir);
+    code = afs_dir_Lookup(&dir, ename, fid);
+    if (code)
+	printf("lookup code %d\n", code);
+    else {
+	printf("Found fid %ld.%ld for file '%s'\n", fid[1], fid[2], ename);
+    }
+    DFlush();
+}
+
+static void
+AddEntry(char *dname, char *ename)
+{
+    dirhandle dir;
+    long fid[3];
+    int code;
+
+    fid[1] = fidCounter++;
+    fid[2] = 3;
+    OpenDir(dname, &dir);
+    code = afs_dir_Create(&dir, ename, fid);
+    if (code)
+	printf("create code %d\n", code);
+    DFlush();
+}
+
+static int
+ListEntry(void * handle, char *name, afs_int32 vnode, afs_int32 unique)
+{
+    printf("%s\t%ld\t%ld\n", name, afs_printable_int32_ld(vnode),
+	   afs_printable_int32_ld(unique));
+
+    return 0;
+}
+
+static void
+ListDir(char *name)
+{
+    dirhandle dir;
+    OpenDir(name, &dir);
+    afs_dir_EnumerateDir(&dir, ListEntry, 0);
+}
+
+static void
+CheckDir(char *name)
+{
+    dirhandle dir;
+    OpenDir(name, &dir);
+    if (DirOK(&dir))
+	printf("Directory ok.\n");
+    else
+	printf("Directory bad\n");
+}
+
+static void
+SalvageDir(char *iname, char *oname)
+{
+    dirhandle in, out;
+    afs_int32 myFid[3], parentFid[3];
+
+    OpenDir(iname, &in);
+    if (afs_dir_Lookup(&in, ".", myFid) || 
+	afs_dir_Lookup(&in, "..", parentFid)) {
+	printf("Lookup of \".\" and/or \"..\" failed: ");
+	printf("%d %d %d %d\n", myFid[1], myFid[2], parentFid[1],
+	       parentFid[2]);
+	printf("Directory cannnot be salvaged\n");
+    }
+    CreateDir(oname, &out);
+    DirSalvage(&in, &out, myFid[1], myFid[2], parentFid[1], parentFid[2]);
+    DFlush();
+}
+
+static void
+DelTest(char *dname, char *ename)
+{
+    dirhandle dir;
+    int code;
+
+    OpenDir(dname, &dir);
+    code = afs_dir_Delete(&dir, ename);
+    if (code)
+	printf("delete code is %d\n", code);
+    DFlush();
+}
+
+static void
+CRTest(char *dname, char *ename, int count)
+{
+    char tbuffer[200];
+    int i;
+    afs_int32 fid[3];
+    dirhandle dir;
+    int code;
+
+    CreateDir(dname, &dir);
+    memset(fid, 0, sizeof(fid));
+    afs_dir_MakeDir(&dir, fid, fid);
+    for (i = 0; i < count; i++) {
+	sprintf(tbuffer, "%s%d", ename, i);
+	fid[1] = fidCounter++;
+	fid[2] = count;
+	code = afs_dir_Create(&dir, tbuffer, &fid);
+	if (i % 100 == 0) {
+	    printf("#");
+	    fflush(stdout);
+	}
+	if (code) {
+	    printf("code for '%s' is %d\n", tbuffer, code);
+	    return;
+	}
+    }
+    DFlush();
+}
+
+static void
+OpenDir(char *name, dirhandle *dir)
+{
+    dir->fd = open(name, O_RDWR, 0666);
+    if (dir->fd == -1) {
+	printf("Couldn't open %s\n", name);
+	exit(1);
+    }
+    dir->uniq = ++Uniq;
+}
+
+static void
+CreateDir(char *name, dirhandle *dir)
+{
+    dir->fd = open(name, O_CREAT | O_RDWR | O_TRUNC, 0666);
+    dir->uniq = ++Uniq;
+    if (dir->fd == -1) {
+	printf("Couldn't create %s\n", name);
+	exit(1);
+    }
+}
+
+int
+ReallyRead(dirhandle *dir, int block, char *data)
+{
+    int code;
+    if (lseek(dir->fd, block * PAGESIZE, 0) == -1)
+	return errno;
+    code = read(dir->fd, data, PAGESIZE);
+    if (code < 0)
+	return errno;
+    if (code != PAGESIZE)
+	return EIO;
+    return 0;
+}
+
+int
+ReallyWrite(dirhandle *dir, int block, char *data)
+{
+    int code;
+    if (lseek(dir->fd, block * PAGESIZE, 0) == -1)
+	return errno;
+    code = write(dir->fd, data, PAGESIZE);
+    if (code < 0)
+	return errno;
+    if (code != PAGESIZE)
+	return EIO;
+    return 0;
+}
+
+void
+FidZap(dirhandle *dir)
+{
+    dir->fd = -1;
+}
+
+void
+FidZero(long *afid)
+{
+    *afid = 0;
+}
+
+int
+FidEq(dirhandle *dir1, dirhandle *dir2)
+{
+    return (dir1->uniq == dir2->uniq);
+}
+
+int
+FidVolEq(long *afid, long *bfid)
+{
+    return 1;
+}
+
+void
+FidCpy(dirhandle *todir, dirhandle *fromdir)
+{
+    *todir = *fromdir;
+}
+
+void
+Die(char *msg)
+{
+    printf("Something died with this message:  %s\n", msg);
+}
+
+void
+Log(const char *fmt, ...)
+{
+    va_list ap;
+
+    va_start(ap, fmt);
+    vprintf(fmt, ap);
+    va_end(ap);
+}
+
+int
+main(int argc, char **argv)
 {
     DInit(600);
     argc--;
@@ -80,222 +295,4 @@ main(argc, argv)
 	Usage();
     }
     exit(0);
-}
-
-LookupDir(dname, ename)
-     char *dname, *ename;
-{
-    dirhandle dir;
-    long fid[3], code;
-
-    OpenDir(dname, &dir);
-    code = Lookup(&dir, ename, fid);
-    if (code)
-	printf("lookup code %d\n", code);
-    else {
-	printf("Found fid %d.%d for file '%s'\n", fid[1], fid[2], ename);
-    }
-    DFlush();
-}
-
-AddEntry(dname, ename)
-     char *dname, *ename;
-{
-    dirhandle dir;
-    long fid[3], code;
-
-    fid[1] = fidCounter++;
-    fid[2] = 3;
-    OpenDir(dname, &dir);
-    code = Create(&dir, ename, fid);
-    if (code)
-	printf("create code %d\n", code);
-    DFlush();
-}
-
-ListDir(name)
-     char *name;
-{
-    extern ListEntry();
-    dirhandle dir;
-    OpenDir(name, &dir);
-    EnumerateDir(&dir, ListEntry, 0);
-}
-
-ListEntry(handle, name, vnode, unique)
-     long handle, vnode, unique;
-     char *name;
-{
-    printf("%s\t%d\t%d\n", name, vnode, unique);
-}
-
-CheckDir(name)
-     char *name;
-{
-    dirhandle dir;
-    OpenDir(name, &dir);
-    if (DirOK(&dir))
-	printf("Directory ok.\n");
-    else
-	printf("Directory bad\n");
-}
-
-SalvageDir(iname, oname)
-     char *iname, *oname;
-{
-    dirhandle in, out;
-    long myFid[3], parentFid[3];
-    OpenDir(iname, &in);
-    if (Lookup(in, ".", myFid) || Lookup(in, "..", parentFid)) {
-	printf("Lookup of \".\" and/or \"..\" failed: ");
-	printf("%d %d %d %d\n", myFid[1], myFid[2], parentFid[1],
-	       parentFid[2]);
-	printf("Directory cannnot be salvaged\n");
-    }
-    CreateDir(oname, &out);
-    DirSalvage(&in, &out, myFid[1], myFid[2], parentFid[1], parentFid[2]);
-    DFlush();
-}
-
-DelTest(dname, ename)
-     char *dname;
-     char *ename;
-{
-    dirhandle dir;
-    long code;
-
-    OpenDir(dname, &dir);
-    code = Delete(&dir, ename);
-    if (code)
-	printf("delete code is %d\n", code);
-    DFlush();
-}
-
-CRTest(dname, ename, count)
-     char *dname;
-     char *ename;
-     int count;
-{
-    char tbuffer[200];
-    long i, code;
-    long fid[3];
-    dirhandle dir;
-
-    CreateDir(dname, &dir);
-    memset(fid, 0, sizeof(fid));
-    MakeDir(&dir, fid, fid);
-    for (i = 0; i < count; i++) {
-	sprintf(tbuffer, "%s%d", ename, i);
-	fid[1] = fidCounter++;
-	fid[2] = count;
-	code = Create(&dir, tbuffer, &fid);
-	if (i % 100 == 0) {
-	    printf("#");
-	    fflush(stdout);
-	}
-	if (code) {
-	    printf("code for '%s' is %d\n", tbuffer, code);
-	    return;
-	}
-    }
-    DFlush();
-}
-
-OpenDir(name, dir)
-     char *name;
-     dirhandle *dir;
-{
-    dir->fd = open(name, O_RDWR, 0666);
-    if (dir->fd == -1) {
-	printf("Couldn't open %s\n", name);
-	exit(1);
-    }
-    dir->uniq = ++Uniq;
-}
-
-CreateDir(name, dir)
-     char *name;
-     dirhandle *dir;
-{
-    dir->fd = open(name, O_CREAT | O_RDWR | O_TRUNC, 0666);
-    dir->uniq = ++Uniq;
-    if (dir->fd == -1) {
-	printf("Couldn't create %s\n", name);
-	exit(1);
-    }
-}
-
-ReallyRead(dir, block, data)
-     dirhandle *dir;
-     int block;
-     char *data;
-{
-    int code;
-    if (lseek(dir->fd, block * PAGESIZE, 0) == -1)
-	return errno;
-    code = read(dir->fd, data, PAGESIZE);
-    if (code < 0)
-	return errno;
-    if (code != PAGESIZE)
-	return EIO;
-    return 0;
-}
-
-ReallyWrite(dir, block, data)
-     dirhandle *dir;
-     int block;
-     char *data;
-{
-    int code;
-    if (lseek(dir->fd, block * PAGESIZE, 0) == -1)
-	return errno;
-    code = write(dir->fd, data, PAGESIZE);
-    if (code < 0)
-	return errno;
-    if (code != PAGESIZE)
-	return EIO;
-    return 0;
-}
-
-FidZap(dir)
-     dirhandle *dir;
-{
-    dir->fd = -1;
-}
-
-int
-FidZero(afid)
-     long *afid;
-{
-    *afid = 0;
-}
-
-FidEq(dir1, dir2)
-     dirhandle *dir1, *dir2;
-{
-    return (dir1->uniq == dir2->uniq);
-}
-
-int
-FidVolEq(afid, bfid)
-     long *afid, *bfid;
-{
-    return 1;
-}
-
-FidCpy(todir, fromdir)
-     dirhandle *todir, *fromdir;
-{
-    *todir = *fromdir;
-}
-
-Die(msg)
-     char *msg;
-{
-    printf("Something died with this message:  %s\n", msg);
-}
-
-Log(a, b, c, d, e, f, g, h, i, j, k, l, m, n)
-{
-    printf(a, b, c, d, e, f, g, h, i, j, k, l, m, n);
 }

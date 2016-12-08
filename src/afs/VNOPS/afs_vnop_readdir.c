@@ -29,14 +29,11 @@
 #include "afs/afs_cbqueue.h"
 #include "afs/nfsclient.h"
 #include "afs/afs_osidnlc.h"
-#if defined(AFS_NBSD40_ENV)
-#include <ufs/ufs/ufs_extern.h> /* direct_pool */
-#endif
 
 #if defined(AFS_HPUX1122_ENV)
 #define DIRPAD 7
 #elif defined(AFS_NBSD40_ENV)
-#define DIRPAD 4
+#define DIRPAD 7
 #else
 #define DIRPAD 3
 #endif
@@ -45,39 +42,47 @@
  * AFS readdir vnodeop and bulk stat support.
  */
 
-/* Saber C hates negative inode #s.  We're not going to talk about software
- * that could fail if it sees a negative inode #.
+/**
+ * Ensure that the blob reference refers to a valid directory entry.
+ * It consults the allocation map in the page header to determine
+ * whether a blob is actually in use or not.
+ *
+ * More formally, BlobScan is supposed to return a new blob number
+ * which is just like the input parameter, only it is advanced over
+ * header or free blobs.
+ *
+ * Note that BlobScan switches pages if necessary.  BlobScan may
+ * return either 0 for success or an error code.  Upon successful
+ * return, the new blob value is assigned to *ablobOut.  The new
+ * blob value (*ablobOut) is set to 0 when the end of the file has
+ * been reached.
+ *
+ * BlobScan is used by the Linux port in a separate file, so it should not
+ * become static.
  */
-#define FIXUPSTUPIDINODE(a)	((a) &= 0x7fffffff)
-
-/* BlobScan is supposed to ensure that the blob reference refers to a valid
-    directory entry.  It consults the allocation map in the page header
-    to determine whether a blob is actually in use or not.
-
-    More formally, BlobScan is supposed to return a new blob number which is just like
-    the input parameter, only it is advanced over header or free blobs.
-    
-    Note that BlobScan switches pages if necessary.  BlobScan may return
-    either 0 or an out-of-range blob number for end of file.
-
-    BlobScan is used by the Linux port in a separate file, so it should not
-    become static.
-*/
 int
-BlobScan(struct dcache * afile, afs_int32 ablob)
+BlobScan(struct dcache * afile, afs_int32 ablob, int *ablobOut)
 {
     afs_int32 relativeBlob;
     afs_int32 pageBlob;
     struct PageHeader *tpe;
+    struct DirBuffer headerbuf;
     afs_int32 i;
+    int code;
 
     AFS_STATCNT(BlobScan);
     /* advance ablob over free and header blobs */
     while (1) {
 	pageBlob = ablob & ~(EPP - 1);	/* base blob in same page */
-	tpe = (struct PageHeader *)afs_dir_GetBlob(afile, pageBlob);
-	if (!tpe)
-	    return 0;		/* we've past the end */
+	code = afs_dir_GetBlob(afile, pageBlob, &headerbuf);
+	if (code == ENOENT) {
+	    *ablobOut = 0; /* past the end of file */
+	    return 0;      /* not an error */
+	}
+	if (code)
+	    return code;
+	tpe = (struct PageHeader *)headerbuf.data;
+
 	relativeBlob = ablob - pageBlob;	/* relative to page's first blob */
 	/* first watch for headers */
 	if (pageBlob == 0) {	/* first dir page has extra-big header */
@@ -95,9 +100,11 @@ BlobScan(struct dcache * afile, afs_int32 ablob)
 	}
 	/* now relativeBlob is the page-relative first allocated blob,
 	 * or EPP (if there are none in this page). */
-	DRelease(tpe, 0);
-	if (i != EPP)
-	    return i + pageBlob;
+	DRelease(&headerbuf, 0);
+	if (i != EPP) {
+	    *ablobOut = i + pageBlob;
+	    return 0;
+	}
 	ablob = pageBlob + EPP;	/* go around again */
     }
     /* never get here */
@@ -211,11 +218,12 @@ int afs_rd_stash_i = 0;
 #define DIRSIZ_LEN(len) \
     ((sizeof (struct __dirent) - (_MAXNAMLEN+1)) + (((len)+1 + DIRPAD) &~ DIRPAD))
 #else
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
 #define DIRSIZ_LEN(len) ((18 + (len) + 1 + 7) & ~7 )
 #else
-#ifdef	AFS_SUN5_ENV
-#define DIRSIZ_LEN(len)	((10 + (len) + 1 + (NBPW-1)) & ~(NBPW-1))
+#ifdef	AFS_NBSD40_ENV
+#define DIRSIZ_LEN(len) \
+    ((sizeof (struct dirent) - (MAXNAMLEN+1)) + (((len)+1 + 7) & ~7))
 #else
 #ifdef	AFS_DIRENT
 #define DIRSIZ_LEN(len) \
@@ -231,8 +239,8 @@ int afs_rd_stash_i = 0;
     ((sizeof (struct direct) - (MAXNAMLEN+1)) + (((len)+1 + 3) &~ 3))
 #endif /* AFS_SGI_ENV */
 #endif /* AFS_DIRENT */
+#endif /* AFS_NBSD40_ENV */
 #endif /* AFS_SUN5_ENV */
-#endif /* AFS_SUN56_ENV */
 #endif /* AFS_HPUX100_ENV */
 
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
@@ -252,7 +260,7 @@ afs_readdir_type(struct vcache *avc, struct DirEntry *ade)
     ObtainReadLock(&afs_xvcache);
     if ((tvc = afs_FindVCache(&tfid, 0, 0))) {
         ReleaseReadLock(&afs_xvcache);
-	if (tvc->mvstat) {
+	if (tvc->mvstat != AFS_MVSTAT_FILE) {
 	    afs_PutVCache(tvc);
 	    return DT_DIR;
 	} else if (((tvc->f.states) & (CStatd | CTruth))) {
@@ -265,7 +273,7 @@ afs_readdir_type(struct vcache *avc, struct DirEntry *ade)
 	    else if (vtype == VREG)
 		return DT_REG;
 	    /* Don't do this until we're sure it can't be a mtpt */
-	    /* if we're CStatd and CTruth and mvstat==0, it's a link */
+	    /* if we're CStatd and CTruth and mvstat==AFS_MVSTAT_FILE, it's a link */
 	    else if (vtype == VLNK)
 		return DT_LNK;
 	    /* what other types does AFS support? */
@@ -300,13 +308,13 @@ afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio,
     struct volume *tvp;
     afs_uint32 Volume = vc->f.fid.Fid.Volume;
     afs_uint32 Vnode  = de->fid.vnode;
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
     struct dirent64 *direntp;
 #else
-#if  defined(AFS_SUN5_ENV) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
+#if  (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
     struct dirent *direntp;
 #endif
-#endif /* AFS_SUN56_ENV */
+#endif /* AFS_SUN5_ENV */
 #ifndef	AFS_SGI53_ENV
     struct min_direct sdirEntry;
 #endif /* AFS_SGI53_ENV */
@@ -322,7 +330,7 @@ afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio,
 	if (!FidCmp(&afs_rootFid, &vc->f.fid)) {
 	    Volume = 0;
 	    Vnode  = 2;
-	} else if (vc->mvstat == 2) {
+	} else if (vc->mvstat == AFS_MVSTAT_ROOT) {
 	    tvp = afs_GetVolume(&vc->f.fid, 0, READ_LOCK);
 	    if (tvp) {
 		Volume = tvp->mtpoint.Fid.Volume;
@@ -340,19 +348,19 @@ afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio,
 	    /* We are the root of the AFS root, and thus our own parent */
 	    Volume = 0;
 	    Vnode  = 2;
-	} else if (vc->mvstat == 2) {
+	} else if (vc->mvstat == AFS_MVSTAT_ROOT) {
 	    /* We are a volume root, which means our parent is in another
 	     * volume.  Luckily, we should have his fid cached... */
-	    if (vc->mvid) {
-		if (!FidCmp(&afs_rootFid, vc->mvid)) {
+	    if (vc->mvid.parent) {
+		if (!FidCmp(&afs_rootFid, vc->mvid.parent)) {
 		    /* Parent directory is the root of the AFS root */
 		    Volume = 0;
 		    Vnode  = 2;
-		} else if (vc->mvid->Fid.Vnode == 1
-			   && vc->mvid->Fid.Unique == 1) {
+		} else if (vc->mvid.parent->Fid.Vnode == 1
+			   && vc->mvid.parent->Fid.Unique == 1) {
 		    /* XXX The above test is evil and probably breaks DFS */
 		    /* Parent directory is the target of a mount point */
-		    tvp = afs_GetVolume(vc->mvid, 0, READ_LOCK);
+		    tvp = afs_GetVolume(vc->mvid.parent, 0, READ_LOCK);
 		    if (tvp) {
 			Volume = tvp->mtpoint.Fid.Volume;
 			Vnode  = tvp->mtpoint.Fid.Vnode;
@@ -360,8 +368,8 @@ afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio,
 		    }
 		} else {
 		    /* Parent directory is not a volume root */
-		    Volume = vc->mvid->Fid.Volume;
-		    Vnode  = vc->mvid->Fid.Vnode;
+		    Volume = vc->mvid.parent->Fid.Volume;
+		    Vnode  = vc->mvid.parent->Fid.Vnode;
 		}
 	    }
 	} else if (de->fid.vnode == 1 && de->fid.vunique == 1) {
@@ -409,8 +417,8 @@ afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio,
 
 	if (use64BitDirent) {
 	    struct min_dirent sdirEntry;
-	    sdirEntry.d_fileno = (Volume << 16) + ntohl(Vnode);
-	    FIXUPSTUPIDINODE(sdirEntry.d_fileno);
+	    sdirEntry.d_fileno = afs_calc_inum(vc->f.fid.Cell,
+	                                       Volume, ntohl(Vnode));
 	    sdirEntry.d_reclen = rlen;
 	    sdirEntry.d_off = (off_t) off;
 	    AFS_UIOMOVE(&sdirEntry, AFS_DIRENT64BASESIZE, UIO_READ, auio,
@@ -432,8 +440,8 @@ afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio,
 	    }
 	} else {
 	    struct irix5_min_dirent sdirEntry;
-	    sdirEntry.d_fileno = (Volume << 16) + ntohl(Vnode);
-	    FIXUPSTUPIDINODE(sdirEntry.d_fileno);
+	    sdirEntry.d_fileno = afs_calc_inum(vc->f.fid.Cell,
+	                                       Volume, ntohl(Vnode));
 	    sdirEntry.d_reclen = rlen;
 	    sdirEntry.d_off = (afs_int32) off;
 	    AFS_UIOMOVE(&sdirEntry, AFS_DIRENT32BASESIZE, UIO_READ, auio,
@@ -458,13 +466,8 @@ afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio,
     }
 #else /* AFS_SGI53_ENV */
 #if  defined(AFS_SUN5_ENV) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
-#if	defined(AFS_SUN56_ENV)
-    direntp = (struct dirent64 *)osi_AllocLargeSpace(AFS_LRALLOCSIZ);
-#else
-    direntp = (struct dirent *)osi_AllocLargeSpace(AFS_LRALLOCSIZ);
-#endif
-    direntp->d_ino =  (Volume << 16) + ntohl(Vnode);
-    FIXUPSTUPIDINODE(direntp->d_ino);
+    direntp = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
+    direntp->d_ino = afs_calc_inum(vc->f.fid.Cell, Volume, ntohl(Vnode));
 #if defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)
     direntp->d_offset = off;
     direntp->d_namlen = slen;
@@ -477,8 +480,7 @@ afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio,
     osi_FreeLargeSpace((char *)direntp);
 #else /* AFS_SUN5_ENV */
     /* Note the odd mechanism for building the inode number */
-    sdirEntry.d_fileno = (Volume << 16) + ntohl(Vnode);
-    FIXUPSTUPIDINODE(sdirEntry.d_fileno);
+    sdirEntry.d_fileno = afs_calc_inum(vc->f.fid.Cell, Volume, ntohl(Vnode));
     sdirEntry.d_reclen = rlen;
 #if !defined(AFS_SGI_ENV)
     sdirEntry.d_namlen = slen;
@@ -503,13 +505,19 @@ afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio,
 #if defined(AFS_NBSD40_ENV)
     {
 	struct dirent *dp;
-	dp = (struct dirent *) pool_get(&ufs_direct_pool, PR_WAITOK);
-	dp->d_ino =  (Volume << 16) + ntohl(Vnode);
-	FIXUPSTUPIDINODE(dp->d_ino);
-	dp->d_reclen = rlen;
-	strcpy(dp->d_name, de->name);
-	AFS_UIOMOVE((char*) dp, sizeof(struct dirent), UIO_READ, auio, code);
-	pool_put(&ufs_direct_pool, dp);
+	dp = osi_AllocLargeSpace(sizeof(struct dirent));
+	memset(dp, 0, sizeof(struct dirent));
+        dp->d_ino = afs_calc_inum(vc->f.fid.Cell, Volume, ntohl(Vnode));
+        dp->d_namlen = slen;
+        dp->d_type = afs_readdir_type(vc, de);
+        strcpy(dp->d_name, de->name);
+        dp->d_reclen = _DIRENT_SIZE(dp) /* rlen */;
+	if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	    afs_warn("%s: %s type %d slen %d rlen %d act. rlen %zu\n", __func__,
+		dp->d_name, dp->d_type, slen, rlen, _DIRENT_SIZE(dp));
+	}
+        AFS_UIOMOVE(dp, dp->d_reclen, UIO_READ, auio, code);
+        osi_FreeLargeSpace((char *)dp);
     }
 #else
     AFS_UIOMOVE((char *) &sdirEntry, sizeof(sdirEntry), UIO_READ, auio, code);
@@ -524,6 +532,7 @@ afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio,
 #endif
     AFS_MOVE_LOCK();
 #endif /* AFS_SGI_ENV */
+#if !defined(AFS_NBSD_ENV)
     /* pad out the difference between rlen and slen... */
     if (DIRSIZ_LEN(slen) < rlen) {
 	AFS_MOVE_UNLOCK();
@@ -536,6 +545,7 @@ afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio,
 	}
 	AFS_MOVE_LOCK();
     }
+#endif
 #endif /* AFS_SUN5_ENV */
 #endif /* AFS_SGI53_ENV */
     return (code);
@@ -586,9 +596,10 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
     afs_size_t origOffset, tlen;
     afs_int32 len;
     int code = 0;
+    struct DirBuffer oldEntry, nextEntry;
     struct DirEntry *ode = 0, *nde = 0;
     int o_slen = 0, n_slen = 0;
-    afs_uint32 us;
+    afs_int32 us;
     struct afs_fakestat_state fakestate;
 #if defined(AFS_SGI53_ENV)
     afs_int32 use64BitDirent, dirsiz;
@@ -601,8 +612,7 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
      * it is necessary for hpux due to stack problems that seem to occur when coming thru the nfs
      * translator side XXX
      */
-    struct min_direct *sdirEntry =
-	(struct min_direct *)osi_AllocSmallSpace(sizeof(struct min_direct));
+    struct min_direct *sdirEntry = osi_AllocSmallSpace(sizeof(struct min_direct));
     afs_int32 rlen;
 #endif
 
@@ -613,6 +623,9 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
      * the null byte.  Followed by null-terminated string.
      */
     AFS_STATCNT(afs_readdir);
+
+    memset(&oldEntry, 0, sizeof(struct DirBuffer));
+    memset(&nextEntry, 0, sizeof(struct DirBuffer));
 
 #if defined(AFS_SGI53_ENV)
 #ifdef AFS_SGI61_ENV
@@ -664,9 +677,8 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 	goto done;
     /* get a reference to the entire directory */
     tdc = afs_GetDCache(avc, (afs_size_t) 0, treq, &origOffset, &tlen, 1);
-    len = tlen;
     if (!tdc) {
-	code = ENOENT;
+	code = EIO;
 	goto done;
     }
     ObtainReadLock(&avc->lock);
@@ -731,19 +743,20 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 	origOffset = AFS_UIO_OFFSET(auio);
 	/* scan for the next interesting entry scan for in-use blob otherwise up point at
 	 * this blob note that ode, if non-zero, also represents a held dir page */
-	us = BlobScan(tdc, (origOffset >> 5));
+	code = BlobScan(tdc, (origOffset >> 5), &us);
 
-	if (us)
-	   afs_dir_GetVerifiedBlob(tdc, us, &nde);
+	if (code == 0 && us)
+	   code = afs_dir_GetVerifiedBlob(tdc, us, &nextEntry);
 
-	if (us == 0 || nde == NULL) {
+	if (us == 0 || code != 0) {
+	    code = 0; /* Reset code - keep old failure behaviour */
 	    /* failed to setup nde, return what we've got, and release ode */
 	    if (len) {
 		/* something to hand over. */
 #ifdef	AFS_HPUX_ENV
-		sdirEntry->d_fileno =
-		    (avc->f.fid.Fid.Volume << 16) + ntohl(ode->fid.vnode);
-		FIXUPSTUPIDINODE(sdirEntry->d_fileno);
+		sdirEntry->d_fileno = afs_calc_inum(avc->f.fid.Cell,
+		                                    avc->f.fid.Fid.Volume,
+		                                    ntohl(ode->fid.vnode));
 		sdirEntry->d_reclen = rlen = AFS_UIO_RESID(auio);
 		sdirEntry->d_namlen = o_slen;
 #if defined(AFS_SUN5_ENV) || defined(AFS_AIX32_ENV) || defined(AFS_HPUX100_ENV)
@@ -771,13 +784,13 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 		}
 #else
 		code = afs_readdir_move(ode, avc, auio, o_slen,
-#if defined(AFS_SUN5_ENV)
+#if defined(AFS_SUN5_ENV) || defined(AFS_NBSD_ENV)
 					len, origOffset);
 #else
 					AFS_UIO_RESID(auio), origOffset);
 #endif
 #endif /* AFS_HPUX_ENV */
-#if !defined(AFS_SUN5_ENV)
+#if !defined(AFS_SUN5_ENV) && !defined(AFS_NBSD_ENV)
 		AFS_UIO_SETRESID(auio, 0);
 #endif
 	    } else {
@@ -787,11 +800,11 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 	    if (eofp)
 		*eofp = 1;	/* Set it properly */
 #endif
-	    if (ode)
-		DRelease(ode, 0);
+	    DRelease(&oldEntry, 0);
 	    goto dirend;
 	}
-	/* by here nde is set */
+	nde = (struct DirEntry *)nextEntry.data;
+	
 	/* Do we have enough user space to carry out our mission? */
 #if defined(AFS_SGI_ENV)
 	n_slen = strlen(nde->name) + 1;	/* NULL terminate */
@@ -806,12 +819,12 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 	if (DIRSIZ_LEN(n_slen) >= (AFS_UIO_RESID(auio) - len)) {
 #endif /* AFS_SGI53_ENV */
 	    /* No can do no more now; ya know... at this time */
-	    DRelease(nde, 0);	/* can't use this one. */
+	    DRelease(&nextEntry, 0);	/* can't use this one. */
 	    if (len) {
 #ifdef	AFS_HPUX_ENV
-		sdirEntry->d_fileno =
-		    (avc->f.fid.Fid.Volume << 16) + ntohl(ode->fid.vnode);
-		FIXUPSTUPIDINODE(sdirEntry->d_fileno);
+		sdirEntry->d_fileno = afs_calc_inum(avc->f.fid.Cell,
+		                                    avc->f.fid.Fid.Volume,
+		                                    ntohl(ode->fid.vnode));
 		sdirEntry->d_reclen = rlen = AFS_UIO_RESID(auio);
 		sdirEntry->d_namlen = o_slen;
 #if defined(AFS_SUN5_ENV) || defined(AFS_AIX32_ENV) || defined(AFS_HPUX100_ENV)
@@ -845,7 +858,9 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 		/* this next line used to be AFSVFS40 or AIX 3.1, but is
 		 * really generic */
 		AFS_UIO_SETOFFSET(auio, origOffset);
+#if !defined(AFS_NBSD_ENV)
 		AFS_UIO_SETRESID(auio, 0);
+#endif
 	    } else {		/* trouble, can't give anything to the user! */
 		/* even though he has given us a buffer, 
 		 * even though we have something to give us,
@@ -853,8 +868,7 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 		 */
 		code = EINVAL;
 	    }
-	    if (ode)
-		DRelease(ode, 0);
+	    DRelease(&oldEntry, 0);
 	    goto dirend;
 	}
 
@@ -864,9 +878,9 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 	 */
 	if (len) {
 #ifdef	AFS_HPUX_ENV
-	    sdirEntry->d_fileno =
-		(avc->f.fid.Fid.Volume << 16) + ntohl(ode->fid.vnode);
-	    FIXUPSTUPIDINODE(sdirEntry->d_fileno);
+	    sdirEntry->d_fileno = afs_calc_inum(avc->f.fid.Cell,
+		                                avc->f.fid.Fid.Volume,
+	                                        ntohl(ode->fid.vnode));
 	    sdirEntry->d_reclen = rlen = len;
 	    sdirEntry->d_namlen = o_slen;
 #if defined(AFS_SUN5_ENV) || defined(AFS_AIX32_ENV) || defined(AFS_HPUX100_ENV)
@@ -903,13 +917,14 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 #else
 	len = DIRSIZ_LEN(o_slen = n_slen);
 #endif /* AFS_SGI53_ENV */
-	if (ode)
-	    DRelease(ode, 0);
+	
+	DRelease(&oldEntry, 0);
+	oldEntry = nextEntry;
 	ode = nde;
-	AFS_UIO_SETOFFSET(auio, (afs_int32) ((us + afs_dir_NameBlobs(nde->name)) << 5));
+	AFS_UIO_SETOFFSET(auio, (us + afs_dir_NameBlobs(nde->name)) << 5);
     }
-    if (ode)
-	DRelease(ode, 0);
+    
+    DRelease(&oldEntry, 0);
 
   dirend:
     ReleaseReadLock(&tdc->lock);

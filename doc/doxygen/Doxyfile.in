@@ -1,0 +1,60 @@
+#
+# This file describes the settings to be used by the documentation system
+# doxygen (www.doxygen.org) for OpenAFS.
+#
+
+PROJECT_NAME           = "OpenAFS"
+PROJECT_BRIEF          = "OpenAFS distributed network file system"
+PROJECT_LOGO           = src/WINNT/afsd/OpenAFS.ico
+OUTPUT_DIRECTORY       = doc/doxygen/output
+
+ABBREVIATE_BRIEF       = "The $name class" "The $name widget" "The $name file" \
+                          is provides specifies contains represents a an the
+QT_AUTOBRIEF           = YES
+OPTIMIZE_OUTPUT_FOR_C  = YES
+SYMBOL_CACHE_SIZE      = 7
+LOOKUP_CACHE_SIZE      = 2
+CASE_SENSE_NAMES       = NO
+HIDE_SCOPE_NAMES       = YES
+
+GENERATE_DOCSET        = YES
+GENERATE_TREEVIEW      = YES
+GENERATE_LATEX         = NO
+
+DOCSET_BUNDLE_ID       = org.openafs.Project
+DOCSET_PUBLISHER_ID    = org.openafs.Publisher
+QHP_NAMESPACE          = org.openafs.Project
+ECLIPSE_DOC_ID         = org.openafs.Project
+
+HAVE_DOT               = @HAVE_DOT@
+DOT_PATH               = @DOT_PATH@
+CALL_GRAPH             = YES
+CALLER_GRAPH           = YES
+
+EXTRACT_ALL            = YES
+INPUT                  = doc/doxygen/input src
+RECURSIVE              = YES
+EXCLUDE                = \
+    src/cf \
+    src/config \
+    src/dviced \
+    src/dvolser \
+    src/external \
+    src/finale \
+    src/JAVA \
+    src/kauth \
+    src/libafs \
+    src/mcas \
+    src/NTObjdir \
+    src/packaging \
+    src/shlibafsrpc \
+    src/tbudb \
+    src/tbutc \
+    src/tests \
+    src/tools \
+    src/tptserver \
+    src/tsalvaged \
+    src/tubik \
+    src/tvlserver \
+    src/tvolser \
+

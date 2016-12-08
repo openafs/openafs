@@ -1,0 +1,114 @@
+# Copyright 2010, Your File System Inc
+# All rights reserved
+#
+# This software has been released under the terms of the BSD License
+# For details, see the LICENSE file in the top level source directory
+
+RELDIR=roken
+!include ..\config\NTMakefile.$(SYS_NAME)
+!include ..\config\NTMakefile.version
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DHAVE_CONFIG_H=1
+
+ROKEN = $(SRC)\external\heimdal\roken
+
+INCFILEDIR = $(DESTDIR)\include
+
+INCFILES = \
+	$(INCFILEDIR)\err.h \
+	$(INCFILEDIR)\roken.h \
+	$(INCFILEDIR)\search.h
+
+ROKEN_INCFILES = \
+	$(INCFILEDIR)\roken-common.h \
+	$(INCFILEDIR)\base64.h
+
+LIBFILE = $(DESTDIR)\lib\afsroken.dll
+
+ROKEN_OBJS = \
+	$(OUT)\base64.obj \
+        $(OUT)\cloexec.obj \
+        $(OUT)\ct.obj \
+	$(OUT)\ecalloc.obj \
+	$(OUT)\emalloc.obj \
+	$(OUT)\erealloc.obj \
+        $(OUT)\err.obj \
+        $(OUT)\errx.obj \
+	$(OUT)\flock.obj \
+	$(OUT)\getopt.obj \
+        $(OUT)\getprogname.obj \
+	$(OUT)\gettimeofday.obj \
+	$(OUT)\hex.obj \
+        $(OUT)\issuid.obj \
+	$(OUT)\localtime_r.obj \
+	$(OUT)\mkdir.obj \
+	$(OUT)\mkstemp.obj \
+	$(OUT)\net_read.obj \
+	$(OUT)\net_write.obj \
+        $(OUT)\realloc.obj \
+	$(OUT)\rename.obj \
+	$(OUT)\setprogname.obj \
+	$(OUT)\snprintf.obj \
+	$(OUT)\socket.obj \
+	$(OUT)\strerror_r.obj \
+	$(OUT)\strlcat.obj \
+	$(OUT)\strlcpy.obj \
+	$(OUT)\strnlen.obj \
+	$(OUT)\strsep.obj \
+	$(OUT)\tsearch.obj \
+        $(OUT)\verr.obj \
+        $(OUT)\verrx.obj \
+        $(OUT)\vwarn.obj \
+        $(OUT)\vwarnx.obj \
+        $(OUT)\warn.obj \
+        $(OUT)\warnerr.obj \
+        $(OUT)\warnx.obj \
+        $(OUT)\win32_alloc.obj
+
+$(ROKEN_OBJS):$(ROKEN)\$$(@B).c
+	$(C2OBJ) $** -I$(ROKEN)
+
+$(ROKEN_INCFILES):$(ROKEN)\$$(@B).h
+	$(COPY) $** $(INCFILEDIR)
+
+$(INCFILES):$$(@B).h
+	$(COPY) $** $(INCFILEDIR)
+
+RESFILE = $(OUT)\afsroken.res
+
+$(RESFILE): afsroken.rc AFS_component_version_number.h
+
+roken.h: $(ROKEN)\roken.h.in
+	$(COPY) $** $@
+
+err.h: $(ROKEN)\err.hin
+	$(COPY) $** $@
+
+search.h: $(ROKEN)\search.hin
+	$(COPY) $** $@
+
+!if !defined(NMAKE)
+NTMAKE = nmake /nologo /f ntmakefile
+!endif
+
+DLLLIBS = \
+#       $(DESTDIR)\lib\afs\afsreg.lib
+
+$(LIBFILE): $(ROKEN_OBJS) $(RESFILE) $(DLLLIBS)
+	$(DLLCONLINK) /DEF:afsroken.def shell32.lib
+	$(_VC_MANIFEST_EMBED_DLL)
+	$(DLLPREP)
+	$(CODESIGN_USERLAND)
+	$(SYMSTORE_IMPORT)
+	$(MAKECYGLIB) --input-def afsroken.def
+
+# Definitions for generating versioninfo resources
+$(OUT)\afsroken.res: AFS_component_version_number.h
+
+install_headers: $(INCFILES) $(ROKEN_INCFILES)
+
+install: install_headers $(LIBFILE)
+
+clean::
+	$(DEL) $(INCFILES)
+	$(DEL) err.h roken.h search.h
+	$(DEL) $(LIBFILE) $(DESTDIR)\lib\afsroken.lib $(DESTDIR)\lib\afsroken.exp

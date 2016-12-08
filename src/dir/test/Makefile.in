@@ -7,25 +7,20 @@
 
 srcdir=../../..
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 
 LIBS = ${srcdir}/lib/libdir.a ${srcdir}/lib/util.a  ${srcdir}/lib/liblwp.a
-CFLAGS=${OPTMZ} -I${TOP_INCDIR} -I${srcdir} -I${TOP_OBJDIR}/src/config ${XCFLAGS} ${ARCHFLAGS}
 
 OBJS=test-salvage.o physio.o dtest.o
 
 all:	dtest
 
-install:	dtest 
+install:	dtest
 
 clean:
 	$(RM) -f *.o *.a test dtest core
 
-dtest:		dtest.o 
-	$(CC) $(LDFLAGS) -o dtest dtest.o $(LIBS)
+dtest:		dtest.o
+	$(AFS_LDRULE) dtest.o $(LIBS)
 
-dtest.o:	dtest.c 
-	$(CC) $(CFLAGS) -c dtest.c 

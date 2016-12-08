@@ -28,7 +28,6 @@
 #define MAXSMBNAMELEN    256	/* max length of an SMB name */
 
 #define LOGON_OPTION_INTEGRATED 1
-#define LOGON_OPTION_HIGHSECURITY 2
 
 /*
  * Define ticket types. For Kerberos V4 tickets, this is overloaded as
@@ -91,12 +90,10 @@ typedef signed char rxkad_level;
     ((((type) == 1) || ((type) == 2)) ? ((type)-1) : 0)
 
 
-extern int rxkad_EpochWasSet;	/* TRUE => we called rx_SetEpoch */
-
-/* An alternate decryption function for rxkad.  Using the given kvno and
- * enctype, decrypt the input data + length to output data + length. */
-typedef int (*rxkad_alt_decrypt_func)(int, int, void *, size_t, void *,
-				      size_t *);
+/* Get key by enctype.  Takes a rock (path to conf dir), kvno and enctype as
+ * input and returns the key and key length.  On input, the keylength parameter
+ * must be set to the length of storage allocated by the caller. */
+typedef int (*rxkad_get_key_enctype_func) (void *, int, int, void *, size_t *);
 
 #include <rx/rxkad_prototypes.h>
 

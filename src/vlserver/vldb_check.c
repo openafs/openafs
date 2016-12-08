@@ -7,6 +7,22 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#include <afsconfig.h>
+#include <afs/param.h>
+
+#include <roken.h>
+
+#ifdef AFS_NT40_ENV
+#include <WINNT/afsevent.h>
+#endif
+
+#include <ubik.h>
+#include <afs/afsutil.h>
+#include <afs/cmd.h>
+
+#include "vlserver.h"
+#include "vldbint.h"
+
 /* Read a VLDB file and verify it for correctness */
 
 #define VL  0x001		/* good volume entry */
@@ -42,32 +58,6 @@
 #define VLDB_CHECK_FATAL    4
 #define vldbread(x,y,z) vldbio(x,y,z,0)
 #define vldbwrite(x,y,z) vldbio(x,y,z,1)
-
-#include <afsconfig.h>
-#include <afs/param.h>
-
-
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <string.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <WINNT/afsevent.h>
-#include <io.h>
-#else
-#include <sys/socket.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#endif
-
-#include "vlserver.h"
-#include "vldbint.h"
-#include <ubik.h>
-#include <afs/afsutil.h>
-#include <afs/cmd.h>
 
 #define HDRSIZE 64
 #define ADDR(x) ((x)/sizeof(struct nvlentry))
@@ -363,9 +353,16 @@ readMH(afs_uint32 addr, int block, struct extentaddr *mhblockP)
 
     vldbread(addr, (char *)mhblockP, VL_ADDREXTBLK_SIZE);
 
+    /* Every mh block has the VLCONTBLOCK flag set in the header to
+     * indicate the entry is an 8192 byte extended block. The
+     * VLCONTBLOCK flag is always clear in regular vl entries. The
+     * vlserver depends on the VLCONTBLOCK flag to correctly traverse
+     * the vldb. The flags field is in network byte order. */
+    mhblockP->ex_hdrflags = ntohl(mhblockP->ex_hdrflags);
+
     if (block == 0) {
+        /* These header fields are only used in the first mh block. */
         mhblockP->ex_count = ntohl(mhblockP->ex_count);
-        mhblockP->ex_flags = ntohl(mhblockP->ex_flags);
         for (i = 0; i < VL_MAX_ADDREXTBLKS; i++) {
 	    mhblockP->ex_contaddrs[i] = ntohl(mhblockP->ex_contaddrs[i]);
         }
@@ -484,7 +481,7 @@ writeMH(afs_int32 addr, int block, struct extentaddr *mhblockP)
     }
     if (block == 0) {
 	mhblockP->ex_count = htonl(mhblockP->ex_count);
-	mhblockP->ex_flags = htonl(mhblockP->ex_flags);
+	mhblockP->ex_hdrflags = htonl(mhblockP->ex_hdrflags);
 	for (i = 0; i < VL_MAX_ADDREXTBLKS; i++) {
 	    mhblockP->ex_contaddrs[i] = htonl(mhblockP->ex_contaddrs[i]);
 	}
@@ -880,7 +877,7 @@ CheckIpAddrs(struct vlheader *header)
 	 * addresses of all the mh blocks.
 	 */
 	readMH(header->SIT, 0, MHblock);
-	if (MHblock->ex_flags != VLCONTBLOCK) {
+	if (MHblock->ex_hdrflags != VLCONTBLOCK) {
 	   log_error
 		(VLDB_CHECK_ERROR,"address %u (offset 0x%0x): Multihomed Block 0: Not a multihomed block\n",
 		 header->SIT, OFFSET(header->SIT));
@@ -902,10 +899,10 @@ CheckIpAddrs(struct vlheader *header)
 		continue;
 
 	    readMH(mhinfo[i].addr, i, MHblock);
-	    if (MHblock->ex_flags != VLCONTBLOCK) {
+	    if (MHblock->ex_hdrflags != VLCONTBLOCK) {
 	        log_error
-		    (VLDB_CHECK_ERROR,"address %u (offset 0x%0x): Multihomed Block 0: Not a multihomed block\n",
-		     header->SIT, OFFSET(header->SIT));
+		    (VLDB_CHECK_ERROR,"address %u (offset 0x%0x): Multihomed Block %d: Not a multihomed block\n",
+		     mhinfo[i].addr, OFFSET(mhinfo[i].addr), i);
 	    }
 
 	    rindex = mhinfo[i].addr / sizeof(vlentry);
@@ -1222,8 +1219,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     }
 
     maxentries = (header.vital_header.eofPtr / sizeof(vlentry)) + 1;
-    record = (struct er *)malloc(maxentries * sizeof(struct er));
-    memset(record, 0, (maxentries * sizeof(struct er)));
+    record = calloc(maxentries, sizeof(struct er));
     memset(serveraddrs, 0, sizeof(serveraddrs));
     memset(mhinfo, 0, sizeof(mhinfo));
     memset(serverref, 0, sizeof(serverref));
@@ -1622,7 +1618,7 @@ main(int argc, char **argv)
 
     setlinebuf(stdout);
 
-    ts = cmd_CreateSyntax(NULL, WorkerBee, NULL, "vldb check");
+    ts = cmd_CreateSyntax(NULL, WorkerBee, NULL, 0, "vldb check");
     cmd_AddParm(ts, "-database", CMD_SINGLE, CMD_REQUIRED, "vldb_file");
     cmd_AddParm(ts, "-uheader", CMD_FLAG, CMD_OPTIONAL,
 		"Display UBIK header");

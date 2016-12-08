@@ -7,10 +7,11 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
+#include <roken.h>
 
 /*
  *                      (3) Define a structure, idused, instead of an
@@ -30,21 +31,13 @@
  *                          conditions.
  */
 
-#include <afs/stds.h>
-#include <sys/types.h>
+
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
 #include <WINNT/afsevent.h>
-#include <io.h>
 #else
-#include <netdb.h>
-#include <netinet/in.h>
 #include <sys/file.h>
 #endif
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
-#include <fcntl.h>
+
 #include <afs/cellconfig.h>
 #include <afs/afsutil.h>
 #include <ubik.h>
@@ -982,10 +975,8 @@ QuoteName(char *s)
 {
     char *qs;
     if (strpbrk(s, " \t")) {
-	qs = (char *)malloc(strlen(s) + 3);
-	strcpy(qs, "\"");
-	strcat(qs, s);
-	strcat(qs, "\"");
+	if (asprintf(&qs, "\"%s\"", s) < 0)
+	    qs = "<<-OUT-OF-MEMORY->>";
     } else
 	qs = s;
     return qs;
@@ -1276,8 +1267,7 @@ CheckPrDatabase(struct misc_data *misc)	/* info & statistics */
     }
     if (misc->verbose)
 	printf("Database has %d entries\n", n);
-    map = (char *)malloc(n);
-    memset(map, 0, n);
+    map = calloc(1, n);
     misc->nEntries = n;
 
     if (misc->verbose) {
@@ -1305,14 +1295,13 @@ CheckPrDatabase(struct misc_data *misc)	/* info & statistics */
 #else
     n = ((misc->maxId > misc->maxForId) ? misc->maxId : misc->maxForId);
     misc->idRange = n - misc->minId + 1;
-    misc->idmap = (afs_int32 *) malloc(misc->idRange * sizeof(afs_int32));
+    misc->idmap = calloc(misc->idRange, sizeof(afs_int32));
     if (!misc->idmap) {
 	afs_com_err(whoami, 0, "Unable to malloc space for max ids of %d",
 		misc->idRange);
 	code = -1;
 	goto abort;
     }
-    memset(misc->idmap, 0, misc->idRange * sizeof(misc->idmap[0]));
 #endif /* SUPERGROUPS */
 
     if (misc->verbose) {
@@ -1460,7 +1449,7 @@ main(int argc, char *argv[])
 
     setlinebuf(stdout);
 
-    ts = cmd_CreateSyntax(NULL, WorkerBee, NULL, "PRDB check");
+    ts = cmd_CreateSyntax(NULL, WorkerBee, NULL, 0, "PRDB check");
     cmd_AddParm(ts, "-database", CMD_SINGLE, CMD_REQUIRED, "ptdb_file");
     cmd_AddParm(ts, "-uheader", CMD_FLAG, CMD_OPTIONAL,
 		"Display UBIK header");

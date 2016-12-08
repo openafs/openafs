@@ -127,6 +127,10 @@ elif [ x"$majorvers" = x15 ]; then
     RELNAME="ElCapitan"
     THISREL=11
 
+elif [ x"$majorvers" = x16 ]; then
+    RELNAME="Sierra"
+    THISREL=12
+
 elif [ x"$majorvers" = x ] ; then
     echo "Error running uname" >&2
     exit 1

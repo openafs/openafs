@@ -32,18 +32,15 @@ to the free list when the files are removed from lost+found
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <sys/types.h>
-#include <sys/file.h>
-#include <dirent.h>
-#include <sys/stat.h>
 #ifdef AFS_HPUX_ENV
 #include <sys/mknod.h>
 #endif
+
 #include <afs/afs_args.h>
 #include <afs/afs.h>
 #include <afs/afssyscalls.h>
-#include <errno.h>
 
 #include "AFS_component_version_number.c"
 

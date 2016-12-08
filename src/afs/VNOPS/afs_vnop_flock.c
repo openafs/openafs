@@ -46,21 +46,11 @@ lockIdSet(struct AFS_FLOCK *flock, struct SimpleLocks *slp, int clid)
     proc_t *procp = ttoproc(curthread);
 
     if (slp) {
-# ifdef AFS_SUN53_ENV
 	slp->sysid = 0;
 	slp->pid = procp->p_pid;
-# else
-	slp->sysid = procp->p_sysid;
-	slp->pid = procp->p_epid;
-# endif
     } else {
-# ifdef AFS_SUN53_ENV
 	flock->l_sysid = 0;
 	flock->l_pid = procp->p_pid;
-# else
-	flock->l_sysid = procp->p_sysid;
-	flock->l_pid = procp->p_epid;
-# endif
     }
 }
 #elif defined(AFS_SGI_ENV)
@@ -335,7 +325,7 @@ HandleFlock(struct vcache *avc, int acom, struct vrequest *areq,
 	    if (!AFS_IS_DISCONNECTED) {
 		struct rx_connection *rxconn;
 	        do {
-		  tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK, &rxconn);
+		    tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK, &rxconn);
 		    if (tc) {
 		        XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_RELEASELOCK);
 		        RX_AFS_GUNLOCK();
@@ -391,8 +381,8 @@ HandleFlock(struct vcache *avc, int acom, struct vrequest *areq,
 		    }
 		}
 		if (!code && avc->flockCount == 0) {
-		    struct rx_connection *rxconn;
 		    if (!AFS_IS_DISCONNECTED) {
+			struct rx_connection *rxconn;
 		        do {
 			    tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK, &rxconn);
 			    if (tc) {
@@ -404,7 +394,7 @@ HandleFlock(struct vcache *avc, int acom, struct vrequest *areq,
 						      (struct AFSFid *)&avc->
 						      f.fid.Fid, &tsync);
 			        RX_AFS_GLOCK();
-				XSTATS_END_TIME;
+			       XSTATS_END_TIME;
 			    } else
 			        code = -1;
 		        } while (afs_Analyze
@@ -591,7 +581,7 @@ int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
     if (code) {
 	goto done;
     }
-#if (defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)) && !defined(AFS_SUN58_ENV)
+#if defined(AFS_SGI_ENV)
     if ((acmd == F_GETLK) || (acmd == F_RGETLK)) {
 #else
     if (acmd == F_GETLK) {
@@ -604,7 +594,7 @@ int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
 	code = afs_CheckCode(code, treq, 2);	/* defeat buggy AIX optimz */
 	goto done;
     } else if ((acmd == F_SETLK) || (acmd == F_SETLKW)
-#if (defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)) && !defined(AFS_SUN58_ENV)
+#if defined(AFS_SGI_ENV)
 	       || (acmd == F_RSETLK) || (acmd == F_RSETLKW)) {
 #else
 	) {
@@ -643,7 +633,7 @@ int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
 	goto done;
     }
     if (((acmd == F_SETLK)
-#if 	(defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)) && !defined(AFS_SUN58_ENV)
+#if 	defined(AFS_SGI_ENV)
 	 || (acmd == F_RSETLK)
 #endif
 	) && code != LOCK_UN)

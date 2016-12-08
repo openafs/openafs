@@ -14,6 +14,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include "util.h"
 
@@ -86,17 +87,17 @@ SetupUtilAdminCmd(void)
 {
     struct cmd_syndesc *ts;
 
-    ts = cmd_CreateSyntax("UtilErrorTranslate", DoUtilErrorTranslate, NULL,
+    ts = cmd_CreateSyntax("UtilErrorTranslate", DoUtilErrorTranslate, NULL, 0,
 			  "translate an error code");
     cmd_AddParm(ts, "-error", CMD_SINGLE, CMD_REQUIRED, "error code");
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("UtilDatabaseServerList", DoUtilDatabaseServerList,
-			  NULL, "list the database servers in a cell");
+			  NULL, 0, "list the database servers in a cell");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_REQUIRED, "cell to list");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("UtilNameToAddress", DoUtilNameToAddress, NULL,
+    ts = cmd_CreateSyntax("UtilNameToAddress", DoUtilNameToAddress, NULL, 0,
 			  "translate a host name to an address");
     cmd_AddParm(ts, "-host", CMD_SINGLE, CMD_REQUIRED, "host name");
     SetupCommonCmdArgs(ts);

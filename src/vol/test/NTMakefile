@@ -44,4 +44,4 @@ $(LTLIST): $(OUT)\ltlist.obj $(EXEC_LIBS)
         $(SYMSTORE_IMPORT)
 
 mkdir:
-	
+

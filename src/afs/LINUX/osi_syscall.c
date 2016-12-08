@@ -14,6 +14,22 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
+#ifdef LINUX_KEYRING_SUPPORT
+/* The syscall probing stuff is unnecessary (and is never called) if we have
+ * keyrings support; we rely on keyrings instead of group ids to track PAGs.
+ * So if we have keyrings, just stub out the syscall functions to do nothing. */
+int
+osi_syscall_init(void)
+{
+    return 0;
+}
+void
+osi_syscall_clean(void)
+{
+    return;
+}
+
+#else /* LINUX_KEYRING_SUPPORT */
 
 #include <linux/module.h> /* early to avoid printf->printk mapping */
 #include "afs/sysincludes.h"
@@ -626,3 +642,5 @@ void osi_syscall_clean(void)
     }
 #endif
 }
+
+#endif /* !LINUX_KEYRING_SUPPORT */

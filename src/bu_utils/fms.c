@@ -10,15 +10,10 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#undef	IN
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#include <stdlib.h>
-#include <sys/types.h>		/* for mtio.h */
-#include <afs/cmd.h>
 #include <afs/procmgmt.h>
+#include <roken.h>
+
+#include <afs/cmd.h>
 #include <afs/usd.h>
 
 /* structure for writing data to tape */
@@ -64,7 +59,7 @@ main(int argc, char **argv)
     sigaction(SIGINT, &intaction, &oldaction);
 
     cptr =
-	cmd_CreateSyntax(NULL, tt_fileMarkSize, NULL,
+	cmd_CreateSyntax(NULL, tt_fileMarkSize, NULL, 0,
 			 "write a tape full of file marks");
     cmd_AddParm(cptr, "-tape", CMD_SINGLE, CMD_REQUIRED, "tape special file");
 
@@ -269,11 +264,10 @@ dataBlock(usd_handle_t hTape, afs_int32 reqSize)
     }
 
     if (dB_buffer == 0) {
-	dB_buffer = (char *)malloc(reqSize);
+	dB_buffer = calloc(1, reqSize);
 	if (dB_buffer == 0)
 	    ERROR(-1);
 	dB_buffersize = reqSize;
-	memset(dB_buffer, 0, dB_buffersize);
     }
 
     ptr = (int *)dB_buffer;

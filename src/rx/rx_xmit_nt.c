@@ -17,17 +17,15 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
 #if defined(AFS_NT40_ENV)
+# include <roken.h>
+# if (_WIN32_WINNT < 0x0501)
+#  undef _WIN32_WINNT
+#  define _WIN32_WINNT 0x0501
+# endif
+# include <mswsock.h>
 
-#include <winsock2.h>
-#if (_WIN32_WINNT < 0x0501)
-#undef _WIN32_WINNT
-#define _WIN32_WINNT 0x0501
-#endif
-#include <mswsock.h>
-
-#if (_WIN32_WINNT < 0x0600)
+# if (_WIN32_WINNT < 0x0600)
 /*
  * WSASendMsg -- send data to a specific destination, with options, using
  *    overlapped I/O where applicable.
@@ -51,16 +49,15 @@ INT
     IN LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine OPTIONAL
     );
 
-#define WSAID_WSASENDMSG /* a441e712-754f-43ca-84a7-0dee44cf606d */ \
+# define WSAID_WSASENDMSG /* a441e712-754f-43ca-84a7-0dee44cf606d */ \
     {0xa441e712,0x754f,0x43ca,{0x84,0xa7,0x0d,0xee,0x44,0xcf,0x60,0x6d}}
-#endif /* _WINNT_WIN32 */
+#endif /* AFS_NT40_ENV */
 
 #include "rx.h"
-#include "rx_packet.h"
 #include "rx_globals.h"
+#include "rx_packet.h"
 #include "rx_xmit_nt.h"
 #include <malloc.h>
-#include <errno.h>
 
 
 /*

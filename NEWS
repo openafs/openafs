@@ -1,4 +1,337 @@
                        User-Visible OpenAFS Changes
+
+OpenAFS 1.8 (in progress)
+
+  All Platforms
+
+    * Substantial code quality improvements, largely spotted by Coverity and
+      clang's static analysis.
+      - Add new library for platform independent functions (opr).
+      - Remove arbitrary path name length limits.
+      - Convert to Heimdal's roken library for reliability.
+      - Avoid garbage in allocated buffers (calloc).
+      - Modernize signal handling in pthreaded server processes (softsig).
+      - Improve code comments and additional Doxygen style comments.
+      - Reduce compiler warnings, dead code, unused variables, and
+        undefined behavior.
+      - Fix bugs found by static code analyzer (clang-analyzer).
+      - Improved unit test coverage.
+      - Make VLDB flag definitions consistent.
+      - Improve use of run-time assertions and add static assertions.
+      - Add compiler attributes to assist static analyzers.
+      - Clean up include headers in the entire tree.
+      - Improve command-line handling library (libcmd).
+      - Replace hash functions with Jenkin's hash function for faster
+        and more evenly distributed lookups.
+      - Provide a red-black tree data structure to enable algorithmic speedups.
+      - Convert backup and salvage servers to the common logging API (libutil).
+      - Improve volume id data type consistency (VolumeId).
+      - Import APIs for kerberos-style profile configuration support.
+      - Add new APIs to support UserList identities.
+      - Add new APIs to support tabular output from command-line utilities.
+
+    * Improved support for non-DES encryption types:
+      - Convert to Heimdal's hcrypto library to support RFC 3961.
+      - Add extended key file format replacing rxkad.keytab, and
+        new key management APIs.
+      - Add support for extended key types to asetkey.
+      - Add akeyconvert to assist in upgrading to OpenAFS 1.8.x by converting an
+        existing rxkad.keytab file to an extended key file.
+      - Do not install the kaserver and related utilities by default to
+        discourage the use of these DES-dependent components.
+      - Remove obsolete klogin and klogin.krb programs.
+      - Add new token APIs to support new rx security classes.
+
+    * Migrate from LWP to POSIX threads (pthreads):
+      - Convert the ptserver and vlserver from LWP to pthreads.
+      - Remove LWP version of the file server binary.
+      - Convert afsd, aklog, asetkey, klog.krb5, pts, udebug, and vos, from LWP
+        to pthreads.
+
+    * Improvements to Rx:
+      - Restructure the Rx API to privatize the implementation.
+      - Convert rx events to a red-black tree data structure to improve
+        performance.
+      - Convert from mutexes to atomic operations for counters to reduce lock
+        contention.
+      - Provide per-opcode Rx statistics.
+      - Add an rx_opaque data type to support non-DES encryption types
+        and general code cleanup.
+
+    * Libraries (both internal and installed) are built using libtool, including
+      libuafs. The resulting shared libraries for libafsrpc and libafsauthent
+      should be more usable than previously.
+
+    * Improvements to the build system:
+      - Convert to libtool to build shared libraries.
+      - Clean up and improve the build system.
+      - Support out of tree builds.
+      - Add a makefile target to generate Doxygen source code documentation.
+      - Link the Java API for OpenAFS with libuafs.a and remove the
+        libjuafs.a library.
+      - Always build the rxperf tool.
+
+    * Improvements to documentation:
+      - Document the new KeyFileExt file.
+      - Reorganized the README files.
+      - Improvements and fixes to documentation generation.
+      - Add experimental epub and mobi support
+      - Remove obsolete LWP information from the file server documentation.
+      - Update and reorganize the Quick Start Guide.
+      - Update the Admin Guide.
+      - Remove AIX, HP-UX, and IRIX information from the Quick Start Guide.
+      - Document the vldb and prdb (ubik) file formats.
+      - Corrections and clarifications to man pages.
+
+    * Improvements for troublshooting, debugging, and testing:
+      - Log more details on volume-server-to-fileserver communication errors
+        when possible.
+      - Set thread names in pthreaded servers on platforms which support
+        thread names.
+      - Add dynroot lock tracking to cmdebug
+      - Fix tracking of an fstrace call site in the cache manager background
+        process.
+      - Add the afsload tool to simulate multiple cache managers for file server
+        load testing.
+      - Add run-time checks for refcount imbalances in the cache manager.
+
+    * Developer tool improvements:
+      - Improvements and fixes for rxgen (used to generate Rx RPC bindings).
+      - Add tool for man page verification of command options.
+      - Add tool to find Unix cache manager lock identification numbers.
+      - Add an option for pretty build output.
+
+    * Add a new protection error code (PRNAMETOOLONG) instead of silently
+      truncating names which exceed the maximum name length (PR_MAXNAMELEN).
+
+    * Add an implementation limit (50000) on the number of names/ids which can
+      be transmitted by unauthenticated clients to the ptserver, avoiding
+      excessive resource consumption from unauthenticated requests.
+
+    * Add the -config option to vos, pts, and aklog to specify the path to the
+      cell configuration files.
+
+    * Add more details in vos release -verbose output.
+
+    * Add the cacheout -encrypt option to encrypt communication between the
+      cacheout client and the fileserver.
+
+    * Add the command line options to the afsio program to enable encryption of
+      traffic between afsio and the fileserver (-clear, -crypt).
+
+    * Add the vos release -force-reclone option to force recloning the volume to
+      be released without forcing a full volume dump being transmitted to all
+      remote sites.
+
+    * Fix vos to avoid writing loopback addresses into the VLDB in
+      certain cases.
+
+    * Print bos and pts error messages to standard error instead of
+      standard out.
+
+    * Improve formatting of the -help output of all commands.
+
+    * Change -n to -dryrun in all backup subcommands.
+
+    * Change the backup deletedump -port command line option to -portoffset.
+
+    * Add user and build host in the version string returned by
+      rxdebug -version.
+
+  All Server Platforms
+
+    * Ubik servers using pthreads are now available and are used by default
+
+    * Remove periodic background fsync by the fileserver (ihandle fsync thread).
+
+    * Fix potential file handle leak in the file server ihandle caching layer.
+
+    * Disable the so-called "hot threads" feature in the file server. The hot
+      threads feature was intended as an optimization for dispatching incoming
+      calls to the current listener thread, but has been reported to incur a
+      performance penalty on modern multi-core systems.
+
+    * Do not permit creation of users with id of ANONYMOUSID.
+
+    * Add the ptserver -restrict_anonymous option to inhibit exposure of user
+      names from the ptserver.
+
+    * Do not truncate server log files by default when server processes
+      are started.  The -transarc-logs option provides backward compatibility
+      with IBM AFS log handling on server startup. Log messages may be lost
+      in back-to- back restarts when a server is running in this mode.
+
+    * Reopen server logs on SIGUSR1. This may be used by third-party log
+      rotation tools, such as logrotate, to reopen the log file handles after
+      log files have been renamed.
+
+    * Fix various bugs when logging with -mrafslogs enabled.
+
+    * Dynamically reload the kerberos realm to AFS cell mapping (krb.conf) and
+      exclusions for mapping kerberos principals to AFS identities (krb.excl)
+      configuration when the CellServDB cell configuration file is touched.
+      Previously, a restart of the file server was required after updating the
+      kerberos mapping configuration files.
+
+    * Add a command line option (-restricted_query) to the vlserver and
+      volserver to restrict information queries about volumes to a specific
+      group of users.
+
+    * Add a command line option to the server programs to specify an alternate
+      fully qualified log file name (-logfile).
+
+    * Add a command line option (-config) to the server programs to specify
+      an alternate path to the server configuration.
+
+    * Add a command line option to the ptserver and vlserver to specify an
+      alternate path to the database data files.
+
+    * Add a command line option to the volume server to enable encryption of
+      volume-server-to-volume-server-traffic (-s2scrypt).
+
+    * Increase the maximum number of LWP threads allowed for the ptserver and
+      vlserver from 16 to 64 (-lwp).
+
+    * Remove an unused file server command line option (-k).
+
+    * Fix an incorrect assertion in Demand Attach File Server which could cause
+      the file server process to abort in certain rare conditions.
+
+    * Deprecate the -bitmap-later configure option for non-Demand-Attach File
+      Servers (DAFS).
+
+    * Add -vhashsize support to non-Demand-Attach File Servers (DAFS).
+
+    * Add support for subnet ranges in the NetInfo and NetRestrict
+      configuration files.
+
+    * Add the GetXStats RPC to the audit log.
+
+    * Fix directory creation by bosserver when built for non-Transarc paths.
+
+    * Fix incomplete list of server addresses retreived by vos listaddr when the
+      vldb contains unreferenced multi-homed server entries.
+
+    * Remove obsolete bos blockscanner and unblockscanner commands that
+      were only needed for the removed MR-AFS functionality.
+
+    * Remove obsolete bos salvage options that were only used by the
+      removed MR-AFS functionality..
+
+    * Remove calls to the deprecated sbrk() function.
+
+    * Add an experimental feature to database servers to support ubik reads
+      while write transactions are in progress, enabled at build time with the
+      --enable-ubik-read-while-write configure option. This feature is not
+      considered ready for production usage at this time.
+
+  All Client Platforms
+
+    * Add support for relative ACL changes with fs setacl. If a single plus (+)
+      or minus (-) character is appended to the rights' letters argument, the
+      new rights are computed relatively to the existing ones.
+
+    * Remove afsd -settime and afsd -nosettime support.
+
+    * Add the afsd -inumcalc option to specify the method used to calculate
+      inode numbers presented by AFS.
+
+    * Return EIO on internal errors instead of the misleading ENOENT.
+
+    * Log ICMP errors received, if any, for unreachable servers.
+
+    * Improve performance of clients with multiple PAGs for different cells.
+
+    * Fix race condition between changing and using user tokens among cache
+      manager threads.
+
+    * Fix fs sysname for users with UID 2748 and 2750 when not running
+      in -rmtsys mode.
+
+    * Add Perl bindings for the user-space cache manager library (libuafs).
+
+    * Fixes to the bypasscache feature.
+
+    * Remove the obsolete Netscape plugin.
+
+  Linux
+
+    * Remove Linux 2.2 and 2.4 support.
+
+    * Changes to avoid EIO errors with multiple processes doing intensive mmap
+      writing. (Drop PageReclaim AOP_WRITEPAGE_ACTIVATE.)
+
+    * Prevent fakestat data inconsistencies in certain cases (131855).
+
+    * Fix dentry leak which can cause a crash on shutdown.
+
+    * Improve error reporting when encountering corrupt directories.
+
+    * Improve rx error handling in the Linux cache manager.
+
+    * Rename kpasswd to kapasswd when packaging RPMs to avoid colliding with
+      Kerberos kpasswd.
+
+    * Do not use the obsolete --enable-largefile-fileservers configure option
+      when packaging RPMs.
+
+    * Use the RemainAfterExit systemd feature to avoid premature exit
+      when -afsdb is not given, for RPM packages.
+
+    * Remove Debian packaging files from the OpenAFS source tree. Debian
+      packaging files are currently maintained in the downstream Debian
+      infrastructure.
+
+    * Add the sparc_linux26 sysname.
+
+  Solaris
+
+    * Remove support for all Solaris and SunOS platforms prior to Solaris 8.
+
+    * Build 64-bit binaries for Solaris x86 by default.
+
+  MacOS
+
+    * Stop processing upcalls once rx shutdown starts.
+
+    * Enable atomics for the darwin kernel.
+
+    * Add a syscall to enable/disable bulkstat at run-time, which is
+      disabled by default.
+
+  FreeBSD
+
+    * Use the native kernel module build system instead of an ad hoc
+      replacement build system.
+
+    * Remove FreeBSD packaging files from the OpenAFS source tree. FreeBSD
+      packaging files are currently maintained in the downstream FreeBSD Ports
+      Collection.
+
+    * Stay up to date with new FreeBSD releases (through 10.3).
+
+  NetBSD
+
+    * Stay up to date with new NetBSD releases (through 7.x)
+
+    * Update to use cprng(9) as the randomness source on NetBSD 6.99/7.x.
+
+    * Build system updates for NetBDS 6.99.x
+
+  OpenBSD
+
+    * Stay up to date with new OpenBSD releases (through 4.7)
+
+  AIX
+
+    * Updates for AIX support.
+
+    * Fix build system for AIX exports.
+
+    * Add the uidpag and localuid runtime options to the aklog LAM plugin.
+      (These runtime options override the use of UID-based PAGs, which were
+      introduced to appease the CDE screensaver.)
+
 OpenAFS 1.6.20 (Security Release)
 
   All platforms

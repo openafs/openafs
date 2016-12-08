@@ -10,10 +10,10 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include "cmd.h"
-#include <stdio.h>
-#include <com_err.h>
+#include <afs/com_err.h>
+#include <afs/cmd.h>
 
 static int
 cproc1(struct cmd_syndesc *as, void *arock)
@@ -49,16 +49,16 @@ main(int argc, char **argv)
 {
     struct cmd_syndesc *ts;
     char tline[1000];
-    long tc;
+    afs_int32 tc;
     char *tp;
     long code;
     char *tv[100];
 
     initialize_CMD_error_table();
 
-    ts = cmd_CreateSyntax("apple", cproc1, NULL, "describe apple");
+    ts = cmd_CreateSyntax("apple", cproc1, NULL, 0, "describe apple");
 
-    ts = cmd_CreateSyntax("pear", cproc2, NULL, "describe pear");
+    ts = cmd_CreateSyntax("pear", cproc2, NULL, 0, "describe pear");
     cmd_AddParm(ts, "-num", CMD_LIST, 0, "number of pears");
     cmd_AddParm(ts, "-noauth", CMD_FLAG, CMD_OPTIONAL, "don't authenticate");
     cmd_AddParm(ts, "-spotpos", CMD_LIST, CMD_OPTIONAL | CMD_EXPANDS, 0);
@@ -66,7 +66,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
     cmd_CreateAlias(ts, "alias");
 
-    ts = cmd_CreateSyntax("quit", cproc3, 0, "quit");
+    ts = cmd_CreateSyntax("quit", cproc3, 0, 0, "quit");
 
     while (1) {
 	printf("> ");

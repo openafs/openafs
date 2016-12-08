@@ -14,33 +14,33 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
+
+#ifdef IGNORE_SOME_GCC_WARNINGS
+# pragma GCC diagnostic warning "-Wstrict-prototypes"
+#endif
+
+#include <roken.h>
+#include <afs/opr.h>
+#include <afs/opr_assert.h>
+
 #include <ctype.h>
-#include <string.h>
 
-    /* These two needed for rxgen output to work */
-#include <sys/types.h>
+#include <hcrypto/des.h>
+#include <hcrypto/ui.h>
+
 #include <rx/xdr.h>
-
-#include <stdio.h>
 #include <rx/rx.h>
 #include <rx/rxkad.h>
+#include <rx/rxkad_convert.h>
 #include <lock.h>
 #define UBIK_LEGACY_CALLITER 1
 #include <ubik.h>
-#include <afs/afs_assert.h>
-#ifndef AFS_NT40_ENV
-#include <pwd.h>
-#endif
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/cmd.h>
 #include <afs/com_err.h>
 #include <afs/afsutil.h>
-#include <des.h>
-#include <des_prototypes.h>
 
 #include "kauth.h"
 #include "kauth_internal.h"
@@ -559,8 +559,8 @@ Unlock(struct cmd_syndesc *as, void *arock)
 	if (code && (code != UNOSERVERS)) {
 	    server = 0;
 	    if (conn && conn->conns[count - 1]
-		&& conn->conns[count - 1]->peer) {
-		server = conn->conns[count - 1]->peer->host;
+		&& rx_PeerOf(conn->conns[count - 1])) {
+		server = rx_HostOf(rx_PeerOf(conn->conns[count - 1]));
 	    }
 	    afs_com_err(whoami, code,
 		    "so %s.%s may still be locked (on server %d.%d.%d.%d)",
@@ -583,8 +583,9 @@ SetFields(struct cmd_syndesc *as, void *arock)
     int code;
     char name[MAXKTCNAMELEN];
     char instance[MAXKTCNAMELEN];
+    char *end;
     afs_int32 flags = 0;
-    Date expiration = 0;
+    afs_int32 expiration = 0;
     afs_int32 lifetime = 0;
     afs_int32 maxAssociates = -1;
     afs_int32 pwexpiry = 0;
@@ -639,9 +640,8 @@ SetFields(struct cmd_syndesc *as, void *arock)
     for (i = 0; i < 4; misc_auth_bytes[i++] = 0);
 
     if (as->parms[4].items) {
-	if (util_isint(as->parms[4].items->data))
-	    pwexpiry = atoi(as->parms[4].items->data);
-	else {
+	pwexpiry = strtol(as->parms[4].items->data, &end, 10);
+	if (*end != '\0') {
 	    fprintf(stderr,
 		    "Password lifetime specified must be a non-negative decimal integer.\n");
 	    pwexpiry = -1;
@@ -651,9 +651,9 @@ SetFields(struct cmd_syndesc *as, void *arock)
 		    "Password lifetime range must be [0..254] days.\n");
 	    fprintf(stderr, "Zero represents an unlimited lifetime.\n");
 	    return KABADCMD;
-	} else {
-	    misc_auth_bytes[0] = pwexpiry + 1;
 	}
+
+	misc_auth_bytes[0] = pwexpiry + 1;
     }
 
     if (as->parms[5].items) {
@@ -674,15 +674,14 @@ SetFields(struct cmd_syndesc *as, void *arock)
     if (as->parms[6].items) {
 	int nfailures;
 
+        nfailures = strtol(as->parms[6].items->data, &end, 10);
 
-	if (util_isint(as->parms[6].items->data)
-	    && ((nfailures = atoi(as->parms[6].items->data)) < 255)) {
-	    misc_auth_bytes[2] = nfailures + 1;
-	} else {
+	if (*end != '\0' || nfailures < 0 || nfailures > 254) {
 	    fprintf(stderr, "Failure limit must be in [0..254].\n");
 	    fprintf(stderr, "Zero represents unlimited login attempts.\n");
 	    return KABADCMD;
 	}
+	misc_auth_bytes[2] = nfailures + 1;
     }
 
     if (as->parms[7].items) {
@@ -766,7 +765,7 @@ StringToKey(struct cmd_syndesc *as, void *arock)
     ka_PrintBytes((char *)&key, sizeof(key));
     printf("'.\n");
 
-    des_string_to_key(as->parms[0].items->data, ktc_to_cblockptr(&key));
+    DES_string_to_key(as->parms[0].items->data, ktc_to_cblockptr(&key));
 
     printf("Converting %s with the DES string to key yields key='",
 	   as->parms[0].items->data);
@@ -880,7 +879,6 @@ PrintName(char *name, char *inst, char *acell, int buflen, char *buf)
 	    left = ka_ConvertBytes(buf + nlen, buflen - nlen, acell, len);
 	    if (left)
 		goto bad_name;
-	    nlen += len;
 	}
     }
     return 0;
@@ -1043,7 +1041,7 @@ GetPassword(struct cmd_syndesc *as, void *arock)
 	if (code)
 	    goto abort;
 	sc = rxnull_NewClientSecurityObject();
-	si = RX_SCINDEX_NULL;
+	si = RX_SECIDX_NULL;
 	conns[0] =
 	    rx_NewConnection(htonl(INADDR_LOOPBACK), htons(AFSCONF_KAUTHPORT),
 			     KA_MAINTENANCE_SERVICE, sc, si);
@@ -1323,7 +1321,7 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 
     /* MyAfterProc() destroys the conn, but just to be sure */
     if (conn) {
-	code = ubik_ClientDestroy(conn);
+	ubik_ClientDestroy(conn);
 	conn = 0;
     }
 
@@ -1412,7 +1410,7 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 		    sprintf(msg, "Administrator's (%s) Password: ", name);
 		else
 		    sprintf(msg, "Password for %s: ", name);
-		code = read_pw_string(passwd, sizeof(passwd), msg, 0);
+		code = UI_UTIL_read_pw_string(passwd, sizeof(passwd), msg, 0);
 		if (code)
 		    code = KAREADPW;
 		else if (strlen(passwd) == 0)
@@ -1427,7 +1425,7 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 		ka_GetAdminToken(name, instance, cell, &key, KA_SIXHOURS,
 				 &token, 0 /* !new */ );
 	    if (code == KABADREQUEST) {
-		des_string_to_key(passwd, ktc_to_cblockptr(&key));
+		DES_string_to_key(passwd, ktc_to_cblockptr(&key));
 		code =
 		    ka_GetAdminToken(name, instance, cell, &key, KA_SIXHOURS,
 				     &token, 0 /* !new */ );
@@ -1518,7 +1516,7 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 
 		    strcpy(msg, p + 1);
 		    strcat(msg, ": ");
-		    code = read_pw_string(password, sizeof(password), msg, 1);
+		    code = UI_UTIL_read_pw_string(password, sizeof(password), msg, 1);
 		    if (code)
 			code = KAREADPW;
 		    else if (strlen(password) == 0)
@@ -1527,10 +1525,9 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 			afs_com_err(whoami, code, "prompting for %s", p + 1);
 			return code;
 		    }
-		    ip = (struct cmd_item *)malloc(sizeof(struct cmd_item));
-		    ip->data = (char *)malloc(strlen(password) + 1);
+		    ip = malloc(sizeof(struct cmd_item));
+		    ip->data = strdup(password);
 		    ip->next = 0;
-		    strcpy(ip->data, password);
 		    as->parms[i].items = ip;
 		}
 	    }
@@ -1672,14 +1669,14 @@ ka_AdminInteractive(int cmd_argc, char *cmd_argv[])
     cmd_SetBeforeProc(MyBeforeProc, NULL);
     cmd_SetAfterProc(MyAfterProc, NULL);
 
-    ts = cmd_CreateSyntax("interactive", Interactive, NULL,
+    ts = cmd_CreateSyntax("interactive", Interactive, NULL, 0,
 			  "enter interactive mode");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("noauthentication", NoAuth, NULL,
-			  "connect to AuthServer w/o using token");
+    cmd_CreateSyntax("noauthentication", NoAuth, NULL, 0,
+		     "connect to AuthServer w/o using token");
 
-    ts = cmd_CreateSyntax("list", ListUsers, NULL,
+    ts = cmd_CreateSyntax("list", ListUsers, NULL, 0,
 			  "list all users in database");
     cmd_AddParm(ts, "-long", CMD_FLAG, CMD_OPTIONAL,
 		"show detailed info about each user");
@@ -1690,26 +1687,26 @@ ka_AdminInteractive(int cmd_argc, char *cmd_argv[])
     add_std_args(ts);
     cmd_CreateAlias(ts, "ls");
 
-    ts = cmd_CreateSyntax("examine", ExamineUser, NULL,
+    ts = cmd_CreateSyntax("examine", ExamineUser, NULL, 0,
 			  "examine the entry for a user");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "name of user");
     cmd_AddParm(ts, "-showkey", CMD_FLAG, CMD_OPTIONAL,
 		"show the user's actual key rather than the checksum");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("create", CreateUser, NULL,
+    ts = cmd_CreateSyntax("create", CreateUser, NULL, 0,
 			  "create an entry for a user");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "name of user");
     cmd_AddParm(ts, "-initial_password", CMD_SINGLE, CMD_OPTIONAL,
 		"initial password");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("delete", DeleteUser, NULL, "delete a user");
+    ts = cmd_CreateSyntax("delete", DeleteUser, NULL, 0, "delete a user");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "name of user");
     add_std_args(ts);
     cmd_CreateAlias(ts, "rm");
 
-    ts = cmd_CreateSyntax("setfields", SetFields, NULL,
+    ts = cmd_CreateSyntax("setfields", SetFields, NULL, 0,
 			  "set various fields in a user's entry");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "name of user");
     cmd_AddParm(ts, "-flags", CMD_SINGLE, CMD_OPTIONAL,
@@ -1734,18 +1731,18 @@ ka_AdminInteractive(int cmd_argc, char *cmd_argv[])
     cmd_CreateAlias(ts, "sf");
 
 
-    ts = cmd_CreateSyntax("unlock", Unlock, NULL,
+    ts = cmd_CreateSyntax("unlock", Unlock, NULL, 0,
 			  "Enable authentication ID after max failed attempts exceeded");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "authentication ID");
     add_std_args(ts);
 
 
-    ts = cmd_CreateSyntax("stringtokey", StringToKey, NULL,
+    ts = cmd_CreateSyntax("stringtokey", StringToKey, NULL, 0,
 			  "convert a string to a key");
     cmd_AddParm(ts, "-string", CMD_SINGLE, 0, "password string");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
 
-    ts = cmd_CreateSyntax("setpassword", SetPassword, NULL,
+    ts = cmd_CreateSyntax("setpassword", SetPassword, NULL, 0,
 			  "set a user's password");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "name of user");
     cmd_AddParm(ts, "-new_password", CMD_SINGLE, CMD_OPTIONAL,
@@ -1758,8 +1755,7 @@ ka_AdminInteractive(int cmd_argc, char *cmd_argv[])
     cmd_CreateAlias(ts, "setpasswd");
 #endif
 
-    /* set a user's key */
-    ts = cmd_CreateSyntax("setkey", SetPassword, NULL, (char *)CMD_HIDDEN);
+    ts = cmd_CreateSyntax("setkey", SetPassword, NULL, CMD_HIDDEN, "set a user's key");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "name of user");
     cmd_Seek(ts, 2);
     cmd_AddParm(ts, "-new_key", CMD_SINGLE, 0, "eight byte new key");
@@ -1767,8 +1763,7 @@ ka_AdminInteractive(int cmd_argc, char *cmd_argv[])
     cmd_AddParm(ts, "-kvno", CMD_SINGLE, CMD_OPTIONAL, "key version number");
     add_std_args(ts);
 
-    /* get a user's password */
-    ts = cmd_CreateSyntax("getpassword", GetPassword, NULL, (char *)CMD_HIDDEN);
+    ts = cmd_CreateSyntax("getpassword", GetPassword, NULL, CMD_HIDDEN, "get a user's password");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "name of user");
     /* don't take standard args */
     /* add_std_args (ts); */
@@ -1776,28 +1771,24 @@ ka_AdminInteractive(int cmd_argc, char *cmd_argv[])
     cmd_CreateAlias(ts, "getpasswd");
 #endif
 
-    /* get a random key */
-    ts = cmd_CreateSyntax("getrandomkey", GetRandomKey, NULL,
-			  (char *)CMD_HIDDEN);
+    ts = cmd_CreateSyntax("getrandomkey", GetRandomKey, NULL, CMD_HIDDEN, "get a random key");
     add_std_args(ts);
 
-    /* get a ticket for a specific server */
-    ts = cmd_CreateSyntax("getticket", GetTicket, NULL, (char *)CMD_HIDDEN);
+    ts = cmd_CreateSyntax("getticket", GetTicket, NULL, CMD_HIDDEN, "get a ticket for a specific server");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "name of server");
     cmd_AddParm(ts, "-lifetime", CMD_SINGLE, CMD_OPTIONAL, "ticket lifetime");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("statistics", Statistics, NULL,
+    ts = cmd_CreateSyntax("statistics", Statistics, NULL, 0,
 			  "show statistics for AuthServer");
     add_std_args(ts);
 
-    /* show debugging info from AuthServer */
-    ts = cmd_CreateSyntax("debuginfo", DebugInfo, NULL, (char *)CMD_HIDDEN);
+    ts = cmd_CreateSyntax("debuginfo", DebugInfo, NULL, CMD_HIDDEN, "show debugging info from AuthServer");
     cmd_AddParm(ts, "-hostname", CMD_SINGLE, CMD_OPTIONAL,
 		"authentication server host name");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("forgetticket", ForgetTicket, NULL,
+    ts = cmd_CreateSyntax("forgetticket", ForgetTicket, NULL, 0,
 			  "delete user's tickets");
 #ifdef notdef
     cmd_AddParm(ts, "-name", CMD_SINGLE, (CMD_OPTIONAL | CMD_HIDE),
@@ -1805,13 +1796,13 @@ ka_AdminInteractive(int cmd_argc, char *cmd_argv[])
 #endif
     cmd_AddParm(ts, "-all", CMD_FLAG, CMD_OPTIONAL, "delete all tickets");
 
-    ts = cmd_CreateSyntax("listtickets", ListTickets, NULL,
+    ts = cmd_CreateSyntax("listtickets", ListTickets, NULL, 0,
 			  "show all cache manager tickets");
     cmd_AddParm(ts, "-name", CMD_SINGLE, CMD_OPTIONAL, "name of server");
     cmd_AddParm(ts, "-long", CMD_FLAG, CMD_OPTIONAL,
 		"show session key and ticket");
 
-    ts = cmd_CreateSyntax("quit", Quit, NULL, "exit program");
+    cmd_CreateSyntax("quit", Quit, NULL, 0, "exit program");
 
     finished = 1;
     conn = 0;			/* no connection yet */

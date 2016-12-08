@@ -15,6 +15,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 
 /*
@@ -31,16 +32,11 @@
 # endif
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include "internal.h"
 
-char *current_token = (char *)NULL;
+char *current_token = NULL;
 extern char *table_name;
 
-char *ds(const char *string);
 char *quote(const char *string);
 void set_table_1num(char *string);
 int char_to_1num(char c);
@@ -71,8 +67,6 @@ typedef
 
 #define YYLTYPE yyltype
 #endif
-
-#include <stdio.h>
 
 #ifndef __cplusplus
 #ifndef __STDC__
@@ -675,7 +669,7 @@ yyparse(YYPARSE_PARAM)
     case 1:
 #line 51 "error_table.y"
 	{
-	    table_name = ds(yyvsp[-2].dynstr);
+	    table_name = strdup(yyvsp[-2].dynstr);
 	    current_token = table_name;
 	    put_ecs();;
 	    break;
@@ -691,7 +685,7 @@ yyparse(YYPARSE_PARAM)
 #line 60 "error_table.y"
 	{
 	    current_token = yyvsp[0].dynstr;
-	    set_table_fun(ds("1"));
+	    set_table_fun(strdup("1"));
 	    yyval.dynstr = yyvsp[0].dynstr;
 	    ;
 	    break;
@@ -733,14 +727,14 @@ yyparse(YYPARSE_PARAM)
     case 10:
 #line 96 "error_table.y"
 	{
-	    yyval.dynstr = ds(yyvsp[0].dynstr);
+	    yyval.dynstr = strdup(yyvsp[0].dynstr);
 	    current_token = yyval.dynstr;;
 	    break;
 	}
     case 11:
 #line 101 "error_table.y"
 	{
-	    yyval.dynstr = ds(yyvsp[0].dynstr);
+	    yyval.dynstr = strdup(yyvsp[0].dynstr);
 	    current_token = yyval.dynstr;;
 	    break;
 	}
@@ -816,7 +810,7 @@ yyparse(YYPARSE_PARAM)
 		 x < (sizeof(yytname) / sizeof(char *)); x++)
 		if (yycheck[x + yyn] == x)
 		    size += strlen(yytname[x]) + 15, count++;
-	    msg = (char *)malloc(size + 15);
+	    msg = malloc(size + 15);
 	    if (msg != 0) {
 		strcpy(msg, "parse error");
 
@@ -941,23 +935,15 @@ yyparse(YYPARSE_PARAM)
  *
  * For copyright info, see mit-sipb-cr.h.
  */
-#ifndef AFS_NT40_ENV
-#include <unistd.h>
-#endif
 #include <afs/param.h>
-#include <string.h>
 #include <assert.h>
 #include <ctype.h>
 #ifdef AFS_NT40_ENV
-#include <sys/types.h>
 #include <afs/afsutil.h>
-#else
-#include <sys/time.h>
 #endif
 #include <sys/timeb.h>
 #include "error_table.h"
 #include "mit-sipb-cr.h"
-#include <stdio.h>
 
 /*
  * Copyright 2000, International Business Machines Corporation and others.
@@ -979,22 +965,13 @@ gensym(const char *x)
     char *symbol;
     if (!gensym_n) {
 	struct timeval tv;
-	gettimeofday(&tv, (void *)0);
+	gettimeofday(&tv, NULL);
 	gensym_n = (tv.tv_sec % 10000) * 100 + tv.tv_usec / 10000;
     }
-    symbol = (char *)malloc(32 * sizeof(char));
+    symbol = malloc(32 * sizeof(char));
     gensym_n++;
     sprintf(symbol, "et%ld", gensym_n);
     return (symbol);
-}
-
-char *
-ds(const char *string)
-{
-    char *rv;
-    rv = (char *)malloc(strlen(string) + 1);
-    strcpy(rv, string);
-    return (rv);
 }
 
 char *
@@ -1010,7 +987,7 @@ quote(const char *string)
 
 afs_int32 table_number = 0;
 int current = 0;
-char **error_codes = (char **)NULL;
+char **error_codes = NULL;
 
 void
 add_ec(const char *name, const char *description)
@@ -1025,14 +1002,13 @@ add_ec(const char *name, const char *description)
     } else if (cfile) {
 	fprintf(cfile, "\t\"%s\",\n", description);
     }
-    if (error_codes == (char **)NULL) {
-	error_codes = (char **)malloc(sizeof(char *));
-	*error_codes = (char *)NULL;
+    if (error_codes == NULL) {
+	error_codes = malloc(sizeof(char *));
+	*error_codes = NULL;
     }
-    error_codes =
-	(char **)realloc((char *)error_codes, (current + 2) * sizeof(char *));
-    error_codes[current++] = ds(name);
-    error_codes[current] = (char *)NULL;
+    error_codes = realloc(error_codes, (current + 2) * sizeof(char *));
+    error_codes[current++] = strdup(name);
+    error_codes[current] = NULL;
 }
 
 void
@@ -1059,14 +1035,13 @@ add_ec_val(const char *name, const char *val, const char *description)
     } else if (cfile) {
 	fprintf(cfile, "\t\"%s\",\n", description);
     }
-    if (error_codes == (char **)NULL) {
-	error_codes = (char **)malloc(sizeof(char *));
-	*error_codes = (char *)NULL;
+    if (error_codes == NULL) {
+	error_codes = malloc(sizeof(char *));
+	*error_codes = NULL;
     }
-    error_codes =
-	(char **)realloc((char *)error_codes, (current + 2) * sizeof(char *));
-    error_codes[current++] = ds(name);
-    error_codes[current] = (char *)NULL;
+    error_codes = realloc(error_codes, (current + 2) * sizeof(char *));
+    error_codes[current++] = strdup(name);
+    error_codes[current] = NULL;
 }
 
 void
@@ -1076,7 +1051,7 @@ put_ecs(void)
     if (!hfile)
         return;
     for (i = 0; i < current; i++) {
-	if (error_codes[i] != (char *)NULL)
+	if (error_codes[i] != NULL)
 	    fprintf(hfile, "#define %-40s (%ldL)\n", error_codes[i],
 		    table_number + i);
     }

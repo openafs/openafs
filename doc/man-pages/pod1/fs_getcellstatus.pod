@@ -47,11 +47,11 @@ The output reports one of the following two values as appropriate:
 
 =head1 EXAMPLES
 
-The following example indicates that programs from the cell C<abc.com> are
+The following example indicates that programs from the cell C<example.com> are
 not allowed to run with setuid permission.
 
-   % fs getcellstatus abc.com
-   Cell abc.com status: no setuid allowed
+   % fs getcellstatus example.com
+   Cell example.com status: no setuid allowed
 
 =head1 PRIVILEGE REQUIRED
 

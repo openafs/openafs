@@ -14,25 +14,15 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-# include <sys/types.h>
-# include <errno.h>
-# include <signal.h>
-# include <string.h>
+#include <afs/opr.h>
+
 #ifdef AFS_NT40_ENV
 # include <WINNT/syscfg.h>
 #else
-# include <sys/socket.h>
-# include <sys/file.h>
-# include <netdb.h>
-# include <sys/stat.h>
-# include <netinet/in.h>
-# include <sys/time.h>
 # include <net/if.h>
-# include <sys/ioctl.h>
-# include <unistd.h>
 #endif
-# include <fcntl.h>
 #if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV)
 # include <sys/syscall.h>
 #endif
@@ -46,19 +36,21 @@
 #define IPPORT_USERRESERVED 5000
 # endif
 
-#if defined(HAVE_LINUX_ERRQUEUE_H) && defined(ADAPT_PMTU)
-#include <linux/types.h>
-#include <linux/errqueue.h>
-#ifndef IP_MTU
-#define IP_MTU 14
-#endif
+#if defined(AFS_LINUX22_ENV) && defined(AFS_RXERRQ_ENV)
+# include <linux/types.h>
+# include <linux/errqueue.h>
+# if defined(AFS_ADAPT_PMTU) && !defined(IP_MTU)
+#  define IP_MTU 14
+# endif
 #endif
 
-#ifndef AFS_NT40_ENV
-# include <sys/time.h>
-#endif
-# include "rx.h"
-# include "rx_globals.h"
+#include "rx.h"
+#include "rx_atomic.h"
+#include "rx_globals.h"
+#include "rx_stats.h"
+#include "rx_peer.h"
+#include "rx_packet.h"
+#include "rx_internal.h"
 
 #ifdef AFS_PTHREAD_ENV
 
@@ -103,12 +95,11 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
     struct sockaddr_in taddr;
     char *name = "rxi_GetUDPSocket: ";
 #ifdef AFS_LINUX22_ENV
-#if defined(ADAPT_PMTU)
-    int pmtu=IP_PMTUDISC_WANT;
-    int recverr=1;
-#else
-    int pmtu=IP_PMTUDISC_DONT;
-#endif
+# if defined(AFS_ADAPT_PMTU)
+    int pmtu = IP_PMTUDISC_WANT;
+# else
+    int pmtu = IP_PMTUDISC_DONT;
+# endif
 #endif
 
 #if !defined(AFS_NT40_ENV)
@@ -141,6 +132,7 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
     taddr.sin_addr.s_addr = ahost;
     taddr.sin_family = AF_INET;
     taddr.sin_port = (u_short) port;
+    memset(&taddr.sin_zero, 0, sizeof(taddr.sin_zero));
 #ifdef STRUCT_SOCKADDR_HAS_SA_LEN
     taddr.sin_len = sizeof(struct sockaddr_in);
 #endif
@@ -201,18 +193,18 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
 	if (!greedy)
 	    (osi_Msg "%s*WARNING* Unable to increase buffering on socket\n",
 	     name);
-        if (rx_stats_active) {
-            MUTEX_ENTER(&rx_stats_mutex);
-            rx_stats.socketGreedy = greedy;
-            MUTEX_EXIT(&rx_stats_mutex);
-        }
+        if (rx_stats_active)
+            rx_atomic_set(&rx_stats.socketGreedy, greedy);
     }
 
 #ifdef AFS_LINUX22_ENV
     setsockopt(socketFd, SOL_IP, IP_MTU_DISCOVER, &pmtu, sizeof(pmtu));
-#if defined(ADAPT_PMTU)
-    setsockopt(socketFd, SOL_IP, IP_RECVERR, &recverr, sizeof(recverr));
 #endif
+#ifdef AFS_RXERRQ_ENV
+    {
+	int recverr = 1;
+	setsockopt(socketFd, SOL_IP, IP_RECVERR, &recverr, sizeof(recverr));
+    }
 #endif
     if (rxi_Listen(socketFd) < 0) {
 	goto error;
@@ -248,7 +240,7 @@ osi_Panic(char *msg, ...)
     va_end(ap);
     fflush(stderr);
     fflush(stdout);
-    afs_abort();
+    opr_abort();
 }
 
 /*
@@ -360,7 +352,7 @@ rx_getAllAddrMaskMtu(afs_uint32 addrBuffer[], afs_uint32 maskBuffer[],
 #endif
 
 #ifdef AFS_NT40_ENV
-extern int rxinit_status;
+extern rx_atomic_t rxinit_status;
 void
 rxi_InitMorePackets(void) {
     int npackets, ncbufs;
@@ -381,7 +373,7 @@ rx_GetIFInfo(void)
 
     LOCK_IF_INIT;
     if (Inited) {
-        if (Inited < 2 && rxinit_status == 0) {
+	if (Inited < 2 && !rx_atomic_test_bit(&rxinit_status, 0)) {
             /* We couldn't initialize more packets earlier.
              * Do it now. */
             rxi_InitMorePackets();
@@ -419,7 +411,7 @@ rx_GetIFInfo(void)
      * and we therefore do not have any mutex locks initialized.  As a
      * result we cannot call rxi_MorePackets() without crashing.
      */
-    if (rxinit_status)
+    if (rx_atomic_test_bit(&rxinit_status, 0))
         return;
 
     rxi_InitMorePackets();
@@ -445,7 +437,7 @@ fudge_netmask(afs_uint32 addr)
 
 
 
-#if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV)
+#if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN160_ENV)
 int
 rxi_syscall(afs_uint32 a3, afs_uint32 a4, void *a5)
 {
@@ -572,7 +564,7 @@ rx_GetIFInfo(void)
 	}
 #endif /* SIOCGIFFLAGS */
 
-#if !defined(AFS_AIX_ENV)  && !defined(AFS_LINUX20_ENV)
+#if !defined(AFS_AIX_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN160_ENV)
 	/* this won't run on an AIX system w/o a cache manager */
 	rxi_syscallp = rxi_syscall;
 #endif
@@ -680,7 +672,7 @@ rxi_InitPeerParams(struct rx_peer *pp)
     afs_uint32 ppaddr;
     u_short rxmtu;
     int ix;
-#if defined(ADAPT_PMTU) && defined(IP_MTU)
+#ifdef AFS_ADAPT_PMTU
     int sock;
     struct sockaddr_in addr;
 #endif
@@ -697,14 +689,12 @@ rxi_InitPeerParams(struct rx_peer *pp)
 	UNLOCK_IF_INIT;
     }
 
-#ifdef ADAPT_MTU
     /* try to second-guess IP, and identify which link is most likely to
      * be used for traffic to/from this host. */
     ppaddr = ntohl(pp->host);
 
     pp->ifMTU = 0;
     rx_rto_setPeerTimeoutSecs(pp, 2);
-    pp->rateFlag = 2;		/* start timing after two full packets */
     /* I don't initialize these, because I presume they are bzero'd...
      * pp->burstSize pp->burst pp->burstWait.sec pp->burstWait.usec
      */
@@ -729,17 +719,13 @@ rxi_InitPeerParams(struct rx_peer *pp)
 	rx_rto_setPeerTimeoutSecs(pp, 3);
 	pp->ifMTU = MIN(rx_MyMaxSendSize, RX_REMOTE_PACKET_SIZE);
     }
-#else /* ADAPT_MTU */
-    pp->rateFlag = 2;		/* start timing after two full packets */
-    rx_rto_setPeerTimeoutSecs(pp, 2);
-    pp->ifMTU = MIN(rx_MyMaxSendSize, OLD_MAX_PACKET_SIZE);
-#endif /* ADAPT_MTU */
-#if defined(ADAPT_PMTU) && defined(IP_MTU)
+#ifdef AFS_ADAPT_PMTU
     sock=socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (sock != OSI_NULLSOCKET) {
         addr.sin_family = AF_INET;
         addr.sin_addr.s_addr = pp->host;
         addr.sin_port = pp->port;
+        memset(&addr.sin_zero, 0, sizeof(addr.sin_zero));
         if (connect(sock, (struct sockaddr *)&addr, sizeof(addr)) == 0) {
             int mtu=0;
             socklen_t s = sizeof(mtu);
@@ -747,11 +733,11 @@ rxi_InitPeerParams(struct rx_peer *pp)
                 pp->ifMTU = MIN(mtu - RX_IPUDP_SIZE, pp->ifMTU);
             }
         }
-#ifdef AFS_NT40_ENV
+# ifdef AFS_NT40_ENV
         closesocket(sock);
-#else
+# else
         close(sock);
-#endif
+# endif
     }
 #endif
     pp->ifMTU = rxi_AdjustIfMTU(pp->ifMTU);
@@ -781,18 +767,21 @@ rx_SetNoJumbo(void)
 
 /* Override max MTU.  If rx_SetNoJumbo is called, it must be
    called before calling rx_SetMaxMTU since SetNoJumbo clobbers rx_maxReceiveSize */
-void
+int
 rx_SetMaxMTU(int mtu)
 {
+    if (mtu < RX_MIN_PACKET_SIZE || mtu > RX_MAX_PACKET_DATA_SIZE)
+	return EINVAL;
+
     rx_MyMaxSendSize = rx_maxReceiveSizeUser = rx_maxReceiveSize = mtu;
+
+    return 0;
 }
 
-#if defined(ADAPT_PMTU)
+#ifdef AFS_RXERRQ_ENV
 int
 rxi_HandleSocketError(int socket)
 {
-    int ret=0;
-#if defined(HAVE_LINUX_ERRQUEUE_H)
     struct msghdr msg;
     struct cmsghdr *cmsg;
     struct sock_extended_err *err;
@@ -810,31 +799,15 @@ rxi_HandleSocketError(int socket)
     code = recvmsg(socket, &msg, MSG_ERRQUEUE|MSG_DONTWAIT|MSG_TRUNC);
 
     if (code < 0 || !(msg.msg_flags & MSG_ERRQUEUE))
-        goto out;
+        return 0;
 
     for (cmsg = CMSG_FIRSTHDR(&msg); cmsg; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
-       if ((char *)cmsg - controlmsgbuf > msg.msg_controllen - CMSG_SPACE(0) ||
-           (char *)cmsg - controlmsgbuf > msg.msg_controllen - CMSG_SPACE(cmsg->cmsg_len) ||
-	   cmsg->cmsg_len == 0) {
-	   cmsg = 0;
-           break;
+	if (cmsg->cmsg_level == SOL_IP && cmsg->cmsg_type == IP_RECVERR) {
+	    err = (struct sock_extended_err *)CMSG_DATA(cmsg);
+	    rxi_ProcessNetError(err, addr.sin_addr.s_addr, addr.sin_port);
 	}
-        if (cmsg->cmsg_level == SOL_IP && cmsg->cmsg_type == IP_RECVERR)
-            break;
     }
-    if (!cmsg)
-        goto out;
-    ret=1;
-    err =(struct sock_extended_err *) CMSG_DATA(cmsg);
 
-    if (err->ee_errno == EMSGSIZE && err->ee_info >= 68) {
-	rxi_SetPeerMtu(NULL, addr.sin_addr.s_addr, addr.sin_port,
-                       err->ee_info - RX_IPUDP_SIZE);
-    }
-    /* other DEST_UNREACH's and TIME_EXCEEDED should be dealt with too */
-
-out:
-#endif
-    return ret;
+    return 1;
 }
 #endif

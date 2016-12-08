@@ -8,10 +8,11 @@ vldb_check - Checks the integrity of the VLDB
 <div class="synopsis">
 
 B<vldb_check> S<<< B<-database> <I<vldb file>> >>> [B<-uheader>] [B<-vheader>]
-    [B<-servers>] [B<-entries>] [B<-quiet> | B<-verbose>] [B<-help>]
+    [B<-servers>] [B<-entries>] [B<-quiet> | B<-verbose>] [B<-fix>]
+    [B<-help>]
 
 B<vldb_check> S<<< B<-d> <I<vldb file>> >>> [B<-u>] [B<-vh>] [B<-s>] [B<-e>]
-    [B<-ve>] [B<-h>]
+    [B<-ve>] [B<-f>] [B<-h>]
 
 =for html
 </div>
@@ -69,6 +70,14 @@ be used with -verbose, -uheader, -servers or -entries.
 
 Reports additional information about the database, including the number of
 entries for each type of volume. Cannot be used with -quiet.
+
+=item B<-fix>
+
+Try to fix errors in the database. If this option is given, B<vldb_check> will
+open the given database file read-write, and will update the database file
+in-place. It is recommended that you backup the database file before running
+with this option, in case B<vldb_check> removes data in order to fix the
+database.
 
 =item B<-help>
 

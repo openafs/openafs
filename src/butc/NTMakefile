@@ -42,7 +42,6 @@ EXELIBS =\
         $(DESTDIR)\lib\afsubik.lib \
         $(DESTDIR)\lib\afs\afsauth.lib \
         $(DESTDIR)\lib\afsrxkad.lib \
-        $(DESTDIR)\lib\afsdes.lib \
         $(DESTDIR)\lib\afsrx.lib \
         $(DESTDIR)\lib\afslwp.lib \
         $(DESTDIR)\lib\afs\afscmd.lib \
@@ -53,7 +52,11 @@ EXELIBS =\
 	$(DESTDIR)\lib\afs\afspioctl.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
-	$(DESTDIR)\lib\libafsconf.lib
+	$(DESTDIR)\lib\libafsconf.lib \
+	$(DESTDIR)\lib\opr.lib \
+	$(DESTDIR)\lib\afshcrypto.lib \
+	$(DESTDIR)\lib\afsroken.lib \
+	$(DESTDIR)\lib\afsrfc3961.lib
 
 $(EXERES): butc.rc AFS_component_version_number.h
 
@@ -87,4 +90,4 @@ $(OUT)\butc_test.exe: $(OUT)\test.obj
         $(SYMSTORE_IMPORT)
 
 mkdir:
-	
+

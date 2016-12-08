@@ -84,10 +84,10 @@ ignored.
 
 =head1 EXAMPLES
 
-The following command enables executable files from the State University
+The following command enables executable files from the Example Organization
 cell to run with setuid privilege on the local machine:
 
-   % fs setcell -cell stateu.edu -suid
+   % fs setcell -cell example.org -suid
 
 =head1 PRIVILEGE REQUIRED
 

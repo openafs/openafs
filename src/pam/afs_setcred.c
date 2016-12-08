@@ -10,20 +10,16 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#include <syslog.h>
-#include <stdlib.h>
-#include <string.h>
-#include <pwd.h>
-#include <unistd.h>
-#include <errno.h>
+#include <roken.h>
 
 #include <security/pam_appl.h>
 #include <security/pam_modules.h>
 
-
-#include <sys/param.h>
+#include <afs/sys_prototypes.h>
 #include <afs/kautils.h>
+
 #include "afs_message.h"
+#include "afs_pam_msg.h"
 #include "afs_util.h"
 
 
@@ -31,7 +27,7 @@
 #define RET(x) { retcode = (x); goto out; }
 
 #if defined(AFS_KERBEROS_ENV)
-extern char *ktc_tkt_string();
+extern char *ktc_tkt_string(void);
 #endif
 
 extern int
@@ -44,9 +40,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
     int nowarn = 0;
     int use_first_pass = 1;	/* use the password passed in by auth */
     int try_first_pass = 0;
-    int got_authtok = 0;
     int ignore_uid = 0;
-    int no_unlog = 0;
     uid_t ignore_uid_id = 0;
     int refresh_token = 0;
     int set_expires = 0;	/* the default is to not to set the env variable */
@@ -58,15 +52,17 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
     char sbuffer[100];
     char *torch_password = NULL;
     int auth_ok = 0;
-    char *lh;
     PAM_CONST char *user = NULL;
     const char *password = NULL;
     int password_expires = -1;
     char *reason = NULL;
-    struct passwd unix_pwd, *upwd = NULL;
-    char upwd_buf[2048];	/* size is a guess. */
+    struct passwd *upwd = NULL;
+#if !(defined(AFS_LINUX20_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV) || defined(AFS_NBSD_ENV))
+    char upwd_buf[2048];       /* size is a guess. */
+    struct passwd unix_pwd;
+#endif
 
-#ifndef AFS_SUN56_ENV
+#ifndef AFS_SUN5_ENV
     openlog(pam_afs_ident, LOG_CONS, LOG_AUTH);
 #endif
     origmask = setlogmask(logmask);
@@ -95,8 +91,8 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 		ignore_uid = 0;
 	    } else {
 		ignore_uid = 1;
-		ignore_uid_id = (uid_t) strtol(argv[i], (char **)NULL, 10);
-		if ((0 > ignore_uid_id) || (ignore_uid_id > IGNORE_MAX)) {
+		ignore_uid_id = (uid_t) strtol(argv[i], NULL, 10);
+		if (ignore_uid_id > IGNORE_MAX) {
 		    ignore_uid = 0;
 		    pam_afs_syslog(LOG_ERR, PAMAFS_IGNOREUID, argv[i]);
 		}
@@ -111,7 +107,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 		pam_afs_syslog(LOG_INFO, PAMAFS_OTHERCELL, cell_ptr);
 	    }
 	} else if (strcasecmp(argv[i], "no_unlog") == 0) {
-	    no_unlog = 1;
+	    ;
 	} else if (strcasecmp(argv[i], "refresh_token") == 0) {
 	    refresh_token = 1;
 	} else if (strcasecmp(argv[i], "set_token") == 0) {
@@ -130,13 +126,13 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
     if (use_first_pass)
 	try_first_pass = 0;
 
-    if (logmask && LOG_MASK(LOG_DEBUG))
+    if (logmask & LOG_MASK(LOG_DEBUG))
 	pam_afs_syslog(LOG_DEBUG, PAMAFS_OPTIONS, nowarn, use_first_pass,
 		       try_first_pass, ignore_uid, ignore_uid_id, 8, 8, 8, 8);
     /* Try to get the user-interaction info, if available. */
     errcode = pam_get_item(pamh, PAM_CONV, (PAM_CONST void **)&pam_convp);
     if (errcode != PAM_SUCCESS) {
-	if (logmask && LOG_MASK(LOG_DEBUG))
+	if (logmask & LOG_MASK(LOG_DEBUG))
 	    pam_afs_syslog(LOG_DEBUG, PAMAFS_NO_USER_INT);
 	pam_convp = NULL;
     }
@@ -156,8 +152,8 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
     /* enhanced: use "ignore_uid <number>" to specify the largest uid
      * which should be ignored by this module
      */
-#if	defined(AFS_HPUX_ENV) || defined(AFS_DARWIN100_ENV) || defined(AFS_SUN58_ENV)
-#if     defined(AFS_HPUX110_ENV) || defined(AFS_DARWIN100_ENV) || defined(AFS_SUN58_ENV)
+#if	defined(AFS_HPUX_ENV) || defined(AFS_DARWIN100_ENV) || defined(AFS_SUN5_ENV)
+#if     defined(AFS_HPUX110_ENV) || defined(AFS_DARWIN100_ENV) || defined(AFS_SUN5_ENV)
     i = getpwnam_r(user, &unix_pwd, upwd_buf, sizeof(upwd_buf), &upwd);
 #else /* AFS_HPUX110_ENV */
     i = getpwnam_r(user, &unix_pwd, upwd_buf, sizeof(upwd_buf));
@@ -181,19 +177,19 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 #endif
 
     if (flags & PAM_DELETE_CRED) {
-	if (logmask && LOG_MASK(LOG_DEBUG))
+	if (logmask & LOG_MASK(LOG_DEBUG))
 	    pam_afs_syslog(LOG_DEBUG, PAMAFS_DELCRED, user);
 
 	RET(PAM_SUCCESS);
     } else if (flags & PAM_REINITIALIZE_CRED) {
 
-	if (logmask && LOG_MASK(LOG_DEBUG))
+	if (logmask & LOG_MASK(LOG_DEBUG))
 	    pam_afs_syslog(LOG_DEBUG, PAMAFS_REINITCRED, user);
 	RET(PAM_SUCCESS);
 
     } else {			/* flags are PAM_REFRESH_CRED, PAM_ESTABLISH_CRED, unknown */
 
-	if (logmask && LOG_MASK(LOG_DEBUG))
+	if (logmask & LOG_MASK(LOG_DEBUG))
 	    pam_afs_syslog(LOG_DEBUG, PAMAFS_ESTABCRED, user);
 
 	errcode = pam_get_data(pamh, pam_afs_lh, (const void **)&password);
@@ -203,23 +199,21 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 		RET(PAM_AUTH_ERR);
 	    }
 	    password = NULL;	/* In case it isn't already NULL */
-	    if (logmask && LOG_MASK(LOG_DEBUG))
+	    if (logmask & LOG_MASK(LOG_DEBUG))
 		pam_afs_syslog(LOG_DEBUG, PAMAFS_NOFIRSTPASS, user);
 	} else if (password[0] == '\0') {
 	    /* Actually we *did* get one but it was empty. */
-	    got_authtok = 1;
 	    /* So don't use it. */
 	    password = NULL;
 	    if (use_first_pass) {
 		pam_afs_syslog(LOG_ERR, PAMAFS_PASSWD_REQ, user);
 		RET(PAM_NEW_AUTHTOK_REQD);
 	    }
-	    if (logmask && LOG_MASK(LOG_DEBUG))
+	    if (logmask & LOG_MASK(LOG_DEBUG))
 		pam_afs_syslog(LOG_DEBUG, PAMAFS_NILPASSWORD, user);
 	} else {
-	    if (logmask && LOG_MASK(LOG_DEBUG))
+	    if (logmask & LOG_MASK(LOG_DEBUG))
 		pam_afs_syslog(LOG_DEBUG, PAMAFS_GOTPASS, user);
-	    got_authtok = 1;
 	}
 	if (!(use_first_pass || try_first_pass)) {
 	    password = NULL;
@@ -246,7 +240,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 		RET(PAM_AUTH_ERR);
 	    }
 	    if (prompt_password[0] == '\0') {
-		if (logmask && LOG_MASK(LOG_DEBUG))
+		if (logmask & LOG_MASK(LOG_DEBUG))
 		    pam_afs_syslog(LOG_DEBUG, PAMAFS_NILPASSWORD);
 		RET(PAM_NEW_AUTHTOK_REQD);
 	    }
@@ -269,7 +263,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	 * pam_sm_authenticate() or if it was destroyed by the application
 	 */
 	if ((!refresh_token) && (getPAG() == -1)) {
-	    if (logmask && LOG_MASK(LOG_DEBUG))
+	    if (logmask & LOG_MASK(LOG_DEBUG))
 		syslog(LOG_DEBUG, "New PAG created in pam_setcred()");
 	    setpag();
 #ifdef AFS_KERBEROS_ENV
@@ -358,7 +352,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
     if (password && torch_password)
 	memset(torch_password, 0, strlen(torch_password));
     (void)setlogmask(origmask);
-#ifndef AFS_SUN56_ENV
+#ifndef AFS_SUN5_ENV
     closelog();
 #endif
     return retcode;

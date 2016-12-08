@@ -9,11 +9,6 @@ srcdir=@srcdir@
 
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-<linux24 linux_24 linux22 linux_22 linux20 linux_20>
-# Override for Linux 2.4 and older
-MKAFS_OSTYPE=LINUX24
-<all>
-
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -25,6 +20,7 @@ AFS_OS_CLEAN = .makelog
 AFS_OS_OBJS = \
 	osi_alloc.o \
 	osi_cred.o \
+	osi_crypto.o \
 	osi_gcpags.o \
 	osi_groups.o \
 	osi_inode.o \
@@ -40,22 +36,19 @@ AFS_OS_OBJS = \
 	osi_vm.o \
 <ppc64_linux26>
 	osi_flush.o \
-<linux26 linux_26>
+<all>
 	osi_export.o \
 	osi_nfssrv.o \
-<linux24 linux_24 linux26 linux_26>
 	osi_ioctl.o \
 	osi_proc.o \
-<all>
 	osi_vnodeops.o \
-<linux26 linux_26>
 	osi_pagecopy.o \
 	osi_fetchstore.o
-<all>
 
 AFS_OS_PAGOBJS = \
 	osi_alloc.o \
 	osi_cred.o \
+	osi_crypto.o \
 	osi_gcpags.o \
 	osi_groups.o \
 	osi_inode.o \
@@ -65,9 +58,8 @@ AFS_OS_PAGOBJS = \
 	osi_syscall.o \
 <ppc64_linux26>
 	osi_flush.o \
-<linux24 linux_24 linux26 linux_26>
-	osi_ioctl.o \
 <all>
+	osi_ioctl.o \
 	osi_pag_module.o 
 
 AFS_OS_NFSOBJS =
@@ -81,6 +73,43 @@ COMMON_DEFINES=-D__KERNEL__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
 LINUX_KERNEL_PATH=@LINUX_KERNEL_PATH@
 LINUX_KERNEL_BUILD=@LINUX_KERNEL_BUILD@
 
+CFLAGS_fcrypt.o = -I${TOP_SRCDIR}/rxkad -I$(TOP_OBJDIR)/src/rxkad
+CFLAGS_crypt_conn.o = -I${TOP_SRCDIR}/rxkad -I$(TOP_OBJDIR)/src/rxkad
+CFLAGS_rxkad_client.o = -I${TOP_SRCDIR}/rxkad -I$(TOP_OBJDIR)/src/rxkad
+CFLAGS_rxkad_common.o = -I${TOP_SRCDIR}/rxkad -I$(TOP_OBJDIR)/src/rxkad
+CFLAGS_opr_rbtree.o = -I${TOP_SRCDIR}/opr
+
+CFLAGS_evp.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto \
+	       -DHAVE_CONFIG_H
+CFLAGS_evp-algs.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
+CFLAGS_evp-kernel.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
+CFLAGS_rand-fortuna-kernel.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
+CFLAGS_rand-timer-kernel.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
+CFLAGS_rand-kernel.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
+CFLAGS_aes.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
+CFLAGS_rijndael-alg-fst.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto \
+			    -DNO_CONFIG_H
+CFLAGS_sha.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
+CFLAGS_sha256-kernel.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
+CFLAGS_md5.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
+CFLAGS_random.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
+
+RFC3961_INCLUDES = -I$(TOP_SRCDIR)/crypto/rfc3961 \
+		   -I$(TOP_SRCDIR)/external/heimdal/krb5
+
+CFLAGS_crypto.o = $(RFC3961_INCLUDES)
+CFLAGS_crypto-aes.o = $(RFC3961_INCLUDES)
+CFLAGS_crypto-context.o = $(RFC3961_INCLUDES)
+CFLAGS_crypto-copy.o = $(RFC3961_INCLUDES)
+CFLAGS_crypto-ct.o = $(RFC3961_INCLUDES)
+CFLAGS_crypto-evp.o = $(RFC3961_INCLUDES)
+CFLAGS_crypto-data.o = $(RFC3961_INCLUDES)
+CFLAGS_crypto-keyblock.o = $(RFC3961_INCLUDES)
+CFLAGS_crypto-store-int.o = $(RFC3961_INCLUDES)
+CFLAGS_crypto-random.o = $(RFC3961_INCLUDES)
+CFLAGS_crypto-algs.o = $(RFC3961_INCLUDES)
+CFLAGS_n-fold.o = $(RFC3961_INCLUDES)
+
 # System specific build commands and flags
 <linux26 linux_26>
 # All the platform-specific and kernel-related things are provided by
@@ -91,58 +120,8 @@ DEFINES = $(COMMON_DEFINES)
 # CFLAGS_* and AFLAGS_* will be copied into the kbuild makefile
 CFLAGS_afs_pag_user.o = -DAFS_PAG_MANAGER
 
-<i386_linux22 i386_linux24>
-CCFLAGS = $(COMMON_KERN_CFLAGS) @P5PLUS_KOPTS@
-DEFINES = $(COMMON_DEFINES) -DCPU=586
-
-<amd64_linux22 amd64_linux24>
-CCFLAGS = $(COMMON_KERN_CFLAGS) -mcmodel=kernel -mno-red-zone
-DEFINES = $(COMMON_DEFINES) 
-
-<i386_umlinux22 i386_umlinux24>
-CCFLAGS = $(COMMON_KERN_CFLAGS) @P5PLUS_KOPTS@ -Wno-strict-prototypes -I$(LINUX_KERNEL_PATH)/arch/um/include -I$(LINUX_KERNEL_PATH)/arch/um/kernel/tt/include -I$(LINUX_KERNEL_PATH)/arch/um/kernel/skas/include
-DEFINES = $(COMMON_DEFINES) -DCPU=586
-
 <i386_umlinux26>
 EXTRA_CFLAGS = -I$(LINUX_KERNEL_PATH)/arch/um/include -I$(LINUX_KERNEL_PATH)/arch/um/kernel/tt/include -I$(LINUX_KERNEL_PATH)/arch/um/kernel/skas/include
-
-<alpha_linux_22 alpha_linux_24>
-CCFLAGS = $(COMMON_KERN_CFLAGS) -mno-fp-regs -ffixed-8
-DEFINES = $(COMMON_DEFINES)
-
-<s390_linux22 s390_linux24>
-CCFLAGS = $(COMMON_KERN_CFLAGS) -fsigned-char
-DEFINES = $(COMMON_DEFINES) -D__s390__ 
-
-<s390x_linux22 s390x_linux24>
-CCFLAGS = $(COMMON_KERN_CFLAGS) -fsigned-char
-DEFINES = $(COMMON_DEFINES) -D__s390x__ 
-
-<sparc_linux22 sparc_linux24>
-LD = ld -m elf32_sparc
-CCFLAGS = $(COMMON_KERN_CFLAGS) -mcpu=v8 -mno-fpu -fcall-used-g5 -fcall-used-g7
-DEFINES = $(COMMON_DEFINES) -DCPU=sparc
-
-<sparc64_linux22 sparc64_linux24>
-CC = sparc64-linux-gcc
-LD = ld -m elf64_sparc
-CCFLAGS = $(COMMON_KERN_CFLAGS) \
-      -mcpu=ultrasparc -m64 -mno-fpu -mcmodel=medlow -ffixed-g4 -fcall-used-g5 -fcall-used-g7 -Wno-sign-compare
-DEFINES = $(COMMON_DEFINES) -DCPU=sparc64
-
-<ppc_linux22 ppc_linux24 ppc64_linux22 ppc64_linux24>
-CCFLAGS = $(COMMON_KERN_CFLAGS) -fsigned-char -msoft-float -fno-builtin -ffixed-r2
-DEFINES = $(COMMON_DEFINES) -D__powerpc__
-
-<parisc_linux24>
-CCFLAGS = $(COMMON_KERN_CFLAGS) -fsigned-char -mno-space-regs \
-      -mfast-indirect-calls -mdisable-fpregs -ffunction-sections \
-      -march=1.1 -mschedule=7100
-DEFINES = $(COMMON_DEFINES) -D__linux__
-
-<ia64_linux24>
-CCFLAGS = $(COMMON_KERN_CFLAGS) -ffixed-r13 -mfixed-range=f10-f15,f32-f127 -falign-functions=32 -mb-step
-DEFINES = $(COMMON_DEFINES)
 
 <all>
 INCLUDES = -I. -I../ -I${TOP_OBJDIR}/src/config \
@@ -228,30 +207,30 @@ ${COMPDIRS}: setup
 	$(RM) -f asm-generic
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-generic asm-generic
 	$(RM) -f asm
-<parisc_linux22 parisc_linux24 parisc_linux26>
+<parisc_linux26>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-parisc asm
-<alpha_linux_22 alpha_linux_24 alpha_linux_26>
+<alpha_linux_26>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-alpha asm
-<i386_linux22 i386_linux24 i386_linux26>
+<i386_linux26>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-i386 asm
-<i386_umlinux22 i386_umlinux24 i386_umlinux26>
+<i386_umlinux26>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-um asm
 	ln -fs ${LINUX_KERNEL_PATH}/arch/um/include/sysdep
-<amd64_linux24 amd64_linux26>
+<amd64_linux26>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-x86_64 asm
-<s390_linux22 s390_linux24 s390_linux26>
+<s390_linux26>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-s390 asm
-<s390x_linux22 s390x_linux24 s390x_linux26>
+<s390x_linux26>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-s390x asm
-<ppc_linux22 ppc_linux24 ppc_linux26>
+<ppc_linux26>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-ppc asm 
-<ppc64_linux24 ppc64_linux26>
+<ppc64_linux26>
 	ln -s ${LINUX_KERNEL_PATH}/include/asm-ppc64 asm 
-<sparc_linux22 sparc_linux24 sparc_linux26>
+<sparc_linux26>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-sparc asm
-<sparc64_linux22 sparc64_linux24 sparc64_linux26>
+<sparc64_linux26>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-sparc64 asm
-<ia64_linux24 ia64_linux26>
+<ia64_linux26>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-ia64 asm
 <all>
 	if [ "${LINUX_KERNEL_PACKAGING}" ] ; then \

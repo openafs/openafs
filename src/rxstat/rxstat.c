@@ -10,14 +10,15 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#ifndef KERNEL
+#include <roken.h>
+#endif
 
 #include <afs/stds.h>
 #include <rx/rx.h>
 #include <rx/rxstat.h>
 #if defined(KERNEL) && !defined(UKERNEL)
 #include "sys/errno.h"
-#else /* KERNEL && !UKERNEL */
-#include <errno.h>
 #endif /* KERNEL && !UKERNEL */
 
 /*

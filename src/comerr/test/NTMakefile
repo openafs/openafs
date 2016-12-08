@@ -17,19 +17,19 @@ EXELIBS =\
 	$(DESTDIR)\lib\afs\afscom_err.lib
 
 $(EXEFILE): $(EXEOBJS)  # dependents built from predefined inference rules
-	$(EXECONLINK) $(EXELIBS) 
+	$(EXECONLINK) $(EXELIBS)
         $(_VC_MANIFEST_EMBED_EXE)
-	$(EXEPREP) 
+	$(EXEPREP)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 
-test1.c test1.h: test1.et 
+test1.c test1.h: test1.et
 	$(DEL) test1.c test1.h
 	$(COMPILE_ET) test1
 
-test2.c test2.h: test2.et 
+test2.c test2.h: test2.et
 	$(DEL) test2.c test2.h
-	$(COMPILE_ET) test2 
+	$(COMPILE_ET) test2
 
 tests: $(EXEFILE)
 
@@ -38,4 +38,4 @@ clean::
 
 
 mkdir:
-	
+
