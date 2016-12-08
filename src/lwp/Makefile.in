@@ -74,14 +74,6 @@ process.o	: process.default.s process.i386.s process.amd64.s process.c lwp.o
 		cp ${srcdir}/process.default.s process.s ; \
 		$(CCOBJ) ${LWP_DBG} ${LWP_OPTMZ} -c ${XCFLAGS} ${ARCHFLAGS} -I${TOP_INCDIR} -KPIC -G0  process.s; \
 		$(RM) -f process.s ;;\
-	s390_*) \
-		$(PATH_CPP) -P -I${TOP_INCDIR} ${srcdir}/process.s390.s >process.s; \
-		${AS} -ahlns process.s -o process.o >process.lst; \
-		$(RM) process.s ;; \
-	s390x_*) \
-		$(PATH_CPP) -P -I${TOP_INCDIR} ${srcdir}/process.s390x.s >process.s; \
-		${AS} -ahlns process.s -o process.o >process.lst; \
-		$(RM) process.s ;; \
 	*_darwin* ) \
 		$(RM) -f process.o ; \
 		CURRENTBUILDARCH="${ARCHFLAGS}"; \
