@@ -1,0 +1,6 @@
+libkopenafs.so.2 libkopenafs2 #MINVER#
+ k_hasafs@Base 1.8.0~pre1
+ k_haspag@Base 1.8.0~pre1
+ k_pioctl@Base 1.8.0~pre1
+ k_setpag@Base 1.8.0~pre1
+ k_unlog@Base 1.8.0~pre1
