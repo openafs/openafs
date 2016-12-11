@@ -14,10 +14,6 @@ update-alternatives --install /usr/bin/pagsh pagsh \
     /usr/bin/pagsh.openafs 100  \
     --slave /usr/share/man/man1/pagsh.1.gz pagsh.1.gz \
     /usr/share/man/man1/pagsh.openafs.1.gz
-update-alternatives --install /usr/bin/klog klog \
-    /usr/bin/klog.afs 10 \
-    --slave /usr/share/man/man1/klog.1.gz klog.1.gz \
-    /usr/share/man/man1/klog.afs.1.gz
 
 # Set the local cell.  If ThisCell already exists, the config script will have
 # set the debconf database parameter accordingly.
