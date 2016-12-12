@@ -1,4 +1,26 @@
                        User-Visible OpenAFS Changes
+
+OpenAFS 1.6.20.1
+
+  All platforms
+
+    * Build fixes required by recent compilers (12482..12484)
+
+  Linux clients
+
+    * Support for mainline kernel 4.9 and distribution kernels with
+      backports from it (12478..12480)
+
+    * In Red Hat packaging, make systemd deal correctly with the client
+      when no userland processes remain after starting it (12481)
+      (RT #133482)
+
+  macOS
+
+    * Support for release 10.12 "Sierra" (12431 12432)
+
+    * Avoid a crash in the Mounts tab of the OpenAFS preference pane (12447)
+
 OpenAFS 1.6.20 (Security Release)
 
   All platforms
