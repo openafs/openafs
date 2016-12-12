@@ -1,6 +1,22 @@
 openafs (1.8.0~pre1-1) UNRELEASED; urgency=low
 
-  * New upstream major release
+  * New upstream major release:
+    - Servers no longer use rxkad.keytab for long-term keys, which are
+      now stored in KeyFileExt.  Administrators must use akeyconvert
+      or similar tooling to populate the KeyFileExt.  In most cases,
+      `akeyconvert` with no arguments will suffice.
+    - kaserver, klog.afs, pam-openafs-kaserver, and other kauth-related
+      tools are removed.
+    - Server log handling has changed.  Logs are not truncated at
+      startup by default, and are re-opened on SIGUSR1, to be compatible
+      with external log rotation tools.
+    - Client time management support (afsd -settime and afsd -nosettime)
+      has been removed.
+    - Linux versions prior to 2.6 are no longer supported by the client.
+    - Most binaries now use pthreads instead of LWP green threads.
+    - The fileserver ihandle fsync thread is removed.
+    - Many other generic improvements throughout the tree; consult the
+      upstream changelog for details.
 
  -- Benjamin Kaduk <kaduk@mit.edu>  Thu, 08 Dec 2016 14:55:15 -0500
 
