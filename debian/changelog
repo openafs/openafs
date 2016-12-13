@@ -1,4 +1,4 @@
-openafs (1.8.0~pre1-1) experimental; urgency=low
+openafs (1.8.0~pre1-1) UNRELEASED; urgency=low
 
   * New upstream major release:
     - Servers no longer use rxkad.keytab for long-term keys, which are
@@ -18,7 +18,7 @@ openafs (1.8.0~pre1-1) experimental; urgency=low
     - Many other generic improvements throughout the tree; consult the
       upstream changelog for details.
 
- -- Benjamin Kaduk <kaduk@mit.edu>  Tue, 13 Dec 2016 01:15:32 -0500
+ -- Benjamin Kaduk <kaduk@mit.edu>  Thu, 08 Dec 2016 14:55:15 -0500
 
 openafs (1.6.20-2) unstable; urgency=medium
 
