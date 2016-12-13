@@ -1,4 +1,4 @@
-openafs (1.8.0~pre1-1) UNRELEASED; urgency=low
+openafs (1.8.0~pre1-1) experimental; urgency=low
 
   * Servers no longer use rxkad.keytab for long-term keys, which are
     now stored in KeyFileExt.  Administrators must use akeyconvert
@@ -8,7 +8,7 @@ openafs (1.8.0~pre1-1) UNRELEASED; urgency=low
     startup by default, and are re-opened on SIGUSR1, to be compatible
     with external log rotation tools.
 
- -- Benjamin Kaduk <kaduk@mit.edu>  Thu, 08 Dec 2016 14:55:15 -0500
+ -- Benjamin Kaduk <kaduk@mit.edu>  Tue, 13 Dec 2016 01:49:46 -0500
 
 openafs (1.6.5-1) unstable; urgency=high
 
