@@ -1,0 +1,60 @@
+From d0ce961499d72768168a98c9321c80943b9a3c75 Mon Sep 17 00:00:00 2001
+From: Anders Kaseorg <andersk@mit.edu>
+Date: Wed, 14 Dec 2016 17:52:35 -0500
+Subject: opr: ExitHandler: re-raise the signal instead of exiting with that
+ code
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+This fixes a ‘make check’ failure introduced by commit
+803d15b6aa1e65b259ba11ca30aa1afd2e12accb “vlserver: convert the vlserver
+to opr softsig”:
+
+    $ make check
+    …
+    volser/vos..............FAILED 6
+    …
+    $ cd tests
+    $ ./libwrap ../lib ./runtests -o volser/vos
+    1..6
+    ok 1 - Successfully got security class
+    ok 2 - Successfully built ubik client structure
+    ok 3 - First address registration succeeds
+    ok 4 - Second address registration succeeds
+    ok 5 - vos output matches
+    Server exited with code 15
+    # wanted: 0
+    #   seen: -1
+    not ok 6 - Server exited cleanly
+    # Looks like you failed 1 test of 6
+
+afstest_StopServer has a check for the process terminating with signal
+15 (SIGTERM), but not for the process exiting with code 15.
+
+Change-Id: I022965ea2b5440486ea1cf562551d3bbd0516104
+---
+ src/opr/softsig.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/src/opr/softsig.c b/src/opr/softsig.c
+index 4a210ad65..469bd43e1 100644
+--- a/src/opr/softsig.c
++++ b/src/opr/softsig.c
+@@ -82,6 +82,13 @@ signalHandler(void *arg)
+ static void
+ ExitHandler(int signal)
+ {
++    sigset_t set;
++    sigemptyset(&set);
++    sigaddset(&set, signal);
++    pthread_sigmask(SIG_UNBLOCK, &set, NULL);
++    raise(signal);
++
++    /* Should be unreachable. */
+     exit(signal);
+ }
+ 
+-- 
+2.11.0
+

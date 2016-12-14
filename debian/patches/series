@@ -1,3 +1,5 @@
 0003-Add-dummy-exit-command-for-afsd-to-do-nothing.patch
 0002-AFS_component_version_number.c-Respect-SOURCE_DATE_E.patch
 0003-Catch-up-to-roken-s-rename-of-base64-symbols.patch
+tests-opr-softsig-t-Avoid-hanging-due-to-intermediat.patch
+opr-ExitHandler-re-raise-the-signal-instead-of-exiti.patch
