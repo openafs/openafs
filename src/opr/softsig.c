@@ -82,6 +82,13 @@ signalHandler(void *arg)
 static void
 ExitHandler(int signal)
 {
+    sigset_t set;
+    sigemptyset(&set);
+    sigaddset(&set, signal);
+    pthread_sigmask(SIG_UNBLOCK, &set, NULL);
+    raise(signal);
+
+    /* Should be unreachable. */
     exit(signal);
 }
 
