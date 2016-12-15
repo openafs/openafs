@@ -1,6 +1,7 @@
 #!/usr/bin/make -f
 
 # Tell Autoconf the correct system types.
+DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
 DEB_HOST_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 DEB_BUILD_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 ifeq ($(DEB_BUILD_GNU_TYPE),$(DEB_HOST_GNU_TYPE))
@@ -106,11 +107,11 @@ override_dh_auto_configure:
 	    --with-docbook2pdf=dblatex --with-xslt-processor=xsltproc	   \
 	    --with-html-xsl=$(HTML_XSL)					   \
 	    --with-krb5-include=/usr/include/mit-krb5			   \
-	    --with-krb5-lib=/usr/lib/x86_64-linux-gnu/mit-krb5		   \
+	    --with-krb5-lib=/usr/lib/$(DEB_HOST_MULTIARCH)/mit-krb5	   \
 	    --with-roken-include=/usr/include/heimdal			   \
-	    --with-roken-lib=/usr/lib/x86_64-linux-gnu/heimdal		   \
+	    --with-roken-lib=/usr/lib/$(DEB_HOST_MULTIARCH)/heimdal	   \
 	    --with-hcrypto-include=/usr/include/heimdal			   \
-	    --with-hcrypto-lib=/usr/lib/x86_64-linux-gnu/heimdal	   \
+	    --with-hcrypto-lib=/usr/lib/$(DEB_HOST_MULTIARCH)/heimdal	   \
 	    $(DEBIAN_OPT_FLAGS) $(SYSTEM)
 
 # Also build a libafs_tree and build the XML documentation if building
