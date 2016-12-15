@@ -1,9 +1,9 @@
-openafs (1.8.0~pre1-3) UNRELEASED; urgency=medium
+openafs (1.8.0~pre1-3) experimental; urgency=medium
 
   * Replace hard-coded x86_64-linux-gnu with DEB_HOST_MULTIARCH.
   * Use dh_auto_configure.
 
- -- Anders Kaseorg <andersk@mit.edu>  Wed, 14 Dec 2016 20:12:48 -0500
+ -- Anders Kaseorg <andersk@mit.edu>  Thu, 15 Dec 2016 01:27:21 -0500
 
 openafs (1.8.0~pre1-2) experimental; urgency=medium
 
