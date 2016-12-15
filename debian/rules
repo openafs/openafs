@@ -1,19 +1,7 @@
 #!/usr/bin/make -f
 
-# Tell Autoconf the correct system types.
 DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
 DEB_HOST_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
-DEB_BUILD_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
-ifeq ($(DEB_BUILD_GNU_TYPE),$(DEB_HOST_GNU_TYPE))
-    SYSTEM = --build $(DEB_HOST_GNU_TYPE)
-else
-    SYSTEM = --build $(DEB_BUILD_GNU_TYPE) --host $(DEB_HOST_GNU_TYPE)
-endif
-
-# Set compiler flags.
-CFLAGS   := $(shell dpkg-buildflags --get CFLAGS)
-CPPFLAGS := $(shell dpkg-buildflags --get CPPFLAGS)
-LDFLAGS  := $(shell dpkg-buildflags --get LDFLAGS)
 
 # Determine whether we're building with optimization.  This doesn't really
 # work at the moment due to upstream problems.
@@ -97,11 +85,9 @@ override_dh_auto_configure:
 	rm -f doc/man-pages/man1/up.1
 	sh regen.sh
 	afslogsdir=/var/log/openafs afslocaldir=/var/lib/openafs/local	   \
-	    sh configure						   \
-	    CFLAGS='$(CFLAGS)' CPPFLAGS='$(CPPFLAGS)' LDFLAGS='$(LDFLAGS)' \
+	    dh_auto_configure --					   \
 	    --with-afs-sysname=$(SYS_NAME) --disable-kernel-module	   \
-	    --prefix=/usr --mandir=\$${prefix}/share/man		   \
-	    --sysconfdir=/etc --libexecdir=/usr/lib			   \
+	    --libdir=\$${prefix}/lib --libexecdir=\$${prefix}/lib	   \
 	    --localstatedir=/var/lib --enable-supergroups		   \
 	    --enable-fuse-client --enable-debug --enable-debug-lwp	   \
 	    --with-docbook2pdf=dblatex --with-xslt-processor=xsltproc	   \
@@ -112,7 +98,7 @@ override_dh_auto_configure:
 	    --with-roken-lib=/usr/lib/$(DEB_HOST_MULTIARCH)/heimdal	   \
 	    --with-hcrypto-include=/usr/include/heimdal			   \
 	    --with-hcrypto-lib=/usr/lib/$(DEB_HOST_MULTIARCH)/heimdal	   \
-	    $(DEBIAN_OPT_FLAGS) $(SYSTEM)
+	    $(DEBIAN_OPT_FLAGS)
 
 # Also build a libafs_tree and build the XML documentation if building
 # architecture-independent packages.
