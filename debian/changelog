@@ -1,11 +1,11 @@
-openafs (1.8.0~pre1-4) UNRELEASED; urgency=medium
+openafs (1.8.0~pre1-4) experimental; urgency=medium
 
   * debian/patches/0006-softsig-helper-fix-signame-loop.patch
     Fix test failures on 32-bit architectures.
   * debian/patches/0007-Run-jhash-t-verbosely.patch
     Provide more output from failing tests.
 
- -- Benjamin Kaduk <kaduk@mit.edu>  Thu, 15 Dec 2016 23:48:00 -0500
+ -- Benjamin Kaduk <kaduk@mit.edu>  Fri, 16 Dec 2016 00:26:39 -0500
 
 openafs (1.8.0~pre1-3) experimental; urgency=medium
 
