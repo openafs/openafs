@@ -1,0 +1,23 @@
+From: Benjamin Kaduk <kaduk@mit.edu>
+Date: Thu, 15 Dec 2016 23:46:09 -0500
+Subject: Run jhash-t verbosely
+
+It's failing on several buildds and we need more information to
+debug why.
+---
+ tests/Makefile.in | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/tests/Makefile.in b/tests/Makefile.in
+index 23f1fa0..0e01fcb 100644
+--- a/tests/Makefile.in
++++ b/tests/Makefile.in
+@@ -23,6 +23,8 @@ runtests.o: $(srcdir)/runtests.c
+ check test tests: runtests
+ 	@for A in $(SUBDIRS); do cd $$A && $(MAKE) $@ && cd .. || exit 1; done
+ 	MAKECHECK=1 ./libwrap @TOP_OBJDIR@/lib \
++	    ./runtests -o $(abs_top_srcdir)/tests/opr/jhash
++	MAKECHECK=1 ./libwrap @TOP_OBJDIR@/lib \
+ 	    ./runtests $(abs_top_srcdir)/tests/TESTS
+ 
+ install:

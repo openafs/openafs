@@ -3,3 +3,5 @@
 0003-Catch-up-to-roken-s-rename-of-base64-symbols.patch
 tests-opr-softsig-t-Avoid-hanging-due-to-intermediat.patch
 opr-ExitHandler-re-raise-the-signal-instead-of-exiti.patch
+0006-softsig-helper-fix-signame-loop.patch
+0007-Run-jhash-t-verbosely.patch

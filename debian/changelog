@@ -1,3 +1,12 @@
+openafs (1.8.0~pre1-4) UNRELEASED; urgency=medium
+
+  * debian/patches/0006-softsig-helper-fix-signame-loop.patch
+    Fix test failures on 32-bit architectures.
+  * debian/patches/0007-Run-jhash-t-verbosely.patch
+    Provide more output from failing tests.
+
+ -- Benjamin Kaduk <kaduk@mit.edu>  Thu, 15 Dec 2016 23:48:00 -0500
+
 openafs (1.8.0~pre1-3) experimental; urgency=medium
 
   * Replace hard-coded x86_64-linux-gnu with DEB_HOST_MULTIARCH.

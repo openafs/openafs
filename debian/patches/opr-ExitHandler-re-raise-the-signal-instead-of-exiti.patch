@@ -1,10 +1,9 @@
-From d0ce961499d72768168a98c9321c80943b9a3c75 Mon Sep 17 00:00:00 2001
 From: Anders Kaseorg <andersk@mit.edu>
 Date: Wed, 14 Dec 2016 17:52:35 -0500
 Subject: opr: ExitHandler: re-raise the signal instead of exiting with that
  code
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
 This fixes a ‘make check’ failure introduced by commit
@@ -38,7 +37,7 @@ Change-Id: I022965ea2b5440486ea1cf562551d3bbd0516104
  1 file changed, 7 insertions(+)
 
 diff --git a/src/opr/softsig.c b/src/opr/softsig.c
-index 4a210ad65..469bd43e1 100644
+index 4a210ad..469bd43 100644
 --- a/src/opr/softsig.c
 +++ b/src/opr/softsig.c
 @@ -82,6 +82,13 @@ signalHandler(void *arg)
@@ -55,6 +54,3 @@ index 4a210ad65..469bd43e1 100644
      exit(signal);
  }
  
--- 
-2.11.0
-
