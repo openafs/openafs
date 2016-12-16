@@ -125,7 +125,7 @@ opr_jhash_opaque(const void *val, size_t length, afs_uint32 initval)
     afs_uint32 a,b,c;
 
     /* Set up the internal state */
-    a = b = c = 0xdeadbeef + (((afs_uint32)length)<<2) + initval;
+    a = b = c = 0xdeadbeef + ((afs_uint32)length) + initval;
 
     while (length > 12) {
 	a += (afs_uint32) str[3]<<24 |
