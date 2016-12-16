@@ -1,3 +1,12 @@
+openafs (1.8.0~pre1-5) UNRELEASED; urgency=medium
+
+  * debian/patches/opr-Make-opr_jhash_opaque-endian-independent.patch,
+    debian/patches/opr-Make-opr_jhash_opaque-consistent-with-opr_jhash.patch,
+    debian/patches/opr-Make-opr_uuid_hash-endian-independent.patch: Fix
+    test failures on big-endian architectures.
+
+ -- Anders Kaseorg <andersk@mit.edu>  Wed, 21 Dec 2016 19:58:22 -0500
+
 openafs (1.8.0~pre1-4) experimental; urgency=medium
 
   * debian/patches/0006-softsig-helper-fix-signame-loop.patch

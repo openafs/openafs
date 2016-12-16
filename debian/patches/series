@@ -5,3 +5,6 @@ tests-opr-softsig-t-Avoid-hanging-due-to-intermediat.patch
 opr-ExitHandler-re-raise-the-signal-instead-of-exiti.patch
 0006-softsig-helper-fix-signame-loop.patch
 0007-Run-jhash-t-verbosely.patch
+opr-Make-opr_jhash_opaque-endian-independent.patch
+opr-Make-opr_jhash_opaque-consistent-with-opr_jhash.patch
+opr-Make-opr_uuid_hash-endian-independent.patch

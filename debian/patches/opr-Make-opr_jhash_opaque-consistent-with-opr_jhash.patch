@@ -1,0 +1,40 @@
+From: Anders Kaseorg <andersk@mit.edu>
+Date: Fri, 16 Dec 2016 03:04:18 -0500
+Subject: opr: Make opr_jhash_opaque consistent with opr_jhash
+
+Change-Id: I42e1030f8c841dcb974476012a774b91c87d3fb0
+---
+ src/opr/jhash.h     | 2 +-
+ tests/opr/jhash-t.c | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/opr/jhash.h b/src/opr/jhash.h
+index e7b7d5d53..9c82f9c98 100644
+--- a/src/opr/jhash.h
++++ b/src/opr/jhash.h
+@@ -125,7 +125,7 @@ opr_jhash_opaque(const void *val, size_t length, afs_uint32 initval)
+     afs_uint32 a,b,c;
+ 
+     /* Set up the internal state */
+-    a = b = c = 0xdeadbeef + (((afs_uint32)length)<<2) + initval;
++    a = b = c = 0xdeadbeef + ((afs_uint32)length) + initval;
+ 
+     while (length > 12) {
+ 	a += (afs_uint32) str[3]<<24 |
+diff --git a/tests/opr/jhash-t.c b/tests/opr/jhash-t.c
+index 92661c27e..bde5a2e40 100644
+--- a/tests/opr/jhash-t.c
++++ b/tests/opr/jhash-t.c
+@@ -65,10 +65,10 @@ main(int argc, char **argv)
+    is_int(0xdeadbeef, opr_jhash_opaque("", 0, 0),
+ 	  "Hashing an empty string works");
+ 
+-   is_int(2748273291UL,
++   is_int(393676113,
+ 	  opr_jhash_opaque("Four score and seven years ago", 30, 0),
+ 	  "Hashing a string with a 0 initval works");
+-   is_int(1389900913,
++   is_int(3445784929UL,
+ 	  opr_jhash_opaque("Four score and seven years ago", 30, 1),
+ 	  "Hashing a string with a 1 initval works");
+   return 0;
