@@ -123,16 +123,23 @@ opr_jhash_opaque(const void *val, size_t length, afs_uint32 initval)
 {
     const unsigned char *str = (const unsigned char *) val;
     afs_uint32 a,b,c;
-    afs_uint32 k[3];
 
     /* Set up the internal state */
     a = b = c = 0xdeadbeef + (((afs_uint32)length)<<2) + initval;
 
     while (length > 12) {
-	memcpy(&k, str, 12);
-	a += k[0];
-	b += k[1];
-	c += k[2];
+	a += (afs_uint32) str[3]<<24 |
+	    (afs_uint32) str[2]<<16 |
+	    (afs_uint32) str[1]<<8 |
+	    (afs_uint32) str[0];
+	b += (afs_uint32) str[7]<<24 |
+	    (afs_uint32) str[6]<<16 |
+	    (afs_uint32) str[5]<<8 |
+	    (afs_uint32) str[4];
+	c += (afs_uint32) str[11]<<24 |
+	    (afs_uint32) str[10]<<16 |
+	    (afs_uint32) str[9]<<8 |
+	    (afs_uint32) str[8];
 	opr_jhash_mix(a, b, c);
 	length -= 12;
 	str += 12;
