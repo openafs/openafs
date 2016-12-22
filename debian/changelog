@@ -1,3 +1,10 @@
+openafs (1.8.0~pre1-6) UNRELEASED; urgency=medium
+
+  * Add versioned build-depends for renamed symbols in heimdal-multidev.
+    (Closes: #848664)
+
+ -- Benjamin Kaduk <kaduk@mit.edu>  Thu, 22 Dec 2016 14:30:06 -0500
+
 openafs (1.8.0~pre1-5) experimental; urgency=medium
 
   * debian/patches/opr-Make-opr_jhash_opaque-endian-independent.patch,

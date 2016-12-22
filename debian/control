@@ -7,7 +7,7 @@ Uploaders: Russ Allbery <rra@debian.org>, Sam Hartman <hartmans@debian.org>,
 Build-Depends: debhelper (>= 9.20160114~), autoconf, automake, bison, comerr-dev,
  cpio, flex, libfuse-dev, libkrb5-dev, libncurses5-dev,
  libpam0g-dev, libxml2-utils, perl, pkg-config, dh-systemd,
- libtool, heimdal-multidev
+ libtool, heimdal-multidev (>= 1.7~git20150920)
 Build-Depends-Indep: dblatex, dkms (>= 2.1.1.1), docbook-xsl, doxygen (>= 1.8.4-1~),
  xsltproc
 Standards-Version: 3.9.8
