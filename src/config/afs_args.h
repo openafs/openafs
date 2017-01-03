@@ -7,66 +7,97 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#ifndef _AFS_ARGS_H_
+#define _AFS_ARGS_H_
+
 /*
  * AFS system call opcodes
  */
 
-#ifndef _AFS_ARGS_H_
-#define _AFS_ARGS_H_
-
-#define	AFSOP_START_RXCALLBACK	  0	/* no aux parms */
-#define	AFSOP_START_AFS		  1	/* no aux parms */
-#define	AFSOP_START_BKG		  2	/* no aux parms */
-#define	AFSOP_START_TRUNCDAEMON	  3	/* no aux parms */
+#define AFSOP_START_RXCALLBACK	  0	/* no aux parms */
+#define AFSOP_START_AFS		  1	/* no aux parms */
+#define AFSOP_START_BKG		  2	/* no aux parms */
+#define AFSOP_START_TRUNCDAEMON	  3	/* no aux parms */
 #define AFSOP_START_CS		  4	/* no aux parms */
+#define AFSOP_ADDCELL		  5	/* parm 2 = cell str */
+#define AFSOP_CACHEINIT		  6	/* parms 2-4 -> cache sizes */
+#define AFSOP_CACHEINFO		  7	/* the cacheinfo file */
+#define AFSOP_VOLUMEINFO	  8	/* the volumeinfo file */
+#define AFSOP_CACHEFILE		  9	/* a random cache file (V*) */
+#define AFSOP_CACHEINODE	 10	/* random cache file by inode */
+#define AFSOP_AFSLOG		 11	/* output log file */
+#define AFSOP_ROOTVOLUME	 12	/* non-standard root volume name */
 
-#define	AFSOP_ADDCELL		  5	/* parm 2 = cell str */
-#define	AFSOP_CACHEINIT		  6	/* parms 2-4 -> cache sizes */
-#define	AFSOP_CACHEINFO		  7	/* the cacheinfo file */
-#define	AFSOP_VOLUMEINFO	  8	/* the volumeinfo file */
-#define	AFSOP_CACHEFILE		  9	/* a random cache file (V*) */
-#define	AFSOP_CACHEINODE	 10	/* random cache file by inode */
-#define	AFSOP_AFSLOG		 11	/* output log file */
-#define	AFSOP_ROOTVOLUME	 12	/* non-standard root volume name */
-#define	AFSOP_STARTLOG		 14	/* temporary: Start afs logging */
-#define	AFSOP_ENDLOG		 15	/* temporary: End afs logging */
+#define AFSOP_STARTLOG		 14	/* temporary: Start afs logging */
+#define AFSOP_ENDLOG		 15	/* temporary: End afs logging */
 #define AFSOP_AFS_VFSMOUNT	 16	/* vfsmount cover for hpux */
 #define AFSOP_ADVISEADDR	 17	/* to init rx cid generator */
-#define AFSOP_CLOSEWAIT 	 18	/* make all closes synchronous */
-#define	AFSOP_RXEVENT_DAEMON	 19	/* rxevent daemon */
-#define	AFSOP_GETMTU		 20	/* stand-in for SIOCGIFMTU, for now */
-#define	AFSOP_GETIFADDRS	 21	/* get machine's ethernet interfaces */
+#define AFSOP_CLOSEWAIT		 18	/* make all closes synchronous */
+#define AFSOP_RXEVENT_DAEMON	 19	/* rxevent daemon */
+#define AFSOP_GETMTU		 20	/* stand-in for SIOCGIFMTU, for now */
+#define AFSOP_GETIFADDRS	 21	/* get machine's ethernet interfaces */
 
-#define	AFSOP_ADDCELL2		 29	/* 2nd add cell protocol interface */
-#define	AFSOP_AFSDB_HANDLER	 30	/* userspace AFSDB lookup handler */
-#define	AFSOP_SET_DYNROOT	 31	/* enable/disable dynroot support */
-#define	AFSOP_ADDCELLALIAS	 32	/* create alias for existing cell */
-#define	AFSOP_SET_FAKESTAT	 33	/* enable/disable fakestat support */
-#define	AFSOP_CELLINFO		 34	/* set the cellinfo file name */
-#define	AFSOP_SET_THISCELL	 35	/* set the primary cell */
+#define AFSOP_ADDCELL2		 29	/* 2nd add cell protocol interface */
+#define AFSOP_AFSDB_HANDLER	 30	/* userspace AFSDB lookup handler */
+#define AFSOP_SET_DYNROOT	 31	/* enable/disable dynroot support */
+#define AFSOP_ADDCELLALIAS	 32	/* create alias for existing cell */
+#define AFSOP_SET_FAKESTAT	 33	/* enable/disable fakestat support */
+#define AFSOP_CELLINFO		 34	/* set the cellinfo file name */
+#define AFSOP_SET_THISCELL	 35	/* set the primary cell */
 #define AFSOP_BASIC_INIT	 36	/* used to be part of START_AFS */
 #define AFSOP_SET_BACKUPTREE	 37	/* enable backup tree support */
 #define AFSOP_SET_RXPCK		 38	/* set rx_extraPackets*/
-#define AFSOP_BUCKETPCT          39     /* bucket percentage */
-#define AFSOP_SET_RXMAXMTU       40     /* set rx_MyMaxSendSize,rx_maxReceiveSizeUser,rx_maxReceiveSize */
-#define AFSOP_BKG_HANDLER        41     /* userspace-capable Bkg daemon */
-#define AFSOP_SET_RXMAXFRAGS     43     /* set rxi_nSendFrags, rxi_nRecvFrags */
-#define AFSOP_SET_RMTSYS_FLAG    44     /* set flag if rmtsys is enabled */
-#define AFSOP_SEED_ENTROPY       45     /* Give the kernel hcrypto entropy */
-#define AFSOP_SET_INUMCALC       46     /* set inode number calculation method */
+#define AFSOP_BUCKETPCT		 39	/* bucket percentage */
+#define AFSOP_SET_RXMAXMTU	 40	/* set rx_MyMaxSendSize,rx_maxReceiveSizeUser,rx_maxReceiveSize */
+#define AFSOP_BKG_HANDLER	 41	/* userspace-capable Bkg daemon */
+#define AFSOP_GETMASK		 42	/* stand-in for SIOCGIFNETMASK */
+#define AFSOP_SET_RXMAXFRAGS	 43	/* set rxi_nSendFrags, rxi_nRecvFrags */
+#define AFSOP_SET_RMTSYS_FLAG	 44	/* set flag if rmtsys is enabled */
+#define AFSOP_SEED_ENTROPY	 45	/* Give the kernel hcrypto entropy */
+#define AFSOP_SET_INUMCALC	 46	/* set inode number calculation method */
+
+#define AFSOP_RXLISTENER_DAEMON  48	/* starts kernel RX listener */
+
+#define AFSOP_CACHEBASEDIR	 50	/* cache base dir */
+#define AFSOP_CACHEDIRS		 51	/* number of files per dir */
+#define AFSOP_CACHEFILES	 52	/* number of files */
+
+#define AFSOP_SETINT		 60	/* set key/value pairs for ints */
+
+#define AFSOP_GO		100	/* whether settime is being done */
+
+#define AFSOP_CHECKLOCKS	200	/* dump lock state */
+#define AFSOP_SHUTDOWN		201	/* Totally shutdown afs (deallocate all) */
+
+#define AFSOP_STOP_RXCALLBACK	210	/* Stop CALLBACK process */
+#define AFSOP_STOP_AFS		211	/* Stop AFS process */
+#define AFSOP_STOP_BKG		212	/* Stop BKG process */
+#define AFSOP_STOP_TRUNCDAEMON	213	/* Stop cache truncate daemon */
+/* AFSOP_STOP_RXEVENT	        214	   defined in osi.h */
+/* AFSOP_STOP_COMPLETE	        215	   defined in osi.h */
+#define AFSOP_STOP_CS		216	/* Stop CheckServer daemon */
+/* AFSOP_STOP_RXK_LISTENER	217	   defined in osi.h */
+#define AFSOP_STOP_AFSDB	218	/* Stop AFSDB handler */
+#define AFSOP_STOP_NETIF	219	/* Stop Netif poller */
+
+#define AFSOP_MAX_OPCODE	AFSOP_STOP_NETIF /* Largest defined opcode. */
+
+/*
+ * AFS system call types and flags.
+ */
 
 /* The range 20-30 is reserved for AFS system offsets in the afs_syscall */
-#define	AFSCALL_PIOCTL		20
-#define	AFSCALL_SETPAG		21
-#define	AFSCALL_IOPEN		22
-#define	AFSCALL_ICREATE		23
-#define	AFSCALL_IREAD		24
-#define	AFSCALL_IWRITE		25
-#define	AFSCALL_IINC		26
-#define	AFSCALL_IDEC		27
-#define	AFSCALL_CALL		28
+#define AFSCALL_PIOCTL		20
+#define AFSCALL_SETPAG		21
+#define AFSCALL_IOPEN		22
+#define AFSCALL_ICREATE		23
+#define AFSCALL_IREAD		24
+#define AFSCALL_IWRITE		25
+#define AFSCALL_IINC		26
+#define AFSCALL_IDEC		27
+#define AFSCALL_CALL		28
 
-#define AFSCALL_ICL             30
+#define AFSCALL_ICL		30
 
 /* 64 bit versions of inode system calls. */
 #define AFSCALL_IOPEN64		41
@@ -82,18 +113,6 @@
 #define AFSCALL_INIT_KERNEL_CONFIG 47	/* set vnode glue ops. */
 #endif
 
-#define	AFSOP_GETMASK		 42	/* stand-in for SIOCGIFNETMASK */
-/* For SGI, this can't interfere with any of the 64 bit inode calls. */
-#define AFSOP_RXLISTENER_DAEMON  48	/* starts kernel RX listener */
-
-/* skip 64 bit calls */
-#define AFSOP_CACHEBASEDIR       50     /* cache base dir */
-#define AFSOP_CACHEDIRS          51     /* number of files per dir */
-#define AFSOP_CACHEFILES         52     /* number of files */
-
-#define AFSOP_SETINT             60     /* we should just set key/value pairs
-                                          for things which are just ints */
-
 /* these are for initialization flags */
 
 #define AFSCALL_INIT_MEMCACHE 0x1
@@ -105,26 +124,9 @@
 #define AFSCALL_RXSTATS_DISABLE	0x2	/* Disable RX stats */
 #define AFSCALL_RXSTATS_CLEAR	0x4	/* Clear RX stats */
 
-#define	AFSOP_GO		100	/* whether settime is being done */
-/* not for initialization: debugging assist */
-#define	AFSOP_CHECKLOCKS	200	/* dump lock state */
-#define	AFSOP_SHUTDOWN		201	/* Totally shutdown afs (deallocate all) */
-
-/* The following aren't used by afs_initState but by afs_termState! */
-#define	AFSOP_STOP_RXCALLBACK	210	/* Stop CALLBACK process */
-#define	AFSOP_STOP_AFS		211	/* Stop AFS process */
-#define AFSOP_STOP_CS		216	/* Stop CheckServer daemon. */
-#define	AFSOP_STOP_BKG		212	/* Stop BKG process */
-#define	AFSOP_STOP_TRUNCDAEMON	213	/* Stop cache truncate daemon */
-/* #define AFSOP_STOP_RXEVENT   214     defined in osi.h	      */
-/* #define AFSOP_STOP_COMPLETE     215  defined in osi.h	      */
-/* #define AFSOP_STOP_RXK_LISTENER   217     defined in osi.h	      */
-#define AFSOP_STOP_AFSDB	218	/* Stop AFSDB handler */
-#define AFSOP_STOP_NETIF        219     /* Stop Netif poller */
-
 /* Main afs syscall entry; this number may vary per system (i.e. defined in afs/param.h) */
 #ifndef	AFS_SYSCALL
-#define	AFS_SYSCALL		31
+#define AFS_SYSCALL		31
 #endif
 
 /* arguments passed by afsd */
@@ -184,9 +186,9 @@ enum {
 /* Used in rx.c as well as afs directory. */
 #if	defined(AFS_AIX32_ENV) || defined(AFS_HPUX_ENV)
 /* XXX Because of rxkad_cprivate... XXX */
-#define	AFS_SMALLOCSIZ 	(38*sizeof(void *))	/* "Small" allocated size */
+#define AFS_SMALLOCSIZ 	(38*sizeof(void *))	/* "Small" allocated size */
 #else
-#define	AFS_SMALLOCSIZ 	(64*sizeof(void *))	/*  "Small" allocated size */
+#define AFS_SMALLOCSIZ 	(64*sizeof(void *))	/*  "Small" allocated size */
 #endif
 #define AFS_LRALLOCSIZ  4096    /* "Large" allocated size */
 
