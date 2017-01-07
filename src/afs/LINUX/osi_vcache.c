@@ -18,7 +18,9 @@
 static void
 TryEvictDentries(struct vcache *avc)
 {
+#ifndef D_INVALIDATE_IS_VOID
     struct dentry *dentry;
+#endif
     struct inode *inode = AFSTOV(avc);
 #if defined(D_ALIAS_IS_HLIST) && !defined(HLIST_ITERATOR_NO_NODE)
     struct hlist_node *p;
