@@ -824,7 +824,7 @@ gzip -9 $RPM_BUILD_ROOT%{_mandir}/man*/*
 # create list of man pages that go in the 'openafs' package
 /bin/ls $RPM_BUILD_ROOT%{_mandir}/man1 \
 	|egrep '^afs|^fs|^kas|^klog|pagsh|^pts|^restorevol|^rxdebug|scout|^sys|tokens|translate|^xstat|udebug|unlog|^uss|^vos' \
-	|egrep -v '^afs_compile_et' \
+	|egrep -v '^afs_compile_et|^klog\.krb5' \
 	>openafs-man1files
 
 /bin/ls $RPM_BUILD_ROOT%{_mandir}/man5 \
@@ -1333,6 +1333,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_bindir}/klog.krb5
 %{_sbindir}/asetkey
 %{_mandir}/man1/aklog.*
+%{_mandir}/man1/klog.krb5.*
 %{_mandir}/man8/asetkey.*
 %endif
 
