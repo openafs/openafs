@@ -107,7 +107,7 @@ pag_to_gidset(afs_uint32 pagvalue, gid_t *gidset, int *a_ngroups,
         }
     }
 
-    if (gidslot != NULL) {
+    if (gidslot == NULL) {
         /* If we don't already have a PAG, grow the groups list by one, and put
          * our PAG in the new empty slot. */
         if ((sizeof(gidset[0])) * (ngroups + 1) > gidset_sz) {
