@@ -148,7 +148,7 @@ DEFINES = $(COMMON_DEFINES)
 INCLUDES = -I. -I../ -I${TOP_OBJDIR}/src/config \
   -I${TOP_SRCDIR}/rx -I${TOP_OBJDIR}/src/rxstat
 
-CFLAGS = $(CCFLAGS) $(DEFINES) $(INCLUDES)
+CFLAGS = $(CCFLAGS) $(KERN_DBG) $(DEFINES) $(INCLUDES)
 
 # Name of directory to hold object files and libraries.
 KOBJ = MODLOAD
