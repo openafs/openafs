@@ -184,6 +184,9 @@ No extra blank lines or newline characters are allowed in the file, even
 after the last entry. Their presence can prevent the Cache Manager from
 reading the file into kernel memory, resulting in an error message.
 
+No traditional UNIX comment lines (beginning with an octothorpe in column
+0) are allowed.
+
 For the client F<CellServDB>, it may be desirable to make the client aware
 of a cell (so that it's listed by default in F</afs> when the B<-dynroot>
 flag to B<afsd> is in use, for instance) without specifying the database
