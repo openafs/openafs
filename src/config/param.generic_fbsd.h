@@ -3,7 +3,6 @@
 
 #define AFSLITTLE_ENDIAN	1
 #define AFS_HAVE_FFS		1	/* Use system's ffs. */
-#define AFS_VM_RDWR_ENV		1	/* read/write implemented via VM */
 
 #ifndef UKERNEL
 /* This section for kernel libafs compiles only */
