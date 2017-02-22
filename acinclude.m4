@@ -1035,6 +1035,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_FUNC([do_sync_read],
 				     [#include <linux/fs.h>],
 				     [do_sync_read(NULL, NULL, 0, NULL);])
+		 AC_CHECK_LINUX_FUNC([file_dentry],
+				     [#include <linux/fs.h>],
+				     [struct file *f; file_dentry(f);])
 		 AC_CHECK_LINUX_FUNC([find_task_by_pid],
 				     [#include <linux/sched.h>],
 				     [pid_t p; find_task_by_pid(p);])
