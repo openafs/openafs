@@ -97,3 +97,8 @@ static_inline int close(int d) {return -1;}
 #endif
 static_inline int gettimeofday(struct timeval *tp, void *tzp)
     {if (tp == NULL) return -1; tp->tv_sec = osi_Time(); tp->tv_usec = 0; return 0;}
+
+#ifdef AFS_SUN5_ENV
+/* workaround to allow --disable-optimize-kernel on Solaris */
+#define double int
+#endif
