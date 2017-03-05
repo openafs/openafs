@@ -1601,14 +1601,26 @@ afs_vop_advlock(ap)
 				 * int  a_flags;
 				 * } */ *ap;
 {
-    int error;
+    int error, a_op;
     struct ucred cr = *osi_curcred();
+
+    a_op = ap->a_op;
+    if (a_op == F_UNLCK) {
+	/*
+	 * When a_fl->type is F_UNLCK, FreeBSD passes in an a_op of F_UNLCK.
+	 * This is (confusingly) different than how you actually release a lock
+	 * with fcntl(), which is done with an a_op of F_SETLK and an l_type of
+	 * F_UNLCK. Pretend we were given an a_op of F_SETLK in this case,
+	 * since this is what afs_lockctl expects.
+	 */
+	a_op = F_SETLK;
+    }
 
     AFS_GLOCK();
     error =
 	afs_lockctl(VTOAFS(ap->a_vp),
 		ap->a_fl,
-		ap->a_op, &cr,
+		a_op, &cr,
 		(int)(intptr_t)ap->a_id);	/* XXX: no longer unique! */
     AFS_GUNLOCK();
     return error;
