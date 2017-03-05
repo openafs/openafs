@@ -659,6 +659,7 @@ rxi_GetIFInfo(void)
 #else
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 #if defined(AFS_FBSD80_ENV)
+    CURVNET_SET(rx_socket->so_vnet);
     TAILQ_FOREACH(ifn, &V_ifnet, if_link) {
 #else
     TAILQ_FOREACH(ifn, &ifnet, if_link) {
@@ -720,6 +721,11 @@ rxi_GetIFInfo(void)
 	    myNetAddrs[l] = addrs[l];
 	}
     }
+
+#ifdef AFS_FBSD80_ENV
+    CURVNET_RESTORE();
+#endif
+
     return different;
 }
 
@@ -730,6 +736,11 @@ rxi_FindIfnet(afs_uint32 addr, afs_uint32 * maskp)
 {
     struct sockaddr_in s, sr;
     rx_ifaddr_t ifad;
+    rx_ifnet_t ret;
+
+#ifdef AFS_FBSD80_ENV
+    CURVNET_SET(rx_socket->so_vnet);
+#endif
 
     s.sin_family = AF_INET;
     s.sin_addr.s_addr = addr;
@@ -739,7 +750,14 @@ rxi_FindIfnet(afs_uint32 addr, afs_uint32 * maskp)
 	rx_ifaddr_netmask(ifad, (struct sockaddr *)&sr, sizeof(sr));
 	*maskp = sr.sin_addr.s_addr;
     }
-    return (ifad ? rx_ifaddr_ifnet(ifad) : NULL);
+
+    ret = (ifad ? rx_ifaddr_ifnet(ifad) : NULL);
+
+#ifdef AFS_FBSD80_ENV
+    CURVNET_RESTORE();
+#endif
+
+    return ret;
 }
 
 #else /* DARWIN || XBSD */
