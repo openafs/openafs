@@ -209,7 +209,6 @@ afs_vop_lookup(ap)
     struct vcache *vcp;
     struct vnode *vp, *dvp;
     int flags = ap->a_cnp->cn_flags;
-    int lockparent;		/* 1 => lockparent flag is set */
 
     dvp = ap->a_dvp;
     if (dvp->v_type != VDIR) {
@@ -221,11 +220,27 @@ afs_vop_lookup(ap)
 
     GETNAME();
 
-    lockparent = flags & LOCKPARENT;
-
 #if __FreeBSD_version < 1000021
     cnp->cn_flags |= MPSAFE; /* steel */
 #endif
+
+    /*
+     * Locking rules:
+     *
+     * - 'dvp' is locked by our caller. We must return it locked, whether we
+     * return success or error.
+     *
+     * - If the lookup succeeds, 'vp' must be locked before we return.
+     *
+     * - If we lock multiple vnodes, parent vnodes must be locked before
+     * children vnodes.
+     *
+     * As a result, looking up the parent directory (if 'flags' has ISDOTDOT
+     * set) is a bit of a special case. In that case, we must unlock 'dvp'
+     * before performing the lookup, since the lookup operation may lock the
+     * target vnode, and the target vnode is the parent of 'dvp' (so we must
+     * lock 'dvp' after locking the target vnode).
+     */
 
     if (flags & ISDOTDOT)
 	MA_VOP_UNLOCK(dvp, 0, p);
@@ -248,27 +263,15 @@ afs_vop_lookup(ap)
     }
     vp = AFSTOV(vcp);		/* always get a node if no error */
 
-    /* The parent directory comes in locked.  We unlock it on return
-     * unless the caller wants it left locked.
-     * we also always return the vnode locked. */
-
     if (flags & ISDOTDOT) {
-	/* vp before dvp since we go root to leaf, and .. comes first */
+	/* Must lock 'vp' before 'dvp', since 'vp' is the parent vnode. */
 	ma_vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
 	ma_vn_lock(dvp, LK_EXCLUSIVE | LK_RETRY, p);
-	/* always return the child locked */
-	if (lockparent && (flags & ISLASTCN)
-	    && (error = ma_vn_lock(dvp, LK_EXCLUSIVE, p))) {
-	    vput(vp);
-	    DROPNAME();
-	    return (error);
-	}
     } else if (vp == dvp) {
 	/* they're the same; afs_lookup() already ref'ed the leaf.
 	 * It came in locked, so we don't need to ref OR lock it */
     } else {
 	ma_vn_lock(vp, LK_EXCLUSIVE | LK_CANRECURSE | LK_RETRY, p);
-	/* always return the child locked */
     }
     *ap->a_vpp = vp;
 
