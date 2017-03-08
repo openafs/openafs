@@ -1,5 +1,40 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.6.20.2
+
+  All platforms
+
+    * Build fixes required by recent compilers or platforms (12514 12521 12534
+      12536 12538)
+
+    * Allow the bos server to start successfully in the presence of those, by
+      accepting a now checked return value indicating that the client ThisCell
+      and CellServDB already exist (12522)
+
+  Linux clients
+
+    * Support for mainline kernel 4.10 and distribution kernels with
+      backports from it (12530)
+
+    * Support for distribution kernels with partial backports from 4.9 (12535)
+      (RT #134158)
+
+    * In Red Hat packaging, moved the klog.krb5 manual page into the krb5
+      subpackage (12511)
+
+    * Allow aklog to function on current S390/S390x (12499)
+
+  Solaris clients
+
+    * Make process authentication groups work on Solaris 11, now using a single
+      group ID (12524..12527)
+
+    * Fix a BAD TRAP panic on Solaris 11 clients built with Studio 12.5 (12567)
+
+  macOS clients
+
+    * Fixed the preference pane for OS X 10.11 and later (12512)
+
 OpenAFS 1.6.20.1
 
   All platforms
