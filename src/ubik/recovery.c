@@ -133,9 +133,17 @@ int
 urecovery_AbortAll(struct ubik_dbase *adbase)
 {
     struct ubik_trans *tt;
+    int reads = 0, writes = 0;
+
     for (tt = adbase->activeTrans; tt; tt = tt->next) {
+	if (tt->type == UBIK_WRITETRANS)
+	    writes++;
+	else
+	    reads++;
 	udisk_abort(tt);
     }
+    ViceLog(0, ("urecovery_AbortAll: just aborted %d read and %d write transactions\n",
+		    reads, writes));
     return 0;
 }
 
