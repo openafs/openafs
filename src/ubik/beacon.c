@@ -563,8 +563,8 @@ ubeacon_Interact(void *dummy)
 		 * the latter down below if we got enough votes to go with */
 		if (code > 0) {
 		    if ((code & ~0xff) == ERROR_TABLE_BASE_RXK) {
-			ViceLog(5, ("token error %d from host %s\n",
-				    code, afs_inet_ntoa_r(ts->addr[0], hoststr)));
+			ViceLog(0, ("Server %s is marked down due to token error %d\n",
+				    afs_inet_ntoa_r(ts->addr[0], hoststr), code));
 			ts->up = 0;
 			ts->beaconSinceDown = 0;
 			urecovery_LostServer(ts);
@@ -592,8 +592,8 @@ ubeacon_Interact(void *dummy)
 		    ts->up = 0;
 		    ts->beaconSinceDown = 0;
 		    urecovery_LostServer(ts);
-		    ViceLog(5, ("time out from %s\n",
-				afs_inet_ntoa_r(ts->addr[0], hoststr)));
+		    ViceLog(0, ("Server %s is marked down due to VOTE_Beacon time out (%d)\n",
+				afs_inet_ntoa_r(ts->addr[0], hoststr), code));
 		}
 		UBIK_BEACON_UNLOCK;
 	    }
@@ -886,6 +886,9 @@ ubeacon_updateUbikNetworkAddress(afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR])
 		UBIK_BEACON_LOCK;
 		ts->up = 0;	/* mark the remote server as down */
 		UBIK_BEACON_UNLOCK;
+		ViceLog(0, ("Server %s is marked down due to DISK_UpdateInterfaceAddr code %d\n",
+			    afs_inet_ntoa_r(ts->addr[0], hoststr), multi_error));
+
 	    }
 	}
 	multi_End;

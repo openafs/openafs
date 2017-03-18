@@ -150,7 +150,7 @@ Quorum_EndIO(struct ubik_trans *atrans, struct rx_connection *aconn)
 static int
 ContactQuorum_iterate(struct ubik_trans *atrans, int aflags, struct ubik_server **ts,
 			 struct rx_connection **conn, afs_int32 *rcode,
-			 afs_int32 *okcalls, afs_int32 code)
+			 afs_int32 *okcalls, afs_int32 code, const char *procname)
 {
     if (!*ts) {
 	/* Initial call - start iterating over servers */
@@ -163,6 +163,8 @@ ContactQuorum_iterate(struct ubik_trans *atrans, int aflags, struct ubik_server 
 	    Quorum_EndIO(atrans, *conn);
 	    *conn = NULL;
 	    if (code) {		/* failure */
+		char hoststr[16];
+
 		*rcode = code;
 		UBIK_BEACON_LOCK;
 		(*ts)->up = 0;		/* mark as down now; beacons will no longer be sent */
@@ -170,6 +172,8 @@ ContactQuorum_iterate(struct ubik_trans *atrans, int aflags, struct ubik_server 
 		UBIK_BEACON_UNLOCK;
 		(*ts)->currentDB = 0;
 		urecovery_LostServer(*ts);	/* tell recovery to try to resend dbase later */
+		ViceLog(0, ("Server %s is marked down due to %s code %d\n",
+			    afs_inet_ntoa_r((*ts)->addr[0], hoststr), procname, *rcode));
 	    } else {		/* success */
 		if (!(*ts)->isClone)
 		    (*okcalls)++;	/* count up how many worked */
@@ -225,18 +229,18 @@ ContactQuorum_rcode(int okcalls, afs_int32 rcode)
  */
 static afs_int32
 ContactQuorum_NoArguments(afs_int32 (*proc)(struct rx_connection *, ubik_tid *),
-	       		  struct ubik_trans *atrans, int aflags)
+			  struct ubik_trans *atrans, int aflags, const char *procname)
 {
     struct ubik_server *ts = NULL;
     afs_int32 code = 0, rcode, okcalls;
     struct rx_connection *conn;
     int done;
 
-    done = ContactQuorum_iterate(atrans, aflags, &ts, &conn, &rcode, &okcalls, code);
+    done = ContactQuorum_iterate(atrans, aflags, &ts, &conn, &rcode, &okcalls, code, procname);
     while (!done) {
 	if (conn)
 	    code = (*proc)(conn, &atrans->tid);
-	done = ContactQuorum_iterate(atrans, aflags, &ts, &conn, &rcode, &okcalls, code);
+	done = ContactQuorum_iterate(atrans, aflags, &ts, &conn, &rcode, &okcalls, code, procname);
     }
     return ContactQuorum_rcode(okcalls, rcode);
 }
@@ -250,12 +254,13 @@ ContactQuorum_DISK_Lock(struct ubik_trans *atrans, int aflags,afs_int32 file,
     afs_int32 code = 0, rcode, okcalls;
     struct rx_connection *conn;
     int done;
+    char *procname = "DISK_Lock";
 
-    done = ContactQuorum_iterate(atrans, aflags, &ts, &conn, &rcode, &okcalls, code);
+    done = ContactQuorum_iterate(atrans, aflags, &ts, &conn, &rcode, &okcalls, code, procname);
     while (!done) {
 	if (conn)
 	    code = DISK_Lock(conn, &atrans->tid, file, position, length, type);
-	done = ContactQuorum_iterate(atrans, aflags, &ts, &conn, &rcode, &okcalls, code);
+	done = ContactQuorum_iterate(atrans, aflags, &ts, &conn, &rcode, &okcalls, code, procname);
     }
     return ContactQuorum_rcode(okcalls, rcode);
 }
@@ -268,12 +273,13 @@ ContactQuorum_DISK_Truncate(struct ubik_trans *atrans, int aflags,
     afs_int32 code = 0, rcode, okcalls;
     struct rx_connection *conn;
     int done;
+    char *procname = "DISK_Truncate";
 
-    done = ContactQuorum_iterate(atrans, aflags, &ts, &conn, &rcode, &okcalls, code);
+    done = ContactQuorum_iterate(atrans, aflags, &ts, &conn, &rcode, &okcalls, code, procname);
     while (!done) {
 	if (conn)
 	    code = DISK_Truncate(conn, &atrans->tid, file, length);
-	done = ContactQuorum_iterate(atrans, aflags, &ts, &conn, &rcode, &okcalls, code);
+	done = ContactQuorum_iterate(atrans, aflags, &ts, &conn, &rcode, &okcalls, code, procname);
     }
     return ContactQuorum_rcode(okcalls, rcode);
 }
@@ -287,10 +293,12 @@ ContactQuorum_DISK_WriteV(struct ubik_trans *atrans, int aflags,
     afs_int32 code = 0, rcode, okcalls;
     struct rx_connection *conn;
     int done;
+    char *procname = "DISK_WriteV";
 
-    done = ContactQuorum_iterate(atrans, aflags, &ts, &conn, &rcode, &okcalls, code);
+    done = ContactQuorum_iterate(atrans, aflags, &ts, &conn, &rcode, &okcalls, code, procname);
     while (!done) {
 	if (conn) {
+	    procname = "DISK_WriteV";	/* in case previous fallback to DISK_Write */
 	    code = DISK_WriteV(conn, &atrans->tid, io_vector, io_buffer);
 	    if ((code <= -450) && (code > -500)) {
 		/* An RPC interface mismatch (as defined in comerr/error_msg.c).
@@ -303,6 +311,7 @@ ContactQuorum_DISK_WriteV(struct ubik_trans *atrans, int aflags,
 		bulkdata tcbs;
 		afs_int32 i, offset;
 
+		procname = "DISK_Write";	/* for accurate error msg, if any */
 		for (i = 0, offset = 0; i < io_vector->iovec_wrt_len; i++) {
 		    /* Sanity check for going off end of buffer */
 		    if ((offset + iovec[i].length) > io_buffer->iovec_buf_len) {
@@ -319,7 +328,7 @@ ContactQuorum_DISK_WriteV(struct ubik_trans *atrans, int aflags,
 		}
 	    }
 	}
-	done = ContactQuorum_iterate(atrans, aflags, &ts, &conn, &rcode, &okcalls, code);
+	done = ContactQuorum_iterate(atrans, aflags, &ts, &conn, &rcode, &okcalls, code, procname);
     }
     return ContactQuorum_rcode(okcalls, rcode);
 }
@@ -334,12 +343,13 @@ ContactQuorum_DISK_SetVersion(struct ubik_trans *atrans, int aflags,
     afs_int32 code = 0, rcode, okcalls;
     struct rx_connection *conn;
     int done;
+    char *procname = "DISK_SetVersion";
 
-    done = ContactQuorum_iterate(atrans, aflags, &ts, &conn, &rcode, &okcalls, code);
+    done = ContactQuorum_iterate(atrans, aflags, &ts, &conn, &rcode, &okcalls, code, procname);
     while (!done) {
 	if (conn)
 	    code = DISK_SetVersion(conn, &atrans->tid, OldVersion, NewVersion);
-	done = ContactQuorum_iterate(atrans, aflags, &ts, &conn, &rcode, &okcalls, code);
+	done = ContactQuorum_iterate(atrans, aflags, &ts, &conn, &rcode, &okcalls, code, procname);
     }
     return ContactQuorum_rcode(okcalls, rcode);
 }
@@ -663,11 +673,12 @@ BeginTrans(struct ubik_dbase *dbase, afs_int32 transMode,
 
     if (transMode == UBIK_WRITETRANS) {
 	/* next try to start transaction on appropriate number of machines */
-	code = ContactQuorum_NoArguments(DISK_Begin, tt, CCheckSyncAdvertised);
+	code = ContactQuorum_NoArguments(DISK_Begin, tt, CCheckSyncAdvertised, "DISK_Begin");
 	if (code) {
 	    /* we must abort the operation */
 	    udisk_abort(tt);
-	    ContactQuorum_NoArguments(DISK_Abort, tt, 0); /* force aborts to the others */
+	    /* force aborts to the others */
+	    ContactQuorum_NoArguments(DISK_Abort, tt, 0, "DISK_Abort");
 	    udisk_end(tt);
 	    DBRELE(dbase);
 	    return code;
@@ -757,7 +768,7 @@ ubik_AbortTrans(struct ubik_trans *transPtr)
     }
 
     /* now it is safe to try remote abort */
-    code = ContactQuorum_NoArguments(DISK_Abort, transPtr, 0);
+    code = ContactQuorum_NoArguments(DISK_Abort, transPtr, 0, "DISK_Abort");
     code2 = udisk_abort(transPtr);
     udisk_end(transPtr);
     DBRELE(dbase);
@@ -854,7 +865,7 @@ ubik_EndTrans(struct ubik_trans *transPtr)
 
 	ReleaseWriteLock(&dbase->cache_lock);
 
-	code = ContactQuorum_NoArguments(DISK_Commit, transPtr, CStampVersion);
+	code = ContactQuorum_NoArguments(DISK_Commit, transPtr, CStampVersion, "DISK_Commit");
 
     } else {
 	memset(&dbase->cachedVersion, 0, sizeof(struct ubik_version));
@@ -868,7 +879,7 @@ ubik_EndTrans(struct ubik_trans *transPtr)
 	 * we lose.  If we contact a majority of sites, then we won't be here: contacting
 	 * a majority guarantees commit, since it guarantees that one dude will be a
 	 * member of the next quorum. */
-	ContactQuorum_NoArguments(DISK_ReleaseLocks, transPtr, 0);
+	ContactQuorum_NoArguments(DISK_ReleaseLocks, transPtr, 0, "DISK_ReleaseLocks");
 	udisk_end(transPtr);
 	DBRELE(dbase);
 	goto error;
@@ -923,7 +934,7 @@ ubik_EndTrans(struct ubik_trans *transPtr)
      * The transaction is committed anyway, since we succeeded in contacting a quorum
      * at the start (when invoking the DiskCommit function).
      */
-    ContactQuorum_NoArguments(DISK_ReleaseLocks, transPtr, 0);
+    ContactQuorum_NoArguments(DISK_ReleaseLocks, transPtr, 0, "DISK_ReleaseLocks");
 
   success:
     udisk_end(transPtr);
@@ -1006,7 +1017,8 @@ ubik_Flush(struct ubik_trans *transPtr)
 				  &transPtr->iovec_data);
     if (code) {
 	udisk_abort(transPtr);
-	ContactQuorum_NoArguments(DISK_Abort, transPtr, 0); /* force aborts to the others */
+	/* force aborts to the others */
+	ContactQuorum_NoArguments(DISK_Abort, transPtr, 0, "DISK_Abort");
 	transPtr->iovec_info.iovec_wrt_len = 0;
 	transPtr->iovec_data.iovec_buf_len = 0;
 	ERROR_EXIT(code);
@@ -1182,7 +1194,8 @@ ubik_Truncate(struct ubik_trans *transPtr, afs_int32 length)
     if (code) {
 	/* we must abort the operation */
 	udisk_abort(transPtr);
-	ContactQuorum_NoArguments(DISK_Abort, transPtr, 0); /* force aborts to the others */
+	/* force aborts to the others */
+	ContactQuorum_NoArguments(DISK_Abort, transPtr, 0, "DISK_Abort");
 	ERROR_EXIT(code);
     }
 
@@ -1229,7 +1242,8 @@ ubik_SetLock(struct ubik_trans *atrans, afs_int32 apos, afs_int32 alen,
 	if (code) {
 	    /* we must abort the operation */
 	    udisk_abort(atrans);
-	    ContactQuorum_NoArguments(DISK_Abort, atrans, 0); /* force aborts to the others */
+	    /* force aborts to the others */
+	    ContactQuorum_NoArguments(DISK_Abort, atrans, 0, "DISK_Abort");
 	    ERROR_EXIT(code);
 	}
     }
