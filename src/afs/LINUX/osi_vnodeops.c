@@ -1078,15 +1078,27 @@ out:
     return afs_convert_code(code);
 }
 
+#if defined(IOP_GETATTR_TAKES_PATH_STRUCT)
+static int
+afs_linux_getattr(const struct path *path, struct kstat *stat, u32 request_mask, unsigned int sync_mode)
+{
+	int err = afs_linux_revalidate(path->dentry);
+	if (!err) {
+                generic_fillattr(path->dentry->d_inode, stat);
+	}
+	return err;
+}
+#else
 static int
 afs_linux_getattr(struct vfsmount *mnt, struct dentry *dentry, struct kstat *stat)
 {
         int err = afs_linux_revalidate(dentry);
         if (!err) {
                 generic_fillattr(dentry->d_inode, stat);
+	}
+	return err;
 }
-        return err;
-}
+#endif
 
 static afs_uint32
 parent_vcache_dv(struct inode *inode, cred_t *credp)

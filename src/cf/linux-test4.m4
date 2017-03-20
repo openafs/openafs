@@ -627,6 +627,18 @@ AC_DEFUN([LINUX_DOP_D_DELETE_TAKES_CONST], [
 			[-Werror])
 ])
 
+AC_DEFUN([LINUX_IOP_GETATTR_TAKES_PATH_STRUCT], [
+  AC_CHECK_LINUX_BUILD([whether 4.11+ inode.i_op->getattr takes a struct path argument],
+                        [ac_cv_linux_iop_getattr_takes_path_struct],
+                        [#include <linux/fs.h>
+                        int _getattr(const struct path *path, struct kstat *stat, u32 request_mask,
+                          unsigned int sync_mode) {return 0;};
+                        struct inode_operations _i_ops;],
+                        [_i_ops.getattr = _getattr;],
+                        [IOP_GETATTR_TAKES_PATH_STRUCT],
+                        [define if 4.11+ inode.i_op->getattr takes a struct path argument],
+                        [-Werror])
+])
 
 AC_DEFUN([LINUX_IOP_MKDIR_TAKES_UMODE_T], [
   AC_CHECK_LINUX_BUILD([whether inode.i_op->mkdir takes a umode_t argument],
