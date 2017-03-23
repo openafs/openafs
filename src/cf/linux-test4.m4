@@ -114,7 +114,10 @@ AC_DEFUN([LINUX_EXPORTS_SYS_OPEN], [
 AC_DEFUN([LINUX_RECALC_SIGPENDING_ARG_TYPE], [
   AC_CHECK_LINUX_BUILD([for recalc_sigpending arg type],
 		       [ac_cv_linux_func_recalc_sigpending_takes_void],
-		       [#include <linux/sched.h>],
+[#include <linux/sched.h>
+#ifdef HAVE_LINUX_SCHED_SIGNAL_H
+#include <linux/sched/signal.h>
+#endif],
 		       [recalc_sigpending();],
 		       [RECALC_SIGPENDING_TAKES_VOID],
 		       [define if your recalc_sigpending takes void],
@@ -125,7 +128,10 @@ AC_DEFUN([LINUX_RECALC_SIGPENDING_ARG_TYPE], [
 AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM], [
   AC_CHECK_LINUX_BUILD([for signal->rlim in struct task_struct],
 		       [ac_cv_linux_sched_struct_task_struct_has_signal_rlim],
-		       [#include <linux/sched.h>],
+[#include <linux/sched.h>
+#ifdef HAVE_LINUX_SCHED_SIGNAL_H
+#include <linux/sched/signal.h>
+#endif],
 		       [struct task_struct _tsk; printk("%d\n", _tsk.signal->rlim);],
 		       [STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM],
 		       [define if your struct task_struct has signal->rlim],

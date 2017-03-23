@@ -152,6 +152,9 @@ struct xfs_inode_info {
 # include <linux/fs.h>
 # include <linux/quota.h>
 # include <linux/sched.h>
+# if defined(HAVE_LINUX_SCHED_SIGNAL_H)
+#  include <linux/sched/signal.h>
+# endif
 # include <linux/mm.h>
 # include <linux/slab.h>
 # include <linux/proc_fs.h>
