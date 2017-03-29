@@ -246,13 +246,9 @@ MakeDir(const char *adir)
 static int
 CreateDirs(const char *coredir)
 {
-    if ((!strncmp
-	 (AFSDIR_USR_DIRPATH, AFSDIR_CLIENT_ETC_DIRPATH,
-	  strlen(AFSDIR_USR_DIRPATH)))
-	||
-	(!strncmp
+    if (!strncmp
 	 (AFSDIR_USR_DIRPATH, AFSDIR_SERVER_BIN_DIRPATH,
-	  strlen(AFSDIR_USR_DIRPATH)))) {
+	  strlen(AFSDIR_USR_DIRPATH))) {
 	if (MakeDir(AFSDIR_USR_DIRPATH))
 	    return errno;
     }
@@ -272,29 +268,6 @@ CreateDirs(const char *coredir)
 	return errno;
     if (MakeDir(AFSDIR_SERVER_LOGS_DIRPATH))
 	return errno;
-#ifndef AFS_NT40_ENV
-    if (!strncmp
-	(AFSDIR_CLIENT_VICE_DIRPATH, AFSDIR_CLIENT_ETC_DIRPATH,
-	 strlen(AFSDIR_CLIENT_VICE_DIRPATH))) {
-	if (MakeDir(AFSDIR_CLIENT_VICE_DIRPATH))
-	    return errno;
-    }
-    if (MakeDir(AFSDIR_CLIENT_ETC_DIRPATH))
-	return errno;
-
-    if (symlink(AFSDIR_SERVER_THISCELL_FILEPATH,
-	    AFSDIR_CLIENT_THISCELL_FILEPATH)) {
-	if (errno != EEXIST) {
-	    return errno;
-	}
-    }
-    if (symlink(AFSDIR_SERVER_CELLSERVDB_FILEPATH,
-	    AFSDIR_CLIENT_CELLSERVDB_FILEPATH)) {
-	if (errno != EEXIST) {
-	    return errno;
-	}
-    }
-#endif /* AFS_NT40_ENV */
     if (coredir) {
 	if (MakeDir(coredir))
 	    return errno;
