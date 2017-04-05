@@ -13,14 +13,17 @@ OpenAFS 1.6.20.2
 
   Linux clients
 
-    * Support for mainline kernel 4.10 and distribution kernels with
-      backports from it (12530)
+    * Support for mainline kernels 4.10 and - most likely - 4.11 and
+      distribution kernels with backports from them (12530 12588..12590 12598)
 
     * Support for distribution kernels with partial backports from 4.9 (12535)
       (RT #134158)
 
     * In Red Hat packaging, moved the klog.krb5 manual page into the krb5
       subpackage (12511)
+
+    * In Red Hat packaging, prevent systemd from double-starting the client
+      (12587)
 
     * Allow aklog to function on current S390/S390x (12499)
 
