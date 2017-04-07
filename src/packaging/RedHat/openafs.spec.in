@@ -598,6 +598,7 @@ export KRB5_CONFIG
 %if %{krb5support}
 	--with-krb5 \
 %endif
+	--enable-kauth \
        $config_opts \
        || exit 1
 
@@ -702,6 +703,7 @@ rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/kas
 rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/klog
 rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/klog.krb
 rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/kpwvalid
+rm -f $RPM_BUILD_ROOT%{_sbindir}/kpwvalid
 rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/pts
 rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/tokens
 rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/tokens.krb
@@ -714,18 +716,26 @@ rm -f $RPM_BUILD_ROOT%{_bindir}/dpass
 rm -f $RPM_BUILD_ROOT%{_bindir}/install
 rm -f $RPM_BUILD_ROOT%{_bindir}/knfs
 rm -f $RPM_BUILD_ROOT%{_bindir}/livesys
-rm -f $RPM_BUILD_ROOT%{_sbindir}/kdb
+rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/kdb
 rm -f $RPM_BUILD_ROOT%{_sbindir}/rmtsysd
-rm -f $RPM_BUILD_ROOT%{_sbindir}/kpwvalid
 rm -rf $RPM_BUILD_ROOT%{_sbindir}/kdump*
 %if !%{build_authlibs}
 rm -f $RPM_BUILD_ROOT%{_libdir}/libafsauthent.so*
 rm -f $RPM_BUILD_ROOT%{_libdir}/libafsrpc.so*
+rm -f $RPM_BUILD_ROOT%{_libdir}/libkopenafs.so*
 %endif
+rm -f $RPM_BUILD_ROOT%{_sbindir}/afsd.fuse
+
+# Relocate afsd to legacy path to match init scripts.
+mv $RPM_BUILD_ROOT%{_sbindir}/afsd $RPM_BUILD_ROOT%{_prefix}/vice/etc/afsd
 
 # Relocate admin utilities to a modern path.
-mv $RPM_BUILD_ROOT%{_prefix}/afs/bin/restorevol $RPM_BUILD_ROOT%{_bindir}/restorevol
+mv $RPM_BUILD_ROOT%{_prefix}/afs/bin/kadb_check $RPM_BUILD_ROOT%{_sbindir}/kadb_check
+mv $RPM_BUILD_ROOT%{_prefix}/afs/bin/prdb_check $RPM_BUILD_ROOT%{_sbindir}/prdb_check
+mv $RPM_BUILD_ROOT%{_prefix}/afs/bin/vldb_check $RPM_BUILD_ROOT%{_sbindir}/vldb_check
+mv $RPM_BUILD_ROOT%{_prefix}/afs/bin/vldb_convert $RPM_BUILD_ROOT%{_sbindir}/vldb_convert
 %if %{krb5support}
+mv $RPM_BUILD_ROOT%{_prefix}/afs/bin/akeyconvert $RPM_BUILD_ROOT%{_sbindir}/akeyconvert
 mv $RPM_BUILD_ROOT%{_prefix}/afs/bin/asetkey $RPM_BUILD_ROOT%{_sbindir}/asetkey
 %endif
 
@@ -733,8 +743,8 @@ mv $RPM_BUILD_ROOT%{_prefix}/afs/bin/asetkey $RPM_BUILD_ROOT%{_sbindir}/asetkey
 mkdir -p $RPM_BUILD_ROOT%{pamdir}
 mv $RPM_BUILD_ROOT%{_libdir}/pam_afs.krb.so $RPM_BUILD_ROOT%{pamdir}
 mv $RPM_BUILD_ROOT%{_libdir}/pam_afs.so $RPM_BUILD_ROOT%{pamdir}
-ln -sf pam_afs.so.1 $RPM_BUILD_ROOT%{pamdir}/pam_afs.so
-ln -sf pam_afs.krb.so.1 $RPM_BUILD_ROOT%{pamdir}/pam_afs.krb.so
+ln -sf pam_afs.so $RPM_BUILD_ROOT%{pamdir}/pam_afs.so.1
+ln -sf pam_afs.krb.so $RPM_BUILD_ROOT%{pamdir}/pam_afs.krb.so.1
 
 # Rename kpasswd to avoid conflicting with krb5 kpasswd.
 mv $RPM_BUILD_ROOT%{_bindir}/kpasswd $RPM_BUILD_ROOT%{_bindir}/kapasswd
@@ -762,12 +772,12 @@ rm -f $RPM_BUILD_ROOT%{_mandir}/man1/livesys.*
 rm -f $RPM_BUILD_ROOT%{_mandir}/man8/rmtsysd.*
 rm -f $RPM_BUILD_ROOT%{_mandir}/man8/aklog_dynamic_auth.*
 rm -f $RPM_BUILD_ROOT%{_mandir}/man8/kdb.*
-rm -f $RPM_BUILD_ROOT%{_mandir}/man8/kpwvalid.*
 rm -f $RPM_BUILD_ROOT%{_mandir}/man8/xfs_size_check.*
 rm -f $RPM_BUILD_ROOT%{_mandir}/man1/package_test.*
 rm -f $RPM_BUILD_ROOT%{_mandir}/man5/package.*
 rm -f $RPM_BUILD_ROOT%{_mandir}/man8/package.*
 %if !%{krb5support}
+rm -f $RPM_BUILD_ROOT%{_mandir}/man8/akeyconvert.*
 rm -f $RPM_BUILD_ROOT%{_mandir}/man8/asetkey.*
 %endif
 
@@ -1134,6 +1144,8 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man8/bos_*.*
 %{_mandir}/man8/bosserver.*
 %{_mandir}/man8/butc.*
+%{_mandir}/man8/dafssync-debug.*
+%{_mandir}/man8/dafssync-debug_*.*
 %{_mandir}/man8/fms.*
 %{_mandir}/man8/fssync-debug.*
 %{_mandir}/man8/fssync-debug_*.*
@@ -1168,6 +1180,8 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_bindir}/up
 %{_prefix}/vice/etc/afsd
 %{_prefix}/vice/etc/C/afszcm.cat
+%{_libdir}/libuafs.a
+%{_libdir}/libuafs_pic.a
 %{pamdir}/pam_afs.krb.so.1
 %{pamdir}/pam_afs.krb.so
 %{pamdir}/pam_afs.so.1
@@ -1180,6 +1194,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %endif
 %{_mandir}/man1/cmdebug.*
 %{_mandir}/man1/up.*
+%{_mandir}/man3/AFS::ukernel.*
 %{_mandir}/man5/afs.5.gz
 %{_mandir}/man5/afs_cache.5.gz
 %{_mandir}/man5/afs_volume_header.5.gz
@@ -1236,9 +1251,11 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man5/FORCESALVAGE.*
 %{_mandir}/man5/FileLog.*
 %{_mandir}/man5/KeyFile.*
+%{_mandir}/man5/KeyFileExt.*
 %{_mandir}/man5/NetInfo.*
 %{_mandir}/man5/NetRestrict.*
 %{_mandir}/man5/NoAuth.*
+%{_mandir}/man5/PtLog.*
 %{_mandir}/man5/SALVAGE.fs.*
 %{_mandir}/man5/SalvageLog.*
 %{_mandir}/man5/sysid.*
@@ -1312,9 +1329,11 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_includedir}/timer.h
 %{_includedir}/ubik.h
 %{_includedir}/ubik_int.h
+%{_includedir}/opr/queue.h
 %{_libdir}/afs
 %{_libdir}/libafshcrypto.a
 %{_libdir}/libafshcrypto.so
+%{_libdir}/libafsrfc3961.a
 %{_libdir}/liblwp.a
 %{_libdir}/libopr.a
 %{_libdir}/librokenafs.a
@@ -1323,7 +1342,6 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_libdir}/librxkad.a
 %{_libdir}/librxstat.a
 %{_libdir}/libubik.a
-%{_libdir}/libubik_pthread.a
 %{_mandir}/man1/rxgen.*
 %{_mandir}/man1/afs_compile_et.*
 
@@ -1356,9 +1374,11 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %defattr(-,root,root)
 %{_bindir}/aklog
 %{_bindir}/klog.krb5
+%{_sbindir}/akeyconvert
 %{_sbindir}/asetkey
 %{_mandir}/man1/aklog.*
 %{_mandir}/man1/klog.krb5.*
+%{_mandir}/man8/akeyconvert.*
 %{_mandir}/man8/asetkey.*
 %endif
 
