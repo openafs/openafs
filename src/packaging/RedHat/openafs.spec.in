@@ -8,13 +8,43 @@
 
 %{!?build_dkmspkg: %define build_dkmspkg 1}
 
-# Determine presence of rpmbuild command line --define arguments used for
-# option specification
+#
+# Determine presence of rpmbuild command line --define arguments and set
+# defaults if not present.
+#
 %define kernvers_on_cmdline %{?kernvers:1}%{!?kernvers:0}
 %define build_userspace_on_cmdline %{?build_userspace:1}%{!?build_userspace:0}
 %define build_modules_on_cmdline %{?build_modules:1}%{!?build_modules:0}
-%define build_authlibs_on_cmdline %{?build_authlibs:1}%{!?build_authlibs:0}
+%define debugspec_on_cmdline %{?debugspec:1}%{!?debugspec:0}
 
+%if !%{kernvers_on_cmdline}
+%define kernvers %(uname -r)
+%endif
+%if !%{build_userspace_on_cmdline}
+%define build_userspace 1
+%endif
+%if !%{build_modules_on_cmdline}
+%define build_modules 1
+%endif
+%if !%{debugspec_on_cmdline}
+%define debugspec 0
+%endif
+
+# Specify '--without authlibs' if you do not want to build the openafs-authlibs
+# package.
+%define build_authlibs %{?_without_authlibs:0}%{!?_without_authlibs:1}
+
+# Specify '--without krb5' if you do not want to build the openafs-krb5 package
+# to distribute aklog, asetkey, and akeyconvert.
+%define krb5support %{?_without_krb5:0}%{!?_without_krb5:1}
+
+# Specify '--with bootkernel' if you want to build the
+# kernel module for Red Hat BOOT Kernels on x86.
+%define bootkernelsupport %{?_with_bootkernel:1}%{!?_with_bootkernel:0}
+
+#
+# Definitions
+#
 %if 0%{?fedora} >= 17 || 0%{?rhel} >= 7
 %define depmod /usr/sbin/depmod
 %else
@@ -39,20 +69,6 @@
 
 %define dkms_version %{pkgvers}-%{pkgrel}%{?dist}
 
-# Set 'debugspec' to 1 if you want to debug the spec file.  This will
-# not remove the installed tree as part of the %clean operation
-%if %{?debugspec:0}%{!?debugspec:1}
-%define debugspec 0
-%endif
-
-# Set 'krb5support' to 1 if you want to build the openafs-krb5 package
-# to distribute aklog and asetkey
-%define krb5support %{?_without_krb5:0}%{!?_without_krb5:1}
-
-# Set 'bootkernelsupport' to 1 if you want to build the
-# kernel module for Red Hat BOOT Kernels on x86.
-%define bootkernelsupport %{?_with_bootkernel:1}%{!?_with_bootkernel:0}
-
 # Define the location of your init.d directory
 %define initdir /etc/rc.d/init.d
 
@@ -61,45 +77,6 @@
 
 # Define the location of the PAM security module directory
 %define pamdir /%{_lib}/security
-
-#######################################################################
-# You probably don't need to change anything beyond this line
-# NOTE: If you do, please email me!!!
-
-# Determine which elements of OpenAFS to build.  For non-x86 arches
-# (subject to the ExclusiveArch setting, below), we build both userspace
-# and modules.  For most x86 arches, we build just the kernel modules.  For
-# i386, we build just the userspace.  If you're running an i386 kernel,
-# you'll need to tweak that last bit.
-%if !%{build_userspace_on_cmdline} && !%{build_modules_on_cmdline}
-
-%define build_userspace 1
-%define build_modules 1
-%ifarch %{ix86} x86_64 ia64
-%define build_authlibs 1
-%else
-%define build_authlibs 0
-%endif
-
-%else
-%if !%{build_userspace_on_cmdline}
-%define build_userspace 0
-%endif
-%if !%{build_modules_on_cmdline}
-%define build_modules 0
-%endif
-%endif
-
-%if !%{build_authlibs_on_cmdline}
-%if %{build_userspace_on_cmdline}
-%define build_authlibs 1
-%else
-%define build_authlibs 0
-%endif
-%endif
-
-# Make sure RPM doesn't complain about installed but non-packaged files.
-#define __check_files  %{nil}
 
 Summary: OpenAFS distributed filesystem
 Name: openafs
@@ -164,16 +141,13 @@ what gets built:
                                   The build will define ksrvdir as
                                   %%{kbase}<kernvers>%%{kend}
 
+ --without authlibs               Disable authlibs package (default: with authlibs)
  --without krb5                   Disable krb5 support (default: with krb5)
  --with bitmap-later              Enable "bitmap later" support
  --with bos-restricted            Enable "bos restricted" mode
  --with supergroups               Enable "supergroups"
 
  --target=i386                    The target architecture to build for.
-                                  When building for a non-default target
-                                  the build may choose whether to build
-                                  userspace or kernel modules automatically.
-                                  The defaults are probably what you want.
 
  --define "build_userspace 1"     Request building of userspace tools
  --define "build_modules 1"       Request building of kernel modules
