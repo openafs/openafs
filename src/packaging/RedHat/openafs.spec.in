@@ -30,6 +30,10 @@
 %define debugspec 0
 %endif
 
+# Specify '--with kauth' if you want to include the legacy kaserver and related
+# programs.
+%define kauth_support %{?_with_kauth:1}%{!?_with_kauth:0}
+
 # Specify '--without authlibs' if you do not want to build the openafs-authlibs
 # package.
 %define build_authlibs %{?_without_authlibs:0}%{!?_without_authlibs:1}
@@ -336,6 +340,7 @@ completely optional, and is only necessary to support legacy
 applications and scripts that hard-code the location of AFS client
 programs.
 
+%if %{kauth_support}
 %package kpasswd
 Summary: OpenAFS KA kpasswd support
 Requires: openafs
@@ -349,6 +354,7 @@ administrative management.
 
 This package provides the kpasswd executable, renamed to kapasswd to avoid
 clashes, for sites still using KAserver instead of Krb5.
+%endif
 
 %if %{krb5support}
 %package krb5
@@ -522,6 +528,7 @@ PrintRedhatKernelFix() {
 }
 
 config_opts="--enable-redhat-buildsys \
+	%{?_with_kauth:--enable-kauth} \
 	%{?_with_bitmap_later:--enable-bitmap-later} \
 	%{?_with_bos_restricted:--enable-bos-restricted-mode} \
 	%{?_with_supergroups:--enable-supergroups} \
@@ -572,7 +579,6 @@ export KRB5_CONFIG
 %if %{krb5support}
 	--with-krb5 \
 %endif
-	--enable-kauth \
        $config_opts \
        || exit 1
 
@@ -673,11 +679,13 @@ chmod +x $RPM_BUILD_ROOT%{_libdir}/*.so*
 # Exclude duplicated files.
 rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/bos
 rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/fs
+%if %{kauth_support}
 rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/kas
 rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/klog
 rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/klog.krb
 rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/kpwvalid
 rm -f $RPM_BUILD_ROOT%{_sbindir}/kpwvalid
+%endif
 rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/pts
 rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/tokens
 rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/tokens.krb
@@ -704,7 +712,9 @@ rm -f $RPM_BUILD_ROOT%{_sbindir}/afsd.fuse
 mv $RPM_BUILD_ROOT%{_sbindir}/afsd $RPM_BUILD_ROOT%{_prefix}/vice/etc/afsd
 
 # Relocate admin utilities to a modern path.
+%if %{kauth_support}
 mv $RPM_BUILD_ROOT%{_prefix}/afs/bin/kadb_check $RPM_BUILD_ROOT%{_sbindir}/kadb_check
+%endif
 mv $RPM_BUILD_ROOT%{_prefix}/afs/bin/prdb_check $RPM_BUILD_ROOT%{_sbindir}/prdb_check
 mv $RPM_BUILD_ROOT%{_prefix}/afs/bin/vldb_check $RPM_BUILD_ROOT%{_sbindir}/vldb_check
 mv $RPM_BUILD_ROOT%{_prefix}/afs/bin/vldb_convert $RPM_BUILD_ROOT%{_sbindir}/vldb_convert
@@ -713,6 +723,7 @@ mv $RPM_BUILD_ROOT%{_prefix}/afs/bin/akeyconvert $RPM_BUILD_ROOT%{_sbindir}/akey
 mv $RPM_BUILD_ROOT%{_prefix}/afs/bin/asetkey $RPM_BUILD_ROOT%{_sbindir}/asetkey
 %endif
 
+%if %{kauth_support}
 # Relocate PAM files to the standard PAM module path.
 mkdir -p $RPM_BUILD_ROOT%{pamdir}
 mv $RPM_BUILD_ROOT%{_libdir}/pam_afs.krb.so $RPM_BUILD_ROOT%{pamdir}
@@ -723,6 +734,7 @@ ln -sf pam_afs.krb.so $RPM_BUILD_ROOT%{pamdir}/pam_afs.krb.so.1
 # Rename kpasswd to avoid conflicting with krb5 kpasswd.
 mv $RPM_BUILD_ROOT%{_bindir}/kpasswd $RPM_BUILD_ROOT%{_bindir}/kapasswd
 mv $RPM_BUILD_ROOT%{_mandir}/man1/kpasswd.1 $RPM_BUILD_ROOT%{_mandir}/man1/kapasswd.1
+%endif
 
 # Exclude obsolete or unused man pages.
 rm -f $RPM_BUILD_ROOT%{_mandir}/man1/afs_ftpd.1
@@ -837,9 +849,11 @@ mkdir -p $RPM_BUILD_ROOT%{_prefix}/afsws/etc
 ln -sf %{_prefix}/bin/afsmonitor    $RPM_BUILD_ROOT%{_prefix}/afsws/bin/afsmonitor
 ln -sf %{_prefix}/bin/bos           $RPM_BUILD_ROOT%{_prefix}/afsws/bin/bos
 ln -sf %{_prefix}/bin/fs            $RPM_BUILD_ROOT%{_prefix}/afsws/bin/fs
+%if %{kauth_support}
 ln -sf %{_prefix}/bin/kapasswd      $RPM_BUILD_ROOT%{_prefix}/afsws/bin/kapasswd
 ln -sf %{_prefix}/bin/klog          $RPM_BUILD_ROOT%{_prefix}/afsws/bin/klog
 ln -sf %{_prefix}/bin/klog.krb      $RPM_BUILD_ROOT%{_prefix}/afsws/bin/klog.krb
+%endif
 ln -sf %{_prefix}/bin/pagsh         $RPM_BUILD_ROOT%{_prefix}/afsws/bin/pagsh
 ln -sf %{_prefix}/bin/pagsh.krb     $RPM_BUILD_ROOT%{_prefix}/afsws/bin/pagsh.krb
 ln -sf %{_prefix}/bin/pts           $RPM_BUILD_ROOT%{_prefix}/afsws/bin/pts
@@ -857,7 +871,9 @@ ln -sf %{_prefix}/sbin/backup       $RPM_BUILD_ROOT%{_prefix}/afsws/etc/backup
 ln -sf %{_prefix}/sbin/butc         $RPM_BUILD_ROOT%{_prefix}/afsws/etc/butc
 ln -sf %{_prefix}/sbin/fms          $RPM_BUILD_ROOT%{_prefix}/afsws/etc/fms
 ln -sf %{_prefix}/sbin/fstrace      $RPM_BUILD_ROOT%{_prefix}/afsws/etc/fstrace
+%if %{kauth_support}
 ln -sf %{_prefix}/sbin/kas          $RPM_BUILD_ROOT%{_prefix}/afsws/etc/kas
+%endif
 ln -sf %{_prefix}/sbin/read_tape    $RPM_BUILD_ROOT%{_prefix}/afsws/etc/read_tape
 ln -sf %{_prefix}/sbin/rxdebug      $RPM_BUILD_ROOT%{_prefix}/afsws/etc/rxdebug
 ln -sf %{_prefix}/sbin/uss          $RPM_BUILD_ROOT%{_prefix}/afsws/etc/uss
@@ -1058,8 +1074,10 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_bindir}/afsmonitor
 %{_bindir}/bos
 %{_bindir}/fs
+%if %{kauth_support}
 %{_bindir}/klog
 %{_bindir}/klog.krb
+%endif
 %{_bindir}/pagsh
 %{_bindir}/pagsh.krb
 %{_bindir}/pts
@@ -1077,7 +1095,9 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_sbindir}/butc
 %{_sbindir}/fms
 %{_sbindir}/fstrace
+%if %{kauth_support}
 %{_sbindir}/kas
+%endif
 %{_sbindir}/read_tape
 %{_sbindir}/rxdebug
 %{_sbindir}/uss
@@ -1089,7 +1109,9 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man1/afsmonitor.*
 %{_mandir}/man1/fs.*
 %{_mandir}/man1/fs_*.*
+%if %{kauth_support}
 %{_mandir}/man1/klog.*
+%endif
 %{_mandir}/man1/pagsh.*
 %{_mandir}/man1/pts.*
 %{_mandir}/man1/pts_*.*
@@ -1125,9 +1147,11 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man8/fssync-debug_*.*
 %{_mandir}/man8/fstrace.*
 %{_mandir}/man8/fstrace_*.*
+%if %{kauth_support}
 %{_mandir}/man8/kas.*
 %{_mandir}/man8/kas_*.*
 %{_mandir}/man8/kaserver.*
+%endif
 %{_mandir}/man8/read_tape.*
 %{_mandir}/man8/uss.*
 %{_mandir}/man8/uss_*.*
@@ -1156,10 +1180,12 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_prefix}/vice/etc/C/afszcm.cat
 %{_libdir}/libuafs.a
 %{_libdir}/libuafs_pic.a
+%if %{kauth_support}
 %{pamdir}/pam_afs.krb.so.1
 %{pamdir}/pam_afs.krb.so
 %{pamdir}/pam_afs.so.1
 %{pamdir}/pam_afs.so
+%endif
 %if 0%{?fedora} < 15 && 0%{?rhel} < 7
 %{initdir}/openafs-client
 %else
@@ -1193,9 +1219,10 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_prefix}/afs/bin/davolserver
 %{_prefix}/afs/bin/fileserver
 %{_prefix}/afs/bin/fssync-debug
-# Should we support KAServer?
+%if %{kauth_support}
 %{_prefix}/afs/bin/kaserver
 %{_prefix}/afs/bin/ka-forwarder
+%endif
 %{_prefix}/afs/bin/pt_util
 %{_prefix}/afs/bin/ptserver
 %{_prefix}/afs/bin/salvager
@@ -1208,7 +1235,9 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_prefix}/afs/bin/volinfo
 %{_prefix}/afs/bin/volscan
 %{_prefix}/afs/bin/volserver
+%if %{kauth_support}
 %{_sbindir}/kadb_check
+%endif
 %{_sbindir}/prdb_check
 %{_sbindir}/vldb_check
 %{_sbindir}/vldb_convert
@@ -1238,8 +1267,10 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man5/VolserLog.*
 %{_mandir}/man5/bdb.DB0.*
 %{_mandir}/man5/fms.log.*
+%if %{kauth_support}
 %{_mandir}/man5/kaserver.DB0.*
 %{_mandir}/man5/kaserverauxdb.*
+%endif
 %{_mandir}/man5/krb.conf.*
 %{_mandir}/man5/krb.excl.*
 %{_mandir}/man5/prdb.DB0.*
@@ -1251,8 +1282,10 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man8/dafileserver.*
 %{_mandir}/man8/dasalvager.*
 %{_mandir}/man8/davolserver.*
+%if %{kauth_support}
 %{_mandir}/man8/kadb_check.*
 %{_mandir}/man8/ka-forwarder.*
+%endif
 %{_mandir}/man8/prdb_check.*
 %{_mandir}/man8/ptserver.*
 %{_mandir}/man8/pt_util.*
@@ -1336,12 +1369,14 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %defattr(-,root,root)
 %{_prefix}/afsws
 
+%if %{kauth_support}
 %files kpasswd
 %defattr(-,root,root)
 %{_bindir}/kapasswd
 %{_bindir}/kpwvalid
 %{_mandir}/man1/kapasswd.*
 %{_mandir}/man8/kpwvalid.*
+%endif
 
 %if %{krb5support}
 %files krb5
