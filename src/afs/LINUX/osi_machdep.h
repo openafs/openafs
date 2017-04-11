@@ -71,8 +71,10 @@
 
 #define afs_hz HZ
 #include "h/sched.h"
-/* in case cred.h is not included in sched.h */
+/* in case cred.h is present but not included in sched.h */
+#if defined(HAVE_LINUX_CRED_H)
 #include "h/cred.h"
+#endif
 #if defined(HAVE_LINUX_CURRENT_KERNEL_TIME)
 static inline time_t osi_Time(void) {
     struct timespec xtime;
