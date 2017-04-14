@@ -30,8 +30,8 @@
 %define debugspec 0
 %endif
 
-# Specify '--with kauth' if you want to include the legacy kaserver and related
-# programs.
+# Specify '--with kauth' if you want to build packages containing the legacy
+# kaserver and related programs.
 %define kauth_support %{?_with_kauth:1}%{!?_with_kauth:0}
 
 # Specify '--without authlibs' if you do not want to build the openafs-authlibs
@@ -150,6 +150,9 @@ what gets built:
  --with bitmap-later              Enable "bitmap later" support
  --with bos-restricted            Enable "bos restricted" mode
  --with supergroups               Enable "supergroups"
+ --with kauth                     Build the openafs-kauth-server and openafs-kauth-client
+                                  packages which contain the legacy kaserver and
+                                  related programs. (default: --without kauth)
 
  --target=i386                    The target architecture to build for.
 
@@ -341,19 +344,36 @@ applications and scripts that hard-code the location of AFS client
 programs.
 
 %if %{kauth_support}
-%package kpasswd
-Summary: OpenAFS KA kpasswd support
+%package kauth-client
+Summary: OpenAFS Kauth Client support
 Requires: openafs
 Group: Networking/Filesystems
 
-%description kpasswd
+%description kauth-client
 The AFS distributed filesystem.  AFS is a distributed filesystem
 allowing cross-platform sharing of files among multiple computers.
 Facilities are provided for access control, authentication, backup and
 administrative management.
 
-This package provides the kpasswd executable, renamed to kapasswd to avoid
-clashes, for sites still using KAserver instead of Krb5.
+This package provides the legacy KAServer client programs and the PAM module
+for authentication with the OpenAFS KAserver; a deprecated authentication
+service.  Generally you should not install this package for new cells or for
+cells using Kerberos v5.
+
+%package kauth-server
+Summary: OpenAFS Kauth Server support
+Requires: openafs
+Group: Networking/Filesystems
+
+%description kauth-server
+The AFS distributed filesystem.  AFS is a distributed filesystem
+allowing cross-platform sharing of files among multiple computers.
+Facilities are provided for access control, authentication, backup and
+administrative management.
+
+This package provides the legacy OpenAFS KAServer; a deprecated authentication
+service. Generally you should not install this package for new cells or for
+cells using Kerberos v5.
 %endif
 
 %if %{krb5support}
@@ -1074,10 +1094,6 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_bindir}/afsmonitor
 %{_bindir}/bos
 %{_bindir}/fs
-%if %{kauth_support}
-%{_bindir}/klog
-%{_bindir}/klog.krb
-%endif
 %{_bindir}/pagsh
 %{_bindir}/pagsh.krb
 %{_bindir}/pts
@@ -1095,9 +1111,6 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_sbindir}/butc
 %{_sbindir}/fms
 %{_sbindir}/fstrace
-%if %{kauth_support}
-%{_sbindir}/kas
-%endif
 %{_sbindir}/read_tape
 %{_sbindir}/rxdebug
 %{_sbindir}/uss
@@ -1109,9 +1122,6 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man1/afsmonitor.*
 %{_mandir}/man1/fs.*
 %{_mandir}/man1/fs_*.*
-%if %{kauth_support}
-%{_mandir}/man1/klog.*
-%endif
 %{_mandir}/man1/pagsh.*
 %{_mandir}/man1/pts.*
 %{_mandir}/man1/pts_*.*
@@ -1147,11 +1157,6 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man8/fssync-debug_*.*
 %{_mandir}/man8/fstrace.*
 %{_mandir}/man8/fstrace_*.*
-%if %{kauth_support}
-%{_mandir}/man8/kas.*
-%{_mandir}/man8/kas_*.*
-%{_mandir}/man8/kaserver.*
-%endif
 %{_mandir}/man8/read_tape.*
 %{_mandir}/man8/uss.*
 %{_mandir}/man8/uss_*.*
@@ -1180,12 +1185,6 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_prefix}/vice/etc/C/afszcm.cat
 %{_libdir}/libuafs.a
 %{_libdir}/libuafs_pic.a
-%if %{kauth_support}
-%{pamdir}/pam_afs.krb.so.1
-%{pamdir}/pam_afs.krb.so
-%{pamdir}/pam_afs.so.1
-%{pamdir}/pam_afs.so
-%endif
 %if 0%{?fedora} < 15 && 0%{?rhel} < 7
 %{initdir}/openafs-client
 %else
@@ -1219,10 +1218,6 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_prefix}/afs/bin/davolserver
 %{_prefix}/afs/bin/fileserver
 %{_prefix}/afs/bin/fssync-debug
-%if %{kauth_support}
-%{_prefix}/afs/bin/kaserver
-%{_prefix}/afs/bin/ka-forwarder
-%endif
 %{_prefix}/afs/bin/pt_util
 %{_prefix}/afs/bin/ptserver
 %{_prefix}/afs/bin/salvager
@@ -1235,9 +1230,6 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_prefix}/afs/bin/volinfo
 %{_prefix}/afs/bin/volscan
 %{_prefix}/afs/bin/volserver
-%if %{kauth_support}
-%{_sbindir}/kadb_check
-%endif
 %{_sbindir}/prdb_check
 %{_sbindir}/vldb_check
 %{_sbindir}/vldb_convert
@@ -1267,10 +1259,6 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man5/VolserLog.*
 %{_mandir}/man5/bdb.DB0.*
 %{_mandir}/man5/fms.log.*
-%if %{kauth_support}
-%{_mandir}/man5/kaserver.DB0.*
-%{_mandir}/man5/kaserverauxdb.*
-%endif
 %{_mandir}/man5/krb.conf.*
 %{_mandir}/man5/krb.excl.*
 %{_mandir}/man5/prdb.DB0.*
@@ -1282,10 +1270,6 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man8/dafileserver.*
 %{_mandir}/man8/dasalvager.*
 %{_mandir}/man8/davolserver.*
-%if %{kauth_support}
-%{_mandir}/man8/kadb_check.*
-%{_mandir}/man8/ka-forwarder.*
-%endif
 %{_mandir}/man8/prdb_check.*
 %{_mandir}/man8/ptserver.*
 %{_mandir}/man8/pt_util.*
@@ -1368,14 +1352,43 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %files compat
 %defattr(-,root,root)
 %{_prefix}/afsws
+%exclude %{_prefix}/afsws/bin/kapasswd
+%exclude %{_prefix}/afsws/bin/klog
+%exclude %{_prefix}/afsws/bin/klog.krb
+%exclude %{_prefix}/afsws/etc/kas
 
 %if %{kauth_support}
-%files kpasswd
+%files kauth-client
 %defattr(-,root,root)
+%{_sbindir}/kas
+%{_bindir}/klog
+%{_bindir}/klog.krb
+%{pamdir}/pam_afs.krb.so.1
+%{pamdir}/pam_afs.krb.so
+%{pamdir}/pam_afs.so.1
+%{pamdir}/pam_afs.so
 %{_bindir}/kapasswd
 %{_bindir}/kpwvalid
+%{_prefix}/afsws/bin/kapasswd
+%{_prefix}/afsws/bin/klog
+%{_prefix}/afsws/bin/klog.krb
+%{_prefix}/afsws/etc/kas
 %{_mandir}/man1/kapasswd.*
+%{_mandir}/man1/klog.*
 %{_mandir}/man8/kpwvalid.*
+%{_mandir}/man8/kas.*
+%{_mandir}/man8/kas_*.*
+
+%files kauth-server
+%defattr(-,root,root)
+%{_prefix}/afs/bin/kaserver
+%{_prefix}/afs/bin/ka-forwarder
+%{_sbindir}/kadb_check
+%{_mandir}/man5/kaserver.DB0.*
+%{_mandir}/man5/kaserverauxdb.*
+%{_mandir}/man8/kadb_check.*
+%{_mandir}/man8/ka-forwarder.*
+%{_mandir}/man8/kaserver.*
 %endif
 
 %if %{krb5support}
