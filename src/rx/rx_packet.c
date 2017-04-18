@@ -85,6 +85,15 @@
 #endif
 #endif /* KERNEL */
 
+/*!
+ * \brief structure used to keep track of allocated packets
+ */
+struct rx_mallocedPacket {
+    struct rx_queue entry;	/*!< chained using the queue package */
+    struct rx_packet *addr;	/*!< address of the first element */
+    afs_uint32 size;		/*!< array size in bytes */
+};
+
 #ifdef RX_LOCKS_DB
 /* rxdb_fileID is used to identify the lock location, along with line#. */
 static int rxdb_fileID = RXDB_FILE_RX_PACKET;
@@ -526,6 +535,33 @@ rxi_AllocDataBuf(struct rx_packet *p, int nb, int class)
     return nb;
 }
 
+/**
+ * Register allocated packets.
+ *
+ * @param[in] addr array of packets
+ * @param[in] npkt number of packets
+ *
+ * @return none
+ */
+static void
+registerPackets(struct rx_packet *addr, afs_uint32 npkt)
+{
+    struct rx_mallocedPacket *mp;
+
+    mp = (struct rx_mallocedPacket *)
+	osi_Alloc(sizeof(struct rx_mallocedPacket));
+
+    osi_Assert(mp);
+    memset(mp, 0, sizeof(struct rx_mallocedPacket));
+
+    mp->addr = addr;
+    mp->size = npkt * sizeof(struct rx_packet);
+
+    MUTEX_ENTER(&rx_mallocedPktQ_lock);
+    queue_Append(&rx_mallocedPacketQueue, mp);
+    MUTEX_EXIT(&rx_mallocedPktQ_lock);
+}
+
 /* Add more packet buffers */
 #ifdef RX_ENABLE_TSFPQ
 void
@@ -539,6 +575,7 @@ rxi_MorePackets(int apackets)
     getme = apackets * sizeof(struct rx_packet);
     p = (struct rx_packet *)osi_Alloc(getme);
     osi_Assert(p);
+    registerPackets(p, apackets);
 
     PIN(p, getme);		/* XXXXX */
     memset(p, 0, getme);
@@ -593,6 +630,7 @@ rxi_MorePackets(int apackets)
     getme = apackets * sizeof(struct rx_packet);
     p = (struct rx_packet *)osi_Alloc(getme);
     osi_Assert(p);
+    registerPackets(p, apackets);
 
     PIN(p, getme);		/* XXXXX */
     memset(p, 0, getme);
@@ -635,6 +673,7 @@ rxi_MorePacketsTSFPQ(int apackets, int flush_global, int num_keep_local)
 
     getme = apackets * sizeof(struct rx_packet);
     p = (struct rx_packet *)osi_Alloc(getme);
+    registerPackets(p, apackets);
 
     PIN(p, getme);		/* XXXXX */
     memset(p, 0, getme);
@@ -703,6 +742,7 @@ rxi_MorePacketsNoLock(int apackets)
         }
     } while(p == NULL);
     memset(p, 0, getme);
+    registerPackets(p, apackets);
 
 #ifdef RX_ENABLE_TSFPQ
     RX_TS_INFO_GET(rx_ts_info);
@@ -739,11 +779,18 @@ rxi_MorePacketsNoLock(int apackets)
 void
 rxi_FreeAllPackets(void)
 {
-    /* must be called at proper interrupt level, etcetera */
-    /* MTUXXX need to free all Packets */
-    osi_Free(rx_mallocedP,
-	     (rx_maxReceiveWindow + 2) * sizeof(struct rx_packet));
-    UNPIN(rx_mallocedP, (rx_maxReceiveWindow + 2) * sizeof(struct rx_packet));
+    struct rx_mallocedPacket *mp;
+
+    MUTEX_ENTER(&rx_mallocedPktQ_lock);
+
+    while (!queue_IsEmpty(&rx_mallocedPacketQueue)) {
+	mp = queue_First(&rx_mallocedPacketQueue, rx_mallocedPacket);
+	queue_Remove(mp);
+	osi_Free(mp->addr, mp->size);
+	UNPIN(mp->addr, mp->size);
+	osi_Free(mp, sizeof(*mp));
+    }
+    MUTEX_EXIT(&rx_mallocedPktQ_lock);
 }
 
 #ifdef RX_ENABLE_TSFPQ
