@@ -155,7 +155,7 @@ OpenAFS packages but are not necessarily tied to a client or server.
 The OpenAFS SRPM can be rebuilt with the following options to control
 what gets built:
 
- --define "kernvers 3.19.3-100.fc20.i686" Specify the specific kernel version 
+ --define "kernvers 3.19.3-100.fc20.i686" Specify the specific kernel version
                                   to build modules against. The default is
                                   to build against the currently-running
                                   kernel.
@@ -189,7 +189,7 @@ what gets built:
                                   <variants> is a space seperated list which
                                   may contain one or more of
                                   '' (for the generic kernel), smp, PAE, xen
-                                  or kdump 
+                                  or kdump
 
 To a kernel module for your running kernel, just run:
   rpmbuild --rebuild --target=`uname -m` openafs-%{pkgvers}-%{pkgrel}%{?dist}.src.rpm
@@ -277,9 +277,9 @@ allowing cross-platform sharing of files among multiple computers.
 Facilities are provided for access control, authentication, backup and
 administrative management.
 
-This package provides a shared version of libafsrpc and libafsauthent. 
-None of the programs included with OpenAFS currently use these shared 
-libraries; however, third-party software that wishes to perform AFS 
+This package provides a shared version of libafsrpc and libafsauthent.
+None of the programs included with OpenAFS currently use these shared
+libraries; however, third-party software that wishes to perform AFS
 authentication may link against them.
 %endif
 
@@ -297,8 +297,8 @@ allowing cross-platform sharing of files among multiple computers.
 Facilities are provided for access control, authentication, backup and
 administrative management.
 
-This package includes the static versions of libafsrpc and 
-libafsauthent, and symlinks required for building against the dynamic 
+This package includes the static versions of libafsrpc and
+libafsauthent, and symlinks required for building against the dynamic
 libraries.
 
 %package devel
@@ -555,7 +555,7 @@ config_opts="--enable-redhat-buildsys \
 
 # Configure AFS
 
-# If we're using Fedora kmods, work out which is the best kernel module to 
+# If we're using Fedora kmods, work out which is the best kernel module to
 # use for the userland configuration step. If no variants have been specified,
 # then use the standard kernel. If variants are specified, use the standard kernel
 # if it's listed, otherwise pick the first listed kernel.
@@ -713,7 +713,7 @@ tar cf - -C ${sysname}/dest/etc . | tar xf - -C $RPM_BUILD_ROOT%{_sbindir}
 tar cf - -C ${sysname}/dest/root.server%{_prefix}/afs bin | tar xf - -C $RPM_BUILD_ROOT%{_prefix}/afs
 tar cf - -C ${sysname}/dest/root.client%{_prefix}/vice/etc afsd C | tar xf - -C $RPM_BUILD_ROOT%{_prefix}/vice/etc
 
-# Set the executable bit on libraries in libdir, so rpmbuild knows to 
+# Set the executable bit on libraries in libdir, so rpmbuild knows to
 # create "Provides" entries in the package metadata for the libraries
 chmod +x $RPM_BUILD_ROOT%{_libdir}/*.so*
 
@@ -991,8 +991,8 @@ fi
 %if 0%{?fedora} < 15 && 0%{?rhel} < 7
 chkconfig --add openafs-client
 %else
-if [ $1 -eq 1 ] ; then 
-    # Initial installation 
+if [ $1 -eq 1 ] ; then
+    # Initial installation
     /bin/systemctl daemon-reload >/dev/null 2>&1 || :
 fi
 %endif
@@ -1021,8 +1021,8 @@ if [ $1 = 1 ] ; then
 fi
 %{initdir}/openafs-server condrestart
 %else
-if [ $1 -eq 1 ] ; then 
-    # Initial installation 
+if [ $1 -eq 1 ] ; then
+    # Initial installation
     /bin/systemctl daemon-reload >/dev/null 2>&1 || :
 fi
 %endif
