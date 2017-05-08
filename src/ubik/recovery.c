@@ -599,7 +599,7 @@ urecovery_Interact(void *dummy)
 	    UBIK_ADDR_LOCK;
 	    rxcall = rx_NewCall(bestServer->disk_rxcid);
 
-	    ViceLog(0, ("Ubik: Synchronize database with server %s\n",
+	    ViceLog(0, ("Ubik: Synchronize database via DISK_GetFile to server %s\n",
 		       afs_inet_ntoa_r(bestServer->addr[0], hoststr)));
 	    UBIK_ADDR_UNLOCK;
 

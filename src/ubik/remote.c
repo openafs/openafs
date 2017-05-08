@@ -495,7 +495,7 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
     /* abort any active trans that may scribble over the database */
     urecovery_AbortAll(dbase);
 
-    ViceLog(0, ("Ubik: Synchronize database with server %s\n",
+    ViceLog(0, ("Ubik: Synchronize database via DISK_SendFile from server %s\n",
 	       afs_inet_ntoa_r(otherHost, hoststr)));
 
     offset = 0;
