@@ -115,7 +115,7 @@ amSyncSite(void)
 	now = FT_ApproxTime();
 	if (beacon_globals.syncSiteUntil <= now) {	/* if my votes have expired, say so */
 	    if (beacon_globals.ubik_amSyncSite)
-		ViceLog(5, ("Ubik: I am no longer the sync site\n"));
+		ViceLog(0, ("Ubik: I am no longer the sync site - my votes expired\n"));
 	    beacon_globals.ubik_amSyncSite = 0;
 	    beacon_globals.ubik_syncSiteAdvertised = 0;
 	    rcode = 0;
@@ -410,7 +410,7 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
 
     if (ubik_singleServer) {
 	if (!beacon_globals.ubik_amSyncSite) {
-	    ViceLog(5, ("Ubik: I am the sync site - 1 server\n"));
+	    ViceLog(0, ("Ubik: I am the sync site - 1 server\n"));
 	    DBHOLD(ubik_dbase);
 	    UBIK_VERSION_LOCK;
 	    version_globals.ubik_epochTime = FT_ApproxTime();
@@ -618,7 +618,7 @@ ubeacon_Interact(void *dummy)
 	if (yesVotes > nServers) {	/* yesVotes is bumped by 2 or 3 for each site */
 	    UBIK_BEACON_LOCK;
 	    if (!beacon_globals.ubik_amSyncSite) {
-		ViceLog(5, ("Ubik: I am the sync site\n"));
+		ViceLog(0, ("Ubik: I am the sync site\n"));
 		/* Defer actually changing any variables until we can take the
 		 * DB lock (which is before the beacon lock in the lock order). */
 		becameSyncSite = 1;
@@ -632,7 +632,7 @@ ubeacon_Interact(void *dummy)
 	} else {
 	    UBIK_BEACON_LOCK;
 	    if (beacon_globals.ubik_amSyncSite)
-		ViceLog(5, ("Ubik: I am no longer the sync site\n"));
+		ViceLog(0, ("Ubik: I am no longer the sync site - I lost the election\n"));
 	    beacon_globals.ubik_amSyncSite = 0;
 	    beacon_globals.ubik_syncSiteAdvertised = 0;
 	    UBIK_BEACON_UNLOCK;

@@ -605,13 +605,13 @@ urecovery_Interact(void *dummy)
 
 	    code = StartDISK_GetFile(rxcall, file);
 	    if (code) {
-		ViceLog(5, ("StartDiskGetFile failed=%d\n", code));
+		ViceLog(0, ("StartDiskGetFile failed=%d\n", code));
 		goto FetchEndCall;
 	    }
 	    nbytes = rx_Read(rxcall, (char *)&length, sizeof(afs_int32));
 	    length = ntohl(length);
 	    if (nbytes != sizeof(afs_int32)) {
-		ViceLog(5, ("Rx-read length error=%d\n", BULK_ERROR));
+		ViceLog(0, ("Rx-read length error=%d\n", BULK_ERROR));
 		code = EIO;
 		goto FetchEndCall;
 	    }
@@ -622,7 +622,7 @@ urecovery_Interact(void *dummy)
 	    code = (*ubik_dbase->setlabel) (ubik_dbase, file, &tversion);
 	    UBIK_VERSION_UNLOCK;
 	    if (code) {
-		ViceLog(5, ("setlabel io error=%d\n", code));
+		ViceLog(0, ("setlabel io error=%d\n", code));
 		goto FetchEndCall;
 	    }
 	    snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.TMP",
@@ -648,7 +648,7 @@ urecovery_Interact(void *dummy)
 #endif
 		nbytes = rx_Read(rxcall, tbuffer, tlen);
 		if (nbytes != tlen) {
-		    ViceLog(5, ("Rx-read bulk error=%d\n", BULK_ERROR));
+		    ViceLog(0, ("Rx-read bulk error=%d\n", BULK_ERROR));
 		    code = EIO;
 		    close(fd);
 		    goto FetchEndCall;
@@ -798,6 +798,12 @@ urecovery_Interact(void *dummy)
 		UBIK_BEACON_LOCK;
 		if (!ts->up) {
 		    UBIK_BEACON_UNLOCK;
+		    /* It would be nice to have this message at loglevel
+		     * 0 as well, but it will log once every 4s for each
+		     * down server while in this recovery state.  This
+		     * should only be changed to loglevel 0 if it is
+		     * also rate-limited.
+		     */
 		    ViceLog(5, ("recovery cannot send version to %s\n",
 				afs_inet_ntoa_r(inAddr.s_addr, hoststr)));
 		    dbok = 0;
@@ -821,7 +827,7 @@ urecovery_Interact(void *dummy)
 			    StartDISK_SendFile(rxcall, file, length,
 					       &ubik_dbase->version);
 			if (code) {
-			    ViceLog(5, ("StartDiskSendFile failed=%d\n",
+			    ViceLog(0, ("StartDiskSendFile failed=%d\n",
 					code));
 			    goto StoreEndCall;
 			}
@@ -834,13 +840,13 @@ urecovery_Interact(void *dummy)
 						     tbuffer, offset, tlen);
 			    if (nbytes != tlen) {
 				code = UIOERROR;
-				ViceLog(5, ("Local disk read error=%d\n", code));
+				ViceLog(0, ("Local disk read error=%d\n", code));
 				goto StoreEndCall;
 			    }
 			    nbytes = rx_Write(rxcall, tbuffer, tlen);
 			    if (nbytes != tlen) {
 				code = BULK_ERROR;
-				ViceLog(5, ("Rx-write bulk error=%d\n", code));
+				ViceLog(0, ("Rx-write bulk error=%d\n", code));
 				goto StoreEndCall;
 			    }
 			    offset += tlen;

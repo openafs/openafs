@@ -210,7 +210,7 @@ SVOTE_Beacon(struct rx_call * rxcall, afs_int32 astate,
 		break;
 	}
 	if (!ts)
-	    ViceLog(5, ("Unknown host %x has sent a beacon\n", otherHost));
+	    ViceLog(0, ("Unknown host %x has sent a beacon\n", otherHost));
 	if (ts && ts->isClone)
 	    isClone = 1;
     } else {
@@ -269,7 +269,7 @@ SVOTE_Beacon(struct rx_call * rxcall, afs_int32 astate,
 	vote_globals.syncTime = now;
     } else if (vote_globals.syncTime + BIGTIME < now) {
 	if (vote_globals.syncHost) {
-	    ViceLog(5, ("Ubik: Lost contact with sync-site %s (NOT in quorum)\n",
+	    ViceLog(0, ("Ubik: Lost contact with sync-site %s (NOT in quorum)\n",
 		 afs_inet_ntoa_r(vote_globals.syncHost, hoststr)));
 	}
 	vote_globals.syncHost = 0;
@@ -315,6 +315,9 @@ SVOTE_Beacon(struct rx_call * rxcall, afs_int32 astate,
 	if ((vote_globals.ubik_lastYesTime + BIGTIME < now) || (otherHost != vote_globals.lastYesHost)
 	    || (vote_globals.lastYesState != astate)) {
 	    /* A new vote or a change in the vote or changed quorum */
+	    /* XXX This should be at loglevel 0, but the conditionals
+	     * ought to be reworked first to prevent excessive logging.
+	     */
 	    ViceLog(5, ("Ubik: vote 'yes' for %s %s\n",
 			afs_inet_ntoa_r(otherHost, hoststr),
 			(astate ? "(in quorum)" : "(NOT in quorum)")));
