@@ -412,7 +412,7 @@ SDISK_GetFile(struct rx_call *rxcall, afs_int32 file,
     code = rx_Write(rxcall, (char *)&tlen, sizeof(afs_int32));
     if (code != sizeof(afs_int32)) {
 	DBRELE(dbase);
-	ViceLog(5, ("Rx-write length error=%d\n", code));
+	ViceLog(0, ("Rx-write length error=%d\n", code));
 	return BULK_ERROR;
     }
     offset = 0;
@@ -421,13 +421,13 @@ SDISK_GetFile(struct rx_call *rxcall, afs_int32 file,
 	code = (*dbase->read) (dbase, file, tbuffer, offset, tlen);
 	if (code != tlen) {
 	    DBRELE(dbase);
-	    ViceLog(5, ("read failed error=%d\n", code));
+	    ViceLog(0, ("read failed error=%d\n", code));
 	    return UIOERROR;
 	}
 	code = rx_Write(rxcall, tbuffer, tlen);
 	if (code != tlen) {
 	    DBRELE(dbase);
-	    ViceLog(5, ("Rx-write length error=%d\n", code));
+	    ViceLog(0, ("Rx-write length error=%d\n", code));
 	    return BULK_ERROR;
 	}
 	length -= tlen;
@@ -526,7 +526,7 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
 #endif
 	code = rx_Read(rxcall, tbuffer, tlen);
 	if (code != tlen) {
-	    ViceLog(5, ("Rx-read length error=%d\n", code));
+	    ViceLog(0, ("Rx-read length error=%d\n", code));
 	    code = BULK_ERROR;
 	    close(fd);
 	    goto failed;
@@ -534,7 +534,7 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
 	code = write(fd, tbuffer, tlen);
 	pass++;
 	if (code != tlen) {
-	    ViceLog(5, ("write failed error=%d\n", code));
+	    ViceLog(0, ("write failed tlen=%d, error=%d\n", tlen, code));
 	    code = UIOERROR;
 	    close(fd);
 	    goto failed;

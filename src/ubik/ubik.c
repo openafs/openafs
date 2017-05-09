@@ -490,7 +490,7 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
 	rx_NewService(0, VOTE_SERVICE_ID, "VOTE", ubik_sc, numClasses,
 		      VOTE_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
-	ViceLog(5, ("Could not create VOTE rx service!\n"));
+	ViceLog(0, ("Could not create VOTE rx service!\n"));
 	return -1;
     }
     rx_SetMinProcs(tservice, 2);
@@ -500,7 +500,7 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
 	rx_NewService(0, DISK_SERVICE_ID, "DISK", ubik_sc, numClasses,
 		      DISK_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
-	ViceLog(5, ("Could not create DISK rx service!\n"));
+	ViceLog(0, ("Could not create DISK rx service!\n"));
 	return -1;
     }
     rx_SetMinProcs(tservice, 2);
