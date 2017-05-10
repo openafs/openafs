@@ -22,6 +22,10 @@
 #endif
 #include "osi_compat.h"
 
+#ifndef CURRENT_TIME
+#define CURRENT_TIME		(current_kernel_time())
+#endif
+
 int cache_fh_type = -1;
 int cache_fh_len = -1;
 
