@@ -747,7 +747,7 @@ doGetXFileNumber(char *fname, char filechar, int maxNum)
      * Reject it if it's out of range, otherwise return it.
      */
     computedVNumber = atoi(++fname);
-    if (computedVNumber < cacheFiles)
+    if (computedVNumber < maxNum)
 	return (computedVNumber);
     else
 	return (-1);
