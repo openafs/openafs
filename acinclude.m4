@@ -944,6 +944,10 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
                  AC_CHECK_LINUX_FUNC([bdi_init],
 				     [#include <linux/backing-dev.h>],
 				     [bdi_init(NULL);])
+                 AC_CHECK_LINUX_FUNC([super_setup_bdi],
+                                     [#include <linux/backing-dev.h>],
+                                     [struct super_block *sb;
+				      super_setup_bdi(sb);])
                  AC_CHECK_LINUX_FUNC([PageChecked],
 				     [#include <linux/mm.h>
 #include <linux/page-flags.h>],
