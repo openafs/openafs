@@ -807,7 +807,6 @@ udisk_write(struct ubik_trans *atrans, afs_int32 afile, void *abuffer,
 	    bp = DNew(atrans, afile, apos >> UBIK_LOGPAGESIZE);
 	    if (!bp)
 		return UIOERROR;
-	    memset(bp, 0, UBIK_PAGESIZE);
 	}
 	/* otherwise, min of remaining bytes and end of buffer to user mode */
 	offset = apos & (UBIK_PAGESIZE - 1);
