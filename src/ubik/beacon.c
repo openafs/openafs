@@ -119,6 +119,7 @@ amSyncSite(void)
 	    if (beacon_globals.ubik_amSyncSite)
 		ubik_dprint("Ubik: I am no longer the sync site\n");
 	    beacon_globals.ubik_amSyncSite = 0;
+	    beacon_globals.ubik_syncSiteAdvertised = 0;
 	    rcode = 0;
 	} else {
 	    rcode = 1;		/* otherwise still have the required votes */
@@ -154,6 +155,32 @@ ubeacon_AmSyncSite(void)
 
     if (!rcode)
 	urecovery_ResetState();
+
+    return rcode;
+}
+
+/*!
+ * \brief Determine whether at least quorum are aware we have a sync-site.
+ *
+ * Called from higher-level modules.
+ *
+ * There is a gap between the time when a new sync-site is elected and the time
+ * when the remotes are aware of that. Therefore, any write transaction between
+ * this gap will fail. This will force a new re-election which might be time
+ * consuming. This procedure determines whether the remotes (quorum) are aware
+ * we have a sync-site.
+ *
+ * \return 1 if remotes are aware we have a sync-site
+ * \return 0 if remotes are not aware we have a sync-site
+ */
+int
+ubeacon_SyncSiteAdvertised(void)
+{
+    afs_int32 rcode;
+
+    UBIK_BEACON_LOCK;
+    rcode = beacon_globals.ubik_syncSiteAdvertised;
+    UBIK_BEACON_UNLOCK;
 
     return rcode;
 }
@@ -371,6 +398,7 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
 	if (nServers == 1 && !amIClone) {
 	    beacon_globals.ubik_amSyncSite = 1;	/* let's start as sync site */
 	    beacon_globals.syncSiteUntil = 0x7fffffff;	/* and be it quite a while */
+	    beacon_globals.ubik_syncSiteAdvertised = 1;
 	}
     } else {
 	if (nServers == 1)	/* special case 1 server */
@@ -382,6 +410,7 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
 	    ubik_dprint("Ubik: I am the sync site - 1 server\n");
 	beacon_globals.ubik_amSyncSite = 1;
 	beacon_globals.syncSiteUntil = 0x7fffffff;	/* quite a while */
+	beacon_globals.ubik_syncSiteAdvertised = 1;
     }
     return 0;
 }
@@ -579,6 +608,11 @@ ubeacon_Interact(void *dummy)
 	    UBIK_BEACON_LOCK;
 	    if (!beacon_globals.ubik_amSyncSite)
 		ubik_dprint("Ubik: I am the sync site\n");
+	    else {
+		/* at this point, we have the guarantee that at least quorum
+		 * received a beacon packet informing we have a sync-site. */
+		beacon_globals.ubik_syncSiteAdvertised = 1;
+	    }
 	    beacon_globals.ubik_amSyncSite = 1;
 	    beacon_globals.syncSiteUntil = oldestYesVote + SMALLTIME;
 #ifndef AFS_PTHREAD_ENV
@@ -592,6 +626,7 @@ ubeacon_Interact(void *dummy)
 	    if (beacon_globals.ubik_amSyncSite)
 		ubik_dprint("Ubik: I am no longer the sync site\n");
 	    beacon_globals.ubik_amSyncSite = 0;
+	    beacon_globals.ubik_syncSiteAdvertised = 0;
 	    UBIK_BEACON_UNLOCK;
 	    DBHOLD(ubik_dbase);
 	    urecovery_ResetState();	/* tell recovery we're no longer the sync site */
