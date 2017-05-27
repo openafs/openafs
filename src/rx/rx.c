@@ -4533,24 +4533,6 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
      * queue - they're not addressed by the contents of this ACK packet.
      */
 
-    /* If the window has been extended by this acknowledge packet,
-     * then wakeup a sender waiting in alloc for window space, or try
-     * sending packets now, if he's been sitting on packets due to
-     * lack of window space */
-    if (call->tnext < (call->tfirst + call->twind)) {
-#ifdef	RX_ENABLE_LOCKS
-	CV_SIGNAL(&call->cv_twind);
-#else
-	if (call->flags & RX_CALL_WAIT_WINDOW_ALLOC) {
-	    call->flags &= ~RX_CALL_WAIT_WINDOW_ALLOC;
-	    osi_rxWakeup(&call->twind);
-	}
-#endif
-	if (call->flags & RX_CALL_WAIT_WINDOW_SEND) {
-	    call->flags &= ~RX_CALL_WAIT_WINDOW_SEND;
-	}
-    }
-
     /* if the ack packet has a receivelen field hanging off it,
      * update our state */
     if (np->length >= rx_AckDataSize(ap->nAcks) + 2 * sizeof(afs_int32)) {
@@ -4655,6 +4637,24 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	peer->nDgramPackets = 1;
 	peer->congestSeq++;
 	call->MTU = OLD_MAX_PACKET_SIZE;
+    }
+
+    /* If the window has been extended by this acknowledge packet,
+     * then wakeup a sender waiting in alloc for window space, or try
+     * sending packets now, if he's been sitting on packets due to
+     * lack of window space */
+    if (call->tnext < (call->tfirst + call->twind)) {
+#ifdef	RX_ENABLE_LOCKS
+	CV_SIGNAL(&call->cv_twind);
+#else
+	if (call->flags & RX_CALL_WAIT_WINDOW_ALLOC) {
+	    call->flags &= ~RX_CALL_WAIT_WINDOW_ALLOC;
+	    osi_rxWakeup(&call->twind);
+	}
+#endif
+	if (call->flags & RX_CALL_WAIT_WINDOW_SEND) {
+	    call->flags &= ~RX_CALL_WAIT_WINDOW_SEND;
+	}
     }
 
     if (nNacked) {
