@@ -4330,7 +4330,12 @@ SalvageVolume(struct SalvInfo *salvinfo, struct InodeSummary *rwIsp, IHandle_t *
     volHeader.inUse = 0;	/* clear flag indicating inUse@last crash */
     volHeader.needsSalvaged = 0;	/* clear 'damaged' flag */
     volHeader.inService = 1;	/* allow service again */
-    volHeader.needsCallback = (salvinfo->VolumeChanged != 0);
+    if (salvinfo->VolumeChanged) {
+	volHeader.needsCallback = 1;
+	volHeader.updateDate = time(NULL);
+    } else {
+	volHeader.needsCallback = 0;
+    }
     volHeader.dontSalvage = DONT_SALVAGE;
     salvinfo->VolumeChanged = 0;
     if (!Testing) {
