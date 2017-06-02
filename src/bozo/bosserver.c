@@ -861,6 +861,13 @@ main(int argc, char **argv, char **envp)
 	else {
 
 	    /* hack to support help flag */
+	    int ec;
+	    if (strcmp(argv[code], "-help") == 0 || strcmp(argv[code], "-h") == 0)
+		ec = 0; /* It is not an error to ask for usage. */
+	    else {
+		printf("Unrecognized option: %s\n", argv[code]);
+		ec = 1;
+	    }
 
 #ifndef AFS_NT40_ENV
 	    printf("Usage: bosserver [-noauth] [-log] "
@@ -886,7 +893,7 @@ main(int argc, char **argv, char **envp)
 #endif
 	    fflush(stdout);
 
-	    exit(0);
+	    exit(ec);
 	}
     }
     if (auditFileName) {
