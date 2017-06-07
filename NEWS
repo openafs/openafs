@@ -1,5 +1,63 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.6.21 (in progress)
+
+  All platforms
+
+    * Avoid a possible 100ms transmit delay in the RX protocol when a peer's
+      receive window transitions from closed to open (12627)
+
+    * Documentation improvements (12476 12477 12559[RT #133339])
+
+  All server platforms
+
+    * When bosserver is started with an unknown option, print an error message
+      and exit with a non-zero value rather than failing silently (12631)
+
+  All DB server platforms
+
+    * Hold the DB lock while checking for an aborted write transaction (12516)
+
+  All file server platforms
+
+    * On demand attach fileservers, don't save or restore a client's host
+      state if CPS ("Current Protection Subdomain") recalculation for it is
+      in progress, to avoid fileserver thread exhaustion (12568)
+
+    * On demand attach fileservers, avoid flooding the log with error messages,
+      which could happen when the fileserver was restarted while a volume was
+      offline (12569)
+
+    * Update a volume's "Last Update" time when its content is modified by
+      the salvager, to make the change visible in the output of "vos examine"
+      and to backup services (12633)
+
+  All client platforms
+
+    * Corrected the DCentries bucket counts for very large and zero length
+      files in the output of "fe getcacheparms -excessive" (12604 12605)
+
+    * Fixed a bug that prevented users with GID 2748 and 2750 from executing
+      the "fs sysname" command on clients running afsd with -rmtsys (12607)
+
+    * Provide a new -inumcalc switch for afsd to allow enabling the alternative
+      MD5 method of inode number calculation, which was previously only
+      possible on Linux and through the sysctl interface (12608 12632)
+
+  Linux clients
+
+    * Support for mainline kernel 4.12 and distribution kernels with backports
+      from it (12624 12626)
+
+    * Re-added the improved algorithm for freeing unused vcaches to reduce
+      memory consumption first introduced with the 1.6.18 release, together
+      with a fix for the issue leading to its removal in 1.6.18.2 (12448..12451)
+
+  macOS clients
+
+    * Fixed a crash while stopping the client on macOS 10.12 "Sierra" (12602)
+
+
 OpenAFS 1.6.20.2
 
   All platforms
