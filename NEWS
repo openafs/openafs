@@ -1,6 +1,6 @@
                        User-Visible OpenAFS Changes
 
-OpenAFS 1.6.21 (in progress)
+OpenAFS 1.6.21
 
   All platforms
 
@@ -35,7 +35,7 @@ OpenAFS 1.6.21 (in progress)
   All client platforms
 
     * Corrected the DCentries bucket counts for very large and zero length
-      files in the output of "fe getcacheparms -excessive" (12604 12605)
+      files in the output of "fs getcacheparms -excessive" (12604 12605)
 
     * Fixed a bug that prevented users with GID 2748 and 2750 from executing
       the "fs sysname" command on clients running afsd with -rmtsys (12607)
