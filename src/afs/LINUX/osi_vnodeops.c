@@ -1589,34 +1589,30 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
  done:
     crfree(credp);
 
-    /* It's ok for the file to not be found. That's noted by the caller by
-     * seeing that the dp->d_inode field is NULL.
-     */
-    if (!code || code == ENOENT) {
-	/*
-	 * d_splice_alias can return an error (EIO) if there is an existing
-	 * connected directory alias for this dentry.
-	 */
-	if (!IS_ERR(newdp)) {
-	    iput(ip);
-	    return newdp;
-	} else {
-	    d_add(dp, ip);
-	    /*
-	     * Depending on the kernel version, d_splice_alias may or may
-	     * not drop the inode reference on error.  If it didn't, do it
-	     * here.
-	     */
+    if (IS_ERR(newdp)) {
+        /* d_splice_alias can return an error (EIO) if there is an existing
+         * connected directory alias for this dentry. Add our dentry manually
+         * ourselves if this happens. */
+        d_add(dp, ip);
+
 #if defined(D_SPLICE_ALIAS_LEAK_ON_ERROR)
-	    iput(ip);
+        /* Depending on the kernel version, d_splice_alias may or may not drop
+         * the inode reference on error. If it didn't, do it here. */
+        iput(ip);
 #endif
-	    return NULL;
-	}
-    } else {
+        return NULL;
+    }
+
+    /* It's ok for the file to not be found (ENOENT). That's noted by the
+     * caller by seeing that the dp->d_inode field is NULL. */
+    if (code && code != ENOENT) {
 	if (ip)
 	    iput(ip);
 	return ERR_PTR(afs_convert_code(code));
     }
+
+    iput(ip);
+    return newdp;
 }
 
 static int
