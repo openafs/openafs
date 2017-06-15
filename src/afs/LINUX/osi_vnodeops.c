@@ -47,6 +47,12 @@
 #define MAX_ERRNO 1000L
 #endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,34)
+/* Enable our workaround for a race with d_splice_alias. The race was fixed in
+ * 2.6.34, so don't do it after that point. */
+# define D_SPLICE_ALIAS_RACE
+#endif
+
 int cachefs_noreadpage = 0;
 
 extern struct backing_dev_info *afs_backing_dev_info;
@@ -1130,6 +1136,44 @@ parent_vcache_dv(struct inode *inode, cred_t *credp)
     return hgetlo(pvcp->f.m.DataVersion);
 }
 
+#ifdef D_SPLICE_ALIAS_RACE
+/* Leave some trace that this code is enabled; otherwise it's pretty hard to
+ * tell. */
+static __attribute__((used)) const char dentry_race_marker[] = "d_splice_alias race workaround enabled";
+
+static int
+check_dentry_race(struct dentry *dp)
+{
+    int raced = 0;
+    if (!dp->d_inode) {
+        struct dentry *parent = dget_parent(dp);
+
+        /* In Linux, before commit 4919c5e45a91b5db5a41695fe0357fbdff0d5767,
+         * d_splice_alias can momentarily hash a dentry before it's fully
+         * populated. This only happens for a moment, since it's unhashed again
+         * right after (in d_move), but this can make the dentry be found by
+         * __d_lookup, and then given to us.
+         *
+         * So check if the dentry is unhashed; if it is, then the dentry is not
+         * valid. We lock the parent inode to ensure that d_splice_alias is no
+         * longer running (the inode mutex will be held during
+         * afs_linux_lookup). Locking d_lock is required to check the dentry's
+         * flags, so lock that, too.
+         */
+        afs_linux_lock_inode(parent->d_inode);
+        spin_lock(&dp->d_lock);
+        if (d_unhashed(dp)) {
+            raced = 1;
+        }
+        spin_unlock(&dp->d_lock);
+        afs_linux_unlock_inode(parent->d_inode);
+
+        dput(parent);
+    }
+    return raced;
+}
+#endif /* D_SPLICE_ALIAS_RACE */
+
 /* Validate a dentry. Return 1 if unchanged, 0 if VFS layer should re-evaluate.
  * In kernels 2.2.10 and above, we are passed an additional flags var which
  * may have either the LOOKUP_FOLLOW OR LOOKUP_DIRECTORY set in which case
@@ -1164,6 +1208,13 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
     if (nd->flags & LOOKUP_RCU)
 # endif
        return -ECHILD;
+#endif
+
+#ifdef D_SPLICE_ALIAS_RACE
+    if (check_dentry_race(dp)) {
+        valid = 0;
+        return valid;
+    }
 #endif
 
     AFS_GLOCK();
