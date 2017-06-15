@@ -1525,9 +1525,21 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
     int code;
 
     AFS_GLOCK();
-    code = afs_lookup(VTOAFS(dip), (char *)comp, &vcp, credp);
 
-    if (!code) {
+    code = afs_lookup(VTOAFS(dip), (char *)comp, &vcp, credp);
+    if (code == ENOENT) {
+        /* It's ok for the file to not be found. That's noted by the caller by
+         * seeing that the dp->d_inode field is NULL (set by d_splice_alias or
+         * d_add, below). */
+        code = 0;
+        osi_Assert(vcp == NULL);
+    }
+    if (code) {
+        AFS_GUNLOCK();
+        goto done;
+    }
+
+    if (vcp) {
 	struct vattr *vattr = NULL;
 	struct vcache *parent_vc = VTOAFS(dip);
 
@@ -1603,9 +1615,7 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
         return NULL;
     }
 
-    /* It's ok for the file to not be found (ENOENT). That's noted by the
-     * caller by seeing that the dp->d_inode field is NULL. */
-    if (code && code != ENOENT) {
+    if (code) {
 	if (ip)
 	    iput(ip);
 	return ERR_PTR(afs_convert_code(code));
