@@ -393,7 +393,7 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 	if (code) {
 	    if (!(avc->f.states & CCorrupt)) {
 		struct cell *tc = afs_GetCellStale(avc->f.fid.Cell, READ_LOCK);
-		afs_warn("Corrupt directory (%d.%d.%d.%d [%s] @%lx, pos %d)",
+		afs_warn("afs: Corrupt directory (%d.%d.%d.%d [%s] @%lx, pos %d)\n",
 			 avc->f.fid.Cell, avc->f.fid.Fid.Volume,
 			 avc->f.fid.Fid.Vnode, avc->f.fid.Fid.Unique,
 			 tc ? tc->cellName : "",
