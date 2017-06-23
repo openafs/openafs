@@ -390,7 +390,7 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 
 	code = afs_dir_GetVerifiedBlob(tdc, dirpos, &de);
 	if (code) {
-	    afs_warn("Corrupt directory (inode %lx, dirpos %d)",
+	    afs_warn("afs: Corrupt directory (inode %lx, dirpos %d)\n",
 		     (unsigned long)&tdc->f.inode, dirpos);
 	    code = -ENOENT;
 	    goto unlock_out;
