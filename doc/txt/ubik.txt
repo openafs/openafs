@@ -1,7 +1,19 @@
 This file contains a threading analysis of Ubik prepared by
-Jeffrey Hutzelman and sent ot the openafs-devel@openafs.org
+Jeffrey Hutzelman and sent to the openafs-devel@openafs.org
 mailing list in February 2011, archived at:
 https://lists.openafs.org/pipermail/openafs-devel/2011-February/018329.html
+
+A while ago, Jeff Altman asked me to do an analysis of the Ubik code with
+repsect to threading, to try to determine how ready the code is to be moved
+from an LWP-based environment to one using preemptive POSIX threads, and
+what it will take to get it the rest of the way there.  Now that the work
+is complete, I'm posting the complete analysis and my recommendations for
+discussion and as a backdrop for changes I expect to see proposed in the
+near future.
+
+This work was funded by Your File System, Inc.
+
+-- Jeff
 
 INTRODUCTION
 
