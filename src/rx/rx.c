@@ -263,6 +263,9 @@ rxi_InitPthread(void)
 
     MUTEX_INIT(&rx_rpc_stats, "rx_rpc_stats", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_freePktQ_lock, "rx_freePktQ_lock", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&rx_mallocedPktQ_lock, "rx_mallocedPktQ_lock", MUTEX_DEFAULT,
+	       0);
+
 #ifdef	RX_ENABLE_LOCKS
 #ifdef RX_LOCKS_DB
     rxdb_init();
@@ -523,6 +526,9 @@ rx_InitHost(u_int host, u_int port)
     MUTEX_INIT(&rx_connHashTable_lock, "rx_connHashTable_lock", MUTEX_DEFAULT,
 	       0);
     MUTEX_INIT(&rx_serverPool_lock, "rx_serverPool_lock", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&rx_mallocedPktQ_lock, "rx_mallocedPktQ_lock", MUTEX_DEFAULT,
+	       0);
+
 #if defined(AFS_HPUX110_ENV)
     if (!uniprocessor)
 	rx_sleepLock = alloc_spinlock(LAST_HELD_ORDER - 10, "rx_sleepLock");
@@ -546,6 +552,7 @@ rx_InitHost(u_int host, u_int port)
     queue_Init(&rx_freePacketQueue);
     rxi_NeedMorePackets = FALSE;
     rx_nPackets = 0;	/* rx_nPackets is managed by rxi_MorePackets* */
+    queue_Init(&rx_mallocedPacketQueue);
 
     /* enforce a minimum number of allocated packets */
     if (rx_extraPackets < rxi_nSendFrags * rx_maxSendWindow)
@@ -4526,24 +4533,6 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
      * queue - they're not addressed by the contents of this ACK packet.
      */
 
-    /* If the window has been extended by this acknowledge packet,
-     * then wakeup a sender waiting in alloc for window space, or try
-     * sending packets now, if he's been sitting on packets due to
-     * lack of window space */
-    if (call->tnext < (call->tfirst + call->twind)) {
-#ifdef	RX_ENABLE_LOCKS
-	CV_SIGNAL(&call->cv_twind);
-#else
-	if (call->flags & RX_CALL_WAIT_WINDOW_ALLOC) {
-	    call->flags &= ~RX_CALL_WAIT_WINDOW_ALLOC;
-	    osi_rxWakeup(&call->twind);
-	}
-#endif
-	if (call->flags & RX_CALL_WAIT_WINDOW_SEND) {
-	    call->flags &= ~RX_CALL_WAIT_WINDOW_SEND;
-	}
-    }
-
     /* if the ack packet has a receivelen field hanging off it,
      * update our state */
     if (np->length >= rx_AckDataSize(ap->nAcks) + 2 * sizeof(afs_int32)) {
@@ -4648,6 +4637,24 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	peer->nDgramPackets = 1;
 	peer->congestSeq++;
 	call->MTU = OLD_MAX_PACKET_SIZE;
+    }
+
+    /* If the window has been extended by this acknowledge packet,
+     * then wakeup a sender waiting in alloc for window space, or try
+     * sending packets now, if he's been sitting on packets due to
+     * lack of window space */
+    if (call->tnext < (call->tfirst + call->twind)) {
+#ifdef	RX_ENABLE_LOCKS
+	CV_SIGNAL(&call->cv_twind);
+#else
+	if (call->flags & RX_CALL_WAIT_WINDOW_ALLOC) {
+	    call->flags &= ~RX_CALL_WAIT_WINDOW_ALLOC;
+	    osi_rxWakeup(&call->twind);
+	}
+#endif
+	if (call->flags & RX_CALL_WAIT_WINDOW_SEND) {
+	    call->flags &= ~RX_CALL_WAIT_WINDOW_SEND;
+	}
     }
 
     if (nNacked) {
@@ -8181,8 +8188,6 @@ shutdown_rx(void)
     UNPIN(rx_connHashTable,
 	  rx_hashTableSize * sizeof(struct rx_connection *));
     UNPIN(rx_peerHashTable, rx_hashTableSize * sizeof(struct rx_peer *));
-
-    rxi_FreeAllPackets();
 
     MUTEX_ENTER(&rx_quota_mutex);
     rxi_dataQuota = RX_MAX_QUOTA;

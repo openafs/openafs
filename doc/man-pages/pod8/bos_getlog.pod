@@ -141,8 +141,8 @@ machine named by the B<-server> argument, or must be logged onto a server
 machine as the local superuser C<root> if the B<-localauth> flag is
 included.
 
-When a server is in restricted mode, B<bos getlog> can only return the
-contents of the salvager's log.
+When a server is in restricted mode, B<bos getlog> B<-file> may only
+specify files from the logs directory.
 
 =head1 SEE ALSO
 

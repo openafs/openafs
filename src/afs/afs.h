@@ -1472,6 +1472,7 @@ struct afs_fakestat_state {
 };
 
 extern int afs_fakestat_enable;
+extern int afs_rmtsys_enable;
 extern int afsd_dynamic_vcaches;
 
 /*

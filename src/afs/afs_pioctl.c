@@ -28,6 +28,7 @@
 #include "afs/afs_bypasscache.h"
 #include "rx/rx_globals.h"
 
+extern int afs_rmtsys_enable;
 struct VenusFid afs_rootFid;
 afs_int32 afs_waitForever = 0;
 short afs_waitForeverCount = 0;
@@ -2879,7 +2880,7 @@ DECL_PIOCTL(PGetCacheSize)
     afs_int32 results[MAXGCSTATS];
     afs_int32 flags;
     struct dcache * tdc;
-    int i, size;
+    int i;
 
     AFS_STATCNT(PGetCacheSize);
 
@@ -2911,9 +2912,10 @@ DECL_PIOCTL(PGetCacheSize)
 
 	    tdc = afs_indexTable[i];
 	    if (tdc){
+		afs_size_t size = tdc->validPos;
+
 	        results[9]++;
-	        size = tdc->validPos;
-	        if ( 0 < size && size < (1<<12) ) results[10]++;
+	        if ( 0 <= size && size < (1<<12) ) results[10]++;
     	        else if (size < (1<<14) ) results[11]++;
 	        else if (size < (1<<16) ) results[12]++;
 	        else if (size < (1<<18) ) results[13]++;
@@ -3776,8 +3778,8 @@ DECL_PIOCTL(PSetSysName)
 	    return EINVAL;
 	num = count;
     }
-    if (afs_cr_gid(*acred) == RMTUSER_REQ ||
-	afs_cr_gid(*acred) == RMTUSER_REQ_PRIV) {   /* Handles all exporters */
+    if (afs_rmtsys_enable && (afs_cr_gid(*acred) == RMTUSER_REQ ||
+	afs_cr_gid(*acred) == RMTUSER_REQ_PRIV)) {   /* Handles all exporters */
 	if (allpags && afs_cr_gid(*acred) != RMTUSER_REQ_PRIV) {
 	    return EPERM;
 	}
@@ -4561,7 +4563,7 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
     newcred->cr_groupset.gs_union.un_groups[0] = g0;
     newcred->cr_groupset.gs_union.un_groups[1] = g1;
 #elif defined(AFS_LINUX26_ENV)
-# ifdef AFS_LINUX26_ONEGROUP_ENV
+# ifdef AFS_PAG_ONEGROUP_ENV
     afs_set_cr_group_info(newcred, groups_alloc(1)); /* nothing sets this */
     l = (((g0-0x3f00) & 0x3fff) << 14) | ((g1-0x3f00) & 0x3fff);
     h = ((g0-0x3f00) >> 14);
@@ -4573,9 +4575,14 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
     GROUP_AT(afs_cr_group_info(newcred), 1) = g1;
 # endif
 #elif defined(AFS_SUN510_ENV)
+# ifdef AFS_PAG_ONEGROUP_ENV
+    gids[0] = afs_get_pag_from_groups(g0, g1);
+    crsetgroups(newcred, 1, gids);
+# else
     gids[0] = g0;
     gids[1] = g1;
     crsetgroups(newcred, 2, gids);
+# endif /* !AFS_PAG_ONEGROUP_ENV */
 #else
     newcred->cr_groups[0] = g0;
     newcred->cr_groups[1] = g1;

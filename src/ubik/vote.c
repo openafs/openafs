@@ -339,7 +339,9 @@ SVOTE_Beacon(struct rx_call * rxcall, afs_int32 astate,
 	lastYesState = astate;	/* remember if site is a sync site */
 	ubik_dbVersion = *avers;	/* resync value */
 	ubik_dbTid = *atid;	/* transaction id, if any, of active trans */
+	DBHOLD(ubik_dbase);
 	urecovery_CheckTid(atid);	/* check if current write trans needs aborted */
+	DBRELE(ubik_dbase);
     }
     return vote;
 }

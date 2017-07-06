@@ -332,10 +332,11 @@
 
     //link configuration
     NSData *prefData = (NSData*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_LINK_CONFIGURATION,  (CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
-    linkConfiguration = (NSMutableDictionary*)[NSPropertyListSerialization propertyListFromData:prefData
-									   mutabilityOption:NSPropertyListMutableContainers
-									   format:nil
-									   errorDescription:nil];
+    NSDictionary *linkDict = (NSMutableDictionary*)[NSPropertyListSerialization propertyListFromData:prefData
+										mutabilityOption:NSPropertyListMutableContainers
+										format:nil
+										errorDescription:nil];
+    linkConfiguration = [linkDict mutableCopy];
 }
 
 // -------------------------------------------------------------------------------

@@ -414,18 +414,18 @@ char adminName[MAXADMINNAME];
 static void
 CheckAdminName(void)
 {
-    int fd = 0;
+    int fd = -1;
     struct afs_stat status;
 
     if ((afs_stat("/AdminName", &status)) ||	/* if file does not exist */
 	(status.st_size <= 0) ||	/* or it is too short */
 	(status.st_size >= (MAXADMINNAME)) ||	/* or it is too long */
-	!(fd = afs_open("/AdminName", O_RDONLY, 0))) {	/* or the open fails */
+	(fd = afs_open("/AdminName", O_RDONLY, 0)) < 0 || /* or open fails */
+	read(fd, adminName, status.st_size) != status.st_size) { /* or read */
+
 	strcpy(adminName, "System:Administrators");	/* use the default name */
-    } else {
-	(void)read(fd, adminName, status.st_size);	/* use name from the file */
     }
-    if (fd)
+    if (fd >= 0)
 	close(fd);		/* close fd if it was opened */
 
 }				/*CheckAdminName */

@@ -22,6 +22,10 @@
 #endif
 #include "osi_compat.h"
 
+#ifndef CURRENT_TIME
+#define CURRENT_TIME		(current_kernel_time())
+#endif
+
 int cache_fh_type = -1;
 int cache_fh_len = -1;
 
@@ -184,7 +188,11 @@ osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
     newattrs.ia_ctime = CURRENT_TIME;
 
     /* avoid notify_change() since it wants to update dentry->d_parent */
+#ifdef HAVE_LINUX_SETATTR_PREPARE
+    code = setattr_prepare(file_dentry(afile->filp), &newattrs);
+#else
     code = inode_change_ok(inode, &newattrs);
+#endif
     if (!code)
 	code = afs_inode_setattr(afile, &newattrs);
     if (!code)

@@ -1127,15 +1127,27 @@ out:
     return afs_convert_code(code);
 }
 
+#if defined(IOP_GETATTR_TAKES_PATH_STRUCT)
+static int
+afs_linux_getattr(const struct path *path, struct kstat *stat, u32 request_mask, unsigned int sync_mode)
+{
+	int err = afs_linux_revalidate(path->dentry);
+	if (!err) {
+                generic_fillattr(path->dentry->d_inode, stat);
+	}
+	return err;
+}
+#else
 static int
 afs_linux_getattr(struct vfsmount *mnt, struct dentry *dentry, struct kstat *stat)
 {
         int err = afs_linux_revalidate(dentry);
         if (!err) {
                 generic_fillattr(dentry->d_inode, stat);
+	}
+	return err;
 }
-        return err;
-}
+#endif
 
 /* Validate a dentry. Return 1 if unchanged, 0 if VFS layer should re-evaluate.
  * In kernels 2.2.10 and above, we are passed an additional flags var which
@@ -1318,6 +1330,24 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 
   good_dentry:
     valid = 1;
+    goto done;
+
+  bad_dentry:
+    valid = 0;
+#ifndef D_INVALIDATE_IS_VOID
+    /* When (v3.18) d_invalidate was converted to void, it also started
+     * being called automatically from revalidate, and automatically
+     * handled:
+     *  - shrink_dcache_parent
+     *  - automatic detach of submounts
+     *  - d_drop
+     * Therefore, after that point, OpenAFS revalidate logic no longer needs
+     * to do any of those things itself for invalid dentry structs.  We only need
+     * to tell VFS it's invalid (by returning 0), and VFS will handle the rest.
+     */
+    if (have_submounts(dp))
+	valid = 1;
+#endif
 
   done:
     /* Clean up */
@@ -1328,6 +1358,7 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
     if (credp)
 	crfree(credp);
 
+#ifndef D_INVALIDATE_IS_VOID
     if (!valid) {
 	/*
 	 * If we had a negative lookup for the name we want to forcibly
@@ -1340,15 +1371,9 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 	} else
 	    d_invalidate(dp);
     }
-
+#endif
     return valid;
 
-  bad_dentry:
-    if (have_submounts(dp))
-	valid = 1;
-    else
-	valid = 0;
-    goto done;
 }
 
 static void
@@ -1821,13 +1846,22 @@ afs_linux_rmdir(struct inode *dip, struct dentry *dp)
 
 static int
 afs_linux_rename(struct inode *oldip, struct dentry *olddp,
-		 struct inode *newip, struct dentry *newdp)
+		 struct inode *newip, struct dentry *newdp
+#ifdef HAVE_LINUX_INODE_OPERATIONS_RENAME_TAKES_FLAGS
+		 , unsigned int flags
+#endif
+		)
 {
     int code;
     cred_t *credp = crref();
     const char *oldname = olddp->d_name.name;
     const char *newname = newdp->d_name.name;
     struct dentry *rehash = NULL;
+
+#ifdef HAVE_LINUX_INODE_OPERATIONS_RENAME_TAKES_FLAGS
+    if (flags)
+	return -EINVAL;		/* no support for new flags yet */
+#endif
 
     /* Prevent any new references during rename operation. */
 

@@ -78,6 +78,7 @@ static int afs_InitSetup_done = 0;
 afs_int32 afs_numcachefiles = -1;
 afs_int32 afs_numfilesperdir = -1;
 char afs_cachebasedir[1024];
+afs_int32 afs_rmtsys_enable = 0;
 
 afs_int32 afs_rx_deadtime = AFS_RXDEADTIME;
 afs_int32 afs_rx_harddead = AFS_HARDDEADTIME;
@@ -85,6 +86,9 @@ afs_int32 afs_rx_idledead = AFS_IDLEDEADTIME;
 afs_int32 afs_rx_idledead_rep = AFS_IDLEDEADTIME_REP;
 
 static int afscall_set_rxpck_received = 0;
+
+/* From afs_util.c */
+extern afs_int32 afs_md5inum;
 
 /* This is code which needs to be called once when the first daemon enters
  * the client. A non-zero return means an error and AFS should not start.
@@ -1300,6 +1304,22 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	rx_MyMaxSendSize = rx_maxReceiveSizeUser = rx_maxReceiveSize = parm2;
     } else if (parm == AFSOP_SET_RXMAXFRAGS) {
 	rxi_nSendFrags = rxi_nRecvFrags = parm2;
+    } else if (parm == AFSOP_SET_RMTSYS_FLAG) {
+	afs_rmtsys_enable = parm2;
+	code = 0;
+    } else if (parm == AFSOP_SET_INUMCALC) {
+	switch (parm2) {
+	case AFS_INUMCALC_COMPAT:
+	    afs_md5inum = 0;
+	    code = 0;
+	    break;
+	case AFS_INUMCALC_MD5:
+	    afs_md5inum = 1;
+	    code = 0;
+	    break;
+	default:
+	    code = EINVAL;
+	}
     } else {
 	code = EINVAL;
     }
@@ -1442,6 +1462,7 @@ afs_shutdown(void)
     afs_warn("NetIfPoller... ");
     osi_StopNetIfPoller();
 #endif
+    rxi_FreeAllPackets();
 
     afs_termState = AFSOP_STOP_COMPLETE;
 

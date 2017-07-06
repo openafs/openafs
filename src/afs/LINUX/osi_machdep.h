@@ -15,11 +15,6 @@
 #ifndef OSI_MACHDEP_H_
 #define OSI_MACHDEP_H_
 
-#include <linux/version.h>
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,4)
-# define AFS_LINUX26_ONEGROUP_ENV 1
-#endif
-
 /* Only needed for xdr.h in glibc 2.1.x */
 #ifndef quad_t
 # define quad_t __quad_t
@@ -76,6 +71,10 @@
 
 #define afs_hz HZ
 #include "h/sched.h"
+/* in case cred.h is present but not included in sched.h */
+#if defined(HAVE_LINUX_CRED_H)
+#include "h/cred.h"
+#endif
 #if defined(HAVE_LINUX_CURRENT_KERNEL_TIME)
 static inline time_t osi_Time(void) {
     struct timespec xtime;
@@ -144,6 +143,11 @@ static inline long copyinstr(char *from, char *to, int count, int *length) {
 
 #ifndef NGROUPS
 #define NGROUPS NGROUPS_SMALL
+#endif
+
+#ifdef STRUCT_GROUP_INFO_HAS_GID
+/* compat macro for Linux 4.9 */
+#define GROUP_AT(gi,x)  ((gi)->gid[x])
 #endif
 
 typedef struct task_struct afs_proc_t;
