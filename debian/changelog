@@ -1,6 +1,17 @@
 openafs (1.6.21-1) UNRELEASED; urgency=medium
 
-  * New upstream release (1.6.21
+  * New upstream release (1.6.21):
+    - Include support for Linx versions through 4.12.
+    - Improve bosserver startup behavior with unexpected arguments or
+      configuration symlinks.
+    - Re-enable vcache cleanup improvement from 1.6.18, with bugs fixed.
+    - Provide the afsd -inumcalc option; this behavior was previously
+      only configurable via sysctl.
+    - The salvager updates volume "last update" times when modifying volumes.
+    - Demand-attach fileserver improvements for reducing log spew and preventing
+      thread exhaustion during CPS recalculation.
+    - Avoid a potential 100ms transmit delay in RX when the peer's receive
+      window advances.
 
  -- Benjamin Kaduk <kaduk@mit.edu>  Thu, 06 Jul 2017 09:19:27 -0500
 
