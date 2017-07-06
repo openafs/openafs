@@ -1,3 +1,9 @@
+openafs (1.6.21-1) UNRELEASED; urgency=medium
+
+  * New upstream release (1.6.21
+
+ -- Benjamin Kaduk <kaduk@mit.edu>  Thu, 06 Jul 2017 09:19:27 -0500
+
 openafs (1.6.20-2) unstable; urgency=medium
 
   * Build-Depend debhelper (>= 9.20160114) for dh_strip
