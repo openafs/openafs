@@ -1,7 +1,9 @@
 openafs (1.6.21-1) UNRELEASED; urgency=medium
 
   * New upstream release (1.6.21):
-    - Include support for Linx versions through 4.12.
+    - Include support for Linx versions through 4.12.  (Closes: #859155)
+    - Improve support for Linux kernels with backported patches.
+      (Closes: #855366)
     - Improve bosserver startup behavior with unexpected arguments or
       configuration symlinks.
     - Re-enable vcache cleanup improvement from 1.6.18, with bugs fixed.
