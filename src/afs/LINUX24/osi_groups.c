@@ -28,8 +28,6 @@
 #include "h/smp_lock.h"
 #endif
 
-#define NUMPAGGROUPS 2
-
 static int
 afs_setgroups(cred_t **cr, int ngroups, gid_t * gidset, int change_parent)
 {

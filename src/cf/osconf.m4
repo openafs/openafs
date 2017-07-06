@@ -398,7 +398,7 @@ case $AFS_SYSNAME in
 		XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} -framework CoreFoundation"
 		;;
 
-	*_darwin_100 | *_darwin_110 | *_darwin_120 | *_darwin_130 | *_darwin_140 | *_darwin_150 )
+	*_darwin_100 | *_darwin_110 | *_darwin_120 | *_darwin_130 | *_darwin_140 | *_darwin_150 | *_darwin_160)
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} ${ARCHFLAGS}'
 		MT_LIBS="${LIB_AFSDB} -framework CoreFoundation"
@@ -716,6 +716,7 @@ case $AFS_SYSNAME in
 		MT_CC=$SOLARISCC
 		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
+		KERN_OPTMZ="-xO3"
 		PAM_CFLAGS="-KPIC"
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
 		SHLIB_CFLAGS="-KPIC"
@@ -736,10 +737,12 @@ if test "x$enable_optimize_kernel" = "x" ; then
   AS_CASE([$AFS_SYSNAME],
     [sunx86_510|sunx86_511],
       dnl Somewhere around Solaris Studio 12.*, the compiler started adding SSE
-      dnl instructions to optimized code, without any ability to turn it off.
-      dnl So just default to not optimizing kernel code for the relevant
-      dnl platforms, until we get a better autoconf test for this.
-      [enable_optimize_kernel=no],
+      dnl instructions to optimized code, without any known way to turn it off.
+      dnl To cope, this condition was added to change the default to
+      dnl 'no'.
+      dnl Now that we have an autoconf test to allow disabling the SSE
+      dnl optimizations, it's safe to once more default to 'yes' here.
+      [enable_optimize_kernel=yes],
     [enable_optimize_kernel=yes])
 fi
 

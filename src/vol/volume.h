@@ -457,7 +457,7 @@ typedef struct VolumeDiskData {
 				 * a readonly volume (replicated volumes have
 				 * the same creation date) */
     Date accessDate;		/* Last access time by a user, large granularity */
-    Date updateDate;		/* Last modification by user */
+    Date updateDate;		/* Last modification by user or salvager */
     Date expirationDate;	/* 0 if it never expires */
     Date backupDate;		/* last time a backup clone was taken */
 

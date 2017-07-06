@@ -25,10 +25,14 @@ The VL Server records operations only as it completes them, and cannot
 recover from failures by reviewing the file. The log contents are useful
 for administrative evaluation of process failures and other problems.
 
-The VL Server can record messages at three levels of detail. By default,
-it records only very rudimentary messages. To increase logging to the
-first level of detail, issue the following command while logged onto the
-database server machine as the local superuser C<root>.
+The VL Server can record messages at several levels of detail. By default, it
+records only very rudimentary messages.  The initial level of detail
+logged by the VL Server can be set by using the B<-d> command
+line option (possibly multiple times) when it is started.
+
+To increase the level of detail logged by a running VL Server, issue
+the following command while logged onto the database server machine
+as the local superuser C<root>.
 
    # kill -TSTP <vlserver_pid>
 

@@ -386,11 +386,9 @@ case $system in
         *-solaris*)
 		MKAFS_OSTYPE=SOLARIS
                 AC_MSG_RESULT(sun4)
-	        AC_PATH_PROG(SOLARISCC, [cc], ,
-		    [/opt/SUNWspro/bin:/opt/SunStudioExpress/bin:/opt/solarisstudio12.3/bin:/opt/solstudio12.2/bin:/opt/sunstudio12.1/bin])
-		if test "x$SOLARISCC" = "x" ; then
-		    AC_MSG_FAILURE(Could not find the solaris cc program.  Please define the environment variable SOLARISCC to specify the path.)
-		fi
+		SOLARIS_PATH_CC
+		SOLARIS_CC_TAKES_XVECTOR_NONE
+		AC_SUBST(SOLARIS_CC_KOPTS)
 		SOLARIS_UFSVFS_HAS_DQRWLOCK
 		SOLARIS_FS_HAS_FS_ROLLED
 		SOLARIS_SOLOOKUP_TAKES_SOCKPARAMS
@@ -623,6 +621,14 @@ else
 			AFS_SYSNAME="x86_darwin_150"
 			OSXSDK="macosx10.11"
 			;;
+		x86_64-apple-darwin16.*)
+			AFS_SYSNAME="x86_darwin_160"
+			OSXSDK="macosx10.12"
+			;;
+		i?86-apple-darwin16.*)
+			AFS_SYSNAME="x86_darwin_160"
+			OSXSDK="macosx10.12"
+			;;
 		sparc-sun-solaris2.5*)
 			AFS_SYSNAME="sun4x_55"
 			enable_login="yes"
@@ -854,8 +860,15 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 					  [#include <linux/fs.h>],
 					  [void],
 					  [struct inode *inode, void *link_data])
+		 AC_CHECK_LINUX_OPERATION([inode_operations], [rename], [takes_flags],
+					  [#include <linux/fs.h>],
+					  [int],
+					  [struct inode *oinode, struct dentry *odentry,
+						struct inode *ninode, struct dentry *ndentry,
+						unsigned int flags])
 
 		 dnl Check for header files
+		 AC_CHECK_LINUX_HEADER([cred.h])
 		 AC_CHECK_LINUX_HEADER([config.h])
 		 AC_CHECK_LINUX_HEADER([completion.h])
 		 AC_CHECK_LINUX_HEADER([exportfs.h])
@@ -863,6 +876,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_HEADER([key-type.h])
 		 AC_CHECK_LINUX_HEADER([semaphore.h])
 		 AC_CHECK_LINUX_HEADER([seq_file.h])
+		 AC_CHECK_LINUX_HEADER([sched/signal.h])
 
 		 dnl Type existence checks
 		 AC_CHECK_LINUX_TYPE([struct vfs_path], [dcache.h])
@@ -878,6 +892,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_STRUCT([ctl_table], [ctl_name], [sysctl.h])
 		 AC_CHECK_LINUX_STRUCT([dentry], [d_u.d_alias], [dcache.h])
 		 AC_CHECK_LINUX_STRUCT([dentry_operations], [d_automount], [dcache.h])
+		 AC_CHECK_LINUX_STRUCT([group_info], [gid], [cred.h])
 		 AC_CHECK_LINUX_STRUCT([inode], [i_alloc_sem], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([inode], [i_blkbits], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([inode], [i_blksize], [fs.h])
@@ -929,6 +944,10 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
                  AC_CHECK_LINUX_FUNC([bdi_init],
 				     [#include <linux/backing-dev.h>],
 				     [bdi_init(NULL);])
+                 AC_CHECK_LINUX_FUNC([super_setup_bdi],
+                                     [#include <linux/backing-dev.h>],
+                                     [struct super_block *sb;
+				      super_setup_bdi(sb);])
                  AC_CHECK_LINUX_FUNC([PageChecked],
 				     [#include <linux/mm.h>
 #include <linux/page-flags.h>],
@@ -958,6 +977,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_FUNC([do_sync_read],
 				     [#include <linux/fs.h>],
 				     [do_sync_read(NULL, NULL, 0, NULL);])
+		 AC_CHECK_LINUX_FUNC([file_dentry],
+				     [#include <linux/fs.h>],
+				     [struct file *f; file_dentry(f);])
 		 AC_CHECK_LINUX_FUNC([find_task_by_pid],
 				     [#include <linux/sched.h>],
 				     [pid_t p; find_task_by_pid(p);])
@@ -1013,6 +1035,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_FUNC([set_nlink],
 				     [#include <linux/fs.h>],
 				     [set_nlink(NULL, 1);])
+		 AC_CHECK_LINUX_FUNC([setattr_prepare],
+				     [#include <linux/fs.h>],
+				     [setattr_prepare(NULL, NULL);])
 		 AC_CHECK_LINUX_FUNC([sock_create_kern],
 				     [#include <linux/net.h>],
 				     [sock_create_kern(0, 0, 0, NULL);])
@@ -1093,6 +1118,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_REGISTER_SYSCTL_TABLE_NOFLAG
 		 LINUX_HAVE_DCACHE_LOCK
 		 LINUX_D_COUNT_IS_INT
+		 LINUX_IOP_GETATTR_TAKES_PATH_STRUCT
 		 LINUX_IOP_MKDIR_TAKES_UMODE_T
 		 LINUX_IOP_CREATE_TAKES_UMODE_T
 		 LINUX_EXPORT_OP_ENCODE_FH_TAKES_INODES

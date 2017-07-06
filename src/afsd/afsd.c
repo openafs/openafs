@@ -51,6 +51,7 @@
   *	-waitclose make close calls always synchronous (slows em down, tho)
   *	-files_per_subdir [n]	number of files per cache subdir. (def=2048)
   *	-shutdown  Shutdown afs daemons
+  *	-inumcalc  inode number calculation method; 0=compat, 1=MD5 digest
   *---------------------------------------------------------------------------*/
 
 #include <afsconfig.h>
@@ -297,6 +298,7 @@ static int enable_fakestat = 0;	/* enable fakestat support */
 static int enable_backuptree = 0;	/* enable backup tree support */
 static int enable_nomount = 0;	/* do not mount */
 static int enable_splitcache = 0;
+static char *inumcalc = NULL;        /* inode number calculation method */
 static int afsd_dynamic_vcaches = 0;	/* Enable dynamic-vcache support */
 int afsd_verbose = 0;		/*Are we being chatty? */
 int afsd_debug = 0;		/*Are we printing debugging info? */
@@ -1912,6 +1914,11 @@ mainproc(struct cmd_syndesc *as, void *arock)
 	rxmaxfrags = atoi(as->parms[38].items->data);
     }
 
+    if (as->parms[39].items) {
+	/* -inumcalc */
+	inumcalc = strdup(as->parms[39].items->data);
+    }
+
     /* parse cacheinfo file if this is a diskcache */
     if (ParseCacheInfoFile()) {
 	exit(1);
@@ -2336,6 +2343,33 @@ afsd_run(void)
             printf("%s: Error seting rxmaxmtu\n", rn);
     }
 
+    if (inumcalc != NULL) {
+	if (strcmp(inumcalc, "compat") == 0) {
+	    if (afsd_verbose) {
+		printf("%s: Setting original inode number calculation method in kernel.\n",
+		       rn);
+	    }
+	    code = afsd_call_syscall(AFSOP_SET_INUMCALC, AFS_INUMCALC_COMPAT);
+	    if (code) {
+		printf("%s: Error setting inode calculation method: code=%d.\n",
+		       rn, code);
+	    }
+	} else if (strcmp(inumcalc, "md5") == 0) {
+	    if (afsd_verbose) {
+		printf("%s: Setting md5 digest inode number calculation in kernel.\n",
+		       rn);
+	    }
+	    code = afsd_call_syscall(AFSOP_SET_INUMCALC, AFS_INUMCALC_MD5);
+	    if (code) {
+		printf("%s: Error setting inode calculation method: code=%d.\n",
+		       rn, code);
+	    }
+	} else {
+	    printf("%s: Unknown value for -inumcalc: %s."
+		   "Using default inode calculation method.\n", rn, inumcalc);
+	}
+    }
+
     if (enable_dynroot) {
 	if (afsd_verbose)
 	    printf("%s: Enabling dynroot support in kernel%s.\n", rn,
@@ -2496,6 +2530,9 @@ afsd_run(void)
 	if (afsd_verbose)
 	    printf("%s: Forking 'rmtsys' daemon.\n", rn);
 	afsd_fork(0, rmtsysd_thread, NULL);
+	code = afsd_call_syscall(AFSOP_SET_RMTSYS_FLAG, 1);
+	if (code)
+	    printf("%s: Error enabling rmtsys support.\n", rn);
     }
 #endif /* !UKERNEL */
     /*
@@ -2590,6 +2627,8 @@ afsd_init(void)
     cmd_AddParm(ts, "-rxmaxfrags", CMD_SINGLE, CMD_OPTIONAL,
                 "Set the maximum number of UDP fragments Rx should send/receive"
                 " per Rx packet");
+    cmd_AddParm(ts, "-inumcalc", CMD_SINGLE, CMD_OPTIONAL,
+		"Set inode number calculation method");
 }
 
 int

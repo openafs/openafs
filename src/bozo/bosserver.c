@@ -169,32 +169,52 @@ CreateDirs(const char *coredir)
 	(!strncmp
 	 (AFSDIR_USR_DIRPATH, AFSDIR_SERVER_BIN_DIRPATH,
 	  strlen(AFSDIR_USR_DIRPATH)))) {
-	MakeDir(AFSDIR_USR_DIRPATH);
+	if (MakeDir(AFSDIR_USR_DIRPATH))
+	    return errno;
     }
     if (!strncmp
 	(AFSDIR_SERVER_AFS_DIRPATH, AFSDIR_SERVER_BIN_DIRPATH,
 	 strlen(AFSDIR_SERVER_AFS_DIRPATH))) {
-	MakeDir(AFSDIR_SERVER_AFS_DIRPATH);
+	if (MakeDir(AFSDIR_SERVER_AFS_DIRPATH))
+	    return errno;
     }
-    MakeDir(AFSDIR_SERVER_BIN_DIRPATH);
-    MakeDir(AFSDIR_SERVER_ETC_DIRPATH);
-    MakeDir(AFSDIR_SERVER_LOCAL_DIRPATH);
-    MakeDir(AFSDIR_SERVER_DB_DIRPATH);
-    MakeDir(AFSDIR_SERVER_LOGS_DIRPATH);
+    if (MakeDir(AFSDIR_SERVER_BIN_DIRPATH))
+	return errno;
+    if (MakeDir(AFSDIR_SERVER_ETC_DIRPATH))
+	return errno;
+    if (MakeDir(AFSDIR_SERVER_LOCAL_DIRPATH))
+	return errno;
+    if (MakeDir(AFSDIR_SERVER_DB_DIRPATH))
+	return errno;
+    if (MakeDir(AFSDIR_SERVER_LOGS_DIRPATH))
+	return errno;
 #ifndef AFS_NT40_ENV
     if (!strncmp
 	(AFSDIR_CLIENT_VICE_DIRPATH, AFSDIR_CLIENT_ETC_DIRPATH,
 	 strlen(AFSDIR_CLIENT_VICE_DIRPATH))) {
-	MakeDir(AFSDIR_CLIENT_VICE_DIRPATH);
+	if (MakeDir(AFSDIR_CLIENT_VICE_DIRPATH))
+	    return errno;
     }
-    MakeDir(AFSDIR_CLIENT_ETC_DIRPATH);
+    if (MakeDir(AFSDIR_CLIENT_ETC_DIRPATH))
+	return errno;
 
-    symlink(AFSDIR_SERVER_THISCELL_FILEPATH, AFSDIR_CLIENT_THISCELL_FILEPATH);
-    symlink(AFSDIR_SERVER_CELLSERVDB_FILEPATH,
-	    AFSDIR_CLIENT_CELLSERVDB_FILEPATH);
+    if (symlink(AFSDIR_SERVER_THISCELL_FILEPATH,
+	    AFSDIR_CLIENT_THISCELL_FILEPATH)) {
+	if (errno != EEXIST) {
+	    return errno;
+	}
+    }
+    if (symlink(AFSDIR_SERVER_CELLSERVDB_FILEPATH,
+	    AFSDIR_CLIENT_CELLSERVDB_FILEPATH)) {
+	if (errno != EEXIST) {
+	    return errno;
+	}
+    }
 #endif /* AFS_NT40_ENV */
-    if (coredir)
-	MakeDir(coredir);
+    if (coredir) {
+	if (MakeDir(coredir))
+	    return errno;
+    }
     return 0;
 }
 
@@ -841,6 +861,13 @@ main(int argc, char **argv, char **envp)
 	else {
 
 	    /* hack to support help flag */
+	    int ec;
+	    if (strcmp(argv[code], "-help") == 0 || strcmp(argv[code], "-h") == 0)
+		ec = 0; /* It is not an error to ask for usage. */
+	    else {
+		printf("Unrecognized option: %s\n", argv[code]);
+		ec = 1;
+	    }
 
 #ifndef AFS_NT40_ENV
 	    printf("Usage: bosserver [-noauth] [-log] "
@@ -866,7 +893,7 @@ main(int argc, char **argv, char **envp)
 #endif
 	    fflush(stdout);
 
-	    exit(0);
+	    exit(ec);
 	}
     }
     if (auditFileName) {
@@ -892,21 +919,33 @@ main(int argc, char **argv, char **envp)
     bnode_Register("cron", &cronbnode_ops, 2);
 
     /* create useful dirs */
-    CreateDirs(DoCore);
+    i = CreateDirs(DoCore);
+    if (i) {
+	printf("bosserver: could not set up directories, code %d\n", i);
+	exit(1);
+    }
 
     /* chdir to AFS log directory */
     if (DoCore)
-	chdir(DoCore);
+	i = chdir(DoCore);
     else
-	chdir(AFSDIR_SERVER_LOGS_DIRPATH);
+	i = chdir(AFSDIR_SERVER_LOGS_DIRPATH);
+
+    if (i) {
+	printf("bosserver: could not change to %s, code %d\n",
+	       DoCore ? DoCore : AFSDIR_SERVER_LOGS_DIRPATH, errno);
+	exit(1);
+    }
 
     /* go into the background and remove our controlling tty, close open
        file desriptors
      */
 
 #ifndef AFS_NT40_ENV
-    if (!nofork)
-	daemon(1, 0);
+    if (!nofork) {
+	if (daemon(1, 0))
+	    printf("bosserver: warning - daemon() returned code %d\n", errno);
+    }
 #endif /* ! AFS_NT40_ENV */
 
     if ((!DoSyslog)

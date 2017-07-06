@@ -36,9 +36,7 @@
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
 
-#ifdef AFS_LINUX20_ENV
-#include "afs/afs_md5.h"	/* For MD5 inodes - Linux only */
-#endif
+#include "afs/afs_md5.h"	/* For MD5 inodes */
 
 #if	defined(AFS_SUN56_ENV)
 #include <inet/led.h>
@@ -53,7 +51,7 @@
 #include <sys/fp_io.h>
 #endif
 
-afs_int32 afs_new_inum = 0;
+afs_int32 afs_md5inum = 0;
 
 #ifndef afs_cv2string
 char *
@@ -364,8 +362,6 @@ afs_data_pointer_to_int32(const void *p)
     return ip.i32[i32_sub];
 }
 
-#ifdef AFS_LINUX20_ENV
-
 afs_int32
 afs_calc_inum(afs_int32 cell, afs_int32 volume, afs_int32 vnode)
 {
@@ -373,7 +369,7 @@ afs_calc_inum(afs_int32 cell, afs_int32 volume, afs_int32 vnode)
     char digest[16];
     struct afs_md5 ct;
 
-    if (afs_new_inum) {
+    if (afs_md5inum) {
 	int offset;
 	AFS_MD5_Init(&ct);
 	AFS_MD5_Update(&ct, &cell, 4);
@@ -401,13 +397,3 @@ afs_calc_inum(afs_int32 cell, afs_int32 volume, afs_int32 vnode)
     ino &= 0x7fffffff;      /* Assumes 32 bit ino_t ..... */
     return ino;
 }
-
-#else
-
-afs_int32
-afs_calc_inum(afs_int32 cell, afs_int32 volume, afs_int32 vnode)
-{
-    return (volume << 16) + vnode;
-}
-
-#endif

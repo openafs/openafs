@@ -113,7 +113,13 @@ afs_fill_super(struct super_block *sb, void *data, int silent)
 #if defined(STRUCT_SUPER_BLOCK_HAS_S_D_OP)
     sb->s_d_op = &afs_dentry_operations;
 #endif
-
+#if defined(HAVE_LINUX_SUPER_SETUP_BDI)
+    code = super_setup_bdi(sb);
+    if (code)
+        goto out;
+    sb->s_bdi->name = "openafs";
+    sb->s_bdi->ra_pages = 32;
+#else
     /* used for inodes backing_dev_info field, also */
     afs_backing_dev_info = kmalloc(sizeof(struct backing_dev_info), GFP_NOFS);
     memset(afs_backing_dev_info, 0, sizeof(struct backing_dev_info));
@@ -132,6 +138,7 @@ afs_fill_super(struct super_block *sb, void *data, int silent)
     /* The name specified here will appear in the flushing thread name - flush-afs */
     bdi_register(afs_backing_dev_info, NULL, "afs");
 #endif
+#endif /* HAVE_LINUX_SUPER_SETUP_BDI */
 #if !defined(AFS_NONFSTRANS)
     sb->s_export_op = &afs_export_ops;
 #endif
@@ -158,7 +165,9 @@ out:
 	if (bdi_init_done)
 	    bdi_destroy(afs_backing_dev_info);
 #endif
+#if !defined(HAVE_LINUX_SUPER_SETUP_BDI)
 	kfree(afs_backing_dev_info);
+#endif
         module_put(THIS_MODULE);
     }
 

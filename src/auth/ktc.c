@@ -817,14 +817,14 @@ ktc_curpag(void)
 	afs_uint32 g0, g1;
 	afs_uint32 h, l, ret;
 	int ngroups;
-#ifdef AFS_LINUX26_ENV
+#ifdef AFS_PAG_ONEGROUP_ENV
 	int i;
 #endif
 
 	ngroups = getgroups(sizeof groups / sizeof groups[0], groups);
 
-#ifdef AFS_LINUX26_ENV
-	/* check for AFS_LINUX26_ONEGROUP_ENV PAGs */
+#ifdef AFS_PAG_ONEGROUP_ENV
+	/* Check for one-group PAGs. */
 	for (i = 0; i < ngroups; i++) {
 	    if (((groups[i] >> 24) & 0xff) == 'A') {
 		return groups[i];

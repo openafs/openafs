@@ -128,7 +128,10 @@ AC_DEFUN([LINUX_EXPORTS_SYS_OPEN], [
 AC_DEFUN([LINUX_RECALC_SIGPENDING_ARG_TYPE], [
   AC_CHECK_LINUX_BUILD([for recalc_sigpending arg type],
 		       [ac_cv_linux_func_recalc_sigpending_takes_void],
-		       [#include <linux/sched.h>],
+[#include <linux/sched.h>
+#ifdef HAVE_LINUX_SCHED_SIGNAL_H
+#include <linux/sched/signal.h>
+#endif],
 		       [recalc_sigpending();],
 		       [RECALC_SIGPENDING_TAKES_VOID],
 		       [define if your recalc_sigpending takes void],
@@ -139,7 +142,10 @@ AC_DEFUN([LINUX_RECALC_SIGPENDING_ARG_TYPE], [
 AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM], [
   AC_CHECK_LINUX_BUILD([for signal->rlim in struct task_struct],
 		       [ac_cv_linux_sched_struct_task_struct_has_signal_rlim],
-		       [#include <linux/sched.h>],
+[#include <linux/sched.h>
+#ifdef HAVE_LINUX_SCHED_SIGNAL_H
+#include <linux/sched/signal.h>
+#endif],
 		       [struct task_struct _tsk; printk("%d\n", _tsk.signal->rlim);],
 		       [STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM],
 		       [define if your struct task_struct has signal->rlim],
@@ -651,6 +657,18 @@ AC_DEFUN([LINUX_DOP_D_DELETE_TAKES_CONST], [
 			[-Werror])
 ])
 
+AC_DEFUN([LINUX_IOP_GETATTR_TAKES_PATH_STRUCT], [
+  AC_CHECK_LINUX_BUILD([whether 4.11+ inode.i_op->getattr takes a struct path argument],
+                        [ac_cv_linux_iop_getattr_takes_path_struct],
+                        [#include <linux/fs.h>
+                        int _getattr(const struct path *path, struct kstat *stat, u32 request_mask,
+                          unsigned int sync_mode) {return 0;};
+                        struct inode_operations _i_ops;],
+                        [_i_ops.getattr = _getattr;],
+                        [IOP_GETATTR_TAKES_PATH_STRUCT],
+                        [define if 4.11+ inode.i_op->getattr takes a struct path argument],
+                        [-Werror])
+])
 
 AC_DEFUN([LINUX_IOP_MKDIR_TAKES_UMODE_T], [
   AC_CHECK_LINUX_BUILD([whether inode.i_op->mkdir takes a umode_t argument],

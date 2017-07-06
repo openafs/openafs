@@ -26,15 +26,14 @@
 #include "afs/nfsclient.h"
 #include "osi_compat.h"
 
-#ifdef AFS_LINUX26_ONEGROUP_ENV
-# define NUMPAGGROUPS 1
+#ifdef AFS_PAG_ONEGROUP_ENV
 
 static afs_uint32
 afs_linux_pag_from_groups(struct group_info *group_info) {
     afs_uint32 g0 = 0;
     afs_uint32 i;
 
-    if (group_info->ngroups < NUMPAGGROUPS)
+    if (group_info->ngroups < AFS_NUMPAGGROUPS)
 	return NOPAG;
 
     for (i = 0; i < group_info->ngroups; i++) {
@@ -54,7 +53,7 @@ afs_linux_pag_to_groups(afs_uint32 newpag,
     afs_kgid_t newkgid = afs_make_kgid(newpag);
 
     if (afs_linux_pag_from_groups(old) == NOPAG)
-	need_space = NUMPAGGROUPS;
+	need_space = AFS_NUMPAGGROUPS;
 
     *new = groups_alloc(old->ngroups + need_space);
 
@@ -75,12 +74,11 @@ afs_linux_pag_to_groups(afs_uint32 newpag,
 }
 
 #else
-# define NUMPAGGROUPS 2
 
 static inline afs_uint32
 afs_linux_pag_from_groups(struct group_info *group_info) {
 
-    if (group_info->ngroups < NUMPAGGROUPS)
+    if (group_info->ngroups < AFS_NUMPAGGROUPS)
 	return NOPAG;
 
     return afs_get_pag_from_groups(GROUP_AT(group_info, 0), GROUP_AT(group_info, 1));
@@ -95,7 +93,7 @@ afs_linux_pag_to_groups(afs_uint32 newpag,
     gid_t g1;
 
     if (afs_linux_pag_from_groups(old) == NOPAG)
-	need_space = NUMPAGGGROUPS;
+	need_space = AFS_NUMPAGGROUPS;
 
     *new = groups_alloc(old->ngroups + need_space);
 

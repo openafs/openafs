@@ -460,7 +460,7 @@ afsconf_Open(const char *adir)
 	    /* The "AFSCONF" environment (or contents of "/.AFSCONF") will be typically set to something like "/afs/<cell>/common/etc" where, by convention, the default files for "ThisCell" and "CellServDB" will reside; note that a major drawback is that a given afs client on that cell may NOT contain the same contents... */
 	    char *home_dir;
 	    afsconf_FILE *fp;
-	    size_t len;
+	    size_t len = 0;
 
 	    if (!(home_dir = getenv("HOME"))) {
 		/* Our last chance is the "/.AFSCONF" file */
@@ -468,8 +468,6 @@ afsconf_Open(const char *adir)
 		if (fp == 0)
 		    goto fail;
 
-		fgets(afs_confdir, 128, fp);
-		fclose(fp);
 	    } else {
 		char *pathname = NULL;
 
@@ -486,10 +484,10 @@ afsconf_Open(const char *adir)
 		    if (fp == 0)
 			goto fail;
 		}
-		fgets(afs_confdir, 128, fp);
-		fclose(fp);
 	    }
-	    len = strlen(afs_confdir);
+	    if (fgets(afs_confdir, 128, fp) != NULL)
+		len = strlen(afs_confdir);
+	    fclose(fp);
 	    if (len == 0)
 		goto fail;
 

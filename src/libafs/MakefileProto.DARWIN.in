@@ -58,9 +58,9 @@ OBJ_ppc=$(shell echo "${ARCH_ppc}" | grep -q -w yes && echo "$@.ppc")
 OBJ_x86=$(shell echo "${ARCH_x86}" | grep -q -w yes && echo "$@.x86")
 OBJ_amd64=$(shell echo "${ARCH_amd64}" | grep -q -w yes && echo "$@.amd64")
 
-<all -ppc_darwin_70 -ppc_darwin_80 -x86_darwin_80 -ppc_darwin_90 -x86_darwin_90>
+<all -ppc_darwin_70 -ppc_darwin_80 -x86_darwin_80 -ppc_darwin_90 -x86_darwin_90 -x86_darwin_160>
 MODLD=$(CC) -static $(KOPTS_DBUG) -nostdlib $(ARCHFLAGS) -Xlinker -kext
-<ppc_darwin_70 ppc_darwin_80 x86_darwin_80 ppc_darwin_90 x86_darwin_90>
+<ppc_darwin_70 ppc_darwin_80 x86_darwin_80 ppc_darwin_90 x86_darwin_90 x86_darwin_160>
 MODLD=$(CC) -static $(KOPTS_DBUG) -nostdlib $(ARCHFLAGS)
 <all>
 
@@ -171,8 +171,12 @@ dest_libafs: $(LIBAFSNONFS) $(LIBAFSNONFSDSYM) ;
 ${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
 	$(MODLD) -r -o ${LIBAFS} ${AFSAOBJS} ${AFSNFSOBJS} -lcc_kext
 
+<all -x86_darwin_160>
 ${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
 	$(MODLD) -r -o ${LIBAFSNONFS} ${AFSAOBJS} ${AFSNONFSOBJS} -lcc_kext
+<x86_darwin_160>
+${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
+	$(MODLD) -r -o ${LIBAFSNONFS} ${AFSAOBJS} ${AFSNONFSOBJS} -lcc_kext -Xlinker -kext
 
 <all -ppc_darwin_70 -ppc_darwin_80 -x86_darwin_80>
 $(LIBAFSDSYM): ${LIBAFS}
