@@ -1967,7 +1967,8 @@ afs_GetServer(afs_uint32 *aserverp, afs_int32 nservers, afs_int32 acell,
 	newts->flags |= SRVR_MULTIHOMED;
     }
     if (acell)
-	newts->cell = afs_GetCell(acell, 0);
+	/* Use the afs_GetCellStale variant to avoid afs_GetServer recursion. */
+	newts->cell = afs_GetCellStale(acell, 0);
 
     /* For each IP address we are registering */
     for (k = 0; k < nservers; k++) {
@@ -2056,7 +2057,8 @@ afs_GetServer(afs_uint32 *aserverp, afs_int32 nservers, afs_int32 acell,
 		afs_servers[iphash] = orphts;
 
 		if (acell)
-		    orphts->cell = afs_GetCell(acell, 0);
+		    /* Use the afs_GetCellStale variant to avoid afs_GetServer recursion. */
+		    orphts->cell = afs_GetCellStale(acell, 0);
 	    }
 
 	    /* Hang the srvAddr struct off of the server structure. The server
