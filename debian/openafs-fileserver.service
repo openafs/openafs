@@ -4,9 +4,9 @@ Wants=network-online.target
 After=network.target network-online.target local-fs.target
 
 [Service]
-Type=forking
+Type=simple
 EnvironmentFile=-/etc/default/openafs-fileserver
-ExecStart=/usr/sbin/bosserver $DAEMON_ARGS
+ExecStart=/usr/sbin/bosserver -nofork $DAEMON_ARGS
 ExecStop=/usr/bin/bos shutdown localhost -wait -localauth
 
 [Install]

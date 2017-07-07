@@ -14,6 +14,8 @@ openafs (1.6.21-1) UNRELEASED; urgency=medium
       thread exhaustion during CPS recalculation.
     - Avoid a potential 100ms transmit delay in RX when the peer's receive
       window advances.
+  * Switch openafs-fileserver.service to Type=simple and pass -nofork to
+    bosserver.  (Closes: #865962)
 
  -- Benjamin Kaduk <kaduk@mit.edu>  Thu, 06 Jul 2017 09:19:27 -0500
 
