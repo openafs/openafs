@@ -121,7 +121,7 @@ Creating a New Cell
       If you have already installed openafs-client and configured it for
       some other cell, you do need to configure it to point to your new
       cell for these instructions to work.  Stop the AFS client on the
-      system with /etc/init.d/openafs-client stop and then run:
+      system with service openafs-client stop and then run:
 
            dpkg-reconfigure openafs-client
 

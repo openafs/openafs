@@ -36,7 +36,7 @@ _Description: Run Openafs client now and at boot?
  be mounted automatically at boot.  However, if you are planning on
  setting up a new cell or are on a laptop, you may not want it started at
  boot time.  If you choose not to start AFS at boot, run
- /etc/init.d/openafs-client force-start to start the client when you wish
+ service openafs-client force-start to start the client when you wish
  to run it.
 
 Template: openafs-client/afsdb
