@@ -27,6 +27,17 @@ else
     DEBIAN_KERN_FLAGS =
 endif
 
+# Skip lengthy parts of the doc build when requested
+ifneq (,$(findstring nodoc,$(DEB_BUILD_OPTIONS)))
+    DOCMAKE=echo --
+    DOXYCMD=
+    GENDOCS=
+else
+    DOCMAKE=make
+    DOXYCMD=dh_doxygen -popenafs-doc
+    GENDOCS=AdminGuide QuickStartUnix UserGuide
+endif
+
 SYS_NAME  := $(shell sh debian/sysname)
 
 package    = openafs
@@ -115,8 +126,8 @@ override_dh_auto_configure:
 override_dh_auto_build-indep:
 	dh_auto_build
 	$(MAKE) libafs_tree
-	set -e; for d in AdminGuide QuickStartUnix UserGuide ; do	\
-	    $(MAKE) -C doc/xml/$$d all ;				\
+	set -e; for d in $(GENDOCS); do	\
+	    $(DOCMAKE) -C doc/xml/$$d all ;				\
 	done
 
 # The manipulation of debian/changelog here is unnecessary with a regular
@@ -126,8 +137,8 @@ override_dh_auto_build-indep:
 override_dh_auto_clean:
 	[ ! -f doc/man-pages/pod1/afs-up.pod ] \
 	    || mv doc/man-pages/pod1/afs-up.pod doc/man-pages/pod1/up.pod
-	set -e; for d in AdminGuide QuickStartUnix UserGuide ; do	    \
-	    [ ! -f doc/xml/$$d/Makefile ] || $(MAKE) -C doc/xml/$$d clean ; \
+	set -e; for d in $(GENDOCS); do	    \
+	    [ ! -f doc/xml/$$d/Makefile ] || $(DOCMAKE) -C doc/xml/$$d clean ; \
 	done
 	[ ! -f debian/changelog.in ] \
 	    || cp debian/changelog debian/changelog.save
@@ -179,13 +190,13 @@ override_dh_install-arch:
 # and the DKMS package.
 override_dh_install-indep:
 	mkdir -p $(DOCS)/html
-	cp doc/xml/*.gif doc/xml/*.html $(DOCS)/html/
-	set -e; for d in AdminGuide QuickStartUnix UserGuide ; do	\
+	-cp doc/xml/*.gif doc/xml/*.html $(DOCS)/html/
+	set -e; for d in $(GENDOCS); do	\
 	    mkdir $(DOCS)/html/$$d ;					\
 	    cp doc/xml/$$d/*.html $(DOCS)/html/$$d/ ;			\
 	    cp doc/xml/$$d/*.pdf $(DOCS)/ ;				\
 	done
-	cp doc/xml/AdminGuide/*.png $(DOCS)/html/AdminGuide/
+	-cp doc/xml/AdminGuide/*.png $(DOCS)/html/AdminGuide/
 	mkdir $(DOCS)/html/arch-overview
 	cp doc/arch/arch-overview.h $(DOCS)/html/arch-overview
 	cd $(DOCS)/html/arch-overview && doxygen -g && doxygen \
@@ -197,7 +208,7 @@ override_dh_install-indep:
 		&& rm Doxyfile *.h && mv html/* . && rm -r latex html	\
 		&& cd $(CURDIR) ;					\
 	done
-	dh_doxygen -popenafs-doc
+	$(DOXYCMD)
 
 	install -d debian/$(srcpkg)/usr/src/modules/$(package)
 	cd libafs_tree && find . -print \

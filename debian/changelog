@@ -16,6 +16,7 @@ openafs (1.6.21-1) UNRELEASED; urgency=medium
       window advances.
   * Switch openafs-fileserver.service to Type=simple and pass -nofork to
     bosserver.  (Closes: #865962)
+  * Update for policy version 4.0.0, honor nodoc in DEB_BUILD_OPTIONS
 
  -- Benjamin Kaduk <kaduk@mit.edu>  Thu, 06 Jul 2017 09:19:27 -0500
 
