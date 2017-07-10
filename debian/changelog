@@ -1,4 +1,4 @@
-openafs (1.6.21-1) UNRELEASED; urgency=medium
+openafs (1.6.21-1) unstable; urgency=medium
 
   * New upstream release (1.6.21):
     - Include support for Linx versions through 4.12.  (Closes: #859155)
@@ -20,7 +20,7 @@ openafs (1.6.21-1) UNRELEASED; urgency=medium
   * Use service(8) instead of /etc/init.d/* directly in documentation and
     helper scripts
 
- -- Benjamin Kaduk <kaduk@mit.edu>  Thu, 06 Jul 2017 09:19:27 -0500
+ -- Benjamin Kaduk <kaduk@mit.edu>  Mon, 10 Jul 2017 15:27:56 -0500
 
 openafs (1.6.20-2) unstable; urgency=medium
 
