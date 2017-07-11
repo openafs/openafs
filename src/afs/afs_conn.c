@@ -393,6 +393,11 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 
     *rxconn = NULL;
 
+    if (!sap || ((sap->sa_flags & SRVR_ISDOWN) && !force_if_down)) {
+	/* sa is known down, and we don't want to force it.  */
+	return NULL;
+    }
+
     /* find cached connection */
     ObtainSharedLock(&afs_xconn, 15);
     foundvec = 0;
