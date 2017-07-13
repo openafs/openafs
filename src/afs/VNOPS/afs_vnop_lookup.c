@@ -377,14 +377,14 @@ afs_EvalFakeStat_int(struct vcache **avcp, struct afs_fakestat_state *state,
 
 	    do {
 		retry = 0;
-		ObtainWriteLock(&afs_xvcache, 597);
-		root_vp = afs_FindVCache(tvc->mvid.target_root, &retry, IS_WLOCK);
+		ObtainReadLock(&afs_xvcache);
+		root_vp = afs_FindVCache(tvc->mvid.target_root, &retry, 0);
 		if (root_vp && retry) {
-		    ReleaseWriteLock(&afs_xvcache);
+		    ReleaseReadLock(&afs_xvcache);
 		    afs_PutVCache(root_vp);
 		}
 	    } while (root_vp && retry);
-	    ReleaseWriteLock(&afs_xvcache);
+	    ReleaseReadLock(&afs_xvcache);
 	} else {
 	    root_vp = afs_GetVCache(tvc->mvid.target_root, areq);
 	}
@@ -821,14 +821,15 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	    tfid.Fid.Unique = ntohl(dirEntryp->fid.vunique);
 	    do {
 		retry = 0;
-		ObtainWriteLock(&afs_xvcache, 130);
-		tvcp = afs_FindVCache(&tfid, &retry, IS_WLOCK /* no stats | LRU */ );
+		ObtainSharedLock(&afs_xvcache, 130);
+		tvcp = afs_FindVCache(&tfid, &retry, IS_SLOCK /* no stats | LRU */ );
 		if (tvcp && retry) {
-		    ReleaseWriteLock(&afs_xvcache);
+		    ReleaseSharedLock(&afs_xvcache);
 		    afs_PutVCache(tvcp);
 		}
 	    } while (tvcp && retry);
 	    if (!tvcp) {	/* otherwise, create manually */
+		UpgradeSToWLock(&afs_xvcache, 129);
 		tvcp = afs_NewBulkVCache(&tfid, hostp, statSeqNo);
 		if (tvcp)
 		{
@@ -852,7 +853,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 		    ReleaseWriteLock(&afs_xvcache);
 		}
 	    } else {
-		ReleaseWriteLock(&afs_xvcache);
+		ReleaseSharedLock(&afs_xvcache);
 	    }
 	    if (!tvcp)
 	    {
