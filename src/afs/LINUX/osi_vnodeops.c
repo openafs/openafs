@@ -171,7 +171,7 @@ afs_linux_VerifyVCache(struct vcache *avc, cred_t **retcred) {
 
     code = afs_CreateReq(&treq, credp);
     if (code == 0) {
-        code = afs_VerifyVCache2(avc, treq);
+	code = afs_VerifyVCache(avc, treq);
 	afs_DestroyReq(treq);
     }
 
@@ -413,7 +413,7 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 
     /* update the cache entry */
   tagain:
-    code = afs_convert_code(afs_VerifyVCache2(avc, treq));
+    code = afs_convert_code(afs_VerifyVCache(avc, treq));
     if (code)
 	goto out;
 
