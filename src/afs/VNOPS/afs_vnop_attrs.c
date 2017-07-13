@@ -248,7 +248,7 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, afs_ucred_t *acred)
 
     if (!(avc->f.states & CStatd)) {
 	if (!(code = afs_CreateReq(&treq, acred))) {
-	    code = afs_VerifyVCache2(avc, treq);
+	    code = afs_VerifyVCache(avc, treq);
 	    inited = 1;
 	}
     } else
