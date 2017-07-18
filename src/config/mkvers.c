@@ -95,7 +95,7 @@ main(int argc, char **argv)
     char *baseDir;
     int argDir = 0;
     char *outputFile = NULL;
-    char outputFileBuf[sizeof(VERS_FILE) + 2];
+    char outputFileBuf[sizeof(VERS_FILE) + 4];
     struct stat sbuf;
     time_t versTime;
     int reBuild = 0;
