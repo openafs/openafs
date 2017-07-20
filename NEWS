@@ -1,6 +1,6 @@
                        User-Visible OpenAFS Changes
 
-OpenAFS 1.8 (in progress)
+OpenAFS 1.8.0pre2
 
   All Platforms
 
@@ -29,6 +29,7 @@ OpenAFS 1.8 (in progress)
       - Import APIs for kerberos-style profile configuration support.
       - Add new APIs to support UserList identities.
       - Add new APIs to support tabular output from command-line utilities.
+      - Convert vnode macros to inline-functions.
 
     * Improved support for non-DES encryption types:
       - Convert to Heimdal's hcrypto library to support RFC 3961.
@@ -57,6 +58,9 @@ OpenAFS 1.8 (in progress)
       - Provide per-opcode Rx statistics.
       - Add an rx_opaque data type to support non-DES encryption types
         and general code cleanup.
+      - Wake up the application thread after 'twind' is updated to avoid 100ms
+        transmit delays when the receive window transitions from closed to
+        open.
 
     * Libraries (both internal and installed) are built using libtool, including
       libuafs. The resulting shared libraries for libafsrpc and libafsauthent
@@ -70,6 +74,10 @@ OpenAFS 1.8 (in progress)
       - Link the Java API for OpenAFS with libuafs.a and remove the
         libjuafs.a library.
       - Always build the rxperf tool.
+      - Fix man-page generation by make after ./regen.sh -q
+      - Support the SOURCE_DATE_EPOCH environment variable to improve build
+        reproducibility.
+      - Modernize language specific SWIG typemaps for libuafs Perl bindings.
 
     * Improvements to documentation:
       - Document the new KeyFileExt file.
@@ -81,7 +89,9 @@ OpenAFS 1.8 (in progress)
       - Update the Admin Guide.
       - Remove AIX, HP-UX, and IRIX information from the Quick Start Guide.
       - Document the vldb and prdb (ubik) file formats.
+      - Add PtLog man page.
       - Corrections and clarifications to man pages.
+      - Add ubik threading analysis doc.
 
     * Improvements for troublshooting, debugging, and testing:
       - Log more details on volume-server-to-fileserver communication errors
@@ -94,12 +104,20 @@ OpenAFS 1.8 (in progress)
       - Add the afsload tool to simulate multiple cache managers for file server
         load testing.
       - Add run-time checks for refcount imbalances in the cache manager.
+      - Fix missing newlines in afsd -debug output.
 
     * Developer tool improvements:
       - Improvements and fixes for rxgen (used to generate Rx RPC bindings).
       - Add tool for man page verification of command options.
       - Add tool to find Unix cache manager lock identification numbers.
       - Add an option for pretty build output.
+
+    * RPM packaging updated:
+      - Update the spec file to keep up with accumulated changes.
+      - Move the klog.krb5 man page to the openafs-krb5 sub-package.
+      - Prevent double-starting client on RHEL7
+      - Convert rpm spec file from deprecated 'make dest' to 'make install'.
+      - Fix rpmbuild command line option default handling.
 
     * Add a new protection error code (PRNAMETOOLONG) instead of silently
       truncating names which exceed the maximum name length (PR_MAXNAMELEN).
@@ -152,6 +170,11 @@ OpenAFS 1.8 (in progress)
       performance penalty on modern multi-core systems.
 
     * Do not permit creation of users with id of ANONYMOUSID.
+
+    * Do not save/restore host states in the fsstate.dat file for hosts which
+      are in the process of retrieving CPS information from the ptserver when
+      the fileserver is being shutdown. This fixes a bug in which the fileserver
+      will incorrectly block all threads following a restart.
 
     * Add the ptserver -restrict_anonymous option to inhibit exposure of user
       names from the ptserver.
@@ -225,6 +248,14 @@ OpenAFS 1.8 (in progress)
       --enable-ubik-read-while-write configure option. This feature is not
       considered ready for production usage at this time.
 
+    * Avoid filling the FileLog with "Volume x offline: not in service" when
+      a volume is administratively taken offline with vos offline.
+
+    * Print an error message when bosserver is started with an unknown
+      command line option.
+
+    * Modify the volume updateDate when the volume is changed by a salvage.
+
   All Client Platforms
 
     * Add support for relative ACL changes with fs setacl. If a single plus (+)
@@ -235,6 +266,10 @@ OpenAFS 1.8 (in progress)
 
     * Add the afsd -inumcalc option to specify the method used to calculate
       inode numbers presented by AFS.
+
+    * Add the afsd -volume-ttl option to specify set the maximum amount of time
+      information retrieved from the vlserver will be cached, regardless of
+      callback expiry times.
 
     * Return EIO on internal errors instead of the misleading ENOENT.
 
@@ -252,6 +287,8 @@ OpenAFS 1.8 (in progress)
 
     * Fixes to the bypasscache feature.
 
+    * Fix fs getcacheparms miscounts.
+
     * Remove the obsolete Netscape plugin.
 
   Linux
@@ -264,6 +301,9 @@ OpenAFS 1.8 (in progress)
     * Prevent fakestat data inconsistencies in certain cases (131855).
 
     * Fix dentry leak which can cause a crash on shutdown.
+
+    * Fix improper use of ENOENT and avoid incorrect use of linux negative
+      dentry cache.
 
     * Improve error reporting when encountering corrupt directories.
 
@@ -284,11 +324,30 @@ OpenAFS 1.8 (in progress)
 
     * Add the sparc_linux26 sysname.
 
+    * Desupport 32-bit Linux kernels on s390/s390x.
+
+    * Fix Debian/Ubuntu build regression on kernel 3.16.39.
+
+    * Fix --enable-kernel-debug for linux 4.8+.
+
+    * Support linux 4.10, 4.11, 4.12
+
   Solaris
 
     * Remove support for all Solaris and SunOS platforms prior to Solaris 8.
 
     * Build 64-bit binaries for Solaris x86 by default.
+
+    * Use one-group PAGs on Solaris 11, which is required for PAG support
+      on Solaris 11 since supplemental groups must be sorted starting with
+      Solaris 11.1.
+
+    * Update search paths for solaris cc for recent versions Solaris Studio.
+
+    * Modernize declaration of module dependences by converting from the
+      deprecated _depends_on symbol to ELF dependencies.
+
+    * Avoid BAD TRAP panic due to invalid opcodes on x86 with Studio 12.5.
 
   MacOS
 
@@ -298,6 +357,11 @@ OpenAFS 1.8 (in progress)
 
     * Add a syscall to enable/disable bulkstat at run-time, which is
       disabled by default.
+
+    * Fix path to binaries in the prefpane.
+
+    * Fix builds on MacOS 10.12 by building only the active architecture
+      by default.
 
   FreeBSD
 
@@ -310,6 +374,8 @@ OpenAFS 1.8 (in progress)
 
     * Stay up to date with new FreeBSD releases (through 10.3).
 
+    * Do not claim AFS_VM_RDWR_ENV
+
   NetBSD
 
     * Stay up to date with new NetBSD releases (through 7.x)
@@ -318,9 +384,13 @@ OpenAFS 1.8 (in progress)
 
     * Build system updates for NetBDS 6.99.x
 
+    * Do not claim AFS_VM_RDWR_ENV
+
   OpenBSD
 
     * Stay up to date with new OpenBSD releases (through 4.7)
+
+    * Do not claim AFS_VM_RDWR_ENV
 
   AIX
 
