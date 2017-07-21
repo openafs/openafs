@@ -786,6 +786,7 @@ rm -f $RPM_BUILD_ROOT%{_mandir}/man1/dlog.*
 rm -f $RPM_BUILD_ROOT%{_mandir}/man1/copyauth.*
 rm -f $RPM_BUILD_ROOT%{_mandir}/man1/dpass.*
 rm -f $RPM_BUILD_ROOT%{_mandir}/man1/livesys.*
+rm -f $RPM_BUILD_ROOT%{_mandir}/man8/afsd.fuse.8
 rm -f $RPM_BUILD_ROOT%{_mandir}/man8/rmtsysd.*
 rm -f $RPM_BUILD_ROOT%{_mandir}/man8/aklog_dynamic_auth.*
 rm -f $RPM_BUILD_ROOT%{_mandir}/man8/kdb.*
