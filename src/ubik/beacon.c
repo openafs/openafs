@@ -399,6 +399,11 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
 	    beacon_globals.ubik_amSyncSite = 1;	/* let's start as sync site */
 	    beacon_globals.syncSiteUntil = 0x7fffffff;	/* and be it quite a while */
 	    beacon_globals.ubik_syncSiteAdvertised = 1;
+	    DBHOLD(ubik_dbase);
+	    UBIK_VERSION_LOCK;
+	    version_globals.ubik_epochTime = FT_ApproxTime();
+	    UBIK_VERSION_UNLOCK;
+	    DBRELE(ubik_dbase);
 	}
     } else {
 	if (nServers == 1)	/* special case 1 server */
@@ -406,8 +411,14 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
     }
 
     if (ubik_singleServer) {
-	if (!beacon_globals.ubik_amSyncSite)
+	if (!beacon_globals.ubik_amSyncSite) {
 	    ubik_dprint("Ubik: I am the sync site - 1 server\n");
+	    DBHOLD(ubik_dbase);
+	    UBIK_VERSION_LOCK;
+	    version_globals.ubik_epochTime = FT_ApproxTime();
+	    UBIK_VERSION_UNLOCK;
+	    DBRELE(ubik_dbase);
+	}
 	beacon_globals.ubik_amSyncSite = 1;
 	beacon_globals.syncSiteUntil = 0x7fffffff;	/* quite a while */
 	beacon_globals.ubik_syncSiteAdvertised = 1;
@@ -431,6 +442,7 @@ ubeacon_Interact(void *dummy)
     afs_int32 i;
     struct ubik_server *ts;
     afs_int32 temp, yesVotes, lastWakeupTime, oldestYesVote, syncsite;
+    int becameSyncSite;
     struct ubik_tid ttid;
     struct ubik_version tversion;
     afs_int32 startTime;
@@ -604,17 +616,20 @@ ubeacon_Interact(void *dummy)
 
 	/* now decide if we have enough votes to become sync site.
 	 * Note that we can still get enough votes even if we didn't for ourself. */
+	becameSyncSite = 0;
 	if (yesVotes > nServers) {	/* yesVotes is bumped by 2 or 3 for each site */
 	    UBIK_BEACON_LOCK;
-	    if (!beacon_globals.ubik_amSyncSite)
+	    if (!beacon_globals.ubik_amSyncSite) {
 		ubik_dprint("Ubik: I am the sync site\n");
-	    else {
+		/* Defer actually changing any variables until we can take the
+		 * DB lock (which is before the beacon lock in the lock order). */
+		becameSyncSite = 1;
+	    } else {
+		beacon_globals.syncSiteUntil = oldestYesVote + SMALLTIME;
 		/* at this point, we have the guarantee that at least quorum
 		 * received a beacon packet informing we have a sync-site. */
 		beacon_globals.ubik_syncSiteAdvertised = 1;
 	    }
-	    beacon_globals.ubik_amSyncSite = 1;
-	    beacon_globals.syncSiteUntil = oldestYesVote + SMALLTIME;
 #ifndef AFS_PTHREAD_ENV
 		/* I did not find a corresponding LWP_WaitProcess(&ubik_amSyncSite) --
 		   this may be a spurious signal call -- sjenkins */
@@ -630,6 +645,25 @@ ubeacon_Interact(void *dummy)
 	    UBIK_BEACON_UNLOCK;
 	    DBHOLD(ubik_dbase);
 	    urecovery_ResetState();	/* tell recovery we're no longer the sync site */
+	    DBRELE(ubik_dbase);
+	}
+	/* We cannot take the DB lock around the entire preceding conditional,
+	 * because if we are currently the sync site and this election serves
+	 * to confirm that status, the DB lock may already be held for a long-running
+	 * write transaction.  In such a case, attempting to acquire the DB lock
+	 * would cause the beacon thread to block and disrupt election processing.
+	 * However, if we are transitioning from not-sync-site to sync-site, there
+	 * can be no outstanding transactions and acquiring the DB lock should be
+	 * safe without extended blocking. */
+	if (becameSyncSite) {
+	    DBHOLD(ubik_dbase);
+	    UBIK_BEACON_LOCK;
+	    UBIK_VERSION_LOCK;
+	    version_globals.ubik_epochTime = FT_ApproxTime();
+	    beacon_globals.ubik_amSyncSite = 1;
+	    beacon_globals.syncSiteUntil = oldestYesVote + SMALLTIME;
+	    UBIK_VERSION_UNLOCK;
+	    UBIK_BEACON_UNLOCK;
 	    DBRELE(ubik_dbase);
 	}
 

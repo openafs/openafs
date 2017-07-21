@@ -877,7 +877,7 @@ udisk_commit(struct ubik_trans *atrans)
 	if (ubeacon_AmSyncSite() && !(urecovery_state & UBIK_RECLABELDB)) {
 	    UBIK_VERSION_LOCK;
 	    oldversion = dbase->version;
-	    newversion.epoch = FT_ApproxTime();;
+	    newversion.epoch = version_globals.ubik_epochTime;
 	    newversion.counter = 1;
 
 	    code = (*dbase->setlabel) (dbase, 0, &newversion);
@@ -886,7 +886,6 @@ udisk_commit(struct ubik_trans *atrans)
 		return code;
 	    }
 
-	    version_globals.ubik_epochTime = newversion.epoch;
 	    dbase->version = newversion;
 	    UBIK_VERSION_UNLOCK;
 
