@@ -715,11 +715,11 @@ rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/kas
 rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/klog
 rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/klog.krb
 rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/kpwvalid
+rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/tokens.krb
 rm -f $RPM_BUILD_ROOT%{_sbindir}/kpwvalid
 %endif
 rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/pts
 rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/tokens
-rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/tokens.krb
 rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/udebug
 rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/vos
 
@@ -885,15 +885,15 @@ ln -sf %{_prefix}/bin/fs            $RPM_BUILD_ROOT%{_prefix}/afsws/bin/fs
 ln -sf %{_prefix}/bin/kapasswd      $RPM_BUILD_ROOT%{_prefix}/afsws/bin/kapasswd
 ln -sf %{_prefix}/bin/klog          $RPM_BUILD_ROOT%{_prefix}/afsws/bin/klog
 ln -sf %{_prefix}/bin/klog.krb      $RPM_BUILD_ROOT%{_prefix}/afsws/bin/klog.krb
+ln -sf %{_prefix}/bin/pagsh.krb     $RPM_BUILD_ROOT%{_prefix}/afsws/bin/pagsh.krb
+ln -sf %{_prefix}/bin/tokens.krb    $RPM_BUILD_ROOT%{_prefix}/afsws/bin/tokens.krb
 %endif
 ln -sf %{_prefix}/bin/pagsh         $RPM_BUILD_ROOT%{_prefix}/afsws/bin/pagsh
-ln -sf %{_prefix}/bin/pagsh.krb     $RPM_BUILD_ROOT%{_prefix}/afsws/bin/pagsh.krb
 ln -sf %{_prefix}/bin/pts           $RPM_BUILD_ROOT%{_prefix}/afsws/bin/pts
 ln -sf %{_prefix}/bin/restorevol    $RPM_BUILD_ROOT%{_prefix}/afsws/bin/restorevol
 ln -sf %{_prefix}/bin/scout         $RPM_BUILD_ROOT%{_prefix}/afsws/bin/scout
 ln -sf %{_prefix}/bin/sys           $RPM_BUILD_ROOT%{_prefix}/afsws/bin/sys
 ln -sf %{_prefix}/bin/tokens        $RPM_BUILD_ROOT%{_prefix}/afsws/bin/tokens
-ln -sf %{_prefix}/bin/tokens.krb    $RPM_BUILD_ROOT%{_prefix}/afsws/bin/tokens.krb
 ln -sf %{_prefix}/bin/translate_et  $RPM_BUILD_ROOT%{_prefix}/afsws/bin/translate_et
 ln -sf %{_prefix}/bin/xstat_cm_test $RPM_BUILD_ROOT%{_prefix}/afsws/bin/xstat_cm_test
 ln -sf %{_prefix}/bin/xstat_fs_test $RPM_BUILD_ROOT%{_prefix}/afsws/bin/xstat_fs_test
@@ -1106,13 +1106,11 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_bindir}/bos
 %{_bindir}/fs
 %{_bindir}/pagsh
-%{_bindir}/pagsh.krb
 %{_bindir}/pts
 %{_bindir}/restorevol
 %{_bindir}/scout
 %{_bindir}/sys
 %{_bindir}/tokens
-%{_bindir}/tokens.krb
 %{_bindir}/translate_et
 %{_bindir}/xstat_cm_test
 %{_bindir}/xstat_fs_test
@@ -1134,7 +1132,6 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man1/fs.1.gz
 %{_mandir}/man1/fs_*.1.gz
 %{_mandir}/man1/pagsh.1.gz
-%{_mandir}/man1/pagsh.krb.1.gz
 %{_mandir}/man1/pts.1.gz
 %{_mandir}/man1/pts_*.1.gz
 %{_mandir}/man1/restorevol.1.gz
@@ -1142,7 +1139,6 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man1/scout.1.gz
 %{_mandir}/man1/sys.1.gz
 %{_mandir}/man1/tokens.1.gz
-%{_mandir}/man1/tokens.krb.1.gz
 %{_mandir}/man1/translate_et.1.gz
 %{_mandir}/man1/udebug.1.gz
 %{_mandir}/man1/unlog.1.gz
@@ -1381,6 +1377,8 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{pamdir}/pam_afs.so
 %{_bindir}/kapasswd
 %{_bindir}/kpwvalid
+%{_bindir}/pagsh.krb
+%{_bindir}/tokens.krb
 %{_prefix}/afsws/bin/kapasswd
 %{_prefix}/afsws/bin/klog
 %{_prefix}/afsws/bin/klog.krb
@@ -1388,6 +1386,8 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man1/kapasswd.1.gz
 %{_mandir}/man1/klog.1.gz
 %{_mandir}/man1/klog.krb.1.gz
+%{_mandir}/man1/pagsh.krb.1.gz
+%{_mandir}/man1/tokens.krb.1.gz
 %{_mandir}/man8/kpwvalid.8.gz
 %{_mandir}/man8/kas.8.gz
 %{_mandir}/man8/kas_*.8.gz
