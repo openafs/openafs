@@ -738,6 +738,11 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libafsrpc.so*
 rm -f $RPM_BUILD_ROOT%{_libdir}/libkopenafs.so*
 %endif
 rm -f $RPM_BUILD_ROOT%{_sbindir}/afsd.fuse
+%if !%{kauth_support}
+rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/tokens.krb
+rm -f $RPM_BUILD_ROOT%{_bindir}/tokens.krb
+rm -f $RPM_BUILD_ROOT%{_bindir}/pagsh.krb
+%endif
 
 # Relocate afsd to legacy path to match init scripts.
 mv $RPM_BUILD_ROOT%{_sbindir}/afsd $RPM_BUILD_ROOT%{_prefix}/vice/etc/afsd
@@ -797,6 +802,12 @@ rm -f $RPM_BUILD_ROOT%{_mandir}/man8/package.*
 %if !%{krb5support}
 rm -f $RPM_BUILD_ROOT%{_mandir}/man8/akeyconvert.*
 rm -f $RPM_BUILD_ROOT%{_mandir}/man8/asetkey.*
+%endif
+%if !%{kauth_support}
+rm -f $RPM_BUILD_ROOT%{_mandir}/man1/pagsh.krb.1
+rm -f $RPM_BUILD_ROOT%{_mandir}/man1/tokens.krb.1
+rm -f $RPM_BUILD_ROOT%{_mandir}/man5/AuthLog.5
+rm -f $RPM_BUILD_ROOT%{_mandir}/man5/AuthLog.dir.5
 %endif
 
 #-----------------------------------------------------------------------------
@@ -1359,11 +1370,33 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 
 %files compat
 %defattr(-,root,root)
-%{_prefix}/afsws
-%exclude %{_prefix}/afsws/bin/kapasswd
-%exclude %{_prefix}/afsws/bin/klog
-%exclude %{_prefix}/afsws/bin/klog.krb
-%exclude %{_prefix}/afsws/etc/kas
+%{_prefix}/afsws/bin/afsmonitor
+%{_prefix}/afsws/bin/bos
+%{_prefix}/afsws/bin/fs
+%{_prefix}/afsws/bin/pagsh
+%{_prefix}/afsws/bin/pts
+%{_prefix}/afsws/bin/restorevol
+%{_prefix}/afsws/bin/scout
+%{_prefix}/afsws/bin/sys
+%{_prefix}/afsws/bin/tokens
+%{_prefix}/afsws/bin/translate_et
+%{_prefix}/afsws/bin/udebug
+%{_prefix}/afsws/bin/unlog
+%{_prefix}/afsws/bin/xstat_cm_test
+%{_prefix}/afsws/bin/xstat_fs_test
+%{_prefix}/afsws/etc/backup
+%{_prefix}/afsws/etc/butc
+%{_prefix}/afsws/etc/fms
+%{_prefix}/afsws/etc/fstrace
+%{_prefix}/afsws/etc/read_tape
+%{_prefix}/afsws/etc/rxdebug
+%{_prefix}/afsws/etc/uss
+%{_prefix}/afsws/etc/vos
+%{_prefix}/afsws/etc/vsys
+%if %{kauth_support}
+%{_prefix}/afsws/bin/pagsh.krb
+%{_prefix}/afsws/bin/tokens.krb
+%endif
 
 %if %{kauth_support}
 %files kauth-client
