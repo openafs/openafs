@@ -140,7 +140,7 @@ int osi_abspath(char *aname, char *buf, int buflen,
     code = osi_lookupname_internal(name, followlink, &mnt, &dp);
     if (!code) {
 #if defined(D_PATH_TAKES_STRUCT_PATH)
-	afs_linux_path_t p = { mnt, dp };
+	afs_linux_path_t p = { .mnt = mnt, .dentry = dp };
 	path = d_path(&p, buf, buflen);
 #else
 	path = d_path(dp, mnt, buf, buflen);
