@@ -630,11 +630,6 @@ ubeacon_Interact(void *dummy)
 		 * received a beacon packet informing we have a sync-site. */
 		beacon_globals.ubik_syncSiteAdvertised = 1;
 	    }
-#ifndef AFS_PTHREAD_ENV
-		/* I did not find a corresponding LWP_WaitProcess(&ubik_amSyncSite) --
-		   this may be a spurious signal call -- sjenkins */
-		LWP_NoYieldSignal(&beacon_globals.ubik_amSyncSite);
-#endif
 	    UBIK_BEACON_UNLOCK;
 	} else {
 	    UBIK_BEACON_LOCK;
