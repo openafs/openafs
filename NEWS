@@ -268,6 +268,10 @@ OpenAFS 1.8.0pre2
 
   All Client Platforms
 
+    * Use rxkad_crypt by default for connections to fileservers.  This matches
+      the existing behavior of the Windows client and has been applied by
+      the distribution packaging on many platforms already.
+
     * Add support for relative ACL changes with fs setacl. If a single plus (+)
       or minus (-) character is appended to the rights' letters argument, the
       new rights are computed relatively to the existing ones.

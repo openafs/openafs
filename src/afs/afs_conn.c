@@ -44,7 +44,7 @@
 /* Exported variables */
 afs_rwlock_t afs_xconn;		/* allocation lock for new things */
 afs_rwlock_t afs_xinterface;	/* for multiple client address */
-afs_int32 cryptall = 0;		/* encrypt all communications */
+afs_int32 cryptall = 1;		/* encrypt all communications */
 
 /* some connection macros */
 
