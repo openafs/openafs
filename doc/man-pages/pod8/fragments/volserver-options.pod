@@ -80,11 +80,15 @@ user.admin PTS entry. Sites whose Kerberos realms don't have these collisions
 between principal names may disable this check by starting the server
 with this option.
 
-=item B<-preserve-vol-stats>
+=item B<-clear-vol-stats>
 
-Preserve volume access statistics over volume restore and reclone operations.
-By default, volume access statistics are reset during volume restore and reclone
-operations.
+Clear volume access statistics during volume restore and reclone operations.
+This includes clearing the volume access statistics of read-only volumes during
+a volume release.  By default, volume access statistics are preserved during
+volume restore and reclone operations.
+
+Volume access statistics were cleared by default in versions prior to OpenAFS
+1.8.0.  This flag is intended to provide compatible behaviour.
 
 =item B<-sync> <I<sync behavior>>
 
