@@ -15,12 +15,11 @@ RTL=@TOP_OBJDIR@/tests/rpctestlib
 RX = ${srcdir}/../../src/rx
 VICED=@TOP_OBJDIR@/src/viced
 FSINT=@TOP_OBJDIR@/src/fsint
-MCAS=@TOP_OBJDIR@/src/mcas
 OSI=@TOP_OBJDIR@/src/osi
 
 MODULE_CFLAGS=-DNINTERFACE -DRXDEBUG -DFSSYNC_BUILD_SERVER \
-	      -DSALVSYNC_BUILD_CLIENT -I${RX} -I${MCAS} ${OSI_XCFLAGS} \
-	      ${MCAS_CFLAGS} -DSUBSYS_LOG_MACRO=RTLLog
+	      -DSALVSYNC_BUILD_CLIENT -I${RX} ${OSI_XCFLAGS} \
+	      -DSUBSYS_LOG_MACRO=RTLLog
 
 headers= ${RTL}/rpc_test_procs.h
 

@@ -172,10 +172,6 @@ and tickets) and test program to create an AFS token.
 
 Lightweight user-level non-preemptive cooperative threading library.
 
- -- mcas
-
-'Multi-word compare and swap', a library for lockless threadsafe data structures.
-
  -- pam
 
 Pluggable authentication modules for afs authentication.
