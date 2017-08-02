@@ -160,6 +160,11 @@ OpenAFS 1.8.0pre2
 
     * Ubik servers using pthreads are now available and are used by default
 
+    * As part of improving Ubik reliability in certain edge cases, an extra
+      election cycle (about 60 seconds) may be needed before writes are
+      permitted.  This is a conservative change that may be removed in
+      the future.
+
     * Remove periodic background fsync by the fileserver (ihandle fsync thread).
 
     * Fix potential file handle leak in the file server ihandle caching layer.
