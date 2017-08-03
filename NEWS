@@ -256,6 +256,11 @@ OpenAFS 1.8.0pre2
 
     * Modify the volume updateDate when the volume is changed by a salvage.
 
+    * Volume usage statistics are now preserved during reclone and restore
+      operations by default, the behavior previously enabled by
+      the -preserve-vol-stats flag to the volserver.  The historical behavior
+      can be retained via the -clear-vol-stats argument.
+
   All Client Platforms
 
     * Add support for relative ACL changes with fs setacl. If a single plus (+)
