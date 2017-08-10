@@ -75,7 +75,7 @@ osi_VM_MultiPageConflict(struct vcache *avc, struct dcache *adc)
 {
     struct multiPage_range *range;
     for (range = (struct multiPage_range *)avc->multiPage.next;
-         range != &avc->multiPage;
+         range != (struct multiPage_range *)&avc->multiPage;
          range = (struct multiPage_range *)QNext(&range->q)) {
 
 	if (adc->f.chunk >= AFS_CHUNK(range->off) &&
