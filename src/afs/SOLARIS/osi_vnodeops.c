@@ -1570,7 +1570,7 @@ gafs_inactive(struct vnode *vp, afs_ucred_t *acred)
 
 
 static int
-gafs_fid(struct vnode *vp, struct fid **fidpp)
+gafs_fid(struct vnode *vp, struct fid *fidpp)
 {
     int code;
     AFS_GLOCK();
