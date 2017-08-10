@@ -1275,56 +1275,297 @@ afs_getsecattr(struct vnode *vp, vsecattr_t *vsecattr, int flag, struct cred *cr
 #endif
 
 #ifdef	AFS_GLOBAL_SUNLOCK
-extern int gafs_open(struct vcache **avcp, afs_int32 aflags, 
-		     afs_ucred_t *acred);
-extern int gafs_close(struct vcache *avc, afs_int32 aflags, 
-		      int count, offset_t offset, afs_ucred_t *acred);
-extern int afs_ioctl(struct vnode *vnp, int com, int arg, int flag, 
-		     cred_t *credp, int *rvalp);
-extern int gafs_access(struct vcache *avc, afs_int32 amode,
-		       int flags, afs_ucred_t *acred);
-extern int gafs_getattr(struct vcache *avc, 
-			struct vattr *attrs, int flags, 
-			afs_ucred_t *acred);
-extern int gafs_setattr(struct vcache *avc, 
-			struct vattr *attrs, int flags, 
-			afs_ucred_t *acred);
-extern int gafs_lookup(struct vcache *adp, char *aname, 
-		       struct vcache **avcp, struct pathname *pnp,
-		       int flags, struct vnode *rdir, afs_ucred_t *acred);
-extern int gafs_remove(struct vcache *adp, char *aname, 
-		       afs_ucred_t *acred);
-extern int gafs_link(struct vcache *adp, struct vcache *avc,
-		     char *aname, afs_ucred_t *acred);
-extern int gafs_rename(struct vcache *aodp, char *aname1,
-		       struct vcache *andp, char *aname2,
-		       afs_ucred_t *acred);
-extern int gafs_symlink(struct vcache *adp, char *aname, 
-			struct vattr *attrs, char *atargetName, 
-			afs_ucred_t *acred);
-extern int gafs_rmdir(struct vcache *adp, char *aname, 
-		      struct vnode *cdirp, afs_ucred_t *acred);
-extern int gafs_mkdir(struct vcache *adp, char *aname, 
-		      struct vattr *attrs, struct vcache **avcp, 
-		      afs_ucred_t *acred);
-extern int gafs_fsync(struct vcache *avc, int flag, afs_ucred_t *acred);
-extern int gafs_readlink(struct vcache *avc, struct uio *auio, 
-			 afs_ucred_t *acred);
-extern int gafs_readdir(struct vcache *avc, struct uio *auio,
-			afs_ucred_t *acred, int *eofp);
-extern void gafs_inactive(struct vcache *avc, 
-			  afs_ucred_t *acred);
-extern int gafs_fid(struct vcache *avc, struct fid **fidpp);
-extern int gafs_create(struct vcache *adp, char *aname, 
-		       struct vattr *attrs, enum vcexcl aexcl, int amode, 
-		       struct vcache **avcp, afs_ucred_t *acred);
-#ifdef AFS_SUN511_ENV
-extern int afs_pathconf(struct vnode *vp, int cmd, u_long *outdatap,
-			afs_ucred_t *credp, caller_context_t *ct);
-#else
-extern int afs_pathconf(struct vnode *vp, int cmd, u_long *outdatap,
-			afs_ucred_t *credp);
-#endif /* AFS_SUN511_ENV */
+
+static int
+gafs_open(struct vcache **avcp, afs_int32 aflags, 
+	  afs_ucred_t *acred)
+{
+    int code;
+
+    AFS_GLOCK();
+    code = afs_open(avcp, aflags, acred);
+    AFS_GUNLOCK();
+    return (code);
+}
+
+static int
+gafs_close(struct vcache *avc, afs_int32 aflags, int count, 
+	   offset_t offset, afs_ucred_t *acred)
+{
+    int code;
+
+    AFS_GLOCK();
+    code = afs_close(avc, aflags, count, offset, acred);
+    AFS_GUNLOCK();
+    return (code);
+}
+
+static int
+gafs_getattr(struct vcache *avc, struct vattr *attrs, 
+	     int flags, afs_ucred_t *acred)
+{
+    int code;
+
+    AFS_GLOCK();
+    code = afs_getattr(avc, attrs, flags, acred);
+    AFS_GUNLOCK();
+    return (code);
+}
+
+
+static int
+gafs_setattr(struct vcache *avc, struct vattr *attrs, 
+	     int flags, afs_ucred_t *acred)
+{
+    int code;
+
+    AFS_GLOCK();
+    code = afs_setattr(avc, attrs, flags, acred);
+    AFS_GUNLOCK();
+    return (code);
+}
+
+
+static int
+gafs_access(struct vcache *avc, afs_int32 amode, int flags, 
+	    afs_ucred_t *acred)
+{
+    int code;
+
+    AFS_GLOCK();
+    code = afs_access(avc, amode, flags, acred);
+    AFS_GUNLOCK();
+    return (code);
+}
+
+
+static int
+gafs_lookup(struct vcache *adp, char *aname, 
+	    struct vcache **avcp, struct pathname *pnp, int flags, 
+	    struct vnode *rdir, afs_ucred_t *acred)
+{
+    int code;
+
+    AFS_GLOCK();
+    code = afs_lookup(adp, aname, avcp, pnp, flags, rdir, acred);
+    AFS_GUNLOCK();
+    return (code);
+}
+
+
+static int
+gafs_create(struct vcache *adp, char *aname, struct vattr *attrs, 
+	    enum vcexcl aexcl, int amode, struct vcache **avcp, 
+	    afs_ucred_t *acred)
+{
+    int code;
+
+    AFS_GLOCK();
+    code = afs_create(adp, aname, attrs, aexcl, amode, avcp, acred);
+    AFS_GUNLOCK();
+    return (code);
+}
+
+static int
+gafs_remove(struct vcache *adp, char *aname, afs_ucred_t *acred)
+{
+    int code;
+
+    AFS_GLOCK();
+    code = afs_remove(adp, aname, acred);
+    AFS_GUNLOCK();
+    return (code);
+}
+
+static int
+gafs_link(struct vcache *adp, struct vcache *avc, 
+	  char *aname, afs_ucred_t *acred)
+{
+    int code;
+
+    AFS_GLOCK();
+    code = afs_link(adp, avc, aname, acred);
+    AFS_GUNLOCK();
+    return (code);
+}
+
+static int
+gafs_rename(struct vcache *aodp, char *aname1, 
+	    struct vcache *andp, char *aname2, 
+	    afs_ucred_t *acred)
+{
+    int code;
+
+    AFS_GLOCK();
+    code = afs_rename(aodp, aname1, andp, aname2, acred);
+#ifdef AFS_SUN510_ENV
+    if (code == 0) {
+	struct vcache *avcp = NULL;
+	
+	(void) afs_lookup(andp, aname2, &avcp, NULL, 0, NULL, acred);
+	if (avcp) {
+	    struct vnode *vp = AFSTOV(avcp), *pvp = AFSTOV(andp);
+
+# ifdef HAVE_VN_RENAMEPATH
+	    vn_renamepath(pvp, vp, aname2, strlen(aname2));
+# else
+	    mutex_enter(&vp->v_lock);
+	    if (vp->v_path != NULL) {
+		kmem_free(vp->v_path, strlen(vp->v_path) + 1);
+		vp->v_path = NULL;
+	    }
+	    mutex_exit(&vp->v_lock);
+	    vn_setpath(afs_globalVp, pvp, vp, aname2, strlen(aname2));
+# endif /* !HAVE_VN_RENAMEPATH */
+
+	    AFS_RELE(avcp);
+	}
+    }
+#endif
+    AFS_GUNLOCK();
+    return (code);
+}
+
+static int
+gafs_mkdir(struct vcache *adp, char *aname, struct vattr *attrs, 
+	   struct vcache **avcp, afs_ucred_t *acred)
+{
+    int code;
+
+    AFS_GLOCK();
+    code = afs_mkdir(adp, aname, attrs, avcp, acred);
+    AFS_GUNLOCK();
+    return (code);
+}
+
+static int
+gafs_rmdir(struct vcache *adp, char *aname, struct vnode *cdirp, 
+	   afs_ucred_t *acred)
+{
+    int code;
+
+    AFS_GLOCK();
+    code = afs_rmdir(adp, aname, cdirp, acred);
+    AFS_GUNLOCK();
+    return (code);
+}
+
+
+static int
+gafs_readdir(struct vcache *avc, struct uio *auio,
+	     afs_ucred_t *acred, int *eofp)
+{
+    int code;
+
+    AFS_GLOCK();
+    code = afs_readdir(avc, auio, acred, eofp);
+    AFS_GUNLOCK();
+    return (code);
+}
+
+static int
+gafs_symlink(struct vcache *adp, char *aname, struct vattr *attrs,
+	     char *atargetName, afs_ucred_t *acred)
+{
+    int code;
+
+    AFS_GLOCK();
+    code = afs_symlink(adp, aname, attrs, atargetName, NULL, acred);
+    AFS_GUNLOCK();
+    return (code);
+}
+
+
+static int
+gafs_readlink(struct vcache *avc, struct uio *auio, afs_ucred_t *acred)
+{
+    int code;
+
+    AFS_GLOCK();
+    code = afs_readlink(avc, auio, acred);
+    AFS_GUNLOCK();
+    return (code);
+}
+
+static int
+gafs_fsync(struct vcache *avc, int flag, afs_ucred_t *acred)
+{
+    int code;
+
+    AFS_GLOCK();
+    code = afs_fsync(avc, flag, acred);
+    AFS_GUNLOCK();
+    return (code);
+}
+
+static int
+afs_inactive(struct vcache *avc, afs_ucred_t *acred)
+{
+    struct vnode *vp = AFSTOV(avc);
+    if (afs_shuttingdown != AFS_RUNNING)
+	return 0;
+
+    /*
+     * In Solaris and HPUX s800 and HP-UX10.0 they actually call us with
+     * v_count 1 on last reference!
+     */
+    mutex_enter(&vp->v_lock);
+    if (avc->vrefCount <= 0)
+	osi_Panic("afs_inactive : v_count <=0\n");
+
+    /*
+     * If more than 1 don't unmap the vnode but do decrement the ref count
+     */
+    vp->v_count--;
+    if (vp->v_count > 0) {
+	mutex_exit(&vp->v_lock);
+	return 0;
+    }
+    mutex_exit(&vp->v_lock);
+
+#ifndef AFS_SUN511_ENV
+    /*
+     * Solaris calls VOP_OPEN on exec, but doesn't call VOP_CLOSE when
+     * the executable exits.  So we clean up the open count here.
+     *
+     * Only do this for AFS_MVSTAT_FILE vnodes: when using fakestat, we can't
+     * lose the open count for volume roots (AFS_MVSTAT_ROOT), even though they
+     * will get VOP_INACTIVE'd when released by afs_PutFakeStat().
+     */
+    if (avc->opens > 0 && avc->mvstat == AFS_MVSTAT_FILE && !(avc->f.states & CCore))
+	avc->opens = avc->execsOrWriters = 0;
+#endif
+
+    afs_InactiveVCache(avc, acred);
+
+    AFS_GUNLOCK();
+    /* VFS_RELE must be called outside of GLOCK, since it can potentially
+     * call afs_freevfs, which acquires GLOCK */
+    VFS_RELE(afs_globalVFS);
+    AFS_GLOCK();
+
+    return 0;
+}
+
+static void
+gafs_inactive(struct vcache *avc, afs_ucred_t *acred)
+{
+    AFS_GLOCK();
+    (void)afs_inactive(avc, acred);
+    AFS_GUNLOCK();
+}
+
+
+static int
+gafs_fid(struct vcache *avc, struct fid **fidpp)
+{
+    int code;
+
+    AFS_GLOCK();
+    code = afs_fid(avc, fidpp);
+    AFS_GUNLOCK();
+    return (code);
+}
 
 #if defined(AFS_SUN511_ENV)
 /* The following list must always be NULL-terminated */
@@ -1346,7 +1587,7 @@ const fs_operation_def_t afs_vnodeops_template[] = {
     VOPNAME_MKDIR,		{ .vop_mkdir = gafs_mkdir },
     VOPNAME_RMDIR,		{ .vop_rmdir = gafs_rmdir },
     VOPNAME_READDIR,		{ .vop_readdir = gafs_readdir },
-    VOPNAME_SYMLINK,		{ .vop_symlink = gafs_symlink },   
+    VOPNAME_SYMLINK,		{ .vop_symlink = gafs_symlink },
     VOPNAME_READLINK,		{ .vop_readlink = gafs_readlink },
     VOPNAME_FSYNC,		{ .vop_fsync = gafs_fsync },
     VOPNAME_INACTIVE,		{ .vop_inactive = gafs_inactive },
@@ -1367,7 +1608,7 @@ const fs_operation_def_t afs_vnodeops_template[] = {
     VOPNAME_PATHCONF,		{ .vop_pathconf = afs_pathconf },
     VOPNAME_PAGEIO,		{ .vop_pageio = afs_pageio },
     VOPNAME_DUMP,		{ .vop_dump = afs_dump },
-    VOPNAME_DUMPCTL,		{ .vop_dumpctl = afs_dumpctl },   
+    VOPNAME_DUMPCTL,		{ .vop_dumpctl = afs_dumpctl },
     VOPNAME_DISPOSE,		{ .vop_dispose = afs_dispose },
     VOPNAME_GETSECATTR,		{ .vop_getsecattr = afs_getsecattr },
     VOPNAME_SETSECATTR, 	{ .vop_setsecattr = afs_setsecattr },
@@ -1395,7 +1636,7 @@ const fs_operation_def_t afs_vnodeops_template[] = {
     VOPNAME_MKDIR,		gafs_mkdir,
     VOPNAME_RMDIR,		gafs_rmdir,
     VOPNAME_READDIR,		gafs_readdir,
-    VOPNAME_SYMLINK,		gafs_symlink,   
+    VOPNAME_SYMLINK,		gafs_symlink,
     VOPNAME_READLINK,		gafs_readlink,
     VOPNAME_FSYNC,		gafs_fsync,
     VOPNAME_INACTIVE,		gafs_inactive,
@@ -1416,7 +1657,7 @@ const fs_operation_def_t afs_vnodeops_template[] = {
     VOPNAME_DUMP,		afs_dump,
     VOPNAME_PATHCONF,		afs_pathconf,
     VOPNAME_PAGEIO,		afs_pageio,
-    VOPNAME_DUMPCTL,		afs_dumpctl,   
+    VOPNAME_DUMPCTL,		afs_dumpctl,
     VOPNAME_DISPOSE,		afs_dispose,
     VOPNAME_GETSECATTR,       afs_getsecattr,
     VOPNAME_SETSECATTR, 	afs_setsecattr,
@@ -1472,296 +1713,5 @@ struct vnodeops Afs_vnodeops = {
 };
 struct vnodeops *afs_ops = &Afs_vnodeops;
 #endif
-
-int
-gafs_open(struct vcache **avcp, afs_int32 aflags, 
-	  afs_ucred_t *acred)
-{
-    int code;
-
-    AFS_GLOCK();
-    code = afs_open(avcp, aflags, acred);
-    AFS_GUNLOCK();
-    return (code);
-}
-
-int
-gafs_close(struct vcache *avc, afs_int32 aflags, int count, 
-	   offset_t offset, afs_ucred_t *acred)
-{
-    int code;
-
-    AFS_GLOCK();
-    code = afs_close(avc, aflags, count, offset, acred);
-    AFS_GUNLOCK();
-    return (code);
-}
-
-int
-gafs_getattr(struct vcache *avc, struct vattr *attrs, 
-	     int flags, afs_ucred_t *acred)
-{
-    int code;
-
-    AFS_GLOCK();
-    code = afs_getattr(avc, attrs, flags, acred);
-    AFS_GUNLOCK();
-    return (code);
-}
-
-
-int
-gafs_setattr(struct vcache *avc, struct vattr *attrs, 
-	     int flags, afs_ucred_t *acred)
-{
-    int code;
-
-    AFS_GLOCK();
-    code = afs_setattr(avc, attrs, flags, acred);
-    AFS_GUNLOCK();
-    return (code);
-}
-
-
-int
-gafs_access(struct vcache *avc, afs_int32 amode, int flags, 
-	    afs_ucred_t *acred)
-{
-    int code;
-
-    AFS_GLOCK();
-    code = afs_access(avc, amode, flags, acred);
-    AFS_GUNLOCK();
-    return (code);
-}
-
-
-int
-gafs_lookup(struct vcache *adp, char *aname, 
-	    struct vcache **avcp, struct pathname *pnp, int flags, 
-	    struct vnode *rdir, afs_ucred_t *acred)
-{
-    int code;
-
-    AFS_GLOCK();
-    code = afs_lookup(adp, aname, avcp, pnp, flags, rdir, acred);
-    AFS_GUNLOCK();
-    return (code);
-}
-
-
-int
-gafs_create(struct vcache *adp, char *aname, struct vattr *attrs, 
-	    enum vcexcl aexcl, int amode, struct vcache **avcp, 
-	    afs_ucred_t *acred)
-{
-    int code;
-
-    AFS_GLOCK();
-    code = afs_create(adp, aname, attrs, aexcl, amode, avcp, acred);
-    AFS_GUNLOCK();
-    return (code);
-}
-
-int
-gafs_remove(struct vcache *adp, char *aname, afs_ucred_t *acred)
-{
-    int code;
-
-    AFS_GLOCK();
-    code = afs_remove(adp, aname, acred);
-    AFS_GUNLOCK();
-    return (code);
-}
-
-int
-gafs_link(struct vcache *adp, struct vcache *avc, 
-	  char *aname, afs_ucred_t *acred)
-{
-    int code;
-
-    AFS_GLOCK();
-    code = afs_link(adp, avc, aname, acred);
-    AFS_GUNLOCK();
-    return (code);
-}
-
-int
-gafs_rename(struct vcache *aodp, char *aname1, 
-	    struct vcache *andp, char *aname2, 
-	    afs_ucred_t *acred)
-{
-    int code;
-
-    AFS_GLOCK();
-    code = afs_rename(aodp, aname1, andp, aname2, acred);
-#ifdef AFS_SUN510_ENV
-    if (code == 0) {
-	struct vcache *avcp = NULL;
-	
-	(void) afs_lookup(andp, aname2, &avcp, NULL, 0, NULL, acred);
-	if (avcp) {
-	    struct vnode *vp = AFSTOV(avcp), *pvp = AFSTOV(andp);
-
-# ifdef HAVE_VN_RENAMEPATH
-	    vn_renamepath(pvp, vp, aname2, strlen(aname2));
-# else
-	    mutex_enter(&vp->v_lock);
-	    if (vp->v_path != NULL) {
-		kmem_free(vp->v_path, strlen(vp->v_path) + 1);
-		vp->v_path = NULL;
-	    }
-	    mutex_exit(&vp->v_lock);
-	    vn_setpath(afs_globalVp, pvp, vp, aname2, strlen(aname2));
-# endif /* !HAVE_VN_RENAMEPATH */
-
-	    AFS_RELE(avcp);
-	}
-    }
-#endif
-    AFS_GUNLOCK();
-    return (code);
-}
-
-int
-gafs_mkdir(struct vcache *adp, char *aname, struct vattr *attrs, 
-	   struct vcache **avcp, afs_ucred_t *acred)
-{
-    int code;
-
-    AFS_GLOCK();
-    code = afs_mkdir(adp, aname, attrs, avcp, acred);
-    AFS_GUNLOCK();
-    return (code);
-}
-
-int
-gafs_rmdir(struct vcache *adp, char *aname, struct vnode *cdirp, 
-	   afs_ucred_t *acred)
-{
-    int code;
-
-    AFS_GLOCK();
-    code = afs_rmdir(adp, aname, cdirp, acred);
-    AFS_GUNLOCK();
-    return (code);
-}
-
-
-int
-gafs_readdir(struct vcache *avc, struct uio *auio,
-	     afs_ucred_t *acred, int *eofp)
-{
-    int code;
-
-    AFS_GLOCK();
-    code = afs_readdir(avc, auio, acred, eofp);
-    AFS_GUNLOCK();
-    return (code);
-}
-
-int
-gafs_symlink(struct vcache *adp, char *aname, struct vattr *attrs,
-	     char *atargetName, afs_ucred_t *acred)
-{
-    int code;
-
-    AFS_GLOCK();
-    code = afs_symlink(adp, aname, attrs, atargetName, NULL, acred);
-    AFS_GUNLOCK();
-    return (code);
-}
-
-
-int
-gafs_readlink(struct vcache *avc, struct uio *auio, afs_ucred_t *acred)
-{
-    int code;
-
-    AFS_GLOCK();
-    code = afs_readlink(avc, auio, acred);
-    AFS_GUNLOCK();
-    return (code);
-}
-
-int
-gafs_fsync(struct vcache *avc, int flag, afs_ucred_t *acred)
-{
-    int code;
-
-    AFS_GLOCK();
-    code = afs_fsync(avc, flag, acred);
-    AFS_GUNLOCK();
-    return (code);
-}
-
-int
-afs_inactive(struct vcache *avc, afs_ucred_t *acred)
-{
-    struct vnode *vp = AFSTOV(avc);
-    if (afs_shuttingdown != AFS_RUNNING)
-	return 0;
-
-    /*
-     * In Solaris and HPUX s800 and HP-UX10.0 they actually call us with
-     * v_count 1 on last reference!
-     */
-    mutex_enter(&vp->v_lock);
-    if (avc->vrefCount <= 0)
-	osi_Panic("afs_inactive : v_count <=0\n");
-
-    /*
-     * If more than 1 don't unmap the vnode but do decrement the ref count
-     */
-    vp->v_count--;
-    if (vp->v_count > 0) {
-	mutex_exit(&vp->v_lock);
-	return 0;
-    }
-    mutex_exit(&vp->v_lock);
-
-#ifndef AFS_SUN511_ENV
-    /*
-     * Solaris calls VOP_OPEN on exec, but doesn't call VOP_CLOSE when
-     * the executable exits.  So we clean up the open count here.
-     *
-     * Only do this for AFS_MVSTAT_FILE vnodes: when using fakestat, we can't
-     * lose the open count for volume roots (AFS_MVSTAT_ROOT), even though they
-     * will get VOP_INACTIVE'd when released by afs_PutFakeStat().
-     */
-    if (avc->opens > 0 && avc->mvstat == AFS_MVSTAT_FILE && !(avc->f.states & CCore))
-	avc->opens = avc->execsOrWriters = 0;
-#endif
-
-    afs_InactiveVCache(avc, acred);
-
-    AFS_GUNLOCK();
-    /* VFS_RELE must be called outside of GLOCK, since it can potentially
-     * call afs_freevfs, which acquires GLOCK */
-    VFS_RELE(afs_globalVFS);
-    AFS_GLOCK();
-
-    return 0;
-}
-
-void
-gafs_inactive(struct vcache *avc, afs_ucred_t *acred)
-{
-    AFS_GLOCK();
-    (void)afs_inactive(avc, acred);
-    AFS_GUNLOCK();
-}
-
-
-int
-gafs_fid(struct vcache *avc, struct fid **fidpp)
-{
-    int code;
-
-    AFS_GLOCK();
-    code = afs_fid(avc, fidpp);
-    AFS_GUNLOCK();
-    return (code);
-}
 
 #endif /* AFS_GLOBAL_SUNLOCK */
