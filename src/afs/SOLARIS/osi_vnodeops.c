@@ -1234,19 +1234,19 @@ afs_dumpctl(struct vnode *vp, int i)
 
 #ifdef	AFS_SUN511_ENV
 static void
-afs_dispose(struct vnode *vp, struct page *p, int fl, int dn, struct cred *cr, struct caller_context_t *ct)
+afs_dispose(struct vnode *vp, struct page *p, int fl, int dn, struct cred *cr, caller_context_t *ct)
 {
     fs_dispose(vp, p, fl, dn, cr,ct);
 }
 
 static int
-afs_setsecattr(struct vnode *vp, vsecattr_t *vsecattr, int flag, struct cred *creds, struct caller_context_t *ct)
+afs_setsecattr(struct vnode *vp, vsecattr_t *vsecattr, int flag, struct cred *creds, caller_context_t *ct)
 {
     return ENOSYS;
 }
 
 static int
-afs_getsecattr(struct vnode *vp, vsecattr_t *vsecattr, int flag, struct cred *creds, struct caller_context_t *ct)
+afs_getsecattr(struct vnode *vp, vsecattr_t *vsecattr, int flag, struct cred *creds, caller_context_t *ct)
 {
   return fs_fab_acl(vp, vsecattr, flag, creds,ct);
 }
