@@ -201,7 +201,7 @@ static int
 afs_getgroups(struct cred *cred, gid_t * gidset)
 {
     int ngrps, savengrps;
-    gid_t *gp;
+    const gid_t *gp;
 
     AFS_STATCNT(afs_getgroups);
 
@@ -260,7 +260,7 @@ afs_setgroups(struct cred **cred, int ngroups, gid_t * gidset,
 #ifdef AFS_PAG_ONEGROUP_ENV
 afs_int32
 osi_get_group_pag(struct cred *cred) {
-    gid_t *gidset;
+    const gid_t *gidset;
     int ngroups;
     int i;
 
