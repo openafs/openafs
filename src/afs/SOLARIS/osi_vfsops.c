@@ -273,6 +273,7 @@ afs_vget(struct vfs *afsp, struct vnode **avcp, struct fid *fidp)
  * Since we don't support diskless clients we shouldn't come here.
  */
 int afsmountroot = 0;
+int
 afs_mountroot(struct vfs *afsp, whymountroot_t why)
 {
     AFS_GLOCK();
@@ -286,6 +287,7 @@ afs_mountroot(struct vfs *afsp, whymountroot_t why)
  * Again not for us.
  */
 int afsswapvp = 0;
+int
 afs_swapvp(struct vfs *afsp, struct vnode **avpp, char *nm)
 {
     AFS_GLOCK();
@@ -367,8 +369,6 @@ int (*nfs_acldisptab_v3) ();
 int (*nfs_checkauth) ();
 #endif
 
-extern Afs_syscall();
-
 static void *
 do_mod_lookup(const char * mod, const char * sym)
 {
@@ -383,6 +383,7 @@ do_mod_lookup(const char * mod, const char * sym)
     return ptr;
 }
 
+int
 #ifdef AFS_SUN510_ENV
 afsinit(int fstype, char *dummy)
 #else
@@ -567,7 +568,8 @@ reset_sysent(void)
   * function in a module and calls it when modloading
   */
 
-_init()
+int
+_init(void)
 {
     char *sysn, *mod_getsysname();
     int code;
@@ -614,8 +616,8 @@ _init()
     return code;
 }
 
-_info(modp)
-     struct modinfo *modp;
+int
+_info(struct modinfo *modp)
 {
     int code;
 
@@ -623,7 +625,8 @@ _info(modp)
     return code;
 }
 
-_fini()
+int
+_fini(void)
 {
     int code;
 

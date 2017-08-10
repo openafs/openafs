@@ -378,6 +378,7 @@ copyin_iparam(caddr_t cmarg, struct iparam *dst)
 #ifdef	AFS_SUN5_ENV
 extern int afs_sinited;
 
+int
 Afs_syscall(struct afssysa *uap, rval_t * rvp)
 {
     int *retval = &rvp->r_val1;
