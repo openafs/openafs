@@ -553,6 +553,12 @@ extern void afsio_free(struct uio *auio);
 extern struct uio* afsio_partialcopy(struct uio *auio, size_t size);
 extern int afsio_skip(struct uio *auio, afs_int32 asize);
 
+/* afs_osi_vget.c */
+#if !defined(AFS_LINUX_ENV) && !defined(AFS_DARWIN80_ENV)
+extern int afs_osi_vget(struct vcache **avcpp, struct fid *afidp,
+                        struct vrequest *areqp);
+#endif
+
 /* afs_osi_vm.c */
 extern int osi_Active(struct vcache *avc);
 extern void osi_FlushPages(struct vcache *avc,
