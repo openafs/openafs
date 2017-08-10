@@ -1433,7 +1433,7 @@ gafs_rename(struct vnode *odvp, char *aname1,
 	    vn_setpath(afs_globalVp, pvp, vp, aname2, strlen(aname2));
 # endif /* !HAVE_VN_RENAMEPATH */
 
-	    AFS_RELE(avcp);
+	    AFS_RELE(AFSTOV(avcp));
 	}
     }
 #endif

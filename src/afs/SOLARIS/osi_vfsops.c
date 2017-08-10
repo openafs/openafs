@@ -121,7 +121,7 @@ afs_unmount(struct vfs *afsp, int flag, afs_ucred_t *credp)
 	 * besides the caller of afs_unmount */
 	rootvp = afs_globalVp;
 	afs_globalVp = NULL;
-	AFS_RELE(rootvp);
+	AFS_RELE(AFSTOV(rootvp));
     }
 
     AFS_GUNLOCK();
@@ -254,7 +254,11 @@ afs_vget(struct vfs *afsp, struct vnode **avcp, struct fid *fidp)
 
     *avcp = NULL;
     if (!(code = afs_InitReq(&treq, credp))) {
-	code = afs_osi_vget((struct vcache **)avcp, fidp, &treq);
+        struct vcache *tvc = NULL;
+	code = afs_osi_vget(&tvc, fidp, &treq);
+        if (tvc) {
+            *avcp = AFSTOV(tvc);
+        }
     }
 
     afs_Trace3(afs_iclSetp, CM_TRACE_VGET, ICL_TYPE_POINTER, *avcp,
