@@ -374,7 +374,7 @@ do_mod_lookup(const char * mod, const char * sym)
 {
     void * ptr;
 
-    ptr = modlookup(mod, sym);
+    ptr = (void*)modlookup(mod, sym);
     if (ptr == NULL) {
         afs_warn("modlookup failed for symbol '%s' in module '%s'\n",
 		 sym, mod);
