@@ -1277,124 +1277,139 @@ afs_getsecattr(struct vnode *vp, vsecattr_t *vsecattr, int flag, struct cred *cr
 #ifdef	AFS_GLOBAL_SUNLOCK
 
 static int
-gafs_open(struct vcache **avcp, afs_int32 aflags, 
+gafs_open(struct vnode **vpp, afs_int32 aflags, 
 	  afs_ucred_t *acred)
 {
     int code;
+    struct vcache *avc = VTOAFS(*vpp);
 
     AFS_GLOCK();
-    code = afs_open(avcp, aflags, acred);
+    code = afs_open(&avc, aflags, acred);
     AFS_GUNLOCK();
+
+    /* afs_open currently never changes avc, but just in case... */
+    *vpp = AFSTOV(avc);
+
     return (code);
 }
 
 static int
-gafs_close(struct vcache *avc, afs_int32 aflags, int count, 
+gafs_close(struct vnode *vp, afs_int32 aflags, int count, 
 	   offset_t offset, afs_ucred_t *acred)
 {
     int code;
-
     AFS_GLOCK();
-    code = afs_close(avc, aflags, count, offset, acred);
+    code = afs_close(VTOAFS(vp), aflags, count, offset, acred);
     AFS_GUNLOCK();
     return (code);
 }
 
 static int
-gafs_getattr(struct vcache *avc, struct vattr *attrs, 
+gafs_getattr(struct vnode *vp, struct vattr *attrs, 
 	     int flags, afs_ucred_t *acred)
 {
     int code;
-
     AFS_GLOCK();
-    code = afs_getattr(avc, attrs, flags, acred);
+    code = afs_getattr(VTOAFS(vp), attrs, flags, acred);
     AFS_GUNLOCK();
     return (code);
 }
 
 
 static int
-gafs_setattr(struct vcache *avc, struct vattr *attrs, 
+gafs_setattr(struct vnode *vp, struct vattr *attrs, 
 	     int flags, afs_ucred_t *acred)
 {
     int code;
-
     AFS_GLOCK();
-    code = afs_setattr(avc, attrs, flags, acred);
+    code = afs_setattr(VTOAFS(vp), attrs, flags, acred);
     AFS_GUNLOCK();
     return (code);
 }
 
 
 static int
-gafs_access(struct vcache *avc, afs_int32 amode, int flags, 
+gafs_access(struct vnode *vp, afs_int32 amode, int flags, 
 	    afs_ucred_t *acred)
 {
     int code;
-
     AFS_GLOCK();
-    code = afs_access(avc, amode, flags, acred);
+    code = afs_access(VTOAFS(vp), amode, flags, acred);
     AFS_GUNLOCK();
     return (code);
 }
 
 
 static int
-gafs_lookup(struct vcache *adp, char *aname, 
-	    struct vcache **avcp, struct pathname *pnp, int flags, 
+gafs_lookup(struct vnode *dvp, char *aname, 
+	    struct vnode **vpp, struct pathname *pnp, int flags, 
 	    struct vnode *rdir, afs_ucred_t *acred)
 {
     int code;
+    struct vcache *tvc = NULL;
 
     AFS_GLOCK();
-    code = afs_lookup(adp, aname, avcp, pnp, flags, rdir, acred);
+    code = afs_lookup(VTOAFS(dvp), aname, &tvc, pnp, flags, rdir, acred);
     AFS_GUNLOCK();
+
+    *vpp = NULL;
+    if (tvc) {
+        *vpp = AFSTOV(tvc);
+    }
+
     return (code);
 }
 
 
 static int
-gafs_create(struct vcache *adp, char *aname, struct vattr *attrs, 
-	    enum vcexcl aexcl, int amode, struct vcache **avcp, 
+gafs_create(struct vnode *dvp, char *aname, struct vattr *attrs, 
+	    enum vcexcl aexcl, int amode, struct vnode **vpp, 
 	    afs_ucred_t *acred)
 {
     int code;
+    struct vcache *tvc = NULL;
 
     AFS_GLOCK();
-    code = afs_create(adp, aname, attrs, aexcl, amode, avcp, acred);
+    code = afs_create(VTOAFS(dvp), aname, attrs, aexcl, amode, &tvc, acred);
     AFS_GUNLOCK();
+
+    *vpp = NULL;
+    if (tvc) {
+        *vpp = AFSTOV(tvc);
+    }
+
     return (code);
 }
 
 static int
-gafs_remove(struct vcache *adp, char *aname, afs_ucred_t *acred)
+gafs_remove(struct vnode *vp, char *aname, afs_ucred_t *acred)
 {
     int code;
-
     AFS_GLOCK();
-    code = afs_remove(adp, aname, acred);
+    code = afs_remove(VTOAFS(vp), aname, acred);
     AFS_GUNLOCK();
     return (code);
 }
 
 static int
-gafs_link(struct vcache *adp, struct vcache *avc, 
+gafs_link(struct vnode *dvp, struct vnode *svp, 
 	  char *aname, afs_ucred_t *acred)
 {
     int code;
-
     AFS_GLOCK();
-    code = afs_link(adp, avc, aname, acred);
+    code = afs_link(VTOAFS(dvp), VTOAFS(svp), aname, acred);
     AFS_GUNLOCK();
     return (code);
 }
 
 static int
-gafs_rename(struct vcache *aodp, char *aname1, 
-	    struct vcache *andp, char *aname2, 
+gafs_rename(struct vnode *odvp, char *aname1, 
+	    struct vnode *ndvp, char *aname2, 
 	    afs_ucred_t *acred)
 {
     int code;
+    struct vcache *aodp = VTOAFS(odvp);
+    struct vcache *andp = VTOAFS(ndvp);
 
     AFS_GLOCK();
     code = afs_rename(aodp, aname1, andp, aname2, acred);
@@ -1427,73 +1442,75 @@ gafs_rename(struct vcache *aodp, char *aname1,
 }
 
 static int
-gafs_mkdir(struct vcache *adp, char *aname, struct vattr *attrs, 
-	   struct vcache **avcp, afs_ucred_t *acred)
+gafs_mkdir(struct vnode *dvp, char *aname, struct vattr *attrs, 
+	   struct vnode **vpp, afs_ucred_t *acred)
 {
     int code;
+    struct vcache *tvc = NULL;
 
     AFS_GLOCK();
-    code = afs_mkdir(adp, aname, attrs, avcp, acred);
+    code = afs_mkdir(VTOAFS(dvp), aname, attrs, &tvc, acred);
     AFS_GUNLOCK();
+
+    *vpp = NULL;
+    if (tvc) {
+        *vpp = AFSTOV(tvc);
+    }
+
     return (code);
 }
 
 static int
-gafs_rmdir(struct vcache *adp, char *aname, struct vnode *cdirp, 
+gafs_rmdir(struct vnode *vp, char *aname, struct vnode *cdirp, 
 	   afs_ucred_t *acred)
 {
     int code;
-
     AFS_GLOCK();
-    code = afs_rmdir(adp, aname, cdirp, acred);
+    code = afs_rmdir(VTOAFS(vp), aname, cdirp, acred);
     AFS_GUNLOCK();
     return (code);
 }
 
 
 static int
-gafs_readdir(struct vcache *avc, struct uio *auio,
+gafs_readdir(struct vnode *vp, struct uio *auio,
 	     afs_ucred_t *acred, int *eofp)
 {
     int code;
-
     AFS_GLOCK();
-    code = afs_readdir(avc, auio, acred, eofp);
+    code = afs_readdir(VTOAFS(vp), auio, acred, eofp);
     AFS_GUNLOCK();
     return (code);
 }
 
 static int
-gafs_symlink(struct vcache *adp, char *aname, struct vattr *attrs,
+gafs_symlink(struct vnode *vp, char *aname, struct vattr *attrs,
 	     char *atargetName, afs_ucred_t *acred)
 {
     int code;
-
     AFS_GLOCK();
-    code = afs_symlink(adp, aname, attrs, atargetName, NULL, acred);
+    code = afs_symlink(VTOAFS(vp), aname, attrs, atargetName, NULL, acred);
     AFS_GUNLOCK();
     return (code);
 }
 
 
 static int
-gafs_readlink(struct vcache *avc, struct uio *auio, afs_ucred_t *acred)
+gafs_readlink(struct vnode *vp, struct uio *auio, afs_ucred_t *acred)
 {
     int code;
-
     AFS_GLOCK();
-    code = afs_readlink(avc, auio, acred);
+    code = afs_readlink(VTOAFS(vp), auio, acred);
     AFS_GUNLOCK();
     return (code);
 }
 
 static int
-gafs_fsync(struct vcache *avc, int flag, afs_ucred_t *acred)
+gafs_fsync(struct vnode *vp, int flag, afs_ucred_t *acred)
 {
     int code;
-
     AFS_GLOCK();
-    code = afs_fsync(avc, flag, acred);
+    code = afs_fsync(VTOAFS(vp), flag, acred);
     AFS_GUNLOCK();
     return (code);
 }
@@ -1548,21 +1565,20 @@ afs_inactive(struct vcache *avc, afs_ucred_t *acred)
 }
 
 static void
-gafs_inactive(struct vcache *avc, afs_ucred_t *acred)
+gafs_inactive(struct vnode *vp, afs_ucred_t *acred)
 {
     AFS_GLOCK();
-    (void)afs_inactive(avc, acred);
+    (void)afs_inactive(VTOAFS(vp), acred);
     AFS_GUNLOCK();
 }
 
 
 static int
-gafs_fid(struct vcache *avc, struct fid **fidpp)
+gafs_fid(struct vnode *vp, struct fid **fidpp)
 {
     int code;
-
     AFS_GLOCK();
-    code = afs_fid(avc, fidpp);
+    code = afs_fid(VTOAFS(vp), fidpp);
     AFS_GUNLOCK();
     return (code);
 }
