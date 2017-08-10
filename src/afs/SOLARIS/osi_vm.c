@@ -47,8 +47,13 @@ osi_VM_GetDownD(struct vcache *avc, struct dcache *adc)
 
     AFS_GUNLOCK();
     code =
+#ifdef AFS_SUN511_ENV
+	afs_putpage(AFSTOV(avc), (offset_t) AFS_CHUNKTOBASE(adc->f.chunk),
+		    AFS_CHUNKTOSIZE(adc->f.chunk), B_INVAL, CRED(), NULL);
+#else
 	afs_putpage(AFSTOV(avc), (offset_t) AFS_CHUNKTOBASE(adc->f.chunk),
 		    AFS_CHUNKTOSIZE(adc->f.chunk), B_INVAL, CRED());
+#endif
     AFS_GLOCK();
 
     return code;
@@ -161,7 +166,11 @@ osi_VM_FlushPages(struct vcache *avc, afs_ucred_t *credp)
     extern int afs_pvn_vptrunc;
 
     afs_pvn_vptrunc++;
+#ifdef AFS_SUN511_ENV
+    (void)afs_putpage(AFSTOV(avc), (offset_t) 0, 0, B_TRUNC | B_INVAL, credp, NULL);
+#else
     (void)afs_putpage(AFSTOV(avc), (offset_t) 0, 0, B_TRUNC | B_INVAL, credp);
+#endif
 }
 
 /* Zero no-longer-used part of last page, when truncating a file
