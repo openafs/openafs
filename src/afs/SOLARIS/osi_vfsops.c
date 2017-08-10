@@ -350,7 +350,11 @@ int (*ufs_igetp) ();
 void (*ufs_itimes_nolockp) ();
 
 int (*afs_orig_ioctl) (), (*afs_orig_ioctl32) ();
+#if AFS_SUN511_ENV
+int64_t (*afs_orig_setgroups) (), (*afs_orig_setgroups32) ();
+#else
 int (*afs_orig_setgroups) (), (*afs_orig_setgroups32) ();
+#endif
 
 #ifndef AFS_SUN510_ENV
 struct ill_s *ill_g_headp = 0;
