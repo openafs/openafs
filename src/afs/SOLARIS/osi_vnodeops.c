@@ -79,26 +79,46 @@ extern afs_lock_t afs_xdcache;
 
 static int afs_nfsrdwr(struct vcache *avc, struct uio *auio, enum uio_rw arw,
                        int ioflag, afs_ucred_t *acred);
+
+#ifdef AFS_SUN511_ENV
+static int afs_GetOnePage(struct vnode *vp, u_offset_t off, size_t alen,
+                          u_int *protp, struct page *pl[], size_t plsz,
+                          struct seg *seg, caddr_t addr, enum seg_rw rw,
+                          afs_ucred_t *acred);
+#else
 static int afs_GetOnePage(struct vnode *vp, u_offset_t off, u_int alen,
                           u_int *protp, struct page *pl[], u_int plsz,
                           struct seg *seg, caddr_t addr, enum seg_rw rw,
                           afs_ucred_t *acred);
+#endif
 
 int afs_pvn_vptrunc;
 
 static int
+#ifdef AFS_SUN511_ENV
+afs_addmap(struct vnode *avp, offset_t offset, struct as *asp,
+	   caddr_t addr, size_t length, uchar_t prot, uchar_t maxprot,
+           uint_t flags, afs_ucred_t *credp, caller_context_t *ct)
+#else
 afs_addmap(struct vnode *avp, offset_t offset, struct as *asp, 
 	   caddr_t addr, int length, int prot, int maxprot, int flags, 
 	   afs_ucred_t *credp)
+#endif
 {
     /* XXX What should we do here?? XXX */
     return (0);
 }
 
 static int
+#ifdef AFS_SUN511_ENV
+afs_delmap(struct vnode *avp, offset_t offset, struct as *asp,
+	   caddr_t addr, size_t length, uint_t prot, uint_t maxprot,
+           uint_t flags, afs_ucred_t *credp, caller_context_t *ct)
+#else
 afs_delmap(struct vnode *avp, offset_t offset, struct as *asp, 
 	   caddr_t addr, int length, int prot, int maxprot, int flags, 
 	   afs_ucred_t *credp)
+#endif
 {
     /* XXX What should we do here?? XXX */
     return (0);
@@ -144,9 +164,15 @@ afs_vmwrite(struct vnode *avp, struct uio *auio, int ioflag,
 }
 
 static int
-afs_getpage(struct vnode *vp, offset_t off, u_int len, u_int *protp, 
-	    struct page *pl[], u_int plsz, struct seg *seg, caddr_t addr, 
+#ifdef AFS_SUN511_ENV
+afs_getpage(struct vnode *vp, offset_t off, size_t len, u_int *protp,
+	    struct page *pl[], size_t plsz, struct seg *seg, caddr_t addr,
+	    enum seg_rw rw, afs_ucred_t *acred, caller_context_t *ct)
+#else
+afs_getpage(struct vnode *vp, offset_t off, u_int len, u_int *protp,
+	    struct page *pl[], u_int plsz, struct seg *seg, caddr_t addr,
 	    enum seg_rw rw, afs_ucred_t *acred)
+#endif
 {
     afs_int32 code = 0;
     AFS_STATCNT(afs_getpage);
@@ -201,9 +227,15 @@ afs_getpage(struct vnode *vp, offset_t off, u_int len, u_int *protp,
 
 /* Return all the pages from [off..off+len) in file */
 static int
+#ifdef AFS_SUN511_ENV
+afs_GetOnePage(struct vnode *vp, u_offset_t off, size_t alen, u_int *protp,
+	       struct page *pl[], size_t plsz, struct seg *seg, caddr_t addr,
+	       enum seg_rw rw, afs_ucred_t *acred)
+#else
 afs_GetOnePage(struct vnode *vp, u_offset_t off, u_int alen, u_int *protp, 
 	       struct page *pl[], u_int plsz, struct seg *seg, caddr_t addr, 
 	       enum seg_rw rw, afs_ucred_t *acred)
+#endif
 {
     struct page *page;
     afs_int32 code = 0;
@@ -479,8 +511,13 @@ afs_never_putapage(struct vnode *vp, struct page *pages, u_offset_t * offp,
 }
 
 int
+#ifdef AFS_SUN511_ENV
+afs_putpage(struct vnode *vp, offset_t off, size_t len, int flags,
+	    afs_ucred_t *cred, caller_context_t *ct)
+#else
 afs_putpage(struct vnode *vp, offset_t off, u_int len, int flags, 
 	    afs_ucred_t *cred)
+#endif
 {
     struct vcache *avc;
     struct page *pages;
@@ -964,7 +1001,14 @@ afs_nfsrdwr(struct vcache *avc, struct uio *auio, enum uio_rw arw,
 }
 
 static int
-afs_map(struct vnode *vp, offset_t off, struct as *as, caddr_t *addr, size_t len, u_char prot, u_char maxprot, u_int flags, afs_ucred_t *cred)
+#ifdef AFS_SUN511_ENV
+afs_map(struct vnode *vp, offset_t off, struct as *as, caddr_t *addr,
+        size_t len, u_char prot, u_char maxprot, u_int flags, afs_ucred_t *cred,
+        caller_context_t *ct)
+#else
+afs_map(struct vnode *vp, offset_t off, struct as *as, caddr_t *addr,
+        size_t len, u_char prot, u_char maxprot, u_int flags, afs_ucred_t *cred)
+#endif
 {
     struct segvn_crargs crargs;
     afs_int32 code;
@@ -1094,21 +1138,39 @@ afs_pathconf(struct vnode *vp, int cmd, u_long *outdatap,
 }
 
 static int
+#ifdef AFS_SUN511_ENV
+afs_ioctl(struct vnode *vnp, int com, intptr_t arg, int flag, cred_t *credp,
+	  int *rvalp, caller_context_t *ct)
+#else
 afs_ioctl(struct vnode *vnp, int com, int arg, int flag, cred_t *credp, 
 	  int *rvalp)
+#endif
 {
     return (ENOTTY);
 }
 
+#ifdef AFS_SUN511_ENV
+static int
+afs_rwlock(struct vnode *vnp, int wlock, caller_context_t *ct)
+{
+    rw_enter(&(VTOAFS(vnp))->rwlock, (wlock ? RW_WRITER : RW_READER));
+    return 0;
+}
+#else /* AFS_SUN510_ENV */
 static void
 afs_rwlock(struct vnode *vnp, int wlock)
 {
     rw_enter(&(VTOAFS(vnp))->rwlock, (wlock ? RW_WRITER : RW_READER));
 }
+#endif /* !AFS_SUN510_ENV */
 
 
 static void
+#ifdef AFS_SUN511_ENV
+afs_rwunlock(struct vnode *vnp, int wlock, caller_context_t *ct)
+#else
 afs_rwunlock(struct vnode *vnp, int wlock)
+#endif
 {
     rw_exit(&(VTOAFS(vnp))->rwlock);
 }
@@ -1116,7 +1178,11 @@ afs_rwunlock(struct vnode *vnp, int wlock)
 
 /* NOT SUPPORTED */
 static int
+#ifdef AFS_SUN511_ENV
+afs_seek(struct vnode *vnp, offset_t ooff, offset_t *noffp, caller_context_t *ct)
+#else
 afs_seek(struct vnode *vnp, offset_t ooff, offset_t *noffp)
+#endif
 {
     int code = 0;
 
@@ -1132,7 +1198,11 @@ afs_seek(struct vnode *vnp, offset_t ooff, offset_t *noffp)
 }
 
 static int
-#ifdef AFS_SUN59_ENV
+#ifdef AFS_SUN511_ENV
+afs_frlock(struct vnode *vnp, int cmd, struct flock64 *ap, int flag,
+	   offset_t off, struct flk_callback *flkcb, afs_ucred_t *credp,
+           caller_context_t *ct)
+#elif defined(AFS_SUN59_ENV)
 afs_frlock(struct vnode *vnp, int cmd, struct flock64 *ap, int flag, 
 	   offset_t off, struct flk_callback *flkcb, afs_ucred_t *credp)
 #else
@@ -1168,8 +1238,13 @@ afs_frlock(struct vnode *vnp, int cmd, struct flock64 *ap, int flag,
 
 
 static int
+#ifdef AFS_SUN511_ENV
+afs_space(struct vnode *vnp, int cmd, struct flock64 *ap, int flag,
+	  offset_t off, afs_ucred_t *credp, caller_context_t *ct)
+#else
 afs_space(struct vnode *vnp, int cmd, struct flock64 *ap, int flag, 
 	  offset_t off, afs_ucred_t *credp)
+#endif
 {
     afs_int32 code = EINVAL;
     struct vattr vattr;
@@ -1188,7 +1263,12 @@ afs_space(struct vnode *vnp, int cmd, struct flock64 *ap, int flag,
 }
 
 static int
+#ifdef AFS_SUN511_ENV
+afs_dump(struct vnode *vp, caddr_t addr, offset_t i1, offset_t i2,
+         caller_context_t *ct)
+#else
 afs_dump(struct vnode *vp, caddr_t addr, int i1, int i2)
+#endif
 {
     AFS_STATCNT(afs_dump);
     afs_warn("AFS_DUMP. MUST IMPLEMENT THIS!!!\n");
@@ -1198,7 +1278,11 @@ afs_dump(struct vnode *vp, caddr_t addr, int i1, int i2)
 
 /* Nothing fancy here; just compare if vnodes are identical ones */
 static int
+#ifdef AFS_SUN511_ENV
+afs_cmp(struct vnode *vp1, struct vnode *vp2, caller_context_t *ct)
+#else
 afs_cmp(struct vnode *vp1, struct vnode *vp2)
+#endif
 {
     AFS_STATCNT(afs_cmp);
     return (vp1 == vp2);
@@ -1206,7 +1290,11 @@ afs_cmp(struct vnode *vp1, struct vnode *vp2)
 
 
 static int
+#ifdef AFS_SUN511_ENV
+afs_realvp(struct vnode *vp, struct vnode **vpp, caller_context_t *ct)
+#else
 afs_realvp(struct vnode *vp, struct vnode **vpp)
+#endif
 {
     AFS_STATCNT(afs_realvp);
     return EINVAL;
@@ -1214,15 +1302,22 @@ afs_realvp(struct vnode *vp, struct vnode **vpp)
 
 
 static int
+#ifdef AFS_SUN511_ENV
+afs_pageio(struct vnode *vp, struct page *pp, u_offset_t ui1, size_t ui2,
+           int i1, struct cred *credp, caller_context_t *ct)
+#else
 afs_pageio(struct vnode *vp, struct page *pp, u_int ui1, u_int ui2, int i1, 
 	   struct cred *credp)
+#endif
 {
     afs_warn("afs_pageio: Not implemented\n");
     return EINVAL;
 }
 
 static int
-#ifdef AFS_SUN59_ENV
+#ifdef AFS_SUN511_ENV
+afs_dumpctl(struct vnode *vp, int i, offset_t *blkp, caller_context_t *ct)
+#elif defined(AFS_SUN59_ENV)
 afs_dumpctl(struct vnode *vp, int i, int *blkp)
 #else
 afs_dumpctl(struct vnode *vp, int i)
@@ -1274,8 +1369,12 @@ afs_getsecattr(struct vnode *vp, vsecattr_t *vsecattr, int flag, struct cred *cr
 #ifdef	AFS_GLOBAL_SUNLOCK
 
 static int
-gafs_open(struct vnode **vpp, afs_int32 aflags, 
-	  afs_ucred_t *acred)
+#ifdef AFS_SUN511_ENV
+gafs_open(struct vnode **vpp, afs_int32 aflags, afs_ucred_t *acred,
+          caller_context_t *ct)
+#else
+gafs_open(struct vnode **vpp, afs_int32 aflags, afs_ucred_t *acred)
+#endif
 {
     int code;
     struct vcache *avc = VTOAFS(*vpp);
@@ -1291,8 +1390,13 @@ gafs_open(struct vnode **vpp, afs_int32 aflags,
 }
 
 static int
-gafs_close(struct vnode *vp, afs_int32 aflags, int count, 
-	   offset_t offset, afs_ucred_t *acred)
+#ifdef AFS_SUN511_ENV
+gafs_close(struct vnode *vp, afs_int32 aflags, int count, offset_t offset,
+           afs_ucred_t *acred, caller_context_t *ct)
+#else
+gafs_close(struct vnode *vp, afs_int32 aflags, int count, offset_t offset,
+           afs_ucred_t *acred)
+#endif
 {
     int code;
     AFS_GLOCK();
@@ -1302,8 +1406,13 @@ gafs_close(struct vnode *vp, afs_int32 aflags, int count,
 }
 
 static int
-gafs_getattr(struct vnode *vp, struct vattr *attrs, 
-	     int flags, afs_ucred_t *acred)
+#ifdef AFS_SUN511_ENV
+gafs_getattr(struct vnode *vp, struct vattr *attrs, int flags,
+             afs_ucred_t *acred, caller_context_t *ct)
+#else
+gafs_getattr(struct vnode *vp, struct vattr *attrs, int flags,
+             afs_ucred_t *acred)
+#endif
 {
     int code;
     AFS_GLOCK();
@@ -1314,8 +1423,13 @@ gafs_getattr(struct vnode *vp, struct vattr *attrs,
 
 
 static int
-gafs_setattr(struct vnode *vp, struct vattr *attrs, 
-	     int flags, afs_ucred_t *acred)
+#ifdef AFS_SUN511_ENV
+gafs_setattr(struct vnode *vp, struct vattr *attrs, int flags,
+             afs_ucred_t *acred, caller_context_t *ct)
+#else
+gafs_setattr(struct vnode *vp, struct vattr *attrs, int flags,
+             afs_ucred_t *acred)
+#endif
 {
     int code;
     AFS_GLOCK();
@@ -1326,8 +1440,13 @@ gafs_setattr(struct vnode *vp, struct vattr *attrs,
 
 
 static int
+#ifdef AFS_SUN511_ENV
+gafs_access(struct vnode *vp, afs_int32 amode, int flags,
+	    afs_ucred_t *acred, caller_context_t *ct)
+#else
 gafs_access(struct vnode *vp, afs_int32 amode, int flags, 
 	    afs_ucred_t *acred)
+#endif
 {
     int code;
     AFS_GLOCK();
@@ -1338,9 +1457,16 @@ gafs_access(struct vnode *vp, afs_int32 amode, int flags,
 
 
 static int
+#ifdef AFS_SUN511_ENV
 gafs_lookup(struct vnode *dvp, char *aname, 
 	    struct vnode **vpp, struct pathname *pnp, int flags, 
+	    struct vnode *rdir, afs_ucred_t *acred, caller_context_t *ct,
+            int *direntflags, struct pathname *realpnp)
+#else
+gafs_lookup(struct vnode *dvp, char *aname,
+	    struct vnode **vpp, struct pathname *pnp, int flags,
 	    struct vnode *rdir, afs_ucred_t *acred)
+#endif
 {
     int code;
     struct vcache *tvc = NULL;
@@ -1359,9 +1485,16 @@ gafs_lookup(struct vnode *dvp, char *aname,
 
 
 static int
+#ifdef AFS_SUN511_ENV
 gafs_create(struct vnode *dvp, char *aname, struct vattr *attrs, 
 	    enum vcexcl aexcl, int amode, struct vnode **vpp, 
+	    afs_ucred_t *acred, int flags, caller_context_t *ct,
+            vsecattr_t *vsecp)
+#else
+gafs_create(struct vnode *dvp, char *aname, struct vattr *attrs,
+	    enum vcexcl aexcl, int amode, struct vnode **vpp,
 	    afs_ucred_t *acred)
+#endif
 {
     int code;
     struct vcache *tvc = NULL;
@@ -1379,7 +1512,12 @@ gafs_create(struct vnode *dvp, char *aname, struct vattr *attrs,
 }
 
 static int
+#ifdef AFS_SUN511_ENV
+gafs_remove(struct vnode *vp, char *aname, afs_ucred_t *acred,
+            caller_context_t *ct, int flags)
+#else
 gafs_remove(struct vnode *vp, char *aname, afs_ucred_t *acred)
+#endif
 {
     int code;
     AFS_GLOCK();
@@ -1389,8 +1527,12 @@ gafs_remove(struct vnode *vp, char *aname, afs_ucred_t *acred)
 }
 
 static int
-gafs_link(struct vnode *dvp, struct vnode *svp, 
-	  char *aname, afs_ucred_t *acred)
+#ifdef AFS_SUN511_ENV
+gafs_link(struct vnode *dvp, struct vnode *svp, char *aname, afs_ucred_t *acred,
+          caller_context_t *ct, int flags)
+#else
+gafs_link(struct vnode *dvp, struct vnode *svp, char *aname, afs_ucred_t *acred)
+#endif
 {
     int code;
     AFS_GLOCK();
@@ -1400,9 +1542,15 @@ gafs_link(struct vnode *dvp, struct vnode *svp,
 }
 
 static int
+#ifdef AFS_SUN511_ENV
+gafs_rename(struct vnode *odvp, char *aname1,
+	    struct vnode *ndvp, char *aname2,
+	    afs_ucred_t *acred, caller_context_t *ct, int flags)
+#else
 gafs_rename(struct vnode *odvp, char *aname1, 
 	    struct vnode *ndvp, char *aname2, 
 	    afs_ucred_t *acred)
+#endif
 {
     int code;
     struct vcache *aodp = VTOAFS(odvp);
@@ -1439,8 +1587,14 @@ gafs_rename(struct vnode *odvp, char *aname1,
 }
 
 static int
+#ifdef AFS_SUN511_ENV
+gafs_mkdir(struct vnode *dvp, char *aname, struct vattr *attrs,
+	   struct vnode **vpp, afs_ucred_t *acred, caller_context_t *ct,
+           int flags, vsecattr_t *vsecp)
+#else
 gafs_mkdir(struct vnode *dvp, char *aname, struct vattr *attrs, 
 	   struct vnode **vpp, afs_ucred_t *acred)
+#endif
 {
     int code;
     struct vcache *tvc = NULL;
@@ -1458,8 +1612,13 @@ gafs_mkdir(struct vnode *dvp, char *aname, struct vattr *attrs,
 }
 
 static int
+#ifdef AFS_SUN511_ENV
+gafs_rmdir(struct vnode *vp, char *aname, struct vnode *cdirp,
+	   afs_ucred_t *acred, caller_context_t *ct, int flags)
+#else
 gafs_rmdir(struct vnode *vp, char *aname, struct vnode *cdirp, 
 	   afs_ucred_t *acred)
+#endif
 {
     int code;
     AFS_GLOCK();
@@ -1470,8 +1629,13 @@ gafs_rmdir(struct vnode *vp, char *aname, struct vnode *cdirp,
 
 
 static int
+#ifdef AFS_SUN511_ENV
+gafs_readdir(struct vnode *vp, struct uio *auio,
+	     afs_ucred_t *acred, int *eofp, caller_context_t *ct, int flags)
+#else
 gafs_readdir(struct vnode *vp, struct uio *auio,
 	     afs_ucred_t *acred, int *eofp)
+#endif
 {
     int code;
     AFS_GLOCK();
@@ -1481,8 +1645,14 @@ gafs_readdir(struct vnode *vp, struct uio *auio,
 }
 
 static int
+#ifdef AFS_SUN511_ENV
+gafs_symlink(struct vnode *vp, char *aname, struct vattr *attrs,
+	     char *atargetName, afs_ucred_t *acred, caller_context_t *ct,
+             int flags)
+#else
 gafs_symlink(struct vnode *vp, char *aname, struct vattr *attrs,
 	     char *atargetName, afs_ucred_t *acred)
+#endif
 {
     int code;
     AFS_GLOCK();
@@ -1493,7 +1663,12 @@ gafs_symlink(struct vnode *vp, char *aname, struct vattr *attrs,
 
 
 static int
+#ifdef AFS_SUN511_ENV
+gafs_readlink(struct vnode *vp, struct uio *auio, afs_ucred_t *acred,
+              caller_context_t *ct)
+#else
 gafs_readlink(struct vnode *vp, struct uio *auio, afs_ucred_t *acred)
+#endif
 {
     int code;
     AFS_GLOCK();
@@ -1503,7 +1678,11 @@ gafs_readlink(struct vnode *vp, struct uio *auio, afs_ucred_t *acred)
 }
 
 static int
+#ifdef AFS_SUN511_ENV
+gafs_fsync(struct vnode *vp, int flag, afs_ucred_t *acred, caller_context_t *ct)
+#else
 gafs_fsync(struct vnode *vp, int flag, afs_ucred_t *acred)
+#endif
 {
     int code;
     AFS_GLOCK();
@@ -1562,7 +1741,11 @@ afs_inactive(struct vcache *avc, afs_ucred_t *acred)
 }
 
 static void
+#ifdef AFS_SUN511_ENV
+gafs_inactive(struct vnode *vp, afs_ucred_t *acred, caller_context_t *ct)
+#else
 gafs_inactive(struct vnode *vp, afs_ucred_t *acred)
+#endif
 {
     AFS_GLOCK();
     (void)afs_inactive(VTOAFS(vp), acred);
@@ -1571,7 +1754,11 @@ gafs_inactive(struct vnode *vp, afs_ucred_t *acred)
 
 
 static int
+#ifdef AFS_SUN511_ENV
+gafs_fid(struct vnode *vp, struct fid *fidpp, caller_context_t *ct)
+#else
 gafs_fid(struct vnode *vp, struct fid *fidpp)
+#endif
 {
     int code;
     AFS_GLOCK();
