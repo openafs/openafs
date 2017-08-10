@@ -716,6 +716,8 @@ struct SimpleLocks {
 #define	CPSIZE	    2
 #if defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV)
 #define vrefCount   v->v_usecount
+#elif defined(AFS_SUN511_ENV)
+# define vrefCount v->v_count
 #else
 #define vrefCount   v.v_count
 #endif /* AFS_XBSD_ENV */
@@ -763,7 +765,7 @@ struct nbvdata {
 };
 #define VTOAFS(v) ((((struct nbvdata *)((v)->v_data)))->afsvc)
 #define AFSTOV(vc) ((vc)->v)
-#elif defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV) || (defined(AFS_LINUX22_ENV) && !defined(STRUCT_SUPER_OPERATIONS_HAS_ALLOC_INODE))
+#elif defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_SUN511_ENV) || (defined(AFS_LINUX22_ENV) && !defined(STRUCT_SUPER_OPERATIONS_HAS_ALLOC_INODE))
 #define VTOAFS(v) ((struct vcache *)(v)->v_data)
 #define AFSTOV(vc) ((vc)->v)
 #else
@@ -837,7 +839,7 @@ struct multiPage_range {
  * !(avc->nextfree) && !avc->vlruq.next => (FreeVCList == avc->nextfree)
  */
 struct vcache {
-#if defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV) || (defined(AFS_LINUX22_ENV) && !defined(STRUCT_SUPER_OPERATIONS_HAS_ALLOC_INODE))
+#if defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_SUN511_ENV) || (defined(AFS_LINUX22_ENV) && !defined(STRUCT_SUPER_OPERATIONS_HAS_ALLOC_INODE))
     struct vnode *v;
 #else
     struct vnode v;		/* Has reference count in v.v_count */
