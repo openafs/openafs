@@ -46,6 +46,7 @@
 #include <vm/seg_vn.h>
 #include <vm/rm.h>
 #if defined(AFS_SUN511_ENV)
+#include <sys/vmsystm.h>
 #include <sys/vfs_opreg.h>
 #endif
 #include <sys/modctl.h>
