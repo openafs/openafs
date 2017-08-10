@@ -76,13 +76,16 @@ extern struct as kas;		/* kernel addr space */
 extern unsigned char *afs_indexFlags;
 extern afs_lock_t afs_xdcache;
 
-/* Additional vnodeops for SunOS 4.0.x */
-int afs_nfsrdwr(), afs_getpage(), afs_putpage(), afs_map();
-int afs_dump(), afs_cmp(), afs_realvp(), afs_GetOnePage();
+static int afs_nfsrdwr(struct vcache *avc, struct uio *auio, enum uio_rw arw,
+                       int ioflag, afs_ucred_t *acred);
+static int afs_GetOnePage(struct vnode *vp, u_offset_t off, u_int alen,
+                          u_int *protp, struct page *pl[], u_int plsz,
+                          struct seg *seg, caddr_t addr, enum seg_rw rw,
+                          afs_ucred_t *acred);
 
 int afs_pvn_vptrunc;
 
-int
+static int
 afs_addmap(struct vnode *avp, offset_t offset, struct as *asp, 
 	   caddr_t addr, int length, int prot, int maxprot, int flags, 
 	   afs_ucred_t *credp)
@@ -91,7 +94,7 @@ afs_addmap(struct vnode *avp, offset_t offset, struct as *asp,
     return (0);
 }
 
-int
+static int
 afs_delmap(struct vnode *avp, offset_t offset, struct as *asp, 
 	   caddr_t addr, int length, int prot, int maxprot, int flags, 
 	   afs_ucred_t *credp)
@@ -100,12 +103,11 @@ afs_delmap(struct vnode *avp, offset_t offset, struct as *asp,
     return (0);
 }
 
+static int
 #ifdef AFS_SUN510_ENV
-int
 afs_vmread(struct vnode *avp, struct uio *auio, int ioflag, 
 	   afs_ucred_t *acred, caller_context_t *ct)
 #else
-int
 afs_vmread(struct vnode *avp, struct uio *auio, int ioflag, 
 	   afs_ucred_t *acred)
 #endif
@@ -121,12 +123,11 @@ afs_vmread(struct vnode *avp, struct uio *auio, int ioflag,
 }
 
 
+static int
 #ifdef AFS_SUN510_ENV
-int
 afs_vmwrite(struct vnode *avp, struct uio *auio, int ioflag, 
 	    afs_ucred_t *acred, caller_context_t *ct)
 #else
-int
 afs_vmwrite(struct vnode *avp, struct uio *auio, int ioflag, 
 	    afs_ucred_t *acred)
 #endif
@@ -141,7 +142,7 @@ afs_vmwrite(struct vnode *avp, struct uio *auio, int ioflag,
     return code;
 }
 
-int
+static int
 afs_getpage(struct vnode *vp, offset_t off, u_int len, u_int *protp, 
 	    struct page *pl[], u_int plsz, struct seg *seg, caddr_t addr, 
 	    enum seg_rw rw, afs_ucred_t *acred)
@@ -198,7 +199,7 @@ afs_getpage(struct vnode *vp, offset_t off, u_int len, u_int *protp,
 }
 
 /* Return all the pages from [off..off+len) in file */
-int
+static int
 afs_GetOnePage(struct vnode *vp, u_offset_t off, u_int alen, u_int *protp, 
 	       struct page *pl[], u_int plsz, struct seg *seg, caddr_t addr, 
 	       enum seg_rw rw, afs_ucred_t *acred)
@@ -588,7 +589,6 @@ afs_putpage(struct vnode *vp, offset_t off, u_int len, int flags,
     return (code);
 }
 
-
 int
 afs_putapage(struct vnode *vp, struct page *pages, u_offset_t * offp,
 	     size_t * lenp, int flags, afs_ucred_t *credp)
@@ -640,7 +640,7 @@ afs_putapage(struct vnode *vp, struct page *pages, u_offset_t * offp,
     return code;
 }
 
-int
+static int
 afs_nfsrdwr(struct vcache *avc, struct uio *auio, enum uio_rw arw,
 	    int ioflag, afs_ucred_t *acred)
 {
@@ -966,7 +966,7 @@ afs_nfsrdwr(struct vcache *avc, struct uio *auio, enum uio_rw arw,
     }
 }
 
-int
+static int
 afs_map(struct vnode *vp, offset_t off, struct as *as, caddr_t *addr, size_t len, u_char prot, u_char maxprot, u_int flags, afs_ucred_t *cred)
 {
     struct segvn_crargs crargs;
@@ -1053,7 +1053,7 @@ afs_map(struct vnode *vp, offset_t off, struct as *as, caddr_t *addr, size_t len
  * For Now We use standard local kernel params for AFS system values. Change this
  * at some point.
  */
-int
+static int
 #ifdef AFS_SUN511_ENV
 afs_pathconf(struct vnode *vp, int cmd, u_long *outdatap,
 	     afs_ucred_t *credp, caller_context_t *ct)
@@ -1096,21 +1096,21 @@ afs_pathconf(struct vnode *vp, int cmd, u_long *outdatap,
     return 0;
 }
 
-int
+static int
 afs_ioctl(struct vnode *vnp, int com, int arg, int flag, cred_t *credp, 
 	  int *rvalp)
 {
     return (ENOTTY);
 }
 
-void
+static void
 afs_rwlock(struct vnode *vnp, int wlock)
 {
     rw_enter(&(VTOAFS(vnp))->rwlock, (wlock ? RW_WRITER : RW_READER));
 }
 
 
-void
+static void
 afs_rwunlock(struct vnode *vnp, int wlock)
 {
     rw_exit(&(VTOAFS(vnp))->rwlock);
@@ -1118,7 +1118,7 @@ afs_rwunlock(struct vnode *vnp, int wlock)
 
 
 /* NOT SUPPORTED */
-int
+static int
 afs_seek(struct vnode *vnp, offset_t ooff, offset_t *noffp)
 {
     int code = 0;
@@ -1134,7 +1134,7 @@ afs_seek(struct vnode *vnp, offset_t ooff, offset_t *noffp)
     return code;
 }
 
-int
+static int
 #ifdef AFS_SUN59_ENV
 afs_frlock(struct vnode *vnp, int cmd, struct flock64 *ap, int flag, 
 	   offset_t off, struct flk_callback *flkcb, afs_ucred_t *credp)
@@ -1170,7 +1170,7 @@ afs_frlock(struct vnode *vnp, int cmd, struct flock64 *ap, int flag,
 }
 
 
-int
+static int
 afs_space(struct vnode *vnp, int cmd, struct flock64 *ap, int flag, 
 	  offset_t off, afs_ucred_t *credp)
 {
@@ -1190,7 +1190,7 @@ afs_space(struct vnode *vnp, int cmd, struct flock64 *ap, int flag,
     return (code);
 }
 
-int
+static int
 afs_dump(struct vnode *vp, caddr_t addr, int i1, int i2)
 {
     AFS_STATCNT(afs_dump);
@@ -1200,7 +1200,7 @@ afs_dump(struct vnode *vp, caddr_t addr, int i1, int i2)
 
 
 /* Nothing fancy here; just compare if vnodes are identical ones */
-int
+static int
 afs_cmp(struct vnode *vp1, struct vnode *vp2)
 {
     AFS_STATCNT(afs_cmp);
@@ -1208,7 +1208,7 @@ afs_cmp(struct vnode *vp1, struct vnode *vp2)
 }
 
 
-int
+static int
 afs_realvp(struct vnode *vp, struct vnode **vpp)
 {
     AFS_STATCNT(afs_realvp);
@@ -1216,7 +1216,7 @@ afs_realvp(struct vnode *vp, struct vnode **vpp)
 }
 
 
-int
+static int
 afs_pageio(struct vnode *vp, struct page *pp, u_int ui1, u_int ui2, int i1, 
 	   struct cred *credp)
 {
@@ -1224,7 +1224,7 @@ afs_pageio(struct vnode *vp, struct page *pp, u_int ui1, u_int ui2, int i1,
     return EINVAL;
 }
 
-int
+static int
 #ifdef AFS_SUN59_ENV
 afs_dumpctl(struct vnode *vp, int i, int *blkp)
 #else
@@ -1236,38 +1236,38 @@ afs_dumpctl(struct vnode *vp, int i)
 }
 
 #ifdef	AFS_SUN511_ENV
-extern void
+static void
 afs_dispose(struct vnode *vp, struct page *p, int fl, int dn, struct cred *cr, struct caller_context_t *ct)
 {
     fs_dispose(vp, p, fl, dn, cr,ct);
 }
 
-int
+static int
 afs_setsecattr(struct vnode *vp, vsecattr_t *vsecattr, int flag, struct cred *creds, struct caller_context_t *ct)
 {
     return ENOSYS;
 }
 
-int
+static int
 afs_getsecattr(struct vnode *vp, vsecattr_t *vsecattr, int flag, struct cred *creds, struct caller_context_t *ct)
 {
   return fs_fab_acl(vp, vsecattr, flag, creds,ct);
 }
 #else
-extern void
+static void
 afs_dispose(struct vnode *vp, struct page *p, int fl, int dn, struct cred *cr)
 {
     fs_dispose(vp, p, fl, dn, cr);
 }
 
-int
+static int
 afs_setsecattr(struct vnode *vp, vsecattr_t *vsecattr, int flag, 
 	       struct cred *creds)
 {
     return ENOSYS;
 }
 
-int
+static int
 afs_getsecattr(struct vnode *vp, vsecattr_t *vsecattr, int flag, struct cred *creds)
 {
     return fs_fab_acl(vp, vsecattr, flag, creds);
