@@ -36,11 +36,14 @@ static int
 		int change_parent);
 
 
+#ifdef AFS_SUN511_ENV
+int64_t
+#else
 int
-afs_xsetgroups(uap, rvp)
-     u_int uap;			/* this is gidsetsize */
-     gid_t *rvp;		/* this is gidset */
+#endif
+afs_xsetgroups(u_int uap, gid_t *rvp)
 {
+    /* 'uap' is our gidsetsize; 'rvp' is our gidset */
     int code = 0;
     struct vrequest treq;
     struct proc *proc = ttoproc(curthread);

@@ -23,4 +23,12 @@ int afs_putpage(struct vnode *vp, offset_t off, u_int len, int flags,
 int afs_putapage(struct vnode *vp, struct page *pages, u_offset_t * offp,
 		 size_t * lenp, int flags, afs_ucred_t *credp);
 
+/* osi_groups.c */
+
+#ifdef AFS_SUN511_ENV
+int64_t afs_xsetgroups(u_int uap, gid_t *rvp);
+#else
+int afs_xsetgroups(u_int uap, gid_t *rvp);
+#endif
+
 #endif /* _OSI_PROTOTYPES_H_ */

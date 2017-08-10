@@ -394,8 +394,6 @@ afsinit(int fstype, char *dummy)
 afsinit(struct vfssw *vfsswp, int fstype)
 #endif
 {
-    extern int afs_xsetgroups();
-
     AFS_STATCNT(afsinit);
 
     afs_orig_setgroups = sysent[SYS_setgroups].sy_callc;
