@@ -108,6 +108,7 @@ static void *securityRock = NULL;
 struct version_data version_globals;
 
 #define	CStampVersion	    1	/* meaning set ts->version */
+#define	CCheckSyncAdvertised	    2	/* check if the remote knows we are the sync-site */
 
 static_inline struct rx_connection *
 Quorum_StartIO(struct ubik_trans *atrans, struct ubik_server *as)
@@ -181,7 +182,10 @@ ContactQuorum_iterate(struct ubik_trans *atrans, int aflags, struct ubik_server 
     if (!(*ts))
 	return 1;
     UBIK_BEACON_LOCK;
-    if (!(*ts)->up || !(*ts)->currentDB) {
+    if (!(*ts)->up || !(*ts)->currentDB ||
+	/* do not call DISK_Begin until we know that lastYesState is set on the
+	 * remote in question; otherwise, DISK_Begin will fail. */
+	((aflags & CCheckSyncAdvertised) && !((*ts)->beaconSinceDown && (*ts)->lastVote))) {
 	UBIK_BEACON_UNLOCK;
 	(*ts)->currentDB = 0;	/* db is no longer current; we just missed an update */
 	return 0;		/* not up-to-date, don't bother.  NULL conn will tell caller not to use */
@@ -678,7 +682,7 @@ BeginTrans(struct ubik_dbase *dbase, afs_int32 transMode,
 
     if (transMode == UBIK_WRITETRANS) {
 	/* next try to start transaction on appropriate number of machines */
-	code = ContactQuorum_NoArguments(DISK_Begin, tt, 0);
+	code = ContactQuorum_NoArguments(DISK_Begin, tt, CCheckSyncAdvertised);
 	if (code) {
 	    /* we must abort the operation */
 	    udisk_abort(tt);
