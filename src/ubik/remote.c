@@ -596,6 +596,7 @@ failed:
 	    ("Ubik: Synchronize database with server %s failed (error = %d)\n",
 	     afs_inet_ntoa_r(otherHost, hoststr), code);
     } else {
+	uvote_set_dbVersion(*avers);
 	ubik_print("Ubik: Synchronize database completed\n");
     }
     DBRELE(dbase);
