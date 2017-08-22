@@ -18,7 +18,11 @@
 
 #include <linux/version.h>
 #include "rx/rx_kcommon.h"
+#if defined(HAVE_LINUX_UACCESS_H)
+#include <linux/uaccess.h>
+#else
 #include <asm/uaccess.h>
+#endif
 #ifdef ADAPT_PMTU
 #include <linux/errqueue.h>
 #include <linux/icmp.h>
