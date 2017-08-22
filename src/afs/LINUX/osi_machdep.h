@@ -123,7 +123,11 @@ wakeup(void *event)
 #define IsAfsVnode(V) ((V)->i_sb == afs_globalVFS)	/* test superblock instead */
 #define SetAfsVnode(V)					/* unnecessary */
 
+#if defined(HAVE_LINUX_UACCESS_H)
+#include <linux/uaccess.h>
+#else
 #include <asm/uaccess.h>
+#endif
 
 #define copyin(F, T, C)  (copy_from_user ((char*)(T), (char*)(F), (C)) > 0 ? EFAULT : 0)
 static inline long copyinstr(char *from, char *to, int count, int *length) {

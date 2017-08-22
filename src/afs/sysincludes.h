@@ -145,7 +145,11 @@ struct coda_inode_info {
 struct xfs_inode_info {
 };
 # endif
-# include <asm/uaccess.h>
+# if defined(HAVE_LINUX_UACCESS_H)
+#  include <linux/uaccess.h>
+# else
+#  include <asm/uaccess.h>
+# endif
 # include <linux/list.h>
 # include <linux/dcache.h>
 # include <linux/mount.h>
