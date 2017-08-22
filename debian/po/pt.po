@@ -1,20 +1,24 @@
 # Portuguese translation for openafs debconf messages
-# Copyright (C) 2007 Miguel Figueiredo 
+# Copyright (C) 2007 Miguel Figueiredo
 # This file is distributed under the same license as the openafs package.
+#
 # Miguel Figueiredo <elmig@debianpt.org>, 2007, 2013.
+# Rui Branco <ruipb@debianpt.org>, 2017.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: openafs 1.4.2-5\n"
 "Report-Msgid-Bugs-To: openafs@packages.debian.org\n"
 "POT-Creation-Date: 2017-07-10 15:27-0500\n"
-"PO-Revision-Date: 2013-04-08 22:18+0100\n"
-"Last-Translator: Miguel Figueiredo <elmig@debianpt.org>\n"
+"PO-Revision-Date: 2017-08-09 09:47+0100\n"
+"Last-Translator: Rui Branco <ruipb@debianpt.org>\n"
 "Language-Team: Portuguese <traduz@debianpt.org>\n"
 "Language: pt\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Gtranslator 2.91.7\n"
 
 #. Type: string
 #. Description
@@ -95,7 +99,6 @@ msgstr "Correr o cliente Openafs agora e no arranque?"
 #. Type: boolean
 #. Description
 #: ../openafs-client.templates:4001
-#, fuzzy
 #| msgid ""
 #| "Normally, most users who install the openafs-client package expect AFS to "
 #| "be mounted automatically at boot.  However, if you are planning on "
@@ -113,8 +116,8 @@ msgstr ""
 "esperam que o AFS seja montado automaticamente no arranque.  No entanto, se "
 "você está a planear instalar uma nova célula ou está num portátil pode não "
 "querer que seja iniciado no arranque.  Se escolher não iniciar o AFS no "
-"arranque, corra /etc/init.d/openafs-client force-start para iniciar o "
-"cliente quando quiser que este corra."
+"arranque, corra o serviço openafs-client force-start para iniciar o cliente "
+"quando quiser que este corra."
 
 #. Type: boolean
 #. Description
@@ -170,7 +173,7 @@ msgstr "Sim"
 #. Choices
 #: ../openafs-client.templates:7001
 msgid "Sparse"
-msgstr "Escasso"
+msgstr "Disperso"
 
 #. Type: select
 #. Choices
@@ -223,7 +226,7 @@ msgid ""
 "CellAlias file are shown as normal, although they may appear to be dangling "
 "links until traversed."
 msgstr ""
-"A opção Escasso é o mesmo que a Sim, excepto que em vez de preencher "
+"A opção Disperso é o mesmo que a Sim, excepto que em vez de preencher "
 "imediatamente /afs a partir de /etc/openafs/CellServDB, as células que não a "
 "célula local, não aparecerão até serem acedidas. Os aliases para as células "
 "definidas no ficheiro CellAlias são mostradas como normalmente, embora "

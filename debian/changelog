@@ -7,6 +7,8 @@ openafs (1.6.21-2) UNRELEASED; urgency=medium
       rebasing mistake so -exit works correctly.
     - Linux-4.13-use-designated-initializers-where-require.patch: Support
       Linux kernel 4.13.  (LP: #1706433)
+  * Update Portuguese debconf translation; thanks Rui Branco.
+    (Closes: #871559)
 
  -- Anders Kaseorg <andersk@mit.edu>  Tue, 22 Aug 2017 17:22:44 -0400
 
