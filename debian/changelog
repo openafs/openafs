@@ -9,6 +9,8 @@ openafs (1.6.21-2) UNRELEASED; urgency=medium
       Linux kernel 4.13.  (LP: #1706433)
   * Update Portuguese debconf translation; thanks Rui Branco.
     (Closes: #871559)
+  * Update French debconf translation; thanks Alban Vidal.
+    (Closes: #872026)
 
  -- Anders Kaseorg <andersk@mit.edu>  Tue, 22 Aug 2017 17:22:44 -0400
 
