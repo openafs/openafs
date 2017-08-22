@@ -3,6 +3,8 @@ openafs (1.6.21-2) UNRELEASED; urgency=medium
   * debian/patches:
     - AFS_component_version_number.c-Respect-SOURCE_DATE_E.patch: Use UTC
       for better reproducibility.
+    - 0003-Add-dummy-exit-command-for-afsd-to-do-nothing.patch: Fix
+      rebasing mistake so -exit works correctly.
 
  -- Anders Kaseorg <andersk@mit.edu>  Tue, 22 Aug 2017 17:22:44 -0400
 

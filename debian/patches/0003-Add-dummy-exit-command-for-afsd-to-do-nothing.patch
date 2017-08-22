@@ -3,25 +3,26 @@ Date: Thu, 23 Oct 2014 17:28:43 -0400
 Subject: Add dummy -exit command for afsd to do nothing
 
 ---
- src/afsd/afsd.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ src/afsd/afsd.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
 diff --git a/src/afsd/afsd.c b/src/afsd/afsd.c
-index 2f0478d..4067919 100644
+index 2f0478db19..a667719291 100644
 --- a/src/afsd/afsd.c
 +++ b/src/afsd/afsd.c
-@@ -1913,6 +1913,10 @@ mainproc(struct cmd_syndesc *as, void *arock)
- 	/* -rxmaxfrags */
- 	rxmaxfrags = atoi(as->parms[38].items->data);
+@@ -1919,6 +1919,11 @@ mainproc(struct cmd_syndesc *as, void *arock)
+ 	inumcalc = strdup(as->parms[39].items->data);
      }
-+    if (as->parms[39].items) {
+ 
++    if (as->parms[40].items) {
 +	/* -exit */
 +	exit(0);
 +    }
- 
-     if (as->parms[39].items) {
- 	/* -inumcalc */
-@@ -2629,6 +2633,7 @@ afsd_init(void)
++
+     /* parse cacheinfo file if this is a diskcache */
+     if (ParseCacheInfoFile()) {
+ 	exit(1);
+@@ -2629,6 +2634,7 @@ afsd_init(void)
                  " per Rx packet");
      cmd_AddParm(ts, "-inumcalc", CMD_SINGLE, CMD_OPTIONAL,
  		"Set inode number calculation method");
