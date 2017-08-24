@@ -33,7 +33,9 @@ ifneq (,$(findstring nodoc,$(DEB_BUILD_OPTIONS)))
     DOXYCMD=
     GENDOCS=
 else
-    DOCMAKE=make
+    # pdfTeX refuses to fully obey SOURCE_DATE_EPOCH without
+    # FORCE_SOURCE_DATE=1.
+    DOCMAKE=FORCE_SOURCE_DATE=1 make
     DOXYCMD=dh_doxygen -popenafs-doc
     GENDOCS=AdminGuide QuickStartUnix UserGuide
 endif
