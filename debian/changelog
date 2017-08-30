@@ -3,6 +3,18 @@ openafs (1.8.0~pre2-1) UNRELEASED; urgency=low
   * Add versioned build-depends for renamed symbols in heimdal-multidev.
     (Closes: #848664)
   * New upstream prerelease:
+    - Desupport 32-bit s390/s390x
+    - Adopt jenkins hash for endianness independence
+    - With afsd -debug, print syscalls on separate lines
+    - Restore debug symbols for the kernel module
+    - Support Linux up to 4.13
+    - Provide vldb cache timeout option for clients
+    - Eliminate potential 100ms delay after rx receive window changes
+    - Modify volume update date after salvager makes changes
+    - Restore client behavior of trying all servers instead of looping on an
+      unresponsive preferred server
+    - Improve ubik safety for relabels and writes shortly after an election
+    - Preserve volume stats during reclone and restore operations
 
  -- Benjamin Kaduk <kaduk@mit.edu>  Wed, 30 Aug 2017 19:45:54 -0500
 
