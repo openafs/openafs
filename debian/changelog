@@ -2,6 +2,9 @@ openafs (1.6.21-3) UNRELEASED; urgency=medium
 
   * Build documentation with FORCE_SOURCE_DATE=1, without which pdfTeX
     refuses to behave fully reproducibly.
+  * debian/patches:
+    - Linux-Include-linux-uaccess.h-rather-than-asm-uacces.patch: Fix
+    build failure on s390x with Linux kernel 4.12.  (LP: #1711835)
 
  -- Anders Kaseorg <andersk@mit.edu>  Thu, 24 Aug 2017 18:08:04 -0400
 
