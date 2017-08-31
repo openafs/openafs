@@ -181,7 +181,7 @@ override_dh_install-indep:
 	done
 	-cp doc/xml/AdminGuide/*.png $(DOCS)/html/AdminGuide/
 	mkdir $(DOCS)/html/arch-overview
-	cp doc/arch/arch-overview.h $(DOCS)/html/arch-overview
+	cp doc/txt/arch-overview.h $(DOCS)/html/arch-overview
 	cd $(DOCS)/html/arch-overview && doxygen -g && doxygen \
 	    && rm Doxyfile *.h && mv html/* . && rm -r latex html
 	set -e; for h in doc/protocol/*.h ; do				\
