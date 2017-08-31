@@ -45,4 +45,4 @@ fi
 export LIBPATH
 
 shift
-"$TEST_COMMAND" "$@"
+exec "$TEST_COMMAND" "$@"

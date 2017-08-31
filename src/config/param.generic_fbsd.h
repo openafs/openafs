@@ -3,7 +3,6 @@
 
 #define AFSLITTLE_ENDIAN	1
 #define AFS_HAVE_FFS		1	/* Use system's ffs. */
-#define AFS_VM_RDWR_ENV		1	/* read/write implemented via VM */
 
 #ifndef UKERNEL
 /* This section for kernel libafs compiles only */
@@ -125,6 +124,16 @@ enum vcexcl { NONEXCL, EXCL };
 /* r273707 added a flags argument to syscall_register() */
 #if __FreeBSD_version >= 1100041
 #define FBSD_SYSCALL_REGISTER_FOUR_ARGS
+#endif
+
+/* r285819 eliminated b_saveaddr from struct buf */
+#if __FreeBSD_version >= 1100078
+#define FBSD_STRUCT_BUF_NO_SAVEADDR
+#endif
+
+/* r292373 changed the KPI for VOP_GETPAGES */
+#if __FreeBSD_version >= 1100092
+#define FBSD_VOP_GETPAGES_BUSIED
 #endif
 
 #else /* !defined(UKERNEL) */

@@ -742,8 +742,14 @@ SDISK_SetVersion(struct rx_call *rxcall, struct ubik_tid *atid,
 	goto done;
     }
 
-    /* Set the label if its version matches the sync-site's */
-    if (uvote_eq_dbVersion(*oldversionp)) {
+    /* Set the label if our version matches the sync-site's. Also set the label
+     * if our on-disk version matches the old version, and our view of the
+     * sync-site's version matches the new version. This suggests that
+     * ubik_dbVersion was updated while the sync-site was setting the new
+     * version, and it already told us via VOTE_Beacon. */
+    if (uvote_eq_dbVersion(*oldversionp)
+	|| (uvote_eq_dbVersion(*newversionp)
+	    && vcmp(ubik_dbase->version, *oldversionp) == 0)) {
 	UBIK_VERSION_LOCK;
 	code = (*ubik_dbase->setlabel) (ubik_dbase, 0, newversionp);
 	if (!code) {

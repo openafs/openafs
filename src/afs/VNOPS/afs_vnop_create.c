@@ -131,6 +131,15 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     }
 
     tdc = afs_GetDCache(adp, (afs_size_t) 0, treq, &offset, &len, 1);
+
+    /** Prevent multiple fetchStatus calls to fileserver when afs_GetDCache()
+      * returns NULL for an error condition
+      */
+    if (!tdc) {
+      code = EIO;
+      goto done;
+    }
+
     ObtainWriteLock(&adp->lock, 135);
     if (tdc)
 	ObtainSharedLock(&tdc->lock, 630);

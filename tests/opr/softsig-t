@@ -33,8 +33,14 @@ use FindBin qw($Bin);
 # Start up our test process, and send it various signals. Check that these
 # signals make it to it correctly, and are reported on the command line.
 my $softsig_helper = $Bin . "/softsig-helper";
-my $pid=open(HELPER, "$softsig_helper |")
-    or die "Couldn't start test helper.";
+
+# This -dummy argument prevents Perl from putting an intermediate sh
+# -c between us and softsig-helper in the case where the build
+# directory happens to contain shell metacharacters, like the ~ in
+# /build/openafs-vb8tid/openafs-1.8.0~pre1 used by the Debian
+# builders.
+my $pid = open(HELPER, "-|", $softsig_helper, "-dummy")
+  or die "Couldn't start test helper.";
 
 # Wait for softsig to start up.
 is(<HELPER>, "Ready\n");
@@ -71,7 +77,7 @@ is($?, SIGKILL, "Helper exited on KILL signal.");
 
 # Check that an internal segmentation fault kills the process.
 
-$pid = open(HELPER, "$softsig_helper -crash |")
+$pid = open(HELPER, "-|", $softsig_helper, "-crash")
     or die "Couldn't start test helper.";
 close(HELPER);
 is($? & 0x7f, SIGSEGV, "Helper exited on SEGV signal.");
@@ -84,7 +90,7 @@ SKIP: {
     skip("Skipping buserror test; SIGBUS constant is not defined.", 1) unless $sigbus;
 
     my ($fh, $path) = mkstemp("/tmp/softsig-t_XXXXXX");
-    $pid = open(HELPER, "$softsig_helper -buserror $path |")
+    $pid = open(HELPER, "-|", $softsig_helper, "-buserror", $path)
         or die "Couldn't start test helper.";
     close(HELPER);
     is($? & 0x7f, $sigbus, "Helper exited on BUS signal.");

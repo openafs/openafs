@@ -63,7 +63,6 @@
 
 #include <afs/afs_sysnames.h>
 
-#define AFS_VM_RDWR_ENV	1
 #define AFS_VFS_ENV	1
 #define AFS_GREEDY43_ENV	1
 

@@ -47,6 +47,10 @@ typedef struct path afs_linux_path_t;
 # endif
 #endif
 
+#ifndef HAVE_LINUX_FILE_DENTRY
+#define file_dentry(file) ((file)->f_dentry)
+#endif
+
 #if defined(HAVE_LINUX_LOCKS_LOCK_FILE_WAIT)
 # define flock_lock_file_wait locks_lock_file_wait
 #endif

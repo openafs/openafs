@@ -534,7 +534,6 @@ afs_DestroyReq(struct vrequest *av)
     }
 }
 
-#ifndef AFS_PAG_ONEGROUP_ENV
 afs_uint32
 afs_get_pag_from_groups(gid_t g0a, gid_t g1a)
 {
@@ -562,6 +561,7 @@ afs_get_pag_from_groups(gid_t g0a, gid_t g1a)
     return NOPAG;
 }
 
+#ifndef AFS_PAG_ONEGROUP_ENV
 void
 afs_get_groups_from_pag(afs_uint32 pag, gid_t * g0p, gid_t * g1p)
 {
@@ -590,7 +590,13 @@ afs_get_groups_from_pag(afs_uint32 pag, gid_t *g0p, gid_t *g1p)
 }
 #endif
 
-#if !defined(AFS_LINUX26_ENV) && !defined(AFS_DARWIN110_ENV)
+#ifdef AFS_LINUX26_ENV
+/* osi_get_group_pag is defined in <ARCH>/osi_groups.c */
+#elif defined(AFS_PAG_ONEGROUP_ENV)
+/* osi_get_group_pag is defined in <ARCH>/osi_groups.c */
+#elif defined(AFS_DARWIN110_ENV)
+/* We don't have pags, so we do not define an osi_get_group_pag */
+#else
 static afs_int32
 osi_get_group_pag(afs_ucred_t *cred)
 {

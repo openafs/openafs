@@ -44,7 +44,7 @@
 /* Exported variables */
 afs_rwlock_t afs_xconn;		/* allocation lock for new things */
 afs_rwlock_t afs_xinterface;	/* for multiple client address */
-afs_int32 cryptall = 0;		/* encrypt all communications */
+afs_int32 cryptall = 1;		/* encrypt all communications */
 
 /* some connection macros */
 
@@ -392,6 +392,11 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
     int isrep = (replicated > 0)?CONN_REPLICATED:0;
 
     *rxconn = NULL;
+
+    if (!sap || ((sap->sa_flags & SRVR_ISDOWN) && !force_if_down)) {
+	/* sa is known down, and we don't want to force it.  */
+	return NULL;
+    }
 
     /* find cached connection */
     ObtainSharedLock(&afs_xconn, 15);

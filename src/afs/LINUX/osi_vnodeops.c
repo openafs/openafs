@@ -47,6 +47,12 @@
 #define MAX_ERRNO 1000L
 #endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,34)
+/* Enable our workaround for a race with d_splice_alias. The race was fixed in
+ * 2.6.34, so don't do it after that point. */
+# define D_SPLICE_ALIAS_RACE
+#endif
+
 int cachefs_noreadpage = 0;
 
 extern struct backing_dev_info *afs_backing_dev_info;
@@ -393,7 +399,7 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 	if (code) {
 	    if (!(avc->f.states & CCorrupt)) {
 		struct cell *tc = afs_GetCellStale(avc->f.fid.Cell, READ_LOCK);
-		afs_warn("Corrupt directory (%d.%d.%d.%d [%s] @%lx, pos %d)",
+		afs_warn("afs: Corrupt directory (%d.%d.%d.%d [%s] @%lx, pos %d)\n",
 			 avc->f.fid.Cell, avc->f.fid.Fid.Volume,
 			 avc->f.fid.Fid.Vnode, avc->f.fid.Fid.Unique,
 			 tc ? tc->cellName : "",
@@ -1078,15 +1084,27 @@ out:
     return afs_convert_code(code);
 }
 
+#if defined(IOP_GETATTR_TAKES_PATH_STRUCT)
+static int
+afs_linux_getattr(const struct path *path, struct kstat *stat, u32 request_mask, unsigned int sync_mode)
+{
+	int err = afs_linux_revalidate(path->dentry);
+	if (!err) {
+                generic_fillattr(path->dentry->d_inode, stat);
+	}
+	return err;
+}
+#else
 static int
 afs_linux_getattr(struct vfsmount *mnt, struct dentry *dentry, struct kstat *stat)
 {
         int err = afs_linux_revalidate(dentry);
         if (!err) {
                 generic_fillattr(dentry->d_inode, stat);
+	}
+	return err;
 }
-        return err;
-}
+#endif
 
 static afs_uint32
 parent_vcache_dv(struct inode *inode, cred_t *credp)
@@ -1117,6 +1135,44 @@ parent_vcache_dv(struct inode *inode, cred_t *credp)
     }
     return hgetlo(pvcp->f.m.DataVersion);
 }
+
+#ifdef D_SPLICE_ALIAS_RACE
+/* Leave some trace that this code is enabled; otherwise it's pretty hard to
+ * tell. */
+static __attribute__((used)) const char dentry_race_marker[] = "d_splice_alias race workaround enabled";
+
+static int
+check_dentry_race(struct dentry *dp)
+{
+    int raced = 0;
+    if (!dp->d_inode) {
+        struct dentry *parent = dget_parent(dp);
+
+        /* In Linux, before commit 4919c5e45a91b5db5a41695fe0357fbdff0d5767,
+         * d_splice_alias can momentarily hash a dentry before it's fully
+         * populated. This only happens for a moment, since it's unhashed again
+         * right after (in d_move), but this can make the dentry be found by
+         * __d_lookup, and then given to us.
+         *
+         * So check if the dentry is unhashed; if it is, then the dentry is not
+         * valid. We lock the parent inode to ensure that d_splice_alias is no
+         * longer running (the inode mutex will be held during
+         * afs_linux_lookup). Locking d_lock is required to check the dentry's
+         * flags, so lock that, too.
+         */
+        afs_linux_lock_inode(parent->d_inode);
+        spin_lock(&dp->d_lock);
+        if (d_unhashed(dp)) {
+            raced = 1;
+        }
+        spin_unlock(&dp->d_lock);
+        afs_linux_unlock_inode(parent->d_inode);
+
+        dput(parent);
+    }
+    return raced;
+}
+#endif /* D_SPLICE_ALIAS_RACE */
 
 /* Validate a dentry. Return 1 if unchanged, 0 if VFS layer should re-evaluate.
  * In kernels 2.2.10 and above, we are passed an additional flags var which
@@ -1152,6 +1208,13 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
     if (nd->flags & LOOKUP_RCU)
 # endif
        return -ECHILD;
+#endif
+
+#ifdef D_SPLICE_ALIAS_RACE
+    if (check_dentry_race(dp)) {
+        valid = 0;
+        return valid;
+    }
 #endif
 
     AFS_GLOCK();
@@ -1305,6 +1368,24 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 
   good_dentry:
     valid = 1;
+    goto done;
+
+  bad_dentry:
+    valid = 0;
+#ifndef D_INVALIDATE_IS_VOID
+    /* When (v3.18) d_invalidate was converted to void, it also started
+     * being called automatically from revalidate, and automatically
+     * handled:
+     *  - shrink_dcache_parent
+     *  - automatic detach of submounts
+     *  - d_drop
+     * Therefore, after that point, OpenAFS revalidate logic no longer needs
+     * to do any of those things itself for invalid dentry structs.  We only need
+     * to tell VFS it's invalid (by returning 0), and VFS will handle the rest.
+     */
+    if (have_submounts(dp))
+	valid = 1;
+#endif
 
   done:
     /* Clean up */
@@ -1315,6 +1396,7 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
     if (credp)
 	crfree(credp);
 
+#ifndef D_INVALIDATE_IS_VOID
     if (!valid) {
 	/*
 	 * If we had a negative lookup for the name we want to forcibly
@@ -1327,15 +1409,9 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 	} else
 	    d_invalidate(dp);
     }
-
+#endif
     return valid;
 
-  bad_dentry:
-    if (have_submounts(dp))
-	valid = 1;
-    else
-	valid = 0;
-    goto done;
 }
 
 static void
@@ -1500,9 +1576,21 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
     int code;
 
     AFS_GLOCK();
-    code = afs_lookup(VTOAFS(dip), (char *)comp, &vcp, credp);
 
-    if (!code) {
+    code = afs_lookup(VTOAFS(dip), (char *)comp, &vcp, credp);
+    if (code == ENOENT) {
+        /* It's ok for the file to not be found. That's noted by the caller by
+         * seeing that the dp->d_inode field is NULL (set by d_splice_alias or
+         * d_add, below). */
+        code = 0;
+        osi_Assert(vcp == NULL);
+    }
+    if (code) {
+        AFS_GUNLOCK();
+        goto done;
+    }
+
+    if (vcp) {
 	struct vattr *vattr = NULL;
 	struct vcache *parent_vc = VTOAFS(dip);
 
@@ -1564,34 +1652,28 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
  done:
     crfree(credp);
 
-    /* It's ok for the file to not be found. That's noted by the caller by
-     * seeing that the dp->d_inode field is NULL.
-     */
-    if (!code || code == ENOENT) {
-	/*
-	 * d_splice_alias can return an error (EIO) if there is an existing
-	 * connected directory alias for this dentry.
-	 */
-	if (!IS_ERR(newdp)) {
-	    iput(ip);
-	    return newdp;
-	} else {
-	    d_add(dp, ip);
-	    /*
-	     * Depending on the kernel version, d_splice_alias may or may
-	     * not drop the inode reference on error.  If it didn't, do it
-	     * here.
-	     */
+    if (IS_ERR(newdp)) {
+        /* d_splice_alias can return an error (EIO) if there is an existing
+         * connected directory alias for this dentry. Add our dentry manually
+         * ourselves if this happens. */
+        d_add(dp, ip);
+
 #if defined(D_SPLICE_ALIAS_LEAK_ON_ERROR)
-	    iput(ip);
+        /* Depending on the kernel version, d_splice_alias may or may not drop
+         * the inode reference on error. If it didn't, do it here. */
+        iput(ip);
 #endif
-	    return NULL;
-	}
-    } else {
+        return NULL;
+    }
+
+    if (code) {
 	if (ip)
 	    iput(ip);
 	return ERR_PTR(afs_convert_code(code));
     }
+
+    iput(ip);
+    return newdp;
 }
 
 static int

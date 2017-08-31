@@ -159,7 +159,7 @@ with the string "ptserver".
 =item B<-logfile> <I<log file>>
 
 Sets the file to use for server logging. If logfile is not specified, and
-no other logging options are supplied, this will be F</usr/afs/logs/PTLog>.
+no other logging options are supplied, this will be F</usr/afs/logs/PtLog>.
 Note that this option is intended for debugging and testing purposes.
 Changing the location of the log file from the command line may result
 in undesirable interactions with tools such as B<bos>.
@@ -220,6 +220,7 @@ command.
 =head1 SEE ALSO
 
 L<BosConfig(5)>,
+L<PtLog(5)>,
 L<prdb.DB0(5)>,
 L<bos_create(8)>,
 L<bos_getlog(8)>,

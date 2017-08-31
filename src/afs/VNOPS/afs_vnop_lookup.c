@@ -696,7 +696,9 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     long startTime;		/* time we started the call,
 				 * for callback expiration base
 				 */
+#if defined(AFS_DARWIN_ENV)
     int ftype[4] = {VNON, VREG, VDIR, VLNK}; /* verify type is as expected */
+#endif
     afs_size_t statSeqNo = 0;	/* Valued of file size to detect races */
     int code;			/* error code */
     afs_int32 newIndex;		/* new index in the dir */
@@ -1160,7 +1162,10 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	 */
 	if (!(tvcp->f.states & CBulkFetching)
 	    || (tvcp->f.m.Length != statSeqNo)
-	    || (ftype[(&statsp[i])->FileType] != vType(tvcp))) {
+#if defined(AFS_DARWIN_ENV)
+            || (ftype[(&statsp[i])->FileType] != vType(tvcp))
+#endif
+           ) {
 	    flagIndex++;
 	    ReleaseWriteLock(&tvcp->lock);
 	    afs_PutVCache(tvcp);

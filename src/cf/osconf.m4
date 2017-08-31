@@ -540,6 +540,7 @@ case $AFS_SYSNAME in
 		CFLAGS="$CFLAGS ${XARCHFLAGS}"
 		LD="/usr/ccs/bin/ld"
 		MT_CFLAGS='-mt'
+		KERN_OPTMZ="-xO3"
 		PAM_CFLAGS="-KPIC"
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
 		SHLIB_CFLAGS="-KPIC"
@@ -567,10 +568,12 @@ if test "x$enable_optimize_kernel" = "x" ; then
   AS_CASE([$AFS_SYSNAME],
     [sunx86_510|sunx86_511],
       dnl Somewhere around Solaris Studio 12.*, the compiler started adding SSE
-      dnl instructions to optimized code, without any ability to turn it off.
-      dnl So just default to not optimizing kernel code for the relevant
-      dnl platforms, until we get a better autoconf test for this.
-      [enable_optimize_kernel=no],
+      dnl instructions to optimized code, without any known way to turn it off.
+      dnl To cope, this condition was added to change the default to
+      dnl 'no'.
+      dnl Now that we have an autoconf test to allow disabling the SSE
+      dnl optimizations, it's safe to once more default to 'yes' here.
+      [enable_optimize_kernel=yes],
     [enable_optimize_kernel=yes])
 fi
 

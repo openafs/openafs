@@ -76,7 +76,7 @@ int restrictedQueryLevel = RESTRICTED_QUERY_ANYUSER;
 
 int rxBind = 0;
 int rxkadDisableDotCheck = 0;
-int DoPreserveVolumeStats = 0;
+int DoPreserveVolumeStats = 1;
 int rxJumbograms = 0;	/* default is to not send and receive jumbograms. */
 int rxMaxMTU = -1;
 char *auditFileName = NULL;
@@ -237,6 +237,7 @@ enum optionsList {
     OPT_peer,
     OPT_process,
     OPT_preserve_vol_stats,
+    OPT_clear_vol_stats,
     OPT_sync,
 #ifdef HAVE_SYSLOG
     OPT_syslog,
@@ -288,8 +289,12 @@ ParseArgs(int argc, char **argv) {
 	    CMD_OPTIONAL, "enable RX transport statistics");
     cmd_AddParmAtOffset(opts, OPT_process, "-enable_process_stats", CMD_FLAG,
 	    CMD_OPTIONAL, "enable RX RPC statistics");
+    /* -preserve-vol-stats on by default now. */
     cmd_AddParmAtOffset(opts, OPT_preserve_vol_stats, "-preserve-vol-stats", CMD_FLAG,
-	    CMD_OPTIONAL, "preserve volume statistics");
+	    CMD_OPTIONAL|CMD_HIDDEN,
+	    "preserve volume statistics when restoring/recloning");
+    cmd_AddParmAtOffset(opts, OPT_clear_vol_stats, "-clear-vol-stats", CMD_FLAG,
+	    CMD_OPTIONAL, "clear volume statistics when restoring/recloning");
 #ifdef HAVE_SYSLOG
     cmd_AddParmAtOffset(opts, OPT_syslog, "-syslog", CMD_SINGLE_OR_FLAG,
 	    CMD_OPTIONAL, "log to syslog");
@@ -317,7 +322,8 @@ ParseArgs(int argc, char **argv) {
     cmd_OptionAsFlag(opts, OPT_log, &DoLogging);
     cmd_OptionAsFlag(opts, OPT_rxbind, &rxBind);
     cmd_OptionAsFlag(opts, OPT_dotted, &rxkadDisableDotCheck);
-    cmd_OptionAsFlag(opts, OPT_preserve_vol_stats, &DoPreserveVolumeStats);
+    if (cmd_OptionPresent(opts, OPT_clear_vol_stats))
+	DoPreserveVolumeStats = 0;
     if (cmd_OptionPresent(opts, OPT_peer))
 	rx_enablePeerRPCStats();
     if (cmd_OptionPresent(opts, OPT_process))

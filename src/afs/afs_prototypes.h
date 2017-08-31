@@ -743,7 +743,7 @@ extern int setpag(afs_proc_t *proc, struct ucred **cred, afs_uint32 pagvalue,
 # endif /* AFS_XBSD_ENV */
 #endif /* UKERNEL */
 
-#if defined(AFS_LINUX26_ENV)
+#if defined(AFS_LINUX26_ENV) || defined(AFS_PAG_ONEGROUP_ENV)
 extern afs_int32 osi_get_group_pag(afs_ucred_t *cred);
 #endif
 
