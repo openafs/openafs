@@ -38,7 +38,7 @@ MODULEROOT=${MODULEROOT:-/lib/modules/`uname -r`}
 
 do_nothing_env() {
     cat > /var/cache/openafs-client/openafs-client.env <<EOF
-AFSD_ARGS=-exit
+AFSD_ARGS=-help
 AFS_SETCRYPT=-help
 AFS_SYSNAME=-help
 KMOD=--version
