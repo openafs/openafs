@@ -57,7 +57,6 @@ generated: force buildtools
 	+${COMPILE_PART1} fsint ${COMPILE_GENERATED}
 	+${COMPILE_PART1} kauth ${COMPILE_GENERATED}
 	+${COMPILE_PART1} ptserver ${COMPILE_GENERATED}
-	+${COMPILE_PART1} rxgk ${COMPILE_GENERATED}
 	+${COMPILE_PART1} rxkad ${COMPILE_GENERATED}
 	+${COMPILE_PART1} rxstat ${COMPILE_GENERATED}
 	+${COMPILE_PART1} sys ${COMPILE_GENERATED}
@@ -216,9 +215,6 @@ afs: config export comerr afs_depinstall
 
 sys: cmd comerr afs hcrypto rx rxstat fsint sys_depinstall
 	+${COMPILE_PART1} sys ${COMPILE_PART2}
-
-rxgk: cmd comerr hcrypto rx rxgk_depinstall
-	+${COMPILE_PART1} rxgk ${COMPILE_PART2}
 
 rxkad: cmd comerr hcrypto rfc3961 rx rxkad_depinstall
 	+${COMPILE_PART1} rxkad ${COMPILE_PART2}
@@ -410,9 +406,6 @@ lwp_depinstall: config
 
 rx_depinstall: config
 	+${COMPILE_PART1} rx ${COMPILE_DEPINSTALL}
-
-rxgk_depinstall: config comerr
-	+${COMPILE_PART1} rxgk ${COMPILE_DEPINSTALL}
 
 rxkad_depinstall: config comerr
 	+${COMPILE_PART1} rxkad ${COMPILE_DEPINSTALL}
@@ -687,7 +680,6 @@ clean2:
 	-${COMPILE_PART1} export ${COMPILE_CLEAN}
 	-${COMPILE_PART1} afs ${COMPILE_CLEAN}
 	-${COMPILE_PART1} sys ${COMPILE_CLEAN}
-	-${COMPILE_PART1} rxgk ${COMPILE_CLEAN}
 	-${COMPILE_PART1} rxkad ${COMPILE_CLEAN}
 	-${COMPILE_PART1} auth ${COMPILE_CLEAN}
 	-${COMPILE_PART1} ubik ${COMPILE_CLEAN}
@@ -880,7 +872,6 @@ distclean: clean
 	src/rx/test/Makefile \
 	src/rxdebug/Makefile \
 	src/rxgen/Makefile \
-	src/rxgk/Makefile \
 	src/rxkad/Makefile \
 	src/rxkad/test/Makefile \
 	src/rxosd/Makefile \

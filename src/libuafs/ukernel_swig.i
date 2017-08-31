@@ -16,8 +16,8 @@
  * For each language you want a binding for, there are two typemaps you
  * must define for that language, since SWIG does not handle them natively.
  * These are the 'in' typemap for READBUF and LENGTH, and the 'argout'
- * typemap for READBUF. Search this file for 'perl5' to see existing ones
- * for the Perl 5 bindings.
+ * typemap for READBUF. Search this file for 'SWIGPERL' to see existing ones
+ * for the Perl bindings.
  */
 
 %module "AFS::ukernel"
@@ -78,14 +78,15 @@ extern int uafs_Run(void);
  * (Reading in a binary buffer from e.g. uafs_write is already handled natively
  * by SWIG. Fancy that.)
  */
-%typemap(in, numinputs=1, perl5) (char *READBUF, int LENGTH) {
+#if defined(SWIGPERL)
+%typemap(in, numinputs=1) (char *READBUF, int LENGTH) {
     if (!SvIOK($input)) {
         SWIG_croak("expected an integer");
     }
     $2 = SvIV($input);
     Newx($1, $2, char);
 }
-%typemap(argout, numinputs=1, perl5) char *READBUF {
+%typemap(argout, numinputs=1) char *READBUF {
     /* some logic here copied from typemaps.i and/or SWIG itself, since I'm not
      * a perl dev */
 
@@ -105,6 +106,9 @@ extern int uafs_Run(void);
     Safefree($1);
     argvi++;
 }
+#else
+# error No READBUF typemap defined for the given language
+#endif
 
 extern int uafs_mkdir(char *path, int mode);
 extern int uafs_chdir(char *path);

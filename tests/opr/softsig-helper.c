@@ -55,7 +55,7 @@ static struct sigtable {
 static char *signame(int signo) {
     int i;
 
-    for (i = 0; i < sizeof(sizeof(sigtable) / sizeof(sigtable[0])); ++i) {
+    for (i = 0; i < sizeof(sigtable) / sizeof(sigtable[0]); ++i) {
 	if (sigtable[i].signo == signo) {
 	    return sigtable[i].name;
 	}

@@ -58,9 +58,7 @@ opr_uuid_equal(const opr_uuid_t *uuid1, const opr_uuid_t *uuid2)
 unsigned int
 opr_uuid_hash(const opr_uuid_t *uuid)
 {
-   /* uuid->data is a (unsigned char *), so there's every danger that this
-    * may cause an unaligned access on some platforms */
-   return opr_jhash((const afs_uint32 *)uuid->data, 4, 0);
+   return opr_jhash_opaque(uuid->data, sizeof(uuid->data), 0);
 }
 
 #if !defined(KERNEL)

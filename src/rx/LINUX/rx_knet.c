@@ -25,7 +25,11 @@
 #include "rx_peer.h"
 #include "rx_packet.h"
 #include "rx_internal.h"
+#if defined(HAVE_LINUX_UACCESS_H)
+#include <linux/uaccess.h>
+#else
 #include <asm/uaccess.h>
+#endif
 #ifdef AFS_RXERRQ_ENV
 #include <linux/errqueue.h>
 #include <linux/icmp.h>

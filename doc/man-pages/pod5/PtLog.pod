@@ -1,0 +1,60 @@
+=head1 NAME
+
+PtLog - Traces Protection Server operations
+
+=head1 DESCRIPTION
+
+The F<PtLog> file records a trace of Protection Server (B<ptserver> process)
+operations on the local machine and describes any error conditions it
+encounters.
+
+If the F<PtLog> file does not already exist in the F</usr/afs/logs> directory
+when the Protection Server starts, the server process creates it and writes
+initial start-up messages to it.
+
+The file is in ASCII format. Administrators listed in the
+F</usr/afs/etc/UserList> file can use the B<bos getlog> command to display
+its contents. Alternatively, log onto the server machine and use a text
+editor or a file display command such as the UNIX B<cat> command. By
+default, the mode bits on the F<PtLog> file grant the required C<r> (read)
+permission to all users.
+
+The Protection Server records operations only as it completes them, and cannot
+recover from failures by reviewing the file. The log contents are useful
+for administrative evaluation of process failures and other problems.
+
+The Protection Server can record messages at several levels of detail. By default, it
+records only very rudimentary messages.  Specify the Protection Server B<-d> <I<debug level>> command
+line option to set the initial logging level when the Protection Server is started.
+
+To increase the level of detail logged by a running Protection Server, issue the following
+command while logged onto the database server machine as the local superuser
+C<root>.
+
+   # kill -TSTP <ptserver_pid>
+
+where <ptserver_pid> is the process ID of the vlserver process, as
+reported in the output from the standard UNIX B<ps> command. To increase
+to the second and third levels of detail, repeat the command.
+
+To disable logging, issue the following command.
+
+   # kill -HUP <ptserver_pid>
+
+To decrease the level of logging, first completely disable it and then
+issue the C<kill -TSTP> command as many times as necessary to reach the
+desired level.
+
+=head1 SEE ALSO
+
+L<UserList(5)>,
+L<bos_getlog(8)>,
+L<ptserver(8)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

@@ -274,14 +274,14 @@ afsd_call_syscall(struct afsd_syscall_args *args)
     error = os_syscall(args);
 
     if (afsd_debug) {
-#ifdef AFS_NBSD40_ENV
-        char *s = strerror(errno);
-        printf("SScall(%d, %d, %d)=%d (%d, %s)\n", AFS_SYSCALL, AFSCALL_CALL,
-                (int)args->params[0], error, errno, s);
-#else
-	printf("SScall(%d, %d, %d)=%d ", AFS_SYSCALL, AFSCALL_CALL,
-	       (int)args->params[0], error);
-#endif
+	if (error == -1) {
+	    char *s = strerror(errno);
+	    printf("SScall(%d, %d, %d)=%d (%d, %s)\n", AFS_SYSCALL, AFSCALL_CALL,
+		   (int)args->params[0], error, errno, s);
+	} else {
+	    printf("SScall(%d, %d, %d)=%d\n", AFS_SYSCALL, AFSCALL_CALL,
+		   (int)args->params[0], error);
+	}
     }
 
     return error;

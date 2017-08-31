@@ -65,10 +65,10 @@ main(int argc, char **argv)
    is_int(0xdeadbeef, opr_jhash_opaque("", 0, 0),
 	  "Hashing an empty string works");
 
-   is_int(2748273291UL,
+   is_int(393676113,
 	  opr_jhash_opaque("Four score and seven years ago", 30, 0),
 	  "Hashing a string with a 0 initval works");
-   is_int(1389900913,
+   is_int(3445784929UL,
 	  opr_jhash_opaque("Four score and seven years ago", 30, 1),
 	  "Hashing a string with a 1 initval works");
   return 0;

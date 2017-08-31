@@ -3471,6 +3471,9 @@ attach2(Error * ec, VolumeId volumeId, char *path, struct DiskPartition64 *partp
 		FreeVolumeHeader(vp);
 	    } else if (!V_inService(vp)) {
 		Log("Volume %lu offline: not in service\n", afs_printable_uint32_lu(V_id(vp)));
+		/* the volume is offline and should be unattached */
+		*ec = VOFFLINE;
+		error_state = VOL_STATE_UNATTACHED;
 		FreeVolumeHeader(vp);
 	    } else {
 		Log("Volume %lu offline: needs salvage\n", afs_printable_uint32_lu(V_id(vp)));
