@@ -1,4 +1,4 @@
-openafs (1.6.21-3) UNRELEASED; urgency=medium
+openafs (1.6.21-3) unstable; urgency=medium
 
   * Build documentation with FORCE_SOURCE_DATE=1, without which pdfTeX
     refuses to behave fully reproducibly.
@@ -6,7 +6,7 @@ openafs (1.6.21-3) UNRELEASED; urgency=medium
     - Linux-Include-linux-uaccess.h-rather-than-asm-uacces.patch: Fix
     build failure on s390x with Linux kernel 4.12.  (LP: #1711835)
 
- -- Anders Kaseorg <andersk@mit.edu>  Thu, 24 Aug 2017 18:08:04 -0400
+ -- Anders Kaseorg <andersk@mit.edu>  Wed, 30 Aug 2017 23:42:03 -0400
 
 openafs (1.6.21-2) unstable; urgency=medium
 
