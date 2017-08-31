@@ -1,9 +1,10 @@
-openafs (1.8.0~pre1-6) UNRELEASED; urgency=medium
+openafs (1.8.0~pre2-1) UNRELEASED; urgency=low
 
   * Add versioned build-depends for renamed symbols in heimdal-multidev.
     (Closes: #848664)
+  * New upstream prerelease:
 
- -- Benjamin Kaduk <kaduk@mit.edu>  Thu, 22 Dec 2016 14:30:06 -0500
+ -- Benjamin Kaduk <kaduk@mit.edu>  Wed, 30 Aug 2017 19:45:54 -0500
 
 openafs (1.8.0~pre1-5) experimental; urgency=medium
 
