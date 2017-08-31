@@ -207,7 +207,7 @@ Should the Openafs filesystem be started and mounted at boot?
 Normally, most users who install the openafs-client package expect to
 run it at boot.  However, if you are planning on setting up a new cell
 or are on a laptop, you may not want it started at boot time. If you
-choose not to start AFS at boot , run /etc/init.d/openafs-client
+choose not to start AFS at boot , run service openafs-client
 force-start to start the client when you wish to run it.
 
 Run Openafs client now and at boot? no
@@ -303,13 +303,13 @@ In order to set up a new AFS cell, you must meet the following:
 
 Do you meet these requirements? [y/n] y
 If the fileserver is not running, this may hang for 30 seconds.
-/etc/init.d/openafs-fileserver stop
+service openafs-fileserver stop
 Stopping AFS Server: bos: could not find entry (can't find cell '<default>' in cell database)
 bosserver.
 What administrative principal should be used? faheem/admin
 
 /etc/openafs/server/CellServDB already exists, renaming to .old
-/etc/init.d/openafs-fileserver start
+service openafs-fileserver start
 Starting AFS Server: bosserver.
 bos adduser riverside.dulci.biostat.duke.edu faheem.admin -localauth
 pt_util: /var/lib/openafs/db/prdb.DB0: Bad UBIK_MAGIC. Is 0 should be 354545
@@ -323,7 +323,7 @@ bos create riverside.dulci.biostat.duke.edu fs fs -cmd /usr/lib/openafs/fileserv
 Waiting for database elections: done.
 vos create riverside.dulci.biostat.duke.edu a root.afs -localauth
 Volume 536870912 created on partition /vicepa of riverside.dulci.biostat.duke.edu
-/etc/init.d/openafs-client force-start
+service openafs-client force-start
 Starting AFS services: afsd: All AFS daemons started.
   afsd.
 

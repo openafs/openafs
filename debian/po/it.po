@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openafs\n"
 "Report-Msgid-Bugs-To: openafs@packages.debian.org\n"
-"POT-Creation-Date: 2013-04-08 11:17-0700\n"
+"POT-Creation-Date: 2017-07-10 15:27-0500\n"
 "PO-Revision-Date: 2013-04-21 13:21+0200\n"
 "Last-Translator: Beatrice Torracca <beatricet@libero.it>\n"
 "Language-Team: Italian <debian-l10n-italian@lists.debian.org>\n"
@@ -95,12 +95,19 @@ msgstr "Eseguire il client Openafs ora e all'avvio?"
 #. Type: boolean
 #. Description
 #: ../openafs-client.templates:4001
+#, fuzzy
+#| msgid ""
+#| "Normally, most users who install the openafs-client package expect AFS to "
+#| "be mounted automatically at boot.  However, if you are planning on "
+#| "setting up a new cell or are on a laptop, you may not want it started at "
+#| "boot time.  If you choose not to start AFS at boot, run /etc/init.d/"
+#| "openafs-client force-start to start the client when you wish to run it."
 msgid ""
 "Normally, most users who install the openafs-client package expect AFS to be "
 "mounted automatically at boot.  However, if you are planning on setting up a "
 "new cell or are on a laptop, you may not want it started at boot time.  If "
-"you choose not to start AFS at boot, run /etc/init.d/openafs-client force-"
-"start to start the client when you wish to run it."
+"you choose not to start AFS at boot, run service openafs-client force-start "
+"to start the client when you wish to run it."
 msgstr ""
 "Normalmente, la maggior parte degli utenti che installa il pacchetto openafs-"
 "client si aspetta che AFS venga automaticamente montato all'avvio. Tuttavia, "
@@ -188,8 +195,8 @@ msgstr ""
 "/afs contiene generalmente una voce per ciascuna cella con cui un client può "
 "comunicare. Tradizionalmente queste voci erano generate dai server nella "
 "cella a cui appartiene il client. Tuttavia, i client OpenAFS possono "
-"generare il contenuto di /afs dinamicamente in base al contenuto di "
-"/etc/openafs/CellServDB e DNS."
+"generare il contenuto di /afs dinamicamente in base al contenuto di /etc/"
+"openafs/CellServDB e DNS."
 
 #. Type: select
 #. Description
@@ -227,8 +234,8 @@ msgstr ""
 #: ../openafs-client.templates:8001
 msgid "Use fakestat to avoid hangs when listing /afs?"
 msgstr ""
-"Usare fakestat per evitare blocchi quando viene elencato il contenuto di "
-"/afs?"
+"Usare fakestat per evitare blocchi quando viene elencato il contenuto di /"
+"afs?"
 
 #. Type: boolean
 #. Description

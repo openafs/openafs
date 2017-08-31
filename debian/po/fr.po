@@ -1,3 +1,7 @@
+# Translation of openafs debconf templates to French
+# Copyright (C) 2006, 2013, 2017 Debian French l10n team <debian-l10n-french@lists.debian.org>
+# This file is distributed under the same license as the openafs package.
+#
 # translation of fr.po to French
 #
 #    Translators, if you are not familiar with the PO format, gettext
@@ -12,20 +16,22 @@
 #
 #    Developers do not need to manually edit POT or PO files.
 #
+# Translators:
 # Christian Perrier <bubulle@debian.org>, 2006, 2013.
+# Alban Vidal <alban.vidal@zordhak.fr>, 2017.
 msgid ""
 msgstr ""
-"Project-Id-Version: fr\n"
+"Project-Id-Version: openafs 1.6.21-1\n"
 "Report-Msgid-Bugs-To: openafs@packages.debian.org\n"
-"POT-Creation-Date: 2013-04-08 11:17-0700\n"
-"PO-Revision-Date: 2013-04-09 09:41+0200\n"
-"Last-Translator: Christian Perrier <bubulle@debian.org>\n"
+"POT-Creation-Date: 2017-07-10 15:27-0500\n"
+"PO-Revision-Date: 2017-08-04 10:36+0100\n"
+"Last-Translator: Alban Vidal <alban.vidal@zordhak.fr>\n"
 "Language-Team: French <debian-l10n-french@lists.debian.org>\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Lokalize 1.4\n"
+"X-Generator: Lokalize 2.0\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
 #. Type: string
@@ -105,23 +111,29 @@ msgstr ""
 #. Description
 #: ../openafs-client.templates:4001
 msgid "Run Openafs client now and at boot?"
-msgstr "Lancer le client AFS maintenant, puis à chaque démarrage ?"
+msgstr "Faut-il lancer le client AFS maintenant, puis à chaque démarrage ?"
 
 #. Type: boolean
 #. Description
 #: ../openafs-client.templates:4001
+#| msgid ""
+#| "Normally, most users who install the openafs-client package expect AFS to "
+#| "be mounted automatically at boot.  However, if you are planning on "
+#| "setting up a new cell or are on a laptop, you may not want it started at "
+#| "boot time.  If you choose not to start AFS at boot, run /etc/init.d/"
+#| "openafs-client force-start to start the client when you wish to run it."
 msgid ""
 "Normally, most users who install the openafs-client package expect AFS to be "
 "mounted automatically at boot.  However, if you are planning on setting up a "
 "new cell or are on a laptop, you may not want it started at boot time.  If "
-"you choose not to start AFS at boot, run /etc/init.d/openafs-client force-"
-"start to start the client when you wish to run it."
+"you choose not to start AFS at boot, run service openafs-client force-start "
+"to start the client when you wish to run it."
 msgstr ""
 "La majorité des utilisateurs qui installent le paquet openafs-client "
 "s'attendent à ce qu'il soit lancé au démarrage. Cependant, si vous prévoyez "
 "de mettre en service une nouvelle cellule ou si vous utilisez un ordinateur "
 "portable, vous ne souhaitez peut-être pas le lancer au démarrage. Si vous "
-"préférez ne pas le lancer au démarrage, utilisez la commande « /etc/init.d/"
+"préférez ne pas le lancer au démarrage, utilisez la commande « service "
 "openafs-client force-start » pour le lancer quand vous en aurez besoin."
 
 #. Type: boolean
@@ -243,7 +255,7 @@ msgstr ""
 #: ../openafs-client.templates:8001
 msgid "Use fakestat to avoid hangs when listing /afs?"
 msgstr ""
-"Utiliser fakestat pour éviter les erreurs à l'affichage du contenu de /afs ?"
+"Faut-il utiliser fakestat pour éviter les erreurs à l'affichage du contenu de /afs ?"
 
 #. Type: boolean
 #. Description

@@ -75,6 +75,47 @@ openafs (1.8.0~pre1-1) experimental; urgency=low
 
  -- Benjamin Kaduk <kaduk@mit.edu>  Tue, 13 Dec 2016 01:49:46 -0500
 
+openafs (1.6.21-2) unstable; urgency=medium
+
+  * debian/patches:
+    - AFS_component_version_number.c-Respect-SOURCE_DATE_E.patch: Use UTC
+      for better reproducibility.
+    - 0003-Add-dummy-exit-command-for-afsd-to-do-nothing.patch: Fix
+      rebasing mistake so -exit works correctly.
+    - Linux-4.13-use-designated-initializers-where-require.patch: Support
+      Linux kernel 4.13.  (LP: #1706433)
+  * Update Portuguese debconf translation; thanks Rui Branco.
+    (Closes: #871559)
+  * Update French debconf translation; thanks Alban Vidal.
+    (Closes: #872026)
+  * Update CellServDB from grand.central.org (2017-03-14).
+
+ -- Anders Kaseorg <andersk@mit.edu>  Tue, 22 Aug 2017 19:47:50 -0400
+
+openafs (1.6.21-1) unstable; urgency=medium
+
+  * New upstream release (1.6.21):
+    - Include support for Linx versions through 4.12.  (Closes: #859155)
+    - Improve support for Linux kernels with backported patches.
+      (Closes: #855366)
+    - Improve bosserver startup behavior with unexpected arguments or
+      configuration symlinks.
+    - Re-enable vcache cleanup improvement from 1.6.18, with bugs fixed.
+    - Provide the afsd -inumcalc option; this behavior was previously
+      only configurable via sysctl.
+    - The salvager updates volume "last update" times when modifying volumes.
+    - Demand-attach fileserver improvements for reducing log spew and preventing
+      thread exhaustion during CPS recalculation.
+    - Avoid a potential 100ms transmit delay in RX when the peer's receive
+      window advances.
+  * Switch openafs-fileserver.service to Type=simple and pass -nofork to
+    bosserver.  (Closes: #865962)
+  * Update for policy version 4.0.0, honor nodoc in DEB_BUILD_OPTIONS
+  * Use service(8) instead of /etc/init.d/* directly in documentation and
+    helper scripts
+
+ -- Benjamin Kaduk <kaduk@mit.edu>  Mon, 10 Jul 2017 15:27:56 -0500
+
 openafs (1.6.20-2) unstable; urgency=medium
 
   * Build-Depend debhelper (>= 9.20160114) for dh_strip
@@ -222,7 +263,7 @@ openafs (1.6.14-1) unstable; urgency=medium
   * Update Swedish translation, thanks Martin Bagge and Anders Jonsson.
     (Closes: #781678)
   * Note that the protocol document rfc5864.txt is dual licensed.
-    (Closes: #768385)
+    (Closes: #754735)
   * Supply copyright notice for systemd helper scripts. (Closes: #779170)
   * Import upstream patches to support the 4.2 Linux kernel.
 

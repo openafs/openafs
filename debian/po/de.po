@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openafs 1.4.2-3\n"
 "Report-Msgid-Bugs-To: openafs@packages.debian.org\n"
-"POT-Creation-Date: 2013-04-08 11:17-0700\n"
+"POT-Creation-Date: 2017-07-10 15:27-0500\n"
 "PO-Revision-Date: 2013-08-05 21:10+0200\n"
 "Last-Translator: Erik Pfannenstein <debianignatz@gmx.de>\n"
 "Language-Team: de <debian-l10n-german@lists.debian.org>\n"
@@ -51,9 +51,9 @@ msgstr ""
 "Computer der Datenbank-Server der Zelle sein soll, geben Sie nur den "
 "Hostnamen dieses Computers ein; fügen Sie andere Server erst später hinzu, "
 "sobald diese funktionieren. Außerdem sollten Sie den AFS-Client auf diesem "
-"Server nicht beim Systemboot starten lassen, bevor diese Zelle "
-"konfiguriert ist. Wenn Sie soweit sind, können Sie "
-"/etc/openafs/afs.conf.client editieren, um den AFS-Client zu aktivieren."
+"Server nicht beim Systemboot starten lassen, bevor diese Zelle konfiguriert "
+"ist. Wenn Sie soweit sind, können Sie /etc/openafs/afs.conf.client "
+"editieren, um den AFS-Client zu aktivieren."
 
 #. Type: string
 #. Description
@@ -89,9 +89,9 @@ msgid ""
 "to dedicate a partition to their AFS cache."
 msgstr ""
 "AFS benutzt einen Bereich der Festplatte, um Netzwerk-Dateien zum "
-"schnelleren Zugriff zwischenzuspeichern. Dieser Cache wird unter "
-"/var/cache/openafs eingehängt werden. Es ist wichtig, dass der Cache nicht "
-"die Partition überfüllt, auf dem er sich befindet. Viele Leute finden es "
+"schnelleren Zugriff zwischenzuspeichern. Dieser Cache wird unter /var/cache/"
+"openafs eingehängt werden. Es ist wichtig, dass der Cache nicht die "
+"Partition überfüllt, auf dem er sich befindet. Viele Leute finden es "
 "nützlich, eine extra Partition für ihren AFS-Cache zu haben."
 
 #. Type: boolean
@@ -103,19 +103,26 @@ msgstr "Soll der Openafs-Client jetzt und beim Systemboot gestartet werden?"
 #. Type: boolean
 #. Description
 #: ../openafs-client.templates:4001
+#, fuzzy
+#| msgid ""
+#| "Normally, most users who install the openafs-client package expect AFS to "
+#| "be mounted automatically at boot.  However, if you are planning on "
+#| "setting up a new cell or are on a laptop, you may not want it started at "
+#| "boot time.  If you choose not to start AFS at boot, run /etc/init.d/"
+#| "openafs-client force-start to start the client when you wish to run it."
 msgid ""
 "Normally, most users who install the openafs-client package expect AFS to be "
 "mounted automatically at boot.  However, if you are planning on setting up a "
 "new cell or are on a laptop, you may not want it started at boot time.  If "
-"you choose not to start AFS at boot, run /etc/init.d/openafs-client force-"
-"start to start the client when you wish to run it."
+"you choose not to start AFS at boot, run service openafs-client force-start "
+"to start the client when you wish to run it."
 msgstr ""
 "Normalerweise erwarten Benutzer, die das Paket openafs-client installieren, "
-"dass AFS automatisch beim Systemboot eingehängt wird. Falls Sie aber eine neue "
-"Zelle erstellen wollen oder einen Laptop benutzen, möchten Sie vielleicht "
-"nicht, dass AFS beim Booten mitstartet. In diesem Fall können Sie "
-"/etc/init.d/openafs-client force-start ausführen, um den AFS-Client erst zu "
-"starten, wenn Sie ihn brauchen."
+"dass AFS automatisch beim Systemboot eingehängt wird. Falls Sie aber eine "
+"neue Zelle erstellen wollen oder einen Laptop benutzen, möchten Sie "
+"vielleicht nicht, dass AFS beim Booten mitstartet. In diesem Fall können "
+"Sie /etc/init.d/openafs-client force-start ausführen, um den AFS-Client erst "
+"zu starten, wenn Sie ihn brauchen."
 
 #. Type: boolean
 #. Description
@@ -209,10 +216,10 @@ msgid ""
 "one line per alias, with the cell name, a space, and then the alias for that "
 "cell.)"
 msgstr ""
-"Wenn Sie /afs dynamisch erstellen lassen, werden Sie vielleicht "
-"/etc/openafs/CellAlias erstellen müssen, sodass die Datei Aliase für "
-"gebräuchliche Zellen enthält (die Syntax ist: Eine Zeile pro Aliasse, mit "
-"Zellenname – Leerzeichen – Alias)."
+"Wenn Sie /afs dynamisch erstellen lassen, werden Sie vielleicht /etc/openafs/"
+"CellAlias erstellen müssen, sodass die Datei Aliase für gebräuchliche Zellen "
+"enthält (die Syntax ist: Eine Zeile pro Aliasse, mit Zellenname – "
+"Leerzeichen – Alias)."
 
 #. Type: select
 #. Description
@@ -226,9 +233,9 @@ msgid ""
 msgstr ""
 "Die Sparse-Option ist dasselbe wie »Ja«, allerdings wird /afs nicht sofort "
 "aus der /etc/openafs/CellServDB bestückt, sondern nicht-lokale Zellen werden "
-"erst angezeigt, nachdem auf sie zugegriffen wurde. Zell-Aliasse aus der Datei "
-"CellAlias werden wie üblich angezeigt, können aber auch als defekte Links "
-"erscheinen, bis sie durchlaufen worden sind."
+"erst angezeigt, nachdem auf sie zugegriffen wurde. Zell-Aliasse aus der "
+"Datei CellAlias werden wie üblich angezeigt, können aber auch als defekte "
+"Links erscheinen, bis sie durchlaufen worden sind."
 
 #. Type: boolean
 #. Description
@@ -271,8 +278,8 @@ msgid ""
 "the same cell as the workstation's client belongs to."
 msgstr ""
 "AFS-Dateiserver gehören zu einer Zelle. Die Server haben den Schlüssel für "
-"den Kerberos-Dienst der Zelle und stellen Speicherplatz für die Zelle bereit. "
-"Normalerweise ist die Zelle identisch mit der des Clients."
+"den Kerberos-Dienst der Zelle und stellen Speicherplatz für die Zelle "
+"bereit. Normalerweise ist die Zelle identisch mit der des Clients."
 
 #. Type: note
 #. Description

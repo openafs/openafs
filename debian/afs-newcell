@@ -104,7 +104,7 @@ while(<MOUNT>) {
     if (m:^AFS:) {
         print "The AFS client is currently running on this workstation.\n";
         print "Please restart this script after running"
-            . " /etc/init.d/openafs-client stop\n";
+            . " service openafs-client stop\n";
         exit(1);
     }
 }
@@ -119,7 +119,7 @@ unless ( -f "/etc/openafs/server/KeyFile") {
 
 # Stop the file server.
 print "If the fileserver is not running, this may hang for 30 seconds.\n";
-run("/etc/init.d/openafs-fileserver stop");
+run("service openafs-fileserver stop");
 
 # Get the local hostname.  Use the fully-qualified hostname to be safer.
 $server = `hostname -f`;
@@ -194,7 +194,7 @@ print CELLSERVDB inet_ntoa($ip), "\t\t\t#$server\n";
 close CELLSERVDB or die "Cannot write to /etc/openafs/server/CellServDB: $!\n";
 
 # Now, we should be able to start bos and add the admin user.
-run("/etc/init.d/openafs-fileserver start");
+run("service openafs-fileserver start");
 $shutdown_needed = 1;
 run("bos adduser $server $afs_admin -localauth");
 unwind("bos removeuser $server $afs_admin -localauth");
@@ -256,7 +256,7 @@ open(THIS, "> /etc/openafs/ThisCell")
     or die "ERROR: Cannot create /etc/openafs/ThisCell: $!\n";
 print THIS "$cell\n";
 close THIS or die "ERROR: Cannot write to /etc/openafs/ThisCell: $!\n";
-run("/etc/init.d/openafs-client force-start");
+run("service openafs-client force-start");
 
 # Verify that AFS has managed to start.
 my $afs_running = 0;
