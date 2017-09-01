@@ -75,6 +75,16 @@ openafs (1.8.0~pre1-1) experimental; urgency=low
 
  -- Benjamin Kaduk <kaduk@mit.edu>  Tue, 13 Dec 2016 01:49:46 -0500
 
+openafs (1.6.21-3) unstable; urgency=medium
+
+  * Build documentation with FORCE_SOURCE_DATE=1, without which pdfTeX
+    refuses to behave fully reproducibly.
+  * debian/patches:
+    - Linux-Include-linux-uaccess.h-rather-than-asm-uacces.patch: Fix
+    build failure on s390x with Linux kernel 4.12.  (LP: #1711835)
+
+ -- Anders Kaseorg <andersk@mit.edu>  Wed, 30 Aug 2017 23:42:03 -0400
+
 openafs (1.6.21-2) unstable; urgency=medium
 
   * debian/patches:
