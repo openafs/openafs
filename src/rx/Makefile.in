@@ -18,6 +18,7 @@ LT_objs = xdr.lo xdr_array.lo xdr_rx.lo xdr_mem.lo xdr_len.lo xdr_afsuuid.lo \
 	  rx_pthread.lo rx.lo rx_null.lo rx_globals.lo rx_getaddr.lo rx_misc.lo \
 	  rx_packet.lo rx_peer.lo rx_rdwr.lo rx_trace.lo rx_conncache.lo \
 	  rx_opaque.lo rx_identity.lo rx_stats.lo rx_multi.lo \
+	  rx_stubs.lo \
 	  AFS_component_version_number.lo
 LT_deps = $(top_builddir)/src/opr/liboafs_opr.la
 LT_libs = $(MT_LIBS)

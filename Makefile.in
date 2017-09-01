@@ -187,7 +187,7 @@ roken: config
 rxgen: $(DIR_roken) config
 	+${COMPILE_PART1} rxgen ${COMPILE_PART2}
 
-rx: config lwp rxgen rx_depinstall util
+rx: config lwp rxgen rx_depinstall util rxgk_depinstall
 	+${COMPILE_PART1} rx ${COMPILE_PART2}
 
 rxstat: rx rxstat_depinstall
