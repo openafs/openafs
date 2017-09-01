@@ -1,4 +1,4 @@
-openafs (1.8.0~pre2-1) UNRELEASED; urgency=low
+openafs (1.8.0~pre2-1) experimental; urgency=low
 
   * Add versioned build-depends for renamed symbols in heimdal-multidev.
     (Closes: #848664)
@@ -17,7 +17,7 @@ openafs (1.8.0~pre2-1) UNRELEASED; urgency=low
     - Preserve volume stats during reclone and restore operations
   * Add automatic akeyconvert invocation to openafs-fileserver.postinst
 
- -- Benjamin Kaduk <kaduk@mit.edu>  Fri, 01 Sep 2017 16:27:02 -0500
+ -- Benjamin Kaduk <kaduk@mit.edu>  Fri, 01 Sep 2017 16:29:04 -0500
 
 openafs (1.8.0~pre1-5) experimental; urgency=medium
 
