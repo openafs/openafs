@@ -538,7 +538,7 @@ createMountpoint(Volume *vol, Volume *newvol, struct VnodeDiskObject *parent,
     AFSFid fid;
     struct timeval now;
     afs_uint32 newvN;
-    char symlink[32];
+    char symlink[VNAMESIZE + 1];
     ssize_t rc;
 
     FT_GetTimeOfDay(&now, 0);

@@ -1364,7 +1364,7 @@ namei_copy_on_write(IHandle_t *h)
     if (afs_stat(name.n_path, &tstat) < 0)
 	return EIO;
     if (tstat.st_nlink > 1) {                   /* do a copy on write */
-	char path[259];
+	char path[NAMEI_PATH_LEN + 4];
 	char *buf;
 	afs_size_t size;
 	ssize_t tlen;
