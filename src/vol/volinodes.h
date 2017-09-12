@@ -18,6 +18,9 @@
 #define __volinodes_h_
 
 #include <stddef.h>
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#endif
 
 /* Used by vutil.c and salvager.c */
 
