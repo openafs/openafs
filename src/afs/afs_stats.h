@@ -1067,7 +1067,7 @@ struct afs_stats_xferData {
                      + 2 * (t2.tv_usec / 1000) * (t2.tv_usec % 1000) / 1000   \
                      + (((t2.tv_usec % 1000) > 707) ? 1 : 0);                 \
      }                                                                        \
-   if (t1.tv_usec > 1000000) {                                                \
+   while (t1.tv_usec > 1000000) {                                             \
         t1.tv_usec -= 1000000;                                                \
         t1.tv_sec++;                                                          \
    }                                                                          \
