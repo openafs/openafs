@@ -356,7 +356,9 @@ int
 osi_rdwr(struct osi_file *osifile, struct uio *uiop, int rw)
 {
     struct file *filp = osifile->filp;
+#ifdef AFS_FILE_NEEDS_SET_FS
     mm_segment_t old_fs = {0};
+#endif /* AFS_FILE_NEEDS_SET_FS */
     int code = 0;
     struct iovec *iov;
     size_t count;
@@ -366,11 +368,13 @@ osi_rdwr(struct osi_file *osifile, struct uio *uiop, int rw)
     savelim = current->TASK_STRUCT_RLIM[RLIMIT_FSIZE].rlim_cur;
     current->TASK_STRUCT_RLIM[RLIMIT_FSIZE].rlim_cur = RLIM_INFINITY;
 
+#ifdef AFS_FILE_NEEDS_SET_FS
     if (uiop->uio_seg == AFS_UIOSYS) {
 	/* Switch into user space */
 	old_fs = get_fs();
 	set_fs(get_ds());
     }
+#endif /* AFS_FILE_NEEDS_SET_FS */
 
     while (code == 0 && uiop->uio_resid > 0 && uiop->uio_iovcnt > 0) {
 	iov = uiop->uio_iov;
@@ -407,10 +411,12 @@ osi_rdwr(struct osi_file *osifile, struct uio *uiop, int rw)
 	code = 0;
     }
 
+#ifdef AFS_FILE_NEEDS_SET_FS
     if (uiop->uio_seg == AFS_UIOSYS) {
 	/* Switch back into kernel space */
 	set_fs(old_fs);
     }
+#endif /* AFS_FILE_NEEDS_SET_FS */
 
     current->TASK_STRUCT_RLIM[RLIMIT_FSIZE].rlim_cur = savelim;
 
