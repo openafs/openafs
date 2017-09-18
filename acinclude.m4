@@ -1004,6 +1004,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_FUNC([__vfs_write],
 				     [#include <linux/fs.h>],
 				     [__vfs_write(NULL, NULL, 0, NULL);])
+		 AC_CHECK_LINUX_FUNC([kernel_write],
+				     [#include <linux/fs.h>],
+				     [kernel_write(NULL, NULL, 0, NULL);])
                  AC_CHECK_LINUX_FUNC([bdi_init],
 				     [#include <linux/backing-dev.h>],
 				     [bdi_init(NULL);])
