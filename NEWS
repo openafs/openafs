@@ -7,6 +7,8 @@ OpenAFS 1.6.21.1
     * Support for mainline kernel 4.13 and distribution kernels with backports
       from it (12664)
 
+    * Fix kernel module build for kernels since 4.12 on S390 (12717)
+
 
 OpenAFS 1.6.21
 
