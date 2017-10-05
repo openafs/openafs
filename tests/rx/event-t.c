@@ -124,10 +124,14 @@ main(void)
     ok(pthread_create(&handler, NULL, eventHandler, NULL) == 0,
        "Created handler thread");
 
-    /* Add 1000 random events to fire over the next 3 seconds */
+    /* Add 1000 random events to fire over the next 3 seconds, but front-loaded
+     * a bit so that we can exercise the cancel/fire race path. */
 
     for (counter = 0; counter < NUMEVENTS; counter++) {
-        when = random() % 3000;
+        when = random() % 4000;
+	/* Put 1/4 of events "right away" so we cancel them as they fire */
+	if (when >= 3000)
+	    when = random() % 5;
 	clock_GetTime(&now);
 	eventTime = now;
 	clock_Addmsec(&eventTime, when);
