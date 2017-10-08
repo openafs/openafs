@@ -539,10 +539,6 @@ EXT afs_kmutex_t rx_connHashTable_lock;
 #define PEER_HASH(host, port)  ((host ^ port) % rx_hashTableSize)
 
 /* Forward definitions of internal procedures */
-#define	rxi_ChallengeOff(conn)	\
-	rxevent_Cancel(&(conn)->challengeEvent)
-#define rxi_NatKeepAliveOff(conn) \
-	rxevent_Cancel(&(conn)->natKeepAliveEvent)
 
 #define rxi_AllocSecurityObject() rxi_Alloc(sizeof(struct rx_securityClass))
 #define	rxi_FreeSecurityObject(obj) rxi_Free(obj, sizeof(struct rx_securityClass))

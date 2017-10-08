@@ -10,7 +10,7 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.lwp
 include @TOP_OBJDIR@/src/config/Makefile.lwptool
 
-MODULE_CFLAGS=$(RXDEBUG)
+MODULE_CFLAGS=$(RXDEBUG) -DRX_REFCOUNT_CHECK
 
 LT_objs = xdr.lo xdr_array.lo xdr_rx.lo xdr_mem.lo xdr_len.lo xdr_afsuuid.lo \
 	  xdr_int32.lo xdr_int64.lo xdr_update.lo xdr_refernce.lo \
