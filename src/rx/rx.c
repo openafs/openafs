@@ -690,10 +690,8 @@ rxi_rto_startTimer(struct rx_call *call, int lastPacket, int istack)
 static_inline void
 rxi_rto_cancel(struct rx_call *call)
 {
-    if (call->resendEvent != NULL) {
-	rxevent_Cancel(&call->resendEvent);
+    if (rxevent_Cancel(&call->resendEvent))
 	CALL_RELE(call, RX_CALL_REFCOUNT_RESEND);
-    }
 }
 
 /*!
@@ -781,15 +779,15 @@ rxi_PostDelayedAckEvent(struct rx_call *call, struct clock *offset)
     when = now;
     clock_Add(&when, offset);
 
-    if (call->delayedAckEvent && clock_Gt(&call->delayedAckTime, &when)) {
-	/* The event we're cancelling already has a reference, so we don't
-	 * need a new one */
-	rxevent_Cancel(&call->delayedAckEvent);
+    if (clock_Gt(&call->delayedAckTime, &when) &&
+	rxevent_Cancel(&call->delayedAckEvent)) {
+	/* We successfully cancelled an event too far in the future to install
+	 * our new one; we can reuse the reference on the call. */
 	call->delayedAckEvent = rxevent_Post(&when, &now, rxi_SendDelayedAck,
 					     call, NULL, 0);
 
 	call->delayedAckTime = when;
-    } else if (!call->delayedAckEvent) {
+    } else if (call->delayedAckEvent == NULL) {
 	CALL_HOLD(call, RX_CALL_REFCOUNT_DELAY);
 	call->delayedAckEvent = rxevent_Post(&when, &now,
 					     rxi_SendDelayedAck,
@@ -801,10 +799,9 @@ rxi_PostDelayedAckEvent(struct rx_call *call, struct clock *offset)
 void
 rxi_CancelDelayedAckEvent(struct rx_call *call)
 {
-   if (call->delayedAckEvent) {
-	rxevent_Cancel(&call->delayedAckEvent);
+    /* Only drop the ref if we cancelled it before it could run. */
+    if (rxevent_Cancel(&call->delayedAckEvent))
 	CALL_RELE(call, RX_CALL_REFCOUNT_DELAY);
-   }
 }
 
 /* called with unincremented nRequestsRunning to see if it is OK to start
@@ -1212,7 +1209,6 @@ rxi_DestroyConnectionNoLock(struct rx_connection *conn)
 {
     struct rx_connection **conn_ptr;
     int havecalls = 0;
-    struct rx_packet *packet;
     int i;
     SPLVAR;
 
@@ -1224,6 +1220,9 @@ rxi_DestroyConnectionNoLock(struct rx_connection *conn)
     if (conn->refCount > 0)
 	conn->refCount--;
     else {
+#ifdef RX_REFCOUNT_CHECK
+	osi_Assert(conn->refCount == 0);
+#endif
         if (rx_stats_active) {
             MUTEX_ENTER(&rx_stats_mutex);
             rxi_lowConnRefCount++;
@@ -1299,21 +1298,6 @@ rxi_DestroyConnectionNoLock(struct rx_connection *conn)
 	return;
     }
 
-    if (conn->natKeepAliveEvent) {
-	rxi_NatKeepAliveOff(conn);
-    }
-
-    if (conn->delayedAbortEvent) {
-	rxevent_Cancel(&conn->delayedAbortEvent);
-	packet = rxi_AllocPacket(RX_PACKET_CLASS_SPECIAL);
-	if (packet) {
-	    MUTEX_ENTER(&conn->conn_data_lock);
-	    rxi_SendConnectionAbort(conn, packet, 0, 1);
-	    MUTEX_EXIT(&conn->conn_data_lock);
-	    rxi_FreePacket(packet);
-	}
-    }
-
     /* Remove from connection hash table before proceeding */
     conn_ptr =
 	&rx_connHashTable[CONN_HASH
@@ -1331,10 +1315,13 @@ rxi_DestroyConnectionNoLock(struct rx_connection *conn)
 	rxLastConn = 0;
 
     /* Make sure the connection is completely reset before deleting it. */
-    /* get rid of pending events that could zap us later */
-    rxevent_Cancel(&conn->challengeEvent);
-    rxevent_Cancel(&conn->checkReachEvent);
-    rxevent_Cancel(&conn->natKeepAliveEvent);
+    /*
+     * Pending events hold a refcount, so we can't get here if they are
+     * non-NULL. */
+    osi_Assert(conn->challengeEvent == NULL);
+    osi_Assert(conn->delayedAbortEvent == NULL);
+    osi_Assert(conn->natKeepAliveEvent == NULL);
+    osi_Assert(conn->checkReachEvent == NULL);
 
     /* Add the connection to the list of destroyed connections that
      * need to be cleaned up. This is necessary to avoid deadlocks
@@ -3658,6 +3645,14 @@ rxi_ConnClearAttachWait(struct rx_connection *conn)
     }
 }
 
+/*
+ * Event handler function for connection-specific events for checking
+ * reachability.  Also called directly from main code with |event| == NULL
+ * in order to trigger the initial reachability check.
+ *
+ * When |event| == NULL, must be called with the connection data lock held,
+ * but returns with the lock unlocked.
+ */
 static void
 rxi_CheckReachEvent(struct rxevent *event, void *arg1, void *arg2, int dummy)
 {
@@ -3667,15 +3662,12 @@ rxi_CheckReachEvent(struct rxevent *event, void *arg1, void *arg2, int dummy)
     struct clock when, now;
     int i, waiting;
 
-    MUTEX_ENTER(&conn->conn_data_lock);
+    if (event != NULL)
+	MUTEX_ENTER(&conn->conn_data_lock);
 
-    if (event)
+    if (event != NULL && event == conn->checkReachEvent)
 	rxevent_Put(&conn->checkReachEvent);
-
     waiting = conn->flags & RX_CONN_ATTACHWAIT;
-    if (event) {
-	putConnection(conn);
-    }
     MUTEX_EXIT(&conn->conn_data_lock);
 
     if (waiting) {
@@ -3707,9 +3699,7 @@ rxi_CheckReachEvent(struct rxevent *event, void *arg1, void *arg2, int dummy)
 	    when.sec += RX_CHECKREACH_TIMEOUT;
 	    MUTEX_ENTER(&conn->conn_data_lock);
 	    if (!conn->checkReachEvent) {
-                MUTEX_ENTER(&rx_refcnt_mutex);
-		conn->refCount++;
-                MUTEX_EXIT(&rx_refcnt_mutex);
+                rx_GetConnection(conn);
 		conn->checkReachEvent = rxevent_Post(&when, &now,
 						     rxi_CheckReachEvent, conn,
 						     NULL, 0);
@@ -3717,6 +3707,9 @@ rxi_CheckReachEvent(struct rxevent *event, void *arg1, void *arg2, int dummy)
 	    MUTEX_EXIT(&conn->conn_data_lock);
 	}
     }
+    /* If fired as an event handler, drop our refcount on the connection. */
+    if (event != NULL)
+	putConnection(conn);
 }
 
 static int
@@ -3742,9 +3735,12 @@ rxi_CheckConnReach(struct rx_connection *conn, struct rx_call *call)
 	return 1;
     }
     conn->flags |= RX_CONN_ATTACHWAIT;
-    MUTEX_EXIT(&conn->conn_data_lock);
-    if (!conn->checkReachEvent)
+    if (conn->checkReachEvent == NULL) {
+	/* rxi_CheckReachEvent(NULL, ...) will drop the lock. */
 	rxi_CheckReachEvent(NULL, conn, call, 0);
+    } else {
+	MUTEX_EXIT(&conn->conn_data_lock);
+    }
 
     return 1;
 }
@@ -4686,6 +4682,7 @@ rxi_SendConnectionAbortLater(struct rx_connection *conn, int msec)
 	clock_GetTime(&now);
 	when = now;
 	clock_Addmsec(&when, msec);
+	rx_GetConnection(conn);
 	conn->delayedAbortEvent =
 	    rxevent_Post(&when, &now, rxi_SendDelayedConnAbort, conn, NULL, 0);
     }
@@ -4903,6 +4900,11 @@ rxi_AckAll(struct rx_call *call)
     call->flags |= RX_CALL_ACKALL_SENT;
 }
 
+/*
+ * Event handler for per-call delayed acks.
+ * Also called synchronously, with |event| == NULL, to send a "delayed" ack
+ * immediately.
+ */
 static void
 rxi_SendDelayedAck(struct rxevent *event, void *arg1, void *unused1,
 		   int unused2)
@@ -4913,7 +4915,6 @@ rxi_SendDelayedAck(struct rxevent *event, void *arg1, void *unused1,
 	MUTEX_ENTER(&call->lock);
 	if (event == call->delayedAckEvent)
 	    rxevent_Put(&call->delayedAckEvent);
-	CALL_RELE(call, RX_CALL_REFCOUNT_DELAY);
     }
     (void)rxi_SendAck(call, 0, 0, RX_ACK_DELAY, 0);
     if (event)
@@ -4923,6 +4924,9 @@ rxi_SendDelayedAck(struct rxevent *event, void *arg1, void *unused1,
 	rxevent_Put(&call->delayedAckEvent);
     (void)rxi_SendAck(call, 0, 0, RX_ACK_DELAY, 0);
 #endif /* RX_ENABLE_LOCKS */
+    /* Release the call reference for the event that fired. */
+    if (event)
+	CALL_RELE(call, RX_CALL_REFCOUNT_DELAY);
 }
 
 #ifdef RX_ENABLE_LOCKS
@@ -5090,10 +5094,8 @@ rxi_SendCallAbort(struct rx_call *call, struct rx_packet *packet,
 static void
 rxi_CancelDelayedAbortEvent(struct rx_call *call)
 {
-    if (call->delayedAbortEvent) {
-	rxevent_Cancel(&call->delayedAbortEvent);
+    if (rxevent_Cancel(&call->delayedAbortEvent))
 	CALL_RELE(call, RX_CALL_REFCOUNT_ABORT);
-    }
 }
 
 /* Send an abort packet for the specified connection.  Packet is an
@@ -5121,7 +5123,8 @@ rxi_SendConnectionAbort(struct rx_connection *conn,
     if (force || rxi_connAbortThreshhold == 0
 	|| conn->abortCount < rxi_connAbortThreshhold) {
 
-	rxevent_Cancel(&conn->delayedAbortEvent);
+	if (rxevent_Cancel(&conn->delayedAbortEvent))
+	    putConnection(conn);
 	error = htonl(conn->error);
 	conn->abortCount++;
 	MUTEX_EXIT(&conn->conn_data_lock);
@@ -5151,10 +5154,11 @@ rxi_ConnectionError(struct rx_connection *conn,
 	dpf(("rxi_ConnectionError conn %"AFS_PTR_FMT" error %d\n", conn, error));
 
 	MUTEX_ENTER(&conn->conn_data_lock);
-	rxevent_Cancel(&conn->challengeEvent);
-	rxevent_Cancel(&conn->natKeepAliveEvent);
-	if (conn->checkReachEvent) {
-	    rxevent_Cancel(&conn->checkReachEvent);
+	if (rxevent_Cancel(&conn->challengeEvent))
+	    putConnection(conn);
+	if (rxevent_Cancel(&conn->natKeepAliveEvent))
+	    putConnection(conn);
+	if (rxevent_Cancel(&conn->checkReachEvent)) {
 	    conn->flags &= ~(RX_CONN_ATTACHWAIT|RX_CONN_NAT_PING);
 	    putConnection(conn);
 	}
@@ -5930,10 +5934,8 @@ rxi_Resend(struct rxevent *event, void *arg0, void *arg1, int istack)
     /* Make sure that the event pointer is removed from the call
      * structure, since there is no longer a per-call retransmission
      * event pending. */
-    if (event == call->resendEvent) {
-	CALL_RELE(call, RX_CALL_REFCOUNT_RESEND);
+    if (event == call->resendEvent)
 	rxevent_Put(&call->resendEvent);
-    }
 
     rxi_CheckPeerDead(call);
 
@@ -5986,6 +5988,7 @@ rxi_Resend(struct rxevent *event, void *arg0, void *arg1, int istack)
     rxi_Start(call, istack);
 
 out:
+    CALL_RELE(call, RX_CALL_REFCOUNT_RESEND);
     MUTEX_EXIT(&call->lock);
 }
 
@@ -6347,6 +6350,7 @@ rxi_NatKeepAliveEvent(struct rxevent *event, void *arg1,
     struct sockaddr_in taddr;
     char *tp;
     char a[1] = { 0 };
+    int resched = 0;
     struct iovec tmpiov[2];
     osi_socket socket =
         (conn->type ==
@@ -6379,20 +6383,28 @@ rxi_NatKeepAliveEvent(struct rxevent *event, void *arg1,
     osi_NetSend(socket, &taddr, tmpiov, 1, 1 + sizeof(struct rx_header), 1);
 
     MUTEX_ENTER(&conn->conn_data_lock);
+    /* We ran, so the handle is no longer needed to try to cancel ourselves. */
+    if (event == conn->natKeepAliveEvent)
+	rxevent_Put(&conn->natKeepAliveEvent);
     MUTEX_ENTER(&rx_refcnt_mutex);
     /* Only reschedule ourselves if the connection would not be destroyed */
-    if (conn->refCount <= 1) {
-	rxevent_Put(&conn->natKeepAliveEvent);
-        MUTEX_EXIT(&rx_refcnt_mutex);
-	MUTEX_EXIT(&conn->conn_data_lock);
-	rx_DestroyConnection(conn); /* drop the reference for this */
-    } else {
-	conn->refCount--; /* drop the reference for this */
-        MUTEX_EXIT(&rx_refcnt_mutex);
-	rxevent_Put(&conn->natKeepAliveEvent);
-	rxi_ScheduleNatKeepAliveEvent(conn);
-	MUTEX_EXIT(&conn->conn_data_lock);
+    if (conn->refCount > 1)
+	resched = 1;
+    if (conn->refCount <= 0) {
+#ifdef RX_REFCOUNT_CHECK
+	osi_Assert(conn->refCount == 0);
+#endif
+	if (rx_stats_active) {
+	    MUTEX_ENTER(&rx_stats_mutex);
+	    rxi_lowConnRefCount++;
+	    MUTEX_EXIT(&rx_stats_mutex);
+	}
     }
+    MUTEX_EXIT(&rx_refcnt_mutex);
+    if (resched)
+	rxi_ScheduleNatKeepAliveEvent(conn);
+    MUTEX_EXIT(&conn->conn_data_lock);
+    putConnection(conn);
 }
 
 static void
@@ -6403,9 +6415,7 @@ rxi_ScheduleNatKeepAliveEvent(struct rx_connection *conn)
 	clock_GetTime(&now);
 	when = now;
 	when.sec += conn->secondsUntilNatPing;
-        MUTEX_ENTER(&rx_refcnt_mutex);
-	conn->refCount++; /* hold a reference for this */
-        MUTEX_EXIT(&rx_refcnt_mutex);
+        rx_GetConnection(conn);
 	conn->natKeepAliveEvent =
 	    rxevent_Post(&when, &now, rxi_NatKeepAliveEvent, conn, NULL, 0);
     }
@@ -6439,7 +6449,6 @@ rxi_KeepAliveEvent(struct rxevent *event, void *arg1, void *dummy,
     struct rx_connection *conn;
     afs_uint32 now;
 
-    CALL_RELE(call, RX_CALL_REFCOUNT_ALIVE);
     MUTEX_ENTER(&call->lock);
 
     if (event == call->keepAliveEvent)
@@ -6455,6 +6464,7 @@ rxi_KeepAliveEvent(struct rxevent *event, void *arg1, void *dummy,
     /* Don't try to keep alive dallying calls */
     if (call->state == RX_STATE_DALLY) {
 	MUTEX_EXIT(&call->lock);
+	CALL_RELE(call, RX_CALL_REFCOUNT_ALIVE);
 	return;
     }
 
@@ -6467,6 +6477,7 @@ rxi_KeepAliveEvent(struct rxevent *event, void *arg1, void *dummy,
     }
     rxi_ScheduleKeepAliveEvent(call);
     MUTEX_EXIT(&call->lock);
+    CALL_RELE(call, RX_CALL_REFCOUNT_ALIVE);
 }
 
 /* Does what's on the nameplate. */
@@ -6476,22 +6487,17 @@ rxi_GrowMTUEvent(struct rxevent *event, void *arg1, void *dummy, int dummy2)
     struct rx_call *call = arg1;
     struct rx_connection *conn;
 
-    CALL_RELE(call, RX_CALL_REFCOUNT_MTU);
     MUTEX_ENTER(&call->lock);
 
     if (event == call->growMTUEvent)
 	rxevent_Put(&call->growMTUEvent);
 
-    if (rxi_CheckCall(call, 0)) {
-	MUTEX_EXIT(&call->lock);
-	return;
-    }
+    if (rxi_CheckCall(call, 0))
+	goto out;
 
     /* Don't bother with dallying calls */
-    if (call->state == RX_STATE_DALLY) {
-	MUTEX_EXIT(&call->lock);
-	return;
-    }
+    if (call->state == RX_STATE_DALLY)
+	goto out;
 
     conn = call->conn;
 
@@ -6504,7 +6510,9 @@ rxi_GrowMTUEvent(struct rxevent *event, void *arg1, void *dummy, int dummy2)
 	conn->idleDeadTime)
 	(void)rxi_SendAck(call, NULL, 0, RX_ACK_MTU, 0);
     rxi_ScheduleGrowMTUEvent(call, 0);
+out:
     MUTEX_EXIT(&call->lock);
+    CALL_RELE(call, RX_CALL_REFCOUNT_MTU);
 }
 
 static void
@@ -6523,10 +6531,8 @@ rxi_ScheduleKeepAliveEvent(struct rx_call *call)
 
 static void
 rxi_CancelKeepAliveEvent(struct rx_call *call) {
-    if (call->keepAliveEvent) {
-	rxevent_Cancel(&call->keepAliveEvent);
+    if (rxevent_Cancel(&call->keepAliveEvent))
 	CALL_RELE(call, RX_CALL_REFCOUNT_ALIVE);
-    }
 }
 
 static void
@@ -6555,10 +6561,8 @@ rxi_ScheduleGrowMTUEvent(struct rx_call *call, int secs)
 static void
 rxi_CancelGrowMTUEvent(struct rx_call *call)
 {
-    if (call->growMTUEvent) {
-	rxevent_Cancel(&call->growMTUEvent);
+    if (rxevent_Cancel(&call->growMTUEvent))
 	CALL_RELE(call, RX_CALL_REFCOUNT_MTU);
-    }
 }
 
 /*
@@ -6608,7 +6612,8 @@ rxi_SendDelayedConnAbort(struct rxevent *event, void *arg1, void *unused,
     struct rx_packet *packet;
 
     MUTEX_ENTER(&conn->conn_data_lock);
-    rxevent_Put(&conn->delayedAbortEvent);
+    if (event == conn->delayedAbortEvent)
+	rxevent_Put(&conn->delayedAbortEvent);
     error = htonl(conn->error);
     conn->abortCount++;
     MUTEX_EXIT(&conn->conn_data_lock);
@@ -6620,6 +6625,7 @@ rxi_SendDelayedConnAbort(struct rxevent *event, void *arg1, void *unused,
 			    sizeof(error), 0);
 	rxi_FreePacket(packet);
     }
+    putConnection(conn);
 }
 
 /* This routine is called to send call abort messages
@@ -6634,7 +6640,8 @@ rxi_SendDelayedCallAbort(struct rxevent *event, void *arg1, void *dummy,
     struct rx_packet *packet;
 
     MUTEX_ENTER(&call->lock);
-    rxevent_Put(&call->delayedAbortEvent);
+    if (event == call->delayedAbortEvent)
+	rxevent_Put(&call->delayedAbortEvent);
     error = htonl(call->error);
     call->abortCount++;
     packet = rxi_AllocPacket(RX_PACKET_CLASS_SPECIAL);
@@ -6648,25 +6655,35 @@ rxi_SendDelayedCallAbort(struct rxevent *event, void *arg1, void *dummy,
     CALL_RELE(call, RX_CALL_REFCOUNT_ABORT);
 }
 
-/* This routine is called periodically (every RX_AUTH_REQUEST_TIMEOUT
+/*
+ * This routine is called periodically (every RX_AUTH_REQUEST_TIMEOUT
  * seconds) to ask the client to authenticate itself.  The routine
  * issues a challenge to the client, which is obtained from the
- * security object associated with the connection */
+ * security object associated with the connection
+ *
+ * This routine is both an event handler and a function called directly;
+ * when called directly the passed |event| is NULL and the
+ * conn->conn->data>lock must must not be held.
+ */
 static void
 rxi_ChallengeEvent(struct rxevent *event,
 		   void *arg0, void *arg1, int tries)
 {
     struct rx_connection *conn = arg0;
 
-    if (event)
+    MUTEX_ENTER(&conn->conn_data_lock);
+    if (event != NULL && event == conn->challengeEvent)
 	rxevent_Put(&conn->challengeEvent);
+    MUTEX_EXIT(&conn->conn_data_lock);
 
     /* If there are no active calls it is not worth re-issuing the
      * challenge.  If the client issues another call on this connection
      * the challenge can be requested at that time.
      */
-    if (!rxi_HasActiveCalls(conn))
+    if (!rxi_HasActiveCalls(conn)) {
+	putConnection(conn);
         return;
+    }
 
     if (RXS_CheckAuthentication(conn->securityObject, conn) != 0) {
 	struct rx_packet *packet;
@@ -6692,6 +6709,7 @@ rxi_ChallengeEvent(struct rxevent *event,
 		}
 	    }
 	    MUTEX_EXIT(&conn->conn_call_lock);
+	    putConnection(conn);
 	    return;
 	}
 
@@ -6707,22 +6725,33 @@ rxi_ChallengeEvent(struct rxevent *event,
 	clock_GetTime(&now);
 	when = now;
 	when.sec += RX_CHALLENGE_TIMEOUT;
-	conn->challengeEvent =
-	    rxevent_Post(&when, &now, rxi_ChallengeEvent, conn, 0,
-			 (tries - 1));
+	MUTEX_ENTER(&conn->conn_data_lock);
+	/* Only reschedule ourselves if not already pending. */
+	if (conn->challengeEvent == NULL) {
+	    rx_GetConnection(conn);
+	    conn->challengeEvent =
+		rxevent_Post(&when, &now, rxi_ChallengeEvent, conn, 0,
+			     (tries - 1));
+	}
+	MUTEX_EXIT(&conn->conn_data_lock);
     }
+    putConnection(conn);
 }
 
 /* Call this routine to start requesting the client to authenticate
  * itself.  This will continue until authentication is established,
  * the call times out, or an invalid response is returned.  The
  * security object associated with the connection is asked to create
- * the challenge at this time.  N.B.  rxi_ChallengeOff is a macro,
- * defined earlier. */
+ * the challenge at this time. */
 static void
 rxi_ChallengeOn(struct rx_connection *conn)
 {
-    if (!conn->challengeEvent) {
+    int start = 0;
+    MUTEX_ENTER(&conn->conn_data_lock);
+    if (!conn->challengeEvent)
+	start = 1;
+    MUTEX_EXIT(&conn->conn_data_lock);
+    if (start) {
 	RXS_CreateChallenge(conn->securityObject, conn);
 	rxi_ChallengeEvent(NULL, conn, 0, RX_CHALLENGE_MAXTRIES);
     };
