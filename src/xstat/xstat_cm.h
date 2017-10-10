@@ -145,4 +145,17 @@ extern int xstat_cm_Cleanup(int);
      *          with the xstat_cm connection array.
      */
 
+extern int xstat_cm_Wait(int sleep_secs);
+    /*
+     * Summary:
+     *    Wait for the collection to complete.
+     *
+     * Args:
+     *    int sleep_secs : time to wait in seconds when running
+     *                     in continuous mode. 0 means wait forever.
+     *
+     * Returns:
+     *    0 on success
+     */
+
 #endif /* _xstat_cm_h_ */

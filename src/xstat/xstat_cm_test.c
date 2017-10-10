@@ -747,10 +747,7 @@ RunTheTest(struct cmd_syndesc *a_s, void *arock)
     struct cmd_item *curr_item;	/*Current CM cmd line record */
     struct sockaddr_in *CMSktArray;	/*Cache Manager socket array */
     struct hostent *he;		/*Host entry */
-    struct timeval tv;		/*Time structure */
-    int sleep_secs;		/*Number of seconds to sleep */
     int initFlags;		/*Flags passed to the init fcn */
-    int waitCode;		/*Result of LWP_WaitProcess() */
     int freq;			/*Frequency of polls */
     int period;			/*Time in minutes of data collection */
 
@@ -875,47 +872,8 @@ RunTheTest(struct cmd_syndesc *a_s, void *arock)
 	exit(-1);
     }
 
-    if (one_shot) {
-	/*
-	 * One-shot operation; just wait for the collection to be done.
-	 */
-	if (debugging_on)
-	    printf("[%s] Calling LWP_WaitProcess() on event %" AFS_PTR_FMT
-		   "\n", rn, &terminationEvent);
-	waitCode = LWP_WaitProcess(&terminationEvent);
-	if (debugging_on)
-	    printf("[%s] Returned from LWP_WaitProcess()\n", rn);
-	if (waitCode) {
-	    if (debugging_on)
-		fprintf(stderr,
-			"[%s] Error %d encountered by LWP_WaitProcess()\n",
-			rn, waitCode);
-	}
-    } else {
-	/*
-	 * Continuous operation.
-	 */
-	sleep_secs = 60 * period;	/*length of data collection */
-	printf
-	    ("xstat_cm service started, main thread sleeping for %d secs.\n",
-	     sleep_secs);
-
-	/*
-	 * Let's just fall asleep for a while, then we'll clean up.
-	 */
-	tv.tv_sec = sleep_secs;
-	tv.tv_usec = 0;
-	code = IOMGR_Select(0,	/*Num fds */
-			    0,	/*Descriptors ready for reading */
-			    0,	/*Descriptors ready for writing */
-			    0,	/*Descriptors with exceptional conditions */
-			    &tv);	/*Timeout structure */
-	if (code) {
-	    fprintf(stderr,
-		    "[%s] IOMGR_Select() returned non-zero value: %d\n", rn,
-		    code);
-	}
-    }
+    /* Wait for the collection complete. */
+    xstat_cm_Wait(60 * period);
 
     /*
      * We're all done.  Clean up, put the last nail in Rx, then

@@ -642,3 +642,76 @@ xstat_cm_ForceProbeNow(void)
      */
     return (0);
 }
+
+/*
+ * Wait for the collection to complete. Returns after one cycle if running in
+ * one-shot mode, otherwise wait for a given amount of time.
+ *
+ * Args:
+ *    int sleep_secs : time to wait in seconds when running
+ *                     in continuous mode. 0 means wait forever.
+ *
+ * Returns:
+ *    0 on success
+ */
+int
+xstat_cm_Wait(int sleep_secs)
+{
+    static char rn[] = "xstat_cm_Wait";	/*Routine name */
+    int code;
+    struct timeval tv;		/*Time structure */
+
+    if (xstat_cm_oneShot) {
+	/*
+	 * One-shot operation; just wait for the collection to be done.
+	 */
+	if (xstat_cm_debug)
+	    printf("[%s] Calling LWP_WaitProcess() on event %" AFS_PTR_FMT
+		   "\n", rn, &terminationEvent);
+	code = LWP_WaitProcess(&terminationEvent);
+	if (xstat_cm_debug)
+	    printf("[%s] Returned from LWP_WaitProcess()\n", rn);
+	if (code) {
+	    fprintf(stderr,
+		    "[%s] Error %d encountered by LWP_WaitProcess()\n",
+		    rn, code);
+	}
+    } else if (sleep_secs == 0) {
+	/* Sleep forever. */
+	tv.tv_sec = 24 * 60;
+	tv.tv_usec = 0;
+	if (xstat_cm_debug)
+	    fprintf(stderr, "[ %s ] going to sleep ...\n", rn);
+	while (1) {
+	    code = IOMGR_Select(0,	/*Num fds */
+				0,	/*Descriptors ready for reading */
+				0,	/*Descriptors ready for writing */
+				0,	/*Descriptors with exceptional conditions */
+				&tv);	/*Timeout structure */
+	    if (code) {
+		fprintf(stderr,
+			"[ %s ] IOMGR_Select() returned non-zero value %d\n",
+			rn, code);
+		break;
+	    }
+	}
+    } else {
+	/* Let's just fall asleep while.  */
+	if (xstat_cm_debug)
+	    printf
+		("xstat_cm service started, main thread sleeping for %d secs.\n",
+		 sleep_secs);
+	tv.tv_sec = sleep_secs;
+	tv.tv_usec = 0;
+	code = IOMGR_Select(0,	/*Num fds */
+			    0,	/*Descriptors ready for reading */
+			    0,	/*Descriptors ready for writing */
+			    0,	/*Descriptors with exceptional conditions */
+			    &tv);	/*Timeout structure */
+	if (code)
+	    fprintf(stderr,
+		    "[%s] IOMGR_Select() returned non-zero value: %d\n", rn,
+		    code);
+    }
+    return code;
+}

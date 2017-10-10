@@ -145,6 +145,19 @@ extern int xstat_fs_Cleanup(int);
      *          with the xstat_fs connection array.
      */
 
+extern int xstat_fs_Wait(int sleep_secs);
+    /*
+     * Summary:
+     *    Wait for the collection to complete.
+     *
+     * Args:
+     *    int sleep_secs : time to wait in seconds when running
+     *                     in continuous mode. 0 means wait forever.
+     *
+     * Returns:
+     *    0 on success
+     */
+
 /*
  * Decode the full performance statistics collection data.
  */

@@ -3723,7 +3723,6 @@ afsmon_execute(void)
     int FSinitFlags = 0;	/* flags for xstat_fs_Init */
     int CMinitFlags = 0;	/* flags for xstat_cm_Init */
     int code;			/* function return code */
-    struct timeval tv;		/* time structure */
     int i;
     short index;
 
@@ -3897,24 +3896,8 @@ afsmon_execute(void)
 
     /* This part of the code is reached only if the input server is not started
      * for debugging purposes */
-
-    /* sleep forever */
-    tv.tv_sec = 24 * 60;
-    tv.tv_usec = 0;
-    fprintf(stderr, "[ %s ] going to sleep ...\n", rn);
-    while (1) {
-	code = IOMGR_Select(0,	/*Num fds */
-			    0,	/*Descriptors ready for reading */
-			    0,	/*Descriptors ready for writing */
-			    0,	/*Descriptors with exceptional conditions */
-			    &tv);	/*Timeout structure */
-	if (code) {
-	    fprintf(stderr,
-		    "[ %s ] IOMGR_Select() returned non-zero value %d\n", rn,
-		    code);
-	    afsmon_Exit(145);
-	}
-    }				/* while sleep */
+    xstat_cm_Wait(0); /* sleep forever */
+    return 0;
 }
 
 
