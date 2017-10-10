@@ -56,7 +56,6 @@ int afsmon_debug = 0;		/* debug info to file ? */
 FILE *debugFD;			/* debugging file descriptor */
 static int afsmon_output = 0;	/* output to file ? */
 static int afsmon_detOutput = 0;	/* detailed output ? */
-static int afsmon_onceOnly = 0;	/* probe once only ? (not implemented) */
 int afsmon_probefreq;		/* probe frequency */
 static int wpkg_to_use;		/* graphics package to use */
 static char output_filename[80];	/* output filename */
@@ -3794,8 +3793,6 @@ afsmon_execute(void)
 	}
 
 	FSinitFlags = 0;
-	if (afsmon_onceOnly)	/* option not provided at this time */
-	    FSinitFlags |= XSTAT_FS_INITFLAG_ONE_SHOT;
 
 	if (afsmon_debug) {
 	    fprintf(debugFD, "[ %s ] Calling xstat_fs_Init \n", rn);
@@ -3867,8 +3864,6 @@ afsmon_execute(void)
 	collIDs[num_cm_collections++] = AFSCB_XSTATSCOLL_FULL_PERF_INFO;
 
 	CMinitFlags = 0;
-	if (afsmon_onceOnly)	/* once only ? */
-	    CMinitFlags |= XSTAT_CM_INITFLAG_ONE_SHOT;
 
 	if (afsmon_debug) {
 	    fprintf(debugFD, "[ %s ] Calling xstat_cm_Init \n", rn);
@@ -3892,19 +3887,6 @@ afsmon_execute(void)
 
 
     /* end of process cache manager entries */
-    /* if only one probe was required setup a waiting process for the
-     * termination signal */
-    if (afsmon_onceOnly) {
-	code = LWP_WaitProcess(&terminationEvent);
-	if (code) {
-	    if (afsmon_debug) {
-		fprintf(debugFD, "LWP_WaitProcess() returned error %d\n",
-			code);
-		fflush(debugFD);
-	    }
-	    afsmon_Exit(135);
-	}
-    }
 
     /* start the gtx input server */
     code = (intptr_t)gtx_InputServer(afsmon_win);
