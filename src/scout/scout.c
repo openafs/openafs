@@ -1635,7 +1635,6 @@ execute_scout(int a_numservers, struct cmd_item *a_srvname, int a_pkg)
     struct mini_line *curr_line;	/*Ptr to current line */
     int i;			/*Generic loop variable */
     int mini_line_bytes;	/*Num bytes in mini_lines */
-    struct timeval tv;		/*Time structure */
     int linenum;		/*Current mini-line number */
 #if 0
     PROCESS pid;		/*Main LWP process ID */
@@ -1966,18 +1965,7 @@ execute_scout(int a_numservers, struct cmd_item *a_srvname, int a_pkg)
 	scout_CleanExit(code);
     }
 
-    /*
-     * We fall into a loop, sleeping forever.
-     */
-    while (1) {
-	tv.tv_sec = 60 * 60;	/*Sleep for an hour at a time */
-	tv.tv_usec = 0;
-	select(0,	/*Num fds */
-	       0,	/*Descriptors ready for reading */
-	       0,	/*Descriptors ready for writing */
-	       0,	/*Descriptors with exceptional conditions */
-	       &tv);	/*Timeout structure */
-    }				/*Sleep forever */
+    fsprobe_Wait(0); /* sleep forever */
 
 #if 0
     /*
@@ -1988,6 +1976,7 @@ execute_scout(int a_numservers, struct cmd_item *a_srvname, int a_pkg)
     return (0);
 #endif /* 0 */
 
+    return 0;
 }				/*execute_scout */
 
 /*------------------------------------------------------------------------

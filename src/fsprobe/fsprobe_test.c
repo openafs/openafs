@@ -148,7 +148,6 @@ main(int argc, char **argv)
     afs_int32 code;	/*Return code */
     struct sockaddr_in FSSktArray[3];	/*socket array */
     struct hostent *he;		/*Host entry */
-    struct timeval tv;		/*Time structure */
     int sleep_secs;		/*Number of seconds to sleep */
 
     printf("\n\nTest of the fsprobe facility.\n\n");
@@ -211,20 +210,7 @@ main(int argc, char **argv)
 	("Fsprobe service started, main thread sleeping for %d seconds...\n",
 	 sleep_secs);
 
-    /*
-     * Let's just fall asleep for a while, then we'll clean up.
-     */
-    tv.tv_sec = sleep_secs;
-    tv.tv_usec = 0;
-    code = IOMGR_Select(0,	/*Num fds */
-			0,	/*Descriptors ready for reading */
-			0,	/*Descriptors ready for writing */
-			0,	/*Descriptors with exceptional conditions */
-			&tv);	/*Timeout structure */
-    if (code) {
-	fprintf(stderr, "[%s] IOMGR_Select() returned non-zero value: %d\n",
-		rn, code);
-    }
+    fsprobe_Wait(sleep_secs);
 
     /*
      * We're all done.  Clean up, put the last nail in Rx, then

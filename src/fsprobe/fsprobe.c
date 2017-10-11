@@ -831,3 +831,44 @@ fsprobe_ForceProbeNow(void)
     return (0);
 
 }				/*fsprobe_ForceProbeNow */
+
+/*------------------------------------------------------------------------
+ * [exported] fsprobe_Wait
+ *
+ * Description:
+ *	Wait for the collection to complete.
+ *
+ * Arguments:
+ *    int sleep_secs : time to wait in seconds. 0 means sleep forever.
+ *
+ * Returns:
+ *	0 on success,
+ *	Error value otherwise.
+ *
+ * Environment:
+ *	The module must have been initialized.
+ *
+ * Side Effects:
+ *	As advertised.
+ *------------------------------------------------------------------------*/
+int
+fsprobe_Wait(int sleep_secs)
+{
+    int code;
+    struct timeval tv;
+
+    if (sleep_secs == 0) {
+	while (1) {
+	    tv.tv_sec = 30;
+	    tv.tv_usec = 0;
+	    code = IOMGR_Select(0, 0, 0, 0, &tv);
+	    if (code != 0)
+		break;
+	}
+    } else {
+	tv.tv_sec = sleep_secs;
+	tv.tv_usec = 0;
+	code = IOMGR_Select(0, 0, 0, 0, &tv);
+    }
+    return code;
+}

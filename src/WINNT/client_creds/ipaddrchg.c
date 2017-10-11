@@ -146,13 +146,7 @@ pingFS(void *ping_params, struct sockaddr_in *addrp, char *namep)
         return 0;
     }
 
-    for (;;)
-    {
-        tv.tv_sec = pp->host.wait;
-        tv.tv_usec = 0;
-        if (IOMGR_Select(0, 0, 0, 0, &tv))
-            break;
-    }
+    fsprobe_Wait(0);
     probeComplete();
     return(0);
 }

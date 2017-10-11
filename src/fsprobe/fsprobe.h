@@ -152,4 +152,6 @@ extern int fsprobe_Cleanup(int);
      *          with the fsprobe connection array.
      */
 
+extern int fsprobe_Wait(int);
+
 #endif /* __fsprobe_h */
