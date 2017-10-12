@@ -53,6 +53,10 @@ afs_InitDualFSCacheOps(struct vnode *vp)
     else if (strncmp("ufs", vp->v_mount->mnt_vfc->vfc_name, 3) == 0)
 #endif
 	afs_CacheFSType = AFS_APPL_UFS_CACHE;
+#ifdef AFS_DARWIN80_ENV
+    else if (strncmp("apfs", buffer, 4) == 0)
+	afs_CacheFSType = AFS_APPL_APFS_CACHE;
+#endif
     else
 	osi_Panic("Unknown cache vnode type\n");
 #ifdef AFS_DARWIN80_ENV
