@@ -214,6 +214,7 @@ extern struct lock__bsd__ afs_global_lock;
 
 #define AFS_APPL_UFS_CACHE 1
 #define AFS_APPL_HFS_CACHE 2
+#define AFS_APPL_APFS_CACHE 3
 
 extern ino_t VnodeToIno(vnode_t avp);
 extern dev_t VnodeToDev(vnode_t vp);
