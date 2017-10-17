@@ -18,13 +18,12 @@
 #include <afs/param.h>
 
 #include <roken.h>
+#include <afs/opr.h>
 
 #include "xstat_cm.h"		/*Interface for this module */
-#include <lwp.h>		/*Lightweight process package */
+#include <pthread.h>
 
 #include <afs/afsutil.h>
-
-#define LWP_STACK_SIZE	(16 * 1024)
 
 /*
  * Exported variables.
@@ -46,9 +45,11 @@ static int xstat_cm_initflag = 0;	/*Was init routine called? */
 static int xstat_cm_debug = 0;	/*Debugging output enabled? */
 static int xstat_cm_oneShot = 0;	/*One-shot operation? */
 static int (*xstat_cm_Handler) (void);	/*Probe handler routine */
-static PROCESS probeLWP_ID;	/*Probe LWP process ID */
+static pthread_t xstat_cm_thread;	/*Probe thread */
 static int xstat_cm_numCollections;	/*Number of desired collections */
 static afs_int32 *xstat_cm_collIDP;	/*Ptr to collection IDs desired */
+static opr_mutex_t xstat_cm_force_lock;	/*Lock to wakeup probe */
+static opr_cv_t xstat_cm_force_cv;	/*Condvar to wakeup probe */
 
 
 /*------------------------------------------------------------------------
@@ -173,7 +174,7 @@ xstat_cm_Cleanup(int a_releaseMem)
  * [private] xstat_cm_LWP
  *
  * Description:
- *	This LWP iterates over the server connections and gathers up
+ *	This thread iterates over the server connections and gathers up
  *	the desired statistics from each one on a regular basis, for
  *	all known data collections.  The associated handler function
  *	is called each time a new data collection is received.
@@ -198,6 +199,7 @@ xstat_cm_LWP(void *unused)
     afs_int32 code;	/*Results of calls */
     int oneShotCode;		/*Result of one-shot signal */
     struct timeval tv;		/*Time structure */
+    struct timespec wait;	/*Time to wait */
     int conn_idx;		/*Connection index */
     struct xstat_cm_ConnectionInfo *curr_conn;	/*Current connection */
     afs_int32 srvVersionNumber;	/*Xstat version # */
@@ -310,36 +312,25 @@ xstat_cm_LWP(void *unused)
 
 	if (xstat_cm_oneShot) {
 	    /*
-	     * One-shot execution desired.  Signal our main procedure
-	     * that we've finished our collection round.
+	     * One-shot execution desired.
 	     */
-	    if (xstat_cm_debug)
-		printf("[%s] Signalling main process at %" AFS_PTR_FMT "\n", rn,
-		       &terminationEvent);
-	    oneShotCode = LWP_SignalProcess(&terminationEvent);
-	    if (oneShotCode)
-		fprintf(stderr, "[%s] Error %d from LWP_SignalProcess()", rn,
-			oneShotCode);
 	    break;		/*from the perpetual while loop */
 	} /*One-shot execution */
 	else {
 	    /*
 	     * Continuous execution desired.  Sleep for the required
-	     * number of seconds.
+	     * number of seconds or wakeup sooner if forced.
 	     */
-	    tv.tv_sec = xstat_cm_ProbeFreqInSecs;
-	    tv.tv_usec = 0;
 	    if (xstat_cm_debug)
 		printf("[%s] Falling asleep for %d seconds\n", rn,
 		       xstat_cm_ProbeFreqInSecs);
-	    code = IOMGR_Select(0,	/*Num fids */
-				0,	/*Descs ready for reading */
-				0,	/*Descs ready for writing */
-				0,	/*Descs w/exceptional conditions */
-				&tv);	/*Ptr to timeout structure */
-	    if (code)
-		fprintf(stderr, "[%s] IOMGR_Select returned code %d\n", rn,
-			code);
+	    gettimeofday(&tv, NULL);
+	    wait.tv_sec = tv.tv_sec + xstat_cm_ProbeFreqInSecs;
+	    wait.tv_nsec = tv.tv_usec * 1000;
+	    opr_mutex_enter(&xstat_cm_force_lock);
+	    code = opr_cv_timedwait(&xstat_cm_force_cv, &xstat_cm_force_lock, &wait);
+	    opr_Assert(code == 0 || code == ETIMEDOUT);
+	    opr_mutex_exit(&xstat_cm_force_lock);
 	}			/*Continuous execution */
     }				/*Service loop */
     return NULL;
@@ -351,7 +342,7 @@ xstat_cm_LWP(void *unused)
  *
  * Description:
  *	Initialize the xstat_cm module: set up Rx connections to the
- *	given set of Cache Managers, start up the probe LWP, and
+ *	given set of Cache Managers, start up the probe thread, and
  *	associate the routine to be called when a probe completes.
  *	Also, let it know which collections you're interested in.
  *
@@ -367,7 +358,7 @@ xstat_cm_LWP(void *unused)
  * Returns:
  *	0 on success,
  *	-2 for (at least one) connection error,
- *	LWP process creation code, if it failed,
+ *	thread process creation code, if it failed,
  *	-1 for other fatal errors.
  *
  * Environment:
@@ -403,6 +394,9 @@ xstat_cm_Init(int a_numServers, struct sockaddr_in *a_socketArray,
 	return (0);
     } else
 	xstat_cm_initflag = 1;
+
+    opr_mutex_init(&xstat_cm_force_lock);
+    opr_cv_init(&xstat_cm_force_cv);
 
     /*
      * Check the parameters for bogosities.
@@ -497,17 +491,17 @@ xstat_cm_Init(int a_numServers, struct sockaddr_in *a_socketArray,
 
     /*
      * Create a null Rx client security object, to be used by the
-     * probe LWP.
+     * probe thread.
      */
     secobj = rxnull_NewClientSecurityObject();
     if (secobj == (struct rx_securityClass *)0) {
 	fprintf(stderr,
-		"[%s] Can't create probe LWP client security object.\n", rn);
+		"[%s] Can't create probe thread client security object.\n", rn);
 	xstat_cm_Cleanup(1);	/*Delete already-malloc'ed areas */
 	return (-1);
     }
     if (xstat_cm_debug)
-	printf("[%s] Probe LWP client security object created\n", rn);
+	printf("[%s] Probe thread client security object created\n", rn);
 
     curr_conn = xstat_cm_ConnInfo;
     conn_err = 0;
@@ -569,25 +563,17 @@ xstat_cm_Init(int a_numServers, struct sockaddr_in *a_socketArray,
     }				/*for curr_srv */
 
     /*
-     * Start up the probe LWP.
+     * Start up the probe thread.
      */
     if (xstat_cm_debug)
-	printf("[%s] Creating the probe LWP\n", rn);
-    code = LWP_CreateProcess(xstat_cm_LWP,	/*Function to start up */
-			     LWP_STACK_SIZE,	/*Stack size in bytes */
-			     1,	/*Priority */
-			     (void *)0,	/*Parameters */
-			     "xstat_cm Worker",	/*Name to use */
-			     &probeLWP_ID);	/*Returned LWP process ID */
+	printf("[%s] Creating the probe thread\n", rn);
+    code = pthread_create(&xstat_cm_thread, NULL, xstat_cm_LWP, NULL);
     if (code) {
-	fprintf(stderr, "[%s] Can't create xstat_cm LWP!  Error is %d\n", rn,
+	fprintf(stderr, "[%s] Can't create xstat_cm thread!  Error is %d\n", rn,
 		code);
 	xstat_cm_Cleanup(1);	/*Delete already-malloc'ed areas */
 	return (code);
     }
-    if (xstat_cm_debug)
-	printf("[%s] Probe LWP process structure located at %" AFS_PTR_FMT "\n", rn,
-	       probeLWP_ID);
 
     /*
      * Return the final results.
@@ -603,7 +589,7 @@ xstat_cm_Init(int a_numServers, struct sockaddr_in *a_socketArray,
  * [exported] xstat_cm_ForceProbeNow
  *
  * Description:
- *	Wake up the probe LWP, forcing it to execute a probe immediately.
+ *	Wake up the probe thread, forcing it to execute a probe immediately.
  *
  * Arguments:
  *	None.
@@ -635,7 +621,9 @@ xstat_cm_ForceProbeNow(void)
     /*
      * Kick the sucker in the side.
      */
-    IOMGR_Cancel(probeLWP_ID);
+    opr_mutex_enter(&xstat_cm_force_lock);
+    opr_cv_signal(&xstat_cm_force_cv);
+    opr_mutex_exit(&xstat_cm_force_lock);
 
     /*
      * We did it, so report the happy news.
@@ -666,14 +654,13 @@ xstat_cm_Wait(int sleep_secs)
 	 * One-shot operation; just wait for the collection to be done.
 	 */
 	if (xstat_cm_debug)
-	    printf("[%s] Calling LWP_WaitProcess() on event %" AFS_PTR_FMT
-		   "\n", rn, &terminationEvent);
-	code = LWP_WaitProcess(&terminationEvent);
+	    printf("[%s] Calling pthread_join()\n", rn);
+	code = pthread_join(xstat_cm_thread, NULL);
 	if (xstat_cm_debug)
-	    printf("[%s] Returned from LWP_WaitProcess()\n", rn);
+	    printf("[%s] Returned from pthread_join()\n", rn);
 	if (code) {
 	    fprintf(stderr,
-		    "[%s] Error %d encountered by LWP_WaitProcess()\n",
+		    "[%s] Error %d encountered by pthread_join()\n",
 		    rn, code);
 	}
     } else if (sleep_secs == 0) {
@@ -681,17 +668,15 @@ xstat_cm_Wait(int sleep_secs)
 	tv.tv_sec = 24 * 60;
 	tv.tv_usec = 0;
 	if (xstat_cm_debug)
-	    fprintf(stderr, "[ %s ] going to sleep ...\n", rn);
+	    fprintf(stderr, "[%s] going to sleep ...\n", rn);
 	while (1) {
-	    code = IOMGR_Select(0,	/*Num fds */
-				0,	/*Descriptors ready for reading */
-				0,	/*Descriptors ready for writing */
-				0,	/*Descriptors with exceptional conditions */
-				&tv);	/*Timeout structure */
-	    if (code) {
-		fprintf(stderr,
-			"[ %s ] IOMGR_Select() returned non-zero value %d\n",
-			rn, code);
+	    code = select(0,	/*Num fds */
+			  0,	/*Descriptors ready for reading */
+			  0,	/*Descriptors ready for writing */
+			  0,	/*Descriptors with exceptional conditions */
+			  &tv);	/*Timeout structure */
+	    if (code < 0) {
+		fprintf(stderr, "[%s] select() error %d\n", rn, errno);
 		break;
 	    }
 	}
@@ -703,15 +688,13 @@ xstat_cm_Wait(int sleep_secs)
 		 sleep_secs);
 	tv.tv_sec = sleep_secs;
 	tv.tv_usec = 0;
-	code = IOMGR_Select(0,	/*Num fds */
-			    0,	/*Descriptors ready for reading */
-			    0,	/*Descriptors ready for writing */
-			    0,	/*Descriptors with exceptional conditions */
-			    &tv);	/*Timeout structure */
-	if (code)
-	    fprintf(stderr,
-		    "[%s] IOMGR_Select() returned non-zero value: %d\n", rn,
-		    code);
+	code = select(0,	/*Num fds */
+		      0,	/*Descriptors ready for reading */
+		      0,	/*Descriptors ready for writing */
+		      0,	/*Descriptors with exceptional conditions */
+		      &tv);	/*Timeout structure */
+	if (code < 0)
+	    fprintf(stderr, "[%s] select() error: %d\n", rn, errno);
     }
     return code;
 }

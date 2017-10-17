@@ -10,21 +10,19 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-include @TOP_OBJDIR@/src/config/Makefile.lwp
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+include @TOP_OBJDIR@/src/config/Makefile.libtool
 
-
-RPCINCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/rx/rx.h
-
-LIBS=${TOP_LIBDIR}/libafsint.a \
-	${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/librx.a \
-	${TOP_LIBDIR}/libafshcrypto_lwp.a \
-	${TOP_LIBDIR}/liblwp.a \
-	${TOP_LIBDIR}/libsys.a \
-	${TOP_LIBDIR}/libopr.a \
-	${TOP_LIBDIR}/util.a
+LT_deps = \
+	$(top_builddir)/src/rxkad/liboafs_rxkad.la \
+	$(top_builddir)/src/fsint/liboafs_fsint.la \
+	$(top_builddir)/src/cmd/liboafs_cmd.la \
+	$(top_builddir)/src/util/liboafs_util.la \
+	$(top_builddir)/src/opr/liboafs_opr.la
 
 all: \
+	liboafs_xstat_fs.la \
+	liboafs_xstat_cm.la \
 	${TOP_INCDIR}/afs/xstat_fs.h \
 	${TOP_INCDIR}/afs/xstat_cm.h \
 	${TOP_LIBDIR}/libxstat_fs.a \
@@ -47,40 +45,61 @@ ${TOP_LIBDIR}/libxstat_cm.a: libxstat_cm.a
 #
 # File Server data collection
 #
-FSINCLS=xstat_fs.h ${RPCINCLS}
+FSINCLS = \
+    xstat_fs.h \
+    ${TOP_INCDIR}/rx/rx.h
 
-libxstat_fs.a: xstat_fs.o xstat_fs_callback.o AFS_component_version_number.o
-	-$(RM) -f $@
-	$(AR) crv $@ xstat_fs.o xstat_fs_callback.o AFS_component_version_number.o
-	$(RANLIB) $@
+LT_objs_fs = \
+    xstat_fs.lo \
+    xstat_fs_callback.lo \
+    afscbint.ss.lo \
+    AFS_component_version_number.lo
 
-xstat_fs.o: xstat_fs.c ${FSINCLS}
+liboafs_xstat_fs.la: liboafs_xstat_fs.la.sym $(LT_objs_fs) $(LT_deps)
+	$(LT_LDLIB_shlib) $(LT_objs_fs) $(LT_deps) $(LT_libs)
 
-xstat_fs_callback.o: xstat_fs_callback.c ${FSINCLS}
+libxstat_fs.a: $(LT_objs_fs)
+	$(LT_LDLIB_static) $(LT_objs_fs)
 
-xstat_fs_test.o: xstat_fs_test.c ${FSINCLS} AFS_component_version_number.c
+# afscbint.ss.c is required for RXAFSCB_ExecuteRequest.
+afscbint.h: $(top_builddir)/src/fsint/afscbint.h
+	${INSTALL_DATA} $? $@
 
-xstat_fs_test: xstat_fs_test.o libxstat_fs.a ${LIBS}
-	$(AFS_LDRULE) xstat_fs_test.o libxstat_fs.a \
-		${LIBS} $(LIB_roken) ${XLIBS}
+afscbint.ss.c: $(top_builddir)/src/fsint/afscbint.ss.c
+	${INSTALL_DATA} $? $@
+
+xstat_fs.lo: xstat_fs.c ${FSINCLS}
+xstat_fs_callback.lo: xstat_fs_callback.c ${FSINCLS}
+xstat_fs_test.lo: xstat_fs_test.c ${FSINCLS} AFS_component_version_number.c
+afscbint.ss.lo: afscbint.ss.c afscbint.h
+
+xstat_fs_test: xstat_fs_test.o liboafs_xstat_fs.la $(LT_deps)
+	$(LT_LDRULE_static) xstat_fs_test.o liboafs_xstat_fs.la \
+		$(LT_deps) $(LIB_roken) ${XLIBS}
 
 #
 # Cache Manager data collection
 #
-CMINCLS=xstat_cm.h ${RPCINCLS}
+CMINCLS = \
+    xstat_cm.h \
+    ${TOP_INCDIR}/rx/rx.h
 
-libxstat_cm.a: xstat_cm.o AFS_component_version_number.o
-	-$(RM) -f libxstat_cm.a
-	$(AR) crv libxstat_cm.a xstat_cm.o AFS_component_version_number.o
-	$(RANLIB) libxstat_cm.a
+LT_objs_cm = \
+    xstat_cm.lo \
+    AFS_component_version_number.lo
 
-xstat_cm.o: xstat_cm.c ${CMINCLS}
+liboafs_xstat_cm.la: liboafs_xstat_cm.la.sym $(LT_objs_cm) $(LT_deps)
+	$(LT_LDLIB_shlib) $(LT_objs_cm) $(LT_deps) $(LT_libs)
 
+libxstat_cm.a: $(LT_objs_cm)
+	$(LT_LDLIB_static) $(LT_objs_cm)
+
+xstat_cm.lo: xstat_cm.c ${CMINCLS}
 xstat_cm_test.o: xstat_cm_test.c ${CMINCLS} AFS_component_version_number.c
 
-xstat_cm_test: xstat_cm_test.o libxstat_cm.a ${LIBS}
-	$(AFS_LDRULE) xstat_cm_test.o libxstat_cm.a \
-		${LIBS} $(LIB_roken) ${XLIBS}
+xstat_cm_test: xstat_cm_test.o liboafs_xstat_cm.la $(LT_deps)
+	$(LT_LDRULE_static) xstat_cm_test.o liboafs_xstat_cm.la \
+		$(LT_deps) $(LIB_roken) ${XLIBS}
 
 #
 # Installation targets
@@ -113,6 +132,8 @@ dest: xstat_fs.h xstat_cm.h libxstat_fs.a libxstat_cm.a xstat_fs_test \
 # Misc targets
 #
 clean:
-	$(RM) -f *.o *.a xstat_fs_test xstat_cm_test core AFS_component_version_number.c
+	$(LT_CLEAN)
+	$(RM) -f *.o *.a afscbint.ss.c afscbint.h xstat_fs_test xstat_cm_test \
+              core AFS_component_version_number.c
 
 include ../config/Makefile.version

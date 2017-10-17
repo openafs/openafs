@@ -2,5 +2,7 @@
 #     git ls-files -i --exclude-standard
 # to check that you haven't inadvertently ignored any tracked files.
 
+/afscbint.h
+/afscbint.ss.c
 /xstat_cm_test
 /xstat_fs_test

@@ -21,6 +21,7 @@
 #include "xstat_fs.h"		/*Interface for xstat_fs module */
 #include <afs/cmd.h>		/*Command line interpreter */
 #include <afs/afsutil.h>
+#include <opr/softsig.h>
 
 /*
  * Command line parameter indices.
@@ -663,6 +664,8 @@ RunTheTest(struct cmd_syndesc *a_s, void *dummy)
     int initFlags;		/*Flags passed to the init fcn */
     int freq;			/*Frequency of polls */
     int period;			/*Time in minutes of data collection */
+
+    opr_softsig_Init();
 
     /*
      * Are we doing one-shot measurements?

@@ -7,7 +7,7 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-include @TOP_OBJDIR@/src/config/Makefile.lwp
+include @TOP_OBJDIR@/src/config/Makefile.pthread
 
 
 INCLS=${TOP_INCDIR}/afs/gtxobjects.h \
@@ -26,17 +26,19 @@ INCLS=${TOP_INCDIR}/afs/gtxobjects.h \
 	${TOP_INCDIR}/afs/xstat_cm.h \
 	afsmonitor.h \
 	afsmon-labels.h
-LIBS=${TOP_LIBDIR}/libxstat_fs.a \
-	${TOP_LIBDIR}/libxstat_cm.a \
-	${TOP_LIBDIR}/libgtx.a \
-	${TOP_LIBDIR}/libafsint.a \
-	${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/librx.a \
-	${TOP_LIBDIR}/libafshcrypto_lwp.a \
-	${TOP_LIBDIR}/liblwp.a \
-	${TOP_LIBDIR}/libsys.a \
-	$(TOP_LIBDIR)/libopr.a \
-	${TOP_LIBDIR}/util.a
+
+LT_deps=\
+	$(top_builddir)/src/xstat/liboafs_xstat_fs.la \
+	$(top_builddir)/src/xstat/liboafs_xstat_cm.la \
+	$(top_builddir)/src/gtx/liboafs_gtx.la \
+	$(top_builddir)/src/rxkad/liboafs_rxkad.la \
+	$(top_builddir)/src/fsint/liboafs_fsint.la \
+	$(top_builddir)/src/cmd/liboafs_cmd.la \
+	$(top_builddir)/src/util/liboafs_util.la \
+	$(top_builddir)/src/opr/liboafs_opr.la \
+	$(top_builddir)/src/lwp/liboafs_lwpcompat.la \
+	$(top_builddir)/src/volser/liboafs_volser.la \
+
 
 EXTRA_LIBS=${LIB_curses} ${XLIBS}
 
@@ -46,13 +48,13 @@ afsmon-output.o: afsmon-output.c ${INCLS}
 afsmon-win.o: afsmon-win.c ${INCLS}
 afsmonitor.o: afsmonitor.c ${INCLS} AFS_component_version_number.c
 
-afsmonitor: afsmonitor.o afsmon-win.o afsmon-output.o ${LIBS}
-	$(AFS_LDRULE) afsmonitor.o afsmon-win.o afsmon-output.o \
-		${LIBS} $(LIB_roken) ${EXTRA_LIBS}
+afsmonitor: afsmonitor.o afsmon-win.o afsmon-output.o ${LT_deps}
+	$(LT_LDRULE_static) afsmonitor.o afsmon-win.o afsmon-output.o \
+		${LT_deps} $(LIB_roken) ${EXTRA_LIBS}
 
-afsmon-parselog:  afsmon-parselog.o ${LIBS}
-	$(AFS_LDRULE) afsmon-parselog.c \
-		${LIBS} $(LIB_roken) ${EXTRA_LIBS}
+afsmon-parselog:  afsmon-parselog.o ${LT_deps}
+	$(LT_LDRULE_static) afsmon-parselog.c \
+		${LT_deps} $(LIB_roken) ${EXTRA_LIBS}
 
 install: afsmonitor
 	${INSTALL} -d ${DESTDIR}${bindir}
@@ -63,6 +65,7 @@ dest: afsmonitor
 	${INSTALL_PROGRAM} afsmonitor ${DEST}/bin/afsmonitor
 
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o afsmonitor AFS_component_version_number.c
 
 include ../config/Makefile.version

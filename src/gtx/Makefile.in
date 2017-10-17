@@ -9,10 +9,11 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-include @TOP_OBJDIR@/src/config/Makefile.lwp
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+include @TOP_OBJDIR@/src/config/Makefile.libtool
 
-
-INCLS=gtxobjects.h \
+INCLS = \
+	gtxobjects.h \
 	gtxwindows.h \
 	gtxcurseswin.h \
 	gtxinput.h \
@@ -28,50 +29,31 @@ INCLS=gtxobjects.h \
 	${TOP_INCDIR}/afs/cellconfig.h \
 	${TOP_INCDIR}/afs/cmd.h
 
-LIBS=\
-	${TOP_LIBDIR}/librx.a \
-	${TOP_LIBDIR}/liblwp.a \
-	${TOP_LIBDIR}/libsys.a \
-	${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/libkauth.a \
-	${TOP_LIBDIR}/libauth.a \
-	${TOP_LIBDIR}/librxkad.a \
-	${TOP_LIBDIR}/libafsrfc3961.a \
-	${TOP_LIBDIR}/libafscom_err.a \
-	${TOP_LIBDIR}/libopr.a \
-	${TOP_LIBDIR}/util.a
+LT_objs = \
+    AFS_component_version_number.lo \
+    keymap.lo \
+    input.lo \
+    frame.lo \
+    curseswindows.lo \
+    dumbwindows.lo \
+    X11windows.lo \
+    windows.lo \
+    objects.lo \
+    lightobject.lo \
+    textobject.lo \
+    objdict.lo \
+    textcb.lo
 
-EXTRA_LIBS=${LIB_curses} ${XLIBS}
+LT_libs = \
+	$(top_builddir)/src/rxkad/liboafs_rxkad.la \
+	$(top_builddir)/src/fsint/liboafs_fsint.la \
+	$(top_builddir)/src/cmd/liboafs_cmd.la \
+	$(top_builddir)/src/util/liboafs_util.la \
+	$(top_builddir)/src/opr/liboafs_opr.la \
+	$(top_builddir)/src/lwp/liboafs_lwpcompat.la
 
-KEYMAP_SRCS=keymap.c input.c frame.c
-
-KEYMAP_OBJS=keymap.o input.o frame.o
-
-WINDOW_SRCS=curseswindows.c \
-	dumbwindows.c \
-	X11windows.c \
-	windows.c
-
-WINDOW_OBJS=curseswindows.o \
-	dumbwindows.o \
-	X11windows.o \
-	windows.o
-
-OBJECT_SRCS=objects.c \
-	lightobject.c \
-	textobject.c
-
-OBJECT_OBJS=objects.o \
-	lightobject.o \
-	textobject.o
-
-DICT_SRCS=objdict.c
-DICT_OBJS=objdict.o
-
-CB_SRCS=textcb.c
-CB_OBJS=textcb.o
-
-all: gtxtest \
+all: \
+    liboafs_gtx.la \
 	${TOP_LIBDIR}/libgtx.a \
 	${TOP_INCDIR}/afs/gtxcurseswin.h \
 	${TOP_INCDIR}/afs/gtxdumbwin.h \
@@ -125,72 +107,50 @@ ${TOP_INCDIR}/afs/gtxwindows.h: gtxwindows.h
 ${TOP_INCDIR}/afs/gtxX11win.h: gtxX11win.h
 	${INSTALL_DATA} $? $@
 
+#
+# Build targets
+#
+liboafs_gtx.la: liboafs_gtx.la.sym $(LT_objs) $(LT_deps)
+	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
+
+libgtx.a: $(LT_objs)
+	$(LT_LDLIB_static) $(LT_objs)
+
+keymap.lo: keymap.c ${INCLS}
+frame.lo: frame.c $(INCLS)
+input.lo: input.c ${INCLS}
+curseswindows.lo: curseswindows.c ${INCLS}
+dumbwindows.lo: dumbwindows.c ${INCLS}
+X11windows.lo: X11windows.c ${INCLS}
+windows.lo: windows.c ${INCLS}
+lightobject.lo: lightobject.c ${INCLS}
+textobject.lo: textobject.c ${INCLS}
+objdict.lo: objdict.c ${INCLS}
+textcb.lo: textcb.c ${INCLS}
+
+#
+# Test programs
+#
 tests: object_test screen_test curses_test cb_test gtxtest
 
-# All objects in the library
-LIBSRCS = ${KEYMAP_SRCS} ${WINDOW_SRCS} ${OBJECT_SRCS} ${DICT_SRCS} ${CB_SRCS}
-LIBOBJS = $(KEYMAP_OBJS) ${WINDOW_OBJS} ${OBJECT_OBJS} ${DICT_OBJS} ${CB_OBJS}
+object_test: object_test.o liboafs_gtx.la
+	$(LT_LDRULE_static) object_test.o liboafs_gtx.la ${LIB_curses} ${XLIBS}
 
-${LIBSRCS}: ${INCLS}
-$(LIBOBJS): ${INCLS}
+screen_test: screen_test.o liboafs_gtx.la
+	$(LT_LDRULE_static) screen_test.o liboafs_gtx.la ${LIB_curses} ${XLIBS}
 
-keymap.o: keymap.c ${INCLS}
+curses_test: curses_test.o liboafs_gtx.la
+	$(LT_LDRULE_static) curses_test.o liboafs_gtx.la ${LIB_curses} ${XLIBS}
 
-frame.o: frame.c $(INCLS)
+cb_test: cb_test.o liboafs_gtx.la
+	$(LT_LDRULE_static) cb_test.o liboafs_gtx.la ${LIB_curses} ${XLIBS}
 
-input.o: input.c ${INCLS}
-
-curseswindows.o: curseswindows.c ${INCLS}
-
-dumbwindows.o: dumbwindows.c ${INCLS}
-
-X11windows.o: X11windows.c ${INCLS}
-
-windows.o: windows.c ${INCLS}
-
-lightobject.o: lightobject.c ${INCLS}
-
-textobject.o: textobject.c ${INCLS}
-
-textcb.o: textcb.c ${INCLS}
-
-#
-# Test programs.
-#
-curses_test.o: curses_test.c ${INCLS} AFS_component_version_number.o
-
-curses_test: curses_test.o $(LIBS)
-	$(AFS_LDRULE) curses_test.o $(LIBS) ${EXTRA_LIBS}
-
-screen_test.o: screen_test.c ${INCLS} AFS_component_version_number.o
-
-screen_test: screen_test.o ${WINDOW_OBJS} ${LIBS}
-	$(AFS_LDRULE) screen_test.o ${WINDOW_OBJS} ${LIBS} ${EXTRA_LIBS}
-
-cb_test.o: cb_test.c ${INCLS} AFS_component_version_number.o
-
-cb_test: cb_test.o ${CB_OBJS} ${LIBS}
-	$(AFS_LDRULE) cb_test.o ${CB_OBJS} ${LIBS} ${EXTRA_LIBS}
-
-gtxtest.o: gtxtest.c ${INCLS} AFS_component_version_number.o
-
-gtxtest: gtxtest.o libgtx.a ${LIBS}
-	$(AFS_LDRULE) gtxtest.o libgtx.a ${LIBS} ${EXTRA_LIBS}
-
-object_test.o: object_test.c ${INCLS} AFS_component_version_number.o
-
-object_test: object_test.o ${WINDOW_OBJS} ${DICT_OBJS} ${OBJECT_OBJS} ${CB_OBJS} ${LIBS}
-	$(AFS_LDRULE) object_test.o ${WINDOW_OBJS} ${DICT_OBJS} \
-		${OBJECT_OBJS} ${CB_OBJS} ${LIBS} ${EXTRA_LIBS}
+gtxtest: gtxtest.o liboafs_gtx.la
+	$(LT_LDRULE_static) gtxtest.o liboafs_gtx.la ${LIB_curses} ${XLIBS}
 
 #
 # Installation targets
 #
-libgtx.a: ${LIBOBJS} AFS_component_version_number.o
-	-$(RM) -f $@
-	$(AR) crv $@ ${LIBOBJS} AFS_component_version_number.o
-	${RANLIB} $@
-
 install: libgtx.a
 	${INSTALL} -d ${DESTDIR}${libdir}/afs
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
@@ -229,6 +189,7 @@ dest: libgtx.a
 # Misc targets
 #
 clean:
+	$(LT_CLEAN)
 	$(RM) -f  *.o *.a *.ln object_test screen_test curses_test core cb_test gtxtest AFS_component_version_number.c
 
 include ../config/Makefile.version

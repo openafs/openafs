@@ -1636,10 +1636,6 @@ execute_scout(int a_numservers, struct cmd_item *a_srvname, int a_pkg)
     int i;			/*Generic loop variable */
     int mini_line_bytes;	/*Num bytes in mini_lines */
     int linenum;		/*Current mini-line number */
-#if 0
-    PROCESS pid;		/*Main LWP process ID */
-    PROCESS gxlistener_ID;	/*Input Server LWP process ID */
-#endif /* 0 */
     struct gator_lightobj *lightdata;	/*Private light data */
 
     if (scout_debug) {
@@ -1648,16 +1644,10 @@ execute_scout(int a_numservers, struct cmd_item *a_srvname, int a_pkg)
     }
 
     /*
-     * We have to initialize LWP support before we start up any of
+     * We have to initialize thread support before we start up any of
      * our packages.
      */
-#if 0
-    code = LWP_InitializeProcessSupport(LWP_NORMAL_PRIORITY, &pid);
-    if (code) {
-	fprintf(stderr, "[%s:%s] Can't initialize LWP\n", pn, rn);
-	scout_CleanExit(code);
-    }
-#endif /* 0 */
+    opr_softsig_Init();
 
     /*
      * Initialize the gtx package.
@@ -1944,19 +1934,6 @@ execute_scout(int a_numservers, struct cmd_item *a_srvname, int a_pkg)
 	return (-1);
     }
 
-
-    /*
-     * Start up the input server LWP for our window.
-     */
-#if 0
-    code = LWP_CreateProcess(gtx_InputServer,	/*Fcn to start up */
-			     8192,	/*Stack size in bytes */
-			     LWP_NORMAL_PRIORITY,	/*Priority */
-			     (void *)scout_gwin,	/*Params: Ptr to window */
-			     "gx-listener",	/*Name to use */
-			     &gxlistener_ID);	/*Returned LWP process ID */
-#endif /* 0 */
-
     code = (int)(intptr_t)gtx_InputServer(scout_gwin);
     if (code) {
 	fprintf(stderr,
@@ -1966,16 +1943,6 @@ execute_scout(int a_numservers, struct cmd_item *a_srvname, int a_pkg)
     }
 
     fsprobe_Wait(0); /* sleep forever */
-
-#if 0
-    /*
-     * How did we get here?  Oh, well, clean up our windows and
-     * return sweetness and light anyway.
-     */
-    WOP_CLEANUP(&scout_gwin);
-    return (0);
-#endif /* 0 */
-
     return 0;
 }				/*execute_scout */
 

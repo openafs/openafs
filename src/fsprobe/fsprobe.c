@@ -18,7 +18,7 @@
 
 #include <roken.h>
 
-#include <lwp.h>		/*Lightweight process package */
+#include <pthread.h>
 #include <afs/cellconfig.h>
 #include <afs/afsint.h>
 #include <afs/afsutil.h>
@@ -28,8 +28,6 @@
 #include <afs/afscbint.h>
 
 #include "fsprobe.h"		/*Interface for this module */
-
-#define LWP_STACK_SIZE	(16 * 1024)
 
 /*
  * Exported variables.
@@ -45,9 +43,11 @@ int fsprobe_ProbeFreqInSecs;	/*Probe freq. in seconds */
 static int fsprobe_initflag = 0;	/*Was init routine called? */
 static int fsprobe_debug = 0;	/*Debugging output enabled? */
 static int (*fsprobe_Handler) (void);	/*Probe handler routine */
-static PROCESS probeLWP_ID;	/*Probe LWP process ID */
+static pthread_t fsprobe_thread;	/*Probe thread */
 static int fsprobe_statsBytes;	/*Num bytes in stats block */
 static int fsprobe_probeOKBytes;	/*Num bytes in probeOK block */
+static opr_mutex_t fsprobe_force_lock;	/*Lock to force probe */
+static opr_cv_t fsprobe_force_cv;	/*Condvar to force probe */
 
 /*------------------------------------------------------------------------
  * [private] fsprobe_CleanupInit
@@ -194,7 +194,7 @@ fsprobe_Cleanup(int a_releaseMem)
  * [private] fsprobe_LWP
  *
  * Description:
- *	This LWP iterates over the server connections and gathers up
+ *	This thread iterates over the server connections and gathers up
  *	the desired statistics from each one on a regular basis.  When
  *	the sweep is done, the associated handler function is called
  *	to process the new data.
@@ -218,6 +218,7 @@ fsprobe_LWP(void *unused)
     static char rn[] = "fsprobe_LWP";	/*Routine name */
     afs_int32 code;	/*Results of calls */
     struct timeval tv;		/*Time structure */
+    struct timespec wait;	/*Time to wait */
     int conn_idx;		/*Connection index */
     struct fsprobe_ConnectionInfo *curr_conn;	/*Current connection */
     struct ProbeViceStatistics *curr_stats;	/*Current stats region */
@@ -352,20 +353,16 @@ fsprobe_LWP(void *unused)
 		    rn, code);
 
 	/*
-	 * Fall asleep for the prescribed number of seconds.
+	 * Fall asleep for the prescribed number of seconds or wakeup
+	 * sooner if forced.
 	 */
-	tv.tv_sec = fsprobe_ProbeFreqInSecs;
-	tv.tv_usec = 0;
-	if (fsprobe_debug)
-	    fprintf(stderr, "[%s] Falling asleep for %d seconds\n", rn,
-		    fsprobe_ProbeFreqInSecs);
-	code = IOMGR_Select(0,	/*Num fids */
-			    0,	/*Descriptors ready for reading */
-			    0,	/*Descriptors ready for writing */
-			    0,	/*Descriptors w/exceptional conditions */
-			    &tv);	/*Ptr to timeout structure */
-	if (code)
-	    fprintf(stderr, "[%s] IOMGR_Select returned code %d\n", rn, code);
+	gettimeofday(&tv, NULL);
+	wait.tv_sec = tv.tv_sec + fsprobe_ProbeFreqInSecs;
+	wait.tv_nsec = tv.tv_usec * 1000;
+	opr_mutex_enter(&fsprobe_force_lock);
+	code = opr_cv_timedwait(&fsprobe_force_cv, &fsprobe_force_lock, &wait);
+	opr_Assert(code == 0 || code == ETIMEDOUT);
+	opr_mutex_exit(&fsprobe_force_lock);
     }				/*Service loop */
     AFS_UNREACHED(free(stats64.ViceStatistics64_val));
     AFS_UNREACHED(return(NULL));
@@ -439,7 +436,7 @@ XListPartitions(struct rx_connection *aconn, struct partList *ptrPartList,
  *
  * Description:
  *	Initialize the fsprobe module: set up Rx connections to the
- *	given set of servers, start up the probe and callback LWPs,
+ *	given set of servers, start up the probe and callback threads,
  *	and associate the routine to be called when a probe completes.
  *
  * Arguments:
@@ -452,7 +449,7 @@ XListPartitions(struct rx_connection *aconn, struct partList *ptrPartList,
  * Returns:
  *	0 on success,
  *	-2 for (at least one) connection error,
- *	LWP process creation code, if it failed,
+ *	thread process creation code, if it failed,
  *	-1 for other fatal errors.
  *
  * Environment:
@@ -490,6 +487,9 @@ fsprobe_Init(int a_numServers, struct sockaddr_in *a_socketArray,
 	return (0);
     } else
 	fsprobe_initflag = 1;
+
+    opr_mutex_init(&fsprobe_force_lock);
+    opr_cv_init(&fsprobe_force_cv);
 
     /*
      * Check the parameters for bogosities.
@@ -543,11 +543,6 @@ fsprobe_Init(int a_numServers, struct sockaddr_in *a_socketArray,
 		(a_numServers * sizeof(struct fsprobe_ConnectionInfo)));
 	return (-1);		/*No cleanup needs to be done yet */
     }
-#if 0
-    else
-	fprintf(stderr, "[%s] fsprobe_ConnInfo allocated (%d bytes)\n", rn,
-		a_numServers * sizeof(struct fsprobe_ConnectionInfo));
-#endif /* 0 */
 
     fsprobe_statsBytes = a_numServers * sizeof(struct ProbeViceStatistics);
     fsprobe_Results.stats = (struct ProbeViceStatistics *)
@@ -609,18 +604,18 @@ fsprobe_Init(int a_numServers, struct sockaddr_in *a_socketArray,
 
     /*
      * Create a null Rx client security object, to be used by the
-     * probe LWP.
+     * probe thread.
      */
     secobj = rxnull_NewClientSecurityObject();
     if (secobj == (struct rx_securityClass *)0) {
 	fprintf(stderr,
-		"[%s] Can't create client security object for probe LWP.\n",
+		"[%s] Can't create client security object for probe thread.\n",
 		rn);
 	fsprobe_Cleanup(1);	/*Delete already-malloc'ed areas */
 	return (-1);
     }
     if (fsprobe_debug)
-	fprintf(stderr, "[%s] Probe LWP client security object created\n",
+	fprintf(stderr, "[%s] Probe thread client security object created\n",
 		rn);
 
     curr_conn = fsprobe_ConnInfo;
@@ -743,37 +738,20 @@ fsprobe_Init(int a_numServers, struct sockaddr_in *a_socketArray,
      */
     if (fsprobe_debug)
 	fprintf(stderr, "[%s] Starting up callback listener.\n", rn);
-    rx_StartServer(0 /*Don't donate yourself to LWP pool */ );
+    rx_StartServer(0 /*Don't donate yourself to thread pool */ );
 
     /*
-     * Start up the probe LWP.
+     * Start up the probe thread.
      */
     if (fsprobe_debug)
-	fprintf(stderr, "[%s] Creating the probe LWP\n", rn);
-    code = LWP_CreateProcess(fsprobe_LWP,	/*Function to start up */
-			     LWP_STACK_SIZE,	/*Stack size in bytes */
-			     1,	/*Priority */
-			     (void *)0,	/*Parameters */
-			     "fsprobe Worker",	/*Name to use */
-			     &probeLWP_ID);	/*Returned LWP process ID */
+	fprintf(stderr, "[%s] Creating the probe thread\n", rn);
+    code = pthread_create(&fsprobe_thread, NULL, fsprobe_LWP, NULL);
     if (code) {
-	fprintf(stderr, "[%s] Can't create fsprobe LWP!  Error is %d\n", rn,
+	fprintf(stderr, "[%s] Can't create fsprobe thread!  Error is %d\n", rn,
 		code);
 	fsprobe_Cleanup(1);	/*Delete already-malloc'ed areas */
 	return (code);
     }
-    if (fsprobe_debug)
-	fprintf(stderr, "[%s] Probe LWP process structure located at %p\n",
-		rn, probeLWP_ID);
-
-#if 0
-    /*
-     * Do I need to do this?
-     */
-    if (fsprobe_debug)
-	fprintf(stderr, "[%s] Calling osi_Wakeup()\n", rn);
-    osi_Wakeup(&rxsrv_afsserver);	/*Wake up anyone waiting for it */
-#endif /* 0 */
 
     /*
      * Return the final results.
@@ -790,7 +768,7 @@ fsprobe_Init(int a_numServers, struct sockaddr_in *a_socketArray,
  * [exported] fsprobe_ForceProbeNow
  *
  * Description:
- *	Wake up the probe LWP, forcing it to execute a probe immediately.
+ *	Wake up the probe thread, forcing it to execute a probe immediately.
  *
  * Arguments:
  *	None.
@@ -823,7 +801,9 @@ fsprobe_ForceProbeNow(void)
     /*
      * Kick the sucker in the side.
      */
-    IOMGR_Cancel(probeLWP_ID);
+    opr_mutex_enter(&fsprobe_force_lock);
+    opr_cv_signal(&fsprobe_force_cv);
+    opr_mutex_exit(&fsprobe_force_lock);
 
     /*
      * We did it, so report the happy news.
@@ -861,14 +841,14 @@ fsprobe_Wait(int sleep_secs)
 	while (1) {
 	    tv.tv_sec = 30;
 	    tv.tv_usec = 0;
-	    code = IOMGR_Select(0, 0, 0, 0, &tv);
-	    if (code != 0)
+	    code = select(0, 0, 0, 0, &tv);
+	    if (code < 0)
 		break;
 	}
     } else {
 	tv.tv_sec = sleep_secs;
 	tv.tv_usec = 0;
-	code = IOMGR_Select(0, 0, 0, 0, &tv);
+	code = select(0, 0, 0, 0, &tv);
     }
     return code;
 }

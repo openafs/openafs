@@ -12,7 +12,7 @@
 
 #include <roken.h>
 
-#include <lwp.h>
+#include <pthread.h>
 
 #include "gtxobjects.h"
 #include "gtxwindows.h"
@@ -21,6 +21,7 @@
 #include "gtxkeymap.h"
 #include "gtxframe.h"
 #include <afs/stds.h>
+#include <afs/opr.h>
 
 
 /* process input */
@@ -65,7 +66,7 @@ struct gwin *
 gtx_Init(int astartInput,
 	 int atype)			/* type of window to create */
 {
-    PROCESS junk;
+    pthread_t thread_id;
     struct onode_initparams oi_params;	/* object init params */
     struct gwin_initparams wi_params;	/* window initialization params */
     struct gwin *twin;
@@ -91,12 +92,8 @@ gtx_Init(int astartInput,
 	return NULL;
 
     /* if we start input thread */
-    IOMGR_Initialize();		/* input thread uses it */
     if (astartInput) {
-	code = LWP_CreateProcess(gtx_InputServer, 8192, LWP_NORMAL_PRIORITY,
-			         NULL, "gx-listener", &junk);
-	if (code)
-	    return NULL;
+	opr_Verify(pthread_create(&thread_id, NULL, gtx_InputServer, NULL) == 0);
     }
 
     /* all done */
