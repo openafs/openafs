@@ -375,14 +375,14 @@ main(int argc, char **argv)
 	    free(curDir);
 	}			/* end for each dir loop */
 	/*delete the file with info on files in directory df->name */
-	IOMGR_Sleep(interval);
+	sleep(interval);
 	continue;
 
       fail_dirbuf:
 	fclose(stream);
 	unlink(dirbuf);
       fail:
-	IOMGR_Sleep(retrytime);
+	sleep(retrytime);
 	if (cnt > 10) {
 	    rx_DestroyConnection(conn);
 	    goto again;
