@@ -660,6 +660,7 @@ rxi_rto_startTimer(struct rx_call *call, int lastPacket, int istack)
 {
     struct clock now, retryTime;
 
+    MUTEX_ASSERT(&call->lock);
     clock_GetTime(&now);
     retryTime = now;
 
@@ -690,6 +691,7 @@ rxi_rto_startTimer(struct rx_call *call, int lastPacket, int istack)
 static_inline void
 rxi_rto_cancel(struct rx_call *call)
 {
+    MUTEX_ASSERT(&call->lock);
     if (rxevent_Cancel(&call->resendEvent))
 	CALL_RELE(call, RX_CALL_REFCOUNT_RESEND);
 }
@@ -775,6 +777,7 @@ rxi_PostDelayedAckEvent(struct rx_call *call, struct clock *offset)
 {
     struct clock now, when;
 
+    MUTEX_ASSERT(&call->lock);
     clock_GetTime(&now);
     when = now;
     clock_Add(&when, offset);
@@ -799,6 +802,7 @@ rxi_PostDelayedAckEvent(struct rx_call *call, struct clock *offset)
 void
 rxi_CancelDelayedAckEvent(struct rx_call *call)
 {
+    MUTEX_ASSERT(&call->lock);
     /* Only drop the ref if we cancelled it before it could run. */
     if (rxevent_Cancel(&call->delayedAckEvent))
 	CALL_RELE(call, RX_CALL_REFCOUNT_DELAY);
@@ -3664,6 +3668,8 @@ rxi_CheckReachEvent(struct rxevent *event, void *arg1, void *arg2, int dummy)
 
     if (event != NULL)
 	MUTEX_ENTER(&conn->conn_data_lock);
+    else
+	MUTEX_ASSERT(&conn->conn_data_lock);
 
     if (event != NULL && event == conn->checkReachEvent)
 	rxevent_Put(&conn->checkReachEvent);
@@ -4675,6 +4681,8 @@ static void
 rxi_SendConnectionAbortLater(struct rx_connection *conn, int msec)
 {
     struct clock when, now;
+
+    MUTEX_ASSERT(&conn->conn_data_lock);
     if (!conn->error) {
 	return;
     }
@@ -5094,6 +5102,7 @@ rxi_SendCallAbort(struct rx_call *call, struct rx_packet *packet,
 static void
 rxi_CancelDelayedAbortEvent(struct rx_call *call)
 {
+    MUTEX_ASSERT(&call->lock);
     if (rxevent_Cancel(&call->delayedAbortEvent))
 	CALL_RELE(call, RX_CALL_REFCOUNT_ABORT);
 }
@@ -6410,6 +6419,7 @@ rxi_NatKeepAliveEvent(struct rxevent *event, void *arg1,
 static void
 rxi_ScheduleNatKeepAliveEvent(struct rx_connection *conn)
 {
+    MUTEX_ASSERT(&conn->conn_data_lock);
     if (!conn->natKeepAliveEvent && conn->secondsUntilNatPing) {
 	struct clock when, now;
 	clock_GetTime(&now);
@@ -6518,6 +6528,7 @@ out:
 static void
 rxi_ScheduleKeepAliveEvent(struct rx_call *call)
 {
+    MUTEX_ASSERT(&call->lock);
     if (!call->keepAliveEvent) {
 	struct clock when, now;
 	clock_GetTime(&now);
@@ -6531,6 +6542,7 @@ rxi_ScheduleKeepAliveEvent(struct rx_call *call)
 
 static void
 rxi_CancelKeepAliveEvent(struct rx_call *call) {
+    MUTEX_ASSERT(&call->lock);
     if (rxevent_Cancel(&call->keepAliveEvent))
 	CALL_RELE(call, RX_CALL_REFCOUNT_ALIVE);
 }
@@ -6538,6 +6550,7 @@ rxi_CancelKeepAliveEvent(struct rx_call *call) {
 static void
 rxi_ScheduleGrowMTUEvent(struct rx_call *call, int secs)
 {
+    MUTEX_ASSERT(&call->lock);
     if (!call->growMTUEvent) {
 	struct clock when, now;
 
@@ -6561,6 +6574,7 @@ rxi_ScheduleGrowMTUEvent(struct rx_call *call, int secs)
 static void
 rxi_CancelGrowMTUEvent(struct rx_call *call)
 {
+    MUTEX_ASSERT(&call->lock);
     if (rxevent_Cancel(&call->growMTUEvent))
 	CALL_RELE(call, RX_CALL_REFCOUNT_MTU);
 }
