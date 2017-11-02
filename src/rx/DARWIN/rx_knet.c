@@ -22,8 +22,6 @@
 #endif
 
 #ifdef RXK_UPCALL_ENV
-extern rx_atomic_t rxinit_status;
-
 void
 rx_upcall(socket_t so, void *arg, __unused int waitflag)
 {
@@ -41,7 +39,7 @@ rx_upcall(socket_t so, void *arg, __unused int waitflag)
     size_t nbytes, resid, noffset;
 
     /* we stopped rx but the socket isn't closed yet */
-    if (rx_atomic_test_bit(&rxinit_status, 0))
+    if (!rxi_IsRunning())
 	return;
 
     /* See if a check for additional packets was issued */

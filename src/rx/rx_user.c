@@ -352,7 +352,6 @@ rx_getAllAddrMaskMtu(afs_uint32 addrBuffer[], afs_uint32 maskBuffer[],
 #endif
 
 #ifdef AFS_NT40_ENV
-extern rx_atomic_t rxinit_status;
 void
 rxi_InitMorePackets(void) {
     int npackets, ncbufs;
@@ -373,7 +372,7 @@ rx_GetIFInfo(void)
 
     LOCK_IF_INIT;
     if (Inited) {
-	if (Inited < 2 && !rx_atomic_test_bit(&rxinit_status, 0)) {
+	if (Inited < 2 && rxi_IsRunning()) {
             /* We couldn't initialize more packets earlier.
              * Do it now. */
             rxi_InitMorePackets();
@@ -407,11 +406,11 @@ rx_GetIFInfo(void)
     UNLOCK_IF;
 
     /*
-     * If rxinit_status is still set, rx_InitHost() has yet to be called
+     * If rxi_IsRunning is false, rx_InitHost() has yet to be called
      * and we therefore do not have any mutex locks initialized.  As a
      * result we cannot call rxi_MorePackets() without crashing.
      */
-    if (rx_atomic_test_bit(&rxinit_status, 0))
+    if (!rxi_IsRunning())
         return;
 
     rxi_InitMorePackets();
