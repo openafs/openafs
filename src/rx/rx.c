@@ -160,6 +160,12 @@ static void rxi_CancelDelayedAbortEvent(struct rx_call *call);
 static void rxi_CancelGrowMTUEvent(struct rx_call *call);
 static void update_nextCid(void);
 
+#ifndef KERNEL
+static void rxi_Finalize_locked(void);
+#elif defined(UKERNEL)
+# define rxi_Finalize_locked() do { } while (0)
+#endif
+
 #ifdef RX_ENABLE_LOCKS
 struct rx_tq_debug {
     rx_atomic_t rxi_start_aborted; /* rxi_start awoke after rxi_Send in error.*/
@@ -442,7 +448,28 @@ static int rxdb_fileID = RXDB_FILE_RX;
 #endif /* RX_ENABLE_LOCKS */
 struct rx_serverQueueEntry *rx_waitForPacket = 0;
 
+/*
+ * This mutex serializes calls to our initialization and shutdown routines
+ * (rx_InitHost, rx_Finalize and shutdown_rx). Only one thread can be running
+ * these at any time; all other threads must wait for it to finish running, and
+ * then examine the value of rxi_running afterwards.
+ */
+#ifdef AFS_PTHREAD_ENV
+# define LOCK_RX_INIT MUTEX_ENTER(&rx_init_mutex)
+# define UNLOCK_RX_INIT MUTEX_EXIT(&rx_init_mutex)
+#else
+# define LOCK_RX_INIT
+# define UNLOCK_RX_INIT
+#endif
+
 /* ------------Exported Interfaces------------- */
+
+static rx_atomic_t rxi_running = RX_ATOMIC_INIT(0);
+int
+rxi_IsRunning(void)
+{
+    return rx_atomic_read(&rxi_running);
+}
 
 /* Initialize rx.  A port number may be mentioned, in which case this
  * becomes the default port number for any service installed later.
@@ -450,11 +477,6 @@ struct rx_serverQueueEntry *rx_waitForPacket = 0;
  * by the kernel.  Whether this will ever overlap anything in
  * /etc/services is anybody's guess...  Returns 0 on success, -1 on
  * error. */
-#if !(defined(AFS_NT40_ENV) || defined(RXK_UPCALL_ENV))
-static
-#endif
-rx_atomic_t rxinit_status = RX_ATOMIC_INIT(1);
-
 int
 rx_InitHost(u_int host, u_int port)
 {
@@ -468,15 +490,17 @@ rx_InitHost(u_int host, u_int port)
     SPLVAR;
 
     INIT_PTHREAD_LOCKS;
-    if (!rx_atomic_test_and_clear_bit(&rxinit_status, 0))
+    LOCK_RX_INIT;
+    if (rxi_IsRunning()) {
+	UNLOCK_RX_INIT;
 	return 0; /* already started */
-
+    }
 #ifdef RXDEBUG
     rxi_DebugInit();
 #endif
 #ifdef AFS_NT40_ENV
     if (afs_winsockInit() < 0)
-	return -1;
+	goto error;
 #endif
 
 #ifndef KERNEL
@@ -492,7 +516,7 @@ rx_InitHost(u_int host, u_int port)
 
     rx_socket = rxi_GetHostUDPSocket(host, (u_short) port);
     if (rx_socket == OSI_NULLSOCKET) {
-	return RX_ADDRINUSE;
+        goto addrinuse;
     }
 #if defined(RX_ENABLE_LOCKS) && defined(KERNEL)
 #ifdef RX_LOCKS_DB
@@ -580,19 +604,19 @@ rx_InitHost(u_int host, u_int port)
 	socklen_t addrlen = sizeof(addr);
 #endif
 	if (getsockname((intptr_t)rx_socket, (struct sockaddr *)&addr, &addrlen)) {
-	    rx_Finalize();
+	    rxi_Finalize_locked();
 	    osi_Free(htable, rx_hashTableSize * sizeof(struct rx_connection *));
-	    return -1;
+	    goto error;
 	}
 	rx_port = addr.sin_port;
 #endif
     }
     rx_stats.minRtt.sec = 9999999;
     if (RAND_bytes(&rx_epoch, sizeof(rx_epoch)) != 1)
-	return -1;
+	goto error;
     rx_epoch  = (rx_epoch & ~0x40000000) | 0x80000000;
     if (RAND_bytes(&rx_nextCid, sizeof(rx_nextCid)) != 1)
-	return -1;
+	goto error;
     rx_nextCid &= RX_CIDMASK;
     MUTEX_ENTER(&rx_quota_mutex);
     rxi_dataQuota += rx_extraQuota; /* + extra pkts caller asked to rsrv */
@@ -623,8 +647,19 @@ rx_InitHost(u_int host, u_int port)
     rxi_StartListener();
 
     USERPRI;
-    rx_atomic_clear_bit(&rxinit_status, 0);
+
+    rx_atomic_set(&rxi_running, 1);
+    UNLOCK_RX_INIT;
+
     return 0;
+
+ addrinuse:
+    UNLOCK_RX_INIT;
+    return RX_ADDRINUSE;
+
+ error:
+    UNLOCK_RX_INIT;
+    return -1;
 }
 
 int
@@ -2492,12 +2527,21 @@ rx_EndCall(struct rx_call *call, afs_int32 rc)
 void
 rx_Finalize(void)
 {
-    struct rx_connection **conn_ptr, **conn_end;
-
     INIT_PTHREAD_LOCKS;
-    if (rx_atomic_test_and_set_bit(&rxinit_status, 0))
+    LOCK_RX_INIT;
+    if (!rxi_IsRunning()) {
+	UNLOCK_RX_INIT;
 	return;			/* Already shutdown. */
+    }
+    rxi_Finalize_locked();
+    UNLOCK_RX_INIT;
+}
 
+static void
+rxi_Finalize_locked(void)
+{
+    struct rx_connection **conn_ptr, **conn_end;
+    rx_atomic_set(&rxi_running, 0);
     rxi_DeleteCachedConnections();
     if (rx_connHashTable) {
 	MUTEX_ENTER(&rx_connHashTable_lock);
@@ -2534,7 +2578,6 @@ rx_Finalize(void)
 #ifdef AFS_NT40_ENV
     afs_winsockCleanup();
 #endif
-
 }
 #endif
 
@@ -7843,9 +7886,12 @@ shutdown_rx(void)
     struct rx_serverQueueEntry *sq;
 #endif /* KERNEL */
 
-    if (rx_atomic_test_and_set_bit(&rxinit_status, 0))
+    LOCK_RX_INIT;
+    if (!rxi_IsRunning()) {
+	UNLOCK_RX_INIT;
 	return;			/* Already shutdown. */
-
+    }
+    rx_atomic_set(&rxi_running, 0);
 #ifndef KERNEL
     rx_port = 0;
 #ifndef AFS_PTHREAD_ENV
@@ -7967,6 +8013,7 @@ shutdown_rx(void)
     rxi_dataQuota = RX_MAX_QUOTA;
     rxi_availProcs = rxi_totalMin = rxi_minDeficit = 0;
     MUTEX_EXIT(&rx_quota_mutex);
+    UNLOCK_RX_INIT;
 }
 
 #ifndef KERNEL

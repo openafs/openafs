@@ -20,6 +20,7 @@ extern rx_atomic_t rx_nWaited;
 /* Prototypes for internal functions */
 
 /* rx.c */
+extern int rxi_IsRunning(void);
 extern void rxi_CancelDelayedAckEvent(struct rx_call *);
 extern void rxi_PacketsUnWait(void);
 extern void rxi_SetPeerMtu(struct rx_peer *peer, afs_uint32 host,
