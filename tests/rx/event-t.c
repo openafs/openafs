@@ -144,7 +144,7 @@ main(void)
     ok(pthread_create(&handler, NULL, eventHandler, NULL) == 0,
        "Created handler thread");
 
-    /* Add 1000 random events to fire over the next 3 seconds, but front-loaded
+    /* Add a number of random events to fire over the next 3 seconds, but front-loaded
      * a bit so that we can exercise the cancel/fire race path. */
 
     for (counter = 0; counter < NUMEVENTS; counter++) {
@@ -160,7 +160,7 @@ main(void)
 	    = rxevent_Post(&eventTime, &now, eventSub, &events[counter], NULL, 0);
 
 	/* A 10% chance that we will schedule another event at the same time */
-	if (counter!=999 && random() % 10 == 0) {
+	if (counter < (NUMEVENTS - 1) && random() % 10 == 0) {
 	     counter++;
 	     events[counter].event
 		 = rxevent_Post(&eventTime, &now, eventSub, &events[counter],
