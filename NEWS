@@ -1,6 +1,6 @@
                        User-Visible OpenAFS Changes
 
-OpenAFS 1.8.0pre2
+OpenAFS 1.8.0pre3
 
   All Platforms
 
@@ -92,6 +92,7 @@ OpenAFS 1.8.0pre2
       - Add PtLog man page.
       - Corrections and clarifications to man pages.
       - Add ubik threading analysis doc.
+      - Normalize the location of text documents in the source tree.
 
     * Improvements for troublshooting, debugging, and testing:
       - Log more details on volume-server-to-fileserver communication errors
@@ -305,6 +306,8 @@ OpenAFS 1.8.0pre2
 
     * Remove the obsolete Netscape plugin.
 
+    * Fix building gtx when ncurses is linked against libtinfo.
+
   Linux
 
     * Remove Linux 2.2 and 2.4 support.
@@ -344,7 +347,7 @@ OpenAFS 1.8.0pre2
 
     * Fix --enable-kernel-debug for linux 4.8+.
 
-    * Support linux 4.10, 4.11, 4.12
+    * Support linux 4.10, 4.11, 4.12, 4.13, 4.14
 
   Solaris
 
