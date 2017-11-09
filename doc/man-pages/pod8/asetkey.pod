@@ -15,6 +15,10 @@ B<asetkey> add <I<type>> <I<kvno>> <I<subtype>> <I<key>>
 
 B<asetkey> add <I<type>> <I<kvno>> <I<subtype>> <I<keyfile>> <I<princ>>
 
+B<asetkey> add-random <I<type>> <I<kvno>>
+
+B<asetkey> add-random <I<type>> <I<kvno>> <I<subtype>>
+
 B<asetkey> delete <I<kvno>>
 
 B<asetkey> delete <I<type>> <I<kvno>>
@@ -53,6 +57,10 @@ match the kvno in the Kerberos KDC (checked with B<kvno> or the
 C<getprinc> function of B<kadmin>).  I<principal> should be the name of
 the AFS principal in the keytab, which must be either C<afs> or
 C<afs/I<cell name>>.
+
+The B<asetkey add-random> command can be used to create randomized keys,
+instead of using keys derived from an existing krb5 principal. This is useful
+primarily for some rxgk keys.
 
 =head1 CAUTIONS
 
