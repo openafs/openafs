@@ -35,6 +35,8 @@ stringToType(const char *string) {
 	return afsconf_rxkad;
     if (strcmp(string, "rxkad_krb5") == 0)
 	return afsconf_rxkad_krb5;
+    if (strcmp(string, "rxgk") == 0)
+	return afsconf_rxgk;
 
     return atoi(string);
 }
@@ -134,7 +136,7 @@ keyFromKeytab(int kvno, afsconf_keyType type, int subtype, const char *keytab, c
 	    retval = krb5_kt_read_service_key(context, (char *)keytab,
 					      principal, kvno,
 					      ENCTYPE_DES_CBC_MD4, &key);
-    } else if (type == afsconf_rxkad_krb5) {
+    } else if (type == afsconf_rxkad_krb5 || type == afsconf_rxgk) {
 	retval = krb5_kt_read_service_key(context, (char *)keytab, principal,
 					  kvno, subtype, &key);
     } else {
@@ -198,9 +200,8 @@ addKey(struct afsconf_dir *dir, int argc, char **argv) {
 	kvno = atoi(argv[3]);
 	if (type == afsconf_rxkad) {
 	    typedKey = keyFromCommandLine(afsconf_rxkad, kvno, 0, argv[5], 8);
-	} else if (type == afsconf_rxkad_krb5){
-	    fprintf(stderr, "Raw keys for afsconf_rxkad_krb5 are unsupported");
-	    exit(1);
+	} else if (type == afsconf_rxgk || type == afsconf_rxkad_krb5) {
+	    typedKey = keyFromCommandLine(type, kvno, atoi(argv[4]), argv[5], strlen(argv[5])/2);
 	} else {
 	    fprintf(stderr, "Unknown key type %s\n", argv[2]);
 	    exit(1);
@@ -209,7 +210,7 @@ addKey(struct afsconf_dir *dir, int argc, char **argv) {
       case 7:
 	type = stringToType(argv[2]);
 	kvno = atoi(argv[3]);
-	if (type == afsconf_rxkad || type == afsconf_rxkad_krb5) {
+	if (type == afsconf_rxkad || type == afsconf_rxkad_krb5 || type == afsconf_rxgk) {
 	    typedKey = keyFromKeytab(kvno, type, atoi(argv[4]), argv[5],
 				     argv[6]);
 	} else {
@@ -285,6 +286,13 @@ listKey(struct afsconf_dir *dir, int argc, char **argv)
 	  case afsconf_rxkad_krb5:
 	    if (kvno != -1) {
 		printf("rxkad_krb5\tkvno %4d enctype %d; key is: ",
+		       kvno, minorType);
+		printKey(keyMaterial);
+	    }
+	    break;
+	  case afsconf_rxgk:
+	    if (kvno != -1) {
+		printf("rxgk\tkvno %4d enctype %d; key is: ",
 		       kvno, minorType);
 		printKey(keyMaterial);
 	    }
