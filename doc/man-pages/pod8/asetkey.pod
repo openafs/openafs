@@ -17,6 +17,10 @@ B<asetkey> add <I<type>> <I<kvno>> <I<subtype>> <I<keyfile>> <I<princ>>
 
 B<asetkey> delete <I<kvno>>
 
+B<asetkey> delete <I<type>> <I<kvno>>
+
+B<asetkey> delete <I<type>> <I<kvno>> <I<subtype>>
+
 B<asetkey> list
 
 =for html
