@@ -2508,9 +2508,7 @@ rx_Finalize(void)
 	    for (conn = *conn_ptr; conn; conn = next) {
 		next = conn->next;
 		if (conn->type == RX_CLIENT_CONNECTION) {
-                    MUTEX_ENTER(&rx_refcnt_mutex);
-		    conn->refCount++;
-                    MUTEX_EXIT(&rx_refcnt_mutex);
+                    rx_GetConnection(conn);
 #ifdef RX_ENABLE_LOCKS
 		    rxi_DestroyConnectionNoLock(conn);
 #else /* RX_ENABLE_LOCKS */
@@ -2765,9 +2763,7 @@ rxi_FreeCall(struct rx_call *call, int haveCTLock)
      */
     MUTEX_ENTER(&conn->conn_data_lock);
     if (conn->flags & RX_CONN_DESTROY_ME && !(conn->flags & RX_CONN_MAKECALL_WAITING)) {
-        MUTEX_ENTER(&rx_refcnt_mutex);
-	conn->refCount++;
-        MUTEX_EXIT(&rx_refcnt_mutex);
+        rx_GetConnection(conn);
 	MUTEX_EXIT(&conn->conn_data_lock);
 #ifdef RX_ENABLE_LOCKS
 	if (haveCTLock)
@@ -3153,9 +3149,7 @@ rxi_FindConnection(osi_socket socket, afs_uint32 host,
             rx_atomic_inc(&rx_stats.nServerConns);
     }
 
-    MUTEX_ENTER(&rx_refcnt_mutex);
-    conn->refCount++;
-    MUTEX_EXIT(&rx_refcnt_mutex);
+    rx_GetConnection(conn);
 
     rxLastConn = conn;		/* store this connection as the last conn used */
     MUTEX_EXIT(&rx_connHashTable_lock);
