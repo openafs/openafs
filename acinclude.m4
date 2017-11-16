@@ -1195,6 +1195,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_DOP_D_REVALIDATE_TAKES_UNSIGNED
 		 LINUX_IOP_LOOKUP_TAKES_UNSIGNED
 		 LINUX_D_INVALIDATE_IS_VOID
+		 LINUX_KERNEL_READ_OFFSET_IS_LAST
 
 		 dnl If we are guaranteed that keyrings will work - that is
 		 dnl  a) The kernel has keyrings enabled
