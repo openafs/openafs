@@ -1248,6 +1248,7 @@ rxi_DestroyConnectionNoLock(struct rx_connection *conn)
     if ((conn->type == RX_CLIENT_CONNECTION)
 	&& (conn->flags & (RX_CONN_MAKECALL_WAITING|RX_CONN_MAKECALL_ACTIVE))) {
 	conn->flags |= RX_CONN_DESTROY_ME;
+	MUTEX_EXIT(&rx_refcnt_mutex);
 	MUTEX_EXIT(&conn->conn_data_lock);
 	USERPRI;
 	return;
