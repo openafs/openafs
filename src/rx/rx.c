@@ -6463,6 +6463,7 @@ rxi_KeepAliveEvent(struct rxevent *event, void *arg1, void *dummy,
 
     if (rxi_CheckCall(call, 0)) {
 	MUTEX_EXIT(&call->lock);
+	CALL_RELE(call, RX_CALL_REFCOUNT_ALIVE);
 	return;
     }
 
