@@ -3039,7 +3039,7 @@ DECL_PIOCTL(PNewCell)
      * This whole logic is bogus, because it relies on the newer command
      * sending its 12th address as 0.
      */
-    if ((afs_pd_remaining(ain) < AFS_MAXCELLHOSTS +3) * sizeof(afs_int32))
+    if (afs_pd_remaining(ain) < (AFS_MAXCELLHOSTS + 3) * sizeof(afs_int32))
 	return EINVAL;
 
     newcell = afs_pd_where(ain) + (AFS_MAXCELLHOSTS + 3) * sizeof(afs_int32);
