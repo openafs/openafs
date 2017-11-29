@@ -1,6 +1,11 @@
 openafs (1.8.0~pre3-1) UNRELEASED; urgency=low
 
-  * New upstream prerelease
+  * New upstream prerelease:
+    - Improve compatibility with recent linux versions
+    - Fix several race conditions in the asynchronous event handler framework
+    - (not new to this prerelease) Improve command-line parsing for various
+      utilities. (Closes: #715623, #715787, #716144, #716444)
+    - Fix for OPENAFS-SA-2017-001. (Closes: #883602)
 
  -- Benjamin Kaduk <kaduk@mit.edu>  Tue, 05 Dec 2017 11:34:37 -0600
 
