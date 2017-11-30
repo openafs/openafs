@@ -872,11 +872,7 @@ canonical_dentry(struct inode *ip)
 
     d_prune_aliases(ip);
 
-# ifdef HAVE_DCACHE_LOCK
-    spin_lock(&dcache_lock);
-# else
-    spin_lock(&ip->i_lock);
-# endif
+    afs_d_alias_lock(ip);
 
 #if defined(D_ALIAS_IS_HLIST)
 # if defined(HLIST_ITERATOR_NO_NODE)
@@ -907,12 +903,12 @@ canonical_dentry(struct inode *ip)
     if (ret) {
 	afs_linux_dget(ret);
     }
-    spin_unlock(&dcache_lock);
+    afs_d_alias_unlock(ip);
 # else
     if (ret) {
 	afs_linux_dget(ret);
     }
-    spin_unlock(&ip->i_lock);
+    afs_d_alias_unlock(ip);
 # endif
 
     return ret;

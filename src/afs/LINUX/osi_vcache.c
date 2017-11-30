@@ -25,7 +25,7 @@ TryEvictDentries(struct vcache *avc)
 #endif
 
 #if defined(HAVE_DCACHE_LOCK)
-    spin_lock(&dcache_lock);
+    afs_d_alias_lock(inode);
 
 restart:
     list_for_each_entry(dentry, &inode->i_dentry, d_alias) {
@@ -33,19 +33,19 @@ restart:
 	    continue;
 	afs_linux_dget(dentry);
 
-	spin_unlock(&dcache_lock);
+	afs_d_alias_unlock(inode);
 	if (d_invalidate(dentry) == -EBUSY) {
 	    dput(dentry);
 	    /* perhaps lock and try to continue? (use cur as head?) */
 	    goto inuse;
 	}
 	dput(dentry);
-	spin_lock(&dcache_lock);
+	afs_d_alias_lock(inode);
 	goto restart;
     }
-    spin_unlock(&dcache_lock);
+    afs_d_alias_unlock(inode);
 #else /* HAVE_DCACHE_LOCK */
-    spin_lock(&inode->i_lock);
+    afs_d_alias_lock(inode);
 
 restart:
 #if defined(D_ALIAS_IS_HLIST)
@@ -65,17 +65,17 @@ restart:
 	spin_unlock(&dentry->d_lock);
 	afs_linux_dget(dentry);
 
-	spin_unlock(&inode->i_lock);
+	afs_d_alias_unlock(inode);
 	if (afs_d_invalidate(dentry) == -EBUSY) {
 	    dput(dentry);
 	    /* perhaps lock and try to continue? (use cur as head?) */
 	    goto inuse;
 	}
 	dput(dentry);
-	spin_lock(&inode->i_lock);
+	afs_d_alias_lock(inode);
 	goto restart;
     }
-    spin_unlock(&inode->i_lock);
+    afs_d_alias_unlock(inode);
 #endif /* HAVE_DCACHE_LOCK */
 inuse:
     return;
@@ -197,11 +197,8 @@ osi_ResetRootVCache(afs_uint32 volid)
 
     dp = d_find_alias(root);
 
-#if defined(HAVE_DCACHE_LOCK)
-    spin_lock(&dcache_lock);
-#else
-    spin_lock(&AFSTOV(vcp)->i_lock);
-#endif
+    afs_d_alias_lock(AFSTOV(vcp));
+
     spin_lock(&dp->d_lock);
 #if defined(D_ALIAS_IS_HLIST)
     hlist_del_init(&dp->d_alias);
@@ -212,11 +209,9 @@ osi_ResetRootVCache(afs_uint32 volid)
 #endif
     dp->d_inode = AFSTOV(vcp);
     spin_unlock(&dp->d_lock);
-#if defined(HAVE_DCACHE_LOCK)
-    spin_unlock(&dcache_lock);
-#else
-    spin_unlock(&AFSTOV(vcp)->i_lock);
-#endif
+
+    afs_d_alias_unlock(AFSTOV(vcp));
+
     dput(dp);
 
     AFS_RELE(root);

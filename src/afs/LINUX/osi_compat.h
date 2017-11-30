@@ -453,6 +453,18 @@ afs_linux_unlock_inode(struct inode *ip) {
 #endif
 }
 
+/* Use these to lock or unlock an inode for processing
+ * its dentry aliases en masse.
+ */
+#if defined(HAVE_DCACHE_LOCK)
+#define afs_d_alias_lock(ip)	    spin_lock(&dcache_lock)
+#define afs_d_alias_unlock(ip)	    spin_unlock(&dcache_lock)
+#else
+#define afs_d_alias_lock(ip)	    spin_lock(&(ip)->i_lock)
+#define afs_d_alias_unlock(ip)	    spin_unlock(&(ip)->i_lock)
+#endif
+
+
 /* Use this instead of dget for dentry operations
  * that occur under a higher lock (e.g. alias processing).
  * Requires that the higher lock (e.g. dcache_lock or
