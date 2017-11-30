@@ -923,12 +923,12 @@ canonical_dentry(struct inode *ip)
 
 # ifdef HAVE_DCACHE_LOCK
     if (ret) {
-	dget_locked(ret);
+	afs_linux_dget(ret);
     }
     spin_unlock(&dcache_lock);
 # else
     if (ret) {
-	dget(ret);
+	afs_linux_dget(ret);
     }
     spin_unlock(&ip->i_lock);
 # endif
