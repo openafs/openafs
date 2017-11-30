@@ -24,27 +24,6 @@ TryEvictDentries(struct vcache *avc)
     struct hlist_node *p;
 #endif
 
-#if defined(HAVE_DCACHE_LOCK)
-    afs_d_alias_lock(inode);
-
-restart:
-    list_for_each_entry(dentry, &inode->i_dentry, d_alias) {
-	if (d_unhashed(dentry))
-	    continue;
-	afs_linux_dget(dentry);
-
-	afs_d_alias_unlock(inode);
-	if (d_invalidate(dentry) == -EBUSY) {
-	    dput(dentry);
-	    /* perhaps lock and try to continue? (use cur as head?) */
-	    goto inuse;
-	}
-	dput(dentry);
-	afs_d_alias_lock(inode);
-	goto restart;
-    }
-    afs_d_alias_unlock(inode);
-#else /* HAVE_DCACHE_LOCK */
     afs_d_alias_lock(inode);
 
 restart:
@@ -76,7 +55,7 @@ restart:
 	goto restart;
     }
     afs_d_alias_unlock(inode);
-#endif /* HAVE_DCACHE_LOCK */
+
 inuse:
     return;
 }
