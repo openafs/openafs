@@ -899,17 +899,10 @@ canonical_dentry(struct inode *ip)
 
     vcp->target_link = ret;
 
-# ifdef HAVE_DCACHE_LOCK
     if (ret) {
 	afs_linux_dget(ret);
     }
     afs_d_alias_unlock(ip);
-# else
-    if (ret) {
-	afs_linux_dget(ret);
-    }
-    afs_d_alias_unlock(ip);
-# endif
 
     return ret;
 }
