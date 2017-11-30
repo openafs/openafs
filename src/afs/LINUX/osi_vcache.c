@@ -31,7 +31,7 @@ restart:
     list_for_each_entry(dentry, &inode->i_dentry, d_alias) {
 	if (d_unhashed(dentry))
 	    continue;
-	dget_locked(dentry);
+	afs_linux_dget(dentry);
 
 	spin_unlock(&dcache_lock);
 	if (d_invalidate(dentry) == -EBUSY) {
@@ -63,7 +63,7 @@ restart:
 	    continue;
 	}
 	spin_unlock(&dentry->d_lock);
-	dget(dentry);
+	afs_linux_dget(dentry);
 
 	spin_unlock(&inode->i_lock);
 	if (afs_d_invalidate(dentry) == -EBUSY) {

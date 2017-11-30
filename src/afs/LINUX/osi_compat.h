@@ -471,6 +471,21 @@ afs_linux_unlock_inode(struct inode *ip) {
 #endif
 }
 
+/* Use this instead of dget for dentry operations
+ * that occur under a higher lock (e.g. alias processing).
+ * Requires that the higher lock (e.g. dcache_lock or
+ * inode->i_lock) is already held.
+ */
+static inline void
+afs_linux_dget(struct dentry *dp) {
+#if defined(HAVE_DCACHE_LOCK)
+    dget_locked(dp);
+#else
+    dget(dp);
+#endif
+}
+
+
 static inline int
 afs_inode_setattr(struct osi_file *afile, struct iattr *newattrs) {
 
