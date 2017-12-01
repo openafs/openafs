@@ -16,10 +16,9 @@
 #include "osi_compat.h"
 
 static void
-TryEvictDentries(struct vcache *avc)
+TryEvictDirDentries(struct inode *inode)
 {
     struct dentry *dentry;
-    struct inode *inode = AFSTOV(avc);
 #if defined(D_ALIAS_IS_HLIST) && !defined(HLIST_ITERATOR_NO_NODE)
     struct hlist_node *p;
 #endif
@@ -45,11 +44,44 @@ restart:
 	afs_linux_dget(dentry);
 
 	afs_d_alias_unlock(inode);
-	if (afs_d_invalidate(dentry) == -EBUSY) {
-	    dput(dentry);
-	    /* perhaps lock and try to continue? (use cur as head?) */
-	    goto inuse;
+
+	/*
+	 * Once we have dropped the d_alias lock (above), it is no longer safe
+	 * to 'continue' our iteration over d_alias because the list may change
+	 * out from under us.  Therefore, we must either leave the loop, or
+	 * restart from the beginning.  To avoid looping forever, we must only
+	 * restart if we know we've d_drop'd an alias.  In all other cases we
+	 * must leave the loop.
+	 */
+
+	/*
+	 * For a long time we used d_invalidate() for this purpose, but
+	 * using shrink_dcache_parent() and checking the refcount ourselves is
+	 * better, for two reasons: it avoids causing ENOENT issues for the
+	 * CWD in linux versions since 3.11, and it avoids dropping Linux
+	 * submounts.
+	 *
+	 * For non-fakestat, AFS mountpoints look like directories and end up here.
+	 */
+
+	shrink_dcache_parent(dentry);
+	spin_lock(&dentry->d_lock);
+	if (afs_dentry_count(dentry) > 1)	/* still has references */ {
+	    if (dentry->d_inode != NULL) /* is not a negative dentry */ {
+		spin_unlock(&dentry->d_lock);
+		dput(dentry);
+		goto inuse;
+	    }
 	}
+	/*
+	 * This is either a negative dentry, or a dentry with no references.
+	 * Either way, it is okay to unhash it now.
+	 * Do so under the d_lock (that is, via __d_drop() instead of d_drop())
+	 * to avoid a race with another process picking up a reference.
+	 */
+	__d_drop(dentry);
+	spin_unlock(&dentry->d_lock);
+
 	dput(dentry);
 	afs_d_alias_lock(inode);
 	goto restart;
@@ -69,12 +101,17 @@ osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep)
     /* First, see if we can evict the inode from the dcache */
     if (defersleep && avc != afs_globalVp && VREFCOUNT(avc) > 1
 	&& avc->opens == 0) {
+	struct inode *ip = AFSTOV(avc);
+
 	*slept = 1;
 	AFS_FAST_HOLD(avc);
 	ReleaseWriteLock(&afs_xvcache);
 	AFS_GUNLOCK();
 
-	TryEvictDentries(avc);
+	if (S_ISDIR(ip->i_mode))
+	    TryEvictDirDentries(ip);
+	else
+	    d_prune_aliases(ip);
 
 	AFS_GLOCK();
 	ObtainWriteLock(&afs_xvcache, 733);
