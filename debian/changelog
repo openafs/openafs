@@ -1,10 +1,10 @@
-openafs (1.6.22-1) UNRELEASED; urgency=high
+openafs (1.6.22-1) unstable; urgency=high
 
   * New upstream security release:
     - Fix for OPENAFS-SA-2017-001. (Closes: #883602)
     - Improved support for recent Linux versions
 
- -- Benjamin Kaduk <kaduk@mit.edu>  Tue, 05 Dec 2017 10:10:35 -0600
+ -- Benjamin Kaduk <kaduk@mit.edu>  Tue, 05 Dec 2017 10:28:15 -0600
 
 openafs (1.6.21-3) unstable; urgency=medium
 
