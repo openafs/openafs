@@ -44,8 +44,29 @@ eventSub(struct rxevent *event, void *arg, void *arg1, int arg2)
 {
     struct testEvent *evrecord = arg;
 
+    /*
+     * The eventListMutex protects the contents of fields in the global
+     * 'events' array, including reading/writing evrecord->event.
+     * However, in this test code, we have an additional guarantee that
+     * the events array will remain allocated for the duration of the test,
+     * and as such that it is safe to dereference |evrecord| at all.  In real
+     * application code where the passed args are pointers to allocated data
+     * structures with finite lifetime, the programmer must ensure that the
+     * firing event can safely access these fields (i.e., that the object
+     * lifetime does not permit the object to be destroyed while an event
+     * pointing to it is outstanding or in progress).  The simplest way to
+     * do this (for reference counted objects) is to have the pending event
+     * hold a reference on the pointed-to object. This reference should be
+     * dropped at the end of the event handler or if the event is
+     * (successfully!) cancelled before it fires.  Other strategies are also
+     * possible, such as deferring object destruction until after all pending
+     * events have run or gotten cancelled, noting that the calling code must
+     * take care to allow the event handler to obtain any needed locks and
+     * avoid deadlock.
+     */
     pthread_mutex_lock(&eventListMutex);
-    rxevent_Put(&evrecord->event);
+    if (evrecord->event != NULL)
+	rxevent_Put(&evrecord->event);
     evrecord->event = NULL;
     evrecord->fired = 1;
     pthread_mutex_unlock(&eventListMutex);
@@ -116,18 +137,21 @@ main(void)
     /* Test for a problem when there is only a single event in the tree */
     event = rxevent_Post(&now, &now, reportSub, NULL, NULL, 0);
     ok(event != NULL, "Created a single event");
-    rxevent_Cancel(&event);
-    ok(1, "Cancelled a single event");
+    ok(rxevent_Cancel(&event), "Cancelled a single event");
     rxevent_RaiseEvents(&now);
     ok(1, "RaiseEvents happened without error");
 
     ok(pthread_create(&handler, NULL, eventHandler, NULL) == 0,
        "Created handler thread");
 
-    /* Add 1000 random events to fire over the next 3 seconds */
+    /* Add a number of random events to fire over the next 3 seconds, but front-loaded
+     * a bit so that we can exercise the cancel/fire race path. */
 
     for (counter = 0; counter < NUMEVENTS; counter++) {
-        when = random() % 3000;
+        when = random() % 4000;
+	/* Put 1/4 of events "right away" so we cancel them as they fire */
+	if (when >= 3000)
+	    when = random() % 5;
 	clock_GetTime(&now);
 	eventTime = now;
 	clock_Addmsec(&eventTime, when);
@@ -136,7 +160,7 @@ main(void)
 	    = rxevent_Post(&eventTime, &now, eventSub, &events[counter], NULL, 0);
 
 	/* A 10% chance that we will schedule another event at the same time */
-	if (counter!=999 && random() % 10 == 0) {
+	if (counter < (NUMEVENTS - 1) && random() % 10 == 0) {
 	     counter++;
 	     events[counter].event
 		 = rxevent_Post(&eventTime, &now, eventSub, &events[counter],
@@ -147,10 +171,8 @@ main(void)
 	if (random() % 4 == 0) {
 	    int victim = random() % counter;
 
-	    if (events[victim].event != NULL) {
-		rxevent_Cancel(&events[victim].event);
+	    if (rxevent_Cancel(&events[victim].event))
 		events[victim].cancelled = 1;
-	    }
 	}
 	pthread_mutex_unlock(&eventListMutex);
     }

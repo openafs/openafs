@@ -1001,9 +1001,12 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 
 		 dnl Function existence checks
 
-		 AC_CHECK_LINUX_FUNC([__vfs_read],
+		 AC_CHECK_LINUX_FUNC([__vfs_write],
 				     [#include <linux/fs.h>],
-				     [__vfs_read(NULL, NULL, 0, NULL);])
+				     [__vfs_write(NULL, NULL, 0, NULL);])
+		 AC_CHECK_LINUX_FUNC([kernel_write],
+				     [#include <linux/fs.h>],
+				     [kernel_write(NULL, NULL, 0, NULL);])
                  AC_CHECK_LINUX_FUNC([bdi_init],
 				     [#include <linux/backing-dev.h>],
 				     [bdi_init(NULL);])
@@ -1192,6 +1195,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_DOP_D_REVALIDATE_TAKES_UNSIGNED
 		 LINUX_IOP_LOOKUP_TAKES_UNSIGNED
 		 LINUX_D_INVALIDATE_IS_VOID
+		 LINUX_KERNEL_READ_OFFSET_IS_LAST
 
 		 dnl If we are guaranteed that keyrings will work - that is
 		 dnl  a) The kernel has keyrings enabled

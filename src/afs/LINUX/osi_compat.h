@@ -645,11 +645,25 @@ afs_d_invalidate(struct dentry *dp)
 #endif
 }
 
+#if defined(HAVE_LINUX___VFS_WRITE)
+# define AFS_FILE_NEEDS_SET_FS 1
+#elif defined(HAVE_LINUX_KERNEL_WRITE)
+/* #undef AFS_FILE_NEEDS_SET_FS */
+#else
+# define AFS_FILE_NEEDS_SET_FS 1
+#endif
+
 static inline int
 afs_file_read(struct file *filp, char __user *buf, size_t len, loff_t *pos)
 {
-#if defined(HAVE_LINUX___VFS_READ)
+#if defined(HAVE_LINUX___VFS_WRITE)
     return __vfs_read(filp, buf, len, pos);
+#elif defined(HAVE_LINUX_KERNEL_WRITE)
+# if defined(LINUX_KERNEL_READ_OFFSET_IS_LAST)
+    return kernel_read(filp, buf, len, pos);
+# else
+    return kernel_read(filp, *pos, buf, len);
+# endif
 #else
     return filp->f_op->read(filp, buf, len, pos);
 #endif
@@ -658,8 +672,14 @@ afs_file_read(struct file *filp, char __user *buf, size_t len, loff_t *pos)
 static inline int
 afs_file_write(struct file *filp, char __user *buf, size_t len, loff_t *pos)
 {
-#if defined(HAVE_LINUX___VFS_READ)
+#if defined(HAVE_LINUX___VFS_WRITE)
     return __vfs_write(filp, buf, len, pos);
+#elif defined(HAVE_LINUX_KERNEL_WRITE)
+# if defined(LINUX_KERNEL_READ_OFFSET_IS_LAST)
+    return kernel_write(filp, buf, len, pos);
+# else
+    return kernel_write(filp, buf, len, *pos);
+# endif
 #else
     return filp->f_op->write(filp, buf, len, pos);
 #endif

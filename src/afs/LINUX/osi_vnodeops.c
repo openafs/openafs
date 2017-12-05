@@ -825,7 +825,7 @@ struct file_operations afs_file_fops = {
 #ifdef STRUCT_FILE_OPERATIONS_HAS_READ_ITER
   .read_iter =	afs_linux_read_iter,
   .write_iter =	afs_linux_write_iter,
-# if !defined(HAVE_LINUX___VFS_READ)
+# if !defined(HAVE_LINUX___VFS_WRITE) && !defined(HAVE_LINUX_KERNEL_WRITE)
   .read =	new_sync_read,
   .write =	new_sync_write,
 # endif
