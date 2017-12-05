@@ -1,5 +1,12 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.6.22
+
+  All Platforms
+
+    * Fix OPENAFS-SA-2017-001: insufficient validation of transport parameters
+      in Rx ack trailer caused integer overflow and assertion failure
+
 OpenAFS 1.6.21.1
 
   Linux clients
