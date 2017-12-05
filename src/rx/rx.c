@@ -4430,12 +4430,20 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	rx_packetread(np, rx_AckDataSize(ap->nAcks) + (int)sizeof(afs_int32),
 		      (int)sizeof(afs_int32), &tSize);
 	tSize = (afs_uint32) ntohl(tSize);
+	if (tSize > RX_MAX_PACKET_SIZE)
+	    tSize = RX_MAX_PACKET_SIZE;
+	if (tSize < RX_MIN_PACKET_SIZE)
+	    tSize = RX_MIN_PACKET_SIZE;
 	peer->natMTU = rxi_AdjustIfMTU(MIN(tSize, peer->ifMTU));
 
 	/* Get the maximum packet size to send to this peer */
 	rx_packetread(np, rx_AckDataSize(ap->nAcks), (int)sizeof(afs_int32),
 		      &tSize);
 	tSize = (afs_uint32) ntohl(tSize);
+	if (tSize > RX_MAX_PACKET_SIZE)
+	    tSize = RX_MAX_PACKET_SIZE;
+	if (tSize < RX_MIN_PACKET_SIZE)
+	    tSize = RX_MIN_PACKET_SIZE;
 	tSize = (afs_uint32) MIN(tSize, rx_MyMaxSendSize);
 	tSize = rxi_AdjustMaxMTU(peer->natMTU, tSize);
 
@@ -4457,6 +4465,10 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 			  rx_AckDataSize(ap->nAcks) + 2 * (int)sizeof(afs_int32),
 			  (int)sizeof(afs_int32), &tSize);
 	    tSize = (afs_uint32) ntohl(tSize);	/* peer's receive window, if it's */
+	    if (tSize == 0)
+		tSize = 1;
+	    if (tSize >= rx_maxSendWindow)
+		tSize = rx_maxSendWindow;
 	    if (tSize < call->twind) {	/* smaller than our send */
 		call->twind = tSize;	/* window, we must send less... */
 		call->ssthresh = MIN(call->twind, call->ssthresh);
@@ -4478,6 +4490,10 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 			  rx_AckDataSize(ap->nAcks) + 2 * (int)sizeof(afs_int32),
 			  sizeof(afs_int32), &tSize);
 	    tSize = (afs_uint32) ntohl(tSize);
+	    if (tSize == 0)
+		tSize = 1;
+	    if (tSize >= rx_maxSendWindow)
+		tSize = rx_maxSendWindow;
 	    /*
 	     * As of AFS 3.5 we set the send window to match the receive window.
 	     */
