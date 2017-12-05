@@ -1,6 +1,6 @@
                        User-Visible OpenAFS Changes
 
-OpenAFS 1.8.0pre2
+OpenAFS 1.8.0pre3
 
   All Platforms
 
@@ -61,6 +61,8 @@ OpenAFS 1.8.0pre2
       - Wake up the application thread after 'twind' is updated to avoid 100ms
         transmit delays when the receive window transitions from closed to
         open.
+      - Fix for OPENAFS-SA-2017-001: sanity-check peer transport parmeters
+        received in ack trailers
 
     * Libraries (both internal and installed) are built using libtool, including
       libuafs. The resulting shared libraries for libafsrpc and libafsauthent
@@ -92,6 +94,7 @@ OpenAFS 1.8.0pre2
       - Add PtLog man page.
       - Corrections and clarifications to man pages.
       - Add ubik threading analysis doc.
+      - Normalize the location of text documents in the source tree.
 
     * Improvements for troublshooting, debugging, and testing:
       - Log more details on volume-server-to-fileserver communication errors
@@ -305,6 +308,8 @@ OpenAFS 1.8.0pre2
 
     * Remove the obsolete Netscape plugin.
 
+    * Fix building gtx when ncurses is linked against libtinfo.
+
   Linux
 
     * Remove Linux 2.2 and 2.4 support.
@@ -344,7 +349,7 @@ OpenAFS 1.8.0pre2
 
     * Fix --enable-kernel-debug for linux 4.8+.
 
-    * Support linux 4.10, 4.11, 4.12
+    * Support linux 4.10, 4.11, 4.12, 4.13, 4.14
 
   Solaris
 
@@ -415,23 +420,6 @@ OpenAFS 1.8.0pre2
     * Add the uidpag and localuid runtime options to the aklog LAM plugin.
       (These runtime options override the use of UID-based PAGs, which were
       introduced to appease the CDE screensaver.)
-
-OpenAFS 1.6.22
-
-  All Platforms
-
-    * Fix OPENAFS-SA-2017-001: insufficient validation of transport parameters
-      in Rx ack trailer caused integer overflow and assertion failure
-
-OpenAFS 1.6.21.1
-
-  Linux clients
-
-    * Support for mainline kernel 4.13 and distribution kernels with backports
-      from it (12664)
-
-    * Fix kernel module build for kernels since 4.12 on S390 (12717)
-
 
 OpenAFS 1.6.21
 
