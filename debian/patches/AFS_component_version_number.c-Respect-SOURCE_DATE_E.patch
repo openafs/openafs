@@ -12,7 +12,7 @@ Change-Id: Id379543a4782a7c1267eaa3d9258751d857cc07b
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/config/Makefile.version-NOCML.in b/src/config/Makefile.version-NOCML.in
-index c8ab053c4..4c7bd1450 100644
+index c8ab053..4c7bd14 100644
 --- a/src/config/Makefile.version-NOCML.in
 +++ b/src/config/Makefile.version-NOCML.in
 @@ -11,7 +11,7 @@ AFS_component_version_number.o: AFS_component_version_number.c

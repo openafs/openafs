@@ -7,7 +7,7 @@ Subject: Add dummy -exit command for afsd to do nothing
  1 file changed, 6 insertions(+)
 
 diff --git a/src/afsd/afsd.c b/src/afsd/afsd.c
-index 2f0478db19..a667719291 100644
+index 2f0478d..a667719 100644
 --- a/src/afsd/afsd.c
 +++ b/src/afsd/afsd.c
 @@ -1919,6 +1919,11 @@ mainproc(struct cmd_syndesc *as, void *arock)

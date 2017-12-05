@@ -1,4 +1,2 @@
 0003-Add-dummy-exit-command-for-afsd-to-do-nothing.patch
 AFS_component_version_number.c-Respect-SOURCE_DATE_E.patch
-Linux-4.13-use-designated-initializers-where-require.patch
-Linux-Include-linux-uaccess.h-rather-than-asm-uacces.patch
