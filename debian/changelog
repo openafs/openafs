@@ -1,4 +1,4 @@
-openafs (1.8.0~pre3-1) UNRELEASED; urgency=low
+openafs (1.8.0~pre3-1) experimental; urgency=low
 
   * New upstream prerelease:
     - Improve compatibility with recent linux versions
@@ -7,7 +7,7 @@ openafs (1.8.0~pre3-1) UNRELEASED; urgency=low
       utilities. (Closes: #715623, #715787, #716144, #716444)
     - Fix for OPENAFS-SA-2017-001. (Closes: #883602)
 
- -- Benjamin Kaduk <kaduk@mit.edu>  Tue, 05 Dec 2017 11:34:37 -0600
+ -- Benjamin Kaduk <kaduk@mit.edu>  Tue, 05 Dec 2017 11:52:42 -0600
 
 openafs (1.8.0~pre2-1) experimental; urgency=low
 
