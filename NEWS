@@ -61,6 +61,8 @@ OpenAFS 1.8.0pre3
       - Wake up the application thread after 'twind' is updated to avoid 100ms
         transmit delays when the receive window transitions from closed to
         open.
+      - Fix for OPENAFS-SA-2017-001: sanity-check peer transport parmeters
+        received in ack trailers
 
     * Libraries (both internal and installed) are built using libtool, including
       libuafs. The resulting shared libraries for libafsrpc and libafsauthent
