@@ -877,6 +877,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_HEADER([semaphore.h])
 		 AC_CHECK_LINUX_HEADER([seq_file.h])
 		 AC_CHECK_LINUX_HEADER([sched/signal.h])
+		 AC_CHECK_LINUX_HEADER([uaccess.h])
 
 		 dnl Type existence checks
 		 AC_CHECK_LINUX_TYPE([struct vfs_path], [dcache.h])

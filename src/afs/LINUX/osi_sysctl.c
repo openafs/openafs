@@ -231,7 +231,9 @@ static struct ctl_table afs_sysctl_table[] = {
 	.mode		= 0644,
      	.proc_handler	= &proc_dointvec
     },
-    {0}
+    {
+	.procname	= 0
+    }
 };
 
 static struct ctl_table fs_sysctl_table[] = {
@@ -247,7 +249,9 @@ static struct ctl_table fs_sysctl_table[] = {
 	.mode		= 0555, 
 	.child		= afs_sysctl_table
     },
-    {0}
+    {
+	.procname	= 0
+    }
 };
 
 int
