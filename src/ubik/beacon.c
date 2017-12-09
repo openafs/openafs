@@ -44,6 +44,7 @@
 /*! \name statics used to determine if we're the sync site */
 static afs_int32 syncSiteUntil = 0;	/*!< valid only if amSyncSite */
 int ubik_amSyncSite = 0;	/*!< flag telling if I'm sync site */
+int ubik_syncSiteAdvertised = 0;	/*!< flag telling if remotes are aware we have quorum */
 static int nServers;		/*!< total number of servers */
 static char amIMagic = 0;	/*!< is this host the magic host */
 char amIClone = 0;		/*!< is this a clone which doesn't vote */
@@ -130,6 +131,7 @@ ubeacon_AmSyncSite(void)
 	    if (ubik_amSyncSite)
 		ubik_dprint("Ubik: I am no longer the sync site\n");
 	    ubik_amSyncSite = 0;
+	    ubik_syncSiteAdvertised = 0;
 	    rcode = 0;
 	} else {
 	    rcode = 1;		/* otherwise still have the required votes */
@@ -139,6 +141,26 @@ ubeacon_AmSyncSite(void)
 	urecovery_ResetState();	/* force recovery to re-execute */
     ubik_dprint("beacon: amSyncSite is %d\n", rcode);
     return rcode;
+}
+
+/*!
+ * \brief Determine whether at least quorum are aware we have a sync-site.
+ *
+ * Called from higher-level modules.
+ *
+ * There is a gap between the time when a new sync-site is elected and the time
+ * when the remotes are aware of that. Therefore, any write transaction between
+ * this gap will fail. This will force a new re-election which might be time
+ * consuming. This procedure determines whether the remotes (quorum) are aware
+ * we have a sync-site.
+ *
+ * \return 1 if remotes are aware we have a sync-site
+ * \return 0 if remotes are not aware we have a sync-site
+ */
+int
+ubeacon_SyncSiteAdvertised(void)
+{
+    return ubik_syncSiteAdvertised;
 }
 
 /*!
@@ -316,6 +338,7 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
 	if (nServers == 1 && !amIClone) {
 	    ubik_amSyncSite = 1;	/* let's start as sync site */
 	    syncSiteUntil = 0x7fffffff;	/* and be it quite a while */
+	    ubik_syncSiteAdvertised = 1;
 	}
     } else {
 	if (nServers == 1)	/* special case 1 server */
@@ -327,6 +350,7 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
 	    ubik_dprint("Ubik: I am the sync site - 1 server\n");
 	ubik_amSyncSite = 1;
 	syncSiteUntil = 0x7fffffff;	/* quite a while */
+	ubik_syncSiteAdvertised = 1;
     }
     return 0;
 }
@@ -503,6 +527,11 @@ ubeacon_Interact(void *dummy)
 	if (yesVotes > nServers) {	/* yesVotes is bumped by 2 or 3 for each site */
 	    if (!ubik_amSyncSite)
 		ubik_dprint("Ubik: I am the sync site\n");
+	    else {
+		/* at this point, we have the guarantee that at least quorum
+		 * received a beacon packet informing we have a sync-site. */
+		ubik_syncSiteAdvertised = 1;
+	    }
 	    ubik_amSyncSite = 1;
 	    syncSiteUntil = oldestYesVote + SMALLTIME;
 #ifndef AFS_PTHREAD_ENV
@@ -514,6 +543,7 @@ ubeacon_Interact(void *dummy)
 	    if (ubik_amSyncSite)
 		ubik_dprint("Ubik: I am no longer the sync site\n");
 	    ubik_amSyncSite = 0;
+	    ubik_syncSiteAdvertised = 0;
 	    urecovery_ResetState();	/* tell recovery we're no longer the sync site */
 	}
 

@@ -442,6 +442,7 @@ extern afs_uint32 ubikGetPrimaryInterfaceAddr(afs_uint32 addr);
 struct afsconf_cell;
 extern void ubeacon_Debug(struct ubik_debug *aparm);
 extern int ubeacon_AmSyncSite(void);
+extern int ubeacon_SyncSiteAdvertised(void);
 extern int ubeacon_InitServerListByInfo(afs_uint32 ame,
 					struct afsconf_cell *info,
 					char clones[]);

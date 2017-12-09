@@ -693,6 +693,11 @@ BeginTrans(struct ubik_dbase *dbase, afs_int32 transMode,
 	    DBRELE(dbase);
 	    return UNOTSYNC;
 	}
+	if (!ubeacon_SyncSiteAdvertised()) {
+	    /* i am the sync-site but the remotes are not aware yet */
+	    DBRELE(dbase);
+	    return UNOQUORUM;
+	}
     }
 
     /* create the transaction */
