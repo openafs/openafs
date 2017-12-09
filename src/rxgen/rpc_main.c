@@ -503,9 +503,6 @@ h_output(char *infile, char *define, int extend, char *outfile, int append)
     f_print(fout, "#ifndef	DST_USA  /* XXXXX */\n");
     f_print(fout, "#include \"h/time.h\"\n");
     f_print(fout, "#endif\n");
-    f_print(fout, "#ifndef AFS_LINUX22_ENV\n");
-    f_print(fout, "#include \"rpc/types.h\"\n");
-    f_print(fout, "#endif /* AFS_LINUX22_ENV */\n");
     f_print(fout, "#ifndef	XDR_GETLONG /* XXXXX */\n");
     f_print(fout, "#ifdef AFS_LINUX22_ENV\n");
     f_print(fout, "#ifndef quad_t\n");
@@ -680,7 +677,6 @@ C_output(char *infile, char *define, int extend, char *outfile, int append)
 	    f_print(fout, "#include \"h/stat.h\"\n");
 	    f_print(fout, "#include \"netinet/in.h\"\n");
 	    f_print(fout, "#include \"h/time.h\"\n");
-	    f_print(fout, "#include \"rpc/types.h\"\n");
 	    f_print(fout, "#include \"rx/xdr.h\"\n");
 	    f_print(fout, "#include \"afs/rxgen_consts.h\"\n");
 	    f_print(fout, "#include \"afs/afs_osi.h\"\n");
@@ -751,7 +747,6 @@ S_output(char *infile, char *define, int extend, char *outfile, int append)
 	    f_print(fout, "#include \"h/stat.h\"\n");
 	    f_print(fout, "#include \"netinet/in.h\"\n");
 	    f_print(fout, "#include \"h/time.h\"\n");
-	    f_print(fout, "#include \"rpc/types.h\"\n");
 	    f_print(fout, "#include \"rx/xdr.h\"\n");
 	    f_print(fout, "#include \"afs/rxgen_consts.h\"\n");
 	    f_print(fout, "#include \"afs/afs_osi.h\"\n");

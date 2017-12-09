@@ -24,7 +24,6 @@
 #include "rpc/auth_kerb.h"
 #endif
 #include "sys/tiuser.h"
-#include "rpc/xdr.h"
 #include "rpc/svc.h"
 #include "nfs/nfs.h"
 

@@ -133,9 +133,6 @@ typedef unsigned short etap_event_t;
 #if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV)
 #include "netinet/in_var.h"
 #endif /* ! AFS_HPUX110_ENV && ! AFS_LINUX22_ENV */
-#if !defined(AFS_LINUX22_ENV) && !defined(AFS_DUX40_ENV)
-#include "rpc/types.h"
-#endif
 #include "afs/afs_osi.h"
 #include "rx_kmutex.h"
 #include "afs/lock.h"

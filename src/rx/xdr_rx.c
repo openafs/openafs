@@ -29,8 +29,6 @@
 #  endif /* AFS_OSF_ENV */
 #  ifdef AFS_LINUX20_ENV
 #   include "h/socket.h"
-#  else
-#   include "rpc/types.h"
 #  endif
 #  ifdef  AFS_OSF_ENV
 #   undef kmem_alloc
