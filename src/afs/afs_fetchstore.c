@@ -11,9 +11,6 @@
 #include "afs/param.h"
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
-#ifndef AFS_LINUX22_ENV
-#include "rpc/types.h"
-#endif
 #ifdef	AFS_ALPHA_ENV
 #undef kmem_alloc
 #undef kmem_free

@@ -25,7 +25,6 @@
 #include "afsincludes.h"
 #else
 #include "h/types.h"
-#include "rpc/types.h"
 #include "rx/xdr.h"
 #endif
 #if !defined(AFS_ALPHA_ENV)
