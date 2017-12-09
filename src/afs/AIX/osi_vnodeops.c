@@ -32,7 +32,6 @@
 #include "h/mbuf.h"
 #include "h/vmuser.h"
 #include "h/shm.h"
-#include "rpc/types.h"
 #include "rpc/xdr.h"
 
 #include "afs/stds.h"

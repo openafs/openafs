@@ -36,7 +36,6 @@
 #include "osi_vfs.h"
 #include "netinet/in.h"
 #include "h/mbuf.h"
-#include "rpc/types.h"
 #include "rpc/xdr.h"
 #include "h/vmuser.h"
 #include "h/syspest.h"

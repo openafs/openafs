@@ -12,9 +12,6 @@
 
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
-#ifndef AFS_LINUX22_ENV
-#include "rpc/types.h"
-#endif
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* statistics */
 

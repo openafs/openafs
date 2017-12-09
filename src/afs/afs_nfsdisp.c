@@ -21,7 +21,6 @@
 #include "rpc/auth_unix.h"
 #include "rpc/auth_des.h"
 #include "sys/tiuser.h"
-#include "rpc/xdr.h"
 #include "rpc/svc.h"
 #include "nfs/nfs.h"
 
