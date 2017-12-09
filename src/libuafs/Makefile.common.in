@@ -344,8 +344,6 @@ afs_exporter.lo: $(TOP_SRCDIR)/afs/afs_exporter.c
 	$(LT_CCRULE) $(TOP_SRCDIR)/afs/afs_exporter.c
 afs_nfsclnt.lo: $(TOP_SRC_AFS)/afs_nfsclnt.c
 	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_nfsclnt.c
-afs_nfsdisp.lo: $(TOP_SRC_AFS)/afs_nfsdisp.c
-	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_nfsdisp.c
 rx.lo: $(TOP_SRC_RX)/rx.c
 	$(LT_CCRULE) $(TOP_SRC_RX)/rx.c
 rx_clock.lo: $(TOP_SRC_RX)/rx_clock.c
