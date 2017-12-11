@@ -752,8 +752,7 @@ urecovery_Interact(void *dummy)
 	if (ubik_dbase->version.epoch == 1) {
 	    DBHOLD(ubik_dbase);
 	    urecovery_AbortAll(ubik_dbase);
-	    ubik_epochTime = 2;
-	    ubik_dbase->version.epoch = ubik_epochTime;
+	    ubik_dbase->version.epoch = 2;
 	    ubik_dbase->version.counter = 1;
 	    code =
 		(*ubik_dbase->setlabel) (ubik_dbase, 0, &ubik_dbase->version);

@@ -339,6 +339,9 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
 	    ubik_amSyncSite = 1;	/* let's start as sync site */
 	    syncSiteUntil = 0x7fffffff;	/* and be it quite a while */
 	    ubik_syncSiteAdvertised = 1;
+	    DBHOLD(ubik_dbase);
+	    ubik_epochTime = FT_ApproxTime();
+	    DBRELE(ubik_dbase);
 	}
     } else {
 	if (nServers == 1)	/* special case 1 server */
@@ -346,8 +349,12 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
     }
 
     if (ubik_singleServer) {
-	if (!ubik_amSyncSite)
+	if (!ubik_amSyncSite) {
 	    ubik_dprint("Ubik: I am the sync site - 1 server\n");
+	    DBHOLD(ubik_dbase);
+	    ubik_epochTime = FT_ApproxTime();
+	    DBRELE(ubik_dbase);
+	}
 	ubik_amSyncSite = 1;
 	syncSiteUntil = 0x7fffffff;	/* quite a while */
 	ubik_syncSiteAdvertised = 1;
@@ -525,9 +532,12 @@ ubeacon_Interact(void *dummy)
 	/* now decide if we have enough votes to become sync site.
 	 * Note that we can still get enough votes even if we didn't for ourself. */
 	if (yesVotes > nServers) {	/* yesVotes is bumped by 2 or 3 for each site */
-	    if (!ubik_amSyncSite)
+	    if (!ubik_amSyncSite) {
 		ubik_dprint("Ubik: I am the sync site\n");
-	    else {
+		DBHOLD(ubik_dbase);
+		ubik_epochTime = FT_ApproxTime();
+		DBRELE(ubik_dbase);
+	    } else {
 		/* at this point, we have the guarantee that at least quorum
 		 * received a beacon packet informing we have a sync-site. */
 		ubik_syncSiteAdvertised = 1;
