@@ -544,11 +544,6 @@ ubeacon_Interact(void *dummy)
 	    }
 	    ubik_amSyncSite = 1;
 	    syncSiteUntil = oldestYesVote + SMALLTIME;
-#ifndef AFS_PTHREAD_ENV
-		/* I did not find a corresponding LWP_WaitProcess(&ubik_amSyncSite) --
-		   this may be a spurious signal call -- sjenkins */
-		LWP_NoYieldSignal(&ubik_amSyncSite);
-#endif
 	} else {
 	    if (ubik_amSyncSite)
 		ubik_dprint("Ubik: I am no longer the sync site\n");
