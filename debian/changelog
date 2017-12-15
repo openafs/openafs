@@ -1,11 +1,11 @@
-openafs (1.6.22-3) UNRELEASED; urgency=medium
+openafs (1.6.22-3) unstable; urgency=medium
 
   * Pull in upstream patch to avoid OOPS on linux 4.14 kernels.
     (Closes: #884420)
   * Pull in pending upstream patch to include stdint.h where needed.
     This should allow Ubuntu to return to syncing openafs from Debian.
 
- -- Benjamin Kaduk <kaduk@mit.edu>  Thu, 14 Dec 2017 20:57:22 -0600
+ -- Benjamin Kaduk <kaduk@mit.edu>  Thu, 14 Dec 2017 21:08:16 -0600
 
 openafs (1.6.22-2) unstable; urgency=medium
 
