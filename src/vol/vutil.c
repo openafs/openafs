@@ -857,7 +857,7 @@ VWalkVolumeHeaders(struct DiskPartition64 *dp, const char *partpath,
 	if (p != NULL && strcmp(p, VHDREXT) == 0) {
 	    char name[VMAXPATHLEN];
 
-	    sprintf(name, "%s" OS_DIRSEP "%s", partpath, dentry->d_name);
+	    snprintf(name, VMAXPATHLEN, "%s" OS_DIRSEP "%s", partpath, dentry->d_name);
 
 	    code = _VHandleVolumeHeader(dp, volfunc, name, &diskHeader, -1, rock);
 	    if (code < 0) {
