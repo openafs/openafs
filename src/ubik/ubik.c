@@ -96,6 +96,7 @@ static int BeginTrans(struct ubik_dbase *dbase, afs_int32 transMode,
 struct rx_securityClass *ubik_sc[3];
 
 #define	CStampVersion	    1	/* meaning set ts->version */
+#define CCheckSyncAdvertised	2	/* check if the remote knows we are the sync-site */
 
 /*!
  * \brief Perform an operation at a quorum, handling error conditions.
@@ -123,7 +124,10 @@ ContactQuorum_NoArguments(afs_int32 (*proc)(struct rx_connection *, ubik_tid *),
     okcalls = 0;
     for (ts = ubik_servers; ts; ts = ts->next) {
 	/* for each server */
-	if (!ts->up || !ts->currentDB) {
+	if (!ts->up || !ts->currentDB ||
+	    /* do not call DISK_Begin until we know that lastYesState is set on
+	     * the remote in question; otherwise, DISK_Begin will fail. */
+	    ((aflags & CCheckSyncAdvertised) && !(ts->beaconSinceDown && ts->lastVote))) {
 	    ts->currentDB = 0;	/* db is no longer current; we just missed an update */
 	    continue;		/* not up-to-date, don't bother */
 	}
@@ -723,7 +727,7 @@ BeginTrans(struct ubik_dbase *dbase, afs_int32 transMode,
 	dbase->writeTidCounter = tt->tid.counter;
 
 	/* next try to start transaction on appropriate number of machines */
-	code = ContactQuorum_NoArguments(DISK_Begin, tt, 0);
+	code = ContactQuorum_NoArguments(DISK_Begin, tt, CCheckSyncAdvertised);
 	if (code) {
 	    /* we must abort the operation */
 	    udisk_abort(tt);
