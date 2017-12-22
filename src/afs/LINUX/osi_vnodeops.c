@@ -2191,7 +2191,11 @@ afs_linux_readpage_fastpath(struct file *fp, struct page *pp, int *codep)
 	AFS_GLOCK();
 	goto out;
     }
+#if defined(PAGEVEC_INIT_COLD_ARG)
     pagevec_init(&lrupv, 0);
+#else
+    pagevec_init(&lrupv);
+#endif
 
     code = afs_linux_read_cache(cacheFp, pp, tdc->f.chunk, &lrupv, NULL);
 
@@ -2351,7 +2355,11 @@ afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
     ancr->offset = auio->uio_offset;
     ancr->length = auio->uio_resid;
 
+#if defined(PAGEVEC_INIT_COLD_ARG)
     pagevec_init(&lrupv, 0);
+#else
+    pagevec_init(&lrupv);
+#endif
 
     for(page_ix = 0; page_ix < num_pages; ++page_ix) {
 
@@ -2571,7 +2579,11 @@ afs_linux_readpages(struct file *fp, struct address_space *mapping,
     task = afs_pagecopy_init_task();
 
     tdc = NULL;
+#if defined(PAGEVEC_INIT_COLD_ARG)
     pagevec_init(&lrupv, 0);
+#else
+    pagevec_init(&lrupv);
+#endif
     for (page_idx = 0; page_idx < num_pages; page_idx++) {
 	struct page *page = list_entry(page_list->prev, struct page, lru);
 	list_del(&page->lru);

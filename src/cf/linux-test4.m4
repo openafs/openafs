@@ -163,6 +163,16 @@ AC_DEFUN([LINUX_KERNEL_POSIX_LOCK_FILE_WAIT_ARG], [
 		       [])
 ])
 
+AC_DEFUN([LINUX_KERNEL_PAGEVEC_INIT_COLD_ARG], [
+  AC_CHECK_LINUX_BUILD([for 2nd argument in pagevec_init found in pre-4.15 kernels],
+		       [ac_cv_linux_kernel_pagevec_init_cold_arg],
+		       [#include <linux/pagevec.h>],
+		       [pagevec_init(0,0);],
+		       [PAGEVEC_INIT_COLD_ARG],
+		       [define if your kernel uses 2 arguments for pagevec_init],
+		       [])
+])
+
 AC_DEFUN([LINUX_KERNEL_SOCK_CREATE], [
   AC_CHECK_LINUX_BUILD([for 5th argument in sock_create found in some SELinux kernels],
 		       [ac_cv_linux_kernel_sock_create_v],
