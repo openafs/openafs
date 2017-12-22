@@ -2077,7 +2077,7 @@ afs_linux_read_cache(struct file *cachefp, struct page *page,
         cachepage = find_get_page(cachemapping, pageindex);
 	if (!cachepage) {
 	    if (!newpage)
-		newpage = page_cache_alloc_cold(cachemapping);
+		newpage = page_cache_alloc(cachemapping);
 	    if (!newpage) {
 		code = -ENOMEM;
 		goto out;
