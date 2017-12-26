@@ -324,6 +324,10 @@ OpenAFS 1.8.0pre3
     * Fix improper use of ENOENT and avoid incorrect use of linux negative
       dentry cache.
 
+    * Use a more correct (less aggressive) scheme to react to downward
+      pressure on cache usage, avoiding d_invalidate(), which can cause
+      getcwd() failures on RHEL 7.4.
+
     * Improve error reporting when encountering corrupt directories.
 
     * Improve rx error handling in the Linux cache manager.
@@ -333,6 +337,9 @@ OpenAFS 1.8.0pre3
 
     * Do not use the obsolete --enable-largefile-fileservers configure option
       when packaging RPMs.
+
+    * In Red Hat packaging, use a separate rpm for kmod debuginfo,
+      removing a needless tight version dependency on the userspace package.
 
     * Use the RemainAfterExit systemd feature to avoid premature exit
       when -afsdb is not given, for RPM packages.
@@ -349,7 +356,7 @@ OpenAFS 1.8.0pre3
 
     * Fix --enable-kernel-debug for linux 4.8+.
 
-    * Support linux 4.10, 4.11, 4.12, 4.13, 4.14
+    * Support linux 4.10, 4.11, 4.12, 4.13, 4.14, 4.15
 
   Solaris
 
@@ -381,6 +388,8 @@ OpenAFS 1.8.0pre3
 
     * Fix builds on MacOS 10.12 by building only the active architecture
       by default.
+
+    * Support versions up through 10.13 (High Sierra) and APFS
 
   FreeBSD
 
