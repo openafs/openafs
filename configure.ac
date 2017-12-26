@@ -9,8 +9,8 @@ AC_CONFIG_SRCDIR([src/config/stds.h])
 AM_INIT_AUTOMAKE([foreign])
 
 AC_CONFIG_HEADER([src/config/afsconfig.h])
-MACOS_VERSION=1.8.0fc4
-LINUX_PKGREL=1.8.0pre4
+MACOS_VERSION=1.8.0fc5
+LINUX_PKGREL=1.8.0pre5
 
 AC_SUBST([MACOS_VERSION])
 
