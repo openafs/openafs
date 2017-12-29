@@ -267,4 +267,4 @@ tests/util/Makefile,
  chmod a+x src/config/shlib-install])
 
 # print a final summary
-SUMMARY
+OPENAFS_SUMMARY
