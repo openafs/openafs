@@ -23,7 +23,7 @@ AC_DEFUN([_OPENAFS_ROKEN_PATHS], [
   buildtool_roken="\$(LDFLAGS_roken) \$(LIB_roken)"])
 
 dnl _OPENAFS_ROKEN_CHECK($action-if-found,
-dnl 			 $action-if-not-found)
+dnl                          $action-if-not-found)
 dnl Find a roken library using $roken_root, $roken_libdir, and $roken_includedir
 dnl
 dnl If none of the three paths are specified,
@@ -38,13 +38,13 @@ AC_DEFUN([_OPENAFS_ROKEN_CHECK], [
   save_LDFLAGS=$LDFLAGS
   save_LIBS=$LIBS
   AS_IF([test x"$CPPFLAGS_roken" != x],
-	[CPPFLAGS="$CPPFLAGS_roken $CPPFLAGS"])
+        [CPPFLAGS="$CPPFLAGS_roken $CPPFLAGS"])
   AS_IF([test x"$LDFLAGS_roken" != x],
-	[LDFLAGS="$LDFLAGS_roken $LDFLAGS"])
+        [LDFLAGS="$LDFLAGS_roken $LDFLAGS"])
   AS_IF([test x"$roken_libdir" != x || test x"$roken_includedir" != x],
-	[checkstr=" with specified include and lib paths"],
-	[AS_IF([test x"$roken_root" != x],
-		[checkstr=" in $roken_root"])])
+        [checkstr=" with specified include and lib paths"],
+        [AS_IF([test x"$roken_root" != x],
+                [checkstr=" in $roken_root"])])
 
   AC_MSG_CHECKING([for usable system libroken$checkstr])
 
@@ -73,7 +73,7 @@ AC_DEFUN([_OPENAFS_ROKEN_CHECK], [
   LIBS=$save_LIBS
 
   AS_IF([test x"$roken_found" = xtrue],
-	 [$1], [$2])
+         [$1], [$2])
 ])
 
 AC_DEFUN([OPENAFS_ROKEN], [
@@ -86,31 +86,117 @@ AC_DEFUN([OPENAFS_ROKEN], [
 
   AC_ARG_WITH([roken],
     [AS_HELP_STRING([--with-roken=DIR],
-	[Location of the roken library, or 'internal'])],
+        [Location of the roken library, or 'internal'])],
     [AS_IF([test x"$withval" = xno],
-	   [AC_ERROR("OpenAFS requires roken to build")],
-	   [AS_IF([test x"$withval" != xyes],
-	          [roken_root="$withval"])
-	   ])
+           [AC_ERROR("OpenAFS requires roken to build")],
+           [AS_IF([test x"$withval" != xyes],
+                  [roken_root="$withval"])
+           ])
     ])
   AC_ARG_WITH([roken-include],
     [AS_HELP_STRING([--with-roken-include=DIR],
-	[Location of roken headers])],
+        [Location of roken headers])],
     [AS_IF([test x"$withval" != xyes && test x"$withval" != xno],
-	[roken_includedir="$withval"])])
+        [roken_includedir="$withval"])])
   AC_ARG_WITH([roken-lib],
     [AS_HELP_STRING([--with-roken-lib=DIR],
-	[Location of roken libraries])],
+        [Location of roken libraries])],
     [AS_IF([test x"$withval" != xyes && test x"$withval" != xno],
-	[roken_libdir="$withval"])])
+        [roken_libdir="$withval"])])
 
   AS_IF([test x"$roken_root" = xinternal],
-	[_OPENAFS_ROKEN_INTERNAL()],
-	[AS_IF([test x"$roken_root" = x && test x"$roken_libdir" = x &&
-		test x"$roken_includedir" = x],
-	    [_OPENAFS_ROKEN_CHECK([], [_OPENAFS_ROKEN_INTERNAL()])],
-	    [_OPENAFS_ROKEN_CHECK([],
-		[AC_MSG_ERROR([Cannot find roken at that location])])
-	    ])
-	])
+        [_OPENAFS_ROKEN_INTERNAL()],
+        [AS_IF([test x"$roken_root" = x && test x"$roken_libdir" = x &&
+                test x"$roken_includedir" = x],
+            [_OPENAFS_ROKEN_CHECK([], [_OPENAFS_ROKEN_INTERNAL()])],
+            [_OPENAFS_ROKEN_CHECK([],
+                [AC_MSG_ERROR([Cannot find roken at that location])])
+            ])
+        ])
+])
+
+AC_DEFUN([OPENAFS_MORE_ROKEN_CHECKS],[
+dnl Functions that Heimdal's libroken provides, but that we
+dnl haven't found a need for yet, and so haven't imported
+AC_CHECK_FUNCS([ \
+        chown \
+        fchown \
+        gethostname \
+        lstat \
+        inet_aton \
+        putenv \
+        readv \
+        setenv \
+        strdup \
+        strftime \
+        strndup \
+        strsep \
+        unsetenv \
+])
+
+dnl Functions that are in objects that we always build from libroken
+AC_CHECK_FUNCS([ \
+        asprintf \
+        asnprintf \
+        vasprintf \
+        vasnprintf \
+        vsnprintf \
+        snprintf \
+])
+
+dnl Functions that we're going to try and get from libroken
+AC_REPLACE_FUNCS([ \
+        daemon \
+        ecalloc \
+        emalloc \
+        erealloc \
+        err \
+        errx \
+        flock \
+        freeaddrinfo \
+        gai_strerror \
+        getaddrinfo \
+        getdtablesize \
+        getnameinfo \
+        getopt \
+        getprogname \
+        gettimeofday \
+        inet_ntop \
+        inet_pton \
+        localtime_r \
+        mkstemp \
+        setenv \
+        setprogname \
+        strcasecmp \
+        strlcat \
+        strnlen \
+        strlcpy \
+        strsep \
+        tdelete \
+        tfind \
+        tsearch \
+        twalk \
+        unsetenv \
+        verr \
+        verrx \
+        vsyslog \
+        vwarn \
+        vwarnx \
+        warn \
+        warnx \
+])
+
+dnl Headers that we're going to try and get from libroken
+AC_CHECK_HEADERS([ \
+        err.h \
+        search.h \
+])
+])
+
+AC_DEFUN([OPENAFS_ROKEN_HEADERS],[
+ROKEN_HEADERS=
+AS_IF([test "$ac_cv_header_err_h" != "yes" ],
+      [ROKEN_HEADERS="$ROKEN_HEADERS \$(TOP_INCDIR)/err.h"],
+      [])
+AC_SUBST(ROKEN_HEADERS)
 ])
