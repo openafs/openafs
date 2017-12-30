@@ -1,3 +1,9 @@
+openafs (1.6.22-4) UNRELEASED; urgency=medium
+
+  * Remove myself from Uploaders.
+
+ -- Russ Allbery <rra@debian.org>  Fri, 29 Dec 2017 20:53:02 -0800
+
 openafs (1.6.22-3) unstable; urgency=medium
 
   * Pull in upstream patch to avoid OOPS on linux 4.14 kernels.

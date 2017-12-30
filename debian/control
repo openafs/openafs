@@ -2,8 +2,7 @@ Source: openafs
 Section: net
 Priority: optional
 Maintainer: Benjamin Kaduk <kaduk@mit.edu>
-Uploaders: Russ Allbery <rra@debian.org>, Sam Hartman <hartmans@debian.org>,
- Anders Kaseorg <andersk@mit.edu>
+Uploaders: Sam Hartman <hartmans@debian.org>, Anders Kaseorg <andersk@mit.edu>
 Build-Depends: debhelper (>= 9.20160709~), autoconf, automake, bison, comerr-dev,
  cpio, flex, libfuse-dev, libkrb5-dev, libncurses5-dev,
  libpam0g-dev, libxml2-utils, perl, pkg-config
