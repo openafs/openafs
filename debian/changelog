@@ -33,6 +33,8 @@ openafs (1.8.0~pre4-1) UNRELEASED; urgency=low
   * Add versioned build-depends for renamed symbols in heimdal-multidev.
     (Closes: #848664)
   * Bump Standards-Version to 4.1.3 (no changes needed).
+  * Update Dutch debconf translation; thanks Frans Spiesschaert.
+    (Closes: #874280)
 
   [ Anders Kaseorg ]
   * Use dh_auto_configure.
