@@ -26,7 +26,7 @@ openafs (1.8.0~pre4-1) UNRELEASED; urgency=low
     - Improve ubik safety for relabels and writes shortly after an election
     - Preserve volume stats during reclone and restore operations
     - Improve command-line parsing for various utilities.
-      (Closes: #715623, #715787, #716144, #716444)
+      (Closes: #715623, #715787, #716144, #716234, #716444)
     - Fix for OPENAFS-SA-2017-001. (Closes: #883602)
     - Many other generic improvements throughout the tree; consult the
       upstream changelog for details.
