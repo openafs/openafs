@@ -1,7 +1,1 @@
-0003-Add-dummy-exit-command-for-afsd-to-do-nothing.patch
-AFS_component_version_number.c-Respect-SOURCE_DATE_E.patch
-0003-Linux-Test-for-__vfs_write-rather-than-__vfs_read.patch
-0004-Linux-Use-kernel_read-kernel_write-when-__vfs-varian.patch
-0005-afs-fix-kernel_write-kernel_read-arguments.patch
-0006-Fix-macro-used-to-check-kernel_read-argument-order.patch
-0007-vol-add-missing-include-of-stdint.h-to-volinodes.h.patch
+0003-Catch-up-to-roken-s-rename-of-base64-symbols.patch

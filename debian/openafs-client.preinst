@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -e
+
+if [ "$1" = upgrade ] && dpkg --compare-versions "$2" lt "1.8.0~"; then
+    update-alternatives --remove klog /usr/bin/klog.afs
+fi
+
+#DEBHELPER#
+
+exit 0

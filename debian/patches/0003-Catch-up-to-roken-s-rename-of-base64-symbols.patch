@@ -1,0 +1,35 @@
+From: Benjamin Kaduk <kaduk@mit.edu>
+Date: Sun, 11 Dec 2016 18:06:03 -0500
+Subject: Catch up to roken's rename of base64 symbols
+
+Upstream roken (i.e., heimdal) renamed their base64 encode/decode
+routines to have a rk_ prefix in 2014, but upstream OpenAFS hasn't
+pulled in an update to their bundled heimdal files since then.
+So, upstream is still using the old name, whereas we are trying
+to link against a more modern libroken, and must use the new names.
+---
+ src/auth/userok.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/auth/userok.c b/src/auth/userok.c
+index fdb3038..caa9ab6 100644
+--- a/src/auth/userok.c
++++ b/src/auth/userok.c
+@@ -470,7 +470,7 @@ ParseLine(char *buffer, struct rx_identity *user)
+ 	if (decodedName == NULL)
+ 	    return ENOMEM;
+ 
+-	len = base64_decode(ename, decodedName);
++	len = rk_base64_decode(ename, decodedName);
+ 	if (len<0) {
+ 	    free(decodedName);
+ 	    return EINVAL;
+@@ -568,7 +568,7 @@ afsconf_AddIdentity(struct afsconf_dir *adir, struct rx_identity *user)
+     if (user->kind == RX_ID_KRB4) {
+ 	fprintf(tf, "%s\n", user->displayName);
+     } else {
+-	base64_encode(user->exportedName.val, user->exportedName.len,
++	rk_base64_encode(user->exportedName.val, user->exportedName.len,
+ 		      &ename);
+ 	fprintf(tf, " %d %s %s\n", user->kind, ename, user->displayName);
+ 	free(ename);

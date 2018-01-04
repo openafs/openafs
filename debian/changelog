@@ -1,6 +1,40 @@
 openafs (1.8.0~pre4-1) UNRELEASED; urgency=low
 
-  * New major branch upstream prerelease:
+  [ Benjamin Kaduk ]
+  * New upstream major release (prerelease):
+    - Servers no longer use rxkad.keytab for long-term keys, which are
+      now stored in KeyFileExt.  Administrators must use akeyconvert
+      or similar tooling to populate the KeyFileExt after updating the
+      krb5 keys in rxkad.keytab.  In most cases, `akeyconvert` with no
+      arguments will suffice; that command is run automatically in the
+      package's postinstall script.
+    - kaserver, klog.afs, pam-openafs-kaserver, and other kauth-related
+      tools are removed.
+    - Server log handling has changed.  Logs are not truncated at
+      startup by default, and are re-opened on SIGUSR1, to be compatible
+      with external log rotation tools.
+    - Client time management support (afsd -settime and afsd -nosettime)
+      has been removed.
+    - Linux versions prior to 2.6 are no longer supported by the client.
+    - Desupport 32-bit s390/s390x
+    - Most binaries now use pthreads instead of LWP green threads.
+    - The fileserver ihandle fsync thread is removed.
+    - Support Linux up to 4.14
+    - Provide vldb cache timeout option for clients
+    - Eliminate potential 100ms delay after rx receive window changes
+    - Modify volume update date after salvager makes changes
+    - Improve ubik safety for relabels and writes shortly after an election
+    - Preserve volume stats during reclone and restore operations
+    - Improve command-line parsing for various utilities.
+      (Closes: #715623, #715787, #716144, #716444)
+    - Fix for OPENAFS-SA-2017-001. (Closes: #883602)
+    - Many other generic improvements throughout the tree; consult the
+      upstream changelog for details.
+  * Add versioned build-depends for renamed symbols in heimdal-multidev.
+    (Closes: #848664)
+
+  [ Anders Kaseorg ]
+  * Use dh_auto_configure.
 
  -- Benjamin Kaduk <kaduk@mit.edu>  Wed, 03 Jan 2018 19:07:27 -0600
 
