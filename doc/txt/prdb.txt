@@ -1,0 +1,580 @@
+This document describes the file format of the protection database file.
+
+The actual prdb.DB0 file on disk begins with a ubik header, which is not
+exposed to the callers of ubik_ RPCs.  64 octets are reserved for this header,
+though only 16 are used.  The first 16 octets contain the representation
+of a struct ubik_hdr, with all fields in network byte order:
+
+       0                   1                   2                   3
+       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                           ubik_magic                          |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |            padding            |          header_size          |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                             epoch                             |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                            counter                            |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                            [unused]                           |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                            [unused]                           |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                            [unused]                           |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                            [unused]                           |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                            [unused]                           |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                            [unused]                           |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                            [unused]                           |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                            [unused]                           |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                            [unused]                           |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                            [unused]                           |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                            [unused]                           |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                            [unused]                           |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+       0                   1                   2                   3
+
+ubik_magic is a global constant, 0x00354545.
+
+padding is an unused field and should always be zeros.
+
+header_size is the length of the reserved space for the ubik header,
+and will always be 0x64.
+
+epoch is the ubik epoch.
+
+counter is the ubik counter for transactions and updates.
+
+The unused space should always be zeros.
+
+The ubik header is not exposed through the PR_ RPC package, and as such
+is not considered to be part of the logical prdb database.  Subsequent
+discussion will refer to addresses and offsets; these addresses are logical
+addresses within the prdb, and do not include the size of the ubik header.
+When using logical addresses to index into the file on disk, the size of
+the ubik header must be added to the offset used.
+
+
+Immediately following the ubik header on disk (so, at the beginning of the
+logical prdb) is the prdb header, which consumes 65600 octets.
+The majority of this space is for two hash tables, enabling
+quick lookups of prdb entries by name and by id.  All fields with integer
+values are stored in network byte order.
+
+The prdb header structure is:
+
+        0                   1                   2                   3
+        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+octets +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     0 |                            version                            |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                          headerSize                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                            freePtr                            |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                            eofPtr                             |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                           maxGroup                            |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                             maxID                             |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                           maxForeign                          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                            maxInst                            |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    32 |                            orphan                             |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                           usercount                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                          groupcount                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                         foreigncount                          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                           instcount                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                          [reserved]                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                          [reserved]                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                          [reserved]                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    64 |                          [reserved]                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                          [reserved]                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        0                   1                   2                   3
+        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    72 |                           nameHash                            |
+       |                                                               |
+       ~                              ...                              ~
+ 32832 |                                                               |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ 32836 |                            idHash                             |
+       |                                                               |
+       ~                              ...                              ~
+ 65596 |                                                               |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+        0                   1                   2                   3
+
+version is the PR database version number.  Only version number 0 is
+presently in use.
+
+headerSize is the size in octets of the prdb header (currently 0x10040).
+
+freePtr is the logical index (in octets) of the first unused prentry in the
+prdb (that is, the first logical hole in the database file).  If the database
+file is densely packed, this field is zero.  This index is not the actual
+index into the prdb.DB0 file on disk, because logical indices within the
+prdb do not account for the 64-octet space reserved for the ubik header.
+
+eofPtr is the index (in octets) of the end of the database file.  When a new
+entry is created that extends the database file, it will be created at this
+logical index.  (Again, this logical index excludes the 64-octet ubik header.)
+
+maxGroup is the most negative group ID allocated, stored as a 32-bit
+twos-complement signed integer.
+
+maxId is the largest user ID allocated to a local-realm user.
+
+maxForeign is the largest user ID allocated to a foreign-realm user.
+
+maxInst is reserved for a feature which is not yet implemented.
+
+orphan is the pointer to the head of the list of "orphaned" prdb entries.
+Entries are orphaned when their owner gets deleted; at that time, they are
+added to the head of the orphan list.
+
+usercount is the number of user entries in the prdb.
+
+groupcount is the number of group entries in the prdb, including mandatory
+groups such as system:backup, system:administrators, system:ptsviewers,
+system:authuser, and system:anyuser.
+
+foreigncount is the number of foreign users that have registered with the
+prdb.
+
+instcount is reserved for a feature which is not yet implemented.
+
+Five 32-bit fields are reserved for future expansion.
+
+The nameHash and idHash fields each contain 8191 entries; each entry is 32 bits,
+so the space consumed by each hash table is 32764 octets.
+
+The NameHash hash function is targetted for ASCII text.  Each octet is
+treated as an unsigned integer from which 31 (decimal) is subtracted
+(corresponding to the 7-bit control characters), and the resulting stream
+of integers is used as the coefficients of a power series with base 31 (also
+decimal), with the least significant coefficient appearing first.
+For example, if a name string was the (highly unlikely and nigh-unusable)
+stream of octets (in hex):
+21 22 23 24
+Then the power series used in the hash function calculation would be
+(all numbers in decimal):
+2 + 3 * 31 + 4 * 31**2 + 5 * 31**3
+The value of this power series is stored in an unsigned 32-bit integer,
+and as such is implicitly computed modulo 2**32.  The remainder modulo
+8191 (the size of the hash table) of this 32-bit value is used as the
+index into the hash table for this name entry.
+(This hash function can be easily implemented iteratively.)
+
+The IdHash hash function is very simple; it is just the remainder modulo
+8191 (the size of the hash table) of the absolute value of the user or
+group id.  Note that a group id of INT_MIN would cause undefined behavior
+in the evaluation of this hash function, and is given the name PRBADID
+and used as a sentinel.
+
+Hash collisions are treated in the standard way of having a linked list
+of entries with the same hash.  The hash table itself holds the id of the
+entry which is the head of the list, and the nextName and nextID fields
+of each entry chain the lists for the respective hash tables.
+
+
+prdb entries follow immediately after the prdb header.  Each entry is
+192 octets in size, and may represent either a user or a group or (if
+enabled) a supergroup entry, or a continuation entry.
+
+User and group entries use the same format for the data structure (user
+ids are positive and group ids are negative, and their structures parallel
+each other), and continuation entries are used when a user belongs to more
+than PRSIZE (10) groups or a group has more than PRSIZE users in it.
+supergroup entries share many fields with the user/group entries, but
+the binary format is slightly different.  In all cases, integer fields
+are represented in network byte order.
+
+All entries have a flags field in the second 16 bits which is used to indicate
+what type the entry is -- PRFREE, PRGRP, PRCONT, PRCELL, PRFOREIGN, or PRINST
+(not used).  The other fields which are invariant in the block structure
+(i.e., present in all types of entry) are id, cellid, and next.  At present
+there is also a reserved field in all entry types at a fixed offset; this
+field can be used for future extensions.  Another invariant is that each
+block (outside the header) is pointed to from some other location.  Continuation
+blocks are pointed to from the 'next' field of the previous block, and
+user/group entries are locatable from the name and id hash tables, either
+directly from the header or through a nextName/nextID pointer.  The head
+of the free list is in the prdb header directly.
+
+The layout of the invariant fields is:
+
+        0                   1                   2                   3
+        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+octets +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     0 |       [entry-specific]        |          type_flags           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                              id                               |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                            cellid                             |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                             next                              |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    16 |                       [entry-specific]                        |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                       [entry-specific]                        |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                       [entry-specific]                        |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                       [entry-specific]                        |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    32 |                           reserved                            |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+type_flags specifies the type of this prdb entry:
+0x1	PRFREE    -- the entry is on the free list
+0x2	PRGRP     -- the entry is a group entry
+0x4	PRCONT    -- the entry is a continuation block
+0x8	PRCELL    -- the entry is a cell entry
+0x10	PRFOREIGN -- the entry is for a foreign user
+0x20	PRINST    -- the entry is a sub/super instance
+0x3f    PRTYPE    -- bitmask for "type" bits
+Other bits are allocated for status flags on the entry:
+0x40	PRACCESS  -- access checking is enabled
+0x80	PRQUOTA   -- group creation quota checking is enabled
+Note that this document specifies the on-disk data format, which is in
+network byte order. Because the fundamental quantum of ubik accesses is
+a 32-bit word, byte swaps between host and network byte order are done
+on 32-bit words, so the in-memory representation may place the bits
+holding type_flags in the other half of the word.
+
+id is the ID number of the user or group, or the user/group to which
+an continuation or other extension entry belongs.  User entries are positive
+and group entries are negative.
+
+cellid is only used for foreign user entries (not foreign groups).
+Group entries are allocated for system:authuser@remotecell with
+a (negative 32-bit) group id of a particular substructure.  Foreign
+user entries have their cellid field set to the id of the
+system:authuser@remotecell group corresponding to the remotecell of the
+foreign user.  (Additionally, foreign user entries are allocated pts ids
+with a particular substructure.)
+There is no particularly good reason for the cellid field to remain an
+invariant in future extensions.
+
+next is a pointer to the next entry in a chain of related data for this
+entry, e.g. a continuation block.  For type PRFREE entries, it is a pointer
+to the next block on the free list.
+
+
+The layout of a user or group entry (struct prentry) is:
+
+        0                   1                   2                   3
+        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+octets +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     0 |           prp_flags           |          type_flags           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                              id                               |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                            cellid                             |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                             next                              |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    16 |                          createTime                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                            addTime                            |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                          removeTime                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                          changeTime                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    32 |                           reserved0                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                           entries[0]                          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                           entries[1]                          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                           entries[2]                          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    48 |                           entries[3]                          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                           entries[4]                          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                           entries[5]                          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                           entries[6]                          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    64 |                           entries[7]                          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                           entries[8]                          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                           entries[9]                          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        0                   1                   2                   3
+        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                             nextID                            |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    80 |                            nextName                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                             owner                             |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                            creator                            |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                            ngroups                            |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    96 |                             nusers                            |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                             count                             |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                            instance                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                             owned                             |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   112 |                           nextOwned                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                            parent                             |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                            sibling                            |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                             child                             |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   128 |                             name                              |
+       +                                                               +
+       |                                                               |
+       +                                                               +
+       |                                                               |
+       +                                                               +
+       |                                                               |
+       +                                                               +
+   144 |                                                               |
+       +                                                               +
+       |                                                               |
+       +                                                               +
+       |                                                               |
+       +                                                               +
+       |                                                               |
+       +                                                               +
+   160 |                                                               |
+       +                                                               +
+       |                                                               |
+       +                                                               +
+       |                                                               |
+       +                                                               +
+       |                                                               |
+       +                                                               +
+   176 |                                                               |
+       +                                                               +
+       |                                                               |
+       +                                                               +
+       |                                                               |
+       +                                                               +
+   188 |                                                               |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+        0                   1                   2                   3
+
+prp_flags and type_flags are consolidated into a single "flags" field for
+API purposes.
+prp_flags hold the access bits for entries, e.g., PRP_STATUS_ANY
+and PRP_ADD_MEM.
+Because prp_flags and type_flags are consolidated
+into a single 'flags' field for the API, the in-memory layout will have
+prp_flags and type_flags swapped on little-endian machines.
+
+[id and cellid are per the entry-invariant fields]
+
+next is a pointer to the next continuation block for this entry, or (for
+type PRFREE entries) a pointer to the next block on the free list.
+
+createTime holds the time at which this entry was created, in seconds from
+the Unix epoch.
+
+addTime is the most recent time at which an entry was added to this
+usr/group's membership list, in seconds since the Unix epoch.
+
+removeTime is the most recent time at which an entry was removed from this
+user/group's membership list, in seconds since the Unix epoch.
+
+changeTime is the most recent time at which the entry was changed with
+a PR_ChangeEntry RPC (that is, renamed or renumbered or had owner
+or name change).  Changing the access flags does not update this time.
+
+reserved[0] is reserved for future use.
+
+entries[0-9] hold the first ten elements of this entry's membership list
+(the users in this group, or the groups of which this user is a member).
+They are populated in increasing order; when fewer than ten elements are
+present, the unused fields are zero or PRBADID.  Additional elements of the
+membership list are stored in continuation block(s).
+
+nextID is a pointer for the hash table chain in the header's idHash hash
+table.  All prdb entries whose id hashes to the same value are stored in
+a singly-linked list; this field effects the linkage of that list.
+
+nextName is similar to nextID, but for the nameHash hash table instead of
+the idHash hash table.
+
+owner is the id of the the prdb entry which owns this entry.
+
+creator is the id of the prdb entry which created this entry.
+
+ngroups is the number of groups this entry is still allowed to create
+(it is the quota minus the number of groups which have been created).
+For regular group entries, this field is always zero.
+For foreign group entries, this is the number of (foreign) users who are
+members of that group.
+
+nusers is nominally the foreign user registration quota for a user entry,
+that is, the number of foreign user entries this user is still allowed to
+create.  However, this quota value is never actually used -- the presence of
+nusers for user entries was intended to support a feature which has not been
+implemented.
+For regular group entries, it is always zero.
+For foreign group entries (i.e., system:authuser@remotecell), nusers is the
+number of foreign user entries which are members of the group.
+(It is used when allocating user ids for new foreign users from that cell.)
+
+count is the cardinality of this entry's membership list.  That is, for user
+entries, the number of groups of which this user is a member; for group entries,
+the number of users in the group.
+
+instances is reserved for a feature which is not yet implemented.
+
+owned is the head of the linked list of entries owned by this entry.
+Both users and groups may own group entries (user entries always display
+as being owned by system:administrators though the numerical value of this
+field is zero).  The nextOwned field of the group entries chains this list.
+
+nextOwned is the pointer to the next entry in the list of groups owned
+by a the owner of this group.
+For user entries, this field is always zero.
+
+parent is reserved for a feature which is not yet implemented.
+
+sibling is reserved for a feature which is not yet implemented.
+
+child is reserved for a feature which is not yet implemented.
+
+name holds the name of this entry.  For users, it is the krb4 name;
+for groups, is is an ASCII string.  The name is NUL-terminated, making the
+maximum permissible length of a name 63 characters.  Unused portions of this
+field should be zeroed.
+
+
+Supergroup entries are quite similar to regular user/group entries, differing
+only at the 'instance', 'parent', 'sibling', and 'child' fields,
+which are replace by 'countsg', 'nextsg', 'supergroup[0]', and
+'supergroup[1]', respectively.  Putting the byte offsets in, those fields
+are:
+
+        0                   1                   2                   3
+        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+octets +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   104 |                            countsg                            |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                             owned                             |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   112 |                           nextOwned                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                            nextsg                             |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                         supergroup[0]                         |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                         supergroup[1]                         |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   128 |                             name                              |
+       ~                                                               ~
+   188 |                                                               |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+        0                   1                   2                   3
+
+countsg is the number of groups of which this group is a member, akin to
+the 'count' field of a user entry.
+
+nextsg is a pointer to a chain of continuation blocks holding additional
+supergroup entries for this group.  That is, the 'entries' elements of the
+continuation blocks will be groups of which this group is a member, akin
+to supergroup[0-1].  This chain is extended using the 'next' pointer of
+the contentry structure, if necessary.
+
+supergroup[0-1] are the first two groups of which this group is a member.
+These supergroup elements are used in increasing order, and unused elements
+should be zero (but PRBADID is also okay).
+
+
+Continuation entries have a simpler structure, retaining a few key fields
+that are shared amongst all types of entry but leaving a large contiguous
+block of space to be used as an array of ids.  Again, all integer
+fields are stored in network byte order.  The format is:
+
+        0                   1                   2                   3
+        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+octets +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     0 |             unused            |          type_flags           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                              id                               |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                            cellid                             |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                             next                              |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    16 |                          reserved[0]                          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                          reserved[1]                          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                          reserved[2]                          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                          reserved[3]                          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    32 |                          reserved[4]                          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                           entries[0]                          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                           entries[1]                          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                           entries[2]                          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    48 |                           entries[3]                          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       ~                              ...                              ~
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   188 |                          entries[38]                          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+        0                   1                   2                   3
+
+the type_flags field is again exposed via the API as a 32-bit 'flags' field,
+but only the low 16 bits are used for flags by continuation entries.
+
+id and cellid are retained as a consistency check for the entry -- these
+fields should be identical amongst the main entry and all continuation
+blocks chained to it.
+
+The four Time fields present in the user/group entries are not needed for
+continuation entries, but are left as reserved so as to make the space
+used for holding ids a contiguous array.
+
+Each continuation block can hold up to 39 additional prdb ids associated
+with the original user or group entry, extending the original 10 entries
+available in the main entry block (for user/group membership) or the
+original 2 entries available in the main group block (for supergroup
+membership).

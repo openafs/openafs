@@ -64,7 +64,7 @@ AC_DEFUN([AC_TRY_KBUILD], [
   fi])
 
 AC_DEFUN([LINUX_KERNEL_COMPILE_WORKS], [
-  AC_MSG_CHECKING([for linux kernel module build works])
+  AC_MSG_CHECKING([if linux kernel module build works])
   AC_TRY_KBUILD(
 [#include <linux/sched.h>
 #include <linux/fs.h>],
@@ -147,7 +147,7 @@ AC_DEFUN([AC_CHECK_LINUX_TYPED_STRUCT],
 		       [#include <linux/$3>],
 		       [$1 _test; printk("%x\n", &_test.$2); ],
 		       AS_TR_CPP($1_HAS_$2),
-		       [Define if kernel typedef'd $1 has the $2 element])
+		       [Define if kernel $1 has the $2 element])
  ])
 
 dnl AC_CHECK_LINUX_OPERATION([structure], [operation], [label], [includes], [return_type], [args])

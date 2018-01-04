@@ -12,13 +12,17 @@
 
 
 #include "rx/rx_kcommon.h"
+#include "rx/rx_atomic.h"
+#include "rx/rx_internal.h"
+#include "rx/rx_packet.h"
+#include "rx/rx_stats.h"
 
 #ifdef AFS_DARWIN80_ENV
 #define soclose sock_close
 #endif
 
 #ifdef RXK_UPCALL_ENV
-extern int rxinit_status;
+extern rx_atomic_t rxinit_status;
 
 void
 rx_upcall(socket_t so, void *arg, __unused int waitflag)
@@ -36,9 +40,8 @@ rx_upcall(socket_t so, void *arg, __unused int waitflag)
     afs_int32 savelen;          /* was using rlen but had aliasing problems */
     size_t nbytes, resid, noffset;
 
-    /* if rx is shut down, but the socket is not closed yet, we
-       can't process packets. just return now. */
-    if (rxinit_status)
+    /* we stopped rx but the socket isn't closed yet */
+    if (rx_atomic_test_bit(&rxinit_status, 0))
 	return;
 
     /* See if a check for additional packets was issued */
@@ -112,7 +115,7 @@ rx_upcall(socket_t so, void *arg, __unused int waitflag)
 	    if (nbytes <= 0) {
 		if (rx_stats_active) {
 		    MUTEX_ENTER(&rx_stats_mutex);
-		    rx_stats.bogusPacketOnRead++;
+		    rx_atomic_inc(&rx_stats.bogusPacketOnRead);
 		    rx_stats.bogusHost = from.sin_addr.s_addr;
 		    MUTEX_EXIT(&rx_stats_mutex);
 		}
@@ -128,9 +131,7 @@ rx_upcall(socket_t so, void *arg, __unused int waitflag)
 	    port = from.sin_port;
 	    if (p->header.type > 0 && p->header.type < RX_N_PACKET_TYPES) {
 		if (rx_stats_active) {
-		    MUTEX_ENTER(&rx_stats_mutex);
-		    rx_stats.packetsRead[p->header.type - 1]++;
-		    MUTEX_EXIT(&rx_stats_mutex);
+		    rx_atomic_inc(&rx_stats.packetsRead[p->header.type - 1]);
 		}
 	    }
 

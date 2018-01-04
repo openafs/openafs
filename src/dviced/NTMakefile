@@ -17,7 +17,6 @@ RELDIR=dviced
 EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\dafileserver.exe
 
 VICED = ..\viced
-TVICED = ..\tviced
 LIBACL = ..\libacl
 DIR = ..\dir
 FSINT = ..\fsint
@@ -26,9 +25,8 @@ RX = ..\rx
 RXOBJS = $(OUT)\xdr_int64.obj \
          $(OUT)\xdr_int32.obj
 
-VICEDOBJS = $(OUT)\viced.obj $(OUT)\afsfileprocs.obj $(OUT)\host.obj $(OUT)\physio.obj $(OUT)\callback.obj 
-
-TVICEDOBJS = $(OUT)\serialize_state.obj
+VICEDOBJS = $(OUT)\viced.obj $(OUT)\afsfileprocs.obj $(OUT)\fsstats.obj $(OUT)\host.obj $(OUT)\physio.obj \
+	$(OUT)\callback.obj $(OUT)\serialize_state.obj
 
 DAFS_VICEDRES =  $(OUT)\dafileserver.res
 
@@ -54,9 +52,6 @@ $(VICEDOBJS): $(VICED)\$$(@B).c
 $(DAFS_VICEDRES): dafileserver.rc AFS_component_version_number.h
 	$(RC) /fo $(DAFS_VICEDRES) dafileserver.rc
 
-$(TVICEDOBJS): $(TVICED)\$$(@B).c
-	$(C2OBJ) -I$(TVICED) $**
-
 $(LIBACLOBJS): $(LIBACL)\$$(@B).C
 	$(C2OBJ) -I$(LIBACL) $**
 
@@ -78,21 +73,22 @@ EXELIBS = \
 	$(DESTDIR)\lib\afs\mtafsutil.lib \
         $(DESTDIR)\lib\afs\daafsvol.lib \
         $(DESTDIR)\lib\afs\mtafsvldb.lib \
-	$(DESTDIR)\lib\afspthread.lib
+	$(DESTDIR)\lib\afspthread.lib \
+	$(DESTDIR)\lib\opr.lib \
+	$(DESTDIR)\lib\afsroken.lib
 
 $(EXEFILE): $(EXEOBJS) $(EXELIBS)
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
-	$(EXEPREP) 
+	$(EXEPREP)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 
 install:  $(EXEFILE)
 
 mkdir:
-	
+
 clean::
 	-$(DEL) $(EXEFILE)
         -$(DEL) $(DAFS_VICEDRES)
 
-	

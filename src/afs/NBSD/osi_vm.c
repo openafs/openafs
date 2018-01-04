@@ -10,7 +10,7 @@
 
 /* osi_vm.c implements:
  *
- * osi_VM_FlushVCache(avc, slept)
+ * osi_VM_FlushVCache(avc)
  * osi_ubc_flush_dirty_and_wait(vp, flags)
  * osi_VM_StoreAllSegments(avc)
  * osi_VM_TryToSmush(avc, acred, sync)
@@ -24,9 +24,6 @@
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afs/afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* statistics */
-/* #include <vm/vm_ubc.h> */
-#include <limits.h>
-#include <float.h>
 
 /* Try to discard pages, in order to recycle a vcache entry.
  *
@@ -35,18 +32,33 @@
  * We also do some non-VM-related chores, such as releasing the cred pointer
  * (for AIX and Solaris) and releasing the gnode (for AIX).
  *
- * Locking:  afs_xvcache lock is held.  If it is dropped and re-acquired,
- *   *slept should be set to warn the caller.
- *
- * Formerly, afs_xvcache was dropped and re-acquired for Solaris, but now it
- * is not dropped and re-acquired for any platform.  It may be that *slept is
- * therefore obsolescent.
+ * Locking:  afs_xvcache lock is held. It must not be dropped.
  *
  * OSF/1 Locking:  VN_LOCK has been called.
  */
 int
-osi_VM_FlushVCache(struct vcache *avc, int *slept)
+osi_VM_FlushVCache(struct vcache *avc)
 {
+    struct vnode *vp = AFSTOV(avc);
+
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("%s enter\n", __func__);
+    }
+
+    if (vp == NULL) {
+	printf("%s NULL vp\n", __func__);
+	return 0;
+    }
+
+    AFS_GUNLOCK();
+    cache_purge(vp);
+    vflushbuf(vp, 1);
+    AFS_GLOCK();
+
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("%s exit\n", __func__);
+    }
+
     return 0;
 }
 
@@ -58,6 +70,22 @@ osi_VM_FlushVCache(struct vcache *avc, int *slept)
 void
 osi_VM_StoreAllSegments(struct vcache *avc)
 {
+    struct vnode *vp;
+
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("%s enter\n", __func__);
+    }
+
+    ReleaseWriteLock(&avc->lock);
+    AFS_GUNLOCK();
+    vp = AFSTOV(avc);
+    mutex_enter(&vp->v_interlock);
+    VOP_PUTPAGES(vp, 0, 0, PGO_ALLPAGES|PGO_CLEANIT|PGO_SYNCIO);
+    AFS_GLOCK();
+    ObtainWriteLock(&avc->lock, 94);
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("%s exit\n", __func__);
+    }
 }
 
 /* Try to invalidate pages, for "fs flush" or "fs flushv"; or
@@ -72,6 +100,17 @@ osi_VM_StoreAllSegments(struct vcache *avc)
 void
 osi_VM_TryToSmush(struct vcache *avc, afs_ucred_t *acred, int sync)
 {
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("%s enter\n", __func__);
+    }
+
+    ReleaseWriteLock(&avc->lock);
+    osi_VM_FlushVCache(avc);
+    ObtainWriteLock(&avc->lock, 59);
+
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("%s exit\n", __func__);
+    }
 }
 
 /* Purge VM for a file when its callback is revoked.
@@ -81,6 +120,23 @@ osi_VM_TryToSmush(struct vcache *avc, afs_ucred_t *acred, int sync)
 void
 osi_VM_FlushPages(struct vcache *avc, afs_ucred_t *credp)
 {
+    struct vnode *vp = AFSTOV(avc);
+
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("%s enter\n", __func__);
+    }
+
+    if (!vp) {
+	printf("%s NULL vp\n", __func__);
+	return;
+    }
+
+    cache_purge(vp);
+    vinvalbuf(vp, 0, credp, curlwp, false, 1);
+
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("%s exit\n", __func__);
+    }
 }
 
 /* Purge pages beyond end-of-file, when truncating a file.
@@ -90,6 +146,17 @@ osi_VM_FlushPages(struct vcache *avc, afs_ucred_t *credp)
  * it only works on Solaris.
  */
 void
-osi_VM_Truncate(struct vcache *avc, int alen, afs_ucred_t *acred)
+osi_VM_Truncate(struct vcache *avc, voff_t alen, afs_ucred_t *acred)
 {
+    struct vnode *vp = AFSTOV(avc);
+
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("%s enter\n", __func__);
+    }
+
+    vtruncbuf(vp, alen, false, 0);
+
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("%s exit\n", __func__);
+    }
 }

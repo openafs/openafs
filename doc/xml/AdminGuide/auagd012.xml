@@ -834,8 +834,8 @@
           and write to files in the <emphasis role="bold">/usr/afs/backup</emphasis> directory.</para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ293" />Open a connection (using a command such as <emphasis role="bold">telnet</emphasis> or
+        <listitem id="LIWQ293">
+          <para>Open a connection (using a command such as <emphasis role="bold">telnet</emphasis> or
           <emphasis role="bold">rlogin</emphasis>) to the Tape Coordinator machine that drives the tape device, or whose local disk
           houses the backup data file. The Tape Coordinator uses a devoted connection or window that must remain open for the Tape
           Coordinator to accept requests and while it is executing them.</para>
@@ -845,8 +845,8 @@
           role="bold">root</emphasis>.</para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ294" />Issue the <emphasis role="bold">butc</emphasis> command to start the Tape Coordinator. You
+        <listitem id="LIWQ294">
+          <para>Issue the <emphasis role="bold">butc</emphasis> command to start the Tape Coordinator. You
           can include either, but not both, of the <emphasis role="bold">-localauth</emphasis> and <emphasis
           role="bold">-cell</emphasis> options, as discussed in <link linkend="HDRWQ287">Performing Backup Operations as the Local
           Superuser Root or in a Foreign Cell</link>. <programlisting>
@@ -1542,8 +1542,8 @@
 </programlisting>
 
       <orderedlist>
-        <listitem>
-          <para><anchor id="LIBKOV-BUTC" />You issue the <emphasis role="bold">butc</emphasis> command to start a Tape Coordinator
+        <listitem id="LIBKOV-BUTC">
+          <para>You issue the <emphasis role="bold">butc</emphasis> command to start a Tape Coordinator
           to handle the dump operation. The Tape Coordinator does not have to be running when you issue the <emphasis
           role="bold">backup dump</emphasis> command, but must be active in time to accept the list of volumes to be included in the
           dump, when Step <link linkend="LIBKOV-VOLMATCHES">3</link> is completed. To avoid coordination problems, it is best to
@@ -1570,8 +1570,8 @@
           mode</link>.</para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIBKOV-VOLMATCHES" />The Backup System works with the VL Server to generate a list of the volumes in the
+        <listitem id="LIBKOV-VOLMATCHES">
+          <para>The Backup System works with the VL Server to generate a list of the volumes in the
           VLDB that match the name and location criteria defined in the volume set's volume entries. If a volume matches more than
           one volume entry, the Backup System ignores the duplicates so that the dump includes only one copy of data from the
           volume.</para>
@@ -1591,8 +1591,8 @@
           role="bold">user.terry.backup</emphasis>, and <emphasis role="bold">user.smith.backup</emphasis>.</para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIBKOV-CLONEDATE" />The Backup System next scans the dump hierarchy for the dump level you have
+        <listitem id="LIBKOV-CLONEDATE">
+          <para>The Backup System next scans the dump hierarchy for the dump level you have
           specified on the <emphasis role="bold">backup dump</emphasis> command line. If it is a full level, then in the current
           operation the Backup System backs up all of the data in all of the volumes in the list obtained in Step <link
           linkend="LIBKOV-VOLMATCHES">3</link>.</para>
@@ -1662,8 +1662,8 @@
 </programlisting>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIBKOV-READCFG" />The Tape Coordinator prepares to back up the data. If there is a <emphasis
+        <listitem id="LIBKOV-READCFG">
+          <para>The Tape Coordinator prepares to back up the data. If there is a <emphasis
           role="bold">CFG_</emphasis>device_name file, the Tape Coordinator already read it in Step <link
           linkend="LIBKOV-BUTC">1</link>. The following list describes how the instructions in the file guide the Tape Coordinator's
           behavior at this point: <variablelist>
@@ -1734,8 +1734,8 @@
           the <emphasis role="bold">-noautoquery</emphasis> flag to the <emphasis role="bold">butc</emphasis> command).</para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIBKOV-NAMECHECK" />The Tape Coordinator opens either a tape drive or backup data file at this point, as
+        <listitem id="LIBKOV-NAMECHECK">
+          <para>The Tape Coordinator opens either a tape drive or backup data file at this point, as
           directed by the instructions in the <emphasis role="bold">CFG_</emphasis>device_name file (described in Step <link
           linkend="LIBKOV-READCFG">6</link>). The instructions also determine whether it invokes a mount script or prompts the
           operator. In Step <link linkend="LIBKOV-BUTC">1</link> the Tape Coordinator read in the device's capacity and filemark
@@ -1751,8 +1751,8 @@
           linkend="HDRWQ280">Eliminating the AFS Tape Name Check</link>.</para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIBKOV-EXPDATE" />For an initial dump, the Tape Coordinator starts writing at the beginning of the tape
+        <listitem id="LIBKOV-EXPDATE">
+          <para>For an initial dump, the Tape Coordinator starts writing at the beginning of the tape
           or backup dump file, overwriting any existing data. To prevent inappropriate overwriting, the Backup System first checks
           the Backup Database for any dump records associated with the name (permanent or AFS tape name) on the tape or backup dump
           file's label. It refuses to write to a backup data file that has unexpired dumps in it, or to a tape that belongs to a
@@ -1779,8 +1779,8 @@
 </programlisting>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIBKOV-WRITE" />The Tape Coordinator now writes data to the tape or backup data file. It uses the
+        <listitem id="LIBKOV-WRITE">
+          <para>The Tape Coordinator now writes data to the tape or backup data file. It uses the
           capacity and filemark size it obtained in Step <link linkend="LIBKOV-NAMECHECK">7</link> as it tracks how much more space
           is available, automatically using its tape acquisition procedure if the dump is not finished when it reaches the end of
           the tape. For a more detailed description, and a discussion of what happens if the Tape Coordinator reaches the physical
@@ -2087,8 +2087,8 @@
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIBKDUMP-SYNTAX" />Issue the <emphasis role="bold">backup dump</emphasis> command to dump the volume
+        <listitem id="LIBKDUMP-SYNTAX">
+          <para>Issue the <emphasis role="bold">backup dump</emphasis> command to dump the volume
           set. <itemizedlist>
               <listitem>
                 <para>To create one initial dump, provide only the volume set name, dump level name, and port offset (if not
@@ -2995,7 +2995,7 @@
    tape name = monthly_guest
    AFS tape name = guests.monthly.3
    creationTime =  Mon Feb  1 04:06:40 1999
-   cell = abc.com
+   cell = example.com
    size = 2150000 Kbytes
    dump path = /monthly
    dump id = 917860000
@@ -4270,8 +4270,8 @@
           cell.</para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LISAVEDB-STARTTC" />If the Tape Coordinator for the tape device that is to perform the operation is not
+        <listitem id="LISAVEDB-STARTTC">
+          <para>If the Tape Coordinator for the tape device that is to perform the operation is not
           already running, open a connection to the appropriate Tape Coordinator machine and issue the <emphasis
           role="bold">butc</emphasis> command, for which complete instructions appear in <link linkend="HDRWQ292">To start a Tape
           Coordinator process</link>. <programlisting>
@@ -4302,8 +4302,8 @@
 </programlisting></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LISAVEDB-CMD" />Issue the <emphasis role="bold">(backup) savedb</emphasis> command to repair corruption
+        <listitem id="LISAVEDB-CMD">
+          <para>Issue the <emphasis role="bold">(backup) savedb</emphasis> command to repair corruption
           in the database as it is written to tape or a file. <programlisting>
    backup&gt; <emphasis role="bold">savedb</emphasis> [<emphasis role="bold">-portoffset</emphasis> &lt;<emphasis>TC port offset</emphasis>&gt;]
 </programlisting></para>

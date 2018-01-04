@@ -10,28 +10,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <sys/types.h>
-#include <stdarg.h>
-#include <string.h>
-#include <errno.h>
-
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <io.h>
-#include <fcntl.h>
-#else
-#include <sys/file.h>
-#include <netinet/in.h>
-#endif
-#include <sys/stat.h>
-
-/* #ifdef AFS_PTHREAD_ENV */
-#if 0   /* temporary hack - klm */
-/* nothing */
-#else
 #include <lwp.h>
-#endif
 
 #include <lock.h>
 #include <afs/afsutil.h>
@@ -88,8 +69,8 @@ uphys_open(struct ubik_dbase *adbase, afs_int32 afid)
     }
 
     /* not found, open it and try to enter in cache */
-    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d", adbase->pathName,
-		 (afid<0)?"SYS":"", (afid<0)?-afid:afid);
+    snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d", adbase->pathName,
+	     (afid<0)?"SYS":"", (afid<0)?-afid:afid);
     fd = open(pbuffer, O_CREAT | O_RDWR, 0600);
     if (fd < 0) {
 	/* try opening read-only */
@@ -132,7 +113,7 @@ uphys_open(struct ubik_dbase *adbase, afs_int32 afid)
 /*!
  * \brief Close the file, maintaining ref count in cache structure.
  */
-int
+static int
 uphys_close(int afd)
 {
     int i;

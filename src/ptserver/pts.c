@@ -10,34 +10,26 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <stdio.h>
-#include <string.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
 #include <ctype.h>
-#include <sys/types.h>
-#include <errno.h>
-#include <afs/cmd.h>
+
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
 #include <WINNT/afsevent.h>
 #include <WINNT/afsreg.h>
-#else
-#include <netinet/in.h>
 #endif
+
 #include <afs/cellconfig.h>
+#include <afs/afsutil.h>
+#include <afs/com_err.h>
+#include <afs/cmd.h>
 #include <rx/rx.h>
 #include <rx/xdr.h>
+
 #include "ptclient.h"
 #include "ptuser.h"
 #include "pterror.h"
 #include "ptprototypes.h"
-#include <afs/afsutil.h>
-#include <afs/com_err.h>
-
-#undef FOREIGN
 
 char *whoami;
 int force = 0;
@@ -90,7 +82,7 @@ pts_Source(struct cmd_syndesc *as, void *arock)
 	perror(as->parms[0].items->data);
 	return errno;
     }
-    sp = (struct sourcestack *)malloc(sizeof *sp);
+    sp = malloc(sizeof *sp);
     if (!sp) {
 	return errno ? errno : ENOMEM;
     } else {
@@ -129,7 +121,7 @@ popsource(void)
 	fclose(source);
     source = sp->s_file;
     shead = sp->s_next;
-    free((char *)sp);
+    free(sp);
     return 1;
 }
 
@@ -223,6 +215,12 @@ GetGlobals(struct cmd_syndesc *as, void *arock)
 	else
 	    confdir = AFSDIR_CLIENT_ETC_DIRPATH;
     }
+
+    if (as->parms[23].items) { /* -config */
+	changed = 1;
+	confdir = as->parms[23].items->data;
+    }
+
     if (changed) {
 	CleanUp(as, arock);
 	code = pr_Initialize(sec, confdir, cell);
@@ -283,7 +281,7 @@ CreateGroup(struct cmd_syndesc *as, void *arock)
 		return code;
 	    }
 	    if (id == 0) {
-		printf("0 isn't a valid group id; aborting\n");
+		fprintf(stderr, "0 isn't a valid group id; aborting\n");
 		return EINVAL;
 	    }
 	    if (id > 0) {
@@ -336,7 +334,7 @@ CreateUser(struct cmd_syndesc *as, void *arock)
 		return code;
 	    }
 	    if (id == 0) {
-		printf("0 isn't a valid user id; aborting\n");
+		fprintf(stderr, "0 isn't a valid user id; aborting\n");
 		return EINVAL;
 	    }
 	    if (id < 0) {
@@ -403,7 +401,7 @@ GetNameOrId(struct cmd_syndesc *as, struct idlist *lids, struct namelist *lnames
 	n = 0;			/* count names */
 	for (i = as->parms[0].items; i; i = i->next)
 	    n++;
-	nl->namelist_val = (prname *) malloc(n * PR_MAXNAMELEN);
+	nl->namelist_val = malloc(n * PR_MAXNAMELEN);
 	nl->namelist_len = n;
 	n = 0;
 	for (i = as->parms[0].items; i; i = i->next)
@@ -431,7 +429,7 @@ GetNameOrId(struct cmd_syndesc *as, struct idlist *lids, struct namelist *lnames
 	n = 0;
 	for (i = as->parms[1].items; i; i = i->next)
 	    n++;
-	lids->idlist_val = (afs_int32 *) malloc(n * sizeof(afs_int32));
+	lids->idlist_val = malloc(n * sizeof(afs_int32));
 	lids->idlist_len = n;
 	n = 0;
 	for (i = as->parms[1].items; i; i = i->next) {
@@ -471,20 +469,30 @@ GetNameOrId(struct cmd_syndesc *as, struct idlist *lids,
     struct idlist ids, tids;	/* local copy, if not ret. ids */
     int goodCount = 0;
 
+    /* Initialise our outputs */
+    memset(lids, 0, sizeof(struct idlist));
+    if (lnames)
+	memset(lnames, 0, sizeof(struct namelist));
+
     for (i = as->parms[0].items; i; i = i->next)
 	n++;
-    lids->idlist_val = (afs_int32 *) malloc(n * sizeof(afs_int32));
+
+    /* Nothing to do, so bail */
+    if (n == 0)
+	return 0;
+
+    lids->idlist_val = malloc(n * sizeof(afs_int32));
     lids->idlist_len = n;
-    ids.idlist_val = (afs_int32 *) malloc(n * sizeof(afs_int32));
+    ids.idlist_val = malloc(n * sizeof(afs_int32));
     ids.idlist_len = n;
-    names.namelist_val = (prname *) malloc(n * PR_MAXNAMELEN);
+    names.namelist_val = malloc(n * PR_MAXNAMELEN);
     names.namelist_len = n;
     if (lnames) {
-	lnames->namelist_val = (prname *) malloc(n * PR_MAXNAMELEN);
+	lnames->namelist_val = malloc(n * PR_MAXNAMELEN);
 	lnames->namelist_len = 0;
     }
     for (i = as->parms[0].items; i; i = i->next) {
-	tnames.namelist_val = (prname *) malloc(PR_MAXNAMELEN);
+	tnames.namelist_val = malloc(PR_MAXNAMELEN);
 	strncpy(tnames.namelist_val[0], i->data, PR_MAXNAMELEN);
 	tnames.namelist_len = 1;
 	tids.idlist_len = 0;
@@ -529,12 +537,13 @@ GetNameOrId(struct cmd_syndesc *as, struct idlist *lids,
 	code = pr_IdToName(&ids, &tnames);
 	if (code)
 	    afs_com_err(whoami, code, "translating ids");
-	else
+	else {
 	    goodCount++;
-	if (lnames) {
-	    for (x = 0; x < ids.idlist_len; x++)
-		strcpy(lnames->namelist_val[nd + x], tnames.namelist_val[x]);
-	    lnames->namelist_len = nd + x;
+	    if (lnames) {
+		for (x = 0; x < ids.idlist_len; x++)
+		    strcpy(lnames->namelist_val[nd + x], tnames.namelist_val[x]);
+		lnames->namelist_len = nd + x;
+	    }
 	}
     }
     /* treat things as working if any of the lookups worked */
@@ -714,7 +723,7 @@ CheckEntry(struct cmd_syndesc *as, void *arock)
 	return PRBADARG;
 
     lids.idlist_len = 2;
-    lids.idlist_val = (afs_int32 *) malloc(sizeof(afs_int32) * 2);
+    lids.idlist_val = malloc(sizeof(afs_int32) * 2);
     lnames.namelist_len = 0;
     lnames.namelist_val = 0;
 
@@ -782,9 +791,6 @@ CheckEntry(struct cmd_syndesc *as, void *arock)
 	    printf(", group quota: unlimited");
 	else
 	    printf(", group quota: %d", aentry.ngroups);
-#if FOREIGN
-	printf(", foreign user quota=%d", aentry.nusers);
-#endif
 	printf(".\n");
     }
 
@@ -923,7 +929,7 @@ SetMaxCommand(struct cmd_syndesc *as, void *arock)
     }
     if (!as->parms[0].items && !as->parms[1].items) {
 	code = PRBADARG;
-	printf("Must specify at least one of group or user.\n");
+	fprintf(stderr, "Must specify at least one of group or user.\n");
     }
     return code;
 }
@@ -953,7 +959,7 @@ SetFields(struct cmd_syndesc *as, void *arock)
 	} else {		/* interpret flag bit names */
 	    if (strlen(access) != 5) {
 	      form_error:
-		printf("Access bits must be of the form 'somar', not %s\n",
+		fprintf(stderr, "Access bits must be of the form 'somar', not %s\n",
 		       access);
 		return PRBADARG;
 	    }
@@ -968,8 +974,8 @@ SetFields(struct cmd_syndesc *as, void *arock)
 		else if (access[i] == '-')
 		    new = 0;
 		else {
-		    printf
-			("Access bits out of order or illegal:\n  must be a combination of letters from '%s' or '%s' or hyphen, not %s\n",
+		    fprintf(stderr,
+			"Access bits out of order or illegal:\n  must be a combination of letters from '%s' or '%s' or hyphen, not %s\n",
 			 flags_upcase, flags_dncase, access);
 		    return PRBADARG;
 		}
@@ -992,17 +998,6 @@ SetFields(struct cmd_syndesc *as, void *arock)
 	}
 	mask |= PR_SF_NGROUPS;
     }
-#if FOREIGN
-    if (as->parms[3].items) {	/* limitgroups */
-	code = util_GetInt32(as->parms[3].items->data, &nusers);
-	if (code) {
-	    afs_com_err(whoami, code, "because nusers was: '%s'",
-		    as->parms[3].items->data);
-	    return code;
-	}
-	mask |= PR_SF_NUSERS;
-    }
-#endif
 
     for (i = 0; i < ids.idlist_len; i++) {
 	afs_int32 id = ids.idlist_val[i];
@@ -1076,9 +1071,12 @@ ListOwned(struct cmd_syndesc *as, void *arock)
 static void
 add_std_args(struct cmd_syndesc *ts)
 {
-    char test_help[AFSDIR_PATH_MAX];
+    char *test_help;
 
-    sprintf(test_help, "use config file in %s", AFSDIR_SERVER_ETC_DIRPATH);
+    if (asprintf(&test_help, "use config file in %s",
+		 AFSDIR_SERVER_ETC_DIRPATH) < 0) {
+	test_help = strdup("use server config file");
+    }
 
     cmd_Seek(ts, 16);
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
@@ -1092,6 +1090,8 @@ add_std_args(struct cmd_syndesc *ts)
 		"use user's authentication (default)");
     cmd_AddParm(ts, "-encrypt", CMD_FLAG, CMD_OPTIONAL,
 		"encrypt commands");
+    cmd_AddParm(ts, "-config", CMD_SINGLE, CMD_OPTIONAL, "config location");
+    free(test_help);
 }
 
 /*
@@ -1144,7 +1144,7 @@ main(int argc, char **argv)
     memset(&state, 0, sizeof(state));
     state.sec = 1; /* default is auth */
 
-    ts = cmd_CreateSyntax("creategroup", CreateGroup, NULL,
+    ts = cmd_CreateSyntax("creategroup", CreateGroup, NULL, 0,
 			  "create a new group");
     cmd_AddParm(ts, "-name", CMD_LIST, 0, "group name");
     cmd_AddParm(ts, "-owner", CMD_SINGLE, CMD_OPTIONAL, "owner of the group");
@@ -1153,24 +1153,24 @@ main(int argc, char **argv)
     add_std_args(ts);
     cmd_CreateAlias(ts, "cg");
 
-    ts = cmd_CreateSyntax("createuser", CreateUser, NULL, "create a new user");
+    ts = cmd_CreateSyntax("createuser", CreateUser, NULL, 0, "create a new user");
     cmd_AddParm(ts, "-name", CMD_LIST, 0, "user name");
     cmd_AddParm(ts, "-id", CMD_LIST, CMD_OPTIONAL, "user id");
     add_std_args(ts);
     cmd_CreateAlias(ts, "cu");
 
-    ts = cmd_CreateSyntax("adduser", AddToGroup, NULL, "add a user to a group");
+    ts = cmd_CreateSyntax("adduser", AddToGroup, NULL, 0, "add a user to a group");
     cmd_AddParm(ts, "-user", CMD_LIST, 0, "user name");
     cmd_AddParm(ts, "-group", CMD_LIST, 0, "group name");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("removeuser", RemoveFromGroup, NULL,
+    ts = cmd_CreateSyntax("removeuser", RemoveFromGroup, NULL, 0,
 			  "remove a user from a group");
     cmd_AddParm(ts, "-user", CMD_LIST, 0, "user name");
     cmd_AddParm(ts, "-group", CMD_LIST, 0, "group name");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("membership", ListMembership, NULL,
+    ts = cmd_CreateSyntax("membership", ListMembership, NULL, 0,
 			  "list membership of a user or group");
     cmd_AddParm(ts, "-nameorid", CMD_LIST, 0, "user or group name or id");
     cmd_AddParm(ts, "-supergroups", CMD_FLAG, CMD_OPTIONAL, "show supergroups");
@@ -1178,72 +1178,68 @@ main(int argc, char **argv)
     add_std_args(ts);
     cmd_CreateAlias(ts, "groups");
 
-    ts = cmd_CreateSyntax("delete", Delete, NULL,
+    ts = cmd_CreateSyntax("delete", Delete, NULL, 0,
 			  "delete a user or group from database");
     cmd_AddParm(ts, "-nameorid", CMD_LIST, 0, "user or group name or id");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("examine", CheckEntry, NULL, "examine an entry");
+    ts = cmd_CreateSyntax("examine", CheckEntry, NULL, 0, "examine an entry");
     cmd_AddParm(ts, "-nameorid", CMD_LIST, 0, "user or group name or id");
     add_std_args(ts);
     cmd_CreateAlias(ts, "check");
 
-    ts = cmd_CreateSyntax("chown", ChownGroup, NULL,
+    ts = cmd_CreateSyntax("chown", ChownGroup, NULL, 0,
 			  "change ownership of a group");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "group name");
     cmd_AddParm(ts, "-owner", CMD_SINGLE, 0, "new owner");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("rename", ChangeName, NULL, "rename user or group");
+    ts = cmd_CreateSyntax("rename", ChangeName, NULL, 0, "rename user or group");
     cmd_AddParm(ts, "-oldname", CMD_SINGLE, 0, "old name");
     cmd_AddParm(ts, "-newname", CMD_SINGLE, 0, "new name");
     add_std_args(ts);
     cmd_CreateAlias(ts, "chname");
 
-    ts = cmd_CreateSyntax("listmax", ListMax, NULL, "list max id");
+    ts = cmd_CreateSyntax("listmax", ListMax, NULL, 0, "list max id");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("setmax", SetMaxCommand, NULL, "set max id");
+    ts = cmd_CreateSyntax("setmax", SetMaxCommand, NULL, 0, "set max id");
     cmd_AddParm(ts, "-group", CMD_SINGLE, CMD_OPTIONAL, "group max");
     cmd_AddParm(ts, "-user", CMD_SINGLE, CMD_OPTIONAL, "user max");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("setfields", SetFields, NULL,
+    ts = cmd_CreateSyntax("setfields", SetFields, NULL, 0,
 			  "set fields for an entry");
     cmd_AddParm(ts, "-nameorid", CMD_LIST, 0, "user or group name or id");
     cmd_AddParm(ts, "-access", CMD_SINGLE, CMD_OPTIONAL, "set privacy flags");
     cmd_AddParm(ts, "-groupquota", CMD_SINGLE, CMD_OPTIONAL,
 		"set limit on group creation");
-#if FOREIGN
-    cmd_AddParm(ts, "-userquota", CMD_SINGLE, CMD_OPTIONAL,
-		"set limit on foreign user creation");
-#endif
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("listowned", ListOwned, NULL,
+    ts = cmd_CreateSyntax("listowned", ListOwned, NULL, 0,
 			  "list groups owned by an entry or zero id gets orphaned groups");
     cmd_AddParm(ts, "-nameorid", CMD_LIST, 0, "user or group name or id");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("listentries", ListEntries, NULL,
+    ts = cmd_CreateSyntax("listentries", ListEntries, NULL, 0,
 			  "list users/groups in the protection database");
     cmd_AddParm(ts, "-users", CMD_FLAG, CMD_OPTIONAL, "list user entries");
     cmd_AddParm(ts, "-groups", CMD_FLAG, CMD_OPTIONAL, "list group entries");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("interactive", pts_Interactive, NULL,
+    ts = cmd_CreateSyntax("interactive", pts_Interactive, NULL, 0,
 			  "enter interactive mode");
     add_std_args(ts);
     cmd_CreateAlias(ts, "in");
 
-    ts = cmd_CreateSyntax("quit", pts_Quit, NULL, "exit program");
+    ts = cmd_CreateSyntax("quit", pts_Quit, NULL, 0, "exit program");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("source", pts_Source, NULL, "read commands from file");
+    ts = cmd_CreateSyntax("source", pts_Source, NULL, 0, "read commands from file");
     cmd_AddParm(ts, "-file", CMD_SINGLE, 0, "filename");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("sleep", pts_Sleep, NULL, "pause for a bit");
+    ts = cmd_CreateSyntax("sleep", pts_Sleep, NULL, 0, "pause for a bit");
     cmd_AddParm(ts, "-delay", CMD_SINGLE, 0, "seconds");
     add_std_args(ts);
 
@@ -1251,7 +1247,7 @@ main(int argc, char **argv)
 
     finished = 1;
     source = NULL;
-    if ((code = cmd_Dispatch(argc, argv))) {
+    if (cmd_Dispatch(argc, argv)) {
 	CleanUp(NULL, NULL);
 	exit(1);
     }
@@ -1282,7 +1278,7 @@ main(int argc, char **argv)
 	}
 	savec = parsev[0];
 	parsev[0] = argv[0];
-	code = cmd_Dispatch(parsec, parsev);
+	cmd_Dispatch(parsec, parsev);
 	parsev[0] = savec;
 	cmd_FreeArgv(parsev);
     }

@@ -9,34 +9,12 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
-#include <sys/types.h>
-#include <errno.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/socket.h>
-#include <sys/file.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-#endif
-#ifdef HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#endif
-#ifdef HAVE_SYS_TIME_H
-#include <sys/time.h>
-#endif
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#include <string.h>
-#include <sys/stat.h>
-#include <afs/afsutil.h>
 #include <afs/stds.h>
-#include <afs/cmd.h>
 
-#include <stdio.h>
+#include <roken.h>
+
+#include <afs/afsutil.h>
+#include <afs/cmd.h>
 
 #include <rx/rx_user.h>
 #include <rx/rx_clock.h>
@@ -384,12 +362,12 @@ MainCommand(struct cmd_syndesc *as, void *arock)
 		continue;
 	    if (onlyAuth != 999) {
 		if (onlyAuth == -1) {
-		    if (tconn.securityIndex != 0)
+		    if (tconn.securityIndex != RX_SECIDX_NULL)
 			continue;
 		} else {
-		    if (tconn.securityIndex != 2)
+		    if (tconn.securityIndex != RX_SECIDX_KAD)
 			continue;
-		    if (withSecStats && (tconn.secStats.type == 3)
+		    if (withSecStats && (tconn.secStats.type == RX_SECTYPE_KAD)
 			&& (tconn.secStats.level != onlyAuth))
 			continue;
 		}
@@ -435,20 +413,20 @@ MainCommand(struct cmd_syndesc *as, void *arock)
 
 	    if (withSecStats) {
 		switch ((int)tconn.secStats.type) {
-		case 0:
-		    if (tconn.securityIndex == 2)
+		case RX_SECTYPE_UNK:
+		    if (tconn.securityIndex == RX_SECIDX_KAD)
 			printf
 			    ("  no GetStats procedure for security object\n");
 		    break;
-		case 1:
+		case RX_SECTYPE_NULL:
 		    printf("  rxnull level=%d, flags=%d\n",
 			   tconn.secStats.level, tconn.secStats.flags);
 		    break;
-		case 2:
+		case RX_SECTYPE_VAB:
 		    printf("  rxvab level=%d, flags=%d\n",
 			   tconn.secStats.level, tconn.secStats.flags);
 		    break;
-		case 3:{
+		case RX_SECTYPE_KAD:{
 			char *level;
 			char flags = tconn.secStats.flags;
 			if (tconn.secStats.level == 0)
@@ -619,7 +597,7 @@ main(int argc, char **argv)
     }
 #endif
 
-    ts = cmd_CreateSyntax(NULL, MainCommand, NULL, "probe RX server");
+    ts = cmd_CreateSyntax(NULL, MainCommand, NULL, 0, "probe RX server");
     cmd_AddParm(ts, "-servers", CMD_SINGLE, CMD_REQUIRED, "server machine");
     cmd_AddParm(ts, "-port", CMD_SINGLE, CMD_OPTIONAL, "IP port");
     cmd_AddParm(ts, "-nodally", CMD_FLAG, CMD_OPTIONAL,

@@ -9,20 +9,14 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
-#include <sys/types.h>
-#include <sys/file.h>
-#include <sys/time.h>
-#include <sys/stat.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
+
+#include <roken.h>
+
 #include <afs/afsutil.h>
-#include <fcntl.h>
+#ifdef HAVE_SYS_WAIT_H
+#include <sys/wait.h>
+#endif
 
 /*
  * XXX CHANGE the following depedent stuff XXX
@@ -49,9 +43,9 @@ main(int argc, char **argv)
     time_t procStartTime = -1, rsTime = -1, lastAnyExit = -1, lastErrorExit = -1;
     char *timeStamp;
 
-    typep = (char *)malloc(50);
-    cmd = (char *)malloc(50);
-    bufp = bufp1 = (char *)malloc(1000);
+    typep = malloc(50);
+    cmd = malloc(50);
+    bufp = bufp1 = malloc(1000);
     while (fgets(buf, sizeof(buf), fin)) {
 	code = sscanf(buf, "%s %s\n", typep, cmd);
 	if (code < 2) {
@@ -220,6 +214,18 @@ main(int argc, char **argv)
      */
     sprintf(bufp1, "%s %s -s TESTING < %s", SENDMAIL, RECIPIENT, buf);
     code = system(bufp1);
+    if (code == -1)
+	perror("system");
+    else if (code == 127)
+	fprintf(stderr, "system: unable to execute shell\n");
+#ifdef WTERMSIG
+    else if (WIFSIGNALED(code))
+	fprintf(stderr, "%s terminated with signal %d\n", SENDMAIL,
+	    WTERMSIG(code));
+    else if (WEXITSTATUS(code) != 0)
+	fprintf(stderr, "%s exited with status %d\n", SENDMAIL,
+	    WEXITSTATUS(code));
+#endif /* WTERMSIG */
     unlink(buf);
     exit(0);
 }

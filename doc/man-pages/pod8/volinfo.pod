@@ -7,7 +7,7 @@ volinfo - Produces detailed statistics about AFS volume headers
 =for html
 <div class="synopsis">
 
-B<volinfo> [B<-online>] [B<-vnode>] [B<-date>] [B<-inode>] [B<-itime>]
+B<volinfo> [B<-checkout>] [B<-vnode>] [B<-date>] [B<-inode>] [B<-itime>]
     S<<< [B<-part> <I<AFS partition name (default current partition)>>+] >>>
     S<<< [B<-volumeid> <I<volume id>>+] >>> [B<-header>] [B<-sizeonly>]
     [B<-fixheader>] [B<-saveinodes>] [B<-orphaned>] [B<-filenames>] [B<-help>]
@@ -28,9 +28,11 @@ display output for one volume only, include the B<-volumeid> argument.
 
 =over 4
 
-=item B<-online>
+=item B<-checkout>
 
-Is nonoperational.
+Checkout the specified volume from the running fileserver. This ensures that
+the fileserver or other processes will not be modifying volume metadata at the
+same time we are trying to read it, leading to invalid or incorrect results.
 
 =item B<-vnode>
 

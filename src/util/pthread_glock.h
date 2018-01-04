@@ -10,8 +10,9 @@
 #ifndef _AFS_PTHREAD_GLOCK_H_
 #define _AFS_PTHREAD_GLOCK_H_
 
-#ifdef AFS_PTHREAD_ENV
+#if defined(AFS_PTHREAD_ENV) && !defined(KERNEL)
 #include <pthread.h>
+#include <afs/opr.h>
 
 typedef struct {
     pthread_mutex_t mut;
@@ -34,16 +35,16 @@ extern int pthread_recursive_mutex_lock(pthread_recursive_mutex_p);
 extern int pthread_recursive_mutex_unlock(pthread_recursive_mutex_p);
 
 #define LOCK_GLOBAL_MUTEX \
-    osi_Assert(pthread_recursive_mutex_lock(&grmutex)==0)
+    opr_Verify(pthread_recursive_mutex_lock(&grmutex)==0)
 
 #define UNLOCK_GLOBAL_MUTEX \
-    osi_Assert(pthread_recursive_mutex_unlock(&grmutex)==0)
+    opr_Verify(pthread_recursive_mutex_unlock(&grmutex)==0)
 
-#else
+#else /* AFS_PTHREAD_ENV && !KERNEL */
 
 #define LOCK_GLOBAL_MUTEX
 #define UNLOCK_GLOBAL_MUTEX
 
-#endif /* AFS_PTHREAD_ENV */
+#endif /* AFS_PTHREAD_ENV && !KERNEL */
 
 #endif /* _AFS_PTHREAD_GLOCK_H_ */

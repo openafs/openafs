@@ -71,19 +71,6 @@ afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
 
 
 
-typedef struct afs_event {
-    struct afs_event *next;	/* next in hash chain */
-    char *event;		/* lwp event: an address */
-    int refcount;		/* Is it in use? */
-    int seq;			/* Sequence number: this is incremented
-				 * by wakeup calls; wait will not return until
-				 * it changes */
-#ifdef AFS_DARWIN80_ENV
-   lck_mtx_t *lck;
-   thread_t owner;
-#endif
-} afs_event_t;
-
 #ifdef AFS_DARWIN80_ENV
 #define EVTLOCK_INIT(e) \
     do { \
@@ -110,9 +97,8 @@ typedef struct afs_event {
 #define EVTLOCK_UNLOCK(e)
 #define EVTLOCK_DESTROY(e)
 #endif
-#define HASHSIZE 128
-afs_event_t *afs_evhasht[HASHSIZE];	/* Hash table for events */
-#define afs_evhash(event)       (afs_uint32) ((((long)event)>>2) & (HASHSIZE-1));
+afs_event_t *afs_evhasht[AFS_EVHASHSIZE];	/* Hash table for events */
+#define afs_evhash(event)       (afs_uint32) ((((long)event)>>2) & (AFS_EVHASHSIZE-1))
 int afs_evhashcnt = 0;
 
 /* Get and initialize event structure corresponding to lwp event (i.e. address)
@@ -138,7 +124,7 @@ afs_getevent(char *event)
 	evp = evp->next;
     }
     if (!newp) {
-	newp = (afs_event_t *) osi_AllocSmallSpace(sizeof(afs_event_t));
+	newp = osi_AllocSmallSpace(sizeof(afs_event_t));
 	afs_evhashcnt++;
 	newp->next = afs_evhasht[hashcode];
 	afs_evhasht[hashcode] = newp;
@@ -321,7 +307,7 @@ void
 shutdown_osisleep(void) {
     struct afs_event *evp, *nevp, **pevpp;
     int i;
-    for (i=0; i < HASHSIZE; i++) {
+    for (i=0; i < AFS_EVHASHSIZE; i++) {
 	evp = afs_evhasht[i];
 	pevpp = &afs_evhasht[i];
 	while (evp) {
@@ -333,6 +319,7 @@ shutdown_osisleep(void) {
 		osi_FreeSmallSpace(evp);
 		afs_evhashcnt--;
 	    } else {
+		afs_warn("nonzero refcount in shutdown_osisleep()\n");
 		EVTLOCK_UNLOCK(evp);
 		pevpp = &evp->next;
 	    }

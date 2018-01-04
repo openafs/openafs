@@ -59,6 +59,7 @@ PODS = \
         pod1\fs_getcrypt.pod           \
         pod1\fs_getfid.pod             \
         pod1\fs_getserverprefs.pod     \
+        pod1\fs_getverify.pod          \
         pod1\fs_help.pod               \
         pod1\fs_listacl.pod            \
         pod1\fs_listaliases.pod        \
@@ -84,6 +85,7 @@ PODS = \
         pod1\fs_setcrypt.pod           \
         pod1\fs_setquota.pod           \
         pod1\fs_setserverprefs.pod     \
+        pod1\fs_setverify.pod          \
         pod1\fs_setvol.pod             \
         pod1\fs_storebehind.pod        \
         pod1\fs_sysname.pod            \
@@ -173,6 +175,7 @@ PODS = \
         pod1\vos_zap.pod               \
         pod1\xstat_cm_test.pod         \
         pod1\xstat_fs_test.pod         \
+        pod3\AFS.ukernel.pod           \
         pod5\afs.pod                   \
         pod5\afsmonitor.pod            \
         pod5\afszcm.cat.pod            \
@@ -259,6 +262,7 @@ PODS = \
         pod8\bos_getdate.pod           \
         pod8\bos_getlog.pod            \
         pod8\bos_getrestart.pod        \
+        pod8\bos_getrestricted.pod     \
         pod8\bos_help.pod              \
         pod8\bos_install.pod           \
         pod8\bos_listhosts.pod         \
@@ -273,6 +277,7 @@ PODS = \
         pod8\bos_setauth.pod           \
         pod8\bos_setcellname.pod       \
         pod8\bos_setrestart.pod        \
+        pod8\bos_setrestricted.pod     \
         pod8\bos_shutdown.pod          \
         pod8\bos_start.pod             \
         pod8\bos_startup.pod           \
@@ -378,8 +383,10 @@ clean::
         $(DEL) pod1\pts_source.pod
         $(DEL) pod1\vos.pod
         $(DEL) pod1\vos_addsite.pod
+        $(DEL) pod1\vos_backup.pod
         $(DEL) pod1\vos_clone.pod
         $(DEL) pod1\vos_copy.pod
+        $(DEL) pod1\vos_dump.pod
         $(DEL) pod1\vos_create.pod
         $(DEL) pod1\vos_examine.pod
         $(DEL) pod1\vos_move.pod
@@ -396,6 +403,9 @@ clean::
 .SUFFIXES: .pod.in
 
 {pod1}.pod.in{pod1}.pod::
+        $(PERL) merge-pod $<
+
+{pod3}.pod.in{pod3}.pod::
         $(PERL) merge-pod $<
 
 {pod5}.pod.in{pod5}.pod::

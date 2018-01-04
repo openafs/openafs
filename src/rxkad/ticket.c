@@ -9,23 +9,18 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-#include <stdio.h>
-
 #include <afs/stds.h>
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
-#include <string.h>
-#include <des.h>
-#include <des_prototypes.h>
+
+#include <roken.h>
+
+#include <hcrypto/des.h>
+
 #include <rx/xdr.h>
 #include <rx/rx.h>
+
 #include "lifetimes.h"
 #include "rxkad.h"
+#include "rxkad_convert.h"
 
 /* This union is used to insure we allocate enough space for a key
  * schedule even if we are linked against a library that uses OpenSSL's
@@ -33,7 +28,7 @@
  * application uses both rxkad and openssl.
  */
 union Key_schedule_safe {
-    Key_schedule schedule;
+    DES_key_schedule schedule;
     struct {
 	union {
 	    char cblock[8];
@@ -115,11 +110,11 @@ tkt_DecodeTicket(char *asecret, afs_int32 ticketLen,
 	((ticketLen) % 8 != 0))	/* enc. part must be (0 mod 8) bytes */
 	return RXKADBADTICKET;
 
-    if (key_sched(ktc_to_cblock(key), schedule.schedule))
+    if (DES_key_sched(ktc_to_cblock(key), &schedule.schedule))
 	return RXKADBADKEY;
 
     ticket = clear_ticket;
-    pcbc_encrypt(asecret, ticket, ticketLen, schedule.schedule, ktc_to_cblockptr(key), DECRYPT);
+    DES_pcbc_encrypt(asecret, ticket, ticketLen, &schedule.schedule, ktc_to_cblockptr(key), DECRYPT);
 
     code =
 	decode_athena_ticket(ticket, ticketLen, name, inst, cell, host,
@@ -213,11 +208,12 @@ tkt_MakeTicket(char *ticket, int *ticketLen, struct ktc_encryptionKey *key,
 	return -1;
 
     /* encrypt ticket */
-    if ((code = key_sched(ktc_to_cblock(key), schedule.schedule))) {
+    if ((code = DES_key_sched(ktc_to_cblock(key), &schedule.schedule))) {
 	printf("In tkt_MakeTicket: key_sched returned %d\n", code);
 	return RXKADBADKEY;
     }
-    pcbc_encrypt(ticket, ticket, *ticketLen, schedule.schedule, ktc_to_cblockptr(key), ENCRYPT);
+    DES_pcbc_encrypt(ticket, ticket, *ticketLen, &schedule.schedule,
+		     ktc_to_cblockptr(key), ENCRYPT);
     return 0;
 }
 

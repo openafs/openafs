@@ -7,10 +7,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 
 
 SRCDIR=/usr/andy/
@@ -23,10 +21,10 @@ CFLAGS=${DBG} -I.. -I. -I${SRCDIR}/include -DDEBUG ${XCFLAGS} ${ARCHFLAGS}
 all: sample_client sample_server
 
 sample_client: sample_client.o ${LIBS} sample.cs.o
-	${CC} ${CFLAGS} -o sample_client sample_client.o sample.cs.o ${LIBS}
+	$(AFS_LDRULE) sample_client.o sample.cs.o ${LIBS}
 
 sample_server: sample_server.o sample.ss.o ${LIBS}
-	${CC} ${CFLAGS} -o sample_server sample_server.o sample.ss.o ${LIBS}
+	$(AFS_LDRULE) sample_server.o sample.ss.o ${LIBS}
 
 sample_client.o:	sample.h
 sample_server.o:	sample.h

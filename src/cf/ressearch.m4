@@ -6,6 +6,7 @@ AC_DEFUN([AC_CHECK_RESOLV_RETRANS],[
 #if defined(__sun__)
 #include <inet/ip.h>
 #endif
+#include <netinet/in.h>
 #include <resolv.h>
 ],[
     _res.retrans = 2;

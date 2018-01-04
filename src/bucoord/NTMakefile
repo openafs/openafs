@@ -81,7 +81,6 @@ EXELIBS =\
         $(DESTDIR)\lib\afsubik.lib \
         $(DESTDIR)\lib\afs\afsauth.lib \
         $(DESTDIR)\lib\afsrxkad.lib \
-        $(DESTDIR)\lib\afsdes.lib \
         $(DESTDIR)\lib\afsrx.lib \
         $(DESTDIR)\lib\afslwp.lib \
         $(DESTDIR)\lib\afs\afscmd.lib \
@@ -91,8 +90,12 @@ EXELIBS =\
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
 	$(DESTDIR)\lib\afs\afspioctl.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
-	$(DESTDIR)\lib\libafsconf.lib
-	
+	$(DESTDIR)\lib\libafsconf.lib \
+	$(DESTDIR)\lib\opr.lib \
+	$(DESTDIR)\lib\afshcrypto.lib \
+	$(DESTDIR)\lib\afsroken.lib \
+	$(DESTDIR)\lib\afsrfc3961.lib
+
 
 $(EXEFILE): $(EXEOBJS) $(EXERES) $(EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
@@ -115,7 +118,7 @@ bucoord_errs.c bc.h:    bucoord_errs.et bc.p.h
 $(OUT)/backup.res: AFS_component_version_number.h
 
 ############################################################################
-# Install 
+# Install
 
 install: $(INCFILES) $(LIBFILE) $(EXEFILE)
 

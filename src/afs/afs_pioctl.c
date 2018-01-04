@@ -27,6 +27,7 @@
 #include "afs/vice.h"
 #include "afs/afs_bypasscache.h"
 #include "rx/rx_globals.h"
+#include "token.h"
 
 extern int afs_rmtsys_enable;
 struct VenusFid afs_rootFid;
@@ -153,6 +154,23 @@ afs_pd_inline(struct afs_pdata *apd, size_t bytes)
     return ret;
 }
 
+static_inline void
+afs_pd_xdrStart(struct afs_pdata *apd, XDR *xdrs, enum xdr_op op) {
+    xdrmem_create(xdrs, apd->ptr, apd->remaining, op);
+}
+
+static_inline void
+afs_pd_xdrEnd(struct afs_pdata *apd, XDR *xdrs) {
+    size_t pos;
+
+    pos = xdr_getpos(xdrs);
+    apd->ptr += pos;
+    apd->remaining -= pos;
+    xdr_destroy(xdrs);
+}
+
+
+
 static_inline int
 afs_pd_getString(struct afs_pdata *apd, char *str, size_t maxLen)
 {
@@ -243,11 +261,13 @@ DECL_PIOCTL(PGetFileCell);
 DECL_PIOCTL(PGetWSCell);
 DECL_PIOCTL(PGetUserCell);
 DECL_PIOCTL(PSetTokens);
+DECL_PIOCTL(PSetTokens2);
 DECL_PIOCTL(PGetVolumeStatus);
 DECL_PIOCTL(PSetVolumeStatus);
 DECL_PIOCTL(PFlush);
 DECL_PIOCTL(PNewStatMount);
 DECL_PIOCTL(PGetTokens);
+DECL_PIOCTL(PGetTokens2);
 DECL_PIOCTL(PUnlog);
 DECL_PIOCTL(PMariner);
 DECL_PIOCTL(PCheckServers);
@@ -403,8 +423,8 @@ static pioctlFunction CpioctlSw[] = {
     PBogus,                     /* 4 */
     PDiscon,                    /* 5 -- get/set discon mode */
     PBogus,                     /* 6 */
-    PBogus,                     /* 7 */
-    PBogus,                     /* 8 */
+    PGetTokens2,                /* 7 */
+    PSetTokens2,                /* 8 */
     PNewUuid,                   /* 9 */
     PBogus,                     /* 10 */
     PBogus,                     /* 11 */
@@ -559,8 +579,7 @@ kioctl(int fdes, int com, caddr_t arg, caddr_t ext)
 	    if (((uap->com >> 8) & 0xff) == 'V') {
 		struct afs_ioctl *datap;
 		AFS_GLOCK();
-		datap =
-		    (struct afs_ioctl *)osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+		datap = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
 		code=copyin_afs_ioctl((char *)uap->arg, datap);
 		if (code) {
 		    osi_FreeSmallSpace(datap);
@@ -658,19 +677,9 @@ afs_xioctl(struct afs_ioctl_sys *uap, rval_t *rvp)
     int ioctlDone = 0, code = 0;
 
     AFS_STATCNT(afs_xioctl);
-# if defined(AFS_SUN57_ENV)
     fd = getf(uap->fd);
     if (!fd)
 	return (EBADF);
-# elif defined(AFS_SUN54_ENV)
-    fd = GETF(uap->fd);
-    if (!fd)
-	return (EBADF);
-# else
-    if (code = getf(uap->fd, &fd)) {
-	return (code);
-    }
-# endif
     if (fd->f_vnode->v_type == VREG || fd->f_vnode->v_type == VDIR) {
 	tvc = VTOAFS(fd->f_vnode);	/* valid, given a vnode */
 	if (tvc && IsAfsVnode(AFSTOV(tvc))) {
@@ -678,17 +687,12 @@ afs_xioctl(struct afs_ioctl_sys *uap, rval_t *rvp)
 	    if (((uap->com >> 8) & 0xff) == 'V') {
 		struct afs_ioctl *datap;
 		AFS_GLOCK();
-		datap =
-		    (struct afs_ioctl *)osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+		datap = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
 		code=copyin_afs_ioctl((char *)uap->arg, datap);
 		if (code) {
 		    osi_FreeSmallSpace(datap);
 		    AFS_GUNLOCK();
-# if defined(AFS_SUN54_ENV)
 		    releasef(uap->fd);
-# else
-		    releasef(fd);
-# endif
 		    return (EFAULT);
 		}
 		code = HandleIoctl(tvc, uap->com, datap);
@@ -698,13 +702,7 @@ afs_xioctl(struct afs_ioctl_sys *uap, rval_t *rvp)
 	    }
 	}
     }
-# if defined(AFS_SUN57_ENV)
     releasef(uap->fd);
-# elif defined(AFS_SUN54_ENV)
-    RELEASEF(uap->fd);
-# else
-    releasef(fd);
-# endif
     if (!ioctlDone)
 	code = ioctl(uap, rvp);
 
@@ -721,7 +719,7 @@ afs_xioctl(struct inode *ip, struct file *fp, unsigned int com,
 {
     struct afs_ioctl_sys ua, *uap = &ua;
     struct vcache *tvc;
-    int ioctlDone = 0, code = 0;
+    int code = 0;
 
     AFS_STATCNT(afs_xioctl);
     ua.com = com;
@@ -743,7 +741,6 @@ afs_xioctl(struct inode *ip, struct file *fp, unsigned int com,
 	    code = HandleIoctl(tvc, uap->com, datap);
 	    osi_FreeSmallSpace(datap);
 	    AFS_GUNLOCK();
-	    ioctlDone = 1;
 	}
 	else
 	    code = EINVAL;
@@ -802,6 +799,10 @@ afs_xioctl(struct thread *td, struct ioctl_args *uap,
 	   register_t *retval)
 {
     afs_proc_t *p = td->td_proc;
+# elif defined(AFS_NBSD_ENV)
+int
+afs_xioctl(afs_proc_t *p, const struct sys_ioctl_args *uap, register_t *retval)
+{
 # else
 struct ioctl_args {
     int fd;
@@ -810,7 +811,7 @@ struct ioctl_args {
 };
 
 int
-afs_xioctl(afs_proc_t *p, struct ioctl_args *uap, register_t *retval)
+afs_xioctl(afs_proc_t *p, const struct ioctl_args *uap, register_t *retval)
 {
 # endif
     struct filedesc *fdp;
@@ -819,18 +820,21 @@ afs_xioctl(afs_proc_t *p, struct ioctl_args *uap, register_t *retval)
     struct file *fd;
 
     AFS_STATCNT(afs_xioctl);
-#   if defined(AFS_NBSD40_ENV)
-     fdp = p->l_proc->p_fd;
-#   else
+#if defined(AFS_NBSD40_ENV)
+    fdp = p->l_proc->p_fd;
+#else
     fdp = p->p_fd;
 #endif
-#if defined(AFS_FBSD100_ENV)
+#if defined(AFS_NBSD50_ENV)
+    if ((fd = fd_getfile(SCARG(uap, fd))) == NULL)
+	return (EBADF);
+#elif defined(AFS_FBSD100_ENV)
     if ((uap->fd >= fdp->fd_nfiles)
 	|| ((fd = fdp->fd_ofiles[uap->fd].fde_file) == NULL))
 	return EBADF;
 #else
-    if ((u_int) uap->fd >= fdp->fd_nfiles
-	|| (fd = fdp->fd_ofiles[uap->fd]) == NULL)
+    if ((uap->fd >= fdp->fd_nfiles)
+	|| ((fd = fdp->fd_ofiles[uap->fd]) == NULL))
 	return EBADF;
 #endif
     if ((fd->f_flag & (FREAD | FWRITE)) == 0)
@@ -845,25 +849,41 @@ afs_xioctl(afs_proc_t *p, struct ioctl_args *uap, register_t *retval)
 # else
 	tvc = VTOAFS((struct vnode *)fd->f_data);	/* valid, given a vnode */
 # endif
-	if (tvc && IsAfsVnode(AFSTOV(tvc))) {
+	if (tvc && IsAfsVnode((struct vnode *)fd->f_data)) {
 	    /* This is an AFS vnode */
-	    if (((uap->com >> 8) & 0xff) == 'V') {
+#if defined(AFS_NBSD50_ENV)
+	    if (((SCARG(uap, com) >> 8) & 0xff) == 'V') {
+#else
+            if (((uap->com >> 8) & 0xff) == 'V') {
+#endif
 		struct afs_ioctl *datap;
 		AFS_GLOCK();
 		datap = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+#if defined(AFS_NBSD50_ENV)
+		code = copyin_afs_ioctl(SCARG(uap, data), datap);
+#else
 		code = copyin_afs_ioctl((char *)uap->arg, datap);
+#endif
 		if (code) {
 		    osi_FreeSmallSpace(datap);
 		    AFS_GUNLOCK();
 		    return code;
 		}
+#if defined(AFS_NBSD50_ENV)
+		code = HandleIoctl(tvc, SCARG(uap, com), datap);
+#else
 		code = HandleIoctl(tvc, uap->com, datap);
+#endif
 		osi_FreeSmallSpace(datap);
 		AFS_GUNLOCK();
 		ioctlDone = 1;
 	    }
 	}
     }
+
+#if defined(AFS_NBSD50_ENV)
+    fd_putfile(SCARG(uap, fd));
+#endif
 
     if (!ioctlDone) {
 # if defined(AFS_FBSD_ENV)
@@ -875,8 +895,7 @@ afs_xioctl(afs_proc_t *p, struct ioctl_args *uap, register_t *retval)
 # elif defined(AFS_OBSD_ENV)
 	code = sys_ioctl(p, uap, retval);
 # elif defined(AFS_NBSD_ENV)
-           struct lwp *l = osi_curproc();
-           code = sys_ioctl(l, uap, retval);
+        code = sys_ioctl(p, uap, retval);
 # endif
     }
 
@@ -1346,7 +1365,8 @@ afs_HandlePioctl(struct vnode *avp, afs_int32 acom,
     if (code)
 	goto out;
 
-    if (function == 8 && device == 'V') {	/* PGetTokens */
+    if ((function == 8 && device == 'V') ||
+       (function == 7 && device == 'C')) {	/* PGetTokens */
 	code = afs_pd_alloc(&output, MAXPIOCTLTOKENLEN);
     } else {
 	code = afs_pd_alloc(&output, AFS_LRALLOCSIZ);
@@ -1458,15 +1478,10 @@ DECL_PIOCTL(PSetAcl)
 	      SHARED_LOCK, NULL));
 
     /* now we've forgotten all of the access info */
-    ObtainWriteLock(&afs_xcbhash, 455);
-    avc->callback = 0;
-    afs_DequeueCallback(avc);
-    avc->f.states &= ~(CStatd | CUnique);
-    ReleaseWriteLock(&afs_xcbhash);
-    if (avc->f.fid.Fid.Vnode & 1 || (vType(avc) == VDIR))
-	osi_dnlc_purgedp(avc);
+    afs_StaleVCacheFlags(avc, AFS_STALEVC_CLEARCB, CUnique);
 
     /* SXW - Should we flush metadata here? */
+
     return code;
 }
 
@@ -1766,12 +1781,13 @@ DECL_PIOCTL(PGetUserCell)
 	if (tu->uid == areq->uid && (tu->states & UPrimary)) {
 	    tu->refCount++;
 	    ReleaseWriteLock(&afs_xuser);
+	    afs_LockUser(tu, READ_LOCK, 0);
 	    break;
 	}
     }
     if (tu) {
 	tcell = afs_GetCell(tu->cell, READ_LOCK);
-	afs_PutUser(tu, WRITE_LOCK);
+	afs_PutUser(tu, READ_LOCK);
 	if (!tcell)
 	    return ESRCH;
 	else {
@@ -1783,6 +1799,51 @@ DECL_PIOCTL(PGetUserCell)
 	ReleaseWriteLock(&afs_xuser);
     }
     return 0;
+}
+
+/* Work out which cell we're changing tokens for */
+static_inline int
+_settok_tokenCell(char *cellName, int *cellNum, int *primary) {
+    int t1;
+    struct cell *cell;
+
+    if (primary) {
+	*primary = 0;
+    }
+
+    if (cellName && strlen(cellName) > 0) {
+	cell = afs_GetCellByName(cellName, READ_LOCK);
+    } else {
+	cell = afs_GetPrimaryCell(READ_LOCK);
+	if (primary)
+	    *primary = 1;
+    }
+    if (!cell) {
+	t1 = afs_initState;
+	if (t1 < 101)
+	    return EIO;
+	else
+	    return ESRCH;
+    }
+    *cellNum = cell->cellNum;
+    afs_PutCell(cell, READ_LOCK);
+
+    return 0;
+}
+
+
+static_inline int
+_settok_setParentPag(afs_ucred_t **cred) {
+    afs_uint32 pag;
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+    char procname[256];
+    osi_procname(procname, 256);
+    afs_warnuser("Process %d (%s) tried to change pags in PSetTokens\n",
+	         MyPidxx2Pid(MyPidxx), procname);
+    return setpag(osi_curproc(), cred, -1, &pag, 1);
+#else
+    return setpag(cred, -1, &pag, 1);
+#endif
 }
 
 /*!
@@ -1807,16 +1868,16 @@ DECL_PIOCTL(PGetUserCell)
  */
 DECL_PIOCTL(PSetTokens)
 {
-    afs_int32 i;
+    afs_int32 cellNum;
+    afs_int32 size;
+    afs_int32 code;
     struct unixuser *tu;
     struct ClearToken clear;
-    struct cell *tcell;
-    char *stp, *stpNew;
+    char *stp;
     char *cellName;
-    int stLen, stLenOld;
+    int stLen;
     struct vrequest *treq = NULL;
     afs_int32 flag, set_parent_pag = 0;
-    int code;
 
     AFS_STATCNT(PSetTokens);
     if (!afs_resourceinit_flag) {
@@ -1832,9 +1893,9 @@ DECL_PIOCTL(PSetTokens)
     if (afs_pd_skip(ain, stLen) != 0)
 	return EINVAL;
 
-    if (afs_pd_getInt(ain, &i) != 0)
+    if (afs_pd_getInt(ain, &size) != 0)
 	return EINVAL;
-    if (i != sizeof(struct ClearToken))
+    if (size != sizeof(struct ClearToken))
 	return EINVAL;
 
     if (afs_pd_getBytes(ain, &clear, sizeof(struct ClearToken)) !=0)
@@ -1860,38 +1921,18 @@ DECL_PIOCTL(PSetTokens)
 	if (afs_pd_getStringPtr(ain, &cellName) != 0)
 	    return EINVAL;
 
-	/* rest is cell name, look it up */
-	tcell = afs_GetCellByName(cellName, READ_LOCK);
-	if (!tcell)
-	    goto nocell;
+	code = _settok_tokenCell(cellName, &cellNum, NULL);
+	if (code)
+	    return code;
     } else {
 	/* default to primary cell, primary id */
-	flag = 1;		/* primary id */
-	tcell = afs_GetPrimaryCell(READ_LOCK);
-	if (!tcell)
-	    goto nocell;
+	code = _settok_tokenCell(NULL, &cellNum, &flag);
+	if (code)
+	    return code;
     }
-    i = tcell->cellNum;
-    afs_PutCell(tcell, READ_LOCK);
+
     if (set_parent_pag) {
-	afs_uint32 pag;
-#if defined(AFS_LINUX26_ENV)
-	afs_ucred_t *old_cred = *acred;
-#endif
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-	char procname[256];
-	osi_procname(procname, 256);
-	afs_warnuser("Process %d (%s) tried to change pags in PSetTokens\n",
-		     MyPidxx2Pid(MyPidxx), procname);
-	if (!setpag(osi_curproc(), acred, -1, &pag, 1)) {
-#else
-	if (!setpag(acred, -1, &pag, 1)) {
-#endif
-#if defined(AFS_LINUX26_ENV)
-	    /* setpag() may have changed our credentials */
-	    *acred = crref();
-	    crfree(old_cred);
-#endif
+	if (_settok_setParentPag(acred) == 0) {
 	    code = afs_CreateReq(&treq, *acred);
 	    if (code) {
 		return code;
@@ -1900,21 +1941,11 @@ DECL_PIOCTL(PSetTokens)
 	}
     }
 
-    stpNew = (char *)afs_osi_Alloc(stLen);
-    if (stpNew == NULL) {
-	return ENOMEM;
-    }
-    memcpy(stpNew, stp, stLen);
-
     /* now we just set the tokens */
-    tu = afs_GetUser(areq->uid, i, WRITE_LOCK);	/* i has the cell # */
-    stp = tu->stp;
-    stLenOld = tu->stLen;
-
-    tu->vid = clear.ViceId;
-    tu->stp = stpNew;
-    tu->stLen = stLen;
-    tu->ct = clear;
+    tu = afs_GetUser(areq->uid, cellNum, WRITE_LOCK);
+    /* Set tokens destroys any that are already there */
+    afs_FreeTokens(&tu->tokens);
+    afs_AddRxkadToken(&tu->tokens, stp, stLen, &clear);
 #ifndef AFS_NOSTATS
     afs_stats_cmfullperf.authent.TicketUpdates++;
     afs_ComputePAGStats();
@@ -1928,21 +1959,7 @@ DECL_PIOCTL(PSetTokens)
     afs_PutUser(tu, WRITE_LOCK);
     afs_DestroyReq(treq);
 
-    if (stp) {
-	afs_osi_Free(stp, stLenOld);
-    }
-
     return 0;
-
-  nocell:
-    {
-	int t1;
-	t1 = afs_initState;
-	if (t1 < 101)
-	    return EIO;
-	else
-	    return ESRCH;
-    }
 }
 
 /*!
@@ -2145,15 +2162,9 @@ DECL_PIOCTL(PFlush)
     AFS_STATCNT(PFlush);
     if (!avc)
 	return EINVAL;
-#ifdef AFS_BOZONLOCK_ENV
-    afs_BozonLock(&avc->pvnLock, avc);	/* Since afs_TryToSmush will do a pvn_vptrunc */
-#endif
     ObtainWriteLock(&avc->lock, 225);
     afs_ResetVCache(avc, *acred, 0);
     ReleaseWriteLock(&avc->lock);
-#ifdef AFS_BOZONLOCK_ENV
-    afs_BozonUnlock(&avc->pvnLock, avc);
-#endif
     return 0;
 }
 
@@ -2200,7 +2211,7 @@ DECL_PIOCTL(PNewStatMount)
     }
     tdc = afs_GetDCache(avc, (afs_size_t) 0, areq, &offset, &len, 1);
     if (!tdc)
-	return ENOENT;
+	return EIO;
     Check_AtSys(avc, name, &sysState, areq);
     ObtainReadLock(&tdc->lock);
     do {
@@ -2220,10 +2231,10 @@ DECL_PIOCTL(PNewStatMount)
 	tvc = afs_GetVCache(&tfid, areq, NULL, NULL);
     }
     if (!tvc) {
-	code = ENOENT;
+	code = EIO;
 	goto out;
     }
-    if (tvc->mvstat != 1) {
+    if (tvc->mvstat != AFS_MVSTAT_MTPT) {
 	afs_PutVCache(tvc);
 	code = EINVAL;
 	goto out;
@@ -2251,6 +2262,38 @@ DECL_PIOCTL(PNewStatMount)
 }
 
 /*!
+ * A helper function to get the n'th cell which a particular user has tokens
+ * for. This is racy. If new tokens are added whilst we're iterating, then
+ * we may return some cells twice. If tokens expire mid run, then we'll
+ * miss some cells from our output. So, could be better, but that would
+ * require an interface change.
+ */
+
+static struct unixuser *
+getNthCell(afs_int32 uid, afs_int32 iterator) {
+    int i;
+    struct unixuser *tu = NULL;
+
+    i = UHash(uid);
+    ObtainReadLock(&afs_xuser);
+    for (tu = afs_users[i]; tu; tu = tu->next) {
+	if (tu->uid == uid && (tu->states & UHasTokens)) {
+	    if (iterator-- == 0)
+	    break;	/* are we done yet? */
+	}
+    }
+    if (tu) {
+	tu->refCount++;
+    }
+    ReleaseReadLock(&afs_xuser);
+    if (tu) {
+	afs_LockUser(tu, READ_LOCK, 0);
+    }
+
+
+    return tu;
+}
+/*!
  * VIOCGETTOK (8) - Get authentication tokens
  *
  * \ingroup pioctl
@@ -2277,10 +2320,11 @@ DECL_PIOCTL(PNewStatMount)
 DECL_PIOCTL(PGetTokens)
 {
     struct cell *tcell;
-    afs_int32 i;
-    struct unixuser *tu;
+    struct unixuser *tu = NULL;
+    union tokenUnion *token;
     afs_int32 iterator = 0;
     int newStyle;
+    int cellNum;
     int code = E2BIG;
 
     AFS_STATCNT(PGetTokens);
@@ -2301,55 +2345,50 @@ DECL_PIOCTL(PGetTokens)
 	if (afs_pd_getInt(ain, &iterator) != 0)
 	    return EINVAL;
     }
-    i = UHash(areq->uid);
-    ObtainReadLock(&afs_xuser);
-    for (tu = afs_users[i]; tu; tu = tu->next) {
-	if (newStyle) {
-	    if (tu->uid == areq->uid && (tu->states & UHasTokens)) {
-		if (iterator-- == 0)
-		    break;	/* are we done yet? */
-	    }
-	} else {
-	    if (tu->uid == areq->uid && afs_IsPrimaryCellNum(tu->cell))
-		break;
-	}
+    if (newStyle) {
+	tu = getNthCell(areq->uid, iterator);
+    } else {
+	cellNum = afs_GetPrimaryCellNum();
+	if (cellNum)
+	    tu = afs_FindUser(areq->uid, cellNum, READ_LOCK);
     }
-    if (tu) {
-	/*
-	 * No need to hold a read lock on each user entry
-	 */
-	tu->refCount++;
-    }
-    ReleaseReadLock(&afs_xuser);
-
     if (!tu) {
 	return EDOM;
     }
-    if (((tu->states & UHasTokens) == 0)
-	|| (tu->ct.EndTimestamp < osi_Time())) {
+    if (!(tu->states & UHasTokens)
+	|| !afs_HasUsableTokens(tu->tokens, osi_Time())) {
 	tu->states |= (UTokensBad | UNeedsReset);
 	afs_NotifyUser(tu, UTokensDropped);
 	afs_PutUser(tu, READ_LOCK);
 	return ENOTCONN;
     }
-    iterator = tu->stLen;	/* for compat, we try to return 56 byte tix if they fit */
+    token = afs_FindToken(tu->tokens, RX_SECIDX_KAD);
+
+    /* If they don't have an RXKAD token, but do have other tokens,
+     * then sadly there's nothing this interface can do to help them. */
+    if (token == NULL)
+	return ENOTCONN;
+
+    /* for compat, we try to return 56 byte tix if they fit */
+    iterator = token->rxkad.ticketLen;
     if (iterator < 56)
 	iterator = 56;		/* # of bytes we're returning */
 
     if (afs_pd_putInt(aout, iterator) != 0)
 	goto out;
-    if (afs_pd_putBytes(aout, tu->stp, tu->stLen) != 0)
+    if (afs_pd_putBytes(aout, token->rxkad.ticket, token->rxkad.ticketLen) != 0)
 	goto out;
-    if (tu->stLen < 56) {
+    if (token->rxkad.ticketLen < 56) {
 	/* Tokens are always 56 bytes or larger */
-	if (afs_pd_skip(aout, iterator - tu->stLen) != 0) {
+	if (afs_pd_skip(aout, iterator - token->rxkad.ticketLen) != 0) {
 	    goto out;
 	}
     }
 
     if (afs_pd_putInt(aout, sizeof(struct ClearToken)) != 0)
 	goto out;
-    if (afs_pd_putBytes(aout, &tu->ct, sizeof(struct ClearToken)) != 0)
+    if (afs_pd_putBytes(aout, &token->rxkad.clearToken,
+			sizeof(struct ClearToken)) != 0)
 	goto out;
 
     if (newStyle) {
@@ -2401,12 +2440,13 @@ DECL_PIOCTL(PUnlog)
     ObtainWriteLock(&afs_xuser, 227);
     for (tu = afs_users[i]; tu; tu = tu->next) {
 	if (tu->uid == areq->uid) {
-	    tu->vid = UNDEFVID;
-	    tu->states &= ~UHasTokens;
-	    /* security is not having to say you're sorry */
-	    memset(&tu->ct, 0, sizeof(struct ClearToken));
 	    tu->refCount++;
 	    ReleaseWriteLock(&afs_xuser);
+
+	    afs_LockUser(tu, WRITE_LOCK, 366);
+
+	    tu->states &= ~UHasTokens;
+	    afs_FreeTokens(&tu->tokens);
 	    afs_NotifyUser(tu, UTokensDropped);
 	    /* We have to drop the lock over the call to afs_ResetUserConns,
 	     * since it obtains the afs_xvcache lock.  We could also keep
@@ -2417,13 +2457,12 @@ DECL_PIOCTL(PUnlog)
 	     * every user conn that existed when we began this call.
 	     */
 	    afs_ResetUserConns(tu);
-	    tu->refCount--;
+	    afs_PutUser(tu, WRITE_LOCK);
 	    ObtainWriteLock(&afs_xuser, 228);
 #ifdef UKERNEL
 	    /* set the expire times to 0, causes
 	     * afs_GCUserData to remove this entry
 	     */
-	    tu->ct.EndTimestamp = 0;
 	    tu->tokenTime = 0;
 #endif /* UKERNEL */
 	}
@@ -2626,7 +2665,7 @@ DECL_PIOCTL(PCheckAuth)
 {
     int i;
     struct srvAddr *sa;
-    struct afs_conn *tc;
+    struct sa_conn_vector *tcv;
     struct unixuser *tu;
     afs_int32 retValue;
 
@@ -2649,8 +2688,8 @@ DECL_PIOCTL(PCheckAuth)
 	/* all connections in cell 1 working? */
 	for (i = 0; i < NSERVERS; i++) {
 	    for (sa = afs_srvAddrs[i]; sa; sa = sa->next_bkt) {
-		for (tc = sa->conns; tc; tc = tc->next) {
-		    if (tc->user == tu && (tu->states & UTokensBad))
+		for (tcv = sa->conns; tcv; tcv = tcv->next) {
+		    if (tcv->user == tu && (tu->states & UTokensBad))
 			retValue = EACCES;
 		}
 	    }
@@ -2670,7 +2709,7 @@ Prefetch(uparmtype apath, struct afs_ioctl *adata, int afollow,
 {
     char *tp;
     afs_int32 code;
-#if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_SGI61_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     size_t bufferSize;
 #else
     u_int bufferSize;
@@ -2979,13 +3018,7 @@ DECL_PIOCTL(PRemoveCallBack)
 		 (tc, rxconn, code, &avc->f.fid, areq,
 		  AFS_STATS_FS_RPCIDX_GIVEUPCALLBACKS, SHARED_LOCK, NULL));
 
-	ObtainWriteLock(&afs_xcbhash, 457);
-	afs_DequeueCallback(avc);
-	avc->callback = 0;
-	avc->f.states &= ~(CStatd | CUnique);
-	ReleaseWriteLock(&afs_xcbhash);
-	if (avc->f.fid.Fid.Vnode & 1 || (vType(avc) == VDIR))
-	    osi_dnlc_purgedp(avc);
+	afs_StaleVCacheFlags(avc, AFS_STALEVC_CLEARCB, CUnique);
     }
     ReleaseWriteLock(&avc->lock);
     return 0;
@@ -3039,7 +3072,7 @@ DECL_PIOCTL(PNewCell)
      * This whole logic is bogus, because it relies on the newer command
      * sending its 12th address as 0.
      */
-    if ((afs_pd_remaining(ain) < AFS_MAXCELLHOSTS +3) * sizeof(afs_int32))
+    if (afs_pd_remaining(ain) < (AFS_MAXCELLHOSTS + 3) * sizeof(afs_int32))
 	return EINVAL;
 
     newcell = afs_pd_where(ain) + (AFS_MAXCELLHOSTS + 3) * sizeof(afs_int32);
@@ -3236,7 +3269,7 @@ DECL_PIOCTL(PRemoveMount)
 
     tdc = afs_GetDCache(avc, (afs_size_t) 0, areq, &offset, &len, 1);	/* test for error below */
     if (!tdc)
-	return ENOENT;
+	return EIO;
     Check_AtSys(avc, name, &sysState, areq);
     ObtainReadLock(&tdc->lock);
     do {
@@ -3256,11 +3289,11 @@ DECL_PIOCTL(PRemoveMount)
 	tvc = afs_GetVCache(&tfid, areq, NULL, NULL);
     }
     if (!tvc) {
-	code = ENOENT;
+	code = EIO;
 	afs_PutDCache(tdc);
 	goto out;
     }
-    if (tvc->mvstat != 1) {
+    if (tvc->mvstat != AFS_MVSTAT_MTPT) {
 	afs_PutDCache(tdc);
 	afs_PutVCache(tvc);
 	code = EINVAL;
@@ -3468,15 +3501,9 @@ FlushVolumeData(struct VenusFid *afid, afs_ucred_t * acred)
 		AFS_FAST_HOLD(tvc);
 #endif
 		ReleaseReadLock(&afs_xvcache);
-#ifdef AFS_BOZONLOCK_ENV
-		afs_BozonLock(&tvc->pvnLock, tvc);	/* Since afs_TryToSmush will do a pvn_vptrunc */
-#endif
 		ObtainWriteLock(&tvc->lock, 232);
 		afs_ResetVCache(tvc, acred, 1);
 		ReleaseWriteLock(&tvc->lock);
-#ifdef AFS_BOZONLOCK_ENV
-		afs_BozonUnlock(&tvc->pvnLock, tvc);
-#endif
 #ifdef AFS_DARWIN80_ENV
 		vnode_put(AFSTOV(tvc));
 #endif
@@ -4798,7 +4825,7 @@ DECL_PIOCTL(PFlushMount)
     }
     tdc = afs_GetDCache(avc, (afs_size_t) 0, areq, &offset, &len, 1);
     if (!tdc)
-	return ENOENT;
+	return EIO;
     Check_AtSys(avc, mount, &sysState, areq);
     ObtainReadLock(&tdc->lock);
     do {
@@ -4818,33 +4845,24 @@ DECL_PIOCTL(PFlushMount)
 	tvc = afs_GetVCache(&tfid, areq, NULL, NULL);
     }
     if (!tvc) {
-	code = ENOENT;
+	code = EIO;
 	goto out;
     }
-    if (tvc->mvstat != 1) {
+    if (tvc->mvstat != AFS_MVSTAT_MTPT) {
 	afs_PutVCache(tvc);
 	code = EINVAL;
 	goto out;
     }
-#ifdef AFS_BOZONLOCK_ENV
-    afs_BozonLock(&tvc->pvnLock, tvc);	/* Since afs_TryToSmush will do a pvn_vptrunc */
-#endif
     ObtainWriteLock(&tvc->lock, 649);
-    ObtainWriteLock(&afs_xcbhash, 650);
-    afs_DequeueCallback(tvc);
-    tvc->f.states &= ~(CStatd | CDirty); /* next reference will re-stat cache entry */
-    ReleaseWriteLock(&afs_xcbhash);
+    /* next reference will re-stat cache entry */
+    afs_StaleVCacheFlags(tvc, 0, CDirty);
     /* now find the disk cache entries */
     afs_TryToSmush(tvc, *acred, 1);
-    osi_dnlc_purgedp(tvc);
     if (tvc->linkData && !(tvc->f.states & CCore)) {
 	afs_osi_Free(tvc->linkData, strlen(tvc->linkData) + 1);
 	tvc->linkData = NULL;
     }
     ReleaseWriteLock(&tvc->lock);
-#ifdef AFS_BOZONLOCK_ENV
-    afs_BozonUnlock(&tvc->pvnLock, tvc);
-#endif
     afs_PutVCache(tvc);
   out:
     if (sysState.allocked)
@@ -5111,7 +5129,12 @@ DECL_PIOCTL(PSetCachingThreshold)
 	cache_bypass_threshold = threshold;
         afs_warn("Cache Bypass Threshold set to: %d\n", threshold);
 	/* TODO:  move to separate pioctl, or enhance pioctl */
-	cache_bypass_strategy = LARGE_FILES_BYPASS_CACHE;
+	if (threshold == AFS_CACHE_BYPASS_DISABLED)
+	    cache_bypass_strategy = NEVER_BYPASS_CACHE;
+	else if (!threshold)
+	    cache_bypass_strategy = ALWAYS_BYPASS_CACHE;
+	else
+	    cache_bypass_strategy = LARGE_FILES_BYPASS_CACHE;
     }
 
     /* Return the current size threshold */
@@ -5298,6 +5321,199 @@ DECL_PIOCTL(PDiscon)
     return afs_pd_putInt(aout, mode);
 }
 
+#define MAX_PIOCTL_TOKENS 10
+
+DECL_PIOCTL(PSetTokens2)
+{
+    int code =0;
+    int i, cellNum, primaryFlag;
+    XDR xdrs;
+    struct unixuser *tu;
+    struct vrequest *treq = NULL;
+    struct ktc_setTokenData tokenSet;
+    struct ktc_tokenUnion decodedToken;
+
+    memset(&tokenSet, 0, sizeof(tokenSet));
+
+    AFS_STATCNT(PSetTokens2);
+    if (!afs_resourceinit_flag)
+	return EIO;
+
+    afs_pd_xdrStart(ain, &xdrs, XDR_DECODE);
+
+    if (!xdr_ktc_setTokenData(&xdrs, &tokenSet)) {
+	afs_pd_xdrEnd(ain, &xdrs);
+	return EINVAL;
+    }
+
+    afs_pd_xdrEnd(ain, &xdrs);
+
+    /* We limit each PAG to 10 tokens to prevent a malicous (or runaway)
+     * process from using up the whole of the kernel memory by allocating
+     * tokens.
+     */
+    if (tokenSet.tokens.tokens_len > MAX_PIOCTL_TOKENS) {
+	xdr_free((xdrproc_t) xdr_ktc_setTokenData, &tokenSet);
+	return E2BIG;
+    }
+
+    code = _settok_tokenCell(tokenSet.cell, &cellNum, &primaryFlag);
+    if (code) {
+	xdr_free((xdrproc_t) xdr_ktc_setTokenData, &tokenSet);
+	return code;
+    }
+
+    if (tokenSet.flags & AFSTOKEN_EX_SETPAG) {
+#if defined(AFS_LINUX26_ENV)
+	afs_ucred_t *old_cred = *acred;
+#endif
+	if (_settok_setParentPag(acred) == 0) {
+#if defined(AFS_LINUX26_ENV)
+	    /* setpag() may have changed our credentials */
+	    *acred = crref();
+	    crfree(old_cred);
+#endif
+	    code = afs_CreateReq(&treq, *acred);
+	    if (code) {
+		xdr_free((xdrproc_t) xdr_ktc_setTokenData, &tokenSet);
+		return code;
+	    }
+	    areq = treq;
+	}
+    }
+
+    tu = afs_GetUser(areq->uid, cellNum, WRITE_LOCK);
+    /* Free any tokens that we've already got */
+    afs_FreeTokens(&tu->tokens);
+
+    /* Iterate across the set of tokens we've received, and stuff them
+     * into this user's tokenJar
+     */
+    for (i=0; i < tokenSet.tokens.tokens_len; i++) {
+	xdrmem_create(&xdrs,
+		      tokenSet.tokens.tokens_val[i].token_opaque_val,
+		      tokenSet.tokens.tokens_val[i].token_opaque_len,
+		      XDR_DECODE);
+
+	memset(&decodedToken, 0, sizeof(decodedToken));
+	if (!xdr_ktc_tokenUnion(&xdrs, &decodedToken)) {
+	    xdr_destroy(&xdrs);
+	    code = EINVAL;
+	    goto out;
+	}
+
+	xdr_destroy(&xdrs);
+
+	afs_AddTokenFromPioctl(&tu->tokens, &decodedToken);
+	/* This is untidy - the old token interface supported passing
+	 * the primaryFlag as part of the token interface. Current
+	 * OpenAFS userland never sets this, but it's specified as being
+	 * part of the XG interface, so we should probably still support
+	 * it. Rather than add it to our AddToken interface, just handle
+	 * it here.
+	 */
+	if (decodedToken.at_type == AFSTOKEN_UNION_KAD) {
+	    if (decodedToken.ktc_tokenUnion_u.at_kad.rk_primary_flag)
+		primaryFlag = 1;
+	}
+
+	/* XXX - We should think more about destruction here. It's likely that
+	 * there is key material in what we're about to throw away, which
+	 * we really should zero out before giving back to the allocator */
+	xdr_free((xdrproc_t) xdr_ktc_tokenUnion, &decodedToken);
+    }
+
+    tu->states |= UHasTokens;
+    tu->states &= ~UTokensBad;
+    afs_SetPrimary(tu, primaryFlag);
+    tu->tokenTime = osi_Time();
+
+    xdr_free((xdrproc_t) xdr_ktc_setTokenData, &tokenSet);
+
+out:
+    afs_ResetUserConns(tu);
+    afs_PutUser(tu, WRITE_LOCK);
+    afs_DestroyReq(treq);
+
+    return code;
+}
+
+DECL_PIOCTL(PGetTokens2)
+{
+    struct cell *cell = NULL;
+    struct unixuser *tu = NULL;
+    afs_int32 iterator;
+    char *cellName = NULL;
+    afs_int32 cellNum;
+    int code = 0;
+    time_t now;
+    XDR xdrs;
+    struct ktc_setTokenData tokenSet;
+
+    AFS_STATCNT(PGetTokens);
+    if (!afs_resourceinit_flag)
+	return EIO;
+
+    memset(&tokenSet, 0, sizeof(tokenSet));
+
+    /* No input data - return tokens for primary cell */
+    /* 4 octets of data is an iterator count */
+    /* Otherwise, treat as string & return tokens for that cell name */
+
+    if (afs_pd_remaining(ain) == sizeof(afs_int32)) {
+	/* Integer iterator - return tokens for the n'th cell found for user */
+	if (afs_pd_getInt(ain, &iterator) != 0)
+	    return EINVAL;
+	tu = getNthCell(areq->uid, iterator);
+    } else {
+        if (afs_pd_remaining(ain) > 0) {
+	    if (afs_pd_getStringPtr(ain, &cellName) != 0)
+		return EINVAL;
+        } else {
+	    cellName = NULL;
+	}
+	code = _settok_tokenCell(cellName, &cellNum, NULL);
+	if (code)
+	    return code;
+	tu = afs_FindUser(areq->uid, cellNum, READ_LOCK);
+    }
+    if (tu == NULL)
+	return EDOM;
+
+    now = osi_Time();
+
+    if (!(tu->states & UHasTokens)
+	|| !afs_HasValidTokens(tu->tokens, now)) {
+	tu->states |= (UTokensBad | UNeedsReset);
+	afs_PutUser(tu, READ_LOCK);
+	return ENOTCONN;
+    }
+
+    code = afs_ExtractTokensForPioctl(tu->tokens, now, &tokenSet);
+    if (code)
+	goto out;
+
+    cell = afs_GetCell(tu->cell, READ_LOCK);
+    tokenSet.cell = cell->cellName;
+    afs_pd_xdrStart(aout, &xdrs, XDR_ENCODE);
+    if (!xdr_ktc_setTokenData(&xdrs, &tokenSet)) {
+	code = E2BIG;
+	goto out;
+    }
+    afs_pd_xdrEnd(aout, &xdrs);
+
+out:
+    tokenSet.cell = NULL;
+
+    if (tu)
+	afs_PutUser(tu, READ_LOCK);
+    if (cell)
+	afs_PutCell(cell, READ_LOCK);
+    xdr_free((xdrproc_t)xdr_ktc_setTokenData, &tokenSet);
+
+    return code;
+};
+
 DECL_PIOCTL(PNFSNukeCreds)
 {
     afs_uint32 addr;
@@ -5326,20 +5542,20 @@ DECL_PIOCTL(PNFSNukeCreds)
     for (i = 0; i < NUSERS; i++) {
 	for (tu = afs_users[i]; tu; tu = tu->next) {
 	    if (tu->exporter && EXP_CHECKHOST(tu->exporter, addr)) {
-		tu->vid = UNDEFVID;
-		tu->states &= ~UHasTokens;
-		/* security is not having to say you're sorry */
-		memset(&tu->ct, 0, sizeof(struct ClearToken));
 		tu->refCount++;
 		ReleaseWriteLock(&afs_xuser);
+
+		afs_LockUser(tu, WRITE_LOCK, 367);
+
+		tu->states &= ~UHasTokens;
+		afs_FreeTokens(&tu->tokens);
 		afs_ResetUserConns(tu);
-		tu->refCount--;
+		afs_PutUser(tu, WRITE_LOCK);
 		ObtainWriteLock(&afs_xuser, 228);
 #ifdef UKERNEL
 		/* set the expire times to 0, causes
 		 * afs_GCUserData to remove this entry
 		 */
-		tu->ct.EndTimestamp = 0;
 		tu->tokenTime = 0;
 #endif /* UKERNEL */
 	    }

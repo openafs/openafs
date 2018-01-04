@@ -10,10 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#include <stdio.h>
-#include <errno.h>
-#include <stdlib.h>		/* for malloc() */
+#include <roken.h>
 
 #include <afs/cmd.h>
 
@@ -109,10 +106,6 @@ struct ncp_sb_info {
 #define _KERNEL 1
 #endif
 
-#ifndef	AFS_OSF_ENV
-#include <sys/param.h>
-#endif
-
 #ifndef AFS_LINUX20_ENV
 #include <nlist.h>
 #endif
@@ -122,7 +115,6 @@ struct ncp_sb_info {
 #endif
 
 #include <afs/stds.h>
-#include <sys/types.h>
 
 #if defined(AFS_OSF_ENV)
 #define	KERNEL
@@ -131,7 +123,6 @@ struct ncp_sb_info {
 #ifdef	_KERN_LOCK_H_
 #include FFFFF
 #endif
-#include <sys/time.h>
 #include <kern/lock.h>
 #include <sys/vnode.h>
 #include <arch/alpha/pmap.h>
@@ -167,16 +158,6 @@ struct ncp_sb_info {
 #ifdef	AFS_SUN5_ENV /*XXXXX*/
 #include <sys/t_lock.h>
 struct vnode foo;
-#ifdef	AFS_SUN54_ENV
-#else
-#ifdef	AFS_SUN52_ENV
-typedef struct stat_mutex stat_mutex_t;
-#define	kmutex_t		stat_mutex_t
-#else
-typedef struct adaptive_mutex2 adaptive_mutex2_t;
-#define	kmutex_t	adaptive_mutex2_t
-#endif
-#endif
 #endif
 
 #ifdef AFS_SGI53_ENV
@@ -200,10 +181,6 @@ typedef struct adaptive_mutex2 adaptive_mutex2_t;
 #include <sys/user.h>
 #endif
 
-#ifndef AFS_LINUX20_ENV
-#include <sys/socket.h>
-#endif
-
 #ifndef AFS_LINUX26_ENV
 #include <sys/file.h>
 #endif
@@ -225,8 +202,6 @@ typedef struct adaptive_mutex2 adaptive_mutex2_t;
 #else
 # include <netinet/in.h>	/* struct in_addr */
 #endif
-
-#include <arpa/inet.h>		/* inet_ntoa() */
 
 #if defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV)
 #ifdef       AFS_SGI_ENV
@@ -352,7 +327,6 @@ typedef enum _spustate {	/* FROM /etc/conf/h/_types.h */
 #endif
 #endif
 #endif
-#include <signal.h>
 #endif
 
 /* AFS includes */
@@ -606,9 +580,6 @@ int Dgcpags = 0;
 #include <sys/elf.h>
 #include <libelf.h>
 #include <sys/elf_M32.h>
-#ifndef	AFS_SUN54_ENV
-typedef ulong_t k_fltset_t;	/* XXXXXXXXXXX */
-#endif /* !AFS_SUN54_ENV */
 #include <sys/proc.h>
 #include <sys/file.h>
 #define	_NLIST_H		/* XXXXXXXXXXXXX */
@@ -642,9 +613,6 @@ PrintIPAddr(int addr)
 
 #ifdef AFS_LINUX20_ENV
 /* Find symbols in a live kernel. */
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #ifdef AFS_LINUX26_ENV
 #define KSYMS "/proc/kallsyms"
@@ -699,7 +667,7 @@ read_ksyms(void)
     }
 
     availksyms = KSYM_ALLOC_BASE;
-    ksyms = (symlist_t *) malloc(availksyms * sizeof(symlist_t));
+    ksyms = malloc(availksyms * sizeof(symlist_t));
     if (!ksyms) {
 	printf("Can't malloc %d elements for symbol list.\n", availksyms);
 	exit(1);
@@ -709,8 +677,7 @@ read_ksyms(void)
     while (fgets(line, MAXLINE, fp)) {
 	if (nksyms >= availksyms) {
 	    availksyms += KSYM_ALLOC_STEP;
-	    ksyms =
-		(symlist_t *) realloc(ksyms, availksyms * sizeof(symlist_t));
+	    ksyms = realloc(ksyms, availksyms * sizeof(symlist_t));
 	    if (!ksyms) {
 		printf("Failed to realloc %d symbols.\n", availksyms);
 		exit(1);
@@ -955,7 +922,7 @@ main(int argc, char **argv)
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
 
-    ts = cmd_CreateSyntax(NULL, cmdproc, NULL,
+    ts = cmd_CreateSyntax(NULL, cmdproc, NULL, 0,
 			  "Read internal cache manager structs");
     cmd_AddParm(ts, "-kobj", CMD_SINGLE, CMD_OPTIONAL,
 		"kernel object (default /vmunix)");
@@ -1378,14 +1345,12 @@ add_found_server(struct server *sep)
     if (NserversFound >= NserversAllocated) {
 	NserversAllocated += SF_ALLOCATION_STEP;
 	if (!serversFound) {
-	    serversFound =
-		(struct server **)malloc(NserversAllocated *
-					 sizeof(struct server *));
+	    serversFound = malloc(NserversAllocated *
+				  sizeof(struct server *));
 	} else {
-	    serversFound =
-		(struct server **)realloc((char *)serversFound,
-					  NserversAllocated *
-					  sizeof(struct server *));
+	    serversFound = realloc(serversFound,
+				   NserversAllocated *
+			           sizeof(struct server *));
 	}
 	if (!serversFound) {
 	    printf("Can't allocate %lu bytes for list of found servers.\n",
@@ -1645,7 +1610,7 @@ print_dcaches(int pnt)
     kread(kmem, symoff, (char *)&count, sizeof count);
     findsym("afs_indexTable", &symoff);
     kread(kmem, symoff, (char *)&table, sizeof(long));
-    ptr = (long *)malloc(count * sizeof(long));
+    ptr = malloc(count * sizeof(long));
     kread(kmem, table, (char *)ptr, count * sizeof(long));
     for (i = 0, j = 0; i < count; i++) {
 	if (dp = (struct dcache *)ptr[i]) {
@@ -1684,7 +1649,7 @@ print_DindexTimes(int pnt)
     kread(kmem, symoff, (char *)&count, sizeof count);
     findsym("afs_indexTimes", &symoff);
     kread(kmem, symoff, (char *)&table, sizeof(long));
-    ptr = (afs_hyper_t *) malloc(count * sizeof(afs_hyper_t));
+    ptr = malloc(count * sizeof(afs_hyper_t));
     kread(kmem, table, (char *)ptr, count * sizeof(afs_hyper_t));
     for (i = 0, j = 0; i < count; i++) {
 	if (pnt)
@@ -1720,7 +1685,7 @@ print_DdvnextTbl(int pnt)
     kread(kmem, symoff, (char *)&count, sizeof count);
     findsym("afs_dvnextTbl", &symoff);
     kread(kmem, symoff, (char *)&table, sizeof(long));
-    ptr = (afs_int32 *) malloc(count * sizeof(afs_int32));
+    ptr = malloc(count * sizeof(afs_int32));
     kread(kmem, table, (char *)ptr, count * sizeof(afs_int32));
     for (i = 0, j = 0; i < count; i++) {
 	if (pnt)
@@ -1749,7 +1714,7 @@ print_DdcnextTbl(int pnt)
     kread(kmem, symoff, (char *)&count, sizeof count);
     findsym("afs_dcnextTbl", &symoff);
     kread(kmem, symoff, (char *)&table, sizeof(long));
-    ptr = (afs_int32 *) malloc(count * sizeof(afs_int32));
+    ptr = malloc(count * sizeof(afs_int32));
     kread(kmem, table, (char *)ptr, count * sizeof(afs_int32));
     for (i = 0, j = 0; i < count; i++) {
 	if (pnt)
@@ -1779,7 +1744,7 @@ print_DindexFlags(int pnt)
     kread(kmem, symoff, (char *)&count, sizeof count);
     findsym("afs_indexFlags", &symoff);
     kread(kmem, symoff, (char *)&table, sizeof(long));
-    flags = (unsigned char *)malloc(count * sizeof(char));
+    flags = malloc(count * sizeof(char));
     kread(kmem, table, flags, count * sizeof(char));
     for (i = 0, j = 0; i < count; i++) {
 	if (pnt)
@@ -1808,7 +1773,7 @@ print_buffers(int pnt)
     kread(kmem, symoff, (char *)&table, sizeof(long));
     findsym("nbuffers", &symoff);
     kread(kmem, symoff, (char *)&count, sizeof(int));
-    buffers = (unsigned char *)malloc(count * sizeof(struct buffer));
+    buffers = malloc(count * sizeof(struct buffer));
     kread(kmem, table, buffers, count * sizeof(struct buffer));
     bp = (struct buffer *)buffers;
     for (i = 0, j = 0; i < count; i++, bp++) {
@@ -2217,11 +2182,11 @@ print_allocs(int pnt)
 int
 readmem(kmem, buf, vad, len)
      int kmem, len;
-#ifdef AFS_SUN57_ENV
+#ifdef AFS_SUN5_ENV
      uintptr_t vad;
 #else
      int vad;
-#endif		/** AFS_SUN57_ENV **/
+#endif		/** AFS_SUN5_ENV **/
      char *buf;
 {
     int newlen;
@@ -2512,13 +2477,6 @@ print_nfsclient(int kmem, struct nfsclientpag *ep,
 void
 pmutex(char *sp, kmutex_t *mp)
 {
-#ifdef	AFS_SUN54_ENV
-
-#else
-    struct stat_mutex *smp = (struct stat_mutex *)mp;
-
-    printf("%s mutex: %x %x\n", sp, smp->m_stats_lock, smp->m_type);
-#endif
 }
 
 #endif
@@ -2698,13 +2656,13 @@ print_volume(int kmem, struct volume *vep, struct volume *ptr, int pnt)
 	   vep->backVol);
 #ifdef	AFS33
     printf
-	("\trwVol=%d, AcTime=%d, copyDate=%d, expTime=%d, vtix=%d, refC=%d, states=%x\n",
-	 vep->rwVol, vep->accessTime, vep->copyDate, vep->expireTime,
+	("\trwVol=%d, setupTime=%d, copyDate=%d, expTime=%d, vtix=%d, refC=%d, states=%x\n",
+	 vep->rwVol, vep->setupTime, vep->copyDate, vep->expireTime,
 	 vep->vtix, vep->refCount, vep->states);
 #else
     printf
-	("\trwVol=%d, AcTime=%d, copyDate=%d, vtix=%d, refC=%d, states=%x\n",
-	 vep->rwVol, vep->accessTime, vep->copyDate, vep->vtix, vep->refCount,
+	("\trwVol=%d, setupTime=%d, copyDate=%d, vtix=%d, refC=%d, states=%x\n",
+	 vep->rwVol, vep->setupTime, vep->copyDate, vep->vtix, vep->refCount,
 	 vep->states);
 #endif
     printf("\tVolume's statuses: ");

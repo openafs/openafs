@@ -12,14 +12,11 @@
 
 
 #ifdef RXDEBUG
-#include <string.h>
-#ifdef AFS_NT40_ENV
-#include <fcntl.h>
-#include <io.h>
-#else
-#include <sys/file.h>
-#include <unistd.h>
-#endif
+
+#include <roken.h>
+
+#include <afs/afsutil.h>
+
 #include "rx.h"
 #include "rx_globals.h"
 #include "rx_trace.h"
@@ -36,11 +33,6 @@ struct rx_trace {
     afs_uint32 servicetime;
     afs_uint32 event;
 };
-
-#include <errno.h>
-#ifdef AFS_NT40_ENV
-#include <afs/afsutil.h>
-#endif
 
 int
 main(int argc, char **argv)

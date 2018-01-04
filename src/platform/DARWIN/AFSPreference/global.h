@@ -26,7 +26,7 @@
 #define kDoYouWantCreateTheDirectory	NSLocalizedStringFromTableInBundle(@"DoYouWantCreateTheDirectory",nil,[NSBundle bundleForClass:[self class]],@"DoYouWantCreateTheDirectory")
 #define kDirectoryCreated				NSLocalizedStringFromTableInBundle(@"DirectoryCreated",nil,[NSBundle bundleForClass:[self class]],@"DirectoryCreated")
 #define kErrorCreatingDirectory			NSLocalizedStringFromTableInBundle(@"ErrorCreatingDirectory",nil,[NSBundle bundleForClass:[self class]],@"ErrorCreatingDirectory")
-#define kErrorGettongSystemVersion		NSLocalizedString(@"ErrorGettongSystemVersion",@"ErrorGettongSystemVersion");
+#define kErrorGettongSystemVersion		NSLocalizedString(@"ErrorGettongSystemVersion",@"ErrorGettongSystemVersion")
 
 
 // PREFERENCE KEY

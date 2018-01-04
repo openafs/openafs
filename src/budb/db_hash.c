@@ -9,18 +9,13 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
-#include <string.h>
-#include <sys/types.h>
 #include <afs/stds.h>
+
+#include <roken.h>
+
 #include <ubik.h>
 #include <afs/bubasics.h>
+
 #include "budb_errs.h"
 #include "database.h"
 #include "budb_internal.h"
@@ -177,11 +172,10 @@ ht_AllocTable(struct ubik_trans *ut, struct memoryHashTable *mht)
     len = nb * nHTBuckets;	/* new hash table length */
 
     mht->size = nb * sizeof(struct memoryHTBlock *);
-    b = mht->blocks = (struct memoryHTBlock **)malloc(mht->size);
-    memset(b, 0, mht->size);
+    b = mht->blocks = calloc(1, mht->size);
 
     for (i = 0; i < nb; i++) {
-	b[i] = (struct memoryHTBlock *)malloc(sizeof(struct memoryHTBlock));
+	b[i] = malloc(sizeof(struct memoryHTBlock));
 	code = AllocBlock(ut, (struct block *)&b[i]->b, &b[i]->a);
 	if (code)
 	    return code;
@@ -290,8 +284,7 @@ ht_GetTableBlock(struct ubik_trans *ut, struct memoryHashTable *mht,
 
     if (*blocksP == 0) {
 	*sizeP = ht_TableSize(length);
-	*blocksP = (struct memoryHTBlock **)malloc(*sizeP);
-	memset(*blocksP, 0, *sizeP);
+	*blocksP = calloc(1, *sizeP);
     }
     n = *sizeP / sizeof(struct memoryHTBlock *);
     if (bi >= n)
@@ -309,8 +302,7 @@ ht_GetTableBlock(struct ubik_trans *ut, struct memoryHashTable *mht,
 		    db_panic("non-zero length, but no table");
 	    }
 	    /* else ta is set from last time around loop */
-	    b[i] =
-		(struct memoryHTBlock *)malloc(sizeof(struct memoryHTBlock));
+	    b[i] = malloc(sizeof(struct memoryHTBlock));
 	    b[i]->a = ta;
 	    b[i]->valid = 0;
 	}
@@ -555,22 +547,22 @@ ht_HashEntry(struct memoryHashTable *mht,
     switch (type) {
     case HT_dumpIden_FUNCTION:
 	retval = IdHashFunction(ntohl(((struct dump *)e)->id));
-	LogDebug(5, "HashEntry: dumpid returns %d\n", retval);
+	LogDebug(5, "HashEntry: dumpid returns %u\n", retval);
 	break;
 
     case HT_dumpName_FUNCTION:
 	retval = StringHashFunction((unsigned char *)((struct dump *)e)->dumpName);
-	LogDebug(5, "HashEntry: dumpname returns %d\n", retval);
+	LogDebug(5, "HashEntry: dumpname returns %u\n", retval);
 	break;
 
     case HT_tapeName_FUNCTION:
 	retval = StringHashFunction((unsigned char *)((struct tape *)e)->name);
-	LogDebug(5, "HashEntry: tapename returns %d\n", retval);
+	LogDebug(5, "HashEntry: tapename returns %u\n", retval);
 	break;
 
     case HT_volName_FUNCTION:
 	retval = StringHashFunction((unsigned char *)((struct volInfo *)e)->name);
-	LogDebug(5, "HashEntry: volname returns %d\n", retval);
+	LogDebug(5, "HashEntry: volname returns %u\n", retval);
 	break;
 
     default:
@@ -730,13 +722,11 @@ ht_HashInList(struct ubik_trans *ut, struct memoryHashTable *mht,
 
     for (ea = listA; ea; ea = next_ea) {	/*f */
 
-	LogDebug(3, "ht_HashInList: move entry at %d, type %d\n", ea,
+	LogDebug(3, "ht_HashInList: move entry at %u, type %d\n", ea,
 		 ntohl(mht->ht->functionType));
 
 	if (dbread(ut, ea, e, e_size))
 	    return BUDB_IO;
-
-	/* LogNetDump((struct dump *) e); */
 
 	/* get the address of the next item on the list */
 	next_ea = ntohl(*(dbadr *) (e + mht->threadOffset));
@@ -757,7 +747,7 @@ ht_HashInList(struct ubik_trans *ut, struct memoryHashTable *mht,
 
 	    /* get the hash value */
 	    hash = ht_HashEntry(mht, e) % mht->length;
-	    LogDebug(4, "ht_HashInList: moved to %d\n", hash);
+	    LogDebug(4, "ht_HashInList: moved to %u\n", hash);
 
 	    /* get the new hash table block */
 	    code = ht_GetTableBlock(ut, mht, hash, 0 /*old */ , &block, &bo);
@@ -942,7 +932,7 @@ ht_HashIn(struct ubik_trans *ut,
     code = set_word_offset(ut, ea, e, mht->threadOffset, block->b.bucket[bo]);
     if (code)
 	return BUDB_IO;
-    LogDebug(5, "Hashin: set %d to %d\n", mht->threadOffset,
+    LogDebug(5, "Hashin: set %d to %u\n", mht->threadOffset,
 	     block->b.bucket[bo]);
 
     code =
@@ -1115,7 +1105,7 @@ scanHashTableBlock(struct ubik_trans *ut,
     int entrySize;		/* hashed entry size */
 
     char entry[sizeof(struct block)];
-    dbadr entryAddr, nextEntryAddr;
+    dbadr entryAddr;
 
     int i;
 
@@ -1127,19 +1117,17 @@ scanHashTableBlock(struct ubik_trans *ut,
      */
 
     for (i = 0; (i < nHTBuckets) && (index < length); i++, index++) {	/*f */
-	entryAddr = 0;
-	nextEntryAddr = ntohl(htBlockPtr->bucket[i]);
+	entryAddr = ntohl(htBlockPtr->bucket[i]);
 
 	/* if this is the old hash table, all entries below the progress mark
 	 * should have been moved to the new hash table
 	 */
-	if (old && (index < mhtPtr->progress) && nextEntryAddr)
+	if (old && (index < mhtPtr->progress) && entryAddr)
 	    return BUDB_INTERNALERROR;
 
 	/* now walk down the chain of each bucket */
-	while (nextEntryAddr) {	/*w */
+	while (entryAddr) {	/*w */
 
-	    entryAddr = nextEntryAddr;
 	    if (dbread(ut, entryAddr, &entry[0], entrySize))
 		return (BUDB_INTERNALERROR);
 
@@ -1147,7 +1135,7 @@ scanHashTableBlock(struct ubik_trans *ut,
 		(*operationFn) (entryAddr, &entry[0], rockPtr);
 	    }
 
-	    nextEntryAddr =
+	    entryAddr =
 		ntohl(*((dbadr *) (entry + mhtPtr->threadOffset)));
 	}			/*w */
 

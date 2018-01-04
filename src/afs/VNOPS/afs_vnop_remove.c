@@ -65,7 +65,7 @@ afsremove(struct vcache *adp, struct dcache *tdc,
     XSTATS_DECLS;
     if (!AFS_IS_DISCONNECTED) {
         do {
-	  tc = afs_Conn(&adp->f.fid, treqp, SHARED_LOCK, &rxconn);
+	    tc = afs_Conn(&adp->f.fid, treqp, SHARED_LOCK, &rxconn);
 	    if (tc) {
 	        XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_REMOVEFILE);
 	        RX_AFS_GUNLOCK();
@@ -93,11 +93,7 @@ afsremove(struct vcache *adp, struct dcache *tdc,
 	    afs_PutVCache(tvc);
 
 	if (code < 0) {
-	    ObtainWriteLock(&afs_xcbhash, 497);
-	    afs_DequeueCallback(adp);
-	    adp->f.states &= ~CStatd;
-	    ReleaseWriteLock(&afs_xcbhash);
-	    osi_dnlc_purgedp(adp);
+	    afs_StaleVCache(adp);
 	}
 	ReleaseWriteLock(&adp->lock);
 	code = afs_CheckCode(code, treqp, 21);
@@ -126,10 +122,6 @@ afsremove(struct vcache *adp, struct dcache *tdc,
     if (tvc) {
 	if (afs_mariner)
 	    afs_MarinerLog("store$Removing", tvc);
-#ifdef AFS_BOZONLOCK_ENV
-	afs_BozonLock(&tvc->pvnLock, tvc);
-	/* Since afs_TryToSmush will do a pvn_vptrunc */
-#endif
 	ObtainWriteLock(&tvc->lock, 141);
 	/* note that callback will be broken on the deleted file if there are
 	 * still >0 links left to it, so we'll get the stat right */
@@ -140,9 +132,6 @@ afsremove(struct vcache *adp, struct dcache *tdc,
 		afs_TryToSmush(tvc, acred, 0);
 	}
 	ReleaseWriteLock(&tvc->lock);
-#ifdef AFS_BOZONLOCK_ENV
-	afs_BozonUnlock(&tvc->pvnLock, tvc);
-#endif
 	afs_PutVCache(tvc);
     }
     return (0);
@@ -206,7 +195,7 @@ afs_remove(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 	goto done;
     }
     if (afs_IsDynrootMount(adp)) {
-	code = ENOENT;
+	code = EROFS;
 	goto done;
     }
 
@@ -353,10 +342,10 @@ afs_remove(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 	code = afsrename(adp, aname, adp, unlname, acred, treq);
 	Tnam1 = unlname;
 	if (!code) {
-	    struct VenusFid *oldmvid = NULL;
-	    if (tvc->mvid) 
-		oldmvid = tvc->mvid;
-	    tvc->mvid = (struct VenusFid *)unlname;
+	    void *oldmvid = NULL;
+	    if (tvc->mvid.silly_name)
+		oldmvid = tvc->mvid.silly_name;
+	    tvc->mvid.silly_name = unlname;
 	    if (oldmvid)
 		osi_FreeSmallSpace(oldmvid);
 	    crhold(acred);
@@ -417,7 +406,7 @@ afs_remunlink(struct vcache *avc, int doit)
     }
 #endif
 
-    if (avc->mvid && (doit || (avc->f.states & CUnlinkedDel))) {
+    if (avc->mvid.silly_name && (doit || (avc->f.states & CUnlinkedDel))) {
 	struct vrequest *treq = NULL;
 
 	if ((code = afs_CreateReq(&treq, avc->uncred))) {
@@ -426,8 +415,8 @@ afs_remunlink(struct vcache *avc, int doit)
 	    /* Must bump the refCount because GetVCache may block.
 	     * Also clear mvid so no other thread comes here if we block.
 	     */
-	    unlname = (char *)avc->mvid;
-	    avc->mvid = NULL;
+	    unlname = avc->mvid.silly_name;
+	    avc->mvid.silly_name = NULL;
 	    cred = avc->uncred;
 	    avc->uncred = NULL;
 

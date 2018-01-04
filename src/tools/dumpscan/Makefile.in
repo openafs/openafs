@@ -1,0 +1,141 @@
+srcdir		= @srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
+
+SHELL		= /bin/sh
+
+INCDIRS=-I${TOP_OBJDIR}/src/config -I${TOP_INCDIR}/afs -I${TOP_INCDIR}
+INCLIBS=-L${SRCDIR}/lib/afs -L${TOP_LIBDIR}
+MODULE_CFLAGS=-DNATIVE_UINT64=afs_uint64
+
+LIBS=\
+	libdumpscan.a \
+	libxfiles.a \
+	${TOP_LIBDIR}/libauth.a \
+	${TOP_LIBDIR}/libaudit.a \
+	${TOP_LIBDIR}/libvolser.a \
+	${TOP_LIBDIR}/libvldb.a \
+	${TOP_LIBDIR}/libubik.a \
+	${TOP_LIBDIR}/librxkad.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/libafshcrypto_lwp.a \
+	${TOP_LIBDIR}/liblwp.a \
+	${TOP_LIBDIR}/util.a \
+	$(TOP_LIBDIR)/libopr.a \
+	${TOP_LIBDIR}/libafscom_err.a \
+	$(LIB_roken) \
+	${XLIBS}
+
+OBJS_afsdump_scan    = afsdump_scan.o repair.o
+OBJS_afsdump_xsed    = afsdump_xsed.o repair.o
+OBJS_libxfiles.a     = xfiles.o xf_errs.o xf_printf.o int64.o \
+                       xf_files.o xf_rxcall.o xf_profile.o
+OBJS_libdumpscan.a   = primitive.o util.o dumpscan_errs.o parsetag.o \
+                       parsedump.o parsevol.o parsevnode.o dump.o \
+                       directory.o pathname.o backuphdr.o stagehdr.o
+
+TARGETS = libxfiles.a libdumpscan.a \
+          afsdump_scan afsdump_dirlist afsdump_extract dumptool
+
+all: libxfiles.a libdumpscan.a \
+	afsdump_scan afsdump_dirlist afsdump_extract dumptool
+
+generated: xf_errs.c xf_errs.h dumpscan_errs.c dumpscan_errs.h
+
+afsdump_scan: libxfiles.a libdumpscan.a $(OBJS_afsdump_scan)
+	$(AFS_LDRULE) $(OBJS_afsdump_scan) $(LIBS)
+
+afsdump_xsed: libxfiles.a libdumpscan.a $(OBJS_afsdump_xsed)
+	$(AFS_LDRULE) $(OBJS_afsdump_xsed) $(LIBS)
+
+afsdump_dirlist: libxfiles.a libdumpscan.a afsdump_dirlist.o
+	$(AFS_LDRULE) afsdump_dirlist.o $(LIBS)
+
+afsdump_extract: libxfiles.a libdumpscan.a afsdump_extract.o
+	$(AFS_LDRULE) afsdump_extract.o $(LIBS)
+
+null-search: libxfiles.a libdumpscan.a null-search.c
+	$(AFS_LDRULE) null-search.c $(LIBS)
+
+dumptool: ${srcdir}/dumptool.c
+	$(AFS_LDRULE) ${srcdir}/dumptool.c
+
+libxfiles.a: $(OBJS_libxfiles.a)
+	-rm -f libxfiles.a
+	$(AR) r libxfiles.a $(OBJS_libxfiles.a)
+	$(RANLIB) libxfiles.a
+
+libdumpscan.a: $(OBJS_libdumpscan.a)
+	-rm -f libdumpscan.a
+	$(AR) r libdumpscan.a $(OBJS_libdumpscan.a)
+	$(RANLIB) libdumpscan.a
+
+xf_errs.c: ${srcdir}/xf_errs.et
+	$(COMPILE_ET_C) -p ${srcdir} xf_errs
+
+xf_errs.h: ${srcdir}/xf_errs.et
+	$(COMPILE_ET_H) -p ${srcdir} xf_errs
+
+afsdump_dirlist.o: xf_errs.h
+afsdump_extract.o: xf_errs.h
+afsdump_scan.o: xf_errs.h
+directory.o: xf_errs.h
+stagehdr.o: xf_errs.h
+util.o: xf_errs.h
+xf_files.o: xf_errs.h
+xfiles.o: xf_errs.h
+xf_printf.o: xf_errs.h
+xf_profile.o: xf_errs.h
+xf_rxcall.o: xf_errs.h
+
+dumpscan_errs.h: ${srcdir}/dumpscan_errs.et
+	$(COMPILE_ET_H) -p ${srcdir} dumpscan_errs
+
+dumpscan_errs.c: ${srcdir}/dumpscan_errs.et
+	$(COMPILE_ET_C) -p ${srcdir} dumpscan_errs
+
+afsdump_dirlist.o: dumpscan_errs.h
+afsdump_extract.o: dumpscan_errs.h
+afsdump_scan.o: dumpscan_errs.h
+backuphdr.o: dumpscan_errs.h
+directory.o: dumpscan_errs.h
+parsedump.o: dumpscan_errs.h
+parsetag.o: dumpscan_errs.h
+parsevnode.o: dumpscan_errs.h
+parsevol.o: dumpscan_errs.h
+pathname.o: dumpscan_errs.h
+repair.o: dumpscan_errs.h
+stagehdr.o: dumpscan_errs.h
+util.o: dumpscan_errs.h
+
+util.o xfiles.o xf_files.o: xf_errs.h
+backuphdr.o directory.o parsedump.o parsetag.o: dumpscan_errs.h
+parsevnode.o parsevol.o pathname.o stagehdr.o:  dumpscan_errs.h
+util.o:                                         dumpscan_errs.h
+
+# repair addresses the same storage as two different types of structs at the
+# same time.
+CFLAGS_repair.o = @CFLAGS_NOSTRICT@
+repair.o: repair.c dumpscan_errs.h
+
+${TOP_LIBDIR}/libxfiles.a: libxfiles.a
+	${INSTALL_DATA} $? $@
+
+${TOP_LIBDIR}/libdumpscan.a: libdumpscan.a
+	${INSTALL_DATA} $? $@
+
+dest:
+
+install:
+
+uninstall:
+
+clean:
+	-rm -f xf_errs.c xf_errs.h dumpscan_errs.c dumpscan_errs.h *.o \
+	$(TARGETS)
+
+include ../../config/Makefile.version
+
+.PHONY:		all install clean realclean distclean mostlyclean install uninstall

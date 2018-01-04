@@ -22,17 +22,12 @@ extern int (*rx_almostSent) (struct rx_packet *, struct sockaddr_in *);
 
 extern void rx_rto_setPeerTimeoutSecs(struct rx_peer *, int secs);
 
-extern void rx_SetEpoch(afs_uint32 epoch);
 extern int rx_Init(u_int port);
 extern int rx_InitHost(u_int host, u_int port);
-extern void rx_SetBusyChannelError(afs_int32 onoff);
 #ifdef AFS_NT40_ENV
 extern void rx_DebugOnOff(int on);
 extern void rx_StatsOnOff(int on);
 extern void rx_StartClientThread(void);
-#endif
-#ifndef KERNEL
-extern void rxi_StartServerProcs(int nExistingProcs);
 #endif
 extern void rx_StartServer(int donateMe);
 extern struct rx_connection *rx_NewConnection(afs_uint32 shost,
@@ -44,12 +39,10 @@ extern void rx_SetConnDeadTime(struct rx_connection *conn,
 			       int seconds);
 extern void rx_SetConnHardDeadTime(struct rx_connection *conn, int seconds);
 extern void rx_SetConnIdleDeadTime(struct rx_connection *conn, int seconds);
-extern void rxi_CleanupConnection(struct rx_connection *conn);
 extern void rxi_DestroyConnection(struct rx_connection *conn);
 extern void rx_GetConnection(struct rx_connection *conn);
 extern void rx_DestroyConnection(struct rx_connection *conn);
 extern struct rx_call *rx_NewCall(struct rx_connection *conn);
-extern int rxi_HasActiveCalls(struct rx_connection *aconn);
 extern int rxi_GetCallNumberVector(struct rx_connection *aconn,
 				   afs_int32 * aint32s);
 extern int rxi_SetCallNumberVector(struct rx_connection *aconn,
@@ -85,115 +78,11 @@ extern void rx_SetArrivalProc(struct rx_call *call,
 extern afs_int32 rx_EndCall(struct rx_call *call, afs_int32 rc);
 extern void rx_InterruptCall(struct rx_call *call, afs_int32 error);
 extern void rx_Finalize(void);
-extern void rxi_PacketsUnWait(void);
-extern struct rx_service *rxi_FindService(osi_socket socket,
-					  u_short serviceId);
-extern struct rx_call *rxi_NewCall(struct rx_connection *conn,
-				   int channel);
-
-/* Don't like this - change source at some point to make calls identical */
-#ifdef RX_ENABLE_LOCKS
-extern void rxi_FreeCall(struct rx_call *call, int haveCTLock);
-#else /* RX_ENABLE_LOCKS */
-extern void rxi_FreeCall(struct rx_call *call);
-#endif /* RX_ENABLE_LOCKS */
-
-extern char *rxi_Alloc(size_t size);
+extern void *rxi_Alloc(size_t size);
 extern void rxi_Free(void *addr, size_t size);
-extern void rxi_SetPeerMtu(struct rx_peer *peer, afs_uint32 host,
-			   afs_uint32 port, int mtu);
-extern struct rx_peer *rxi_FindPeer(afs_uint32 host,
-				    u_short port,
-				    struct rx_peer *origPeer, int create);
-extern struct rx_connection *rxi_FindConnection(osi_socket socket,
-						afs_uint32 host,
-						u_short port,
-						u_short serviceId,
-						afs_uint32 cid,
-						afs_uint32 epoch, int type,
-						u_int securityIndex,
-						int *unknownService);
-extern struct rx_packet *rxi_ReceivePacket(struct rx_packet *np,
-					   osi_socket socket, afs_uint32 host,
-					   u_short port, int *tnop,
-					   struct rx_call **newcallp);
-extern int rxi_IsConnInteresting(struct rx_connection *aconn);
-extern struct rx_packet *rxi_ReceiveDataPacket(struct rx_call *call,
-					       struct rx_packet *np,
-					       int istack, osi_socket socket,
-					       afs_uint32 host, u_short port,
-					       int *tnop,
-					       struct rx_call **newcallp);
-extern struct rx_packet *rxi_ReceiveAckPacket(struct rx_call *call,
-					      struct rx_packet *np,
-					      int istack);
-extern struct rx_packet *rxi_ReceiveResponsePacket(struct
-						   rx_connection *conn, struct rx_packet
-						   *np, int istack);
-extern struct rx_packet *rxi_ReceiveChallengePacket(struct
-						    rx_connection *conn, struct rx_packet
-						    *np, int istack);
-extern void rxi_AttachServerProc(struct rx_call *call,
-				 osi_socket socket,
-				 int *tnop,
-				 struct rx_call **newcallp);
-extern void rxi_AckAll(struct rxevent *event, struct rx_call *call,
-		       char *dummy);
-extern void rxi_SendDelayedAck(struct rxevent *event,
-			       void *call /* struct rx_call *call */, void *dummy);
-extern void rxi_ClearTransmitQueue(struct rx_call *call,
-				   int force);
-extern void rxi_ClearReceiveQueue(struct rx_call *call);
-extern struct rx_packet *rxi_SendCallAbort(struct rx_call *call,
-					   struct rx_packet *packet,
-					   int istack, int force);
-extern struct rx_packet *rxi_SendConnectionAbort(struct rx_connection
-						 *conn,
-						 struct rx_packet *packet,
-						 int istack, int force);
-extern void rxi_ConnectionError(struct rx_connection *conn,
-				afs_int32 error);
 extern void rxi_CallError(struct rx_call *call, afs_int32 error);
-extern void rxi_ResetCall(struct rx_call *call,
-			  int newcall);
-extern struct rx_packet *rxi_SendAck(struct rx_call *call, struct rx_packet
-				     *optionalPacket, int serial, int reason,
-				     int istack);
-extern void rxi_Start(struct rx_call *call, int istack);
-extern void rxi_Send(struct rx_call *call,
-		     struct rx_packet *p, int istack);
-#ifdef RX_ENABLE_LOCKS
-extern int rxi_CheckCall(struct rx_call *call, int haveCTLock);
-#else /* RX_ENABLE_LOCKS */
-extern int rxi_CheckCall(struct rx_call *call);
-#endif /* RX_ENABLE_LOCKS */
-extern void rxi_KeepAliveEvent(struct rxevent *event,
-			       void *call /* struct rx_call *call */,
-			       void *dummy);
-extern void rxi_GrowMTUEvent(struct rxevent *event,
-			     void *call /* struct rx_call *call */,
-			     void *dummy);
-extern void rxi_ScheduleKeepAliveEvent(struct rx_call *call);
-extern void rxi_ScheduleNatKeepAliveEvent(struct rx_connection *conn);
-extern void rxi_ScheduleGrowMTUEvent(struct rx_call *call, int secs);
-extern void rxi_KeepAliveOn(struct rx_call *call);
-extern void rxi_NatKeepAliveOn(struct rx_connection *conn);
-extern void rxi_GrowMTUOn(struct rx_call *call);
-extern void rx_SetConnSecondsUntilNatPing(struct rx_connection *conn, afs_int32 seconds);
-extern void rxi_SendDelayedConnAbort(struct rxevent *event,
-				     void *conn, /* struct rx_connection *conn */
-				     void *dummy);
-extern void rxi_SendDelayedCallAbort(struct rxevent *event,
-				     void *call, /* struct rx_call *call */
-				     void *dummy);
-extern void rxi_ChallengeEvent(struct rxevent *event,
-			       void *conn, /* struct rx_connection *conn */
-			       void *arg1, int atries);
-extern void rxi_ChallengeOn(struct rx_connection *conn);
-extern void rxi_ReapConnections(struct rxevent *unused, void *unused1,
-				void *unused2);
-extern void rx_KeepAliveOn(struct rx_call *call);
-extern void rx_KeepAliveOff(struct rx_call *call);
+extern void rx_SetConnSecondsUntilNatPing(struct rx_connection *conn,
+					  afs_int32 seconds);
 extern int rxs_Release(struct rx_securityClass *aobj);
 #ifndef KERNEL
 extern void rx_PrintTheseStats(FILE * file, struct rx_statistics *s, int size,
@@ -229,9 +118,6 @@ extern afs_int32 rx_GetServerPeers(osi_socket socket, afs_uint32 remoteAddr,
 extern afs_int32 rx_GetLocalPeers(afs_uint32 peerHost, afs_uint16 peerPort,
 				      struct rx_debugPeer * peerStats);
 extern void shutdown_rx(void);
-#ifndef osirx_AssertMine
-extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
-#endif
 #ifndef KERNEL
 extern int rx_KeyCreate(rx_destructor_t rtn);
 #endif
@@ -274,13 +160,23 @@ extern void rx_clearProcessRPCStats(afs_uint32 clearFlag);
 extern void rx_clearPeerRPCStats(afs_uint32 clearFlag);
 extern void rx_SetRxStatUserOk(int (*proc) (struct rx_call * call));
 extern int rx_RxStatUserOk(struct rx_call *call);
+extern void rx_ClearProcessRPCStats(afs_int32 rxInterface);
+extern void rx_ClearPeerRPCStats(afs_int32 rxInterface, afs_uint32 peerHost, afs_uint16 peerPort);
+extern void *rx_CopyProcessRPCStats(afs_uint64 op);
+extern void *rx_CopyPeerRPCStats(afs_uint64 op, afs_uint32 peerHost, afs_uint16 peerPort);
+extern void rx_ReleaseRPCStats(void *stats);
 extern afs_int32 rx_SetSecurityConfiguration(struct rx_service *service,
 					     rx_securityConfigVariables type,
 					     void *value);
+extern int rx_GetThreadNum(void);
+extern int rx_SetThreadNum(void);
 
 void rxi_DebugInit(void);
 void rxi_DebugPrint(char *format, ...)
     AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
+
+extern int rx_GetNetworkError(struct rx_connection *conn, int *err_origin,
+                              int *err_type, int *err_code, const char **msg);
 
 /* rx_clock.c */
 #if !defined(clock_Init)
@@ -316,33 +212,13 @@ extern void rx_ReleaseCachedConnection(struct rx_connection *conn);
 /* rx_event.c */
 extern int rxevent_nFree;
 extern int rxevent_nPosted;
-#if 0
-extern struct rxevent *rxevent_Post(struct clock *when,
-				    void (*func) (struct rxevent * event,
-						  struct rx_connection * conn,
-						  struct rx_call * acall),
-				    void *arg, void *arg1);
-/* this func seems to be called with tons of different style routines, need to look
-at another time. */
-#else
-extern struct rxevent *rxevent_Post(struct clock *when,
-				    void (*func) (struct rxevent *, void *, void *),
-				    void *arg, void *arg1);
-extern struct rxevent *rxevent_Post2(struct clock *when,
-				    void (*func) (struct rxevent *, void *, void *, int),
-				    void *arg, void *arg1, int arg2);
-extern struct rxevent *rxevent_PostNow(struct clock *when, struct clock *now,
-				       void (*func) (struct rxevent *, void *, void *), void *arg, void *arg1);
-extern struct rxevent *rxevent_PostNow2(struct clock *when, struct clock *now,
-					void (*func) (struct rxevent *, void *, void *, int), void *arg,
-					void *arg1, int arg2);
-#endif
+extern struct rxevent *rxevent_Post(struct clock *when, struct clock *now,
+				     void (*func) (struct rxevent *, void *,
+						   void *, int),
+				     void *arg, void *arg1, int arg2);
 extern void shutdown_rxevent(void);
 extern struct rxepoch *rxepoch_Allocate(struct clock *when);
 extern void rxevent_Init(int nEvents, void (*scheduler) (void));
-extern void rxevent_Cancel_1(struct rxevent *ev,
-			     struct rx_call *call,
-			     int type);
 extern int rxevent_RaiseEvents(struct clock *next);
 
 
@@ -380,18 +256,6 @@ extern int rxk_DelPort(u_short aport);
 extern void rxk_shutdownPorts(void);
 extern osi_socket rxi_GetUDPSocket(u_short port);
 extern osi_socket rxi_GetHostUDPSocket(u_int host, u_short port);
-# if defined(AFS_LINUX26_ENV)
-# define osi_Panic(msg...) do { printk(KERN_CRIT "openafs: " msg); BUG(); } while (0)
-# undef osi_Assert
-# define osi_Assert(expr) \
-    do { if (!(expr)) osi_Panic("assertion failed: %s, file: %s, line: %d\n", #expr, __FILE__, __LINE__); } while (0)
-# elif defined(AFS_AIX_ENV)
-extern void osi_Panic(char *fmt, void *a1, void *a2, void *a3);
-# else
-extern void osi_Panic(char *fmt, ...)
-    AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2)
-    AFS_NORETURN;
-#endif
 extern int osi_utoa(char *buf, size_t len, unsigned long val);
 extern void rxi_InitPeerParams(struct rx_peer *pp);
 extern void shutdown_rxkernel(void);
@@ -513,6 +377,7 @@ extern void multi_Finalize_Ignore(struct multi_handle *mh);
 extern struct rx_securityClass *rxnull_NewServerSecurityObject(void);
 extern struct rx_securityClass *rxnull_NewClientSecurityObject(void);
 
+
 /* rx_packet.c */
 extern afs_int32 rx_SlowGetInt32(struct rx_packet *packet, size_t offset);
 extern afs_int32 rx_SlowPutInt32(struct rx_packet *packet, size_t offset,
@@ -524,23 +389,18 @@ extern afs_int32 rx_SlowWritePacket(struct rx_packet *packet, int offset,
 extern int rxi_RoundUpPacket(struct rx_packet *p, unsigned int nb);
 extern int rxi_AllocDataBuf(struct rx_packet *p, int nb, int cla_ss);
 extern void rxi_MorePackets(int apackets);
-extern void rxi_MorePacketsNoLock(int apackets);
 #if defined(AFS_PTHREAD_ENV)
 extern void rxi_MorePacketsTSFPQ(int apackets, int flush_global, int num_keep_local); /* more flexible packet alloc function */
-extern void rxi_AdjustLocalPacketsTSFPQ(int num_keep_local, int allow_overcommit); /* adjust thread-local queue length, for places where we know how many packets we will need a priori */
 extern void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to global queue */
 #endif
 extern void rxi_FreeAllPackets(void);
 extern void rx_CheckPackets(void);
-extern void rxi_FreePacketNoLock(struct rx_packet *p);
-extern int rxi_FreeDataBufsNoLock(struct rx_packet *p, afs_uint32 first);
 extern void rxi_RestoreDataBufs(struct rx_packet *p);
 extern int rxi_TrimDataBufs(struct rx_packet *p, int first);
 extern void rxi_FreePacket(struct rx_packet *p);
-extern struct rx_packet *rxi_AllocPacketNoLock(int cla_ss);
 extern struct rx_packet *rxi_AllocPacket(int cla_ss);
-extern int rxi_AllocPackets(int cla_ss, int num_pkts, struct rx_queue *q);
-extern int rxi_FreePackets(int num_pkts, struct rx_queue *q);
+extern int rxi_AllocPackets(int cla_ss, int num_pkts, struct opr_queue *q);
+extern int rxi_FreePackets(int num_pkts, struct opr_queue *q);
 extern struct rx_packet *rxi_AllocSendPacket(struct rx_call *call,
 					     int want);
 extern int rxi_ReadPacket(osi_socket socket, struct rx_packet *p,
@@ -581,14 +441,12 @@ extern void rxi_PrepareSendPacket(struct rx_call *call,
 extern int rxi_AdjustIfMTU(int mtu);
 extern int rxi_AdjustMaxMTU(int mtu, int peerMaxMTU);
 extern int rxi_AdjustDgramPackets(int frags, int mtu);
-#ifdef  AFS_GLOBAL_RXLOCK_KERNEL
-extern void rxi_WaitforTQBusy(struct rx_call *call);
-#endif
 
 /* rxperf.c */
 
 
 /* rx_pthread.c */
+extern int rx_NewThreadId(void);
 extern void rxi_Delay(int sec);
 extern void rxi_InitializeThreadSupport(void);
 extern void rxi_StartServerProc(void *(*proc) (void *), int stacksize);
@@ -616,8 +474,6 @@ extern int rxi_WriteProc(struct rx_call *call, char *buf,
 extern int rx_WriteProc(struct rx_call *call, char *buf, int nbytes);
 extern int rx_WriteProc32(struct rx_call *call,
 			  afs_int32 * value);
-extern int rxi_WritevAlloc(struct rx_call *call, struct iovec *iov, int *nio,
-			   int maxio, int nbytes);
 extern int rx_WritevAlloc(struct rx_call *call, struct iovec *iov, int *nio,
 			  int maxio, int nbytes);
 extern int rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio,
@@ -625,7 +481,14 @@ extern int rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio,
 extern int rx_WritevProc(struct rx_call *call, struct iovec *iov, int nio,
 			 int nbytes);
 extern void rxi_FlushWrite(struct rx_call *call);
+extern void rxi_FlushWriteLocked(struct rx_call *call);
 extern void rx_FlushWrite(struct rx_call *call);
+
+
+
+/* rx_stats.c */
+extern struct rx_statistics * rx_GetStatistics(void);
+extern void rx_FreeStatistics(struct rx_statistics **);
 
 /* rx_trace.c */
 
@@ -636,7 +499,6 @@ extern afs_kmutex_t rx_if_init_mutex;
 extern afs_kmutex_t rx_if_mutex;
 #endif
 extern osi_socket rxi_GetUDPSocket(u_short port);
-extern void osi_AssertFailU(const char *expr, const char *file, int line) AFS_NORETURN;
 extern void rxi_InitPeerParams(struct rx_peer *pp);
 extern int rxi_HandleSocketError(int socket);
 
@@ -654,7 +516,7 @@ extern void osi_Panic(char *fmt, ...) AFS_NORETURN;
 
 extern void rx_GetIFInfo(void);
 extern void rx_SetNoJumbo(void);
-extern void rx_SetMaxMTU(int mtu);
+extern int rx_SetMaxMTU(int mtu);
 
 /* rx_xmit_nt.c */
 
@@ -665,9 +527,6 @@ extern void rx_SetMaxMTU(int mtu);
    include the afs_prototypes.h file - just make sure they match */
 #ifndef afs_osi_Alloc
 extern void *afs_osi_Alloc(size_t x);
-#endif
-#ifndef afs_osi_Alloc_NoSleep
-extern void *afs_osi_Alloc_NoSleep(size_t x);
 #endif
 #ifndef afs_osi_Free
 extern void afs_osi_Free(void *x, size_t asize);

@@ -29,9 +29,6 @@ struct buServerConfS {
     char *databaseName;		/* database file name */
     char *databaseExtension;	/* extension (depends on ubik) */
 
-    /* error logging */
-    FILE *log;			/* log file for status/errors */
-
     /* ubik and comm. related */
     afs_uint32 myHost;
     afs_uint32 serverList[MAXSERVERS];	/* list of ubik servers */

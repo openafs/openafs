@@ -9,17 +9,13 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
+
+#include <roken.h>
+
 #include <afs/afsint.h>
-#include <sys/socket.h>
 #include <rx/rx_globals.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
 #include <ubik.h>
-#include <string.h>
 
 struct ubik_client *cstruct;
 struct rx_connection *serverconns[MAXSERVERS];
@@ -276,7 +272,6 @@ FetchData(char **argp)
 static afs_int32
 FetchProc(struct rx_call *acall)
 {
-    extern char *malloc();
     char *tbuffer;
     afs_int32 tlen, length, code;
 
@@ -835,7 +830,6 @@ Readdir(char **argp)
 static afs_int32
 FetchDir(struct rx_call *acall)
 {
-    extern char *malloc();
     char *tbuffer;
     afs_int32 tlen, length, code;
     struct dirent *dp;

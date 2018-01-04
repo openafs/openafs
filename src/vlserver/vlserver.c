@@ -9,39 +9,27 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
-#include <sys/types.h>
-#include <signal.h>
-#include <sys/stat.h>
-#include <string.h>
-#ifdef HAVE_FCNTL_H
-#include <fcntl.h>
+
+#include <roken.h>
+#ifdef AFS_PTHREAD_ENV
+# include <opr/softsig.h>
+# include <afs/procmgmt_softsig.h> /* must come after softsig.h */
 #endif
+
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
 #include <WINNT/afsevent.h>
 #endif
+
 #ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
-#endif
-#include <time.h>
-#ifdef HAVE_NETDB_H
-#include <netdb.h>
-#endif
-#ifdef HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#endif
-#include <stdio.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
 #endif
 
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
 #include <rx/rxstat.h>
+#include <afs/cmd.h>
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 #include <afs/auth.h>
@@ -50,26 +38,26 @@
 #include <lock.h>
 #include <ubik.h>
 #include <afs/afsutil.h>
+
 #include "vlserver.h"
 #include "vlserver_internal.h"
 
-#define MAXLWP 16
-const char *vl_dbaseName;
+#define MAXLWP 64
 struct afsconf_dir *vldb_confdir = 0;	/* vldb configuration dir */
 int lwps = 9;
 
 struct vldstats dynamic_statistics;
 struct ubik_dbase *VL_dbase;
 afs_uint32 rd_HostAddress[MAXSERVERID + 1];
+afs_uint32 wr_HostAddress[MAXSERVERID + 1];
 
 static void *CheckSignal(void*);
-int LogLevel = 0;
 int smallMem = 0;
+int restrictedQueryLevel = RESTRICTED_QUERY_ANYUSER;
 int rxJumbograms = 0;		/* default is to not send and receive jumbo grams */
 int rxMaxMTU = -1;
 afs_int32 rxBind = 0;
 int rxkadDisableDotCheck = 0;
-int debuglevel = 0;
 
 #define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
 afs_uint32 SHostAddrs[ADDRSPERSITE];
@@ -125,9 +113,53 @@ vldb_rxstat_userok(struct rx_call *call)
     return afsconf_SuperUser(vldb_confdir, call, NULL);
 }
 
+/**
+ * Return true if this name is a member of the local realm.
+ */
+int
+vldb_IsLocalRealmMatch(void *rock, char *name, char *inst, char *cell)
+{
+    struct afsconf_dir *dir = (struct afsconf_dir *)rock;
+    afs_int32 islocal = 0;	/* default to no */
+    int code;
+
+    code = afsconf_IsLocalRealmMatch(dir, &islocal, name, inst, cell);
+    if (code) {
+	VLog(0,
+		("Failed local realm check; code=%d, name=%s, inst=%s, cell=%s\n",
+		 code, name, inst, cell));
+    }
+    return islocal;
+}
+
 /* Main server module */
 
 #include "AFS_component_version_number.c"
+
+enum optionsList {
+    OPT_noauth,
+    OPT_smallmem,
+    OPT_auditlog,
+    OPT_auditiface,
+    OPT_config,
+    OPT_debug,
+    OPT_database,
+    OPT_logfile,
+    OPT_threads,
+#ifdef HAVE_SYSLOG
+    OPT_syslog,
+#endif
+    OPT_peer,
+    OPT_process,
+    OPT_nojumbo,
+    OPT_jumbo,
+    OPT_rxbind,
+    OPT_rxmaxmtu,
+    OPT_trace,
+    OPT_dotted,
+    OPT_restricted_query,
+    OPT_transarc_logs
+};
 
 int
 main(int argc, char **argv)
@@ -142,10 +174,20 @@ main(int argc, char **argv)
     struct afsconf_cell info;
     struct hostent *th;
     char hostname[VL_MAXNAMELEN];
-    int noAuth = 0, index;
+    int noAuth = 0;
     char clones[MAXHOSTSPERCELL];
-    char *auditFileName = NULL;
     afs_uint32 host = ntohl(INADDR_ANY);
+    struct cmd_syndesc *opts;
+    struct logOptions logopts;
+
+    char *vl_dbaseName;
+    char *configDir;
+
+    char *auditFileName = NULL;
+    char *interface = NULL;
+    char *optstring = NULL;
+
+    char *restricted_query_parameter = NULL;
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -165,100 +207,7 @@ main(int argc, char **argv)
 #endif
     osi_audit_init();
 
-    /* Parse command line */
-    for (index = 1; index < argc; index++) {
-	if (strcmp(argv[index], "-noauth") == 0) {
-	    noAuth = 1;
-	} else if (strcmp(argv[index], "-p") == 0) {
-	    lwps = atoi(argv[++index]);
-	    if (lwps > MAXLWP) {
-		printf("Warning: '-p %d' is too big; using %d instead\n",
-		       lwps, MAXLWP);
-		lwps = MAXLWP;
-	    }
-	} else if (strcmp(argv[index], "-d") == 0) {
-	    if ((index + 1) >= argc) {
-		fprintf(stderr, "missing argument for -d\n");
-		return -1;
-	    }
-	    debuglevel = atoi(argv[++index]);
-	    LogLevel = debuglevel;
-	} else if (strcmp(argv[index], "-nojumbo") == 0) {
-	    rxJumbograms = 0;
-	} else if (strcmp(argv[index], "-jumbo") == 0) {
-	    rxJumbograms = 1;
-	} else if (strcmp(argv[index], "-rxbind") == 0) {
-	    rxBind = 1;
-	} else if (strcmp(argv[index], "-allow-dotted-principals") == 0) {
-	    rxkadDisableDotCheck = 1;
-	} else if (!strcmp(argv[index], "-rxmaxmtu")) {
-	    if ((index + 1) >= argc) {
-		fprintf(stderr, "missing argument for -rxmaxmtu\n");
-		return -1;
-	    }
-	    rxMaxMTU = atoi(argv[++index]);
-	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) ||
-		(rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
-		printf("rxMaxMTU %d invalid; must be between %d-%" AFS_SIZET_FMT "\n",
-		       rxMaxMTU, RX_MIN_PACKET_SIZE,
-		       RX_MAX_PACKET_DATA_SIZE);
-		return -1;
-	    }
-
-	} else if (strcmp(argv[index], "-smallmem") == 0) {
-	    smallMem = 1;
-
-	} else if (strcmp(argv[index], "-trace") == 0) {
-	    extern char rxi_tracename[80];
-	    strcpy(rxi_tracename, argv[++index]);
-
-	} else if (strcmp(argv[index], "-auditlog") == 0) {
-	    auditFileName = argv[++index];
-
-	} else if (strcmp(argv[index], "-audit-interface") == 0) {
-	    char *interface = argv[++index];
-
-	    if (osi_audit_interface(interface)) {
-		printf("Invalid audit interface '%s'\n", interface);
-		return -1;
-	    }
-
-	} else if (strcmp(argv[index], "-enable_peer_stats") == 0) {
-	    rx_enablePeerRPCStats();
-	} else if (strcmp(argv[index], "-enable_process_stats") == 0) {
-	    rx_enableProcessRPCStats();
-#ifndef AFS_NT40_ENV
-	} else if (strcmp(argv[index], "-syslog") == 0) {
-	    /* set syslog logging flag */
-	    serverLogSyslog = 1;
-	} else if (strncmp(argv[index], "-syslog=", 8) == 0) {
-	    serverLogSyslog = 1;
-	    serverLogSyslogFacility = atoi(argv[index] + 8);
-#endif
-	} else {
-	    /* support help flag */
-#ifndef AFS_NT40_ENV
-	    printf("Usage: vlserver [-p <number of processes>] [-nojumbo] "
-		   "[-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals] "
-		   "[-auditlog <log path>] [-jumbo] [-d <debug level>] "
-		   "[-syslog[=FACILITY]] "
-		   "[-enable_peer_stats] [-enable_process_stats] "
-		   "[-help]\n");
-#else
-	    printf("Usage: vlserver [-p <number of processes>] [-nojumbo] "
-		   "[-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals] "
-		   "[-auditlog <log path>] [-jumbo] [-d <debug level>] "
-		   "[-enable_peer_stats] [-enable_process_stats] "
-		   "[-help]\n");
-#endif
-	    fflush(stdout);
-	    exit(0);
-	}
-    }
-
-    if (auditFileName) {
-	osi_audit_file(auditFileName);
-    }
+    memset(&logopts, 0, sizeof(logopts));
 
     /* Initialize dirpaths */
     if (!(initAFSDirPath() & AFSDIR_SERVER_PATHS_OK)) {
@@ -269,26 +218,202 @@ main(int argc, char **argv)
 		argv[0]);
 	exit(2);
     }
-    vl_dbaseName = AFSDIR_SERVER_VLDB_FILEPATH;
 
-#ifndef AFS_NT40_ENV
-    serverLogSyslogTag = "vlserver";
+    vl_dbaseName = strdup(AFSDIR_SERVER_VLDB_FILEPATH);
+    configDir = strdup(AFSDIR_SERVER_ETC_DIRPATH);
+
+    cmd_DisableAbbreviations();
+    cmd_DisablePositionalCommands();
+    opts = cmd_CreateSyntax(NULL, NULL, NULL, 0, NULL);
+
+    /* vlserver specific options */
+    cmd_AddParmAtOffset(opts, OPT_noauth, "-noauth", CMD_FLAG,
+		        CMD_OPTIONAL, "disable authentication");
+    cmd_AddParmAtOffset(opts, OPT_smallmem, "-smallmem", CMD_FLAG,
+		        CMD_OPTIONAL, "optimise for small memory systems");
+
+    /* general server options */
+    cmd_AddParmAtOffset(opts, OPT_auditlog, "-auditlog", CMD_SINGLE,
+		        CMD_OPTIONAL, "location of audit log");
+    cmd_AddParmAtOffset(opts, OPT_auditiface, "-audit-interface", CMD_SINGLE,
+		        CMD_OPTIONAL, "interface to use for audit logging");
+    cmd_AddParmAtOffset(opts, OPT_config, "-config", CMD_SINGLE,
+		        CMD_OPTIONAL, "configuration location");
+    cmd_AddParmAtOffset(opts, OPT_debug, "-d", CMD_SINGLE,
+		        CMD_OPTIONAL, "debug level");
+    cmd_AddParmAtOffset(opts, OPT_database, "-database", CMD_SINGLE,
+		        CMD_OPTIONAL, "database file");
+    cmd_AddParmAlias(opts, OPT_database, "-db");
+    cmd_AddParmAtOffset(opts, OPT_logfile, "-logfile", CMD_SINGLE,
+		        CMD_OPTIONAL, "location of logfile");
+    cmd_AddParmAtOffset(opts, OPT_threads, "-p", CMD_SINGLE, CMD_OPTIONAL,
+		        "number of threads");
+#ifdef HAVE_SYSLOG
+    cmd_AddParmAtOffset(opts, OPT_syslog, "-syslog", CMD_SINGLE_OR_FLAG,
+		        CMD_OPTIONAL, "log to syslog");
 #endif
-    OpenLog(AFSDIR_SERVER_VLOG_FILEPATH);	/* set up logging */
-    SetupLogSignals();
+    cmd_AddParmAtOffset(opts, OPT_transarc_logs, "-transarc-logs", CMD_FLAG,
+			CMD_OPTIONAL, "enable Transarc style logging");
 
-    tdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
+    /* rx options */
+    cmd_AddParmAtOffset(opts, OPT_peer, "-enable_peer_stats", CMD_FLAG,
+		        CMD_OPTIONAL, "enable RX transport statistics");
+    cmd_AddParmAtOffset(opts, OPT_process, "-enable_process_stats", CMD_FLAG,
+		        CMD_OPTIONAL, "enable RX RPC statistics");
+    cmd_AddParmAtOffset(opts, OPT_nojumbo, "-nojumbo", CMD_FLAG,
+		        CMD_OPTIONAL, "disable jumbograms");
+    cmd_AddParmAtOffset(opts, OPT_jumbo, "-jumbo", CMD_FLAG,
+		        CMD_OPTIONAL, "enable jumbograms");
+    cmd_AddParmAtOffset(opts, OPT_rxbind, "-rxbind", CMD_FLAG,
+		        CMD_OPTIONAL, "bind only to the primary interface");
+    cmd_AddParmAtOffset(opts, OPT_rxmaxmtu, "-rxmaxmtu", CMD_SINGLE,
+		        CMD_OPTIONAL, "maximum MTU for RX");
+    cmd_AddParmAtOffset(opts, OPT_trace, "-trace", CMD_SINGLE,
+		        CMD_OPTIONAL, "rx trace file");
+    cmd_AddParmAtOffset(opts, OPT_restricted_query, "-restricted_query",
+			CMD_SINGLE, CMD_OPTIONAL, "anyuser | admin");
+
+
+    /* rxkad options */
+    cmd_AddParmAtOffset(opts, OPT_dotted, "-allow-dotted-principals",
+		        CMD_FLAG, CMD_OPTIONAL,
+		        "permit Kerberos 5 principals with dots");
+
+    code = cmd_Parse(argc, argv, &opts);
+    if (code == CMD_HELP) {
+	exit(0);
+    }
+    if (code)
+	return -1;
+
+    cmd_OptionAsString(opts, OPT_config, &configDir);
+
+    cmd_OpenConfigFile(AFSDIR_SERVER_CONFIG_FILE_FILEPATH);
+    cmd_SetCommandName("vlserver");
+
+    /* vlserver options */
+    cmd_OptionAsFlag(opts, OPT_noauth, &noAuth);
+    cmd_OptionAsFlag(opts, OPT_smallmem, &smallMem);
+    if (cmd_OptionAsString(opts, OPT_trace, &optstring) == 0) {
+	extern char rxi_tracename[80];
+	strcpy(rxi_tracename, optstring);
+	free(optstring);
+	optstring = NULL;
+    }
+
+    /* general server options */
+
+    cmd_OptionAsString(opts, OPT_auditlog, &auditFileName);
+
+    if (cmd_OptionAsString(opts, OPT_auditiface, &interface) == 0) {
+	if (osi_audit_interface(interface)) {
+	    printf("Invalid audit interface '%s'\n", interface);
+	    return -1;
+	}
+	free(interface);
+    }
+
+    cmd_OptionAsString(opts, OPT_database, &vl_dbaseName);
+
+    if (cmd_OptionAsInt(opts, OPT_threads, &lwps) == 0) {
+	if (lwps > MAXLWP) {
+	     printf("Warning: '-p %d' is too big; using %d instead\n",
+		    lwps, MAXLWP);
+	     lwps = MAXLWP;
+	}
+    }
+
+    cmd_OptionAsInt(opts, OPT_debug, &logopts.lopt_logLevel);
+#ifdef HAVE_SYSLOG
+    if (cmd_OptionPresent(opts, OPT_syslog)) {
+	if (cmd_OptionPresent(opts, OPT_logfile)) {
+	    fprintf(stderr, "Invalid options: -syslog and -logfile are exclusive.\n");
+	    return -1;
+	}
+	if (cmd_OptionPresent(opts, OPT_transarc_logs)) {
+	    fprintf(stderr, "Invalid options: -syslog and -transarc-logs are exclusive.\n");
+	    return -1;
+	}
+
+	logopts.lopt_dest = logDest_syslog;
+	logopts.lopt_facility = LOG_DAEMON; /* default value */
+	logopts.lopt_tag = "vlserver";
+	cmd_OptionAsInt(opts, OPT_syslog, &logopts.lopt_facility);
+    } else
+#endif
+    {
+	logopts.lopt_dest = logDest_file;
+	if (cmd_OptionPresent(opts, OPT_transarc_logs)) {
+	    logopts.lopt_rotateOnOpen = 1;
+	    logopts.lopt_rotateStyle = logRotate_old;
+	}
+	if (cmd_OptionPresent(opts, OPT_logfile))
+	    cmd_OptionAsString(opts, OPT_logfile, (char**)&logopts.lopt_filename);
+	else
+	    logopts.lopt_filename = AFSDIR_SERVER_VLOG_FILEPATH;
+    }
+
+
+    /* rx options */
+    if (cmd_OptionPresent(opts, OPT_peer))
+	rx_enablePeerRPCStats();
+    if (cmd_OptionPresent(opts, OPT_process))
+	rx_enableProcessRPCStats();
+    if (cmd_OptionPresent(opts, OPT_nojumbo))
+	rxJumbograms = 0;
+    if (cmd_OptionPresent(opts, OPT_jumbo))
+	rxJumbograms = 1;
+
+    cmd_OptionAsFlag(opts, OPT_rxbind, &rxBind);
+
+    cmd_OptionAsInt(opts, OPT_rxmaxmtu, &rxMaxMTU);
+
+    /* rxkad options */
+    cmd_OptionAsFlag(opts, OPT_dotted, &rxkadDisableDotCheck);
+
+    /* restricted query */
+    if (cmd_OptionAsString(opts, OPT_restricted_query,
+			   &restricted_query_parameter) == 0) {
+	if (strcmp(restricted_query_parameter, "anyuser") == 0)
+	    restrictedQueryLevel = RESTRICTED_QUERY_ANYUSER;
+	else if (strcmp(restricted_query_parameter, "admin") == 0)
+	    restrictedQueryLevel = RESTRICTED_QUERY_ADMIN;
+	else {
+	    printf("invalid argument for -restricted_query: %s\n",
+		   restricted_query_parameter);
+	    return -1;
+	}
+	free(restricted_query_parameter);
+    }
+
+    if (auditFileName) {
+	osi_audit_file(auditFileName);
+    }
+
+    OpenLog(&logopts);
+#ifdef AFS_PTHREAD_ENV
+    opr_softsig_Init();
+    SetupLogSoftSignals();
+#else
+    SetupLogSignals();
+#endif
+
+    tdir = afsconf_Open(configDir);
     if (!tdir) {
 	VLog(0,
 	    ("vlserver: can't open configuration files in dir %s, giving up.\n",
-	     AFSDIR_SERVER_ETC_DIRPATH));
+	     configDir));
 	exit(1);
     }
+
+    /* initialize audit user check */
+    osi_audit_set_user_check(tdir, vldb_IsLocalRealmMatch);
+
 #ifdef AFS_NT40_ENV
     /* initialize winsock */
     if (afs_winsockInit() < 0) {
 	ReportErrorEventAlt(AFSEVT_SVR_WINSOCK_INIT_FAILED, 0, argv[0], 0);
-	VLog(0, ("vlserver: couldn't initialize winsock.\n"));
+	VLog(0, ("vlserver: couldn't initialize winsock. \n"));
 	exit(1);
     }
 #endif
@@ -310,7 +435,7 @@ main(int argc, char **argv)
 	afsconf_GetExtendedCellInfo(tdir, NULL, AFSCONF_VLDBSERVICE, &info,
 				    clones);
     if (code) {
-	VLog(0, ("vlserver: Couldn't get cell server list for 'afsvldb'.\n"));
+	printf("vlserver: Couldn't get cell server list for 'afsvldb'.\n");
 	exit(2);
     }
 
@@ -327,10 +452,10 @@ main(int argc, char **argv)
         if (AFSDIR_SERVER_NETRESTRICT_FILEPATH ||
             AFSDIR_SERVER_NETINFO_FILEPATH) {
             char reason[1024];
-            ccode = parseNetFiles(SHostAddrs, NULL, NULL,
-				  ADDRSPERSITE, reason,
-				  AFSDIR_SERVER_NETINFO_FILEPATH,
-				  AFSDIR_SERVER_NETRESTRICT_FILEPATH);
+            ccode = afsconf_ParseNetFiles(SHostAddrs, NULL, NULL,
+					  ADDRSPERSITE, reason,
+					  AFSDIR_SERVER_NETINFO_FILEPATH,
+					  AFSDIR_SERVER_NETRESTRICT_FILEPATH);
         } else
 #endif
 	{
@@ -346,36 +471,45 @@ main(int argc, char **argv)
 	rx_SetNoJumbo();
     }
     if (rxMaxMTU != -1) {
-	rx_SetMaxMTU(rxMaxMTU);
+	if (rx_SetMaxMTU(rxMaxMTU) != 0) {
+	    VLog(0, ("rxMaxMTU %d invalid\n", rxMaxMTU));
+	    return -1;
+	}
     }
 
+    code = rx_Init(htons(AFSCONF_VLDBPORT));
+    if (code < 0) {
+        VLog(0, ("vlserver: Rx init failed: %d\n", code));
+        exit(1);
+    }
+    rx_SetRxDeadTime(50);
+
     ubik_nBuffers = 512;
-    ubik_CRXSecurityProc = afsconf_ClientAuth;
-    ubik_CRXSecurityRock = (char *)tdir;
-    ubik_SRXSecurityProc = afsconf_ServerAuth;
-    ubik_SRXSecurityRock = (char *)tdir;
-    ubik_CheckRXSecurityProc = afsconf_CheckAuth;
-    ubik_CheckRXSecurityRock = (char *)tdir;
+    ubik_SetClientSecurityProcs(afsconf_ClientAuth, afsconf_UpToDate, tdir);
+    ubik_SetServerSecurityProcs(afsconf_BuildServerSecurityObjects,
+				afsconf_CheckAuth, tdir);
+
+    ubik_SyncWriterCacheProc = vlsynccache;
     code =
 	ubik_ServerInitByInfo(myHost, htons(AFSCONF_VLDBPORT), &info, clones,
 			      vl_dbaseName, &VL_dbase);
     if (code) {
-	printf("vlserver: Ubik init failed: %s\n", afs_error_message(code));
+	VLog(0, ("vlserver: Ubik init failed: %s\n", afs_error_message(code)));
 	exit(2);
     }
-    rx_SetRxDeadTime(50);
 
     memset(rd_HostAddress, 0, sizeof(rd_HostAddress));
+    memset(wr_HostAddress, 0, sizeof(wr_HostAddress));
     initialize_dstats();
 
-    afsconf_BuildServerSecurityObjects(tdir, 0, &securityClasses, &numClasses);
+    afsconf_BuildServerSecurityObjects(tdir, &securityClasses, &numClasses);
 
     tservice =
 	rx_NewServiceHost(host, 0, USER_SERVICE_ID, "Vldb server",
 			  securityClasses, numClasses,
 			  VL_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
-	printf("vlserver: Could not create VLDB_SERVICE rx service\n");
+	VLog(0, ("vlserver: Could not create VLDB_SERVICE rx service\n"));
 	exit(3);
     }
     rx_SetMinProcs(tservice, 2);
@@ -403,7 +537,7 @@ main(int argc, char **argv)
     if (afsconf_GetLatestKey(tdir, NULL, NULL) == 0) {
 	LogDesWarning();
     }
-    printf("%s\n", cml_version_number);	/* Goes to the log */
+    VLog(0, ("%s\n", cml_version_number));
 
     /* allow super users to manage RX statistics */
     rx_SetRxStatUserOk(vldb_rxstat_userok);

@@ -18,12 +18,31 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#ifdef AFS_HPUX_ENV
+/* We need the old directory type headers (included below), so don't include
+ * the normal dirent.h, or it will conflict. */
+# undef HAVE_DIRENT_H
+# include <sys/inode.h>
+# define	LONGFILENAMES	1
+# include <sys/sysmacros.h>
+# include <sys/ino.h>
+# define	DIRSIZ_MACRO
+# ifdef HAVE_USR_OLD_USR_INCLUDE_NDIR_H
+#  include </usr/old/usr/include/ndir.h>
+# else
+#  include <ndir.h>
+# endif
+#endif
+
+#include <roken.h>
+
+#include <ctype.h>
+
+#ifdef HAVE_SYS_FILE_H
+#include <sys/file.h>
+#endif
 
 #define VICE			/* allow us to put our changes in at will */
-#include <stdio.h>
-
-#include <sys/param.h>
-#include <sys/time.h>
 
 #ifdef AFS_SUN_ENV
 #define KERNEL
@@ -32,8 +51,6 @@
 #ifdef AFS_SUN_ENV
 #undef KERNEL
 #endif
-
-#include <sys/file.h>
 
 #ifdef	AFS_OSF_ENV
 #include <sys/vnode.h>
@@ -45,7 +62,6 @@
 #define VFS
 #include <sys/vnode.h>
 #ifdef	  AFS_SUN5_ENV
-#include <unistd.h>
 #include <sys/fs/ufs_inode.h>
 #include <sys/fs/ufs_fs.h>
 #define _KERNEL
@@ -62,18 +78,7 @@
 #else /* AFS_VFSINCL_ENV */
 
 #include <sys/inode.h>
-#ifdef	AFS_HPUX_ENV
-#include <ctype.h>
-#define	LONGFILENAMES	1
-#include <sys/sysmacros.h>
-#include <sys/ino.h>
-#define	DIRSIZ_MACRO
-#ifdef HAVE_USR_OLD_USR_INCLUDE_NDIR_H
-#include </usr/old/usr/include/ndir.h>
-#else
-#include <ndir.h>
-#endif
-#else
+#ifndef	AFS_HPUX_ENV
 #define KERNEL
 #include <sys/dir.h>
 #undef KERNEL
@@ -82,14 +87,7 @@
 #endif /* AFS_VFSINCL_ENV */
 #endif /* AFS_OSF_ENV */
 
-#include <sys/stat.h>
 #include <sys/wait.h>
-#ifdef	AFS_SUN5_ENV
-#include <string.h>
-#else
-#include <strings.h>
-#endif
-#include <ctype.h>
 #ifdef	XAFS_SUN_ENV
 #include <mntent.h>
 #else
@@ -103,10 +101,9 @@
 #endif
 #endif
 #include "fsck.h"
-#include <errno.h>
 #include <sys/signal.h>
 
-char *rawname(), *unrawname(), *blockcheck(), *malloc();
+char *rawname(), *unrawname(), *blockcheck();
 void catch(), catchquit(), voidquit();
 static int tryForce;
 int returntosingle;
@@ -386,7 +383,7 @@ main(argc, argv)
 	    hotroot = 0;
 #ifdef	AFS_SUN5_ENV
 	    if (wflag && !writable(*argv)) {
-		(void)fprintf(stderr, "not writeable '%s'\n", *argv);
+		(void)fprintf(stderr, "not writable '%s'\n", *argv);
 		argv++;
 	    } else
 #endif
@@ -561,13 +558,11 @@ finddisk(name)
 	if (strncmp(dk->name, name, len) == 0 && dk->name[len] == 0)
 	    return (dk);
     }
-    if ((*dkp = (struct disk *)malloc(sizeof(struct disk))) == NULL)
+    if ((*dkp = malloc(sizeof(struct disk))) == NULL)
 	errexit("out of memory");
     dk = *dkp;
-    if ((dk->name = malloc((unsigned int)len + 1)) == NULL)
+    if ((dk->name = strdup(name)) == NULL)
 	errexit("out of memory");
-    strncpy(dk->name, name, len);
-    dk->name[len] = '\0';
     dk->part = NULL;
     dk->next = NULL;
     dk->pid = 0;
@@ -586,15 +581,13 @@ addpart(name, fsname)
 	    printf("%s in fstab more than once!\n", name);
 	    return;
 	}
-    if ((*ppt = (struct part *)malloc(sizeof(struct part))) == NULL)
+    if ((*ppt = malloc(sizeof(struct part))) == NULL)
 	errexit("out of memory");
     pt = *ppt;
-    if ((pt->name = malloc((unsigned int)strlen(name) + 1)) == NULL)
+    if ((pt->name = strdup(name)) == NULL)
 	errexit("out of memory");
-    strcpy(pt->name, name);
-    if ((pt->fsname = malloc((unsigned int)strlen(fsname) + 1)) == NULL)
+    if ((pt->fsname = strdup(fsname)) == NULL)
 	errexit("out of memory");
-    strcpy(pt->fsname, fsname);
     pt->next = NULL;
 }
 
@@ -900,7 +893,7 @@ checkfilesys(filesys, parname)
     ckfini();
     free(blockmap);
     free(statemap);
-    free((char *)lncntp);
+    free(lncntp);
     lncntp = NULL;
     blockmap = statemap = NULL;
 #ifdef	AFS_SUN5_ENV

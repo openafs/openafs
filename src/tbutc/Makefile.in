@@ -7,19 +7,15 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+
 
 BUTMOBJS    =file_tm.o
 BUTMLIBS    =libbutm.a
 BUTMINCLS   =${TOP_INCDIR}/afs/com_err.h ${TOP_INCDIR}/afs/butm.h
 
-CC      = ${MT_CC}
-CFLAGS  = ${COMMON_CFLAGS} -I${TOP_SRCDIR}/volser ${MT_CFLAGS} @XBSA_CFLAGS@ -I${BUCOORD} -I${VOLSER} -I../bucoord -I../volser
+MODULE_CFLAGS = @XBSA_CFLAGS@ -I${BUCOORD} -I${VOLSER} -I../bucoord -I../volser
 
-LWP     = ${srcdir}/../lwp
 BUTM    = ${srcdir}/../butm
 BUTC    = ${srcdir}/../butc
 BUCOORD = ${srcdir}/../bucoord
@@ -29,13 +25,10 @@ BUCOORDOBJS=ubik_db_if.o ../bucoord/volstub.o ../bucoord/dlq.o \
 	    status.o ../bucoord/bucoord_errs.o
 
 VOLSEROBJS=vsprocs.o vsutils.o lockprocs.o
-VOLSERLIBS=${TOP_LIBDIR}/libvosadmin.a ${TOP_LIBDIR}/libafsadminutil.a
-
-LWPOBJS     =lock.o
 
 BUTCOBJS   =dbentries.o tcprocs.o lwps.o tcmain.o list.o recoverDb.o \
 	    tcudbprocs.o dump.o tcstatus.o butc_xbsa.o afsxbsa.o \
-            ${LWPOBJS} ${BUCOORDOBJS} ${VOLSEROBJS}
+            ${BUCOORDOBJS}
 
 BUTCINCLS=${TOP_INCDIR}/afs/partition.h \
 	    ${TOP_INCDIR}/afs/volume.h \
@@ -54,13 +47,18 @@ BUTCINCLS=${TOP_INCDIR}/afs/partition.h \
 BUTCINCLUDE=-I. -I${TOP_INCDIR}
 BUTCLIBS=${TOP_LIBDIR}/libbudb.a \
 	    ${TOP_LIBDIR}/libbubasics.a \
-	    ${VOLSERLIBS} \
             ${BUTMLIBS} \
-	    ${TOP_LIBDIR}/libafsauthent.a \
-	    ${TOP_LIBDIR}/libafsrpc.a \
-            ${TOP_LIBDIR}/libcmd.a \
-	    ${TOP_LIBDIR}/util.a \
-	    ${TOP_LIBDIR}/libusd.a \
+	    $(top_builddir)/src/kauth/liboafs_kauth.la \
+	    $(top_builddir)/src/volser/liboafs_volser.la \
+	    $(top_builddir)/src/vlserver/liboafs_vldb.la \
+	    $(top_builddir)/src/ubik/liboafs_ubik.la \
+	    $(top_builddir)/src/rxkad/liboafs_rxkad.la \
+            $(top_builddir)/src/cmd/liboafs_cmd.la \
+	    $(top_builddir)/src/util/liboafs_util.la \
+	    $(top_builddir)/src/opr/liboafs_opr.la \
+	    $(top_builddir)/src/usd/liboafs_usd.la \
+	    $(top_builddir)/src/lwp/liboafs_lwpcompat.la \
+	    $(top_builddir)/src/sys/liboafs_sys.la \
 	    ${TOP_LIBDIR}/libprocmgmt.a
 
 #
@@ -70,7 +68,8 @@ BUTCLIBS=${TOP_LIBDIR}/libbudb.a \
 all: butc
 
 butc: ${BUTCOBJS} ${BUTCLIBS}
-	${CC} ${CFLAGS} ${BUTCOBJS} ${BUTCLIBS} ${MT_LIBS} ${XLIBS} ${KRB5_LIBS} -o butc
+	$(LT_LDRULE_static) ${BUTCOBJS} ${BUTCLIBS} \
+		$(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
 
 libbutm.a: ${BUTMOBJS} AFS_component_version_number.o
 	-$(RM) -f libbutm.a
@@ -78,65 +77,63 @@ libbutm.a: ${BUTMOBJS} AFS_component_version_number.o
 	${RANLIB} libbutm.a
 
 afsxbsa.o: ${BUTC}/afsxbsa.c ${BUTC}/afsxbsa.h ${BUTCINCLS}
-	${CC} ${CFLAGS} -c ${BUTC}/afsxbsa.c
+	$(AFS_CCRULE) ${BUTC}/afsxbsa.c
 
 dbentries.o: ${BUTC}/dbentries.c ${BUTCINCLS}
-	${CC} ${CFLAGS} -c ${BUTC}/dbentries.c
+	$(AFS_CCRULE) ${BUTC}/dbentries.c
 
 tcprocs.o: ${BUTC}/tcprocs.c ${BUTCINCLS}
-	${CC} ${CFLAGS} -c ${BUTC}/tcprocs.c
+	$(AFS_CCRULE) ${BUTC}/tcprocs.c
 
 lwps.o: ${BUTC}/lwps.c ${BUTCINCLS}
-	${CC} ${CFLAGS} -c ${BUTC}/lwps.c
+	$(AFS_CCRULE) ${BUTC}/lwps.c
 
 tcmain.o: ${BUTC}/tcmain.c ${BUTCINCLS} AFS_component_version_number.c
-	${CC} ${CFLAGS} -c ${BUTC}/tcmain.c
+	$(AFS_CCRULE) ${BUTC}/tcmain.c
 
 list.o: ${BUTC}/list.c ${BUTCINCLS}
-	${CC} ${CFLAGS} -c ${BUTC}/list.c
+	$(AFS_CCRULE) ${BUTC}/list.c
 
 recoverDb.o: ${BUTC}/recoverDb.c ${BUTCINCLS}
-	${CC} ${CFLAGS} -c ${BUTC}/recoverDb.c
+	$(AFS_CCRULE) ${BUTC}/recoverDb.c
 
+CFLAGS_tcudbprocs.o=@CFLAGS_NOERROR@
 tcudbprocs.o: ${BUTC}/tcudbprocs.c ${BUTCINCLS}
-	${CC} ${CFLAGS} -c ${BUTC}/tcudbprocs.c
+	$(AFS_CCRULE) ${BUTC}/tcudbprocs.c
 
 dump.o: ${BUTC}/dump.c ${BUTCINCLS}
-	${CC} ${CFLAGS} -c ${BUTC}/dump.c
+	$(AFS_CCRULE) ${BUTC}/dump.c
 
 tcstatus.o: ${BUTC}/tcstatus.c ${BUTCINCLS}
-	${CC} ${CFLAGS} -c ${BUTC}/tcstatus.c
+	$(AFS_CCRULE) ${BUTC}/tcstatus.c
 
 butc_xbsa.o: ${BUTC}/butc_xbsa.c ${BUTC}/butc_xbsa.h ${BUTCINCLS}
-	${CC} ${CFLAGS} -c ${BUTC}/butc_xbsa.c
+	$(AFS_CCRULE) ${BUTC}/butc_xbsa.c
 
 ubik_db_if.o: ${BUCOORD}/ubik_db_if.c
-	${CC} ${CFLAGS} -c ${BUCOORD}/ubik_db_if.c
+	$(AFS_CCRULE) ${BUCOORD}/ubik_db_if.c
 
 status.o: ${BUCOORD}/status.c
-	${CC} ${CFLAGS} -c ${BUCOORD}/status.c
+	$(AFS_CCRULE) ${BUCOORD}/status.c
 
 vsutils.o: ${VOLSER}/vsutils.c
-	${CC} ${CFLAGS} -c ${VOLSER}/vsutils.c
+	$(AFS_CCRULE) ${VOLSER}/vsutils.c
 
 vsprocs.o: ${VOLSER}/vsprocs.c
-	${CC} ${CFLAGS} -c ${VOLSER}/vsprocs.c
+	$(AFS_CCRULE) ${VOLSER}/vsprocs.c
 
 lockprocs.o: ${VOLSER}/lockprocs.c
-	${CC} ${CFLAGS} -c ${VOLSER}/lockprocs.c
-
-lock.o: ${LWP}/lock.c
-	${CC} ${CFLAGS} -c ${LWP}/lock.c
+	$(AFS_CCRULE) ${VOLSER}/lockprocs.c
 
 file_tm.o: ${BUTM}/file_tm.c ${BUTMINCLS}
-	${CC} ${CFLAGS} -c ${BUTM}/file_tm.c
+	$(AFS_CCRULE) ${BUTM}/file_tm.c
 
 #
 # Install targets
 #
 install: butc
 	${INSTALL} -d ${DESTDIR}${sbindir}
-	${INSTALL_PROGRAM} butc ${DESTDIR}${sbindir}/butc
+	$(LT_INSTALL_PROGRAM) butc ${DESTDIR}${sbindir}/butc
 
 dest: butc
 	${INSTALL} -d ${DEST}/etc
@@ -146,6 +143,7 @@ dest: butc
 # Misc targets
 #
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o *.a core AFS_component_version_number.c butc
 
 include ../config/Makefile.version

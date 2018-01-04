@@ -7,10 +7,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+
 
 all: ${TOP_INCDIR}/afs/afs_Admin.h
 

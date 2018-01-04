@@ -32,4 +32,4 @@ clean::
         $(DEL) $(OUT)\snprintf_test.*
 
 mkdir:
-	
+

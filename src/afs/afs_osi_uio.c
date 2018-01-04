@@ -75,6 +75,39 @@ afsio_trim(struct uio *auio, afs_int32 asize)
     }
     return 0;
 }
+
+/* Allocate space for, then partially copy, over an existing iovec up to the
+ * length given in len.
+ *
+ * This requires that SmallSpace can alloc space big enough to hold a struct
+ * UIO, plus 16 iovecs
+ */
+
+struct uio *
+afsio_partialcopy(struct uio *auio, size_t len) {
+    char *space;
+    struct uio *newuio;
+    struct iovec *newvec;
+    size_t space_len = sizeof(struct uio) +
+                       sizeof(struct iovec) * AFS_MAXIOVCNT;
+
+    /* Allocate a block that can contain both the UIO and the iovec */
+    space = osi_AllocSmallSpace(space_len);
+    memset(space, 0, space_len);
+
+    newuio = (struct uio *) space;
+    newvec = (struct iovec *) (space + sizeof(struct uio));
+
+    afsio_copy(auio, newuio, newvec);
+    afsio_trim(newuio, len);
+
+    return newuio;
+}
+
+void
+afsio_free(struct uio *uio) {
+    osi_FreeSmallSpace(uio);
+}
 #endif
 
 /* skip asize bytes in the current uio structure */

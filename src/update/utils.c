@@ -9,32 +9,28 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
-#include <rx/rxkad.h>
-#include "global.h"
+
+#include <roken.h>
+
 #ifdef AFS_NT40_ENV
 #include <afs/errmap_nt.h>
 #include <afs/afsutil.h>
 #include <WINNT/afssw.h>
 #endif
-#include <stdio.h>
-#include <string.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#include <stdlib.h>
+
+#include <rx/rxkad.h>
+#include "global.h"
+
 
 int
 AddToList(struct filestr **ah, char *aname)
 {
     struct filestr *tf;
-    tf = (struct filestr *)malloc(sizeof(struct filestr));
+    tf = malloc(sizeof(struct filestr));
     tf->next = *ah;
     *ah = tf;
-    tf->name = (char *)malloc(strlen(aname) + 1);
-    strcpy(tf->name, aname);
+    tf->name = strdup(aname);
     return 0;
 }
 

@@ -56,45 +56,42 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
+
+#include <roken.h>
 
 #ifdef IGNORE_SOME_GCC_WARNINGS
 # pragma GCC diagnostic warning "-Wimplicit-function-declaration"
 #endif
 
-#include <afs/stds.h>
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
-#include <string.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
-#include <des.h>
-#include <des_prototypes.h>
+
+#define HC_DEPRECATED_CRYPTO
+#include <hcrypto/md4.h>
+#include <hcrypto/md5.h>
+#include <hcrypto/des.h>
+#include <hcrypto/hmac.h>
+
 #include "lifetimes.h"
 #include "rxkad.h"
+#include "rxkad_convert.h"
 
 #include "v5gen-rewrite.h"
 #include "v5gen.h"
 #include "der.h"
 #include "v5der.c"
 #include "v5gen.c"
-#include "md4.h"
-#include "md5.h"
+
+#define RFC3961_NO_ENUMS
+#define RFC3961_NO_CKSUM
+#include <afs/rfc3961.h>
 
 /*
  * Principal conversion Taken from src/lib/krb5/krb/conv_princ from MIT Kerberos.  If you
  * find a need to change the services here, please consider opening a
  * bug with MIT by sending mail to krb5-bugs@mit.edu.
  */
-
-extern afs_int32 des_cbc_encrypt(void * in, void * out,
-                                 afs_int32 length,
-                                 des_key_schedule key, des_cblock *iv,
-                                 int encrypt);
-extern int des_key_sched(des_cblock k, des_key_schedule schedule);
 
 struct krb_convert {
     char *v4_str;
@@ -181,24 +178,27 @@ static int
 static int rxkad_derive_des_key(const void *, size_t,
 				struct ktc_encryptionKey *);
 static int compress_parity_bits(void *, size_t *);
-static void hmac_md5_iov(const void *, size_t, const struct iovec *,
-			 unsigned int, void *);
-
 
 int
 tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 		  int (*get_key) (void *, int, struct ktc_encryptionKey *),
+		  rxkad_get_key_enctype_func get_key_enctype,
 		  char *get_key_rock, int serv_kvno, char *name, char *inst,
 		  char *cell, struct ktc_encryptionKey *session_key, afs_int32 * host,
-		  afs_uint32 * start, afs_uint32 * end, afs_int32 disableCheckdot,
-		  rxkad_alt_decrypt_func alt_decrypt)
+		  afs_uint32 * start, afs_uint32 * end, afs_int32 disableCheckdot)
 {
     char plain[MAXKRB5TICKETLEN];
     struct ktc_encryptionKey serv_key;
+    void *keybuf;
+    size_t keysize, allocsiz;
+    krb5_context context;
+    krb5_keyblock k;
+    krb5_crypto cr;
+    krb5_data plaindata;
     Ticket t5;			/* Must free */
     EncTicketPart decr_part;	/* Must free */
     int code;
-    size_t siz, plainsiz;
+    size_t siz, plainsiz = 0;
     int v5_serv_kvno;
     char *v5_comp0, *v5_comp1, *c;
     const struct krb_convert *p;
@@ -232,15 +232,14 @@ tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 	v5_serv_kvno = *t5.enc_part.kvno;
     }
 
-    /* check ticket */
-    if (t5.enc_part.cipher.length > sizeof(plain))
-	goto bad_ticket;
+    /* Check that the key type really fit into 8 bytes */
     switch (t5.enc_part.etype) {
     case ETYPE_DES_CBC_CRC:
     case ETYPE_DES_CBC_MD4:
     case ETYPE_DES_CBC_MD5:
-	/* Check that the key type really fit into 8 bytes */
-	if (t5.enc_part.cipher.length % 8 != 0)
+	/* check ticket */
+	if (t5.enc_part.cipher.length > sizeof(plain)
+	    || t5.enc_part.cipher.length % 8 != 0)
 	    goto bad_ticket;
 
 	code = (*get_key) (get_key_rock, v5_serv_kvno, &serv_key);
@@ -250,22 +249,72 @@ tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 	/* Decrypt data here, save in plain, assume it will shrink */
 	code =
 	    krb5_des_decrypt(&serv_key, t5.enc_part.etype,
-			     t5.enc_part.cipher.data,
-			     t5.enc_part.cipher.length, plain, &plainsiz);
-	if (code != 0)
-	    goto bad_ticket;
+			     t5.enc_part.cipher.data, t5.enc_part.cipher.length,
+			     plain, &plainsiz);
 	break;
     default:
-	if (alt_decrypt != NULL) {
-	    plainsiz = sizeof(plain);
-	    code = alt_decrypt(v5_serv_kvno, t5.enc_part.etype,
-			       t5.enc_part.cipher.data,
-			       t5.enc_part.cipher.length, plain, &plainsiz);
-	    if (code != 0)
-		goto cleanup;
-	} else
+	if (get_key_enctype == NULL)
 	    goto unknown_key;
+	code = krb5_init_context(&context);
+	if (code != 0)
+	    goto unknown_key;
+	code = krb5_enctype_valid(context, t5.enc_part.etype);
+	if (code != 0) {
+	    krb5_free_context(context);
+	    goto unknown_key;
+	}
+	code = krb5_enctype_keybits(context,  t5.enc_part.etype, &keysize);
+	if (code != 0) {
+	    krb5_free_context(context);
+	    goto unknown_key;
+	}
+	keysize = keysize / 8;
+	allocsiz = keysize;
+	keybuf = rxi_Alloc(allocsiz);
+	/* this is not quite a hole for afsconf_GetKeyByTypes. A wrapper
+	   that calls afsconf_GetKeyByTypes and afsconf_typedKey_values
+	   is needed */
+	code = get_key_enctype(get_key_rock, v5_serv_kvno, t5.enc_part.etype,
+			       keybuf, &keysize);
+	if (code) {
+	    rxi_Free(keybuf, allocsiz);
+	    krb5_free_context(context);
+	    goto unknown_key;
+	}
+	code = krb5_keyblock_init(context, t5.enc_part.etype,
+				  keybuf, keysize, &k);
+	rxi_Free(keybuf, allocsiz);
+	if (code != 0) {
+	    krb5_free_context(context);
+	    goto unknown_key;
+	}
+	code = krb5_crypto_init(context, &k, t5.enc_part.etype, &cr);
+	krb5_free_keyblock_contents(context, &k);
+	if (code != 0) {
+	    krb5_free_context(context);
+	    goto unknown_key;
+	}
+#ifndef KRB5_KU_TICKET
+#define KRB5_KU_TICKET 2
+#endif
+	code = krb5_decrypt(context, cr, KRB5_KU_TICKET, t5.enc_part.cipher.data,
+			    t5.enc_part.cipher.length, &plaindata);
+	krb5_crypto_destroy(context, cr);
+	if (code == 0) {
+	    if (plaindata.length > MAXKRB5TICKETLEN) {
+		krb5_data_free(&plaindata);
+		krb5_free_context(context);
+		goto bad_ticket;
+	    }
+	    memcpy(plain, plaindata.data, plaindata.length);
+	    plainsiz = plaindata.length;
+	    krb5_data_free(&plaindata);
+	}
+	krb5_free_context(context);
     }
+
+    if (code != 0)
+	goto bad_ticket;
 
     /* Decode ticket */
     code = decode_EncTicketPart((unsigned char *)plain, plainsiz, &decr_part, &siz);
@@ -432,15 +481,15 @@ krb5_des_decrypt(struct ktc_encryptionKey *key, int etype, void *in,
 {
     int (*cksum_func) (void *, size_t, void *, size_t,
 		       struct ktc_encryptionKey *);
-    des_cblock ivec;
-    des_key_schedule s;
+    DES_cblock ivec;
+    DES_key_schedule s;
     char cksum[24];
     size_t cksumsz;
     int ret = 1;		/* failure */
 
     cksum_func = NULL;
 
-    des_key_sched(ktc_to_cblock(key), (struct des_ks_struct *)&s);
+    DES_key_sched(ktc_to_cblock(key), &s);
 
 #define CONFOUNDERSZ 8
 
@@ -464,7 +513,7 @@ krb5_des_decrypt(struct ktc_encryptionKey *key, int etype, void *in,
 	abort();
     }
 
-    des_cbc_encrypt(in, out, insz, s, &ivec, 0);
+    DES_cbc_encrypt(in, out, insz, &s, &ivec, 0);
 
     memcpy(cksum, (char *)out + CONFOUNDERSZ, cksumsz);
     memset((char *)out + CONFOUNDERSZ, 0, cksumsz);
@@ -476,6 +525,101 @@ krb5_des_decrypt(struct ktc_encryptionKey *key, int etype, void *in,
     memmove(out, (char *)out + CONFOUNDERSZ + cksumsz, *outsz);
 
     return ret;
+}
+
+int
+tkt_MakeTicket5(char *ticket, int *ticketLen, int enctype, int *kvno,
+		void *key, size_t keylen,
+		char *name, char *inst, char *cell, afs_uint32 start,
+		afs_uint32 end, struct ktc_encryptionKey *sessionKey,
+		char *sname, char *sinst)
+{
+    EncTicketPart data;
+    EncryptedData encdata;
+    unsigned char *buf, *encodebuf;
+    size_t encodelen, allocsiz;
+    heim_general_string carray[2];
+    int code;
+    krb5_context context;
+    krb5_keyblock kb;
+    krb5_crypto cr;
+    krb5_data encrypted;
+    size_t tl;
+
+    memset(&encrypted, 0, sizeof(encrypted));
+    cr = NULL;
+    context = NULL;
+    buf = NULL;
+    memset(&kb, 0, sizeof(kb));
+    memset(&data, 0, sizeof(data));
+
+    data.flags.transited_policy_checked = 1;
+    data.key.keytype=ETYPE_DES_CBC_CRC;
+    data.key.keyvalue.data=sessionKey->data;
+    data.key.keyvalue.length=8;
+    data.crealm=cell;
+    carray[0]=name;
+    carray[1]=inst;
+    data.cname.name_type=KRB5_NT_PRINCIPAL;
+    data.cname.name_string.val=carray;
+    data.cname.name_string.len=inst[0]?2:1;
+    data.authtime=start;
+    data.endtime=end;
+
+    allocsiz = length_EncTicketPart(&data);
+    buf = rxi_Alloc(allocsiz);
+    encodelen = allocsiz;
+    /* encode function wants pointer to end of buffer */
+    encodebuf = buf + allocsiz - 1;
+    code = encode_EncTicketPart(encodebuf, allocsiz, &data, &encodelen);
+
+    if (code)
+	goto cleanup;
+    code = krb5_init_context(&context);
+    if (code)
+	goto cleanup;
+    code = krb5_keyblock_init(context, enctype, key, keylen, &kb);
+    if (code)
+	goto cleanup;
+    code = krb5_crypto_init(context, &kb, enctype, &cr);
+    if (code)
+	goto cleanup;
+    code = krb5_encrypt(context, cr, KRB5_KU_TICKET, buf,
+			encodelen, &encrypted);
+    if (code)
+	goto cleanup;
+    memset(&encdata, 0, sizeof(encdata));
+    encdata.etype=enctype;
+    encdata.kvno=kvno;
+    encdata.cipher.data=encrypted.data;
+    encdata.cipher.length=encrypted.length;
+
+    if (length_EncryptedData(&encdata) > *ticketLen) {
+	code = RXKADTICKETLEN;
+	goto cleanup;
+    }
+    tl=*ticketLen;
+    code = encode_EncryptedData((unsigned char *)ticket + *ticketLen - 1, *ticketLen, &encdata, &tl);
+    if (code == 0) {
+	*kvno=RXKAD_TKT_TYPE_KERBEROS_V5_ENCPART_ONLY;
+	/*
+	 * encode function fills in from the end. move data to
+	 * beginning of buffer
+	 */
+	memmove(ticket, ticket + *ticketLen - tl, tl);
+	*ticketLen=tl;
+    }
+
+cleanup:
+    krb5_data_free(&encrypted);
+    if (cr != NULL)
+	krb5_crypto_destroy(context, cr);
+    krb5_free_keyblock_contents(context, &kb);
+    krb5_free_context(context);
+    rxi_Free(buf, allocsiz);
+    if ((code & 0xFFFFFF00) == ERROR_TABLE_BASE_asn1)
+	return RXKADINCONSISTENCY;
+    return code;
 }
 
 /*
@@ -504,28 +648,28 @@ rxkad_derive_des_key(const void *in, size_t insize,
 {
     unsigned char i;
     char Lbuf[4];		/* bits of output, as 32 bit word, MSB first */
-    char tmp[16];
-    struct iovec iov[3];
-    des_cblock ktmp;
+    char tmp[64];		/* only needs to be 16 for md5, but lets be sure it fits */
+    unsigned int mdsize;
+    DES_cblock ktmp;
+    HMAC_CTX mctx;
 
     Lbuf[0] = 0;
     Lbuf[1] = 0;
     Lbuf[2] = 0;
     Lbuf[3] = 64;
 
-    iov[0].iov_base = &i;
-    iov[0].iov_len = 1;
-    iov[1].iov_base = "rxkad";
-    iov[1].iov_len = strlen("rxkad") + 1;   /* includes label and separator */
-    iov[2].iov_base = Lbuf;
-    iov[2].iov_len = 4;
-
     /* stop when 8 bit counter wraps to 0 */
-    for (i = 1; i ; i++) {
-	hmac_md5_iov(in, insize, iov, 3, tmp);
+    for (i = 1; i; i++) {
+	HMAC_CTX_init(&mctx);
+	HMAC_Init_ex(&mctx, in, insize, EVP_md5(), NULL);
+	HMAC_Update(&mctx, &i, 1);
+	HMAC_Update(&mctx, "rxkad", strlen("rxkad") + 1);   /* includes label and separator */
+	HMAC_Update(&mctx, Lbuf, 4);
+	mdsize = sizeof(tmp);
+	HMAC_Final(&mctx, tmp, &mdsize);
 	memcpy(ktmp, tmp, 8);
-	des_fixup_key_parity(ktmp);
-	if (!des_is_weak_key(ktmp)) {
+	DES_set_odd_parity(&ktmp);
+	if (!DES_is_weak_key(&ktmp)) {
 	    memcpy(out->data, ktmp, 8);
 	    return 0;
 	}
@@ -560,45 +704,6 @@ compress_parity_bits(void *buffer, size_t *bufsiz)
 	memmove(cb + 7 * i, cb + 8 * i, 7);
     *bufsiz = 7 * nk;
     return 0;
-}
-
-/* HMAC: Keyed-Hashing for Message Authentication, using MD5 as the hash.
- * See RFC 2104.
- *
- * The constants 64 and 16 are the input block size and output length,
- * respectively, of md5.
- */
-static void
-hmac_md5_iov(const void *key, size_t ks,
-	     const struct iovec *data, unsigned int niov, void *output)
-{
-    MD5_CTX md5;
-    const unsigned char *kp;
-    unsigned int i;
-    unsigned char tmp[16], tmpk[16], i_pad[64], o_pad[64];
-    if (ks > 64) {
-	MD5_Init(&md5);
-	MD5_Update(&md5, key, ks);
-	MD5_Final(tmpk, &md5);
-	key = tmpk;
-	ks = 16;
-    }
-    kp = key;
-    for (i = 0; i < ks; i++)
-	i_pad[i] = kp[i] ^ 0x36;
-    memset(i_pad + ks, 0x36, 64 - ks);
-    MD5_Init(&md5);
-    MD5_Update(&md5, i_pad, 64);
-    for (i = 0; i < niov; i++)
-	MD5_Update(&md5, data[i].iov_base, data[i].iov_len);
-    MD5_Final(tmp, &md5);
-    for (i = 0; i < ks; i++)
-	o_pad[i] = kp[i] ^ 0x5c;
-    memset(o_pad + ks, 0x5c, 64 - ks);
-    MD5_Init(&md5);
-    MD5_Update(&md5, o_pad, 64);
-    MD5_Update(&md5, tmp, 16);
-    MD5_Final(output, &md5);
 }
 
 /*

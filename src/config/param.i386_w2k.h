@@ -21,6 +21,7 @@
 #define AFS_HAVE_STATVFS    0	/* System doesn't support statvfs */
 #define AFS_KRB5_ERROR_ENV  1   /* fetch_krb5_error_message() available in afsutil.lib */
 #define HAVE_SSIZE_T        1
+#define HAVE_INT64TOINT32   1
 
 #include <afs/afs_sysnames.h>
 #define SYS_NAME_ID	SYS_NAME_ID_i386_w2k
@@ -51,21 +52,9 @@ typedef int ssize_t;
 #endif
 #endif
 
-#if 0
-#define memset(A, 0, S) memset((void*)(A), 0, (size_t)(S))
-#define memcpy(B, A, S) memcpy((void*)(B), (void*)(A), (size_t)(S))
-/* There is a minor syntactic difference between memcmp and bcmp... */
-#define memcmp(A, B, S) (memcmp((void*)(A), (void*)(B), (size_t)(S)) ? 1 : 0)
-#define strchr(s, c)             strchr(s, c)
-#define strrchr(s, c)            strrchr(s, c)
-#endif
 #define strcasecmp(s1,s2)       _stricmp(s1,s2)
 #define strncasecmp(s1,s2,n)    _strnicmp(s1,s2,n)
 #define sleep(seconds)          Sleep((seconds) * 1000)
-#define fsync(fileno)           _commit(fileno)
-#define ftruncate(fd, size)     _chsize((fd), (long)(size))
-#define strtoll(str, cp, base)  strtoi64((str), (cp), (base))
-#define strtoull(str, cp, base) strtoui64((str), (cp), (base))
 
 #define random()                rand()
 #define srandom(a)              srand(a)
@@ -74,9 +63,6 @@ typedef int ssize_t;
 #define pclose(stream)          _pclose(stream)
 typedef char *caddr_t;
 
-#define pipe(fdp)               _pipe(fdp, 4096, _O_BINARY)
-
-#define snprintf                _snprintf
 #endif /* AFS_PARAM_H */
 
 #else /* !defined(UKERNEL) */

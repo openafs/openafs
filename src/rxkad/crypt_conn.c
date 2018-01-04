@@ -12,39 +12,27 @@
 
 
 #include <afsconfig.h>
-#ifdef KERNEL
-#include "afs/param.h"
-#else
 #include <afs/param.h>
-#endif
-
+#include <afs/stds.h>
 
 #ifdef KERNEL
-#include "afs/stds.h"
 #ifndef UKERNEL
 #include "h/types.h"
 #if defined(AFS_AIX_ENV) || defined(AFS_AUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_XBSD_ENV)
 #include "h/systm.h"
 #endif
-#include "rx/rx.h"
 #include "netinet/in.h"
 #else /* !UKERNEL */
 #include "afs/sysincludes.h"
-#include "rx/rx.h"
 #endif /* !UKERNEL */
 #else /* !KERNEL */
-#include <afs/stds.h>
-#include <sys/types.h>
-#include <string.h>
-#include <rx/rx.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
+#include <roken.h>
+#include <afs/opr.h>
 #endif /* KERNEL */
 
-#include <des/stats.h>
+#include <rx/rx.h>
+#include <rx/rx_packet.h>
+#include <rx/rxkad_stats.h>
 #include "private_data.h"
 #define XPRT_RXKAD_CRYPT
 

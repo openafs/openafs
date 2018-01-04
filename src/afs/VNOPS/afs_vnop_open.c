@@ -137,13 +137,7 @@ afs_open(struct vcache **avcp, afs_int32 aflags, afs_ucred_t *acred)
 #endif
 	/* normal file or symlink */
 	osi_FlushText(tvc);	/* only needed to flush text if text locked last time */
-#ifdef AFS_BOZONLOCK_ENV
-	afs_BozonLock(&tvc->pvnLock, tvc);
-#endif
 	osi_FlushPages(tvc, acred);
-#ifdef AFS_BOZONLOCK_ENV
-	afs_BozonUnlock(&tvc->pvnLock, tvc);
-#endif
     }
     /* set date on file if open in O_TRUNC mode */
     if (aflags & FTRUNC) {

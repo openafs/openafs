@@ -1,0 +1,87 @@
+=head1 NAME
+
+fs_setverify - Enables or disables data verification for AFS store data operations [Windows only]
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<fs setverify> S<<< [B<-verify>] <I<on/off>> >>> [B<-help>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<fs setverify> command sets the status of data verification for
+store data operations in the AFS client. When enabled, each store data
+operation is followed by a matching fetch data request.  If the data does
+not match, the operation is repeated. The complement of this command is
+B<fs getverify>, which shows the status of data verification in the client.
+
+The default data verification status is disabled.
+
+This is a global setting and applies to all subsequent connections to an
+AFS File Server from this Cache Manager. There is no way to enable or
+disable enverifyion for specific connections.
+
+=head1 CAUTIONS
+
+The B<fs setverify> command is only available on Microsoft Windows.  There
+is no equivalent for other platforms.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-verify> <I<on/off>>
+
+This is the only option to B<fs setverify>. The B<-verify> option takes
+either C<on> or C<off>. C<on> enables data verification. C<off> disables
+data verification. Since this is the only option, the C<-verify> flag may be
+omitted.
+
+C<0> and C<1> or C<true> and C<false> are not supported as replacements
+for C<on> and C<off>.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+This command produces no output other than error messages.
+
+=head1 EXAMPLES
+
+There are only four ways to invoke B<fs setverify>.  Either of:
+
+   % fs setverify -verify on
+   % fs setverify on
+
+will enable data verification and:
+
+   % fs setverify -verify off
+   % fs setverify off
+
+will disable data verification.
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be logged in as the local superuser root.
+
+=head1 SEE ALSO
+
+L<fs_getverify(1)>
+
+=head1 COPYRIGHT
+
+Copyright 2012 Jeffrey Altman <jaltman@your-file-system.com>
+
+This documentation is covered by the BSD License as written in the
+doc/LICENSE file. This man page was written by Jeffrey Altman for
+OpenAFS.

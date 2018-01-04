@@ -13,14 +13,14 @@ B<backup diskrestore> S<<< B<-server> <I<machine to restore>> >>>
     S<<< [B<-newserver> <I<destination machine>>] >>>
     S<<< [B<-newpartition> <I<destination partition>>] >>>
     S<<< [B<-extension> <I<new volume name extension>>] >>>
-    [B<-n>] [B<-localauth>] S<<< [B<-cell> <I<cell name>>] >>> [B<-help>]
+    [B<-dryrun> | B<-n>] [B<-localauth>] S<<< [B<-cell> <I<cell name>>] >>> [B<-help>]
 
 B<backup di> S<<< B<-s> <I<machine to restore>> >>>
     S<<< B<-pa> <I<partition to restore>> >>>
     S<<< [B<-po> <I<TC port offset>>+] >>>
     S<<< [B<-news> <I<destination machine>>] >>>
     S<<< [B<-newp> <I<destination partition>>] >>>
-    S<<< [B<-e> <I<new volume name extension>>] >>> [B<-n>] [B<-l>]
+    S<<< [B<-e> <I<new volume name extension>>] >>> [B<-dryrun> | B<-n>] [B<-l>]
     S<<< [B<-c> <I<cell name>>] >>> [B<-h>]
 
 =for html
@@ -106,8 +106,8 @@ volume with the specified extension also already exists, the command
 overwrites it.
 
 To print out a list of the tapes containing the needed dumps, without
-actually performing the restore operation, include the B<-n> flag along
-with the other options to be used on the actual command.
+actually performing the restore operation, include the B<-dryrun> flag
+along with the other options to be used on the actual command.
 
 The Tape Coordinator's default response to this command is to access the
 first tape it needs by invoking the C<MOUNT> instruction in the local
@@ -179,7 +179,7 @@ name and extension cannot exceed 22 characters in length. To use a period
 to separate the extension from the name, specify it as the first character
 of the string (as in C<.rst>, for example).
 
-=item B<-n>
+=item B<-dryrun> | B<-n>
 
 Displays a list of the tapes necessary to perform the requested restore,
 without actually performing the operation.
@@ -218,7 +218,7 @@ without restoring the indicated volume or the value C<n> to terminate the
 operation. In the latter case, the operator can then attempt to determine
 the cause of the tape error.
 
-If the issuer includes the B<-n> flag with the command, the following
+If the issuer includes the B<-dryrun> flag with the command, the following
 string appears at the head of the list of the tapes necessary to perform
 the restore operation:
 
@@ -228,25 +228,26 @@ the restore operation:
 
 The following command restores the volumes for which the VLDB lists a
 read/write site on the F</vicepd> partition of the machine
-C<fs5.abc.com>. The Tape Coordinator associated with port offset 3
+C<fs5.example.com>. The Tape Coordinator associated with port offset 3
 performs the operation.
 
-   % backup diskrestore -server fs5.abc.com -partition /vicepd -portoffset 3
+   % backup diskrestore -server fs5.example.com   \
+                        -partition /vicepd -portoffset 3
 
 The following command restores the volumes for which the VLDB lists a
-read/write site on the F</vicepb> partition of the machine C<fs1.abc.com>
-to a new site: the F</vicepa> partition on the machine C<fs3.abc.com>. The
+read/write site on the F</vicepb> partition of the machine C<fs1.example.com>
+to a new site: the F</vicepa> partition on the machine C<fs3.example.com>. The
 Tape Coordinator associated with port offset 0 performs the
 operation. (The command appears here on two lines only for legibility.)
 
-   % backup diskrestore  -server fs1.abc.com -partition /vicepb   \
-                         -newserver fs3.abc.com -newpartition /vicepa
+   % backup diskrestore  -server fs1.example.com -partition /vicepb   \
+                         -newserver fs3.example.com -newpartition /vicepa
 
 The following command lists the tapes required to restore the volumes for
 which the VLDB lists a read/write site on the F</vicepm> partition of the
-machine C<fs4.abc.com>:
+machine C<fs4.example.com>:
 
-   % backup diskrestore -server fs4.abc.com -partition /vicepm -n
+   % backup diskrestore -server fs4.example.com -partition /vicepm -dryrun
    Tapes needed:
    user.sunday1.1
    user.sunday1.2

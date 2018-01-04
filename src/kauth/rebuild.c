@@ -10,27 +10,14 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <fcntl.h>
-#include <io.h>
-#else
-#include <sys/file.h>
-#include <netinet/in.h>
-#endif
-#include <string.h>
-#include <stdio.h>
-#include <errno.h>
-#include <time.h>
+#include <hcrypto/des.h>
+
 #include <ubik.h>
 #include <afs/cmd.h>
-#include <des.h>
-#include <des_prototypes.h>
 #include <rx/rxkad.h>
-
+#include <rx/rxkad_convert.h>
 #include <afs/com_err.h>
 
 #include "kauth.h"
@@ -449,8 +436,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     nentries =
 	(info.st_size -
 	 (UBIK_HEADERSIZE + header.headerSize)) / sizeof(struct kaentry);
-    entrys = (int *)malloc(nentries * sizeof(int));
-    memset(entrys, 0, nentries * sizeof(int));
+    entrys = calloc(nentries, sizeof(int));
 
     for (i = 0, index = sizeof(header); i < nentries;
 	 i++, index += sizeof(struct kaentry)) {
@@ -470,8 +456,8 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		    printf("Entry %d has zero length name\n", i);
 		continue;
 	    }
-	    if (!des_check_key_parity(ktc_to_cblock(&entry.key))
-		|| des_is_weak_key(ktc_to_cblock(&entry.key))) {
+	    if (!DES_check_key_parity(ktc_to_cblock(&entry.key))
+		|| DES_is_weak_key(ktc_to_cblock(&entry.key))) {
 		fprintf(stderr, "Entry %d, %s, has bad key\n", i,
 			EntryName(&entry));
 		continue;
@@ -642,7 +628,7 @@ main(int argc, char **argv)
 
     setlinebuf(stdout);
 
-    ts = cmd_CreateSyntax(NULL, WorkerBee, NULL, "KADB check");
+    ts = cmd_CreateSyntax(NULL, WorkerBee, NULL, 0, "KADB check");
     cmd_AddParm(ts, "-database", CMD_SINGLE, CMD_REQUIRED, "kadb_file");
     cmd_AddParm(ts, "-uheader", CMD_FLAG, CMD_OPTIONAL,
 		"Display UBIK header");

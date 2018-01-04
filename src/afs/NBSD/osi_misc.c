@@ -65,129 +65,40 @@ int
 afs_osi_suser(void *credp)
 {
     int code;
+/*
+ *	lwp->l_acflag is gone in NBSD50. It was "Accounting" stuff.
+ *	lwp->l_ru is what is listed as "accounting information" now, so this
+ *	may or may not work...
+ */
+#ifdef AFS_NBSD50_ENV
+    code = kauth_authorize_generic(credp,
+				   KAUTH_GENERIC_ISSUSER,
+				   &curlwp->l_ru);
+#else
     code = kauth_authorize_generic(credp,
 				   KAUTH_GENERIC_ISSUSER,
 				   &curlwp->l_acflag);
+#endif
     return (code == 0);
 }
 
-/*
- * Support Alloc_NoSleep.  This should propagate back to OBSD.
- * Matt.
- */
-void *
-osi_nbsd_Alloc(size_t asize, int cansleep)
-{
-    void *p;
-    int glocked;
-
-    if (cansleep) {
-	glocked = ISAFS_GLOCK();
-	if (glocked)
-	    AFS_GUNLOCK();
-	MALLOC(p, void *, asize, M_AFSGENERIC, M_WAITOK);
-	if (glocked)
-	    AFS_GLOCK();
-    } else {
-	MALLOC(p, void *, asize, M_AFSGENERIC, M_NOWAIT);
-    }
-
-    return (p);
-}
-
-void
-osi_nbsd_Free(void *p, size_t asize)
-{
-    FREE(p, M_AFSGENERIC);
-}
-
-inline void *
-afs_osi_Alloc(size_t asize) {
-    return (osi_nbsd_Alloc(asize, 1));
-}
-
-inline void *
-afs_osi_Alloc_NoSleep(size_t asize) {
-    return (osi_nbsd_Alloc(asize, 0));
-}
-
-inline void
-afs_osi_Free(void *buf, size_t asize) {
-    osi_nbsd_Free(buf, asize);
-}
-
-inline void
-afs_osi_FreeStr(char *x)
-{
-    afs_osi_Free(x, strlen(x) + 1);
-}
-
-/* XXXX OpenBSD avoids space pool, presumably Rees believed the kernel
- * allocator did as well or better */
-#if 0
-void
-osi_FreeLargeSpace(void *p)
-{
-    osi_nbsd_Free(p, 0);
-}
-
-/* XXXX OpenBSD avoids space pool, presumably Rees believed the kernel
- * allocator did as well or better */
-#if 0
-void
-osi_FreeSmallSpace(void *p)
-{
-    osi_nbsd_Free(p, 0);
-}
-
-void *
-osi_AllocLargeSpace(size_t size)
-{
-    AFS_ASSERT_GLOCK();
-    AFS_STATCNT(osi_AllocLargeSpace);
-    return (osi_nbsd_Alloc(size, 1));
-}
-
-void *
-osi_AllocSmallSpace(size_t size)
-{
-    AFS_ASSERT_GLOCK();
-    AFS_STATCNT(osi_AllocSmallSpace);
-    return (osi_nbsd_Alloc(size, 1));
-}
-
-#endif /* Space undef */
-
 int
-afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, retval)
-    long *retval;
-    long dev, near_inode, param1, param2, param3, param4;
-{
-    return EINVAL;
-}
-
-#endif /* Space undef */
-
-int
-afs_syscall_iopen(dev, inode, usrmod, retval)
-    long *retval;
-    int dev, inode, usrmod;
+afs_syscall_icreate(long dev, long near_inode, long param1, long param2,
+		    long param3, long param4, register_t *retval)
 {
     return EINVAL;
 }
 
 int
-afs_syscall_iincdec(dev, inode, inode_p1, amount)
-     int dev, inode, inode_p1, amount;
+afs_syscall_iopen(int dev, int inode, int usrmod, register_t *retval)
 {
     return EINVAL;
 }
 
-inline gid_t
-osi_crgroupbyid(afs_ucred_t *acred, int gindex)
+int
+afs_syscall_iincdec(int dev, int inode, int inode_p1, int amount)
 {
-    struct kauth_cred *cr = acred;
-    return (cr->cr_groups[gindex]);
+    return EINVAL;
 }
 
 /*

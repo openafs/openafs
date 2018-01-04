@@ -18,29 +18,15 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <dirent.h>
-#include <sys/stat.h>
-#include <time.h>
-#include <errno.h>
 #ifdef AFS_NT40_ENV
-#include <io.h>
 #include <WINNT/afsevent.h>
-#else
-#include <sys/param.h>
-#include <sys/file.h>
-#ifndef ITIMER_REAL
-#include <sys/time.h>
-#endif /* ITIMER_REAL */
 #endif
-#include <rx/xdr.h>
-#include <afs/afsint.h>
-#include <afs/afs_assert.h>
 
-#include <fcntl.h>
+#include <afs/opr.h>
+#include <opr/lock.h>
+#include <afs/afsint.h>
 
 #ifndef AFS_NT40_ENV
 #include <afs/osi_inode.h>
@@ -50,9 +36,9 @@
 #include <afs/dir.h>
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
+#include <rx/rx_queue.h>
 
 #include "nfs.h"
-#include "lwp.h"
 #include "lock.h"
 #include "ihandle.h"
 #include "vnode.h"
@@ -72,13 +58,13 @@ int VolumeChanged; /* hack to make dir package happy */
 
 
 struct volop_state {
-    afs_uint32 volume;
+    VolumeId volume;
     afs_uint32 vnode;
     afs_uint32 unique;
     char partName[16];
 };
 
-struct state {
+struct fssync_state {
     afs_int32 reason;
     struct volop_state * vop;
 };
@@ -89,10 +75,11 @@ static char **fssd_argv;
 static int fssd_argc;
 #endif
 
-static int common_prolog(struct cmd_syndesc *, struct state *);
-static int common_volop_prolog(struct cmd_syndesc *, struct state *);
+static int common_prolog(struct cmd_syndesc *, struct fssync_state *);
+static int common_volop_prolog(struct cmd_syndesc *, struct fssync_state *);
 
-static int do_volop(struct state *, afs_int32 command, SYNC_response * res);
+static int do_volop(struct fssync_state *, afs_int32 command,
+		    SYNC_response * res);
 
 static int VolOnline(struct cmd_syndesc * as, void * rock);
 static int VolOffline(struct cmd_syndesc * as, void * rock);
@@ -170,52 +157,52 @@ main(int argc, char **argv)
     fssd_argc = argc;
 #endif
 
-    ts = cmd_CreateSyntax("online", VolOnline, NULL, "bring a volume online (FSYNC_VOL_ON opcode)");
+    ts = cmd_CreateSyntax("online", VolOnline, NULL, 0, "bring a volume online (FSYNC_VOL_ON opcode)");
     VOLOP_PARMS_DECL(ts);
 
-    ts = cmd_CreateSyntax("offline", VolOffline, NULL, "take a volume offline (FSYNC_VOL_OFF opcode)");
+    ts = cmd_CreateSyntax("offline", VolOffline, NULL, 0, "take a volume offline (FSYNC_VOL_OFF opcode)");
     VOLOP_PARMS_DECL(ts);
 
-    ts = cmd_CreateSyntax("mode", VolMode, NULL, "change volume attach mode (FSYNC_VOL_NEEDVOLUME opcode)");
+    ts = cmd_CreateSyntax("mode", VolMode, NULL, 0, "change volume attach mode (FSYNC_VOL_NEEDVOLUME opcode)");
     VOLOP_PARMS_DECL(ts);
     cmd_CreateAlias(ts, "needvolume");
 
-    ts = cmd_CreateSyntax("detach", VolDetach, NULL, "detach a volume (FSYNC_VOL_DONE opcode)");
+    ts = cmd_CreateSyntax("detach", VolDetach, NULL, 0, "detach a volume (FSYNC_VOL_DONE opcode)");
     VOLOP_PARMS_DECL(ts);
 
-    ts = cmd_CreateSyntax("callback", VolBreakCBKs, NULL, "break callbacks for volume (FSYNC_VOL_BREAKCBKS opcode)");
+    ts = cmd_CreateSyntax("callback", VolBreakCBKs, NULL, 0, "break callbacks for volume (FSYNC_VOL_BREAKCBKS opcode)");
     VOLOP_PARMS_DECL(ts);
     cmd_CreateAlias(ts, "cbk");
 
-    ts = cmd_CreateSyntax("move", VolMove, NULL, "set volume moved flag (FSYNC_VOL_MOVE opcode)");
+    ts = cmd_CreateSyntax("move", VolMove, NULL, 0, "set volume moved flag (FSYNC_VOL_MOVE opcode)");
     VOLOP_PARMS_DECL(ts);
 
-    ts = cmd_CreateSyntax("list", VolList, NULL, "sync local volume list (FSYNC_VOL_LISTVOLUMES opcode)");
+    ts = cmd_CreateSyntax("list", VolList, NULL, 0, "sync local volume list (FSYNC_VOL_LISTVOLUMES opcode)");
     VOLOP_PARMS_DECL(ts);
     cmd_CreateAlias(ts, "ls");
 
-    ts = cmd_CreateSyntax("leaveoff", VolLeaveOff, 0, "leave volume offline (FSYNC_VOL_LEAVE_OFF opcode)");
+    ts = cmd_CreateSyntax("leaveoff", VolLeaveOff, 0, 0, "leave volume offline (FSYNC_VOL_LEAVE_OFF opcode)");
     VOLOP_PARMS_DECL(ts);
 
-    ts = cmd_CreateSyntax("attach", VolForceAttach, 0, "force full attachment (FSYNC_VOL_ATTACH opcode)");
+    ts = cmd_CreateSyntax("attach", VolForceAttach, 0, 0, "force full attachment (FSYNC_VOL_ATTACH opcode)");
     VOLOP_PARMS_DECL(ts);
 
-    ts = cmd_CreateSyntax("error", VolForceError, 0, "force into hard error state (FSYNC_VOL_FORCE_ERROR opcode)");
+    ts = cmd_CreateSyntax("error", VolForceError, 0, 0, "force into hard error state (FSYNC_VOL_FORCE_ERROR opcode)");
     VOLOP_PARMS_DECL(ts);
 
-    ts = cmd_CreateSyntax("query", VolQuery, NULL, "get volume structure (FSYNC_VOL_QUERY opcode)");
+    ts = cmd_CreateSyntax("query", VolQuery, NULL, 0, "get volume structure (FSYNC_VOL_QUERY opcode)");
     VOLOP_PARMS_DECL(ts);
     cmd_CreateAlias(ts, "qry");
 
-    ts = cmd_CreateSyntax("header", VolHdrQuery, NULL, "get volume disk data structure (FSYNC_VOL_QUERY_HDR opcode)");
+    ts = cmd_CreateSyntax("header", VolHdrQuery, NULL, 0, "get volume disk data structure (FSYNC_VOL_QUERY_HDR opcode)");
     VOLOP_PARMS_DECL(ts);
     cmd_CreateAlias(ts, "hdr");
 
-    ts = cmd_CreateSyntax("volop", VolOpQuery, NULL, "get pending volume operation info (FSYNC_VOL_QUERY_VOP opcode)");
+    ts = cmd_CreateSyntax("volop", VolOpQuery, NULL, 0, "get pending volume operation info (FSYNC_VOL_QUERY_VOP opcode)");
     VOLOP_PARMS_DECL(ts);
     cmd_CreateAlias(ts, "vop");
 
-    ts = cmd_CreateSyntax("vnode", VnQuery, NULL, "get vnode structure (FSYNC_VOL_QUERY_VNODE opcode)");
+    ts = cmd_CreateSyntax("vnode", VnQuery, NULL, 0, "get vnode structure (FSYNC_VOL_QUERY_VNODE opcode)");
     cmd_Seek(ts, CUSTOM_PARMS_OFFSET);
     cmd_AddParm(ts, "-volumeid", CMD_SINGLE, 0, "volume id");
     cmd_AddParm(ts, "-vnodeid", CMD_SINGLE, 0, "vnode id");
@@ -223,42 +210,42 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-partition", CMD_SINGLE, 0, "partition name");
     COMMON_PARMS_DECL(ts);
 
-    ts = cmd_CreateSyntax("stats", StatsQuery, NULL, "see 'stats help' for more information");
+    ts = cmd_CreateSyntax("stats", StatsQuery, NULL, 0, "see 'stats help' for more information");
     cmd_Seek(ts, CUSTOM_PARMS_OFFSET);
     cmd_AddParm(ts, "-cmd", CMD_SINGLE, 0, "subcommand");
     cmd_AddParm(ts, "-arg1", CMD_SINGLE, CMD_OPTIONAL, "arg1");
     cmd_AddParm(ts, "-arg2", CMD_SINGLE, CMD_OPTIONAL, "arg2");
     COMMON_PARMS_DECL(ts);
 
-    ts = cmd_CreateSyntax("vgcquery", VGCQuery, 0, "query volume group cache (FSYNC_VG_QUERY opcode)");
+    ts = cmd_CreateSyntax("vgcquery", VGCQuery, 0, 0, "query volume group cache (FSYNC_VG_QUERY opcode)");
     cmd_Seek(ts, CUSTOM_PARMS_OFFSET);
     cmd_AddParm(ts, "-partition", CMD_SINGLE, 0, "partition name");
     cmd_AddParm(ts, "-volumeid", CMD_SINGLE, 0, "volume id");
     COMMON_PARMS_DECL(ts);
     cmd_CreateAlias(ts, "vgcqry");
 
-    ts = cmd_CreateSyntax("vgcadd", VGCAdd, 0, "add entry to volume group cache (FSYNC_VG_ADD opcode)");
+    ts = cmd_CreateSyntax("vgcadd", VGCAdd, 0, 0, "add entry to volume group cache (FSYNC_VG_ADD opcode)");
     cmd_Seek(ts, CUSTOM_PARMS_OFFSET);
     cmd_AddParm(ts, "-partition", CMD_SINGLE, 0, "partition name");
     cmd_AddParm(ts, "-parent", CMD_SINGLE, 0, "parent volume id");
     cmd_AddParm(ts, "-child", CMD_SINGLE, 0, "child volume id");
     COMMON_PARMS_DECL(ts);
 
-    ts = cmd_CreateSyntax("vgcdel", VGCDel, 0, "delete entry from volume group cache (FSYNC_VG_DEL opcode)");
+    ts = cmd_CreateSyntax("vgcdel", VGCDel, 0, 0, "delete entry from volume group cache (FSYNC_VG_DEL opcode)");
     cmd_Seek(ts, CUSTOM_PARMS_OFFSET);
     cmd_AddParm(ts, "-partition", CMD_SINGLE, 0, "partition name");
     cmd_AddParm(ts, "-parent", CMD_SINGLE, 0, "parent volume id");
     cmd_AddParm(ts, "-child", CMD_SINGLE, 0, "child volume id");
     COMMON_PARMS_DECL(ts);
 
-    ts = cmd_CreateSyntax("vgcscan", VGCScan, 0,
+    ts = cmd_CreateSyntax("vgcscan", VGCScan, 0, 0,
 			  "start volume group cache re-scan"
 			  " (FSYNC_VG_SCAN opcode)");
     cmd_Seek(ts, CUSTOM_PARMS_OFFSET);
     cmd_AddParm(ts, "-partition", CMD_SINGLE, 0, "partition name");
     COMMON_PARMS_DECL(ts);
 
-    ts = cmd_CreateSyntax("vgcscanall", VGCScanAll, 0,
+    ts = cmd_CreateSyntax("vgcscanall", VGCScanAll, 0, 0,
 			  "start whole-server volume group cache re-scan"
 			  " (FSYNC_VG_SCAN_ALL opcode)");
     COMMON_PARMS_DECL(ts);
@@ -287,6 +274,7 @@ dafs_prolog(void)
     /* LISTVOLUMES is a no-op; we just want to get the response header flags
      * to see if the server reports itself as DAFS or not */
     code = FSYNC_VolOp(0, NULL, FSYNC_VOL_LISTVOLUMES, FSYNC_WHATEVER, &res);
+    VDisconnectFS();	/* disconnect before continuing */
     if (code) {
 	/* probably failed to contact the fileserver; later code will provide
 	 * some warning/error indication */
@@ -309,7 +297,7 @@ dafs_prolog(void)
 #endif /* !AFS_DEMAND_ATTACH_FS */
 
 static int
-common_prolog(struct cmd_syndesc * as, struct state * state)
+common_prolog(struct cmd_syndesc * as, struct fssync_state * state)
 {
     struct cmd_item *ti;
     VolumePackageOptions opts;
@@ -360,12 +348,12 @@ common_prolog(struct cmd_syndesc * as, struct state * state)
 }
 
 static int
-common_volop_prolog(struct cmd_syndesc * as, struct state * state)
+common_volop_prolog(struct cmd_syndesc * as, struct fssync_state * state)
 {
     struct cmd_item *ti;
 
     state->vop = (struct volop_state *) calloc(1, sizeof(struct volop_state));
-    osi_Assert(state->vop != NULL);
+    opr_Assert(state->vop != NULL);
 
     if ((ti = as->parms[COMMON_VOLOP_PARMS_OFFSET].items)) {	/* -volumeid */
 	state->vop->volume = atoi(ti->data);
@@ -406,7 +394,7 @@ debug_response(afs_int32 code, SYNC_response * res)
 }
 
 static int
-do_volop(struct state * state, afs_int32 command, SYNC_response * res)
+do_volop(struct fssync_state * state, afs_int32 command, SYNC_response * res)
 {
     afs_int32 code;
     SYNC_PROTO_BUF_DECL(res_buf);
@@ -454,7 +442,7 @@ do_volop(struct state * state, afs_int32 command, SYNC_response * res)
 static int
 VolOnline(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
 
     common_prolog(as, &state);
     common_volop_prolog(as, &state);
@@ -471,7 +459,7 @@ VolOnline(struct cmd_syndesc * as, void * rock)
 static int
 VolOffline(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
 
     common_prolog(as, &state);
     common_volop_prolog(as, &state);
@@ -484,7 +472,7 @@ VolOffline(struct cmd_syndesc * as, void * rock)
 static int
 VolMode(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
 
     common_prolog(as, &state);
     common_volop_prolog(as, &state);
@@ -497,7 +485,7 @@ VolMode(struct cmd_syndesc * as, void * rock)
 static int
 VolDetach(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
 
     common_prolog(as, &state);
     common_volop_prolog(as, &state);
@@ -510,7 +498,7 @@ VolDetach(struct cmd_syndesc * as, void * rock)
 static int
 VolBreakCBKs(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
 
     common_prolog(as, &state);
     common_volop_prolog(as, &state);
@@ -523,7 +511,7 @@ VolBreakCBKs(struct cmd_syndesc * as, void * rock)
 static int
 VolMove(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
 
     common_prolog(as, &state);
     common_volop_prolog(as, &state);
@@ -536,7 +524,7 @@ VolMove(struct cmd_syndesc * as, void * rock)
 static int
 VolList(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
 
     common_prolog(as, &state);
     common_volop_prolog(as, &state);
@@ -549,7 +537,7 @@ VolList(struct cmd_syndesc * as, void * rock)
 static int
 VolLeaveOff(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
 
     common_prolog(as, &state);
     common_volop_prolog(as, &state);
@@ -562,7 +550,7 @@ VolLeaveOff(struct cmd_syndesc * as, void * rock)
 static int
 VolForceAttach(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
 
     common_prolog(as, &state);
     common_volop_prolog(as, &state);
@@ -575,7 +563,7 @@ VolForceAttach(struct cmd_syndesc * as, void * rock)
 static int
 VolForceError(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
 
     common_prolog(as, &state);
     common_volop_prolog(as, &state);
@@ -691,13 +679,10 @@ vn_flags_to_string(afs_uint32 flags)
 static int
 VolQuery(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
     SYNC_PROTO_BUF_DECL(res_buf);
     SYNC_response res;
     Volume v;
-#ifdef AFS_DEMAND_ATTACH_FS
-    int hi, lo;
-#endif
 
     dafs_prolog();
 
@@ -714,14 +699,13 @@ VolQuery(struct cmd_syndesc * as, void * rock)
 	memcpy(&v, res.payload.buf, sizeof(Volume));
 
 	printf("volume = {\n");
-	printf("\thashid          = %u\n", v.hashid);
+	printf("\thashid          = %" AFS_VOLID_FMT "\n", afs_printable_VolumeId_lu(v.hashid));
 	printf("\theader          = %p\n", v.header);
 	printf("\tdevice          = %d\n", v.device);
 	printf("\tpartition       = %p\n", v.partition);
 	printf("\tlinkHandle      = %p\n", v.linkHandle);
 	printf("\tnextVnodeUnique = %u\n", v.nextVnodeUnique);
 	printf("\tdiskDataHandle  = %p\n", v.diskDataHandle);
-	printf("\tvnodeHashOffset = %u\n", v.vnodeHashOffset);
 	printf("\tshuttingDown    = %d\n", v.shuttingDown);
 	printf("\tgoingOffline    = %d\n", v.goingOffline);
 	printf("\tcacheCheck      = %u\n", v.cacheCheck);
@@ -761,28 +745,14 @@ VolQuery(struct cmd_syndesc * as, void * rock)
 	    /* statistics structure */
 	    printf("\tstats = {\n");
 
-	    printf("\t\thash_lookups = {\n");
-	    SplitInt64(v.stats.hash_lookups,hi,lo);
-	    printf("\t\t\thi = %u\n", hi);
-	    printf("\t\t\tlo = %u\n", lo);
-	    printf("\t\t}\n");
-
-	    printf("\t\thash_short_circuits = {\n");
-	    SplitInt64(v.stats.hash_short_circuits,hi,lo);
-	    printf("\t\t\thi = %u\n", hi);
-	    printf("\t\t\tlo = %u\n", lo);
-	    printf("\t\t}\n");
-
-	    printf("\t\thdr_loads = {\n");
-	    SplitInt64(v.stats.hdr_loads,hi,lo);
-	    printf("\t\t\thi = %u\n", hi);
-	    printf("\t\t\tlo = %u\n", lo);
-	    printf("\t\t}\n");
-
-	    printf("\t\thdr_gets = {\n");
-	    SplitInt64(v.stats.hdr_gets,hi,lo);
-	    printf("\t\t\thi = %u\n", hi);
-	    printf("\t\t\tlo = %u\n", lo);
+	    printf("\t\thash_lookups = %"AFS_INT64_FMT"\n",
+		   v.stats.hash_lookups);
+	    printf("\t\thash_short_circuits = %"AFS_INT64_FMT"\n",
+		   v.stats.hash_short_circuits);
+	    printf("\t\thdr_loads = %"AFS_INT64_FMT"\n",
+		   v.stats.hdr_loads);
+	    printf("\t\thdr_gets = %"AFS_INT64_FMT"\n",
+		   v.stats.hdr_gets);
 	    printf("\t\t}\n");
 
 	    printf("\t\tattaches         = %u\n", v.stats.attaches);
@@ -826,7 +796,7 @@ VolQuery(struct cmd_syndesc * as, void * rock)
 static int
 VolHdrQuery(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
     SYNC_PROTO_BUF_DECL(res_buf);
     SYNC_response res;
     VolumeDiskData v;
@@ -850,7 +820,7 @@ VolHdrQuery(struct cmd_syndesc * as, void * rock)
 	printf("\t\tversion = %u\n", v.stamp.version);
 	printf("\t}\n");
 
-	printf("\tid               = %u\n", v.id);
+	printf("\tid               = %" AFS_VOLID_FMT "\n", afs_printable_VolumeId_lu(v.id));
 	printf("\tname             = '%s'\n", v.name);
 	if (v.inUse != 0) {
 	    printf("\tinUse            = %d (%s)\n", v.inUse, VPTypeToString(v.inUse));
@@ -862,10 +832,10 @@ VolHdrQuery(struct cmd_syndesc * as, void * rock)
 	printf("\tneedsSalvaged    = %d\n", v.needsSalvaged);
 	printf("\tuniquifier       = %u\n", v.uniquifier);
 	printf("\ttype             = %d\n", v.type);
-	printf("\tparentId         = %u\n", v.parentId);
-	printf("\tcloneId          = %u\n", v.cloneId);
-	printf("\tbackupId         = %u\n", v.backupId);
-	printf("\trestoredFromId   = %u\n", v.restoredFromId);
+	printf("\tparentId         = %" AFS_VOLID_FMT "\n", afs_printable_VolumeId_lu(v.parentId));
+	printf("\tcloneId          = %" AFS_VOLID_FMT "\n", afs_printable_VolumeId_lu(v.cloneId));
+	printf("\tbackupId         = %" AFS_VOLID_FMT "\n", afs_printable_VolumeId_lu(v.backupId));
+	printf("\trestoredFromId   = %" AFS_VOLID_FMT "\n", afs_printable_VolumeId_lu(v.restoredFromId));
 	printf("\tneedsCallback    = %d\n", v.needsCallback);
 	printf("\tdestroyMe        = %d\n", v.destroyMe);
 	printf("\tdontSalvage      = %d\n", v.dontSalvage);
@@ -887,11 +857,7 @@ VolHdrQuery(struct cmd_syndesc * as, void * rock)
 	printf("\texpirationDate   = %u\n", v.expirationDate);
 	printf("\tbackupDate       = %u\n", v.backupDate);
 	printf("\tcopyDate         = %u\n", v.copyDate);
-#ifdef OPENAFS_VOL_STATS
 	printf("\tstat_initialized = %d\n", v.stat_initialized);
-#else
-        printf("\tmtd              = '%s'\n", v.motd);
-#endif
 	printf("}\n");
     }
 
@@ -901,7 +867,7 @@ VolHdrQuery(struct cmd_syndesc * as, void * rock)
 static int
 VolOpQuery(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
     SYNC_PROTO_BUF_DECL(res_buf);
     SYNC_response res;
     FSSYNC_VolOp_info vop;
@@ -942,8 +908,8 @@ VolOpQuery(struct cmd_syndesc * as, void * rock)
 	printf("\t}\n");
 
 	printf("\tvop = {\n");
-	printf("\t\tvolume         = %u\n", vop.vop.volume);
-	if (afs_strnlen(vop.vop.partName, sizeof(vop.vop.partName)) <
+	printf("\t\tvolume         = %" AFS_VOLID_FMT "\n", afs_printable_VolumeId_lu(vop.vop.volume));
+	if (strnlen(vop.vop.partName, sizeof(vop.vop.partName)) <
 	    sizeof(vop.vop.partName)) {
 	    printf("\t\tpartName       = '%s'\n", vop.vop.partName);
 	} else {
@@ -958,7 +924,7 @@ VolOpQuery(struct cmd_syndesc * as, void * rock)
 }
 
 static int
-vn_prolog(struct cmd_syndesc * as, struct state * state)
+vn_prolog(struct cmd_syndesc * as, struct fssync_state * state)
 {
     struct cmd_item *ti;
 
@@ -993,7 +959,7 @@ vn_prolog(struct cmd_syndesc * as, struct state * state)
 }
 
 static int
-do_vnqry(struct state * state, SYNC_response * res)
+do_vnqry(struct fssync_state * state, SYNC_response * res)
 {
     afs_int32 code;
     int command = FSYNC_VOL_QUERY_VNODE;
@@ -1020,7 +986,7 @@ do_vnqry(struct state * state, SYNC_response * res)
 static int
 VnQuery(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
     SYNC_PROTO_BUF_DECL(res_buf);
     SYNC_response res;
     Vnode v;
@@ -1122,7 +1088,7 @@ StatsQuery(struct cmd_syndesc * as, void * rock)
     afs_int32 code;
     int command;
     struct cmd_item *ti;
-    struct state state;
+    struct fssync_state state;
     SYNC_PROTO_BUF_DECL(res_buf);
     SYNC_response res;
     FSSYNC_StatsOp_hdr scom;
@@ -1254,7 +1220,6 @@ print_vol_stats_general(VolPkgStats * stats)
 #ifdef AFS_DEMAND_ATTACH_FS
     int i;
 #endif
-    afs_uint32 hi, lo;
 
     printf("VolPkgStats = {\n");
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -1264,54 +1229,23 @@ print_vol_stats_general(VolPkgStats * stats)
 	       stats->state_levels[i]);
     }
 
-    SplitInt64(stats->hash_looks, hi, lo);
-    printf("\thash_looks = {\n");
-    printf("\t\thi = %u\n", hi);
-    printf("\t\tlo = %u\n", lo);
-    printf("\t}\n");
-
-    SplitInt64(stats->hash_reorders, hi, lo);
-    printf("\thash_reorders = {\n");
-    printf("\t\thi = %u\n", hi);
-    printf("\t\tlo = %u\n", lo);
-    printf("\t}\n");
-
-    SplitInt64(stats->salvages, hi, lo);
-    printf("\tsalvages = {\n");
-    printf("\t\thi = %u\n", hi);
-    printf("\t\tlo = %u\n", lo);
-    printf("\t}\n");
-
-    SplitInt64(stats->vol_ops, hi, lo);
-    printf("\tvol_ops = {\n");
-    printf("\t\thi = %u\n", hi);
-    printf("\t\tlo = %u\n", lo);
-    printf("\t}\n");
+    printf("\thash_looks = %"AFS_INT64_FMT"\n",
+	   stats->hash_looks);
+    printf("\thash_reorders = %"AFS_INT64_FMT"\n",
+	   stats->hash_reorders);
+    printf("\tsalvages = %"AFS_INT64_FMT"\n",
+	   stats->salvages);
+    printf("\tvol_ops = %"AFS_INT64_FMT"\n",
+	   stats->vol_ops);
 #endif
-    SplitInt64(stats->hdr_loads, hi, lo);
-    printf("\thdr_loads = {\n");
-    printf("\t\thi = %u\n", hi);
-    printf("\t\tlo = %u\n", lo);
-    printf("\t}\n");
-
-    SplitInt64(stats->hdr_gets, hi, lo);
-    printf("\thdr_gets = {\n");
-    printf("\t\thi = %u\n", hi);
-    printf("\t\tlo = %u\n", lo);
-    printf("\t}\n");
-
-    SplitInt64(stats->attaches, hi, lo);
-    printf("\tattaches = {\n");
-    printf("\t\thi = %u\n", hi);
-    printf("\t\tlo = %u\n", lo);
-    printf("\t}\n");
-
-    SplitInt64(stats->soft_detaches, hi, lo);
-    printf("\tsoft_detaches = {\n");
-    printf("\t\thi = %u\n", hi);
-    printf("\t\tlo = %u\n", lo);
-    printf("\t}\n");
-
+    printf("\thdr_loads = %"AFS_INT64_FMT"\n",
+	   stats->hdr_loads);
+    printf("\thdr_gets = %"AFS_INT64_FMT"\n",
+	   stats->hdr_gets);
+    printf("\tattaches = %"AFS_INT64_FMT"\n",
+	   stats->attaches);
+    printf("\tsoft_detaches = %"AFS_INT64_FMT"\n",
+	   stats->soft_detaches);
     printf("\thdr_cache_size = %d\n", stats->hdr_cache_size);
 
     printf("}\n");
@@ -1334,10 +1268,6 @@ print_vol_stats_viceP(struct DiskPartitionStats64 * stats)
 static void
 print_vol_stats_hash(struct VolumeHashChainStats * stats)
 {
-#ifdef AFS_DEMAND_ATTACH_FS
-    afs_uint32 hi, lo;
-#endif
-
     printf("DiskPartitionStats = {\n");
     printf("\ttable_size = %d\n", stats->table_size);
     printf("\tchain_len = %d\n", stats->chain_len);
@@ -1346,23 +1276,12 @@ print_vol_stats_hash(struct VolumeHashChainStats * stats)
     printf("\tchain_cacheCheck = %d\n", stats->chain_cacheCheck);
     printf("\tchain_busy = %d\n", stats->chain_busy);
 
-    SplitInt64(stats->chain_looks, hi, lo);
-    printf("\tchain_looks = {\n");
-    printf("\t\thi = %u\n", hi);
-    printf("\t\tlo = %u\n", lo);
-    printf("\t}\n");
-
-    SplitInt64(stats->chain_gets, hi, lo);
-    printf("\tchain_gets = {\n");
-    printf("\t\thi = %u\n", hi);
-    printf("\t\tlo = %u\n", lo);
-    printf("\t}\n");
-
-    SplitInt64(stats->chain_reorders, hi, lo);
-    printf("\tchain_reorders = {\n");
-    printf("\t\thi = %u\n", hi);
-    printf("\t\tlo = %u\n", lo);
-    printf("\t}\n");
+    printf("\tchain_looks = %"AFS_INT64_FMT"\n",
+	   stats->chain_looks);
+    printf("\tchain_gets = %"AFS_INT64_FMT"\n",
+	   stats->chain_gets);
+    printf("\tchain_reorders = %"AFS_INT64_FMT"\n",
+	   stats->chain_reorders);
 #endif /* AFS_DEMAND_ATTACH_FS */
 
     printf("}\n");
@@ -1396,7 +1315,7 @@ static int
 VGCQuery(struct cmd_syndesc * as, void * rock)
 {
     afs_int32 code;
-    struct state state;
+    struct fssync_state state;
     char * partName;
     VolumeId volid;
     FSSYNC_VGQry_response_t q_res;
@@ -1443,7 +1362,7 @@ static int
 VGCAdd(struct cmd_syndesc * as, void * rock)
 {
     afs_int32 code;
-    struct state state;
+    struct fssync_state state;
     char * partName;
     VolumeId parent, child;
     struct cmd_item *ti;
@@ -1478,7 +1397,7 @@ static int
 VGCDel(struct cmd_syndesc * as, void * rock)
 {
     afs_int32 code;
-    struct state state;
+    struct fssync_state state;
     char * partName;
     VolumeId parent, child;
     struct cmd_item *ti;
@@ -1513,7 +1432,7 @@ static int
 VGCScan(struct cmd_syndesc * as, void * rock)
 {
     afs_int32 code;
-    struct state state;
+    struct fssync_state state;
     char * partName;
     struct cmd_item *ti;
 
@@ -1536,7 +1455,7 @@ static int
 VGCScanAll(struct cmd_syndesc * as, void * rock)
 {
     afs_int32 code;
-    struct state state;
+    struct fssync_state state;
 
     common_prolog(as, &state);
     fprintf(stderr, "calling FSYNC_VCGScanAll\n");

@@ -26,12 +26,6 @@
 #ifdef	KERNEL
 #include "rx_kmutex.h"
 #include "rx_kernel.h"
-#include "rx_clock.h"
-#include "rx_event.h"
-#include "rx_queue.h"
-#include "rx_packet.h"
-#include "rx_misc.h"
-#include "rx_multi.h"
 #if defined (AFS_OBSD_ENV) && !defined (MLEN)
 #include "sys/mbuf.h"
 #endif
@@ -52,17 +46,129 @@
 #include <ws2tcpip.h>
 #endif
 # include "rx_user.h"
-# include "rx_clock.h"
-# include "rx_event.h"
-# include "rx_packet.h"
-# include "rx_misc.h"
-# include "rx_null.h"
-# include "rx_multi.h"
 #ifndef AFS_NT40_ENV
 # include <netinet/in.h>
 # include <sys/socket.h>
 #endif
 #endif /* KERNEL */
+
+#include <opr/queue.h>
+
+#include "rx_clock.h"
+#include "rx_event.h"
+#include "rx_misc.h"
+#include "rx_null.h"
+#include "rx_multi.h"
+
+/* These items are part of the new RX API. They're living in this section
+ * for now, to keep them separate from everything else... */
+
+struct rx_connection;
+struct rx_call;
+struct rx_packet;
+
+/* Connection management */
+
+extern afs_uint32  rx_GetConnectionEpoch(struct rx_connection *conn);
+extern afs_uint32  rx_GetConnectionId(struct rx_connection *conn);
+extern void *rx_GetSecurityData(struct rx_connection *conn);
+extern void  rx_SetSecurityData(struct rx_connection *conn, void *data);
+extern int  rx_IsUsingPktCksum(struct rx_connection *conn);
+extern void rx_SetSecurityHeaderSize(struct rx_connection *conn, afs_uint32 size);
+extern afs_uint32  rx_GetSecurityHeaderSize(struct rx_connection *conn);
+extern void rx_SetSecurityMaxTrailerSize(struct rx_connection *conn, afs_uint32 size);
+extern afs_uint32  rx_GetSecurityMaxTrailerSize(struct rx_connection *conn);
+extern void rx_SetMsgsizeRetryErr(struct rx_connection *conn, int err);
+extern int  rx_IsServerConn(struct rx_connection *conn);
+extern int  rx_IsClientConn(struct rx_connection *conn);
+extern struct rx_securityClass *rx_SecurityObjectOf(const struct rx_connection *);
+extern struct rx_peer *rx_PeerOf(struct rx_connection *);
+extern u_short rx_ServiceIdOf(struct rx_connection *);
+extern int rx_SecurityClassOf(struct rx_connection *);
+extern struct rx_service *rx_ServiceOf(struct rx_connection *);
+extern int rx_ConnError(struct rx_connection *);
+
+/* Call management */
+extern struct rx_connection *rx_ConnectionOf(struct rx_call *call);
+extern int rx_Error(struct rx_call *call);
+extern int rx_GetRemoteStatus(struct rx_call *call);
+extern void rx_SetLocalStatus(struct rx_call *call, int status);
+extern int rx_GetCallAbortCode(struct rx_call *call);
+extern void rx_SetCallAbortCode(struct rx_call *call, int code);
+
+extern void rx_RecordCallStatistics(struct rx_call *call,
+				    unsigned int rxInterface,
+				    unsigned int currentFunc,
+				    unsigned int totalFunc,
+				    int isServer);
+
+/* Peer management */
+extern afs_uint32 rx_HostOf(struct rx_peer *peer);
+extern u_short rx_PortOf(struct rx_peer *peer);
+
+/* Packets */
+
+/* Packet classes, for rx_AllocPacket and rx_packetQuota */
+#define	RX_PACKET_CLASS_RECEIVE	    0
+#define	RX_PACKET_CLASS_SEND	    1
+#define	RX_PACKET_CLASS_SPECIAL	    2
+#define	RX_PACKET_CLASS_RECV_CBUF   3
+#define	RX_PACKET_CLASS_SEND_CBUF   4
+
+#define	RX_N_PACKET_CLASSES	    5	/* Must agree with above list */
+
+#define	RX_PACKET_TYPES	    {"data", "ack", "busy", "abort", "ackall", "challenge", "response", "debug", "params", "unused", "unused", "unused", "version"}
+#define	RX_N_PACKET_TYPES	    13	/* Must agree with above list;
+					 * counts 0
+					 * WARNING: if this number ever
+					 * grows past 13, rxdebug packets
+					 * will need to be modified */
+
+
+/* For most Unixes, maximum elements in an iovec is 16 */
+#define RX_MAXIOVECS 16		        /* limit for ReadvProc/WritevProc */
+#define RX_MAXWVECS (RX_MAXIOVECS-1)	/* need one iovec for packet header */
+
+/* Debugging */
+
+/* Call flags, states and modes are exposed by the debug interface */
+#ifndef KDUMP_RX_LOCK
+/* Major call states */
+#define	RX_STATE_NOTINIT  0	/* Call structure has never been initialized */
+#define	RX_STATE_PRECALL  1	/* Server-only:  call is not in progress, but packets have arrived */
+#define	RX_STATE_ACTIVE	  2	/* An active call; a process is dealing with this call */
+#define	RX_STATE_DALLY	  3	/* Dallying after process is done with call */
+#define	RX_STATE_HOLD	  4	/* Waiting for acks on reply data packets */
+#define RX_STATE_RESET    5     /* Call is being reset */
+
+/* Call modes:  the modes of a call in RX_STATE_ACTIVE state (process attached) */
+#define	RX_MODE_SENDING	  1	/* Sending or ready to send */
+#define	RX_MODE_RECEIVING 2	/* Receiving or ready to receive */
+#define	RX_MODE_ERROR	  3	/* Something in error for current conversation */
+#define	RX_MODE_EOF	  4	/* Server has flushed (or client has read) last reply packet */
+
+/* Flags */
+#define	RX_CALL_READER_WAIT	   1	/* Reader is waiting for next packet */
+#define	RX_CALL_WAIT_WINDOW_ALLOC  2	/* Sender is waiting for window to allocate buffers */
+#define	RX_CALL_WAIT_WINDOW_SEND   4	/* Sender is waiting for window to send buffers */
+#define	RX_CALL_WAIT_PACKETS	   8	/* Sender is waiting for packet buffers */
+#define	RX_CALL_WAIT_PROC	  16	/* Waiting for a process to be assigned */
+#define	RX_CALL_RECEIVE_DONE	  32	/* All packets received on this call */
+#define	RX_CALL_CLEARED		  64	/* Receive queue cleared in precall state */
+#define	RX_CALL_TQ_BUSY		 128	/* Call's Xmit Queue is busy; don't modify */
+#define	RX_CALL_TQ_CLEARME	 256	/* Need to clear this call's TQ later */
+#define RX_CALL_TQ_SOME_ACKED    512	/* rxi_Start needs to discard ack'd packets. */
+#define RX_CALL_TQ_WAIT		1024	/* Reader is waiting for TQ_BUSY to be reset */
+#define RX_CALL_FAST_RECOVER    2048	/* call is doing congestion recovery */
+/* 4096 was RX_CALL_FAST_RECOVER_WAIT */
+#define RX_CALL_SLOW_START_OK   8192	/* receiver acks every other packet */
+#define RX_CALL_IOVEC_WAIT	16384	/* waiting thread is using an iovec */
+#define RX_CALL_HAVE_LAST	32768	/* Last packet has been received */
+#define RX_CALL_NEED_START	0x10000	/* tells rxi_Start to start again */
+/* 0x20000 was RX_CALL_PEER_BUSY */
+#define RX_CALL_ACKALL_SENT     0x40000 /* ACKALL has been sent on the call */
+#define RX_CALL_FLUSH		0x80000 /* Transmit queue should be flushed to peer */
+#endif
 
 
 /* Configurable parameters */
@@ -100,24 +206,8 @@ int ntoh_syserr_conv(int error);
 #define	RX_WAIT	    1
 #define	RX_DONTWAIT 0
 
-#define	rx_ConnectionOf(call)		((call)->conn)
-#define	rx_PeerOf(conn)			((conn)->peer)
-#define	rx_HostOf(peer)			((peer)->host)
-#define	rx_PortOf(peer)			((peer)->port)
-#define	rx_SetLocalStatus(call, status)	((call)->localStatus = (status))
 #define rx_GetLocalStatus(call, status) ((call)->localStatus)
-#define	rx_GetRemoteStatus(call)	((call)->remoteStatus)
-#define	rx_Error(call)			((call)->error)
-#define	rx_ConnError(conn)		((conn)->error)
-#define	rx_IsServerConn(conn)		((conn)->type == RX_SERVER_CONNECTION)
-#define	rx_IsClientConn(conn)		((conn)->type == RX_CLIENT_CONNECTION)
-/* Don't use these; use the IsServerConn style */
-#define	rx_ServerConn(conn)		((conn)->type == RX_SERVER_CONNECTION)
-#define	rx_ClientConn(conn)		((conn)->type == RX_CLIENT_CONNECTION)
-#define rx_IsUsingPktCksum(conn)	((conn)->flags & RX_CONN_USING_PACKET_CKSUM)
-#define rx_ServiceIdOf(conn)		((conn)->serviceId)
-#define	rx_SecurityClassOf(conn)	((conn)->securityIndex)
-#define rx_SecurityObjectOf(conn)	((conn)->securityObject)
+
 
 static_inline int
 rx_IsLoopbackAddr(afs_uint32 addr)
@@ -150,12 +240,6 @@ rx_IsLoopbackAddr(afs_uint32 addr)
 /* Define procedure to set service dead time */
 #define rx_SetIdleDeadTime(service,time) ((service)->idleDeadTime = (time))
 
-/*
- * Define error to return in server connections when failing to answer.
- * (server only) For example, AFS viced sends VNOSERVICE.
- */
-#define rx_SetServerIdleDeadErr(service,err) ((service)->idleDeadErr = (err))
-
 /* Define procedures for getting and setting before and after execute-request procs */
 #define rx_SetAfterProc(service,proc) ((service)->afterProc = (proc))
 #define rx_SetBeforeProc(service,proc) ((service)->beforeProc = (proc))
@@ -178,9 +262,6 @@ rx_IsLoopbackAddr(afs_uint32 addr)
 /* Set the overload threshold and the overload error */
 #define rx_SetBusyThreshold(threshold, code) (rx_BusyThreshold=(threshold),rx_BusyError=(code))
 
-/* Set the error to use for retrying a connection during MTU tuning */
-#define rx_SetMsgsizeRetryErr(conn, err) ((conn)->msgsizeRetryErr = (err))
-
 /* If this flag is set,no new requests are processed by rx, all new requests are
 returned with an error code of RX_CALL_DEAD ( transient error ) */
 #define	rx_SetRxTranquil()   		(rx_tranquil = 1)
@@ -192,8 +273,7 @@ returned with an error code of RX_CALL_DEAD ( transient error ) */
 #define rx_SetConnAbortThreshold(A) (rxi_connAbortThreshhold = (A))
 #define rx_SetConnAbortDelay(A) (rxi_connAbortDelay = (A))
 
-#define rx_GetCallAbortCode(call) ((call)->abortCode)
-#define rx_SetCallAbortCode(call, code) ((call)->abortCode = (code))
+
 
 #define cpspace(call) ((call)->curlen)
 #define cppos(call) ((call)->curpos)
@@ -219,76 +299,6 @@ returned with an error code of RX_CALL_DEAD ( transient error ) */
 #define rx_DisableHotThread()		(rx_enable_hot_thread = 0)
 
 #define rx_PutConnection(conn) rx_DestroyConnection(conn)
-
-/* A connection is an authenticated communication path, allowing
-   limited multiple asynchronous conversations. */
-#ifdef KDUMP_RX_LOCK
-struct rx_connection_rx_lock {
-    struct rx_connection_rx_lock *next;	/*  on hash chain _or_ free list */
-    struct rx_peer_rx_lock *peer;
-#else
-struct rx_connection {
-    struct rx_connection *next;	/*  on hash chain _or_ free list */
-    struct rx_peer *peer;
-#endif
-#ifdef	RX_ENABLE_LOCKS
-    afs_kmutex_t conn_call_lock;	/* locks conn_call_cv */
-    afs_kcondvar_t conn_call_cv;
-    afs_kmutex_t conn_data_lock;	/* locks packet data */
-#endif
-    afs_uint32 epoch;		/* Process start time of client side of connection */
-    afs_uint32 cid;		/* Connection id (call channel is bottom bits) */
-    afs_int32 error;		/* If this connection is in error, this is it */
-#ifdef KDUMP_RX_LOCK
-    struct rx_call_rx_lock *call[RX_MAXCALLS];
-#else
-    struct rx_call *call[RX_MAXCALLS];
-#endif
-    afs_uint32 callNumber[RX_MAXCALLS];	/* Current call numbers */
-    afs_uint32 rwind[RX_MAXCALLS];
-    u_short twind[RX_MAXCALLS];
-    afs_uint32 lastBusy[RX_MAXCALLS]; /* timestamp of the last time we got an
-                                       * RX_PACKET_TYPE_BUSY packet for this
-                                       * call slot, or 0 if the slot is not busy */
-    afs_uint32 serial;		/* Next outgoing packet serial number */
-    afs_uint32 lastSerial;	/* # of last packet received, for computing skew */
-    afs_int32 lastPacketSize; /* last >max attempt */
-    afs_int32 lastPacketSizeSeq; /* seq number of attempt */
-    afs_int32 lastPingSize; /* last MTU ping attempt */
-    afs_int32 lastPingSizeSer; /* serial of last MTU ping attempt */
-    struct rxevent *challengeEvent;	/* Scheduled when the server is challenging a     */
-    struct rxevent *delayedAbortEvent;	/* Scheduled to throttle looping client */
-    struct rxevent *checkReachEvent;	/* Scheduled when checking reachability */
-    int abortCount;		/* count of abort messages sent */
-    /* client-- to retransmit the challenge */
-    struct rx_service *service;	/* used by servers only */
-    u_short serviceId;		/* To stamp on requests (clients only) */
-    afs_uint32 refCount;	/* Reference count (rx_refcnt_mutex) */
-    u_char flags;		/* Defined below - (conn_data_lock) */
-    u_char type;		/* Type of connection, defined below */
-    u_char secondsUntilPing;	/* how often to ping for each active call */
-    u_char securityIndex;	/* corresponds to the security class of the */
-    /* securityObject for this conn */
-    struct rx_securityClass *securityObject;	/* Security object for this connection */
-    void *securityData;		/* Private data for this conn's security class */
-    u_short securityHeaderSize;	/* Length of security module's packet header data */
-    u_short securityMaxTrailerSize;	/* Length of security module's packet trailer data */
-
-    int timeout;		/* Overall timeout per call (seconds) for this conn */
-    int lastSendTime;		/* Last send time for this connection */
-    u_short secondsUntilDead;	/* Maximum silence from peer before RX_CALL_DEAD */
-    u_short hardDeadTime;	/* hard max for call execution */
-    u_short idleDeadTime;	/* max time a call can be idle (no data) */
-    u_char ackRate;		/* how many packets between ack requests */
-    u_char makeCallWaiters;	/* how many rx_NewCalls are waiting */
-    u_char idleDeadDetection;   /* detect idle dead timeouts? */
-    afs_int32 secondsUntilNatPing;	/* how often to ping conn */
-    struct rxevent *natKeepAliveEvent; /* Scheduled to keep connection open */
-    afs_int32 msgsizeRetryErr;
-    int nSpecific;		/* number entries in specific data */
-    void **specific;		/* pointer to connection specific data */
-};
-
 
 /* A service is installed by rx_NewService, and specifies a service type that
  * is exported by this process.  Incoming calls are stamped with the service
@@ -330,7 +340,6 @@ struct rx_service {
     u_short connDeadTime;	/* Seconds until a client of this service will be declared dead, if it is not responding */
     u_short idleDeadTime;	/* Time a server will wait for I/O to start up again */
     u_char checkReach;		/* Check for asymmetric clients? */
-    afs_int32 idleDeadErr;
     int nSpecific;		/* number entries in specific data */
     void **specific;		/* pointer to connection specific data */
 #ifdef	RX_ENABLE_LOCKS
@@ -340,109 +349,6 @@ struct rx_service {
 };
 
 #endif /* KDUMP_RX_LOCK */
-
-/* A server puts itself on an idle queue for a service using an
- * instance of the following structure.  When a call arrives, the call
- * structure pointer is placed in "newcall", the routine to execute to
- * service the request is placed in executeRequestProc, and the
- * process is woken up.  The queue entry's address is used for the
- * sleep/wakeup. If socketp is non-null, then this thread is willing
- * to become a listener thread. A thread sets *socketp to -1 before
- * sleeping. If *socketp is not -1 when the thread awakes, it is now
- * the listener thread for *socketp. When socketp is non-null, tno
- * contains the server's threadID, which is used to make decitions in GetCall.
- */
-#ifdef KDUMP_RX_LOCK
-struct rx_serverQueueEntry_rx_lock {
-#else
-struct rx_serverQueueEntry {
-#endif
-    struct rx_queue queueItemHeader;
-#ifdef KDUMP_RX_LOCK
-    struct rx_call_rx_lock *newcall;
-#else
-    struct rx_call *newcall;
-#endif
-#ifdef	RX_ENABLE_LOCKS
-    afs_kmutex_t lock;
-    afs_kcondvar_t cv;
-#endif
-    int tno;
-    osi_socket *socketp;
-};
-
-
-/* A peer refers to a peer process, specified by a (host,port) pair.  There may be more than one peer on a given host. */
-#ifdef KDUMP_RX_LOCK
-struct rx_peer_rx_lock {
-    struct rx_peer_rx_lock *next;	/* Next in hash conflict or free list */
-#else
-struct rx_peer {
-    struct rx_peer *next;	/* Next in hash conflict or free list */
-#endif
-#ifdef RX_ENABLE_LOCKS
-    afs_kmutex_t peer_lock;	/* Lock peer */
-#endif				/* RX_ENABLE_LOCKS */
-    afs_uint32 host;		/* Remote IP address, in net byte order */
-    u_short port;		/* Remote UDP port, in net byte order */
-
-    /* interface mtu probably used for this host  -  includes RX Header */
-    u_short ifMTU;		/* doesn't include IP header */
-
-    /* For garbage collection */
-    afs_uint32 idleWhen;	/* When the refcountwent to zero */
-    afs_uint32 refCount;	/* Reference count for this structure (rx_peerHashTable_lock) */
-
-    /* Congestion control parameters */
-    u_char burstSize;		/* Reinitialization size for the burst parameter */
-    u_char burst;		/* Number of packets that can be transmitted right now, without pausing */
-    struct clock burstWait;	/* Delay until new burst is allowed */
-    struct rx_queue congestionQueue;	/* Calls that are waiting for non-zero burst value */
-    int rtt;			/* Smoothed round trip time, measured in milliseconds/8 */
-    int rtt_dev;		/* Smoothed rtt mean difference, in milliseconds/4 */
-    int nSent;			/* Total number of distinct data packets sent, not including retransmissions */
-    int reSends;		/* Total number of retransmissions for this peer, since this structure was created */
-
-/* Skew: if a packet is received N packets later than expected (based
- * on packet serial numbers), then we define it to have a skew of N.
- * The maximum skew values allow us to decide when a packet hasn't
- * been received yet because it is out-of-order, as opposed to when it
- * is likely to have been dropped. */
-    afs_uint32 inPacketSkew;	/* Maximum skew on incoming packets */
-    afs_uint32 outPacketSkew;	/* Peer-reported max skew on our sent packets */
-    int rateFlag;		/* Flag for rate testing (-no 0yes +decrement) */
-
-    /* the "natural" MTU, excluding IP,UDP headers, is negotiated by the endpoints */
-    u_short natMTU;
-    u_short maxMTU;
-    /* negotiated maximum number of packets to send in a single datagram. */
-    u_short maxDgramPackets;
-    /* local maximum number of packets to send in a single datagram. */
-    u_short ifDgramPackets;
-    /*
-     * MTU, cwind, and nDgramPackets are used to initialize
-     * slow start parameters for new calls. These values are set whenever a
-     * call sends a retransmission and at the end of each call.
-     * congestSeq is incremented each time the congestion parameters are
-     * changed by a call recovering from a dropped packet. A call used
-     * MAX when updating congestion parameters if it started with the
-     * current congestion sequence number, otherwise it uses MIN.
-     */
-    u_short MTU;		/* MTU for AFS 3.4a jumboGrams */
-    u_short cwind;		/* congestion window */
-    u_short nDgramPackets;	/* number packets per AFS 3.5 jumbogram */
-    u_short congestSeq;		/* Changed when a call retransmits */
-    afs_hyper_t bytesSent;	/* Number of bytes sent to this peer */
-    afs_hyper_t bytesReceived;	/* Number of bytes received from this peer */
-    struct rx_queue rpcStats;	/* rpc statistic list */
-    int lastReachTime;		/* Last time we verified reachability */
-    afs_int32 maxPacketSize;    /* peer packetsize hint */
-
-#ifdef ADAPT_WINDOW
-    afs_int32 smRtt;
-    afs_int32 countDown;
-#endif
-};
 
 #ifndef KDUMP_RX_LOCK
 /* Flag bits for connection structure */
@@ -464,190 +370,7 @@ struct rx_peer {
 /* Maximum number of acknowledgements in an acknowledge packet */
 #define	RX_MAXACKS	    255
 
-/* Call structure:  only instantiated for active calls and dallying server calls.  The permanent call state (i.e. the call number as well as state shared with other calls associated with this connection) is maintained in the connection structure. */
-#ifdef KDUMP_RX_LOCK
-struct rx_call_rx_lock {
-#else
-struct rx_call {
-#endif
-    struct rx_queue queue_item_header;	/* Call can be on various queues (one-at-a-time) */
-    struct rx_queue tq;		/* Transmit packet queue */
-    struct rx_queue rq;		/* Receive packet queue */
-    /*
-     * The following fields are accessed while the call is unlocked.
-     * These fields are used by the caller/server thread to marshall
-     * and unmarshall RPC data. The only time they may be changed by
-     * other threads is when the RX_CALL_IOVEC_WAIT flag is set.
-     *
-     * NOTE: Be sure that these fields start and end on a double
-     *       word boundary. Otherwise threads that are changing
-     *       adjacent fields will cause problems.
-     */
-    struct rx_queue iovq;	/* readv/writev packet queue */
-    u_short nLeft;		/* Number bytes left in first receive packet */
-    u_short curvec;		/* current iovec in currentPacket */
-    u_short curlen;		/* bytes remaining in curvec */
-    u_short nFree;		/* Number bytes free in last send packet */
-    struct rx_packet *currentPacket;	/* Current packet being assembled or being read */
-    char *curpos;		/* current position in curvec */
-    /*
-     * End of fields accessed with call unlocked
-     */
-    u_char channel;		/* Index of call, within connection */
-    u_char state;		/* Current call state as defined below */
-    u_char mode;		/* Current mode of a call in ACTIVE state */
-#ifdef	RX_ENABLE_LOCKS
-    afs_kmutex_t lock;		/* lock covers data as well as mutexes. */
-    afs_kmutex_t *call_queue_lock;	/* points to lock for queue we're on,
-					 * if any. */
-    afs_kcondvar_t cv_twind;
-    afs_kcondvar_t cv_rq;
-    afs_kcondvar_t cv_tq;
-#endif
-#ifdef KDUMP_RX_LOCK
-    struct rx_connection_rx_lock *conn;	/* Parent connection for call */
-#else
-    struct rx_connection *conn;	/* Parent connection for this call */
-#endif
-    afs_uint32 *callNumber;	/* Pointer to call number field within connection */
-    afs_uint32 flags;		/* Some random flags */
-    u_char localStatus;		/* Local user status sent out of band */
-    u_char remoteStatus;	/* Remote user status received out of band */
-    afs_int32 error;		/* Error condition for this call */
-    afs_uint32 timeout;		/* High level timeout for this call */
-    afs_uint32 rnext;		/* Next sequence number expected to be read by rx_ReadData */
-    afs_uint32 rprev;		/* Previous packet received; used for deciding what the next packet to be received should be, in order to decide whether a negative acknowledge should be sent */
-    afs_uint32 rwind;		/* The receive window:  the peer must not send packets with sequence numbers >= rnext+rwind */
-    afs_uint32 tfirst;		/* First unacknowledged transmit packet number */
-    afs_uint32 tnext;		/* Next transmit sequence number to use */
-    afs_uint32 tprev;		/* Last packet that we saw an ack for */
-    u_short twind;		/* The transmit window:  we cannot assign a sequence number to a packet >= tfirst + twind */
-    u_short cwind;		/* The congestion window */
-    u_short nSoftAcked;		/* Number soft acked transmit packets */
-    u_short nextCwind;		/* The congestion window after recovery */
-    u_short nCwindAcks;		/* Number acks received at current cwind */
-    u_short ssthresh;		/* The slow start threshold */
-    u_short nDgramPackets;	/* Packets per AFS 3.5 jumbogram */
-    u_short nAcks;		/* The number of consecutive acks */
-    u_short nNacks;		/* Number packets acked that follow the
-				 * first negatively acked packet */
-    u_short nSoftAcks;		/* The number of delayed soft acks */
-    u_short nHardAcks;		/* The number of delayed hard acks */
-    u_short congestSeq;		/* Peer's congestion sequence counter */
-    int rtt;
-    int rtt_dev;
-    struct clock rto;		/* The round trip timeout calculated for this call */
-    struct rxevent *resendEvent;	/* If this is non-Null, there is a retransmission event pending */
-    struct rxevent *timeoutEvent;	/* If this is non-Null, then there is an overall timeout for this call */
-    struct rxevent *keepAliveEvent;	/* Scheduled periodically in active calls to keep call alive */
-    struct rxevent *growMTUEvent;      /* Scheduled periodically in active calls to discover true maximum MTU */
-    struct rxevent *delayedAckEvent;	/* Scheduled after all packets are received to send an ack if a reply or new call is not generated soon */
-    struct rxevent *delayedAbortEvent;	/* Scheduled to throttle looping client */
-    int abortCode;		/* error code from last RPC */
-    int abortCount;		/* number of times last error was sent */
-    u_int lastSendTime;		/* Last time a packet was sent on this call */
-    u_int lastReceiveTime;	/* Last time a packet was received for this call */
-    u_int lastSendData;		/* Last time a nonping was sent on this call */
-    void (*arrivalProc) (struct rx_call * call, void * mh, int index);	/* Procedure to call when reply is received */
-    void *arrivalProcHandle;	/* Handle to pass to replyFunc */
-    int arrivalProcArg;         /* Additional arg to pass to reply Proc */
-    afs_uint32 lastAcked;	/* last packet "hard" acked by receiver */
-    afs_uint32 startWait;	/* time server began waiting for input data/send quota */
-    struct clock traceWait;	/* time server began waiting for input data/send quota */
-    struct clock traceStart;	/* time the call started running */
-    u_short MTU;		/* size of packets currently sending */
-#ifdef RX_ENABLE_LOCKS
-    short refCount;		/* Used to keep calls from disappearring
-				 * when we get them from a queue. (rx_refcnt_lock) */
-#endif                          /* RX_ENABLE_LOCKS */
-/* Call refcount modifiers */
-#define RX_CALL_REFCOUNT_BEGIN  0	/* GetCall/NewCall/EndCall */
-#define RX_CALL_REFCOUNT_RESEND 1	/* resend event */
-#define RX_CALL_REFCOUNT_DELAY  2	/* delayed ack */
-#define RX_CALL_REFCOUNT_ALIVE  3	/* keep alive event */
-#define RX_CALL_REFCOUNT_PACKET 4	/* waiting for packets. */
-#define RX_CALL_REFCOUNT_SEND   5	/* rxi_Send */
-#define RX_CALL_REFCOUNT_ACKALL 6	/* rxi_AckAll */
-#define RX_CALL_REFCOUNT_ABORT  7	/* delayed abort */
-#define RX_CALL_REFCOUNT_MAX    8	/* array size. */
-#ifdef RX_REFCOUNT_CHECK
-    short refCDebug[RX_CALL_REFCOUNT_MAX];
-#endif				/* RX_REFCOUNT_CHECK */
-
-    /*
-     * iov, iovNBytes, iovMax, and iovNext are set in rxi_ReadvProc()
-     * and adjusted by rxi_FillReadVec().  iov does not own the buffers
-     * it refers to.  The buffers belong to the packets stored in iovq.
-     * Only one call to rx_ReadvProc() can be active at a time.
-     */
-
-    int iovNBytes;		/* byte count for current iovec */
-    int iovMax;			/* number elements in current iovec */
-    int iovNext;		/* next entry in current iovec */
-    struct iovec *iov;		/* current iovec */
-
-    struct clock queueTime;	/* time call was queued */
-    struct clock startTime;	/* time call was started */
-    afs_hyper_t bytesSent;	/* Number bytes sent */
-    afs_hyper_t bytesRcvd;	/* Number bytes received */
-    u_short tqWaiters;
-
-    struct rx_packet *xmitList[RX_MAXACKS]; /* Can't xmit more than we ack */
-                                /* Protected by setting RX_CALL_TQ_BUSY */
-#ifdef ADAPT_WINDOW
-    struct clock pingRequestTime;
-#endif
-#ifdef RXDEBUG_PACKET
-    u_short tqc;                /* packet count in tq */
-    u_short rqc;                /* packet count in rq */
-    u_short iovqc;              /* packet count in iovq */
-
-#ifdef KDUMP_RX_LOCK
-    struct rx_call_rx_lock *allNextp;
-#else
-    struct rx_call *allNextp;
-#endif
-    afs_uint32 call_id;
-#endif
-};
-
 #ifndef KDUMP_RX_LOCK
-/* Major call states */
-#define	RX_STATE_NOTINIT  0	/* Call structure has never been initialized */
-#define	RX_STATE_PRECALL  1	/* Server-only:  call is not in progress, but packets have arrived */
-#define	RX_STATE_ACTIVE	  2	/* An active call; a process is dealing with this call */
-#define	RX_STATE_DALLY	  3	/* Dallying after process is done with call */
-#define	RX_STATE_HOLD	  4	/* Waiting for acks on reply data packets */
-#define RX_STATE_RESET    5     /* Call is being reset */
-
-/* Call modes:  the modes of a call in RX_STATE_ACTIVE state (process attached) */
-#define	RX_MODE_SENDING	  1	/* Sending or ready to send */
-#define	RX_MODE_RECEIVING 2	/* Receiving or ready to receive */
-#define	RX_MODE_ERROR	  3	/* Something in error for current conversation */
-#define	RX_MODE_EOF	  4	/* Server has flushed (or client has read) last reply packet */
-
-/* Flags */
-#define	RX_CALL_READER_WAIT	   1	/* Reader is waiting for next packet */
-#define	RX_CALL_WAIT_WINDOW_ALLOC  2	/* Sender is waiting for window to allocate buffers */
-#define	RX_CALL_WAIT_WINDOW_SEND   4	/* Sender is waiting for window to send buffers */
-#define	RX_CALL_WAIT_PACKETS	   8	/* Sender is waiting for packet buffers */
-#define	RX_CALL_WAIT_PROC	  16	/* Waiting for a process to be assigned */
-#define	RX_CALL_RECEIVE_DONE	  32	/* All packets received on this call */
-#define	RX_CALL_CLEARED		  64	/* Receive queue cleared in precall state */
-#define	RX_CALL_TQ_BUSY		 128	/* Call's Xmit Queue is busy; don't modify */
-#define	RX_CALL_TQ_CLEARME	 256	/* Need to clear this call's TQ later */
-#define RX_CALL_TQ_SOME_ACKED    512	/* rxi_Start needs to discard ack'd packets. */
-#define RX_CALL_TQ_WAIT		1024	/* Reader is waiting for TQ_BUSY to be reset */
-#define RX_CALL_FAST_RECOVER    2048	/* call is doing congestion recovery */
-/* 4096 was RX_CALL_FAST_RECOVER_WAIT */
-#define RX_CALL_SLOW_START_OK   8192	/* receiver acks every other packet */
-#define RX_CALL_IOVEC_WAIT	16384	/* waiting thread is using an iovec */
-#define RX_CALL_HAVE_LAST	32768	/* Last packet has been received */
-#define RX_CALL_NEED_START	0x10000	/* tells rxi_Start to start again */
-#define RX_CALL_PEER_BUSY	0x20000 /* the last packet we received on this call was a
-                                         * BUSY packet; i.e. the channel for this call is busy */
-#define RX_CALL_ACKALL_SENT     0x40000 /* ACKALL has been sent on the call */
-
 
 /* The structure of the data portion of an acknowledge packet: An acknowledge
  * packet is in network byte order at all times.  An acknowledgement is always
@@ -720,6 +443,15 @@ struct rx_ackPacket {
 #define	RX_CHECKREACH_TTL	60	/* Re-check reachability this often */
 
 /*
+ * rx_GetNetworkError 'origin' constants. These define the meaning of the
+ * 'type' and 'code' values returned by rx_GetNetworkError.
+ */
+
+/* Used for ICMP errors; the type and code are the ICMP type and code,
+ * respectively */
+#define RX_NETWORK_ERROR_ORIGIN_ICMP (0)
+
+/*
  * RX error codes.  RX uses error codes from -1 to -64 and -100.
  * Rxgen uses other error codes < -64 (see src/rxgen/rpc_errors.h);
  * user programs are expected to return positive error codes
@@ -756,31 +488,39 @@ struct rx_ackPacket {
 /* EMSGSIZE returned from network.  Packet too big, must fragment */
 #define RX_MSGSIZE		    (-8)
 
-/*
- * Idle dead timeout error.  This error is never sent on the wire.
- * rxi_SendCallAbort() translates RX_CALL_IDLE to RX_CALL_TIMEOUT.
- */
-#define RX_CALL_IDLE                (-9)
+/* The value -9 was previously used for RX_CALL_IDLE but is now free for
+ * reuse. */
 
-/*
- * Busy call channel error.  This error is never sent on the wire.
- * rxi_SendCallAbort() translates RX_CALL_BUSY to RX_CALL_TIMEOUT.
- */
-#define RX_CALL_BUSY                (-10)
+/* The value -10 was previously used for RX_CALL_BUSY but is now free for
+ * reuse. */
 
 /* transient failure detected ( possibly the server is restarting ) */
 /* this should be equal to VRESTARTING ( util/errors.h ) for old clients to work */
 #define RX_RESTARTING		    (-100)
 
 typedef enum {
-    RX_SECIDX_NULL = 0,
-    RX_SECIDX_KAD  = 2,
-    RX_SECIDX_GK   = 4,
-    RX_SECIDX_K5   = 5,
+    RX_SECIDX_NULL = 0,		/** rxnull, no security. */
+    RX_SECIDX_VAB  = 1,		/** vice tokens with bcrypt.  Unused. */
+    RX_SECIDX_KAD  = 2,		/** kerberos/DES. */
+    RX_SECIDX_KAE  = 3,		/** rxkad, but always encrypt. */
+    RX_SECIDX_GK   = 4,		/** rxgk, RFC 3961 crypto. */
+    RX_SECIDX_K5   = 5,		/** kerberos 5 tickets as tokens. */
 } rx_securityIndex;
 
+/*
+ * We use an enum for the symbol definitions but have no need for a typedef
+ * because the enum is at least as wide as 'int' and these have to fit into
+ * a field of type 'char'.  Direct assigment will do the right thing if the
+ * enum value fits into that type.
+ */
+enum {
+    RX_SECTYPE_UNK = 0,
+    RX_SECTYPE_NULL = 1,
+    RX_SECTYPE_VAB = 2,
+    RX_SECTYPE_KAD = 3,
+};
 struct rx_securityObjectStats {
-    char type;			/* 0:unk 1:null,2:vab 3:kad */
+    char type;			/* An RX_SECTYPE_* value */
     char level;
     char sparec[10];		/* force correct alignment */
     afs_int32 flags;		/* 1=>unalloc, 2=>auth, 4=>expired */
@@ -875,6 +615,7 @@ struct rx_securityClass {
 #define RXS_DestroyConnection(obj,conn) RXS_OP(obj,DestroyConnection,(obj,conn))
 #define RXS_GetStats(obj,conn,stats) RXS_OP(obj,GetStats,(obj,conn,stats))
 #define RXS_SetConfiguration(obj, conn, type, value, currentValue) RXS_OP(obj, SetConfiguration,(obj,conn,type,value,currentValue))
+
 
 
 /* Structure for keeping rx statistics.  Note that this structure is returned
@@ -1051,46 +792,6 @@ struct rx_debugPeer {
 #define	RX_OTHER_IN	1	/* packets avail in in queue */
 #define	RX_OTHER_OUT	2	/* packets avail in out queue */
 
-
-
-/* Only include this once, even when re-loading for kdump. */
-#ifndef _CALL_REF_DEFINED_
-#define _CALL_REF_DEFINED_
-
-#ifdef RX_ENABLE_LOCKS
-#ifdef RX_REFCOUNT_CHECK
-/* RX_REFCOUNT_CHECK is used to test for call refcount leaks by event
- * type.
- */
-extern int rx_callHoldType;
-#define CALL_HOLD(call, type) do { \
-				 call->refCount++; \
-				 call->refCDebug[type]++; \
-				 if (call->refCDebug[type] > 50)  {\
-				     rx_callHoldType = type; \
-				     osi_Panic("Huge call refCount"); \
-							       } \
-			     } while (0)
-#define CALL_RELE(call, type) do { \
-				 call->refCount--; \
-				 call->refCDebug[type]--; \
-				 if (call->refCDebug[type] > 50) {\
-				     rx_callHoldType = type; \
-				     osi_Panic("Negative call refCount"); \
-							      } \
-			     } while (0)
-#else /* RX_REFCOUNT_CHECK */
-#define CALL_HOLD(call, type) 	 call->refCount++
-#define CALL_RELE(call, type)	 call->refCount--
-#endif /* RX_REFCOUNT_CHECK */
-
-#else /* RX_ENABLE_LOCKS */
-#define CALL_HOLD(call, type)
-#define CALL_RELE(call, type)
-#endif /* RX_ENABLE_LOCKS */
-
-#endif /* _CALL_REF_DEFINED_ */
-
 #define RX_SERVER_DEBUG_SEC_STATS		0x1
 #define RX_SERVER_DEBUG_ALL_CONN		0x2
 #define RX_SERVER_DEBUG_RX_STATS		0x4
@@ -1122,9 +823,9 @@ typedef struct rx_function_entry_v1 {
     afs_uint32 interfaceId;
     afs_uint32 func_total;
     afs_uint32 func_index;
-    afs_hyper_t invocations;
-    afs_hyper_t bytes_sent;
-    afs_hyper_t bytes_rcvd;
+    afs_uint64 invocations;
+    afs_uint64 bytes_sent;
+    afs_uint64 bytes_rcvd;
     struct clock queue_time_sum;
     struct clock queue_time_sum_sqr;
     struct clock queue_time_min;
@@ -1148,8 +849,8 @@ typedef struct rx_function_entry_v1 {
 #define RX_STATS_RETRIEVAL_FIRST_EDITION 1	/* first implementation */
 
 typedef struct rx_interface_stat {
-    struct rx_queue queue_header;
-    struct rx_queue all_peers;
+    struct opr_queue entry;
+    struct opr_queue entryPeers;
     rx_function_entry_v1_t stats[1];	/* make sure this is aligned correctly */
 } rx_interface_stat_t, *rx_interface_stat_p;
 
@@ -1157,57 +858,6 @@ typedef struct rx_interface_stat {
 
 #ifdef AFS_NT40_ENV
 extern int rx_DumpCalls(FILE *outputFile, char *cookie);
-
-#define rx_MutexIncrement(object, mutex) InterlockedIncrement(&object)
-#define rx_MutexAdd(object, addend, mutex) InterlockedExchangeAdd(&object, addend)
-#define rx_MutexDecrement(object, mutex) InterlockedDecrement(&object)
-#define rx_MutexAdd1Increment2(object1, addend, object2, mutex) \
-    do { \
-        MUTEX_ENTER(&mutex); \
-        object1 += addend; \
-        InterlockedIncrement(&object2); \
-        MUTEX_EXIT(&mutex); \
-    } while (0)
-#define rx_MutexAdd1Decrement2(object1, addend, object2, mutex) \
-    do { \
-        MUTEX_ENTER(&mutex); \
-        object1 += addend; \
-        InterlockedDecrement(&object2); \
-        MUTEX_EXIT(&mutex); \
-    } while (0)
-#else
-#define rx_MutexIncrement(object, mutex) \
-    do { \
-        MUTEX_ENTER(&mutex); \
-        object++; \
-        MUTEX_EXIT(&mutex); \
-    } while(0)
-#define rx_MutexAdd(object, addend, mutex) \
-    do { \
-        MUTEX_ENTER(&mutex); \
-        object += addend; \
-        MUTEX_EXIT(&mutex); \
-    } while(0)
-#define rx_MutexAdd1Increment2(object1, addend, object2, mutex) \
-    do { \
-        MUTEX_ENTER(&mutex); \
-        object1 += addend; \
-        object2++; \
-        MUTEX_EXIT(&mutex); \
-    } while(0)
-#define rx_MutexAdd1Decrement2(object1, addend, object2, mutex) \
-    do { \
-        MUTEX_ENTER(&mutex); \
-        object1 += addend; \
-        object2--; \
-        MUTEX_EXIT(&mutex); \
-    } while(0)
-#define rx_MutexDecrement(object, mutex) \
-    do { \
-        MUTEX_ENTER(&mutex); \
-        object--; \
-        MUTEX_EXIT(&mutex); \
-    } while(0)
 #endif
 
 #endif /* _RX_   End of rx.h */
@@ -1218,4 +868,105 @@ extern int rx_DumpCalls(FILE *outputFile, char *cookie);
 #include "rx_prototypes.h"
 #endif
 
+static_inline afs_uint32
+RPCOpStat_Peer(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return rpcop_stat->remote_peer;
+}
+
+static_inline afs_uint32
+RPCOpStat_Port(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return rpcop_stat->remote_port;
+}
+
+static_inline afs_uint32
+RPCOpStat_IsServer(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return rpcop_stat->remote_is_server;
+}
+
+static_inline afs_uint32
+RPCOpStat_InterfaceId(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return rpcop_stat->interfaceId;
+}
+
+static_inline afs_uint32
+RPCOpStat_NumFuncs(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return rpcop_stat->func_total;
+}
+
+static_inline afs_uint32
+RPCOpStat_CurFunc(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return rpcop_stat->func_index;
+}
+
+static_inline struct clock *
+RPCOpStat_QTimeSum(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return &(rpcop_stat->queue_time_sum);
+}
+
+static_inline struct clock *
+RPCOpStat_QTimeSumSqr(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return &(rpcop_stat->queue_time_sum_sqr);
+}
+
+static_inline struct clock *
+RPCOpStat_QTimeSumMin(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return &(rpcop_stat->queue_time_min);
+}
+
+static_inline struct clock *
+RPCOpStat_QTimeSumMax(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return &(rpcop_stat->queue_time_max);
+}
+
+static_inline struct clock *
+RPCOpStat_ExecTimeSum(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return &(rpcop_stat->execution_time_sum);
+}
+
+static_inline struct clock *
+RPCOpStat_ExecTimeSumSqr(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return &(rpcop_stat->execution_time_sum_sqr);
+}
+
+static_inline struct clock *
+RPCOpStat_ExecTimeSumMin(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return &(rpcop_stat->execution_time_min);
+}
+
+static_inline struct clock *
+RPCOpStat_ExecTimeSumMax(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return &(rpcop_stat->execution_time_max);
+}
+
+static_inline afs_uint64
+RPCOpStat_NumCalls(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return rpcop_stat->invocations;
+}
+
+static_inline afs_uint64
+RPCOpStat_BytesSent(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return rpcop_stat->bytes_sent;
+}
+
+static_inline afs_uint64
+RPCOpStat_BytesRcvd(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return rpcop_stat->bytes_rcvd;
+}
 #endif /* !KDUMP_RX_LOCK */

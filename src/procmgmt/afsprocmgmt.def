@@ -8,3 +8,5 @@ EXPORTS
 	pmgt_ProcessWaitPid		@7
 	pmgt_spawnData			@8  DATA
 	pmgt_spawnDataLen		@9  DATA
+	pmgt_SignalInit			@10
+	pmgt_SignalRegister		@11

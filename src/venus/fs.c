@@ -9,29 +9,19 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
+#include <roken.h>
+#include <ctype.h>
+#include <assert.h>
 
 #include <afs/afs_consts.h>
 #include <afs/afs_args.h>
 #include <rx/xdr.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <errno.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <netinet/in.h>
-#include <sys/stat.h>
-#include <afs/stds.h>
 #include <afs/vice.h>
 #include <afs/venus.h>
 #include <afs/com_err.h>
 #include <afs/afs_consts.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
-
-#include <string.h>
 
 #undef VIRTUE
 #undef VICE
@@ -45,10 +35,7 @@
 #include <afs/volser.h>
 #include <afs/vlserver.h>
 #include <afs/cmd.h>
-#include <afs/afsutil.h>
 #include <afs/com_err.h>
-#include <stdlib.h>
-#include <assert.h>
 #include <afs/ptclient.h>
 #include <afs/ptuser.h>
 #include <afs/afsutil.h>
@@ -80,7 +67,6 @@ static int PruneList(struct AclEntry **, int);
 static int CleanAcl(struct Acl *, char *);
 static int SetVolCmd(struct cmd_syndesc *as, void *arock);
 static int GetCellName(char *, struct afsconf_cell *);
-static int VLDBInit(int, struct afsconf_cell *);
 static void Die(int, char *);
 
 /*
@@ -310,7 +296,7 @@ Parent(char *apath)
     tp = strrchr(tspace, '/');
     if (tp == (char *)tspace)
 	tp++;
-    else if (tp == (char *)NULL) {
+    else if (tp == NULL) {
 	tp      = (char *)tspace;
 	*(tp++) = '.';
     }
@@ -318,16 +304,32 @@ Parent(char *apath)
     return tspace;
 }
 
-enum rtype { add, destroy, deny };
+                                /* added relative add resp. delete    */
+                                /* (so old add really means to set)   */
+enum rtype { add, destroy, deny, reladd, reldel };
 
 static afs_int32
 Convert(char *arights, int dfs, enum rtype *rtypep)
 {
-    int i, len;
     afs_int32 mode;
     char tc;
+    char *tcp;                  /* to walk through the rights string  */
 
     *rtypep = add;		/* add rights, by default */
+
+                                /* analyze last character of string   */
+    tcp = arights + strlen(arights);
+    if ( tcp-- > arights ) {    /* assure non-empty string            */
+        if ( *tcp == '+' )
+            *rtypep = reladd;   /* '+' indicates more rights          */
+        else if ( *tcp == '-' )
+            *rtypep = reldel;   /* '-' indicates less rights          */
+        else if ( *tcp == '=' )
+            *rtypep = add;      /* '=' also allows old behaviour      */
+        else
+            tcp++;              /* back to original null byte         */
+        *tcp = '\0';            /* do not disturb old strcmp-s        */
+    }
 
     if (dfs) {
 	if (!strcmp(arights, "null")) {
@@ -358,10 +360,9 @@ Convert(char *arights, int dfs, enum rtype *rtypep)
 	*rtypep = destroy;	/* Remove entire entry */
 	return 0;
     }
-    len = strlen(arights);
     mode = 0;
-    for (i = 0; i < len; i++) {
-	tc = *arights++;
+    tcp = arights;
+    while ((tc = *tcp++ )) {
 	if (dfs) {
 	    if (tc == '-')
 		continue;
@@ -458,32 +459,47 @@ SetDotDefault(struct cmd_item **aitemp)
     if (*aitemp)
 	return;			/* already has value */
     /* otherwise, allocate an item representing "." */
-    ti = (struct cmd_item *)malloc(sizeof(struct cmd_item));
+    ti = malloc(sizeof(struct cmd_item));
     assert(ti);
     ti->next = (struct cmd_item *)0;
-    ti->data = (char *)malloc(2);
+    ti->data = malloc(2);
     assert(ti->data);
     strcpy(ti->data, ".");
     *aitemp = ti;
 }
 
 static void
-ChangeList(struct Acl *al, afs_int32 plus, char *aname, afs_int32 arights)
+ChangeList(struct Acl *al, afs_int32 plus, char *aname, afs_int32 arights,
+	   enum rtype *artypep)
 {
     struct AclEntry *tlist;
     tlist = (plus ? al->pluslist : al->minuslist);
     tlist = FindList(tlist, aname);
     if (tlist) {
-	/* Found the item already in the list. */
-	tlist->rights = arights;
+	/* Found the item already in the list.
+	 * modify rights in case of reladd and reladd only,
+	 * use standard - add, ie. set - otherwise
+	 */
+        if ( artypep == NULL )
+            tlist->rights = arights;
+        else if ( *artypep == reladd )
+            tlist->rights |= arights;
+        else if ( *artypep == reldel )
+            tlist->rights &= ~arights;
+        else
+            tlist->rights = arights;
+
 	if (plus)
 	    al->nplus -= PruneList(&al->pluslist, al->dfs);
 	else
 	    al->nminus -= PruneList(&al->minuslist, al->dfs);
 	return;
     }
+    if ( artypep != NULL && *artypep == reldel )
+        return;                 /* can't reduce non-existing rights   */
+
     /* Otherwise we make a new item and plug in the new data. */
-    tlist = (struct AclEntry *)malloc(sizeof(struct AclEntry));
+    tlist = malloc(sizeof(struct AclEntry));
     assert(tlist);
     strcpy(tlist->name, aname);
     tlist->rights = arights;
@@ -556,7 +572,7 @@ EmptyAcl(char *astr)
     struct Acl *tp;
     int junk;
 
-    tp = (struct Acl *)malloc(sizeof(struct Acl));
+    tp = malloc(sizeof(struct Acl));
     assert(tp);
     tp->nplus = tp->nminus = 0;
     tp->pluslist = tp->minuslist = 0;
@@ -573,7 +589,7 @@ ParseAcl(char *astr)
     struct AclEntry *first, *last, *tl;
     struct Acl *ta;
 
-    ta = (struct Acl *)malloc(sizeof(struct Acl));
+    ta = malloc(sizeof(struct Acl));
     assert(ta);
     ta->dfs = 0;
     sscanf(astr, "%d dfs:%d %1024s", &ta->nplus, &ta->dfs, ta->cell);
@@ -589,7 +605,7 @@ ParseAcl(char *astr)
     for (i = 0; i < nplus; i++) {
 	sscanf(astr, "%99s %d", tname, &trights);
 	astr = SkipLine(astr);
-	tl = (struct AclEntry *)malloc(sizeof(struct AclEntry));
+	tl = malloc(sizeof(struct AclEntry));
 	assert(tl);
 	if (!first)
 	    first = tl;
@@ -607,7 +623,7 @@ ParseAcl(char *astr)
     for (i = 0; i < nminus; i++) {
 	sscanf(astr, "%99s %d", tname, &trights);
 	astr = SkipLine(astr);
-	tl = (struct AclEntry *)malloc(sizeof(struct AclEntry));
+	tl = malloc(sizeof(struct AclEntry));
 	assert(tl);
 	if (!first)
 	    first = tl;
@@ -834,7 +850,7 @@ SetACLCmd(struct cmd_syndesc *as, void *arock)
 		plusp = 0;
 	    if (rtype == destroy && ta->dfs)
 		rights = -1;
-	    ChangeList(ta, plusp, ui->data, rights);
+	    ChangeList(ta, plusp, ui->data, rights, &rtype);
 	}
 	blob.in = AclToString(ta);
 	blob.out_size = 0;
@@ -961,10 +977,11 @@ CopyACLCmd(struct cmd_syndesc *as, void *arock)
 	    }
 	    strcpy(ta->cell, fa->cell);
 	}
+                                /* NULL rtype for standard handling   */
 	for (tp = fa->pluslist; tp; tp = tp->next)
-	    ChangeList(ta, 1, tp->name, tp->rights);
+	    ChangeList(ta, 1, tp->name, tp->rights, NULL);
 	for (tp = fa->minuslist; tp; tp = tp->next)
-	    ChangeList(ta, 0, tp->name, tp->rights);
+	    ChangeList(ta, 0, tp->name, tp->rights, NULL);
 	blob.in = AclToString(ta);
 	blob.out_size = 0;
 	blob.in_size = 1 + strlen(blob.in);
@@ -1706,102 +1723,126 @@ QuotaCmd(struct cmd_syndesc *as, void *arock)
 }
 
 static int
+GetLastComponent(const char *data, char **outdir, char **outbase,
+		 int *thru_symlink)
+{
+    char orig_name[MAXPATHLEN];	/*Original name, may be modified */
+    char true_name[MAXPATHLEN];	/*``True'' dirname (e.g., symlink target) */
+    char *lastSlash;
+    struct stat statbuff;	/*Buffer for status info */
+    int link_chars_read;	/*Num chars read in readlink() */
+    char *dirname = NULL;
+    char *basename = NULL;
+
+    *outbase = NULL;
+    *outdir = NULL;
+
+    if (thru_symlink)
+	*thru_symlink = 0;
+
+    snprintf(orig_name, sizeof(orig_name), "%s%s",
+	     (data[0] == '/') ? "" : "./", data);
+
+    if (lstat(orig_name, &statbuff) < 0) {
+	/* if lstat fails, we should still try the pioctl, since it
+	 * may work (for example, lstat will fail, but pioctl will
+	 * work if the volume of offline (returning ENODEV). */
+	statbuff.st_mode = S_IFDIR;	/* lie like pros */
+    }
+
+    /*
+     * The lstat succeeded.  If the given file is a symlink, substitute
+     * the file name with the link name.
+     */
+    if ((statbuff.st_mode & S_IFMT) == S_IFLNK) {
+	if (thru_symlink)
+	     *thru_symlink = 1;
+
+	/* Read name of resolved file (leave space for NULL!) */
+	link_chars_read = readlink(orig_name, true_name, MAXPATHLEN-1);
+	if (link_chars_read <= 0) {
+	    fprintf(stderr,
+		    "%s: Can't read target name for '%s' symbolic link!\n",
+		    pn, orig_name);
+	    goto out;
+	}
+
+	/* Add a trailing null to what was read, bump the length. */
+	true_name[link_chars_read++] = 0;
+
+	/*
+	 * If the symlink is an absolute pathname, we're fine.  Otherwise, we
+	 * have to create a full pathname using the original name and the
+	 * relative symlink name.  Find the rightmost slash in the original
+	 * name (we know there is one) and splice in the symlink value.
+	 */
+	if (true_name[0] != '/') {
+	    lastSlash = strrchr(orig_name, '/');
+	    strcpy(++lastSlash, true_name);
+	    strcpy(true_name, orig_name);
+	}
+     } else {
+	strcpy(true_name, orig_name);
+     }
+
+    /* Find rightmost slash, if any. */
+    lastSlash = strrchr(true_name, '/');
+    if (lastSlash == true_name) {
+	dirname = strdup("/");
+	basename = strdup(lastSlash+1);
+    } else if (lastSlash != NULL) {
+	/*
+	 * Found it.  Designate everything before it as the parent directory,
+	 * everything after it as the final component.
+	 */
+	*lastSlash = '\0';
+	dirname = strdup(true_name);
+	basename = strdup(lastSlash+1);
+    } else {
+	/*
+	 * No slash appears in the given file name.  Set parent_dir to the current
+	 * directory, and the last component as the given name.
+	 */
+	dirname = strdup(".");
+	basename = strdup(true_name);
+    }
+
+    if (strcmp(basename, ".") == 0
+	|| strcmp(basename, "..") == 0) {
+	fprintf(stderr,
+		"%s: you may not use '.' or '..' as the last component\n", pn);
+	fprintf(stderr, "%s: of a name in this fs command.\n", pn);
+	goto out;
+    }
+
+    *outdir = dirname;
+    *outbase = basename;
+
+    return 0;
+
+out:
+    if (dirname)
+	free(dirname);
+    if (basename)
+	free(basename);
+    return -1;
+}
+
+
+static int
 ListMountCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
     struct cmd_item *ti;
-    char orig_name[1024];	/*Original name, may be modified */
-    char true_name[1024];	/*``True'' dirname (e.g., symlink target) */
-    char parent_dir[1024];	/*Parent directory of true name */
-    char *last_component;	/*Last component of true name */
-    struct stat statbuff;	/*Buffer for status info */
-    int link_chars_read;	/*Num chars read in readlink() */
-    int thru_symlink;		/*Did we get to a mount point via a symlink? */
+    char *last_component;
+    char *parent_dir;
+    int thru_symlink = 0;
     int error = 0;
 
     for (ti = as->parms[0].items; ti; ti = ti->next) {
-	/* once per file */
-	thru_symlink = 0;
-	sprintf(orig_name, "%s%s", (ti->data[0] == '/') ? "" : "./",
-		ti->data);
-
-	if (lstat(orig_name, &statbuff) < 0) {
-	    /* if lstat fails, we should still try the pioctl, since it
-	     * may work (for example, lstat will fail, but pioctl will
-	     * work if the volume of offline (returning ENODEV). */
-	    statbuff.st_mode = S_IFDIR;	/* lie like pros */
-	}
-
-	/*
-	 * The lstat succeeded.  If the given file is a symlink, substitute
-	 * the file name with the link name.
-	 */
-	if ((statbuff.st_mode & S_IFMT) == S_IFLNK) {
-	    thru_symlink = 1;
-	    /*
-	     * Read name of resolved file.
-	     */
-	    link_chars_read = readlink(orig_name, true_name, 1024 - 1);
-	    if (link_chars_read <= 0) {
-		fprintf(stderr,
-			"%s: Can't read target name for '%s' symbolic link!\n",
-			pn, orig_name);
-		error = 1;
-		continue;
-	    }
-
-	    /*
-	     * Add a trailing null to what was read, bump the length.
-	     */
-	    true_name[link_chars_read++] = 0;
-
-	    /*
-	     * If the symlink is an absolute pathname, we're fine.  Otherwise, we
-	     * have to create a full pathname using the original name and the
-	     * relative symlink name.  Find the rightmost slash in the original
-	     * name (we know there is one) and splice in the symlink value.
-	     */
-	    if (true_name[0] != '/') {
-		last_component = (char *)strrchr(orig_name, '/');
-		strcpy(++last_component, true_name);
-		strcpy(true_name, orig_name);
-	    }
-	} else
-	    strcpy(true_name, orig_name);
-
-	/*
-	 * Find rightmost slash, if any.
-	 */
-	last_component = (char *)strrchr(true_name, '/');
-	if (last_component == (char *)true_name) {
-	    strcpy(parent_dir, "/");
-	    last_component++;
-	}
-	else if (last_component != (char *)NULL) {
-	    /*
-	     * Found it.  Designate everything before it as the parent directory,
-	     * everything after it as the final component.
-	     */
-	    strncpy(parent_dir, true_name, last_component - true_name);
-	    parent_dir[last_component - true_name] = 0;
-	    last_component++;	/*Skip the slash */
-	} else {
-	    /*
-	     * No slash appears in the given file name.  Set parent_dir to the current
-	     * directory, and the last component as the given name.
-	     */
-	    strcpy(parent_dir, ".");
-	    last_component = true_name;
-	}
-
-	if (strcmp(last_component, ".") == 0
-	    || strcmp(last_component, "..") == 0) {
-	    fprintf(stderr,
-		    "%s: you may not use '.' or '..' as the last component\n",
-		    pn);
-	    fprintf(stderr, "%s: of a name in the 'fs lsmount' command.\n",
-		    pn);
+	if (GetLastComponent(ti->data, &parent_dir,
+			     &last_component, &thru_symlink) != 0) {
 	    error = 1;
 	    continue;
 	}
@@ -1813,6 +1854,7 @@ ListMountCmd(struct cmd_syndesc *as, void *arock)
 	memset(space, 0, AFS_PIOCTL_MAXSIZE);
 
 	code = pioctl(parent_dir, VIOC_AFS_STAT_MT_PT, &blob, 1);
+	free(last_component);
 
 	if (code == 0) {
 	    printf("'%s' is a %smount point for volume '%s'\n", ti->data,
@@ -1826,6 +1868,7 @@ ListMountCmd(struct cmd_syndesc *as, void *arock)
 	    }
 	    error = 1;
 	}
+	free(parent_dir);
     }
     return error;
 }
@@ -1838,6 +1881,7 @@ MakeMountCmd(struct cmd_syndesc *as, void *arock)
     struct afsconf_cell info;
     struct vldbentry vldbEntry;
     struct ViceIoctl blob;
+    struct afsconf_dir *dir;
 
 /*
 
@@ -1896,14 +1940,31 @@ defect #3069
 	}
     }
 
-    code = GetCellName(cellName ? cellName : space, &info);
+    dir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH);
+    if (!dir) {
+	fprintf(stderr,
+		"Could not process files in configuration directory (%s).\n",
+		AFSDIR_CLIENT_ETC_DIRPATH);
+        return 1;
+    }
+
+    code = afsconf_GetCellInfo(dir, cellName ? cellName : space,
+		               AFSCONF_VLDBSERVICE, &info);
     if (code) {
+	fprintf(stderr,
+		"%s: cell %s not in %s\n", pn, cellName ? cellName : space,
+		AFSDIR_CLIENT_CELLSERVDB_FILEPATH);
 	return 1;
     }
+
     if (!(as->parms[4].items)) {
 	/* not fast, check which cell the mountpoint is being created in */
-	/* not fast, check name with VLDB */
-	code = VLDBInit(1, &info);
+	code = ugen_ClientInitCell(dir, &info,
+				   AFSCONF_SECOPTS_FALLBACK_NULL |
+				   AFSCONF_SECOPTS_NOAUTH,
+				   &uclient, VLDB_MAXSERVERS,
+				   AFSCONF_VLDBSERVICE, 50);
+
 	if (code == 0) {
 	    /* make the check.  Don't complain if there are problems with init */
 	    code =
@@ -3015,25 +3076,10 @@ GetCellName(char *cellName, struct afsconf_cell *info)
     return 0;
 }
 
-
-static int
-VLDBInit(int noAuthFlag, struct afsconf_cell *info)
-{
-    afs_int32 code;
-
-    code = ugen_ClientInit(noAuthFlag, (char *) AFSDIR_CLIENT_ETC_DIRPATH,
-			   info->name, 0, &uclient,
-                           NULL, pn, rxkad_clear,
-                           VLDB_MAXSERVERS, AFSCONF_VLDBSERVICE, 50,
-                           0, 0, USER_SERVICE_ID);
-    rxInitDone = 1;
-    return code;
-}
-
 static struct ViceIoctl gblob;
 static int debug = 0;
 /*
- * here follow some routines in suport of the setserverprefs and
+ * here follow some routines in support of the setserverprefs and
  * getserverprefs commands.  They are:
  * SetPrefCmd  "top-level" routine
  * addServer   adds a server to the list of servers to be poked into the
@@ -3602,17 +3648,17 @@ main(int argc, char **argv)
 #endif
 
     /* try to find volume location information */
-    ts = cmd_CreateSyntax("getclientaddrs", GetClientAddrsCmd, NULL,
+    ts = cmd_CreateSyntax("getclientaddrs", GetClientAddrsCmd, NULL, 0,
 			  "get client network interface addresses");
     cmd_CreateAlias(ts, "gc");
 
-    ts = cmd_CreateSyntax("setclientaddrs", SetClientAddrsCmd, NULL,
+    ts = cmd_CreateSyntax("setclientaddrs", SetClientAddrsCmd, NULL, 0,
 			  "set client network interface addresses");
     cmd_AddParm(ts, "-address", CMD_LIST, CMD_OPTIONAL | CMD_EXPANDS,
 		"client network interfaces");
     cmd_CreateAlias(ts, "sc");
 
-    ts = cmd_CreateSyntax("setserverprefs", SetPrefCmd, NULL,
+    ts = cmd_CreateSyntax("setserverprefs", SetPrefCmd, NULL, 0,
 			  "set server ranks");
     cmd_AddParm(ts, "-servers", CMD_LIST, CMD_OPTIONAL | CMD_EXPANDS,
 		"fileserver names and ranks");
@@ -3623,7 +3669,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-stdin", CMD_FLAG, CMD_OPTIONAL, "input from stdin");
     cmd_CreateAlias(ts, "sp");
 
-    ts = cmd_CreateSyntax("getserverprefs", GetPrefCmd, NULL,
+    ts = cmd_CreateSyntax("getserverprefs", GetPrefCmd, NULL, 0,
 			  "get server ranks");
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_OPTIONAL,
 		"output to named file");
@@ -3632,7 +3678,7 @@ main(int argc, char **argv)
 /*    cmd_AddParm(ts, "-cell", CMD_FLAG, CMD_OPTIONAL, "cellname"); */
     cmd_CreateAlias(ts, "gp");
 
-    ts = cmd_CreateSyntax("setacl", SetACLCmd, NULL, "set access control list");
+    ts = cmd_CreateSyntax("setacl", SetACLCmd, NULL, 0, "set access control list");
     cmd_AddParm(ts, "-dir", CMD_LIST, 0, "directory");
     cmd_AddParm(ts, "-acl", CMD_LIST, 0, "access list entries");
     cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, "clear access list");
@@ -3645,7 +3691,7 @@ main(int argc, char **argv)
 		"initial file acl (DFS only)");
     cmd_CreateAlias(ts, "sa");
 
-    ts = cmd_CreateSyntax("listacl", ListACLCmd, NULL,
+    ts = cmd_CreateSyntax("listacl", ListACLCmd, NULL, 0,
 			  "list access control list");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
     parm_listacl_id = ts->nParms;
@@ -3654,16 +3700,16 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-cmd", CMD_FLAG, CMD_OPTIONAL, "output as 'fs setacl' command");
     cmd_CreateAlias(ts, "la");
 
-    ts = cmd_CreateSyntax("getcalleraccess", GetCallerAccess, NULL,
+    ts = cmd_CreateSyntax("getcalleraccess", GetCallerAccess, NULL, 0,
             "list callers access");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
     cmd_CreateAlias(ts, "gca");
 
-    ts = cmd_CreateSyntax("cleanacl", CleanACLCmd, NULL,
+    ts = cmd_CreateSyntax("cleanacl", CleanACLCmd, NULL, 0,
 			  "clean up access control list");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
 
-    ts = cmd_CreateSyntax("copyacl", CopyACLCmd, NULL,
+    ts = cmd_CreateSyntax("copyacl", CopyACLCmd, NULL, 0,
 			  "copy access control list");
     cmd_AddParm(ts, "-fromdir", CMD_SINGLE, 0,
 		"source directory (or DFS file)");
@@ -3677,13 +3723,13 @@ main(int argc, char **argv)
 
     cmd_CreateAlias(ts, "ca");
 
-    ts = cmd_CreateSyntax("flush", FlushCmd, NULL, "flush file from cache");
+    ts = cmd_CreateSyntax("flush", FlushCmd, NULL, 0, "flush file from cache");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
-    ts = cmd_CreateSyntax("flushmount", FlushMountCmd, NULL,
+    ts = cmd_CreateSyntax("flushmount", FlushMountCmd, NULL, 0,
 			  "flush mount symlink from cache");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
 
-    ts = cmd_CreateSyntax("setvol", SetVolCmd, NULL, "set volume status");
+    ts = cmd_CreateSyntax("setvol", SetVolCmd, NULL, 0, "set volume status");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
     cmd_AddParm(ts, "-max", CMD_SINGLE, CMD_OPTIONAL,
 		"disk space quota in 1K units");
@@ -3696,34 +3742,34 @@ main(int argc, char **argv)
 		"offline message");
     cmd_CreateAlias(ts, "sv");
 
-    ts = cmd_CreateSyntax("messages", MessagesCmd, NULL,
+    ts = cmd_CreateSyntax("messages", MessagesCmd, NULL, 0,
 			  "control Cache Manager messages");
     cmd_AddParm(ts, "-show", CMD_SINGLE, CMD_OPTIONAL,
 		"[user|console|all|none]");
 
-    ts = cmd_CreateSyntax("examine", ExamineCmd, NULL, "display file/volume status");
+    ts = cmd_CreateSyntax("examine", ExamineCmd, NULL, 0, "display file/volume status");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
     cmd_CreateAlias(ts, "lv");
     cmd_CreateAlias(ts, "listvol");
 
-    ts = cmd_CreateSyntax("listquota", ListQuotaCmd, NULL, "list volume quota");
+    ts = cmd_CreateSyntax("listquota", ListQuotaCmd, NULL, 0, "list volume quota");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
     cmd_AddParm(ts, "-human", CMD_FLAG, CMD_OPTIONAL, "human-readable listing");
     cmd_CreateAlias(ts, "lq");
 
-    ts = cmd_CreateSyntax("diskfree", DiskFreeCmd, NULL,
+    ts = cmd_CreateSyntax("diskfree", DiskFreeCmd, NULL, 0,
 			  "show server disk space usage");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
     cmd_AddParm(ts, "-human", CMD_FLAG, CMD_OPTIONAL, "human-readable listing");
     cmd_CreateAlias(ts, "df");
 
-    ts = cmd_CreateSyntax("quota", QuotaCmd, NULL, "show volume quota usage");
+    ts = cmd_CreateSyntax("quota", QuotaCmd, NULL, 0, "show volume quota usage");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
 
-    ts = cmd_CreateSyntax("lsmount", ListMountCmd, NULL, "list mount point");
+    ts = cmd_CreateSyntax("lsmount", ListMountCmd, NULL, 0, "list mount point");
     cmd_AddParm(ts, "-dir", CMD_LIST, 0, "directory");
 
-    ts = cmd_CreateSyntax("mkmount", MakeMountCmd, NULL, "make mount point");
+    ts = cmd_CreateSyntax("mkmount", MakeMountCmd, NULL, 0, "make mount point");
     cmd_AddParm(ts, "-dir", CMD_SINGLE, 0, "directory");
     cmd_AddParm(ts, "-vol", CMD_SINGLE, 0, "volume name");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
@@ -3732,7 +3778,7 @@ main(int argc, char **argv)
 		"don't check name with VLDB");
 
 #if defined(AFS_CACHE_BYPASS)
-	ts = cmd_CreateSyntax("bypassthreshold", BypassThresholdCmd, 0,
+	ts = cmd_CreateSyntax("bypassthreshold", BypassThresholdCmd, NULL, 0,
 		"get/set cache bypass file size threshold");
 	cmd_AddParm(ts, "-size", CMD_SINGLE, CMD_OPTIONAL, "file size");
 #endif
@@ -3745,10 +3791,10 @@ defect 3069
 */
 
 
-    ts = cmd_CreateSyntax("rmmount", RemoveMountCmd, NULL, "remove mount point");
+    ts = cmd_CreateSyntax("rmmount", RemoveMountCmd, NULL, 0, "remove mount point");
     cmd_AddParm(ts, "-dir", CMD_LIST, 0, "directory");
 
-    ts = cmd_CreateSyntax("checkservers", CheckServersCmd, NULL,
+    ts = cmd_CreateSyntax("checkservers", CheckServersCmd, NULL, 0,
 			  "check local cell's servers");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell to check");
     cmd_AddParm(ts, "-all", CMD_FLAG, CMD_OPTIONAL, "check all cells");
@@ -3757,12 +3803,12 @@ defect 3069
     cmd_AddParm(ts, "-interval", CMD_SINGLE, CMD_OPTIONAL,
 		"seconds between probes");
 
-    ts = cmd_CreateSyntax("checkvolumes", CheckVolumesCmd, NULL,
+    ts = cmd_CreateSyntax("checkvolumes", CheckVolumesCmd, NULL, 0,
 			  "check volumeID/name mappings");
     cmd_CreateAlias(ts, "checkbackups");
 
 
-    ts = cmd_CreateSyntax("setcachesize", SetCacheSizeCmd, NULL,
+    ts = cmd_CreateSyntax("setcachesize", SetCacheSizeCmd, NULL, 0,
 			  "set cache size");
     cmd_AddParm(ts, "-blocks", CMD_SINGLE, CMD_OPTIONAL,
 		"size in 1K byte blocks (0 => reset)");
@@ -3771,19 +3817,19 @@ defect 3069
     cmd_AddParm(ts, "-reset", CMD_FLAG, CMD_OPTIONAL,
 		"reset size back to boot value");
 
-    ts = cmd_CreateSyntax("getcacheparms", GetCacheParmsCmd, NULL,
+    ts = cmd_CreateSyntax("getcacheparms", GetCacheParmsCmd, NULL, 0,
 			  "get cache usage info");
     cmd_AddParm(ts, "-files", CMD_FLAG, CMD_OPTIONAL, "Show cach files used as well");
     cmd_AddParm(ts, "-excessive", CMD_FLAG, CMD_OPTIONAL, "excessively verbose cache stats");
 
-    ts = cmd_CreateSyntax("listcells", ListCellsCmd, NULL,
+    ts = cmd_CreateSyntax("listcells", ListCellsCmd, NULL, 0,
 			  "list configured cells");
     cmd_AddParm(ts, "-numeric", CMD_FLAG, CMD_OPTIONAL, "addresses only");
 
-    ts = cmd_CreateSyntax("listaliases", ListAliasesCmd, NULL,
-			  "list configured cell aliases");
+    cmd_CreateSyntax("listaliases", ListAliasesCmd, NULL, 0,
+		     "list configured cell aliases");
 
-    ts = cmd_CreateSyntax("setquota", SetQuotaCmd, NULL, "set volume quota");
+    ts = cmd_CreateSyntax("setquota", SetQuotaCmd, NULL, 0, "set volume quota");
     cmd_AddParm(ts, "-path", CMD_SINGLE, CMD_OPTIONAL, "dir/file path");
     cmd_AddParm(ts, "-max", CMD_SINGLE, 0, "max quota in kbytes");
 #ifdef notdef
@@ -3791,13 +3837,13 @@ defect 3069
 #endif
     cmd_CreateAlias(ts, "sq");
 
-    ts = cmd_CreateSyntax("newcell", NewCellCmd, NULL, "configure new cell");
+    ts = cmd_CreateSyntax("newcell", NewCellCmd, NULL, 0, "configure new cell");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "cell name");
     cmd_AddParm(ts, "-servers", CMD_LIST, CMD_REQUIRED, "primary servers");
     cmd_AddParm(ts, "-linkedcell", CMD_SINGLE, CMD_OPTIONAL,
 		"linked cell name");
 
-    ts = cmd_CreateSyntax("newalias", NewAliasCmd, NULL,
+    ts = cmd_CreateSyntax("newalias", NewAliasCmd, NULL, 0,
 			  "configure new cell alias");
     cmd_AddParm(ts, "-alias", CMD_SINGLE, 0, "alias name");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "real name of cell");
@@ -3815,44 +3861,43 @@ defect 3069
 		"cell's vldb server port");
 #endif
 
-    ts = cmd_CreateSyntax("whichcell", WhichCellCmd, NULL, "list file's cell");
+    ts = cmd_CreateSyntax("whichcell", WhichCellCmd, NULL, 0, "list file's cell");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
 
-    ts = cmd_CreateSyntax("whereis", WhereIsCmd, NULL, "list file's location");
+    ts = cmd_CreateSyntax("whereis", WhereIsCmd, NULL, 0, "list file's location");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
 
-    ts = cmd_CreateSyntax("wscell", WSCellCmd, NULL, "list workstation's cell");
+    cmd_CreateSyntax("wscell", WSCellCmd, NULL, 0, "list workstation's cell");
 
 /*
     ts = cmd_CreateSyntax("primarycell", PrimaryCellCmd, NULL, "obsolete (listed primary cell)");
 */
 
-    /* set cache monitor host address */
-    ts = cmd_CreateSyntax("monitor", MonitorCmd, NULL, (char *)CMD_HIDDEN);
+    ts = cmd_CreateSyntax("monitor", MonitorCmd, NULL, CMD_HIDDEN, "set cache monitor host address");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_OPTIONAL,
 		"host name or 'off'");
     cmd_CreateAlias(ts, "mariner");
 
-    ts = cmd_CreateSyntax("getcellstatus", GetCellCmd, NULL, "get cell status");
+    ts = cmd_CreateSyntax("getcellstatus", GetCellCmd, NULL, 0, "get cell status");
     cmd_AddParm(ts, "-cell", CMD_LIST, 0, "cell name");
 
-    ts = cmd_CreateSyntax("setcell", SetCellCmd, NULL, "set cell status");
+    ts = cmd_CreateSyntax("setcell", SetCellCmd, NULL, 0, "set cell status");
     cmd_AddParm(ts, "-cell", CMD_LIST, 0, "cell name");
     cmd_AddParm(ts, "-suid", CMD_FLAG, CMD_OPTIONAL, "allow setuid programs");
     cmd_AddParm(ts, "-nosuid", CMD_FLAG, CMD_OPTIONAL,
 		"disallow setuid programs");
 
-    ts = cmd_CreateSyntax("flushvolume", FlushVolumeCmd, NULL,
+    ts = cmd_CreateSyntax("flushvolume", FlushVolumeCmd, NULL, 0,
 			  "flush all data in volume");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
 
-    cmd_CreateSyntax("flushall", FlushAllVolumesCmd, NULL, "flush all data from the cache");
+    cmd_CreateSyntax("flushall", FlushAllVolumesCmd, NULL, 0, "flush all data from the cache");
 
-    ts = cmd_CreateSyntax("sysname", SysNameCmd, NULL,
+    ts = cmd_CreateSyntax("sysname", SysNameCmd, NULL, 0,
 			  "get/set sysname (i.e. @sys) value");
     cmd_AddParm(ts, "-newsys", CMD_LIST, CMD_OPTIONAL, "new sysname");
 
-    ts = cmd_CreateSyntax("exportafs", ExportAfsCmd, NULL,
+    ts = cmd_CreateSyntax("exportafs", ExportAfsCmd, NULL, 0,
 			  "enable/disable translators to AFS");
     cmd_AddParm(ts, "-type", CMD_SINGLE, 0, "exporter name");
     cmd_AddParm(ts, "-start", CMD_SINGLE, CMD_OPTIONAL,
@@ -3869,7 +3914,7 @@ defect 3069
 		"enable callbacks to get creds from new clients (on  | off)");
 
 
-    ts = cmd_CreateSyntax("storebehind", StoreBehindCmd, NULL,
+    ts = cmd_CreateSyntax("storebehind", StoreBehindCmd, NULL, 0,
 			  "store to server after file close");
     cmd_AddParm(ts, "-kbytes", CMD_SINGLE, CMD_OPTIONAL,
 		"asynchrony for specified names");
@@ -3879,47 +3924,47 @@ defect 3069
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, "show status");
     cmd_CreateAlias(ts, "sb");
 
-    ts = cmd_CreateSyntax("setcrypt", SetCryptCmd, NULL,
+    ts = cmd_CreateSyntax("setcrypt", SetCryptCmd, NULL, 0,
 			  "set cache manager encryption flag");
     cmd_AddParm(ts, "-crypt", CMD_SINGLE, 0, "on or off");
 
-    ts = cmd_CreateSyntax("getcrypt", GetCryptCmd, NULL,
+    cmd_CreateSyntax("getcrypt", GetCryptCmd, NULL, 0,
 			  "get cache manager encryption flag");
 
-    ts = cmd_CreateSyntax("rxstatproc", RxStatProcCmd, NULL,
+    ts = cmd_CreateSyntax("rxstatproc", RxStatProcCmd, NULL, 0,
 			  "Manage per process RX statistics");
     cmd_AddParm(ts, "-enable", CMD_FLAG, CMD_OPTIONAL, "Enable RX stats");
     cmd_AddParm(ts, "-disable", CMD_FLAG, CMD_OPTIONAL, "Disable RX stats");
     cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, "Clear RX stats");
 
-    ts = cmd_CreateSyntax("rxstatpeer", RxStatPeerCmd, NULL,
+    ts = cmd_CreateSyntax("rxstatpeer", RxStatPeerCmd, NULL, 0,
 			  "Manage per peer RX statistics");
     cmd_AddParm(ts, "-enable", CMD_FLAG, CMD_OPTIONAL, "Enable RX stats");
     cmd_AddParm(ts, "-disable", CMD_FLAG, CMD_OPTIONAL, "Disable RX stats");
     cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, "Clear RX stats");
 
-    ts = cmd_CreateSyntax("setcbaddr", CallBackRxConnCmd, NULL, "configure callback connection address");
+    ts = cmd_CreateSyntax("setcbaddr", CallBackRxConnCmd, NULL, 0, "configure callback connection address");
     cmd_AddParm(ts, "-addr", CMD_SINGLE, CMD_OPTIONAL, "host name or address");
 
     /* try to find volume location information */
-    ts = cmd_CreateSyntax("getfid", GetFidCmd, NULL,
+    ts = cmd_CreateSyntax("getfid", GetFidCmd, NULL, 0,
 			  "get fid for file(s)");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
 
-    ts = cmd_CreateSyntax("discon", DisconCmd, NULL,
+    ts = cmd_CreateSyntax("discon", DisconCmd, NULL, 0,
 			  "disconnection mode");
     cmd_AddParm(ts, "-mode", CMD_SINGLE, CMD_REQUIRED, "offline | online");
     cmd_AddParm(ts, "-policy", CMD_SINGLE, CMD_OPTIONAL, "client | server");
     cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL, "Force reconnection, despite any synchronization issues.");
     cmd_AddParm(ts, "-uid", CMD_SINGLE, CMD_OPTIONAL, "Numeric UID of user whose tokens to use at reconnect.");
 
-    ts = cmd_CreateSyntax("nukenfscreds", NukeNFSCredsCmd, NULL, "nuke credentials for NFS client");
+    ts = cmd_CreateSyntax("nukenfscreds", NukeNFSCredsCmd, NULL, 0, "nuke credentials for NFS client");
     cmd_AddParm(ts, "-addr", CMD_SINGLE, 0, "host name or address");
 
-    ts = cmd_CreateSyntax("uuid", UuidCmd, NULL, "manage the UUID for the cache manager");
+    ts = cmd_CreateSyntax("uuid", UuidCmd, NULL, 0, "manage the UUID for the cache manager");
     cmd_AddParm(ts, "-generate", CMD_FLAG, CMD_REQUIRED, "generate a new UUID");
 
-    ts = cmd_CreateSyntax("precache", PreCacheCmd, 0,
+    ts = cmd_CreateSyntax("precache", PreCacheCmd, NULL, 0,
 			  "set precache size");
     cmd_AddParm(ts, "-blocks", CMD_SINGLE, CMD_OPTIONAL,
 		"size in 1K byte blocks (0 => disable)");
@@ -4101,94 +4146,13 @@ FlushMountCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 code;
     struct ViceIoctl blob;
     struct cmd_item *ti;
-    char orig_name[1024];	/*Original name, may be modified */
-    char true_name[1024];	/*``True'' dirname (e.g., symlink target) */
-    char parent_dir[1024];	/*Parent directory of true name */
-    char *last_component;	/*Last component of true name */
-    struct stat statbuff;	/*Buffer for status info */
-    int link_chars_read;	/*Num chars read in readlink() */
+    char *last_component;
+    char *parent_dir;
     int error = 0;
 
     for (ti = as->parms[0].items; ti; ti = ti->next) {
-	/* once per file */
-	sprintf(orig_name, "%s%s", (ti->data[0] == '/') ? "" : "./",
-		ti->data);
-
-	if (lstat(orig_name, &statbuff) < 0) {
-	    /* if lstat fails, we should still try the pioctl, since it
-	     * may work (for example, lstat will fail, but pioctl will
-	     * work if the volume of offline (returning ENODEV). */
-	    statbuff.st_mode = S_IFDIR;	/* lie like pros */
-	}
-
-	/*
-	 * The lstat succeeded.  If the given file is a symlink, substitute
-	 * the file name with the link name.
-	 */
-	if ((statbuff.st_mode & S_IFMT) == S_IFLNK) {
-	    /*
-	     * Read name of resolved file.
-	     */
-	    link_chars_read = readlink(orig_name, true_name, 1024 - 1);
-	    if (link_chars_read <= 0) {
-		fprintf(stderr,
-			"%s: Can't read target name for '%s' symbolic link!\n",
-			pn, orig_name);
-		error = 1;
-		continue;
-	    }
-
-	    /*
-	     * Add a trailing null to what was read, bump the length.
-	     */
-	    true_name[link_chars_read++] = 0;
-
-	    /*
-	     * If the symlink is an absolute pathname, we're fine.  Otherwise, we
-	     * have to create a full pathname using the original name and the
-	     * relative symlink name.  Find the rightmost slash in the original
-	     * name (we know there is one) and splice in the symlink value.
-	     */
-	    if (true_name[0] != '/') {
-		last_component = (char *)strrchr(orig_name, '/');
-		strcpy(++last_component, true_name);
-		strcpy(true_name, orig_name);
-	    }
-	} else
-	    strcpy(true_name, orig_name);
-
-	/*
-	 * Find rightmost slash, if any.
-	 */
-	last_component = (char *)strrchr(true_name, '/');
-	if (last_component == (char *)true_name) {
-	    strcpy(parent_dir, "/");
-	    last_component++;
-	}
-	else if (last_component != (char *)NULL) {
-	    /*
-	     * Found it.  Designate everything before it as the parent directory,
-	     * everything after it as the final component.
-	     */
-	    strncpy(parent_dir, true_name, last_component - true_name);
-	    parent_dir[last_component - true_name] = 0;
-	    last_component++;	/*Skip the slash */
-	} else {
-	    /*
-	     * No slash appears in the given file name.  Set parent_dir to the current
-	     * directory, and the last component as the given name.
-	     */
-	    strcpy(parent_dir, ".");
-	    last_component = true_name;
-	}
-
-	if (strcmp(last_component, ".") == 0
-	    || strcmp(last_component, "..") == 0) {
-	    fprintf(stderr,
-		    "%s: you may not use '.' or '..' as the last component\n",
-		    pn);
-	    fprintf(stderr, "%s: of a name in the 'fs flushmount' command.\n",
-		    pn);
+	if (GetLastComponent(ti->data, &parent_dir,
+			     &last_component, NULL) != 0) {
 	    error = 1;
 	    continue;
 	}
@@ -4196,9 +4160,10 @@ FlushMountCmd(struct cmd_syndesc *as, void *arock)
 	blob.in = last_component;
 	blob.in_size = strlen(last_component) + 1;
 	blob.out_size = 0;
-	memset(space, 0, AFS_PIOCTL_MAXSIZE);
 
 	code = pioctl(parent_dir, VIOC_AFS_FLUSHMOUNT, &blob, 1);
+
+	free(last_component);
 
 	if (code != 0) {
 	    if (errno == EINVAL) {
@@ -4208,6 +4173,7 @@ FlushMountCmd(struct cmd_syndesc *as, void *arock)
 	    }
 	    error = 1;
 	}
+	free(parent_dir);
     }
     return error;
 }

@@ -78,8 +78,8 @@ automatically appended to them. This argument is normally the name of the
 cell to which the machines belong. Do not include the period that
 separates this suffix from the distinguishing part of each file server
 machine name, but do include any periods that occur within the suffix
-itself.  For example, in the ABC Corporation cell, the proper value is
-C<abc.com> rather than C<.abc.com>.
+itself.  For example, in the Example Corporation cell, the proper value is
+C<example.com> rather than C<.example.com>.
 
 =item B<-frequency> <I<poll frequency>>
 
@@ -208,18 +208,18 @@ the B<scout> program on several machines but displaying the results on a
 single machine.
 
 For example, when the B<-host> flag is included and the B<scout> program
-is running on the machine C<client1.abc.com>, the banner line reads as
+is running on the machine C<client1.example.com>, the banner line reads as
 follows:
 
-   [client1.abc.com] Scout
+   [client1.example.com] Scout
 
 =item *
 
 The B<-basename> argument displays the indicated basename on the banner
-line. For example, including the argument C<-basename abc.com> argument
+line. For example, including the argument C<-basename example.com> argument
 results in the following banner line:
 
-   Scout for abc.com
+   Scout for example.com
 
 =back
 
@@ -310,7 +310,7 @@ If the scout program is unable to access or otherwise obtain information
 about a partition, it generates a message similar to the following
 example:
 
-   Could not get information on server fs1.abc.com partition /vicepa
+   Could not get information on server fs1.example.com partition /vicepa
 
 =head2 The Message/Probe Line
 

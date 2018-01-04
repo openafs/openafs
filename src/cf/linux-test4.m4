@@ -25,20 +25,6 @@ read_lock(&tasklist_lock);
 		       [])
 ])
 
-AC_DEFUN([LINUX_COMPLETION_H_EXISTS], [
-  AC_CHECK_LINUX_BUILD([for linux/completion.h],
-		       [ac_cv_linux_completion_h_exists],
-[#include <linux/version.h>
-#include <linux/completion.h>],
-[struct completion _c;
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,4,8)
-lose
-#endif],
-		       [HAVE_LINUX_COMPLETION_H]
-		       [Define if your kernel has a usable linux/completion.h],
-		       [])
-])
-
 
 AC_DEFUN([LINUX_EXPORTS_INIT_MM], [
   AC_CHECK_LINUX_BUILD([for exported init_mm],
@@ -160,6 +146,16 @@ AC_DEFUN([LINUX_KERNEL_POSIX_LOCK_FILE_WAIT_ARG], [
 		       [posix_lock_file(0,0,0);],
 		       [POSIX_LOCK_FILE_WAIT_ARG],
 		       [define if your kernel uses 3 arguments for posix_lock_file],
+		       [])
+])
+
+AC_DEFUN([LINUX_KERNEL_PAGEVEC_INIT_COLD_ARG], [
+  AC_CHECK_LINUX_BUILD([for 2nd argument in pagevec_init found in pre-4.15 kernels],
+		       [ac_cv_linux_kernel_pagevec_init_cold_arg],
+		       [#include <linux/pagevec.h>],
+		       [pagevec_init(0,0);],
+		       [PAGEVEC_INIT_COLD_ARG],
+		       [define if your kernel uses 2 arguments for pagevec_init],
 		       [])
 ])
 
@@ -296,14 +292,14 @@ void *cookie;
 AC_DEFUN([LINUX_DOP_D_REVALIDATE_TAKES_NAMEIDATA], [
   AC_CHECK_LINUX_BUILD([whether dentry_operations.d_revalidate takes a nameidata],
 		       [ac_cv_linux_func_d_revalidate_takes_nameidata],
-[#include <linux/fs.h>
-#include <linux/namei.h>],
-[struct dentry _dentry;
-struct nameidata _nameidata;
-(void)_dentry.d_op->d_revalidate(&_dentry, &_nameidata);],
+                        [#include <linux/fs.h>
+                        #include <linux/namei.h>
+                        static int reval(struct dentry *d, struct nameidata *nd) { return 0; }
+                        struct dentry_operations dops;],
+                        [dops.d_revalidate = reval;],
 		       [DOP_REVALIDATE_TAKES_NAMEIDATA],
 		       [define if your dops.d_revalidate takes a nameidata argument],
-		       [])
+		       [-Werror])
 ])
 
 
@@ -592,16 +588,6 @@ AC_DEFUN([LINUX_EXPORTS_KEY_TYPE_KEYRING], [
 ])
 
 
-AC_DEFUN([LINUX_KEYS_HAVE_SESSION_TO_PARENT], [
-  AC_CHECK_LINUX_BUILD([for KEYCTL_SESSION_TO_PARENT],
-		       [ac_cv_linux_have_session_to_parent],
-		       [#include <linux/keyctl.h>],
-		       [int i = KEYCTL_SESSION_TO_PARENT;],
-		       [HAVE_SESSION_TO_PARENT],
-		       [define if keyctl has the KEYCTL_SESSION_TO_PARENT function])
-])
-
-
 AC_DEFUN([LINUX_HAVE_TRY_TO_FREEZE], [
   AC_CHECK_LINUX_BUILD([for try_to_freeze],
 		       [ac_cv_linux_have_try_to_freeze],
@@ -648,10 +634,10 @@ AC_DEFUN([LINUX_DOP_D_DELETE_TAKES_CONST], [
   AC_CHECK_LINUX_BUILD([whether dentry.d_op->d_delete takes a const argument],
 			[ac_cv_linux_dop_d_delete_takes_const],
 			[#include <linux/fs.h>
-			#include <linux/dcache.h>],
-			[struct dentry_operations _d_ops;
-			int _d_del(const struct dentry *de) {return 0;};
-			_d_ops.d_delete = _d_del;],
+			#include <linux/dcache.h>
+			static int _d_del(const struct dentry *de) { return 0; }
+			struct dentry_operations _d_ops;],
+			[_d_ops.d_delete = _d_del;],
 			[DOP_D_DELETE_TAKES_CONST],
 			[define if dentry.d_op->d_delete takes a const argument],
 			[-Werror])
@@ -673,10 +659,10 @@ AC_DEFUN([LINUX_IOP_GETATTR_TAKES_PATH_STRUCT], [
 AC_DEFUN([LINUX_IOP_MKDIR_TAKES_UMODE_T], [
   AC_CHECK_LINUX_BUILD([whether inode.i_op->mkdir takes a umode_t argument],
 			[ac_cv_linux_iop_mkdir_takes_umode_t],
-			[#include <linux/fs.h>],
-			[struct inode_operations _i_ops;
-			int _mkdir(struct inode *i, struct dentry *d, umode_t m) {return 0;};
-			_i_ops.mkdir = _mkdir;],
+			[#include <linux/fs.h>
+			static int _mkdir(struct inode *i, struct dentry *d, umode_t m) { return 0; }
+			struct inode_operations _i_ops;],
+			[_i_ops.mkdir = _mkdir;],
 			[IOP_MKDIR_TAKES_UMODE_T],
 			[define if inode.i_op->mkdir takes a umode_t argument],
 			[-Werror])
@@ -700,11 +686,10 @@ AC_DEFUN([LINUX_IOP_CREATE_TAKES_UMODE_T], [
 AC_DEFUN([LINUX_EXPORT_OP_ENCODE_FH_TAKES_INODES], [
   AC_CHECK_LINUX_BUILD([whether export operation encode_fh takes inode arguments],
 			[ac_cv_linux_export_op_encode_fh__takes_inodes],
-			[#include <linux/exportfs.h>],
-			[struct export_operations _exp_ops;
-			int _encode_fh(struct inode *i, __u32 *fh, int *len, struct inode *p)
-				{return 0;};
-			_exp_ops.encode_fh = _encode_fh;],
+			[#include <linux/exportfs.h>
+			static int _encode_fh(struct inode *i, __u32 *fh, int *len, struct inode *p) { return 0; }
+			struct export_operations _exp_ops;],
+			[_exp_ops.encode_fh = _encode_fh;],
 			[EXPORT_OP_ENCODE_FH_TAKES_INODES],
 			[define if encode_fh export op takes inode arguments],
 			[-Werror])
@@ -789,10 +774,10 @@ AC_DEFUN([LINUX_DOP_D_REVALIDATE_TAKES_UNSIGNED], [
   AC_CHECK_LINUX_BUILD([whether dentry_operations.d_revalidate takes an unsigned int],
 			[ac_cv_linux_func_d_revalidate_takes_unsigned],
 			[#include <linux/fs.h>
-			#include <linux/namei.h>],
-			[struct dentry_operations dops;
-			int reval(struct dentry *d, unsigned int i) { return 0; };
-			dops.d_revalidate = reval;],
+			#include <linux/namei.h>
+			static int reval(struct dentry *d, unsigned int i) { return 0; }
+			struct dentry_operations _d_ops;],
+			[_d_ops.d_revalidate = reval;],
 		       [DOP_REVALIDATE_TAKES_UNSIGNED],
 		       [define if your dops.d_revalidate takes an unsigned int argument],
 		       [-Werror])
@@ -803,10 +788,10 @@ AC_DEFUN([LINUX_IOP_LOOKUP_TAKES_UNSIGNED], [
   AC_CHECK_LINUX_BUILD([whether inode operation lookup takes an unsigned int],
 			[ac_cv_linux_func_lookup_takes_unsigned],
 			[#include <linux/fs.h>
-			#include <linux/namei.h>],
-			[struct inode_operations iops;
-			struct dentry *look(struct inode *i, struct dentry *d, unsigned int j) { return NULL; };
-			iops.lookup = look;],
+			#include <linux/namei.h>
+			static struct dentry *look(struct inode *i, struct dentry *d, unsigned int j) { return NULL; }
+			struct inode_operations _i_ops;],
+			[_i_ops.lookup = look;],
 		       [IOP_LOOKUP_TAKES_UNSIGNED],
 		       [define if your iops.lookup takes an unsigned int argument],
 		       [-Werror])
@@ -823,4 +808,16 @@ AC_DEFUN([LINUX_D_INVALIDATE_IS_VOID], [
 		       [D_INVALIDATE_IS_VOID],
 		       [define if your d_invalidate returns void],
 		       [])
+])
+
+AC_DEFUN([LINUX_KERNEL_READ_OFFSET_IS_LAST], [
+  AC_CHECK_LINUX_BUILD([whether offset is the last argument to kernel_read],
+                       [ac_cv_linux_func_kernel_read_offset_is_last],
+                       [#include <linux/fs.h>],
+                       [
+                       ssize_t kernel_read(struct file *, void *, size_t, loff_t *);
+                       ],
+                       [KERNEL_READ_OFFSET_IS_LAST],
+                       [define if your kernel_read has offset as the last argument],
+                       [])
 ])

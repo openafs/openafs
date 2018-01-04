@@ -28,7 +28,7 @@
 #ifdef KERNEL
 # include "afs/sysincludes.h"
 #else
-# include <stdlib.h>
+# include <roken.h>
 #endif
 
 #include "xdr.h"
@@ -85,31 +85,16 @@ xdrlen_inline(XDR *xdrs, u_int len)
 
 static struct xdr_ops xdrlen_ops = {
 #ifndef HAVE_STRUCT_LABEL_SUPPORT
-#ifdef AFS_XDR_64BITOPS
-    NULL,
-    NULL,
-#endif
     /* Windows does not support labeled assigments */
-#if !(defined(KERNEL) && defined(AFS_SUN57_ENV))
     xdrlen_getint32,    /* not supported */
     xdrlen_putint32,    /* serialize an afs_int32 */
-#endif
     xdrlen_getbytes,    /* not supported */
     xdrlen_putbytes,    /* serialize counted bytes */
     xdrlen_getpos,      /* get offset in the stream */
     xdrlen_setpos,      /* set offset in the stream */
     xdrlen_inline,      /* not supported */
     xdrlen_destroy,     /* destroy stream */
-#if (defined(KERNEL) && defined(AFS_SUN57_ENV))
-    NULL,               /* control - not implemented */
-    xdrlen_getint32,    /* not supported */
-    xdrlen_putint32,    /* serialize an afs_int32 */
-#endif
 #else
-#ifdef AFS_XDR_64BITOPS
-    .x_getint64 = NULL,
-    .x_putint64 = NULL,
-#endif
     .x_getint32 = xdrlen_getint32,
     .x_putint32 = xdrlen_putint32,
     .x_getbytes = xdrlen_getbytes,

@@ -9,9 +9,11 @@ pts_sleep - Pauses for a few seconds
 
 B<pts sleep> S<<< [B<-delay>] <I<# of seconds>> >>>
    S<<< [B<-cell>] <I<cell name>> >>> [B<-noauth>] [B<-localauth>] [B<-force>]
+   [B<-help>] [B<-auth>] [B<-encrypt>] S<<< [B<-config> <I<config directory>>] >>>
 
 B<pts sl> S<<< [B<-d>] <I<# of seconds>> >>> S<<< [B<-c>] <I<cell name>> >>>
-   [B<-n>] [B<-l>] [B<-f>]
+   [B<-n>] [B<-l>] [B<-f>] [B<-h>]
+   [B<-a>] [B<-e>] S<<< [B<-co> <I<config directory>>] >>>
 
 =for html
 </div>
@@ -37,6 +39,10 @@ Although they have no effect, B<pts sleep> takes the following standard
 B<pts> options:
 
 =over 4
+
+=item B<-delay> <I<# of seconds>>
+
+Specifies the amount of time to sleep, in seconds.
 
 =include fragments/pts-common.pod
 

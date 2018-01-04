@@ -19,7 +19,8 @@
  * thereby swamping the file server.  As a result, something like
  * 10 or 15 might be a better bet.
  */
-#define MAX_CB_HOSTS	10
+/* With revised multi_Rx, responses get handled as early as they tickle in, so try big */
+#define MAX_CB_HOSTS	1024
 
 /* max time to break a callback, otherwise client is dead or net is hosed */
 #define MAXCBT 25
@@ -50,7 +51,7 @@ struct cbstruct {
 struct FileEntry {
     afs_uint32 vnode;
     afs_uint32 unique;
-    afs_uint32 volid;
+    VolumeId volid;
     afs_uint32 fnext;           /* index of next FE in hash chain */
     afs_uint32 ncbs;            /* number of callbacks for this FE */
     afs_uint32 firstcb;         /* index of first cb in per-FE list */

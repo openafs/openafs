@@ -95,3 +95,43 @@ osi_fbsd_free(void *p)
 {
        free(p, M_AFS);
 }
+
+/**
+ * check if a vcache is in use
+ *
+ * @return status
+ *  @retcode 0 success
+ *  @retcode EBUSY vcache is in use by someone else
+ *  @retcode otherwise other error
+ *
+ * @pre  The caller must hold the vnode interlock for the associated vnode
+ * @post The vnode interlock for the associated vnode will still be held
+ *       and must be VI_UNLOCK'd by the caller
+ */
+int
+osi_fbsd_checkinuse(struct vcache *avc)
+{
+    struct vnode *vp = AFSTOV(avc);
+
+    ASSERT_VI_LOCKED(vp, "osi_fbsd_checkinuse");
+
+    /* The interlock is needed to check the usecount. */
+    if (vp->v_usecount > 0) {
+	return EBUSY;
+    }
+
+    /* XXX
+     * The value of avc->opens here came to be, at some point,
+     * typically -1.  This was caused by incorrectly performing afs_close
+     * processing on vnodes being recycled */
+    if (avc->opens) {
+	return EBUSY;
+    }
+
+    /* if a lock is held, give up */
+    if (CheckLock(&avc->lock)) {
+	return EBUSY;
+    }
+
+    return 0;
+}

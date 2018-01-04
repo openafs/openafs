@@ -37,6 +37,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+
 #include <unistd.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -95,7 +96,7 @@ getClientHandle()
     }
     Die(1, "No free client handles!\n");
 
-    return (clientHandle_t *) NULL;	/* quiet compiler. */
+    return NULL;	/* quiet compiler. */
 }
 
 int nSigIO = 0;
@@ -298,7 +299,7 @@ handleRequest(char *arg)
 	FD_SET(ch->ch_fd, &(ch->ch_except));
 	code =
 	    IOMGR_Select(ch->ch_fd + 1, &(ch->ch_read), &(ch->ch_write),
-			 &(ch->ch_except), (struct timeval *)NULL);
+			 &(ch->ch_except), NULL);
 	if (FD_ISSET(ch->ch_fd, &(ch->ch_except))) {
 	    Log("Received expception. Read fd_set shows %d\n",
 		FD_ISSET(ch->ch_fd, &(ch->ch_read)));
@@ -375,7 +376,7 @@ handleWrite(clientHandle_t * ch, selcmd_t * sc)
     if (sc->sc_flags & SC_WAIT_OOB)
 	sendOOB(ch->ch_fd);
 
-    buf = (char *)malloc(sc->sc_info);
+    buf = malloc(sc->sc_info);
     assert(buf);
     i = 0;
 

@@ -9,29 +9,23 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
 #include <afs/stds.h>
+
+#include <roken.h>
+#include <afs/opr.h>
+
+#include <hcrypto/des.h>
+#include <hcrypto/ui.h>
+
+#include <rx/rxkad_convert.h>
+
 #include <afs/pthread_glock.h>
-#include <stdio.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <crypt.h>
-#endif
-#include <string.h>
-#ifdef HAVE_UNISTD_H
-#if !defined(__USE_XOPEN)
-#define __USE_XOPEN
-#endif
-#include <unistd.h>
-#endif
 #include <afs/cellconfig.h>
 #include <afs/auth.h>
 #include <afs/afsutil.h>
-#include <des.h>
-#include <des_prototypes.h>
+
 #include "kauth.h"
 #include "kautils.h"
-
 
 /* This defines the Andrew string_to_key function.  It accepts a password
    string as input and converts it via a one-way encryption algorithm to a DES
@@ -77,16 +71,16 @@ Andrew_StringToKey(char *str, char *cell,	/* cell for password */
 	    keybytes[i] = (unsigned char)(temp << 1);
 	}
     }
-    des_fixup_key_parity(ktc_to_cblock(key));
+    DES_set_odd_parity(ktc_to_cblock(key));
 }
 
 static void
 StringToKey(char *str, char *cell,	/* cell for password */
 	    struct ktc_encryptionKey *key)
 {
-    des_key_schedule schedule;
-    unsigned char temp_key[8];
-    char ivec[8];
+    DES_key_schedule schedule;
+    DES_cblock temp_key;
+    DES_cblock ivec;
     char password[BUFSIZ];
     int passlen;
 
@@ -96,18 +90,19 @@ StringToKey(char *str, char *cell,	/* cell for password */
     if ((passlen = strlen(password)) > sizeof(password))
 	passlen = sizeof(password);
 
-    memcpy(ivec, "kerberos", 8);
-    memcpy(temp_key, "kerberos", 8);
-    des_fixup_key_parity(temp_key);
-    des_key_sched(temp_key, schedule);
-    des_cbc_cksum(charptr_to_cblockptr(password), charptr_to_cblockptr(ivec), passlen, schedule, charptr_to_cblockptr(ivec));
+    memcpy(&ivec, "kerberos", 8);
+    memcpy(&temp_key, "kerberos", 8);
+    DES_set_odd_parity(&temp_key);
+    DES_key_sched(&temp_key, &schedule);
+    DES_cbc_cksum((DES_cblock *) password, &ivec, passlen, &schedule, &ivec);
 
-    memcpy(temp_key, ivec, 8);
-    des_fixup_key_parity(temp_key);
-    des_key_sched(temp_key, schedule);
-    des_cbc_cksum(charptr_to_cblockptr(password), ktc_to_cblockptr(key), passlen, schedule, charptr_to_cblockptr(ivec));
+    memcpy(&temp_key, &ivec, 8);
+    DES_set_odd_parity(&temp_key);
+    DES_key_sched(&temp_key, &schedule);
+    DES_cbc_cksum((DES_cblock *)password, ktc_to_cblock(key), passlen,
+		   &schedule, &ivec);
 
-    des_fixup_key_parity(ktc_to_cblock(key));
+    DES_set_odd_parity(ktc_to_cblock(key));
 }
 
 void
@@ -148,7 +143,7 @@ ka_ReadPassword(char *prompt, int verify, char *cell,
 
     LOCK_GLOBAL_MUTEX;
     memset(key, 0, sizeof(struct ktc_encryptionKey));
-    code = read_pw_string(password, sizeof(password), prompt, verify);
+    code = UI_UTIL_read_pw_string(password, sizeof(password), prompt, verify);
     if (code) {
 	UNLOCK_GLOBAL_MUTEX;
 	return KAREADPW;

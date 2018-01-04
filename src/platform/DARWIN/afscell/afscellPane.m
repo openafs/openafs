@@ -235,7 +235,7 @@ NSString *fileWriteCellAlias=@"/private/tmp/org.OpenAFS.Install.CellAlias";
 		/* do some validation on cell string */
 		if (![self _validateCellString:newStrCell])
 		{
-			[self _continueAlertPanel:@"Invalid local cell name: value should be a complete Internet domain-style name (for example, \"abc.com\")" titleText:@"Invalid Cell Name" firstButtonText:@"OK" secondButtonText:nil];
+			[self _continueAlertPanel:@"Invalid local cell name: value should be a complete Internet domain-style name (for example, \"example.com\")" titleText:@"Invalid Cell Name" firstButtonText:@"OK" secondButtonText:nil];
 			return NO;
 		}
 		

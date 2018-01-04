@@ -1,7 +1,0 @@
-libkopenafs.so.1 libkopenafs1 #MINVER#
- KOPENAFS_1.0@KOPENAFS_1.0 1.5.69
- k_hasafs@KOPENAFS_1.0 1.5.69
- k_haspag@KOPENAFS_1.0 1.5.75
- k_pioctl@KOPENAFS_1.0 1.5.69
- k_setpag@KOPENAFS_1.0 1.5.69
- k_unlog@KOPENAFS_1.0 1.5.69

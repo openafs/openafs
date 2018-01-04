@@ -119,6 +119,11 @@ specified foreign cell.
 
 =back
 
+=item B<-config> <I<config directory>>
+
+The location of the directory to use to obtain configuration information,
+including the CellServDB. This is primarily provided for testing purposes.
+
 =item B<-force>
 
 Enables the command to continue executing as far as possible when errors
@@ -177,6 +182,18 @@ defined in the server machine's local F</usr/afs/etc/ThisCell> file),
 whereas a command on which the B<-cell> argument is included runs in the
 specified foreign cell. Also, do not combine the B<-localauth> and
 B<-noauth> flags.
+
+=item B<-auth>
+
+Use the calling user's tokens from the kernel to communicate with the ptserver
+(that is, the same tokens displayed by L<tokens(1)>. This is the default if
+neither B<-localauth> nor B<-noauth> is given.
+
+Since this option is the default, it is usually not useful for running single
+command line operations. However, it can be useful when running commands via
+L<pts_interactive(1)>, since otherwise it would be impossible to switch from,
+for example, B<-localauth> back to using regular tokens during a bulk
+operation. See L<pts_interactive(1)> for more details.
 
 =back
 

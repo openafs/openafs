@@ -72,10 +72,15 @@ osi_StopListener(void)
 {
     struct proc *p;
 
-    soclose(rx_socket);
-    p = pfind(rxk_ListenerPid);
+    solock(rx_socket);
+    soshutdown(rx_socket, SHUT_RDWR);
+    sounlock(rx_socket);
+    mutex_enter(proc_lock);
+    p = proc_find(rxk_ListenerPid);
+    mutex_exit(proc_lock);
     if (p)
 	psignal(p, SIGUSR1);
+    soclose(rx_socket);
 }
 
 /*

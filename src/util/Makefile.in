@@ -7,42 +7,60 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+include @TOP_OBJDIR@/src/config/Makefile.lwptool
+
 HELPER_SPLINT=@HELPER_SPLINT@
 
+LT_rpc_objs     = base64.lo
 
-objects = assert.o base64.o casestrcpy.o config_file.o ktime.o volparse.o \
-	 hostparse.o exec.o \
-	 hputil.o kreltime.o isathing.o get_krbrlm.o uuid.o serverLog.o \
-	 dirpath.o fileutil.o netutils.o flipbase64.o fstab.o \
-	 afs_atomlist.o afs_lhash.o snprintf.o strlcat.o strlcpy.o strnlen.o \
-	 pthread_glock.o daemon.o rxkstats.o ${REGEX_OBJ}
+LT_objs =$(LT_rpc_objs) \
+	 ktime.lo volparse.lo hostparse.lo exec.lo \
+	 hputil.lo kreltime.lo uuid.lo serverLog.lo \
+	 dirpath.lo fileutil.lo flipbase64.lo fstab.lo \
+	 afs_atomlist.lo afs_lhash.lo pthread_glock.lo tabular_output.lo \
+	 pthread_threadname.lo ${REGEX_OBJ}
+
+LT_deps = $(top_builddir)/src/opr/liboafs_opr.la
+LT_libs = $(LIB_roken) $(MT_LIBS)
 
 includes = \
 	${TOP_INCDIR}/afs/dirpath.h \
 	${TOP_INCDIR}/afs/pthread_nosigs.h \
-	${TOP_INCDIR}/afs/afs_assert.h \
 	${TOP_INCDIR}/afs/errors.h \
 	${TOP_INCDIR}/afs/vice.h \
-	${TOP_INCDIR}/afs/remote.h \
 	${TOP_INCDIR}/afs/ktime.h \
 	${TOP_INCDIR}/afs/fileutil.h \
-	${TOP_INCDIR}/afs/netutils.h \
-	${TOP_INCDIR}/afs/packages.h \
 	${TOP_INCDIR}/afs/afsutil.h \
 	${TOP_INCDIR}/afs/afsutil_prototypes.h \
 	${TOP_INCDIR}/afs/pthread_glock.h \
 	${TOP_INCDIR}/afs/afs_atomlist.h \
 	${TOP_INCDIR}/afs/afs_lhash.h \
-	${TOP_INCDIR}/afs/softsig.h
+	${TOP_INCDIR}/afs/work_queue.h \
+	${TOP_INCDIR}/afs/work_queue_types.h \
+	${TOP_INCDIR}/afs/thread_pool.h \
+	${TOP_INCDIR}/afs/thread_pool_types.h \
+	${TOP_INCDIR}/afs/tabular_output.h
 
 all: ${includes} \
 	${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libafsutil.a \
-	sys
+	${TOP_LIBDIR}/libafsutil_pic.a \
+	sys \
+	liboafs_util.la \
+	libafsrpc_util.la
+
+util.a: $(LT_objs)
+	$(LT_LDLIB_lwp) $(LT_objs)
+
+libafsutil_pic.la: $(LT_objs)
+	$(LT_LDLIB_pic) $(LT_objs)
+
+liboafs_util.la: liboafs_util.la.sym $(LT_objs) $(LT_deps)
+	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
+
+libafsrpc_util.la: $(LT_rpc_objs)
+	$(LT_LDLIB_pic) $(LT_rpc_objs)
 
 buildtools: ${TOP_LIBDIR}/libafsutil.a ${TOP_INCDIR}/afs/afsutil.h
 buildtools_clean: clean
@@ -55,28 +73,16 @@ ${TOP_INCDIR}/afs/dirpath.h: dirpath.h
 ${TOP_INCDIR}/afs/pthread_nosigs.h: ${srcdir}/pthread_nosigs.h
 	${INSTALL_DATA} $? $@
 
-${TOP_INCDIR}/afs/afs_assert.h: ${srcdir}/afs_assert.h
-	${INSTALL_DATA} $? $@
-
 ${TOP_INCDIR}/afs/errors.h: ${srcdir}/errors.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/vice.h: ${srcdir}/vice.h
 	${INSTALL_DATA} $? $@
 
-${TOP_INCDIR}/afs/remote.h: ${srcdir}/remote.h
-	${INSTALL_DATA} $? $@
-
 ${TOP_INCDIR}/afs/ktime.h: ${srcdir}/ktime.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/fileutil.h: ${srcdir}/fileutil.h
-	${INSTALL_DATA} $? $@
-
-${TOP_INCDIR}/afs/netutils.h: ${srcdir}/netutils.h
-	${INSTALL_DATA} $? $@
-
-${TOP_INCDIR}/afs/packages.h: ${srcdir}/packages.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/afsutil.h: ${srcdir}/afsutil.h
@@ -94,7 +100,19 @@ ${TOP_INCDIR}/afs/afs_atomlist.h: ${srcdir}/afs_atomlist.h
 ${TOP_INCDIR}/afs/afs_lhash.h: ${srcdir}/afs_lhash.h
 	${INSTALL_DATA} $? $@
 
-${TOP_INCDIR}/afs/softsig.h: ${srcdir}/softsig.h
+${TOP_INCDIR}/afs/work_queue.h: ${srcdir}/work_queue.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/work_queue_types.h: ${srcdir}/work_queue_types.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/thread_pool.h: ${srcdir}/thread_pool.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/thread_pool_types.h: ${srcdir}/thread_pool_types.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/tabular_output.h: ${srcdir}/tabular_output.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_LIBDIR}/util.a: util.a
@@ -103,10 +121,13 @@ ${TOP_LIBDIR}/util.a: util.a
 ${TOP_LIBDIR}/libafsutil.a: util.a
 	${INSTALL_DATA} $? $@
 
+${TOP_LIBDIR}/libafsutil_pic.a: libafsutil_pic.la
+	${INSTALL_DATA} .libs/libafsutil_pic.a $@
+
 # Use " as the sed boundary character because we lose anyway if that occurs
 # in path names.
 dirpath.h: ${srcdir}/dirpath.hin Makefile
-	( sed \
+	sed \
 		-e 's"@afsconfdir"${afsconfdir}"' \
 		-e 's"@viceetcdir"${viceetcdir}"' \
 		-e 's"@afssrvbindir"${afssrvbindir}"' \
@@ -118,105 +139,15 @@ dirpath.h: ${srcdir}/dirpath.hin Makefile
 		-e 's"@afsbackupdir"${afsbackupdir}"' \
 		-e 's"@afsbosconfigdir"${afsbosconfigdir}"' \
 		-e 's"@afsdatadir"${afsdatadir}"' \
-		${srcdir}/dirpath.hin >dirpath.h.tmp && \
-		if cmp dirpath.h.tmp dirpath.h >/dev/null ; then : ; else \
-		mv dirpath.h.tmp dirpath.h ; fi)
-	rm -f dirpath.h.tmp
+		${srcdir}/dirpath.hin >dirpath.h
 
-util.a: ${objects} AFS_component_version_number.o
-	$(RM) -f util.a
-	$(AR) crv util.a ${objects} AFS_component_version_number.o
-	$(RANLIB) util.a
 
-pthread_glock.o: ${srcdir}/pthread_glock.c ${includes}
-	${MT_CC} ${CFLAGS} ${MT_CFLAGS} -c ${srcdir}/pthread_glock.c
+$(LT_objs): ${includes}
 
-assert.o: ${srcdir}/assert.c ${includes}
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/assert.c
+sys.o: sys.c AFS_component_version_number.c ${includes}
 
-casestrcpy.o: ${srcdir}/casestrcpy.c ${includes}
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/casestrcpy.c
-
-hputil.o: ${srcdir}/hputil.c ${includes}
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/hputil.c
-
-flipbase64.o: ${srcdir}/flipbase64.c ${includes}
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/flipbase64.c
-
-volparse.o: ${srcdir}/volparse.c ${includes}
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/volparse.c
-
-snprintf.o: ${srcdir}/snprintf.c ${includes}
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/snprintf.c
-
-fstab.o: ${srcdir}/fstab.c ${includes}
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/fstab.c
-
-base64.o: ${srcdir}/base64.c ${includes}
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/base64.c
-
-config_file.o: ${TOP_SRCDIR}/external/heimdal/krb5/config_file.c krb5_locl.h
-	${CCOBJ} ${CFLAGS} -c ${TOP_SRCDIR}/external/heimdal/krb5/config_file.c
-
-hostparse.o: ${srcdir}/hostparse.c ${includes}
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/hostparse.c
-
-exec.o: ${srcdir}/exec.c ${includes}
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/exec.c
-
-ktime.o: ${srcdir}/ktime.c ${includes}
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/ktime.c
-
-kreltime.o: ${srcdir}/kreltime.c ${includes}
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/kreltime.c
-
-get_krbrlm.o: ${srcdir}/get_krbrlm.c ${includes}
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/get_krbrlm.c
-
-uuid.o: ${srcdir}/uuid.c ${includes}
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/uuid.c
-
-sys.o: ${srcdir}/sys.c AFS_component_version_number.c ${includes}
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/sys.c
-
-sys: sys.o 
-	${CC} ${LDFLAGS} -o sys sys.o
-
-isathing.o: ${srcdir}/isathing.c ${includes}
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/isathing.c
-
-serverLog.o: ${srcdir}/serverLog.c ${includes}
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/serverLog.c
-
-dirpath.o: ${srcdir}/dirpath.c ${includes}
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/dirpath.c
-
-fileutil.o: ${srcdir}/fileutil.c ${includes}
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/fileutil.c
-
-netutils.o: ${srcdir}/netutils.c ${includes}
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/netutils.c
-
-afs_atomlist.o: ${srcdir}/afs_atomlist.c ${includes}
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/afs_atomlist.c
-
-afs_lhash.o: ${srcdir}/afs_lhash.c ${includes}
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/afs_lhash.c
-
-strlcat.o: ${srcdir}/strlcat.c ${includes}
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/strlcat.c
-
-strlcpy.o: ${srcdir}/strlcpy.c ${includes}
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/strlcpy.c
-
-strnlen.o: ${srcdir}/strnlen.c ${includes}
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/strnlen.c
-
-daemon.o: ${srcdir}/daemon.c ${includes}
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/daemon.c
-
-rxkstats.o: ${srcdir}/rxkstats.c ${includes}
-	${CCOBJ} ${CFLAGS} -c ${srcdir}/rxkstats.c
+sys: sys.o
+	$(AFS_LDRULE) sys.o
 
 #
 # Install targets
@@ -230,20 +161,20 @@ install: dirpath.h util.a sys
 	${INSTALL} -d ${DESTDIR}${bindir}
 	${INSTALL_DATA} dirpath.h ${DESTDIR}${includedir}/afs/dirpath.h
 	${INSTALL_DATA} ${srcdir}/pthread_nosigs.h ${DESTDIR}${includedir}/afs/pthread_nosigs.h
-	${INSTALL_DATA} ${srcdir}/afs_assert.h ${DESTDIR}${includedir}/afs/afs_assert.h
 	${INSTALL_DATA} ${srcdir}/errors.h ${DESTDIR}${includedir}/afs/errors.h
 	${INSTALL_DATA} ${srcdir}/vice.h ${DESTDIR}${includedir}/afs/vice.h
-	${INSTALL_DATA} ${srcdir}/remote.h ${DESTDIR}${includedir}/afs/remote.h
 	${INSTALL_DATA} ${srcdir}/ktime.h ${DESTDIR}${includedir}/afs/ktime.h
 	${INSTALL_DATA} ${srcdir}/fileutil.h ${DESTDIR}${includedir}/afs/fileutil.h
-	${INSTALL_DATA} ${srcdir}/netutils.h ${DESTDIR}${includedir}/afs/netutils.h
-	${INSTALL_DATA} ${srcdir}/packages.h ${DESTDIR}${includedir}/afs/packages.h
 	${INSTALL_DATA} ${srcdir}/afsutil.h ${DESTDIR}${includedir}/afs/afsutil.h
 	${INSTALL_DATA} ${srcdir}/afsutil_prototypes.h ${DESTDIR}${includedir}/afs/afsutil_prototypes.h
 	${INSTALL_DATA} ${srcdir}/pthread_glock.h ${DESTDIR}${includedir}/afs/pthread_glock.h
 	${INSTALL_DATA} ${srcdir}/afs_atomlist.h ${DESTDIR}${includedir}/afs/afs_atomlist.h
 	${INSTALL_DATA} ${srcdir}/afs_lhash.h ${DESTDIR}${includedir}/afs/afs_lhash.h
-	${INSTALL_DATA} ${srcdir}/softsig.h ${DESTDIR}${includedir}/afs/softsig.h
+	${INSTALL_DATA} ${srcdir}/work_queue.h ${DESTDIR}${includedir}/afs/work_queue.h
+	${INSTALL_DATA} ${srcdir}/work_queue_types.h ${DESTDIR}${includedir}/afs/work_queue_types.h
+	${INSTALL_DATA} ${srcdir}/thread_pool.h ${DESTDIR}${includedir}/afs/thread_pool.h
+	${INSTALL_DATA} ${srcdir}/thread_pool_types.h ${DESTDIR}${includedir}/afs/thread_pool_types.h
+	${INSTALL_DATA} ${srcdir}/tabular_output.h ${DESTDIR}${includedir}/afs/tabular_output.h
 	${INSTALL_DATA} util.a ${DESTDIR}${libdir}/afs/util.a
 	${INSTALL_DATA} util.a ${DESTDIR}${libdir}/afs/libafsutil.a
 	${INSTALL_PROGRAM} sys ${DESTDIR}${bindir}/sys
@@ -254,20 +185,20 @@ dest: dirpath.h util.a sys
 	${INSTALL} -d ${DEST}/bin
 	${INSTALL_DATA} dirpath.h ${DEST}/include/afs/dirpath.h
 	${INSTALL_DATA} ${srcdir}/pthread_nosigs.h ${DEST}/include/afs/pthread_nosigs.h
-	${INSTALL_DATA} ${srcdir}/afs_assert.h ${DEST}/include/afs/afs_assert.h
 	${INSTALL_DATA} ${srcdir}/errors.h ${DEST}/include/afs/errors.h
 	${INSTALL_DATA} ${srcdir}/vice.h ${DEST}/include/afs/vice.h
-	${INSTALL_DATA} ${srcdir}/remote.h ${DEST}/include/afs/remote.h
 	${INSTALL_DATA} ${srcdir}/ktime.h ${DEST}/include/afs/ktime.h
 	${INSTALL_DATA} ${srcdir}/fileutil.h ${DEST}/include/afs/fileutil.h
-	${INSTALL_DATA} ${srcdir}/netutils.h ${DEST}/include/afs/netutils.h
-	${INSTALL_DATA} ${srcdir}/packages.h ${DEST}/include/afs/packages.h
 	${INSTALL_DATA} ${srcdir}/afsutil.h ${DEST}/include/afs/afsutil.h
 	${INSTALL_DATA} ${srcdir}/afsutil_prototypes.h ${DEST}/include/afs/afsutil_prototypes.h
 	${INSTALL_DATA} ${srcdir}/pthread_glock.h ${DEST}/include/afs/pthread_glock.h
 	${INSTALL_DATA} ${srcdir}/afs_atomlist.h ${DEST}/include/afs/afs_atomlist.h
 	${INSTALL_DATA} ${srcdir}/afs_lhash.h ${DEST}/include/afs/afs_lhash.h
-	${INSTALL_DATA} ${srcdir}/softsig.h ${DEST}/include/afs/softsig.h
+	${INSTALL_DATA} ${srcdir}/work_queue.h ${DEST}/include/afs/work_queue.h
+	${INSTALL_DATA} ${srcdir}/work_queue_types.h ${DEST}/include/afs/work_queue_types.h
+	${INSTALL_DATA} ${srcdir}/thread_pool.h ${DEST}/include/afs/thread_pool.h
+	${INSTALL_DATA} ${srcdir}/thread_pool_types.h ${DEST}/include/afs/thread_pool_types.h
+	${INSTALL_DATA} ${srcdir}/tabular_output.h ${DEST}/include/afs/tabular_output.h
 	${INSTALL_DATA} util.a ${DEST}/lib/afs/util.a
 	${INSTALL_DATA} util.a ${DEST}/lib/afs/libafsutil.a
 	${INSTALL_PROGRAM} sys ${DEST}/bin/sys
@@ -277,7 +208,8 @@ dest: dirpath.h util.a sys
 #
 
 clean:
-	$(RM) -f ${objects} sys dirpath.h
+	$(LT_CLEAN)
+	$(RM) -f sys dirpath.h
 	$(RM) -f util.a *.o core AFS_component_version_number.c
 
 test:
@@ -287,7 +219,7 @@ include ../config/Makefile.version
 
 check-splint:
 	sh $(HELPER_SPLINT) $(CFLAGS) \
-	    assert.c base64.c casestrcpy.c ktime.c volparse.c hostparse.c \
-	    hputil.c kreltime.c isathing.c get_krbrlm.c uuid.c serverLog.c \
-	    dirpath.c fileutil.c netutils.c flipbase64.c \
-	    afs_atomlist.c afs_lhash.c snprintf.c fstab.c
+	    base64.c ktime.c volparse.c hostparse.c \
+	    hputil.c kreltime.c uuid.c serverLog.c \
+	    dirpath.c fileutil.c flipbase64.c \
+	    afs_atomlist.c afs_lhash.c fstab.c

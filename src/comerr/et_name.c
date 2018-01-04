@@ -6,8 +6,10 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-#include <afs/afsutil.h>
 
+#include <roken.h>
+
+#include <afs/opr.h>
 
 #include "error_table.h"
 #include "mit-sipb-cr.h"
@@ -19,7 +21,7 @@ static const char char_set[] =
 static char buf[6];
 
 const char *
-afs_error_table_name(afs_int32 num)
+afs_error_table_name(int num)
 {
     int ch;
     int i;

@@ -54,7 +54,7 @@ static int afs_dynrootInit = 0;
 static int afs_dynrootEnable = 0;
 static int afs_dynrootCell = 0;
 
-static afs_rwlock_t afs_dynrootDirLock;
+afs_rwlock_t afs_dynrootDirLock;
 /* Start of variables protected by afs_dynrootDirLock */
 static char *afs_dynrootDir = NULL;
 static int afs_dynrootDirLen;
@@ -74,7 +74,7 @@ struct afs_dynSymlink {
     char *target;
 };
 
-static afs_rwlock_t afs_dynSymlinkLock;
+afs_rwlock_t afs_dynSymlinkLock;
 /* Start of variables protected by afs_dynSymlinkLock */
 static struct afs_dynSymlink *afs_dynSymlinkBase = NULL;
 static int afs_dynSymlinkIndex = 0;
@@ -105,6 +105,17 @@ afs_dynrootCellInit(void)
     }
 
     return 0;
+}
+
+/*!
+ * Returns non-zero if the volume is the dynroot volume.
+ */
+int
+afs_IsDynrootVolume(struct volume *v)
+{
+    return (afs_dynrootEnable
+	    && v->cell == afs_dynrootCell
+	    && v->volume == AFS_DYNROOT_VOLUME);
 }
 
 /*
@@ -257,7 +268,7 @@ afs_dynroot_addDirEnt(struct DirHeader *dirHeader, int *curPageP,
     /*
      * Add the new entry to the correct hash chain.
      */
-    i = DirHash(name);
+    i = afs_dir_DirHash(name);
     dirEntry->next = dirHeader->hashTable[i];
     dirHeader->hashTable[i] = htons(curPage * EPP + curChunk);
 
@@ -295,8 +306,7 @@ afs_DynrootInvalidate(void)
 	ReleaseReadLock(&afs_xvcache);
     } while (retry);
     if (tvc) {
-	tvc->f.states &= ~(CStatd | CUnique);
-	osi_dnlc_purgedp(tvc);
+	afs_StaleVCacheFlags(tvc, AFS_STALEVC_NOCB, CUnique);
 	afs_PutVCache(tvc);
     }
 }

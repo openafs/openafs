@@ -29,7 +29,7 @@
 #endif
 #endif /* !defined(UKERNEL) */
 
-#if (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)) || defined(AFS_HPUX_64BIT_ENV) || defined(AFS_SUN57_64BIT_ENV) || (defined(AFS_SGI_ENV) && (_MIPS_SZLONG==64)) || defined(NEED_IOCTL32)
+#if (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)) || defined(AFS_HPUX_64BIT_ENV) || defined(AFS_SUN5_64BIT_ENV) || (defined(AFS_SGI_ENV) && (_MIPS_SZLONG==64)) || defined(NEED_IOCTL32)
 static void
 afs_ioctl32_to_afs_ioctl(const struct afs_ioctl32 *src, struct afs_ioctl *dst)
 {
@@ -91,7 +91,7 @@ copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst)
     }
 #endif /* defined(AFS_HPUX_64BIT_ENV) */
 
-#if defined(AFS_SUN57_64BIT_ENV)
+#if defined(AFS_SUN5_64BIT_ENV)
     struct afs_ioctl32 dst32;
 
     if (get_udatamodel() == DATAMODEL_ILP32) {
@@ -100,7 +100,7 @@ copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst)
 	    afs_ioctl32_to_afs_ioctl(&dst32, dst);
 	return code;
     }
-#endif /* defined(AFS_SUN57_64BIT_ENV) */
+#endif /* defined(AFS_SUN5_64BIT_ENV) */
 
 #if defined(AFS_SGI_ENV) && (_MIPS_SZLONG==64)
     struct afs_ioctl32 dst32;
@@ -342,7 +342,7 @@ struct iparam32 {
 };
 
 
-#if defined(AFS_HPUX_64BIT_ENV) || defined(AFS_SUN57_64BIT_ENV) || (defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)) || defined(NEED_IOCTL32)
+#if defined(AFS_HPUX_64BIT_ENV) || defined(AFS_SUN5_64BIT_ENV) || (defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)) || defined(NEED_IOCTL32)
 static void
 iparam32_to_iparam(const struct iparam32 *src, struct iparam *dst)
 {
@@ -377,7 +377,7 @@ copyin_iparam(caddr_t cmarg, struct iparam *dst)
     }
 #endif /* AFS_HPUX_64BIT_ENV */
 
-#if defined(AFS_SUN57_64BIT_ENV)
+#if defined(AFS_SUN5_64BIT_ENV)
     struct iparam32 dst32;
 
     if (get_udatamodel() == DATAMODEL_ILP32) {
@@ -386,7 +386,7 @@ copyin_iparam(caddr_t cmarg, struct iparam *dst)
 	    iparam32_to_iparam(&dst32, dst);
 	return code;
     }
-#endif /* AFS_SUN57_64BIT_ENV */
+#endif /* AFS_SUN5_64BIT_ENV */
 
 #if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
     struct iparam32 dst32;
@@ -476,14 +476,14 @@ afs3_syscall(struct thread *p, void *args)
 	long parm5;
 	long parm6;
     } *uap = (struct a *)args;
-    long *retval;
+    long fbsd_ret = 0;
+    long *retval = &fbsd_ret;
 #elif defined(AFS_NBSD40_ENV)
 int
-afs3_syscall(struct lwp *p, void *args)
+afs3_syscall(struct lwp *p, const void *args, register_t *retval)
 {
     /* see osi_machdep.h */
     struct afs_sysargs *uap = (struct afs_sysargs *) args;
-    long *retval;
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int
 afs3_syscall(afs_proc_t *p, void *args, long *retval)
@@ -522,7 +522,7 @@ afs_syscall(long syscall, long parm1, long parm2, long parm3, long parm4)
 #else
 # if defined(UKERNEL)
 int
-Afs_syscall()
+Afs_syscall(void)
 {
     struct a {
 	long syscall;
@@ -709,7 +709,7 @@ Afs_syscall()
 				   uap->parm4, rvp, CRED());
 #elif defined(AFS_FBSD_ENV)
 	    code =
-		afs_syscall_pioctl(uap->parm1, uap->parm2, uap->parm3,
+		afs_syscall_pioctl((void *)uap->parm1, uap->parm2, (void *)uap->parm3,
 				   uap->parm4, p->td_ucred);
 #elif defined(AFS_DARWIN80_ENV)
 	    code =
@@ -717,8 +717,8 @@ Afs_syscall()
 				   uap->parm4, kauth_cred_get());
 #elif defined(AFS_NBSD40_ENV)
 	    code =
-		afs_syscall_pioctl(SCARG(uap, parm1), SCARG(uap, parm2),
-				   SCARG(uap, parm3), SCARG(uap, parm4),
+		afs_syscall_pioctl((char *)SCARG(uap, parm1), SCARG(uap, parm2),
+				   (void *)SCARG(uap, parm3), SCARG(uap, parm4),
 				   kauth_cred_get());
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	    code =
@@ -754,10 +754,11 @@ Afs_syscall()
 					iparams.param2, iparams.param3,
 					iparams.param4, rvp, CRED());
 #elif defined(AFS_NBSD40_ENV)
-
-		code = afs_syscall_create(SCARG(uap, parm1), SCARG(uap, parm2),
-					  SCARG(uap, parm3), SCARG(uap, parm4),
-					  retval);
+		code =
+			afs_syscall_icreate(SCARG(uap, parm1), SCARG(uap, parm2),
+				iparams.param1, iparams.param2, iparams.param3,
+				iparams.param4, retval
+			);
 #else
 		code =
 		    afs_syscall_icreate(uap->parm1, uap->parm2, iparams.param1,

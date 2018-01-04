@@ -36,53 +36,16 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <malloc.h>
-extern void lwp_abort(void);
-#else
-#include <unistd.h>		/* select() prototype */
-#include <sys/types.h>		/* fd_set on older platforms */
-#include <sys/time.h>		/* struct timeval, select() prototype */
-#ifndef FD_SET
-# include <sys/select.h>	/* fd_set on newer platforms */
+#ifdef HAVE_SYS_SELECT_H
+#include <sys/select.h>
 #endif
-#include <sys/file.h>
-#endif /* AFS_NT40_ENV */
+
+#include <afs/opr.h>
+
 #include "lwp.h"
 #include "timer.h"
-#include <signal.h>
-#include <errno.h>
-#ifdef AFS_SUN5_ENV
-#include <fcntl.h>
-#endif
-
-#if	defined(USE_PTHREADS) || defined(USE_SOLARIS_THREADS)
-
-void IOMGR_Initialize()	/* noop */
-{ }
-
-void IOMGR_Sleep (seconds)
-  unsigned seconds;
-{
-    struct timespec itv;
-
-    itv.tv_sec = seconds;
-    itv.tv_nsec = 0;
-    MUTEX_EXIT(&lwp_mutex);
-    osi_Assert(pthread_delay_np(&itv) == 0);
-    MUTEX_ENTER(&lwp_mutex);
-}
-
-#else
-
-#ifdef	AFS_DECOSF_ENV
-extern void *malloc();
-#endif	/* AFS_DECOSF_ENV */
 
 typedef unsigned char bool;
 #define FALSE	0
@@ -189,19 +152,19 @@ void IOMGR_FreeFDSet(fd_set *s)
  */
 fd_set *IOMGR_AllocFDSet(void)
 {
-    struct IOMGR_fd_set *t;
+    fd_set *t;
     if (iomgrFreeFDSets) {
-	t =  iomgrFreeFDSets;
+	t = (fd_set *) iomgrFreeFDSets;
 	iomgrFreeFDSets = iomgrFreeFDSets->next;
     }
     else {
-	t = (struct IOMGR_fd_set *)malloc(sizeof(fd_set));
+	t = malloc(sizeof(fd_set));
     }
     if (!t)
-	return (fd_set*)0;
+	return NULL;
     else {
-	FD_ZERO((fd_set*)t);
-	return (fd_set*)t;
+	FD_ZERO(t);
+	return t;
     }
 }
 
@@ -211,11 +174,11 @@ static struct IoRequest *NewRequest(void)
 {
     struct IoRequest *request;
 
-    if ((request=iorFreeList))
+    if ((request=iorFreeList)) {
 	iorFreeList = (struct IoRequest *) (request->next);
-    else request = (struct IoRequest *) malloc(sizeof(struct IoRequest));
+	memset(request, 0, sizeof(struct IoRequest));
+    } else request = calloc(1, sizeof(struct IoRequest));
 
-    memset((char*)request, 0, sizeof(struct IoRequest));
     return request;
 }
 
@@ -587,7 +550,7 @@ static void *IOMGR(void *dummy)
 		  }
 #endif
 		  iomgr_errno = errno;
-		  lwp_abort();
+		  opr_abort();
 	       }
 	    }
 
@@ -869,7 +832,7 @@ int IOMGR_Select(int fds, fd_set *readfds, fd_set *writefds,
 	fprintf(stderr, "IOMGR_Select: fds=%d, more than max %d\n",
 		fds, FD_SETSIZE);
 	fflush(stderr);
-	lwp_abort();
+	opr_abort();
     }
 #endif
 
@@ -1020,4 +983,3 @@ void IOMGR_Sleep (int seconds)
     timeout.tv_usec = 0;
     IOMGR_Select(0, 0, 0, 0, &timeout);
 }
-#endif	/* USE_PTHREADS */

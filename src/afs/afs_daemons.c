@@ -36,10 +36,6 @@ struct brequest afs_brs[NBRS];	/* request structures */
 struct afs_osi_WaitHandle AFS_WaitHandler, AFS_CSWaitHandler;
 static int afs_brs_count = 0;	/* request counter, to service reqs in order */
 
-static int rxepoch_checked = 0;
-#define afs_CheckRXEpoch() {if (rxepoch_checked == 0 && rxkad_EpochWasSet) { \
-	rxepoch_checked = 1; afs_GCUserData(/* force flag */ 1);  } }
-
 /* PAG garbage collection */
 /* We induce a compile error if param.h does not define AFS_GCPAGS */
 afs_int32 afs_gcpags = AFS_GCPAGS;
@@ -142,8 +138,6 @@ afs_Daemon(void)
     afs_uint32 lastCBSlotBump;
 
     AFS_STATCNT(afs_Daemon);
-    last1MinCheck = last3MinCheck = last60MinCheck = last10MinCheck =
-    last5MinCheck = lastNMinCheck = 0;
 
     afs_rootFid.Fid.Volume = 0;
     while (afs_initState < 101)
@@ -180,6 +174,7 @@ afs_Daemon(void)
 	if (afs_nfsexporter)
 	    afs_FlushActiveVcaches(0);	/* flush NFS writes */
 	afs_FlushVCBs(1);	/* flush queued callbacks */
+
 	afs_MaybeWakeupTruncateDaemon();	/* free cache space if have too */
 	rx_CheckPackets();	/* Does RX need more packets? */
 
@@ -202,7 +197,6 @@ afs_Daemon(void)
 #if 0
 	    afs_StoreDirtyVcaches();
 #endif
-	    afs_CheckRXEpoch();
 	    last1MinCheck = now;
 	}
 
@@ -247,7 +241,7 @@ afs_Daemon(void)
 #endif /* else AFS_USERSPACE_IP_ADDR */
 	    if (!afs_CheckServerDaemonStarted)
 		afs_CheckServers(0, NULL);
-	    afs_GCUserData(0);	/* gc old conns */
+	    afs_GCUserData();	/* gc old conns */
 	    /* This is probably the wrong way of doing GC for the various exporters but it will suffice for a while */
 	    for (exporter = root_exported; exporter;
 		 exporter = exporter->exp_next) {
@@ -312,7 +306,7 @@ afs_Daemon(void)
 int
 afs_CheckRootVolume(void)
 {
-    char rootVolName[32];
+    char rootVolName[MAXROOTVOLNAMELEN];
     struct volume *tvp = NULL;
     int usingDynroot = afs_GetDynrootEnable();
     int localcell;
@@ -520,7 +514,6 @@ BStore(struct brequest *ab)
     AFS_STATCNT(BStore);
     if ((code = afs_CreateReq(&treq, ab->cred)))
 	return;
-    code = 0;
     tvc = ab->vc;
 #if defined(AFS_SGI_ENV)
     /*
@@ -556,8 +549,46 @@ BStore(struct brequest *ab)
 	 * can know the "raw" value for interpreting the value internally, as
 	 * well as the afs_CheckCode value to give to the OS. */
 	ab->code_raw = code;
-	ab->code_checkcode = afs_CheckCode(code, treq, 43);
+	ab->code_checkcode = afs_CheckCode(code, treq, 430);
 
+	ab->flags |= BUVALID;
+	if (ab->flags & BUWAIT) {
+	    ab->flags &= ~BUWAIT;
+	    afs_osi_Wakeup(ab);
+	}
+    }
+    afs_DestroyReq(treq);
+}
+
+static void
+BPartialStore(struct brequest *ab)
+{
+    struct vcache *tvc;
+    afs_int32 code;
+    struct vrequest *treq = NULL;
+    int locked, shared_locked = 0;
+
+    AFS_STATCNT(BStore);
+    if ((code = afs_CreateReq(&treq, ab->cred)))
+	return;
+    tvc = ab->vc;
+    locked = tvc->lock.excl_locked? 1:0;
+    if (!locked)
+        ObtainWriteLock(&tvc->lock, 1209);
+    else if (!(tvc->lock.excl_locked & WRITE_LOCK)) {
+	shared_locked = 1;
+	ConvertSToRLock(&tvc->lock);
+    }
+    code = afs_StoreAllSegments(tvc, treq, AFS_ASYNC);
+    if (!locked)
+	ReleaseWriteLock(&tvc->lock);
+    else if (shared_locked)
+	ConvertSToRLock(&tvc->lock);
+    /* now set final return code, and wakeup anyone waiting */
+    if ((ab->flags & BUVALID) == 0) {
+	/* set final code, since treq doesn't go across processes */
+	ab->code_raw = code;
+	ab->code_checkcode = afs_CheckCode(code, treq, 43);
 	ab->flags |= BUVALID;
 	if (ab->flags & BUWAIT) {
 	    ab->flags &= ~BUWAIT;
@@ -614,7 +645,9 @@ afs_BQueue(short aopcode, struct vcache *avc,
 	    tb->opcode = aopcode;
 	    tb->vc = avc;
 	    tb->cred = acred;
-	    crhold(tb->cred);
+	    if (tb->cred) {
+		crhold(tb->cred);
+	    }
 	    if (avc) {
 		AFS_FAST_HOLD(avc);
 	    }
@@ -955,7 +988,7 @@ brequest_release(struct brequest *tb)
     afs_BRelease(tb);  /* this grabs and releases afs_xbrs lock */
 }
 
-#ifdef AFS_DARWIN80_ENV
+#ifdef AFS_NEW_BKG
 int
 afs_BackgroundDaemon(struct afs_uspc_param *uspc, void *param1, void *param2)
 #else
@@ -972,7 +1005,7 @@ afs_BackgroundDaemon(void)
 	/* Irix with "short stack" exits */
 	afs_BackgroundDaemon_once();
 
-#ifdef AFS_DARWIN80_ENV
+#ifdef AFS_NEW_BKG
     /* If it's a re-entering syscall, complete the request and release */
     if (uspc->ts > -1) {
         tb = afs_brs;
@@ -996,7 +1029,7 @@ afs_BackgroundDaemon(void)
 #endif
         /* Otherwise it's a new one */
 	afs_nbrs++;
-#ifdef AFS_DARWIN80_ENV
+#ifdef AFS_NEW_BKG
     }
 #endif
 
@@ -1010,7 +1043,7 @@ afs_BackgroundDaemon(void)
 		afs_termState = AFSOP_STOP_RXCALLBACK;
 	    ReleaseWriteLock(&afs_xbrs);
 	    afs_osi_Wakeup(&afs_termState);
-#ifdef AFS_DARWIN80_ENV
+#ifdef AFS_NEW_BKG
 	    return -2;
 #else
 	    return;
@@ -1060,6 +1093,8 @@ afs_BackgroundDaemon(void)
                 return 0;
             }
 #endif
+	    else if (tb->opcode == BOP_PARTIAL_STORE)
+		BPartialStore(tb);
 	    else
 		panic("background bop");
 	    brequest_release(tb);
@@ -1074,7 +1109,7 @@ afs_BackgroundDaemon(void)
 	    afs_brsDaemons--;
 	}
     }
-#ifdef AFS_DARWIN80_ENV
+#ifdef AFS_NEW_BKG
     return -2;
 #endif
 }
@@ -1086,7 +1121,7 @@ shutdown_daemons(void)
     AFS_STATCNT(shutdown_daemons);
     if (afs_cold_shutdown) {
 	afs_brsDaemons = brsInit = 0;
-	rxepoch_checked = afs_nbrs = 0;
+	afs_nbrs = 0;
 	memset(afs_brs, 0, sizeof(afs_brs));
 	memset(&afs_xbrs, 0, sizeof(afs_lock_t));
 	afs_brsWaiters = 0;

@@ -7,14 +7,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.pthread
 
-CC = ${MT_CC}
-CFLAGS=${COMMON_CFLAGS} ${MT_CFLAGS}
-CCRULE = ${CC} ${CFLAGS} -c $?
 
 PTSERVER = ../../ptserver
 
@@ -55,10 +49,10 @@ libptsadmin.a: ${LIBOBJS}
 afs_ptsAdmin.o: afs_ptsAdmin.h
 
 ptint.xdr.o: ${PTSERVER}/ptint.xdr.c
-	${CCRULE}
+	$(AFS_CCRULE) ${PTSERVER}/ptint.xdr.c
 
 ptint.cs.o: ${PTSERVER}/ptint.cs.c
-	${CCRULE}
+	$(AFS_CCRULE) $(PTSERVER)/ptint.cs.c
 
 clean:
 	$(RM) -f *.o libptsadmin*

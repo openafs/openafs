@@ -10,26 +10,12 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/time.h>
-#include <sys/file.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#endif
-#include <stdlib.h>
-#include <string.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
+#include <roken.h>
+
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <lwp.h>
 #include <lock.h>
-#include <errno.h>
 #include <afs/tcdata.h>
 #include <afs/bubasics.h>
 #include <afs/budb_client.h>
@@ -37,6 +23,7 @@
 #include <afs/vldbint.h>
 #include <afs/ktime.h>
 #include <afs/vlserver.h>
+#include <afs/afsint.h>
 #include <afs/volser.h>
 #include <afs/volser_prototypes.h>
 #include <afs/volint.h>
@@ -99,15 +86,6 @@ afs_int32 tapeblocks;		/* Number of 16K tape datablocks in buffer (!CONF_XBSA) *
      sprintf(dumpname, "%s", name); \
    else \
      sprintf(dumpname, "%s (DumpId %u)", name, dbDumpId);
-
-#if defined(AFS_NT40_ENV) || defined(AFS_SUN4_ENV)
-int
-localtime_r(time_t * t, struct tm *tm)
-{
-    memcpy(tm, localtime(t), sizeof(struct tm));
-    return 0;
-}
-#endif
 
 struct dumpRock {
     /* status only */
@@ -319,8 +297,6 @@ dumpVolume(struct tc_dumpDesc * curDump, struct dumpRock * dparamsPtr)
 	chunkSize = 0;
 	fragmentvolume = 0;
 	while (!endofvolume && !fragmentvolume) {	/*w */
-	    bytesread = 0;
-
 	    /* Check for abort in the middle of writing data */
 	    if (volBytesRead >= chunkSize) {
 		chunkSize += BIGCHUNK;
@@ -671,8 +647,6 @@ xbsaDumpVolume(struct tc_dumpDesc * curDump, struct dumpRock * dparamsPtr)
     volBytesRead = 0;
     chunkSize = 0;
     while (!endofvolume) {	/*w */
-	bytesread = 0;
-
 	/* Check for abort in the middle of writing data */
 	if (volBytesRead >= chunkSize) {
 	    chunkSize += BIGCHUNK;
@@ -895,7 +869,7 @@ dumpPass(struct dumpRock * dparamsPtr, int passNumber)
 
 	    switch (curDump->vtype) {
 	    case BACKVOL:
-		if (!(vldbEntry.flags & BACK_EXISTS)) {
+		if (!(vldbEntry.flags & VLF_BACKEXISTS)) {
 		    ErrorLog(0, taskId, 0, 0,
 			     "Volume %s (%u) failed - Backup volume no longer exists\n",
 			     curDump->name, curDump->vid);
@@ -907,7 +881,7 @@ dumpPass(struct dumpRock * dparamsPtr, int passNumber)
 
 	    case RWVOL:
 		for (e = 0; e < vldbEntry.nServers; e++) {	/* Find the RW volume */
-		    if (vldbEntry.serverFlags[e] & ITSRWVOL)
+		    if (vldbEntry.serverFlags[e] & VLSF_RWVOL)
 			break;
 		}
 		break;
@@ -925,7 +899,7 @@ dumpPass(struct dumpRock * dparamsPtr, int passNumber)
 
 		if (e >= vldbEntry.nServers) {	/* Didn't find RO volume */
 		    for (e = 0; e < vldbEntry.nServers; e++) {	/* Find the first RO volume */
-			if (vldbEntry.serverFlags[e] & ITSROVOL)
+			if (vldbEntry.serverFlags[e] & VLSF_ROVOL)
 			    break;
 		    }
 		}
@@ -1151,6 +1125,7 @@ Dumper(void *param)
     extern struct deviceSyncNode *deviceLatch;
     extern struct tapeConfig globalTapeConfig;
 
+    afs_pthread_setname_self("dumper");
     taskId = nodePtr->taskID;	/* Get task Id */
     setStatus(taskId, DRIVE_WAIT);
     EnterDeviceQueue(deviceLatch);
@@ -1417,11 +1392,7 @@ retryPrompt(char *volumeName, afs_int32 volumeId, afs_uint32 taskId)
 
 	start = time(0);
 	while (1) {
-#ifdef AFS_PTHREAD_ENV
-	    code = GetResponseKey(5, &ch);	/* ch stores key pressed */
-#else
 	    code = LWP_GetResponseKey(5, &ch);	/* ch stores key pressed */
-#endif
 	    if (code == 1)
 		break;		/* input is available */
 
@@ -2061,6 +2032,7 @@ DeleteDump(void *param)
     dumpid = ptr->dumpID;
     taskId = ptr->taskId;	/* Get task Id */
 
+    afs_pthread_setname_self("deletedump");
     setStatus(taskId, DRIVE_WAIT);
     EnterDeviceQueue(deviceLatch);
     clearStatus(taskId, DRIVE_WAIT);

@@ -5,7 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-AFSDEV_AUXCDEFINES = -DFSSYNC_BUILD_SERVER
+AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV -DRXDEBUG -DFSSYNC_BUILD_SERVER
 
 RELDIR=viced
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
@@ -16,55 +16,79 @@ RELDIR=viced
 
 INCFILEDIR = $(DESTDIR)\include\afs
 
-INCFILES =\
-	$(INCFILEDIR)\fs_stats.h
-
+INCFILES = $(INCFILEDIR)\fs_stats.h
 
 
 ############################################################################
 # Build the fileserver
-# This is now done in tviced
 
 EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\fileserver.exe
 
-EXERES = $(OUT)\fileserver.res
+EXERES= $(OUT)\fileserver.res
 
-EXEOBJS =\
-	$(OUT)\afsfileprocs.obj \
-	$(OUT)\callback.obj \
-	$(OUT)\host.obj \
-	$(OUT)\physio.obj \
-	$(OUT)\viced.obj \
-	$(OUT)\AFS_component_version_number.obj
+LWP = ..\lwp
+LIBACL = ..\libacl
+FSINT = ..\fsint
+RX = ..\rx
+
+RXOBJS = $(OUT)\xdr_int64.obj \
+         $(OUT)\xdr_int32.obj
+
+VICEDOBJS = $(OUT)\viced.obj $(OUT)\afsfileprocs.obj $(OUT)\fsstats.obj $(OUT)\host.obj $(OUT)\physio.obj $(OUT)\callback.obj
+
+
+LWPOBJS = $(OUT)\lock.obj $(OUT)\fasttime.obj $(OUT)\threadname.obj
+
+LIBACLOBJS = $(OUT)\aclprocs.obj $(OUT)\netprocs.obj
+
+FSINTOBJS = $(OUT)\afsaux.obj $(OUT)\afscbint.cs.obj $(OUT)\afsint.ss.obj $(OUT)\afsint.xdr.obj
+
+EXEOBJS = $(EXERES) $(VICEDOBJS) $(LWPOBJS) $(LIBACLOBJS) \
+	  $(FSINTOBJS) $(RXOBJS)
+
+noversion: install
+
+all: fileserver
+
+$(EXERES): fileserver.rc AFS_component_version_number.h
+
+$(RXOBJS): $(RX)\$$(@B).c
+	$(C2OBJ) -I$(RX) $**
+
+$(VICEDOBJS): $$(@B).c
+	$(C2OBJ) $**
+
+$(LWPOBJS): $(LWP)\$$(@B).C
+	$(C2OBJ) -I$(LWP) $**
+
+$(LIBACLOBJS): $(LIBACL)\$$(@B).C
+	$(C2OBJ) -I$(LIBACL) $**
+
+$(FSINTOBJS): $(FSINT)\$$(@B).C
+	$(C2OBJ) -I$(FSINT) $**
 
 EXELIBS = \
+	$(DESTDIR)\lib\afsauthent.lib \
+	$(DESTDIR)\lib\afsrpc.lib \
 	$(DESTDIR)\lib\afs\afscmd.lib \
-	$(DESTDIR)\lib\afs\afsvol.lib \
-	$(DESTDIR)\lib\afs\afsutil.lib \
-	$(DESTDIR)\lib\afs\afsdir.lib \
-	$(DESTDIR)\lib\afs\afsvol.lib \
 	$(DESTDIR)\lib\afs\afsaudit.lib \
-	$(DESTDIR)\lib\afs\afsauth.lib \
-	$(DESTDIR)\lib\afs\afsvldb.lib \
-	$(DESTDIR)\lib\afs\afsprot.lib \
-	$(DESTDIR)\lib\afs\afskauth.lib \
 	$(DESTDIR)\lib/afs/afscom_err.lib \
-	$(DESTDIR)\lib\afsubik.lib \
-	$(DESTDIR)\lib\afsrxkad.lib \
-	$(DESTDIR)\lib\afsdes.lib \
-	$(DESTDIR)\lib\afs\afsint.lib \
-	$(DESTDIR)\lib\afsrx.lib \
-	$(DESTDIR)\lib\afslwp.lib \
-	$(DESTDIR)\lib\afs\afsacl.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
-        $(DESTDIR)\lib\afs\afspioctl.lib
+	$(DESTDIR)\lib\afs\mtafsutil.lib \
+        $(DESTDIR)\lib\afs\mtafsvol.lib \
+        $(DESTDIR)\lib\afs\mtafsvldb.lib \
+        $(DESTDIR)\lib\afs\mtafsdir.lib \
+	$(DESTDIR)\lib\opr.lib \
+	$(DESTDIR)\lib\afspthread.lib \
+	$(DESTDIR)\lib\afsroken.lib \
+	$(DESTDIR)\lib\afsrfc3961.lib
 
-$(EXEFILE): $(EXEOBJS) $(EXERES) $(EXELIBS)
+$(EXEFILE): $(EXEOBJS) $(EXELIBS)
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
-	$(EXEPREP) 
+	$(EXEPREP)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 
@@ -72,28 +96,29 @@ $(EXEFILE): $(EXEOBJS) $(EXERES) $(EXELIBS)
 # Build cbd - not generally distributed debugging program
 CBD = $(DESTDIR)\root.server\usr\afs\bin\cbd.exe
 
+CBDLIBS =\
+	$(DESTDIR)\lib\afsroken.lib
+
 CBDRES = $(OUT)\cbd.res
 
 $(OUT)\cbd.obj: callback.c AFS_component_version_number.h
 	$(C2OBJ) callback.c -DINTERPRET_DUMP
 
-$(CBD): $(OUT)\cbd.obj $(CBDRES)
+$(CBD): $(OUT)\cbd.obj $(CBDLIBS) $(CBDRES)
 	$(EXECONLINK)
-        $(_VC_MANIFEST_EMBED_EXE)
-        $(CODESIGN_USERLAND)
-        $(SYMSTORE_IMPORT)
+	$(_VC_MANIFEST_EMBED_EXE)
+	$(CODESIGN_USERLAND)
+	$(SYMSTORE_IMPORT)
 
 ############################################################################
 # generate versioninfo resources
-$(EXERES): fileserver.rc AFS_component_version_number.h
 
 $(CBDRES): cbd.rc AFS_component_version_number.h
 
-install:  $(INCFILES) $(CBD)
+install: $(INCFILES) $(CBD) $(EXEFILE)
 
 mkdir:
-	
+
 clean::
 	$(DEL) $(EXERES)
 	$(DEL) $(CBDRES)
-

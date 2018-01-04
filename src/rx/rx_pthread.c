@@ -18,30 +18,25 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+#include <afs/opr.h>
 
-#include <sys/types.h>
-#include <errno.h>
-#include <signal.h>
-#include <string.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
+#include <assert.h>
+
+#ifdef AFS_PTHREAD_ENV
+
+#include "rx.h"
+#include "rx_globals.h"
+#include "rx_pthread.h"
+#include "rx_clock.h"
+#include "rx_atomic.h"
+#include "rx_internal.h"
+#include "rx_pthread.h"
+#ifdef AFS_NT40_ENV
+#include "rx_xmit_nt.h"
 #endif
-#ifndef AFS_NT40_ENV
-# include <sys/socket.h>
-# include <sys/file.h>
-# include <netdb.h>
-# include <netinet/in.h>
-# include <net/if.h>
-# include <sys/ioctl.h>
-# include <sys/time.h>
-# include <unistd.h>
-# include <assert.h>
-#endif
-#include <sys/stat.h>
-#include <rx/rx.h>
-#include <rx/rx_globals.h>
-#include <rx/rx_pthread.h>
-#include <rx/rx_clock.h>
+
+static void rxi_SetThreadNum(int threadID);
 
 /* Set rx_pthread_event_rescheduled if event_handler should just try
  * again instead of sleeping.
@@ -66,6 +61,13 @@ afs_kmutex_t listener_mutex;
 static int listeners_started = 0;
 afs_kmutex_t rx_clock_mutex;
 struct clock rxi_clockNow;
+
+static rx_atomic_t threadHiNum;
+
+int
+rx_NewThreadId(void) {
+    return rx_atomic_inc_and_read(&threadHiNum);
+}
 
 /*
  * Delay the current thread the specified number of seconds.
@@ -258,7 +260,7 @@ rx_ListenerProc(void *argp)
 	/* osi_Assert(threadID != -1); */
 	/* osi_Assert(newcall != NULL); */
 	sock = OSI_NULLSOCKET;
-	osi_Assert(pthread_setspecific(rx_thread_id_key, (void *)(intptr_t)threadID) == 0);
+	rxi_SetThreadNum(threadID);
 	rxi_ServerProc(threadID, newcall, &sock);
 	/* osi_Assert(sock != OSI_NULLSOCKET); */
     }
@@ -293,7 +295,7 @@ rx_ServerProc(void * dummy)
      * thread... chose the latter.
      */
     MUTEX_ENTER(&rx_pthread_mutex);
-    threadID = ++rxi_pthread_hinum;
+    threadID = rx_NewThreadId();
     if (rxi_fcfs_thread_num == 0 && rxi_fcfs_thread_num != threadID)
 	rxi_fcfs_thread_num = threadID;
     MUTEX_EXIT(&rx_pthread_mutex);
@@ -302,7 +304,7 @@ rx_ServerProc(void * dummy)
 
     while (1) {
 	sock = OSI_NULLSOCKET;
-	osi_Assert(pthread_setspecific(rx_thread_id_key, (void *)(intptr_t)threadID) == 0);
+	rxi_SetThreadNum(threadID);
 	rxi_ServerProc(threadID, newcall, &sock);
 	/* osi_Assert(sock != OSI_NULLSOCKET); */
 	newcall = NULL;
@@ -345,9 +347,7 @@ rxi_StartListener(void)
 	0) {
 	osi_Panic("Unable to create Rx event handling thread\n");
     }
-    MUTEX_ENTER(&rx_pthread_mutex);
-    ++rxi_pthread_hinum;
-    MUTEX_EXIT(&rx_pthread_mutex);
+    rx_NewThreadId();
     AFS_SIGSET_RESTORE();
 
     MUTEX_ENTER(&listener_mutex);
@@ -379,9 +379,7 @@ rxi_Listen(osi_socket sock)
     if (pthread_create(&thread, &tattr, rx_ListenerProc, (void *)(intptr_t)sock) != 0) {
 	osi_Panic("Unable to create socket listener thread\n");
     }
-    MUTEX_ENTER(&rx_pthread_mutex);
-    ++rxi_pthread_hinum;
-    MUTEX_EXIT(&rx_pthread_mutex);
+    rx_NewThreadId();
     AFS_SIGSET_RESTORE();
     return 0;
 }
@@ -395,11 +393,15 @@ int
 rxi_Recvmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 {
     int ret;
-#if defined(HAVE_LINUX_ERRQUEUE_H) && defined(ADAPT_PMTU)
-    while((rxi_HandleSocketError(socket)) > 0)
-      ;
-#endif
     ret = recvmsg(socket, msg_p, flags);
+
+#ifdef AFS_RXERRQ_ENV
+    if (ret < 0) {
+	while (rxi_HandleSocketError(socket) > 0)
+	    ;
+    }
+#endif
+
     return ret;
 }
 
@@ -411,35 +413,43 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 {
     int ret;
     ret = sendmsg(socket, msg_p, flags);
-#ifdef AFS_LINUX22_ENV
+
+#ifdef AFS_RXERRQ_ENV
+    if (ret < 0) {
+	while (rxi_HandleSocketError(socket) > 0)
+	    ;
+	return ret;
+    }
+#else
+# ifdef AFS_LINUX22_ENV
     /* linux unfortunately returns ECONNREFUSED if the target port
      * is no longer in use */
     /* and EAGAIN if a UDP checksum is incorrect */
     if (ret == -1 && errno != ECONNREFUSED && errno != EAGAIN) {
-#else
+# else
     if (ret == -1) {
-#endif
+# endif
 	dpf(("rxi_sendmsg failed, error %d\n", errno));
 	fflush(stdout);
-#ifndef AFS_NT40_ENV
+# ifndef AFS_NT40_ENV
         if (errno > 0)
           return -errno;
-#else
+# else
             if (WSAGetLastError() > 0)
               return -WSAGetLastError();
-#endif
+# endif
 	return -1;
     }
+#endif /* !AFS_RXERRQ_ENV */
     return 0;
 }
 
 struct rx_ts_info_t * rx_ts_info_init(void) {
     struct rx_ts_info_t * rx_ts_info;
-    rx_ts_info = (rx_ts_info_t *) malloc(sizeof(rx_ts_info_t));
+    rx_ts_info = calloc(1, sizeof(rx_ts_info_t));
     osi_Assert(rx_ts_info != NULL && pthread_setspecific(rx_ts_info_key, rx_ts_info) == 0);
-    memset(rx_ts_info, 0, sizeof(rx_ts_info_t));
 #ifdef RX_ENABLE_TSFPQ
-    queue_Init(&rx_ts_info->_FPQ);
+    opr_queue_Init(&rx_ts_info->_FPQ.queue);
 
     MUTEX_ENTER(&rx_packets_mutex);
     rx_TSFPQMaxProcs++;
@@ -448,3 +458,25 @@ struct rx_ts_info_t * rx_ts_info_init(void) {
 #endif /* RX_ENABLE_TSFPQ */
     return rx_ts_info;
 }
+
+int
+rx_GetThreadNum(void) {
+    return (intptr_t)pthread_getspecific(rx_thread_id_key);
+}
+
+static void
+rxi_SetThreadNum(int threadID) {
+    osi_Assert(pthread_setspecific(rx_thread_id_key,
+			           (void *)(intptr_t)threadID) == 0);
+}
+
+int
+rx_SetThreadNum(void) {
+    int threadId;
+
+    threadId = rx_NewThreadId();
+    rxi_SetThreadNum(threadId);
+    return threadId;
+}
+
+#endif

@@ -14,21 +14,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <sys/types.h>
 #include <afs/cmd.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/param.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/time.h>
-#endif
 #include <lwp.h>
 #include <rx/rx.h>
 #include <afs/bubasics.h>
@@ -63,7 +51,7 @@ bc_Dumper(int aindex)
     struct rx_connection *tconn;
     struct bc_volumeDump *tde;
     afs_int32 count, port;
-    struct tc_dumpDesc *volDesc = 0;
+    struct tc_dumpDesc *volDesc = NULL;
     struct tc_dumpArray volArray;
     char *baseNamePtr;
     statusP statusPtr;
@@ -90,8 +78,12 @@ bc_Dumper(int aindex)
      */
     for (count = 0, tde = dumpTaskPtr->volumes; tde;
 	 tde = tde->next, count++);
-    volDesc =
-	(struct tc_dumpDesc *)malloc(count * sizeof(struct tc_dumpDesc));
+
+    /* Nothing to dump, so just return success */
+    if (count == 0)
+	goto error_exit;
+
+    volDesc = malloc(count * sizeof(struct tc_dumpDesc));
     if (!volDesc) {
 	afs_com_err(whoami, BC_NOMEM, NULL);
 	ERROR(BC_NOMEM);

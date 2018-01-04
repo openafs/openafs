@@ -134,7 +134,7 @@ and L<B<vos help>|vos_help(1)>.
 =head1 OPTIONS
 
 The following arguments and flags are available on many commands in the
-B<bos> suite. The reference page for each command also lists them, but
+B<vos> suite. The reference page for each command also lists them, but
 they are described here in greater detail.
 
 =over 4
@@ -164,6 +164,11 @@ the B<-localauth> flag is included always runs in the local cell (as
 defined in the server machine's local F</usr/afs/etc/ThisCell> file),
 whereas a command on which the B<-cell> argument is included runs in the
 specified foreign cell.
+
+=item B<-config> <I<config directory>>
+
+The location of the directory to use to obtain configuration information,
+including the CellServDB. This is primarily provided for testing purposes.
 
 =item B<-help>
 
@@ -236,7 +241,7 @@ L<B<vos move>|vos_move(1)> command also accept this notation.
 Identifies the file server machine that houses, or is to house, the
 volumes or AFS server partitions of interest. Provide the machine's IP
 address in dotted decimal format, its fully qualified host name (for
-example, C<fs1.abc.com>), or the shortest abbreviated form of its host
+example, C<fs1.example.com>), or the shortest abbreviated form of its host
 name that distinguishes it from other machines. Successful use of an
 abbreviated form depends on the availability of a name resolution service
 (such as the Domain Name Service or a local host table) at the time the

@@ -133,7 +133,7 @@ afs_root(struct vfs *afsp, struct vnode **avpp, char *unused1)
 	    if (tvp) {
 		afs_globalVp = tvp;
 	    } else
-		code = ENOENT;
+		code = EIO;
 	}
     }
     if (tvp) {

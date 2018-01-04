@@ -35,8 +35,8 @@
       </indexterm></para>
 
     <orderedlist>
-      <listitem>
-        <para><anchor id="LINOSAVE-TOKENS" />Issue the <emphasis role="bold">tokens</emphasis> command to verify that you have valid
+      <listitem id="LINOSAVE-TOKENS">
+        <para>Issue the <emphasis role="bold">tokens</emphasis> command to verify that you have valid
         tokens. For complete instructions, see <link linkend="HDRWQ30">To Display Your Tokens</link>. <programlisting>
    % <emphasis role="bold">tokens</emphasis>
 </programlisting></para>
@@ -57,8 +57,8 @@
         </itemizedlist>
       </listitem>
 
-      <listitem>
-        <para><anchor id="LINOSAVE-FSCHECKS" />Issue the <emphasis role="bold">fs checkservers</emphasis> command to check the
+      <listitem id="LINOSAVE-FSCHECKS">
+        <para>Issue the <emphasis role="bold">fs checkservers</emphasis> command to check the
         status of file server machines. For complete instructions, see <link linkend="HDRWQ41">Checking the Status of Server
         Machines</link>. <programlisting>
    % <emphasis role="bold">fs checkservers &amp;</emphasis>
@@ -93,8 +93,8 @@
         </itemizedlist>
       </listitem>
 
-      <listitem>
-        <para><anchor id="LINOSAVE-PERMS" />Issue the <emphasis role="bold">fs listacl</emphasis> command to verify that you have
+      <listitem id="LINOSAVE-PERMS">
+        <para>Issue the <emphasis role="bold">fs listacl</emphasis> command to verify that you have
         the permissions you need for accessing, copying, or saving the file. For complete instructions, see <link
         linkend="HDRWQ53">To display an ACL</link>. <programlisting>
    % <emphasis role="bold">fs listacl</emphasis> &lt;<replaceable>dir/file path</replaceable>&gt;
@@ -141,8 +141,8 @@
         have the necessary permissions, proceed to Step <link linkend="LINOSAVE-QUOTA">4</link>.</para>
       </listitem>
 
-      <listitem>
-        <para><anchor id="LINOSAVE-QUOTA" />If copying a file, issue the <emphasis role="bold">fs listquota</emphasis> command to
+      <listitem id="LINOSAVE-QUOTA">
+        <para>If copying a file, issue the <emphasis role="bold">fs listquota</emphasis> command to
         check whether the volume into which you are copying it, or the partition that houses that volume, is almost full. For
         saving, check the volume and partition that contain the directory into which you are saving the file. For complete
         instructions, see <link linkend="HDRWQ39">Displaying Volume Quota</link>. <programlisting>
@@ -152,7 +152,7 @@
         <para>The command produces output as in the following example:</para>
 
         <programlisting>
-   % <emphasis role="bold">fs listquota /afs/abc.com/usr/terry</emphasis>
+   % <emphasis role="bold">fs listquota /afs/example.com/usr/terry</emphasis>
    Volume Name     Quota    Used    % Used   Partition
    user.terry      10000    3400       34%         86%
 </programlisting>
@@ -212,7 +212,7 @@
 </programlisting></para>
 
         <para>For <replaceable>directory</replaceable>, provide the complete pathname to the directory (for example, <emphasis
-        role="bold">/afs/abc.com/usr/</emphasis><replaceable>your_username</replaceable>). This is necessary because AFS cannot
+        role="bold">/afs/example.com/usr/</emphasis><replaceable>your_username</replaceable>). This is necessary because AFS cannot
         interpret pathname abbreviations if you do not have the <emphasis role="bold">l</emphasis> (<emphasis
         role="bold">lookup</emphasis>) permission.</para>
       </listitem>

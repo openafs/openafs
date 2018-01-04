@@ -7,12 +7,7 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
-KRB5CFLAGS = @KRB5_CPPFLAGS@
-KRB5LIBS = @KRB5_LDFLAGS@ @KRB5_LIBS@
+include @TOP_OBJDIR@/src/config/Makefile.lwp
 
 INCLS=${TOP_INCDIR}/afs/afsint.h \
 	${TOP_INCDIR}/afs/cmd.h \
@@ -28,10 +23,12 @@ AFSIO_INCLS=${TOP_INCDIR}/afs/afsint.h \
 	${TOP_INCDIR}/afs/afsutil.h
 
 AFSIO_LIBS=${TOP_LIBDIR}/libafscp.a \
-	${TOP_LIBDIR}/libafsauthent.a \
-	${TOP_LIBDIR}/libafsrpc.a \
-	${TOP_LIBDIR}/libcmd.a \
-	$(TOP_LIBDIR)/libafsutil.a
+	$(top_builddir)/src/rxkad/liboafs_rxkad.la \
+	$(top_builddir)/src/fsint/liboafs_fsint.la \
+	$(top_builddir)/src/vlserver/liboafs_vldb.la \
+	$(top_builddir)/src/cmd/liboafs_cmd.la \
+	$(top_builddir)/src/util/liboafs_util.la \
+	$(top_builddir)/src/opr/liboafs_opr.la
 
 FSLIBS=${TOP_LIBDIR}/libsys.a \
 	 ${TOP_LIBDIR}/libvldb.a \
@@ -42,12 +39,14 @@ FSLIBS=${TOP_LIBDIR}/libsys.a \
 	 ${TOP_LIBDIR}/libafscom_err.a \
 	 ${TOP_LIBDIR}/libcmd.a \
 	 ${TOP_LIBDIR}/libkauth.a \
-	 ${TOP_LIBDIR}/libdes.a \
 	 ${TOP_LIBDIR}/librx.a \
 	 ${TOP_LIBDIR}/libsys.a \
 	 ${TOP_LIBDIR}/liblwp.a \
 	 ${TOP_LIBDIR}/libaudit.a \
-	 $(TOP_LIBDIR)/libafsutil.a
+	 $(TOP_LIBDIR)/libafsutil.a \
+	 $(TOP_LIBDIR)/libopr.a \
+	 ${TOP_LIBDIR}/libafsrfc3961.a \
+	 ${TOP_LIBDIR}/libafshcrypto_lwp.a
 
 CMLIBS=${TOP_LIBDIR}/libsys.a \
 	 ${TOP_LIBDIR}/libafsint.a \
@@ -56,11 +55,13 @@ CMLIBS=${TOP_LIBDIR}/libsys.a \
 	 ${TOP_LIBDIR}/libafscom_err.a \
 	 ${TOP_LIBDIR}/libcmd.a \
 	 ${TOP_LIBDIR}/librx.a \
+	 ${TOP_LIBDIR}/libafshcrypto_lwp.a \
 	 ${TOP_LIBDIR}/libsys.a \
 	 ${TOP_LIBDIR}/liblwp.a \
+	 $(TOP_LIBDIR)/libopr.a \
 	 $(TOP_LIBDIR)/libafsutil.a
 
-LIBS = ${FSLIBS} 
+LIBS = ${FSLIBS}
 
 all: fs up fstrace cmdebug livesys kdump-build cacheout afsio
 
@@ -68,86 +69,61 @@ all: fs up fstrace cmdebug livesys kdump-build cacheout afsio
 # Build targets
 #
 cacheout: cacheout.o
-	$(CC) ${CFLAGS} -o cacheout cacheout.o ${LIBS} ${XLIBS} ${CMLIBS} ${KRB5_LIBS}
+	$(AFS_LDRULE) cacheout.o ${LIBS} $(LIB_roken) ${XLIBS} ${CMLIBS}
 
 cacheout.o: cacheout.c
 
-PTH_CFLAGS=$(COMMON_CFLAGS) $(MT_CFLAGS)
-PTH_LDFLAGS=$(COMMON_LDFLAGS) $(MT_LDFLAGS)
-PTH_CCRULE=$(MT_CC) $(PTH_CFLAGS) -o $@ -c
 
 up.o: up.c AFS_component_version_number.c
 
 up: up.o
-	${CC} ${CFLAGS} -o up up.o ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) up.o ${LIBS} $(LIB_roken) ${XLIBS}
 
 fs.o: fs.c ${INCLS} AFS_component_version_number.c
 
 fs: fs.o $(LIBS)
-	${CC} ${CFLAGS} -o fs fs.o ${TOP_LIBDIR}/libprot.a $(LIBS) ${XLIBS} ${KRB5_LIBS}
+	$(AFS_LDRULE) fs.o ${TOP_LIBDIR}/libprot.a $(LIBS) \
+		$(LIB_roken) ${XLIBS}
 
-afsio.o: ${srcdir}/afsio.c ${AFSIO_INCLS} AFS_component_version_number.c
+afsio.o: afsio.c ${AFSIO_INCLS} AFS_component_version_number.c
 	${PTH_CCRULE} ${srcdir}/afsio.c
-vldbint.cs.o: ../vlserver/vldbint.cs.c
-	${PTH_CCRULE} ../vlserver/vldbint.cs.c
-vldbint.xdr.o: ../vlserver/vldbint.xdr.c
-	${PTH_CCRULE}  ../vlserver/vldbint.xdr.c
 afscbint.ss.o: ../fsint/afscbint.ss.c
 	${PTH_CCRULE} ../fsint/afscbint.ss.c
 
-afsio: afsio.o vldbint.cs.o afscbint.ss.o vldbint.xdr.o ${AFSIO_LIBS}
-	$(MT_CC) @KRB5_CPPFLAGS@ $(PTH_LDFLAGS) $(PTH_CFLAGS) -o afsio afsio.o vldbint.cs.o afscbint.ss.o vldbint.xdr.o ${AFSIO_LIBS} \
-		${MT_LIBS} ${XLIBS} ${KRB5LIBS}
+afsio: afsio.o afscbint.ss.o ${AFSIO_LIBS}
+	$(LT_LDRULE_static) afsio.o afscbint.ss.o \
+		${AFSIO_LIBS} \
+		$(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} \
+		$(LDFLAGS_krb5) $(LIB_krb5)
 
 livesys.o: livesys.c ${INCLS} AFS_component_version_number.c
 
-livesys: livesys.c $(LIBS)
-	${CC} ${CFLAGS} -o livesys ${srcdir}/livesys.c $(LIBS) ${XLIBS} ${KRB5_LIBS}
+livesys: livesys.o $(LIBS)
+	$(AFS_LDRULE) livesys.o $(LIBS) $(LIB_roken) ${XLIBS}
 
-twiddle: twiddle.c $(LIBS)
-	${CC} ${CFLAGS} -o twiddle ${srcdir}/twiddle.c $(LIBS) ${XLIBS} ${KRB5_LIBS}
+twiddle: twiddle.o $(LIBS)
+	$(AFS_LDRULE) twiddle.o $(LIBS) $(LIB_roken) ${XLIBS}
 
-gcpags: gcpags.c $(LIBS)
-	${CC} ${CFLAGS} -o gcpags ${srcdir}/gcpags.c $(LIBS) ${XLIBS}
+gcpags: gcpags.o $(LIBS)
+	$(AFS_LDRULE) gcpags.o $(LIBS) $(LIB_roken) ${XLIBS}
 
 whatfid.o: whatfid.c ${INCLS} AFS_component_version_number.c
 
 whatfid: whatfid.o ${LIBS}
-	${CC} ${CFLAGS} -o whatfid whatfid.o ${LIBS} ${XLIBS} ${KRB5_LIBS}
-
-fstrace.o: fstrace.c AFS_component_version_number.c
-	case ${SYS_NAME} in \
-		sun4_411 | sun4c_411 | sun4m_412 ) \
-			${CCXPG2} ${DBG} ${OPTMZ} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} -I${TOP_INCDIR} -c ${srcdir}/fstrace.c ;; \
-		sun*_4* ) \
-			${CC} ${DBG} ${OPTMZ} -I/usr/xpg2include -I/usr/5include -g -I${TOP_SRCDIR}/config -I${TOP_INCDIR} -I${TOP_INCDIR} -c fstrace.c ;; \
-		* ) \
-			${CC} ${CFLAGS} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} -I${TOP_INCDIR} -c ${srcdir}/fstrace.c ;; \
-	esac
+	$(AFS_LDRULE) whatfid.o ${LIBS} $(LIB_roken) ${XLIBS}
 
 fstrace: fstrace.o
-	case ${SYS_NAME} in \
-		sun4_411 | sun4c_411 | sun4m_412 ) \
-			${CCXPG2} ${CFLAGS} -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a ;; \
-		sun*_4* ) \
-			${CC} -L/usr/xpg2lib -L/usr/5lib ${CFLAGS} -g -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a -lxpg ;; \
-		hp700_ux100 | hp800_ux100 | hp?00_ux10? | hp_ux10? | hp_ux11?) \
-			${CC} -I${TOP_OBJDIR}/src/config  -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a ;; \
-		* ) \
-			${CC} ${CFLAGS} -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a ${XLIBS} ;; \
-	esac
+	$(AFS_LDRULE) fstrace.o $(LIBS) $(LIB_roken) ${XLIBS}
 
 cmdebug.o: cmdebug.c ${INCLS} AFS_component_version_number.c
 
 cmdebug: cmdebug.o ${CMLIBS}
-	$(CC) -o cmdebug cmdebug.o ${CFLAGS} ${CMLIBS} ${XLIBS} ${KRB5_LIBS}
+	$(AFS_LDRULE) cmdebug.o ${CMLIBS} $(LIB_roken) ${XLIBS}
 
 dedebug.o: dedebug.c ${INCLS} AFS_component_version_number.c
 
 dedebug: dedebug.o ${CMLIBS}
-	$(CC) -o dedebug dedebug.o ${CFLAGS} ${CMLIBS} ${XLIBS} ${KRB5_LIBS}
-
-
+	$(AFS_LDRULE) dedebug.o ${CMLIBS} $(LIB_roken) ${XLIBS}
 
 #
 # Kernel info dumper - these are done with submakes so that
@@ -203,7 +179,7 @@ kdump: kdump.o
 	* )     ${CC} -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a ${XLIBS} ;; \
 	esac
 
-kdump64: 
+kdump64:
 	-set -x; \
 	case ${SYS_NAME} in \
 	sun4x_5[789] | sun4x_510 | hp_ux11* | sunx86_5[789] | sunx86_510 )  \
@@ -222,7 +198,7 @@ kdump.o: kdump.c ${INCLS} AFS_component_version_number.c
 		*linux* ) \
 			$(MAKE) kdump-linux-${LINUX_VERSION}.o ;; \
 		alpha_osf1 | alpha_osf20 |  alpha_osf30 | alpha_osf32 | alpha_osf32c| alpha_dux?? ) \
-			${CC} ${CFLAGS} -I/usr/sys/include -I/usr/sys/BINARY -I/usr/sys/AFS -DDEBUGGER -c ${srcdir}/kdump.c ;;\
+			${CC} ${AFS_CFLAGS} -I/usr/sys/include -I/usr/sys/BINARY -I/usr/sys/AFS -DDEBUGGER -c ${srcdir}/kdump.c ;;\
 		sgi_6? ) \
 			for f in ../libafs/STATIC.IP*/CPU_KDEFS; \
 			do	IP=`expr "$$f" : '../libafs/STATIC.\(IP..\)'`; \
@@ -327,7 +303,7 @@ install: kdump-build fs livesys up fstrace cmdebug afsio
 	hp_ux11* ) \
 		${INSTALL_SCRIPT} kdump.sh.hp_ux11 ${DESTDIR}${sbindir}/kdump; \
 		${INSTALL_PROGRAM} kdump-build ${DESTDIR}${sbindir}/kdump ;; \
-	*_fbsd* ) \
+	*bsd* ) \
 		;; \
 	*) \
 		${INSTALL_PROGRAM} kdump-build ${DESTDIR}${sbindir}/kdump ;; \
@@ -385,7 +361,10 @@ dest: kdump-build fs livesys up fstrace cmdebug afsio
 #
 
 clean:
-	$(RM) -f *.o *.a up fs kdump-* kdump kdump64 core cmdebug AFS_component_version_number.c fstrace gcpags livesys dedebug afsio
+	$(LT_CLEAN)
+	$(RM) -f *.o *.a up fs kdump-* kdump kdump64 core cmdebug \
+		AFS_component_version_number.c fstrace gcpags livesys dedebug \
+		cacheout afsio
 
 test:
 	cd test; $(MAKE)

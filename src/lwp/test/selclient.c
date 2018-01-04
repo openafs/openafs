@@ -37,6 +37,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+
 #include <unistd.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -241,9 +242,9 @@ sendTest(int sockFD, int delay, int reqOOB, int size)
     selcmd_t selCmd;
     time_t stime, etime;
 
-    buf = (char *)malloc(size);
+    buf = malloc(size);
     assert(buf);
-    bufTest = (char *)malloc(size);
+    bufTest = malloc(size);
     assert(bufTest);
 
     for (j = i = 0; i < size; i++, j++) {
@@ -284,7 +285,7 @@ sendTest(int sockFD, int delay, int reqOOB, int size)
 	    (void)time(&stime);
 	    code =
 		IOMGR_Select(sockFD + 1, rfds, wfds, efds,
-			     (struct timeval *)NULL);
+			     NULL);
 	    assert(code > 0);
 
 	    if (FD_ISSET(sockFD, wfds)) {

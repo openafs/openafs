@@ -14,6 +14,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+
 #include <ctype.h>
 
 #include "bos.h"
@@ -102,10 +104,9 @@ LocalParseLine(char *aline, struct token **alist)
 	    if (inToken) {
 		inToken = 0;	/* end of this token */
 		*tptr++ = 0;
-		ttok = (struct token *)malloc(sizeof(struct token));
+		ttok = malloc(sizeof(struct token));
 		ttok->next = NULL;
-		ttok->key = (char *)malloc(strlen(tbuffer) + 1);
-		strcpy(ttok->key, tbuffer);
+		ttok->key = strdup(tbuffer);
 		if (last) {
 		    last->next = ttok;
 		    last = ttok;
@@ -1807,7 +1808,7 @@ SetupBosAdminCmd(void)
 {
     struct cmd_syndesc *ts;
 
-    ts = cmd_CreateSyntax("BosProcessCreate", DoBosProcessCreate, NULL,
+    ts = cmd_CreateSyntax("BosProcessCreate", DoBosProcessCreate, NULL, 0,
 			  "create a new bos process");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where process will be created");
@@ -1823,7 +1824,7 @@ SetupBosAdminCmd(void)
 		"path to notifier binary that is run when process terminates");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosFSProcessCreate", DoBosFSProcessCreate, NULL,
+    ts = cmd_CreateSyntax("BosFSProcessCreate", DoBosFSProcessCreate, NULL, 0,
 			  "create a fs bos process");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where process will be created");
@@ -1839,7 +1840,7 @@ SetupBosAdminCmd(void)
 		"path to notifier binary that is run when process terminates");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosProcessDelete", DoBosProcessDelete, NULL,
+    ts = cmd_CreateSyntax("BosProcessDelete", DoBosProcessDelete, NULL, 0,
 			  "delete a bos process");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where process will be deleted");
@@ -1848,7 +1849,7 @@ SetupBosAdminCmd(void)
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("BosProcessExecutionStateGet",
-			  DoBosProcessExecutionStateGet, NULL,
+			  DoBosProcessExecutionStateGet, NULL, 0,
 			  "get the process execution state of a process");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where process exists");
@@ -1857,7 +1858,7 @@ SetupBosAdminCmd(void)
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("BosProcessExecutionStateSet",
-			  DoBosProcessExecutionStateSet, NULL,
+			  DoBosProcessExecutionStateSet, NULL, 0,
 			  "set the process execution state of a process");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where process exists");
@@ -1870,7 +1871,7 @@ SetupBosAdminCmd(void)
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("BosProcessExecutionStateSetTemporary",
-			  DoBosProcessExecutionStateSetTemporary, NULL,
+			  DoBosProcessExecutionStateSetTemporary, NULL, 0,
 			  "set the process execution state "
 			  "of a process temporarily");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
@@ -1883,12 +1884,12 @@ SetupBosAdminCmd(void)
 		"set the process state to running");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosProcessNameList", DoBosProcessNameList, NULL,
+    ts = cmd_CreateSyntax("BosProcessNameList", DoBosProcessNameList, NULL, 0,
 			  "list the names of all processes at a bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to query");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosProcessInfoGet", DoBosProcessInfoGet, NULL,
+    ts = cmd_CreateSyntax("BosProcessInfoGet", DoBosProcessInfoGet, NULL, 0,
 			  "get information about a process");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where process exists");
@@ -1897,7 +1898,7 @@ SetupBosAdminCmd(void)
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("BosProcessParameterList",
-			  DoBosProcessParameterList, NULL,
+			  DoBosProcessParameterList, NULL, 0,
 			  "list the parameters of a process");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where process exists");
@@ -1905,7 +1906,7 @@ SetupBosAdminCmd(void)
 		"the name of the process");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosProcessNotifierGet", DoBosProcessNotifierGet, NULL,
+    ts = cmd_CreateSyntax("BosProcessNotifierGet", DoBosProcessNotifierGet, NULL, 0,
 			  "get the notifier for a process");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where process exists");
@@ -1913,7 +1914,7 @@ SetupBosAdminCmd(void)
 		"the name of the process");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosProcessRestart", DoBosProcessRestart, NULL,
+    ts = cmd_CreateSyntax("BosProcessRestart", DoBosProcessRestart, NULL, 0,
 			  "restart a process");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where process exists");
@@ -1921,13 +1922,13 @@ SetupBosAdminCmd(void)
 		"the name of the process");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosProcessAllStop", DoBosProcessAllStop, NULL,
+    ts = cmd_CreateSyntax("BosProcessAllStop", DoBosProcessAllStop, NULL, 0,
 			  "stop all processes at a bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where processes exists");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosProcessAllWaitStop", DoBosProcessAllWaitStop, NULL,
+    ts = cmd_CreateSyntax("BosProcessAllWaitStop", DoBosProcessAllWaitStop, NULL, 0,
 			  "stop all processes at a bos server and block "
 			  "until they all exit");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
@@ -1935,7 +1936,7 @@ SetupBosAdminCmd(void)
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("BosProcessAllWaitTransition",
-			  DoBosProcessAllWaitTransition, NULL,
+			  DoBosProcessAllWaitTransition, NULL, 0,
 			  "wait until all processes have transitioned to "
 			  "their desired state");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
@@ -1943,7 +1944,7 @@ SetupBosAdminCmd(void)
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("BosProcessAllStopAndRestart",
-			  DoBosProcessAllStopAndRestart, NULL,
+			  DoBosProcessAllStopAndRestart, NULL, 0,
 			  "stop all processes at a bos server and "
 			  "then restart them");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
@@ -1952,7 +1953,7 @@ SetupBosAdminCmd(void)
 		"include the bos server in the processes to be restarted");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosAdminCreate", DoBosAdminCreate, NULL,
+    ts = cmd_CreateSyntax("BosAdminCreate", DoBosAdminCreate, NULL, 0,
 			  "create an admin user at a bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where admin will be created");
@@ -1960,7 +1961,7 @@ SetupBosAdminCmd(void)
 		"the name of the administrator to add");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosAdminDelete", DoBosAdminDelete, NULL,
+    ts = cmd_CreateSyntax("BosAdminDelete", DoBosAdminDelete, NULL, 0,
 			  "delete an admin user at a bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where admin will be deleted");
@@ -1968,13 +1969,13 @@ SetupBosAdminCmd(void)
 		"the name of the administrator to delete");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosAdminList", DoBosAdminList, NULL,
+    ts = cmd_CreateSyntax("BosAdminList", DoBosAdminList, NULL, 0,
 			  "list all admin users at a bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where admins will be listed");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosKeyCreate", DoBosKeyCreate, NULL,
+    ts = cmd_CreateSyntax("BosKeyCreate", DoBosKeyCreate, NULL, 0,
 			  "create a key at a bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where key will be created");
@@ -1983,7 +1984,7 @@ SetupBosAdminCmd(void)
     cmd_AddParm(ts, "-key", CMD_SINGLE, CMD_REQUIRED, "new encryption key");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosKeyDelete", DoBosKeyDelete, NULL,
+    ts = cmd_CreateSyntax("BosKeyDelete", DoBosKeyDelete, NULL, 0,
 			  "delete a key at a bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where key will be deleted");
@@ -1991,41 +1992,41 @@ SetupBosAdminCmd(void)
 		"version number of the key");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosKeyList", DoBosKeyList, NULL,
+    ts = cmd_CreateSyntax("BosKeyList", DoBosKeyList, NULL, 0,
 			  "list keys at a bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where keys exist");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosCellSet", DoBosCellSet, NULL,
+    ts = cmd_CreateSyntax("BosCellSet", DoBosCellSet, NULL, 0,
 			  "set the cell at a bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to modify");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_REQUIRED, "new cell");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosCellGet", DoBosCellGet, NULL,
+    ts = cmd_CreateSyntax("BosCellGet", DoBosCellGet, NULL, 0,
 			  "get the cell at a bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to query");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosHostCreate", DoBosHostCreate, NULL,
+    ts = cmd_CreateSyntax("BosHostCreate", DoBosHostCreate, NULL, 0,
 			  "add a host entry to the server CellServDB");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to modify");
     cmd_AddParm(ts, "-host", CMD_SINGLE, CMD_REQUIRED, "host to add");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosHostDelete", DoBosHostDelete, NULL,
+    ts = cmd_CreateSyntax("BosHostDelete", DoBosHostDelete, NULL, 0,
 			  "delete a host entry from the server CellServDB");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to modify");
     cmd_AddParm(ts, "-host", CMD_SINGLE, CMD_REQUIRED, "host to delete");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosHostList", DoBosHostList, NULL,
+    ts = cmd_CreateSyntax("BosHostList", DoBosHostList, NULL, 0,
 			  "list all host entries from the server CellServDB");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to query");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosExecutableCreate", DoBosExecutableCreate, NULL,
+    ts = cmd_CreateSyntax("BosExecutableCreate", DoBosExecutableCreate, NULL, 0,
 			  "create a new binary at a bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to modify");
     cmd_AddParm(ts, "-binary", CMD_SINGLE, CMD_REQUIRED,
@@ -2034,7 +2035,7 @@ SetupBosAdminCmd(void)
 		"path where the binary will be stored");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosExecutableRevert", DoBosExecutableRevert, NULL,
+    ts = cmd_CreateSyntax("BosExecutableRevert", DoBosExecutableRevert, NULL, 0,
 			  "revert a binary at a bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to modify");
     cmd_AddParm(ts, "-executable", CMD_SINGLE, CMD_REQUIRED,
@@ -2042,14 +2043,14 @@ SetupBosAdminCmd(void)
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("BosExecutableTimestampGet",
-			  DoBosExecutableTimestampGet, NULL,
+			  DoBosExecutableTimestampGet, NULL, 0,
 			  "get the timestamps for a binary at bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to query");
     cmd_AddParm(ts, "-executable", CMD_SINGLE, CMD_REQUIRED,
 		"path to the binary to revert");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosExecutablePrune", DoBosExecutablePrune, NULL,
+    ts = cmd_CreateSyntax("BosExecutablePrune", DoBosExecutablePrune, NULL, 0,
 			  "prune various files at bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to modify");
     cmd_AddParm(ts, "-oldfiles", CMD_FLAG, CMD_OPTIONAL, "prune .old files");
@@ -2058,7 +2059,7 @@ SetupBosAdminCmd(void)
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("BosExecutableRestartTimeSet",
-			  DoBosExecutableRestartTimeSet, NULL,
+			  DoBosExecutableRestartTimeSet, NULL, 0,
 			  "set the restart times at a bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to modify");
     cmd_AddParm(ts, "-daily", CMD_FLAG, CMD_OPTIONAL,
@@ -2070,7 +2071,7 @@ SetupBosAdminCmd(void)
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("BosExecutableRestartTimeGet",
-			  DoBosExecutableRestartTimeGet, NULL,
+			  DoBosExecutableRestartTimeGet, NULL, 0,
 			  "get the restart times at a bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to query");
     cmd_AddParm(ts, "-daily", CMD_FLAG, CMD_OPTIONAL,
@@ -2079,14 +2080,14 @@ SetupBosAdminCmd(void)
 		"get weekly restart time");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosLogGet", DoBosLogGet, NULL,
+    ts = cmd_CreateSyntax("BosLogGet", DoBosLogGet, NULL, 0,
 			  "get a log file from the bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to query");
     cmd_AddParm(ts, "-logfile", CMD_SINGLE, CMD_REQUIRED,
 		"path to the log file to retrieve");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosAuthSet", DoBosAuthSet, NULL,
+    ts = cmd_CreateSyntax("BosAuthSet", DoBosAuthSet, NULL, 0,
 			  "set the authorization level at a bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to modify");
     cmd_AddParm(ts, "-requireauth", CMD_FLAG, CMD_OPTIONAL,
@@ -2095,7 +2096,7 @@ SetupBosAdminCmd(void)
 		"don't require authorization");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosCommandExecute", DoBosCommandExecute, 0,
+    ts = cmd_CreateSyntax("BosCommandExecute", DoBosCommandExecute, 0, 0,
 			  "execute a command at a bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where command will execute");
@@ -2103,7 +2104,7 @@ SetupBosAdminCmd(void)
 		"command to execute");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosSalvage", DoBosSalvage, NULL,
+    ts = cmd_CreateSyntax("BosSalvage", DoBosSalvage, NULL, 0,
 			  "execute a salvage command at a bos server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where salvager will execute");

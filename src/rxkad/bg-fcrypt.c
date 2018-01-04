@@ -31,46 +31,36 @@
  * SUCH DAMAGE.
  */
 #include <afsconfig.h>
-#ifdef KERNEL
-#include "afs/param.h"
-#else
 #include <afs/param.h>
-#endif
-
+#include <afs/stds.h>
 
 #define DEBUG 0
 #ifdef KERNEL
 #ifndef UKERNEL
-#include "afs/stds.h"
 #include "h/types.h"
 #if !defined(AFS_LINUX20_ENV) && !defined(AFS_OBSD_ENV)
 #include "netinet/in.h"
 #endif
 #else /* UKERNEL */
 #include "afs/sysincludes.h"
-#include "afs/stds.h"
 #endif /* UKERNEL */
 #ifdef AFS_LINUX22_ENV
 #include <asm/byteorder.h>
 #endif
 
 #else /* KERNEL */
+#include <roken.h>
+#include <afs/opr.h>
 
-#include <afs/stds.h>
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
 #include <rx/rx.h>
+#include <rx/rx_packet.h>
 #endif /* KERNEL */
 
 #include "fcrypt.h"
 #include "rxkad.h"
 #include "fcrypt.h"
 #include "private_data.h"
-#include <des/stats.h>
+#include "stats.h"
 
 /*
  * Unrolling of the inner loops helps the most on pentium chips
@@ -98,12 +88,12 @@
 
 /* Rotate 32 bit word left */
 #define ROT32L(x, n) ((((afs_uint32) x) << (n)) | (((afs_uint32) x) >> (32-(n))))
-#define bswap32(x) (((ROT32L(x, 16) & 0x00ff00ff)<<8) | ((ROT32L(x, 16)>>8) & 0x00ff00ff))
+#define octetswap32(x) (((ROT32L(x, 16) & 0x00ff00ff)<<8) | ((ROT32L(x, 16)>>8) & 0x00ff00ff))
 
 #if WORDS_BIGENDIAN
 #define NTOH(x) (x)
 #else
-#define NTOH(x) bswap32(x)
+#define NTOH(x) octetswap32(x)
 #endif
 
 /*
@@ -546,7 +536,6 @@ fc_keysched(void *key_, fc_KeySchedule sched)
     const unsigned char *key = key_;
 
     /* Do we have 56 bit longs or even longer longs? */
-#ifdef AFS_64BIT_ENV
     afs_uint64 k;		/* k holds all 56 non parity bits */
 
     /* Compress out parity bits */
@@ -601,64 +590,7 @@ fc_keysched(void *key_, fc_KeySchedule sched)
     *sched++ = EFF_NTOHL((afs_uint32) k);
     ROT56R64(k, 11);
     *sched++ = EFF_NTOHL((afs_uint32) k);
-#else
-    afs_uint32 hi, lo;		/* hi is upper 24 bits and lo lower 32, total 56 */
 
-    /* Compress out parity bits */
-    lo = (*key++) >> 1;
-    lo <<= 7;
-    lo |= (*key++) >> 1;
-    lo <<= 7;
-    lo |= (*key++) >> 1;
-    lo <<= 7;
-    lo |= (*key++) >> 1;
-    hi = lo >> 4;
-    lo &= 0xf;
-    lo <<= 7;
-    lo |= (*key++) >> 1;
-    lo <<= 7;
-    lo |= (*key++) >> 1;
-    lo <<= 7;
-    lo |= (*key++) >> 1;
-    lo <<= 7;
-    lo |= (*key) >> 1;
-
-    /* Use lower 32 bits for schedule, rotate by 11 each round (16 times) */
-    *sched++ = EFF_NTOHL(lo);
-    ROT56R(hi, lo, 11);
-    *sched++ = EFF_NTOHL(lo);
-    ROT56R(hi, lo, 11);
-    *sched++ = EFF_NTOHL(lo);
-    ROT56R(hi, lo, 11);
-    *sched++ = EFF_NTOHL(lo);
-    ROT56R(hi, lo, 11);
-
-    *sched++ = EFF_NTOHL(lo);
-    ROT56R(hi, lo, 11);
-    *sched++ = EFF_NTOHL(lo);
-    ROT56R(hi, lo, 11);
-    *sched++ = EFF_NTOHL(lo);
-    ROT56R(hi, lo, 11);
-    *sched++ = EFF_NTOHL(lo);
-    ROT56R(hi, lo, 11);
-
-    *sched++ = EFF_NTOHL(lo);
-    ROT56R(hi, lo, 11);
-    *sched++ = EFF_NTOHL(lo);
-    ROT56R(hi, lo, 11);
-    *sched++ = EFF_NTOHL(lo);
-    ROT56R(hi, lo, 11);
-    *sched++ = EFF_NTOHL(lo);
-    ROT56R(hi, lo, 11);
-
-    *sched++ = EFF_NTOHL(lo);
-    ROT56R(hi, lo, 11);
-    *sched++ = EFF_NTOHL(lo);
-    ROT56R(hi, lo, 11);
-    *sched++ = EFF_NTOHL(lo);
-    ROT56R(hi, lo, 11);
-    *sched++ = EFF_NTOHL(lo);
-#endif
     INC_RXKAD_STATS(fc_key_scheds);
     return 0;
 }
@@ -692,14 +624,14 @@ rxkad_EncryptPacket(const struct rx_connection * rx_connection_not_used,
 
     memcpy(ivec, iv, sizeof(ivec));	/* Must use copy of iv */
     for (frag = &packet->wirevec[1]; len; frag++) {
-	int iov_len = frag->iov_len;
-	afs_uint32 *iov_bas = (afs_uint32 *) frag->iov_base;
-	if (iov_len == 0)
+	int ilen = frag->iov_len;
+	afs_uint32 *ibas = (afs_uint32 *) frag->iov_base;
+	if (ilen == 0)
 	    return RXKADDATALEN;	/* Length mismatch */
-	if (len < iov_len)
-	    iov_len = len;	/* Don't process to much data */
-	fc_cbc_enc(iov_bas, iov_bas, iov_len, sched, ivec);
-	len -= iov_len;
+	if (len < ilen)
+	    ilen = len;	/* Don't process to much data */
+	fc_cbc_enc(ibas, ibas, ilen, sched, ivec);
+	len -= ilen;
     }
     return 0;
 }
@@ -719,14 +651,14 @@ rxkad_DecryptPacket(const struct rx_connection * rx_connection_not_used,
     ADD_RXKAD_STATS(bytesDecrypted[rxkad_TypeIndex(tp->type)],len);
     memcpy(ivec, iv, sizeof(ivec));	/* Must use copy of iv */
     for (frag = &packet->wirevec[1]; len > 0; frag++) {
-	int iov_len = frag->iov_len;
-	afs_uint32 *iov_bas = (afs_uint32 *) frag->iov_base;
-	if (iov_len == 0)
+	int ilen = frag->iov_len;
+	afs_uint32 *ibas = (afs_uint32 *) frag->iov_base;
+	if (ilen == 0)
 	    return RXKADDATALEN;	/* Length mismatch */
-	if (len < iov_len)
-	    iov_len = len;	/* Don't process to much data */
-	fc_cbc_dec(iov_bas, iov_bas, iov_len, sched, ivec);
-	len -= iov_len;
+	if (len < ilen)
+	    ilen = len;	/* Don't process to much data */
+	fc_cbc_dec(ibas, ibas, ilen, sched, ivec);
+	len -= ilen;
     }
     return 0;
 }
@@ -736,11 +668,6 @@ rxkad_DecryptPacket(const struct rx_connection * rx_connection_not_used,
  * It is possible to link with the client kernel libafs.a to verify
  * the test case. Use TEST_KERNEL to get the mangled names.
  */
-
-#include <stdio.h>
-#include <string.h>
-
-#include <time.h>
 
 const char the_quick[] = "The quick brown fox jumps over the lazy dogs.\0\0";
 
@@ -840,16 +767,16 @@ main()
 	int i;
 
 	fc_keysched(key1, sched);
-	gettimeofday(&start, 0);
+	gettimeofday(&start, NULL);
 	for (i = 0; i < 1000000; i++)
 	    fc_keysched(key1, sched);
-	gettimeofday(&stop, 0);
+	gettimeofday(&stop, NULL);
 	printf("fc_keysched    = %2.2f us\n",
 	       (stop.tv_sec - start.tv_sec +
 		(stop.tv_usec - start.tv_usec) / 1e6) * 1);
 
 	fc_ecb_encrypt(data, data, sched, ENCRYPT);
-	gettimeofday(&start, 0);
+	gettimeofday(&start, NULL);
 	for (i = 0; i < 1000000; i++)
 	    fc_ecb_encrypt(data, data, sched, ENCRYPT);
 	gettimeofday(&stop, 0);
@@ -859,11 +786,11 @@ main()
 
 	fc_cbc_encrypt(the_quick, ciph, sizeof(the_quick), sched, iv,
 		       ENCRYPT);
-	gettimeofday(&start, 0);
+	gettimeofday(&start, NULL);
 	for (i = 0; i < 100000; i++)
 	    fc_cbc_encrypt(the_quick, ciph, sizeof(the_quick), sched, iv,
 			   ENCRYPT);
-	gettimeofday(&stop, 0);
+	gettimeofday(&stop, NULL);
 	printf("fc_cbc_encrypt = %2.2f us\n",
 	       (stop.tv_sec - start.tv_sec +
 		(stop.tv_usec - start.tv_usec) / 1e6) * 10);

@@ -10,6 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #ifndef RXDEBUG
 char rxi_tracename[80] = "\0Tracing not compiled in";
@@ -21,17 +22,15 @@ main(int argc, char **argv)
 }
 #endif
 #else
-#include <string.h>
-#ifdef AFS_NT40_ENV
-#include <fcntl.h>
-#include <io.h>
-#else
-#include <sys/file.h>
-#include <unistd.h>
-#endif
+
 #include "rx.h"
+#include "rx_atomic.h"
 #include "rx_globals.h"
+#include "rx_internal.h"
 #include "rx_trace.h"
+
+#include "rx_conn.h"
+#include "rx_call.h"
 
 #ifdef RXTRACEON
 char rxi_tracename[80] = "/tmp/rxcalltrace";
@@ -85,7 +84,7 @@ rxi_calltrace(unsigned int event, struct rx_call *call)
     rxtinfo.now = now.sec * 1000 + now.usec / 1000;
     rxtinfo.cid = call->conn->cid;
     rxtinfo.call = *(call->callNumber);
-    rxtinfo.qlen = rx_nWaiting;
+    rxtinfo.qlen = rx_atomic_read(&rx_nWaiting);
     rxtinfo.servicetime = 0;
     rxtinfo.waittime = 0;
 
@@ -133,7 +132,6 @@ rxi_calltrace(unsigned int event, struct rx_call *call)
 }
 
 #ifdef DUMPTRACE
-#include <errno.h>
 #ifdef AFS_NT40_ENV
 #include <afs/afsutil.h>
 #endif

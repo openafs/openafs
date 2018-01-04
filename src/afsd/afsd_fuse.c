@@ -74,15 +74,11 @@ static int stderr_save;
 static char *
 afs_path(const char *apath)
 {
-    size_t len;
     static const char prefix[] = "/afs/";
     char *path;
 
-    len = strlen(apath) + sizeof(prefix);
-
-    path = malloc(len);
-
-    sprintf(path, "%s%s", prefix, apath);
+    if (asprintf(&path, "%s%s", prefix, apath) < 0)
+	path = NULL;
 
     return path;
 }
@@ -105,6 +101,9 @@ fuafsd_getattr(const char *apath, struct stat *stbuf)
 	int code;
 	char *path = afs_path(apath);
 
+	if (path == NULL)
+	    return -ENOMEM;
+
 	code = uafs_lstat(path, stbuf);
 
 	free(path);
@@ -120,6 +119,9 @@ fuafsd_opendir(const char *apath, struct fuse_file_info * fi)
 {
 	usr_DIR * dirp;
 	char *path = afs_path(apath);
+
+	if (path == NULL)
+	    return -ENOMEM;
 
 	dirp = uafs_opendir(path);
 
@@ -166,6 +168,9 @@ fuafsd_create(const char *apath, mode_t mode, struct fuse_file_info * fi)
 	int fd;
 	char *path = afs_path(apath);
 
+	if (path == NULL)
+	    return -ENOMEM;
+
 	fd = uafs_open(path, fi->flags, mode);
 
 	free(path);
@@ -207,6 +212,9 @@ fuafsd_readlink(const char *apath, char * buf, size_t len)
 	int code;
 	char *path = afs_path(apath);
 
+	if (path == NULL)
+	    return -ENOMEM;
+
 	code = uafs_readlink(path, buf, len);
 
 	free(path);
@@ -226,6 +234,9 @@ fuafsd_mkdir(const char *apath, mode_t mode)
 	int code;
 	char *path = afs_path(apath);
 
+	if (path == NULL)
+	    return -ENOMEM;
+
 	code = uafs_mkdir(path, mode);
 
 	free(path);
@@ -241,6 +252,9 @@ fuafsd_unlink(const char *apath)
 {
 	int code;
 	char *path = afs_path(apath);
+
+	if (path == NULL)
+	    return -ENOMEM;
 
 	code = uafs_unlink(path);
 
@@ -258,6 +272,9 @@ fuafsd_rmdir(const char *apath)
 	int code;
 	char *path = afs_path(apath);
 
+	if (path == NULL)
+	    return -ENOMEM;
+
 	code = uafs_rmdir(path);
 
 	free(path);
@@ -274,6 +291,12 @@ fuafsd_symlink(const char *atarget, const char *asource)
 	int code;
 	char *target = afs_path(atarget);
 	char *source = afs_path(asource);
+
+	if (target == NULL || source == NULL) {
+	    if (target) free(target);
+	    if (source) free(source);
+	    return -ENOMEM;
+	}
 
 	code = uafs_symlink(target, source);
 
@@ -293,6 +316,12 @@ fuafsd_rename(const char *aold, const char *anew)
 	char *old = afs_path(aold);
 	char *new = afs_path(anew);
 
+	if (old == NULL || new == NULL) {
+	    if (old) free(old);
+	    if (new) free(new);
+	    return -ENOMEM;
+	}
+
 	code = uafs_rename(old, new);
 
 	free(old);
@@ -311,6 +340,12 @@ fuafsd_link(const char *aexisting, const char *anew)
 	char *existing = afs_path(aexisting);
 	char *new = afs_path(anew);
 
+	if (existing == NULL || new == NULL) {
+	    if (existing) free(existing);
+	    if (new) free(new);
+	    return -ENOMEM;
+	}
+
 	code = uafs_link(existing, new);
 
 	free(existing);
@@ -328,6 +363,9 @@ fuafsd_chmod(const char *apath, mode_t mode)
 	int code;
 	char *path = afs_path(apath);
 
+	if (path == NULL)
+	    return -ENOMEM;
+
 	code = uafs_chmod(path, mode);
 
 	free(path);
@@ -343,6 +381,9 @@ fuafsd_truncate(const char *apath, off_t length)
 {
 	int code;
 	char *path = afs_path(apath);
+
+	if (path == NULL)
+	    return -ENOMEM;
 
 	code = uafs_truncate(path, length);
 
@@ -567,7 +608,18 @@ main(int argc, char **argv)
 
 	split_args(&args);
 
-	uafs_ParseArgs(afsd_args.argc, afsd_args.argv);
+	code = uafs_ParseArgs(afsd_args.argc, afsd_args.argv);
+	if (code != 0) {
+	    /*
+	     * split_args() failed to populate afds_args correctly.
+	     * We do not not bother to check for CMD_HELP here, since
+	     * split_args() exits when -help is given.
+	     */
+	    fprintf(stderr,
+		    "afsd.fuse: Could not parse command line options; code %d\n",
+		    code);
+	    return 1;
+	}
 
 	/* pass "-- /mount/dir" to fuse to specify dir to mount; "--" is
 	 * just to make sure fuse doesn't interpret the mount dir as a flag

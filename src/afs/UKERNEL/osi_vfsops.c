@@ -81,7 +81,7 @@ afs_root(OSI_VFS_DECL(afsp), struct vnode **avpp)
 	    if (tvp) {
 		afs_globalVp = tvp;
 	    } else
-		code = ENOENT;
+		code = EIO;
 	}
     }
     if (tvp) {

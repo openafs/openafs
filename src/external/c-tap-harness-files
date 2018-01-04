@@ -1,0 +1,11 @@
+LICENSE			LICENSE
+NEWS			NEWS
+README			README
+tests/runtests.c	tests/runtests.c
+tests/tap/basic.c	tests/tap/basic.c
+tests/tap/basic.h	tests/tap/basic.h
+tests/tap/float.c	tests/tap/float.c
+tests/tap/float.h	tests/tap/float.h
+tests/tap/libtap.sh	tests/tap/libtap.sh
+tests/tap/macros.h	tests/tap/macros.h
+

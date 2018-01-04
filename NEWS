@@ -1,21 +1,434 @@
                        User-Visible OpenAFS Changes
 
-OpenAFS 1.6.22
+OpenAFS 1.8.0pre3
 
   All Platforms
 
-    * Fix OPENAFS-SA-2017-001: insufficient validation of transport parameters
-      in Rx ack trailer caused integer overflow and assertion failure
+    * Substantial code quality improvements, largely spotted by Coverity and
+      clang's static analysis.
+      - Add new library for platform independent functions (opr).
+      - Remove arbitrary path name length limits.
+      - Convert to Heimdal's roken library for reliability.
+      - Avoid garbage in allocated buffers (calloc).
+      - Modernize signal handling in pthreaded server processes (softsig).
+      - Improve code comments and additional Doxygen style comments.
+      - Reduce compiler warnings, dead code, unused variables, and
+        undefined behavior.
+      - Fix bugs found by static code analyzer (clang-analyzer).
+      - Improved unit test coverage.
+      - Make VLDB flag definitions consistent.
+      - Improve use of run-time assertions and add static assertions.
+      - Add compiler attributes to assist static analyzers.
+      - Clean up include headers in the entire tree.
+      - Improve command-line handling library (libcmd).
+      - Replace hash functions with Jenkin's hash function for faster
+        and more evenly distributed lookups.
+      - Provide a red-black tree data structure to enable algorithmic speedups.
+      - Convert backup and salvage servers to the common logging API (libutil).
+      - Improve volume id data type consistency (VolumeId).
+      - Import APIs for kerberos-style profile configuration support.
+      - Add new APIs to support UserList identities.
+      - Add new APIs to support tabular output from command-line utilities.
+      - Convert vnode macros to inline-functions.
 
-OpenAFS 1.6.21.1
+    * Improved support for non-DES encryption types:
+      - Convert to Heimdal's hcrypto library to support RFC 3961.
+      - Add extended key file format replacing rxkad.keytab, and
+        new key management APIs.
+      - Add support for extended key types to asetkey.
+      - Add akeyconvert to assist in upgrading to OpenAFS 1.8.x by converting an
+        existing rxkad.keytab file to an extended key file.
+      - Do not install the kaserver and related utilities by default to
+        discourage the use of these DES-dependent components.
+      - Remove obsolete klogin and klogin.krb programs.
+      - Add new token APIs to support new rx security classes.
 
-  Linux clients
+    * Migrate from LWP to POSIX threads (pthreads):
+      - Convert the ptserver and vlserver from LWP to pthreads.
+      - Remove LWP version of the file server binary.
+      - Convert afsd, aklog, asetkey, klog.krb5, pts, udebug, and vos, from LWP
+        to pthreads.
 
-    * Support for mainline kernel 4.13 and distribution kernels with backports
-      from it (12664)
+    * Improvements to Rx:
+      - Restructure the Rx API to privatize the implementation.
+      - Convert rx events to a red-black tree data structure to improve
+        performance.
+      - Convert from mutexes to atomic operations for counters to reduce lock
+        contention.
+      - Provide per-opcode Rx statistics.
+      - Add an rx_opaque data type to support non-DES encryption types
+        and general code cleanup.
+      - Wake up the application thread after 'twind' is updated to avoid 100ms
+        transmit delays when the receive window transitions from closed to
+        open.
+      - Fix for OPENAFS-SA-2017-001: sanity-check peer transport parmeters
+        received in ack trailers
 
-    * Fix kernel module build for kernels since 4.12 on S390 (12717)
+    * Libraries (both internal and installed) are built using libtool, including
+      libuafs. The resulting shared libraries for libafsrpc and libafsauthent
+      should be more usable than previously.
 
+    * Improvements to the build system:
+      - Convert to libtool to build shared libraries.
+      - Clean up and improve the build system.
+      - Support out of tree builds.
+      - Add a makefile target to generate Doxygen source code documentation.
+      - Link the Java API for OpenAFS with libuafs.a and remove the
+        libjuafs.a library.
+      - Always build the rxperf tool.
+      - Fix man-page generation by make after ./regen.sh -q
+      - Support the SOURCE_DATE_EPOCH environment variable to improve build
+        reproducibility.
+      - Modernize language specific SWIG typemaps for libuafs Perl bindings.
+
+    * Improvements to documentation:
+      - Document the new KeyFileExt file.
+      - Reorganized the README files.
+      - Improvements and fixes to documentation generation.
+      - Add experimental epub and mobi support
+      - Remove obsolete LWP information from the file server documentation.
+      - Update and reorganize the Quick Start Guide.
+      - Update the Admin Guide.
+      - Remove AIX, HP-UX, and IRIX information from the Quick Start Guide.
+      - Document the vldb and prdb (ubik) file formats.
+      - Add PtLog man page.
+      - Corrections and clarifications to man pages.
+      - Add ubik threading analysis doc.
+      - Normalize the location of text documents in the source tree.
+
+    * Improvements for troublshooting, debugging, and testing:
+      - Log more details on volume-server-to-fileserver communication errors
+        when possible.
+      - Set thread names in pthreaded servers on platforms which support
+        thread names.
+      - Add dynroot lock tracking to cmdebug
+      - Fix tracking of an fstrace call site in the cache manager background
+        process.
+      - Add the afsload tool to simulate multiple cache managers for file server
+        load testing.
+      - Add run-time checks for refcount imbalances in the cache manager.
+      - Fix missing newlines in afsd -debug output.
+
+    * Developer tool improvements:
+      - Improvements and fixes for rxgen (used to generate Rx RPC bindings).
+      - Add tool for man page verification of command options.
+      - Add tool to find Unix cache manager lock identification numbers.
+      - Add an option for pretty build output.
+
+    * RPM packaging updated:
+      - Update the spec file to keep up with accumulated changes.
+      - Move the klog.krb5 man page to the openafs-krb5 sub-package.
+      - Prevent double-starting client on RHEL7
+      - Convert rpm spec file from deprecated 'make dest' to 'make install'.
+      - Fix rpmbuild command line option default handling.
+
+    * Add a new protection error code (PRNAMETOOLONG) instead of silently
+      truncating names which exceed the maximum name length (PR_MAXNAMELEN).
+
+    * Add an implementation limit (50000) on the number of names/ids which can
+      be transmitted by unauthenticated clients to the ptserver, avoiding
+      excessive resource consumption from unauthenticated requests.
+
+    * Add the -config option to vos, pts, and aklog to specify the path to the
+      cell configuration files.
+
+    * Add more details in vos release -verbose output.
+
+    * Add the cacheout -encrypt option to encrypt communication between the
+      cacheout client and the fileserver.
+
+    * Add the command line options to the afsio program to enable encryption of
+      traffic between afsio and the fileserver (-clear, -crypt).
+
+    * Add the vos release -force-reclone option to force recloning the volume to
+      be released without forcing a full volume dump being transmitted to all
+      remote sites.
+
+    * Fix vos to avoid writing loopback addresses into the VLDB in
+      certain cases.
+
+    * Print bos and pts error messages to standard error instead of
+      standard out.
+
+    * Improve formatting of the -help output of all commands.
+
+    * Change -n to -dryrun in all backup subcommands.
+
+    * Change the backup deletedump -port command line option to -portoffset.
+
+    * Add user and build host in the version string returned by
+      rxdebug -version.
+
+  All Server Platforms
+
+    * Ubik servers using pthreads are now available and are used by default
+
+    * As part of improving Ubik reliability in certain edge cases, an extra
+      election cycle (about 60 seconds) may be needed before writes are
+      permitted.  This is a conservative change that may be removed in
+      the future.
+
+    * Remove periodic background fsync by the fileserver (ihandle fsync thread).
+
+    * Fix potential file handle leak in the file server ihandle caching layer.
+
+    * Disable the so-called "hot threads" feature in the file server. The hot
+      threads feature was intended as an optimization for dispatching incoming
+      calls to the current listener thread, but has been reported to incur a
+      performance penalty on modern multi-core systems.
+
+    * Do not permit creation of users with id of ANONYMOUSID.
+
+    * Do not save/restore host states in the fsstate.dat file for hosts which
+      are in the process of retrieving CPS information from the ptserver when
+      the fileserver is being shutdown. This fixes a bug in which the fileserver
+      will incorrectly block all threads following a restart.
+
+    * Add the ptserver -restrict_anonymous option to inhibit exposure of user
+      names from the ptserver.
+
+    * Do not truncate server log files by default when server processes
+      are started.  The -transarc-logs option provides backward compatibility
+      with IBM AFS log handling on server startup. Log messages may be lost
+      in back-to- back restarts when a server is running in this mode.
+
+    * Reopen server logs on SIGUSR1. This may be used by third-party log
+      rotation tools, such as logrotate, to reopen the log file handles after
+      log files have been renamed.
+
+    * Fix various bugs when logging with -mrafslogs enabled.
+
+    * Dynamically reload the kerberos realm to AFS cell mapping (krb.conf) and
+      exclusions for mapping kerberos principals to AFS identities (krb.excl)
+      configuration when the CellServDB cell configuration file is touched.
+      Previously, a restart of the file server was required after updating the
+      kerberos mapping configuration files.
+
+    * Add a command line option (-restricted_query) to the vlserver and
+      volserver to restrict information queries about volumes to a specific
+      group of users.
+
+    * Add a command line option to the server programs to specify an alternate
+      fully qualified log file name (-logfile).
+
+    * Add a command line option (-config) to the server programs to specify
+      an alternate path to the server configuration.
+
+    * Add a command line option to the ptserver and vlserver to specify an
+      alternate path to the database data files.
+
+    * Add a command line option to the volume server to enable encryption of
+      volume-server-to-volume-server-traffic (-s2scrypt).
+
+    * Increase the maximum number of LWP threads allowed for the ptserver and
+      vlserver from 16 to 64 (-lwp).
+
+    * Remove an unused file server command line option (-k).
+
+    * Fix an incorrect assertion in Demand Attach File Server which could cause
+      the file server process to abort in certain rare conditions.
+
+    * Deprecate the -bitmap-later configure option for non-Demand-Attach File
+      Servers (DAFS).
+
+    * Add -vhashsize support to non-Demand-Attach File Servers (DAFS).
+
+    * Add support for subnet ranges in the NetInfo and NetRestrict
+      configuration files.
+
+    * Add the GetXStats RPC to the audit log.
+
+    * Fix directory creation by bosserver when built for non-Transarc paths.
+
+    * Fix incomplete list of server addresses retreived by vos listaddr when the
+      vldb contains unreferenced multi-homed server entries.
+
+    * Remove obsolete bos blockscanner and unblockscanner commands that
+      were only needed for the removed MR-AFS functionality.
+
+    * Remove obsolete bos salvage options that were only used by the
+      removed MR-AFS functionality..
+
+    * Remove calls to the deprecated sbrk() function.
+
+    * Add an experimental feature to database servers to support ubik reads
+      while write transactions are in progress, enabled at build time with the
+      --enable-ubik-read-while-write configure option. This feature is not
+      considered ready for production usage at this time.
+
+    * Avoid filling the FileLog with "Volume x offline: not in service" when
+      a volume is administratively taken offline with vos offline.
+
+    * Print an error message when bosserver is started with an unknown
+      command line option.
+
+    * Modify the volume updateDate when the volume is changed by a salvage.
+
+    * Volume usage statistics are now preserved during reclone and restore
+      operations by default, the behavior previously enabled by
+      the -preserve-vol-stats flag to the volserver.  The historical behavior
+      can be retained via the -clear-vol-stats argument.
+
+  All Client Platforms
+
+    * Use rxkad_crypt by default for connections to fileservers.  This matches
+      the existing behavior of the Windows client and has been applied by
+      the distribution packaging on many platforms already.
+
+    * Add support for relative ACL changes with fs setacl. If a single plus (+)
+      or minus (-) character is appended to the rights' letters argument, the
+      new rights are computed relatively to the existing ones.
+
+    * Remove afsd -settime and afsd -nosettime support.
+
+    * Add the afsd -inumcalc option to specify the method used to calculate
+      inode numbers presented by AFS.
+
+    * Add the afsd -volume-ttl option to specify set the maximum amount of time
+      information retrieved from the vlserver will be cached, regardless of
+      callback expiry times.
+
+    * Return EIO on internal errors instead of the misleading ENOENT.
+
+    * Log ICMP errors received, if any, for unreachable servers.
+
+    * Improve performance of clients with multiple PAGs for different cells.
+
+    * Fix race condition between changing and using user tokens among cache
+      manager threads.
+
+    * Fix fs sysname for users with UID 2748 and 2750 when not running
+      in -rmtsys mode.
+
+    * Add Perl bindings for the user-space cache manager library (libuafs).
+
+    * Fixes to the bypasscache feature.
+
+    * Fix fs getcacheparms miscounts.
+
+    * Remove the obsolete Netscape plugin.
+
+    * Fix building gtx when ncurses is linked against libtinfo.
+
+  Linux
+
+    * Remove Linux 2.2 and 2.4 support.
+
+    * Changes to avoid EIO errors with multiple processes doing intensive mmap
+      writing. (Drop PageReclaim AOP_WRITEPAGE_ACTIVATE.)
+
+    * Prevent fakestat data inconsistencies in certain cases (131855).
+
+    * Fix dentry leak which can cause a crash on shutdown.
+
+    * Fix improper use of ENOENT and avoid incorrect use of linux negative
+      dentry cache.
+
+    * Use a more correct (less aggressive) scheme to react to downward
+      pressure on cache usage, avoiding d_invalidate(), which can cause
+      getcwd() failures on RHEL 7.4.
+
+    * Improve error reporting when encountering corrupt directories.
+
+    * Improve rx error handling in the Linux cache manager.
+
+    * Rename kpasswd to kapasswd when packaging RPMs to avoid colliding with
+      Kerberos kpasswd.
+
+    * Do not use the obsolete --enable-largefile-fileservers configure option
+      when packaging RPMs.
+
+    * In Red Hat packaging, use a separate rpm for kmod debuginfo,
+      removing a needless tight version dependency on the userspace package.
+
+    * Use the RemainAfterExit systemd feature to avoid premature exit
+      when -afsdb is not given, for RPM packages.
+
+    * Remove Debian packaging files from the OpenAFS source tree. Debian
+      packaging files are currently maintained in the downstream Debian
+      infrastructure.
+
+    * Add the sparc_linux26 sysname.
+
+    * Desupport 32-bit Linux kernels on s390/s390x.
+
+    * Fix Debian/Ubuntu build regression on kernel 3.16.39.
+
+    * Fix --enable-kernel-debug for linux 4.8+.
+
+    * Support linux 4.10, 4.11, 4.12, 4.13, 4.14, 4.15
+
+  Solaris
+
+    * Remove support for all Solaris and SunOS platforms prior to Solaris 8.
+
+    * Build 64-bit binaries for Solaris x86 by default.
+
+    * Use one-group PAGs on Solaris 11, which is required for PAG support
+      on Solaris 11 since supplemental groups must be sorted starting with
+      Solaris 11.1.
+
+    * Update search paths for solaris cc for recent versions Solaris Studio.
+
+    * Modernize declaration of module dependences by converting from the
+      deprecated _depends_on symbol to ELF dependencies.
+
+    * Avoid BAD TRAP panic due to invalid opcodes on x86 with Studio 12.5.
+
+  MacOS
+
+    * Stop processing upcalls once rx shutdown starts.
+
+    * Enable atomics for the darwin kernel.
+
+    * Add a syscall to enable/disable bulkstat at run-time, which is
+      disabled by default.
+
+    * Fix path to binaries in the prefpane.
+
+    * Fix builds on MacOS 10.12 by building only the active architecture
+      by default.
+
+    * Support versions up through 10.13 (High Sierra) and APFS
+
+  FreeBSD
+
+    * Use the native kernel module build system instead of an ad hoc
+      replacement build system.
+
+    * Remove FreeBSD packaging files from the OpenAFS source tree. FreeBSD
+      packaging files are currently maintained in the downstream FreeBSD Ports
+      Collection.
+
+    * Stay up to date with new FreeBSD releases (through 10.3).
+
+    * Do not claim AFS_VM_RDWR_ENV
+
+  NetBSD
+
+    * Stay up to date with new NetBSD releases (through 7.x)
+
+    * Update to use cprng(9) as the randomness source on NetBSD 6.99/7.x.
+
+    * Build system updates for NetBDS 6.99.x
+
+    * Do not claim AFS_VM_RDWR_ENV
+
+  OpenBSD
+
+    * Stay up to date with new OpenBSD releases (through 4.7)
+
+    * Do not claim AFS_VM_RDWR_ENV
+
+  AIX
+
+    * Updates for AIX support.
+
+    * Fix build system for AIX exports.
+
+    * Add the uidpag and localuid runtime options to the aklog LAM plugin.
+      (These runtime options override the use of UID-based PAGs, which were
+      introduced to appease the CDE screensaver.)
 
 OpenAFS 1.6.21
 
@@ -1514,6 +1927,214 @@ OpenAFS 1.6.0 (2011-08-15)
     * Avoid panic on shutdown when mount failed.
 
 
+OpenAFS 1.6.0pre2
+
+  All systems: Minor bugfixes.
+
+  ADDITIONAL CHANGES IN 1.6.0PRE2
+
+  All platforms:
+
+    - Documentation updates.
+
+    - Don't stop Rx keepalives after an ackall is received, avoiding
+      spurious connection timeouts. (128848)
+
+    - Don't retry Rx calls on channels returning busy errors. (128671)
+
+    - vos will not die with a double free error at command completion.
+
+    - Properly enable Rx connection hard timeouts.
+
+    - Initialize rx_multi lock before use.
+
+    - Avoid spurious crashes when initializing in "backup" client.
+
+  All unix platforms:
+
+    - Check for /afs existance before starting, unless -nomount is specified.
+
+    - Avoid a potential panic when using /afs/.:mount syntax.
+
+    - Avoid a panic in memcache mode due to missing CellItems file.
+
+  All server platforms:
+
+    - Attempt to recovery more quickly from timed out volume release
+      transactions.
+
+    - Auditing now properly byte order swaps IP addresses when printing.
+
+    - vos split now has improved error handling.
+
+    - Many changes to again support Windows fileservers.
+
+    - During volume removal, data removal speed improved.
+
+    - Improve CPU utilization during volume attaching by DAFS.
+
+    - In salvager check-only mode, avoid potentially fixing a vnode.
+
+    - Fix support for large (greater than 2gb) volume special files.
+
+    - Salvager will not crash if multiple or bad volume link tables
+      are encountered.
+
+    - Avoid erroneous full dump by remembering which sites were out of date
+      at the start of the release.
+
+  FreeBSD:
+
+    - Remove support for "Giant" lock as we no longer need to use it.
+
+    - Don't sleep with AFS GLOCK.
+
+    - Properly enable 64 bit long long support.
+
+    - Restore support for FreeBSD 7 (128612)
+
+    - Fix locking issues at shutdown.
+
+  Linux:
+
+    - support through kernel 2.6.38.
+
+    - RedHat packaging now properly supports RHEL6.
+
+    - Use rx_Readv in cache bypass to improve performance.
+
+    - Properly handle 0-length replies during cache bypass operations.
+
+    - Properly handle non-contiguous readpage cache bypass operations.
+
+    - Do proper locking when transitioning to or from cache bypass.
+
+    - Avoid extra runs of vcache freeing routine. (128756)
+
+  MacOS:
+
+    - Check for unloaded kernel extensions when decoding AFS panics.
+
+    - Properly handle setpag errors. PAGs are not supported.
+
+    - Disable "get tokens at login" in prefs pane if AD authentication
+      plugin is configured.
+
+  OpenBSD:
+
+    - support through OpenBSD 4.8.
+
+  Solaris:
+
+    - Fix support for Solaris pre-10.
+
+  Windows:
+
+    - afs_config will not longer set the Tray Icon State
+      in the registry if the checkbox is not present in
+      the dialog. (128591)
+
+    - AFS Explorer Shell Extension now works from folder
+      backgrounds.  Overlays for mount points and symlinks
+      are present in the dll, but are not registered at present
+      by the installers.
+
+    - Do not use RankServerInterval registry value as the value for
+      PerformanceTuningInterval.
+
+    - When the data version of a mountpoint or symlink changes,
+      the target string in the cm_scache_t object must be cleared.
+
+    - "fs checkservers" now includes vldb servers in the output
+      and only lists multi-homed servers once.  A multi-homed
+      server that has at least one up interface is no longer
+      considered to be down.
+
+    - When asynchronously storing dirty data buffers to the
+      file server ensure that (a) the cm_scache_t object and
+      the cm_buf_t object are for the same File ID so that
+      locking and signalling work properly; and (b) if the
+      FID no longer exists on the file server, do not panic,
+      just discard the buffer.
+
+    - When processing VNOVOL, VMOVED and VOFFLINE errors perform
+      server comparisons by UUID or address and not simply by
+      cm_server_t pointer.  Otherwise, server failover may not
+      succeed.
+
+    - Do not preserve status information for cm_scache_t objects
+      when the issuing server is multi-homed.
+
+    - Giving up all callbacks when shutting down or suspending
+      the machine is now significantly faster due to the use
+      of an rx_multi implementation.  (This functionality is
+      still off by default and must be activated by a registry
+      value.)
+
+    - Race conditions were possible when updating the state
+      of the cm_volume_t flags and when moving the volumes
+      within the least recently used list.
+
+    - Ensure that the lanahelper library does not perform a
+      NCBRESET of each lan adapter when enumerating the
+      current network bindings.  Correcting this permits OpenAFS
+      to work on Windows 7 when the network adapter settings
+      change.
+
+    - Fix creation of mount points and symlinks as \\AFS\xxxx
+
+  PREVIOUS CHANGES:
+
+  All platforms:
+
+    - vos now properly deals with matching sites when servers are multihomed.
+
+  All Unix platforms:
+
+    - Servers now marked down when GetCapabilities returns error.
+
+    - In-use vcache count is now properly tracked.
+
+  All server platforms:
+
+    - Fix ptserver supergroups support on 64 bit platforms.
+
+    - Demand attach salvaging doesn't use freed volume pointers.
+
+    - Properly hold host lock during host enumeration in fileserver.
+
+  FreeBSD:
+
+    - Fix socket termination on shutdown.
+
+    - Support for 7.2, 7.3, 7.4 and 8.2 included.
+
+    - References to vcaches are no longer leaked during root or reclaim.
+
+  Linux:
+
+    - Define llseek handler to avoid ESPIPE error in 2.6.37.
+
+    - Mount interface replaces get_sb (new for 2.6.37, not yet required).
+
+    - RedHat init script allows deferring for a new binary restart.
+
+    - DEFINE_MUTEX replaces DECLARE_MUTEX for 2.6.37.
+
+  MacOS:
+
+    - Correct return value from setpag syscall.
+
+  OpenBSD:
+
+    - Bug fixes for issues introduced previously in 1.5 series.
+
+  Solaris:
+
+    - Switch to ioctl() syscall replacement for Solaris 11 since syscall 65
+      is not safe.
+
+
 OpenAFS 1.5.78 (2010-11-04)
 
   All platforms
@@ -2073,92 +2694,140 @@ OpenAFS 1.5.74 (2010-04-22)
 
 OpenAFS 1.5.73 (2010-03-24)
 
-  All platforms
+  All systems: Minor bugfixes. New features.
 
-    * NAT keepalive support at Rx level.
+  * New functionality:
 
-    * Corrected SRV record support for cell name canonicalization.
+  All systems:
 
-  All server platforms
+    - NAT keepalive support at Rx level.
 
-    * Fix volume callback notification to not notify unaffected clients.
-      (126497)
+    * Bugfixes:
 
-    * Allow root directory recreation by salvager. (94658)
+  All systems:
 
-    * Numerous DAFS fixes.
+    - Corrected server IP address output in vos syncvldb verbose mode.
 
-    * Improvements to callback table overflow handling. (126451)
+    - Corrected server IP address output for last "yes" host in udebug.
 
-    * bosserver now shuts down cleanly on SIGTERM.
+    - Corrected SRV record support for canonicalizing cell names.
+
+  All UNIX clients:
+
+    - Fixed a potential race in Disconnected AFS "remove" support.
+
+    - Fix a potential blocking condition in fakestat mode.
+
+    - Avoid some errors and stack overflow reports when vos is interrupted.
+      (33360,125535)
+
+    - Clean up several minor memory leaks.
+
+    - If a large file is stored to a non-largefile fileserver, avoid
+      a potential deadlock.
+
+    - Increase maximum number of sysnames to 32.
+
+    - Readd fs mariner "storing" message, missing since AFS 3.3.
+
+    - Attempt timeouts on AFSDB lookups in userspace.
+
+    - Avoid interrupting writes due to an idle deadtime timeout.
+
+  All server platforms:
+
+    - Properly notify only affected hosts for volume callbacks. (126497)
+
+    - Allow volumes with trashed root directory to be recovered. (94658)
+
+    - Hold lock in file and volservers when traversing partition list.
+
+    - Use finer-grained locking in DAFS: volume, instead of partition locks.
+
+    - Schedule all DAFS salvages via FSSYNC.
+
+    - Avoid stale ptserver credential caching issue on keyfile update.
+
+    - Improve callback table overflow handling. (126451)
+
+    - Preclude deadlocks on when attempting to save DAFS state.
+
+    - Avoid races deleting hosts. (126454)
+
+    - Improve salvage speed for DAFS (124488)
+
+    - The bosserver now handles SIGTERM.
 
   Microsoft Windows
 
-    * Prevent the Explorer Shell extension from crashing if symlink
+    - Prevent the Explorer Shell extension from crashing if symlink
       creation failed.  (126406)
 
-    * A Rx level NAT ping has been implemented. A registry value enables.
+    - A Rx level NAT ping has been implemented. A registry value enables.
 
-    * Adds krb5 error message translation to aklog, afscreds,
+    - Adds krb5 error message translation to aklog, afscreds,
       afslogon.dll, the network identity manager afs provider and
       translate_et.
 
-    * Default mode bit settings for file and directory creation are now
+    - Default mode bit settings for file and directory creation are now
       provided, and can be configured.
 
-    * An SMB request trace facility is provided and can be enabled for
+    - An SMB request trace facility is provided and can be enabled for
       debugging.
 
-  All UNIX client platforms
+  AIX:
 
-    * Rx idle deadtime does not stop file writes.
+    - Clean up properly on mount failure.
 
-    * Disconnected AFS no longer has a race condition during remove ops.
+    - Add entry to /etc/vfs to allow umount to work.
 
-    * Fakestat avoids a condition which could cause it to block on network
-      activity.
+  FreeBSD:
 
-    * Several fixes to handle interruptions in vos operations. (33360,
-      125535)
+    - Additional work to support FreeBSD 8-current.
 
-    * Allow more sysnames in a sysname list.
+  IRIX:
 
-    * Attempt to enforce timeouts on AFSDB lookups.
+    - Fix build issues with library order.
 
-  AIX
+  Linux:
 
-    * Clean up properly on mount failure.
+    - Fix s390 support conflict with executable stack patches.
 
-    * Add entry to /etc/vfs to allow umount to work.
+    - Don't count root's AFS session keyrings against quota.
 
-  Linux
+    - Correct dkms support in RPM config file.
 
-    * Several issues to deal with older kernels.
+    - Keyring destructor now properly cleans up all tokens.
 
-    * Avoid leaking the global lock in the /proc cellservdb code.
+    - Build again on old 2.6 kernels.
 
-    * Keyring destruction now cleans up all tokens.
+    - Avoid GLOCK leak when updating CellServDB in-core.
 
-    * Keyring quotas are not enforced against root.
+    - Fix byte-range lock handling.
 
-  MacOS
+    - Attempt to deal with bdi issues. (126514)
 
-    * Some FSEvents hinting for authentication events now done. (23781)
+  MacOS:
 
-    * Update uninstaller. (125634)
+    - Some FSEvents hinting for authentication events now done. (23781)
 
-    * Rewrite afssettings and fstab code to avoid licensing issue with
-      APSL.
+    - Update uninstaller. (125634)
 
-    * Growl client for user monitoring of AFS events included.
+    - Rewrite afssettings and fstab code to avoid licensing issue with APSL.
 
-    * Properly support insert-only dropboxes.
+    - Growl client for user monitoring of AFS events included.
 
-    * Add bulkstat support.
+    - Properly support insert-only dropboxes.
 
-    * Include support for moving in Finder across mount points.
+    - Add bulkstat support.
 
-    * Preferences Pane includes support for Kerberos 5 ticket renewal.
+    - Include support for moving in Finder across mount points.
+
+    - Preferences Pane includes support for Kerberos 5 ticket renewal.
+
+  OpenBSD:
+
+    - Some support for OpenBSD 4.7.
 
 
 OpenAFS 1.5.72 (2010-02-15)
@@ -3750,7 +4419,1039 @@ OpenAFS 1.5.36 (2008-05-09)
       without further attempts to contact the file server.
 
 
-=======> Changes back to 1.3 have not yet been incorporated here <=======
+OpenAFS 1.4.12
+
+  All client systems: Major bugfixes.
+  File servers: Major bugfixes.
+
+  * New functionality:
+
+  All systems:
+
+    - Provide portable (pioctl) method for discovering what PAG a user is
+      in. Required to support userspace PAG information collection on AIX
+      5.1, and knowing whether Linux uses one group, two group, or only
+      keyring based PAGs. (124709)
+
+    * Bugfixes:
+
+  All systems:
+
+    - Fixes to avoid issues cleaning up deleted hosts in the fileserver (126454)
+
+    - Fixes to avoid dropping writes due to server idle timeouts.
+
+    - Don't miss cache chunks of large files while truncating.
+
+    - Avoid null pointer dereference for unexpected volume names in volume
+      utilities.
+
+    - Don't mark connections waiting for additional packet window availability
+      idle.
+
+    - Kerberos 5 utilities (klog.krb5, aklog) enable weak encryption support.
+
+    - Avoid a double-free of an Rx call structure during a client fetch error.
+
+    - Avoid losing hosts during address changes. (125215)
+
+    - Clients shouldn't trust Fetchdata replies for the size of returned data.
+
+    - fileserver will not hang when attempting to cleanup and dump core.
+
+    - salvager will not leave core files in random directories.
+
+    - avoid letting retransmit timer get to 0 seconds.
+
+    - in event of dbserver contact failure, shut fileserver down cleanly.
+
+    - handle large partitions during check for needed disk space at
+      client start.
+
+    - time out Rx connections if network unreachable error received.
+
+    - avoid dereferencing NULL pointer freeing Rx packets in receive. (125110)
+
+    - mark stack not executable in LWP. (125491)
+
+    - return a correct VolumeSync structure from Bulkstat RPCs in fileserver.
+
+    - client attempts to better free memory at shutdown.
+
+    - clear rx call queue safely. (125110)
+
+    - retry VLserver registration on failure in fileserver.
+
+    - update accessdate for volumes on access in fileserver.
+
+    - additional safety checks on vlserver operations to avoid
+      database corruption.
+
+    - make ktc_curpag available on all builds. (125155)
+
+  FreeBSD:
+
+    - Build fixes.
+
+  Linux:
+
+    - Handle kernel changes through 2.6.33.
+
+    - Fix oops in clear_inode due to missed locking. (125589)
+
+    - Better handle /afs mount failures.
+
+    - Clean up after failures creating our kernel kmem cache.
+
+    - Work around memory management issues with some kernels when configuring
+      the buffer cache/bdi (126514)
+
+    - Rename compile_et to afs_compile_et to avoid RPM conflicts.
+
+    - Handle whole-file locks properly. (126561)
+
+    - Deal with kernel autoconf header renaming.
+
+    - Handle SELinux cache backing file labels better to avoid potential oops.
+      (92944,125544)
+
+  MacOS:
+
+    - klog now works correctly on 64 bit machines.
+
+    - launchd now used to launch AFS at boot.
+
+    - Preferences pane included for 10.4 and later.
+
+    - Older versions can now be installed from packages.
+
+    - Finder does not trigger bogus AFSDB lookups in /afs in dynroot mode.
+
+    - Include package with debug kernel module symbols.
+
+  OpenBSD:
+
+    - Build fixes.
+
+    - Support for x86_64.
+
+  Solaris:
+
+    - Handle ZFS caches usefully. (125365)
+
+    - Implement additional pathconf support.
+
+OpenAFS 1.4.11
+
+  Linux client systems: Major bugfixes.
+  All client systems: Minor bugfixes.
+  File servers: Major bugfixes.
+
+  * New functionality:
+
+  All systems:
+
+    - Provide portable (pioctl) method for discovering what PAG a user is
+      in. Required to support userspace PAG information collection on AIX
+      5.1, and knowing whether Linux uses one group, two group, or only
+      keyring based PAGs. (124709)
+
+    * Bugfixes:
+
+  All systems:
+
+    - Fix bosserver to invoke salvager with "-force" instead of ambiguous
+      "-f". (124916)
+
+    - Cleanup for ptserver argument parsing to allow debug mode to work. (124893)
+
+    - Sanity checking for ptserver log levels. (124894)
+
+    - Fix for uninitialized memory dereference in klog.krb5.
+
+    - Fix an overflow in the cellconfig code used by client and server. (124891)
+
+    - Fix an erroneous vos verbose mode format string.
+
+    - Avoid losing writes on mmap()ed files when cache is memcache. (124671)
+
+    - Provide an afsd switch to allow override of the maximum MTU. (124880)
+
+    - Provide support for encrypt mode in pts.
+
+    - Fix race in background sync code which could cause volumes to go offline.
+      (124359)
+
+    - Fix fileserver to avoid a null pointer dereference in client identity
+      lookup routines. (125020)
+
+    - Improve handling of moves of volumes from 1.5 series fileservers. (18349)
+
+  FreeBSD:
+
+    - UKERNEL build fix. (124681)
+
+  Linux:
+
+    - Allow syscall probing to be disabled by switch to configure at build time.
+
+    - Fix bug in anti-recursion protection for mmap clients. (124627)
+
+    - Avoid a panic caused by changing credentials during VFS operations. (124737)
+
+    - Avoid need for rcu subsystem when unavailable. (124986)
+
+    - Improve keyring PAG setup code. (125001)
+
+    - Avoid possible ext3 cache truncation issues. (124942)
+
+  MacOS:
+
+    - MacOS 10.3 UKERNEL build fix. (124681)
+
+  OpenBSD:
+
+    - Update support for 4.5 (124719)
+
+  OpenSolaris:
+
+    - Updates for newer OpenSolaris kernels. (124116, 124924)
+
+OpenAFS 1.4.10
+
+  All client systems: Security fixes.
+  File servers: Major bugfixes.
+  All systems: Minor bugfixes.
+
+  * Security fixes:
+
+  All client systems:
+
+    - Avoid a potential kernel memory overrun if more items than requested are
+      returned from an InlineBulk or BulkStatus message. (124579)
+
+  Linux client systems:
+
+    - Avoid converting negative errors into invalid kernel memory pointers. (124580)
+
+    * Bugfixes:
+
+  AIX:
+
+    - Don't build aklog NAS module when krb5 is not available. (124522)
+
+  FreeBSD:
+
+    - Additional fixes and support. (124107, 123917)
+
+  Linux:
+
+    - Support 2.6.28. (123580)
+
+    - Support 2.6.29. (124115)
+
+    - Attempt to support 2.6.30 (124560)
+
+    - Avoid race during truncation. (124094)
+
+    - Dynamic vcache allocation support, to deal with inotify vcache pinning. (124334)
+
+    - Correct use of truncate_inode_pages to vmtruncate for locking issues. (124128)
+
+    - Update RPM configuration. (123650, 102673, 124272)
+
+    - Update kernel feature detection. (124507, 123604)
+
+    - Do appropriate locking for CellServDB in /proc. (124407)
+
+  MacOS:
+
+    - Fix MacOS 10.3 support.
+
+    - Add candidate Darwin 10 support.
+
+  NetBSD:
+
+    - Corrected NetBSD version tests. (123647)
+
+  OpenBSD:
+
+    - Update support for 4.4 (124541)
+
+  Solaris:
+
+    - Support cache filesystems which do not allow open by inode number, enabled by
+      default on Solaris 9 and later. (123677)
+
+    - Improve error code return quality. (124426)
+
+    - Allow large partitions on Solaris servers.
+
+  All client systems:
+
+    - Avoid improper error messages about key version when krb5 is in use. (124220)
+
+    - Avoid attempting to free kernel memory which was already freed. (124531)
+
+    - Properly count offline volumes in vos client. (124333)
+
+  All server systems:
+
+    - Avoid 64 bit time issues in callback dump files. (124451)
+
+    - Support more than one local Kerberos realm; Usernames are assumed to be the
+      same across realms.
+
+    - Ubik recovery is corrected to avoid spurious errors. (123723)
+
+    - Do proper host address hashing for little endian machines in fileserver. (124447)
+
+    - Update backup utility to properly compute header needs in the backup buffer.
+      (124425)
+
+    - Avoid blocking during Rx unused connection reaping.
+
+    - Avoid leaking file handles in the fileserver when closing a volume. (124359)
+
+    - Fix bosserver corefile naming to be y2k-safe. (124340)
+
+    - Avoid potential infinite loop in deleted host handling in the fileserver.
+
+    - Support large volume dumps in vol-dump. (123984)
+
+    - Build butc XBSA support on 64 bit systems.
+
+  All systems:
+
+    - Properly track Rx connection idleness for timeouts.
+
+    - Additional documentation. (124472)
+
+    - Avoid a race which may result in an in-use Rx packet being freed. (123799)
+
+OpenAFS 1.4.9
+
+  All client systems: Security fixes.
+
+  * Security fixes:
+
+  All client systems:
+
+    - Avoid a potential kernel memory overrun if more items than requested are
+      returned from an InlineBulk or BulkStatus message. (124579)
+
+  Linux client systems:
+
+    - Avoid converting negative errors into invalid kernel memory pointers. (124580)
+
+OpenAFS 1.4.8
+
+  File servers: Major bugfixes.
+  All systems: Minor bugfixes.
+
+  * Bugfixes:
+
+  AIX:
+
+    - AIX 6.1 is now supported.
+
+    - Unpin kernel memory references after free. (99456)
+
+    FreeBSD:
+
+    - FreeBSD 7 is now supported.
+
+  Linux:
+
+    - Avoid deadlock when writing back pages in an mmap()ed file larger than
+      the cache. (120491)
+
+    - Update process tree walking for PAG garbage collection to avoid oopses.
+      (116603)
+
+    - fakestat mode now correctly avoids spurious ENOTDIR errors.
+
+    - Use kernel build system for all platforms.
+
+    - Remove openafs directory from proc in correct order. (112910)
+
+    - Handle renames across directories correctly in the linux dcache. (74672)
+
+    - Probe syscall table when possible. (105457)
+
+    - Mount point parsing is now updated to handle only well-formed mount
+      points rather than similarly-formed symlinks. (113558, 100836)
+
+    - ucontext-style LWP is now anbled for glibc versions newer than 2.3.
+
+  MacOS:
+
+    - Update available space shown. (112910)
+
+  NetBSD:
+
+    - Work around broken SIGWAIT. (111404)
+
+  Solaris:
+
+    - Solaris 10 now defaults to namei fileservers.
+
+    - NFS translator issues fixed.
+
+    - Changes to address Solaris updates. (105495)
+
+  All client systems:
+
+    - udebug correctly displays the last "yes" host.
+
+    - Allow more vldb lookups to be cached in the client.
+
+    - Fix aklog to not be excessively verbose when not requested.
+
+    - Add support for timing out accesses which are not completing in a timely
+      manner.
+
+    - Properly flag backup volumes being added to the vldb by vos syncvldb.
+
+  All server systems:
+
+    - fileserver "large" setting now implies 128 threads instead of 12.
+
+    - fileserver check for duplicate uuids is now applied correctly.
+
+    - Newer xbsa APIs are supported for TSM integration in butc.
+
+    - salvager avoids corrupting length of directory objects. (111585, 107767)
+
+    - volserver avoids a race during volume release so a volume will not
+      appear to be offline. (107258)
+
+    - Add support for returning errors when accesses are not completing
+      in a timely manner.
+
+    - Avoid potential race in the volserver when creating transactions. (121263)
+
+    - Return sensible error when a release or restore exhausts server
+      resources. (121040)
+
+    - volserver now returns EXDEV if a new replica would duplicate one which
+      already existed elsewhere on the server.
+
+    - Disable jumbograms by default.
+
+    - volserver updates a volume's updateDate on volume creation. (110943)
+
+    - Partitions over 2tb are now supported. (88811)
+
+  All systems:
+
+    - Re-enable Rx client keepalives. (20727)
+
+    - Support autoconf 2.62. (118058)
+
+    - Update Rx to avoid leaking packets.
+
+    - vos supports the -noresolve options to avoid issues with 127.0.0.1 being
+      named in /etc/hosts.
+
+    - Additional documentation. (104110)
+
+OpenAFS 1.4.7
+
+  File servers: Major bugfixes.
+  All systems: Minor bugfixes.
+
+  * Bugfixes:
+
+  AIX:
+
+    - Kerberos as included in AIX has missing symbols. AFS krb5 tools now
+      deal correctly.
+
+    - AIX LAM aklog plugin can now be used CDE screenlocker.
+
+    - Add support for getting the current PAG in pagsh and PAM.
+
+    - Avoid sending a terminal hangup to STREAMS in aklog.
+
+    - Fix afsdb support in the client.
+
+  Linux:
+
+    - Kernels through 2.6.25 are now supported. (77370,88000,83716,83890,80463)
+
+    - Client now only hashes dirty inodes. (78544)
+
+    - Fix to avoid returning invalid mount point data when -fakestat-all is in use.
+      (93898)
+
+    - RPM build system updates. (93616)
+
+    - Restored write-on-close-or-fsync semantics when possible. (17509)
+
+    - Enabled support for flock() on files in AFS. (53457)
+
+    - ARM Linux now supported.
+
+    - Kernel keyring support updated.
+
+    - Fix client-displayed timestamp ordering by zeroing nanosecond field.
+
+  MacOS:
+
+    - Boot time init script now uses afs.conf to store config options. (81825)
+
+    - Avoid kernel panic due to excessive lock tracking when removing files.
+
+    - Avoid leaking kernel memory when trying to read() a directory.
+
+  Solaris:
+
+    - Avoid potential kernel panic if the root vnode of AFS changes.
+
+    - Avoid potential kernel panic when shutting down if contracts are in use.
+
+    - Avoid potential delays when creating new PAGs if the system clock
+      has gone backwards.
+
+  All client systems:
+
+    - At client shutdown, try harder to clean up in-use resources. (74479)
+
+    - When fakestat is in use, enable optimization for Gnome Nautilus lookups.
+
+    - Properly hold lock when updating disk cache metadata to avoid
+      kernel panic. (59136)
+
+    - Avoid wrapping to the start of a file when attempting to write a large file
+      to a pre-largefile fileserver. (73720)
+
+  All server systems:
+
+    - Fixed to avoid truncating ubik databases during recovery. (77183)
+
+    - fileserver issue with internal file cache filling has been fixed. (87977)
+
+    - fileserver thread quota enforcement now done in all cases. (87416)
+
+    - fileserver avoids potential network-related deadlock when breaking
+      callbacks.
+
+    - fileserver avoids crash due to race of resource creation and user requests
+      at startup.
+
+    - fileserver avoids crash when reinitializing Ubik connections.
+
+    - volserver fixed to avoid leaving orphaned files during restore. (46937)
+
+    - volserver now supports convertROtoRW for inode fileservers.
+
+    - Support disabling kerberos 4 style username protection in servers. (75101)
+
+  All systems:
+
+    - Fix to butc to avoid crash due to threaded library variant.
+
+    - Fix to avoid network retransmission issues if the system clock goes
+      backwards.
+
+    - vos syncvldb and syncserver now support a dryrun (do nothing) mode.
+
+    - vos addsite now supports adding a site where a replica is already
+      available.
+
+    - vos clone now supports creating properly-named readonly and backup clones.
+
+    - vos restore now allows an older copy of a volume at an alternate site to
+      not be removed.
+
+    - cmdebug now supports dumping a client's CellServDB.
+
+    - cmdebug now supports showing human-readable expiration times.
+
+    - aklog now handles Kerberos referrals.
+
+    - Additional documentation now included. (89288,89289,86677)
+
+OpenAFS 1.4.6
+
+  All systems: Major bugfixes.
+
+  * Bugfixes:
+
+  All systems:
+
+    - fileserver host tracking code had a missing lock on a host structure;
+      that lock has been added.
+
+    - fileserver handling for clients which are giving up callbacks did not
+      hold a lock, making it unsafe and allowing clients to potentially
+      crash the server by racing.
+
+    - fileserver will now leave a corefile when it is doing a shutdown due
+      to error conditions.
+
+    - fileserver again allows ufs as a valid filesystem type (regression in 1.4.5).
+
+    - cbd handler for fileserver status data has an interpretation error which
+      could cause crashes corrected.
+
+    - fileserver accurately tracks number of callbacks on a given file.
+
+OpenAFS 1.4.5
+
+  All systems: Minor bugfixes.
+  New systems: MacOS 10.5.
+
+  All systems:
+
+    - fileserver address tracking is improved to avoid potentially merging
+      unrelated hosts.
+
+    - Documentation updates.
+
+    - namei fileserver now does fsync()s in background batches for performance
+      improvements.
+
+    - Kerberos ticket support corrected in bundled Kerberos 4 utilities on 64
+      bit platforms.
+
+    - fileserver includes limited per-host thread quota support to avoid
+      resource starvation.
+
+    - fileserver deals with more damaged volumes without asserting.
+
+    - vos validates dumpfiles before attempting restores.
+
+    - vos clone will no longer potentially delete the parent volume.
+
+    - Client no longer permits empty UUID to be created.
+
+    - fs uuid command for checking, regenerating UUID added.
+
+    - Updates for gcc 4.2.
+
+    - fileserver treats w (write) permission as granting read lock permission
+      in addition to write.
+
+  AIX:
+
+    - Bundled NAS Kerberos is now supported. (5.x)
+
+    - LAM aklog module is provided. (5.x)
+
+    - Associate cache files with correct filesystem to avoid snapshots when
+      performing maintenance on local filesystems.
+
+  Irix:
+
+    - Makefile updates.
+
+  Linux:
+
+    - Kernels throigh 2.6.23 are known to work.
+
+    - Updates to syscall table probing.
+
+    - Bug fix in keyring PAG support to avoid oops.
+
+    - updated sample RPM configuration.
+
+    - sparc32 lwp support updated.
+
+    - Avoid potential oops in symlink support in certain older kernels.
+
+    - Avoid potential deadlock during vmalloc.
+
+    - Corrected locking while interacting with kernel task list.
+
+  MacOS:
+
+    - Several panics fixed, including remove_fsref. (10.4 and later)
+
+    - IP address changes now tracked.
+
+    - Corrected support for dropboxes (li access without r) with cp and Finder.
+
+    - fstrace and ancillary files now included.
+
+    - man pages are now installed in the default MANPATH.
+
+    - Servers will be timed out quickly if there is no route available.
+
+    - Temporary files from remove-while-busy now cleaned up correctly.
+
+  Solaris:
+
+    - Updates to accomodate kernel interface changes. (10u4 and later)
+
+    - knfs and NFS translator support updated.
+
+    - Changes to accomodate version 5.4 xbsa library.
+
+    - Updates for new SunStudio defaults.
+
+OpenAFS 1.4.2
+
+  All systems: Major bugfixes.
+
+  * Bugfixes:
+
+  All systems:
+
+    * A bug in the namei volserver which could erroneously make a replicated or
+      moved volume go offline has been fixed.
+
+    * Volume package users (fileserver, volserver, salvager) avoid using lockf to
+      avoid leaking byte range locks on volume internal files.
+
+  MacOS 10.4:
+
+    * A bug where the client kernel module could free stack memory (which caused
+      issues with 64 bit Intel most commonly) has been fixed.
+
+  Linux:
+
+    * A missing kernel feature test has been fixed.
+
+    * group based PAG support is still enabled when possible.
+
+    * ia32 syscall table support for amd64 has build fixes for modern kernels.
+
+  Solaris:
+
+    * fopen() is not safe for use with more than 255 file descriptors open;
+      Emulate it in the afsconf package so afsconf can be used in the fileserver.
+
+  Windows:
+
+    * DNS registration is disabled for the loopback adapter, and we make sure
+      Netbios is turned on.
+
+  Since 1.4.1:
+
+  All platforms:
+    * Remove use of ubik_Call in the source code so prototypes are used.
+
+    * Avoid synchrony in call from the fileserver to the ptserver.
+
+    * Fix a bug in the backup suite when restoring.
+
+    * fileserver and volserver now log for error conditions which may cause
+      exiting.
+
+    * rx avoids a stack overrun when more packets are needed.
+
+    * volserver avoids holding a lock too long when purging volumes.
+
+    * volserver lock initialization fixes
+
+    * volserver volume nuke fixes to avoid leaving files behind
+
+    * fileserver avoids error when authenticating ptserver requests
+
+    * fileserver no longer crashes when GetCPS fails
+
+    * salvager enhancements to deal better with corrupt volumes for namei
+
+  Unix:
+
+    * aklog deals with KDCs which give "generic" replies to principals not
+      existing.
+
+    * Fix bug in cache parameter autotuning
+
+  RedHat:
+
+    * packaging fixes
+
+  Linux:
+
+    * amd64 pthread library family updates.
+
+    * autoconf fixes for kernel feature testing
+
+    * keyring PAG support now only enabled if needed features are present
+      and other updates
+
+    * inline a version of BUG() so we get better oopses
+
+  AIX:
+
+    * tsm is updated to work with the new AIX 5 interface.
+
+  MacOS:
+
+    * Cross compile fixes
+
+    * Packaging improvements
+
+    * Large file support fixed (Thanks to Chaskiel Grundman)
+
+    * Fixes for Leopard seed.
+
+    * Installer image updates
+
+  Windows:
+
+    * Removes race conditions and a deadlock introduced in 1.4.1
+
+    * Fixes ANSI filename option.
+
+    * Establishes new connections to file servers when
+      IP address configuration changes are detected.
+
+    * Improved CIFS compatibility
+
+    * Cache Manager optimizations
+
+    * Fixes vlserver failover when mounting 'root.afs'
+      (Freelance mode disabled)
+
+    * Installs help files in the correct location for use by afscreds.exe
+      and afs control panel.
+
+    * Improve reporting of "over quota" and "disk full" errors.
+
+    * Prevent crash when evaluating mount points to volumes that do
+      not exist
+
+    * Removes auto-registration of AFS ID in foreign ptservers from
+      Integrated Logon DLL.  This prevents crashes if the DLL is loaded
+      and unloaded prior to termination of the process.
+
+    * SDK moved to \Program Files\OpenAFS\SDK
+
+    * NSIS and WiX Installer Frameworks update to the latest versions
+
+    * Improvements to the Kerberos Logon Integration
+
+    * Prevents exception in Integrated Logon DLL during SysPrep
+
+    * Prevents displays of MessageBox dialogs in response to Network Adapter
+      errors
+
+    * Hard Dead and Connection Timeout values restricted to the CIFS Session
+      Timeout value.
+
+    * Correct writing of BackConnectionsHostNames registry value.
+
+    * Properly recycles Volume entries
+
+    * The AFS Explorer Shell Extension always finds its resource library.
+
+    * The export list for AFSAUTHENT.DLL has been corrected.  (The AFS
+      plugin for NetIDMgr will no longer use 100% of CPU.)
+
+    * Renaming files on Microsoft Vista Build 5536 works.
+
+    * Better handling of "." directory in fs commands
+
+    * Add OpenAFS License text to installers
+
+    * fs setquota and fs mkmount commands behave the same as the UNIX
+      version
+
+OpenAFS 1.4.2
+
+  All systems: Major bugfixes.
+
+  * Bugfixes:
+
+  All systems:
+
+    - Volume dump parsing code in the volserver has better error checking.
+
+    - salvager has improved damaged volume handling on namei fileservers.
+
+    - fileserver has size validity checks for when large file support is disabled.
+
+    - fileserver avoids potentially multiply adding a host to its hash table.
+
+    - rxkad client private data storage is allocated dynamically on ticket size.
+
+    - Handle universal error code translation for file locking.
+
+    - fileserver needs to swap callback connections on a client IP change.
+
+    - fileserver host package revised to reduce lock contention.
+
+    - Rx has been fixed to count hard acks, thus opening the congestion window.
+
+    - All servers support bound Rx sockets (on one interface).
+
+    - namei fileserver no longer use lockf() to avoid range locking issues.
+
+    - most binaries now support the -version switch.
+
+    - backup suite fixes for 64 bit platforms.
+
+    - volserver avoids holding holds during volume purges.
+
+    - volserver avoids losing files on namei during vos zap.
+
+  AIX:
+
+    - fileserver now properly supports large files.
+
+    - TSM updates for AIX 5
+
+    - Kernel module avoids leaking Rx packets.
+
+    - Avoid use of global ubik client structure in fileserver.
+
+    - Update ubik call client interface to allow for prototyping.
+
+    - audit logging fixes when stdarg does not provide integral va_list type.
+
+  MacOS 10.4:
+
+    - A bug where the client kernel module could free stack memory (which
+      caused issues with 64 bit Intel most commonly) has been fixed.
+
+    - Packaging fixes and updates.
+
+    - Uninstaller added.
+
+    - Fix large file support.
+
+  Linux:
+
+    - autoconf kernel feature testing has been restructured.
+
+    - PAG garbage collection is enabled by default.
+
+    - Kerberos updates for RHEL3.
+
+    - Fix POSIX lock enrollment for older Linux kernels.
+
+    - Updates for new 2.6 kernels.
+
+    - Avoid deadlocks in put_inode handler.
+
+    - Keyring-based PAG support.
+
+    - Fixes to avoid getting better oops info in the kernel.
+
+  Solaris:
+
+    - Remove some kernel symbol bindings for symbols we don't use.
+
+    - Cleanup for loopback mount of AFS on Solaris 10.
+
+    - Avoid issues with stdio not supporting file descriptors above 255 on
+      Solaris 8 and lower in the fileserver.
+
+OpenAFS 1.4.1
+
+  All systems: Major bugfixes.
+  New systems: MacOS 10.4 (PowerPC and Intel)
+
+  * Bugfixes:
+
+  All systems:
+
+    - Several race conditions in the host tracking and handling in the fileserver
+      which could cause inconsistent behavior and crashes have been fixed.
+
+    - A fileserver bug where a reference to a volume could be leaked and later
+      cause a deadlock as a result of a bulk status call
+
+    - Reference counting of fileserver objects in unsigned 32 bit integers
+      instead of signed 16 bit integers.
+
+    - Avoid type mismatches when handling time values (betweemn 32 bit and 64 bit
+      variables).
+
+    - Fix a memory leak during multilevel packet queue handling.
+
+    - Audit log output had been updated to include FIDs for newly created files.
+
+  HP-UX 11i:
+
+    - 64 bit (large file) inodes are supported.
+
+    - Salvager will now handle large (>4gb) partitions.
+
+    * New features:
+
+  All systems:
+
+    - asetkey is now included to ease Kerberos 5 integration for server
+      administrators.
+
+    - A new fileserver statistics collection including callback statistics was
+      added.
+
+    - man pages are now generated.
+
+  Microsoft Windows:
+
+    - Fixes error message problems experienced by fs.exe and the AFS Explorer
+      Shell Extensions related to the use of Universal Error Codes by the
+      AFS File Server
+
+    - Adds full SMB/CIFS support for byte range locking.  In this implementation
+      all locks are allocated locally and the AFS lock privilege is ignored.
+      While this will not prevent two processes on different machines from
+      simultaneously writing to the same file, it will prevent two processes
+      on the same machine from doing so.
+
+    - The UP server check period has been reduced to once every ten minutes to
+      match the period used by the UNIX clients.  The shorter period will
+      assist clients maintain RX connections through NATs.
+
+    - Fixes the DOWN server check logic to ensure that any server that responds
+      to a check is marked UP unless it is in the process of restarting.
+
+    - Add logic to better handle objects that no longer exist on the file server.
+      (VNOVNODE errors.)
+
+    - Prevent the removal of existing drive mappings by "afscreds.exe -M"
+
+    - Fixes the procmgmt library so that it doesn't cause applications that
+      unload it to crash.
+
+    - Improves the warnings written to the afsd_init.log file when the
+      Windows RPC Protocol drivers are improperly configured.
+
+    - Fixes "fs setserverprefs -vlserver".  Multiple calls with the same
+      server parameter could result in a crash of afsd_service.exe.
+
+    - The SMB/CIFS layer was audited for reference miscounts and memory leaks.
+      All SMB objects are now properly counted, locked, and released when
+      their work is done.
+
+    - Prevent file truncation of the user does not have the appropriate access.
+
+    - Token management was re-written to allow user tokens to be preserved
+      during integrated login and freed after logoff is complete.
+
+    - Added a mechanism by which abandoned SMB virtual circuits can be
+      detected and the associated resources cleaned up.
+
+    - Prevent the allocation of SMB file handles with a value of 0 or 0xFFFF
+      which would be considered invalid by Windows applications.
+
+    - Fixed the processing of cell names to ensure that they are always
+      treated as case insensitive strings.
+
+    - Fixed the network provider code to avoid querying the profile location
+      if integrated login is disabled.
+
+    - If a mount point string is empty, return Path Not Found to the application.
+
+    - Windows returns WSAECONNRESET when an ICMP packet is received in response
+      to a transmitted UDP packet that cannot be delivered.  Do not mark the
+      connection as bad but instead retry the request.
+
+    - Fix the data written to the registry as part of the BackConnectionHostnames
+      values.
+
+    - Fixed the rx-lwp implementation to always generate unique rx call
+      identitiers.
+
+    - The default "fs minidump" type now includes data segments.
 
 
 OpenAFS 1.3

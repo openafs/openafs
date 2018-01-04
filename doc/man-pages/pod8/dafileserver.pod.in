@@ -55,13 +55,11 @@ prior to save and following a restore.
 
 The default is C<both>.
 
-=item B<-vhashsize <I<size>>
+=item B<-vlrudisable>
 
-The log(2) number of of volume hash buckets.  Default is 8 (i.e., by
-default, there are 2^8 = 256 volume hash buckets). The minimum that can
-be specified is 6 (64 hash buckets). In OpenAFS 1.5.77 and earlier, the
-maximum that can be specified is 14 (16384 buckets). After 1.5.77, the
-maximum that can be specified is 28 (268435456 buckets).
+This option completely disables the VLRU mechanism, which means volumes will
+never "soft detach". The use of this option is only intended for debugging use
+or if you find a serious bug in the VLRU mechanism you wish to work around.
 
 =item B<-vlruthresh <I<minutes>>
 
@@ -96,11 +94,11 @@ strongly discouraged. Only use it if you really know what you are doing.
 =head1 EXAMPLES
 
 The following B<bos create> command creates a dafs process on
-the file server machine C<fs2.abc.com> that uses the large configuration
+the file server machine C<fs2.example.com> that uses the large configuration
 size, and allows volumes to exceed their quota by 10%. Type the command on
 a single line:
 
-   % bos create -server fs2.abc.com -instance dafs -type dafs \
+   % bos create -server fs2.example.com -instance dafs -type dafs \
                 -cmd "/usr/afs/bin/dafileserver -pctspare 10 -L" \
                 /usr/afs/bin/davolserver \
                 /usr/afs/bin/salvageserver \

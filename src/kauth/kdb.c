@@ -10,18 +10,13 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <fcntl.h>
-#include <sys/types.h>
-#include <time.h>
-#include <stdio.h>
-#ifndef AFS_NT40_ENV
-#include <strings.h>
-#endif
 #include <afs/cmd.h>
+#include <afs/afsutil.h>
+
 #include "kauth.h"
 #include "kalog.h"
-#include <afs/afsutil.h>
 
 #ifdef AUTH_DBM_LOG
 
@@ -109,12 +104,13 @@ main(int argc, char **argv)
 {
     struct cmd_syndesc *ts;
     afs_int32 code;
-    char dbmfile_help[AFSDIR_PATH_MAX];
+    char *dbmfile_help;
 
-    sprintf(dbmfile_help, "dbmfile to use (default %s)",
-	    AFSDIR_SERVER_KALOGDB_FILEPATH);
+    if (asprintf(&dbmfile_help, "dbmfile to use (default %s)",
+		 AFSDIR_SERVER_KALOGDB_FILEPATH) < 0)
+	dbmfile_help = "dbmfile to use";
     dbmfile = AFSDIR_SERVER_KALOGDB_FILEPATH;
-    ts = cmd_CreateSyntax(NULL, cmdproc, NULL, "Dump contents of dbm database");
+    ts = cmd_CreateSyntax(NULL, cmdproc, NULL, 0, "Dump contents of dbm database");
     cmd_AddParm(ts, "-dbmfile", CMD_SINGLE, CMD_OPTIONAL, dbmfile_help);
     cmd_AddParm(ts, "-key", CMD_SINGLE, CMD_OPTIONAL,
 		"extract entries that match specified key");

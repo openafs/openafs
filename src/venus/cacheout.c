@@ -7,21 +7,14 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#include <afs/vldbint.h>
-
-
-#include <stdio.h>
-#include <string.h>
-
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
+#include <roken.h>
 
 #include <ctype.h>
-#include <sys/types.h>
+
 #include <afs/auth.h>
 #include <afs/cmd.h>
 #include <afs/cellconfig.h>
@@ -29,14 +22,10 @@
 #include <afs/vlserver.h>
 #include <rx/rx.h>
 #include <rx/xdr.h>
-
 #include <ubik.h>
 #include <afs/kauth.h>
 #include <afs/afsutil.h>
-
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+#include <afs/vldbint.h>
 
 /*
 File servers in NW byte order.
@@ -251,11 +240,15 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
     struct afsconf_cell info;
     struct rx_connection *serverconns[MAXSERVERS];
     afs_int32 code, i;
-    struct rx_securityClass *scnull;
+    rxkad_level sclevel = rxkad_auth;
 
     sprintf(confdir, "%s", AFSDIR_CLIENT_ETC_DIRPATH);
     if (as->parms[4].items) { /* -localauth */
 	sprintf(confdir, "%s", AFSDIR_SERVER_ETC_DIRPATH);
+    }
+
+    if (as->parms[5].items) { /* -encrypt */
+	sclevel = rxkad_crypt;
     }
 
     /* setup to talk to servers */
@@ -265,7 +258,7 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 	return 1;
     }
 
-    scnull = sc = rxnull_NewClientSecurityObject();
+    sc = rxnull_NewClientSecurityObject();
     scindex = 0;
 
     tdir = afsconf_Open(confdir);
@@ -283,7 +276,11 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
     }
 
     if (as->parms[4].items) { /* -localauth */
-	code = afsconf_ClientAuth(tdir, &sc, &scindex);
+	if (sclevel == rxkad_crypt) {
+	    code = afsconf_ClientAuthSecure(tdir, &sc, &scindex);
+	} else {
+	    code = afsconf_ClientAuth(tdir, &sc, &scindex);
+	}
 	if (code || scindex == 0) {
 	    afsconf_Close(tdir);
 	    fprintf(stderr, "Could not get security object for -localauth (code: %d)\n",
@@ -304,7 +301,7 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 	    fprintf(stderr, "Could not get afs tokens, running unauthenticated\n");
 	} else {
 	    scindex = 2;
-	    sc = rxkad_NewClientSecurityObject(rxkad_auth, &ttoken.sessionKey,
+	    sc = rxkad_NewClientSecurityObject(sclevel, &ttoken.sessionKey,
 	                                       ttoken.kvno, ttoken.ticketLen,
 	                                       ttoken.ticket);
 	}
@@ -313,8 +310,8 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
     for (i = 0; i < info.numServers; ++i)
 	serverconns[i] =
 	    rx_NewConnection(info.hostAddr[i].sin_addr.s_addr,
-			     info.hostAddr[i].sin_port, USER_SERVICE_ID, scnull,
-			     0);
+			     info.hostAddr[i].sin_port, USER_SERVICE_ID, sc,
+			     scindex);
     for (; i < MAXSERVERS; ++i) {
 	serverconns[i] = (struct rx_connection *)0;
     }
@@ -348,15 +345,16 @@ main(int argc, char **argv)
     cmd_SetBeforeProc(MyBeforeProc, NULL);
 
     ts = cmd_CreateSyntax("initcmd" /*"invalidatecache" */ , InvalidateCache,
-			  NULL, "invalidate server ACL cache");
+			  NULL, 0, "invalidate server ACL cache");
     cmd_AddParm(ts, "-id", CMD_LIST, CMD_OPTIONAL, "user identifier");
     cmd_AddParm(ts, "-ip", CMD_LIST, CMD_OPTIONAL, "IP address");
     cmd_CreateAlias(ts, "ic");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
     cmd_AddParm(ts, "-noauth", CMD_FLAG, CMD_OPTIONAL, "don't authenticate");
     cmd_AddParm(ts, "-localauth", CMD_FLAG, CMD_OPTIONAL, "user server tickets");
+    cmd_AddParm(ts, "-encrypt", CMD_FLAG, CMD_OPTIONAL, "encrypt commands");
 
-    ts = cmd_CreateSyntax("listservers", GetServerList, NULL,
+    ts = cmd_CreateSyntax("listservers", GetServerList, NULL, 0,
 			  "list servers in the cell");
     cmd_CreateAlias(ts, "ls");
 

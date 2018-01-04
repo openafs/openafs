@@ -9,42 +9,32 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
-#if defined(AFS_LINUX24_ENV)
-#define _REGEX_RE_COMP
+
+#include <roken.h>
+
+#ifdef HAVE_POSIX_REGEX		/* use POSIX regexp library */
+#include <regex.h>
 #endif
-#include <sys/types.h>
+
 #include <afs/cmd.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#endif
-#include <errno.h>
 #include <afs/com_err.h>
 #include <afs/afsutil.h>
 #include <afs/budb.h>
 #include <afs/budb_prototypes.h>
 #include <afs/butc.h>
 #include <afs/bubasics.h>	/* PA */
+#include <afs/afsint.h>
 #include <afs/volser.h>
 #include <afs/voldefs.h>	/* PA */
 #include <afs/vldbint.h>	/* PA */
 #include <afs/ktime.h>		/* PA */
 #include <ubik.h>
-#include <time.h>
 #include <lock.h>
-#include <afs/butc.h>
 #include <afs/tcdata.h>
 #include <afs/butx.h>
 #include <afs/vsutils_prototypes.h>
-#ifdef HAVE_POSIX_REGEX		/* use POSIX regexp library */
-#include <regex.h>
-#endif
+
 #include "bc.h"
 #include "error_macros.h"
 #include "bucoord_internal.h"
@@ -118,13 +108,12 @@ getSPEntries(afs_uint32 server, afs_int32 partition,
     }
     /* No server entry added. Add one */
     if (!(*ss)) {
-	*ss = (struct serversort *)malloc(sizeof(struct serversort));
+	*ss = calloc(1, sizeof(struct serversort));
 	if (!(*ss)) {
 	    afs_com_err(whoami, BC_NOMEM, NULL);
 	    *ss = 0;
 	    return (BC_NOMEM);
 	}
-	memset(*ss, 0, sizeof(struct serversort));
 	(*ss)->ipaddr = server;
 	(*ss)->next = *serverlist;
 	*serverlist = *ss;
@@ -139,7 +128,7 @@ getSPEntries(afs_uint32 server, afs_int32 partition,
     }
     /* No partition entry added. Add one */
     if (!(*ps)) {
-	*ps = (struct partitionsort *)malloc(sizeof(struct partitionsort));
+	*ps = calloc(1, sizeof(struct partitionsort));
 	if (!(*ps)) {
 	    afs_com_err(whoami, BC_NOMEM, NULL);
 	    free(*ss);
@@ -147,7 +136,6 @@ getSPEntries(afs_uint32 server, afs_int32 partition,
 	    *ss = 0;
 	    return (BC_NOMEM);
 	}
-	memset(*ps, 0, sizeof(struct partitionsort));
 	(*ps)->part = partition;
 	(*ps)->next = (*ss)->partitions;
 	(*ss)->partitions = *ps;
@@ -270,15 +258,15 @@ EvalVolumeSet2(struct bc_config *aconfig,
 		ei = entries[e].matchindex & 0xffff;
 		et = (entries[e].matchindex >> 16) & 0xffff;
 		switch (et) {
-		case ITSRWVOL:{
+		case VLSF_RWVOL:{
 			et = RWVOL;
 			break;
 		    }
-		case ITSBACKVOL:{
+		case VLSF_BACKVOL:{
 			et = BACKVOL;
 			break;
 		    }
-		case ITSROVOL:{
+		case VLSF_ROVOL:{
 			et = ROVOL;
 			break;
 		    }
@@ -321,15 +309,13 @@ EvalVolumeSet2(struct bc_config *aconfig,
 
 		if (add) {
 		    /* Allocate a volume dump structure and its name */
-		    tvd = (struct bc_volumeDump *)
-			malloc(sizeof(struct bc_volumeDump));
+		    tvd = calloc(1, sizeof(struct bc_volumeDump));
 		    if (!tvd) {
 			afs_com_err(whoami, BC_NOMEM, NULL);
 			ERROR(BC_NOMEM);
 		    }
-		    memset(tvd, 0, sizeof(*tvd));
 
-		    tvd->name = (char *)malloc(strlen(entries[e].name) + 10);
+		    tvd->name = malloc(strlen(entries[e].name) + 10);
 		    if (!(tvd->name)) {
 			afs_com_err(whoami, BC_NOMEM, NULL);
 			free(tvd);
@@ -365,7 +351,7 @@ EvalVolumeSet2(struct bc_config *aconfig,
 
 	    /* Free memory allocated during VL call */
 	    if (bulkentries.nbulkentries_val) {
-		free((char *)bulkentries.nbulkentries_val);
+		free(bulkentries.nbulkentries_val);
 		bulkentries.nbulkentries_val = 0;
 		entries = 0;
 	    }
@@ -378,7 +364,7 @@ EvalVolumeSet2(struct bc_config *aconfig,
 
   error_exit:
     if (bulkentries.nbulkentries_val) {
-	free((char *)bulkentries.nbulkentries_val);
+	free(bulkentries.nbulkentries_val);
     }
     return (code);
 }				/*EvalVolumeSet2 */
@@ -517,8 +503,8 @@ EvalVolumeSet1(struct bc_config *aconfig,
 		/* If the RW name matches the volume set entry, take
 		 * it and exit. First choice is to use the RW volume.
 		 */
-		if (entry.serverFlags[srvpartpair] & ITSRWVOL) {
-		    if (entry.flags & RW_EXISTS) {
+		if (entry.serverFlags[srvpartpair] & VLSF_RWVOL) {
+		    if (entry.flags & VLF_RWEXISTS) {
 			sprintf(patt, "%s", entry.name);
 #ifdef HAVE_POSIX_REGEX
 			code = regexec(&re, patt, 0, NULL, 0);
@@ -537,7 +523,7 @@ EvalVolumeSet1(struct bc_config *aconfig,
 		    /* If the BK name matches the volume set entry, take
 		     * it and exit. Second choice is to use the BK volume.
 		     */
-		    if (entry.flags & BACK_EXISTS) {
+		    if (entry.flags & VLF_BACKEXISTS) {
 			sprintf(patt, "%s.backup", entry.name);
 #ifdef HAVE_POSIX_REGEX
 			code = regexec(&re, patt, 0, NULL, 0);
@@ -558,8 +544,8 @@ EvalVolumeSet1(struct bc_config *aconfig,
 		 * it, but continue searching. Further entries may be
 		 * RW or backup entries that will match.
 		 */
-		else if (!found && (entry.serverFlags[srvpartpair] & ITSROVOL)
-			 && (entry.flags & RO_EXISTS)) {
+		else if (!found && (entry.serverFlags[srvpartpair] & VLSF_ROVOL)
+			 && (entry.flags & VLF_ROEXISTS)) {
 		    sprintf(patt, "%s.readonly", entry.name);
 #ifdef HAVE_POSIX_REGEX
 		    code = regexec(&re, patt, 0, NULL, 0);
@@ -591,15 +577,13 @@ EvalVolumeSet1(struct bc_config *aconfig,
 		}
 
 		total++;
-		tvd = (struct bc_volumeDump *)
-		    malloc(sizeof(struct bc_volumeDump));
+		tvd = calloc(1, sizeof(struct bc_volumeDump));
 		if (!tvd) {
 		    afs_com_err(whoami, BC_NOMEM, NULL);
 		    return (BC_NOMEM);
 		}
-		memset(tvd, 0, sizeof(*tvd));
 
-		tvd->name = (char *)malloc(strlen(entry.name) + 10);
+		tvd->name = malloc(strlen(entry.name) + 10);
 		if (!(tvd->name)) {
 		    afs_com_err(whoami, BC_NOMEM, NULL);
 		    free(tvd);
@@ -741,18 +725,15 @@ bc_FloatATOI(char *anum)
 char *
 bc_CopyString(char *astring)
 {
-    afs_int32 tlen;
     char *tp;
 
     if (!astring)
 	return (NULL);		/* propagate null strings easily */
-    tlen = strlen(astring);
-    tp = (char *)malloc(tlen + 1);	/* don't forget the terminating null */
+    tp = strdup(astring);
     if (!tp) {
 	afs_com_err(whoami, BC_NOMEM, NULL);
 	return (tp);
     }
-    strcpy(tp, astring);
     return tp;
 }
 
@@ -780,7 +761,7 @@ concatParams(struct cmd_item *itemPtr)
 	return (NULL);
     }
 
-    string = (char *)malloc(length);	/* allocate the string */
+    string = malloc(length);	/* allocate the string */
     if (!string) {
 	afs_com_err(whoami, BC_NOMEM, NULL);
 	return (NULL);
@@ -1182,33 +1163,28 @@ bc_VolRestoreCmd(struct cmd_syndesc *as, void *arock)
     }
 
     /* specified other destination host */
-    if (as->parms[0].items) {
-	tp = as->parms[0].items->data;
-	if (bc_ParseHost(tp, &destServ)) {
-	    afs_com_err(whoami, 0, "Failed to locate destination host '%s'", tp);
-	    return -1;
-	}
+    tp = as->parms[0].items->data;
+    if (bc_ParseHost(tp, &destServ)) {
+	afs_com_err(whoami, 0, "Failed to locate destination host '%s'", tp);
+	return -1;
     }
 
     /* specified other destination partition */
-    if (as->parms[1].items) {
-	tp = as->parms[1].items->data;
-	if (bc_GetPartitionID(tp, &destPartition)) {
-	    afs_com_err(whoami, 0, "Can't parse destination partition '%s'", tp);
-	    return -1;
-	}
+    tp = as->parms[1].items->data;
+    if (bc_GetPartitionID(tp, &destPartition)) {
+	afs_com_err(whoami, 0, "Can't parse destination partition '%s'", tp);
+	return -1;
     }
 
     for (ti = as->parms[2].items; ti; ti = ti->next) {
 	/* build list of volume items */
-	tvol = (struct bc_volumeDump *)malloc(sizeof(struct bc_volumeDump));
+	tvol = calloc(1, sizeof(struct bc_volumeDump));
 	if (!tvol) {
 	    afs_com_err(whoami, BC_NOMEM, NULL);
 	    return BC_NOMEM;
 	}
-	memset(tvol, 0, sizeof(struct bc_volumeDump));
 
-	tvol->name = (char *)malloc(VOLSER_MAXVOLNAME + 1);
+	tvol->name = malloc(VOLSER_MAXVOLNAME + 1);
 	if (!tvol->name) {
 	    afs_com_err(whoami, BC_NOMEM, NULL);
 	    return BC_NOMEM;
@@ -1248,7 +1224,7 @@ bc_VolRestoreCmd(struct cmd_syndesc *as, void *arock)
     if (as->parms[5].items) {
 	for (ti = as->parms[5].items; ti; ti = ti->next)
 	    portCount++;
-	ports = (afs_int32 *) malloc(portCount * sizeof(afs_int32));
+	ports = malloc(portCount * sizeof(afs_int32));
 	if (!ports) {
 	    afs_com_err(whoami, BC_NOMEM, NULL);
 	    return BC_NOMEM;
@@ -1378,7 +1354,7 @@ bc_DiskRestoreCmd(struct cmd_syndesc *as, void *arock)
     if (as->parms[2].items) {
 	for (ti = as->parms[2].items; ti; ti = ti->next)
 	    portCount++;
-	ports = (afs_int32 *) malloc(portCount * sizeof(afs_int32));
+	ports = malloc(portCount * sizeof(afs_int32));
 	if (!ports) {
 	    afs_com_err(whoami, BC_NOMEM, NULL);
 	    return BC_NOMEM;
@@ -1545,11 +1521,9 @@ bc_VolsetRestoreCmd(struct cmd_syndesc *as, void *arock)
 	    }
 
 	    /* Allocate a volumeDump structure and link it in */
-	    tvol =
-		(struct bc_volumeDump *)malloc(sizeof(struct bc_volumeDump));
-	    memset(tvol, 0, sizeof(struct bc_volumeDump));
+	    tvol = calloc(1, sizeof(struct bc_volumeDump));
 
-	    tvol->name = (char *)malloc(VOLSER_MAXVOLNAME + 1);
+	    tvol->name = malloc(VOLSER_MAXVOLNAME + 1);
 	    if (!tvol->name) {
 		afs_com_err(whoami, BC_NOMEM, NULL);
 		return BC_NOMEM;
@@ -1575,7 +1549,7 @@ bc_VolsetRestoreCmd(struct cmd_syndesc *as, void *arock)
     if (as->parms[2].items) {
 	for (ti = as->parms[2].items; ti; ti = ti->next)
 	    portCount++;
-	ports = (afs_int32 *) malloc(portCount * sizeof(afs_int32));
+	ports = malloc(portCount * sizeof(afs_int32));
 	if (!ports) {
 	    afs_com_err(whoami, BC_NOMEM, NULL);
 	    return BC_NOMEM;
@@ -1648,7 +1622,6 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 problemFindingDump;	/* can't find parent(s) */
 
     afs_int32 *portp = NULL;
-    afs_int32 portCount = 0;
     afs_int32 doAt, atTime;	/* Time a timed-dump is to start at */
     afs_int32 length;
     char *timeString;
@@ -1731,8 +1704,7 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
 
 	/* get the port number, if one was specified */
 	if (as->parms[2].items) {
-	    portCount = 1;
-	    portp = (afs_int32 *) malloc(sizeof(afs_int32));
+	    portp = malloc(sizeof(afs_int32));
 	    if (!portp) {
 		afs_com_err(whoami, BC_NOMEM, NULL);
 		return BC_NOMEM;
@@ -1813,7 +1785,7 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
 	    sprintf(statusPtr->taskName, "Scheduled Dump");
 	    statusPtr->jobNumber = bc_jobNumber();
 	    statusPtr->scheduledDump = atTime;
-	    statusPtr->cmdLine = (char *)malloc(length);
+	    statusPtr->cmdLine = malloc(length);
 	    if (!statusPtr->cmdLine) {
 		afs_com_err(whoami, BC_NOMEM, NULL);
 		return BC_NOMEM;
@@ -1865,12 +1837,11 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
      * global variables so this can take place in main.
      */
     if (loadfile) {
-	loadFile = (char *)malloc(strlen(as->parms[6].items->data) + 1);
+	loadFile = strdup(as->parms[6].items->data);
 	if (!loadFile) {
 	    afs_com_err(whoami, BC_NOMEM, NULL);
 	    return BC_NOMEM;
 	}
-	strcpy(loadFile, as->parms[6].items->data);
 	return 0;
     }
 
@@ -2475,7 +2446,7 @@ bc_deleteDumpCmd(struct cmd_syndesc *as, void *arock)
 	havetime = 1;
     }
 
-    port = (as->parms[3].items ? getPortOffset(as->parms[3].items->data) : 0);	/* -port */
+    port = (as->parms[3].items ? getPortOffset(as->parms[3].items->data) : 0);	/* -portoffset */
     if (as->parms[5].items)	/* -dbonly */
 	port = -1;
 
@@ -2779,12 +2750,10 @@ DBLookupByVolume(char *volumeName)
 	    for (i = 0; i < numEntries; i++) {	/*f */
 		struct dumpedVol *insPtr, **prevPtr;
 
-		tempPtr =
-		    (struct dumpedVol *)malloc(sizeof(struct dumpedVol));
+		tempPtr = calloc(1, sizeof(struct dumpedVol));
 		if (!tempPtr)
 		    ERROR(BC_NOMEM);
 
-		memset(tempPtr, 0, sizeof(*tempPtr));
 		tempPtr->incTime = volumeEntry[i].clone;
 		tempPtr->dumpID = volumeEntry[i].dump;
 		strncpy(tempPtr->tapeName, volumeEntry[i].tape,
@@ -2937,13 +2906,12 @@ dumpInfo(afs_int32 dumpid, afs_int32 detailFlag)
 
     /* now get the list of tapes */
     for (tapeNumber = dumpEntry.tapes.b; tapeNumber <= dumpEntry.tapes.maxTapes; tapeNumber++) {	/*f */
-	tapeLinkPtr = (struct tapeLink *)malloc(sizeof(struct tapeLink));
+	tapeLinkPtr = calloc(1, sizeof(struct tapeLink));
 	if (!tapeLinkPtr) {
 	    afs_com_err(whoami, BC_NOMEM, NULL);
 	    ERROR(BC_NOMEM);
 	}
 
-	memset(tapeLinkPtr, 0, sizeof(*tapeLinkPtr));
 	code = bcdb_FindTapeSeq(dumpid, tapeNumber, &tapeLinkPtr->tapeEntry);
 	if (code) {
 	    code = 0;
@@ -2988,13 +2956,11 @@ dumpInfo(afs_int32 dumpid, afs_int32 detailFlag)
 	    for (i = 0; i < vl.budb_volumeList_len; i++) {
 		link = &tapeLinkPtr->firstVolume;
 
-		volumeLinkPtr =
-		    (struct volumeLink *)malloc(sizeof(struct volumeLink));
+		volumeLinkPtr = calloc(1, sizeof(struct volumeLink));
 		if (!volumeLinkPtr) {
 		    afs_com_err(whoami, BC_NOMEM, NULL);
 		    ERROR(BC_NOMEM);
 		}
-		memset(volumeLinkPtr, 0, sizeof(*volumeLinkPtr));
 
 		memcpy(&volumeLinkPtr->volumeEntry,
 		       &vl.budb_volumeList_val[i],

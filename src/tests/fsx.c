@@ -1017,10 +1017,8 @@ main(int argc, char **argv)
     original_buf = (char *)malloc(maxfilelen);
     for (i = 0; i < maxfilelen; i++)
 	original_buf[i] = random() % 256;
-    good_buf = (char *)malloc(maxfilelen);
-    bzero(good_buf, maxfilelen);
-    temp_buf = (char *)malloc(maxoplen);
-    bzero(temp_buf, maxoplen);
+    good_buf = calloc(1, maxfilelen);
+    temp_buf = calloc(1, maxoplen);
     if (lite) {			/* zero entire existing file */
 	ssize_t written;
 

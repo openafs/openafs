@@ -14,20 +14,17 @@
 #ifndef _RX_MISC_H_
 #define _RX_MISC_H_
 
-#define MISCMTU
-#define ADAPT_MTU
-
 #if defined(AFS_SUN5_ENV)
 #include <sys/sockio.h>
 #include <sys/fcntl.h>
 #endif
 
 #if	defined(AFS_AIX41_ENV) && defined(KERNEL)
-#define PIN(a, b) pin(a, b);
-#define UNPIN(a, b) unpin(a, b);
+#define PIN(a, b) pin(a, b)
+#define UNPIN(a, b) unpin(a, b)
 #else
-#define PIN(a, b) ;
-#define UNPIN(a, b) ;
+#define PIN(a, b)
+#define UNPIN(a, b)
 #endif
 
 

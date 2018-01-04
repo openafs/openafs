@@ -10,20 +10,14 @@
 #include <afsconfig.h>
 #include <afs/stds.h>
 
+#include <roken.h>
 
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#endif
 #include <afs/com_err.h>
 #include <afs/bubasics.h>
 #include <lock.h>
 #include <afs/tcdata.h>
 #include <afs/cmd.h>
+
 #include "bc.h"
 #include "error_macros.h"
 #include "bucoord_internal.h"

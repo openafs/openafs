@@ -69,7 +69,7 @@ enum vcexcl { EXCL, NONEXCL };
 #ifndef AFS_DARWIN80_ENV
 #define vnode_clearfsnode(x) ((x)->v_data = 0)
 #define vnode_fsnode(x) (x)->v_data
-#define vnode_lock(x) vn_lock(x, LK_EXCLUSIVE | LK_RETRY, current_proc());
+#define vnode_lock(x) vn_lock(x, LK_EXCLUSIVE | LK_RETRY, current_proc())
 #define vnode_isvroot(x) (((x)->v_flag & VROOT)?1:0)
 #define vnode_vtype(x) (x)->v_type
 #define vnode_isdir(x) ((x)->v_type == VDIR)
@@ -105,7 +105,7 @@ enum vcexcl { EXCL, NONEXCL };
 #define crref kauth_cred_get_with_ref
 #define crhold kauth_cred_ref
 #ifdef AFS_DARWIN100_ENV
-static inline void crfree(kauth_cred_t X) { kauth_cred_unref(&X); }
+#define crfree(X) kauth_cred_unref(&X)
 #else
 #define crfree kauth_cred_rele
 #endif
@@ -143,7 +143,7 @@ typedef struct proc afs_proc_t;
 
 #define osi_vnhold(avc,r)       VN_HOLD(AFSTOV(avc))
 #define VN_HOLD(vp) darwin_vn_hold(vp)
-#define VN_RELE(vp) vrele(vp);
+#define VN_RELE(vp) vrele(vp)
 
 void darwin_vn_hold(struct vnode *vp);
 
@@ -205,15 +205,16 @@ extern struct lock__bsd__ afs_global_lock;
 #define USERPRI
 #if 0
 #undef SPLVAR
-#define SPLVAR int x;
+#define SPLVAR int x
 #undef NETPRI
-#define NETPRI x=splnet();
+#define NETPRI x=splnet()
 #undef USERPRI
-#define USERPRI splx(x);
+#define USERPRI splx(x)
 #endif
 
 #define AFS_APPL_UFS_CACHE 1
 #define AFS_APPL_HFS_CACHE 2
+#define AFS_APPL_APFS_CACHE 3
 
 extern ino_t VnodeToIno(vnode_t avp);
 extern dev_t VnodeToDev(vnode_t vp);
@@ -226,9 +227,9 @@ extern int igetinode(mount_t vfsp, dev_t dev , ino_t inode, vnode_t *vpp,
 #define osi_curcred() &afs_osi_cred
 
 #ifdef AFS_DARWIN80_ENV
-uio_t afsio_darwin_partialcopy(uio_t auio, int size);
-
-#define uprintf printf
+# define afsio_free(X) uio_free(X)
+# define afsio_setoffset(X, Y) uio_setoffset(X, Y)
+# define uprintf printf
 #endif
 
 /* Vnode related macros */

@@ -9,10 +9,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 
 INCLS=${TOP_INCDIR}/afs/partition.h ${TOP_INCDIR}/afs/volume.h \
 	${TOP_INCDIR}/afs/vlserver.h ${TOP_INCDIR}/rx/rx.h \
@@ -38,14 +36,16 @@ LIBS=${TOP_LIBDIR}/libbudb.a \
         ${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/librxkad.a \
         ${TOP_LIBDIR}/libsys.a  \
-        ${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/librx.a \
         ${TOP_LIBDIR}/libsys.a  \
 	${TOP_LIBDIR}/liblwp.a \
         ${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libafscom_err.a \
+	${TOP_LIBDIR}/libafsrfc3961.a \
+	${TOP_LIBDIR}/libafshcrypto_lwp.a \
 	${TOP_LIBDIR}/libusd.a \
 	${TOP_LIBDIR}/util.a \
+	$(TOP_LIBDIR)/libopr.a \
 	${TOP_LIBDIR}/libprocmgmt.a
 
 TESTOBJS=test.o
@@ -56,37 +56,39 @@ SOBJS=dbentries.o tcprocs.o lwps.o tcmain.o list.o recoverDb.o tcudbprocs.o \
 all: butc read_tape
 
 butc_test: ${TESTOBJS} ${LIBS} ${INCLS} ${HACKS}
-	${CC} ${CFLAGS} ${TESTOBJS} ${LIBS} ${XLIBS} ${KRB5_LIBS} -o butc_test
+	$(AFS_LDRULE) ${TESTOBJS} ${LIBS} $(LIB_roken) ${XLIBS}
 
 tdump: tdump.c AFS_component_version_number.c
-	${CC} ${CFLAGS} ${srcdir}/tdump.c -o tdump
+	$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) $(AFS_LDFLAGS) \
+		${srcdir}/tdump.c -o tdump
 
 butc: ${SOBJS} ${LIBS} ${INCLS} ${HACKS}
 	@case ${SYS_NAME} in \
-	  rs_aix*) ${CC} ${CFLAGS} ${SOBJS} ${LIBS} ${XLIBS} ${KRB5_LIBS} /usr/lib/libc_r.a -o butc;; \
-	  *)        ${CC} ${CFLAGS} ${SOBJS} ${LIBS} ${XLIBS} ${KRB5_LIBS} -o butc;; \
+	  rs_aix*) $(AFS_LDRULE_NOQ) ${SOBJS} ${LIBS} $(LIB_roken) ${XLIBS} \
+	  	/usr/lib/libc_r.a ;; \
+	  *)       $(AFS_LDRULE_NOQ) ${SOBJS} ${LIBS} $(LIB_roken) ${XLIBS} ;; \
 	esac
 
 tcmain.o: tcmain.c ${INCLS} AFS_component_version_number.c
-	$(CC) $(CFLAGS) -c ${srcdir}/tcmain.c
-
 dbentries.o: dbentries.c ${INCLS}
 tcprocs.o: tcprocs.c ${INCLS}
 test.o: test.c ${INCLS} AFS_component_version_number.c
 lwps.o: lwps.c ${INCLS}
-	$(CC) $(CFLAGS) -c ${srcdir}/lwps.c
 list.o: list.c ${INCLS}
 recoverDb.o: recoverDb.c ${INCLS}
 tcudbprocs.o: tcudbprocs.c ${INCLS}
-	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c ${srcdir}/tcudbprocs.c
 dump.o: dump.c ${INCLS}
-	$(CC) $(CFLAGS) -c ${srcdir}/dump.c
 tcstatus.o: tcstatus.c ${INCLS}
 
 read_tape: read_tape.c
-	${CC} ${CFLAGS} -o read_tape ${srcdir}/read_tape.c \
+	$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) $(AFS_LDFLAGS) \
+		-o read_tape ${srcdir}/read_tape.c \
 		${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libusd.a \
-		${TOP_LIBDIR}/util.a
+		${TOP_LIBDIR}/util.a $(TOP_LIBDIR)/libopr.a \
+		$(LIB_roken) $(XLIBS)
+
+# Errors
+CFLAGS_tcudbprocs.o=@CFLAGS_NOERROR@
 
 clean:
 	$(RM) -f butc *.o butc_test core tdump read_tape AFS_component_version_number.c

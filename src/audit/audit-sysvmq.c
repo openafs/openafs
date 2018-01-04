@@ -8,22 +8,16 @@
  */
 
 #include <afsconfig.h>
+#include <afs/param.h>
+
+#include <roken.h>
 
 /* only build on platforms that have SysV IPC support; i.e., when we
  * have sys/ipc.h */
 #ifdef HAVE_SYS_IPC_H
 
-#include <afs/param.h>
-
-#include <string.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
-#include <unistd.h>
-#include <fcntl.h>
 
 #include "audit-api.h"
 

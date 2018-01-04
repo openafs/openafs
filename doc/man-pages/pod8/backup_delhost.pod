@@ -72,9 +72,9 @@ ignored.
 
 The following command deletes the Backup Database entry for the Tape
 Coordinator with port offset 2 on the Tape Coordinator machine
-C<backup3.abc.com>:
+C<backup3.example.com>:
 
-   % backup delhost -tapehost backup3.abc.com -portoffset 2
+   % backup delhost -tapehost backup3.example.com -portoffset 2
 
 =head1 PRIVILEGE REQUIRED
 

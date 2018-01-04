@@ -7,28 +7,18 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
-INCDIRS=-I${TOP_INCDIR} -I..
-LDIRS=-L${TOP_LIBDIR} -L${DESTDIR}/lib/afs -L..
-
-CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LDIRS} ${LIBS} ${XCFLAGS} ${ARCHFLAGS}
+MODULE_CFLAGS=$(LDIRS) $(LIBS)
 
 all: testproc
 
-install:  
+install:
 
 #
 # Build targets
 #
-testproc: testproc.c 
-	$(CC) $(CFLAGS) -o testproc testproc.c
-
-smail-notifier: smail-notifier.c 
-	$(CC) $(CFLAGS) -o smail-notifier smail-notifier.c
+testproc: testproc.c
+	$(CC) $(AFS_LDFLAGS) $(AFS_CFLAGS) -o testproc testproc.c
 
 #
 # Misc targets
@@ -36,5 +26,5 @@ smail-notifier: smail-notifier.c
 clean:
 	$(RM) -f  *.a *.o testproc core
 
-dest:  
+dest:
 

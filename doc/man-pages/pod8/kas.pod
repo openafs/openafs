@@ -71,7 +71,7 @@ To avoid having to provide a password repeatedly when issuing a sequence
 of B<kas> commands, enter I<interactive mode> by issuing the B<kas
 interactive> command, typing B<kas> without any operation code, or typing
 B<kas> followed by a user and cell name, separated by an at-sign (C<@>; an
-example is C<kas smith.admin@abc.com>). After prompting once for a
+example is C<kas smith.admin@example.com>). After prompting once for a
 password, the Authentication Server accepts the resulting token for every
 command issued during the interactive session. See L<kas_interactive(8)>
 for a discussion of when to use each method for entering interactive mode

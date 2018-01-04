@@ -79,8 +79,7 @@ afs_GetAccessBits(struct vcache *avc, afs_int32 arights,
 	if (!tu) {
 	    return (arights & avc->f.anyAccess);
 	}
-	if ((tu->vid == UNDEFVID) || !(tu->states & UHasTokens)
-	    || (tu->states & UTokensBad)) {
+	if (!(tu->states & UHasTokens) || (tu->states & UTokensBad)) {
 	    afs_PutUser(tu, READ_LOCK);
 	    return (arights & avc->f.anyAccess);
 	} else {
@@ -215,9 +214,9 @@ afs_access(OSI_VC_DECL(avc), afs_int32 amode,
 
     AFS_DISCON_LOCK();
 
-    if (afs_fakestat_enable && avc->mvstat == 1) {
+    if (afs_fakestat_enable && avc->mvstat == AFS_MVSTAT_MTPT) {
 	code = afs_TryEvalFakeStat(&avc, &fakestate, treq);
-        if (code == 0 && avc->mvstat == 1) {
+        if (code == 0 && avc->mvstat == AFS_MVSTAT_MTPT) {
 	    afs_PutFakeStat(&fakestate);
 	    AFS_DISCON_UNLOCK();
 	    afs_DestroyReq(treq);
@@ -359,7 +358,7 @@ afs_getRights(OSI_VC_DECL(avc), afs_int32 arights,
 
     code = afs_VerifyVCache(avc, treq);
     if (code) {
-	code = afs_CheckCode(code, treq, 16);
+	code = afs_CheckCode(code, treq, 18);
 	afs_DestroyReq(treq);
 	return code;
     }

@@ -7,14 +7,20 @@ ptserver - Initializes the Protection Server
 =for html
 <div class="synopsis">
 
-B<ptserver> S<<< [B<-database> | B<-db> <I<db path>>] >>> S<<< [B<-p> <I<number of threads>>] >>> S<<< [B<-d> <I<debug level>>] >>>
-    S<<< [B<-groupdepth> <I<# of nested groups>>] >>>
+ptserver S<<< [B<-database> | B<-db> <I<db path>>] >>>
+    S<<< [B<-p> <I<number of threads>>] >>>
+    S<<< [B<-d> <I<debug level>>] >>>
+    S<<< [B<-groupdepth> | B<-depth> <I<# of nested groups>>] >>>
     S<<< [B<-default_access> <I<user access mask>> <I<group access mask>>] >>>
-    [B<-restricted>] [B<-enable_peer_stats>]
+    [B<-restricted>] [B<-restrict_anonymous>] [B<-enable_peer_stats>]
     [B<-enable_process_stats>] [B<-allow-dotted-principals>]
     [B<-rxbind>] S<<< [B<-auditlog> <I<file path>>] >>>
     S<<< [B<-audit-interface> (file | sysvmq)] >>>
-    S<<< [B<-syslog>[=<I<FACILITY>>]] >>> S<<< [B<-rxmaxmtu> <I<bytes>>] >>>
+    S<<< [B<-syslog>[=<I<FACILITY>>]] >>>
+    S<<< [B<-logfile> <I<log file>>] >>>
+    [B<-transarc-logs>]
+    S<<< [B<-config> <I<configuration path>>] >>>
+    S<<< [B<-rxmaxmtu> <I<bytes>>] >>>
     [B<-help>]
 
 =for html
@@ -76,7 +82,7 @@ F</usr/afs/logs/PtLog> file. Provide one of the following values, each
 of which produces an increasingly detailed trace: C<0>, C<1>, C<5>, C<25>,
 and C<125>. 
 
-=item B<-database> <I<db path>>, B<-db> <I<db path>>
+=item B<-database> | B<-db> <I<db path>>
 
 Specifies the pathname of an alternate directory in which the Protection
 Database files reside. Provide the complete pathname, ending in the base
@@ -87,14 +93,14 @@ F</usr/afs/db/prdb>.
 =item B<-p> <I<number of threads>>
 
 Sets the number of server lightweight processes (LWPs or pthreads) to run.
-Provide a positive integer from the range C<3> to C<16>. The default
+Provide a positive integer from the range C<3> to C<64>. The default
 value is C<3>.
 
-=item B<-groupdepth> <I<# of nested groups>>, B<-depth> <I<# of nested groups>>
+=item B<-groupdepth> | B<-depth> <I<# of nested groups>>
 
 Specifies the group depth for nested groups when B<ptserver> is compiled
 with the SUPERGROUPS option enabled.  The default depth for nested groups
-is 5.  This option may be shortened to B<-depth>.
+is 5.
 
 =item B<-default_access> <I<user access>> <I<group access>>
 
@@ -107,6 +113,11 @@ information on the flags.
 
 Run the PT Server in restricted mode. While in restricted mode, only
 members of the system:administrators PTS group may make any PTS changes.
+
+=item B<-restrict_anonymous>
+
+Run the PT Server in restricted anonymous access mode. While in this mode,
+only authenticated users will be able to access the PTS database.
 
 =item B<-enable_peer_stats>
 
@@ -145,6 +156,27 @@ log file.  B<-syslog>=I<FACILITY> can be used to specify to which facility
 the log message should be sent.  Logging message sent to syslog are tagged
 with the string "ptserver".
 
+=item B<-logfile> <I<log file>>
+
+Sets the file to use for server logging. If logfile is not specified, and
+no other logging options are supplied, this will be F</usr/afs/logs/PtLog>.
+Note that this option is intended for debugging and testing purposes.
+Changing the location of the log file from the command line may result
+in undesirable interactions with tools such as B<bos>.
+
+=item B<-transarc-logs>
+
+Use Transarc style logging features. Rename the log file
+F</usr/afs/logs/PtLog> to F</usr/afs/logs/PtLog.old> when the PT Server is
+restarted.  This option is provided for compatibility with older versions.
+
+=item B<-config> <I<configuration directory>>
+
+Set the location of the configuration directory used to configure this
+service. In a typical configuration this will be F</usr/afs/etc> - this
+option allows the use of alternative configuration locations for testing
+purposes.
+
 =item B<-auditlog> <I<log path>>
 
 Turns on audit logging, and sets the path for the audit log.  The audit
@@ -172,10 +204,10 @@ ignored.
 =head1 EXAMPLES
 
 The following B<bos create> command creates a C<ptserver> process on the
-machine C<fs3.abc.com>. The command appears here on multiple lines only
+machine C<fs3.example.com>. The command appears here on multiple lines only
 for legibility.
 
-   % bos create -server fs3.abc.com -instance ptserver \
+   % bos create -server fs3.example.com -instance ptserver \
                 -type simple -cmd /usr/afs/bin/ptserver
 
 =head1 PRIVILEGE REQUIRED
@@ -188,6 +220,7 @@ command.
 =head1 SEE ALSO
 
 L<BosConfig(5)>,
+L<PtLog(5)>,
 L<prdb.DB0(5)>,
 L<bos_create(8)>,
 L<bos_getlog(8)>,

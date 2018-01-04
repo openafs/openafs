@@ -10,28 +10,21 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#include <sys/types.h>
-#include <string.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
+#include <roken.h>
+#include <afs/opr.h>
+#ifdef AFS_PTHREAD_ENV
+# include <opr/lock.h>
+# include <opr/softsig.h>
+# include <afs/procmgmt_softsig.h> /* must come after softsig */
 #endif
+
 #ifdef AFS_NT40_ENV
-#include <time.h>
-#include <fcntl.h>
 #include <windows.h>
 #include <WINNT/afsevent.h>
-#else
-#include <sys/time.h>
-#include <sys/file.h>
-#include <netinet/in.h>
-#include <unistd.h>
 #endif
-#include <rx/xdr.h>
+
+#include <rx/rx_queue.h>
 #include <afs/afsint.h>
-#include <stdio.h>
-#include <signal.h>
-#include <afs/afs_assert.h>
 #include <afs/prs_fs.h>
 #include <afs/nfs.h>
 #include <lwp.h>
@@ -52,19 +45,14 @@
 #include <afs/keys.h>
 #include <afs/dir.h>
 #include <ubik.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-
-#include <errno.h>
 #include <afs/audit.h>
 #include <afs/afsutil.h>
+#include <afs/cmd.h>
 #include <lwp.h>
+
 #include "volser.h"
 #include "volint.h"
 #include "volser_internal.h"
-
-/*@printflike@*/ extern void Log(const char *format, ...);
-/*@printflike@*/ extern void Abort(const char *format, ...);
 
 #define VolserVersion "2.0"
 #define N_SECURITY_OBJECTS 3
@@ -84,10 +72,18 @@ int debuglevel = 0;
 #define MAXLWP 128
 int lwps = 9;
 int udpBufSize = 0;		/* UDP buffer size for receive */
+int restrictedQueryLevel = RESTRICTED_QUERY_ANYUSER;
 
 int rxBind = 0;
 int rxkadDisableDotCheck = 0;
-int DoPreserveVolumeStats = 0;
+int DoPreserveVolumeStats = 1;
+int rxJumbograms = 0;	/* default is to not send and receive jumbograms. */
+int rxMaxMTU = -1;
+char *auditFileName = NULL;
+static struct logOptions logopts;
+char *configDir = NULL;
+
+enum vol_s2s_crypt doCrypt = VS2SC_NEVER;
 
 #define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
 afs_uint32 SHostAddrs[ADDRSPERSITE];
@@ -96,14 +92,6 @@ afs_uint32 SHostAddrs[ADDRSPERSITE];
                           osi_audit(VS_ExitEvent, code, AUD_END); \
 			  exit(code);                             \
 		       }
-
-#if defined(AFS_PTHREAD_ENV)
-int
-threadNum(void)
-{
-    return (intptr_t)pthread_getspecific(rx_thread_id_key);
-}
-#endif
 
 static void
 MyBeforeProc(struct rx_call *acall)
@@ -146,6 +134,7 @@ BKGLoop(void *unused)
     struct timeval tv;
     int loop = 0;
 
+    afs_pthread_setname_self("vol bkg");
     while (1) {
 	tv.tv_sec = GCWAKEUP;
 	tv.tv_usec = 0;
@@ -163,54 +152,14 @@ BKGLoop(void *unused)
 	loop++;
 	if (loop == 10) {	/* reopen log every 5 minutes */
 	    loop = 0;
-	    ReOpenLog(AFSDIR_SERVER_VOLSERLOG_FILEPATH);
+	    ReOpenLog();
 	}
     }
 
     return NULL;
 }
 
-/* Background daemon for sleeping so the volserver does not become I/O bound */
-afs_int32 TTsleep, TTrun;
-#ifndef AFS_PTHREAD_ENV
-static void *
-BKGSleep(void *unused)
-{
-    struct volser_trans *tt;
-
-    if (TTsleep) {
-	while (1) {
-#ifdef AFS_PTHREAD_ENV
-	    sleep(TTrun);
-#else /* AFS_PTHREAD_ENV */
-	    IOMGR_Sleep(TTrun);
-#endif
-	    VTRANS_LOCK;
-	    for (tt = TransList(); tt; tt = tt->next) {
-                VTRANS_OBJ_LOCK(tt);
-		if ((strcmp(tt->lastProcName, "DeleteVolume") == 0)
-		    || (strcmp(tt->lastProcName, "Clone") == 0)
-		    || (strcmp(tt->lastProcName, "ReClone") == 0)
-		    || (strcmp(tt->lastProcName, "Forward") == 0)
-		    || (strcmp(tt->lastProcName, "Restore") == 0)
-		    || (strcmp(tt->lastProcName, "ForwardMulti") == 0)) {
-                    VTRANS_OBJ_UNLOCK(tt);
-		    break;
-                }
-                VTRANS_OBJ_UNLOCK(tt);
-	    }
-	    if (tt) {
-	        VTRANS_UNLOCK;
-		sleep(TTsleep);
-	    } else
-	        VTRANS_UNLOCK;
-	}
-    }
-    return NULL;
-}
-#endif
-
-#ifdef AFS_NT40_ENV
+#if defined(AFS_NT40_ENV) || defined(AFS_DARWIN160_ENV)
 /* no volser_syscall */
 #elif defined(AFS_SUN511_ENV)
 int
@@ -253,6 +202,230 @@ vol_rxstat_userok(struct rx_call *call)
     return afsconf_SuperUser(tdir, call, NULL);
 }
 
+/**
+ * Return true if this name is a member of the local realm.
+ */
+static int
+vol_IsLocalRealmMatch(void *rock, char *name, char *inst, char *cell)
+{
+    struct afsconf_dir *dir = (struct afsconf_dir *)rock;
+    afs_int32 islocal = 0;	/* default to no */
+    int code;
+
+    code = afsconf_IsLocalRealmMatch(dir, &islocal, name, inst, cell);
+    if (code) {
+	ViceLog(0,
+		("Failed local realm check; code=%d, name=%s, inst=%s, cell=%s\n",
+		 code, name, inst, cell));
+    }
+    return islocal;
+}
+
+enum optionsList {
+    OPT_log,
+    OPT_rxbind,
+    OPT_dotted,
+    OPT_debug,
+    OPT_threads,
+    OPT_auditlog,
+    OPT_audit_interface,
+    OPT_nojumbo,
+    OPT_jumbo,
+    OPT_rxmaxmtu,
+    OPT_sleep,
+    OPT_udpsize,
+    OPT_peer,
+    OPT_process,
+    OPT_preserve_vol_stats,
+    OPT_clear_vol_stats,
+    OPT_sync,
+#ifdef HAVE_SYSLOG
+    OPT_syslog,
+#endif
+    OPT_logfile,
+    OPT_config,
+    OPT_restricted_query,
+    OPT_transarc_logs,
+    OPT_s2s_crypt
+};
+
+static int
+ParseArgs(int argc, char **argv) {
+    int code;
+    int optval;
+    char *optstring = NULL;
+    struct cmd_syndesc *opts;
+    char *sleepSpec = NULL;
+    char *sync_behavior = NULL;
+    char *restricted_query_parameter = NULL;
+    char *s2s_crypt_behavior = NULL;
+
+    opts = cmd_CreateSyntax(NULL, NULL, NULL, 0, NULL);
+    cmd_AddParmAtOffset(opts, OPT_log, "-log", CMD_FLAG, CMD_OPTIONAL,
+	   "log vos users");
+    cmd_AddParmAtOffset(opts, OPT_rxbind, "-rxbind", CMD_FLAG, CMD_OPTIONAL,
+	   "bind only to the primary interface");
+    cmd_AddParmAtOffset(opts, OPT_dotted, "-allow-dotted-principals", CMD_FLAG, CMD_OPTIONAL,
+	   "permit Kerberos 5 principals with dots");
+    cmd_AddParmAtOffset(opts, OPT_debug, "-d", CMD_SINGLE, CMD_OPTIONAL,
+	   "debug level");
+    cmd_AddParmAtOffset(opts, OPT_threads, "-p", CMD_SINGLE, CMD_OPTIONAL,
+	   "number of threads");
+    cmd_AddParmAtOffset(opts, OPT_auditlog, "-auditlog", CMD_SINGLE,
+	   CMD_OPTIONAL, "location of audit log");
+    cmd_AddParmAtOffset(opts, OPT_audit_interface, "-audit-interface",
+	   CMD_SINGLE, CMD_OPTIONAL, "interface to use for audit logging");
+    cmd_AddParmAtOffset(opts, OPT_nojumbo, "-nojumbo", CMD_FLAG, CMD_OPTIONAL,
+	    "disable jumbograms");
+    cmd_AddParmAtOffset(opts, OPT_jumbo, "-jumbo", CMD_FLAG, CMD_OPTIONAL,
+	    "enable jumbograms");
+    cmd_AddParmAtOffset(opts, OPT_rxmaxmtu, "-rxmaxmtu", CMD_SINGLE,
+	    CMD_OPTIONAL, "maximum MTU for RX");
+    cmd_AddParmAtOffset(opts, OPT_udpsize, "-udpsize", CMD_SINGLE,
+	    CMD_OPTIONAL, "size of socket buffer in bytes");
+    cmd_AddParmAtOffset(opts, OPT_sleep, "-sleep", CMD_SINGLE,
+	    CMD_OPTIONAL, "make background daemon sleep (LWP only)");
+    cmd_AddParmAtOffset(opts, OPT_peer, "-enable_peer_stats", CMD_FLAG,
+	    CMD_OPTIONAL, "enable RX transport statistics");
+    cmd_AddParmAtOffset(opts, OPT_process, "-enable_process_stats", CMD_FLAG,
+	    CMD_OPTIONAL, "enable RX RPC statistics");
+    /* -preserve-vol-stats on by default now. */
+    cmd_AddParmAtOffset(opts, OPT_preserve_vol_stats, "-preserve-vol-stats", CMD_FLAG,
+	    CMD_OPTIONAL|CMD_HIDDEN,
+	    "preserve volume statistics when restoring/recloning");
+    cmd_AddParmAtOffset(opts, OPT_clear_vol_stats, "-clear-vol-stats", CMD_FLAG,
+	    CMD_OPTIONAL, "clear volume statistics when restoring/recloning");
+#ifdef HAVE_SYSLOG
+    cmd_AddParmAtOffset(opts, OPT_syslog, "-syslog", CMD_SINGLE_OR_FLAG,
+	    CMD_OPTIONAL, "log to syslog");
+#endif
+    cmd_AddParmAtOffset(opts, OPT_transarc_logs, "-transarc-logs", CMD_FLAG,
+			CMD_OPTIONAL, "enable Transarc style logging");
+    cmd_AddParmAtOffset(opts, OPT_sync, "-sync",
+	    CMD_SINGLE, CMD_OPTIONAL, "always | onclose | never");
+    cmd_AddParmAtOffset(opts, OPT_logfile, "-logfile", CMD_SINGLE,
+	   CMD_OPTIONAL, "location of log file");
+    cmd_AddParmAtOffset(opts, OPT_config, "-config", CMD_SINGLE,
+	   CMD_OPTIONAL, "configuration location");
+    cmd_AddParmAtOffset(opts, OPT_restricted_query, "-restricted_query",
+	    CMD_SINGLE, CMD_OPTIONAL, "anyuser | admin");
+    cmd_AddParmAtOffset(opts, OPT_s2s_crypt, "-s2scrypt",
+	    CMD_SINGLE, CMD_OPTIONAL, "always | inherit | never");
+
+    code = cmd_Parse(argc, argv, &opts);
+    if (code == CMD_HELP) {
+	exit(0);
+    }
+    if (code)
+	return 1;
+
+    cmd_OptionAsFlag(opts, OPT_log, &DoLogging);
+    cmd_OptionAsFlag(opts, OPT_rxbind, &rxBind);
+    cmd_OptionAsFlag(opts, OPT_dotted, &rxkadDisableDotCheck);
+    if (cmd_OptionPresent(opts, OPT_clear_vol_stats))
+	DoPreserveVolumeStats = 0;
+    if (cmd_OptionPresent(opts, OPT_peer))
+	rx_enablePeerRPCStats();
+    if (cmd_OptionPresent(opts, OPT_process))
+	rx_enableProcessRPCStats();
+    if (cmd_OptionPresent(opts, OPT_nojumbo))
+	rxJumbograms = 0;
+    if (cmd_OptionPresent(opts, OPT_jumbo))
+	rxJumbograms = 1;
+
+#ifdef HAVE_SYSLOG
+    if (cmd_OptionPresent(opts, OPT_syslog)) {
+	if (cmd_OptionPresent(opts, OPT_logfile)) {
+	    fprintf(stderr, "Invalid options: -syslog and -logfile are exclusive.\n");
+	    return -1;
+	}
+	if (cmd_OptionPresent(opts, OPT_transarc_logs)) {
+	    fprintf(stderr, "Invalid options: -syslog and -transarc-logs are exclusive.\n");
+	    return -1;
+	}
+	logopts.lopt_dest = logDest_syslog;
+	logopts.lopt_facility = LOG_DAEMON;
+	logopts.lopt_tag = "volserver";
+	cmd_OptionAsInt(opts, OPT_syslog, &logopts.lopt_facility);
+    } else
+#endif
+    {
+	logopts.lopt_dest = logDest_file;
+	if (cmd_OptionPresent(opts, OPT_transarc_logs)) {
+	    logopts.lopt_rotateOnOpen = 1;
+	    logopts.lopt_rotateStyle = logRotate_old;
+	}
+	if (cmd_OptionPresent(opts, OPT_logfile))
+	    cmd_OptionAsString(opts, OPT_logfile, (char**)&logopts.lopt_filename);
+	else
+	    logopts.lopt_filename = AFSDIR_SERVER_VOLSERLOG_FILEPATH;
+    }
+    cmd_OptionAsInt(opts, OPT_debug, &logopts.lopt_logLevel);
+
+    cmd_OptionAsInt(opts, OPT_rxmaxmtu, &rxMaxMTU);
+    if (cmd_OptionAsInt(opts, OPT_udpsize, &optval) == 0) {
+	if (optval < rx_GetMinUdpBufSize()) {
+	    printf("Warning:udpsize %d is less than minimum %d; ignoring\n",
+		    optval, rx_GetMinUdpBufSize());
+	} else
+	    udpBufSize = optval;
+    }
+    cmd_OptionAsString(opts, OPT_auditlog, &auditFileName);
+
+    if (cmd_OptionAsString(opts, OPT_audit_interface, &optstring) == 0) {
+	if (osi_audit_interface(optstring)) {
+	    printf("Invalid audit interface '%s'\n", optstring);
+	    return -1;
+	}
+	free(optstring);
+	optstring = NULL;
+    }
+    if (cmd_OptionAsInt(opts, OPT_threads, &lwps) == 0) {
+	if (lwps > MAXLWP) {
+	    printf("Warning: '-p %d' is too big; using %d instead\n", lwps, MAXLWP);
+	    lwps = MAXLWP;
+	}
+    }
+    if (cmd_OptionAsString(opts, OPT_sleep, &sleepSpec) == 0) {
+	printf("Warning: -sleep option ignored; this option is obsolete\n");
+    }
+    if (cmd_OptionAsString(opts, OPT_sync, &sync_behavior) == 0) {
+	if (ih_SetSyncBehavior(sync_behavior)) {
+	    printf("Invalid -sync value %s\n", sync_behavior);
+	    return -1;
+	}
+    }
+    cmd_OptionAsString(opts, OPT_config, &configDir);
+    if (cmd_OptionAsString(opts, OPT_restricted_query,
+			   &restricted_query_parameter) == 0) {
+	if (strcmp(restricted_query_parameter, "anyuser") == 0)
+	    restrictedQueryLevel = RESTRICTED_QUERY_ANYUSER;
+	else if (strcmp(restricted_query_parameter, "admin") == 0)
+	    restrictedQueryLevel = RESTRICTED_QUERY_ADMIN;
+	else {
+	    printf("invalid argument for -restricted_query: %s\n",
+		   restricted_query_parameter);
+	    return -1;
+	}
+	free(restricted_query_parameter);
+    }
+    if (cmd_OptionAsString(opts, OPT_s2s_crypt, &s2s_crypt_behavior) == 0) {
+	if (strcmp(s2s_crypt_behavior, "always") == 0)
+	    doCrypt = VS2SC_ALWAYS;
+	else if (strcmp(s2s_crypt_behavior, "never") == 0)
+	    doCrypt = VS2SC_NEVER;
+	else if (strcmp(s2s_crypt_behavior, "inherit") == 0)
+	    doCrypt = VS2SC_INHERIT;
+	else {
+	    printf("invalid argument for -s2scrypt: %s\n", s2s_crypt_behavior);
+	    return -1;
+	}
+	free(s2s_crypt_behavior);
+    }
+
+    return 0;
+}
+
 #include "AFS_component_version_number.c"
 int
 main(int argc, char **argv)
@@ -261,13 +434,8 @@ main(int argc, char **argv)
     struct rx_securityClass **securityClasses;
     afs_int32 numClasses;
     struct rx_service *service;
-    struct ktc_encryptionKey tkey;
     int rxpackets = 100;
-    int rxJumbograms = 0;	/* default is to send and receive jumbograms. */
-    int rxMaxMTU = -1;
-    int bufSize = 0;		/* temp variable to read in udp socket buf size */
     afs_uint32 host = ntohl(INADDR_ANY);
-    char *auditFileName = NULL;
     VolumePackageOptions opts;
 
 #ifdef	AFS_AIX32_ENV
@@ -298,128 +466,10 @@ main(int argc, char **argv)
 	exit(2);
     }
 
-    TTsleep = TTrun = 0;
+    configDir = strdup(AFSDIR_SERVER_ETC_DIRPATH);
 
-    /* parse cmd line */
-    for (code = 1; code < argc; code++) {
-	if (strcmp(argv[code], "-log") == 0) {
-	    /* set extra logging flag */
-	    DoLogging = 1;
-	} else if (strcmp(argv[code], "-help") == 0) {
-	    goto usage;
-	} else if (strcmp(argv[code], "-rxbind") == 0) {
-	    rxBind = 1;
-	} else if (strcmp(argv[code], "-allow-dotted-principals") == 0) {
-	    rxkadDisableDotCheck = 1;
-	} else if (strcmp(argv[code], "-d") == 0) {
-	    if ((code + 1) >= argc) {
-		fprintf(stderr, "missing argument for -d\n");
-		return -1;
-	    }
-	    debuglevel = atoi(argv[++code]);
-	    LogLevel = debuglevel;
-	} else if (strcmp(argv[code], "-p") == 0) {
-	    lwps = atoi(argv[++code]);
-	    if (lwps > MAXLWP) {
-		printf("Warning: '-p %d' is too big; using %d instead\n",
-		       lwps, MAXLWP);
-		lwps = MAXLWP;
-	    }
-	} else if (strcmp(argv[code], "-auditlog") == 0) {
-	    auditFileName = argv[++code];
-
-	} else if (strcmp(argv[code], "-audit-interface") == 0) {
-	    char *interface = argv[++code];
-
-	    if (osi_audit_interface(interface)) {
-		printf("Invalid audit interface '%s'\n", interface);
-		return -1;
-	    }
-	} else if (strcmp(argv[code], "-nojumbo") == 0) {
-	    rxJumbograms = 0;
-	} else if (strcmp(argv[code], "-jumbo") == 0) {
-	    rxJumbograms = 1;
-	} else if (!strcmp(argv[code], "-rxmaxmtu")) {
-	    if ((code + 1) >= argc) {
-		fprintf(stderr, "missing argument for -rxmaxmtu\n");
-		exit(1);
-	    }
-	    rxMaxMTU = atoi(argv[++code]);
-	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) ||
-		(rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
-		printf("rxMaxMTU %d invalid; must be between %d-%" AFS_SIZET_FMT "\n",
-		       rxMaxMTU, RX_MIN_PACKET_SIZE,
-		       RX_MAX_PACKET_DATA_SIZE);
-		exit(1);
-	    }
-	} else if (strcmp(argv[code], "-sleep") == 0) {
-	    sscanf(argv[++code], "%d/%d", &TTsleep, &TTrun);
-	    if ((TTsleep < 0) || (TTrun <= 0)) {
-		printf("Warning: '-sleep %d/%d' is incorrect; ignoring\n",
-		       TTsleep, TTrun);
-		TTsleep = TTrun = 0;
-	    }
-	} else if (strcmp(argv[code], "-udpsize") == 0) {
-	    if ((code + 1) >= argc) {
-		printf("You have to specify -udpsize <integer value>\n");
-		exit(1);
-	    }
-	    sscanf(argv[++code], "%d", &bufSize);
-	    if (bufSize < rx_GetMinUdpBufSize())
-		printf
-		    ("Warning:udpsize %d is less than minimum %d; ignoring\n",
-		     bufSize, rx_GetMinUdpBufSize());
-	    else
-		udpBufSize = bufSize;
-	} else if (strcmp(argv[code], "-enable_peer_stats") == 0) {
-	    rx_enablePeerRPCStats();
-	} else if (strcmp(argv[code], "-enable_process_stats") == 0) {
-	    rx_enableProcessRPCStats();
-	} else if (strcmp(argv[code], "-preserve-vol-stats") == 0) {
-	    DoPreserveVolumeStats = 1;
-	} else if (strcmp(argv[code], "-sync") == 0) {
-	    if ((code + 1) >= argc) {
-		printf("You have to specify -sync <sync_behavior>\n");
-		exit(1);
-	    }
-	    ih_PkgDefaults();
-	    if (ih_SetSyncBehavior(argv[++code])) {
-		printf("Invalid -sync value %s\n", argv[code]);
-		exit(1);
-	    }
-	}
-#ifndef AFS_NT40_ENV
-	else if (strcmp(argv[code], "-syslog") == 0) {
-	    /* set syslog logging flag */
-	    serverLogSyslog = 1;
-	} else if (strncmp(argv[code], "-syslog=", 8) == 0) {
-	    serverLogSyslog = 1;
-	    serverLogSyslogFacility = atoi(argv[code] + 8);
-	}
-#endif
-	else {
-	    printf("volserver: unrecognized flag '%s'\n", argv[code]);
-	  usage:
-#ifndef AFS_NT40_ENV
-	    printf("Usage: volserver [-log] [-p <number of processes>] "
-		   "[-auditlog <log path>] [-d <debug level>] "
-		   "[-nojumbo] [-jumbo] [-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals] "
-		   "[-udpsize <size of socket buffer in bytes>] "
-		   "[-syslog[=FACILITY]] "
-		   "[-enable_peer_stats] [-enable_process_stats] "
-		   "[-sync <always | delayed | onclose | never>] "
-		   "[-help]\n");
-#else
-	    printf("Usage: volserver [-log] [-p <number of processes>] "
-		   "[-auditlog <log path>] [-d <debug level>] "
-		   "[-nojumbo] [-jumbo] [-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals] "
-		   "[-udpsize <size of socket buffer in bytes>] "
-		   "[-enable_peer_stats] [-enable_process_stats] "
-		   "[-sync <always | delayed | onclose | never>] "
-		   "[-help]\n");
-#endif
-	    VS_EXIT(1);
-	}
+    if (ParseArgs(argc, argv)) {
+	exit(1);
     }
 
     if (auditFileName) {
@@ -436,7 +486,7 @@ main(int argc, char **argv)
     InitErrTabs();
 
 #ifdef AFS_PTHREAD_ENV
-    SetLogThreadNumProgram( threadNum );
+    SetLogThreadNumProgram( rx_GetThreadNum );
 #endif
 
 #ifdef AFS_NT40_ENV
@@ -446,9 +496,8 @@ main(int argc, char **argv)
 	exit(1);
     }
 #endif
-    /* Open VolserLog and map stdout, stderr into it; VInitVolumePackage2 can
-       log, so we need to do this here */
-    OpenLog(AFSDIR_SERVER_VOLSERLOG_FILEPATH);
+
+    OpenLog(&logopts);
 
     VOptDefaults(volumeServer, &opts);
     if (VInitVolumePackage2(volumeServer, &opts)) {
@@ -461,7 +510,7 @@ main(int argc, char **argv)
 #ifndef AFS_PTHREAD_ENV
     vol_PollProc = IOMGR_Poll;	/* tell vol pkg to poll io system periodically */
 #endif
-#ifndef AFS_NT40_ENV
+#if !defined( AFS_NT40_ENV ) && !defined(AFS_DARWIN160_ENV)
     rxi_syscallp = volser_syscall;
 #endif
     rx_nPackets = rxpackets;	/* set the max number of packets */
@@ -472,10 +521,10 @@ main(int argc, char **argv)
         if (AFSDIR_SERVER_NETRESTRICT_FILEPATH ||
             AFSDIR_SERVER_NETINFO_FILEPATH) {
             char reason[1024];
-            ccode = parseNetFiles(SHostAddrs, NULL, NULL,
-                                           ADDRSPERSITE, reason,
-                                           AFSDIR_SERVER_NETINFO_FILEPATH,
-                                           AFSDIR_SERVER_NETRESTRICT_FILEPATH);
+            ccode = afsconf_ParseNetFiles(SHostAddrs, NULL, NULL,
+                                          ADDRSPERSITE, reason,
+                                          AFSDIR_SERVER_NETINFO_FILEPATH,
+                                          AFSDIR_SERVER_NETRESTRICT_FILEPATH);
         } else
 	{
             ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
@@ -495,39 +544,49 @@ main(int argc, char **argv)
 	rx_SetNoJumbo();
     }
     if (rxMaxMTU != -1) {
-	rx_SetMaxMTU(rxMaxMTU);
+	if (rx_SetMaxMTU(rxMaxMTU) != 0) {
+	    fprintf(stderr, "rxMaxMTU %d is invalid\n", rxMaxMTU);
+	    VS_EXIT(1);
+	}
     }
     rx_GetIFInfo();
     rx_SetRxDeadTime(420);
     memset(busyFlags, 0, sizeof(busyFlags));
 
+#ifdef AFS_PTHREAD_ENV
+    opr_softsig_Init();
+    SetupLogSoftSignals();
+#else
     SetupLogSignals();
+#endif
 
     {
 #ifdef AFS_PTHREAD_ENV
 	pthread_t tid;
 	pthread_attr_t tattr;
-	osi_Assert(pthread_attr_init(&tattr) == 0);
-	osi_Assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
-
-	osi_Assert(pthread_create(&tid, &tattr, BKGLoop, NULL) == 0);
+	opr_Verify(pthread_attr_init(&tattr) == 0);
+	opr_Verify(pthread_attr_setdetachstate(&tattr,
+					       PTHREAD_CREATE_DETACHED) == 0);
+	opr_Verify(pthread_create(&tid, &tattr, BKGLoop, NULL) == 0);
 #else
 	PROCESS pid;
 	LWP_CreateProcess(BKGLoop, 16*1024, 3, 0, "vol bkg daemon", &pid);
-	LWP_CreateProcess(BKGSleep,16*1024, 3, 0, "vol slp daemon", &pid);
 #endif
     }
 
     /* Create a single security object, in this case the null security object, for unauthenticated connections, which will be used to control security on connections made to this server */
 
-    tdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
+    tdir = afsconf_Open(configDir);
     if (!tdir) {
 	Abort("volser: could not open conf files in %s\n",
-	      AFSDIR_SERVER_ETC_DIRPATH);
+	      configDir);
 	VS_EXIT(1);
     }
-    afsconf_GetKey(tdir, 999, &tkey);
-    afsconf_BuildServerSecurityObjects(tdir, 0, &securityClasses, &numClasses);
+
+    /* initialize audit user check */
+    osi_audit_set_user_check(tdir, vol_IsLocalRealmMatch);
+
+    afsconf_BuildServerSecurityObjects(tdir, &securityClasses, &numClasses);
     if (securityClasses[0] == NULL)
 	Abort("rxnull_NewServerSecurityObject");
     service =
@@ -566,11 +625,6 @@ main(int argc, char **argv)
 		   Log);
     if (afsconf_GetLatestKey(tdir, NULL, NULL) == 0) {
 	LogDesWarning();
-    }
-    if (TTsleep) {
-	Log("Will sleep %d second%s every %d second%s\n", TTsleep,
-	    (TTsleep > 1) ? "s" : "", TTrun + TTsleep,
-	    (TTrun + TTsleep > 1) ? "s" : "");
     }
 
     /* allow super users to manage RX statistics */

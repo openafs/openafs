@@ -7,10 +7,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+
 
 OSXSDK = @OSXSDK@
 
@@ -20,7 +18,7 @@ all: OpenAFS.prefPane afssettings afscell growlagent aklog.bundle
 
 AFSPreference/build/Release/OpenAFS.prefPane: OpenAFS.prefPane
 afscell/build/Release/afscell.bundle: afscell
-afscell/InstallerSections.plist: afscell 
+afscell/InstallerSections.plist: afscell
 
 OpenAFS.prefPane:
 	@case ${OSXSDK} in \
@@ -49,8 +47,8 @@ afscell:
 		echo Not building afscell.bundle for ${OSXSDK} ;; \
 	esac
 
-afssettings: afssettings.m 
-	${CC} ${CFLAGS} -o afssettings $? -framework Foundation
+afssettings: afssettings.m
+	${CC} ${AFS_CFLAGS} -o afssettings $? -framework Foundation
 
 install: \
 	${DESTDIR}${sbindir}/afssettings

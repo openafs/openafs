@@ -849,7 +849,7 @@ OSI_VC_DECL(avc);
 
     if (bp->b_flags & B_READ) {
 	uio->uio_fmode = FREAD;
-	error = afs_read(vp, uio, cr, 0, 0, 0);
+	error = afs_read(vp, uio, cr, 0);
     } else {
 	uio->uio_fmode = FWRITE;
 	error = afs_write(vp, uio, 0, cr, 0);
@@ -1152,7 +1152,7 @@ OSI_VC_DECL(avc);
 	    avc->mapcnt -= mapcnt;
 	    code = afs_StoreOnLastReference(avc, &treq);
 	    /* The following behavior mimics the behavior in afs_close. */
-	    if (code == VNOVNODE || code == ENOENT)
+	    if (code == VNOVNODE)
 		code = 0;
 	    if (code) {
 		if (mapcnt) {

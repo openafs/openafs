@@ -7,23 +7,12 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+
 HELPER_SPLINT=@HELPER_SPLINT@
 ENABLE_PTHREADED_UBIK=@ENABLE_PTHREADED_UBIK@
 
-CCRULE=${MT_CC} ${CFLAGS} ${MT_CFLAGS} -c
-
-RX=../rx
-UTIL=../util
-PTSERVER=../ptserver
-
-RXOBJS= rx_pthread.o rxkad_errs.o
-
-UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o \
-     volparse.o flipbase64.o softsig.o hostparse.o snprintf.o pthread_glock.o
+PTSERVER=$(srcdir)/../ptserver
 
 INCLS=${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/lock.h  \
@@ -32,197 +21,146 @@ INCLS=${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/rx/xdr.h \
 	${TOP_INCDIR}/afs/keys.h \
 	${TOP_INCDIR}/afs/cellconfig.h \
-	ptint.h \
-	pterror.h
+	ptint.h
 
-LIBS=${RXOBJS} ${UTILOBJS}\
-	${TOP_LIBDIR}/libubik_pthread.a \
-	${TOP_LIBDIR}/libafsauthent.a \
-	${TOP_LIBDIR}/libafsrpc.a \
-	${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/libafsutil.a 
+LIBS_common= \
+	$(top_builddir)/src/ubik/liboafs_ubik.la \
+	$(top_builddir)/src/sys/liboafs_sys.la \
+	$(top_builddir)/src/rx/liboafs_rx.la \
+	$(top_builddir)/src/rxstat/liboafs_rxstat.la \
+	$(top_builddir)/src/lwp/liboafs_lwpcompat.la \
+	$(top_builddir)/src/rxkad/liboafs_rxkad.la \
+	$(top_builddir)/src/cmd/liboafs_cmd.la \
+	$(top_builddir)/src/util/liboafs_util.la \
+	$(top_builddir)/src/opr/liboafs_opr.la
 
-PTOBJS=ptuser.o pterror.o ptint.cs.o ptint.xdr.o
+LIBS_server= \
+	$(top_builddir)/src/audit/liboafs_audit.la \
+	$(LIBS_common)
+
+LIBS_client= \
+	$(top_builddir)/src/ptserver/liboafs_prot.la \
+	$(LIBS_common)
 
 all: ptserver pts pt_util db_verify \
 	depinstall readgroup readpwd testpt
 
-depinstall: 
+generated: \
+	pterror.h pterror.c
+
+depinstall:
+
+# When supergroups is enabled, some parts of ptserver cast between
+# incompatible structs.
+CFLAGS_ptutils.o = @CFLAGS_NOSTRICT@
+CFLAGS_ptprocs.o = @CFLAGS_NOSTRICT@
 
 #
 # Build targets
 #
 
-rx_pthread.o: ${RX}/rx_pthread.c
-	${CCRULE} ${srcdir}/${RX}/rx_pthread.c
-
-rxkad_errs.o: ../rxkad/rxkad_errs.c
-	${CCRULE} ../rxkad/rxkad_errs.c
-
-#
-# get the pthreaded util stuff compiled here.  we do this instead of
-# using the non-pthreaded libutil.a.  There probably should be a
-# pthreaded version of this library, as we are doing with ubik itself, but...
-#
-
-assert.o: ${UTIL}/assert.c
-	${CCRULE} ${srcdir}/${UTIL}/assert.c
-
-uuid.o: ${UTIL}/uuid.c
-	${CCRULE} ${srcdir}/${UTIL}/uuid.c
-
-serverLog.o: ${UTIL}/serverLog.c
-	${CCRULE} ${srcdir}/${UTIL}/serverLog.c
-
-fileutil.o: ${UTIL}/fileutil.c
-	${CCRULE} ${srcdir}/${UTIL}/fileutil.c
-
-volparse.o: ${UTIL}/volparse.c
-	${CCRULE} ${srcdir}/${UTIL}/volparse.c
-
-flipbase64.o: ${UTIL}/flipbase64.c
-	${CCRULE} ${srcdir}/${UTIL}/flipbase64.c
-
-netutils.o: ${UTIL}/netutils.c
-	${CCRULE} ${srcdir}/${UTIL}/netutils.c
-
-dirpath.o: ${UTIL}/dirpath.c
-	${CCRULE} ${srcdir}/${UTIL}/dirpath.c
-
-softsig.o: ${UTIL}/softsig.c
-	${CCRULE} ${srcdir}/${UTIL}/softsig.c
-
-hostparse.o: ${UTIL}/hostparse.c
-	${CCRULE} ${srcdir}/${UTIL}/hostparse.c
-
-snprintf.o: ${UTIL}/snprintf.c
-	${CCRULE} ${srcdir}/${UTIL}/snprintf.c
-
-pthread_glock.o: ${UTIL}/pthread_glock.c
-	${CCRULE} ${srcdir}/${UTIL}/pthread_glock.c
-
-
 ptserver.o: ${PTSERVER}/ptserver.c ${INCLS}
-	${CCRULE} ${srcdir}/${PTSERVER}/ptserver.c
+	$(AFS_CCRULE) $(PTSERVER)/ptserver.c
 
-# When supergroups is enabled, some parts of ptserver cast between
-# # incompatible structs.
-ptutils.o: ${PTSERVER}/ptutils.c ${INCLS}
-	${CCRULE} @CFLAGS_NOSTRICT@ ${srcdir}/${PTSERVER}/ptutils.c
+ptutils.o: ${PTSERVER}/ptutils.c ${INCLS} pterror.h
+	$(AFS_CCRULE) $(PTSERVER)/ptutils.c
 
 ptprocs.o: ${PTSERVER}/ptprocs.c ${INCLS}
-	${CCRULE} @CFLAGS_NOSTRICT@ ${srcdir}/${PTSERVER}/ptprocs.c
+	$(AFS_CCRULE) $(PTSERVER)/ptprocs.c
 
 utils.o: ${PTSERVER}/utils.c ${INCLS}
-	${CCRULE} ${srcdir}/${PTSERVER}/utils.c
+	$(AFS_CCRULE) $(PTSERVER)/utils.c
 
 map.o: ${PTSERVER}/map.c ${INCLS}
-	${CCRULE} ${srcdir}/${PTSERVER}/map.c
-
-ptint.ss.o: ptint.ss.c
-	${CCRULE} ptint.ss.c
-
-ptint.cs.o: ptint.cs.c
-	${CCRULE} ptint.cs.c
-
-ptint.xdr.o: ptint.xdr.c
-	${CCRULE} ptint.xdr.c
-
-ptint.cs.c: ${PTSERVER}/ptint.xg
-	${RXGEN} -A -x -C -u -o $@ ${srcdir}/${PTSERVER}/ptint.xg
+	$(AFS_CCRULE) $(PTSERVER)/map.c
 
 ptint.ss.c: ${PTSERVER}/ptint.xg
-	${RXGEN} -A -x -S -o $@ ${srcdir}/${PTSERVER}/ptint.xg
+	${RXGEN} -A -x -S -o $@ ${PTSERVER}/ptint.xg
 
 ptint.xdr.c: ${PTSERVER}/ptint.xg
-	${RXGEN} -A -x -c -o $@ ${srcdir}/${PTSERVER}/ptint.xg
+	${RXGEN} -A -x -c -o $@ ${PTSERVER}/ptint.xg
 
 ptint.h: ${PTSERVER}/ptint.xg
-	${RXGEN} -A -x -h -u -o $@ ${srcdir}/${PTSERVER}/ptint.xg
+	${RXGEN} -A -x -h -u -o $@ ${PTSERVER}/ptint.xg
 
-ptint.cs.c: ptint.h
 ptint.ss.c: ptint.h
 ptint.xdr.c: ptint.h
 
-Kptint.cs.c: ${PTSERVER}/ptint.xg Kptint.h
-	${RXGEN} -A -x -k -C -o Kptint.cs.c ${srcdir}/${PTSERVER}/ptint.xg
- 
-Kptint.xdr.c: ${PTSERVER}/ptint.xg
-	${RXGEN} -A -x -k -c -o Kptint.xdr.c ${srcdir}/${PTSERVER}/ptint.xg
- 
-Kptint.h: ${PTSERVER}/ptint.xg
-	${RXGEN} -A -x -k -h -o Kptint.h ${srcdir}/${PTSERVER}/ptint.xg
-
-display.o: ${PTSERVER}/display.c ${INCLS}
-	${CCRULE} ${srcdir}/${PTSERVER}/display.c
-
-ptserver: ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o $(LIBS) ${TOP_LIBDIR}/libaudit.a map.o
-	${CC} ${LDFLAGS} -o ptserver ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o map.o $(LIBS) ${MT_LIBS} ${XLIBS} ${TOP_LIBDIR}/libaudit.a ${KRB5_LIBS}
+ptserver: ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o map.o \
+	  $(LIBS_server)
+	$(LT_LDRULE_static) ptserver.o ptutils.o ptprocs.o \
+		ptint.ss.o ptint.xdr.o utils.o map.o \
+		$(LIBS_server) \
+		$(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
 
 db_verify.o: ${PTSERVER}/db_verify.c ${INCLS}
-	${CCRULE} ${srcdir}/${PTSERVER}/db_verify.c
+	$(AFS_CCRULE) $(PTSERVER)/db_verify.c
 
-db_verify: db_verify.o pterror.o display.o $(LIBS)
-	$(CC) ${LDFLAGS} -o db_verify db_verify.o display.o pterror.o $(LIBS) ${MT_LIBS} ${XLIBS}
+db_verify: db_verify.o $(LIBS_client)
+	$(LT_LDRULE_static) db_verify.o \
+		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
 
-ptclient: ptclient.o display.o ptuser.o pterror.o ptint.cs.o ptint.xdr.o AFS_component_version_number.o $(LIBS)
-	$(CC) ${LDFLAGS} -o ptclient ptclient.o display.o $(PTOBJS) $(LIBS) ${MT_LIBS} ${XLIBS} ${KRB5_LIBS}
+ptclient: ptclient.o AFS_component_version_number.o $(LIBS_client)
+	$(LT_LDRULE_static) ptclient.o \
+		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
 
 ptclient.o: ${PTSERVER}/ptclient.c ${INCLS}
-	${CCRULE} ${srcdir}/${PTSERVER}/ptclient.c
+	$(AFS_CCRULE) $(PTSERVER)/ptclient.c
 
-ptuser.o: ${PTSERVER}/ptuser.c ${INCLS}
-	${CCRULE} ${srcdir}/${PTSERVER}/ptuser.c
-
-pterror.c: ${PTSERVER}/pterror.et
-	${COMPILE_ET_C} -p ${srcdir}/${PTSERVER} pterror
-
-pterror.h: ${PTSERVER}/pterror.et
-	${COMPILE_ET_H} -p ${srcdir}/${PTSERVER} pterror
-
-db_verify.o: pterror.h
-ptclient.o: pterror.h
-ptprocs.o: pterror.h
-pts.o: pterror.h
-ptuser.o: pterror.h
-pt_util.o: pterror.h
-ptutils.o: pterror.h
-readgroup.o: pterror.h
-testpt.o: pterror.h
-utils.o: pterror.h
-
-pts: pts.o $(PTOBJS) ${TOP_LIBDIR}/libcmd.a $(LIBS) ${INCLS}
-	$(CC) ${LDFLAGS} -o pts pts.o ${TOP_LIBDIR}/libcmd.a $(PTOBJS) ${LIBS} ${MT_LIBS} ${XLIBS} ${KRB5_LIBS}
+pts: pts.o $(LIBS_client) ${INCLS}
+	$(LT_LDRULE_static) pts.o \
+		${LIBS_client} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
 
 pts.o: ${PTSERVER}/pts.c
-	${CCRULE} ${srcdir}/${PTSERVER}/pts.c
+	$(AFS_CCRULE) $(PTSERVER)/pts.c
 
-readgroup: readgroup.o $(PTOBJS) $(LIBS)
-	$(CC) ${CFLAGS} -o readgroup readgroup.o $(PTOBJS) ${LIBS} ${MT_LIBS} ${XLIBS} ${KRB5_LIBS}
+readgroup: readgroup.o $(LIBS_client)
+	$(LT_LDRULE_static) readgroup.o \
+		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
 
 readgroup.o: ${PTSERVER}/readgroup.c ${INCLS}
-	${CCRULE} ${srcdir}/${PTSERVER}/readgroup.c
+	$(AFS_CCRULE) $(PTSERVER)/readgroup.c
 
-readpwd: readpwd.o $(PTOBJS) $(LIBS)
-	$(CC) ${CFLAGS} -o readpwd readpwd.o $(PTOBJS) ${LIBS} ${MT_LIBS} ${XLIBS} ${KRB5_LIBS}
+readpwd: readpwd.o $(LIBS_client)
+	$(LT_LDRULE_static) readpwd.o \
+		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
 
 readpwd.o: ${PTSERVER}/readpwd.c ${INCLS}
-	${CCRULE} ${srcdir}/${PTSERVER}/readpwd.c
+	$(AFS_CCRULE) $(PTSERVER)/readpwd.c
 
-testpt: testpt.o $(PTOBJS) ${TOP_LIBDIR}/libcmd.a $(LIBS)
-	$(CC) ${CFLAGS} -o testpt testpt.o -lm ${TOP_LIBDIR}/libcmd.a $(PTOBJS) $(LIBS) ${MT_LIBS} ${XLIBS} ${KRB5_LIBS}
+testpt: testpt.o $(LIBS_client)
+	$(LT_LDRULE_static) testpt.o -lm \
+		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
 
 testpt.o: ${PTSERVER}/testpt.c ${INCLS}
-	${CCRULE} ${srcdir}/${PTSERVER}/testpt.c
+	$(AFS_CCRULE) $(PTSERVER)/testpt.c
 
-pt_util: pt_util.o ptutils.o ptubik.o utils.o map.o $(PTOBJS) $(LIBS)
-	$(CC) ${CFLAGS} -o pt_util pt_util.o ptutils.o ptubik.o utils.o map.o $(PTOBJS) ${TOP_LIBDIR}/libcmd.a $(LIBS) ${MT_LIBS} ${XLIBS} ${KRB5_LIBS}
+pt_util: pt_util.o ptutils.o ptubik.o utils.o map.o $(LIBS_client)
+	$(LT_LDRULE_static) pt_util.o ptutils.o ptubik.o utils.o map.o \
+		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
 
 pt_util.o: ${PTSERVER}/pt_util.c
-	${CCRULE} ${srcdir}/${PTSERVER}/pt_util.c
+	$(AFS_CCRULE) $(PTSERVER)/pt_util.c
 
 ptubik.o: ${PTSERVER}/ptubik.c ${INCLS}
-	${CCRULE} ${srcdir}/${PTSERVER}/ptubik.c
+	$(AFS_CCRULE) $(PTSERVER)/ptubik.c
+
+pterror.c: ${PTSERVER}/pterror.et
+	${COMPILE_ET_C} -p ${PTSERVER} pterror
+
+pterror.h: ${PTSERVER}/pterror.et
+	${COMPILE_ET_H} -p ${PTSERVER} pterror
+
+db_verify.o db_verify.lo: pterror.h
+ptclient.o ptclient.lo: pterror.h
+ptprocs.o ptprocs.lo: pterror.h
+pts.o pts.lo: pterror.h
+ptuser.o ptuser.lo: pterror.h
+pt_util.o pt_util.lo: pterror.h
+ptutils.o ptutils.lo: pterror.h
+readgroup.o readgroup.lo: pterror.h
+testpt.o testpt.lo: pterror.h
+utils.o utils.lo: pterror.h
 
 prerror.h: pterror.h
 	${INSTALL} $? $@
@@ -233,11 +171,13 @@ prerror.h: pterror.h
 #
 install: ptserver pts pt_util db_verify
 	if [ "x$(ENABLE_PTHREADED_UBIK)" = "xyes" ] ; then \
-		${INSTALL_PROGRAM} ptserver ${DESTDIR}${afssrvlibexecdir}/ptserver; \
-		${INSTALL_PROGRAM} pts ${DESTDIR}${afssrvbindir}/pts; \
-		${INSTALL_PROGRAM} pts ${DESTDIR}${bindir}/pts; \
-		${INSTALL_PROGRAM} pt_util ${DESTDIR}${afssrvsbindir}/pt_util; \
-		${INSTALL_PROGRAM} db_verify ${DESTDIR}${afssrvsbindir}/prdb_check; \
+		${LT_INSTALL_PROGRAM} ptserver \
+			${DESTDIR}${afssrvlibexecdir}/ptserver; \
+		${LT_INSTALL_PROGRAM} pts ${DESTDIR}${afssrvbindir}/pts; \
+		${LT_INSTALL_PROGRAM} pts ${DESTDIR}${bindir}/pts; \
+		${LT_INSTALL_PROGRAM} pt_util ${DESTDIR}${afssrvsbindir}/pt_util; \
+		${LT_INSTALL_PROGRAM} db_verify \
+			${DESTDIR}${afssrvsbindir}/prdb_check; \
 	fi
 
 dest: ptserver pts pt_util db_verify
@@ -253,6 +193,7 @@ dest: ptserver pts pt_util db_verify
 # Misc. targets
 #
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.a *.o ptserver ptint.cs.c ptint.ss.c ptclient ptint.xdr.c ptint.h \
 	pts readgroup readpwd db_verify testpt pt_util pterror.h pterror.c \
 	core AFS_component_version_number.c Kptint.cs.c Kptint.h Kptint.xdr.c

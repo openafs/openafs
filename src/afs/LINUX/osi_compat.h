@@ -339,21 +339,39 @@ kernel_getsockopt(struct socket *sockp, int level, int name, char *val,
 #endif
 
 #ifdef HAVE_TRY_TO_FREEZE
-static inline void
+static inline int
 afs_try_to_freeze(void) {
 # ifdef LINUX_REFRIGERATOR_TAKES_PF_FREEZE
-    try_to_freeze(PF_FREEZE);
+    return try_to_freeze(PF_FREEZE);
 # else
-    try_to_freeze();
+    return try_to_freeze();
 # endif
 }
 #else
-static inline void
+static inline int
 afs_try_to_freeze(void) {
 # ifdef CONFIG_PM
     if (current->flags & PF_FREEZE) {
 	refrigerator(PF_FREEZE);
+	return 1;
     }
+# endif
+    return 0;
+}
+#endif
+
+/* The commit which changed refrigerator so that it takes no arguments
+ * also added freezing(), so if LINUX_REFRIGERATOR_TAKES_PF_FREEZE is
+ * true, the kernel doesn't have a freezing() function.
+ */
+#ifdef LINUX_REFRIGERATOR_TAKES_PF_FREEZE
+static inline int
+freezing(struct task_struct *p)
+{
+# ifdef CONFIG_PM
+    return p->flags & PF_FREEZE;
+# else
+    return 0;
 # endif
 }
 #endif
@@ -453,6 +471,33 @@ afs_linux_unlock_inode(struct inode *ip) {
 #endif
 }
 
+/* Use these to lock or unlock an inode for processing
+ * its dentry aliases en masse.
+ */
+#if defined(HAVE_DCACHE_LOCK)
+#define afs_d_alias_lock(ip)	    spin_lock(&dcache_lock)
+#define afs_d_alias_unlock(ip)	    spin_unlock(&dcache_lock)
+#else
+#define afs_d_alias_lock(ip)	    spin_lock(&(ip)->i_lock)
+#define afs_d_alias_unlock(ip)	    spin_unlock(&(ip)->i_lock)
+#endif
+
+
+/* Use this instead of dget for dentry operations
+ * that occur under a higher lock (e.g. alias processing).
+ * Requires that the higher lock (e.g. dcache_lock or
+ * inode->i_lock) is already held.
+ */
+static inline void
+afs_linux_dget(struct dentry *dp) {
+#if defined(HAVE_DCACHE_LOCK)
+    dget_locked(dp);
+#else
+    dget(dp);
+#endif
+}
+
+
 static inline int
 afs_inode_setattr(struct osi_file *afile, struct iattr *newattrs) {
 
@@ -508,6 +553,41 @@ afs_get_dentry_ref(afs_linux_path_t *path, struct vfsmount **mnt, struct dentry 
     path_put(path);
 #endif
 }
+
+/* wait_event_freezable appeared with 2.6.24 */
+
+/* These implement the original AFS wait behaviour, with respect to the
+ * refrigerator, rather than the behaviour of the current wait_event_freezable
+ * implementation.
+ */
+
+#ifndef wait_event_freezable
+# define wait_event_freezable(waitqueue, condition)				\
+({										\
+    int _ret;									\
+    do {									\
+	_ret = wait_event_interruptible(waitqueue, 				\
+					(condition) || freezing(current));	\
+	if (_ret && !freezing(current))					\
+	    break;								\
+	else if (!(condition))							\
+	    _ret = -EINTR;							\
+    } while (afs_try_to_freeze());						\
+    _ret;									\
+})
+
+# define wait_event_freezable_timeout(waitqueue, condition, timeout)		\
+({										\
+     int _ret;									\
+     do {									\
+	_ret = wait_event_interruptible_timeout(waitqueue,			\
+						(condition || 			\
+						 freezing(current)),		\
+						timeout);			\
+     } while (afs_try_to_freeze());						\
+     _ret;									\
+})
+#endif
 
 #if defined(STRUCT_TASK_STRUCT_HAS_CRED)
 static inline struct file *
@@ -592,11 +672,25 @@ afs_d_invalidate(struct dentry *dp)
 #endif
 }
 
+#if defined(HAVE_LINUX___VFS_WRITE)
+# define AFS_FILE_NEEDS_SET_FS 1
+#elif defined(HAVE_LINUX_KERNEL_WRITE)
+/* #undef AFS_FILE_NEEDS_SET_FS */
+#else
+# define AFS_FILE_NEEDS_SET_FS 1
+#endif
+
 static inline int
 afs_file_read(struct file *filp, char __user *buf, size_t len, loff_t *pos)
 {
-#if defined(HAVE_LINUX___VFS_READ)
+#if defined(HAVE_LINUX___VFS_WRITE)
     return __vfs_read(filp, buf, len, pos);
+#elif defined(HAVE_LINUX_KERNEL_WRITE)
+# if defined(KERNEL_READ_OFFSET_IS_LAST)
+    return kernel_read(filp, buf, len, pos);
+# else
+    return kernel_read(filp, *pos, buf, len);
+# endif
 #else
     return filp->f_op->read(filp, buf, len, pos);
 #endif
@@ -605,8 +699,14 @@ afs_file_read(struct file *filp, char __user *buf, size_t len, loff_t *pos)
 static inline int
 afs_file_write(struct file *filp, char __user *buf, size_t len, loff_t *pos)
 {
-#if defined(HAVE_LINUX___VFS_READ)
+#if defined(HAVE_LINUX___VFS_WRITE)
     return __vfs_write(filp, buf, len, pos);
+#elif defined(HAVE_LINUX_KERNEL_WRITE)
+# if defined(KERNEL_READ_OFFSET_IS_LAST)
+    return kernel_write(filp, buf, len, pos);
+# else
+    return kernel_write(filp, buf, len, *pos);
+# endif
 #else
     return filp->f_op->write(filp, buf, len, pos);
 #endif

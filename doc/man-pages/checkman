@@ -1,0 +1,303 @@
+#!/usr/bin/perl
+#
+# Copyright (c) 2013 Sine Nomine Associates
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS
+# IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+# ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# checkman - run everything in the given directory of binaries, and try to
+# find mismatches between the -help output, and the man page for that command
+
+use strict;
+use warnings;
+
+use Getopt::Long;
+use File::Find;
+
+my $bindir;
+my $mandir;
+
+sub usage {
+	print STDERR "WARNING: Running checkman can be dangerous, as it tries to \n";
+	print STDERR "blindly run almost everything in the given binaries dir.\n\n";
+	print STDERR "Usage: $0 --bindir <binaries_dir> --mandir <manpages_dir>";
+}
+
+GetOptions(
+	"b|bindir=s" => \$bindir,
+	"M|mandir=s" => \$mandir,
+) or die("Error while parsing options\n");
+
+if (not defined($bindir)) {
+	usage();
+}
+if (not defined($mandir)) {
+	usage();
+}
+
+if (not -d $bindir) {
+	die("--bindir $bindir is not a directory\n");
+}
+if (not -d $mandir) {
+	die("--mandir $mandir is not a directory\n");
+}
+if (not -d "$mandir/man1") {
+	die("--mandir must point to a dir containing man1, man8, etc\n");
+}
+
+my %cmd_blacklist = (
+	rmtsysd => '',
+	pagsh => '',
+	'pagsh.krb' => '',
+	kpwvalid => '',
+	'afs.rc' => '',
+);
+
+my %cmd_map;
+my $mismatch = 0;
+
+# find a list of all possible commands we can run, and map them to their full
+# path
+find(sub {
+	if (-f and -x and -s) {
+		$cmd_map{$_} = $File::Find::name;
+	}
+}, $bindir);
+
+my %opt_map;
+my @error_cmds;
+
+sub parsehelp($$;$);
+
+sub
+check_opts($$)
+{
+	my ($manstr, $helpout) = @_;
+
+	my %help_opts;
+
+	my %syn_opts;
+	my %man_opts;
+	my %man_just_opts;
+
+	$helpout =~ tr/\n/ /;
+
+	# match everything that looks like an option
+	# basically, find stuff that begins with a hyphen, and is surrounded by
+	# brackets or spaces, or precedes a '='
+	for ($helpout =~ m/(?:\[| )-([a-zA-Z0-9_-]+)(?=\s|[][]|=)/g) {
+		#print "   help str $manstr opt -$_\n" if ($manstr =~ /ptserver/);
+		if ($_ eq 'c') {
+			# Almost everything lists '-c' as an alias for '-cell'.
+			# We don't put that in the first synopsis for each man
+			# page, so just pretend it's not there.
+			next;
+		}
+		$help_opts{$_} = 1;
+	}
+
+	my $manout = `man -s 8,1 -M '$mandir' $manstr 2>/dev/null`;
+
+	my $insyn = 0;
+	my $inopts = 0;
+
+	my $syn_sections = 0;
+	my $lastline;
+	my $curline;
+
+	for (split /^/, $manout) {
+		$lastline = $curline if (defined($curline));
+		$curline = $_;
+
+		if (m/^SYNOPSIS$/) {
+			$insyn = 1;
+			$inopts = 0;
+			next;
+		}
+		if (m/^OPTIONS$/) {
+			$insyn = 0;
+			$inopts = 1;
+			next;
+		}
+		if (m/^[A-Z]+$/) {
+			if ($inopts) {
+				# don't need anything after OPTIONS
+				$inopts = 0;
+				last;
+			}
+			$insyn = 0;
+			next;
+		}
+		if (m/^\s+[a-z]/ and $insyn) {
+			$syn_sections++;
+			if ($syn_sections > 1) {
+				# don't need anything in the synopsis after the first area
+				$insyn = 0;
+				next;
+			}
+		}
+
+		if ($insyn) {
+			# check for options in the synopsis...
+			for (m/(?:\[|\s)-([a-zA-Z0-9_-]+)(?=\s|\]|\[)/g) {
+				#print "   man page $manstr syn opt -$_\n" if ($manstr =~ /ptserver/);
+				$syn_opts{$_} = 1;
+			}
+		}
+		if ($inopts) {
+			# check for options in the OPTIONS section
+			#print "last: $lastline, cur: $_\n";
+			if ($lastline =~ m/^(\s*|OPTIONS)$/ && m/^\s+-[a-zA-Z0-9_-]+/) {
+				# Options only appear after a blank line (or right after the
+				# OPTIONS line), so only go here if the last
+				# line was blank, and we see what looks like an
+				# option as the first thing on the current
+				# line.
+
+				# Find all options on the current line. Option
+				# aliases can appear on the same =items line,
+				# so get all of the aliases.
+				for (m/\s-([a-zA-Z0-9_-]+)/g) {
+					$man_just_opts{$_} = 1;
+					if (exists $syn_opts{$_}) {
+						# only count them if they also appeared in the synopsis earlier
+						$man_opts{$_} = 1;
+					}
+				}
+			}
+		}
+	}
+
+	if (not %man_opts and not %syn_opts) {
+		# we found no options in the man page output; so probably, we didn't
+		# actually get a man page back. just print a single message, so we don't
+		# print out something for every single option
+		print "man page $manstr missing\n";
+		return;
+	}
+
+	for (keys %help_opts) {
+		if (not exists $man_opts{$_}) {
+			my $extra = '';
+			if (exists $syn_opts{$_}) {
+				$extra = " from OPTIONS";
+			} elsif (exists $man_just_opts{$_}) {
+				$extra = " from synopsis";
+			}
+
+			print "man page $manstr missing option -$_$extra\n";
+			$mismatch = 1;
+		}
+	}
+	my %tmphash = (%syn_opts, %man_just_opts);
+	for (keys %tmphash) {
+		if (not exists $help_opts{$_}) {
+			my $extra = '';
+			if (not exists $syn_opts{$_}) {
+				$extra = " in OPTIONS";
+			} elsif (not exists $man_just_opts{$_}) {
+				$extra = " in synopsis";
+			}
+
+			print "man page $manstr extra option -$_$extra\n";
+			$mismatch = 1;
+		}
+	}
+}
+
+sub
+parsehelp($$;$) {
+	my ($cmd, $path, $subcmd) = @_;
+
+	my $runstr;
+	my $manstr;
+
+	$runstr = $path;
+	$manstr = $cmd;
+
+	if (defined($subcmd)) {
+		$runstr = "$path $subcmd";
+		if ($subcmd ne "initcmd") {
+			$manstr = "$cmd"."_"."$subcmd";
+		}
+	}
+
+	if (defined($cmd_blacklist{$cmd})) {
+		return;
+	}
+
+	my $out = `$runstr -help 2>&1`;
+	if (defined($out)) {
+		if ($out =~ m/^Usage: /) {
+			# actual help output, listing options etc
+			check_opts($manstr, $out);
+			return;
+		}
+
+		if ($out =~ m/Commands are:$/m) {
+			# multi-command program
+			if (defined($subcmd)) {
+				die("Subcommand $cmd $subcmd gave more subcommands?");
+			}
+
+			if ($out =~ m/^initcmd.*initialize the program$/m) {
+				# not actually multi-command; we just need to give the initcmd
+				# pseudo-subcommand
+				parsehelp($cmd, $path, "initcmd");
+				return;
+			}
+
+			# find all of the subcommands, and call parsehelp() on them
+			for (split /^/, $out) {
+				chomp;
+				next if m/Commands are:$/;
+				next if m/^apropos\s/ or m/^help\s/;
+				if (m/^(\S+)\s+[\S ]+$/) {
+					parsehelp($cmd, $path, $1);
+				} else {
+					print "for cmd $cmd got unmatched line $_\n";
+				}
+			}
+
+			return;
+		}
+	}
+
+	if (not defined($subcmd)) {
+		$subcmd = "";
+	}
+
+	print "Skipped command $path $subcmd\n";
+
+	# not sure what to do about this one
+	push @error_cmds, "$path $subcmd";
+}
+
+for my $cmd (keys %cmd_map) {
+	my $path = $cmd_map{$cmd};
+
+	parsehelp($cmd, $path);
+}
+
+exit($mismatch);

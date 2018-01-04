@@ -7,28 +7,23 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.lwp
 
-INCDIRS=-I${TOP_INCDIR} -I..
+
 LDIRS=-L${TOP_LIBDIR} -L${DESTDIR}/lib/afs -L..
 LIBS= -lacl -lprot -lubik -lrx -llwp -lauth -lrxkad -lsys ${XLIBS}
 
-CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LDIRS} ${LIBS} ${XCFLAGS} ${ARCHFLAGS}
-
 all: acltest
 
-install: 
+install:
 
 #
 # Build targets
 #
 acltest: acltest.o
-	$(CC) -o acltest acltest.o $(CFLAGS)
+	$(AFS_LDRULE) $(LDIRS) $(LIBS) acltest.o
 
-acltest.o: acltest.c 
+acltest.o: acltest.c
 
 #
 # Misc. targets
@@ -36,5 +31,5 @@ acltest.o: acltest.c
 clean:
 	$(RM) -f *.o *.a acltest core
 
-dest: 
+dest:
 

@@ -5,7 +5,7 @@ increase the amount of detail. Use the B<bos getlog> command to
 display the contents of the log file.
 
 The command's arguments enable the administrator to control many aspects
-of the File Server's performance, as detailed in L<OPTIONS>.  By default
+of the File Server's performance, as detailed in L</OPTIONS>.  By default
 the File Server sets values for many arguments that are suitable
 for a medium-sized file server machine. To set values suitable for a small
 or large file server machine, use the B<-S> or B<-L> flag
@@ -18,7 +18,7 @@ machine sizes.
 
 =item *
 
-The maximum number of lightweight processes (LWPs) or pthreads 
+The maximum number of threads
 the File Server uses to handle requests for data; corresponds to the 
 B<-p> argument. The File Server always uses a minimum of 32 KB of 
 memory for these processes.
@@ -64,7 +64,7 @@ The default values are:
 
   Parameter (Argument)               Small (-S)     Medium   Large (-L)
   ---------------------------------------------------------------------
-  Number of LWPs (-p)                        6           9          128
+  Number of threads (-p)                     6           9          128
   Number of cached dir blocks (-b)          70          90          120
   Number of cached large vnodes (-l)       200         400          600
   Number of cached small vnodes (-s)       200         400          600

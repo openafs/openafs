@@ -9,32 +9,20 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <WINNT/afsevent.h>
-#include <fcntl.h>
-#include <io.h>
+
 #include <afs/procmgmt.h>
-#else
-#include <netdb.h>
-#include <netinet/in.h>
-#include <sys/file.h>
+#include <roken.h>
+#include <afs/opr.h>
+
+#ifdef AFS_NT40_ENV
+#include <WINNT/afsevent.h>
 #endif
-#include <dirent.h>
-#include <string.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
+
+#ifdef	AFS_AIX_ENV
+#include <sys/statfs.h>
 #endif
-#include <sys/stat.h>
-#include <errno.h>
-#include <stdio.h>
+
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rxkad.h>
@@ -42,9 +30,7 @@
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
 #include <afs/com_err.h>
-#ifdef	AFS_AIX_ENV
-#include <sys/statfs.h>
-#endif
+
 #include "update.h"
 #include "global.h"
 
@@ -76,29 +62,46 @@ update_rxstat_userok(struct rx_call *call)
 
 /*
  * PathInDirectory() -- determine if path is in directory (or is directory)
+ * Returns 1 if yes, 0 if no, -1 on error.
  */
 static int
 PathInDirectory(char *dir, char *path)
 {
-    int inDir = 0;
+    int inDir = 0, code;
     size_t dirLen;
-    char dirNorm[AFSDIR_PATH_MAX], pathNorm[AFSDIR_PATH_MAX];
+    char *dirNorm, *pathNorm;
 
 #ifdef AFS_NT40_ENV
     /* case-insensitive comparison of normalized, same-flavor (short) paths */
     DWORD status;
 
+    dirNorm = malloc(AFSDIR_PATH_MAX);
+    if (dirNorm == NULL)
+	return -1;
     status = GetShortPathName(dir, dirNorm, AFSDIR_PATH_MAX);
     if (status == 0 || status > AFSDIR_PATH_MAX) {
 	/* can't convert path to short version; just use long version */
-	strcpy(dirNorm, dir);
+	free(dirNorm);
+	dirNorm = strdup(dir);
+	if (dirNorm == NULL)
+	    return -1;
     }
     FilepathNormalize(dirNorm);
 
+    pathNorm = malloc(AFSDIR_PATH_MAX);
+    if (pathNorm == NULL) {
+	code = -1;
+	goto out;
+    }
     status = GetShortPathName(path, pathNorm, AFSDIR_PATH_MAX);
     if (status == 0 || status > AFSDIR_PATH_MAX) {
 	/* can't convert path to short version; just use long version */
-	strcpy(pathNorm, path);
+	free(pathNorm);
+	pathNorm = strdup(path);
+	if (pathNorm == NULL) {
+	    code = -1;
+	    goto out;
+	}
     }
     FilepathNormalize(pathNorm);
 
@@ -112,10 +115,16 @@ PathInDirectory(char *dir, char *path)
     }
 #else
     /* case-sensitive comparison of normalized paths */
-    strcpy(dirNorm, dir);
+    dirNorm = strdup(dir);
+    if (dirNorm == NULL)
+	return -1;
     FilepathNormalize(dirNorm);
 
-    strcpy(pathNorm, path);
+    pathNorm = strdup(path);
+    if (pathNorm == NULL) {
+	code = -1;
+	goto out;
+    }
     FilepathNormalize(pathNorm);
 
     dirLen = strlen(dirNorm);
@@ -127,13 +136,17 @@ PathInDirectory(char *dir, char *path)
 	}
     }
 #endif /* AFS_NT40_ENV */
-    return inDir;
+    code = 0;
+out:
+    free(dirNorm);
+    free(pathNorm);
+    return (code != 0) ? code : inDir;
 }
 
 int
 AuthOkay(struct rx_call *call, char *name)
 {
-    int i;
+    int i, r;
     rxkad_level level;
     afs_int32 code;
     int matches;
@@ -142,8 +155,8 @@ AuthOkay(struct rx_call *call, char *name)
     if (!afsconf_SuperUser(cdir, call, NULL))
 	return 0;
 
-    if (rx_SecurityClassOf(rx_ConnectionOf(call)) == 2) {
-	code = rxkad_GetServerInfo(call->conn, &level, 0, 0, 0, 0, 0);
+    if (rx_SecurityClassOf(rx_ConnectionOf(call)) == RX_SECIDX_KAD) {
+	code = rxkad_GetServerInfo(rx_ConnectionOf(call), &level, 0, 0, 0, 0, 0);
 	if (code)
 	    return 0;
     } else
@@ -151,7 +164,10 @@ AuthOkay(struct rx_call *call, char *name)
 
     matches = 0;
     for (i = 0; i < nDirs; i++) {
-	if (PathInDirectory(dirName[i], name)) {
+	r = PathInDirectory(dirName[i], name);
+	if (r < 0)
+	    return 0;
+	if (r) {
 	    if (dirLevel[i] > level)
 		return 0;
 	    matches++;
@@ -278,10 +294,10 @@ main(int argc, char *argv[])
         if (AFSDIR_SERVER_NETRESTRICT_FILEPATH ||
             AFSDIR_SERVER_NETINFO_FILEPATH) {
             char reason[1024];
-            ccode = parseNetFiles(SHostAddrs, NULL, NULL,
-                                           ADDRSPERSITE, reason,
-                                           AFSDIR_SERVER_NETINFO_FILEPATH,
-                                           AFSDIR_SERVER_NETRESTRICT_FILEPATH);
+            ccode = afsconf_ParseNetFiles(SHostAddrs, NULL, NULL,
+                                          ADDRSPERSITE, reason,
+                                          AFSDIR_SERVER_NETINFO_FILEPATH,
+                                          AFSDIR_SERVER_NETRESTRICT_FILEPATH);
         } else
 	{
             ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
@@ -295,7 +311,7 @@ main(int argc, char *argv[])
     if (rx_InitHost(host, htons(AFSCONF_UPDATEPORT)) < 0)
 	Quit("rx_init");
 
-    afsconf_BuildServerSecurityObjects(cdir, 0, &securityClasses, &numClasses);
+    afsconf_BuildServerSecurityObjects(cdir, &securityClasses, &numClasses);
 
     if (securityClasses[2] == NULL)
 	Quit("rxkad_NewServerSecurityObject");
@@ -414,7 +430,7 @@ update_SendFile(int fd, struct rx_call *call, struct stat *status)
     blockSize = status->st_blksize;
 #endif
     length = status->st_size;
-    buffer = (char *)malloc(blockSize);
+    buffer = malloc(blockSize);
     if (!buffer) {
 	printf("malloc failed\n");
 	return UPDATE_ERROR;

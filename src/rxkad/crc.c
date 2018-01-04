@@ -35,20 +35,13 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
-#include <string.h>
+
+#include <roken.h>
+
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include "rxkad.h"
-#include <des.h>
 #include "lifetimes.h"
 
 static u_long table[256];

@@ -14,6 +14,8 @@
 #include <errno.h>
 #include <stdio.h>
 
+#include "kopenafs.h"
+
 int
 main(void)
 {

@@ -177,12 +177,14 @@ EXEC_LIBS = \
 	$(DESTDIR)\lib\afs\mtafsvol.lib \
 	$(DESTDIR)\lib\afs\mtafsutil.lib \
         $(DESTDIR)\lib\afsrpc.lib \
-	$(DESTDIR)\lib\afs\afsdir.lib \
+	$(DESTDIR)\lib\afs\mtafsdir.lib \
 	$(DESTDIR)\lib\afs\afsacl.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
-	$(DESTDIR)\lib\afspthread.lib
+	$(DESTDIR)\lib\afspthread.lib \
+	$(DESTDIR)\lib\opr.lib \
+	$(DESTDIR)\lib\afsroken.lib
 
 ############################################################################
 # build salvager
@@ -284,4 +286,4 @@ $(OUT)\volinfo.res: AFS_component_version_number.h
 install: $(INCFILES) $(LIBFILE) $(MT_LIBFILE) $(DAFS_LIBFILE) $(SALVAGER) $(VOLINFO) $(VOLSCAN)
 
 mkdir:
-	
+

@@ -8,8 +8,6 @@
 #define	AFS_ALPHA_ENV	1
 #define AFS_ALPHA_XBSD_ENV 1
 
-#define AFS_64BIT_ENV	1
-
 #define SYS_NAME       "alpha_nbsd16"
 #define SYS_NAME_ID    SYS_NAME_ID_alpha_nbsd16
 
@@ -50,7 +48,6 @@
 #define AFSLITTLE_ENDIAN    1
 #define AFS_HAVE_FFS        1	/* Use system's ffs. */
 #define AFS_HAVE_STATVFS    0	/* System doesn't support statvfs */
-#define AFS_VM_RDWR_ENV	    1	/* read/write implemented via VM */
 
 #define	afsio_iov	uio_iov
 #define	afsio_iovcnt	uio_iovcnt

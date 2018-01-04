@@ -1,4 +1,6 @@
 /*!
+  \addtogroup vldb-spec VLDB Server Interface
+  @{
 
 	\page title AFS-3 Programmer's Reference: Volume Server/Volume Location
 Server  Interface 
@@ -3621,4 +3623,5 @@ Library For Managing Ubiquitous Data, ITCID, Pittsburgh, PA, Month, 1988.
 \li [5] Information Technology Center, Carnegie Mellon University. Quorum
 Completion, ITCID, Pittsburgh, PA, Month, 1988. 
 
+  @}
 */

@@ -20,6 +20,7 @@ B<bosserver>
     S<<< [B<-rxmaxmtu> <I<bytes>>] >>>
     S<<< [B<-rxbind>] >>>
     S<<< [B<-syslog>[=<I<facility>>]>] >>>
+    S<<< [B<-transarc-logs>] >>>
     S<<< [B<-pidfiles>[=<I<path>>]] >>>
     S<<< [B<-nofork>] >>>
     S<<< [B<-help>] >>>
@@ -119,9 +120,10 @@ suites. Provide the command name and all option names in full.
 
 =item B<-noauth>
 
-Assigns the unprivileged identity C<anonymous> to the issuer, which is
-useful only when authorization checking is disabled on the server machine
-(for instance, during the installation of a file server machine.)
+Turns off all authorization checks, and allows all connecting users to act as
+administrators, even unauthenticated users. The use of this option is
+inherently insecure, and should only be used in controlled environments for
+experimental or debug purposes. See L<NoAuth(5)>.
 
 =item B<-log>
 
@@ -195,6 +197,12 @@ Rx socket will listen on all interfaces.
 Specifies that logging output should go to syslog instead of the normal
 log file.  B<-syslog>=I<facility> can be used to specify to which facility
 the log message should be sent.
+
+=item B<-transarc-logs>
+
+Use Transarc style logging features. Rename the existing log file
+F</usr/afs/logs/BosLog> to F</usr/afs/logs/BosLog.old> when the bos server is
+restarted.  This option is provided for compatibility with older versions.
 
 =item B<-pidfiles>[=<I<path>>]
 

@@ -18,31 +18,21 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <sys/types.h>
-#include <stdio.h>
-#include <afs/afs_assert.h>
 #ifdef AFS_NT40_ENV
-#include <fcntl.h>
 #include <windows.h>
 #include <winbase.h>
-#include <io.h>
-#include <time.h>
-#else
-#include <sys/file.h>
-#include <sys/time.h>
-#include <unistd.h>
 #endif
-#include <string.h>
-#include <errno.h>
-#include <sys/stat.h>
 
 #include <rx/xdr.h>
 #include <afs/afsint.h>
+#include <afs/afssyscalls.h>
+#include <rx/rx_queue.h>
+
 #include "nfs.h"
 #include "lwp.h"
 #include "lock.h"
-#include <afs/afssyscalls.h>
 #include "ihandle.h"
 #include "vnode.h"
 #include "volume.h"
@@ -87,7 +77,7 @@ ci_AddItem(struct clone_head *ah, Inode aino)
 
     /* if no last elt (first call) or last item full, get a new one */
     if ((!ah->last) || ah->last->nitems >= CLONE_MAXITEMS) {
-	ti = (struct clone_items *)malloc(sizeof(struct clone_items));
+	ti = malloc(sizeof(struct clone_items));
 	if (!ti) {
 	    Log("ci_AddItem: malloc failed\n");
 	    osi_Panic("ci_AddItem: malloc failed\n");
@@ -266,9 +256,9 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 	    } else if (rwinode) {
 		if (IH_INC(V_linkHandle(rwvp), rwinode, V_parentId(rwvp)) ==
 		    -1) {
-		    Log("IH_INC failed: %"AFS_PTR_FMT", %s, %u errno %d\n",
+		    Log("IH_INC failed: %"AFS_PTR_FMT", %s, %" AFS_VOLID_FMT " errno %d\n",
 			V_linkHandle(rwvp), PrintInode(stmp, rwinode),
-			V_parentId(rwvp), errno);
+			afs_printable_VolumeId_lu(V_parentId(rwvp)), errno);
 		    VForceOffline(rwvp);
 		    ERROR_EXIT(EIO);
 		}
@@ -319,9 +309,9 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 	    if (inodeinced) {
 		if (IH_DEC(V_linkHandle(rwvp), rwinode, V_parentId(rwvp)) ==
 		    -1) {
-		    Log("IH_DEC failed: %"AFS_PTR_FMT", %s, %u errno %d\n",
+		    Log("IH_DEC failed: %"AFS_PTR_FMT", %s, %" AFS_VOLID_FMT " errno %d\n",
 			V_linkHandle(rwvp), PrintInode(stmp, rwinode),
-			V_parentId(rwvp), errno);
+			afs_printable_VolumeId_lu(V_parentId(rwvp)), errno);
 		    VForceOffline(rwvp);
 		    ERROR_EXIT(EIO);
 		}
@@ -398,7 +388,7 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 		error = FDH_TRUNC(rwFd, offset);
 	    }
 	}
-	FDH_SYNC(rwFd);
+	(void)FDH_SYNC(rwFd);
 	FDH_CLOSE(rwFd);
     }
 
@@ -436,8 +426,9 @@ CloneVolume(Error * rerror, Volume * original, Volume * new, Volume * old)
     if (code)
 	ERROR_EXIT(code);
     if (filecount != V_filecount(original) || diskused != V_diskused(original))
-       Log("Clone %u: filecount %d -> %d diskused %d -> %d\n",
-	    V_id(original), filecount, V_filecount(original), diskused, V_diskused(original));
+	Log("Clone %" AFS_VOLID_FMT ": filecount %d -> %d diskused %d -> %d\n",
+	    afs_printable_VolumeId_lu(V_id(original)), filecount,
+	    V_filecount(original), diskused, V_diskused(original));
 
     code = CopyVolumeHeader(&V_disk(original), &V_disk(new));
     if (code)

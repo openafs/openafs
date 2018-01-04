@@ -61,6 +61,9 @@ extern void *osi_find_syscall_table(int which);
 extern void osi_proc_init(void);
 extern void osi_proc_clean(void);
 
+/* osi_sleep.c */
+extern void osi_event_shutdown(void);
+
 /* osi_syscall.c */
 extern int osi_syscall_init(void);
 extern void osi_syscall_clean(void);
@@ -70,7 +73,7 @@ extern int osi_sysctl_init(void);
 extern void osi_sysctl_clean(void);
 
 /* osi_vm.c */
-extern int osi_VM_FlushVCache(struct vcache *avc, int *slept);
+extern int osi_VM_FlushVCache(struct vcache *avc);
 extern void osi_VM_TryToSmush(struct vcache *avc, afs_ucred_t *acred,
 			      int sync);
 extern void osi_VM_FSyncInval(struct vcache *avc);

@@ -40,7 +40,14 @@
     <title>Related Documents</title>
 
     <para>The OpenAFS documentation set also includes the following
-    documents.
+    documents.  Large portions of them are as released to the community
+      by IBM, and are not directly applicable to current releases of
+      OpenAFS.  This document uses the legacy "Transarc" paths
+      (<computeroutput>/usr/afs</computeroutput>,
+       <computeroutput>/usr/vice</computeroutput>, etc.), which do not
+       correspond to the normal file system hierarchy on many modern
+       machines; the paths may need to be substituted according to
+       the local software installation.
       <variablelist>
         <varlistentry>
           <term><citetitle>OpenAFS Administration Guide</citetitle></term>

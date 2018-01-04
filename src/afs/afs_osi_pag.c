@@ -186,6 +186,8 @@ int
 afs_setpag(afs_ucred_t **credpp)
 #elif	defined(AFS_FBSD_ENV)
 afs_setpag(struct thread *td, void *args)
+#elif	defined(AFS_NBSD_ENV)
+afs_setpag(afs_proc_t *p, const void *args, register_t *retval)
 #elif  defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 afs_setpag(afs_proc_t *p, void *args, int *retval)
 #else
@@ -218,8 +220,7 @@ afs_setpag(void)
 #elif	defined(AFS_FBSD_ENV)
     code = AddPag(td, genpag(), &td->td_ucred);
 #elif   defined(AFS_NBSD40_ENV)
-    /* XXXX won't work */
-    code = AddPag(p, genpag(), (afs_ucred_t **) osi_curcred());
+    code = AddPag(p, genpag(), &p->l_proc->p_cred);
 #elif	defined(AFS_XBSD_ENV)
     code = AddPag(p, genpag(), &p->p_rcred);
 #elif	defined(AFS_AIX41_ENV)
@@ -426,8 +427,6 @@ AddPag(afs_int32 aval, afs_ucred_t **credpp)
     AFS_STATCNT(AddPag);
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     if ((code = setpag(p, credpp, aval, &newpag, 0)))
-#elif defined(AFS_NBSD40_ENV)
-    if ((code = setpag(p, (void *) credpp, aval, &newpag, 0)))
 #else
     if ((code = setpag(credpp, aval, &newpag, 0)))
 #endif
@@ -613,13 +612,12 @@ osi_get_group_pag(afs_ucred_t *cred)
     ngroups = crgetngroups(cred);
 #endif
 #if defined(AFS_NBSD40_ENV)
-#warning com afs_ucred_t w/magic will not work
     if (cred == NOCRED || cred == FSCRED)
       return NOPAG;
     if (osi_crngroups(cred) < 3)
       return NOPAG;
-    g0 = osi_crgroupbyid(cred, 0);
-    g1 = osi_crgroupbyid(cred, 1);
+    g0 = osi_crgroupbyid(cred, 1);
+    g1 = osi_crgroupbyid(cred, 2);
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     if (cred == NOCRED || cred == FSCRED)
 	return NOPAG;

@@ -17,10 +17,8 @@ INCFILES = \
 
 install: $(INCFILES)
 
-install9x: install
-
 clean::
 	$(DEL) $(INCFILES)
 
 mkdir:
-	
+

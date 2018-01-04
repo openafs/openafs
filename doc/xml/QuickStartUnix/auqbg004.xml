@@ -10,8 +10,9 @@
   read this chapter and the material from the <citetitle>OpenAFS
   Administration Guide</citetitle> listed in <link
   linkend="HDRWQ8">Recommended Reading List</link>. It is also best to
-  read through <link linkend="HDRWQ17">Installing the First AFS
-  Machine</link> before beginning the installation, so that you understand
+  read the entirety of certain sections of this document, in particular
+  <link linkend="HDRWQ17">Installing the First AFS
+  Machine</link>, before beginning the installation, so that you understand
   the overall scope of the installation procedure. Similarly, before
   installing additional server or client machines it is best to read
   through <link linkend="HDRWQ99">Installing Additional Server
@@ -27,7 +28,9 @@
   authentication, please see the notes in 
   <link linkend="KAS001">kaserver and legacy Kerberos 5 authentication</link>
   and the rest of Appendix B for how the installation
-  steps will differ from those described in the rest of this guide.</para>
+  steps will differ from those described in the rest of this guide.
+  Do not use the <emphasis role="bold">kaserver</emphasis> for new
+  deployments of AFS; it uses extremely insecure cryptography.</para>
 
   <sect1 id="HDRWQ7">
     <title>The Procedures Described in this Guide</title>
@@ -47,8 +50,7 @@
         <title>Incorporating AFS Into the Kernel</title>
 
         <para>You must incorporate AFS modifications into the kernel of
-        every client machine. On some operating systems you must also 
-        incorporate these modifications into the kernels of server machines. 
+        every client machine.
         Depending on 
         the operating system, you either use a program for dynamic kernel
         loading, build a new static kernel, or can choose between the
@@ -77,6 +79,12 @@
         functions:
           <itemizedlist>
             <listitem>
+              <para>It acts as the first <emphasis>database server
+              machine</emphasis>, running the server processes that
+              maintain the AFS administrative databases</para>
+            </listitem>
+
+            <listitem>
               <para>It may act as the <emphasis>system control
               machine</emphasis>, distributing certain
               configuration files to the other server machines in the
@@ -88,14 +96,12 @@
               machine</emphasis> for its system type, distributing AFS
               binaries to other server machines of its system type</para>
             </listitem>
-
-            <listitem>
-              <para>It acts as the first <emphasis>database server
-              machine</emphasis>, running the server processes that
-              maintain the AFS administrative databases</para>
-            </listitem>
           </itemizedlist>
         </para>
+
+        <para>The latter two functions are performed by the Update Server,
+          which is considered to be deprecated and may be removed in a
+          future release.</para>
 
         <para>After you install server and client functionality, you
         complete other procedures specific to the first machine, including
@@ -272,7 +278,8 @@
       <title>Login Identity</title>
 
       <para>Log into the machine you are installing as the local superuser <emphasis role="bold">root</emphasis>. When instructed,
-      also authenticate with AFS as the administrative user <emphasis role="bold">admin</emphasis>. <indexterm>
+      also authenticate to AFS using Kerberos as the administrative
+      user <emphasis role="bold">admin</emphasis>. <indexterm>
           <primary>overview</primary>
 
           <secondary>general installation requirements</secondary>
@@ -290,7 +297,8 @@
         <listitem>
           <para>You must have a Kerberos 5 realm running for your site, and
           the ability to create new principals within that realm. If you are
-          working with an existing cell using <emphasis>kaserver</emphasis>
+          working with an existing cell using the deprecated
+          <emphasis>kaserver</emphasis>
           or Kerberos v4 authentication, please see 
           <link linkend="KAS001">kaserver and legacy Kerberos 4 authentication</link> 
           for modifications to the following instructions.</para>
@@ -361,12 +369,10 @@
         </listitem>
 
         <listitem>
-          <para>The partition mounted on the <emphasis role="bold">/usr</emphasis> directory must have at least 18 MB of disk space
-	<!-- XXX - Is this still true - how big are our binaries these days? -->
-          available for storing the AFS server binaries (stored by convention in the <emphasis role="bold">/usr/afs/bin</emphasis>
-          directory). If the machine is also a client, there must be additional local disk space available, as specified in <link
-          linkend="HDRWQ12">Client Machine Requirements</link>. The complete set of AFS binaries requires yet more space, but they
-          are normally stored in an AFS volume rather than on a machine's local disk.</para>
+          <para>The partition mounted on the
+            <emphasis role="bold">/usr</emphasis> directory must have
+            a sufficient amount of space to hold the AFS binaries that will
+            be used; a few hundred MB should be more than sufficient.</para>
 
           <para>More significant amounts of space on the partition are required by the administrative databases stored in the
           <emphasis role="bold">/usr/afs/db</emphasis> directory and the server process log files stored in the <emphasis
@@ -375,8 +381,12 @@
         </listitem>
 
         <listitem>
-          <para>There must be at least one partition (or logical volume, if the operating system and AFS support them) dedicated
-          exclusively to storing AFS volumes. The total number and size of server partitions on all file server machines in the cell
+          <para>There should be at least one partition (or logical
+          volume, if the operating system and AFS support them) dedicated
+          exclusively to storing AFS volumes. Special configuration is
+          required to use non-dedicated partitions as the backing store
+          for AFS file data.  The total number and size of server
+          partitions on all file server machines in the cell
           determines how much space is available for AFS files.</para>
         </listitem>
       </itemizedlist>
@@ -399,22 +409,24 @@
 
       <itemizedlist>
         <listitem>
-          <para>The partition mounted on the <emphasis role="bold">/usr</emphasis> directory must have at least 4 MB of disk space
-          available for storing the AFS client binaries and kernel library files (stored by convention in the <emphasis
-          role="bold">/usr/vice/etc</emphasis> directory). The complete set of AFS binaries requires more space, but they are
-          normally stored in an AFS volume rather than on a machine's local disk. For most system types, the instructions have you
-          copy only the one kernel library file appropriate for the machine you are installing. If you choose to store all of the
-          library files on the local disk, the space requirement can be significantly greater.</para>
+          <para>The partition mounted on the
+          <emphasis role="bold">/usr</emphasis> directory must have
+          a sufficient amount of disk space to store the AFS binaries that
+          will be used; a few hundred MB should be more than sufficient.</para>
         </listitem>
 
         <listitem>
           <para>On a client machine that uses a disk cache, there must be enough free space on the cache partition (by convention,
           mounted on the <emphasis role="bold">/usr/vice/cache</emphasis> directory) to accommodate the cache. The minimum
-          recommended cache size is 10 MB, but larger caches generally perform better.</para>
+          recommended cache size is 50 MB, but larger caches generally
+          perform better.  It is recommended to have a dedicated partition
+          for this cache, as the client does not degrade gracefully when
+          the partition containing the cache is filled by other
+          processes.</para>
         </listitem>
 
         <listitem>
-          <para>On a client machine that uses a memory cache, there must be at least 5 MB of machine memory to devote to caching,
+          <para>On a client machine that uses a memory cache, there must be at least 50 MB of machine memory to devote to caching,
           but again more memory generally leads to better performance. For further discussion, see the sections in <link
           linkend="HDRWQ133">Installing Additional Client Machines</link> about configuring the cache.</para>
         </listitem>
@@ -462,8 +474,13 @@
   <sect1 id="HDRWQ14">
     <title>About Upgrading the Operating System</title>
 
-    <para>Whenever you upgrade an AFS machine to a different operating system, you must take several actions to maintain proper AFS
-    functionality. These actions include, but are not necessarily limited to, the following. <itemizedlist>
+    <para>On most modern systems, using Kerberos 5 for authentication and
+      the namei fileserver backend, no particular precautions need to be
+      taken across operating system upgrades.  Legacy confiruations
+      involving kaserver authentication or inode fileserver backends
+      will need to undertake the following precautions.</para>
+
+    <para>These actions include, but are not necessarily limited to, the following. <itemizedlist>
         <listitem>
           <para>On platforms running the inode fileserver, unmount the AFS server partitions (mounted at <emphasis role="bold">/vicep</emphasis><replaceable>xx</replaceable>
           directories) on all file server machines, to prevent the vendor-supplied <emphasis role="bold">fsck</emphasis> program

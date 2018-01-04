@@ -66,7 +66,7 @@
     </sect2><sect2 id="HDRWQ83"><title>To Authenticate on an Unsupported Operating System</title>
     <orderedlist>
       <listitem><para>Log onto the NFS client machine using your NFS username.</para></listitem>
-      <listitem><para><anchor id="LINFS-TELNET" />Establish a connection to the NFS/AFS translator machine you are
+      <listitem id="LINFS-TELNET"><para>Establish a connection to the NFS/AFS translator machine you are
       using (for example, using the <emphasis role="bold">telnet</emphasis> utility) and log onto it using your AFS
       username (which is normally the same as your NFS username).</para></listitem>
       <listitem><para>
@@ -82,8 +82,8 @@
    % <emphasis role="bold">klog -setpag</emphasis>
 </programlisting>
       </para></listitem>
-      <listitem><para>
-        <anchor id="LINFS-KNFS" />Issue the <emphasis role="bold">knfs</emphasis> command to associate your AFS tokens
+      <listitem id="LINFS-KNFS"><para>
+        Issue the <emphasis role="bold">knfs</emphasis> command to associate your AFS tokens
         with your UNIX UID on the NFS client machine where you are working. This enables the Cache Manager on the
         translator machine to use the tokens properly when you access AFS from the NFS client machine.
         </para><para>If your NFS client machine is a system type for which AFS defines a system name, it can make sense
@@ -103,7 +103,7 @@
         <variablelist>
           <varlistentry><term><emphasis role="bold"><replaceable>host name</replaceable></emphasis></term>
           <listitem><para>Specifies the fully-qualified hostname of your NFS client machine (such as
-          <emphasis role="bold">nfs52.abc.com</emphasis>).</para></listitem></varlistentry>
+          <emphasis role="bold">nfs52.example.com</emphasis>).</para></listitem></varlistentry>
           <varlistentry><term><emphasis role="bold"><replaceable>user ID</replaceable></emphasis></term>
           <listitem><para>Specifies your UNIX UID or equivalent (not your username) on the NFS client machine. If your
           system administrator has followed the conventional practice, then your UNIX and AFS UIDs are the same. If you
@@ -114,7 +114,7 @@
           <listitem><para>Specifies your NFS client machine's system type name.</para></listitem></varlistentry>
         </variablelist>
       </listitem>
-      <listitem><para><anchor id="LINFS-LOGOUT" />(<emphasis role="bold">Optional</emphasis>) Log out from the
+      <listitem id="LINFS-LOGOUT"><para>(<emphasis role="bold">Optional</emphasis>) Log out from the
       translator machine, but do not unauthenticate.</para></listitem>
       <listitem><para>Work on the NFS client machine, accessing AFS as necessary.</para></listitem>
       <listitem><para>

@@ -13,7 +13,8 @@ RELDIR=procmgmt
 
 ############################################################################
 
-INCFILES =	$(DESTDIR)\include\afs\procmgmt.h
+INCFILES =	$(DESTDIR)\include\afs\procmgmt.h \
+	 $(DESTDIR)\include\afs\procmgmt_softsig.h
 
 $(INCFILES):$$(@F)
 	$(COPY) $** $(DESTDIR)\include\afs\.
@@ -31,7 +32,8 @@ DLLOBJS =\
 
 DLLLIBS =\
 	$(DESTDIR)\lib\afspthread.lib \
-	$(DESTDIR)\lib\afs\afsutil.lib
+	$(DESTDIR)\lib\afs\mtafsutil.lib \
+        $(DESTDIR)\lib\afsroken.lib
 
 $(DLLFILE): $(DLLOBJS) $(DLLRES) $(DLLLIBS)
 	$(DLLCONLINK) /DEF:afsprocmgmt.def
@@ -79,8 +81,6 @@ $(OUT)\afskill.res: AFS_component_version_number.h
 #	$(RC) $*.rc
 
 install_headers: $(INCFILES)
-
-install9x: install_headers
 
 install: install_headers $(DLLFILE) $(CL_KILL_EXEFILE)
 

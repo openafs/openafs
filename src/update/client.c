@@ -9,36 +9,22 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
-#include <sys/types.h>
-#include <sys/stat.h>
+
+#include <afs/procmgmt.h>
+#include <roken.h>
+#include <afs/opr.h>
+
 #ifdef AFS_NT40_ENV
-#include <fcntl.h>
-#include <winsock2.h>
 #include <WINNT/afsevent.h>
 #include <sys/utime.h>
 #include <direct.h>
-#include <process.h>
-#include <io.h>
-#include <afs/procmgmt.h>
-#else
-#include <sys/file.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <sys/time.h>
 #endif
-#include <dirent.h>
-#include <string.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
+
+#ifdef	AFS_AIX_ENV
+#include <sys/statfs.h>
 #endif
-#include <stdio.h>
-#include <errno.h>
+
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rxkad.h>
@@ -46,9 +32,7 @@
 #include <afs/cellconfig.h>
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
-#ifdef	AFS_AIX_ENV
-#include <sys/statfs.h>
-#endif
+
 #include "update.h"
 #include "global.h"
 #include "update_internal.h"
@@ -496,7 +480,7 @@ update_ReceiveFile(int fd, struct rx_call *call, struct stat *status)
 #else
     blockSize = status->st_blksize;
 #endif
-    buffer = (char *)malloc(blockSize);
+    buffer = malloc(blockSize);
     if (!buffer) {
 	printf("malloc failed\n");
 	return UPDATE_ERROR;
@@ -523,28 +507,45 @@ update_ReceiveFile(int fd, struct rx_call *call, struct stat *status)
 
 /*
  * PathsAreEquivalent() -- determine if paths are equivalent
+ * Returns 1 if yes, 0 if no, -1 on error.
  */
 static int
 PathsAreEquivalent(char *path1, char *path2)
 {
-    int areEq = 0;
-    char pathNorm1[AFSDIR_PATH_MAX], pathNorm2[AFSDIR_PATH_MAX];
+    int areEq = 0, code;
+    char *pathNorm1, *pathNorm2;
 
 #ifdef AFS_NT40_ENV
     /* case-insensitive comparison of normalized, same-flavor (short) paths */
     DWORD status;
 
+    pathNorm1 = malloc(AFSDIR_PATH_MAX);
+    if (pathNorm1 == NULL)
+	return -1;
     status = GetShortPathName(path1, pathNorm1, AFSDIR_PATH_MAX);
     if (status == 0 || status > AFSDIR_PATH_MAX) {
 	/* can't convert path to short version; just use long version */
-	strcpy(pathNorm1, path1);
+	free(pathNorm1);
+	pathNorm1 = strdup(path1);
+	if (pathNorm1 == NULL)
+	    return -1;
     }
     FilepathNormalize(pathNorm1);
 
+    pathNorm2 = malloc(AFSDIR_PATH_MAX);
+    if (pathNorm2 == NULL) {
+	code = -1;
+	goto out;
+    }
     status = GetShortPathName(path2, pathNorm2, AFSDIR_PATH_MAX);
     if (status == 0 || status > AFSDIR_PATH_MAX) {
 	/* can't convert path to short version; just use long version */
-	strcpy(pathNorm2, path2);
+	free(pathNorm2);
+	pathNorm2 = strdup(path2);
+	if (pathNorm2 == NULL) {
+	    code = -1;
+	    goto out;
+	}
     }
     FilepathNormalize(pathNorm2);
 
@@ -553,17 +554,27 @@ PathsAreEquivalent(char *path1, char *path2)
     }
 #else
     /* case-sensitive comparison of normalized paths */
-    strcpy(pathNorm1, path1);
+    pathNorm1 = strdup(path1);
+    if (pathNorm1 == NULL)
+	return -1;
     FilepathNormalize(pathNorm1);
 
-    strcpy(pathNorm2, path2);
+    pathNorm2 = strdup(path2);
+    if (pathNorm2 == NULL) {
+	code = -1;
+	goto out;
+    }
     FilepathNormalize(pathNorm2);
 
     if (strcmp(pathNorm1, pathNorm2) == 0) {
 	areEq = 1;
     }
 #endif /* AFS_NT40_ENV */
-    return areEq;
+    code = 0;
+out:
+    free(pathNorm1);
+    free(pathNorm2);
+    return (code != 0) ? code : areEq;
 }
 
 
@@ -593,11 +604,12 @@ NotOnHost(char *filename, struct filestr *okhostfiles)
 	    afs_com_err(whoami, rc, "Unable to construct local path");
 	    return -1;
 	}
-	if (PathsAreEquivalent(hostfile, filename)) {
-	    free(hostfile);
-	    return 0;
-	}
+	rc = PathsAreEquivalent(hostfile, filename);
 	free(hostfile);
+	if (rc < 0)
+	    return -1;
+	if (rc)
+	    return 0;
     }
     return 1;
 }
@@ -624,7 +636,7 @@ RenameNewFiles(struct filestr *modFiles)
 	strcat(newname, ".NEW");
 	if (verbose >= 2)
 	    printf("  renaming %s\n", newname);
-	errcode = renamefile(newname, fname);
+	errcode = rk_rename(newname, fname);
 	if (errcode) {
 	    printf("could not rename %s to %s\n", newname, fname);
 	    afs_com_err(whoami, errno, "could not rename %s to %s", newname,

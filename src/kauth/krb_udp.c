@@ -14,30 +14,27 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
-#include <sys/types.h>
-#include <errno.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <afs/errmap_nt.h>
-#define snprintf _snprintf
-#else
-#include <sys/socket.h>
-#include <netdb.h>
-#include <netinet/in.h>
+
+#include <roken.h>
+
+#ifdef IGNORE_SOME_GCC_WARNINGS
+# pragma GCC diagnostic warning "-Wdeprecated-declarations"
 #endif
-#include <string.h>
-#include <afs/afsutil.h>
-#include <time.h>
+
+#ifdef AFS_NT40_ENV
+#include <afs/errmap_nt.h>
+#endif
+
+#define HC_DEPRECATED
+#include <hcrypto/des.h>
+
 #include <afs/com_err.h>
 #include <lwp.h>
-#include <des.h>
-#include <des_prototypes.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rxkad.h>
+#include <rx/rxkad_convert.h>
 #include <afs/auth.h>
 #include <ubik.h>
 
@@ -114,7 +111,7 @@ FiveMinuteCheckLWP(void *unused)
     while (1) {
 	IOMGR_Sleep(fiveminutes);
 	/* close the log so it can be removed */
-	ReOpenLog(AFSDIR_SERVER_KALOG_FILEPATH);	/* no trunc, just append */
+	ReOpenLog();	/* no trunc, just append */
     }
     return NULL;
 }
@@ -130,7 +127,7 @@ create_cipher(char *cipher, int *cipherLen,
     int slen;
     unsigned char life = time_to_life(start, end);
     int len;
-    des_key_schedule schedule;
+    DES_key_schedule schedule;
     afs_int32 code;
 
     answer = cipher;
@@ -163,9 +160,9 @@ create_cipher(char *cipher, int *cipherLen,
 	printf("\n");
     }
 
-    if ((code = des_key_sched(ktc_to_cblock(key), schedule)))
+    if ((code = DES_key_sched(ktc_to_cblock(key), &schedule)))
 	printf("In KAAuthenticate: key_sched returned %d\n", code);
-    des_pcbc_encrypt(cipher, cipher, len, schedule, ktc_to_cblockptr(key), ENCRYPT);
+    DES_pcbc_encrypt(cipher, cipher, len, &schedule, ktc_to_cblockptr(key), ENCRYPT);
     *cipherLen = round_up_to_ebs(len);
 
     if (krb_udp_debug) {
@@ -217,13 +214,13 @@ check_auth(struct packet *pkt, char *auth, int authLen,
 	   char *cell)
 {
     char *packet;
-    des_key_schedule schedule;
+    DES_key_schedule schedule;
     afs_int32 cksum;
     afs_int32 time_sec;
     int byteOrder = pkt->byteOrder;
 
-    des_key_sched(ktc_to_cblock(key), schedule);
-    des_pcbc_encrypt(auth, auth, authLen, schedule, ktc_to_cblockptr(key), DECRYPT);
+    DES_key_sched(ktc_to_cblock(key), &schedule);
+    DES_pcbc_encrypt(auth, auth, authLen, &schedule, ktc_to_cblockptr(key), DECRYPT);
     packet = auth;
     if (strcmp(packet, name) != 0)
 	return KABADTICKET;
@@ -322,7 +319,7 @@ UDP_Authenticate(int ksoc, struct sockaddr_in *client, char *name,
 	}
 
 	/* make the ticket */
-	code = des_random_key(ktc_to_cblock(&sessionKey));
+	code = DES_new_random_key(ktc_to_cblock(&sessionKey));
 	if (code) {
 	    code = KERB_ERR_NULL_KEY;	/* was KANOKEYS */
 	    goto abort;
@@ -535,7 +532,7 @@ UDP_GetTicket(int ksoc, struct packet *pkt, afs_int32 kvno,
     if (ntohl(server.flags) & KAFNOSEAL)
 	return KABADSERVER;
 
-    code = des_random_key(ktc_to_cblock(&sessionKey));
+    code = DES_new_random_key(ktc_to_cblock(&sessionKey));
     if (code) {
 	code = KERB_ERR_NULL_KEY;	/* was KANOKEYS */
 	goto fail;
@@ -1033,7 +1030,7 @@ FindBlock(at, aname, ainstance, tentry)
     strcpy(tentry->userID.name, aname);
     strcpy(tentry->userID.instance, ainstance);
     tentry->key_version = htonl(17);
-    des_string_to_key("toa", &tentry->key);
+    DES_string_to_key("toa", &tentry->key);
     tentry->flags = htonl(KAFNORMAL);
     tentry->user_expiration = htonl(NEVERDATE);
     tentry->max_ticket_lifetime = htonl(MAXKTCTICKETLIFETIME);
@@ -1050,7 +1047,7 @@ ka_LookupKey(tt, name, inst, kvno, key)
 {
     printf("Calling ka_LookupKey with '%s'.'%s'\n", name, inst);
     *kvno = 23;
-    des_string_to_key("applexx", key);
+    DES_string_to_key("applexx", key);
 }
 
 static afs_int32
@@ -1063,7 +1060,7 @@ kvno_tgs_key(authDomain, kvno, tgskey)
 	printf("Called with wrong %s as authDomain\n", authDomain);
     if (kvno != 23)
 	printf("kvno_tgs_key: being called with wrong kvno: %d\n", kvno);
-    des_string_to_key("applexx", tgskey);
+    DES_string_to_key("applexx", tgskey);
     return 0;
 }
 

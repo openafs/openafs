@@ -10,8 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <roken.h>
 
 #include <afs/afsutil.h>
 #include <afs/com_err.h>
@@ -23,6 +22,7 @@
 #include <afs/cellconfig.h>
 #include <afs/cmd.h>
 #include <afs/vlserver.h>
+#include <afs/afsint.h>
 #include "volser.h"
 #endif
 

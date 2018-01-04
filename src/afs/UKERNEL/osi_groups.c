@@ -74,7 +74,7 @@ usr_setpag(struct usr_ucred **cred, afs_uint32 pagvalue, afs_uint32 * newpag,
 
     AFS_STATCNT(setpag);
 
-    gidset = (gid_t *) osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+    gidset = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
     ngroups = afs_getgroups(*cred, gidset);
 
     if (afs_get_pag_from_groups(gidset[0], gidset[1]) == NOPAG) {

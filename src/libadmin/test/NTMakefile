@@ -23,7 +23,8 @@ AFSCP_EXELIBS =\
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
         $(DESTDIR)\lib\afs\afsutil.lib \
-	$(DESTDIR)\lib\afs\afscmd.lib  # static library
+        $(DESTDIR)\lib\afsroken.lib \
+	$(DESTDIR)\lib\afs\afscmd.lib # static library
 
 AFSCP_EXEOBJS =\
 	$(OUT)\bos.obj \
@@ -40,4 +41,4 @@ $(OUT)\afscp.exe: $(OUT)\afscp.obj $(AFSCP_EXEOBJS) $(AFSCP_EXELIBS)
         $(SYMSTORE_IMPORT)
 
 mkdir:
-	
+

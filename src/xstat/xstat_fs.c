@@ -17,13 +17,13 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include "xstat_fs.h"		/*Interface for this module */
 #include <lwp.h>		/*Lightweight process package */
 
 #include <afs/afsutil.h>
 #include <afs/afscbint.h>
-#include <string.h>
 
 #define LWP_STACK_SIZE	(16 * 1024)
 
@@ -469,7 +469,7 @@ xstat_fs_Init(int a_numServers, struct sockaddr_in *a_socketArray,
     xstat_fs_ProbeFreqInSecs = a_ProbeFreqInSecs;
     xstat_fs_numCollections = a_numCollections;
     collIDBytes = xstat_fs_numCollections * sizeof(afs_int32);
-    xstat_fs_collIDP = (afs_int32 *) (malloc(collIDBytes));
+    xstat_fs_collIDP = malloc(collIDBytes);
     memcpy(xstat_fs_collIDP, a_collIDP, collIDBytes);
     if (xstat_fs_debug) {
 	printf("[%s] Asking for %d collection(s): ", rn,
@@ -491,8 +491,8 @@ xstat_fs_Init(int a_numServers, struct sockaddr_in *a_socketArray,
      * Allocate the necessary data structures and initialize everything
      * else.
      */
-    xstat_fs_ConnInfo = (struct xstat_fs_ConnectionInfo *)
-	malloc(a_numServers * sizeof(struct xstat_fs_ConnectionInfo));
+    xstat_fs_ConnInfo = malloc(a_numServers
+			       * sizeof(struct xstat_fs_ConnectionInfo));
     if (xstat_fs_ConnInfo == (struct xstat_fs_ConnectionInfo *)0) {
 	fprintf(stderr,
 		"[%s] Can't allocate %d connection info structs (%" AFS_SIZET_FMT " bytes)\n",

@@ -9,31 +9,21 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
 #include <afs/stds.h>
-#include <ctype.h>
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
-#include <stdio.h>
-#include <string.h>
+
+#include <roken.h>
+#include <afs/opr.h>
+
 #include <rx/rx.h>
 #include <rx/xdr.h>
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/afsutil.h>
 #include <afs/com_err.h>
-#include <errno.h>
+
 #include "ptclient.h"
 #include "ptuser.h"
 #include "pterror.h"
-
-#ifdef UKERNEL
-# include "afs_usrops.h"
-#endif
 
 struct ubik_client *pruclient = 0;
 static afs_int32 lastLevel;	/* security level pruclient, if any */
@@ -69,11 +59,10 @@ AllocateIdHash(struct idhash **aidhash)
 {
     struct idhash *idhash;
 
-    idhash = (struct idhash *)malloc(sizeof(struct idhash));
+    idhash = calloc(1, sizeof(struct idhash));
     if (!idhash) {
        return ENOMEM;
     }
-    memset((void *)idhash, 0, sizeof(struct idhash));
     *aidhash = idhash;
     return 0;
 }
@@ -121,7 +110,7 @@ FindId(struct idhash *idhash, afs_int32 id)
     }
 
     /* Insert this id but return not found. */
-    newChain = (struct idchain *)malloc(sizeof(struct idchain));
+    newChain = malloc(sizeof(struct idchain));
     if (!newChain) {
 	return ENOMEM;
     } else {
@@ -154,9 +143,14 @@ CreateIdList(struct idhash *idhash, idlist * alist, afs_int32 select)
     if (select & PRUSERS) {
 	entries += idhash->userEntries;
     }
+    if (entries == 0) {
+	alist->idlist_len = 0;
+	alist->idlist_val = NULL;
+	return 0;
+    }
 
     alist->idlist_len = entries;
-    alist->idlist_val = (afs_int32 *) malloc(sizeof(afs_int32) * entries);
+    alist->idlist_val = malloc(sizeof(afs_int32) * entries);
     if (!alist->idlist_val) {
 	return ENOMEM;
     }
@@ -183,16 +177,14 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
     afs_int32 code;
     struct rx_connection *serverconns[MAXSERVERS];
     struct rx_securityClass *sc = NULL;
-    static struct afsconf_dir *tdir = (struct afsconf_dir *)NULL;	/* only do this once */
+    static struct afsconf_dir *tdir = NULL;	/* only do this once */
     static char tconfDir[100] = "";
     static char tcell[64] = "";
     afs_int32 scIndex;
     afs_int32 secFlags;
     static struct afsconf_cell info;
     afs_int32 i;
-#if !defined(UKERNEL)
     char cellstr[64];
-#endif
     afs_int32 gottdir = 0;
     afs_int32 refresh = 0;
 
@@ -201,11 +193,6 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
     initialize_ACFG_error_table();
     initialize_KTC_error_table();
 
-#if defined(UKERNEL)
-    if (!cell) {
-        cell = afs_LclCellName;
-    }
-#else /* defined(UKERNEL) */
     if (!cell) {
         if (!tdir)
             tdir = afsconf_Open(confDir);
@@ -230,7 +217,6 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
         }
         cell = cellstr;
     }
-#endif /* defined(UKERNEL) */
 
     if (tdir == NULL || strcmp(confDir, tconfDir) || strcmp(cell, tcell)) {
 	/*
@@ -239,9 +225,9 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 	 */
 	if (tdir && !gottdir) {
 	    afsconf_Close(tdir);
-            tdir = (struct afsconf_dir *)NULL;
+            tdir = NULL;
         }
-	pruclient = (struct ubik_client *)NULL;
+	pruclient = NULL;
         refresh = 1;
     }
 
@@ -249,9 +235,6 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 	strncpy(tconfDir, confDir, sizeof(tconfDir));
         strncpy(tcell, cell, sizeof(tcell));
 
-#if defined(UKERNEL)
-	tdir = afs_cdir;
-#else /* defined(UKERNEL) */
         if (!gottdir)
             tdir = afsconf_Open(confDir);
 	if (!tdir) {
@@ -264,7 +247,6 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 			"libprot: No configuration directory specified.\n");
 	    return -1;
 	}
-#endif /* defined(UKERNEL) */
 
 	code = afsconf_GetCellInfo(tdir, cell, "afsprot", &info);
 	if (code) {
@@ -292,13 +274,11 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
      * to force use of the KeyFile.  secLevel == 0 implies -noauth was
      * specified. */
     if (secLevel == 2) {
-	secFlags = AFSCONF_SECOPTS_LOCALAUTH;
-	secFlags |= AFSCONF_SECOPTS_ALWAYSENCRYPT;
-	code = afsconf_PickClientSecObj(tdir, secFlags, &info, cell, &sc, &scIndex, NULL);
-	if (code) {
-	    afs_com_err(whoami, code, "(getting key from local KeyFile)\n");
-        }
-
+	/* If secLevel is two assume we're on a file server and use
+	 * ClientAuthSecure if possible. */
+	code = afsconf_ClientAuthSecure(tdir, &sc, &scIndex);
+	if (code)
+	    afs_com_err(whoami, code, "(calling client secure)\n");
     } else if (secLevel > 0) {
 	secFlags = 0;
 	if (secLevel > 1)
@@ -352,31 +332,53 @@ pr_End(void)
     return code;
 }
 
-
-
-int
-pr_CreateUser(char name[PR_MAXNAMELEN], afs_int32 *id)
+/*
+ * Make sure that arg is a proper C string that fits in a prname.
+ * If strnlen(arg, PR_MAXNAMELEN) == PR_MAXNAMELEN, then arg either
+ * doesn't have a terminating NUL or is too long, and we can't tell
+ * which one in the current API.  This code has always assumed that
+ * the names presented to it are valid C strings, but for robustness
+ * we can't depend on the server side guaranteeing that.  Unfortunately,
+ * the wire protocol uses a vector[PR_MAXNAMELEN] of char, so XDR will
+ * not automatically fix up strings generated by the server.
+ *
+ * The inequality is just belt-and-suspenders and should be impossible.
+ */
+static_inline int check_length(prname arg)
 {
-    afs_int32 code;
-
-    stolower(name);
-    if (*id) {
-	code = ubik_PR_INewEntry(pruclient, 0, name, *id, 0);
-	return code;
-    } else {
-	code = ubik_PR_NewEntry(pruclient, 0, name, 0, 0, id);
-	return code;
-    }
-
+    if (strnlen(arg, PR_MAXNAMELEN) >= PR_MAXNAMELEN)
+	return PRNAMETOOLONG;
+    return 0;
 }
 
 int
-pr_CreateGroup(char name[PR_MAXNAMELEN], char owner[PR_MAXNAMELEN], afs_int32 *id)
+pr_CreateUser(prname name, afs_int32 *id)
+{
+    afs_int32 code;
+
+    code = check_length(name);
+    if (code)
+	return code;
+    stolower(name);
+    if (*id) {
+	code = ubik_PR_INewEntry(pruclient, 0, name, *id, 0);
+    } else {
+	code = ubik_PR_NewEntry(pruclient, 0, name, 0, 0, id);
+    }
+    return code;
+}
+
+int
+pr_CreateGroup(prname name, prname owner, afs_int32 *id)
 {
     afs_int32 code;
     afs_int32 oid = 0;
     afs_int32 flags = 0;
 
+    code = check_length(name);
+    if (code)
+	return code;
+    /* pr_SNameToId will check owner's length. */
     stolower(name);
     if (owner) {
 	code = pr_SNameToId(owner, &oid);
@@ -388,20 +390,19 @@ pr_CreateGroup(char name[PR_MAXNAMELEN], char owner[PR_MAXNAMELEN], afs_int32 *i
     flags |= PRGRP;
     if (*id) {
 	code = ubik_PR_INewEntry(pruclient, 0, name, *id, oid);
-	return code;
     } else {
 	code = ubik_PR_NewEntry(pruclient, 0, name, flags, oid, id);
-	return code;
     }
+    return code;
 }
 
 int
-pr_Delete(char *name)
+pr_Delete(prname name)
 {
     afs_int32 code;
     afs_int32 id;
 
-    stolower(name);
+    /* pr_SNameToId both checks the length of name and lowercases it. */
     code = pr_SNameToId(name, &id);
     if (code)
 	return code;
@@ -421,12 +422,18 @@ pr_DeleteByID(afs_int32 id)
 }
 
 int
-pr_AddToGroup(char *user, char *group)
+pr_AddToGroup(prname user, prname group)
 {
     afs_int32 code;
     namelist lnames;
     idlist lids;
 
+    code = check_length(user);
+    if (code)
+	return code;
+    code = check_length(group);
+    if (code)
+	return code;
     lnames.namelist_len = 2;
     lnames.namelist_val = malloc(2 * PR_MAXNAMELEN);
     strncpy(lnames.namelist_val[0], user, PR_MAXNAMELEN);
@@ -437,6 +444,10 @@ pr_AddToGroup(char *user, char *group)
     if (code)
 	goto done;
     /* if here, still could be missing an entry */
+    if (lids.idlist_len != 2) {
+	code = PRINTERNAL;
+	goto done;
+    }
     if (lids.idlist_val[0] == ANONYMOUSID
 	|| lids.idlist_val[1] == ANONYMOUSID) {
 	code = PRNOENT;
@@ -454,12 +465,18 @@ pr_AddToGroup(char *user, char *group)
 }
 
 int
-pr_RemoveUserFromGroup(char *user, char *group)
+pr_RemoveUserFromGroup(prname user, prname group)
 {
     afs_int32 code;
     namelist lnames;
     idlist lids;
 
+    code = check_length(user);
+    if (code)
+	return code;
+    code = check_length(group);
+    if (code)
+	return code;
     lnames.namelist_len = 2;
     lnames.namelist_val = malloc(2 * PR_MAXNAMELEN);
     strncpy(lnames.namelist_val[0], user, PR_MAXNAMELEN);
@@ -470,6 +487,10 @@ pr_RemoveUserFromGroup(char *user, char *group)
     if (code)
 	goto done;
 
+    if (lids.idlist_len != 2) {
+	code = PRINTERNAL;
+	goto done;
+    }
     if (lids.idlist_val[0] == ANONYMOUSID
 	|| lids.idlist_val[1] == ANONYMOUSID) {
 	code = PRNOENT;
@@ -493,19 +514,26 @@ pr_NameToId(namelist *names, idlist *ids)
     afs_int32 code;
     afs_int32 i;
 
-    for (i = 0; i < names->namelist_len; i++)
+    for (i = 0; i < names->namelist_len; i++) {
+	code = check_length(names->namelist_val[i]);
+	if (code)
+	    return code;
 	stolower(names->namelist_val[i]);
+    }
     code = ubik_PR_NameToID(pruclient, 0, names, ids);
     return code;
 }
 
 int
-pr_SNameToId(char name[PR_MAXNAMELEN], afs_int32 *id)
+pr_SNameToId(prname name, afs_int32 *id)
 {
     namelist lnames;
     idlist lids;
     afs_int32 code;
 
+    code = check_length(name);
+    if (code)
+	return code;
     lids.idlist_len = 0;
     lids.idlist_val = 0;
     lnames.namelist_len = 1;
@@ -516,23 +544,45 @@ pr_SNameToId(char name[PR_MAXNAMELEN], afs_int32 *id)
     if (lids.idlist_val) {
 	*id = *lids.idlist_val;
 	xdr_free((xdrproc_t) xdr_idlist, &lids);
+    } else if (code == 0) {
+	code = PRINTERNAL;
     }
     if (lnames.namelist_val)
 	free(lnames.namelist_val);
     return code;
 }
 
+/*
+ * Like ubik_PR_IDToName, but enforces that the output prnames are
+ * interpretable as C strings (i.e., NUL-terminated).
+ */
 int
-pr_IdToName(idlist *ids, namelist *names)
+string_PR_IDToName(struct ubik_client *client, afs_int32 flags,
+		   idlist *ids, namelist *names)
 {
     afs_int32 code;
+    int i;
 
-    code = ubik_PR_IDToName(pruclient, 0, ids, names);
+    code = ubik_PR_IDToName(client, flags, ids, names);
+    if (code)
+	return code;
+    for (i = 0; i < names->namelist_len; i++) {
+	code = check_length(names->namelist_val[i]);
+	if (code)
+	    return code;
+    }
     return code;
 }
 
+
 int
-pr_SIdToName(afs_int32 id, char name[PR_MAXNAMELEN])
+pr_IdToName(idlist *ids, namelist *names)
+{
+    return string_PR_IDToName(pruclient, 0, ids, names);
+}
+
+int
+pr_SIdToName(afs_int32 id, prname name)
 {
     namelist lnames;
     idlist lids;
@@ -543,10 +593,11 @@ pr_SIdToName(afs_int32 id, char name[PR_MAXNAMELEN])
     *lids.idlist_val = id;
     lnames.namelist_len = 0;
     lnames.namelist_val = 0;
-    code = ubik_PR_IDToName(pruclient, 0, &lids, &lnames);
-
+    code = pr_IdToName(&lids, &lnames);
     if (lnames.namelist_val)
 	strncpy(name, lnames.namelist_val[0], PR_MAXNAMELEN);
+    else if (code == 0)
+	code = PRINTERNAL;
 
     if (lids.idlist_val)
 	free(lids.idlist_val);
@@ -615,19 +666,28 @@ pr_GetHostCPS(afs_uint32 host, prlist *CPS)
 }
 
 int
-pr_ListMembers(char *group, namelist *lnames)
+pr_ListMembers(prname group, namelist *lnames)
 {
     afs_int32 code;
     afs_int32 gid;
+    int i;
 
     memset(lnames, 0, sizeof(namelist));
 
+    /* pr_SNameToId checks the length of group. */
     code = pr_SNameToId(group, &gid);
     if (code)
 	return code;
     if (gid == ANONYMOUSID)
 	return PRNOENT;
     code = pr_IDListMembers(gid, lnames);
+    if (code)
+	return code;
+    for (i = 0; i < lnames->namelist_len; i++) {
+	code = check_length(lnames->namelist_val[i]);
+	if (code)
+	    return code;
+    }
     return code;
 }
 
@@ -706,7 +766,7 @@ pr_IDListExpandedMembers(afs_int32 aid, namelist * lnames)
     if (code) {
 	return code;
     }
-    stack = (afs_int32 *) malloc(sizeof(afs_int32) * maxstack);
+    stack = malloc(sizeof(afs_int32) * maxstack);
     if (!stack) {
 	code = ENOMEM;
 	goto done;
@@ -749,9 +809,7 @@ pr_IDListExpandedMembers(afs_int32 aid, namelist * lnames)
 		if (n == maxstack) {	/* need more stack space */
 		    afs_int32 *tmp;
 		    maxstack += n;
-		    tmp =
-			(afs_int32 *) realloc(stack,
-					      maxstack * sizeof(afs_int32));
+		    tmp = realloc(stack, maxstack * sizeof(afs_int32));
 		    if (!tmp) {
 			code = ENOMEM;
 			xdr_free((xdrproc_t) xdr_prlist, &alist);
@@ -768,10 +826,14 @@ pr_IDListExpandedMembers(afs_int32 aid, namelist * lnames)
     code = CreateIdList(members, &lids, (aid < 0 ? PRUSERS : PRGROUPS));
     if (code) {
 	goto done;
+    } else if (lids.idlist_len == 0) {
+	/* Avoid the RPC when there's nothing to look up. */
+	lnames->namelist_len = 0;
+	lnames->namelist_val = NULL;
+	goto done;
     }
     code = pr_IdToName(&lids, lnames);
-    if (lids.idlist_len)
-	free(lids.idlist_val);
+    free(lids.idlist_val);
 
   done:
     if (stack)
@@ -787,13 +849,16 @@ pr_ListEntry(afs_int32 id, struct prcheckentry *aentry)
     afs_int32 code;
 
     code = ubik_PR_ListEntry(pruclient, 0, id, aentry);
-    return code;
+    if (code)
+	return code;
+    return check_length(aentry->name);
 }
 
 afs_int32
 pr_ListEntries(int flag, afs_int32 startindex, afs_int32 *nentries, struct prlistentries **entries, afs_int32 *nextstartindex)
 {
     afs_int32 code;
+    int i;
     prentries bulkentries;
 
     *nentries = 0;
@@ -805,18 +870,33 @@ pr_ListEntries(int flag, afs_int32 startindex, afs_int32 *nentries, struct prlis
     code =
 	ubik_PR_ListEntries(pruclient, 0, flag, startindex,
 		  &bulkentries, nextstartindex);
-    *nentries = bulkentries.prentries_len;
-    *entries = bulkentries.prentries_val;
+    if (code)
+	return code;
+    for (i = 0; i < bulkentries.prentries_len; i++) {
+	/* XXX should we try to return all the other entries? */
+	code = check_length(bulkentries.prentries_val[i].name);
+	if (code)
+	    goto out;
+    }
+
+out:
+    if (code != 0) {
+	xdr_free((xdrproc_t)xdr_prentries, &bulkentries);
+    } else {
+	*nentries = bulkentries.prentries_len;
+	*entries = bulkentries.prentries_val;
+    }
     return code;
 }
 
 int
-pr_CheckEntryByName(char *name, afs_int32 *id, char *owner, char *creator)
+pr_CheckEntryByName(prname name, afs_int32 *id, prname owner, prname creator)
 {
     /* struct prcheckentry returns other things, which aren't useful to show at this time. */
     afs_int32 code;
     struct prcheckentry aentry;
 
+    /* pr_SNameToId will check name's length. */
     code = pr_SNameToId(name, id);
     if (code)
 	return code;
@@ -836,12 +916,13 @@ pr_CheckEntryByName(char *name, afs_int32 *id, char *owner, char *creator)
 }
 
 int
-pr_CheckEntryById(char *name, afs_int32 id, char *owner, char *creator)
+pr_CheckEntryById(prname name, afs_int32 id, prname owner, prname creator)
 {
     /* struct prcheckentry returns other things, which aren't useful to show at this time. */
     afs_int32 code;
     struct prcheckentry aentry;
 
+    /* XXX ListEntry RPC gives us the name back so should avoid extra RPC */
     code = pr_SIdToName(id, name);
     if (code)
 	return code;
@@ -861,12 +942,13 @@ pr_CheckEntryById(char *name, afs_int32 id, char *owner, char *creator)
 }
 
 int
-pr_ChangeEntry(char *oldname, char *newname, afs_int32 *newid, char *newowner)
+pr_ChangeEntry(prname oldname, prname newname, afs_int32 *newid, prname newowner)
 {
     afs_int32 code;
     afs_int32 id;
     afs_int32 oid = 0;
 
+    /* pr_SNameToId takes care of length checks for us. */
     code = pr_SNameToId(oldname, &id);
     if (code)
 	return code;
@@ -887,12 +969,18 @@ pr_ChangeEntry(char *oldname, char *newname, afs_int32 *newid, char *newowner)
 }
 
 int
-pr_IsAMemberOf(char *uname, char *gname, afs_int32 *flag)
+pr_IsAMemberOf(prname uname, prname gname, afs_int32 *flag)
 {
     afs_int32 code;
     namelist lnames;
     idlist lids;
 
+    code = check_length(uname);
+    if (code)
+	return code;
+    code = check_length(gname);
+    if (code)
+	return code;
     stolower(uname);
     stolower(gname);
     lnames.namelist_len = 2;
@@ -907,6 +995,11 @@ pr_IsAMemberOf(char *uname, char *gname, afs_int32 *flag)
 	    free(lnames.namelist_val);
 	xdr_free((xdrproc_t) xdr_idlist, &lids);
 	return code;
+    }
+    if (lids.idlist_len != 2) {
+	free(lnames.namelist_val);
+	xdr_free((xdrproc_t) xdr_idlist, &lids);
+	return PRINTERNAL;
     }
     code =
 	ubik_PR_IsAMemberOf(pruclient, 0, lids.idlist_val[0],

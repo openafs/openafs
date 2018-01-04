@@ -16,27 +16,18 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
 #include <pthread.h>
 #endif
 
-#include <string.h>
-
 #include <rx/rx.h>
 #include <rx/rxstat.h>
-
 #include <afs/afs_Admin.h>
 #include <afs/afs_AdminErrors.h>
 #include <afs/afs_clientAdmin.h>
 #include <afs/afs_utilAdmin.h>
-
-#ifdef AFS_DARWIN_ENV
-pthread_mutex_t des_init_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t des_random_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t rxkad_random_mutex = PTHREAD_MUTEX_INITIALIZER;
-#endif /* AFS_DARWIN_ENV */
 
 #include <afs/afsint.h>
 #define FSINT_COMMON_XG
@@ -52,9 +43,6 @@ pthread_mutex_t rxkad_random_mutex = PTHREAD_MUTEX_INITIALIZER;
 #include <afs/bosint.h>
 #include <ubik.h>
 #include <ubik_int.h>
-#ifndef AFS_NT40_ENV
-#include <arpa/inet.h>		/* for inet_ntoa() */
-#endif
 
 void
 Usage(void)
@@ -227,14 +215,13 @@ main(int argc, char *argv[])
 	    printf("    %s\n", funcList[index]);
 	}
 
-	if (!hiszero(stats.s.stats_v1.invocations)) {
-	    printf("\tinvoc (%u.%u) bytes_sent (%u.%u) bytes_rcvd (%u.%u)\n",
-		   hgethi(stats.s.stats_v1.invocations),
-		   hgetlo(stats.s.stats_v1.invocations),
-		   hgethi(stats.s.stats_v1.bytes_sent),
-		   hgetlo(stats.s.stats_v1.bytes_sent),
-		   hgethi(stats.s.stats_v1.bytes_rcvd),
-		   hgetlo(stats.s.stats_v1.bytes_rcvd));
+	if (stats.s.stats_v1.invocations != 0) {
+	    printf("\tinvoc %"AFS_UINT64_FMT
+		   " bytes_sent %"AFS_UINT64_FMT
+		   " bytes_rcvd %"AFS_UINT64_FMT"\n",
+		   stats.s.stats_v1.invocations,
+		   stats.s.stats_v1.bytes_sent,
+		   stats.s.stats_v1.bytes_rcvd);
 	    printf("\tqsum %d.%06d qsqr %d.%06d"
 		   " qmin %d.%06d qmax %d.%06d\n",
 		   stats.s.stats_v1.queue_time_sum.sec,

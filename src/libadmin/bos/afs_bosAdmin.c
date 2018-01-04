@@ -9,30 +9,21 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
-#include <stdio.h>
 #include <afs/stds.h>
+
+#include <roken.h>
+
 #include <rx/rx.h>
 #include <rx/rxstat.h>
-#include "afs_bosAdmin.h"
-#include "../adminutil/afs_AdminInternal.h"
 #include <afs/afs_AdminErrors.h>
 #include <afs/afs_utilAdmin.h>
 #include <afs/bosint.h>
 #include <afs/bnode.h>
 #include <afs/ktime.h>
 #include <afs/dirpath.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <stdlib.h>
-#ifdef AFS_NT40_ENV
-#include <io.h>
-#else
-#include <unistd.h>
-#endif
-#include <string.h>
+
+#include "afs_bosAdmin.h"
+#include "../adminutil/afs_AdminInternal.h"
 
 typedef struct bos_server {
     int begin_magic;
@@ -170,7 +161,7 @@ bos_ServerOpen(const void *cellHandle, const char *serverName,
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
-    bos_server_p bos_server = (bos_server_p) calloc(1, sizeof(bos_server_t));
+    bos_server_p bos_server = calloc(1, sizeof(bos_server_t));
     int serverAddress;
 
     /*
@@ -599,7 +590,7 @@ bos_ProcessExecutionStateGet(const void *serverHandle,
 static int
 SetExecutionState(const void *serverHandle, const char *processName,
 		  const bos_ProcessExecutionState_t processStatus,
-		  int (*func) (struct rx_connection *, char *,
+		  int (*func) (struct rx_connection *, const char *,
 			       afs_int32), afs_status_p st)
 {
     int rc = 0;
@@ -780,10 +771,8 @@ bos_ProcessNameGetBegin(const void *serverHandle, void **iterationIdP,
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
-    afs_admin_iterator_p iter =
-	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
-    process_name_get_p proc =
-	(process_name_get_p) malloc(sizeof(process_name_get_t));
+    afs_admin_iterator_p iter = malloc(sizeof(afs_admin_iterator_t));
+    process_name_get_p proc = malloc(sizeof(process_name_get_t));
 
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_ProcessNameGetBegin;
@@ -1104,9 +1093,8 @@ bos_ProcessParameterGetBegin(const void *serverHandle,
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
-    afs_admin_iterator_p iter =
-	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
-    param_get_p param = (param_get_p) malloc(sizeof(param_get_t));
+    afs_admin_iterator_p iter = malloc(sizeof(afs_admin_iterator_t));
+    param_get_p param = malloc(sizeof(param_get_t));
 
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_ProcessParameterGetBegin;
@@ -1769,9 +1757,8 @@ bos_AdminGetBegin(const void *serverHandle, void **iterationIdP,
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
-    afs_admin_iterator_p iter =
-	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
-    admin_get_p admin = (admin_get_p) malloc(sizeof(admin_get_t));
+    afs_admin_iterator_p iter = malloc(sizeof(afs_admin_iterator_t));
+    admin_get_p admin = malloc(sizeof(admin_get_t));
 
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_AdminGetBegin;
@@ -2086,9 +2073,8 @@ bos_KeyGetBegin(const void *serverHandle, void **iterationIdP,
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
-    afs_admin_iterator_p iter =
-	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
-    key_get_p key = (key_get_p) malloc(sizeof(key_get_t));
+    afs_admin_iterator_p iter = malloc(sizeof(afs_admin_iterator_t));
+    key_get_p key = malloc(sizeof(key_get_t));
 
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_KeyGetBegin;
@@ -2493,9 +2479,8 @@ bos_HostGetBegin(const void *serverHandle, void **iterationIdP,
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
-    afs_admin_iterator_p iter =
-	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
-    host_get_p host = (host_get_p) malloc(sizeof(host_get_t));
+    afs_admin_iterator_p iter = malloc(sizeof(afs_admin_iterator_t));
+    host_get_p host = malloc(sizeof(host_get_t));
 
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_HostGetBegin;
@@ -2704,7 +2689,7 @@ bos_ExecutableCreate(const void *serverHandle, const char *sourceFile,
 			  (afs_int32) estat.st_mode, estat.st_mtime);
 
     if (tst) {
-	rx_EndCall(tcall, tst);
+	tst = rx_EndCall(tcall, tst);
 	goto fail_bos_ExecutableCreate;
     }
 
@@ -3199,7 +3184,7 @@ bos_LogGet(const void *serverHandle, const char *log,
   fail_bos_LogGet:
 
     if (have_call) {
-	rx_EndCall(tcall, 0);
+	tst = rx_EndCall(tcall, 0);
     }
 
     if (st != NULL) {
@@ -3532,7 +3517,7 @@ bos_Salvage(const void *cellHandle, const void *serverHandle,
 
     if (log != NULL) {
 
-	logData = (char *)malloc(INITIAL_LOG_LEN);
+	logData = malloc(INITIAL_LOG_LEN);
 	if (!logData) {
 	    tst = ADMNOMEM;
 	    goto fail_bos_Salvage;
@@ -3542,7 +3527,7 @@ bos_Salvage(const void *cellHandle, const void *serverHandle,
 	       (serverHandle, AFSDIR_CANONICAL_SERVER_SLVGLOG_FILEPATH,
 		&logLen, logData, &tst)) {
 	    if (logLen > INITIAL_LOG_LEN) {
-		logData = (char *)realloc(logData, (logLen + (logLen / 10)));
+		logData = realloc(logData, (logLen + (logLen / 10)));
 		if (logData == NULL) {
 		    tst = ADMNOMEM;
 		    goto fail_bos_Salvage;

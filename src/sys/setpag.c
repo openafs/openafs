@@ -15,14 +15,15 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <afs/afs_args.h>
-#include <afs/sys_prototypes.h>
-#include <unistd.h>
-#include <stdio.h>
 #if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV)
 # include <sys/syscall.h>
 #endif
+
+#include <afs/afs_args.h>
+#include <afs/sys_prototypes.h>
+
 #include "afssyscalls.h"
 
 #ifdef AFS_AIX32_ENV

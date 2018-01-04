@@ -9,22 +9,15 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
-#include <stdio.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#include <sys/file.h>
-#endif
-#include <sys/types.h>
 #include <afs/stds.h>
+
+#include <roken.h>
+
 #include <afs/bubasics.h>
 #include <afs/afsutil.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
-#include <string.h>
+
 #include "budb.h"
 #include "budb_errs.h"
 #include "database.h"
@@ -101,23 +94,6 @@ printDumpEntry(struct budb_dumpEntry *deptr)
 
     printTapeSet(&deptr->tapes, (deptr->flags & BUDB_DUMP_XBSA_NSS));
     printPrincipal(&deptr->dumper);
-}
-
-/* printHashTable
- *	print the hash table structure, i.e. the header structure.
- */
-
-void
-printHashTable(FILE *fid, struct hashTable *htptr)
-{
-    fprintf(fid, "functionType = %d\n", htptr->functionType);
-    fprintf(fid, "threadOffset = %d\n", htptr->threadOffset);
-    fprintf(fid, "entries = %d\n", htptr->entries);
-    fprintf(fid, "length = %d\n", htptr->length);
-    fprintf(fid, "table = %d\n", htptr->table);
-    fprintf(fid, "progress = %d\n", htptr->progress);
-    fprintf(fid, "oldLength = %d\n", htptr->oldLength);
-    fprintf(fid, "oldTable = %d\n", htptr->oldTable);
 }
 
 /* printMemoryHashTable

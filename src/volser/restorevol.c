@@ -42,28 +42,19 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include <afs/afsint.h>
 #include <afs/nfs.h>
+#include <rx/rx_queue.h>
 #include <lock.h>
 #include <afs/ihandle.h>
 #include <afs/vnode.h>
 #include <afs/volume.h>
-#include "volint.h"
-#include "dump.h"
 #include <afs/cmd.h>
 
-#include <sys/param.h>
-#include <sys/types.h>
-#include <sys/uio.h>
-#include <stdio.h>
-#include <errno.h>
-#include <netinet/in.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <dirent.h>
-#include <string.h>
-
+#include "volint.h"
+#include "dump.h"
 
 char rootdir[MAXPATHLEN];
 char mntroot[MAXPATHLEN];
@@ -86,8 +77,8 @@ readvalue(int size)
     ptr = (char *)&value;
 
     s = sizeof(value) - size;
-    if (size < 0) {
-	fprintf(stderr, "Too much data in afs_int32\n");
+    if (s < 0) {
+	fprintf(stderr, "Too much data for afs_int32\n");
 	return 0;
     }
 
@@ -479,16 +470,16 @@ ReadVNode(afs_int32 count)
 	    if (vnode == 1)
 		strncpy(parentdir, rootdir, sizeof parentdir);
 	    else {
-		afs_snprintf(parentdir, sizeof parentdir, "%s" OS_DIRSEP "%s%d", rootdir,
-			     ADIR, vnode);
+		snprintf(parentdir, sizeof parentdir,
+			 "%s" OS_DIRSEP "%s%d", rootdir, ADIR, vnode);
 
 		len = readlink(parentdir, linkname, MAXNAMELEN);
 		if (len < 0) {
 		    /* parentdir does not exist. So create an orphan dir.
 		     * and then link the parentdir to the orphaned dir.
 		     */
-		    afs_snprintf(linkname, sizeof linkname, "%s" OS_DIRSEP "%s%d",
-				 rootdir, ODIR, vnode);
+		    snprintf(linkname, sizeof linkname, "%s" OS_DIRSEP "%s%d",
+			     rootdir, ODIR, vnode);
 		    code = mkdir(linkname, 0777);
 		    if ((code < 0) && (errno != EEXIST)) {
 			fprintf(stderr,
@@ -497,8 +488,8 @@ ReadVNode(afs_int32 count)
 		    }
 
 		    /* Link the parentdir to it - now parentdir exists */
-		    afs_snprintf(linkname, sizeof linkname, "%s%d/", ODIR,
-				 vnode);
+		    snprintf(linkname, sizeof linkname, "%s%d/", ODIR,
+			     vnode);
 		    code = symlink(linkname, parentdir);
 		    if (code) {
 			fprintf(stderr,
@@ -552,7 +543,7 @@ ReadVNode(afs_int32 count)
 
 
 		buffer = NULL;
-		buffer = (char *)malloc(vn.dataSize);
+		buffer = malloc(vn.dataSize);
 
 		readdata(buffer, vn.dataSize);
 		page0 = (struct Page0 *)buffer;
@@ -580,10 +571,12 @@ ReadVNode(afs_int32 count)
 				/* dirname is the directory to create.
 				 * vflink is what will link to it.
 				 */
-				afs_snprintf(dirname, sizeof dirname, "%s" OS_DIRSEP "%s",
-					     parentdir, this_name);
-			    afs_snprintf(vflink, sizeof vflink, "%s" OS_DIRSEP "%s%d",
-					 rootdir, ADIR, this_vn);
+			    snprintf(dirname, sizeof dirname,
+				     "%s" OS_DIRSEP "%s",
+				     parentdir, this_name);
+			    snprintf(vflink, sizeof vflink,
+				     "%s" OS_DIRSEP "%s%d",
+				     rootdir, ADIR, this_vn);
 
 			    /* The link and directory may already exist */
 			    len = readlink(vflink, linkname, MAXNAMELEN);
@@ -602,8 +595,9 @@ ReadVNode(afs_int32 count)
 				 * It was created originally as orphaned.
 				 */
 				linkname[len - 1] = '\0';	/* remove '/' at end */
-				afs_snprintf(lname, sizeof lname, "%s" OS_DIRSEP "%s",
-					     rootdir, linkname);
+				snprintf(lname, sizeof lname,
+				         "%s" OS_DIRSEP "%s",
+					 rootdir, linkname);
 				code = rename(lname, dirname);
 				if (code) {
 				    fprintf(stderr,
@@ -614,12 +608,11 @@ ReadVNode(afs_int32 count)
 
 			    /* Now create/update the link to the new/moved directory */
 			    if (vn.vnode == 1)
-				afs_snprintf(dirname, sizeof dirname, "%s/",
-					     this_name);
+				snprintf(dirname, sizeof dirname, "%s/",
+					 this_name);
 			    else
-				afs_snprintf(dirname, sizeof dirname,
-					     "%s%d/%s/", ADIR, vn.vnode,
-					     this_name);
+				snprintf(dirname, sizeof dirname, "%s%d/%s/",
+					 ADIR, vn.vnode, this_name);
 			    unlink(vflink);
 			    code = symlink(dirname, vflink);
 			    if (code) {
@@ -633,11 +626,11 @@ ReadVNode(afs_int32 count)
 			     * by creating a link within the directory. Restoring
 			     * the file will later remove the link.
 			     */
-			    else {
-			     /*AFILEENTRY*/ afs_snprintf(vflink,
-							 sizeof vflink,
-							 "%s" OS_DIRSEP "%s%d", parentdir,
-							 AFILE, this_vn);
+			else {
+			     /*AFILEENTRY*/
+			    snprintf(vflink, sizeof vflink,
+				     "%s" OS_DIRSEP "%s%d", parentdir,
+				     AFILE, this_vn);
 
 			    code = symlink(this_name, vflink);
 			    if ((code < 0) && (errno != EEXIST)) {
@@ -666,12 +659,12 @@ ReadVNode(afs_int32 count)
 		 * then the file will be an orphaned file.
 		 */
 		lfile = 1;
-		afs_snprintf(filename, sizeof filename, "%s" OS_DIRSEP "%s%d", parentdir,
-			     AFILE, vn.vnode);
+		snprintf(filename, sizeof filename, "%s" OS_DIRSEP "%s%d",
+			 parentdir, AFILE, vn.vnode);
 		len = readlink(filename, fname, MAXNAMELEN);
 		if (len < 0) {
-		    afs_snprintf(filename, sizeof filename, "%s" OS_DIRSEP "%s%d",
-				 rootdir, OFILE, vn.vnode);
+		    snprintf(filename, sizeof filename, "%s" OS_DIRSEP "%s%d",
+			     rootdir, OFILE, vn.vnode);
 		    lfile = 0;	/* no longer a linked file; a direct path */
 		}
 
@@ -698,11 +691,10 @@ ReadVNode(afs_int32 count)
 				    errno);
 			else {
 			    char tmp[100];
-			    (void)afs_snprintf(tmp, sizeof tmp,
-					       "Read %llu bytes out of %llu",
-					       (afs_uintmax_t) (vn.dataSize -
-								size),
-					       (afs_uintmax_t) vn.dataSize);
+			    snprintf(tmp, sizeof tmp,
+				     "Read %llu bytes out of %llu",
+				     (afs_uintmax_t) (vn.dataSize - size),
+				     (afs_uintmax_t) vn.dataSize);
 			    fprintf(stderr, "%s\n", tmp);
 			}
 			break;
@@ -747,16 +739,16 @@ open_fail:
 		 * of the symbolic link. If it doesn't exist,
 		 * then the link will be an orphaned link.
 		 */
-		afs_snprintf(linkname, sizeof linkname, "%s" OS_DIRSEP "%s%d", parentdir,
-			     AFILE, vn.vnode);
+		snprintf(linkname, sizeof linkname, "%s" OS_DIRSEP "%s%d",
+			 parentdir, AFILE, vn.vnode);
 		len = readlink(linkname, fname, MAXNAMELEN - 1);
 		if (len < 0) {
-		    afs_snprintf(filename, sizeof filename, "%s" OS_DIRSEP "%s%d",
-				 rootdir, OFILE, vn.vnode);
+		    snprintf(filename, sizeof filename, "%s" OS_DIRSEP "%s%d",
+			     rootdir, OFILE, vn.vnode);
 		} else {
 		    fname[len] = '\0';
-		    afs_snprintf(filename, sizeof filename, "%s" OS_DIRSEP "%s",
-				 parentdir, fname);
+		    snprintf(filename, sizeof filename, "%s" OS_DIRSEP "%s",
+			     parentdir, fname);
 		}
 
 		/* Read the link in, delete it, and then create it */
@@ -943,20 +935,20 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	dirP = opendir(rootdir);
 	while (dirP && (dirE = readdir(dirP))) {
 	    if (strncmp(dirE->d_name, ADIR, strlen(ADIR)) == 0) {
-		afs_snprintf(name, sizeof name, "%s" OS_DIRSEP "%s", rootdir,
-			     dirE->d_name);
+		snprintf(name, sizeof name, "%s" OS_DIRSEP "%s", rootdir,
+			 dirE->d_name);
 		dirQ = opendir(name);
 		while (dirQ && (dirF = readdir(dirQ))) {
 		    if (strncmp(dirF->d_name, AFILE, strlen(AFILE)) == 0) {
-			afs_snprintf(name, sizeof name, "%s" OS_DIRSEP "%s/%s", rootdir,
-				     dirE->d_name, dirF->d_name);
+			snprintf(name, sizeof name, "%s" OS_DIRSEP "%s/%s",
+				 rootdir, dirE->d_name, dirF->d_name);
 			unlink(name);
 		    }
 		}
 		closedir(dirQ);
 	    } else if (strncmp(dirE->d_name, AFILE, strlen(AFILE)) == 0) {
-		afs_snprintf(name, sizeof name, "%s" OS_DIRSEP "%s", rootdir,
-			     dirE->d_name);
+		snprintf(name, sizeof name, "%s" OS_DIRSEP "%s", rootdir,
+			 dirE->d_name);
 		unlink(name);
 	    }
 	}
@@ -967,7 +959,8 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     dirP = opendir(rootdir);
     while (dirP && (dirE = readdir(dirP))) {
 	if (strncmp(dirE->d_name, ADIR, strlen(ADIR)) == 0) {
-	    afs_snprintf(name, sizeof name, "%s" OS_DIRSEP "%s", rootdir, dirE->d_name);
+	    snprintf(name, sizeof name, "%s" OS_DIRSEP "%s", rootdir,
+		     dirE->d_name);
 	    unlink(name);
 	}
     }
@@ -983,7 +976,7 @@ main(int argc, char **argv)
 
     setlinebuf(stdout);
 
-    ts = cmd_CreateSyntax(NULL, WorkerBee, NULL, "vldb check");
+    ts = cmd_CreateSyntax(NULL, WorkerBee, NULL, 0, "vldb check");
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_OPTIONAL, "dump file");
     cmd_AddParm(ts, "-dir", CMD_SINGLE, CMD_OPTIONAL, "restore dir");
     cmd_AddParm(ts, "-extension", CMD_SINGLE, CMD_OPTIONAL, "name extension");

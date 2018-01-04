@@ -33,9 +33,9 @@ database server machine as the local superuser C<root>.
 =head1 EXAMPLES
 
 The following B<bos create> command creates a C<davolserver> process on the
-machine C<fs2.abc.com> as part of the dafs process:
+machine C<fs2.example.com> as part of the dafs process:
 
-   % bos create -server fs2.abc.com -instance dafs -type dafs \
+   % bos create -server fs2.example.com -instance dafs -type dafs \
                 -cmd "/usr/afs/bin/dafileserver" \
                 /usr/afs/bin/davolserver \
                 /usr/afs/bin/salvageserver \

@@ -14,16 +14,13 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include "gtxtextobj.h"		/*Interface for this module */
 #include "gtxwindows.h"		/*Gator window interface */
 #include "gtxcurseswin.h"	/*Gator curses window interface */
 #include "gtxdumbwin.h"		/*Gator dumb terminal window interface */
 #include "gtxX11win.h"		/*Gator X11 window interface */
-#include <stdio.h>		/*Standard I/O stuff */
-#include <errno.h>
-#include <string.h>
-#include <stdlib.h>
 
 /*Externally-advertised array of text onode operations*/
 struct onodeops gator_text_ops = {
@@ -87,7 +84,7 @@ gator_text_create(struct onode *text_onp, struct onode_createparams *params)
 	fprintf(stderr,
 		"[%s:%s] Allocating %" AFS_SIZET_FMT " bytes for text object private data region\n",
 		mn, rn, sizeof(struct gator_textobj));
-    text_data = (struct gator_textobj *)malloc(sizeof(struct gator_textobj));
+    text_data = malloc(sizeof(struct gator_textobj));
     if (text_data == (struct gator_textobj *)0) {
 	fprintf(stderr,
 		"[%s:%s] Can't allocate %" AFS_SIZET_FMT " bytes for text object private data region, errno is %d\n",

@@ -9,23 +9,12 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
-#include <string.h>
-#include <stdio.h>
+
+#include <roken.h>
+
 #include "ptserver.h"
-
 #include "display.h"
-
-# include <time.h>
-
 
 static char *
 pr_TimeToString(time_t clock)

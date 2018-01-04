@@ -7,15 +7,9 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
-
+include @TOP_OBJDIR@/src/config/Makefile.lwp
 
 INCDIRS=-I. -I.. -I${TOP_INCDIR} ${FSINCLUDES}
-INSTALL = ${SRCDIR}/bin/install
-LDFLAGS = ${OPTMZ} ${PROF} ${LDIRS} ${XLDFLAGS} ${ARCHFLAGS}
 
 LIBS=${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/vlib.a \
 	${TOP_LIBDIR}/util.a \
@@ -24,7 +18,7 @@ LIBS=${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/vlib.a \
 
 NAMEI_LIBS=../vlib.a ${TOP_LIBDIR}/util.a ${TOP_LIBDIR}/liblwp.a
 
-CFLAGS = -D${SYS_NAME} ${OPTMZ} ${INCDIRS} ${XCFLAGS} ${ARCHFLAGS} -g
+MODULE_CFLAGS = -D${SYS_NAME} -g
 
 PROGS = listVicepx
 
@@ -35,47 +29,39 @@ OBJECTS=listVicepx.o utilities.o  updateDirInode.o
 
 all: listVicepx updateDirInode testpart
 
-install:   
+install:
 
 ${OBJECTS}: ${PUBLICHEADERS} ${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/lock.h ${TOP_INCDIR}/afs/afsint.h ../filesignal.h ../vutils.h ../vldb.h ../salvage.h ../volinodes.h ../qiin.h
 
-listVicepx.o:	listVicepx.c  utilities.c
-		${CC} ${CFLAGS} -c listVicepx.c
-		${CC} ${CFLAGS} -c utilities.c
-
-testpart:	testpart.c ../vlib.a
-		${CC} ${CFLAGS} ${LDFLAGS} -o $@ testpart.c \
-		${TOP_LIBDIR}/vlib.a ${TOP_LIBDIR}/liblwp.a \
+testpart: testpart.c ../vlib.a
+	$(AFS_LDRULE) testpart.c ${TOP_LIBDIR}/vlib.a ${TOP_LIBDIR}/liblwp.a \
 		${TOP_LIBDIR}/util.a ${XLIBS}
-		
 
-listVicepx:	listVicepx.o utilities.o 
-		${CC} ${LDFLAGS} -o listVicepx listVicepx.o utilities.o ${LIBS} 
 
-updateDirInode.o:	updateDirInode.c  
-		${CC} ${CFLAGS} -c updateDirInode.c
+listVicepx: listVicepx.o utilities.o
+	$(AFS_LDRULE) listVicepx.o utilities.o ${LIBS}
 
-updateDirInode:	updateDirInode.o 
-		${CC} ${LDFLAGS} -o updateDirInode updateDirInode.o ${LIBS} 
+updateDirInode:	updateDirInode.o
+	$(AFS_LDRULE) updateDirInode.o ${LIBS}
 
 
 NAMEI_PROGS = nicreate nincdec nino nilist
 namei: ${NAMEI_PROGS}
 
 nicreate: nicreate.o nsubr.o
-	${CC} ${CFLAGS} -o nicreate nicreate.o nsubr.o ${NAMEI_LIBS}
+	$(AFS_LDRULE) nicreate.o nsubr.o ${NAMEI_LIBS}
 
 nincdec: nincdec.o nsubr.o
-	${CC} ${CFLAGS} -o nincdec nincdec.o nsubr.o ${NAMEI_LIBS}
+	$(AFS_LDRULE) nincdec.o nsubr.o ${NAMEI_LIBS}
 
 nilist: nilist.o nsubr.o
-	${CC} ${CFLAGS} -o nilist nilist.o nsubr.o ${NAMEI_LIBS}
+	$(AFS_LDRULE) nilist.o nsubr.o ${NAMEI_LIBS}
 
 nino: nino.o
-	${CC} ${CFLAGS} -o nino nino.o ${TOP_LIBDIR}/util.a
+	$(AFS_LDRULE) nino.o ${TOP_LIBDIR}/util.a
 
 clean:
-	$(RM) -f *.o *.a 
+	$(RM) -f *.o *.a
 	$(RM) -f ${SCMPROGS} ${STAGEPROGS} core listVicepx updateDirInode
-dest:   
+dest:
 

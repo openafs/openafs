@@ -109,7 +109,7 @@
 
 
 int cache_bypass_strategy   = 	NEVER_BYPASS_CACHE;
-int cache_bypass_threshold  =  	AFS_CACHE_BYPASS_DISABLED; /* file size > threshold triggers bypass */
+afs_size_t cache_bypass_threshold  =  	AFS_CACHE_BYPASS_DISABLED; /* file size > threshold triggers bypass */
 int cache_bypass_prefetch = 1;	/* Should we do prefetching ? */
 
 extern afs_rwlock_t afs_xcbhash;
@@ -139,11 +139,7 @@ afs_TransitionToBypass(struct vcache *avc,
     if (aflags & TRANSSetManualBit)
 	setManual = 1;
 
-#ifdef AFS_BOZONLOCK_ENV
-    afs_BozonLock(&avc->pvnLock, avc);	/* Since afs_TryToSmush will do a pvn_vptrunc */
-#else
     AFS_GLOCK();
-#endif
 
     ObtainWriteLock(&avc->lock, 925);
     /*
@@ -170,16 +166,11 @@ afs_TransitionToBypass(struct vcache *avc,
 	}
     }
 
-#if 0
     /* also cg2v, don't dequeue the callback */
-    ObtainWriteLock(&afs_xcbhash, 956);
-    afs_DequeueCallback(avc);
-    ReleaseWriteLock(&afs_xcbhash);
-#endif
-    avc->f.states &= ~(CStatd | CDirty);      /* next reference will re-stat */
+    /* next reference will re-stat */
+    afs_StaleVCacheFlags(avc, AFS_STALEVC_NOCB, CDirty);
     /* now find the disk cache entries */
     afs_TryToSmush(avc, acred, 1);
-    osi_dnlc_purgedp(avc);
     if (avc->linkData && !(avc->f.states & CCore)) {
 	afs_osi_Free(avc->linkData, strlen(avc->linkData) + 1);
 	avc->linkData = NULL;
@@ -194,11 +185,7 @@ afs_TransitionToBypass(struct vcache *avc,
 
 done:
     ReleaseWriteLock(&avc->lock);
-#ifdef AFS_BOZONLOCK_ENV
-    afs_BozonUnlock(&avc->pvnLock, avc);
-#else
     AFS_GUNLOCK();
-#endif
 }
 
 /*
@@ -224,11 +211,7 @@ afs_TransitionToCaching(struct vcache *avc,
     if (aflags & TRANSSetManualBit)
 	setManual = 1;
 
-#ifdef AFS_BOZONLOCK_ENV
-    afs_BozonLock(&avc->pvnLock, avc);	/* Since afs_TryToSmush will do a pvn_vptrunc */
-#else
     AFS_GLOCK();
-#endif
     ObtainWriteLock(&avc->lock, 926);
     /*
      * Someone may have beat us to doing the transition - we had no lock
@@ -238,13 +221,11 @@ afs_TransitionToCaching(struct vcache *avc,
 	goto done;
 
     /* Ok, we actually do need to flush */
-    ObtainWriteLock(&afs_xcbhash, 957);
-    afs_DequeueCallback(avc);
-    avc->f.states &= ~(CStatd | CDirty);	/* next reference will re-stat cache entry */
-    ReleaseWriteLock(&afs_xcbhash);
+    /* next reference will re-stat cache entry */
+    afs_StaleVCacheFlags(avc, 0, CDirty);
+
     /* now find the disk cache entries */
     afs_TryToSmush(avc, acred, 1);
-    osi_dnlc_purgedp(avc);
     if (avc->linkData && !(avc->f.states & CCore)) {
 	afs_osi_Free(avc->linkData, strlen(avc->linkData) + 1);
 	avc->linkData = NULL;
@@ -259,11 +240,7 @@ afs_TransitionToCaching(struct vcache *avc,
 
 done:
     ReleaseWriteLock(&avc->lock);
-#ifdef AFS_BOZONLOCK_ENV
-    afs_BozonUnlock(&avc->pvnLock, avc);
-#else
     AFS_GUNLOCK();
-#endif
 }
 
 /* In the case where there's an error in afs_NoCacheFetchProc or
@@ -437,6 +414,7 @@ afs_NoCacheFetchProc(struct rx_call *acall,
 			goto done;
 		    }
 		    size -= bytes;
+		    auio->uio_resid -= bytes;
 		    iovno = 0;
 		}
 		pp = (bypass_page_t)auio->uio_iov[curpage].iov_base;
@@ -485,7 +463,7 @@ afs_ReadNoCache(struct vcache *avc,
     struct brequest *breq;
     struct vrequest *areq = NULL;
 
-    if (avc && avc->vc_error) {
+    if (avc->vc_error) {
 	code = EIO;
 	afs_warn("afs_ReadNoCache VCache Error!\n");
 	goto cleanup;
@@ -581,11 +559,11 @@ afs_PrefetchNoCache(struct vcache *avc,
     iovecp = auio->uio_iov;
 #endif
 
-    tcallspec = (struct tlocal1 *) osi_Alloc(sizeof(struct tlocal1));
+    tcallspec = osi_Alloc(sizeof(struct tlocal1));
     do {
-      tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK /* ignored */, &rxconn);
+	tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK /* ignored */, &rxconn);
 	if (tc) {
-	    avc->callback = tc->srvr->server;
+	    avc->callback = tc->parent->srvr->server;
 	    tcall = rx_NewCall(rxconn);
 #ifdef AFS_64BIT_CLIENT
 	    if (!afs_serverHasNo64Bit(tc)) {
@@ -601,9 +579,8 @@ afs_PrefetchNoCache(struct vcache *avc,
 
 		    if (bytes != sizeof(afs_int32)) {
 			length_hi = 0;
-			code = rx_Error(tcall);
 			COND_GUNLOCK(locked);
-			code = rx_EndCall(tcall, code);
+			code = rx_EndCall(tcall, RX_PROTOCOL_ERROR);
 			COND_RE_GLOCK(locked);
 			tcall = NULL;
 		    }

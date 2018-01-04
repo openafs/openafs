@@ -10,15 +10,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <errno.h>
-#include <sys/types.h>
-#include <sys/file.h>
-#include <sys/stat.h>
 #include <afs/com_err.h>
-#include <stdio.h>
-#include <sys/ioctl.h>
-#include <netinet/in.h>
 #include <lwp.h>
 #include <afs/butm.h>
 #include "AFS_component_version_number.c"

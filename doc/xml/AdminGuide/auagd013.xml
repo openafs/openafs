@@ -2,6 +2,7 @@
 <chapter id="HDRWQ323">
   <title>Monitoring and Auditing AFS Performance</title>
 
+  <para>
   <indexterm>
     <primary>scout program</primary>
   </indexterm>
@@ -48,7 +49,7 @@
     <secondary>monitoring activity</secondary>
   </indexterm>
 
-  <para>AFS comes with three main monitoring tools: <itemizedlist>
+  AFS comes with three main monitoring tools: <itemizedlist>
       <listitem>
         <para>The <emphasis role="bold">scout</emphasis> program, which monitors and gathers statistics on File Server
         performance.</para>
@@ -261,7 +262,7 @@
 
       <para>As previously mentioned, the <emphasis role="bold">scout</emphasis> program can monitor the File Server process on any
       number of file server machines. If all of the machines belong to the same cell, then their hostnames probably all have the
-      same domain name suffix, such as <emphasis role="bold">abc.com</emphasis> in the ABC Corporation cell. In this case, you can
+      same domain name suffix, such as <emphasis role="bold">example.com</emphasis> in the Example Corporation cell. In this case, you can
       use the <emphasis role="bold">-basename</emphasis> argument to the <emphasis role="bold">scout</emphasis> command, which has
       several advantages: <itemizedlist>
           <listitem>
@@ -328,11 +329,11 @@
               machines but displaying the results on a single machine.</para>
 
               <para>For example, the following banner line appears when you run the <emphasis role="bold">scout</emphasis> program
-              on the machine <emphasis role="bold">client1.abc.com</emphasis> and use the<emphasis role="bold">-host</emphasis>
+              on the machine <emphasis role="bold">client1.example.com</emphasis> and use the<emphasis role="bold">-host</emphasis>
               flag:</para>
 
               <programlisting>
-   [client1.abc.com] scout
+   [client1.example.com] scout
 </programlisting>
             </listitem>
 
@@ -341,11 +342,11 @@
               banner line. For further discussion, see <link linkend="HDRWQ328">Using the -basename argument to Specify a Domain
               Name</link>.</para>
 
-              <para>For example, if you specify a value of <emphasis role="bold">abc.com</emphasis> for the <emphasis
+              <para>For example, if you specify a value of <emphasis role="bold">example.com</emphasis> for the <emphasis
               role="bold">-basename</emphasis> argument, the banner line reads:</para>
 
               <programlisting>
-   scout for abc.com
+   scout for example.com
 </programlisting>
             </listitem>
           </itemizedlist></para>
@@ -732,8 +733,8 @@
                   linkend="HDRWQ328">Using the -basename argument to Specify a Domain Name</link>.</para>
 
                   <para>Do not include the period that separates the domain suffix from the initial part of the machine name, but do
-                  include any periods that occur within the suffix itself. (For example, in the ABC Corporation cell, the proper
-                  value is <emphasis role="bold">abc.com</emphasis>, not <emphasis role="bold">.abc.com</emphasis>.)</para>
+                  include any periods that occur within the suffix itself. (For example, in the Example Corporation cell, the proper
+                  value is <emphasis role="bold">example.com</emphasis>, not <emphasis role="bold">.example.com</emphasis>.)</para>
                 </listitem>
               </varlistentry>
 
@@ -905,7 +906,7 @@
       <para>This section presents examples of the <emphasis role="bold">scout</emphasis> program, combining different arguments and
       illustrating the screen displays that result.</para>
 
-      <para>In the first example, an administrator in the ABC Corporation issues the <emphasis role="bold">scout</emphasis> command
+      <para>In the first example, an administrator in the Example Corporation issues the <emphasis role="bold">scout</emphasis> command
       without providing any optional arguments or flags. She includes the <emphasis role="bold">-server</emphasis> argument because
       she is providing multiple machine names. She chooses to specify on the initial part of each machine's name even though she has
       not used the <emphasis role="bold">-basename</emphasis> argument, relying on the cell's name service to obtain the
@@ -948,7 +949,7 @@
       arguments. <itemizedlist>
           <listitem>
             <para>She provides the machine names in the same form as in Example 1, but this time she also uses the <emphasis
-            role="bold">-basename</emphasis> argument to specify their domain name suffix, <emphasis role="bold">abc.com</emphasis>.
+            role="bold">-basename</emphasis> argument to specify their domain name suffix, <emphasis role="bold">example.com</emphasis>.
             This implies that the <emphasis role="bold">scout</emphasis> program does not need the name service to expand the names
             to fully-qualified hostnames, but the name service still converts the hostnames to IP addresses.</para>
           </listitem>
@@ -970,13 +971,13 @@
         </itemizedlist></para>
 
       <programlisting>
-   % <emphasis role="bold">scout -server fs1 fs2 -basename abc.com -host -frequency 5 -attention disk 5000</emphasis> 
+   % <emphasis role="bold">scout -server fs1 fs2 -basename example.com -host -frequency 5 -attention disk 5000</emphasis> 
 </programlisting>
 
       <para>The use of optional arguments results in several differences between <link linkend="FIGWQ338">Figure 3</link> and <link
       linkend="FIGWQ337">Figure 2</link>. First, because the <emphasis role="bold">-host</emphasis> flag is included, the banner
       line displays the name of the machine running the <emphasis role="bold">scout</emphasis> process as
-      <computeroutput>[client52]</computeroutput> along with the basename <computeroutput>abc.com</computeroutput> specified with
+      <computeroutput>[client52]</computeroutput> along with the basename <computeroutput>example.com</computeroutput> specified with
       the <emphasis role="bold">-basename</emphasis> argument.</para>
 
       <para>Another difference is that two rather than four of machine <emphasis role="bold">fs2</emphasis>'s partitions appear in
@@ -2248,9 +2249,9 @@
 
       <para>The following graphic is an example <computeroutput>System Overview</computeroutput> screen. The <emphasis
       role="bold">afsmonitor</emphasis> program is monitoring six File Servers and seven Cache Managers. The File Server process on
-      host <emphasis role="bold">fs1.abc.com</emphasis> and the Cache Manager on host <emphasis role="bold">cli33.abc.com</emphasis>
+      host <emphasis role="bold">fs1.example.com</emphasis> and the Cache Manager on host <emphasis role="bold">cli33.example.com</emphasis>
       are each marked <computeroutput>[ 1]</computeroutput> to indicate that one threshold value is exceeded. The
-      <computeroutput>[PF]</computeroutput> marker on host <emphasis role="bold">fs6.abc.com</emphasis> indicates that its File
+      <computeroutput>[PF]</computeroutput> marker on host <emphasis role="bold">fs6.example.com</emphasis> indicates that its File
       Server process did not respond to the last probe.</para>
 
       <figure id="Figure_6" label="6">

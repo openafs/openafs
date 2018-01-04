@@ -8,7 +8,8 @@ kdb - Displays log or privileged actions performed by the Authentication Server
 <div class="synopsis">
 
 B<kdb> S<<< [B<-dbmfile> <I<dbmfile to use (default /usr/afs/logs/AuthLog)>>] >>>
-    S<<< [B<-key> <I<extract entries that match specified key>>] >>> [B<-help>]
+    S<<< [B<-key> <I<extract entries that match specified key>>] >>>
+    [B<-long>] [B<-numeric>] [B<-help>]
 
 =for html
 </div>
@@ -50,6 +51,15 @@ F<AuthLog.dir> and F<AuthLog.pag> files in the F</usr/afs/logs> directory.
 =item B<-key> <I<extract entries that match specified key>>
 
 Specifies each entry to be displayed from the indicated file.
+
+=item B<-long>
+
+When printing all entries, print out detailed information for each entry.
+
+=item B<-numeric>
+
+Do not resolve IP addresses to hostnames, and instead print out numeric IP
+addresses.
 
 =item B<-help>
 
@@ -119,12 +129,12 @@ The final line of output sums the number of entries.
 
 =head1 EXAMPLES
 
-The following example shows the output of the B<kdb> command in the ABC
-Corporation cell (C<abc.com>):
+The following example shows the output of the B<kdb> command in the Example
+Corporation cell (C<example.com>):
 
    % kdb
    Printing all entries found in /usr/afs/logs/AuthLog
-   admin,krbtgt.ABC.COM:auth
+   admin,krbtgt.EXAMPLE.COM:auth
    admin,afs:gtck
    admin:cruser
    admin:delu

@@ -10,19 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/file.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <sys/time.h>
-#include <netdb.h>
-#endif
-#include <stdlib.h>
-#include <string.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <lwp.h>
@@ -30,8 +19,8 @@
 #include <afs/tcdata.h>
 #include <afs/bubasics.h>
 #include <afs/budb_client.h>
+#include <afs/afsint.h>
 #include <afs/vldbint.h>
-
 #include <afs/vlserver.h>
 #include <afs/volser.h>
 #include <afs/volint.h>
@@ -39,7 +28,6 @@
 #include <afs/bucoord_prototypes.h>
 
 #include "butc_internal.h"
-
 #include "error_macros.h"
 
 dlqlinkT savedEntries;
@@ -55,8 +43,8 @@ threadEntryDir(void *anEntry, afs_int32 size, afs_int32 type)
     int tried;
 
     for (tried = 0; tried < 5; tried++) {
-	entryPtr = (dlqlinkP) malloc(sizeof(dlqlinkT));
-	entry = (char *)malloc(size);
+	entryPtr = malloc(sizeof(dlqlinkT));
+	entry = malloc(size);
 	if (entryPtr && entry)
 	    break;
 
@@ -99,7 +87,7 @@ threadEntry(void *anEntry, afs_int32 size, afs_int32 type)
 
     for (tried = 0; tried < 5; tried++) {
 	entryPtr = (dlqlinkP) malloc(sizeof(dlqlinkT));
-	entry = (char *)malloc(size);
+	entry = malloc(size);
 	if (entryPtr && entry)
 	    break;
 
@@ -340,6 +328,7 @@ dbWatcher(void *unused)
     afs_int32 code = 0;
     int i, c, addedDump;
 
+    afs_pthread_setname_self("dbWatcher");
     dlqInit(&entries_to_flush);
     dlqInit(&savedEntries);
 
@@ -485,10 +474,6 @@ dbWatcher(void *unused)
 		    free(entryPtr->dlq_structPtr);
 		free(entryPtr);
 	    }
-	    entryPtr = (dlqlinkP) 0;
-	    dumpPtr = (budb_dumpEntry *) 0;
-	    volPtr = (budb_volumeEntry *) 0;
-	    tapePtr = (budb_tapeEntry *) 0;
 	}			/*while */
 
 	dbWatcherinprogress = 0;

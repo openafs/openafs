@@ -31,6 +31,12 @@ $(INCFILEDIR)\afsconfig.h: afsconfig-windows.h
 	$(COPY) $? $@
 
 idirs: doclink
+!	IF (!EXIST($(SRC)\WINNT\afsrdr\build))
+		$(MKDIR) $(SRC)\WINNT\afsrdr\build
+!	ENDIF
+!	IF (!EXIST($(SRC)\WINNT\afsrdr\build\$(CPU)))
+		$(MKDIR) $(SRC)\WINNT\afsrdr\build\$(CPU)
+!	ENDIF
 !	IF (!EXIST($(OJT)))
 		$(MKDIR) $(OJT)
 !	ENDIF
@@ -82,11 +88,14 @@ idirs: doclink
 !	IF (!EXIST($(OJT)\config))
 		$(MKDIR) $(OJT)\config
 !	ENDIF
-!	IF (!EXIST($(OJT)\des))
-		$(MKDIR) $(OJT)\des
+!	IF (!EXIST($(OJT)\crypto))
+		$(MKDIR) $(OJT)\crypto
 !	ENDIF
-!	IF (!EXIST($(OJT)\des\test))
-		$(MKDIR) $(OJT)\des\test
+!	IF (!EXIST($(OJT)\crypto\hcrypto))
+		$(MKDIR) $(OJT)\crypto\hcrypto
+!	ENDIF
+!	IF (!EXIST($(OJT)\crypto\rfc3961))
+		$(MKDIR) $(OJT)\crypto\rfc3961
 !	ENDIF
 !	IF (!EXIST($(OJT)\dir))
 		$(MKDIR) $(OJT)\dir
@@ -108,6 +117,12 @@ idirs: doclink
 !	ENDIF
 !	IF (!EXIST($(OJT)\libacl))
 		$(MKDIR) $(OJT)\libacl
+!	ENDIF
+!	IF (!EXIST($(OJT)\opr))
+		$(MKDIR) $(OJT)\opr
+!	ENDIF
+!	IF (!EXIST($(OJT)\roken))
+		$(MKDIR) $(OJT)\roken
 !	ENDIF
 !	IF (!EXIST($(OJT)\tests))
 		$(MKDIR) $(OJT)\tests
@@ -147,6 +162,9 @@ idirs: doclink
 !	ENDIF
 !	IF (!EXIST($(OJT)\libafsauthent))
 		$(MKDIR) $(OJT)\libafsauthent
+!	ENDIF
+!	IF (!EXIST($(OJT)\libafscp))
+		$(MKDIR) $(OJT)\libafscp
 !	ENDIF
 !	IF (!EXIST($(OJT)\libafsrpc))
 		$(MKDIR) $(OJT)\libafsrpc
@@ -199,11 +217,14 @@ idirs: doclink
 !	IF (!EXIST($(OJT)\tbutc))
 		$(MKDIR) $(OJT)\tbutc
 !	ENDIF
-!	IF (!EXIST($(OJT)\tviced))
-		$(MKDIR) $(OJT)\tviced
-!	ENDIF
 !	IF (!EXIST($(OJT)\tvolser))
 		$(MKDIR) $(OJT)\tvolser
+!	ENDIF
+!	IF (!EXIST($(OJT)\tools))
+		$(MKDIR) $(OJT)\tools
+!	ENDIF
+!	IF (!EXIST($(OJT)\tools\rxperf))
+		$(MKDIR) $(OJT)\tools\rxperf
 !	ENDIF
 !	IF (!EXIST($(OJT)\dviced))
 		$(MKDIR) $(OJT)\dviced
@@ -277,6 +298,24 @@ idirs: doclink
 !	IF (!EXIST($(OJT)\WINNT\afslegal\lang))
 		$(MKDIR) $(OJT)\WINNT\afslegal\lang
 !	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsrdr))
+		$(MKDIR) $(OJT)\WINNT\afsrdr
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsrdr\tools))
+		$(MKDIR) $(OJT)\WINNT\afsrdr\tools
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsrdr\tools\authgroup))
+		$(MKDIR) $(OJT)\WINNT\afsrdr\tools\authgroup
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsrdr\tools\gettrace))
+		$(MKDIR) $(OJT)\WINNT\afsrdr\tools\gettrace
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsrdr\tools\settrace))
+		$(MKDIR) $(OJT)\WINNT\afsrdr\tools\settrace
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsrdr\tools\crash))
+		$(MKDIR) $(OJT)\WINNT\afsrdr\tools\crash
+!	ENDIF
 !	IF (!EXIST($(OJT)\WINNT\afsreg))
 		$(MKDIR) $(OJT)\WINNT\afsreg
 !	ENDIF
@@ -321,6 +360,15 @@ idirs: doclink
 !	ENDIF
 !	IF (!EXIST($(OJT)\WINNT\aklog))
 		$(MKDIR) $(OJT)\WINNT\aklog
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsrdr))
+		$(MKDIR) $(OJT)\WINNT\afsrdr
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsrdr\kernel))
+		$(MKDIR) $(OJT)\WINNT\afsrdr\kernel
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsrdr\npdll))
+		$(MKDIR) $(OJT)\WINNT\afsrdr\npdll
 !	ENDIF
 !	IF (!EXIST($(OJT)\WINNT\bosctlsvc))
 		$(MKDIR) $(OJT)\WINNT\bosctlsvc
@@ -418,8 +466,11 @@ idirs: doclink
 !	IF (!EXIST($(DESTDIR)\include\afs))
 		$(MKDIR) $(DESTDIR)\include\afs
 !	ENDIF
-!	IF (!EXIST($(DESTDIR)\include\des))
-		$(MKDIR) $(DESTDIR)\include\des
+!	IF (!EXIST($(DESTDIR)\include\hcrypto))
+		$(MKDIR) $(DESTDIR)\include\hcrypto
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\include\opr))
+		$(MKDIR) $(DESTDIR)\include\opr
 !	ENDIF
 !	IF (!EXIST($(DESTDIR)\include\rx))
 		$(MKDIR) $(DESTDIR)\include\rx
@@ -484,7 +535,7 @@ $(DESTDIR)\bin\NTBUILD.bat:..\NTBUILD.bat
 	$(COPY) $? $@
 	$(UTIL_CR) + $@
 
-$(DESTDIR)\bin\NTLang.bat: NTLang.bat $(DESTDIR)\bin\util_cr.exe 
+$(DESTDIR)\bin\NTLang.bat: NTLang.bat $(DESTDIR)\bin\util_cr.exe
 	$(COPY) NTLang.bat $(DESTDIR)\bin
 	$(UTIL_CR) + $(DESTDIR)\bin\NTLang.bat
 
@@ -501,10 +552,10 @@ doclink:
 	- symlink make $(DESTDIR)\doc doc-pathname
 
 
-version: $(DESTDIR)\bin\mkvers.exe NTMakefile.version 
+version: $(DESTDIR)\bin\mkvers.exe NTMakefile.version
 
 NTMakefile.version: NTMakefile.version-CML NTMakefile.version-NOCML
-	-$(DEL) NTMakefile.version
+	$(DEL) NTMakefile.version
 !	IF (EXIST(..\..\src\CML\state) || EXIST(..\..\..\src\CML\state))
 		$(COPY) NTMakefile.version-CML NTMakefile.version
 !	ELSE

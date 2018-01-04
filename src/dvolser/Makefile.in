@@ -7,37 +7,17 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+
 HELPER_SPLINT=@HELPER_SPLINT@
 
-CC=${MT_CC}
-CFLAGS=${COMMON_CFLAGS} -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG -DFSSYNC_BUILD_CLIENT -DAFS_DEMAND_ATTACH_FS
+MODULE_CFLAGS=-DRXDEBUG -DFSSYNC_BUILD_CLIENT -DAFS_DEMAND_ATTACH_FS
 
-CCRULE=${CC} ${CFLAGS} -c $?
-
-VICED=../viced
-VLSERVER=../vlserver
-LWP=../lwp
-LIBACL=../libacl
-UTIL=../util
-DIR=../dir
-VOL=../vol
-FSINT=../fsint
-VOLSER=../volser
-RX=../rx
+DIR=$(srcdir)/../dir
+VOL=$(srcdir)/../vol
+VOLSER=$(srcdir)/../volser
 
 VOLSEROBJS=volmain.o volprocs.o physio.o voltrans.o volerr.o volint.cs.o dumpstuff.o  volint.ss.o volint.xdr.o vscommon.o vol_split.o
-
-VLSERVEROBJS=vldbint.cs.o vldbint.xdr.o vl_errors.o
-
-LWPOBJS=lock.o threadname.o
-
-LIBACLOBJS=aclprocs.o netprocs.o
-
-UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o volparse.o flipbase64.o softsig.o
 
 DIROBJS=buffer.o dir.o salvage.o
 
@@ -45,190 +25,131 @@ VOLOBJS= vnode.o volume.o vutil.o partition.o fssync-client.o purge.o \
 	 clone.o devname.o common.o ihandle.o listinodes.o \
 	 namei_ops.o nuke.o salvsync-client.o daemon_com.o
 
-FSINTOBJS=# afsaux.o afscbint.cs.o afsint.ss.o afsint.xdr.o
+objects= ${VOLSEROBJS} ${DIROBJS} ${VOLOBJS}
 
-RXOBJS=rx_pthread.o
+LIBS=	$(top_builddir)/src/cmd/liboafs_cmd.la		\
+	$(top_builddir)/src/libacl/liboafs_acl.la \
+        $(top_builddir)/src/rx/liboafs_rx.la \
+        $(top_builddir)/src/rxstat/liboafs_rxstat.la \
+        $(top_builddir)/src/rxkad/liboafs_rxkad.la \
+        $(top_builddir)/src/lwp/liboafs_lwpcompat.la \
+	$(top_builddir)/src/util/liboafs_util.la	\
+	$(top_builddir)/src/opr/liboafs_opr.la		\
+	$(top_builddir)/src/usd/liboafs_usd.la
 
-objects= ${VOLSEROBJS} ${LWPOBJS} ${LIBACLOBJS} \
-	 ${UTILOBJS} ${DIROBJS} ${VOLOBJS} ${FSINTOBJS} ${RXOBJS}
+all: davolserver
 
-LIBS=	${TOP_LIBDIR}/libcmd.a          \
-	${TOP_LIBDIR}/libafsauthent.a   \
-	${TOP_LIBDIR}/libafsrpc.a       \
-	${TOP_LIBDIR}/libafsutil.a      \
-	${TOP_LIBDIR}/libusd.a
-
-all: davolserver 
-
-COMPILE=${CC} ${CFLAGS} -c $?
-
-rx_pthread.o: ${RX}/rx_pthread.c
-	${COMPILE} -DDPF_FSLOG
 volmain.o: ${VOLSER}/volmain.c
-	${COMPILE} -I../volser
+	$(AFS_CCRULE) -I../volser $(VOLSER)/volmain.c
+
 vol_split.o: ${VOLSER}/vol_split.c
-	${COMPILE} -I../volser
+	$(AFS_CCRULE) -I../volser $(VOLSER)/vol_split.c
+
 volprocs.o: ${VOLSER}/volprocs.c
-	${COMPILE} -I../volser
+	$(AFS_CCRULE) -I../volser $(VOLSER)/volprocs.c
+
 physio.o: ${VOLSER}/physio.c
-	${COMPILE}
+	$(AFS_CCRULE) $(VOLSER)/physio.c
+
 voltrans.o: ${VOLSER}/voltrans.c
-	${COMPILE} -I../volser
-volerr.o: ${VOLSER}/volerr.c
-	${COMPILE}
-volint.cs.o: ${VOLSER}/volint.cs.c
-	${COMPILE}
+	$(AFS_CCRULE) -I../volser $(VOLSER)/voltrans.c
+
+volerr.o: ../volser/volerr.c
+	$(AFS_CCRULE) ../volser/volerr.c
+
+volint.cs.o: ../volser/volint.cs.c
+	$(AFS_CCRULE) ../volser/volint.cs.c
+
 dumpstuff.o: ${VOLSER}/dumpstuff.c
-	${COMPILE} -I../volser
-volint.ss.o: ${VOLSER}/volint.ss.c
-	${COMPILE}
-volint.xdr.o: ${VOLSER}/volint.xdr.c
-	${COMPILE}
+	$(AFS_CCRULE) -I../volser $(VOLSER)/dumpstuff.c
+
+volint.ss.o: ../volser/volint.ss.c
+	$(AFS_CCRULE) ../volser/volint.ss.c
+
+volint.xdr.o: ../volser/volint.xdr.c
+	$(AFS_CCRULE) ../volser/volint.xdr.c
+
 vsprocs.o: ${VOLSER}/vsprocs.c
-	${COMPILE}
+	$(AFS_CCRULE) $(VOLSER)/vsprocs.c
+
 vsutils.o: ${VOLSER}/vsutils.c
-	${COMPILE}
+	$(AFS_CCRULE) $(VOLSER)/vsutils.c
+
 lockprocs.o: ${VOLSER}/lockprocs.c
-	${COMPILE}
-
-assert.o: ${UTIL}/assert.c
-	${COMPILE}
-
-uuid.o: ${UTIL}/uuid.c
-	${COMPILE}
-
-serverLog.o: ${UTIL}/serverLog.c
-	${COMPILE}
-
-fileutil.o: ${UTIL}/fileutil.c
-	${COMPILE}
-
-volparse.o: ${UTIL}/volparse.c
-	${COMPILE}
-
-flipbase64.o: ${UTIL}/flipbase64.c
-	${COMPILE}
-
-netutils.o: ${UTIL}/netutils.c
-	${COMPILE} -I../util
-
-dirpath.o: ${UTIL}/dirpath.c
-	${COMPILE}
-
-softsig.o: ${UTIL}/softsig.c
-	${COMPILE}
-
-lock.o: ${LWP}/lock.c
-	${COMPILE}
-
-threadname.o: ${LWP}/threadname.c
-	${COMPILE}
-
-aclprocs.o: ${LIBACL}/aclprocs.c
-	${COMPILE}
-
-netprocs.o: ${LIBACL}/netprocs.c
-	${COMPILE}
-
-vlserver.h vl_errors.c: ${VLSERVER}/vl_errors.et ${VLSERVER}/vlserver.p.h
-	$(RM) -f vlserver.h vl_errors.c; ${COMPILE_ET} -p ${VLSERVER} vl_errors -h vlserver
-
-vl_errors.o: vl_errors.c
-	${COMPILE}
-
-vldbint.cs.o: ${VLSERVER}/vldbint.cs.c
-	${COMPILE}
-
-vldbint.xdr.o: ${VLSERVER}/vldbint.xdr.c
-	${COMPILE}
+	$(AFS_CCRULE) $(VOLSER)/lockprocs.c
 
 buffer.o: ${DIR}/buffer.c
-	${COMPILE}
+	$(AFS_CCRULE) $(DIR)/buffer.c
 
 dir.o: ${DIR}/dir.c
-	${COMPILE}
+	$(AFS_CCRULE) $(DIR)/dir.c
 
 salvage.o: ${DIR}/salvage.c
-	${COMPILE}
+	$(AFS_CCRULE) $(DIR)/salvage.c
 
 vnode.o: ${VOL}/vnode.c
-	${COMPILE}
+	$(AFS_CCRULE) $(VOL)/vnode.c
 
 volume.o: ${VOL}/volume.c
-	${COMPILE}
+	$(AFS_CCRULE) $(VOL)/volume.c
 
 vutil.o: ${VOL}/vutil.c
-	${COMPILE}
+	$(AFS_CCRULE) $(VOL)/vutil.c
 
 partition.o: ${VOL}/partition.c
-	${COMPILE}
+	$(AFS_CCRULE) $(VOL)/partition.c
 
 nuke.o: ${VOL}/nuke.c
-	${COMPILE}
+	$(AFS_CCRULE) $(VOL)/nuke.c
 
 fssync-client.o: ${VOL}/fssync-client.c
-	${COMPILE}
+	$(AFS_CCRULE) $(VOL)/fssync-client.c
 
 salvsync-client.o: ${VOL}/salvsync-client.c
-	${COMPILE}
+	$(AFS_CCRULE) $(VOL)/salvsync-client.c
 
 daemon_com.o: ${VOL}/daemon_com.c
-	${COMPILE}
+	$(AFS_CCRULE) $(VOL)/daemon_com.c
 
 purge.o: ${VOL}/purge.c
-	${COMPILE}
+	$(AFS_CCRULE) $(VOL)/purge.c
 
 clone.o: ${VOL}/clone.c
-	${COMPILE}
+	$(AFS_CCRULE) $(VOL)/clone.c
 
 devname.o: ${VOL}/devname.c
-	${COMPILE}
+	$(AFS_CCRULE) $(VOL)/devname.c
 
 common.o: ${VOL}/common.c
-	${COMPILE}
+	$(AFS_CCRULE) $(VOL)/common.c
 
 vscommon.o: ${VOLSER}/common.c
-	${COMPILE} -o vscommon.o
+	$(AFS_CCRULE) $(VOLSER)/common.c
 
 listinodes.o: ${VOL}/listinodes.c
-	${COMPILE}
+	$(AFS_CCRULE) $(VOL)/listinodes.c
 
 ihandle.o: ${VOL}/ihandle.c
-	${COMPILE}
+	$(AFS_CCRULE) $(VOL)/ihandle.c
 
 namei_ops.o: ${VOL}/namei_ops.c
-	${COMPILE}
-
-afsaux.o: ${FSINT}/afsaux.c
-	${COMPILE}
-
-afscbint.cs.o: ${FSINT}/afscbint.cs.c
-	${COMPILE}
-
-afscbint.ss.o: ${FSINT}/afscbint.ss.c
-	${COMPILE}
-
-afsint.cs.o: ${FSINT}/afsint.cs.c
-	${COMPILE}
-
-afsint.ss.o: ${FSINT}/afsint.ss.c
-	${COMPILE}
-
-afsint.xdr.o: ${FSINT}/afsint.xdr.c
-	${COMPILE}
+	$(AFS_CCRULE) $(VOL)/namei_ops.c
 
 davolserver: ${objects} ${LIBS}
-	${CC} ${LDFLAGS} -o davolserver ${objects} ${LIBS} ${MT_LIBS} ${XLIBS} ${KRB5_LIBS}
+	$(LT_LDRULE_static) ${objects} ${LIBS} $(LIB_hcrypto) $(LIB_roken) \
+		${MT_LIBS} ${XLIBS}
 
 install: davolserver
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
-	${INSTALL} davolserver ${DESTDIR}${afssrvlibexecdir}/davolserver
+	${LT_INSTALL_PROGRAM} davolserver \
+		${DESTDIR}${afssrvlibexecdir}/davolserver
 
 dest: davolserver
 	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
 	${INSTALL} davolserver ${DEST}/root.server/usr/afs/bin/davolserver
 
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o davolserver core AFS_component_version_number.c
 
 include ../config/Makefile.version

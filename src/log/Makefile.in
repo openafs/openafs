@@ -7,10 +7,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 
 PROGRAMS=	unlog tokens tokens.krb
 
@@ -20,38 +18,51 @@ ${TOP_INCDIR}/afs/cellconfig.h
 
 LIBRARIES=${TOP_LIBDIR}/libauth.a \
 		${TOP_LIBDIR}/librxkad.a \
-		${TOP_LIBDIR}/libdes.a \
 		${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/librx.a \
 		${TOP_LIBDIR}/libsys.a \
 	        ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
-	        ${TOP_LIBDIR}/util.a
+	        ${TOP_LIBDIR}/util.a ${TOP_LIBDIR}/libopr.a \
+		${TOP_LIBDIR}/libafsrfc3961.a \
+		${TOP_LIBDIR}/libafshcrypto_lwp.a
+
 KLIBRARIES=${TOP_LIBDIR}/libauth.krb.a \
 		${TOP_LIBDIR}/librxkad.a \
-		${TOP_LIBDIR}/libdes.a \
 		${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/librx.a \
 		${TOP_LIBDIR}/libsys.a \
 	        ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
-	        ${TOP_LIBDIR}/util.a
+	        ${TOP_LIBDIR}/util.a ${TOP_LIBDIR}/libopr.a \
+		${TOP_LIBDIR}/libafsrfc3961.a \
+		${TOP_LIBDIR}/libafshcrypto_lwp.a
 
 #
 # Main targets
 #
-all: unlog tokens tokens.krb
+all: unlog tokens tokens.krb pagsh pagsh.krb
 
 #
 # Build targets
 #
 kseal: kseal.o ${LIBRARIES}
-	${CC} -o kseal kseal.o ${LIBRARIES} ${XLIBS} ${CFLAGS}
+	$(AFS_LDRULE) kseal.o ${LIBRARIES} $(LIB_roken) ${XLIBS}
+
+pagsh: pagsh.o ${LIBRARIES}
+	$(AFS_LDRULE) pagsh.o ${LIBRARIES} $(LIB_roken) ${XLIBS}
+
+CFLAGS_pagsh.krb.o = -DAFS_KERBEROS_ENV
+pagsh.krb.o: pagsh.c
+	$(AFS_CCRULE) $(srcdir)/pagsh.c
+
+pagsh.krb: pagsh.krb.o ${KLIBRARIES}
+	$(AFS_LDRULE) pagsh.krb.o ${KLIBRARIES} $(LIB_roken) ${XLIBS}
 
 unlog: unlog.o ${LIBRARIES}
-	${CC} -o unlog unlog.o ${LIBRARIES} ${XLIBS} ${CFLAGS}
+	$(AFS_LDRULE) unlog.o ${LIBRARIES} $(LIB_roken) ${XLIBS}
 
 tokens: tokens.o ${LIBRARIES}
-	${CC} -o tokens tokens.o ${LIBRARIES} ${XLIBS} ${CFLAGS}
+	$(AFS_LDRULE) tokens.o ${LIBRARIES} $(LIB_roken) ${XLIBS}
 
 tokens.krb: tokens.o ${KLIBRARIES}
-	${CC} -o tokens.krb tokens.o ${KLIBRARIES} ${XLIBS} ${CFLAGS}
+	$(AFS_LDRULE) tokens.o ${KLIBRARIES} $(LIB_roken) ${XLIBS}
 
 kseal.o: kseal.c ${INCLS} AFS_component_version_number.c
 unlog.o: unlog.c AFS_component_version_number.c
@@ -60,7 +71,7 @@ tokens.o: tokens.c ${TOP_INCDIR}/rx/xdr.h AFS_component_version_number.c
 #
 # Install targets
 #
-install: unlog tokens tokens.krb
+install: unlog tokens tokens.krb pagsh pagsh.krb
 	${INSTALL} -d ${DESTDIR}${bindir}
 	${INSTALL} -d ${DESTDIR}${afssrvbindir}
 	${INSTALL} -d ${DESTDIR}${sbindir}
@@ -69,8 +80,11 @@ install: unlog tokens tokens.krb
 	${INSTALL_PROGRAM} tokens.krb ${DESTDIR}${bindir}/tokens.krb
 	${INSTALL_PROGRAM} tokens ${DESTDIR}${afssrvbindir}/tokens
 	${INSTALL_PROGRAM} tokens.krb ${DESTDIR}${afssrvbindir}/tokens.krb
+	${INSTALL_PROGRAM} pagsh ${DESTDIR}${bindir}/pagsh
+	${INSTALL_PROGRAM} pagsh.krb ${DESTDIR}${bindir}/pagsh.krb
 
-dest: unlog tokens tokens.krb
+
+dest: unlog tokens tokens.krb pagsh pagsh.krb
 	${INSTALL} -d ${DEST}/bin
 	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
 	${INSTALL} -d ${DEST}/etc
@@ -79,12 +93,14 @@ dest: unlog tokens tokens.krb
 	${INSTALL_PROGRAM} tokens.krb ${DEST}/bin/tokens.krb
 	${INSTALL_PROGRAM} tokens ${DEST}/root.server/usr/afs/bin/tokens
 	${INSTALL_PROGRAM} tokens.krb ${DEST}/root.server/usr/afs/bin/tokens.krb
-
+	${INSTALL_PROGRAM} pagsh ${DEST}/bin/pagsh
+	${INSTALL_PROGRAM} pagsh.krb ${DEST}/bin/pagsh.krb
 #
 # Misc. targets
 #
-clean:	
-	$(RM) -f *.o unlog tokens kseal core AFS_component_version_number.c tokens.krb
+clean:
+	$(RM) -f *.o unlog tokens kseal pagsh pagsh.krb \
+		core AFS_component_version_number.c tokens.krb
 
 test:
 	cd test; $(MAKE)

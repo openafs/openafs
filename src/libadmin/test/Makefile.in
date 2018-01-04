@@ -7,13 +7,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
-
-CC = ${MT_CC}
-CFLAGS = ${COMMON_CFLAGS} ${MT_CFLAGS}
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+top_builddir=@TOP_OBJDIR@
 
 ########################################################################
 # build tests
@@ -27,8 +22,10 @@ AFSCPLIBS =\
 	$(TOP_LIBDIR)/libptsadmin.a \
 	$(TOP_LIBDIR)/libafsauthent.a \
 	$(TOP_LIBDIR)/libafsrpc.a \
-	$(TOP_LIBDIR)/libcmd.a \
-	$(TOP_LIBDIR)/libafsutil.a
+	$(top_builddir)/src/cmd/liboafs_cmd.la \
+	$(top_builddir)/src/opr/liboafs_opr.la \
+	$(top_builddir)/src/util/liboafs_util.la \
+	${TOP_LIBDIR}/libafshcrypto_lwp.a
 
 AFSCPOBJS =\
 	bos.o \
@@ -40,12 +37,11 @@ AFSCPOBJS =\
 
 all test tests: afscp
 
-client.o: client.c
-	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c ${srcdir}/client.c
+CFLAGS_client.o = @CFLAGS_NOERROR@
 
 afscp: afscp.o $(AFSCPOBJS) $(AFSCPLIBS)
-	$(CC) $(CFLAGS) -o afscp afscp.o $(AFSCPOBJS) \
-	-L${TOP_LIBDIR} $(AFSCPLIBS) ${MT_LIBS} $(XLIBS)
+	$(LT_LDRULE_static) afscp.o $(AFSCPOBJS) $(AFSCPLIBS) \
+		$(LIB_roken) $(LIB_crypt) ${MT_LIBS}
 
 #######################################################################
 install:
@@ -53,4 +49,5 @@ install:
 dest:
 
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o afscp core

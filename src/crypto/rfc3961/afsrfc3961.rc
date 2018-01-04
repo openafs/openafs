@@ -1,0 +1,9 @@
+/* Define VERSIONINFO resource */
+
+#define  AFS_VERINFO_FILE_DESCRIPTION "AFS RFC 3961 Crypto DLL"
+#define AFS_VERINFO_DLL
+#define  AFS_VERINFO_NAME "afsrfc3961"
+#define  AFS_VERINFO_FILENAME "afsrfc3961.dll"
+
+#include "AFS_component_version_number.h"
+#include "..\..\config\NTVersioninfo.rc"

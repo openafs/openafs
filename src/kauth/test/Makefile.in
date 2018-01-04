@@ -7,21 +7,14 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 INCDIRS= -I${DESTDIR}/include -I..
 LDIRS= -L${DESTDIR}/lib -L${DESTDIR}/lib/afs -L..
 LIBS= -llwp -ldes -lrxkad -lauth -lcmd -lubik -lprot -lsys -lrx -lafscom_err -lkauth
 
-CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LDIRS} ${LIBS} ${XCFLAGS} ${ARCHFLAGS}
-
-
 # the only tests _known_ to work are multiklog and the tcl scripts.
 
-all test tests: multiklog 
+all test tests: multiklog
 
 install:
 dest:
@@ -30,28 +23,29 @@ clean:
 	$(RM) -f *.o core
 
 multiklog: multiklog.o
-	cc -o  multiklog ${CFLAGS} multiklog.o -lafsutil
+	$(AFS_LDRULE) multiklog.o ${LDIRS} ${LIBS} -lafsutil
 
 test_date: ../kautils.o test_date.o ${utilib}
-	cc -o test_date ${CFLAGS} test_date.o ../kautils.o -lafsutil
+	$(AFS_LDRULE) test_date.o ../kautils.o ${LDIRS} ${LIBS} -lafsutil
 
 test_badtix: test_badtix.o
-	cc -o test_badtix ${CFLAGS} test_badtix.o
+	$(AFS_LDRULE) test_badtix.o ${LDIRS} ${LIBS}
 
 decode_ticket: decode_ticket.o
-	cc -o decode_ticket ${CFLAGS} decode_ticket.o 
+	$(AFS_LDRULE) decode_ticket.o ${LDIRS} ${LIBS}
 
 test_interim_ktc: test_interim_ktc.o
-	cc -o test_interim_ktc ${CFLAGS} test_interim_ktc.o
+	$(AFS_LDRULE) test_interim_ktc.o ${LDIRS} ${LIBS}
 
-test_rxkad_free: test_rxkad_free.o 
-	cc -o test_rxkad_free  ${CFLAGS} test_rxkad_free.o 
+test_rxkad_free: test_rxkad_free.o
+	$(AFS_LDRULE) test_rxkad_free.o ${LDIRS} ${LIBS}
 
-test_getticket: test_getticket.o 
-	cc -o test_getticket  ${CFLAGS} test_getticket.o 
+test_getticket: test_getticket.o
+	$(AFS_LDRULE) test_getticket.o ${LDIRS} ${LIBS}
 
 background: background.c
-	cc -o background background.c
+	$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) $(AFS_LDFLAGS) \
+		${LDIRS} ${LIBS} -o background background.c
 
 # test_interim_ktc depends on normally running ka & pr servers.  Also on
 # the current user having write access to the working directory.  Also
