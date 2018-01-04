@@ -1,4 +1,4 @@
-openafs (1.8.0~pre1-1) experimental; urgency=low
+openafs (1.8.0~pre4-1) unstable; urgency=low
 
   * Servers no longer use rxkad.keytab for long-term keys, which are
     now stored in KeyFileExt.  Administrators must use akeyconvert

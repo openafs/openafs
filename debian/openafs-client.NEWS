@@ -1,4 +1,4 @@
-openafs (1.8.0~pre1-1) experimental; urgency=low
+openafs (1.8.0~pre4-1) unstable; urgency=low
 
     - Client time management support (afsd -settime and afsd -nosettime)
       has been removed.
