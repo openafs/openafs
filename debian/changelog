@@ -1,3 +1,9 @@
+openafs (1.8.0~pre4-1) UNRELEASED; urgency=low
+
+  * New major branch upstream prerelease:
+
+ -- Benjamin Kaduk <kaduk@mit.edu>  Wed, 03 Jan 2018 19:07:27 -0600
+
 openafs (1.6.22-3) unstable; urgency=medium
 
   * Pull in upstream patch to avoid OOPS on linux 4.14 kernels.
