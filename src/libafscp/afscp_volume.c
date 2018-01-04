@@ -27,11 +27,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#ifdef HAVE_SEARCH_H
+#include <roken.h>
+
 #include <search.h>
-#else
-#include "afscp_search.h"
-#endif
 
 #include <afs/vlserver.h>
 #include <afs/vldbint.h>
@@ -117,12 +115,11 @@ afscp_VolumeByName(struct afscp_cell *cell, const char *vname,
 	afscp_errno = code;
 	return NULL;
     }
-    ret = malloc(sizeof(struct afscp_volume));
+    ret = calloc(1, sizeof(struct afscp_volume));
     if (ret == NULL) {
 	afscp_errno = ENOMEM;
 	return NULL;
     }
-    memset(ret, 0, sizeof(struct afscp_volume));
     strlcpy(ret->name, u.u.name, sizeof(ret->name));
     ret->nservers = 0;
     ret->cell = cell;
@@ -135,7 +132,7 @@ afscp_VolumeByName(struct afscp_cell *cell, const char *vname,
 	    afs_dprintf(("uvldbentry server %d flags: %x\n", srv,
 			 u.u.serverFlags[srv]));
 
-	    if ((u.u.serverFlags[srv] & VLSERVER_FLAG_UUID) == 0)
+	    if ((u.u.serverFlags[srv] & VLSF_UUID) == 0)
 		server =
 		    afscp_ServerByAddr(cell, u.u.serverNumber[srv].time_low);
 	    else
@@ -174,8 +171,8 @@ afscp_VolumeByName(struct afscp_cell *cell, const char *vname,
     }
 
     ret->voltype = intype;
-    server = afscp_ServerByIndex(ret->servers[0]);
 #ifdef AFSCP_DEBUG
+    server = afscp_ServerByIndex(ret->servers[0]);
     if (server != NULL)
 	i.s_addr = server->addrs[0];
     else
@@ -231,12 +228,11 @@ afscp_VolumeById(struct afscp_cell *cell, afs_uint32 id)
 	afscp_errno = code;
 	return NULL;
     }
-    ret = malloc(sizeof(struct afscp_volume));
+    ret = calloc(1, sizeof(struct afscp_volume));
     if (ret == NULL) {
 	afscp_errno = ENOMEM;
 	return NULL;
     }
-    memset(ret, 0, sizeof(struct afscp_volume));
     strlcpy(ret->name, u.u.name, sizeof(ret->name));
     ret->nservers = 0;
     ret->cell = cell;
@@ -259,7 +255,7 @@ afscp_VolumeById(struct afscp_cell *cell, afs_uint32 id)
 	for (srv = 0; srv < u.u.nServers; srv++) {
 	    if ((u.u.serverFlags[srv] & vtype) == 0)
 		continue;
-	    if ((u.u.serverFlags[srv] & VLSERVER_FLAG_UUID) == 0)
+	    if ((u.u.serverFlags[srv] & VLSF_UUID) == 0)
 		server =
 		    afscp_ServerByAddr(cell, u.u.serverNumber[srv].time_low);
 	    else
@@ -317,8 +313,8 @@ afscp_VolumeById(struct afscp_cell *cell, afs_uint32 id)
 	break;
     }
     ret->voltype = voltype;
-    server = afscp_ServerByIndex(ret->servers[0]);
 #ifdef AFSCP_DEBUG
+    server = afscp_ServerByIndex(ret->servers[0]);
     if (server)
 	i.s_addr = server->addrs[0];
     else

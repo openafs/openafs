@@ -98,6 +98,7 @@ our $HEADER = <<'EOH';
 EOH
 
 our %HEADINGS = (1 => 'User Commands',
+                 3 => 'C Library Functions',
                  5 => 'Configuration and Data Files',
                  8 => 'Administrator Commands');
 
@@ -105,7 +106,7 @@ our %HEADINGS = (1 => 'User Commands',
 # description, returning that as an array.
 sub scan_names {
     my @index;
-    for my $dir (qw(pod1 pod5 pod8)) {
+    for my $dir (qw(pod1 pod3 pod5 pod8)) {
         my $section = $dir;
         $section =~ s/^pod//;
         opendir (D, $dir) or die "Cannot open $dir: $!\n";
@@ -122,6 +123,9 @@ sub scan_names {
                 warn "$dir/$file: cannot find NAME section, skipping\n";
             }
             $name =~ s/^(backup|bos|fs|fstrace|kas|pts|symlink|uss|vos)_/$1 /;
+	    if ($section eq '3') {
+		$name =~ s/^AFS\./AFS::/;
+	    }
             if ($section eq '5') {
                 $name =~ s/_/ /g;
             }
@@ -137,7 +141,7 @@ sub scan_names {
 unless (-d 'html') {
     mkdir ('html', 0755) or die "Cannot create html directory: $!\n";
 }
-for my $dir (qw(pod1 pod5 pod8)) {
+for my $dir (qw(pod1 pod3 pod5 pod8)) {
     my $section = $dir;
     $section =~ s/^pod//;
     mkdir ("html/$section", 0755) unless -d "html/$section";

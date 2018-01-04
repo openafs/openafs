@@ -40,43 +40,43 @@ LIBOBJS =\
 	$(OUT)\butx_errs.obj \
 	$(OUT)\AFS_component_version_number.obj
 
-$(LIBFILE): $(LIBOBJS) 
-	$(LIBARCH) 
+$(LIBFILE): $(LIBOBJS)
+	$(LIBARCH)
 
 ############################################################################
 # rxgen on butc.xg and bumon.xg
 
 butc.xdr.c: butc.xg butc.h
-	$(RXGEN) -c -o $@ butc.xg
+	$(RXGEN) -A -c -x -o $@ butc.xg
 
 butc.ss.c: butc.xg butc.h
-	$(RXGEN) -S -o $@ butc.xg
+	$(RXGEN) -A -S -o $@ butc.xg
 
 butc.cs.c: butc.xg butc.h
-	$(RXGEN) -C -o $@ butc.xg
+	$(RXGEN) -A -C -o $@ butc.xg
 
 butc.h: butc.xg
-	$(RXGEN) -h -o $@ butc.xg
+	$(RXGEN) -A -h -o $@ butc.xg
 
 bumon.xdr.c: bumon.xg bumon.h
-	$(RXGEN) -c -o $@ bumon.xg
+	$(RXGEN) -A -c -x -o $@ bumon.xg
 
 bumon.ss.c: bumon.xg bumon.h
-	$(RXGEN) -S -o $@ bumon.xg
+	$(RXGEN) -A -S -o $@ bumon.xg
 
 bumon.cs.c: bumon.xg bumon.h
-	$(RXGEN) -C -o $@ bumon.xg
+	$(RXGEN) -A -C -o $@ bumon.xg
 
 bumon.h: bumon.xg
-	$(RXGEN) -h -o $@ bumon.xg
+	$(RXGEN) -A -h -o $@ bumon.xg
 
 ############################################################################
-# compile_et on butm_errs.et and butc_errs.et 
+# compile_et on butm_errs.et and butc_errs.et
 
 butm.h butm_errs.c: butm_errs.et butm.p.h
 	$(DEL) butm.h butm_errs.c
 	$(COMPILE_ET) butm_errs -h butm
-	
+
 tcdata.h butc_errs.c: butc_errs.et tcdata.p.h butm.h
 	$(DEL) tcdata.h butc_errs.c
 	$(COMPILE_ET) butc_errs -h tcdata
@@ -99,4 +99,4 @@ clean::
 		butc_errs.c butm_errs.c	butx_errs.c
 
 mkdir:
-	
+

@@ -15,21 +15,11 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <sys/types.h>
-#include <sys/ioctl.h>
 #include <afs/vice.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <sys/stat.h>
-#include <sys/file.h>
-#include <stdio.h>
-#include <errno.h>
 #include <rx/xdr.h>
-#include <errno.h>
-#include <signal.h>
-#include <string.h>
-#include <stdarg.h>
+
 /*#include <afs/cellconfig.h>*/
 #include "rmtsys.h"
 #include "sys_prototypes.h"
@@ -69,8 +59,8 @@ rmtsysd(void)
     /* Initialize the rx-based RMTSYS server */
     if (rx_Init(htons(AFSCONF_RMTSYSPORT)) < 0)
 	rmt_Quit("rx_init");
-    securityObjects[0] = rxnull_NewServerSecurityObject();
-    if (securityObjects[0] == (struct rx_securityClass *)0)
+    securityObjects[RX_SECIDX_NULL] = rxnull_NewServerSecurityObject();
+    if (securityObjects[RX_SECIDX_NULL] == (struct rx_securityClass *)0)
 	rmt_Quit("rxnull_NewServerSecurityObject");
     service =
 	rx_NewService(0, RMTSYS_SERVICEID, AFSCONF_RMTSYSSERVICE,
@@ -97,7 +87,7 @@ SRMTSYS_SetPag(struct rx_call *call, clientcred *creds, afs_int32 *newpag,
     afs_int32 error;
 
     *errornumber = 0;
-    SETCLIENTCONTEXT(blob, rx_HostOf(call->conn->peer), creds->uid,
+    SETCLIENTCONTEXT(blob, rx_HostOf(rx_PeerOf(rx_ConnectionOf(call))), creds->uid,
 		     creds->group0, creds->group1, PSETPAG, NFS_EXPORTER);
     data.in = (caddr_t) blob;
     data.in_size = sizeof(blob);
@@ -127,11 +117,9 @@ SRMTSYS_Pioctl(struct rx_call *call, clientcred *creds, char *path,
     afs_uint32 blob[PIOCTL_HEADER];
 
     *errornumber = 0;
-    SETCLIENTCONTEXT(blob, rx_HostOf(call->conn->peer), creds->uid,
+    SETCLIENTCONTEXT(blob, rx_HostOf(rx_PeerOf(rx_ConnectionOf(call))), creds->uid,
 		     creds->group0, creds->group1, cmd, NFS_EXPORTER);
-    data.in =
-	(char *)malloc(InData->rmtbulk_len +
-		       PIOCTL_HEADER * sizeof(afs_int32));
+    data.in = malloc(InData->rmtbulk_len + PIOCTL_HEADER * sizeof(afs_int32));
     if (!data.in)
 	return (-1);		/* helpless here */
     if (!strcmp(path, NIL_PATHP))

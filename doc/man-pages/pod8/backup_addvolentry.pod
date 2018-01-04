@@ -71,7 +71,7 @@ create it).
 
 Defines the set of one or more file server machines that house the volumes
 in the volume entry. Provide either one fully-qualified hostname (such as
-C<fs1.abc.com>) or the metacharacter expression C<.*> (period and
+C<fs1.example.com>) or the metacharacter expression C<.*> (period and
 asterisk), which matches all machine names in the VLDB.
 
 =item B<-partition> <I<partition name>>
@@ -165,11 +165,11 @@ names begin with the string C<sun4x_56> followed by a period:
 
 The following command adds a volume entry to the volume set called C<fs2>,
 to match all volumes on the F</vicepb> partition of file server machine
-C<fs2.abc.com>. Because it is issued at the shell prompt, double quotes
+C<fs2.example.com>. Because it is issued at the shell prompt, double quotes
 surround the metacharacters in the B<-volumes> argument. (The command is
 shown here on two lines only for legibility reasons.)
 
-   % backup addvolentry -name fs2 -server fs2.abc.com \
+   % backup addvolentry -name fs2 -server fs2.example.com \
                         -partition /vicepb -volumes ".*"
 
 The chapter in the I<OpenAFS Administration Guide> about configuring the

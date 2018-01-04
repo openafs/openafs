@@ -9,20 +9,17 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
+
+#include <roken.h>
+
 #include <windows.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
-#include <malloc.h>
-#include <string.h>
 #include <winioctl.h>
-#include <winsock2.h>
 #define SECURITY_WIN32
 #include <security.h>
 #include <nb30.h>
+#include <tchar.h>
+#include <strsafe.h>
 
 #include <osi.h>
 
@@ -37,14 +34,16 @@
 #include <cm_dir.h>
 #include <cm_utils.h>
 #include <cm_ioctl.h>
-
+#include <smb_iocons.h>
 #include <smb.h>
 #include <pioctl_nt.h>
 #include <WINNT/afsreg.h>
 #include <lanahelper.h>
 
-#include <loadfuncs-krb5.h>
 #include <krb5.h>
+#include <..\WINNT\afsrdr\common\AFSUserDefines.h>
+#include <..\WINNT\afsrdr\common\AFSUserIoctl.h>
+#include <..\WINNT\afsrdr\common\AFSUserStructs.h>
 
 static char AFSConfigKeyName[] = AFSREG_CLT_SVC_PARAM_SUBKEY;
 
@@ -58,6 +57,7 @@ typedef struct fs_ioctlRequest {
     long nbytes;		/* bytes received (when unmarshalling) */
     char data[FS_IOCTLREQUEST_MAXSIZE];	/* data we're marshalling */
 } fs_ioctlRequest_t;
+
 
 static int
 CMtoUNIXerror(int cm_code)
@@ -142,6 +142,109 @@ IoctlDebug(void)
 }
 
 static BOOL
+RDR_Ready(void)
+{
+    HANDLE hDevHandle = NULL;
+    DWORD bytesReturned;
+    AFSDriverStatusRespCB *respBuffer = NULL;
+    DWORD rc = 0;
+    BOOL ready = FALSE;
+
+    hDevHandle = CreateFileW( AFS_SYMLINK_W,
+                             GENERIC_READ | GENERIC_WRITE,
+                             FILE_SHARE_READ | FILE_SHARE_WRITE,
+                             NULL,
+                             OPEN_EXISTING,
+                             0,
+                             NULL);
+    if( hDevHandle == INVALID_HANDLE_VALUE)
+    {
+        DWORD gle = GetLastError();
+
+        if (gle && IoctlDebug() ) {
+            char buf[4096];
+            int saveerrno;
+
+            saveerrno = errno;
+            if ( FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
+                               NULL,
+                               gle,
+                               MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),
+                               buf,
+                               4096,
+                               NULL
+                               ) )
+            {
+                fprintf(stderr,"RDR_Ready CreateFile(%S) failed: 0x%X\r\n\t[%s]\r\n",
+                        AFS_SYMLINK_W,gle,buf);
+            }
+            errno = saveerrno;
+        }
+        return FALSE;
+    }
+
+    //
+    // Allocate a response buffer.
+    //
+    respBuffer = calloc(1, sizeof( AFSDriverStatusRespCB));
+    if( respBuffer)
+    {
+
+        if( !DeviceIoControl( hDevHandle,
+                              IOCTL_AFS_STATUS_REQUEST,
+                              NULL,
+                              0,
+                              (void *)respBuffer,
+                              sizeof( AFSDriverStatusRespCB),
+                              &bytesReturned,
+                              NULL))
+        {
+            //
+            // Error condition back from driver
+            //
+            DWORD gle = GetLastError();
+
+            if (gle && IoctlDebug() ) {
+                char buf[4096];
+                int saveerrno;
+
+                saveerrno = errno;
+                if ( FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
+                                    NULL,
+                                    gle,
+                                    MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),
+                                    buf,
+                                    4096,
+                                    NULL
+                                    ) )
+                {
+                    fprintf(stderr,"RDR_Ready CreateFile(%s) failed: 0x%X\r\n\t[%s]\r\n",
+                             AFS_SYMLINK,gle,buf);
+                }
+                errno = saveerrno;
+            }
+            rc = -1;
+            goto cleanup;
+        }
+
+        if (bytesReturned == sizeof(AFSDriverStatusRespCB))
+        {
+            ready = ( respBuffer->Status == AFS_DRIVER_STATUS_READY );
+        }
+    } else
+        rc = ENOMEM;
+
+  cleanup:
+    if (respBuffer)
+        free( respBuffer);
+
+    if (hDevHandle != INVALID_HANDLE_VALUE)
+        CloseHandle(hDevHandle);
+
+    return ready;
+}
+
+static BOOL
 DisableServiceManagerCheck(void)
 {
     static int init = 0;
@@ -221,178 +324,138 @@ cleanup:
     return(hr);
 }
 
-// krb5 functions
-DECL_FUNC_PTR(krb5_cc_default_name);
-DECL_FUNC_PTR(krb5_cc_set_default_name);
-DECL_FUNC_PTR(krb5_get_default_config_files);
-DECL_FUNC_PTR(krb5_free_config_files);
-DECL_FUNC_PTR(krb5_free_context);
-DECL_FUNC_PTR(krb5_get_default_realm);
-DECL_FUNC_PTR(krb5_free_default_realm);
-DECL_FUNC_PTR(krb5_init_context);
-DECL_FUNC_PTR(krb5_cc_default);
-DECL_FUNC_PTR(krb5_parse_name);
-DECL_FUNC_PTR(krb5_free_principal);
-DECL_FUNC_PTR(krb5_cc_close);
-DECL_FUNC_PTR(krb5_cc_get_principal);
-DECL_FUNC_PTR(krb5_build_principal);
-DECL_FUNC_PTR(krb5_c_random_make_octets);
-DECL_FUNC_PTR(krb5_get_init_creds_password);
-DECL_FUNC_PTR(krb5_free_cred_contents);
-DECL_FUNC_PTR(krb5_cc_resolve);
-DECL_FUNC_PTR(krb5_unparse_name);
-DECL_FUNC_PTR(krb5_free_unparsed_name);
-
-FUNC_INFO krb5_fi[] = {
-    MAKE_FUNC_INFO(krb5_cc_default_name),
-    MAKE_FUNC_INFO(krb5_cc_set_default_name),
-    MAKE_FUNC_INFO(krb5_get_default_config_files),
-    MAKE_FUNC_INFO(krb5_free_config_files),
-    MAKE_FUNC_INFO(krb5_free_context),
-    MAKE_FUNC_INFO(krb5_get_default_realm),
-    MAKE_FUNC_INFO(krb5_free_default_realm),
-    MAKE_FUNC_INFO(krb5_init_context),
-    MAKE_FUNC_INFO(krb5_cc_default),
-    MAKE_FUNC_INFO(krb5_parse_name),
-    MAKE_FUNC_INFO(krb5_free_principal),
-    MAKE_FUNC_INFO(krb5_cc_close),
-    MAKE_FUNC_INFO(krb5_cc_get_principal),
-    MAKE_FUNC_INFO(krb5_build_principal),
-    MAKE_FUNC_INFO(krb5_c_random_make_octets),
-    MAKE_FUNC_INFO(krb5_get_init_creds_password),
-    MAKE_FUNC_INFO(krb5_free_cred_contents),
-    MAKE_FUNC_INFO(krb5_cc_resolve),
-    MAKE_FUNC_INFO(krb5_unparse_name),
-    MAKE_FUNC_INFO(krb5_free_unparsed_name),
-    END_FUNC_INFO
-};
-
-static int
-LoadFuncs(
-    const char* dll_name,
-    FUNC_INFO fi[],
-    HINSTANCE* ph,  // [out, optional] - DLL handle
-    int* pindex,    // [out, optional] - index of last func loaded (-1 if none)
-    int cleanup,    // cleanup function pointers and unload on error
-    int go_on,      // continue loading even if some functions cannot be loaded
-    int silent      // do not pop-up a system dialog if DLL cannot be loaded
-    )
-{
-    HINSTANCE h;
-    int i, n, last_i;
-    int error = 0;
-    UINT em;
-
-    if (ph) *ph = 0;
-    if (pindex) *pindex = -1;
-
-    for (n = 0; fi[n].func_ptr_var; n++)
-        *(fi[n].func_ptr_var) = 0;
-
-    if (silent)
-        em = SetErrorMode(SEM_FAILCRITICALERRORS);
-    h = LoadLibrary(dll_name);
-    if (silent)
-        SetErrorMode(em);
-
-    if (!h)
-        return 0;
-
-    last_i = -1;
-    for (i = 0; (go_on || !error) && (i < n); i++)
-    {
-        void* p = (void*)GetProcAddress(h, fi[i].func_name);
-        if (!p)
-            error = 1;
-        else
-        {
-            last_i = i;
-            *(fi[i].func_ptr_var) = p;
-        }
-    }
-    if (pindex) *pindex = last_i;
-    if (error && cleanup && !go_on) {
-        for (i = 0; i < n; i++) {
-            *(fi[i].func_ptr_var) = 0;
-        }
-        FreeLibrary(h);
-        return 0;
-    }
-    if (ph) *ph = h;
-    if (error) return 0;
-    return 1;
-}
-#if defined(_IA64_) || defined(_AMD64_)
-#define KERB5DLL "krb5_64.dll"
-#else
-#define KERB5DLL "krb5_32.dll"
-#endif
 static BOOL
-IsKrb5Available()
+UnicodeToANSI(LPCWSTR lpInputString, LPSTR lpszOutputString, int nOutStringLen)
 {
-    static HINSTANCE hKrb5DLL = 0;
+    CPINFO CodePageInfo;
 
-    if ( hKrb5DLL )
-        return TRUE;
+    GetCPInfo(CP_ACP, &CodePageInfo);
 
-    hKrb5DLL = LoadLibrary(KERB5DLL);
-    if (hKrb5DLL) {
-        if (!LoadFuncs(KERB5DLL, krb5_fi, 0, 0, 1, 0, 0))
+    if (CodePageInfo.MaxCharSize > 1) {
+        // Only supporting non-Unicode strings
+        int reqLen = WideCharToMultiByte( CP_ACP, 0,
+                                          lpInputString, -1,
+                                          NULL, 0, NULL, NULL);
+        if ( reqLen > nOutStringLen)
         {
-            FreeLibrary(hKrb5DLL);
-            hKrb5DLL = 0;
             return FALSE;
+        } else {
+            if (WideCharToMultiByte( CP_ACP,
+                                     WC_COMPOSITECHECK,
+                                     lpInputString, -1,
+                                     lpszOutputString,
+                                     nOutStringLen, NULL, NULL) == 0)
+                return FALSE;
         }
-        return TRUE;
     }
-    return FALSE;
+    else
+    {
+        // Looks like unicode, better translate it
+        if (WideCharToMultiByte( CP_ACP,
+                                 WC_COMPOSITECHECK,
+                                 lpInputString, -1,
+                                 lpszOutputString,
+                                 nOutStringLen, NULL, NULL) == 0)
+            return FALSE;
+    }
+
+    return TRUE;
 }
 
 static BOOL
-GetLSAPrincipalName(char * szUser, DWORD *dwSize)
+GetLSAPrincipalName(char * pszUser, DWORD dwUserSize)
 {
-    krb5_context   ctx = 0;
-    krb5_error_code code;
-    krb5_ccache mslsa_ccache=0;
-    krb5_principal princ = 0;
-    char * pname = 0;
-    BOOL success = 0;
+    KERB_QUERY_TKT_CACHE_REQUEST CacheRequest;
+    PKERB_RETRIEVE_TKT_RESPONSE pTicketResponse = NULL;
+    ULONG ResponseSize;
+    PKERB_EXTERNAL_NAME pClientName = NULL;
+    PUNICODE_STRING     pDomainName = NULL;
+    LSA_STRING Name;
+    HANDLE hLogon = INVALID_HANDLE_VALUE;
+    ULONG PackageId;
+    NTSTATUS ntStatus;
+    NTSTATUS ntSubStatus = 0;
+    WCHAR * wchUser = NULL;
+    DWORD   dwSize;
+    SHORT   sCount;
+    BOOL bRet = FALSE;
 
-    if (!IsKrb5Available())
-        return FALSE;
-
-    if (code = pkrb5_init_context(&ctx))
+    ntStatus = LsaConnectUntrusted( &hLogon);
+    if (FAILED(ntStatus))
         goto cleanup;
 
-    if (code = pkrb5_cc_resolve(ctx, "MSLSA:", &mslsa_ccache))
+    Name.Buffer = MICROSOFT_KERBEROS_NAME_A;
+    Name.Length = (USHORT)(sizeof(MICROSOFT_KERBEROS_NAME_A) - sizeof(char));
+    Name.MaximumLength = Name.Length;
+
+    ntStatus = LsaLookupAuthenticationPackage( hLogon, &Name, &PackageId);
+    if (FAILED(ntStatus))
         goto cleanup;
 
-    if (code = pkrb5_cc_get_principal(ctx, mslsa_ccache, &princ))
+    memset(&CacheRequest, 0, sizeof(KERB_QUERY_TKT_CACHE_REQUEST));
+    CacheRequest.MessageType = KerbRetrieveTicketMessage;
+    CacheRequest.LogonId.LowPart = 0;
+    CacheRequest.LogonId.HighPart = 0;
+
+    ntStatus = LsaCallAuthenticationPackage( hLogon,
+                                             PackageId,
+                                             &CacheRequest,
+                                             sizeof(CacheRequest),
+                                             &pTicketResponse,
+                                             &ResponseSize,
+                                             &ntSubStatus);
+    if (FAILED(ntStatus) || FAILED(ntSubStatus))
         goto cleanup;
 
-    if (code = pkrb5_unparse_name(ctx, princ, &pname))
-        goto cleanup;
+    /* We have a ticket in the response */
+    pClientName = pTicketResponse->Ticket.ClientName;
+    pDomainName = &pTicketResponse->Ticket.DomainName;
 
-    if ( strlen(pname) < *dwSize ) {
-        strncpy(szUser, pname, *dwSize);
-        szUser[*dwSize-1] = '\0';
-        success = 1;
+    /* We want to return ClientName @ DomainName */
+
+    dwSize = 0;
+    for ( sCount = 0; sCount < pClientName->NameCount; sCount++)
+    {
+        dwSize += pClientName->Names[sCount].Length;
     }
-    *dwSize = (DWORD)strlen(pname);
+    dwSize += pDomainName->Length + sizeof(WCHAR);
+
+    if ( dwSize / sizeof(WCHAR) > dwUserSize )
+        goto cleanup;
+
+    wchUser = malloc(dwSize);
+    if (wchUser == NULL)
+        goto cleanup;
+
+    for ( sCount = 0, wchUser[0] = L'\0'; sCount < pClientName->NameCount; sCount++)
+    {
+        StringCbCatNW( wchUser, dwSize,
+                       pClientName->Names[sCount].Buffer,
+                       pClientName->Names[sCount].Length);
+    }
+    StringCbCatNW( wchUser, dwSize,
+                   pDomainName->Buffer,
+                   pDomainName->Length);
+
+    if ( !UnicodeToANSI( wchUser, pszUser, dwUserSize) )
+        goto cleanup;
+
+    bRet = TRUE;
 
   cleanup:
-    if (pname)
-        pkrb5_free_unparsed_name(ctx, pname);
 
-    if (princ)
-        pkrb5_free_principal(ctx, princ);
+    if (wchUser)
+        free(wchUser);
 
-    if (mslsa_ccache)
-        pkrb5_cc_close(ctx, mslsa_ccache);
+    if ( hLogon != INVALID_HANDLE_VALUE)
+        LsaDeregisterLogonProcess(hLogon);
 
-    if (ctx)
-        pkrb5_free_context(ctx);
-    return success;
+    if ( pTicketResponse ) {
+        SecureZeroMemory(pTicketResponse,ResponseSize);
+        LsaFreeReturnBuffer(pTicketResponse);
+    }
+
+    return bRet;
 }
 
 //
@@ -459,6 +522,7 @@ DriveIsMappedToAFS(char *drivestr, char *NetbiosName)
     DWORD i;
     BOOL  bIsAFS = FALSE;
     char  subststr[MAX_PATH];
+    char  device[MAX_PATH];
 
     //
     // Handle drive letter substitution created with "SUBST <drive> <path>".
@@ -476,6 +540,14 @@ DriveIsMappedToAFS(char *drivestr, char *NetbiosName)
                 return FALSE;
         }
         drivestr = subststr;
+    }
+
+    //
+    // Check for \Device\AFSRedirector
+    //
+    if (QueryDosDevice(drivestr, device, MAX_PATH) &&
+        _strnicmp( device, "\\Device\\AFSRedirector", strlen("\\Device\\AFSRedirector")) == 0) {
+        return TRUE;
     }
 
     //
@@ -577,13 +649,13 @@ DriveIsGlobalAutoMapped(char *drivestr)
 static long
 GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 {
+    HKEY hk;
     char *drivep = NULL;
-    char netbiosName[MAX_NB_NAME_LENGTH];
+    char netbiosName[MAX_NB_NAME_LENGTH]="AFS";
     DWORD CurrentState = 0;
     char  HostName[64] = "";
     char tbuffer[MAX_PATH]="";
     HANDLE fh;
-    HKEY hk;
     char szUser[128] = "";
     char szClient[MAX_PATH] = "";
     char szPath[MAX_PATH] = "";
@@ -591,7 +663,9 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
     DWORD res;
     DWORD ioctlDebug = IoctlDebug();
     DWORD gle;
+    DWORD dwAttrib;
     DWORD dwSize = sizeof(szUser);
+    BOOL  usingRDR = FALSE;
     int saveerrno;
     UINT driveType;
     int sharingViolation;
@@ -600,11 +674,63 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
     gethostname(HostName, sizeof(HostName));
     if (!DisableServiceManagerCheck() &&
         GetServiceStatus(HostName, TEXT("TransarcAFSDaemon"), &CurrentState) == NOERROR &&
-	CurrentState != SERVICE_RUNNING)
+        CurrentState != SERVICE_RUNNING)
+    {
+        if ( ioctlDebug ) {
+            saveerrno = errno;
+            fprintf(stderr, "pioctl GetServiceStatus(%s) == %d\r\n",
+                    HostName, CurrentState);
+            errno = saveerrno;
+        }
 	return -1;
+    }
 
-    // Populate the Netbios Name
-    lana_GetNetbiosName(netbiosName,LANA_NETBIOS_NAME_FULL);
+    if (RDR_Ready()) {
+        usingRDR = TRUE;
+
+        if ( ioctlDebug ) {
+            saveerrno = errno;
+            fprintf(stderr, "pioctl Redirector is ready\r\n");
+            errno = saveerrno;
+        }
+
+        if (RegOpenKey (HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY, &hk) == 0)
+        {
+            DWORD dwSize = sizeof(netbiosName);
+            DWORD dwType = REG_SZ;
+            RegQueryValueExA (hk, "NetbiosName", NULL, &dwType, (PBYTE)netbiosName, &dwSize);
+            RegCloseKey (hk);
+
+            if ( ioctlDebug ) {
+                saveerrno = errno;
+                fprintf(stderr, "pioctl NetbiosName = \"%s\"\r\n", netbiosName);
+                errno = saveerrno;
+            }
+        } else {
+            if ( ioctlDebug ) {
+                saveerrno = errno;
+                gle = GetLastError();
+                fprintf(stderr, "pioctl Unable to open \"HKLM\\%s\" using NetbiosName = \"AFS\" GLE=0x%x\r\n",
+                        HostName, CurrentState, gle);
+                errno = saveerrno;
+            }
+        }
+    } else {
+        if ( ioctlDebug ) {
+            saveerrno = errno;
+            fprintf(stderr, "pioctl Redirector is not ready\r\n");
+            errno = saveerrno;
+        }
+
+        if (!GetEnvironmentVariable("AFS_PIOCTL_SERVER", netbiosName, sizeof(netbiosName)))
+            lana_GetNetbiosName(netbiosName,LANA_NETBIOS_NAME_FULL);
+
+        if ( ioctlDebug ) {
+            saveerrno = errno;
+            fprintf(stderr, "pioctl NetbiosName = \"%s\"\r\n", netbiosName);
+            errno = saveerrno;
+        }
+    }
 
     if (fileNamep) {
         drivep = strchr(fileNamep, ':');
@@ -694,22 +820,21 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
         sprintf(tbuffer,"\\\\%s\\all%s",netbiosName,SMB_IOCTL_FILENAME);
     }
 
-    fflush(stdout);
-    /* now open the file */
-    sharingViolation = 0;
-    do {
-        if (sharingViolation)
-            Sleep(100);
-        fh = CreateFile(tbuffer, FILE_READ_DATA | FILE_WRITE_DATA,
-                        FILE_SHARE_READ, NULL, OPEN_EXISTING,
-                        FILE_FLAG_WRITE_THROUGH, NULL);
-        sharingViolation++;
-    } while (fh == INVALID_HANDLE_VALUE &&
-             GetLastError() == ERROR_SHARING_VIOLATION &&
-             sharingViolation < 100);
+    if ( ioctlDebug ) {
+        saveerrno = errno;
+        fprintf(stderr, "pioctl filename = \"%s\"\r\n", tbuffer);
+        errno = saveerrno;
+    }
+
     fflush(stdout);
 
-    if (fh == INVALID_HANDLE_VALUE) {
+    /*
+     * Try to find the correct path and authentication
+     */
+    dwAttrib = GetFileAttributes(tbuffer);
+    if (dwAttrib == INVALID_FILE_ATTRIBUTES) {
+        int  gonext = 0;
+
         gle = GetLastError();
         if (gle && ioctlDebug ) {
             char buf[4096];
@@ -721,22 +846,22 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                                MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),
                                buf,
                                4096,
-                               (va_list *) NULL
+                               NULL
                                ) )
             {
-                fprintf(stderr,"pioctl CreateFile(%s) failed: 0x%X\r\n\t[%s]\r\n",
+                fprintf(stderr,"pioctl GetFileAttributes(%s) failed: 0x%X\r\n\t[%s]\r\n",
                         tbuffer,gle,buf);
             }
             errno = saveerrno;
             SetLastError(gle);
         }
-    }
 
-    if (fh == INVALID_HANDLE_VALUE &&
-        GetLastError() != ERROR_SHARING_VIOLATION) {
-        int  gonext = 0;
+        /* with the redirector interface, fail immediately.  there is nothing to retry */
+        if (usingRDR)
+            return -1;
 
-        lana_GetNetbiosName(szClient, LANA_NETBIOS_NAME_FULL);
+        if (!GetEnvironmentVariable("AFS_PIOCTL_SERVER", szClient, sizeof(szClient)))
+            lana_GetNetbiosName(szClient, LANA_NETBIOS_NAME_FULL);
 
         if (RegOpenKey (HKEY_CURRENT_USER,
                          TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer"), &hk) == 0)
@@ -783,19 +908,8 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             if (gonext)
                 goto try_lsa_principal;
 
-            sharingViolation = 0;
-            do {
-                if (sharingViolation)
-                    Sleep(100);
-                fh = CreateFile(tbuffer, FILE_READ_DATA | FILE_WRITE_DATA,
-                                FILE_SHARE_READ, NULL, OPEN_EXISTING,
-                                FILE_FLAG_WRITE_THROUGH, NULL);
-                sharingViolation++;
-            } while (fh == INVALID_HANDLE_VALUE &&
-                     GetLastError() == ERROR_SHARING_VIOLATION &&
-                     sharingViolation < 100);
-            fflush(stdout);
-            if (fh == INVALID_HANDLE_VALUE) {
+            dwAttrib = GetFileAttributes(tbuffer);
+            if (dwAttrib == INVALID_FILE_ATTRIBUTES) {
                 gle = GetLastError();
                 if (gle && ioctlDebug ) {
                     char buf[4096];
@@ -807,10 +921,10 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                                         MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),
                                         buf,
                                         4096,
-                                        (va_list *) NULL
+                                        NULL
                                         ) )
                     {
-                        fprintf(stderr,"pioctl CreateFile(%s) failed: 0x%X\r\n\t[%s]\r\n",
+                        fprintf(stderr,"pioctl GetFileAttributes(%s) failed: 0x%X\r\n\t[%s]\r\n",
                                  tbuffer,gle,buf);
                     }
                     errno = saveerrno;
@@ -821,12 +935,12 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
     }
 
   try_lsa_principal:
-    if (fh == INVALID_HANDLE_VALUE &&
-        GetLastError() != ERROR_SHARING_VIOLATION) {
+    if (!usingRDR &&
+        dwAttrib == INVALID_FILE_ATTRIBUTES) {
         int  gonext = 0;
 
         dwSize = sizeof(szUser);
-        if (GetLSAPrincipalName(szUser, &dwSize)) {
+        if (GetLSAPrincipalName(szUser, dwSize)) {
             if ( ioctlDebug ) {
                 saveerrno = errno;
                 fprintf(stderr, "pioctl LSA Principal logon user: [%s]\r\n",szUser);
@@ -863,19 +977,8 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             if (gonext)
                 goto try_sam_compat;
 
-            sharingViolation = 0;
-            do {
-                if (sharingViolation)
-                    Sleep(100);
-                fh = CreateFile(tbuffer, FILE_READ_DATA | FILE_WRITE_DATA,
-                                FILE_SHARE_READ, NULL, OPEN_EXISTING,
-                                FILE_FLAG_WRITE_THROUGH, NULL);
-                sharingViolation++;
-            } while (fh == INVALID_HANDLE_VALUE &&
-                     GetLastError() == ERROR_SHARING_VIOLATION &&
-                     sharingViolation < 100);
-            fflush(stdout);
-            if (fh == INVALID_HANDLE_VALUE) {
+            dwAttrib = GetFileAttributes(tbuffer);
+            if (dwAttrib == INVALID_FILE_ATTRIBUTES) {
                 gle = GetLastError();
                 if (gle && ioctlDebug ) {
                     char buf[4096];
@@ -887,10 +990,10 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                                         MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),
                                         buf,
                                         4096,
-                                        (va_list *) NULL
+                                        NULL
                                         ) )
                     {
-                        fprintf(stderr,"pioctl CreateFile(%s) failed: 0x%X\r\n\t[%s]\r\n",
+                        fprintf(stderr,"pioctl GetFileAttributes(%s) failed: 0x%X\r\n\t[%s]\r\n",
                                  tbuffer,gle,buf);
                     }
                     errno = saveerrno;
@@ -901,8 +1004,8 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
     }
 
   try_sam_compat:
-    if (fh == INVALID_HANDLE_VALUE &&
-        GetLastError() != ERROR_SHARING_VIOLATION) {
+    if (!usingRDR &&
+        dwAttrib == INVALID_FILE_ATTRIBUTES) {
         dwSize = sizeof(szUser);
         if (GetUserNameEx(NameSamCompatible, szUser, &dwSize)) {
             if ( ioctlDebug ) {
@@ -937,19 +1040,8 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                 return -1;
             }
 
-            sharingViolation = 0;
-            do {
-                if (sharingViolation)
-                    Sleep(100);
-                fh = CreateFile(tbuffer, FILE_READ_DATA | FILE_WRITE_DATA,
-                                FILE_SHARE_READ, NULL, OPEN_EXISTING,
-                                FILE_FLAG_WRITE_THROUGH, NULL);
-                sharingViolation++;
-            } while (fh == INVALID_HANDLE_VALUE &&
-                     GetLastError() == ERROR_SHARING_VIOLATION &&
-                     sharingViolation < 100);
-            fflush(stdout);
-            if (fh == INVALID_HANDLE_VALUE) {
+            dwAttrib = GetFileAttributes(tbuffer);
+            if (dwAttrib == INVALID_FILE_ATTRIBUTES) {
                 gle = GetLastError();
                 if (gle && ioctlDebug ) {
                     char buf[4096];
@@ -961,10 +1053,10 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                                         MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),
                                         buf,
                                         4096,
-                                        (va_list *) NULL
+                                        NULL
                                         ) )
                     {
-                        fprintf(stderr,"pioctl CreateFile(%s) failed: 0x%X\r\n\t[%s]\r\n",
+                        fprintf(stderr,"pioctl GetFileAttributes(%s) failed: 0x%X\r\n\t[%s]\r\n",
                                  tbuffer,gle,buf);
                     }
                     errno = saveerrno;
@@ -976,6 +1068,26 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             return -1;
         }
     }
+
+    if ( dwAttrib != (FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM)) {
+        fprintf(stderr, "GetFileAttributes(%s) returned: 0x%08X\r\n",
+                tbuffer, dwAttrib);
+        return -1;
+    }
+
+    /* tbuffer now contains the correct path; now open the file */
+    sharingViolation = 0;
+    do {
+        if (sharingViolation)
+            Sleep(100);
+        fh = CreateFile(tbuffer, FILE_READ_DATA | FILE_WRITE_DATA,
+                        FILE_SHARE_READ, NULL, OPEN_EXISTING,
+                        FILE_FLAG_WRITE_THROUGH, NULL);
+        sharingViolation++;
+    } while (fh == INVALID_HANDLE_VALUE &&
+             GetLastError() == ERROR_SHARING_VIOLATION &&
+             sharingViolation < 100);
+    fflush(stdout);
 
     if (fh == INVALID_HANDLE_VALUE)
         return -1;
@@ -1025,6 +1137,10 @@ Transceive(HANDLE handle, fs_ioctlRequest_t * reqp)
             fprintf(stderr, "pioctl Transceive ReadFile failed: 0x%X\r\n",gle);
             errno = save;
         }
+	if (gle == ERROR_NOT_SUPPORTED) {
+	    errno = EINVAL;
+	    return -1;
+	}
         return gle;
     }
 
@@ -1235,8 +1351,97 @@ pioctl_int(char *pathp, afs_int32 opcode, struct ViceIoctl *blobp, afs_int32 fol
     long code;
     long temp;
     char fullPath[1000];
+    char altPath[1024];
     HANDLE reqHandle;
     int save;
+    int i,j,count,all;
+
+    /*
+     * The pioctl operations for creating a mount point and a symlink are broken.
+     * Instead of 'pathp' referring to the directory object in which the symlink
+     * or mount point within which the new object is to be created, 'pathp' refers
+     * to the object itself.  This results in a problem when the object being created
+     * is located within the Freelance root.afs volume.  \\afs\foo will not be a
+     * valid share name since the 'foo' object does not yet exist.  Therefore,
+     * \\afs\foo\_._.afs_ioctl_._ cannot be opened.  Instead in these two cases
+     * we must force the use of the \\afs\all\foo form of the path.
+     *
+     * We cannot use this form in all cases because of smb submounts which are
+     * not located within the Freelance local root.
+     */
+    switch ( opcode ) {
+    case VIOC_AFS_CREATE_MT_PT:
+    case VIOC_SYMLINK:
+        if (pathp &&
+             (pathp[0] == '\\' && pathp[1] == '\\' ||
+              pathp[0] == '/' && pathp[1] == '/')) {
+            for (all = count = j = 0; pathp[j]; j++) {
+                if (pathp[j] == '\\' || pathp[j] == '/')
+                    count++;
+
+                /* Test to see if the second component is 'all' */
+                if (count == 3) {
+                    all = 1;
+                    for (i=0; pathp[i+j]; i++) {
+                        switch(i) {
+                        case 0:
+                            if (pathp[i+j] != 'a' &&
+                                pathp[i+j] != 'A') {
+                                all = 0;
+                                goto notall;
+                            }
+                            break;
+                        case 1:
+                        case 2:
+                            if (pathp[i+j] != 'l' &&
+                                 pathp[i+j] != 'L') {
+                                all = 0;
+                                goto notall;
+                            }
+                            break;
+                        default:
+                            all = 0;
+                            goto notall;
+                        }
+                    }
+                    if (i != 3)
+                        all = 0;
+                }
+
+              notall:
+                if (all)
+                    break;
+            }
+
+            /*
+             * if count is three and the second component is not 'all',
+             * then we are attempting to create an object in the
+             * Freelance root.afs volume.  Substitute the path.
+             */
+
+            if (count == 3 && !all) {
+                /* Normalize the name to use \\afs\all as the root */
+                for (count = i = j = 0; pathp[j] && i < sizeof(altPath); j++) {
+                    if (pathp[j] == '\\' || pathp[j] == '/') {
+                        altPath[i++] = '\\';
+                        count++;
+
+                        if (count == 3) {
+                            altPath[i++] = 'a';
+                            altPath[i++] = 'l';
+                            altPath[i++] = 'l';
+                            altPath[i++] = '\\';
+                            count++;
+                        }
+                    } else {
+                        altPath[i++] = pathp[j];
+                    }
+                }
+                altPath[i] = '\0';
+                pathp = altPath;
+            }
+        }
+    }
 
     code = GetIoctlHandle(pathp, &reqHandle);
     if (code) {

@@ -10,11 +10,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#include <errno.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <sys/stat.h>
+#include <roken.h>
+#include <afs/opr.h>
+
 #if defined(AFS_AIX_ENV)
 #include <sys/tape.h>
 #include <sys/statfs.h>
@@ -22,21 +20,10 @@
 #ifdef AFS_DARWIN_ENV
 #include <sys/ioccom.h>
 #endif
-#if defined(AFS_DUX40_ENV) || defined(AFS_OBSD_ENV) || defined(AFS_NBSD_ENV) || (defined(AFS_DARWIN_ENV) && !defined(AFS_DARWIN100_ENV))
-#include <sys/ioctl.h>
-#endif
 #ifndef AFS_DARWIN100_ENV
 #include <sys/mtio.h>
 #endif
 #endif /* AFS_AIX_ENV */
-
-#include <string.h>
-#include <stdlib.h>
-
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
-#include <afs/afs_assert.h>
 
 #include "usd.h"
 
@@ -58,19 +45,8 @@ typedef off_t osi_lloff_t;
  * conversion occur.  A good compiler in a 64 bit environment will
  * elide the entire statement if the offset type is 64 bits wide.
  */
-#define osi_hFitsInOff(ahyper, noff) \
-    ((sizeof(noff) == 4) ? hfitsin32(ahyper) : 1)
-
-#define osi_h2off(ahyper, noff)               \
-    ((sizeof(noff) == 4)                      \
-    ? ((noff) = (osi_lloff_t)hgetlo(ahyper))\
-     : ((noff) = ((osi_lloff_t)hgethi(ahyper)<<32) | (osi_lloff_t)hgetlo(ahyper)))
-
-#define osi_off2h(noff, ahyper)            \
-     ((sizeof(noff) == 4)                   \
-     ? (hset32(ahyper, (int)noff)) \
-     : (hset64(ahyper, (int)((noff>>32)&0xffffffff), ((int)noff&0xffffffff))))
-
+#define osi_hFitsInOff(val) \
+    ((sizeof(osi_lloff_t) == 4) ? (((val) & 0xffffffff00000000LL) == 0) : 1)
 
 /************ End of osi wrappers ***********************************/
 
@@ -115,21 +91,20 @@ usd_FileWrite(usd_handle_t usd, char *buf, afs_uint32 nbytes,
 extern osi_lloff_t osi_llseek(int, osi_lloff_t, int);
 
 static int
-usd_FileSeek(usd_handle_t usd, afs_hyper_t reqOff, int whence,
-	     afs_hyper_t * curOffP)
+usd_FileSeek(usd_handle_t usd, afs_int64 reqOff, int whence,
+	     afs_int64 * curOffP)
 {
     int fd = (intptr_t)(usd->handle);
     osi_lloff_t lloff;
 
-    if (!osi_hFitsInOff(reqOff, lloff))
+    if (!osi_hFitsInOff(reqOff))
 	return EINVAL;
 
-    osi_h2off(reqOff, lloff);
-    lloff = osi_llseek(fd, lloff, whence);
+    lloff = osi_llseek(fd, reqOff, whence);
     if (lloff == (((osi_lloff_t) 0) - 1))
 	return errno;
     if (curOffP)
-	osi_off2h(lloff, *curOffP);
+	*curOffP = lloff;
 
     return 0;
 }
@@ -146,8 +121,7 @@ usd_FileIoctl(usd_handle_t usd, int req, void *arg)
 #ifdef AFS_AIX_ENV
     struct statfs fsinfo;	/* AIX stat structure doesn't have st_blksize */
 #endif /* AFS_AIX_ENV */
-    afs_hyper_t size;
-    osi_lloff_t off;
+    afs_int64 size;
     int code = 0;
 
     switch (req) {
@@ -185,7 +159,7 @@ usd_FileIoctl(usd_handle_t usd, int req, void *arg)
     case USD_IOCTL_GETSIZE:
 	if (S_ISCHR(info.st_mode) || S_ISBLK(info.st_mode))
 	    return ENOTTY;	/* shouldn't be a device */
-	osi_off2h(info.st_size, *(afs_hyper_t *) arg);
+	*(afs_int64 *)arg = info.st_size;
 	break;
     case USD_IOCTL_GETFULLNAME:
 	*(char **)arg = usd->fullPathName;
@@ -199,14 +173,13 @@ usd_FileIoctl(usd_handle_t usd, int req, void *arg)
 	/* However, I'm pretty sure this doesn't work on Ultrix so I am
 	 * unsure about OSF/1 and HP/UX. 931118 */
 
-	size = *(afs_hyper_t *) arg;
-	if (!osi_hFitsInOff(size, off))
+	size = *(afs_int64 *) arg;
+	if (!osi_hFitsInOff(size))
 	    return EFBIG;
-	osi_h2off(size, off);
 #ifdef O_LARGEFILE
-	code = ftruncate64(fd, off);
+	code = ftruncate64(fd, size);
 #else /* O_LARGEFILE */
-	code = ftruncate(fd, off);
+	code = ftruncate(fd, size);
 #endif /* O_LARGEFILE */
 	if (code == -1)
 	    code = errno;
@@ -352,16 +325,14 @@ usd_FileOpen(const char *path, int flags, int mode, usd_handle_t * usdP)
     if (fd == -1)
 	return errno;
 
-    usd = (usd_handle_t) malloc(sizeof(*usd));
-    memset(usd, 0, sizeof(*usd));
+    usd = calloc(1, sizeof(*usd));
     usd->handle = (void *)(intptr_t)fd;
     usd->read = usd_FileRead;
     usd->write = usd_FileWrite;
     usd->seek = usd_FileSeek;
     usd->ioctl = usd_FileIoctl;
     usd->close = usd_FileClose;
-    usd->fullPathName = (char *)malloc(strlen(path) + 1);
-    strcpy(usd->fullPathName, path);
+    usd->fullPathName = strdup(path);
     usd->openFlags = flags;
 
     code = 0;
@@ -373,7 +344,7 @@ usd_FileOpen(const char *path, int flags, int mode, usd_handle_t * usdP)
 #endif /* O_LARGEFILE */
 
 	/* make sure both lock bits aren't set */
-	assert(~flags & (USD_OPEN_RLOCK | USD_OPEN_WLOCK));
+	opr_Assert(~flags & (USD_OPEN_RLOCK | USD_OPEN_WLOCK));
 
 	fl.l_type = ((flags & USD_OPEN_RLOCK) ? F_RDLCK : F_WRLCK);
 	fl.l_whence = SEEK_SET;
@@ -421,11 +392,7 @@ usd_FileStandardInput(usd_handle_t * usdP)
 {
     usd_handle_t usd;
 
-    if (usdP)
-	*usdP = NULL;
-
-    usd = (usd_handle_t) malloc(sizeof(*usd));
-    memset(usd, 0, sizeof(*usd));
+    usd = calloc(1, sizeof(*usd));
     usd->handle = (void *)((unsigned long)0);
     usd->read = usd_FileRead;
     usd->write = usd_FileWrite;
@@ -450,11 +417,7 @@ usd_FileStandardOutput(usd_handle_t * usdP)
 {
     usd_handle_t usd;
 
-    if (usdP)
-	*usdP = NULL;
-
-    usd = (usd_handle_t) malloc(sizeof(*usd));
-    memset(usd, 0, sizeof(*usd));
+    usd = calloc(1, sizeof(*usd));
     usd->handle = (void *)((unsigned long)1);
     usd->read = usd_FileRead;
     usd->write = usd_FileWrite;

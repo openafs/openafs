@@ -30,9 +30,13 @@ XDROBJS = $(OUT)\xdr.obj $(OUT)\xdr_array.obj $(OUT)\xdr_arrayn.obj $(OUT)\xdr_f
 	$(OUT)\xdr_rec.obj  $(OUT)\xdr_refernce.obj $(OUT)\xdr_rx.obj $(OUT)\xdr_update.obj \
 	$(OUT)\xdr_afsuuid.obj $(OUT)\xdr_int64.obj $(OUT)\xdr_int32.obj $(OUT)\xdr_len.obj
 
-RXOBJS = $(OUT)\rx_event.obj $(OUT)\rx_clock_nt.obj $(OUT)\rx_user.obj $(OUT)\rx_lwp.obj $(OUT)\rx.obj \
-	$(OUT)\rx_null.obj $(OUT)\rx_globals.obj $(OUT)\rx_getaddr.obj $(OUT)\rx_misc.obj $(OUT)\rx_packet.obj \
-	$(OUT)\rx_rdwr.obj $(OUT)\rx_trace.obj $(OUT)\rx_xmit_nt.obj $(OUT)\rx_conncache.obj
+RXOBJS = $(OUT)\rx_event.obj $(OUT)\rx_clock_nt.obj $(OUT)\rx_user.obj \
+	 $(OUT)\rx_lwp.obj $(OUT)\rx.obj $(OUT)\rx_null.obj \
+	 $(OUT)\rx_globals.obj $(OUT)\rx_getaddr.obj $(OUT)\rx_misc.obj \
+	 $(OUT)\rx_packet.obj $(OUT)\rx_rdwr.obj $(OUT)\rx_trace.obj \
+	 $(OUT)\rx_xmit_nt.obj $(OUT)\rx_conncache.obj \
+	 $(OUT)\rx_opaque.obj $(OUT)\rx_identity.obj $(OUT)\rx_stats.obj \
+         $(OUT)\rx_call.obj $(OUT)\rx_conn.obj $(OUT)\rx_peer.obj
 
 MULTIOBJS = $(OUT)\rx_multi.obj
 
@@ -42,6 +46,7 @@ INCFILEDIR = $(DESTDIR)\include\rx
 
 INCFILES  = \
 	$(INCFILEDIR)\rx.h \
+	$(INCFILEDIR)\rx_atomic.h \
 	$(INCFILEDIR)\rx_packet.h \
 	$(INCFILEDIR)\rx_user.h \
 	$(INCFILEDIR)\rx_event.h \
@@ -52,6 +57,8 @@ INCFILES  = \
 	$(INCFILEDIR)\rx_multi.h \
 	$(INCFILEDIR)\rx_null.h \
 	$(INCFILEDIR)\rx_lwp.h \
+	$(INCFILEDIR)\rx_identity.h \
+	$(INCFILEDIR)\rx_opaque.h \
 	$(INCFILEDIR)\rx_pthread.h \
 	$(INCFILEDIR)\rx_xmit_nt.h \
 	$(INCFILEDIR)\xdr_prototypes.h \
@@ -60,7 +67,7 @@ INCFILES  = \
 
 $(LIBOBJS): $(INCFILES)
 
-$(MULTIOBJS):  rx_multi.h 
+$(MULTIOBJS):  rx_multi.h
 
 $(XDROBJS): xdr.h
 
@@ -74,10 +81,8 @@ install_headers:  $(INCFILES)
 
 install: install_headers $(LIBFILE)
 
-install9x: install_headers $(LIBFILE)
-
 clean::
 	$(DEL) $(LIBFILE) $(INCFILES)
 
 mkdir:
-	
+

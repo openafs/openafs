@@ -7,14 +7,14 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+include @TOP_OBJDIR@/src/config/Makefile.lwptool
 
-LIBOBJS = rxstat.cs.o rxstat.ss.o rxstat.xdr.o rxstat.o
+LT_objs = rxstat.cs.lo rxstat.ss.lo rxstat.xdr.lo rxstat.lo
+LT_deps = $(top_builddir)/src/rx/liboafs_rx.la
 
-all: depinstall ${TOP_LIBDIR}/librxstat.a 
+all: depinstall liboafs_rxstat.la librxstat_pic.la \
+	${TOP_LIBDIR}/librxstat.a
 
 generated: \
 	Krxstat.cs.c Krxstat.ss.c Krxstat.xdr.c \
@@ -49,10 +49,14 @@ rxstat.xdr.c: rxstat.h
 rxstat.cs.c: rxstat.h
 rxstat.ss.c: rxstat.h
 
-librxstat.a: ${LIBOBJS} AFS_component_version_number.o
-	-$(RM) -f $@
-	$(AR) crv $@ ${LIBOBJS} AFS_component_version_number.o
-	$(RANLIB) $@
+librxstat.a: $(LT_objs)
+	$(LT_LDLIB_lwp) $(LT_objs)
+
+liboafs_rxstat.la: liboafs_rxstat.la.sym $(LT_objs) $(LT_deps)
+	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
+
+librxstat_pic.la: $(LT_objs)
+	$(LT_LDLIB_pic) $(LT_objs)
 
 Krxstat.cs.c: rxstat.xg
 	${RXGEN} -x -k -C -o $@ ${srcdir}/rxstat.xg
@@ -82,6 +86,7 @@ dest: rxstat.h librxstat.a
 # Misc. targets
 #
 clean:
+	$(LT_CLEAN)
 	$(RM) -f rxstat.h *.xdr.c *.cs.c *.ss.c *.o *.a core AFS_component_version_number.c
 
 include ../config/Makefile.version

@@ -190,6 +190,7 @@
 #define SetExtendedVolumeAttributesEvent "AFS_SRX_SetVA"
 #define GetStatisticsEvent      "AFS_SRX_GetStats"
 #define XStatsVersionEvent      "AFS_SRX_XStatsVer"
+#define GetXStatsEvent          "AFS_SRX_GetXStats"
 
 #define NoAuthEvent             "AFS_RunNoAuth"
 #define NoAuthDisableEvent      "AFS_NoAuthDsbl"
@@ -302,4 +303,5 @@ int osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...);
 int osi_audit_file(const char *filename);
 void osi_audit_init(void);
 int osi_audit_interface(const char *interface);
+void osi_audit_set_user_check(void *rock, int (*islocal)(void *rock, char *name, char *inst, char *cell));
 void audit_PrintStats(FILE *out);

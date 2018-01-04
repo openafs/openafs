@@ -10,22 +10,13 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <sys/types.h>
-#include <stdio.h>
-#include <stdlib.h>
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
 #include <WINNT/afsreg.h>
 #include <WINNT/afsevent.h>
 #endif
-#include <string.h>
-#ifdef HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#endif
-#ifdef HAVE_NETDB_H
-#include <netdb.h>
-#endif
+
 #include <rx/rxkad.h>
 #include "cellconfig.h"
 #include "keys.h"

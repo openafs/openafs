@@ -21,7 +21,9 @@ use Cwd;
 my $help;
 my $man;
 my $externalDir;
+my $nowhitespace;
 my $result = GetOptions("help|?" => \$help,
+			"nofixwhitespace" => \$nowhitespace,
 			"man" => \$man,
 			"externaldir=s" => \$externalDir);
 		
@@ -49,11 +51,29 @@ my $fh = IO::File->new("$externalDir/$module-files")
   or die "Couldn't open mapping file : $!\n";
 while (<$fh>) {
   next if /^\s#/;
-  if (/^(.+)\s+(.+)$/) {
+  if (/^(\S+)\s+(\S+)$/) {
     $mapping{$1} = $2;
   } elsif (/\w+/) {
     die "Unrecognised line in mapping file : $_\n";
   }
+}
+undef $fh;
+
+# Read in our last-sha1 file
+my $last;
+
+$fh = IO::File->new("$externalDir/$module-last");
+if ($fh) {
+  $last = $fh->getline;
+  chomp $last;
+}
+undef $fh;
+
+my $author;
+$fh = IO::File->new("$externalDir/$module-author");
+if ($fh) {
+  $author = $fh->getline;
+  chomp $author;
 }
 undef $fh;
 
@@ -82,6 +102,14 @@ my $commitDesc = `git describe $commitish`;
 chomp $commitSha1;
 chomp $commitDesc;
 
+# If we know what our last import was, then get a list of all of the changes
+# since that import
+my $changes;
+if ($last) {
+  my $filelist = join(' ', sort keys(%mapping));
+  $changes = `git shortlog $last..$commitish $filelist`;
+}
+
 # Populate our temporary directory with the originals of everything that was
 # listed in the mapping file
 system("git archive --format=tar --prefix=source/ $commitish".
@@ -108,7 +136,11 @@ if (system("git diff-index --quiet --cached HEAD --ignore-submodules") != 0 ||
   $stashed = 1;
 }
 
+
 eval {
+  my @addedFiles;
+  my @deletedFiles;
+
   # Use git-ls-files to get the list of currently committed files for the module
   my $lspipe = IO::Pipe->new();
   $lspipe->reader(qw(git ls-files));
@@ -122,6 +154,9 @@ eval {
   foreach my $source (sort keys(%mapping)) {
     if (-f "$tempdir/source/$source") {
       File::Path::make_path(File::Basename::dirname($mapping{$source}));
+      if (!-f "$externalDir/$module/".$mapping{$source}) {
+	 push @addedFiles, $mapping{$source};
+      }
       system("cp $tempdir/source/$source ".
 	     "   $externalDir/$module/".$mapping{$source}) == 0
          or die "Copy failed with $!\n";
@@ -138,19 +173,51 @@ eval {
   foreach my $missing (keys(%filesInTree)) {
     system("git rm $missing") == 0
       or die "Couldn't git rm $missing : $!\n";
+    push @deletedFiles, $missing;
   }
 
   if (system("git status") == 0) {
-    my $fh=IO::File->new("$tempdir/commit-msg", "w")
+    my $fh=IO::File->new("$externalDir/$module-last", "w");
+    $fh->print($commitSha1."\n");
+    undef $fh;
+    system("git add $externalDir/$module-last") == 0
+       or die "Git add of last file failed with $!\n";
+
+    $fh=IO::File->new("$tempdir/commit-msg", "w")
       or die "Unable to write commit message\n";
     $fh->print("Import of code from $module\n");
     $fh->print("\n");
-    $fh->print("This commit updates the code imported from the external\n");
-    $fh->print("$module git repository to their revision\n$commitSha1\n");
-    $fh->print("which is described as $commitDesc\n");
+    $fh->print("This commit updates the code imported from $module to\n");
+    $fh->print("$commitSha1 ($commitDesc)\n");
+    if ($changes) {
+	$fh->print("\n");
+	$fh->print("Upstream changes are:\n\n");
+	$fh->print($changes);
+    }
+    if (@addedFiles) {
+	$fh->print("\n");
+	$fh->print("New files are:\n");
+	$fh->print(join("\n", map { "\t".$_  } sort @addedFiles));
+	$fh->print("\n");
+    }
+    if (@deletedFiles) {
+	$fh->print("\n");
+	$fh->print("Deleted files are:\n");
+	$fh->print(join("\n", map { "\t".$_  } sort @deletedFiles));
+	$fh->print("\n");
+    }
     undef $fh;
-    system("git commit -F $tempdir/commit-msg") == 0
+    $author="--author '$author'" if ($author);
+    system("git commit --no-verify -F $tempdir/commit-msg $author") == 0
       or die "Commit failed : $!\n";
+    if ($nowhitespace) {
+	print STDERR "WARNING: not fixing whitespace errors.\n";
+    } else {
+	system("git rebase --whitespace=fix HEAD^") == 0
+	    or print STDERR "WARNING: Fixing whitespace errors failed.\n";
+    }
+    system("GIT_EDITOR=true git commit --amend") == 0
+      or print STDERR "WARNING: Firing commit msg hooks failed.\n";
   }
 };
 
@@ -185,6 +252,7 @@ import-external-git [options] <module> <repository> [<commitish>]
     --help		brief help message
     --man		full documentation
     --externalDir	exact path to import into
+    --nofixwhitespace   don't apply whitespace fixes
 
 =head1 DESCRIPTION
 

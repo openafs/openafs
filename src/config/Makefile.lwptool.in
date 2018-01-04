@@ -1,0 +1,10 @@
+# This Makefile fragment contains rules for building libraries that are
+# an lwp/libtool mixture
+
+.SUFFIXES: .lo
+
+.c.lo:
+	$(LTLWP_CCRULE) $<
+%.lo: %.c
+	$(LTLWP_CCRULE) $<
+

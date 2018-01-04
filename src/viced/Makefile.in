@@ -9,136 +9,141 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
-HELPER_SPLINT=@HELPER_SPLINT@
+include @TOP_OBJDIR@/src/config/Makefile.pthread
 
 
-CFLAGS=${DBG} ${OPTMZ} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} \
-       ${XCFLAGS} ${ARCHFLAGS} -DNINTERFACE
+MODULE_CFLAGS = -DRXDEBUG -DFSSYNC_BUILD_SERVER -DSALVSYNC_BUILD_CLIENT
 
-LDFLAGS = ${DBUG} ${XLDFLAGS} ${ARCHFLAGS}
+DIR=$(srcdir)/../dir
+VOL=$(srcdir)/../vol
 
-LIBS=${TOP_LIBDIR}/libacl.a	\
-	${TOP_LIBDIR}/libvldb.a	\
-	${TOP_LIBDIR}/libprot.a	\
-	${TOP_LIBDIR}/libauth.a	\
-	${TOP_LIBDIR}/librxkad.a		\
-	${TOP_LIBDIR}/libubik.a 		\
-	${TOP_LIBDIR}/vlib.a		\
-	${TOP_LIBDIR}/libdir.a	\
-	${TOP_LIBDIR}/util.a		\
-	${TOP_LIBDIR}/libsys.a	\
-	${TOP_LIBDIR}/libafsint.a	\
-	${TOP_LIBDIR}/librxstat.a	\
-	${TOP_LIBDIR}/librx.a		\
-	${TOP_LIBDIR}/libsys.a	\
-	${TOP_LIBDIR}/libdes.a		\
-	${TOP_LIBDIR}/libafscom_err.a	\
-	${TOP_LIBDIR}/liblwp.a \
-	${TOP_LIBDIR}/libafsutil.a
+VICEDOBJS=viced.o afsfileprocs.o host.o physio.o callback.o serialize_state.o \
+	  fsstats.o
 
-headers=${TOP_INCDIR}/lwp.h		\
-	${TOP_INCDIR}/afs/acl.h	\
-	${TOP_INCDIR}/afs/errors.h	\
-	${TOP_INCDIR}/afs/ptclient.h \
-	${TOP_INCDIR}/lock.h		\
-	${TOP_INCDIR}/afs/volume.h	\
-	${TOP_INCDIR}/afs/vnode.h	\
-	${TOP_INCDIR}/rx/rx.h	\
-	${TOP_INCDIR}/rx/xdr.h	\
-	${TOP_INCDIR}/afs/auth.h	\
-	${TOP_INCDIR}/afs/afsint.h	\
-	viced.h				\
-	host.h				\
-	callback.h			\
-	fs_stats.h
+DIROBJS=buffer.o dir.o salvage.o
 
-objects=viced.o		\
-	afsfileprocs.o	\
-	host.o		\
-	physio.o	\
-	callback.o	
+VOLOBJS= vnode.o volume.o vutil.o partition.o fssync-server.o \
+	 clone.o devname.o common.o ihandle.o listinodes.o namei_ops.o \
+	 salvsync-client.o daemon_com.o vg_cache.o vg_scan.o
+
+FSINTOBJS = afsint.ss.o
+
+objects= ${VICEDOBJS} ${DIROBJS} ${VOLOBJS} ${FSINTOBJS}
+
+LIBS= \
+     $(top_builddir)/src/vlserver/liboafs_vldb.la \
+     $(top_builddir)/src/rxkad/liboafs_rxkad.la \
+     $(top_builddir)/src/rxstat/liboafs_rxstat.la \
+     $(top_builddir)/src/lwp/liboafs_lwpcompat.la \
+     $(top_builddir)/src/libacl/liboafs_acl.la \
+     $(top_builddir)/src/fsint/liboafs_fsint.la \
+     $(top_builddir)/src/cmd/liboafs_cmd.la \
+     $(top_builddir)/src/opr/liboafs_opr.la \
+     $(top_builddir)/src/util/liboafs_util.la
 
 all: cbd fsprobe check_sysid fileserver ${TOP_INCDIR}/afs/fs_stats.h
 
 ${TOP_INCDIR}/afs/fs_stats.h: fs_stats.h
 	${INSTALL_DATA} $? $@
 
-${objects}: ${headers}
-
-viced.o: AFS_component_version_number.o
-
-check_sysid: check_sysid.c
-	${CC} ${CFLAGS} -o check_sysid ${srcdir}/check_sysid.c
-
-fileserver: ${objects} ${headers} ${LIBS}
-	set -x; \
-	case ${SYS_NAME} in \
-	rs_aix*) \
-	    ${CC} -K ${LDFLAGS} -o fileserver ${objects} \
-	    ${TOP_LIBDIR}/libaudit.a ${LIBS} ${XLIBS} ${KRB5_LIBS} ;; \
-	*) \
-	    ${CC} ${LDFLAGS} -o fileserver ${objects} \
-	    ${TOP_LIBDIR}/libaudit.a ${LIBS} ${XLIBS} ${KRB5_LIBS} ;; \
-	esac
+check_sysid: check_sysid.o
+	$(LT_LDRULE_static) check_sysid.o \
+		${LIBS} $(LIB_hcrypto) $(LIB_roken) $(MT_LIBS) ${XLIBS}
 
 fsprobe.o: fsprobe.c AFS_component_version_number.c
-	${CC} ${CFLAGS} @CFLAGS_NOERROR@ -DINTERPRET_DUMP -c ${srcdir}/fsprobe.c
 
 fsprobe: fsprobe.o
-	${CC} ${CFLAGS} -o fsprobe fsprobe.o ${LIBS} ${XLIBS} ${KRB5_LIBS}
+	$(LT_LDRULE_static) fsprobe.o \
+		${LIBS} $(LIB_hcrypto) $(LIB_roken) $(MT_LIBS)
 
+CFLAGS_cbd.o = -DINTERPRET_DUMP
 cbd.o: callback.c AFS_component_version_number.c
-	${CC} ${CFLAGS} -DINTERPRET_DUMP -c -o cbd.o ${srcdir}/callback.c
+	$(AFS_CCRULE) $(srcdir)/callback.c
 
 cbd: cbd.o
-	${CC} ${CFLAGS} -DINTERPRET_DUMP -o cbd cbd.o ${LIBS} ${XLIBS} ${KRB5_LIBS}
+	$(LT_LDRULE_static) cbd.o ${LIBS} $(LIB_roken) ${XLIBS}
 
-install: fileserver fs_stats.h
+buffer.o: ${DIR}/buffer.c
+	$(AFS_CCRULE) $(DIR)/buffer.c
+
+dir.o: ${DIR}/dir.c
+	$(AFS_CCRULE) $(DIR)/dir.c
+
+salvage.o: ${DIR}/salvage.c
+	$(AFS_CCRULE) $(DIR)/salvage.c
+
+vnode.o: ${VOL}/vnode.c
+	$(AFS_CCRULE) $(VOL)/vnode.c
+
+volume.o: ${VOL}/volume.c
+	$(AFS_CCRULE) $(VOL)/volume.c
+
+vutil.o: ${VOL}/vutil.c
+	$(AFS_CCRULE) $(VOL)/vutil.c
+
+partition.o: ${VOL}/partition.c
+	$(AFS_CCRULE) $(VOL)/partition.c
+
+vg_cache.o: ${VOL}/vg_cache.c
+	$(AFS_CCRULE) $(VOL)/vg_cache.c
+
+vg_scan.o: ${VOL}/vg_scan.c
+	$(AFS_CCRULE) $(VOL)/vg_scan.c
+
+fssync-server.o: ${VOL}/fssync-server.c
+	$(AFS_CCRULE) $(VOL)/fssync-server.c
+
+fssync-client.o: ${VOL}/fssync-client.c
+	$(AFS_CCRULE) $(VOL)/fssync-client.c
+
+salvsync-client.o: ${VOL}/salvsync-client.c
+	$(AFS_CCRULE) $(VOL)/salvsync-client.c
+
+daemon_com.o: ${VOL}/daemon_com.c
+	$(AFS_CCRULE) $(VOL)/daemon_com.c
+
+clone.o: ${VOL}/clone.c
+	$(AFS_CCRULE) $(VOL)/clone.c
+
+nuke.o: ${VOL}/nuke.c
+	$(AFS_CCRULE) $(VOL)/nuke.c
+
+devname.o: ${VOL}/devname.c
+	$(AFS_CCRULE) $(VOL)/devname.c
+
+common.o: ${VOL}/common.c
+	$(AFS_CCRULE) $(VOL)/common.c
+
+listinodes.o: ${VOL}/listinodes.c
+	$(AFS_CCRULE) $(VOL)/listinodes.c
+
+ihandle.o: ${VOL}/ihandle.c
+	$(AFS_CCRULE) $(VOL)/ihandle.c
+
+namei_ops.o: ${VOL}/namei_ops.c
+	$(AFS_CCRULE) $(VOL)/namei_ops.c
+
+afsint.ss.o: ../fsint/afsint.ss.c
+	$(AFS_CCRULE) ../fsint/afsint.ss.c
+
+fileserver: ${objects} ${LIBS}
+	$(LT_LDRULE_static) ${objects} \
+		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
+
+install: fileserver
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
-	${INSTALL} -d ${DESTDIR}${includedir}/afs
-	${INSTALL_DATA} ${srcdir}/fs_stats.h ${DESTDIR}${includedir}/afs/fs_stats.h
-	@case ${SYS_NAME} in \
-	alpha_dux4*|*linux*|rs_aix*|sgi_6*|sun4x*|sunx86*) \
-		echo "Don't install fileserver for ${SYS_NAME}" ;; \
-	*_darwin_[1-6][0-9]) \
-		echo ${INSTALL} fileserver ${DESTDIR}${afssrvlibexecdir}/fileserver ; \
-		${INSTALL} fileserver ${DESTDIR}${afssrvlibexecdir}/fileserver ;; \
-	*_darwin_*) \
-		echo "Don't install fileserver for ${SYS_NAME}" ;; \
-	*) \
-		echo ${INSTALL} fileserver ${DESTDIR}${afssrvlibexecdir}/fileserver ; \
-		${INSTALL} fileserver ${DESTDIR}${afssrvlibexecdir}/fileserver ;; \
-	esac
+	${INSTALL} -d ${DESTDIR}${afssrvsbindir}
+	${LT_INSTALL_PROGRAM} fileserver \
+		${DESTDIR}${afssrvlibexecdir}/fileserver
 
-dest: fileserver fs_stats.h
+dest: fileserver
 	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
-	${INSTALL} -d ${DEST}/include/afs
-	${INSTALL_DATA} ${srcdir}/fs_stats.h ${DEST}/include/afs/fs_stats.h
-	@case ${SYS_NAME} in \
-	alpha_dux4*|*linux*|rs_aix*|sgi_6*|sun4x*|sunx86*) \
-		echo "Don't install fileserver for ${SYS_NAME}" ;; \
-	*_darwin_[1-6][0-9]) \
-		echo ${INSTALL} fileserver ${DEST}/root.server/usr/afs/bin/fileserver ; \
-		${INSTALL} fileserver ${DEST}/root.server/usr/afs/bin/fileserver ;; \
-	*_darwin_*) \
-		echo "Don't install fileserver for ${SYS_NAME}" ;; \
-	*) \
-		echo ${INSTALL} fileserver ${DEST}/root.server/usr/afs/bin/fileserver ; \
-		${INSTALL} fileserver ${DEST}/root.server/usr/afs/bin/fileserver ;; \
-	esac
+	${INSTALL} fileserver \
+		${DEST}/root.server/usr/afs/bin/fileserver
 
 clean:
-	$(RM) -f *.o fileserver core AFS_component_version_number.c cbd check_sysid fsprobe
+	$(LT_CLEAN)
+	$(RM) -f *.o fileserver core AFS_component_version_number.c \
+	       cbd check_sysid fsprobe
 
 include ../config/Makefile.version
-check-splint::
-	sh $(HELPER_SPLINT) $(CFLAGS) \
-	    viced.c		\
-	    afsfileprocs.c	\
-	    host.c		\
-	    physio.c	\
-	    callback.c

@@ -9,26 +9,19 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
+#include <roken.h>
+
+#include <ctype.h>
+
+#include <hcrypto/des.h>
 
 #include <afs/afsutil.h>
-#include <afs/stds.h>
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <sys/file.h>
-#endif
-#include <string.h>
-#include <time.h>
-#include <stdio.h>
-#include <ctype.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
-#include <des.h>
-#include <des_prototypes.h>
+#include <rx/rxkad_convert.h>
+
 #include "kauth.h"
 #include "kautils.h"
 
@@ -142,18 +135,18 @@ umin(afs_uint32 a, afs_uint32 b)
 afs_int32
 ka_KeyCheckSum(char *key, afs_uint32 * cksumP)
 {
-    des_key_schedule s;
-    unsigned char block[8];
+    DES_key_schedule s;
+    DES_cblock block;
     afs_uint32 cksum;
     afs_int32 code;
 
     *cksumP = 0;
     memset(block, 0, 8);
-    code = des_key_sched(charptr_to_cblock(key), s);
+    code = DES_key_sched(charptr_to_cblock(key), &s);
     if (code)
 	return KABADKEY;
-    des_ecb_encrypt(block, block, s, ENCRYPT);
-    memcpy(&cksum, block, sizeof(afs_int32));
+    DES_ecb_encrypt(&block, &block, &s, ENCRYPT);
+    memcpy(&cksum, &block, sizeof(afs_int32));
     *cksumP = ntohl(cksum);
     return 0;
 }
@@ -175,14 +168,18 @@ ka_timestr(afs_int32 time, char *tstr, afs_int32 tlen)
 {
     char tbuffer[32];		/* need at least 26 bytes */
     time_t passtime;		/* modern systems have 64 bit time */
+    struct tm tm;
 
-    if (!time)
-	strcpy(tstr, "no date");	/* special case this */
-    else if (time == NEVERDATE)
+    passtime = time;
+
+    if (time == NEVERDATE)
 	strcpy(tstr, "never");
     else {
-	passtime = time;
-	strncpy(tstr, afs_ctime(&passtime, tbuffer, sizeof(tbuffer)), tlen);
-	tstr[strlen(tstr) - 1] = '\0';	/* punt the newline character */
+	if (!time || strftime(tbuffer, sizeof(tbuffer), "%c",
+			      localtime_r(&passtime, &tm)) == 0)
+	    strcpy(tstr, "no date");
+	else {
+	    strncpy(tstr, tbuffer, tlen);
+	}
     }
 }

@@ -9,26 +9,15 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
-#include <string.h>
+
+#include <roken.h>
+
 #include <ctype.h>
-#ifdef AFS_NT40_ENV
-#include <fcntl.h>
-#include <winsock2.h>
-#else
-#include <sys/types.h>
-#include <sys/file.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#endif /* AFS_NT40_ENV */
-#include <sys/stat.h>
 #ifdef AFS_AIX_ENV
 #include <sys/statfs.h>
 #endif
 
-#include <errno.h>
 #include <lock.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
@@ -41,6 +30,7 @@
 #include <afs/afsint.h>
 #include <afs/cmd.h>
 #include <rx/rxkad.h>
+
 #include "volser.h"
 #include "volint.h"
 #include "lockdata.h"
@@ -48,7 +38,6 @@
 #include "vsutils_prototypes.h"
 
 struct ubik_client *cstruct;
-static rxkad_level vsu_rxkad_level = rxkad_clear;
 
 static void
 ovlentry_to_nvlentry(struct vldbentry *oentryp,
@@ -216,7 +205,7 @@ VLDB_ReplaceEntry(afs_uint32 volid, afs_int32 voltype, struct nvldbentry *entryp
 
 static void
 convertBulkToNBulk(bulkentries *bulk, nbulkentries *nbulk) {
-    int i;
+    unsigned int i;
 
     if (bulk->bulkentries_len == 0)
 	return;
@@ -271,9 +260,6 @@ VLDB_ListAttributes(VldbListByAttributes *attrp,
 	}
     }
 
-    if (code)
-	return code;
-
     /* Ensure the number of entries claimed matches the no. returned */
     if (*entriesp < 0)
 	*entriesp = 0;
@@ -311,7 +297,7 @@ VLDB_ListAttributesN2(VldbListByAttributes *attrp,
 
 struct cacheips {
     afs_uint32 server;
-    afs_int32 count;
+    afs_uint32 count;
     afs_uint32 addrs[16];
 };
 /*
@@ -329,8 +315,8 @@ VLDB_IsSameAddrs(afs_uint32 serv1, afs_uint32 serv2, afs_int32 *errorp)
     int code;
     ListAddrByAttributes attrs;
     bulkaddrs addrs;
-    afs_uint32 *addrp, i, j, f1, f2;
-    afs_int32 unique, nentries;
+    afs_uint32 *addrp, j, f1, f2;
+    afs_int32 unique, nentries, i;
     afsUUID uuid;
     static int initcache = 0;
 
@@ -405,38 +391,18 @@ VLDB_IsSameAddrs(afs_uint32 serv1, afs_uint32 serv2, afs_int32 *errorp)
     return code;
 }
 
-
-/*
-  Set encryption.  If 'cryptflag' is nonzero, encrpytion is turned on
-  for authenticated connections; if zero, encryption is turned off.
-  Calling this function always results in a level of at least rxkad_auth;
-  to get a rxkad_clear connection, simply don't call this.
-*/
-void
-vsu_SetCrypt(int cryptflag)
-{
-    if (cryptflag) {
-	vsu_rxkad_level = rxkad_crypt;
-    } else {
-	vsu_rxkad_level = rxkad_auth;
-    }
-}
-
-
 /*
   Get the appropriate type of ubik client structure out from the system.
 */
-afs_int32
-vsu_ClientInit(int noAuthFlag, const char *confDir, char *cellName, afs_int32 sauth,
-               struct ubik_client **uclientp,
-	       int (*secproc)(struct rx_securityClass *, afs_int32))
+int
+vsu_ClientInit(const char *confDir, char *cellName, int secFlags,
+	       int (*secproc)(struct rx_securityClass *, afs_int32),
+	       struct ubik_client **uclientp)
 {
-    return ugen_ClientInit(noAuthFlag, confDir, cellName, sauth, uclientp,
-			   secproc, "vsu_ClientInit", vsu_rxkad_level,
-			   VLDB_MAXSERVERS, AFSCONF_VLDBSERVICE, 90,
-			   0, 0, USER_SERVICE_ID);
+    return ugen_ClientInitFlags(confDir, cellName, secFlags, uclientp,
+				secproc, VLDB_MAXSERVERS, AFSCONF_VLDBSERVICE,
+				90);
 }
-
 
 /*extract the name of volume <name> without readonly or backup suffixes
  * and return the result as <rname>.
@@ -445,7 +411,7 @@ int
 vsu_ExtractName(char rname[], char name[])
 {
     char sname[VOLSER_OLDMAXVOLNAME + 1];
-    int total;
+    size_t total;
 
     strncpy(sname, name, sizeof(sname));
     sname[sizeof(sname) - 1] = '\0';
@@ -474,7 +440,7 @@ vsu_GetVolumeID(char *astring, struct ubik_client *acstruct, afs_int32 *errp)
     char volname[VOLSER_OLDMAXVOLNAME + 1];
     struct nvldbentry entry;
     afs_int32 vcode = 0;
-    int total;
+    size_t total;
 
     *errp = 0;
 

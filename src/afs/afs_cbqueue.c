@@ -216,12 +216,9 @@ afs_CheckCallbacks(unsigned int secs)
 			if (!(tvp->serverHost[i]->flags & SRVR_ISDOWN)) {
 			    /* What about locking xvcache or vrefcount++ or
 			     * write locking tvc? */
-			    QRemove(tq);
-			    tvc->f.states &= ~(CStatd | CMValid | CUnique);
-                            if (!(tvc->f.states & (CVInit|CVFlushed)) &&
-                                (tvc->f.fid.Fid.Vnode & 1 ||
-                                 (vType(tvc) == VDIR)))
-				osi_dnlc_purgedp(tvc);
+			    afs_StaleVCacheFlags(tvc, AFS_STALEVC_CBLOCKED |
+				AFS_STALEVC_SKIP_DNLC_FOR_INIT_FLUSHED,
+				CMValid | CUnique);
 			    tvc->dchint = NULL;	/*invalidate em */
 			    afs_ResetVolumeInfo(tvp);
 			    break;
@@ -233,11 +230,9 @@ afs_CheckCallbacks(unsigned int secs)
 		/* Do I need to worry about things like execsorwriters?
 		 * What about locking xvcache or vrefcount++ or write locking tvc?
 		 */
-		QRemove(tq);
-		tvc->f.states &= ~(CStatd | CMValid | CUnique);
-                if (!(tvc->f.states & (CVInit|CVFlushed)) &&
-                    (tvc->f.fid.Fid.Vnode & 1 || (vType(tvc) == VDIR)))
-		    osi_dnlc_purgedp(tvc);
+		afs_StaleVCacheFlags(tvc, AFS_STALEVC_CBLOCKED |
+				     AFS_STALEVC_SKIP_DNLC_FOR_INIT_FLUSHED,
+				     CMValid | CUnique);
 	    }
 	}
 
@@ -303,14 +298,10 @@ afs_FlushCBs(void)
 
     for (i = 0; i < VCSIZE; i++)	/* reset all the vnodes */
 	for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
-	    tvc->callback = 0;
+	    afs_StaleVCacheFlags(tvc, AFS_STALEVC_CBLOCKED |
+				 AFS_STALEVC_CLEARCB |
+				 AFS_STALEVC_SKIP_DNLC_FOR_INIT_FLUSHED, 0);
 	    tvc->dchint = NULL;	/* invalidate hints */
-	    tvc->f.states &= ~(CStatd);
-	    if (QPrev(&(tvc->callsort)))
-		QRemove(&(tvc->callsort));
-	    if (!(tvc->f.states & (CVInit|CVFlushed)) &&
-                ((tvc->f.fid.Fid.Vnode & 1) || (vType(tvc) == VDIR)))
-		osi_dnlc_purgedp(tvc);
 	}
 
     afs_InitCBQueue(0);
@@ -334,14 +325,10 @@ afs_FlushServerCBs(struct server *srvp)
     for (i = 0; i < VCSIZE; i++) {	/* reset all the vnodes */
 	for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
 	    if (tvc->callback == srvp) {
-		tvc->callback = 0;
+		afs_StaleVCacheFlags(tvc, AFS_STALEVC_CBLOCKED |
+				     AFS_STALEVC_CLEARCB |
+				     AFS_STALEVC_SKIP_DNLC_FOR_INIT_FLUSHED, 0);
 		tvc->dchint = NULL;	/* invalidate hints */
-		tvc->f.states &= ~(CStatd);
-		if (!(tvc->f.states & (CVInit|CVFlushed)) &&
-                    ((tvc->f.fid.Fid.Vnode & 1) || (vType(tvc) == VDIR))) {
-		    osi_dnlc_purgedp(tvc);
-		}
-		afs_DequeueCallback(tvc);
 	    }
 	}
     }

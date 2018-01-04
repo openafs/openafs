@@ -1,0 +1,89 @@
+=head1 NAME
+
+vos_online - Brings a volume online
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<vos online> S<<< B<-server> <I<machine name>> >>>
+    S<<< B<-partition> <I<partition name>> >>> 
+    S<<< B<-id> <I<volume name or ID>> >>>
+    S<<< [B<-cell> <I<cell name>>] >>>
+    [B<-noauth>] B<-localauth>]
+    [B<-verbose>] [B<-encrypt>] [B<-noresolve>]
+    S<<< [B<-config> <I<config directory>>] >>>
+    [B<-help>]
+
+B<vos on> S<<< B<-s> <I<machine name>> >>>
+    S<<< B<-p> <I<partition name>> >>> 
+    S<<< B<-i> <I<volume name or ID>> >>>
+    S<<< [B<-c> <I<cell name>>] >>>
+    [B<-noa>] B<-l>] [B<-v>] [B<-e>] [B<-nor>]
+    S<<< [B<-co> <I<config directory>>] >>>
+    [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<vos online> command brings an offline volume on line with the 
+B<fileserver>.
+
+=head1 CAUTIONS
+
+None.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-server> <I<machine name>>
+
+Identifies the file server machine where the volume resides. 
+Provide the machine's IP address or its host name (either fully
+qualified or using an unambiguous abbreviation). For details, see
+L<vos(1)>.
+
+=item B<-partition> <I<partition name>>
+
+Identifies the partition where the volume resides, on the
+file server machine named by the B<-server> argument. Provide the
+partition's complete name with preceding slash (for example, C</vicepa>)
+or use one of the three acceptable abbreviated forms. For details, see
+L<vos(1)>.
+
+=item B<-id> <I<volume name or ID>>
+
+Specifies either the complete name or volume ID number of the volume.
+
+=include fragments/vos-common.pod
+
+=back
+
+=head1 EXAMPLES
+
+The following example brings an offline volume online:
+
+   % vos online -server sv7.example.org -partition /vicepb -id root.afs
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the F</usr/afs/etc/UserList> file on the
+machine specified with the B<-server> argument and on each database server
+machine. If the B<-localauth> flag is included, the issuer must instead be
+logged on to a server machine as the local superuser C<root>.
+
+=head1 SEE ALSO
+
+L<vos(1)>,
+L<vos_offline(1)>,
+L<bos_salvage(8)>,
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This man page was created by Steven Jenkins.

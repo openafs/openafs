@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
     <appendix id="HDRWQ86"><title>OpenAFS Command Syntax and Online Help</title>
 
+<para>
 <indexterm><primary>syntax of AFS commands described</primary></indexterm>
 
-    <para>The AFS commands available to you are used to authenticate, list AFS information, protect directories, create
+    The AFS commands available to you are used to authenticate, list AFS information, protect directories, create
     and manage groups, and create and manage ACLs. There are three general types of commands available to all AFS
     users: file server commands, protection server commands, and miscellaneous commands. This chapter discusses the
     syntax of these AFS commands, the rules that must be followed when issuing them, and ways of accessing help
@@ -122,13 +123,13 @@
     </itemizedlist>
     <para>For example, the following two commands are equivalent:</para>
 <programlisting>
-   % <emphasis role="bold">fs setacl -dir /afs/abc.com/usr/terry/private -acl pat rl</emphasis>
-   % <emphasis role="bold">fs setacl /afs/abc.com/usr/terry/private pat rl</emphasis>
+   % <emphasis role="bold">fs setacl -dir /afs/example.com/usr/terry/private -acl pat rl</emphasis>
+   % <emphasis role="bold">fs setacl /afs/example.com/usr/terry/private pat rl</emphasis>
 </programlisting>
     <para>However, the following is not an acceptable short form because the arguments are not in the prescribed
     order:</para>
 <programlisting>
-   % <emphasis role="bold">fs setacl -acl pat rl /afs/abc.com/usr/terry/private</emphasis>
+   % <emphasis role="bold">fs setacl -acl pat rl /afs/example.com/usr/terry/private</emphasis>
 </programlisting>
     </sect2><sect2 id="Header_174"><title>Shortening Switches and Flags</title>
     <para>
@@ -169,7 +170,7 @@
 </programlisting>
     <para>Both of the previous examples are acceptable short forms for the following command:</para>
 <programlisting>
-   % <emphasis role="bold">fs setacl -dir /afs/abc.com/usr/terry -acl pat rl</emphasis>
+   % <emphasis role="bold">fs setacl -dir /afs/example.com/usr/terry -acl pat rl</emphasis>
 </programlisting>
     </sect2></sect1><sect1 id="Header_176"><title>Commonly Used fs and pts Commands</title>
     <para>This section provides additional information on the commonly used AFS <emphasis role="bold">fs</emphasis> and

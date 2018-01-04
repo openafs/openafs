@@ -24,4 +24,4 @@ $(OUT)\usd_test.exe: $(OUT)\usd_test.obj $(LIBFILE) $(LIBUTIL)
         $(SYMSTORE_IMPORT)
 
 mkdir:
-	
+

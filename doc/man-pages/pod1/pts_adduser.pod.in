@@ -9,9 +9,11 @@ pts_adduser - Adds a user or machine to a Protection Database group
 
 B<pts adduser> S<<< B<-user> <I<user name>>+ >>> S<<< B<-group> <I<group name>>+ >>>
     S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>] [B<-force>] [B<-help>]
+    [B<-auth>] [B<-encrypt>] S<<< [B<-config> <I<config directory>>] >>>
 
 B<pts ad> S<<< B<-u> <I<user name>>+ >>> S<<< B<-g> <I<group name>>+ >>>
     S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>] [B<-f>] [B<-h>]
+    [B<-a>] [B<-e>] S<<< [B<-co> <I<config directory>>] >>>
 
 =for html
 </div>
@@ -65,9 +67,9 @@ smith:colleagues group.
 
    % pts adduser -user jones terry pat -group smith:colleagues
 
-The following example adds the machine entries in the ABC Corporation
+The following example adds the machine entries in the Example Corporation
 subnet to the group C<bin-prot>. Because of the IP address range of the
-ABC Corporation subnet, the system administrator was able to group the
+Example Corporation subnet, the system administrator was able to group the
 machines into three machine entries (using the wildcard notation discussed
 on the B<pts createuser> reference page).
 

@@ -67,7 +67,7 @@ loop:
 	    if (afs_IsDynrootFid(&tvc->f.fid))
 		continue;
 	    /* no fake fsevents on mount point sources. leaks refs */
-	    if (tvc->mvstat == 1)
+	    if (tvc->mvstat == AFS_MVSTAT_MTPT)
 		continue;
 	    /* if it's being reclaimed, just pass */
 	    if (vnode_get(vp))
@@ -189,10 +189,10 @@ afs_suser(void *credp)
 }
 
 #ifdef AFS_DARWIN80_ENV
-uio_t
-afsio_darwin_partialcopy(uio_t auio, int size)
+struct uio *
+afsio_partialcopy(struct uio *auio, size_t size)
 {
-    uio_t res;
+    struct uio *res;
     int i;
     user_addr_t iovaddr;
     user_size_t iovsize;

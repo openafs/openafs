@@ -10,18 +10,18 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 
 RPCINCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/rx/rx.h
 
 LIBS=${TOP_LIBDIR}/libafsint.a \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/libafshcrypto_lwp.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/libopr.a \
 	${TOP_LIBDIR}/util.a
 
 all: \
@@ -61,7 +61,8 @@ xstat_fs_callback.o: xstat_fs_callback.c ${FSINCLS}
 xstat_fs_test.o: xstat_fs_test.c ${FSINCLS} AFS_component_version_number.c
 
 xstat_fs_test: xstat_fs_test.o libxstat_fs.a ${LIBS}
-	${CC} ${CFLAGS} -o xstat_fs_test xstat_fs_test.o libxstat_fs.a ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) xstat_fs_test.o libxstat_fs.a \
+		${LIBS} $(LIB_roken) ${XLIBS}
 
 #
 # Cache Manager data collection
@@ -78,7 +79,8 @@ xstat_cm.o: xstat_cm.c ${CMINCLS}
 xstat_cm_test.o: xstat_cm_test.c ${CMINCLS} AFS_component_version_number.c
 
 xstat_cm_test: xstat_cm_test.o libxstat_cm.a ${LIBS}
-	${CC} ${CFLAGS} -o xstat_cm_test xstat_cm_test.o libxstat_cm.a ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) xstat_cm_test.o libxstat_cm.a \
+		${LIBS} $(LIB_roken) ${XLIBS}
 
 #
 # Installation targets

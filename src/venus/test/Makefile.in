@@ -7,17 +7,22 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+top_builddir=@top_builddir@
 
-
-INCDIRS= -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} -I..
-LDIRS= -L${TOP_LIBDIR} -L..
-LIBS= -lsys -lubik -lvldb -lauth -lrxkad -ldes -lafscom_err -lcmd -lrx -llwp -lafsutil
-
-CFLAGS = ${OPTIMIZE} ${INCDIRS} ${XCFLAGS} ${ARCHFLAGS}
+LT_deps = \
+	$(TOP_OBJDIR)/src/sys/liboafs_sys.la \
+	$(TOP_OBJDIR)/src/ubik/liboafs_ubik.la \
+	$(TOP_OBJDIR)/src/vlserver/liboafs_vldb.la \
+	$(TOP_OBJDIR)/src/auth/liboafs_auth.la \
+	$(TOP_OBJDIR)/src/rxkad/liboafs_rxkad.la \
+	$(TOP_OBJDIR)/src/comerr/liboafs_comerr.la \
+	$(TOP_OBJDIR)/src/cmd/liboafs_cmd.la \
+	$(TOP_OBJDIR)/src/rx/liboafs_rx.la \
+	$(TOP_OBJDIR)/src/util/liboafs_util.la \
+	$(TOP_OBJDIR)/src/opr/liboafs_opr.la
+LT_libs = \
+	$(LDFLAGS_roken) $(LIB_roken) $(LDFLAGS_hcrypto) $(LIB_hcrypto) $(XLIBS)
 
 all test:  fulltest owntest idtest getinitparams
 
@@ -25,14 +30,15 @@ install:
 dest:
 
 fulltest: fulltest.o
-	$(CC) $(CFLAGS) -o $@ $@.o $(LDIRS) $(LIBS)
+	$(LT_LDRULE_static) $@.o $(LT_deps) $(LT_libs)
 owntest: owntest.o
-	$(CC) $(CFLAGS) -o $@ $@.o $(LDIRS) $(LIBS)
+	$(LT_LDRULE_static) $@.o $(LT_deps) $(LT_libs)
 idtest: idtest.o
-	$(CC) $(CFLAGS) -o $@ $@.o $(LDIRS) $(LIBS)
+	$(LT_LDRULE_static) $@.o $(LT_deps) $(LT_libs)
 getinitparams: getinitparams.o
-	$(CC) $(CFLAGS) -o $@ $@.o $(LDIRS) $(LIBS)
+	$(LT_LDRULE_static) $@.o $(LT_deps) $(LT_libs)
 
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o fulltest owntest idtest getinitparams
 

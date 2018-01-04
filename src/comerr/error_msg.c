@@ -10,25 +10,27 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include "internal.h"
-#include <stdio.h>
-#include "error_table.h"
-#include "mit-sipb-cr.h"
 #ifdef HAVE_LIBINTL
 #include <libintl.h>
 #endif
 #ifdef AFS_DARWIN_ENV
 #include <CoreFoundation/CoreFoundation.h>
 #endif
+
+#include <afs/opr.h>
 #include <afs/errors.h>
 #include <afs/afsutil.h>
-#include <string.h>
+
+#include "internal.h"
+#include "error_table.h"
+#include "mit-sipb-cr.h"
 #include "com_err.h"
 
 static char buffer[64];
 
-static struct et_list *_et_list = (struct et_list *)NULL;
+static struct et_list *_et_list = NULL;
 
 #ifdef AFS_PTHREAD_ENV
 #include <pthread.h>
@@ -50,8 +52,7 @@ static pthread_once_t et_list_once = PTHREAD_ONCE_INIT;
 static void
 et_mutex_once(void)
 {
-    assert(!pthread_mutex_init
-	   (&et_list_mutex, (const pthread_mutexattr_t *)0));
+    opr_Verify(!pthread_mutex_init(&et_list_mutex, NULL));
     et_list_done = 1;
 }
 
@@ -59,9 +60,9 @@ et_mutex_once(void)
 	do { \
 	    if (!et_list_done) \
 		pthread_once(&et_list_once, et_mutex_once); \
-	    assert(pthread_mutex_lock(&et_list_mutex)==0); \
+	    opr_Verify(pthread_mutex_lock(&et_list_mutex)==0); \
 	} while (0)
-#define UNLOCK_ET_LIST assert(pthread_mutex_unlock(&et_list_mutex)==0)
+#define UNLOCK_ET_LIST opr_Verify(pthread_mutex_unlock(&et_list_mutex)==0)
 #else
 #define LOCK_ET_LIST
 #define UNLOCK_ET_LIST

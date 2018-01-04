@@ -34,6 +34,7 @@ B<afsd> [B<-afsdb>] [B<-backuptree>]
      [B<-disable-dynamic-vcaches>] 
      S<<< [B<-volumes> <I<number of volume entries>>] >>>
      [B<-waitclose>] [B<-rxmaxfrags> <I<max # of fragments>>]
+     S<<< [B<-volume-ttl> <I<vldb cache timeout>>] >>>
 
 =for html
 </div>
@@ -292,10 +293,7 @@ Server.
 =item *
 
 One I<server connection> daemon, which sends a probe to the File
-Server every few minutes to check that it is still accessible. If the
-B<-settime> option is set, it also synchronizes the machine's clock
-with the clock on a randomly-chosen file server machine. There is
-always one server connection daemon.
+Server every few minutes to check that it is still accessible.
 
 =item *
 
@@ -533,10 +531,12 @@ When the dynamic root (B<-dynroot>, B<-dynroot-sparse>) and the fake stat
 provides a special directory named F</afs/.:mount> which allows access to
 volumes by volume name or ID.  The F</afs/.:mount> directory appears to be
 empty, but any name in the form of I<cell>:I<volume> will be resolved as a
-read-write mount point to the specified volume.  This dynamic mount feature is
-recommended only for temporary access to a volume.  Linux-based cache managers
-provide this dynamic mount feature even when dynamic root (B<-dynroot>,
-B<-dynroot-sparse>) is not in effect.
+read-write mount point to the specified volume.  For example, the
+I<user.jdoe> volume in the I<example.com> cell would be accessible at the
+following path: F</afs/.:mount/example.com:user.jdoe>.  This dynamic mount
+feature is recommended only for temporary access to a volume.  Linux-based
+cache managers provide this dynamic mount feature even when dynamic root
+(B<-dynroot>, B<-dynroot-sparse>) is not in effect.
 
 =item B<-dynroot-sparse>
 
@@ -650,7 +650,7 @@ mounted in /Network/afs like other network file systems.
 =item B<-nosettime>
 
 This option is obsolete and no longer has any effect.  The operating system
-provided time keeping services should be used to maintain the system time.
+provided time keeping daemons should be used to maintain the system time.
 
 =item B<-prealloc> <I<number of preallocated blocks>>
 
@@ -707,15 +707,8 @@ improve OpenAFS client performance in some circumstances.
 
 =item B<-settime>
 
-The B<-settime> option is deprecated and should no longer be specified.  The
-operating system provided time keeping services should be used to maintain the
-system time.
-
-The B<-settime> option enables the native AFS time synchronization.  If the
-B<-settime> option is specified, then a randomly selected a file server machine
-in the local cell is used as the source for the correct time. Every five minutes
-thereafter, the local clock is adjusted (if necessary) to match the file server
-machine's clock.
+This option is obsolete and no longer has any effect.  The operating system
+provided time keeping daemons should be used to maintain the system time.
 
 =item B<-shutdown>
 
@@ -760,6 +753,21 @@ Has no effect on the operation of the Cache Manager. The behavior it
 affected in previous versions of the Cache Manager, to perform synchronous
 writes to the File Server, is now the default behavior. To perform
 asynchronous writes in certain cases, use the B<fs storebehind> command.
+
+=item B<-volume-ttl>
+
+Specifies the maximum amount of time the Cache Manager will cache volume
+information retrieved from VL Servers.
+
+By default, the Cache Manager will cache read-only volume information as long
+as a volume callback is held for a read-only volume. The callback may be held
+as long as files in the read-only volume are being accessed.  The Cache Manager
+will cache read/write volume information as long as volume level errors are not
+returned from fileservers while accessing files within the volume.
+
+Use the B<-volume-ttl> to specify the maximum amount of time in seconds
+volume information will be cached, regardless of connectivity to the
+fileserers. The minimum valid value is 600 seconds (10 minutes).
 
 =back
 

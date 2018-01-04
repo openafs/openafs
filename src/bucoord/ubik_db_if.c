@@ -12,22 +12,17 @@
 #include <afsconfig.h>
 #include <afs/stds.h>
 
+#include <roken.h>
+
 #ifdef IGNORE_SOME_GCC_WARNINGS
 # pragma GCC diagnostic warning "-Wstrict-prototypes"
 #endif
 
-#include <sys/types.h>
-#include <fcntl.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#elif defined(AFS_SUN5_ENV)
-#include <netdb.h>
-#else
-#include <sys/param.h>		/* for hostnames etc */
-#endif
+#include <afs/cmd.h>
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <ubik.h>
+#include <afs/afsint.h>
 #include <afs/volser.h>
 #include <afs/volser_prototypes.h>
 #include <afs/afsutil.h>
@@ -35,7 +30,6 @@
 #include <afs/budb_client.h>
 #include <afs/budb.h>
 #include <afs/com_err.h>
-#include <errno.h>
 
 #include "bc.h"
 #include "error_macros.h"
@@ -497,12 +491,11 @@ bcdb_GetTextFile(udbClientTextP ctPtr)
 
     /* allocate a buffer */
     bufferSize = 1024;
-    charList.charListT_val = (char *)malloc(bufferSize);
+    charList.charListT_val = malloc(bufferSize);
     if (charList.charListT_val == 0)
 	ERROR(BUDB_INTERNALERROR);
     charList.charListT_len = bufferSize;
 
-    offset = 0;
     nextOffset = 0;
     ctPtr->textSize = 0;
     while (nextOffset != -1) {
@@ -566,7 +559,7 @@ bcdb_SaveTextFile(udbClientTextP ctPtr)
 
     /* allocate a buffer */
     bufferSize = 1024;
-    charList.charListT_val = (char *)malloc(bufferSize);
+    charList.charListT_val = malloc(bufferSize);
     if (charList.charListT_val == 0)
 	ERROR(BUDB_INTERNALERROR);
     charList.charListT_len = bufferSize;
@@ -593,7 +586,7 @@ bcdb_SaveTextFile(udbClientTextP ctPtr)
 
     offset = 0;
     while (fileSize != 0) {
-	chunkSize = MIN(fileSize, bufferSize);
+	chunkSize = min(fileSize, bufferSize);
 	code =
 	    fread(charList.charListT_val, sizeof(char), chunkSize,
 		  ctPtr->textStream);
@@ -1221,9 +1214,7 @@ int
 bc_openTextFile(udbClientTextP ctPtr, char *tmpFileName)
 {
     int code = 0;
-#ifdef HAVE_MKSTEMP
     int fd;
-#endif
 
     if (ctPtr->textStream != NULL) {
 	fclose(ctPtr->textStream);
@@ -1231,15 +1222,10 @@ bc_openTextFile(udbClientTextP ctPtr, char *tmpFileName)
     }
 
     sprintf(tmpFileName, "%s/bu_XXXXXX", gettmpdir());
-#ifdef HAVE_MKSTEMP
     fd = mkstemp(tmpFileName);
     if (fd == -1)
 	ERROR(BUDB_INTERNALERROR);
     ctPtr->textStream = fdopen(fd, "w+");
-#else
-    mktemp(tmpFileName);
-    ctPtr->textStream = fopen(tmpFileName, "w+");
-#endif
     if (ctPtr->textStream == NULL)
 	ERROR(BUDB_INTERNALERROR);
 

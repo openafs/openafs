@@ -25,17 +25,11 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#ifdef AFS_PTHREAD_ENV
-#include <afs/afs_assert.h>
-/* can't include this in lwp, rx hasn't built yet */
-#include <rx/rx.h>
-#else
-#include <assert.h>
-#endif
+#include <roken.h>
+#include <afs/opr.h>
 
 #include "lwp.h"
 #include "lock.h"
-#include <stdio.h>
 
 #define FALSE	0
 #define TRUE	1
@@ -48,9 +42,9 @@ Lock_Init(struct Lock *lock)
     lock->wait_states = 0;
     lock->num_waiting = 0;
 #ifdef AFS_PTHREAD_ENV
-    MUTEX_INIT(&lock->mutex, "lock", MUTEX_DEFAULT, 0);
-    CV_INIT(&lock->read_cv, "read", CV_DEFAULT, 0);
-    CV_INIT(&lock->write_cv, "write", CV_DEFAULT, 0);
+    opr_mutex_init(&lock->mutex);
+    opr_cv_init(&lock->read_cv);
+    opr_cv_init(&lock->write_cv);
 #endif /* AFS_PTHREAD_ENV */
 }
 
@@ -58,9 +52,9 @@ void
 Lock_Destroy(struct Lock *lock)
 {
 #ifdef AFS_PTHREAD_ENV
-    MUTEX_DESTROY(&lock->mutex);
-    CV_DESTROY(&lock->read_cv);
-    CV_DESTROY(&lock->write_cv);
+    opr_mutex_destroy(&lock->mutex);
+    opr_cv_destroy(&lock->read_cv);
+    opr_cv_destroy(&lock->write_cv);
 #endif /* AFS_PTHREAD_ENV */
 }
 
@@ -74,7 +68,7 @@ Afs_Lock_Obtain(struct Lock *lock, int how)
 	do {
 	    lock->wait_states |= READ_LOCK;
 #ifdef AFS_PTHREAD_ENV
-	    CV_WAIT(&lock->read_cv, &lock->mutex);
+	    opr_cv_wait(&lock->read_cv, &lock->mutex);
 #else /* AFS_PTHREAD_ENV */
 	    LWP_WaitProcess(&lock->readers_reading);
 #endif /* AFS_PTHREAD_ENV */
@@ -88,7 +82,7 @@ Afs_Lock_Obtain(struct Lock *lock, int how)
 	do {
 	    lock->wait_states |= WRITE_LOCK;
 #ifdef AFS_PTHREAD_ENV
-	    CV_WAIT(&lock->write_cv, &lock->mutex);
+	    opr_cv_wait(&lock->write_cv, &lock->mutex);
 #else /* AFS_PTHREAD_ENV */
 	    LWP_WaitProcess(&lock->excl_locked);
 #endif /* AFS_PTHREAD_ENV */
@@ -102,7 +96,7 @@ Afs_Lock_Obtain(struct Lock *lock, int how)
 	do {
 	    lock->wait_states |= SHARED_LOCK;
 #ifdef AFS_PTHREAD_ENV
-	    CV_WAIT(&lock->write_cv, &lock->mutex);
+	    opr_cv_wait(&lock->write_cv, &lock->mutex);
 #else /* AFS_PTHREAD_ENV */
 	    LWP_WaitProcess(&lock->excl_locked);
 #endif /* AFS_PTHREAD_ENV */
@@ -116,7 +110,7 @@ Afs_Lock_Obtain(struct Lock *lock, int how)
 	do {
 	    lock->wait_states |= WRITE_LOCK;
 #ifdef AFS_PTHREAD_ENV
-	    CV_WAIT(&lock->write_cv, &lock->mutex);
+	    opr_cv_wait(&lock->write_cv, &lock->mutex);
 #else /* AFS_PTHREAD_ENV */
 	    LWP_WaitProcess(&lock->excl_locked);
 #endif /* AFS_PTHREAD_ENV */
@@ -127,7 +121,7 @@ Afs_Lock_Obtain(struct Lock *lock, int how)
 
     default:
 	printf("Can't happen, bad LOCK type: %d\n", how);
-	assert(0);
+	opr_Assert(0);
     }
 }
 
@@ -138,7 +132,7 @@ Afs_Lock_WakeupR(struct Lock *lock)
     if (lock->wait_states & READ_LOCK) {
 	lock->wait_states &= ~READ_LOCK;
 #ifdef AFS_PTHREAD_ENV
-	CV_BROADCAST(&lock->read_cv);
+	opr_cv_broadcast(&lock->read_cv);
 #else /* AFS_PTHREAD_ENV */
 	LWP_NoYieldSignal(&lock->readers_reading);
 #endif /* AFS_PTHREAD_ENV */
@@ -152,14 +146,14 @@ Afs_Lock_ReleaseR(struct Lock *lock)
     if (lock->wait_states & READ_LOCK) {
 	lock->wait_states &= ~READ_LOCK;
 #ifdef AFS_PTHREAD_ENV
-	CV_BROADCAST(&lock->read_cv);
+	opr_cv_broadcast(&lock->read_cv);
 #else /* AFS_PTHREAD_ENV */
 	LWP_NoYieldSignal(&lock->readers_reading);
 #endif /* AFS_PTHREAD_ENV */
     } else {
 	lock->wait_states &= ~EXCL_LOCKS;
 #ifdef AFS_PTHREAD_ENV
-	CV_BROADCAST(&lock->write_cv);
+	opr_cv_broadcast(&lock->write_cv);
 #else /* AFS_PTHREAD_ENV */
 	LWP_NoYieldSignal(&lock->excl_locked);
 #endif /* AFS_PTHREAD_ENV */
@@ -173,14 +167,14 @@ Afs_Lock_ReleaseW(struct Lock *lock)
     if (lock->wait_states & EXCL_LOCKS) {
 	lock->wait_states &= ~EXCL_LOCKS;
 #ifdef AFS_PTHREAD_ENV
-	CV_BROADCAST(&lock->write_cv);
+	opr_cv_broadcast(&lock->write_cv);
 #else /* AFS_PTHREAD_ENV */
 	LWP_NoYieldSignal(&lock->excl_locked);
 #endif /* AFS_PTHREAD_ENV */
     } else {
 	lock->wait_states &= ~READ_LOCK;
 #ifdef AFS_PTHREAD_ENV
-	CV_BROADCAST(&lock->read_cv);
+	opr_cv_broadcast(&lock->read_cv);
 #else /* AFS_PTHREAD_ENV */
 	LWP_NoYieldSignal(&lock->readers_reading);
 #endif /* AFS_PTHREAD_ENV */

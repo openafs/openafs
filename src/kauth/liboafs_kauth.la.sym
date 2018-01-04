@@ -1,0 +1,16 @@
+initialize_KA_error_table
+ka_AuthServerConn
+ka_AuthSpecificServersConn
+ka_Authenticate
+ka_CellConfig
+ka_CellToRealm
+ka_ChangePassword
+ka_GetAdminToken
+ka_GetToken
+ka_Init
+ka_KeyCheckSum
+ka_LocalCell
+ka_ParseLoginName
+ka_StringToKey
+ka_UserAuthenticateGeneral
+ka_VerifyUserPassword

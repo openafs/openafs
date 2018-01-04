@@ -1,0 +1,99 @@
+#!/usr/bin/perl
+#
+# Copyright (c) 2010 Your File System Inc. All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR `AS IS'' AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+# IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+# NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+# THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+use strict;
+use warnings;
+use Test::More tests => 11;
+use IO::File;
+use POSIX qw(:signal_h);
+use File::Temp;
+use FindBin qw($Bin);
+
+# Start up our test process, and send it various signals. Check that these
+# signals make it to it correctly, and are reported on the command line.
+my $softsig_helper = $Bin . "/softsig-helper";
+
+# This -dummy argument prevents Perl from putting an intermediate sh
+# -c between us and softsig-helper in the case where the build
+# directory happens to contain shell metacharacters, like the ~ in
+# /build/openafs-vb8tid/openafs-1.8.0~pre1 used by the Debian
+# builders.
+my $pid = open(HELPER, "-|", $softsig_helper, "-dummy")
+  or die "Couldn't start test helper.";
+
+# Wait for softsig to start up.
+is(<HELPER>, "Ready\n");
+
+# Check that a load of common signals are correctly trapped.
+
+kill 'INT', $pid;
+is(<HELPER>, "Received INT\n");
+
+kill 'HUP', $pid;
+is(<HELPER>, "Received HUP\n");
+
+kill 'QUIT', $pid;
+is(<HELPER>, "Received QUIT\n");
+
+kill 'ALRM', $pid;
+is(<HELPER>, "Received ALRM\n");
+
+kill 'TERM', $pid;
+is(<HELPER>, "Received TERM\n");
+
+kill 'USR1', $pid;
+is(<HELPER>, "Received USR1\n");
+
+kill 'USR2', $pid;
+is(<HELPER>, "Received USR2\n");
+
+
+# Check that we can actually stop the process with a kill.
+
+kill 'KILL', $pid;
+close(HELPER);
+is($?, SIGKILL, "Helper exited on KILL signal.");
+
+# Check that an internal segmentation fault kills the process.
+
+$pid = open(HELPER, "-|", $softsig_helper, "-crash")
+    or die "Couldn't start test helper.";
+close(HELPER);
+is($? & 0x7f, SIGSEGV, "Helper exited on SEGV signal.");
+
+# Check that an internal bus error kills the process.
+# Skip this test when running on ancient versions of Perl
+# which do not have SIGBUS defined.
+SKIP: {
+    my $sigbus = eval "SIGBUS";
+    skip("Skipping buserror test; SIGBUS constant is not defined.", 1) unless $sigbus;
+
+    my ($fh, $path) = mkstemp("/tmp/softsig-t_XXXXXX");
+    $pid = open(HELPER, "-|", $softsig_helper, "-buserror", $path)
+        or die "Couldn't start test helper.";
+    close(HELPER);
+    is($? & 0x7f, $sigbus, "Helper exited on BUS signal.");
+    $fh->close;
+    unlink $path;
+}

@@ -1,17 +1,10 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.pthread
 
-CC=${MT_CC}
-CFLAGS=${COMMON_CFLAGS} -I.. -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG @KRB5_CPPFLAGS@
-CCRULE=${CC} ${CFLAGS} -c $?
-
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
-
-KRB5CFLAGS = @KRB5_CPPFLAGS@
-KRB5LIBS = @KRB5_LIBS@
+#for debugging:
+#CFLAGS += -DAFSCP_DEBUG
+KRB5CPPFLAGS = @KRB5_CPPFLAGS@
 
 LIBOBJS = \
 	afscp_callback.o \
@@ -23,36 +16,11 @@ LIBOBJS = \
 	afscp_init.o \
 	afscp_util.o \
 	afscp_dirops.o \
-	afscp_roken.o \
 	afscp_acl.o
 
 all: \
-	${TOP_LIBDIR}/libafsutil.a \
 	${TOP_LIBDIR}/libafscp.a \
 	depinstall
-
-afscp_roken.o: afscp_roken.c
-	${CCRULE}
-afscp_callback.o: afscp_callback.c
-	${CCRULE}
-afscp_server.o: afscp_server.c
-	${CCRULE}
-afscp_file.o: afscp_file.c
-	${CCRULE}
-afscp_fid.o: afscp_fid.c
-	${CCRULE}
-afscp_dir.o: afscp_dir.c
-	${CCRULE}
-afscp_dirops.o: afscp_dirops.c
-	${CCRULE}
-afscp_acl.o: afscp_acl.c
-	${CCRULE}
-afscp_volume.o: afscp_volume.c
-	${CCRULE}
-afscp_init.o: afscp_init.c
-	${CCRULE}
-afscp_util.o: afscp_util.c
-	${CCRULE}
 
 #
 # Build targets
@@ -71,8 +39,8 @@ depinstall: \
 ${TOP_INCDIR}/afs/afscp.h: afscp.h
 	${INSTALL_DATA} $? $@
 
-CFLAGS_afscp_util.o = $(KRB5CFLAGS)
-CFLAGS_afscp_server.o = $(KRB5CFLAGS)
+CPPFLAGS_afscp_util.o = $(KRB5CPPFLAGS)
+CPPFLAGS_afscp_server.o = $(KRB5CPPFLAGS)
 
 #
 # Install targets

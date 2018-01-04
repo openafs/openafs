@@ -21,18 +21,18 @@
   *	-blocks	    The number of blocks available in the workstation cache.
   *	-files	    The target number of files in the workstation cache (Default:
   *		    1000).
-  *	-rootvol	    The name of the root volume to use.
+  *	-rootvol    The name of the root volume to use.
   *	-stat	    The number of stat cache entries.
-  *	-hosts	    List of servers to check for volume location info FOR THE
+  *	-hosts	    [OBSOLETE] List of servers to check for volume location info FOR THE
   *		    HOME CELL.
   *     -memcache   Use an in-memory cache rather than disk.
-  *	-cachedir    The base directory for the workstation cache.
+  *	-cachedir   The base directory for the workstation cache.
   *	-mountdir   The directory on which the AFS is to be mounted.
-  *	-confdir    The configuration directory .
+  *	-confdir    The configuration directory.
   *	-nosettime  Don't keep checking the time to avoid drift (default).
-  *	-settime    Keep checking the time to avoid drift (deprecated).
+  *     -settime    [IGNORED] Keep checking the time to avoid drift.
   *	-rxmaxmtu   Set the max mtu to help with VPN issues.
-  *	-verbose     Be chatty.
+  *	-verbose    Be chatty.
   *	-disable-dynamic-vcaches     Disable the use of -stat value as the starting size of
   *                          the size of the vcache/stat cache pool,
   *                          but increase that pool dynamically as needed.
@@ -44,45 +44,59 @@
   *                support daemon
   *     -chunksize [n]   2^n is the chunksize to be used.  0 is default.
   *     -dcache    The number of data cache entries.
+  *     -volumes    The number of volume entries.
   *     -biods     Number of bkg I/O daemons (AIX3.1 only)
   *	-prealloc  Number of preallocated "small" memory blocks
-  *	-logfile   [OBSOLETE] Place where to put the logfile (default in
+  *	-logfile    [IGNORED] Place where to put the logfile (default in
   *                <cache>/etc/AFSLog.
   *	-waitclose make close calls always synchronous (slows em down, tho)
   *	-files_per_subdir [n]	number of files per cache subdir. (def=2048)
   *	-shutdown  Shutdown afs daemons
+  *	-enable_peer_stats	Collect RPC statistics by peer.
+  *	-enable_process_stats	Collect RPC statistics for this process.
+  *	-mem_alloc_sleep [IGNORED] Sleep when allocating memory.
+  *	-afsdb	    Enable AFSDB support.
+  *	-dynroot	Enable dynroot support.
+  *	-dynroot-sparse	Enable dynroot support with minimal cell list.
+  *	-fakestat	Enable fake stat() for cross-cell mounts.
+  *	-fakestat-all	Enable fake stat() for all mounts.
+  *	-nomount    Do not mount /afs.
+  *	-backuptree Prefer backup volumes for mountpoints in backup volumes.
+  *	-rxbind	    Bind the rx socket.
+  *	-rxpck	    Value for rx_extraPackets.
+  *	-splitcache RW/RO ratio for cache.
+  *	-rxmaxfrags Max number of UDP fragments per rx packet.
   *	-inumcalc  inode number calculation method; 0=compat, 1=MD5 digest
+  *	-volume-ttl vldb cache timeout in seconds
   *---------------------------------------------------------------------------*/
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-#ifdef IGNORE_SOME_GCC_WARNINGS
-# pragma GCC diagnostic warning "-Wdeprecated-declarations"
+/* darwin dirent.h doesn't give us the prototypes we want if KERNEL is
+ * defined, and roken includes dirent */
+#if defined(UKERNEL) && defined(AFS_USR_DARWIN_ENV)
+# undef KERNEL
+# include <roken.h>
+# define KERNEL
+#else
+# include <roken.h>
 #endif
 
 #define VFS 1
 
 #include <afs/stds.h>
+#include <afs/opr.h>
+#include <afs/opr_assert.h>
 
 #include <afs/cmd.h>
 
 #include "afsd.h"
 
-#include <afs/afs_assert.h>
 #include <afs/afsutil.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <signal.h>
-#include <string.h>
-#include <stdlib.h>
-#include <time.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+
 #include <sys/file.h>
-#include <errno.h>
-#include <sys/time.h>
 #include <sys/wait.h>
+#include <hcrypto/rand.h>
 
 /* darwin dirent.h doesn't give us the prototypes we want if KERNEL is
  * defined */
@@ -92,11 +106,6 @@
 # define KERNEL
 #else
 # include <dirent.h>
-#endif
-
-
-#ifdef HAVE_SYS_PARAM_H
-#include <sys/param.h>
 #endif
 
 #ifdef HAVE_SYS_FS_TYPES_H
@@ -131,29 +140,14 @@
 #include <sys/fstyp.h>
 #endif
 
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
+#include <ctype.h>
 
-#ifdef HAVE_FCNTL_H
-#include <fcntl.h>
-#endif
-
-#include <netinet/in.h>
 #include <afs/afs_args.h>
 #include <afs/cellconfig.h>
-#include <ctype.h>
 #include <afs/afssyscalls.h>
 #include <afs/afsutil.h>
 #include <afs/sys_prototypes.h>
 
-#ifdef AFS_SGI61_ENV
-#include <unistd.h>
-#include <libelf.h>
-#include <dwarf.h>
-#include <libdwarf.h>
-void set_staticaddrs(void);
-#endif /* AFS_SGI61_ENV */
 #if defined(AFS_SGI62_ENV) && !defined(AFS_SGI65_ENV)
 #include <sym.h>
 #include <symconst.h>
@@ -164,27 +158,14 @@ void set_staticaddrs(void);
 
 #ifdef AFS_DARWIN_ENV
 #ifdef AFS_DARWIN80_ENV
-#include <sys/ioctl.h>
 #include <sys/xattr.h>
 #endif
 #include <CoreFoundation/CoreFoundation.h>
 
-#include <SystemConfiguration/SystemConfiguration.h>
-#include <SystemConfiguration/SCDynamicStore.h>
-
-#ifndef AFS_ARM_DARWIN_ENV
-#include <IOKit/pwr_mgt/IOPMLib.h>
-#include <IOKit/IOMessage.h>
-
-static io_connect_t root_port;
-static IONotificationPortRef notify;
-static io_object_t iterator;
-#endif
-
-static CFRunLoopSourceRef source;
-
 static int event_pid;
-
+#ifndef AFS_ARM_DARWIN_ENV
+#define MACOS_EVENT_HANDLING 1
+#endif
 #endif /* AFS_DARWIN_ENV */
 
 #if AFS_HAVE_STATVFS || defined(HAVE_SYS_STATVFS_H)
@@ -240,15 +221,15 @@ struct in_addr_42 {
 /*
  * Global configuration variables.
  */
-static afs_int32 enable_rxbind = 0;
-static afs_int32 afs_shutdown = 0;
-static afs_int32 cacheBlocks;		/*Num blocks in the cache */
-static afs_int32 cacheFiles;		/*Optimal # of files in workstation cache */
-static afs_int32 rwpct = 0;
-static afs_int32 ropct = 0;
-static afs_int32 cacheStatEntries;	/*Number of stat cache entries */
-static char cacheBaseDir[1024];	/*Where the workstation AFS cache lives */
-static char confDir[1024];		/*Where the workstation AFS configuration lives */
+static int enable_rxbind = 0;
+static int afs_shutdown = 0;
+static int cacheBlocks;		/*Num blocks in the cache */
+static int cacheFiles;		/*Optimal # of files in workstation cache */
+static int rwpct = 0;
+static int ropct = 0;
+static int cacheStatEntries;	/*Number of stat cache entries */
+static char *cacheBaseDir;	/*Where the workstation AFS cache lives */
+static char *confDir;		/*Where the workstation AFS configuration lives */
 static char fullpn_DCacheFile[1024];	/*Full pathname of DCACHEFILE */
 static char fullpn_VolInfoFile[1024];	/*Full pathname of VOLINFOFILE */
 static char fullpn_CellInfoFile[1024];	/*Full pathanem of CELLINFOFILE */
@@ -263,9 +244,8 @@ static int sawDCacheSize = 0;
 static int sawBiod = 0;
 #endif
 static int sawCacheStatEntries = 0;
-char afsd_cacheMountDir[1024];	/*Mount directory for AFS */
-static char rootVolume[64] = "root.afs";	/*AFS root volume name */
-static afs_int32 cacheSetTime = 0;	/*Keep checking time to avoid drift? */
+char *afsd_cacheMountDir;
+static char *rootVolume = NULL;
 #ifdef AFS_XBSD_ENV
 static int createAndTrunc = O_RDWR | O_CREAT | O_TRUNC;	/*Create & truncate on open */
 #else
@@ -305,6 +285,7 @@ int afsd_debug = 0;		/*Are we printing debugging info? */
 static int afsd_CloseSynch = 0;	/*Are closes synchronous or not? */
 static int rxmaxmtu = 0;       /* Are we forcing a limit on the mtu? */
 static int rxmaxfrags = 0;      /* Are we forcing a limit on frags? */
+static int volume_ttl = 0;      /* enable vldb cache timeout support */
 
 #ifdef AFS_SGI62_ENV
 #define AFSD_INO_T ino64_t
@@ -334,13 +315,70 @@ struct afs_cacheParams cparams;	/* params passed to cache manager */
 
 int PartSizeOverflow(char *path, int cs);
 
-#if defined(AFS_SUN510_ENV) && defined(RXK_LISTENER_ENV)
-static void fork_rx_syscall_wait();
-#endif
-static void fork_rx_syscall();
-static void fork_syscall();
+static int afsd_syscall(int code, ...);
 
-#if defined(AFS_DARWIN_ENV) && !defined(AFS_ARM_DARWIN_ENV)
+#if defined(AFS_SUN510_ENV) && defined(RXK_LISTENER_ENV)
+static void fork_rx_syscall_wait(const char *rn, int syscall, ...);
+#endif
+static void fork_rx_syscall(const char *rn, int syscall, ...);
+static void fork_syscall(const char *rn, int syscall, ...);
+
+enum optionsList {
+    OPT_blocks,
+    OPT_files,
+    OPT_rootvol,
+    OPT_stat,
+    OPT_memcache,
+    OPT_cachedir,
+    OPT_mountdir,
+    OPT_daemons,
+    OPT_nosettime,
+    OPT_verbose,
+    OPT_rmtsys,
+    OPT_debug,
+    OPT_chunksize,
+    OPT_dcache,
+    OPT_volumes,
+    OPT_biods,
+    OPT_prealloc,
+    OPT_confdir,
+    OPT_logfile,
+    OPT_waitclose,
+    OPT_shutdown,
+    OPT_peerstats,
+    OPT_processstats,
+    OPT_memallocsleep,
+    OPT_afsdb,
+    OPT_filesdir,
+    OPT_dynroot,
+    OPT_fakestat,
+    OPT_fakestatall,
+    OPT_nomount,
+    OPT_backuptree,
+    OPT_rxbind,
+    OPT_settime,
+    OPT_rxpck,
+    OPT_splitcache,
+    OPT_nodynvcache,
+    OPT_rxmaxmtu,
+    OPT_dynrootsparse,
+    OPT_rxmaxfrags,
+    OPT_inumcalc,
+    OPT_volume_ttl,
+};
+
+#ifdef MACOS_EVENT_HANDLING
+#include <SystemConfiguration/SystemConfiguration.h>
+#include <SystemConfiguration/SCDynamicStore.h>
+
+#include <IOKit/pwr_mgt/IOPMLib.h>
+#include <IOKit/IOMessage.h>
+
+static io_connect_t root_port;
+static IONotificationPortRef notify;
+static io_object_t iterator;
+static CFRunLoopSourceRef source;
+
 static void
 afsd_sleep_callback(void * refCon, io_service_t service,
 		    natural_t messageType, void * messageArgument )
@@ -387,17 +425,16 @@ afsd_update_addresses(CFRunLoopTimerRef timer, void *info)
     afs_uint32 addrbuf[MAXIPADDRS], maskbuf[MAXIPADDRS],
 	mtubuf[MAXIPADDRS];
     char reason[1024];
-    afs_int32 code;
+    int code;
 
-    code =
-	parseNetFiles(addrbuf, maskbuf, mtubuf, MAXIPADDRS, reason,
-		      AFSDIR_CLIENT_NETINFO_FILEPATH,
-		      AFSDIR_CLIENT_NETRESTRICT_FILEPATH);
+    code = afsconf_ParseNetFiles(addrbuf, maskbuf, mtubuf, MAXIPADDRS,
+				 reason, AFSDIR_CLIENT_NETINFO_FILEPATH,
+				 AFSDIR_CLIENT_NETRESTRICT_FILEPATH);
 
     if (code > 0) {
 	/* Note we're refreshing */
 	code = code | 0x40000000;
-	afsd_call_syscall(AFSOP_ADVISEADDR, code, addrbuf, maskbuf, mtubuf);
+	afsd_syscall(AFSOP_ADVISEADDR, code, addrbuf, maskbuf, mtubuf);
     } else
 	printf("ADVISEADDR: Error in specifying interface addresses:%s\n",
 	       reason);
@@ -527,7 +564,7 @@ ParseCacheInfoFile(void)
     static char rn[] = "ParseCacheInfoFile";	/*This routine's name */
     FILE *cachefd;		/*Descriptor for cache info file */
     int parseResult;		/*Result of our fscanf() */
-    afs_int32 tCacheBlocks;
+    int tCacheBlocks;
     char tCacheBaseDir[1024], *tbd, tCacheMountDir[1024], *tmd;
 
     if (afsd_debug)
@@ -572,9 +609,9 @@ ParseCacheInfoFile(void)
 	 tbd++);
     /* now copy in the fields not explicitly overridden by cmd args */
     if (!sawCacheMountDir)
-	strcpy(afsd_cacheMountDir, tmd);
+	afsd_cacheMountDir = strdup(tmd);
     if (!sawCacheBaseDir)
-	strcpy(cacheBaseDir, tbd);
+	cacheBaseDir = strdup(tbd);
     if (!sawCacheBlocks)
 	cacheBlocks = tCacheBlocks;
 
@@ -1025,8 +1062,7 @@ doSweepAFSCache(int *vFilesFound,
 		cache_dir_list[dirNum]++;	/* keep directory's file count */
 		if (cache_dir_list[dirNum] > nFilesPerDir) {
 		    /* Too many files -- add to filelist */
-		    struct afsd_file_list *tmp = (struct afsd_file_list *)
-			malloc(sizeof(*tmp));
+		    struct afsd_file_list *tmp = malloc(sizeof(*tmp));
 		    if (!tmp)
 			printf
 			    ("%s: MALLOC FAILED allocating file_list entry\n",
@@ -1320,7 +1356,7 @@ CheckCacheBaseDir(char *dir)
 
 		    if (cp = hasmntopt(&mnt, "dev="))
 			rdev =
-			    (int)strtol(cp + strlen("dev="), (char **)NULL,
+			    (int)strtol(cp + strlen("dev="), NULL,
 					16);
 
 		    if ((rdev == 0) && (stat(mnt.mnt_mountp, &statmnt) == 0))
@@ -1360,7 +1396,7 @@ SweepAFSCache(int *vFilesFound)
     }
 
     if (cache_dir_list == NULL) {
-	cache_dir_list = (int *)malloc(maxDir * sizeof(*cache_dir_list));
+	cache_dir_list = malloc(maxDir * sizeof(*cache_dir_list));
 	if (cache_dir_list == NULL) {
 	    printf("%s: Malloc Failed!\n", rn);
 	    return (-1);
@@ -1370,17 +1406,15 @@ SweepAFSCache(int *vFilesFound)
     }
 
     if (cache_dir_filelist == NULL) {
-	cache_dir_filelist = (struct afsd_file_list **)
-	    malloc(maxDir * sizeof(*cache_dir_filelist));
+	cache_dir_filelist = calloc(maxDir, sizeof(*cache_dir_filelist));
 	if (cache_dir_filelist == NULL) {
 	    printf("%s: Malloc Failed!\n", rn);
 	    return (-1);
 	}
-	memset(cache_dir_filelist, 0, maxDir * sizeof(*cache_dir_filelist));
     }
 
     if (dir_for_V == NULL) {
-	dir_for_V = (int *)malloc(cacheFiles * sizeof(*dir_for_V));
+	dir_for_V = malloc(cacheFiles * sizeof(*dir_for_V));
 	if (dir_for_V == NULL) {
 	    printf("%s: Malloc Failed!\n", rn);
 	    return (-1);
@@ -1404,7 +1438,7 @@ ConfigCell(struct afsconf_cell *aci, void *arock, struct afsconf_dir *adir)
 {
     int isHomeCell;
     int i, code;
-    afs_int32 cellFlags = 0;
+    int cellFlags = 0;
     afs_int32 hosts[MAXHOSTSPERCELL];
 
     /* figure out if this is the home cell */
@@ -1423,7 +1457,7 @@ ConfigCell(struct afsconf_cell *aci, void *arock, struct afsconf_dir *adir)
 				 * for upwards compatibility */
 
     /* configure one cell */
-    code = afsd_call_syscall(AFSOP_ADDCELL2, hosts,	/* server addresses */
+    code = afsd_syscall(AFSOP_ADDCELL2, hosts,	/* server addresses */
 			aci->name,	/* cell name */
 			cellFlags,	/* is this the home cell? */
 			aci->linkedCell);	/* Linked cell, if any */
@@ -1437,7 +1471,7 @@ ConfigCellAlias(struct afsconf_cellalias *aca,
 		void *arock, struct afsconf_dir *adir)
 {
     /* push the alias into the kernel */
-    afsd_call_syscall(AFSOP_ADDCELLALIAS, aca->aliasName, aca->realName);
+    afsd_syscall(AFSOP_ADDCELLALIAS, aca->aliasName, aca->realName);
     return 0;
 }
 
@@ -1454,7 +1488,7 @@ AfsdbLookupHandler(void)
     kernelMsg[1] = 0;
     acellName[0] = '\0';
 
-#if defined(AFS_DARWIN_ENV) && !defined(AFS_ARM_DARWIN_ENV)
+#ifdef MACOS_EVENT_HANDLING
     /* Fork the event handler also. */
     code = fork();
     if (code == 0) {
@@ -1468,7 +1502,7 @@ AfsdbLookupHandler(void)
 	/* On some platforms you only get 4 args to an AFS call */
 	int sizeArg = ((sizeof acellName) << 16) | (sizeof kernelMsg);
 	code =
-	    afsd_call_syscall(AFSOP_AFSDB_HANDLER, acellName, kernelMsg, sizeArg);
+	    afsd_syscall(AFSOP_AFSDB_HANDLER, acellName, kernelMsg, sizeArg);
 	if (code) {		/* Something is wrong? */
 	    sleep(1);
 	    continue;
@@ -1498,7 +1532,7 @@ AfsdbLookupHandler(void)
 #endif
 }
 
-#ifdef AFS_DARWIN_ENV
+#ifdef AFS_NEW_BKG
 static void
 BkgHandler(void)
 {
@@ -1507,8 +1541,7 @@ BkgHandler(void)
     char srcName[256];
     char dstName[256];
 
-    uspc = (struct afs_uspc_param *)malloc(sizeof(struct afs_uspc_param));
-    memset(uspc, 0, sizeof(struct afs_uspc_param));
+    uspc = calloc(1, sizeof(struct afs_uspc_param));
     memset(srcName, 0, sizeof(srcName));
     memset(dstName, 0, sizeof(dstName));
 
@@ -1524,7 +1557,7 @@ BkgHandler(void)
 	/* pushing in a buffer this large */
 	uspc->bufSz = 256;
 
-	code = afsd_call_syscall(AFSOP_BKG_HANDLER, uspc, srcName, dstName);
+	code = afsd_syscall(AFSOP_BKG_HANDLER, uspc, srcName, dstName);
 	if (code) {		/* Something is wrong? */
 	    if (code == -2) /* shutting down */
 		break;
@@ -1629,7 +1662,7 @@ afsdb_thread(void *rock)
 static void *
 daemon_thread(void *rock)
 {
-#ifdef AFS_DARWIN80_ENV
+#ifdef AFS_NEW_BKG
     /* Since the background daemon runs as a user process,
      * need to drop the controlling TTY, etc.
      */
@@ -1639,10 +1672,8 @@ daemon_thread(void *rock)
 	exit(1);
     }
     BkgHandler();
-#elif defined(AFS_AIX32_ENV)
-    afsd_call_syscall(AFSOP_START_BKG, 0);
 #else
-    afsd_call_syscall(AFSOP_START_BKG);
+    afsd_syscall(AFSOP_START_BKG, 0);
 #endif
     return NULL;
 }
@@ -1656,8 +1687,16 @@ rmtsysd_thread(void *rock)
 }
 #endif /* !UKERNEL */
 
-int
-mainproc(struct cmd_syndesc *as, void *arock)
+/**
+ * Check the command line and cacheinfo options.
+ *
+ * @param[in] as  parsed command line arguments
+ *
+ * @note Invokes the shutdown syscall and exits with 0 when
+ *       -shutdown is given.
+ */
+static int
+CheckOptions(struct cmd_syndesc *as)
 {
     afs_int32 code;		/*Result of fork() */
 #ifdef	AFS_SUN5_ENV
@@ -1674,148 +1713,113 @@ mainproc(struct cmd_syndesc *as, void *arock)
     }
 #endif
 
+    cmd_OpenConfigFile(AFSDIR_CLIENT_CONFIG_FILE_FILEPATH);
+    cmd_SetCommandName("afsd");
+
     /* call atoi on the appropriate parsed results */
-    if (as->parms[0].items) {
-	/* -blocks */
-	cacheBlocks = atoi(as->parms[0].items->data);
+    if (cmd_OptionAsInt(as, OPT_blocks, &cacheBlocks) == 0)
 	sawCacheBlocks = 1;
-    }
-    if (as->parms[1].items) {
-	/* -files */
-	cacheFiles = atoi(as->parms[1].items->data);
-	filesSet = 1;		/* set when spec'd on cmd line */
-    }
-    if (as->parms[2].items) {
-	/* -rootvol */
-	strcpy(rootVolume, as->parms[2].items->data);
+
+    if (cmd_OptionAsInt(as, OPT_files, &cacheFiles) == 0)
+	filesSet = 1;
+
+    if (cmd_OptionAsString(as, OPT_rootvol, &rootVolume) == 0)
 	rootVolSet = 1;
-    }
-    if (as->parms[3].items) {
-	/* -stat */
-	cacheStatEntries = atoi(as->parms[3].items->data);
+
+    if (cmd_OptionAsInt(as, OPT_stat, &cacheStatEntries) == 0)
 	sawCacheStatEntries = 1;
-    }
-    if (as->parms[4].items) {
-	/* -memcache */
-	cacheBaseDir[0] = '\0';
+
+    if (cmd_OptionPresent(as, OPT_memcache)) {
+	cacheBaseDir = NULL;
 	sawCacheBaseDir = 1;
 	cacheFlags |= AFSCALL_INIT_MEMCACHE;
     }
-    if (as->parms[5].items) {
-	/* -cachedir */
-	strcpy(cacheBaseDir, as->parms[5].items->data);
+
+    if (cmd_OptionAsString(as, OPT_cachedir, &cacheBaseDir) == 0)
 	sawCacheBaseDir = 1;
-    }
-    if (as->parms[6].items) {
-	/* -mountdir */
-	strcpy(afsd_cacheMountDir, as->parms[6].items->data);
+
+    if (cmd_OptionAsString(as, OPT_mountdir, &afsd_cacheMountDir) == 0)
 	sawCacheMountDir = 1;
-    }
-    if (as->parms[7].items) {
-	/* -daemons */
-	nDaemons = atoi(as->parms[7].items->data);
-    }
-    if (as->parms[8].items) {
-	/* -nosettime */
-	printf("afsd: -nosettime is deprecated -- ignored\n");
-	cacheSetTime = 0;
-    }
-    if (as->parms[9].items) {
-	/* -verbose */
-	afsd_verbose = 1;
-    }
-    if (as->parms[10].items) {
-	/* -rmtsys */
+
+    cmd_OptionAsInt(as, OPT_daemons, &nDaemons);
+
+    afsd_verbose = cmd_OptionPresent(as, OPT_verbose);
+
+    if (cmd_OptionPresent(as, OPT_rmtsys)) {
 	afsd_rmtsys = 1;
 #ifdef UKERNEL
 	printf("-rmtsys not supported for UKERNEL\n");
 	return -1;
 #endif
     }
-    if (as->parms[11].items) {
-	/* -debug */
+
+    if (cmd_OptionPresent(as, OPT_debug)) {
 	afsd_debug = 1;
 	afsd_verbose = 1;
     }
-    if (as->parms[12].items) {
-	/* -chunksize */
-	chunkSize = atoi(as->parms[12].items->data);
+
+    if (cmd_OptionAsInt(as, OPT_chunksize, &chunkSize) == 0) {
 	if (chunkSize < 0 || chunkSize > 30) {
 	    printf
 		("afsd:invalid chunk size (not in range 0-30), using default\n");
 	    chunkSize = 0;
 	}
     }
-    if (as->parms[13].items) {
-	/* -dcache */
-	dCacheSize = atoi(as->parms[13].items->data);
+
+    if (cmd_OptionAsInt(as, OPT_dcache, &dCacheSize) == 0)
 	sawDCacheSize = 1;
-    }
-    if (as->parms[14].items) {
-	/* -volumes */
-	vCacheSize = atoi(as->parms[14].items->data);
-    }
-    if (as->parms[15].items) {
+
+    cmd_OptionAsInt(as, OPT_volumes, &vCacheSize);
+
+    if (cmd_OptionPresent(as, OPT_biods)) {
 	/* -biods */
 #ifndef	AFS_AIX32_ENV
 	printf
 	    ("afsd: [-biods] currently only enabled for aix3.x VM supported systems\n");
 #else
-	nBiods = atoi(as->parms[15].items->data);
-	sawBiod = 1;
+	cmd_OptionAsInt(as, OPT_biods, &nBiods);
 #endif
     }
-    if (as->parms[16].items) {
-	/* -prealloc */
-	preallocs = atoi(as->parms[16].items->data);
-    }
-    strcpy(confDir, AFSDIR_CLIENT_ETC_DIRPATH);
-    if (as->parms[17].items) {
-	/* -confdir */
-	strcpy(confDir, as->parms[17].items->data);
+    cmd_OptionAsInt(as, OPT_prealloc, &preallocs);
+
+    if (cmd_OptionAsString(as, OPT_confdir, &confDir) == CMD_MISSING) {
+	confDir = strdup(AFSDIR_CLIENT_ETC_DIRPATH);
     }
     sprintf(fullpn_CacheInfo, "%s/%s", confDir, CACHEINFOFILE);
-    if (as->parms[18].items) {
-	/* -logfile */
+
+    if (cmd_OptionPresent(as, OPT_logfile)) {
         printf("afsd: Ignoring obsolete -logfile flag\n");
     }
-    if (as->parms[19].items) {
-	/* -waitclose */
-	afsd_CloseSynch = 1;
-    }
-    if (as->parms[20].items) {
+
+    afsd_CloseSynch = cmd_OptionPresent(as, OPT_waitclose);
+
+    if (cmd_OptionPresent(as, OPT_shutdown)) {
 	/* -shutdown */
 	afs_shutdown = 1;
 	/*
 	 * Cold shutdown is the default
 	 */
 	printf("afsd: Shutting down all afs processes and afs state\n");
-	code = afsd_call_syscall(AFSOP_SHUTDOWN, 1);
+	code = afsd_syscall(AFSOP_SHUTDOWN, 1);
 	if (code) {
 	    printf("afsd: AFS still mounted; Not shutting down\n");
 	    exit(1);
 	}
 	exit(0);
     }
-    if (as->parms[21].items) {
-	/* -enable_peer_stats */
-	enable_peer_stats = 1;
-    }
-    if (as->parms[22].items) {
-	/* -enable_process_stats */
-	enable_process_stats = 1;
-    }
-    if (as->parms[23].items) {
-	/* -mem_alloc_sleep */
+
+    enable_peer_stats = cmd_OptionPresent(as, OPT_peerstats);
+    enable_process_stats = cmd_OptionPresent(as, OPT_processstats);
+
+    if (cmd_OptionPresent(as, OPT_memallocsleep)) {
 	printf("afsd: -mem_alloc_sleep is deprecated -- ignored\n");
     }
-    if (as->parms[24].items) {
-	/* -afsdb */
-	enable_afsdb = 1;
-    }
-    if (as->parms[25].items) {
+
+    enable_afsdb = cmd_OptionPresent(as, OPT_afsdb);
+    if (cmd_OptionPresent(as, OPT_filesdir)) {
 	/* -files_per_subdir */
-	int res = atoi(as->parms[25].items->data);
+	int res;
+        cmd_OptionAsInt(as, OPT_filesdir, &res);
 	if (res < 10 || res > (1 << 30)) {
 	    printf
 		("afsd:invalid number of files per subdir, \"%s\". Ignored\n",
@@ -1824,66 +1828,60 @@ mainproc(struct cmd_syndesc *as, void *arock)
 	    nFilesPerDir = res;
 	}
     }
-    if (as->parms[26].items) {
-	/* -dynroot */
-	enable_dynroot = 1;
-    }
-    if (as->parms[27].items) {
-	/* -fakestat */
+    enable_dynroot = cmd_OptionPresent(as, OPT_dynroot);
+
+    if (cmd_OptionPresent(as, OPT_fakestat)) {
 	enable_fakestat = 2;
     }
-    if (as->parms[28].items) {
-	/* -fakestat-all */
+    if (cmd_OptionPresent(as, OPT_fakestatall)) {
 	enable_fakestat = 1;
     }
-    if (as->parms[29].items) {
-	/* -nomount */
-	enable_nomount = 1;
-    }
-    if (as->parms[30].items) {
-	/* -backuptree */
-	enable_backuptree = 1;
-    }
-    if (as->parms[31].items) {
-	/* -rxbind */
-	enable_rxbind = 1;
-    }
-    if (as->parms[32].items) {
+    if (cmd_OptionPresent(as, OPT_settime)) {
 	/* -settime */
-	printf("afsd: -settime is deprecated\n");
-	cacheSetTime = 1;
+	printf("afsd: -settime ignored\n");
+	printf("afsd: the OpenAFS client no longer sets the system time; "
+	       "please use NTP or\n");
+	printf("afsd: another such system to synchronize client time\n");
     }
 
+    enable_nomount = cmd_OptionPresent(as, OPT_nomount);
+    enable_backuptree = cmd_OptionPresent(as, OPT_backuptree);
+    enable_rxbind = cmd_OptionPresent(as, OPT_rxbind);
+
     /* set rx_extraPackets */
-    if (as->parms[33].items) {
+    if (cmd_OptionPresent(as, OPT_rxpck)) {
 	/* -rxpck */
-	int rxpck = atoi(as->parms[33].items->data);
+	int rxpck;
+        cmd_OptionAsInt(as, OPT_rxpck, &rxpck);
 	printf("afsd: set rxpck = %d\n", rxpck);
-	code = afsd_call_syscall(AFSOP_SET_RXPCK, rxpck);
+	code = afsd_syscall(AFSOP_SET_RXPCK, rxpck);
 	if (code) {
 	    printf("afsd: failed to set rxpck\n");
 	    exit(1);
 	}
     }
-    if (as->parms[34].items) {
+    if (cmd_OptionPresent(as, OPT_splitcache)) {
 	char *c;
-	if (!as->parms[34].items->data ||
-	    ((c = strchr(as->parms[34].items->data, '/')) == NULL))
+	char *var = NULL;
+
+	cmd_OptionAsString(as, OPT_splitcache, &var);
+
+	if (var == NULL || ((c = strchr(var, '/')) == NULL))
 	    printf
 		("ignoring splitcache (specify as RW/RO percentages: 60/40)\n");
 	else {
-	    ropct = atoi((char *)c + 1);
+	    ropct = atoi(c + 1);
 	    *c = '\0';
-	    rwpct = atoi((char *)as->parms[34].items->data);
+	    rwpct = atoi(var);
 	    if ((rwpct != 0) && (ropct != 0) && (ropct + rwpct == 100)) {
 		/* -splitcache */
 		enable_splitcache = 1;
 	    }
 	}
+	free(var);
     }
-    if (as->parms[35].items) {
+    if (cmd_OptionPresent(as, OPT_nodynvcache)) {
 #ifdef AFS_MAXVCOUNT_ENV
-       /* -disable-dynamic-vcaches */
        afsd_dynamic_vcaches = 0;
 #else
        printf("afsd: Error toggling flag, dynamically allocated vcaches not supported on your platform\n");
@@ -1900,24 +1898,17 @@ mainproc(struct cmd_syndesc *as, void *arock)
     printf("afsd: %s dynamically allocated vcaches\n", ( afsd_dynamic_vcaches ? "enabling" : "disabling" ));
 #endif
 
-    /* set -rxmaxmtu */
-    if (as->parms[36].items) {
-        /* -rxmaxmtu */
-        rxmaxmtu = atoi(as->parms[36].items->data);
-    }
-    if (as->parms[37].items) {
-	/* -dynroot-sparse */
+    cmd_OptionAsInt(as, OPT_rxmaxmtu, &rxmaxmtu);
+
+    if (cmd_OptionPresent(as, OPT_dynrootsparse)) {
 	enable_dynroot = 2;
     }
-    if (as->parms[38].items) {
-	/* -rxmaxfrags */
-	rxmaxfrags = atoi(as->parms[38].items->data);
-    }
 
-    if (as->parms[39].items) {
-	/* -inumcalc */
-	inumcalc = strdup(as->parms[39].items->data);
+    cmd_OptionAsInt(as, OPT_rxmaxfrags, &rxmaxfrags);
+    if (cmd_OptionPresent(as, OPT_inumcalc)) {
+	cmd_OptionAsString(as, OPT_inumcalc, &inumcalc);
     }
+    cmd_OptionAsInt(as, OPT_volume_ttl, &volume_ttl);
 
     /* parse cacheinfo file if this is a diskcache */
     if (ParseCacheInfoFile()) {
@@ -1934,13 +1925,13 @@ afsd_run(void)
     struct afsconf_dir *cdir;	/* config dir */
     int lookupResult;		/*Result of GetLocalCellName() */
     int i;
-    afs_int32 code;		/*Result of fork() */
+    int code;			/*Result of fork() */
     char *fsTypeMsg = NULL;
     int cacheIteration;		/*How many times through cache verification */
     int vFilesFound;		/*How many data cache files were found in sweep */
     int currVFile;		/*Current AFS cache file number passed in */
 
-    /*
+	/*
      * Pull out all the configuration info for the workstation's AFS cache and
      * the cellular community we're willing to let our users see.
      */
@@ -2038,6 +2029,7 @@ afsd_run(void)
 		chunkSize = 20;
 	    }
 	}
+
 	if (!filesSet) {
 	    cacheFiles = cacheBlocks / 32;	/* Assume 32k avg filesize */
 
@@ -2120,14 +2112,13 @@ afsd_run(void)
     /*
      * Create and zero the inode table for the desired cache files.
      */
-    inode_for_V = (AFSD_INO_T *) malloc(cacheFiles * sizeof(AFSD_INO_T));
+    inode_for_V = calloc(cacheFiles, sizeof(AFSD_INO_T));
     if (inode_for_V == (AFSD_INO_T *) 0) {
 	printf
 	    ("%s: malloc() failed for cache file inode table with %d entries.\n",
 	     rn, cacheFiles);
 	exit(1);
     }
-    memset(inode_for_V, '\0', (cacheFiles * sizeof(AFSD_INO_T)));
     if (afsd_debug)
 	printf("%s: %d inode_for_V entries at %p, %lu bytes\n", rn,
 	       cacheFiles, inode_for_V,
@@ -2165,24 +2156,30 @@ afsd_run(void)
     /*
      * Set the primary cell name.
      */
-    afsd_call_syscall(AFSOP_SET_THISCELL, LclCellName);
+    afsd_syscall(AFSOP_SET_THISCELL, LclCellName);
 
     /* Initialize RX daemons and services */
 
     /* initialize the rx random number generator from user space */
     {
+	/* rand-fortuna wants at least 128 bytes of seed; be generous. */
+	unsigned char seedbuf[256];
+	if (RAND_bytes(seedbuf, sizeof(seedbuf)) != 1) {
+	    printf("SEED_ENTROPY: Error retrieving seed entropy\n");
+	}
+	afsd_syscall(AFSOP_SEED_ENTROPY, seedbuf, sizeof(seedbuf));
+	memset(seedbuf, 0, sizeof(seedbuf));
 	/* parse multihomed address files */
 	afs_uint32 addrbuf[MAXIPADDRS], maskbuf[MAXIPADDRS],
 	    mtubuf[MAXIPADDRS];
 	char reason[1024];
-	code =
-	    parseNetFiles(addrbuf, maskbuf, mtubuf, MAXIPADDRS, reason,
-			  AFSDIR_CLIENT_NETINFO_FILEPATH,
-			  AFSDIR_CLIENT_NETRESTRICT_FILEPATH);
+	code = afsconf_ParseNetFiles(addrbuf, maskbuf, mtubuf, MAXIPADDRS, reason,
+				     AFSDIR_CLIENT_NETINFO_FILEPATH,
+				     AFSDIR_CLIENT_NETRESTRICT_FILEPATH);
 	if (code > 0) {
 	    if (enable_rxbind)
 		code = code | 0x80000000;
-	    afsd_call_syscall(AFSOP_ADVISEADDR, code, addrbuf, maskbuf, mtubuf);
+	    afsd_syscall(AFSOP_ADVISEADDR, code, addrbuf, maskbuf, mtubuf);
 	} else
 	    printf("ADVISEADDR: Error in specifying interface addresses:%s\n",
 		   reason);
@@ -2190,16 +2187,6 @@ afsd_run(void)
 
     /* Set realtime priority for most threads to same as for biod's. */
     afsd_set_afsd_rtpri();
-
-#ifdef	AFS_SGI53_ENV
-#ifdef AFS_SGI61_ENV
-    set_staticaddrs();
-#else /* AFS_SGI61_ENV */
-    code = get_nfsstaticaddr();
-    if (code)
-	afsd_call_syscall(AFSOP_NFSSTATICADDR, code);
-#endif /* AFS_SGI61_ENV */
-#endif /* AFS_SGI_53_ENV */
 
     /* Start listener, then callback listener. Lastly, start rx event daemon.
      * Change in ordering is so that Linux port has socket fd in listener
@@ -2226,7 +2213,7 @@ afsd_run(void)
     fork_rx_syscall(rn, AFSOP_START_RXCALLBACK, preallocs, enable_peer_stats,
                     enable_process_stats);
 #else
-    fork_syscall(rn, AFSOP_START_RXCALLBACK, preallocs);
+    fork_syscall(rn, AFSOP_START_RXCALLBACK, preallocs, 0, 0);
 #endif
 #if defined(AFS_SUN5_ENV) || defined(RXK_LISTENER_ENV) || defined(RXK_UPCALL_ENV)
     if (afsd_verbose)
@@ -2239,8 +2226,7 @@ afsd_run(void)
 	    printf("%s: Forking AFSDB lookup handler.\n", rn);
 	afsd_fork(0, afsdb_thread, NULL);
     }
-
-    code = afsd_call_syscall(AFSOP_BASIC_INIT, 1);
+    code = afsd_syscall(AFSOP_BASIC_INIT, 1);
     if (code) {
 	printf("%s: Error %d in basic initialization.\n", rn, code);
         exit(1);
@@ -2261,19 +2247,19 @@ afsd_run(void)
     cparams.cacheDcaches = dCacheSize;
     cparams.cacheVolumes = vCacheSize;
     cparams.chunkSize = chunkSize;
-    cparams.setTimeFlag = cacheSetTime;
+    cparams.setTimeFlag = 0;
     cparams.memCacheFlag = cacheFlags;
     cparams.dynamic_vcaches = afsd_dynamic_vcaches;
-    afsd_call_syscall(AFSOP_CACHEINIT, &cparams);
+    afsd_syscall(AFSOP_CACHEINIT, &cparams);
 
     /* do it before we init the cache inodes */
     if (enable_splitcache) {
-	afsd_call_syscall(AFSOP_BUCKETPCT, 1, rwpct);
-	afsd_call_syscall(AFSOP_BUCKETPCT, 2, ropct);
+	afsd_syscall(AFSOP_BUCKETPCT, 1, rwpct);
+	afsd_syscall(AFSOP_BUCKETPCT, 2, ropct);
     }
 
     if (afsd_CloseSynch)
-	afsd_call_syscall(AFSOP_CLOSEWAIT);
+	afsd_syscall(AFSOP_CLOSEWAIT);
 
     /*
      * Sweep the workstation AFS cache directory, remembering the inodes of
@@ -2314,7 +2300,7 @@ afsd_run(void)
 	       fullpn_DCacheFile);
     /* once again, meaningless for a memory-based cache. */
     if (!(cacheFlags & AFSCALL_INIT_MEMCACHE))
-	afsd_call_syscall(AFSOP_CACHEINFO, fullpn_DCacheFile);
+	afsd_syscall(AFSOP_CACHEINFO, fullpn_DCacheFile);
 
     /*
      * Pass the kernel the name of the workstation cache file holding the
@@ -2324,13 +2310,13 @@ afsd_run(void)
 	if (afsd_debug)
 	    printf("%s: Calling AFSOP_CELLINFO: cell info file is '%s'\n", rn,
 		   fullpn_CellInfoFile);
-	afsd_call_syscall(AFSOP_CELLINFO, fullpn_CellInfoFile);
+	afsd_syscall(AFSOP_CELLINFO, fullpn_CellInfoFile);
     }
 
     if (rxmaxfrags) {
 	if (afsd_verbose)
             printf("%s: Setting rxmaxfrags in kernel = %d\n", rn, rxmaxfrags);
-	code = afsd_call_syscall(AFSOP_SET_RXMAXFRAGS, rxmaxfrags);
+	code = afsd_syscall(AFSOP_SET_RXMAXFRAGS, rxmaxfrags);
         if (code)
             printf("%s: Error seting rxmaxfrags\n", rn);
     }
@@ -2338,7 +2324,7 @@ afsd_run(void)
     if (rxmaxmtu) {
 	if (afsd_verbose)
             printf("%s: Setting rxmaxmtu in kernel = %d\n", rn, rxmaxmtu);
-	code = afsd_call_syscall(AFSOP_SET_RXMAXMTU, rxmaxmtu);
+	code = afsd_syscall(AFSOP_SET_RXMAXMTU, rxmaxmtu);
         if (code)
             printf("%s: Error seting rxmaxmtu\n", rn);
     }
@@ -2349,7 +2335,7 @@ afsd_run(void)
 		printf("%s: Setting original inode number calculation method in kernel.\n",
 		       rn);
 	    }
-	    code = afsd_call_syscall(AFSOP_SET_INUMCALC, AFS_INUMCALC_COMPAT);
+	    code = afsd_syscall(AFSOP_SET_INUMCALC, AFS_INUMCALC_COMPAT);
 	    if (code) {
 		printf("%s: Error setting inode calculation method: code=%d.\n",
 		       rn, code);
@@ -2359,7 +2345,7 @@ afsd_run(void)
 		printf("%s: Setting md5 digest inode number calculation in kernel.\n",
 		       rn);
 	    }
-	    code = afsd_call_syscall(AFSOP_SET_INUMCALC, AFS_INUMCALC_MD5);
+	    code = afsd_syscall(AFSOP_SET_INUMCALC, AFS_INUMCALC_MD5);
 	    if (code) {
 		printf("%s: Error setting inode calculation method: code=%d.\n",
 		       rn, code);
@@ -2374,7 +2360,7 @@ afsd_run(void)
 	if (afsd_verbose)
 	    printf("%s: Enabling dynroot support in kernel%s.\n", rn,
 		   (enable_dynroot==2)?", not showing cells.":"");
-	code = afsd_call_syscall(AFSOP_SET_DYNROOT, 1);
+	code = afsd_syscall(AFSOP_SET_DYNROOT, 1);
 	if (code)
 	    printf("%s: Error enabling dynroot support.\n", rn);
     }
@@ -2384,7 +2370,7 @@ afsd_run(void)
 	    printf("%s: Enabling fakestat support in kernel%s.\n", rn,
 		   (enable_fakestat==1)?" for all mountpoints."
 		   :" for crosscell mountpoints");
-	code = afsd_call_syscall(AFSOP_SET_FAKESTAT, enable_fakestat);
+	code = afsd_syscall(AFSOP_SET_FAKESTAT, enable_fakestat);
 	if (code)
 	    printf("%s: Error enabling fakestat support.\n", rn);
     }
@@ -2392,7 +2378,7 @@ afsd_run(void)
     if (enable_backuptree) {
 	if (afsd_verbose)
 	    printf("%s: Enabling backup tree support in kernel.\n", rn);
-	code = afsd_call_syscall(AFSOP_SET_BACKUPTREE, enable_backuptree);
+	code = afsd_syscall(AFSOP_SET_BACKUPTREE, enable_backuptree);
 	if (code)
 	    printf("%s: Error enabling backup tree support.\n", rn);
     }
@@ -2440,7 +2426,15 @@ afsd_run(void)
 	if (afsd_verbose)
 	    printf("%s: Calling AFSOP_ROOTVOLUME with '%s'\n", rn,
 		   rootVolume);
-	afsd_call_syscall(AFSOP_ROOTVOLUME, rootVolume);
+	afsd_syscall(AFSOP_ROOTVOLUME, rootVolume);
+    }
+
+    if (volume_ttl != 0) {
+	if (afsd_verbose)
+	    printf("%s: Calling AFSOP_SET_VOLUME_TTL with '%d'\n", rn, volume_ttl);
+	code = afsd_syscall(AFSOP_SET_VOLUME_TTL, volume_ttl);
+	if (code != 0)
+	    printf("%s: Error setting volume ttl to %d seconds; code=%d.\n", rn, volume_ttl, code);
     }
 
     /*
@@ -2452,7 +2446,7 @@ afsd_run(void)
 	       fullpn_VolInfoFile);
     /* once again, meaningless for a memory-based cache. */
     if (!(cacheFlags & AFSCALL_INIT_MEMCACHE))
-	afsd_call_syscall(AFSOP_VOLUMEINFO, fullpn_VolInfoFile);
+	afsd_syscall(AFSOP_VOLUMEINFO, fullpn_VolInfoFile);
 
     /*
      * Give the kernel the names of the AFS files cached on the workstation's
@@ -2468,7 +2462,7 @@ afsd_run(void)
 	for (currVFile = 0; currVFile < cacheFiles; currVFile++) {
 	    if (!nocachefile) {
 		sprintf(fullpn_VFile, "%s/D%d/V%d", cacheBaseDir, dir_for_V[currVFile], currVFile);
-		code = afsd_call_syscall(AFSOP_CACHEFILE, fullpn_VFile);
+		code = afsd_syscall(AFSOP_CACHEFILE, fullpn_VFile);
 		if (code) {
 		    if (currVFile == 0) {
 			if (afsd_debug)
@@ -2487,12 +2481,8 @@ afsd_run(void)
 		}
 		/* fall through to setup-by-inode */
 	    }
-#ifdef AFS_SGI62_ENV
-	    afsd_call_syscall(AFSOP_CACHEINODE,
-			 (afs_uint32) (inode_for_V[currVFile] >> 32),
-			 (afs_uint32) (inode_for_V[currVFile] & 0xffffffff));
-#elif !(defined(AFS_LINUX26_ENV) || defined(AFS_CACHE_VNODE_PATH))
-	    afsd_call_syscall(AFSOP_CACHEINODE, inode_for_V[currVFile]);
+#if defined(AFS_SGI62_ENV) || !(defined(AFS_LINUX26_ENV) || defined(AFS_CACHE_VNODE_PATH))
+	    afsd_syscall(AFSOP_CACHEINODE, inode_for_V[currVFile]);
 #else
 	    printf
 		("%s: Error calling AFSOP_CACHEINODE: not configured\n",
@@ -2508,8 +2498,8 @@ afsd_run(void)
      */
     if (afsd_debug)
 	printf("%s: Calling AFSOP_GO with cacheSetTime = %d\n", rn,
-	       cacheSetTime);
-    afsd_call_syscall(AFSOP_GO, cacheSetTime);
+	       0);
+    afsd_syscall(AFSOP_GO, 0);
 
     /*
      * At this point, we have finished passing the kernel all the info
@@ -2530,7 +2520,7 @@ afsd_run(void)
 	if (afsd_verbose)
 	    printf("%s: Forking 'rmtsys' daemon.\n", rn);
 	afsd_fork(0, rmtsysd_thread, NULL);
-	code = afsd_call_syscall(AFSOP_SET_RMTSYS_FLAG, 1);
+	code = afsd_syscall(AFSOP_SET_RMTSYS_FLAG, 1);
 	if (code)
 	    printf("%s: Error enabling rmtsys support.\n", rn);
     }
@@ -2541,621 +2531,135 @@ afsd_run(void)
     return 0;
 }
 
+#ifndef UKERNEL
 #include "AFS_component_version_number.c"
+#endif
 
 void
 afsd_init(void)
 {
     struct cmd_syndesc *ts;
 
-    ts = cmd_CreateSyntax(NULL, mainproc, NULL, "start AFS");
+    ts = cmd_CreateSyntax(NULL, NULL, NULL, 0, "start AFS");
 
     /* 0 - 10 */
-    cmd_AddParm(ts, "-blocks", CMD_SINGLE, CMD_OPTIONAL,
-		"1024 byte blocks in cache");
-    cmd_AddParm(ts, "-files", CMD_SINGLE, CMD_OPTIONAL, "files in cache");
-    cmd_AddParm(ts, "-rootvol", CMD_SINGLE, CMD_OPTIONAL,
-		"name of AFS root volume");
-    cmd_AddParm(ts, "-stat", CMD_SINGLE, CMD_OPTIONAL,
-		"number of stat entries");
-    cmd_AddParm(ts, "-memcache", CMD_FLAG, CMD_OPTIONAL, "run diskless");
-    cmd_AddParm(ts, "-cachedir", CMD_SINGLE, CMD_OPTIONAL, "cache directory");
-    cmd_AddParm(ts, "-mountdir", CMD_SINGLE, CMD_OPTIONAL, "mount location");
-    cmd_AddParm(ts, "-daemons", CMD_SINGLE, CMD_OPTIONAL,
-		"number of daemons to use");
-    cmd_AddParm(ts, "-nosettime", CMD_FLAG, CMD_OPTIONAL,
-		"don't set the time");
-    cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL,
-		"display lots of information");
-    cmd_AddParm(ts, "-rmtsys", CMD_FLAG, CMD_OPTIONAL,
-		"start NFS rmtsysd program");
-
-    /* 11 - 20 */
-    cmd_AddParm(ts, "-debug", CMD_FLAG, CMD_OPTIONAL, "display debug info");
-    cmd_AddParm(ts, "-chunksize", CMD_SINGLE, CMD_OPTIONAL,
-		"log(2) of chunk size");
-    cmd_AddParm(ts, "-dcache", CMD_SINGLE, CMD_OPTIONAL,
-		"number of dcache entries");
-    cmd_AddParm(ts, "-volumes", CMD_SINGLE, CMD_OPTIONAL,
-		"number of volume entries");
-    cmd_AddParm(ts, "-biods", CMD_SINGLE, CMD_OPTIONAL,
-		"number of bkg I/O daemons (aix vm)");
-    cmd_AddParm(ts, "-prealloc", CMD_SINGLE, CMD_OPTIONAL,
-		"number of 'small' preallocated blocks");
-    cmd_AddParm(ts, "-confdir", CMD_SINGLE, CMD_OPTIONAL,
-		"configuration directory");
-    cmd_AddParm(ts, "-logfile", CMD_SINGLE, CMD_OPTIONAL,
-		"Place to keep the CM log");
-    cmd_AddParm(ts, "-waitclose", CMD_FLAG, CMD_OPTIONAL,
-		"make close calls synchronous");
-    cmd_AddParm(ts, "-shutdown", CMD_FLAG, CMD_OPTIONAL,
-		"Shutdown all afs state");
-    /* 21 - 30 */
-    cmd_AddParm(ts, "-enable_peer_stats", CMD_FLAG, CMD_OPTIONAL | CMD_HIDE,
-		"Collect rpc statistics by peer");
-    cmd_AddParm(ts, "-enable_process_stats", CMD_FLAG,
-		CMD_OPTIONAL | CMD_HIDE,
-		"Collect rpc statistics for this process");
-    cmd_AddParm(ts, "-mem_alloc_sleep", CMD_FLAG, (CMD_OPTIONAL | CMD_HIDE),
-		"Allow sleeps when allocating memory cache");
-    cmd_AddParm(ts, "-afsdb", CMD_FLAG, (CMD_OPTIONAL),
-		"Enable AFSDB support");
-    cmd_AddParm(ts, "-files_per_subdir", CMD_SINGLE, CMD_OPTIONAL,
-		"log(2) of the number of cache files per cache subdirectory");
-    cmd_AddParm(ts, "-dynroot", CMD_FLAG, CMD_OPTIONAL,
-		"Enable dynroot support");
-    cmd_AddParm(ts, "-fakestat", CMD_FLAG, CMD_OPTIONAL,
-		"Enable fakestat support for cross-cell mounts");
-    cmd_AddParm(ts, "-fakestat-all", CMD_FLAG, CMD_OPTIONAL,
-		"Enable fakestat support for all mounts");
-    cmd_AddParm(ts, "-nomount", CMD_FLAG, CMD_OPTIONAL, "Do not mount AFS");
-    cmd_AddParm(ts, "-backuptree", CMD_FLAG, CMD_OPTIONAL,
-		"Prefer backup volumes for mointpoints in backup volumes");
-    /* 31 - 40 */
-    cmd_AddParm(ts, "-rxbind", CMD_FLAG, CMD_OPTIONAL,
-		"Bind the Rx socket (one interface only)");
-    cmd_AddParm(ts, "-settime", CMD_FLAG, CMD_OPTIONAL, "set the time");
-    cmd_AddParm(ts, "-rxpck", CMD_SINGLE, CMD_OPTIONAL,
-		"set rx_extraPackets to this value");
-    cmd_AddParm(ts, "-splitcache", CMD_SINGLE, CMD_OPTIONAL,
-		"Percentage RW versus RO in cache (specify as 60/40)");
-    cmd_AddParm(ts, "-disable-dynamic-vcaches", CMD_FLAG, CMD_OPTIONAL,
-		"disable stat/vcache cache growing as needed");
-    cmd_AddParm(ts, "-rxmaxmtu", CMD_SINGLE, CMD_OPTIONAL, "set rx max MTU to use");
-    cmd_AddParm(ts, "-dynroot-sparse", CMD_FLAG, CMD_OPTIONAL,
-		"Enable dynroot support with minimal cell list");
-    cmd_AddParm(ts, "-rxmaxfrags", CMD_SINGLE, CMD_OPTIONAL,
-                "Set the maximum number of UDP fragments Rx should send/receive"
-                " per Rx packet");
-    cmd_AddParm(ts, "-inumcalc", CMD_SINGLE, CMD_OPTIONAL,
-		"Set inode number calculation method");
+    cmd_AddParmAtOffset(ts, OPT_blocks, "-blocks", CMD_SINGLE,
+		        CMD_OPTIONAL, "1024 byte blocks in cache");
+    cmd_AddParmAtOffset(ts, OPT_files, "-files", CMD_SINGLE,
+		        CMD_OPTIONAL, "files in cache");
+    cmd_AddParmAtOffset(ts, OPT_rootvol, "-rootvol", CMD_SINGLE,
+		        CMD_OPTIONAL, "name of AFS root volume");
+    cmd_AddParmAtOffset(ts, OPT_stat, "-stat", CMD_SINGLE,
+		        CMD_OPTIONAL, "number of stat entries");
+    cmd_AddParmAtOffset(ts, OPT_memcache, "-memcache", CMD_FLAG,
+		        CMD_OPTIONAL, "run diskless");
+    cmd_AddParmAtOffset(ts, OPT_cachedir, "-cachedir", CMD_SINGLE,
+		        CMD_OPTIONAL, "cache directory");
+    cmd_AddParmAtOffset(ts, OPT_mountdir, "-mountdir", CMD_SINGLE,
+		        CMD_OPTIONAL, "mount location");
+    cmd_AddParmAtOffset(ts, OPT_daemons, "-daemons", CMD_SINGLE,
+		        CMD_OPTIONAL, "number of daemons to use");
+    cmd_AddParmAtOffset(ts, OPT_nosettime, "-nosettime", CMD_FLAG,
+		        CMD_OPTIONAL, "don't set the time");
+    cmd_AddParmAtOffset(ts, OPT_verbose, "-verbose", CMD_FLAG,
+		        CMD_OPTIONAL, "display lots of information");
+    cmd_AddParmAtOffset(ts, OPT_rmtsys, "-rmtsys", CMD_FLAG,
+		        CMD_OPTIONAL, "start NFS rmtsysd program");
+    cmd_AddParmAtOffset(ts, OPT_debug, "-debug", CMD_FLAG,
+			CMD_OPTIONAL, "display debug info");
+    cmd_AddParmAtOffset(ts, OPT_chunksize, "-chunksize", CMD_SINGLE,
+		        CMD_OPTIONAL, "log(2) of chunk size");
+    cmd_AddParmAtOffset(ts, OPT_dcache, "-dcache", CMD_SINGLE,
+		        CMD_OPTIONAL, "number of dcache entries");
+    cmd_AddParmAtOffset(ts, OPT_volumes, "-volumes", CMD_SINGLE,
+		        CMD_OPTIONAL, "number of volume entries");
+    cmd_AddParmAtOffset(ts, OPT_biods, "-biods", CMD_SINGLE,
+		        CMD_OPTIONAL, "number of bkg I/O daemons (aix vm)");
+    cmd_AddParmAtOffset(ts, OPT_prealloc, "-prealloc", CMD_SINGLE,
+		        CMD_OPTIONAL, "number of 'small' preallocated blocks");
+    cmd_AddParmAtOffset(ts, OPT_confdir, "-confdir", CMD_SINGLE,
+			CMD_OPTIONAL, "configuration directory");
+    cmd_AddParmAtOffset(ts, OPT_logfile, "-logfile", CMD_SINGLE,
+		        CMD_OPTIONAL, "Place to keep the CM log");
+    cmd_AddParmAtOffset(ts, OPT_waitclose, "-waitclose", CMD_FLAG,
+		        CMD_OPTIONAL, "make close calls synchronous");
+    cmd_AddParmAtOffset(ts, OPT_shutdown, "-shutdown", CMD_FLAG,
+		        CMD_OPTIONAL, "Shutdown all afs state");
+    cmd_AddParmAtOffset(ts, OPT_peerstats, "-enable_peer_stats", CMD_FLAG,
+			CMD_OPTIONAL, "Collect rpc statistics by peer");
+    cmd_AddParmAtOffset(ts, OPT_processstats, "-enable_process_stats",
+		        CMD_FLAG, CMD_OPTIONAL, "Collect rpc statistics for this process");
+    cmd_AddParmAtOffset(ts, OPT_memallocsleep, "-mem_alloc_sleep",
+			CMD_FLAG, CMD_OPTIONAL | CMD_HIDE,
+			"Allow sleeps when allocating memory cache");
+    cmd_AddParmAtOffset(ts, OPT_afsdb, "-afsdb", CMD_FLAG,
+		        CMD_OPTIONAL, "Enable AFSDB support");
+    cmd_AddParmAtOffset(ts, OPT_filesdir, "-files_per_subdir", CMD_SINGLE,
+			CMD_OPTIONAL,
+		        "log(2) of the number of cache files per "
+			"cache subdirectory");
+    cmd_AddParmAtOffset(ts, OPT_dynroot, "-dynroot", CMD_FLAG,
+		        CMD_OPTIONAL, "Enable dynroot support");
+    cmd_AddParmAtOffset(ts, OPT_fakestat, "-fakestat", CMD_FLAG,
+		        CMD_OPTIONAL,
+			"Enable fakestat support for cross-cell mounts");
+    cmd_AddParmAtOffset(ts, OPT_fakestatall, "-fakestat-all", CMD_FLAG,
+		        CMD_OPTIONAL,
+			"Enable fakestat support for all mounts");
+    cmd_AddParmAtOffset(ts, OPT_nomount, "-nomount", CMD_FLAG,
+		        CMD_OPTIONAL, "Do not mount AFS");
+    cmd_AddParmAtOffset(ts, OPT_backuptree, "-backuptree", CMD_FLAG,
+		        CMD_OPTIONAL,
+			"Prefer backup volumes for mountpoints in backup "
+			"volumes");
+    cmd_AddParmAtOffset(ts, OPT_rxbind, "-rxbind", CMD_FLAG,
+			CMD_OPTIONAL,
+			"Bind the Rx socket (one interface only)");
+    cmd_AddParmAtOffset(ts, OPT_settime, "-settime", CMD_FLAG,
+			CMD_OPTIONAL, "set the time");
+    cmd_AddParmAtOffset(ts, OPT_rxpck, "-rxpck", CMD_SINGLE, CMD_OPTIONAL,
+			"set rx_extraPackets to this value");
+    cmd_AddParmAtOffset(ts, OPT_splitcache, "-splitcache", CMD_SINGLE,
+			CMD_OPTIONAL,
+			"Percentage RW versus RO in cache (specify as 60/40)");
+    cmd_AddParmAtOffset(ts, OPT_nodynvcache, "-disable-dynamic-vcaches",
+			CMD_FLAG, CMD_OPTIONAL,
+			"disable stat/vcache cache growing as needed");
+    cmd_AddParmAtOffset(ts, OPT_rxmaxmtu, "-rxmaxmtu", CMD_SINGLE,
+			CMD_OPTIONAL, "set rx max MTU to use");
+    cmd_AddParmAtOffset(ts, OPT_dynrootsparse, "-dynroot-sparse", CMD_FLAG,
+			CMD_OPTIONAL,
+			"Enable dynroot support with minimal cell list");
+    cmd_AddParmAtOffset(ts, OPT_rxmaxfrags, "-rxmaxfrags", CMD_SINGLE,
+			CMD_OPTIONAL,
+			"Set the maximum number of UDP fragments Rx should "
+			"send/receive per Rx packet");
+    cmd_AddParmAtOffset(ts, OPT_inumcalc, "-inumcalc", CMD_SINGLE, CMD_OPTIONAL,
+			"Set inode number calculation method");
+    cmd_AddParmAtOffset(ts, OPT_volume_ttl, "-volume-ttl", CMD_SINGLE,
+			CMD_OPTIONAL,
+			"Set the vldb cache timeout value in seconds.");
 }
 
+/**
+ * Parse and check the command line options.
+ *
+ * @note The -shutdown command is handled in CheckOptions().
+ */
 int
 afsd_parse(int argc, char **argv)
 {
-    return cmd_Dispatch(argc, argv);
-}
-
-#ifdef	AFS_SGI53_ENV
-#ifdef AFS_SGI61_ENV
-/* The dwarf structures are searched to find entry points of static functions
- * and the addresses of static variables. The file name as well as the
- * sybmol name is reaquired.
- */
-
-/* Contains list of names to find in given file. */
-typedef struct {
-    char *name;			/* Name of variable or function. */
-    afs_hyper_t addr;		/* Address of function, undefined if not found. */
-    Dwarf_Half type;		/* DW_AT_location for vars, DW_AT_lowpc for func's */
-    char found;			/* set if found. */
-} staticAddrList;
-
-typedef struct {
-    char *file;			/* Name of file containing vars or funcs */
-    staticAddrList *addrList;	/* List of vars and/or funcs. */
-    int nAddrs;			/* # of addrList's */
-    int found;			/* set if we've found this file already. */
-} staticNameList;
-
-/* routines used to find addresses in /unix */
-#if defined(AFS_SGI62_ENV) && !defined(AFS_SGI65_ENV)
-void findMDebugStaticAddresses(staticNameList *, int, int);
-#endif
-void findDwarfStaticAddresses(staticNameList *, int);
-void findElfAddresses(Dwarf_Debug, Dwarf_Die, staticNameList *);
-void getElfAddress(Dwarf_Debug, Dwarf_Die, staticAddrList *);
-
-#if defined(AFS_SGI62_ENV) && !defined(AFS_SGI65_ENV)
-#define AFS_N_FILELISTS 2
-#define AFS_SYMS_NEEDED 3
-#else /* AFS_SGI62_ENV */
-#define AFS_N_FILELISTS 1
-#endif /* AFS_SGI62_ENV */
-
-
-
-void
-set_staticaddrs(void)
-{
-    staticNameList fileList[AFS_N_FILELISTS];
-
-    fileList[0].addrList =
-	(staticAddrList *) calloc(1, sizeof(staticAddrList));
-    if (!fileList[0].addrList) {
-	printf("set_staticaddrs: Can't calloc fileList[0].addrList\n");
-	return;
-    }
-    fileList[0].file = "nfs_server.c";
-    fileList[0].found = 0;
-    fileList[0].nAddrs = 1;
-    fileList[0].addrList[0].name = "rfsdisptab_v2";
-    fileList[0].addrList[0].type = DW_AT_location;
-    fileList[0].addrList[0].found = 0;
-
-#if defined(AFS_SGI62_ENV) && !defined(AFS_SGI65_ENV)
-    fileList[1].addrList =
-	(staticAddrList *) calloc(2, sizeof(staticAddrList));
-    if (!fileList[1].addrList) {
-	printf("set_staticaddrs: Can't malloc fileList[1].addrList\n");
-	return;
-    }
-    fileList[1].file = "uipc_socket.c";
-    fileList[1].found = 0;
-    fileList[1].nAddrs = 2;
-    fileList[1].addrList[0].name = "sblock";
-    fileList[1].addrList[0].type = DW_AT_low_pc;
-    fileList[1].addrList[0].found = 0;
-    fileList[1].addrList[1].name = "sbunlock";
-    fileList[1].addrList[1].type = DW_AT_low_pc;
-    fileList[1].addrList[1].found = 0;
-
-    if (64 != sysconf(_SC_KERN_POINTERS))
-	findMDebugStaticAddresses(fileList, AFS_N_FILELISTS, AFS_SYMS_NEEDED);
-    else
-#endif /* AFS_SGI62_ENV */
-	findDwarfStaticAddresses(fileList, AFS_N_FILELISTS);
-
-    if (fileList[0].addrList[0].found) {
-	afsd_call_syscall(AFSOP_NFSSTATICADDR2, fileList[0].addrList[0].addr.high,
-		     fileList[0].addrList[0].addr.low);
-    } else {
-	if (afsd_verbose)
-	    printf("NFS V2 is not present in the kernel.\n");
-    }
-    free(fileList[0].addrList);
-#if defined(AFS_SGI62_ENV) && !defined(AFS_SGI65_ENV)
-    if (fileList[1].addrList[0].found && fileList[1].addrList[1].found) {
-	afsd_call_syscall(AFSOP_SBLOCKSTATICADDR2,
-		     fileList[1].addrList[0].addr.high,
-		     fileList[1].addrList[0].addr.low,
-		     fileList[1].addrList[1].addr.high,
-		     fileList[1].addrList[1].addr.low);
-    } else {
-	if (!fileList[1].addrList[0].found)
-	    printf("Can't find %s in kernel. Exiting.\n",
-		   fileList[1].addrList[0].name);
-	if (!fileList[1].addrList[0].found)
-	    printf("Can't find %s in kernel. Exiting.\n",
-		   fileList[1].addrList[1].name);
-	exit(1);
-    }
-    free(fileList[1].addrList);
-#endif /* AFS_SGI62_ENV */
-}
-
-
-/* Find addresses for static variables and functions. */
-void
-findDwarfStaticAddresses(staticNameList * nameList, int nLists)
-{
-    int fd;
-    int i;
-    int found = 0;
-    int code;
-    char *s;
-    char *hname = (char *)0;
-    Dwarf_Unsigned dwarf_access = O_RDONLY;
-    Dwarf_Debug dwarf_debug;
-    Dwarf_Error dwarf_error;
-    Dwarf_Unsigned dwarf_cu_header_length;
-    Dwarf_Unsigned dwarf_abbrev_offset;
-    Dwarf_Half dwarf_address_size;
-    Dwarf_Unsigned next_cu_header;
-    Dwarf_Die dwarf_die;
-    Dwarf_Die dwarf_next_die;
-    Dwarf_Die dwarf_child_die;
-
-    if (elf_version(EV_CURRENT) == EV_NONE) {
-	printf("findDwarfStaticAddresses: Bad elf version.\n");
-	return;
-    }
-
-    if ((fd = open("/unix", O_RDONLY, 0)) < 0) {
-	printf("findDwarfStaticAddresses: Failed to open /unix.\n");
-	return;
-    }
-    code =
-	dwarf_init(fd, dwarf_access, NULL, NULL, &dwarf_debug, &dwarf_error);
-    if (code != DW_DLV_OK) {
-	/* Nope hope for the elves and dwarves, try intermediate code. */
-	close(fd);
-	return;
-    }
-
-    found = 0;
-    while (1) {
-	/* Run through the headers until we find ones for files we've
-	 * specified in nameList.
-	 */
-	code =
-	    dwarf_next_cu_header(dwarf_debug, &dwarf_cu_header_length, NULL,
-				 &dwarf_abbrev_offset, &dwarf_address_size,
-				 &next_cu_header, &dwarf_error);
-	if (code == DW_DLV_NO_ENTRY) {
-	    break;
-	} else if (code == DW_DLV_ERROR) {
-	    printf("findDwarfStaticAddresses: Error reading headers: %s\n",
-		   dwarf_errmsg(dwarf_error));
-	    break;
-	}
-
-	code = dwarf_siblingof(dwarf_debug, NULL, &dwarf_die, &dwarf_error);
-	if (code != DW_DLV_OK) {
-	    printf("findDwarfStaticAddresses: Can't get first die. %s\n",
-		   (code == DW_DLV_ERROR) ? dwarf_errmsg(dwarf_error) : "");
-	    break;
-	}
-
-	/* This is the header, test the name. */
-	code = dwarf_diename(dwarf_die, &hname, &dwarf_error);
-	if (code == DW_DLV_OK) {
-	    s = strrchr(hname, '/');
-	    for (i = 0; i < nLists; i++) {
-		if (s && !strcmp(s + 1, nameList[i].file)) {
-		    findElfAddresses(dwarf_debug, dwarf_die, &nameList[i]);
-		    found++;
-		    break;
-		}
-	    }
-	} else {
-	    printf
-		("findDwarfStaticAddresses: Can't get name of current header. %s\n",
-		 (code == DW_DLV_ERROR) ? dwarf_errmsg(dwarf_error) : "");
-	    break;
-	}
-	dwarf_dealloc(dwarf_debug, hname, DW_DLA_STRING);
-	hname = (char *)0;
-	if (found >= nLists) {	/* we're done */
-	    break;
-	}
-    }
-
-    /* Frees up all allocated space. */
-    (void)dwarf_finish(dwarf_debug, &dwarf_error);
-    close(fd);
-}
-
-void
-findElfAddresses(Dwarf_Debug dwarf_debug, Dwarf_Die dwarf_die,
-		 staticNameList * nameList)
-{
-    int i;
-    Dwarf_Error dwarf_error;
-    Dwarf_Die dwarf_next_die;
-    Dwarf_Die dwarf_child_die;
-    Dwarf_Attribute dwarf_return_attr;
-    char *vname = (char *)0;
-    int found = 0;
+    struct cmd_syndesc *ts = NULL;
     int code;
 
-    /* Drop into this die to find names in addrList. */
-    code = dwarf_child(dwarf_die, &dwarf_child_die, &dwarf_error);
-    if (code != DW_DLV_OK) {
-	printf("findElfAddresses: Can't get child die. %s\n",
-	       (code == DW_DLV_ERROR) ? dwarf_errmsg(dwarf_error) : "");
-	return;
+    code = cmd_Parse(argc, argv, &ts);
+    if (code) {
+	return code;
     }
-
-    /* Try to find names in each sibling. */
-    dwarf_next_die = (Dwarf_Die) 0;
-    do {
-	code = dwarf_diename(dwarf_child_die, &vname, &dwarf_error);
-	/* It's possible that some siblings don't have names. */
-	if (code == DW_DLV_OK) {
-	    for (i = 0; i < nameList->nAddrs; i++) {
-		if (!nameList->addrList[i].found) {
-		    if (!strcmp(vname, nameList->addrList[i].name)) {
-			getElfAddress(dwarf_debug, dwarf_child_die,
-				      &(nameList->addrList[i]));
-			found++;
-			break;
-		    }
-		}
-	    }
-	}
-	if (dwarf_next_die)
-	    dwarf_dealloc(dwarf_debug, dwarf_next_die, DW_DLA_DIE);
-
-	if (found >= nameList->nAddrs) {	/* we're done. */
-	    break;
-	}
-
-	dwarf_next_die = dwarf_child_die;
-	code =
-	    dwarf_siblingof(dwarf_debug, dwarf_next_die, &dwarf_child_die,
-			    &dwarf_error);
-
-    } while (code == DW_DLV_OK);
+    code = CheckOptions(ts);
+    cmd_FreeOptions(&ts);
+    return code;
 }
-
-/* Get address out of current die. */
-void
-getElfAddress(Dwarf_Debug dwarf_debug, Dwarf_Die dwarf_child_die,
-	      staticAddrList * addrList)
-{
-    int i;
-    Dwarf_Error dwarf_error;
-    Dwarf_Attribute dwarf_return_attr;
-    Dwarf_Bool dwarf_return_bool;
-    Dwarf_Locdesc *llbuf = NULL;
-    Dwarf_Signed listlen;
-    off64_t addr = (off64_t) 0;
-    int code;
-
-    code =
-	dwarf_hasattr(dwarf_child_die, addrList->type, &dwarf_return_bool,
-		      &dwarf_error);
-    if ((code != DW_DLV_OK) || (!dwarf_return_bool)) {
-	printf("getElfAddress: no address given for %s. %s\n", addrList->name,
-	       (code == DW_DLV_ERROR) ? dwarf_errmsg(dwarf_error) : "");
-	return;
-    }
-    code =
-	dwarf_attr(dwarf_child_die, addrList->type, &dwarf_return_attr,
-		   &dwarf_error);
-    if (code != DW_DLV_OK) {
-	printf("getElfAddress: Can't get attribute. %s\n",
-	       (code == DW_DLV_ERROR) ? dwarf_errmsg(dwarf_error) : "");
-	return;
-    }
-
-    switch (addrList->type) {
-    case DW_AT_location:
-	code =
-	    dwarf_loclist(dwarf_return_attr, &llbuf, &listlen, &dwarf_error);
-	if (code != DW_DLV_OK) {
-	    printf("getElfAddress: Can't get location for %s. %s\n",
-		   addrList->name,
-		   (code == DW_DLV_ERROR) ? dwarf_errmsg(dwarf_error) : "");
-	    return;
-	}
-	if ((listlen != 1) || (llbuf[0].ld_cents != 1)) {
-	    printf("getElfAddress: %s has more than one address.\n",
-		   addrList->name);
-	    return;
-	}
-	addr = llbuf[0].ld_s[0].lr_number;
-	break;
-
-    case DW_AT_low_pc:
-	code =
-	    dwarf_lowpc(dwarf_child_die, (Dwarf_Addr *) & addr, &dwarf_error);
-	if (code != DW_DLV_OK) {
-	    printf("getElfAddress: Can't get lowpc for %s. %s\n",
-		   addrList->name,
-		   (code == DW_DLV_ERROR) ? dwarf_errmsg(dwarf_error) : "");
-	    return;
-	}
-	break;
-
-    default:
-	printf("getElfAddress: Bad case %d in switch.\n", addrList->type);
-	return;
-    }
-
-    addrList->addr.high = (addr >> 32) & 0xffffffff;
-    addrList->addr.low = addr & 0xffffffff;
-    addrList->found = 1;
-}
-
-#if defined(AFS_SGI62_ENV) && !defined(AFS_SGI65_ENV)
-/* Find symbols in the .mdebug section for 32 bit kernels. */
-/*
- * do_mdebug()
- * On 32bit platforms, we're still using the ucode compilers to build
- * the kernel, so we need to get our static text/data from the .mdebug
- * section instead of the .dwarf sections.
- */
-/* SearchNameList searches our bizarre structs for the given string.
- * If found, sets the found bit and the address and returns 1.
- * Not found returns 0.
- */
-int
-SearchNameList(char *name, afs_uint32 addr, staticNameList * nameList,
-	       int nLists)
-{
-    int i, j;
-    for (i = 0; i < nLists; i++) {
-	for (j = 0; j < nameList[i].nAddrs; j++) {
-	    if (nameList[i].addrList[j].found)
-		continue;
-	    if (!strcmp(name, nameList[i].addrList[j].name)) {
-		nameList[i].addrList[j].addr.high = 0;
-		nameList[i].addrList[j].addr.low = addr;
-		nameList[i].addrList[j].found = 1;
-		return 1;
-	    }
-	}
-    }
-    return 0;
-}
-
-static void
-SearchMDebug(Elf_Scn * scnp, Elf32_Shdr * shdrp, staticNameList * nameList,
-	     int nLists, int needed)
-{
-    long *buf = (long *)(elf_getdata(scnp, NULL)->d_buf);
-    u_long addr, mdoff = shdrp->sh_offset;
-    HDRR *hdrp;
-    SYMR *symbase, *symp, *symend;
-    FDR *fdrbase, *fdrp;
-    int i, j;
-    char *strbase, *str;
-    int ifd;
-    int nFound = 0;
-
-    /* get header */
-    addr = (__psunsigned_t) buf;
-    hdrp = (HDRR *) addr;
-
-    /* setup base addresses */
-    addr = (u_long) buf + (u_long) (hdrp->cbFdOffset - mdoff);
-    fdrbase = (FDR *) addr;
-    addr = (u_long) buf + (u_long) (hdrp->cbSymOffset - mdoff);
-    symbase = (SYMR *) addr;
-    addr = (u_long) buf + (u_long) (hdrp->cbSsOffset - mdoff);
-    strbase = (char *)addr;
-
-#define KEEPER(a,b)	((a == stStaticProc && b == scText) || \
-			 (a == stStatic && (b == scData || b == scBss || \
-					    b == scSBss || b == scSData)))
-
-    for (fdrp = fdrbase; fdrp < &fdrbase[hdrp->ifdMax]; fdrp++) {
-	str = strbase + fdrp->issBase + fdrp->rss;
-
-	/* local symbols for each fd */
-	for (symp = &symbase[fdrp->isymBase];
-	     symp < &symbase[fdrp->isymBase + fdrp->csym]; symp++) {
-	    if (KEEPER(symp->st, symp->sc)) {
-		if (symp->value == 0)
-		    continue;
-
-		str = strbase + fdrp->issBase + symp->iss;
-		/* Look for AFS symbols of interest */
-		if (SearchNameList(str, symp->value, nameList, nLists)) {
-		    nFound++;
-		    if (nFound >= needed)
-			return;
-		}
-	    }
-	}
-    }
-}
-
-/*
- * returns section with the name of scn_name, & puts its header in shdr64 or
- * shdr32 based on elf's file type
- *
- */
-Elf_Scn *
-findMDebugSection(Elf * elf, char *scn_name)
-{
-    Elf64_Ehdr *ehdr64;
-    Elf32_Ehdr *ehdr32;
-    Elf_Scn *scn = NULL;
-    Elf64_Shdr *shdr64;
-    Elf32_Shdr *shdr32;
-
-    if ((ehdr32 = elf32_getehdr(elf)) == NULL)
-	return (NULL);
-    do {
-	if ((scn = elf_nextscn(elf, scn)) == NULL)
-	    break;
-	if ((shdr32 = elf32_getshdr(scn)) == NULL)
-	    return (NULL);
-    } while (strcmp
-	     (scn_name,
-	      elf_strptr(elf, ehdr32->e_shstrndx, shdr32->sh_name)));
-
-    return (scn);
-}
-
-
-void
-findMDebugStaticAddresses(staticNameList * nameList, int nLists, int needed)
-{
-    int fd;
-    Elf *elf;
-    Elf_Scn *mdebug_scn;
-    Elf32_Shdr *mdebug_shdr;
-    char *names;
-
-    if ((fd = open("/unix", O_RDONLY)) == -1) {
-	printf("findMDebugStaticAddresses: Failed to open /unix.\n");
-	return;
-    }
-
-    (void)elf_version(EV_CURRENT);
-    if ((elf = elf_begin(fd, ELF_C_READ, NULL)) == NULL) {
-	printf
-	    ("findMDebugStaticAddresses: /unix doesn't seem to be an elf file\n");
-	close(fd);
-	return;
-    }
-    mdebug_scn = findMDebugSection(elf, ".mdebug");
-    if (!mdebug_scn) {
-	printf("findMDebugStaticAddresses: Can't find .mdebug section.\n");
-	goto find_end;
-    }
-    mdebug_shdr = elf32_getshdr(mdebug_scn);
-    if (!mdebug_shdr) {
-	printf("findMDebugStaticAddresses: Can't find .mdebug header.\n");
-	goto find_end;
-    }
-
-    (void)SearchMDebug(mdebug_scn, mdebug_shdr, nameList, nLists, needed);
-
-  find_end:
-    elf_end(elf);
-    close(fd);
-}
-#endif /* AFS_SGI62_ENV */
-
-#else /* AFS_SGI61_ENV */
-#include <nlist.h>
-struct nlist nlunix[] = {
-    {"rfsdisptab_v2"},
-    {0},
-};
-
-get_nfsstaticaddr()
-{
-    int i, j, kmem, count;
-
-    if ((kmem = open("/dev/kmem", O_RDONLY)) < 0) {
-	printf("Warning: can't open /dev/kmem\n");
-	return 0;
-    }
-    if ((j = nlist("/unix", nlunix)) < 0) {
-	printf("Warning: can't nlist /unix\n");
-	return 0;
-    }
-    i = nlunix[0].n_value;
-    if (lseek(kmem, i, L_SET /*0 */ ) != i) {
-	printf("Warning: can't lseek to %x\n", i);
-	return 0;
-    }
-    if ((j = read(kmem, &count, sizeof count)) != sizeof count) {
-	printf("WARNING: kmem read at %x failed\n", i);
-	return 0;
-    }
-    return i;
-}
-#endif /* AFS_SGI61_ENV */
-#endif /* AFS_SGI53_ENV */
-
-struct afsd_syscall_args {
-    long syscall;
-    long param1;
-    long param2;
-    long param3;
-    long param4;
-    long param5;
-    const char *rn;
-    int rxpri;
-};
 
 /**
  * entry point for calling a syscall from another proc/thread.
@@ -3175,8 +2679,7 @@ call_syscall_thread(void *rock)
 	afsd_set_rx_rtpri();
     }
 
-    code = afsd_call_syscall(args->syscall, args->param1, args->param2,
-                                 args->param3, args->param4, args->param5);
+    code = afsd_call_syscall(args);
     if (code && args->syscall == AFSOP_START_CS) {
 	printf("%s: No check server daemon in client.\n", args->rn);
     }
@@ -3184,6 +2687,101 @@ call_syscall_thread(void *rock)
     free(args);
 
     return NULL;
+}
+
+static void
+afsd_syscall_populate(struct afsd_syscall_args *args, int syscall, va_list ap)
+{
+    afsd_syscall_param_t *params;
+
+    memset(args, 0, sizeof(struct afsd_syscall_args));
+
+    args->syscall = syscall;
+    params = args->params;
+
+    switch (syscall) {
+    case AFSOP_RXEVENT_DAEMON:
+    case AFSOP_CLOSEWAIT:
+    case AFSOP_START_AFS:
+    case AFSOP_START_CS:
+    case AFSOP_START_TRUNCDAEMON:
+	break;
+    case AFSOP_START_BKG:
+    case AFSOP_SHUTDOWN:
+    case AFSOP_SET_RXPCK:
+    case AFSOP_BASIC_INIT:
+    case AFSOP_SET_RXMAXFRAGS:
+    case AFSOP_SET_RXMAXMTU:
+    case AFSOP_SET_DYNROOT:
+    case AFSOP_SET_FAKESTAT:
+    case AFSOP_SET_BACKUPTREE:
+    case AFSOP_BUCKETPCT:
+    case AFSOP_GO:
+    case AFSOP_SET_RMTSYS_FLAG:
+    case AFSOP_SET_INUMCALC:
+    case AFSOP_SET_VOLUME_TTL:
+	params[0] = CAST_SYSCALL_PARAM((va_arg(ap, int)));
+	break;
+    case AFSOP_SET_THISCELL:
+    case AFSOP_ROOTVOLUME:
+    case AFSOP_VOLUMEINFO:
+    case AFSOP_CACHEFILE:
+    case AFSOP_CACHEINFO:
+    case AFSOP_CACHEINIT:
+    case AFSOP_CELLINFO:
+	params[0] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
+	break;
+    case AFSOP_ADDCELLALIAS:
+	params[0] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
+	params[1] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
+	break;
+    case AFSOP_AFSDB_HANDLER:
+	params[0] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
+	params[1] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
+	params[2] = CAST_SYSCALL_PARAM((va_arg(ap, int)));
+	break;
+    case AFSOP_BKG_HANDLER:
+	params[0] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
+	params[1] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
+	params[2] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
+	break;
+    case AFSOP_RXLISTENER_DAEMON:
+    case AFSOP_START_RXCALLBACK:
+	params[0] = CAST_SYSCALL_PARAM((va_arg(ap, int)));
+	params[1] = CAST_SYSCALL_PARAM((va_arg(ap, int)));
+	params[2] = CAST_SYSCALL_PARAM((va_arg(ap, int)));
+	break;
+    case AFSOP_ADVISEADDR:
+	params[0] = CAST_SYSCALL_PARAM((va_arg(ap, int)));
+	params[1] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
+	params[2] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
+	params[3] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
+	break;
+    case AFSOP_ADDCELL2:
+	params[0] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
+	params[1] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
+	params[2] = CAST_SYSCALL_PARAM((va_arg(ap, afs_int32)));
+	params[3] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
+	break;
+    case AFSOP_CACHEINODE:
+#if defined AFS_SGI62_ENV
+	{
+	    afs_int64 tmp = va_arg(ap, afs_int64);
+	    params[0] = CAST_SYSCALL_PARAM((afs_uint32)(tmp >> 32));
+	    params[1] = CAST_SYSCALL_PARAM((afs_uint32)(tmp & 0xffffffff));
+	}
+#else
+	params[0] = CAST_SYSCALL_PARAM((va_arg(ap, afs_uint32)));
+#endif
+	break;
+    case AFSOP_SEED_ENTROPY:
+	params[0] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
+	params[1] = CAST_SYSCALL_PARAM((va_arg(ap, afs_uint32)));
+	break;
+    default:
+	printf("Unknown syscall enountered: %d\n", syscall);
+	opr_Assert(0);
+    }
 }
 
 /**
@@ -3196,19 +2794,12 @@ call_syscall_thread(void *rock)
  * @param[in] syscall syscall to run
  */
 static void
-fork_syscall_impl(int rx, int wait, const char *rn, long syscall, long param1,
-                  long param2, long param3, long param4, long param5)
+fork_syscall_impl(int rx, int wait, const char *rn, int syscall, va_list ap)
 {
     struct afsd_syscall_args *args;
 
     args = malloc(sizeof(*args));
-
-    args->syscall = syscall;
-    args->param1 = param1;
-    args->param2 = param2;
-    args->param3 = param3;
-    args->param4 = param4;
-    args->param5 = param5;
+    afsd_syscall_populate(args, syscall, ap);
     args->rxpri = rx;
     args->rn = rn;
 
@@ -3219,20 +2810,26 @@ fork_syscall_impl(int rx, int wait, const char *rn, long syscall, long param1,
  * call a syscall in another process or thread.
  */
 static void
-fork_syscall(const char *rn, long syscall, long param1, long param2,
-             long param3, long param4, long param5)
+fork_syscall(const char *rn, int syscall, ...)
 {
-    fork_syscall_impl(0, 0, rn, syscall, param1, param2, param3, param4, param5);
+    va_list ap;
+
+    va_start(ap, syscall);
+    fork_syscall_impl(0, 0, rn, syscall, ap);
+    va_end(ap);
 }
 
 /**
  * call a syscall in another process or thread, and give it RX priority.
  */
 static void
-fork_rx_syscall(const char *rn, long syscall, long param1, long param2,
-                long param3, long param4, long param5)
+fork_rx_syscall(const char *rn, int syscall, ...)
 {
-    fork_syscall_impl(1, 0, rn, syscall, param1, param2, param3, param4, param5);
+    va_list ap;
+
+    va_start(ap, syscall);
+    fork_syscall_impl(1, 0, rn, syscall, ap);
+    va_end(ap);
 }
 
 #if defined(AFS_SUN510_ENV) && defined(RXK_LISTENER_ENV)
@@ -3241,9 +2838,25 @@ fork_rx_syscall(const char *rn, long syscall, long param1, long param2,
  * for it to finish before returning.
  */
 static void
-fork_rx_syscall_wait(const char *rn, long syscall, long param1, long param2,
-                     long param3, long param4, long param5)
+fork_rx_syscall_wait(const char *rn, int syscall, ...)
 {
-    fork_syscall_impl(1, 1, rn, syscall, param1, param2, param3, param4, param5);
+    va_list ap;
+
+    va_start(ap, syscall);
+    fork_syscall_impl(1, 1, rn, syscall, ap);
+    va_end(ap);
 }
 #endif /* AFS_SUN510_ENV && RXK_LISTENER_ENV */
+
+static int
+afsd_syscall(int syscall, ...)
+{
+    va_list ap;
+    struct afsd_syscall_args args;
+
+    va_start(ap, syscall);
+    afsd_syscall_populate(&args, syscall, ap);
+    va_end(ap);
+
+    return afsd_call_syscall(&args);
+}

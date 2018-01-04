@@ -16,28 +16,19 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+
+#ifdef HAVE_SYS_FILE_H
+#include <sys/file.h>
+#endif
+
 #ifdef AFS_DEMAND_ATTACH_FS
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <dirent.h>
-#include <afs/afs_assert.h>
-#include <string.h>
-#ifdef AFS_NT40_ENV
-#include <io.h>
-#else
-#include <sys/file.h>
-#include <sys/param.h>
-#if defined(AFS_SUN5_ENV) || defined(AFS_HPUX_ENV)
-#include <unistd.h>
-#endif
-#endif /* AFS_NT40_ENV */
+#include <afs/opr.h>
+#include <rx/rx_queue.h>
+#include <opr/lock.h>
 #include <lock.h>
 #include <afs/afsutil.h>
-#include <lwp.h>
 #include "nfs.h"
 #include <afs/afsint.h>
 #include "ihandle.h"
@@ -52,12 +43,6 @@
 
 #include "vg_cache.h"
 #include "vg_cache_impl.h"
-
-#ifdef O_LARGEFILE
-#define afs_open	open64
-#else /* !O_LARGEFILE */
-#define afs_open	open
-#endif /* !O_LARGEFILE */
 
 static int _VVGC_scan_table_init(VVGCache_scan_table_t * tbl);
 static int _VVGC_scan_table_add(VVGCache_scan_table_t * tbl,
@@ -431,7 +416,7 @@ _VVGC_scan_start(struct DiskPartition64 * dp)
 	ViceLog(0, ("_VVGC_scan_start: pthread_create failed with %d\n", code));
 
 	old_state = _VVGC_state_change(dp, VVGC_PART_STATE_INVALID);
-	osi_Assert(old_state == VVGC_PART_STATE_UPDATING);
+	opr_Assert(old_state == VVGC_PART_STATE_UPDATING);
     }
 
  error:

@@ -13,19 +13,11 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
-#include <sys/types.h>
+
+#include <roken.h>
+
 #include <afs/cmd.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/time.h>
-#endif
 #include <lwp.h>
 #include <afs/bubasics.h>
 #include "bc.h"
@@ -33,6 +25,7 @@
 #include <afs/butc.h>
 #include <afs/budb.h>
 #include <afs/vlserver.h>
+
 #include "error_macros.h"
 #include "bucoord_internal.h"
 #include "bucoord_prototypes.h"
@@ -192,14 +185,13 @@ bc_Restorer(afs_int32 aindex)
     time_t did;
     int foundtape, c;
 
-    dlevels = (struct dumpinfo *) malloc(num_dlevels * sizeof(*dlevels));
+    dlevels = malloc(num_dlevels * sizeof(*dlevels));
 
     dumpTaskPtr = &bc_dumpTasks[aindex];
     serverAll = HOSTADDR(&dumpTaskPtr->destServer);
     partitionAll = dumpTaskPtr->destPartition;
 
-    volumeEntries = (struct budb_volumeEntry *)
-	malloc(MAXTAPESATONCE * sizeof(struct budb_volumeEntry));
+    volumeEntries = malloc(MAXTAPESATONCE * sizeof(struct budb_volumeEntry));
     if (!volumeEntries) {
 	afs_com_err(whoami, BC_NOMEM, NULL);
 	ERROR(BC_NOMEM);
@@ -277,12 +269,11 @@ bc_Restorer(afs_int32 aindex)
 
 	/* If didn't find it, create one and thread into list */
 	if (!di) {
-	    di = (struct dumpinfo *)malloc(sizeof(struct dumpinfo));
+	    di = calloc(1, sizeof(struct dumpinfo));
 	    if (!di) {
 		afs_com_err(whoami, BC_NOMEM, NULL);
 		ERROR(BC_NOMEM);
 	    }
-	    memset(di, 0, sizeof(struct dumpinfo));
 
 	    di->DumpId = dumpDescr->id;
 	    di->initialDumpId = dumpDescr->initialDumpID;
@@ -299,21 +290,19 @@ bc_Restorer(afs_int32 aindex)
 	}
 
 	/* Create one and thread into list */
-	vi = (struct volinfo *)malloc(sizeof(struct volinfo));
+	vi = calloc(1, sizeof(struct volinfo));
 	if (!vi) {
 	    afs_com_err(whoami, BC_NOMEM, NULL);
 	    ERROR(BC_NOMEM);
 	}
-	memset(vi, 0, sizeof(struct volinfo));
 
-	vi->volname = (char *)malloc(strlen(vname) + 1);
+	vi->volname = strdup(vname);
 	if (!vi->volname) {
 	    free(vi);
 	    afs_com_err(whoami, BC_NOMEM, NULL);
 	    ERROR(BC_NOMEM);
 	}
 
-	strcpy(vi->volname, vname);
 	if (serverAll) {
 	    vi->server = serverAll;
 	    vi->partition = partitionAll;
@@ -342,7 +331,7 @@ bc_Restorer(afs_int32 aindex)
 		struct dumpinfo *tdl = dlevels;
 
 		num_dlevels += num_dlevels;	/* double */
-		dlevels = (struct dumpinfo *) malloc(num_dlevels * sizeof(*dlevels));
+		dlevels = malloc(num_dlevels * sizeof(*dlevels));
 		memcpy(dlevels, tdl, (num_dlevels/2) * sizeof(*dlevels));
 		free(tdl);
 	    }
@@ -479,24 +468,19 @@ bc_Restorer(afs_int32 aindex)
 
 			/* Allocate a new tapelist entry if one not found */
 			if (!tle) {
-			    tle = (struct bc_tapeList *)
-				malloc(sizeof(struct bc_tapeList));
+			    tle = calloc(1, sizeof(struct bc_tapeList));
 			    if (!tle) {
 				afs_com_err(whoami, BC_NOMEM, NULL);
 				return (BC_NOMEM);
 			    }
-			    memset(tle, 0, sizeof(struct bc_tapeList));
 
-			    tle->tapeName =
-				(char *)malloc(strlen(volumeEntries[ve].tape)
-					       + 1);
+			    tle->tapeName = strdup(volumeEntries[ve].tape);
 			    if (!tle->tapeName) {
 				free(tle);
 				afs_com_err(whoami, BC_NOMEM, NULL);
 				return (BC_NOMEM);
 			    }
 
-			    strcpy(tle->tapeName, volumeEntries[ve].tape);
 			    tle->dumpID = dlevels[lv].DumpId;
 			    tle->initialDumpID = dlevels[lv].initialDumpId;
 			    tle->tapeNumber = tapeseq;
@@ -534,24 +518,19 @@ bc_Restorer(afs_int32 aindex)
 			 * Remember the server and partition.
 			 */
 			if (!ti) {
-			    ti = (struct bc_tapeItem *)
-				malloc(sizeof(struct bc_tapeItem));
+			    ti = calloc(1, sizeof(struct bc_tapeItem));
 			    if (!ti) {
 				afs_com_err(whoami, BC_NOMEM, NULL);
 				return (BC_NOMEM);
 			    }
-			    memset(ti, 0, sizeof(struct bc_tapeItem));
 
-			    ti->volumeName =
-				(char *)malloc(strlen(volumeEntries[ve].name)
-					       + 1);
+			    ti->volumeName = strdup(volumeEntries[ve].name);
 			    if (!ti->volumeName) {
 				free(ti);
 				afs_com_err(whoami, BC_NOMEM, NULL);
 				return (BC_NOMEM);
 			    }
 
-			    strcpy(ti->volumeName, volumeEntries[ve].name);
 			    ti->server = vi->server;
 			    ti->partition = vi->partition;
 			    ti->oid = volumeEntries[ve].id;
@@ -633,14 +612,11 @@ bc_Restorer(afs_int32 aindex)
     }
 
     /* Allocate a list of volumes to restore */
-    tcarray =
-	(struct tc_restoreDesc *)malloc(nentries *
-					sizeof(struct tc_restoreDesc));
+    tcarray = calloc(nentries, sizeof(struct tc_restoreDesc));
     if (!tcarray) {
 	afs_com_err(whoami, BC_NOMEM, NULL);
 	ERROR(BC_NOMEM);
     }
-    memset(tcarray, 0, nentries * sizeof(struct tc_restoreDesc));
 
     /* Fill in the array with the list above */
     i = 0;

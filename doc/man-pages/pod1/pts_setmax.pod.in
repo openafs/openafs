@@ -9,9 +9,11 @@ pts_setmax - Sets the value of the max group id or max user id counter
 
 B<pts setmax> S<<< [B<-group> <I<group max>>] >>> S<<< [B<-user> <I<user max>>] >>>
     S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>] [B<-force>] [B<-help>]
+    [B<-auth>] [B<-encrypt>] S<<< [B<-config> <I<config directory>>] >>>
 
 B<pts setm> [B<-g> I<group max>>] S<<< [B<-u> <I<user max>>] >>>
     S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>] [B<-f>] [B<-h>]
+    [B<-a>] [B<-e>] S<<< [B<-co> <I<config directory>>] >>>
 
 =for html
 </div>

@@ -5,8 +5,9 @@
 /Makefile.common
 /MakefileProto.*
 !/MakefileProto.*.in
+/PERLUAFS
 /UAFS
-/JUAFS
+/UAFS.pic
 /afs
 /afsd
 /afsint
@@ -18,7 +19,6 @@
 /net
 /netinet
 /nfs
-/nsapi
 /rpc
 /rx
 /sys

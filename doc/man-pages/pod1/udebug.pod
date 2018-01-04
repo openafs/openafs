@@ -33,7 +33,7 @@ coordinator), and the status of the connections between them.
 Names the database server machine that is running the process for which to
 display status information. Provide the machine's IP address in dotted
 decimal format, its fully qualified host name (for example,
-B<fs1.abc.com>), or the shortest abbreviated form of its host name that
+B<fs1.example.com>), or the shortest abbreviated form of its host name that
 distinguishes it from other machines. Successful use of an abbreviated
 form depends on the availability of a name resolution service (such as the
 Domain Name Service or a local host table) at the time the command is
@@ -43,17 +43,25 @@ issued.
 
 Identifies the database server process for which to display status
 information, either by its process name or port number. Provide one of the
-following values.
+following values:
 
 =over 4
 
-=item B<buserver> or 7021 for the Backup Server
+=item
 
-=item B<kaserver> or 7004 for the Authentication Server
+B<buserver> or 7021 for the Backup Server
 
-=item B<ptserver> or 7002 for the Protection Server
+=item
 
-=item B<vlserver> or 7003 for the Volume Location Server
+B<kaserver> or 7004 for the Authentication Server
+
+=item
+
+B<ptserver> or 7002 for the Protection Server
+
+=item
+
+B<vlserver> or 7003 for the Volume Location Server
 
 =back
 

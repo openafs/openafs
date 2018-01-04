@@ -125,22 +125,8 @@ afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
     return code;
 }
 
-/*
- * All this gluck should probably also be replaced with CVs.
- */
-typedef struct afs_event {
-    struct afs_event *next;     /* next in hash chain */
-    char *event;                /* lwp event: an address */
-    int refcount;               /* Is it in use? */
-    int seq;                    /* Sequence number: this is incremented
-                                 * by wakeup calls; wait will not return until
-                                 * it changes */
-    int cond;
-} afs_event_t;
-
-#define HASHSIZE 128
-afs_event_t *afs_evhasht[HASHSIZE];     /* Hash table for events */
-#define afs_evhash(event)       (afs_uint32) ((((long)event)>>2) & (HASHSIZE-1));
+afs_event_t *afs_evhasht[AFS_EVHASHSIZE];     /* Hash table for events */
+#define afs_evhash(event)       (afs_uint32) ((((long)event)>>2) & (AFS_EVHASHSIZE-1))
 int afs_evhashcnt = 0;
 
 /* Get and initialize event structure corresponding to lwp event (i.e. address)
@@ -164,7 +150,7 @@ afs_getevent(char *event)
         evp = evp->next;
     }
     if (!newp) {
-        newp = (afs_event_t *) osi_AllocSmallSpace(sizeof(afs_event_t));
+        newp = osi_AllocSmallSpace(sizeof(afs_event_t));
         afs_evhashcnt++;
         newp->next = afs_evhasht[hashcode];
         afs_evhasht[hashcode] = newp;

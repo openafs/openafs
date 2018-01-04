@@ -110,39 +110,36 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
+
+#include <roken.h>
+#include <afs/opr.h>
+#ifdef AFS_PTHREAD_ENV
+# include <opr/softsig.h>
+# include <afs/procmgmt_softsig.h> /* must come after softsig.h */
 #endif
-#include <sys/types.h>
-#include <stdio.h>
-#include <fcntl.h>
-#include <sys/stat.h>
+
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
 #include <WINNT/afsevent.h>
-#else
-#include <netdb.h>
-#include <netinet/in.h>
 #endif
-#include <string.h>
+
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
+#include <rx/rxstat.h>
 #include <lock.h>
 #include <ubik.h>
+#include <afs/cmd.h>
 #include <afs/cellconfig.h>
 #include <afs/auth.h>
 #include <afs/keys.h>
+#include <afs/afsutil.h>
+#include <afs/audit.h>
+#include <afs/com_err.h>
+
 #include "ptserver.h"
 #include "ptprototypes.h"
 #include "error_macros.h"
-#include "afs/audit.h"
-#include <afs/afsutil.h>
-#include <afs/com_err.h>
-#include <rx/rxstat.h>
 
 /* make	all of these into a structure if you want */
 struct prheader cheader;
@@ -153,10 +150,8 @@ struct afsconf_dir *prdir;
 extern afs_int32 depthsg;
 #endif
 
-char *pr_realmName;
-
-int debuglevel = 0;
 int restricted = 0;
+int restrict_anonymous = 0;
 int rxMaxMTU = -1;
 int rxBind = 0;
 int rxkadDisableDotCheck = 0;
@@ -200,6 +195,48 @@ pr_rxstat_userok(struct rx_call *call)
     return afsconf_SuperUser(prdir, call, NULL);
 }
 
+/**
+ * Return true if this name is a member of the local realm.
+ */
+int
+pr_IsLocalRealmMatch(void *rock, char *name, char *inst, char *cell)
+{
+    struct afsconf_dir *dir = (struct afsconf_dir *)rock;
+    afs_int32 islocal = 0;	/* default to no */
+    int code;
+
+    code = afsconf_IsLocalRealmMatch(dir, &islocal, name, inst, cell);
+    if (code) {
+	ViceLog(0, ("Failed local realm check; code=%d, name=%s, inst=%s, cell=%s\n",
+		 code, name, inst, cell));
+    }
+    return islocal;
+}
+
+
+enum optionsList {
+    OPT_database,
+    OPT_access,
+    OPT_groupdepth,
+    OPT_restricted,
+    OPT_restrict_anonymous,
+    OPT_auditlog,
+    OPT_auditiface,
+    OPT_config,
+    OPT_debug,
+    OPT_logfile,
+    OPT_threads,
+#ifdef HAVE_SYSLOG
+    OPT_syslog,
+#endif
+    OPT_peer,
+    OPT_process,
+    OPT_rxbind,
+    OPT_rxmaxmtu,
+    OPT_dotted,
+    OPT_transarc_logs
+};
+
 int
 main(int argc, char **argv)
 {
@@ -213,14 +250,16 @@ main(int argc, char **argv)
     int lwps = 3;
     char clones[MAXHOSTSPERCELL];
     afs_uint32 host = htonl(INADDR_ANY);
+    struct cmd_syndesc *opts;
+    struct cmd_item *list;
 
-    const char *pr_dbaseName;
+    char *pr_dbaseName;
+    char *configDir;
+    struct logOptions logopts;
     char *whoami = "ptserver";
 
-    int a;
-    char arg[100];
-
     char *auditFileName = NULL;
+    char *interface = NULL;
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -250,7 +289,9 @@ main(int argc, char **argv)
 	exit(2);
     }
 
-    pr_dbaseName = AFSDIR_SERVER_PRDB_FILEPATH;
+    pr_dbaseName = strdup(AFSDIR_SERVER_PRDB_FILEPATH);
+    configDir = strdup(AFSDIR_SERVER_ETC_DIRPATH);
+    memset(&logopts, 0, sizeof(logopts));
 
 #if defined(SUPERGROUPS)
     /* make sure the structures for database records are the same size */
@@ -266,159 +307,174 @@ main(int argc, char **argv)
     }
 #endif
 
-    for (a = 1; a < argc; a++) {
-	int alen;
-	lcstring(arg, argv[a], sizeof(arg));
-	alen = strlen(arg);
-	if (strcmp(argv[a], "-d") == 0) {
-	    if ((a + 1) >= argc) {
-		fprintf(stderr, "missing argument for -d\n");
-		return -1;
-	    }
-	    debuglevel = atoi(argv[++a]);
-	    LogLevel = debuglevel;
-	} else if ((strncmp(arg, "-database", alen) == 0)
-	    || (strncmp(arg, "-db", alen) == 0)) {
-	    pr_dbaseName = argv[++a];	/* specify a database */
-	} else if (strncmp(arg, "-p", alen) == 0) {
-	    lwps = atoi(argv[++a]);
-	    if (lwps > 16) {	/* maximum of 16 */
-		printf("Warning: '-p %d' is too big; using %d instead\n",
-		       lwps, 16);
-		lwps = 16;
-	    } else if (lwps < 3) {	/* minimum of 3 */
-		printf("Warning: '-p %d' is too small; using %d instead\n",
-		       lwps, 3);
-		lwps = 3;
-	    }
+    cmd_DisableAbbreviations();
+    cmd_DisablePositionalCommands();
+    opts = cmd_CreateSyntax(NULL, NULL, NULL, 0, NULL);
+
+/* ptserver specific options */
+    cmd_AddParmAtOffset(opts, OPT_database, "-database", CMD_SINGLE,
+		        CMD_OPTIONAL, "database file");
+    cmd_AddParmAlias(opts, OPT_database, "-db");
+
+    cmd_AddParmAtOffset(opts, OPT_access, "-default_access", CMD_LIST,
+		        CMD_OPTIONAL, "default access flags for new entries");
 #if defined(SUPERGROUPS)
-	} else if ((strncmp(arg, "-groupdepth", alen) == 0)
-		 || (strncmp(arg, "-depth", alen) == 0)) {
-	    depthsg = atoi(argv[++a]);	/* Max search depth for supergroups */
+    cmd_AddParmAtOffset(opts, OPT_groupdepth, "-groupdepth", CMD_SINGLE,
+		        CMD_OPTIONAL, "max search depth for supergroups");
+    cmd_AddParmAlias(opts, OPT_groupdepth, "-depth");
 #endif
-	} else if (strncmp(arg, "-default_access", alen) == 0) {
-	    prp_user_default = prp_access_mask(argv[++a]);
-	    prp_group_default = prp_access_mask(argv[++a]);
-	}
-	else if (strncmp(arg, "-restricted", alen) == 0) {
-	    restricted = 1;
-	}
-	else if (strncmp(arg, "-rxbind", alen) == 0) {
-	    rxBind = 1;
-	}
-	else if (strncmp(arg, "-allow-dotted-principals", alen) == 0) {
-	    rxkadDisableDotCheck = 1;
-	}
-	else if (strncmp(arg, "-enable_peer_stats", alen) == 0) {
-	    rx_enablePeerRPCStats();
-	} else if (strncmp(arg, "-enable_process_stats", alen) == 0) {
-	    rx_enableProcessRPCStats();
-	}
-#ifndef AFS_NT40_ENV
-	else if (strncmp(arg, "-syslog", alen) == 0) {
-	    /* set syslog logging flag */
-	    serverLogSyslog = 1;
-	} else if (strncmp(arg, "-syslog=", MIN(8, alen)) == 0) {
-	    serverLogSyslog = 1;
-	    serverLogSyslogFacility = atoi(arg + 8);
-	}
-#endif
-	else if (strncmp(arg, "-auditlog", alen) == 0) {
-	    auditFileName = argv[++a];
+    cmd_AddParmAtOffset(opts, OPT_restricted, "-restricted", CMD_FLAG,
+		        CMD_OPTIONAL, "enable restricted mode");
+    cmd_AddParmAtOffset(opts, OPT_restrict_anonymous, "-restrict_anonymous",
+			CMD_FLAG, CMD_OPTIONAL, "enable restricted anonymous mode");
 
-	} else if (strncmp(arg, "-audit-interface", alen) == 0) {
-	    char *interface = argv[++a];
-	    if (osi_audit_interface(interface)) {
-		printf("Invalid audit interface '%s'\n", interface);
-		PT_EXIT(1);
-	    }
-	}
-	else if (!strncmp(arg, "-rxmaxmtu", alen)) {
-	    if ((a + 1) >= argc) {
-		fprintf(stderr, "missing argument for -rxmaxmtu\n");
-		PT_EXIT(1);
-	    }
-	    rxMaxMTU = atoi(argv[++a]);
-	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) ||
-		 (rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
-		printf("rxMaxMTU %d invalid; must be between %d-%" AFS_SIZET_FMT "\n",
-			rxMaxMTU, RX_MIN_PACKET_SIZE,
-			RX_MAX_PACKET_DATA_SIZE);
-		PT_EXIT(1);
-	    }
-	}
-	else if (*arg == '-') {
-	    /* hack in help flag support */
+    /* general server options */
+    cmd_AddParmAtOffset(opts, OPT_auditlog, "-auditlog", CMD_SINGLE,
+		 	CMD_OPTIONAL, "location of audit log");
+    cmd_AddParmAtOffset(opts, OPT_auditiface, "-audit-interface", CMD_SINGLE,
+		        CMD_OPTIONAL, "interface to use for audit logging");
+    cmd_AddParmAtOffset(opts, OPT_config, "-config", CMD_SINGLE,
+		        CMD_OPTIONAL, "configuration location");
+    cmd_AddParmAtOffset(opts, OPT_debug, "-d", CMD_SINGLE,
+		        CMD_OPTIONAL, "debug level");
+    cmd_AddParmAtOffset(opts, OPT_logfile, "-logfile", CMD_SINGLE,
+		        CMD_OPTIONAL, "location of logfile");
+    cmd_AddParmAtOffset(opts, OPT_threads, "-p", CMD_SINGLE,
+		        CMD_OPTIONAL, "number of threads");
+#ifdef HAVE_SYSLOG
+    cmd_AddParmAtOffset(opts, OPT_syslog, "-syslog", CMD_SINGLE_OR_FLAG, 
+		        CMD_OPTIONAL, "log to syslog");
+#endif
+    cmd_AddParmAtOffset(opts, OPT_transarc_logs, "-transarc-logs", CMD_FLAG,
+			CMD_OPTIONAL, "enable Transarc style logging");
 
-#if defined(SUPERGROUPS)
-#ifndef AFS_NT40_ENV
-	    printf("Usage: ptserver [-database <db path>] "
-		   "[-auditlog <log path>] "
-		   "[-audit-interface <file|sysvmq> (default is file)] "
-		   "[-syslog[=FACILITY]] [-d <debug level>] "
-		   "[-p <number of processes>] [-rebuild] "
-		   "[-groupdepth <depth>] "
-		   "[-restricted] [-rxmaxmtu <bytes>] [-rxbind] "
-		   "[-allow-dotted-principals] "
-		   "[-enable_peer_stats] [-enable_process_stats] "
-		   "[-default_access default_user_access default_group_access] "
-		   "[-help]\n");
-#else /* AFS_NT40_ENV */
-	    printf("Usage: ptserver [-database <db path>] "
-		   "[-auditlog <log path>] "
-		   "[-audit-interface <file|sysvmq> (default is file)] "
-		   "[-d <debug level>] "
-		   "[-p <number of processes>] [-rebuild] [-rxbind] "
-		   "[-allow-dotted-principals] "
-		   "[-default_access default_user_access default_group_access] "
-		   "[-restricted] [-rxmaxmtu <bytes>] [-rxbind] "
-		   "[-groupdepth <depth>] " "[-help]\n");
-#endif
-#else
-#ifndef AFS_NT40_ENV
-	    printf("Usage: ptserver [-database <db path>] "
-		   "[-auditlog <log path>] "
-		   "[-audit-interface <file|sysvmq> (default is file)] "
-		   "[-d <debug level>] "
-		   "[-syslog[=FACILITY]] "
-		   "[-p <number of processes>] [-rebuild] "
-		   "[-enable_peer_stats] [-enable_process_stats] "
-		   "[-default_access default_user_access default_group_access] "
-		   "[-restricted] [-rxmaxmtu <bytes>] [-rxbind] "
-		   "[-allow-dotted-principals] "
-		   "[-help]\n");
-#else /* AFS_NT40_ENV */
-	    printf("Usage: ptserver [-database <db path>] "
-		   "[-auditlog <log path>] [-d <debug level>] "
-		   "[-default_access default_user_access default_group_access] "
-		   "[-restricted] [-rxmaxmtu <bytes>] [-rxbind] "
-		   "[-allow-dotted-principals] "
-		   "[-p <number of processes>] [-rebuild] " "[-help]\n");
-#endif
-#endif
-	    fflush(stdout);
+    /* rx options */
+    cmd_AddParmAtOffset(opts, OPT_peer, "-enable_peer_stats", CMD_FLAG,
+		        CMD_OPTIONAL, "enable RX transport statistics");
+    cmd_AddParmAtOffset(opts, OPT_process, "-enable_process_stats", CMD_FLAG,
+		        CMD_OPTIONAL, "enable RX RPC statistics");
+    cmd_AddParmAtOffset(opts, OPT_rxbind, "-rxbind", CMD_FLAG,
+		        CMD_OPTIONAL, "bind only to the primary interface");
+    cmd_AddParmAtOffset(opts, OPT_rxmaxmtu, "-rxmaxmtu", CMD_SINGLE,
+		        CMD_OPTIONAL, "maximum MTU for RX");
 
+    /* rxkad options */
+    cmd_AddParmAtOffset(opts, OPT_dotted, "-allow-dotted-principals",
+		        CMD_FLAG, CMD_OPTIONAL,
+		        "permit Kerberos 5 principals with dots");
+
+    code = cmd_Parse(argc, argv, &opts);
+    if (code == CMD_HELP) {
+	PT_EXIT(0);
+    }
+    if (code)
+	PT_EXIT(1);
+
+    cmd_OptionAsString(opts, OPT_config, &configDir);
+
+    cmd_OpenConfigFile(AFSDIR_SERVER_CONFIG_FILE_FILEPATH);
+    cmd_SetCommandName("ptserver");
+
+    if (cmd_OptionAsList(opts, OPT_access, &list) == 0) {
+	prp_user_default = prp_access_mask(list->data);
+	if (list->next == NULL || list->next->data == NULL) {
+	    fprintf(stderr, "Missing second argument for -default_access\n");
 	    PT_EXIT(1);
 	}
-#if defined(SUPERGROUPS)
-	else {
-	    fprintf(stderr, "Unrecognized arg: '%s' ignored!\n", arg);
-	}
-#endif
+	prp_group_default = prp_access_mask(list->next->data);
     }
+
+#if defined(SUPERGROUPS)
+    cmd_OptionAsInt(opts, OPT_groupdepth, &depthsg);
+#endif
+
+    cmd_OptionAsFlag(opts, OPT_restricted, &restricted);
+    cmd_OptionAsFlag(opts, OPT_restrict_anonymous, &restrict_anonymous);
+
+    /* general server options */
+    cmd_OptionAsString(opts, OPT_auditlog, &auditFileName);
+
+    if (cmd_OptionAsString(opts, OPT_auditiface, &interface) == 0) {
+	if (osi_audit_interface(interface)) {
+	    printf("Invalid audit interface '%s'\n", interface);
+	    PT_EXIT(1);
+	}
+	free(interface);
+    }
+
+    cmd_OptionAsString(opts, OPT_database, &pr_dbaseName);
+
+    if (cmd_OptionAsInt(opts, OPT_threads, &lwps) == 0) {
+	if (lwps > 64) {	/* maximum of 64 */
+	    printf("Warning: '-p %d' is too big; using %d instead\n",
+		   lwps, 64);
+	    lwps = 64;
+	} else if (lwps < 3) {	/* minimum of 3 */
+	    printf("Warning: '-p %d' is too small; using %d instead\n",
+		   lwps, 3);
+	    lwps = 3;
+	}
+    }
+
+#ifdef HAVE_SYSLOG
+    if (cmd_OptionPresent(opts, OPT_syslog)) {
+	if (cmd_OptionPresent(opts, OPT_logfile)) {
+	    fprintf(stderr, "Invalid options: -syslog and -logfile are exclusive.");
+	    PT_EXIT(1);
+	}
+	if (cmd_OptionPresent(opts, OPT_transarc_logs)) {
+	    fprintf(stderr, "Invalid options: -syslog and -transarc-logs are exclusive.");
+	    PT_EXIT(1);
+	}
+	logopts.lopt_dest = logDest_syslog;
+	logopts.lopt_facility = LOG_DAEMON;
+	logopts.lopt_tag = "ptserver";
+	cmd_OptionAsInt(opts, OPT_syslog, &logopts.lopt_facility);
+    } else
+#endif
+    {
+	logopts.lopt_dest = logDest_file;
+	if (cmd_OptionPresent(opts, OPT_transarc_logs)) {
+	    logopts.lopt_rotateOnOpen = 1;
+	    logopts.lopt_rotateStyle = logRotate_old;
+	}
+	if (cmd_OptionPresent(opts, OPT_logfile))
+	    cmd_OptionAsString(opts, OPT_logfile, (char**)&logopts.lopt_filename);
+	else
+	    logopts.lopt_filename = AFSDIR_SERVER_PTLOG_FILEPATH;
+    }
+    cmd_OptionAsInt(opts, OPT_debug, &logopts.lopt_logLevel);
+
+    /* rx options */
+    if (cmd_OptionPresent(opts, OPT_peer))
+	rx_enablePeerRPCStats();
+
+    if (cmd_OptionPresent(opts, OPT_process))
+	rx_enableProcessRPCStats();
+
+    cmd_OptionAsFlag(opts, OPT_rxbind, &rxBind);
+
+    cmd_OptionAsInt(opts, OPT_rxmaxmtu, &rxMaxMTU);
+
+    /* rxkad options */
+    cmd_OptionAsFlag(opts, OPT_dotted, &rxkadDisableDotCheck);
+
+    cmd_FreeOptions(&opts);
 
     if (auditFileName) {
 	osi_audit_file(auditFileName);
 	osi_audit(PTS_StartEvent, 0, AUD_END);
     }
 
-#ifndef AFS_NT40_ENV
-    serverLogSyslogTag = "ptserver";
-#endif
-    OpenLog(AFSDIR_SERVER_PTLOG_FILEPATH);	/* set up logging */
+    OpenLog(&logopts);
+#ifdef AFS_PTHREAD_ENV
+    opr_softsig_Init();
+    SetupLogSoftSignals();
+#else
     SetupLogSignals();
+#endif
 
-    prdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
+    prdir = afsconf_Open(configDir);
     if (!prdir) {
 	fprintf(stderr, "ptserver: can't open configuration directory.\n");
 	PT_EXIT(1);
@@ -451,17 +507,15 @@ main(int argc, char **argv)
 	afs_com_err(whoami, code, "Couldn't get server list");
 	PT_EXIT(2);
     }
-    pr_realmName = info.name;
 
-    {
-	/* initialize ubik */
-	ubik_CRXSecurityProc = afsconf_ClientAuth;
-	ubik_CRXSecurityRock = prdir;
-	ubik_SRXSecurityProc = afsconf_ServerAuth;
-	ubik_SRXSecurityRock = prdir;
-	ubik_CheckRXSecurityProc = afsconf_CheckAuth;
-	ubik_CheckRXSecurityRock = prdir;
-    }
+    /* initialize audit user check */
+    osi_audit_set_user_check(prdir, pr_IsLocalRealmMatch);
+
+    /* initialize ubik */
+    ubik_SetClientSecurityProcs(afsconf_ClientAuth, afsconf_UpToDate, prdir);
+    ubik_SetServerSecurityProcs(afsconf_BuildServerSecurityObjects,
+				afsconf_CheckAuth, prdir);
+
     /* The max needed is when deleting an entry.  A full CoEntry deletion
      * required removal from 39 entries.  Each of which may refers to the entry
      * being deleted in one of its CoEntries.  If a CoEntry is freed its
@@ -477,10 +531,10 @@ main(int argc, char **argv)
 	if (AFSDIR_SERVER_NETRESTRICT_FILEPATH ||
 	    AFSDIR_SERVER_NETINFO_FILEPATH) {
 	    char reason[1024];
-	    ccode = parseNetFiles(SHostAddrs, NULL, NULL,
-					   ADDRSPERSITE, reason,
-					   AFSDIR_SERVER_NETINFO_FILEPATH,
-					   AFSDIR_SERVER_NETRESTRICT_FILEPATH);
+	    ccode = afsconf_ParseNetFiles(SHostAddrs, NULL, NULL,
+					  ADDRSPERSITE, reason,
+					  AFSDIR_SERVER_NETINFO_FILEPATH,
+					  AFSDIR_SERVER_NETRESTRICT_FILEPATH);
 	} else
 	{
 	    ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
@@ -499,7 +553,10 @@ main(int argc, char **argv)
     rx_SetNoJumbo();
 
     if (rxMaxMTU != -1) {
-	rx_SetMaxMTU(rxMaxMTU);
+	if (rx_SetMaxMTU(rxMaxMTU) != 0) {
+	    printf("rxMaxMTU %d is invalid\n", rxMaxMTU);
+	    PT_EXIT(1);
+	}
     }
 
     code =
@@ -509,12 +566,12 @@ main(int argc, char **argv)
 	afs_com_err(whoami, code, "Ubik init failed");
 	PT_EXIT(2);
     }
+
 #if defined(SUPERGROUPS)
     pt_hook_write();
 #endif
 
-    afsconf_BuildServerSecurityObjects(prdir, 0, &securityClasses,
-				       &numClasses);
+    afsconf_BuildServerSecurityObjects(prdir, &securityClasses, &numClasses);
 
     tservice =
 	rx_NewServiceHost(host, 0, PRSRV, "Protection Server", securityClasses,

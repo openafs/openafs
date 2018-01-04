@@ -12,18 +12,10 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
-#include <stdio.h>
-#include <errno.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <netinet/in.h>
 #include <afs/stds.h>
+
+#include <roken.h>
+
 #include <afs/com_err.h>
 #include <afs/vice.h>
 #include <afs/venus.h>
@@ -31,7 +23,6 @@
 #include <afs/afsint.h>
 #include <afs/cellconfig.h>
 #include <afs/cmd.h>
-#include <strings.h>
 
 
 struct VenusFid {
@@ -102,7 +93,7 @@ main(argc, argv)
 
     pn = argv[0];
 
-    ts = cmd_CreateSyntax("initcmd", WhatFidCmd, NULL, "list fid for file(s)");
+    ts = cmd_CreateSyntax("initcmd", WhatFidCmd, NULL, 0, "list fid for file(s)");
     WhatFidCmd_FileParm = cmd_AddParm(ts, "-path", CMD_LIST, 0, "pathnames");
     WhatFidCmd_FollowLinkParm =
 	cmd_AddParm(ts, "-link", CMD_FLAG, CMD_OPTIONAL,

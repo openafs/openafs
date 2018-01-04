@@ -13,9 +13,8 @@
 
 #ifdef AFS_SUN5_ENV
 #include "rx/rx_kcommon.h"
+#include "rx/rx_packet.h"
 
-
-#ifdef AFS_SUN56_ENV
 
 #include "inet/common.h"
 #include "sys/tiuser.h"
@@ -24,12 +23,10 @@
 #include "sys/stream.h"
 #include "sys/tihdr.h"
 #include "sys/fcntl.h"
-#ifdef AFS_SUN58_ENV
 #include "netinet/ip6.h"
 #define ipif_local_addr ipif_lcl_addr
 #ifndef V4_PART_OF_V6
 #define V4_PART_OF_V6(v6)       v6.s6_addr32[3]
-#endif
 #endif
 #include "inet/ip.h"
 #include "inet/ip_if.h"
@@ -152,11 +149,9 @@ rxi_GetIFInfo()
 
 #else
     for (ill = ill_g_head; ill; ill = ill->ill_next) {
-#ifdef AFS_SUN58_ENV
 	/* Make sure this is an IPv4 ILL */
 	if (ill->ill_isv6)
 	    continue;
-#endif
 
 	/* Iterate over all the addresses on this ILL */
 	for (ipif = ill->ill_ipif; ipif; ipif = ipif->ipif_next) {
@@ -277,11 +272,9 @@ rxi_FindIfMTU(afs_uint32 addr)
 }
 #else
     for (ill = ill_g_head; ill; ill = ill->ill_next) {
-#ifdef AFS_SUN58_ENV
 	/* Make sure this is an IPv4 ILL */
 	if (ill->ill_isv6)
 	    continue;
-#endif
 
 	/* Iterate over all the addresses on this ILL */
 	for (ipif = ill->ill_ipif; ipif; ipif = ipif->ipif_next) {
@@ -808,351 +801,4 @@ osi_StopListener(void)
     osi_FreeSocket(rx_socket);
 }
 
-#else /* AFS_SUN56_ENV */
-
-#include "inet/common.h"
-#include "sys/tiuser.h"
-#include "sys/t_kuser.h"
-#include "sys/ioctl.h"
-#include "sys/stropts.h"
-#include "sys/stream.h"
-#include "sys/strsubr.h"
-#include "sys/vnode.h"
-#include "sys/stropts.h"
-#include "sys/tihdr.h"
-#include "sys/timod.h"
-#include "sys/fcntl.h"
-#include "sys/debug.h"
-#include "inet/common.h"
-#include "inet/mi.h"
-#include "netinet/udp.h"
-
-extern dev_t afs_udp_rdev;
-
-
-int
-rxi_GetIFInfo()
-{
-    return 0;
-}
-
-
-/* rxi_NewSocket, rxi_FreeSocket and osi_NetSend are from the now defunct
- * afs_osinet.c. 
- */
-
-dev_t afs_udp_rdev = (dev_t) 0;
-
-/* Allocate a new socket at specified port in network byte order. */
-osi_socket *
-rxk_NewSocketHost(afs_uint32 ahost, short aport)
-{
-    TIUSER *udp_tiptr;
-    struct t_bind *reqp, *rspp;
-    afs_int32 code;
-    struct sockaddr_in *myaddrp;
-    struct stdata *stp;
-    struct queue *q;
-
-    AFS_STATCNT(osi_NewSocket);
-    afs_udp_rdev = makedevice(11 /*CLONE*/, ddi_name_to_major("udp"));
-    code = t_kopen(NULL, afs_udp_rdev, FREAD | FWRITE, &udp_tiptr, CRED());
-    if (code) {
-	return (osi_socket *)0;
-    }
-
-    code = t_kalloc(udp_tiptr, T_BIND, T_ADDR, (char **)&reqp);
-    if (code) {
-	t_kclose(udp_tiptr, 0);
-    }
-    code = t_kalloc(udp_tiptr, T_BIND, T_ADDR, (char **)&rspp);
-    if (code) {
-	t_kfree(udp_tiptr, (char *)reqp, T_BIND);
-	t_kclose(udp_tiptr, 0);
-	return (osi_socket *)0;
-    }
-
-    reqp->addr.len = sizeof(struct sockaddr_in);
-    myaddrp = (struct sockaddr_in *)reqp->addr.buf;
-    myaddrp->sin_family = AF_INET;
-    myaddrp->sin_port = aport;
-    myaddrp->sin_addr.s_addr = ahost;	/* byteswap? */
-
-    code = t_kbind(udp_tiptr, reqp, rspp);
-    if (code) {
-	t_kfree(udp_tiptr, (char *)reqp, T_BIND);
-	t_kfree(udp_tiptr, (char *)rspp, T_BIND);
-	t_kclose(udp_tiptr, 0);
-	return (osi_socket *)0;
-    }
-    if (memcmp(reqp->addr.buf, rspp->addr.buf, rspp->addr.len)) {
-	t_kfree(udp_tiptr, (char *)reqp, T_BIND);
-	t_kfree(udp_tiptr, (char *)rspp, T_BIND);
-	t_kclose(udp_tiptr, 0);
-	return (osi_socket *)0;
-    }
-    t_kfree(udp_tiptr, (char *)reqp, T_BIND);
-    t_kfree(udp_tiptr, (char *)rspp, T_BIND);
-
-    /*
-     * Set the send and receive buffer sizes.
-     */
-    stp = udp_tiptr->fp->f_vnode->v_stream;
-    q = stp->sd_wrq;
-    q->q_hiwat = rx_UdpBufSize;
-    q->q_next->q_hiwat = rx_UdpBufSize;
-    RD(q)->q_hiwat = rx_UdpBufSize;
-
-    return (osi_socket *)udp_tiptr;
-}
-
-osi_socket *
-rxk_NewSocket(short aport)
-{
-    return rxk_NewSocketHost(htonl(INADDR_ANY), aport);
-}
-
-int
-osi_FreeSocket(osi_socket *asocket)
-{
-    extern int rxk_ListenerPid;
-    TIUSER *udp_tiptr = (TIUSER *) asocket;
-    AFS_STATCNT(osi_FreeSocket);
-
-    if (rxk_ListenerPid) {
-	kill(rxk_ListenerPid, SIGUSR1);
-	afs_osi_Sleep(&rxk_ListenerPid);
-    }
-    return 0;
-}
-
-
-int
-osi_NetSend(osi_socket asocket, struct sockaddr_in *addr, struct iovec *dvec,
-	    int nvecs, afs_int32 asize, int istack)
-{
-    int i;
-    int code;
-    TIUSER *udp_tiptr = (TIUSER *) asocket;
-    struct t_kunitdata *udreq;
-    struct sockaddr_in sin;
-    mblk_t *bp;
-    mblk_t *dbp;
-
-    /*
-     * XXX We don't do any checking on the family since it's assumed to be
-     * AF_INET XXX
-     */
-    sin.sin_family = AF_INET;
-    sin.sin_addr.s_addr = addr->sin_addr.s_addr;
-    sin.sin_port = addr->sin_port;
-
-    /*
-     * Get a buffer for the RX header
-     */
-    if (nvecs < 1) {
-	osi_Panic("osi_NetSend, nvecs=%d\n", nvecs);
-    }
-    while (!(bp = allocb(dvec[0].iov_len, BPRI_LO))) {
-	if (strwaitbuf(dvec[i].iov_len, BPRI_LO)) {
-	    return (ENOSR);
-	}
-    }
-
-    /* Copy the data into the buffer */
-    memcpy((char *)bp->b_wptr, (char *)dvec[0].iov_base, dvec[0].iov_len);
-    bp->b_datap->db_type = M_DATA;
-    bp->b_wptr += dvec[0].iov_len;
-
-    /*
-     * Append each element in the iovec to the buffer
-     */
-    for (i = 1; i < nvecs; i++) {
-	/* Get a buffer for the next chunk */
-	while (!(dbp = allocb(dvec[i].iov_len, BPRI_LO))) {
-	    if (strwaitbuf(dvec[i].iov_len, BPRI_LO)) {
-		freeb(bp);
-		return (ENOSR);
-	    }
-	}
-
-	/* Copy the data into the buffer */
-	memcpy((char *)dbp->b_wptr, (char *)dvec[i].iov_base,
-	       dvec[i].iov_len);
-	dbp->b_datap->db_type = M_DATA;
-	dbp->b_wptr += dvec[i].iov_len;
-
-	/* Append it to the message buffer */
-	linkb(bp, dbp);
-    }
-
-    /*
-     * Allocate and format the unitdata structure.
-     */
-    code = t_kalloc(udp_tiptr, T_UNITDATA, T_UDATA, (char **)&udreq);
-    if (code) {
-	freeb(bp);
-	printf("osi_NetSend: t_kalloc failed %d\n", code);
-	return code;
-    }
-    udreq->addr.len = sizeof(struct sockaddr_in);
-    udreq->addr.maxlen = sizeof(struct sockaddr_in);
-    udreq->addr.buf =
-	(char *)kmem_alloc(sizeof(struct sockaddr_in), KM_SLEEP);
-    udreq->opt.len = 0;
-    udreq->opt.maxlen = 0;
-    memcpy(udreq->addr.buf, (char *)&sin, sizeof(struct sockaddr_in));
-    udreq->udata.udata_mp = bp;
-    udreq->udata.len = asize;
-
-    code = t_ksndudata(udp_tiptr, udreq, NULL);
-    if (code) {
-	printf("osi_NetSend: t_ksndudata failed %d\n", code);
-    }
-
-    t_kfree(udp_tiptr, (caddr_t) udreq, T_UNITDATA);
-    return code;
-}
-
-
-int
-osi_NetReceive(osi_socket *asocket, struct sockaddr_in *addr,
-	       struct iovec *dvec, int nvecs, int *alength)
-{
-    int i;
-    TIUSER *udp_tiptr = (TIUSER *) asocket;
-    struct t_kunitdata *udreq;
-    mblk_t *dbp;
-    char *phandle;
-    short sport;
-    int code = 0;
-    int length;
-    int tlen;
-    int blen;
-    char *tbase;
-    int type;
-    int error;
-    int events;
-
-    /*
-     * Allocate the unitdata structure.
-     */
-    code = t_kalloc(udp_tiptr, T_UNITDATA, T_UDATA, (char **)&udreq);
-    if (code) {
-	printf("osi_NetReceive: t_kalloc failed %d\n", code);
-	return code;
-    }
-    udreq->addr.len = sizeof(struct sockaddr_in);
-    udreq->addr.maxlen = sizeof(struct sockaddr_in);
-    udreq->addr.buf =
-	(char *)kmem_alloc(sizeof(struct sockaddr_in), KM_SLEEP);
-    udreq->opt.len = 0;
-    udreq->opt.maxlen = 0;
-
-    /*
-     * Loop until we get an error or receive some data.
-     */
-    while (1) {
-	/*
-	 * Wait until there is something to do
-	 */
-	code = t_kspoll(udp_tiptr, -1, READWAIT, &events);
-	if (events == 0) {
-	    osi_Panic("osi_NetReceive, infinite t_kspoll timed out\n");
-	}
-	/*
-	 * If there is a message then read it in
-	 */
-	if (code == 0) {
-	    code = t_krcvudata(udp_tiptr, udreq, &type, &error);
-	}
-
-	/*
-	 * Block attempts to kill this thread
-	 */
-	if (code == EINTR && ISSIG(curthread, FORREAL)) {
-	    klwp_t *lwp = ttolwp(curthread);
-	    proc_t *p = ttoproc(curthread);
-	    int sig = lwp->lwp_cursig;
-
-	    if (sig == SIGKILL) {
-		mutex_enter(&p->p_lock);
-		p->p_flag &= ~SKILLED;
-		mutex_exit(&p->p_lock);
-	    }
-	    lwp->lwp_cursig = 0;
-	    if (lwp->lwp_curinfo) {
-		kmem_free((caddr_t) lwp->lwp_curinfo,
-			  sizeof(*lwp->lwp_curinfo));
-		lwp->lwp_curinfo = NULL;
-	    }
-	}
-
-	if (code) {
-	    break;
-	}
-
-	/*
-	 * Ignore non-data message types
-	 */
-	if (type != T_DATA) {
-	    continue;
-	}
-
-	/*
-	 * Save the source address
-	 */
-	memcpy((char *)addr, udreq->addr.buf, sizeof(struct sockaddr_in));
-
-	/*
-	 * Copy out the message buffers, take care not to overflow
-	 * the I/O vector.
-	 */
-	dbp = udreq->udata.udata_mp;
-	length = *alength;
-	for (i = 0; dbp != NULL && length > 0 && i < nvecs; i++) {
-	    tlen = dvec[i].iov_len;
-	    tbase = dvec[i].iov_base;
-	    if (tlen > length) {
-		tlen = length;
-	    }
-	    while (dbp != NULL && tlen > 0) {
-		blen = dbp->b_wptr - dbp->b_rptr;
-		if (blen > tlen) {
-		    memcpy(tbase, (char *)dbp->b_rptr, tlen);
-		    length -= tlen;
-		    dbp->b_rptr += tlen;
-		    tlen = 0;
-		} else {
-		    memcpy(tbase, (char *)dbp->b_rptr, blen);
-		    length -= blen;
-		    tlen -= blen;
-		    tbase += blen;
-		    dbp = dbp->b_cont;
-		}
-	    }
-	}
-	*alength = *alength - length;
-	break;
-    }
-
-    t_kfree(udp_tiptr, (caddr_t) udreq, T_UNITDATA);
-    return code;
-}
-
-
-void
-osi_StopListener(void)
-{
-    osi_FreeSocket(rx_socket);
-}
-
-
-void
-shutdown_rxkernel(void)
-{
-}
-
-
-#endif /* AFS_SUN56_ENV */
 #endif /* AFS_SUN5_ENV */

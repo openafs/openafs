@@ -53,13 +53,7 @@ getinode(vfsp, dev, inode, ipp, credp, perror)
 
     *perror = 0;
 
-    if (!vfsp
-#if !defined(AFS_SUN58_ENV)
-	&& !(vfsp = vfs_devsearch(dev))
-#else
-	&& !(vfsp = vfs_dev2vfsp(dev))
-#endif
-	) {
+    if (!vfsp && !(vfsp = vfs_dev2vfsp(dev))) {
 	return (ENODEV);
     }
     ufsvfsp = (struct ufsvfs *)vfsp->vfs_data;
@@ -163,7 +157,7 @@ afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, rvp,
       * This conversion is needed only for the 64 bit OS.
       */
 
-#ifdef AFS_SUN57_64BIT_ENV
+#ifdef AFS_SUN5_64BIT_ENV
     newdev = expldev((dev32_t) dev);
 #else
     newdev = dev;
@@ -195,12 +189,7 @@ afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, rvp,
     rw_enter(&newip->i_contents, RW_WRITER);
     newip->i_flag |= IACC | IUPD | ICHG;
 
-#if	defined(AFS_SUN56_ENV)
     newip->i_vicemagic = VICEMAGIC;
-#else
-    newip->i_uid = 0;
-    newip->i_gid = -2;
-#endif
     newip->i_nlink = 1;
     newip->i_mode = IFREG;
 #ifdef AFS_SUN510_ENV
@@ -219,7 +208,7 @@ afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, rvp,
 	    (((param4 >> 16) & 0x1f) << 22) + (param3 & 0x3fffff);
 	newip->i_vicep3 = ((param4 << 16) + (param2 & 0xffff));
     }
-#ifdef AFS_SUN57_64BIT_ENV
+#ifdef AFS_SUN5_64BIT_ENV
     rvp->r_vals = newip->i_number;
 #else
     rvp->r_val1 = newip->i_number;
@@ -259,7 +248,7 @@ afs_syscall_iopen(dev, inode, usrmod, rvp, credp)
       * This conversion is needed only for the 64 bit OS.
       */
 
-#ifdef AFS_SUN57_64BIT_ENV
+#ifdef AFS_SUN5_64BIT_ENV
     newdev = expldev((dev32_t) dev);
 #else
     newdev = dev;
@@ -269,7 +258,7 @@ afs_syscall_iopen(dev, inode, usrmod, rvp, credp)
     if (code) {
 	return (code);
     }
-    code = falloc((struct vnode *)NULL, FWRITE | FREAD, &fp, &fd);
+    code = falloc(NULL, FWRITE | FREAD, &fp, &fd);
     if (code) {
 	rw_enter(&ip->i_contents, RW_READER);
 	AFS_ITIMES(ip);
@@ -301,7 +290,7 @@ afs_syscall_iopen(dev, inode, usrmod, rvp, credp)
      * thing, but on 64-bit they point to two different 32-bit locations that
      * make up one 64-bit int; so on 64-bit big-endian we need to set the
      * second one. */
-#if defined(AFS_SUN57_64BIT_ENV) && !defined(AFSLITTLE_ENDIAN)
+#if defined(AFS_SUN5_64BIT_ENV) && !defined(AFSLITTLE_ENDIAN)
     rvp->r_val2 = fd;
 #else
     rvp->r_val1 = fd;
@@ -330,7 +319,7 @@ afs_syscall_iincdec(dev, inode, inode_p1, amount, rvp, credp)
       * This conversion is needed only for the 64 bit OS.
       */
 
-#ifdef AFS_SUN57_64BIT_ENV
+#ifdef AFS_SUN5_64BIT_ENV
     newdev = expldev((dev32_t) dev);
 #else
     newdev = dev;

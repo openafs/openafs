@@ -20,7 +20,6 @@
 #define AFS_AIX51_ENV		1
 #define AFS_AIX52_ENV		1
 
-#define AFS_64BIT_ENV		1
 #define AFS_64BIT_CLIENT	1
 #define AFS_NAMEI_ENV		1
 #ifdef AFS_NAMEI_ENV
@@ -60,7 +59,6 @@
 
 /* Extra kernel definitions (from kdefs file) */
 #ifdef _KERNEL
-#define	AFS_SHORTGID	1
 #define	AFS_UIOFMODE	1
 #define	afsio_iov	uio_iov
 #define	afsio_iovcnt	uio_iovcnt
@@ -98,7 +96,6 @@
 #ifndef	AFS_PARAM_H
 #define	AFS_PARAM_H
 
-#define AFS_64BIT_ENV           1
 #define AFS_64BIT_CLIENT        1
 #define AFS_NAMEI_ENV           1
 #ifdef AFS_NAMEI_ENV

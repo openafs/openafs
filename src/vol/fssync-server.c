@@ -43,30 +43,14 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <sys/types.h>
-#include <stdio.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
+#include <afs/opr.h>
+#ifdef AFS_PTHREAD_ENV
+# include <opr/lock.h>
 #endif
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <time.h>
-#else
-#include <sys/param.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/time.h>
-#include <unistd.h>
-#endif
-#include <errno.h>
-#include <afs/afs_assert.h>
-#include <signal.h>
-#include <string.h>
-
-#include <rx/xdr.h>
 #include <afs/afsint.h>
+#include <rx/rx_queue.h>
 #include "nfs.h"
 #include <afs/errors.h>
 #include "daemon_com.h"
@@ -159,7 +143,6 @@ static void GetHandler(struct pollfd *fds, int maxfds, int events, int *nfds);
 static void CallHandler(fd_set * fdsetp);
 static void GetHandler(fd_set * fdsetp, int *maxfdp);
 #endif
-extern int LogLevel;
 
 static afs_int32 FSYNC_com_VolOp(osi_socket fd, SYNC_command * com, SYNC_response * res);
 
@@ -218,19 +201,20 @@ FSYNC_fsInit(void)
     Lock_Init(&FSYNC_handler_lock);
 
 #ifdef AFS_PTHREAD_ENV
-    osi_Assert(pthread_attr_init(&tattr) == 0);
-    osi_Assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
-    osi_Assert(pthread_create(&tid, &tattr, FSYNC_sync, NULL) == 0);
+    opr_Verify(pthread_attr_init(&tattr) == 0);
+    opr_Verify(pthread_attr_setdetachstate(&tattr,
+					   PTHREAD_CREATE_DETACHED) == 0);
+    opr_Verify(pthread_create(&tid, &tattr, FSYNC_sync, NULL) == 0);
 #else /* AFS_PTHREAD_ENV */
-    osi_Assert(LWP_CreateProcess
-	   (FSYNC_sync, USUAL_STACK_SIZE, USUAL_PRIORITY, (void *)0,
-	    "FSYNC_sync", &pid) == LWP_SUCCESS);
+    opr_Verify(LWP_CreateProcess(FSYNC_sync, USUAL_STACK_SIZE,
+				 USUAL_PRIORITY, NULL,
+				 "FSYNC_sync", &pid) == LWP_SUCCESS);
 #endif /* AFS_PTHREAD_ENV */
 
 #ifdef AFS_DEMAND_ATTACH_FS
     queue_Init(&fsync_salv.head);
-    CV_INIT(&fsync_salv.cv, "fsync salv", CV_DEFAULT, 0);
-    osi_Assert(pthread_create(&tid, &tattr, FSYNC_salvageThread, NULL) == 0);
+    opr_cv_init(&fsync_salv.cv);
+    opr_Verify(pthread_create(&tid, &tattr, FSYNC_salvageThread, NULL) == 0);
 #endif /* AFS_DEMAND_ATTACH_FS */
 }
 
@@ -264,7 +248,7 @@ FSYNC_sync(void * args)
 
     /* we must not be called before vol package initialization, since we use
      * vol package mutexes and conds etc */
-    osi_Assert(VInit);
+    opr_Assert(VInit);
 
     SYNC_getAddr(&state->endpoint, &state->addr);
     SYNC_cleanupSock(state);
@@ -275,11 +259,9 @@ FSYNC_sync(void * args)
 
 #ifdef AFS_PTHREAD_ENV
     /* set our 'thread-id' so that the host hold table works */
-    MUTEX_ENTER(&rx_stats_mutex);	/* protects rxi_pthread_hinum */
-    tid = ++rxi_pthread_hinum;
-    MUTEX_EXIT(&rx_stats_mutex);
-    pthread_setspecific(rx_thread_id_key, (void *)(intptr_t)tid);
+    tid = rx_SetThreadNum();
     Log("Set thread id %d for FSYNC_sync\n", tid);
+    afs_pthread_setname_self("FSYNC_sync");
 #endif /* AFS_PTHREAD_ENV */
 
     VOL_LOCK;
@@ -300,7 +282,7 @@ FSYNC_sync(void * args)
 
     state->fd = SYNC_getSock(&state->endpoint);
     code = SYNC_bindSock(state);
-    osi_Assert(!code);
+    opr_Assert(!code);
 
 #ifdef AFS_DEMAND_ATTACH_FS
     /*
@@ -315,10 +297,10 @@ FSYNC_sync(void * args)
     }
     memcpy(thread_opts, &VThread_defaults, sizeof(VThread_defaults));
     thread_opts->disallow_salvsync = 1;
-    osi_Assert(pthread_setspecific(VThread_key, thread_opts) == 0);
+    opr_Verify(pthread_setspecific(VThread_key, thread_opts) == 0);
 
     code = VVGCache_PkgInit();
-    osi_Assert(code == 0);
+    opr_Assert(code == 0);
 #endif
 
     InitHandler();
@@ -384,7 +366,7 @@ FSYNC_salvageThread(void * args)
 	if (node->update_salv_prio) {
 	    if (VUpdateSalvagePriority_r(vp)) {
 		ViceLog(0, ("FSYNC_salvageThread: unable to raise salvage priority "
-		            "for volume %lu\n", afs_printable_uint32_lu(vp->hashid)));
+		            "for volume %" AFS_VOLID_FMT "\n", afs_printable_VolumeId_lu(vp->hashid)));
 	    }
 	}
 
@@ -428,12 +410,12 @@ FSYNC_backgroundSalvage(Volume *vp)
     node->update_salv_prio = vp->salvage.requested;
 
     if (VRequestSalvage_r(&ec, vp, SALVSYNC_ERROR, 0)) {
-	ViceLog(0, ("FSYNC_backgroundSalvage: unable to request salvage for volume %lu\n",
-	            afs_printable_uint32_lu(vp->hashid)));
+	ViceLog(0, ("FSYNC_backgroundSalvage: unable to request salvage for volume %" AFS_VOLID_FMT "\n",
+	            afs_printable_VolumeId_lu(vp->hashid)));
     }
 
     queue_Append(&fsync_salv.head, node);
-    CV_BROADCAST(&fsync_salv.cv);
+    opr_cv_broadcast(&fsync_salv.cv);
 }
 #endif /* AFS_DEMAND_ATTACH_FS */
 
@@ -451,10 +433,10 @@ FSYNC_newconnection(osi_socket afd)
     fd = accept(afd, (struct sockaddr *)&other, &junk);
     if (fd == OSI_NULLSOCKET) {
 	Log("FSYNC_newconnection:  accept failed, errno==%d\n", errno);
-	osi_Assert(1 == 2);
+	opr_abort();
     } else if (!AddHandler(fd, FSYNC_com)) {
 	AcceptOff();
-	osi_Assert(AddHandler(fd, FSYNC_com));
+	opr_Verify(AddHandler(fd, FSYNC_com));
     }
 }
 
@@ -721,10 +703,10 @@ FSYNC_com_VolOn(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	(vcom->hdr->programType != vp->pending_vol_op->com.programType)) {
 	/* a different program has this volume checked out. deny. */
 	Log("FSYNC_VolOn: WARNING: program type %u has attempted to manipulate "
-	    "state for volume %u using command code %u while the volume is "
+	    "state for volume %" AFS_VOLID_FMT " using command code %u while the volume is "
 	    "checked out by program type %u for command code %u.\n",
 	    vcom->hdr->programType,
-	    vcom->vop->volume,
+	    afs_printable_VolumeId_lu(vcom->vop->volume),
 	    vcom->hdr->command,
 	    vp->pending_vol_op->com.programType,
 	    vp->pending_vol_op->com.command);
@@ -801,7 +783,7 @@ FSYNC_com_VolOn(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     }
 #else /* !AFS_DEMAND_ATTACH_FS */
     tvolName[0] = OS_DIRSEPC;
-    snprintf(&tvolName[1], sizeof(tvolName)-1, VFORMAT, afs_printable_uint32_lu(vcom->vop->volume));
+    snprintf(&tvolName[1], sizeof(tvolName)-1, VFORMAT, afs_printable_VolumeId_lu(vcom->vop->volume));
     tvolName[sizeof(tvolName)-1] = '\0';
 
     vp = VAttachVolumeByName_r(&error, vcom->vop->partName, tvolName,
@@ -910,37 +892,38 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
                 if (vp->pending_vol_op->com.command == FSYNC_VOL_OFF &&
                     vp->pending_vol_op->com.reason == FSYNC_SALVAGE) {
 
-                    Log("denying offline request for volume %lu; volume is salvaging\n",
-		        afs_printable_uint32_lu(vp->hashid));
+                    Log("denying offline request for volume %" AFS_VOLID_FMT "; volume is salvaging\n",
+		        afs_printable_VolumeId_lu(vp->hashid));
 
                     res->hdr.reason = FSYNC_SALVAGE;
                     goto deny;
                 }
-		Log("volume %u already checked out\n", vp->hashid);
+		Log("volume %" AFS_VOLID_FMT " already checked out\n",
+		    afs_printable_VolumeId_lu(vp->hashid));
 		/* XXX debug */
-		Log("vp->vop = { com = { ver=%u, prog=%d, com=%d, reason=%d, len=%u, flags=0x%x }, vop = { vol=%u, part='%s' } }\n",
+		Log("vp->vop = { com = { ver=%u, prog=%d, com=%d, reason=%d, len=%u, flags=0x%x }, vop = { vol=%" AFS_VOLID_FMT ", part='%s' } }\n",
 		    vp->pending_vol_op->com.proto_version,
 		    vp->pending_vol_op->com.programType,
 		    vp->pending_vol_op->com.command,
 		    vp->pending_vol_op->com.reason,
 		    vp->pending_vol_op->com.command_len,
 		    vp->pending_vol_op->com.flags,
-		    vp->pending_vol_op->vop.volume,
+		    afs_printable_VolumeId_lu(vp->pending_vol_op->vop.volume),
 		    vp->pending_vol_op->vop.partName );
-		Log("vcom = { com = { ver=%u, prog=%d, com=%d, reason=%d, len=%u, flags=0x%x } , vop = { vol=%u, part='%s' } }\n",
+		Log("vcom = { com = { ver=%u, prog=%d, com=%d, reason=%d, len=%u, flags=0x%x } , vop = { vol=%" AFS_VOLID_FMT ", part='%s' } }\n",
 		    vcom->hdr->proto_version,
 		    vcom->hdr->programType,
 		    vcom->hdr->command,
 		    vcom->hdr->reason,
 		    vcom->hdr->command_len,
 		    vcom->hdr->flags,
-		    vcom->vop->volume,
+		    afs_printable_VolumeId_lu(vcom->vop->volume),
 		    vcom->vop->partName);
 		res->hdr.reason = FSYNC_EXCLUSIVE;
 		goto deny;
 	    } else {
-		Log("warning: volume %u recursively checked out by programType id %d\n",
-		    vp->hashid, vcom->hdr->programType);
+		Log("warning: volume %" AFS_VOLID_FMT " recursively checked out by programType id %d\n",
+		    afs_printable_VolumeId_lu(vp->hashid), vcom->hdr->programType);
 	    }
 	}
 
@@ -982,8 +965,8 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	case volumeUtility:
 	case volumeServer:
             if (VIsSalvaging(vp)) {
-                Log("denying offline request for volume %lu; volume is in salvaging state\n",
-		    afs_printable_uint32_lu(vp->hashid));
+                Log("denying offline request for volume %" AFS_VOLID_FMT "; volume is in salvaging state\n",
+		    afs_printable_VolumeId_lu(vp->hashid));
                 res->hdr.reason = FSYNC_SALVAGE;
 
 		/* the volume hasn't been checked out yet by the salvager,
@@ -1055,8 +1038,9 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
                 break;
             }
 
-	    Log("FSYNC_com_VolOff: failed to get heavyweight reference to volume %u (state=%u, flags=0x%x)\n",
-		vcom->vop->volume, V_attachState(vp), V_attachFlags(vp));
+	    Log("FSYNC_com_VolOff: failed to get heavyweight reference to volume %" AFS_VOLID_FMT " (state=%u, flags=0x%x)\n",
+		afs_printable_VolumeId_lu(vcom->vop->volume),
+		V_attachState(vp), V_attachFlags(vp));
 	    res->hdr.reason = FSYNC_VOL_PKG_ERROR;
 	    goto deny;
 	} else if (nvp != vp) {
@@ -1078,9 +1062,9 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     if (vp) {
 	if (VVolOpLeaveOnline_r(vp, &info)) {
 	    VUpdateVolume_r(&error, vp, VOL_UPDATE_WAIT);	/* At least get volume stats right */
-	    if (LogLevel) {
-		Log("FSYNC: Volume %u (%s) was left on line for an external %s request\n",
-		    V_id(vp), V_name(vp),
+	    if (GetLogLevel() > 0) {
+		Log("FSYNC: Volume %" AFS_VOLID_FMT " (%s) was left on line for an external %s request\n",
+		    afs_printable_VolumeId_lu(V_id(vp)), V_name(vp),
 		    vcom->hdr->reason == V_CLONE ? "clone" :
 		    vcom->hdr->reason == V_READONLY ? "readonly" :
 		    vcom->hdr->reason == V_DUMP ? "dump" :
@@ -1109,7 +1093,7 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	    VCreateReservation_r(vp);
             VOfflineForVolOp_r(&error, vp, "A volume utility is running.");
             if (error==0) {
-                osi_Assert(vp->nUsers==0);
+                opr_Assert(vp->nUsers==0);
                 vp->pending_vol_op->vol_op_state = FSSYNC_VolOpRunningOffline;
             }
             else {
@@ -1211,8 +1195,8 @@ FSYNC_com_VolMove(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     }
 
     if ((code == SYNC_OK) && (V_BreakVolumeCallbacks != NULL)) {
-	Log("fssync: volume %u moved to %x; breaking all call backs\n",
-	    vcom->vop->volume, vcom->hdr->reason);
+	Log("fssync: volume %" AFS_VOLID_FMT " moved to %x; breaking all call backs\n",
+	    afs_printable_VolumeId_lu(vcom->vop->volume), vcom->hdr->reason);
 	VOL_UNLOCK;
 	(*V_BreakVolumeCallbacks) (vcom->vop->volume);
 	VOL_LOCK;
@@ -1428,8 +1412,8 @@ FSYNC_com_VolBreakCBKs(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 {
     /* if the volume is being restored, break all callbacks on it */
     if (V_BreakVolumeCallbacks) {
-	Log("fssync: breaking all call backs for volume %u\n",
-	    vcom->vop->volume);
+	Log("fssync: breaking all call backs for volume %" AFS_VOLID_FMT "\n",
+	    afs_printable_VolumeId_lu(vcom->vop->volume));
 	VOL_UNLOCK;
 	(*V_BreakVolumeCallbacks) (vcom->vop->volume);
 	VOL_LOCK;
@@ -1591,7 +1575,7 @@ FSYNC_com_VolOpQuery(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	    res->hdr.reason = FSYNC_WRONG_PART;
 	    code = SYNC_FAILED;
 	} else {
-	    osi_Assert(sizeof(FSSYNC_VolOp_info) <= res->payload.len);
+	    opr_Assert(sizeof(FSSYNC_VolOp_info) <= res->payload.len);
 	    memcpy(res->payload.buf, vp->pending_vol_op, sizeof(FSSYNC_VolOp_info));
 	    res->hdr.response_len += sizeof(FSSYNC_VolOp_info);
 	}
@@ -1630,7 +1614,7 @@ FSYNC_com_VGQuery(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	goto done;
     }
 
-    osi_Assert(sizeof(FSSYNC_VGQry_response_t) <= res->payload.len);
+    opr_Assert(sizeof(FSSYNC_VGQry_response_t) <= res->payload.len);
 
     rc = VVGCache_query_r(dp, vcom->vop->volume, res->payload.buf);
     switch (rc) {
@@ -2028,7 +2012,7 @@ FSYNC_Drop(osi_socket fd)
 	    }
 #else
 	    tvolName[0] = OS_DIRSEPC;
-	    sprintf(&tvolName[1], VFORMAT, afs_printable_uint32_lu(p[i].volumeID));
+	    sprintf(&tvolName[1], VFORMAT, afs_printable_VolumeId_lu(p[i].volumeID));
 	    vp = VAttachVolumeByName_r(&error, p[i].partName, tvolName,
 				       V_VOLUPD);
 	    if (vp)
@@ -2039,11 +2023,7 @@ FSYNC_Drop(osi_socket fd)
     }
     VOL_UNLOCK;
     RemoveHandler(fd);
-#ifdef AFS_NT40_ENV
-    closesocket(fd);
-#else
-    close(fd);
-#endif
+    rk_closesocket(fd);
     AcceptOn();
 }
 
@@ -2053,7 +2033,7 @@ static void
 AcceptOn(void)
 {
     if (AcceptHandler == -1) {
-	osi_Assert(AddHandler(fssync_server_state.fd, FSYNC_newconnection));
+	opr_Verify(AddHandler(fssync_server_state.fd, FSYNC_newconnection));
 	AcceptHandler = FindHandler(fssync_server_state.fd);
     }
 }
@@ -2062,7 +2042,7 @@ static void
 AcceptOff(void)
 {
     if (AcceptHandler != -1) {
-	osi_Assert(RemoveHandler(fssync_server_state.fd));
+	opr_Verify(RemoveHandler(fssync_server_state.fd));
 	AcceptHandler = -1;
     }
 }
@@ -2147,7 +2127,7 @@ FindHandler(osi_socket afd)
 	    return i;
 	}
     ReleaseReadLock(&FSYNC_handler_lock);	/* just in case */
-    osi_Assert(1 == 2);
+    opr_abort();
     return -1;			/* satisfy compiler */
 }
 
@@ -2159,7 +2139,7 @@ FindHandler_r(osi_socket afd)
 	if (HandlerFD[i] == afd) {
 	    return i;
 	}
-    osi_Assert(1 == 2);
+    opr_abort();
     return -1;			/* satisfy compiler */
 }
 
@@ -2181,7 +2161,7 @@ GetHandler(struct pollfd *fds, int maxfds, int events, int *nfds)
     ObtainReadLock(&FSYNC_handler_lock);
     for (i = 0; i < MAXHANDLERS; i++)
 	if (HandlerFD[i] != OSI_NULLSOCKET) {
-	    osi_Assert(fdi<maxfds);
+	    opr_Assert(fdi<maxfds);
 	    fds[fdi].fd = HandlerFD[i];
 	    fds[fdi].events = events;
 	    fds[fdi].revents = 0;

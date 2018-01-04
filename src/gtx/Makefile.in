@@ -9,10 +9,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 
 INCLS=gtxobjects.h \
 	gtxwindows.h \
@@ -38,8 +36,9 @@ LIBS=\
 	${TOP_LIBDIR}/libkauth.a \
 	${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/librxkad.a \
-	${TOP_LIBDIR}/libdes.a \
+	${TOP_LIBDIR}/libafsrfc3961.a \
 	${TOP_LIBDIR}/libafscom_err.a \
+	${TOP_LIBDIR}/libopr.a \
 	${TOP_LIBDIR}/util.a
 
 EXTRA_LIBS=${LIB_curses} ${XLIBS}
@@ -161,27 +160,28 @@ textcb.o: textcb.c ${INCLS}
 curses_test.o: curses_test.c ${INCLS} AFS_component_version_number.o
 
 curses_test: curses_test.o $(LIBS)
-	${CC} ${CFLAGS} -o curses_test curses_test.o $(LIBS) ${EXTRA_LIBS}
+	$(AFS_LDRULE) curses_test.o $(LIBS) ${EXTRA_LIBS}
 
 screen_test.o: screen_test.c ${INCLS} AFS_component_version_number.o
 
 screen_test: screen_test.o ${WINDOW_OBJS} ${LIBS}
-	${CC} ${CFLAGS} -o screen_test screen_test.o ${WINDOW_OBJS} ${LIBS} ${EXTRA_LIBS}
+	$(AFS_LDRULE) screen_test.o ${WINDOW_OBJS} ${LIBS} ${EXTRA_LIBS}
 
 cb_test.o: cb_test.c ${INCLS} AFS_component_version_number.o
 
 cb_test: cb_test.o ${CB_OBJS} ${LIBS}
-	${CC} ${CFLAGS} -o cb_test cb_test.o ${CB_OBJS} ${LIBS} ${EXTRA_LIBS}
+	$(AFS_LDRULE) cb_test.o ${CB_OBJS} ${LIBS} ${EXTRA_LIBS}
 
 gtxtest.o: gtxtest.c ${INCLS} AFS_component_version_number.o
 
 gtxtest: gtxtest.o libgtx.a ${LIBS}
-	${CC} ${LDFLAGS} -o gtxtest gtxtest.o libgtx.a ${LIBS} ${EXTRA_LIBS}
+	$(AFS_LDRULE) gtxtest.o libgtx.a ${LIBS} ${EXTRA_LIBS}
 
 object_test.o: object_test.c ${INCLS} AFS_component_version_number.o
 
 object_test: object_test.o ${WINDOW_OBJS} ${DICT_OBJS} ${OBJECT_OBJS} ${CB_OBJS} ${LIBS}
-	${CC} ${CFLAGS} -o object_test object_test.o ${WINDOW_OBJS} ${DICT_OBJS} ${OBJECT_OBJS} ${CB_OBJS} ${LIBS} ${EXTRA_LIBS}
+	$(AFS_LDRULE) object_test.o ${WINDOW_OBJS} ${DICT_OBJS} \
+		${OBJECT_OBJS} ${CB_OBJS} ${LIBS} ${EXTRA_LIBS}
 
 #
 # Installation targets

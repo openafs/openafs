@@ -89,21 +89,42 @@ rx_headers:
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..
 
-util_headers:
+util_headers: opr_headers
      @echo ***** $@
 	$(DOCD) $(SRC)\util
 	$(CD) $(SRC)\util
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..
 
-pthread: util_headers
+opr_headers: roken_headers
+     @echo ***** $@
+	$(DOCD) $(SRC)\opr
+	$(CD) $(SRC)\opr
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..
+
+roken_headers:
+     @echo ***** $@
+	$(DOCD) $(SRC)\roken
+	$(CD) $(SRC)\roken
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..
+
+hcrypto_headers: util_headers
+     @echo ***** $@
+	$(DOCD) $(SRC)\crypto\hcrypto
+	$(CD) $(SRC)\crypto\hcrypto
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..\..
+
+pthread: hcrypto_headers
      @echo ***** $@
 	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
-util: procmgmt_headers afsreg_headers lwp_headers rx_headers pthread
+util: procmgmt_headers afsreg_headers lwp_headers rx_headers opr
      @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
@@ -159,14 +180,35 @@ rxgen: lwp
 	$(NTMAKE)
 	$(CD) ..\..
 
-des: rxgen
+opr: rfc3961
      @echo ***** $@
-	$(DOCD) $(SRC)\des
-	$(CD) $(SRC)\des
+	$(DOCD) $(SRC)\opr
+	$(CD) $(SRC)\opr
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+hcrypto: roken
+     @echo ***** $@
+	$(DOCD) $(SRC)\crypto\hcrypto
+	$(CD) $(SRC)\crypto\hcrypto
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+rfc3961: hcrypto
+     @echo ***** $@
+	$(DOCD) $(SRC)\crypto\$@
+	$(CD) $(SRC)\crypto\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+roken: pthread
+     @echo ***** $@
+        $(DOCD) $(SRC)\roken
+	$(CD) $(SRC)\roken
 	$(NTMAKE)
 	$(CD) ..\..
 
-rx: des
+rx: rxgen
      @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
@@ -276,14 +318,14 @@ auth: sys
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
-	$(CD) ..\..	
+	$(CD) ..\..
 
 ubik: auth
      @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
-	$(CD) ..\..	
+	$(CD) ..\..
 
 ptserver: ubik
      @echo ***** $@
@@ -354,7 +396,14 @@ libafsrpc: dir
 	$(NTMAKE)
 	$(CD) ..\..
 
-vol: libafsrpc
+rxtests: libafsrpc
+     @echo ***** $@
+	$(DOCD) $(SRC)\rx\test
+	$(CD) $(SRC)\rx\test
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+vol: rxtests
      @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
@@ -368,14 +417,7 @@ volser: vol
 	$(NTMAKE)
 	$(CD) ..\..
 
-viced: volser
-     @echo ***** $@
-	$(DOCD) $(SRC)\$@
-	$(CD) $(SRC)\$@
-	$(NTMAKE)
-	$(CD) ..\..
-
-update: viced
+update: volser
      @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
@@ -424,14 +466,14 @@ libafsauthent: bu_utils
 	$(NTMAKE)
 	$(CD) ..\..
 
-tviced: libafsauthent
+viced: libafsauthent
      @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
-tvolser: tviced
+tvolser: viced
      @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
@@ -648,7 +690,14 @@ netidmgr_plugin: xstat
 	$(NTMAKE)
 	$(CD) ..\..\..
 
-rpctestlib: fsint libafsrpc
+afsrdr: config
+        echo ***** $@
+        $(DOCD) $(SRC)\WINNT\afsrdr
+        $(CD) $(SRC)\WINNT\afsrdr
+        $(NTMAKE)
+        $(CD) ..\..\..
+
+rpctestlib: config fsint libafsrpc
      @echo ***** $@
 	$(DOCD) $(TESTS)\$@
 	$(CD) $(TESTS)\$@
@@ -662,7 +711,7 @@ libafscp: libafscp_headers util afs volser vlserver rx auth fsint afsdobjs
 	$(NTMAKE)
 	$(CD) ..\..
 
-extra: netidmgr_plugin rpctestlib
+extra: config
 !	IF EXIST($(SRC)\WINNT\extra) && EXIST($(SRC)\WINNT\extra\NTMakefile)
      @echo ***** $@
     $(DOCD) $(SRC)\WINNT\$@
@@ -672,17 +721,24 @@ extra: netidmgr_plugin rpctestlib
 !	ELSE
      @echo ***** Skipping $@ ***** Not found.
 !	ENDIF
-                
-finale: extra
+
+tools: config
+     @echo ***** $@
+	$(DOCD) $(SRC)\tools\rxperf
+	$(CD) $(SRC)\tools\rxperf
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+finale: netidmgr_plugin
      @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
-install: finale
+install: finale afsrdr tools rpctestlib extra
 	@echo Build Finished Successfully
-        
+
 
 # Clean target for obj tree
 clean:
@@ -703,8 +759,8 @@ mkdir:
     -mkdir $(DESTDIR)
     -mkdir $(AFS_OBJDIR)\checked
     -mkdir $(AFS_OBJDIR)\free
-	-xcopy /q /t /e $(SRC)\*.* $(AFS_OBJDIR)\checked\ 
-	-xcopy /q /t /e $(SRC)\*.* $(AFS_OBJDIR)\free\ 
+	-xcopy /q /t /e $(SRC)\*.* $(AFS_OBJDIR)\checked\
+	-xcopy /q /t /e $(SRC)\*.* $(AFS_OBJDIR)\free\
     -mkdir $(DESTDIR)\checked
 	-mkdir $(DESTDIR)\free
     -mkdir $(DESTDIR)\checked\bin
@@ -765,11 +821,11 @@ wix-lite: loopback man-pages documentation
    $(NTMAKE) LITECLIENT=1
    $(CD) ..\..\..\..
 
-media: install NSIS wix
-
 install-nsis: install NSIS
 
 install-wix: install wix
 
 install-wix-lite: install wix-lite
+
+media: install-wix
 

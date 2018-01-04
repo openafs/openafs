@@ -1,0 +1,53 @@
+EXPORTS
+	ct_memcmp		@1
+	err			@3
+	errx			@4
+	rk_getopt		@5
+	issuid			@9
+	net_read		@10
+	net_write		@11
+	rk_cloexec		@12
+	rk_cloexec_file		@13
+	rk_ecalloc		@14
+	rk_emalloc		@15
+	rk_erealloc		@16
+	rk_hex_encode		@17
+	rk_localtime_r		@18
+	rk_snprintf		@19
+	rk_socket		@20
+	rk_strlcat		@21
+	rk_strnlen		@22
+	rk_strlcpy		@23
+	verr			@25
+	verrx			@26
+	vwarn			@27
+	vwarnx			@28
+	warn			@29
+	warnx			@30
+	base64_decode		@31
+	base64_encode		@32
+	rk_strsep		@33
+        rk_optarg               @34 DATA
+        rk_optind               @35 DATA
+        rk_opterr               @36 DATA
+	rk_mkstemp		@37
+	rk_asnprintf		@38
+	rk_asprintf		@39
+        rk_vsnprintf            @40
+        rk_vasnprintf           @41
+	rk_flock		@42
+	rk_gettimeofday		@43
+        rk_tsearch              @44
+        rk_tdelete              @45
+        rk_tfind                @46
+	rk_getprogname		@47
+	rk_setprogname		@48
+        rk_calloc               @49
+        rk_free                 @50
+        rk_malloc               @51
+        rk_realloc              @52
+        rk_strdup               @53
+        rk_wcsdup               @54
+	rk_rename		@55
+	rk_vasprintf		@56
+	rk_mkdir		@57

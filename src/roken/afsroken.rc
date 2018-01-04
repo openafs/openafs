@@ -1,0 +1,15 @@
+/*
+ * Copyright 2010, Your File System Inc
+ * All rights reserved
+ *
+ * This software has been released under the terms of the BSD License
+ * For details, see the LICENSE file in the top level source directory
+ */
+
+#define  AFS_VERINFO_FILE_DESCRIPTION "AFS Roken Compatibility DLL"
+#define AFS_VERINFO_DLL
+#define  AFS_VERINFO_NAME "afsroken"
+#define  AFS_VERINFO_FILENAME "afsroken.dll"
+
+#include "AFS_component_version_number.h"
+#include "..\config\NTVersioninfo.rc"

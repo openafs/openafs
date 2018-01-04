@@ -57,22 +57,19 @@
 #include "afs/afs_stats.h"	/* afs statistics */
 #include "rx/rx_multi.h"
 
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
 #include <inet/led.h>
 #include <inet/common.h>
-#if     defined(AFS_SUN58_ENV)
-# include <netinet/ip6.h>
-# define ipif_local_addr ipif_lcl_addr
-#  ifndef V4_PART_OF_V6
-#  define V4_PART_OF_V6(v6)       v6.s6_addr32[3]
-#  endif
-# endif
+#include <netinet/ip6.h>
+#define ipif_local_addr ipif_lcl_addr
+#ifndef V4_PART_OF_V6
+# define V4_PART_OF_V6(v6)       v6.s6_addr32[3]
+#endif
 #include <inet/ip.h>
 #endif
 
 /* Exported variables */
 afs_rwlock_t afs_xserver;	/* allocation lock for servers */
-struct server *afs_setTimeHost = 0;	/* last host we used for time */
 struct server *afs_servers[NSERVERS];	/* Hashed by server`s uuid & 1st ip */
 afs_rwlock_t afs_xsrvAddr;	/* allocation lock for srvAddrs */
 struct srvAddr *afs_srvAddrs[NSERVERS];	/* Hashed by server's ip */
@@ -157,11 +154,6 @@ afs_MarkServerUpOrDown(struct srvAddr *sa, int a_isDown)
 	 * All ips are down we treat the whole server down
 	 */
 	a_serverP->flags |= SRVR_ISDOWN;
-	/*
-	 * If this was our time server, search for another time server
-	 */
-	if (a_serverP == afs_setTimeHost)
-	    afs_setTimeHost = 0;
     } else {
 	sa->sa_flags &= ~SRVADDR_ISDOWN;
 	/* If any ips are up, the server is also marked up */
@@ -238,7 +230,7 @@ afs_MarkServerUpOrDown(struct srvAddr *sa, int a_isDown)
 
 
 afs_int32
-afs_ServerDown(struct srvAddr *sa, int code)
+afs_ServerDown(struct srvAddr *sa, int code, struct rx_connection *rxconn)
 {
     struct server *aserver = sa->server;
 
@@ -247,11 +239,11 @@ afs_ServerDown(struct srvAddr *sa, int code)
 	return 0;
     afs_MarkServerUpOrDown(sa, SRVR_ISDOWN);
     if (sa->sa_portal == aserver->cell->vlport)
-	print_internet_address
-	    ("afs: Lost contact with volume location server ", sa, "", 1, code);
+	print_internet_address("afs: Lost contact with volume location server ",
+	                      sa, "", 1, code, rxconn);
     else
 	print_internet_address("afs: Lost contact with file server ", sa, "",
-			       1, code);
+			       1, code, rxconn);
     return 1;
 }				/*ServerDown */
 
@@ -309,18 +301,18 @@ CheckVLServer(struct srvAddr *sa, struct vrequest *areq)
     code = VL_ProbeServer(rxconn);
     RX_AFS_GLOCK();
     rx_SetConnDeadTime(rxconn, afs_rx_deadtime);
-    afs_PutConn(tc, rxconn, SHARED_LOCK);
     /*
      * If probe worked, or probe call not yet defined (for compatibility
      * with old vlsevers), then we treat this server as running again
      */
     if (code == 0 || (code <= -450 && code >= -470)) {
-	if (tc->srvr == sa) {
+	if (tc->parent->srvr == sa) {
 	    afs_MarkServerUpOrDown(sa, 0);
 	    print_internet_address("afs: volume location server ", sa,
-				   " is back up", 2, code);
+				   " is back up", 2, code, rxconn);
 	}
     }
+    afs_PutConn(tc, rxconn, SHARED_LOCK);
 
 }				/*CheckVLServer */
 
@@ -526,7 +518,8 @@ ForceAllNewConnections(void)
 }
 
 static void
-CkSrv_MarkUpDown(struct afs_conn **conns, int nconns, afs_int32 *results)
+CkSrv_MarkUpDown(struct afs_conn **conns, struct rx_connection **rxconns,
+                 int nconns, afs_int32 *results)
 {
     struct srvAddr *sa;
     struct afs_conn *tc;
@@ -534,13 +527,13 @@ CkSrv_MarkUpDown(struct afs_conn **conns, int nconns, afs_int32 *results)
 
     for(i = 0; i < nconns; i++){
 	tc = conns[i];
-	sa = tc->srvr;
+	sa = tc->parent->srvr;
 
 	if (( results[i] >= 0 ) && (sa->sa_flags & SRVADDR_ISDOWN) &&
-	    (tc->srvr == sa)) {
+	    (tc->parent->srvr == sa)) {
 	    /* server back up */
 	    print_internet_address("afs: file server ", sa, " is back up", 2,
-			           results[i]);
+			           results[i], rxconns[i]);
 
 	    ObtainWriteLock(&afs_xserver, 244);
 	    ObtainWriteLock(&afs_xsrvAddr, 245);
@@ -554,143 +547,11 @@ CkSrv_MarkUpDown(struct afs_conn **conns, int nconns, afs_int32 *results)
 	} else {
 	    if (results[i] < 0) {
 		/* server crashed */
-		afs_ServerDown(sa, results[i]);
+		afs_ServerDown(sa, results[i], rxconns[i]);
 		ForceNewConnections(sa);  /* multi homed clients */
 	    }
 	}
     }
-}
-
-void
-CkSrv_SetTime(int nconns, struct rx_connection **rxconns,
-              struct afs_conn **conns)
-{
-    struct afs_conn *tc;
-    afs_int32 start, end = 0, delta;
-    osi_timeval_t tv;
-    struct srvAddr *sa;
-    afs_int32 *conntimer, *results, *deltas;
-    afs_int32 i = 0;
-    char tbuffer[CVBS];
-
-    conntimer = afs_osi_Alloc(nconns * sizeof (afs_int32));
-    osi_Assert(conntimer != NULL);
-    results = afs_osi_Alloc(nconns * sizeof (afs_int32));
-    osi_Assert(results != NULL);
-    deltas = afs_osi_Alloc(nconns * sizeof (afs_int32));
-    osi_Assert(deltas != NULL);
-
-    /* make sure we're starting from zero */
-    memset(&deltas, 0, sizeof(deltas));
-
-    start = osi_Time();         /* time the gettimeofday call */
-    AFS_GUNLOCK();
-    if ( afs_setTimeHost == NULL ) {
-	multi_Rx(rxconns,nconns)
-	{
-	    tv.tv_sec = tv.tv_usec = 0;
-	    multi_RXAFS_GetTime(
-		(afs_uint32 *)&tv.tv_sec, (afs_uint32 *)&tv.tv_usec);
-	    tc = conns[multi_i];
-	    sa = tc->srvr;
-	    if (conntimer[multi_i] == 1)
-		rx_SetConnDeadTime(tc->id, afs_rx_deadtime);
-	    end = osi_Time();
-	    results[multi_i]=multi_error;
-	    if ((start == end) && !multi_error)
-		deltas[multi_i] = end - tv.tv_sec;
-	} multi_End;
-    } else {			/* find and query setTimeHost only */
-	for ( i = 0 ; i < nconns ; i++ ) {
-	    if ( conns[i] == NULL || conns[i]->srvr == NULL )
-		continue;
-	    if ( conns[i]->srvr->server == afs_setTimeHost ) {
-		tv.tv_sec = tv.tv_usec = 0;
-		results[i] = RXAFS_GetTime(rxconns[i],
-					   (afs_uint32 *)&tv.tv_sec,
-					   (afs_uint32 *)&tv.tv_usec);
-		end = osi_Time();
-		if ((start == end) && !results[i])
-		    deltas[i] = end - tv.tv_sec;
-		break;
-	    }
-	}
-    }
-    AFS_GLOCK();
-
-    if ( afs_setTimeHost == NULL )
-	CkSrv_MarkUpDown(conns, nconns, results);
-    else /* We lack info for other than this host */
-	CkSrv_MarkUpDown(&conns[i], 1, &results[i]);
-
-    /*
-     * If we're supposed to set the time, and the call worked
-     * quickly (same second response) and this is the host we
-     * use for the time and the time is really different, then
-     * really set the time
-     */
-    if (afs_setTime != 0) {
-	for (i=0; i<nconns; i++) {
-	    delta = deltas[i];
-	    tc = conns[i];
-	    sa = tc->srvr;
-
-	    if ((tc->srvr->server == afs_setTimeHost ||
-		 /* Sync only to a server in the local cell */
-		 (afs_setTimeHost == (struct server *)0 &&
-		  afs_IsPrimaryCell(sa->server->cell)))) {
-		/* set the time */
-		char msgbuf[90];  /* strlen("afs: setting clock...") + slop */
-		delta = end - tv.tv_sec;   /* how many secs fast we are */
-
-		afs_setTimeHost = tc->srvr->server;
-		/* see if clock has changed enough to make it worthwhile */
-		if (delta >= AFS_MINCHANGE || delta <= -AFS_MINCHANGE) {
-		    end = osi_Time();
-		    if (delta > AFS_MAXCHANGEBACK) {
-			/* setting clock too far back, just do it a little */
-			tv.tv_sec = end - AFS_MAXCHANGEBACK;
-		    } else {
-			tv.tv_sec = end - delta;
-		    }
-		    afs_osi_SetTime(&tv);
-		    if (delta > 0) {
-			strcpy(msgbuf, "afs: setting clock back ");
-			if (delta > AFS_MAXCHANGEBACK) {
-			    afs_strcat(msgbuf,
-				       afs_cv2string(&tbuffer[CVBS],
-						     AFS_MAXCHANGEBACK));
-			    afs_strcat(msgbuf, " seconds (of ");
-			    afs_strcat(msgbuf,
-				       afs_cv2string(&tbuffer[CVBS],
-						     delta -
-						     AFS_MAXCHANGEBACK));
-			    afs_strcat(msgbuf, ", via ");
-			    print_internet_address(msgbuf, sa,
-						   "); clock is still fast.",
-						   0, 0);
-			} else {
-			    afs_strcat(msgbuf,
-				       afs_cv2string(&tbuffer[CVBS], delta));
-			    afs_strcat(msgbuf, " seconds (via ");
-			    print_internet_address(msgbuf, sa, ").", 0, 0);
-			}
-		    } else {
-			strcpy(msgbuf, "afs: setting clock ahead ");
-			afs_strcat(msgbuf,
-				   afs_cv2string(&tbuffer[CVBS], -delta));
-			afs_strcat(msgbuf, " seconds (via ");
-			print_internet_address(msgbuf, sa, ").", 0, 0);
-		    }
-                    /* We're only going to set it once; why bother looping? */
-		    break;
-		}
-	    }
-	}
-    }
-    afs_osi_Free(conntimer, nconns * sizeof(afs_int32));
-    afs_osi_Free(deltas, nconns * sizeof(afs_int32));
-    afs_osi_Free(results, nconns * sizeof(afs_int32));
 }
 
 void
@@ -718,7 +579,7 @@ CkSrv_GetCaps(int nconns, struct rx_connection **rxconns,
     AFS_GLOCK();
 
     for ( i = 0 ; i < nconns ; i++ ) {
-	ts = conns[i]->srvr->server;
+	ts = conns[i]->parent->srvr->server;
 	if ( !ts )
 	    continue;
 	ts->capabilities = 0;
@@ -737,7 +598,7 @@ CkSrv_GetCaps(int nconns, struct rx_connection **rxconns,
 		caps[i].Capabilities_len = 0;
 	    }
     }
-    CkSrv_MarkUpDown(conns, nconns, results);
+    CkSrv_MarkUpDown(conns, rxconns, nconns, results);
 
     afs_osi_Free(caps, nconns * sizeof(Capabilities));
     afs_osi_Free(results, nconns * sizeof(afs_int32));
@@ -747,8 +608,7 @@ CkSrv_GetCaps(int nconns, struct rx_connection **rxconns,
 void
 afs_CheckServers(int adown, struct cell *acellp)
 {
-    afs_LoopServers(adown?AFS_LS_DOWN:AFS_LS_UP, acellp, 1, CkSrv_GetCaps,
-		    afs_setTime?CkSrv_SetTime:NULL);
+    afs_LoopServers(adown?AFS_LS_DOWN:AFS_LS_UP, acellp, 1, CkSrv_GetCaps, NULL);
 }
 
 /* adown: AFS_LS_UP   - check only up
@@ -784,11 +644,6 @@ afs_LoopServers(int adown, struct cell *acellp, int vlalso,
     if (AFS_IS_DISCONNECTED)
         return;
 
-    conns = (struct afs_conn **)0;
-    rxconns = (struct rx_connection **) 0;
-    conntimer = 0;
-    nconns = 0;
-
     if ((code = afs_CreateReq(&treq, afs_osi_credp)))
 	return;
     ObtainReadLock(&afs_xserver);	/* Necessary? */
@@ -822,9 +677,9 @@ afs_LoopServers(int adown, struct cell *acellp, int vlalso,
     conntimer = afs_osi_Alloc(j * sizeof (afs_int32));
     osi_Assert(conntimer != NULL);
 
+    nconns = 0;
     for (i = 0; i < j; i++) {
 	struct rx_connection *rxconn;
-
 	sa = addrs[i];
 	ts = sa->server;
 	if (!ts)
@@ -859,8 +714,7 @@ afs_LoopServers(int adown, struct cell *acellp, int vlalso,
 	if (!tc)
 	    continue;
 
-	if ((sa->sa_flags & SRVADDR_ISDOWN) || afs_HaveCallBacksFrom(sa->server)
-	    || (tc->srvr->server == afs_setTimeHost)) {
+	if ((sa->sa_flags & SRVADDR_ISDOWN) || afs_HaveCallBacksFrom(sa->server)) {
 	    conns[nconns]=tc;
 	    rxconns[nconns]=rxconn;
 	    if (sa->sa_flags & SRVADDR_ISDOWN) {
@@ -885,7 +739,7 @@ afs_LoopServers(int adown, struct cell *acellp, int vlalso,
 
     for (i = 0; i < nconns; i++) {
 	if (conntimer[i] == 1)
-	    rx_SetConnDeadTime(tc->id, afs_rx_deadtime);
+	    rx_SetConnDeadTime(rxconns[i], afs_rx_deadtime);
 	afs_PutConn(conns[i], rxconns[i], SHARED_LOCK);     /* done with it now */
     }
 
@@ -1121,108 +975,6 @@ afs_SortServers(struct server *aservers[], int count)
 
 #define	USEIFADDR
 
-
-#if	defined(AFS_SUN5_ENV) && ! defined(AFS_SUN56_ENV)
-#include <inet/common.h>
-/* IP interface structure, one per local address */
-typedef struct ipif_s {
-     /**/ struct ipif_s *ipif_next;
-    struct ill_s *ipif_ill;	/* Back pointer to our ill */
-    long ipif_id;		/* Logical unit number */
-    u_int ipif_mtu;		/* Starts at ipif_ill->ill_max_frag */
-    afs_int32 ipif_local_addr;	/* Local IP address for this if. */
-    afs_int32 ipif_net_mask;	/* Net mask for this interface. */
-    afs_int32 ipif_broadcast_addr;	/* Broadcast addr for this interface. */
-    afs_int32 ipif_pp_dst_addr;	/* Point-to-point dest address. */
-    u_int ipif_flags;		/* Interface flags. */
-    u_int ipif_metric;		/* BSD if metric, for compatibility. */
-    u_int ipif_ire_type;	/* LOCAL or LOOPBACK */
-    mblk_t *ipif_arp_down_mp;	/* Allocated at time arp comes up to
-				 * prevent awkward out of mem condition
-				 * later
-				 */
-    mblk_t *ipif_saved_ire_mp;	/* Allocated for each extra IRE_SUBNET/
-				 * RESOLVER on this interface so that
-				 * they can survive ifconfig down.
-				 */
-    /*
-     * The packet counts in the ipif contain the sum of the
-     * packet counts in dead IREs that were affiliated with
-     * this ipif.
-     */
-    u_long ipif_fo_pkt_count;	/* Forwarded thru our dead IREs */
-    u_long ipif_ib_pkt_count;	/* Inbound packets for our dead IREs */
-    u_long ipif_ob_pkt_count;	/* Outbound packets to our dead IREs */
-    unsigned int
-      ipif_multicast_up:1,	/* We have joined the allhosts group */
-    : 0;
-} ipif_t;
-
-typedef struct ipfb_s {
-     /**/ struct ipf_s *ipfb_ipf;	/* List of ... */
-    kmutex_t ipfb_lock;		/* Protect all ipf in list */
-} ipfb_t;
-
-typedef struct ilm_s {
-     /**/ afs_int32 ilm_addr;
-    int ilm_refcnt;
-    u_int ilm_timer;		/* IGMP */
-    struct ipif_s *ilm_ipif;	/* Back pointer to ipif */
-    struct ilm_s *ilm_next;	/* Linked list for each ill */
-} ilm_t;
-
-typedef struct ill_s {
-     /**/ struct ill_s *ill_next;	/* Chained in at ill_g_head. */
-    struct ill_s **ill_ptpn;	/* Pointer to previous next. */
-    queue_t *ill_rq;		/* Read queue. */
-    queue_t *ill_wq;		/* Write queue. */
-
-    int ill_error;		/* Error value sent up by device. */
-
-    ipif_t *ill_ipif;		/* Interface chain for this ILL. */
-    u_int ill_ipif_up_count;	/* Number of IPIFs currently up. */
-    u_int ill_max_frag;		/* Max IDU. */
-    char *ill_name;		/* Our name. */
-    u_int ill_name_length;	/* Name length, incl. terminator. */
-    u_int ill_subnet_type;	/* IRE_RESOLVER or IRE_SUBNET. */
-    u_int ill_ppa;		/* Physical Point of Attachment num. */
-    u_long ill_sap;
-    int ill_sap_length;		/* Including sign (for position) */
-    u_int ill_phys_addr_length;	/* Excluding the sap. */
-    mblk_t *ill_frag_timer_mp;	/* Reassembly timer state. */
-    ipfb_t *ill_frag_hash_tbl;	/* Fragment hash list head. */
-
-    queue_t *ill_bind_pending_q;	/* Queue waiting for DL_BIND_ACK. */
-    ipif_t *ill_ipif_pending;	/* IPIF waiting for DL_BIND_ACK. */
-
-    /* ill_hdr_length and ill_hdr_mp will be non zero if
-     * the underlying device supports the M_DATA fastpath
-     */
-    int ill_hdr_length;
-
-    ilm_t *ill_ilm;		/* Multicast mebership for lower ill */
-
-    /* All non-nil cells between 'ill_first_mp_to_free' and
-     * 'ill_last_mp_to_free' are freed in ill_delete.
-     */
-#define	ill_first_mp_to_free	ill_hdr_mp
-    mblk_t *ill_hdr_mp;		/* Contains fastpath template */
-    mblk_t *ill_bcast_mp;	/* DLPI header for broadcasts. */
-    mblk_t *ill_bind_pending;	/* T_BIND_REQ awaiting completion. */
-    mblk_t *ill_resolver_mp;	/* Resolver template. */
-    mblk_t *ill_attach_mp;
-    mblk_t *ill_bind_mp;
-    mblk_t *ill_unbind_mp;
-    mblk_t *ill_detach_mp;
-#define	ill_last_mp_to_free	ill_detach_mp
-
-    u_int ill_frag_timer_running:1, ill_needs_attach:1, ill_is_ptp:1,
-	ill_priv_stream:1, ill_unbind_pending:1, ill_pad_to_bit_31:27;
-      MI_HRT_DCL(ill_rtime)
-      MI_HRT_DCL(ill_rtmp)
-} ill_t;
-#endif
-
 #ifdef AFS_USERSPACE_IP_ADDR
 #ifndef afs_min
 #define afs_min(A,B) ((A)<(B)) ? (A) : (B)
@@ -1298,7 +1050,7 @@ afsi_SetServerIPRank(struct srvAddr *sa, struct in_ifaddr *ifa)
 		sa->sa_iprank = t;
 	}
     }
-#ifdef  IFF_POINTTOPOINT
+#if defined(IFF_POINTOPOINT) && !defined(UKERNEL)
     /* check for case #4 -- point-to-point link */
     if ((ifa->ia_ifp->if_flags & IFF_POINTOPOINT)
 	&& (SA2ULONG(IA_DST(ifa)) == ntohl(sa->sa_ip))) {
@@ -1309,7 +1061,7 @@ afsi_SetServerIPRank(struct srvAddr *sa, struct in_ifaddr *ifa)
 	if (sa->sa_iprank > t)
 	    sa->sa_iprank = t;
     }
-#endif /* IFF_POINTTOPOINT */
+#endif /* IFF_POINTOPOINT */
 }
 #endif /*(!defined(AFS_SUN5_ENV)) && defined(USEIFADDR) */
 #if (defined(AFS_DARWIN_ENV) || defined(AFS_OBSD47_ENV) || defined(AFS_FBSD_ENV)) && defined(USEIFADDR)
@@ -1404,7 +1156,7 @@ afsi_enum_set_rank(struct hashbucket *h, caddr_t mkey, caddr_t arg1,
 }
 #endif				/* AFS_SGI62_ENV */
 static int
-afs_SetServerPrefs(struct srvAddr *sa)
+afs_SetServerPrefs(struct srvAddr *const sa)
 {
 #if     defined(AFS_USERSPACE_IP_ADDR)
     int i;
@@ -1426,8 +1178,7 @@ afs_SetServerPrefs(struct srvAddr *sa)
 #endif
     int subnet, subnetmask, net, netmask;
 
-    if (sa)
-	  sa->sa_iprank = 0;
+    sa->sa_iprank = 0;
 #ifdef AFS_SUN510_ENV
     rw_enter(&afsifinfo_lock, RW_READER);
 
@@ -1444,16 +1195,6 @@ afs_SetServerPrefs(struct srvAddr *sa)
 	}
 	net = afsifinfo[i].ipaddr & netmask;
 
-#ifdef notdef
-	if (!s) {
-	    if (!rx_IsLoopbackAddr(afsifinfo[i].ipaddr)) {	/* ignore loopback */
-		*cnt += 1;
-		if (*cnt > 16)
-		    return;
-		*addrp++ = afsifinfo[i].ipaddr;
-	    }
-	} else
-#endif /* notdef */
         {
             /* XXXXXX Do the individual ip ranking below XXXXX */
             if ((sa->sa_ip & netmask) == net) {
@@ -1485,11 +1226,9 @@ afs_SetServerPrefs(struct srvAddr *sa)
 #else
     for (ill = (struct ill_s *)*addr /*ill_g_headp */ ; ill;
 	 ill = ill->ill_next) {
-#ifdef AFS_SUN58_ENV
 	/* Make sure this is an IPv4 ILL */
 	if (ill->ill_isv6)
 	    continue;
-#endif
 	for (ipif = ill->ill_ipif; ipif; ipif = ipif->ipif_next) {
 	    subnet = ipif->ipif_local_addr & ipif->ipif_net_mask;
 	    subnetmask = ipif->ipif_net_mask;
@@ -1507,16 +1246,6 @@ afs_SetServerPrefs(struct srvAddr *sa)
 		netmask = 0;
 	    }
 	    net = ipif->ipif_local_addr & netmask;
-#ifdef notdef
-	    if (!s) {
-		if (!rx_IsLoopbackAddr(ipif->ipif_local_addr)) {	/* ignore loopback */
-		    *cnt += 1;
-		    if (*cnt > 16)
-			return;
-		    *addrp++ = ipif->ipif_local_addr;
-		}
-	    } else
-#endif /* notdef */
 	    {
 		/* XXXXXX Do the individual ip ranking below XXXXX */
 		if ((sa->sa_ip & netmask) == net) {
@@ -1551,27 +1280,8 @@ afs_SetServerPrefs(struct srvAddr *sa)
     struct in_ifaddr *ifad = (struct in_ifaddr *)0;
     struct sockaddr_in *sin;
 
-    if (!sa) {
-#ifdef notdef			/* clean up, remove this */
-	for (ifn = ifnet; ifn != NULL; ifn = ifn->if_next) {
-	    for (ifad = ifn->if_addrlist; ifad != NULL; ifad = ifad->ifa_next) {
-		if ((IFADDR2SA(ifad)->sa_family == AF_INET)
-		    && !(ifn->if_flags & IFF_LOOPBACK)) {
-		    *cnt += 1;
-		    if (*cnt > 16)
-			return;
-		    *addrp++ =
-			((struct sockaddr_in *)IFADDR2SA(ifad))->sin_addr.
-			s_addr;
-		}
-	}}
-#endif				/* notdef */
-	return;
-    }
     sa->sa_iprank = 0;
-#ifdef	ADAPT_MTU
     ifn = rxi_FindIfnet(sa->sa_ip, &ifad);
-#endif
     if (ifn) {			/* local, more or less */
 #ifdef IFF_LOOPBACK
 	if (ifn->if_flags & IFF_LOOPBACK) {
@@ -1607,8 +1317,7 @@ afs_SetServerPrefs(struct srvAddr *sa)
     }
 #else				/* USEIFADDR */
 
-    if (sa)
-	sa->sa_iprank = LO;
+    sa->sa_iprank = LO;
 #ifdef AFS_SGI62_ENV
     (void)hash_enum(&hashinfo_inaddr, afsi_enum_set_rank, HTF_INET, NULL,
 		    (caddr_t) sa, NULL);
@@ -1678,8 +1387,7 @@ afs_SetServerPrefs(struct srvAddr *sa)
 #endif
 #endif				/* AFS_SUN5_ENV */
 #endif				/* else AFS_USERSPACE_IP_ADDR */
-    if (sa)
-	  sa->sa_iprank += afs_randomMod15();
+    sa->sa_iprank += afs_randomMod15();
 
     return 0;
 }				/* afs_SetServerPrefs */
@@ -1813,8 +1521,8 @@ afs_GetCapabilities(struct server *ts)
     ObtainWriteLock(&afs_xserver, 723);
     /* we forced a conn above; important we mark it down if needed */
     if ((code < 0) && (code != RXGEN_OPCODE)) {
-	afs_ServerDown(tc->srvr, code);
-	ForceNewConnections(tc->srvr); /* multi homed clients */
+	afs_ServerDown(tc->parent->srvr, code, rxconn);
+	ForceNewConnections(tc->parent->srvr); /* multi homed clients */
     }
     afs_PutConn(tc, rxconn, SHARED_LOCK);
     if ( code && code != RXGEN_OPCODE ) {
@@ -1967,7 +1675,8 @@ afs_GetServer(afs_uint32 *aserverp, afs_int32 nservers, afs_int32 acell,
 	newts->flags |= SRVR_MULTIHOMED;
     }
     if (acell)
-	newts->cell = afs_GetCell(acell, 0);
+	/* Use the afs_GetCellStale variant to avoid afs_GetServer recursion. */
+	newts->cell = afs_GetCellStale(acell, 0);
 
     /* For each IP address we are registering */
     for (k = 0; k < nservers; k++) {
@@ -2056,7 +1765,8 @@ afs_GetServer(afs_uint32 *aserverp, afs_int32 nservers, afs_int32 acell,
 		afs_servers[iphash] = orphts;
 
 		if (acell)
-		    orphts->cell = afs_GetCell(acell, 0);
+		    /* Use the afs_GetCellStale variant to avoid afs_GetServer recursion. */
+		    orphts->cell = afs_GetCellStale(acell, 0);
 	    }
 
 	    /* Hang the srvAddr struct off of the server structure. The server
@@ -2130,7 +1840,6 @@ afs_RemoveAllConns(void)
     int i;
     struct server *ts, *nts;
     struct srvAddr *sa;
-    struct afs_conn *tc, *ntc;
 
     ObtainReadLock(&afs_xserver);
     ObtainWriteLock(&afs_xconn, 1001);
@@ -2141,15 +1850,7 @@ afs_RemoveAllConns(void)
             nts = ts->next;
             for (sa = ts->addr; sa; sa = sa->next_sa) {
                 if (sa->conns) {
-                    tc = sa->conns;
-                    while (tc) {
-                        ntc = tc->next;
-                        AFS_GUNLOCK();
-                        rx_DestroyConnection(tc->id);
-                        AFS_GLOCK();
-                        afs_osi_Free(tc, sizeof(struct afs_conn));
-                        tc = ntc;
-                    }
+                    afs_ReleaseConns(sa->conns);
                     sa->conns = NULL;
 		    sa->natping = NULL;
                 }

@@ -36,18 +36,6 @@ struct rxkad_endpoint {
     afs_int32 securityIndex;	/* security index */
 };
 
-/* structure used for generating connection IDs; must be encrypted in network
- * byte order.  Also must be a multiple of 8 bytes for encryption to work
- * properly.
- */
-struct rxkad_cidgen {
-    struct clock time;		/* time now */
-    afs_int32 random1;		/* some implementation-specific random info */
-    afs_int32 random2;		/* more random info */
-    afs_int32 counter;		/* a counter */
-    afs_int32 ipAddr;		/* or an approximation to it */
-};
-
 #define PDATA_SIZE(l) (sizeof(struct rxkad_cprivate) - MAXKTCTICKETLEN + (l))
 
 /* private data in client-side security object */
@@ -78,11 +66,11 @@ struct rxkad_sprivate {
     int (*get_key) (void *, int,
 		    struct ktc_encryptionKey *);
 				/* func. of kvno and server key ptr */
+    rxkad_get_key_enctype_func get_key_enctype;
     int (*user_ok) (char *, char *,
 		    char *, afs_int32);
 				/* func called with new client name */
     afs_uint32 flags;		/* configuration flags */
-    rxkad_alt_decrypt_func alt_decrypt;
 };
 
 /* private data in server-side connection */

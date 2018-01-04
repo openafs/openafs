@@ -18,9 +18,10 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <stdio.h>
-#include <string.h>
+#include <ctype.h>
+
 #define VICE
 
 #if	defined(AFS_SUN_ENV) || defined(AFS_OSF_ENV)
@@ -35,8 +36,6 @@ extern vfscklogprintf();
 #endif
 
 #define DKTYPENAMES
-#include <sys/param.h>
-#include <sys/time.h>
 
 #ifdef	AFS_OSF_ENV
 #include <sys/vnode.h>
@@ -48,13 +47,10 @@ extern vfscklogprintf();
 #include <ufs/dir.h>
 #undef	_KERNEL
 #undef	_BSD
-#include <stdio.h>
 #else /* AFS_OSF_ENV */
 #ifdef AFS_VFSINCL_ENV
 #include <sys/vnode.h>
 #ifdef	  AFS_SUN5_ENV
-#include <stdio.h>
-#include <unistd.h>
 #include <sys/fs/ufs_inode.h>
 #include <sys/fs/ufs_fs.h>
 #define _KERNEL
@@ -68,7 +64,6 @@ extern vfscklogprintf();
 #else /* AFS_VFSINCL_ENV */
 #include <sys/inode.h>
 #ifdef	AFS_HPUX_ENV
-#include <ctype.h>
 #define	LONGFILENAMES	1
 #include <sys/sysmacros.h>
 #include <sys/ino.h>
@@ -77,10 +72,7 @@ extern vfscklogprintf();
 #endif /* AFS_VFSINCL_ENV */
 #endif /* AFS_OSF_ENV */
 
-#include <sys/stat.h>
-#include <sys/ioctl.h>
 #include <sys/file.h>
-#include <ctype.h>
 #ifdef	AFS_SUN5_ENV
 #include <sys/mntent.h>
 #include <sys/vfstab.h>
@@ -108,7 +100,6 @@ struct bufarea *pbp;
     /* inode map */	howmany((fs)->fs_ipg, NBBY) + \
     /* block map */	howmany((fs)->fs_cpg * (fs)->fs_spc / NSPF(fs), NBBY))
 
-char *malloc(), *calloc();
 struct disklabel *getdisklabel();
 
 setup(dev)
@@ -482,7 +473,7 @@ setup(dev)
      * read in the summary info.
      */
     asked = 0;
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
     {
 	caddr_t sip;
 	sip = calloc(1, sblock.fs_cssize);
@@ -503,10 +494,10 @@ setup(dev)
 	    sip += size;
 	}
     }
-#else /* AFS_SUN56_ENV */
+#else /* AFS_SUN5_ENV */
 #if     defined(AFS_HPUX110_ENV)
     size = fragroundup(&sblock, sblock.fs_cssize);
-    sblock.fs_csp = (struct csum *)calloc(1, (unsigned)size);
+    sblock.fs_csp = calloc(1, (unsigned)size);
     if ((bread
 	 (fsreadfd, (char *)sblock.fs_csp, fsbtodb(&sblock, sblock.fs_csaddr),
 	  size) != 0) && !asked) {
@@ -526,7 +517,7 @@ setup(dev)
 	    sblock.fs_cssize - i <
 	    sblock.fs_bsize ? sblock.fs_cssize - i : sblock.fs_bsize;
 #endif /* AFS_HPUX101_ENV */
-	sblock.fs_csp[j] = (struct csum *)calloc(1, (unsigned)size);
+	sblock.fs_csp[j] = calloc(1, (unsigned)size);
 	if (bread
 	    (fsreadfd, (char *)sblock.fs_csp[j],
 	     fsbtodb(&sblock, sblock.fs_csaddr + j * sblock.fs_frag),
@@ -542,7 +533,7 @@ setup(dev)
 	}
     }
 #endif /* else AFS_HPUX110_ENV */
-#endif /* else AFS_SUN56_ENV */
+#endif /* else AFS_SUN5_ENV */
 
 #if	defined(AFS_SUN_ENV) && !defined(AFS_SUN3_ENV)
     /*
@@ -583,7 +574,7 @@ setup(dev)
 	msgprintf("cannot alloc %d bytes for statemap\n", maxino + 1);
 	goto badsb;
     }
-    lncntp = (short *)calloc((unsigned)(maxino + 1), sizeof(short));
+    lncntp = calloc((unsigned)(maxino + 1), sizeof(short));
     if (lncntp == NULL) {
 	msgprintf("cannot alloc %d bytes for lncntp\n",
 		  (maxino + 1) * sizeof(short));
@@ -699,14 +690,14 @@ readsb(listerr)
     altsblock.fs_optim = sblock.fs_optim;
     altsblock.fs_rotdelay = sblock.fs_rotdelay;
     altsblock.fs_maxbpg = sblock.fs_maxbpg;
-#if	!defined(__alpha) && !defined(AFS_SUN56_ENV)
+#if	!defined(__alpha) && !defined(AFS_SUN5_ENV)
 #if !defined(AFS_HPUX110_ENV)
     /* HPUX110 will use UpdateAlternateSuper() below */
     memcpy((char *)altsblock.fs_csp, (char *)sblock.fs_csp,
 	   sizeof sblock.fs_csp);
 #endif /* ! AFS_HPUX110_ENV */
 #endif /* ! __alpha */
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
     memcpy((char *)altsblock.fs_u.fs_csp_pad, (char *)sblock.fs_u.fs_csp_pad,
 	   sizeof(sblock.fs_u.fs_csp_pad));
 #endif
@@ -925,7 +916,7 @@ is_root(rdev_num)
     return (1);
 }
 
-getline(fp, loc, maxlen)
+vfsck_getline(fp, loc, maxlen)
      FILE *fp;
      char *loc;
 {
@@ -956,7 +947,7 @@ freply(s)
     if (!isatty(0))
 	errexit("exiting\n");
     printf("\n%s? ", s);
-    if (getline(stdin, line, sizeof(line)) == EOF)
+    if (vfsck_getline(stdin, line, sizeof(line)) == EOF)
 	errexit("\n");
     if (line[0] == 'y' || line[0] == 'Y')
 	return (1);

@@ -19,25 +19,25 @@ TOP_SRC_AFS = ${TOP_SRCDIR}/afs
 TOP_SRC_RXSTAT = ${TOP_SRCDIR}/rxstat
 TOP_SRC_FSINT = ${TOP_SRCDIR}/fsint
 TOP_SRC_RX = ${TOP_SRCDIR}/rx
+TOP_SRC_OPR = $(TOP_SRCDIR)/opr
 TOP_SRC_VNOPS = ${TOP_SRCDIR}/afs/VNOPS
 TOP_SRC_RXKAD = ${TOP_SRCDIR}/rxkad
 
 COMMON_INCLUDE = -I. -I.. -I../nfs \
+	-I$(TOP_SRCDIR)/crypto/hcrypto/kernel \
 	-I${TOP_SRCDIR} \
 	-I${TOP_SRCDIR}/afs \
 	-I${TOP_SRCDIR}/afs/${MKAFS_OSTYPE} \
 	-I${TOP_SRCDIR}/config \
 	-I${TOP_SRCDIR}/rx/${MKAFS_OSTYPE} \
-	-I${TOP_SRCDIR}/rxkad \
-	-I${TOP_SRCDIR}/util \
+	-I${TOP_SRCDIR}/external/heimdal \
 	-I${TOP_OBJDIR}/src \
 	-I${TOP_OBJDIR}/src/afs \
 	-I${TOP_OBJDIR}/src/afs/${MKAFS_OSTYPE} \
-	-I${TOP_OBJDIR}/src/util \
-	-I${TOP_OBJDIR}/src/rxkad \
 	-I${TOP_OBJDIR}/src/config \
 	-I${TOP_OBJDIR}/src/fsint \
 	-I${TOP_OBJDIR}/src/vlserver \
+	-I${TOP_OBJDIR}/src/auth \
 	-I${TOP_INCDIR} \
 	-I${TOP_INCDIR}/afs 
 
@@ -47,9 +47,9 @@ COMMON_INCLUDE = -I. -I.. -I../nfs \
 	$(CC) $(COMMON_INCLUDE) $(CFLAGS) -P -c $<
 
 .c.o:
-	$(CC) $(COMMON_INCLUDE) $(CFLAGS) $(CFLAGS-$(@)) $(KERN_DBG) -c $<
-CRULE_NOOPT=	$(CC) $(COMMON_INCLUDE) $(KERN_DBG) $(CFLAGS) $(CFLAGS-$(@)) -o $@ -c $?
-CRULE_OPT=	$(CC) $(COMMON_INCLUDE) $(KERN_DBG) $(KERN_OPTMZ) $(CFLAGS) $(CFLAGS-$(@)) -o $@ -c $?
+	$(RUN_CC) $(CC) $(COMMON_INCLUDE) $(CFLAGS) $(CFLAGS-$(@)) $(KERN_DBG) -c $<
+CRULE_NOOPT=	$(RUN_CC) $(CC) $(COMMON_INCLUDE) $(KERN_DBG) $(CFLAGS) $(CFLAGS-$(@)) -o $@ -c
+CRULE_OPT=	$(RUN_CC) $(CC) $(COMMON_INCLUDE) $(KERN_DBG) $(KERN_OPTMZ) $(CFLAGS) $(CFLAGS-$(@)) -o $@ -c
 
 system:	all
 
@@ -71,6 +71,9 @@ single_destdir_libafs: dest_libafs
 depsrcs: 
 
 AFSAOBJS = \
+	sha256-kernel.o \
+	rand-fortuna-kernel.o \
+	rand-timer-kernel.o \
 	afs_atomlist.o \
 	afs_lhash.o \
 	afs_analyze.o \
@@ -92,7 +95,6 @@ AFSAOBJS = \
 	afs_init.o \
 	afs_lock.o	\
 	afs_mariner.o \
-	afs_md5.o \
 	afs_memcache.o	\
 	afs_fetchstore.o	\
 	afs_osi.o		\
@@ -106,6 +108,7 @@ AFSAOBJS = \
 	afs_server.o \
 	afs_stat.o \
 	afs_syscall.o \
+	afs_tokens.o \
 	afs_user.o \
 	afs_util.o \
 	afs_vcache.o \
@@ -128,6 +131,8 @@ AFSAOBJS = \
 	afs_volume.o \
 	afs_warn.o \
 	afsaux.o		\
+	xdr_update.o	\
+	xdr_refernce.o	\
 	Kvice.xdr.o	\
 	xdr_arrayn.o	\
 	xdr_array.o	\
@@ -136,18 +141,25 @@ AFSAOBJS = \
 	Kvice.cs.o	\
 	fcrypt.o		\
 	rx.o		\
+	rx_call.o	\
+	rx_conn.o	\
+	rx_peer.o	\
 	rx_rdwr.o	\
 	rx_clock.o	\
 	rx_event.o	\
 	rx_globals.o	\
+	rx_identity.o	\
 	rx_kmutex.o	\
 	rx_knet.o	\
 	rx_kcommon.o	\
 	rx_misc.o	\
 	rx_null.o	\
+	rx_opaque.o	\
 	rx_getaddr.o	\
 	rx_packet.o	\
 	rx_multi.o	\
+	rx_stats.o	\
+	opr_rbtree.o	\
 	xdr_rx.o	\
 	xdr_mem.o	\
 	xdr_len.o	\
@@ -164,6 +176,27 @@ AFSAOBJS = \
 	rxkad_common.o	\
 	xdr_afsuuid.o	\
 	xdr.o		\
+	Ktoken.xdr.o	\
+	md5.o		\
+	evp.o		\
+	evp-algs.o    	\
+	rand-kernel.o   \
+	alloc-kernel.o	\
+	aes.o		\
+	rijndael-alg-fst.o \
+	sha.o		\
+	n-fold.o	\
+	crypto.o	\
+	crypto-algs.o   \
+	crypto-aes.o	\
+	crypto-context.o \
+	crypto-copy.o	\
+	crypto-ct.o	\
+	crypto-evp.o	\
+	crypto-data.o 	\
+	crypto-keyblock.o \
+	crypto-store-int.o \
+	crypto-random.o	\
 	afs_uuid.o $(AFS_OS_OBJS)
 
 # These next two allow nfs and nonfs builds to occur in the same directory.
@@ -183,6 +216,17 @@ AFSNONFSOBJS = \
 
 # init daemons call pioctl
 AFSPAGOBJS = \
+	sha256-kernel.o \
+	rand-fortuna-kernel.o \
+	rand-timer-kernel.o \
+	md5.o		\
+	evp.o		\
+	evp-algs.o    	\
+	rand-kernel.o   \
+	alloc-kernel.o	\
+	aes.o		\
+	rijndael-alg-fst.o \
+	sha.o		\
 	afs_atomlist.o \
 	afs_error.o \
 	afs_icl.o \
@@ -196,25 +240,36 @@ AFSPAGOBJS = \
 	afs_pag_user.o \
 	afs_stat.o \
 	afs_syscall.o \
+	afs_tokens.o \
 	afs_warn.o \
 	afsaux.o		\
+	xdr_update.o	\
+	xdr_refernce.o	\
 	xdr_arrayn.o	\
 	xdr_array.o	\
 	xdr_int32.o	\
 	xdr_int64.o	\
-	rx.o		\
-	rx_rdwr.o	\
+	rx_pag.o	\
+	rx_pag_call.o	\
+	rx_conn.o	\
+        rx_peer.o       \
+	rx_pag_rdwr.o	\
 	rx_clock.o	\
 	rx_event.o	\
 	rx_globals.o	\
+	rx_identity.o	\
 	rx_kmutex.o	\
 	rx_pag_knet.o	\
-	rx_kcommon.o	\
+	rx_pag_kcommon.o	\
 	rx_misc.o	\
 	rx_null.o	\
+	rx_opaque.o	\
 	rx_getaddr.o	\
-	rx_packet.o	\
+	rx_pag_packet.o	\
 	rx_multi.o	\
+	rx_stats.o	\
+	strcasecmp_pag.o	\
+	opr_rbtree.o	\
 	xdr_rx.o	\
 	xdr_mem.o	\
 	xdr_len.o	\
@@ -228,306 +283,441 @@ AFSPAGOBJS = \
 	AFS_component_version_number.o\
 	xdr_afsuuid.o	\
 	xdr.o		\
+	Ktoken.xdr.o	\
 	afs_uuid.o $(AFS_OS_PAGOBJS)
 
 
 # Compilation rules
 # These files are to be optimized
 base64.o: $(TOP_SRCDIR)/util/base64.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRCDIR)/util/base64.c
 afs_atomlist.o: $(TOP_SRCDIR)/util/afs_atomlist.c
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRCDIR)/util/afs_atomlist.c
 afs_lhash.o: $(TOP_SRCDIR)/util/afs_lhash.c
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRCDIR)/util/afs_lhash.c
 afs_analyze.o: $(TOP_SRC_AFS)/afs_analyze.c
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRC_AFS)/afs_analyze.c
 afs_axscache.o: $(TOP_SRC_AFS)/afs_axscache.c
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRC_AFS)/afs_axscache.c
 afs_buffer.o: $(TOP_SRC_AFS)/afs_buffer.c
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRC_AFS)/afs_buffer.c
 afs_bypasscache.o: $(TOP_SRC_AFS)/afs_bypasscache.c
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRC_AFS)/afs_bypasscache.c
 afs_cell.o: $(TOP_SRC_AFS)/afs_cell.c
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRC_AFS)/afs_cell.c
 afs_conn.o: $(TOP_SRC_AFS)/afs_conn.c
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRC_AFS)/afs_conn.c
 afs_dcache.o: $(TOP_SRC_AFS)/afs_dcache.c
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRC_AFS)/afs_dcache.c
 afs_disconnected.o: $(TOP_SRC_AFS)/afs_disconnected.c
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRC_AFS)/afs_disconnected.c
 afs_dynroot.o: 	$(TOP_SRC_AFS)/afs_dynroot.c
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRC_AFS)/afs_dynroot.c
 afs_error.o: $(TOP_SRC_AFS)/afs_error.c
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRC_AFS)/afs_error.c
 afs_init.o: $(TOP_SRC_AFS)/afs_init.c
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRC_AFS)/afs_init.c
 afs_mariner.o: $(TOP_SRC_AFS)/afs_mariner.c
-	$(CRULE_OPT)
-afs_md5.o: $(TOP_SRC_AFS)/afs_md5.c
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRC_AFS)/afs_mariner.c
 afs_osidnlc.o: $(TOP_SRC_AFS)/afs_osidnlc.c
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRC_AFS)/afs_osidnlc.c
 afs_osi.o: 	$(TOP_SRC_AFS)/afs_osi.c
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRC_AFS)/afs_osi.c
 afs_osi_alloc.o: $(TOP_SRC_AFS)/afs_osi_alloc.c
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRC_AFS)/afs_osi_alloc.c
 afs_osi_pag.o: $(TOP_SRC_AFS)/afs_osi_pag.c
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRC_AFS)/afs_osi_pag.c
 afs_osi_uio.o: $(TOP_SRC_AFS)/afs_osi_uio.c
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRC_AFS)/afs_osi_uio.c
 afs_osi_vget.o: $(TOP_SRC_AFS)/afs_osi_vget.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_AFS)/afs_osi_vget.c
 afs_osi_vm.o: 	$(TOP_SRC_AFS)/afs_osi_vm.c
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRC_AFS)/afs_osi_vm.c
 afs_segments.o: $(TOP_SRC_AFS)/afs_segments.c
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRC_AFS)/afs_segments.c
 afs_server.o: $(TOP_SRC_AFS)/afs_server.c
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRC_AFS)/afs_server.c
+afs_tokens.o: $(TOP_SRC_AFS)/afs_tokens.c
+	$(CRULE_OPT) $(TOP_SRC_AFS)/afs_tokens.c
 afs_user.o: $(TOP_SRC_AFS)/afs_user.c
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRC_AFS)/afs_user.c
 afs_util.o: $(TOP_SRC_AFS)/afs_util.c
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRC_AFS)/afs_util.c
 afs_warn.o: $(TOP_SRC_AFS)/afs_warn.c
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRC_AFS)/afs_warn.c
 afs_vcache.o: $(TOP_SRC_AFS)/afs_vcache.c
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRC_AFS)/afs_vcache.c
 afs_vnop_access.o: $(TOP_SRC_VNOPS)/afs_vnop_access.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_VNOPS)/afs_vnop_access.c
 afs_vnop_attrs.o: $(TOP_SRC_VNOPS)/afs_vnop_attrs.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_VNOPS)/afs_vnop_attrs.c
 afs_vnop_create.o: $(TOP_SRC_VNOPS)/afs_vnop_create.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_VNOPS)/afs_vnop_create.c
 afs_vnop_dirops.o: $(TOP_SRC_VNOPS)/afs_vnop_dirops.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_VNOPS)/afs_vnop_dirops.c
 afs_vnop_fid.o: $(TOP_SRC_VNOPS)/afs_vnop_fid.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_VNOPS)/afs_vnop_fid.c
 afs_vnop_flock.o: $(TOP_SRC_VNOPS)/afs_vnop_flock.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_VNOPS)/afs_vnop_flock.c
 afs_vnop_link.o: $(TOP_SRC_VNOPS)/afs_vnop_link.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_VNOPS)/afs_vnop_link.c
 afs_vnop_lookup.o: $(TOP_SRC_VNOPS)/afs_vnop_lookup.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_VNOPS)/afs_vnop_lookup.c
 afs_vnop_open.o: $(TOP_SRC_VNOPS)/afs_vnop_open.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_VNOPS)/afs_vnop_open.c
 afs_vnop_read.o: $(TOP_SRC_VNOPS)/afs_vnop_read.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_VNOPS)/afs_vnop_read.c
 afs_vnop_readdir.o: $(TOP_SRC_VNOPS)/afs_vnop_readdir.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_VNOPS)/afs_vnop_readdir.c
 afs_vnop_remove.o: $(TOP_SRC_VNOPS)/afs_vnop_remove.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_VNOPS)/afs_vnop_remove.c
 afs_vnop_rename.o: $(TOP_SRC_VNOPS)/afs_vnop_rename.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_VNOPS)/afs_vnop_rename.c
 afs_vnop_strategy.o: $(TOP_SRC_VNOPS)/afs_vnop_strategy.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_VNOPS)/afs_vnop_strategy.c
 afs_vnop_symlink.o: $(TOP_SRC_VNOPS)/afs_vnop_symlink.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_VNOPS)/afs_vnop_symlink.c
 afs_vnop_write.o: $(TOP_SRC_VNOPS)/afs_vnop_write.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_VNOPS)/afs_vnop_write.c
 afs_volume.o: $(TOP_SRC_AFS)/afs_volume.c
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRC_AFS)/afs_volume.c
+rx_call.o: $(TOP_SRC_RX)/rx_call.c
+	$(CRULE_OPT) $(TOP_SRC_RX)/rx_call.c
+rx_conn.o: $(TOP_SRC_RX)/rx_conn.c
+	$(CRULE_OPT) $(TOP_SRC_RX)/rx_conn.c
+rx_peer.o: $(TOP_SRC_RX)/rx_peer.c
+	$(CRULE_OPT) $(TOP_SRC_RX)/rx_peer.c
 rx_rdwr.o: $(TOP_SRC_RX)/rx_rdwr.c
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRC_RX)/rx_rdwr.c
 afs_uuid.o: $(TOP_SRCDIR)/util/uuid.c
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRCDIR)/util/uuid.c
 xdr_afsuuid.o: $(TOP_SRCDIR)/rx/xdr_afsuuid.c
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRCDIR)/rx/xdr_afsuuid.c
 xdr_mem.o: $(TOP_SRCDIR)/rx/xdr_mem.c
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRCDIR)/rx/xdr_mem.c
 xdr_len.o: $(TOP_SRCDIR)/rx/xdr_len.c
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRCDIR)/rx/xdr_len.c
+Ktoken.xdr.o: $(TOP_OBJDIR)/src/auth/Ktoken.xdr.c
+	$(CRULE_OPT) $(TOP_OBJDIR)/src/auth/Ktoken.xdr.c
 
 # these files are not to be optimized - subject to change.
 afs_cbqueue.o: $(TOP_SRC_AFS)/afs_cbqueue.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_AFS)/afs_cbqueue.c
 afs_callback.o: $(TOP_SRC_AFS)/afs_callback.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_AFS)/afs_callback.c
 afs_chunk.o: $(TOP_SRC_AFS)/afs_chunk.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_AFS)/afs_chunk.c
 afs_daemons.o: $(TOP_SRC_AFS)/afs_daemons.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_AFS)/afs_daemons.c
 afs_dir.o: 	$(TOP_SRCDIR)/dir/dir.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRCDIR)/dir/dir.c
 afs_icl.o: $(TOP_SRC_AFS)/afs_icl.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_AFS)/afs_icl.c
 AFS_component_version_number.o: AFS_component_version_number.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) AFS_component_version_number.c
 afs_lock.o: $(TOP_SRC_AFS)/afs_lock.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_AFS)/afs_lock.c
 afs_memcache.o: $(TOP_SRC_AFS)/afs_memcache.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_AFS)/afs_memcache.c
 afs_pag_call.o: $(TOP_SRC_AFS)/afs_pag_call.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_AFS)/afs_pag_call.c
 afs_pag_cred.o: $(TOP_SRC_AFS)/afs_pag_cred.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_AFS)/afs_pag_cred.c
 afs_fetchstore.o: $(TOP_SRC_AFS)/afs_fetchstore.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_AFS)/afs_fetchstore.c
 afs_stat.o: $(TOP_SRC_AFS)/afs_stat.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_AFS)/afs_stat.c
 afs_syscall.o: $(TOP_SRC_AFS)/afs_syscall.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_AFS)/afs_syscall.c
 fcrypt.o: 	$(TOP_SRC_RXKAD)/fcrypt.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_RXKAD)/fcrypt.c
 crypt_conn.o: $(TOP_SRC_RXKAD)/crypt_conn.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_RXKAD)/crypt_conn.c
 rxkad_client.o: $(TOP_SRC_RXKAD)/rxkad_client.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_RXKAD)/rxkad_client.c
 rxkad_common.o: $(TOP_SRC_RXKAD)/rxkad_common.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_RXKAD)/rxkad_common.c
+
+CFLAGS-fcrypt.o = -I${TOP_SRCDIR}/rxkad -I$(TOP_OBJDIR)/src/rxkad
+CFLAGS-crypt_conn.o = -I${TOP_SRCDIR}/rxkad -I$(TOP_OBJDIR)/src/rxkad
+CFLAGS-rxkad_client.o = -I${TOP_SRCDIR}/rxkad -I$(TOP_OBJDIR)/src/rxkad
+CFLAGS-rxkad_common.o = -I${TOP_SRCDIR}/rxkad -I$(TOP_OBJDIR)/src/rxkad
+
 afs_exporter.o: $(TOP_SRC_AFS)/afs_exporter.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_AFS)/afs_exporter.c
 afs_nfsclnt.o: $(TOP_SRC_AFS)/afs_nfsclnt.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_AFS)/afs_nfsclnt.c
 afs_nfsdisp.o: $(TOP_SRC_AFS)/afs_nfsdisp.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_AFS)/afs_nfsdisp.c
 rx.o: $(TOP_SRC_RX)/rx.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/rx.c
 rx_clock.o: $(TOP_SRC_RX)/rx_clock.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/rx_clock.c
 rx_event.o: $(TOP_SRC_RX)/rx_event.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/rx_event.c
 rx_globals.o: $(TOP_SRC_RX)/rx_globals.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/rx_globals.c
+rx_identity.o: $(TOP_SRC_RX)/rx_identity.c
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/rx_identity.c
 rx_misc.o: $(TOP_SRC_RX)/rx_misc.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/rx_misc.c
 rx_multi.o: $(TOP_SRC_RX)/rx_multi.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/rx_multi.c
 rx_null.o: $(TOP_SRC_RX)/rx_null.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/rx_null.c
+rx_opaque.o: $(TOP_SRC_RX)/rx_opaque.c
+	$(CRULE_OPT) $(TOP_SRC_RX)/rx_opaque.c
 rx_getaddr.o: $(TOP_SRC_RX)/rx_getaddr.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/rx_getaddr.c
 rx_packet.o: $(TOP_SRC_RX)/rx_packet.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/rx_packet.c
+rx_stats.o: $(TOP_SRC_RX)/rx_stats.c
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/rx_stats.c
+opr_rbtree.o: $(TOP_SRC_OPR)/rbtree.c
+	$(CRULE_OPT) $(TOP_SRC_OPR)/rbtree.c
+CFLAGS-opr-rbtree.o = -I$(TOP_INCDIR)/opr
 xdr_rx.o: $(TOP_SRC_RX)/xdr_rx.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/xdr_rx.c
 Kcallback.ss.o: $(TOP_OBJ_FSINT)/Kcallback.ss.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_OBJ_FSINT)/Kcallback.ss.c
 rxstat.o: $(TOP_SRC_RXSTAT)/rxstat.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_RXSTAT)/rxstat.c
 Kpagcb.cs.o: $(TOP_OBJ_FSINT)/Kpagcb.cs.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_OBJ_FSINT)/Kpagcb.cs.c
 Kpagcb.ss.o: $(TOP_OBJ_FSINT)/Kpagcb.ss.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_OBJ_FSINT)/Kpagcb.ss.c
 Kpagcb.xdr.o: $(TOP_OBJ_FSINT)/Kpagcb.xdr.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_OBJ_FSINT)/Kpagcb.xdr.c
 Krxstat.ss.o: $(TOP_OBJ_RXSTAT)/Krxstat.ss.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_OBJ_RXSTAT)/Krxstat.ss.c
 Krxstat.xdr.o: $(TOP_OBJ_RXSTAT)/Krxstat.xdr.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_OBJ_RXSTAT)/Krxstat.xdr.c
 Kvice.xdr.o: $(TOP_OBJ_FSINT)/Kvice.xdr.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_OBJ_FSINT)/Kvice.xdr.c
 Kvice.cs.o: $(TOP_OBJ_FSINT)/Kvice.cs.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_OBJ_FSINT)/Kvice.cs.c
 Krmtsys.xdr.o: $(TOP_OBJ_SYS)/Krmtsys.xdr.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_OBJ_SYS)/Krmtsys.xdr.c
 Krmtsys.cs.o: $(TOP_OBJ_SYS)/Krmtsys.cs.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_OBJ_SYS)/Krmtsys.cs.c
 afsaux.o: $(TOP_SRC_FSINT)/afsaux.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_FSINT)/afsaux.c
+xdr_update.o: $(TOP_SRC_RX)/xdr_update.c
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/xdr_update.c
+xdr_refernce.o: $(TOP_SRC_RX)/xdr_refernce.c
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/xdr_refernce.c
 xdr_arrayn.o: $(TOP_SRC_RX)/xdr_arrayn.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/xdr_arrayn.c
 xdr_array.o: $(TOP_SRC_RX)/xdr_array.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/xdr_array.c
 xdr_int32.o: $(TOP_SRC_RX)/xdr_int32.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/xdr_int32.c
 xdr_int64.o: $(TOP_SRC_RX)/xdr_int64.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/xdr_int64.c
 xdr.o: $(TOP_SRC_RX)/xdr.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/xdr.c
 Kvldbint.cs.o: ${TOP_OBJ_VLSERVER}/Kvldbint.cs.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) ${TOP_OBJ_VLSERVER}/Kvldbint.cs.c
 CFLAGS-Kvldbint.xdr.o= -DAFS_UUID_XG
 Kvldbint.xdr.o: ${TOP_OBJ_VLSERVER}/Kvldbint.xdr.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) ${TOP_OBJ_VLSERVER}/Kvldbint.xdr.c
 rx_kmutex.o: $(TOP_SRC_RX)/${MKAFS_OSTYPE}/rx_kmutex.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/${MKAFS_OSTYPE}/rx_kmutex.c
 rx_knet.o: $(TOP_SRC_RX)/${MKAFS_OSTYPE}/rx_knet.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/${MKAFS_OSTYPE}/rx_knet.c
 rx_kcommon.o: $(TOP_SRC_RX)/rx_kcommon.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/rx_kcommon.c
 
 # Files which do not contain NFS translator code.
 CFLAGS-afs_call.o= -DAFS_NONFSTRANS
 afs_call.o: $(TOP_SRC_AFS)/afs_call.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_AFS)/afs_call.c
 CFLAGS-afs_pioctl.o= -DAFS_NONFSTRANS
 afs_pioctl.o: $(TOP_SRC_AFS)/afs_pioctl.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_AFS)/afs_pioctl.c
 
 # NFS Translator versions of the above code.
 afs_call_nfs.o:	$(TOP_SRC_AFS)/afs_call.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_AFS)/afs_call.c
 afs_pioctl_nfs.o:	$(TOP_SRC_AFS)/afs_pioctl.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_AFS)/afs_pioctl.c
 
 # Special objects for the PAG module
 afs_pag_user.o: $(TOP_SRC_AFS)/afs_user.c
-	$(CRULE_OPT) -DAFS_PAG_MANAGER
+	$(CRULE_OPT) -DAFS_PAG_MANAGER $(TOP_SRC_AFS)/afs_user.c
+rx_pag.o: $(TOP_SRC_RX)/rx.c
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/rx.c
+rx_pag_call.o: $(TOP_SRC_RX)/rx_call.c
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/rx_call.c
+rx_pag_rdwr.o: $(TOP_SRC_RX)/rx_rdwr.c
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/rx_rdwr.c
+rx_pag_kcommon.o: $(TOP_SRC_RX)/rx_kcommon.c
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/rx_kcommon.c
+rx_pag_packet.o: $(TOP_SRC_RX)/rx_packet.c
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/rx_packet.c
 rx_pag_knet.o: $(TOP_SRC_RX)/${MKAFS_OSTYPE}/rx_knet.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/${MKAFS_OSTYPE}/rx_knet.c
+strcasecmp_pag.o: $(TOP_SRCDIR)/crypto/hcrypto/kernel/strcasecmp.c
+	$(CRULE_NOOPT) $(TOP_SRCDIR)/crypto/hcrypto/kernel/strcasecmp.c
+
+# Crypto
+md5.o: $(TOP_SRCDIR)/external/heimdal/hcrypto/md5.c
+	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/hcrypto/md5.c
+
+evp.o: $(TOP_SRCDIR)/external/heimdal/hcrypto/evp.c
+	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/hcrypto/evp.c
+CFLAGS-evp.o= -I$(TOP_INCDIR)/hcrypto \
+	      -DHAVE_CONFIG_H
+
+evp-algs.o: $(TOP_SRCDIR)/crypto/hcrypto/kernel/evp-algs.c
+	$(CRULE_OPT) $(TOP_SRCDIR)/crypto/hcrypto/kernel/evp-algs.c
+CFLAGS-evp-algs.o = -I$(TOP_INCDIR)/hcrypto
+
+rand-kernel.o: $(TOP_SRCDIR)/crypto/hcrypto/kernel/rand.c
+	$(CRULE_OPT) $(TOP_SRCDIR)/crypto/hcrypto/kernel/rand.c
+CFLAGS-rand-kernel.o = -I$(TOP_INCDIR)/hcrypto
+
+rand-fortuna-kernel.o: $(TOP_SRCDIR)/external/heimdal/hcrypto/rand-fortuna.c
+	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/hcrypto/rand-fortuna.c
+CFLAGS-rand-fortuna-kernel.o = -I$(TOP_INCDIR)/hcrypto
+
+rand-timer-kernel.o: $(TOP_SRCDIR)/crypto/hcrypto/kernel/rand-timer.c
+	$(CRULE_OPT) $(TOP_SRCDIR)/crypto/hcrypto/kernel/rand-timer.c
+CFLAGS-rand-timer-kernel.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
+
+sha256-kernel.o: $(TOP_SRCDIR)/external/heimdal/hcrypto/sha256.c
+	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/hcrypto/sha256.c
+CFLAGS-sha256-kernel.o = -I$(TOP_INCDIR)/hcrypto
+
+alloc-kernel.o: $(TOP_SRCDIR)/crypto/hcrypto/kernel/alloc.c
+	$(CRULE_OPT) $(TOP_SRCDIR)/crypto/hcrypto/kernel/alloc.c
+
+aes.o: $(TOP_SRCDIR)/external/heimdal/hcrypto/aes.c
+	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/hcrypto/aes.c
+
+rijndael-alg-fst.o:  $(TOP_SRCDIR)/external/heimdal/hcrypto/rijndael-alg-fst.c
+	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/hcrypto/rijndael-alg-fst.c
+
+sha.o: $(TOP_SRCDIR)/external/heimdal/hcrypto/sha.c
+	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/hcrypto/sha.c
+
+RFC3961_INCLUDES = -I$(TOP_SRCDIR)/crypto/rfc3961 \
+		   -I$(TOP_SRCDIR)/external/heimdal/krb5
+
+n-fold.o: $(TOP_SRCDIR)/external/heimdal/krb5/n-fold.c
+	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/krb5/n-fold.c
+CFLAGS-n-fold.o = $(RFC3961_INCLUDES)
+
+crypto.o: $(TOP_SRCDIR)/external/heimdal/krb5/crypto.c
+	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/krb5/crypto.c
+CFLAGS-crypto.o = $(RFC3961_INCLUDES)
+
+crypto-aes.o: $(TOP_SRCDIR)/external/heimdal/krb5/crypto-aes.c
+	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/krb5/crypto-aes.c
+CFLAGS-crypto-aes.o = $(RFC3961_INCLUDES)
+
+crypto-evp.o: $(TOP_SRCDIR)/external/heimdal/krb5/crypto-evp.c
+	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/krb5/crypto-evp.c
+CFLAGS-crypto-evp.o = $(RFC3961_INCLUDES)
+
+crypto-data.o: $(TOP_SRCDIR)/external/heimdal/krb5/data.c
+	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/krb5/data.c
+CFLAGS-crypto-data.o = $(RFC3961_INCLUDES)
+
+crypto-keyblock.o: $(TOP_SRCDIR)/external/heimdal/krb5/keyblock.c
+	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/krb5/keyblock.c
+CFLAGS-crypto-keyblock.o = $(RFC3961_INCLUDES)
+
+crypto-store-int.o: $(TOP_SRCDIR)/external/heimdal/krb5/store-int.c
+	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/krb5/store-int.c
+CFLAGS-crypto-store-int.o = $(RFC3961_INCLUDES)
+
+crypto-random.o: $(TOP_SRCDIR)/crypto/rfc3961/kernel/random.c
+	$(CRULE_OPT) $(TOP_SRCDIR)/crypto/rfc3961/kernel/random.c
+CFLAGS-crypto-random.o = -I$(TOP_SRCDIR)/crypto/kernel
+
+crypto-algs.o: $(TOP_SRCDIR)/crypto/rfc3961/kernel/algs.c
+	$(CRULE_OPT) $(TOP_SRCDIR)/crypto/rfc3961/kernel/algs.c
+CFLAGS-crypto-algs.o = $(RFC3961_INCLUDES)
+
+crypto-copy.o: $(TOP_SRCDIR)/crypto/rfc3961/copy.c
+	$(CRULE_OPT) $(TOP_SRCDIR)/crypto/rfc3961/copy.c
+CFLAGS-crypto-copy.o = $(RFC3961_INCLUDES)
+
+crypto-context.o: $(TOP_SRCDIR)/crypto/rfc3961/context.c
+	$(CRULE_OPT) $(TOP_SRCDIR)/crypto/rfc3961/context.c
+CFLAGS-crypto-context.o = $(RFC3961_INCLUDES)
+
+crypto-ct.o: $(TOP_SRCDIR)/external/heimdal/roken/ct.c
+	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/roken/ct.c
+CFLAGS-crypto-ct.o = $(RFC3961_INCLUDES)
 
 # Files which are specific to particular architectures/targets
 # but have common build rules. Place here instead of duplicating
 # in the per-platform Makefiles.
 osi_groups.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_groups.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_groups.c
 osi_gcpags.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_gcpags.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_gcpags.c
 osi_inode.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_inode.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_inode.c
 osi_file.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_file.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_file.c
 osi_sleep.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_sleep.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_sleep.c
 osi_misc.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_misc.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_misc.c
 CFLAGS-osi_vfsops_nfs.o= -DAFS_WRAPPER=${LIBAFS}_wrapper -DAFS_CONF_DATA=${LIBAFS}_conf_data
 osi_vfsops_nfs.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vfsops.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vfsops.c
 CFLAGS-osi_vfsops.o= -DAFS_NONFSTRANS -DAFS_WRAPPER=${LIBAFSNONFS}_wrapper -DAFS_CONF_DATA=${LIBAFSNONFS}_conf_data
 osi_vfsops.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vfsops.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vfsops.c
 osi_vm.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vm.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vm.c
 osi_vnodeops.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vnodeops.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vnodeops.c
+CFLAGS-osi_debug.o = -I${TOP_SRCDIR}/rxkad
 osi_debug.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_debug.c
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_debug.c
 osi_ioctl.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_ioctl.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_ioctl.c
 osi_module.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_module.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_module.c
 osi_pag_module.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_pag_module.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_pag_module.c
 osi_proc.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_proc.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_proc.c
 osi_probe.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_probe.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_probe.c
 osi_syscall.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_syscall.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_syscall.c
 osi_sysctl.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_sysctl.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_sysctl.c
 osi_flush.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_flush.s
-	$(CRULE_OPT)
+	$(CRULE_OPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_flush.s
 osi_export.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_export.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_export.c
 osi_nfssrv.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_nfssrv.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_nfssrv.c
 osi_alloc.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_alloc.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_alloc.c
 osi_cred.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_cred.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_cred.c
 osi_idbg.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_idbg.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_idbg.c
 osi_config.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_config.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_config.c
 osi_timeout.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_timeout.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_timeout.c
 osi_pagecopy.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_pagecopy.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_pagecopy.c
 osi_fetchstore.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_fetchstore.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_fetchstore.c
 osi_vcache.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vcache.c
-	$(CRULE_NOOPT)
+	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vcache.c
+osi_crypto.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_crypto.c
+	$(CRULE_OPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_crypto.c
 
 clean:
 	-$(RM) -rf STATIC* MODLOAD* $(AFS_OS_CLEAN)

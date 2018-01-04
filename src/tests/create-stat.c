@@ -31,11 +31,11 @@
  * SUCH DAMAGE.
  */
 
+#include <afsconfig.h>
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-
-#include <afsconfig.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -76,7 +76,8 @@ main(int argc, char **argv)
 
     file = argv[1];
 
-    asprintf(&filename, "%s.new", file);
+    if (asprintf(&filename, "%s.new", file) < 0)
+	err(1, "asprintf");
 
     ret = open(file, O_RDWR, 0600);
     if (ret < 0)

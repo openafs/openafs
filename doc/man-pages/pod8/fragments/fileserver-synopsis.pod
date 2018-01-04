@@ -37,6 +37,7 @@ B<fileserver>
     S<<< [B<-enable_process_stats>] >>>
     S<<< [B<-syslog> [<I< loglevel >>]] >>>
     S<<< [B<-mrafslogs>] >>>
+    S<<< [B<-transarc-logs>] >>>
     S<<< [B<-saneacls>] >>>
     S<<< [B<-help>] >>>
     S<<< [B<-vhandle-setaside> <I<fds reserved for non-cache io>>] >>>
@@ -45,6 +46,8 @@ B<fileserver>
     S<<< [B<-vattachpar> <I<number of volume attach threads>>] >>>
     S<<< [B<-m> <I<min percentage spare in partition>>] >>>
     S<<< [B<-lock>] >>>
-    S<<< [B<-sync> <I<sync behavior>>] >>>
+    S<<< [B<-vhashsize> <I<log(2) of number of volume hash buckets>>] >>>
     S<<< [B<-offline-timeout> <I<timeout in seconds>>] >>>
     S<<< [B<-offline-shutdown-timeout> <I<timeout in seconds>>] >>>
+    S<<< [B<-sync> <I<sync behavior>>] >>>
+    S<<< [B<-logfile <I<log file>>] >>> S<<< [B<-config <I<configuration path>>] >>>

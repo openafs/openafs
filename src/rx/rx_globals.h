@@ -21,6 +21,7 @@
 
 #ifndef GLOBALSINIT
 #define GLOBALSINIT(x)
+#define POSTAMBLE
 #if defined(AFS_NT40_ENV)
 #define RX_STATS_INTERLOCKED 1
 #if defined(AFS_PTHREAD_ENV)
@@ -42,12 +43,6 @@ EXT struct rx_service *rx_services[RX_MAX_SERVICES + 1];
 /* Protects nRequestsRunning as well as pool allocation variables. */
 EXT afs_kmutex_t rx_serverPool_lock;
 #endif /* RX_ENABLE_LOCKS */
-
-/* Incoming calls wait on this queue when there are no available server processes */
-EXT struct rx_queue rx_incomingCallQueue;
-
-/* Server processes wait on this queue when there are no appropriate calls to process */
-EXT struct rx_queue rx_idleServerQueue;
 
 /* Constant delay time before sending a hard ack if the receiver consumes
  * a packet while no delayed ack event is scheduled. Ensures that the
@@ -134,21 +129,12 @@ EXT int rxi_OrphanFragSize GLOBALSINIT(512);
 #define RX_MAX_DGRAM_PACKETS 6	/* max packets per jumbogram */
 
 EXT int rxi_nDgramPackets GLOBALSINIT(RX_MAX_DGRAM_PACKETS);
-/* allow n packets between soft acks - must be power of 2 -1, else change
- * macro below */
+/* allow n packets between soft acks */
 EXT int rxi_SoftAckRate GLOBALSINIT(RX_FAST_ACK_RATE);
 /* consume n packets before sending hard ack, should be larger than above,
    but not absolutely necessary.  If it's smaller, than fast receivers will
    send a soft ack, immediately followed by a hard ack. */
 EXT int rxi_HardAckRate GLOBALSINIT(RX_FAST_ACK_RATE + 1);
-
-/* If window sizes become very variable (in terms of #packets), be
- * sure that the sender can get back a hard acks without having to wait for
- * some kind of timer event first (like a keep-alive, for instance).
- * It might be kind of tricky, so it might be better to shrink the
- * window size by reducing the packet size below the "natural" MTU. */
-
-#define	ACKHACK(p,r) { if (((p)->header.seq & (rxi_SoftAckRate))==0) (p)->header.flags |= RX_REQUEST_ACK; }
 
 EXT int rx_nPackets GLOBALSINIT(0);	/* preallocate packets with rx_extraPackets */
 
@@ -163,7 +149,7 @@ EXT int rx_nPackets GLOBALSINIT(0);	/* preallocate packets with rx_extraPackets 
 EXT pthread_key_t rx_ts_info_key;
 typedef struct rx_ts_info_t {
     struct {
-        struct rx_queue queue;
+        struct opr_queue queue;
         int len;                /* local queue length */
         int delta;              /* number of new packets alloc'd locally since last sync w/ global queue */
 
@@ -188,7 +174,7 @@ EXT struct rx_ts_info_t * rx_ts_info_init(void);   /* init function for thread-s
     do { \
         ts_info_p = (struct rx_ts_info_t*)pthread_getspecific(rx_ts_info_key); \
         if (ts_info_p == NULL) { \
-            osi_Assert((ts_info_p = rx_ts_info_init()) != NULL); \
+            opr_Verify((ts_info_p = rx_ts_info_init()) != NULL); \
         } \
     } while(0)
 #endif /* AFS_PTHREAD_ENV */
@@ -198,7 +184,7 @@ EXT struct rx_ts_info_t * rx_ts_info_init(void);   /* init function for thread-s
 /* in pthreads rx, free packet queue is now a two-tiered queueing system
  * in which the first tier is thread-specific, and the second tier is
  * a global free packet queue */
-EXT struct rx_queue rx_freePacketQueue;
+EXT struct opr_queue rx_freePacketQueue;
 #ifdef RX_TRACK_PACKETS
 #define RX_FPQ_MARK_FREE(p) \
     do { \
@@ -256,12 +242,12 @@ EXT afs_kmutex_t rx_freePktQ_lock;
  * This information is used when afs is being unmounted and the memory
  * used by those packets needs to be released.
  */
-EXT struct rx_queue rx_mallocedPacketQueue;
+EXT struct opr_queue rx_mallocedPacketQueue;
 #ifdef RX_ENABLE_LOCKS
 EXT afs_kmutex_t rx_mallocedPktQ_lock;
 #endif /* RX_ENABLE_LOCKS */
 
-#if defined(AFS_PTHREAD_ENV)
+#if defined(AFS_PTHREAD_ENV) && !defined(KERNEL)
 #define RX_ENABLE_TSFPQ
 EXT int rx_TSFPQGlobSize GLOBALSINIT(3); /* number of packets to transfer between global and local queues in one op */
 EXT int rx_TSFPQLocalMax GLOBALSINIT(15); /* max number of packets on local FPQ before returning a glob to the global pool */
@@ -311,9 +297,12 @@ EXT int rx_TSFPQMaxProcs GLOBALSINIT(0); /* max number of threads expected */
         struct rx_packet * p; \
         int tsize = MIN((rx_ts_info_p)->_FPQ.len, (rx_ts_info_p)->_FPQ.len - rx_TSFPQLocalMax + 3 *  rx_TSFPQGlobSize); \
 	if (tsize <= 0) break; \
-        for (i=0,p=queue_Last(&((rx_ts_info_p)->_FPQ), rx_packet); \
-             i < tsize; i++,p=queue_Prev(p, rx_packet)); \
-        queue_SplitAfterPrepend(&((rx_ts_info_p)->_FPQ),&rx_freePacketQueue,p); \
+        for (i=0,p=opr_queue_Last(&((rx_ts_info_p)->_FPQ.queue), \
+				 struct rx_packet, entry); \
+             i < tsize; i++,p=opr_queue_Prev(&p->entry, \
+		     			    struct rx_packet, entry )); \
+        opr_queue_SplitAfterPrepend(&((rx_ts_info_p)->_FPQ.queue), \
+				   &rx_freePacketQueue, &p->entry); \
         (rx_ts_info_p)->_FPQ.len -= tsize; \
         rx_nFreePackets += tsize; \
         (rx_ts_info_p)->_FPQ.ltog_ops++; \
@@ -331,9 +320,12 @@ EXT int rx_TSFPQMaxProcs GLOBALSINIT(0); /* max number of threads expected */
         int i; \
         struct rx_packet * p; \
         if (num_transfer <= 0) break; \
-        for (i=0,p=queue_Last(&((rx_ts_info_p)->_FPQ), rx_packet); \
-	     i < (num_transfer); i++,p=queue_Prev(p, rx_packet)); \
-        queue_SplitAfterPrepend(&((rx_ts_info_p)->_FPQ),&rx_freePacketQueue,p); \
+        for (i=0,p=opr_queue_Last(&((rx_ts_info_p)->_FPQ.queue), \
+				 struct rx_packet, entry ); \
+	     i < (num_transfer); \
+	     i++,p=opr_queue_Prev(&p->entry, struct rx_packet, entry )); \
+        opr_queue_SplitAfterPrepend(&((rx_ts_info_p)->_FPQ.queue), \
+				   &rx_freePacketQueue, &p->entry); \
         (rx_ts_info_p)->_FPQ.len -= (num_transfer); \
         rx_nFreePackets += (num_transfer); \
         (rx_ts_info_p)->_FPQ.ltog_ops++; \
@@ -353,9 +345,12 @@ EXT int rx_TSFPQMaxProcs GLOBALSINIT(0); /* max number of threads expected */
         struct rx_packet * p; \
         tsize = (rx_TSFPQGlobSize <= rx_nFreePackets) ? \
                  rx_TSFPQGlobSize : rx_nFreePackets; \
-        for (i=0,p=queue_First(&rx_freePacketQueue, rx_packet); \
-             i < tsize; i++,p=queue_Next(p, rx_packet)); \
-        queue_SplitBeforeAppend(&rx_freePacketQueue,&((rx_ts_info_p)->_FPQ),p); \
+        for (i=0, \
+	       p=opr_queue_First(&rx_freePacketQueue, struct rx_packet, entry); \
+             i < tsize; \
+	     i++,p=opr_queue_Next(&p->entry, struct rx_packet, entry)); \
+        opr_queue_SplitBeforeAppend(&rx_freePacketQueue, \
+				   &((rx_ts_info_p)->_FPQ.queue), &p->entry); \
         (rx_ts_info_p)->_FPQ.len += i; \
         rx_nFreePackets -= i; \
         (rx_ts_info_p)->_FPQ.gtol_ops++; \
@@ -368,9 +363,12 @@ EXT int rx_TSFPQMaxProcs GLOBALSINIT(0); /* max number of threads expected */
         struct rx_packet * p; \
         tsize = (num_transfer); \
         if (tsize > rx_nFreePackets) tsize = rx_nFreePackets; \
-        for (i=0,p=queue_First(&rx_freePacketQueue, rx_packet); \
-             i < tsize; i++,p=queue_Next(p, rx_packet)); \
-        queue_SplitBeforeAppend(&rx_freePacketQueue,&((rx_ts_info_p)->_FPQ),p); \
+        for (i=0, \
+	       p=opr_queue_First(&rx_freePacketQueue, struct rx_packet, entry); \
+             i < tsize; \
+	     i++, p=opr_queue_Next(&p->entry, struct rx_packet, entry)); \
+        opr_queue_SplitBeforeAppend(&rx_freePacketQueue, \
+				   &((rx_ts_info_p)->_FPQ.queue), &p->entry); \
         (rx_ts_info_p)->_FPQ.len += i; \
         rx_nFreePackets -= i; \
         (rx_ts_info_p)->_FPQ.gtol_ops++; \
@@ -379,8 +377,9 @@ EXT int rx_TSFPQMaxProcs GLOBALSINIT(0); /* max number of threads expected */
 /* checkout a packet from the thread-specific free packet queue */
 #define RX_TS_FPQ_CHECKOUT(rx_ts_info_p,p) \
     do { \
-        (p) = queue_First(&((rx_ts_info_p)->_FPQ), rx_packet); \
-        queue_Remove(p); \
+        (p) = opr_queue_First(&((rx_ts_info_p)->_FPQ.queue), \
+			     struct rx_packet, entry); \
+        opr_queue_Remove(&p->entry); \
         RX_FPQ_MARK_USED(p); \
         (rx_ts_info_p)->_FPQ.len--; \
         (rx_ts_info_p)->_FPQ.checkout_ops++; \
@@ -394,12 +393,14 @@ EXT int rx_TSFPQMaxProcs GLOBALSINIT(0); /* max number of threads expected */
         int i; \
         struct rx_packet *p; \
         if (num_transfer > (rx_ts_info_p)->_FPQ.len) num_transfer = (rx_ts_info_p)->_FPQ.len; \
-        for (i=0, p=queue_First(&((rx_ts_info_p)->_FPQ), rx_packet); \
+        for (i=0, p=opr_queue_First(&((rx_ts_info_p)->_FPQ.queue), \
+				   struct rx_packet, entry); \
              i < num_transfer; \
-             i++, p=queue_Next(p, rx_packet)) { \
+             i++, p=opr_queue_Next(&p->entry, struct rx_packet, entry)) { \
             RX_FPQ_MARK_USED(p); \
         } \
-        queue_SplitBeforeAppend(&((rx_ts_info_p)->_FPQ),(q),p); \
+        opr_queue_SplitBeforeAppend(&((rx_ts_info_p)->_FPQ.queue),(q), \
+				   &((p)->entry)); \
         (rx_ts_info_p)->_FPQ.len -= num_transfer; \
         (rx_ts_info_p)->_FPQ.checkout_ops++; \
         (rx_ts_info_p)->_FPQ.checkout_xfer += num_transfer; \
@@ -407,7 +408,7 @@ EXT int rx_TSFPQMaxProcs GLOBALSINIT(0); /* max number of threads expected */
 /* check a packet into the thread-specific free packet queue */
 #define RX_TS_FPQ_CHECKIN(rx_ts_info_p,p) \
     do { \
-        queue_Prepend(&((rx_ts_info_p)->_FPQ), (p)); \
+        opr_queue_Prepend(&((rx_ts_info_p)->_FPQ.queue), &((p)->entry)); \
         RX_FPQ_MARK_FREE(p); \
         (rx_ts_info_p)->_FPQ.len++; \
         (rx_ts_info_p)->_FPQ.checkin_ops++; \
@@ -419,22 +420,20 @@ EXT int rx_TSFPQMaxProcs GLOBALSINIT(0); /* max number of threads expected */
  * since caller already knows length of (q) for other reasons */
 #define RX_TS_FPQ_QCHECKIN(rx_ts_info_p,num_transfer,q) \
     do { \
-        struct rx_packet *p, *np; \
-        for (queue_Scan((q), p, np, rx_packet)) { \
-            RX_FPQ_MARK_FREE(p); \
+	struct opr_queue *cur; \
+        for (opr_queue_Scan((q), cur)) { \
+            RX_FPQ_MARK_FREE(opr_queue_Entry(cur, struct rx_packet, entry)); \
         } \
-        queue_SplicePrepend(&((rx_ts_info_p)->_FPQ),(q)); \
+        opr_queue_SplicePrepend(&((rx_ts_info_p)->_FPQ.queue),(q)); \
         (rx_ts_info_p)->_FPQ.len += (num_transfer); \
         (rx_ts_info_p)->_FPQ.checkin_ops++; \
         (rx_ts_info_p)->_FPQ.checkin_xfer += (num_transfer); \
     } while(0)
-#endif /* AFS_PTHREAD_ENV */
+#endif /* AFS_PTHREAD_ENV && !KERNEL */
 
 /* Number of free packets */
 EXT int rx_nFreePackets GLOBALSINIT(0);
 EXT int rxi_NeedMorePackets GLOBALSINIT(0);
-EXT int rx_nWaiting GLOBALSINIT(0);
-EXT int rx_nWaited GLOBALSINIT(0);
 EXT int rx_packetReclaims GLOBALSINIT(0);
 
 /* largest packet which we can safely receive, initialized to AFS 3.2 value
@@ -467,7 +466,7 @@ EXT afs_kmutex_t freeSQEList_lock;
 #endif
 
 /* List of free call structures */
-EXT struct rx_queue rx_freeCallQueue;
+EXT struct opr_queue rx_freeCallQueue;
 #ifdef	RX_ENABLE_LOCKS
 EXT afs_kmutex_t rx_freeCallQueue_lock;
 #endif
@@ -519,14 +518,12 @@ EXT afs_int32 rxi_availProcs GLOBALSINIT(0);	/* number of threads in the pool */
 EXT afs_int32 rxi_totalMin GLOBALSINIT(0);	/* Sum(minProcs) forall services */
 EXT afs_int32 rxi_minDeficit GLOBALSINIT(0);	/* number of procs needed to handle all minProcs */
 
-EXT int rx_nextCid;		/* Next connection call id */
-EXT int rx_epoch;		/* Initialization time of rx */
+EXT afs_uint32 rx_nextCid;		/* Next connection call id */
+EXT afs_uint32 rx_epoch;		/* Initialization time of rx */
 #ifdef	RX_ENABLE_LOCKS
 EXT afs_kcondvar_t rx_waitingForPackets_cv;
 #endif
 EXT char rx_waitingForPackets;	/* Processes set and wait on this variable when waiting for packet buffers */
-
-EXT struct rx_statistics rx_stats;
 
 EXT struct rx_peer **rx_peerHashTable;
 EXT struct rx_connection **rx_connHashTable;
@@ -542,21 +539,18 @@ EXT afs_kmutex_t rx_connHashTable_lock;
 #define PEER_HASH(host, port)  ((host ^ port) % rx_hashTableSize)
 
 /* Forward definitions of internal procedures */
-#define	rxi_ChallengeOff(conn)	rxevent_Cancel((conn)->challengeEvent, (struct rx_call*)0, 0);
-#define rxi_KeepAliveOff(call) rxevent_Cancel((call)->keepAliveEvent, call, RX_CALL_REFCOUNT_ALIVE)
-#define rxi_NatKeepAliveOff(conn) rxevent_Cancel((conn)->natKeepAliveEvent, (struct rx_call*)0, 0)
 
-#define rxi_AllocSecurityObject() (struct rx_securityClass *) rxi_Alloc(sizeof(struct rx_securityClass))
+#define rxi_AllocSecurityObject() rxi_Alloc(sizeof(struct rx_securityClass))
 #define	rxi_FreeSecurityObject(obj) rxi_Free(obj, sizeof(struct rx_securityClass))
-#define	rxi_AllocService()	(struct rx_service *) rxi_Alloc(sizeof(struct rx_service))
+#define	rxi_AllocService()	rxi_Alloc(sizeof(struct rx_service))
 #define	rxi_FreeService(obj) \
 do { \
     MUTEX_DESTROY(&(obj)->svc_data_lock);  \
     rxi_Free((obj), sizeof(struct rx_service)); \
 } while (0)
-#define	rxi_AllocPeer()		(struct rx_peer *) rxi_Alloc(sizeof(struct rx_peer))
+#define	rxi_AllocPeer()		rxi_Alloc(sizeof(struct rx_peer))
 #define	rxi_FreePeer(peer)	rxi_Free(peer, sizeof(struct rx_peer))
-#define	rxi_AllocConnection()	(struct rx_connection *) rxi_Alloc(sizeof(struct rx_connection))
+#define	rxi_AllocConnection()	rxi_Alloc(sizeof(struct rx_connection))
 #define rxi_FreeConnection(conn) (rxi_Free(conn, sizeof(struct rx_connection)))
 
 EXT afs_int32 rx_stats_active GLOBALSINIT(1);	/* boolean - rx statistics gathering */
@@ -568,21 +562,21 @@ EXT FILE *rxevent_debugFile;	/* Set to an stdio descriptor for event logging to 
 #endif
 
 #ifdef RXDEBUG
-#define rx_Log rx_debugFile
-#ifdef AFS_NT40_ENV
+# define rx_Log rx_debugFile
+# ifdef AFS_NT40_ENV
 EXT int rxdebug_active;
-#define dpf(args) do { if (rxdebug_active) rxi_DebugPrint args; } while (0)
+#  define dpf(args) do { if (rxdebug_active) rxi_DebugPrint args; } while (0)
+# else
+#  ifdef DPF_FSLOG
+#   include <afs/afsutil.h>
+#   define dpf(args) FSLog args
+#  else
+#   define dpf(args) do { if (rx_debugFile) rxi_DebugPrint args; } while (0)
+#  endif
+# endif
+# define rx_Log_event rxevent_debugFile
 #else
-#ifdef DPF_FSLOG
-#include <afs/afsutil.h>
-#define dpf(args) FSLog args
-#else
-#define dpf(args) do { if (rx_debugFile) rxi_DebugPrint args; } while (0)
-#endif
-#endif
-#define rx_Log_event rxevent_debugFile
-#else
-#define dpf(args)
+# define dpf(args)
 #endif /* RXDEBUG */
 
 EXT char *rx_packetTypes[RX_N_PACKET_TYPES] GLOBALSINIT(RX_PACKET_TYPES);	/* Strings defined in rx.h */
@@ -619,20 +613,16 @@ EXT int rxi_callAbortDelay GLOBALSINIT(3000);
 #if defined(AFS_PTHREAD_ENV)
 EXT int rxi_fcfs_thread_num GLOBALSINIT(0);
 EXT pthread_key_t rx_thread_id_key;
-/* keep track of pthread numbers - protected by rx_stats_mutex,
- * except in rx_Init() before mutex exists! */
-EXT int rxi_pthread_hinum GLOBALSINIT(0);
 #else
 #define rxi_fcfs_thread_num (0)
 #endif
 
 #if defined(RX_ENABLE_LOCKS)
-EXT afs_kmutex_t rx_stats_mutex;	/* used to protect stats gathering */
-EXT afs_kmutex_t rx_waiting_mutex;	/* used to protect waiting counters */
-EXT afs_kmutex_t rx_quota_mutex;	/* used to protect quota counters */
-EXT afs_kmutex_t rx_pthread_mutex;	/* used to protect pthread counters */
-EXT afs_kmutex_t rx_packets_mutex;	/* used to protect packet counters */
-EXT afs_kmutex_t rx_refcnt_mutex;       /* used to protect conn/call ref counts */
+EXT afs_kmutex_t rx_waiting_mutex POSTAMBLE;	/* used to protect waiting counters */
+EXT afs_kmutex_t rx_quota_mutex POSTAMBLE;	/* used to protect quota counters */
+EXT afs_kmutex_t rx_pthread_mutex POSTAMBLE;	/* used to protect pthread counters */
+EXT afs_kmutex_t rx_packets_mutex POSTAMBLE;	/* used to protect packet counters */
+EXT afs_kmutex_t rx_refcnt_mutex POSTAMBLE;       /* used to protect conn/call ref counts */
 #endif
 
 EXT int rx_enable_stats GLOBALSINIT(0);

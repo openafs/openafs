@@ -1,0 +1,16 @@
+EXPORTS
+	oafs_h_krb5_init_context                    @1
+	oafs_h_krb5_free_context                    @2
+	oafs_h_krb5_enctype_valid                   @3
+	oafs_h_krb5_crypto_init                     @4
+	oafs_h_krb5_crypto_destroy                  @5
+	oafs_h_krb5_encrypt                         @6
+	oafs_h_krb5_decrypt                         @7
+	oafs_h_krb5_enctype_keybits                 @8
+	oafs_h_krb5_data_free                       @9
+	oafs_h_krb5_data_alloc                      @10
+	oafs_h_krb5_keyblock_init                   @11
+	oafs_h_krb5_copy_keyblock                   @12
+	oafs_h_krb5_copy_keyblock_contents          @13
+	oafs_h_krb5_free_keyblock                   @14
+	oafs_h_krb5_free_keyblock_contents          @15

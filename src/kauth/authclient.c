@@ -11,41 +11,30 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
+
+#include <roken.h>
+#include <afs/opr.h>
 
 #ifdef IGNORE_SOME_GCC_WARNINGS
 # pragma GCC diagnostic warning "-Wstrict-prototypes"
 # pragma GCC diagnostic warning "-Wimplicit-function-declaration"
 #endif
 
+#include <hcrypto/des.h>
+
 #define UBIK_LEGACY_CALLITER 1
 
-#include <afs/stds.h>
 #include <afs/pthread_glock.h>
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#endif
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
-#include <string.h>
-#include <stdio.h>
-#include <des.h>
-#include <des_prototypes.h>
 #include <rx/rxkad.h>
+#include <rx/rxkad_convert.h>
 #include <afs/cellconfig.h>
 #include <ubik.h>
 #include <afs/auth.h>
 #include <afs/afsutil.h>
+
 #include "kauth.h"
 #include "kautils.h"
-
-#ifdef UKERNEL
-#include "afs_usrops.h"
-#endif
 
 static struct afsconf_dir *conf = 0;
 static struct afsconf_cell explicit_cell_server_list;
@@ -56,7 +45,7 @@ static int debug = 0;
 #ifdef ENCRYPTIONBLOCKSIZE
 #undef ENCRYPTIONBLOCKSIZE
 #endif
-#define ENCRYPTIONBLOCKSIZE (sizeof(des_cblock))
+#define ENCRYPTIONBLOCKSIZE (sizeof(DES_cblock))
 
 /* Copy the specified list of servers into a specially know cell named
    "explicit".  The cell can then be used to debug experimental servers. */
@@ -111,17 +100,13 @@ ka_GetServers(char *cell, struct afsconf_cell * cellinfo)
     char cellname[MAXKTCREALMLEN];
 
     LOCK_GLOBAL_MUTEX;
-    if (cell && !strlen(cell))
-	cell = 0;
+    if (cell == NULL || strlen(cell) == 0)
+	cell = NULL;
     else
 	cell = lcstring(cellname, cell, sizeof(cellname));
 
     if (!conf) {
-#ifdef UKERNEL
-	conf = afs_cdir;
-#else /* UKERNEL */
 	conf = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH);
-#endif /* UKERNEL */
 	if (!conf) {
 	    UNLOCK_GLOBAL_MUTEX;
 	    return KANOCELLS;
@@ -143,7 +128,7 @@ ka_GetSecurity(int service, struct ktc_token * token,
     case KA_TICKET_GRANTING_SERVICE:
       no_security:
 	*scP = rxnull_NewClientSecurityObject();
-	*siP = RX_SCINDEX_NULL;
+	*siP = RX_SECIDX_NULL;
 	break;
     case KA_MAINTENANCE_SERVICE:
 	if (!token)
@@ -152,7 +137,7 @@ ka_GetSecurity(int service, struct ktc_token * token,
 	    rxkad_NewClientSecurityObject(rxkad_crypt, &token->sessionKey,
 					  token->kvno, token->ticketLen,
 					  token->ticket);
-	*siP = RX_SCINDEX_KAD;
+	*siP = RX_SECIDX_KAD;
 	break;
     default:
 	UNLOCK_GLOBAL_MUTEX;
@@ -501,7 +486,7 @@ ka_Authenticate(char *name, char *instance, char *cell, struct ubik_client * con
 		struct ktc_token * token, afs_int32 * pwexpires)
 {				/* days until it expires */
     afs_int32 code;
-    des_key_schedule schedule;
+    DES_key_schedule schedule;
     Date request_time;
     struct ka_gettgtRequest request;
     struct ka_gettgtAnswer answer_old;
@@ -513,7 +498,7 @@ ka_Authenticate(char *name, char *instance, char *cell, struct ubik_client * con
     int version;
 
     LOCK_GLOBAL_MUTEX;
-    if ((code = des_key_sched(ktc_to_cblock(key), schedule))) {
+    if ((code = DES_key_sched(ktc_to_cblock(key), &schedule))) {
 	UNLOCK_GLOBAL_MUTEX;
 	return KABADKEY;
     }
@@ -534,8 +519,8 @@ ka_Authenticate(char *name, char *instance, char *cell, struct ubik_client * con
     memcpy(request.label, req_label, sizeof(request.label));
     arequest.SeqLen = sizeof(request);
     arequest.SeqBody = (char *)&request;
-    des_pcbc_encrypt(arequest.SeqBody, arequest.SeqBody, arequest.SeqLen,
-		     schedule, ktc_to_cblockptr(key), ENCRYPT);
+    DES_pcbc_encrypt(arequest.SeqBody, arequest.SeqBody, arequest.SeqLen,
+		     &schedule, ktc_to_cblockptr(key), ENCRYPT);
 
     oanswer.MaxSeqLen = sizeof(answer);
     oanswer.SeqLen = 0;
@@ -570,8 +555,8 @@ ka_Authenticate(char *name, char *instance, char *cell, struct ubik_client * con
 	    return code;
 	return KAUBIKCALL;
     }
-    des_pcbc_encrypt(oanswer.SeqBody, oanswer.SeqBody, oanswer.SeqLen,
-		     schedule, ktc_to_cblockptr(key), DECRYPT);
+    DES_pcbc_encrypt(oanswer.SeqBody, oanswer.SeqBody, oanswer.SeqLen,
+		     &schedule, ktc_to_cblockptr(key), DECRYPT);
 
     switch (version) {
     case 1:
@@ -639,7 +624,7 @@ ka_GetToken(char *name, char *instance, char *cell, char *cname, char *cinst, st
     ka_BBS oanswer;
     char *strings;
     int len;
-    des_key_schedule schedule;
+    DES_key_schedule schedule;
     int version;
     afs_int32 pwexpires;
 
@@ -647,7 +632,7 @@ ka_GetToken(char *name, char *instance, char *cell, char *cname, char *cinst, st
     aticket.SeqLen = auth_token->ticketLen;
     aticket.SeqBody = auth_token->ticket;
 
-    code = des_key_sched(ktc_to_cblock(&auth_token->sessionKey), schedule);
+    code = DES_key_sched(ktc_to_cblock(&auth_token->sessionKey), &schedule);
     if (code) {
 	UNLOCK_GLOBAL_MUTEX;
 	return KABADKEY;
@@ -655,7 +640,8 @@ ka_GetToken(char *name, char *instance, char *cell, char *cname, char *cinst, st
 
     times.start = htonl(start);
     times.end = htonl(end);
-    des_ecb_encrypt(&times, &times, schedule, ENCRYPT);
+    DES_ecb_encrypt((DES_cblock *)&times, (DES_cblock *)&times, &schedule,
+		    ENCRYPT);
 
     atimes.SeqLen = sizeof(times);
     atimes.SeqBody = (char *)&times;
@@ -688,8 +674,9 @@ ka_GetToken(char *name, char *instance, char *cell, char *cname, char *cinst, st
 	return KAUBIKCALL;
     }
 
-    des_pcbc_encrypt(oanswer.SeqBody, oanswer.SeqBody, oanswer.SeqLen,
-		     schedule, ktc_to_cblockptr(&auth_token->sessionKey), DECRYPT);
+    DES_pcbc_encrypt(oanswer.SeqBody, oanswer.SeqBody, oanswer.SeqLen,
+		     &schedule, ktc_to_cblockptr(&auth_token->sessionKey),
+		     DECRYPT);
 
     switch (version) {
     case 1:

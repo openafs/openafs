@@ -205,10 +205,10 @@
         <para>Create and start the new <emphasis role="bold">dafs</emphasis> bnode.
           <programlisting>
  # <emphasis role="bold">bos create  </emphasis>&lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">dafs dafs</emphasis> \
-               <emphasis role="bold">-cmd /usr/afs/bin/dafileserver</emphasis> &lt;<replaceable>dafileserver options</replaceable>&gt; \
-               <emphasis role="bold">-cmd /usr/afs/bin/davolserver</emphasis> &lt;<replaceable>davolserver options</replaceable>&gt; \
-               <emphasis role="bold">-cmd /usr/afs/bin/salvageserver</emphasis> &lt;<replaceable>salvageserver options</replaceable>&gt; \
-               <emphasis role="bold">-cmd /usr/afs/bin/dasalvager</emphasis> &lt;<replaceable>dasalvager options</replaceable>&gt; \
+               <emphasis role="bold">-cmd</emphasis> '<emphasis role="bold">/usr/afs/bin/dafileserver</emphasis> &lt;<replaceable>dafileserver options</replaceable>&gt;' \
+               <emphasis role="bold">-cmd</emphasis> '<emphasis role="bold">/usr/afs/bin/davolserver</emphasis> &lt;<replaceable>davolserver options</replaceable>&gt;' \
+               <emphasis role="bold">-cmd</emphasis> '<emphasis role="bold">/usr/afs/bin/salvageserver</emphasis> &lt;<replaceable>salvageserver options</replaceable>&gt;' \
+               <emphasis role="bold">-cmd</emphasis> '<emphasis role="bold">/usr/afs/bin/dasalvager</emphasis> &lt;<replaceable>dasalvager options</replaceable>&gt;' \
                <emphasis role="bold">-cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt;
           </programlisting>
         You can use the same options for the <emphasis

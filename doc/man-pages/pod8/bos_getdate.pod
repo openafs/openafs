@@ -71,7 +71,8 @@ L<bos(8)>.
 =item B<-localauth>
 
 Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> file. The B<bos> command interpreter presents the
+F</usr/afs/etc/KeyFile> or F</usr/afs/etc/KeyFileExt> file.
+The B<bos> command interpreter presents the
 ticket to the BOS Server during mutual authentication. Do not combine this
 flag with the B<-cell> or B<-noauth> options. For more details, see
 L<bos(8)>.
@@ -93,9 +94,9 @@ simply omitting it.
 =head1 EXAMPLES
 
 The following command examines the time stamps on the files with basename
-C<kaserver> on the machine C<fs2.abc.com>:
+C<kaserver> on the machine C<fs2.example.com>:
 
-   % bos getdate -server fs2.abc.com -file kaserver
+   % bos getdate -server fs2.example.com -file kaserver
    File /usr/afs/bin/kaserver dated Mon Jan 4 10:00:36 1999.
    .BAK file dated Wed Dec 9 18:55:04 1998, no .OLD file.
 
@@ -106,6 +107,7 @@ None
 =head1 SEE ALSO
 
 L<KeyFile(5)>,
+L<KeyFileExt(5)>,
 L<bos(8)>,
 L<bos_install(8)>,
 L<bos_prune(8)>,

@@ -19,7 +19,6 @@
 #ifndef __KAUTILS__
 #define __KAUTILS__
 
-#include <des.h>
 #include <afs/auth.h>
 
 #ifndef KAMAJORVERSION
@@ -125,7 +124,7 @@ extern char *ka_LocalCell(void
 
 extern int ka_ExpandCell(char *cell, char *fullCell, int *alocal);
 
-extern int ka_CellToRealm(char *cell, char *realm, int *local);
+extern int ka_CellToRealm(char *cell, char *realm, int *local) AFS_NONNULL((2));
 
 extern void ka_PrintUserID(char *prefix, char *name, char *instance,
 			   char *postfix);
@@ -196,10 +195,6 @@ extern afs_int32 ka_VerifyUserPassword(afs_int32 version, char *name,
 #define KA_AUTHENTICATION_SERVICE 731
 #define KA_TICKET_GRANTING_SERVICE 732
 #define KA_MAINTENANCE_SERVICE 733
-
-#define RX_SCINDEX_NULL	0	/* No security */
-#define RX_SCINDEX_VAB 	1	/* vice tokens, with bcrypt */
-#define RX_SCINDEX_KAD	2	/* Kerberos/DES */
 
 #define KA_TGS_NAME "krbtgt"
 	/* realm is TGS instance */

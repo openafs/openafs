@@ -12,9 +12,6 @@
 
 /* File-oriented utility functions */
 
-extern int
-  renamefile(const char *oldname, const char *newname);
-
 /* Path normalization routines */
 #define FPN_FORWARD_SLASHES 1
 #define FPN_BACK_SLASHES    2

@@ -10,6 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 #include <ctype.h>
 #include <afs/cmd.h>
 #include <afs/afsint.h>
@@ -37,7 +38,6 @@ typedef enum {
     P_VOLUMEID,
     P_HEADER,
     P_SIZEONLY,
-    P_SIZEONLY_COMPAT,
     P_FIXHEADER,
     P_SAVEINODES,
     P_ORPHANED,
@@ -154,38 +154,39 @@ main(int argc, char **argv)
     afs_int32 code;
     struct cmd_syndesc *ts;
 
-    ts = cmd_CreateSyntax(NULL, VolInfo, NULL,
+    ts = cmd_CreateSyntax(NULL, VolInfo, NULL, 0,
 			  "Dump volume's internal state");
-    cmd_AddParm(ts, "-checkout", CMD_FLAG, CMD_OPTIONAL,
+    cmd_AddParmAtOffset(ts, P_CHECKOUT, "-checkout", CMD_FLAG, CMD_OPTIONAL,
 			"Checkout volumes from running fileserver");
-    cmd_AddParm(ts, "-vnode", CMD_FLAG, CMD_OPTIONAL,
+    cmd_AddParmAtOffset(ts, P_VNODE, "-vnode", CMD_FLAG, CMD_OPTIONAL,
 			"Dump vnode info");
-    cmd_AddParm(ts, "-date", CMD_FLAG, CMD_OPTIONAL,
+    cmd_AddParmAtOffset(ts, P_DATE, "-date", CMD_FLAG, CMD_OPTIONAL,
 			"Also dump vnode's mod date");
-    cmd_AddParm(ts, "-inode", CMD_FLAG, CMD_OPTIONAL,
+    cmd_AddParmAtOffset(ts, P_INODE, "-inode", CMD_FLAG, CMD_OPTIONAL,
 			"Also dump vnode's inode number");
-    cmd_AddParm(ts, "-itime", CMD_FLAG, CMD_OPTIONAL,
+    cmd_AddParmAtOffset(ts, P_ITIME, "-itime", CMD_FLAG, CMD_OPTIONAL,
 			"Dump special inode's mod times");
-    cmd_AddParm(ts, "-part", CMD_LIST, CMD_OPTIONAL,
+    cmd_AddParmAtOffset(ts, P_PART, "-part", CMD_LIST, CMD_OPTIONAL,
 			"AFS partition name or id (default current partition)");
-    cmd_AddParm(ts, "-volumeid", CMD_LIST, CMD_OPTIONAL,
+    cmd_AddParmAtOffset(ts, P_VOLUMEID, "-volumeid", CMD_LIST, CMD_OPTIONAL,
 			"Volume id");
-    cmd_AddParm(ts, "-header", CMD_FLAG, CMD_OPTIONAL,
+    cmd_AddParmAtOffset(ts, P_HEADER, "-header", CMD_FLAG, CMD_OPTIONAL,
 			"Dump volume's header info");
-    cmd_AddParm(ts, "-sizeonly", CMD_FLAG, CMD_OPTIONAL,
+    cmd_AddParmAtOffset(ts, P_SIZEONLY, "-sizeonly", CMD_FLAG, CMD_OPTIONAL,
 			"Dump volume's size");
-    cmd_AddParm(ts, "-sizeOnly", CMD_FLAG, CMD_OPTIONAL | CMD_HIDE,
-			"Alias for -sizeonly");
-    cmd_AddParm(ts, "-fixheader", CMD_FLAG,
+    cmd_AddParmAtOffset(ts, P_FIXHEADER, "-fixheader", CMD_FLAG,
 			CMD_OPTIONAL, "Try to fix header");
-    cmd_AddParm(ts, "-saveinodes", CMD_FLAG,
+    cmd_AddParmAtOffset(ts, P_SAVEINODES, "-saveinodes", CMD_FLAG,
 			CMD_OPTIONAL, "Try to save all inodes");
-    cmd_AddParm(ts, "-orphaned", CMD_FLAG, CMD_OPTIONAL,
+    cmd_AddParmAtOffset(ts, P_ORPHANED, "-orphaned", CMD_FLAG, CMD_OPTIONAL,
 			"List all dir/files without a parent");
 #if defined(AFS_NAMEI_ENV)
-    cmd_AddParm(ts, "-filenames", CMD_FLAG,
+    cmd_AddParmAtOffset(ts, P_FILENAMES, "-filenames", CMD_FLAG,
 			CMD_OPTIONAL, "Also dump vnode's namei filename");
 #endif
+
+    /* For compatibility with older versions. */
+    cmd_AddParmAlias(ts, P_SIZEONLY, "-sizeOnly");
 
     code = cmd_Dispatch(argc, argv);
     return code;

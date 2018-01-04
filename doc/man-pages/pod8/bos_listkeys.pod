@@ -35,6 +35,11 @@ Displaying actual keys on the standard output stream (by including the
 B<-showkey> flag) is a security exposure. Displaying a checksum is
 sufficient for most purposes.
 
+This command will only list keys in the F<KeyFile>; it cannot display
+keys from a F<KeyFileExt>.  A server running a modern, secure installation
+using only keys for the rxkad-k5 extension will yield no keys in
+the output of this command.
+
 =head1 OPTIONS
 
 =over 4
@@ -70,7 +75,8 @@ L<bos(8)>.
 =item B<-localauth>
 
 Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> file. The B<bos> command interpreter presents the
+F</usr/afs/etc/KeyFile> or F</usr/afs/etc/KeyFileExt> file.
+The B<bos> command interpreter presents the
 ticket to the BOS Server during mutual authentication. Do not combine this
 flag with the B<-cell> or B<-noauth> options. For more details, see
 L<bos(8)>.
@@ -106,9 +112,9 @@ version number in the output from this command.
 =head1 EXAMPLES
 
 The following example shows the checksums for the keys stored in the
-F<KeyFile> file on the machine C<fs3.abc.com>.
+F<KeyFile> file on the machine C<fs3.example.com>.
 
-   % bos listkeys fs3.abc.com
+   % bos listkeys fs3.example.com
    key 1 has cksum 972037177
    key 3 has cksum 2825175022
    key 4 has cksum 260617746
@@ -117,9 +123,9 @@ F<KeyFile> file on the machine C<fs3.abc.com>.
    All done.
 
 The following example shows the actual keys from the F<KeyFile> file on
-the machine C<fs6.abc.com>.
+the machine C<fs6.example.com>.
 
-   % bos listkeys fs6.abc.com -showkey
+   % bos listkeys fs6.example.com -showkey
    key 0 is '\040\205\211\241\345\002\023\211'
    key 1 is '\343\315\307\227\255\320\135\244'
    key 2 is '\310\310\255\253\326\236\261\211'
@@ -136,6 +142,7 @@ included.
 =head1 SEE ALSO
 
 L<KeyFile(5)>,
+L<KeyFileExt(5)>,
 L<UserList(5)>,
 L<asetkey(8)>,
 L<bos_addkey(8)>,

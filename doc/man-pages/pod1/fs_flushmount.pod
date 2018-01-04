@@ -55,7 +55,7 @@ ignored.
 The following command flushes from the cache the mount point for user
 C<pat>'s home directory:
 
-   % fs flushm /afs/abc.com/usr/pat
+   % fs flushm /afs/example.com/usr/pat
 
 =head1 PRIVILEGE REQUIRED
 

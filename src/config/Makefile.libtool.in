@@ -1,0 +1,12 @@
+# This Makefile fragment contains rules necessary to build libtool libraries,
+# the Makefile rules necessary to use them are all in Makefile.config
+
+.SUFFIXES: .lo
+
+.c.lo:
+	$(LT_CCRULE) $<
+%.lo: %.c
+	$(LT_CCRULE) $<
+.m.lo:
+	$(LT_CCRULE) $<
+

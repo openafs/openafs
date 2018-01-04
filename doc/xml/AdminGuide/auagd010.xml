@@ -730,8 +730,8 @@
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ186" />Select a site (disk partition on a file server machine) for the new volume. To verify that
+        <listitem id="LIWQ186">
+          <para>Select a site (disk partition on a file server machine) for the new volume. To verify that
           the site has enough free space to house the volume (now, or if it grows to use its entire quota), issue the <emphasis
           role="bold">vos partinfo</emphasis> command.</para>
 
@@ -774,8 +774,8 @@
             </variablelist></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ187" />Select a volume name, taking note of the information in <link linkend="HDRWQ184">About Volume
+        <listitem id="LIWQ187">
+          <para>Select a volume name, taking note of the information in <link linkend="HDRWQ184">About Volume
           Names</link>.</para>
 
           <indexterm>
@@ -795,8 +795,8 @@
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ188" />Issue the <emphasis role="bold">vos create</emphasis> command to create the volume.
+        <listitem id="LIWQ188">
+          <para>Issue the <emphasis role="bold">vos create</emphasis> command to create the volume.
           <programlisting>
    % <emphasis role="bold">vos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>partition name</replaceable>&gt; &lt;<replaceable>volume name</replaceable>&gt; \
         [<emphasis role="bold">-maxquota</emphasis> &lt;<replaceable>initial quota (KB)</replaceable>&gt;]
@@ -874,9 +874,7 @@
           </indexterm>
         </listitem>
 
-        <listitem>
-          <anchor id="LIWQ189" />
-
+        <listitem id="LIWQ189">
           <para><emphasis role="bold">(Optional)</emphasis> Issue the <emphasis role="bold">fs mkmount</emphasis> command to mount
           the volume in the filespace. For complete syntax, see <link linkend="HDRWQ212">To create a regular or read/write mount
           point</link>. <programlisting>
@@ -917,7 +915,7 @@
 
                   <para>Specify the read/write path to the mount point, to avoid the failure that results when you attempt to change
                   a read-only volume. By convention, you indicate the read/write path by placing a period before the cell name at
-                  the pathname's second level (for example, <emphasis role="bold">/afs/.abc.com</emphasis>). For further discussion
+                  the pathname's second level (for example, <emphasis role="bold">/afs/.example.com</emphasis>). For further discussion
                   of the concept of read/write and read-only paths through the filespace, see <link linkend="HDRWQ209">The Rules of
                   Mount Point Traversal</link>.</para>
                 </listitem>
@@ -1386,16 +1384,16 @@
       </indexterm>
 
       <orderedlist>
-        <listitem>
-          <para><anchor id="LIWQ195" />Verify that you are listed in the <emphasis role="bold">/usr/afs/etc/UserList</emphasis>
+        <listitem id="LIWQ195">
+          <para>Verify that you are listed in the <emphasis role="bold">/usr/afs/etc/UserList</emphasis>
           file. If necessary, issue the <emphasis role="bold">bos listusers</emphasis> command, which is fully described in <link
           linkend="HDRWQ593">To display the users in the UserList file</link>. <programlisting>
    % <emphasis role="bold">bos listusers</emphasis> &lt;<replaceable>machine name</replaceable>&gt;
 </programlisting></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ196" />Select one or more sites at which to replicate the volume. There are several factors to
+        <listitem id="LIWQ196">
+          <para>Select one or more sites at which to replicate the volume. There are several factors to
           consider: <itemizedlist>
               <listitem>
                 <para>How many sites are already defined. As previously noted, it is usually appropriate to define a read-only site
@@ -1467,8 +1465,8 @@
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ197" />Issue the <emphasis role="bold">vos addsite</emphasis> command to define each new read-only
+        <listitem id="LIWQ197">
+          <para>Issue the <emphasis role="bold">vos addsite</emphasis> command to define each new read-only
           site in the VLDB. <programlisting>
    % <emphasis role="bold">vos addsite</emphasis> &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>partition name</replaceable>&gt; &lt;<replaceable>volume name or ID</replaceable>&gt;
 </programlisting></para>
@@ -1509,8 +1507,8 @@
             </variablelist></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ198" /><emphasis role="bold">(Optional)</emphasis> Verify that the <emphasis
+        <listitem id="LIWQ198">
+          <para><emphasis role="bold">(Optional)</emphasis> Verify that the <emphasis
           role="bold">fs</emphasis> process (which incorporates the Volume Server) is functioning normally on each file server
           machine where you have defined a read-only site, and that the <emphasis role="bold">vlserver</emphasis> process (the
           Volume Location Server) is functioning correctly on each database server machine. Knowing that they are functioning
@@ -1550,8 +1548,8 @@
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ199" />Issue the <emphasis role="bold">vos release</emphasis> command to clone the read/write source
+        <listitem id="LIWQ199">
+          <para>Issue the <emphasis role="bold">vos release</emphasis> command to clone the read/write source
           volume and distribute the clone to each read-only site. <programlisting>
    % <emphasis role="bold">vos release</emphasis> &lt;<replaceable>volume name or ID</replaceable>&gt; [<emphasis role="bold">-f</emphasis>]
 </programlisting></para>
@@ -1585,9 +1583,7 @@
             </variablelist></para>
         </listitem>
 
-        <listitem>
-          <anchor id="LIWQ200" />
-
+        <listitem id="LIWQ200">
           <para><emphasis role="bold">(Optional)</emphasis> Issue the <emphasis role="bold">vos examine</emphasis> command to verify
           that no site definition in the VLDB entry is marked with an <computeroutput>Old release</computeroutput> or
           <computeroutput>New release</computeroutput> flag. The command is described fully in <link linkend="HDRWQ221">Displaying
@@ -1811,14 +1807,14 @@
 
       <para>The following example command creates a <emphasis role="bold">cron</emphasis> process called <emphasis
       role="bold">backupusers</emphasis> in the <emphasis role="bold">/usr/afs/local/BosConfig</emphasis> file on the machine
-      <emphasis role="bold">fs3.abc.com</emphasis>. The process runs every day at 1:00 a.m. to create a backup version of every
+      <emphasis role="bold">fs3.example.com</emphasis>. The process runs every day at 1:00 a.m. to create a backup version of every
       volume in the cell whose name starts with the string <emphasis role="bold">user</emphasis>. The <emphasis
       role="bold">-localauth</emphasis> flag enables the process to invoke the privileged <emphasis role="bold">vos
       backupsys</emphasis> command while unauthenticated. Note that the <emphasis role="bold">-cmd</emphasis> argument specifies a
       complete pathname for the <emphasis role="bold">vos</emphasis> binary, because the PATH environment variable for the BOS
       Server (running as the local superuser <emphasis role="bold">root</emphasis>) generally does not include the path to AFS
       binaries. <programlisting>
-   % <emphasis role="bold">bos create fs3.abc.com backupusers cron</emphasis>\ 
+   % <emphasis role="bold">bos create fs3.example.com backupusers cron</emphasis>\ 
   <emphasis role="bold">-cmd "/usr/afs/bin/vos backupsys -prefix user -localauth" "1:00"</emphasis>
 </programlisting></para>
 
@@ -1898,8 +1894,8 @@
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ206" />Issue the <emphasis role="bold">vos backup</emphasis> command to create a backup version of a
+        <listitem id="LIWQ206">
+          <para>Issue the <emphasis role="bold">vos backup</emphasis> command to create a backup version of a
           read/write source volume. The message shown confirms the success of the backup operation. <programlisting>
    % <emphasis role="bold">vos backup</emphasis> &lt;<replaceable>volume name or ID</replaceable>&gt; Created backup volume for volume name or ID
 </programlisting></para>
@@ -1941,8 +1937,8 @@
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ207" /><emphasis role="bold">(Optional)</emphasis> Issue the <emphasis role="bold">fs
+        <listitem id="LIWQ207">
+          <para><emphasis role="bold">(Optional)</emphasis> Issue the <emphasis role="bold">fs
           mkmount</emphasis> to mount the backup volume. While this step is optional, Cache Managers cannot access the volume's
           contents if it is not mounted. <programlisting>
    % <emphasis role="bold">fs mkmount</emphasis> &lt;<replaceable>directory</replaceable>&gt; &lt;<replaceable>volume name</replaceable>&gt; <emphasis
@@ -2249,7 +2245,7 @@
             <para>It is conventional to create only one read/write mount point in a cell's filespace, using it to mount the cell's
             <emphasis role="bold">root.cell</emphasis> volume just below the AFS filespace root (by convention, <emphasis
             role="bold">/afs/.</emphasis><replaceable>cellname</replaceable>). As indicated, it is conventional to place a period at
-            the start of the read/write mount point's name (for example, <emphasis role="bold">/afs/.abc.com</emphasis>). The period
+            the start of the read/write mount point's name (for example, <emphasis role="bold">/afs/.example.com</emphasis>). The period
             distinguishes the read/write mount point from the regular mount point for the <emphasis role="bold">root.cell</emphasis>
             volume at the same level. This is the only case in which it is conventional to create two mount points for the same
             volume. A desirable side effect of this naming convention for this read/write mount point is that it does not appear in
@@ -2405,37 +2401,37 @@
 </programlisting>
 
       <para>For a regular mount point, a number sign (<computeroutput>#</computeroutput>) precedes the volume name string, as in the
-      following example command issued on a client machine in the <emphasis role="bold">abc.com</emphasis> cell.</para>
+      following example command issued on a client machine in the <emphasis role="bold">example.com</emphasis> cell.</para>
 
       <programlisting>
-   % <emphasis role="bold">fs lsmount /afs/abc.com/usr/terry</emphasis>
-   '/afs/abc.com/usr/terry' is a mount point for volume '#user.terry'
+   % <emphasis role="bold">fs lsmount /afs/example.com/usr/terry</emphasis>
+   '/afs/example.com/usr/terry' is a mount point for volume '#user.terry'
 </programlisting>
 
       <para>For a read/write mount point, a percent sign (<computeroutput>%</computeroutput>) precedes the volume name string, as in
-      the following example command issued on a client machine in the <emphasis role="bold">abc.com</emphasis> cell. The cell's
+      the following example command issued on a client machine in the <emphasis role="bold">example.com</emphasis> cell. The cell's
       administrators have followed the convention of preceding the read/write mount point's name with a period.</para>
 
       <programlisting>
-   % <emphasis role="bold">fs lsmount /afs/.abc.com</emphasis>
-   '/afs/.abc.com' is a mount point for volume '%root.cell'
+   % <emphasis role="bold">fs lsmount /afs/.example.com</emphasis>
+   '/afs/.example.com' is a mount point for volume '%root.cell'
 </programlisting>
 
       <para>For a cellular mount point, a cell name and colon (<computeroutput>:</computeroutput>) follow the number or percent sign
       and precede the volume name string, as in the following example command issued on a client machine in the <emphasis
-      role="bold">abc.com</emphasis> cell.</para>
+      role="bold">example.com</emphasis> cell.</para>
 
       <programlisting>
-   % <emphasis role="bold">fs lsmount /afs/ghi.gov</emphasis>
-   '/afs/ghi.gov' is a mount point for volume '#ghi.gov:root.cell'
+   % <emphasis role="bold">fs lsmount /afs/example.org</emphasis>
+   '/afs/example.org' is a mount point for volume '#example.org:root.cell'
 </programlisting>
 
       <para>For a symbolic link to a mount point, the output is of the form shown in the following example command issued on a
-      client machine in the <emphasis role="bold">abc.com</emphasis> cell.</para>
+      client machine in the <emphasis role="bold">example.com</emphasis> cell.</para>
 
       <programlisting>
-   % <emphasis role="bold">fs lsmount /afs/abc</emphasis>
-   '/afs/abc' is a symbolic link, leading to a mount point for volume '#root.cell'
+   % <emphasis role="bold">fs lsmount /afs/example</emphasis>
+   '/afs/example' is a symbolic link, leading to a mount point for volume '#root.cell'
 </programlisting>
 
       <para>If the directory is not a mount point or is not in AFS, the output reads as follows.</para>
@@ -2531,7 +2527,7 @@
 
                   <para>Specify the read/write path to the mount point, to avoid the failure that results when you attempt to create
                   a new mount point in a read-only volume. By convention, you indicate the read/write path by placing a period
-                  before the cell name at the pathname's second level (for example, <emphasis role="bold">/afs/.abc.com</emphasis>).
+                  before the cell name at the pathname's second level (for example, <emphasis role="bold">/afs/.example.com</emphasis>).
                   For further discussion of the concept of read/write and read-only paths through the filespace, see <link
                   linkend="HDRWQ209">The Rules of Mount Point Traversal</link>.</para>
                 </listitem>
@@ -2591,8 +2587,8 @@
 </programlisting></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ214" />If you are mounting one or more foreign cells' <emphasis role="bold">root.cell</emphasis>
+        <listitem id="LIWQ214">
+          <para>If you are mounting one or more foreign cells' <emphasis role="bold">root.cell</emphasis>
           volume at the second level in your filespace and your cell's <emphasis role="bold">root.afs</emphasis> volume is
           replicated, you must create a temporary mount point for the <emphasis role="bold">root.afs</emphasis> volume's read/write
           version in a directory on which the ACL grants you the <emphasis role="bold">i</emphasis> and <emphasis
@@ -2754,7 +2750,7 @@
 
                   <para>Specify the read/write path to the mount point, to avoid the failure that results when you attempt to delete
                   a mount point from a read-only volume. By convention, you indicate the read/write path by placing a period before
-                  the cell name at the pathname's second level (for example, <emphasis role="bold">/afs/.abc.com</emphasis>). For
+                  the cell name at the pathname's second level (for example, <emphasis role="bold">/afs/.example.com</emphasis>). For
                   further discussion of the concept of read/write and read-only paths through the filespace, see <link
                   linkend="HDRWQ209">The Rules of Mount Point Traversal</link>.</para>
                 </listitem>
@@ -2787,11 +2783,23 @@
       <itemizedlist>
           <listitem>
 	    <para><emphasis role="bold">Windows:</emphasis>
-            \\afs\example.com#root.cell</para>
+            \\afs\example.com%root.cell - Access a read/write volume directly</para>
+          </listitem>
+          <listitem>
+	    <para><emphasis role="bold">Windows:</emphasis>
+            \\afs\example.com#root.cell - Access a read-only volume directly</para>
           </listitem>
           <listitem>
 	    <para><emphasis role="bold">Unix:</emphasis>
-            /afs/.:mount/example.com#root.cell</para>
+            /afs/.:mount/example.com:root.cell - Access a read/write volume directly</para>
+          </listitem>
+          <listitem>
+	    <para><emphasis role="bold">Unix:</emphasis>
+            /afs/.:mount/example.com:root.cell.readonly - Access a read-only volume directly</para>
+          </listitem>
+          <listitem>
+	    <para><emphasis role="bold">Unix:</emphasis>
+            /afs/.:mount/example.com:root.cell.backup - Access a backup volume directly</para>
           </listitem>
       </itemizedlist>
     </sect2>
@@ -3085,7 +3093,7 @@
    user.terry
        RWrite: 50489902    Backup: 50489904
        number of sites -&gt; 1
-          server fs3.abc.com partition /vicepc RW Site
+          server fs3.example.com partition /vicepc RW Site
 </programlisting>
     </sect2>
 
@@ -3304,8 +3312,8 @@
       following example:</para>
 
       <programlisting>
-   % <emphasis role="bold">vos listvol  fs2.abc.com /vicepb</emphasis>
-   Total number of volumes on server fs2.abc.com \
+   % <emphasis role="bold">vos listvol  fs2.example.com /vicepb</emphasis>
+   Total number of volumes on server fs2.example.com \
                                        partition /vicepb : 66
    sys                  1969534847 RW       1582 K On-line
    sys.backup           1969535105 BK       1582 K On-line
@@ -3331,8 +3339,8 @@
       off-line, and busy volumes) is omitted.</para>
 
       <programlisting>
-   % <emphasis role="bold">vos listvol fs3.abc.com /vicepa -f</emphasis>
-   Total number of volumes on server fs3.abc.com  \
+   % <emphasis role="bold">vos listvol fs3.example.com /vicepa -f</emphasis>
+   Total number of volumes on server fs3.example.com  \
                                        partition /vicepa: 37
    50489902
    50489904
@@ -3491,20 +3499,20 @@
       <para>An example of the output when the <emphasis role="bold">-long</emphasis> flag is included:</para>
 
       <programlisting>
-   % <emphasis role="bold">vos listvol fs2.abc.com b -long</emphasis>
-   Total number of volumes on server fs2.abc.com
+   % <emphasis role="bold">vos listvol fs2.example.com b -long</emphasis>
+   Total number of volumes on server fs2.example.com
                                        partition /vicepb: 66
          .                   .      .         .   .    .
          .                   .      .         .   .    .
    user.pat             1969534536 RW      17518 K On-line
-        fs2.abc.com /vicepb
+        fs2.example.com /vicepb
         RWrite 1969534536 ROnly 0        Backup 1969534538
         MaxQuota      20000 K
         Creation    Mon Jun 12 09:02:25 1989
         Last Update Thu Jan  4 17:39:34 1990
         1573 accesses in the past day (i.e., vnode references)
    user.pat.backup      1969534538 BK      17537 K On-line
-        fs2.abc.com /vicepb
+        fs2.example.com /vicepb
         RWrite 1969534536 ROnly 0        Backup 1969534538
         MaxQuota      20000 K
         Creation    Fri Jan  5 06:37:59 1990
@@ -3541,9 +3549,9 @@
       <para>An example of the output when the <emphasis role="bold">-extended</emphasis> flag is included:</para>
 
       <programlisting>
-   % <emphasis role="bold">vos listvol fs3.abc.com a -extended</emphasis>
+   % <emphasis role="bold">vos listvol fs3.example.com a -extended</emphasis>
    common.bboards   1969535592 RW    23149 K used 9401 files On-line
-       fs3.abc.com /vicepa
+       fs3.example.com /vicepa
        RWrite 1969535592 ROnly          0 Backup 1969535594
        MaxQuota      30000 K
        Creation    Mon Mar  8 14:26:05 1999
@@ -3696,7 +3704,7 @@
       <programlisting>
    % <emphasis role="bold">vos examine user.terry</emphasis>
    user.terry                    536870981 RW   3459 K On-line
-       fs3.abc.com /vicepa
+       fs3.example.com /vicepa
        Write 5360870981   ROnly          0  Backup 536870983
        MaxQuota      40000 K
        Creation    Mon Jun 12 15:22:06 1989
@@ -3704,7 +3712,7 @@
        5719 accesses in the past day (i.e., vnode references)
        RWrite: 5360870981   Backup: 536870983
        number of sites -&gt; 1
-          server fs3.abc.com partition /vicepa RW Site
+          server fs3.example.com partition /vicepa RW Site
        Volume is currently LOCKED
 </programlisting>
     </sect2>
@@ -3925,7 +3933,7 @@
         <para>The following is an example of the output:</para>
 
         <programlisting>
-   % <emphasis role="bold">fs listquota /afs/abc.com/usr/terry</emphasis>
+   % <emphasis role="bold">fs listquota /afs/example.com/usr/terry</emphasis>
    Volume Name     Quota    Used    % Used   Partition
    user.terry      15000    5071       34%         86%
 </programlisting>
@@ -4003,7 +4011,7 @@
         <computeroutput>vid</computeroutput> field.</para>
 
         <programlisting>
-   % <emphasis role="bold">fs examine /afs/abc.com/usr/terry</emphasis>
+   % <emphasis role="bold">fs examine /afs/example.com/usr/terry</emphasis>
    Volume status for vid = 50489902 named user.terry
    Current maximum quota is 15000
    Current blocks used are 5073
@@ -4098,8 +4106,8 @@
             example:</para>
 
             <programlisting>
-   % <emphasis role="bold">fs whereis /afs/abc.com/user/terry</emphasis>
-   File /afs/abc.com/usr/terry is on host fs2.abc.com
+   % <emphasis role="bold">fs whereis /afs/example.com/user/terry</emphasis>
+   File /afs/example.com/usr/terry is on host fs2.example.com
 </programlisting>
           </listitem>
 
@@ -4365,35 +4373,36 @@
     of the volume containing the file. Therefore, the VLDB must accurately reflect the state of volumes on the file server machines
     at all times. The Volume Server and VL Server automatically update a volume's VLDB entry when its status changes during a
     <emphasis role="bold">vos</emphasis> operation, by performing the following series of steps. <orderedlist>
-        <listitem>
-          <para><anchor id="LIWQ228" />The VL Server locks the VLDB entry. The lock advises other operations not to manipulate any
+        <listitem id="LIWQ228">
+          <para>The VL Server locks the VLDB entry. The lock advises other operations not to manipulate any
           of the volume versions (read/write, read-only, or backup), which prevents the inconsistency that can result from multiple
           simultaneous operations.</para>
         </listitem>
 
-        <listitem>
+        <listitem id="LIWQ229">
           <para><indexterm>
               <primary>intention flag in VLDB entry</primary>
             </indexterm> <indexterm>
               <primary>VLDB</primary>
 
               <secondary>intention flag set by VL Server</secondary>
-            </indexterm> <anchor id="LIWQ229" />The VL Server sets an <emphasis>intention flag</emphasis> in the VLDB entry that
+            </indexterm>
+          The VL Server sets an <emphasis>intention flag</emphasis> in the VLDB entry that
           indicates the kind of operation to be performed. This flag never appears in VLDB listings because it is for internal use
           only. In case the operation terminates prematurely, this flag tells the Salvager which operation was interrupted. (The
           Salvager then determines the steps necessary either to complete the operation or return the volume to a previous
           consistent state. For more information on salvaging, see <link linkend="HDRWQ232">Salvaging Volumes</link>.)</para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ230" />The Volume Server manipulates the volume. It usually sets the
+        <listitem id="LIWQ230">
+          <para>The Volume Server manipulates the volume. It usually sets the
           <computeroutput>Off-line</computeroutput> flag in the volume header, which makes the volume inaccessible to the File
           Server and other Volume Server operations during the manipulation. When the operation completes, the volume is again
           marked <computeroutput>On-line</computeroutput>.</para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ231" />The VL Server records any changes resulting from the operation in the VLDB entry. Once the
+        <listitem id="LIWQ231">
+          <para>The VL Server records any changes resulting from the operation in the VLDB entry. Once the
           operation is complete, it removes the intention flag set in Step <link linkend="LIWQ229">2</link>and releases the lock set
           in Step <link linkend="LIWQ228">1</link>.</para>
         </listitem>
@@ -4564,8 +4573,8 @@
 </programlisting></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIVOL-SYNCVL" />Issue the <emphasis role="bold">vos syncvldb</emphasis> command to make the VLDB reflect
+        <listitem id="LIVOL-SYNCVL">
+          <para>Issue the <emphasis role="bold">vos syncvldb</emphasis> command to make the VLDB reflect
           the true state of all volumes on a machine or partition, or the state of one volume.</para>
 
           <note>
@@ -4632,8 +4641,8 @@
             </variablelist></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIVOL-SYNCSR" />Issue the <emphasis role="bold">vos syncserv</emphasis> command to inspect each volume
+        <listitem id="LIVOL-SYNCSR">
+          <para>Issue the <emphasis role="bold">vos syncserv</emphasis> command to inspect each volume
           for which the VLDB lists a version at the specified site.</para>
 
           <note>
@@ -5179,7 +5188,7 @@
 
                   <para>Specify the read/write path to the file or directory, to avoid the failure that results when you attempt to
                   change a read-only volume. By convention, you indicate the read/write path by placing a period before the cell
-                  name at the pathname's second level (for example, <emphasis role="bold">/afs/.abc.com</emphasis>). For further
+                  name at the pathname's second level (for example, <emphasis role="bold">/afs/.example.com</emphasis>). For further
                   discussion of the concept of read/write and read-only paths through the filespace, see <link
                   linkend="HDRWQ209">The Rules of Mount Point Traversal</link>.</para>
                 </listitem>
@@ -5340,7 +5349,7 @@
       <para>The following example illustrates the output produced by this command:</para>
 
       <programlisting>
-   % <emphasis role="bold">fs quota /afs/abc.com/usr/terry</emphasis>
+   % <emphasis role="bold">fs quota /afs/example.com/usr/terry</emphasis>
    34% of quota used.
 </programlisting>
 
@@ -5420,7 +5429,7 @@
       kilobyte units), the percent quota used, and the percentage of space on the volume's host partition that is used.</para>
 
       <programlisting>
-   % <emphasis role="bold">fs listquota /afs/abc.com/usr/terry</emphasis>
+   % <emphasis role="bold">fs listquota /afs/example.com/usr/terry</emphasis>
    Volume Name     Quota    Used    % Used   Partition
    user.terry      15000    5071       34%         86%
 </programlisting>
@@ -5507,7 +5516,7 @@
       current size (both in kilobyte units), and the free and total number of kilobyte blocks on the volume's host partition.</para>
 
       <programlisting>
-   % <emphasis role="bold">fs examine /afs/abc.com/usr/terry</emphasis>
+   % <emphasis role="bold">fs examine /afs/example.com/usr/terry</emphasis>
    Volume status for vid = 50489902 named user.terry
    Current maximum quota is 15000
    Current blocks used are 5073
@@ -5733,8 +5742,7 @@
           role="bold">fs setacl</emphasis> command to grant other rights as necessary.</para>
         </listitem>
 
-        <listitem>
-          <anchor id="LIWQ237" />
+        <listitem id="LIWQ237">
 
           <para><emphasis role="bold">(Optional)</emphasis> Dump the volume to a file or to tape, in case you want to restore it
           later. To copy the volume's contents to a file, use the <emphasis role="bold">vos dump</emphasis> command as instructed in
@@ -5763,8 +5771,8 @@
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ238" />Issue the <emphasis role="bold">vos remove</emphasis> command to remove the volume. If
+        <listitem id="LIWQ238">
+          <para>Issue the <emphasis role="bold">vos remove</emphasis> command to remove the volume. If
           removing a read-only volume from multiple sites, repeat the command for each one. <programlisting>
    % <emphasis role="bold">vos remove</emphasis> [<emphasis role="bold">-server</emphasis> machine name&gt;] [<emphasis role="bold">-partition</emphasis> &lt;<replaceable>partition name</replaceable>&gt;] \
                <emphasis role="bold">-id</emphasis> &lt;<replaceable>volume name or ID</replaceable>&gt;
@@ -5824,8 +5832,8 @@
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ239" />If you are removing the last existing version of the volume, issue the <emphasis
+        <listitem id="LIWQ239">
+          <para>If you are removing the last existing version of the volume, issue the <emphasis
           role="bold">fs rmmount</emphasis> command remove the corresponding mount point. Complete instructions appear in <link
           linkend="HDRWQ236">To remove a volume and unmount it</link>.</para>
 
@@ -6045,8 +6053,8 @@
           role="bold">fs setacl</emphasis> command to grant other rights as necessary.</para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ241" />Issue the <emphasis role="bold">vos dump</emphasis> command to dump the volume.
+        <listitem id="LIWQ241">
+          <para>Issue the <emphasis role="bold">vos dump</emphasis> command to dump the volume.
           <programlisting>
    % <emphasis role="bold">vos dump -id</emphasis> &lt;<replaceable>volume name or ID</replaceable>&gt; [<emphasis role="bold">-time</emphasis> &lt;<replaceable>dump from time</replaceable>&gt;] [<emphasis
                 role="bold">-file</emphasis> &lt;<replaceable>arg</replaceable>&gt;] [<emphasis role="bold">-server</emphasis> &lt;<replaceable>server</replaceable>&gt;] [<emphasis
@@ -6251,8 +6259,8 @@
 </programlisting></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ243" />Issue the <emphasis role="bold">vos restore</emphasis> command to create a new volume and
+        <listitem id="LIWQ243">
+          <para>Issue the <emphasis role="bold">vos restore</emphasis> command to create a new volume and
           restore the dump file into it. Type it on a single line; it appears on multiple lines here only for legibility.
           <programlisting>
    % <emphasis role="bold">vos restore</emphasis> &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>partition name</replaceable>&gt; \
@@ -6586,8 +6594,8 @@
           role="bold">fs setacl</emphasis> command to grant other rights as necessary.</para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIVOL-REN" />Issue the <emphasis role="bold">vos rename</emphasis> command to rename the volume.
+        <listitem id="LIVOL-REN">
+          <para>Issue the <emphasis role="bold">vos rename</emphasis> command to rename the volume.
           <programlisting>
    % <emphasis role="bold">vos rename</emphasis> &lt;<replaceable>old volume name</replaceable>&gt; &lt;<replaceable>new volume name</replaceable>&gt;
 </programlisting></para>

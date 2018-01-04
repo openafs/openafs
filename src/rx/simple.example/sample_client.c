@@ -48,7 +48,7 @@ main(int argc, char **argv)
     null_securityObject = rxnull_NewClientSecurityObject();
     conn =
 	rx_NewConnection(host, SAMPLE_SERVER_PORT, SAMPLE_SERVICE_ID,
-			 null_securityObject, SAMPLE_NULL);
+			 null_securityObject, RX_SECIDX_NULL);
     for (i = 1; i < 10; i++) {
 	int error, result;
 	printf("add(%d,%d)", i, i * 2);

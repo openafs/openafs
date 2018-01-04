@@ -49,7 +49,7 @@ afs_init(struct vfsconf *vfc)
     int code;
     int offset = AFS_SYSCALL;
 #if defined(AFS_FBSD90_ENV) || defined(AFS_FBSD82_ENV)
-# if defined(AFS_FBSD110_ENV)
+# if defined(FBSD_SYSCALL_REGISTER_FOUR_ARGS)
     code = syscall_register(&offset, &afs_sysent, &old_sysent, 0);
 # else
     code = syscall_register(&offset, &afs_sysent, &old_sysent);
@@ -59,8 +59,8 @@ afs_init(struct vfsconf *vfc)
 	return code;
     }
 #else
-    if (sysent[AFS_SYSCALL].sy_call != nosys
-        && sysent[AFS_SYSCALL].sy_call != lkmnosys) {
+    if (sysent[AFS_SYSCALL].sy_call != (sy_call_t *)nosys
+        && sysent[AFS_SYSCALL].sy_call != (sy_call_t *)lkmnosys) {
         printf("AFS_SYSCALL in use. aborting\n");
         return EBUSY;
     }
@@ -292,7 +292,7 @@ tryagain:
 		    }
 		}
 	    } else
-		error = ENOENT;
+		error = EIO;
 	}
     }
     if (tvp) {

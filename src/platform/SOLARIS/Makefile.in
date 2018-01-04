@@ -7,10 +7,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 
 INCLS = ${TOP_INCDIR}/afs/afsint.h ${TOP_INCDIR}/afs/cmd.h \
 	${TOP_INCDIR}/afs/osi_inode.h ${TOP_INCDIR}/afs/param.h
@@ -25,8 +23,7 @@ all: fs_conv_sol26
 # Build targets
 #
 fs_conv_sol26: fs_conv_sol26.o ${LIBS}
-	${CC} ${CFLAGS} -o fs_conv_sol26 fs_conv_sol26.o \
-		${TOP_LIBDIR}/libcmd.a ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) fs_conv_sol26.o ${TOP_LIBDIR}/libcmd.a $(LIB_roken) ${LIBS} ${XLIBS}
 
 fs_conv_sol26: ${INCLS} AFS_component_version_number.c
 

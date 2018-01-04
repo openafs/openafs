@@ -13,23 +13,15 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
 
-#include <stddef.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#include <pthread.h>
+#include <roken.h>
 
 #include <rx/rx.h>
 #include <rx/rxstat.h>
 #include <afs/afs_Admin.h>
 #include <afs/afs_AdminErrors.h>
 #include <afs/afs_utilAdmin.h>
-
 #include <afs/dirpath.h>
 #include <afs/cellconfig.h>
 #include <afs/kautils.h>
@@ -202,13 +194,9 @@ cfg_ClientQueryStatus(const char *hostName,	/* name of host */
 
 	    if (tst == 0 && clientSt == 0) {
 		/* everything looks good; malloc cell name buffer to return */
-		clientCellName =
-		    (char *)malloc(strlen(cellentry->cellInfo.name) + 1);
-		if (clientCellName == NULL) {
+		clientCellName = strdup(cellentry->cellInfo.name);
+		if (clientCellName == NULL)
 		    tst = ADMNOMEM;
-		} else {
-		    strcpy(clientCellName, cellentry->cellInfo.name);
-		}
 	    }
 
 	    (void)afsconf_Close(confdir);

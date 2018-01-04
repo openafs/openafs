@@ -9,14 +9,18 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
+
+#include <roken.h>
+
+#include <rx/rx.h>
+#include <rx/rxstat.h>
+
+#ifdef AFS_NT40_ENV
+# include <afs/krb5_nt.h>
+#endif
+
 #include <afs/afs_Admin.h>
-#include <stdio.h>
-#include <string.h>
-#include <afs/afs_Admin.h>
-#include "afs_AdminInternal.h"
 #include <afs/pthread_glock.h>
 #include <afs/cellconfig.h>
 #include <afs/dirpath.h>
@@ -26,20 +30,10 @@
 #include <afs/vlserver.h>
 #include <afs/pterror.h>
 #include <afs/bnode.h>
-#include <afs/volser.h>
 #include <afs/afscbint.h>
-#include <rx/rx.h>
-#include <rx/rxstat.h>
-#ifdef AFS_NT40_ENV
-# include <winsock2.h>
-# include <afs/krb5_nt.h>
-#else
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#endif
+#include <afs/volser.h>
+
+#include "afs_AdminInternal.h"
 #include "afs_utilAdmin.h"
 
 /*
@@ -86,6 +80,9 @@ init_once(void)
     error_init_done = 1;
 }
 
+/*
+ * (*errorTextP) will not be freed by the caller.
+ */
 int ADMINAPI
 util_AdminErrorCodeTranslate(afs_status_t errorCode, int langId,
 			     const char **errorTextP, afs_status_p st)
@@ -109,8 +106,9 @@ util_AdminErrorCodeTranslate(afs_status_t errorCode, int langId,
     *errorTextP = afs_error_message(code);
 #ifdef AFS_KRB5_ERROR_ENV
     if (strncmp(*errorTextP, "unknown", strlen("unknown")) == 0) {
-        const char *msg = fetch_krb5_error_message(NULL, code);
-        *errorTextP = msg ? msg : error_message(code);
+        const char *msg = fetch_krb5_error_message(code);
+        if (msg)
+            *errorTextP = msg;
     }
 #endif
     rc = 1;
@@ -228,10 +226,8 @@ util_DatabaseServerGetBegin(const char *cellName, void **iterationIdP,
 {
     int rc = 0;
     afs_status_t tst = 0;
-    afs_admin_iterator_p iter =
-	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
-    database_server_get_p serv =
-	(database_server_get_p) calloc(1, sizeof(database_server_get_t));
+    afs_admin_iterator_p iter = malloc(sizeof(afs_admin_iterator_t));
+    database_server_get_p serv = calloc(1, sizeof(database_server_get_t));
     char copyCell[MAXCELLCHARS];
 
     /*
@@ -1207,13 +1203,13 @@ UnmarshallRPCStats(afs_uint32 serverVersion, afs_uint32 ** ptrP,
     s->stats_v1.func_index = *(ptr++);
     hi = *(ptr++);
     lo = *(ptr++);
-    hset64(s->stats_v1.invocations, hi, lo);
+    s->stats_v1.invocations = ((afs_uint64) hi << 32) + lo;
     hi = *(ptr++);
     lo = *(ptr++);
-    hset64(s->stats_v1.bytes_sent, hi, lo);
+    s->stats_v1.bytes_sent = ((afs_uint64) hi << 32) + lo;
     hi = *(ptr++);
     lo = *(ptr++);
-    hset64(s->stats_v1.bytes_rcvd, hi, lo);
+    s->stats_v1.bytes_rcvd = ((afs_uint64) hi << 32) + lo;
     s->stats_v1.queue_time_sum.sec = *(ptr++);
     s->stats_v1.queue_time_sum.usec = *(ptr++);
     s->stats_v1.queue_time_sum_sqr.sec = *(ptr++);
@@ -1338,9 +1334,8 @@ util_RPCStatsGetBegin(struct rx_connection *conn,
 {
     int rc = 0;
     afs_status_t tst = 0;
-    afs_admin_iterator_p iter =
-	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
-    rpc_stat_get_p stat = (rpc_stat_get_p) malloc(sizeof(rpc_stat_get_t));
+    afs_admin_iterator_p iter = malloc(sizeof(afs_admin_iterator_t));
+    rpc_stat_get_p stat = malloc(sizeof(rpc_stat_get_t));
 
     if (conn == NULL) {
 	tst = ADMRXCONNNULL;
@@ -1873,13 +1868,13 @@ util_CMGetServerPrefsBegin(struct rx_connection *conn, void **iterationIdP,
 	goto fail_util_CMGetServerPrefsBegin;
     }
 
-    iter = (afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
+    iter = malloc(sizeof(afs_admin_iterator_t));
     if (iter == NULL) {
 	tst = ADMNOMEM;
 	goto fail_util_CMGetServerPrefsBegin;
     }
 
-    pref = (cm_srvr_pref_get_p) malloc(sizeof(cm_srvr_pref_get_t));
+    pref = malloc(sizeof(cm_srvr_pref_get_t));
     if (pref == NULL) {
 	free(iter);
 	tst = ADMNOMEM;
@@ -2100,13 +2095,13 @@ util_CMListCellsBegin(struct rx_connection *conn, void **iterationIdP,
 	goto fail_util_CMListCellsBegin;
     }
 
-    iter = (afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
+    iter = malloc(sizeof(afs_admin_iterator_t));
     if (iter == NULL) {
 	tst = ADMNOMEM;
 	goto fail_util_CMListCellsBegin;
     }
 
-    cell = (cm_list_cell_get_p) malloc(sizeof(cm_list_cell_get_t));
+    cell = malloc(sizeof(cm_list_cell_get_t));
     if (cell == NULL) {
 	free(iter);
 	tst = ADMNOMEM;
@@ -2704,7 +2699,7 @@ util_RXDebugConnectionsBegin(rxdebugHandle_p handle, int allconns,
 	goto fail_util_RXDebugConnectionsBegin;
     }
 
-    iter = (afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
+    iter = malloc(sizeof(afs_admin_iterator_t));
     if (iter == NULL) {
 	tst = ADMNOMEM;
 	goto fail_util_RXDebugConnectionsBegin;
@@ -2723,7 +2718,7 @@ util_RXDebugConnectionsBegin(rxdebugHandle_p handle, int allconns,
 	goto fail_util_RXDebugConnectionsBegin;
     }
 
-    t = (rxdebug_conn_get_p) malloc(sizeof(rxdebug_conn_get_t));
+    t = malloc(sizeof(rxdebug_conn_get_t));
     if (t == NULL) {
 	free(iter);
 	tst = ADMNOMEM;
@@ -2967,7 +2962,7 @@ util_RXDebugPeersBegin(rxdebugHandle_p handle, void **iterationIdP,
 	goto fail_util_RXDebugPeersBegin;
     }
 
-    iter = (afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
+    iter = malloc(sizeof(afs_admin_iterator_t));
     if (iter == NULL) {
 	tst = ADMNOMEM;
 	goto fail_util_RXDebugPeersBegin;
@@ -2986,7 +2981,7 @@ util_RXDebugPeersBegin(rxdebugHandle_p handle, void **iterationIdP,
 	goto fail_util_RXDebugPeersBegin;
     }
 
-    t = (rxdebug_peer_get_p) malloc(sizeof(rxdebug_peer_get_t));
+    t = malloc(sizeof(rxdebug_peer_get_t));
     if (t == NULL) {
 	free(iter);
 	tst = ADMNOMEM;

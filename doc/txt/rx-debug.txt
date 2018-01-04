@@ -1,0 +1,329 @@
+
+                               Rx Debug
+                               --------
+
+Introduction
+============
+
+Rx provides data collections for remote debugging and troubleshooting using UDP
+packets.  This document provides details on the protocol, data formats, and
+the data format versions.
+
+
+Protocol
+========
+
+A simple request/response protocol is used to request this information
+from an Rx instance.  Request and response packets contain an Rx header but
+only a subset of the header fields are used, since the debugging packages are
+not part of the Rx RPC protocol.
+
+The protocol is simple. A client sends an Rx DEBUG (8) packet to an
+address:port of an active Rx instance. This request contains an arbitrary
+request number in the callNumber field of the Rx header (reused here since
+DEBUG packets are never used in RPCs). The payload of the request is simply a
+pair 32 bit integers in network byte order. The first integer indicates the
+which data collection type is requested. The second integer indicates which
+record number of the data type requested, for data types which have multiple
+records, such as the rx connections and rx peers. The request packet must have
+the CLIENT-INITIATED flag set in the Rx header.
+
+Rx responds with a single Rx DEBUG (8) packet, the payload of which contains
+the data record for the type and index requested. The callNumber in the Rx
+header contains the same number as the value of the request, allowing the
+client to match responses to requests.  The response DEBUG packet does not
+contain the request type and index parameters.
+
+The first 32-bits, in network byte order, of the response payload indicate
+error conditions:
+
+* 0xFFFFFFFF (-1) index is out of range
+* 0xFFFFFFF8 (-8) unknown request type
+
+
+Data Collection Types
+=====================
+
+OpenAFS defines 5 types of data collections which may be
+requested:
+
+  1  GETSTATS   Basic Rx statistics           (struct rx_debugStats)
+  2  GETCONN    Active connections [indexed]  (struct rx_debugConn)
+  3  GETALLCONN All connections [indexed]     (struct rx_debugConn)
+  4  RXSTATS    Detailed Rx statistics        (struct rx_statistics)
+  5  GETPEER    Rx peer info [indexed]        (struct rx_peerDebug)
+
+The format of the response data for each type is given below. XDR is
+not used. All integers are in network byte order.
+
+In a typical exchange, a client will request the "basic Rx stats" data first.
+This contains a data layout version number (detailed in the next section).
+
+Types GETCONN (2), GETALLCONN (3), and GETPEER (5), are array-like data
+collections.  The index field is used to retrieve each record, one per packet.
+The first record is index 0. The client may request each record, starting with
+zero, and incremented by one on each request packet, until the Rx service
+returns -1 (out of range). No provisions are made for locking the data
+collections between requests, as this is intended only to be a debugging
+interface.
+
+
+Data Collection Versions
+========================
+
+Every Rx service has a single byte wide debugging version id, which is set at
+build time.  This version id allows clients to properly interpret the response
+data formats for the various data types.  The version id is present in the
+basic Rx statistics (type 1) response data.
+
+The first usable version is 'L', which was present in early Transarc/IBM AFS.
+The first version in OpenAFS was 'Q', and versions after 'Q' are OpenAFS
+specific extensions. The current version for OpenAFS is 'S'.
+
+Historically, the version id has been incremented when a new debug data type is
+added or changed.  The version history is summarized in the following table:
+
+    'L'  - Earliest usable version
+         - GETSTATS (1) supported
+         - GETCONNS (2) supported (with obsolete format rx_debugConn_vL)
+         - Added connection object security stats (rx_securityObjectStats) to GETCONNS (2)
+         - Transarc/IBM AFS
+
+    'M'  - Added GETALLCONN (3) data type
+         - Added RXSTATS (4) data type
+         - Transarc/IBM AFS
+
+    'N'  - Added calls waiting for a thread count (nWaiting) to GETSTATS (1)
+         - Transarc/IBM AFS
+
+    'O'  - Added number of idle threads count (idleThreads) to GETSTATS (1)
+         - Transarc/IBM AFS
+
+    'P'  - Added cbuf packet allocation failure counts (receiveCbufPktAllocFailures
+           and sendCbufPktAllocFailures) to RXSTATS (4)
+         - Transarc/IBM AFS
+
+    'Q'  - Added GETPEER (5) data type
+         - Transarc/IBM AFS
+         - OpenAFS 1.0
+
+    (?)  - Added number of busy aborts sent (nBusies) to RXSTATS (4)
+         - rxdebug was not changed to display this new count
+         - OpenAFS 1.4.0
+
+    'R'  - Added total calls which waited for a thread (nWaited) to GETSTATS (1)
+         - OpenAFS 1.5.0 (devel)
+         - OpenAFS 1.6.0 (stable)
+
+    'S'  - Added total packets allocated (nPackets) to GETSTATS (1)
+         - OpenAFS 1.5.53 (devel)
+         - OpenAFS 1.6.0 (stable)
+
+
+
+Debug Request Parameters
+========================
+
+The payload of DEBUG request packets is two 32 bit integers
+in network byte order.
+
+
+    struct rx_debugIn {
+        afs_int32 type;   /* requested type; range 1..5 */
+        afs_int32 index;  /* record number: 0 .. n */
+    };
+
+The index field should be set to 0 when type is GETSTAT (1) and RXSTATS (4).
+
+
+
+GETSTATS (1)
+============
+
+GETSTATS returns basic Rx performance statistics and the overall debug
+version id.
+
+    struct rx_debugStats {
+        afs_int32 nFreePackets;
+        afs_int32 packetReclaims;
+        afs_int32 callsExecuted;
+        char waitingForPackets;
+        char usedFDs;
+        char version;
+        char spare1;
+        afs_int32 nWaiting;       /* Version 'N': number of calls waiting for a thread */
+        afs_int32 idleThreads;    /* Version 'O': number of server threads that are idle */
+        afs_int32 nWaited;        /* Version 'R': total calls waited */
+        afs_int32 nPackets;       /* Version 'S': total packets allocated */
+        afs_int32 spare2[6];
+    };
+
+
+GETCONN (2) and GETALLCONN (3)
+==============================
+
+GETCONN (2) returns an active connection information record, for the
+given index.
+
+GETALLCONN (3) returns a connection information record, active or not,
+for the given index.  The GETALLCONN (3) data type was added in
+version 'M'.
+
+The data format is the same for GETCONN (2) and GETALLCONN (3), and is
+as follows:
+
+    struct rx_debugConn {
+        afs_uint32 host;
+        afs_int32 cid;
+        afs_int32 serial;
+        afs_int32 callNumber[RX_MAXCALLS];
+        afs_int32 error;
+        short port;
+        char flags;
+        char type;
+        char securityIndex;
+        char sparec[3];        /* force correct alignment */
+        char callState[RX_MAXCALLS];
+        char callMode[RX_MAXCALLS];
+        char callFlags[RX_MAXCALLS];
+        char callOther[RX_MAXCALLS];
+        /* old style getconn stops here */
+        struct rx_securityObjectStats secStats;
+        afs_int32 epoch;
+        afs_int32 natMTU;
+        afs_int32 sparel[9];
+    };
+
+
+An obsolete layout, which exhibited a problem with data alignment, was used in
+Version 'L'. This is defined as:
+
+    struct rx_debugConn_vL {
+        afs_uint32 host;
+        afs_int32 cid;
+        afs_int32 serial;
+        afs_int32 callNumber[RX_MAXCALLS];
+        afs_int32 error;
+        short port;
+        char flags;
+        char type;
+        char securityIndex;
+        char callState[RX_MAXCALLS];
+        char callMode[RX_MAXCALLS];
+        char callFlags[RX_MAXCALLS];
+        char callOther[RX_MAXCALLS];
+        /* old style getconn stops here */
+        struct rx_securityObjectStats secStats;
+        afs_int32 sparel[10];
+    };
+
+
+The layout of the secStats field is as follows:
+
+    struct rx_securityObjectStats {
+        char type;			/* 0:unk 1:null,2:vab 3:kad */
+        char level;
+        char sparec[10];		/* force correct alignment */
+        afs_int32 flags;		/* 1=>unalloc, 2=>auth, 4=>expired */
+        afs_uint32 expires;
+        afs_uint32 packetsReceived;
+        afs_uint32 packetsSent;
+        afs_uint32 bytesReceived;
+        afs_uint32 bytesSent;
+        short spares[4];
+        afs_int32 sparel[8];
+    };
+
+
+
+RXSTATS (4)
+===========
+
+RXSTATS (4) returns general rx statistics. Every member of the returned
+structure is a 32 bit integer in network byte order.  The assumption is made
+sizeof(int) is equal to sizeof(afs_int32).
+
+The RXSTATS (4) data type was added in Version 'M'.
+
+
+    struct rx_statistics {         /* General rx statistics */
+        int packetRequests;        /* Number of packet allocation requests */
+        int receivePktAllocFailures;
+        int sendPktAllocFailures;
+        int specialPktAllocFailures;
+        int socketGreedy;          /* Whether SO_GREEDY succeeded */
+        int bogusPacketOnRead;     /* Number of inappropriately short packets received */
+        int bogusHost;             /* Host address from bogus packets */
+        int noPacketOnRead;        /* Number of read packets attempted when there was actually no packet to read off the wire */
+        int noPacketBuffersOnRead; /* Number of dropped data packets due to lack of packet buffers */
+        int selects;               /* Number of selects waiting for packet or timeout */
+        int sendSelects;           /* Number of selects forced when sending packet */
+        int packetsRead[RX_N_PACKET_TYPES];    /* Total number of packets read, per type */
+        int dataPacketsRead;       /* Number of unique data packets read off the wire */
+        int ackPacketsRead;        /* Number of ack packets read */
+        int dupPacketsRead;        /* Number of duplicate data packets read */
+        int spuriousPacketsRead;   /* Number of inappropriate data packets */
+        int packetsSent[RX_N_PACKET_TYPES];    /* Number of rxi_Sends: packets sent over the wire, per type */
+        int ackPacketsSent;       /* Number of acks sent */
+        int pingPacketsSent;      /* Total number of ping packets sent */
+        int abortPacketsSent;     /* Total number of aborts */
+        int busyPacketsSent;      /* Total number of busies sent received */
+        int dataPacketsSent;      /* Number of unique data packets sent */
+        int dataPacketsReSent;    /* Number of retransmissions */
+        int dataPacketsPushed;    /* Number of retransmissions pushed early by a NACK */
+        int ignoreAckedPacket;    /* Number of packets with acked flag, on rxi_Start */
+        struct clock totalRtt;    /* Total round trip time measured (use to compute average) */
+        struct clock minRtt;      /* Minimum round trip time measured */
+        struct clock maxRtt;      /* Maximum round trip time measured */
+        int nRttSamples;          /* Total number of round trip samples */
+        int nServerConns;         /* Total number of server connections */
+        int nClientConns;         /* Total number of client connections */
+        int nPeerStructs;         /* Total number of peer structures */
+        int nCallStructs;         /* Total number of call structures allocated */
+        int nFreeCallStructs;     /* Total number of previously allocated free call structures */
+        int netSendFailures;
+        afs_int32 fatalErrors;
+        int ignorePacketDally;    /* packets dropped because call is in dally state */
+        int receiveCbufPktAllocFailures;  /* Version 'P': receive cbuf packet alloc failures */
+        int sendCbufPktAllocFailures;     /* Version 'P': send cbuf packet alloc failures */
+        int nBusies;                      /* Version 'R': number of busy aborts sent */
+        int spares[4];
+    };
+
+
+GETPEER (5)
+===========
+
+GETPEER (5) returns a peer information record, for the given index.
+
+    struct rx_debugPeer {
+        afs_uint32 host;
+        u_short port;
+        u_short ifMTU;
+        afs_uint32 idleWhen;
+        short refCount;
+        u_char burstSize;
+        u_char burst;
+        struct clock burstWait;
+        afs_int32 rtt;
+        afs_int32 rtt_dev;
+        struct clock timeout;
+        afs_int32 nSent;
+        afs_int32 reSends;
+        afs_int32 inPacketSkew;
+        afs_int32 outPacketSkew;
+        afs_int32 rateFlag;
+        u_short natMTU;
+        u_short maxMTU;
+        u_short maxDgramPackets;
+        u_short ifDgramPackets;
+        u_short MTU;
+        u_short cwind;
+        u_short nDgramPackets;
+        u_short congestSeq;
+        afs_hyper_t bytesSent;
+        afs_hyper_t bytesReceived;
+        afs_int32 sparel[10];
+    };
+
+

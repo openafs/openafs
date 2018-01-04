@@ -9,32 +9,25 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
+#include <roken.h>
+#include <afs/opr.h>
 
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
-#include <sys/types.h>
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
 #include <WINNT/afsevent.h>
-#else
-#include <netinet/in.h>
-#include <netdb.h>
 #endif
-#include <stdio.h>
+
 #include <rx/xdr.h>
 #include <rx/rx.h>
-#include <string.h>
-#include <afs/stds.h>
 #include <afs/com_err.h>
 #include <afs/cellconfig.h>
+#include <afs/afsutil.h>
+
 #include "ptclient.h"
 #include "ptuser.h"
 #include "pterror.h"
 #include "display.h"
-#include <afs/afsutil.h>
-
 
 afs_int32 security = 0;
 char confdir[AFSDIR_PATH_MAX];
@@ -55,7 +48,7 @@ static char *lineProgress;
 
 #ifndef AFS_PTHREAD_ENV
 int
-osi_audit()
+osi_audit(void)
 {
 /* OK, this REALLY sucks bigtime, but I can't tell who is calling
  * afsconf_CheckAuth easily, and only *SERVERS* should be calling osi_audit
@@ -250,7 +243,7 @@ main(int argc, char **argv)
 	if (code) {
 	    afs_com_err(whoami, PRBADARG,
 		    "error reading opcode in line '%s', got '%.*s'", line,
-		    sizeof(op), op);
+		    (int) sizeof(op), op);
 	    exit(1);
 	}
 	if (strlen(op) == 0)
@@ -332,7 +325,7 @@ main(int argc, char **argv)
 	    if (CodeOk(code))
 		afs_com_err(whoami, code, "on %s %d %d", op, id, gid);
 	} else if (!strcmp(op, "iton")) {
-	    lid.idlist_val = (afs_int32 *) malloc(20 * sizeof(afs_int32));
+	    lid.idlist_val = malloc(20 * sizeof(afs_int32));
 	    ptr = lid.idlist_val;
 	    lid.idlist_len = 0;
 	    foo = line;
@@ -361,8 +354,7 @@ main(int argc, char **argv)
 	    lid.idlist_val = 0;
 	    lid.idlist_len = 0;
 	} else if (!strcmp(op, "ntoi")) {
-	    lnames.namelist_val =
-		(prname *) malloc(PR_MAXLIST * PR_MAXNAMELEN);
+	    lnames.namelist_val = malloc(PR_MAXLIST * PR_MAXNAMELEN);
 	    lnames.namelist_len = 0;
 	    foo = line;
 	    skip(&foo);
@@ -706,6 +698,7 @@ main(int argc, char **argv)
 	else
 	    printf("Unknown op: '%s'! ? for help\n", op);
     }
+    return 0;
 }
 
 

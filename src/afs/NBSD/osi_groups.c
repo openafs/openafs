@@ -29,40 +29,36 @@
 
 /*
  * NetBSD has a very flexible and elegant replacement for Unix
- * groups KPIs, see KAUTH(9).
+ * groups KPIs, see kauth(9).
  *
  */
 
-static int
-osi_getgroups(kauth_cred_t cred, int ngroups, gid_t * gidset);
-
+static int osi_getgroups(afs_ucred_t *, int, gid_t *);
 
 /* why **? are we returning or reallocating creat? */
-static int
-osi_setgroups(struct proc *proc, kauth_cred_t *cred, int ngroups,
-	      gid_t * gidset, int change_parent);
+static int osi_setgroups(afs_proc_t *, afs_ucred_t **, int, gid_t *, int);
+
+int Afs_xsetgroups(afs_proc_t *, const void *, register_t *);
 
 int
-Afs_xsetgroups(struct proc *p, void *args, int *retval)
+Afs_xsetgroups(afs_proc_t *p, const void *args, register_t *retval)
 {
     int code = 0;
     struct vrequest treq;
-    kauth_cred_t cred = osi_proccred(p);
+    afs_ucred_t *cred = osi_proccred(p);
 
     AFS_STATCNT(afs_xsetgroups);
 
     AFS_GLOCK();
-    code = afs_InitReq(&treq, (afs_ucred_t *) cred);
+    code = afs_InitReq(&treq, cred);
     AFS_GUNLOCK();
 
     if (code)
 	return code;
 
-    /*
-     * XXX Does treq.uid == osi_crgetruid(cred)?
-     */
+    /* results visible via kauth_cred_getgroups. also does other work */
+    code = sys_setgroups(p, args, retval);
 
-    code = kauth_cred_setgroups(cred, args, retval, osi_crgetruid(cred));
     /*
      * Note that if there is a pag already in the new groups we don't
      * overwrite it with the old pag.
@@ -78,9 +74,8 @@ Afs_xsetgroups(struct proc *p, void *args, int *retval)
     return code;
 }
 
-
 int
-setpag(struct proc *proc, afs_ucred_t *cred, afs_uint32 pagvalue,
+setpag(afs_proc_t *proc, afs_ucred_t **cred, afs_uint32 pagvalue,
        afs_uint32 * newpag, int change_parent)
 {
     gid_t gidset[NGROUPS];
@@ -94,7 +89,7 @@ setpag(struct proc *proc, afs_ucred_t *cred, afs_uint32 pagvalue,
 	if (ngroups + 2 > NGROUPS) {
 	    return (E2BIG);
 	}
-	for (j = ngroups - 1; j >= 0; j--) {
+	for (j = ngroups - 1; j >= 1; j--) {
 	    gidset[j + 2] = gidset[j];
 	}
 	ngroups += 2;
@@ -107,45 +102,41 @@ setpag(struct proc *proc, afs_ucred_t *cred, afs_uint32 pagvalue,
 
 
 static int
-osi_getgroups(kauth_cred_t cred, int ngroups, gid_t * gidset)
+osi_getgroups(afs_ucred_t *cred, int ngroups, gid_t *gidset)
 {
-    int ngrps, savengrps;
-    struct kauth_cred *cr;
-    gid_t *gp;
-
     AFS_STATCNT(afs_getgroups);
 
-    cr = (struct kauth_cred *) cred;
-    savengrps = ngrps = MIN(ngroups, kauth_cred_ngroups(cred));
-    gp = cred->cr_groups;
-    while (ngrps--)
-	*gidset++ = *gp++;
-    return savengrps;
+    ngroups = MIN(kauth_cred_ngroups(cred), ngroups);
+
+    kauth_cred_getgroups(cred, gidset, ngroups, UIO_SYSSPACE);
+    return ngroups;
 }
 
 
 static int
-osi_setgroups(struct proc *proc, kauth_cred_t *cred, int ngroups,
+osi_setgroups(afs_proc_t *proc, afs_ucred_t **cred, int ngroups,
 	      gid_t * gidset, int change_parent)
 {
-    int i;
-    struct kauth_cred *cr;
+    int code;
+    afs_ucred_t *ocred;
 
     AFS_STATCNT(afs_setgroups); /* XXX rename statcnt */
 
     if (ngroups > NGROUPS)
 	return EINVAL;
 
-    cr = (struct kauth_cred *) *cred;
-    if (!change_parent)
-	cr = kauth_cred_copy(cr);
+    proc_crmod_enter();
 
-    for (i = 0; i < ngroups; i++)
-	cr->cr_groups[i] = gidset[i];
-    for (i = ngroups; i < NGROUPS; i++)
-	cr->cr_groups[i] = NOGROUP;
-    cr->cr_ngroups = ngroups;
+    if (!change_parent) {
+	ocred = *cred;
+	*cred = kauth_cred_dup(ocred);
+    }
 
-    *cred = cr;
-    return (0);
+    code = kauth_cred_setgroups(*cred, gidset, ngroups, -1, UIO_SYSSPACE);
+
+    if (!change_parent) {
+	proc_crmod_leave(*cred, ocred, false);
+    }
+
+    return code;
 }

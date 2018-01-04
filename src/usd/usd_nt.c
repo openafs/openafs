@@ -10,12 +10,10 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include <windows.h>
-#include <stdio.h>
-#include <io.h>
 #include <winioctl.h>
-#include <sys/stat.h>
 #include <crtdbg.h>
 
 #include <afs/errmap_nt.h>
@@ -101,13 +99,13 @@ usd_DeviceWrite(usd_handle_t usd, char *buf, afs_uint32 nbytes,
  * Add a check of the offset against the disk size to fix this problem. */
 
 static int
-usd_DeviceSeek(usd_handle_t usd, afs_hyper_t reqOff, int whence,
-	       afs_hyper_t * curOffP)
+usd_DeviceSeek(usd_handle_t usd, afs_int64 reqOff, int whence,
+	       afs_int64 * curOffP)
 {
     HANDLE fd = usd->handle;
     DWORD method, result;
     DWORD error;
-    long loOffset, hiOffset;
+    LARGE_INTEGER offset, retOffset;
 
     /* determine move method based on value of whence */
 
@@ -125,29 +123,25 @@ usd_DeviceSeek(usd_handle_t usd, afs_hyper_t reqOff, int whence,
 
     /* attempt seek */
 
-    loOffset = hgetlo(reqOff);
-    hiOffset = hgethi(reqOff);
-
     if (usd->privateData) {
 
 	/* For disk devices that know their size, check the offset against the
 	 * limit provided by DeviceIoControl(). */
 
-	DWORDLONG offset =
-	    ((DWORDLONG) hgethi(reqOff) << 32 | (DWORDLONG) hgetlo(reqOff));
+	afs_int64 k = ((afs_uint32) usd->privateData);
 
-	DWORDLONG k = (DWORDLONG) ((afs_uint32) usd->privateData);
-
-	/* _ASSERT(AFS_64BIT_ENV); */
-	if (offset >= (k << 10))
+	if (reqOff >= (k << 10))
 	    return EINVAL;
     }
 
-    result = SetFilePointer(fd, loOffset, &hiOffset, method);
-    if (result == 0xffffffff && (error = GetLastError()) != NO_ERROR)
+    offset.QuadPart = reqOff;
+
+    result = SetFilePointerEx(fd, offset, &retOffset, method);
+    if (result == 0 && (error = GetLastError()) != NO_ERROR)
 	return nterr_nt2unix(error, EIO);
+
     if (curOffP)
-	hset64(*curOffP, hiOffset, result);
+	*curOffP = retOffset.QuadPart;
 
     return 0;
 }
@@ -156,6 +150,7 @@ static int
 usd_DeviceIoctl(usd_handle_t usd, int req, void *arg)
 {
     HANDLE fd = usd->handle;
+    LARGE_INTEGER size;
     DWORD result;
     DWORD hiPart;
     int code = 0;
@@ -233,14 +228,15 @@ usd_DeviceIoctl(usd_handle_t usd, int req, void *arg)
 	break;
 
     case USD_IOCTL_GETSIZE:
-	result = GetFileSize(fd, &hiPart);
-	if (result == 0xffffffff && (code = GetLastError()) != NO_ERROR)
+	if (!GetFileSizeEx(fd, &size) && (code = GetLastError()) != NO_ERROR)
 	    return nterr_nt2unix(code, EIO);
-	hset64(*(afs_hyper_t *) arg, hiPart, result);
+
+	*(afs_int64 *) arg = size.QuadPart;
+
 	return 0;
 
     case USD_IOCTL_SETSIZE:
-	code = usd_DeviceSeek(usd, *(afs_hyper_t *) arg, SEEK_SET, NULL);
+	code = usd_DeviceSeek(usd, *(afs_int64 *) arg, SEEK_SET, NULL);
 	if (!code) {
 	    if (!SetEndOfFile(fd))
 		code = nterr_nt2unix(GetLastError(), EIO);
@@ -470,9 +466,7 @@ usd_DeviceOpen(const char *path, int oflag, int pmode, usd_handle_t * usdP)
     if (devhandle == INVALID_HANDLE_VALUE)
 	return nterr_nt2unix(GetLastError(), EIO);
 
-    usd = (usd_handle_t) malloc(sizeof(*usd));
-    memset(usd, 0, sizeof(*usd));
-
+    usd = calloc(1, sizeof(*usd));
 
     _ASSERT(sizeof(devhandle) <= sizeof(usd->handle));
     usd->handle = (void *)devhandle;
@@ -483,8 +477,7 @@ usd_DeviceOpen(const char *path, int oflag, int pmode, usd_handle_t * usdP)
     usd->ioctl = usd_DeviceIoctl;
     usd->close = usd_DeviceClose;
 
-    usd->fullPathName = (char *)malloc(strlen(path) + 1);
-    strcpy(usd->fullPathName, path);
+    usd->fullPathName = strdup(path);
     usd->openFlags = oflag;
 
     /* For devices, this is the first real reference, so many errors show up
@@ -529,8 +522,7 @@ usd_DeviceStandardInput(usd_handle_t * usdP)
     if (usdP)
 	*usdP = NULL;
 
-    usd = (usd_handle_t) malloc(sizeof(*usd));
-    memset(usd, 0, sizeof(*usd));
+    usd = calloc(1, sizeof(*usd));
     usd->handle = (void *)0;
     usd->read = usd_DeviceRead;
     usd->write = usd_DeviceWrite;
@@ -557,8 +549,7 @@ usd_DeviceStandardOutput(usd_handle_t * usdP)
     if (usdP)
 	*usdP = NULL;
 
-    usd = (usd_handle_t) malloc(sizeof(*usd));
-    memset(usd, 0, sizeof(*usd));
+    usd = calloc(1, sizeof(*usd));
     usd->handle = (void *)1;
     usd->read = usd_DeviceRead;
     usd->write = usd_DeviceWrite;

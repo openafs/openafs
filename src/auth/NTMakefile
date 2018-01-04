@@ -15,7 +15,17 @@ INCFILEDIR = $(DESTDIR)\include\afs  # header file install directory
 INCFILES =\
 	$(INCFILEDIR)\auth.h \
 	$(INCFILEDIR)\cellconfig.h \
-	$(INCFILEDIR)\keys.h
+	$(INCFILEDIR)\keys.h \
+        $(INCFILEDIR)\token.h
+
+############################################################################
+# rxgen on token.xg
+
+token.xdr.c: token.xg token.h
+	$(RXGEN) -x -c -o $@ token.xg
+
+token.h: token.xg
+	$(RXGEN) -x -h -u -o $@ token.xg
 
 
 ############################################################################
@@ -27,21 +37,26 @@ AFSD = ..\WINNT\afsd
 
 AFSAUTH_LIBOBJS =\
 	$(OUT)\cellconfig.obj \
+	$(OUT)\keys.obj \
 	$(OUT)\userok.obj \
 	$(OUT)\writeconfig.obj \
 	$(OUT)\authcon.obj \
+	$(OUT)\realms.obj \
 	$(OUT)\acfg_errors.obj \
 	$(OUT)\ktc_errors.obj \
 	$(OUT)\ktc_nt.obj \
+        $(OUT)\token.obj \
+        $(OUT)\token.xdr.obj \
+	$(OUT)\netrestrict.obj \
 	$(OUT)\AFS_component_version_number.obj
 
 AFSDOBJS =\
-	$(OUT)\$(AFSD)\afsrpc_c.obj
+	$(OUT)\$(AFSD)\afsrpc_$(CPU)_c.obj
 
 $(AFSDOBJS): $(AFSD)\$$(@B).c
 	$(C2OBJ) -I$*(*D) $**
 
-$(AFSAUTH_LIBFILE): $(AFSAUTH_LIBOBJS) $(AFSDOBJS) 
+$(AFSAUTH_LIBFILE): $(AFSAUTH_LIBOBJS) $(AFSDOBJS)
 	$(LIBARCH) rpcrt4.lib
 
 ############################################################################
@@ -54,12 +69,13 @@ AFSAUTH_KRB_LIBOBJS =\
 	$(OUT)\userok.obj \
 	$(OUT)\writeconfig.obj \
 	$(OUT)\authcon.obj \
+	$(OUT)\realms.obj \
 	$(OUT)\acfg_errors.obj \
 	$(OUT)\ktc_errors.obj \
 	$(OUT)\ktc_nt.obj \
 	$(OUT)\AFS_component_version_number.obj
-	
-$(AFSAUTH_KRB_LIBFILE): $(AFSAUTH_KRB_LIBOBJS)  
+
+$(AFSAUTH_KRB_LIBFILE): $(AFSAUTH_KRB_LIBOBJS)
 	$(LIBARCH) rpcrt4.lib
 
 ############################################################################
@@ -68,25 +84,28 @@ $(AFSAUTH_KRB_LIBFILE): $(AFSAUTH_KRB_LIBOBJS)
 SETKEY_EXEFILE = $(OUT)\setkey.exe
 
 SETKEY_EXEOBJS =\
-	$(OUT)\setkey.obj 
+	$(OUT)\setkey.obj
 
 EXELIBDIR = $(DESTDIR)\lib
 
 EXELIBS =\
 	$(EXELIBDIR)\afs\afsauth.lib \
 	$(EXELIBDIR)\afsrxkad.lib \
-	$(EXELIBDIR)\afsdes.lib \
 	$(EXELIBDIR)\afsrx.lib \
 	$(EXELIBDIR)\afslwp.lib \
 	$(EXELIBDIR)\afs\afsutil.lib \
 	$(EXELIBDIR)\afs\afseventlog.lib \
 	$(EXELIBDIR)\afs\afsreg.lib \
-	$(EXELIBDIR)\libafsconf.lib
+	$(EXELIBDIR)\libafsconf.lib \
+	$(EXELIBDIR)\opr.lib \
+	$(EXELIBDIR)\afshcrypto.lib \
+	$(EXELIBDIR)\afsroken.lib \
+	$(EXELIBDIR)\afsrfc3961.lib
 
 $(SETKEY_EXEFILE): $(SETKEY_EXEOBJS) $(EXELIBS)
 	$(EXECONLINK) dnsapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
-	$(EXEPREP) 
+	$(EXEPREP)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 
@@ -96,10 +115,10 @@ COPYAUTH_EXEFILE = $(DESTDIR)\etc\copyauth.exe
 COPYAUTH_EXEOBJS =\
 	$(OUT)\copyauth.obj
 
-$(COPYAUTH_EXEFILE): $(COPYAUTH_EXEOBJS) $(EXELIBS) 
+$(COPYAUTH_EXEFILE): $(COPYAUTH_EXEOBJS) $(EXELIBS)
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
-	$(EXEPREP) 
+	$(EXEPREP)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 
@@ -118,14 +137,13 @@ install_headers: $(INCFILES)
 
 install: $(AFSAUTH_LIBFILE) $(AFSAUTH_KRB_LIBFILE) $(OUT)\setkey.exe # $(COPYAUTH_EXEFILE)
 
-install9x: install
-
 clean::
 	$(DEL) acfg_errors.c ktc_errors.c
 	$(DEL) $(INCFILES) $(AFSAUTH_LIBFILE)
 	$(DEL) auth.h  cellconfig.h
+        $(DEL) token.h token.xdr.c
 
 setkey: $(SETKEY_EXEFILE)
 
 mkdir:
-	
+

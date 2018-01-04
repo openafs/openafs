@@ -408,7 +408,7 @@ static int UnEvalFakeStat(struct vrequest *areq, struct vcache **vcpp)
     if (!afs_fakestat_enable)
 	return 0;
 
-    if (*vcpp == afs_globalVp || vType(*vcpp) != VDIR || (*vcpp)->mvstat != 2)
+    if (*vcpp == afs_globalVp || vType(*vcpp) != VDIR || (*vcpp)->mvstat != AFS_MVSTAT_ROOT)
 	return 0;
 
     /* Figure out what FID to look for */
@@ -505,7 +505,7 @@ static struct dentry *get_dentry_from_fid(cred_t *credp, struct VenusFid *afid)
      * at parentVnode on directories, except for VIOCGETVCXSTATUS.
      * So, if this fails, we don't really care very much.
      */
-    if (vType(vcp) == VDIR && vcp->mvstat != 2 && !vcp->f.parent.vnode)
+    if (vType(vcp) == VDIR && vcp->mvstat != AFS_MVSTAT_ROOT && !vcp->f.parent.vnode)
 	update_dir_parent(treq, vcp);
 
     /*
@@ -520,7 +520,7 @@ static struct dentry *get_dentry_from_fid(cred_t *credp, struct VenusFid *afid)
 	       code);
 #endif
 	afs_PutVCache(vcp);
-	code = afs_CheckCode(code, treq, 101);
+	code = afs_CheckCode(code, treq, 103);
 	afs_DestroyReq(treq);
 	afs_DestroyAttr(vattr);
 	return ERR_PTR(-code);
@@ -642,7 +642,7 @@ static int afs_export_get_name(struct dentry *parent, char *name,
     }
 
     /* Figure out what FID to look for */
-    if (vcp->mvstat == 2) { /* volume root */
+    if (vcp->mvstat == AFS_MVSTAT_ROOT) { /* volume root */
 	tvp = afs_GetVolume(&vcp->f.fid, 0, READ_LOCK);
 	if (!tvp) {
 #ifdef OSI_EXPORT_DEBUG
@@ -869,11 +869,11 @@ static struct dentry *afs_export_get_parent(struct dentry *child)
 	/* a mount point in the dynmount directory */
 	afs_GetDynrootMountFid(&tfid);
 
-    } else if (vcp->mvstat == 2) {
+    } else if (vcp->mvstat == AFS_MVSTAT_ROOT) {
 	/* volume root */
 	ObtainReadLock(&vcp->lock);
-	if (vcp->mvid && vcp->mvid->Fid.Volume) {
-	    tfid = *vcp->mvid;
+	if (vcp->mvid.parent && vcp->mvid.parent->Fid.Volume) {
+	    tfid = *vcp->mvid.parent;
 	    ReleaseReadLock(&vcp->lock);
 	} else {
 	    ReleaseReadLock(&vcp->lock);
@@ -898,7 +898,7 @@ static struct dentry *afs_export_get_parent(struct dentry *child)
 
     } else {
 	/* any other vnode */
-	if (vType(vcp) == VDIR && !vcp->f.parent.vnode && vcp->mvstat != 1) {
+	if (vType(vcp) == VDIR && !vcp->f.parent.vnode && vcp->mvstat != AFS_MVSTAT_MTPT) {
 	    code = afs_CreateReq(&treq, credp);
 	    if (code) {
 #ifdef OSI_EXPORT_DEBUG

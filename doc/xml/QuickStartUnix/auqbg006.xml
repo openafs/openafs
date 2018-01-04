@@ -2,6 +2,7 @@
 <chapter id="HDRWQ99">
   <title>Installing Additional Server Machines</title>
 
+  <para>
   <indexterm>
     <primary>instructions</primary>
 
@@ -20,7 +21,7 @@
     <see>file server machine, additional</see>
   </indexterm>
 
-  <para>Instructions for the following procedures appear in the indicated section of this chapter. <itemizedlist>
+  Instructions for the following procedures appear in the indicated section of this chapter. <itemizedlist>
       <listitem>
         <para><link linkend="HDRWQ100">Installing an Additional File Server Machine</link></para>
       </listitem>
@@ -58,13 +59,14 @@
         your operating system, either on the local filesystem or via an NFS
         mount of the distribution's contents.</para>
       </listitem>
-    </itemizedlist></para>
+    </itemizedlist>
 
   <indexterm>
     <primary>requirements</primary>
 
     <secondary>file server machine (additional)</secondary>
   </indexterm>
+  </para>
 
   <sect1 id="HDRWQ100">
     <title>Installing an Additional File Server Machine</title>
@@ -234,18 +236,6 @@
 
       <para>To continue, proceed to the section for this system type: <itemizedlist>
           <listitem>
-            <para><link linkend="HDRWQ101">Getting Started on AIX Systems</link></para>
-          </listitem>
-
-          <listitem>
-            <para><link linkend="HDRWQ103">Getting Started on HP-UX Systems</link></para>
-          </listitem>
-
-          <listitem>
-            <para><link linkend="HDRWQ104">Getting Started on IRIX Systems</link></para>
-          </listitem>
-
-          <listitem>
             <para><link linkend="HDRWQ106">Getting Started on Linux Systems</link></para>
           </listitem>
 
@@ -253,894 +243,6 @@
             <para><link linkend="HDRWQ107">Getting Started on Solaris Systems</link></para>
           </listitem>
         </itemizedlist></para>
-
-      <sect3 id="HDRWQ101">
-        <title>Getting Started on AIX Systems</title>
-
-        <para>Begin by running the AFS initialization script to call the AIX kernel extension facility, which dynamically loads AFS
-        modifications into the kernel. Then configure partitions and replace the AIX <emphasis role="bold">fsck</emphasis> program
-        with a version that correctly handles AFS volumes. <orderedlist>
-            <indexterm>
-              <primary>incorporating AFS kernel extensions</primary>
-
-              <secondary>server machine after first</secondary>
-
-              <tertiary>AIX</tertiary>
-            </indexterm>
-
-            <indexterm>
-              <primary>AFS kernel extensions</primary>
-
-              <secondary>on server machine after first</secondary>
-
-              <tertiary>AIX</tertiary>
-            </indexterm>
-
-            <indexterm>
-              <primary>file server machine, additional</primary>
-
-              <secondary>AFS kernel extensions</secondary>
-
-              <tertiary>on AIX</tertiary>
-            </indexterm>
-
-            <indexterm>
-              <primary>AIX</primary>
-
-              <secondary>AFS kernel extensions</secondary>
-
-              <tertiary>on add'l server machine</tertiary>
-            </indexterm>
-
-            <listitem>
-              <para>Unpack the distribution tarball. The examples below assume 
-              that you have unpacked the files into the 
-              <emphasis role="bold">/tmp/afsdist</emphasis> directory. If you 
-              pick a different location, substitute this in all of the following 
-              examples. Once you have unpacked the distribution, 
-              change directory as indicated.
-<programlisting>
-   # <emphasis role="bold">cd /tmp/afsdist/rs_aix42/dest/root.client/usr/vice/etc</emphasis>
-</programlisting></para>
-            </listitem>
-
-            <listitem>
-              <para>Copy the AFS kernel library files to the local <emphasis role="bold">/usr/vice/etc/dkload</emphasis> directory,
-              and the AFS initialization script to the <emphasis role="bold">/etc</emphasis> directory. <programlisting>
-   # <emphasis role="bold">cp -rp  dkload  /usr/vice/etc</emphasis>
-   # <emphasis role="bold">cp -p  rc.afs  /etc/rc.afs</emphasis>
-</programlisting></para>
-            </listitem>
-
-            <listitem>
-              <para>Edit the <emphasis role="bold">/etc/rc.afs</emphasis> script, setting the <computeroutput>NFS</computeroutput>
-              variable as indicated.</para>
-
-              <para>If the machine is not to function as an NFS/AFS Translator, set the <computeroutput>NFS</computeroutput>
-              variable as follows.</para>
-
-              <programlisting>
-   NFS=$NFS_NONE
-</programlisting>
-
-              <para>If the machine is to function as an NFS/AFS Translator and is running AIX 4.2.1 or higher, set the
-              <computeroutput>NFS</computeroutput> variable as follows. Note that NFS must already be loaded into the kernel, which
-              happens automatically on systems running AIX 4.1.1 and later, as long as the file <emphasis
-              role="bold">/etc/exports</emphasis> exists.</para>
-
-              <programlisting>
-   NFS=$NFS_IAUTH
-</programlisting>
-            </listitem>
-
-            <listitem>
-              <para>Invoke the <emphasis role="bold">/etc/rc.afs</emphasis> script to load AFS modifications into the kernel. You
-              can ignore any error messages about the inability to start the BOS Server or the Cache Manager or AFS client.
-              <programlisting>
-   # <emphasis role="bold">/etc/rc.afs</emphasis>
-</programlisting> <indexterm>
-                  <primary>configuring</primary>
-
-                  <secondary>AFS server partition on server machine after first</secondary>
-
-                  <tertiary>AIX</tertiary>
-                </indexterm> <indexterm>
-                  <primary>AFS server partition</primary>
-
-                  <secondary>configuring on server machine after first</secondary>
-
-                  <tertiary>AIX</tertiary>
-                </indexterm> <indexterm>
-                  <primary>file server machine, additional</primary>
-
-                  <secondary>AFS server partition</secondary>
-
-                  <tertiary>on AIX</tertiary>
-                </indexterm> <indexterm>
-                  <primary>AIX</primary>
-
-                  <secondary>AFS server partition</secondary>
-
-                  <tertiary>on add'l server machine</tertiary>
-                </indexterm></para>
-            </listitem>
-
-            <listitem>
-              <para>Create a directory called <emphasis role="bold">/vicep</emphasis><replaceable>xx</replaceable> for each AFS
-              server partition you are configuring (there must be at least one). Repeat the command for each partition.
-              <programlisting>
-   # <emphasis role="bold">mkdir /vicep</emphasis><replaceable>xx</replaceable>
-</programlisting></para>
-            </listitem>
-
-            <listitem>
-              <para>Use the <emphasis role="bold">SMIT</emphasis> program to create a journaling file system on each partition to be
-              configured as an AFS server partition.</para>
-            </listitem>
-
-            <listitem>
-              <para>Mount each partition at one of the <emphasis role="bold">/vicep</emphasis><replaceable>xx</replaceable>
-              directories. Choose one of the following three methods: <itemizedlist>
-                  <listitem>
-                    <para>Use the <emphasis role="bold">SMIT</emphasis> program</para>
-                  </listitem>
-
-                  <listitem>
-                    <para>Use the <emphasis role="bold">mount -a</emphasis> command to mount all partitions at once</para>
-                  </listitem>
-
-                  <listitem>
-                    <para>Use the <emphasis role="bold">mount</emphasis> command on each partition in turn</para>
-                  </listitem>
-                </itemizedlist></para>
-
-              <para>Also configure the partitions so that they are mounted automatically at each reboot. For more information, refer
-              to the AIX documentation. <indexterm>
-                  <primary>replacing fsck program</primary>
-
-                  <secondary>server machine after first</secondary>
-
-                  <tertiary>AIX</tertiary>
-                </indexterm> <indexterm>
-                  <primary>fsck program</primary>
-
-                  <secondary>on server machine after first</secondary>
-
-                  <tertiary>AIX</tertiary>
-                </indexterm> <indexterm>
-                  <primary>file server machine, additional</primary>
-
-                  <secondary>fsck program</secondary>
-
-                  <tertiary>on AIX</tertiary>
-                </indexterm> <indexterm>
-                  <primary>AIX</primary>
-
-                  <secondary>fsck program</secondary>
-
-                  <tertiary>on add'l server machine</tertiary>
-                </indexterm></para>
-            </listitem>
-
-            <listitem>
-              <para>On systems prior to AIX 5.1, move the AIX 
-              <emphasis role="bold">fsck</emphasis> program helper to a safe 
-              location and install the version from the AFS distribution in 
-              its place. Note that on AIX 5.1, and later, systems this step is
-              not required, and the <emphasis role="bold">v3fshelper</emphasis>
-              program is not shipped for these systems.</para>
-              
-              <para>The AFS binary distribution must still be available in the
-              <emphasis role="bold">/tmp/afsdist</emphasis> directory. 
-<programlisting>
-   # <emphasis role="bold">cd /sbin/helpers</emphasis>
-   # <emphasis role="bold">mv v3fshelper v3fshelper.noafs</emphasis>
-   # <emphasis role="bold">cp -p /tmp/afsdist/rs_aix42/dest/root.server/etc/v3fshelper v3fshelper</emphasis>
-</programlisting></para>
-            </listitem>
-
-            <listitem>
-              <para>If the machine is to remain an AFS client, incorporate AFS into its authentication system, following the
-              instructions in <link linkend="HDRWQ25">Enabling AFS Login on AIX Systems</link>.</para>
-            </listitem>
-
-            <listitem>
-              <para>Proceed to <link linkend="HDRWQ108">Starting Server Programs</link>.</para>
-            </listitem>
-          </orderedlist></para>
-      </sect3>
-
-      <sect3 id="HDRWQ103">
-        <title>Getting Started on HP-UX Systems</title>
-
-        <para>Begin by building AFS modifications into the kernel, then configure server partitions and replace the HP-UX <emphasis
-        role="bold">fsck</emphasis> program with a version that correctly handles AFS volumes.</para>
-
-        <para>If the machine's hardware and software configuration exactly matches another HP-UX machine on which AFS is already
-        built into the kernel, you can copy the kernel from that machine to this one. In general, however, it is better to build AFS
-        modifications into the kernel on each machine according to the following instructions. 
-          <orderedlist>
-            <indexterm>
-              <primary>incorporating AFS kernel extensions</primary>
-
-              <secondary>server machine after first</secondary>
-
-              <tertiary>HP-UX</tertiary>
-            </indexterm>
-
-            <indexterm>
-              <primary>AFS kernel extensions</primary>
-
-              <secondary>on server machine after first</secondary>
-
-              <tertiary>HP-UX</tertiary>
-            </indexterm>
-
-            <indexterm>
-              <primary>file server machine, additional</primary>
-
-              <secondary>AFS kernel extensions</secondary>
-
-              <tertiary>on HP-UX</tertiary>
-            </indexterm>
-
-            <indexterm>
-              <primary>HP-UX</primary>
-
-              <secondary>AFS-modified kernel</secondary>
-
-              <tertiary>on add'l server machine</tertiary>
-            </indexterm>
-
-            <listitem>
-              <para>Move the existing kernel-related files to a safe location. <programlisting>
-   # <emphasis role="bold">cp /stand/vmunix /stand/vmunix.noafs</emphasis>
-   # <emphasis role="bold">cp /stand/system /stand/system.noafs</emphasis>
-</programlisting></para>
-            </listitem>
-
-            <listitem>
-              <para>Unpack the OpenAFS HP-UX distribution tarball. The examples 
-              below assume that you have unpacked the files into the 
-              <emphasis role="bold">/tmp/afsdist</emphasis> directory. If you 
-              pick a different location, substitute this in all of the following 
-              examples. Once you have unpacked the distribution, change 
-              directory as indicated.
-<programlisting>
-   # <emphasis role="bold">cd /tmp/afsdist/hp_ux110/dest/root.client</emphasis>
-</programlisting></para>
-            </listitem>
-
-            <listitem>
-              <para>Copy the AFS initialization file to the local directory for initialization files (by convention, <emphasis
-              role="bold">/sbin/init.d</emphasis> on HP-UX machines). Note the removal of the <emphasis role="bold">.rc</emphasis>
-              extension as you copy the file. <programlisting>
-   # <emphasis role="bold">cp usr/vice/etc/afs.rc  /sbin/init.d/afs</emphasis>
-</programlisting></para>
-            </listitem>
-
-            <listitem>
-              <para>Copy the file <emphasis role="bold">afs.driver</emphasis> to the local <emphasis
-              role="bold">/usr/conf/master.d</emphasis> directory, changing its name to <emphasis role="bold">afs</emphasis> as you
-              do. <programlisting>
-   # <emphasis role="bold">cp  usr/vice/etc/afs.driver  /usr/conf/master.d/afs</emphasis>
-</programlisting></para>
-            </listitem>
-
-            <listitem>
-              <para>Copy the AFS kernel module to the local <emphasis role="bold">/usr/conf/lib</emphasis> directory.</para>
-
-              <para>If the machine's kernel supports NFS server functionality:</para>
-
-              <programlisting>
-   # <emphasis role="bold">cp bin/libafs.a /usr/conf/lib</emphasis>   
-</programlisting>
-
-              <para>If the machine's kernel does not support NFS server functionality, change the file's name as you copy it:</para>
-
-              <programlisting>
-   # <emphasis role="bold">cp bin/libafs.nonfs.a /usr/conf/lib/libafs.a</emphasis>
-</programlisting>
-            </listitem>
-
-            <listitem>
-              <para>Incorporate the AFS driver into the kernel, either using the <emphasis role="bold">SAM</emphasis> program or a
-              series of individual commands. <itemizedlist>
-                  <listitem>
-                    <para>To use the <emphasis role="bold">SAM</emphasis> program: <orderedlist>
-                        <listitem>
-                          <para>Invoke the <emphasis role="bold">SAM</emphasis> program, specifying the hostname of the local
-                          machine as <replaceable>local_hostname</replaceable>. The <emphasis role="bold">SAM</emphasis> graphical
-                          user interface pops up. <programlisting>
-   # <emphasis role="bold">sam -display</emphasis> <replaceable>local_hostname</replaceable><emphasis role="bold">:0</emphasis> 
-</programlisting></para>
-                        </listitem>
-
-                        <listitem>
-                          <para>Choose the <emphasis role="bold">Kernel Configuration</emphasis> icon, then the <emphasis
-                          role="bold">Drivers</emphasis> icon. From the list of drivers, select <emphasis
-                          role="bold">afs</emphasis>.</para>
-                        </listitem>
-
-                        <listitem>
-                          <para>Open the pull-down <emphasis role="bold">Actions</emphasis> menu and choose the <emphasis
-                          role="bold">Add Driver to Kernel</emphasis> option.</para>
-                        </listitem>
-
-                        <listitem>
-                          <para>Open the <emphasis role="bold">Actions</emphasis> menu again and choose the <emphasis
-                          role="bold">Create a New Kernel</emphasis> option.</para>
-                        </listitem>
-
-                        <listitem>
-                          <para>Confirm your choices by choosing <emphasis role="bold">Yes</emphasis> and <emphasis
-                          role="bold">OK</emphasis> when prompted by subsequent pop-up windows. The <emphasis
-                          role="bold">SAM</emphasis> program builds the kernel and reboots the system.</para>
-                        </listitem>
-
-                        <listitem>
-                          <para>Login again as the superuser <emphasis role="bold">root</emphasis>. <programlisting>
-   login: <emphasis role="bold">root</emphasis>
-   Password: <replaceable>root_password</replaceable>
-</programlisting></para>
-                        </listitem>
-                      </orderedlist></para>
-                  </listitem>
-
-                  <listitem>
-                    <para>To use individual commands: <orderedlist>
-                        <listitem>
-                          <para>Edit the file <emphasis role="bold">/stand/system</emphasis>, adding an entry for <emphasis
-                          role="bold">afs</emphasis> to the <computeroutput>Subsystems</computeroutput> section.</para>
-                        </listitem>
-
-                        <listitem>
-                          <para>Change to the <emphasis role="bold">/stand/build</emphasis> directory and issue the <emphasis
-                          role="bold">mk_kernel</emphasis> command to build the kernel. <programlisting>
-   # <emphasis role="bold">cd /stand/build</emphasis>
-   # <emphasis role="bold">mk_kernel</emphasis>
-</programlisting></para>
-                        </listitem>
-
-                        <listitem>
-                          <para>Move the new kernel to the standard location (<emphasis role="bold">/stand/vmunix</emphasis>),
-                          reboot the machine to start using it, and login again as the superuser <emphasis
-                          role="bold">root</emphasis>. <programlisting>
-   # <emphasis role="bold">mv /stand/build/vmunix_test /stand/vmunix</emphasis>
-   # <emphasis role="bold">cd /</emphasis>
-   # <emphasis role="bold">shutdown -r now</emphasis>             
-   login: <emphasis role="bold">root</emphasis>
-   Password: <replaceable>root_password</replaceable>
-</programlisting></para>
-                        </listitem>
-                      </orderedlist></para>
-                  </listitem>
-                </itemizedlist></para>
-
-              <indexterm>
-                <primary>configuring</primary>
-
-                <secondary>AFS server partition on server machine after first</secondary>
-
-                <tertiary>HP-UX</tertiary>
-              </indexterm>
-
-              <indexterm>
-                <primary>AFS server partition</primary>
-
-                <secondary>configuring on server machine after first</secondary>
-
-                <tertiary>HP-UX</tertiary>
-              </indexterm>
-
-              <indexterm>
-                <primary>file server machine, additional</primary>
-
-                <secondary>AFS server partition</secondary>
-
-                <tertiary>on HP-UX</tertiary>
-              </indexterm>
-
-              <indexterm>
-                <primary>HP-UX</primary>
-
-                <secondary>AFS server partition</secondary>
-
-                <tertiary>on add'l server machine</tertiary>
-              </indexterm>
-            </listitem>
-
-            <listitem>
-              <para>Create a directory called <emphasis role="bold">/vicep</emphasis><replaceable>xx</replaceable> for each AFS
-              server partition you are configuring (there must be at least one). Repeat the command for each partition.
-              <programlisting>
-   # <emphasis role="bold">mkdir /vicep</emphasis><replaceable>xx</replaceable>
-</programlisting></para>
-            </listitem>
-
-            <listitem>
-              <para>Use the <emphasis role="bold">SAM</emphasis> program to create a file system on each partition. For
-              instructions, consult the HP-UX documentation.</para>
-            </listitem>
-
-            <listitem>
-              <para>On some HP-UX systems that use logical volumes, the <emphasis role="bold">SAM</emphasis> program automatically
-              mounts the partitions. If it has not, mount each partition by issuing either the <emphasis role="bold">mount
-              -a</emphasis> command to mount all partitions at once or the <emphasis role="bold">mount</emphasis> command to mount
-              each partition in turn. <indexterm>
-                  <primary>replacing fsck program</primary>
-
-                  <secondary>server machine after first</secondary>
-
-                  <tertiary>HP-UX</tertiary>
-                </indexterm> <indexterm>
-                  <primary>fsck program</primary>
-
-                  <secondary>on server machine after first</secondary>
-
-                  <tertiary>HP-UX</tertiary>
-                </indexterm> <indexterm>
-                  <primary>file server machine, additional</primary>
-
-                  <secondary>fsck program</secondary>
-
-                  <tertiary>on HP-UX</tertiary>
-                </indexterm> <indexterm>
-                  <primary>HP-UX</primary>
-
-                  <secondary>fsck program</secondary>
-
-                  <tertiary>on add'l server machine</tertiary>
-                </indexterm></para>
-            </listitem>
-
-            <listitem>
-              <para>Create the command configuration file <emphasis role="bold">/sbin/lib/mfsconfig.d/afs</emphasis>. Use a text
-              editor to place the indicated two lines in it: <programlisting>
-   format_revision 1
-   fsck            0        m,P,p,d,f,b:c:y,n,Y,N,q,
-</programlisting></para>
-            </listitem>
-
-            <listitem>
-              <para>Create and change directory to an AFS-specific command directory called <emphasis
-              role="bold">/sbin/fs/afs</emphasis>. <programlisting>
-   # <emphasis role="bold">mkdir /sbin/fs/afs</emphasis>
-   # <emphasis role="bold">cd  /sbin/fs/afs</emphasis>
-</programlisting></para>
-            </listitem>
-
-            <listitem>
-              <para>Copy the AFS-modified version of the <emphasis role="bold">fsck</emphasis> program (the <emphasis
-              role="bold">vfsck</emphasis> binary) and related files from the distribution directory to the new AFS-specific command
-              directory. <programlisting>
-   # <emphasis role="bold">cp -p /tmp/afsdist/hp_ux110/dest/root.server/etc/*  .</emphasis>
-</programlisting></para>
-            </listitem>
-
-            <listitem>
-              <para>Change the <emphasis role="bold">vfsck</emphasis> binary's name to <emphasis role="bold">fsck</emphasis> and set
-              the mode bits appropriately on all of the files in the <emphasis role="bold">/sbin/fs/afs</emphasis> directory.
-              <programlisting>
-   # <emphasis role="bold">mv  vfsck  fsck</emphasis>
-   # <emphasis role="bold">chmod  755  *</emphasis>
-</programlisting></para>
-            </listitem>
-
-            <listitem>
-              <para>Edit the <emphasis role="bold">/etc/fstab</emphasis> file, changing the file system type for each AFS server
-              partition from <computeroutput>hfs</computeroutput> to <computeroutput>afs</computeroutput>. This ensures that the
-              AFS-modified <emphasis role="bold">fsck</emphasis> program runs on the appropriate partitions.</para>
-
-              <para>The sixth line in the following example of an edited file shows an AFS server partition, <emphasis
-              role="bold">/vicepa</emphasis>.</para>
-
-              <programlisting>
-   /dev/vg00/lvol1 / hfs defaults 0 1
-   /dev/vg00/lvol4 /opt hfs defaults 0 2
-   /dev/vg00/lvol5 /tmp hfs defaults 0 2
-   /dev/vg00/lvol6 /usr hfs defaults 0 2
-   /dev/vg00/lvol8 /var hfs defaults 0 2
-   /dev/vg00/lvol9 /vicepa afs defaults 0 2
-   /dev/vg00/lvol7 /usr/vice/cache hfs defaults 0 2
-</programlisting>
-            </listitem>
-
-            <listitem>
-              <para>If the machine is to remain an AFS client, incorporate AFS into its authentication system, following the
-              instructions in <link linkend="HDRWQ35">Enabling AFS Login on HP-UX Systems</link>.</para>
-            </listitem>
-
-            <listitem>
-              <para>Proceed to <link linkend="HDRWQ108">Starting Server Programs</link>.</para>
-            </listitem>
-          </orderedlist></para>
-      </sect3>
-
-      <sect3 id="HDRWQ104">
-        <title>Getting Started on IRIX Systems</title>
-
-        <para>Begin by incorporating AFS modifications into the kernel. Either use the <emphasis role="bold">ml</emphasis> dynamic
-        loader program, or build a static kernel. Then configure partitions to house AFS volumes. AFS supports use of both EFS and
-        XFS partitions for housing AFS volumes. SGI encourages use of XFS partitions. <indexterm>
-            <primary>file server machine, additional</primary>
-
-            <secondary>fsck program</secondary>
-
-            <tertiary>on IRIX</tertiary>
-          </indexterm> <indexterm>
-            <primary>fsck program</primary>
-
-            <secondary>on server machine after first</secondary>
-
-            <tertiary>IRIX</tertiary>
-          </indexterm></para>
-
-        <para>You do not need to replace IRIX <emphasis role="bold">fsck</emphasis> program, because the version that SGI
-        distributes handles AFS volumes properly. <orderedlist>
-            <indexterm>
-              <primary>incorporating AFS kernel extensions</primary>
-
-              <secondary>server machine after first</secondary>
-
-              <tertiary>IRIX</tertiary>
-            </indexterm>
-
-            <indexterm>
-              <primary>AFS kernel extensions</primary>
-
-              <secondary>on server machine after first</secondary>
-
-              <tertiary>IRIX</tertiary>
-            </indexterm>
-
-            <indexterm>
-              <primary>file server machine, additional</primary>
-
-              <secondary>AFS kernel extensions</secondary>
-
-              <tertiary>on IRIX</tertiary>
-            </indexterm>
-
-            <listitem>
-              <para>Prepare for incorporating AFS into the kernel by performing the following procedures. <orderedlist>
-                  <listitem>
-                    <para>Unpack the OpenAFS IRIX distribution tarball. The 
-                    examples below assume that you have unpacked the files into 
-                    the <emphasis role="bold">/tmp/afsdist</emphasis> 
-                    directory. If you pick a different location, substitue this 
-                    in all of the following examples. Once you have unpacked 
-                    the distribution, change directory as indicated.
-<programlisting>
-   # <emphasis role="bold">cd /tmp/afsdist/sgi_65/dest/root.client</emphasis>
-</programlisting></para>
-                  </listitem>
-
-                  <listitem>
-                    <para>Copy the AFS initialization script to the local directory for initialization files (by convention,
-                    <emphasis role="bold">/etc/init.d</emphasis> on IRIX machines). Note the removal of the <emphasis
-                    role="bold">.rc</emphasis> extension as you copy the script. <programlisting>
-   # <emphasis role="bold">cp -p   usr/vice/etc/afs.rc  /etc/init.d/afs</emphasis>
-</programlisting></para>
-                  </listitem>
-
-                  <listitem>
-                    <para>Issue the <emphasis role="bold">uname -m</emphasis> command to determine the machine's CPU board type. The
-                    <emphasis role="bold">IP</emphasis><replaceable>xx</replaceable> value in the output must match one of the
-                    supported CPU board types listed in the <emphasis>OpenAFS Release Notes</emphasis> for the current version of
-                    AFS. <programlisting>
-   # <emphasis role="bold">uname -m</emphasis>
-</programlisting></para>
-                  </listitem>
-                </orderedlist></para>
-            </listitem>
-
-            <listitem>
-              <para>Incorporate AFS into the kernel, either using the <emphasis role="bold">ml</emphasis> program or by building AFS
-              modifications into a static kernel. <itemizedlist>
-                  <indexterm>
-                    <primary>IRIX</primary>
-
-                    <secondary>AFS kernel extensions</secondary>
-
-                    <tertiary>on server machine after first</tertiary>
-                  </indexterm>
-
-                  <listitem>
-                    <para>To use the <emphasis role="bold">ml</emphasis> program: <indexterm>
-                        <primary>afsml variable (IRIX)</primary>
-
-                        <secondary>server machine after first</secondary>
-                      </indexterm> <indexterm>
-                        <primary>variables</primary>
-
-                        <secondary>afsml (IRIX)</secondary>
-
-                        <tertiary>server machine after first</tertiary>
-                      </indexterm> <indexterm>
-                        <primary>IRIX</primary>
-
-                        <secondary>afsml variable</secondary>
-
-                        <tertiary>server machine after first</tertiary>
-                      </indexterm> <indexterm>
-                        <primary>afsxnfs variable (IRIX)</primary>
-
-                        <secondary>server machine after first</secondary>
-                      </indexterm> <indexterm>
-                        <primary>variables</primary>
-
-                        <secondary>afsxnfs (IRIX)</secondary>
-
-                        <tertiary>server machine after first</tertiary>
-                      </indexterm> <indexterm>
-                        <primary>IRIX</primary>
-
-                        <secondary>afsxnfs variable</secondary>
-
-                        <tertiary>server machine after first</tertiary>
-                      </indexterm> <orderedlist>
-                        <listitem>
-                          <para>Create the local <emphasis role="bold">/usr/vice/etc/sgiload</emphasis> directory to house the AFS
-                          kernel library file. <programlisting>
-   # <emphasis role="bold">mkdir /usr/vice/etc/sgiload</emphasis>
-</programlisting></para>
-                        </listitem>
-
-                        <listitem>
-                          <para>Copy the appropriate AFS kernel library file to the <emphasis
-                          role="bold">/usr/vice/etc/sgiload</emphasis> directory. The <emphasis
-                          role="bold">IP</emphasis><replaceable>xx</replaceable> portion of the library file name must match the
-                          value previously returned by the <emphasis role="bold">uname -m</emphasis> command. Also choose the file
-                          appropriate to whether the machine's kernel supports NFS server functionality (NFS must be supported for
-                          the machine to act as an NFS/AFS Translator). Single- and multiprocessor machines use the same library
-                          file.</para>
-
-                          <para>(You can choose to copy all of the kernel library files into the <emphasis
-                          role="bold">/usr/vice/etc/sgiload</emphasis> directory, but they require a significant amount of
-                          space.)</para>
-
-                          <para>If the machine's kernel supports NFS server functionality:</para>
-
-                          <programlisting>
-   # <emphasis role="bold">cp -p  usr/vice/etc/sgiload/libafs.IP</emphasis><replaceable>xx</replaceable><emphasis role="bold">.o  /usr/vice/etc/sgiload</emphasis>   
-</programlisting>
-
-                          <para>If the machine's kernel does not support NFS server functionality:</para>
-
-                          <programlisting>
-   # <emphasis role="bold">cp -p  usr/vice/etc/sgiload/libafs.IP</emphasis><replaceable>xx</replaceable><emphasis role="bold">.nonfs.o</emphasis>   \
-                   <emphasis role="bold">/usr/vice/etc/sgiload</emphasis>
-</programlisting>
-                        </listitem>
-
-                        <listitem>
-                          <para>Issue the <emphasis role="bold">chkconfig</emphasis> command to activate the <emphasis
-                          role="bold">afsml</emphasis> configuration variable. <programlisting>
-   # <emphasis role="bold">/etc/chkconfig -f afsml on</emphasis>   
-</programlisting></para>
-
-                          <para>If the machine is to function as an NFS/AFS Translator and the kernel supports NFS server
-                          functionality, activate the <emphasis role="bold">afsxnfs</emphasis> variable.</para>
-
-                          <programlisting>
-   # <emphasis role="bold">/etc/chkconfig -f afsxnfs on</emphasis>
-</programlisting>
-                        </listitem>
-
-                        <listitem>
-                          <para>Run the <emphasis role="bold">/etc/init.d/afs</emphasis> script to load AFS extensions into the
-                          kernel. The script invokes the <emphasis role="bold">ml</emphasis> command, automatically determining
-                          which kernel library file to use based on this machine's CPU type and the activation state of the
-                          <emphasis role="bold">afsxnfs</emphasis> variable.</para>
-
-                          <para>You can ignore any error messages about the inability to start the BOS Server or the Cache Manager
-                          or AFS client.</para>
-
-                          <programlisting>
-   # <emphasis role="bold">/etc/init.d/afs start</emphasis>
-</programlisting>
-                        </listitem>
-
-                        <listitem>
-                          <para>Proceed to Step <link linkend="LIWQ105">3</link>.</para>
-                        </listitem>
-                      </orderedlist></para>
-
-                    <indexterm>
-                      <primary>IRIX</primary>
-
-                      <secondary>AFS-modified kernel</secondary>
-
-                      <tertiary>on add'l server machine</tertiary>
-                    </indexterm>
-                  </listitem>
-
-                  <listitem>
-                    <para>If you prefer to build a kernel, and the machine's hardware and software configuration exactly matches
-                    another IRIX machine on which AFS is already built into the kernel, you can copy the kernel from that machine to
-                    this one. In general, however, it is better to build AFS modifications into the kernel on each machine according
-                    to the following instructions. <orderedlist>
-                        <listitem>
-                          <para>Copy the kernel initialization file <emphasis role="bold">afs.sm</emphasis> to the local <emphasis
-                          role="bold">/var/sysgen/system</emphasis> directory, and the kernel master file <emphasis
-                          role="bold">afs</emphasis> to the local <emphasis role="bold">/var/sysgen/master.d</emphasis> directory.
-                          <programlisting>
-   # <emphasis role="bold">cp -p  bin/afs.sm  /var/sysgen/system</emphasis>
-   # <emphasis role="bold">cp -p  bin/afs  /var/sysgen/master.d</emphasis>
-</programlisting></para>
-                        </listitem>
-
-                        <listitem>
-                          <para>Copy the appropriate AFS kernel library file to the local file <emphasis
-                          role="bold">/var/sysgen/boot/afs.a</emphasis>; the <emphasis
-                          role="bold">IP</emphasis><replaceable>xx</replaceable> portion of the library file name must match the
-                          value previously returned by the <emphasis role="bold">uname -m</emphasis> command. Also choose the file
-                          appropriate to whether the machine's kernel supports NFS server functionality (NFS must be supported for
-                          the machine to act as an NFS/AFS Translator). Single- and multiprocessor machines use the same library
-                          file.</para>
-
-                          <para>If the machine's kernel supports NFS server functionality:</para>
-
-                          <programlisting>
-   # <emphasis role="bold">cp -p   bin/libafs.IP</emphasis><replaceable>xx</replaceable><emphasis role="bold">.a   /var/sysgen/boot/afs.a</emphasis>   
-</programlisting>
-
-                          <para>If the machine's kernel does not support NFS server functionality:</para>
-
-                          <programlisting>
-   # <emphasis role="bold">cp -p  bin/libafs.IP</emphasis><replaceable>xx</replaceable><emphasis role="bold">.nonfs.a  /var/sysgen/boot/afs.a</emphasis>
-</programlisting>
-                        </listitem>
-
-                        <listitem>
-                          <para>Issue the <emphasis role="bold">chkconfig</emphasis> command to deactivate the <emphasis
-                          role="bold">afsml</emphasis> configuration variable. <programlisting>
-   # <emphasis role="bold">/etc/chkconfig -f afsml off</emphasis>   
-</programlisting></para>
-
-                          <para>If the machine is to function as an NFS/AFS Translator and the kernel supports NFS server
-                          functionality, activate the <emphasis role="bold">afsxnfs</emphasis> variable.</para>
-
-                          <programlisting>
-   # <emphasis role="bold">/etc/chkconfig -f afsxnfs on</emphasis>
-</programlisting>
-                        </listitem>
-
-                        <listitem>
-                          <para>Copy the existing kernel file, <emphasis role="bold">/unix</emphasis>, to a safe location. Compile
-                          the new kernel, which is created in the file <emphasis role="bold">/unix.install</emphasis>. It overwrites
-                          the existing <emphasis role="bold">/unix</emphasis> file when the machine reboots in the next step.
-                          <programlisting>
-   # <emphasis role="bold">cp /unix /unix_noafs</emphasis>
-   # <emphasis role="bold">autoconfig</emphasis>
-</programlisting></para>
-                        </listitem>
-
-                        <listitem>
-                          <para>Reboot the machine to start using the new kernel, and login again as the superuser <emphasis
-                          role="bold">root</emphasis>. <programlisting>
-   # <emphasis role="bold">cd /</emphasis>
-   # <emphasis role="bold">shutdown -i6 -g0 -y</emphasis>
-   login: <emphasis role="bold">root</emphasis>
-   Password: <replaceable>root_password</replaceable>
-</programlisting></para>
-                        </listitem>
-                      </orderedlist></para>
-                  </listitem>
-                </itemizedlist></para>
-
-              <indexterm>
-                <primary>configuring</primary>
-
-                <secondary>AFS server partition on server machine after first</secondary>
-
-                <tertiary>IRIX</tertiary>
-              </indexterm>
-
-              <indexterm>
-                <primary>AFS server partition</primary>
-
-                <secondary>configuring on server machine after first</secondary>
-
-                <tertiary>IRIX</tertiary>
-              </indexterm>
-
-              <indexterm>
-                <primary>file server machine, additional</primary>
-
-                <secondary>AFS server partition</secondary>
-
-                <tertiary>on IRIX</tertiary>
-              </indexterm>
-
-              <indexterm>
-                <primary>IRIX</primary>
-
-                <secondary>AFS server partition</secondary>
-
-                <tertiary>on add'l server machine</tertiary>
-              </indexterm>
-            </listitem>
-
-            <listitem>
-              <para><anchor id="LIWQ105" />Create a directory called <emphasis
-              role="bold">/vicep</emphasis><replaceable>xx</replaceable> for each AFS server partition you are configuring (there
-              must be at least one). Repeat the command for each partition. <programlisting>
-   # <emphasis role="bold">mkdir /vicep</emphasis><replaceable>xx</replaceable>
-</programlisting></para>
-            </listitem>
-
-            <listitem>
-              <para>Add a line with the following format to the file systems registry file, <emphasis
-              role="bold">/etc/fstab</emphasis>, for each partition (or logical volume created with the XLV volume manager) to be
-              mounted on one of the directories created in the previous step.</para>
-
-              <para>For an XFS partition or logical volume:</para>
-
-              <programlisting>
-   /dev/dsk/<replaceable>disk</replaceable>  /vicep<replaceable>xx</replaceable>  xfs  rw,raw=/dev/rdsk/<replaceable>disk</replaceable>  0  0   
-</programlisting>
-
-              <para>For an EFS partition:</para>
-
-              <programlisting>
-   /dev/dsk/<replaceable>disk</replaceable>  /vicep<replaceable>xx</replaceable>  efs  rw,raw=/dev/rdsk/<replaceable>disk</replaceable>  0  0   
-</programlisting>
-
-              <para>The following are examples of an entry for each file system type:</para>
-
-              <programlisting>
-   /dev/dsk/dks0d2s6 /vicepa  xfs rw,raw=/dev/rdsk/dks0d2s6  0 0
-   /dev/dsk/dks0d3s1 /vicepb  efs rw,raw=/dev/rdsk/dks0d3s1  0 0
-</programlisting>
-            </listitem>
-
-            <listitem>
-              <para>Create a file system on each partition that is to be mounted on a <emphasis
-              role="bold">/vicep</emphasis><replaceable>xx</replaceable> directory. The following commands are probably appropriate,
-              but consult the IRIX documentation for more information. In both cases, <replaceable>raw_device</replaceable> is a raw
-              device name like <emphasis role="bold">/dev/rdsk/dks0d0s0</emphasis> for a single disk partition or <emphasis
-              role="bold">/dev/rxlv/xlv0</emphasis> for a logical volume.</para>
-
-              <para>For XFS file systems, include the indicated options to configure the partition or logical volume with inodes
-              large enough to accommodate AFS-specific information:</para>
-
-              <programlisting>
-   # <emphasis role="bold">mkfs -t xfs -i size=512 -l size=4000b</emphasis> <replaceable>raw_device</replaceable>   
-</programlisting>
-
-              <para>For EFS file systems:</para>
-
-              <programlisting>
-   # <emphasis role="bold">mkfs -t efs</emphasis> <replaceable>raw_device</replaceable>
-</programlisting>
-            </listitem>
-
-            <listitem>
-              <para>Mount each partition by issuing either the <emphasis role="bold">mount -a</emphasis> command to mount all
-              partitions at once or the <emphasis role="bold">mount</emphasis> command to mount each partition in turn.</para>
-            </listitem>
-
-            <listitem>
-              <para><emphasis role="bold">(Optional)</emphasis> If you have configured partitions or logical volumes to use XFS,
-              issue the following command to verify that the inodes are configured properly (are large enough to accommodate
-              AFS-specific information). If the configuration is correct, the command returns no output. Otherwise, it specifies the
-              command to run in order to configure each partition or logical volume properly. <programlisting>
-   # <emphasis role="bold">/usr/afs/bin/xfs_size_check</emphasis>
-</programlisting></para>
-            </listitem>
-
-            <listitem>
-              <para>If the machine is to remain an AFS client, incorporate AFS into its authentication system, following the
-              instructions in <link linkend="HDRWQ40">Enabling AFS Login on IRIX Systems</link>.</para>
-            </listitem>
-
-            <listitem>
-              <para>Proceed to <link linkend="HDRWQ108">Starting Server Programs</link>.</para>
-            </listitem>
-          </orderedlist></para>
-      </sect3>
 
       <sect3 id="HDRWQ106">
         <title>Getting Started on Linux Systems</title>
@@ -1667,7 +769,7 @@
     <sect2 id="HDRWQ108">
       <title>Starting Server Programs</title>
 
-      <para>In this section you initialize the BOS Server, the Update Server, the controller process for NTPD, and the <emphasis
+      <para>In this section you initialize the BOS Server, the Update Server, and the <emphasis
       role="bold">fs</emphasis> process. You begin by copying the necessary server files to the local disk. <orderedlist>
           <indexterm>
             <primary>copying</primary>
@@ -1895,8 +997,8 @@
               </indexterm></para>
           </listitem>
 
-          <listitem>
-            <para><anchor id="LIWQ109" />If you run a system control machine, create the <emphasis
+          <listitem id="LIWQ109">
+            <para>If you run a system control machine, create the <emphasis
             role="bold">upclientetc</emphasis> process as an instance of the client portion of the Update Server. It accepts updates
             of the common configuration files stored in the system control machine's <emphasis role="bold">/usr/afs/etc</emphasis>
             directory from the <emphasis role="bold">upserver</emphasis> process (server portion of the Update Server) running on
@@ -1940,8 +1042,8 @@
             </indexterm>
           </listitem>
 
-          <listitem>
-            <para><anchor id="LIWQ110" />Create an instance of the Update 
+          <listitem id="LIWQ110">
+            <para>Create an instance of the Update 
             Server to handle distribution of the file server binaries
             stored in the <emphasis role="bold">/usr/afs/bin</emphasis> 
             directory. If your architecture using a package management system
@@ -1986,63 +1088,6 @@
 </programlisting>
                 </listitem>
               </itemizedlist>
-
-            <indexterm>
-              <primary>runntp process</primary>
-
-              <secondary>server machine after first</secondary>
-            </indexterm>
-
-            <indexterm>
-              <primary>starting</primary>
-
-              <secondary>runntp process</secondary>
-
-              <tertiary>server machine after first</tertiary>
-            </indexterm>
-
-            <indexterm>
-              <primary>file server machine, additional</primary>
-
-              <secondary>runntp process</secondary>
-            </indexterm>
-
-            <indexterm>
-              <primary>NTPD</primary>
-
-              <secondary>server machine after first</secondary>
-            </indexterm>
-          </listitem>
-
-          <listitem>
-          
-            <note>
-              <para>Historically, AFS provided its own version of the
-              Network Time Protocol Daemon. Whilst this is still provided for
-              existing sites, we recommend that you configure and run your
-              own timeservice independently of AFS. The instructions below are
-              provided for those sites still reliant upon OpenAFS's ntp system.
-              </para>
-            </note>
-            
-            <para>Start the <emphasis role="bold">runntp</emphasis> process, which configures the Network Time Protocol Daemon
-            (NTPD) to choose a database server machine chosen randomly from the local <emphasis
-            role="bold">/usr/afs/etc/CellServDB</emphasis> file as its time source. In the standard configuration, the first
-            database server machine installed in your cell refers to a time source outside the cell, and serves as the basis for
-            clock synchronization on all server machines. <programlisting>
-   # <emphasis role="bold">./bos create</emphasis>  &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">runntp simple</emphasis>  \ 
-         <emphasis role="bold">/usr/afs/bin/runntp -cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt;  <emphasis
-                  role="bold">-noauth</emphasis>
-</programlisting></para>
-
-            <note>
-              <para>Do not run the <emphasis role="bold">runntp</emphasis> process if NTPD or another time synchronization protocol
-              is already running on the machine. Some versions of some operating systems run a time synchronization program by
-              default, as detailed in the <emphasis>OpenAFS Release Notes</emphasis>.</para>
-
-              <para>Attempting to run multiple instances of the NTPD causes an error. Running NTPD together with another time
-              synchronization protocol is unnecessary and can cause instability in the clock setting.</para>
-            </note>
 
             <indexterm>
               <primary>File Server</primary>
@@ -2480,13 +1525,6 @@
           </listitem>
 
           <listitem>
-            <para>On AIX systems, add the following line to the <emphasis role="bold">/etc/vfs</emphasis> file. It enables AIX to
-            unmount AFS correctly during shutdown. <programlisting>
-   afs     4     none     none
-</programlisting></para>
-          </listitem>
-
-          <listitem>
             <para>On non-packaged Linux systems, copy the <emphasis role="bold">afsd</emphasis> options file from the <emphasis
             role="bold">/usr/vice/etc</emphasis> directory to the <emphasis role="bold">/etc/sysconfig</emphasis> directory,
             removing the <emphasis role="bold">.conf</emphasis> extension as you do so. <programlisting>
@@ -2498,18 +1536,6 @@
             <para>Edit the machine's AFS initialization script or <emphasis role="bold">afsd</emphasis> options file to set
             appropriate values for <emphasis role="bold">afsd</emphasis> command parameters. The script resides in the indicated
             location on each system type: <itemizedlist>
-                <listitem>
-                  <para>On AIX systems, <emphasis role="bold">/etc/rc.afs</emphasis></para>
-                </listitem>
-
-                <listitem>
-                  <para>On HP-UX systems, <emphasis role="bold">/sbin/init.d/afs</emphasis></para>
-                </listitem>
-
-                <listitem>
-                  <para>On IRIX systems, <emphasis role="bold">/etc/init.d/afs</emphasis></para>
-                </listitem>
-
                 <listitem>
                   <para>On Fedora and RHEL systems, 
                   <emphasis role="bold">/etc/sysconfig/openafs</emphasis>. 
@@ -2616,209 +1642,7 @@
                 <secondary>AFS initialization script</secondary>
 
                 <tertiary>server machine after first</tertiary>
-              </indexterm> <indexterm>
-                <primary>AIX</primary>
-
-                <secondary>AFS initialization script</secondary>
-
-                <tertiary>on add'l server machine</tertiary>
-              </indexterm></para>
-          </listitem>
-
-          <listitem>
-            <para>Run the AFS initialization script by issuing the appropriate commands for this system type.</para>
-
-            <para><emphasis role="bold">On AIX systems:</emphasis> <orderedlist>
-                <listitem>
-                  <para>Reboot the machine and log in again as the local superuser <emphasis role="bold">root</emphasis>.
-                  <programlisting>
-   # <emphasis role="bold">cd /</emphasis>
-   # <emphasis role="bold">shutdown -r now</emphasis>
-   login: <emphasis role="bold">root</emphasis>
-   Password: <replaceable>root_password</replaceable>
-</programlisting></para>
-                </listitem>
-
-                <listitem>
-                  <para>Run the AFS initialization script. <programlisting>
-   # <emphasis role="bold">/etc/rc.afs</emphasis>
-</programlisting></para>
-                </listitem>
-
-                <listitem>
-                  <para>Edit the AIX initialization file, <emphasis role="bold">/etc/inittab</emphasis>, adding the following line
-                  to invoke the AFS initialization script. Place it just after the line that starts NFS daemons. <programlisting>
-   rcafs:2:wait:/etc/rc.afs &gt; /dev/console 2&gt;&amp;1 # Start AFS services
-</programlisting></para>
-                </listitem>
-
-                <listitem>
-                  <para><emphasis role="bold">(Optional)</emphasis> There are now copies of the AFS initialization file in both the
-                  <emphasis role="bold">/usr/vice/etc</emphasis> and <emphasis role="bold">/etc</emphasis> directories. If you want
-                  to avoid potential confusion by guaranteeing that they are always the same, create a link between them. You can
-                  always retrieve the original script from the AFS CD-ROM if necessary. <programlisting>
-   # <emphasis role="bold">cd  /usr/vice/etc</emphasis>
-   # <emphasis role="bold">rm  rc.afs</emphasis>
-   # <emphasis role="bold">ln -s  /etc/rc.afs</emphasis>
-</programlisting></para>
-                </listitem>
-
-                <listitem>
-                  <para>Proceed to Step <link linkend="LIWQ113">4</link>.</para>
-                </listitem>
-              </orderedlist></para>
-
-            <indexterm>
-              <primary>HP-UX</primary>
-
-              <secondary>AFS initialization script</secondary>
-
-              <tertiary>on add'l server machine</tertiary>
-            </indexterm>
-
-            <para><emphasis role="bold">On HP-UX systems:</emphasis> <orderedlist>
-                <listitem>
-                  <para>Run the AFS initialization script. <programlisting>
-   # <emphasis role="bold">/sbin/init.d/afs  start</emphasis>
-</programlisting></para>
-                </listitem>
-
-                <listitem>
-                  <para>Change to the <emphasis role="bold">/sbin/init.d</emphasis> directory and issue the <emphasis role="bold">ln
-                  -s</emphasis> command to create symbolic links that incorporate the AFS initialization script into the HP-UX
-                  startup and shutdown sequence. <programlisting>
-   # <emphasis role="bold">cd /sbin/init.d</emphasis>
-   # <emphasis role="bold">ln -s ../init.d/afs /sbin/rc2.d/S460afs</emphasis>
-   # <emphasis role="bold">ln -s ../init.d/afs /sbin/rc2.d/K800afs</emphasis>
-</programlisting></para>
-                </listitem>
-
-                <listitem>
-                  <para><emphasis role="bold">(Optional)</emphasis> There are now copies of the AFS initialization file in both the
-                  <emphasis role="bold">/usr/vice/etc</emphasis> and <emphasis role="bold">/sbin/init.d</emphasis> directories. If
-                  you want to avoid potential confusion by guaranteeing that they are always the same, create a link between them.
-                  You can always retrieve the original script from the AFS CD-ROM if necessary. <programlisting>
-   # <emphasis role="bold">cd /usr/vice/etc</emphasis>
-   # <emphasis role="bold">rm afs.rc</emphasis>
-   # <emphasis role="bold">ln -s  /sbin/init.d/afs  afs.rc</emphasis>
-</programlisting></para>
-                </listitem>
-
-                <listitem>
-                  <para>Proceed to Step <link linkend="LIWQ113">4</link>.</para>
-                </listitem>
-              </orderedlist></para>
-
-            <indexterm>
-              <primary>IRIX</primary>
-
-              <secondary>AFS initialization script</secondary>
-
-              <tertiary>on add'l server machine</tertiary>
-            </indexterm>
-
-            <indexterm>
-              <primary>afsclient variable (IRIX)</primary>
-
-              <secondary>server machine after first</secondary>
-            </indexterm>
-
-            <indexterm>
-              <primary>variables</primary>
-
-              <secondary>afsclient (IRIX)</secondary>
-
-              <tertiary>server machine after first</tertiary>
-            </indexterm>
-
-            <indexterm>
-              <primary>IRIX</primary>
-
-              <secondary>afsclient variable</secondary>
-
-              <tertiary>server machine after first</tertiary>
-            </indexterm>
-
-            <indexterm>
-              <primary>afsserver variable (IRIX)</primary>
-
-              <secondary>server machine after first</secondary>
-            </indexterm>
-
-            <indexterm>
-              <primary>variables</primary>
-
-              <secondary>afsserver (IRIX)</secondary>
-
-              <tertiary>server machine after first</tertiary>
-            </indexterm>
-
-            <indexterm>
-              <primary>IRIX</primary>
-
-              <secondary>afsserver variable</secondary>
-
-              <tertiary>server machine after first</tertiary>
-            </indexterm>
-
-            <para><emphasis role="bold">On IRIX systems:</emphasis> <orderedlist>
-                <listitem>
-                  <para>If you have configured the machine to use the <emphasis role="bold">ml</emphasis> dynamic loader program,
-                  reboot the machine and log in again as the local superuser <emphasis role="bold">root</emphasis>. <programlisting>
-   # <emphasis role="bold">cd /</emphasis>
-   # <emphasis role="bold">shutdown -i6 -g0 -y</emphasis>
-   login: <emphasis role="bold">root</emphasis>
-   Password: <replaceable>root_password</replaceable>
-</programlisting></para>
-                </listitem>
-
-                <listitem>
-                  <para>Issue the <emphasis role="bold">chkconfig</emphasis> command to activate the <emphasis
-                  role="bold">afsserver</emphasis> configuration variable. <programlisting>
-   # <emphasis role="bold">/etc/chkconfig -f afsserver on</emphasis>   
-</programlisting></para>
-
-                  <para>If you have configured this machine as an AFS client and want to it remain one, also issue the <emphasis
-                  role="bold">chkconfig</emphasis> command to activate the <emphasis role="bold">afsclient</emphasis> configuration
-                  variable.</para>
-
-                  <programlisting>
-   # <emphasis role="bold">/etc/chkconfig -f afsclient on</emphasis> 
-</programlisting>
-                </listitem>
-
-                <listitem>
-                  <para>Run the AFS initialization script. <programlisting>
-   # <emphasis role="bold">/etc/init.d/afs  start</emphasis>
-</programlisting></para>
-                </listitem>
-
-                <listitem>
-                  <para>Change to the <emphasis role="bold">/etc/init.d</emphasis> directory and issue the <emphasis role="bold">ln
-                  -s</emphasis> command to create symbolic links that incorporate the AFS initialization script into the IRIX
-                  startup and shutdown sequence. <programlisting>
-   # <emphasis role="bold">cd /etc/init.d</emphasis>
-   # <emphasis role="bold">ln -s ../init.d/afs /etc/rc2.d/S35afs</emphasis>
-   # <emphasis role="bold">ln -s ../init.d/afs /etc/rc0.d/K35afs</emphasis>
-</programlisting></para>
-                </listitem>
-
-                <listitem>
-                  <para><emphasis role="bold">(Optional)</emphasis> There are now copies of the AFS initialization file in both the
-                  <emphasis role="bold">/usr/vice/etc</emphasis> and <emphasis role="bold">/etc/init.d</emphasis> directories. If
-                  you want to avoid potential confusion by guaranteeing that they are always the same, create a link between them.
-                  You can always retrieve the original script from the AFS CD-ROM if necessary. <programlisting>
-   # <emphasis role="bold">cd /usr/vice/etc</emphasis>
-   # <emphasis role="bold">rm afs.rc</emphasis>
-   # <emphasis role="bold">ln -s  /etc/init.d/afs  afs.rc</emphasis>
-</programlisting></para>
-                </listitem>
-
-                <listitem>
-                  <para>Proceed to Step <link linkend="LIWQ113">4</link>.</para>
-                </listitem>
-              </orderedlist></para>
-
+              </indexterm>
             <indexterm>
               <primary>Linux</primary>
 
@@ -2826,6 +1650,11 @@
 
               <tertiary>on add'l server machine</tertiary>
             </indexterm>
+              </para>
+          </listitem>
+
+          <listitem>
+            <para>Run the AFS initialization script by issuing the appropriate commands for this system type.</para>
 
             <para><emphasis role="bold">On Fedora or RHEL Linux systems:</emphasis> 
               <orderedlist>
@@ -2957,8 +1786,8 @@
               </orderedlist></para>
           </listitem>
 
-          <listitem>
-            <para><anchor id="LIWQ113" />Verify that <emphasis role="bold">/usr/afs</emphasis> and its subdirectories on the new
+          <listitem id="LIWQ113">
+            <para>Verify that <emphasis role="bold">/usr/afs</emphasis> and its subdirectories on the new
             file server machine meet the ownership and mode bit requirements outlined in <link linkend="HDRWQ96">Protecting
             Sensitive AFS Directories</link>. If necessary, use the <emphasis role="bold">chmod</emphasis> command to correct the
             mode bits.</para>
@@ -3176,8 +2005,8 @@
             </indexterm></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ115" />Issue the <emphasis role="bold">bos addhost</emphasis> command to add the new database server
+        <listitem id="LIWQ115">
+          <para>Issue the <emphasis role="bold">bos addhost</emphasis> command to add the new database server
           machine to the <emphasis role="bold">/usr/afs/etc/CellServDB</emphasis> file on existing server machines (as well as the
           new database server machine itself).</para>
 
@@ -3214,8 +2043,8 @@
 </programlisting></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ116" />Add the new database server machine to your cell's central <emphasis
+        <listitem id="LIWQ116">
+          <para>Add the new database server machine to your cell's central <emphasis
           role="bold">CellServDB</emphasis> source file, if you use one. The standard location is <emphasis
           role="bold">/afs/</emphasis><replaceable>cellname</replaceable><emphasis
           role="bold">/common/etc/CellServDB</emphasis>.</para>
@@ -3244,16 +2073,16 @@
             </indexterm></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ117" />If this machine's IP address is lower than any existing database server machine's, update
+        <listitem id="LIWQ117">
+          <para>If this machine's IP address is lower than any existing database server machine's, update
           every client machine's <emphasis role="bold">/usr/vice/etc/CellServDB</emphasis> file and kernel memory list to include
           this machine. (If this machine's IP address is not the lowest, it is acceptable to wait until Step <link
           linkend="LIWQ123">12</link>.)</para>
 
           <para>There are several ways to update the <emphasis role="bold">CellServDB</emphasis> file on client machines, as
           detailed in the chapter of the <emphasis>OpenAFS Administration Guide</emphasis> about administering client machines. One
-          option is to copy over the central update source (which you updated in Step <link linkend="LIWQ116">5</link>), with or
-          without using the <emphasis role="bold">package</emphasis> program. To update the machine's kernel memory list, you can
+          option is to copy over the central update source (which you updated in Step <link linkend="LIWQ116">5</link>).
+          To update the machine's kernel memory list, you can
           either reboot after changing the <emphasis role="bold">CellServDB</emphasis> file or issue the <emphasis role="bold">fs
           newcell</emphasis> command. 
             <indexterm>
@@ -3282,7 +2111,7 @@
           for an additional installation step.</para>
         </listitem>
 
-        <listitem>
+        <listitem id="LIWQ119">
           <indexterm>
             <primary>Backup Server</primary>
             <secondary>starting</secondary>
@@ -3293,7 +2122,7 @@
             <tertiary>new db-server machine</tertiary>
           </indexterm>
 
-          <para><anchor id="LIWQ119" />Start the Backup Server (the <emphasis role="bold">buserver</emphasis> process). You must
+          <para>Start the Backup Server (the <emphasis role="bold">buserver</emphasis> process). You must
           perform other configuration procedures before actually using the AFS Backup System, as detailed in the <emphasis>OpenAFS
           Administration Guide</emphasis>. <programlisting>
    % <emphasis role="bold">bos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">buserver simple /usr/afs/bin/buserver</emphasis>
@@ -3312,8 +2141,8 @@
             </indexterm></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ120" />Start the Protection Server (the <emphasis role="bold">ptserver</emphasis> process).
+        <listitem id="LIWQ120">
+          <para>Start the Protection Server (the <emphasis role="bold">ptserver</emphasis> process).
           <programlisting>
    % <emphasis role="bold">bos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">ptserver simple /usr/afs/bin/ptserver</emphasis>
 </programlisting> <indexterm>
@@ -3331,8 +2160,8 @@
             </indexterm></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ121" />Start the Volume Location (VL) Server (the <emphasis role="bold">vlserver</emphasis>
+        <listitem id="LIWQ121">
+          <para>Start the Volume Location (VL) Server (the <emphasis role="bold">vlserver</emphasis>
           process). <programlisting>
    % <emphasis role="bold">bos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">vlserver simple /usr/afs/bin/vlserver</emphasis>
 </programlisting> <indexterm>
@@ -3360,8 +2189,8 @@
             </indexterm></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ122" />Issue the <emphasis role="bold">bos restart</emphasis> command on every database server
+        <listitem id="LIWQ122">
+          <para>Issue the <emphasis role="bold">bos restart</emphasis> command on every database server
           machine in the cell, including the new machine. The command restarts the Authentication, Backup, Protection, and VL
           Servers, which forces an election of a new Ubik coordinator for each process. The new machine votes in the election and is
           considered as a potential new coordinator.</para>
@@ -3391,13 +2220,13 @@
             </itemizedlist></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ123" />If you did not update the <emphasis role="bold">CellServDB</emphasis> file on client machines
+        <listitem id="LIWQ123">
+          <para>If you did not update the <emphasis role="bold">CellServDB</emphasis> file on client machines
           in Step <link linkend="LIWQ117">6</link>, do so now.</para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ124" />If you wish to participate in the AFS
+        <listitem id="LIWQ124">
+          <para>If you wish to participate in the AFS
           global name space, send the new database server machine's name and 
           IP address to grand.central.org. Do so, by emailing an updated
           <emphasis role="bold">CellServDB</emphasis> fragment for your cell
@@ -3510,8 +2339,8 @@
 </programlisting></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ126" />If your cell is included in the global
+        <listitem id="LIWQ126">
+          <para>If your cell is included in the global
           <emphasis role="bold">CellServDB</emphasis>, send the revised list of 
           your cell's database server machines to grand.central.org</para>
 
@@ -3522,8 +2351,8 @@
           machine.</para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ127" />Remove the decommissioned machine from your cell's central <emphasis
+        <listitem id="LIWQ127">
+          <para>Remove the decommissioned machine from your cell's central <emphasis
           role="bold">CellServDB</emphasis> source file, if you use one. The conventional location is <emphasis
           role="bold">/afs/</emphasis><replaceable>cellname</replaceable><emphasis
           role="bold">/common/etc/CellServDB</emphasis>.</para>
@@ -3554,16 +2383,16 @@
             </indexterm></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ128" />Update every client machine's <emphasis role="bold">/usr/vice/etc/CellServDB</emphasis> file
+        <listitem id="LIWQ128">
+          <para>Update every client machine's <emphasis role="bold">/usr/vice/etc/CellServDB</emphasis> file
           and kernel memory list to exclude this machine. Altering the <emphasis role="bold">CellServDB</emphasis> file and kernel
           memory list before stopping the actual database server processes avoids possible time-out delays that result when users
           send requests to a decommissioned database server machine that is still listed in the file.</para>
 
           <para>There are several ways to update the <emphasis role="bold">CellServDB</emphasis> file on client machines, as
           detailed in the chapter of the <emphasis>OpenAFS Administration Guide</emphasis> about administering client machines. One
-          option is to copy over the central update source (which you updated in Step <link linkend="LIWQ116">5</link>), with or
-          without using the <emphasis role="bold">package</emphasis> program. To update the machine's kernel memory list, you can
+          option is to copy over the central update source (which you updated in Step <link linkend="LIWQ116">5</link>).
+          To update the machine's kernel memory list, you can
           either reboot after changing the <emphasis role="bold">CellServDB</emphasis> file or issue the <emphasis role="bold">fs
           newcell</emphasis> command. <indexterm>
               <primary>bos commands</primary>
@@ -3586,8 +2415,8 @@
             </indexterm></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ129" />Issue the <emphasis role="bold">bos removehost</emphasis> command to remove the
+        <listitem id="LIWQ129">
+          <para>Issue the <emphasis role="bold">bos removehost</emphasis> command to remove the
           decommissioned database server machine from the <emphasis role="bold">/usr/afs/etc/CellServDB</emphasis> file on server
           machines.</para>
 
@@ -3643,8 +2472,8 @@
             </indexterm></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ130" />Issue the <emphasis role="bold">bos stop</emphasis> command to stop the database server
+        <listitem id="LIWQ130">
+          <para>Issue the <emphasis role="bold">bos stop</emphasis> command to stop the database server
           processes on the machine, by substituting its fully-qualified hostname for the
           <replaceable>machine&nbsp;name</replaceable> argument. The command changes each process's status in the <emphasis
           role="bold">/usr/afs/local/BosConfig</emphasis> file to <computeroutput>NotRun</computeroutput>, but does not remove its
@@ -3673,8 +2502,8 @@
             </indexterm></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ131" /><emphasis role="bold">(Optional)</emphasis> Issue the <emphasis role="bold">bos
+        <listitem id="LIWQ131">
+          <para><emphasis role="bold">(Optional)</emphasis> Issue the <emphasis role="bold">bos
           delete</emphasis> command to remove the entries for database server processes from the <emphasis
           role="bold">BosConfig</emphasis> file. This step is unnecessary if you plan to restart the database server functionality
           on this machine in future. <programlisting>
@@ -3704,8 +2533,8 @@
             </indexterm></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ132" />Issue the <emphasis role="bold">bos restart</emphasis> command on every database server
+        <listitem id="LIWQ132">
+          <para>Issue the <emphasis role="bold">bos restart</emphasis> command on every database server
           machine in the cell, to restart the Backup, Protection, and VL Servers. This forces the election of a Ubik
           coordinator for each process, ensuring that the remaining database server processes recognize that the machine is no
           longer a database server.</para>

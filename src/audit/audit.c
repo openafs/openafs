@@ -10,15 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <fcntl.h>
-#include <stdarg.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#ifndef AFS_NT40_ENV
-#include <unistd.h>
-#endif
 #ifdef AFS_AIX32_ENV
 #include <sys/audit.h>
 #else
@@ -28,33 +21,26 @@
 #define AUDIT_FAIL_ACCESS 3
 #define AUDIT_FAIL_PRIV 4
 #endif /* AFS_AIX32_ENV */
-#include <errno.h>
 
+#include <afs/opr.h>
 #include "afs/afsint.h"
 #include <rx/rx.h>
 #include <rx/rxkad.h>
 #include "audit.h"
 #include "audit-api.h"
 #include "lock.h"
-#ifdef AFS_AIX32_ENV
-#include <sys/audit.h>
-#endif
-#include <afs/afsutil.h>
 
-/* C99 requires va_copy.  Older versions of GCC provide __va_copy.  Per t
-   Autoconf manual, memcpy is a generally portable fallback. */
-#ifndef va_copy
-# ifdef __va_copy
-#  define va_copy(d, s)         __va_copy((d), (s))
-# else
-#  define va_copy(d, s)         memcpy(&(d), &(s), sizeof(va_list))
-# endif
-#endif
+#include <afs/afsutil.h>
 
 extern struct osi_audit_ops audit_file_ops;
 #ifdef HAVE_SYS_IPC_H
 extern struct osi_audit_ops audit_sysvmq_ops;
 #endif
+
+static struct {
+    void *rock;
+    int (*islocal)(void *rock, char *name, char *inst, char *cell);
+} audit_user_check = { NULL, NULL };
 
 static struct {
     const char *name;
@@ -180,16 +166,15 @@ printbuf(int rec, char *audEvent, char *afsName, afs_int32 hostId,
     int num = LogThreadNum();
     struct in_addr hostAddr;
     time_t currenttime;
-    char *timeStamp;
     char tbuffer[26];
+    struct tm tm;
 
     /* Don't print the timestamp or thread id if we recursed */
     if (rec == 0) {
 	currenttime = time(0);
-	timeStamp = afs_ctime(&currenttime, tbuffer,
-			      sizeof(tbuffer));
-	timeStamp[24] = ' ';   /* ts[24] is the newline, 25 is the null */
-	audit_ops->append_msg(timeStamp);
+	if (strftime(tbuffer, sizeof(tbuffer), "%a %b %d %H:%M:%S %Y ",
+		     localtime_r(&currenttime, &tm)) !=0)
+	    audit_ops->append_msg(tbuffer);
 
 	if (num > -1)
 	    audit_ops->append_msg("[%d] ", num);
@@ -327,7 +312,7 @@ osi_audit_internal(char *audEvent,	/* Event name (15 chars or less) */
     /* i'm pretty sure all the server apps now call osi_audit_init(),
      * but to be extra careful we'll leave this assert in here for a
      * while to make sure */
-    osi_Assert(audit_lock_initialized);
+    opr_Assert(audit_lock_initialized);
 #endif /* AFS_PTHREAD_ENV */
 
     if ((osi_audit_all < 0) || (osi_echo_trail < 0))
@@ -414,7 +399,7 @@ osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...)
     struct rx_peer *peer;
     afs_int32 secClass;
     afs_int32 code;
-    char afsName[MAXKTCNAMELEN];
+    char afsName[MAXKTCNAMELEN + MAXKTCNAMELEN + MAXKTCREALMLEN + 3];
     afs_int32 hostId;
     va_list vaList;
 
@@ -430,15 +415,14 @@ osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...)
 	conn = rx_ConnectionOf(call);	/* call -> conn) */
 	if (conn) {
             secClass = rx_SecurityClassOf(conn);	/* conn -> securityIndex */
-	    if (secClass == 0) {	/* unauthenticated */
+	    if (secClass == RX_SECIDX_NULL) {	/* unauthenticated */
 		osi_audit("AFS_Aud_Unauth", (-1), AUD_STR, audEvent, AUD_END);
 		strcpy(afsName, "--UnAuth--");
-	    } else if (secClass == 2) {	/* authenticated */
+	    } else if (secClass == RX_SECIDX_KAD || secClass == RX_SECIDX_KAE) {
+		/* authenticated with rxkad */
                 char tcell[MAXKTCREALMLEN];
                 char name[MAXKTCNAMELEN];
                 char inst[MAXKTCNAMELEN];
-                char vname[256];
-                int  ilen, clen;
 
                 code =
 		    rxkad_GetServerInfo(conn, NULL, NULL, name, inst, tcell,
@@ -447,66 +431,26 @@ osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...)
 		    osi_audit("AFS_Aud_NoAFSId", (-1), AUD_STR, audEvent, AUD_END);
 		    strcpy(afsName, "--NoName--");
 		} else {
-                    strncpy(vname, name, sizeof(vname));
-                    if ((ilen = strlen(inst))) {
-                        if (strlen(vname) + 1 + ilen >= sizeof(vname))
-                            goto done;
-                        strcat(vname, ".");
-                        strcat(vname, inst);
-                    }
-                    if ((clen = strlen(tcell))) {
-#if defined(AFS_ATHENA_STDENV) || defined(AFS_KERBREALM_ENV)
-                        static char local_realms[AFS_NUM_LREALMS][AFS_REALM_SZ];
-			static int  num_lrealms = -1;
-			int i, lrealm_match;
-
-			if (num_lrealms == -1) {
-			    for (i = 0; i < AFS_NUM_LREALMS; i++) {
-				if (afs_krb_get_lrealm(local_realms[i], i) != 0 /*KSUCCESS*/)
-				    break;
-			    }
-
-			    if (i == 0)
-				strncpy(local_realms[0], "UNKNOWN.LOCAL.REALM", AFS_REALM_SZ);
-			    num_lrealms = i;
-                        }
-
-			/* Check to see if the ticket cell matches one of the local realms */
-			lrealm_match = 0;
-			for (i = 0; i < num_lrealms ; i++ ) {
-			    if (!strcasecmp(local_realms[i], tcell)) {
-				lrealm_match = 1;
-				break;
-			    }
-			}
-			/* If yes, then make sure that the name is not present in
-  			 * an exclusion list */
-			if (lrealm_match) {
-			    char uname[256];
-			    if (inst[0])
-				snprintf(uname,sizeof(uname),"%s.%s@%s",name,inst,tcell);
-			    else
-				snprintf(uname,sizeof(uname),"%s@%s",name,tcell);
-
-			    if (afs_krb_exclusion(uname))
-				lrealm_match = 0;
-			}
-
-			if (!lrealm_match) {
-                            if (strlen(vname) + 1 + clen >= sizeof(vname))
-                                goto done;
-                            strcat(vname, "@");
-                            strcat(vname, tcell);
-                        }
-#endif
-                    }
-                    strcpy(afsName, vname);
-                }
-	    } else {		/* Unauthenticated & unknown */
+		    afs_int32 islocal = 0;
+		    if (audit_user_check.islocal) {
+			islocal =
+			    audit_user_check.islocal(audit_user_check.rock,
+						     name, inst, tcell);
+		    }
+		    strlcpy(afsName, name, sizeof(afsName));
+		    if (inst[0]) {
+			strlcat(afsName, ".", sizeof(afsName));
+			strlcat(afsName, inst, sizeof(afsName));
+		    }
+		    if (tcell[0] && !islocal) {
+			strlcat(afsName, "@", sizeof(afsName));
+			strlcat(afsName, tcell, sizeof(afsName));
+		    }
+		}
+	    } else {		/* Unauthenticated and/or unknown */
 		osi_audit("AFS_Aud_UnknSec", (-1), AUD_STR, audEvent, AUD_END);
                 strcpy(afsName, "--Unknown--");
 	    }
-	done:
 	    peer = rx_PeerOf(conn);	/* conn -> peer */
 	    if (peer)
 		hostId = rx_HostOf(peer);	/* peer -> host */
@@ -588,6 +532,15 @@ osi_audit_interface(const char *interface)
     }
 
     return 1;
+}
+
+void
+osi_audit_set_user_check(void *rock,
+			 int (*islocal) (void *rock, char *name, char *inst,
+					 char *cell))
+{
+    audit_user_check.rock = rock;
+    audit_user_check.islocal = islocal;
 }
 
 void

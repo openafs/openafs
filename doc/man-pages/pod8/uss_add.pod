@@ -122,7 +122,7 @@ Corresponding variable in the template file: $PWEXPIRES.
 
 Names the file server machine on which to create the new user's volume. It
 is best to provide a fully qualified hostname (for example,
-C<fs1.abc.com>), but an abbreviated form is acceptable provided that the
+C<fs1.example.com>), but an abbreviated form is acceptable provided that the
 cell's naming service is available to resolve it at the time the volume is
 created.
 
@@ -158,7 +158,7 @@ Specify the read/write path to the directory, to avoid the failure that
 results from attempting to create a new mount point in a read-only
 volume. By convention, the read/write path is indicated by placing a
 period before the cell name at the pathname's second level (for example,
-F</afs/.abc.com>). For further discussion of the concept of read/write and
+F</afs/.example.com>). For further discussion of the concept of read/write and
 read-only paths through the filespace, see the B<fs mkmount> reference
 page.
 
@@ -293,7 +293,7 @@ The combination of the following example uss add command and C<V>
 instruction in a template file called C<uss.tpl> creates Protection and
 Authentication Database entries named C<smith>, and a volume called
 C<user.smith> with a quota of 2500 kilobyte blocks, mounted at the
-pathname F</afs/abc.com/usr/smith>. The access control list (ACL) on the
+pathname F</afs/example.com/usr/smith>. The access control list (ACL) on the
 mount point grants C<smith> all rights.
 
 The issuer of the B<uss add> command provides only the template file's
@@ -302,8 +302,8 @@ directory. The command and C<V> instruction appear here on two lines only
 for legibility; there are no line breaks in the actual instruction or
 command.
 
-   V user.$USER $SERVER.abc.com /vice$PART $1 \
-       /afs/abc.com/usr/$USER $UID $USER all
+   V user.$USER $SERVER.example.com /vice$PART $1 \
+       /afs/example.com/usr/$USER $UID $USER all
 
    % uss add -user smith -realname "John Smith" -pass js_pswd \
        -server fs2 -partition b -template uss.tpl -var 1 2500

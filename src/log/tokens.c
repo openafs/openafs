@@ -10,20 +10,11 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <stdio.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
-#include <sys/file.h>
 #include <rx/xdr.h>
-#include <errno.h>
-#include <sys/types.h>
 #include <afs/auth.h>
-#include <time.h>		/*time(), ctime() */
-#include <pwd.h>
-
-#include <string.h>
+#include <afs/ktc.h>
 
 #define VIRTUE
 #define VICE
@@ -46,8 +37,10 @@ main(int argc, char **argv)
     time_t tokenExpireTime;	/*When token expires */
     char *expireString;		/*Char string of expiration time */
     char UserName[MAXKTCNAMELEN * 2 + 2]; /*Printable user name */
-    struct ktc_principal serviceName, clientName;	/* service name for ticket */
+    char *cellName;
+    struct ktc_principal clientName;	/* service name for ticket */
     struct ktc_token token;	/* the token we're printing */
+    struct ktc_setTokenData *tokenSet;
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -78,47 +71,47 @@ main(int argc, char **argv)
     cellNum = 0;
     current_time = time(0);
     while (1) {
-	rc = ktc_ListTokens(cellNum, &cellNum, &serviceName);
+	rc = ktc_ListTokensEx(cellNum, &cellNum, &cellName);
 	if (rc) {
 	    /* only error is now end of list */
 	    printf("   --End of list--\n");
 	    break;
 	} else {
 	    /* get the ticket info itself */
-	    rc = ktc_GetToken(&serviceName, &token, sizeof(token),
-			      &clientName);
+	    rc = ktc_GetTokenEx(cellName, &tokenSet);
 	    if (rc) {
 		printf
-		    ("tokens: failed to get token info for service %s.%s.%s (code %d)\n",
-		     serviceName.name, serviceName.instance, serviceName.cell,
-		     rc);
+		    ("tokens: failed to get token info for cell %s (code %d)\n",
+		     cellName, rc);
 		continue;
 	    }
-	    tokenExpireTime = token.endTime;
-	    strcpy(UserName, clientName.name);
-	    if (clientName.instance[0] != 0) {
-		strcat(UserName, ".");
-		strcat(UserName, clientName.instance);
+	    rc = token_extractRxkad(tokenSet, &token, NULL, &clientName);
+	    if (rc == 0) {
+		tokenExpireTime = token.endTime;
+		strcpy(UserName, clientName.name);
+		if (clientName.instance[0] != 0) {
+		    strcat(UserName, ".");
+		    strcat(UserName, clientName.instance);
+		}
+	        if (UserName[0] == 0)
+		    printf("rxkad Tokens");
+		else if (strncmp(UserName, "AFS ID", 6) == 0) {
+		    printf("User's (%s) rxkad tokens", UserName);
+	        } else if (strncmp(UserName, "Unix UID", 8) == 0) {
+		    printf("RxkadTokens");
+		} else
+		    printf("User %s's rxkad tokens", UserName);
+		printf(" for %s ", cellName);
+		if (tokenExpireTime <= current_time)
+		    printf("[>> Expired <<]\n");
+		else {
+		    expireString = ctime(&tokenExpireTime);
+		    expireString += 4;	/*Move past the day of week */
+		    expireString[12] = '\0';
+		    printf("[Expires %s]\n", expireString);
+	        }
 	    }
-	    if (UserName[0] == 0)
-		printf("Tokens");
-	    else if (strncmp(UserName, "AFS ID", 6) == 0) {
-		printf("User's (%s) tokens", UserName);
-	    } else if (strncmp(UserName, "Unix UID", 8) == 0) {
-		printf("Tokens");
-	    } else
-		printf("User %s's tokens", UserName);
-	    printf(" for %s%s%s@%s ", serviceName.name,
-		   serviceName.instance[0] ? "." : "", serviceName.instance,
-		   serviceName.cell);
-	    if (tokenExpireTime <= current_time)
-		printf("[>> Expired <<]\n");
-	    else {
-		expireString = ctime(&tokenExpireTime);
-		expireString += 4;	/*Move past the day of week */
-		expireString[12] = '\0';
-		printf("[Expires %s]\n", expireString);
-	    }
+	    token_FreeSet(&tokenSet);
 	}
     }
     exit(0);

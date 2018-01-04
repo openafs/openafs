@@ -1,0 +1,24 @@
+
+srcdir=@srcdir@
+abs_top_builddir=@abs_top_builddir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+
+TESTS = vos-t
+
+MODULE_CFLAGS=-I$(srcdir)/../.. -I$(srcdir)/../common/
+
+all check test tests: $(TESTS)
+
+MODULE_LIBS = 	../tap/libtap.a \
+		$(abs_top_builddir)/src/vlserver/liboafs_vldb.la \
+		$(XLIBS)
+
+vos-t: vos-t.o ../common/config.o ../common/servers.o ../common/ubik.o \
+		../common/network.o
+	$(LT_LDRULE_static) vos-t.o ../common/config.o ../common/servers.o \
+		../common/ubik.o ../common/network.o $(MODULE_LIBS)
+
+clean:
+	$(LT_CLEAN)
+	rm -f *.o $(TESTS)

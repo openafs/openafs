@@ -105,8 +105,7 @@ pushStack(name)
      char *name;
 {
     assert(stackSize < MAX_STACK_SIZE);
-    assert(stack[stackSize] = (char *)malloc(strlen(name) + 1));
-    strcpy(stack[stackSize], name);
+    assert(stack[stackSize] = strdup(name));
     stackSize++;
 }
 

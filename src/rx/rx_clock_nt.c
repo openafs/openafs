@@ -13,10 +13,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #ifdef AFS_NT40_ENV
-#include <stdio.h>
-#include <stdlib.h>
 #include <windef.h>
 #include <winbase.h>
 #include "rx_clock.h"

@@ -1,0 +1,48 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use Test::More tests=>4;
+use POSIX qw(:sys_wait_h :signal_h);
+
+my $port = 4000;
+my $build = $ENV{BUILD};
+$build = ".." if (!defined($build));
+my $rxperf = $build."/../src/tools/rxperf/rxperf";
+
+# Start up an rxperf server
+
+my $pid = fork();
+if ($pid == -1) {
+    fail("Failed to fork rxperf server");
+    exit(1);
+} elsif ($pid == 0) { 
+    exec({$rxperf}
+	 "rxperf", "server", "-p", $port, "-u", "1024", "-H", "-N");
+    die("Kabooom ?");
+}
+pass("Started rxperf server");
+
+# Start up an rxperf client, and run a test
+is(0, 
+   system("$rxperf client -c rpc -p $port -S 1048576 -R 1048576 -T 30 -u 1024 -H -N"),
+   "single threaded client ran successfully");
+
+is (0,
+    system("$rxperf client -c rpc -p $port -S 1048576 -R 1048576 -T 1 -t 30 -u 1024 -H -N"),
+    "multi threaded client ran succesfully");
+
+# Kill the server, and check its exit code
+
+kill("TERM", $pid);
+waitpid($pid, 0);
+if (WIFSIGNALED($?) && WTERMSIG($?) != SIGTERM) {
+    fail("Server died with signal ".WTERMSIG($?));
+} elsif (WIFEXITED($?) && WEXITSTATUS($?) != 0) {
+    fail("Server exited with code". WEXITSTATUS($?));
+} else {
+    pass("Server exited succesfully");
+}
+
+

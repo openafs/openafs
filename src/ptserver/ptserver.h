@@ -9,6 +9,11 @@
 
 #include "ptint.h"
 
+/* A sanitized version of a routine prototyped in ptint.h.  The implementation
+ * is in ptuser.c, but putting the declaration in ptuser.h breaks things. */
+extern int string_PR_IDToName(struct ubik_client *client, afs_int32 flags,
+			      idlist *ids, namelist *names) AFS_NONNULL();
+
 #define	PRSRV		73
 
 #define	ENTRYSIZE	192

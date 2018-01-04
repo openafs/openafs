@@ -11,6 +11,7 @@
 #define AFS_SRC_VOLSER_INTERNAL_H
 
 /* common.c */
+extern void Abort(const char *, ...) AFS_NORETURN AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
 extern void Log(const char *, ...) AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
 extern void InitErrTabs(void);
 
@@ -20,7 +21,7 @@ extern afs_int32 split_volume(struct rx_call *, Volume *, Volume *,
 
 /* voltrans.c */
 extern struct volser_trans *FindTrans(afs_int32);
-extern struct volser_trans *NewTrans(afs_uint32, afs_int32);
+extern struct volser_trans *NewTrans(VolumeId, afs_int32);
 extern struct volser_trans *TransList(void);
 extern afs_int32 DeleteTrans(struct volser_trans *atrans, afs_int32 lock);
 extern afs_int32 TRELE (struct volser_trans *);
@@ -33,7 +34,6 @@ extern afs_int32 GCTrans(void);
 
 /* vsprocs.c */
 struct nvldbentry;
-extern int yesprompt(char *str);
 extern int PrintError(char *msg, afs_int32 errcode);
 extern void init_volintInfo(struct volintInfo *vinfo);
 extern void SubEnumerateEntry(struct nvldbentry *entry);
@@ -61,8 +61,7 @@ extern int UV_MoveVolume2(afs_uint32 afromvol, afs_uint32 afromserver,
 extern int UV_BackupVolume(afs_uint32 aserver, afs_int32 apart,
 			   afs_uint32 avolid);
 extern int UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
-			    afs_int32 afrompart, int forceflag, int upflag);
-extern void dump_sig_handler(int x);
+			    afs_int32 afrompart, int flags);
 extern int UV_DumpVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 			 afs_int32 afrompart, afs_int32 fromdate,
 			 afs_int32(*DumpFunction) (struct rx_call *, void *),
@@ -96,18 +95,10 @@ extern int UV_XListVolumes(afs_uint32 a_serverID, afs_int32 a_partID,
 extern int UV_XListOneVolume(afs_uint32 a_serverID, afs_int32 a_partID,
 			     afs_uint32 a_volID,
 			     struct volintXInfo **a_resultPP);
-extern int sortVolumes(const void *a, const void *b);
 extern int UV_SyncVolume(afs_uint32 aserver, afs_int32 apart, char *avolname,
 			 int flags);
 extern int UV_SyncVldb(afs_uint32 aserver, afs_int32 apart, int flags,
 		       int force);
-extern afs_int32 VolumeExists(afs_uint32 server, afs_int32 partition,
-			      afs_uint32 volumeid);
-extern afs_int32 CheckVldbRWBK(struct nvldbentry *entry,
-			       afs_int32 * modified);
-extern int CheckVldbRO(struct nvldbentry *entry, afs_int32 * modified);
-extern afs_int32 CheckVldb(struct nvldbentry *entry, afs_int32 * modified,
-                           afs_int32 *deleted);
 extern int UV_SyncServer(afs_uint32 aserver, afs_int32 apart, int flags,
 			 int force);
 extern int UV_RenameVolume(struct nvldbentry *entry, char oldname[],
@@ -135,7 +126,8 @@ extern int UV_DumpClonedVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 extern int UV_GetSize(afs_uint32 afromvol, afs_uint32 afromserver,
                       afs_int32 afrompart, afs_int32 fromdate,
                       struct volintSize *vol_size);
-
+extern int UV_ConvertRO(afs_uint32 server, afs_uint32 partition, afs_uint32 volid,
+			struct nvldbentry *entry);
 extern int verbose;
 extern int noresolve;
 #endif

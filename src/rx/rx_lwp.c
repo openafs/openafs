@@ -21,30 +21,24 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-# include <sys/types.h>		/* fd_set on older platforms */
-# include <errno.h>
-# include <signal.h>
-#ifdef AFS_NT40_ENV
-# include <winsock2.h>
-#else
-# include <unistd.h>		/* select() prototype */
-# include <sys/time.h>		/* struct timeval, select() prototype */
-# ifndef FD_SET
-#  include <sys/select.h>	/* fd_set on newer platforms */
-# endif
-# include <sys/socket.h>
+#ifdef HAVE_SYS_FILE_H
 # include <sys/file.h>
-# include <netdb.h>
-# include <sys/stat.h>
-# include <netinet/in.h>
-# include <net/if.h>
-# include <sys/ioctl.h>
-# include <sys/time.h>
 #endif
-# include "rx.h"
-# include "rx_globals.h"
-# include <lwp.h>
+
+#ifndef AFS_PTHREAD_ENV
+
+#include <lwp.h>
+
+#include "rx.h"
+#include "rx_atomic.h"
+#include "rx_globals.h"
+#include "rx_internal.h"
+#include "rx_stats.h"
+#ifdef AFS_NT40_ENV
+#include "rx_xmit_nt.h"
+#endif
 
 #define MAXTHREADNAMELENGTH 64
 
@@ -211,7 +205,8 @@ rxi_ListenerProc(fd_set * rfds, int *tnop, struct rx_call **newcallp)
 	    tv.tv_usec = cv.usec;
 	    tvp = &tv;
 	}
-	rx_stats.selects++;
+	if (rx_stats_active)
+	    rx_atomic_inc(&rx_stats.selects);
 
 	*rfds = rx_selectMask;
 
@@ -417,11 +412,17 @@ rxi_Listen(osi_socket sock)
 int
 rxi_Recvmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 {
-#if defined(HAVE_LINUX_ERRQUEUE_H) && defined(ADAPT_PMTU)
-    while((rxi_HandleSocketError(socket)) > 0)
-	;
+    int code;
+    code = recvmsg(socket, msg_p, flags);
+
+#ifdef AFS_RXERRQ_ENV
+    if (code < 0) {
+	while((rxi_HandleSocketError(socket)) > 0)
+	    ;
+    }
 #endif
-    return recvmsg(socket, msg_p, flags);
+
+    return code;
 }
 
 /*
@@ -441,7 +442,8 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 	err = errno;
 #endif
 
-	rx_stats.sendSelects++;
+	if (rx_stats_active)
+	    rx_atomic_inc(&rx_stats.sendSelects);
 
 	if (!sfds) {
 	    if (!(sfds = IOMGR_AllocFDSet())) {
@@ -451,7 +453,7 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 	    }
 	    FD_SET(socket, sfds);
 	}
-#if defined(HAVE_LINUX_ERRQUEUE_H) && defined(ADAPT_PMTU)
+#ifdef AFS_RXERRQ_ENV
 	while((rxi_HandleSocketError(socket)) > 0)
 	  ;
 #endif
@@ -473,7 +475,13 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
               return -err;
 	    return -1;
 	}
-	while ((err = select(socket + 1, 0, sfds, 0, 0)) != 1) {
+	while ((err = select(
+#ifdef AFS_NT40_ENV
+                             0,
+#else
+                             socket + 1,
+#endif
+                             0, sfds, 0, 0)) != 1) {
 	    if (err >= 0 || errno != EINTR)
 		osi_Panic("rxi_sendmsg: select error %d.%d", err, errno);
 	    FD_ZERO(sfds);
@@ -484,3 +492,4 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 	IOMGR_FreeFDSet(sfds);
     return 0;
 }
+#endif

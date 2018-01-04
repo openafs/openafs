@@ -27,11 +27,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#ifdef HAVE_SEARCH_H
+#include <roken.h>
+
 #include <search.h>
-#else
-#include "afscp_search.h"
-#endif
 
 #include <afs/vlserver.h>
 #include <afs/vldbint.h>

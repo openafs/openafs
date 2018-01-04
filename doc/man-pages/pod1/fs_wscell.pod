@@ -41,10 +41,10 @@ in the format
 =head1 EXAMPLES
 
 The following example results when the fs wscell is issued on a machine in
-the State University cell:
+the Example Organization cell:
 
    % fs wscell
-   This workstation belongs to cell 'stateu.edu'
+   This workstation belongs to cell 'example.org'
 
 =head1 PRIVILEGE REQUIRED
 

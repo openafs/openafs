@@ -10,33 +10,17 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <afs/procmgmt.h>
+#include <roken.h>
+
 #ifdef IGNORE_SOME_GCC_WARNINGS
 # pragma GCC diagnostic warning "-Wimplicit-function-declaration"
 #endif
 
-#include <sys/types.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <io.h>
-#else
-#include <sys/time.h>
-#include <sys/file.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#endif
-#include <errno.h>
-#include <rx/xdr.h>
+#include <afs/opr.h>
 #include <rx/rx.h>
 #include <afs/afsint.h>
-#include <stdio.h>
-#include <string.h>
-#include <afs/procmgmt.h>
-#include <afs/afs_assert.h>
 #include <afs/prs_fs.h>
-#include <fcntl.h>
 #include <afs/nfs.h>
 #include <lwp.h>
 #include <lock.h>
@@ -54,6 +38,7 @@
 #include <afs/butm_prototypes.h>
 #include <afs/budb_prototypes.h>
 #include <afs/afsutil.h>
+
 #include "butc_internal.h"
 #include "error_macros.h"
 
@@ -139,7 +124,6 @@ GetDBTape(afs_int32 taskId, Date expires, struct butm_tapeInfo *tapeInfoPtr,
     char tapeName[BU_MAXTAPELEN];
     char strlevel[5];
     struct timeval tp;
-    struct timezone tzp;
     afs_int32 curTime;
     int tapecount = 1;
 
@@ -253,7 +237,7 @@ GetDBTape(afs_int32 taskId, Date expires, struct butm_tapeInfo *tapeInfoPtr,
 	     */
 	    else {
 		/* Check the tape's expiration date. Use the expiration on the label */
-		gettimeofday(&tp, &tzp);
+		gettimeofday(&tp, NULL);
 		curTime = tp.tv_sec;
 		if (curTime < oldTapeLabel.expirationDate) {
 		    TLog(taskId, "This tape has not expired\n");
@@ -287,11 +271,9 @@ GetDBTape(afs_int32 taskId, Date expires, struct butm_tapeInfo *tapeInfoPtr,
 	*wroteLabel = 1;
 
 	/* Initialize a tapeEntry for later inclusion into the database */
-	listEntryPtr =
-	    (struct tapeEntryList *)malloc(sizeof(struct tapeEntryList));
+	listEntryPtr = calloc(1, sizeof(struct tapeEntryList));
 	if (!listEntryPtr)
 	    ERROR_EXIT(TC_NOMEMORY);
-	memset(listEntryPtr, 0, sizeof(struct tapeEntryList));
 
 	/* Remember dumpid so we can delete it later */
 	if ((oldTapeLabel.structVersion >= TAPE_VERSION_3)
@@ -433,7 +415,7 @@ writeDbDump(struct butm_tapeInfo *tapeInfoPtr, afs_uint32 taskId,
     charList.charListT_val = 0;
     charList.charListT_len = 0;
     blockSize = BUTM_BLKSIZE;
-    writeBlock = (char *)malloc(BUTM_BLOCKSIZE);
+    writeBlock = malloc(BUTM_BLOCKSIZE);
     if (!writeBlock)
 	ERROR_EXIT(TC_NOMEMORY);
 
@@ -508,7 +490,7 @@ writeDbDump(struct butm_tapeInfo *tapeInfoPtr, afs_uint32 taskId,
 		AFS_SIGSET_RESTORE();
 #else
 		code =
-		    LWP_CreateProcess(KeepAlive, 16384, 1, (void *)NULL,
+		    LWP_CreateProcess(KeepAlive, 16384, 1, NULL,
 				      "Keep-alive process", &alivePid);
 #endif
 		if (code) {
@@ -659,6 +641,7 @@ saveDbToTape(void *param)
     extern struct deviceSyncNode *deviceLatch;
     extern struct tapeConfig globalTapeConfig;
 
+    afs_pthread_setname_self("Db save");
     expires = (saveDbIfPtr->archiveTime ? NEVERDATE : 0);
     taskId = saveDbIfPtr->taskId;
     dumpEntry.id = 0;
@@ -838,7 +821,6 @@ readDbTape(struct butm_tapeInfo *tapeInfoPtr,
 	if (!code)
 	    strcpy(tapeName, te.name);
     }
-    code = 0;
 
     while (1) {			/*w */
 	if (interactiveFlag) {	/* need a tape to read */
@@ -890,11 +872,9 @@ readDbTape(struct butm_tapeInfo *tapeInfoPtr,
 
 
     /* Initialize a tapeEntry for later inclusion into the database */
-    listEntryPtr =
-	(struct tapeEntryList *)malloc(sizeof(struct tapeEntryList));
+    listEntryPtr = calloc(1, sizeof(struct tapeEntryList));
     if (!listEntryPtr)
 	ERROR_EXIT(TC_NOMEMORY);
-    memset(listEntryPtr, 0, sizeof(struct tapeEntryList));
 
     /* Fill in tape entry so we can save it later */
     strcpy(tapeEntryPtr->name, TNAME(&oldTapeLabel));
@@ -1042,6 +1022,7 @@ restoreDbFromTape(void *param)
     extern struct tapeConfig globalTapeConfig;
     extern struct deviceSyncNode *deviceLatch;
 
+    afs_pthread_setname_self("Db restore");
     setStatus(taskId, DRIVE_WAIT);
     EnterDeviceQueue(deviceLatch);	/* lock tape device */
     clearStatus(taskId, DRIVE_WAIT);
@@ -1139,6 +1120,7 @@ KeepAlive(void *unused)
 
     extern struct udbHandleS udbHandle;
 
+    afs_pthread_setname_self("Keep-alive");
     while (1) {
 #ifdef AFS_PTHREAD_ENV
 	sleep(5);
@@ -1365,11 +1347,10 @@ saveTextFile(afs_int32 taskId, afs_int32 textType, char *fileName)
     afs_int32 code = 0;
     int tlock = 0;
 
-    ctPtr = (udbClientTextP) malloc(sizeof(*ctPtr));
+    ctPtr = calloc(1, sizeof(*ctPtr));
     if (!ctPtr)
 	ERROR_EXIT(TC_NOMEMORY);
 
-    memset(ctPtr, 0, sizeof(*ctPtr));
     ctPtr->textType = textType;
 
     /* lock the text in the database */
@@ -1430,7 +1411,7 @@ restoreText(struct butm_tapeInfo *tapeInfo,
     udbClientTextP ctPtr = 0;
     afs_int32 textType;
 
-    ctPtr = (udbClientTextP) malloc(sizeof(*ctPtr));
+    ctPtr = malloc(sizeof(*ctPtr));
     if (!ctPtr)
 	ERROR_EXIT(TC_NOMEMORY);
 
@@ -1457,11 +1438,7 @@ restoreText(struct butm_tapeInfo *tapeInfo,
 
     /* open the text file */
     sprintf(filename, "%s/bu_XXXXXX", gettmpdir());
-#if defined (HAVE_MKSTEMP)
     fid = mkstemp(filename);
-#else
-    fid = open(mktemp(filename), O_RDWR | O_CREAT | O_EXCL, 0600);
-#endif
     if (fid < 0) {
 	ErrorLog(0, rstTapeInfoPtr->taskId, errno, 0,
 		 "Can't open temporary text file: %s\n", filename);
@@ -1470,7 +1447,7 @@ restoreText(struct butm_tapeInfo *tapeInfo,
 
     /* allocate buffer for text */
     readBlockSize = BUTM_BLKSIZE;
-    readBuffer = (char *)malloc(readBlockSize);
+    readBuffer = malloc(readBlockSize);
     if (!readBuffer)
 	ERROR_EXIT(TC_NOMEMORY);
 
@@ -1559,7 +1536,7 @@ getTapeData(struct butm_tapeInfo *tapeInfoPtr,
 	ERROR_EXIT(TC_ABORTEDBYREQUEST);
 
     if (!tapeReadBuffer) {
-	tapeReadBuffer = (char *)malloc(BUTM_BLOCKSIZE);
+	tapeReadBuffer = malloc(BUTM_BLOCKSIZE);
 	if (!tapeReadBuffer)
 	    ERROR_EXIT(TC_NOMEMORY);
     }

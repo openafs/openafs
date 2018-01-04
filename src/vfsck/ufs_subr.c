@@ -20,11 +20,10 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #define VICE
 
-#include <sys/param.h>
-#include <sys/time.h>
 #ifdef	AFS_OSF_ENV
 #include <ufs/fs.h>
 #else /* AFS_OSF_ENV */

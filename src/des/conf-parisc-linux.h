@@ -1,4 +1,0 @@
-#define BITS32
-#define BIG
-#define MSBFIRST
-#define MUSTALIGN

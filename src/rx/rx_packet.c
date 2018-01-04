@@ -8,88 +8,75 @@
  */
 
 #include <afsconfig.h>
-#ifdef KERNEL
-#include "afs/param.h"
-#else
 #include <afs/param.h>
-#endif
 
 #ifdef KERNEL
-#if defined(UKERNEL)
-#include "afs/sysincludes.h"
-#include "afsincludes.h"
-#include "rx/rx_kcommon.h"
-#include "rx/rx_clock.h"
-#include "rx/rx_queue.h"
-#include "rx/rx_packet.h"
-#else /* defined(UKERNEL) */
-#ifdef RX_KERNEL_TRACE
-#include "../rx/rx_kcommon.h"
-#endif
-#include "h/types.h"
-#ifndef AFS_LINUX20_ENV
-#include "h/systm.h"
-#endif
-#if defined(AFS_SGI_ENV) || defined(AFS_HPUX110_ENV)
-#include "afs/sysincludes.h"
-#endif
-#if defined(AFS_OBSD_ENV)
-#include "h/proc.h"
-#endif
-#include "h/socket.h"
-#if !defined(AFS_SUN5_ENV) &&  !defined(AFS_LINUX20_ENV) && !defined(AFS_HPUX110_ENV)
-#if	!defined(AFS_OSF_ENV) && !defined(AFS_AIX41_ENV)
-#include "sys/mount.h"		/* it gets pulled in by something later anyway */
-#endif
-#include "h/mbuf.h"
-#endif
-#include "netinet/in.h"
-#include "afs/afs_osi.h"
-#include "rx_kmutex.h"
-#include "rx/rx_clock.h"
-#include "rx/rx_queue.h"
-#ifdef	AFS_SUN5_ENV
-#include <sys/sysmacros.h>
-#endif
-#include "rx/rx_packet.h"
-#endif /* defined(UKERNEL) */
-#include "rx/rx_globals.h"
+# if defined(UKERNEL)
+#  include "afs/sysincludes.h"
+#  include "afsincludes.h"
+#  include "rx_kcommon.h"
+# else /* defined(UKERNEL) */
+#  ifdef RX_KERNEL_TRACE
+#   include "rx_kcommon.h"
+#  endif
+#  include "h/types.h"
+#  ifndef AFS_LINUX20_ENV
+#   include "h/systm.h"
+#  endif
+#  if defined(AFS_SGI_ENV) || defined(AFS_HPUX110_ENV) || defined(AFS_NBSD50_ENV)
+#   include "afs/sysincludes.h"
+#  endif
+#  if defined(AFS_OBSD_ENV)
+#   include "h/proc.h"
+#  endif
+#  include "h/socket.h"
+#  if !defined(AFS_SUN5_ENV) &&  !defined(AFS_LINUX20_ENV) && !defined(AFS_HPUX110_ENV)
+#   if	!defined(AFS_OSF_ENV) && !defined(AFS_AIX41_ENV)
+#    include "sys/mount.h"		/* it gets pulled in by something later anyway */
+#   endif
+#   include "h/mbuf.h"
+#  endif
+#  include "netinet/in.h"
+#  include "afs/afs_osi.h"
+#  include "rx_kmutex.h"
+# endif /* defined(UKERNEL) */
 #else /* KERNEL */
-#include "sys/types.h"
-#include <sys/stat.h>
-#include <errno.h>
-#if defined(AFS_NT40_ENV)
-#include <winsock2.h>
-#ifndef EWOULDBLOCK
-#define EWOULDBLOCK WSAEWOULDBLOCK
-#endif
-#include "rx_user.h"
-#include "rx_xmit_nt.h"
-#include <stdlib.h>
-#else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#endif
-#include "rx_clock.h"
-#include "rx.h"
-#include "rx_queue.h"
-#ifdef	AFS_SUN5_ENV
-#include <sys/sysmacros.h>
-#endif
-#include "rx_packet.h"
-#include "rx_globals.h"
-#include <lwp.h>
-#include <string.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
+# include <roken.h>
+# include <assert.h>
+# include <afs/opr.h>
+# if defined(AFS_NT40_ENV)
+#  ifndef EWOULDBLOCK
+#   define EWOULDBLOCK WSAEWOULDBLOCK
+#  endif
+#  include "rx_user.h"
+#  include "rx_xmit_nt.h"
+# endif
+# include <lwp.h>
 #endif /* KERNEL */
+
+#ifdef	AFS_SUN5_ENV
+# include <sys/sysmacros.h>
+#endif
+
+#include <opr/queue.h>
+
+#include "rx.h"
+#include "rx_clock.h"
+#include "rx_packet.h"
+#include "rx_atomic.h"
+#include "rx_globals.h"
+#include "rx_internal.h"
+#include "rx_stats.h"
+
+#include "rx_peer.h"
+#include "rx_conn.h"
+#include "rx_call.h"
 
 /*!
  * \brief structure used to keep track of allocated packets
  */
 struct rx_mallocedPacket {
-    struct rx_queue entry;	/*!< chained using the queue package */
+    struct opr_queue entry;	/*!< chained using opr_queue */
     struct rx_packet *addr;	/*!< address of the first element */
     afs_uint32 size;		/*!< array size in bytes */
 };
@@ -105,20 +92,30 @@ static afs_uint32       rx_packet_id = 0;
 
 extern char cml_version_number[];
 
-static int AllocPacketBufs(int class, int num_pkts, struct rx_queue *q);
+static int AllocPacketBufs(int class, int num_pkts, struct opr_queue *q);
 
 static void rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
 				afs_uint32 ahost, short aport,
 				afs_int32 istack);
+static struct rx_packet *rxi_AllocPacketNoLock(int class);
+
+#ifndef KERNEL
+static void rxi_MorePacketsNoLock(int apackets);
+#endif
 
 #ifdef RX_ENABLE_TSFPQ
-static int
-rxi_FreeDataBufsTSFPQ(struct rx_packet *p, afs_uint32 first, int flush_global);
+static int rxi_FreeDataBufsTSFPQ(struct rx_packet *p, afs_uint32 first,
+				 int flush_global);
+static void rxi_AdjustLocalPacketsTSFPQ(int num_keep_local,
+					int allow_overcommit);
 #else
-static int rxi_FreeDataBufsToQueue(struct rx_packet *p,
-				   afs_uint32 first,
-				   struct rx_queue * q);
+static void rxi_FreePacketNoLock(struct rx_packet *p);
+static int rxi_FreeDataBufsNoLock(struct rx_packet *p, afs_uint32 first);
+static int rxi_FreeDataBufsToQueue(struct rx_packet *p, afs_uint32 first,
+				   struct opr_queue * q);
 #endif
+
+extern struct opr_queue rx_idleServerQueue;
 
 /* some rules about packets:
  * 1.  When a packet is allocated, the final iov_buf contains room for
@@ -253,14 +250,14 @@ rx_SlowWritePacket(struct rx_packet * packet, int offset, int resid, char *in)
 }
 
 int
-rxi_AllocPackets(int class, int num_pkts, struct rx_queue * q)
+rxi_AllocPackets(int class, int num_pkts, struct opr_queue * q)
 {
-    struct rx_packet *p, *np;
+    struct opr_queue *c;
 
     num_pkts = AllocPacketBufs(class, num_pkts, q);
 
-    for (queue_Scan(q, p, np, rx_packet)) {
-        RX_PACKET_IOV_FULLINIT(p);
+    for (opr_queue_Scan(q, c)) {
+        RX_PACKET_IOV_FULLINIT(opr_queue_Entry(c, struct rx_packet, entry));
     }
 
     return num_pkts;
@@ -268,7 +265,7 @@ rxi_AllocPackets(int class, int num_pkts, struct rx_queue * q)
 
 #ifdef RX_ENABLE_TSFPQ
 static int
-AllocPacketBufs(int class, int num_pkts, struct rx_queue * q)
+AllocPacketBufs(int class, int num_pkts, struct opr_queue * q)
 {
     struct rx_ts_info_t * rx_ts_info;
     int transfer;
@@ -298,7 +295,7 @@ AllocPacketBufs(int class, int num_pkts, struct rx_queue * q)
 }
 #else /* RX_ENABLE_TSFPQ */
 static int
-AllocPacketBufs(int class, int num_pkts, struct rx_queue * q)
+AllocPacketBufs(int class, int num_pkts, struct opr_queue * q)
 {
     struct rx_packet *c;
     int i;
@@ -320,19 +317,19 @@ AllocPacketBufs(int class, int num_pkts, struct rx_queue * q)
         if (rx_stats_active) {
             switch (class) {
             case RX_PACKET_CLASS_RECEIVE:
-                rx_MutexIncrement(rx_stats.receivePktAllocFailures, rx_stats_mutex);
+                rx_atomic_inc(&rx_stats.receivePktAllocFailures);
                 break;
             case RX_PACKET_CLASS_SEND:
-                rx_MutexIncrement(rx_stats.sendPktAllocFailures, rx_stats_mutex);
+                rx_atomic_inc(&rx_stats.sendPktAllocFailures);
                 break;
             case RX_PACKET_CLASS_SPECIAL:
-                rx_MutexIncrement(rx_stats.specialPktAllocFailures, rx_stats_mutex);
+                rx_atomic_inc(&rx_stats.specialPktAllocFailures);
                 break;
             case RX_PACKET_CLASS_RECV_CBUF:
-                rx_MutexIncrement(rx_stats.receiveCbufPktAllocFailures, rx_stats_mutex);
+                rx_atomic_inc(&rx_stats.receiveCbufPktAllocFailures);
                 break;
             case RX_PACKET_CLASS_SEND_CBUF:
-                rx_MutexIncrement(rx_stats.sendCbufPktAllocFailures, rx_stats_mutex);
+                rx_atomic_inc(&rx_stats.sendCbufPktAllocFailures);
                 break;
             }
 	}
@@ -351,13 +348,13 @@ AllocPacketBufs(int class, int num_pkts, struct rx_queue * q)
     }
 #endif /* KERNEL */
 
-    for (i=0, c=queue_First(&rx_freePacketQueue, rx_packet);
+    for (i=0, c=opr_queue_First(&rx_freePacketQueue, struct rx_packet, entry);
 	 i < num_pkts;
-	 i++, c=queue_Next(c, rx_packet)) {
+	 i++, c=opr_queue_Next(&c->entry, struct rx_packet, entry)) {
         RX_FPQ_MARK_USED(c);
     }
 
-    queue_SplitBeforeAppend(&rx_freePacketQueue,q,c);
+    opr_queue_SplitBeforeAppend(&rx_freePacketQueue, q, &c->entry);
 
     rx_nFreePackets -= num_pkts;
 
@@ -377,22 +374,25 @@ AllocPacketBufs(int class, int num_pkts, struct rx_queue * q)
 #ifdef RX_ENABLE_TSFPQ
 /* num_pkts=0 means queue length is unknown */
 int
-rxi_FreePackets(int num_pkts, struct rx_queue * q)
+rxi_FreePackets(int num_pkts, struct opr_queue * q)
 {
     struct rx_ts_info_t * rx_ts_info;
-    struct rx_packet *c, *nc;
+    struct opr_queue *cursor, *store;
     SPLVAR;
 
     osi_Assert(num_pkts >= 0);
     RX_TS_INFO_GET(rx_ts_info);
 
     if (!num_pkts) {
-	for (queue_Scan(q, c, nc, rx_packet), num_pkts++) {
-	    rxi_FreeDataBufsTSFPQ(c, 2, 0);
+	for (opr_queue_ScanSafe(q, cursor, store)) {
+	    num_pkts++;
+	    rxi_FreeDataBufsTSFPQ(opr_queue_Entry(cursor, struct rx_packet, 
+				    		 entry), 2, 0);
 	}
     } else {
-	for (queue_Scan(q, c, nc, rx_packet)) {
-	    rxi_FreeDataBufsTSFPQ(c, 2, 0);
+	for (opr_queue_ScanSafe(q, cursor, store)) {
+	    rxi_FreeDataBufsTSFPQ(opr_queue_Entry(cursor, struct rx_packet, 
+				    		 entry), 2, 0);
 	}
     }
 
@@ -418,27 +418,33 @@ rxi_FreePackets(int num_pkts, struct rx_queue * q)
 #else /* RX_ENABLE_TSFPQ */
 /* num_pkts=0 means queue length is unknown */
 int
-rxi_FreePackets(int num_pkts, struct rx_queue *q)
+rxi_FreePackets(int num_pkts, struct opr_queue *q)
 {
-    struct rx_queue cbs;
-    struct rx_packet *p, *np;
+    struct opr_queue cbs;
+    struct opr_queue *cursor, *store;
     int qlen = 0;
     SPLVAR;
 
     osi_Assert(num_pkts >= 0);
-    queue_Init(&cbs);
+    opr_queue_Init(&cbs);
 
     if (!num_pkts) {
-        for (queue_Scan(q, p, np, rx_packet), num_pkts++) {
+        for (opr_queue_ScanSafe(q, cursor, store)) {
+	    struct rx_packet *p
+		= opr_queue_Entry(cursor, struct rx_packet, entry);
 	    if (p->niovecs > 2) {
 		qlen += rxi_FreeDataBufsToQueue(p, 2, &cbs);
 	    }
             RX_FPQ_MARK_FREE(p);
+	    num_pkts++;
 	}
 	if (!num_pkts)
 	    return 0;
     } else {
-        for (queue_Scan(q, p, np, rx_packet)) {
+        for (opr_queue_ScanSafe(q, cursor, store)) {
+	    struct rx_packet *p
+		= opr_queue_Entry(cursor, struct rx_packet, entry);
+
 	    if (p->niovecs > 2) {
 		qlen += rxi_FreeDataBufsToQueue(p, 2, &cbs);
 	    }
@@ -447,7 +453,7 @@ rxi_FreePackets(int num_pkts, struct rx_queue *q)
     }
 
     if (qlen) {
-	queue_SpliceAppend(q, &cbs);
+	opr_queue_SpliceAppend(q, &cbs);
 	qlen += num_pkts;
     } else
 	qlen = num_pkts;
@@ -455,7 +461,7 @@ rxi_FreePackets(int num_pkts, struct rx_queue *q)
     NETPRI;
     MUTEX_ENTER(&rx_freePktQ_lock);
 
-    queue_SpliceAppend(&rx_freePacketQueue, q);
+    opr_queue_SpliceAppend(&rx_freePacketQueue, q);
     rx_nFreePackets += qlen;
 
     /* Wakeup anyone waiting for packets */
@@ -505,8 +511,7 @@ int
 rxi_AllocDataBuf(struct rx_packet *p, int nb, int class)
 {
     int i, nv;
-    struct rx_queue q;
-    struct rx_packet *cb, *ncb;
+    struct opr_queue q, *cursor, *store;
 
     /* compute the number of cbuf's we need */
     nv = nb / RX_CBUFFERSIZE;
@@ -518,14 +523,19 @@ rxi_AllocDataBuf(struct rx_packet *p, int nb, int class)
         return nb;
 
     /* allocate buffers */
-    queue_Init(&q);
+    opr_queue_Init(&q);
     nv = AllocPacketBufs(class, nv, &q);
 
     /* setup packet iovs */
-    for (i = p->niovecs, queue_Scan(&q, cb, ncb, rx_packet), i++) {
-        queue_Remove(cb);
+    i = p ->niovecs;
+    for (opr_queue_ScanSafe(&q, cursor, store)) {
+	struct rx_packet *cb
+	    = opr_queue_Entry(cursor, struct rx_packet, entry);
+
+        opr_queue_Remove(&cb->entry);
         p->wirevec[i].iov_base = (caddr_t) cb->localdata;
         p->wirevec[i].iov_len = RX_CBUFFERSIZE;
+	i++;
     }
 
     nb -= (nv * RX_CBUFFERSIZE);
@@ -548,17 +558,17 @@ registerPackets(struct rx_packet *addr, afs_uint32 npkt)
 {
     struct rx_mallocedPacket *mp;
 
-    mp = (struct rx_mallocedPacket *)
-	osi_Alloc(sizeof(struct rx_mallocedPacket));
+    mp = osi_Alloc(sizeof(*mp));
 
-    osi_Assert(mp);
-    memset(mp, 0, sizeof(struct rx_mallocedPacket));
+    osi_Assert(mp != NULL);
+    memset(mp, 0, sizeof(*mp));
 
     mp->addr = addr;
     mp->size = npkt * sizeof(struct rx_packet);
+    osi_Assert(npkt <= MAX_AFS_UINT32 / sizeof(struct rx_packet));
 
     MUTEX_ENTER(&rx_mallocedPktQ_lock);
-    queue_Append(&rx_mallocedPacketQueue, mp);
+    opr_queue_Append(&rx_mallocedPacketQueue, &mp->entry);
     MUTEX_EXIT(&rx_mallocedPktQ_lock);
 }
 
@@ -573,7 +583,7 @@ rxi_MorePackets(int apackets)
     SPLVAR;
 
     getme = apackets * sizeof(struct rx_packet);
-    p = (struct rx_packet *)osi_Alloc(getme);
+    p = osi_Alloc(getme);
     osi_Assert(p);
     registerPackets(p, apackets);
 
@@ -628,7 +638,7 @@ rxi_MorePackets(int apackets)
     SPLVAR;
 
     getme = apackets * sizeof(struct rx_packet);
-    p = (struct rx_packet *)osi_Alloc(getme);
+    p = osi_Alloc(getme);
     osi_Assert(p);
     registerPackets(p, apackets);
 
@@ -644,7 +654,7 @@ rxi_MorePackets(int apackets)
 #endif
 	p->niovecs = 2;
 
-	queue_Append(&rx_freePacketQueue, p);
+	opr_queue_Append(&rx_freePacketQueue, &p->entry);
 #ifdef RXDEBUG_PACKET
         p->packetId = rx_packet_id++;
         p->allNextp = rx_mallocedP;
@@ -672,7 +682,7 @@ rxi_MorePacketsTSFPQ(int apackets, int flush_global, int num_keep_local)
     SPLVAR;
 
     getme = apackets * sizeof(struct rx_packet);
-    p = (struct rx_packet *)osi_Alloc(getme);
+    p = osi_Alloc(getme);
     registerPackets(p, apackets);
 
     PIN(p, getme);		/* XXXXX */
@@ -720,7 +730,7 @@ rxi_MorePacketsTSFPQ(int apackets, int flush_global, int num_keep_local)
 
 #ifndef KERNEL
 /* Add more packet buffers */
-void
+static void
 rxi_MorePacketsNoLock(int apackets)
 {
 #ifdef RX_ENABLE_TSFPQ
@@ -735,7 +745,7 @@ rxi_MorePacketsNoLock(int apackets)
 	* ((rx_maxJumboRecvSize - RX_FIRSTBUFFERSIZE) / RX_CBUFFERSIZE);
     do {
         getme = apackets * sizeof(struct rx_packet);
-        p = (struct rx_packet *)osi_Alloc(getme);
+        p = osi_Alloc(getme);
 	if (p == NULL) {
             apackets -= apackets / 4;
             osi_Assert(apackets > 0);
@@ -756,7 +766,7 @@ rxi_MorePacketsNoLock(int apackets)
 #endif
 	p->niovecs = 2;
 
-	queue_Append(&rx_freePacketQueue, p);
+	opr_queue_Append(&rx_freePacketQueue, &p->entry);
 #ifdef RXDEBUG_PACKET
         p->packetId = rx_packet_id++;
         p->allNextp = rx_mallocedP;
@@ -783,9 +793,10 @@ rxi_FreeAllPackets(void)
 
     MUTEX_ENTER(&rx_mallocedPktQ_lock);
 
-    while (!queue_IsEmpty(&rx_mallocedPacketQueue)) {
-	mp = queue_First(&rx_mallocedPacketQueue, rx_mallocedPacket);
-	queue_Remove(mp);
+    while (!opr_queue_IsEmpty(&rx_mallocedPacketQueue)) {
+	mp = opr_queue_First(&rx_mallocedPacketQueue,
+			     struct rx_mallocedPacket, entry);
+	opr_queue_Remove(&mp->entry);
 	osi_Free(mp->addr, mp->size);
 	UNPIN(mp->addr, mp->size);
 	osi_Free(mp, sizeof(*mp));
@@ -794,7 +805,7 @@ rxi_FreeAllPackets(void)
 }
 
 #ifdef RX_ENABLE_TSFPQ
-void
+static void
 rxi_AdjustLocalPacketsTSFPQ(int num_keep_local, int allow_overcommit)
 {
     struct rx_ts_info_t * rx_ts_info;
@@ -856,33 +867,20 @@ rx_CheckPackets(void)
    */
 
 /* Actually free the packet p. */
-#ifdef RX_ENABLE_TSFPQ
-void
-rxi_FreePacketNoLock(struct rx_packet *p)
-{
-    struct rx_ts_info_t * rx_ts_info;
-    dpf(("Free %"AFS_PTR_FMT"\n", p));
-
-    RX_TS_INFO_GET(rx_ts_info);
-    RX_TS_FPQ_CHECKIN(rx_ts_info,p);
-    if (rx_ts_info->_FPQ.len > rx_TSFPQLocalMax) {
-        RX_TS_FPQ_LTOG(rx_ts_info);
-    }
-}
-#else /* RX_ENABLE_TSFPQ */
-void
+#ifndef RX_ENABLE_TSFPQ
+static void
 rxi_FreePacketNoLock(struct rx_packet *p)
 {
     dpf(("Free %"AFS_PTR_FMT"\n", p));
 
     RX_FPQ_MARK_FREE(p);
     rx_nFreePackets++;
-    queue_Append(&rx_freePacketQueue, p);
+    opr_queue_Append(&rx_freePacketQueue, &p->entry);
 }
 #endif /* RX_ENABLE_TSFPQ */
 
 #ifdef RX_ENABLE_TSFPQ
-void
+static void
 rxi_FreePacketTSFPQ(struct rx_packet *p, int flush_global)
 {
     struct rx_ts_info_t * rx_ts_info;
@@ -918,7 +916,7 @@ rxi_FreePacketTSFPQ(struct rx_packet *p, int flush_global)
  */
 #ifndef RX_ENABLE_TSFPQ
 static int
-rxi_FreeDataBufsToQueue(struct rx_packet *p, afs_uint32 first, struct rx_queue * q)
+rxi_FreeDataBufsToQueue(struct rx_packet *p, afs_uint32 first, struct opr_queue * q)
 {
     struct iovec *iov;
     struct rx_packet * cb;
@@ -930,14 +928,13 @@ rxi_FreeDataBufsToQueue(struct rx_packet *p, afs_uint32 first, struct rx_queue *
 	    osi_Panic("rxi_FreeDataBufsToQueue: unexpected NULL iov");
 	cb = RX_CBUF_TO_PACKET(iov->iov_base, p);
 	RX_FPQ_MARK_FREE(cb);
-	queue_Append(q, cb);
+	opr_queue_Append(q, &cb->entry);
     }
     p->length = 0;
     p->niovecs = 0;
 
     return count;
 }
-#endif
 
 /*
  * free packet continuation buffers into the global free packet pool
@@ -948,7 +945,7 @@ rxi_FreeDataBufsToQueue(struct rx_packet *p, afs_uint32 first, struct rx_queue *
  * returns:
  *   zero always
  */
-int
+static int
 rxi_FreeDataBufsNoLock(struct rx_packet *p, afs_uint32 first)
 {
     struct iovec *iov;
@@ -965,7 +962,8 @@ rxi_FreeDataBufsNoLock(struct rx_packet *p, afs_uint32 first)
     return 0;
 }
 
-#ifdef RX_ENABLE_TSFPQ
+#else
+
 /*
  * free packet continuation buffers into the thread-local free pool
  *
@@ -1023,7 +1021,7 @@ void
 rxi_RestoreDataBufs(struct rx_packet *p)
 {
     unsigned int i;
-    struct iovec *iov = &p->wirevec[2];
+    struct iovec *iov;
 
     RX_PACKET_IOV_INIT(p);
 
@@ -1159,7 +1157,7 @@ rxi_FreePacket(struct rx_packet *p)
  * The header is absolutely necessary, besides, this is the way the
  * length field is usually used */
 #ifdef RX_ENABLE_TSFPQ
-struct rx_packet *
+static struct rx_packet *
 rxi_AllocPacketNoLock(int class)
 {
     struct rx_packet *p;
@@ -1167,41 +1165,15 @@ rxi_AllocPacketNoLock(int class)
 
     RX_TS_INFO_GET(rx_ts_info);
 
-#ifdef KERNEL
-    if (rxi_OverQuota(class)) {
-	rxi_NeedMorePackets = TRUE;
-        if (rx_stats_active) {
-            switch (class) {
-            case RX_PACKET_CLASS_RECEIVE:
-                rx_MutexIncrement(rx_stats.receivePktAllocFailures, rx_stats_mutex);
-                break;
-            case RX_PACKET_CLASS_SEND:
-                rx_MutexIncrement(rx_stats.sendPktAllocFailures, rx_stats_mutex);
-                break;
-            case RX_PACKET_CLASS_SPECIAL:
-                rx_MutexIncrement(rx_stats.specialPktAllocFailures, rx_stats_mutex);
-                break;
-            case RX_PACKET_CLASS_RECV_CBUF:
-                rx_MutexIncrement(rx_stats.receiveCbufPktAllocFailures, rx_stats_mutex);
-                break;
-            case RX_PACKET_CLASS_SEND_CBUF:
-                rx_MutexIncrement(rx_stats.sendCbufPktAllocFailures, rx_stats_mutex);
-                break;
-            }
-	}
-        return (struct rx_packet *)0;
-    }
-#endif /* KERNEL */
-
     if (rx_stats_active)
-        rx_MutexIncrement(rx_stats.packetRequests, rx_stats_mutex);
-    if (queue_IsEmpty(&rx_ts_info->_FPQ)) {
+        rx_atomic_inc(&rx_stats.packetRequests);
+    if (opr_queue_IsEmpty(&rx_ts_info->_FPQ.queue)) {
 
 #ifdef KERNEL
-        if (queue_IsEmpty(&rx_freePacketQueue))
+        if (opr_queue_IsEmpty(&rx_freePacketQueue))
 	    osi_Panic("rxi_AllocPacket error");
 #else /* KERNEL */
-        if (queue_IsEmpty(&rx_freePacketQueue))
+        if (opr_queue_IsEmpty(&rx_freePacketQueue))
 	    rxi_MorePacketsNoLock(rx_maxSendWindow);
 #endif /* KERNEL */
 
@@ -1222,7 +1194,7 @@ rxi_AllocPacketNoLock(int class)
     return p;
 }
 #else /* RX_ENABLE_TSFPQ */
-struct rx_packet *
+static struct rx_packet *
 rxi_AllocPacketNoLock(int class)
 {
     struct rx_packet *p;
@@ -1233,19 +1205,19 @@ rxi_AllocPacketNoLock(int class)
         if (rx_stats_active) {
             switch (class) {
             case RX_PACKET_CLASS_RECEIVE:
-                rx_MutexIncrement(rx_stats.receivePktAllocFailures, rx_stats_mutex);
+                rx_atomic_inc(&rx_stats.receivePktAllocFailures);
                 break;
             case RX_PACKET_CLASS_SEND:
-                rx_MutexIncrement(rx_stats.sendPktAllocFailures, rx_stats_mutex);
+                rx_atomic_inc(&rx_stats.sendPktAllocFailures);
                 break;
             case RX_PACKET_CLASS_SPECIAL:
-                rx_MutexIncrement(rx_stats.specialPktAllocFailures, rx_stats_mutex);
+                rx_atomic_inc(&rx_stats.specialPktAllocFailures);
                 break;
             case RX_PACKET_CLASS_RECV_CBUF:
-                rx_MutexIncrement(rx_stats.receiveCbufPktAllocFailures, rx_stats_mutex);
+                rx_atomic_inc(&rx_stats.receiveCbufPktAllocFailures);
                 break;
             case RX_PACKET_CLASS_SEND_CBUF:
-                rx_MutexIncrement(rx_stats.sendCbufPktAllocFailures, rx_stats_mutex);
+                rx_atomic_inc(&rx_stats.sendCbufPktAllocFailures);
                 break;
             }
         }
@@ -1254,19 +1226,19 @@ rxi_AllocPacketNoLock(int class)
 #endif /* KERNEL */
 
     if (rx_stats_active)
-        rx_MutexIncrement(rx_stats.packetRequests, rx_stats_mutex);
+        rx_atomic_inc(&rx_stats.packetRequests);
 
 #ifdef KERNEL
-    if (queue_IsEmpty(&rx_freePacketQueue))
+    if (opr_queue_IsEmpty(&rx_freePacketQueue))
 	osi_Panic("rxi_AllocPacket error");
 #else /* KERNEL */
-    if (queue_IsEmpty(&rx_freePacketQueue))
+    if (opr_queue_IsEmpty(&rx_freePacketQueue))
 	rxi_MorePacketsNoLock(rx_maxSendWindow);
 #endif /* KERNEL */
 
     rx_nFreePackets--;
-    p = queue_First(&rx_freePacketQueue, rx_packet);
-    queue_Remove(p);
+    p = opr_queue_First(&rx_freePacketQueue, struct rx_packet, entry);
+    opr_queue_Remove(&p->entry);
     RX_FPQ_MARK_USED(p);
 
     dpf(("Alloc %"AFS_PTR_FMT", class %d\n", p, class));
@@ -1282,7 +1254,7 @@ rxi_AllocPacketNoLock(int class)
 #endif /* RX_ENABLE_TSFPQ */
 
 #ifdef RX_ENABLE_TSFPQ
-struct rx_packet *
+static struct rx_packet *
 rxi_AllocPacketTSFPQ(int class, int pull_global)
 {
     struct rx_packet *p;
@@ -1291,17 +1263,17 @@ rxi_AllocPacketTSFPQ(int class, int pull_global)
     RX_TS_INFO_GET(rx_ts_info);
 
     if (rx_stats_active)
-        rx_MutexIncrement(rx_stats.packetRequests, rx_stats_mutex);
-    if (pull_global && queue_IsEmpty(&rx_ts_info->_FPQ)) {
+        rx_atomic_inc(&rx_stats.packetRequests);
+    if (pull_global && opr_queue_IsEmpty(&rx_ts_info->_FPQ.queue)) {
         MUTEX_ENTER(&rx_freePktQ_lock);
 
-        if (queue_IsEmpty(&rx_freePacketQueue))
+        if (opr_queue_IsEmpty(&rx_freePacketQueue))
 	    rxi_MorePacketsNoLock(rx_maxSendWindow);
 
 	RX_TS_FPQ_GTOL(rx_ts_info);
 
         MUTEX_EXIT(&rx_freePktQ_lock);
-    } else if (queue_IsEmpty(&rx_ts_info->_FPQ)) {
+    } else if (opr_queue_IsEmpty(&rx_ts_info->_FPQ.queue)) {
         return NULL;
     }
 
@@ -1411,9 +1383,7 @@ rxi_AllocSendPacket(struct rx_call *call, int want)
 	 * just wait.  */
 	NETPRI;
 	call->flags |= RX_CALL_WAIT_PACKETS;
-        MUTEX_ENTER(&rx_refcnt_mutex);
 	CALL_HOLD(call, RX_CALL_REFCOUNT_PACKET);
-        MUTEX_EXIT(&rx_refcnt_mutex);
 	MUTEX_EXIT(&call->lock);
 	rx_waitingForPackets = 1;
 
@@ -1424,9 +1394,7 @@ rxi_AllocSendPacket(struct rx_call *call, int want)
 #endif
 	MUTEX_EXIT(&rx_freePktQ_lock);
 	MUTEX_ENTER(&call->lock);
-        MUTEX_ENTER(&rx_refcnt_mutex);
 	CALL_RELE(call, RX_CALL_REFCOUNT_PACKET);
-        MUTEX_EXIT(&rx_refcnt_mutex);
 	call->flags &= ~RX_CALL_WAIT_PACKETS;
 	USERPRI;
     }
@@ -1516,15 +1484,13 @@ rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
     if (nbytes < 0 || (nbytes > tlen) || (p->length & 0x8000)) { /* Bogus packet */
 	if (nbytes < 0 && errno == EWOULDBLOCK) {
             if (rx_stats_active)
-                rx_MutexIncrement(rx_stats.noPacketOnRead, rx_stats_mutex);
+                rx_atomic_inc(&rx_stats.noPacketOnRead);
 	} else if (nbytes <= 0) {
             if (rx_stats_active) {
-                MUTEX_ENTER(&rx_stats_mutex);
-                rx_stats.bogusPacketOnRead++;
+                rx_atomic_inc(&rx_stats.bogusPacketOnRead);
                 rx_stats.bogusHost = from.sin_addr.s_addr;
-                MUTEX_EXIT(&rx_stats_mutex);
             }
-	    dpf(("B: bogus packet from [%x,%d] nb=%d", ntohl(from.sin_addr.s_addr),
+	    dpf(("B: bogus packet from [%x,%d] nb=%d\n", ntohl(from.sin_addr.s_addr),
 		 ntohs(from.sin_port), nbytes));
 	}
 	return 0;
@@ -1537,7 +1503,7 @@ rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
 	*host = from.sin_addr.s_addr;
 	*port = from.sin_port;
 
-	dpf(("Dropped %d %s: %x.%u.%u.%u.%u.%u.%u flags %d len %d",
+	dpf(("Dropped %d %s: %x.%u.%u.%u.%u.%u.%u flags %d len %d\n",
 	      p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(*host), ntohs(*port), p->header.serial,
 	      p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.flags,
 	      p->length));
@@ -1553,32 +1519,10 @@ rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
 
 	*host = from.sin_addr.s_addr;
 	*port = from.sin_port;
-	if (p->header.type > 0 && p->header.type < RX_N_PACKET_TYPES) {
-            if (rx_stats_active) {
-                struct rx_peer *peer;
-                rx_MutexIncrement(rx_stats.packetsRead[p->header.type - 1], rx_stats_mutex);
-                /*
-                 * Try to look up this peer structure.  If it doesn't exist,
-                 * don't create a new one -
-                 * we don't keep count of the bytes sent/received if a peer
-                 * structure doesn't already exist.
-                 *
-                 * The peer/connection cleanup code assumes that there is 1 peer
-                 * per connection.  If we actually created a peer structure here
-                 * and this packet was an rxdebug packet, the peer structure would
-                 * never be cleaned up.
-                 */
-                peer = rxi_FindPeer(*host, *port, 0, 0);
-                /* Since this may not be associated with a connection,
-                 * it may have no refCount, meaning we could race with
-                 * ReapConnections
-                 */
-                if (peer && (peer->refCount > 0)) {
-                    MUTEX_ENTER(&peer->peer_lock);
-                    hadd32(peer->bytesReceived, p->length);
-                    MUTEX_EXIT(&peer->peer_lock);
-                }
-            }
+	if (rx_stats_active
+	    && p->header.type > 0 && p->header.type < RX_N_PACKET_TYPES) {
+
+		rx_atomic_inc(&rx_stats.packetsRead[p->header.type - 1]);
 	}
 
 #ifdef RX_TRIMDATABUFS
@@ -1803,6 +1747,10 @@ m_cpytoiovec(struct mbuf *m, int off, int len, struct iovec iovs[], int niovs)
 #endif /* AFS_SUN5_ENV */
 
 #if !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN80_ENV)
+#if defined(AFS_NBSD_ENV)
+int
+rx_mb_to_packet(struct mbuf *amb, void (*free) (struct mbuf *), int hdr_len, int data_len, struct rx_packet *phandle)
+#else
 int
 rx_mb_to_packet(amb, free, hdr_len, data_len, phandle)
 #if defined(AFS_SUN5_ENV) || defined(AFS_HPUX110_ENV)
@@ -1813,6 +1761,7 @@ rx_mb_to_packet(amb, free, hdr_len, data_len, phandle)
      void (*free) ();
      struct rx_packet *phandle;
      int hdr_len, data_len;
+#endif /* AFS_NBSD_ENV */
 {
     int code;
 
@@ -1835,7 +1784,6 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 {
     struct rx_debugIn tin;
     afs_int32 tl;
-    struct rx_serverQueueEntry *np, *nqe;
 
     /*
      * Only respond to client-initiated Rx debug packets,
@@ -1871,10 +1819,9 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 	    tstat.callsExecuted = htonl(rxi_nCalls);
 	    tstat.packetReclaims = htonl(rx_packetReclaims);
 	    tstat.usedFDs = CountFDs(64);
-	    tstat.nWaiting = htonl(rx_nWaiting);
-	    tstat.nWaited = htonl(rx_nWaited);
-	    queue_Count(&rx_idleServerQueue, np, nqe, rx_serverQueueEntry,
-			tstat.idleThreads);
+	    tstat.nWaiting = htonl(rx_atomic_read(&rx_nWaiting));
+	    tstat.nWaited = htonl(rx_atomic_read(&rx_nWaited));
+	    tstat.idleThreads = opr_queue_Count(&rx_idleServerQueue);
 	    MUTEX_EXIT(&rx_serverPool_lock);
 	    tstat.idleThreads = htonl(tstat.idleThreads);
 	    tl = sizeof(struct rx_debugStats) - ap->length;
@@ -1935,11 +1882,11 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 			    tconn.callNumber[j] = htonl(tc->callNumber[j]);
 			    if ((tcall = tc->call[j])) {
 				tconn.callState[j] = tcall->state;
-				tconn.callMode[j] = tcall->mode;
+				tconn.callMode[j] = tcall->app.mode;
 				tconn.callFlags[j] = tcall->flags;
-				if (queue_IsNotEmpty(&tcall->rq))
+				if (!opr_queue_IsEmpty(&tcall->rq))
 				    tconn.callOther[j] |= RX_OTHER_IN;
-				if (queue_IsNotEmpty(&tcall->tq))
+				if (!opr_queue_IsEmpty(&tcall->tq))
 				    tconn.callOther[j] |= RX_OTHER_OUT;
 			    } else
 				tconn.callState[j] = RX_STATE_NOTINIT;
@@ -2043,17 +1990,14 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 			tpeer.ifMTU = htons(tp->ifMTU);
 			tpeer.idleWhen = htonl(tp->idleWhen);
 			tpeer.refCount = htons(tp->refCount);
-			tpeer.burstSize = tp->burstSize;
-			tpeer.burst = tp->burst;
-			tpeer.burstWait.sec = htonl(tp->burstWait.sec);
-			tpeer.burstWait.usec = htonl(tp->burstWait.usec);
+			tpeer.burstSize = 0;
+			tpeer.burst = 0;
+			tpeer.burstWait.sec = 0;
+			tpeer.burstWait.usec = 0;
 			tpeer.rtt = htonl(tp->rtt);
 			tpeer.rtt_dev = htonl(tp->rtt_dev);
 			tpeer.nSent = htonl(tp->nSent);
 			tpeer.reSends = htonl(tp->reSends);
-			tpeer.inPacketSkew = htonl(tp->inPacketSkew);
-			tpeer.outPacketSkew = htonl(tp->outPacketSkew);
-			tpeer.rateFlag = htonl(tp->rateFlag);
 			tpeer.natMTU = htons(tp->natMTU);
 			tpeer.maxMTU = htons(tp->maxMTU);
 			tpeer.maxDgramPackets = htons(tp->maxDgramPackets);
@@ -2062,12 +2006,14 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 			tpeer.cwind = htons(tp->cwind);
 			tpeer.nDgramPackets = htons(tp->nDgramPackets);
 			tpeer.congestSeq = htons(tp->congestSeq);
-			tpeer.bytesSent.high = htonl(tp->bytesSent.high);
-			tpeer.bytesSent.low = htonl(tp->bytesSent.low);
+			tpeer.bytesSent.high =
+			    htonl(tp->bytesSent >> 32);
+			tpeer.bytesSent.low =
+			    htonl(tp->bytesSent & MAX_AFS_UINT32);
 			tpeer.bytesReceived.high =
-			    htonl(tp->bytesReceived.high);
+			    htonl(tp->bytesReceived >> 32);
 			tpeer.bytesReceived.low =
-			    htonl(tp->bytesReceived.low);
+			    htonl(tp->bytesReceived & MAX_AFS_UINT32);
                         MUTEX_EXIT(&tp->peer_lock);
 
                         MUTEX_ENTER(&rx_peerHashTable_lock);
@@ -2180,6 +2126,7 @@ rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
     taddr.sin_family = AF_INET;
     taddr.sin_port = aport;
     taddr.sin_addr.s_addr = ahost;
+    memset(&taddr.sin_zero, 0, sizeof(taddr.sin_zero));
 #ifdef STRUCT_SOCKADDR_HAS_SA_LEN
     taddr.sin_len = sizeof(struct sockaddr_in);
 #endif
@@ -2203,7 +2150,7 @@ rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
 	afs_Trace1(afs_iclSetp, CM_TRACE_TIMESTAMP, ICL_TYPE_STRING,
 		   "before osi_NetSend()");
 	AFS_GUNLOCK();
-    } else
+    }
 #else
     if (waslocked)
 	AFS_GUNLOCK();
@@ -2220,7 +2167,7 @@ rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
 		   "after osi_NetSend()");
 	if (!waslocked)
 	    AFS_GUNLOCK();
-    } else
+    }
 #else
     if (waslocked)
 	AFS_GLOCK();
@@ -2231,6 +2178,31 @@ rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
 	apacket->niovecs = saven;
     }
 
+}
+
+static void
+rxi_NetSendError(struct rx_call *call, int code)
+{
+    int down = 0;
+#ifdef AFS_NT40_ENV
+    if (code == -1 && WSAGetLastError() == WSAEHOSTUNREACH) {
+	down = 1;
+    }
+    if (code == -WSAEHOSTUNREACH) {
+	down = 1;
+    }
+#elif defined(AFS_LINUX20_ENV)
+    if (code == -ENETUNREACH) {
+	down = 1;
+    }
+#elif defined(AFS_DARWIN_ENV)
+    if (code == EHOSTUNREACH) {
+	down = 1;
+    }
+#endif
+    if (down) {
+	call->lastReceiveTime = 0;
+    }
 }
 
 /* Send the packet to appropriate destination for the specified
@@ -2255,6 +2227,7 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
     addr.sin_family = AF_INET;
     addr.sin_port = peer->port;
     addr.sin_addr.s_addr = peer->host;
+    memset(&addr.sin_zero, 0, sizeof(addr.sin_zero));
 
     /* This stuff should be revamped, I think, so that most, if not
      * all, of the header stuff is always added here.  We could
@@ -2330,7 +2303,7 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 	    afs_Trace1(afs_iclSetp, CM_TRACE_TIMESTAMP, ICL_TYPE_STRING,
 		       "before osi_NetSend()");
 	    AFS_GUNLOCK();
-	} else
+	}
 #else
 	if (waslocked)
 	    AFS_GUNLOCK();
@@ -2341,7 +2314,7 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 			 p->length + RX_HEADER_SIZE, istack)) != 0) {
 	    /* send failed, so let's hurry up the resend, eh? */
             if (rx_stats_active)
-                rx_MutexIncrement(rx_stats.netSendFailures, rx_stats_mutex);
+                rx_atomic_inc(&rx_stats.netSendFailures);
 	    p->flags &= ~RX_PKTFLAG_SENT; /* resend it very soon */
 
 	    /* Some systems are nice and tell us right away that we cannot
@@ -2349,18 +2322,9 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 	     * So, when this happens let's "down" the host NOW so
 	     * we don't sit around waiting for this host to timeout later.
 	     */
-	    if (call &&
-#ifdef AFS_NT40_ENV
-		(code == -1 && WSAGetLastError() == WSAEHOSTUNREACH) || (code == -WSAEHOSTUNREACH)
-#elif defined(AFS_LINUX20_ENV)
-		code == -ENETUNREACH
-#elif defined(AFS_DARWIN_ENV)
-		code == EHOSTUNREACH
-#else
-		0
-#endif
-		)
-		call->lastReceiveTime = 0;
+	    if (call) {
+		rxi_NetSendError(call, code);
+	    }
 	}
 #ifdef KERNEL
 #ifdef RX_KERNEL_TRACE
@@ -2370,7 +2334,7 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 		       "after osi_NetSend()");
 	    if (!waslocked)
 		AFS_GUNLOCK();
-	} else
+	}
 #else
 	if (waslocked)
 	    AFS_GLOCK();
@@ -2378,15 +2342,15 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 #endif
 #ifdef RXDEBUG
     }
-    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" len %d",
+    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" len %d\n",
           deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(peer->host),
           ntohs(peer->port), p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber,
           p->header.seq, p->header.flags, p, p->length));
 #endif
     if (rx_stats_active) {
-        rx_MutexIncrement(rx_stats.packetsSent[p->header.type - 1], rx_stats_mutex);
+        rx_atomic_inc(&rx_stats.packetsSent[p->header.type - 1]);
         MUTEX_ENTER(&peer->peer_lock);
-        hadd32(peer->bytesSent, p->length);
+        peer->bytesSent += p->length;
         MUTEX_EXIT(&peer->peer_lock);
     }
 }
@@ -2417,6 +2381,7 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
     addr.sin_family = AF_INET;
     addr.sin_port = peer->port;
     addr.sin_addr.s_addr = peer->host;
+    memset(&addr.sin_zero, 0, sizeof(addr.sin_zero));
 
     if (len + 1 > RX_MAXIOVECS) {
 	osi_Panic("rxi_SendPacketList, len > RX_MAXIOVECS\n");
@@ -2430,19 +2395,17 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
     conn->serial += len;
     for (i = 0; i < len; i++) {
 	p = list[i];
+	/* a ping *or* a sequenced packet can count */
 	if (p->length > conn->peer->maxPacketSize) {
-	    /* a ping *or* a sequenced packet can count */
-	    if ((p->length > conn->peer->maxPacketSize)) {
-		if (((p->header.type == RX_PACKET_TYPE_ACK) &&
-		     (p->header.flags & RX_REQUEST_ACK)) &&
-		    ((i == 0) || (p->length >= conn->lastPingSize))) {
-		    conn->lastPingSize = p->length;
-		    conn->lastPingSizeSer = serial + i;
-		} else if ((p->header.seq != 0) &&
-			   ((i == 0) || (p->length >= conn->lastPacketSize))) {
-		    conn->lastPacketSize = p->length;
-		    conn->lastPacketSizeSeq = p->header.seq;
-		}
+	    if (((p->header.type == RX_PACKET_TYPE_ACK) &&
+		 (p->header.flags & RX_REQUEST_ACK)) &&
+		((i == 0) || (p->length >= conn->lastPingSize))) {
+		conn->lastPingSize = p->length;
+		conn->lastPingSizeSer = serial + i;
+	    } else if ((p->header.seq != 0) &&
+		       ((i == 0) || (p->length >= conn->lastPacketSize))) {
+		conn->lastPacketSize = p->length;
+		conn->lastPacketSizeSeq = p->header.seq;
 	    }
 	}
     }
@@ -2549,7 +2512,7 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 			 istack)) != 0) {
 	    /* send failed, so let's hurry up the resend, eh? */
             if (rx_stats_active)
-                rx_MutexIncrement(rx_stats.netSendFailures, rx_stats_mutex);
+                rx_atomic_inc(&rx_stats.netSendFailures);
 	    for (i = 0; i < len; i++) {
 		p = list[i];
 		p->flags &= ~RX_PKTFLAG_SENT;  /* resend it very soon */
@@ -2559,18 +2522,9 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 	     * So, when this happens let's "down" the host NOW so
 	     * we don't sit around waiting for this host to timeout later.
 	     */
-	    if (call &&
-#ifdef AFS_NT40_ENV
-		(code == -1 && WSAGetLastError() == WSAEHOSTUNREACH) || (code == -WSAEHOSTUNREACH)
-#elif defined(AFS_LINUX20_ENV)
-		code == -ENETUNREACH
-#elif defined(AFS_DARWIN_ENV)
-		code == EHOSTUNREACH
-#else
-		0
-#endif
-		)
-		call->lastReceiveTime = 0;
+	    if (call) {
+		rxi_NetSendError(call, code);
+	    }
 	}
 #if	defined(AFS_SUN5_ENV) && defined(KERNEL)
 	if (!istack && waslocked)
@@ -2581,16 +2535,16 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 
     osi_Assert(p != NULL);
 
-    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" len %d",
+    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" len %d\n",
           deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(peer->host),
           ntohs(peer->port), p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber,
           p->header.seq, p->header.flags, p, p->length));
 
 #endif
     if (rx_stats_active) {
-        rx_MutexIncrement(rx_stats.packetsSent[p->header.type - 1], rx_stats_mutex);
+        rx_atomic_inc(&rx_stats.packetsSent[p->header.type - 1]);
         MUTEX_ENTER(&peer->peer_lock);
-        hadd32(peer->bytesSent, p->length);
+        peer->bytesSent += p->length;
         MUTEX_EXIT(&peer->peer_lock);
     }
 }
@@ -2631,6 +2585,7 @@ rxi_SendRawAbort(osi_socket socket, afs_uint32 host, u_short port,
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = host;
     addr.sin_port = port;
+    memset(&addr.sin_zero, 0, sizeof(addr.sin_zero));
 #ifdef STRUCT_SOCKADDR_HAS_SA_LEN
     addr.sin_len = sizeof(struct sockaddr_in);
 #endif

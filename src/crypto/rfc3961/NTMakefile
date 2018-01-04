@@ -1,0 +1,68 @@
+RELDIR=crypto\rfc3961
+!include ..\..\config\NTMakefile.$(SYS_NAME)
+!include ..\..\config\NTMakefile.version
+
+UPSTREAM = $(SRC)\external\heimdal
+HKRB5 = $(UPSTREAM)\krb5
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I$(UPSTREAM)\hcrypto -I$(UPSTREAM)\krb5
+
+INCFILEDIR = $(DESTDIR)\include\afs
+
+INCFILES = \
+	$(INCFILEDIR)\rfc3961.h
+
+LIBFILE = $(DESTDIR)\lib\afsrfc3961.dll
+
+# Object files by category.
+LOCAL_OBJS = \
+	$(OUT)\context.obj \
+	$(OUT)\copy.obj
+
+HKRB5_OBJS = \
+        $(OUT)\crypto-aes.obj \
+        $(OUT)\crypto-algs.obj \
+        $(OUT)\crypto-arcfour.obj \
+        $(OUT)\crypto.obj \
+        $(OUT)\crypto-des3.obj \
+        $(OUT)\crypto-des.obj \
+        $(OUT)\crypto-des-common.obj \
+        $(OUT)\crypto-evp.obj \
+        $(OUT)\crypto-null.obj \
+	$(OUT)\crypto-rand.obj \
+        $(OUT)\data.obj \
+        $(OUT)\keyblock.obj \
+        $(OUT)\n-fold.obj \
+        $(OUT)\store-int.obj
+
+$(HKRB5_OBJS):$(HKRB5)\$$(@B).c
+	$(C2OBJ) $** -I$(HKRB5)
+
+$(INCFILES):$$(@B).h
+	$(COPY) $** $(INCFILEDIR)
+
+RESFILE = $(OUT)\afsrfc3961.res
+
+$(RESFILE): afsrfc3961.rc AFS_component_version_number.h
+
+!if !defined(NMAKE)
+NTMAKE = nmake /nologo /f ntmakefile
+!endif
+
+DLLLIBS = \
+	$(DESTDIR)\lib\afsroken.lib $(DESTDIR)\lib\afshcrypto.lib
+
+$(LIBFILE): $(LOCAL_OBJS) $(HKRB5_OBJS) $(RESFILE) $(DLLLIBS)
+	$(DLLCONLINK) /DEF:afsrfc3961.def shell32.lib
+        $(_VC_MANIFEST_EMBED_DLL)
+	$(DLLPREP)
+        $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
+	$(MAKECYGLIB) --input-def afsrfc3961.def
+
+install_headers: $(INCFILES)
+
+install: install_headers $(LIBFILE)
+
+clean::
+        $(DEL) $(INCFILES)
+	$(DEL) $(LIBFILE) $(DESTDIR)\lib\afsrfc3961.lib $(DESTDIR)\lib\afsrfc3961.exp

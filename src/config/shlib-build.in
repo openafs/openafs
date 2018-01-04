@@ -22,7 +22,9 @@ sysname="@AFS_SYSNAME@"
 library=
 major=
 minor=
+unused=
 srcdir=.
+plain=
 done=
 while [ -z "$done" ] && [ $# -gt 0 ] ; do
     case "$1" in
@@ -51,18 +53,27 @@ while [ -z "$done" ] && [ $# -gt 0 ] ; do
         minor="$1"
         shift
         ;;
+    -i)
+	ignore=yes
+	shift
+	;;
+    -p)
+	plain=yes
+	shift
+	;;
     --)
         shift
         done=yes
         ;;
     *)
-        echo 'Usage: shlib-build -l <lib> -M <major> -m <minor> -- ...' >&2
+        echo 'Usage: shlib-build (-p -f <file> | [-i] -l <lib> -M <major> -m <minor>) -- ...' >&2
         exit 1
         ;;
     esac
 done
-if [ -z "$library" ] ; then
-    echo 'Usage: shlib-install -l <lib> -M <major> -m <minor>' >&2
+if [ -z "$library" ] && [ -z "$plain" ] || \
+   [ -z "$filename" ] && [ "x$plain" != "x" ] ; then
+    echo 'Usage: shlib-build (-p -f <file> | [-i] -l <lib> -M <major> -m <minor>) -- ...' >&2
     exit 1
 fi
 
@@ -79,7 +90,7 @@ if [ -z "$filename" ] ; then
 fi
 case $sysname in
 rs_aix*)
-    if [ -f "$srcdir/$library.map" ] ; then
+    if [ -z "$plain" ] && [ -f "$srcdir/$library.map" ] ; then
 	cat $srcdir/$library.map | \
 	awk '/local:/ {inglobal=0};
 	     inglobal { sub(/;/,""); print };
@@ -91,7 +102,7 @@ rs_aix*)
     $linker $export -o "$filename" "$@"
     ;;
 sun*_5*)
-    if [ -f "$srcdir/$library.map" ] ; then
+    if [ -z "$plain" ] && [ -f "$srcdir/$library.map" ] ; then
         if [ -z "$ignore" ] ; then
             export="-Wl,-M$srcdir/$library.map"
         else
@@ -111,7 +122,7 @@ sun*_5*)
     fi
     ;;
 *_linux*)
-    if [ -f "$srcdir/$library.map" ] ; then
+    if [ -z "$plain" ] && [ -f "$srcdir/$library.map" ] ; then
         export="-Wl,--version-script=$srcdir/$library.map"
     fi
     if [ -z "$soname" ] ; then
@@ -123,14 +134,14 @@ sun*_5*)
     fi
     ;;
 hp_ux*)
-    if [ -f "$srcdir/$library.hp" ] ; then
+    if [ -z "$plain" ] && [ -f "$srcdir/$library.hp" ] ; then
         export="-c $srcdir/$library.hp"
     fi
     echo "$linker $export -o $filename $*"
     $linker $export -o "$filename" "$@"
     ;;
 *darwin*)
-    if [ -f "$srcdir/$library.map" ] ; then
+    if [ -z "$plain" ] && [ -f "$srcdir/$library.map" ] ; then
 	# For 10.4 and later, the Mac exports list is a list of symbols,
 	# prefixed with an '_'
 	cat $srcdir/$library.map | \
@@ -140,6 +151,9 @@ hp_ux*)
 	     /global:/ { inglobal=1};' \
 	> $library.exp
 	export="-Wl,-exported_symbols_list,$library.exp"
+	if [ ! -z "$ignore" ] ; then
+	    export="$export,-undefined,dynamic_lookup"
+	fi
     fi
     echo "$linker $export -o $filename $*"
     $linker $export -o "$filename" "$@"

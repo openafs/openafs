@@ -59,6 +59,7 @@
 #endif
 #define AFS_SIGSET_CLEAR() \
 do { \
+         int b; \
 	 sigfillset(&i_tset); \
          _SETSEGV \
          _SETBUS \
@@ -66,12 +67,14 @@ do { \
          _SETTRAP \
          _SETABRT \
          _SETFPE \
-	 assert(AFS_SET_SIGMASK(SIG_BLOCK, &i_tset, &i_oset) == 0); \
+	 b = (AFS_SET_SIGMASK(SIG_BLOCK, &i_tset, &i_oset) == 0); \
+         opr_Assert(b); \
 } while (0)
 
 #define AFS_SIGSET_RESTORE() \
 do { \
-	 assert(AFS_SET_SIGMASK(SIG_SETMASK, &i_oset, NULL) == 0); \
+	 int b = (AFS_SET_SIGMASK(SIG_SETMASK, &i_oset, NULL) == 0); \
+         opr_Assert(b); \
 } while (0)
 #endif /* AFS_NT40_ENV */
 

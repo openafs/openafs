@@ -9,28 +9,16 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
-#include <sys/types.h>
+
+#include <roken.h>
+#include <afs/opr.h>
+
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
 #include <WINNT/afsevent.h>
-#else
-#include <sys/file.h>
-#include <netdb.h>
-#include <netinet/in.h>
 #endif
-#include "kalog.h"		/* for OpenLog() */
-#include <time.h>
-#include <stdio.h>
-#include <string.h>
-#ifdef HAVE_FCNTL_H
-#include <fcntl.h>
-#endif
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
+
+
 #include <lwp.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
@@ -43,7 +31,8 @@
 #include <afs/com_err.h>
 #include <afs/audit.h>
 #include <ubik.h>
-#include <sys/stat.h>
+
+#include "kalog.h"		/* for OpenLog() */
 #include "kauth.h"
 #include "kauth_internal.h"
 #include "kautils.h"
@@ -66,7 +55,6 @@ struct afsconf_dir *KA_conf;	/* for getting cell info */
 int MinHours = 0;
 int npwSums = KA_NPWSUMS;	/* needs to be variable sometime */
 
-#include <stdarg.h>
 #if !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
 #undef vfprintf
 #define vfprintf(stream,fmt,args) _doprnt(fmt,args,stream)
@@ -79,6 +67,25 @@ int
 KA_rxstat_userok(struct rx_call *call)
 {
     return afsconf_SuperUser(KA_conf, call, NULL);
+}
+
+/**
+ * Return true if this name is a member of the local realm.
+ */
+static int
+KA_IsLocalRealmMatch(void *rock, char *name, char *inst, char *cell)
+{
+    struct afsconf_dir *dir = (struct afsconf_dir *)rock;
+    afs_int32 islocal = 0;	/* default to no */
+    int code;
+
+    code = afsconf_IsLocalRealmMatch(dir, &islocal, name, inst, cell);
+    if (code) {
+	ViceLog(0,
+		("Failed local realm check; code=%d, name=%s, inst=%s, cell=%s\n",
+		 code, name, inst, cell));
+    }
+    return islocal;
 }
 
 afs_int32
@@ -156,7 +163,7 @@ main(int argc, char *argv[])
     const char *cellservdb, *dbpath, *lclpath;
     int a;
     char arg[32];
-    char default_lclpath[AFSDIR_PATH_MAX];
+    char *default_lclpath;
     int servers;
     int initFlags;
     int level;			/* security level for Ubik */
@@ -164,6 +171,7 @@ main(int argc, char *argv[])
     char clones[MAXHOSTSPERCELL];
     afs_uint32 host = ntohl(INADDR_ANY);
     char *auditFileName = NULL;
+    struct logOptions logopts;
 
     struct rx_service *tservice;
     struct rx_securityClass *sca[1];
@@ -188,13 +196,15 @@ main(int argc, char *argv[])
 #endif
     osi_audit_init();
 
+    memset(&logopts, 0, sizeof(logopts));
+
     if (argc == 0) {
       usage:
 	printf("Usage: kaserver [-noAuth] [-database <dbpath>] "
 	       "[-auditlog <log path>] [-audit-interface <file|sysvmq>] "
 	       "[-rxbind] [-localfiles <lclpath>] [-minhours <n>] "
 	       "[-servers <serverlist>] [-crossrealm] "
-	       /*" [-enable_peer_stats] [-enable_process_stats] " */
+	       "[-enable_peer_stats] [-enable_process_stats] "
 	       "[-help]\n");
 	exit(1);
     }
@@ -218,8 +228,12 @@ main(int argc, char *argv[])
 
     cellservdb = AFSDIR_SERVER_ETC_DIRPATH;
     dbpath = AFSDIR_SERVER_KADB_FILEPATH;
-    strcompose(default_lclpath, AFSDIR_PATH_MAX, AFSDIR_SERVER_LOCAL_DIRPATH,
-	       "/", AFSDIR_KADB_FILE, NULL);
+
+    if (asprintf(&default_lclpath, "%s/%s", AFSDIR_SERVER_LOCAL_DIRPATH,
+		 AFSDIR_KADB_FILE) < 0) {
+	fprintf(stderr, "%s: No memory for default local dir path\n", argv[0]);
+	exit(2);
+    }
     lclpath = default_lclpath;
 
     debugOutput = 0;
@@ -310,7 +324,12 @@ main(int argc, char *argv[])
      * text logging. So open the AuthLog file for logging and redirect
      * stdin and stdout to it
      */
-    OpenLog(AFSDIR_SERVER_KALOG_FILEPATH);
+    logopts.lopt_dest = logDest_file;
+    logopts.lopt_filename = AFSDIR_SERVER_KALOG_FILEPATH;
+    logopts.lopt_rotateOnOpen = 1;
+    logopts.lopt_rotateStyle = logRotate_old;
+
+    OpenLog(&logopts);
     SetupLogSignals();
 #endif
 
@@ -352,11 +371,16 @@ main(int argc, char *argv[])
 	ViceLog(0, ("Using server list from %s cell database.\n", cell));
     }
 
+    /* initialize audit user check */
+    osi_audit_set_user_check(KA_conf, KA_IsLocalRealmMatch);
+
     /* initialize ubik */
     if (level == rxkad_clear)
-	ubik_CRXSecurityProc = afsconf_ClientAuth;
+	ubik_SetClientSecurityProcs(afsconf_ClientAuth, afsconf_UpToDate,
+				    KA_conf);
     else if (level == rxkad_crypt)
-	ubik_CRXSecurityProc = afsconf_ClientAuthSecure;
+	ubik_SetClientSecurityProcs(afsconf_ClientAuthSecure,
+				    afsconf_UpToDate, KA_conf);
     else {
 	ViceLog(0, ("Unsupported security level %d\n", level));
 	exit(5);
@@ -364,11 +388,10 @@ main(int argc, char *argv[])
     ViceLog(0,
 	    ("Using level %s for Ubik connections.\n",
 	     (level == rxkad_crypt ? "crypt" : "clear")));
-    ubik_CRXSecurityRock = (char *)KA_conf;
-    ubik_SRXSecurityProc = afsconf_ServerAuth;
-    ubik_SRXSecurityRock = (char *)KA_conf;
-    ubik_CheckRXSecurityProc = afsconf_CheckAuth;
-    ubik_CheckRXSecurityRock = (char *)KA_conf;
+
+    ubik_SetServerSecurityProcs(afsconf_BuildServerSecurityObjects,
+				afsconf_CheckAuth,
+				KA_conf);
 
     ubik_nBuffers = 80;
 
@@ -377,10 +400,10 @@ main(int argc, char *argv[])
         if (AFSDIR_SERVER_NETRESTRICT_FILEPATH ||
             AFSDIR_SERVER_NETINFO_FILEPATH) {
             char reason[1024];
-            ccode = parseNetFiles(SHostAddrs, NULL, NULL,
-                                           ADDRSPERSITE, reason,
-                                           AFSDIR_SERVER_NETINFO_FILEPATH,
-                                           AFSDIR_SERVER_NETRESTRICT_FILEPATH);
+            ccode = afsconf_ParseNetFiles(SHostAddrs, NULL, NULL,
+                                          ADDRSPERSITE, reason,
+                                          AFSDIR_SERVER_NETINFO_FILEPATH,
+                                          AFSDIR_SERVER_NETRESTRICT_FILEPATH);
         } else
 	{
             ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
@@ -408,7 +431,7 @@ main(int argc, char *argv[])
 	exit(2);
     }
 
-    sca[RX_SCINDEX_NULL] = rxnull_NewServerSecurityObject();
+    sca[RX_SECIDX_NULL] = rxnull_NewServerSecurityObject();
 
     tservice =
 	rx_NewServiceHost(host, 0, KA_AUTHENTICATION_SERVICE,
@@ -431,9 +454,9 @@ main(int argc, char *argv[])
     rx_SetMinProcs(tservice, 1);
     rx_SetMaxProcs(tservice, 1);
 
-    scm[RX_SCINDEX_NULL] = sca[RX_SCINDEX_NULL];
-    scm[RX_SCINDEX_VAB] = 0;
-    scm[RX_SCINDEX_KAD] =
+    scm[RX_SECIDX_NULL] = sca[RX_SECIDX_NULL];
+    scm[RX_SECIDX_VAB] = 0;
+    scm[RX_SECIDX_KAD] =
 	rxkad_NewServerSecurityObject(rxkad_crypt, 0, kvno_admin_key, 0);
     tservice =
 	rx_NewServiceHost(host, 0, KA_MAINTENANCE_SERVICE, "Maintenance", scm, 3,

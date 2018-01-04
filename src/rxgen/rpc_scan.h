@@ -71,8 +71,6 @@ enum tok_kind {
     TOK_STRING,
     TOK_BOOL,
     TOK_VOID,
-    TOK_PROGRAM,
-    TOK_VERSION,
     TOK_PACKAGE,
     TOK_PREFIX,
     TOK_STATINDEX,

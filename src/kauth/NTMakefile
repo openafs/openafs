@@ -33,8 +33,9 @@ KAUTH_LIBOBJS =\
 	$(OUT)\kauth.cs.obj \
 	$(OUT)\kaaux.obj \
 	$(OUT)\client.obj \
+	$(OUT)\crypt.obj \
 	$(OUT)\authclient.obj \
-	$(OUT)\token.obj \
+	$(OUT)\katoken.obj \
 	$(OUT)\kautils.obj \
 	$(OUT)\kalocalcell.obj \
 	$(OUT)\kaerrors.obj \
@@ -42,8 +43,8 @@ KAUTH_LIBOBJS =\
 	$(OUT)\krb_tf.obj \
 	$(OUT)\AFS_component_version_number.obj
 
-$(KAUTH_LIBFILE): $(KAUTH_LIBOBJS) 
-	$(LIBARCH)  
+$(KAUTH_LIBFILE): $(KAUTH_LIBOBJS)
+	$(LIBARCH)
 
 ############################################################################
 # build afskauth.krb.lib
@@ -56,7 +57,7 @@ KAUTH_KRB_LIBOBJS =\
 	$(OUT)\kaaux.obj \
 	$(OUT)\client.obj \
 	$(OUT)\authclient.obj \
-	$(OUT)\token.obj \
+	$(OUT)\katoken.obj \
 	$(OUT)\kautils.obj \
 	$(OUT)\kalocalcell.obj \
 	$(OUT)\kaerrors.obj \
@@ -64,8 +65,8 @@ KAUTH_KRB_LIBOBJS =\
 	$(OUT)\krb_tf.obj \
 	$(OUT)\AFS_component_version_number.obj
 
-$(KAUTH_KRB_LIBFILE): $(KAUTH_KRB_LIBOBJS) 
-	$(LIBARCH)  
+$(KAUTH_KRB_LIBFILE): $(KAUTH_KRB_LIBOBJS)
+	$(LIBARCH)
 
 #make user.krb.obj
 
@@ -86,14 +87,17 @@ AFSLIBS =  \
 	$(AFSLIBDIR)\afsaudit.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afslwp.lib \
-	$(DESTDIR)\lib\afsdes.lib \
 	$(DESTDIR)\lib\afsrxstat.lib \
 	$(DESTDIR)\lib\afsrx.lib \
 	$(DESTDIR)\lib\afsubik.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
 	$(DESTDIR)\lib\afsrxkad.lib \
-	$(DESTDIR)\lib\libafsconf.lib
-	
+	$(DESTDIR)\lib\libafsconf.lib \
+	$(DESTDIR)\lib\opr.lib \
+	$(DESTDIR)\lib\afshcrypto.lib \
+	$(DESTDIR)\lib\afsroken.lib \
+	$(DESTDIR)\lib\afsrfc3961.lib
+
 TOKENLIB = $(DESTDIR)\lib\afs\afspioctl.lib
 
 ############################################################################
@@ -122,13 +126,13 @@ KASERVER_EXELIBS =\
 $(KASERVER): $(KASERVER_OBJS) $(AFSLIBS) $(KASERVER_EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
-	$(EXEPREP) 
+	$(EXEPREP)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 
 #build $(OUT)\kadatabase.obj
 
-$(OUT)\kadatabase.obj: kadatabase.c 
+$(OUT)\kadatabase.obj: kadatabase.c
 	$(C2OBJ) $**  /DSPECIAL=1
 
 #build $(OUT)\kaprocs.obj
@@ -145,11 +149,11 @@ KAS_OBJS =\
 	$(OUT)\admin_tools.obj \
 	$(OUT)\kkids.obj \
 	$(OUT)\kas.res
-	
+
 $(KAS): $(KAS_OBJS) $(AFSLIBS) $(KAUTH_LIBFILE) $(TOKENLIB)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
-	$(EXEPREP) 
+	$(EXEPREP)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 
@@ -177,14 +181,14 @@ $(OUT)\kpwvalid.exe: $(OUT)\kpwvalid.obj $(AFSLIBS) $(KAUTH_LIBFILE)
         $(SYMSTORE_IMPORT)
 
 #kdb.exe - Not implemented for NT - because dbm not available on NT
-#kdb.exe: $(OUT)\kdb.obj $(AFSLIBS) $(KAUTH_LIBFILE) 
+#kdb.exe: $(OUT)\kdb.obj $(AFSLIBS) $(KAUTH_LIBFILE)
 #	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
 #       $(_VC_MANIFEST_EMBED_EXE)
 #        $(CODESIGN_USERLAND)
 #        $(SYMSTORE_IMPORT)
 
-#rebuild.exe 
-$(OUT)\rebuild.exe: $(OUT)\rebuild.obj $(OUT)\kautils.obj $(AFSLIBS) 
+#rebuild.exe
+$(OUT)\rebuild.exe: $(OUT)\rebuild.obj $(OUT)\kautils.obj $(AFSLIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
@@ -218,14 +222,14 @@ kauth.h: kauth.rg
 	$(RXGEN) -u -x -h -o $@ kauth.rg
 
 ############################################################################
-# compile_et on kaerrors.c 
+# compile_et on kaerrors.c
 
 kaerrors.c kautils.h: kaerrors.et kautils.p.h
 	$(DEL) kautils.h kaerrors.c
 	$(COMPILE_ET) kaerrors -h kautils
 
 ############################################################################
-# install 
+# install
 
 install: $(INCFILES) $(KAUTH_LIBFILE) $(KAUTH_KRB_LIBFILE) $(KASERVER) $(KAS) \
 	$(KPASSWD_EXEFILE) \
@@ -233,7 +237,7 @@ install: $(INCFILES) $(KAUTH_LIBFILE) $(KAUTH_KRB_LIBFILE) $(KASERVER) $(KAS) \
 	$(DESTDIR)\etc\kas.exe
 
 install9X: $(INCFILES) $(KAUTH_LIBFILE) $(KAUTH_KRB_LIBFILE) \
-	$(KPASSWD_EXEFILE) 
+	$(KPASSWD_EXEFILE)
 
 # installation targets that depend on local targets
 $(DESTDIR)\etc\kas.exe:  $(DESTDIR)\root.server\usr\afs\bin\kas.exe
@@ -250,4 +254,3 @@ clean::
 	$(DEL) kaerrors.c
 
 mkdir:
-	

@@ -43,11 +43,10 @@
 #define ENDMAC   } while (0)
 
 #ifdef AFS_PTHREAD_ENV
-#include <pthread.h>
-/* can't include in non-lwp case; rx builds later */
-#include <rx/rx.h>
-#define LOCK_LOCK(A) MUTEX_ENTER(&(A)->mutex);
-#define LOCK_UNLOCK(A) MUTEX_EXIT(&(A)->mutex);
+#include <afs/opr.h>
+#include <opr/lock.h>
+#define LOCK_LOCK(A) opr_mutex_enter(&(A)->mutex)
+#define LOCK_UNLOCK(A) opr_mutex_exit(&(A)->mutex)
 #else /* AFS_PTHREAD_ENV */
 #define LOCK_LOCK(A)
 #define LOCK_UNLOCK(A)
@@ -251,5 +250,8 @@ void Lock_Destroy(struct Lock *lock);
 
 #define WriteLocked(lock)\
 	((lock)->excl_locked & WRITE_LOCK)
+
+#define SharedLocked(lock)\
+	((lock)->excl_locked & SHARED_LOCK)
 
 #endif /* LOCK_H */

@@ -14,15 +14,10 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include <afs/afs_args.h>
-#include <sys/file.h>
-#include <sys/ioctl.h>
-#include <unistd.h>
-#include <stdio.h>
-#ifdef AFS_SUN5_ENV
-#include <fcntl.h>
-#endif
+
 #include "afssyscalls.h"
 
 #ifdef AFS_LINUX20_ENV

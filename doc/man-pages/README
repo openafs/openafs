@@ -157,8 +157,8 @@ Formatting Standards
 Man Page Sections
 
   The section of a man page is determined by which directory it's in.
-  pod1 will be section 1 man pages, pod5 will be section 5, and pod8 will
-  be section 8.
+  pod1 will be section 1 man pages, pod3 will be section 3, pod5 will be
+  section 5, and pod8 will be section 8.
 
   The breakdown between section 1 and section 8 is fuzzy and it's hard to
   get right.  The current layout balances the following goals:
@@ -235,15 +235,6 @@ Known Problems
   don't just report the deficiency again, but any contributions towards
   fixing it are greatly appreciated.
 
-   * There's no mention of the Kerberos v5 support.  At least, we need
-     some disclaimers under klog and friends talking about sites without
-     kaserver (and possibly without fakeka), and deprecation warnings
-     on the .krb varient commands.
-
-   * Linked cells are currently documented in fs newcell as being only
-     for DCE, which is not correct.  That documentation, aklog, and the
-     CellServDB documentation needs to be updated.
-
    * We need a way to add links to other man pages (kinit most notably)
      without creating dangling links in the HTML output.  This probably
      means that the HTML conversion script needs to generate at startup
@@ -282,13 +273,9 @@ Known Problems
 
    * Document backup deletedump -port/-groupid/-dbonly/-force/-noexecute
 
-   * Replace backup diskrestore/dump -n option with -noexecute or -dryrun?
-
    * Document backup help -admin
 
-   * Document backup volrestore -usedump. Also, s/-n/.../ as above?
-
-   * Replace backup volsetrestore -n option with -noexecute or -dryrun?
+   * Document backup volrestore -usedump.
 
   If you notice other problems, please send them to the openafs-doc list
   even if you don't have time to fix them.  Someone else might, and we

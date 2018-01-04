@@ -10,18 +10,20 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+#include <afs/opr.h>
 
-#include <stdio.h>
 #ifdef AFS_NT40_ENV
 #include <WINNT/afsevent.h>
 #endif
 #include <ctype.h>
-#include <string.h>
+
 #include <rx/rx.h>
 #include <rx/xdr.h>
 #include <afs/cellconfig.h>
 #include <afs/afsutil.h>
 #include <afs/com_err.h>
+
 #include "ptclient.h"
 #include "ptuser.h"
 #include "pterror.h"
@@ -86,7 +88,7 @@ main(int argc, char **argv)
 	    verbose = 1;
 	else {
 	    if (!strcmp(argv[i], "-c")) {
-		cellname = (char *)malloc(100);
+		cellname = malloc(100);
 		strncpy(cellname, argv[++i], 100);
 	    } else
 		strncpy(buf, argv[i], 150);
@@ -155,8 +157,7 @@ main(int argc, char **argv)
 		    } else {
 			/* add the members of a group to the group */
 			if (verbose)
-			    printf("Adding %s to %s.\n",
-				   lnames.namelist_val[i], gname);
+			    printf("Adding %s to %s.\n", name, gname);
 			code = pr_ListMembers(name, &lnames);
 			if (code) {
 			    fprintf(stderr,
@@ -164,14 +165,15 @@ main(int argc, char **argv)
 				    name, gname);
 			    fprintf(stderr, "%s (%d).\n", pr_ErrorMsg(code),
 				    code);
+			} else {
+			    for (i = 0; i < lnames.namelist_len; i++) {
+			        code =
+				    pr_AddToGroup(lnames.namelist_val[i], gname);
+			        report_error(code, lnames.namelist_val[i], gname);
+			    }
+			    if (lnames.namelist_val)
+			        free(lnames.namelist_val);
 			}
-			for (i = 0; i < lnames.namelist_len; i++) {
-			    code =
-				pr_AddToGroup(lnames.namelist_val[i], gname);
-			    report_error(code, lnames.namelist_val[i], gname);
-			}
-			if (lnames.namelist_val)
-			    free(lnames.namelist_val);
 		    }
 		    memset(name, 0, PR_MAXNAMELEN);
 		    skip(&tmp);
@@ -199,16 +201,17 @@ main(int argc, char **argv)
 				name, gname);
 			fprintf(stderr, "%s (%d).\n", pr_ErrorMsg(code),
 				code);
+		    } else {
+		        for (i = 0; i < lnames.namelist_len; i++) {
+			    if (verbose)
+			        printf("Adding %s to %s.\n",
+				       lnames.namelist_val[i], gname);
+			    code = pr_AddToGroup(lnames.namelist_val[i], gname);
+			    report_error(code, lnames.namelist_val[i], gname);
+		        }
+		        if (lnames.namelist_val)
+			    free(lnames.namelist_val);
 		    }
-		    for (i = 0; i < lnames.namelist_len; i++) {
-			if (verbose)
-			    printf("Adding %s to %s.\n",
-				   lnames.namelist_val[i], gname);
-			code = pr_AddToGroup(lnames.namelist_val[i], gname);
-			report_error(code, lnames.namelist_val[i], gname);
-		    }
-		    if (lnames.namelist_val)
-			free(lnames.namelist_val);
 		}
 		memset(name, 0, PR_MAXNAMELEN);
 		skip(&tmp);

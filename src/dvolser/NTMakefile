@@ -44,7 +44,7 @@ LIBOBJS = $(OUT)\volint.cs.obj  \
           $(OUT)\volint.xdr.obj \
           $(OUT)\volerr.obj  \
           $(OUT)\volint.ss.obj  \
-          $(OUT)\AFS_component_version_number.obj 
+          $(OUT)\AFS_component_version_number.obj
 
 LIBOBJS2 = $(OUT)\vsprocs.obj \
           $(OUT)\vsutils.obj \
@@ -91,12 +91,14 @@ VOLSERVER_EXELIBS = \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
 	$(DESTDIR)\lib\afs\mtafsutil.lib \
-	$(DESTDIR)\lib\afspthread.lib
+	$(DESTDIR)\lib\opr.lib \
+	$(DESTDIR)\lib\afspthread.lib \
+	$(DESTDIR)\lib\afsroken.lib
 
 $(VOLSERVER_EXEFILE): $(VOLSERVER_EXEOBJS) $(VOLSERVER_EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
-	$(EXEPREP) 
+	$(EXEPREP)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 
@@ -143,7 +145,7 @@ volser.h volerr.c: $(VOLSER)\volerr.et $(VOLSER)\volser.p.h
 ############################################################################
 # Install target; primary makefile target
 
-install_lib: $(LIBFILE) 
+install_lib: $(LIBFILE)
 
 install: install_lib $(VOLSERVER_EXEFILE) $(CL_VOS_EXEFILE) \
 		$(INCFILES)

@@ -17,29 +17,19 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <stdio.h>
-#include <sys/types.h>
-#include <errno.h>
-#ifdef AFS_NT40_ENV
-#include <fcntl.h>
-#else
+#ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
-#include <unistd.h>
-#include <string.h>
-#ifdef	AFS_SUN5_ENV
-#include <sys/fcntl.h>
 #endif
-#endif
+
 #include <rx/xdr.h>
 #include <afs/afsint.h>
-#include <errno.h>
 #include <afs/afssyscalls.h>
 #include "nfs.h"
 #include "ihandle.h"
 #include "salvage.h"
 #include <afs/dir.h>
-#include <assert.h>
 #include "vol_internal.h"
 
 /* returns 0 on success, errno on failure */
@@ -104,7 +94,7 @@ ReallyWrite(DirHandle * file, int block, char *data)
  * The handle needs to be dereferenced with the FidZap() routine.
  */
 void
-SetSalvageDirHandle(DirHandle * dir, afs_int32 volume, Device device,
+SetSalvageDirHandle(DirHandle * dir, VolumeId volume, Device device,
 		    Inode inode, int *volumeChanged)
 {
     static int SalvageCacheCheck = 1;
@@ -147,7 +137,7 @@ FidEq(DirHandle * afile, DirHandle * bfile)
 }
 
 int
-FidVolEq(DirHandle * afile, afs_int32 vid)
+FidVolEq(DirHandle * afile, VolumeId vid)
 {
     if (afile->dirh_volume != vid)
 	return 0;
@@ -162,7 +152,7 @@ FidCpy(DirHandle * tofile, DirHandle * fromfile)
 }
 
 void
-Die(char *msg)
+Die(const char *msg)
 {
     printf("%s\n", msg);
     osi_Panic("%s\n", msg);

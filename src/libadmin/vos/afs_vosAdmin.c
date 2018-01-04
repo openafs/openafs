@@ -9,28 +9,19 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
-#include <stdio.h>
-#include <string.h>
+
+#include <roken.h>
+
 #include <ctype.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <io.h>
-#else
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#endif
-#include "afs_vosAdmin.h"
-#include "../adminutil/afs_AdminInternal.h"
+
 #include <afs/vlserver.h>
+#include <afs/afsint.h>
 #include <afs/volser.h>
 #include <afs/volint.h>
+
+#include "afs_vosAdmin.h"
+#include "../adminutil/afs_AdminInternal.h"
 
 /* File descriptors are HANDLE's on NT. The following typedef helps catch
  * type errors. Duplicated from vol/ihandle.h
@@ -159,10 +150,10 @@ GetServerAndPart(struct nvldbentry *entry, int voltype, afs_int32 * server,
 
     /* Doesn't check for non-existance of backup volume */
     if ((voltype == RWVOL) || (voltype == BACKVOL)) {
-	vtype = ITSRWVOL;
+	vtype = VLSF_RWVOL;
 	istart = 0;		/* seach the entire entry */
     } else {
-	vtype = ITSROVOL;
+	vtype = VLSF_ROVOL;
 	/* Seach from beginning of entry or pick up where we left off */
 	istart = ((*previdx < 0) ? 0 : *previdx + 1);
     }
@@ -249,7 +240,7 @@ vos_BackupVolumeCreate(const void *cellHandle, vos_MessageCallBack_t callBack,
      * same server as volumeId
      */
 
-    if (rw_vol_entry.flags & BACK_EXISTS) {
+    if (rw_vol_entry.flags & VLF_BACKEXISTS) {
 	if (!GetVolumeInfo
 	    (c_handle, rw_vol_entry.volumeId[BACKVOL], &bk_vol_entry,
 	     &bk_server, &bk_partition, &bk_vol_type, &tst)) {
@@ -401,7 +392,7 @@ vos_BackupVolumeCreateMultiple(const void *cellHandle,
 	 * Skip entries that don't have a RW volume
 	 */
 
-	if (!(entry->flags & RW_EXISTS)) {
+	if (!(entry->flags & VLF_RWEXISTS)) {
 	    if (callBack != NULL) {
 		const char *messageText;
 		if (util_AdminErrorCodeTranslate
@@ -696,10 +687,8 @@ vos_PartitionGetBegin(const void *cellHandle, const void *serverHandle,
     int rc = 0;
     afs_status_t tst = 0;
     file_server_p f_server = (file_server_p) serverHandle;
-    afs_admin_iterator_p iter =
-	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
-    partition_get_p part =
-	(partition_get_p) calloc(1, sizeof(partition_get_t));
+    afs_admin_iterator_p iter = malloc(sizeof(afs_admin_iterator_t));
+    partition_get_p part = calloc(1, sizeof(partition_get_t));
 
     /*
      * Validate arguments
@@ -885,7 +874,7 @@ vos_ServerOpen(const void *cellHandle, const char *serverName,
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
-    file_server_p f_server = (file_server_p) malloc(sizeof(file_server_t));
+    file_server_p f_server = malloc(sizeof(file_server_t));
     int server_address;
     struct rx_securityClass *sc[3];
     int scIndex;
@@ -1344,9 +1333,8 @@ vos_FileServerGetBegin(const void *cellHandle, vos_MessageCallBack_t callBack,
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
-    afs_admin_iterator_p iter =
-	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
-    server_get_p serv = (server_get_p) calloc(1, sizeof(server_get_t));
+    afs_admin_iterator_p iter = malloc(sizeof(afs_admin_iterator_t));
+    server_get_p serv = calloc(1, sizeof(server_get_t));
     struct VLCallBack unused;
 
 
@@ -1683,10 +1671,8 @@ vos_ServerTransactionStatusGetBegin(const void *cellHandle,
     int rc = 0;
     afs_status_t tst = 0;
     file_server_p f_server = (file_server_p) serverHandle;
-    afs_admin_iterator_p iter =
-	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
-    transaction_get_p tran =
-	(transaction_get_p) calloc(1, sizeof(transaction_get_t));
+    afs_admin_iterator_p iter = malloc(sizeof(afs_admin_iterator_t));
+    transaction_get_p tran = calloc(1, sizeof(transaction_get_t));
 
 
     /*
@@ -1894,19 +1880,19 @@ copyVLDBEntry(struct nvldbentry *source, vos_vldbEntry_p dest,
 	dest->volumeSites[i].serverPartition = source->serverPartition[i];
 	dest->volumeSites[i].serverFlags = 0;
 
-	if (source->serverFlags[i] & NEW_REPSITE) {
+	if (source->serverFlags[i] & VLSF_NEWREPSITE) {
 	    dest->volumeSites[i].serverFlags |= VOS_VLDB_NEW_REPSITE;
 	}
-	if (source->serverFlags[i] & ITSROVOL) {
+	if (source->serverFlags[i] & VLSF_ROVOL) {
 	    dest->volumeSites[i].serverFlags |= VOS_VLDB_READ_ONLY;
 	}
-	if (source->serverFlags[i] & ITSRWVOL) {
+	if (source->serverFlags[i] & VLSF_RWVOL) {
 	    dest->volumeSites[i].serverFlags |= VOS_VLDB_READ_WRITE;
 	}
-	if (source->serverFlags[i] & ITSBACKVOL) {
+	if (source->serverFlags[i] & VLSF_BACKVOL) {
 	    dest->volumeSites[i].serverFlags |= VOS_VLDB_BACKUP;
 	}
-	if (source->serverFlags[i] & RO_DONTUSE) {
+	if (source->serverFlags[i] & VLSF_DONTUSE) {
 	    dest->volumeSites[i].serverFlags |= VOS_VLDB_DONT_USE;
 	}
 
@@ -2133,10 +2119,8 @@ vos_VLDBGetBegin(const void *cellHandle, const void *serverHandle,
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     file_server_p f_server = (file_server_p) serverHandle;
-    afs_admin_iterator_p iter =
-	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
-    vldb_entry_get_p entry =
-	(vldb_entry_get_p) calloc(1, sizeof(vldb_entry_get_t));
+    afs_admin_iterator_p iter = malloc(sizeof(afs_admin_iterator_t));
+    vldb_entry_get_p entry = calloc(1, sizeof(vldb_entry_get_t));
     struct VldbListByAttributes attr;
 
     attr.Mask = 0;
@@ -3814,9 +3798,8 @@ vos_VolumeGetBegin(const void *cellHandle, const void *serverHandle,
     int rc = 0;
     afs_status_t tst = 0;
     file_server_p f_server = (file_server_p) serverHandle;
-    afs_admin_iterator_p iter =
-	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
-    volume_get_p entry = (volume_get_p) calloc(1, sizeof(volume_get_t));
+    afs_admin_iterator_p iter = malloc(sizeof(afs_admin_iterator_t));
+    volume_get_p entry = calloc(1, sizeof(volume_get_t));
 
     /*
      * Validate arguments

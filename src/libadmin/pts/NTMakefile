@@ -39,7 +39,9 @@ DLLLIBS =\
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
 	$(DESTDIR)\lib\afspthread.lib \
-	$(DESTDIR)\lib\afs\afsutil.lib
+	$(DESTDIR)\lib\afs\mtafsutil.lib \
+	$(DESTDIR)\lib\opr.lib \
+        $(DESTDIR)\lib\afsroken.lib
 
 $(DLLFILE): $(DLLOBJS) $(DLLLIBS)
 	$(DLLCONLINK) /DEF:ptsadmin.def
@@ -66,4 +68,4 @@ $(PTSERVEROBJS): $(PTSERVER)\$$(@B).c
 $(OUT)\afsptsadmin.res: AFS_component_version_number.h
 
 mkdir:
-	
+

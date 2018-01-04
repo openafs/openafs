@@ -57,7 +57,8 @@ static OSStatus do_aklog(char *cell)
 
     char *aklogCmd;
     if (cell) {
-	asprintf(&aklogCmd, "/usr/bin/aklog %s", cell);
+	if (asprintf(&aklogCmd, "/usr/bin/aklog %s", cell) < 0)
+	    aklogCmd = NULL;
 	if (aklogCmd)
 	    return system(aklogCmd);
 	else

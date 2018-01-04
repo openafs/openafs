@@ -8,9 +8,12 @@ pts_interactive - Enters interactive mode
 <div class="synopsis">
 
 B<pts interactive> S<<< [B<-cell>] <I<cell name>> >>> [B<-noauth>]
-    [B<-auth>] [B<-localauth>] [B<-force>]
+    [B<-auth>] [B<-localauth>] [B<-force>] [B<-help>]
+    [B<-encrypt>] S<<< [B<-config> <I<config directory>>] >>>
 
-B<pts in> S<<< [B<-c>] <I<cell name>> >>> [B<-n>] [B<-f>]
+
+B<pts in> S<<< [B<-c>] <I<cell name>> >>> [B<-n>] [B<-f>] [B<-h>]
+    [B<-a>] [B<-e>] S<<< [B<-co> <I<config directory>>] >>>
 
 =for html
 </div>

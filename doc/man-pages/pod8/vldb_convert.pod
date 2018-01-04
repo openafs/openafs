@@ -81,22 +81,22 @@ relaxed in OpenAFS.
 
 =over 4
 
-=item [B<initcmd>]
+=item B<initcmd>
 
 This is an optional string that does nothing.
 
-=item [B<-to>] <I<AFS version goal>>
+=item B<-to> <I<AFS version goal>>
 
 This option is required when downgrading or when upgrading to a version
 less than 3.4.  Specify 1, 2, 3, or 4 to choose version 3.1, 3.2, 3.3, or
 3,4 respectively. This defaults to version 3.4.
 
-=item [B<-from>] <I<current AFS version>>
+=item B<-from> <I<current AFS version>>
 
 This option is required when downgrading. Specify 1, 2, 3, or 4 to choose
 version 3.1, 3.2, 3.3, or 3.4 respectively.
 
-=item [B<-path>] <I<path to VLDB file>>
+=item B<-path> <I<path to VLDB file>>
 
 Specifies the path the VLDB file. This defaults to F</usr/afs/db/vldb.DB0>
 and only needs to be used if the VLDB file is not in the default path..

@@ -56,7 +56,8 @@ DLLLIBS =\
 	$(DESTDIR)\lib\afsrpc.lib \
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
-        $(DESTDIR)\lib\libafsconf.lib
+        $(DESTDIR)\lib\libafsconf.lib \
+        $(DESTDIR)\lib\afsroken.lib
 
 $(DLLFILE): $(DLLOBJS) $(DLLLIBS)
 	$(DLLCONLINK) /DEF:afscfgadmin.def shell32.lib
@@ -103,4 +104,4 @@ install: $(DLLFILE) $(INCFILES)
 clean::
 
 mkdir:
-	
+

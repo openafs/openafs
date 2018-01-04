@@ -72,10 +72,10 @@ typedef struct rpc_test_request_ctx {
 
 
 #define CTX_FOR_RXCALL(call) \
-    (rx_GetServiceSpecific((rx_ConnectionOf(call))->service, ctx_key))
+    (rx_GetServiceSpecific((rx_ServiceOf(rx_ConnectionOf(call))), ctx_key))
 
-afs_int32 rpc_test_PkgInit();
-void rpc_test_PkgShutdown();
+afs_int32 rpc_test_PkgInit(void);
+void rpc_test_PkgShutdown(void);
 
 /* call channel, callback RPC server multiplexing */
 afs_int32 init_fs_channel(rpc_test_request_ctx **ctx /* out */, char *cb_if,
@@ -83,7 +83,7 @@ afs_int32 init_fs_channel(rpc_test_request_ctx **ctx /* out */, char *cb_if,
 afs_int32 destroy_fs_channel(rpc_test_request_ctx *ctx);
 
 /* test proc wrappers */
-afs_int32 rpc_test_fetch_status();
+afs_int32 rpc_test_fetch_status(void);
 afs_int32 rpc_test_afs_fetch_status(rpc_test_request_ctx *ctx, AFSFid *fid,
                               AFSFetchStatus *outstatus);
 #if defined(AFS_BYTE_RANGE_FLOCKS) /* when will then be now?  soon. */

@@ -53,6 +53,10 @@ afs_InitDualFSCacheOps(struct vnode *vp)
     else if (strncmp("ufs", vp->v_mount->mnt_vfc->vfc_name, 3) == 0)
 #endif
 	afs_CacheFSType = AFS_APPL_UFS_CACHE;
+#ifdef AFS_DARWIN80_ENV
+    else if (strncmp("apfs", buffer, 4) == 0)
+	afs_CacheFSType = AFS_APPL_APFS_CACHE;
+#endif
     else
 	osi_Panic("Unknown cache vnode type\n");
 #ifdef AFS_DARWIN80_ENV
@@ -155,7 +159,7 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
 #endif
 	afs_osicred_initialized = 1;
     }
-    afile = (struct osi_file *)osi_AllocSmallSpace(sizeof(struct osi_file));
+    afile = osi_AllocSmallSpace(sizeof(struct osi_file));
     AFS_GUNLOCK();
 #ifdef AFS_CACHE_VNODE_PATH
     if (!ainode->ufs) {
@@ -347,7 +351,7 @@ afs_osi_Read(struct osi_file *afile, int offset, void *aptr,
 	afs_Trace2(afs_iclSetp, CM_TRACE_READFAILED, ICL_TYPE_INT32, resid,
 		   ICL_TYPE_INT32, code);
 	if (code > 0) {
-	    code *= -1;
+	    code = -code;
 	}
     }
     return code;
@@ -390,7 +394,7 @@ afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
 	afile->offset += code;
     } else {
 	if (code > 0) {
-	    code *= -1;
+	    code = -code;
 	}
     }
     if (afile->proc) {

@@ -10,16 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#endif
-#include <errno.h>
+#include <roken.h>
 
 #include "bc.h"
 
@@ -66,19 +57,16 @@ bc_InitConfig(char *apath)
     struct bc_config *tb;
 
     /* initialize global config structure */
-    tb = (struct bc_config *)malloc(sizeof(struct bc_config));
+    tb = calloc(1, sizeof(struct bc_config));
     if (!tb)
 	return (BC_NOMEM);
 
     bc_globalConfig = tb;
-    memset(tb, 0, sizeof(struct bc_config));
-    tb->path = (char *)malloc(strlen(apath) + 1);
+    tb->path = strdup(apath);
     if (!tb->path) {
 	free(tb);
 	return (BC_NOMEM);
     }
-
-    strcpy(tb->path, apath);
 
     /* now read the important config files; no file means empty list during system init */
 
@@ -106,10 +94,8 @@ HostAdd(struct bc_hostEntry **alist, char *aname, afs_int32 aport)
     for (tentry = *tlast; tentry; tlast = &tentry->next, tentry = *tlast);
 
     /* tlast now points to the next pointer (or head pointer) we should overwrite */
-    tentry = (struct bc_hostEntry *)malloc(sizeof(struct bc_hostEntry));
-    memset(tentry, 0, sizeof(*tentry));
-    tentry->name = (char *)malloc(strlen(aname) + 1);
-    strcpy(tentry->name, aname);
+    tentry = calloc(1, sizeof(struct bc_hostEntry));
+    tentry->name = strdup(aname);
     *tlast = tentry;
     tentry->next = (struct bc_hostEntry *)0;
     tentry->addr.sin_family = AF_INET;

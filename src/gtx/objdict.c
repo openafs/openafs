@@ -16,9 +16,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include "gtxobjdict.h"		/*Interface for this module */
-#include <stdio.h>		/*Standard I/O package */
 
 static char mn[] = "gator_objdict";	/*Module name */
 static int objdict_debug;	/*Is debugging turned on? */

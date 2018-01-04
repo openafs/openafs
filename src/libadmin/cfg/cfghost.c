@@ -13,28 +13,16 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
 
-#include <stddef.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
+#include <roken.h>
 
 #include <pthread.h>
 
 #ifdef AFS_NT40_ENV
 #include <WINNT/vptab.h>
 #include <WINNT/afsreg.h>
-#include <io.h>
 #include <direct.h>
-#else
-#include <unistd.h>
 #endif /* AFS_NT40_ENV */
 
 #include <rx/rx.h>
@@ -47,7 +35,6 @@
 #include <afs/afs_clientAdmin.h>
 #include <afs/afs_kasAdmin.h>
 #include <afs/afs_ptsAdmin.h>
-
 
 #include <afs/kautils.h>
 #include <afs/bnode.h>
@@ -97,6 +84,7 @@ cfg_HostQueryStatus(const char *hostName,	/* name of host */
 		    afs_status_p st)
 {				/* completion status */
     int rc = 1;
+    struct afsconf_keys keys;
     afs_status_t tst2, tst = 0;
     afs_status_t serverSt = 0;
     char *serverCellName = NULL;
@@ -167,7 +155,8 @@ cfg_HostQueryStatus(const char *hostName,	/* name of host */
 	    if (confdir->cellName == NULL || *confdir->cellName == '\0') {
 		/* no cell set for server */
 		serverSt = ADMCFGSERVERNOTINCELL;
-	    } else if (confdir->keystr == NULL || confdir->keystr->nkeys == 0) {
+	    } else if ((afsconf_GetKeys(confdir, &keys) != 0)
+		       || (keys.nkeys == 0)) {
 		/* no server keys */
 		serverSt = ADMCFGSERVERNOKEYS;
 	    } else {
@@ -188,13 +177,9 @@ cfg_HostQueryStatus(const char *hostName,	/* name of host */
 
 	    if (tst == 0 && serverSt == 0) {
 		/* everything looks good; malloc cell name buffer to return */
-		serverCellName =
-		    (char *)malloc(strlen(cellentry->cellInfo.name) + 1);
-		if (serverCellName == NULL) {
+		serverCellName = strdup(cellentry->cellInfo.name);
+		if (serverCellName == NULL)
 		    tst = ADMNOMEM;
-		} else {
-		    strcpy(serverCellName, cellentry->cellInfo.name);
-		}
 	    }
 
 	    (void)afsconf_Close(confdir);
@@ -271,10 +256,9 @@ cfg_HostOpen(void *cellHandle,	/* cell handle */
     if (tst == 0) {
 	char *localHostName;
 
-	if ((cfg_host = (cfg_host_p) malloc(sizeof(cfg_host_t))) == NULL) {
+	if ((cfg_host = malloc(sizeof(cfg_host_t))) == NULL) {
 	    tst = ADMNOMEM;
-	} else if ((localHostName = (char *)malloc(strlen(fullHostName) + 1))
-		   == NULL) {
+	} else if ((localHostName = strdup(fullHostName)) == NULL) {
 	    free(cfg_host);
 	    tst = ADMNOMEM;
 	} else {
@@ -286,8 +270,6 @@ cfg_HostOpen(void *cellHandle,	/* cell handle */
 	    cfg_host->cellHandle = cellHandle;
 	    cfg_host->bosHandle = NULL;
 	    cfg_host->end_magic = END_MAGIC;
-
-	    strcpy(localHostName, fullHostName);
 
 	    if (!afsclient_CellNameGet
 		(cfg_host->cellHandle, &cfg_host->cellName, &tst2)) {
@@ -912,7 +894,7 @@ cfg_HostPartitionTableEnumerate(void *hostHandle,	/* host config handle */
 		    vpentryCountMax * (sizeof(cfg_partitionEntry_t) +
 				       sizeof(struct vptab));
 
-		if ((metaTablep = (void *)malloc(metaTableSize)) == NULL) {
+		if ((metaTablep = malloc(metaTableSize)) == NULL) {
 		    tst = ADMNOMEM;
 		} else {
 		    int i;
@@ -1224,7 +1206,7 @@ int ADMINAPI
 cfg_StringDeallocate(char *stringDataP,	/* (multi)string to deallocate */
 		     afs_status_p st)
 {				/* completion status */
-    free((void *)stringDataP);
+    free(stringDataP);
     if (st != NULL) {
 	*st = 0;
     }
@@ -1240,7 +1222,7 @@ int ADMINAPI
 cfg_PartitionListDeallocate(cfg_partitionEntry_t * partitionListDataP,
 			    afs_status_p st)
 {
-    free((void *)partitionListDataP);
+    free(partitionListDataP);
     if (st != NULL) {
 	*st = 0;
     }

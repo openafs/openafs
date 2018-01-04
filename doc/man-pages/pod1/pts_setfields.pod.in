@@ -11,12 +11,14 @@ B<pts setfields> S<<< B<-nameorid> <I<user or group name or id>>+ >>>
     S<<< [B<-access> <I<set privacy flags>>] >>>
     S<<< [B<-groupquota> <I<set limit on group creation>>] >>>
     S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>]
-    [B<-force>] [B<-help>]
+    [B<-force>] [B<-help>] [B<-auth>] [B<-encrypt>]
+    S<<< [B<-config> <I<config directory>>] >>>
 
 B<pts setf> S<<< B<-na> <I<user or group name or id>>+ >>>
-    S<<< [B<-a> <I<set privacy flags>>] >>>
+    S<<< [B<-ac> <I<set privacy flags>>] >>>
     S<<< [B<-g> <I<set limit on group creation>>] >>> S<<< [B<-c> <I<cell name>>] >>>
-    [B<-no>] [B<-l>] [B<-f>] [B<-h>]
+    [B<-no>] [B<-l>] [B<-f>] [B<-h>] [B<-au>] [B<-e>]
+    S<<< [B<-co> <I<config directory>>] >>>
 
 =for html
 </div>

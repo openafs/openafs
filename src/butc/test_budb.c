@@ -6,12 +6,10 @@
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  */
-
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#include <sys/types.h>
-#include <netinet/in.h>
+#include <roken.h>
 
 #include <afs/budb_client.h>
 #include <afs/budb.h>

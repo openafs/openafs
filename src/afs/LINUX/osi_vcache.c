@@ -16,45 +16,14 @@
 #include "osi_compat.h"
 
 static void
-TryEvictDentries(struct vcache *avc)
+TryEvictDirDentries(struct inode *inode)
 {
-#ifndef D_INVALIDATE_IS_VOID
     struct dentry *dentry;
-#endif
-    struct inode *inode = AFSTOV(avc);
 #if defined(D_ALIAS_IS_HLIST) && !defined(HLIST_ITERATOR_NO_NODE)
     struct hlist_node *p;
 #endif
 
-#if defined(D_INVALIDATE_IS_VOID)
-    /* At this kernel level, d_invalidate always succeeds;
-     * that is, it will now invalidate even an active directory,
-     * Therefore we must use a different method to evict dentries.
-     */
-    d_prune_aliases(inode);
-#else
-#if defined(HAVE_DCACHE_LOCK)
-    spin_lock(&dcache_lock);
-
-restart:
-    list_for_each_entry(dentry, &inode->i_dentry, d_alias) {
-	if (d_unhashed(dentry))
-	    continue;
-	dget_locked(dentry);
-
-	spin_unlock(&dcache_lock);
-	if (d_invalidate(dentry) == -EBUSY) {
-	    dput(dentry);
-	    /* perhaps lock and try to continue? (use cur as head?) */
-	    goto inuse;
-	}
-	dput(dentry);
-	spin_lock(&dcache_lock);
-	goto restart;
-    }
-    spin_unlock(&dcache_lock);
-#else /* HAVE_DCACHE_LOCK */
-    spin_lock(&inode->i_lock);
+    afs_d_alias_lock(inode);
 
 restart:
 #if defined(D_ALIAS_IS_HLIST)
@@ -72,22 +41,54 @@ restart:
 	    continue;
 	}
 	spin_unlock(&dentry->d_lock);
-	dget(dentry);
+	afs_linux_dget(dentry);
 
-	spin_unlock(&inode->i_lock);
-	if (afs_d_invalidate(dentry) == -EBUSY) {
-	    dput(dentry);
-	    /* perhaps lock and try to continue? (use cur as head?) */
-	    goto inuse;
+	afs_d_alias_unlock(inode);
+
+	/*
+	 * Once we have dropped the d_alias lock (above), it is no longer safe
+	 * to 'continue' our iteration over d_alias because the list may change
+	 * out from under us.  Therefore, we must either leave the loop, or
+	 * restart from the beginning.  To avoid looping forever, we must only
+	 * restart if we know we've d_drop'd an alias.  In all other cases we
+	 * must leave the loop.
+	 */
+
+	/*
+	 * For a long time we used d_invalidate() for this purpose, but
+	 * using shrink_dcache_parent() and checking the refcount ourselves is
+	 * better, for two reasons: it avoids causing ENOENT issues for the
+	 * CWD in linux versions since 3.11, and it avoids dropping Linux
+	 * submounts.
+	 *
+	 * For non-fakestat, AFS mountpoints look like directories and end up here.
+	 */
+
+	shrink_dcache_parent(dentry);
+	spin_lock(&dentry->d_lock);
+	if (afs_dentry_count(dentry) > 1)	/* still has references */ {
+	    if (dentry->d_inode != NULL) /* is not a negative dentry */ {
+		spin_unlock(&dentry->d_lock);
+		dput(dentry);
+		goto inuse;
+	    }
 	}
+	/*
+	 * This is either a negative dentry, or a dentry with no references.
+	 * Either way, it is okay to unhash it now.
+	 * Do so under the d_lock (that is, via __d_drop() instead of d_drop())
+	 * to avoid a race with another process picking up a reference.
+	 */
+	__d_drop(dentry);
+	spin_unlock(&dentry->d_lock);
+
 	dput(dentry);
-	spin_lock(&inode->i_lock);
+	afs_d_alias_lock(inode);
 	goto restart;
     }
-    spin_unlock(&inode->i_lock);
-#endif /* HAVE_DCACHE_LOCK */
+    afs_d_alias_unlock(inode);
+
 inuse:
-#endif /* D_INVALIDATE_IS_VOID */
     return;
 }
 
@@ -100,12 +101,17 @@ osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep)
     /* First, see if we can evict the inode from the dcache */
     if (defersleep && avc != afs_globalVp && VREFCOUNT(avc) > 1
 	&& avc->opens == 0) {
+	struct inode *ip = AFSTOV(avc);
+
 	*slept = 1;
 	AFS_FAST_HOLD(avc);
 	ReleaseWriteLock(&afs_xvcache);
 	AFS_GUNLOCK();
 
-	TryEvictDentries(avc);
+	if (S_ISDIR(ip->i_mode))
+	    TryEvictDirDentries(ip);
+	else
+	    d_prune_aliases(ip);
 
 	AFS_GLOCK();
 	ObtainWriteLock(&afs_xvcache, 733);
@@ -207,11 +213,8 @@ osi_ResetRootVCache(afs_uint32 volid)
 
     dp = d_find_alias(root);
 
-#if defined(HAVE_DCACHE_LOCK)
-    spin_lock(&dcache_lock);
-#else
-    spin_lock(&AFSTOV(vcp)->i_lock);
-#endif
+    afs_d_alias_lock(AFSTOV(vcp));
+
     spin_lock(&dp->d_lock);
 #if defined(D_ALIAS_IS_HLIST)
     hlist_del_init(&dp->d_alias);
@@ -222,11 +225,9 @@ osi_ResetRootVCache(afs_uint32 volid)
 #endif
     dp->d_inode = AFSTOV(vcp);
     spin_unlock(&dp->d_lock);
-#if defined(HAVE_DCACHE_LOCK)
-    spin_unlock(&dcache_lock);
-#else
-    spin_unlock(&AFSTOV(vcp)->i_lock);
-#endif
+
+    afs_d_alias_unlock(AFSTOV(vcp));
+
     dput(dp);
 
     AFS_RELE(root);

@@ -12,17 +12,22 @@ B<vos clone> S<<< [B<-id>] <I<volume name or ID>> >>>
     S<<< [B<-partition>] <I<partition name>> >>>
     S<<< [B<-toname> <I<volume name on destination>>] >>>
     S<<< [B<-toid> <I<volume ID on destination>>] >>>
-    [B<-offline>] [B<-readonly>]
+    [B<-offline>] [B<-readonly>] [B<-readwrite>]
     S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>]
-    [B<-verbose>] [B<-encrypt>] [B<-noresolve>] [B<-help>]
+    [B<-verbose>] [B<-encrypt>] [B<-noresolve>]
+    S<<< [B<-config> <I<config directory>>] >>>
+    [B<-help>]
 
 B<vos cl> S<<< [B<-i>] <I<volume name or ID>> >>>
     S<<< [B<-s>] <I<server name>> >>>
     S<<< [B<-p>] <I<partition name>> >>>
     S<<< [B<-ton> <I<volume name on destination>>] >>>
-    S<<< [B<-toi> <I<volume ID on destination>>] >>> [B<-o>] [B<-r>]
+    S<<< [B<-toi> <I<volume ID on destination>>] >>> [B<-o>]
+    [B<-reado>] [B<-readw>]
     S<<< [B<-c> <I<cell name>>] >>> [B<-noa>]
-    [B<-l>] [B<-v>] [B<-e>] [B<-nor>] [B<-h>]
+    [B<-l>] [B<-v>] [B<-e>] [B<-nor>]
+    S<<< [B<-co> <I<config directory>>] >>>
+    [B<-h>]
 
 =for html
 </div>
@@ -64,18 +69,18 @@ such command.
 
 =over 4
 
-=item [B<-id>] <I<volume name or ID>>
+=item B<-id> <I<volume name or ID>>
 
 Specifies either the complete name or volume ID number of a read/write
 volume.
 
-=item [B<-server>] <I<machine name>>
+=item B<-server> <I<machine name>>
 
 Identifies the file server machine where the source volume resides. Provide
 the machine's IP address or its host name (either fully qualified or using
 an unambiguous abbreviation). For details, see L<vos(1)>.
 
-=item [B<-partition>] <I<partition name>>
+=item B<-partition> <I<partition name>>
 
 Names the partition where the source volume resides. Provide the full
 partition name (for, example, B</vicepa>) or one of the abbreviated forms
@@ -97,48 +102,11 @@ Leaves the new volume flagged as off-line in the volume database.
 
 Flags the new volume as read-only in the volume database.
 
-=item B<-cell> <I<cell name>>
+=item B<-readwrite>
 
-Names the cell in which to run the command. Do not combine this argument
-with the B<-localauth> flag. For more details, see L<vos(1)>.
+Flags the new volume as read-write in the volume database.
 
-=item B<-noauth>
-
-Assigns the unprivileged identity C<anonymous> to the issuer. Do not
-combine this flag with the B<-localauth> flag. For more details, see
-L<vos(1)>.
-
-=item B<-localauth>
-
-Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> file. The B<vos> command interpreter presents
-it to the Volume Server and Volume Location Server during mutual
-authentication. Do not combine this flag with the B<-cell> argument or
-B<-noauth> flag. For more details, see L<vos(1)>.
-
-=item B<-verbose>
-
-Produces on the standard output stream a detailed trace of the command's
-execution. If this argument is omitted, only warnings and error messages
-appear.
-
-=item B<-encrypt>
-
-Encrypts the command so that the operation's results are not transmitted
-across the network in clear text. This option is available in OpenAFS
-versions 1.4.11 or later and 1.5.60 or later.
-
-=item B<-noresolve>
-
-Shows all servers as IP addresses instead of the DNS name. This is very
-useful when the server address is registered as 127.0.0.1 or when dealing
-with multi-homed servers. This option is available in OpenAFS
-versions 1.4.8 or later and 1.5.35 or later.
-
-=item B<-help>
-
-Prints the online help for this command. All other valid options are
-ignored.
+=include fragments/vos-common.pod
 
 =back
 

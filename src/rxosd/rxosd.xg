@@ -1,0 +1,320 @@
+/*
+ * RX OSD interface description
+ */
+
+package RXOSD_
+prefix S
+
+%#include <rx/rx.h>
+%#include <rx/rx_null.h>
+
+/* prototype for pseudo-RPC call */
+%char *RXOSD_TranslateOpCode(afs_int32 code);
+
+%#define	OSD_SERVER_PORT		htons(7011) /* as MR-AFS remioserver */
+%#define	OSD_SERVICE_PORT	htons(0)
+%#define	OSD_SERVICE_ID		900   /* same as REMIOSRV for MR-AFS */
+%#define	OSD_NULL			0
+%#define	OSD_RXKAD			2
+%#define        RXOSD_RESTARTING		-100
+
+%#ifndef OSD_WAIT_FOR_TAPE
+%#define OSD_WAIT_FOR_TAPE	1096
+%#endif
+
+%#define T10_CDB_SIZE 200
+
+typedef opaque t10rock<T10_CDB_SIZE>;
+
+%#define CAPCRYPTLEN 72
+struct t10cap {
+	afs_uint32 pid_hi;
+	afs_uint32 pid_lo;
+	afs_uint32 oid_hi;
+	afs_uint32 oid_lo;
+	afs_uint32 maxlen_hi;
+	afs_uint32 maxlen_lo;
+	afs_uint32 ip;
+	short port;
+	short reserved;
+	afsUUID uuid;
+	afs_uint32 cap;
+	afs_uint32 expires;
+	afs_uint32 user;
+	afs_uint32 spare[3];
+	afs_uint32 epoch;
+	afs_uint32 cid;
+};
+
+struct t10sec {
+        char check[20];
+        char nonce[12];
+        char datain[4];
+        char dataout[4];
+};
+
+struct t10cdb {
+        char    operation;
+        char    control;
+        char    res1[5];
+        char    lng;
+        char    action[2];
+        char    service[6];
+        char    pid[8];
+        char    oid[8];
+        char    res2[4];
+        char    length[8];
+        char    offset[8];
+        char    attrparm[28];
+        struct t10cap cap;
+        struct t10sec sec;
+};
+
+struct osd_incdec {
+	afs_uint64 oid;
+	afs_uint64 pid;
+	afs_int32  todo;
+	afs_int32  done;
+};
+typedef struct osd_incdec osd_incdecList <>;
+
+struct osd_md5 {
+	afs_uint64 oid;
+	afs_uint64 pid;
+	afs_uint64 size;
+	afs_uint32 md5[4];
+};
+
+struct osd_obj_desc {
+	afs_uint64 oid;
+	afs_uint64 pid;
+	afs_uint32 id;
+	afs_uint32 ip;
+	afs_uint32 stripe;
+};
+typedef struct osd_obj_desc osd_obj_descList <>;
+
+struct osd_segm_desc {
+	afs_uint64 length;
+	afs_uint32 stripes;
+	afs_uint32 stripe_size;
+	osd_obj_descList objList;
+};
+typedef struct osd_segm_desc osd_segm_descList <>;
+
+struct rxosd_fetch_entry {
+	afs_uint64 part_id;
+	afs_uint64 obj_id;
+	afs_uint32 user;
+	afs_uint32 time;
+	afs_uint32 fileserver;
+	struct osd_segm_descList list;
+};
+typedef struct rxosd_fetch_entry rxosd_fetch_entryList<>;
+
+%#define TAPE_FETCH  	1
+%#define XFERING     	2
+%#define SET_FILE_READY 3
+
+struct FetchEntry {
+    afs_uint32 Requestor;
+    afs_uint32 TimeStamp;
+    afs_uint32 Volume;
+    afs_uint32 Vnode;
+    afs_uint32 Uniquifier;
+    afs_uint32 rank;
+    afs_uint32 state;
+    afs_uint32 caller;
+};
+typedef FetchEntry FetchEntryList<>;
+
+struct WipeCandidate {
+    afs_uint64 p_id;
+    afs_uint64 o_id;
+    afs_uint64 size;
+    afs_uint32 atime;
+};
+typedef WipeCandidate WipeCandidateList<>;
+
+struct activerpc {
+        afs_uint32 num;
+        afs_uint32 ip;
+        afs_uint64 part;
+        afs_uint64 obj;
+};
+typedef activerpc activerpcList<>;
+
+struct varname {
+        char name[64];
+};
+
+struct rxosd_stat {
+	afs_uint32 rpc;
+	afs_uint64 cnt;
+};
+typedef rxosd_stat rxosd_statList<>;
+
+struct rxosd_kbps {
+	afs_uint32 val[96];
+};
+
+create_part	(IN afs_uint64 part_id) = 1;
+
+create		(IN afs_uint64 part_id,
+		 IN afs_uint64 from_id,
+		 OUT afs_uint64 *obj_id) = 2;
+
+hardlink	(IN afs_uint64 from_part,
+		 IN afs_uint64 from_id,
+		 IN afs_uint64 to_part,
+		 IN afs_uint64 to_id,
+		 OUT afs_uint64 *obj_id) = 3;
+
+write		(IN t10rock rock,
+		 IN afs_uint64 part_id,
+		 IN afs_uint64 obj_id,
+		 IN afs_uint64 offset,
+		 IN afs_uint64 length) split = 4;
+
+write_keep	(IN afs_uint64 part_id,
+		 IN afs_uint64 obj_id,
+		 IN afs_uint64 offset,
+		 IN afs_uint64 length,
+		 IN afs_uint32 atime,
+		 IN afs_uint32 mtime) split = 5;
+
+writePS		(IN t10rock rock,
+		 IN afs_uint64 part_id,
+		 IN afs_uint64 obj_id,
+		 IN afs_uint64 offset,
+		 IN afs_uint64 length,
+		 IN afs_uint32 stripe_size,
+		 IN afs_uint32 nstripes,
+		 IN afs_uint32 mystripe) split = 6;
+
+read		(IN t10rock rock,
+		 IN afs_uint64 part_id,
+		 IN afs_uint64 obj_id,
+		 IN afs_uint64 offset,
+		 IN afs_uint64 length) split = 7;
+
+readPS		(IN t10rock rock,
+		 IN afs_uint64 part_id,
+		 IN afs_uint64 obj_id,
+		 IN afs_uint64 offset,
+		 IN afs_uint64 length,
+		 IN afs_uint32 stripe_size,
+		 IN afs_uint32 nstripes,
+		 IN afs_uint32 mystripe) split = 8;
+
+truncate	(IN afs_uint64 part_id,
+		 IN afs_uint64 obj_id,
+		 IN afs_uint64 length) = 9;
+
+incdec		(IN afs_uint64 part_id,
+		 IN afs_uint64 obj_id,
+		 IN afs_int32 diff) = 10;
+
+bulkincdec	(INOUT osd_incdecList *list) = 11;
+
+remove_part	(IN afs_uint64 part_id) = 12;
+
+list		(IN afs_uint64 part_id,
+		 IN afs_uint64 start_id) split = 13;
+
+examine		(IN afs_uint64 part_id,
+		 IN afs_uint64 obj_id,
+		 OUT afs_uint64 *size,
+		 OUT afs_uint32 *linkcount,
+		 OUT afs_uint32 *mtime,
+		 OUT afs_uint32 *atime) = 14;
+
+examineHSM	(IN afs_uint64 part_id,
+		 IN afs_uint64 obj_id,
+		 OUT afs_uint64 *size,
+		 OUT afs_uint32 *linkcount,
+		 OUT afs_uint32 *time,
+		 OUT afs_int32 *status) = 15;
+
+list_part	(IN afs_uint64 start_id) split = 16;
+
+copy		(IN afs_uint64 from_part,
+		 IN afs_uint64 to_part,
+		 IN afs_uint64 from_id,
+		 IN afs_uint64 to_id,
+		 IN afs_uint32 to_osd) = 17;
+
+CopyOnWrite     (IN afs_uint64 part_id,
+                 IN afs_uint64 from_id,
+		 IN afs_uint64 offs,
+		 IN afs_uint64 length,
+		 IN afs_uint64 size,
+                 OUT afs_uint64 *obj_id) = 18;
+
+Dummy           (IN afs_uint32 in,
+                 OUT afs_uint32 *out) = 19;
+
+md5sum          (IN afs_uint64 part_id,
+                 IN afs_uint64 obj_id,
+                 OUT struct osd_md5 *md5) = 20;
+
+create_archive  (IN afs_uint64 part_id,
+		 IN afs_uint64 from_id,
+		 IN struct osd_segm_descList *list,
+		 OUT struct osd_md5 *output) = 21;
+
+restore_archive (IN afs_uint64 part_id,
+		 IN afs_uint64 obj_id,
+		 IN afs_uint32 user,
+		 IN struct osd_segm_descList *listi,
+		 OUT osd_md5 *output) = 22;
+
+close_file	(IN afs_uint64 part_id,
+		 IN afs_uint64 obj_id) = 23;
+
+fetchqueue	(OUT FetchEntryList *list) = 24;
+
+wipe_candidates (IN afs_uint32 lun,
+		 IN afs_uint32 max,
+		 IN afs_uint32 algorithm,
+		 IN afs_uint32 minMB,
+		 IN afs_uint32 spare,
+		 OUT WipeCandidateList *list) = 25;
+
+Variable	(IN afs_int32 cmd,
+ 		 IN string name<256>,
+ 		 IN afs_int64 value,
+ 		 OUT afs_int64 *result) = 26;
+
+threads		(OUT struct activerpcList *list)  = 27;
+
+statistic	(IN afs_int32 reset,
+		 OUT afs_uint32 *since,
+		 OUT afs_uint64 *received,
+		 OUT afs_uint64 *sent,
+		 OUT rxosd_statList *stat,
+		 OUT struct rxosd_kbps *kbpsrcvd,
+		 OUT struct rxosd_kbps *kbpssent) = 28;
+
+setatime	(IN afs_uint64 part_id,
+		 IN afs_uint64 obj_id,
+		 IN afs_uint32 atime,
+		 IN afs_uint32 mtime) = 29;
+
+updatecounters	(IN afs_uint64 bytes_rcvd,
+		 IN afs_uint64 bytes_sent) = 30;
+
+write_to_hpss	(IN afs_uint64 part_id,
+		 IN afs_uint64 obj_id,
+		 IN struct osd_segm_descList *list,
+		 OUT osd_md5 *output) = 31;
+
+read_from_hpss	(IN afs_uint64 part_id,
+		 IN afs_uint64 obj_id,
+		 IN struct osd_segm_descList *list,
+		 OUT osd_md5 *output) = 32;
+
+ProbeServer     () = 33;
+
+/* end package */
+

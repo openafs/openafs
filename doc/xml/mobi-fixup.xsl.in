@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+
+<!--
+     The kindle seems to render certain lists with an extra line break.
+     To work around this for now, we remove the first <para> for itemized
+     and ordered lists.
+-->
+
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+
+    <xsl:import href="@DOCBOOK_STYLESHEETS@/epub/docbook.xsl"/>
+
+    <xsl:template match="/">
+	<xsl:copy>
+	    <xsl:apply-imports/>
+	</xsl:copy>
+    </xsl:template>
+
+
+    <xsl:template match="itemizedlist/listitem/para[position() = 1]">
+        <!-- still process any anchors embedded in the <listitem> -->
+        <xsl:call-template name="anchor">
+            <xsl:with-param name="node" select="parent::listitem"/>
+        </xsl:call-template>
+	<xsl:apply-templates/>
+    </xsl:template>
+
+    <xsl:template match="orderedlist/listitem/para[position() = 1]">
+        <!-- still process any anchors embedded in the <listitem> -->
+        <xsl:call-template name="anchor">
+            <xsl:with-param name="node" select="parent::listitem"/>
+        </xsl:call-template>
+	<xsl:apply-templates/>
+    </xsl:template>
+
+</xsl:stylesheet>

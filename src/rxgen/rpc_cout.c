@@ -35,10 +35,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "rpc_scan.h"
 #include "rpc_parse.h"
 #include "rpc_util.h"
@@ -74,7 +72,7 @@ static void print_rxifsizeof(char *prefix, char *type);
 void
 emit(definition * def)
 {
-    if (def->def_kind == DEF_PROGRAM || def->def_kind == DEF_CONST) {
+    if (def->def_kind == DEF_CONST) {
 	return;
     }
     print_header(def);
@@ -100,7 +98,7 @@ emit(definition * def)
 static int
 findtype(definition * def, char *type)
 {
-    if (def->def_kind == DEF_PROGRAM || def->def_kind == DEF_CONST) {
+    if (def->def_kind == DEF_CONST) {
 	return (0);
     } else {
 	return (streq(def->def_name, type));
@@ -163,7 +161,11 @@ print_ifarg(char *arg)
 static void
 print_ifarg_with_cast(int ptr_to, char *type, char *arg)
 {
-    f_print(fout, ptr_to ? ", (%s *) %s" : ", (%s) %s", type, arg);
+    if (streq(type, "bool")) {
+	f_print(fout, ptr_to ? ", (bool_t *) %s" : ", (bool_t) %s", arg);
+    } else {
+	f_print(fout, ptr_to ? ", (%s *) %s" : ", (%s) %s", type, arg);
+    }
 }
 
 static void
@@ -194,6 +196,42 @@ static void
 space(void)
 {
     f_print(fout, "\n\n");
+}
+
+static void
+print_ifarg_val(char *objname, char *name)
+{
+    if (*objname == '&') {
+	if (brief_flag) {
+	    f_print(fout, "%s.val", objname);
+	} else {
+	    f_print(fout, "%s.%s_val", objname, name);
+	}
+    } else {
+	if (brief_flag) {
+	    f_print(fout, "&%s->val", objname);
+	} else {
+	    f_print(fout, "&%s->%s_val", objname, name);
+	}
+    }
+}
+
+static void
+print_ifarg_len(char *objname, char *name)
+{
+    if (*objname == '&') {
+	if (brief_flag) {
+	    f_print(fout, "%s.len", objname);
+	} else {
+	    f_print(fout, "%s.%s_len", objname, name);
+	}
+    } else {
+	if (brief_flag) {
+	    f_print(fout, "&%s->len", objname);
+	} else {
+	    f_print(fout, "&%s->%s_len", objname, name);
+	}
+    }
 }
 
 static void
@@ -237,6 +275,14 @@ print_ifstat(int indent, char *prefix, char *type, relation rel, char *amax,
 	    alt = "string";
 	} else if (streq(type, "opaque")) {
 	    alt = "bytes";
+	    tabify(fout, indent);
+	    f_print(fout, "{\n");
+	    ++indent;
+	    tabify(fout, indent);
+	    f_print(fout, "u_int __len = (u_int) ");
+	    f_print(fout, "*(");
+	    print_ifarg_len(objname, name);
+	    f_print(fout, ");\n");
 	}
 	if (streq(type, "string")) {
 	    print_ifopen(indent, alt);
@@ -249,21 +295,12 @@ print_ifstat(int indent, char *prefix, char *type, relation rel, char *amax,
 		print_ifopen(indent, "array");
                 print_ifarg("(caddr_t *)");
 	    }
-	    if (*objname == '&') {
-		if (brief_flag) {
-		    f_print(fout, "%s.val, (u_int *)%s.len", objname, objname);
-		} else {
-		    f_print(fout, "%s.%s_val, (u_int *)%s.%s_len",
-			    objname, name, objname, name);
-		}
+	    print_ifarg_val(objname, name);
+	    f_print(fout, ", ");
+	    if (streq(type, "opaque")) {
+		f_print(fout, "&__len");
 	    } else {
-		if (brief_flag) {
-		    f_print(fout, "&%s->val, (u_int *)&%s->len",
-			    objname, objname);
-		} else {
-		    f_print(fout, "&%s->%s_val, (u_int *)&%s->%s_len",
-			    objname, name, objname, name);
-		}
+		print_ifarg_len(objname, name);
 	    }
 	}
 	print_ifarg(amax);
@@ -273,10 +310,21 @@ print_ifstat(int indent, char *prefix, char *type, relation rel, char *amax,
 	break;
     case REL_ALIAS:
 	print_ifopen(indent, type);
-        print_ifarg_with_cast(1, type, objname);
+	print_ifarg(objname);
 	break;
     }
     print_ifclose(indent);
+    if (rel == REL_ARRAY && streq(type, "opaque")) {
+	tabify(fout, indent);
+	f_print(fout, "*(");
+	print_ifarg_len(objname, name);
+	f_print(fout, ")");
+	f_print(fout, " = __len;\n");
+	--indent;
+	tabify(fout, indent);
+	f_print(fout, "}\n");
+    }
+
 }
 
 
@@ -521,16 +569,15 @@ print_param(declaration * dec)
 	} else if (streq(type, "opaque")) {
 	    alt = "opaque";
 	}
-	if (alt) {
+	if (alt)
 	    print_rxifopen(alt);
-	    print_rxifarg(amp, objname, 0);
-	} else {
+	else
 	    print_rxifopen("vector");
-	    print_rxifarg(amp, "(char *)", 0);
-	    sprintf(temp, "%s", objname);
-	    strcat(Proc_list->code, temp);
-	    strcat(Proc_list->scode, temp);
-	}
+
+	print_rxifarg(amp, "(char *)", 0);
+	sprintf(temp, "%s", objname);
+	strcat(Proc_list->code, temp);
+	strcat(Proc_list->scode, temp);
 	print_rxifarg("", amax, 1);
 	if (!alt) {
 	    print_rxifsizeof(prefix, type);
@@ -549,7 +596,7 @@ print_param(declaration * dec)
 		Proc_list->pl.param_flag |= OUT_STRING;
 		print_rxifarg("", objname, 0);
 	    } else
-		print_rxifarg("&", objname, 0);
+		print_rxifarg("(char **) &", objname, 0);
 /*			print_rxifarg(amp, objname, 0);	*/
 	    print_rxifarg("", amax, 1);
 	    if (!alt) {

@@ -53,10 +53,10 @@ afsd_check_mount(const char *rn, const char *mountdir)
 }
 
 int
-afsd_call_syscall(long param1, long param2, long param3, long param4,
-                  long param5)
+afsd_call_syscall(struct afsd_syscall_args *args)
 {
-    return call_syscall(AFSCALL_CALL, param1, param2, param3, param4, param5);
+    return call_syscall(AFSCALL_CALL, args->syscall, args->params[0],
+		        args->params[1], args->params[2], args->params[3]);
 }
 
 int

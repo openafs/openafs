@@ -36,21 +36,11 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include <limits.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <ctype.h>
-#include <string.h>
-#ifdef HAVE_SIGNAL_H
-#include <signal.h>
-#endif
-#ifdef HAVE_SYS_FILE_H
-#include <sys/file.h>
-#endif
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
+
 #include "rpc_scan.h"
 #include "rpc_parse.h"
 #include "rpc_util.h"
@@ -62,9 +52,6 @@ struct commandline {
     int brief_flag;
     int cflag;
     int hflag;
-    int lflag;
-    int sflag;
-    int mflag;
     int Cflag;
     int Sflag;
     int rflag;
@@ -79,7 +66,6 @@ struct commandline {
 };
 
 #define MAXCPPARGS	256	/* maximum number of arguments to cpp */
-#define MAXCMDLINE      1024	/* MAX chars on a single  cmd line */
 
 char *prefix = "";
 static char *IncludeDir[MAXCPPARGS];
@@ -95,34 +81,32 @@ char yflag = 0;			/* if set, only emit function name arrays to xdr file */
 int debug = 0;
 static int pclose_fin = 0;
 static char *cmdname;
-#ifdef AFS_NT40_ENV
-static char *CPP = NULL;
-#else /* AFS_NT40_ENV */
 #ifdef PATH_CPP
-static char CPP[] = PATH_CPP;
+static char *CPP = PATH_CPP;
 #else
-static char CPP[] = "/lib/cpp";
+#ifdef AFS_NT40_ENV
+static char *CPP = "cl /EP /C /nologo";
+#else
+static char *CPP = "/lib/cpp";
 #endif
-#endif /* AFS_NT40_ENV */
-static char CPPFLAGS[] = "-C";
+#endif
 
-#ifdef	AFS_ALPHA_ENV
 /*
  * Running "cpp" directly on DEC OSF/1 does not define anything; the "cc"
  * driver is responsible.  To compensate (and allow for other definitions
  * which should always be passed to "cpp"), place definitions which whould
- * always be passed to "rxgen" in this table.
+ * always be passed to "rxgen" in this string.
  */
-static char *XTRA_CPPFLAGS[] = {
+static char *CPPFLAGS = "-C"
+#ifdef	AFS_ALPHA_ENV
 #ifdef	__alpha
-    "-D__alpha",
+    " -D__alpha"
 #endif /* __alpha */
 #ifdef	OSF
-    "-DOSF",
+    " -DOSF"
 #endif /* OSF */
-    NULL
-};
 #endif
+;
 
 #include "AFS_component_version_number.c"
 
@@ -134,10 +118,6 @@ static void c_output(char *infile, char *define, int extend, char *outfile,
 		     int append);
 static void h_output(char *infile, char *define, int extend, char *outfile,
 		     int append);
-static void s_output(int argc, char *argv[], char *infile, char *define,
-		     int extend, char *outfile, int nomain);
-static void l_output(char *infile, char *define, int extend, char *outfile);
-static void do_registers(int argc, char *argv[]);
 static int parseargs(int argc, char *argv[], struct commandline *cmd);
 static void C_output(char *infile, char *define, int extend, char *outfile,
 		     int append);
@@ -149,14 +129,11 @@ int
 main(int argc, char *argv[])
 {
     struct commandline cmd;
+    char *ep;
 
-#ifdef AFS_NT40_ENV
-    /* initialize CPP with the correct pre-processor for Windows */
-    CPP = getenv("RXGEN_CPPCMD");
-    if (!CPP)
-	CPP = "cl /EP /C /nologo";
-#endif /* AFS_NT40_ENV */
-
+    ep = getenv("RXGEN_CPPCMD");
+    if (ep)
+	CPP = ep;
 #ifdef	AFS_AIX32_ENV
     /*
      * The following signal action for AIX is necessary so that in case of a
@@ -175,9 +152,9 @@ main(int argc, char *argv[])
     if (!parseargs(argc, argv, &cmd)) {
 	f_print(stderr, "usage: %s infile\n", cmdname);
 	f_print(stderr,
-		"       %s [-c | -h | -l | -m | -C | -S | -r | -b | -k | -R | -p | -d | -z | -u] [-Pprefix] [-Idir] [-o outfile] [infile]\n",
+		"       %s [-c | -h | -C | -S | -r | -b | -k | -p | -d | -z | -u] [-Pprefix] [-Idir] [-o outfile] [infile]\n",
 		cmdname);
-	f_print(stderr, "       %s [-s udp|tcp]* [-o outfile] [infile]\n",
+	f_print(stderr, "       %s [-o outfile] [infile]\n",
 		cmdname);
 	exit(1);
     }
@@ -189,11 +166,6 @@ main(int argc, char *argv[])
 	c_output(cmd.infile, "-DRPC_XDR", !EXTEND, cmd.outfile, 0);
     } else if (cmd.hflag) {
 	h_output(cmd.infile, "-DRPC_HDR", !EXTEND, cmd.outfile, 0);
-    } else if (cmd.lflag) {
-	l_output(cmd.infile, "-DRPC_CLNT", !EXTEND, cmd.outfile);
-    } else if (cmd.sflag || cmd.mflag) {
-	s_output(argc, argv, cmd.infile, "-DRPC_SVC", !EXTEND, cmd.outfile,
-		 cmd.mflag);
     } else if (cmd.Cflag) {
 	OutFileFlag = NULL;
 	C_output(cmd.infile, "-DRPC_CLIENT", !EXTEND, cmd.outfile, 1);
@@ -292,32 +264,30 @@ open_output(char *infile, char *outfile)
 static void
 open_input(char *infile, char *define)
 {
-    char cpp_cmdline[MAXCMDLINE];
+    char *cpp_cmdline;
+    int i, l = 0;
 
-    int i;
     if (debug == 0) {
 	infilename = (infile == NULL) ? "<stdin>" : infile;
-	strcpy(cpp_cmdline, CPP);
-	strcat(cpp_cmdline, " ");
-	strcat(cpp_cmdline, CPPFLAGS);
-	strcat(cpp_cmdline, " ");
-	strcat(cpp_cmdline, define);
-
-#ifdef	AFS_ALPHA_ENV
-	for (i = 0;
-	     i < (sizeof(XTRA_CPPFLAGS) / sizeof(XTRA_CPPFLAGS[0])) - 1;
-	     i++) {
-	    strcat(cpp_cmdline, " ");
-	    strcat(cpp_cmdline, XTRA_CPPFLAGS[i]);
+        l = strlen(CPP) + strlen(CPPFLAGS) + strlen(define) + 3;
+	for (i = 0; i < nincludes; i++)
+	    l += strlen(IncludeDir[i]) + 1;
+        l += strlen(infile) + 1;
+	cpp_cmdline = malloc(l);
+	if (!cpp_cmdline) {
+	  perror("Unable to allocate space for cpp command line");
+	  crash();
 	}
-#endif
+
+	sprintf(cpp_cmdline, "%s %s %s", CPP, CPPFLAGS, define);
+	l = strlen(cpp_cmdline);
 	for (i = 0; i < nincludes; i++) {
-	    strcat(cpp_cmdline, " ");
-	    strcat(cpp_cmdline, IncludeDir[i]);
+	    cpp_cmdline[l++] = ' ';
+	    strcpy(cpp_cmdline + l, IncludeDir[i]);
+            l += strlen(IncludeDir[i]);
 	}
-
-	strcat(cpp_cmdline, " ");
-	strcat(cpp_cmdline, infile);
+	cpp_cmdline[l++] = ' ';
+	strcpy(cpp_cmdline + l, infile);
 
 	fin = popen(cpp_cmdline, "r");
 	if (fin == NULL)
@@ -370,6 +340,7 @@ c_output(char *infile, char *define, int extend, char *outfile, int append)
 	} else {
 	    f_print(fout, "#include <afsconfig.h>\n");
 	    f_print(fout, "#include <afs/param.h>\n");
+	    f_print(fout, "#include <roken.h>\n");
 	}
 	f_print(fout, "#ifdef AFS_NT40_ENV\n");
 	f_print(fout, "#define AFS_RXGEN_EXPORT __declspec(dllexport)\n");
@@ -478,14 +449,11 @@ h_output(char *infile, char *define, int extend, char *outfile, int append)
     if (brief_flag) {
 	f_print(fout, "#include \"rx/rx_opaque.h\"\n");
     }
-    if (uflag)
-	f_print(fout, "#include <ubik.h>\n");
     f_print(fout, "#else	/* UKERNEL */\n");
     f_print(fout, "#include \"h/types.h\"\n");
     f_print(fout, "#ifndef	SOCK_DGRAM  /* XXXXX */\n");
     f_print(fout, "#include \"h/socket.h\"\n");
     f_print(fout, "#endif\n");
-    f_print(fout, "struct ubik_client;\n");
     f_print(fout, "#ifndef	DTYPE_SOCKET  /* XXXXX */\n");
     f_print(fout, "#ifndef AFS_LINUX22_ENV\n");
     f_print(fout, "#include \"h/file.h\"\n");
@@ -561,90 +529,6 @@ h_output(char *infile, char *define, int extend, char *outfile, int append)
     }
 }
 
-/*
- * Compile into an RPC service
- */
-static void
-s_output(int argc, char *argv[], char *infile, char *define, int extend,
-	 char *outfile, int nomain)
-{
-    char *include;
-    definition *def;
-    int foundprogram;
-    char *outfilename;
-
-    open_input(infile, define);
-    outfilename = extend ? extendfile(infile, outfile) : outfile;
-    open_output(infile, outfilename);
-    f_print(fout, "#include <stdio.h>\n");
-    f_print(fout, "#include <rpc/rpc.h>\n");
-    if (infile && (include = extendfile(infile, ".h"))) {
-	f_print(fout, "#include \"%s\"\n", include);
-	free(include);
-    }
-    foundprogram = 0;
-    while ((def = get_definition())) {
-	foundprogram |= (def->def_kind == DEF_PROGRAM);
-    }
-    if (extend && !foundprogram) {
-	(void)unlink(outfilename);
-	return;
-    }
-    if (nomain) {
-	write_programs((char *)NULL);
-    } else {
-	write_most();
-	do_registers(argc, argv);
-	write_rest();
-	write_programs("static");
-    }
-}
-
-static void
-l_output(char *infile, char *define, int extend, char *outfile)
-{
-    char *include;
-    definition *def;
-    int foundprogram;
-    char *outfilename;
-
-    open_input(infile, define);
-    outfilename = extend ? extendfile(infile, outfile) : outfile;
-    open_output(infile, outfilename);
-    f_print(fout, "#include <rpc/rpc.h>\n");
-    f_print(fout, "#include <sys/time.h>\n");
-    if (infile && (include = extendfile(infile, ".h"))) {
-	f_print(fout, "#include \"%s\"\n", include);
-	free(include);
-    }
-    foundprogram = 0;
-    while ((def = get_definition())) {
-	foundprogram |= (def->def_kind == DEF_PROGRAM);
-    }
-    if (extend && !foundprogram) {
-	(void)unlink(outfilename);
-	return;
-    }
-    write_stubs();
-}
-
-/*
- * Perform registrations for service output
- */
-static void
-do_registers(int argc, char *argv[])
-{
-    int i;
-
-    for (i = 1; i < argc; i++) {
-	if (streq(argv[i], "-s")) {
-	    write_register(argv[i + 1]);
-	    i++;
-	}
-    }
-}
-
-
 static void
 C_output(char *infile, char *define, int extend, char *outfile, int append)
 {
@@ -669,6 +553,13 @@ C_output(char *infile, char *define, int extend, char *outfile, int append)
 	if (kflag) {
 	    f_print(fout, "#include \"%s\"\n\n", include);
 	} else {
+	    f_print(fout, "#include <afsconfig.h>\n");
+	    f_print(fout, "#include <afs/param.h>\n");
+	    f_print(fout, "#include <roken.h>\n");
+	    f_print(fout, "#include <afs/opr.h>\n");
+	    f_print(fout, "#ifdef AFS_PTHREAD_ENV\n");
+	    f_print(fout, "# include <opr/lock.h>\n");
+	    f_print(fout, "#endif\n");
 	    f_print(fout, "#include \"%s\"\n\n", include);
 	}
 	free(include);
@@ -740,6 +631,9 @@ S_output(char *infile, char *define, int extend, char *outfile, int append)
 	if (kflag) {
 	    f_print(fout, "#include \"%s\"\n", include);
 	} else {
+	    f_print(fout, "#include <afsconfig.h>\n");
+	    f_print(fout, "#include <afs/param.h>\n");
+	    f_print(fout, "#include <roken.h>\n");
 	    f_print(fout, "#include \"%s\"\n\n", include);
 	}
 	free(include);
@@ -837,13 +731,10 @@ parseargs(int argc, char *argv[], struct commandline *cmd)
 		case 'A':
 		case 'c':
 		case 'h':
-		case 'l':
-		case 'm':
 		case 'C':
 		case 'S':
 		case 'b':
 		case 'r':
-		case 'R':
 		case 'k':
 		case 'p':
 		case 'd':
@@ -857,7 +748,6 @@ parseargs(int argc, char *argv[], struct commandline *cmd)
 		    flag[(int)c] = 1;
 		    break;
 		case 'o':
-		case 's':
 		    if (argv[i][j - 1] != '-' || argv[i][j + 1] != 0) {
 			return (0);
 		    }
@@ -865,16 +755,10 @@ parseargs(int argc, char *argv[], struct commandline *cmd)
 		    if (++i == argc) {
 			return (0);
 		    }
-		    if (c == 's') {
-			if (!streq(argv[i], "udp") && !streq(argv[i], "tcp")) {
-			    return (0);
-			}
-		    } else if (c == 'o') {
-			if (cmd->outfile) {
-			    return (0);
-			}
-			cmd->outfile = argv[i];
+		    if (cmd->outfile) {
+			return (0);
 		    }
+		    cmd->outfile = argv[i];
 		    goto nextarg;
 		case 'P':
 		    if (argv[i][j - 1] != '-')
@@ -882,6 +766,10 @@ parseargs(int argc, char *argv[], struct commandline *cmd)
 		    prefix = &argv[i][j + 1];
 		    goto nextarg;
 		case 'I':
+		    if (nincludes >= MAXCPPARGS) {
+			f_print(stderr, "Too many -I arguments\n");
+			return (0);
+		    }
 		    if (argv[i][j - 1] != '-')
 			return (0);
 		    IncludeDir[nincludes++] = &argv[i][j - 1];
@@ -898,9 +786,6 @@ parseargs(int argc, char *argv[], struct commandline *cmd)
     cmd->brief_flag = brief_flag = flag['b'];
     cmd->cflag = cflag = flag['c'];
     cmd->hflag = hflag = flag['h'];
-    cmd->sflag = flag['s'];
-    cmd->lflag = flag['l'];
-    cmd->mflag = flag['m'];
     cmd->xflag = xflag = flag['x'];
     cmd->yflag = yflag = flag['y'];
     cmd->Cflag = Cflag = flag['C'];
@@ -914,8 +799,7 @@ parseargs(int argc, char *argv[], struct commandline *cmd)
     if (cmd->pflag)
 	combinepackages = 1;
     nflags =
-	cmd->cflag + cmd->hflag + cmd->sflag + cmd->lflag + cmd->mflag +
-	cmd->Cflag + cmd->Sflag + cmd->rflag;
+	cmd->cflag + cmd->hflag + cmd->Cflag + cmd->Sflag + cmd->rflag;
     if (nflags == 0) {
 	if (cmd->outfile != NULL || cmd->infile == NULL) {
 	    return (0);

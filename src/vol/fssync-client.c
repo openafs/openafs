@@ -35,33 +35,23 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <sys/types.h>
-#include <stdio.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <time.h>
-#else
-#include <sys/param.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/time.h>
+#include <afs/opr.h>
+#ifdef AFS_PTHREAD_ENV
+# include <opr/lock.h>
 #endif
-#include <errno.h>
-#include <afs/afs_assert.h>
-#include <signal.h>
-#include <string.h>
 
-#include <rx/xdr.h>
 #include <afs/afsint.h>
-#include "nfs.h"
+#include <rx/rx_queue.h>
 #include <afs/errors.h>
+#include <afs/afssyscalls.h>
+
+#include "nfs.h"
 #include "daemon_com.h"
 #include "fssync.h"
 #include "lwp.h"
 #include "lock.h"
-#include <afs/afssyscalls.h>
 #include "ihandle.h"
 #include "vnode.h"
 #include "volume.h"
@@ -69,8 +59,6 @@
 #include "common.h"
 
 #ifdef FSSYNC_BUILD_CLIENT
-
-extern int LogLevel;
 
 static SYNC_client_state fssync_state =
     { -1,                    /* file descriptor */
@@ -84,8 +72,8 @@ static SYNC_client_state fssync_state =
 #ifdef AFS_PTHREAD_ENV
 static pthread_mutex_t vol_fsync_mutex;
 static volatile int vol_fsync_mutex_init = 0;
-#define VFSYNC_LOCK MUTEX_ENTER(&vol_fsync_mutex)
-#define VFSYNC_UNLOCK MUTEX_EXIT(&vol_fsync_mutex)
+#define VFSYNC_LOCK opr_mutex_enter(&vol_fsync_mutex)
+#define VFSYNC_UNLOCK opr_mutex_exit(&vol_fsync_mutex)
 #else
 #define VFSYNC_LOCK
 #define VFSYNC_UNLOCK
@@ -97,7 +85,7 @@ FSYNC_clientInit(void)
 #ifdef AFS_PTHREAD_ENV
     /* this is safe since it gets called with VOL_LOCK held, or before we go multithreaded */
     if (!vol_fsync_mutex_init) {
-	MUTEX_INIT(&vol_fsync_mutex, "vol fsync", MUTEX_DEFAULT, 0);
+	opr_mutex_init(&vol_fsync_mutex);
 	vol_fsync_mutex_init = 1;
     }
 #endif

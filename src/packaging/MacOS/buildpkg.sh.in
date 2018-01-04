@@ -175,10 +175,11 @@ if [ $firstpass = yes ]; then
     chmod -R og-w $PKGROOT/private
     chmod  og-rx $PKGROOT/private/var/db/openafs/cache
 
-    mkdir -p $PKGROOT/usr/bin $PKGROOT/usr/sbin $PKGROOT/usr/share/man/man1 $PKGROOT/usr/share/man/man5 $PKGROOT/usr/share/man/man8
+    mkdir -p $PKGROOT/usr/bin $PKGROOT/usr/lib $PKGROOT/usr/sbin $PKGROOT/usr/share/man/man1 $PKGROOT/usr/share/man/man5 $PKGROOT/usr/share/man/man8
 
     BINLIST="fs klog klog.krb pagsh pagsh.krb pts sys tokens tokens.krb unlog unlog.krb aklog"
     ETCLIST="vos"
+    SHLIBLIST="libafsauthent.dylib libafsauthent.dylib.1 libafsauthent.dylib.1.1 libafshcrypto.dylib libafshcrypto.dylib.1 libafshcrypto.dylib.1.1 libafsrpc.dylib libafsrpc.dylib.1 libafsrpc.dylib.1.4 libkopenafs.dylib libkopenafs.dylib.1 libkopenafs.dylib.1.1 librokenafs.dylib librokenafs.dylib.1 librokenafs.dylib.1.1"
 
 # Should these be linked into /usr too?
     OTHER_BINLIST="bos cmdebug rxgen translate_et udebug xstat_cm_test xstat_fs_test"
@@ -189,6 +190,9 @@ if [ $firstpass = yes ]; then
     done
     for f in $ETCLIST; do
        ln -s ../../Library/OpenAFS/Tools/etc/$f $PKGROOT/usr/sbin/$f
+    done
+    for f in $SHLIBLIST; do
+       ln -s ../../Library/OpenAFS/Tools/lib/$f $PKGROOT/usr/lib/$f
     done
     for f in `ls $PKGROOT/Library/OpenAFS/Tools/man/man1`; do
 	gzip -9 $PKGROOT/Library/OpenAFS/Tools/man/man1/$f

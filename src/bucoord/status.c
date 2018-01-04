@@ -9,20 +9,15 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/time.h>
-#endif
+
+#include <roken.h>
+
+#include <afs/cmd.h>
+#include <afs/opr.h>
 #include <afs/com_err.h>
 #include <afs/bubasics.h>
+
 #include "bc.h"
 #include "error_macros.h"
 #include "bucoord_internal.h"
@@ -93,11 +88,10 @@ createStatusNode(void)
 {
     statusP ptr;
 
-    ptr = (statusP) malloc(sizeof(*ptr));
+    ptr = calloc(1, sizeof(*ptr));
     if (ptr == 0) {
 	return (0);
     }
-    memset(ptr, 0, sizeof(*ptr));
 
     /* link it onto the chain of status entries */
     ObtainWriteLock(&statusQueueLock);

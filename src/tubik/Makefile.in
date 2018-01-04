@@ -5,273 +5,95 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-srcdir=@srcdir@/../ubik
+srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+
 HELPER_SPLINT=@HELPER_SPLINT@
+ENABLE_PTHREADED_UBIK=@ENABLE_PTHREADED_UBIK@
 
-CCRULE=${MT_CC} ${CFLAGS} ${MT_CFLAGS} -c $?
-
-RX=../rx
-UTIL=../util
-
-LIBOBJS=disk.o  remote.o beacon.o recovery.o ubik.o  vote.o lock.o phys.o \
-	ubik_int.cs.o ubik_int.ss.o ubik_int.xdr.o ubikcmd.o \
-	ubikclient.o uerrors.o uinit.o
+UBIK=$(srcdir)/../ubik
 
 INCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/lock.h \
 	${TOP_INCDIR}/rx/rx.h ${TOP_INCDIR}/rx/xdr.h \
 	${TOP_INCDIR}/lock.h ubik.h ubik_int.h utst_int.h
 
-RXOBJS = rx_pthread.o
+LTLIBS=@TOP_OBJDIR@/src/util/liboafs_util.la \
+       @TOP_OBJDIR@/src/ubik/liboafs_ubik.la \
+       @TOP_OBJDIR@/src/cmd/liboafs_cmd.la
 
-UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o \
-       volparse.o flipbase64.o softsig.o hostparse.o snprintf.o \
-       pthread_glock.o strlcat.o strlcpy.o strnlen.o
-
-LIBS=${RXOBJS} ${UTILOBJS} ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/liblwp.a \
-     ${TOP_LIBDIR}/libafscom_err.a ${TOP_LIBDIR}/libcmd.a \
-     ${TOP_LIBDIR}/libsys.a ${XLIBS} \
-     ${LDFLAGS} ${MT_LIBS}
-
-all: depinstall ${TOP_LIBDIR}/libubik_pthread.a udebug utst_server utst_client
-
-depinstall: \
-	ubik_int.cs.c ubik_int.xdr.c
-
-#
-# get the pthreaded rx stuff compiled here
-#
-
-rx_pthread.o: ${RX}/rx_pthread.c
-	${CCRULE} -DDPF_FSLOG
-
-#
-# get the pthreaded util stuff compiled here.  we do this instead of
-# using the non-pthreaded libutil.a.  There probably should be a
-# pthreaded version of this library, as we are doing with ubik itself, but...
-#
-
-assert.o: ${UTIL}/assert.c
-	${CCRULE}
-
-uuid.o: ${UTIL}/uuid.c
-	${CCRULE}
-
-serverLog.o: ${UTIL}/serverLog.c
-	${CCRULE}
-
-fileutil.o: ${UTIL}/fileutil.c
-	${CCRULE}
-
-volparse.o: ${UTIL}/volparse.c
-	${CCRULE}
-
-strlcat.o: ${UTIL}/strlcat.c
-	${CCRULE}
-
-strlcpy.o: ${UTIL}/strlcpy.c
-	${CCRULE}
-
-strnlen.o: ${UTIL}/strnlen.c
-	${CCRULE}
-
-flipbase64.o: ${UTIL}/flipbase64.c
-	${CCRULE}
-
-netutils.o: ${UTIL}/netutils.c
-	${CCRULE}
-
-dirpath.o: ${UTIL}/dirpath.c
-	${CCRULE}
-
-softsig.o: ${UTIL}/softsig.c
-	${CCRULE}
-
-hostparse.o: ${UTIL}/hostparse.c
-	${CCRULE}
-
-snprintf.o: ${UTIL}/snprintf.c
-	${CCRULE}
-
-pthread_glock.o: ${UTIL}/pthread_glock.c
-	${CCRULE}
-
+all: udebug utst_server utst_client
 
 #
 # insert comments here
 #
 
-utst_server: utst_server.o utst_int.ss.o utst_int.xdr.o libubik_pthread.a ${RXOBJS} ${UTILOBJS}
-	${CC} ${CFLAGS} -o utst_server utst_server.o utst_int.ss.o utst_int.xdr.o libubik_pthread.a $(LIBS)
-
-utst_client: utst_client.o utst_int.cs.o utst_int.xdr.o libubik_pthread.a ${RXOBJS} ${UTILOBJS}
-	${CC} ${CFLAGS} -o utst_client utst_client.o utst_int.cs.o utst_int.xdr.o libubik_pthread.a $(LIBS)
-
-udebug: udebug.o libubik_pthread.a ${RXOBJS} ${UTILOBJS}
-	${CC} ${CFLAGS} -o udebug udebug.o libubik_pthread.a $(LIBS)
-
-ubik_int.cs.c: ${srcdir}/ubik_int.xg
-	${RXGEN} -A -x -C -o $@ ${srcdir}/ubik_int.xg
-
-ubik_int.ss.c: ${srcdir}/ubik_int.xg
-	${RXGEN} -A -x -S -o $@ ${srcdir}/ubik_int.xg
-
-ubik_int.xdr.c: ${srcdir}/ubik_int.xg
-	${RXGEN} -A -x -c -o $@ ${srcdir}/ubik_int.xg
-
-ubik_int.h: ${srcdir}/ubik_int.xg
-	${RXGEN} -A -x -h -o $@ ${srcdir}/ubik_int.xg
-
-ubik_int.cs.c: ubik_int.h
-ubik_int.ss.c: ubik_int.h
-ubik_int.xdr.c: ubik_int.h
-
-Kubik_int.cs.c: ${srcdir}/ubik_int.xg Kubik_int.h
-	${RXGEN} -A -x -k -C -o Kubik_int.cs.c ${srcdir}/ubik_int.xg
- 
-Kubik_int.xdr.c: ${srcdir}/ubik_int.xg
-	${RXGEN} -A -x -k -c -o Kubik_int.xdr.c ${srcdir}/ubik_int.xg
- 
-Kubik_int.h: ${srcdir}/ubik_int.xg
-	${RXGEN} -A -x -k -h -o Kubik_int.h ${srcdir}/ubik_int.xg
-
 utst_int.ss.o: utst_int.ss.c
-	${CCRULE}
-
 utst_int.cs.o: utst_int.cs.c
-	${CCRULE}
-
 utst_int.xdr.o: utst_int.xdr.c
-	${CCRULE}
 
-utst_int.cs.c: ${srcdir}/utst_int.xg
-	${RXGEN} -A -C -u -o $@ ${srcdir}/utst_int.xg
+utst_int.cs.c: ${UBIK}/utst_int.xg
+	${RXGEN} -A -C -u -o $@ ${UBIK}/utst_int.xg
 
-utst_int.ss.c: ${srcdir}/utst_int.xg
-	${RXGEN} -A -S -o $@ ${srcdir}/utst_int.xg
+utst_int.ss.c: ${UBIK}/utst_int.xg
+	${RXGEN} -A -S -o $@ ${UBIK}/utst_int.xg
 
-utst_int.xdr.c: ${srcdir}/utst_int.xg
-	${RXGEN} -A -c -o $@ ${srcdir}/utst_int.xg
+utst_int.xdr.c: ${UBIK}/utst_int.xg
+	${RXGEN} -A -c -o $@ ${UBIK}/utst_int.xg
 
-utst_int.h: ${srcdir}/utst_int.xg
-	${RXGEN} -A -h -u -o $@ ${srcdir}/utst_int.xg
+utst_int.h: ${UBIK}/utst_int.xg
+	${RXGEN} -A -h -u -o $@ ${UBIK}/utst_int.xg
 
 utst_int.cs.c: utst_int.h
 utst_int.ss.c: utst_int.h
 utst_int.xdr.c: utst_int.h
 
-utst_server.o: ${srcdir}/utst_server.c
-	${CCRULE}
+utst_server.o: ${UBIK}/utst_server.c utst_int.h
+	${AFS_CCRULE} ${UBIK}/utst_server.c
 
-utst_client.o: ${srcdir}/utst_client.c
-	${CCRULE}
+utst_client.o: ${UBIK}/utst_client.c utst_int.h
+	${AFS_CCRULE} ${UBIK}/utst_client.c
 
-udebug.o: ${srcdir}/udebug.c
-	${CCRULE}
+utst_server: utst_server.o utst_int.ss.o utst_int.xdr.o $(LTLIBS)
+	$(LT_LDRULE_static) utst_server.o utst_int.ss.o utst_int.xdr.o \
+		$(LTLIBS) $(LIBS) $(LIB_hcrypto) $(LIB_roken)
 
-uerrors.o: uerrors.c
-	${CCRULE}
+utst_client: utst_client.o utst_int.cs.o utst_int.xdr.o $(LTLIBS)
+	$(LT_LDRULE_static) utst_client.o utst_int.cs.o utst_int.xdr.o \
+		$(LTLIBS) $(LIBS) $(LIB_hcrypto) $(LIB_roken)
 
-uerrors.c ubik.h: ${srcdir}/uerrors.et ${srcdir}/ubik.p.h
-	$(RM) -f ubik.h uerrors.c
-	${COMPILE_ET} -p ${srcdir} uerrors -h ubik
+udebug.o: ${UBIK}/udebug.c
+	${AFS_CCRULE} ${UBIK}/udebug.c
 
-libubik_pthread.a: ${INCLS} ${LIBOBJS} AFS_component_version_number.o
-	-$(RM) -f $@
-	$(AR) crc $@ ${LIBOBJS} AFS_component_version_number.o
-	$(RANLIB) $@
-
-disk.o: ${srcdir}/disk.c
-	${CCRULE}
-
-uinit.o: ${srcdir}/uinit.c
-	${CCRULE}
-
-remote.o: ${srcdir}/remote.c
-	${CCRULE}
-
-beacon.o: ${srcdir}/beacon.c
-	${CCRULE}
-
-lock.o: ${srcdir}/lock.c
-	${CCRULE}
-
-recovery.o: ${srcdir}/recovery.c
-	${CCRULE}
-
-ubik.o: ${srcdir}/ubik.c
-	${CCRULE}
-
-phys.o: ${srcdir}/phys.c
-	${CCRULE}
-
-vote.o: ${srcdir}/vote.c
-	${CCRULE}
-
-ubikcmd.o: ${srcdir}/ubikcmd.c
-	${CCRULE}
-
-ubikclient.o: ${srcdir}/ubikclient.c
-	${CCRULE}
-
-ubik_int.ss.o: ubik_int.ss.c
-	${CCRULE}
-
-ubik_int.cs.o: ubik_int.cs.c
-	${CCRULE}
-
-ubik_int.xdr.o: ubik_int.xdr.c
-	${CCRULE}
+udebug: udebug.o $(LTLIBS)
+	$(LT_LDRULE_static) udebug.o \
+		$(LTLIBS) $(LIBS) $(LIB_hcrypto) $(LIB_roken)
 
 #
 # Installation targets
 #
 test: all
 
-install: ${DESTDIR}${libdir}/libubik_pthread.a udebug
-	${INSTALL} udebug ${DESTDIR}${bindir}/udebug
-	${INSTALL} udebug ${DESTDIR}${afssrvbindir}/udebug
+install: udebug
+	${INSTALL} -d ${DESTDIR}${bindir}
+	${INSTALL} -d ${DESTDIR}${afssrvbindir}
+	if [ "x$(ENABLE_PTHREADED_UBIK)" = "xyes" ] ; then                 \
+	    $(LT_INSTALL_PROGRAM) udebug ${DESTDIR}${bindir}/udebug;          \
+	    $(LT_INSTALL_PROGRAM) udebug ${DESTDIR}${afssrvbindir}/udebug;    \
+	fi
 
-${DEST}/bin/udebug ${DEST}/root.server/usr/afs/bin/udebug: udebug
-	${INSTALL} $? $@
-
-${DEST}/lib/libubik_pthread.a: libubik_pthread.a
-	${INSTALL} $? $@
-
-${DEST}/include/ubik.h: ubik.h
-	${INSTALL} $? $@
-
-${DEST}/include/ubik_int.h: ubik_int.h
-	${INSTALL} $? $@
-
+dest: udebug
+	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
+	if [ "x$(ENABLE_PTHREADED_UBIK)" = "xyes" ] ; then                    \
+	    ${INSTALL_PROGRAM} udebug ${DEST}/bin/udebug;		      \
+	    ${INSTALL_PROGRAM} udebug ${DEST}/root.server/usr/afs/bin/udebug; \
+	fi
 #
 # Misc. targets
 #
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o utst_server utst_client udebug *.a *.cs.c *.ss.c *.xdr.c
-	$(RM) -f utst_int.h ubik_int.h uerrors.c ubik.h core AFS_component_version_number.c Kubik_int.h
+	$(RM) -f utst_int.h core AFS_component_version_number.c
 
 include ../config/Makefile.version
-
-
-${DESTDIR}${libdir}/libubik_pthread.a: libubik_pthread.a
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/libubik_pthread.a: libubik_pthread.a
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/ubik.h: ubik.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/ubik_int.h: ubik_int.h
-	${INSTALL} $? $@
-
-dest: \
-	${DEST}/lib/libubik_pthread.a \
-	${DEST}/bin/udebug \
-	${DEST}/root.server/usr/afs/bin/udebug
-

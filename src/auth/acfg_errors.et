@@ -19,4 +19,6 @@ error_table ACFG
   ec AFSCONF_FULL, "no more entries"
   ec AFSCONF_NOCELLDB, "unable to open cell database"
   ec AFSCONF_NO_SECURITY_CLASS, "unable to build security class"
+  ec AFSCONF_BADKEY, "key doesn't meet requirements"
+  ec AFSCONF_NOCELLNAME, "cannot determine local cell name"
 end

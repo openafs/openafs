@@ -17,27 +17,21 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include <ctype.h>
-#include <errno.h>
-#include <sys/stat.h>
-#include <stdio.h>
-#include <string.h>
-#ifdef AFS_NT40_ENV
-#include <fcntl.h>
-#include <time.h>
-#include <io.h>
-#else
-#include <sys/param.h>
+
+#ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
-#include <sys/time.h>
 #endif
+
 #include <afs/cmd.h>
 #include <afs/dir.h>
 #include <afs/afsint.h>
 #include <afs/errors.h>
 #include <afs/acl.h>
 #include <afs/prs_fs.h>
+#include <rx/rx_queue.h>
 
 #include "nfs.h"
 #include "lock.h"
@@ -45,31 +39,15 @@
 #include "vnode.h"
 #include "volume.h"
 #include "partition.h"
+#include "salvage.h"
 #include "daemon_com_inline.h"
 #include "fssync_inline.h"
 #include "vol-info.h"
 
-#ifdef _AIX
-#include <time.h>
-#endif
-
-#include <dirent.h>
-
-#ifdef O_LARGEFILE
-#define afs_stat	stat64
-#define afs_fstat	fstat64
-#define afs_open	open64
-#else /* !O_LARGEFILE */
-#define afs_stat	stat
-#define afs_fstat	fstat
-#define afs_open	open
-#endif /* !O_LARGEFILE */
-
-#include "salvage.h"
-
 static int volinfo_init = 0;
 static const char *progname = "";
 static const char *PLACEHOLDER = "-";
+
 
 /* Numeric column type ids */
 typedef enum columnType {
@@ -150,11 +128,11 @@ static int PrintingVolumeSizes = 0;	/*print volume size lines */
  * List of procedures to call when scanning vnodes.
  */
 struct VnodeScanProc {
-    struct rx_queue link;
+    struct opr_queue link;
     const char *heading;
     void (*proc) (struct VolInfoOpt *opt, struct VnodeDetails * vdp);
 };
-static struct rx_queue VnodeScanLists[nVNODECLASSES];
+static struct opr_queue VnodeScanLists[nVNODECLASSES];
 
 /* Forward Declarations */
 static void PrintHeader(Volume * vp);
@@ -196,8 +174,8 @@ date(time_t date)
     char buf[32];
 
     (void)strftime(buf, 32, "%Y/%m/%d.%H:%M:%S", tm);	/* NT does not have %T */
-    (void)afs_snprintf(results[next = (next + 1) & 7], MAX_DATE_RESULT,
-		       "%lu (%s)", (unsigned long)date, buf);
+    snprintf(results[next = (next + 1) & 7], MAX_DATE_RESULT,
+	     "%lu (%s)", (unsigned long)date, buf);
     return results[next];
 }
 
@@ -294,8 +272,8 @@ PrintVolumeSizes(Volume * vp)
     afs_int64 diff_k = volumeTotals.size_k - volumeTotals.diskused_k;
 
     PrintVolumeSizeHeading();
-    printf("%u\t%9llu%9llu%10llu%10llu%9lld\t%24s\n",
-	   V_id(vp),
+    printf("%" AFS_VOLID_FMT "\t%9llu%9llu%10llu%10llu%9lld\t%24s\n",
+	   afs_printable_VolumeId_lu(V_id(vp)),
 	   volumeTotals.diskused_k,
 	   volumeTotals.auxsize_k, volumeTotals.vnodesize_k,
 	   volumeTotals.size_k, diff_k, V_name(vp));
@@ -451,7 +429,7 @@ AttachVolume(struct VolInfoOpt *opt, struct DiskPartition64 *dp,
     vp->shuttingDown = 0;
     vp->goingOffline = 0;
     vp->nUsers = 1;
-    vp->header = (struct volHeader *)calloc(1, sizeof(*vp->header));
+    vp->header = calloc(1, sizeof(*vp->header));
     if (!vp->header) {
 	fprintf(stderr, "%s: Failed to allocate volume header.\n", progname);
 	free(vp);
@@ -648,8 +626,8 @@ volinfo_ScanPartitions(struct VolInfoOpt *opt, char *partNameOrId, VolumeId volu
 		goto cleanup;
 	    }
 	}
-	(void)afs_snprintf(name1, sizeof name1, VFORMAT,
-		 afs_printable_uint32_lu(volumeId));
+	snprintf(name1, sizeof name1, VFORMAT,
+		 afs_printable_VolumeId_lu(volumeId));
 	if (opt->printHeading) {
 	    PrintColumnHeading(opt);
 	}
@@ -680,7 +658,7 @@ volinfo_AddVnodeHandler(int vnodeClass,
     struct VnodeScanProc *entry = malloc(sizeof(struct VnodeScanProc));
     entry->proc = proc;
     entry->heading = heading;
-    queue_Append(&VnodeScanLists[vnodeClass], (struct rx_queue *)entry);
+    opr_queue_Append(&VnodeScanLists[vnodeClass], (struct opr_queue *)entry);
 }
 
 /**
@@ -700,8 +678,8 @@ volinfo_Init(const char *aprogname)
 	DInit(1024);
 	VInitVnodes(vLarge, 0);
 	VInitVnodes(vSmall, 0);
-	queue_Init(&VnodeScanLists[vLarge]);
-	queue_Init(&VnodeScanLists[vSmall]);
+	opr_queue_Init(&VnodeScanLists[vLarge]);
+	opr_queue_Init(&VnodeScanLists[vSmall]);
         volinfo_init = 1;
     }
     return 0;
@@ -766,6 +744,7 @@ volinfo_AddOutputColumn(char *name)
     }
     return 2;
 }
+
 
 /**
  * Determine if the current directory is a vice partition
@@ -892,11 +871,11 @@ HandlePart(struct VolInfoOpt *opt, struct DiskPartition64 *partP)
 /**
  * Inspect a volume header special file.
  *
- * @param[in]  name       descriptive name of the type of header special file
- * @param[in]  dp         partition object for this volume
- * @param[in]  header     header object for this volume
- * @param[in]  inode      fileserver inode number for this header special file
- * @param[out] psize      total of the header special file
+ * @param[in]    name       descriptive name of the type of header special file
+ * @param[in]    dp         partition object for this volume
+ * @param[in]    header     header object for this volume
+ * @param[in]    inode      fileserver inode number for this header special file
+ * @param[inout] psize      total of the header special file sizes
  *
  * @return none
  */
@@ -916,16 +895,16 @@ HandleSpecialFile(struct VolInfoOpt *opt, const char *name, struct DiskPartition
     fdP = IH_OPEN(ih);
     if (fdP == NULL) {
 	fprintf(stderr,
-		"%s: Error opening header file '%s' for volume %u\n", progname,
-		name, header->id);
+		"%s: Error opening header file '%s' for volume %" AFS_VOLID_FMT "\n", progname,
+		name, afs_printable_VolumeId_lu(header->id));
 	perror("open");
 	goto error;
     }
     size = FDH_SIZE(fdP);
     if (size == -1) {
 	fprintf(stderr,
-		"%s: Error getting size of header file '%s' for volume %u\n",
-		progname, name, header->id);
+		"%s: Error getting size of header file '%s' for volume %" AFS_VOLID_FMT "\n",
+		progname, name, afs_printable_VolumeId_lu(header->id));
 	perror("fstat");
 	goto error;
     }
@@ -959,7 +938,6 @@ HandleSpecialFile(struct VolInfoOpt *opt, const char *name, struct DiskPartition
  * @param[in]  dp         partition object for this volume
  * @param[in]  header_fd  volume header file descriptor
  * @param[in]  header     volume header object
- * @param[out] psize      total of the header special file
  *
  * @return none
  */
@@ -973,8 +951,8 @@ HandleHeaderFiles(struct VolInfoOpt *opt, struct DiskPartition64 *dp, FD_t heade
 	size = OS_SIZE(header_fd);
 	printf("Volume header (size = %lld):\n", size);
 	printf("\tstamp\t= 0x%x\n", header->stamp.version);
-	printf("\tVolId\t= %u\n", header->id);
-	printf("\tparent\t= %u\n", header->parent);
+	printf("\tVolId\t= %" AFS_VOLID_FMT "\n", afs_printable_VolumeId_lu(header->id));
+	printf("\tparent\t= %" AFS_VOLID_FMT "\n", afs_printable_VolumeId_lu(header->parent));
     }
 
     HandleSpecialFile(opt, "Info", dp, header, header->volumeInfo, &size);
@@ -1006,8 +984,8 @@ HandleHeaderFiles(struct VolInfoOpt *opt, struct DiskPartition64 *dp, FD_t heade
 static int
 IsScannable(struct VolInfoOpt *opt, Volume * vp)
 {
-    if (queue_IsEmpty(&VnodeScanLists[vLarge]) &&
-	queue_IsEmpty(&VnodeScanLists[vSmall])) {
+    if (opr_queue_IsEmpty(&VnodeScanLists[vLarge]) &&
+	opr_queue_IsEmpty(&VnodeScanLists[vSmall])) {
 	return 0;
     }
     if (!opt->scanVolType) {
@@ -1021,8 +999,8 @@ IsScannable(struct VolInfoOpt *opt, Volume * vp)
     case BACKVOL:
 	return opt->scanVolType & SCAN_BK;
     default:
-	fprintf(stderr, "%s: Volume %u; Unknown volume type %d\n", progname,
-		V_id(vp), V_type(vp));
+	fprintf(stderr, "%s: Volume %" AFS_VOLID_FMT "; Unknown volume type %d\n", progname,
+		afs_printable_VolumeId_lu(V_id(vp)), V_type(vp));
 	break;
     }
     return 0;
@@ -1044,24 +1022,22 @@ HandleVolume(struct VolInfoOpt *opt, struct DiskPartition64 *dp, char *name)
 {
     struct VolumeHeader header;
     struct VolumeDiskHeader diskHeader;
-    struct afs_stat status;
-    int fd = -1;
+    FD_t fd = INVALID_FD;
     Volume *vp = NULL;
     char headerName[1024];
     afs_sfsize_t n;
 
-    (void)afs_snprintf(headerName, sizeof headerName, "%s" OS_DIRSEP "%s",
-		       VPartitionPath(dp), name);
-    if ((fd = afs_open(headerName, O_RDONLY)) == -1) {
+    snprintf(headerName, sizeof headerName, "%s" OS_DIRSEP "%s",
+	     VPartitionPath(dp), name);
+    if ((fd = OS_OPEN(headerName, O_RDONLY, 0666)) == INVALID_FD) {
 	fprintf(stderr, "%s: Cannot open volume header %s\n", progname, name);
 	goto cleanup;
     }
-
-    if (afs_fstat(fd, &status) == -1) {
+    if (OS_SIZE(fd) < 0) {
 	fprintf(stderr, "%s: Cannot read volume header %s\n", progname, name);
 	goto cleanup;
     }
-    n = read(fd, &diskHeader, sizeof(diskHeader));
+    n = OS_READ(fd, &diskHeader, sizeof(diskHeader));
     if (n != sizeof(diskHeader)
 	|| diskHeader.stamp.magic != VOLUMEHEADERMAGIC) {
 	fprintf(stderr, "%s: Error reading volume header %s\n", progname,
@@ -1119,8 +1095,8 @@ HandleVolume(struct VolInfoOpt *opt, struct DiskPartition64 *dp, char *name)
     }
 
   cleanup:
-    if (fd != -1) {
-	close(fd);
+    if (fd != INVALID_FD) {
+	OS_CLOSE(fd);
     }
     if (vp) {
 	DetachVolume(opt, vp);
@@ -1168,7 +1144,7 @@ volumeTypeShortString(int type)
 static void
 PrintHeader(Volume * vp)
 {
-    printf("Volume header for volume %u (%s)\n", V_id(vp), V_name(vp));
+    printf("Volume header for volume %" AFS_VOLID_FMT " (%s)\n", afs_printable_VolumeId_lu(V_id(vp)), V_name(vp));
     printf("stamp.magic = %x, stamp.version = %u\n", V_stamp(vp).magic,
 	   V_stamp(vp).version);
     printf
@@ -1180,9 +1156,8 @@ PrintHeader(Volume * vp)
 	 V_type(vp), volumeTypeString(V_type(vp)), V_uniquifier(vp),
 	 V_needsCallback(vp), V_destroyMe(vp));
     printf
-	("id = %u, parentId = %u, cloneId = %u, backupId = %u, restoredFromId = %u\n",
-	 V_id(vp), V_parentId(vp), V_cloneId(vp), V_backupId(vp),
-	 V_restoredFromId(vp));
+	("id = %" AFS_VOLID_FMT ", parentId = %" AFS_VOLID_FMT ", cloneId = %" AFS_VOLID_FMT ", backupId = %" AFS_VOLID_FMT ", restoredFromId = %" AFS_VOLID_FMT "\n",
+	 afs_printable_VolumeId_lu(V_id(vp)), afs_printable_VolumeId_lu(V_parentId(vp)), afs_printable_VolumeId_lu(V_cloneId(vp)), afs_printable_VolumeId_lu(V_backupId(vp)), afs_printable_VolumeId_lu(V_restoredFromId(vp)));
     printf
 	("maxquota = %d, minquota = %d, maxfiles = %d, filecount = %d, diskused = %d\n",
 	 V_maxquota(vp), V_minquota(vp), V_maxfiles(vp), V_filecount(vp),
@@ -1200,7 +1175,7 @@ PrintHeader(Volume * vp)
 	 V_dayUse(vp), V_weekUse(vp)[0], V_weekUse(vp)[1], V_weekUse(vp)[2],
 	 V_weekUse(vp)[3], V_weekUse(vp)[4], V_weekUse(vp)[5],
 	 V_weekUse(vp)[6], date(V_dayUseDate(vp)));
-    printf("volUpdateCounter = %u\n", V_volUpCounter(vp));
+    printf("volUpdateCounter = %u\n", V_volUpdateCounter(vp));
 }
 
 /**
@@ -1236,7 +1211,7 @@ GetFileInfo(FD_t fd, afs_sfsize_t * size, char **ctime, char **mtime,
     *mtime = NT_date(&fi.ftLastWriteTime);
     *atime = NT_date(&fi.ftLastAccessTime);
 #else
-    struct afs_stat status;
+    struct afs_stat_st status;
     if (afs_fstat(fd, &status) == -1) {
 	fprintf(stderr, "%s: fstat failed %d\n", progname, errno);
 	return -1;
@@ -1279,7 +1254,7 @@ volinfo_SaveInode(struct VolInfoOpt *opt, struct VnodeDetails *vdp)
 		progname, PrintInode(NULL, ino), errno);
 	return;
     }
-    (void)afs_snprintf(nfile, sizeof nfile, "TmpInode.%s", PrintInode(NULL, ino));
+    snprintf(nfile, sizeof nfile, "TmpInode.%s", PrintInode(NULL, ino));
     ofd = afs_open(nfile, O_CREAT | O_RDWR | O_TRUNC, 0600);
     if (ofd < 0) {
 	fprintf(stderr,
@@ -1356,15 +1331,7 @@ GetDirVnode(struct VolInfoOpt *opt, Volume * vp, VnodeId parent, VnodeDiskObject
 		afs_printable_uint32_lu(V_id(vp)));
     }
     offset = vnodeIndexOffset(&VnodeClassInfo[vLarge], parent);
-    code = FDH_SEEK(DirIndexFd, offset, 0);
-    if (code == -1) {
-	fprintf(stderr,
-		"%s: GetDirVnode: seek failed for %lu.%lu to offset %llu\n",
-		progname, afs_printable_uint32_lu(V_id(vp)),
-		afs_printable_uint32_lu(parent), (long long unsigned)offset);
-	return -1;
-    }
-    code = FDH_READ(DirIndexFd, pvn, SIZEOF_LARGEDISKVNODE);
+    code = FDH_PREAD(DirIndexFd, pvn, SIZEOF_LARGEDISKVNODE, offset);
     if (code != SIZEOF_LARGEDISKVNODE) {
 	fprintf(stderr,
 		"%s: GetDirVnode: read failed for %lu.%lu at offset %llu\n",
@@ -1418,7 +1385,7 @@ GetDirEntry(Volume * vp, VnodeDiskObject * pvnode, VnodeId cvnid,
     }
     SetSalvageDirHandle(&dir, V_parentId(vp), V_device(vp), ino,
 			&volumeChanged);
-    code = InverseLookup(&dir, cvnid, cuniq, dirent, dirent_len);
+    code = afs_dir_InverseLookup(&dir, cvnid, cuniq, dirent, dirent_len);
     if (code) {
 	fprintf(stderr, "%s: afs_dir_InverseLookup failed with code %d\n",
 		progname, code);
@@ -1573,11 +1540,7 @@ ReadSymlinkTarget(struct VnodeDetails *vdp)
 	code = -1;
 	goto cleanup;
     }
-    if (FDH_SEEK(fdP, 0, SEEK_SET) < 0) {
-	code = -1;
-	goto cleanup;
-    }
-    readLength = FDH_READ(fdP, buffer, fileLength);
+    readLength = FDH_PREAD(fdP, buffer, fileLength, 0);
     if (readLength < 0) {
 	fprintf(stderr,
 		"%s: Error reading symlink contents for fid (%lu.%lu.%lu.%lu); "
@@ -1756,15 +1719,15 @@ HandleVnodes(struct VolInfoOpt *opt, Volume * vp, VnodeClass class)
     FdHandle_t *fdP = NULL;
     afs_sfsize_t size;
     char *ctime, *atime, *mtime;
-    struct rx_queue *scanList = &VnodeScanLists[class];
-    struct VnodeScanProc *entry;
-    struct VnodeScanProc *next;
+    struct opr_queue *scanList = &VnodeScanLists[class];
+    struct opr_queue *cursor;
 
-    if (queue_IsEmpty(scanList)) {
+    if (opr_queue_IsEmpty(scanList)) {
 	return;
     }
 
-    for (queue_Scan(scanList, entry, next, VnodeScanProc)) {
+    for (opr_queue_Scan(scanList, cursor)) {
+	struct VnodeScanProc *entry = (struct VnodeScanProc *)cursor;
 	if (entry->heading) {
 	    printf("%s", entry->heading);
 	}
@@ -1814,7 +1777,8 @@ HandleVnodes(struct VolInfoOpt *opt, Volume * vp, VnodeClass class)
 	vnodeDetails.offset = offset;
 	vnodeDetails.index = vnodeIndex;
 
-        for (queue_Scan(scanList, entry, next, VnodeScanProc)) {
+	for (opr_queue_Scan(scanList, cursor)) {
+	    struct VnodeScanProc *entry = (struct VnodeScanProc *)cursor;
 	    if (entry->proc) {
 		(*entry->proc) (opt, &vnodeDetails);
 	    }

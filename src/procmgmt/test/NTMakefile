@@ -22,4 +22,4 @@ $(OUT)\pmgttest.exe: $(OUT)\pmgttest.obj $(PMGTTEST_EXELIBS)
         $(SYMSTORE_IMPORT)
 
 mkdir:
-	
+

@@ -36,12 +36,10 @@
 #include "afs/afs_util.h"
 #include "afs/unified_afs.h"
 
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
 #include <inet/led.h>
 #include <inet/common.h>
-#if     defined(AFS_SUN58_ENV)
 #include <netinet/ip6.h>
-#endif
 #include <inet/ip.h>
 #endif
 
@@ -278,7 +276,7 @@ afs_CheckCode(afs_int32 acode, struct vrequest *areq, int where)
     if (areq->volumeError == VOLBUSY)
 	return EWOULDBLOCK;
     if (acode == VNOVNODE)
-	return ENOENT;
+	return EIO;
     if (acode == VDISKFULL)
 	return ENOSPC;
     if (acode == VOVERQUOTA)

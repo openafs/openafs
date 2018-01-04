@@ -48,8 +48,8 @@ such damages.
 #include "afs/afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
 
+#if !defined(AFS_NBSD50_ENV)
 static char waitV;
-
 
 /* cancel osi_Wait */
 void
@@ -74,13 +74,13 @@ afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
 {
     int timo, code = 0;
     struct timeval atv, time_now, endTime;
+    const struct timeval timezero = { 0, 0 };
 
     AFS_STATCNT(osi_Wait);
 
     atv.tv_sec = ams / 1000;
     atv.tv_usec = (ams % 1000) * 1000;
-    time_now.tv_sec = time_second;
-    time_now.tv_usec = 0;
+    getmicrouptime(&time_now);
     timeradd(&atv, &time_now, &endTime);
 
     if (ahandle)
@@ -89,18 +89,19 @@ afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
     AFS_GUNLOCK();
 
     do {
-
-	time_now.tv_sec = time_second;
-	time_now.tv_usec = 0;
-
 	timersub(&endTime, &time_now, &atv);
-	timo = atv.tv_sec * hz + atv.tv_usec * hz / 1000000 + 1;
+	if (timercmp(&atv, &timezero, <))
+	    break;
+	timo = tvtohz(&atv);
 	if (aintok) {
 	    code = tsleep(&waitV, PCATCH | PVFS, "afs_W1", timo);
-	    if (code)
-		code = (code == EWOULDBLOCK) ? 0 : EINTR;
-	} else
-	    tsleep(&waitV, PVFS, "afs_W2", timo);
+	} else {
+	    code = tsleep(&waitV, PVFS, "afs_W2", timo);
+	}
+	if (code)
+	    code = (code == EWOULDBLOCK) ? 0 : EINTR;
+
+        getmicrouptime(&time_now);
 
 	/* if we were cancelled, quit now */
 	if (ahandle && (ahandle->proc == NULL)) {
@@ -110,6 +111,7 @@ afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
     } while (timercmp(&time_now, &endTime, <));
 
     AFS_GLOCK();
+
     return code;
 }
 
@@ -135,3 +137,192 @@ afs_osi_Wakeup(void *event)
     wakeup(event);
     return 1;
 }
+#else
+static char waitV;
+
+void
+afs_osi_InitWaitHandle(struct afs_osi_WaitHandle *achandle)
+{
+    AFS_STATCNT(osi_InitWaitHandle);
+    achandle->proc = (caddr_t) 0;
+}
+
+/* cancel osi_Wait */
+void
+afs_osi_CancelWait(struct afs_osi_WaitHandle *achandle)
+{
+    caddr_t proc;
+
+    AFS_STATCNT(osi_CancelWait);
+    proc = achandle->proc;
+    if (proc == 0)
+	return;
+    achandle->proc = (caddr_t) 0;	/* so dude can figure out he was signalled */
+    afs_osi_Wakeup(&waitV);
+}
+
+/* afs_osi_Wait
+ * Waits for data on ahandle, or ams ms later.  ahandle may be null.
+ * Returns 0 if timeout and EINTR if signalled.
+ */
+int
+afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
+{
+    int code;
+    afs_int32 endTime;
+
+    AFS_STATCNT(osi_Wait);
+    endTime = osi_Time() + (ams / 1000);
+    if (ahandle)
+	ahandle->proc = (caddr_t) osi_curproc();
+    do {
+	AFS_ASSERT_GLOCK();
+	code = afs_osi_TimedSleep(&waitV, ams, aintok);
+
+	if (code)
+	    break;		/* if something happened, quit now */
+	/* if we we're cancelled, quit now */
+	if (ahandle && (ahandle->proc == (caddr_t) 0)) {
+	    /* we've been signalled */
+	    break;
+	}
+    } while (osi_Time() < endTime);
+    return code;
+}
+
+
+
+
+afs_event_t *afs_evhasht[AFS_EVHASHSIZE];	/* Hash table for events */
+#define afs_evhash(event)	(afs_uint32) ((((long)event)>>2) & (AFS_EVHASHSIZE-1))
+int afs_evhashcnt = 0;
+
+/* Get and initialize event structure corresponding to lwp event (i.e. address)
+ * */
+static afs_event_t *
+afs_getevent(char *event)
+{
+    afs_event_t *evp, *newp = 0;
+    int hashcode;
+
+    AFS_ASSERT_GLOCK();
+    hashcode = afs_evhash(event);
+    evp = afs_evhasht[hashcode];
+    while (evp) {
+	if (evp->event == event) {
+	    evp->refcount++;
+	    return evp;
+	}
+	if (evp->refcount == 0)
+	    newp = evp;
+	evp = evp->next;
+    }
+    if (!newp) {
+	newp = osi_AllocSmallSpace(sizeof(afs_event_t));
+	afs_evhashcnt++;
+	newp->next = afs_evhasht[hashcode];
+	afs_evhasht[hashcode] = newp;
+	cv_init(&newp->cond, "afsevent");
+	newp->seq = 0;
+    }
+    newp->event = event;
+    newp->refcount = 1;
+    return newp;
+}
+
+/* Release the specified event */
+#define relevent(evp) ((evp)->refcount--)
+
+
+void
+afs_osi_Sleep(void *event)
+{
+    struct afs_event *evp;
+    int seq;
+
+    evp = afs_getevent(event);
+    seq = evp->seq;
+    while (seq == evp->seq) {
+	AFS_ASSERT_GLOCK();
+	cv_wait(&evp->cond, &afs_global_mtx);
+    }
+    relevent(evp);
+}
+
+int
+afs_osi_SleepSig(void *event)
+{
+    struct afs_event *evp;
+    int seq, code = 0;
+
+    evp = afs_getevent(event);
+    seq = evp->seq;
+    while (seq == evp->seq) {
+	AFS_ASSERT_GLOCK();
+	code = cv_wait_sig(&evp->cond, &afs_global_mtx);
+	if (code) {
+	    code = (code == EWOULDBLOCK) ? 0 : EINTR;
+	    break;
+	}
+    }
+    relevent(evp);
+    return code;
+}
+
+/* afs_osi_TimedSleep
+ *
+ * Arguments:
+ * event - event to sleep on
+ * ams --- max sleep time in milliseconds
+ * aintok - 1 if should sleep interruptibly
+ *
+ * Returns 0 if timeout and EINTR if signalled.
+ */
+int
+afs_osi_TimedSleep(void *event, afs_int32 ams, int aintok)
+{
+    int code;
+    struct afs_event *evp;
+    int ticks;
+
+    ticks = mstohz(ams);
+    ticks = ticks ? ticks : 1;
+    evp = afs_getevent(event);
+
+    AFS_ASSERT_GLOCK();
+    if (aintok) {
+	code = cv_timedwait_sig(&evp->cond, &afs_global_mtx, ticks);
+    } else {
+	code = cv_timedwait(&evp->cond, &afs_global_mtx, ticks);
+    }
+
+    switch (code) {
+    default:
+	code = EINTR;
+	break;
+    case EWOULDBLOCK:
+	code = 0;
+	break;
+    }
+
+    relevent(evp);
+    return code;
+}
+
+
+int
+afs_osi_Wakeup(void *event)
+{
+    int ret = 1;
+    struct afs_event *evp;
+
+    evp = afs_getevent(event);
+    if (evp->refcount > 1) {
+	evp->seq++;
+	cv_broadcast(&evp->cond);
+	ret = 0;
+    }
+    relevent(evp);
+    return 0;
+}
+#endif

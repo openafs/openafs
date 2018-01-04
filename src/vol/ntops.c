@@ -12,29 +12,22 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #ifdef AFS_NT40_ENV
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
 #include <direct.h>
-#include <io.h>
-#include <fcntl.h>
-#include <sys/stat.h>
 #include <windows.h>
 #include <winnt.h>
 #include <winbase.h>
 #include <lock.h>
 #include <afs/afsutil.h>
+#include <rx/rx_queue.h>
 #include "nfs.h"
 #include <afs/afsint.h>
 #include "ihandle.h"
 #include "vnode.h"
 #include "volume.h"
 #include "viceinode.h"
-#include <dirent.h>
-#include <afs/afs_assert.h>
 #include <afs/errmap_nt.h>
 
 #define BASEFILEATTRIBUTE FILE_ATTRIBUTE_NORMAL
@@ -392,5 +385,7 @@ nt_DriveToDev(char *drive)
 	dev = toupper(*drive) - 'A';
     if ((dev < 2) || (dev > 25))
 	return -1;
+
+    return dev;
 }
 #endif

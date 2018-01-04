@@ -13,13 +13,17 @@ B<vos zap> S<<< B<-server> <I<machine name>> >>>
     [B<-force>] [B<-backup>]
     S<<< [B<-cell> <I<cell name>>] >>>
     [B<-noauth>] [B<-localauth>]
-    [B<-verbose>] [B<-encrypt>] [B<-noresolve>] [B<-help>]
+    [B<-verbose>] [B<-encrypt>] [B<-noresolve>]
+    S<<< [B<-config> <I<config directory>>] >>>
+    [B<-help>]
 
 B<vos z> S<<< B<-s> <I<machine name>> >>>
     S<<< B<-p> <I<partition name>> >>>
     S<<< B<-i> <I<volume ID>> >>>
     [B<-f>] [B<-b>] S<<< [B<-c> <I<cell name>>] >>>
-    [B<-noa>] [B<-l>] [B<-v>] [B<-e>] [B<-nor>] [B<-h>]
+    [B<-noa>] [B<-l>] [B<-v>] [B<-e>] [B<-nor>]
+    S<<< [B<-co> <I<config directory>>] >>>
+    [B<-h>]
 
 =for html
 </div>
@@ -111,10 +115,10 @@ read-only or backup volume.
 =head1 EXAMPLES
 
 The following example removes the volume with volume ID 536870988 from the
-F</vicepf> partition of the file server machine C<fs6.abc.com>, without
+F</vicepf> partition of the file server machine C<fs6.example.com>, without
 noting the change in the VLDB.
 
-   % vos zap -server fs6.abc.com -partition f -id 536870988
+   % vos zap -server fs6.example.com -partition f -id 536870988
 
 =head1 PRIVILEGE REQUIRED
 

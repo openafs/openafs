@@ -131,6 +131,15 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     }
 
     tdc = afs_GetDCache(adp, (afs_size_t) 0, treq, &offset, &len, 1);
+
+    /** Prevent multiple fetchStatus calls to fileserver when afs_GetDCache()
+      * returns NULL for an error condition
+      */
+    if (!tdc) {
+      code = EIO;
+      goto done;
+    }
+
     ObtainWriteLock(&adp->lock, 135);
     if (tdc)
 	ObtainSharedLock(&tdc->lock, 630);
@@ -258,8 +267,12 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 		    }
 		}
 		*avcp = tvc;
-	    } else
-		code = ENOENT;	/* shouldn't get here */
+
+	    } else {
+		/* Directory entry already exists, but we cannot fetch the
+		 * fid it points to. */
+		code = EIO;
+	    }
 	    /* make sure vrefCount bumped only if code == 0 */
 	    goto done;
 	}
@@ -304,7 +317,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     	do {
 	    tc = afs_Conn(&adp->f.fid, treq, SHARED_LOCK, &rxconn);
 	    if (tc) {
-	    	hostp = tc->srvr->server;	/* remember for callback processing */
+	    	hostp = tc->parent->srvr->server; /* remember for callback processing */
 	    	now = osi_Time();
 	    	XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_CREATEFILE);
 	    	RX_AFS_GUNLOCK();
@@ -352,11 +365,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 
 	if (code) {
 	    if (code < 0) {
-	    	ObtainWriteLock(&afs_xcbhash, 488);
-	    	afs_DequeueCallback(adp);
-	    	adp->f.states &= ~CStatd;
-	    	ReleaseWriteLock(&afs_xcbhash);
-	    	osi_dnlc_purgedp(adp);
+		afs_StaleVCache(adp);
 	    }
 	    ReleaseWriteLock(&adp->lock);
 	    if (tdc) {
@@ -447,11 +456,9 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 		    afs_QueueCallback(tvc, CBHash(CallBack.ExpirationTime), volp);
 		}
 	    } else {
-		afs_DequeueCallback(tvc);
-		tvc->f.states &= ~(CStatd | CUnique);
-		tvc->callback = 0;
-		if (tvc->f.fid.Fid.Vnode & 1 || (vType(tvc) == VDIR))
-		    osi_dnlc_purgedp(tvc);
+		afs_StaleVCacheFlags(tvc,
+				     AFS_STALEVC_CBLOCKED | AFS_STALEVC_CLEARCB,
+				     CUnique);
 	    }
 	    ReleaseWriteLock(&afs_xcbhash);
 	    if (AFS_IS_DISCON_RW) {
@@ -466,8 +473,11 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	    ReleaseWriteLock(&tvc->lock);
 	    *avcp = tvc;
 	    code = 0;
-	} else
-	    code = ENOENT;
+
+	} else {
+	    /* Cannot create a new vcache. */
+	    code = EIO;
+	}
     } else {
 	/* otherwise cache entry already exists, someone else must
 	 * have created it.  Comments used to say:  "don't need write
@@ -553,7 +563,7 @@ afs_LocalHero(struct vcache *avc, struct dcache *adc,
     /* The bulk status code used the length as a sequence number.  */
     /* Don't update the vcache entry unless the stats are current. */
     if (avc->f.states & CStatd) {
-	hset(avc->f.m.DataVersion, avers);
+	afs_SetDataVersion(avc, &avers);
 #ifdef AFS_64BIT_CLIENT
 	FillInt64(avc->f.m.Length, astat->Length_hi, astat->Length);
 #else /* AFS_64BIT_CLIENT */

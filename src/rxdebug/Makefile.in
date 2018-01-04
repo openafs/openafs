@@ -7,29 +7,30 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.lwp
 
-CFLAGS=${COMMON_CFLAGS} ${XCFLAGS} ${ARCHFLAGS}
 
-LIBS=${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
-	       ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libafsutil.a
+LIBS=${TOP_LIBDIR}/librx.a \
+     ${TOP_LIBDIR}/libafshcrypto_lwp.a \
+     ${TOP_LIBDIR}/liblwp.a \
+     ${TOP_LIBDIR}/libcmd.a \
+     ${TOP_LIBDIR}/libsys.a \
+     ${TOP_LIBDIR}/libopr.a \
+     ${TOP_LIBDIR}/libafsutil.a
 
 all: rxdebug rxdumptrace
 
 rxdebug.o: rxdebug.c
 
+CFLAGS_rxdumptrace.o=-DDUMPTRACE
 rxdumptrace.o: ../rx/rx_trace.c
-	$(CC) $(CFLAGS) -DDUMPTRACE -c -o rxdumptrace.o ${srcdir}/../rx/rx_trace.c
+	$(AFS_CCRULE) $(srcdir)/../rx/rx_trace.c
 
 rxdumptrace: rxdumptrace.o ${LIBS}
-	$(RM) -f rxdumptrace
-	$(CC) $(CFLAGS) -o rxdumptrace rxdumptrace.o  ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) rxdumptrace.o  ${LIBS} $(LIB_roken) ${XLIBS}
 
 rxdebug: rxdebug.o ${LIBS}
-	${CC} ${CFLAGS} -o $@ $@.o ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) rxdebug.o ${LIBS} $(LIB_roken) ${XLIBS}
 
 #
 # Install targets

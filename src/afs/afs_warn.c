@@ -23,7 +23,7 @@
 
 #if !defined(AFS_LINUX20_ENV)
 # include <net/if.h>
-# if defined(AFS_SUN58_ENV)
+# if defined(AFS_SUN5_ENV)
 #  include <sys/varargs.h>
 # elif defined(AFS_FBSD_ENV)
 #  include <machine/stdarg.h>
@@ -44,12 +44,10 @@
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
 
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
 #include <inet/led.h>
 #include <inet/common.h>
-#if     defined(AFS_SUN58_ENV)
 #include <netinet/ip6.h>
-#endif
 #include <inet/ip.h>
 #endif
 

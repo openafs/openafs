@@ -8,25 +8,20 @@
  *		     therefore the database must be quiescent for the
  *		     output of this program to be valid.
  */
-
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#include <sys/types.h>
-#include <sys/time.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <string.h>
-#include <sys/file.h>
+#include <roken.h>
 
+#include <ctype.h>
 
 #include <lock.h>
-#include <netinet/in.h>
 #define UBIK_INTERNALS
 #include <ubik.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rxkad.h>
+
 #include "kauth.h"
 #include "kaserver.h"
 #include "kautils.h"

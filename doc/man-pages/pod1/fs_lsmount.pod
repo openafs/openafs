@@ -90,23 +90,23 @@ to discard it, which forces the Cache Manager to refetch the mount point.
 The following example shows the mount point for the home directory of user
 C<smith>:
 
-   % fs lsmount /afs/abc.com/usr/smith
-   '/afs/abc.com/usr/smith' is a mount point for volume '#user.smith'
+   % fs lsmount /afs/example.com/usr/smith
+   '/afs/example.com/usr/smith' is a mount point for volume '#user.smith'
 
 The following example shows both the regular and read/write mount points
-for the ABC Corporation cell's C<root.cell> volume.
+for the Example Corporation cell's C<root.cell> volume.
 
-   % fs lsmount /afs/abc.com
-   '/afs/abc.com' is a mount point for volume '#root.cell'
+   % fs lsmount /afs/example.com
+   '/afs/example.com' is a mount point for volume '#root.cell'
 
-   % fs lsmount /afs/.abc.com
-   '/afs/.abc.com' is a mount point for volume '%root.cell'
+   % fs lsmount /afs/.example.com
+   '/afs/.example.com' is a mount point for volume '%root.cell'
 
-The following example shows a cellular mount point: the State University
-cell's C<root.cell> volume as mounted in the ABC Corporation cell's tree.
+The following example shows a cellular mount point: the Example Organization
+cell's C<root.cell> volume as mounted in the Example Corporation cell's tree.
 
-   % fs lsmount /afs/stateu.edu
-   '/afs/stateu.edu' is a mount point for volume '#stateu.edu:root.cell'
+   % fs lsmount /afs/example.org
+   '/afs/example.org' is a mount point for volume '#example.org:root.cell'
 
 =head1 PRIVILEGE REQUIRED
 

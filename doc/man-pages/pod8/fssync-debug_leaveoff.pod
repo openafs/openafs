@@ -56,6 +56,11 @@ I<salvageServer>,
 I<volumeServer> and
 I<volumeSalvager>.
 
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
 =back
 
 =head1 PRIVILEGE REQUIRED

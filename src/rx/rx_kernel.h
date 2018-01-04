@@ -36,7 +36,27 @@ typedef struct socket *osi_socket;
         CM_TRACE_RXWAKE, ICL_TYPE_STRING, __FILE__, ICL_TYPE_INT32, __LINE__)
 
 extern int osi_utoa(char *buf, size_t len, unsigned long val);
-#define osi_Assert(exp) (void)((exp) || (osi_AssertFailK( #exp , __FILE__, __LINE__), 0))
+
+# if defined(AFS_LINUX26_ENV)
+#  define osi_Panic(msg...) \
+    do { printk(KERN_CRIT "openafs: " msg); BUG(); } while (0)
+#  define osi_Assert(expr) \
+    do { \
+	if (!(expr)) \
+	    osi_Panic("assertion failed: %s, file: %s, line: %d\n", \
+		      #expr, __FILE__, __LINE__); \
+    } while (0)
+# elif defined(AFS_AIX_ENV)
+extern void osi_Panic(char *fmt, void *a1, void *a2, void *a3);
+#  define osi_Assert(exp) \
+    (void)((exp) || (osi_AssertFailK( #exp , __FILE__, __LINE__), 0))
+# else
+extern void osi_Panic(char *fmt, ...)
+    AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2)
+    AFS_NORETURN;
+#  define osi_Assert(exp) \
+    (void)((exp) || (osi_AssertFailK( #exp , __FILE__, __LINE__), 0))
+# endif
 
 #ifdef AFS_LINUX20_ENV
 # define	osi_Msg printk)(
@@ -58,12 +78,18 @@ extern int osi_utoa(char *buf, size_t len, unsigned long val);
 #endif
 #define rx_ifnet_mtu(x) (x)->if_mtu
 #define rx_ifnet_flags(x) (x?(x)->if_flags:0)
-#if defined(AFS_OBSD46_ENV) || defined(AFS_FBSD81_ENV)
+#if defined(FBSD_IFA_IFWITHNET_THREE_ARGS)
+#define rx_ifaddr_withnet(x) ifa_ifwithnet(x, 0, RT_ALL_FIBS)
+#elif defined(AFS_OBSD46_ENV) || defined(AFS_FBSD81_ENV)
 #define rx_ifaddr_withnet(x) ifa_ifwithnet(x, 0)
 #else
 #define rx_ifaddr_withnet(x) ifa_ifwithnet(x)
 #endif
+#if defined(FBSD_IF_METRIC_IN_STRUCT_IFNET)
+#define rx_ifnet_metric(x) (x?(x)->if_metric:0)
+#else
 #define rx_ifnet_metric(x) (x?(x)->if_data.ifi_metric:0)
+#endif
 #define rx_ifaddr_ifnet(x) (x?(x)->ifa_ifp:0)
 #define rx_ifaddr_address_family(x) (x)->ifa_addr->sa_family
 #define rx_ifaddr_address(x, y, z) memcpy(y, (x)->ifa_addr, z)

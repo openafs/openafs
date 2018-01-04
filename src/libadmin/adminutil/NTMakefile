@@ -31,7 +31,7 @@ INCFILES= $(INCFILEDIR)\afs_AdminCommonErrors.h \
 	$(INCFILEDIR)\afs_AdminMiscErrors.h \
 	$(INCFILEDIR)\afs_AdminPtsErrors.h \
 	$(INCFILEDIR)\afs_AdminUtilErrors.h \
- 	$(INCFILEDIR)\afs_AdminVosErrors.h
+	$(INCFILEDIR)\afs_AdminVosErrors.h
 
 $(INCFILES):$$(@F)
 	 $(COPY)  $** $(INCFILEDIR)\.
@@ -43,31 +43,31 @@ afs_AdminBosErrors.h afs_AdminBosErrors.c : afs_AdminBosErrors.et
 afs_AdminCfgErrors.h afs_AdminCfgErrors.c : afs_AdminCfgErrors.et
         $(DEL) afs_AdminCfgErrors.h afs_AdminCfgErrors.c
         $(COMPILE_ET) afs_AdminCfgErrors -h afs_AdminCfgErrors
- 
+
 afs_AdminClientErrors.h afs_AdminClientErrors.c : afs_AdminClientErrors.et
         $(DEL) afs_AdminClientErrors.h afs_AdminClientErrors.c
         $(COMPILE_ET) afs_AdminClientErrors -h afs_AdminClientErrors
- 
+
 afs_AdminCommonErrors.h afs_AdminCommonErrors.c: afs_AdminCommonErrors.et
         $(DEL) afs_AdminCommonErrors.h afs_AdminCommonErrors.c
         $(COMPILE_ET) afs_AdminCommonErrors -h afs_AdminCommonErrors
- 
+
 afs_AdminKasErrors.h afs_AdminKasErrors.c : afs_AdminKasErrors.et
         $(DEL) afs_AdminKasErrors.h afs_AdminKasErrors.c
         $(COMPILE_ET) afs_AdminKasErrors -h afs_AdminKasErrors
- 
+
 afs_AdminMiscErrors.h afs_AdminMiscErrors.c : afs_AdminMiscErrors.et
         $(DEL) afs_AdminMiscErrors.h afs_AdminMiscErrors.c
         $(COMPILE_ET) afs_AdminMiscErrors -h afs_AdminMiscErrors
- 
+
 afs_AdminPtsErrors.h afs_AdminPtsErrors.c : afs_AdminPtsErrors.et
         $(DEL) afs_AdminPtsErrors.h afs_AdminPtsErrors.c
         $(COMPILE_ET) afs_AdminPtsErrors -h afs_AdminPtsErrors
- 
+
 afs_AdminUtilErrors.h afs_AdminUtilErrors.c : afs_AdminUtilErrors.et
         $(DEL) afs_AdminUtilErrors.h afs_AdminUtilErrors.c
         $(COMPILE_ET) afs_AdminUtilErrors -h afs_AdminUtilErrors
- 
+
 afs_AdminVosErrors.h afs_AdminVosErrors.c : afs_AdminVosErrors.et
         $(DEL) afs_AdminVosErrors.h afs_AdminVosErrors.c
         $(COMPILE_ET) afs_AdminVosErrors -h afs_AdminVosErrors
@@ -91,13 +91,13 @@ BOZOOBJS=\
 	$(OUT)\boserr.obj
 
 KAUTHOBJS=\
-	$(OUT)\kaerrors.obj 
-	
+	$(OUT)\kaerrors.obj
+
 CMDOBJS=\
-	$(OUT)\cmd_errors.obj 
+	$(OUT)\cmd_errors.obj
 
 PTSERVEROBJS=\
-	$(OUT)\pterror.obj 
+	$(OUT)\pterror.obj
 
 UBIKOBJS=\
 	$(OUT)\uerrors.obj
@@ -137,28 +137,18 @@ ILIBDIR = $(DESTDIR)\lib\afs
 
 DLLLIBS =\
 	$(DESTDIR)\lib\afspthread.lib \
+	$(DESTDIR)\lib\afs\mtafsint.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
-        $(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afsauthent.lib \
-        $(DESTDIR)\lib\afs\afsreg.lib
+        $(DESTDIR)\lib\afs\mtafsutil.lib \
+        $(DESTDIR)\lib\afs\afsreg.lib \
+	$(DESTDIR)\lib\opr.lib \
+        $(DESTDIR)\lib\afsroken.lib
 
-!IF "$(CPU)" == "IA64" || "$(CPU)" == "AMD64" || "$(CPU)" == "ALPHA64"
-KFWLIBS = \
-    $(AFSROOT)\src\WINNT\kfw\lib\$(CPU)\krb5_64.lib \
-    $(AFSROOT)\src\WINNT\kfw\lib\$(CPU)\comerr64.lib \
-    dnsapi.lib mpr.lib delayimp.lib shell32.lib
-LINKOPTS = /DELAYLOAD:krb5_64.dll /DELAYLOAD:comerr64.dll
-!else
-KFWLIBS = \
-    $(AFSROOT)\src\WINNT\kfw\lib\$(CPU)\krb5_32.lib \
-    $(AFSROOT)\src\WINNT\kfw\lib\$(CPU)\comerr32.lib \
-    dnsapi.lib mpr.lib delayimp.lib shell32.lib
-LINKOPTS = /DELAYLOAD:krb5_32.dll /DELAYLOAD:comerr32.dll
-!endif
-afscflags = -I$(AFSROOT)\src\WINNT\kfw\inc\krb5 $(afscflags)
+NTLIBS = dnsapi.lib mpr.lib shell32.lib
 
-$(DLLFILE): $(DLLOBJS) $(DLLLIBS)
-	$(DLLCONLINK) /DEF:afsadminutil.def $(KFWLIBS)
+$(DLLFILE): $(DLLOBJS) $(DLLLIBS) $(HEIMDEPS)
+	$(DLLCONLINK) /DEF:afsadminutil.def $(NTLIBS) $(HEIMLINKOPTS)
         $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
         $(CODESIGN_USERLAND)
@@ -223,4 +213,5 @@ clean::
 	$(DEL) $(DLLOBJS)
 	$(DEL) $(DLLFILE)
 mkdir:
-	
+
+

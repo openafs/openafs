@@ -13,15 +13,9 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
 
-#include <stddef.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
+#include <roken.h>
 
 #include <pthread.h>
 
@@ -297,7 +291,7 @@ cfg_CellServDbEnumerate(const char *fsDbHost,	/* fileserver or database host */
 	    }
 	    bufSize++;		/* end multistring */
 
-	    *cellDbHosts = (char *)malloc(bufSize);
+	    *cellDbHosts = malloc(bufSize);
 
 	    if (*cellDbHosts == NULL) {
 		tst = ADMNOMEM;
@@ -313,14 +307,12 @@ cfg_CellServDbEnumerate(const char *fsDbHost,	/* fileserver or database host */
 
 	    /* return cell name to caller */
 	    if (tst == 0) {
-		*cellName = (char *)malloc(strlen(dbhostCell) + 1);
+		*cellName = strdup(dbhostCell);
 
 		if (*cellName == NULL) {
 		    free(*cellDbHosts);
-			*cellDbHosts = NULL;
+		    *cellDbHosts = NULL;
 		    tst = ADMNOMEM;
-		} else {
-		    strcpy(*cellName, dbhostCell);
 		}
 	    }
 	}
@@ -349,8 +341,8 @@ int ADMINAPI
 cfg_CellServDbStatusDeallocate(cfg_cellServDbStatus_t * statusItempP,
 			       afs_status_p st)
 {
-	if ( statusItempP )
-		free((void *)statusItempP);
+    if ( statusItempP )
+	free(statusItempP);
 
     if (st != NULL) {
 	*st = 0;
@@ -436,7 +428,7 @@ CellServDbUpdate(int updateOp, void *hostHandle, const char *sysControlHost,
 
 	/* create control block */
 
-	ctrlBlockp = (cfg_csdb_update_ctrl_t *) malloc(sizeof(*ctrlBlockp));
+	ctrlBlockp = malloc(sizeof(*ctrlBlockp));
 
 	if (ctrlBlockp == NULL) {
 	    tst = ADMNOMEM;
@@ -501,8 +493,7 @@ CellServDbUpdate(int updateOp, void *hostHandle, const char *sysControlHost,
 		    short nameBlockDone = 0;
 
 		    while (!nameBlockDone) {
-			nameBlockp = ((cfg_csdb_update_name_t *)
-				      malloc(sizeof(*nameBlockp)));
+			nameBlockp = malloc(sizeof(*nameBlockp));
 
 			if (nameBlockp == NULL) {
 			    tst = ADMNOMEM;
@@ -658,8 +649,8 @@ UpdateWorkerThread(void *argp)
 
 	    /* alloc memory for status information (including host name) */
 
-	    while ((statusp = (cfg_cellServDbStatus_t *)
-		    malloc(sizeof(*statusp) + AFS_MAX_SERVER_NAME_LEN)) ==
+	    while ((statusp =
+			malloc(sizeof(*statusp) + AFS_MAX_SERVER_NAME_LEN)) ==
 		   NULL) {
 		/* avoid tight loop while waiting for status storage */
 		cfgutil_Sleep(1);
@@ -826,7 +817,7 @@ NameBlockGetBegin(cfg_host_p cfg_host, const char *sysControlHost,
     afs_status_t tst2, tst = 0;
     cfg_csdb_nameblock_iteration_t *nbIterp;
 
-    nbIterp = (cfg_csdb_nameblock_iteration_t *) malloc(sizeof(*nbIterp));
+    nbIterp = malloc(sizeof(*nbIterp));
 
     if (nbIterp == NULL) {
 	tst = ADMNOMEM;
@@ -1005,7 +996,7 @@ ServerNameGetBegin(cfg_host_p cfg_host, short dbOnly, void **iterationIdP,
     afs_status_t tst2, tst = 0;
     cfg_server_iteration_t *serverIterp;
 
-    serverIterp = (cfg_server_iteration_t *) malloc(sizeof(*serverIterp));
+    serverIterp = malloc(sizeof(*serverIterp));
 
     if (serverIterp == NULL) {
 	tst = ADMNOMEM;

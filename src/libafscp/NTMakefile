@@ -5,7 +5,8 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-RELDIR=libacl
+AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV
+RELDIR=libafscp
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
 
@@ -35,7 +36,6 @@ LIBOBJS =\
 	$(OUT)\afscp_init.obj \
 	$(OUT)\afscp_util.obj \
 	$(OUT)\afscp_dirops.obj \
-	$(OUT)\afscp_roken.obj \
 	$(OUT)\afscp_acl.obj \
 	$(OUT)\AFS_component_version_number.obj
 

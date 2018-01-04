@@ -114,8 +114,8 @@ CommandProc(struct cmd_syndesc *as, void *arock)
     struct serverParms *sParms;
     struct clientParms *cParms;
 
-    sParms = (struct serverParms *)osi_Alloc(sizeof(*sParms));
-    cParms = (struct clientParms *)osi_Alloc(sizeof(*cParms));
+    sParms = osi_Alloc(sizeof(*sParms));
+    cParms = osi_Alloc(sizeof(*cParms));
     memset(sParms, 0, sizeof(*sParms));
     memset(cParms, 0, sizeof(*cParms));
     sParms->whoami = cParms->whoami = whoami;
@@ -305,7 +305,7 @@ main(int argc, char **argv)
 	exit(1);
     }
 #endif
-    ts = cmd_CreateSyntax(NULL, CommandProc, NULL,
+    ts = cmd_CreateSyntax(NULL, CommandProc, NULL, 0,
 			  "run Rx authentication stress test");
     cmd_AddParm(ts, "-server", CMD_FLAG, CMD_OPTIONAL, "start server");
     cmd_AddParm(ts, "-client", CMD_SINGLE, CMD_OPTIONAL, "start client");

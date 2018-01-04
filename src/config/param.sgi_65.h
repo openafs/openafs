@@ -37,7 +37,6 @@
 
 #define _ANSI_C_SOURCE		1	/* rx_user.h */
 
-#define AFS_64BIT_ENV		1	/* Defines afs_int32 as int, not long. */
 #define AFS_64BIT_CLIENT	1
 #define AFS_64BITPOINTER_ENV	1	/* pointers are 64 bits. */
 #define AFS_64BITUSERPOINTER_ENV	1
@@ -176,8 +175,6 @@
 #define AFSBIG_ENDIAN	1
 #define AFS_HAVE_FFS            1	/* Use system's ffs. */
 #define AFS_HAVE_STATVFS	1	/* System supports statvfs */
-
-#define AFS_64BIT_ENV		1	/* Defines afs_int32 as int, not long. */
 
 #include <afs/afs_sysnames.h>
 

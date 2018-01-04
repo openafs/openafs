@@ -17,22 +17,26 @@
 /* KDUMP_KERNEL is defined when kdump includes this header. */
 #ifndef KDUMP_KERNEL
 
+typedef int afs_kmutex_t;
+typedef int afs_kcondvar_t;
+
 #define CALL_HOLD(call, type)
+#define CALL_HOLD_R(call, type)
 #define CALL_RELE(call, type)
+#define CALL_RELE_R(call, type)
 
 #define MUTEX_DESTROY(a)
 #define MUTEX_ENTER(a)
 #define MUTEX_TRYENTER(a) 1
 #define MUTEX_EXIT(a)
 #define MUTEX_INIT(a,b,c,d)
-#define MUTEX_ISMINE(a)
+#define MUTEX_ASSERT(a)
 #define CV_INIT(a,b,c,d)
 #define CV_DESTROY(a)
 #define CV_WAIT(cv, l)
 #define CV_SIGNAL(cv)
 #define CV_BROADCAST(cv)
 #define CV_TIMEDWAIT(cv, l, t)
-#define osirx_AssertMine(a, b)
 
 #endif /* KERNEL */
 

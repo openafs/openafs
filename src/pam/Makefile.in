@@ -7,95 +7,105 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+include @TOP_OBJDIR@/src/config/Makefile.libtool
 
+LT_objs = afs_account.lo afs_session.lo afs_password.lo \
+	  afs_pam_msg.lo afs_message.lo \
+	  $(top_builddir)/src/opr/libopr_pic.la \
+	  $(top_builddir)/src/comerr/libcomerr_pic.la \
+	  $(top_builddir)/src/rx/librx_pic.la \
+	  $(top_builddir)/src/rxkad/librxkad_pic.la \
+	  $(top_builddir)/src/audit/libaudit_pic.la \
+	  $(top_builddir)/src/util/libafsutil_pic.la \
+	  $(top_builddir)/src/sys/libsys_pic.la \
+	  $(top_builddir)/src/ubik/libauthent_ubik.la \
+	  $(top_builddir)/src/ptserver/libprot_pic.la \
+	  $(top_builddir)/src/kauth/libkauth_pic.la \
+	  $(top_builddir)/src/auth/libpam_auth.la \
+	  $(top_builddir)/src/crypto/rfc3961/librfc3961_pic.la
+LT_deps =
+LT_libs = \
+	$(PAM_LIBS) $(LDFLAGS_hcrypto) $(LDFLAGS_roken) \
+	$(LIB_hcrypto) $(LIB_roken) $(LIB_crypt) $(LIB_AFSDB)
 
-  LIBSA = ${TOP_LIBDIR}/libprot.a ${TOP_LIBDIR}/libubik.a
-AFSLIBS = ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libsys.a \
-	  ${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/librx.a \
-	  ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libaudit.a \
-          ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libafscom_err.a \
-	  ${TOP_LIBDIR}/util.a
+INSTALL_KAUTH = @INSTALL_KAUTH@
 
-LDFLAGS = ${SHLIB_LDFLAGS}
-   LIBS = ${TOP_LIBDIR}/libafsauthent_pic.a ${TOP_LIBDIR}/libafsrpc_pic.a \
-	  ${PAM_LIBS} ${KRB5_LIBS} @LIB_AFSDB@ ${MT_LIBS}
-  KLIBS = ktc_krb.o ${TOP_LIBDIR}/libafsauthent_pic.a \
-	  ${TOP_LIBDIR}/libafsrpc_pic.a ${PAM_LIBS} ${KRB5_LIBS} \
-	  @LIB_AFSDB@ ${MT_LIBS}
- SHOBJS = afs_account.o afs_session.o afs_password.o \
-	  afs_pam_msg.o afs_message.o AFS_component_version_number.o
-   OBJS = $(SHOBJS) test_pam.o
-INCLUDES=-I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} 
-CFLAGS =  ${PAM_DBG} ${PAM_OPTMZ} ${INCLUDES} ${PAM_CFLAGS}
+MODULE_CFLAGS=${PAM_CFLAGS}
 
-all: test_pam pam_afs.so.1 pam_afs.krb.so.1
+all: test_pam pam_afs.la pam_afs.krb.la
 
-afs_setcred.o: afs_setcred.c afs_pam_msg.h afs_message.h afs_util.h
-	${CC} ${CFLAGS} -c ${srcdir}/afs_setcred.c -o afs_setcred.o
+CFLAGS_afs_setcred_krb.lo = -DAFS_KERBEROS_ENV
+CFLAGS_afs_auth_krb.lo   = -DAFS_KERBEROS_ENV
+CFLAGS_afs_util_krb.lo   = -DAFS_KERBEROS_ENV
+CFLAGS_ktc_krb.lo        = -DAFS_KERBEROS_ENV -I../auth
+CFLAGS_ktc.lo            = -I../auth
 
-afs_setcred_krb.o: afs_setcred.c afs_pam_msg.h afs_message.h afs_util.h
-	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c ${srcdir}/afs_setcred.c -o afs_setcred_krb.o
+afs_setcred.lo: afs_setcred.c afs_pam_msg.h afs_message.h afs_util.h
+afs_setcred_krb.lo: afs_setcred.c afs_pam_msg.h afs_message.h afs_util.h
+	$(LT_CCRULE) ${srcdir}/afs_setcred.c
 
-afs_auth.o: afs_auth.c afs_pam_msg.h afs_message.h afs_util.h
-	${CC} ${CFLAGS} -c ${srcdir}/afs_auth.c -o afs_auth.o
+afs_auth.lo: afs_auth.c afs_pam_msg.h afs_message.h afs_util.h
+afs_auth_krb.lo: afs_auth.c afs_pam_msg.h afs_message.h afs_util.h
+	$(LT_CCRULE) ${srcdir}/afs_auth.c
 
-afs_auth_krb.o: afs_auth.c afs_pam_msg.h afs_message.h afs_util.h
-	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c ${srcdir}/afs_auth.c -o afs_auth_krb.o
+afs_util.lo: afs_util.c afs_pam_msg.h afs_message.h afs_util.h
+afs_util_krb.lo: afs_util.c afs_pam_msg.h afs_message.h afs_util.h
+	$(LT_CCRULE) ${srcdir}/afs_util.c
 
-afs_util.o: afs_util.c afs_pam_msg.h afs_message.h afs_util.h
-	${CC} ${CFLAGS} -c ${srcdir}/afs_util.c -o afs_util.o
-
-afs_util_krb.o: afs_util.c afs_pam_msg.h afs_message.h afs_util.h
-	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c ${srcdir}/afs_util.c -o afs_util_krb.o
-
-ktc_krb.o: ${srcdir}/../auth/ktc.c ${TOP_INCDIR}/afs/cellconfig.h \
+ktc.lo: ${srcdir}/../auth/ktc.c ${TOP_INCDIR}/afs/cellconfig.h \
 		${TOP_INCDIR}/afs/auth.h ${srcdir}/../auth/keys.h \
 		${TOP_INCDIR}/afs/vice.h
-	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c ${srcdir}/../auth/ktc.c -o $@ -I../auth
+	$(LT_CCRULE) $(srcdir)/../auth/ktc.c
+ktc_krb.lo: ${srcdir}/../auth/ktc.c ${TOP_INCDIR}/afs/cellconfig.h \
+		${TOP_INCDIR}/afs/auth.h ${srcdir}/../auth/keys.h \
+		${TOP_INCDIR}/afs/vice.h
+	$(LT_CCRULE) $(srcdir)/../auth/ktc.c
 
-pam_afs.so.1: $(SHOBJS) afs_setcred.o afs_auth.o afs_util.o \
-		${TOP_LIBDIR}/libafsauthent_pic.a \
-		${TOP_LIBDIR}/libafsrpc_pic.a \
+pam_afs.la: $(LT_objs) $(LT_deps) \
+		afs_setcred.lo afs_auth.lo afs_util.lo ktc.lo \
 		pam_afs.map
-	../config/shlib-build -d $(srcdir) -f pam_afs.so.1 -l pam_afs -- \
-		afs_setcred.o afs_auth.o afs_util.o ${SHOBJS} ${LIBS}
+	$(LIBTOOL) --quiet --mode=link --tag=CC $(MT_CC) $(XLDFLAGS) -rpath $(libdir) \
+		-module -no-undefined -o pam_afs.la \
+		afs_setcred.lo afs_auth.lo afs_util.lo ktc.lo \
+		$(LT_objs) $(LT_deps) $(LT_libs)
 
-pam_afs.krb.so.1: $(SHOBJS) afs_setcred_krb.o afs_auth_krb.o afs_util_krb.o \
-		ktc_krb.o ${TOP_LIBDIR}/libafsauthent_pic.a \
-		${TOP_LIBDIR}/libafsrpc_pic.a \
-		pam_afs.map
-	../config/shlib-build -d $(srcdir) -f pam_afs.krb.so.1 -l pam_afs -- \
-		afs_setcred_krb.o afs_auth_krb.o afs_util_krb.o \
-		${SHOBJS} ${KLIBS}
+pam_afs.krb.la: $(LT_objs) $(LT_deps) \
+		afs_setcred_krb.lo afs_auth_krb.lo afs_util_krb.lo \
+		ktc_krb.lo pam_afs.map
+	$(LIBTOOL) --quiet --mode=link --tag=CC $(MT_CC) $(XLDFLAGS) -rpath $(libdir) \
+		-module -no-undefined -o pam_afs.krb.la \
+		afs_setcred_krb.lo afs_auth_krb.lo afs_util_krb.lo ktc_krb.lo \
+		$(LT_objs) $(LT_deps) $(LT_libs)
 
 test_pam: test_pam.o
-	set -x; \
+	$(Q)set -x; \
 	case "$(SYS_NAME)" in \
 	hp_ux* | ia64_hpux*) \
-		$(CC) $(CFLAGS) -o $@ test_pam.o ${PAM_LIBS};; \
+		$(AFS_LDRULE_NOQ) test_pam.o ${PAM_LIBS};; \
 	sun*_5*) \
-		$(CC) $(CFLAGS) -o $@ test_pam.o ${PAM_LIBS};; \
+		$(AFS_LDRULE_NOQ) test_pam.o ${PAM_LIBS};; \
 	*linux*) \
-		$(CC) $(CFLAGS) -rdynamic -o $@ test_pam.o -lpam -ldl;; \
+		$(AFS_LDRULE_NOQ) -rdynamic test_pam.o -lpam -ldl;; \
 	*fbsd*| *nbsd*) \
-		$(CC) $(CFLAGS) -rdynamic -o $@ test_pam.o -lpam ;; \
+		$(AFS_LDRULE_NOQ) -rdynamic test_pam.o -lpam ;; \
 	*) \
 		echo No link line for system $(SYS_NAME). ;; \
 	esac
 
-install: pam_afs.so.1 pam_afs.krb.so.1
-	${INSTALL} -d ${DESTDIR}${libdir}
-	${INSTALL_DATA} pam_afs.so.1 ${DESTDIR}${libdir}/pam_afs.so.1
-	${INSTALL_DATA} pam_afs.krb.so.1 ${DESTDIR}${libdir}/pam_afs.krb.so.1
+install: pam_afs.la pam_afs.krb.la
+	if [ "x${INSTALL_KAUTH}" = "xyes" ]; then \
+		${INSTALL} -d ${DESTDIR}${libdir}; \
+		$(INSTALL_DATA) .libs/pam_afs.so ${DESTDIR}${libdir}; \
+		$(INSTALL_DATA) .libs/pam_afs.krb.so ${DESTDIR}${libdir}; \
+	fi
 
-dest: pam_afs.so.1 pam_afs.krb.so.1
-	${INSTALL} -d ${DEST}/lib
-	${INSTALL_DATA} pam_afs.so.1 ${DEST}/lib/pam_afs.so.1
-	${INSTALL_DATA} pam_afs.krb.so.1 ${DEST}/lib/pam_afs.krb.so.1
+dest: pam_afs.la pam_afs.krb.la
+	if [ "x${INSTALL_KAUTH}" = "xyes" ]; then \
+		${INSTALL} -d ${DEST}/lib; \
+		$(INSTALL_DATA) .libs/pam_afs.so ${DEST}/lib; \
+		$(INSTALL_DATA) .libs/pam_afs.krb.so ${DEST}/lib; \
+	fi
 
 afs_pam_msg.o: afs_pam_msg.c afs_pam_msg.h afs_message.h
 afs_message.o: afs_message.c afs_message.h
@@ -104,6 +114,7 @@ afs_message.o: afs_message.c afs_message.h
 # Misc. targets
 #
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.a *.o *.so.1 test_pam core *~ \
 		AFS_component_version_number.c pam_afs.exp
 

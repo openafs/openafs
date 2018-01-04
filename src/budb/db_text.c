@@ -10,26 +10,17 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <fcntl.h>
-#include <io.h>
-#else
-#include <netinet/in.h>
-#include <sys/file.h>
-#include <sys/param.h>
-#endif
-#include <string.h>
-#include <sys/types.h>
 #include <ubik.h>
 #include <afs/bubasics.h>
+#include <afs/audit.h>
+#include <afs/afsutil.h>
+
 #include "budb_errs.h"
 #include "database.h"
 #include "error_macros.h"
 #include "budb_internal.h"
-#include "afs/audit.h"
-#include <afs/afsutil.h>
 
 /* --------------------------------
  * interface & support code to manage text blocks within the
@@ -119,7 +110,7 @@ GetText(struct rx_call *call, afs_uint32 lockHandle, afs_int32 textType,
 
     /* compute minimum of remaining text or user buffer */
     textRemaining = ntohl(tbPtr->size) - offset;
-    transferSize = MIN(textRemaining, maxLength);
+    transferSize = min(textRemaining, maxLength);
 
     /* allocate the transfer storage */
     if (transferSize <= 0) {
@@ -127,7 +118,7 @@ GetText(struct rx_call *call, afs_uint32 lockHandle, afs_int32 textType,
 	charListPtr->charListT_val = NULL;
     } else {
 	charListPtr->charListT_len = transferSize;
-	charListPtr->charListT_val = (char *)malloc(transferSize);
+	charListPtr->charListT_val = malloc(transferSize);
 	if (charListPtr->charListT_val == 0)
 	    ABORT(BUDB_NOMEM);
     }
@@ -186,7 +177,7 @@ GetText(struct rx_call *call, afs_uint32 lockHandle, afs_int32 textType,
 
   no_xfer_abort:
     charListPtr->charListT_len = 0;
-    charListPtr->charListT_val = (char *)malloc(0);
+    charListPtr->charListT_val = NULL;
 
   abort_exit:
     if (ut)
@@ -374,7 +365,7 @@ SaveText(struct rx_call *call, afs_uint32 lockHandle, afs_int32 textType,
     while (textLength) {
 	/* compute the transfer size */
 	remainingInBlock = (BLOCK_DATA_SIZE - (offset % BLOCK_DATA_SIZE));
-	chunkSize = MIN(remainingInBlock, textLength);
+	chunkSize = min(remainingInBlock, textLength);
 
 	/* copy in the data */
 	memcpy(&diskBlock.a[offset % BLOCK_DATA_SIZE], textptr, chunkSize);
@@ -475,7 +466,7 @@ saveTextToFile(struct ubik_trans *ut, struct textBlock *tbPtr)
     totalSize = size = ntohl(tbPtr->size);
     blockAddr = ntohl(tbPtr->textAddr);
     while (size) {
-	chunkSize = MIN(BLOCK_DATA_SIZE, size);
+	chunkSize = min(BLOCK_DATA_SIZE, size);
 	dbread(ut, blockAddr, (char *)&block, sizeof(block));
 	if (write(fid, &block.a[0], chunkSize) < 0)
 	    break;
@@ -491,31 +482,3 @@ saveTextToFile(struct ubik_trans *ut, struct textBlock *tbPtr)
     }
 }
 
-
-#if (defined(AFS_HPUX_ENV)) || defined(AFS_NT40_ENV)
-
-/* mkstemp
- * entry:
- *	st - string containing template for a tmp file name
- * exit:
- *	-1 - failed
- *	0-n - open file descriptor
- * notes:
- *	1) missing in Ultrix, HP/UX and AIX 221 environment
- *      2) iterate some number of times to alleviate the race?
- */
-
-int
-mkstemp(char *st)
-{
-    int retval = -1;
-
-#ifdef AFS_LINUX20_ENV
-    retval = open(mkstemp(st), O_RDWR | O_CREAT | O_EXCL, 0600);
-#else
-    retval = open(mktemp(st), O_RDWR | O_CREAT | O_EXCL, 0600);
-#endif
-
-    return (retval);
-}
-#endif

@@ -8,10 +8,12 @@ voldump - Dump an AFS volume without using the Volume Server
 <div class="synopsis">
 
 B<voldump> S<<< B<-part> <I<partition>> >>> S<<< B<-volumeid> <I<volume id>> >>>
-    S<<< [B<-file> <I<dump file>>] >>> [B<-verbose>] [B<-help>]
+    S<<< [B<-file> <I<dump file>>] >>> [B<-time> <I<dump from time>>]
+    [B<-verbose>] [B<-help>]
 
 B<voldump> S<<< B<-p> <I<partition>> >>> S<<< B<-vo> <I<volume id>> >>>
-    S<<< [B<-f> <I<dump file>>] >>> [B<-ve>] [B<-h>]
+    S<<< [B<-f> <I<dump file>>] >>> [B<-time> <I<dump from time>>]
+    [B<-ve>] [B<-h>]
 
 =for html
 </div>
@@ -63,10 +65,20 @@ numeric ID, not by name.
 Specifies the output file for the dump.  If this option is not given, the
 volume will be dumped to standard output.
 
+=item B<-time> <I<dump from time>>
+
+Specifies whether the dump is full or incremental. Omit this argument to create
+a full dump, or provide one of the valid values listed in L<vos_dump(1)>.
+
 =item B<-verbose>
 
 Asks for a verbose trace of the dump process.  This trace information will
 be sent to standard error.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 

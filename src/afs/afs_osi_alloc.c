@@ -24,77 +24,40 @@
 #include "sys/sleep.h"
 #include "sys/syspest.h"
 #include "sys/lock_def.h"
-/*lock_t osi_fsplock = LOCK_AVAIL;*/
 #endif
 
+#ifndef AFS_PRIVATE_OSI_ALLOCSPACES
+
 afs_lock_t osi_fsplock;
+afs_lock_t osi_flplock;
 
 static struct osi_packet {
     struct osi_packet *next;
-} *freePacketList = NULL, *freeSmallList;
-afs_lock_t osi_flplock;
+} *freePacketList = NULL, *freeSmallList = NULL;
+
+#endif /* AFS_PRIVATE_OSI_ALLOCSPACES */
 
 static char memZero;		/* address of 0 bytes for kmem_alloc */
 
-struct osimem {
-    struct osimem *next;
-};
-
-#if !defined(AFS_NBSD_ENV)
 void *
-afs_osi_Alloc(size_t x)
+afs_osi_Alloc(size_t size)
 {
-#if !defined(AFS_LINUX20_ENV) && !defined(AFS_FBSD_ENV)
-    struct osimem *tm = NULL;
-    int size;
-#endif
-
     AFS_STATCNT(osi_Alloc);
     /* 0-length allocs may return NULL ptr from AFS_KALLOC, so we special-case
      * things so that NULL returned iff an error occurred */
-    if (x == 0)
+    if (size == 0)
 	return &memZero;
 
     AFS_STATS(afs_stats_cmperf.OutStandingAllocs++);
-    AFS_STATS(afs_stats_cmperf.OutStandingMemUsage += x);
+    AFS_STATS(afs_stats_cmperf.OutStandingMemUsage += size);
 #ifdef AFS_LINUX20_ENV
-    return osi_linux_alloc(x, 1);
+    return osi_linux_alloc(size, 1);
 #elif defined(AFS_FBSD_ENV)
-    return osi_fbsd_alloc(x, 1);
+    return osi_fbsd_alloc(size, 1);
 #else
-    size = x;
-    tm = (struct osimem *)AFS_KALLOC(size);
-#ifdef	AFS_SUN5_ENV
-    if (!tm)
-	osi_Panic("osi_Alloc: Couldn't allocate %d bytes; out of memory!\n",
-		  size);
-#endif
-    return (void *)tm;
+    return AFS_KALLOC(size);
 #endif
 }
-
-#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
-
-void *
-afs_osi_Alloc_NoSleep(size_t x)
-{
-    struct osimem *tm;
-    int size;
-
-    AFS_STATCNT(osi_Alloc);
-    /* 0-length allocs may return NULL ptr from AFS_KALLOC, so we special-case
-     * things so that NULL returned iff an error occurred */
-    if (x == 0)
-	return &memZero;
-
-    size = x;
-    AFS_STATS(afs_stats_cmperf.OutStandingAllocs++);
-    AFS_STATS(afs_stats_cmperf.OutStandingMemUsage += x);
-    tm = (struct osimem *)AFS_KALLOC_NOSLEEP(size);
-    return (void *)tm;
-}
-
-#endif /* SUN || SGI */
 
 void
 afs_osi_Free(void *x, size_t asize)
@@ -110,7 +73,7 @@ afs_osi_Free(void *x, size_t asize)
 #elif defined(AFS_FBSD_ENV)
     osi_fbsd_free(x);
 #else
-    AFS_KFREE((struct osimem *)x, asize);
+    AFS_KFREE(x, asize);
 #endif
 }
 
@@ -119,6 +82,8 @@ afs_osi_FreeStr(char *x)
 {
     afs_osi_Free(x, strlen(x) + 1);
 }
+
+#ifndef AFS_PRIVATE_OSI_ALLOCSPACES
 
 /* free space allocated by AllocLargeSpace.  Also called by mclput when freeing
  * a packet allocated by osi_NetReceive. */
@@ -215,13 +180,13 @@ osi_AllocSmallSpace(size_t size)
     ReleaseWriteLock(&osi_fsplock);
     return (char *)tp;
 }
-
-#endif /* !AFS_NBSD_ENV */
+#endif /* AFS_PRIVATE_OSI_ALLOCSPACES */
 
 void
 shutdown_osinet(void)
 {
     AFS_STATCNT(shutdown_osinet);
+#ifndef AFS_PRIVATE_OSI_ALLOCSPACES
     if (afs_cold_shutdown) {
 	struct osi_packet *tp;
 
@@ -243,6 +208,7 @@ shutdown_osinet(void)
 	LOCK_INIT(&osi_fsplock, "osi_fsplock");
 	LOCK_INIT(&osi_flplock, "osi_flplock");
     }
+#endif /* AFS_PRIVATE_OSI_ALLOCSPACES */
     if (afs_stats_cmperf.LargeBlocksActive ||
 	afs_stats_cmperf.SmallBlocksActive)
     {
@@ -251,3 +217,4 @@ shutdown_osinet(void)
 		 afs_stats_cmperf.SmallBlocksActive);
     }
 }
+

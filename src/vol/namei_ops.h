@@ -15,11 +15,11 @@
 #ifdef AFS_NAMEI_ENV
 
 /* Basic file operations */
-extern FILE *namei_fdopen(IHandle_t * h, char *fdperms);
+extern FD_t namei_fdopen(IHandle_t * h, char *fdperms);
 extern int namei_unlink(char *name);
 
 /* Inode operations */
-extern Inode namei_MakeSpecIno(int volid, int type);
+extern Inode namei_MakeSpecIno(VolumeId volid, int type);
 extern Inode namei_icreate(IHandle_t * lh, char *part, afs_uint32 p1,
 			   afs_uint32 p2, afs_uint32 p3, afs_uint32 p4);
 extern IHandle_t *namei_icreate_init(IHandle_t *lh, int dev, char *part,
@@ -40,16 +40,16 @@ extern int namei_FixSpecialOGM(FdHandle_t *h, int check);
 #include "nfs.h"
 #include "viceinode.h"
 int namei_ListAFSFiles(char *dev,
-		       int (*write_fun) (FILE * fp,
+		       int (*write_fun) (FD_t fp,
 					 struct ViceInodeInfo * info,
-					 char *dir, char *file), FILE * fp,
+					 char *dir, char *file), FD_t fp,
 		       int (*judge_fun) (struct ViceInodeInfo * info,
-					 afs_uint32 vid, void *rock),
-		       afs_uint32 singleVolumeNumber, void *rock);
-int ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
-		   int (*judgeInode) (struct ViceInodeInfo * info, afs_uint32 vid,
+					 VolumeId vid, void *rock),
+		       VolumeId singleVolumeNumber, void *rock);
+int ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
+		   int (*judgeInode) (struct ViceInodeInfo * info, VolumeId vid,
 				      void *rock),
-		   afs_uint32 singleVolumeNumber, int *forcep, int forceR,
+		   VolumeId singleVolumeNumber, int *forcep, int forceR,
 		   char *wpath, void *rock);
 
 #define NAMEI_LCOMP_LEN 32
@@ -80,7 +80,7 @@ typedef struct {
 #endif
 
 void namei_HandleToName(namei_t * name, IHandle_t * h);
-int namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId);
+int namei_ConvertROtoRWvolume(char *pname, VolumeId volumeId);
 int namei_replace_file_by_hardlink(IHandle_t *hLink, IHandle_t *hTarget);
 
 # ifdef AFS_SALSRV_ENV

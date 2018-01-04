@@ -88,7 +88,7 @@ afs_MarinerLog(char *astring, struct vcache *avc)
 #ifdef  STRUCT_SOCKADDR_HAS_SA_LEN
     taddr.sin_len = sizeof(taddr);
 #endif
-    tp = buf = (char *)osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+    tp = buf = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
 
     strcpy(tp, astring);
     tp += strlen(astring);

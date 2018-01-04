@@ -14,19 +14,18 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#include <sys/param.h>
-#endif
 #include <afs/stds.h>
-#include <sys/types.h>
+
+#include <roken.h>
+
+#include <afs/opr.h>
+
+#ifdef AFS_PTHREAD_ENV
+# include <opr/lock.h>
+#endif
+
 #include <ubik.h>
-#include <lock.h>
-#include <string.h>
+#include <afs/audit.h>
 
 #include "database.h"
 #include "budb.h"
@@ -34,7 +33,6 @@
 #include "error_macros.h"
 #include "budb_errs.h"
 #include "budb_internal.h"
-#include "afs/audit.h"
 
 
 /* dump ubik database - routines to scan the database and dump all
@@ -74,7 +72,7 @@ canWrite(int fid)
 	if (dumpSyncPtr->ds_readerStatus == DS_WAITING) {
 	    dumpSyncPtr->ds_readerStatus = 0;
 #ifdef AFS_PTHREAD_ENV
-	    CV_BROADCAST(&dumpSyncPtr->ds_readerStatus_cond);
+	    opr_cv_broadcast(&dumpSyncPtr->ds_readerStatus_cond);
 #else
 	    code = LWP_SignalProcess(&dumpSyncPtr->ds_readerStatus);
 	    if (code)
@@ -85,7 +83,7 @@ canWrite(int fid)
 	ReleaseWriteLock(&dumpSyncPtr->ds_lock);
 #ifdef AFS_PTHREAD_ENV
 	MUTEX_ENTER(&dumpSyncPtr->ds_writerStatus_mutex);
-	CV_WAIT(&dumpSyncPtr->ds_writerStatus_cond, &dumpSyncPtr->ds_writerStatus_mutex);
+	opr_cv_wait(&dumpSyncPtr->ds_writerStatus_cond, &dumpSyncPtr->ds_writerStatus_mutex);
 	MUTEX_EXIT(&dumpSyncPtr->ds_writerStatus_mutex);
 #else
 	LWP_WaitProcess(&dumpSyncPtr->ds_writerStatus);
@@ -115,7 +113,7 @@ haveWritten(afs_int32 nbytes)
     if (dumpSyncPtr->ds_readerStatus == DS_WAITING) {
 	dumpSyncPtr->ds_readerStatus = 0;
 #ifdef AFS_PTHREAD_ENV
-	CV_BROADCAST(&dumpSyncPtr->ds_readerStatus_cond);
+	opr_cv_broadcast(&dumpSyncPtr->ds_readerStatus_cond);
 #else
 	code = LWP_SignalProcess(&dumpSyncPtr->ds_readerStatus);
 	if (code)
@@ -145,7 +143,7 @@ doneWriting(afs_int32 error)
 	ReleaseWriteLock(&dumpSyncPtr->ds_lock);
 #ifdef AFS_PTHREAD_ENV
 	MUTEX_ENTER(&dumpSyncPtr->ds_writerStatus_mutex);
-	CV_WAIT(&dumpSyncPtr->ds_writerStatus_cond, &dumpSyncPtr->ds_writerStatus_mutex);
+	opr_cv_wait(&dumpSyncPtr->ds_writerStatus_cond, &dumpSyncPtr->ds_writerStatus_mutex);
 	MUTEX_EXIT(&dumpSyncPtr->ds_writerStatus_mutex);
 #else
 	LWP_WaitProcess(&dumpSyncPtr->ds_writerStatus);
@@ -162,7 +160,7 @@ doneWriting(afs_int32 error)
 	dumpSyncPtr->ds_writerStatus = DS_DONE;
     dumpSyncPtr->ds_readerStatus = 0;
 #ifdef AFS_PTHREAD_ENV
-    CV_BROADCAST(&dumpSyncPtr->ds_readerStatus_cond);
+    opr_cv_broadcast(&dumpSyncPtr->ds_readerStatus_cond);
 #else
     code = LWP_NoYieldSignal(&dumpSyncPtr->ds_readerStatus);
     if (code)
@@ -501,7 +499,7 @@ writeText(struct ubik_trans *ut, int fid, int textType)
 	if (code)
 	    ERROR(code);
 
-	writeSize = MIN(textSize, BLOCK_DATA_SIZE);
+	writeSize = min(textSize, BLOCK_DATA_SIZE);
 	if (!writeSize)
 	    break;
 

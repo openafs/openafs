@@ -8,15 +8,11 @@
  */
 
 #include <afsconfig.h>
+#include <afs/param.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <roken.h>
+
 #include "linked_list.h"
-
-#ifndef NULL
-#define NULL 0
-#endif
 
 #ifndef TRUE
 #define TRUE 1
@@ -61,7 +57,7 @@ ll_node *ll_add_node(linked_list *list, ll_end which_end)
 {
     ll_node *node = NULL;
 
-    if ((node = (ll_node *)calloc(1, sizeof(ll_node))) != NULL) {
+    if ((node = calloc(1, sizeof(ll_node))) != NULL) {
 	if (list->nelements == 0) {
 	    list->first = node;
 	    list->last = node;
@@ -105,38 +101,31 @@ int ll_delete_node(linked_list *list, ll_node *node)
    *   won't point to valid data.
    */
 {
-    int status = LL_SUCCESS;
     ll_node *cur_node = NULL;
-    int found = FALSE;
 
     if (list->nelements == 0)
-	status = LL_FAILURE;
-    else {
-	for (cur_node = list->first; (cur_node != NULL) && !found;
-	     cur_node = cur_node->next) {
-	    if (cur_node == node) {
+	return LL_FAILURE;
 
-		if (cur_node->prev)
-		    cur_node->prev->next = cur_node->next;
-		else
-		    list->first = cur_node->next;
+    for (cur_node = list->first; cur_node != NULL; cur_node = cur_node->next) {
+	if (cur_node == node) {
 
-		if (cur_node->next)
-		    cur_node->next->prev = cur_node->prev;
-		else
-		    list->last = cur_node->prev;
+	    if (cur_node->prev)
+		cur_node->prev->next = cur_node->next;
+	    else
+		list->first = cur_node->next;
 
-		free(cur_node);
-		list->nelements--;
-		found = TRUE;
-	    }
+	    if (cur_node->next)
+		cur_node->next->prev = cur_node->prev;
+	    else
+		list->last = cur_node->prev;
+
+	    free(cur_node);
+	    list->nelements--;
+	    return LL_SUCCESS;
 	}
     }
 
-    if (!found)
-	status = LL_FAILURE;
-
-    return(status);
+    return LL_FAILURE;
 }
 
 
@@ -160,8 +149,7 @@ int ll_string(linked_list *list, ll_s_action action, char *string)
 	if (!ll_string(list, ll_s_check, string)) {
 	    if ((cur_node = ll_add_node(list, ll_tail))) {
 		char *new_string;
-		if ((new_string = (char *)calloc(strlen(string) + 1,
-						sizeof(char)))) {
+		if ((new_string = calloc(strlen(string) + 1, sizeof(char)))) {
 		    strcpy(new_string, string);
 		    ll_add_data(cur_node, new_string);
 		}

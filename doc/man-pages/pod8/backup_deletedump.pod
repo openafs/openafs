@@ -10,9 +10,9 @@ backup_deletedump - Deletes one or more dump records from the Backup Database
 B<backup deletedump> S<<< [B<-dumpid> <I<dump id>>+] >>>
     S<<< [B<-from> <I<date time>>+] >>>
     S<<< [B<-to> <I<date time>>+] >>>
-    S<<< [B<-port> <I<TC port offset>>] >>>
+    S<<< [B<-portoffset> <I<TC port offset>>] >>>
     S<<< [B<-groupid> <I<group ID>>] >>>
-    [B<-dbonly>] [B<-force>] [B<-noexecute>] [B<-localauth>]
+    [B<-dbonly>] [B<-force>] [B<-dryrun> | B<-n>] [B<-localauth>]
     S<<< [B<-cell> <I<cell name>>] >>>
     [B<-help>]
 
@@ -21,7 +21,8 @@ B<backup dele> S<<< [B<-d> <I<dump id>>+] >>>
     [-t <I<date time>>+]
     S<<< [B<-p> <I<TC port offset>>] >>>
     S<<< [B<-g> <I<group ID>>] >>>
-    [B<-db>] [B<-fo>] [B<-n>] [B<-l>]
+    [B<-db>] [B<-fo>] [B<-l>]
+    [B<-dryrun> | B<-n>]
     S<<< [B<-c> <I<cell name>>] >>>
     [B<-h>]
 
@@ -123,6 +124,35 @@ B<Caution:> Specifying the value C<NOW> for this argument when the
 B<-from> argument is omitted deletes all dump records from the Backup
 Database (except for Backup Database dump records created with the
 B<backup savedb> command).
+
+=item B<-groupid> <I<group id>>
+
+Delete all dumps associated with the given group ID. If B<-from> and B<-to> are
+also given, then we only delete dumps that are both a part of this group ID,
+and fall within the time range specified by B<-from> and B<-to>.
+
+=item B<-dbonly>
+
+If this option is specified, only delete the dump from the budb; do not contact
+the Tape Coordinator at all.
+
+=item B<-force>
+
+By default, we attempt to delete the specified dumps from the Tape Coordinator
+before deleting the dumps from the budb. If the Tape Coordinator operation
+fails, then we do not delete the dumps from the budb. If the B<-force> option
+is given, we will delete the specified dumps from the budb, even if deleting
+the dumps on the Tape Coordinator fails.
+
+=item B<-portoffset> <I<TC port offset>>
+
+Specifies the port offset number of the Tape Coordinator to contact for this
+operation.
+
+=item B<-dryrun> | B<-n>
+
+Prints out information about what actions would be taken to run this command,
+but do not actually perform those actions.
 
 =item B<-localauth>
 

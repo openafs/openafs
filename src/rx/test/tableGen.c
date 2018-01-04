@@ -246,7 +246,7 @@ ProcessCmdLine(argc, argv, apFileNamePP, outputFileP)
 		if (n == 0)
 		    FATAL("ProcessCmdLine: must give dir with -d\n");
 		dir_size = n;
-		dir = (char **)malloc(sizeof(char *) * n);
+		dir = malloc(sizeof(char *) * n);
 		MEM_CHK(dir, "ProcessCmdLine: out of mem dir\n");
 		for (i = 0; i < n; i++)
 		    *(dir + i) = *++argv;
@@ -272,7 +272,7 @@ ProcessCmdLine(argc, argv, apFileNamePP, outputFileP)
 		if (n == 0)
 		    FATAL("ProcessCmdLine: must give typ with -t\n");
 		typ_size = n;
-		typ = (char **)malloc(sizeof(char *) * n);
+		typ = malloc(sizeof(char *) * n);
 		MEM_CHK(typ, "ProcessCmdLine: out of mem typ\n");
 		for (i = 0; i < n; i++)
 		    *(typ + i) = *++argv;

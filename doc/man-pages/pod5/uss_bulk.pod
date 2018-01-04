@@ -135,7 +135,7 @@ Corresponding variable in the template file: $PWEXPIRES.
 
 Names the file server machine on which to create the new user's volume. It
 is best to provide a fully-qualified hostname (for example,
-C<fs1.abc.com>), but an abbreviated form is acceptable provided that the
+C<fs1.example.com>), but an abbreviated form is acceptable provided that the
 cell's naming service is available to resolve it at the time the volume is
 created.
 
@@ -304,19 +304,19 @@ template file).
 
    add smith:John Smith:::fs1:a:::::marketing
    add jones:Pat Jones:::fs3:c:::::finance
-   V user.$USER $SERVER.abc.com /vicep$PART 2000 \
-       /afs/abc.com/usr/$3/$USER $UID $USER all
+   V user.$USER $SERVER.example.com /vicep$PART 2000 \
+       /afs/example.com/usr/$3/$USER $UID $USER all
 
 The first add instruction creates an account called C<smith> in the
 Protection and Authentication Databases, with an initial password
 C<changeme> and a value for $UID provided by the Protection Server. The
 volume C<user.smith> resides on partition F</vicepa> of file server
-machine C<fs1.abc.com> and is mounted at
-F</afs/abc.com/usr/marketing/smith>. He owns his home directory and has
+machine C<fs1.example.com> and is mounted at
+F</afs/example.com/usr/marketing/smith>. He owns his home directory and has
 all access permissions on its root directory's access control list
 (ACL). The account for C<jones> is similar, except that the volume resides
-on partition F</vicepc> of file server machine C<fs3.abc.com> and is
-mounted at F</afs/abc.com/usr/finance/jones>.
+on partition F</vicepc> of file server machine C<fs3.example.com> and is
+mounted at F</afs/example.com/usr/finance/jones>.
 
 Notice that the fields corresponding to the volume mount point, UID, $1
 variable, and $2 variable are empty (between C<a> and C<marketing> on the
@@ -340,12 +340,12 @@ instruction applies to it, but user C<johnson>'s volume is removed because
 the third field of her C<delete> instruction overrides the current
 default.
 
-   delete smith:/afs/abc.com/usr/smith
-   delete pat:/afs/abc.com/usr/pat
-   delete rogers:/afs/abc.com/usr/rogers
+   delete smith:/afs/example.com/usr/smith
+   delete pat:/afs/example.com/usr/pat
+   delete rogers:/afs/example.com/usr/rogers
    savevolume
-   delete terry:/afs/abc.com/usr/terry
-   delete johnson:/afs/abc.com/usr/johnson:delvolume
+   delete terry:/afs/example.com/usr/terry
+   delete johnson:/afs/example.com/usr/johnson:delvolume
 
 The following example exec instruction appears between sets of C<add> and
 C<delete> instructions in a bulk input file.  A message appears in the

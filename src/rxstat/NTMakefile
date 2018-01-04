@@ -48,8 +48,6 @@ copyheader: rxstat.h
 
 install: copyheader $(LIBFILE) $(INCFILES)
 
-install9x: install
-
 clean::
 	$(DEL) rxstat.cs.c rxstat.h rxstat.ss.c rxstat.xdr.c
 	$(DEL) $(LIBFILE)

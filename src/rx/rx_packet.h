@@ -9,6 +9,7 @@
 
 #ifndef _RX_PACKET_
 #define _RX_PACKET_
+
 #if defined(AFS_NT40_ENV)
 #include "rx_xmit_nt.h"
 #endif
@@ -32,20 +33,24 @@
 
 
 #if defined(AFS_NT40_ENV)
-#ifndef MIN
-#define MIN(a,b)  ((a)<(b)?(a):(b))
-#endif
-#ifndef MAX
-#define MAX(a,b)  ((a)>(b)?(a):(b))
-#endif
+# ifndef MIN
+#  define MIN(a,b)  ((a)<(b)?(a):(b))
+# endif
+# ifndef MAX
+#  define MAX(a,b)  ((a)>(b)?(a):(b))
+# endif
 #else /* AFS_NT40_ENV */
-#if !defined(AFS_DARWIN_ENV) && !defined(AFS_USR_DARWIN_ENV) && !defined(AFS_XBSD_ENV) && !defined(AFS_USR_FBSD_ENV) && !defined(AFS_USR_DFBSD_ENV) && !defined(AFS_LINUX20_ENV)
-#include <sys/sysmacros.h>	/* MIN, MAX on Solaris */
-#endif
-#if !(defined(AFS_LINUX26_ENV) && defined(KERNEL))
-#include <sys/param.h>		/* MIN, MAX elsewhere */
-#endif
-#endif /* AFS_NT40_ENV */
+# if !defined(AFS_DARWIN_ENV) && !defined(AFS_USR_DARWIN_ENV)   \
+    && !defined(AFS_XBSD_ENV) && !defined(AFS_USR_FBSD_ENV)     \
+    && !defined(AFS_USR_DFBSD_ENV) && !defined(AFS_LINUX20_ENV)
+#  include <sys/sysmacros.h>	/* MIN, MAX on most commercial UNIX */
+# endif
+/* Linux 3.7 doesn't have sys/param.h in kernel space, and afs/param.h ensures
+ * that MIN and MAX are available for kernel builds. */
+# if !(defined(AFS_LINUX26_ENV) && defined(KERNEL))
+#  include <sys/param.h>	/* MIN, MAX elsewhere */
+# endif
+#endif /* !AFS_NT40_ENV */
 
 #define	IPv6_HDR_SIZE		40	/* IPv6 Header */
 #define IPv6_FRAG_HDR_SIZE	 8	/* IPv6 Fragment Header */
@@ -129,23 +134,6 @@
 #define RX_PACKET_TYPE_PARAMS       9	/* exchange size params (showUmine) */
 #define RX_PACKET_TYPE_VERSION	   13	/* get AFS version */
 
-
-#define	RX_PACKET_TYPES	    {"data", "ack", "busy", "abort", "ackall", "challenge", "response", "debug", "params", "unused", "unused", "unused", "version"}
-#define	RX_N_PACKET_TYPES	    13	/* Must agree with above list;
-					 * counts 0
-					 * WARNING: if this number ever
-					 * grows past 13, rxdebug packets
-					 * will need to be modified */
-
-/* Packet classes, for rx_AllocPacket and rx_packetQuota */
-#define	RX_PACKET_CLASS_RECEIVE	    0
-#define	RX_PACKET_CLASS_SEND	    1
-#define	RX_PACKET_CLASS_SPECIAL	    2
-#define	RX_PACKET_CLASS_RECV_CBUF   3
-#define	RX_PACKET_CLASS_SEND_CBUF   4
-
-#define	RX_N_PACKET_CLASSES	    5	/* Must agree with above list */
-
 /* Flags for rx_header flags field */
 #define	RX_CLIENT_INITIATED	1	/* Packet is sent/received from client side of call */
 #define	RX_REQUEST_ACK		2	/* Peer requests acknowledgement */
@@ -211,9 +199,7 @@ struct rx_jumboHeader {
     u_short cksum;		/* packet header checksum */
 };
 
-/* For most Unixes, maximum elements in an iovec is 16 */
-#define RX_MAXIOVECS 16		/* limit for ReadvProc/WritevProc */
-#define RX_MAXWVECS RX_MAXIOVECS-1	/* need one iovec for packet header */
+
 
 /*
  * The values for the RX buffer sizes are calculated to ensure efficient
@@ -252,8 +238,12 @@ struct rx_jumboHeader {
  */
 #define RX_EXTRABUFFERSIZE 4
 
+#ifndef RX_MAXWVECS
+#error RX_MAXWVECS not defined
+#endif
+
 struct rx_packet {
-    struct rx_queue queueItemHeader;	/* Packets are chained using the queue.h package */
+    struct opr_queue entry;	/* Packets are chained using opr_queue */
     struct clock timeSent;	/* When this packet was transmitted last */
     afs_uint32 firstSerial;	/* Original serial number of this packet */
     struct clock firstSent;	/* When this packet was transmitted first */
@@ -292,14 +282,6 @@ struct rx_packet {
 #define RX_CBUF_TO_PACKET(CP, PP) \
     ((struct rx_packet *) \
      ((char *)(CP) - ((char *)(&(PP)->localdata[0])-(char *)(PP))))
-
-/* Macros callable by security modules, to set header/trailer lengths,
- * set actual packet size, and find the beginning of the security
- * header (or data) */
-#define rx_SetSecurityHeaderSize(conn, length) ((conn)->securityHeaderSize = (length))
-#define rx_SetSecurityMaxTrailerSize(conn, length) ((conn)->securityMaxTrailerSize = (length))
-#define rx_GetSecurityHeaderSize(conn) ((conn)->securityHeaderSize)
-#define rx_GetSecurityMaxTrailerSize(conn) ((conn)->securityMaxTrailerSize)
 
 /* This is the address of the data portion of the packet.  Any encryption
  * headers will be at this address, the actual data, for a data packet, will

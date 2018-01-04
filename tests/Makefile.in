@@ -1,31 +1,32 @@
 # Build rules for the OpenAFS test suite.
 
-srcdir=@srcdir@
+srcdir=@srcdir@/../src/external/c-tap-harness/tests
 abs_top_srcdir=@abs_top_srcdir@
 abs_top_builddir=@abs_top_builddir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.pthread
 
-RUNTESTS_CPPFLAGS = -DSOURCE='"$(abs_top_srcdir)/tests"' \
+MODULE_CFLAGS = -DSOURCE='"$(abs_top_srcdir)/tests"' \
 	-DBUILD='"$(abs_top_builddir)/tests"'
 
-all: runtests
-	cd tap && $(MAKE) $@
-	cd util && $(MAKE) $@
+SUBDIRS = tap common auth util cmd volser opr rx
 
-runtests.o: $(srcdir)/runtests.c
-	$(CCOBJ) $(CFLAGS) $(RUNTESTS_CPPFLAGS) -c $(srcdir)/runtests.c
+all: runtests
+	@for A in $(SUBDIRS); do cd $$A && $(MAKE) $@ && cd .. || exit 1; done
 
 runtests: runtests.o
-	$(CC) $(LDFLAGS) -o runtests runtests.o
+	$(AFS_LDRULE) runtests.o
+
+runtests.o: $(srcdir)/runtests.c
+	$(AFS_CCRULE) $(srcdir)/runtests.c
 
 check test tests: runtests
-	cd tap && $(MAKE) $@
-	cd util && $(MAKE) $@
-	./runtests $(abs_top_srcdir)/tests/TESTS
+	@for A in $(SUBDIRS); do cd $$A && $(MAKE) $@ && cd .. || exit 1; done
+	MAKECHECK=1 ./libwrap @TOP_OBJDIR@/lib \
+	    ./runtests $(abs_top_srcdir)/tests/TESTS
 
 install:
 
 clean distclean:
-	cd tap && $(MAKE) $@
-	cd util && $(MAKE) $@
+	@for A in $(SUBDIRS); do cd $$A && $(MAKE) $@ && cd .. || exit 1; done
 	$(RM) -f *.o core runtests

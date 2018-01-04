@@ -10,10 +10,7 @@ encounters.
 
 If the F<FileLog> file does not already exist in the
 F</usr/afs/logs> directory when the File Server starts, the server
-process creates it and writes initial start-up messages to it. If there
-is an existing file, the File Server renames it to
-F<FileLog.old>, overwriting the existing
-F<FileLog.old> file if it exists.
+process creates it and writes initial start-up messages to it.
 
 The file is in ASCII format. Administrators listed in the
 F</usr/afs/etc/UserList> file can use the B<bos getlog> command to display

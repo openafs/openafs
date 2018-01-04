@@ -5,7 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-# nmake Makefile for NT build of LWP. 
+# nmake Makefile for NT build of LWP.
 
 RELDIR=lwp
 !include ..\config\NTMakefile.$(SYS_NAME)
@@ -28,14 +28,11 @@ LIBFILE = $(DESTDIR)\lib\afslwp.lib
 INCFILES = \
 	$(DESTDIR)\include\lock.h \
 	$(DESTDIR)\include\lwp.h \
-	$(DESTDIR)\include\preempt.h \
 	$(DESTDIR)\include\timer.h
 
 install_headers: $(INCFILES)
 
-install: install_headers $(LIBFILE) 
-
-install9x: install
+install: install_headers $(LIBFILE)
 
 $(LIBFILE): $(LIBOBJS)
 	$(LIBARCH)
@@ -52,4 +49,4 @@ clean::
 	$(DEL) $(LIBFILE)
 
 mkdir:
-	
+

@@ -43,11 +43,8 @@
 #ifdef KERNEL
 # include "afs/sysincludes.h"
 #else
-# include <string.h>
+# include <roken.h>
 # include <limits.h>
-# ifndef AFS_NT40_ENV
-#  include <netinet/in.h>
-# endif
 #endif
 
 #include "xdr.h"
@@ -63,31 +60,16 @@ static void xdrmem_destroy(XDR *);
 
 static struct xdr_ops xdrmem_ops = {
 #ifndef HAVE_STRUCT_LABEL_SUPPORT
-#ifdef AFS_XDR_64BITOPS
-    NULL,
-    NULL,
-#endif
     /* Windows does not support labeled assigments */
-#if !(defined(KERNEL) && defined(AFS_SUN57_ENV))
     xdrmem_getint32,    /* deserialize an afs_int32 */
     xdrmem_putint32,    /* serialize an afs_int32 */
-#endif
     xdrmem_getbytes,    /* deserialize counted bytes */
     xdrmem_putbytes,    /* serialize counted bytes */
     xdrmem_getpos,      /* get offset in the stream: not supported. */
     xdrmem_setpos,      /* set offset in the stream: not supported. */
     xdrmem_inline,      /* prime stream for inline macros */
     xdrmem_destroy,     /* destroy stream */
-#if (defined(KERNEL) && defined(AFS_SUN57_ENV))
-    NULL,               /* control - not implemented */
-    xdrmem_getint32,    /* not supported */
-    xdrmem_putint32,    /* serialize an afs_int32 */
-#endif
 #else
-#ifdef AFS_XDR_64BITOPS
-    .x_getint64 = NULL,
-    .x_putint64 = NULL,
-#endif
     .x_getint32 = xdrmem_getint32,
     .x_putint32 = xdrmem_putint32,
     .x_getbytes = xdrmem_getbytes,

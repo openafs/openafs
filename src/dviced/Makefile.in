@@ -9,219 +9,147 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.pthread
 
-CC=${MT_CC}
-CFLAGS=${COMMON_CFLAGS} -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG -DFSSYNC_BUILD_SERVER -DSALVSYNC_BUILD_CLIENT -DAFS_DEMAND_ATTACH_FS
 
-CCRULE=${CC} ${CFLAGS} -c $?
+MODULE_CFLAGS=-DRXDEBUG -DFSSYNC_BUILD_SERVER \
+	      -DSALVSYNC_BUILD_CLIENT -DAFS_DEMAND_ATTACH_FS
 
-RX=../rx
-VICED=../viced
-TVICED=../tviced
-VLSERVER=../vlserver
-LWP=../lwp
-LIBACL=../libacl
-UTIL=../util
-DIR=../dir
-VOL=../vol
-FSINT=../fsint
+VICED=$(srcdir)/../viced
+VLSERVER=$(srcdir)/../vlserver
+DIR=$(srcdir)/../dir
+VOL=$(srcdir)/../vol
 
-VICEDOBJS=viced.o afsfileprocs.o host.o physio.o callback.o serialize_state.o	
-
-VLSERVEROBJS=vldbint.cs.o vldbint.xdr.o
-
-LWPOBJS=lock.o threadname.o
-
-LIBACLOBJS=aclprocs.o netprocs.o
-
-UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o volparse.o flipbase64.o softsig.o
+VICEDOBJS=viced.o afsfileprocs.o host.o physio.o callback.o serialize_state.o \
+	  fsstats.o
 
 DIROBJS=buffer.o dir.o salvage.o
 
 VOLOBJS= vnode.o volume.o vutil.o partition.o fssync-server.o \
 	 clone.o devname.o common.o ihandle.o listinodes.o namei_ops.o \
-	 fstab.o salvsync-client.o daemon_com.o vg_cache.o vg_scan.o
+	 salvsync-client.o daemon_com.o vg_cache.o vg_scan.o
 
-FSINTOBJS= afsaux.o afscbint.cs.o afsint.ss.o afsint.xdr.o
+FSINTOBJS= afsint.ss.o
 
-RXOBJS = rx_pthread.o 
+objects= ${VICEDOBJS} ${DIROBJS} ${VOLOBJS} ${FSINTOBJS}
 
-objects= ${VICEDOBJS} ${VLSERVEROBJS} ${LWPOBJS} ${LIBACLOBJS} \
-	 ${UTILOBJS} ${DIROBJS} ${VOLOBJS} ${FSINTOBJS} ${RXOBJS}
+SDBGOBJS = state_analyzer.o \
+	   $(top_builddir)/src/util/liboafs_util.la \
+	   $(top_builddir)/src/opr/liboafs_opr.la
 
-SDBGOBJS = state_analyzer.o uuid.o dirpath.o fileutil.o ${TOP_LIBDIR}/util.a
-
-LIBS=${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/util.a
+LIBS= \
+     $(top_builddir)/src/vlserver/liboafs_vldb.la \
+     $(top_builddir)/src/libacl/liboafs_acl.la \
+     $(top_builddir)/src/rxkad/liboafs_rxkad.la \
+     $(top_builddir)/src/rxstat/liboafs_rxstat.la \
+     $(top_builddir)/src/lwp/liboafs_lwpcompat.la \
+     $(top_builddir)/src/fsint/liboafs_fsint.la \
+     $(top_builddir)/src/cmd/liboafs_cmd.la \
+     $(top_builddir)/src/opr/liboafs_opr.la \
+     $(top_builddir)/src/util/liboafs_util.la
 
 all: dafileserver state_analyzer
 
-rx_pthread.o: ${RX}/rx_pthread.c
-	${CCRULE} -DDPF_FSLOG
-
 viced.o: ${VICED}/viced.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VICED)/viced.c
 
 afsfileprocs.o: ${VICED}/afsfileprocs.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VICED)/afsfileprocs.c
 
 host.o: ${VICED}/host.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VICED)/host.c
 
 physio.o: ${VICED}/physio.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VICED)/physio.c
 
 callback.o: ${VICED}/callback.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VICED)/callback.c
 
-serialize_state.o: ${TVICED}/serialize_state.c
-	${CCRULE}
+fsstats.o: ${VICED}/fsstats.c
+	$(AFS_CCRULE) $(VICED)/fsstats.c
 
-assert.o: ${UTIL}/assert.c
-	${CCRULE}
-
-uuid.o: ${UTIL}/uuid.c
-	${CCRULE}
-
-serverLog.o: ${UTIL}/serverLog.c
-	${CCRULE}
-
-fileutil.o: ${UTIL}/fileutil.c
-	${CCRULE}
-
-volparse.o: ${UTIL}/volparse.c
-	${CCRULE}
-
-flipbase64.o: ${UTIL}/flipbase64.c
-	${CCRULE}
-
-netutils.o: ${UTIL}/netutils.c
-	${CCRULE} -I../util
-
-dirpath.o: ${UTIL}/dirpath.c
-	${CCRULE}
-
-softsig.o: ${UTIL}/softsig.c
-	${CCRULE}
-
-lock.o: ${LWP}/lock.c
-	${CCRULE}
-
-threadname.o: ${LWP}/threadname.c
-	${CCRULE}
-
-aclprocs.o: ${LIBACL}/aclprocs.c
-	${CCRULE}
-
-netprocs.o: ${LIBACL}/netprocs.c
-	${CCRULE}
-
-vldbint.cs.o: ${VLSERVER}/vldbint.cs.c
-	${CCRULE} -I${srcdir}/../vlserver
-
-vldbint.xdr.o: ${VLSERVER}/vldbint.xdr.c
-	${CCRULE} -I${srcdir}/../vlserver
+serialize_state.o: ${VICED}/serialize_state.c
+	$(AFS_CCRULE) $(VICED)/serialize_state.c
 
 buffer.o: ${DIR}/buffer.c
-	${CCRULE}
+	$(AFS_CCRULE) $(DIR)/buffer.c
 
 dir.o: ${DIR}/dir.c
-	${CCRULE}
+	$(AFS_CCRULE) $(DIR)/dir.c
 
 salvage.o: ${DIR}/salvage.c
-	${CCRULE}
+	$(AFS_CCRULE) $(DIR)/salvage.c
 
 vnode.o: ${VOL}/vnode.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/vnode.c
 
 volume.o: ${VOL}/volume.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/volume.c
 
 vutil.o: ${VOL}/vutil.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/vutil.c
 
 partition.o: ${VOL}/partition.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/partition.c
 
 vg_cache.o: ${VOL}/vg_cache.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/vg_cache.c
 
 vg_scan.o: ${VOL}/vg_scan.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/vg_scan.c
 
 fssync-server.o: ${VOL}/fssync-server.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/fssync-server.c
 
 fssync-client.o: ${VOL}/fssync-client.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/fssync-client.c
 
 salvsync-client.o: ${VOL}/salvsync-client.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/salvsync-client.c
 
 daemon_com.o: ${VOL}/daemon_com.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/daemon_com.c
 
 clone.o: ${VOL}/clone.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/clone.c
 
 nuke.o: ${VOL}/nuke.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/nuke.c
 
 devname.o: ${VOL}/devname.c
-	${CCRULE}
-
-# only for darwin?
-fstab.o: ${UTIL}/fstab.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/devname.c
 
 common.o: ${VOL}/common.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/common.c
 
 listinodes.o: ${VOL}/listinodes.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/listinodes.c
 
 ihandle.o: ${VOL}/ihandle.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/ihandle.c
 
 namei_ops.o: ${VOL}/namei_ops.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOL)/namei_ops.c
 
-afsaux.o: ${FSINT}/afsaux.c
-	${CCRULE} -I../fsint
+afsint.ss.o: ../fsint/afsint.ss.c
+	$(AFS_CCRULE) ../fsint/afsint.ss.c
 
-afscbint.cs.o: ${FSINT}/afscbint.cs.c
-	${CCRULE}
-
-afscbint.ss.o: ${FSINT}/afscbint.ss.c
-	${CCRULE}
-
-afsint.cs.o: ${FSINT}/afsint.cs.c
-	${CCRULE}
-
-afsint.ss.o: ${FSINT}/afsint.ss.c
-	${CCRULE}
-
-afsint.xdr.o: ${FSINT}/afsint.xdr.c
-	${CCRULE}
-
-state_analyzer.o: ${TVICED}/state_analyzer.c
-	${CCRULE}
+state_analyzer.o: ${VICED}/state_analyzer.c
+	$(AFS_CCRULE) $(VICED)/state_analyzer.c
 
 dafileserver: ${objects} ${LIBS}
-	${CC} ${LDFLAGS} -o dafileserver ${objects} ${LIBS} ${MT_LIBS} ${XLIBS} ${KRB5_LIBS}
+	$(LT_LDRULE_static) ${objects} \
+		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
 
 state_analyzer: ${SDBGOBJS}
-	${CC} ${LDFLAGS} -o state_analyzer ${SDBGOBJS} ${MT_LIBS} ${XLIBS}
+	$(LT_LDRULE_static) ${SDBGOBJS} $(LIB_roken) ${MT_LIBS}
 
 install: dafileserver state_analyzer
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
 	${INSTALL} -d ${DESTDIR}${afssrvsbindir}
-	${INSTALL} dafileserver \
+	$(LT_INSTALL_PROGRAM) dafileserver \
 		${DESTDIR}${afssrvlibexecdir}/dafileserver
-	${INSTALL_PROGRAM} state_analyzer \
+	${LT_INSTALL_PROGRAM} state_analyzer \
 		${DESTDIR}${afssrvsbindir}/state_analyzer
 
 dest: dafileserver state_analyzer
@@ -232,6 +160,7 @@ dest: dafileserver state_analyzer
 		${DEST}/root.server/usr/afs/bin/state_analyzer
 
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o dafileserver state_analyzer core AFS_component_version_number.c
 
 include ../config/Makefile.version

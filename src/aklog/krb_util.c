@@ -10,11 +10,10 @@
  */
 
 #include <afsconfig.h>
-
-#if 0
-#include <kerberosIV/mit-copyright.h>
-#endif
 #include <afs/stds.h>
+
+#include <roken.h>
+
 #define KERBEROS_APPLE_DEPRECATED(x)
 #include "aklog.h"
 #include <krb5.h>
@@ -25,7 +24,6 @@
 
 #include <afs/cellconfig.h>
 
-#include <string.h>
 #include <ctype.h>
 
 #define S_AD_SZ sizeof(struct sockaddr_in)

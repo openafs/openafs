@@ -1,0 +1,186 @@
+# A roken library for AFS
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.libtool
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+
+LT_current = 2
+LT_revision = 0
+LT_age = 0
+
+# ROKEN_LTLIBOBJS incorporates the pieces which configure has detected we
+# need to replace/provide.  The values contained therein include a prefix
+# ${LIBOBJDIR}, which is not set, so they will be sought in this directory.
+LT_objs = $(ROKEN_LTLIBOBJS) base64.lo cloexec.lo ct.lo hex.lo issuid.lo \
+	  mkdir.lo net_read.lo net_write.lo socket.lo snprintf.lo \
+	  warnerr.lo
+
+HEADERS = ${TOP_INCDIR}/base64.h \
+	  ${TOP_INCDIR}/roken.h \
+	  ${TOP_INCDIR}/roken-common.h
+
+UPSTREAM = $(TOP_SRCDIR)/external/heimdal/roken
+
+# TOP_LIBDIR is a convenient place where we can ensure that both the shared
+# and static versions of the library will end up (I'm looking at you, AIX).
+# Otherwise we could just use .libs directly, since only openafs-internal
+# tools will be linking roken from that directory.
+all: $(ROKEN_HEADERS) $(HEADERS) $(TOP_LIBDIR)/librokenafs.$(SHLIB_SUFFIX) \
+	$(TOP_LIBDIR)/librokenafs.a
+
+buildtools: $(ROKEN_HEADERS) $(HEADERS)
+
+install: librokenafs.la librokenafs.a
+	$(LT_INSTALL_DATA) librokenafs.la $(DESTDIR)$(libdir)/librokenafs.la
+	$(RM) $(DESTDIR)$(libdir)/librokenafs.la
+	$(INSTALL_DATA) librokenafs.a $(DESTDIR)$(libdir)/librokenafs.a
+
+dest: librokenafs.la librokenafs.a
+	$(LT_INSTALL_DATA) librokenafs.la $(DEST)/lib/librokenafs.la
+	$(RM) $(DEST)/lib/librokenafs.la
+	$(INSTALL_DATA) librokenafs.a $(DEST)/lib/librokenafs.a
+
+clean:
+	$(LT_CLEAN)
+	$(RM) -f $(OBJECTS) librokenafs.a err.h
+
+$(TOP_LIBDIR)/librokenafs.$(SHLIB_SUFFIX): librokenafs.la
+	$(LT_INSTALL_DATA) librokenafs.la $(TOP_LIBDIR)/librokenafs.la
+	# libtool gets confused if we leave these around
+	$(RM) $(TOP_LIBDIR)/librokenafs.la
+
+librokenafs.la: librokenafs.la.sym $(LT_objs)
+	$(LT_LDLIB_shlib_missing) $(LT_objs)
+
+$(TOP_LIBDIR)/librokenafs.a: librokenafs.a
+	$(INSTALL_DATA) $? $@
+
+librokenafs.a: $(LT_objs)
+	$(LT_LDLIB_static) $(LT_objs)
+
+$(TOP_INCDIR)/base64.h: ${UPSTREAM}/base64.h
+	$(INSTALL_DATA) $? $@
+
+$(TOP_INCDIR)/err.h: ${UPSTREAM}/err.hin
+	$(INSTALL_DATA) $? $@
+
+$(TOP_INCDIR)/roken.h: $(UPSTREAM)/roken.h.in
+	$(INSTALL_DATA) $? $@
+
+$(TOP_INCDIR)/roken-common.h: $(UPSTREAM)/roken-common.h
+	$(INSTALL_DATA) $? $@
+
+err.h: ${UPSTREAM}/err.hin
+	$(INSTALL_DATA) $? $@
+
+# Here we have explicit rules for all the libtool objects we might need to
+# build.  The implicit rules don't work since the sources are in a different
+# castle.
+base64.lo: $(UPSTREAM)/base64.c ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/base64.c
+
+cloexec.lo: ${UPSTREAM}/cloexec.c ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/cloexec.c
+
+ct.lo: ${UPSTREAM}/ct.c ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/ct.c
+
+daemon.lo: ${UPSTREAM}/daemon.c ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/daemon.c
+
+ecalloc.lo: ${UPSTREAM}/ecalloc.c ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/ecalloc.c
+
+emalloc.lo: ${UPSTREAM}/emalloc.c ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/emalloc.c
+
+erealloc.lo: ${UPSTREAM}/erealloc.c ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/erealloc.c
+
+err.lo: ${UPSTREAM}/err.c err.h ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/err.c
+
+errx.lo: ${UPSTREAM}/errx.c err.h ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/errx.c
+
+flock.lo: ${UPSTREAM}/flock.c ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/flock.c
+
+getopt.lo: ${UPSTREAM}/getopt.c ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/getopt.c
+
+getprogname.lo: ${UPSTREAM}/getprogname.c ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/getprogname.c
+
+hex.lo: ${UPSTREAM}/hex.c ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/hex.c
+
+issuid.lo: ${UPSTREAM}/issuid.c ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/issuid.c
+
+mkstemp.lo: ${UPSTREAM}/mkstemp.c ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/mkstemp.c
+
+mkdir.lo: ${UPSTREAM}/mkdir.c ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/mkdir.c
+
+net_read.lo: ${UPSTREAM}/net_read.c ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/net_read.c
+
+net_write.lo: ${UPSTREAM}/net_write.c ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/net_write.c
+
+setenv.lo: ${UPSTREAM}/setenv.c ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/setenv.c
+
+setprogname.lo: ${UPSTREAM}/setprogname.c ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/setprogname.c
+
+socket.lo: ${UPSTREAM}/socket.c ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/socket.c
+
+# The upstream snprintf.c has some pointer warnings in it
+CFLAGS_snprintf.lo = @CFLAGS_NOERROR@
+
+snprintf.lo: ${UPSTREAM}/snprintf.c ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/snprintf.c
+
+strlcat.lo: ${UPSTREAM}/strlcat.c ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/strlcat.c
+
+strlcpy.lo: ${UPSTREAM}/strlcpy.c ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/strlcpy.c
+
+strnlen.lo: ${UPSTREAM}/strnlen.c ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/strnlen.c
+
+strsep.lo: ${UPSTREAM}/strsep.c ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/strsep.c
+
+unsetenv.lo: ${UPSTREAM}/unsetenv.c ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/unsetenv.c
+
+verr.lo: ${UPSTREAM}/verr.c err.h ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/verr.c
+
+verrx.lo: ${UPSTREAM}/verrx.c err.h ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/verrx.c
+
+vsyslog.lo: ${UPSTREAM}/vsyslog.c ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/vsyslog.c
+
+vwarn.lo: ${UPSTREAM}/vwarn.c err.h ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/vwarn.c
+
+vwarnx.lo: ${UPSTREAM}/vwarnx.c err.h ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/vwarnx.c
+
+warn.lo: ${UPSTREAM}/warn.c err.h ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/warn.c
+
+warnerr.lo: ${UPSTREAM}/warnerr.c err.h ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/warnerr.c
+
+warnx.lo: ${UPSTREAM}/warnx.c err.h ${HEADERS}
+	$(LT_CCRULE) $(UPSTREAM)/warnx.c

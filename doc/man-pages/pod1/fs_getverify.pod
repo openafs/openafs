@@ -1,0 +1,69 @@
+=head1 NAME
+
+fs_getverify - Displays the state of data verification for AFS store operations [Windows only]
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<fs getverify> [B<-help>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<fs getverify> command shows the status of data verification for
+store data operations in the AFS client. When enabled, each store data
+operation is followed by a matching fetch data request.  If the data does
+not match, the operation is repeated. The complement of this command is
+B<fs setverify> which sets the status of data verification in the client.
+
+=head1 CAUTIONS
+
+The B<fs getverify> command is only available on Microsoft Windows.  There
+is no equivalent for other platforms.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+If data verification is enabled, the output is:
+
+   Data verify mode is currently on.
+
+If data verification is disabled, the output is:
+
+   Data verify mode is currently off.
+
+=head1 EXAMPLES
+
+There is only one way to invoke B<fs getverify>:
+
+   % fs getverify
+
+=head1 PRIVILEGE REQUIRED
+
+No special privileges are required for this command.
+
+=head1 SEE ALSO
+
+L<fs_setverify(1)>
+
+=head1 COPYRIGHT
+
+Copyright 2012 Jeffrey Altman <jaltman@your-file-system.com>
+
+This documentation is covered by the BSD License as written in the
+doc/LICENSE file. This man page was written by Jeffrey Altman for
+OpenAFS.
