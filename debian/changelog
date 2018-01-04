@@ -1,4 +1,4 @@
-openafs (1.8.0~pre4-1) UNRELEASED; urgency=low
+openafs (1.8.0~pre4-1) unstable; urgency=low
 
   [ Benjamin Kaduk ]
   * New upstream major release (prerelease):
@@ -40,7 +40,7 @@ openafs (1.8.0~pre4-1) UNRELEASED; urgency=low
   * Use dh_auto_configure.
   * Correct some paths in the openafs-doc packaging
 
- -- Benjamin Kaduk <kaduk@mit.edu>  Wed, 03 Jan 2018 19:07:27 -0600
+ -- Benjamin Kaduk <kaduk@mit.edu>  Wed, 03 Jan 2018 22:14:49 -0600
 
 openafs (1.6.22-3) unstable; urgency=medium
 
